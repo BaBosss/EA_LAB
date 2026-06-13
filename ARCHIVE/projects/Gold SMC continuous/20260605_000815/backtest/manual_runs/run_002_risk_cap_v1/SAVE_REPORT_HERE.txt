@@ -1,0 +1,15 @@
+Save the new MT5 Risk Cap v1 report in this folder:
+
+C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_002_risk_cap_v1
+
+Preferred file names:
+
+report.html
+trade_list.csv
+testergraph.csv
+
+If MT5 saves extra image/xlsx files, keep them in:
+
+raw_exports\
+
+After saving, tell Codex: "จัดไฟล์ risk cap run_002 ให้หน่อย"

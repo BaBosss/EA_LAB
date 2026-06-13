@@ -1,0 +1,22 @@
+Risk Cap v1 manual retest handoff
+
+Current valid target folder:
+C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_002_risk_cap_v1
+
+EA to select in MT5 Strategy Tester:
+Gold_SMC_Continuous_MT5_RiskCapV1
+
+Set file:
+C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_002_risk_cap_v1\set_used.set
+
+Required file after manual test:
+report.html
+
+Optional files:
+trade_list.csv
+testergraph.csv
+risk_cap_summary.txt
+risk_cap_diagnostics.csv
+
+Validation gate:
+The report is valid only if it includes Risk Cap v1 inputs and max lot does not exceed 0.20.

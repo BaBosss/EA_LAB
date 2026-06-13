@@ -1,0 +1,12 @@
+Risk Cap Patch v1 Summary
+common_files_path=C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\
+max_lot_used=0.12
+max_deposit_load=8.91
+max_floating_dd_percent=8.70
+recovery_steps_used=3
+number_of_times_new_entry_blocked_by_dd=0
+number_of_times_close_all_triggered=3415071
+number_of_times_lot_capped=0
+number_of_times_recovery_blocked=2359812
+daily_loss_stop_count=3415071
+cooldown_block_count=1558328

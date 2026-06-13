@@ -1,0 +1,17 @@
+Risk Cap Patch v1 Summary
+common_files_path=C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\
+max_lot_used=0.20
+max_deposit_load=16.77
+max_floating_dd_percent=7.15
+recovery_steps_used=7
+counter_semantics=event counters count transition into a state; active tick counters count how long the state persisted
+close_all_event_count=26
+stop_new_entries_event_count=0
+daily_loss_stop_event_count=26
+cooldown_event_count=64
+recovery_block_event_count=10
+lot_cap_event_count=6
+close_all_active_ticks=4102336
+stop_new_entries_active_ticks=0
+daily_loss_active_ticks=4102336
+cooldown_active_ticks=19989013

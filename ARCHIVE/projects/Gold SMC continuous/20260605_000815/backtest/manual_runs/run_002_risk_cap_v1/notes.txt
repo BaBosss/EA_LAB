@@ -1,0 +1,23 @@
+Risk Cap v1 manual retest folder.
+
+Save or copy the MT5 retest artifacts here.
+
+Use Expert:
+Gold_SMC_Continuous_MT5_RiskCapV1
+
+Use set:
+set_used.set
+
+Required before running:
+- InpMaxLotAbsolute = 0.20
+- InpRecoveryMultiplierMax = 1.3
+- InpMaxRecoverySteps = 3
+
+Save files using these names:
+- report.html
+- trade_list.csv, if exported
+- testergraph.csv, if exported
+- risk_cap_summary.txt, if created in MT5 Common Files
+- risk_cap_diagnostics.csv, if created in MT5 Common Files
+
+The old risk-cap report in the project set folder was created before the RiskCapV1 build existed, so do not use it as the valid retest.

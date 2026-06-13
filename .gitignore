@@ -1,0 +1,37 @@
+# Local secrets
+scripts/config.yaml
+
+# Runtime logs and generated outputs
+logs/*
+ea_projects/*/logs/*
+ea_projects/*/backtest/*
+ea_projects/*/optimization/*
+ea_projects/*/reports/latest/*
+
+# Keep folder placeholders
+!logs/.gitkeep
+!ea_projects/_template/logs/.gitkeep
+!ea_projects/_template/backtest/.gitkeep
+!ea_projects/_template/backtest/manual_runs/
+!ea_projects/_template/backtest/manual_runs/run_001/
+!ea_projects/_template/backtest/manual_runs/run_001/report.html
+!ea_projects/_template/backtest/manual_runs/run_001/trade_list.csv
+!ea_projects/_template/backtest/manual_runs/run_001/set_used.set
+!ea_projects/_template/backtest/manual_runs/run_001/run_context.yaml
+!ea_projects/_template/backtest/manual_runs/run_001/notes.txt
+!ea_projects/_template/optimization/.gitkeep
+!ea_projects/_template/optimization/plans/
+!ea_projects/_template/optimization/plans/.gitkeep
+!ea_projects/_template/optimization/raw_results/
+!ea_projects/_template/optimization/raw_results/.gitkeep
+!ea_projects/_template/optimization/analyzed/
+!ea_projects/_template/optimization/analyzed/.gitkeep
+!ea_projects/_template/optimization/candidates/
+!ea_projects/_template/optimization/candidates/.gitkeep
+!ea_projects/_template/optimization/oos/
+!ea_projects/_template/optimization/oos/.gitkeep
+!ea_projects/_template/reports/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc

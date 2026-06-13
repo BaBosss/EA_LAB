@@ -1,0 +1,254 @@
+{
+  "original": {
+    "inputs_risk_cap_present": false,
+    "net_profit": 27181.36,
+    "profit_factor": 1.448864,
+    "expected_payoff": 38.50051,
+    "recovery_factor": 3.454633,
+    "sharpe": 1.996263,
+    "balance_dd_max": "12 074.24 (28.25%)",
+    "equity_dd_max": "7 868.09 (22.44%)",
+    "total_trades": 706,
+    "short_trades": "277 (64.98%)",
+    "long_trades": "429 (78.55%)",
+    "profit_trades": "517 (73.23%)",
+    "loss_trades": "189 (26.77%)",
+    "largest_profit_trade": 6179.84,
+    "largest_loss_trade": -12074.24,
+    "avg_profit_trade": 169.704449,
+    "avg_loss_trade": -320.40127,
+    "avg_holding": "18:26:38",
+    "max_holding": "104:00:14",
+    "deals_in": 706,
+    "deals_out": 706,
+    "win_rate_computed": 73.23,
+    "sum_profit_computed": 27181.36,
+    "max_lot_in": 2.56,
+    "lot_ge_016": 132,
+    "lot_ge_1": 15,
+    "max_cycle_entries": 11,
+    "max_cycle_lot": 2.56,
+    "max_cycle_abs_net_lot": 4.2,
+    "top_losses": [
+      {
+        "time": "2026.02.09 22:20:48",
+        "type": "buy",
+        "volume": 0.32,
+        "price": 5081.39,
+        "profit": -12074.24,
+        "balance": 30662.82,
+        "comment": NaN
+      },
+      {
+        "time": "2026.04.27 18:02:29",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 4670.31,
+        "profit": -3450.88,
+        "balance": 36013.23,
+        "comment": NaN
+      },
+      {
+        "time": "2025.09.15 20:09:29",
+        "type": "buy",
+        "volume": 0.64,
+        "price": 3681.75,
+        "profit": -3006.72,
+        "balance": 20388.53,
+        "comment": NaN
+      },
+      {
+        "time": "2025.05.12 02:00:15",
+        "type": "sell",
+        "volume": 0.32,
+        "price": 3269.49,
+        "profit": -2783.68,
+        "balance": 14824.11,
+        "comment": NaN
+      },
+      {
+        "time": "2025.10.27 13:30:30",
+        "type": "sell",
+        "volume": 0.32,
+        "price": 4033.64,
+        "profit": -2677.12,
+        "balance": 21654.5,
+        "comment": NaN
+      }
+    ],
+    "top_wins": [
+      {
+        "time": "2026.02.09 01:28:30",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 5024.4,
+        "profit": 6179.84,
+        "balance": 38134.18,
+        "comment": "tp 5024.08"
+      },
+      {
+        "time": "2026.02.06 01:52:22",
+        "type": "buy",
+        "volume": 0.32,
+        "price": 4711.33,
+        "profit": 5407.68,
+        "balance": 31954.34,
+        "comment": "tp 4711.33"
+      },
+      {
+        "time": "2026.02.09 22:20:48",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 5081.2,
+        "profit": 3664.64,
+        "balance": 42737.06,
+        "comment": NaN
+      },
+      {
+        "time": "2026.04.27 17:34:16",
+        "type": "buy",
+        "volume": 1.28,
+        "price": 4683.82,
+        "profit": 2517.76,
+        "balance": 38477.23,
+        "comment": "tp 4683.90"
+      },
+      {
+        "time": "2025.05.12 02:00:15",
+        "type": "buy",
+        "volume": 0.64,
+        "price": 3269.69,
+        "profit": 2464.0,
+        "balance": 17607.79,
+        "comment": NaN
+      }
+    ],
+    "html_path": "C:\\Users\\patip\\OneDrive\\.Codex\\EA_LAB\\ea_projects\\Gold SMC continuous\\ReportTester-146237.html"
+  },
+  "risk_cap_v1": {
+    "inputs_risk_cap_present": false,
+    "net_profit": 27181.36,
+    "profit_factor": 1.448864,
+    "expected_payoff": 38.50051,
+    "recovery_factor": 3.454633,
+    "sharpe": 1.996263,
+    "balance_dd_max": "12 074.24 (28.25%)",
+    "equity_dd_max": "7 868.09 (22.44%)",
+    "total_trades": 706,
+    "short_trades": "277 (64.98%)",
+    "long_trades": "429 (78.55%)",
+    "profit_trades": "517 (73.23%)",
+    "loss_trades": "189 (26.77%)",
+    "largest_profit_trade": 6179.84,
+    "largest_loss_trade": -12074.24,
+    "avg_profit_trade": 169.704449,
+    "avg_loss_trade": -320.40127,
+    "avg_holding": "18:26:38",
+    "max_holding": "104:00:14",
+    "deals_in": 706,
+    "deals_out": 706,
+    "win_rate_computed": 73.23,
+    "sum_profit_computed": 27181.36,
+    "max_lot_in": 2.56,
+    "lot_ge_016": 132,
+    "lot_ge_1": 15,
+    "max_cycle_entries": 11,
+    "max_cycle_lot": 2.56,
+    "max_cycle_abs_net_lot": 4.2,
+    "top_losses": [
+      {
+        "time": "2026.02.09 22:20:48",
+        "type": "buy",
+        "volume": 0.32,
+        "price": 5081.39,
+        "profit": -12074.24,
+        "balance": 30662.82,
+        "comment": NaN
+      },
+      {
+        "time": "2026.04.27 18:02:29",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 4670.31,
+        "profit": -3450.88,
+        "balance": 36013.23,
+        "comment": NaN
+      },
+      {
+        "time": "2025.09.15 20:09:29",
+        "type": "buy",
+        "volume": 0.64,
+        "price": 3681.75,
+        "profit": -3006.72,
+        "balance": 20388.53,
+        "comment": NaN
+      },
+      {
+        "time": "2025.05.12 02:00:15",
+        "type": "sell",
+        "volume": 0.32,
+        "price": 3269.49,
+        "profit": -2783.68,
+        "balance": 14824.11,
+        "comment": NaN
+      },
+      {
+        "time": "2025.10.27 13:30:30",
+        "type": "sell",
+        "volume": 0.32,
+        "price": 4033.64,
+        "profit": -2677.12,
+        "balance": 21654.5,
+        "comment": NaN
+      }
+    ],
+    "top_wins": [
+      {
+        "time": "2026.02.09 01:28:30",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 5024.4,
+        "profit": 6179.84,
+        "balance": 38134.18,
+        "comment": "tp 5024.08"
+      },
+      {
+        "time": "2026.02.06 01:52:22",
+        "type": "buy",
+        "volume": 0.32,
+        "price": 4711.33,
+        "profit": 5407.68,
+        "balance": 31954.34,
+        "comment": "tp 4711.33"
+      },
+      {
+        "time": "2026.02.09 22:20:48",
+        "type": "sell",
+        "volume": 0.64,
+        "price": 5081.2,
+        "profit": 3664.64,
+        "balance": 42737.06,
+        "comment": NaN
+      },
+      {
+        "time": "2026.04.27 17:34:16",
+        "type": "buy",
+        "volume": 1.28,
+        "price": 4683.82,
+        "profit": 2517.76,
+        "balance": 38477.23,
+        "comment": "tp 4683.90"
+      },
+      {
+        "time": "2025.05.12 02:00:15",
+        "type": "buy",
+        "volume": 0.64,
+        "price": 3269.69,
+        "profit": 2464.0,
+        "balance": 17607.79,
+        "comment": NaN
+      }
+    ],
+    "html_path": "C:\\Users\\patip\\OneDrive\\.Codex\\EA_LAB\\ea_projects\\Gold SMC continuous\\set\\ReportTester-146237 - risk cap.html"
+  }
+}

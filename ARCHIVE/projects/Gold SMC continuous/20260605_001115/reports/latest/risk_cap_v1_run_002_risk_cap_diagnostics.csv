@@ -1,0 +1,2 @@
+max_lot_used,max_deposit_load,max_floating_dd_percent,recovery_steps_used,number_of_times_new_entry_blocked_by_dd,number_of_times_close_all_triggered,number_of_times_lot_capped,number_of_times_recovery_blocked,daily_loss_stop_count,cooldown_block_count
+0.12,8.91,8.70,3,0,3415071,0,2359812,3415071,1558328

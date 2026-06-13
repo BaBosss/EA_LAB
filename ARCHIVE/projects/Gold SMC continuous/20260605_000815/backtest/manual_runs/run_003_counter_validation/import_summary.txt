@@ -1,0 +1,50 @@
+﻿AUTO_MT5_REPORT_COLLECTOR
+timestamp: 2026-06-03T19:57:55.4449968+07:00
+project: Gold SMC continuous
+run_id: run_003_counter_validation
+run_type: risk_cap_validation
+run_folder: C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation
+
+source_folders_scanned:
+  - C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\Tester
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files
+
+files_copied:
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\risk_cap_summary.txt -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_summary.txt
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\risk_cap_diagnostics.csv -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_diagnostics.csv
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\metaeditor.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\metaeditor.log
+  - C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_trade_list.csv -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_v1_run_002_trade_list.csv
+  - C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_report.html -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_v1_run_002_report.html
+  - C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_risk_cap_diagnostics.csv -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_v1_run_002_risk_cap_diagnostics.csv
+  - C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_set_used.set -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\risk_cap_v1_run_002_set_used.set
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260603.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260603.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260601.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260601.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260531.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260531.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260530.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260530.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260529.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260529.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260528.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260528.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260526.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260526.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260525.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260525.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260524.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260524.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260523.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260523.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260521.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260521.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260520.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260520.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260519.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260519.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260518.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260518.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260517.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260517.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260516.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260516.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260515.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260515.log
+  - C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\logs\20260511.log -> C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation\20260511.log
+
+files_missing_or_failed:
+  - NONE
+
+suspected_main_report: C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_report.html
+suspected_testergraph: MISSING
+suspected_set_file: C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\reports\latest\risk_cap_v1_run_002_set_used.set
+diagnostics_found: risk_cap_diagnostics.csv, risk_cap_summary.txt
+
+next_suggested_command:
+  Run backtest-report-analyzer on: C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\backtest\manual_runs\run_003_counter_validation

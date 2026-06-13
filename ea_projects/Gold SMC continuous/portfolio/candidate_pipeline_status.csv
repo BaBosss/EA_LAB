@@ -1,0 +1,7 @@
+stage,count,status_note
+Idea / Prototype,4,Pipeline candidates still conceptual or not yet tested
+Optimization,2,Optimization active or pending
+Single Test Passed,1,Single-test candidate not yet OOS validated
+OOS Validated,1,Gold_SMC_Run004_OOS_VALIDATED
+Tiny Live,0,No tiny-live candidates yet
+Production Portfolio,0,No production portfolio candidates yet

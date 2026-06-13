@@ -1,0 +1,30 @@
+Risk Cap v1 manual retest instructions
+
+Use this Expert Advisor in MT5 Strategy Tester:
+
+Gold_SMC_Continuous_MT5_RiskCapV1
+
+Do not use:
+
+Gold_SMC_Continuous_MT5
+
+Load this set file:
+
+C:\Users\patip\OneDrive\.Codex\EA_LAB\ea_projects\Gold SMC continuous\set\Gold_SMC_Continuous_MT5_RiskCapV1.set
+
+Before pressing Start, the Inputs tab must show:
+
+InpMaxLotAbsolute = 0.20
+InpRecoveryMultiplierMax = 1.3
+InpMaxRecoverySteps = 3
+
+If those inputs do not appear:
+
+1. Restart MT5.
+2. Open File > Open Data Folder.
+3. Confirm this file exists:
+   MQL5\Experts\Gold_SMC_Continuous_MT5_RiskCapV1.ex5
+4. If the file does not exist there, the open MT5 is using a different data folder.
+5. Do not run the retest until the new inputs are visible.
+
+After the test, the report max lot must be <= 0.20. If max lot is still above 0.20, the old EA was used.

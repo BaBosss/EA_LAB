@@ -1,0 +1,4 @@
+Pass,Profit,Expected Payoff,Profit Factor,Recovery Factor,Sharpe Ratio,Equity DD %,Trades,InpSwingPeriod,InpRiskReward,InpLotMultiplier,InpMinGapPts,InpTakeProfitUSD,InpDailyTargetUSD,InpSLBufferPts,InpMaxRecoverySteps,plan_reject_reasons,score
+1432,3662.79,7.583416,1.175431,1.972912,1.745573,12.9559,483,6,2.0,2.0,250,160,100,15,3,,81.3738
+1057,3662.79,7.583416,1.175431,1.972912,1.745573,12.9559,483,6,2.0,1.6,250,160,100,15,3,,81.3738
+1396,2845.43,5.771663,1.123711,1.488281,1.378714,14.3078,493,5,2.0,1.4,200,120,100,15,3,,66.7375

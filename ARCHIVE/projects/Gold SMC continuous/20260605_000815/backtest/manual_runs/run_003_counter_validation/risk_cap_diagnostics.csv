@@ -1,0 +1,2 @@
+max_lot_used,max_deposit_load,max_floating_dd_percent,recovery_steps_used,close_all_event_count,stop_new_entries_event_count,daily_loss_stop_event_count,cooldown_event_count,recovery_block_event_count,lot_cap_event_count,close_all_active_ticks,stop_new_entries_active_ticks,daily_loss_active_ticks,cooldown_active_ticks
+0.20,16.77,7.15,7,26,0,26,64,10,6,4102336,0,4102336,19989013
