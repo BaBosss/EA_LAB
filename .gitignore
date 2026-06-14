@@ -1,5 +1,11 @@
-# Local secrets
+# Local secrets & credentials
 scripts/config.yaml
+*.env
+secrets.*
+**/credentials*
+# MT5 terminal configs with live account info
+terminal.ini
+terminalmt5.ini
 
 # Runtime logs and generated outputs
 logs/*
