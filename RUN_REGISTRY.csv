@@ -8,6 +8,8 @@ reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2023.06.01 - 2026.06.01),
 reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2021.01.01 - 2023.06.01),0.83,45.31,-0.26,107,-1182.37,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EURCADv3_loopOOS.htm
 reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),1.01,24.66,0.02,116,49.74,18.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_IS.htm
 reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),1.05,25.79,0.15,91,448.66,19.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_OOS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),1.18,46.5,0.75,229,4974.92,24.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\PIVOTv1_loopIS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),0.84,55.72,-0.47,169,-3296.2,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\PIVOTv1_loopOOS.htm
 EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.38,10.9,4.22,447,9240.87,75.5,PASS,,,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html
 EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.04,22.67,0.4,758,992.93,20.4,REJECT,,,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html
 EA_GoldenEmber_Pivot,optimizer,,,,1.26071,18.2555,3.170647,769,17072.0,49.9,THIN,THIN,4/196,D:\EA_LAB\ea_projects\EA_GoldenEmber_Pivot\reports\raw\Port 6 Pivot range - NZDUSD - rev0.xml

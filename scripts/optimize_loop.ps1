@@ -30,7 +30,12 @@ Write-Output "[1/4] optimize $Expert $Symbol ($OptFrom..$OptTo)..."
 if (-not (Test-Path $xml)) { Write-Output "LOOP FAIL: no optimizer XML (headless opt->XML may not be supported on this build)"; exit 1 }
 
 Write-Output "[2/4] select robust pass -> .set"
+if (Test-Path $rset) { Remove-Item $rset -Force }
 & python "$S\set_from_robust.py" $xml --base $BaseSet -o $rset --strategy $Strategy
+if (-not (Test-Path $rset)) {
+  Write-Output "LOOP STOP ($Code): no robust pass survived the gate (plateau NONE). Nothing to single-test."
+  exit 1
+}
 
 Write-Output "[3/4] single-test IS ($OptFrom..$OptTo) + OOS ($OosFrom..$OosTo)"
 & "$S\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Model 1 -FromDate $OptFrom -ToDate $OptTo -SetFile $rset -ReportName "$($Code)_loopIS"
