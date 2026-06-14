@@ -1,0 +1,8 @@
+; EX197 coarse: 4 params, moderate higher lots (0.2-0.6), small space (~300 combos) for fast 6-month scan
+Count_Order_B=5||5||3||17||Y
+Count_Order_S=9||9||0||9||N
+Grid_Distance=30||30||10||60||Y
+RSI_period=10||10||4||18||Y
+RSI_oversold=33||33||0||33||N
+RSI_overbought=68||68||0||68||N
+Hedging_Lots=0.2||0.2||0.1||0.6||Y

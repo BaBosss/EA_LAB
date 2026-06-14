@@ -1,0 +1,11 @@
+; robust-pass .set generated 2026-06-14 from OPT_EX197v2.xml
+; robust pick: PF=1.697259 DD%=1.8158 RF=3.869591 trades=619 plateau=GOOD survivors=48/108
+; OVERRIDDEN 4 optimized params; load in MT5 Inputs->Load, run SINGLE test
+; lean optimize .set for EX197 — 4 key params, coarse steps (~108 combos, fast + low overfit)
+Count_Order_B=5||5||0||5||N
+Count_Order_S=9||9||0||9||N
+Grid_Distance=40||40||0||40||N
+RSI_period=14||14||0||14||N
+RSI_oversold=33||33||0||33||N
+RSI_overbought=68||68||0||68||N
+Hedging_Lots=0.4||0.4||0||0.4||N

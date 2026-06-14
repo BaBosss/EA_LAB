@@ -1,0 +1,8 @@
+; lean optimize .set for EX197 — 4 key params, coarse steps (~108 combos, fast + low overfit)
+Count_Order_B=5||5||5||15||Y
+Count_Order_S=9||9||0||9||N
+Grid_Distance=30||30||10||60||Y
+RSI_period=10||10||4||18||Y
+RSI_oversold=33||33||0||33||N
+RSI_overbought=68||68||0||68||N
+Hedging_Lots=0.2||0.2||0.1||0.4||Y
