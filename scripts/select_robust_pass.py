@@ -35,14 +35,17 @@ def _m(p):
 
 def select_robust(passes, strategy="default"):
     total = len(passes)
+    # trade-count floor: reject high-PF/low-trade flukes (e.g. PF 24 on 30 trades)
+    min_trades = max(100, SB.TRADE_MIN.get(strategy, 80))
     survivors = []
     for p in passes:
         pf = p.get("profit_factor")
         dd = p.get("max_drawdown_percent")
         rf = p.get("recovery_factor")
+        tr = p.get("total_trades") or 0
         if pf is None or dd is None or rf is None:
             continue
-        if pf >= GATE_PF and dd <= GATE_DD and rf >= GATE_RF:
+        if pf >= GATE_PF and dd <= GATE_DD and rf >= GATE_RF and tr >= min_trades:
             rscore = (SB.pf_score(pf) + SB.dd_score(dd) + SB.rf_score(rf)
                       + SB.trade_score(p.get("total_trades"), strategy))
             survivors.append((round(rscore, 1), p))
