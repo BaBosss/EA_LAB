@@ -30,6 +30,8 @@ def _m(p):
         "RF": p.get("recovery_factor"),
         "trades": p.get("total_trades"),
         "net": p.get("net_profit"),
+        "EP": p.get("expected_payoff"),
+        "SR": p.get("sharpe_ratio"),
     }
 
 

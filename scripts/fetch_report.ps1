@@ -1,43 +1,45 @@
 ﻿<#
-fetch_report.ps1 — ดึง MT5 report ตัวล่าสุดที่เพิ่ง "Save as Report" เข้าโฟลเดอร์ EA_LAB
-แล้วบันทึกค่าลง master log (RUN_LOG.csv) อัตโนมัติ
+fetch_report.ps1 — ดึง MT5 report ที่ "Save as Report" เข้าโฟลเดอร์ EA_LAB
+จัดเป็นโฟลเดอร์แยกตามชื่อ EA + แยก single/optimize + บันทึก RUN_LOG.csv อัตโนมัติ
 
-ใช้ตอน test ผ่าน MT5 GUI เอง (manual) แล้วอยากให้ Claude เอาผลไปวิเคราะห์ต่อ
-ขั้นตอนของคุณ: ใน MT5 -> คลิกขวาผลลัพธ์ -> Save as Report -> เซฟลงโฟลเดอร์ไหนก็ได้ที่สแกน
-(แนะนำ: D:\EA_LAB\_inbox) แล้วรันสคริปต์นี้
+โครงสร้างปลายทาง:
+  _mt5_auto\EA_runs\<EA>\single\    <- .htm + รูป png ของ single test
+  _mt5_auto\EA_runs\<EA>\optimize\  <- .xml ของ optimization
 
-  Mode 1 (single)   : ดึง backtest single-test .htm ตัวล่าสุด -> _mt5_auto\reports\
-  Mode 2 (optimize) : ดึง optimization .xml ตัวล่าสุด        -> _mt5_auto\optimizations\
-  Mode 3 (both)     : ดึงทั้ง single + optimize ตัวล่าสุด
+ขั้นตอนของคุณ: ใน MT5 -> คลิกขวาผลลัพธ์ -> Save as Report -> เซฟลง D:\EA_LAB\_inbox
+แล้วเลือกวิธีใช้:
 
-ทุกโหมด: อ่านชื่อ EA / Symbol / ช่วงวัน จากในไฟล์เอง -> ตั้งชื่อไฟล์ + log ค่าให้
-RUN_LOG.csv (เปิดใน Excel ได้) แล้วพิมพ์คำสั่ง analyze ตัวถัดไป
+  โหมดดึงครั้งเดียว:
+    & .\fetch_report.ps1                 # เมนู 1/2/3
+    & .\fetch_report.ps1 -Mode both
 
-ตัวอย่าง:
-  & .\fetch_report.ps1                      # เมนูถาม 1/2/3
-  & .\fetch_report.ps1 -Mode both
-  & .\fetch_report.ps1 -Mode optimize -Label EX197v8 -Strategy grid
-  & .\fetch_report.ps1 -Mode single -ExpectEA "EX197" -Move -NoLog
+  โหมดเฝ้าอัตโนมัติ (แนะนำเวลาเทสหลายตัวรวด):
+    & .\fetch_report.ps1 -Watch          # เปิดค้างไว้ พอ save ลง _inbox ปุ๊บ จัดให้ทันที
+                                          # หยุดด้วย Ctrl+C
+
+ทุกโหมดอ่านชื่อ EA / Symbol / ช่วงวันจากในไฟล์เอง -> ไม่ต้องพิมพ์
 #>
 param(
   [ValidateSet("menu", "single", "optimize", "both", "1", "2", "3")]
   [string]$Mode = "menu",
-  [string]$Label = "",          # ถ้าใส่ จะใช้เป็นชื่อไฟล์แทน auto-name (โหมดเดียวเท่านั้น)
-  [string]$ExpectEA = "",       # ถ้าใส่ จะเตือนเมื่อ EA ในไฟล์ไม่ตรง
-  [string]$Strategy = "default",# ส่งต่อให้ log_run.py สำหรับ scoring (default/grid/mean_reversion...)
+  [switch]$Watch,               # เฝ้า _inbox อัตโนมัติ (วนลูป)
+  [switch]$WatchOnce,           # สแกน _inbox รอบเดียวแล้วจบ (ใช้ debug/cron)
+  [int]$IntervalSec = 5,        # รอบการเฝ้า (วินาที)
+  [string]$Label = "",          # บังคับชื่อไฟล์ (โหมดเดียวเท่านั้น)
+  [string]$ExpectEA = "",       # เตือนเมื่อ EA ในไฟล์ไม่ตรง
+  [string]$Strategy = "default",# ส่งต่อ log_run.py สำหรับ scoring
   [string[]]$Source = @(),      # เพิ่ม folder สแกนเอง
-  [switch]$Move,                # ย้ายไฟล์ต้นทางทิ้ง (default = copy ปลอดภัยกว่า)
-  [switch]$NoLog                # ไม่บันทึกลง RUN_LOG.csv
+  [switch]$Move,                # ย้ายไฟล์ต้นทางทิ้ง (default = copy). โหมด -Watch บังคับ move
+  [switch]$NoLog                # ไม่บันทึก RUN_LOG.csv
 )
 $ErrorActionPreference = "Stop"
 
 $Auto    = "D:\EA_LAB\_mt5_auto"
-$Reports = Join-Path $Auto "reports"
-$Opts    = Join-Path $Auto "optimizations"
+$Runs    = Join-Path $Auto "EA_runs"
 $Inbox   = "D:\EA_LAB\_inbox"
 $Mt5Data = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
 $LogPy   = "D:\EA_LAB\scripts\log_run.py"
-New-Item -ItemType Directory -Force $Reports, $Opts, $Inbox | Out-Null
+New-Item -ItemType Directory -Force $Runs, $Inbox | Out-Null
 
 $ScanDirs = @($Inbox, $Mt5Data, (Join-Path $Mt5Data "Tester\Reports"),
   (Join-Path $env:USERPROFILE "Downloads"), (Join-Path $env:USERPROFILE "Desktop")) + $Source
@@ -64,11 +66,10 @@ function Get-SingleInfo([string]$path) {
   $period = _after "Period:"
   $dm = [regex]::Match($period, '(\d{4}\.\d{2}\.\d{2})\s*-\s*(\d{4}\.\d{2}\.\d{2})')
   [pscustomobject]@{
-    Ok     = ($title -match 'Strategy Tester Report' -and (_after "Expert:"))
-    EA     = (_after "Expert:")
-    Symbol = (_after "Symbol:")
-    From   = $(if ($dm.Success) { $dm.Groups[1].Value } else { "" })
-    To     = $(if ($dm.Success) { $dm.Groups[2].Value } else { "" })
+    Ok = ($title -match 'Strategy Tester Report' -and (_after "Expert:"))
+    EA = (_after "Expert:"); Symbol = (_after "Symbol:")
+    From = $(if ($dm.Success) { $dm.Groups[1].Value } else { "" })
+    To   = $(if ($dm.Success) { $dm.Groups[2].Value } else { "" })
   }
 }
 
@@ -78,86 +79,124 @@ function Get-OptInfo([string]$path) {
   $isOpt = ($raw -match 'office:spreadsheet' -and $title)
   $m = [regex]::Match($title, '^(.*?)\s+([A-Z0-9._]+),([A-Za-z0-9]+)\s+(\d{4}\.\d{2}\.\d{2})-(\d{4}\.\d{2}\.\d{2})')
   [pscustomobject]@{
-    Ok     = $isOpt
-    EA     = $(if ($m.Success) { $m.Groups[1].Value.Trim() } else { $title })
+    Ok = $isOpt
+    EA = $(if ($m.Success) { $m.Groups[1].Value.Trim() } else { $title })
     Symbol = $(if ($m.Success) { $m.Groups[2].Value } else { "" })
-    From   = $(if ($m.Success) { $m.Groups[4].Value } else { "" })
-    To     = $(if ($m.Success) { $m.Groups[5].Value } else { "" })
+    From = $(if ($m.Success) { $m.Groups[4].Value } else { "" })
+    To   = $(if ($m.Success) { $m.Groups[5].Value } else { "" })
   }
 }
 
-# ===== ฟังก์ชันดึง 1 โหมด คืน path ปลายทาง (หรือ $null ถ้าไม่เจอ) =====
+# ===== จัดไฟล์ 1 ไฟล์เข้าโฟลเดอร์ EA + log. คืน $dest หรือ $null =====
+function Process-File([System.IO.FileInfo]$file, [string]$forceLabel) {
+  $isXml = ($file.Extension -ieq ".xml")
+  $info = if ($isXml) { Get-OptInfo $file.FullName } else { Get-SingleInfo $file.FullName }
+  if (-not $info.Ok) { return $null }
+  $mode = if ($isXml) { "optimize" } else { "single" }
+
+  Write-Host ""
+  Write-Host "  [$mode] $($info.EA)  |  $($info.Symbol)  |  $($info.From) - $($info.To)" -ForegroundColor Green
+  Write-Host "         src: $($file.FullName)" -ForegroundColor DarkGray
+  if ($ExpectEA -and ($info.EA -notlike "*$ExpectEA*")) {
+    Write-Host "  !! เตือน: EA ('$($info.EA)') ไม่ตรงกับที่คาด ('$ExpectEA')" -ForegroundColor Yellow
+  }
+
+  $eaSafe = Get-SafeName $info.EA; $symSafe = Get-SafeName $info.Symbol
+  $destDir = Join-Path (Join-Path $Runs $eaSafe) $mode
+  New-Item -ItemType Directory -Force $destDir | Out-Null
+
+  if ($mode -eq "single") {
+    $name = if ($forceLabel) { $forceLabel } else { "{0}_{1}-{2}" -f $symSafe, ($info.From -replace '\.', ''), ($info.To -replace '\.', '') }
+    $ext = ".htm"
+  } else {
+    $name = if ($forceLabel) { ($forceLabel -replace '^OPT_', '') } else { $symSafe }
+    $name = "OPT_$name"; $ext = ".xml"
+  }
+  $dest = Join-Path $destDir "$name$ext"
+  if (Test-Path $dest) {
+    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
+    $dest = Join-Path $destDir "${name}_$stamp$ext"
+  }
+  $finalBase = [IO.Path]::GetFileNameWithoutExtension($dest)
+
+  $copy = { param($s, $d) if ($Move -or $Watch) { Move-Item -LiteralPath $s -Destination $d -Force } else { Copy-Item -LiteralPath $s -Destination $d -Force } }
+  & $copy $file.FullName $dest
+
+  # single: เก็บรูป png/gif ที่ชื่อขึ้นต้นเดียวกัน (X.png, X-holding.png, ...) ไปด้วย
+  if ($mode -eq "single") {
+    $srcBase = $file.BaseName
+    Get-ChildItem -LiteralPath $file.DirectoryName -File -ErrorAction SilentlyContinue |
+      Where-Object { $_.Extension -in @(".png", ".gif") -and ($_.BaseName -eq $srcBase -or $_.BaseName -like "$srcBase-*") } |
+      ForEach-Object {
+        $suffix = $_.BaseName.Substring($srcBase.Length)   # "" หรือ "-holding"
+        & $copy $_.FullName (Join-Path $destDir "$finalBase$suffix$($_.Extension)")
+      }
+  }
+  Write-Host "  -> $dest" -ForegroundColor Cyan
+
+  if (-not $NoLog -and (Test-Path $LogPy)) {
+    try { & python $LogPy "$dest" --type $mode --strategy $Strategy 2>&1 | Out-Host }
+    catch { Write-Host "  (log ไม่สำเร็จ: $($_.Exception.Message))" -ForegroundColor DarkYellow }
+  }
+  return $dest
+}
+
+# ===== ดึงตัวล่าสุดของโหมดที่ระบุ (single/optimize) =====
 function Invoke-Fetch([string]$mode) {
   $ext = if ($mode -eq "single") { @("*.htm", "*.html") } else { @("*.xml") }
   $cands = foreach ($d in $ScanDirs) {
     foreach ($p in $ext) { Get-ChildItem -LiteralPath $d -Filter $p -File -ErrorAction SilentlyContinue }
   }
-  $cands = $cands | Where-Object { $_.DirectoryName -ne $Reports -and $_.DirectoryName -ne $Opts } |
-    Sort-Object LastWriteTime -Descending
+  $cands = $cands | Where-Object { $_.FullName -notlike "$Runs*" } | Sort-Object LastWriteTime -Descending
   if (-not $cands) { Write-Host "[$mode] ไม่เจอไฟล์ $($ext -join '/') ในโฟลเดอร์ที่สแกน" -ForegroundColor Red; return $null }
-
-  $picked = $null; $info = $null
   foreach ($f in $cands) {
-    try {
-      $i = if ($mode -eq "single") { Get-SingleInfo $f.FullName } else { Get-OptInfo $f.FullName }
-      if ($i.Ok) { $picked = $f; $info = $i; break }
-    } catch {}
+    $r = Process-File $f $Label
+    if ($r) { return $r }
   }
-  if (-not $picked) {
-    Write-Host "[$mode] เจอไฟล์แต่ไม่มีตัวไหนเป็น $mode report ที่อ่านได้ (ใหม่สุด: $($cands[0].Name))" -ForegroundColor Red
-    return $null
-  }
-
-  Write-Host ""
-  Write-Host "  [$mode] EA ที่เทสล่าสุด : $($info.EA)" -ForegroundColor Green
-  Write-Host "         Symbol         : $($info.Symbol)"
-  Write-Host "         ช่วงวัน         : $($info.From) - $($info.To)"
-  Write-Host "         ไฟล์ต้นทาง       : $($picked.FullName)"
-  Write-Host "         เวลาเซฟ         : $($picked.LastWriteTime)"
-  if ($ExpectEA -and ($info.EA -notlike "*$ExpectEA*")) {
-    Write-Host "  !! เตือน: EA ในไฟล์ ('$($info.EA)') ไม่ตรงกับที่คาด ('$ExpectEA') — เช็คก่อนใช้ผล" -ForegroundColor Yellow
-  }
-
-  $eaSafe = Get-SafeName $info.EA; $symSafe = Get-SafeName $info.Symbol
-  if ($mode -eq "single") {
-    $name = if ($Label) { $Label } else { "{0}_{1}_{2}-{3}" -f $eaSafe, $symSafe, ($info.From -replace '\.', ''), ($info.To -replace '\.', '') }
-    $dest = Join-Path $Reports "$name.htm"
-  } else {
-    $name = if ($Label) { ($Label -replace '^OPT_', '') } else { "{0}_{1}" -f $eaSafe, $symSafe }
-    $dest = Join-Path $Opts "OPT_$name.xml"
-  }
-  if (Test-Path $dest) {
-    $stamp = Get-Date -Format "yyyyMMdd_HHmmss"
-    $b = [IO.Path]::GetFileNameWithoutExtension($dest); $e = [IO.Path]::GetExtension($dest)
-    $dest = Join-Path (Split-Path $dest) "${b}_$stamp$e"
-  }
-  if ($Move) { Move-Item -LiteralPath $picked.FullName -Destination $dest -Force }
-  else { Copy-Item -LiteralPath $picked.FullName -Destination $dest -Force }
-  Write-Host "  OK -> $dest" -ForegroundColor Cyan
-
-  # บันทึกลง RUN_LOG.csv
-  if (-not $NoLog -and (Test-Path $LogPy)) {
-    try { & python $LogPy "$dest" --type $mode --strategy $Strategy 2>&1 | Out-Host }
-    catch { Write-Host "  (log ไม่สำเร็จ: $($_.Exception.Message))" -ForegroundColor DarkYellow }
-  }
-
-  Write-Host "  ขั้นต่อไป (ให้ Claude รัน):" -ForegroundColor White
-  if ($mode -eq "single") {
-    Write-Host "    python D:\EA_LAB\scripts\_show_rows.py `"$eaSafe`"" -ForegroundColor Gray
-  } else {
-    Write-Host "    python D:\EA_LAB\scripts\select_robust_pass.py `"$dest`"" -ForegroundColor Gray
-  }
-  return $dest
+  Write-Host "[$mode] เจอไฟล์แต่ไม่มีตัวไหนเป็น $mode report ที่อ่านได้ (ใหม่สุด: $($cands[0].Name))" -ForegroundColor Red
+  return $null
 }
 
-# ===== เมนู / resolve mode =====
+# ===== โหมดเฝ้าอัตโนมัติ =====
+function Start-Watch {
+  Write-Host ""
+  Write-Host "  WATCH: เฝ้า $Inbox — Save as Report ลงที่นี่ได้เลย (Ctrl+C เพื่อหยุด)" -ForegroundColor Cyan
+  Write-Host "  ไฟล์ใหม่จะถูกย้ายเข้า EA_runs\<EA>\single|optimize + log ให้อัตโนมัติ" -ForegroundColor DarkGray
+  $seen = @{}
+  while ($true) {
+    Invoke-WatchPass $seen
+    Start-Sleep -Seconds $IntervalSec
+  }
+}
+
+function Invoke-WatchPass($seen) {
+  $files = @(Get-ChildItem -LiteralPath $Inbox -File -ErrorAction SilentlyContinue |
+    Where-Object { @(".htm", ".html", ".xml") -contains $_.Extension.ToLower() } | Sort-Object LastWriteTime)
+  foreach ($f in $files) {
+    $key = "$($f.FullName)|$($f.Length)|$($f.LastWriteTimeUtc.Ticks)"
+    if ($seen.ContainsKey($key)) { continue }
+    # รอให้ไฟล์เขียนเสร็จ (ขนาดนิ่ง) กันจับตอนยังเซฟไม่จบ
+    Start-Sleep -Milliseconds 400
+    $now = Get-Item -LiteralPath $f.FullName -ErrorAction SilentlyContinue
+    if (-not $now -or $now.Length -ne $f.Length) { continue }
+    Process-File $now $Label | Out-Null
+    $seen[$key] = $true
+  }
+}
+
+# ===== resolve โหมด / เมนู =====
+if ($WatchOnce) { Invoke-WatchPass @{}; return }
+if ($Watch) { Start-Watch; return }
+
 if ($Mode -eq "menu") {
   Write-Host ""
   Write-Host "  MT5 report fetcher" -ForegroundColor Cyan
-  Write-Host "  1) single   = ดึง backtest single-test .htm ตัวล่าสุด"
+  Write-Host "  1) single   = ดึง single-test .htm ตัวล่าสุด"
   Write-Host "  2) optimize = ดึง optimization .xml ตัวล่าสุด"
   Write-Host "  3) both     = ดึงทั้งสองอย่าง"
-  $ans = (Read-Host "เลือก (1/2/3)").Trim()
+  Write-Host "  4) watch    = เฝ้า _inbox อัตโนมัติ (เทสหลายตัวรวด)"
+  $ans = (Read-Host "เลือก (1/2/3/4)").Trim()
+  if ($ans -eq "4") { Start-Watch; return }
   $Mode = switch ($ans) { "1" { "single" } "2" { "optimize" } "3" { "both" } default { $ans } }
 }
 switch ($Mode) { "1" { $Mode = "single" }; "2" { $Mode = "optimize" }; "3" { $Mode = "both" } }
@@ -165,20 +204,13 @@ if ($Mode -notin @("single", "optimize", "both")) { Write-Host "ABORT: Mode ไ�
 
 Write-Host ""
 Write-Host "scan: $($ScanDirs -join '  |  ')" -ForegroundColor DarkGray
-if ($Mode -eq "both" -and $Label) { Write-Host "(หมายเหตุ: -Label ใช้ได้เฉพาะโหมดเดียว — โหมด both จะตั้งชื่ออัตโนมัติ)" -ForegroundColor DarkYellow; $Label = "" }
+if ($Mode -eq "both" -and $Label) { Write-Host "(โหมด both ตั้งชื่ออัตโนมัติ — -Label ถูกข้าม)" -ForegroundColor DarkYellow; $Label = "" }
 
 $results = @()
-if ($Mode -eq "both") {
-  $results += Invoke-Fetch "single"
-  $results += Invoke-Fetch "optimize"
-} else {
-  $results += Invoke-Fetch $Mode
-}
+if ($Mode -eq "both") { $results += Invoke-Fetch "single"; $results += Invoke-Fetch "optimize" }
+else { $results += Invoke-Fetch $Mode }
 
 $ok = @($results | Where-Object { $_ })
 Write-Host ""
-if ($ok.Count -gt 0) {
-  Write-Host "เสร็จ $($ok.Count) ไฟล์ — บอก Claude ได้เลยว่าดึงผลมาแล้ว (ดู RUN_LOG.csv ได้ด้วย)" -ForegroundColor Green
-} else {
-  Write-Host "ไม่ได้ไฟล์ — เช็คว่า Save as Report ลงโฟลเดอร์ที่สแกนหรือยัง" -ForegroundColor Red
-}
+if ($ok.Count -gt 0) { Write-Host "เสร็จ $($ok.Count) ไฟล์ — บอก Claude ได้เลย (ดู RUN_LOG.csv ได้ด้วย)" -ForegroundColor Green }
+else { Write-Host "ไม่ได้ไฟล์ — เช็คว่า Save as Report ลงโฟลเดอร์ที่สแกนหรือยัง" -ForegroundColor Red }

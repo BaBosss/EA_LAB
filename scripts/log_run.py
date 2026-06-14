@@ -39,7 +39,8 @@ import select_robust_pass as RS       # noqa: E402
 
 LOG = Path(r"D:\EA_LAB\RUN_LOG.csv")
 COLS = ["logged_at", "type", "ea", "symbol", "timeframe", "date_from", "date_to",
-        "PF", "DD_pct", "RF", "trades", "net", "score", "verdict", "report_file"]
+        "PF", "DD_pct", "RF", "trades", "net", "EP", "SR", "Edge",
+        "score", "verdict", "report_file"]
 
 
 def _now():
@@ -73,12 +74,19 @@ def row_for_single(path, strategy):
     v = SB.score(d, strategy)
     tf, frm, to = _split_period(d.get("period", ""))
     m = v["metrics"]
+    ep = d.get("expected_payoff")
+    avg_loss = d.get("average_loss_trade")
+    # Edge เป็นหน่วย R = กำไรคาดหวังต่อไม้ / ขนาดการเสียปกติ (เทียบข้าม EA ได้)
+    edge = ""
+    if isinstance(ep, (int, float)) and isinstance(avg_loss, (int, float)) and abs(avg_loss) > 1e-9:
+        edge = round(ep / abs(avg_loss), 3)
     return {
         "logged_at": _now(), "type": "single",
         "ea": v.get("ea_name") or d.get("ea_name", ""), "symbol": v.get("symbol", ""),
         "timeframe": tf, "date_from": frm, "date_to": to,
         "PF": m.get("PF"), "DD_pct": m.get("DD%"), "RF": m.get("RF"),
         "trades": m.get("trades"), "net": m.get("net"),
+        "EP": ep, "SR": d.get("sharpe_ratio"), "Edge": edge,
         "score": v.get("BacktestScore"), "verdict": v.get("verdict"),
         "report_file": str(path),
     }
@@ -110,6 +118,7 @@ def row_for_optimize(path, strategy):
         "ea": ea, "symbol": sym, "timeframe": tf, "date_from": frm, "date_to": to,
         "PF": _r(rb.get("PF")), "DD_pct": _r(rb.get("DD%")), "RF": _r(rb.get("RF")),
         "trades": rb.get("trades"), "net": _r(rb.get("net")),
+        "EP": _r(rb.get("EP")), "SR": _r(rb.get("SR")), "Edge": "",
         "score": r.get("robust_score"), "verdict": plateau,
         "report_file": str(path),
     }
@@ -183,8 +192,9 @@ def main():
             return
         print(f"RUN_LOG.csv — {len(rows)} แถว")
         for r in rows:
-            print(f"  {r['logged_at']}  {r['type']:8} {r['ea']:24.24} {r['symbol']:8} "
+            print(f"  {r['logged_at']}  {r['type']:8} {r['ea']:22.22} {r['symbol']:7} "
                   f"PF={r['PF']:>5} DD={r['DD_pct']:>5} RF={r['RF']:>5} "
+                  f"EP={r.get('EP',''):>6} SR={r.get('SR',''):>5} Edge={r.get('Edge',''):>5} "
                   f"tr={r['trades']:>5} score={r['score']:>5} {r['verdict']}")
         return
 
