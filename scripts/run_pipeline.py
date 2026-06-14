@@ -53,7 +53,7 @@ def main():
     files = []
     for root in roots:
         for dp, _, fns in os.walk(root):
-            if "_legacy" in dp:
+            if any(skip in dp for skip in ("_legacy", "node_modules", ".git", "backup_before")):
                 continue
             for fn in fns:
                 ext = fn.lower().rsplit(".", 1)[-1]
