@@ -1,0 +1,9 @@
+project,type,ea_name,symbol,period,PF,DD%,RF,trades,net,score,verdict,file
+EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.38,10.9,4.22,447,9240.87,75.5,PASS,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html
+EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.04,22.67,0.4,758,992.93,20.4,REJECT,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html
+EA_GoldenEmber_Pivot,optimizer,,,,1.267665,31.3092,1.813761,815,26750.73,,top of 196 passes,D:\EA_LAB\ea_projects\EA_GoldenEmber_Pivot\reports\raw\Port 6 Pivot range - NZDUSD - rev0.xml
+Gold SMC continuous,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2023.01.01 - 2026.06.04),1.11,17.45,1.34,596,2398.89,39.4,WATCH,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\forward_test\forward_ReportTester-146237.html
+Gold SMC continuous,optimizer,,,,1.442046,10.6026,4.513068,464,10074.07,,top of 1623 passes,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\optimization_snapshot\pass_2_raw_ReportOptimizer-146237.xml
+Gold SMC continuous,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.31,12.38,3.22,479,7497.37,70.7,PASS,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\single_test\run_004_ReportTester-146237.html
+Matchagrid,optimizer,,,,1.894337,67.2854,2.251926,3330,31270.76,,top of 176 passes,D:\EA_LAB\ea_projects\Matchagrid\CHFJPY\ReportOptimizer-146237 - CHFJPY.xml
+Matchagrid,single,MatchaGrid,CHFJPY,M15 (2026.01.01 - 2026.06.10),1.84,18.64,2.79,1163,8351.92,65.1,PASS,D:\EA_LAB\ea_projects\Matchagrid\CHFJPY\ReportTester-146237-CHFJPY.html
