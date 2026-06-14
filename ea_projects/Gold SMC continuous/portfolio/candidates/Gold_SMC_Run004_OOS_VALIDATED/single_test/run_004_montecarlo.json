@@ -1,0 +1,29 @@
+{
+  "source_file": "D:\\EA_LAB\\ea_projects\\Gold SMC continuous\\portfolio\\candidates\\Gold_SMC_Run004_OOS_VALIDATED\\single_test\\run_004_trades.csv",
+  "trade_count": 479,
+  "net_profit": 7497.37,
+  "observed_pf": 1.31,
+  "observed_dd_pct": 12.24,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.31,
+    "pf_median": 1.31,
+    "pf_95th": 1.31,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 18.12,
+    "dd_95th_pct": 29.84,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 1.02,
+    "pf_median": 1.324,
+    "pf_95th": 1.716,
+    "pf_range_5_95": 0.696,
+    "dd_median_pct": 18.93,
+    "dd_95th_pct": 40.35,
+    "prob_of_ruin_pct": 1.8,
+    "permutations": 1000
+  }
+}
