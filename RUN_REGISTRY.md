@@ -4,32 +4,32 @@
 
 ## Single backtests (scored)
 
-| Verdict | Score | Project | Symbol | PF | DD% | RF | Trades | Net | File |
-|---|---:|---|---|---:|---:|---:|---:|---:|---|
-| PASS | 83.6 | reports | EURCAD | 3.9 | 10.98 | 4.36 | 113 | 11373.57 | EURCADv3_loopIS.htm |
-| PASS | 78.2 | reports | EURCAD | 24.7 | 9.17 | 3.92 | 30 | 4952.06 | EURCADv2_loopIS.htm |
-| PASS | 75.5 | EA_CORE_V1_TESTBED | XAUUSD | 1.38 | 10.9 | 4.22 | 447 | 9240.87 | RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html |
-| PASS | 70.7 | Gold SMC continuous | XAUUSD | 1.31 | 12.38 | 3.22 | 479 | 7497.37 | run_004_ReportTester-146237.html |
-| PASS | 65.1 | Matchagrid | CHFJPY | 1.84 | 18.64 | 2.79 | 1163 | 8351.92 | ReportTester-146237-CHFJPY.html |
-| WATCH | 63.3 | reports | EURCAD | 2.55 | 16.52 | 1.58 | 32 | 3377.72 | EURCADv2_loopOOS.htm |
-| WATCH | 39.4 | Gold SMC continuous | XAUUSD | 1.11 | 17.45 | 1.34 | 596 | 2398.89 | forward_ReportTester-146237.html |
-| REJECT | 46.4 | reports | EURCAD | 1.34 | 19.27 | 0.94 | 133 | 2846.86 | EURCAD_IS.htm |
-| REJECT | 24.0 | reports | NZDUSD | 1.18 | 46.5 | 0.75 | 229 | 4974.92 | PIVOTv1_loopIS.htm |
-| REJECT | 20.4 | EA_CORE_V1_TESTBED | XAUUSD | 1.04 | 22.67 | 0.4 | 758 | 992.93 | RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html |
-| REJECT | 19.0 | reports | NZDUSD | 1.05 | 25.79 | 0.15 | 91 | 448.66 | GEP_OOS.htm |
-| REJECT | 18.4 | reports | NZDUSD | 1.01 | 24.66 | 0.02 | 116 | 49.74 | GEP_IS.htm |
-| REJECT | 15.0 | reports | EURCAD | 0.94 | 31.44 | -0.19 | 188 | -779.73 | EURCAD_OOS.htm |
-| REJECT | 15.0 | reports | EURCAD | 0.83 | 45.31 | -0.26 | 107 | -1182.37 | EURCADv3_loopOOS.htm |
-| REJECT | 15.0 | reports | NZDUSD | 0.84 | 55.72 | -0.47 | 169 | -3296.2 | PIVOTv1_loopOOS.htm |
-| REJECT | 7.1 | reports | AUDCAD | 0.76 | 26.24 | -0.24 | 21 | -735.02 | AUDCAD_IS.htm |
+| Verdict | Score | Project             | Symbol |   PF |   DD% |    RF | Trades |      Net | File                                               |
+| ------- | ----: | ------------------- | ------ | ---: | ----: | ----: | -----: | -------: | -------------------------------------------------- |
+| PASS    |  83.6 | reports             | EURCAD |  3.9 | 10.98 |  4.36 |    113 | 11373.57 | EURCADv3_loopIS.htm                                |
+| PASS    |  78.2 | reports             | EURCAD | 24.7 |  9.17 |  3.92 |     30 |  4952.06 | EURCADv2_loopIS.htm                                |
+| PASS    |  75.5 | EA_CORE_V1_TESTBED  | XAUUSD | 1.38 |  10.9 |  4.22 |    447 |  9240.87 | RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html |
+| PASS    |  70.7 | Gold SMC continuous | XAUUSD | 1.31 | 12.38 |  3.22 |    479 |  7497.37 | run_004_ReportTester-146237.html                   |
+| PASS    |  65.1 | Matchagrid          | CHFJPY | 1.84 | 18.64 |  2.79 |   1163 |  8351.92 | ReportTester-146237-CHFJPY.html                    |
+| WATCH   |  63.3 | reports             | EURCAD | 2.55 | 16.52 |  1.58 |     32 |  3377.72 | EURCADv2_loopOOS.htm                               |
+| WATCH   |  39.4 | Gold SMC continuous | XAUUSD | 1.11 | 17.45 |  1.34 |    596 |  2398.89 | forward_ReportTester-146237.html                   |
+| REJECT  |  46.4 | reports             | EURCAD | 1.34 | 19.27 |  0.94 |    133 |  2846.86 | EURCAD_IS.htm                                      |
+| REJECT  |  24.0 | reports             | NZDUSD | 1.18 |  46.5 |  0.75 |    229 |  4974.92 | PIVOTv1_loopIS.htm                                 |
+| REJECT  |  20.4 | EA_CORE_V1_TESTBED  | XAUUSD | 1.04 | 22.67 |   0.4 |    758 |   992.93 | RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html |
+| REJECT  |  19.0 | reports             | NZDUSD | 1.05 | 25.79 |  0.15 |     91 |   448.66 | GEP_OOS.htm                                        |
+| REJECT  |  18.4 | reports             | NZDUSD | 1.01 | 24.66 |  0.02 |    116 |    49.74 | GEP_IS.htm                                         |
+| REJECT  |  15.0 | reports             | EURCAD | 0.94 | 31.44 | -0.19 |    188 |  -779.73 | EURCAD_OOS.htm                                     |
+| REJECT  |  15.0 | reports             | EURCAD | 0.83 | 45.31 | -0.26 |    107 | -1182.37 | EURCADv3_loopOOS.htm                               |
+| REJECT  |  15.0 | reports             | NZDUSD | 0.84 | 55.72 | -0.47 |    169 |  -3296.2 | PIVOTv1_loopOOS.htm                                |
+| REJECT  |   7.1 | reports             | AUDCAD | 0.76 | 26.24 | -0.24 |     21 |  -735.02 | AUDCAD_IS.htm                                      |
 
 ## Optimizer batches (ROBUST pick, not profit-max)
 
-| Plateau | RobustScore | Project | PF | DD% | RF | Trades | Net | Survivors | File |
-|---|---:|---|---:|---:|---:|---:|---:|---:|---|
-| GOOD | 64.5 | Gold SMC continuous | 1.255166 | 6.866 | 4.755738 | 387 | 4850.71 | 375/1623 | pass_2_raw_ReportOptimizer-146237.xml |
-| GOOD | 60.1 | Matchagrid | 2.092508 | 11.6881 | 2.540963 | 584 | 3320.48 | 34/176 | ReportOptimizer-146237 - CHFJPY.xml |
-| THIN | 49.9 | EA_GoldenEmber_Pivot | 1.26071 | 18.2555 | 3.170647 | 769 | 17072.0 | 4/196 | Port 6 Pivot range - NZDUSD - rev0.xml |
+| Plateau | RobustScore | Project              |       PF |     DD% |       RF | Trades |     Net | Survivors | File                                   |
+| ------- | ----------: | -------------------- | -------: | ------: | -------: | -----: | ------: | --------: | -------------------------------------- |
+| GOOD    |        64.5 | Gold SMC continuous  | 1.255166 |   6.866 | 4.755738 |    387 | 4850.71 |  375/1623 | pass_2_raw_ReportOptimizer-146237.xml  |
+| GOOD    |        60.1 | Matchagrid           | 2.092508 | 11.6881 | 2.540963 |    584 | 3320.48 |    34/176 | ReportOptimizer-146237 - CHFJPY.xml    |
+| THIN    |        49.9 | EA_GoldenEmber_Pivot |  1.26071 | 18.2555 | 3.170647 |    769 | 17072.0 |     4/196 | Port 6 Pivot range - NZDUSD - rev0.xml |
 
 ## SHORTLIST — re-test these in MT5 first (robust pass + plateau)
 

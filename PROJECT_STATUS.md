@@ -12,15 +12,15 @@
 
 ## 2. Milestone (7 เฟส)
 
-| เฟส | คือ | สถานะ | % |
-|---|---|---|---|
-| **0. Foundation** | จัดบ้าน, กู้ความรู้ (chat 788), รวม EA_LAB, git | ✅ DONE | 100 |
-| **1. Automation pipeline** | parse→deals→score→MonteCarlo→robust-select→gen.set→registry→**MT5 headless** | ✅ DONE (single-test พิสูจน์แล้ว) | 90 |
-| **2. Candidate production** | รัน shortlist + validate ให้ผ่าน IS→OOS→robustness | 🔄 กำลังทำ (batch รันอยู่ตอนนี้) | 25 |
-| **3. EA Template** | เปลือก EA dropdown modes (MM/TP/SL/Recovery/Hedge ร่วม, เปลี่ยนแค่ entry) | ⬜ ยังไม่เริ่ม (พัก) | 0 |
-| **4. Portfolio** | correlation + DD overlap → จัดพอร์ต (ต้องมี ≥2-3 EA ผ่านก่อน) | ⬜ ยังไม่เริ่ม | 0 |
-| **5. Demo** | รัน demo จริง ≥3 เดือน (บังคับ ห้ามลัด) | ⬜ ยังไม่เริ่ม | 0 |
-| **6. Live** | 10 พอร์ต ทุนเล็ก + monitoring + kill-switch | ⬜ ยังไม่เริ่ม (เป้า) | 0 |
+| เฟส                         | คือ                                                                          | สถานะ                            | %   |
+| --------------------------- | ---------------------------------------------------------------------------- | -------------------------------- | --- |
+| **0. Foundation**           | จัดบ้าน, กู้ความรู้ (chat 788), รวม EA_LAB, git                              | ✅ DONE                           | 100 |
+| **1. Automation pipeline**  | parse→deals→score→MonteCarlo→robust-select→gen.set→registry→**MT5 headless** | ✅ DONE (single-test พิสูจน์แล้ว) | 90  |
+| **2. Candidate production** | รัน shortlist + validate ให้ผ่าน IS→OOS→robustness                           | 🔄 กำลังทำ (batch รันอยู่ตอนนี้) | 25  |
+| **3. EA Template**          | เปลือก EA dropdown modes (MM/TP/SL/Recovery/Hedge ร่วม, เปลี่ยนแค่ entry)    | ⬜ ยังไม่เริ่ม (พัก)              | 0   |
+| **4. Portfolio**            | correlation + DD overlap → จัดพอร์ต (ต้องมี ≥2-3 EA ผ่านก่อน)                | ⬜ ยังไม่เริ่ม                    | 0   |
+| **5. Demo**                 | รัน demo จริง ≥3 เดือน (บังคับ ห้ามลัด)                                      | ⬜ ยังไม่เริ่ม                    | 0   |
+| **6. Live**                 | 10 พอร์ต ทุนเล็ก + monitoring + kill-switch                                  | ⬜ ยังไม่เริ่ม (เป้า)             | 0   |
 
 **Track แยก — EA_CORE_V1 framework** (MQL5 ที่ Codex สร้าง): foundation เสร็จ (1317 PASS, metadata-only), ExecutionEngine ยังไม่เริ่ม → **พักไว้** ตามทิศทาง balanced (ใช้ EA สำเร็จรูปก่อน)
 
