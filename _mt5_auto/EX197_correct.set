@@ -1,0 +1,24 @@
+; EX197 correct optimize: Lots + Lot_plus_B + Lot_plus_S + Grid_Distance + Close_Money
+; Backtest_Mode locked = true (1)
+; 5x6x6x4x10 = 7,200 combos | 6-month window
+; All other params locked at v2-robust values (Count_Order_B=5, Count_Order_S=9)
+Lots=0.01||0.01||0.01||0.05||Y
+Lot_plus_B=0.01||0.00||0.01||0.05||Y
+Lot_plus_S=0.01||0.00||0.01||0.05||Y
+Grid_Distance=40||30||10||60||Y
+Close_Money=3||3||3||30||Y
+Backtest_Mode=1||1||0||1||N
+Count_Order_B=5||5||0||5||N
+Count_Order_S=9||9||0||9||N
+Upper_limit_lot_size=0.2||0.2||0||0.2||N
+RSI_period=14||14||0||14||N
+RSI_oversold=33||33||0||33||N
+RSI_overbought=68||68||0||68||N
+Hedging_Lots=0.4||0.4||0||0.4||N
+Trailing_Stop=5||5||0||5||N
+Trailing_Step=1||1||0||1||N
+Max_Order_Hedging=10||10||0||10||N
+Max_Order_Close_All=30||30||0||30||N
+Cutloss_Mode=0||0||0||0||N
+Cutloss_Percent=30||30||0||30||N
+Candle_body_size=100||100||0||100||N
