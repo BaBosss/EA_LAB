@@ -1,0 +1,29 @@
+{
+  "source_file": "D:\\EA_LAB\\ea_projects\\Matchagrid\\CHFJPY\\_mg_trades.csv",
+  "trade_count": 1163,
+  "net_profit": 8351.92,
+  "observed_pf": 1.844,
+  "observed_dd_pct": 5.73,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.844,
+    "pf_median": 1.844,
+    "pf_95th": 1.844,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 2.84,
+    "dd_95th_pct": 4.5,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 1.591,
+    "pf_median": 1.838,
+    "pf_95th": 2.137,
+    "pf_range_5_95": 0.547,
+    "dd_median_pct": 2.89,
+    "dd_95th_pct": 4.68,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}

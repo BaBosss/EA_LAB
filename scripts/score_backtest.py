@@ -96,6 +96,10 @@ def score(d, strategy="default"):
     else:
         warnings.append("no monthly data (parse with --trades) -> stability scored 5/10")
 
+    if strategy == "grid":
+        warnings.append(f"GRID: size against REPORT DD ({dd}%) x2-3 — closed-trade Monte Carlo "
+                        "understates floating basket drawdown; do not trust MC DD/ruin for grids")
+
     comp = {
         "profit_factor": pf_score(pf),
         "max_dd": dd_score(dd),

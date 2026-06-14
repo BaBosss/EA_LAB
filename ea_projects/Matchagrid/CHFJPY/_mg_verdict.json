@@ -1,0 +1,29 @@
+{
+  "ea_name": "MatchaGrid",
+  "symbol": "CHFJPY",
+  "period": "M15 (2026.01.01 - 2026.06.10)",
+  "strategy": "grid",
+  "metrics": {
+    "PF": 1.84,
+    "DD%": 18.64,
+    "RF": 2.79,
+    "trades": 1163,
+    "EP": 7.18,
+    "net": 8351.92
+  },
+  "components": {
+    "profit_factor": 21.4,
+    "max_dd": 6.6,
+    "recovery_factor": 16.1,
+    "trade_count": 7.0,
+    "expected_payoff": 9.0,
+    "monthly_stability": 5.0
+  },
+  "BacktestScore": 65.1,
+  "band": "B (usable)",
+  "verdict": "PASS",
+  "warnings": [
+    "no monthly data (parse with --trades) -> stability scored 5/10"
+  ],
+  "source": "D:\\EA_LAB\\ea_projects\\Matchagrid\\CHFJPY\\ReportTester-146237-CHFJPY.html"
+}

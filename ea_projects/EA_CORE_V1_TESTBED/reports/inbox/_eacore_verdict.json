@@ -1,0 +1,29 @@
+{
+  "ea_name": "Gold_SMC_Continuous_MT5_RiskCapV1",
+  "symbol": "XAUUSD",
+  "period": "H1 (2025.01.01 - 2026.06.01)",
+  "strategy": "mean_reversion",
+  "metrics": {
+    "PF": 1.38,
+    "DD%": 10.9,
+    "RF": 4.22,
+    "trades": 447,
+    "EP": 20.67,
+    "net": 9240.87
+  },
+  "components": {
+    "profit_factor": 16.8,
+    "max_dd": 14.7,
+    "recovery_factor": 20,
+    "trade_count": 10.0,
+    "expected_payoff": 9.0,
+    "monthly_stability": 5.0
+  },
+  "BacktestScore": 75.5,
+  "band": "B (usable)",
+  "verdict": "PASS",
+  "warnings": [
+    "no monthly data (parse with --trades) -> stability scored 5/10"
+  ],
+  "source": "D:\\EA_LAB\\ea_projects\\EA_CORE_V1_TESTBED\\reports\\inbox\\RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html"
+}

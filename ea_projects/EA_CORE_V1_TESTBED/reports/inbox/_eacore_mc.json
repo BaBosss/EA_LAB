@@ -1,0 +1,29 @@
+{
+  "source_file": "D:\\EA_LAB\\ea_projects\\EA_CORE_V1_TESTBED\\reports\\inbox\\_eacore_trades.csv",
+  "trade_count": 447,
+  "net_profit": 9240.87,
+  "observed_pf": 1.378,
+  "observed_dd_pct": 14.77,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.378,
+    "pf_median": 1.378,
+    "pf_95th": 1.378,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 18.53,
+    "dd_95th_pct": 32.17,
+    "prob_of_ruin_pct": 0.1,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 1.065,
+    "pf_median": 1.376,
+    "pf_95th": 1.845,
+    "pf_range_5_95": 0.781,
+    "dd_median_pct": 18.89,
+    "dd_95th_pct": 39.53,
+    "prob_of_ruin_pct": 2.5,
+    "permutations": 1000
+  }
+}
