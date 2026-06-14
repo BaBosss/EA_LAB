@@ -37,14 +37,14 @@ modules/
 ```powershell
 & D:\EA_LAB\ea_template\deploy.ps1 -Compile      # junction เข้า MQL5\Experts + compile
 # smoke backtest (ปิด MT5 GUI ก่อน):
-& D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EA_LabTemplate\EA_LabTemplate" -Symbol EURUSD `
+& D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\EA_LabTemplate" -Symbol EURUSD `
     -Model 1 -FromDate 2024.01.01 -ToDate 2026.06.01 -ReportName LabTpl_smoke
 # เก็บผลเข้า RUN_LOG:
 & D:\EA_LAB\scripts\fetch_report.ps1 -Mode single
 # optimize:
-& D:\EA_LAB\scripts\optimize_loop.ps1 -Expert "EA_LabTemplate\EA_LabTemplate" -Symbol EURUSD -Code LABTPL ...
+& D:\EA_LAB\scripts\optimize_loop.ps1 -Expert "EALabTpl\EA_LabTemplate" -Symbol EURUSD -Code LABTPL ...
 ```
-Expert name สำหรับ tester = `EA_LabTemplate\EA_LabTemplate`
+Expert name สำหรับ tester = `EALabTpl\EA_LabTemplate`
 
 ## นอกขอบเขตเฟสนี้
 Recovery/Hedge/Basket เต็ม · entry เพิ่ม (Breakout/Swing/MeanRev/GSMC) · demo/live + safety review · ยก Entry_* เข้า EA_CORE_V1 เป็น StrategySignal_v2

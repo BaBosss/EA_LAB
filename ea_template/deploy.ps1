@@ -1,36 +1,34 @@
 <#
-deploy.ps1 - ทำให้ MetaEditor เห็น EA_LabTemplate เพื่อ compile/test
-ค่า default = junction (ลิงก์ ea_template เข้า MQL5\Experts\ -> แก้ที่ EA_LAB ที่เดียว, git ตามได้)
-  & .\deploy.ps1            # สร้าง junction
-  & .\deploy.ps1 -Copy      # ก๊อปจริง (ถ้าไม่อยากใช้ junction)
-  & .\deploy.ps1 -Compile   # deploy แล้ว compile ต่อเลย
-Expert name สำหรับ tester/mt5_run.ps1:  EA_LabTemplate\EA_LabTemplate
+deploy.ps1 - copy EA_LabTemplate into the LIVE MT5 data folder so MetaEditor
+can compile it and Strategy Tester can run it.
+  & .\deploy.ps1            # copy source -> Experts\EALabTpl
+  & .\deploy.ps1 -Compile   # copy then compile (reads compile.log)
+Expert name for tester / mt5_run.ps1 :  EALabTpl\EA_LabTemplate
+NOTE: headless smoke/optimize (mt5_run.ps1) needs the MT5 GUI CLOSED.
+      Compiling here does NOT require closing MT5.
 #>
-param([switch]$Copy, [switch]$Compile)
+param([switch]$Compile)
 $ErrorActionPreference = "Stop"
 
-$src = "D:\EA_LAB\ea_template"
-$mt5 = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
-$meta= "D:\Meta 5\metaeditor64.exe"
-$dst = Join-Path $mt5 "MQL5\Experts\EA_LabTemplate"
+$src  = "D:\EA_LAB\ea_template"
+$data = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
+$meta = "D:\Meta 5\metaeditor64.exe"
+$dst  = Join-Path $data "MQL5\Experts\EALabTpl"
 
-if ($Copy) {
-  robocopy $src $dst /MIR /XD .git /XF *.ex5 *.log | Out-Null
-  Write-Host "copied -> $dst" -ForegroundColor Cyan
-}
-elseif (Test-Path $dst) {
-  Write-Host "already deployed: $dst" -ForegroundColor DarkGray
-}
-else {
-  & cmd /c mklink /J "$dst" "$src" | Out-Host
-  Write-Host "junction -> $dst" -ForegroundColor Cyan
-}
+# fast-fail robocopy (/R:1 /W:1) so a transient lock never hangs the mirror
+robocopy "$src" "$dst" /MIR /R:1 /W:1 /XD .git /XF *.ex5 *.log /NFL /NDL /NJH /NJS | Out-Null
+if($LASTEXITCODE -ge 8){ Write-Host "robocopy error ($LASTEXITCODE) - is MT5 locking the folder?" -ForegroundColor Red; exit 1 }
+Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
 if ($Compile) {
   $mq5 = Join-Path $dst "EA_LabTemplate.mq5"
   $log = Join-Path $dst "compile.log"
-  Write-Host "compiling..." -ForegroundColor DarkGray
+  if(Test-Path $log){ Remove-Item $log -Force }
   Start-Process -FilePath $meta -ArgumentList "/compile:`"$mq5`"","/log:`"$log`"" -Wait
-  if (Test-Path $log) { Get-Content -Raw -Encoding Unicode $log | Write-Host }
+  if(Test-Path $log){
+    $txt = Get-Content -Raw -Encoding Unicode $log
+    $res = ($txt -split "`r?`n" | Where-Object { $_ -match "Result:" })
+    Write-Host $res -ForegroundColor Green
+  }
 }
-Write-Host "Expert name for tester: EA_LabTemplate\EA_LabTemplate" -ForegroundColor Green
+Write-Host "Expert name for tester: EALabTpl\EA_LabTemplate" -ForegroundColor Green

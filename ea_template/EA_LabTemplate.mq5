@@ -5,7 +5,7 @@
 //|   Phase 3a: Strategy-Tester only. Entry = Grid Trend MA.        |
 //+------------------------------------------------------------------+
 #property copyright "EA_LAB"
-#property version   "0.10"
+#property version   "1.00"
 #property description "Dropdown-mode chassis (Grid Trend MA). Strategy-Tester phase; built-in indicators only."
 #property strict
 
