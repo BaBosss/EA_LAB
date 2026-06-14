@@ -72,5 +72,5 @@ if (Test-Path $srcXml) {
   Write-Output "next: python select_robust_pass.py `"$destXml`" --strategy <strat>"
 }
 else {
-  Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but no .xml, MT5 may need the optimization report exported differently — check $DataDir for $ReportName.* and the Tester logs."
+  Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
 }
