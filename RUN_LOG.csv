@@ -2,3 +2,5 @@
 2026-06-14 23:23:43,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1,2024.01.01,2026.06.01,1.15,12.49,2.69,735,5182.23,7.05,1.46,0.031,52.8,WATCH,_mt5_auto/EA_runs/Gold_SMC_Continuous_MT5_RiskCapV1/single/XAUUSD_20240101-20260601.htm
 2026-06-14 23:35:17,optimize,Gold_SMC_FiboRecovery_MT5,XAUUSD,H1,2025.01.01,2026.06.01,4.11,7.83,6.26,2189,5260.23,2.4,4.89,,72.9,GOOD 30/176 (robust),D:\EA_LAB\_mt5_auto\EA_runs\Gold_SMC_FiboRecovery_MT5\optimize\OPT_XAUUSD_20260614_233517.xml
 2026-06-14 23:35:33,single,Gold_SMC_FiboRecovery_MT5,XAUUSD,H1,2025.01.01,2026.06.01,3.7,16.32,2.42,652,4488.2,6.88,3.7,0.198,72.9,PASS,D:\EA_LAB\_mt5_auto\EA_runs\Gold_SMC_FiboRecovery_MT5\single\XAUUSD_20250101-20260601_20260614_233533.htm
+2026-06-15 06:20:09,single,EA_LabTemplate,EURUSD,H1,2024.01.01,2026.06.01,0.85,7.38,-0.95,3013,-703.75,-0.23,-1.82,-0.09,33.4,REJECT,_mt5_auto/reports/LabTpl_smoke.htm
+2026-06-15 06:21:36,optimize,EA_LabTemplate,EURUSD,H1,2024.01.01,2026.06.01,,0.0,0,0,0.0,0,0,,,NONE 0/63 (profitmax),_mt5_auto/optimizations/OPT_LABTPL.xml

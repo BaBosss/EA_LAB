@@ -1,6 +1,17 @@
-# RESUME HERE — อัพเดท 2026-06-14 (session 2)
+# RESUME HERE — อัพเดท 2026-06-15 (session 3)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
+
+---
+
+## EA_LabTemplate (Phase 3a) — ✅ ใช้งานได้แล้ว (2026-06-15)
+
+EA chassis dropdown-mode ที่ `D:\EA_LAB\ea_template\` (git). compile 0/0, smoke เทรด 3013 ไม้, funnel ครบวง.
+- deploy: `& D:\EA_LAB\ea_template\deploy.ps1 -Compile` → `Experts\EALabTpl\` (data folder 9CA1, ไม่ใช่ portable D:\Meta 5)
+- expert name: `EALabTpl\EA_LabTemplate`
+- **finding:** GridTrendMA (MA-cross) บน EURUSD H1 ไม่มี edge (opt 63 combo PF≈0.86 ติดลบหมด, gate NONE). DD แค่ 6-7%.
+- next ทดลอง: XAUUSD (instrument เทรนด์), ExitMode=RUN_TREND (ปล่อยกำไรวิ่ง แทน ATR_TP ที่ตัดกำไร), หรือเพิ่ม filter
+- รายละเอียด: memory [[ea-lab-template]]
 
 ---
 
