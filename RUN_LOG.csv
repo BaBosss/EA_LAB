@@ -1,3 +1,4 @@
 ﻿logged_at,type,ea,symbol,timeframe,date_from,date_to,PF,DD_pct,RF,trades,net,EP,SR,Edge,score,verdict,report_file
 2026-06-14 23:23:43,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1,2024.01.01,2026.06.01,1.15,12.49,2.69,735,5182.23,7.05,1.46,0.031,52.8,WATCH,_mt5_auto/EA_runs/Gold_SMC_Continuous_MT5_RiskCapV1/single/XAUUSD_20240101-20260601.htm
-2026-06-14 23:23:44,optimize,Gold_SMC_FiboRecovery_MT5,XAUUSD,H1,2025.01.01,2026.06.01,41.19,0.32,12.38,192,397.1,2.07,32.73,,80.0,WEAK 11/165 (robust),_mt5_auto/EA_runs/Gold_SMC_FiboRecovery_MT5/optimize/OPT_XAUUSD.xml
+2026-06-14 23:35:17,optimize,Gold_SMC_FiboRecovery_MT5,XAUUSD,H1,2025.01.01,2026.06.01,4.11,7.83,6.26,2189,5260.23,2.4,4.89,,72.9,GOOD 30/176 (robust),D:\EA_LAB\_mt5_auto\EA_runs\Gold_SMC_FiboRecovery_MT5\optimize\OPT_XAUUSD_20260614_233517.xml
+2026-06-14 23:35:33,single,Gold_SMC_FiboRecovery_MT5,XAUUSD,H1,2025.01.01,2026.06.01,3.7,16.32,2.42,652,4488.2,6.88,3.7,0.198,72.9,PASS,D:\EA_LAB\_mt5_auto\EA_runs\Gold_SMC_FiboRecovery_MT5\single\XAUUSD_20250101-20260601_20260614_233533.htm

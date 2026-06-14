@@ -44,3 +44,7 @@ ea_projects/*/reports/latest/*
 # Python cache
 __pycache__/
 *.pyc
+
+# compiled MQL5 binaries
+*.ex5
+ea_template/compile.log
