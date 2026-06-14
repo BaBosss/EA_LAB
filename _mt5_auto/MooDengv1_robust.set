@@ -1,0 +1,16 @@
+; MooDeng USDCHF H1 — locked params from prior PASS 80.7 backtest (2024.01.01-2026.05.16)
+; PF 4.11, DD 13.76%, RF 5.24, trades 191 — provenance: manual backtest, params manually selected
+_1_Lot_per_money=70000||70000||0||70000||N
+ATRX=4||4||0||4||N
+MA_METHOD=2||2||0||2||N
+APPLIED_PRICE=1||1||0||1||N
+Fast_MA_Period=20||20||0||20||N
+Slow_MA_Period=30||30||0||30||N
+Volume_Fast_Candle=2||2||0||2||N
+Volume_Slow_Candle=3||3||0||3||N
+TL_Start_Money_percent=3.0||3.0||0||3.0||N
+TL_Step_Money_percent=0.1||0.1||0||0.1||N
+TL_Stop_Money_percent=0.2||0.2||0||0.2||N
+ATR_Period=14||14||0||14||N
+score=3||3||0||3||N
+MagicStart=3917||3917||0||3917||N

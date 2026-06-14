@@ -1,104 +1,30 @@
 project,type,ea_name,symbol,period,PF,DD%,RF,trades,net,score,verdict,plateau,survivors,file
-XAUUSD,single,(Boss) Grid Trend Follower,XAUUSD,H1 (2024.05.24 - 2026.05.24),1.93,24.87,5.21,698,61331.71,66.4,WATCH,,,D:\Forex\30_OPTIMIZATION\04_Reports\(BOSS) Grid trend follower\XAUUSD\ReportTester-146237.html
-EX197,optimizer,,,,4.156754,5.8882,3.69672,150,2232.93,73.9,GOOD,GOOD,291/504,D:\Forex\30_OPTIMIZATION\04_Reports\EX197\EX197.xml
-Set 1,optimizer,,,,1.616598,18.2688,3.178699,369,12287.42,53.6,THIN,THIN,3/139,D:\Forex\30_OPTIMIZATION\04_Reports\Gold SMC continuous\Set 1\ReportOptimizer-146237.xml
-Set 1,single,Gold_SMC_Continuous_MT5,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.45,22.44,3.45,706,27181.36,62.4,WATCH,,,D:\Forex\30_OPTIMIZATION\04_Reports\Gold SMC continuous\Set 1\ReportTester-146237.html
-Set 2,optimizer,,,,1.662616,15.0649,8.628833,922,128726.22,59.9,GOOD,GOOD,28/1023,D:\Forex\30_OPTIMIZATION\04_Reports\Gold SMC continuous\Set 2\ReportOptimizer-146237.xml
-Set 2,single,Gold_SMC_Continuous_MT5,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.49,20.79,6.13,1053,247717.73,66.3,WATCH,,,D:\Forex\30_OPTIMIZATION\04_Reports\Gold SMC continuous\Set 2\ReportTester-146237.html
-MACD-V,optimizer,,,,2.221781,46.4608,2.956604,64,354851.59,,NONE,NONE,0/1368,D:\Forex\30_OPTIMIZATION\04_Reports\MACD-V\ReportOptimizer-146237-2.xml
-MACD-V,optimizer,,,,1.747857,36.7727,1.797506,45,253646.1,,NONE,NONE,0/660,D:\Forex\30_OPTIMIZATION\04_Reports\MACD-V\ReportOptimizer-146237.xml
-USDCHF,single,(oh) MooDeng Bot,USDCHF,H1 (2024.01.01 - 2026.05.16),4.11,13.76,5.24,191,22743.68,80.7,PASS,,,D:\Forex\30_OPTIMIZATION\04_Reports\Moodeng\USDCHF\ReportTester-146237.html
-Port 1 - Xauusd,optimizer,,,,1.400075,53.7259,3.747766,726,1194487.86,,NONE,NONE,0/1100,D:\Forex\30_OPTIMIZATION\04_Reports\Port 1 - Xauusd\ReportOptimizer-146237.xml
-Port 6 Pivot range - NZDUSD - rev 0,optimizer,,,,1.349502,12.8236,2.965768,529,7123.39,55.9,GOOD,GOOD,52/363,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD - rev 0\Port 6 Pivot range - NZDUSD - rev0-1.xml
-Port 6 Pivot range - NZDUSD - rev 0,optimizer,,,,1.26071,18.2555,3.170647,769,17072.0,49.9,THIN,THIN,4/196,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD - rev 0\Port 6 Pivot range - NZDUSD - rev0.xml
-Port 6 Pivot range - NZDUSD,optimizer,,,,1.37326,25.5021,3.567369,792,80907.94,,NONE,NONE,0/176,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD\Port 6 Pivot range - NZDUSD - MM.xml
-Port 6 Pivot range - NZDUSD,optimizer,,,,1.373007,31.3563,1.358255,172,12336.27,,NONE,NONE,0/196,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD\Port 6 Pivot range - NZDUSD-S1.xml
-Port 6 Pivot range - NZDUSD,optimizer,,,,1.368061,22.8945,3.003168,754,35842.57,,NONE,NONE,0/156,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD\Port 6 Pivot range - NZDUSD-S2.xml
-Port 6 Pivot range - NZDUSD,optimizer,,,,2.442328,10.6163,4.914275,165,12313.6,70.0,GOOD,GOOD,79/1694,D:\Forex\30_OPTIMIZATION\04_Reports\Port 6 Pivot range - NZDUSD\Port 6 Pivot range - NZDUSD.xml
-AUDCAD,optimizer,,,,4.622365,14.5254,6.883411,449,63618.0,65.9,GOOD,GOOD,63/2064,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\AUDCAD\Audcad - 1st op.xml
-AUDCAD,optimizer,,,,1.557451,12.3929,5.376736,939,31665.59,61.7,WEAK,WEAK,11/2955,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\AUDCAD\Audcad - 2nd op.xml
-AUDCAD,optimizer,,,,1.525148,14.4335,6.037709,1186,43535.2,59.3,THIN,THIN,1/2134,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\AUDCAD\Audcad - 3rd op.xml
-AUDCAD,optimizer,,,,1.437581,17.6496,5.120969,2202,210804.7,55.1,THIN,THIN,2/3554,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\AUDCAD\Audcad - 4th op.xml
-AUDNZD,optimizer,,,,1.769578,18.0052,3.712,106,10708.08,57.1,WEAK,WEAK,8/5774,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\AUDNZD\AUDNZD - 1st op.xml
-EURCAD,optimizer,,,,2.332548,10.5967,8.212034,598,56121.04,70.0,GOOD,GOOD,245/3290,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\EURCAD\EURCAD - dynamic.xml
-EURCAD,optimizer,,,,2.483833,10.5102,6.260438,230,20698.95,70.1,GOOD,GOOD,411/4703,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\EURCAD\EURCAD.xml
-EURGBP,optimizer,,,,10.147552,8.6629,7.168968,116,14187.03,72.0,GOOD,GOOD,762/8603,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\EURGBP\EURGBP - 1st op.xml
-EURGBP,optimizer,,,,2.804399,11.0652,6.335121,325,31142.0,69.5,GOOD,GOOD,606/4077,D:\Forex\30_OPTIMIZATION\04_Reports\Preset\Port 2 -smart grid\EURGBP\EURGBP - 2nd op 2020-2026.xml
-RSI dynamic,optimizer,,,,1.494273,16.6826,2.694312,151,7885.12,52.4,WEAK,WEAK,5/2670,D:\Forex\30_OPTIMIZATION\04_Reports\RSI dynamic\XAUUSD.xml
-(Boss) PSAR follow trend rev 1.1 lot plus,optimizer,,,,2.706504,4.4532,2.738171,220,1370.92,72.4,WEAK,WEAK,16/110,D:\Forex\30_OPTIMIZATION\OLD_Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportOptimizer-146237.xml
-(Boss) PSAR follow trend rev 1.1 lot plus,single,(Boss) PSAR follow trend rev 1.1 lot plus,EURUSD,H1 (2024.01.01 - 2025.04.14),5.25,21.72,4.31,476,44937.07,72.4,WATCH,,,D:\Forex\30_OPTIMIZATION\OLD_Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportTester-146237.html
-(Boss) PSAR follow trend rev 1.1 lot plus,single,(Boss) PSAR follow trend rev 1.2 lot plus,EURUSD,H1 (2024.01.01 - 2025.05.18),2.15,38.07,2.12,3205,11152.45,58.5,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportTester-146237_1.2.html
-(Boss) PSAR follow trend rev 1.1 lot plus,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2024.04.01 00:00 - 2025.05.12 23:00    (2024.04.01 - 2025.05.13),5.65,,,485,554.94,43.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\(Boss) PSAR follow trend rev 1.1 lot plus\mt4.htm
-(Jobot) Elliot wave 5 zone AAA,optimizer,,,,5.453844,23.3514,2.414767,97,14581.04,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Elliot wave 5 zone AAA\ReportOptimizer-330388474.xml
-(Jobot) Price Action - Trend Line -Fibo -Martingale,optimizer,,,,2.504709,58.4144,2.59716,1232,219497.74,,NONE,NONE,0/24,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Price Action - Trend Line -Fibo -Martingale\PA trend FIbo 1 hr.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.927281,7.6355,5.717566,170,3356.04,73.1,WEAK,WEAK,9/24,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag AUDUSD 1 hr 01.23-03.23.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.130497,73.9117,3.402101,238,90354.25,,NONE,NONE,0/10,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag AUDUSD 1 hr 01.23-03.23_2.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.46777,11.9643,4.491151,246,5549.67,68.6,THIN,THIN,3/23,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag martingale 1 hr.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,2.207561,12.9748,5.287,723,19969.0,67.5,THIN,THIN,2/23,D:\Forex\30_OPTIMIZATION\OLD_Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag martingale 15 min.xml
-(Nuiindy) Perfect Tri arbitrage any symbol,optimizer,,,,1.303754,7.86,3.669598,603,3818.07,62.8,THIN,THIN,2/40,D:\Forex\30_OPTIMIZATION\OLD_Report\(Nuiindy) Perfect Tri arbitrage any symbol\ReportOptimizer-106260760.xml
-(Nuiindy) Perfect Tri arbitrage any symbol,single,(NuiIndy) Perfect Tri Arbitrage Any Symbols,EURUSDm,H1 (2023.01.01 - 2023.12.16),1.21,32.55,3.04,3827,50031.53,56.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\(Nuiindy) Perfect Tri arbitrage any symbol\ReportTester-116329702.html
-(OH) Grid upper lower,single,(Oh) Grid Upper lower V23,EURUSD,H1 (2024.01.01 - 2025.05.18),1.46,64.52,0.85,3898,10589.57,34.6,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\(OH) Grid upper lower\ReportTester-331255623.html
-EA,single,,,,1.38,,,15155,22103.72,34.8,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\00. Dpwnload\EA\DetailedStatement.htm
-New folder,single,,XAUUSD (Gold vs US Dollar ),15 Minutes (M15)  2025.08.01 01:00 - 2025.11.28 21:30    (2025.08.01 - 2025.12.01),4.01,,,152,11861.6,47.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\00. Dpwnload\EA\New folder\StrategyTester.htm
-00. Dpwnload,optimizer,,,,2.607322,7.9076,3.941339,569,10957.0,72.6,THIN,THIN,4/34,D:\Forex\30_OPTIMIZATION\OLD_Report\00. Dpwnload\optimize moo deng.xml
-Booster Complete,optimizer,,,,4.162986,6.0616,5.068701,889,3755.35,74.7,WEAK,WEAK,9/26,D:\Forex\30_OPTIMIZATION\OLD_Report\Booster Complete\Eurusd All TF.xml
-EMA+ADX,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2024.01.02 07:00 - 2024.05.16 23:00    (2024.01.01 - 2024.05.17),1.52,,,4709,83.72,36.2,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\EMA+ADX\EMA+ADX6.15 EU 1 hr.htm
-AUDCAD 5 m,single,,AUDCADc (Australian Dollar vs Canadian Dollar),5 Minutes (M5)  2023.02.14 11:50 - 2024.01.05 00:00    (2023.01.01 - 2024.01.05),3.93,,,751,100.06,43.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Forexthai4pips\AUDCAD 5 m\StrategyTester.htm
-Audcadc 15 m,single,,AUDCADc (Australian Dollar vs Canadian Dollar),15 Minutes (M15)  2023.01.01 22:30 - 2024.01.05 00:00    (2023.01.01 - 2024.01.05),1.69,,,5063,62.1,37.9,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Forexthai4pips\Audcadc 15 m\StrategyTester.htm
-EURNZDc 15m,single,,EURNZDc (Euro vs New Zealand Dollar),15 Minutes (M15)  2023.01.01 22:15 - 2024.01.05 00:00    (2023.01.01 - 2024.01.05),1.59,,,10824,79.97,36.9,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Forexthai4pips\EURNZDc 15m\forexthai eurnzd 15 m.htm
-EURNZDc 5 m,single,,EURNZDc (Euro vs New Zealand Dollar),5 Minutes (M5)  2023.01.30 12:00 - 2024.01.05 00:00    (2023.01.01 - 2024.01.05),1.56,,,16493,173.81,36.6,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Forexthai4pips\EURNZDc 5 m\StrategyTester.htm
-Grid horizontal line,optimizer,,,,1.317734,31.1418,2.339005,4816,429246.49,,NONE,NONE,0/24,D:\Forex\30_OPTIMIZATION\OLD_Report\Grid horizontal line\Grid horizontal line trailing fibo daily.xml
-Grid horizontal line,optimizer,,,,4.091019,19.3197,3.88381,457,10036.23,57.5,THIN,THIN,2/28,D:\Forex\30_OPTIMIZATION\OLD_Report\Grid horizontal line\Grid horizontal rev3 dialy 01.2024-03.2024.xml
-LB81 - Advance Trading Robot No.20 [RSI Divergence],optimizer,,,,1.987818,5.5003,2.686228,160,1660.68,69.0,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\LB81 - Advance Trading Robot No.20 [RSI Divergence]\All symbol TF 5m.xml
-LBA1 - RSI OVB OVS,single,,EURUSDc (Euro vs US Dollar),5 Minutes (M5)  2024.01.01 22:05 - 2024.06.14 20:55    (2024.01.01 - 2024.06.16),2.94,,,268,40.42,43.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\LBA1 - RSI OVB OVS\StrategyTester eurusd 5 mm.htm
-QQQ No-name,optimizer,,,,2.934267,19.1434,2.165174,146,6421.71,55.2,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ No-name\all symbol TF 15 min martingale 1.5.xml
-QQQ No-name,optimizer,,,,2.472368,65.3068,1.783546,603,69278.68,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ No-name\all symbol TF 5 min martingale 1.5 2023-6.2024.xml
-QQQ No-name,optimizer,,,,2.709388,22.5913,3.863799,394,42239.86,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ No-name\all symbol TF 5 min martingale 1.5.xml
-QQQ Training ROBO V8D,optimizer,,,,3.28103,73.9688,1.719224,86,18236.38,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ Training ROBO V8D\12 min.xml
-QQQ Training ROBO V8D,optimizer,,,,2.247975,44.3262,1.722883,81,9754.41,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ Training ROBO V8D\15 min.xml
-QQQ Training ROBO V8D,optimizer,,,,6.059401,8.4109,3.565739,131,3623.29,70.9,THIN,THIN,2/31,D:\Forex\30_OPTIMIZATION\OLD_Report\QQQ Training ROBO V8D\5 min 31 symbol.xml
-RSI BB TP1per AUD CAD 15 m,single,(Boss)RSI_BB rev 3.1 (complete),AUDCADm,M15 (2023.01.01 - 2024.01.02),2.23,98.95,1.56,658,23987.75,61.2,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\RSI BB TP1per AUD CAD 15 m\RSI BB TP1per.html
-AUDCAD 15M,single,(Boss)RSI_OBOS rev 4.1 (MT5),AUDCAD,M15 (2023.01.01 - 2024.01.02),5.98,40.53,2.94,1097,18579.36,65.6,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\RSI_OBOS\AUDCAD 15M\ReportTester-110460013.html
-RSI_OBOS,optimizer,,,,3.423905,31.5333,3.926037,675,107057.93,,NONE,NONE,0/25,D:\Forex\30_OPTIMIZATION\OLD_Report\RSI_OBOS\RSI_OBOS 1 hr.xml
-RSI_OBOS,optimizer,,,,3.889037,31.5333,4.011252,669,109381.62,,NONE,NONE,0/25,D:\Forex\30_OPTIMIZATION\OLD_Report\RSI_OBOS\RSI_OBOS 1hr optimizer.xml
-(Boss) PSAR follow trend rev 1.1 lot plus,optimizer,,,,2.706504,4.4532,2.738171,220,1370.92,72.4,WEAK,WEAK,16/110,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportOptimizer-146237.xml
-(Boss) PSAR follow trend rev 1.1 lot plus,single,(Boss) PSAR follow trend rev 1.1 lot plus,EURUSD,H1 (2024.01.01 - 2025.04.14),5.25,21.72,4.31,476,44937.07,72.4,WATCH,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportTester-146237.html
-(Boss) PSAR follow trend rev 1.1 lot plus,single,(Boss) PSAR follow trend rev 1.2 lot plus,EURUSD,H1 (2024.01.01 - 2025.05.18),2.15,38.07,2.12,3205,11152.45,58.5,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Boss) PSAR follow trend rev 1.1 lot plus\ReportTester-146237_1.2.html
-(Boss) PSAR follow trend rev 1.1 lot plus,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2024.04.01 00:00 - 2025.05.12 23:00    (2024.04.01 - 2025.05.13),5.65,,,485,554.94,43.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Boss) PSAR follow trend rev 1.1 lot plus\mt4.htm
-(Jobot) Elliot wave 5 zone AAA,optimizer,,,,5.453844,23.3514,2.414767,97,14581.04,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Elliot wave 5 zone AAA\ReportOptimizer-330388474.xml
-(Jobot) Price Action - Trend Line -Fibo -Martingale,optimizer,,,,2.504709,58.4144,2.59716,1232,219497.74,,NONE,NONE,0/24,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Price Action - Trend Line -Fibo -Martingale\PA trend FIbo 1 hr.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.927281,7.6355,5.717566,170,3356.04,73.1,WEAK,WEAK,9/24,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag AUDUSD 1 hr 01.23-03.23.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.130497,73.9117,3.402101,238,90354.25,,NONE,NONE,0/10,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag AUDUSD 1 hr 01.23-03.23_2.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,3.46777,11.9643,4.491151,246,5549.67,68.6,THIN,THIN,3/23,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag martingale 1 hr.xml
-(Jobot) Trend Line by Zigzag Martingale,optimizer,,,,2.207561,12.9748,5.287,723,19969.0,67.5,THIN,THIN,2/23,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Jobot) Trend Line by Zigzag Martingale\Trendline zigzag martingale 15 min.xml
-(Nuiindy) Perfect Tri arbitrage any symbol,optimizer,,,,1.303754,7.86,3.669598,603,3818.07,62.8,THIN,THIN,2/40,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Nuiindy) Perfect Tri arbitrage any symbol\ReportOptimizer-106260760.xml
-(Nuiindy) Perfect Tri arbitrage any symbol,single,(NuiIndy) Perfect Tri Arbitrage Any Symbols,EURUSDm,H1 (2023.01.01 - 2023.12.16),1.21,32.55,3.04,3827,50031.53,56.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(Nuiindy) Perfect Tri arbitrage any symbol\ReportTester-116329702.html
-(OH) Grid upper lower,single,(Oh) Grid Upper lower V23,EURUSD,H1 (2024.01.01 - 2025.05.18),1.46,64.52,0.85,3898,10589.57,34.6,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\(OH) Grid upper lower\ReportTester-331255623.html
-Booster Complete,optimizer,,,,4.162986,6.0616,5.068701,889,3755.35,74.7,WEAK,WEAK,9/26,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\Booster Complete\Eurusd All TF.xml
-EMA+ADX,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2024.01.02 07:00 - 2024.05.16 23:00    (2024.01.01 - 2024.05.17),1.52,,,4709,83.72,36.2,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\EMA+ADX\EMA+ADX6.15 EU 1 hr.htm
-Grid horizontal line,optimizer,,,,1.317734,31.1418,2.339005,4816,429246.49,,NONE,NONE,0/24,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\Grid horizontal line\Grid horizontal line trailing fibo daily.xml
-Grid horizontal line,optimizer,,,,4.091019,19.3197,3.88381,457,10036.23,57.5,THIN,THIN,2/28,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\Grid horizontal line\Grid horizontal rev3 dialy 01.2024-03.2024.xml
-LB81 - Advance Trading Robot No.20 [RSI Divergence],optimizer,,,,1.987818,5.5003,2.686228,160,1660.68,69.0,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\LB81 - Advance Trading Robot No.20 [RSI Divergence]\All symbol TF 5m.xml
-LBA1 - RSI OVB OVS,single,,EURUSDc (Euro vs US Dollar),5 Minutes (M5)  2024.01.01 22:05 - 2024.06.14 20:55    (2024.01.01 - 2024.06.16),2.94,,,268,40.42,43.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\LBA1 - RSI OVB OVS\StrategyTester eurusd 5 mm.htm
-QQQ No-name,optimizer,,,,2.934267,19.1434,2.165174,146,6421.71,55.2,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ No-name\all symbol TF 15 min martingale 1.5.xml
-QQQ No-name,optimizer,,,,2.472368,65.3068,1.783546,603,69278.68,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ No-name\all symbol TF 5 min martingale 1.5 2023-6.2024.xml
-QQQ No-name,optimizer,,,,2.709388,22.5913,3.863799,394,42239.86,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ No-name\all symbol TF 5 min martingale 1.5.xml
-QQQ Training ROBO V8D,optimizer,,,,3.28103,73.9688,1.719224,86,18236.38,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ Training ROBO V8D\12 min.xml
-QQQ Training ROBO V8D,optimizer,,,,2.247975,44.3262,1.722883,81,9754.41,,NONE,NONE,0/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ Training ROBO V8D\15 min.xml
-QQQ Training ROBO V8D,optimizer,,,,6.059401,8.4109,3.565739,131,3623.29,70.9,THIN,THIN,2/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\QQQ Training ROBO V8D\5 min 31 symbol.xml
-RSI BB TP1per AUD CAD 15 m,single,(Boss)RSI_BB rev 3.1 (complete),AUDCADm,M15 (2023.01.01 - 2024.01.02),2.23,98.95,1.56,658,23987.75,61.2,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\RSI BB TP1per AUD CAD 15 m\RSI BB TP1per.html
-AUDCAD 15M,single,(Boss)RSI_OBOS rev 4.1 (MT5),AUDCAD,M15 (2023.01.01 - 2024.01.02),5.98,40.53,2.94,1097,18579.36,65.6,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\RSI_OBOS\AUDCAD 15M\ReportTester-110460013.html
-RSI_OBOS,optimizer,,,,3.423905,31.5333,3.926037,675,107057.93,,NONE,NONE,0/25,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\RSI_OBOS\RSI_OBOS 1 hr.xml
-RSI_OBOS,optimizer,,,,3.889037,31.5333,4.011252,669,109381.62,,NONE,NONE,0/25,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\RSI_OBOS\RSI_OBOS 1hr optimizer.xml
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),2.28,,,188,23566.98,47.0,REJECT,,,"D:\Forex\30_OPTIMIZATION\OLD_Report\Report\TMA + PA\EU PA martingale close 2,MM x2.htm"
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),2.29,,,430,32809.31,47.0,REJECT,,,"D:\Forex\30_OPTIMIZATION\OLD_Report\Report\TMA + PA\EU close2,MM1.2.htm"
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),0.96,,,912,-10138.1,15.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\TMA + PA\EU no rev.htm
-TMA + PA,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2023.01.03 00:00 - 2024.03.08 21:00    (2023.01.01 - 2024.03.09),3.17,,,210,10104.57,47.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\TMA + PA\EU rev 6 1 hr every tick.htm
-[METAFX]MD032- BB,optimizer,,,,3.260841,16.9967,2.150508,142,4449.38,57.4,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\[METAFX]MD032- BB\ReportOptimizer-330388474.xml
-[METAFX]MD032- BB,optimizer,,,,3.512128,12.889,6.506446,518,31132.37,67.6,THIN,THIN,3/30,D:\Forex\30_OPTIMIZATION\OLD_Report\Report\[METAFX]MD032- BB\TF 15 m + configure.xml
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),2.28,,,188,23566.98,47.0,REJECT,,,"D:\Forex\30_OPTIMIZATION\OLD_Report\TMA + PA\EU PA martingale close 2,MM x2.htm"
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),2.29,,,430,32809.31,47.0,REJECT,,,"D:\Forex\30_OPTIMIZATION\OLD_Report\TMA + PA\EU close2,MM1.2.htm"
-TMA + PA,single,,EURUSDm (Euro vs US Dollar),1 Hour (H1)  2022.12.30 01:00 - 2024.02.23 21:00    (2020.01.01 - 2024.02.25),0.96,,,912,-10138.1,15.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\TMA + PA\EU no rev.htm
-TMA + PA,single,,EURUSDc (Euro vs US Dollar),1 Hour (H1)  2023.01.03 00:00 - 2024.03.08 21:00    (2023.01.01 - 2024.03.09),3.17,,,210,10104.57,47.0,REJECT,,,D:\Forex\30_OPTIMIZATION\OLD_Report\TMA + PA\EU rev 6 1 hr every tick.htm
-[METAFX]MD032- BB,optimizer,,,,3.260841,16.9967,2.150508,142,4449.38,57.4,THIN,THIN,1/31,D:\Forex\30_OPTIMIZATION\OLD_Report\[METAFX]MD032- BB\ReportOptimizer-330388474.xml
-[METAFX]MD032- BB,optimizer,,,,3.512128,12.889,6.506446,518,31132.37,67.6,THIN,THIN,3/30,D:\Forex\30_OPTIMIZATION\OLD_Report\[METAFX]MD032- BB\TF 15 m + configure.xml
+reports,single,Boss - 2 Adaptive Smart Grid,AUDCAD,H1 (2023.06.01 - 2026.06.01),0.76,26.24,-0.24,21,-735.02,7.1,REJECT,,,D:\EA_LAB\_mt5_auto\reports\AUDCAD_IS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2023.06.01 - 2026.06.01),1.34,19.27,0.94,133,2846.86,46.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EURCAD_IS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2021.01.01 - 2023.06.01),0.94,31.44,-0.19,188,-779.73,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EURCAD_OOS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2023.06.01 - 2026.06.01),24.7,9.17,3.92,30,4952.06,78.2,PASS,,,D:\EA_LAB\_mt5_auto\reports\EURCADv2_loopIS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2021.01.01 - 2023.06.01),2.55,16.52,1.58,32,3377.72,63.3,WATCH,,,D:\EA_LAB\_mt5_auto\reports\EURCADv2_loopOOS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2023.06.01 - 2026.06.01),3.9,10.98,4.36,113,11373.57,83.6,PASS,,,D:\EA_LAB\_mt5_auto\reports\EURCADv3_loopIS.htm
+reports,single,Boss - 2 Adaptive Smart Grid,EURCAD,H1 (2021.01.01 - 2023.06.01),0.83,45.31,-0.26,107,-1182.37,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EURCADv3_loopOOS.htm
+reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2023.06.01 - 2026.06.01),1.7,1.82,3.87,619,708.29,81.7,PASS,,,D:\EA_LAB\_mt5_auto\reports\EX197v2_loopIS.htm
+reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2021.01.01 - 2023.06.01),1.47,3.78,1.3,297,493.4,69.2,WATCH,,,D:\EA_LAB\_mt5_auto\reports\EX197v2_loopOOS.htm
+reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2023.06.01 - 2026.06.01),1.96,4.25,3.72,535,1638.49,83.3,PASS,,,D:\EA_LAB\_mt5_auto\reports\EX197v7_loopIS.htm
+reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2021.01.01 - 2023.06.01),1.4,40.53,0.16,259,669.68,36.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EX197v7_loopOOS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),1.01,24.66,0.02,116,49.74,18.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_IS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),1.05,25.79,0.15,91,448.66,19.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_OOS.htm
+reports,single,(oh) MooDeng Bot,EURGBP,H1 (2024.01.01 - 2026.06.01),1.91,22.58,2.86,498,16657.7,65.0,WATCH,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopIS.htm
+reports,single,(oh) MooDeng Bot,EURGBP,H1 (2021.01.01 - 2024.01.01),0.1,78.14,-0.99,18,-7788.5,6.8,REJECT,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopOOS.htm
+reports,single,(oh) MooDeng Bot,EURUSD,H1 (2024.01.01 - 2026.06.01),2.69,18.76,3.73,346,25123.77,74.6,PASS,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURUSD_loopIS.htm
+reports,single,(oh) MooDeng Bot,EURUSD,H1 (2021.01.01 - 2024.01.01),0.16,71.8,-0.85,38,-6829.87,8.8,REJECT,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURUSD_loopOOS.htm
+reports,single,(oh) MooDeng Bot,USDCHF,H1 (2024.01.01 - 2026.06.01),3.66,14.0,4.94,189,20497.8,80.5,PASS,,,D:\EA_LAB\_mt5_auto\reports\MooDengv1_loopIS.htm
+reports,single,(oh) MooDeng Bot,USDCHF,H1 (2021.01.01 - 2024.01.01),0.94,80.39,-0.11,253,-3067.43,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\MooDengv1_loopOOS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),1.18,46.5,0.75,229,4974.92,24.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\PIVOTv1_loopIS.htm
+reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),0.84,55.72,-0.47,169,-3296.2,15.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\PIVOTv1_loopOOS.htm
+EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.38,10.9,4.22,447,9240.87,75.5,PASS,,,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0002_XAUUSD_H1_SINGLE.html
+EA_CORE_V1_TESTBED,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.04,22.67,0.4,758,992.93,20.4,REJECT,,,D:\EA_LAB\ea_projects\EA_CORE_V1_TESTBED\reports\inbox\RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html
+EA_GoldenEmber_Pivot,optimizer,,,,1.26071,18.2555,3.170647,769,17072.0,49.9,THIN,THIN,4/196,D:\EA_LAB\ea_projects\EA_GoldenEmber_Pivot\reports\raw\Port 6 Pivot range - NZDUSD - rev0.xml
+Gold SMC continuous,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2023.01.01 - 2026.06.04),1.11,17.45,1.34,596,2398.89,39.4,WATCH,,,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\forward_test\forward_ReportTester-146237.html
+Gold SMC continuous,optimizer,,,,1.255166,6.866,4.755738,387,4850.71,64.5,GOOD,GOOD,375/1623,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\optimization_snapshot\pass_2_raw_ReportOptimizer-146237.xml
+Gold SMC continuous,single,Gold_SMC_Continuous_MT5_RiskCapV1,XAUUSD,H1 (2025.01.01 - 2026.06.01),1.31,12.38,3.22,479,7497.37,70.7,PASS,,,D:\EA_LAB\ea_projects\Gold SMC continuous\portfolio\candidates\Gold_SMC_Run004_OOS_VALIDATED\single_test\run_004_ReportTester-146237.html
+Matchagrid,optimizer,,,,2.092508,11.6881,2.540963,584,3320.48,60.1,GOOD,GOOD,34/176,D:\EA_LAB\ea_projects\Matchagrid\CHFJPY\ReportOptimizer-146237 - CHFJPY.xml
+Matchagrid,single,MatchaGrid,CHFJPY,M15 (2026.01.01 - 2026.06.10),1.84,18.64,2.79,1163,8351.92,65.1,PASS,,,D:\EA_LAB\ea_projects\Matchagrid\CHFJPY\ReportTester-146237-CHFJPY.html
