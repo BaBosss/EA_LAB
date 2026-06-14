@@ -12,29 +12,48 @@
 | WATCH | 39.4 | Gold SMC continuous | XAUUSD | 1.11 | 17.45 | 1.34 | 596 | 2398.89 | forward_ReportTester-146237.html |
 | REJECT | 20.4 | EA_CORE_V1_TESTBED | XAUUSD | 1.04 | 22.67 | 0.4 | 758 | 992.93 | RUN_EA_CORE_V1_20260612_0003_XAUUSD_H1_SINGLE.html |
 
-## Optimizer runs (top pass)
+## Optimizer batches (ROBUST pick, not profit-max)
 
-| Project | PF | DD% | RF | Trades | Net | Passes | File |
-|---|---:|---:|---:|---:|---:|---|---|
-| (drop) | 1.719645 | 55.0372 | 0.995477 | 488 | 5722.36 | top of 504 passes | EX197.xml |
-| (drop) | 2.221781 | 46.4608 | 2.956604 | 64 | 354851.59 | top of 1368 passes | ReportOptimizer-146237-2.xml |
-| (drop) | 1.747857 | 36.7727 | 1.797506 | 45 | 253646.1 | top of 660 passes | ReportOptimizer-146237.xml |
-| (drop) | 1.274359 | 33.253 | 1.908941 | 791 | 41628.16 | top of 363 passes | Port 6 Pivot range - NZDUSD - rev0-1.xml |
-| (drop) | 1.267665 | 31.3092 | 1.813761 | 815 | 26750.73 | top of 196 passes | Port 6 Pivot range - NZDUSD - rev0.xml |
-| (drop) | 1.37326 | 25.5021 | 3.567369 | 792 | 80907.94 | top of 176 passes | Port 6 Pivot range - NZDUSD - MM.xml |
-| (drop) | 1.373007 | 31.3563 | 1.358255 | 172 | 12336.27 | top of 196 passes | Port 6 Pivot range - NZDUSD-S1.xml |
-| (drop) | 1.368061 | 22.8945 | 3.003168 | 754 | 35842.57 | top of 156 passes | Port 6 Pivot range - NZDUSD-S2.xml |
-| (drop) | 1.441892 | 23.5057 | 3.581871 | 830 | 64893.73 | top of 1694 passes | Port 6 Pivot range - NZDUSD.xml |
-| (drop) | 2.264466 | 20.1776 | 6.025724 | 1287 | 241547.19 | top of 2064 passes | Audcad - 1st op.xml |
-| (drop) | 2.72584 | 23.3457 | 6.499395 | 881 | 187046.09 | top of 2955 passes | Audcad - 2nd op.xml |
-| (drop) | 2.102402 | 38.2432 | 7.237359 | 1179 | 86998.63 | top of 2134 passes | Audcad - 3rd op.xml |
-| (drop) | 1.264247 | 51.2647 | 4.181055 | 2490 | 220997.84 | top of 3554 passes | Audcad - 4th op.xml |
-| (drop) | 1.637554 | 28.2869 | 2.359525 | 238 | 31354.45 | top of 5774 passes | AUDNZD - 1st op.xml |
-| (drop) | 2.722609 | 19.3006 | 4.299001 | 561 | 103840.74 | top of 3290 passes | EURCAD - dynamic.xml |
-| (drop) | 2.294193 | 20.7002 | 5.971834 | 379 | 39603.59 | top of 4703 passes | EURCAD.xml |
-| (drop) | 3.690046 | 19.154 | 4.546014 | 229 | 33032.93 | top of 8603 passes | EURGBP - 1st op.xml |
-| (drop) | 3.753808 | 15.3086 | 8.798821 | 469 | 150486.94 | top of 4077 passes | EURGBP - 2nd op 2020-2026.xml |
-| (drop) | 1.183508 | 22.2084 | 2.997196 | 983 | 46706.32 | top of 2670 passes | XAUUSD.xml |
-| EA_GoldenEmber_Pivot | 1.267665 | 31.3092 | 1.813761 | 815 | 26750.73 | top of 196 passes | Port 6 Pivot range - NZDUSD - rev0.xml |
-| Gold SMC continuous | 1.442046 | 10.6026 | 4.513068 | 464 | 10074.07 | top of 1623 passes | pass_2_raw_ReportOptimizer-146237.xml |
-| Matchagrid | 1.894337 | 67.2854 | 2.251926 | 3330 | 31270.76 | top of 176 passes | ReportOptimizer-146237 - CHFJPY.xml |
+| Plateau | RobustScore | Project | PF | DD% | RF | Trades | Net | Survivors | File |
+|---|---:|---|---:|---:|---:|---:|---:|---:|---|
+| GOOD | 73.9 | EX197 | 4.156754 | 5.8882 | 3.69672 | 150 | 2232.93 | 296/504 | EX197.xml |
+| GOOD | 72.0 | EURGBP | 10.147552 | 8.6629 | 7.168968 | 116 | 14187.03 | 1242/8603 | EURGBP - 1st op.xml |
+| GOOD | 70.1 | EURCAD | 2.483833 | 10.5102 | 6.260438 | 230 | 20698.95 | 411/4703 | EURCAD.xml |
+| GOOD | 70.0 | Port 6 Pivot range - NZDUSD | 2.442328 | 10.6163 | 4.914275 | 165 | 12313.6 | 79/1694 | Port 6 Pivot range - NZDUSD.xml |
+| GOOD | 70.0 | EURCAD | 2.332548 | 10.5967 | 8.212034 | 598 | 56121.04 | 245/3290 | EURCAD - dynamic.xml |
+| GOOD | 69.5 | EURGBP | 2.804399 | 11.0652 | 6.335121 | 325 | 31142.0 | 606/4077 | EURGBP - 2nd op 2020-2026.xml |
+| GOOD | 68.7 | AUDCAD | 8.193002 | 9.9464 | 8.682524 | 72 | 12877.92 | 97/2064 | Audcad - 1st op.xml |
+| GOOD | 68.1 | AUDNZD | 2.478323 | 12.4205 | 4.87327 | 92 | 19394.25 | 78/5774 | AUDNZD - 1st op.xml |
+| GOOD | 66.8 | MACD-V | 3.503959 | 12.5231 | 7.092688 | 78 | 308957.51 | 29/1368 | ReportOptimizer-146237-2.xml |
+| GOOD | 64.5 | Gold SMC continuous | 1.255166 | 6.866 | 4.755738 | 387 | 4850.71 | 375/1623 | pass_2_raw_ReportOptimizer-146237.xml |
+| GOOD | 63.3 | RSI dynamic | 2.317274 | 13.6607 | 4.961064 | 60 | 6816.8 | 183/2670 | XAUUSD.xml |
+| WEAK | 61.7 | AUDCAD | 1.557451 | 12.3929 | 5.376736 | 939 | 31665.59 | 11/2955 | Audcad - 2nd op.xml |
+| GOOD | 60.1 | Matchagrid | 2.092508 | 11.6881 | 2.540963 | 584 | 3320.48 | 34/176 | ReportOptimizer-146237 - CHFJPY.xml |
+| THIN | 59.3 | AUDCAD | 1.525148 | 14.4335 | 6.037709 | 1186 | 43535.2 | 1/2134 | Audcad - 3rd op.xml |
+| GOOD | 55.9 | Port 6 Pivot range - NZDUSD - rev 0 | 1.349502 | 12.8236 | 2.965768 | 529 | 7123.39 | 52/363 | Port 6 Pivot range - NZDUSD - rev0-1.xml |
+| THIN | 55.1 | AUDCAD | 1.437581 | 17.6496 | 5.120969 | 2202 | 210804.7 | 2/3554 | Audcad - 4th op.xml |
+| THIN | 49.9 | Port 6 Pivot range - NZDUSD - rev 0 | 1.26071 | 18.2555 | 3.170647 | 769 | 17072.0 | 4/196 | Port 6 Pivot range - NZDUSD - rev0.xml |
+| THIN | 49.9 | EA_GoldenEmber_Pivot | 1.26071 | 18.2555 | 3.170647 | 769 | 17072.0 | 4/196 | Port 6 Pivot range - NZDUSD - rev0.xml |
+| NONE |  | MACD-V | 1.747857 | 36.7727 | 1.797506 | 45 | 253646.1 | 0/660 | ReportOptimizer-146237.xml |
+| NONE |  | Port 6 Pivot range - NZDUSD | 1.37326 | 25.5021 | 3.567369 | 792 | 80907.94 | 0/176 | Port 6 Pivot range - NZDUSD - MM.xml |
+| NONE |  | Port 6 Pivot range - NZDUSD | 1.373007 | 31.3563 | 1.358255 | 172 | 12336.27 | 0/196 | Port 6 Pivot range - NZDUSD-S1.xml |
+| NONE |  | Port 6 Pivot range - NZDUSD | 1.368061 | 22.8945 | 3.003168 | 754 | 35842.57 | 0/156 | Port 6 Pivot range - NZDUSD-S2.xml |
+
+## SHORTLIST — re-test these in MT5 first (robust pass + plateau)
+
+| RobustScore | Plateau | Project | Robust PF / DD% / RF | vs profit-max DD% | File |
+|---:|---|---|---|---:|---|
+| 73.9 | GOOD | EX197 | 4.156754 / 5.8882 / 3.69672 | 55.0372 | EX197.xml |
+| 72.0 | GOOD | EURGBP | 10.147552 / 8.6629 / 7.168968 | 19.154 | EURGBP - 1st op.xml |
+| 70.1 | GOOD | EURCAD | 2.483833 / 10.5102 / 6.260438 | 20.7002 | EURCAD.xml |
+| 70.0 | GOOD | Port 6 Pivot range - NZDUSD | 2.442328 / 10.6163 / 4.914275 | 23.5057 | Port 6 Pivot range - NZDUSD.xml |
+| 70.0 | GOOD | EURCAD | 2.332548 / 10.5967 / 8.212034 | 19.3006 | EURCAD - dynamic.xml |
+| 69.5 | GOOD | EURGBP | 2.804399 / 11.0652 / 6.335121 | 15.3086 | EURGBP - 2nd op 2020-2026.xml |
+| 68.7 | GOOD | AUDCAD | 8.193002 / 9.9464 / 8.682524 | 20.1776 | Audcad - 1st op.xml |
+| 68.1 | GOOD | AUDNZD | 2.478323 / 12.4205 / 4.87327 | 28.2869 | AUDNZD - 1st op.xml |
+| 66.8 | GOOD | MACD-V | 3.503959 / 12.5231 / 7.092688 | 46.4608 | ReportOptimizer-146237-2.xml |
+| 64.5 | GOOD | Gold SMC continuous | 1.255166 / 6.866 / 4.755738 | 10.6026 | pass_2_raw_ReportOptimizer-146237.xml |
+| 63.3 | GOOD | RSI dynamic | 2.317274 / 13.6607 / 4.961064 | 22.2084 | XAUUSD.xml |
+| 61.7 | WEAK | AUDCAD | 1.557451 / 12.3929 / 5.376736 | 23.3457 | Audcad - 2nd op.xml |
+| 60.1 | GOOD | Matchagrid | 2.092508 / 11.6881 / 2.540963 | 67.2854 | ReportOptimizer-146237 - CHFJPY.xml |
+| 55.9 | GOOD | Port 6 Pivot range - NZDUSD - rev 0 | 1.349502 / 12.8236 / 2.965768 | 33.253 | Port 6 Pivot range - NZDUSD - rev0-1.xml |

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Batch pipeline: scan report files -> parse -> score -> central registry.
+"""Batch pipeline: scan reports -> parse -> score / robust-pass -> registry.
 
-For every MT5 single-test HTML it parses + scores (BacktestScore v1).
-For every optimizer XML it records the top pass.
-Writes D:\\EA_LAB\\RUN_REGISTRY.csv and RUN_REGISTRY.md.
+Single-test HTML  -> parse + BacktestScore v1 (verdict PASS/WATCH/REJECT).
+Optimizer XML     -> robust-pass selector (NOT profit-max) + plateau quality.
+Writes RUN_REGISTRY.md/.csv + a SHORTLIST of optimizer batches worth re-testing.
 
 Usage: python run_pipeline.py [root ...]   (default: ea_projects + _mt5_report_drop)
 """
@@ -12,13 +12,13 @@ import os
 import sys
 from pathlib import Path
 
-# import the (fixed) parser from the installed skill + local scorer
 SKILLS = r"C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts"
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SKILLS)
 sys.path.insert(0, HERE)
 import parse_mt5_report as P          # noqa: E402
 import score_backtest as SB           # noqa: E402
+import select_robust_pass as RS       # noqa: E402
 
 LAB = r"D:\EA_LAB"
 DEFAULT_ROOTS = [os.path.join(LAB, "ea_projects"), os.path.join(LAB, "_mt5_report_drop")]
@@ -45,7 +45,7 @@ def project_of(path):
         i = parts.index("ea_projects")
         if i + 1 < len(parts):
             return parts[i + 1]
-    return "(drop)"
+    return Path(path).parent.name
 
 
 def main():
@@ -60,53 +60,60 @@ def main():
                 if ext in ("html", "htm", "xml"):
                     files.append(os.path.join(dp, fn))
 
-    records, errors = [], []
+    records, errors, shortlist = [], [], []
     for f in sorted(files):
         proj = project_of(f)
+        strat = guess_strategy(proj + " " + os.path.basename(f))
         try:
-            ext = f.lower().rsplit(".", 1)[-1]
-            if ext == "xml":
-                d = P.parse_optimizer_xml(Path(f), top=1)
-                ps = d.get("passes") or []
-                if not ps:
+            if f.lower().endswith(".xml"):
+                d = P.parse_optimizer_xml(Path(f), top=0)
+                passes = d.get("passes") or []
+                if not passes:
                     continue
-                t = ps[0]
-                records.append({
-                    "project": proj, "type": "optimizer", "ea_name": "",
-                    "symbol": "", "period": "", "PF": t.get("profit_factor"),
-                    "DD%": t.get("max_drawdown_percent"), "RF": t.get("recovery_factor"),
-                    "trades": t.get("total_trades"), "net": t.get("net_profit"),
-                    "score": "", "verdict": f"top of {d.get('total_passes')} passes",
+                r = RS.select_robust(passes, strat)
+                pick = r["robust"] or r["profit_max"]
+                rec = {
+                    "project": proj, "type": "optimizer", "ea_name": "", "symbol": "",
+                    "period": "", "PF": pick["PF"], "DD%": pick["DD%"], "RF": pick["RF"],
+                    "trades": pick["trades"], "net": pick["net"],
+                    "score": r["robust_score"] if r["robust_score"] is not None else "",
+                    "verdict": r["plateau"],
+                    "plateau": r["plateau"],
+                    "survivors": f"{r['survivors']}/{r['total_passes']}",
                     "file": f,
-                })
+                }
+                records.append(rec)
+                if r["robust"] and r["plateau"] in ("GOOD", "WEAK"):
+                    shortlist.append((r["robust_score"], proj, r, f))
             else:
                 d = P.parse_html_report(Path(f))
                 if d.get("profit_factor") is None or not d.get("total_trades"):
-                    continue                      # not a tester report
-                strat = guess_strategy(proj + " " + (d.get("ea_name") or ""))
+                    continue
                 v = SB.score(d, strat)
                 m = v["metrics"]
                 records.append({
                     "project": proj, "type": "single", "ea_name": d.get("ea_name"),
                     "symbol": d.get("symbol"), "period": d.get("period"),
-                    "PF": m["PF"], "DD%": m["DD%"], "RF": m["RF"],
-                    "trades": m["trades"], "net": m["net"],
-                    "score": v["BacktestScore"], "verdict": v["verdict"], "file": f,
+                    "PF": m["PF"], "DD%": m["DD%"], "RF": m["RF"], "trades": m["trades"],
+                    "net": m["net"], "score": v["BacktestScore"], "verdict": v["verdict"],
+                    "plateau": "", "survivors": "", "file": f,
                 })
         except Exception as e:
             errors.append((f, repr(e)[:120]))
 
     cols = ["project", "type", "ea_name", "symbol", "period", "PF", "DD%", "RF",
-            "trades", "net", "score", "verdict", "file"]
+            "trades", "net", "score", "verdict", "plateau", "survivors", "file"]
     with open(os.path.join(LAB, "RUN_REGISTRY.csv"), "w", encoding="utf-8", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols)
+        w = csv.DictWriter(fh, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
         w.writerows(records)
 
     order = {"PASS": 0, "WATCH": 1, "REJECT": 2}
     singles = sorted([r for r in records if r["type"] == "single"],
                      key=lambda r: (order.get(r["verdict"], 3), -(r["score"] or 0)))
-    opt = [r for r in records if r["type"] == "optimizer"]
+    opt = sorted([r for r in records if r["type"] == "optimizer"],
+                 key=lambda r: -(r["score"] if isinstance(r["score"], (int, float)) else -1))
+
     md = ["# RUN REGISTRY", "",
           f"> auto-generated by run_pipeline.py · {len(records)} reports · {len(errors)} errors",
           "", "## Single backtests (scored)", "",
@@ -115,22 +122,31 @@ def main():
     for r in singles:
         md.append("| {verdict} | {score} | {project} | {symbol} | {PF} | {DD%} | {RF} | "
                   "{trades} | {net} | {f} |".format(f=os.path.basename(r["file"]), **r))
-    if opt:
-        md += ["", "## Optimizer runs (top pass)", "",
-               "| Project | PF | DD% | RF | Trades | Net | Passes | File |",
-               "|---|---:|---:|---:|---:|---:|---|---|"]
-        for r in opt:
-            md.append("| {project} | {PF} | {DD%} | {RF} | {trades} | {net} | {verdict} | {f} |"
-                      .format(f=os.path.basename(r["file"]), **r))
+
+    md += ["", "## Optimizer batches (ROBUST pick, not profit-max)", "",
+           "| Plateau | RobustScore | Project | PF | DD% | RF | Trades | Net | Survivors | File |",
+           "|---|---:|---|---:|---:|---:|---:|---:|---:|---|"]
+    for r in opt:
+        md.append("| {plateau} | {score} | {project} | {PF} | {DD%} | {RF} | {trades} | "
+                  "{net} | {survivors} | {f} |".format(f=os.path.basename(r["file"]), **r))
+
+    # SHORTLIST: robust pass exists + a real plateau -> worth re-testing in MT5
+    shortlist.sort(key=lambda x: -(x[0] or 0))
+    md += ["", "## SHORTLIST — re-test these in MT5 first (robust pass + plateau)", "",
+           "| RobustScore | Plateau | Project | Robust PF / DD% / RF | vs profit-max DD% | File |",
+           "|---:|---|---|---|---:|---|"]
+    for sc, proj, r, f in shortlist:
+        rb, pm = r["robust"], r["profit_max"]
+        md.append(f"| {sc} | {r['plateau']} | {proj} | "
+                  f"{rb['PF']} / {rb['DD%']} / {rb['RF']} | {pm['DD%']} | {os.path.basename(f)} |")
+
     if errors:
-        md += ["", "## Parse errors", ""]
-        md += [f"- {os.path.basename(f)} — {e}" for f, e in errors]
+        md += ["", "## Parse errors", ""] + [f"- {os.path.basename(f)} — {e}" for f, e in errors]
     Path(os.path.join(LAB, "RUN_REGISTRY.md")).write_text("\n".join(md), encoding="utf-8")
 
     npass = sum(1 for r in singles if r["verdict"] == "PASS")
-    nwatch = sum(1 for r in singles if r["verdict"] == "WATCH")
     print(f"reports={len(records)} single={len(singles)} optimizer={len(opt)} errors={len(errors)}")
-    print(f"  PASS={npass} WATCH={nwatch} REJECT={len(singles)-npass-nwatch}")
+    print(f"  single PASS={npass}  ·  shortlist (robust+plateau)={len(shortlist)}")
     print(f"wrote {LAB}\\RUN_REGISTRY.md + .csv")
 
 
