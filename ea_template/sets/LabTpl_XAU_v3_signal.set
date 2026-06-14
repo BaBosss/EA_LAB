@@ -1,0 +1,9 @@
+; XAUUSD v3: single trade only (MaxGridLevels=1) — isolate MA cross signal quality
+; If RF passes with no grid, the signal has edge and we need to fix the grid spacing
+; ATRmult=3.0 was best in v2
+InpExitMode=2||2||0||3||N
+InpMaxGridLevels=1||1||0||1||N
+InpSL_ATRmult=3.0||3.0||0||3.0||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpFastMA=20||10||5||35||Y
+InpSlowMA=50||40||10||120||Y

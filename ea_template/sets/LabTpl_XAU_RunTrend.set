@@ -1,0 +1,3 @@
+InpFastMA=20||10||5||40||Y
+InpSlowMA=50||40||10||120||Y
+InpExitMode=2||2||0||3||N

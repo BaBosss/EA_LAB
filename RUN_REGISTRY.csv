@@ -12,6 +12,9 @@ reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2023.06.
 reports,single,EX197- Multi Group Scalping EA [Breakout FVG],GBPJPY,H1 (2021.01.01 - 2023.06.01),1.4,40.53,0.16,259,669.68,36.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\EX197v7_loopOOS.htm
 reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),1.01,24.66,0.02,116,49.74,18.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_IS.htm
 reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),1.05,25.79,0.15,91,448.66,19.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_OOS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2023.01.01 - 2026.06.01),1.53,8.71,1.67,1032,1759.21,65.8,PASS,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU3_loopIS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2020.01.01 - 2023.01.01),0.69,11.08,-0.82,1461,-919.32,29.5,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU3_loopOOS.htm
+reports,single,EA_LabTemplate,EURUSD,H1 (2024.01.01 - 2026.06.01),0.85,7.38,-0.95,3013,-703.75,33.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LabTpl_smoke.htm
 reports,single,(oh) MooDeng Bot,EURGBP,H1 (2024.01.01 - 2026.06.01),1.91,22.58,2.86,498,16657.7,65.0,WATCH,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopIS.htm
 reports,single,(oh) MooDeng Bot,EURGBP,H1 (2021.01.01 - 2024.01.01),0.1,78.14,-0.99,18,-7788.5,6.8,REJECT,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopOOS.htm
 reports,single,(oh) MooDeng Bot,EURUSD,H1 (2024.01.01 - 2026.06.01),2.69,18.76,3.73,346,25123.77,74.6,PASS,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURUSD_loopIS.htm

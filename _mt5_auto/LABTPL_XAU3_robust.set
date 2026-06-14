@@ -1,0 +1,12 @@
+; robust-pass .set generated 2026-06-14 from OPT_LABTPL_XAU3.xml
+; robust pick: PF=1.532263 DD%=8.7093 RF=1.666881 trades=1032 plateau=THIN survivors=1/54
+; OVERRIDDEN 2 optimized params; load in MT5 Inputs->Load, run SINGLE test
+; XAUUSD v3: single trade only (MaxGridLevels=1) — isolate MA cross signal quality
+; If RF passes with no grid, the signal has edge and we need to fix the grid spacing
+; ATRmult=3.0 was best in v2
+InpExitMode=2||2||0||3||N
+InpMaxGridLevels=1||1||0||1||N
+InpSL_ATRmult=3.0||3.0||0||3.0||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpFastMA=35||35||0||35||N
+InpSlowMA=120||120||0||120||N

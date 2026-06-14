@@ -1,0 +1,9 @@
+; XAUUSD v2: RUN_TREND + ATR SL sweep + no hard-kill interference
+; Hard kill raised to 50 so it doesn't halt trading mid-backtest
+; Grid capped at 3 levels to reduce exposure accumulation
+InpExitMode=2||2||0||3||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpMaxGridLevels=3||3||0||3||N
+InpFastMA=20||10||5||35||Y
+InpSlowMA=50||40||10||120||Y
+InpSL_ATRmult=2.0||1.0||0.5||3.0||Y
