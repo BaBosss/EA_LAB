@@ -5,11 +5,12 @@
 2. `D:\EA_LAB\PROJECT_STATUS.md` — สถานะ/milestone/ขั้นตอนใช้งาน
 3. `D:\EA_LAB\RUN_REGISTRY.md` — ผล backtest ทั้งหมด (auto)
 
-## ค้างอยู่ (in-flight ตอน clear)
-- **optimize_loop ของ EURCADv2** (Boss-2 Adaptive Smart Grid) รัน background ไว้
-- เช็คผล: ดู `RUN_REGISTRY.md` แถว `EURCADv2_loopIS/OOS` + ไฟล์ `_mt5_auto\optimizations\OPT_EURCADv2.xml`
-- **ถ้าไม่มี OPT_EURCADv2.xml** = headless optimize -> XML ไม่ทำงานบน build นี้ (ต้อง export มือใน GUI หรือหาทาง v2)
-- รัน `python D:\EA_LAB\scripts\run_pipeline.py D:\EA_LAB\ea_projects D:\EA_LAB\_mt5_auto\reports` เพื่อ refresh registry
+## ล่าสุด (resolved 2026-06-14)
+- **optimize loop เต็มสาย CONFIRMED ทำงาน** — headless optimize -> XML ได้จริง (Optimization=2, เขียนไป data folder เหมือน single-test) · `optimize_loop.ps1` = 1 คำสั่งจบ (optimize->robust->set->single-test->score)
+- robust selector แก้แล้ว: **trade floor >=100** ตัด fluke PF สูงเทรดน้อย
+- **EURCAD grid: IS PASS (PF 3.9/113tr) แต่ OOS REJECT (PF 0.83 ขาดทุน, DD 45%)** = grid overfit ยืนยัน แม้ provenance สะอาด -> **เลิกตาม grid family**
+- **EA validated จริง = GSMC (Gold SMC) ตัวเดียว** -> ต้องการ non-grid EA เพิ่ม (mean-reversion/trend)
+- next: เอา optimize_loop ไปใช้กับ EA แบบ non-grid (เทรดเยอะ) เช่น GSMC, trend EAs -> หา candidate ที่ผ่าน OOS จริง
 
 ## สถานะสั้นๆ
 - automation pipeline ครบ + MT5 headless single-test **พิสูจน์แล้วทำงาน**
