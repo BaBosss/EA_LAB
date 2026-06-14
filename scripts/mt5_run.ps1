@@ -28,8 +28,15 @@ param(
 )
 $ErrorActionPreference = "Stop"
 
-if ((Get-Process terminal64 -ErrorAction SilentlyContinue) -and -not $Force) {
-  Write-Output "ABORT: MT5 GUI is running. Close it first, or pass -Force."; exit 2
+if (-not $Force) {
+  # a previous headless run may still be closing — wait up to 25s before deciding
+  $g = [Diagnostics.Stopwatch]::StartNew()
+  while ((Get-Process terminal64 -ErrorAction SilentlyContinue) -and $g.Elapsed.TotalSeconds -lt 25) {
+    Start-Sleep -Seconds 2
+  }
+  if (Get-Process terminal64 -ErrorAction SilentlyContinue) {
+    Write-Output "ABORT: MT5 GUI still running after 25s. Close it first, or pass -Force."; exit 2
+  }
 }
 if (-not (Test-Path $Terminal)) { Write-Output "ABORT: terminal not found: $Terminal"; exit 2 }
 
