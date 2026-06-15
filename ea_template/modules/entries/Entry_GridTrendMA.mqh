@@ -9,7 +9,7 @@
 #include "IEntry.mqh"
 #include "../Indicators.mqh"
 
-EntrySignal Entry_Evaluate(const string sym, const ENUM_TIMEFRAMES tf)
+EntrySignal Entry_GridTrendMA_Evaluate(const string sym, const ENUM_TIMEFRAMES tf)
 {
    double f = Indi_FastMA(0);
    double s = Indi_SlowMA(0);

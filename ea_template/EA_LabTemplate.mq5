@@ -6,7 +6,7 @@
 //+------------------------------------------------------------------+
 #property copyright "EA_LAB"
 #property version   "1.00"
-#property description "Dropdown-mode chassis (Grid Trend MA). Strategy-Tester phase; built-in indicators only."
+#property description "Dropdown-mode chassis (Grid Trend MA / Breakout). Strategy-Tester phase; built-in indicators only."
 #property strict
 
 #define __EA_LAB_TEMPLATE__ 1
@@ -19,6 +19,7 @@
 #include "modules/MoneyManagement.mqh"
 #include "modules/ExitManager.mqh"
 #include "modules/entries/Entry_GridTrendMA.mqh"
+#include "modules/entries/Entry_Breakout.mqh"
 #include "modules/Recovery.mqh"
 #include "modules/Hedge.mqh"
 #include "modules/Basket.mqh"
@@ -46,6 +47,16 @@ void OnDeinit(const int reason)
 }
 
 //+------------------------------------------------------------------+
+// entry dispatch: routes to the correct entry module based on InpEntryStyle
+EntrySignal Entry_Dispatch()
+{
+   switch(InpEntryStyle)
+   {
+      case ENTRY_BREAKOUT:   return Entry_Breakout_Evaluate(_Symbol, _Period);
+      default:               return Entry_GridTrendMA_Evaluate(_Symbol, InpMA_TF);
+   }
+}
+
 // grid spacing in points (ATR-based or fixed)
 double Grid_StepPoints()
 {
@@ -70,7 +81,7 @@ void OnTick()
    Basket_OnTick();
 
    // (3) entry signal (pure direction)
-   EntrySignal sig = Entry_Evaluate(_Symbol, InpMA_TF);
+   EntrySignal sig = Entry_Dispatch();
    if(!sig.valid) return;
 
    // (4) risk gate
@@ -104,6 +115,7 @@ void OnTick()
    double firstLot = MM_FirstLot(Exit_SLDistancePoints());
    double lot      = MM_NextLot(firstLot, have);   // have = level index
 
-   Exec_Open(dir, lot, sl, tp, "GridTrendMA L" + IntegerToString(have));
+   string entryTag = (InpEntryStyle == ENTRY_BREAKOUT ? "Breakout" : "GridTrendMA");
+   Exec_Open(dir, lot, sl, tp, entryTag + " L" + IntegerToString(have));
 }
 //+------------------------------------------------------------------+

@@ -10,8 +10,8 @@
 //==================== Dropdown axes (structure) =====================
 enum ENUM_ENTRY_STYLE
 {
-   ENTRY_GRID_TREND_MA = 0   // Grid trend-following (MA cross)
-   // future: BREAKOUT, SWING, MEAN_REV
+   ENTRY_GRID_TREND_MA = 0,  // Grid trend-following (MA cross)
+   ENTRY_BREAKOUT      = 1   // Donchian channel breakout (N-bar high/low)
 };
 
 enum ENUM_EXIT_MODE
@@ -95,6 +95,10 @@ input ENUM_TREND_FILTER InpTrendFilter    = TFILTER_NONE; // NONE=always trade, 
 input int               InpFilterATRMA    = 20;           // ATR_EXPAND: MA period for ATR smoothing
 input double            InpFilterATRRatio = 1.0;          // ATR_EXPAND: trade when ATR > ratio*ATR_MA
 input int               InpFilterSlopeBar = 3;            // MA_SLOPE: bars back to check slope
+
+input group "=== Entry: Breakout (Donchian) ==="
+input int  InpBreakoutBars        = 20;   // lookback bars for channel high/low
+input int  InpBreakoutConfirmBars = 1;    // consecutive closes beyond channel required (0=tick-level)
 
 input group "=== Entry: Grid Trend MA ==="
 input int            InpFastMA          = 20;
