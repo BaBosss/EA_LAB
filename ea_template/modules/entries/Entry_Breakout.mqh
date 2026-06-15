@@ -1,63 +1,77 @@
 //+------------------------------------------------------------------+
 //| Entry_Breakout.mqh - Donchian channel breakout signal.           |
-//| BUY  when ask breaks N-bar high; SELL when bid breaks N-bar low. |
-//| InpBreakoutConfirmBars >= 1: require that many consecutive closed |
-//| bars beyond the channel before firing (0 = tick-level breakout). |
-//| Respects InpTradeDirection and InpTrendFilter (shared dropdowns). |
+//|                                                                  |
+//| Channel anchor = bars BEFORE the confirmation window so that     |
+//| confirmed closes are genuinely outside the prior channel         |
+//| (avoids the look-ahead trap where bar[1] is both the confirmer  |
+//| and part of the channel).                                        |
+//|                                                                  |
+//| InpBreakoutConfirmBars = 0 : tick-level (ask/bid vs channel)     |
+//| InpBreakoutConfirmBars >= 1: require N closed bars beyond level  |
+//|                                                                  |
+//| Respects InpTradeDirection and InpTrendFilter (shared dropdowns).|
 //+------------------------------------------------------------------+
 #ifndef EA_LAB_ENTRY_BREAKOUT_MQH
 #define EA_LAB_ENTRY_BREAKOUT_MQH
 #include "IEntry.mqh"
 #include "../Indicators.mqh"
 
-// returns true if N consecutive closed bars all closed beyond level
-bool Breakout_ClosesConfirm(const int dir, const double level, const int nBars)
-{
-   for(int i = 1; i <= nBars; i++)
-   {
-      double c = iClose(_Symbol, _Period, i);
-      if(c <= 0.0)               return false;
-      if(dir == 1 && c <= level) return false;
-      if(dir == 2 && c >= level) return false;
-   }
-   return true;
-}
-
 EntrySignal Entry_Breakout_Evaluate(const string sym, const ENUM_TIMEFRAMES tf)
 {
    int lookback = (InpBreakoutBars > 1 ? InpBreakoutBars : 2);
+   int confirmN = (InpBreakoutConfirmBars >= 1 ? InpBreakoutConfirmBars : 0);
 
-   // channel anchored 1 bar back (avoids look-ahead on current open bar)
-   double channel_high = Indi_HighestHigh(lookback, 1);
-   double channel_low  = Indi_LowestLow(lookback, 1);
-   if(channel_high <= 0.0 || channel_low <= 0.0)
+   // anchor channel BEFORE the confirmation window to avoid look-ahead
+   // confirmN=0 → startShift=1 (exclude live bar only)
+   // confirmN=1 → startShift=2 (exclude live bar + the 1 confirming bar)
+   int channelStart = confirmN + 1;
+
+   double ch_high = Indi_HighestHigh(lookback, channelStart);
+   double ch_low  = Indi_LowestLow(lookback,  channelStart);
+   if(ch_high <= 0.0 || ch_low <= 0.0)
       return Entry_MakeNone("Channel levels not ready");
-
-   MqlTick t;
-   if(!SymbolInfoTick(_Symbol, t)) return Entry_MakeNone("No tick");
 
    int    dir    = 0;
    string reason = "";
 
-   if(t.ask > channel_high)
+   if(confirmN == 0)
    {
-      dir    = 1;
-      reason = StringFormat("ASK %.5f > %d-bar high %.5f", t.ask, lookback, channel_high);
-   }
-   else if(t.bid < channel_low)
-   {
-      dir    = 2;
-      reason = StringFormat("BID %.5f < %d-bar low %.5f", t.bid, lookback, channel_low);
+      // tick-level: fire when current ask/bid pierces the channel
+      MqlTick t;
+      if(!SymbolInfoTick(_Symbol, t)) return Entry_MakeNone("No tick");
+      if(t.ask > ch_high)
+      {
+         dir    = 1;
+         reason = StringFormat("ASK %.5f > %d-bar high %.5f", t.ask, lookback, ch_high);
+      }
+      else if(t.bid < ch_low)
+      {
+         dir    = 2;
+         reason = StringFormat("BID %.5f < %d-bar low %.5f", t.bid, lookback, ch_low);
+      }
+      else
+         return Entry_MakeNone("Inside channel");
    }
    else
-      return Entry_MakeNone("Inside channel");
-
-   // optional close-confirmation (InpBreakoutConfirmBars >= 1)
-   if(InpBreakoutConfirmBars >= 1)
    {
-      double confirm_level = (dir == 1 ? channel_high : channel_low);
-      if(!Breakout_ClosesConfirm(dir, confirm_level, InpBreakoutConfirmBars))
-         return Entry_MakeNone("Close confirm not met");
+      // close-confirmed: check last confirmN closed bars vs channel
+      // determine candidate direction from the most recent close
+      double c1 = iClose(_Symbol, _Period, 1);
+      if(c1 <= 0.0) return Entry_MakeNone("No close data");
+
+      if(c1 > ch_high)      dir = 1;
+      else if(c1 < ch_low)  dir = 2;
+      else return Entry_MakeNone("Close[1] inside channel");
+
+      for(int i = 2; i <= confirmN; i++)
+      {
+         double c = iClose(_Symbol, _Period, i);
+         if(c <= 0.0)               return Entry_MakeNone("No close data");
+         if(dir == 1 && c <= ch_high) return Entry_MakeNone("Close confirm not met");
+         if(dir == 2 && c >= ch_low)  return Entry_MakeNone("Close confirm not met");
+      }
+      reason = StringFormat("Close[1..%d] beyond %d-bar %s %.5f",
+                            confirmN, lookback, (dir==1?"high":"low"), (dir==1?ch_high:ch_low));
    }
 
    // direction bias gate (shared)
@@ -78,7 +92,8 @@ EntrySignal Entry_Breakout_Evaluate(const string sym, const ENUM_TIMEFRAMES tf)
 
    EntrySignal sig;
    sig.direction  = dir;
-   sig.strength   = (dir == 1 ? t.ask - channel_high : channel_low - t.bid);
+   sig.strength   = (dir == 1 ? iClose(_Symbol,_Period,1) - ch_high
+                               : ch_low - iClose(_Symbol,_Period,1));
    sig.confidence = 1.0;
    sig.valid      = true;
    sig.reason     = reason;
