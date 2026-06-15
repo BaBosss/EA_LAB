@@ -1,0 +1,14 @@
+InpEntryStyle=1
+InpBreakoutBars=20
+InpBreakoutConfirmBars=1
+InpExitMode=3
+InpSLMode=3
+InpSL_ATRmult=2.0
+InpTP_ATRmult=3.0
+InpMaxGridLevels=1
+InpTradeDirection=0
+InpTrendFilter=0
+InpCloseAllWhenDDPct=50
+InpFixedLot=0.01
+InpDryRun=false
+InpMagic=990002

@@ -1,0 +1,20 @@
+; robust-pass .set generated 2026-06-14 from BREAKOUT_opt1_XAU_H1.xml
+; robust pick: PF=1.578428 DD%=2.6817 RF=5.61432 trades=355 plateau=GOOD survivors=29/170
+; OVERRIDDEN 6 optimized params; load in MT5 Inputs->Load, run SINGLE test
+; XAUUSD H1 BREAKOUT optimize — IS 2023.01.01-2026.06.01
+; Axes: BreakoutBars x ConfirmBars x SL_ATR x TP_ATR x TradeDirection x TrendFilter
+; Format: current||start||step||stop||Y
+InpEntryStyle=1
+InpBreakoutBars=40||40||0||40||N
+InpBreakoutConfirmBars=0||0||0||0||N
+InpExitMode=3
+InpSLMode=3
+InpSL_ATRmult=1.5||1.5||0||1.5||N
+InpTP_ATRmult=5||5||0||5||N
+InpMaxGridLevels=1
+InpTradeDirection=1||1||0||1||N
+InpTrendFilter=1||1||0||1||N
+InpCloseAllWhenDDPct=50
+InpFixedLot=0.01
+InpDryRun=false
+InpMagic=990002

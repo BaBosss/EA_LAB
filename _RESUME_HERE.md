@@ -1,4 +1,4 @@
-# RESUME HERE — อัพเดท 2026-06-15 (session 4)
+# RESUME HERE — อัพเดท 2026-06-15 (session 5)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
@@ -7,60 +7,74 @@
 ## ถัดไปทันที (session ถัดไป)
 
 ### ลำดับงาน:
-1. **ค — เพิ่ม EntryStyle BREAKOUT ใน EA_LabTemplate** (session ถัดไปทำก่อน)
-   - เพิ่ม `ENTRY_BREAKOUT` enum ใน `Inputs.mqh`
-   - สร้าง `Entry_Breakout.mqh` ใน `ea_template/modules/entries/`
-   - Signal: breakout จาก high/low ย้อนหลัง N แท่ง (Donchian-style, built-in iHighest/iLowest)
-   - params: InpBreakoutBars, InpBreakoutConfirmBars, ใช้ร่วมกับ ATR filter + direction bias ที่มีแล้ว
-   - deploy -Compile → optimize XAUUSD/GBPJPY
 
-2. **ก — ทดสอบ .ex5 EA candidates** สำหรับ EA #2
-   - ดู Expert path จาก MT5: `D:\Meta 5\MQL5\Experts\`
-   - `LondonBO.ex5` — London Breakout (เริ่มก่อน)
-   - `HalfTrend_MTF_EA.ex5` — trend following MTF
-   - `Multi-Timeframe Trend Following.ex5`
-   - `EA TREND V2.ex5`
-   - `Sentinel KMZ_2.5_fix MT5.ex5`
-   - `PivotProbabilityPro.ex5`
-   - **Eurusd All TF.xml** (WEAK PF 4.16 DD 6% 889 trades) ใน `D:\Forex\30_OPTIMIZATION\OLD_Report\` — ไม่รู้ EA ไหน ต้องหาก่อน
+1. **ก — ทดสอบ .ex5 candidates ต่อ** (LondonBO ยังไม่ optimize)
+   - `LondonBO.ex5` — ต้องเปิด MT5 GUI → ดู Inputs tab → จดชื่อ params → ทำ .set → optimize_loop
+   - หรือลอง GBPJPY / EURUSD / USDJPY time-based smoke ก่อน (London open = 07:00-10:00 GMT)
+   - `HalfTrend_MTF_EA.ex5` — อาจมี edge ถ้า reduce lot + ปรับ timeframe (M15 หรือ H4)
+   - ยัง: `Sentinel KMZ_2.5_fix MT5.ex5`, `PivotProbabilityPro.ex5`
 
-3. **GridTrendMA XAUUSD** — ผู้ใช้จะ optimize เองต่อ (อย่าแตะ)
+2. **ข — GSMC robustness (Monte Carlo)** — GSMC ยังรอ Monte Carlo / WF pass
+   - ใช้ robustness-validator skill กับ GSMC (portfolio candidate #1)
+   - ต้องมี IS+OOS report + set file ก่อน (มีแล้วจาก session ก่อน)
+
+3. **ค — template EntryStyle ถัดไป** — BREAKOUT ทดสอบแล้ว ไม่มี edge บน forex H1
+   - พิจารณา MEAN_REVERSION entry (Bollinger band bounce หรือ RSI extreme)
+   - หรือ SESSION filter บน BREAKOUT (เพิ่ม InpBreakoutHourFrom/To)
 
 ---
 
-## EA_LabTemplate (Phase 3a) — ✅ ใช้งานได้ + อัพเดท filter แล้ว
+## EA_LabTemplate (Phase 3a) — ✅ BREAKOUT entry เพิ่มแล้ว
 
 EA chassis dropdown-mode ที่ `D:\EA_LAB\ea_template\` (git). compile 0/0.
 - deploy: `& D:\EA_LAB\ea_template\deploy.ps1 -Compile` → `Experts\EALabTpl\` (data folder 9CA1)
 - expert name: `EALabTpl\EA_LabTemplate`
 
 ### Dropdown axes ปัจจุบัน:
-- `InpEntryStyle`: GRID_TREND_MA (เดียว) → **ต้องเพิ่ม BREAKOUT**
+- `InpEntryStyle`: GRID_TREND_MA (0) / **BREAKOUT (1)** ← เพิ่ม session นี้
+- `InpBreakoutBars`: lookback channel (default 20)
+- `InpBreakoutConfirmBars`: 0=tick-level, 1+=close-confirmed (channel shifts past confirm window)
 - `InpExitMode`: FIXED_TP / TRAIL / RUN_TREND / ATR_TP
 - `InpSLMode`: NONE / FIXED_POINTS / MONEY / ATR / STRUCT_DONCHIAN / STRUCT_SR
-- `InpTrendFilter`: NONE / ATR_EXPAND / MA_SLOPE ← **เพิ่มแล้ว session นี้**
-- `InpTradeDirection`: BOTH / LONG_ONLY / SHORT_ONLY ← **เพิ่มแล้ว session นี้**
+- `InpTrendFilter`: NONE / ATR_EXPAND / MA_SLOPE
+- `InpTradeDirection`: BOTH / LONG_ONLY / SHORT_ONLY
 - `InpFirstLotMode`: FIXED / RISK
 - `InpLotProgression`: NONE / LINEAR / MULTIPLIER / PLUS / LOG
-- `InpRecoveryMode`: NONE / LIGHT / ADAPTIVE / AGGRESSIVE (stubs)
 
-### Findings GridTrendMA:
-- EURUSD H1: ไม่มี edge (PF 0.86 ทุก combo)
-- XAUUSD H1: regime-dependent — IS LONG-only+filter: PF 2.26 RF 2.59 GOOD, OOS fail
-- Hard kill `InpCloseAllWhenDDPct`: ตั้ง 50 ใน backtest (25 halt EA กลางทาง)
-- รายละเอียด: `memory/ea-lab-template.md`
+### BREAKOUT findings (session 5):
+- Bug found+fixed: channel anchor must use startShift=confirmN+1 (else close-confirm always fails)
+- XAUUSD H1: IS PF 1.578 DD 2.68% RF 5.61 survivors 29/170 GOOD → OOS PF 0.80 DD 4.87% FAIL
+  - Best params: BreakoutBars=40, Confirm=0 (tick-level), LONG_ONLY, ATR_EXPAND, SL=1.5×ATR, TP=5×ATR
+  - Same regime-dependent pattern as GridTrendMA — bull regime only
+- GBPJPY H1: 0 survivors plateau=NONE (no IS edge)
+- EURUSD H1: 0 survivors plateau=NONE (PF 1.004 best)
+- **Conclusion:** H1 Donchian whipsaws on forex. Session-specific breakout (LondonBO) is the right form.
 
 ---
 
-## สถานะ EA candidates
+## สถานะ .ex5 candidates (ทดสอบ session 5)
+
+| EA | Pair | IS | OOS | Verdict |
+|---|---|---|---|---|
+| EA TREND V2 | EURUSD H1 | PF 1.20 DD 4.62% score 67 | PF 1.15 eq-DD 19.3% one-big-trade | ❌ REJECT (OOS one-big-trade) |
+| EA TREND V2 | GBPUSD H1 | PF 1.26 DD 3.36% | PF 1.15 DD 31.28% | ❌ REJECT (OOS DD too high) |
+| EA TREND V2 | USDJPY H1 | PF 1.18 DD 12.99% | PF 0.48 DD 86.95% | ❌ REJECT (OOS blow-up) |
+| EA TREND V2 | XAUUSD/GBPJPY | PF 0.31/0.71 | — | ❌ REJECT (fixed pip sizing blow-up) |
+| Multi-TF Trend | EURUSD H1 | PF 0.83 DD 64% | — | ❌ REJECT (blow-up) |
+| HalfTrend_MTF | XAUUSD H1 | PF 1.05 DD 38% 8470t | — | ⏸ NEEDS LOT TUNING |
+| LondonBO | GBPUSD H1 | PF 0.93 default | — | ⏸ NEEDS OPTIMIZE (inputs unknown) |
+
+---
+
+## สถานะ EA candidates (รวม)
 
 | EA | Pair | ผล |
 |---|---|---|
-| GSMC (Gold SMC RiskCap) | XAUUSD | ✅ PORTFOLIO_CANDIDATE #1 |
+| GSMC (Gold SMC RiskCap) | XAUUSD | ✅ PORTFOLIO_CANDIDATE #1 (รอ Monte Carlo) |
 | EX197 Multi Group Scalping | GBPJPY | ❌ CONDITIONAL REJECT — OOS RF 1.30 < 1.50 |
-| MooDeng Bot | USDCHF | ❌ REJECT — OOS PF 0.94, DD 80% |
-| MooDeng Bot | EURUSD | ❌ REJECT — OOS PF 0.16, DD 71.8% |
-| MooDeng Bot | EURGBP | ❌ REJECT — OOS PF 0.10, DD 78.1% |
+| MooDeng Bot | USDCHF/EURUSD/EURGBP | ❌ REJECT |
+| EA TREND V2 | EURUSD/GBPUSD | ❌ REJECT |
+| EA_LabTemplate BREAKOUT | XAUUSD | ⏸ IS only (regime-dependent) |
 | EA_LabTemplate GridTrendMA | XAUUSD | ⏸ ผู้ใช้ optimize เองต่อ |
 
 ---
@@ -75,31 +89,42 @@ EA chassis dropdown-mode ที่ `D:\EA_LAB\ea_template\` (git). compile 0/0.
 ## คำสั่งหลัก
 
 ```powershell
-# optimize loop (IS=ใหม่กว่า, OOS=เก่ากว่า)
+# optimize loop
 & D:\EA_LAB\scripts\optimize_loop.ps1 -Expert "EA_NAME" -Symbol XXXX -BaseSet "path\to.set" -Code CODE -OptFrom 2023.01.01 -OptTo 2026.06.01 -OosFrom 2020.01.01 -OosTo 2023.01.01
 
 # single test
 & D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EA_NAME" -Symbol XXXX -Model 1 -FromDate 2024.01.01 -ToDate 2026.06.01 -SetFile "path\to.set" -ReportName "label"
 
+# optimize (แยก)
+& D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert "EA_NAME" -Symbol XXXX -Model 1 -FromDate 2023.01.01 -ToDate 2026.06.01 -SetFile "path.set" -ReportName "OPT_label"
+
 # ดูผล
 python D:\EA_LAB\scripts\_show_rows.py "keyword"
+
+# parse + score
+python C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts\parse_mt5_report.py "report.htm" > parsed.json
+python D:\EA_LAB\scripts\score_backtest.py "parsed.json" --strategy trend
 ```
 
 ## .set files ที่มี
 
 ```
+_mt5_auto/BREAKOUT_opt_XAU.set           XAUUSD optimize ranges
+_mt5_auto/BREAKOUT_XAU_robust.set        XAUUSD robust pick (BreakoutBars=40 LONG_ONLY ATR_EXPAND)
+_mt5_auto/BREAKOUT_opt_GBPJPY.set        GBPJPY (ทดสอบแล้ว — ไม่มี edge)
+_mt5_auto/BREAKOUT_opt_EURUSD.set        EURUSD (ทดสอบแล้ว — ไม่มี edge)
+_mt5_auto/BREAKOUT_smoke_XAU.set         XAUUSD default smoke (Confirm=1)
 _mt5_auto/MooDengv1_robust.set           USDCHF
-_mt5_auto/MooDeng_EURUSD_robust.set      EURUSD
-_mt5_auto/MooDeng_EURGBP_robust.set      EURGBP
 _mt5_auto/LABTPL_XAU3_robust.set         XAUUSD single-trade no-filter
 _mt5_auto/LABTPL_XAU4_robust.set         XAUUSD single-trade ATR filter
 _mt5_auto/LABTPL_XAU5_robust.set         XAUUSD single-trade LONG-only + ATR filter
 ea_template/sets/LabTpl_XAU_v5_long.set  template set สำหรับ XAUUSD LONG-only
 ```
 
-## GitHub private repo — ยังไม่เสร็จ รันเอง:
+## Important notes
 
-```
-gh repo create EA-Lab --private --description "MT5 EA platform"
-cd D:\EA_LAB && git remote add origin https://github.com/<username>/EA-Lab.git && git push -u origin master
-```
+- **MT5 .set optimize format:** `param=current||start||step||stop||Y` (NOT start||stop||step!)
+- **InpBreakoutConfirmBars=1:** channel anchors at shift=2 (else close[1]>channel impossible)
+- **InpCloseAllWhenDDPct:** ตั้ง 50 ใน backtest (25 halt EA กลางทาง)
+- **EA TREND V2:** ใช้ pip sizing คงที่ — blows up บน XAUUSD/GBPJPY (volatile pairs)
+- **Expert names:** root data folder EAs = bare name (e.g. "LondonBO"), subfolders = "folder\name" (e.g. "EALabTpl\EA_LabTemplate")
