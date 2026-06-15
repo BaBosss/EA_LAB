@@ -1,0 +1,11 @@
+; XAUUSD v5: LONG-only + ATR expansion filter
+; Gold structural bias is bullish — skip SHORT signals to avoid 2022 bear chop
+InpTradeDirection=1||1||0||1||N
+InpExitMode=2||2||0||3||N
+InpMaxGridLevels=1||1||0||1||N
+InpSL_ATRmult=3.0||3.0||0||3.0||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpTrendFilter=1||1||0||1||N
+InpFastMA=20||10||5||35||Y
+InpSlowMA=50||40||10||120||Y
+InpFilterATRMA=20||10||5||40||Y

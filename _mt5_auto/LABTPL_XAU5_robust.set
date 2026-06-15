@@ -1,0 +1,14 @@
+; robust-pass .set generated 2026-06-14 from OPT_LABTPL_XAU5.xml
+; robust pick: PF=2.263637 DD%=6.1783 RF=2.590309 trades=472 plateau=GOOD survivors=46/121
+; OVERRIDDEN 3 optimized params; load in MT5 Inputs->Load, run SINGLE test
+; XAUUSD v5: LONG-only + ATR expansion filter
+; Gold structural bias is bullish — skip SHORT signals to avoid 2022 bear chop
+InpTradeDirection=1||1||0||1||N
+InpExitMode=2||2||0||3||N
+InpMaxGridLevels=1||1||0||1||N
+InpSL_ATRmult=3.0||3.0||0||3.0||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpTrendFilter=1||1||0||1||N
+InpFastMA=25||25||0||25||N
+InpSlowMA=110||110||0||110||N
+InpFilterATRMA=35||35||0||35||N

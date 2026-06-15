@@ -41,6 +41,37 @@ double Indi_FastMA(const int shift = 0) { return Indi_CopyOne(g_hFastMA, shift);
 double Indi_SlowMA(const int shift = 0) { return Indi_CopyOne(g_hSlowMA, shift); }
 double Indi_ATR(const int shift = 0)    { return Indi_CopyOne(g_hATR, shift); }
 
+// ATR simple moving average (uses existing g_hATR buffer — no extra handle needed)
+// shift=1 to avoid look-ahead: reads period bars starting one bar back
+double Indi_ATR_MA(const int period, const int startShift = 1)
+{
+   double buf[];
+   if(CopyBuffer(g_hATR, 0, startShift, period, buf) < period) return 0.0;
+   double sum = 0.0;
+   for(int i = 0; i < period; i++) sum += buf[i];
+   return sum / period;
+}
+
+// True when ATR(0) > ATR_MA * ratio (volatility expanding = trending)
+bool Indi_ATR_IsExpanding(const int period, const double ratio = 1.0)
+{
+   double atr_now = Indi_ATR(0);
+   double atr_ma  = Indi_ATR_MA(period);
+   if(atr_now <= 0.0 || atr_ma <= 0.0) return false;
+   return atr_now > atr_ma * ratio;
+}
+
+// True when fast MA is sloping in direction: dir=1 means fastMA rising, dir=2 falling
+bool Indi_MA_IsSloping(const int direction, const int barsBack = 3)
+{
+   double now  = Indi_FastMA(0);
+   double prev = Indi_FastMA(barsBack);
+   if(now <= 0.0 || prev <= 0.0) return false;
+   if(direction == 1) return now > prev;
+   if(direction == 2) return now < prev;
+   return false;
+}
+
 // ATR expressed in points (price/_Point)
 double Indi_ATR_Points(const int shift = 0)
 {

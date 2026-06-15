@@ -47,6 +47,20 @@ enum ENUM_LOT_PROGRESSION
    PROG_LOG        = 4       // lot * (1 + factor*log(level+1))
 };
 
+enum ENUM_TRADE_DIR
+{
+   TRADEDIR_BOTH       = 0,
+   TRADEDIR_LONG_ONLY  = 1,
+   TRADEDIR_SHORT_ONLY = 2
+};
+
+enum ENUM_TREND_FILTER
+{
+   TFILTER_NONE       = 0,
+   TFILTER_ATR_EXPAND = 1,  // only trade when ATR > MA(ATR)*ratio (volatility expanding)
+   TFILTER_MA_SLOPE   = 2   // only trade when fast MA slope confirms direction
+};
+
 enum ENUM_RECOVERY_MODE
 {
    REC_NONE       = 0,
@@ -73,6 +87,15 @@ input bool                 InpBasketEnabled  = false;
 input bool                 InpDryRun         = false;   // true = log intents, no real orders
 
 //==================== Entry: Grid Trend MA =========================
+input group "=== Trade direction bias ==="
+input ENUM_TRADE_DIR InpTradeDirection = TRADEDIR_BOTH;  // BOTH / LONG_ONLY / SHORT_ONLY
+
+input group "=== Trend filter (entry quality gate) ==="
+input ENUM_TREND_FILTER InpTrendFilter    = TFILTER_NONE; // NONE=always trade, ATR_EXPAND=trend only
+input int               InpFilterATRMA    = 20;           // ATR_EXPAND: MA period for ATR smoothing
+input double            InpFilterATRRatio = 1.0;          // ATR_EXPAND: trade when ATR > ratio*ATR_MA
+input int               InpFilterSlopeBar = 3;            // MA_SLOPE: bars back to check slope
+
 input group "=== Entry: Grid Trend MA ==="
 input int            InpFastMA          = 20;
 input int            InpSlowMA          = 50;

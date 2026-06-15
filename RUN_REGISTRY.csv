@@ -14,6 +14,10 @@ reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2023.06.01 - 2026.06.01),
 reports,single,Boss - 6 Pivot Range Trading,NZDUSD,H1 (2021.01.01 - 2023.06.01),1.05,25.79,0.15,91,448.66,19.0,REJECT,,,D:\EA_LAB\_mt5_auto\reports\GEP_OOS.htm
 reports,single,EA_LabTemplate,XAUUSD,H1 (2023.01.01 - 2026.06.01),1.53,8.71,1.67,1032,1759.21,65.8,PASS,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU3_loopIS.htm
 reports,single,EA_LabTemplate,XAUUSD,H1 (2020.01.01 - 2023.01.01),0.69,11.08,-0.82,1461,-919.32,29.5,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU3_loopOOS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2023.01.01 - 2026.06.01),1.4,8.19,1.54,702,1463.25,65.6,PASS,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU4_loopIS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2020.01.01 - 2023.01.01),0.84,8.25,-0.47,689,-398.04,32.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU4_loopOOS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2023.01.01 - 2026.06.01),2.26,6.18,2.59,472,2014.25,79.1,PASS,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU5_loopIS.htm
+reports,single,EA_LabTemplate,XAUUSD,H1 (2020.01.01 - 2023.01.01),0.62,8.24,-0.73,508,-616.38,32.5,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LABTPL_XAU5_loopOOS.htm
 reports,single,EA_LabTemplate,EURUSD,H1 (2024.01.01 - 2026.06.01),0.85,7.38,-0.95,3013,-703.75,33.4,REJECT,,,D:\EA_LAB\_mt5_auto\reports\LabTpl_smoke.htm
 reports,single,(oh) MooDeng Bot,EURGBP,H1 (2024.01.01 - 2026.06.01),1.91,22.58,2.86,498,16657.7,65.0,WATCH,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopIS.htm
 reports,single,(oh) MooDeng Bot,EURGBP,H1 (2021.01.01 - 2024.01.01),0.1,78.14,-0.99,18,-7788.5,6.8,REJECT,,,D:\EA_LAB\_mt5_auto\reports\MooDengEURGBP_loopOOS.htm

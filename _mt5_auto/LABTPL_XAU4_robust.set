@@ -1,0 +1,14 @@
+; robust-pass .set generated 2026-06-14 from OPT_LABTPL_XAU4.xml
+; robust pick: PF=1.395329 DD%=8.1928 RF=1.537819 trades=702 plateau=THIN survivors=1/130
+; OVERRIDDEN 3 optimized params; load in MT5 Inputs->Load, run SINGLE test
+; XAUUSD v4: ATR-expansion trend filter — optimize filter period + MA periods
+; MaxGridLevels=1 for clean signal diagnostic (test signal quality before adding grid)
+; ATRmult=3.0 (best from v2)
+InpExitMode=2||2||0||3||N
+InpMaxGridLevels=1||1||0||1||N
+InpSL_ATRmult=3.0||3.0||0||3.0||N
+InpCloseAllWhenDDPct=50||50||0||50||N
+InpTrendFilter=1||1||0||1||N
+InpFastMA=35||35||0||35||N
+InpSlowMA=90||90||0||90||N
+InpFilterATRMA=40||40||0||40||N
