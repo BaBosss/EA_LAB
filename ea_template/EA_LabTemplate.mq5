@@ -20,6 +20,7 @@
 #include "modules/ExitManager.mqh"
 #include "modules/entries/Entry_GridTrendMA.mqh"
 #include "modules/entries/Entry_Breakout.mqh"
+#include "modules/entries/Entry_MeanReversion.mqh"
 #include "modules/Recovery.mqh"
 #include "modules/Hedge.mqh"
 #include "modules/Basket.mqh"
@@ -52,8 +53,9 @@ EntrySignal Entry_Dispatch()
 {
    switch(InpEntryStyle)
    {
-      case ENTRY_BREAKOUT:   return Entry_Breakout_Evaluate(_Symbol, _Period);
-      default:               return Entry_GridTrendMA_Evaluate(_Symbol, InpMA_TF);
+      case ENTRY_BREAKOUT:       return Entry_Breakout_Evaluate(_Symbol, _Period);
+      case ENTRY_MEAN_REVERSION: return Entry_MeanReversion_Evaluate(_Symbol, _Period);
+      default:                   return Entry_GridTrendMA_Evaluate(_Symbol, InpMA_TF);
    }
 }
 

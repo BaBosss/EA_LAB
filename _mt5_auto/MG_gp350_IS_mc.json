@@ -1,0 +1,29 @@
+{
+  "source_file": "D:/EA_LAB/_mt5_auto/MG_gp350_IS_trades.csv",
+  "trade_count": 2373,
+  "net_profit": 8119.36,
+  "observed_pf": 1.969,
+  "observed_dd_pct": 5.73,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.969,
+    "pf_median": 1.969,
+    "pf_95th": 1.969,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 1.48,
+    "dd_95th_pct": 2.18,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 1.755,
+    "pf_median": 1.973,
+    "pf_95th": 2.215,
+    "pf_range_5_95": 0.46,
+    "dd_median_pct": 1.47,
+    "dd_95th_pct": 2.28,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}

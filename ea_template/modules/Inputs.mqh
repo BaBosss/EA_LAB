@@ -10,8 +10,9 @@
 //==================== Dropdown axes (structure) =====================
 enum ENUM_ENTRY_STYLE
 {
-   ENTRY_GRID_TREND_MA = 0,  // Grid trend-following (MA cross)
-   ENTRY_BREAKOUT      = 1   // Donchian channel breakout (N-bar high/low)
+   ENTRY_GRID_TREND_MA  = 0,  // Grid trend-following (MA cross)
+   ENTRY_BREAKOUT       = 1,  // Donchian channel breakout (N-bar high/low)
+   ENTRY_MEAN_REVERSION = 2   // BB outer-band + RSI extreme bounce
 };
 
 enum ENUM_EXIT_MODE
@@ -99,6 +100,16 @@ input int               InpFilterSlopeBar = 3;            // MA_SLOPE: bars back
 input group "=== Entry: Breakout (Donchian) ==="
 input int  InpBreakoutBars        = 20;   // lookback bars for channel high/low
 input int  InpBreakoutConfirmBars = 1;    // consecutive closes beyond channel required (0=tick-level)
+input int  InpBreakoutHourFrom    = 0;    // session start hour UTC (0=no filter)
+input int  InpBreakoutHourTo      = 0;    // session end hour UTC   (0=no filter; wraps midnight if From>To)
+
+input group "=== Entry: Mean Reversion (BB + RSI) ==="
+input int    InpMR_BB_Period  = 20;       // Bollinger Band period
+input double InpMR_BB_Dev     = 2.0;     // BB standard deviations
+input int    InpMR_RSI_Period = 14;       // RSI period
+input int    InpMR_RSI_OB    = 70;       // RSI overbought level (short entry)
+input int    InpMR_RSI_OS    = 30;       // RSI oversold level (long entry)
+input bool   InpMR_RequireBB = true;     // require price at outer BB band (AND with RSI)
 
 input group "=== Entry: Grid Trend MA ==="
 input int            InpFastMA          = 20;

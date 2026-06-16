@@ -74,6 +74,18 @@ EntrySignal Entry_Breakout_Evaluate(const string sym, const ENUM_TIMEFRAMES tf)
                             confirmN, lookback, (dir==1?"high":"low"), (dir==1?ch_high:ch_low));
    }
 
+   // session filter (UTC hour gate)
+   if(InpBreakoutHourFrom != InpBreakoutHourTo)
+   {
+      MqlDateTime dt;
+      TimeToStruct(TimeGMT(), dt);
+      int h = dt.hour;
+      bool inSession = (InpBreakoutHourFrom <= InpBreakoutHourTo)
+                         ? (h >= InpBreakoutHourFrom && h < InpBreakoutHourTo)
+                         : (h >= InpBreakoutHourFrom || h < InpBreakoutHourTo);
+      if(!inSession) return Entry_MakeNone("Outside session");
+   }
+
    // direction bias gate (shared)
    if(InpTradeDirection == TRADEDIR_LONG_ONLY  && dir == 2) return Entry_MakeNone("SHORT skipped (LONG_ONLY)");
    if(InpTradeDirection == TRADEDIR_SHORT_ONLY && dir == 1) return Entry_MakeNone("LONG skipped (SHORT_ONLY)");

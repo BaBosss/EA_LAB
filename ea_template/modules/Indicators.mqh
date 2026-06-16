@@ -10,6 +10,8 @@
 int g_hFastMA = INVALID_HANDLE;
 int g_hSlowMA = INVALID_HANDLE;
 int g_hATR    = INVALID_HANDLE;
+int g_hBB     = INVALID_HANDLE;
+int g_hRSI    = INVALID_HANDLE;
 
 ENUM_TIMEFRAMES Indi_TF(const ENUM_TIMEFRAMES tf) { return (tf == PERIOD_CURRENT ? _Period : tf); }
 
@@ -18,7 +20,10 @@ bool Indi_Init()
    g_hFastMA = iMA(_Symbol, Indi_TF(InpMA_TF), InpFastMA, 0, InpMAMethod, PRICE_CLOSE);
    g_hSlowMA = iMA(_Symbol, Indi_TF(InpMA_TF), InpSlowMA, 0, InpMAMethod, PRICE_CLOSE);
    g_hATR    = iATR(_Symbol, Indi_TF(InpATR_TF), InpATR_Period);
-   return (g_hFastMA != INVALID_HANDLE && g_hSlowMA != INVALID_HANDLE && g_hATR != INVALID_HANDLE);
+   g_hBB     = iBands(_Symbol, _Period, InpMR_BB_Period, 0, InpMR_BB_Dev, PRICE_CLOSE);
+   g_hRSI    = iRSI(_Symbol, _Period, InpMR_RSI_Period, PRICE_CLOSE);
+   return (g_hFastMA != INVALID_HANDLE && g_hSlowMA != INVALID_HANDLE &&
+           g_hATR != INVALID_HANDLE && g_hBB != INVALID_HANDLE && g_hRSI != INVALID_HANDLE);
 }
 
 void Indi_Deinit()
@@ -26,7 +31,9 @@ void Indi_Deinit()
    if(g_hFastMA != INVALID_HANDLE) IndicatorRelease(g_hFastMA);
    if(g_hSlowMA != INVALID_HANDLE) IndicatorRelease(g_hSlowMA);
    if(g_hATR    != INVALID_HANDLE) IndicatorRelease(g_hATR);
-   g_hFastMA = g_hSlowMA = g_hATR = INVALID_HANDLE;
+   if(g_hBB     != INVALID_HANDLE) IndicatorRelease(g_hBB);
+   if(g_hRSI    != INVALID_HANDLE) IndicatorRelease(g_hRSI);
+   g_hFastMA = g_hSlowMA = g_hATR = g_hBB = g_hRSI = INVALID_HANDLE;
 }
 
 // returns 0.0 if buffer not ready yet (caller treats 0 as "no data")
@@ -79,6 +86,16 @@ double Indi_ATR_Points(const int shift = 0)
    if(pt <= 0.0) return 0.0;
    return Indi_ATR(shift) / pt;
 }
+
+// BB buffers: 0=upper, 1=basis(mid), 2=lower
+double Indi_BB_Upper(const int shift = 1) { return Indi_CopyOne(g_hBB, shift); }   // uses buffer 0
+double Indi_BB_Lower(const int shift = 1)
+{
+   double buf[];
+   if(CopyBuffer(g_hBB, 2, shift, 1, buf) < 1) return 0.0;
+   return buf[0];
+}
+double Indi_RSI(const int shift = 1) { return Indi_CopyOne(g_hRSI, shift); }
 
 double Indi_LowestLow(const int bars, const int startShift = 1)
 {

@@ -1,0 +1,29 @@
+{
+  "source_file": "D:\\EA_LAB\\_mt5_auto\\GSMC_locked_IS_trades.csv",
+  "trade_count": 997,
+  "net_profit": 1589.69,
+  "observed_pf": 1.041,
+  "observed_dd_pct": 35.01,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.041,
+    "pf_median": 1.041,
+    "pf_95th": 1.041,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 28.39,
+    "dd_95th_pct": 43.33,
+    "prob_of_ruin_pct": 1.2,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 0.878,
+    "pf_median": 1.035,
+    "pf_95th": 1.237,
+    "pf_range_5_95": 0.359,
+    "dd_median_pct": 29.83,
+    "dd_95th_pct": 70.63,
+    "prob_of_ruin_pct": 16.7,
+    "permutations": 1000
+  }
+}

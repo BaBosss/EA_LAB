@@ -1,5 +1,7 @@
 # Gold SMC Continuous (XAU H1) — Run004 RiskCapV1 · Full Pipeline Verdict
 
+> **⚠ UPDATE 2026-06-15: Extended IS/OOS validation complete — verdict downgraded. See Section 7.**
+
 > Produced 2026-06-14 by the automated pipeline (parse → score → OOS compare →
 > Monte Carlo). All numbers come from real MT5 reports in this folder. This is
 > the first EA taken through the complete IS → OOS → robustness loop.
@@ -52,3 +54,58 @@
 1. Demo ≥3 months (live-like broker) → ForwardDemoScore.
 2. Correlation vs Pivot NZDUSD & EX197 GBPJPY before assigning to a port.
 3. (pipeline TODO) fix parser comma-truncation so net_profit/one-big-trade auto-compute; add monthly distribution to scoring.
+
+---
+
+## 7. EXTENDED VALIDATION UPDATE — 2026-06-15
+
+### What changed
+The original IS (2025.01–2026.06) covered only the gold bull run. The "OOS/forward" was 2023-2026 — still within a gold bull period. **True OOS (2020-2023 = COVID crash + gold ranging/bear) was never tested.** This update adds that test and an extended IS (2023-2026).
+
+Both param sets tested: `run_004_locked` (README frozen) and `robust_v2` (plateau optimizer pick).
+
+### Extended IS — 2023.01.01 to 2026.06.01 (3.5 years)
+| Params | PF | DD% | RF | Trades | Verdict |
+|---|---:|---:|---:|---:|---|
+| run_004_locked | 1.04 | 33.54 | 0.47 | 997 | **REJECT** |
+| robust_v2 | 0.97 | 32.28 | -0.27 | 868 | **REJECT** |
+
+Gates: PF≥1.20, DD≤20%, RF≥1.50. Both param sets fail all three.
+
+### True OOS — 2020.01.01 to 2023.01.01 (gold bear + COVID + ranging)
+| Params | PF | DD% | RF | Trades | Verdict |
+|---|---:|---:|---:|---:|---|
+| run_004_locked | 0.90 | 33.58 | -0.75 | 787 | **REJECT** |
+| robust_v2 | 0.90 | 28.53 | -0.76 | 632 | **REJECT** |
+
+Both param sets lose money (PF < 1.0) in the true OOS period.
+
+### Monte Carlo — locked params, extended IS (997 trades)
+| | observed | shuffle 95th | bootstrap 5th/95th |
+|---|---:|---:|---:|
+| PF | 1.041 | 1.041 | **0.878** / 1.237 (median 1.035) |
+| DD% | 35.01 | 43.33 | — / **70.63** |
+| Prob of ruin (50% DD) | — | 1.2% | **16.7%** |
+
+- Bootstrap PF 5th = 0.878: **edge does not survive resampling** (< 1.0).
+- Bootstrap ruin 16.7%: 1-in-6 chance of 50% DD on live-like trade sampling.
+- Bootstrap DD 95th = 70.63%: catastrophic in adverse sequences.
+
+### Root-cause diagnosis
+The EA was optimized exclusively on the 2025-2026 gold bull run. Both the recovery basket logic (InpLotMultiplier=1.5) and the SMC signal (InpRiskReward=1.8) are tuned to trending/breakout gold conditions. In ranging (2020-2021) and mean-reverting (2022) gold conditions, the basket recovery compounds losses instead of recovering them.
+
+### Revised classification
+**REGIME-DEPENDENT — NOT portfolio-ready.**
+
+| Gate | Original verdict | Updated verdict |
+|---|---|---|
+| Backtest (IS) | PASS (PF 1.31, short window) | FAIL on extended IS |
+| OOS degradation | PASS (PF 1.11, same regime) | FAIL (PF 0.90 true OOS) |
+| MC robustness | WARN (ruin 1.8%) | FAIL (ruin 16.7%) |
+| **Overall** | CONDITIONALLY ROBUST | **DISQUALIFIED** |
+
+### What would be needed to revive GSMC
+1. Re-optimize on full 2020-2026 window (not just bull run) — expect significantly different params or far fewer trades.
+2. Add regime filter (ADX or volatility gate) to suspend trading in ranging gold conditions.
+3. Reduce basket recovery aggressiveness (InpLotMultiplier closer to 1.0) to survive drawdown compounding.
+4. After any redesign, re-run full IS/OOS/MC pipeline before reconsidering portfolio placement.

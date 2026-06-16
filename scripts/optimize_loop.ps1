@@ -12,6 +12,8 @@ Example:
 param(
   [Parameter(Mandatory)][string]$Expert,
   [Parameter(Mandatory)][string]$Symbol,
+  [string]$Period   = "H1",
+  [int]$Model       = 1,
   [Parameter(Mandatory)][string]$BaseSet,
   [string]$Strategy = "default",
   [Parameter(Mandatory)][string]$Code,
@@ -26,7 +28,7 @@ $xml = "D:\EA_LAB\_mt5_auto\optimizations\OPT_$Code.xml"
 $rset = "D:\EA_LAB\_mt5_auto\$($Code)_robust.set"
 
 Write-Output "[1/4] optimize $Expert $Symbol ($OptFrom..$OptTo)..."
-& "$S\mt5_optimize.ps1" -Expert $Expert -Symbol $Symbol -SetFile $BaseSet -FromDate $OptFrom -ToDate $OptTo -ReportName "OPT_$Code" -TimeoutSec 2400
+& "$S\mt5_optimize.ps1" -Expert $Expert -Symbol $Symbol -Period $Period -SetFile $BaseSet -FromDate $OptFrom -ToDate $OptTo -ReportName "OPT_$Code" -TimeoutSec 2400
 if (-not (Test-Path $xml)) { Write-Output "LOOP FAIL: no optimizer XML (headless opt->XML may not be supported on this build)"; exit 1 }
 
 Write-Output "[2/4] select robust pass -> .set"
@@ -38,8 +40,8 @@ if (-not (Test-Path $rset)) {
 }
 
 Write-Output "[3/4] single-test IS ($OptFrom..$OptTo) + OOS ($OosFrom..$OosTo)"
-& "$S\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Model 1 -FromDate $OptFrom -ToDate $OptTo -SetFile $rset -ReportName "$($Code)_loopIS"
-& "$S\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Model 1 -FromDate $OosFrom -ToDate $OosTo -SetFile $rset -ReportName "$($Code)_loopOOS"
+& "$S\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Period $Period -Model $Model -FromDate $OptFrom -ToDate $OptTo -SetFile $rset -ReportName "$($Code)_loopIS"
+& "$S\mt5_run.ps1" -Expert $Expert -Symbol $Symbol -Period $Period -Model $Model -FromDate $OosFrom -ToDate $OosTo -SetFile $rset -ReportName "$($Code)_loopOOS"
 
 Write-Output "[4/4] score"
 & python "$S\run_pipeline.py" "D:\EA_LAB\ea_projects" "D:\EA_LAB\_mt5_auto\reports" *> $null

@@ -1,4 +1,4 @@
-# RESUME HERE — อัพเดท 2026-06-15 (session 5)
+# RESUME HERE — อัพเดท 2026-06-15 (session 8)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
@@ -8,19 +8,36 @@
 
 ### ลำดับงาน:
 
-1. **ก — ทดสอบ .ex5 candidates ต่อ** (LondonBO ยังไม่ optimize)
-   - `LondonBO.ex5` — ต้องเปิด MT5 GUI → ดู Inputs tab → จดชื่อ params → ทำ .set → optimize_loop
-   - หรือลอง GBPJPY / EURUSD / USDJPY time-based smoke ก่อน (London open = 07:00-10:00 GMT)
-   - `HalfTrend_MTF_EA.ex5` — อาจมี edge ถ้า reduce lot + ปรับ timeframe (M15 หรือ H4)
-   - ยัง: `Sentinel KMZ_2.5_fix MT5.ex5`, `PivotProbabilityPro.ex5`
+1. **ก — Matchagrid CHFJPY** ✅ COMPLETE → **CONDITIONALLY ROBUST / DEMO_READY**
+   - Manual grid search: GridPoints 300→350 + LotStart 0.02→0.01 + StepAddLot 0.06→0.01
+   - IS 2023-2026: PF=1.97 DD=18.01% Score=66 PASS; OOS 2020-2023: PF=2.08 DD=23.75% WATCH
+   - MC bootstrap: PF5th=1.755, ruin=0.0% — edge ยืนยัน
+   - Locked params: `MG_CHFJPY_v1_locked.set` · Verdict: `ea_projects/Matchagrid/CHFJPY/validated_v1/ROBUSTNESS_VERDICT.md`
+   - Sizing caution: live DD อาจถึง 36-72% (grid multiplier 2-3×) → demo ≥3 เดือนก่อน live
 
-2. **ข — GSMC robustness (Monte Carlo)** — GSMC ยังรอ Monte Carlo / WF pass
-   - ใช้ robustness-validator skill กับ GSMC (portfolio candidate #1)
-   - ต้องมี IS+OOS report + set file ก่อน (มีแล้วจาก session ก่อน)
+2. **ข — GSMC revive** (optional, ถ้า Matchagrid ยังไม่พอ)
+   - Set file ready: `GSMC_revive_opt.set` (wider range, LotMultiplier 1.0-1.3, full window 2020-2026)
+   - รัน optimize_loop IS 2020-2023 OOS 2023-2026
 
-3. **ค — template EntryStyle ถัดไป** — BREAKOUT ทดสอบแล้ว ไม่มี edge บน forex H1
-   - พิจารณา MEAN_REVERSION entry (Bollinger band bounce หรือ RSI extreme)
-   - หรือ SESSION filter บน BREAKOUT (เพิ่ม InpBreakoutHourFrom/To)
+3. **ค — template MEAN_REVERSION smoke** ✅ CODE DONE (session นี้)
+   - MEAN_REVERSION (BB+RSI bounce) เพิ่มแล้ว, compile 0/0
+   - SESSION filter บน BREAKOUT (InpBreakoutHourFrom/To UTC) เพิ่มแล้ว
+   - ต้องสร้าง .set + optimize: EA_LabTemplate MR บน EURUSD หรือ XAUUSD H1
+
+4. **ง — EAs smoke batch 1 COMPLETE (session 8)**
+   - smoke_all.ps1 ทดสอบ 27 EAs → PASS: BaronGrid (PF=1.83 DD=4.06%), Immortal Gold (PF=2.64 DD=9.24%)
+   - **BaronGrid** → OOS 2020-2023 PF=0.78 + full-window opt ไม่ robust → **REJECT**
+   - **Immortal Gold** → OOS 2020-2023 PF=0.21 DD=230% BLOWUP (LONG-only martingale) → **REJECT**
+   - **smoke_batch2.ps1** COMPLETE: 37 EAs จาก MQL5 EA\ + Quantum\ → PASS 2 ตัว:
+     - **`Quantum\Quantum Speed`** EURUSD → IS PF=1.93 DD=7.66% (256t) PASS + OOS PF=1.55 DD=12.03% (206t) WATCH — **first non-martingale commercial EA with OOS edge!**
+     - `rev_001_Smart_Money_EA` EURUSD → IS PF=2.07 DD=5.74% (38t) — too few trades, needs OOS
+     - PORT 1 (CelestialWoodfire) REJECT PF=0.70. PORT 6 (GoldenEmber rev012) REJECT PF=0.68. All Boss EAs REJECT. All rev_00x mostly REJECT.
+   - **Quantum Speed optimize_loop** running (IS: 2023-2026, OOS: 2020-2023)
+
+5. **GSMC robustness** ✅ COMPLETE → **DISQUALIFIED**
+   - Extended IS 2023-2026: PF=1.04 DD=33.5% / OOS 2020-2023: PF=0.90 DD=33.6% → ทั้งคู่ REJECT
+   - MC bootstrap ruin=16.7% — ไม่มี edge จริง
+   - Verdict: `ea_projects/Gold SMC continuous/portfolio/candidates/.../ROBUSTNESS_VERDICT.md` (Section 7)
 
 ---
 
@@ -31,9 +48,13 @@ EA chassis dropdown-mode ที่ `D:\EA_LAB\ea_template\` (git). compile 0/0.
 - expert name: `EALabTpl\EA_LabTemplate`
 
 ### Dropdown axes ปัจจุบัน:
-- `InpEntryStyle`: GRID_TREND_MA (0) / **BREAKOUT (1)** ← เพิ่ม session นี้
+- `InpEntryStyle`: GRID_TREND_MA (0) / BREAKOUT (1) / **MEAN_REVERSION (2)** ← เพิ่ม session นี้
 - `InpBreakoutBars`: lookback channel (default 20)
 - `InpBreakoutConfirmBars`: 0=tick-level, 1+=close-confirmed (channel shifts past confirm window)
+- `InpBreakoutHourFrom/To`: UTC session filter (0,0 = no filter) ← เพิ่ม session นี้
+- `InpMR_BB_Period/Dev`: Bollinger Band params (MEAN_REVERSION) ← เพิ่ม session นี้
+- `InpMR_RSI_Period/OB/OS`: RSI extreme levels ← เพิ่ม session นี้
+- `InpMR_RequireBB`: require price at outer BB band (AND with RSI)
 - `InpExitMode`: FIXED_TP / TRAIL / RUN_TREND / ATR_TP
 - `InpSLMode`: NONE / FIXED_POINTS / MONEY / ATR / STRUCT_DONCHIAN / STRUCT_SR
 - `InpTrendFilter`: NONE / ATR_EXPAND / MA_SLOPE
@@ -70,12 +91,24 @@ EA chassis dropdown-mode ที่ `D:\EA_LAB\ea_template\` (git). compile 0/0.
 
 | EA | Pair | ผล |
 |---|---|---|
-| GSMC (Gold SMC RiskCap) | XAUUSD | ✅ PORTFOLIO_CANDIDATE #1 (รอ Monte Carlo) |
+| GSMC (Gold SMC RiskCap) | XAUUSD | ❌ DISQUALIFIED — regime-dependent |
+| **Matchagrid** | CHFJPY M15 | ✅ **CONDITIONALLY ROBUST** — PF 1.97 IS / 2.08 OOS, DD 18/24%, MC ruin=0% → DEMO_READY |
 | EX197 Multi Group Scalping | GBPJPY | ❌ CONDITIONAL REJECT — OOS RF 1.30 < 1.50 |
 | MooDeng Bot | USDCHF/EURUSD/EURGBP | ❌ REJECT |
 | EA TREND V2 | EURUSD/GBPUSD | ❌ REJECT |
+| HalfTrend_MTF_EA | XAUUSD H1/H4 | ❌ REJECT — overtrading (8470-10103 trades), DD 36-38% |
+| Sentinel KMZ 2.5 | XAUUSD H1 | ❌ REJECT — PF 0.95, DD 93% |
+| PivotProbabilityPro | XAU/EUR H1 | ❌ REJECT — PF 0.84 losing |
+| BB Return MT5 EA V_7.40 | XAUUSD H1 | ❌ REJECT — 44 trades only (insufficient) |
 | EA_LabTemplate BREAKOUT | XAUUSD | ⏸ IS only (regime-dependent) |
 | EA_LabTemplate GridTrendMA | XAUUSD | ⏸ ผู้ใช้ optimize เองต่อ |
+| **Immortal Gold** | XAUUSD H1 | ❌ REJECT — LONG-only martingale, OOS 2020-2023 PF=0.21 DD=230% BLOWUP |
+| **BaronGrid** | EURUSD H1 | ❌ REJECT — OOS 2020-2023 PF=0.78, full-window opt gives 120 trades/6yr (too thin) |
+| EA Among Us | EURUSD H1 | ❌ REJECT — no-SL martingale (Kmartin=1.5), risky structure |
+| KNTPTT Grid Scalp Pro | EURUSD H1 | ⏸ WATCH IS — GridMultiplierStart=3, needs OOS test |
+| **Quantum Speed** | EURUSD H1 | ❌ DISQUALIFIED — IS+OOS PASS on OHLC but Model=4 real-ticks: PF=1.13 trades=68 FAIL (tight 5-pip trail = OHLC artifact) |
+| Smart_Money_EA | EURUSD H1 | ⏸ IS PF=2.07 DD=5.74% only 38 trades — OOS test pending |
+| KNTPTT Grid Scalp Pro | EURUSD H1 | ⏸ IS PF=1.60 DD=12.5% — OOS test pending |
 
 ---
 

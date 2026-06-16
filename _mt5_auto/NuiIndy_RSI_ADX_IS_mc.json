@@ -1,0 +1,29 @@
+{
+  "source_file": "D:\\EA_LAB\\_mt5_auto\\NuiIndy_RSI_ADX_IS_trades.csv",
+  "trade_count": 3009,
+  "net_profit": 14442.09,
+  "observed_pf": 2.399,
+  "observed_dd_pct": 4.87,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 2.399,
+    "pf_median": 2.399,
+    "pf_95th": 2.399,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 1.87,
+    "dd_95th_pct": 2.99,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 2.047,
+    "pf_median": 2.395,
+    "pf_95th": 2.816,
+    "pf_range_5_95": 0.769,
+    "dd_median_pct": 1.86,
+    "dd_95th_pct": 2.91,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}
