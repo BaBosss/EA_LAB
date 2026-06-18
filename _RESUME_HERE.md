@@ -49,7 +49,11 @@ MACD บน symbol CHF ใหม่ — IS/OOS validated:
 | **GBPCHF** | 1.74 / 7.0 / 2.30 (804t) | **2.16 / 9.5 / 2.11 (955t)** | ✅ PASS candidate #5 |
 | EURCHF | 1.66 / 12.1 / **0.86** | 2.03 / 6.4 / 1.73 | ❌ IS RF<1.5 |
 
-**เหลือทำก่อนเข้าพอร์ต GBPCHF:** (1) MC bootstrap (2) **correlation กับ MG/MACD** — GBPCHF มี CHF อาจ correlate สูงกับ MG (CHFJPY) + MACD_GBPUSD (GBP). ถ้า HIGH ทั้งคู่อาจไม่คุ้มเพิ่ม. Set ใช้ `_mt5_auto/MACD_GBPUSD_locked.set` (default params).
+**CORRELATION CHECK DONE (session 12) → GBPCHF REJECT เป็นตัวเพิ่ม:**
+GBPCHF vs MG_CHFJPY=+0.622 HIGH · vs MACD_USDCAD=+0.802 HIGH · vs MACD_GBPUSD=+0.583 MED · vs NuiIndy=+0.169 LOW
+→ correlate สูงกับ 2/4 ตัวที่มี = เพิ่มแล้วเสี่ยงกระจุก ไม่กระจาย. **คง portfolio 4 ตัว.**
+ถ้าจะหา #5 จริง: ต้อง family/instrument อื่น (gold/index, ไม่ใช่ CHF/GBP/CAD) corr ต่ำกับทั้ง 4.
+deals_GBPCHF.csv อยู่ที่ `_mt5_auto/` (OOS window). Set: `MACD_GBPUSD_locked.set`.
 
 Batch4 + smoke_new (รอบก่อน) ไม่มีตัวผ่าน: Grizzy DD85%, EX162 DD41%, Ben_CR DD69%, Ghost/DayZone 0-trade.
 
