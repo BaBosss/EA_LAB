@@ -35,6 +35,68 @@ def _m(p):
     }
 
 
+# keys that are metrics/ids, NOT optimizable parameters — everything else in a
+# pass dict is treated as a tunable param for plateau-center detection
+_NON_PARAM = {
+    "Pass", "Result", "Profit", "Expected Payoff", "Profit Factor",
+    "Recovery Factor", "Sharpe Ratio", "Custom", "Equity DD %", "Trades",
+    "pass_id", "result", "net_profit", "expected_payoff", "profit_factor",
+    "recovery_factor", "sharpe_ratio", "custom", "max_drawdown_percent",
+    "total_trades",
+}
+
+
+def _param_keys(passes):
+    """Optimizable param columns = numeric keys that vary across passes."""
+    if not passes:
+        return []
+    keys = []
+    for k in passes[0]:
+        if k in _NON_PARAM:
+            continue
+        vals = {p.get(k) for p in passes if isinstance(p.get(k), (int, float))}
+        if len(vals) > 1:                  # only params that actually varied
+            keys.append(k)
+    return keys
+
+
+def _grid_step(passes, key):
+    """Smallest positive gap between distinct sorted values of a param."""
+    vals = sorted({p[key] for p in passes if isinstance(p.get(key), (int, float))})
+    gaps = [b - a for a, b in zip(vals, vals[1:]) if b - a > 0]
+    return min(gaps) if gaps else 1.0
+
+
+def plateau_center(survivors_passes, all_passes):
+    """Pick the survivor whose neighbours (±1 grid step in every param) are also
+    survivors — the CENTRE of the robust zone, not a median of metrics.
+
+    A param value that's good but surrounded by failing params is an overfit
+    spike; the centre of a wide plateau transfers to live/OOS far better.
+    Returns (best_pass, neighbour_count) or (None, 0).
+    """
+    pkeys = _param_keys(all_passes)
+    if not pkeys or not survivors_passes:
+        return (survivors_passes[0] if survivors_passes else None, 0)
+    steps = {k: _grid_step(all_passes, k) for k in pkeys}
+    surv_keys = {tuple(p.get(k) for k in pkeys) for p in survivors_passes}
+
+    best, best_n = None, -1
+    for p in survivors_passes:
+        here = tuple(p.get(k) for k in pkeys)
+        # count surviving neighbours within 1 grid step on each axis
+        n = 0
+        for other in surv_keys:
+            if other == here:
+                continue
+            if all(abs((other[i] or 0) - (here[i] or 0)) <= steps[pkeys[i]] + 1e-9
+                   for i in range(len(pkeys))):
+                n += 1
+        if n > best_n:
+            best, best_n = p, n
+    return best, best_n
+
+
 def select_robust(passes, strategy="default"):
     total = len(passes)
     # trade-count floor: reject high-PF/low-trade flukes (e.g. PF 24 on 30 trades)
@@ -66,6 +128,12 @@ def select_robust(passes, strategy="default"):
 
     profit_max = max(passes, key=lambda p: (p.get("net_profit")
                      if isinstance(p.get("net_profit"), (int, float)) else float("-inf")))
+
+    # plateau-centre pick: most robust param region, not just best single metric
+    surv_passes = [p for _, p in survivors]
+    center_pass, center_neighbours = plateau_center(surv_passes, passes)
+    pkeys = _param_keys(passes)
+
     return {
         "total_passes": total,
         "survivors": n,
@@ -74,6 +142,11 @@ def select_robust(passes, strategy="default"):
         "robust": _m(survivors[0][1]) if survivors else None,
         "robust_score": survivors[0][0] if survivors else None,
         "profit_max": _m(profit_max),
+        "param_keys": pkeys,
+        "center": _m(center_pass) if center_pass else None,
+        "center_params": {k: center_pass.get(k) for k in pkeys} if center_pass else None,
+        "center_neighbours": center_neighbours,
+        "robust_params": {k: survivors[0][1].get(k) for k in pkeys} if survivors else None,
     }
 
 
@@ -88,8 +161,11 @@ def main():
     r = select_robust(d.get("passes") or [], a.strategy)
     print(f"passes={r['total_passes']} survivors={r['survivors']} "
           f"({r['survivor_ratio_pct']}%) plateau={r['plateau']}")
-    print(f"robust pick: {r['robust']}  score={r['robust_score']}")
-    print(f"profit-max : {r['profit_max']}  <- overfit-prone")
+    print(f"robust pick : {r['robust']}  score={r['robust_score']}")
+    print(f"  params    : {r['robust_params']}")
+    print(f"center pick : {r['center']}  neighbours={r['center_neighbours']}  <- USE THIS (plateau centre)")
+    print(f"  params    : {r['center_params']}")
+    print(f"profit-max  : {r['profit_max']}  <- overfit-prone")
 
 
 if __name__ == "__main__":
