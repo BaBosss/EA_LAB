@@ -1,0 +1,8 @@
+; ST_EA03 MACD CADJPY H1 — IS/OOS validation run
+; Same default params as GBPUSD locked; MagicStart offset to 9399
+; Smoke result: PF=2.24 DD=11.2% T=1055 (beats USDCAD locked 1.76)
+Lots_divided=10000000.0
+MACD_Count=2
+LOT_Repeat=3
+Nearby_PIP=10.0
+MagicStart=9399

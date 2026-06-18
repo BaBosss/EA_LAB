@@ -1,4 +1,4 @@
-# RESUME HERE — อัพเดท 2026-06-18 (session 10)
+# RESUME HERE — อัพเดท 2026-06-18 (session 11)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
@@ -10,10 +10,10 @@
 |---|---|---|---|---|---|---|---|---|
 | 1 | MG_v1_locked | CHFJPY M15 | 1.97 | 2.08 | 23.8% | 1.81 | `_mt5_auto/MG_CHFJPY_v1_locked.set` | CONFIRMED |
 | 2 | NuiIndy RSI+ADX | EURUSD H1 | 2.25 | 2.00 | 28.9% | 4.91 | `_mt5_auto/NuiIndy_EURUSD_robust.set` | CONFIRMED (WATCH DD) |
-| 3 | ST_EA03 MACD | GBPUSD H1 | 2.38 | 2.47 | 5.1% | 4.26 | default params | CONFIRMED — Best |
-| 4 | ST_EA03 MACD | USDCAD H1 | 1.76 | 2.62 | 6.3% | 2.43 | default params | CONFIRMED — New |
+| 3 | ST_EA03 MACD | GBPUSD H1 | 2.38 | 2.47 | 5.1% | 4.26 | `_mt5_auto/MACD_GBPUSD_locked.set` | CONFIRMED — Best |
+| 4 | ST_EA03 MACD | USDCAD H1 | 1.76 | 2.62 | 6.3% | 2.43 | `_mt5_auto/MACD_USDCAD_locked.set` | CONFIRMED — New |
 
-MC ยังไม่ได้รัน: NuiIndy, MACD_GBPUSD, MACD_USDCAD (รันใน session 10)
+**MC ยังไม่ได้รัน** สำหรับ NuiIndy, MACD_GBPUSD, MACD_USDCAD — ทำก่อน deploy จริง (ทำแค่ MG_v1 ไปแล้ว)
 
 ---
 
@@ -35,7 +35,10 @@ Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
 
 ## ถัดไปทันที (session ถัดไป)
 
-### หา Portfolio Candidate #5
+### Portfolio ปิดแล้ว — 4 EAs พร้อม demo deploy
+ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับขั้นตอน attach บน ThinkMarkets $10k demo
+
+### หา Portfolio Candidate #5 (optional, ถ้าอยากขยาย)
 ตัวเลือก:
 - ลอง EAs ใหม่ที่ยังไม่ได้ smoke (batch4 list: Boss Hedging, DayZone v2, GhostBot G07, Ghost JOMHOD, GridProfit2way, Grizzy BUY, NuiIndy TriArb, WinningPro25, E4_7_4, ESQ1004 BBR, EX162 EMA, EX177 Grid, Grid197 ATR, ScalpTrade v23, BlackWolf, Ben CR 2025, oh MasterGrid ATR)
 - เน้น non-grid, non-martingale เพื่อหลีก HIGH correlation กับ MG
@@ -64,6 +67,22 @@ IS PF=1.20 trades=43 — robust params ไม่ transfer
 | GBPJPY H1 | 1.43 | — | — | Smoke REJECT |
 
 ### NuiIndy locked: RSI=18, ADX_period=20, ADX_Value=35
+
+---
+
+## Validation Log (session 11, 2026-06-18)
+
+### MACD CADJPY IS/OOS — REJECT
+Smoke PF=2.24 (2023-2026 IS window) looked promising vs USDCAD 1.76, but:
+IS: PF=2.24 DD=11.2% RF=1.57 T=1055 PASS / OOS: PF=1.24 DD=72.9% RF=0.14 FAIL (DD, RF)
+Conclusion: default MACD params are GBPUSD/USDCAD specific — don't transfer to CADJPY
+
+### NuiIndy center params (RSI=24, ADX=12) OOS — keep locked (RSI=18, ADX=20)
+Center pick had 16 neighbours in plateau vs locked 12 — centre of robust zone
+OOS center:  PF=1.97 DD=29.6% RF=3.76 T=2625 WATCH
+OOS locked:  PF=2.00 DD=28.9% RF=4.91 T=~2600 WATCH
+Locked wins on all 3 metrics. Lesson: when the plateau is flat and broad, center ≈ robust ≈ same perf zone.
+Plateau-center still valid as principle; just not a regression in this case.
 
 ---
 
