@@ -1,0 +1,29 @@
+{
+  "source_file": "_mt5_auto/deals_MACD_USDCAD.csv",
+  "trade_count": 918,
+  "net_profit": 1574.21,
+  "observed_pf": 2.621,
+  "observed_dd_pct": 1.58,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 2.621,
+    "pf_median": 2.621,
+    "pf_95th": 2.621,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 0.56,
+    "dd_95th_pct": 0.84,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 2.135,
+    "pf_median": 2.653,
+    "pf_95th": 3.308,
+    "pf_range_5_95": 1.173,
+    "dd_median_pct": 0.54,
+    "dd_95th_pct": 0.91,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}

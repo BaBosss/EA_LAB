@@ -1,0 +1,11 @@
+; Matchagrid CHFJPY v1 LOCKED — extended IS/OOS validated 2026-06-15
+; IS 2023-2026 M15: PF=1.97 DD=18.01% RF=2.77 trades=2373 Score=66.1 PASS
+; OOS 2020-2023 M15: PF=2.08 DD=23.75% RF=1.81 trades=1409 WATCH
+; MC bootstrap: PF5th=1.755 ruin=0.0% → edge confirmed
+; Key fix vs original: GridPoints 300→350, LotStart 0.02→0.01, StepAddLot 0.06→0.01
+; Size live for 50% worst-case DD (grid equity DD = backtest×2-3)
+InpLotStart=0.01||0.01||0||0.01||N
+InpStepAddLot=0.01||0.01||0||0.01||N
+InpStepEveryOrders=5||5||0||5||N
+InpProfitTarget=14||14||0||14||N
+InpGridPoints=350||350||0||350||N

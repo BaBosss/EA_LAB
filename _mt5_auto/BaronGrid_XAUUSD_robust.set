@@ -1,0 +1,14 @@
+﻿; BaronGrid XAUUSD robust .set (from OPT_XAUUSD_20260616_214601.xml)
+; robust pick: PF=2.306 DD%=6.3 RF=5.21 trades=160 plateau=GOOD survivors=317/1247
+InpLotSize=0.01
+InpDailyTargetUSD=50.0
+InpDailyLossUSD=500.0
+InpMaxOrders=12
+InpGridStep=150
+InpMultiplier=1.1
+InpEMAPeriod=140
+InpRSIPeriod=13
+InpRSIUpper=70
+InpRSILower=40
+InpMagicNumber=888222
+InpSlippage=30

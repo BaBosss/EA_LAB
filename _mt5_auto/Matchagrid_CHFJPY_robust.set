@@ -1,0 +1,8 @@
+; Matchagrid CHFJPY robust pick — pass 51/176, plateau=GOOD (34 survivors)
+; IS 2026.01-2026.06 M15: PF=2.09 DD%=11.69 RF=2.54 trades=584
+; All params LOCKED (all N). Use for extended IS + OOS validation.
+InpLotStart=0.02||0.02||0||0.02||N
+InpStepAddLot=0.06||0.06||0||0.06||N
+InpStepEveryOrders=4||4||0||4||N
+InpProfitTarget=17||17||0||17||N
+InpGridPoints=300||300||0||300||N

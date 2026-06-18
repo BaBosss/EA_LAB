@@ -1,0 +1,8 @@
+; Matchagrid CHFJPY test: wider grid gap
+; LotStart=0.01 StepAddLot=0.01 GridPoints=350 (up from 300)
+; Goal: push DD below 20% gate
+InpLotStart=0.01||0.01||0||0.01||N
+InpStepAddLot=0.01||0.01||0||0.01||N
+InpStepEveryOrders=5||5||0||5||N
+InpProfitTarget=14||14||0||14||N
+InpGridPoints=350||350||0||350||N

@@ -1,0 +1,5 @@
+﻿; NuiIndy RSI+ADX EURUSD H1 robust .set (from OPT_NuiIndy.xml)
+; robust pick: PF=2.247 DD%=9.33 RF=7.78 trades=3533 plateau=GOOD survivors=98/128
+RSI_Period=18
+ADX_period=20
+ADX_Value=35

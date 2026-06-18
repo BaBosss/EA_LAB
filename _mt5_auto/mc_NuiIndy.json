@@ -1,0 +1,29 @@
+{
+  "source_file": "_mt5_auto/deals_NuiIndy.csv",
+  "trade_count": 3264,
+  "net_profit": 17224.06,
+  "observed_pf": 1.995,
+  "observed_dd_pct": 6.23,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.995,
+    "pf_median": 1.995,
+    "pf_95th": 1.995,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 3.76,
+    "dd_95th_pct": 6.38,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 1.674,
+    "pf_median": 1.995,
+    "pf_95th": 2.347,
+    "pf_range_5_95": 0.673,
+    "dd_median_pct": 3.85,
+    "dd_95th_pct": 6.94,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}

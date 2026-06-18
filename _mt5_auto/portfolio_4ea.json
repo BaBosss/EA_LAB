@@ -1,0 +1,106 @@
+{
+  "source_file": "_mt5_auto/portfolio_monthly_4ea.csv",
+  "months": 36,
+  "period": "2020.01..2022.12",
+  "ea_names": [
+    "MG_v1",
+    "NuiIndy",
+    "MACD_GBPUSD",
+    "MACD_USDCAD"
+  ],
+  "weights": {
+    "MG_v1": 0.25,
+    "NuiIndy": 0.25,
+    "MACD_GBPUSD": 0.25,
+    "MACD_USDCAD": 0.25
+  },
+  "per_ea_max_dd_pct": {
+    "MG_v1": 0.0,
+    "NuiIndy": 0.0,
+    "MACD_GBPUSD": 0.0,
+    "MACD_USDCAD": 0.0
+  },
+  "pairs": [
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "NuiIndy",
+      "correlation": 0.541,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "MACD_GBPUSD",
+      "correlation": 0.768,
+      "correlation_level": "HIGH",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.607,
+      "correlation_level": "HIGH",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "MACD_GBPUSD",
+      "correlation": 0.302,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.242,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MACD_GBPUSD",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.572,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    }
+  ],
+  "combined": {
+    "max_dd_pct": 0.0,
+    "worst_same_month_loss_pct": 0.81,
+    "worst_month": "2020.01",
+    "mean_monthly_return_pct": 1.858
+  },
+  "crisis_months": [],
+  "loss_target_pct": 10.0,
+  "blocking_flags": {
+    "correlation_gt_0_7": [
+      "MG_v1~MACD_GBPUSD"
+    ],
+    "dd_overlap_red": [
+      "MG_v1~NuiIndy",
+      "MG_v1~MACD_GBPUSD",
+      "MG_v1~MACD_USDCAD",
+      "NuiIndy~MACD_GBPUSD",
+      "NuiIndy~MACD_USDCAD",
+      "MACD_GBPUSD~MACD_USDCAD"
+    ]
+  }
+}
