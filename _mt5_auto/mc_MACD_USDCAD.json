@@ -14,16 +14,16 @@
     "dd_median_pct": 0.56,
     "dd_95th_pct": 0.84,
     "prob_of_ruin_pct": 0.0,
-    "permutations": 1000
+    "permutations": 2000
   },
   "bootstrap": {
-    "pf_5th": 2.135,
-    "pf_median": 2.653,
-    "pf_95th": 3.308,
-    "pf_range_5_95": 1.173,
-    "dd_median_pct": 0.54,
-    "dd_95th_pct": 0.91,
+    "pf_5th": 2.151,
+    "pf_median": 2.645,
+    "pf_95th": 3.274,
+    "pf_range_5_95": 1.123,
+    "dd_median_pct": 0.55,
+    "dd_95th_pct": 0.89,
     "prob_of_ruin_pct": 0.0,
-    "permutations": 1000
+    "permutations": 2000
   }
 }
