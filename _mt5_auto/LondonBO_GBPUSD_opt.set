@@ -1,0 +1,22 @@
+; LondonBO GBPUSD H1 optimize
+; Expert name: LondonBO
+; OptFrom=2023.01.01 OptTo=2026.06.01  OosFrom=2020.01.01 OosTo=2023.01.01
+; Default range: 05:00-08:00 UTC, breakout at 08:00, close at 20:00
+; Optimize: range start, SL, TP, MinRange
+InpRangeStartHour=5||3||1||6||Y
+InpRangeStartMin=0
+InpRangeEndHour=8
+InpRangeEndMin=0
+InpBreakoutHour=8
+InpBreakoutMin=0
+InpTradeCloseHour=20
+InpTradeCloseMin=0
+InpLotSize=0.01
+InpRiskPercent=1.0
+InpStopLossPips=120||80||20||200||Y
+InpTakeProfitPips=300||150||50||400||Y
+InpBreakevenPips=0
+InpUseTrailingStop=false
+InpTrailingPips=100.0
+InpTrailingStep=20.0
+InpMinRangePoints=50||20||20||100||Y

@@ -1,0 +1,15 @@
+; robust-pass .set generated 2026-06-14 from OPT_BaronGrid.xml
+; robust pick: PF=3.716191 DD%=2.1735 RF=6.417619 trades=412 plateau=GOOD survivors=52/150
+; OVERRIDDEN 4 optimized params; load in MT5 Inputs->Load, run SINGLE test
+InpLotSize=0.01
+InpDailyTargetUSD=50.0
+InpDailyLossUSD=100.0
+InpMaxOrders=10
+InpGridStep=300||300||0||300||N
+InpMultiplier=1.0
+InpEMAPeriod=200||200||0||200||N
+InpRSIPeriod=14
+InpRSIUpper=80||80||0||80||N
+InpRSILower=40||40||0||40||N
+InpMagicNumber=888111
+InpSlippage=30

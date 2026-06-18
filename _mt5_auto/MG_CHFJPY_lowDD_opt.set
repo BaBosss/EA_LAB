@@ -1,0 +1,9 @@
+; Matchagrid CHFJPY re-optimize: prioritize low DD
+; Problem: robust pick (LotStart=0.02 StepAddLot=0.06 GridPoints=300) gives DD 48-64%
+; Fix: smaller lots, larger grid gap, fewer escalation steps
+; IS target: 2023.01-2026.06  OOS: 2020.01-2023.01
+InpLotStart=0.01||0.01||0.01||0.03||Y
+InpStepAddLot=0.01||0.01||0.01||0.04||Y
+InpStepEveryOrders=4||3||1||6||Y
+InpProfitTarget=17||10||5||30||Y
+InpGridPoints=300||200||50||500||Y

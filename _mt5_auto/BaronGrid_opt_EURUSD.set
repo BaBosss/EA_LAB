@@ -1,0 +1,12 @@
+InpLotSize=0.01
+InpDailyTargetUSD=50.0
+InpDailyLossUSD=100.0
+InpMaxOrders=10
+InpGridStep=200||100||50||400||Y
+InpMultiplier=1.0
+InpEMAPeriod=200||100||50||300||Y
+InpRSIPeriod=14
+InpRSIUpper=70||60||5||80||Y
+InpRSILower=30||20||5||40||Y
+InpMagicNumber=888111
+InpSlippage=30

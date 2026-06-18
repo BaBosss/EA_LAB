@@ -1,0 +1,9 @@
+; Matchagrid CHFJPY minimum lot escalation test
+; LotStart=0.01 StepAddLot=0.01 (most conservative from optimizer range)
+; Goal: DD < 20% on extended IS 2023-2026
+; GridPoints=300 EveryOrders=5 ProfitTarget=14 (same as pass168)
+InpLotStart=0.01||0.01||0||0.01||N
+InpStepAddLot=0.01||0.01||0||0.01||N
+InpStepEveryOrders=5||5||0||5||N
+InpProfitTarget=14||14||0||14||N
+InpGridPoints=300||300||0||300||N

@@ -1,0 +1,9 @@
+; Matchagrid CHFJPY pass 168 from original optimizer (2026.01-2026.06)
+; Lowest DD in XML among PF>=1.20 passes: DD=10.13%, PF=1.965, trades=577
+; LotStart=0.02 StepAddLot=0.02 (minimal escalation vs robust=0.06)
+; Testing whether smaller StepAddLot reduces extended IS DD (was 48.75% with pass51)
+InpLotStart=0.02||0.02||0||0.02||N
+InpStepAddLot=0.02||0.02||0||0.02||N
+InpStepEveryOrders=5||5||0||5||N
+InpProfitTarget=14||14||0||14||N
+InpGridPoints=300||300||0||300||N

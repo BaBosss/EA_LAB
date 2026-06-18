@@ -1,0 +1,29 @@
+; GSMC robust pick v2 from pass_2 optimizer (375/1623 survivors, plateau=GOOD)
+; PF=1.255 DD%=6.87 RF=4.76 trades=387 (IS 2025.01-2026.06)
+; All params LOCKED (all N). Use for IS 2023-2026 / OOS 2020-2023 single tests.
+___SMC_LOGIC___==== 24/5 SMC M1 SNIPER ===
+InpSwingPeriod=7||7||0||7||N
+InpRiskReward=2.4||2.4||0||2.4||N
+___SMART_RECOVERY___==== QUANTUM BASKET RECOVERY ===
+InpLotSize=0.01||0.01||0||0.01||N
+InpLotMultiplier=1.2||1.2||0||1.2||N
+InpMinGapPts=200||200||0||200||N
+___MONEY_TARGETS___==== MONEY TARGETS ===
+InpTakeProfitUSD=160||160||0||160||N
+InpDailyTargetUSD=100||100||0||100||N
+InpSLBufferPts=20||20||0||20||N
+___RISK_CAP_V1___==== RISK CAP PATCH V1 ===
+InpMaxLotAbsolute=0.2||0.20||0||0.2||N
+InpMaxDepositLoadPercent=30||30.0||0||30||N
+InpMaxFloatingDDPercent=20||20.0||0||20||N
+InpMaxDailyLossPercent=5||5.0||0||5||N
+InpMaxRecoverySteps=3||3||0||3||N
+InpRecoveryMultiplierMax=1.3||1.3||0||1.3||N
+InpStopNewEntriesWhenDDPercent=15||15.0||0||15||N
+InpCloseAllWhenDDPercent=25||25.0||0||25||N
+InpOneRecoveryChainAtATime=true||false||0||true||N
+InpBlockNewCycleAfterLoss=true||false||0||true||N
+InpCooldownBarsAfterStop=40||40||0||40||N
+___SYSTEM___==== SYSTEM ===
+InpMagic=270000||270000||0||270000||N
+InpSlippage=3||3||0||3||N
