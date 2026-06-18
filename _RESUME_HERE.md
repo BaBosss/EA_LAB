@@ -1,4 +1,4 @@
-# RESUME HERE — อัพเดท 2026-06-18 (session 12)
+# RESUME HERE — อัพเดท 2026-06-18 (session 13)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
@@ -36,26 +36,24 @@ Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
 
 ## ถัดไปทันที (session ถัดไป)
 
-### Portfolio ปิดแล้ว — 4 EAs พร้อม demo deploy
-ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับขั้นตอน attach บน ThinkMarkets $10k demo
+### Portfolio FINAL — 4 EAs CONFIRMED ✅
+ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับ attach บน ThinkMarkets $10k demo + live cent $100
+Cent sets: `*_cent.set` (Port1) / `*_cent_p2.set` (+100 Magic) / `*_cent_p3.set` (+200 Magic)
 
-### Portfolio READY — DEPLOY DEMO ได้เลย
-ดู `DEMO_DEPLOYMENT_PLAN.md` (อัปเดต 2026-06-18 รวม MC results แล้ว)
+### หา #5 — สถานะล่าสุด (session 13 exhausted MACD+NuiIndy+BossV2)
+**Symbols tested (MACD):** GBPCHF ✓IS/OOS แต่ HIGH corr → skip; EURGBP/EURCAD/AUDUSD/NZDUSD/GBPCAD → 0 ผ่าน OOS
+**NuiIndy GBPUSD:** IS PF=2.22/RF=19 ดีมาก แต่ OOS DD=36.7% (too high) + GBPUSD corr
+**BossV2 (Boss_11/12/13):** 0/8 ผ่าน — ดู rejection log ด้านล่าง
 
-### Portfolio Candidate #5 → GBPCHF ผ่าน! (session 12)
-MACD บน symbol CHF ใหม่ — IS/OOS validated:
-| Symbol | IS PF/DD/RF | OOS PF/DD/RF | Verdict |
-|---|---|---|---|
-| **GBPCHF** | 1.74 / 7.0 / 2.30 (804t) | **2.16 / 9.5 / 2.11 (955t)** | ✅ PASS candidate #5 |
-| EURCHF | 1.66 / 12.1 / **0.86** | 2.03 / 6.4 / 1.73 | ❌ IS RF<1.5 |
+**ตัวเลือกถัดไปที่ยังไม่ลอง:**
+1. `NuiIndy บน USDJPY หรือ AUDJPY H1` — JPY carry ให้ ADX trend ชัด
+2. `EURCAD optimize ลึก` — IS PF=2.06 แข็งแกร่ง, OOS RF=0.94 fail นิดเดียว อาจแก้ด้วย optimize params
+3. `Boss_11 deep entry sweep` — vary FastMA+SlowMA ทั้งคู่ (ปัจจุบัน FastMA=20 fixed)
+4. `ยอมรับ 4 EAs` — portfolio สมดุลดีแล้ว ไม่จำเป็นต้องมี #5
 
-**CORRELATION CHECK DONE (session 12) → GBPCHF REJECT เป็นตัวเพิ่ม:**
-GBPCHF vs MG_CHFJPY=+0.622 HIGH · vs MACD_USDCAD=+0.802 HIGH · vs MACD_GBPUSD=+0.583 MED · vs NuiIndy=+0.169 LOW
-→ correlate สูงกับ 2/4 ตัวที่มี = เพิ่มแล้วเสี่ยงกระจุก ไม่กระจาย. **คง portfolio 4 ตัว.**
-ถ้าจะหา #5 จริง: ต้อง family/instrument อื่น (gold/index, ไม่ใช่ CHF/GBP/CAD) corr ต่ำกับทั้ง 4.
-deals_GBPCHF.csv อยู่ที่ `_mt5_auto/` (OOS window). Set: `MACD_GBPUSD_locked.set`.
-
-Batch4 + smoke_new (รอบก่อน) ไม่มีตัวผ่าน: Grizzy DD85%, EX162 DD41%, Ben_CR DD69%, Ghost/DayZone 0-trade.
+### GBPCHF (validated, keep for multi-broker expansion)
+IS 1.74/OOS 2.16 ผ่าน แต่ corr สูง: vs MG_CHFJPY=0.622, vs MACD_USDCAD=0.802 → ใช้เมื่อกระจาย broker
+Set: `MACD_GBPUSD_locked.set` · deals: `_mt5_auto/deals_GBPCHF.csv`
 
 ---
 
@@ -91,7 +89,7 @@ Root cause Boss_11: EXIT_RUN_TREND (mode 24) exits ALL positions on first MA rev
 Fix tried (C2 ATR_TP): ExitMode=22 (per-order ATR TP) + StackMode=91, XAU H4 72→192 combos → 0 survivors PF_max=1.05 → REJECT
 Conclusion: GridTrendMA MA-cross signal has no edge on XAUUSD H4 IS window regardless of exit mode.
 Boss_11 SUSPEND — needs deeper entry-param sweep or different instrument before re-trying.
-ทางเลือกถ้าจะหาต่อ: MACD optimize บน symbol ใหม่ที่ยังไม่ลอง (EURGBP, AUDUSD, NZDUSD)
+→ ดู "ถัดไปทันที" ด้านบนสำหรับตัวเลือกถัดไป
 
 ---
 
