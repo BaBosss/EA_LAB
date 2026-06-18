@@ -1,0 +1,9 @@
+; Matchagrid CHFJPY M15 — CENT ACCOUNT VERSION
+; InpLotStart=0.01 is already minimum — no change
+; Grid risk: each level adds 0.01 lots, monitor equity closely
+; On cent $100: DO NOT let grid open more than 3-4 levels (= 0.03-0.04 lots)
+InpLotStart=0.01||0.01||0||0.01||N
+InpStepAddLot=0.01||0.01||0||0.01||N
+InpStepEveryOrders=5||5||0||5||N
+InpProfitTarget=14||14||0||14||N
+InpGridPoints=350||350||0||350||N

@@ -1,17 +1,18 @@
 # Demo Deployment Plan — Portfolio v1
-อัพเดท: 2026-06-18 | สถานะ: READY TO DEPLOY
+อัพเดท: 2026-06-18 | สถานะ: ✅ MC VALIDATED — READY TO DEPLOY
 
 ---
 
 ## Portfolio Summary
 
-| # | EA | Symbol | TF | Set File | OOS PF | OOS DD | MC ruin |
-|---|---|---|---|---|---|---|---|
-| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 23.8% | 0% |
-| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | 0% |
-| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | 0% |
-| 4 | ST_EA03 MACD | USDCAD | H1 | default params | 2.62 | 6.3% | 0% |
+| # | EA | Symbol | TF | Set File | OOS PF | OOS DD | MC PF5th | MC DD95th | MC ruin |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 23.8% | 1.755 | n/a | 0% ✅ |
+| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | **1.67** | 6.4% | 0% ✅ |
+| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | **2.06** | 1.3% | 0% ✅ |
+| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 6.3% | **2.15** | 0.9% | 0% ✅ |
 
+MC รัน 2026-06-18 — 2000 bootstrap permutations, ruin threshold DD>50%
 Correlation flag: MG_v1 × MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate) — ยอมรับได้ที่ equal weight
 
 ---
@@ -59,7 +60,7 @@ Correlation flag: MG_v1 × MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate) — ย�
 
 ### 1. เปิด MT5 → เปิด demo account
 ```
-File → Open Account → ThinkMarkets → Demo → $1,000 USD
+File → Open Account → ThinkMarkets → Demo → $10,000 USD
 ```
 
 ### 2. Attach EA ทีละตัว

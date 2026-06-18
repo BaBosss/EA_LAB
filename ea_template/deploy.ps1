@@ -21,14 +21,20 @@ if($LASTEXITCODE -ge 8){ Write-Host "robocopy error ($LASTEXITCODE) - is MT5 loc
 Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
 if ($Compile) {
-  $mq5 = Join-Path $dst "EA_LabTemplate.mq5"
-  $log = Join-Path $dst "compile.log"
-  if(Test-Path $log){ Remove-Item $log -Force }
-  Start-Process -FilePath $meta -ArgumentList "/compile:`"$mq5`"","/log:`"$log`"" -Wait
-  if(Test-Path $log){
-    $txt = Get-Content -Raw -Encoding Unicode $log
-    $res = ($txt -split "`r?`n" | Where-Object { $_ -match "Result:" })
-    Write-Host $res -ForegroundColor Green
+  # V2 = three Boss wrappers; V1 EA_LabTemplate kept for reference
+  $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","EA_LabTemplate.mq5")
+  foreach($t in $targets){
+    $mq5 = Join-Path $dst $t
+    if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }
+    $log = Join-Path $dst ("compile_" + [IO.Path]::GetFileNameWithoutExtension($t) + ".log")
+    if(Test-Path $log){ Remove-Item $log -Force }
+    Start-Process -FilePath $meta -ArgumentList "/compile:`"$mq5`"","/log:`"$log`"" -Wait
+    if(Test-Path $log){
+      $txt = Get-Content -Raw -Encoding Unicode $log
+      $res = ($txt -split "`r?`n" | Where-Object { $_ -match "Result:|error|warning" })
+      Write-Host "[$t]" -ForegroundColor Cyan
+      $res | ForEach-Object { Write-Host "  $_" -ForegroundColor Green }
+    }
   }
 }
-Write-Host "Expert name for tester: EALabTpl\EA_LabTemplate" -ForegroundColor Green
+Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev" -ForegroundColor Green

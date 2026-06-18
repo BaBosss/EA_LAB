@@ -1,0 +1,9 @@
+; NuiIndy RSI+ADX EURUSD H1 — CENT ACCOUNT VERSION
+; Original Lot_Divided=500000 (gives 0.02 lots on balance 10000)
+; Cent adjusted: Lot_Divided=1100000 -> 10000/1100000=0.0091 -> rounds to 0.01 minimum
+; Pip value at 0.01 lots = $0.10/pip (vs $0.20/pip original)
+Lot_Divided=1100000.0
+RSI_Period=18
+ADX_period=20
+ADX_Value=35
+MagicStart=1524

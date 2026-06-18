@@ -48,3 +48,13 @@ __pycache__/
 # compiled MQL5 binaries
 *.ex5
 ea_template/compile.log
+ea_template/compile_*.log
+
+# _mt5_auto transient artifacts (reports/ini/logs are bulky + regenerable)
+_mt5_auto/reports/
+_mt5_auto/ini/
+_mt5_auto/EA_runs/
+_mt5_auto/optimizations/
+_mt5_auto/*.txt
+_mt5_auto/*.log
+# keep .set / .json / .ps1 (curated configs + results)

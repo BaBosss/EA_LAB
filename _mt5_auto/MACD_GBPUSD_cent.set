@@ -1,0 +1,9 @@
+; ST_EA03 MACD GBPUSD H1 — CENT ACCOUNT VERSION
+; Lots_divided=10000000 -> 10000/10000000=0.001 -> rounds to min 0.01 already
+; No change needed — formula already gives minimum lot on cent 10000 balance
+; LOT_Repeat=3 -> 0.01 x3 = 0.03 lots total, pip value $0.30/pip
+Lots_divided=10000000.0
+MACD_Count=2
+LOT_Repeat=3
+Nearby_PIP=10.0
+MagicStart=9397

@@ -1,19 +1,20 @@
-# RESUME HERE — อัพเดท 2026-06-18 (session 11)
+# RESUME HERE — อัพเดท 2026-06-18 (session 12)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
 ---
 
-## Portfolio Candidates (ยืนยันแล้ว)
+## Portfolio Candidates (ยืนยันแล้ว + MC COMPLETE)
 
-| # | EA | Symbol/TF | IS PF | OOS PF | OOS DD | OOS RF | Set File | สถานะ |
-|---|---|---|---|---|---|---|---|---|
-| 1 | MG_v1_locked | CHFJPY M15 | 1.97 | 2.08 | 23.8% | 1.81 | `_mt5_auto/MG_CHFJPY_v1_locked.set` | CONFIRMED |
-| 2 | NuiIndy RSI+ADX | EURUSD H1 | 2.25 | 2.00 | 28.9% | 4.91 | `_mt5_auto/NuiIndy_EURUSD_robust.set` | CONFIRMED (WATCH DD) |
-| 3 | ST_EA03 MACD | GBPUSD H1 | 2.38 | 2.47 | 5.1% | 4.26 | `_mt5_auto/MACD_GBPUSD_locked.set` | CONFIRMED — Best |
-| 4 | ST_EA03 MACD | USDCAD H1 | 1.76 | 2.62 | 6.3% | 2.43 | `_mt5_auto/MACD_USDCAD_locked.set` | CONFIRMED — New |
+| # | EA | Symbol/TF | IS PF | OOS PF | OOS DD | OOS RF | MC PF5th | MC ruin | Set File | สถานะ |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1 | MG_v1_locked | CHFJPY M15 | 1.97 | 2.08 | 23.8% | 1.81 | 1.755 | 0% | `_mt5_auto/MG_CHFJPY_v1_locked.set` | CONFIRMED |
+| 2 | NuiIndy RSI+ADX | EURUSD H1 | 2.25 | 2.00 | 28.9% | 4.91 | **1.67** | 0% | `_mt5_auto/NuiIndy_EURUSD_robust.set` | CONFIRMED (WATCH DD) |
+| 3 | ST_EA03 MACD | GBPUSD H1 | 2.38 | 2.47 | 5.1% | 4.26 | **2.06** | 0% | `_mt5_auto/MACD_GBPUSD_locked.set` | CONFIRMED — Best |
+| 4 | ST_EA03 MACD | USDCAD H1 | 1.76 | 2.62 | 6.3% | 2.43 | **2.15** | 0% | `_mt5_auto/MACD_USDCAD_locked.set` | CONFIRMED |
 
-**MC ยังไม่ได้รัน** สำหรับ NuiIndy, MACD_GBPUSD, MACD_USDCAD — ทำก่อน deploy จริง (ทำแค่ MG_v1 ไปแล้ว)
+**MC รันครบแล้ว (2026-06-18)** — `_mt5_auto/MC_NuiIndy.json`, `MC_MACD_GBPUSD.json`, `MC_MACD_USDCAD.json`
+NuiIndy PF5th=1.67 (3264 trades), MACD_GBPUSD PF5th=2.06 (1150 trades), MACD_USDCAD PF5th=2.15 (918 trades)
 
 ---
 
@@ -38,11 +39,40 @@ Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
 ### Portfolio ปิดแล้ว — 4 EAs พร้อม demo deploy
 ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับขั้นตอน attach บน ThinkMarkets $10k demo
 
-### หา Portfolio Candidate #5 (optional, ถ้าอยากขยาย)
-ตัวเลือก:
-- ลอง EAs ใหม่ที่ยังไม่ได้ smoke (batch4 list: Boss Hedging, DayZone v2, GhostBot G07, Ghost JOMHOD, GridProfit2way, Grizzy BUY, NuiIndy TriArb, WinningPro25, E4_7_4, ESQ1004 BBR, EX162 EMA, EX177 Grid, Grid197 ATR, ScalpTrade v23, BlackWolf, Ben CR 2025, oh MasterGrid ATR)
-- เน้น non-grid, non-martingale เพื่อหลีก HIGH correlation กับ MG
-- ถ้าได้ candidate → รัน 5-EA correlation, พิจารณา drop/weight MG ถ้า HIGH ยังอยู่
+### Portfolio READY — DEPLOY DEMO ได้เลย
+ดู `DEMO_DEPLOYMENT_PLAN.md` (อัปเดต 2026-06-18 รวม MC results แล้ว)
+
+### Portfolio Candidate #5 → GBPCHF ผ่าน! (session 12)
+MACD บน symbol CHF ใหม่ — IS/OOS validated:
+| Symbol | IS PF/DD/RF | OOS PF/DD/RF | Verdict |
+|---|---|---|---|
+| **GBPCHF** | 1.74 / 7.0 / 2.30 (804t) | **2.16 / 9.5 / 2.11 (955t)** | ✅ PASS candidate #5 |
+| EURCHF | 1.66 / 12.1 / **0.86** | 2.03 / 6.4 / 1.73 | ❌ IS RF<1.5 |
+
+**เหลือทำก่อนเข้าพอร์ต GBPCHF:** (1) MC bootstrap (2) **correlation กับ MG/MACD** — GBPCHF มี CHF อาจ correlate สูงกับ MG (CHFJPY) + MACD_GBPUSD (GBP). ถ้า HIGH ทั้งคู่อาจไม่คุ้มเพิ่ม. Set ใช้ `_mt5_auto/MACD_GBPUSD_locked.set` (default params).
+
+Batch4 + smoke_new (รอบก่อน) ไม่มีตัวผ่าน: Grizzy DD85%, EX162 DD41%, Ben_CR DD69%, Ghost/DayZone 0-trade.
+
+---
+
+## Cent Deployment Sets (session 12) — สำหรับ live cent $100
+.set ปรับสำหรับ cent account (lot scale ถูกต้องกับทุน $100):
+- Port 1: `MG_CHFJPY_cent.set` · `NuiIndy_EURUSD_cent.set` · `MACD_GBPUSD_cent.set` · `MACD_USDCAD_cent.set`
+- Port 2: `*_cent_p2.set` (Magic +100) · Port 3: `*_cent_p3.set` (Magic +200)
+- NuiIndy cent ปรับ Lot_Divided 500k→1.1M (lot 0.02→0.01) · MACD/MG ใช้ min lot อยู่แล้ว
+- ⚠️ lot บน cent = lot เดียวกับ standard แต่ทุน 100× น้อย → buffer บางมาก, MG grid คือจุดเสี่ยงสุด
+
+---
+
+## EA_LabTemplate V2 — BUILD เสร็จ (session 12) ✅
+`ea_template/core/` chassis ใหม่ compile 0/0 → 3 .ex5: `Boss_11_GridTrend` / `Boss_12_Breakout` / `Boss_13_MeanRev`
+- Expert name: `EALabTpl\Boss_NN_*` · Design: `ea_template/DESIGN_V2.md` + `OPTIMIZE_GUIDE.md`
+- เลขกำกับ enum (21/22/33..), ATR 2 ตัว (signal/risk), Stack 9x + confirm 0-3, cage 0x
+- Smoke ยืนยัน: Boss_12 XAUUSD 1088 trades PF 0.94 (default, ยังไม่ opt)
+- **GOTCHA:** MQL5 ไม่รองรับ `#if EXPR==n` → ใช้ `#ifdef LAB_ENTRY_11`. Experts\EALabTpl = junction → compile ที่ src แล้ว copy .ex5 (ดู [[ea-lab-template]] memory)
+- **Next:** optimize Boss_11/12/13 ด้วย 5 plans (OPTIMIZE_GUIDE) → `gen_plan_set.py`
+- Ben_CR_2025 XAUUSD: PF=1.88 แต่ DD=69% → REJECT
+ทางเลือกถ้าจะหาต่อ: MACD optimize บน symbol ใหม่ที่ยังไม่ลอง (EURGBP, AUDUSD, NZDUSD)
 
 ---
 
