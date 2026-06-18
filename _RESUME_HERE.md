@@ -35,20 +35,20 @@ Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
 
 ## ถัดไปทันที (session ถัดไป)
 
-### 1. Monte Carlo — NuiIndy, MACD_GBPUSD, MACD_USDCAD (รันใน session 10)
-ใช้ deals CSV ที่มีแล้ว: deals_NuiIndy.csv, deals_MACD.csv, deals_MACD_USDCAD.csv
-
-### 2. EAAmongUs — optimize เพื่อ lock params (รันใน session 10)
-IS: PF=2.20 DD=5.4% RF=1.37 / OOS: PF=2.42 DD=2.6%
-ปัญหา: IS RF=1.37 < gate 1.50 → optimize หา robust params
-EA name: "EA Among Us" (root folder)
-
-### 3. ถ้า EAAmongUs ผ่าน → รัน correlation 5 EAs
-→ ถ้า MG_v1 x MACD_GBPUSD ยัง HIGH อาจ drop MG หรือ weight ลด
+### หา Portfolio Candidate #5
+ตัวเลือก:
+- ลอง EAs ใหม่ที่ยังไม่ได้ smoke (batch4 list: Boss Hedging, DayZone v2, GhostBot G07, Ghost JOMHOD, GridProfit2way, Grizzy BUY, NuiIndy TriArb, WinningPro25, E4_7_4, ESQ1004 BBR, EX162 EMA, EX177 Grid, Grid197 ATR, ScalpTrade v23, BlackWolf, Ben CR 2025, oh MasterGrid ATR)
+- เน้น non-grid, non-martingale เพื่อหลีก HIGH correlation กับ MG
+- ถ้าได้ candidate → รัน 5-EA correlation, พิจารณา drop/weight MG ถ้า HIGH ยังอยู่
 
 ---
 
 ## Rejection Log (session 10, 2026-06-18)
+
+### EAAmongUs EURUSD H1 — REJECT
+Optimize robust pick: Kmartin=1.2, Grid_Distance=100, TP=50
+IS: PF=2.40 DD=1.2% RF=3.27 T=595 PASS / OOS: PF=2.24 DD=3.2% RF=1.15 T=532 FAIL
+Gate fail: OOS RF=1.15 < 1.50 — martingale, no-SL, RF won't clear gate
 
 ### BaronGrid XAUUSD — REJECT
 IS PF=1.20 trades=43 — robust params ไม่ transfer
