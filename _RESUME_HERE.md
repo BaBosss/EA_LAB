@@ -74,8 +74,23 @@ Batch4 + smoke_new (รอบก่อน) ไม่มีตัวผ่าน:
 - เลขกำกับ enum (21/22/33..), ATR 2 ตัว (signal/risk), Stack 9x + confirm 0-3, cage 0x
 - Smoke ยืนยัน: Boss_12 XAUUSD 1088 trades PF 0.94 (default, ยังไม่ opt)
 - **GOTCHA:** MQL5 ไม่รองรับ `#if EXPR==n` → ใช้ `#ifdef LAB_ENTRY_11`. Experts\EALabTpl = junction → compile ที่ src แล้ว copy .ex5 (ดู [[ea-lab-template]] memory)
-- **Next:** optimize Boss_11/12/13 ด้วย 5 plans (OPTIMIZE_GUIDE) → `gen_plan_set.py`
+- **Plan E design issue:** `_2_BasketTP_Money=0` default → basket exit ไม่ทำงาน; ต้องเพิ่มค่า BasketTP หรือใช้ ExitMode=22 แทน
 - Ben_CR_2025 XAUUSD: PF=1.88 แต่ DD=69% → REJECT
+
+### Boss V2 Optimize Log (session 13) — 0/7 ผ่าน
+| EA | Symbol/TF | Plan | IS | OOS | Verdict |
+|---|---|---|---|---|---|
+| Boss_12_Breakout | XAUUSD H1 | D | 1/18 THIN | PF=0.81 | REJECT |
+| Boss_11_GridTrend | XAUUSD H1 | C RUN_TREND | 0/30 | - | REJECT |
+| Boss_11_GridTrend | EURUSD H4 | C RUN_TREND | 0/30 | - | REJECT |
+| Boss_11_GridTrend | XAUUSD H4 | C RUN_TREND | 0/30 | - | REJECT |
+| Boss_13_MeanRev | EURUSD H1 | A | 0/9 | - | REJECT |
+| Boss_13_MeanRev | GBPUSD H1 | A2 wider | 2/81 THIN | PF=1.04 | REJECT |
+
+Root cause Boss_11: EXIT_RUN_TREND (mode 24) exits ALL positions on first MA reversal bar → whipsaw kills grid.
+Fix tried (C2 ATR_TP): ExitMode=22 (per-order ATR TP) + StackMode=91, XAU H4 72→192 combos → 0 survivors PF_max=1.05 → REJECT
+Conclusion: GridTrendMA MA-cross signal has no edge on XAUUSD H4 IS window regardless of exit mode.
+Boss_11 SUSPEND — needs deeper entry-param sweep or different instrument before re-trying.
 ทางเลือกถ้าจะหาต่อ: MACD optimize บน symbol ใหม่ที่ยังไม่ลอง (EURGBP, AUDUSD, NZDUSD)
 
 ---
@@ -101,6 +116,28 @@ IS PF=1.20 trades=43 — robust params ไม่ transfer
 | GBPJPY H1 | 1.43 | — | — | Smoke REJECT |
 
 ### NuiIndy locked: RSI=18, ADX_period=20, ADX_Value=35
+
+---
+
+## Validation Log (session 13, 2026-06-18) — MACD new symbols
+
+### MACD new-symbol sweep — 0/5 passed
+| Symbol | IS PF/DD | OOS PF/DD/RF | Verdict |
+|---|---|---|---|
+| EURGBP H1 | 1.94 / 1.4% | 1.16 / 14.3% / 0.49 | REJECT (OOS PF,RF) |
+| AUDUSD H1 | 1.48 / 12.1% | — | Skip (IS<1.50) |
+| NZDUSD H1 | 1.16 / 21.7% | — | Skip (IS<1.50, DD>20) |
+| GBPCAD H1 | 1.26 / 21.2% | — | Skip (IS<1.50, DD>20) |
+| EURCAD H1 | 2.06 / 4.2% | 1.49 / 18.6% / 0.94 | REJECT (OOS RF=0.94<1.50) |
+
+Conclusion: MACD default params are GBPUSD/USDCAD specific. Cross pairs with EUR/GBP/CAD don't clear OOS gate.
+Note: EURCAD IS strong (PF=2.06) but 2020-2022 COVID+energy-crisis CAD volatility kills RF in OOS.
+
+### NuiIndy GBPUSD H1 — REJECT (DD)
+IS: PF=2.22 DD=12.9% RF=19.34 T=4068 (excellent) | OOS: PF=2.05 DD=36.7% RF=7.12 T=4264
+Gate fail: OOS DD=36.7% > 20% (even higher than EURUSD's 28.9% exception)
+Double reject: same symbol as MACD_GBPUSD → HIGH correlation expected
+PF/RF excellent — worth revisiting if portfolio expands to higher DD tolerance or separate broker.
 
 ---
 

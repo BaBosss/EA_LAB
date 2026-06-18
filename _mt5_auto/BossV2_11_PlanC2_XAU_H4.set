@@ -1,0 +1,16 @@
+; Boss_11_GridTrend — Plan C2: ATR_TP per-order + GridTrend stack (XAUUSD H4)
+; Fix: ExitMode=22 (per-order ATR TP) instead of 24 (RUN_TREND which whipsaws)
+; Optimize: _0_SlowMA x _22_TP_ATRmult x _33_SL_ATRmult x _9_MaxLevels = 72 combos
+ExitMode=22
+SLMode=33
+StackMode=91
+StackConfirm=1
+TrendFilter=71
+FirstLotMode=41
+LotProg=50
+ProtectLevel=2
+_41_FixedLot=0.01||0.01||0||0.01||N
+_0_SlowMA=30||30||20||100||Y
+_22_TP_ATRmult=2.0||1.0||1.0||4.0||Y
+_33_SL_ATRmult=1.5||1.0||0.5||2.5||Y
+_9_MaxLevels=3||3||2||8||Y

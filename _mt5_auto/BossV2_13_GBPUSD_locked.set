@@ -1,0 +1,15 @@
+; Boss_13_MeanRev — GBPUSD H1 locked IS params (2026-06-18)
+; IS: PF=1.21 DD=0.22% RF=1.72 T=175 | plateau=THIN (RSI extreme)
+ExitMode=22
+SLMode=33
+StackMode=90
+StackConfirm=0
+TrendFilter=70
+FirstLotMode=41
+LotProg=50
+ProtectLevel=1
+_41_FixedLot=0.01
+_22_TP_ATRmult=1.5
+_33_SL_ATRmult=1.0
+_13_RSI_OB=80
+_13_RSI_OS=20

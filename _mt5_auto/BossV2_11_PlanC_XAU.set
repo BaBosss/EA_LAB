@@ -1,0 +1,16 @@
+; Boss Lab V2 - Plan C_TREND : Trend - run-trend exit, grid-trend stack, ATR-expand filter (entry 11)
+; ATR-mult ranges are instrument-agnostic. lot=0.01
+;
+ExitMode=24
+SLMode=33
+StackMode=91
+StackConfirm=1
+TrendFilter=71
+FirstLotMode=41
+LotProg=50
+ProtectLevel=2
+_41_FixedLot=0.01||0.01||0||0.01||N
+_0_SlowMA=30||30||20||100||Y
+_33_SL_ATRmult=2||2||1||3||Y
+_9_MaxLevels=3||3||2||8||Y
+; combos ~= 30

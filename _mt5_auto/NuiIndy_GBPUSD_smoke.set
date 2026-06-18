@@ -1,0 +1,7 @@
+; NuiIndy RSI+ADX GBPUSD H1 smoke — using EURUSD locked params
+; RSI=18 ADX=20 Value=35 (same as EURUSD confirmed)
+Lot_Divided=500000.0
+RSI_Period=18
+ADX_period=20
+ADX_Value=35
+MagicStart=1524

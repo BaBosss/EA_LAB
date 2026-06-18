@@ -1,0 +1,14 @@
+; Boss_12_Breakout — XAUUSD H1 locked IS params (2026-06-18)
+; IS: 1/18 survivor plateau=THIN | _12_Bars=60 TP_ATR=5 SL_ATR=1.5
+ExitMode=22
+SLMode=33
+StackMode=90
+StackConfirm=0
+TrendFilter=70
+FirstLotMode=41
+LotProg=50
+ProtectLevel=1
+_41_FixedLot=0.01
+_12_Bars=60
+_22_TP_ATRmult=5.0
+_33_SL_ATRmult=1.5

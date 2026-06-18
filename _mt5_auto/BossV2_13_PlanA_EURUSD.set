@@ -1,0 +1,15 @@
+; Boss Lab V2 - Plan A_SCALP : Scalp - small ATR TP, tight SL, single (FX M5-M15)
+; ATR-mult ranges are instrument-agnostic. lot=0.01
+;
+ExitMode=22
+SLMode=33
+StackMode=90
+StackConfirm=0
+TrendFilter=70
+FirstLotMode=41
+LotProg=50
+ProtectLevel=1
+_41_FixedLot=0.01||0.01||0||0.01||N
+_22_TP_ATRmult=0.5||0.5||0.5||1.5||Y
+_33_SL_ATRmult=1||1||0.5||2||Y
+; combos ~= 9

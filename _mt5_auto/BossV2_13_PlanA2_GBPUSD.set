@@ -1,0 +1,15 @@
+; Boss_13_MeanRev — Plan A2: sweep RSI thresholds + TP/SL on GBPUSD H1
+; 3 axes: RSI_OS {20,25,30} x TP_ATRmult {0.5,1.0,1.5} x SL_ATRmult {1.0,1.5,2.0} = 27 combos
+ExitMode=22
+SLMode=33
+StackMode=90
+StackConfirm=0
+TrendFilter=70
+FirstLotMode=41
+LotProg=50
+ProtectLevel=1
+_41_FixedLot=0.01||0.01||0||0.01||N
+_22_TP_ATRmult=0.5||0.5||0.5||1.5||Y
+_33_SL_ATRmult=1.0||1.0||0.5||2.0||Y
+_13_RSI_OS=25||20||5||30||Y
+_13_RSI_OB=75||70||5||80||Y

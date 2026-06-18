@@ -1,0 +1,15 @@
+; Boss Lab V2 - Plan B_SWING : Swing - large ATR TP, wide SL, single (Gold, FX trend)
+; ATR-mult ranges are instrument-agnostic. lot=0.01
+;
+ExitMode=22
+SLMode=33
+StackMode=90
+StackConfirm=0
+TrendFilter=70
+FirstLotMode=41
+LotProg=50
+ProtectLevel=2
+_41_FixedLot=0.01||0.01||0||0.01||N
+_22_TP_ATRmult=4||4||2||8||Y
+_33_SL_ATRmult=2||2||1||4||Y
+; combos ~= 9
