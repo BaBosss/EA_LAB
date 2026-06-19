@@ -1,4 +1,4 @@
-# RESUME HERE — อัพเดท 2026-06-18 (session 13)
+# RESUME HERE — อัพเดท 2026-06-19 (session 14)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
@@ -34,7 +34,19 @@ Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
 
 ---
 
-## ถัดไปทันที (session ถัดไป)
+## AI Workflow (session 14, 2026-06-19) — ใช้ตั้งแต่นี้ไป
+
+**claude-9arm (Qwen ฟรี)** พร้อมใช้แล้ว — Claude เรียกให้เองอัตโนมัติ คุณไม่ต้องสั่งเอง
+- งาน qwen: รัน `mt5_optimize.ps1` / `mt5_run.ps1`, batch smoke, extract_deals, จัดไฟล์
+- งาน Claude: เลือก plateau, judge gate, correlation, สั่งงาน, verify ผล qwen
+- โมเดล: **Sonnet = default**, Haiku = subagent screener, Opus = architecture only, qwen = mechanical (ฟรี)
+
+Setup: `~/.claude-9arm.json` (key+gateway) · PowerShell `$PROFILE` function · `~/.bashrc` function
+Gotcha: ต้อง `--bare` + force `ANTHROPIC_BASE_URL=https://gateway.9arm.co` ทุกครั้ง (ดู [[qwen-9arm-setup]])
+
+---
+
+## ถัดไปทันที (session 14+)
 
 ### Portfolio FINAL — 4 EAs CONFIRMED ✅
 ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับ attach บน ThinkMarkets $10k demo + live cent $100
@@ -45,7 +57,7 @@ Cent sets: `*_cent.set` (Port1) / `*_cent_p2.set` (+100 Magic) / `*_cent_p3.set`
 **NuiIndy GBPUSD:** IS PF=2.22/RF=19 ดีมาก แต่ OOS DD=36.7% (too high) + GBPUSD corr
 **BossV2 (Boss_11/12/13):** 0/8 ผ่าน — ดู rejection log ด้านล่าง
 
-**ตัวเลือกถัดไปที่ยังไม่ลอง:**
+**ตัวเลือกถัดไปที่ยังไม่ลอง (qwen รัน, Claude judge):**
 1. `NuiIndy บน USDJPY หรือ AUDJPY H1` — JPY carry ให้ ADX trend ชัด
 2. `EURCAD optimize ลึก` — IS PF=2.06 แข็งแกร่ง, OOS RF=0.94 fail นิดเดียว อาจแก้ด้วย optimize params
 3. `Boss_11 deep entry sweep` — vary FastMA+SlowMA ทั้งคู่ (ปัจจุบัน FastMA=20 fixed)
