@@ -1,0 +1,11 @@
+; EA_RUNNER GBPUSD H1 — first OOS-positive config (IS PF 1.11 / OOS PF 1.02), 2026-06-20
+InpAllowLiveOrders=true
+InpUseZeroLineFilter=true
+InpMinCrossStrength=0.0
+InpVerboseLogging=false
+InpStopLossPoints=300
+InpTakeProfitPoints=400
+InpHoldBars=0
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9

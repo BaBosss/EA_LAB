@@ -1,10 +1,15 @@
-# RESUME HERE — อัพเดท 2026-06-19 (session 14)
+# RESUME HERE — อัพเดท 2026-06-19 (session 16)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
+> **2 workstreams แยกกัน:**
+> - **EA_LAB (portfolio search)** = ไฟล์นี้ → COMPLETE ที่ 5 EAs, EA screening จบแล้ว, เหลือ deploy demo
+> - **EA_CORE_V1 (custom framework)** = `D:\EA_Project\CURRENT_BUILD\PHASE_0_WALKING_SKELETON_RECORD.md`
+>   → Phase 0 spine BUILT+DEPLOYED, รอ verify ใน Strategy Tester แล้วทำ Phase A MACD
+
 ---
 
-## Portfolio Candidates (ยืนยันแล้ว + MC COMPLETE)
+## Portfolio Candidates (ยืนยันแล้ว + MC COMPLETE) — 5 EAs
 
 | # | EA | Symbol/TF | IS PF | OOS PF | OOS DD | OOS RF | MC PF5th | MC ruin | Set File | สถานะ |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -12,29 +17,37 @@
 | 2 | NuiIndy RSI+ADX | EURUSD H1 | 2.25 | 2.00 | 28.9% | 4.91 | **1.67** | 0% | `_mt5_auto/NuiIndy_EURUSD_robust.set` | CONFIRMED (WATCH DD) |
 | 3 | ST_EA03 MACD | GBPUSD H1 | 2.38 | 2.47 | 5.1% | 4.26 | **2.06** | 0% | `_mt5_auto/MACD_GBPUSD_locked.set` | CONFIRMED — Best |
 | 4 | ST_EA03 MACD | USDCAD H1 | 1.76 | 2.62 | 6.3% | 2.43 | **2.15** | 0% | `_mt5_auto/MACD_USDCAD_locked.set` | CONFIRMED |
+| **5** | **Gold Reaper** | **XAUUSD H1** | **2.35** | **1.53** | **17.3%** | **4.35** | **1.331** | **1.9%** | `(default params)` | **CONDITIONAL ⚠️** |
 
-**MC รันครบแล้ว (2026-06-18)** — `_mt5_auto/MC_NuiIndy.json`, `MC_MACD_GBPUSD.json`, `MC_MACD_USDCAD.json`
-NuiIndy PF5th=1.67 (3264 trades), MACD_GBPUSD PF5th=2.06 (1150 trades), MACD_USDCAD PF5th=2.15 (918 trades)
-
----
-
-## Portfolio Correlation (OOS 2020-2023, 4 EAs equal 25%)
-
-| Pair | Correlation | Level |
-|---|---|---|
-| MG_v1 x NuiIndy | 0.541 | MEDIUM |
-| MG_v1 x MACD_GBPUSD | 0.768 | HIGH (flag) |
-| MG_v1 x MACD_USDCAD | 0.607 | HIGH |
-| NuiIndy x MACD_GBPUSD | 0.302 | MEDIUM |
-| NuiIndy x MACD_USDCAD | 0.242 | LOW |
-| MACD_GBPUSD x MACD_USDCAD | 0.572 | MEDIUM |
-
-Combined (4 EAs): mean return 1.86%/month, worst month -0.81% (Jan 2020)
-Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate)
+**MC รันครบแล้ว** — #1-4: MC_NuiIndy.json/MC_MACD_GBPUSD.json/MC_MACD_USDCAD.json · #5: ดูด้านล่าง
+Expert name #5: `The Gold Reaper MT5_4.3_fix_@FundedMillionAiress` · deals: `_mt5_auto/deals_GoldReaper_OOS.csv`
+⚠️ Gold Reaper CONDITIONAL: OOS PF บางมาก (1.53 vs gate 1.50), IS→OOS degradation -35% — monitor demo ใกล้ชิด
 
 ---
 
-## AI Workflow (session 14, 2026-06-19) — ใช้ตั้งแต่นี้ไป
+## Portfolio Correlation (OOS 2020-2023, 5 EAs equal 20%)
+
+| Pair | Correlation | Level | Severe DD Overlap |
+|---|---|---|---|
+| MG_v1 x NuiIndy | 0.541 | MEDIUM | 🔴 100% |
+| MG_v1 x MACD_GBPUSD | 0.768 | HIGH (flag) | 🔴 100% |
+| MG_v1 x MACD_USDCAD | 0.607 | HIGH | 🔴 100% |
+| NuiIndy x MACD_GBPUSD | 0.302 | MEDIUM | 🔴 100% |
+| NuiIndy x MACD_USDCAD | 0.242 | LOW | 🔴 100% |
+| MACD_GBPUSD x MACD_USDCAD | 0.572 | MEDIUM | 🔴 100% |
+| **GoldReaper x MG_v1** | **-0.357** | **MEDIUM (negative)** | 🟢 8.3% |
+| **GoldReaper x NuiIndy** | **+0.068** | **LOW** | 🟢 8.3% |
+| **GoldReaper x MACD_GBPUSD** | **-0.257** | **LOW (negative)** | 🟢 8.3% |
+| **GoldReaper x MACD_USDCAD** | **-0.161** | **LOW (negative)** | 🟢 8.3% |
+
+Combined (5 EAs 20% each): mean return **4.73%/month**, worst month -4.24% (Nov 2022), combined max DD **6.83%**
+Gold Reaper = natural hedge — anti-correlated กับ FX EAs ทั้งหมด
+Blocking flag: MG_v1 x MACD_GBPUSD = 0.768 HIGH (เดิม, ยังมีอยู่)
+Monthly data: `_mt5_auto/portfolio_monthly_5ea.csv`
+
+---
+
+## AI Workflow (session 14-15, 2026-06-19) — ใช้ตั้งแต่นี้ไป
 
 **claude-9arm (Qwen ฟรี)** พร้อมใช้แล้ว — Claude เรียกให้เองอัตโนมัติ คุณไม่ต้องสั่งเอง
 - งาน qwen: รัน `mt5_optimize.ps1` / `mt5_run.ps1`, batch smoke, extract_deals, จัดไฟล์
@@ -46,22 +59,38 @@ Gotcha: ต้อง `--bare` + force `ANTHROPIC_BASE_URL=https://gateway.9arm.c
 
 ---
 
-## ถัดไปทันที (session 14+)
+## ถัดไปทันที (session 16+)
 
-### Portfolio FINAL — 4 EAs CONFIRMED ✅
+### ✅ จบแล้ว: EA screening (ทุก batch) — Portfolio FINAL ที่ 5 EAs, ไม่ต้องหาเพิ่ม
+### ⏳ PENDING จริงๆ ที่เหลือ (เรียงลำดับ):
+1. **สร้าง Gold Reaper cent set** — #5 ยังไม่มี cent set (ใช้ default params) → ต้องสร้างก่อน deploy live cent
+2. **Deploy 5 EAs บน ThinkMarkets $10k demo** — ดู `DEMO_DEPLOYMENT_PLAN.md`. Gold Reaper drag ลง XAUUSD H1 ได้เลย (default params, AdjustLotsize=true)
+3. **Monitor demo ≥ 3 เดือน** ก่อน live cent — โดยเฉพาะ Gold Reaper (CONDITIONAL) + MG grid (DD เสี่ยง)
+4. **EA_CORE_V1 Phase 0 verify** (workstream แยก) — รัน tester ดู `D:\EA_Project\CURRENT_BUILD\PHASE_0_WALKING_SKELETON_RECORD.md`
+
+### Portfolio FINAL — 5 EAs ✅ (4 CONFIRMED + 1 CONDITIONAL)
 ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับ attach บน ThinkMarkets $10k demo + live cent $100
-Cent sets: `*_cent.set` (Port1) / `*_cent_p2.set` (+100 Magic) / `*_cent_p3.set` (+200 Magic)
+Cent sets #1-4: `*_cent.set` (Port1) / `*_cent_p2.set` (+100 Magic) / `*_cent_p3.set` (+200 Magic)
+Gold Reaper (#5): ใช้ default params, ไม่มี cent set ยังไม่ได้สร้าง — สร้างก่อน deploy
 
-### หา #5 — สถานะล่าสุด (session 13 exhausted MACD+NuiIndy+BossV2)
-**Symbols tested (MACD):** GBPCHF ✓IS/OOS แต่ HIGH corr → skip; EURGBP/EURCAD/AUDUSD/NZDUSD/GBPCAD → 0 ผ่าน OOS
-**NuiIndy GBPUSD:** IS PF=2.22/RF=19 ดีมาก แต่ OOS DD=36.7% (too high) + GBPUSD corr
-**BossV2 (Boss_11/12/13):** 0/8 ผ่าน — ดู rejection log ด้านล่าง
+### Batch 4 Fresh Screen — CLOSED ✅ (session 16, 2026-06-19)
+**8 runs (3-month window 2026.01-04)** ไม่มี PASS เลย — EA screening สมบูรณ์แล้ว
+- Ghost Bot G07 (EURUSD+XAUUSD): 0 trades → REJECT (ต้องการ setup พิเศษ / ไม่ compatible)
+- Ghost JOMHOD (EURUSD): PF=1.37 DD=15.1% → REJECT (ต่ำกว่า gate + DD สูง)
+- Winning Pro 2.5 / EA TREND V2 / Grizzy BUY / Boss Hedging / GridProfit2way: 0 trades หรือไม่ผ่าน → REJECT
+- Gold Reaper freshness check (2026.01-04): **PF=7.74** DD=3.12% Trades=110 → **ยังทำงานได้ดีมาก**
 
-**ตัวเลือกถัดไปที่ยังไม่ลอง (qwen รัน, Claude judge):**
-1. `NuiIndy บน USDJPY หรือ AUDJPY H1` — JPY carry ให้ ADX trend ชัด
-2. `EURCAD optimize ลึก` — IS PF=2.06 แข็งแกร่ง, OOS RF=0.94 fail นิดเดียว อาจแก้ด้วย optimize params
-3. `Boss_11 deep entry sweep` — vary FastMA+SlowMA ทั้งคู่ (ปัจจุบัน FastMA=20 fixed)
-4. `ยอมรับ 4 EAs` — portfolio สมดุลดีแล้ว ไม่จำเป็นต้องมี #5
+### หา #5 — CLOSED ✅ Gold Reaper XAUUSD เป็น #5 (session 15)
+**Batch 3 smoke (20 EAs):** 1 survivor = Gold Reaper IS PF=2.35 DD=13.85% → OOS PF=1.53 DD=17.3% → MC ruin=1.9% PF5th=1.331 → CONDITIONAL
+**NuiIndy USDJPY/AUDJPY:** REJECT ทั้งคู่ (DD>100% wipeout ด้วย locked EURUSD params)
+**Batch 3 rejects:** EX162/GPM-DD63/Knight×2/ZyFer/BlackWolf/BossPivot/BlackDragon/XAUScalper/SentinelXAU/SMCFibo/FiboHarm/LQScalp/ScalpV2/Snowball/GhostMA
+
+### Qwen Workflow Gotchas (session 15)
+- ต้อง source profile: `. "$env:USERPROFILE\OneDrive\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1"` ก่อนทุกครั้ง
+- prompt inline ที่มี `-Expert` = parse เป็น flag → **เขียน task ลงไฟล์ แล้วให้ Qwen อ่านเสมอ** (เหมือน smoke batch 3)
+- single run → รัน PowerShell ตรงๆ ไม่ต้องผ่าน Qwen
+- Qwen อ่าน balance DD แทน equity DD → prompt ต้องระบุ `equity_drawdown_maximal_pct` ชัดๆ
+- EA_STRATEGY_GUIDE.md: `D:\EA_LAB\EA_STRATEGY_GUIDE.md` (reference ก่อน backtest)
 
 ### GBPCHF (validated, keep for multi-broker expansion)
 IS 1.74/OOS 2.16 ผ่าน แต่ corr สูง: vs MG_CHFJPY=0.622, vs MACD_USDCAD=0.802 → ใช้เมื่อกระจาย broker
