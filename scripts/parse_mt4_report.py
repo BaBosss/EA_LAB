@@ -70,7 +70,8 @@ def parse(path):
     if pm:
         params, pip_suspect = {}, []
         _pipkeys = ("tp","takeprofit","sl","stop","trail","distance","dist","step",
-                    "gap","nearby","pip","points","breakeven","grid","range","offset")
+                    "gap","nearby","pip","points","breakeven","grid","range","offset",
+                    "spread")  # MaxSpread/Spread_contr block gold EAs on 3-digit (spread in points ~10x)
         _skip = ("lot","magic","color","font","size","deviation","slippage","comm",
                  "telegram","website","url","percent","number","multiplier","hour")
         for tok in pm.group(1).split(";"):

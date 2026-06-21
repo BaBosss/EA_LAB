@@ -20,7 +20,8 @@ import sys, re, html as _html
 
 PIP_KEYS = ("tp", "takeprofit", "sl", "stop", "stoploss", "trail", "trailing",
             "distance", "dist", "step", "gap", "nearby", "pip", "points",
-            "breakeven", "ts", "td", "ml", "range", "offset", "grid")
+            "breakeven", "ts", "td", "ml", "range", "offset", "grid",
+            "spread")  # MaxSpread/Spread_contr filters block gold EAs on 3-digit brokers
 
 def report_params(path):
     with open(path, "r", encoding="utf-8", errors="ignore") as f:

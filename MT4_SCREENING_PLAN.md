@@ -91,10 +91,13 @@ python "D:\EA_LAB\scripts\parse_mt4_report.py" "D:\EA_LAB\_mt4_auto\reports\<TAG
 จะ**เล็กไป 10 เท่า** → EA churn (เทรดถล่ม TP จิ๋ว) หรือ **ไม่เทรดเลย (NO_DATA/THIN)** →
 ดูเหมือนไม่มี edge ทั้งที่ถ้าตั้ง pip ถูกอาจดีมาก. **ห้าม REJECT ทันที** — ต้องเทสซ้ำ pip ที่ถูก
 
-**สัญญาณว่าน่าจะ pip ผิด (ไม่ใช่ไม่มี edge):**
+**สัญญาณว่าน่าจะ config ผิด (ไม่ใช่ไม่มี edge):**
 - trades สูงผิดปกติ (>2000/ปี) + avg trade จิ๋ว → TP/distance แน่นไป (เช่น Gold Stuff TP=150→$0.15, ClevrFX 3993 เทรด)
-- NO_DATA / THIN (เทรด 0 หรือ <10) ทั้งที่ EA เป็น gold EA → SL/TP เล็กจน init fail หรือไม่เข้าเงื่อนไข
-- `parse_mt4_report.py` ใส่ field `pip_suspect` (input ชื่อ pip-ish ที่เป็นเลข ≠ 0) ให้ดูแล้ว
+- NO_DATA / THIN (เทรด 0 หรือ <10) ทั้งที่ EA เป็น gold EA → ดู 2 สาเหตุหลัก:
+  - **(พบบ่อยสุด) MaxSpread / Spread_contr ตั้งต่ำเกิน** — spread ทองบน 3-หลักคิดเป็น points ใหญ่ ~10 เท่า → filter บล็อกทุกออเดอร์. ✅ พิสูจน์แล้ว: ARTGOLDPro default 0 เทรด → MaxSpread 80→800 = 30 เทรด PF 1.10 WATCH
+  - SL/TP เล็กจนไม่เข้าเงื่อนไข / init fail
+- **เช็คก่อนเสมอ:** EA hardcode symbol อื่นไหม (เช่น Boring Pips `trade_symbol="AUDNZD NZDCAD AUDCAD"` → NO_DATA บน gold เพราะมันไม่เทรด gold เลย ไม่ใช่บั๊ก — อย่าเสียเวลา refix)
+- `parse_mt4_report.py` ใส่ field `pip_suspect` (input pip/spread ที่เป็นเลข ≠ 0) + `params` (ทุก input) ให้ดูแล้ว
 
 **วิธีทำ (Claude — ต้องใช้วิจารณญาณ ไม่ใช่งาน Qwen):**
 ```powershell

@@ -1,0 +1,15 @@
+RiskPercent=3
+MinLot=0.01
+MaxLot=10
+TrailingStart=50
+TrailingStep=10
+TrailingDistance=30
+Slippage=3
+MaxSpread=800
+MagicNumber=2222
+MinTradeIntervalMinutes=60
+ATRMultiplierTP=2
+ATRMultiplierSL=3
+ATRPeriod=14
+RecoveryMultiplier=1.3
+MaxRecoveryTrades=5

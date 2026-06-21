@@ -3,3 +3,33 @@ AI Gold Sniper EA,EURUSDc,1 Hour (H1),10.0,0.17,-0.7,0.01,70.0,n/a,REJECT
 AI Gold Sniper EA,XAUUSDc,1 Hour (H1),115.0,2.26,1.26,0.01,98.26,n/a,PASS
 Gold Stuff EA V7.0,EURUSDc,1 Hour (H1),789.0,2.43,85.05,0.6,70.22,n/a,PASS
 Gold Stuff EA V7.0,XAUUSDc,1 Hour (H1),4655.0,5.09,21670.24,39.26,71.13,n/a,PASS
+(Jobot) Billionaire News EA ATR Hand,XAUUSDc,1 Hour (H1),2573.0,1.01,268.22,19.63,34.08,n/a,REJECT
+(Jobot) Billionaire News EA ATR Hand,EURUSDc,1 Hour (H1),3329.0,0.38,-1638.81,16.57,22.8,n/a,REJECT
+(Jobot) Greed and Fear v3,XAUUSDc,1 Hour (H1),2.0,1.0,-0.01,0.0,50.0,n/a,THIN
+(Jobot) Greed and Fear v3,EURUSDc,1 Hour (H1),2.0,0.26,-0.23,0.0,50.0,n/a,THIN
+(Jobot) Price Action - Trend Line -Fibo -Martingale v3.2 Hedging + atr + nearby,XAUUSDc,SKIP,,,,,,,NO_REPORT
+(Jobot) Price Action - Trend Line -Fibo -Martingale v3.2 Hedging + atr + nearby,EURUSDc,SKIP,,,,,,,NO_REPORT
+(NiyomBot) RSI Dynamic Candle V3.1,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+(NiyomBot) RSI Dynamic Candle V3.1,EURUSDc,1 Hour (H1),578.0,0.0,-8.28,0.0,0.0,n/a,REJECT
+AlgoScalpPro_2.6_Update,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+AlgoScalpPro_2.6_Update,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+ARTGOLDPro_TFH1Complete,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+ARTGOLDPro_TFH1Complete,EURUSDc,1 Hour (H1),25.0,0.59,-5.88,0.12,68.0,n/a,REJECT
+Aui grid 1.0 mt4,XAUUSDc,1 Hour (H1),5527.0,0.32,-24.25,0.25,97.74,n/a,REJECT
+Aui grid 1.0 mt4,EURUSDc,1 Hour (H1),761.0,0.73,-3.29,0.03,51.64,n/a,REJECT
+AW Recovery EA V3.3_fix,XAUUSDc,1 Hour (H1),24.0,1.32,12.6,0.86,50.0,n/a,WATCH
+AW Recovery EA V3.3_fix,EURUSDc,1 Hour (H1),15.0,1.41,0.39,0.03,60.0,n/a,PASS
+Boring Pips MT4_4.3_fix,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+Boring Pips MT4_4.3_fix,EURUSDc,1 Hour (H1),54.0,16.74,53.41,0.21,96.3,n/a,PASS
+Broker Killer v 2 .2 by @SoftechFX_Robot,XAUUSDc,1 Hour (H1),5613.0,1.09,3.89,0.56,99.14,n/a,REJECT
+Broker Killer v 2 .2 by @SoftechFX_Robot,EURUSDc,1 Hour (H1),942.0,1.35,6.61,0.28,77.49,n/a,WATCH
+BuRengNong207_FiniteBreakOut,XAUUSDc,1 Hour (H1),508.0,1.76,359.85,8.58,54.53,n/a,PASS
+BuRengNong207_FiniteBreakOut,EURUSDc,1 Hour (H1),24.0,1.65,0.76,0.01,66.67,n/a,PASS
+BuRengNong2073,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+BuRengNong2073,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+ClevrFX_EA,XAUUSDc,1 Hour (H1),3993.0,5.27,8252.34,12.58,70.82,n/a,PASS
+ClevrFX_EA,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+DHW GoldEA4,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+DHW GoldEA4,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA 2050 Pro ,XAUUSDc,SKIP,,,,,,,NO_REPORT
+EA 2050 Pro ,EURUSDc,SKIP,,,,,,,NO_REPORT
