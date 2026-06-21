@@ -16,8 +16,8 @@ import re
 import sys
 from pathlib import Path
 
-sys.path.insert(0, r"C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts")
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, r"C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts")
 import parse_mt5_report as P          # noqa: E402
 import select_robust_pass as RS       # noqa: E402
 

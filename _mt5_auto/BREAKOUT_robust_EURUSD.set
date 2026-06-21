@@ -1,0 +1,19 @@
+; robust-pass .set generated 2026-06-21 from BREAKOUT_opt1_EURUSD_H1.xml
+; FALLBACK: profit-max pass (no robust plateau) PF=1.004464 DD%=0.6939 trades=227
+; OVERRIDDEN 6 optimized params
+; EURUSD H1 BREAKOUT optimize — IS 2023.01.01-2026.06.01
+; Format: current||start||step||stop||Y
+InpEntryStyle=1
+InpBreakoutBars=30||30||0||30||N
+InpBreakoutConfirmBars=2||2||0||2||N
+InpExitMode=3
+InpSLMode=3
+InpSL_ATRmult=3||3||0||3||N
+InpTP_ATRmult=3||3||0||3||N
+InpMaxGridLevels=1
+InpTradeDirection=1||1||0||1||N
+InpTrendFilter=1||1||0||1||N
+InpCloseAllWhenDDPct=50
+InpFixedLot=0.01
+InpDryRun=false
+InpMagic=990003

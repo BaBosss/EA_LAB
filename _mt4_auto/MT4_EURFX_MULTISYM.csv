@@ -1,0 +1,13 @@
+expert,symbol,window_requested,data_actual,bars,trades,PF,DD%,win%,note
+EURUSD Trading Forex Robot,EURUSDc,2023.12-2025.06(IS),full,8858,48,1.38,0.22,66.67,full-history-IS
+EURUSD Trading Forex Robot,EURUSDc,2025.06-2026.06(OOS),full,,73?,3.89,30.31,,screen-OOS
+EURUSD Trading Forex Robot,XAUUSDc,2023.12-2025.06(IS),full,8917,10,,0.22,100.0,THIN-not-native
+EURUSD Trading Forex Robot,USDCHFc,2023.12-2026.06,2026.02.26-05.31only,1692,18,5.12,0.03,77.78,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,AUDUSDc,2023.12-2026.06,2026.02.26-05.31only,1692,27,3.34,0.03,81.48,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,GBPUSDc,2023.12-2026.06,2026.02.26-05.31only,1692,23,2.36,0.02,73.91,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,GBPJPYc,2023.12-2026.06,2026.02.26-05.31only,1692,18,1.79,0.05,61.11,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,USDCADc,2023.12-2026.06,2026.02.26-05.31only,1692,21,1.39,0.12,52.38,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,EURJPYc,2023.12-2026.06,2026.02.26-05.31only,1692,20,1.21,0.24,50.0,data-limited-~3mo-overlap
+EURUSD Trading Forex Robot,NZDUSDc,2023.12-2026.06,2026.02.26-05.31only,1692,10,0.15,0.02,60.0,data-limited-negative
+EURUSD Trading Forex Robot,USDJPYc,2023.12-2026.06,2026.02.26-05.31only,1692,4,,0.01,100.0,THIN
+EURUSD Trading Forex Robot,EURGBPc,2023.12-2026.06,2026.02.26-05.31only,1692,2,,0.0,100.0,THIN

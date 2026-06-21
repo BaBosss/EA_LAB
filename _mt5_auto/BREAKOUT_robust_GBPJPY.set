@@ -1,0 +1,19 @@
+; robust-pass .set generated 2026-06-21 from BREAKOUT_opt1_GBPJPY_H1.xml
+; FALLBACK: profit-max pass (no robust plateau) PF=1.03194 DD%=1.4161 trades=308
+; OVERRIDDEN 6 optimized params
+; GBPJPY H1 BREAKOUT optimize — IS 2023.01.01-2026.06.01
+; Format: current||start||step||stop||Y
+InpEntryStyle=1
+InpBreakoutBars=15||15||0||15||N
+InpBreakoutConfirmBars=1||1||0||1||N
+InpExitMode=3
+InpSLMode=3
+InpSL_ATRmult=2.5||2.5||0||2.5||N
+InpTP_ATRmult=5||5||0||5||N
+InpMaxGridLevels=1
+InpTradeDirection=1||1||0||1||N
+InpTrendFilter=1||1||0||1||N
+InpCloseAllWhenDDPct=50
+InpFixedLot=0.01
+InpDryRun=false
+InpMagic=990003
