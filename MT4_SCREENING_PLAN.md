@@ -156,6 +156,56 @@ Phase 2 suspects Batch 3:
 - KRAPOOK YELLOW ANT: DD=60.83% = grid จริง ไม่ใช่ pip error → REJECT
 - Gold_Kangaroo/Goldex AI/HFT2/Jesko_fix: NO_DATA both = structural fail → skip
 
+## ผล Batch 4 (16 EAs — Qwen, 2026-06-21) ✅ COMPLETE
+13/16 NO_REPORT = commercial locked EAs (Quantum/Ro King Man/SkyFX/SMC/Vigorous/Winning/Zeus etc.)
+| EA | XAU PF | XAU t | XAU DD% | EUR PF | verdict |
+|---|---|---|---|---|---|
+| KZM V.1.20 | 0.24 | 5867 | 0.32 | 1.38 | XAU REJECT, EUR WATCH |
+| Little Birds EA | 0.81 | 462 | 103.45 | 0.50 | REJECT (XAU DD หายนะ) |
+| 14 EAs | SKIP | — | — | SKIP | NO_REPORT (locked/init fail) |
+
+## ✅ SCREENING COMPLETE — 63 EAs, 4 Batches + Phase 2
+
+## Phase 2 refix summary (all complete)
+| EA | Phase 2 ผล | verdict |
+|---|---|---|
+| ARTGOLDPro | MaxSpread 80→800 = 30t PF=1.10 | **WATCH** (rescued) |
+| Gold Stuff V7.0 | pip×10 ยัง churn DD=53% | REJECT (grid จริง) |
+| DHW GoldEA4 | all fix ยัง 0t | REJECT (structural) |
+| AlgoScalpPro | spread+pip fix EUR=0.41 XAU=0t | REJECT |
+| BuRengNong2073 | pip×10 ยัง 0t | REJECT (TF15 only) |
+| ClevrFX | TP×10 = 0t (tradeLimit stall) | REJECT (scalp artifact) |
+| EA Game Changer | TP×10 = 6795t (เกือบเท่าเดิม) | REJECT (hedge grid, Model 2 artifact) |
+| GMGS PRO V2 | TakeProfit=30→ diagnosis: martingale hedge | REJECT (same artifact class) |
+
+## 🏆 FINAL SHORTLIST — MT4 EA candidates ที่น่า deep validate
+
+### ✅ XAU Clean PASS (สมเหตุสมผลทุกมิติ)
+| EA | XAU PF | XAU t | XAU DD% | EUR PF | หมายเหตุ |
+|---|---|---|---|---|---|
+| **EA_Golden_Elephant** | **4.08** | 207 | **2.60** | **6.69** | ดีทั้ง 2 sym, low DD ✅ |
+| **KRAPOOK BLUE ANT** | **2.65** | 477 | **0.40** | 1.28 | DD ต่ำสุดใน pool ✅ |
+| **BuRengNong207_FiniteBreakOut** | **1.76** | 508 | **8.58** | **1.65** | cleanest ทั้ง 2 sym ✅ |
+
+### ⚠️ XAU Borderline (ผ่านแต่มีข้อกังวล)
+| EA | XAU PF | XAU t | XAU DD% | หมายเหตุ |
+|---|---|---|---|---|
+| EURUSD Trading Forex Robot | 5.56 | 73 | **30.31** | DD borderline; EUR 3.89 clean |
+| AI Gold Sniper EA | 2.26 | 115 | 0.01 | micro lot ($1.26 net) — lot ไมโคร |
+| KRAPOOK AI SNIPER | 8.50 | **21** | 1.33 | THIN — 21 trades only |
+| ARTGOLDPro (Phase 2 rescued) | 1.10 | 30 | 0.87 | trades น้อย |
+
+### 📋 EUR-only interesting
+| EA | EUR PF | EUR t | หมายเหตุ |
+|---|---|---|---|
+| God_s/God's Blessing | 4.31 | 45 | ไม่เทรด XAU |
+| Gold Buster MT4 | 4.09 | 141 | ไม่เทรด XAU |
+| Infinix ea | 8.48 | 33 | THIN; XAU DD=103% |
+| Fibot EA | 2.48 | 321 | ไม่เทรด XAU |
+
+## Next: Deep Validation (IS/OOS + Model 0)
+Top 3 → IS/OOS extended (2020-2025) + Model 0 every-tick → cent .set
+
 ## หลัง screen เสร็จ (Claude ทำต่อ)
 1. **Phase 2 pip re-test** กับ gold ทุกตัวที่ churn / NO_DATA / THIN ที่มี pip_suspect (ข้างบน)
 2. คัด PASS/WATCH ที่ DD สมเหตุสมผล → deep validation (IS/OOS split + Model 0 every-tick ตัวที่ผ่าน)
