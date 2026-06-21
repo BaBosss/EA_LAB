@@ -1,0 +1,5 @@
+﻿expert,symbol,period,trades,PF,net,maxDD%,win%,quality,screen
+AI Gold Sniper EA,EURUSDc,1 Hour (H1),10.0,0.17,-0.7,0.01,70.0,n/a,REJECT
+AI Gold Sniper EA,XAUUSDc,1 Hour (H1),115.0,2.26,1.26,0.01,98.26,n/a,PASS
+Gold Stuff EA V7.0,EURUSDc,1 Hour (H1),789.0,2.43,85.05,0.6,70.22,n/a,PASS
+Gold Stuff EA V7.0,XAUUSDc,1 Hour (H1),4655.0,5.09,21670.24,39.26,71.13,n/a,PASS
