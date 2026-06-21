@@ -1,0 +1,49 @@
+﻿
+1	09:20:55.721	MQL5.community: authorization failed
+1	14:23:08.807	MQL5.community: authorization failed
+1	14:25:32.739	MQL5.community: authorization failed
+1	14:25:42.791	MQL5.community: authorization failed
+1	14:26:33.473	MQL5.community: authorization failed
+1	14:26:41.861	MQL5.community: authorization failed
+1	14:37:04.360	MQL5.community: authorization failed
+1	14:37:32.567	MQL5.community: authorization failed
+1	14:38:49.774	MQL5.community: authorization failed
+1	14:39:18.494	MQL5.community: authorization failed
+1	14:39:48.700	MQL5.community: authorization failed
+1	14:40:18.919	MQL5.community: authorization failed
+1	14:40:44.212	MQL5.community: authorization failed
+1	14:41:10.657	MQL5.community: authorization failed
+1	14:41:45.915	MQL5.community: authorization failed
+1	14:42:15.155	MQL5.community: authorization failed
+1	14:42:52.265	MQL5.community: authorization failed
+1	14:43:23.756	MQL5.community: authorization failed
+1	14:44:24.674	MQL5.community: authorization failed
+1	14:45:05.492	'141049900': connect failed [No connection]
+1	14:45:21.092	MQL5.community: authorization failed
+1	14:46:05.075	MQL5.community: authorization failed
+1	14:46:41.229	MQL5.community: authorization failed
+1	14:47:31.796	MQL5.community: authorization failed
+1	14:48:13.722	MQL5.community: authorization failed
+1	14:48:48.228	MQL5.community: authorization failed
+1	14:49:25.415	MQL5.community: authorization failed
+1	14:50:50.263	MQL5.community: authorization failed
+1	14:51:22.341	MQL5.community: authorization failed
+1	14:51:47.428	MQL5.community: authorization failed
+1	14:54:35.927	MQL5.community: authorization failed
+1	14:56:11.152	MQL5.community: authorization failed
+1	15:18:18.177	MQL5.community: authorization failed
+1	15:19:22.613	MQL5.community: authorization failed
+1	15:20:41.026	MQL5.community: authorization failed
+1	15:21:22.498	MQL5.community: authorization failed
+1	15:22:09.734	MQL5.community: authorization failed
+1	15:22:33.590	MQL5.community: authorization failed
+1	15:23:02.991	MQL5.community: authorization failed
+1	15:25:43.971	MQL5.community: authorization failed
+1	15:26:16.974	MQL5.community: authorization failed
+1	15:26:42.797	MQL5.community: authorization failed
+1	15:27:09.013	MQL5.community: authorization failed
+0	15:27:26.449	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+0	15:27:53.526	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+0	15:31:06.501	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+
+

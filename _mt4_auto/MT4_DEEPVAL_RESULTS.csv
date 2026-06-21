@@ -1,0 +1,9 @@
+expert,symbol,window,from,to,trades,PF,net,maxDD%,win%,verdict,reason
+EA_Golden_Elephant,XAUUSDc,IS,2023.12.01,2025.06.01,151,0.09,-1249.03,16.47,70.2,REJECT,grid-StepGrid250-MultLot2-MaxOrder4
+EA_Golden_Elephant,XAUUSDc,OOS,2025.06.01,2026.06.01,207,4.08,,2.60,,screen,lucky-1yr-window
+KRAPOOK BLUE ANT GOAL KEEPER 1.00,XAUUSDc,IS,2023.12.01,2025.06.01,797,1.12,83.64,12.57,56.46,REJECT,grid-GridDistance-IS-DD-31x-vs-OOS
+KRAPOOK BLUE ANT GOAL KEEPER 1.00,XAUUSDc,OOS,2025.06.01,2026.06.01,477,2.65,,0.40,,screen,lucky-1yr-window
+BuRengNong207_FiniteBreakOut,XAUUSDc,IS,2023.12.01,2025.06.01,361,0.00,-10019.93,100.2,61.77,REJECT,martingale-mult1.4-MaxTrades20-BLOWN
+BuRengNong207_FiniteBreakOut,XAUUSDc,OOS,2025.06.01,2026.06.01,508,1.76,,8.58,,screen,lucky-1yr-window
+EURUSD Trading Forex Robot,XAUUSDc,IS,2023.12.01,2025.06.01,10,,125.92,0.22,100.0,REJECT,THIN-not-native-XAU-Symbols=EURUSD
+EURUSD Trading Forex Robot,EURUSDc,IS,2023.12.01,2025.06.01,48,1.38,5.17,0.22,66.67,REJECT,WATCH-only-martingale-degradation2.8x

@@ -1,0 +1,474 @@
+﻿0	09:20:48.985	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	09:20:48.985	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 18256 / 32535 Mb, Disk: 182 / 465 Gb, GMT+7
+0	09:20:48.985	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	09:20:50.463	'141049900': login on Exness-Real35 through DC05 (ping: 34.16 ms)
+0	09:20:51.228	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 34.16 ms)
+0	09:20:51.374	'141049900': previous successful authorization performed from 1.20.173.25
+0	09:20:55.715	'141049900': auto connecting to a better access point DC-START (ping is 34.63 ms)
+1	09:20:55.721	MQL5.community: authorization failed
+0	09:20:55.914	ThinkMarkets MT4 build 1471 stopped
+0	14:10:43.942	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:10:43.942	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14865 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:10:43.942	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:10:45.267	'141049900': login on Exness-Real35 through DC-START (ping: 34.63 ms)
+0	14:10:45.863	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.63 ms)
+0	14:10:46.069	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:23:04.402	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:23:04.402	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16678 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:23:04.402	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:23:04.454	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\MACDSAMPLE_EUR_ctrl.ini'
+0	14:23:06.276	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:23:06.841	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:23:07.034	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:23:08.807	MQL5.community: authorization failed
+0	14:23:08.894	ThinkMarkets MT4 build 1471 stopped
+0	14:25:28.273	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:25:28.273	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16308 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:25:28.273	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:25:28.324	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AIGOLD_XAU.ini'
+0	14:25:29.996	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:25:30.597	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:25:30.773	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:25:32.739	MQL5.community: authorization failed
+0	14:25:32.843	ThinkMarkets MT4 build 1471 stopped
+0	14:25:38.381	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:25:38.382	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16180 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:25:38.382	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:25:38.433	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AIGOLD_EUR.ini'
+0	14:25:40.089	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:25:40.718	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:25:40.924	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:25:42.791	MQL5.community: authorization failed
+0	14:25:42.969	ThinkMarkets MT4 build 1471 stopped
+0	14:26:27.076	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:26:27.076	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16163 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:26:27.076	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:26:27.128	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\GOLDSTUFF_XAU.ini'
+0	14:26:28.759	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:26:29.328	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:26:29.550	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:26:33.473	MQL5.community: authorization failed
+0	14:26:33.642	ThinkMarkets MT4 build 1471 stopped
+0	14:26:37.168	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:26:37.168	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16089 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:26:37.168	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:26:37.218	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\GOLDSTUFF_EUR.ini'
+0	14:26:38.861	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:26:39.480	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:26:39.668	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:26:41.861	MQL5.community: authorization failed
+0	14:26:42.213	ThinkMarkets MT4 build 1471 stopped
+0	14:31:28.186	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:31:28.187	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 15646 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:31:28.187	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:31:28.246	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_BILL_XAU.ini'
+0	14:31:29.666	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:31:30.251	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:31:30.457	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:32:58.183	ThinkMarkets MT4 build 1471 stopped
+0	14:33:22.726	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:33:22.726	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 15323 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:33:22.726	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:33:22.783	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_BILL_EUR.ini'
+0	14:33:24.236	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:33:24.912	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:33:25.132	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:36:31.598	ThinkMarkets MT4 build 1471 stopped
+0	14:37:00.125	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:37:00.126	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14912 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:37:00.126	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:37:00.183	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_GF_XAU.ini'
+0	14:37:01.779	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:02.359	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:02.552	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:37:04.360	MQL5.community: authorization failed
+0	14:37:04.590	ThinkMarkets MT4 build 1471 stopped
+0	14:37:28.417	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:37:28.417	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14821 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:37:28.417	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:37:28.466	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_GF_EUR.ini'
+0	14:37:29.919	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:30.471	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:30.690	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:37:32.567	MQL5.community: authorization failed
+0	14:37:32.748	ThinkMarkets MT4 build 1471 stopped
+0	14:37:56.956	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:37:56.957	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14720 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:37:56.957	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:37:57.014	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_PA_XAU.ini'
+0	14:37:58.419	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:59.115	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:37:59.320	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:37:59.650	ThinkMarkets MT4 build 1471 stopped
+0	14:38:20.164	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:38:20.165	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14598 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:38:20.165	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:38:20.221	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\JOBOT_PA_EUR.ini'
+0	14:38:21.615	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:38:22.232	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:38:22.451	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:38:22.772	ThinkMarkets MT4 build 1471 stopped
+0	14:38:45.721	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:38:45.722	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14605 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:38:45.722	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:38:45.773	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\NIYOM_RSI_XAU.ini'
+0	14:38:47.238	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:38:47.862	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:38:48.049	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:38:49.774	MQL5.community: authorization failed
+0	14:38:50.098	ThinkMarkets MT4 build 1471 stopped
+0	14:39:14.240	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:39:14.241	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14512 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:39:14.241	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:39:14.298	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\NIYOM_RSI_EUR.ini'
+0	14:39:15.746	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:39:16.397	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:39:16.586	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:39:18.494	MQL5.community: authorization failed
+0	14:39:18.646	ThinkMarkets MT4 build 1471 stopped
+0	14:39:44.796	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:39:44.797	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14754 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:39:44.797	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:39:44.860	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ALGO_XAU.ini'
+0	14:39:46.287	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:39:46.952	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:39:47.143	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:39:48.700	MQL5.community: authorization failed
+0	14:39:49.204	ThinkMarkets MT4 build 1471 stopped
+0	14:40:15.043	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:40:15.043	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14755 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:40:15.043	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:40:15.101	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ALGO_EUR.ini'
+0	14:40:16.506	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:40:17.172	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:40:17.392	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:40:18.919	MQL5.community: authorization failed
+0	14:40:19.434	ThinkMarkets MT4 build 1471 stopped
+0	14:40:40.376	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:40:40.376	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14728 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:40:40.376	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:40:40.435	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ARTGOLD_XAU.ini'
+0	14:40:41.834	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:40:42.525	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:40:42.725	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:40:44.212	MQL5.community: authorization failed
+0	14:40:44.273	ThinkMarkets MT4 build 1471 stopped
+0	14:41:06.795	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:41:06.796	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14687 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:41:06.796	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:41:06.847	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ARTGOLD_EUR.ini'
+0	14:41:08.269	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:41:08.862	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:41:09.050	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:41:10.657	MQL5.community: authorization failed
+0	14:41:11.132	ThinkMarkets MT4 build 1471 stopped
+0	14:41:35.199	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:41:35.200	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14620 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:41:35.200	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:41:35.259	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AUI_XAU.ini'
+0	14:41:36.678	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:41:37.364	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:41:37.571	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:41:45.915	MQL5.community: authorization failed
+0	14:41:46.166	ThinkMarkets MT4 build 1471 stopped
+0	14:42:10.386	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:42:10.387	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14536 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:42:10.387	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:42:10.445	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AUI_EUR.ini'
+0	14:42:11.837	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:42:12.412	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:42:12.600	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:42:15.155	MQL5.community: authorization failed
+0	14:42:15.663	ThinkMarkets MT4 build 1471 stopped
+0	14:42:48.127	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:42:48.128	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14391 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:42:48.128	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:42:48.186	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AWREC_XAU.ini'
+0	14:42:49.612	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:42:50.196	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:42:50.722	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:42:52.265	MQL5.community: authorization failed
+0	14:42:52.772	ThinkMarkets MT4 build 1471 stopped
+0	14:43:19.619	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:43:19.619	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14371 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:43:19.619	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:43:19.677	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\AWREC_EUR.ini'
+0	14:43:21.083	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:43:21.638	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:43:21.839	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:43:23.756	MQL5.community: authorization failed
+0	14:43:23.881	ThinkMarkets MT4 build 1471 stopped
+0	14:44:02.657	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:44:02.657	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14186 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:44:02.657	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:44:02.707	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BORING_XAU.ini'
+0	14:44:04.137	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:44:04.733	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:44:04.907	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:44:24.674	MQL5.community: authorization failed
+0	14:44:25.061	ThinkMarkets MT4 build 1471 stopped
+0	14:44:58.304	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:44:58.304	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14158 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:44:58.304	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:44:58.349	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BORING_EUR.ini'
+0	14:44:59.738	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:45:00.351	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:45:00.541	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:45:05.492	'141049900': connect failed [No connection]
+1	14:45:21.092	MQL5.community: authorization failed
+0	14:45:21.242	ThinkMarkets MT4 build 1471 stopped
+0	14:45:59.257	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:45:59.257	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14027 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:45:59.257	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:45:59.312	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRKILL_XAU.ini'
+0	14:46:00.555	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:46:01.114	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:46:01.324	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:46:05.075	MQL5.community: authorization failed
+0	14:46:05.410	ThinkMarkets MT4 build 1471 stopped
+0	14:46:36.730	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:46:36.730	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13878 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:46:36.730	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:46:36.781	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRKILL_EUR.ini'
+0	14:46:38.173	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:46:38.799	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:46:38.986	'141049900': previous successful authorization performed from 66.212.22.7
+1	14:46:41.229	MQL5.community: authorization failed
+0	14:46:41.549	ThinkMarkets MT4 build 1471 stopped
+0	14:47:16.953	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:47:16.953	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13827 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:47:16.953	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:47:17.010	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRNBO_XAU.ini'
+0	14:47:18.452	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:47:19.116	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:47:19.340	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:47:31.796	MQL5.community: authorization failed
+0	14:47:32.006	ThinkMarkets MT4 build 1471 stopped
+0	14:47:57.804	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:47:57.805	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13680 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:47:57.805	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:47:57.864	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRNBO_EUR.ini'
+0	14:47:59.281	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:47:59.875	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:48:00.079	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:48:13.722	MQL5.community: authorization failed
+0	14:48:13.770	ThinkMarkets MT4 build 1471 stopped
+0	14:48:36.855	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:48:36.856	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13646 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:48:36.856	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:48:36.915	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRN3_XAU.ini'
+0	14:48:38.322	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:48:38.952	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:48:39.174	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:48:48.228	MQL5.community: authorization failed
+0	14:48:48.286	ThinkMarkets MT4 build 1471 stopped
+0	14:49:12.441	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:49:12.441	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13514 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:49:12.441	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:49:12.491	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRN3_EUR.ini'
+0	14:49:13.994	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:49:14.547	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:49:14.738	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:49:25.415	MQL5.community: authorization failed
+0	14:49:25.456	ThinkMarkets MT4 build 1471 stopped
+0	14:49:51.028	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:49:51.028	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13465 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:49:51.028	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:49:51.077	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\CLEV_XAU.ini'
+0	14:49:52.503	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:49:53.129	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:49:53.318	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:50:19.549	ThinkMarkets MT4 build 1471 stopped
+0	14:50:46.344	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:50:46.345	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13351 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:50:46.345	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:50:46.394	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\CLEV_EUR.ini'
+0	14:50:47.816	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:50:48.474	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:50:48.665	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:50:50.263	MQL5.community: authorization failed
+0	14:50:50.717	ThinkMarkets MT4 build 1471 stopped
+0	14:51:18.525	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:51:18.526	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13308 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:51:18.526	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:51:18.574	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\DHW_XAU.ini'
+0	14:51:19.993	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:51:20.697	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:51:20.904	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:51:22.341	MQL5.community: authorization failed
+0	14:51:22.467	ThinkMarkets MT4 build 1471 stopped
+0	14:51:43.571	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:51:43.571	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13203 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:51:43.571	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:51:43.624	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\DHW_EUR.ini'
+0	14:51:45.041	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:51:45.685	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:51:45.895	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:51:47.428	MQL5.community: authorization failed
+0	14:51:47.947	ThinkMarkets MT4 build 1471 stopped
+0	14:52:09.411	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:52:09.411	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13217 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:52:09.411	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:52:09.466	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\EA2050_XAU.ini'
+0	14:52:10.894	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:11.542	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:11.750	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:52:12.081	ThinkMarkets MT4 build 1471 stopped
+0	14:52:29.022	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:52:29.022	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13136 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:52:29.022	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:52:29.071	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\EA2050_XAU2.ini'
+0	14:52:30.463	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:31.117	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:31.323	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:52:31.668	ThinkMarkets MT4 build 1471 stopped
+0	14:52:55.929	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:52:55.929	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13275 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:52:55.929	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:52:55.977	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\EA2050_EUR.ini'
+0	14:52:57.401	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:58.068	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:52:58.293	'141049900': previous successful authorization performed from 49.228.251.75
+0	14:52:58.624	ThinkMarkets MT4 build 1471 stopped
+0	14:54:30.256	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:54:30.256	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13424 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:54:30.256	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:54:30.308	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\GOLDSTUFF_XAU_pipx10.ini'
+0	14:54:31.761	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:54:32.379	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:54:32.584	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:54:35.927	MQL5.community: authorization failed
+0	14:54:36.160	ThinkMarkets MT4 build 1471 stopped
+0	14:56:07.280	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	14:56:07.280	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 13254 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	14:56:07.280	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	14:56:07.328	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ARTGOLD_XAU_spreadfix.ini'
+0	14:56:08.760	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:56:09.442	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	14:56:09.665	'141049900': previous successful authorization performed from 49.228.251.75
+1	14:56:11.152	MQL5.community: authorization failed
+0	14:56:11.593	ThinkMarkets MT4 build 1471 stopped
+0	15:18:14.175	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:18:14.175	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14575 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:18:14.175	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:18:14.230	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\DHW_XAU_spreadfix.ini'
+0	15:18:15.802	'141049900': login on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	15:18:16.436	'141049900': login datacenter on Exness-Real35 through DC-START (ping: 34.26 ms)
+0	15:18:16.645	'141049900': previous successful authorization performed from 1.20.173.25
+0	15:18:18.172	'141049900': auto connecting to a better access point DC05 (ping is 35.46 ms)
+1	15:18:18.177	MQL5.community: authorization failed
+0	15:18:18.688	ThinkMarkets MT4 build 1471 stopped
+0	15:19:18.634	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:19:18.634	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14587 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:19:18.634	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:19:18.692	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\DHW_XAU_fullfix.ini'
+0	15:19:20.203	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:19:20.961	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:19:21.152	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:19:22.613	MQL5.community: authorization failed
+0	15:19:22.700	ThinkMarkets MT4 build 1471 stopped
+0	15:20:36.945	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:20:36.945	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 14385 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:20:36.945	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:20:36.992	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ALGO_XAU_fix.ini'
+0	15:20:38.606	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:20:39.362	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:20:39.584	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:20:41.026	MQL5.community: authorization failed
+0	15:20:41.125	ThinkMarkets MT4 build 1471 stopped
+0	15:21:09.667	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:21:09.668	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 17502 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:21:09.668	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:21:09.718	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\ALGO_EUR_fix.ini'
+0	15:21:11.321	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:21:12.100	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:21:12.289	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:21:22.498	MQL5.community: authorization failed
+0	15:21:22.907	ThinkMarkets MT4 build 1471 stopped
+0	15:21:58.250	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:21:58.251	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 17398 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:21:58.251	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:21:58.308	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\BRN3_XAU_pipx10.ini'
+0	15:21:59.880	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:22:00.663	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:22:00.851	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:22:09.734	MQL5.community: authorization failed
+0	15:22:09.962	ThinkMarkets MT4 build 1471 stopped
+0	15:22:29.390	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:22:29.390	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 17372 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:22:29.390	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:22:29.445	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\CLEV_XAU_tpfix.ini'
+0	15:22:31.043	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:22:31.817	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:22:32.035	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:22:33.590	MQL5.community: authorization failed
+0	15:22:34.082	ThinkMarkets MT4 build 1471 stopped
+0	15:22:58.965	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:22:58.965	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 17294 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:22:58.965	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:22:59.015	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\CLEV_XAU_tponly.ini'
+0	15:23:00.545	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:23:01.296	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:23:01.487	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:23:02.991	MQL5.community: authorization failed
+0	15:23:03.044	ThinkMarkets MT4 build 1471 stopped
+0	15:25:32.555	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:25:32.555	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16801 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:25:32.555	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:25:32.609	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\GAMECHG_XAU.ini'
+0	15:25:34.166	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:25:34.944	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:25:35.147	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:25:43.971	MQL5.community: authorization failed
+0	15:25:44.304	ThinkMarkets MT4 build 1471 stopped
+0	15:26:08.354	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:26:08.355	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16749 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:26:08.355	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:26:08.401	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\GAMECHG_EUR.ini'
+0	15:26:09.916	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:26:10.677	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:26:10.879	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:26:16.974	MQL5.community: authorization failed
+0	15:26:17.011	ThinkMarkets MT4 build 1471 stopped
+0	15:26:35.511	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:26:35.511	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16587 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:26:35.511	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:26:35.569	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\IRONMAN_XAU.ini'
+0	15:26:37.049	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:26:37.764	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:26:37.936	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:26:42.797	MQL5.community: authorization failed
+0	15:26:42.996	ThinkMarkets MT4 build 1471 stopped
+0	15:27:01.558	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:27:01.558	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16583 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:27:01.558	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:27:01.611	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\IRONMAN_EUR.ini'
+0	15:27:03.101	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:03.821	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:04.038	'141049900': previous successful authorization performed from 49.228.251.75
+1	15:27:09.013	MQL5.community: authorization failed
+0	15:27:09.108	ThinkMarkets MT4 build 1471 stopped
+0	15:27:26.405	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:27:26.405	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16539 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:27:26.405	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:27:26.449	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+0	15:27:27.929	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:28.637	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:28.856	'141049900': previous successful authorization performed from 49.228.251.75
+0	15:27:29.186	ThinkMarkets MT4 build 1471 stopped
+0	15:27:53.467	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:27:53.468	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16459 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:27:53.468	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:27:53.526	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+0	15:27:54.928	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:55.693	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:27:55.882	'141049900': previous successful authorization performed from 49.228.251.75
+0	15:27:56.202	ThinkMarkets MT4 build 1471 stopped
+0	15:31:06.454	ThinkMarkets MT4 build 1471 started (TF Global Markets (Aust) Pty Ltd)
+0	15:31:06.454	Windows 10 Pro x64, UAC, 20 x 13th Gen Intel Core i5-13500, Memory: 16119 / 32535 Mb, Disk: 181 / 465 Gb, GMT+7
+0	15:31:06.454	Data Folder: C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0
+0	15:31:06.501	Started with configuration file 'D:\EA_LAB\_mt4_auto\ini\LAMBO_XAU.ini'
+0	15:31:07.976	'141049900': login on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:31:08.739	'141049900': login datacenter on Exness-Real35 through DC05 (ping: 35.46 ms)
+0	15:31:08.910	'141049900': previous successful authorization performed from 49.228.251.75
+0	15:31:09.227	ThinkMarkets MT4 build 1471 stopped

@@ -1,0 +1,38 @@
+All 30 rows are in the CSV. Now let me compile the ranked markdown table sorted by XAU PF descending.
+
+---
+
+## BATCH 1 Results — Ranked by XAU PF (Descending)
+
+| EA | XAU PF | XAU DD% | XAU Trades | EUR PF | Verdict (XAU) |
+|---|---|---|---|---|---|
+| ClevrFX_EA | **5.27** | 12.58% | 3,993 | 0.00 (NO_DATA) | **PASS** |
+| BuRengNong207_FiniteBreakOut | **1.76** | 8.58% | 508 | 1.65 | **PASS** |
+| AW Recovery EA V3.3_fix | **1.32** | 0.86% | 24 | 1.41 | **WATCH** |
+| Broker Killer v 2 .2 by @SoftechFX_Robot | 1.09 | 0.56% | 5,613 | 1.35 | REJECT |
+| (Jobot) Billionaire News EA ATR Hand | 1.01 | 19.63% | 2,573 | 0.38 | REJECT |
+| (Jobot) Greed and Fear v3 | 1.00 | 0.00% | 2 | 0.26 | THIN |
+| Aui grid 1.0 mt4 | 0.32 | 0.25% | 5,527 | 0.73 | REJECT |
+| AlgoScalpPro_2.6_Update | — | — | 0 | 0 | NO_DATA |
+| ARTGOLDPro_TFH1Complete | — | — | 0 | 0.59 | NO_DATA |
+| BuRengNong2073 | — | — | 0 | 0 | NO_DATA |
+| DHW GoldEA4 | — | — | 0 | 0 | NO_DATA |
+| (Jobot) Price Action - Trend Line -Fibo -Martingale v3.2 Hedging + atr + nearby | — | — | — | — | NO_REPORT |
+| (NiyomBot) RSI Dynamic Candle V3.1 | — | — | 0 | 0.00 | NO_DATA / REJECT |
+| Boring Pips MT4_4.3_fix | — | — | 0 | 16.74 | NO_DATA |
+| EA 2050 Pro | — | — | — | — | NO_REPORT |
+
+### Summary
+
+- **PASS on XAU**: ClevrFX_EA (PF 5.27, 12.6% DD), BuRengNong207_FiniteBreakOut (PF 1.76, 8.6% DD)
+- **WATCH on XAU**: AW Recovery EA V3.3_fix (PF 1.32, 0.86% DD) — low trades (24)
+- **REJECT on XAU**: (Jobot) Billionaire News EA (PF 1.01), Broker Killer (PF 1.09), (Jobot) Greed and Fear (PF 1.00, THIN), Aui grid (PF 0.32)
+- **NO_DATA (0 trades)**: AlgoScalpPro, ARTGOLDPro, BuRengNong2073, DHW GoldEA4, Boring Pips (XAU only)
+- **NO_REPORT (EA failed to init)**: (Jobot) Price Action..., EA 2050 Pro
+- **GRID RISK** (DD >30% AND trades >2000): **Aui grid 1.0 mt4** on XAU (5,527 trades, PF 0.32, massive trade count with negative profit — classic grid/martingale blowup pattern)
+
+### Standout Performers
+
+1. **ClevrFX_EA** — Best XAU result: PF 5.27, 3,993 trades, 12.6% max DD. However, EURUSDc returned NO_DATA (0 trades), suggesting it may be XAU-only or has symbol-specific issues.
+2. **BuRengNong207_FiniteBreakOut** — Solid across both symbols: XAU PF 1.76 (508 trades, 8.6% DD) + EUR PF 1.65 (24 trades, 0.01% DD). Most balanced performer.
+3. **AW Recovery EA V3.3_fix** — WATCH on XAU (PF 1.32, 0.86% DD) + PASS on EUR (PF 1.41). Recovery/martingale-style but very tight DD.

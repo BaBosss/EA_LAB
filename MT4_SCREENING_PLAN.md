@@ -1,6 +1,6 @@
 # MT4 EA Screening — Workflow Design & Qwen Handoff
 
-อัพเดท: 2026-06-21 | สถานะ: 🟢 INFRA PROVEN (4 runs done) — พร้อมส่ง Qwen ทำ batch ต่อ
+อัพเดท: 2026-06-21 | สถานะ: ✅ **COMPLETE — Screening + Deep Validation จบแล้ว. ผล: 0 EA ผ่าน. ไม่มีตัวใดเข้าพอร์ต.**
 
 ## เป้าหมาย
 Smoke-screen MT4 EAs ~63 ตัว (โฟลเดอร์ `MQL4\Experts`) ที่ยังไม่เคยเทส
@@ -203,14 +203,27 @@ Phase 2 suspects Batch 3:
 | Infinix ea | 8.48 | 33 | THIN; XAU DD=103% |
 | Fibot EA | 2.48 | 321 | ไม่เทรด XAU |
 
-## Next: Deep Validation (IS/OOS + Model 0)
-Top 3 → IS/OOS extended (2020-2025) + Model 0 every-tick → cent .set
+## ✅ Deep Validation — COMPLETE (2026-06-21): ทุกตัว REJECT
+**Method:** IS window 2023.12.01→2025.06.01 (18mo, ไม่เคยดู) + OOS = 1-yr screen (2025.06.01→2026.06.01).
+MT4 ไม่มี data 2020-2022 (XAUUSDc H1 ลึกแค่ ~30mo) → ต้อง split ภายใน data ที่มี.
+Gate: IS+OOS ต้อง PF≥1.20 + DD consistent.
 
-## หลัง screen เสร็จ (Claude ทำต่อ)
-1. **Phase 2 pip re-test** กับ gold ทุกตัวที่ churn / NO_DATA / THIN ที่มี pip_suspect (ข้างบน)
-2. คัด PASS/WATCH ที่ DD สมเหตุสมผล → deep validation (IS/OOS split + Model 0 every-tick ตัวที่ผ่าน)
-3. แยก GRID/martingale ออกพิจารณาต่างหาก (ต้อง MC + DD cap)
-4. ตัวที่รอด → cent .set + เข้า portfolio expansion
+| EA | IS PF | IS DD% | OOS PF | OOS DD% | สาเหตุ REJECT |
+|---|---|---|---|---|---|
+| EA_Golden_Elephant | **0.09** | 16.47 | 4.08 | 2.60 | Grid (StepGrid=250, MultiplierLot=2, MaxOrder=4) — OOS 1ปีดีบังเอิญ |
+| KRAPOOK BLUE ANT | 1.12 | **12.57** | 2.65 | 0.40 | Grid (Grid_Distance_Snow/Rev) — IS DD ต่างจาก OOS 31× |
+| BuRengNong207 | **0.00** | **100.2** | 1.76 | 8.58 | Martingale (mult=1.4, MaxTrades=20) — บัญชีแตกใน IS |
+| EURUSD Forex Robot (XAU) | THIN 10t | — | 5.56 | 30.31 | ไม่ใช่ native XAU (Symbols="EURUSD H1"); IS 10t vs OOS 73t ขัดแย้ง |
+| EURUSD Forex Robot (EUR) | 1.38 | 0.22 | 3.89 | — | Martingale params, WATCH เท่านั้น, degradation 2.8× |
+
+**EA_Golden_Elephant = EA_Golden_Mammoth** — ยืนยัน MD5 hash เหมือนกันเป๊ะ (ไฟล์เดียวกัน คนละชื่อ).
+
+### ข้อสรุป
+ทุก EA ที่ดูดีในหน้าต่าง 1 ปี (screen) ล้วนมีโครงสร้าง **martingale/grid** ที่โผล่ใน IS period.
+นี่คือ finding ปกติของ random MT4 EA pool — PF สูงในช่วงสั้นมักมาจากการถัวที่ระเบิดเมื่อเจอ trend ยาว.
+**ไม่มี MT4 EA เข้าพอร์ต. แผน live ยังคงเป็น MT5 5-EA + EA_BREAKOUT_XAU (ตัวที่ 6).**
+
+## เครื่องมือเพิ่ม
 
 ## เครื่องมือเพิ่ม
 - `scripts\mt4_pipfix_set.py` — ดึง params จากรายงาน → ×N เฉพาะ pip fields → เขียน .set สำหรับ re-test
