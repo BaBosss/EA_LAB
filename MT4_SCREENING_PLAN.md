@@ -24,6 +24,11 @@ Smoke-screen MT4 EAs ~63 ตัว (โฟลเดอร์ `MQL4\Experts`) ท
 > หมายเหตุ broker: นายอยากได้ ThinkMarkets แต่ terminal ล็อกอินค้างที่ Exness
 > และสลับต้อง login (Claude กรอกรหัสไม่ได้). Exness cent data ลึก+ใหม่กว่า ThinkMarkets
 > และตรงแผน cent live → ใช้ Exness ไปก่อน. ถ้าจะเอา ThinkMarkets: นาย login เองแล้วรันซ้ำ symbol = EURUSD/XAUUSD (ไม่มี c)
+>
+> ⚠️ **DIGITS (ยืนยัน 2026-06-21):** XAUUSDc = **3 หลัก** (ราคา 3353.870, point=0.001),
+> EURUSDc = 5 หลัก (มาตรฐาน). gold EA ที่ hardcode SL/TP เป็น point โดยไม่เช็ค Digits จะเพี้ยน 10 เท่า.
+> **แต่นี่คือสภาพ live จริงของนาย** (Exness cent = gold 3 หลัก) → เทส 3 หลัก = ถูกต้อง ตรง live.
+> EA ที่พังบน 3 หลัก = พังในพอร์ตจริงด้วย → คัดออกถูกแล้ว. ทุก XAU row ใน CSV เป็น 3 หลักทั้งหมด.
 
 ---
 
