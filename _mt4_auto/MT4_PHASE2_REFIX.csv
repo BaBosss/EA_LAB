@@ -1,3 +1,8 @@
 expert,symbol,fix,trades,PF,net,maxDD%,win%,quality,screen
 Gold Stuff EA V7.0,XAUUSDc,pip_x10(TP/dist/trail),3948.0,4.98,17454.22,53.16,71.53,n/a,PASS
 ARTGOLDPro_TFH1Complete,XAUUSDc,MaxSpread_x10(80->800),30.0,1.1,11.31,0.87,86.67,n/a,WATCH
+DHW GoldEA4,XAUUSDc,MaxSpread_x10(60->600)+SwingBuf+TP_x10,0,,,,,,NO_DATA(structural)
+AlgoScalpPro_2.6_Update,XAUUSDc,spread+pip_x10,0,,,,,,NO_DATA(XAU logic fail)
+AlgoScalpPro_2.6_Update,EURUSDc,spread+pip_x10,124.0,0.41,-3990.19,44.92,54.84,n/a,REJECT
+BuRengNong2073,XAUUSDc,pip_x10(SL/TP/step/Trail),0,,,,,,NO_DATA(TF15 only)
+ClevrFX_EA,XAUUSDc,TP_x10(10->100),0,,,,,,REJECT(scalp_artifact)

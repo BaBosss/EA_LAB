@@ -1,0 +1,71 @@
+allowBuy=true
+allowSell=true
+strattype=1
+ORDER="======= ORDER SETTINGS ======"
+lottype=1
+lotSize=0.01
+takeprofit=100
+lotMul=1.5
+lotMax=0
+mulSkip=1
+dist2=20
+dist3=1
+dist4=1
+RISK_MANAGEMENT="====== RISK MANAGEMENT ====="
+oneTradePerCandle=true
+allowHedge=true
+maxspread=0
+tradeLimit=20
+maxPairs=0
+LOSS_CUT="========= LOSS CUT ========="
+lossCutType=0
+lcvalue=1000
+DD_RECOVERY="======== DD RECOVERY ========"
+ddRecovery=true
+ddrCount=3
+ddrProfit=1
+RSI_="======= RSI SETTINGS ========"
+rsiperiod=9
+rsiprice=0
+roverbought=70
+roversold=30
+MA_="======== MA SETTINGS ========"
+ma1period=5
+ma1shift=0
+ma1method=0
+ma1price=0
+TIME_MANAGEMNET="====== TIME MANAGEMENT ======"
+use_date=false
+startTime="7:00"
+endTime="19:00"
+DAY_MANAGEMNET="======= DAY MANAGEMENT ======="
+monday=true
+tuesday=true
+wednesday=true
+thursday=true
+friday=false
+OTHER="======= OTHER SETTINGS ======"
+highRes=false
+dbtype=0
+showCandleProf=true
+magic=9244
+NEWS="======== NEWS ========"
+closeBefore=15
+startAfter=30
+currencies="AUD,CAD,EUR,GBP,JPY,NZD,USD"
+NEWS_IMPACT="======= IMPACT ======="
+highImpact=true
+medImpact=true
+lowImpact=false
+NEWS_COLORS="======= COLORS ========"
+clrHighNews=Red
+clrMedNews=Orange
+clrLowNews=Yellow
+NEWS_BOX="====== NEWS BOX ======"
+showNewsBox=true
+showBg=true
+bgcolor=Black
+newsCount=5
+NEWS_LINES="====== NEWS LINES ======"
+showNewsLines=true
+showText=true
