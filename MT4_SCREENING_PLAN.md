@@ -86,6 +86,25 @@ python "D:\EA_LAB\scripts\parse_mt4_report.py" "D:\EA_LAB\_mt4_auto\reports\<TAG
 ดู `QWEN_MT4_SCREEN_PLAN.md` — รัน EA ที่เหลือทั้งหมด × {XAUUSDc, EURUSDc} ด้วย pattern ข้างบน
 แล้ว append ลง `MT4_SCREEN_RESULTS.csv` + รายงานตาราง ranked ตาม PF (XAU)
 
+## ผล Batch 2 (15 EAs — Qwen, 2026-06-21) ✅ COMPLETE
+| EA | XAU PF | XAU t | XAU DD% | EUR PF | verdict | หมายเหตุ |
+|---|---|---|---|---|---|---|
+| EA_Golden_Elephant | **4.08** | 207 | 2.60 | **6.69** | PASS ✅ | clean ทั้งคู่ |
+| EA_Golden_Mammoth | **4.08** | 207 | 2.60 | **6.69** | PASS ✅ | ผลเหมือน Elephant ทุกบิต = same EA? |
+| EURUSD Trading Forex Robot | **5.56** | 73 | 30.31 | **3.89** | PASS | XAU DD สูงเล็กน้อย |
+| EA Game Changer_fix | **7.32** | 6911 | 14.33 | **2.22** | PASS⚠️ | 6911t = churn suspect Phase 2 |
+| EA-HOKKYDJONG | 1.03 | 5825 | 0.77 | **1.80** | XAU REJECT/EUR PASS | XAU churn |
+| Fibot EA | NO_DATA | 0 | — | **2.48** | EUR PASS only | XAU ไม่เทรด |
+| EA IRON MAN V.10 | NO_DATA | — | — | THIN | NO_DATA | |
+| EA Re Mink-Kwan 1.6 | NO_DATA | — | — | NO_DATA | structural | |
+| EA Rebalance V.5+ | NO_DATA | — | — | NO_DATA | structural | |
+| Espresso_Gold_Pro | 0.34 | 301 | **125%** | 0.07 | REJECT | DD หายนะ |
+| Fx Setka Trader v2 | 0.19 | 1133 | **103%** | 0.93 | REJECT | DD หายนะ |
+| Fancy Meal | THIN | 6 | — | 1.01 | THIN | |
+| EA Lambo | SKIP | — | — | SKIP | NO_REPORT | |
+| EX18 GTS | SKIP | — | — | SKIP | NO_REPORT | |
+| GARRY'S AI | SKIP | — | — | SKIP | NO_REPORT | |
+
 ## ⚠️ Phase 2 — Pip-adjusted re-test (สำคัญ! กัน "พลาด EA ดีเพราะตั้ง pip ผิด")
 **ปัญหา:** บน gold 3-หลัก (point=0.001) EA ที่ input SL/TP/distance ถูกตั้งมาเพื่อ 2-หลัก
 จะ**เล็กไป 10 เท่า** → EA churn (เทรดถล่ม TP จิ๋ว) หรือ **ไม่เทรดเลย (NO_DATA/THIN)** →

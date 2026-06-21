@@ -33,3 +33,33 @@ DHW GoldEA4,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
 DHW GoldEA4,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
 EA 2050 Pro ,XAUUSDc,SKIP,,,,,,,NO_REPORT
 EA 2050 Pro ,EURUSDc,SKIP,,,,,,,NO_REPORT
+EA Game Changer_fix,XAUUSDc,1 Hour (H1),6911.0,7.32,64774.21,14.33,70.57,n/a,PASS
+EA Game Changer_fix,EURUSDc,1 Hour (H1),1006.0,2.22,64.03,0.6,70.68,n/a,PASS
+EA IRON MAN V.10,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA IRON MAN V.10,EURUSDc,1 Hour (H1),9.0,0.78,-4.6,0.51,55.56,n/a,THIN
+EA Lambo   43168831,XAUUSDc,SKIP,,,,,,,NO_REPORT
+EA Lambo   43168831,EURUSDc,SKIP,,,,,,,NO_REPORT
+EA Re Mink-Kwan 1.6,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA Re Mink-Kwan 1.6,EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA Rebalance V.5+ by [NVF],XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA Rebalance V.5+ by [NVF],EURUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+EA_Golden_Elephant,XAUUSDc,1 Hour (H1),207.0,4.08,270.1,2.6,69.57,n/a,PASS
+EA_Golden_Elephant,EURUSDc,1 Hour (H1),101.0,6.69,48.35,0.41,79.21,n/a,PASS
+EA_Golden_Mammoth,XAUUSDc,1 Hour (H1),207.0,4.08,270.1,2.6,69.57,n/a,PASS
+EA_Golden_Mammoth,EURUSDc,1 Hour (H1),101.0,6.69,48.35,0.41,79.21,n/a,PASS
+EA-HOKKYDJONG,XAUUSDc,1 Hour (H1),5825.0,1.03,3.21,0.77,94.59,n/a,REJECT
+EA-HOKKYDJONG,EURUSDc,1 Hour (H1),2882.0,1.8,71.2,0.51,66.79,n/a,PASS
+Espresso_Gold_Pro,XAUUSDc,1 Hour (H1),301.0,0.34,-13868.82,125.05,58.8,n/a,REJECT
+Espresso_Gold_Pro,EURUSDc,1 Hour (H1),116.0,0.07,-14338.88,140.67,31.03,n/a,REJECT
+EURUSD Trading Forex Robot,XAUUSDc,1 Hour (H1),73.0,5.56,630.45,30.31,64.38,n/a,PASS
+EURUSD Trading Forex Robot,EURUSDc,1 Hour (H1),36.0,3.89,5.8,0.06,61.11,n/a,PASS
+EX18 - GTSแก้แล้ว and Profit First_Last Closing Oder RV1+puUpper_limit,XAUUSDc,SKIP,,,,,,,NO_REPORT
+EX18 - GTSแก้แล้ว and Profit First_Last Closing Oder RV1+puUpper_limit,EURUSDc,SKIP,,,,,,,NO_REPORT
+Fancy Meal run_rev1 atr nearby,XAUUSDc,1 Hour (H1),6.0,0.2,-1.01,0.01,83.33,n/a,THIN
+Fancy Meal run_rev1 atr nearby,EURUSDc,1 Hour (H1),21.0,1.01,0.0,0.0,71.43,n/a,REJECT
+Fibot EA,XAUUSDc,1 Hour (H1),0.0,None,0.0,0.0,0.0,n/a,NO_DATA
+Fibot EA,EURUSDc,1 Hour (H1),321.0,2.48,22.64,0.15,50.16,n/a,PASS
+Fx Setka Trader v2,XAUUSDc,1 Hour (H1),1133.0,0.19,-10333.36,103.15,87.2,n/a,REJECT
+Fx Setka Trader v2,EURUSDc,1 Hour (H1),245.0,0.93,-1149.85,97.87,73.47,n/a,REJECT
+GARRY'S AI,XAUUSDc,SKIP,,,,,,,NO_REPORT
+GARRY'S AI,EURUSDc,SKIP,,,,,,,NO_REPORT
