@@ -1,0 +1,32 @@
+; EA_RUNNER Phase H (StrategySignal_v4) — GBPUSD H1 test
+; InpCountBars=20 matches ST_EA03 MACD_Count=2
+; Using GBPUSD-locked MACD params (12/26/9) + SL300/TP400
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=true
+InpMagic=990001
+InpHoldBars=0
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=300
+InpTakeProfitPoints=400
+InpVerboseLogging=false
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpCountBars=20
+InpTrailingPoints=0
+InpSessionFilter=false
+InpSessionStartGMT=7
+InpSessionEndGMT=17
+InpUseMtfGate=false
+InpGatePeriod=16385
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0

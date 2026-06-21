@@ -1,0 +1,16 @@
+; EA_BREAKOUT_XAU v3 LIVE params — XAUUSD H1
+; Validated: IS M4 2023-2026 PF=2.66 45t DD=0.89% | OOS M4 2020-2022 PF=1.77 33t DD=0.87%
+; Bar-open gate (g_bar_checked) ensures M4 matches OHLC trade count behavior
+InpBreakoutBars=40
+InpAtrPeriod=14
+InpAtrMaPeriod=20
+InpAtrMaRatio=1.0
+InpSlAtrMult=1.5
+InpTpAtrMult=5.0
+InpUseDailyEma=true
+InpEmaPeriod=200
+InpBuyOnly=true
+InpLotSize=0.01
+InpMagic=991001
+InpDeviation=20
+InpAllowLive=true

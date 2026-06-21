@@ -1,0 +1,33 @@
+; EA_RUNNER v3 — IS OPTIMIZE SET v2 (FIXED: non-overlapping Fast/Slow, complete algo)
+; StrategySignal_v3: MACD+RSI+EMA, both filters ON at defaults.
+;
+; FIX vs v1: previous set had Fast range up to 24 and Slow range from 18 → many
+; combos with Fast>=Slow returned INIT_FAILED (ValidateParams rejects), which made
+; the GENETIC optimizer abort after ~6 passes. Now Fast<=18 and Slow>=24 → every
+; combo is valid, zero OnInit failures. Use Optimization=1 (slow COMPLETE) for full
+; coverage; grid is small enough (1,500 combos) to brute-force with Model 2.
+;
+; Ranges: Fast||6||3||18||Y   = 6,9,12,15,18      (5)
+;         Slow||24||6||48||Y  = 24,30,36,42,48    (5)
+;         Signal||5||2||13||Y = 5,7,9,11,13       (5)
+;         SL||150||100||450||Y= 150,250,350,450   (4)
+;         TP||200||200||600||Y= 200,400,600       (3)
+; Total: 5×5×5×4×3 = 1,500 combos, all valid.
+
+InpAllowLiveOrders=true||0||0||0||N
+InpUseZeroLineFilter=false||0||0||0||N
+InpMinCrossStrength=0.0||0||0||0||N
+InpCountBars=0||0||0||0||N
+InpVerboseLogging=false||0||0||0||N
+InpHoldBars=0||0||0||0||N
+InpStopLossPoints=300||150||100||450||Y
+InpTakeProfitPoints=400||200||200||600||Y
+InpMacdFast=12||6||3||18||Y
+InpMacdSlow=26||24||6||48||Y
+InpMacdSignal=9||5||2||13||Y
+InpRsiPeriod=14||0||0||0||N
+InpUseRsiFilter=true||0||0||0||N
+InpRsiOverbought=70.0||0||0||0||N
+InpRsiOversold=30.0||0||0||0||N
+InpEmaPeriod=50||0||0||0||N
+InpUseEmaFilter=true||0||0||0||N

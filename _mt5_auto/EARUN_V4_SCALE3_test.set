@@ -1,0 +1,37 @@
+; EA_RUNNER Phase I (ScaleExecutor_v1) — 3-leg tiered TP test
+; InpCountBars=2, InpLotRepeat=3, TP: 50/100/200pts (5/10/20pip)
+; No SL (InpStopLossPoints=0) — ST_EA03-faithful mode
+; InpCloseOnReverseSignal=true — close all legs on opposite count signal
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=true
+InpMagic=990001
+InpHoldBars=0
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=0
+InpTakeProfitPoints=400
+InpVerboseLogging=false
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpCountBars=2
+InpLotRepeat=3
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpTrailingPoints=0
+InpSessionFilter=false
+InpSessionStartGMT=7
+InpSessionEndGMT=17
+InpUseMtfGate=false
+InpGatePeriod=16385
+InpCloseOnReverseSignal=true
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0

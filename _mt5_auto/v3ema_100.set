@@ -1,0 +1,17 @@
+InpAllowLiveOrders=true
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpCountBars=0
+InpVerboseLogging=false
+InpHoldBars=0
+InpStopLossPoints=300
+InpTakeProfitPoints=400
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpRsiPeriod=14
+InpRsiOverbought=70.0
+InpRsiOversold=30.0
+InpUseRsiFilter=false
+InpUseEmaFilter=true
+InpEmaPeriod=100

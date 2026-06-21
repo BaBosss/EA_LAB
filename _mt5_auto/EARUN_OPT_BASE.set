@@ -1,0 +1,22 @@
+; EA_RUNNER — BASE OPTIMIZE SET (wide range, genetic sweep)
+; Use with mt5_optimize.ps1 — Optimization=2 (genetic), Model=2 (open prices, fast)
+; After optimizer finishes, run select_robust_pass.py on the XML to pick center params.
+; DO NOT use this set for a final backtest — copy center_params into a locked .set first.
+;
+; Optimize ranges: Fast||6||3||24||Y = values 6,9,12,15,18,21,24 (7 steps)
+;                  Slow||18||6||48||Y = values 18,24,30,36,42,48 (6 steps)
+;                  Signal||5||2||13||Y = values 5,7,9,11,13 (5 steps)
+;                  SL||150||50||500||Y = values 150,200,...,500 (8 steps)
+;                  TP||200||100||600||Y = values 200,300,400,500,600 (5 steps)
+; Total grid: 7×6×5×8×5 = 8,400 combos — genetic optimizer handles this easily.
+
+InpAllowLiveOrders=true||0||0||0||N
+InpUseZeroLineFilter=true||0||0||0||N
+InpMinCrossStrength=0.0||0||0||0||N
+InpVerboseLogging=false||0||0||0||N
+InpHoldBars=0||0||0||0||N
+InpStopLossPoints=300||150||50||500||Y
+InpTakeProfitPoints=400||200||100||600||Y
+InpMacdFast=12||6||3||24||Y
+InpMacdSlow=26||18||6||48||Y
+InpMacdSignal=9||5||2||13||Y

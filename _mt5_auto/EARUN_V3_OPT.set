@@ -1,0 +1,31 @@
+; EA_RUNNER v3 — IS OPTIMIZE SET (MACD+RSI+EMA filters)
+; StrategySignal_v3: RSI zone filter + EMA trend-side filter (both ON, defaults).
+; Goal: compare best IS PF against v2 ceiling of PF=1.11.
+; Use with mt5_optimize.ps1 — Optimization=2 (genetic), Model=1 (OHLC fast)
+; After run: select_robust_pass.py on the XML → lock params into EARUN_V3_GBPUSD_locked.set
+;
+; First pass — fix RSI/EMA at defaults, optimize MACD + SL + TP.
+; Optimize ranges: Fast||6||3||24||Y = 6,9,12,15,18,21,24 (7 values)
+;                  Slow||18||6||48||Y = 18,24,30,36,42,48 (6 values)
+;                  Signal||5||2||13||Y = 5,7,9,11,13 (5 values)
+;                  SL||150||50||500||Y = 150,200,...,500 (8 values)
+;                  TP||200||100||600||Y = 200,300,400,500,600 (5 values)
+; Total grid: 7×6×5×8×5 = 8,400 combos (same size as v1 baseline — fair comparison)
+
+InpAllowLiveOrders=true||0||0||0||N
+InpUseZeroLineFilter=false||0||0||0||N
+InpMinCrossStrength=0.0||0||0||0||N
+InpCountBars=0||0||0||0||N
+InpVerboseLogging=false||0||0||0||N
+InpHoldBars=0||0||0||0||N
+InpStopLossPoints=300||150||50||500||Y
+InpTakeProfitPoints=400||200||100||600||Y
+InpMacdFast=12||6||3||24||Y
+InpMacdSlow=26||18||6||48||Y
+InpMacdSignal=9||5||2||13||Y
+InpRsiPeriod=14||0||0||0||N
+InpUseRsiFilter=true||0||0||0||N
+InpRsiOverbought=70.0||0||0||0||N
+InpRsiOversold=30.0||0||0||0||N
+InpEmaPeriod=50||0||0||0||N
+InpUseEmaFilter=true||0||0||0||N

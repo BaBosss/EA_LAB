@@ -1,0 +1,16 @@
+; EA_BREAKOUT_XAU v2 — center plateau pick (select_robust_pass.py)
+; IS 2023-2026: PF=2.10, DD=3.19%, Trades=195, Sharpe=3.47
+; Neighbors=12 (plateau center = low overfit risk)
+InpBreakoutBars=55
+InpAtrPeriod=14
+InpAtrMaPeriod=20
+InpAtrMaRatio=1.0
+InpSlAtrMult=1.5
+InpTpAtrMult=8.0
+InpUseDailyEma=true
+InpEmaPeriod=150
+InpBuyOnly=true
+InpLotSize=0.01
+InpMagic=991001
+InpDeviation=20
+InpAllowLive=true

@@ -1,5 +1,0 @@
-InpAllowLiveOrders=true
-InpUseZeroLineFilter=true
-InpVerboseLogging=false
-InpStopLossPoints=300||150||150||600||1
-InpTakeProfitPoints=600||300||150||900||1

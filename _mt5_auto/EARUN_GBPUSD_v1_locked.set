@@ -1,4 +1,5 @@
 ; EA_RUNNER GBPUSD H1 — first OOS-positive config (IS PF 1.11 / OOS PF 1.02), 2026-06-20
+; Phase F: LotSizer wired — FIXED mode = same behavior as before (base=0.01)
 InpAllowLiveOrders=true
 InpUseZeroLineFilter=true
 InpMinCrossStrength=0.0
@@ -9,3 +10,9 @@ InpHoldBars=0
 InpMacdFast=12
 InpMacdSlow=26
 InpMacdSignal=9
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0

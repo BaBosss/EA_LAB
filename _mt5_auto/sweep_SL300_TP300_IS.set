@@ -1,0 +1,14 @@
+InpAllowLiveOrders=true
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpVerboseLogging=false
+InpStopLossPoints=300
+InpTakeProfitPoints=300
+InpHoldBars=0
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpCountBars=0
+InpTrailingPoints=0
+InpSessionFilter=false
+InpUseMtfGate=false

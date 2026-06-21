@@ -1,0 +1,44 @@
+; EA_RUNNER Phase J — XAUUSD H1 IS backtest (StrategySignal_v5 Donchian breakout)
+; Validated params from EA_LabTemplate BREAKOUT_opt1_XAU_H1.xml pass #77 (adapted)
+; IS window: 2023.01.01–2026.06.01
+
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=true
+InpMagic=990005
+InpHoldBars=0
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=300
+InpTakeProfitPoints=600
+InpVerboseLogging=false
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpCountBars=2
+InpBreakoutBars=40
+InpAtrPeriod=14
+InpAtrMaPeriod=20
+InpAtrMaRatio=1.0
+InpSlAtrMult=1.5
+InpTpAtrMult=5.0
+InpBuyOnly=true
+InpLotRepeat=1
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpTrailingPoints=0
+InpSessionFilter=false
+InpSessionStartGMT=7
+InpSessionEndGMT=17
+InpUseMtfGate=false
+InpGatePeriod=16385
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0

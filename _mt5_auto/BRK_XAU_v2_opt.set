@@ -1,0 +1,17 @@
+; EA_BREAKOUT_XAU v2 optimize set — XAUUSD H1 IS 2023-2026
+; Optimize: BreakoutBars, SlAtrMult, TpAtrMult, EmaPeriod
+; Fixed: AtrPeriod=14, AtrMaPeriod=20, AtrMaRatio=1.0, BuyOnly=true, EmaOn=true
+
+InpBreakoutBars=40||25||5||60||Y
+InpAtrPeriod=14||14||1||14||N
+InpAtrMaPeriod=20||20||1||20||N
+InpAtrMaRatio=1.0||1.0||0.1||1.0||N
+InpSlAtrMult=1.5||1.0||0.5||3.5||Y
+InpTpAtrMult=5.0||3.0||1.0||9.0||Y
+InpUseDailyEma=true||true||true||true||N
+InpEmaPeriod=200||50||50||250||Y
+InpBuyOnly=true||true||true||true||N
+InpLotSize=0.01||0.01||0.01||0.01||N
+InpMagic=991001||991001||1||991001||N
+InpDeviation=20||20||1||20||N
+InpAllowLive=true||true||true||true||N

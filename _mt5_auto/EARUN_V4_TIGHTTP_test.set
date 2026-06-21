@@ -1,0 +1,35 @@
+; EA_RUNNER Phase I — single leg, tight TP=50pts, SL=100pts, CountBars=2
+; Tests if count filter shows edge with tight TP (avoids immediate re-entry insensitivity)
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=true
+InpMagic=990002
+InpHoldBars=0
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=100
+InpTakeProfitPoints=50
+InpVerboseLogging=false
+InpUseZeroLineFilter=false
+InpMinCrossStrength=0.0
+InpCountBars=2
+InpLotRepeat=1
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpTrailingPoints=0
+InpSessionFilter=false
+InpSessionStartGMT=7
+InpSessionEndGMT=17
+InpUseMtfGate=false
+InpGatePeriod=16385
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0
