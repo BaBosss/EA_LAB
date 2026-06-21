@@ -131,6 +131,31 @@ python "D:\EA_LAB\scripts\mt4_pipfix_set.py" "<report>.htm" "<EA>_pipx10.set" --
 **ตัดสิน:** ถ้า ×10 → trades สมเหตุสมผล (ไม่ churn) + edge โผล่ = EA ดีแต่ default ผิด → เก็บเข้า deep validation.
 ถ้า ×10 ก็ยังแย่ = ไม่มี edge จริง → REJECT. (บาง EA auto-detect Digits อยู่แล้ว → default ถูก, ×10 จะใหญ่เกิน → เลือก version ที่ trade สมเหตุสมผล)
 
+## ผล Batch 3 (15 EAs — Qwen, 2026-06-21) ✅ COMPLETE
+| EA | XAU PF | XAU t | XAU DD% | EUR PF | verdict | หมายเหตุ |
+|---|---|---|---|---|---|---|
+| KRAPOOK AI 2026 SNIPER | **8.50** | 21 | 1.33 | NO_DATA | THIN⚠️ | 21t เท่านั้น — artifact? |
+| KRAPOOK BLUE ANT | **2.65** | 477 | **0.40** | 1.28 | PASS ✅ | clean XAU, low DD |
+| Gold Buster MT4 | 0.22 | 273 | 32.30 | **4.09** | EUR PASS | XAU REJECT |
+| GMGS PRO V2 | 1.29 | 2787 | 0.10 | **1.66** | WATCH/PASS | XAU 2787t churn suspect |
+| Infinix ea | 0.85 | 38 | 103.19 | **8.48** | EUR PASS | XAU DD หายนะ |
+| God_s Blessing Expert | NO_DATA | — | — | **4.31** | EUR PASS | same as God's Blessing |
+| God's Blessing Expert | NO_DATA | — | — | **4.31** | EUR PASS | ผลเหมือนกันทุกบิต |
+| KRAPOOK YELLOW ANT | 1.18 | 3511 | **60.83** | 1.09 | WATCH⚠️ | DD=61% grid/martingale |
+| Ghost Bot 01 G07 (1) | SKIP | — | — | 1.34 | EUR WATCH | NO_REPORT XAU |
+| Gold_Kangaroo | NO_DATA | — | — | NO_DATA | REJECT | structural |
+| Goldex AI 1.4 | NO_DATA | — | — | NO_DATA | REJECT | structural |
+| HFT2 | NO_DATA | — | — | NO_DATA | REJECT | structural |
+| Jesko_fix | NO_DATA | — | — | NO_DATA | REJECT | structural |
+| Greezly Bot Pro | SKIP | — | — | SKIP | NO_REPORT | |
+| Infinix Currency Ea | SKIP | — | — | SKIP | NO_REPORT | |
+
+Phase 2 suspects Batch 3:
+- KRAPOOK SNIPER: 21 trades = THIN/artifact — ถ้า trades น้อยเกินบน Model 2 = เก็บ Deep Val ไว้
+- GMGS PRO V2: 2787 trades = churn suspect, check TP field
+- KRAPOOK YELLOW ANT: DD=60.83% = grid จริง ไม่ใช่ pip error → REJECT
+- Gold_Kangaroo/Goldex AI/HFT2/Jesko_fix: NO_DATA both = structural fail → skip
+
 ## หลัง screen เสร็จ (Claude ทำต่อ)
 1. **Phase 2 pip re-test** กับ gold ทุกตัวที่ churn / NO_DATA / THIN ที่มี pip_suspect (ข้างบน)
 2. คัด PASS/WATCH ที่ DD สมเหตุสมผล → deep validation (IS/OOS split + Model 0 every-tick ตัวที่ผ่าน)
