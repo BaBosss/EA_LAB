@@ -1,0 +1,14 @@
+Periods=10
+Multiplier=3
+Lotfix=0.01
+Balance=1000
+InfoPanel=false
+InfoTrend=false
+VisualProfitOnTheChart=false
+TakeProfit=200
+Magic=22424
+Filter=true
+PeriodInd2=0
+StepGrid=2000
+MaxOrder=2
+MultiplierLot=1

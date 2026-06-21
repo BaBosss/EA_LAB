@@ -1,0 +1,11 @@
+EA_Name=KRAPOOK BLUE ANT GOAL KEEPER 1.00
+Shutdown=3000
+Lot_fix=0.01
+Max_Lot=0.1
+Back_Test_Mode=false
+Time_Start=00.01
+Time_End=20.00
+MagicStart=58774
+Grid_Distance_Snow=40
+Grid_Distance_Rev=120
+Close_Profit=120
