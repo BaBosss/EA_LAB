@@ -65,6 +65,29 @@ def parse(path):
     if m:
         d["win_pct"] = _num(m.group(1))
 
+    # capture EA input parameters (records strategy + flags pip-denominated inputs)
+    pm = re.search(r"Parameters\s+(.+?)\s+Bars in test", t, re.S)
+    if pm:
+        params, pip_suspect = {}, []
+        _pipkeys = ("tp","takeprofit","sl","stop","trail","distance","dist","step",
+                    "gap","nearby","pip","points","breakeven","grid","range","offset")
+        _skip = ("lot","magic","color","font","size","deviation","slippage","comm",
+                 "telegram","website","url","percent","number","multiplier","hour")
+        for tok in pm.group(1).split(";"):
+            tok = tok.strip()
+            if "=" in tok:
+                k, v = tok.split("=", 1)
+                k, v = k.strip(), v.strip()
+                params[k] = v
+                kl = k.lower()
+                if (re.fullmatch(r"-?\d+(\.\d+)?", v) and float(v) != 0
+                        and any(x in kl for x in _pipkeys)
+                        and not any(s in kl for s in _skip)):
+                    pip_suspect.append(f"{k}={v}")
+        d["params"] = params
+        if pip_suspect:
+            d["pip_suspect"] = pip_suspect
+
     # verdict helper for the screen gate
     pf = d.get("profit_factor"); tr = d.get("total_trades")
     if pf is None or tr is None:

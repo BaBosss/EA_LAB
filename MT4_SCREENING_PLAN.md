@@ -86,7 +86,35 @@ python "D:\EA_LAB\scripts\parse_mt4_report.py" "D:\EA_LAB\_mt4_auto\reports\<TAG
 ดู `QWEN_MT4_SCREEN_PLAN.md` — รัน EA ที่เหลือทั้งหมด × {XAUUSDc, EURUSDc} ด้วย pattern ข้างบน
 แล้ว append ลง `MT4_SCREEN_RESULTS.csv` + รายงานตาราง ranked ตาม PF (XAU)
 
+## ⚠️ Phase 2 — Pip-adjusted re-test (สำคัญ! กัน "พลาด EA ดีเพราะตั้ง pip ผิด")
+**ปัญหา:** บน gold 3-หลัก (point=0.001) EA ที่ input SL/TP/distance ถูกตั้งมาเพื่อ 2-หลัก
+จะ**เล็กไป 10 เท่า** → EA churn (เทรดถล่ม TP จิ๋ว) หรือ **ไม่เทรดเลย (NO_DATA/THIN)** →
+ดูเหมือนไม่มี edge ทั้งที่ถ้าตั้ง pip ถูกอาจดีมาก. **ห้าม REJECT ทันที** — ต้องเทสซ้ำ pip ที่ถูก
+
+**สัญญาณว่าน่าจะ pip ผิด (ไม่ใช่ไม่มี edge):**
+- trades สูงผิดปกติ (>2000/ปี) + avg trade จิ๋ว → TP/distance แน่นไป (เช่น Gold Stuff TP=150→$0.15, ClevrFX 3993 เทรด)
+- NO_DATA / THIN (เทรด 0 หรือ <10) ทั้งที่ EA เป็น gold EA → SL/TP เล็กจน init fail หรือไม่เข้าเงื่อนไข
+- `parse_mt4_report.py` ใส่ field `pip_suspect` (input ชื่อ pip-ish ที่เป็นเลข ≠ 0) ให้ดูแล้ว
+
+**วิธีทำ (Claude — ต้องใช้วิจารณญาณ ไม่ใช่งาน Qwen):**
+```powershell
+# 1. ดู params + pip_suspect ของ EA นั้น
+python "D:\EA_LAB\scripts\parse_mt4_report.py" "<report>.htm"        # ดู params/pip_suspect
+python "D:\EA_LAB\scripts\mt4_pipfix_set.py" "<report>.htm" --list   # ดูทุก param + flag PIP?
+# 2. สร้าง .set ที่ ×10 เฉพาะ field pip จริง (เลือกเองอย่าใช้ auto ตรง ๆ — ดู --fields)
+python "D:\EA_LAB\scripts\mt4_pipfix_set.py" "<report>.htm" "<EA>_pipx10.set" --mult 10 --fields TP,SL,Distance,...
+# 3. เทสซ้ำด้วย .set นั้น แล้วเทียบ default vs ×10
+& "D:\EA_LAB\scripts\mt4_run.ps1" -Expert "<EA>" -Symbol XAUUSDc -Period H1 -FromDate 2025.06.01 -ToDate 2026.06.01 -SetFile "D:\EA_LAB\_mt4_auto\<EA>_pipx10.set" -ReportName "<TAG>_XAU_pipx10" -Model 2
+```
+**ตัดสิน:** ถ้า ×10 → trades สมเหตุสมผล (ไม่ churn) + edge โผล่ = EA ดีแต่ default ผิด → เก็บเข้า deep validation.
+ถ้า ×10 ก็ยังแย่ = ไม่มี edge จริง → REJECT. (บาง EA auto-detect Digits อยู่แล้ว → default ถูก, ×10 จะใหญ่เกิน → เลือก version ที่ trade สมเหตุสมผล)
+
 ## หลัง screen เสร็จ (Claude ทำต่อ)
-1. คัด PASS/WATCH ที่ DD สมเหตุสมผล → deep validation (IS/OOS split + Model 0 every-tick ตัวที่ผ่าน)
-2. แยก GRID/martingale ออกพิจารณาต่างหาก (ต้อง MC + DD cap)
-3. ตัวที่รอด → cent .set + เข้า portfolio expansion
+1. **Phase 2 pip re-test** กับ gold ทุกตัวที่ churn / NO_DATA / THIN ที่มี pip_suspect (ข้างบน)
+2. คัด PASS/WATCH ที่ DD สมเหตุสมผล → deep validation (IS/OOS split + Model 0 every-tick ตัวที่ผ่าน)
+3. แยก GRID/martingale ออกพิจารณาต่างหาก (ต้อง MC + DD cap)
+4. ตัวที่รอด → cent .set + เข้า portfolio expansion
+
+## เครื่องมือเพิ่ม
+- `scripts\mt4_pipfix_set.py` — ดึง params จากรายงาน → ×N เฉพาะ pip fields → เขียน .set สำหรับ re-test
+- `parse_mt4_report.py` — เพิ่ม field `params` (บันทึก strategy) + `pip_suspect` (flag input ที่ต้องเช็ค)
