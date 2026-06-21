@@ -1,5 +1,9 @@
 # Demo Deployment Plan — Portfolio v1
-อัพเดท: 2026-06-20 | สถานะ: ✅ MC VALIDATED — READY TO DEPLOY (5 EA: 4 CONFIRMED + 1 CONDITIONAL)
+อัพเดท: 2026-06-21 | สถานะ: 🟡 DEPLOYED TO DEMO — รอกด Allow Trading (2026-06-22)
+
+> **2026-06-21:** วาง 5 EA ลง ThinkMarkets demo ครบแล้ว (charts + .set โหลดเรียบร้อย)
+> ยังไม่ enable AutoTrading — ผู้ใช้จะกดปุ่ม Allow Trading พรุ่งนี้ (2026-06-22) เพื่อเริ่มเก็บ forward data
+> Gold Reaper อัปเกรดเป็น CONFIRMED แล้ว (OOS 2023-25 PF=2.07) → ใช้ `GoldReaper_cent_v1.set`
 
 ---
 
@@ -11,7 +15,9 @@
 | 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | **1.67** | 6.4% | 0% | ✅ CONFIRMED |
 | 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | **2.06** | 1.3% | 0% | ✅ CONFIRMED |
 | 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 6.3% | **2.15** | 0.9% | 0% | ✅ CONFIRMED |
-| 5 | Gold Reaper | XAUUSD | H1 | default params (no .set) | 1.53 | 17.3% | **1.331** | n/a | 1.9% | ⚠️ CONDITIONAL |
+| 5 | Gold Reaper | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 1.53 / 2.07¹ | 17.3% / 24.22%¹ | **1.331** | n/a | 1.9% | ✅ CONFIRMED |
+
+¹ Gold Reaper: 2020-22 OOS PF=1.53 / 2023-25 OOS PF=2.07 (2319t, DD=24.22%). อัปเกรดจาก CONDITIONAL → CONFIRMED (2026-06-21). DD 24% ปกติของ martingale-family; MaxAllowedDD=30 เป็น hard cap.
 
 MC รัน 2026-06-18 — 2000 bootstrap permutations, ruin threshold DD>50%
 Correlation flag: MG_v1 × MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate) — ยอมรับได้ที่ equal weight
