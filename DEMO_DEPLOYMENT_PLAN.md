@@ -1,162 +1,157 @@
-# Demo Deployment Plan — Portfolio v1
-อัพเดท: 2026-06-21 | สถานะ: 🟡 DEPLOYED TO DEMO — รอกด Allow Trading (2026-06-22)
+# Demo Deployment Plan — Portfolio v2
+อัพเดท: 2026-06-22 | สถานะ: 🟢 RUNNING — AutoTrading เปิดแล้ว 2026-06-22
 
-> **2026-06-21:** วาง 5 EA ลง ThinkMarkets demo ครบแล้ว (charts + .set โหลดเรียบร้อย)
-> ยังไม่ enable AutoTrading — ผู้ใช้จะกดปุ่ม Allow Trading พรุ่งนี้ (2026-06-22) เพื่อเริ่มเก็บ forward data
-> Gold Reaper อัปเกรดเป็น CONFIRMED แล้ว (OOS 2023-25 PF=2.07) → ใช้ `GoldReaper_cent_v1.set`
+> **Demo clock เริ่ม 2026-06-22** — promote to live ได้เร็วสุด **2026-09-22** (3 เดือน)
+> VPS candidates (EA 6-8) deploy คืน 2026-06-22 — แยกจาก demo ThinkMarkets
 
 ---
 
-## Portfolio Summary
+## ภาพรวม EA ทั้งหมด
 
-| # | EA | Symbol | TF | Set File | OOS PF | OOS DD | MC PF5th | MC DD95th | MC ruin | Status |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 23.8% | 1.755 | n/a | 0% | ✅ CONFIRMED |
-| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | **1.67** | 6.4% | 0% | ✅ CONFIRMED |
-| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | **2.06** | 1.3% | 0% | ✅ CONFIRMED |
-| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 6.3% | **2.15** | 0.9% | 0% | ✅ CONFIRMED |
-| 5 | Gold Reaper | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 1.53 / 2.07¹ | 17.3% / 24.22%¹ | **1.331** | n/a | 1.9% | ✅ CONFIRMED |
+### กลุ่ม A — Portfolio Core (ThinkMarkets Demo $10,000)
+*5 EA confirmed, รันอยู่ตั้งแต่ 2026-06-22*
 
-¹ Gold Reaper: 2020-22 OOS PF=1.53 / 2023-25 OOS PF=2.07 (2319t, DD=24.22%). อัปเกรดจาก CONDITIONAL → CONFIRMED (2026-06-21). DD 24% ปกติของ martingale-family; MaxAllowedDD=30 เป็น hard cap.
+| # | EA | Symbol | TF | Set File | OOS PF | OOS DD | MC PF5th | Status |
+|---|---|---|---|---|---|---|---|---|
+| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 23.8% | 1.755 | ✅ CONFIRMED / LIVE |
+| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | 1.67 | ✅ CONFIRMED / LIVE |
+| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | 2.06 | ✅ CONFIRMED / LIVE |
+| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 6.3% | 2.15 | ✅ CONFIRMED / LIVE |
+| 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 24.2% | 1.331 | ✅ CONFIRMED / LIVE ⚠️ |
 
-MC รัน 2026-06-18 — 2000 bootstrap permutations, ruin threshold DD>50%
-Correlation flag: MG_v1 × MACD_GBPUSD = 0.768 HIGH (CHF/GBP correlate) — ยอมรับได้ที่ equal weight
-Gold Reaper (#5): **anti-correlated กับ FX EA ทั้งหมด** (-0.357/-0.161/negative) → natural hedge. รวม 5 EA: combined max DD 6.83%, mean return 4.73%/เดือน, Gold×FX severe-DD overlap แค่ 8.3%.
-Freshness check 2026.01-04: PF=7.74 DD=3.12% 110 trades — alive ในตลาดล่าสุด
+⚠️ Gold Reaper: MC ruin 1.9% (ตัวเดียวในพอร์ตที่ > 0%) — pause ถ้า live DD > 25% หรือ PF < 1.2 ใน 30 วัน
 
-> **⚠️ Gold Reaper = CONDITIONAL:** MC ruin 1.9% (ตัวเดียวที่ > 0% ในพอร์ต) + เป็น downloaded commercial EA → deploy เป็น "satellite" position ดู demo ใกล้ชิด ถ้า DD จริง > 25% หรือ PF < 1.2 ใน 30 วัน → pause ทันที
+### กลุ่ม B — Candidates on VPS (แยกต่างหาก — deploy คืน 2026-06-22)
+*3 EA ใหม่ บน VPS แยก — รอ ≥30 real trades ก่อน judge*
+
+| # | EA | Symbol | TF | Set File | OOS PF | Status | Risk rule |
+|---|---|---|---|---|---|---|---|
+| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `BRK_XAU_live_v2.set` | 1.77 (M4) | 🟡 VPS pending | BUY-only, monitor regime |
+| 7 | LondonConsoBreakout | GBPUSD | H1 | `CB_GBP_H1_live_v1.set` | 2.08 | 🟡 VPS pending | 0.5% risk — GBP concentration |
+| 8 | LondonConsoBreakout | EURUSD | H1 | `CB_EUR_H1_live_v1.set` | 1.25 | 🟡 VPS pending ⚠️ | CONDITIONAL — EUR bear risk |
+
+**Promote conditions (กลุ่ม B → portfolio):**
+- ≥30 real trades ผ่านไป
+- PF ≥ 1.40 จาก live trades
+- ไม่ถึง stop rule → promote เข้า Core พร้อมปรับขนาด
+
+**Stop rules กลุ่ม B:**
+- EA 6: ถ้า XAU กลับเป็น bear trend ยาว → review BUY-only bias
+- EA 7: pause ถ้า DD > 1.5% หรือ 10 consecutive losses — เพิ่ม risk เป็น 1% หลัง 30 trades pass
+- EA 8: pause ถ้า monthly DD > 1% หรือ 10 consecutive losses — **อย่าเพิ่ม lot**
 
 ---
 
 ## Account Setup
 
-**Demo account: ThinkMarkets**
-- เปิด demo account ใหม่ที่ ThinkMarkets (แยกจาก live)
-- Deposit: **$10,000 USD** (demo) — ตรงกับ backtest deposit พอดี ไม่ต้องแก้ params เพิ่ม
-  - เหตุผล: MACD ใช้ Lots_divided=10,000,000 → บน $10k ได้ lot=0.001×3=0.003 ต่อ signal
-  - ถ้าใช้ $1,000 → lot ต่ำกว่า minimum 0.01 ของ broker
-- Leverage: 1:100 (ตามที่ backtest ใช้)
-- Account type: Hedge (รองรับ multiple EAs บน symbol เดียวกัน)
+### กลุ่ม A — ThinkMarkets Demo
+- Deposit: **$10,000 USD** — ตรงกับ backtest deposit (lot sizing ถูกต้องโดยอัตโนมัติ)
+- Leverage: 1:100, Account type: Hedge
+
+### กลุ่ม B — VPS (แยกต่างหาก)
+- Bundle อยู่ใน `D:\EA_LAB\_vps_deploy\`
+- Deploy steps ดู README ใน folder แต่ละตัว
 
 ---
 
-## Lot Sizing (บน demo $10,000 — ตรงตาม backtest)
+## Lot Sizing
 
-| EA | Param | Lot per signal | หมายเหตุ |
-|---|---|---|---|
-| MG_v1 CHFJPY | InpLotStart=0.01 | **0.01** (fixed) | grid เปิดหลายออเดอร์, equity DD = backtest×2-3 |
-| NuiIndy EURUSD | Lot_Divided=500,000 | **0.02** ($10k/500k) | dynamic, scales กับ equity |
-| MACD GBPUSD | Lots_divided=10,000,000 × LOT_Repeat=3 | **0.003** (0.001×3) | เล็กมาก — ตั้งใจให้ conservative |
-| MACD USDCAD | เหมือน GBPUSD, MagicStart=9398 | **0.003** | MagicStart ต่างกันเพื่อไม่ชน |
-| Gold Reaper XAUUSD | **default params** | ⚠️ ต้องยืนยันจาก GUI | EA ใช้ default ตอน backtest; lot/risk param ต้องอ่านจาก MT5 Navigator ก่อน attach — ดู "Gold Reaper param TODO" ด้านล่าง |
+### กลุ่ม A — $10,000 USD demo
 
-> **Gold Reaper param TODO (ก่อน attach):** Gold Reaper เป็น downloaded commercial EA — backtest รันด้วย default params ล้วน (TesterInputs ว่าง) และ headless log ไม่ echo ค่า default ออกมา จึง**อ่าน lot/risk setting ไม่ได้แบบ headless** ต้องเปิด EA ใน MT5 (drag ลง chart → Inputs tab) เพื่อยืนยัน:
-> 1. Money-management mode (fixed lot หรือ risk-% ?) — ถ้า risk-% จะ scale กับ $10k เอง; ถ้า fixed lot ต้องเช็คว่าไม่ใหญ่เกินสำหรับ $10k demo
-> 2. ค่า lot/risk default ที่จะใช้
-> 3. Magic number default (ต้องไม่ชน 1524/9397/9398 ของ EA อื่น — ถ้าชนให้ตั้งใหม่)
-> **cent set (`GoldReaper_XAUUSD_cent.set`) ยังไม่สร้าง** — รออ่าน param จาก GUI ก่อน แล้วค่อยทำตอนเตรียม live cent (หลัง demo 3 เดือน)
-
-> **คำเตือน MG_v1:** backtest DD=23.8% → live DD est **48–71%** (grid×2-3)
-> บน $10k demo: worst case DD ≈ $2,380–$7,100 — monitor ใกล้ชิด
-> สำหรับ live $100 cent จริง: DD 71% = $71 — ยอมรับได้
-
----
-
-## Expert Names (MT5 Strategy Tester / Attach)
-
-ต้องยืนยันชื่อจาก MT5 Navigator:
-
-| EA | ชื่อน่าจะเป็น | ต้องยืนยัน |
+| EA | Lot per signal | หมายเหตุ |
 |---|---|---|
-| Matchagrid | `Matchagrid` | ✅ ใช้งานได้ (ผ่าน backtest แล้ว) |
-| NuiIndy RSI+ADX | `(NuiIndy) Dynamic RSI+ADX Style (4)` | ✅ ใช้งานได้ |
-| ST_EA03 MACD | `(ST) EA03 Count MACD v1` | ✅ ใช้งานได้ |
-| Gold Reaper | `The Gold Reaper MT5_4.3_fix_@FundedMillionAiress` | ✅ ใช้งานได้ (ผ่าน backtest แล้ว) |
+| MG_v1 CHFJPY | 0.01 (fixed) | grid DD backtest×2-3 บน live |
+| NuiIndy EURUSD | 0.02 ($10k/500k) | dynamic, scales กับ equity |
+| MACD GBPUSD | 0.003 (0.001×3 legs) | conservative ตั้งใจ |
+| MACD USDCAD | 0.003 | เหมือนกัน |
+| Gold Reaper | StartLots=0.01 | cent set |
+
+### กลุ่ม B — VPS
+- EA 6, 7, 8: ทั้งหมด LotSize=0.01 (fixed, standalone)
+
+### ⚠️ Cent account (10,000 cent = $100) — ถ้าจะย้ายไป live
+- ST_EA03 (EA 3, 4): Lots_divided=10,000,000 → บน 10k cent = 0.001/leg = ต่ำกว่า min lot ❌
+- **ต้องปรับ**: เปลี่ยน Lots_divided เป็น **100,000** → ได้ 0.1 cent lot/leg (conservative)
+- EA อื่น (fixed 0.01): ใช้ได้บน cent โดยตรง ✅
 
 ---
 
-## Deployment Steps
+## Magic Numbers (ห้ามซ้ำ)
 
-### 1. เปิด MT5 → เปิด demo account
-```
-File → Open Account → ThinkMarkets → Demo → $10,000 USD
-```
+| Magic | EA |
+|---|---|
+| 1524 | NuiIndy EURUSD |
+| 9397 | ST_EA03 GBPUSD |
+| 9398 | ST_EA03 USDCAD |
+| (default) | Gold Reaper — ตรวจจาก GUI ก่อน attach |
+| 990005 | LondonConsoBreakout (ทั้ง GBPUSD + EURUSD — OK เพราะ filter by _Symbol) |
+| 991001 | EA_BREAKOUT_XAU |
 
-### 2. Attach EA ทีละตัว
+---
 
-**EA 1: MG_v1 CHFJPY M15**
-```
-Chart: CHFJPY M15
-EA: Matchagrid
-Inputs: Load _mt5_auto/MG_CHFJPY_v1_locked.set
-AutoTrading: ON
-```
+## Expert Names (MT5 Navigator)
 
-**EA 2: NuiIndy EURUSD H1**
-```
-Chart: EURUSD H1
-EA: (NuiIndy) Dynamic RSI+ADX Style (4)
-Inputs: Load _mt5_auto/NuiIndy_EURUSD_robust.set
-  → Lot_Divided=500000, RSI_Period=18, ADX_period=20, ADX_Value=35, MagicStart=1524
-AutoTrading: ON
-```
-
-**EA 3: MACD GBPUSD H1**
-```
-Chart: GBPUSD H1
-EA: (ST) EA03 Count MACD v1
-Inputs: Load _mt5_auto/MACD_GBPUSD_locked.set
-  → Lots_divided=10000000, MACD_Count=2, LOT_Repeat=3, Nearby_PIP=10, MagicStart=9397
-AutoTrading: ON
-```
-
-**EA 4: MACD USDCAD H1**
-```
-Chart: USDCAD H1
-EA: (ST) EA03 Count MACD v1
-Inputs: Load _mt5_auto/MACD_USDCAD_locked.set
-  → Lots_divided=10000000, MACD_Count=2, LOT_Repeat=3, Nearby_PIP=10, MagicStart=9398
-AutoTrading: ON
-```
-
-**EA 5: Gold Reaper XAUUSD H1** ⚠️ CONDITIONAL — satellite position
-```
-Chart: XAUUSD H1
-EA: The Gold Reaper MT5_4.3_fix_@FundedMillionAiress
-Inputs: DEFAULT params (ไม่มี .set)
-  → ก่อน ON: เปิด Inputs tab ยืนยัน MM mode + lot/risk + Magic ไม่ชน (ดู param TODO ด้านบน)
-AutoTrading: ON (หลังยืนยัน param แล้วเท่านั้น)
-```
-
-### 3. ตรวจสอบก่อน AutoTrading ON
-- [ ] Chart ถูก symbol/timeframe
-- [ ] .set loaded ถูกไฟล์ (EA 1-4) / Gold Reaper param ยืนยันจาก GUI แล้ว (EA 5)
-- [ ] Lot size สมเหตุสมผล (0.01–0.05 range)
-- [ ] Magic number ไม่ซ้ำกันระหว่าง EAs (1524 / 9397 / 9398 / Gold Reaper default)
-- [ ] AutoTrading enabled (ปุ่มสีเขียวบน toolbar)
+| EA | Expert name |
+|---|---|
+| Matchagrid | `Matchagrid` |
+| NuiIndy | `(NuiIndy) Dynamic RSI+ADX Style (4)` |
+| ST_EA03 | `(ST) EA03 Count MACD v1` |
+| Gold Reaper | `The Gold Reaper MT5_4.3_fix_@FundedMillionAiress` |
+| EA_BREAKOUT_XAU | `EA_BREAKOUT_XAU` |
+| LondonConsoBreakout | `(Boss)_LondonConsoBreakout_rev01` |
 
 ---
 
 ## Monitoring Checklist (รายสัปดาห์)
 
-| ตรวจสอบ | เกณฑ์ | Action |
+### กลุ่ม A
+
+| EA | หยุดถ้า | Action |
 |---|---|---|
-| MG_v1 DD | >35% live → หยุดชั่วคราว | Close all MG positions |
-| NuiIndy DD | >20% live | Review params |
+| MG_v1 | Live DD > 35% | Close all MG positions |
+| NuiIndy | Live DD > 20% | Review params |
 | MACD GBPUSD/USDCAD | PF < 1.0 ใน 30 วัน | Pause + review |
-| Gold Reaper (⚠️) | DD > 25% live **หรือ** PF < 1.2 ใน 30 วัน | Pause ทันที (CONDITIONAL — เกณฑ์เข้มกว่าตัวอื่น) |
-| ทุก EA | ไม่มี trade ใน 2 สัปดาห์ | ตรวจสอบ AutoTrading / connection |
+| Gold Reaper ⚠️ | DD > 25% **หรือ** PF < 1.2 ใน 30 วัน | Pause ทันที |
+| ทุก EA | ไม่มี trade 2 สัปดาห์ | ตรวจ AutoTrading / connection |
+
+### กลุ่ม B
+
+| EA | หยุดถ้า | เพิ่ม risk ถ้า |
+|---|---|---|
+| EA_BREAKOUT_XAU | XAU bear trend ยาว | 30 trades, PF ≥ 1.40 |
+| CB_GBP GBPUSD | DD > 1.5% หรือ 10 consec loss | 30 trades, PF ≥ 1.40 → เพิ่มเป็น 1% |
+| CB_EUR EURUSD ⚠️ | Monthly DD > 1% หรือ 10 consec loss | **ไม่เพิ่ม lot** — conditional ถาวร |
 
 ---
 
-## Demo Duration
+## Timeline
 
-**ขั้นต่ำ 3 เดือน** ก่อน live จริง — โดยเฉพาะ MG_v1 (grid) ต้องเห็น drawdown cycle จริง
+| วันที่ | Milestone |
+|---|---|
+| 2026-06-22 | Demo กลุ่ม A เริ่ม (AutoTrading ON) |
+| 2026-06-22 (คืน) | VPS กลุ่ม B deploy |
+| 2026-09-22 | กลุ่ม A ครบ 3 เดือน → judge live |
+| 2026-09-22+ | กลุ่ม B judge (ถ้า ≥30 trades ถึงแล้ว) |
+| หลัง judge | Live บน cent account $100/port, เป้า 10 ports |
 
 ---
 
-## ต่อไปหลัง Demo
+## ต่อไปหลัง 3 เดือน
 
-1. ถ้า 3 เดือนผ่าน → live บน cent account $100 ต่อ port
-2. ถ้า MG_v1 DD สูงใน demo → พิจารณา drop + หา replacement ที่ correlation ต่ำกับ MACD
-3. เป้าหมายระยะยาว: 10 ports × $100 = $1,000 total live
+1. รัน per-EA attribution script (parse history by magic) → ดูว่า EA ไหนกำไร/ขาดทุน
+2. ถ้ากลุ่ม A ผ่าน → live บน cent $100/port (ปรับ ST_EA03 Lots_divided ก่อน)
+3. ถ้ากลุ่ม B ผ่านเงื่อนไข → merge เข้า Core portfolio
+4. ถ้า MG_v1 DD สูงเกิน → พิจารณา drop + หา replacement correlation ต่ำ
+
+---
+
+## EA_CORE_V1 — งานต่อ
+
+**Phases A–J: เสร็จแล้ว** (framework validated, signals v2-v4, LotSizer, ScaleExecutor v1)
+
+**Part B ScaleExecutor (planned):** implement pending/limit order pyramid แบบ ST_EA03
+- Phase I (simultaneous market open) = PF 0.84 LOSING → dead end
+- Root cause: ST_EA03 ใช้ Nearby_PIP PENDING order stagger → legs fill เมื่อราคาเคลื่อน
+- Next: เปลี่ยน `ScaleExecutor_v1` ให้ส่ง ORDER_TYPE_BUY_LIMIT/SELL_LIMIT แทน market
+- Target: reproduce ST_EA03-level PF >> 1.11 บน GBPUSD/USDCAD H1
+- ⚠️ Model 4 required (TP < 20 pip trigger)
