@@ -1,0 +1,27 @@
+; (Boss)_LondonConsoBreakout_rev01 — GBPUSD H1 live/demo v1
+; ─────────────────────────────────────────────────────────────
+; IS  2023-2025.06: PF 1.96, 41t, DD 0.10%, Sharpe 6.98
+; OOS 2025.06-2026: PF 2.08, 16t  (thin — monitor closely)
+; OOS 2020-2022:    PF 1.25, 45t  (3/3 windows pass)
+; MC_5th PF (IS): ~1.10
+; ─────────────────────────────────────────────────────────────
+; CORRELATION NOTE: ST_EA03 GBPUSD H1 also in portfolio.
+; Day overlap ~12% (CB fires on compression days, MACD on momentum).
+; RISK: size at 0.5% account risk (half normal) for GBPUSD concentration.
+; ─────────────────────────────────────────────────────────────
+_00_OptimizeMode=false
+_01_ConsoStartHour=6
+_01_ConsoEndHour=10
+_01_TradeEndHour=18
+_01_CloseEod=true
+_01_ConsoAtrMult=1.0
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=2.5
+_02_TpAtrMult=2.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990005
+_06_Deviation=20
+_06_AllowLive=true
