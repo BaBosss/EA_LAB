@@ -4,10 +4,7 @@
 > **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
 > ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
 
-> ⚠️ **ตรวจ ST_EA03 ด่วน** — Lots_divided=10,000,000 บนบัญชี 10,000 cent
-> → lot คำนวณได้ = 10,000 ÷ 10,000,000 = **0.001 ต่อ leg** ซึ่งต่ำกว่า min lot 0.01
-> → EA 3 (GBPUSD) และ EA 4 (USDCAD) **อาจไม่เทรดเลย**
-> ตรวจใน MT5 Experts log: ถ้าเห็น "Invalid lot" หรือ 0 trades → ต้องแก้ Lots_divided
+> ✅ **ST_EA03 lot fix DONE (2026-06-22)** — Lots_divided แก้ 10M → 100,000 แล้ว
 
 ---
 
@@ -17,8 +14,8 @@
 |---|---|---|---|---|---|---|---|
 | 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 🟢 LIVE | fixed 0.01 lot ✅ |
 | 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 🟢 LIVE | 10k/500k = 0.02 lot ✅ |
-| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | ⚠️ VERIFY | 10k/10M = 0.001 < min → อาจไม่เทรด |
-| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | ⚠️ VERIFY | เหมือน EA 3 |
+| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 🟢 LIVE | Lots_divided แก้ → 100,000 (0.1 lot/leg) ✅ |
+| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 🟢 LIVE | เหมือน EA 3 ✅ |
 | 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
 | 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.77 | 🟢 LIVE | BUY-only 0.01 lot ✅ |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
@@ -51,15 +48,14 @@
 |---|---|---|
 | MG_v1 CHFJPY | 0.01 (fixed) | ✅ |
 | NuiIndy EURUSD | 10k ÷ 500k = **0.02** | ✅ |
-| ST_EA03 GBPUSD | 10k ÷ 10M = **0.001/leg** × 3 | ❌ ต่ำกว่า min 0.01 → ตรวจด่วน |
-| ST_EA03 USDCAD | เหมือนกัน | ❌ ต่ำกว่า min 0.01 → ตรวจด่วน |
+| ST_EA03 GBPUSD | 10k ÷ 100k = **0.1/leg** × 3 = 0.3 | ✅ แก้แล้ว |
+| ST_EA03 USDCAD | เหมือนกัน | ✅ แก้แล้ว |
 | Gold Reaper | StartLots=0.01 | ✅ |
 | EA_BREAKOUT_XAU | 0.01 (fixed) | ✅ |
 | CB_GBP GBPUSD | 0.01 (fixed) | ✅ |
 | CB_EUR EURUSD | 0.01 (fixed) | ✅ |
 
-**แก้ ST_EA03 ถ้า lot ต่ำกว่า min:** เปลี่ยน `Lots_divided` จาก 10,000,000 → **100,000**
-→ 10k ÷ 100k = 0.1 cent lot/leg × 3 = 0.3 (conservative แต่ trade ได้)
+ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,000** → 0.1 lot/leg × 3 legs = 0.3 total ✅
 
 ---
 
@@ -116,7 +112,7 @@
 | วันที่ | Milestone |
 |---|---|
 | 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
-| 2026-06-22 (เร่งด่วน) | ตรวจ ST_EA03 lot size — แก้ถ้าไม่เทรด |
+| 2026-06-22 | ST_EA03 lot fix — Lots_divided แก้ → 100,000 ✅ |
 | 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
 | หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 
