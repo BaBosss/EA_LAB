@@ -1,34 +1,28 @@
-# Demo Deployment Plan — Portfolio v2
-อัพเดท: 2026-06-22 | สถานะ: 🟢 RUNNING — AutoTrading เปิดแล้ว 2026-06-22
+# Demo Deployment Plan — Portfolio v3
+อัพเดท: 2026-06-22 | สถานะ: 🟢 RUNNING — ทั้ง 8 EA deploy แล้วบน 10,000 cent account เดียว
 
-> **Demo clock เริ่ม 2026-06-22** — promote to live ได้เร็วสุด **2026-09-22** (3 เดือน)
-> VPS candidates (EA 6-8) deploy คืน 2026-06-22 — แยกจาก demo ThinkMarkets
+> **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
+> ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
+
+> ⚠️ **ตรวจ ST_EA03 ด่วน** — Lots_divided=10,000,000 บนบัญชี 10,000 cent
+> → lot คำนวณได้ = 10,000 ÷ 10,000,000 = **0.001 ต่อ leg** ซึ่งต่ำกว่า min lot 0.01
+> → EA 3 (GBPUSD) และ EA 4 (USDCAD) **อาจไม่เทรดเลย**
+> ตรวจใน MT5 Experts log: ถ้าเห็น "Invalid lot" หรือ 0 trades → ต้องแก้ Lots_divided
 
 ---
 
-## ภาพรวม EA ทั้งหมด
+## ภาพรวม EA ทั้งหมด (10,000 cent — account เดียว)
 
-### กลุ่ม A — Portfolio Core (ThinkMarkets Demo $10,000)
-*5 EA confirmed, รันอยู่ตั้งแต่ 2026-06-22*
-
-| # | EA | Symbol | TF | Set File | OOS PF | OOS DD | MC PF5th | Status |
-|---|---|---|---|---|---|---|---|---|
-| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 23.8% | 1.755 | ✅ CONFIRMED / LIVE |
-| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 28.9% | 1.67 | ✅ CONFIRMED / LIVE |
-| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 5.1% | 2.06 | ✅ CONFIRMED / LIVE |
-| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 6.3% | 2.15 | ✅ CONFIRMED / LIVE |
-| 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 24.2% | 1.331 | ✅ CONFIRMED / LIVE ⚠️ |
-
-⚠️ Gold Reaper: MC ruin 1.9% (ตัวเดียวในพอร์ตที่ > 0%) — pause ถ้า live DD > 25% หรือ PF < 1.2 ใน 30 วัน
-
-### กลุ่ม B — Candidates on VPS (แยกต่างหาก — deploy คืน 2026-06-22)
-*3 EA ใหม่ บน VPS แยก — รอ ≥30 real trades ก่อน judge*
-
-| # | EA | Symbol | TF | Set File | OOS PF | Status | Risk rule |
+| # | EA | Symbol | TF | Set File | OOS PF | Status | หมายเหตุ |
 |---|---|---|---|---|---|---|---|
-| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `BRK_XAU_live_v2.set` | 1.77 (M4) | 🟡 VPS pending | BUY-only, monitor regime |
-| 7 | LondonConsoBreakout | GBPUSD | H1 | `CB_GBP_H1_live_v1.set` | 2.08 | 🟡 VPS pending | 0.5% risk — GBP concentration |
-| 8 | LondonConsoBreakout | EURUSD | H1 | `CB_EUR_H1_live_v1.set` | 1.25 | 🟡 VPS pending ⚠️ | CONDITIONAL — EUR bear risk |
+| 1 | Matchagrid (MG_v1) | CHFJPY | M15 | `MG_CHFJPY_v1_locked.set` | 2.08 | 🟢 LIVE | fixed 0.01 lot ✅ |
+| 2 | NuiIndy RSI+ADX | EURUSD | H1 | `NuiIndy_EURUSD_robust.set` | 2.00 | 🟢 LIVE | 10k/500k = 0.02 lot ✅ |
+| 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | ⚠️ VERIFY | 10k/10M = 0.001 < min → อาจไม่เทรด |
+| 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | ⚠️ VERIFY | เหมือน EA 3 |
+| 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
+| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.77 | 🟢 LIVE | BUY-only 0.01 lot ✅ |
+| 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
+| 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | 🟢 LIVE ⚠️ | CONDITIONAL 0.01 lot |
 
 **Promote conditions (กลุ่ม B → portfolio):**
 - ≥30 real trades ผ่านไป
@@ -44,35 +38,28 @@
 
 ## Account Setup
 
-### กลุ่ม A — ThinkMarkets Demo
-- Deposit: **$10,000 USD** — ตรงกับ backtest deposit (lot sizing ถูกต้องโดยอัตโนมัติ)
-- Leverage: 1:100, Account type: Hedge
-
-### กลุ่ม B — VPS (แยกต่างหาก)
-- Bundle อยู่ใน `D:\EA_LAB\_vps_deploy\`
-- Deploy steps ดู README ใน folder แต่ละตัว
+- **Account: 10,000 cent** (= $100 USD equivalent) — deploy 2026-06-22
+- EA 1–5: `.set` อยู่ใน `D:\EA_LAB\_mt5_auto\`
+- EA 6–8: `.set` อยู่ใน `D:\EA_LAB\_vps_deploy\` (แต่ละ subfolder)
+- Leverage: ตามที่ broker กำหนด, Account type: Hedge
 
 ---
 
 ## Lot Sizing
 
-### กลุ่ม A — $10,000 USD demo
-
-| EA | Lot per signal | หมายเหตุ |
+| EA | Lot บน 10,000 cent | สถานะ |
 |---|---|---|
-| MG_v1 CHFJPY | 0.01 (fixed) | grid DD backtest×2-3 บน live |
-| NuiIndy EURUSD | 0.02 ($10k/500k) | dynamic, scales กับ equity |
-| MACD GBPUSD | 0.003 (0.001×3 legs) | conservative ตั้งใจ |
-| MACD USDCAD | 0.003 | เหมือนกัน |
-| Gold Reaper | StartLots=0.01 | cent set |
+| MG_v1 CHFJPY | 0.01 (fixed) | ✅ |
+| NuiIndy EURUSD | 10k ÷ 500k = **0.02** | ✅ |
+| ST_EA03 GBPUSD | 10k ÷ 10M = **0.001/leg** × 3 | ❌ ต่ำกว่า min 0.01 → ตรวจด่วน |
+| ST_EA03 USDCAD | เหมือนกัน | ❌ ต่ำกว่า min 0.01 → ตรวจด่วน |
+| Gold Reaper | StartLots=0.01 | ✅ |
+| EA_BREAKOUT_XAU | 0.01 (fixed) | ✅ |
+| CB_GBP GBPUSD | 0.01 (fixed) | ✅ |
+| CB_EUR EURUSD | 0.01 (fixed) | ✅ |
 
-### กลุ่ม B — VPS
-- EA 6, 7, 8: ทั้งหมด LotSize=0.01 (fixed, standalone)
-
-### ⚠️ Cent account (10,000 cent = $100) — ถ้าจะย้ายไป live
-- ST_EA03 (EA 3, 4): Lots_divided=10,000,000 → บน 10k cent = 0.001/leg = ต่ำกว่า min lot ❌
-- **ต้องปรับ**: เปลี่ยน Lots_divided เป็น **100,000** → ได้ 0.1 cent lot/leg (conservative)
-- EA อื่น (fixed 0.01): ใช้ได้บน cent โดยตรง ✅
+**แก้ ST_EA03 ถ้า lot ต่ำกว่า min:** เปลี่ยน `Lots_divided` จาก 10,000,000 → **100,000**
+→ 10k ÷ 100k = 0.1 cent lot/leg × 3 = 0.3 (conservative แต่ trade ได้)
 
 ---
 
@@ -128,11 +115,10 @@
 
 | วันที่ | Milestone |
 |---|---|
-| 2026-06-22 | Demo กลุ่ม A เริ่ม (AutoTrading ON) |
-| 2026-06-22 (คืน) | VPS กลุ่ม B deploy |
-| 2026-09-22 | กลุ่ม A ครบ 3 เดือน → judge live |
-| 2026-09-22+ | กลุ่ม B judge (ถ้า ≥30 trades ถึงแล้ว) |
-| หลัง judge | Live บน cent account $100/port, เป้า 10 ports |
+| 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
+| 2026-06-22 (เร่งด่วน) | ตรวจ ST_EA03 lot size — แก้ถ้าไม่เทรด |
+| 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
+| หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 
 ---
 
