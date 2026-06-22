@@ -1,4 +1,4 @@
-# PROJECT STATUS — EA Platform (อัพเดท 2026-06-14)
+# PROJECT STATUS — EA Platform (อัพเดท 2026-06-22)
 
 > ภาพรวม "ถึงไหนแล้ว / เหลืออะไร / ใช้งานยังไง" · คู่กับ `PLATFORM_INDEX.md` (แผนที่ไฟล์)
 > **เป้าหมาย:** 10 พอร์ต × 2-3 EA ที่ไม่ correlate กัน × 10,000 cent → passive income
@@ -6,7 +6,9 @@
 ---
 
 ## 1. สรุป 1 บรรทัด
-**เครื่องมือ (automation) สร้างเสร็จ ~90% และพิสูจน์แล้วว่าทำงานจริง** — ตอนนี้กำลังเข้าสู่ช่วง "ป้อน EA เข้าระบบเพื่อหา candidate ที่ผ่านจริง" ส่วนที่เหลือถึง live ส่วนใหญ่เป็น **เวลา** (demo 3 เดือนบังคับ) ไม่ใช่ engineering
+**Deploy ครบ 8 EA บน 10,000 cent account แล้ว (2026-06-22)** — screening + validation จบ, automation pipeline
+codified เป็น 9 skills. ตอนนี้อยู่ช่วง **demo-monitor (ติดนาฬิกา) → judge 2026-09-22**. งาน engineering ที่เหลือ
+ทำได้เลย 2 thread: (A) เครื่องมือ judge per-EA, (B) EA_CORE ScaleExecutor Part B. การหา signal ใหม่ปิดแล้ว.
 
 ---
 
@@ -16,13 +18,17 @@
 | --------------------------- | ---------------------------------------------------------------------------- | -------------------------------- | --- |
 | **0. Foundation**           | จัดบ้าน, กู้ความรู้ (chat 788), รวม EA_LAB, git                              | ✅ DONE                           | 100 |
 | **1. Automation pipeline**  | parse→deals→score→MonteCarlo→robust-select→gen.set→registry→**MT5 headless** | ✅ DONE (single-test พิสูจน์แล้ว) | 90  |
-| **2. Candidate production** | รัน shortlist + validate ให้ผ่าน IS→OOS→robustness                           | 🔄 กำลังทำ (batch รันอยู่ตอนนี้) | 25  |
-| **3. EA Template**          | เปลือก EA dropdown modes (MM/TP/SL/Recovery/Hedge ร่วม, เปลี่ยนแค่ entry)    | ⬜ ยังไม่เริ่ม (พัก)              | 0   |
-| **4. Portfolio**            | correlation + DD overlap → จัดพอร์ต (ต้องมี ≥2-3 EA ผ่านก่อน)                | ⬜ ยังไม่เริ่ม                    | 0   |
-| **5. Demo**                 | รัน demo จริง ≥3 เดือน (บังคับ ห้ามลัด)                                      | ⬜ ยังไม่เริ่ม                    | 0   |
-| **6. Live**                 | 10 พอร์ต ทุนเล็ก + monitoring + kill-switch                                  | ⬜ ยังไม่เริ่ม (เป้า)             | 0   |
+| **2. Candidate production** | รัน shortlist + validate ให้ผ่าน IS→OOS→robustness                           | ✅ DONE (8 EA ผ่าน + standalone signals) | 100 |
+| **3. EA Template**          | standalone-first template (`EA_STANDALONE_TEMPLATE.mq5`) — CB/BRK สร้างจากนี้  | ✅ DONE (เปลี่ยนทิศเป็น standalone) | 100 |
+| **4. Portfolio**            | correlation + DD overlap → จัดพอร์ต 8 EA                                       | ✅ DONE                          | 100 |
+| **5. Demo**                 | รัน demo จริง ≥3 เดือน (บังคับ ห้ามลัด) — **เริ่ม 2026-06-22, judge 09-22**   | 🔄 กำลังเดิน (ติดนาฬิกา)          | 5   |
+| **6. Live**                 | 10 พอร์ต ทุนเล็ก + monitoring + kill-switch                                  | ⬜ หลัง judge 09-22               | 0   |
 
-**Track แยก — EA_CORE_V1 framework** (MQL5 ที่ Codex สร้าง): foundation เสร็จ (1317 PASS, metadata-only), ExecutionEngine ยังไม่เริ่ม → **พักไว้** ตามทิศทาง balanced (ใช้ EA สำเร็จรูปก่อน)
+**Track แยก — EA_CORE_V1 framework** (MQL5 ที่ Codex สร้าง): foundation + Phase 0 spine deployed, Phase A MACD
+spec เขียนแล้ว → ตัวถัดไป **ScaleExecutor Part B (pending-order pyramid)**. ยังเป็น proof-of-concept track คู่ขนาน.
+
+**Post-deploy tooling pending:** `report_deals.mq5` + `parse_live_deals.ps1` (per-EA P&L by magic) — ต้องสร้างก่อน
+judge 09-22 (ดู skill `ea-live-monitor`). กำลังทำใน Thread A.
 
 ---
 
@@ -87,7 +93,10 @@
 
 ---
 
-## 7. ถัดไปทันที
-1. ⏳ batch screening (รันอยู่) เสร็จ → score → review → เห็นว่ามี candidate ใหม่ผ่านกี่ตัว
-2. ตัวที่ผ่าน screening (Model 1) → re-run real-tick (Model 4) ยืนยัน
-3. พอได้ ≥2-3 ตัว uncorrelated → เริ่มเฟส 4 (portfolio)
+## 7. ถัดไปทันที (2026-06-22)
+1. 🔧 **Thread A (กำลังทำ):** สร้าง `report_deals.mq5` + `parse_live_deals.ps1` → per-EA P&L by magic (ก่อน judge 09-22)
+2. 🔧 **Thread B:** EA_CORE ScaleExecutor Part B (pending-order pyramid)
+3. ⏰ demo-monitor 8 EA จนถึง 2026-09-22 → ใช้สกิล `ea-live-monitor` ออก keep/kill verdict
+4. ❌ หา signal ใหม่ = ปิดแล้ว (signal hunt exhausted)
+
+> หมายเหตุ: section 4 ด้านบน (GSMC = 1 ตัว) เป็น log เก่า session ต้นๆ — portfolio จริง = 8 EA, ดู `DEMO_DEPLOYMENT_PLAN.md`

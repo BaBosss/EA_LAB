@@ -1,11 +1,20 @@
-# RESUME HERE — อัพเดท 2026-06-19 (session 16)
+# RESUME HERE — อัพเดท 2026-06-22 (deploy ครบ 8 EA)
 
 อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
 
+> **🟢 DEPLOYED 2026-06-22 — 8 EA รันอยู่บน 10,000 cent account เดียว. Judge date 2026-09-22 (demo 3 เดือน).**
+> ดูตารางพอร์ต + .set ล่าสุดที่ `DEMO_DEPLOYMENT_PLAN.md` (= source of truth). ตารางด้านล่างในไฟล์นี้
+> เป็นพอร์ต 5 EA เดิม (validation log) — ยังถูกต้องในแง่ตัวเลข IS/OOS แต่ portfolio จริงตอนนี้ = 8 EA.
+>
 > **2 workstreams แยกกัน:**
-> - **EA_LAB (portfolio search)** = ไฟล์นี้ → COMPLETE ที่ 5 EAs, EA screening จบแล้ว, เหลือ deploy demo
+> - **EA_LAB (portfolio search)** = ไฟล์นี้ → screening จบ, **deploy ครบ 8 EA แล้ว**, เข้าสู่ช่วง demo-monitor (ติดนาฬิกา)
 > - **EA_CORE_V1 (custom framework)** = `D:\EA_Project\CURRENT_BUILD\PHASE_0_WALKING_SKELETON_RECORD.md`
->   → Phase 0 spine BUILT+DEPLOYED, รอ verify ใน Strategy Tester แล้วทำ Phase A MACD
+>   → Phase 0 spine BUILT+DEPLOYED, Phase A MACD spec เขียนแล้ว, ตัวถัดไป = ScaleExecutor Part B (pending-order pyramid)
+>
+> **8-EA portfolio (2026-06-22):** #1 MG CHFJPY M15 · #2 NuiIndy EURUSD H1 · #3 ST_EA03 MACD GBPUSD H1 ·
+> #4 ST_EA03 MACD USDCAD H1 · #5 Gold Reaper XAUUSD H1 · #6 EA_BREAKOUT_XAU XAUUSD H1 (magic 991001) ·
+> #7 LondonConsoBreakout GBPUSD H1 (magic 990005) · #8 LondonConsoBreakout EURUSD H1 (magic 990005, conditional).
+> ST_EA03 lot fix: Lots_divided 10M→100k บน cent. รายละเอียดเต็ม → `DEMO_DEPLOYMENT_PLAN.md`.
 
 ---
 
@@ -59,14 +68,17 @@ Gotcha: ต้อง `--bare` + force `ANTHROPIC_BASE_URL=https://gateway.9arm.c
 
 ---
 
-## ถัดไปทันที (session 16+)
+## ถัดไปทันที (อัพเดท 2026-06-22)
 
-### ✅ จบแล้ว: EA screening (ทุก batch) — Portfolio FINAL ที่ 5 EAs, ไม่ต้องหาเพิ่ม
-### ⏳ PENDING จริงๆ ที่เหลือ (เรียงลำดับ):
-1. **สร้าง Gold Reaper cent set** — #5 ยังไม่มี cent set (ใช้ default params) → ต้องสร้างก่อน deploy live cent
-2. **Deploy 5 EAs บน ThinkMarkets $10k demo** — ดู `DEMO_DEPLOYMENT_PLAN.md`. Gold Reaper drag ลง XAUUSD H1 ได้เลย (default params, AdjustLotsize=true)
-3. **Monitor demo ≥ 3 เดือน** ก่อน live cent — โดยเฉพาะ Gold Reaper (CONDITIONAL) + MG grid (DD เสี่ยง)
-4. **EA_CORE_V1 Phase 0 verify** (workstream แยก) — รัน tester ดู `D:\EA_Project\CURRENT_BUILD\PHASE_0_WALKING_SKELETON_RECORD.md`
+### ✅ จบแล้ว: EA screening + **deploy ครบ 8 EA บน 10k cent (2026-06-22)**
+### ⏰ ติดนาฬิกา: demo-monitor 8 EA → **judge 2026-09-22** (ลัดไม่ได้) — จับตา Gold Reaper (conditional) + MG grid (DD) + CB_EUR (conditional)
+### 🔧 ทำได้เลย (ไม่ติดเวลา):
+1. **เครื่องมือ judge (Thread A) — กำลังทำ:** สร้าง `report_deals.mq5` (ดึง P&L ต่อ deal + magic ผ่าน HistoryDeal API)
+   + `parse_live_deals.ps1` (roll-up by magic,symbol). ใช้คู่สกิล `ea-live-monitor`. **ต้องมีก่อน 09-22 ไม่งั้น judge per-EA ไม่ได้** (account report ไม่มี magic ต่อ deal).
+2. **EA_CORE_V1 ScaleExecutor Part B (Thread B):** pending-order pyramid (BUY_LIMIT/SELL_LIMIT) เลียนแบบ ST_EA03 Nearby_PIP — ดู `CURRENT_BUILD/`
+3. หา signal ใหม่ = **ปิดแล้ว** (Bucket D 0 survivor, intake เหลือแต่ martingale) — อย่าเสียเวลาหาเพิ่ม
+
+### Pipeline เป็น skill แล้ว (2026-06-22): signal-scanner → mql-code-generator → mql-code-reviewer → backtest-optimize-rigor → robustness-validator → portfolio-selector → live-deployment-controller → vps-deploy-ops → **ea-live-monitor** (post-deploy)
 
 ### Portfolio FINAL — 5 EAs ✅ (4 CONFIRMED + 1 CONDITIONAL)
 ดู `DEMO_DEPLOYMENT_PLAN.md` สำหรับ attach บน ThinkMarkets $10k demo + live cent $100
