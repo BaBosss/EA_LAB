@@ -1,0 +1,27 @@
+; (Boss)_LondonConsoBreakout_rev01 — EURUSD H1 live/demo v1
+; ─────────────────────────────────────────────────────────────
+; IS  2023-2025.06: PF 2.09, 66t, DD 0.13%, Sharpe 7.62
+; OOS 2025.06-2026: PF 1.25, 33t ✅
+; OOS 2020-2022:    PF 0.86, 90t ❌  ← EUR bear 2022 (1.23→0.96)
+; FULL 2020-2026:   PF 1.26, 189t
+; ─────────────────────────────────────────────────────────────
+; ⚠️  CONDITIONAL DEPLOY — known weakness: EUR persistent downtrend
+; Stop rule: pause if monthly DD > 1% OR 10 consecutive losses
+; Same magic (990005) as CB_GBP — OK, EA filters by _Symbol internally
+; ─────────────────────────────────────────────────────────────
+_00_OptimizeMode=false
+_01_ConsoStartHour=6
+_01_ConsoEndHour=11
+_01_TradeEndHour=18
+_01_CloseEod=true
+_01_ConsoAtrMult=1.5
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=2.0
+_02_TpAtrMult=4.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990005
+_06_Deviation=20
+_06_AllowLive=true
