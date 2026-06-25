@@ -8,13 +8,14 @@
 >
 > **2 workstreams แยกกัน:**
 > - **EA_LAB (portfolio search)** = ไฟล์นี้ → screening จบ, **deploy ครบ 8 EA แล้ว**, เข้าสู่ช่วง demo-monitor (ติดนาฬิกา)
-> - **EA_CORE_V1 (custom framework)** = `D:\EA_Project\CURRENT_BUILD\PHASE_0_WALKING_SKELETON_RECORD.md`
->   → Phase 0 spine BUILT+DEPLOYED, Phase A MACD spec เขียนแล้ว, ตัวถัดไป = ScaleExecutor Part B (pending-order pyramid)
+> - **EA_CORE_V1 (custom framework)** = `D:\EA_Project\CURRENT_BUILD\EA_CORE_V1_FREEZE_STATUS.md`
+>   → FROZEN-but-green. ScaleExecutor_v2 (pyramid) + OCO fix DONE. **v4 edge-trigger DONE 2026-06-25**
+>     (level 571t/PF1.06 → edge 120t/PF1.47, GBPUSD H1 2mo M4 — ปิด gap ไป ST_EA03's 36 entries).
 >
-> **8-EA portfolio (2026-06-22):** #1 MG CHFJPY M15 · #2 NuiIndy EURUSD H1 · #3 ST_EA03 MACD GBPUSD H1 ·
-> #4 ST_EA03 MACD USDCAD H1 · #5 Gold Reaper XAUUSD H1 · #6 EA_BREAKOUT_XAU XAUUSD H1 (magic 991001) ·
-> #7 LondonConsoBreakout GBPUSD H1 (magic 990005) · #8 LondonConsoBreakout EURUSD H1 (magic 990005, conditional).
-> ST_EA03 lot fix: Lots_divided 10M→100k บน cent. รายละเอียดเต็ม → `DEMO_DEPLOYMENT_PLAN.md`.
+> **Portfolio = 7 active (CB_EUR ถอด 2026-06-25):** #1 MG CHFJPY M15 · #2 NuiIndy EURUSD H1 ·
+> #3 ST_EA03 MACD GBPUSD H1 · #4 ST_EA03 MACD USDCAD H1 · #5 Gold Reaper XAUUSD H1 ·
+> #6 EA_BREAKOUT_XAU XAUUSD H1 (magic 991001) · #7 LondonConsoBreakout GBPUSD H1 (magic 990005).
+> ~~#8 CB_EUR EURUSD~~ = DROPPED (Q2 rescue ไม่เจอ durable edge). รายละเอียด → `DEMO_DEPLOYMENT_PLAN.md`.
 
 ---
 

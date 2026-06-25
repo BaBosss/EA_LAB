@@ -1,7 +1,11 @@
-# PLATFORM_INDEX — เปิดไฟล์นี้ก่อนเสมอ
+# PLATFORM_INDEX — แผนที่ 5 ที่อยู่ทางกายภาพ
 
-> แผนที่กลางของ EA platform ทั้งหมด · อัปเดต 2026-06-14
-> กฎข้อเดียว: **เครื่องนี้ (D:\) เป็นหลัก · OneDrive เป็น backup เท่านั้น · D:\EA_LAB อยู่ใน git ย้อนได้**
+> อัปเดต 2026-06-14 · ตรวจ 2026-06-25 · กฎ: **D:\ เป็นหลัก · OneDrive = backup · D:\EA_LAB อยู่ใน git**
+>
+> ⚠️ **ไฟล์นี้ = แผนที่ "ที่อยู่ 5 ก้อน" (section 1) เป็นค่าหลักที่ยังถูกต้อง.**
+> สถานะ EA / cleanup-task ด้านล่าง (section 3, 5) เป็น **log เก่า 06-14** — ของจริงดูที่:
+> สถานะ portfolio → `DEMO_DEPLOYMENT_PLAN.md` · ทะเบียน EA → `EA_SCORECARD_AND_REGISTRY.md` ·
+> โครง EA_LAB ภายใน → `README.md`. (เช่น GSMC ใน section 3 ถูก **DISQUALIFIED** ไปแล้ว)
 
 ---
 
@@ -24,7 +28,7 @@
 
 | โฟลเดอร์ | คือ |
 |---|---|
-| `PLATFORM_INDEX.md` (นี่) · `INDEX.md` (ทะเบียน EA) · `README.md` · `EA_LAB_MASTER_SPEC.md`* | ไฟล์ root (เหลือ 4 ตัว) |
+| root *.md | canonical = `_RESUME_HERE` · `DEMO_DEPLOYMENT_PLAN` · `EA_SCORECARD_AND_REGISTRY` · `INTAKE_QUEUE` · `README` · `PLATFORM_INDEX`(นี่). เก่า → ย้ายไป `_archive_docs/` แล้ว (2026-06-25) |
 | `ea_projects/` | งานจริงต่อ EA — ดูข้อ 3 |
 | `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `_legacy_manual/` = doc เก่าตกยุค |
 | `scripts/` | automation (collect_mt5_reports, export_reports, import_manual_run...) ⚠️ **path ยังชี้ OneDrive ต้องแก้** |

@@ -1,5 +1,13 @@
 # QWEN UNATTENDED WORK PLAN — 2026-06-23 / 06-24
 
+> **STATUS 2026-06-25 — ส่วนใหญ่จบแล้ว (เก็บไว้เป็น playbook reference):**
+> - **Q1 CB new-symbol** → ✅ DONE: 4/4 DEAD (GBPJPY/GBPCAD/EURGBP/USDCAD ไม่ผ่าน) — CB = GBPUSD-only.
+> - **Q2 CB_EUR rescue** → ✅ DONE: no durable edge, **CB_EUR DROPPED**. (sweep `_mt5_auto/sweeps/CB_EUR_rescue.csv`)
+> - **R1/R2 re-examine** → ✅ DONE: RSI_Swing + TrendRegression ยืนยัน DEAD.
+> - ผลทั้งหมดสรุปใน memory `signal-landscape` + `EA_SCORECARD_AND_REGISTRY.md`.
+> - ⚠️ บทเรียน: qwen gateway throw Cloudflare 524 บน long run — ใช้ **background PowerShell** แทน (ดู memory).
+> ด้านล่าง = แผนเดิม เก็บไว้เป็น sweep playbook (constraints + tooling ยังใช้ได้).
+
 **Purpose:** Sonnet token budget is nearly spent this week. Offload all mechanical
 backtest sweeps to Qwen (`claude-9arm`). Qwen RUNS the sweeps and COLLECTS results to
 CSV. Sonnet reviews the CSVs later and makes the keep/drop/deploy decisions.

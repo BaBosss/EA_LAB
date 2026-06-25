@@ -1,50 +1,35 @@
 # EA_LAB
 
-EA_LAB is a separate testing and optimization workspace for EA experiments, presets, reports, results, and candidate tracking.
+คลังวิจัย/หลักฐาน + automation pipeline สำหรับหา-validate-deploy EA portfolio
+(แยกขาดจาก `D:\EA_Project` = EA_CORE_V1 framework source).
 
-EA_LAB is separate from EA_CORE_V1.
+> **เป้าหมาย:** 10 พอร์ต × 2-3 EA ที่ไม่ correlate กัน × 10,000 cent → passive income
 
-This scaffold is template-only. The Excel files contain template schemas only: sheet names and practical column headers.
+## อ่านก่อน (canonical — source of truth)
 
-This scaffold does not create formulas, macros, VBA, external connections, PowerQuery, parser logic, strategy logic, live trading logic, broker integration, Telegram automation, dashboard automation, or EA_CORE_V1 source changes.
+| ไฟล์ | คือ |
+|---|---|
+| **`_RESUME_HERE.md`** | เปิดก่อนเสมอเมื่อเริ่ม session — สถานะล่าสุด + 2 workstream |
+| **`DEMO_DEPLOYMENT_PLAN.md`** | พอร์ต live ที่ deploy จริง (source of truth) + .set + magic + monitoring rule |
+| **`EA_SCORECARD_AND_REGISTRY.md`** | ทะเบียน EA ทุกตัว + scoring rubric + kill-reason |
+| **`INTAKE_QUEUE.md`** | funnel รับ source/strategy ใหม่ (drop ลง `_intake_drop/`) |
+| **`PLATFORM_INDEX.md`** | แผนที่ไฟล์/โฟลเดอร์ทั้งหมด |
+| **`docs/RECOVERED_PLATFORM_DESIGN_20260614.md`** | design "สมอง" — scoring v1, gate chain, optimize Pass 0/1/2/4 |
+| **`AUTOMATION_GUIDE.md`** + `docs/MT5_AUTOMATION.md` | pipeline funnel + MT5 headless mechanics |
+| **`EA_STRATEGY_GUIDE.md`** | reference strategy ทุกตัวที่เคย screen |
 
-## Intended Use
+## โครงโฟลเดอร์
 
-- Strategy presets
-- Preset parameters
-- Manual and future automated MT5 reports
-- Backtest and optimization results
-- Candidate selection
-- Future portfolio tracking
+- `ea_projects/` — งานราย EA (config/reports/set_files/validated_v1)
+- `scripts/` — automation (mt5_run.ps1, mt5_optimize.ps1, parse_*, score_*, grid_sweep.ps1...)
+- `_mt5_auto/` — locked .set + sweep results + MC json (reports/ini/logs = gitignored, regenerable)
+- `_intake_drop/` — staging รับ source ใหม่ (gitignored — ดิบ, ไหลผ่าน INTAKE_QUEUE funnel)
+- `docs/` — design docs · `docs/_legacy_manual/` = Codex-era manual workflow (เก็บไว้อ้างอิง)
+- `_archive_docs/` — session log / plan / index เก่าที่จบแล้ว (ย้ายออกจาก root 2026-06-25)
+- `skills/` — สำเนา .md ของ pipeline skills (ตัวจริงอยู่ `C:\Users\patip\.claude\skills`)
 
-## Identifier Formats
-
-- RunID format: RUN_<EA_CODE><0001>
-- OptBatchID format: OPT_<EA_CODE><0001>
-- PassID format: _P000001
-- CandidateID format: CAND_<EA_CODE>_
-- RecommendationID format: REC_<EA_CODE><0001>
-
-## Workflow Note
-
-Manual/auto MT5 reports are not parsed yet.
-
-Reports may be manually placed into reports\inbox.
-
-Parsing and automation are future phases only.
-
-No parser exists yet.
-
-No automation exists yet.
-
----
-
-## UPDATE 2026-06-12 — เริ่มใช้งานจริงแล้ว
-
-- **เปิด [INDEX.md](INDEX.md) ก่อนเสมอ** = ทะเบียน EA ทุกตัว + สถานะ
-- **parser มีแล้ว** (เลิกใช้ข้อความ "no parser exists yet" ด้านบน) — อยู่ใน skill
-  pipeline ดู [scripts/README.md](scripts/README.md)
-- **EA ตัวแรกที่ทำจริง:** [ea_projects/EA_GoldenEmber_Pivot](ea_projects/EA_GoldenEmber_Pivot/00_README.md)
-- **idea bank:** `D:\Forex\50_KNOWLEDGE\IDEA_BANK\` (ไม่ย้ายมา ใช้ร่วมกัน)
-- **skill pipeline:** `C:\Users\patip\.claude\skills\` = สมองที่ให้คะแนน/ตัดสิน;
-  EA_LAB = แฟ้มหลักฐานของ EA แต่ละตัว
+## กฎเหล็ก
+- อย่าเชื่อ report เก่าบนดิสก์ — rerun ด้วย locked .set ก่อนตัดสินเสมอ
+- ปิด MT5 GUI ก่อนรัน automation (script abort ถ้าเปิดอยู่)
+- ของก้อนใหญ่กลั่นด้วย script ไม่โหลดดิบเข้า context · ทุกงานใหญ่ commit git
+- demo ≥3 เดือนห้ามลัด · grid/martingale ใช้ report DD + every-tick ไม่ใช่ MC อย่างเดียว
