@@ -1,0 +1,11 @@
+combo,params,window,PF,Net,Trades,EqDDpct,Win,Sharpe,Status
+0,StopLossPoints0,IS,4.69,96.27,145,0.49,86.21,4.36,OK
+0,StopLossPoints0,CRISIS,0.94,-16.23,180,3.05,84.44,-0.15,OK
+1,StopLossPoints100,IS,1.07,6.45,185,0.15,52.43,1.02,OK
+1,StopLossPoints100,CRISIS,1.00,-0.87,300,0.29,37.00,-0.07,OK
+2,StopLossPoints200,IS,1.17,17.20,174,0.30,66.67,1.97,OK
+2,StopLossPoints200,CRISIS,0.83,-48.27,293,0.80,50.51,-2.71,OK
+3,StopLossPoints300,IS,1.38,35.58,166,0.33,74.70,3.08,OK
+3,StopLossPoints300,CRISIS,0.84,-49.19,286,1.01,60.49,-2.12,OK
+4,StopLossPoints500,IS,1.32,31.42,160,0.37,80.00,2.06,OK
+4,StopLossPoints500,CRISIS,0.69,-119.03,262,1.72,66.79,-4.09,OK
