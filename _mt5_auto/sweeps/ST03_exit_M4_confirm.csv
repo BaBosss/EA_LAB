@@ -1,0 +1,6 @@
+combo,window,model,PF,Net,Trades,DDpct,Win,Sharpe,verdict
+tp3=50_near=50,IS_2024.01-03,M4,2.14,21.77,154,0.38,70.78,2.35,WINNER
+tp3=50_near=50,OOS_2024.09-11,M4,3.26,25.08,129,0.18,75.97,5.99,WINNER
+tp3=80_near=50,IS_2024.01-03,M4,6.83,63.41,151,0.38,80.13,6.20,REJECT_too-good
+tp3=80_near=50,OOS_2024.09-11,M4,13.19,60.69,132,0.20,80.30,7.78,REJECT_too-good
+tp3=50_near=100(default),IS_2024.01-03,M4,1.47,13.79,120,0.37,65.83,1.48,baseline
