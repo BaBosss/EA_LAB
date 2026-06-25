@@ -1,0 +1,37 @@
+; EA_RUNNER_ST03 SAFE-SIZED v1 (2026-06-25) ? 5x of optimized winner
+; tp3=50/near=50, base 0.05 (5x). GBPUSD H1 ONLY (multi-symbol transfer failed).
+; Sizing judged on STRESS window not calm: GBP crisis 2022.08-11 equity DD=13.79% (survives).
+; calm 2024 DD ~1.9%, IS PF 2.14 / held-out 3.26. ~5x the profit of 0.01 base.
+; DO NOT exceed ~5x: 25x gives 9% calm DD but 68% crisis DD = near-ruin (no-SL tail).
+; no-SL OCO scalp ? a hard SL would cap the tail + allow bigger safe sizing (not yet tried).
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=false
+InpMagic=990010
+InpHoldBars=80
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=0
+InpTakeProfitPoints=600
+InpVerboseLogging=false
+InpCountBars=2
+InpLotRepeat=3
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpNearbyPip=50
+InpPendingMode=2
+InpTrailingPoints=0
+InpSessionFilter=false
+InpUseMtfGate=false
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.05
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0
+InpEdgeTrigger=true

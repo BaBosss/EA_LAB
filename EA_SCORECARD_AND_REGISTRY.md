@@ -91,7 +91,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|
-| EA_RUNNER_ST03 (CORE replica) | GBPUSD H1 | PF 1.06 (was 0.63) | ★★☆ | **REBUILD** | OCO fix worked; signal fires too often (level→edge trigger = next fix) |
+| EA_RUNNER_ST03 (CORE replica) | GBPUSD H1 | **M4 IS 2.14 / held-out 3.26** | ★★☆ | **CANDIDATE (framework PoC)** | 2026-06-25: edge-trigger fixed over-trade (571→120t) + exit optimize `near=100→50` → reproduces ST_EA03-grade. `ST03_optimized_v1.set`. **Multi-symbol: GBPUSD-ONLY** (USDCAD/EUR/AUD/NZD fail OOS — need per-symbol optimize). **Sizing: no-SL tail CONFIRMED** — 25× = 9% calm DD but **68% crisis DD** (GBP 2022 near-ruin); safe = **5× (base 0.05)** crisis DD 14%, `ST03_sized5_v1.set`. NEXT high-value = add hard SL to cap tail (not LotRepeat/HoldBars). Framework PoC — ST_EA03 already live |
 
 ### MT5 — FRESH TEMPLATE EAs (built 2026-06-22)
 | EA | best smoke | Conf | Verdict | Kill reason / re-exam |

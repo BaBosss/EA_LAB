@@ -1,0 +1,4 @@
+sizing,base_lot,calm2024_DD%,calm2024_Net,crisis2022_DD%,crisis2022_Net,note
+1x,0.01,0.38,21.77,~2.7,-164,baseline
+5x,0.05,~1.9,~109,13.79,-818,SAFE - crisis DD within 15% budget
+25x,0.25,9.35,546.22,68.65,-4091,UNSAFE - near-ruin in stress (no-SL tail)
