@@ -47,8 +47,15 @@ __pycache__/
 
 # compiled MQL5 binaries
 *.ex5
+*.ex4
 ea_template/compile.log
 ea_template/compile_*.log
+# root-level transient compile logs
+/compile_*.log
+
+# transient intake staging drop (raw vendor EA source/binaries, ~580MB, regenerable
+# from user's source archive; flows through INTAKE_QUEUE funnel — not curated work)
+_intake_drop/
 
 # _mt5_auto transient artifacts (reports/ini/logs are bulky + regenerable)
 _mt5_auto/reports/

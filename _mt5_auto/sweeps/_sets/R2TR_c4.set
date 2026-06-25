@@ -1,0 +1,14 @@
+; R2TR combo 4 : TpAtrMult3.0_RegPeriod50_ChannelK1.5
+_00_OptimizeMode=true
+_01_RegPeriod=50
+_01_ChannelK=1.5
+_01_SlopeMinPts=0.0
+_01_RequireInTrend=true
+_02_SlAtrMult=2.0
+_02_TpAtrMult=3.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990003
+_06_Deviation=20
+_06_AllowLive=false

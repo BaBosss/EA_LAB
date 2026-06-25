@@ -73,9 +73,14 @@ Gotcha: ต้อง `--bare` + force `ANTHROPIC_BASE_URL=https://gateway.9arm.c
 ### ✅ จบแล้ว: EA screening + **deploy ครบ 8 EA บน 10k cent (2026-06-22)**
 ### ⏰ ติดนาฬิกา: demo-monitor 8 EA → **judge 2026-09-22** (ลัดไม่ได้) — จับตา Gold Reaper (conditional) + MG grid (DD) + CB_EUR (conditional)
 ### 🔧 ทำได้เลย (ไม่ติดเวลา):
-1. **เครื่องมือ judge (Thread A) — กำลังทำ:** สร้าง `report_deals.mq5` (ดึง P&L ต่อ deal + magic ผ่าน HistoryDeal API)
-   + `parse_live_deals.ps1` (roll-up by magic,symbol). ใช้คู่สกิล `ea-live-monitor`. **ต้องมีก่อน 09-22 ไม่งั้น judge per-EA ไม่ได้** (account report ไม่มี magic ต่อ deal).
-2. **EA_CORE_V1 ScaleExecutor Part B (Thread B):** pending-order pyramid (BUY_LIMIT/SELL_LIMIT) เลียนแบบ ST_EA03 Nearby_PIP — ดู `CURRENT_BUILD/`
+1. **เครื่องมือ judge (Thread A) — ✅ DONE:** `D:\EA_LAB\scripts\report_deals.mq5` + `parse_live_deals.ps1` สร้างแล้ว
+   ทดสอบแล้ว (CB_GBP/CB_EUR split ถูกต้อง). ใช้ได้ตอน judge 09-22.
+2. **EA_CORE_V1 ScaleExecutor Part B (Thread B) — 🔴 STUCK:**
+   - ScaleExecutor_v2.mqh ✅ (25 asserts PASS), EA_RUNNER_ST03.mq5 ✅ (compiled 0 errors)
+   - IS test GBPUSD Model 4 → **0 trades** (root cause ยังไม่รู้)
+   - Diagnostic counters เพิ่มแล้วใน source (OnDeinit Print ST03_DIAG)
+   - **Next session: recompile → test non-verbose → อ่าน ST03_DIAG retcode → fix**
+   - ดูรายละเอียดเต็ม: `CURRENT_BUILD/EA_CORE_V1_FREEZE_STATUS.md` section "UPDATE 2026-06-22 end-of-session"
 3. หา signal ใหม่ = **ปิดแล้ว** (Bucket D 0 survivor, intake เหลือแต่ martingale) — อย่าเสียเวลาหาเพิ่ม
 
 ### Pipeline เป็น skill แล้ว (2026-06-22): signal-scanner → mql-code-generator → mql-code-reviewer → backtest-optimize-rigor → robustness-validator → portfolio-selector → live-deployment-controller → vps-deploy-ops → **ea-live-monitor** (post-deploy)

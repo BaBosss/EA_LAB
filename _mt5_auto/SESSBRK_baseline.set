@@ -1,0 +1,16 @@
+; (Boss)_SessionBreakout_rev01 baseline lock — reproduce smoke XAU M15 PF~1.04
+_00_OptimizeMode=false
+_01_StartHour=9
+_01_RangeHours=1
+_01_TradeEndHour=18
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=1.5
+_02_TpAtrMult=2.5
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990004
+_06_Deviation=20
+_06_AllowLive=false

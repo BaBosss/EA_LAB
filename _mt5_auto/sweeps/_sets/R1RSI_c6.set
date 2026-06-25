@@ -1,0 +1,20 @@
+; R1RSI combo 6 : TpAtrMult4.0_SlAtrMult1.5_ExtremeBars12
+_00_OptimizeMode=true
+_01_RsiPeriod=14
+_01_ExtremeBars=12
+_01_BbPeriod=20
+_01_BbDev=2.0
+_01_MacdFast=12
+_01_MacdSlow=26
+_01_MacdSignal=9
+_01_UseBbFilter=true
+_01_UseMacdFilter=true
+_01_MacdReversal=false
+_02_SlAtrMult=1.5
+_02_TpAtrMult=4.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990002
+_06_Deviation=20
+_06_AllowLive=false

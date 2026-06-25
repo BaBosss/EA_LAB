@@ -1,0 +1,17 @@
+; SessionBreakout EURUSD H1 leader (StartH=10, RangeH=1, EndH=20, SL=2.0, TP=2.0)
+; IS 2023-2025.06: PF=1.19, 618t, DD=0.26%, Sharpe=2.25 — real plateau, sub-gate
+_00_OptimizeMode=false
+_01_StartHour=10
+_01_RangeHours=1
+_01_TradeEndHour=20
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=2.0
+_02_TpAtrMult=2.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990004
+_06_Deviation=20
+_06_AllowLive=false

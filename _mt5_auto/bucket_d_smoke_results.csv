@@ -1,0 +1,22 @@
+ea_name,track,symbol,period,trades,pf,net_profit,dd_pct,sharpe,gate,notes
+Boss_TrendEmaAdx,MT5,XAUUSD,H1,0,0,0,0,0,ERROR,0 trades
+Boss_DynRSI,MT5,XAUUSD,H4,1,0,4990,1.9,0,ERROR,swing RSI+BB+MACD | 1 trade, need alt
+Boss_DynRSI,MT5,XAUUSD,H1,3,0,-590,5.9,0,FAIL,swing RSI+BB+MACD [ALT XAUUSD H1] | 3 trades
+Boss_RSI_OBOS,MT5,EURUSD,H1,1,0,-5950,80.5,0,ERROR,reversal | 1 trade, huge loss
+Boss_RSI_OBOS,MT5,XAUUSD,H1,1,0,-7390,73.9,0,ERROR,reversal [ALT XAUUSD H1] | 1 trade, huge loss
+Boss_PSAR,MT5,EURUSD,H1,1,0,-6900,80.5,0,ERROR,PSAR trend | 1 trade, huge loss
+Boss_Redbull,MT5,XAUUSD,H1,0,0,0,0,0,ERROR,unknown | NO_REPORT (EA hangs)
+Boss_Infinix,MT5,XAUUSD,H1,0,0,0,0,0,ERROR,unknown | NO_REPORT (EA hangs)
+Boss_Supermax,MT5,XAUUSD,H1,0,0,0,0,0,ERROR,unknown | NO_REPORT (EA hangs)
+Boss_RSI_Scalp_XAU,MT5,XAUUSD,M15,4,279.89,52.99,0.24,0.18,THIN,scalper tight TP | SUSPECT_TOOGOOD | NEEDS_M4 | 4 trades
+Jobot_NewsNF,MT5,XAUUSD,M5,0,0,0,0,0,ERROR,news straddle | 0 trades | INCONCLUSIVE
+Boss_Supermax,MT5,XAUUSD,H1,0,0,0,0,0,ERROR,NO_REPORT (EA hangs on MT5)
+Boss_RSI_Scalp_XAU,MT5,XAUUSD,M15,4,279.89,52.99,0.24,0,SUSPECT_ARTIFACT,tight-TP PF280/4t = fill artifact + thin; needs M4 if pursued
+Jobot_NewsNF,MT5,XAUUSD,M5,0,0,0,0,0,INCONCLUSIVE,news EA 0 trades in 2026Q1 (no NFP trigger or non-functional)
+RSI_Swing_BB_rev01,MT5-NEW,XAUUSD,H4,194,0.85,-717,10.79,0,FAIL,decoded clean signal; naked edge break-even (martingale was the edge)
+RSI_Swing_BB_rev01,MT5-NEW,EURUSD,H1,918,0.97,-47,1.51,0,FAIL,both-sides ~break-even
+RSI_Swing_BB_rev01,MT5-NEW,EURUSD,H1-BUYONLY,524,1.03,_,_,0,FAIL,BUY-only marginally positive but below 1.40 gate
+TrendRegression_rev01,MT5-NEW,XAUUSD,H1,671,0.81,-1639,21.34,0,FAIL,linreg pullback-in-trend; reversion entry no edge
+TrendRegression_rev01,MT5-NEW,EURUSD,H1,797,0.85,-206,2.57,0,FAIL,reversion entry no edge
+SessionBreakout_rev01,MT5-NEW,XAUUSD,M15,854,1.04,125,2.67,0,WATCH,London open-range momentum; POSITIVE on gold; optimize candidate
+SessionBreakout_rev01,MT5-NEW,EURUSD,M15,860,0.84,-79,0.85,0,FAIL,momentum no edge on EUR

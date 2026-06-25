@@ -1,0 +1,17 @@
+; SessionBreakout XAUUSD H1 — IS leader (NY open range StartH=12, RangeH=2, EndH=16)
+; IS 2023-2025.06: PF=1.39, 321t, DD=0.50%, Sharpe=5.82 (plateau: top 11 passes = same session)
+_00_OptimizeMode=false
+_01_StartHour=12
+_01_RangeHours=2
+_01_TradeEndHour=16
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=1.0
+_02_TpAtrMult=2.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990004
+_06_Deviation=20
+_06_AllowLive=false

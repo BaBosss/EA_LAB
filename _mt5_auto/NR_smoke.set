@@ -1,0 +1,17 @@
+; (Boss)_NRBreakout_rev01 — smoke defaults
+_00_OptimizeMode=false
+_01_NrLookback=7
+_01_NrMult=0.8
+_01_EntryStartH=9
+_01_TradeEndH=18
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=1.5
+_02_TpAtrMult=3.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990006
+_06_Deviation=20
+_06_AllowLive=false

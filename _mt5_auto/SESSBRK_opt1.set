@@ -1,0 +1,17 @@
+; (Boss)_SessionBreakout_rev01 OPTIMIZE pass 1 — XAU M15
+; sweep: StartHour, RangeHours, TradeEndHour, SlAtrMult, TpAtrMult
+_00_OptimizeMode=true
+_01_StartHour=9||7||1||15||Y
+_01_RangeHours=1||1||1||4||Y
+_01_TradeEndHour=18||16||2||22||Y
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=1.5||1.0||0.5||3.0||Y
+_02_TpAtrMult=2.5||1.5||0.5||5.0||Y
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990004
+_06_Deviation=20
+_06_AllowLive=false

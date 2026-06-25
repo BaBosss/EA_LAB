@@ -1,0 +1,17 @@
+; CBEURX combo 31 : TpAtrMult4.0_ConsoAtrMult2.0_SlAtrMult2.0
+_00_OptimizeMode=false
+_01_ConsoStartHour=6
+_01_ConsoEndHour=11
+_01_TradeEndHour=18
+_01_CloseEod=true
+_01_ConsoAtrMult=2.0
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=2.0
+_02_TpAtrMult=4.0
+_03_AtrPeriod=14
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=990005
+_06_Deviation=20
+_06_AllowLive=false

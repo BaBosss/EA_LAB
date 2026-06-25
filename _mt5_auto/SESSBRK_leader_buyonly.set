@@ -1,0 +1,16 @@
+; leader params (9/1/16 SL2.0 TP2.0) with BUY-only — regime hypothesis check
+_00_OptimizeMode=false
+_01_StartHour=9
+_01_RangeHours=1
+_01_TradeEndHour=16
+_01_CloseEod=true
+_01_BuyBreakHigh=true
+_01_SellBreakLow=true
+_02_SlAtrMult=2.0
+_02_TpAtrMult=2.0
+_03_AtrPeriod=14
+_05_BuyOnly=true
+_05_LotSize=0.01
+_06_Magic=990004
+_06_Deviation=20
+_06_AllowLive=false

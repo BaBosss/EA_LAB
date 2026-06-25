@@ -1,5 +1,5 @@
 # Demo Deployment Plan — Portfolio v3
-อัพเดท: 2026-06-22 | สถานะ: 🟢 RUNNING — ทั้ง 8 EA deploy แล้วบน 10,000 cent account เดียว
+อัพเดท: 2026-06-25 | สถานะ: 🟢 RUNNING — **7 EA active** บน 10,000 cent account เดียว (CB_EUR ถอดออก 2026-06-25)
 
 > **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
 > ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
@@ -19,7 +19,7 @@
 | 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
 | 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.77 | 🟢 LIVE | BUY-only 0.01 lot ✅ |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
-| 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | 🟢 LIVE ⚠️ | CONDITIONAL 0.01 lot |
+| 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | ❌ DROP (2026-06-25) | Q2 rescue sweep พบ no durable edge (OOS ทั้งคู่ <1.0) → ถอดออกจาก demo. Portfolio จริง = 7 ตัว |
 
 **Promote conditions (กลุ่ม B → portfolio):**
 - ≥30 real trades ผ่านไป
@@ -103,7 +103,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 |---|---|---|
 | EA_BREAKOUT_XAU | XAU bear trend ยาว | 30 trades, PF ≥ 1.40 |
 | CB_GBP GBPUSD | DD > 1.5% หรือ 10 consec loss | 30 trades, PF ≥ 1.40 → เพิ่มเป็น 1% |
-| CB_EUR EURUSD ⚠️ | Monthly DD > 1% หรือ 10 consec loss | **ไม่เพิ่ม lot** — conditional ถาวร |
+| ~~CB_EUR EURUSD~~ | **DROPPED 2026-06-25** | Q2 rescue sweep (48 combo × 3 win) ไม่เจอ durable edge — OOS ทั้งคู่ <1.0. GBPUSD-only confirmed. ถอด EA ออกจาก EURUSD chart ใน MT5 GUI |
 
 ---
 

@@ -1,6 +1,18 @@
-; EA_BREAKOUT_XAU v3 LIVE params — XAUUSD H1
-; Validated: IS M4 2023-2026 PF=2.66 45t DD=0.89% | OOS M4 2020-2022 PF=1.77 33t DD=0.87%
-; Bar-open gate (g_bar_checked) ensures M4 matches OHLC trade count behavior
+; EA_BREAKOUT_XAU LIVE params — XAUUSD H1
+; Validated: IS M4 2020-2026 PF=2.27 86t DD=2.08% | OOS M4 2023-2026 PF=1.77 33t DD=0.65%
+; MC bootstrap PF-5th=1.43 ruin=0% DD-95th=1.96%
+; Bar-open gate (g_bar_checked) — M4 trade count matches OHLC behavior
+; ---
+; PARAM NAMES HERE = OLD NAMES (Inp*) because the running .ex5 was compiled before the
+; _NN_ rename refactor (2026-06-22). DO NOT switch to _NN_ names until the new .ex5
+; is compiled and deployed to AppData Experts. See redeploy checklist below.
+; ---
+; REDEPLOY CHECKLIST (run once when ready):
+;   1. Copy D:\EA_Project\CURRENT_BUILD\TEMPLATE\EA_BREAKOUT_XAU.mq5
+;          → C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts\EA_BREAKOUT_XAU.mq5
+;   2. Open MetaEditor → compile → verify 0 errors
+;   3. In MT5 demo: remove old EA from chart, re-attach new .ex5, load BRK_XAU_live_v2.set
+;   4. Replace this file with BRK_XAU_live_v2.set (new param names)
 InpBreakoutBars=40
 InpAtrPeriod=14
 InpAtrMaPeriod=20
