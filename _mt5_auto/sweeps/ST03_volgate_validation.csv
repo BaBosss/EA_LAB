@@ -1,0 +1,9 @@
+window,baseline_net,gate_net_1.5_300,baseline_trades,gate_trades,verdict
+BREXIT2016,-217.74,+94.29,83,81,SAVED (cut 2 spike-tail trades)
+COVID2020,-48.64,-49.17,94,92,no help (sustained trend not spike)
+GILT2022,-82.06,-84.77,157,151,no help
+WF6_2025H1,-79.57,-83.27,147,137,no help
+WF3_2021H2,-143.86,-122.39,102,103,marginal
+OOS2024,26.27,23.79,107,99,preserved -10pct
+# vol-gate = cheap GAP insurance (saves spike events like Brexit) but NOT a general tail fix.
+# Losing windows are TREND regimes not ATR spikes -> real lever = trend/ADX filter.

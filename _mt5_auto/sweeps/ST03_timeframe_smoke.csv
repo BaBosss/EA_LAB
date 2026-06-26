@@ -1,0 +1,5 @@
+timeframe,model,PF,Net,Trades,window,note
+H1,M1,8.83,62.01,168,2024.01-04,best by far (design TF)
+M30,M1,1.86,49.46,228,2024.01-04,weaker - spread eats 5pip target
+M15,M1,1.48,55.44,387,2024.01-04,weakest + 2x churn for same return
+# H1 confirmed optimal. Lower TF structurally weaker (spread vs tiny reversion target).
