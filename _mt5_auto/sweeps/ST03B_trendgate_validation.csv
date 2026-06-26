@@ -1,0 +1,10 @@
+window,baseline_net,adx_gate_net,baseline_trades,adx_trades,verdict
+COVID2020,-48.6,-65.6,94,48,WORSE
+GILT2022,-82.1,-89.0,157,107,WORSE
+WF6_2025H1,-79.6,-93.8,147,118,WORSE
+WF3_2021H2,-143.9,-126.7,102,86,~same(still big loss)
+BREXIT2016,-217.7,-281.3,83,48,MUCH WORSE
+IS2024_calm,34.1,27.0,122,98,calm -21pct
+WF5_2023_calm,48.2,36.3,138,95,calm down (PF up 3.81->5.76)
+# ADX trend-gate FALSIFIED: counterproductive. ADX lags - by ADX>30 the trend is mature/reverting
+# (when the strategy SHOULD trade); gate cuts the good reversion trades, keeps early-trend losers.

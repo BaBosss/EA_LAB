@@ -34,9 +34,12 @@ excursions until they revert, converting would-be losers into small wins.
 lump when price trends hard without reverting.
 **Failure mode:** every real crisis PF<1 (Brexit/COVID/gilt) — the "steamroller". Negative skew
 (MC PF-range 20.5). Regime-dependent (2025H1 weak). Hard SL kills it (realises the temp excursions
-before they revert). **Tamed by:** vol-gate (ATR>1.5×ATR_MA(300) → sit out) — Brexit −218→+94.
-**Idea seeds:** the vol-gate pattern generalises to ANY no-SL reversion harvester; the same engine
-on other liquid rangers (EURUSD) may work once per-symbol tuned + gated.
+before they revert). **Tail CANNOT be filtered reactively** (tested 2026-06-26): vol-gate
+(ATR>1.5×ATR_MA(300)) only catches GAP spikes (Brexit −218→+94) but misses sustained-trend crises;
+ADX trend-gate is COUNTERPRODUCTIVE (ADX lags → cuts the good reversion trades, keeps early-trend
+losers). **So you cannot size this up safely.**
+**Idea seeds:** more profit comes from DIVERSIFICATION not leverage — run the engine small on other
+liquid rangers (EURUSD/EURGBP) per-symbol tuned, and combine uncorrelated legs in a portfolio.
 
 ### MG_v1 MatchaGrid — CHFJPY M15 (CORE) 🟨
 **Mechanism (hypothesis):** bounded grid with hard SL on a range-bound cross.
@@ -89,5 +92,8 @@ directionally. Session-timing edge, not indicator edge.
    (NY, Tokyo) and to XAU (which trends → breakout-friendly).
 4. **Momentum-only on trenders** — keep reversion OFF gold; build a clean XAU momentum/continuation
    EA (Gold Reaper-style) rather than fighting it with reversion.
-5. **The universal tamer** — the ATR-long-baseline vol-gate cut ST03's worst tail at ~0 calm cost;
-   bolt it onto ANY no-SL/grid harvester to convert "ruin tail" into "sit-out".
+5. **Tail-filter caution (tested, mostly negative)** — for a no-SL reversion harvester the crisis
+   tail resists reactive filters: ATR vol-gate catches only gap spikes; ADX trend-gate is
+   counterproductive (lags). Don't expect a TA filter to unlock sizing — diversify instead. A
+   *leading* regime signal (macro calendar / cross-asset stress), not a lagging indicator, is the
+   only untested angle.
