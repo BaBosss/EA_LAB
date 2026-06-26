@@ -1,0 +1,7 @@
+symbol,combo,M2_IS,M2_OOS,M4_OOS,verdict
+EURUSD,tp30/near50,1.39,1.28,0.54,REJECT (M2->M4 collapse, spread eats tiny target)
+EURUSD,tp50/near50,1.11,1.85,0.74,REJECT (M2->M4 collapse)
+EURGBP,all,<1,<1,n/a,REJECT (no edge even at M2)
+USDCAD,all,mixed,<1.2,n/a,REJECT (OOS<1.2 at M2)
+# Conclusion: no new symbol survives. GBPUSD-only re-confirmed at M4.
+# Lesson: Model-2 over-promised for this no-SL tight-target EA; every-tick confirm is mandatory.
