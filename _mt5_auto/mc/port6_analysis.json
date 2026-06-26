@@ -1,0 +1,206 @@
+{
+  "source_file": "_mt5_auto/portfolio_monthly_6ea.csv",
+  "months": 36,
+  "period": "2020.01..2022.12",
+  "ea_names": [
+    "MG_v1",
+    "NuiIndy",
+    "MACD_GBPUSD",
+    "MACD_USDCAD",
+    "GoldReaper_XAUUSD",
+    "ST03_replica_GBPUSD"
+  ],
+  "weights": {
+    "MG_v1": 0.1667,
+    "NuiIndy": 0.1667,
+    "MACD_GBPUSD": 0.1667,
+    "MACD_USDCAD": 0.1667,
+    "GoldReaper_XAUUSD": 0.1667,
+    "ST03_replica_GBPUSD": 0.1667
+  },
+  "per_ea_max_dd_pct": {
+    "MG_v1": 0.0,
+    "NuiIndy": 0.0,
+    "MACD_GBPUSD": 0.0,
+    "MACD_USDCAD": 0.0,
+    "GoldReaper_XAUUSD": 62.39,
+    "ST03_replica_GBPUSD": 3.39
+  },
+  "pairs": [
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "NuiIndy",
+      "correlation": 0.541,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "MACD_GBPUSD",
+      "correlation": 0.768,
+      "correlation_level": "HIGH",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.607,
+      "correlation_level": "HIGH",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "GoldReaper_XAUUSD",
+      "correlation": -0.357,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 8.3,
+      "severe_overlap_color": "GREEN"
+    },
+    {
+      "ea_a": "MG_v1",
+      "ea_b": "ST03_replica_GBPUSD",
+      "correlation": -0.473,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 47.2,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "MACD_GBPUSD",
+      "correlation": 0.302,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.242,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "GoldReaper_XAUUSD",
+      "correlation": 0.068,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 8.3,
+      "severe_overlap_color": "GREEN"
+    },
+    {
+      "ea_a": "NuiIndy",
+      "ea_b": "ST03_replica_GBPUSD",
+      "correlation": -0.013,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 47.2,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MACD_GBPUSD",
+      "ea_b": "MACD_USDCAD",
+      "correlation": 0.572,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 100.0,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MACD_GBPUSD",
+      "ea_b": "GoldReaper_XAUUSD",
+      "correlation": -0.257,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 8.3,
+      "severe_overlap_color": "GREEN"
+    },
+    {
+      "ea_a": "MACD_GBPUSD",
+      "ea_b": "ST03_replica_GBPUSD",
+      "correlation": -0.239,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 47.2,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "MACD_USDCAD",
+      "ea_b": "GoldReaper_XAUUSD",
+      "correlation": -0.161,
+      "correlation_level": "LOW",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 8.3,
+      "severe_overlap_color": "GREEN"
+    },
+    {
+      "ea_a": "MACD_USDCAD",
+      "ea_b": "ST03_replica_GBPUSD",
+      "correlation": -0.354,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 0.0,
+      "dd_overlap_color": "GREEN",
+      "severe_overlap_pct": 47.2,
+      "severe_overlap_color": "RED"
+    },
+    {
+      "ea_a": "GoldReaper_XAUUSD",
+      "ea_b": "ST03_replica_GBPUSD",
+      "correlation": 0.408,
+      "correlation_level": "MEDIUM",
+      "dd_overlap_pct": 38.9,
+      "dd_overlap_color": "YELLOW",
+      "severe_overlap_pct": 8.3,
+      "severe_overlap_color": "GREEN"
+    }
+  ],
+  "combined": {
+    "max_dd_pct": 5.76,
+    "worst_same_month_loss_pct": -3.5,
+    "worst_month": "2022.11",
+    "mean_monthly_return_pct": 3.928
+  },
+  "crisis_months": [],
+  "loss_target_pct": 10.0,
+  "blocking_flags": {
+    "correlation_gt_0_7": [
+      "MG_v1~MACD_GBPUSD"
+    ],
+    "dd_overlap_red": [
+      "MG_v1~NuiIndy",
+      "MG_v1~MACD_GBPUSD",
+      "MG_v1~MACD_USDCAD",
+      "MG_v1~ST03_replica_GBPUSD",
+      "NuiIndy~MACD_GBPUSD",
+      "NuiIndy~MACD_USDCAD",
+      "NuiIndy~ST03_replica_GBPUSD",
+      "MACD_GBPUSD~MACD_USDCAD",
+      "MACD_GBPUSD~ST03_replica_GBPUSD",
+      "MACD_USDCAD~ST03_replica_GBPUSD"
+    ]
+  }
+}
