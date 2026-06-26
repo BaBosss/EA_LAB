@@ -1,0 +1,22 @@
+; EA_BREAKOUT_XAU (Boss)_Breakout_Donchian_XAU_rev01 — LIVE params XAUUSD H1
+; NEW _NN_ param names — use ONLY with the recompiled .ex5 (post-2026-06-22 rename).
+; Validated: IS M4 2020-2026 PF=2.27 86t DD=2.08% | OOS M4 2023-2026 PF=1.77 33t DD=0.65%
+; MC bootstrap PF-5th=1.43 ruin=0% DD-95th=1.96%
+;
+; DEPLOY THIS ONLY AFTER the new .ex5 is compiled+attached. Until then the demo runs
+; the OLD .ex5 with BRK_XAU_live_v1.set (Inp* names). See v1 header for the redeploy
+; checklist. Do the swap when the demo can tolerate a brief EA reload (market quiet).
+_00_OptimizeMode=false
+_01_BreakoutBars=40
+_02_SlAtrMult=1.5
+_02_TpAtrMult=5.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=200
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=991001
+_06_Deviation=20
+_06_AllowLive=true

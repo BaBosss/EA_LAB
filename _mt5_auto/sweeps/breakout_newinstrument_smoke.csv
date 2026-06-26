@@ -1,0 +1,9 @@
+symbol,PF,Net,Trades,Win_pct,verdict,note
+USDJPY,1.16,22.84,92,27.17,WATCH,momentum-on-trender structurally sane; lead -> optimize once
+GBPJPY,0.94,-16.04,113,18.58,DEAD,
+XAGUSD,0.97,-58.91,138,24.64,DEAD,
+BRENT,0.86,-4.19,35,20.00,DEAD,thin trades
+WTI,0.96,-0.40,14,35.71,DEAD,too few trades (14) - breakoutbars too wide for oil
+US30,0.68,-19.43,50,18.00,DEAD,XAU-tuned params dont fit index; low priority re-smoke w/ tuned bars
+# Naked breakout (EA_BREAKOUT_XAU both-dir, H1, M2, 2023-2026, default params).
+# Only USDJPY clears WATCH. Portfolio has no JPY momentum leg -> diversifier if it optimizes.
