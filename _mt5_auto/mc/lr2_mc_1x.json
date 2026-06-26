@@ -1,0 +1,29 @@
+{
+  "source_file": "_mt5_auto/mc/lr2_combined_deals.csv",
+  "trade_count": 229,
+  "net_profit": 60.34,
+  "observed_pf": 5.43,
+  "observed_dd_pct": 0.08,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 5.43,
+    "pf_median": 5.43,
+    "pf_95th": 5.43,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 0.05,
+    "dd_95th_pct": 0.07,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 2.923,
+    "pf_median": 5.833,
+    "pf_95th": 23.391,
+    "pf_range_5_95": 20.468,
+    "dd_median_pct": 0.05,
+    "dd_95th_pct": 0.08,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  }
+}
