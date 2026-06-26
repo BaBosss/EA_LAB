@@ -1,0 +1,15 @@
+; BRKJPY c7 _02_TpAtrMult5.0__01_BreakoutBars60
+_00_OptimizeMode=false
+_01_BreakoutBars=60
+_02_SlAtrMult=1.5
+_02_TpAtrMult=5.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=200
+_05_BuyOnly=false
+_05_LotSize=0.01
+_06_Magic=991001
+_06_Deviation=20
+_06_AllowLive=true
