@@ -20,6 +20,7 @@
 | 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.77 | 🟢 LIVE | BUY-only 0.01 lot ✅ |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
 | 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | ❌ DROP (2026-06-25) | Q2 rescue sweep พบ no durable edge (OOS ทั้งคู่ <1.0) → ถอดออกจาก demo. Portfolio จริง = 7 ตัว |
+| 9 | EA_RUNNER_ST03 (LR2 replica) | GBPUSD | H1 | `_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set` | 3.93 | 🟡 STAGED (2026-06-26) | framework replica ของ ST_EA03 GBPUSD (EA 3) = correlate สูง → **อย่ารันคู่กับ EA 3 ในบัญชีเดียว**; ใช้บัญชี/พอร์ตแยก. robustness MARGINAL → 1x (0.01) + monitor 30 ไม้แรก. magic 990010. AllowLiveOrders=true ใน live set ✅ |
 
 **Promote conditions (กลุ่ม B → portfolio):**
 - ≥30 real trades ผ่านไป
@@ -69,6 +70,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 | (default) | Gold Reaper — ตรวจจาก GUI ก่อน attach |
 | 990005 | LondonConsoBreakout (ทั้ง GBPUSD + EURUSD — OK เพราะ filter by _Symbol) |
 | 991001 | EA_BREAKOUT_XAU |
+| 990010 | EA_RUNNER_ST03 GBPUSD (LR2 replica — separate account from ST_EA03 EA3) |
 
 ---
 

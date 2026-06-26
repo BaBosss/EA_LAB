@@ -1,0 +1,44 @@
+; EA_RUNNER_ST03 OPTIMIZED v2 (2026-06-25) - LotRepeat=2 winner (supersedes v1 LR3)
+; Config: tp3=50 (5pip OCO) / near=50 (5pip leg spacing) / LotRepeat=2 (2 legs)
+; Model 4 GBPUSD H1 confirmed (base 1x sizing 0.01):
+;   IS  2024.01-03 : PF 8.31  Net 34.07  122t  EqDD 0.26%
+;   OOS 2024.09-11 : PF 3.93  Net 26.27  107t  EqDD 0.13%
+;   CRISIS 2022.08-11 : PF 0.39  Net -82.06  157t  EqDD 1.18% (no-SL tail, base sizing)
+; vs v1 LR3 (tp3=50/near=50/LotRepeat=3): IS 2.14 / OOS 3.26 / crisis ~2.75%.
+;   LR2 beats on all 3 windows AND crisis tail is ~half (1.18% vs 2.75%): 2 legs = smaller
+;   floating tail. The high IS PF 8.31 is justified by that smaller tail, NOT a free lunch.
+; CAVEAT: no-SL OCO scalp - realized DD understates FLOATING DD. GBPUSD-only, 2024 windows.
+; DEAD ENDS: any hard SL kills calm edge (4.69->~1.2, PF<1 in crisis anyway). Multi-symbol
+;   negative (USDCAD best minPF 0.62). Risk control = conservative sizing only.
+; Sizing experiments live in ST03_lr2_sized_v1.set (see its header for crisis-confirmed mult).
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=true
+InpMagic=990010
+InpHoldBars=80
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=0
+InpTakeProfitPoints=600
+InpVerboseLogging=false
+InpCountBars=2
+InpLotRepeat=2
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpNearbyPip=50
+InpPendingMode=2
+InpTrailingPoints=0
+InpSessionFilter=false
+InpUseMtfGate=false
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0
+InpEdgeTrigger=true
