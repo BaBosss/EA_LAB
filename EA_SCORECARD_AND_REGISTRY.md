@@ -108,6 +108,9 @@ distance-scaling insight) — note it, but the EA itself is out.
 | MACD crossover | EURUSD/USDJPY/AUD/NZD/USDCAD/EURGBP/+JPY crosses | ≤1.16 | ★★★ | **DEAD** | exhaustive multi-symbol sweep, all fail OOS |
 | BB+RSI mean-reversion | EURUSD/XAUUSD | ≤1.11 | ★★☆ | **DEAD** | same ~1.1 ceiling as MACD |
 | BREAKOUT (LabTpl) | EURUSD/GBPJPY | ≤1.03 | ★★★ | **DEAD** | optimizer 0/180 & 0/175 survivors — edge is XAU-specific |
+| BREAKOUT (EA_BREAKOUT_XAU, both-dir) | US30/WTI/BRENT/XAGUSD/GBPJPY | <1.0 | ★★☆ | **DEAD (2026-06-26)** | new-instrument momentum smoke (M2, 2023-26, default params); oil/index thin trades (XAU-tuned bars). No naked edge |
+| BREAKOUT (EA_BREAKOUT_XAU, both-dir) | **USDJPY H1** | smoke 1.16 → opt | ★★★ | **REJECT (2026-06-26)** | WATCH→optimized→dead. 12-combo (Bars×TpAtr) IS/OOS: 0 clear OOS≥1.40; high-TP curve-fit yen 2023-24 (IS 2.5/OOS 0.7), low-TP caps ~1.18. See [[signal-landscape]] |
+| Vol-gate / Trend-gate on ST03 | GBPUSD | — | ★★★ | **filters DEAD (2026-06-26)** | no-SL tail not reactively filterable: vol-gate=gap-only, ADX trend-gate counterproductive (lags). See ST03 row + EDGE_CATALOG |
 
 ### MT4 — SCREENED (63 EAs, 0 deployed)
 | EA | screen PF | Conf | Verdict | Reason |
