@@ -24,6 +24,7 @@ param(
   [string]$Terminal = "D:\Meta 5\terminal64.exe",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 1800,
+  [int]$ReserveCores = 4,        # leave this many logical CPUs free so the desktop stays responsive
   [switch]$Force
 )
 $ErrorActionPreference = "Stop"
@@ -65,11 +66,34 @@ $ini = "$auto\ini\$ReportName.ini"
 
 Write-Output "launch: $Expert | $Symbol $Period | $FromDate..$ToDate | set=$([IO.Path]::GetFileName($SetFile))"
 $proc = Start-Process -FilePath $Terminal -ArgumentList "/config:`"$ini`"" -PassThru
+# FREEZE GUARD: keep the box responsive even under every-tick (Model 4) load.
+#  - BelowNormal priority so the desktop/UI never starves behind the tester.
+#  - reserve $ReserveCores logical CPUs (affinity mask) so the machine never pegs to 100%.
+# Root cause of the 2026-06-23/25 freezes: long M4 runs at default priority pegged all
+# cores; a run that overran the timeout was left alive and kept chewing CPU.
+try {
+  Start-Sleep -Milliseconds 800   # let terminal64 spin up before we touch it
+  if (-not $proc.HasExited) {
+    $proc.PriorityClass = [Diagnostics.ProcessPriorityClass]::BelowNormal
+    $logical = [Environment]::ProcessorCount
+    if ($logical -gt ($ReserveCores + 1)) {
+      $useBits = $logical - $ReserveCores
+      $mask = ([bigint]1 -shl $useBits) - 1
+      $proc.ProcessorAffinity = [IntPtr][int64]$mask
+    }
+  }
+} catch { Write-Output "  (priority/affinity guard skipped: $($_.Exception.Message))" }
 $sw = [Diagnostics.Stopwatch]::StartNew()
 while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
   if (Test-Path $srcHtm) { Start-Sleep -Seconds 2; break }
   if ($proc.HasExited -and $sw.Elapsed.TotalSeconds -gt 8) { Start-Sleep -Seconds 2; break }
   Start-Sleep -Seconds 4
+}
+# TIMEOUT KILL: never leave a runaway tester alive eating the machine.
+if (-not $proc.HasExited -and -not (Test-Path $srcHtm)) {
+  Write-Output ("TIMEOUT after {0}s - killing terminal64 (PID {1}) so it cannot keep pegging CPU." -f $TimeoutSec, $proc.Id)
+  try { $proc.Kill() } catch {}
+  Start-Sleep -Seconds 2
 }
 if (Test-Path $srcHtm) {
   Move-Item $srcHtm $destHtm -Force

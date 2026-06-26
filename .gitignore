@@ -59,6 +59,7 @@ _intake_drop/
 
 # _mt5_auto transient artifacts (reports/ini/logs are bulky + regenerable)
 _mt5_auto/reports/
+_mt5_auto/_archive/
 _mt5_auto/ini/
 _mt5_auto/EA_runs/
 _mt5_auto/optimizations/
