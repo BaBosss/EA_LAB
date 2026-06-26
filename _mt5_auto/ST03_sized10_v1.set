@@ -1,0 +1,38 @@
+; EA_RUNNER_ST03 OPTIMIZED v1 (2026-06-25) ? exit/scaling optimize winner
+; tp3=50 (5pip OCO) / near=50 (5pip leg spacing) ? beats default near=100
+; Model 4 GBPUSD H1: IS 2024.01-03 PF=2.14 154t | held-out 2024.09-11 PF=3.26 129t
+; vs default near=100: IS 1.47. Reproduces ST_EA03-grade (ref OOS 2.47) IN-FRAMEWORK.
+; CAVEAT: no-SL OCO scalp ? realized DD understates FLOATING DD. MC/floating-DD check
+;   required before any trust beyond framework proof-of-concept. GBPUSD-only, 2024 windows.
+; REJECTED sibling tp3=80/near=50 (PF 6.83/13.19 = too-good no-SL artifact).
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=false
+InpMagic=990010
+InpHoldBars=80
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=0
+InpTakeProfitPoints=600
+InpVerboseLogging=false
+InpCountBars=2
+InpLotRepeat=3
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpNearbyPip=50
+InpPendingMode=2
+InpTrailingPoints=0
+InpSessionFilter=false
+InpUseMtfGate=false
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.25
+InpLotSizerStep=0.01
+InpLotSizerMax=0.30
+InpLotSizerLegs=5
+InpLotSizerOnMax=0
+InpEdgeTrigger=true

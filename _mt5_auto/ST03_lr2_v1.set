@@ -1,0 +1,34 @@
+; EA_RUNNER_ST03 LR2 winner, base 1x sizing (raw/intermediate of 2026-06-25 saga).
+; CANONICAL copy = ST03_optimized_v2.set (same body, full results in that header).
+; Config: tp3=50 / near=50 / LotRepeat=2. M4 GBPUSD H1: IS 8.31 / OOS 3.93 / crisis 1.18%.
+InpEnableLogging=true
+InpEnableDiagnostics=true
+InpEnableRiskEngine=true
+InpAllowLiveOrders=false
+InpMagic=990010
+InpHoldBars=80
+InpDeviationPoints=20
+InpMacdFast=12
+InpMacdSlow=26
+InpMacdSignal=9
+InpStopLossPoints=0
+InpTakeProfitPoints=600
+InpVerboseLogging=false
+InpCountBars=2
+InpLotRepeat=2
+InpTp1Pts=200
+InpTp2Pts=100
+InpTp3Pts=50
+InpNearbyPip=50
+InpPendingMode=2
+InpTrailingPoints=0
+InpSessionFilter=false
+InpUseMtfGate=false
+InpCloseOnReverseSignal=false
+InpLotSizerMode=0
+InpLotSizerBase=0.01
+InpLotSizerStep=0.01
+InpLotSizerMax=0.10
+InpLotSizerLegs=5
+InpLotSizerOnMax=0
+InpEdgeTrigger=true
