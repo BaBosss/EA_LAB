@@ -1,0 +1,19 @@
+﻿; EA_SUPERTREND_MTF mode 2: H4 base 0.03 + H1 add-ons 0.01 (max 3)
+_01_ATRperiod=10
+_01_Multiplier=3.0
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseEmaFilter=true
+_03_EMAperiod=200
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_04_MtfMode=2
+_04_MtfTF=16388
+_04_MaxAdds=3
+_05_FixedLot=0.01
+_05_BaseLot=0.03
+_05_AddLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990021
