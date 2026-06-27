@@ -6,8 +6,11 @@ Model-4 backtest via mt5_run.ps1 (which is the ONLY MT5 instance — runs are se
 parses the report, and appends one row per combo to an output CSV.
 
 DESIGN NOTES
-  * MT5 runs ONE tester at a time. This script is strictly sequential — never launch
-    two of these at once (the 2nd aborts with "MT5 GUI still running").
+  * One MT5 INSTALL runs one tester at a time, so this script is sequential per install.
+    For PARALLELISM, run a 2nd copy pointed at a different install via -Terminal/-DataDir/-Portable
+    (e.g. D:\Meta 5b /portable). The process guard is scoped by exe path, so two installs do
+    not abort each other. KEEP MODEL 4 SERIAL (every-tick = freeze risk on this box); only
+    parallelize light Model-2 smokes.
   * Robust to a single bad combo: a backtest that yields no report is logged as a
     FAIL row and the sweep continues (no hang — mt5_run.ps1 has its own timeout).
   * The EA must already be COMPILED into the terminal Experts folder. This script
@@ -38,7 +41,10 @@ param(
   [Parameter(Mandatory)][string]$OutCsv,
   [Parameter(Mandatory)][string]$ReportPrefix,
   [int]$Model = 4,
-  [int]$PerTestTimeoutSec = 600
+  [int]$PerTestTimeoutSec = 600,
+  [string]$Terminal = "D:\Meta 5\terminal64.exe",
+  [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
+  [switch]$Portable
 )
 $ErrorActionPreference = "Stop"
 $runner = "D:\EA_LAB\scripts\mt5_run.ps1"
@@ -113,9 +119,14 @@ for ($ci = 0; $ci -lt $combos.Count; $ci++) {
     $n++
     $rep = "${ReportPrefix}_c${ci}_$($w.Label)"
     Write-Output "[$n/$total] combo$ci $tagStr | $($w.Label) $($w.From)..$($w.To)"
-    $out = & $runner -Expert $Expert -Symbol $Symbol -Period $Period -Model $Model `
-                     -FromDate $w.From -ToDate $w.To -SetFile $setPath `
-                     -ReportName $rep -TimeoutSec $PerTestTimeoutSec 2>&1 | Out-String
+    $runnerArgs = @{
+      Expert = $Expert; Symbol = $Symbol; Period = $Period; Model = $Model
+      FromDate = $w.From; ToDate = $w.To; SetFile = $setPath
+      ReportName = $rep; TimeoutSec = $PerTestTimeoutSec
+      Terminal = $Terminal; DataDir = $DataDir
+    }
+    if ($Portable) { $runnerArgs.Portable = $true }
+    $out = & $runner @runnerArgs 2>&1 | Out-String
     $repPath = "D:\EA_LAB\_mt5_auto\reports\$rep.htm"
     if (Test-Path $repPath) {
       $r = Parse-Report $repPath

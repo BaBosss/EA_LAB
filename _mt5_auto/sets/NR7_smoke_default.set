@@ -1,0 +1,11 @@
+﻿_00_OptimizeMode=false
+_01_NR_Period=7
+_01_ATRPeriod=14
+_01_TrendEMA=200
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_04_TrailATR=2.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990080

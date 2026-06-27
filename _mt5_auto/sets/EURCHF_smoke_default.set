@@ -1,0 +1,15 @@
+﻿_00_OptimizeMode=false
+_01_BB_Period=20
+_01_BB_Dev=2.0
+_01_RSI_Period=14
+_01_RSI_Overbought=65.0
+_01_RSI_Oversold=35.0
+_01_ATR_Period=14
+_02_SL_ATR_mult=3.0
+_02_TP_ATR_mult=2.0
+_03_ExitAtMean=true
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_05_MaxPositions=1
+_06_AllowLive=false
+_06_Magic=990100

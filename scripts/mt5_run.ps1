@@ -25,18 +25,25 @@ param(
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 1800,
   [int]$ReserveCores = 4,        # leave this many logical CPUs free so the desktop stays responsive
+  [switch]$Portable,             # run this terminal in /portable mode (data dir = install folder) for parallel instances
   [switch]$Force
 )
 $ErrorActionPreference = "Stop"
 
+# Guard is now scoped to THIS install's exe path, not the global "terminal64" name, so a
+# second portable instance (different exe path) can run in parallel without false aborts.
+$TermPath = (Resolve-Path $Terminal -ErrorAction SilentlyContinue).Path
+function Get-SameInstall {
+  Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $TermPath }
+}
 if (-not $Force) {
-  # a previous headless run may still be closing — wait up to 25s before deciding
+  # a previous headless run of THIS install may still be closing — wait up to 25s before deciding
   $g = [Diagnostics.Stopwatch]::StartNew()
-  while ((Get-Process terminal64 -ErrorAction SilentlyContinue) -and $g.Elapsed.TotalSeconds -lt 25) {
+  while ((Get-SameInstall) -and $g.Elapsed.TotalSeconds -lt 25) {
     Start-Sleep -Seconds 2
   }
-  if (Get-Process terminal64 -ErrorAction SilentlyContinue) {
-    Write-Output "ABORT: MT5 GUI still running after 25s. Close it first, or pass -Force."; exit 2
+  if (Get-SameInstall) {
+    Write-Output "ABORT: MT5 instance '$Terminal' already running. Close it, use a different -Terminal, or -Force."; exit 2
   }
 }
 if (-not (Test-Path $Terminal)) { Write-Output "ABORT: terminal not found: $Terminal"; exit 2 }
@@ -64,8 +71,10 @@ $lines = @(
 $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
 
-Write-Output "launch: $Expert | $Symbol $Period | $FromDate..$ToDate | set=$([IO.Path]::GetFileName($SetFile))"
-$proc = Start-Process -FilePath $Terminal -ArgumentList "/config:`"$ini`"" -PassThru
+$portTag = if ($Portable) { " [portable]" } else { "" }
+Write-Output "launch: $Expert | $Symbol $Period | $FromDate..$ToDate | set=$([IO.Path]::GetFileName($SetFile))$portTag"
+$argList = if ($Portable) { "/config:`"$ini`" /portable" } else { "/config:`"$ini`"" }
+$proc = Start-Process -FilePath $Terminal -ArgumentList $argList -PassThru
 # FREEZE GUARD: keep the box responsive even under every-tick (Model 4) load.
 #  - BelowNormal priority so the desktop/UI never starves behind the tester.
 #  - reserve $ReserveCores logical CPUs (affinity mask) so the machine never pegs to 100%.

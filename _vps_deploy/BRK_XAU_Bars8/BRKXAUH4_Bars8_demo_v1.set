@@ -1,0 +1,21 @@
+; EA_BREAKOUT_XAU — BRKXAUH4 Bars8 additive variant (DEMO v1)
+; Validated 2026-06-27: IS M4 2023-2025.06 PF=2.61 / OOS M4 2025.06-2026.06 PF=3.92
+; MC bootstrap: PF_5th=1.73, DD_95th=~2%, Ruin=0% PASS all gates
+; Corr vs live Bars40 (991001): 0.21 LOW → ADDITIVE as leg #9
+; Magic=991002 (different from live Bars40 991001 — both can coexist on same XAUUSD H1 chart)
+; TF: H1 (EA hardcodes PERIOD_H1 internally; -Period flag has no effect)
+; Lot: 0.01 (DEMO 10k cent account)
+_00_OptimizeMode=false
+_01_BreakoutBars=8
+_02_SlAtrMult=1.5
+_02_TpAtrMult=4.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=200
+_05_BuyOnly=true
+_05_LotSize=0.01
+_06_Magic=991002
+_06_Deviation=20
+_06_AllowLive=true
