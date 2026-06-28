@@ -247,3 +247,5 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
 | `DEMO_DEPLOYMENT_PLAN.md` | live portfolio source of truth → ข้อ 3 |
 </content>
 </invoke>
+
+<!-- sync test 2026-06-28 -->
