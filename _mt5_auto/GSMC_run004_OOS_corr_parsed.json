@@ -1,0 +1,16 @@
+{
+  "report_type": "single_backtest",
+  "source_file": "D:\\EA_LAB\\_mt5_auto\\reports\\GSMC_run004_OOS_corr.htm",
+  "ea_name": "Gold_SMC_Continuous_MT5_RiskCapV1",
+  "symbol": "XAUUSD",
+  "period": "H1 (2020.01.01 - 2023.01.01)",
+  "currency": "USD",
+  "initial_deposit": 10000.0,
+  "leverage": "1:100",
+  "history_quality": "Model=2 (no spread/slippage simulation)",
+  "modelling_note": "Model=2 (1-minute OHLC, no spread/slippage). For real-tick execution expectation see GSMC_locked_OOS_parsed.json (Model=4: PF=0.90). True live edge in 0.90-1.03 range.",
+  "net_profit": 838.75,
+  "profit_factor": 1.03,
+  "sharpe_ratio": 0.16,
+  "total_trades": 722
+}
