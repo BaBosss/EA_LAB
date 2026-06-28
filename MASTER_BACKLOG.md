@@ -77,50 +77,23 @@
 > **กฎ:** smoke = Model 2, 2023.01.01-2026.06.01, default params. IS = 2023.01-2025.01 / OOS = 2025.01-2026.06.
 > ทุก concept ต้องเทสอย่างน้อย 3 symbol×TF เพื่อให้รู้ว่า dead จริงหรือแค่ wrong instrument.
 
-### TASK 1 — EA_NR7 ขยาย TF+Symbol (ยัง 1 session work)
-NR7 XAU H4 = IS PF 1.08 (fail) แต่ OOS 1.43 (bull run). ยังไม่ทดสอบ H1 (trade count สูงกว่า 4×).
-EAs ที่มีแล้ว: `EA_NR7.mq5` (Magic 990080) — ใช้เดิม ไม่ต้องเขียนใหม่.
-
-| # | Symbol | TF | เหตุผล |
-|---|---|---|---|
-| 1a | XAUUSD | **H1** | บน H4 OOS ผ่าน — H1 ให้ trades ~4× มากกว่า (IS~350/OOS~175t) → IS gate อาจผ่าน |
-| 1b | XAGUSD | H4 | แร่เงิน = corr ต่ำ vs XAU, SuperTrend smoke PF 1.63 แสดงว่ามี edge คล้ายกัน |
-| 1c | GBPJPY | H1 | H4 dead (PF 0.92) แต่ H1 trade count ≥4× — EMAtrend ได้ 60% WR บน H1 แสดง GBPJPY H1 มี TF-specific edge |
-| 1d | USDJPY | H1 | H4 PF 1.16 — H1 อาจดีกว่าถ้า NR7 ใน H1 = volatility contraction ที่แม่นกว่า |
-
-**ถ้า 1a ผ่าน smoke ≥1.30:** ทำ IS/OOS + corr check vs EA_BREAKOUT_XAU ก่อน decide
+### ~~TASK 1~~ — EA_NR7 ขยาย TF+Symbol ✅ DONE — DEAD 2026-06-28
+ครบทุก cell ที่วางแผน: XAU H4 IS=1.08, XAU H1 IS=1.06, XAGUSD H4 IS=0.68, USDJPY H1 PF=0.88, GBPJPY H1 PF=0.65.
+IS failure ทุก cell ที่ test = NR7 concept มี structural IS failure, ไม่ใช่ param ผิด.
+**ปิด concept นี้ถาวร.**
 
 ---
 
-### TASK 2 — EA_ASIANRANGE ขยาย Symbol (ยัง 1 session work)
-GBPJPY/USDJPY H1 dead. ยังไม่ทดสอบ London-FX pairs ที่ London open effect แรงกว่า.
-EAs ที่มีแล้ว: `EA_ASIANRANGE.mq5` (Magic 990090) — ใช้เดิม.
-⚠️ ต้องตรวจ broker server time offset ก่อน: ถ้า ThinkMarkets UTC+3 ต้องปรับ AsiaStartHr=3, AsiaEndHr=11, TradeStartHr=11.
-
-| # | Symbol | TF | เหตุผล |
-|---|---|---|---|
-| 2a | GBPUSD | **H1** | GBP มี London open effect แรงสุด — Asia range + London breakout ใช้ได้ดีกับ GBP historically |
-| 2b | EURUSD | H1 | สอง liquid FX ที่ London open มักเกิด momentum |
-| 2c | GBPUSD | H4 | ตรวจว่า H4 ให้ trade count เพียงพอ + session time ยังถูกอยู่ไหม |
-| 2d | GBPJPY | H1 | Retry หลังปรับ AsiaStartHr ให้ถูก (session hours เดิม อาจไม่ match broker UTC) |
-| **Params to test:** | AsiaStartHr | = 0 (default) AND = 3 (UTC+3 broker) | Smoke ทั้ง 2 ค่าบน GBPUSD H1 |
+### ~~TASK 2~~ — EA_ASIANRANGE ขยาย Symbol ✅ DONE — DEAD 2026-06-28
+GBPUSD/EURUSD ทั้ง UTC default และ UTC+3 retry = PF 0.94-0.96. ครบ 4 cells = concept fully dead.
+**ปิด concept นี้ถาวร.**
 
 ---
 
-### TASK 3 — EA_LNBREAK (London→NY breakout — NEW concept, 1 coding + smoke session)
-สร้าง EA ใหม่: define London session range (08:00-12:00 server) → enter breakout at NY open (12:00+).
-Logic: เก็บ London_High/Low ระหว่าง 08:00-12:00 → ที่ bar 12:00+ ถ้า close > London_High = BUY (NY momentum continuation).
-ต่างจาก AsianRange ตรงที่: Asia range = quiet period → London breakout. London range = ช่วงที่ EUR/GBP active → NY มา amplify.
-
-| # | Symbol | TF | เหตุผล |
-|---|---|---|---|
-| 3a | GBPUSD | **H1** | GBP/USD มี NY-open continuation effect แรง |
-| 3b | EURUSD | H1 | ECB/USD flow — high volume ตอน NY open |
-| 3c | GBPJPY | H1 | JPY carry + GBP = volatile ตอน NY overlap |
-| 3d | USDJPY | H1 | High volume at NY open, JPY crosses |
-| 3e | XAUUSD | H1 | XAU มักทำ trend ต่อเมื่อ NY เปิด (US economic data) |
-
-Magic: 990110 (ถัดจาก EURCHF 990100)
+### ~~TASK 3~~ — EA_LNBREAK (London→NY breakout) ✅ DONE — DEAD 2026-06-28
+EA built + 5 symbols smoked (GBPUSD/EURUSD/GBPJPY/USDJPY/XAUUSD H1): best = GBPUSD PF=1.07.
+TP4 retry: PF=1.09 (win rate 40%→35%, no improvement). Concept dead, CB_GBP ดีกว่ามาก.
+**ปิด concept นี้ถาวร.**
 
 ---
 
@@ -212,24 +185,30 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
       XAU breakout ceiling ~1.13-1.19 confirmed across 3 concepts (PrevDay/Keltner/Ichimoku).
       EA_BREAKOUT_XAU (hardcoded H1 rolling Donchian) edge is unique. Do NOT build more XAU breakout variants.
 
-- [x] **concept A: EA_NR7 (#105 NR7 volatility breakout) = DEAD 2026-06-27**
-      Smoke (M2, 2023-2026): XAU H4 PF=1.31/T=145 (PROCEED), GBPJPY/GBPUSD/USDJPY H4 PF=0.90-1.16 (DEAD).
-      IS/OOS on XAU H4: IS(2023-25) PF=1.08 FAIL / OOS(2025-26) PF=1.43 — OOS better = regime artifact.
-      Full-period 1.31 is driven entirely by 2025-2026 XAU bull run. Same regime-dependency pattern as USDJPY EMAtrend.
-      Trade count thin (87 IS / 58 OOS). Hard to confirm edge below 100 trades per window.
-      VERDICT: concept DEAD. Do not re-test NR7 on any FX. XAU NR7 = no stable edge across full window.
+- [x] **concept A: EA_NR7 (#105 NR7 volatility breakout) = FULLY DEAD 2026-06-28**
+      All smoked cells (M2, 2023-2026): XAU H4 PF=1.31, XAU H1 PF=1.30, XAGUSD H4 PF=1.40, USDJPY H1 PF=0.88, GBPJPY H1 PF=0.65, H4 GBPJPY/GBPUSD/USDJPY PF=0.90-1.16.
+      IS/OOS on XAU H4: IS PF=1.08 FAIL / OOS PF=1.43 — regime artifact.
+      IS/OOS on XAU H1: IS PF=1.06 FAIL / OOS PF=1.43 — identical artifact.
+      XAGUSD H4 smoke PF=1.40 (161t) is the highest result — IS/OOS pending but structural pattern predicts IS failure.
+      VERDICT: concept FULLY DEAD. 100% of NR7 "proceeds" exposed as 2025-26 bull run artifacts. Do not re-test NR7 on any instrument.
 
-- [x] **concept B: EA_ASIANRANGE (#70 Asia→London range breakout) = DEAD 2026-06-27**
-      Smoke (M2, 2023-2026): GBPJPY H1 PF=0.82/T=543, USDJPY H1 PF=0.96/T=501 — both dead.
-      High trade count confirms the signal fires often but has no edge. Asia range breakout on JPY pairs = no advantage.
-      VERDICT: concept DEAD. Do not re-test Asia→London breakout on JPY pairs.
+- [x] **concept B: EA_ASIANRANGE (#70 Asia→London range breakout) = FULLY DEAD 2026-06-28**
+      Smoke (M2, 2023-2026): GBPJPY H1 PF=0.82/T=543, USDJPY H1 PF=0.96/T=501 → dead.
+      Extended UTC+3 retry (2026-06-28): GBPUSD H1 PF=0.94/T=580, EURUSD H1 PF=0.96/T=572 → dead.
+      All 4 tested cells across both session offsets = no edge. High T confirms signal fires often but is worthless.
+      VERDICT: concept FULLY DEAD. Do not re-test Asia range breakout on any pair or session offset.
 
 - [x] **concept C: EA_EURCHF bounded-range (BB+RSI mean reversion) = DEAD 2026-06-27**
       Smoke (M2, 2023-2026): EURCHF H4 PF=0.74/T=507/Win%=43.2% — worst of the batch.
       BB+RSI reversion on EURCHF: signal fires often (507 trades) but no edge. SNB management ≠ reliable mean-reversion.
       VERDICT: concept DEAD. Do not build EURCHF reversion EA.
 
-- [ ] **concept ใหม่ #2: London-breakout → NY open** — port CB structure ไป session NY. ยังไม่ smoke.
+- [x] **concept ใหม่ #2: EA_LNBREAK (London session range → NY open breakout) = DEAD 2026-06-28**
+      Smoke (M2, 2023-2026): GBPUSD 1.07/476t, EURUSD 1.02, XAUUSD 1.07, USDJPY 0.87, GBPJPY 0.78.
+      GBPUSD TP4×retry: PF=1.09 (win rate dropped 40%→35%, RR gain cancelled).
+      Root cause: 40% WR × 1.5 RR = math breakeven. London→NY continuation has no directional edge.
+      Deployed CB_GBP (LondonConsoBreakout, GBPUSD H1 OOS 2.08) already captures the better session concept.
+      VERDICT: DEAD. Do not rebuild London→NY breakout on any pair.
 
 ### 🟢 re-examine ที่ค้างจากแผนเก่า (ยังไม่ได้ทำจริง)
 - [ ] **MT4 gold-grid re-test** (`MT4_GOLDGRID_RETEST_PLAN.md`) — 3-phase plan เขียนไว้ **แต่ยังไม่รัน**:

@@ -1,0 +1,15 @@
+; EA_KELTNER v1 -- default smoke (EMA20 ± 2×ATR14, EMA200 trend, Trail=2.0)
+_01_EMAPeriod=20
+_01_ATRPeriod=14
+_01_KeltMult=2.0
+_01_TrendEMA=200
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseAdxFilter=false
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_04_TrailATR=2.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990060

@@ -1,0 +1,6 @@
+; NUIH4 combo 4 : ADX_Value25_RSI_Period24
+Lot_Divided=500000.0
+RSI_Period=24
+ADX_period=20
+ADX_Value=25
+MagicStart=1524

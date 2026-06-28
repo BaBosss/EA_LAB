@@ -1,0 +1,16 @@
+﻿_00_OptimizeMode=false
+_01_AsiaStartHr=3
+_01_AsiaEndHr=11
+_01_TradeEndHr=23
+_01_BreakBuf=0.5
+_03_UseEmaFilter=true
+_03_EmaPeriod=200
+_03_ATRPeriod=14
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=3.0
+_04_TrailATR=2.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_05_OnlyOncePerDay=true
+_06_AllowLive=false
+_06_Magic=990090

@@ -1,0 +1,15 @@
+; BRKXAUH4 combo 1 : TpAtrMult6.0_BreakoutBars8
+_00_OptimizeMode=false
+_01_BreakoutBars=8
+_02_SlAtrMult=1.5
+_02_TpAtrMult=6.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=200
+_05_BuyOnly=true
+_05_LotSize=0.01
+_06_Magic=991001
+_06_Deviation=20
+_06_AllowLive=true

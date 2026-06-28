@@ -1,0 +1,29 @@
+{
+  "source_file": "_mt5_auto\\deals_BRK_XAU_H4_c0.csv",
+  "trade_count": 61,
+  "net_profit": 931.74,
+  "observed_pf": 2.94,
+  "observed_dd_pct": 0.67,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 2.94,
+    "pf_median": 2.94,
+    "pf_95th": 2.94,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 0.9,
+    "dd_95th_pct": 1.46,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 5000
+  },
+  "bootstrap": {
+    "pf_5th": 1.734,
+    "pf_median": 2.934,
+    "pf_95th": 4.824,
+    "pf_range_5_95": 3.089,
+    "dd_median_pct": 0.89,
+    "dd_95th_pct": 1.66,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 5000
+  }
+}

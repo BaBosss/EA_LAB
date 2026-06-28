@@ -1,0 +1,16 @@
+; EA_EMATREND v1 -- naked smoke default (EMA20/50/200, ADX14>=20, SL=ATR14*2, no TP, no pyramid)
+_01_FastEMA=20
+_01_SlowEMA=50
+_01_TrendEMA=200
+_01_ATRPeriod=14
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_04_MaxPyramid=0
+_04_PyramidATR=1.5
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990040
