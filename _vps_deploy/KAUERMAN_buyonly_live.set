@@ -1,0 +1,12 @@
+; EA_KAUFMAN_ER — BuyOnly live deploy (XAUUSD H4, demo account)
+; IS PF=2.34 / OOS PF=5.19 / Corr vs BRK=0.752 → deploy at 0.01 lot (reduced alongside BRK)
+; Magic=990127. Do NOT use on same chart as EA_SUPERTREND without confirming different magic.
+_01_ERPeriod=14
+_01_ERThreshold=0.30
+_02_STAtrPeriod=10
+_02_STMultiplier=3.0
+_03_SL_ATR=2.5
+_03_BuyOnly=true
+_04_FixedLot=0.01
+_05_Magic=990127
+_05_AllowLive=true
