@@ -1,0 +1,19 @@
+; EA_BREAKOUT_XAU — LIVE params XAUUSD H1 — v3 (Bars=55 plateau center)
+; _NN_ param names — use ONLY with the recompiled .ex5 (post-2026-06-22 rename).
+; IS 2023-2026 (H1, Model=2): PF=2.10, DD=3.19%, Trades=195, Sharpe=3.47 | Neighbors=12
+; OOS plateau range: PF=2.94-4.87
+; Changes from v2: _01_BreakoutBars 40→55, _02_TpAtrMult 5.0→8.0, _04_EmaPeriod 200→150
+_00_OptimizeMode=false
+_01_BreakoutBars=55
+_02_SlAtrMult=1.5
+_02_TpAtrMult=8.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=150
+_05_BuyOnly=true
+_05_LotSize=0.01
+_06_Magic=991001
+_06_Deviation=20
+_06_AllowLive=true

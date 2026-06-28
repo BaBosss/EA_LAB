@@ -1,0 +1,15 @@
+; EA_BREAKOUT_XAU — XAGUSD H1 buy-only test: Bars=60, Tp=8.5 (best IS PF=1.752)
+_00_OptimizeMode=false||false||0||false||N
+_01_BreakoutBars=60||60||0||60||N
+_02_SlAtrMult=1.5||1.5||0||1.5||N
+_02_TpAtrMult=8.5||8.5||0||8.5||N
+_03_AtrPeriod=14||14||0||14||N
+_03_AtrMaPeriod=20||20||0||20||N
+_03_AtrExpandRatio=1.0||1.0||0||1.0||N
+_04_UseDailyEma=true||true||0||true||N
+_04_EmaPeriod=150||150||0||150||N
+_05_BuyOnly=true||true||0||true||N
+_05_LotSize=0.01||0.01||0||0.01||N
+_06_Magic=992001||992001||0||992001||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

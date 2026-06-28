@@ -1,0 +1,9 @@
+﻿
+11:19:24 === MT4 Phase 1 Mechanism Gate START ===
+11:19:24 Symbol=XAUUSD  Period=2024.01.01-2025.06.01  Model=M2 (open prices)
+11:19:24 Goal: check lot escalation pattern - bounded vs uncapped martingale
+11:19:24 START MECH_Elephant (EA_Golden_Elephant)
+11:19:34 DONE MECH_Elephant
+11:19:37 START MECH_GoldStuff (Gold Stuff EA V7.0)
+11:19:47 DONE MECH_GoldStuff
+11:19:51 === DONE: inspect trade logs for lot escalation ===

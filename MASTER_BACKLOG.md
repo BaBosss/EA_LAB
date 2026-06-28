@@ -46,6 +46,7 @@
 > Model4: IS PF 2.85-3.19 / OOS 2.94-4.87) = param improvement ไม่ใช่ TF/instrument ใหม่.
 
 ### 🔴 ติดเวลา / ทำก่อน
+- [ ] **EA #6 reload Bars55** — MT5 GUI → XAUUSD H1 chart → EA_BREAKOUT_XAU → F7 → load `_vps_deploy\BRK_XAU_live_v3.set` → OK (แค่ 2 นาที)
 - [ ] **ST03 replica deploy → จันทร์ 2026-06-29** (DEMO, magic 990010). bundle staged แล้ว `_vps_deploy/ST03_GBPUSD/`. ดู `DEMO_DEPLOYMENT_PLAN.md`.
       Steps: DEMO MT5 → New GBPUSD H1 chart → attach EA_RUNNER_ST03 → load `ST03_GBPUSD_live_v1.set` → verify magic=990010 + AllowLiveOrders=true
 - [ ] **EA #10 deploy (BRKXAU Bars8)** — DEMO MT5 → New XAUUSD H1 chart → attach EA_BREAKOUT_XAU → load `_vps_deploy\BRK_XAU_Bars8\BRKXAUH4_Bars8_demo_v1.set` → verify magic=991002
@@ -58,9 +59,12 @@
 
 - **Phase 1 — re-tune / param-improve EA ที่ proven (ROI สูงสุด):**
   - [x] **XAU breakout BreakoutBars=55 = ดีสุด** (ไม่ใช่ "H4" — EA เป็น H1-signal ตายตัว). IS PF 2.85-3.19 /
-        OOS 2.94-4.87. Bars8 ผ่าน MC (PF-5th 1.73). corr Bars8 vs deployed Bars40 = 0.21 LOW = additive variant.
-        → ขั้นต่อ: deploy เล็ก เป็น re-tuned variant ของ EA_BREAKOUT_XAU (Bars55) หลัง ST03 จันทร์
+        OOS 2.94-4.87. Bars8 ผ่าน MC (PF-5th 1.73). corr Bars8 vs deployed Bars55 = 0.21 LOW = additive variant.
+        → ✅ **v3.set done 2026-06-28** (`_vps_deploy/BRK_XAU_live_v3.set`, Bars=55, TP×8, EMA150) — ต้อง reload EA #6 ใน MT5 GUI (F7 → load v3.set → OK)
+  - [x] **XAGUSD buy-only REJECT 2026-06-28**: smoke 1.45 ✅ / IS 1.47 ✅ / OOS 0.78 ❌ structural — Silver 2020-23 hostile (COVID crash, Reddit squeeze, bear). XAU≠XAGUSD buy-only. Do NOT revisit.
   - GBPUSD breakout (EA_BREAKOUT_XAU H1-signal) = ❌ DEAD (Bars8-20, Model4 PF 0.66-0.85). N-bar breakout = XAU-specific
+  - EA_LNBREAK (London breakout) = ❌ DEAD 2026-06-28 — smoke PF 1.07-1.09 ทุก symbol ไม่ผ่าน gate
+  - EA_GoldenEmber_Pivot = ❌ DEAD 2026-06-28 — IS PF=1.01, DD=24.66% (robust pass = best optimizer result ก็ยังแบน)
   - [x] **NuiIndy reversion H4 = 0 trades → reversion เพดานที่ H1** (H4 สัญญาณน้อยเกิน, M30/M15 spread กิน per ST03)
   - ⚠️ ของจริงที่ยังไม่ทำ: ทดสอบ **signal TF อื่น** ต้องแก้ EA ให้ internal TF เป็น input ก่อน (ตอนนี้ hardcode H1)
 - **Phase 2 — ขุด technique จาก strategy folder (เฉพาะเมื่อ EA ต้องการ):** ATR-nearby pyramid (= ST03 concept, validated แล้ว) ·

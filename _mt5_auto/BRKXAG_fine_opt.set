@@ -1,0 +1,18 @@
+; EA_BREAKOUT_XAU — XAGUSD H1 buy-only FINE optimization
+; Coarse center: BreakoutBars=50, TpAtrMult=8.0, EmaPeriod=150
+; Fine sweep: BreakoutBars 40..60 step 5 (5 vals), TpAtrMult 7.0..9.0 step 0.5 (5 vals), EmaPeriod fixed=150
+; Total: 5 x 5 x 1 = 25 combinations
+_00_OptimizeMode=false||false||0||false||N
+_01_BreakoutBars=50||40||5||60||Y
+_02_SlAtrMult=1.5||1.5||0||1.5||N
+_02_TpAtrMult=8.0||7.0||0.5||9.0||Y
+_03_AtrPeriod=14||14||0||14||N
+_03_AtrMaPeriod=20||20||0||20||N
+_03_AtrExpandRatio=1.0||1.0||0||1.0||N
+_04_UseDailyEma=true||true||0||true||N
+_04_EmaPeriod=150||150||0||150||N
+_05_BuyOnly=true||true||0||true||N
+_05_LotSize=0.01||0.01||0||0.01||N
+_06_Magic=992001||992001||0||992001||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

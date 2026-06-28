@@ -1,0 +1,9 @@
+; EA_IB_OCO — Inside Bar OCO pending smoke
+_01_ATRPeriod=14
+_01_ATRBuffer=0.15
+_02_SL_ATR=2.0
+_02_TP_RR=2.0
+_02_ExpireBars=5
+_03_FixedLot=0.01
+_04_Magic=990135
+_04_AllowLive=false

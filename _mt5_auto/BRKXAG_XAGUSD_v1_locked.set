@@ -1,0 +1,23 @@
+; EA_BREAKOUT_XAU — XAGUSD H1 buy-only LOCKED params v1
+; === VERDICT: REJECT — OOS HARD FAIL ===
+; Coarse opt : 72 passes, 12/72 survivors (16.7%) WEAK plateau, center Bars=50 Tp=8 Ema=150
+; Fine opt   : 25 passes, 19/25 survivors (44.0%) WEAK plateau, center Bars=50 Tp=8.0 (7 neighbors)
+; IS  2023-2026: PF=1.47, DD=3.48%, RF=2.15, Trades=102  — PASS gate
+; OOS 2020-2023: PF=0.78, DD=3.34%, RF=-0.49, Trades=73  — HARD FAIL (PF<1.20, RF<1.50, net=-166)
+; OOS check Bars=60/Tp=8.5: PF=0.65, net=-268 — structurally negative 2020-2023 period
+; MC (IS):  ruin=0.0%, PF5th=1.471 (order-shuffle on 102 trades, deposit=10000)
+; Magic=992001  BuyOnly=true  (no sell trades)
+_00_OptimizeMode=false||false||0||false||N
+_01_BreakoutBars=50||50||0||50||N
+_02_SlAtrMult=1.5||1.5||0||1.5||N
+_02_TpAtrMult=8.0||8.0||0||8.0||N
+_03_AtrPeriod=14||14||0||14||N
+_03_AtrMaPeriod=20||20||0||20||N
+_03_AtrExpandRatio=1.0||1.0||0||1.0||N
+_04_UseDailyEma=true||true||0||true||N
+_04_EmaPeriod=150||150||0||150||N
+_05_BuyOnly=true||true||0||true||N
+_05_LotSize=0.01||0.01||0||0.01||N
+_06_Magic=992001||992001||0||992001||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

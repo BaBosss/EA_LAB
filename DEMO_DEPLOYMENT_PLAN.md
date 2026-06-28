@@ -17,11 +17,11 @@
 | 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 🟢 LIVE | Lots_divided แก้ → 100,000 (0.1 lot/leg) ✅ |
 | 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 🟢 LIVE | เหมือน EA 3 ✅ |
 | 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
-| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.77 | 🟢 LIVE | BUY-only 0.01 lot ✅ |
+| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v3.set` | 2.94-4.87 | 🟡 RELOAD | **v3 upgrade** Bars=55, TP×8, EMA150. Reload EA in MT5 GUI (F7→load v3.set→OK). IS PF=2.10/Sharpe=3.47, Neighbors=12. |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
 | 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | ❌ DROP (2026-06-25) | Q2 rescue sweep พบ no durable edge (OOS ทั้งคู่ <1.0) → ถอดออกจาก demo. Portfolio จริง = 7 ตัว |
 | 9 | EA_RUNNER_ST03 (LR2 replica) | GBPUSD | H1 | `_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set` | 3.93 | 🟡 DEPLOY MON 2026-06-29 (DEMO) | bundle staged + verified 2026-06-26. magic 990010, AllowLiveOrders=true. corr −0.24 vs live ST_EA03 = LOW. |
-| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD | H1 | `_vps_deploy\BRK_XAU_Bars8\BRKXAUH4_Bars8_demo_v1.set` | 3.92 | 🟡 DEPLOY (DEMO) | Additive leg: corr 0.21 vs live Bars40 (#6). MC PASS (PF_5th 1.73, ruin 0%). Magic=991002. Same chart as #6 (different magic, coexist OK). |
+| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD | H1 | `_vps_deploy\BRK_XAU_Bars8\BRKXAUH4_Bars8_demo_v1.set` | 3.92 | 🟡 DEPLOY (DEMO) | Additive leg: corr 0.21 vs live Bars55 (#6). MC PASS (PF_5th 1.73, ruin 0%). Magic=991002. Same chart as #6 (different magic, coexist OK). |
 
 **Promote conditions (กลุ่ม B → portfolio):**
 - ≥30 real trades ผ่านไป
@@ -70,7 +70,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 | 9398 | ST_EA03 USDCAD |
 | (default) | Gold Reaper — ตรวจจาก GUI ก่อน attach |
 | 990005 | LondonConsoBreakout (ทั้ง GBPUSD + EURUSD — OK เพราะ filter by _Symbol) |
-| 991001 | EA_BREAKOUT_XAU (Bars40, live) |
+| 991001 | EA_BREAKOUT_XAU (Bars55, live — v3 set) |
 | 991002 | EA_BREAKOUT_XAU (Bars8 additive, DEMO) |
 | 990010 | EA_RUNNER_ST03 GBPUSD (LR2 replica — separate account from ST_EA03 EA3) |
 
@@ -105,7 +105,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 
 | EA | หยุดถ้า | เพิ่ม risk ถ้า |
 |---|---|---|
-| EA_BREAKOUT_XAU (Bars40, #6) | XAU bear trend ยาว | 30 trades, PF ≥ 1.40 |
+| EA_BREAKOUT_XAU (Bars55, #6) | XAU bear trend ยาว | 30 trades, PF ≥ 1.40 |
 | EA_BREAKOUT_XAU (Bars8, #9) | XAU bear trend ยาว หรือ corr vs #6 > 0.60 live | 30 trades, PF ≥ 1.40 |
 | CB_GBP GBPUSD | DD > 1.5% หรือ 10 consec loss | 30 trades, PF ≥ 1.40 → เพิ่มเป็น 1% |
 | ~~CB_EUR EURUSD~~ | **DROPPED 2026-06-25** | Q2 rescue sweep (48 combo × 3 win) ไม่เจอ durable edge — OOS ทั้งคู่ <1.0. GBPUSD-only confirmed. ถอด EA ออกจาก EURUSD chart ใน MT5 GUI |
@@ -118,6 +118,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 |---|---|
 | 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
 | 2026-06-22 | ST_EA03 lot fix — Lots_divided แก้ → 100,000 ✅ |
+| 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) |
 | 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
 | หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 

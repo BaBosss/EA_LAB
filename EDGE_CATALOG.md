@@ -69,6 +69,28 @@ any grid/martingale that screened well but DQ'd on uncapped tail.
 directionally. Session-timing edge, not indicator edge.
 **Failure mode:** GBP concentration; EURUSD variant had no durable edge (dropped).
 
+### EA_SUPERTREND — XAUUSD H4 (CANDIDATE, reduced lot) ✅
+**Mechanism:** ATR-based SuperTrend bands; direction flips when close crosses the opposite band.
+EMA200 + ADX≥20 filter removes ranging periods. Both directions (no BuyOnly).
+**Why edge:** XAU's trending nature rewards trend-following; EMA200+ADX gate ensures entries only
+in confirmed momentum conditions. OOS > IS (PF 4.49 vs 1.54) — no overfit signal.
+**Failure mode:** Both-direction = vulnerable when gold trends down (shorts lose); ADX filter
+doesn't fully protect against slow-grinding adverse trends. High corr with BRK_XAU (0.724).
+**Correlation:** 0.724 vs EA_BREAKOUT_XAU. Both directional XAU legs → reduce lot, do NOT cut.
+**IS/OOS:** IS PF=1.54 / 37t / DD 2.23% | OOS PF=4.49 / 18t / DD 4.94%
+Set: `_mt5_auto/sweeps/_sets/ST_v1_naked_default.set`, Magic=990020, Deploy: XAUUSD H4
+
+### EA_KAUFMAN_ER BuyOnly — XAUUSD H4 (CANDIDATE, reduced lot) ✅
+**Mechanism:** Kaufman Efficiency Ratio gate (ER > 0.30 = trending regime) → allow SuperTrend
+signal. ER = |net price change| / sum(|bar-to-bar changes|). BuyOnly captures XAU bullish bias.
+**Why edge:** ER gate keeps EA dormant in choppy/ranging periods, firing only when price makes
+clean directional progress — filters out bad SuperTrend entries that fire in sideways markets.
+**Failure mode:** BuyOnly = secular gold downtrend risk (same as EA_BREAKOUT_XAU). Low OOS trade
+count (17t — OOS PF=5.19 is reliable signal but small sample; watch live).
+**Correlation:** 0.752 vs EA_BREAKOUT_XAU. Reduce lot to 0.005-0.01. Include.
+**IS/OOS:** IS PF=2.34 / 50t | OOS PF=5.19 / 17t (OOS >> IS = confirmed no overfit)
+Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD H4
+
 ---
 
 ## DEAD PILE — what the failures teach (anti-edges worth remembering)

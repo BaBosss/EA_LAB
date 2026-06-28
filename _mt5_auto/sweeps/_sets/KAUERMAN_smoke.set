@@ -1,0 +1,9 @@
+; EA_KAUFMAN_ER — Kaufman ER gate + SuperTrend smoke
+_01_ERPeriod=14
+_01_ERThreshold=0.30
+_02_STAtrPeriod=10
+_02_STMultiplier=3.0
+_03_SL_ATR=2.5
+_04_FixedLot=0.01
+_05_Magic=990127
+_05_AllowLive=false

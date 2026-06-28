@@ -1,0 +1,16 @@
+; EA_BREAKOUT_XAU — XAGUSD H1 buy-only smoke (Bars=55 validated params)
+; Testing buy-only breakout edge on Silver — same params as XAU v3 center
+_00_OptimizeMode=false
+_01_BreakoutBars=55
+_02_SlAtrMult=1.5
+_02_TpAtrMult=8.0
+_03_AtrPeriod=14
+_03_AtrMaPeriod=20
+_03_AtrExpandRatio=1.0
+_04_UseDailyEma=true
+_04_EmaPeriod=150
+_05_BuyOnly=true
+_05_LotSize=0.01
+_06_Magic=992001
+_06_Deviation=20
+_06_AllowLive=false

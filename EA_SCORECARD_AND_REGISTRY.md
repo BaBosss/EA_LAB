@@ -100,6 +100,8 @@ distance-scaling insight) — note it, but the EA itself is out.
 | (Boss)_RSI_Swing_BB_rev01 | EUR H1 PF 1.03 | ★★☆ | **DEAD (confirmed 2026-06-23)** | RE-EXAMINED: 27-combo sweep EURUSD IS+OOS, best min-PF **0.99** (breakeven), nothing ≥1.2. "Martingale was the edge" CONFIRMED — naked signal has none. Kill upgraded smoke→optimized |
 | (Boss)_TrendRegression_rev01 | XAU H1 0.81 | ★★☆ | **DEAD (confirmed 2026-06-23)** | RE-EXAMINED: 27-combo sweep XAUUSD IS+OOS, best min-PF **0.91**, all losing. Reversion-on-trend has no gold edge (matches momentum>reversion thesis). Kill upgraded smoke→optimized |
 | (Boss)_NRBreakout_rev01 | 0.82–1.03 | ★★☆ | **PARKED→lean DEAD** | partial sweep, all sub-gate; low prior. RE-EXAMINE only if idle |
+| EA_GoldenEmber_Pivot (Boss 6 MTF Range Pivot) | NZDUSD H1 PF 1.01 | ★★★ | **DEAD (2026-06-28)** | IS 2023-2026 PF=1.01, DD=24.66%, 116t / OOS 2021-2023 PF=1.05, DD=25.79% — flat + massive DD. Robust pass (best optimizer result) still gives no IS edge. GEP DQ — do NOT revisit |
+| EA_LNBREAK (London NY breakout) | GBPUSD H1 PF 1.09 | ★★★ | **DEAD (2026-06-28)** | Multi-symbol smoke 2023-2026 M2: GBPUSD 1.09 / EURUSD 1.02 / XAUUSD 1.07 / GBPJPY 0.78 / USDJPY 0.87. Best PF=1.09 after tp_mult=4 tweak — below gate 1.20. London breakout has no durable H1 edge on these symbols |
 
 ### MT5 — SIGNAL/FILTER RESEARCH (EA_RUNNER family)
 | Signal | Sym | IS PF | Conf | Verdict | Reason |
@@ -109,6 +111,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 | BB+RSI mean-reversion | EURUSD/XAUUSD | ≤1.11 | ★★☆ | **DEAD** | same ~1.1 ceiling as MACD |
 | BREAKOUT (LabTpl) | EURUSD/GBPJPY | ≤1.03 | ★★★ | **DEAD** | optimizer 0/180 & 0/175 survivors — edge is XAU-specific |
 | BREAKOUT (EA_BREAKOUT_XAU, both-dir) | US30/WTI/BRENT/XAGUSD/GBPJPY | <1.0 | ★★☆ | **DEAD (2026-06-26)** | new-instrument momentum smoke (M2, 2023-26, default params); oil/index thin trades (XAU-tuned bars). No naked edge |
+| BREAKOUT (EA_BREAKOUT_XAU, **buy-only**) | **XAGUSD H1** | smoke 1.45 → IS 1.47 → OOS 0.78 | ★★★ | **REJECT (2026-06-28)** | Smoke PF=1.45 ✅ / IS PF=1.47 ✅ / OOS PF=0.78 ❌ structural. 2020-2023 Silver hostile to buy-only: COVID crash (-30%), Feb-2021 Reddit spike+collapse, 2022 bear trend. Plateau shallow (12/72 coarse), not param-dependent (best-IS params give OOS 0.65). Silver ≠ Gold for buy-only breakout. Do NOT re-test buy-only BRK on XAGUSD. |
 | BREAKOUT (EA_BREAKOUT_XAU, both-dir) | **USDJPY H1** | smoke 1.16 → opt | ★★★ | **REJECT (2026-06-26)** | WATCH→optimized→dead. 12-combo (Bars×TpAtr) IS/OOS: 0 clear OOS≥1.40; high-TP curve-fit yen 2023-24 (IS 2.5/OOS 0.7), low-TP caps ~1.18. See [[signal-landscape]] |
 | Vol-gate / Trend-gate on ST03 | GBPUSD | — | ★★★ | **filters DEAD (2026-06-26)** | no-SL tail not reactively filterable: vol-gate=gap-only, ADX trend-gate counterproductive (lags). See ST03 row + EDGE_CATALOG |
 
