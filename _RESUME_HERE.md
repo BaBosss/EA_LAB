@@ -1,6 +1,16 @@
-# RESUME HERE — อัพเดท 2026-06-22 (deploy ครบ 8 EA)
+# RESUME HERE — DEPRECATED (อัพเดทล่าสุด 2026-06-22, superseded 2026-06-28)
 
-อ่านไฟล์นี้ก่อนเสมอเมื่อเปิด session ใหม่
+> **DEPRECATED** — ไฟล์นี้ล้าสมัยแล้ว ใช้ไฟล์เหล่านี้แทน:
+> - **`MASTER_BACKLOG.md`** — source of truth สำหรับงานที่ต้องทำต่อ
+> - **`DEMO_DEPLOYMENT_PLAN.md`** — portfolio ปัจจุบัน + EA status ทุกตัว
+> - **`EA_SCORECARD_AND_REGISTRY.md`** — registry EA ทั้งหมด (live + dead)
+> - **`EDGE_CATALOG.md`** — edge mechanism ของทุก live EA
+
+ข้อมูลด้านล่างยังคงถูกต้องในแง่ตัวเลข IS/OOS แต่ portfolio จริงตอนนี้อัพเดทแล้ว (ดู DEMO_DEPLOYMENT_PLAN.md)
+
+---
+
+# (ประวัติ) อัพเดท 2026-06-22 — deploy ครบ 8 EA
 
 > **🟢 DEPLOYED 2026-06-22 — 8 EA รันอยู่บน 10,000 cent account เดียว. Judge date 2026-09-22 (demo 3 เดือน).**
 > ดูตารางพอร์ต + .set ล่าสุดที่ `DEMO_DEPLOYMENT_PLAN.md` (= source of truth). ตารางด้านล่างในไฟล์นี้
