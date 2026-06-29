@@ -14,13 +14,20 @@
 #>
 [CmdletBinding()]
 param(
-  [string]$Root = 'D:\EA_LAB',
+  # portable: resolve repo root from THIS script's location (scripts\..), not a
+  # hardcoded path - so a fresh clone on any machine/path still validates itself.
+  [string]$Root = $(if($PSScriptRoot){ (Resolve-Path (Join-Path $PSScriptRoot '..')).Path } else { (Get-Location).Path }),
   [switch]$Strict   # exit 1 on any warning (used by the git pre-commit hook)
 )
 
 # ---- INVARIANTS (mirror PROJECT_STATE.md section 0.5) ----
+# NOTE: this list is the ENFORCER copy; keep in sync with PROJECT_STATE section 0.5
+# (and the DEMO table) by hand whenever the portfolio changes. The guard only
+# covers these few HARD invariants - NOT arbitrary content (PF numbers, statuses).
 $JUDGE   = '2026-09-22'
+$START   = '2026-06-22'
 $ACCOUNT = '10,000 cent'
+$EACOUNT = '9 EA'
 $MAGICS  = '1524','9397','9398','990005','990010','991001','991002'
 
 $script:warn = 0
@@ -43,6 +50,12 @@ Check ((Has $PS $JUDGE) -and (Has $DEMO $JUDGE)) "judge date $JUDGE consistent i
 
 # 2. account size present in both
 Check ((Has $PS $ACCOUNT) -and (Has $DEMO $ACCOUNT)) "account '$ACCOUNT' consistent" "account '$ACCOUNT' missing from PROJECT_STATE or DEMO"
+
+# 2b. live-clock start date present in both
+Check ((Has $PS $START) -and (Has $DEMO $START)) "live-clock start $START consistent" "start date $START missing from PROJECT_STATE or DEMO"
+
+# 2c. declared portfolio size present in the entry doc
+Check (Has $PS $EACOUNT) "portfolio size '$EACOUNT' declared in PROJECT_STATE" "'$EACOUNT' invariant missing from PROJECT_STATE"
 
 # 3. no competing 'single source of truth' claim outside PROJECT_STATE
 $rivals = Get-ChildItem $Root -Filter *.md | Where-Object { $_.Name -ne 'PROJECT_STATE.md' -and $_.Name -notmatch 'RESUME|RUN_REGISTRY' } |

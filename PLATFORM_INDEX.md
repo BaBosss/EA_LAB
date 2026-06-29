@@ -28,7 +28,7 @@
 
 | โฟลเดอร์ | คือ |
 |---|---|
-| root *.md | canonical = `PROJECT_STATE`(entry) · `DEMO_DEPLOYMENT_PLAN` · `MASTER_BACKLOG` · `EA_SCORECARD_AND_REGISTRY` · `INTAKE_QUEUE` · `README` · `PLATFORM_INDEX`(นี่). เก่า/deprecated → `_archive_docs/` (รอบล่าสุด 2026-06-29: _RESUME_HERE, RUN_REGISTRY, QWEN_WORK_PLAN) |
+| root *.md | canonical = `PROJECT_STATE`(entry) · `DEMO_DEPLOYMENT_PLAN` · `MASTER_BACKLOG` · `EA_SCORECARD_AND_REGISTRY` · `INTAKE_QUEUE` · `README` · `PLATFORM_INDEX`(นี่). เก่า/deprecated → `_archive_docs/` (2026-06-29: _RESUME_HERE, QWEN_WORK_PLAN). RUN_REGISTRY.* = gitignored (auto-gen, deprecated) |
 | `ea_projects/` | งานจริงต่อ EA — ดูข้อ 3 |
 | `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `_legacy_manual/` = doc เก่าตกยุค |
 | `scripts/` | automation (collect_mt5_reports, export_reports, import_manual_run...) ⚠️ **path ยังชี้ OneDrive ต้องแก้** |

@@ -12,6 +12,10 @@ _inbox/
 
 # Runtime logs and generated outputs
 logs/*
+# RUN_REGISTRY.* = DEPRECATED auto-output of run_pipeline.py (regenerated at root).
+# ignored so a stale regenerate never re-clutters/contradicts the tracked docs.
+/RUN_REGISTRY.md
+/RUN_REGISTRY.csv
 ea_projects/*/logs/*
 ea_projects/*/backtest/*
 ea_projects/*/optimization/*
