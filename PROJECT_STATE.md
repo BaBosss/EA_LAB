@@ -20,6 +20,36 @@
 
 ---
 
+## 0.5 ANTI-DRIFT — กันเอกสารเพี้ยน (ทำให้ "อ่านครั้งหน้า = ครั้งก่อน")
+
+ปัญหาเดิม: หลายไฟล์อ้าง authority ทับกัน + เขียน fact เดียวซ้ำหลายที่ → อัปเดตมือแล้วเพี้ยน. กฎ 3 ข้อ:
+
+**1) 1 fact มี owner เดียว** — fact อยู่ไฟล์เดียว ที่อื่น **link ห้าม copy**:
+
+| fact | owner เดียว | ที่อื่นทำได้ |
+|---|---|---|
+| สถานะ% · decision · แผน · invariants | **PROJECT_STATE.md** (นี่) | link |
+| live portfolio (EA/magic/lot/judge/monitor) | **DEMO_DEPLOYMENT_PLAN.md** | link |
+| backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
+| ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
+| แผนที่ไฟล์ · 5 ที่อยู่ | **PLATFORM_INDEX.md** | link |
+| EA_CORE framework | `D:\EA_Project` docs + `EA_CORE_ST03_LOOP_PLAN.md` | link |
+
+ถ้า 2 ไฟล์พูดเรื่องเดียวต่างกัน → **INVARIANTS (ข้อ 3) ชนะ** แล้วแก้ไฟล์ที่ผิดทันที.
+
+**2) PROJECT_STATE = entry เดียว** — ไฟล์อื่นห้ามเขียน "เปิดไฟล์นี้ไฟล์เดียวพอ". secondary doc ขึ้นต้นด้วย
+banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: <X เท่านั้น>`.
+
+**3) INVARIANTS — fact ที่ต้องตรงทุกที่ (ที่ไหนเขียนต่าง = ที่นั่นผิด):**
+- live portfolio = **9 EA** บน **1 account 10,000 cent** (#8 CB_EUR dropped)
+- live clock start **2026-06-22** · judge **2026-09-22**
+- backtest window **2023–2026** · re-opt ทุก 6 เดือน
+- **magic map (ห้ามชน):** 1524=NuiIndy · 9397=ST_EA03 GBP · 9398=ST_EA03 CAD · 990005=CB_GBP ·
+  990010=ST03 replica · 991001=BRK Bars55 · 991002=BRK Bars8 · MG_v1+GoldReaper=GUI default (ไม่อยู่ .set)
+- ก่อน commit รัน **`scripts/check_state.ps1`** → เตือนถ้า invariant เพี้ยน/ขัดกัน
+
+---
+
 ## 1. เป้าหมาย + ภาพรวม 4 ชั้น (โรงงาน 1 + เครื่องยนต์ 1 + แม่พิมพ์ 1 → พอร์ตจริง)
 
 > **เป้าหมายสูงสุด:** 10 พอร์ต × 2–3 EA ที่ **ไม่ correlate กัน** × 10,000 cent → passive income.
@@ -38,10 +68,12 @@
 ## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
 
 - **EA_LAB 85%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). เหลือ housekeeping (fix path
-  OneDrive→D:, รวม template ซ้ำ, รวม central_results+portfolio, ลบ RUN_REGISTRY deprecated).
+  OneDrive→D:, รวม template ซ้ำ). ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
+  RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5).
 - **EA_CORE 70%** — Phases A–J เสร็จ, signals v2–v4, LotSizer. **อัปเดต 2026-06-29:** entry v4 ✅ +
   **ScaleExecutor_v2 (limit-order pyramid) เขียนเสร็จ+wired+compile แล้ว** (ไม่ใช่ v1 market อีก).
-  แต่ **ผล validate ปัจจุบัน = overfit รุนแรง** (ST03B "TG": IS PF 7.08 → WF/stress 0.19–0.32 พังหมด).
+  แต่ **ผล validate ปัจจุบัน = overfit รุนแรง** (ST03B "TG": IS PF 7.08 → WF/stress 0.19–0.32 พังหมด
+  — ⚠️ ตัวเลขจาก unverified report-parse; STEP 1-2 ของแผนสั่ง **rerun ยืนยันก่อนเชื่อ**).
   งานจริงเหลือ = **diagnose overfit + หา durable set** (ไม่ใช่เขียน executor). แผนรัน Sonnet →
   `EA_CORE_ST03_LOOP_PLAN.md`. fallback ถ้าไม่ผ่าน = ship ST_EA03 .ex5 (trade อยู่แล้ว), EA_CORE = R&D.
 - **EA_Template 90%** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **งานเสร็จ**. optimize 0/7 มี edge
@@ -73,17 +105,20 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 
 | # | EA | Symbol/TF | Magic | OOS PF | สถานะ |
 |---|---|---|---|---|---|
-| 1 | Matchagrid MG_v1 | CHFJPY M15 | (read .set) | 2.08 | 🟢 LIVE |
+| 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | 🟢 LIVE |
 | 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE |
 | 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | 🟢 LIVE |
 | 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | 🟢 LIVE |
 | 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | 🟢 LIVE |
 | 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94–4.87 | 🟡 RELOAD v3 (วันนี้) |
 | 7 | LondonConsoBreakout | GBPUSD H1 | 990005 | 2.08 | 🟢 LIVE |
-| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93 | 🟡 DEPLOY วันนี้ |
+| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟡 DEPLOY วันนี้ |
 | 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟡 DEPLOY วันนี้ |
 
 (#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA หลัง deploy วันนี้.)
+
+> ***3.93 = PROVISIONAL** — report เก่ายังไม่ rerun + executor-sibling (ST03B) overfit → **re-confirm OOS
+> ด้วย locked .set ก่อนใช้เป็น baseline เทียบ live**. deploy ลง DEMO ได้ (demo มีไว้จับ overfit แบบนี้).
 
 วันนี้ทำตาม → **`DEPLOY_CHECKLIST_2026-06-29.md`** (step-by-step + verify).
 

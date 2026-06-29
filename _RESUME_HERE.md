@@ -1,6 +1,7 @@
 # RESUME HERE — DEPRECATED (อัพเดทล่าสุด 2026-06-22, superseded 2026-06-28)
 
 > **DEPRECATED** — ไฟล์นี้ล้าสมัยแล้ว ใช้ไฟล์เหล่านี้แทน:
+> - **`PROJECT_STATE.md`** — 👉 AI START HERE (entry เดียว: สถานะ/decision/แผน/invariants)
 > - **`MASTER_BACKLOG.md`** — source of truth สำหรับงานที่ต้องทำต่อ
 > - **`DEMO_DEPLOYMENT_PLAN.md`** — portfolio ปัจจุบัน + EA status ทุกตัว
 > - **`EA_SCORECARD_AND_REGISTRY.md`** — registry EA ทั้งหมด (live + dead)

@@ -1,4 +1,6 @@
 # Demo Deployment Plan — Portfolio v3
+
+> ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **live portfolio** (EA/magic/lot/judge/monitor) เท่านั้น
 อัพเดท: 2026-06-27 | สถานะ: 🟢 RUNNING — **7 EA active** + 2 pending deploy | รอ 2026-09-22 judge
 
 > **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)

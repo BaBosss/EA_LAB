@@ -1,5 +1,9 @@
 # EA Deployment Plan — 2026-06-28
 
+> ⚠️ canonical entry = **`PROJECT_STATE.md`**. ไฟล์นี้ = plan ของ **standalone EA_RUNNER_v1**
+> (Donchian breakout, XAUUSD H1, magic **5001**) — **แยกคนละเรื่องกับ 9-EA demo portfolio**
+> (นั่นอยู่ `DEMO_DEPLOYMENT_PLAN.md`). EA_RUNNER_v1 ไม่อยู่ใน demo 9 ตัว — ตรวจสถานะจริงก่อนใช้.
+
 ## Unit A: EA_RUNNER_v1 (STANDALONE)
 
 **EA:** EA_RUNNER_v1.ex5 (EA_CORE_V1 Phase 5)  

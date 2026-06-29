@@ -1,8 +1,10 @@
-# MASTER BACKLOG & COVERAGE — single source of truth
+# MASTER BACKLOG & COVERAGE
+
+> ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **backlog · coverage matrix · hunt** เท่านั้น
 **สร้าง 2026-06-27.** จุดประสงค์: รวม "สิ่งที่ต้องทำ" ที่กระจายอยู่ 5 ไฟล์มาไว้ที่เดียว + ตอบว่า
 **EA ตัวไหนเทสกับ symbol/TF ไหนแล้ว, optimize รึยัง, ช่องว่างจริงอยู่ตรงไหน.**
 
-> เปิดไฟล์นี้ไฟล์เดียวพอ. ที่เหลือ (`_RESUME_HERE`, `INTAKE_QUEUE`, `QWEN_WORK_PLAN`,
+> เปิดไฟล์นี้สำหรับ backlog. สถานะ/decision/แผนรวม → `PROJECT_STATE.md`. ที่เหลือ (`INTAKE_QUEUE`, `QWEN_WORK_PLAN`,
 > `EA_SCORECARD`, `MT4_GOLDGRID_RETEST_PLAN`, `DEMO_DEPLOYMENT_PLAN`) = รายละเอียด/archive.
 
 ---

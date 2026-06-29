@@ -1,4 +1,6 @@
 # EA SCORECARD & REGISTRY — canonical scoring + audit trail
+
+> ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **ทะเบียน EA · scoring rubric · kill-reason** เท่านั้น
 **Created 2026-06-23.** Purpose: make every keep/kill decision **transparent and reproducible**.
 No EA is "dead" without a recorded reason AND a confidence tag saying how thoroughly it was tested.
 A kill made on a smoke test (★) is LOW confidence and must be re-examined before it is final.

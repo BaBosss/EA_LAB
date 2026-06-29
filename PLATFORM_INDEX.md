@@ -33,7 +33,7 @@
 | `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `_legacy_manual/` = doc เก่าตกยุค |
 | `scripts/` | automation (collect_mt5_reports, export_reports, import_manual_run...) ⚠️ **path ยังชี้ OneDrive ต้องแก้** |
 | `skills/` | สำเนา .md ของ skill (ตัวจริงอยู่ที่ `.claude\skills`) |
-| `portfolio/` + `central_results/` | candidate/portfolio (EA_CANDIDATE_MASTER.xlsx) — ควรรวมเป็นที่เดียว |
+| `portfolio/` | candidate/portfolio (EA_CANDIDATE_MASTER.xlsx) — ✅ รวม central_results เข้ามาแล้ว 2026-06-29 |
 | `_mt5_report_drop/` | inbox วาง report MT5 (oos/optimization/single/_needs_project) |
 | `ACTIVE/` `ARCHIVE/` `SYSTEM/` `handoff/` | โครงเดิมจาก OneDrive lab (projects, manifests, rules) |
 | `strategy_idea_bank/` | STRATEGY_IDEA_BANK.xlsx (idea bank ตัวเต็มอยู่ D:\Forex) |
@@ -77,7 +77,7 @@
 | แก้ path ใน `scripts/` จาก OneDrive → D:\EA_LAB (ไม่งั้น automation พัง) | ต้องทำก่อนใช้ automation |
 | รวม template ซ้ำ (`_template` + `_TEMPLATE_EA_PROJECT`) เป็น 1 | low |
 | ลบโฟลเดอร์ขยะ `ea_projects/Gold` | low |
-| รวม `central_results` + `portfolio` เป็นที่เดียว | low |
+| ~~รวม `central_results` + `portfolio`~~ | ✅ done 2026-06-29 |
 | ก็อป `.Codex\Optimize` (305 MB คลัง report) → `D:\Forex\30_OPTIMIZATION` | ตัดสินทีหลัง |
 | ทำ PROJECT_MASTER_SPEC (EA_Project) อัปเดต baseline 1317 | EA_CORE track |
 

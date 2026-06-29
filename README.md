@@ -10,7 +10,7 @@
 | ไฟล์ | คือ |
 |---|---|
 | **`PROJECT_STATE.md`** | 👉 **AI START HERE** — living state กลาง (ภาพรวม/สถานะ%/decision/monitor/แผนต่อ) เปิดก่อนเสมอ |
-| `DEPLOY_CHECKLIST_2026-06-29.md` | checklist deploy วันนี้ (ST03 replica + Bars8 + reload #6 v3) |
+| `DEPLOY_CHECKLIST_2026-06-29.md` | checklist deploy วันนี้ (ephemeral — ลบได้หลัง deploy เสร็จ) |
 | `EA_CORE_ST03_LOOP_PLAN.md` | แผนปิด framework loop ด้วย ST03 edge (EA_CORE ทางเลือก 2) |
 | ~~`_RESUME_HERE.md`~~ | deprecated → ใช้ `PROJECT_STATE.md` แทน |
 | **`DEMO_DEPLOYMENT_PLAN.md`** | พอร์ต live ที่ deploy จริง (source of truth) + .set + magic + monitoring rule |

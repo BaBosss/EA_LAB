@@ -37,6 +37,10 @@
 - [ ] กด **OK** → ดู Experts log: init ผ่าน, "AllowLiveOrders=true", magic 990010
 - [ ] ✅ เสร็จ: หน้ายิ้ม 🙂 มุมขวาบนชาร์ต = EA ทำงาน
 
+> ⚠️ **baseline OOS 3.93 = PROVISIONAL.** executor-sibling (ST03B pyramid) overfit → ก่อนใช้ 3.93 เป็น
+> เกณฑ์ judge ให้ **re-run OOS ด้วย locked .set ยืนยันก่อน** (งานนี้อยู่ใน `EA_CORE_ST03_LOOP_PLAN.md`).
+> deploy ลง **DEMO** ได้เลย — demo 3 เดือนมีไว้จับ overfit แบบนี้พอดี.
+
 ⚠️ ถ้า EA_RUNNER_ST03 ไม่อยู่ใน Navigator = ยังไม่ได้ compile/copy .ex5 ไป Experts folder.
 แก้: compile จาก `D:\EA_Project\CURRENT_BUILD\...EA_RUNNER_ST03.mq5` แล้ว copy .ex5 เข้า
 `<MT5 DataDir>\MQL5\Experts\` → refresh Navigator. (ใช้ skill `vps-deploy-ops` ช่วยได้.)
@@ -60,7 +64,8 @@ Experts log เห็น init ทั้ง 991001 + 991002.
 
 ## หลัง deploy (verify + บันทึก)
 - [ ] เปิด tab **Trade** — ดูว่าไม่มี error "AutoTrading disabled / invalid lots / no money"
-- [ ] เช็ค magic ไม่ชนกัน: 1524 · 9397 · 9398 · (GR default) · 990005 · 990010 · 991001 · 991002
+- [ ] เช็ค magic ไม่ชนกัน: MG_v1(GUI default) · 1524 · 9397 · 9398 · GoldReaper(GUI default) · 990005 · 990010 · 991001 · 991002
+      — **MG_v1 + GoldReaper magic ไม่อยู่ใน .set (อ่าน/ดูจาก GUI)**; ถ้าทั้งคู่ = 0 แต่คนละ symbol ยัง attribute ได้ด้วย (magic,symbol)
 - [ ] ปล่อยรัน 1–2 วัน แล้ว export `live_deals.csv` (ดู PROJECT_STATE section 6) เช็คว่า EA ใหม่เริ่มมี deal
 - [ ] อัปเดต `DEMO_DEPLOYMENT_PLAN.md` + `PROJECT_STATE.md`: #6 🟡→🟢, #9 🟡→🟢, #10 🟡→🟢
 - [ ] `git add -A && git commit` — "deploy(demo): ST03 replica + Bars8 + reload #6 v3 → 9 EA live 2026-06-29"
