@@ -31,7 +31,7 @@ $EACOUNT = '9 EA'
 $MAGICS  = '1524','9397','9398','990005','990010','991001','991002'
 
 $script:warn = 0
-function Has($file,$needle){ (Test-Path $file) -and ((Get-Content $file -Raw -ErrorAction SilentlyContinue) -match [regex]::Escape($needle)) }
+function Has($file,$needle){ (Test-Path $file) -and ((Get-Content $file -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match [regex]::Escape($needle)) }
 function Check($cond,$okMsg,$warnMsg){
   if($cond){ Write-Host "[OK]   $okMsg" -ForegroundColor Green }
   else     { Write-Host "[WARN] $warnMsg" -ForegroundColor Yellow; $script:warn++ }
@@ -57,10 +57,12 @@ Check ((Has $PS $START) -and (Has $DEMO $START)) "live-clock start $START consis
 # 2c. declared portfolio size present in the entry doc
 Check (Has $PS $EACOUNT) "portfolio size '$EACOUNT' declared in PROJECT_STATE" "'$EACOUNT' invariant missing from PROJECT_STATE"
 
-# 3. no competing 'single source of truth' claim outside PROJECT_STATE
+# 3. no competing single-entry claim (English OR Thai) outside PROJECT_STATE.
+# Thai needle built from code points so this script stays ASCII (PS5.1 reads ANSI).
+$thaiOnly = -join (0x0E44,0x0E1F,0x0E25,0x0E4C,0x0E40,0x0E14,0x0E35,0x0E22,0x0E27 | ForEach-Object {[char]$_})  # = "single file (is enough)"
 $rivals = Get-ChildItem $Root -Filter *.md | Where-Object { $_.Name -ne 'PROJECT_STATE.md' -and $_.Name -notmatch 'RESUME|RUN_REGISTRY' } |
-  Where-Object { (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match 'single source of truth' }
-Check ($rivals.Count -eq 0) "no competing 'single source of truth' claims" ("competing entry claim in: " + (($rivals | ForEach-Object Name) -join ', '))
+  Where-Object { $c = (Get-Content $_.FullName -Raw -Encoding UTF8 -ErrorAction SilentlyContinue); ($c -match 'single source of truth') -or ($c -match [regex]::Escape($thaiOnly)) }
+Check ($rivals.Count -eq 0) "no competing single-entry claim (EN/TH)" ("competing entry claim in: " + (($rivals | ForEach-Object Name) -join ', '))
 
 # 4. owner banner present on the secondary owners
 foreach($f in @($DEMO,$BL,$SC)){

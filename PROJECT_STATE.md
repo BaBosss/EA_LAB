@@ -83,7 +83,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   `EA_CORE_ST03_LOOP_PLAN.md`. fallback ถ้าไม่ผ่าน = ship ST_EA03 .ex5 (trade อยู่แล้ว), EA_CORE = R&D.
 - **EA_Template 90%** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **งานเสร็จ**. optimize 0/7 มี edge
   (MA-cross ไม่มี edge). **ใช้เป็นเครื่องมือ smoke ไอเดีย ไม่เพิ่ม signal ใหม่.**
-- **Live Portfolio 18%** — 7 EA active + 2 รอ deploy (วันนี้). live clock เริ่ม 2026-06-22 →
+- **Live Portfolio 18%** — **9 EA** บน 1 account (วันนี้ deploy 2 ตัวสุดท้ายให้ครบ). live clock เริ่ม 2026-06-22 →
   judge เร็วสุด **2026-09-22**. ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
 - **Signal hunt ~90% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
   Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). เหลือช่องแคบ: GR optimize, MT4 goldgrid,
