@@ -13,7 +13,10 @@
   ASCII-only on purpose (Windows PowerShell 5.1 reads scripts as ANSI).
 #>
 [CmdletBinding()]
-param([string]$Root = 'D:\EA_LAB')
+param(
+  [string]$Root = 'D:\EA_LAB',
+  [switch]$Strict   # exit 1 on any warning (used by the git pre-commit hook)
+)
 
 # ---- INVARIANTS (mirror PROJECT_STATE.md section 0.5) ----
 $JUDGE   = '2026-09-22'
@@ -58,4 +61,5 @@ Check ($missing.Count -eq 0) "all $($MAGICS.Count) magics present in DEMO_DEPLOY
 
 if($script:warn -eq 0){ Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green }
 else { Write-Host ("=== {0} WARNING(s) - fix the drift above ===" -f $script:warn) -ForegroundColor Yellow }
+if($Strict -and $script:warn -gt 0){ exit 1 }
 exit 0

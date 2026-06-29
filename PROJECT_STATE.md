@@ -46,7 +46,9 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 - backtest window **2023–2026** · re-opt ทุก 6 เดือน
 - **magic map (ห้ามชน):** 1524=NuiIndy · 9397=ST_EA03 GBP · 9398=ST_EA03 CAD · 990005=CB_GBP ·
   990010=ST03 replica · 991001=BRK Bars55 · 991002=BRK Bars8 · MG_v1+GoldReaper=GUI default (ไม่อยู่ .set)
-- ก่อน commit รัน **`scripts/check_state.ps1`** → เตือนถ้า invariant เพี้ยน/ขัดกัน
+- **bot บังคับเอง:** git **pre-commit hook** (`.githooks/pre-commit`) รัน `scripts/check_state.ps1 -Strict`
+  อัตโนมัติทุก commit → **block ถ้า drift**. setup ครั้งเดียวต่อเครื่อง: `git config core.hooksPath .githooks`.
+  bypass ฉุกเฉิน: `git commit --no-verify`. รันมือ: `powershell -File scripts/check_state.ps1`
 
 ---
 

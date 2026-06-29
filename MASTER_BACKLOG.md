@@ -4,7 +4,7 @@
 **สร้าง 2026-06-27.** จุดประสงค์: รวม "สิ่งที่ต้องทำ" ที่กระจายอยู่ 5 ไฟล์มาไว้ที่เดียว + ตอบว่า
 **EA ตัวไหนเทสกับ symbol/TF ไหนแล้ว, optimize รึยัง, ช่องว่างจริงอยู่ตรงไหน.**
 
-> เปิดไฟล์นี้สำหรับ backlog. สถานะ/decision/แผนรวม → `PROJECT_STATE.md`. ที่เหลือ (`INTAKE_QUEUE`, `QWEN_WORK_PLAN`,
+> เปิดไฟล์นี้สำหรับ backlog. สถานะ/decision/แผนรวม → `PROJECT_STATE.md`. ที่เหลือ (`INTAKE_QUEUE`,
 > `EA_SCORECARD`, `MT4_GOLDGRID_RETEST_PLAN`, `DEMO_DEPLOYMENT_PLAN`) = รายละเอียด/archive.
 
 ---
@@ -245,9 +245,9 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
 ## 5. ที่มาของ to-do เดิม (รวมมาที่นี่แล้ว — ไม่ต้องไล่หา)
 | ไฟล์ | สถานะ |
 |---|---|
-| `_RESUME_HERE.md` | resume context — section "ถัดไปทันที" รวมเข้าข้อ 3 แล้ว |
+| ~~`_RESUME_HERE.md`~~ | archived → `_archive_docs/` (resume context รวมเข้าข้อ 3 + PROJECT_STATE) |
 | `INTAKE_QUEUE.md` | Bucket D CLOSED · C/E = martingale skip |
-| `QWEN_WORK_PLAN.md` | Q1/Q2/R1/R2 = DONE (playbook reference) |
+| ~~`QWEN_WORK_PLAN.md`~~ | archived → `_archive_docs/` (Q1/Q2/R1/R2 DONE) |
 | `EA_SCORECARD_AND_REGISTRY.md` | rubric + audit trail · Part 3 RE-EXAM → ข้อ 3 |
 | `MT4_GOLDGRID_RETEST_PLAN.md` | **ยังไม่รัน** → ข้อ 3 |
 | `DEMO_DEPLOYMENT_PLAN.md` | live portfolio source of truth → ข้อ 3 |

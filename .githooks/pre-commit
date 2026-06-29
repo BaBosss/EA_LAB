@@ -1,0 +1,16 @@
+#!/bin/sh
+# EA_LAB anti-drift pre-commit guard (see PROJECT_STATE.md section 0.5).
+# Runs scripts/check_state.ps1 -Strict; blocks the commit if docs drift.
+# Bypass once with:  git commit --no-verify
+ps=$(command -v powershell.exe 2>/dev/null || command -v pwsh 2>/dev/null || true)
+if [ -z "$ps" ]; then
+  echo "[pre-commit] PowerShell not found - skipping check_state.ps1"
+  exit 0
+fi
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_state.ps1 -Strict
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] doc drift detected (above). fix it, or bypass: git commit --no-verify"
+fi
+exit $rc
