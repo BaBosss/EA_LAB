@@ -9,7 +9,10 @@
 
 | ไฟล์ | คือ |
 |---|---|
-| **`_RESUME_HERE.md`** | เปิดก่อนเสมอเมื่อเริ่ม session — สถานะล่าสุด + 2 workstream |
+| **`PROJECT_STATE.md`** | 👉 **AI START HERE** — living state กลาง (ภาพรวม/สถานะ%/decision/monitor/แผนต่อ) เปิดก่อนเสมอ |
+| `DEPLOY_CHECKLIST_2026-06-29.md` | checklist deploy วันนี้ (ST03 replica + Bars8 + reload #6 v3) |
+| `EA_CORE_ST03_LOOP_PLAN.md` | แผนปิด framework loop ด้วย ST03 edge (EA_CORE ทางเลือก 2) |
+| ~~`_RESUME_HERE.md`~~ | deprecated → ใช้ `PROJECT_STATE.md` แทน |
 | **`DEMO_DEPLOYMENT_PLAN.md`** | พอร์ต live ที่ deploy จริง (source of truth) + .set + magic + monitoring rule |
 | **`EA_SCORECARD_AND_REGISTRY.md`** | ทะเบียน EA ทุกตัว + scoring rubric + kill-reason |
 | **`INTAKE_QUEUE.md`** | funnel รับ source/strategy ใหม่ (drop ลง `_intake_drop/`) |
