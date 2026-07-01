@@ -1,0 +1,37 @@
+﻿; Gold Reaper 4.3 â€” Cent account live set
+; Validated: IS 2026.01-04 PF=7.74 (freshness) | OOS 2023-2025 M1 PF=2.07 2319t DD=24.22% | OOS 2020-2022 PF=1.53
+; DD note: 24% equity DD is normal for GR (martingale-family); MaxAllowedDD=30 caps it
+; StartLots=0.01 is the lot control param (Risk=1234 = internal variable mode, keep)
+; All other params are factory defaults â€” do NOT change strategy toggles
+UseVariableValues=true
+AdjustLotsizeToVariableValues=true
+ShowInfoPanel=true
+UpdateInfoTesting=false
+AllowBuyTrades=true
+AllowSellTrades=true
+TradeFrequency=5
+MaxSpread=500.0
+UseHL_TrailingSL=true
+FridayStopHour=25
+setSL_TP_After_Entry=false
+FakeOutFilter=2
+EnableNFP_Filter=true
+AutoGMT=true
+ForceBalanceToUse=0.0
+Risk=1234
+StartLots=0.01||0.01||0.01||0.05||Y
+MaxAllowedDD=30.0
+UseWeightedLots=true
+MaxRiskPerStrategy_=1.0
+OnlyUp=true
+CheckMargin=true
+UseEquity=false
+RunStrat1=true
+RunStrat2=true
+RunStrat3=true
+RunStrat4=true
+RunStrat5=true
+RunStrat6=true
+RunStrat7=true
+RunStrat8=true
+RunStrat9=true
