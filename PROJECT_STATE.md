@@ -77,8 +77,8 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   งานที่ผูกกับเวลาจริง (operate จนถึง judge, ขยายจาก 1→หลายพอร์ต) ไม่ใช่งานสร้างเพิ่ม.
   ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
-  (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
-  (log: `QWEN_RUN_LOG.md`).
+  (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
+  2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
 - **EA_CORE 100% — LOOP ปิดแล้ว (2026-07-02, fallback invoked):** STEP 1→5 เดินครบ.
   หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
   STEP 3 coarse grid **complete 48 combos → OOS PF<1.0 ทั้งหมด** (ดีสุด 0.87 บน M2 ฝั่ง optimistic).
@@ -95,11 +95,13 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
   ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
   เพราะ demo มีไว้จับ overfit). ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
-- **Signal hunt ~95% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
-  Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). ✅ **2026-07-02 ปิดเพิ่ม:** GR optimize (null
+- **Signal hunt ~98% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
+  Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). ✅ **2026-07-02 ปิดเพิ่มครบ:** GR optimize (null
   result, live set unchanged) · #20 Trend+Pyramid (XAU H4 gap closed, DEAD ทั้งคู่ single/pyramid) ·
-  MT4 goldgrid Phase 2 (Model 0 artifact gate, กำลังรัน). **ไม่มี candidate ใหม่เหลือจาก TOP-8/10 shortlist**
-  — โหมดตอนนี้ = รอไอเดียใหม่ ไม่ใช่มีคิวให้ทำต่อ. รายละเอียดเต็ม → `MASTER_BACKLOG.md`.
+  **MT4 goldgrid ปิดเคสแล้ว** (`MT4_GOLDGRID_RETEST_PLAN.md`) — Elephant/Mammoth artifact confirmed
+  (PF 85→1.41 ที่ Model 1, DD 53.65%/yr) · Gold Stuff V7 DQ ยืนยัน (uncapped martingale + DD 77%/yr).
+  **ไม่มี candidate ใหม่เหลือจาก TOP-8/10 shortlist หรือ MT4 goldgrid pool** — โหมดตอนนี้ = รอไอเดียใหม่
+  ไม่ใช่มีคิวให้ทำต่อ. รายละเอียดเต็ม → `MASTER_BACKLOG.md`.
 
 ---
 
@@ -184,28 +186,30 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 
 ## 7. FORWARD PLAN (today → judge → after)
 
-### ✅ เสร็จแล้ว (2026-06-29 → 07-02)
-- Deploy ครบ 3 รายการ → พอร์ต 9 EA live ✅ · qwen batch queue รันจบ (GR opt, MT4 goldgrid, baseline, splits)
+### ✅ เสร็จแล้วครบ (2026-06-29 → 07-02) — งานสร้าง/หา edge จบรอบนี้แล้ว
+- Deploy ครบ 3 รายการ → พอร์ต 9 EA live ✅
 - EA_Template freeze 100% + เขียน `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`
+- **EA_CORE loop ปิดแล้ว (fallback):** STEP 1→5 ครบ, grid 48 combos ไม่เจอ durable set →
+  EA_CORE = R&D, ST_EA03 standalone = production. ST03 replica re-confirm: OOS PF 0.86 = baseline จริง (WATCH)
+- **KAUFMAN_ER/SUPERTREND ตรวจแล้ว** → CANDIDATE reserve / PARKED · **user decision 2026-07-02: เก็บไว้ก่อน
+  ไม่ deploy** (ไอเดียอนาคต: ใช้ Kaufman ER เป็น regime/direction filter ให้ EA อื่น — ดู EA_SCORECARD)
+- **Gold Reaper opt** = null result (StartLots ไม่มีผลจริงภายใต้ Risk=1234 mode) → live set คงเดิม
+- **#20 Trend+Pyramid** = DEAD (XAU/GBP H4 ทั้ง single-entry และ pyramid) → ปิด TOP-8/10 shortlist ครบ
+- **MT4 goldgrid** = ปิดเคส (Elephant/Mammoth artifact confirmed PF 85→1.41 DD 53.65%/yr ·
+  GoldStuffV7 DQ ยืนยัน uncapped martingale DD 77%/yr) → gold-grid concept dead ทั้ง pool
+- housekeeping ทั้งหมด: ลบ ea_projects/Gold ✅ · template ซ้ำเหลือตัวเดียว ✅ · portable python ✅ ·
+  fix OneDrive→D: path ✅ · แก้ log data ที่เกือบหาย (qwen merge) ✅
 
-### ✅ ปิดแล้ว 2026-07-02 — EA_CORE loop (STEP 1→5 ครบ, fallback invoked)
-- STEP 2 A/B + STEP 3 grid 48 combos → ไม่มี durable set → EA_CORE = R&D, ST_EA03 standalone = production
-- ST03 replica re-confirm แล้ว: OOS PF 0.86 = baseline จริง (WATCH บน demo)
-- KAUFMAN_ER/SUPERTREND ตรวจแล้ว → CANDIDATE reserve / PARKED (ดู decision log — **รอ user ตัดสินใจ deploy KER หรือไม่**)
-- housekeeping: ลบ ea_projects/Gold ✅ · template ซ้ำเหลือตัวเดียว ✅ · portable python ✅
+**สรุป: ไม่มีงาน "หา edge ใหม่" ค้างอยู่แล้ว** (signal hunt ~98% อิ่มตัว) — โหมดต่อจากนี้ = operate
 
-### 🟡 คิวรอง (สัปดาห์นี้/ถัดไป)
-- Review ผล qwen ที่ค้าง: GR opt plateau-check (PF 2.35 — memory 06-28 ระบุ default FF2 อยู่บน plateau แล้ว → ยืนยัน+บันทึกลง scorecard) · GG Elephant = artifact DQ · GG Mammoth 5.10 ยังไม่ตัดสิน · GoldStuffV7 = DQ
-- #20 Trend+Pyramid generate → /signal-scan (`STRATEGY_200_ANALYSIS.md`)
-- housekeeping LAB ที่เหลือ: fix path OneDrive→D: ใน `scripts/`
-
-### 🟣 ถึง 2026-09-22 (judge)
-- /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica 30 trades แรก
+### 🟣 ถึง 2026-09-22 (judge) — โหมด operate ล้วน
+- /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica (คาดว่าจะ kill),
+  KAUFMAN_ER ถ้า user ตัดสินใจ deploy ระหว่างทาง
 - สะสม ≥30 real trades/EA
-- ปิด EA_CORE ST03 loop ให้ได้ deployable framework EA
 
 ### 🟢 หลัง 2026-09-22
 - per-EA attribution → promote ตัวผ่าน (PF≥1.40, ≥30 trades) → เพิ่ม lot / เปิดพอร์ตที่ 2 → มุ่ง 10 พอร์ต
+- ถ้ามีไอเดีย signal ใหม่เข้ามา (นอก TOP-8/10 shortlist เดิม) → /signal-scan ตามปกติ
 
 ---
 

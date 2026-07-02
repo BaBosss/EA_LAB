@@ -3,6 +3,26 @@
 lot/spacing). Re-test the high-PF gold grids killed on DD/grid BEFORE final verdict. User wants ALL
 levers tried: lower lot · widen grid spacing · stretch SL/TP/filter · let optimizer find DD-budget sizing.
 
+> ## ✅ CLOSED 2026-07-02 (Claude Fable) — ALL 3 TARGETS FAIL, gold-grid concept confirmed dead
+> **Elephant/Mammoth:** Phase 2 artifact gate — PF collapsed **85.14 (Model 2, 06-29) → 1.41 (Model 1,
+> 07-02)** + DD 53.65%/yr even at capped MaxOrder=4. Artifact confirmed, not deployable.
+> **Gold Stuff V7:** Phase 1 mechanism gate alone DQs it (`iMO=100` practically uncapped + `SL=0` +
+> `MM=1.5` martingale) — Phase 2 confirms with DD=77.11%/yr blowup. DQ stands.
+> **KRAPOOK:** not re-tested this round — EXPIRED license makes it un-deployable regardless of test
+> outcome; remains "technique reference only" per its existing verdict.
+> **Environment limitation hit:** ThinkMarkets-Live 4 has **no M1/tick history cached for XAUUSDMINI
+> before ~2026-03** (Model 0 and Model 1 both returned NO_DATA for 2023-2025 windows) — true Model-0
+> every-tick could not be run for the full 3.5yr window as originally planned. Substituted **Model 1
+> (control points) on the most recent 1-year window with real cached data (2025.06-2026.06)** as the
+> best-available decisive test — this is a materially better simulation than Model 2 (open-price-only,
+> which is what created the PF-85/PF-0.25 artifacts) and was sufficient to give an unambiguous verdict.
+> To get true Model-0 coverage of the full history later, sync History Center for XAUUSDMINI M1 via
+> the MT4 GUI first (headless runs can't trigger this download).
+> **Result matches the plan's own "if ALL fail" expected outcome** (§EXPECTED OUTCOMES below) — Phase 3
+> sizing/spacing sweep is NOT justified for any of the 3 targets. This plan is DONE, do not re-open
+> without a genuinely different gold-grid EA (not a Elephant/Mammoth/GoldStuffV7 re-test).
+> Full evidence → `EA_SCORECARD_AND_REGISTRY.md` MT4 section · reports → `_mt4_auto/reports/PHASE2_*`.
+
 ## TARGETS (user-selected: "MT4 gold grids, PF สูง")
 | EA (tester name) | prior verdict | prior result | caveat |
 |---|---|---|---|

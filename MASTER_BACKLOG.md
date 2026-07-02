@@ -116,14 +116,17 @@ Default params ปัจจุบัน = conditional OK แต่ ยังไ�
 
 ---
 
-### TASK 5 — MT4 goldgrid Phase 1 (cheap, ~10 min)
-Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity curve artifact check ตาม `MT4_GOLDGRID_RETEST_PLAN.md`.
-ถ้า equity = step-function (spike then flat) = martingale artifact → ปิดทิ้ง.
-ถ้า equity = smooth uptrend = ลองต่อ Phase 2.
+### TASK 5 — MT4 goldgrid — ✅ DONE (Phase 1 06-29, Phase 2 07-02)
+~~Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity curve artifact check~~ done 06-29.
+~~Phase 2 = Model 0 artifact gate~~ done 07-02 (Model 1 substitute, no tick history cached) — **ALL 3 FAIL**,
+gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md` §CLOSED.
 
 ---
 
-### ลำดับที่แนะนำสำหรับ session ถัดไป:
+> **⚠️ ของด้านล่างนี้เป็น planning block เก่า (คอนเทนต์อ้าง "Deploy จันทร์" ที่ผ่านไปนานแล้ว + เลข TASK ไม่ตรงกับ
+> TASK 1-5 ปัจจุบันในไฟล์นี้) — เก็บไว้เป็น archive ไม่ใช่คิวจริง. ดูสถานะปัจจุบันที่ PROJECT_STATE.md §7 แทน.**
+
+### ~~ลำดับที่แนะนำสำหรับ session ถัดไป~~ (เก่า/archive)
 1. Deploy จันทร์ก่อน (ST03 + Bars8) → 10 นาที
 2. TASK 1 (NR7 ขยาย) — ใช้เวลา ~45 นาที (smoke 4 combo ด้วย 2 MT5 parallel)
 3. TASK 3 (EA_LNBREAK code + smoke) — ใช้เวลา ~60 นาที
@@ -220,15 +223,20 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
       VERDICT: DEAD. Do not rebuild London→NY breakout on any pair.
 
 ### 🟢 re-examine ที่ค้างจากแผนเก่า (ยังไม่ได้ทำจริง)
-- [ ] **MT4 gold-grid re-test** (`MT4_GOLDGRID_RETEST_PLAN.md`) — 3-phase plan เขียนไว้ **แต่ยังไม่รัน**:
-      Elephant/Mammoth (artifact?), Gold Stuff V7 (martingale?), KRAPOOK (expired=technique only). Phase 1 ถูกมาก (~5 นาที).
 - [ ] **R3: EURUSD Forex Robot (MT4)** — WATCH/PARKED (thin 48t). deep 30-mo IS/OOS multi-symbol ยังไม่ทำ. (`EA_SCORECARD` Part 3)
-- [ ] **Gold Reaper optimize** — ตอนนี้ default params; ลอง plateau/sizing เพื่อยืนยันไม่ใช่ lone spike (เป็น conditional leg).
 
 ### ⚪ ปิดแล้ว / อย่าเสียเวลาซ้ำ
 - Bucket D (martingale ports) = 0 survivors · CB new-symbol 4/4 DEAD · CB_EUR rescue DROP · R1 RSI_Swing / R2 TrendRegression = DEAD ·
   USDJPY breakout opt→REJECT · ST03 multi-symbol/SL/rearm = DEAD · MACD all-symbols exhaustive REJECT.
 - **EA_SUPERTREND** = XAU-specific edge, 12-symbol hunt 0 additive legs · **EA_DONCHIAN** = 0 additive legs (USDJPY regime artifact, XAU below 1.30 all periods).
+- ✅ **MT4 gold-grid re-test = DONE 2026-07-02** (`MT4_GOLDGRID_RETEST_PLAN.md` §CLOSED) — Elephant/Mammoth
+  artifact confirmed (PF 85→1.41 at Model 1, DD 53.65%/yr) · Gold Stuff V7 DQ confirmed (uncapped
+  martingale + DD 77%/yr) · KRAPOOK not re-tested (expired, technique-only regardless). All 3 fail —
+  gold-grid concept dead. Do not re-open without a different gold-grid EA.
+- ✅ **Gold Reaper optimize = DONE 2026-07-02** — StartLots sweep was a null result (Risk=1234 internal
+  variable mode ignores it); live set unchanged. See `EA_SCORECARD_AND_REGISTRY.md`.
+- ✅ **#20 Trend+Pyramid = DONE 2026-07-02** — XAU H4 DEAD closes the last gap (full detail in the
+  EA_EMATREND entry above in this section).
 - **EA_EMATREND** (#20 EMA-cross trend follower) = **concept DEAD. 4 smoke PROCEEDs were all regime artifacts.**
   2015-2026 11-year checks: USDJPY PF 1.21 / GBPUSD PF 0.76 / GBPJPY PF 0.61. All three deeply negative in 2015-2022 era.
   The EMA20/50 cross H4 only worked in the 2022-2026 high-volatility post-COVID/BOJ/Brexit regime.
@@ -259,7 +267,7 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
 | `INTAKE_QUEUE.md` | Bucket D CLOSED · C/E = martingale skip |
 | ~~`QWEN_WORK_PLAN.md`~~ | archived → `_archive_docs/` (Q1/Q2/R1/R2 DONE) |
 | `EA_SCORECARD_AND_REGISTRY.md` | rubric + audit trail · Part 3 RE-EXAM → ข้อ 3 |
-| `MT4_GOLDGRID_RETEST_PLAN.md` | **ยังไม่รัน** → ข้อ 3 |
+| `MT4_GOLDGRID_RETEST_PLAN.md` | ✅ CLOSED 2026-07-02 (all 3 targets fail) → ข้อ 3 |
 | `DEMO_DEPLOYMENT_PLAN.md` | live portfolio source of truth → ข้อ 3 |
 </content>
 </invoke>

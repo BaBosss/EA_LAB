@@ -140,7 +140,8 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT4 — SCREENED (63 EAs, 0 deployed)
 | EA | screen PF | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| EA_Golden_Elephant/Mammoth | XAU 4.08 | ★★★ | **DISQUALIFIED→DEAD** | grid; TP200→2000 collapsed PF 7.77→0.06 = tight-TP artifact |
+| EA_Golden_Elephant/Mammoth | XAU 4.08 | ★★★ | **DISQUALIFIED→DEAD (re-confirmed 2026-07-02)** | grid; TP200→2000 collapsed PF 7.77→0.06 = tight-TP artifact. **Phase 2 re-test** (`MT4_GOLDGRID_RETEST_PLAN.md`, XAUUSDMINI H1, Model 1 control-points 1yr 2025.06-2026.06 — Model 0 unavailable, no tick history cached): PF collapsed **85.14 (Model 2) → 1.41 (Model 1)**, DD **53.65%/yr** at MaxOrder=4 (already capped). Artifact confirmed at every model tested; the thin residual edge isn't deployable at this DD. Mammoth = identical binary (MD5 match), same verdict, not re-tested. |
+| Gold Stuff EA V7.0 | XAU 5.09/39%DD | ★★★ | **DISQUALIFIED (re-confirmed 2026-07-02)** | Phase 1 mechanism gate: `iMO=100` (max orders, practically uncapped) + `SL=0` (no per-position stop) + `MM=1.5` martingale multiplier = uncapped grid/martingale, DQ stands structurally. Phase 2 empirical: Model 1, 1yr 2025.06-2026.06, XAUUSDMINI H1 → PF=2.20 (935 trades, high-frequency churn) but **DD=77.11% in ONE YEAR** — ruin risk confirmed, no sizing fix possible per Step-0 gate. |
 | KRAPOOK BLUE ANT | XAU 2.65 | ★★★ | **DISQUALIFIED** | EA EXPIRED (best profile of pool but un-deployable). Technique (distance-scaling) saved for reuse |
 | BuRengNong207 | XAU 1.76 | ★★★ | **DISQUALIFIED** | martingale-only (mult=1.0 → 0/9 pass); no signal under it |
 | EURUSD Forex Robot | EUR 3.89 | ★★☆ | **WATCH/PARKED** | NOT martingale (scrutinize cleared it); disqualifier = THIN sample (48t). Needs deep-data re-test |
