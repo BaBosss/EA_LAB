@@ -49,11 +49,20 @@ ST03B "TG" pyramid ที่ overfit — Sonnet ต้องยืนยัน�
 ## C. งานจริง — STEP 1→5 (Sonnet ทำตามลำดับ)
 
 ### STEP 1 — orient + ยืนยัน target (อย่าข้าม)
-- [ ] อ่าน: `TEMPLATE/EA_RUNNER_ST03.mq5` (+ `EA_RUNNER_ST03B.mq5`), `CORE/ScaleExecutor_v2.mqh`,
+- [x] อ่าน: `TEMPLATE/EA_RUNNER_ST03.mq5` (+ `EA_RUNNER_ST03B.mq5`), `CORE/ScaleExecutor_v2.mqh`,
       `DOCS/ST_EA03_REVERSE_ENGINEER_AND_V4_PLAN.md` (Part B §88-109).
-- [ ] ตอบให้ชัด: **variant ไหนคือเป้า** (ST03 vs ST03B), ใช้ executor v2 จริงไหม, `.set` ปัจจุบันคืออะไร,
+- [x] ตอบให้ชัด: **variant ไหนคือเป้า** (ST03 vs ST03B), ใช้ executor v2 จริงไหม, `.set` ปัจจุบันคืออะไร,
       ผล B มาจาก param ชุดไหน. เขียนสรุป 5 บรรทัดก่อนรันอะไร.
 - accept: รู้แน่ว่าจะ validate binary+`.set` ตัวไหน.
+
+> **STEP 1 summary (Claude Fable, 2026-07-02 — file inspection):**
+> 1. **เป้าของ loop = `EA_RUNNER_ST03B.mq5` "TG"** — ต่างจาก ST03 ตรงเพิ่ม TrendGate (ADX block:
+>    `InpTrendGateOn=true, InpAdxMax=30`, บรรทัด 89–91). ตัวที่ deploy demo (990010) = `EA_RUNNER_ST03` + LR2 set — คนละตัว.
+> 2. **executor v2 จริง** — ทั้งสอง runner include `ScaleExecutor_v2.mqh` (ST03:123, ST03B:129).
+> 3. **.set ปัจจุบัน:** ST03B locked = `_mt5_auto\ST03B_trendgate_v1.set` (LotRepeat=2, Tp3=50, **Nearby=50**, Mode=2 LIMIT,
+>    TrendGate on, magic 990010) · replica deployed = `_mt5_auto\ST03_lr2_sized_v1.set` (LR2, Tp3=50, Nearby=50, base lot 0.12, magic 990010).
+> 4. **ผลตาราง B** มาจาก ST03B TG (`_mt5_auto\reports\ST03B_TG_*.htm`) — param ตาม trendgate set (LR2/50/50) **ไม่ใช่** LR3/Nearby=100 ที่ STEP 2 เขียนไว้ → STEP 2 ฝั่ง B ต้องใช้ค่าจาก locked set จริง.
+> 5. ⚠️ magic 990010 ซ้ำกันระหว่าง ST03B set กับ replica ที่ deploy — **ห้ามเอา ST03B ขึ้น demo account เดียวกันโดยไม่เปลี่ยน magic**.
 
 ### STEP 2 — reproduce A/B baseline (entry-only vs entry+pyramid)
 - [ ] compile runner (headless, `vps-deploy-ops`/`mt5_run.ps1`). GBPUSD H1, **Model 4**, window สั้น

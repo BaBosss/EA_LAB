@@ -30,7 +30,7 @@
 |---|---|
 | root *.md | canonical = `PROJECT_STATE`(entry) · `DEMO_DEPLOYMENT_PLAN` · `MASTER_BACKLOG` · `EA_SCORECARD_AND_REGISTRY` · `INTAKE_QUEUE` · `README` · `PLATFORM_INDEX`(นี่). เก่า/deprecated → `_archive_docs/` (2026-06-29: _RESUME_HERE, QWEN_WORK_PLAN). RUN_REGISTRY.* = gitignored (auto-gen, deprecated) |
 | `ea_projects/` | งานจริงต่อ EA — ดูข้อ 3 |
-| `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `_legacy_manual/` = doc เก่าตกยุค |
+| `docs/` | เอกสารดีไซน์ทั้งหมด · **`RECOVERED_PLATFORM_DESIGN_20260614.md` = สมองที่กู้มา (อ่านอันนี้)** · `EA_CORE_AND_TEMPLATE_GUIDE.md` = สถาปัตยกรรม+วิธีใช้ EA_CORE/EA_Template (2026-07-02) · `_legacy_manual/` = doc เก่าตกยุค |
 | `scripts/` | automation (collect_mt5_reports, export_reports, import_manual_run...) ⚠️ **path ยังชี้ OneDrive ต้องแก้** |
 | `skills/` | สำเนา .md ของ skill (ตัวจริงอยู่ที่ `.claude\skills`) |
 | `portfolio/` | candidate/portfolio (EA_CANDIDATE_MASTER.xlsx) — ✅ รวม central_results เข้ามาแล้ว 2026-06-29 |
@@ -51,7 +51,7 @@
 | **EA_GoldenEmber_Pivot** | NZDUSD pivot-range | ✅ validated (RUN_0004/0005 backtest ค้าง) |
 | EA_CORE_V1_TESTBED | ที่เก็บ report ของ EA_CORE_V1 | report XAUUSD รอ parse |
 | Matchagrid | grid EA | preliminary |
-| `_template` / `_TEMPLATE_EA_PROJECT` | เทมเพลตโปรเจกต์ (ซ้ำ 2 อัน) | ต้องรวมเป็น 1 |
+| `_TEMPLATE_EA_PROJECT` | เทมเพลตโปรเจกต์ (เหลือตัวเดียว — `_template` ถูกลบ/รวมไปแล้ว, ตรวจ 2026-07-02) | ✅ ใช้ตัวนี้ |
 | `Gold` | โฟลเดอร์ขยะ (ว่างซ้อน) | ลบทิ้งได้ |
 
 **EA validated ตอนนี้มี 3 ตัว:** Gold SMC (XAU), Pivot (NZDUSD), EX197 (GBPJPY, อยู่ idea bank) → พอเริ่มทำ portfolio port แรกได้
@@ -75,7 +75,7 @@
 | งาน | ระดับ |
 |---|---|
 | แก้ path ใน `scripts/` จาก OneDrive → D:\EA_LAB (ไม่งั้น automation พัง) | ต้องทำก่อนใช้ automation |
-| รวม template ซ้ำ (`_template` + `_TEMPLATE_EA_PROJECT`) เป็น 1 | low |
+| ~~รวม template ซ้ำ (`_template` + `_TEMPLATE_EA_PROJECT`)~~ | ✅ เหลือตัวเดียวแล้ว (ตรวจ 2026-07-02) |
 | ลบโฟลเดอร์ขยะ `ea_projects/Gold` | low |
 | ~~รวม `central_results` + `portfolio`~~ | ✅ done 2026-06-29 |
 | ก็อป `.Codex\Optimize` (305 MB คลัง report) → `D:\Forex\30_OPTIMIZATION` | ตัดสินทีหลัง |

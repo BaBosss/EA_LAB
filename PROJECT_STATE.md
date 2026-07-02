@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-06-29 · **updated by:** Claude (Opus) · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-02 · **updated by:** Claude (Fable) · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -63,8 +63,8 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
 | **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | 70% ยังไม่เทรดจริง |
-| **EA_Template** | `D:\EA_LAB\ea_template` (Boss V2 chassis) | แม่พิมพ์ — เสียบ signal เข้า chassis เดียว backtest เร็ว | 90% เครื่องมือพร้อม / 0 edge |
-| **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 18% (1 พอร์ต, demo เดิน) |
+| **EA_Template** | `D:\EA_LAB\ea_template` (Boss V2 chassis) | แม่พิมพ์ — เสียบ signal เข้า chassis เดียว backtest เร็ว | **100% — FREEZE เป็น smoke tool** (2026-07-02) |
+| **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
 
 หมายเหตุ: "EA_Project" กับ "EA_CORE" = track เดียวกัน (Project = repo, Core = engine ข้างใน).
 
@@ -74,17 +74,25 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 - **EA_LAB 85%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). เหลือ housekeeping (fix path
   OneDrive→D:, รวม template ซ้ำ). ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
-  RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5).
+  RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
+  (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
+  (log: `QWEN_RUN_LOG.md`).
 - **EA_CORE 70%** — Phases A–J เสร็จ, signals v2–v4, LotSizer. **อัปเดต 2026-06-29:** entry v4 ✅ +
   **ScaleExecutor_v2 (limit-order pyramid) เขียนเสร็จ+wired+compile แล้ว** (ไม่ใช่ v1 market อีก).
   แต่ **ผล validate ปัจจุบัน = overfit รุนแรง** (ST03B "TG": IS PF 7.08 → WF/stress 0.19–0.32 พังหมด
   — ⚠️ ตัวเลขจาก unverified report-parse; STEP 1-2 ของแผนสั่ง **rerun ยืนยันก่อนเชื่อ**).
   งานจริงเหลือ = **diagnose overfit + หา durable set** (ไม่ใช่เขียน executor). แผนรัน Sonnet →
   `EA_CORE_ST03_LOOP_PLAN.md`. fallback ถ้าไม่ผ่าน = ship ST_EA03 .ex5 (trade อยู่แล้ว), EA_CORE = R&D.
-- **EA_Template 90%** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **งานเสร็จ**. optimize 0/7 มี edge
-  (MA-cross ไม่มี edge). **ใช้เป็นเครื่องมือ smoke ไอเดีย ไม่เพิ่ม signal ใหม่.**
-- **Live Portfolio 18%** — **9 EA** บน 1 account (วันนี้ deploy 2 ตัวสุดท้ายให้ครบ). live clock เริ่ม 2026-06-22 →
-  judge เร็วสุด **2026-09-22**. ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
+  **blocker ที่รู้แล้ว (2026-07-02):** เครื่องไม่มี python → STEP 3 post-processing (`set_from_robust.py`)
+  รันไม่ได้ + รอบ 06-29 opt ได้ 0 passes ทุก Model → ต้องแก้สองอย่างนี้ก่อนเข้า STEP 3.
+  architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
+- **EA_Template 100% — FREEZE (2026-07-02)** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **track ปิดอย่างเป็นทางการ**:
+  ใช้เป็น smoke tool เท่านั้น ไม่พัฒนา chassis ต่อ (ไอเดียใหม่เสียบผ่าน Boss V2 ได้ตามเดิม). architecture +
+  วิธีใช้ → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`. หมายเหตุ: `modules\`(V1) vs `core\`(V2) ซ้ำโดยตั้งใจ ไม่ใช่ขยะ.
+- **Live Portfolio 20%** — ✅ **9 EA live ครบแล้ว (user ยืนยัน deploy เสร็จ 2026-07-02)**. live clock เริ่ม 2026-06-22 →
+  judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
+  ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
+  เพราะ demo มีไว้จับ overfit). ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
 - **Signal hunt ~90% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
   Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). เหลือช่องแคบ: GR optimize, MT4 goldgrid,
   #20 Trend+Pyramid. รายละเอียดเต็ม → `MASTER_BACKLOG.md`.
@@ -96,6 +104,8 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | วันที่ | การตัดสินใจ | เหตุผล |
 |---|---|---|
 | 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |
+| 2026-07-02 | **EA_Template = FREEZE 100% เป็น smoke tool** | เครื่องมือเสร็จ วัดเชื่อถือได้ = จบงาน track; ไม่พัฒนา chassis ต่อ, ไอเดียใหม่ยังเสียบผ่าน Boss V2 ได้ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
+| 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 ขัด 3.93 provisional → ห้ามใช้เป็น baseline จนกว่า re-confirm ด้วย locked .set |
 | 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
 | 2026-06-23 | **DD% ไม่ใช่ hard gate** | DD แก้ได้ด้วย sizing/spacing; structural gate คือ "กลไก" (uncapped martingale/grid). ดู EA_SCORECARD Step 0 |
 | ongoing | **correlation rule:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **ลด lot ไม่ใช่ตัดทิ้ง** | user rule (memory: correlation-vs-lotsize) |
@@ -115,17 +125,18 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 | 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | 🟢 LIVE |
 | 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | 🟢 LIVE |
 | 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | 🟢 LIVE |
-| 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94–4.87 | 🟡 RELOAD v3 (วันนี้) |
+| 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94–4.87 | 🟢 LIVE (v3 reloaded) |
 | 7 | LondonConsoBreakout | GBPUSD H1 | 990005 | 2.08 | 🟢 LIVE |
-| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟡 DEPLOY วันนี้ |
-| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟡 DEPLOY วันนี้ |
+| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟠 LIVE — **WATCH** |
+| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟢 LIVE |
 
-(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA หลัง deploy วันนี้.)
+(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA — deploy ครบ ✅ 2026-07-02.)
 
-> ***3.93 = PROVISIONAL** — report เก่ายังไม่ rerun + executor-sibling (ST03B) overfit → **re-confirm OOS
-> ด้วย locked .set ก่อนใช้เป็น baseline เทียบ live**. deploy ลง DEMO ได้ (demo มีไว้จับ overfit แบบนี้).
+> ***3.93 = PROVISIONAL และตอนนี้มีหลักฐานแย้ง** — qwen rerun 2026-06-29 ได้ **OOS PF 0.86 (585 trades)**
+> (`QWEN_RUN_LOG.md` T1) ⚠️ ยังไม่ยืนยันว่า rerun ใช้ .set/window ตรง locked set → ต้อง **re-confirm ด้วย
+> locked .set** ก่อนใช้เป็น baseline เทียบ live. คงไว้บน demo ได้ (demo มีไว้จับ overfit แบบนี้) แต่สถานะ = WATCH.
 
-วันนี้ทำตาม → **`DEPLOY_CHECKLIST_2026-06-29.md`** (step-by-step + verify).
+deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
 
 ---
 
@@ -165,15 +176,20 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 
 ## 7. FORWARD PLAN (today → judge → after)
 
-### 🔴 วันนี้ (จ. 2026-06-29) — `DEPLOY_CHECKLIST_2026-06-29.md`
-Deploy 3 จังหวะใน MT5 GUI (~15 นาที): reload #6 v3 · ST03 replica (990010) · Bars8 (991002).
+### ✅ เสร็จแล้ว (2026-06-29 → 07-02)
+- Deploy ครบ 3 รายการ → พอร์ต 9 EA live ✅ · qwen batch queue รันจบ (GR opt, MT4 goldgrid, baseline, splits)
+- EA_Template freeze 100% + เขียน `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`
 
-### 🟡 สัปดาห์นี้
-- Gold Reaper optimize (plateau-check, MASTER_BACKLOG TASK 4)
-- MT4 goldgrid Phase 1 (~5 นาที, `MT4_GOLDGRID_RETEST_PLAN.md`)
+### 🔴 โฟกัสตอนนี้ — ปิด EA_CORE loop (`EA_CORE_ST03_LOOP_PLAN.md` STEP 1→5)
+- STEP 1–2: ยืนยัน variant/.set แล้ว rerun reproduce overfit + A/B (entry-only vs pyramid)
+- blocker STEP 3: **python ไม่มีบนเครื่อง** (`scripts/set_from_robust.py` รันไม่ได้) + opt เคยได้ 0 passes → ติดตั้ง python + วินิจฉัย opt ก่อน
+- จบที่ STEP 5: durable set → deploy / ไม่เจอ → fallback (EA_CORE = R&D, ST_EA03 standalone = production) — **ทั้งสองทาง = ปิด track**
+
+### 🟡 คิวรอง (สัปดาห์นี้/ถัดไป)
+- Review ผล qwen ที่ค้าง: GR opt plateau-check (PF 2.35) · GG Elephant PF 85 = สงสัย artifact · GG Mammoth 5.10 · GoldStuffV7 0.25 → ออก verdict ลง EA_SCORECARD
+- re-confirm ST03 replica OOS ด้วย locked .set (ปลด WATCH หรือยืนยันว่าไม่มี edge)
 - #20 Trend+Pyramid generate → /signal-scan (`STRATEGY_200_ANALYSIS.md`)
-- EA_CORE loop: เริ่ม ScaleExecutor Part B (`EA_CORE_ST03_LOOP_PLAN.md`)
-- housekeeping LAB (fix path, รวม template, ลบ ea_projects/Gold)
+- housekeeping LAB (fix path OneDrive→D:, รวม `ea_projects/_template`+`_TEMPLATE_EA_PROJECT`, ลบ ea_projects/Gold)
 
 ### 🟣 ถึง 2026-09-22 (judge)
 - /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica 30 trades แรก
@@ -196,6 +212,7 @@ Deploy 3 จังหวะใน MT5 GUI (~15 นาที): reload #6 v3 · ST
 | backlog + coverage matrix เต็ม | `MASTER_BACKLOG.md` |
 | ทะเบียน EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
 | แผนที่ไฟล์/5 ที่อยู่ | `PLATFORM_INDEX.md` · `README.md` |
+| สถาปัตยกรรม+วิธีใช้ EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
 | design "สมอง" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
 | automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
 | รับ source ใหม่ | `INTAKE_QUEUE.md` |
