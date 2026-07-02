@@ -108,7 +108,29 @@ ST03B "TG" pyramid ที่ overfit — Sonnet ต้องยืนยัน�
   (ไม่ชน 990010/9397/9398). corr vs live ST_EA03 (คาดสูง = ไม่ใช่ leg ใหม่ แต่พิสูจน์ framework สำเร็จ).
 - **ถ้าไม่ผ่าน:** ใช้ **fallback ที่ doc ระบุ** — ship ST_EA03 `.ex5` ที่ validated แล้ว (deploy อยู่),
   ลด EA_CORE เป็น R&D track. **ไม่เสียของ** เพราะ edge ยัง trade อยู่ผ่าน standalone.
-- [ ] อัปเดต `PROJECT_STATE.md` (EA_CORE %, Decision log) + `EA_SCORECARD` + ตาราง B ในไฟล์นี้.
+- [x] อัปเดต `PROJECT_STATE.md` (EA_CORE %, Decision log) + `EA_SCORECARD` + ตาราง B ในไฟล์นี้.
+
+---
+
+## ✅ LOOP CLOSED — STEP 5 DECISION (2026-07-02, Claude Fable): **FALLBACK INVOKED**
+
+**STEP 3 ผล (หลักฐานปิดเคส):** coarse grid **complete enumeration 48 combos**
+(Tp3{30,60,90,120} × Nearby{50,100,150} × LotRepeat{2,3} × PendingMode{2,3}),
+IS 2023.01–2025.01 + OOS 2025.01–2026.06, Model 2, GBPUSD H1
+(`_mt5_auto/optimizations/OPT_ST3G_IS.xml` + `OPT_ST3G_OOS.xml`):
+- **OOS PF < 1.0 ทั้ง 48/48 combos** (ดีสุด 0.87 ที่ tp3=120/nb=50/LR2/pm2) · IS เองก็เพดานแค่ ~1.14
+- Model 2 คือฝั่ง "มองโลกแง่ดี" ของ family นี้ (พิสูจน์แล้วใน per-symbol: M2 1.28–1.85 → M4 0.54–0.74)
+  → M4 มีแต่แย่กว่า ไม่ต้อง confirm top-3
+- สอดคล้อง (1) STEP 2: signal เพียวๆ PF 0.67 (2) qwen M4 rerun combo ที่ deploy (50/50/LR2/pm2): OOS 0.86
+- หมายเหตุ optimizer: "0 passes" ของรอบ 06-29 = ปัญหาที่ **genetic mode (Optimization=2)** —
+  Optimization=1 (complete) ทำงานปกติ (probe 4 passes + grid 96 passes สำเร็จ)
+
+**คำตัดสิน:** ไม่มี durable set ในตระกูล param นี้ — edge ปี 2024 คือ regime ไม่ใช่โครงสร้าง.
+- **EA_CORE = R&D track** (framework สมบูรณ์เชิงวิศวกรรม: signal v2–v5, ScaleExecutor_v2, risk stack,
+  regression 1417 PASS — พร้อม reuse เมื่อเจอ signal ที่มี edge จริง)
+- **production = ST_EA03 standalone** (live อยู่, magic 9397/9398)
+- **ST03 replica (990010) บน demo:** คงไว้เก็บ data ถึง judge — คาดหวังใกล้ศูนย์/ลบ, เป็นตัวเก็ง kill แรก
+- ห้ามกลับมา tune ตระกูล Tp3/Nearby/LotRepeat/PendingMode บน GBPUSD อีกโดยไม่มี signal ใหม่ (48 combos ปิดแล้ว)
 
 ---
 

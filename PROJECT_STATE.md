@@ -62,7 +62,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | ชื่อ | ที่อยู่จริง | บทบาท | สถานะ % |
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | 75% — STEP 1–2 done, เหลือ STEP 3–5 ปิด loop |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | **100% — loop ปิด (fallback): framework = R&D พร้อม reuse, ST_EA03 standalone = production** |
 | **EA_Template** | `D:\EA_LAB\ea_template` (Boss V2 chassis) | แม่พิมพ์ — เสียบ signal เข้า chassis เดียว backtest เร็ว | **100% — FREEZE เป็น smoke tool** (2026-07-02) |
 | **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
 
@@ -77,13 +77,14 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
   (log: `QWEN_RUN_LOG.md`).
-- **EA_CORE 75%** — Phases A–J เสร็จ, signals v2–v5, ScaleExecutor_v2 wired+compile ✅.
-  **STEP 1–2 ของ loop เสร็จ 2026-07-02 (Claude Fable):** reproduce ยืนยัน **PF 7.08 = ตัวเลขจริง**
-  (ไม่ใช่ parse ผิด) และ A/B ชี้ขาด — **signal v4 เพียวๆ ไม่มี edge (PF 0.67 ขาดทุน), overfit อยู่ที่
-  โครง exit ของ executor** ที่ tune เข้า IS. เหลือ STEP 3 (coarse grid, rank min(IS,OOS)) → ถ้าไม่เจอ
-  durable set → STEP 5 fallback (EA_CORE = R&D, ST_EA03 standalone = production). ✅ python blocker
-  ปลดแล้ว (portable `tools/python312` + `scripts/use_python.ps1`). ⚠️ hazard ใหม่ที่พบ: config LR1 ต้องตั้ง
-  `InpAllowLiveOrders=true` ใน tester ไม่งั้น 0-trade เงียบ. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
+- **EA_CORE 100% — LOOP ปิดแล้ว (2026-07-02, fallback invoked):** STEP 1→5 เดินครบ.
+  หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
+  STEP 3 coarse grid **complete 48 combos → OOS PF<1.0 ทั้งหมด** (ดีสุด 0.87 บน M2 ฝั่ง optimistic).
+  **ข้อสรุป: EA_CORE = R&D track** — framework สมบูรณ์เชิงวิศวกรรม (signals v2–v5, ScaleExecutor_v2,
+  risk stack, regression 1417 PASS) พร้อม reuse เมื่อมี signal ที่มี edge จริง; **production = ST_EA03
+  standalone** (live 9397/9398). replica 990010 บน demo = WATCH เก็บ data. ห้าม re-tune ตระกูล param นี้.
+  gotchas ที่บันทึกไว้: LR1 ต้อง `InpAllowLiveOrders=true` ใน tester · optimizer genetic mode พัง ใช้
+  Optimization=1 · portable python `tools/python312`. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
   architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
 - **EA_Template 100% — FREEZE (2026-07-02)** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **track ปิดอย่างเป็นทางการ**:
   ใช้เป็น smoke tool เท่านั้น ไม่พัฒนา chassis ต่อ (ไอเดียใหม่เสียบผ่าน Boss V2 ได้ตามเดิม). architecture +
@@ -103,6 +104,8 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | วันที่ | การตัดสินใจ | เหตุผล |
 |---|---|---|
 | 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |
+| 2026-07-02 | **EA_CORE loop ปิดแล้ว — FALLBACK: EA_CORE = R&D, ST_EA03 standalone = production** | STEP 3 grid 48/48 combos OOS PF<1.0 (complete enum, M2 ฝั่ง optimistic) + STEP 2 signal เพียว PF 0.67 → ไม่มี durable set. ห้าม re-tune ตระกูลนี้โดยไม่มี signal ใหม่. หลักฐาน: `EA_CORE_ST03_LOOP_PLAN.md` STEP 5 |
+| 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve · SUPERTREND XAU = PARKED** (ยังไม่ deploy) | re-confirm ผ่านทั้งคู่ แต่ corr ระหว่างกัน 0.946 = ตัวเดียวกัน → ถ้าจะ deploy เอา KER ตัวเดียว 0.01 lot (corr 0.75 vs BRK8). ดู EA_SCORECARD §VALIDATED RESERVE |
 | 2026-07-02 | **EA_Template = FREEZE 100% เป็น smoke tool** | เครื่องมือเสร็จ วัดเชื่อถือได้ = จบงาน track; ไม่พัฒนา chassis ต่อ, ไอเดียใหม่ยังเสียบผ่าน Boss V2 ได้ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
 | 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 ขัด 3.93 provisional → ห้ามใช้เป็น baseline จนกว่า re-confirm ด้วย locked .set |
 | 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
@@ -180,16 +183,16 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 - Deploy ครบ 3 รายการ → พอร์ต 9 EA live ✅ · qwen batch queue รันจบ (GR opt, MT4 goldgrid, baseline, splits)
 - EA_Template freeze 100% + เขียน `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`
 
-### 🔴 โฟกัสตอนนี้ — ปิด EA_CORE loop (`EA_CORE_ST03_LOOP_PLAN.md` STEP 1→5)
-- STEP 1–2: ยืนยัน variant/.set แล้ว rerun reproduce overfit + A/B (entry-only vs pyramid)
-- blocker STEP 3: **python ไม่มีบนเครื่อง** (`scripts/set_from_robust.py` รันไม่ได้) + opt เคยได้ 0 passes → ติดตั้ง python + วินิจฉัย opt ก่อน
-- จบที่ STEP 5: durable set → deploy / ไม่เจอ → fallback (EA_CORE = R&D, ST_EA03 standalone = production) — **ทั้งสองทาง = ปิด track**
+### ✅ ปิดแล้ว 2026-07-02 — EA_CORE loop (STEP 1→5 ครบ, fallback invoked)
+- STEP 2 A/B + STEP 3 grid 48 combos → ไม่มี durable set → EA_CORE = R&D, ST_EA03 standalone = production
+- ST03 replica re-confirm แล้ว: OOS PF 0.86 = baseline จริง (WATCH บน demo)
+- KAUFMAN_ER/SUPERTREND ตรวจแล้ว → CANDIDATE reserve / PARKED (ดู decision log — **รอ user ตัดสินใจ deploy KER หรือไม่**)
+- housekeeping: ลบ ea_projects/Gold ✅ · template ซ้ำเหลือตัวเดียว ✅ · portable python ✅
 
 ### 🟡 คิวรอง (สัปดาห์นี้/ถัดไป)
-- Review ผล qwen ที่ค้าง: GR opt plateau-check (PF 2.35) · GG Elephant PF 85 = สงสัย artifact · GG Mammoth 5.10 · GoldStuffV7 0.25 → ออก verdict ลง EA_SCORECARD
-- re-confirm ST03 replica OOS ด้วย locked .set (ปลด WATCH หรือยืนยันว่าไม่มี edge)
+- Review ผล qwen ที่ค้าง: GR opt plateau-check (PF 2.35 — memory 06-28 ระบุ default FF2 อยู่บน plateau แล้ว → ยืนยัน+บันทึกลง scorecard) · GG Elephant = artifact DQ · GG Mammoth 5.10 ยังไม่ตัดสิน · GoldStuffV7 = DQ
 - #20 Trend+Pyramid generate → /signal-scan (`STRATEGY_200_ANALYSIS.md`)
-- housekeeping LAB (fix path OneDrive→D:, รวม `ea_projects/_template`+`_TEMPLATE_EA_PROJECT`, ลบ ea_projects/Gold)
+- housekeeping LAB ที่เหลือ: fix path OneDrive→D: ใน `scripts/`
 
 ### 🟣 ถึง 2026-09-22 (judge)
 - /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica 30 trades แรก
