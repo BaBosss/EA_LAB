@@ -134,14 +134,24 @@ Per the plan's loop rule: since XAUUSD/EURUSD are unavailable on this broker, no
 | 2026-06-29 20:29 | TASK1R2 | CBGBP_M2/GBPUSD/OOS | - | PF=? Net=? Trades=? | ERR |
 | 2026-06-29 20:29 | TASK1R2 | NUII_M2/EURUSD/IS | - | PF=? Net=? Trades=? | ERR |
 | 2026-06-29 20:29 | TASK1R2 | NUII_M2/EURUSD/OOS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MACDg_M2/GBPUSD/IS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MACDg_M2/GBPUSD/OOS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MACDc_M2/USDCAD/IS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MACDc_M2/USDCAD/OOS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | GR_M2/XAUUSD/IS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | GR_M2/XAUUSD/OOS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MG_M2/CHFJPY/IS | - | PF=? Net=? Trades=? | ERR |
-| 2026-06-29 20:29 | TASK1R2 | MG_M2/CHFJPY/OOS | - | PF=? Net=? Trades=? | ERR |
+| 2026-06-29 20:29 | TASK1R2 | MACDg_M2/GBPUSD/IS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I11 19:35, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MACDg_M2_IS.htm | PF=2.45 Net=904.31 Trades=276 | OK |
+| 2026-06-29 20:29 | TASK1R2 | MACDg_M2/GBPUSD/OOS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I12 19:36, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MACDg_M2_OOS.htm | PF=2.24 Net=545.61 Trades=188 | OK |
+| 2026-06-29 20:29 | TASK1R2 | MACDc_M2/USDCAD/IS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I13 19:37, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MACDc_M2_IS.htm | PF=0.29 Net=-2254.39 Trades=255 | OK |
+| 2026-06-29 20:29 | TASK1R2 | MACDc_M2/USDCAD/OOS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I14 19:38, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MACDc_M2_OOS.htm | PF=1.79 Net=271.41 Trades=178 | OK |
+| 2026-06-29 20:29 | TASK1R2 | GR_M2/XAUUSD/IS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I15 19:39, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_GR_M2_IS.htm | PF=0.00 Net=0.00 Trades=0 | OK (0 trades — likely no-signal window, not a script error) |
+| 2026-06-29 20:29 | TASK1R2 | GR_M2/XAUUSD/OOS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I16 19:40** | SKIPPED (XAUUSD unavailable, broker feed gap) | - | ERR: no_data |
+| 2026-06-29 20:29 | TASK1R2 | MG_M2/CHFJPY/IS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I17 19:41, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MG_M2_IS.htm | PF=0.17 Net=-8793.51 Trades=281 | OK |
+| 2026-06-29 20:29 | TASK1R2 | MG_M2/CHFJPY/OOS | ~~PF=? ERR~~ **MERGED 2026-07-02 ← R2-I18 19:45, verified vs htm** | D:\EA_LAB\_mt5_auto\reports\QWEN_MG_M2_OOS.htm | PF=2.15 Net=2720.65 Trades=713 | OK |
+
+> **MERGE NOTE (2026-07-02, Claude Fable):** the 8 rows above were mis-logged as ERR/unknown by a later
+> failed re-run attempt. The real results from the earlier successful run (R2-I11..I18, 19:35-19:45)
+> had been written to a malformed-path stray file (`D:EA_LABQWEN_RUN_LOG.md`, created by a path-escaping
+> bug — never should have existed outside this log) instead of merging into this canonical log. Found
+> during a `/scrutinize` pass on 2026-07-02; every PF number above was independently re-parsed from the
+> underlying `.htm` report on disk (not just trusted from the stray file's text) before merging. Source
+> file deleted after this merge — see housekeeping commit same day. Rows 127-136 (ST03rep_M2/BRK55_M2/
+> BRK8_M2/CBGBP_M2/NUII_M2 TASK1R2 ERR) were NOT touched — their real data already exists earlier in this
+> file under R2-I1..I10 (lines 50-59) or are genuine broker-unavailable skips; no data loss there.
 | 2026-06-29 20:29 | DONE | QUEUE DRAINED idle until Claude review | - | - | OK |
 | 2026-06-29 20:31 | TASK1 | ST03rep/GBPUSD/IS | - | PF=? Net=? Trades=? | ERR |
 | 2026-06-29 20:31 | TASK1 | ST03rep/GBPUSD/OOS | - | PF=? Net=? Trades=? | ERR |
