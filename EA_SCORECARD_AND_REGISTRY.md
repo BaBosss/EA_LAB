@@ -85,10 +85,24 @@ distance-scaling insight) — note it, but the EA itself is out.
 | NuiIndy RSI+ADX | EURUSD H1 | 2.00 | — | ★★★ | **CORE** | |
 | ST_EA03 MACD | GBPUSD H1 | 2.47 | — | ★★★ | **CORE** | count+tiered-TP scalp |
 | ST_EA03 MACD | USDCAD H1 | 2.62 | — | ★★★ | **CORE** | |
-| Gold Reaper 4.3 | XAUUSD H1 | 2.07 | — | ★★★ | **CORE** ⚠️ | ruin 1.9% — watch |
+| Gold Reaper 4.3 | XAUUSD H1 | 2.07 | — | ★★★ | **CORE** ⚠️ | ruin 1.9% — watch. **Live set unchanged 2026-07-02** — see plateau-check note below (optimize attempt was a null result, not a real check) |
 | EA_BREAKOUT_XAU | XAUUSD H1 | 1.77 (M4) | 0.65 | ★★★ | **CANDIDATE** | BUY-only regime risk; thin OOS 33t |
 | LondonConsoBreakout | GBPUSD H1 | 2.08 | 0.10 | ★★★ | **CANDIDATE** | 3/3 OOS; GBP concentration |
 | LondonConsoBreakout | EURUSD H1 | 1.25 | 0.13 | ★★★ | **DROP (was #8)** | Q2 rescue sweep (48 combo×3 win) DONE — NO combo passes all 3 at PF≥1.2; best min-PF 0.92, both OOS <1.0. No durable edge → remove from portfolio |
+
+> **Gold Reaper opt review (2026-07-02, Claude Fable):** qwen's `QWEN_GR_opt.xml` (2026-06-29, 5 passes
+> sweeping `StartLots` 0.01→0.05, GBPUSD... XAUUSD H1, combined window 2023.01–2026.06, `Optimization=2`
+> genetic) is a **null result, not a real plateau-check** — all 5 passes are bit-identical
+> (Profit=267741.38, PF=2.349244, Trades=2548, DD=13.8505% — every digit the same regardless of lot).
+> Root cause: the ini also carries `Risk=1234` + `UseWeightedLots=true` + `AdjustLotsizeToVariableValues=true`.
+> Per the comment already in the live set (`_mt5_auto/GoldReaper_cent_v1.set`): **"Risk=1234 = internal
+> variable mode"** — Gold Reaper is a closed-source multi-strategy EA (9 sub-strategies, `RunStrat1..9`)
+> whose own risk engine computes lot size in this mode, so the `StartLots` input the optimizer swept had
+> **zero effect on any output**. The optimizer wasn't testing robustness; it re-ran the identical backtest
+> 5 times. **No new evidence, good or bad — live set stands unchanged** (`GoldReaper_cent_v1.set`,
+> `StartLots=0.01`, unchanged since deploy). If Gold Reaper needs real tuning later, sweep
+> `MaxRiskPerStrategy_` or `RunStrat1..9` toggles instead — do NOT re-sweep `StartLots` under
+> `Risk=1234` mode, it's a wasted pass.
 
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
