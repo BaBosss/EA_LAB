@@ -77,9 +77,11 @@ ST03B "TG" pyramid ที่ overfit — Sonnet ต้องยืนยัน�
       `Engine_SetLiveEnabled(InpAllowLiveOrders)` → ถ้า false = dry-run **0-trade เงียบๆ ใน tester**
       (ScaleExec2 path ยิง CTrade ตรง ไม่โดน). ทุก config LR1 ต้องตั้ง `InpAllowLiveOrders=true`.
 
-> **STEP 2 CONCLUSION (2026-07-02):** signal v4 เพียวๆ **ไม่มี edge** บน GBPUSD window นี้ (PF 0.67 ขาดทุน)
-> — กำไร IS ทั้งหมดมาจากโครง exit ของ executor (tight Tp3 group-OCO + no-SL + HoldBars) ที่ tune เข้า IS.
-> สอดคล้อง (1) WF/stress พัง 0.19–0.32 (2) replica OOS PF 0.86 (verified ini ตรง locked set).
+> **STEP 2 CONCLUSION (2026-07-02, ปรับ wording หลัง scrutinize):** ผล A เป็น **indicative เท่านั้น**
+> (13 trades / 2 เดือน / exit หยาบตัวเดียว TP600+HoldBars80 — น้ำหนักสถิติต่ำ, อย่าใช้ฆ่า signal v4 ทั้ง concept).
+> สิ่งที่ A/B บอกได้จริงคือ: กำไร IS ของ B มาจากโครง exit ของ executor (tight Tp3 group-OCO + no-SL)
+> ไม่ใช่จาก signal โดยลำพัง. **หลักฐานหลักที่ใช้ตัดสิน = STEP 3 grid (800–1,800 trades/pass) +
+> qwen M4 rerun 585 trades (OOS 0.86)** — สอดคล้อง WF/stress 0.19–0.32.
 > **นัยต่อ STEP 3:** โอกาสเจอ durable set ต่ำ — ถ้า coarse grid (rank ด้วย min(IS,OOS)) ไม่เจอ combo ที่
 > OOS≥1.40 & retention≥0.6 ให้ไป STEP 5 fallback ทันที อย่าฝืน tune ต่อ.
 - accept: B trade-count ≈ ST_EA03 (~36 entry events), reproduce ผลเดิมได้ (sanity ว่า harness ถูก). ✅ B ผ่านแล้ว
@@ -117,7 +119,11 @@ ST03B "TG" pyramid ที่ overfit — Sonnet ต้องยืนยัน�
 **STEP 3 ผล (หลักฐานปิดเคส):** coarse grid **complete enumeration 48 combos**
 (Tp3{30,60,90,120} × Nearby{50,100,150} × LotRepeat{2,3} × PendingMode{2,3}),
 IS 2023.01–2025.01 + OOS 2025.01–2026.06, Model 2, GBPUSD H1
-(`_mt5_auto/optimizations/OPT_ST3G_IS.xml` + `OPT_ST3G_OOS.xml`):
+(`_mt5_auto/optimizations/OPT_ST3G_IS.xml` + `OPT_ST3G_OOS.xml`).
+**Expert ที่ใช้ = `EA_RUNNER_ST03` (base family, ไม่เปิด gate)** — จงใจไม่ใช้ ST03B+TG เพราะ TG ถูก
+falsify ไปแล้ว (ทำ crisis แย่ลง + กิน calm, ดู EA_SCORECARD) → การทดสอบ base = claim ที่แรงกว่า
+(ต่อให้ไม่มี gate ที่เป็นพิษ ก็ยังไม่มี durable set). หมายเหตุ: grid ไม่มี Tp3=50 (step 30) แต่ combo
+ที่ deploy จริง (50/50/LR2/pm2) มี qwen M4 rerun ตรงตัวแล้ว = OOS 0.86:
 - **OOS PF < 1.0 ทั้ง 48/48 combos** (ดีสุด 0.87 ที่ tp3=120/nb=50/LR2/pm2) · IS เองก็เพดานแค่ ~1.14
 - Model 2 คือฝั่ง "มองโลกแง่ดี" ของ family นี้ (พิสูจน์แล้วใน per-symbol: M2 1.28–1.85 → M4 0.54–0.74)
   → M4 มีแต่แย่กว่า ไม่ต้อง confirm top-3

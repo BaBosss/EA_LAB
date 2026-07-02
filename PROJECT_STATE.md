@@ -72,8 +72,9 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 ## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
 
-- **EA_LAB 85%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). เหลือ housekeeping (fix path
-  OneDrive→D:, รวม template ซ้ำ). ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
+- **EA_LAB 85%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). เหลือ housekeeping ข้อเดียว:
+  fix path OneDrive→D: ใน `scripts/` (~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅ 2026-07-02).
+  ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
   (log: `QWEN_RUN_LOG.md`).
@@ -134,10 +135,11 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 
 (#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA — deploy ครบ ✅ 2026-07-02.)
 
-> ***3.93 หักล้างแล้ว (verified 2026-07-02)** — ตรวจ ini ของ qwen rerun (`_mt5_auto/ini/QWEN_ST03rep_OOS.ini`):
-> Expert/param ตรง locked set (LR2·Tp3=50·Nearby=50·Mode2·Model 4·OOS 2025.01–2026.06) → **OOS PF 0.86
-> (585 trades) + IS PF 1.42 = เชื่อถือได้, replica ไม่มี durable edge ใน OOS**. baseline เทียบ live ใช้ 0.86
-> ไม่ใช่ 3.93. คงไว้บน demo เพื่อเก็บ data ถึง judge ได้ แต่คาดหวัง = ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก).
+> ***3.93 = คนละ window, ไม่ใช้เป็น baseline (verified 2026-07-02)** — 3.93 มาจาก OOS window รอบ 06-26
+> (regime ดี, ดู scorecard WFA "regime-dependent"). qwen rerun ด้วย ini ตรง locked set
+> (LR2·Tp3=50·Nearby=50·Mode2·Model 4·**full OOS 2025.01–2026.06**) = **PF 0.86 (585 trades)** ซึ่งตรง
+> regime ปัจจุบัน → **baseline เทียบ live ใช้ 0.86**. คงไว้บน demo เก็บ data ถึง judge ได้ แต่คาดหวัง =
+> ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก). loop ปิดแล้ว → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
 
 deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
 
