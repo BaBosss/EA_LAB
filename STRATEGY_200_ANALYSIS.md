@@ -241,9 +241,13 @@
 
 ## สรุป: shortlist เรียงตามคะแนน (สิ่งที่ควรลองก่อน)
 
-### 🥇 8/10 — TOP (trend-rider/pyramid ที่พอร์ตยังไม่มี — ลองก่อน)
-- **#20 Trend-Following + Pyramiding** · **#68 SuperTrend (ATR10×3)** · **#94 Donchian 55 Turtle + pyramid**
-- เหตุผล: พอร์ตมี breakout + reversion แต่**ไม่มี pure trend-follower ที่ ride เทรนด์ยาว** — 3 ตัวนี้เติมช่องว่างนั้น + กลไก pyramid เรา validate แล้ว (ST03)
+### 🥇 8/10 — TOP (trend-rider/pyramid ที่พอร์ตยังไม่มี) — **ปิดครบทั้ง 3 แล้ว 2026-07-02**
+- **#20 Trend-Following + Pyramiding** → **DEAD** (XAU/GBP H4, single 0.87–1.02 / pyramid 0.99–1.00 — pyramid ไม่ช่วยเลย)
+- **#68 SuperTrend (ATR10×3)** → tested XAU H4 (IS 1.92/OOS 5.09), **PARKED** (corr 0.946 vs Kaufman ER ที่ดีกว่า)
+- **#94 Donchian 55 Turtle + pyramid** → **DEAD** (0 additive legs, ดู MASTER_BACKLOG)
+- ⚠️ เหตุผลเดิมที่เขียนไว้ผิด: "กลไก pyramid เรา validate แล้ว (ST03)" — **หักล้างแล้ว 2026-07-02**
+  (EA_CORE loop ปิดด้วย fallback, coarse grid 48/48 combos OOS PF<1.0 — pyramid executor ของ ST03
+  ไม่มี durable edge, ดู `EA_CORE_ST03_LOOP_PLAN.md`). อย่าใช้ประโยคนี้อ้างอิงต่อ.
 
 ### 🥈 7/10 — breakout/trend แน่น (ลองรอบสอง)
 - #30 Breakout prev H/L + ATR trail · #38 ATR breakout · #62 Keltner breakout · #66 Ichimoku Kumo+ADX ·

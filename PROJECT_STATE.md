@@ -72,8 +72,9 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 ## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
 
-- **EA_LAB 85%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). เหลือ housekeeping ข้อเดียว:
-  fix path OneDrive→D: ใน `scripts/` (~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅ 2026-07-02).
+- **EA_LAB 90%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). housekeeping ปิดครบทุกข้อ 2026-07-02:
+  ~~fix path OneDrive→D:~~ ✅ + ~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅. เหลือ 10% =
+  งานที่ผูกกับเวลาจริง (operate จนถึง judge, ขยายจาก 1→หลายพอร์ต) ไม่ใช่งานสร้างเพิ่ม.
   ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
@@ -94,9 +95,11 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
   ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
   เพราะ demo มีไว้จับ overfit). ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
-- **Signal hunt ~90% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
-  Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). เหลือช่องแคบ: GR optimize, MT4 goldgrid,
-  #20 Trend+Pyramid. รายละเอียดเต็ม → `MASTER_BACKLOG.md`.
+- **Signal hunt ~95% อิ่มตัว** — concept ใหม่ตายเกือบหมด (NR7/AsianRange/LNBREAK/EURCHF/Donchian/
+  Keltner/Ichimoku/PrevDay/EMA-cross/SuperTrend = DEAD). ✅ **2026-07-02 ปิดเพิ่ม:** GR optimize (null
+  result, live set unchanged) · #20 Trend+Pyramid (XAU H4 gap closed, DEAD ทั้งคู่ single/pyramid) ·
+  MT4 goldgrid Phase 2 (Model 0 artifact gate, กำลังรัน). **ไม่มี candidate ใหม่เหลือจาก TOP-8/10 shortlist**
+  — โหมดตอนนี้ = รอไอเดียใหม่ ไม่ใช่มีคิวให้ทำต่อ. รายละเอียดเต็ม → `MASTER_BACKLOG.md`.
 
 ---
 

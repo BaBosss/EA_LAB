@@ -73,8 +73,11 @@
   PSAR trailing exit / session filter → graft ใส่ breakout ถ้า exit ต้องปรับ. ไม่ใช่ standalone screening.
 - **Phase 3 — concept ใหม่ (ยังไม่ smoke):** EURCHF bounded-range · London→NY breakout.
   - **idea source จริง = `200 AI Prompt` PDF** (ไม่ใช่ folder EA ที่ตายแล้ว). วิเคราะห์ครบ 200 ตัวที่
-    [STRATEGY_200_ANALYSIS.md](STRATEGY_200_ANALYSIS.md). TOP 8/10 (trend-follower ที่พอร์ตยังไม่มี):
-    **#68 SuperTrend · #94 Donchian/Turtle · #20 Trend+Pyramid** → generate → /signal-scan → funnel.
+    [STRATEGY_200_ANALYSIS.md](STRATEGY_200_ANALYSIS.md). TOP 8/10 shortlist (trend-follower ที่พอร์ตยังไม่มี)
+    **ปิดครบทั้ง 3 แล้ว (2026-07-02):** #68 SuperTrend → tested XAU H4, PARKED as reserve (corr 0.946 vs
+    Kaufman ER ที่ดีกว่า, ดู `EA_SCORECARD_AND_REGISTRY.md`) · #94 Donchian/Turtle → DEAD (0 additive legs,
+    line above) · #20 Trend+Pyramid → DEAD (line above, XAU gap closed today). **ไม่มี candidate เหลือจาก
+    shortlist นี้** — signal hunt เข้าสู่โหมด "รอไอเดียใหม่" ไม่ใช่ "มีคิวให้ทำต่อ".
 
 ---
 
@@ -229,7 +232,14 @@ Phase 1 = run Elephant/Mammoth/Gold Stuff V7 บน MT4 simulator ดู equity 
 - **EA_EMATREND** (#20 EMA-cross trend follower) = **concept DEAD. 4 smoke PROCEEDs were all regime artifacts.**
   2015-2026 11-year checks: USDJPY PF 1.21 / GBPUSD PF 0.76 / GBPJPY PF 0.61. All three deeply negative in 2015-2022 era.
   The EMA20/50 cross H4 only worked in the 2022-2026 high-volatility post-COVID/BOJ/Brexit regime.
-  Do not re-test any FX pair with EMA-cross H4 concept. XAU not fully tested (but XAU breakout already captures directional edge).
+  Do not re-test any FX pair with EMA-cross H4 concept.
+  **XAU gap closed 2026-07-02** (was "not fully tested"): /signal-scan via Boss_11_GridTrend chassis
+  (MA20/50 cross, ATR-expand trend filter), IS-era 2023-2026 (the era EMA-cross performed BEST elsewhere),
+  Model 2 — XAU H4 naked PF 0.87 (138t) → pyramid (StackMode 91) PF 0.99 (201t, DD 18→20%): **still dead,
+  pyramiding does not rescue it** (more trades + more DD, no real PF gain — the "pyramid edge" the concept
+  hoped for doesn't exist). GBP H4 same test: PF 1.02 single / 1.00 pyramid — breakeven noise, not an edge.
+  **#20 Trend+Pyramid = fully closed, DEAD across the shortlisted symbols.** Do not revisit without a
+  genuinely different entry mechanism (not MA-cross).
 
 ---
 
