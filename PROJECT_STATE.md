@@ -62,7 +62,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | ชื่อ | ที่อยู่จริง | บทบาท | สถานะ % |
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | 70% ยังไม่เทรดจริง |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | 75% — STEP 1–2 done, เหลือ STEP 3–5 ปิด loop |
 | **EA_Template** | `D:\EA_LAB\ea_template` (Boss V2 chassis) | แม่พิมพ์ — เสียบ signal เข้า chassis เดียว backtest เร็ว | **100% — FREEZE เป็น smoke tool** (2026-07-02) |
 | **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
 
@@ -77,14 +77,13 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → **ผลรอ Claude review/ตัดสิน**
   (log: `QWEN_RUN_LOG.md`).
-- **EA_CORE 70%** — Phases A–J เสร็จ, signals v2–v4, LotSizer. **อัปเดต 2026-06-29:** entry v4 ✅ +
-  **ScaleExecutor_v2 (limit-order pyramid) เขียนเสร็จ+wired+compile แล้ว** (ไม่ใช่ v1 market อีก).
-  แต่ **ผล validate ปัจจุบัน = overfit รุนแรง** (ST03B "TG": IS PF 7.08 → WF/stress 0.19–0.32 พังหมด
-  — ⚠️ ตัวเลขจาก unverified report-parse; STEP 1-2 ของแผนสั่ง **rerun ยืนยันก่อนเชื่อ**).
-  งานจริงเหลือ = **diagnose overfit + หา durable set** (ไม่ใช่เขียน executor). แผนรัน Sonnet →
-  `EA_CORE_ST03_LOOP_PLAN.md`. fallback ถ้าไม่ผ่าน = ship ST_EA03 .ex5 (trade อยู่แล้ว), EA_CORE = R&D.
-  **blocker ที่รู้แล้ว (2026-07-02):** เครื่องไม่มี python → STEP 3 post-processing (`set_from_robust.py`)
-  รันไม่ได้ + รอบ 06-29 opt ได้ 0 passes ทุก Model → ต้องแก้สองอย่างนี้ก่อนเข้า STEP 3.
+- **EA_CORE 75%** — Phases A–J เสร็จ, signals v2–v5, ScaleExecutor_v2 wired+compile ✅.
+  **STEP 1–2 ของ loop เสร็จ 2026-07-02 (Claude Fable):** reproduce ยืนยัน **PF 7.08 = ตัวเลขจริง**
+  (ไม่ใช่ parse ผิด) และ A/B ชี้ขาด — **signal v4 เพียวๆ ไม่มี edge (PF 0.67 ขาดทุน), overfit อยู่ที่
+  โครง exit ของ executor** ที่ tune เข้า IS. เหลือ STEP 3 (coarse grid, rank min(IS,OOS)) → ถ้าไม่เจอ
+  durable set → STEP 5 fallback (EA_CORE = R&D, ST_EA03 standalone = production). ✅ python blocker
+  ปลดแล้ว (portable `tools/python312` + `scripts/use_python.ps1`). ⚠️ hazard ใหม่ที่พบ: config LR1 ต้องตั้ง
+  `InpAllowLiveOrders=true` ใน tester ไม่งั้น 0-trade เงียบ. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
   architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
 - **EA_Template 100% — FREEZE (2026-07-02)** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **track ปิดอย่างเป็นทางการ**:
   ใช้เป็น smoke tool เท่านั้น ไม่พัฒนา chassis ต่อ (ไอเดียใหม่เสียบผ่าน Boss V2 ได้ตามเดิม). architecture +
@@ -132,9 +131,10 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 
 (#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA — deploy ครบ ✅ 2026-07-02.)
 
-> ***3.93 = PROVISIONAL และตอนนี้มีหลักฐานแย้ง** — qwen rerun 2026-06-29 ได้ **OOS PF 0.86 (585 trades)**
-> (`QWEN_RUN_LOG.md` T1) ⚠️ ยังไม่ยืนยันว่า rerun ใช้ .set/window ตรง locked set → ต้อง **re-confirm ด้วย
-> locked .set** ก่อนใช้เป็น baseline เทียบ live. คงไว้บน demo ได้ (demo มีไว้จับ overfit แบบนี้) แต่สถานะ = WATCH.
+> ***3.93 หักล้างแล้ว (verified 2026-07-02)** — ตรวจ ini ของ qwen rerun (`_mt5_auto/ini/QWEN_ST03rep_OOS.ini`):
+> Expert/param ตรง locked set (LR2·Tp3=50·Nearby=50·Mode2·Model 4·OOS 2025.01–2026.06) → **OOS PF 0.86
+> (585 trades) + IS PF 1.42 = เชื่อถือได้, replica ไม่มี durable edge ใน OOS**. baseline เทียบ live ใช้ 0.86
+> ไม่ใช่ 3.93. คงไว้บน demo เพื่อเก็บ data ถึง judge ได้ แต่คาดหวัง = ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก).
 
 deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
 

@@ -76,7 +76,7 @@
 |---|---|
 | แก้ path ใน `scripts/` จาก OneDrive → D:\EA_LAB (ไม่งั้น automation พัง) | ต้องทำก่อนใช้ automation |
 | ~~รวม template ซ้ำ (`_template` + `_TEMPLATE_EA_PROJECT`)~~ | ✅ เหลือตัวเดียวแล้ว (ตรวจ 2026-07-02) |
-| ลบโฟลเดอร์ขยะ `ea_projects/Gold` | low |
+| ~~ลบโฟลเดอร์ขยะ `ea_projects/Gold`~~ | ✅ ลบแล้ว 2026-07-02 (ที่จริงเป็น compile log หลงทาง ไม่ใช่โฟลเดอร์) |
 | ~~รวม `central_results` + `portfolio`~~ | ✅ done 2026-06-29 |
 | ก็อป `.Codex\Optimize` (305 MB คลัง report) → `D:\Forex\30_OPTIMIZATION` | ตัดสินทีหลัง |
 | ทำ PROJECT_MASTER_SPEC (EA_Project) อัปเดต baseline 1317 | EA_CORE track |

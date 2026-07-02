@@ -65,13 +65,31 @@ ST03B "TG" pyramid ที่ overfit — Sonnet ต้องยืนยัน�
 > 5. ⚠️ magic 990010 ซ้ำกันระหว่าง ST03B set กับ replica ที่ deploy — **ห้ามเอา ST03B ขึ้น demo account เดียวกันโดยไม่เปลี่ยน magic**.
 
 ### STEP 2 — reproduce A/B baseline (entry-only vs entry+pyramid)
-- [ ] compile runner (headless, `vps-deploy-ops`/`mt5_run.ps1`). GBPUSD H1, **Model 4**, window สั้น
-      (เช่น 2024.01–03) เพื่อ iterate เร็ว.
-- [ ] A = `InpLotRepeat=1` (entry-only) · B = `InpLotRepeat=3, Tp3=50, Nearby=100, Mode=2`.
-- accept: B trade-count ≈ ST_EA03 (~36 entry events), reproduce ผลเดิมได้ (sanity ว่า harness ถูก).
+- [x] compile runner (headless — 0 errors 2 warnings, 2026-07-02, `TEMPLATE/compile_st03b_step2.log`;
+      .ex5 copy เข้า terminal Experts แล้ว). GBPUSD H1, **Model 4**, window 2024.01–03.
+- [x] **B (pyramid, locked TG set) = reproduce สำเร็จเป๊ะ:** PF **7.08** · net +26.99 · 61 open events ·
+      100% real ticks (`_mt5_auto/reports/ST03B_STEP2_B_repro.htm`) → **ตัวเลข overfit ตาราง B = ของจริง
+      ไม่ใช่ parse ผิด**. หมายเหตุ: 1 run ≈ 20 นาที (6.2M ticks) — ตั้ง TimeoutSec ≥ 2400.
+- [x] **A (entry-only LR1) = PF 0.67 · net −15.58 · 13 trades** (`ST03B_STEP2_A_entry_v2.htm`;
+      รอบแรกโมฆะเพราะ tester-gate — ดู hazard ด้านล่าง, ใช้ `ST03B_TG_A_entryonly_v2.set` ที่ตั้ง
+      `InpAllowLiveOrders=true` แทน).
+      ⚠️ **hazard ต้องจำ:** path single (`InpLotRepeat<=1`) ผ่าน ExecutionEngine ที่
+      `Engine_SetLiveEnabled(InpAllowLiveOrders)` → ถ้า false = dry-run **0-trade เงียบๆ ใน tester**
+      (ScaleExec2 path ยิง CTrade ตรง ไม่โดน). ทุก config LR1 ต้องตั้ง `InpAllowLiveOrders=true`.
+
+> **STEP 2 CONCLUSION (2026-07-02):** signal v4 เพียวๆ **ไม่มี edge** บน GBPUSD window นี้ (PF 0.67 ขาดทุน)
+> — กำไร IS ทั้งหมดมาจากโครง exit ของ executor (tight Tp3 group-OCO + no-SL + HoldBars) ที่ tune เข้า IS.
+> สอดคล้อง (1) WF/stress พัง 0.19–0.32 (2) replica OOS PF 0.86 (verified ini ตรง locked set).
+> **นัยต่อ STEP 3:** โอกาสเจอ durable set ต่ำ — ถ้า coarse grid (rank ด้วย min(IS,OOS)) ไม่เจอ combo ที่
+> OOS≥1.40 & retention≥0.6 ให้ไป STEP 5 fallback ทันที อย่าฝืน tune ต่อ.
+- accept: B trade-count ≈ ST_EA03 (~36 entry events), reproduce ผลเดิมได้ (sanity ว่า harness ถูก). ✅ B ผ่านแล้ว
   ⚠️ per-tick OCO เคยค้าง — ใช้ freeze-guard (memory: mt5-backtest-freeze-guard), window สั้นตอน iterate.
 
 ### STEP 3 — diagnose overfit + หา durable set (หัวใจ)
+> ✅ **python blocker ปลดแล้ว (2026-07-02):** portable Python 3.12.10 อยู่ `D:\EA_LAB\tools\python312\`
+> (embeddable, ไม่แตะ system PATH). ก่อนรัน script ที่เรียก `python` ให้ dot-source
+> `. D:\EA_LAB\scripts\use_python.ps1` ก่อน (ตั้ง PATH เฉพาะ process). ทดสอบ `set_from_robust.py --help` ผ่านแล้ว.
+> ⚠️ ยังเหลือ sub-blocker: รอบ 06-29 optimize ST03GRID ได้ **0 passes ทุก Model** — ต้อง diagnose config/ini ก่อนยิง grid ใหม่.
 - [ ] coarse grid **Model 2** (เร็ว, trade-count เป๊ะ, PF relative) บน levers:
       `InpTp3Pts∈{30,50,80,120} × InpNearbyPip∈{50,100,150} × InpLotRepeat∈{2,3} × InpPendingMode∈{2,3}`.
 - [ ] รัน **IS 2023–2025 + OOS 2025–2026 พร้อมกัน** ทุก combo → rank ด้วย **min(IS_PF, OOS_PF)** (ไม่ใช่ IS อย่างเดียว — นี่คือกับดักที่ทำให้ PF 7.08 หลุดมา).
