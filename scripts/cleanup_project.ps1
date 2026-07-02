@@ -1,5 +1,5 @@
 param(
-    [string]$LabRoot = "C:\Users\patip\OneDrive\.Codex\EA_LAB",
+    [string]$LabRoot = "D:\EA_LAB",
     [string]$ProjectName = "",
     [switch]$Execute,
     [switch]$IncludeRejected,

@@ -9,7 +9,7 @@ mt5_tester_report_paths:
   - "C:/Users/YOUR_USER/AppData/Roaming/MetaQuotes/Terminal/YOUR_TERMINAL_ID/Tester/Reports"
 mt5_common_files_path: "C:/Users/YOUR_USER/AppData/Roaming/MetaQuotes/Terminal/Common/Files"
 default_manual_import_mode: true
-report_drop_folder: "C:/Users/YOUR_USER/OneDrive/.Codex/EA_LAB/_mt5_report_drop"
+report_drop_folder: "D:/EA_LAB/_mt5_report_drop"
 # Portable mode is opt-in only. Use run_backtest.ps1 -Portable when you
 # intentionally want the terminal installation folder as the data context.
 mt5_use_portable_default: false
@@ -18,7 +18,7 @@ default_account_type: "demo"
 telegram_bot_token: "PLACEHOLDER_TELEGRAM_BOT_TOKEN"
 telegram_allowed_user_ids:
   - 123456789
-default_project_path: "C:/Users/patip/OneDrive/.Codex/EA_LAB"
+default_project_path: "D:/EA_LAB"
 codex_command: "codex"
 max_parallel_jobs: 1
 log_level: "INFO"
