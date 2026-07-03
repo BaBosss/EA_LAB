@@ -244,11 +244,13 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 sizing ที่ scale แล้ว และยังไม่เคยรันเป็นพอร์ตรวมกัน 2 symbol พร้อมกัน** ยังห้าม deploy
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
-1. **Monte Carlo บน config ที่ DD-scale แล้วจริง** (AUDUSD 20x, AUDJPY 20x) — เครื่องมือพร้อมแล้ว
-   `scripts/mt5_montecarlo.py` (แก้ UTF-16 bug แล้ว) รันกับ `_mt5_auto/reports/ZIGL_AUDJPY_lot20x_M1.htm`
-   และ `ZIGL_AUDUSD_lot20x_M1.htm` ที่มีอยู่แล้ว (ไม่ต้องรัน backtest ใหม่)
-2. **รัน AUDUSD+AUDJPY เป็นพอร์ตรวมกันจริง** (2 instance คนละ magic บนบัญชีเดียวกัน) เทียบ equity curve
-   รวมกับแยกกัน — corr 0.554 (WATCH tier) แปลว่าควรลด lot ทั้งคู่ ไม่ใช่รันเต็ม lot แยกกัน
+1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
+   95th 16.55%/worst 26.04% · AUDJPY 95th 11.22%/worst 18.18% · ruin 0% ทั้งคู่ — PASS
+2. ~~**รัน AUDUSD+AUDJPY เป็นพอร์ตรวมกัน**~~ ✅ **เสร็จ 2026-07-03 (closed-trade merge):**
+   full-lot MC-DD 95th 16.92% เกิน budget → **แนะนำ 0.7x ทั้งคู่ (MC-95th 12.44%, net +$2,677/17mo,
+   PF 1.48)** — scale `_05_BaseLot`+`_04_TpUsd`+`_06_MaxTotalLot` พร้อมกัน · เดือนที่ลบพร้อมกันมีแค่
+   1/17 แต่คือ **2026-06 เดือนล่าสุด** → จับตาบน demo · caveat: วัดจาก closed trades — combined
+   floating DD ต้องพิสูจน์บน demo (ตัวเลขเต็ม → EA_SCORECARD §FRESH TEMPLATE EAs)
 3. **GBPAUD/USDJPY/EURCHF** ยังบางเกิน (12-18 เทรด) — ถ้าจะเก็บต่อ ต้องรอ history ยาวขึ้นหรือหา window อื่น
    เพิ่ม ไม่ใช่เชื่อจากเทรดน้อยแบบนี้
 4. **ก่อน deploy จริง:** ผ่าน `robustness-validator` skill ให้ครบ (ยังไม่เคยเรียก skill นี้กับ EA ตัวนี้เลย)
