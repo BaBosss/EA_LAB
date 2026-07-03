@@ -251,7 +251,12 @@ full-window 8x: eqDD 12.17% ✅ / PF 1.12 ❌). บทเรียนที่�
 parity ผ่าน (PF 2.04 vs 1.91 · 58 vs 54 trades · net +$2,913 vs +$2,780 · eqDD ต่ำกว่าฝั่งดี) ·
 regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec + input ใหม่ 9 กลุ่ม + บทเรียน parity →
 `ea_template\DESIGN_V2.md` §5.5 · **workflow "standalone → แม่พิมพ์" ตาม VISION ปิด loop ครั้งแรกสำเร็จ**
-→ งานถัดไป: sweep Boss_14 กลไก×symbol (qwen batch) หา symbol ที่กลไก durable จริง
+→ ~~sweep Boss_14 กลไก×symbol~~ ✅ **รอบ 1 ปิด (2026-07-03 ดึก):** 5 symbol (EURCAD/USDJPY/
+EURCHF/EURJPY/GBPAUD, full-window 2023–2026 M1 + per-year split) → **GBPAUD = WATCH เดียว**
+(PF 1.23 เต็ม sample) ที่เหลือ DEAD/REJECT หมด — กลไก grid+LOG durable แค่ตระกูล AUD + GBPAUD
+ไม่ใช่ universal. ตัวเลข + บทเรียน (kill-DD halt truncate sample → sweep ด้วย set 0.25x เสมอ) →
+EA_SCORECARD §FRESH TEMPLATE. เครื่องมือใหม่: `scripts/report_year_split.py` (per-year PF จาก
+run เดียว = backward-OOS ฟรี — ใช้กับทุก sweep ต่อไป)
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
