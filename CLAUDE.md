@@ -2,6 +2,22 @@
 
 Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_STATE.md) — read that first every session. This file only holds instructions for how Claude Code itself should operate in this repo.
 
+## Multi-agent collaboration (Claude Code + Codex + ZCode on this machine)
+
+Cross-agent protocol lives in **[AGENTS.md](AGENTS.md)** (roles, write permissions, iron rules) and the
+work queue in **[AGENT_TASKBOARD.md](AGENT_TASKBOARD.md)**. Claude-specific duties:
+
+- **You are lead engineer + sole judge.** Other agents produce raw evidence; verdicts, direction, and
+  Decision-log/VISION/scorecard-verdict edits are yours (or the user's) alone.
+- **Before your token window ends** (or at any natural pause): leave the taskboard stocked with OPEN
+  orders — each one self-contained, mechanical, with numeric acceptance criteria and explicit ห้าม.
+  A Claude hour should end as "orders written + prior results judged", not as raw batch runs.
+- **On-return protocol (every session start):** (1) `git log --oneline -15` — look for `[codex]`/`[zcode]`
+  commits since your last one; (2) read AGENT_TASKBOARD for DONE/BLOCKED rows; (3) review their raw
+  results → issue verdicts → move conclusions into scorecard/PROJECT_STATE → mark rows REVIEWED;
+  (4) run `scripts/check_state.ps1` if anything looks off. Never build on unreviewed agent output.
+- Don't edit rows other agents have CLAIMED; don't assume their in-flight work — check timestamps.
+
 ## Orchestration workflow
 
 You (the orchestrator model) plan, decompose, and synthesize — you do not do mechanical work yourself when a subagent can. **Cost rule (user directive 2026-07-03): always route to the CHEAPEST tier whose output you can still verify.** Cost order: qwen ≈ free < Sonnet < Opus < you.

@@ -30,6 +30,8 @@
 |---|---|---|
 | สถานะ% · decision · แผน · invariants | **PROJECT_STATE.md** (นี่) | link |
 | ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **VISION.md** | link |
+| กติกา multi-agent (Claude/Codex/ZCode) | **AGENTS.md** | link |
+| คิวงานกลาง + ผลดิบรอ review | **AGENT_TASKBOARD.md** | link |
 | live portfolio (EA/magic/lot/judge/monitor) | **DEMO_DEPLOYMENT_PLAN.md** | link |
 | backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
 | ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
@@ -144,6 +146,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | 2026-07-03 | **แก้ scoring rubric: mechanism-risk hard-gate → score-penalty** + **Model 1 (control points) = ขั้นต่ำก่อน REJECT/DISQUALIFIED ใดๆ** (Model 2 = proof-of-concept เท่านั้น) | user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง. บันทึกใน `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. พิสูจน์คุณค่าทันที: จับ false-positive ได้ 2 ครั้งในวันเดียว (Zeus XAU Model 1 fill-artifact PF 1.89→Model 0 จริง 1.01; AUDCAD Model 2 PF 1.80→Model 1 จริง 0.89) |
 | 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` — AUDJPY = CANDIDATE แรกที่รอด** (PF 1.21 เท่ากันทั้ง Model 2/1 = ไม่ใช่ fill artifact; DD-scale เข้า 15% ได้ PF 1.91 net +$2,780/18mo) ยังไม่ IS/OOS/MC | AUDCAD ตกทั้ง baseline/tightened ที่ Model 1 — ทองถูกตัดออกทั้งหมดตามคำสั่ง user (Zeus family ไม่เหมาะกับ volatility ทอง) |
 | 2026-07-03 | **user rule: ห้ามตัดสิน DEAD/REJECT จนกว่าจะลอง optimize จริง** — verdict จาก param ชุดเดียว = PARKED-pending-optimize เสมอ | user-corrected ระหว่าง Boss_14 sweep — **พิสูจน์คุณค่าภายในชั่วโมงเดียว: 3/4 symbol ที่ถูกเรียก DEAD/REJECT ฟื้นหลัง probe 54-pass** (EURJPY 0.83→2.49 · EURCAD 0.65→1.82 · USDJPY 1.00→1.51) เหลือ EURCHF ตายจริง (0/54). ดู EA_SCORECARD §FRESH TEMPLATE |
+| 2026-07-03 | **Multi-agent protocol: Claude = lead/judge เท่านั้น · Codex = peer engineer · ZCode = batch runner · ส่งไม้ผ่าน `AGENT_TASKBOARD.md` (order + acceptance criteria) · single-writer: VISION/Decision log/verdict = Claude/user เท่านั้น** | user ใช้ 3 agent ร่วมกัน (Claude quota จำกัด) — กัน "คนอื่นทำต่อแล้วพัง" ด้วย: order เล็ก+ตรวจได้ด้วยตัวเลข · agent อื่นผลิตหลักฐานไม่ตัดสิน · cage (check_state/tpl_regression) เป็น agent-agnostic · Claude กลับมาต้อง review ก่อน build ต่อ. กติกาเต็ม → `AGENTS.md` |
 | 2026-07-03 | **user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first ห้าม reject ตรงๆ** — reject จาก cap ได้เฉพาะเมื่อ (1) resize เข้า band แล้ว edge หลุด gate (2) ถึง min-lot แล้วยังเกิน (3) optimize probe ไม่เจอ config ที่เข้า band (4) ไม่เปิดไม้เลย · ส่วน fail เชิง edge (PF หลุด gate) reject ตรงได้เพราะ PF ไม่ขึ้นกับ scale | ขยาย decision 2026-06-23 ("DD ไม่ใช่ hard gate") ให้ครอบ cap ทุกชนิด + ระบุลำดับก่อน reject ชัด — บังคับใช้แล้วใน 4 skills: backtest-report-analyzer (RULE 1b resize-first, ถอน Dim-3 RED จาก hard-fail), robustness-validator (ruin resize-first), backtest-optimize-rigor (Verdict discipline), signal-scanner (smoke ห้ามฆ่าด้วย DD) |
 | 2026-07-03 | **Direction alignment (grill session): Boss V2 = แม่พิมพ์หลักตัวเดียว (UNFREEZE — supersede freeze 2026-07-02)** · EA_CORE = คลังอะไหล่ R&D (ไม่ทิ้ง ทำต่อเมื่อพร้อม) · standalone = ทางด่วนชั่วคราว ต้อง port เข้าแม่พิมพ์เมื่อพิสูจน์ edge | เหตุใหม่ที่ทำให้รื้อ decision เดิมได้: ภาพจริงของเจ้าของเพิ่งถูก capture ครั้งแรก (`VISION.md`) — แม่พิมพ์เดียว function กลางร่วม ต่างแค่ entry+TF · เจ้าของต้องเข้าใจระบบได้ทั้งตัว (EA_CORE อ่านไม่ออก = drift ซ้ำ) |
 | 2026-07-03 | **โหมดงาน = dual-track ถาวร** (โรงงานเดินตลอด + operate คู่กัน) — ยกเลิกคำว่า "operate ล้วน" | แกนล่าที่ยังไม่อิ่มตัว = **กลไก×symbol** (Zeus พิสูจน์: edge มาจาก grid+LOG บน AUD ไม่ใช่ entry เทพ) — ที่อิ่มตัวคือ entry เดี่ยวเท่านั้น |
@@ -332,6 +335,7 @@ MC → `robustness-validator` ทีละตัว (เริ่ม GBPAUD) · 
 |---|---|
 | สถานะ + แผนนี้ (hub) | **`PROJECT_STATE.md`** (ไฟล์นี้) |
 | ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
+| กติกา multi-agent + คิวงานกลาง | `AGENTS.md` · `AGENT_TASKBOARD.md` |
 | deploy วันนี้ | `DEPLOY_CHECKLIST_2026-06-29.md` |
 | EA_CORE ปิด loop ด้วย ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
 | live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
