@@ -177,7 +177,9 @@ param: `_9_StackConfirm` (enum) — logic อยู่ใน `Stack.mqh` คู�
 | MoneyManagement | FirstLot × Progression = กี่ lot | 4x + 5x |
 | ExitManager | TP/SL/trail/basket | 2x + 3x |
 | RiskControl | กรง: clamp lot, margin, hard-kill DD | InpRC_ |
-| Recovery/Hedge/Basket | stub ปิด | 8x (future) |
+| Recovery | เติมไม้แก้เมื่อตะกร้าแดง (81/82/83) — cap โดย cage | 8x + _8_ |
+| Hedge | ล็อกสวนเมื่อ DD ลอยทะลุ trigger (HEDGE_LOCK) | HedgeMode + _H_ |
+| Basket | stub ปิด (group exit จริงอยู่ใน ExitManager) | (future) |
 
 ลำดับต่อ tick (LabCore.OnTick):
 ```
@@ -266,8 +268,8 @@ _36_SD_Mult  _36_SD_Period          (SL mode 36)
 |---|---|---|---|---|
 | **Protection (cage)** | 🛡️ | `0x` profile + `RC_*` | ✅ ทำงานจริง | เปิดเสมอ |
 | **Basket (group exit)** | 🛡️ | `_2_BasketTP` / `_32_BasketSL` (money) | ✅ อยู่ใน ExitManager | ตาม plan |
-| **Recovery (เติมไม้)** | ⚔️ | `8x` + `_8_*`, cap โดย `RC_*` | ⛔ stub | `80` None |
-| **Hedge (ล็อกสวน)** | ⚔️ | `InpHedgeMode` (0 off) | ⛔ stub | off (defer) |
+| **Recovery (เติมไม้)** | ⚔️ | `8x` + `_8_*`, cap โดย `RC_*` | ✅ ทำงานจริง (2026-07-03) | `80` None |
+| **Hedge (ล็อกสวน)** | ⚔️ | `HedgeMode` + `_H_*` | ✅ HEDGE_LOCK (2026-07-03) | `0` off |
 
 ### 0x Protection profile (cage — เปิดเสมอ)
 cage คำนวณตลอด profile แค่ตั้งค่า default ของ `RC_*`
@@ -287,20 +289,33 @@ _32_BasketSL_Money  = ปิดทั้งตะกร้าเมื่อข�
 ```
 > grid/recovery **ต้อง** มี `_32_BasketSL_Money` เสมอ = เพดานขาดทุนตะกร้า (กันทบไม่จบ)
 
-### 8x Recovery (⚔️ offensive — เปิดได้แต่ cap แข็ง)
+### 8x Recovery (⚔️ offensive — build แล้ว 2026-07-03, เปิดได้แต่ cap แข็ง)
 ```
-80 None      ← default ทุก plan ที่ไม่ใช่ grid
-81 Light     ← เติม 1-2 ไม้ lot คงที่ เมื่อ adverse >= _8_TriggerATR, cap RC_MaxRecSteps
-82 Adaptive  ← (ยังไม่ build — gated)
-83 Aggressive← (ยังไม่ build — gated, martingale-like, ห้าม live จนกว่าผ่าน MC ruin<5%)
+80 None      ← default ทุก plan ที่ไม่ใช่ grid (early-return — พฤติกรรม = stub เดิมเป๊ะ)
+81 Light     ← เติมไม้ lot = first-lot คงที่ เมื่อ adverse >= _8_TriggerATR×ATR, 1 ไม้/bar
+82 Adaptive  ← lot = firstLot × (1 + basketLoss$/_8_DDRefMoney), clamp ที่ RC_RecMultMax
+83 Aggressive← lot = firstLot × min(_8_RecMult,RC_RecMultMax)^step (step ตาม _8_StepATR band)
+               — martingale-like, ห้าม live จนกว่าผ่าน MC ruin<5%
 ```
-params: `_8_TriggerATR` (เริ่มแก้เมื่อขาดทุน X×ATR) · `_8_StepATR` (ระยะเติม) · lot โตตาม `5x` progression
+เงื่อนไขยิงทุกโหมด: ตะกร้าทิศเดียว + ติดลบเท่านั้น (mixed/กำไร = ไม่ยิง) · ผ่าน `Exec_Open`
+(dry-run + broker lot normalize) · แชร์ position-count cap เดียวกับ Stack (`RiskControl_MaxLevels()`)
+params: `_8_TriggerATR` (default 1.5) · `_8_StepATR` (1.0) · `_8_RecMult` (1.3, เฉพาะ 83) ·
+`_8_DDRefMoney` (100, เฉพาะ 82)
 **กฎเหล็ก:** recovery ทุกระดับถูก clamp โดย cage → `RC_MaxRecSteps` + `RC_RecMultMax` + `RC_KillDDPct`
 ต่อให้ตั้ง 83 ก็ระเบิดไม่ได้เกิน KillDD
 
-### Hedge — เลื่อน
-ซับซ้อน (margin 2 ทาง, lock/unlock timing) + เสี่ยง ไม่จำเป็นกับ portfolio ปัจจุบัน
-คง `HEDGE_OFF` ไว้ → ออกแบบเฟสหลังถ้าจำเป็นจริง
+### Hedge (⚔️ build แล้ว 2026-07-03 — HEDGE_LOCK)
+```
+0 HEDGE_OFF  ← default (early-return — พฤติกรรม = stub เดิมเป๊ะ)
+1 HEDGE_LOCK ← DD% ลอยของตะกร้า >= _H_TriggerDDPct → เปิดไม้สวน 1 ไม้
+               ขนาด _H_Ratio × |net lots| (ไม่นับ hedge เก่า) → ปิดคืนเมื่อ DD <= _H_ReleaseDDPct
+```
+params: `_H_TriggerDDPct` (8.0) · `_H_ReleaseDDPct` (3.0) · `_H_Ratio` (1.0) · `_H_MaxLot` (0=ใช้ RC_MaxLot)
+hedge leg ติด magic เดิม + comment tag `" H"` → ไม่ถูกนับเป็น exposure ทิศทาง / ไม่ trigger Recovery
+**ข้อจำกัดที่ต้องรู้ก่อนใช้จริง:** (1) ใช้ได้เฉพาะ **hedging account** — บน netting account order สวน
+จะกลายเป็นลด position แทน (2) การระบุ hedge leg พึ่ง position comment ซึ่งบาง broker ตัด/เขียนทับ
+บน live ได้ — ใน tester ปลอดภัย, ก่อน live จริงต้อง verify comment survival บน demo ก่อน
+(3) ยังไม่เคยผ่าน backtest/MC ใดๆ — เปิดใช้ = ต้องเข้า pipeline validate ปกติเหมือน mechanism ใหม่ทุกตัว
 
 ---
 

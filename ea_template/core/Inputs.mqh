@@ -96,7 +96,11 @@ enum ENUM_PROTECT_PROFILE
    PROTECT_LOOSE  = 3   // 03 Loose  (KillDD40 Load50 Steps5) grid only
 };
 
-enum ENUM_HEDGE_MODE { HEDGE_OFF = 0 };   // 0 off (deferred)
+enum ENUM_HEDGE_MODE
+{
+   HEDGE_OFF  = 0,  // 0 off (default)
+   HEDGE_LOCK = 1   // 1 opposite-direction lock on basket DD breach
+};
 
 //==================== Mode selectors ===============================
 input group "=== Mode selectors (code = value) ==="
@@ -207,6 +211,23 @@ input group "=== 0x Protection (cage - always on) ==="
 input ENUM_PROTECT_PROFILE ProtectLevel = PROTECT_NORMAL; // 02 sets KillDD/Load/Steps
 input double RC_MaxLot     = 0.20;   // per-order lot ceiling
 input double RC_RecMultMax = 1.3;    // cap effective progression multiplier
+
+//==================== 8x Recovery (offensive add-into-loss) ========
+// OFF unless RecoveryMode != 80. Every add clamped by the cage
+// (RiskControl_MaxLevels + RC_RecMultMax + RC_MaxLot + deposit load).
+input group "=== 8x Recovery (cage-capped) ==="
+input double _8_TriggerATR = 1.5;   // start recovering when adverse >= x * Risk-ATR
+input double _8_StepATR    = 1.0;   // add one order per x * Risk-ATR of further adverse
+input double _8_RecMult    = 1.3;   // 83 Aggressive per-step multiplier (clamped by RC_RecMultMax)
+input double _8_DDRefMoney = 100.0; // 82 Adaptive DD reference ($ of basket loss = +1x size)
+
+//==================== Hedge (defensive opposite lock) ==============
+// OFF unless HedgeMode != 0. One hedge leg at a time; released by DD.
+input group "=== Hedge (defensive lock) ==="
+input double _H_TriggerDDPct = 8.0;  // open hedge when basket floating DD% >= this
+input double _H_ReleaseDDPct = 3.0;  // close hedge when basket DD% recovers <= this
+input double _H_Ratio        = 1.0;  // hedge lots = ratio * net exposed lots
+input double _H_MaxLot       = 0.0;  // hedge lot ceiling (0 = use RC_MaxLot only)
 
 //==================== General ======================================
 input group "=== General ==="

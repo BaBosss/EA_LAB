@@ -262,11 +262,19 @@ sizing ที่ scale แล้ว และยังไม่เคยรั�
 
 ### 🔧 งานอัปเกรดแม่พิมพ์ Boss V2 (track ใหม่ 2026-07-03 — ทำขนานกับ Zeus ได้)
 
-1. เติม **Hedge/Recovery module จริง** (ตอนนี้เป็น stub ปิดไว้ใน `ea_template\core\`)
-2. เพิ่ม **smoke-regression ชุดเล็ก** — backtest ค่าคงที่ 1 ชุดทุกครั้งที่แก้ core แล้วเทียบเลขเดิม
-   (ทดแทน test suite ที่ Boss V2 ไม่มี)
-3. หลังจากนั้น: sweep แกน **กลไก×symbol** (grid/DCA/hedge/progression บนคู่เงินที่ยังไม่เคยลอง)
-   ผ่าน `/signal-scan` ตามปกติ
+1. ~~เติม **Hedge/Recovery module จริง**~~ ✅ **เสร็จ 2026-07-03 (deep-reasoner + regression-verified):**
+   Recovery 81 Light / 82 Adaptive / 83 Aggressive + HEDGE_LOCK — ทุกโหมด cage-clamped,
+   default OFF ทุกตัว, compile 0/0 ทั้ง 3 Boss EA. spec + ข้อจำกัด (netting account, comment tag,
+   ยังไม่เคย backtest) → `ea_template\DESIGN_V2.md` §5
+2. ~~เพิ่ม **smoke-regression ชุดเล็ก**~~ ✅ **เสร็จ 2026-07-03:** `scripts\tpl_regression.ps1` +
+   `ea_template\regression_baseline.csv` (3 Boss EA, XAU H1 2024H1, Model 1) — รอบแรกจับ parity
+   หลังใส่ Hedge/Recovery แล้ว: **REGRESSION CLEAN ทั้ง 3 ตัว**. กฎ: แก้ `core\` ทุกครั้งต้องรัน
+   script นี้ก่อน commit
+3. ต่อไป: sweep แกน **กลไก×symbol** (grid/DCA/hedge/progression บนคู่เงินที่ยังไม่เคยลอง)
+   ผ่าน `/signal-scan` ตามปกติ · หมายเหตุ: โหมดใหม่ (82/83/HEDGE_LOCK) ยังไม่เคยผ่าน backtest ใดๆ —
+   เปิดใช้ครั้งแรก = validate เหมือน mechanism ใหม่
+4. gotcha ใหม่: `deploy.ps1` แก้แล้วให้ resolve junction `Roaming\MetaQuotes\Terminal →
+   D:\MetaTraderData\...` ก่อน robocopy (subdir-create ผ่าน junction เคย fail เงียบ)
 
 **ไฟล์ที่เกี่ยวข้องทั้งหมด:**
 - EA source: `D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_ZeusInspired_GridLog_rev01.mq5`

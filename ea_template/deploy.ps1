@@ -12,6 +12,12 @@ $ErrorActionPreference = "Stop"
 
 $src  = "D:\EA_LAB\ea_template"
 $data = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
+# robocopy's subdirectory-create (core\) intermittently fails when writing THROUGH the
+# Roaming junction (found 2026-07-03) - resolve to the real target before copying.
+$junc = Get-Item "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal" -Force -ErrorAction SilentlyContinue
+if ($junc -and $junc.LinkType -and $junc.Target) {
+  $data = Join-Path ([string]$junc.Target) "9CA16B8382AE4CF692710FB36B9DA355"
+}
 $meta = "D:\Meta 5\metaeditor64.exe"
 $dst  = Join-Path $data "MQL5\Experts\EALabTpl"
 

@@ -41,6 +41,7 @@ int OnInit()
    }
    Exec_Init();
    RiskControl_Init();
+   Recovery_Init();
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
