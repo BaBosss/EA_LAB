@@ -42,6 +42,16 @@ $srcXml = Join-Path $DataDir "$ReportName.xml"
 $destXml = "$auto\optimizations\$ReportName.xml"
 Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
+# Hygiene: clear the optimization cache so every run is provably fresh.
+# (2026-07-04 note: a suspected cross-date cache-reuse bug was DISPROVEN by a
+# controlled rerun - identical IS vs full-window rows on GBPAUD turned out to be
+# genuine range-dormancy, both resting-stop sides unhit for the final 13 months.
+# Clearing stays as cheap insurance against ever confusing the two cases.)
+$testerCache = Join-Path $DataDir "Tester\cache"
+if (Test-Path $testerCache) {
+  Get-ChildItem $testerCache -Filter "*.opt" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
 $inputs = @()
 foreach ($l in Get-Content $SetFile) {
   $t = $l.Trim()
