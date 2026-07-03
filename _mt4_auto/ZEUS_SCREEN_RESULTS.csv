@@ -1,0 +1,21 @@
+expert,symbol,period,trades,PF,net,maxDD%,win%,screen
+Zeus Gold Hedge V1.2_fix_1420,XAUUSD,1 Hour (H1),814,0.80,-10419.24,101.76,70.39,REJECT
+Zeus Gold Hedge V1.2_fix_1420,EURUSD,1 Hour (H1),2058,1.54,10335.86,51.93,70.36,PASS
+Zeus Gold Hedge V1.2_fix_1420,AUDCAD,1 Hour (H1),1151,0.59,-9418.43,95.73,69.33,REJECT
+Zeus Gold Hedge V1.2_fix_1420,AUDUSD,1 Hour (H1),1130,0.68,-14114.21,126.63,69.65,REJECT
+Zeus Gold Hedge V1.2_fix_1420,BNBUSD,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,BTCUSD,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,CHFJPY,1 Hour (H1),624,1.99,2115.25,3.75,69.07,PASS
+Zeus Gold Hedge V1.2_fix_1420,DOGEUSD,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,ETHUSD,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,EURCHF,1 Hour (H1),150,2.04,570.54,4.68,63.33,PASS
+Zeus Gold Hedge V1.2_fix_1420,EURGBP,1 Hour (H1),165,1.95,626.81,5.14,69.70,PASS
+Zeus Gold Hedge V1.2_fix_1420,GBPUSD,1 Hour (H1),492,0.65,-10159.18,101.16,67.28,REJECT
+Zeus Gold Hedge V1.2_fix_1420,NAS100,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,SOLUSD,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,SPX500,1 Hour (H1),601,0.59,-7614.97,83.39,71.05,REJECT
+Zeus Gold Hedge V1.2_fix_1420,USDCAD,1 Hour (H1),106,0.32,-8219.29,82.61,54.72,REJECT
+Zeus Gold Hedge V1.2_fix_1420,USDCHF,1 Hour (H1),0,,0.00,0.00,0.00,NO_DATA
+Zeus Gold Hedge V1.2_fix_1420,USDJPY,1 Hour (H1),497,0.63,-8570.75,87.94,67.61,REJECT
+Zeus Gold Hedge V1.2_fix_1420,WTI,1 Hour (H1),932,1.84,5043.71,44.67,72.21,PASS
+Zeus Gold Hedge V1.2_fix_1420,XAUUSDMINI,1 Hour (H1),305,0.42,-17165.90,163.29,68.52,REJECT

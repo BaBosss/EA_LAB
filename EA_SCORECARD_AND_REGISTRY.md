@@ -10,13 +10,58 @@ A kill made on a smoke test (★) is LOW confidence and must be re-examined befo
 ## PART 1 — THE SCORING RUBRIC
 
 ### Step 0 — HARD GATES (any one fails → DISQUALIFIED, do not score further)
-These are *structural* gates — failure modes that **cannot be tuned away** by sizing or spacing.
-| Gate | Fail condition | Why it's structural (not sizing) |
+**Revised 2026-07-03 (user-corrected — supersedes the original all-mechanism version below).**
+Mechanism risk (uncapped martingale/grid) is no longer an instant pre-measurement kill — it wasted
+opportunities on EAs that might have scored fine on realized numbers. It now feeds the score instead
+(see Step 0b below). Only genuine **deployability facts** stay as true hard gates — things no amount
+of good performance can fix, because the EA literally cannot run live:
+| Gate | Fail condition | Why it's a true hard gate (not a risk judgment) |
 |---|---|---|
-| **Uncapped martingale** | lot scales on losses with **no step cap** (or cap so high a plausible streak still ruins) | doubling outruns any deposit; not fixable by lot — only by capping steps |
-| **Uncapped grid / no hard SL** | keeps adding positions with no binding cap AND no per-position SL | floating DD is unbounded + invisible to closed-trade stats |
 | **Expired / locked .ex** | license/time-expired, won't trade live | un-deployable — validation effort wasted (KRAPOOK lesson) |
-| **Model-2 tight-TP artifact** | TP < spread; PF collapses when TP×10 | "edge" is open-price fill fiction, not real |
+| **Structural non-function** | NO_DATA on every symbol tried, init fails every time, etc. | there is nothing to score |
+
+> ⚠️ **Model-2-only artifact is now a SUSPECT flag, not an instant gate** (see the fidelity-floor rule
+> below) — a PF collapse on TP×10 seen only at Model 2 must be re-confirmed at Model 1 (control points)
+> before it can finalize a DISQUALIFIED/REJECT verdict. Model 2 alone proves the concept fires, nothing more.
+
+### Step 0b — MECHANISM RISK PENALTY (score-based, replaces the old hard gate)
+Uncapped martingale / uncapped grid-no-hard-SL are still real structural risk — they just no longer
+skip straight to DISQUALIFIED before the EA is even measured. Apply directly to the Step 1 total:
+| Condition | Penalty |
+|---|---|
+| Uncapped martingale (lot scales on losses, no step cap, or cap so high a plausible streak still ruins) | **−25 pts off Step 1 total** |
+| Uncapped grid / no hard SL (adds positions with no binding cap AND no per-position SL) | **−25 pts off Step 1 total** (both present → −25 total, not stacked twice for the same mechanism) |
+
+Flag the registry row **⚠️ MECHANISM RISK** whenever this penalty applies, and require the
+sizing-normalized DD procedure below to be run before ANY deploy consideration, regardless of the
+resulting score band — a high raw score with this flag still needs the DD-budget re-test, not a
+straight deploy.
+
+### ⏱️ TEST FIDELITY FLOOR (added 2026-07-03, strengthened same day — user-corrected)
+**Model 2 (open prices) is proof-of-concept only — it can confirm an EA fires and its logic runs, and
+nothing more.** Its PF/DD numbers must NEVER be reported, ranked, or compared as if they mean anything
+— not just "don't use it to REJECT," don't use it to judge good OR bad, don't screen/rank multiple
+symbols by their Model-2 PF either. **Any number put in front of the user requires at least Model 1
+(control points) first.** If Model 2 is used at all, it's only to filter out zero-trade/broken configs
+before spending Model-1 time — the moment a PF number gets reported or a symbol gets ranked, it must be
+Model 1+. Confirmed twice in one day on the same EA: AUDCAD screened PF 1.80 at Model 2 → PF 0.89 at
+Model 1; AUDNZD screened PF 1.96 at Model 2 → PF 1.06 at Model 1. Both would have looked like real
+candidates off Model 2 alone. Model 2's fixed/open-price fills
+routinely overstate both edge (tight-TP artifacts) and risk (grid/martingale DD) — in this project's
+own Zeus Gold Hedge test (2026-07-03), the SAME parameters showed DD 102% at Model 2 vs DD 79% at
+Model 0 (every tick) — same direction, but Model 2 alone would have been a worse, unconfirmed number
+driving the verdict. Model 0/every-tick remains required only for the final go/no-go on an actual
+deploy candidate (unchanged from the existing Model ladder in `backtest-optimize-rigor`).
+
+> **Known backtest blind spot — fixed spread.** MT4's Strategy Tester holds spread at a single
+> constant value ("Spread: Current (N)") for the ENTIRE backtest at every model level, including
+> Model 0. It does not simulate real spread widening during volatile/news moves. Any EA whose live
+> risk control depends partly on a `MaxSpread` filter (blocking new entries when spread blows out)
+> will show WORSE backtest DD than live, because the filter never actually trips in simulation —
+> confirmed on Zeus (MaxSpread=25 input, but every generated report shows a flat single-digit-to-25
+> "Current" spread throughout, meaning the filter had nothing to block). Note this explicitly on any
+> verdict for an EA with a meaningful spread filter; don't let a backtest DD number alone override
+> demonstrated live survival without accounting for this gap.
 
 > ### ⚠️ DD% is NOT a hard gate (revised 2026-06-23, user-corrected)
 > Raw max-DD% conflates **two different things**: (1) *position sizing & grid spacing* — fully
@@ -115,9 +160,10 @@ distance-scaling insight) — note it, but the EA itself is out.
 | EA_KAUFMAN_ER (BuyOnly) | XAUUSD H4 | 2.34 (50t) | 5.19 (17t) | ★★☆ | **CANDIDATE — reserve (user decision 2026-07-02: เก็บก่อน ไม่ deploy)** | re-confirm 2026-07-02 (`KER_RECONF_*`, M2) ตรงตัวเลข 06-28 เป๊ะ. DD 5.1%. จุดอ่อน: OOS บาง 17t (H4 → ~2 ปีกว่าจะครบ 30 live trades) · **corr 0.946 vs EA_SUPERTREND** (sibling — ห้าม deploy คู่) · corr 0.75 vs BRK8 live → ถ้า deploy = 0.01 lot · เป็น XAU-long bet ซ้อน BRK55/BRK8/GR ที่ live อยู่. **เงื่อนไขก่อน deploy จริง: (1) M4 confirm 1 รอบ (บทเรียน M2-optimism จาก ST03 EURUSD) (2) แก้ invariant 9→10 EA + DEMO plan + check_state.ps1.** 💡 **idea จาก user (2026-07-02): เอา Kaufman ER (Efficiency Ratio) ไปใช้เป็น "ตัวบอกทิศ/regime filter" ให้ EA อื่น** — เข้าทาง vol-gate/regime line ใน EDGE_CATALOG; ถ้าจะลอง → เพิ่มเงื่อนไข ER เข้า EA ที่มี edge อยู่แล้วแล้ววัด A/B, ไม่ใช่สร้าง EA ใหม่. set พร้อม: `_vps_deploy/KAUERMAN_buyonly_live.set` (magic 990127) |
 | EA_SUPERTREND v1 naked | XAUUSD H4 | 1.92 (33t) | 5.09 (17t) | ★★☆ | **PARKED — แพ้ KER** | rerun 2026-07-02 (`STV1_XAU_RECONF_*`) ผ่าน gate แต่ corr 0.946 กับ KER ที่ดีกว่าทุกด้าน → เก็บเป็น fallback ของ KER. (SuperTrend "DEAD" ใน signal hunt = คู่เงินอื่น; XAU H4 ตัวนี้รอด) |
 
-### MT5 — FRESH TEMPLATE EAs (built 2026-06-22)
+### MT5 — FRESH TEMPLATE EAs (built 2026-06-22, +1 built 2026-07-03)
 | EA | best smoke | Conf | Verdict | Kill reason / re-exam |
 |---|---|---|---|---|
+| (Boss)_ZeusInspired_GridLog_rev01 | AUDUSD H1 IS 1.63→OOS 1.78 (retention 1.09) | ★★☆ | **CANDIDATE — AUDUSD + AUDJPY confirmed via IS/OOS, portfolio not yet deployed** | Original design (L3 redesign of Zeus Gold Hedge behavior — `ZEUS_GOLD_HEDGE_ANALYSIS.md` §5.9-5.11). Screened 27 FX symbols total (no gold — user call), Model 1 minimum for every reported number after 2 same-day Model-2 false positives (AUDCAD 1.80→0.89, AUDNZD 1.96→1.06). **Survivors after IS/OOS split (IS=2025 H1-H2, OOS=2026 H1-mid):** AUDUSD retention 1.09 (OOS beats IS — strongest), AUDJPY retention 0.87 (passes ≥0.8 gate). **EURCAD DROPPED** — looked fine full-window (PF 1.23 @ DD 13.39%) but failed OOS outright (retention 0.53, net negative) — reinforces IS/OOS over single-window trust. DD-scaled to 10-20% band (base_lot + `_04_TpUsd` must scale together — fixed-$ TP breaks proportionally otherwise, found the hard way): AUDJPY 20x → PF 1.91/DD 14.73%/net $2,780/18mo/Sharpe 2.02; AUDUSD 20x → PF 1.22/DD 12.92%/net $1,043/Sharpe 0.32. Monte Carlo (order-resample, DD-only distribution — net/PF are order-invariant sums) flags AUDUSD's observed DD as possibly favorable-luck (95th pctile 16.55%, worst 26.04% vs observed 12.92%); AUDJPY/EURCAD more stable under reshuffle. **Correlation:** AUDUSD/AUDJPY 0.554 (WATCH — run both, reduced lot); AUDUSD/EURCAD 0.708 (HIGH — don't combine, moot now EURCAD is dropped); EURJPY near-zero corr with all three (-0.003 to -0.093) despite weak own edge (PF~1.04-1.09) — diversifier-only role, small lot. GBPAUD/USDJPY/EURCHF hold up at Model 1 but too thin (12-18 trades) to trust yet. **Still not Monte-Carlo'd on the DD-scaled AUDUSD/AUDJPY configs specifically, not portfolio-tested together.** Compiled .ex5 + all .set variants at `D:\EA_Project\CURRENT_BUILD\TEMPLATE\`. |
 | (Boss)_SessionBreakout_rev01 | XAU M15 PF 1.04 | ★★★ | **DEAD** | 1,200-pass EXHAUSTIVE sweep ceiling 1.20 + forward 0.91. Thoroughly killed — do NOT revisit |
 | (Boss)_RSI_Swing_BB_rev01 | EUR H1 PF 1.03 | ★★☆ | **DEAD (confirmed 2026-06-23)** | RE-EXAMINED: 27-combo sweep EURUSD IS+OOS, best min-PF **0.99** (breakeven), nothing ≥1.2. "Martingale was the edge" CONFIRMED — naked signal has none. Kill upgraded smoke→optimized |
 | (Boss)_TrendRegression_rev01 | XAU H1 0.81 | ★★☆ | **DEAD (confirmed 2026-06-23)** | RE-EXAMINED: 27-combo sweep XAUUSD IS+OOS, best min-PF **0.91**, all losing. Reversion-on-trend has no gold edge (matches momentum>reversion thesis). Kill upgraded smoke→optimized |
@@ -147,7 +193,8 @@ distance-scaling insight) — note it, but the EA itself is out.
 | EURUSD Forex Robot | EUR 3.89 | ★★☆ | **WATCH/PARKED** | NOT martingale (scrutinize cleared it); disqualifier = THIN sample (48t). Needs deep-data re-test |
 | Espresso_Gold/Fx Setka/Little Birds/KRAPOOK Yellow | — | ★★☆ | **DISQUALIFIED** | catastrophic DD 60–125% (grid/martingale) |
 | EA Game Changer/GMGS PRO | XAU high | ★★★ | **DEAD** | Model-2 tight-TP/hedge-grid artifact (TP×10 confirmed) |
-| ~45 others | — | ★★☆ | **DEAD/REJECT** | structural (NO_DATA/init-fail), commercial-locked, or grid. See [[mt4-screening]] |
+| **Zeus Gold Hedge V1.2** | EU PF 0.87 (M0) / XAU PF 1.01 (M0) | ★★★ | **REJECT — low score, not a hard gate (re-scored 2026-07-03)** | Not locked after all — earlier SKIP/NO_REPORT (2026-06-21) was a broker/account license mismatch on Exness, runs fine on ThinkMarkets-Live 4. **Step 0b mechanism penalty applies** (uncapped grid, `StopLoss=0` every order, `MaxLoss=100000`/`Maxlot=100` far larger than account = not real caps) → −25pts, but NOT auto-disqualified — both symbols were run the full Model 2→1→0 ladder before any verdict. XAU compiled-default: Model 2 said REJECT (DD 102%), Model 1 showed a **false PASS artifact** (PF 1.89, +$801K, 6.5 trades/bar — physically implausible, caught before reporting), Model 0 (final authority) = PF 1.01/DD 85.59% — statistically breakeven with catastrophic DD, score fails on Risk Control regardless of the softened gate. EU: user's exact live config (lot=0.06,K_Lot=1.4,CloseAll=20,PlusLot=0.08) PF 0.87/DD 79% under Model 0 despite 3mo live survival — stress concentrates ~2mo into the 18mo window, likely outside the live sample seen so far, not evidence the config is safe going forward. Full analysis + full ladder table: `ZEUS_GOLD_HEDGE_ANALYSIS.md`. Also surfaced a real MT4 tester blind spot (fixed spread never widens → `MaxSpread` filter can't be credited in backtest) now documented in `backtest-optimize-rigor`. Technique reused (not the code — behavioral principle only): inspired an original L3-redesign EA `(Boss)_ZeusInspired_GridLog_rev01.mq5` (ATR spacing, LOG lot, real SL, partial-close, DD-adaptive first lot) — compiled clean, backtest in progress. |
+| ~44 others | — | ★★☆ | **DEAD/REJECT** | structural (NO_DATA/init-fail), commercial-locked, or grid. See [[mt4-screening]] |
 
 ---
 
