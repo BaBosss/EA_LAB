@@ -270,7 +270,7 @@ EURUSD **3**, NZDUSD **8**. Top-3 ดิบเรียง PF:
 
 ---
 
-## ORDER-008 — Re-exam ศพเก่าที่ตายโดยไม่เคย optimize: EA_LNBREAK + NRBreakout (stage A: เตรียมข้อมูล) — `OPEN` (role: Codex)
+## ORDER-008 — Re-exam ศพเก่าที่ตายโดยไม่เคย optimize: EA_LNBREAK + NRBreakout (stage A: เตรียมข้อมูล) — `DONE(Codex, 2026-07-04 00:17 +07:00)` (role: Codex)
 
 **ทำไม (user rule 2026-07-03):** LNBREAK ถูกฆ่าจาก **M2 smoke + default params** (ผิดกฎ Model-2 ด้วย) ·
 NRBreakout ตายจาก partial sweep — ทั้งคู่ไม่เคยได้ 54-pass probe ตามกติกาใหม่
@@ -281,7 +281,81 @@ NRBreakout ตายจาก partial sweep — ทั้งคู่ไม่�
 **Acceptance:** ตาราง inputs ครบทั้ง 2 EA + ข้อเสนอ ranges · commit `[codex] ORDER-008A done` ·
 Claude จะ approve ranges แล้วออก stage B (รัน probe) รอบหน้า
 
-**ผล:** _(รอ)_
+**ผล (Codex; stage A เท่านั้น ไม่ได้รัน backtest):** พบ source ทั้งสองไฟล์ที่
+`D:\EA_Project\CURRENT_BUILD\TEMPLATE\EA_LNBREAK.mq5` และ
+`D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_NRBreakout_rev01.mq5`.
+
+**EA_LNBREAK — inputs ครบ 23 รายการ**
+
+| ชื่อ | ชนิด | default |
+|---|---|---|
+| `_g00_` | string | `-- [00] OPTIMIZER ----------------------` |
+| `_00_OptimizeMode` | bool | `false` |
+| `_g01_` | string | `-- [01] SESSION TIMES (server hrs) ----` |
+| `_01_LondonStartHr` | int | `11` |
+| `_01_LondonEndHr` | int | `15` |
+| `_01_NyEndHr` | int | `23` |
+| `_01_BreakBuf` | double | `0.3` |
+| `_g03_` | string | `-- [03] FILTERS ------------------------` |
+| `_03_UseEmaFilter` | bool | `true` |
+| `_03_EmaPeriod` | int | `200` |
+| `_03_ATRPeriod` | int | `14` |
+| `_g02_` | string | `-- [02] SL / TP ------------------------` |
+| `_02_SL_ATR_mult` | double | `2.0` |
+| `_02_TP_ATR_mult` | double | `3.0` |
+| `_g04_` | string | `-- [04] TRAIL --------------------------` |
+| `_04_TrailATR` | double | `2.0` |
+| `_g05_` | string | `-- [05] TRADE MGMT ---------------------` |
+| `_05_FixedLot` | double | `0.01` |
+| `_05_MaxSpreadPts` | int | `0` |
+| `_05_OnlyOncePerDay` | bool | `true` |
+| `_g06_` | string | `-- [06] SYSTEM -------------------------` |
+| `_06_AllowLive` | bool | `false` |
+| `_06_Magic` | int | `990110` |
+
+**(Boss)_NRBreakout_rev01 — inputs ครบ 22 รายการ**
+
+| ชื่อ | ชนิด | default |
+|---|---|---|
+| `_g00_` | string | `── [00] TESTER / OPTIMIZER ────────────────` |
+| `_00_OptimizeMode` | bool | `false` |
+| `_g01_` | string | `── [01] NR FILTER ─────────────────────────` |
+| `_01_NrLookback` | int | `7` |
+| `_01_NrMult` | double | `0.8` |
+| `_01_EntryStartH` | int | `9` |
+| `_01_TradeEndH` | int | `18` |
+| `_01_CloseEod` | bool | `true` |
+| `_01_BuyBreakHigh` | bool | `true` |
+| `_01_SellBreakLow` | bool | `true` |
+| `_g02_` | string | `── [02] SL / TP ───────────────────────────` |
+| `_02_SlAtrMult` | double | `1.5` |
+| `_02_TpAtrMult` | double | `3.0` |
+| `_g03_` | string | `── [03] ATR ───────────────────────────────` |
+| `_03_AtrPeriod` | int | `14` |
+| `_g05_` | string | `── [05] TRADE MGMT ────────────────────────` |
+| `_05_BuyOnly` | bool | `false` |
+| `_05_LotSize` | double | `0.01` |
+| `_g06_` | string | `── [06] SYSTEM ────────────────────────────` |
+| `_06_Magic` | long | `990006` |
+| `_06_Deviation` | ulong | `20` |
+| `_06_AllowLive` | bool | `false` |
+
+**ข้อเสนอ coarse sweep สำหรับ Claude approve (4 params × 3 ค่า = 81 passes ต่อ EA):** เลือกเฉพาะ
+signal/exit ที่มี causal path; freeze lot, magic, execution และ session defaults. ใช้ ATR-relative ก่อน pip.
+
+| EA | Parameter | ค่าที่เสนอ 3 ค่า | รูปแบบ `.set` | เหตุผล |
+|---|---|---|---|---|
+| LNBREAK | `_01_BreakBuf` | 0.0, 0.3, 0.6 | `0.3||0.0||0.3||0.6||Y` | ความเข้มของ range breakout แบบ ATR |
+| LNBREAK | `_02_SL_ATR_mult` | 1.0, 2.0, 3.0 | `2.0||1.0||1.0||3.0||Y` | stop distance แบบ volatility-relative |
+| LNBREAK | `_02_TP_ATR_mult` | 1.5, 3.0, 4.5 | `3.0||1.5||1.5||4.5||Y` | reward distance แบบ ATR |
+| LNBREAK | `_04_TrailATR` | 0.0, 1.5, 3.0 | `1.5||0.0||1.5||3.0||Y` | เปรียบเทียบ off/medium/wide trail |
+| NRBreakout | `_01_NrLookback` | 3, 7, 11 | `7||3||4||11||Y` | ความยาวฐาน daily compression |
+| NRBreakout | `_01_NrMult` | 0.6, 0.8, 1.0 | `0.8||0.6||0.2||1.0||Y` | ความเข้ม narrow-range condition |
+| NRBreakout | `_02_SlAtrMult` | 1.0, 2.0, 3.0 | `2.0||1.0||1.0||3.0||Y` | stop distance แบบ ATR |
+| NRBreakout | `_02_TpAtrMult` | 1.5, 3.0, 4.5 | `3.0||1.5||1.5||4.5||Y` | reward distance แบบ ATR |
+
+หมายเหตุข้อเสนอ: LNBREAK TP กับ trail มี interaction จึงควรอ่าน plateau เป็นกลุ่ม ไม่เลือก peak เดี่ยว;
+NRBreakout freeze `_03_AtrPeriod=14` เพื่อไม่เพิ่ม dimension และ freeze session hours จน signal shape ผ่านก่อน.
 
 ---
 
