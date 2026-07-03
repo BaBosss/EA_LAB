@@ -262,8 +262,11 @@ regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec +
 EURCAD (1.82) · USDJPY (1.51)** + AUDNZD WATCH · EURCHF DEAD-optimized · 9 ตัว
 PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_SCORECARD §FRESH TEMPLATE.
 เครื่องมือใหม่: `report_year_split.py` + probe set กลาง `Boss14_GridLog_GBPAUD_opt1.set`
-**งานถัดไป (คิวเปิด): robustness phase ของ 4 candidate** — plateau-center IS/OOS split →
-MC → `robustness-validator` ทีละตัว (เริ่ม GBPAUD) · แล้วค่อย corr-gate เป็นพอร์ต Boss_14 family
+**Robustness phase (เริ่ม 2026-07-04):** ❌ **GBPAUD = PARKED ตัวแรก** — IS 1.71 + MC ผ่าน แต่ตก
+fresh-start OOS (23t PF 0.49) = regime-dependent · **บทเรียนระบบ: chained run ของ resting-stop
+mechanism หลับข้ามช่วงร้ายได้ → fresh-start OOS บังคับก่อน demo ทุก candidate** · คิวถัดไป =
+ORDER-005 (IS-opt 5 ตัว: AUDNZD นำ — ชนะ regime ล่าสุดจริง 1.52/2.21 ต่างจาก GBPAUD ที่หลับ)
+→ Claude เลือก center → fresh-start OOS → ตัวผ่านค่อย MC + corr-gate + demo
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
