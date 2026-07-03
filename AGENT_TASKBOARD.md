@@ -8,7 +8,7 @@
 
 ---
 
-## ORDER-001 — GBPAUD: re-optimize บน IS window (กัน in-sample bias) — `DONE(Codex, 2026-07-03 23:31 +07:00)` (role: ZCode/Codex)
+## ORDER-001 — GBPAUD: re-optimize บน IS window (กัน in-sample bias) — `REVIEWED(Claude, 2026-07-03 23:45 +07:00)` (role: ZCode/Codex)
 
 **ทำไม:** plateau PF 1.71 ปัจจุบันมาจาก optimize บน window เต็ม = in-sample. ต้อง re-optimize บน
 IS เท่านั้น แล้วเอา plateau-center ไปทดสอบ OOS ที่ไม่เคยเห็น (ORDER-002)
@@ -23,6 +23,12 @@ append ตาราง top-10 pass (PF, Trades, EqDD%, params ทั้ง 4 ค
 
 **ผล (Codex, Model 1):** XML `BOSS14_OPT_GBPAUD_IS.xml` ครบ **54 rows**. ตารางดิบด้านล่าง
 เรียง `Profit Factor` จากมากไปน้อยเพื่อแสดง top-10 เท่านั้น (ไม่ได้เลือก plateau-center/verdict):
+
+**Review & Plateau-center verdict (Claude, 2026-07-03):** Pass 26 (PF 1.71 / Trades 88 / DD 4.42%)
+selected for OOS-confirm. Reason: PF = stable (matched p26 full-window 1.71, not overfit-peaking like
+Pass 3 PF 2.38), Trades wide (88 = cushion), DD low (4.42% = margin for OOS volatility). Set saved
+as `Boss14_GridLog_GBPAUD_IS_p26.set` (params: Step 3.0×Dist 2.2×TP 175×BUY). Next order: OOS
+confirm (ORDER-004).
 
 | Pass | PF | Trades | EqDD% | _9_StepATRmult | _14_Direction | _14_DistAtrMult | _2_BasketTP_Money |
 |---:|---:|---:|---:|---:|---:|---:|---:|
@@ -55,7 +61,24 @@ top-5 ดิบ · commit `[tag] ORDER-002 done`
 
 ---
 
-## ORDER-003 — Monte Carlo บน GBPAUD p26 report — `OPEN` (role: ZCode)
+## ORDER-004 — GBPAUD p26: OOS-confirm (2025.07-2026.07) + MC — `OPEN` (role: ZCode)
+
+**คำสั่ง:**
+```powershell
+# (1) OOS confirm run
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol GBPAUD -Period H1 -FromDate 2025.07.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_GBPAUD_IS_p26.set' -ReportName BOSS14_GBPAUD_OOS_P26_M1
+
+# (2) MC on OOS report
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\mt5_montecarlo.py D:\EA_LAB\_mt5_auto\reports\BOSS14_GBPAUD_OOS_P26_M1.htm --deposit 10000 --iters 5000
+```
+**Acceptance:** 2 reports + MC ผล (DD median/95th/worst, ruin, P(loss)) append ใต้ order นี้ · commit `[tag] ORDER-004 done`
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-003 — Monte Carlo บน GBPAUD p26 report — `SKIPPED` (subsumed into ORDER-004)
 
 **คำสั่ง:**
 ```powershell
