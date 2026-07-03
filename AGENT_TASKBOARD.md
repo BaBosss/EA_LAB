@@ -8,7 +8,7 @@
 
 ---
 
-## ORDER-001 — GBPAUD: re-optimize บน IS window (กัน in-sample bias) — `OPEN` (role: ZCode/Codex)
+## ORDER-001 — GBPAUD: re-optimize บน IS window (กัน in-sample bias) — `DONE(Codex, 2026-07-03 23:31 +07:00)` (role: ZCode/Codex)
 
 **ทำไม:** plateau PF 1.71 ปัจจุบันมาจาก optimize บน window เต็ม = in-sample. ต้อง re-optimize บน
 IS เท่านั้น แล้วเอา plateau-center ไปทดสอบ OOS ที่ไม่เคยเห็น (ORDER-002)
@@ -21,7 +21,21 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 append ตาราง top-10 pass (PF, Trades, EqDD%, params ทั้ง 4 คอลัมน์) ใต้ order นี้ · commit `[tag] ORDER-001 done`
 **ห้าม:** ตัดสินว่า pass ไหน "ดีสุด" — รายงานดิบพอ (plateau-center = งาน Claude)
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1):** XML `BOSS14_OPT_GBPAUD_IS.xml` ครบ **54 rows**. ตารางดิบด้านล่าง
+เรียง `Profit Factor` จากมากไปน้อยเพื่อแสดง top-10 เท่านั้น (ไม่ได้เลือก plateau-center/verdict):
+
+| Pass | PF | Trades | EqDD% | _9_StepATRmult | _14_Direction | _14_DistAtrMult | _2_BasketTP_Money |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 3 | 2.382883 | 64 | 3.9710 | 1.4 | 2 | 1.4 | 100 |
+| 33 | 2.371173 | 33 | 4.9115 | 1.4 | 2 | 3.0 | 175 |
+| 52 | 1.903453 | 10 | 4.0263 | 2.2 | 2 | 3.0 | 250 |
+| 26 | 1.706119 | 88 | 4.4203 | 3.0 | 1 | 2.2 | 175 |
+| 9 | 1.473466 | 61 | 3.9710 | 1.4 | 2 | 2.2 | 100 |
+| 50 | 1.447075 | 70 | 6.1250 | 3.0 | 1 | 3.0 | 250 |
+| 32 | 1.407810 | 74 | 5.8881 | 3.0 | 1 | 3.0 | 175 |
+| 19 | 1.326168 | 233 | 7.6547 | 2.2 | 1 | 1.4 | 175 |
+| 43 | 1.311771 | 146 | 10.0078 | 2.2 | 1 | 2.2 | 250 |
+| 48 | 1.285409 | 214 | 13.7788 | 1.4 | 1 | 3.0 | 250 |
 
 ---
 
