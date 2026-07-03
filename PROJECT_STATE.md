@@ -240,8 +240,13 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 
 ### 🔴 HANDOFF — ZeusInspired_GridLog (เริ่มต่อจากตรงนี้ session หน้า)
 
-**สถานะ:** AUDUSD + AUDJPY ผ่าน IS/OOS จริงแล้ว (retention 1.09 / 0.87) — **ยังไม่ผ่าน Monte Carlo บน
-sizing ที่ scale แล้ว และยังไม่เคยรันเป็นพอร์ตรวมกัน 2 symbol พร้อมกัน** ยังห้าม deploy
+**สถานะ (FINAL 2026-07-03): ตระกูล ZeusInspired = ไม่ deploy.** validation ครบทุกด่านแล้ว
+(MC ✅ → พอร์ตรวม ✅ → **backward-OOS 2023-24 = ด่านที่ฆ่า**): AUDUSD REJECT (ไม่เทรดก่อน 2025 +
+2024 ขาดทุน) · AUDJPY PARKED (กำไร 3 ปีแต่ต้อง size ลงจน PF เหลือ 1.12 < gate 1.20 —
+full-window 8x: eqDD 12.17% ✅ / PF 1.12 ❌). **สิ่งที่รอดคือ mechanism:** grid+LOG+ATR spacing →
+port เข้า Boss V2 เป็น module เพื่อ sweep กลไก×symbol (Sonnet, งานถัดไป). บทเรียนที่จ่ายแล้วคุ้ม:
+(1) IS/OOS ใน regime เดียวกัน (2025-26) ไม่พอ — backward-OOS บังคับทุก candidate ต่อไป
+(2) MC จาก closed trades optimistic จริง (MC worst 18% vs ปี hostile จริง 36%)
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
@@ -251,7 +256,11 @@ sizing ที่ scale แล้ว และยังไม่เคยรั�
    PF 1.48)** — scale `_05_BaseLot`+`_04_TpUsd`+`_06_MaxTotalLot` พร้อมกัน · เดือนที่ลบพร้อมกันมีแค่
    1/17 แต่คือ **2026-06 เดือนล่าสุด** → จับตาบน demo · caveat: วัดจาก closed trades — combined
    floating DD ต้องพิสูจน์บน demo (ตัวเลขเต็ม → EA_SCORECARD §FRESH TEMPLATE EAs)
-3. **GBPAUD/USDJPY/EURCHF** ยังบางเกิน (12-18 เทรด) — ถ้าจะเก็บต่อ ต้องรอ history ยาวขึ้นหรือหา window อื่น
+3. ✅ **Backward-OOS 2023–2024 เสร็จ 2026-07-03 (รอบ 3) — VERDICT เปลี่ยน:** **AUDUSD = REJECT**
+   (แทบไม่เทรดก่อน 2025 + ปี 2024 ขาดทุน PF 0.41 — edge เป็น regime 2025-26 เท่านั้น) ·
+   **AUDJPY = CONDITIONAL** (กำไรทั้ง 3 ปีแต่ 2023 eqDD 36% ที่ 20x → ต้อง de-scale เป็น **lot8x**) ·
+   แผนพอร์ตรวม 0.7x = ยกเลิก → AUDJPY solo · ตัวเลข → `_mt5_auto/ZIGL_BWD_OOS.csv` + scorecard
+3b. **GBPAUD/USDJPY/EURCHF** ยังบางเกิน (12-18 เทรด) — ถ้าจะเก็บต่อ ต้องรอ history ยาวขึ้นหรือหา window อื่น
    เพิ่ม ไม่ใช่เชื่อจากเทรดน้อยแบบนี้
 4. **ก่อน deploy จริง:** ผ่าน `robustness-validator` skill ให้ครบ (ยังไม่เคยเรียก skill นี้กับ EA ตัวนี้เลย)
    + สร้าง magic number ใหม่ (990101/990102 มีอยู่แล้วใน .set แต่ยังไม่จองในระบบ live)

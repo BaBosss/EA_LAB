@@ -1,0 +1,5 @@
+symbol,window,trades,PF,net,balDD%,eqDD%,sharpe,verdict_note
+AUDUSD,2023,4,3.15,567.73,2.64,4.38,0.14,sample too thin - EA barely fires pre-2025
+AUDUSD,2024,8,0.41,-414.43,6.81,10.92,-0.32,LOSING on unseen year
+AUDJPY,2023,69,1.17,893.56,30.14,36.07,0.43,profitable but eqDD 36% at 20x = budget bust
+AUDJPY,2024,41,3.80,3125.24,4.78,8.57,2.64,strong
