@@ -11,21 +11,25 @@
 ## 1. ภาพใหญ่ — สองระบบนี้คืออะไร ต่างกันยังไง
 
 ทั้งคู่คือ "โครง EA สำเร็จรูป" (chassis) ที่ให้เสียบ signal เข้าไปโดยไม่ต้องเขียน risk/lot/execution ใหม่ทุกครั้ง
-แต่เกิดมาคนละจุดประสงค์:
+— **ซ้ำซ้อนกันเชิงจุดประสงค์โดยยอมรับ** (สร้างคนละรอบ คนละสไตล์วิศวกรรม). บทบาทถูก align ใหม่
+2026-07-03 ตาม `VISION.md` (แม่พิมพ์เดียว · function กลางร่วมกัน · ต่างแค่ entry+TF):
 
 | | **EA_Template (Boss V2)** | **EA_CORE_V1** |
 |---|---|---|
 | ที่อยู่ | `D:\EA_LAB\ea_template` | `D:\EA_Project\CURRENT_BUILD` |
-| บทบาท | **แม่พิมพ์ smoke** — เสียบไอเดีย → backtest เร็ว → ตาย/รอด | **เครื่องยนต์ production** — framework คุณภาพสูง ปั๊ม EA จริงจาก chassis เดียว |
-| ปรัชญา | เร็ว ง่าย dropdown ทุกอย่าง | contract-first, ทุก module มี test (regression 1417 PASS / 0 FAIL) |
+| บทบาท (2026-07-03) | **แม่พิมพ์หลักตัวเดียวของโรงงาน** — smoke + production ออกจากที่นี่ทั้งหมด | **คลังอะไหล่ R&D** — หยิบ module มาใส่แม่พิมพ์เมื่อต้องการ · พักพัฒนาจนกว่าจะพร้อม |
+| ปรัชญา | เร็ว ง่าย dropdown ทุกอย่าง — เจ้าของเข้าใจได้ทั้งตัว | contract-first, ทุก module มี test (regression 1417 PASS / 0 FAIL) |
 | ความลึก | 1 ไฟล์ .ex5 ต่อ entry, indicator built-in | module แยกชั้น: signal / executor / risk / adapter |
-| Execution | market order ขาเดียว | ScaleExecutor_v2 = multi-leg pyramid (pending LIMIT/STOP + OCO) |
-| สถานะ (ดู PROJECT_STATE) | เครื่องมือเสร็จ = **freeze เป็น smoke tool** | code เสร็จ, รอปิด validate loop (ST03) |
+| Execution | market order ขาเดียว (pyramid ยังไม่มี — อะไหล่ที่รอ port คือ ScaleExecutor_v2) | ScaleExecutor_v2 = multi-leg pyramid (pending LIMIT/STOP + OCO) |
+| สถานะ (ดู PROJECT_STATE) | UNFREEZE — งานค้าง: เติม Hedge/Recovery + smoke-regression | loop ปิดแล้ว (fallback) — เก็บเป็นคลังอะไหล่ |
 
-**เมื่อไหร่ใช้ตัวไหน:**
-- ไอเดีย signal ใหม่ → **EA_Template** ก่อนเสมอ (smoke ถูกและเร็ว — ผ่าน `/signal-scan` pipeline)
-- signal ที่พิสูจน์ edge แล้ว + อยากได้ execution ซับซ้อน (pyramid, tiered TP, portfolio guard) → **EA_CORE**
-- EA standalone ที่ deploy จริง (ST_EA03, BRK ฯลฯ) = .mq5 เดี่ยวใน `TEMPLATE\` ของ EA_Project — ใช้ไฟล์ตรง ไม่ผ่าน chassis ไหน
+**เมื่อไหร่ใช้ตัวไหน (aligned 2026-07-03):**
+- ไอเดียใหม่ (entry ใหม่ *หรือ* กลไกใหม่×symbol) → **Boss V2** ก่อนเสมอ (ผ่าน `/signal-scan` pipeline)
+- เขียน **standalone** ได้เฉพาะเมื่อแม่พิมพ์ยังแสดงกลไกนั้นไม่ได้ = **ทางด่วนชั่วคราว** — พิสูจน์ edge
+  เมื่อไหร่ **ต้อง port กลับเข้า Boss V2** (เพิ่ม entry/module ให้แม่พิมพ์) + re-confirm เลขตรงเดิม
+  ก่อน deploy. ห้ามปล่อย standalone เป็นถาวร (ยกเว้น EA ที่ live อยู่แล้ว — grandfather ถึง judge)
+- ต้องการ execution ซับซ้อน (pyramid, OCO) → ยก module จาก **EA_CORE** มา port ใส่ Boss V2
+  ไม่ใช่ย้ายงานไปทำบน EA_CORE
 
 ---
 
@@ -174,18 +178,22 @@ input prefix ตามแกน: `Inp11_`, `Inp22_`, `Inp33_` … (รายล�
 ## 4. จุดต่อกับ pipeline EA_LAB (ภาพรวม flow)
 
 ```
-ไอเดีย signal ──► /signal-scan (triage momentum/reversion + เลือก symbol×TF)
+ไอเดีย (entry ใหม่ หรือ กลไก×symbol ใหม่) ──► /signal-scan (triage + เลือก symbol×TF)
       │
       ▼
-EA_Template Boss V2 ── smoke (Model 1) ──► ตาย = จบ (บันทึก MASTER_BACKLOG)
-      │ รอด
+Boss V2 (แม่พิมพ์) ── smoke (Model 1) ──► ตาย = จบ (บันทึก MASTER_BACKLOG)
+      │ รอด                     ▲
+      ▼                         │ port กลับ + re-confirm เลข (บังคับ)
+optimize หยาบ → IS/OOS → MC/WF  │
+      │ PASS                    │
+      ▼                         │
+(ถ้าจำเป็นต้องอ้อมผ่าน standalone ชั่วคราว ──────┘)
+      │
       ▼
-optimize หยาบ → IS/OOS → MC/WF (skills: ea-optimization-orchestrator, robustness-validator)
-      │ PASS
-      ▼
-เขียนเป็น standalone .mq5 (TEMPLATE\ ของ EA_Project) หรือ wire เข้า EA_CORE ถ้าต้องการ
-pyramid/portfolio-guard ──► corr gate ──► deploy demo (vps-deploy-ops) ──► /ea-monitor
+corr gate ──► deploy demo จากแม่พิมพ์ (vps-deploy-ops) ──► /ea-monitor
 ```
 
-- EA_Template = ด่านแรก (ฆ่าไอเดียถูกๆ) · EA_CORE = ปลายทาง production สำหรับ execution ซับซ้อน
-- ทั้งสองใช้ automation กลางชุดเดียวกัน: `D:\EA_LAB\scripts\` + `_mt5_auto\` (กฎ: ปิด GUI, Model 4 ก่อนตัดสินจริง, window 2023–2026)
+- Boss V2 = ทั้งด่านแรกและปลายทาง production (แม่พิมพ์เดียวตาม `VISION.md`) · EA_CORE = คลังอะไหล่
+  (ต้องการ pyramid/portfolio-guard → ยก module มาใส่แม่พิมพ์)
+- standalone = ทางด่วนชั่วคราวเท่านั้น — พิสูจน์ edge แล้วต้อง port เข้าแม่พิมพ์ก่อน deploy
+- ทั้งหมดใช้ automation กลางชุดเดียวกัน: `D:\EA_LAB\scripts\` + `_mt5_auto\` (กฎ: ปิด GUI, Model 4 ก่อนตัดสินจริง, window 2023–2026)

@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-03 · **updated by:** Claude Sonnet 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-03 (รอบ 2 — direction alignment) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -29,6 +29,7 @@
 | fact | owner เดียว | ที่อื่นทำได้ |
 |---|---|---|
 | สถานะ% · decision · แผน · invariants | **PROJECT_STATE.md** (นี่) | link |
+| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **VISION.md** | link |
 | live portfolio (EA/magic/lot/judge/monitor) | **DEMO_DEPLOYMENT_PLAN.md** | link |
 | backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
 | ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
@@ -55,15 +56,16 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 ---
 
-## 1. เป้าหมาย + ภาพรวม 4 ชั้น (โรงงาน 1 + เครื่องยนต์ 1 + แม่พิมพ์ 1 → พอร์ตจริง)
+## 1. เป้าหมาย + ภาพรวม 4 ชั้น (โรงงาน 1 + แม่พิมพ์ 1 + คลังอะไหล่ 1 → พอร์ตจริง)
 
 > **เป้าหมายสูงสุด:** 10 พอร์ต × 2–3 EA ที่ **ไม่ correlate กัน** × 10,000 cent → passive income.
+> **ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ → `VISION.md`** (อ่านคู่ไฟล์นี้ทุก session — ถ้างานขัดกับ VISION ให้หยุดถามเจ้าของ)
 
-| ชื่อ | ที่อยู่จริง | บทบาท | สถานะ % |
+| ชื่อ | ที่อยู่จริง | บทบาท (aligned 2026-07-03) | สถานะ % |
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | เครื่องยนต์ framework MQL5 (ปั๊ม EA หลายตัวจาก chassis เดียว) | **100% — loop ปิด (fallback): framework = R&D พร้อม reuse, ST_EA03 standalone = production** |
-| **EA_Template** | `D:\EA_LAB\ea_template` (Boss V2 chassis) | แม่พิมพ์ — เสียบ signal เข้า chassis เดียว backtest เร็ว | **100% — FREEZE เป็น smoke tool** (2026-07-02) |
+| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **แม่พิมพ์หลักตัวเดียวของโรงงาน** (UNFREEZE 2026-07-03) — function กลางร่วมกัน (MM/lot/SL/grid/hedge/recovery) ต่างแค่ entry+TF · งานผลิต EA ใหม่ทุกตัวออกจากที่นี่ | chassis เสร็จ · เหลือเติม Hedge/Recovery + smoke-regression |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | **คลังอะไหล่ R&D** — ไม่ทิ้ง หยิบ module (เช่น ScaleExecutor pyramid) มาใส่แม่พิมพ์เมื่อต้องการ · TEMPLATE\ = ที่อยู่ standalone (ทางด่วนชั่วคราว — พิสูจน์ edge แล้วต้อง port เข้าแม่พิมพ์) | framework สมบูรณ์ · พักการพัฒนา จนกว่าจะพร้อม |
 | **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
 
 หมายเหตุ: "EA_Project" กับ "EA_CORE" = track เดียวกัน (Project = repo, Core = engine ข้างใน).
@@ -79,7 +81,8 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
   2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
-- **EA_CORE 100% — LOOP ปิดแล้ว (2026-07-02, fallback invoked):** STEP 1→5 เดินครบ.
+- **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
+  (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
   หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
   STEP 3 coarse grid **complete 48 combos → OOS PF<1.0 ทั้งหมด** (ดีสุด 0.87 บน M2 ฝั่ง optimistic).
   **ข้อสรุป: EA_CORE = R&D track** — framework สมบูรณ์เชิงวิศวกรรม (signals v2–v5, ScaleExecutor_v2,
@@ -88,9 +91,13 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   gotchas ที่บันทึกไว้: LR1 ต้อง `InpAllowLiveOrders=true` ใน tester · optimizer genetic mode พัง ใช้
   Optimization=1 · portable python `tools/python312`. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
   architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-- **EA_Template 100% — FREEZE (2026-07-02)** — chassis compile 0/0 รันถูก วัดเชื่อถือได้ = **track ปิดอย่างเป็นทางการ**:
-  ใช้เป็น smoke tool เท่านั้น ไม่พัฒนา chassis ต่อ (ไอเดียใหม่เสียบผ่าน Boss V2 ได้ตามเดิม). architecture +
-  วิธีใช้ → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`. หมายเหตุ: `modules\`(V1) vs `core\`(V2) ซ้ำโดยตั้งใจ ไม่ใช่ขยะ.
+- **EA_Template (Boss V2) — UNFREEZE 2026-07-03 → แม่พิมพ์หลักตัวเดียว** (supersede freeze 2026-07-02
+  ด้วยเหตุใหม่: ภาพจริงของเจ้าของเพิ่งถูก capture ใน `VISION.md` — แม่พิมพ์เดียว function กลางร่วมกัน
+  ต่างแค่ entry+TF). chassis compile 0/0 วัดเชื่อถือได้อยู่แล้ว · **งานค้างเพื่อเป็นแม่พิมพ์เต็มตัว:**
+  (1) เติม Hedge/Recovery module จริง (ตอนนี้เป็น stub ปิดไว้) (2) เพิ่ม smoke-regression ชุดเล็ก
+  (backtest ค่าคงที่ 1 ชุด เทียบเลขเดิมทุกครั้งที่แก้ core) (3) port Zeus grid/LOG เข้าเป็น entry
+  หลัง Zeus validate ผ่าน. architecture + วิธีใช้ → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
+  หมายเหตุ: `modules\`(V1) vs `core\`(V2) ซ้ำโดยตั้งใจ ไม่ใช่ขยะ.
 - **Live Portfolio 20%** — ✅ **9 EA live ครบแล้ว (user ยืนยัน deploy เสร็จ 2026-07-02)**. live clock เริ่ม 2026-06-22 →
   judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
   ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
@@ -136,6 +143,10 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | 2026-07-03 | **Zeus Gold Hedge V1.2 (MT4) = REJECT ทั้ง XAU/EU** (score ต่ำ ไม่ใช่ hard gate — ดู rubric fix ด้านล่าง) → ต่อยอดเป็น `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign) | วิเคราะห์เต็ม: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md` · methodology → skill `locked-ea-analyzer` |
 | 2026-07-03 | **แก้ scoring rubric: mechanism-risk hard-gate → score-penalty** + **Model 1 (control points) = ขั้นต่ำก่อน REJECT/DISQUALIFIED ใดๆ** (Model 2 = proof-of-concept เท่านั้น) | user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง. บันทึกใน `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. พิสูจน์คุณค่าทันที: จับ false-positive ได้ 2 ครั้งในวันเดียว (Zeus XAU Model 1 fill-artifact PF 1.89→Model 0 จริง 1.01; AUDCAD Model 2 PF 1.80→Model 1 จริง 0.89) |
 | 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` — AUDJPY = CANDIDATE แรกที่รอด** (PF 1.21 เท่ากันทั้ง Model 2/1 = ไม่ใช่ fill artifact; DD-scale เข้า 15% ได้ PF 1.91 net +$2,780/18mo) ยังไม่ IS/OOS/MC | AUDCAD ตกทั้ง baseline/tightened ที่ Model 1 — ทองถูกตัดออกทั้งหมดตามคำสั่ง user (Zeus family ไม่เหมาะกับ volatility ทอง) |
+| 2026-07-03 | **Direction alignment (grill session): Boss V2 = แม่พิมพ์หลักตัวเดียว (UNFREEZE — supersede freeze 2026-07-02)** · EA_CORE = คลังอะไหล่ R&D (ไม่ทิ้ง ทำต่อเมื่อพร้อม) · standalone = ทางด่วนชั่วคราว ต้อง port เข้าแม่พิมพ์เมื่อพิสูจน์ edge | เหตุใหม่ที่ทำให้รื้อ decision เดิมได้: ภาพจริงของเจ้าของเพิ่งถูก capture ครั้งแรก (`VISION.md`) — แม่พิมพ์เดียว function กลางร่วม ต่างแค่ entry+TF · เจ้าของต้องเข้าใจระบบได้ทั้งตัว (EA_CORE อ่านไม่ออก = drift ซ้ำ) |
+| 2026-07-03 | **โหมดงาน = dual-track ถาวร** (โรงงานเดินตลอด + operate คู่กัน) — ยกเลิกคำว่า "operate ล้วน" | แกนล่าที่ยังไม่อิ่มตัว = **กลไก×symbol** (Zeus พิสูจน์: edge มาจาก grid+LOG บน AUD ไม่ใช่ entry เทพ) — ที่อิ่มตัวคือ entry เดี่ยวเท่านั้น |
+| 2026-07-03 | **Zeus: validate จบใน standalone ก่อน (MC + พอร์ตรวม) → PASS แล้วค่อย port เข้า Boss V2 เป็น pilot ของ workflow ใหม่ → deploy จากแม่พิมพ์** · 9 EA live ไม่แตะจนถึง judge | ไม่ทิ้งผล IS/OOS ที่ทำแล้ว · port ก่อน validate = ต้อง rerun ทั้งหมด · แตะ EA live = ทำลาย data การทดลอง |
+| 2026-07-03 | **เพิ่ม `VISION.md`** = owner ของ "ภาพใหญ่/ปรัชญาโรงงาน" — AI ทุก session อ่านคู่ PROJECT_STATE, งานขัด VISION ให้หยุดถาม | root cause ของ drift = ภาพในหัวเจ้าของไม่เคยถูกเขียนเป็นไฟล์ → ทุก session ตีความจาก status ที่ drift ไปแล้ว |
 | 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
 | 2026-06-23 | **DD% ไม่ใช่ hard gate** | DD แก้ได้ด้วย sizing/spacing; structural gate คือ "กลไก" (uncapped martingale/grid). ดู EA_SCORECARD Step 0 |
 | ongoing | **correlation rule:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **ลด lot ไม่ใช่ตัดทิ้ง** | user rule (memory: correlation-vs-lotsize) |
@@ -222,9 +233,10 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 - housekeeping ทั้งหมด: ลบ ea_projects/Gold ✅ · template ซ้ำเหลือตัวเดียว ✅ · portable python ✅ ·
   fix OneDrive→D: path ✅ · แก้ log data ที่เกือบหาย (qwen merge) ✅
 
-**สรุปเดิม (2026-07-02, ล้าสมัยแล้ว):** ~~ไม่มีงาน "หา edge ใหม่" ค้างอยู่แล้ว~~ — **แก้ไข 2026-07-03:
-มีงานค้างจริงจาก ZeusInspired_GridLog (ดู HANDOFF ด้านล่าง)** โหมดหลักยังเป็น operate สำหรับ 9 EA live
-เดิม แต่มีอีก track หนึ่งขนานกันอยู่ (candidate ใหม่ที่ยังไม่ deploy)
+**สรุปเดิม (2026-07-02, ล้าสมัยแล้ว):** ~~ไม่มีงาน "หา edge ใหม่" ค้างอยู่แล้ว~~ — **แก้ไข 2026-07-03
+(direction alignment): โหมดถาวรจากนี้ = dual-track** — (1) โรงงานเดินตลอด: ล่า edge ผ่านแม่พิมพ์ Boss V2
+(แกนใหม่ = กลไก×symbol) + งานค้าง Zeus (HANDOFF ด้านล่าง) + งานอัปเกรดแม่พิมพ์ (ด้านล่าง) ·
+(2) operate 9 EA live คู่กันจนถึง judge. ดูปรัชญา → `VISION.md`
 
 ### 🔴 HANDOFF — ZeusInspired_GridLog (เริ่มต่อจากตรงนี้ session หน้า)
 
@@ -242,6 +254,17 @@ sizing ที่ scale แล้ว และยังไม่เคยรั�
 4. **ก่อน deploy จริง:** ผ่าน `robustness-validator` skill ให้ครบ (ยังไม่เคยเรียก skill นี้กับ EA ตัวนี้เลย)
    + สร้าง magic number ใหม่ (990101/990102 มีอยู่แล้วใน .set แต่ยังไม่จองในระบบ live)
    + ตาม `vps-deploy-ops` checklist ปกติ (ยังไม่ได้ build deploy bundle)
+5. **(ใหม่ 2026-07-03) ถ้า validate ผ่านทั้งหมด → port เข้า Boss V2 เป็น `Entry_GridLog` ก่อน deploy**
+   (Zeus = pilot ของ workflow "standalone → แม่พิมพ์" ตาม VISION) — port แล้วต้อง re-confirm เลข
+   ตรงกับ standalone เดิมก่อนถือว่า port สำเร็จ · deploy จากแม่พิมพ์ ไม่ใช่จากร่าง standalone
+
+### 🔧 งานอัปเกรดแม่พิมพ์ Boss V2 (track ใหม่ 2026-07-03 — ทำขนานกับ Zeus ได้)
+
+1. เติม **Hedge/Recovery module จริง** (ตอนนี้เป็น stub ปิดไว้ใน `ea_template\core\`)
+2. เพิ่ม **smoke-regression ชุดเล็ก** — backtest ค่าคงที่ 1 ชุดทุกครั้งที่แก้ core แล้วเทียบเลขเดิม
+   (ทดแทน test suite ที่ Boss V2 ไม่มี)
+3. หลังจากนั้น: sweep แกน **กลไก×symbol** (grid/DCA/hedge/progression บนคู่เงินที่ยังไม่เคยลอง)
+   ผ่าน `/signal-scan` ตามปกติ
 
 **ไฟล์ที่เกี่ยวข้องทั้งหมด:**
 - EA source: `D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_ZeusInspired_GridLog_rev01.mq5`
@@ -260,7 +283,7 @@ sizing ที่ scale แล้ว และยังไม่เคยรั�
 - MT5 headless run ไม่ผ่าน `-SetFile` = อาจ carry-over ค่าจาก run ก่อนหน้า ไม่ใช่ compiled default เสมอไป
   ต้องส่ง .set ระบุค่าครบทุกครั้ง
 
-### 🟣 ถึง 2026-09-22 (judge) — โหมด operate ล้วน (9 EA เดิม)
+### 🟣 ถึง 2026-09-22 (judge) — track operate (9 EA เดิม — เดินคู่กับโรงงาน ไม่ใช่โหมดเดียว)
 - /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica (คาดว่าจะ kill),
   KAUFMAN_ER ถ้า user ตัดสินใจ deploy ระหว่างทาง
 - สะสม ≥30 real trades/EA
@@ -276,6 +299,7 @@ sizing ที่ scale แล้ว และยังไม่เคยรั�
 | ต้องรู้เรื่อง | เปิดไฟล์ |
 |---|---|
 | สถานะ + แผนนี้ (hub) | **`PROJECT_STATE.md`** (ไฟล์นี้) |
+| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
 | deploy วันนี้ | `DEPLOY_CHECKLIST_2026-06-29.md` |
 | EA_CORE ปิด loop ด้วย ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
 | live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
