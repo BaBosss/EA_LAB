@@ -243,10 +243,15 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 **สถานะ (FINAL 2026-07-03): ตระกูล ZeusInspired = ไม่ deploy.** validation ครบทุกด่านแล้ว
 (MC ✅ → พอร์ตรวม ✅ → **backward-OOS 2023-24 = ด่านที่ฆ่า**): AUDUSD REJECT (ไม่เทรดก่อน 2025 +
 2024 ขาดทุน) · AUDJPY PARKED (กำไร 3 ปีแต่ต้อง size ลงจน PF เหลือ 1.12 < gate 1.20 —
-full-window 8x: eqDD 12.17% ✅ / PF 1.12 ❌). **สิ่งที่รอดคือ mechanism:** grid+LOG+ATR spacing →
-port เข้า Boss V2 เป็น module เพื่อ sweep กลไก×symbol (Sonnet, งานถัดไป). บทเรียนที่จ่ายแล้วคุ้ม:
+full-window 8x: eqDD 12.17% ✅ / PF 1.12 ❌). บทเรียนที่จ่ายแล้วคุ้ม:
 (1) IS/OOS ใน regime เดียวกัน (2025-26) ไม่พอ — backward-OOS บังคับทุก candidate ต่อไป
 (2) MC จาก closed trades optimistic จริง (MC worst 18% vs ปี hostile จริง 36%)
+
+✅ **PORT เสร็จ 2026-07-03 (รอบ 5 attempts): กลไก Zeus อยู่ในแม่พิมพ์แล้ว = `Boss_14_GridLog`**
+parity ผ่าน (PF 2.04 vs 1.91 · 58 vs 54 trades · net +$2,913 vs +$2,780 · eqDD ต่ำกว่าฝั่งดี) ·
+regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec + input ใหม่ 9 กลุ่ม + บทเรียน parity →
+`ea_template\DESIGN_V2.md` §5.5 · **workflow "standalone → แม่พิมพ์" ตาม VISION ปิด loop ครั้งแรกสำเร็จ**
+→ งานถัดไป: sweep Boss_14 กลไก×symbol (qwen batch) หา symbol ที่กลไก durable จริง
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD

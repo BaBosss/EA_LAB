@@ -31,6 +31,17 @@ double Exit_RiskATR_Scaled()
    return atr;
 }
 
+// additive: _33_SL_MaxPips (0 = off) hard-caps the ATR SL distance (price units).
+// pip = 10*point on 3/5-digit symbols. Zeus GridLog parity: SL = min(mult*ATR, 150 pips).
+double Exit_CapATRDist(const double distPrice)
+{
+   if(_33_SL_MaxPips <= 0.0) return distPrice;
+   int dg = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   double pipPrice = ((dg == 3 || dg == 5) ? 10.0 : 1.0) * Exit_Point();
+   double cap = _33_SL_MaxPips * pipPrice;
+   return (cap > 0.0 ? MathMin(distPrice, cap) : distPrice);
+}
+
 // SL distance in points for a fresh order (RISK sizing); 0 if not price-based
 double Exit_SLDistancePoints()
 {
@@ -38,7 +49,7 @@ double Exit_SLDistancePoints()
    switch(SLMode)
    {
       case SL_FIXED_POINTS: return _31_SL_Pip;
-      case SL_ATR:          return (pt > 0.0 ? _33_SL_ATRmult * Exit_RiskATR_Scaled() / pt : 0.0);
+      case SL_ATR:          return (pt > 0.0 ? Exit_CapATRDist(_33_SL_ATRmult * Exit_RiskATR_Scaled()) / pt : 0.0);
       case SL_SD:           return (pt > 0.0 ? _36_SD_Mult * Indi_SD(1) / pt : 0.0);
       case SL_STRUCT_DONCHIAN:
       case SL_STRUCT_SR:
@@ -67,7 +78,7 @@ double Exit_InitialSL(const int dir, const double entryPrice)
          return (dir == 1 ? entryPrice - _31_SL_Pip * pt : entryPrice + _31_SL_Pip * pt);
       case SL_ATR:
       {
-         double a = _33_SL_ATRmult * Exit_RiskATR_Scaled();
+         double a = Exit_CapATRDist(_33_SL_ATRmult * Exit_RiskATR_Scaled());
          return (dir == 1 ? entryPrice - a : entryPrice + a);
       }
       case SL_SD:
@@ -87,6 +98,14 @@ double Exit_InitialSL(const int dir, const double entryPrice)
 // initial TP price (0 = managed dynamically)
 double Exit_InitialTP(const int dir, const double entryPrice)
 {
+   // additive: _2_SuppressLegTP (default false = unchanged behavior) forces
+   // every leg to have NO per-order broker TP, relying solely on the basket
+   // money TP (_2_BasketTP_Money) to close the whole basket together. Needed
+   // by GridLog(14) port: standalone Zeus opens every leg with TP=0.0 (real
+   // per-order SL only) - without this, chassis EXIT_ATR_TP attaches a live
+   // per-leg TP that lets individual legs close independently of the basket,
+   // fragmenting one basket-cycle into several partial trades (breaks parity).
+   if(_2_SuppressLegTP) return 0.0;
    double pt = Exit_Point();
    switch(ExitMode)
    {
@@ -136,10 +155,42 @@ void Exit_ApplyTrailing()
    }
 }
 
+// additive: 2-stage partial close as basket floating profit approaches the
+// _2_BasketTP_Money target (Zeus GridLog port (14)). OFF unless both pct
+// thresholds are > 0. Mirrors standalone ManagePartialClose(): flags reset
+// whenever floating profit dips back to/below zero (re-arms for the next
+// approach to target within the same basket).
+bool g_exit_partial1_done = false;
+bool g_exit_partial2_done = false;
+
+void Exit_ManagePartialClose()
+{
+   if(_2_BasketTP_Money <= 0.0) return;               // needs a target to measure % against
+   if(_2_PartialPct1 <= 0.0 && _2_PartialPct2 <= 0.0) return;   // both off
+
+   double profit = Exec_BasketProfit();
+   if(profit <= 0.0) { g_exit_partial1_done = false; g_exit_partial2_done = false; return; }
+
+   double pctOfTarget = profit / _2_BasketTP_Money * 100.0;
+
+   if(!g_exit_partial1_done && _2_PartialPct1 > 0.0 && pctOfTarget >= _2_PartialPct1)
+   {
+      Exec_ClosePartialFraction(_2_PartialFrac1);
+      g_exit_partial1_done = true;
+   }
+   if(!g_exit_partial2_done && _2_PartialPct2 > 0.0 && pctOfTarget >= _2_PartialPct2)
+   {
+      Exec_ClosePartialFraction(_2_PartialFrac2);
+      g_exit_partial2_done = true;
+   }
+}
+
 // per-tick basket management; returns true if it closed the whole basket
 bool Exit_ManageBasket()
 {
    if(Exec_CountAll() <= 0) return false;
+
+   Exit_ManagePartialClose();   // no-op unless _2_PartialPct1/2 set
 
    double profit = Exec_BasketProfit();
    if(_2_BasketTP_Money > 0.0 && profit >= _2_BasketTP_Money) { Exec_CloseAll(); return true; }

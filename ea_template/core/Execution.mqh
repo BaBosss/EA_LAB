@@ -130,4 +130,27 @@ bool Exec_ModifyPosition(const ulong ticket, const double sl, const double tp)
    return g_trade.PositionModify(ticket, sl, tp);
 }
 
+// additive: partial-close every own position by `frac` of its current volume
+// (skips legs where the resulting close volume would be <=0 or >= full volume,
+// i.e. below broker min-lot step after normalize). Used by ExitManager's
+// milestone partial-close (_2_PartialPct1/2) - Zeus GridLog port (14).
+void Exec_ClosePartialFraction(const double frac)
+{
+   if(frac <= 0.0) return;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsMine(i)) continue;
+      ulong  tk  = PositionGetInteger(POSITION_TICKET);
+      double vol = PositionGetDouble(POSITION_VOLUME);
+      double closeVol = Exec_NormalizeLot(vol * frac);
+      if(closeVol <= 0.0 || closeVol >= vol) continue;   // skip if it would close the whole leg
+      if(DryRun)
+      {
+         PrintFormat("[DRYRUN] partial-close ticket=%I64u vol=%.2f frac=%.2f -> %.2f", tk, vol, frac, closeVol);
+         continue;
+      }
+      g_trade.PositionClosePartial(tk, closeVol);
+   }
+}
+
 #endif // BOSS_LAB_EXECUTION_MQH

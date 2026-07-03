@@ -17,11 +17,11 @@ V2 = รื้อ usability ของ chassis เดิม 3 เรื่อง�
 
 | หมวด | Dropdown | โค้ด → ความหมาย | Default |
 |---|---|---|---|
-| **1x Entry** | (compile-time, เป็นชื่อ EA) | `11` GridTrendMA · `12` Breakout · `13` MeanReversion | per-build |
+| **1x Entry** | (compile-time, เป็นชื่อ EA) | `11` GridTrendMA · `12` Breakout · `13` MeanReversion · `14` GridLog (Zeus port) | per-build |
 | **2x Exit/TP** | InpExitMode | `21` FixTP(pip) · `22` TP_ATR · `23` Trail · `24` RunTrend | 22 |
 | **3x SL** | InpSLMode | `30` None · `31` FixPip · `32` Money · `33` ATR · `34` Donchian · `35` SR | 33 |
 | **4x FirstLot** | InpFirstLotMode | `41` Fixed · `42` Risk% | 41 |
-| **5x Progression** | InpLotProgression | `50` None · `51` Linear · `52` Multiplier · `53` Plus · `54` Log | 50 |
+| **5x Progression** | InpLotProgression | `50` None · `51` Linear · `52` Multiplier · `53` Plus · `54` Log · `55` LogPower (Zeus `factor^ln(N)`) | 50 |
 | **6x Direction** | InpTradeDir | `60` Both · `61` LongOnly · `62` ShortOnly | 60 |
 | **7x Filter** | InpTrendFilter | `70` None · `71` ATR_Expand · `72` MA_Slope | 70 |
 | **8x Recovery** | InpRecoveryMode | `80` None · `81` Light · `82` Adaptive · `83` Aggressive | 80 |
@@ -318,6 +318,32 @@ hedge leg ติด magic เดิม + comment tag `" H"` → ไม่ถู�
 (3) ยังไม่เคยผ่าน backtest/MC ใดๆ — เปิดใช้ = ต้องเข้า pipeline validate ปกติเหมือน mechanism ใหม่ทุกตัว
 
 ---
+
+## 5.5) Entry 14 — GridLog (Zeus mechanism port, 2026-07-03)
+
+port กลไกจาก `(Boss)_ZeusInspired_GridLog_rev01.mq5` (standalone PARKED — กลไกรอด backward-OOS
+แต่ EA เดิม size ปลอดภัยแล้ว PF ไม่ถึง gate) เข้าแม่พิมพ์เพื่อใช้ sweep กลไก×symbol.
+**Parity verified 2026-07-03:** AUDJPY H1 2025.01–2026.07 M1 vs standalone — PF 2.04 vs 1.91 ·
+58 vs 54 trades · net +$2,913 vs +$2,780 · eqDD 9.34% vs 14.73% (ต่ำกว่าฝั่งดี). ใช้ 5 attempts,
+set อ้างอิง: `sets\Boss14_GridLog_AUDJPY_20x.set`.
+
+**กลไก:** arm resting-stop level (`max(ATR(1)×_14_DistAtrMult, _14_MinDistPips)`) ที่ bar เปิดเมื่อ flat
+→ trigger เช็คทุก tick (fill ตรง level เหมือน pending stop) → grid DCA ผ่าน Stack 92 → LOG-power lot
+→ basket $TP + partial close 2 จังหวะ → per-leg ATR SL (capped)
+
+**Input ใหม่ที่เพิ่มเข้า core (ทุกตัว default = OFF/พฤติกรรมเดิม):**
+- `_0_BarOpenOnly` — ทั้ง pipeline ประเมินครั้งเดียวต่อ bar (Zeus-style); intrabar เหลือแค่ resting-stop fill
+- `_33_SL_MaxPips` — เพดาน SL (Zeus: min(4×ATR, 150 pips))
+- `PROG_LOG_POWER` (55) + `_55_LogPowerFactor/_55_UseLnNotLog10` — lot = base×factor^ln(N)
+- `_4_DdAdaptiveOn/_4_DdTier*` — DD-adaptive first lot
+- `_2_PartialPct1/2 + Frac1/2` — partial close ที่ % ของ basket target · `_2_SuppressLegTP` — leg ไม่มี TP รายไม้
+- `_9_StepMinPips` — floor ระยะ grid · `_9_StepATRShift` — ATR shift ของ step (1 = แท่งปิด)
+- `RC_MaxLevelsOverride` — แยก grid depth ออกจาก RC_MaxRecSteps ของ cage (KillDD ยังคุมตามเดิม)
+
+**บทเรียน parity ที่จ่ายแล้ว (อย่าเจอซ้ำ):** (1) Zeus ประเมินทุกอย่างครั้งเดียวต่อ bar — chassis รันทุก tick
+ทำ partial ยิงซ้ำจน basket แตกเป็นเทรดย่อย (2) resting stop ต้อง latch level ตอน arm ไม่ใช่คำนวณ dist
+ใหม่ทุก bar และ trigger ต้องเช็คทุก tick (3) เพดาน SL 150 pips bind จริงช่วง ATR สูง (4) per-leg TP
+ต้อง suppress เมื่อใช้ basket TP
 
 ## 6) Safety default ต่อ Strategy Plan
 ผูกชั้น loss-mgmt เข้ากับ 5 plans ใน OPTIMIZE_GUIDE:

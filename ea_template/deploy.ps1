@@ -27,8 +27,8 @@ if($LASTEXITCODE -ge 8){ Write-Host "robocopy error ($LASTEXITCODE) - is MT5 loc
 Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
 if ($Compile) {
-  # V2 = three Boss wrappers; V1 EA_LabTemplate kept for reference
-  $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","EA_LabTemplate.mq5")
+  # V2 = four Boss wrappers; V1 EA_LabTemplate kept for reference
+  $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","Boss_14_GridLog.mq5","EA_LabTemplate.mq5")
   foreach($t in $targets){
     $mq5 = Join-Path $dst $t
     if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }
@@ -43,4 +43,4 @@ if ($Compile) {
     }
   }
 }
-Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev" -ForegroundColor Green
+Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev | Boss_14_GridLog" -ForegroundColor Green

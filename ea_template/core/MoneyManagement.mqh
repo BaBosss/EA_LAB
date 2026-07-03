@@ -18,6 +18,23 @@ double MM_MoneyPerPointPerLot()
    return tickVal * (point / tickSize);
 }
 
+// additive: DD-adaptive first-lot multiplier (Zeus GridLog _05_DdAdaptive port).
+// Applied ONLY to the first order of a new basket, tiered on current floating
+// account DD%, always clamped by _4_DdHardCapMult. OFF by default (returns 1.0).
+double MM_DdAdaptiveMultiplier()
+{
+   if(!_4_DdAdaptiveOn) return 1.0;
+   double equity  = AccountInfoDouble(ACCOUNT_EQUITY);
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0) return 1.0;
+   double ddPct = (balance - equity) / balance * 100.0;
+   double mult = 1.0;
+   if(ddPct >= _4_DdTier2Pct) mult = _4_DdTier2Mult;
+   else if(ddPct >= _4_DdTier1Pct) mult = _4_DdTier1Mult;
+   if(_4_DdHardCapMult > 0.0 && mult > _4_DdHardCapMult) mult = _4_DdHardCapMult;
+   return mult;
+}
+
 // first-order lot. slDistancePoints required for RISK mode (else fixed).
 double MM_FirstLot(const double slDistancePoints)
 {
@@ -29,6 +46,7 @@ double MM_FirstLot(const double slDistancePoints)
       if(perPoint > 0.0)
          lot = riskMoney / (slDistancePoints * perPoint);
    }
+   lot *= MM_DdAdaptiveMultiplier();   // no-op unless _4_DdAdaptiveOn
    return RiskControl_ClampLot(lot);
 }
 
@@ -58,6 +76,15 @@ double MM_NextLot(const double firstLot, const int level)
       case PROG_LOG:
          lot = firstLot * (1.0 + _51_ProgFactor * MathLog((double)(lv + 1)));
          break;
+      case PROG_LOG_POWER:
+      {
+         // Zeus GridLog port (14): lot = baseLot * factor^(ln orderN) [or log10],
+         // orderN = lv+1 (1-indexed, so level 0 -> orderN 1 -> exponent 0 -> lot=firstLot).
+         double orderN   = (double)(lv + 1);
+         double exponent = (_55_UseLnNotLog10 ? MathLog(orderN) : MathLog10(orderN));
+         lot = firstLot * MathPow(_55_LogPowerFactor, exponent);
+         break;
+      }
       case PROG_NONE:
       default:
          lot = firstLot;

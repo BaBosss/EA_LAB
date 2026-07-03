@@ -12,12 +12,29 @@
 #include "Execution.mqh"
 #include "entries/IEntry.mqh"
 
-// grid step in price (Signal-ATR based or fixed points)
+// grid step in price (Signal-ATR based or fixed points), with an optional
+// additive pips floor (_9_StepMinPips, default 0=off). Zeus GridLog port (14)
+// uses this floor to prevent near-zero-ATR degenerate spacing (its _03_MinDistPips).
+// Pip = 10*point on 3/5-digit symbols (matches standalone PipSize()), else = point.
+double Stack_PipSize()
+{
+   int digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
+   double point = Indi_Point();
+   if(digits == 5 || digits == 3) return point * 10.0;
+   return point;
+}
+
 double Stack_StepPrice()
 {
-   double stepPts = (_9_StepUseATR ? _9_StepATRmult * Indi_ATR_Points() : _9_StepPoints);
+   double stepPts = (_9_StepUseATR ? _9_StepATRmult * Indi_ATR_Points(_9_StepATRShift) : _9_StepPoints);
    if(stepPts <= 0.0) stepPts = (_9_StepPoints > 0.0 ? _9_StepPoints : 300.0);
-   return stepPts * Indi_Point();
+   double stepPrice = stepPts * Indi_Point();
+   if(_9_StepMinPips > 0.0)
+   {
+      double floorPrice = _9_StepMinPips * Stack_PipSize();
+      if(stepPrice < floorPrice) stepPrice = floorPrice;
+   }
+   return stepPrice;
 }
 
 // confirm gate for an add at trigger level (dir = basket direction)

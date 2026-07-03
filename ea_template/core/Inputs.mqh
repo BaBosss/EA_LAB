@@ -7,12 +7,14 @@
 #ifndef BOSS_LAB_INPUTS_MQH
 #define BOSS_LAB_INPUTS_MQH
 
-// wrapper defines ONE of: LAB_ENTRY_11 / LAB_ENTRY_12 / LAB_ENTRY_13 (+ LAB_ENTRY_TAG)
+// wrapper defines ONE of: LAB_ENTRY_11 / LAB_ENTRY_12 / LAB_ENTRY_13 / LAB_ENTRY_14 (+ LAB_ENTRY_TAG)
 // MQL5 preprocessor has no '#if EXPR==n' / '#elif' -> use token #ifdef only.
 #ifndef LAB_ENTRY_11
 #ifndef LAB_ENTRY_12
 #ifndef LAB_ENTRY_13
+#ifndef LAB_ENTRY_14
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -49,7 +51,8 @@ enum ENUM_LOT_PROGRESSION
    PROG_LINEAR     = 51,  // 51 Linear  lot*(1+f*lv)
    PROG_MULTIPLIER = 52,  // 52 Multiplier lot*m^lv (martingale)
    PROG_PLUS       = 53,  // 53 Plus  lot+plus*lv
-   PROG_LOG        = 54   // 54 Log  lot*(1+f*ln(lv+1))
+   PROG_LOG        = 54,  // 54 Log  lot*(1+f*ln(lv+1))
+   PROG_LOG_POWER  = 55   // 55 LogPower  lot*factor^(ln(orderN)) - Zeus GridLog port (14)
 };
 
 enum ENUM_TRADE_DIR
@@ -113,6 +116,7 @@ input ENUM_TREND_FILTER    TrendFilter   = TFILTER_NONE;    // Filter 7x
 input ENUM_RECOVERY_MODE   RecoveryMode  = REC_NONE;        // Recovery 8x
 input ENUM_HEDGE_MODE      HedgeMode     = HEDGE_OFF;
 input bool                 DryRun        = false;           // log intents, no orders
+input bool                 _0_BarOpenOnly = false;          // evaluate whole OnTick pipeline once per bar (Zeus-style; false = every tick, unchanged)
 
 //==================== Stack (9x) - per-build defaults ==============
 input group "=== 9x Stack (how orders stack) ==="
@@ -128,9 +132,17 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
 input ENUM_STACK_MODE    StackMode    = STACK_GRID_AGAINST; // 92 default for MR (DCA)
 input ENUM_STACK_CONFIRM StackConfirm = CONF_PRICE_ACT;     // 3 (DCA needs strong confirm)
 #endif
+#ifdef LAB_ENTRY_14
+input ENUM_STACK_MODE    StackMode    = STACK_GRID_AGAINST; // 92 default for GridLog (adds vs adverse move)
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // 0 (Zeus grid add = distance only, blind)
+#endif
 input bool   _9_StepUseATR  = true;     // grid step from Signal-ATR (else points)
 input double _9_StepATRmult = 1.0;      // step = mult x Signal-ATR
 input double _9_StepPoints  = 300;      // step when not ATR
+input double _9_StepMinPips = 0;        // additive: pips floor under the ATR step (0=off). Zeus GridLog _03_MinDistPips.
+input int    _9_StepATRShift = 0;       // additive: Signal-ATR shift for the step calc (0=current/forming bar,
+                                         // matches Boss_11/12/13 unchanged default; 1=last CLOSED bar, matches
+                                         // standalone Zeus GetATR(1) - GridLog(14) parity .set uses 1).
 input int    _9_MaxLevels   = 5;        // max stacked orders
 
 //==================== ENTRY params (compile-time guarded) ==========
@@ -158,6 +170,13 @@ input int    _13_RSI_OS     = 30;
 input bool   _13_RequireBB  = true;
 #endif
 
+#ifdef LAB_ENTRY_14
+input group "=== 14 Entry: GridLog (Zeus-inspired breakout-arm) ==="
+input int    _14_Direction   = 1;      // 1=BUY only, 2=SELL only (fixed, never both - matches standalone)
+input double _14_DistAtrMult = 1.5;    // arm/grid-step distance = mult x Signal-ATR
+input double _14_MinDistPips = 20.0;   // floor under the ATR distance (pips; 3/5-digit symbols = 10xpoint)
+#endif
+
 //==================== Trend MA (shared: entry11 + filter + runtrend) =
 input group "=== Trend MA (shared) ==="
 input int             _0_FastMA   = 20;
@@ -179,10 +198,24 @@ input double _2_BasketTP_Money = 0;    // close basket at +money (0=off)
 input double _23_TrailStart   = 300;   // 23 trail start (pip gain)
 input double _23_TrailStep    = 100;   // 23 trail distance
 
+// additive: 2-stage partial close as the basket approaches _2_BasketTP_Money.
+// OFF by default (both pct thresholds 0 = never fires). Zeus GridLog port (14):
+// _04_PartialPct1/_04_PartialFrac1 + _04_PartialPct2/_04_PartialFrac2.
+input double _2_PartialPct1  = 0;      // close frac1 of basket volume at this % of TP target (0=off)
+input double _2_PartialFrac1 = 0.30;
+input double _2_PartialPct2  = 0;      // close frac2 of basket volume at this % of TP target (0=off)
+input double _2_PartialFrac2 = 0.30;
+
+// additive: suppress per-leg broker TP entirely (default false = unchanged).
+// GridLog(14) parity set turns this on - standalone Zeus legs carry TP=0.0,
+// exit is basket-money-TP only (+ per-leg SL). See Exit_InitialTP for detail.
+input bool _2_SuppressLegTP = false;
+
 //==================== Stop loss (3x) ===============================
 input group "=== 3x Stop loss params ==="
 input double _31_SL_Pip        = 1000; // 31 fixed pip
 input double _33_SL_ATRmult    = 2.0;  // 33 ATR x mult (x Risk-ATR)
+input double _33_SL_MaxPips    = 0.0;  // 33 hard ceiling on ATR SL distance, in pips (0=off; pip=10*point on 3/5-digit)
 input bool   _33_AdaptiveON    = false;// 33 regime-scale: SL*=clamp(ATR/SMA(ATR,N),.7,1.5)
 input int    _33_AdaptiveN     = 50;   // 33 adaptive SMA period
 input double _32_SL_Money      = 0;    // 32 basket money stop (0=off)
@@ -205,12 +238,31 @@ input double _42_RiskPct    = 1.0;   // 42 risk% balance per first order
 input double _51_ProgFactor = 0.5;   // 51/54 coefficient
 input double _52_ProgMult   = 1.3;   // 52 multiplier
 input double _53_PlusLot    = 0.01;  // 53 additive step
+input double _55_LogPowerFactor  = 1.3;   // 55 PROG_LOG_POWER: lot = firstLot * factor^(ln(orderN))
+input bool   _55_UseLnNotLog10   = true;  // 55: true=ln, false=log10 (Zeus GridLog _05_UseLnNotLog10)
+
+// additive: DD-adaptive first-lot multiplier (Zeus GridLog _05_DdAdaptive).
+// Applied ONLY to the first order of a new basket (level 0), always capped by
+// _4_DdHardCapMult, so this cannot itself become a second unbounded martingale.
+// OFF by default (_4_DdAdaptiveOn=false -> multiplier always 1.0).
+input bool   _4_DdAdaptiveOn    = false;
+input double _4_DdTier1Pct      = 10.0;   // floating account DD% at first-order time
+input double _4_DdTier1Mult     = 1.2;
+input double _4_DdTier2Pct      = 20.0;
+input double _4_DdTier2Mult     = 1.5;
+input double _4_DdHardCapMult   = 1.5;    // never exceeds this regardless of DD depth
 
 //==================== Protection cage (0x + RC_) ===================
 input group "=== 0x Protection (cage - always on) ==="
 input ENUM_PROTECT_PROFILE ProtectLevel = PROTECT_NORMAL; // 02 sets KillDD/Load/Steps
 input double RC_MaxLot     = 0.20;   // per-order lot ceiling
 input double RC_RecMultMax = 1.3;    // cap effective progression multiplier
+// additive: explicit stack/recovery depth override, independent of ProtectLevel's
+// RC_MaxRecSteps (2/3/5). 0 = OFF (falls back to existing min(RC_MaxRecSteps,_9_MaxLevels)
+// behavior - Boss_11/12/13 default is 0, so RiskControl_MaxLevels() is UNCHANGED for them).
+// Set > 0 to let a grid-heavy entry (e.g. GridLog/14) reach a deeper basket while
+// ProtectLevel still governs KillDD/DepositLoad independently of step-count.
+input int RC_MaxLevelsOverride = 0;
 
 //==================== 8x Recovery (offensive add-into-loss) ========
 // OFF unless RecoveryMode != 80. Every add clamped by the cage

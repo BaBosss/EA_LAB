@@ -105,10 +105,14 @@ double RiskControl_ClampLot(double lot)
    return lot;
 }
 
-// effective stacking/recovery levels allowed = min(stack max, cage max)
+// effective stacking/recovery levels allowed = min(stack max, cage max).
+// additive: RC_MaxLevelsOverride (default 0=off) lets a grid-heavy entry decouple
+// depth from ProtectLevel's RC_MaxRecSteps (2/3/5, sized for Recovery-mode steps,
+// not Stack depth) while KillDD/DepositLoad still come from ProtectLevel untouched.
+// Default 0 -> cageMax = RC_MaxRecSteps() exactly as before (Boss_11/12/13 unaffected).
 int RiskControl_MaxLevels()
 {
-   int cageMax  = RC_MaxRecSteps();
+   int cageMax  = (RC_MaxLevelsOverride > 0 ? RC_MaxLevelsOverride : RC_MaxRecSteps());
    int stackMax = (_9_MaxLevels > 0 ? _9_MaxLevels : 1000);
    return (cageMax < stackMax ? cageMax : stackMax);
 }
