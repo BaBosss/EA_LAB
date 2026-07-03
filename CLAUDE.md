@@ -2,6 +2,23 @@
 
 Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_STATE.md) — read that first every session. This file only holds instructions for how Claude Code itself should operate in this repo.
 
+## Model transition (Fable → Opus, effective ~2026-07-07)
+
+The user's plan loses Claude Fable access after 2026-07-07; **Claude Code continues on Opus.** The
+lead/judge role belongs to *Claude Code the seat*, not to any model. For the incoming model:
+
+- Nothing project-critical lives in any model's head. Everything is in: `VISION.md` → `PROJECT_STATE.md`
+  → `ROADMAP.md` → `AGENTS.md`/`AGENT_TASKBOARD.md` → skills (`C:\Users\patip\.claude\skills\`) →
+  auto-memory (same directory, persists across models). Read in that order on first session.
+- Honor every user rule in the Decision log verbatim (Model-2 ban, no-DEAD-before-optimize,
+  cap-breach-resize-first, correlation→reduce-lot-not-cut, 3-year window). These were each paid for
+  with real mistakes — do not re-litigate them without new evidence.
+- The user prefers decisions presented as real-workflow scenarios with one decisive recommendation,
+  in Thai, short (see memory: feedback-simple-language-decisions). Cost matters: cheapest verifiable
+  tier first (qwen < Sonnet < Opus-subagent), delegate batch runs, keep the main context for judgment.
+- If anything here conflicts with what you observe in the repo, trust the repo + pre-commit guard,
+  then fix the doc — that's the anti-drift system working as designed.
+
 ## Multi-agent collaboration (Claude Code + Codex + ZCode on this machine)
 
 Cross-agent protocol lives in **[AGENTS.md](AGENTS.md)** (roles, write permissions, iron rules) and the
