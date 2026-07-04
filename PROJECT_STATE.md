@@ -262,17 +262,27 @@ regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec +
 EURCAD (1.82) · USDJPY (1.51)** + AUDNZD WATCH · EURCHF DEAD-optimized · 9 ตัว
 PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_SCORECARD §FRESH TEMPLATE.
 เครื่องมือใหม่: `report_year_split.py` + probe set กลาง `Boss14_GridLog_GBPAUD_opt1.set`
-**Robustness phase — 🎉 จบรอบแรก (2026-07-04 สาย): Boss_14 DEMO cohort #1 = 3 ตัว**
-**AUDNZD (990202) · EURJPY (990203) · USDJPY (990201)** — ครบทุกด่าน (IS-opt → fresh-OOS →
-full-confirm ทุกปีบวก → MC ruin 0%) · sets `Boss14_GridLog_*_DEMO.set` (sizing 0.25x — วัด
-พฤติกรรม; resize ตอน promote) · **⏳ รอ user (บันทึก 2026-07-04 — user ยืนยันจะทำเมื่อว่าง): attach 3 ชาร์ต demo** (H1, set
-`*_DEMO.set` — แนะนำบัญชี demo แยกใหม่ ตาม scrutiny: kill-DD เป็น account-wide) ·
-⚠️ USDJPY+EURJPY short-JPY คู่ → demo วัด corr แล้วลด lot ตามกฎ · GBPJPY = WATCH ·
-PARKED: GBPAUD/EURCAD · DEAD-optimized: EURCHF/USDCHF · **คิวเปิด: ORDER-008B (MT5,
-ต้องรัน full-approval), ORDER-011 (harness — acceptance run ค้าง), ORDER-012/013
-(treasure-triage: อ่าน ea-src 98 + PDF 289, ไม่ใช้ MT5)** · เครื่องมือใหม่: `_triage/inventory.csv`
-(กอง 2.wait-for-test 8,857 ไฟล์) · หมายเหตุระบบ: Codex sandbox รอบเช้าบล็อก spawn MT5 —
-MT5 orders ต้องรันแบบ full-approval หรือให้ Claude/user รัน
+**🤝 HANDOFF (2026-07-04 ค่ำ — session Fable สุดท้ายก่อน compact; อ่านตรงนี้ = รู้ทุกอย่าง):**
+
+**✅ DEMO bench = 6 EA ครบทุกด่าน (IS-opt→fresh-OOS→full-confirm→MC→Model-4 real ticks):**
+cohort-1: USDJPY 990201 · AUDNZD 990202 (แชมป์) · EURJPY 990203 (fill-sensitive) ·
+cohort-2: AUDCAD 990204 (OOS 4.30) · CADJPY 990205 (thin 11t) · EURUSD-SELL 990206 ·
+sets = `Boss14_GridLog_<SYM>_DEMO.set` (0.25x, DdAdaptive OFF ตาม scrutiny)
+
+**⏳ USER DECISION บันทึกแล้ว (2026-07-04): เปิดบัญชี demo ใหม่ทุน 60,000 cent (6×10k ตาม
+scrutiny round-2 — ให้ risk-threshold ต่อ EA ตรงกับที่ validate) แล้ว attach ทั้ง 6 ชาร์ต H1 —
+user จะทำ "พรุ่งนี้" (2026-07-05)** · attach แล้ว demo-clock 3 เดือนเริ่มนับ → โหมดเงียบ: operate
++ hunt ช้าๆ ตาม ROADMAP §2.5
+
+**คิวเปิดใน taskboard (สั่งผ่าน Telegram ได้เลย):** ORDER-019 (corr matrix 6 ตัว — คำถาม risk
+ใหญ่สุด) · ORDER-020 (ขุด SELL-side จาก XML เดิม ฟรี) · ORDER-021 (สรุป 20 treasure sources)
+**งาน Claude session หน้า:** review 019-021 → ตัดสิน corr/sizing family → คัด treasure →
+(ถ้า user attach แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+**เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
+(Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
+ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
+**Verdict อื่นล่าสุด:** GBPJPY/USDCAD/NZDUSD = WATCH · GBPAUD/EURCAD/GBPUSD = PARKED (GBP
+hostile pattern) · EURCHF/USDCHF/LNBREAK = DEAD-optimized · NRBreakout = PARKED-final
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD

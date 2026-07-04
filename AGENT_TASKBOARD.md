@@ -893,6 +893,42 @@ Strategy counts:
 
 ---
 
+## ORDER-019 — corr matrix ของ Boss_14 family (6 ตัว demo) — `OPEN` (role: oc-btest, ไม่ใช้ MT5)
+
+**ทำไม:** คำถาม risk ใหญ่สุดตอนนี้ — 6 ตัวกลไกเดียวกัน (ซ้อน AUD/JPY/CAD) จะเจ๊งพร้อมกันไหม
+**งาน:** ใช้ `D:\EA_LAB\_mt5_auto\corr_monthly.py` (มีอยู่แล้ว — อ่าน usage ในไฟล์) คำนวณ
+pairwise monthly-return correlation จาก 6 full reports:
+`BOSS14_{USDJPY,AUDNZD,EURJPY}_FULL_ISPICK_M1.htm` + `BOSS14_{AUDCAD,CADJPY,EURUSD}_FULL_ISPICK_M1.htm`
+**Acceptance:** ตาราง 6×6 (ค่า corr 2 ตำแหน่ง) + list คู่ที่ >0.60 และ >0.40 · commit `[oc-btest] ORDER-019 done`
+**ห้าม:** สรุปว่าต้องตัด/ลดตัวไหน — Claude ใช้กฎ corr→ลด lot เอง
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-020 — ขุด SELL-side จาก optimizer XML ที่มีอยู่ (hunt queue #1, ฟรี — ไม่รันอะไรใหม่) — `OPEN` (role: oc-dev)
+
+**ทำไม:** EURUSD SELL ผ่านถึง demo → ฝั่ง SELL อาจมีของอีก และข้อมูลอยู่ในมือแล้ว
+**งาน:** parse ทุกไฟล์ `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_*.xml` (ทุก symbol ทุกรุ่น) →
+รวมทุก pass ที่ `_14_Direction=2 AND PF>=1.2 AND Trades>=50` เป็นตารางเดียว (symbol, window(IS/full จากชื่อไฟล์), pass, PF, Trades, EqDD%, 4 params)
+**Acceptance:** ตารางครบ + นับต่อ symbol · commit `[oc-dev] ORDER-020 done` · ห้าม verdict
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-021 — สรุป 20 treasure sources (momentum 13 + breakout 7) ให้ Claude อ่าน — `OPEN` (role: oc-dev)
+
+**งาน:** จาก `_triage/ea_src_triage.csv` เอาแถว strategy_type ∈ {momentum, breakout} (ข้าม dup) →
+ต่อไฟล์เขียนสรุป ≤10 บรรทัดลง `D:\EA_LAB\_triage\shortlist_briefs.md`: (1) entry rule เป๊ะๆ
+(indicator+เงื่อนไข+ค่า default) (2) exit/SL/TP (3) sizing (4) สิ่งที่ Boss V2 ยังไม่มี (เทียบ DESIGN_V2
+§4 axes ตรงๆ — ถ้าไม่มีของใหม่เขียน "nothing new") (5) คำเตือน (lock/expiry/broker-specific ถ้าเจอ)
+**Acceptance:** ครบ 20 ไฟล์ · commit `[oc-dev] ORDER-021 done` · ห้ามให้คะแนน/จัดอันดับ
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -975,6 +1011,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
 
 
 
