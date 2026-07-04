@@ -836,7 +836,7 @@ Main stats (raw MT5 report):
 
 ---
 
-## ORDER-018 — เติม EA_MASTER_INDEX.csv ให้ครบทะเบียน — `OPEN` (role: oc-dev)
+## ORDER-018 — เติม EA_MASTER_INDEX.csv ให้ครบทะเบียน — `DONE` (role: oc-dev)
 
 **เป้า:** ตารางรวม filter EA ได้ทุกมิติ (user 2026-07-04) · Claude seed 17 แถวแรกแล้ว (Boss_14 family
 + ศพล่าสุด) — เติมส่วนที่เหลือ **ตาม checklist เข้ม ห้ามตีความเอง:**
@@ -852,7 +852,43 @@ Main stats (raw MT5 report):
 **Acceptance:** CSV รวม ≥100 แถว ไม่มีแถวซ้ำ (name+home_cell unique) · ทุกแถวครบ 15 คอลัมน์ ·
 สรุปจำนวนต่อ status + ต่อ strategy · commit `[oc-dev] ORDER-018 done`
 
-**ผล:** _(รอ)_
+**ผล (oc-dev, 2026-07-04):**
+
+เติม `EA_MASTER_INDEX.csv` ตาม checklist:
+- seed เดิม 17 แถวคงไว้
+- เพิ่มจาก `_triage/ea_src_triage.csv` ครบ 88/88 แถว (`status=UNTESTED`, `confidence=0`, `home_cell=-`)
+- เพิ่มจาก `EA_SCORECARD_AND_REGISTRY.md` PART 2 เฉพาะแถว EA ที่ verdict cell เริ่มด้วย/ชี้ชัดเป็น DEAD/PARKED/REJECT/WATCH และยังไม่มีใน index: 11 แถว
+
+Validation:
+- CSV data rows: **116** (>=100)
+- duplicate `(name, home_cell)`: **0**
+- bad 15-column rows: **0**
+
+Status counts:
+| status | count |
+|---|---:|
+| DEAD | 10 |
+| DEMO | 6 |
+| PARKED | 7 |
+| REJECT | 1 |
+| UNTESTED | 88 |
+| WATCH | 4 |
+
+Strategy counts:
+| strategy | count |
+|---|---:|
+| - | 11 |
+| breakout | 7 |
+| breakout-arm | 13 |
+| breakout-arm SELL | 2 |
+| grid | 31 |
+| momentum | 13 |
+| news | 1 |
+| NR-compression breakout | 1 |
+| reversion | 19 |
+| scalper | 4 |
+| session-breakout | 1 |
+| unknown | 13 |
 
 ---
 
