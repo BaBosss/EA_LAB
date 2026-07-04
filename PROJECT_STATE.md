@@ -265,7 +265,8 @@ PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_
 **Robustness phase — 🎉 จบรอบแรก (2026-07-04 สาย): Boss_14 DEMO cohort #1 = 3 ตัว**
 **AUDNZD (990202) · EURJPY (990203) · USDJPY (990201)** — ครบทุกด่าน (IS-opt → fresh-OOS →
 full-confirm ทุกปีบวก → MC ruin 0%) · sets `Boss14_GridLog_*_DEMO.set` (sizing 0.25x — วัด
-พฤติกรรม; resize ตอน promote) · **รอ user: attach 3 ชาร์ตบน demo terminal** (H1, set ตามชื่อ) ·
+พฤติกรรม; resize ตอน promote) · **⏳ รอ user (บันทึก 2026-07-04 — user ยืนยันจะทำเมื่อว่าง): attach 3 ชาร์ต demo** (H1, set
+`*_DEMO.set` — แนะนำบัญชี demo แยกใหม่ ตาม scrutiny: kill-DD เป็น account-wide) ·
 ⚠️ USDJPY+EURJPY short-JPY คู่ → demo วัด corr แล้วลด lot ตามกฎ · GBPJPY = WATCH ·
 PARKED: GBPAUD/EURCAD · DEAD-optimized: EURCHF/USDCHF · **คิวเปิด: ORDER-008B (MT5,
 ต้องรัน full-approval), ORDER-011 (harness — acceptance run ค้าง), ORDER-012/013

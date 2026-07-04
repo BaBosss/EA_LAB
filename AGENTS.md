@@ -14,6 +14,11 @@
 | **Claude Code** | Lead engineer / judge — ทิศทาง, verdict, เขียน order, review งาน agent อื่น | ทุกอย่าง                                              | —                                                                                                    |
 | **Codex**       | Peer engineer — execute order ที่ scope ชัด, second opinion เมื่อถูกถาม     | โค้ดตาม spec ของ order, รันทดสอบ, **รายงานตัวเลขดิบ** | ตัดสิน verdict · แก้ VISION.md · แก้ Decision log (§3) · แก้กฎใน skill/ไฟล์นี้ · เปลี่ยนทิศทางงานเอง |
 | **ZCode**       | Batch runner — รัน backtest/optimize/parse ตาม order                        | รัน script ที่มีอยู่, เก็บผลเป็นตาราง/CSV             | เหมือน Codex + **ห้ามแก้ source code ทุกไฟล์**                                                       |
+| **ทีม OpenClaw (สั่งจาก Telegram)** | `[oc-mgr]` manager = รับคำสั่ง/แจก/รายงาน progress · `[oc-dev]` ea_developer = เทียบเท่า Codex · `[oc-btest]` ea_backtester = เทียบเท่า ZCode | ตาม role ที่เทียบเท่า · brief ประจำตัวอยู่ใน workspace ของแต่ละตัว | เหมือน role ที่เทียบเท่า · **คนละ runtime กับ Codex Desktop/ZCode Desktop — งานไม่ขึ้นจอพวกนั้น** ดูได้จาก STATUS.md + git log (tag [oc-*]) + Telegram |
+
+**Heartbeat (กฎ user 2026-07-04):** ทุก agent ที่ทำงานเกิน ~10 นาที ต้องรายงานความคืบหน้า
+ทุก ~10-15 นาที (1 บรรทัด: ทำอะไร ~% ติดอะไร) — ทีม OpenClaw รายงานใน Telegram ผ่าน manager ·
+Codex/ZCode ที่รันหน้าคอม รายงานใน console ของตัวเอง
 
 หลักเดียวที่ครอบทุกอย่าง: **agent อื่น "ผลิตหลักฐาน" — Claude/user เป็นคน "ตัดสิน"**
 เจองานที่ต้องตัดสินใจนอก order → หยุด, เขียน BLOCKED ลง taskboard พร้อมคำถาม, ไปทำ order ถัดไป
