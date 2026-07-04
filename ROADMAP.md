@@ -82,6 +82,7 @@
 
 | งาน | เฟส | มอบใคร |
 |---|---|---|
+| **`_2_BasketTP_ATRmult`** — basket TP แบบ ATR-scaled (additive, default 0=$ เดิม) — จาก self-review 2026-07-04: $-TP ไม่ scale ข้าม instrument class · **ทำก่อน sweep non-FX ครั้งแรกเสมอ** · validate ด้วย ab_mode_test เทียบ $TP vs ATR-TP · lot% มีแล้ว (mode 42) ไม่ต้องสร้าง | ก่อน sweep metals/index | oc-dev + regression cage |
 | Walk-forward automation (script รัน rolling window + สรุป) | 1 | Codex |
 | Hedge/Recovery A/B validation harness | 2 | Codex ออกแบบ order, ZCode รัน |
 | Portfolio equity combiner หลาย account (ต่อยอด zigl_correlation) | 3 | Codex |
