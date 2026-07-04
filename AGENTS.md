@@ -40,6 +40,8 @@
 5. **Git:** commit บ่อย, ข้อความ commit ขึ้นต้นด้วย tag ตัวเอง `[codex]` / `[zcode]` · ห้าม push/force/rebase/amend ·
    ห้าม `--no-verify` (pre-commit guard คือกันชนของทุกคน) · ทำงานบน branch ปัจจุบัน อย่าสร้าง/สลับ branch เอง
 6. Python = portable: dot-source `scripts\use_python.ps1` ก่อน (ไม่มี system python)
+7. **หลัง commit ทุกครั้ง รัน `powershell -File D:\EA_LAB\scripts\make_status.ps1`** — regenerate
+   STATUS.md + สำเนาขึ้น OneDrive ให้ user ดูจากมือถือ (ห้ามแก้ STATUS.md ด้วยมือ)
 
 ## 4. วงจรการทำงาน (ต่อ 1 order)
 
