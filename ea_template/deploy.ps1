@@ -43,4 +43,14 @@ if ($Compile) {
     }
   }
 }
+# lane 2: mirror compiled EAs (+source for reference) to the portable 2nd tester
+# (D:\Meta 5b, /portable mode) so oc-btest can run its own lane without touching
+# the main instance. .ex5 INCLUDED here on purpose (5b has no compiler wired up).
+$dst2 = "D:\Meta 5b\MQL5\Experts\EALabTpl"
+if (Test-Path "D:\Meta 5b\terminal64.exe") {
+  robocopy "$dst" "$dst2" /MIR /R:1 /W:1 /XF *.log /NFL /NDL /NJH /NJS | Out-Null
+  if($LASTEXITCODE -lt 8){ Write-Host "deployed lane2 -> $dst2" -ForegroundColor Cyan }
+  else { Write-Host "lane2 robocopy error ($LASTEXITCODE)" -ForegroundColor Yellow }
+}
+
 Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev | Boss_14_GridLog" -ForegroundColor Green

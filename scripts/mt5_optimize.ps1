@@ -29,11 +29,15 @@ param(
   [string]$Terminal = "D:\Meta 5\terminal64.exe",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 7200,
+  [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
   [switch]$Force
 )
 $ErrorActionPreference = "Stop"
-if ((Get-Process terminal64 -ErrorAction SilentlyContinue) -and -not $Force) {
-  Write-Output "ABORT: MT5 GUI is running. Close it first, or -Force."; exit 2
+# guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
+# can run in parallel without aborting each other
+$running = Get-Process terminal64 -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Terminal }
+if ($running -and -not $Force) {
+  Write-Output "ABORT: this MT5 instance is running ($Terminal). Close it first, or -Force."; exit 2
 }
 
 $auto = "D:\EA_LAB\_mt5_auto"
@@ -69,7 +73,8 @@ $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
 
 Write-Output "OPTIMIZE: $Expert | $Symbol $Period | $FromDate..$ToDate | mode=$Optimization"
-$proc = Start-Process -FilePath $Terminal -ArgumentList "/config:`"$ini`"" -PassThru
+$mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
+$proc = Start-Process -FilePath $Terminal -ArgumentList $mtArgs -PassThru
 $sw = [Diagnostics.Stopwatch]::StartNew()
 while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {
   if (Test-Path $srcXml) { Start-Sleep -Seconds 2; break }

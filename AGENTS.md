@@ -42,7 +42,13 @@ Codex/ZCode ที่รันหน้าคอม รายงานใน con
 ## 3. กฎเหล็กทางเทคนิค (ทุก agent — ผิดข้อใดข้อหนึ่ง = งานนั้นใช้ไม่ได้)
 
 1. **แก้ `ea_template\core\*` เมื่อไหร่ ต้องรัน `powershell -File scripts\tpl_regression.ps1` → ต้อง CLEAN** ก่อน commit
-2. **MT5 มี instance หลักตัวเดียว** (`D:\Meta 5`) — ปิด GUI ก่อนรัน headless, รันทีละงาน (script abort เองถ้าชน) · ห้าม `-Force` · ห้าม kill process
+2. **MT5 มี 2 เลน (ตั้งแต่ 2026-07-04):**
+   - **เลน 1 (หลัก):** `D:\Meta 5` — สำหรับ Claude/user/Codex desktop · default ของทุก script
+   - **เลน 2 (agent):** `D:\Meta 5b` portable — **ทีม OpenClaw (oc-btest) ใช้เลนนี้เสมอ**:
+     ต่อท้ายทุกคำสั่ง `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`
+   - รันคู่กันได้ (guard แยกตาม exe path) **ยกเว้น Model 4 (real ticks) ห้ามรันคู่กับอะไรทั้งนั้น**
+     (เครื่องเคย freeze — ดู memory freeze-guard) · ภายในเลนเดียวกันยังรันทีละงาน · ห้าม `-Force` ·
+     ห้าม kill process · EA ใหม่จะไปเลน 2 อัตโนมัติผ่าน `ea_template\deploy.ps1`
 3. **ตัวเลขที่รายงาน = Model 1 ขึ้นไป** (Model 2 ใช้กรอง zero-trade เท่านั้น) · ทุก full-window run แตกปีด้วย `scripts\report_year_split.py`
 4. **Verdict rules (สรุปจาก decision log — อ่านฉบับเต็มใน PROJECT_STATE §3):**
    ห้าม DEAD/REJECT ก่อน optimize probe · cap breach (DD/margin/ruin) = resize-first ห้าม reject ตรง ·
@@ -64,6 +70,9 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
   → สถานะ REVIEWED → เขียน order รอบถัดไป
 ```
 - order ละ **1 งานจบในตัว** ผลตรวจได้ด้วยตัวเลข/ไฟล์ — ถ้างานใหญ่ Claude ต้องหั่นก่อน
+- **order ที่มีการตีความ/จำแนก (บทเรียน ORDER-012):** เกณฑ์ต้องเป็น checklist ที่ตอบ ได้/ไม่ได้
+  ทุกข้อ (เช่น "Y ต่อเมื่อ: มี entry indicator จริง AND ไม่ใช่ grid/martingale เป็นแกน AND มี SL")
+  — ห้ามเขียนเกณฑ์แบบให้ agent ใช้วิจารณญาณ ("น่าสนใจ", "มี edge") เพราะจะได้ผลหลวมเสมอ
 - ไม่มี order OPEN เหลือ + Claude ไม่อยู่ → **หยุด อย่าคิดงานใหม่เอง** (บันทึกข้อเสนอเป็น comment ใน taskboard ได้)
 
 ## 5. เมื่อไหร่ใช้ตัวไหน (มุมมอง user)

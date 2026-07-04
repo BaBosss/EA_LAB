@@ -476,7 +476,7 @@ Top-5 raw rows by Profit Factor:
 
 ---
 
-## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `BLOCKED(acceptance run via mt5_run.ps1 produced no Boss_11 report; should Codex keep the new harness staged and wait for Claude to fix MT5 report generation, or switch to another collector/path?)` (role: Codex, งาน engineering)
+## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `OPEN (UNBLOCKED 2026-07-04: harness เขียนเสร็จแล้ว เหลือ acceptance run — มอบ oc-btest รันบนเลน 2 (Boss_11 deploy ไป 5b แล้ว): เพิ่ม -Terminal/-DataDir/-Portable ใน ab_mode_test.ps1 ถ้ายังไม่รองรับ ให้ oc-dev เพิ่ม param ตามแบบ mt5_run.ps1 ก่อน)` (role: oc-dev + oc-btest)
 
 **ทำไม:** โหมด Recovery 81/82/83 + HEDGE_LOCK ใน Boss V2 ยังไม่เคยถูก backtest — Phase 2 ต้องการ
 เครื่องมือเทียบ "EA เดิม vs EA เดิม+เปิดโหมด" อย่างเป็นระบบ
@@ -637,6 +637,21 @@ spawn process (เหมือน session เที่ยงคืนที่�
 
 ---
 
+## ORDER-015 — pipeline batch #2: IS-opt + rule-based OOS ของ 6 symbol ที่เหลือ — `OPEN` (role: oc-btest, เลน 2)
+
+**Symbols (จาก ORDER-007 probe ที่มี life):** CADJPY, NZDUSD, GBPUSD, USDCAD, AUDCAD, EURUSD
+**ขั้นตอนต่อ symbol (ทำทีละตัวจนจบทั้ง 6 — ทุกคำสั่งต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
+1. IS-opt: `mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol <SYM> -Period H1 -FromDate 2023.01.01 -ToDate 2025.06.30 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_GBPAUD_opt1.set' -ReportName BOSS14_OPT_<SYM>_IS -TimeoutSec 21600`
+2. เลือก pass แบบ rule-based: **PF สูงสุดในกลุ่ม Trades≥50** จาก XML (ไม่มี → รายงาน "no qualifying pass" ข้าม symbol)
+3. สร้าง set: copy `Boss14_GridLog_screen_small.set` → `Boss14_GridLog_<SYM>_ISpick.set` override 4 params (Step/Direction/Dist/TP)
+4. Fresh-start OOS: `mt5_run.ps1 ... -FromDate 2025.07.01 -ToDate 2026.07.01 -Model 1 -SetFile <ISpick> -ReportName BOSS14_<SYM>_OOS_M1`
+**Acceptance:** ตารางต่อ symbol: pass ที่เลือก (4 params) | OOS trades/PF/net/eqDD% · commit `[oc-btest] ORDER-015 done`
+**Progress:** รายงาน Telegram ทุกรอบ poll (~5-10 นาที) ตาม brief · **ห้าม:** verdict — Claude ตัดสิน
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -719,3 +734,4 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
