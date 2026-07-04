@@ -64,7 +64,7 @@ _3_RiskATR_TF=0
 _41_FixedLot=0.10
 _55_LogPowerFactor=1.3
 _55_UseLnNotLog10=true
-_4_DdAdaptiveOn=true
+_4_DdAdaptiveOn=false
 _4_DdTier1Pct=10.0
 _4_DdTier1Mult=1.2
 _4_DdTier2Pct=20.0
@@ -84,4 +84,5 @@ RC_MaxLevelsOverride=6
 _0_Magic=990203
 _0_Slippage=20
 _0_MaxSpread=0
+
 
