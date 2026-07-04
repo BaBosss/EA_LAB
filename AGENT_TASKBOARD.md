@@ -637,7 +637,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 
 ---
 
-## ORDER-015 — pipeline batch #2: IS-opt + rule-based OOS ของ 6 symbol ที่เหลือ — `OPEN` (role: oc-btest, เลน 2)
+## ORDER-015 — pipeline batch #2: IS-opt + rule-based OOS ของ 6 symbol ที่เหลือ — `DONE(oc-btest, 2026-07-04 14:08 +07)` (role: oc-btest, เลน 2)
 
 **Symbols (จาก ORDER-007 probe ที่มี life):** CADJPY, NZDUSD, GBPUSD, USDCAD, AUDCAD, EURUSD
 **ขั้นตอนต่อ symbol (ทำทีละตัวจนจบทั้ง 6 — ทุกคำสั่งต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
@@ -648,7 +648,45 @@ spawn process (เหมือน session เที่ยงคืนที่�
 **Acceptance:** ตารางต่อ symbol: pass ที่เลือก (4 params) | OOS trades/PF/net/eqDD% · commit `[oc-btest] ORDER-015 done`
 **Progress:** รายงาน Telegram ทุกรอบ poll (~5-10 นาที) ตาม brief · **ห้าม:** verdict — Claude ตัดสิน
 
-**ผล:** _(รอ)_
+**ผล (oc-btest, Model 1, MT5 เลน 2 `D:\Meta 5b`, 2026-07-04):**
+
+Optimizer XML verification: all 6 optimizer XML files have **54 rows**.
+No `NO XML` / `NO REPORT` was encountered.
+
+Rule-based selection: picked highest PF among optimizer passes with `Trades>=50`.
+
+| Symbol | IS pass | StepATR | Direction | DistATR | BasketTP | OOS Trades | OOS PF | OOS Net | OOS EqDD% |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| CADJPY | 26 | 3.0 | 1 | 2.2 | 175 | 26 | 1.98 | +345.37 | 2.83 |
+| NZDUSD | 29 | 3.0 | 2 | 2.2 | 175 | 9 | 1.47 | +81.91 | 1.07 |
+| GBPUSD | 48 | 1.4 | 1 | 3.0 | 250 | 59 | 0.61 | -611.75 | 9.65 |
+| USDCAD | 26 | 3.0 | 1 | 2.2 | 175 | 13 | 2.07 | +204.06 | 1.84 |
+| AUDCAD | 36 | 1.4 | 1 | 1.4 | 250 | 41 | 4.30 | +923.50 | 2.19 |
+| EURUSD | 15 | 1.4 | 2 | 3.0 | 100 | 18 | 2.35 | +195.98 | 1.55 |
+
+Files:
+- Optimizer XML:
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_CADJPY_IS.xml`
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_NZDUSD_IS.xml`
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_GBPUSD_IS.xml`
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_USDCAD_IS.xml`
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_AUDCAD_IS.xml`
+  - `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_EURUSD_IS.xml`
+- Picked sets:
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_CADJPY_ISpick.set`
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_NZDUSD_ISpick.set`
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_GBPUSD_ISpick.set`
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_USDCAD_ISpick.set`
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDCAD_ISpick.set`
+  - `D:\EA_LAB\ea_template\sets\Boss14_GridLog_EURUSD_ISpick.set`
+- OOS reports:
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_CADJPY_OOS_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_NZDUSD_OOS_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_GBPUSD_OOS_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_USDCAD_OOS_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_AUDCAD_OOS_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_EURUSD_OOS_M1.htm`
+- Machine-readable summary: `D:\EA_LAB\_mt5_auto\ORDER015_results.json`
 
 ---
 
