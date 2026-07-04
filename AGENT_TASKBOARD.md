@@ -1041,7 +1041,7 @@ commit `[tag] ORDER-023 done`
 
 ---
 
-## ORDER-021 — สรุป 20 treasure sources (momentum 13 + breakout 7) ให้ Claude อ่าน — `OPEN` (role: oc-dev)
+## ORDER-021 — สรุป 20 treasure sources (momentum 13 + breakout 7) ให้ Claude อ่าน — `REVIEWED(Claude/Fable, 2026-07-04 — ทำเองแทน Codex ที่ token หมด, ใช้ Explore subagent อ่าน source แทนตัวเอง)` (role: oc-dev → done by Claude)
 
 **งาน:** จาก `_triage/ea_src_triage.csv` เอาแถว strategy_type ∈ {momentum, breakout} (ข้าม dup) →
 ต่อไฟล์เขียนสรุป ≤10 บรรทัดลง `D:\EA_LAB\_triage\shortlist_briefs.md`: (1) entry rule เป๊ะๆ
@@ -1049,7 +1049,24 @@ commit `[tag] ORDER-023 done`
 §4 axes ตรงๆ — ถ้าไม่มีของใหม่เขียน "nothing new") (5) คำเตือน (lock/expiry/broker-specific ถ้าเจอ)
 **Acceptance:** ครบ 20 ไฟล์ · commit `[oc-dev] ORDER-021 done` · ห้ามให้คะแนน/จัดอันดับ
 
-**ผล:** _(รอ)_
+**ผล (Claude/Fable, 2026-07-04):** ครบ 20 ไฟล์ (momentum 13 + breakout 7) → `_triage/shortlist_briefs.md`
+· base dir ยืนยันแล้ว = `D:\Forex\10_EA_PROJECTS\2. wait for test\` (แก้ปัญหา path เดิมที่เคย mis-join
+ใน ORDER-018 ก่อนหน้า — คราวนี้ verify ด้วย `find` ก่อนอ่านไฟล์จริง)
+
+**สรุปสั้น (factual, ไม่ใช่ verdict — รายละเอียดเต็มในไฟล์):**
+- **momentum 7/13 = "nothing new"** (MA-cross ธรรมดา ตรง GridTrendMA axis อยู่แล้ว รวม 2 ไฟล์เป็น stock
+  MetaQuotes sample ตรงๆ) — ไม่ต้องพิจารณาต่อ
+- **momentum ที่มีของใหม่จริง:** multi-symbol CCI currency-strength ranking (2 ไฟล์, ไม่มี axis
+  รองรับ multi-symbol basket เลย) · ZigZag-vs-EMA comparator · ADX+DI trend-strength filter stacked
+  บน MACD (Boss V2 ยังไม่มี ADX module) · two-tier/dual-lot basket-per-symbol (XIMA_DASH) · multi-pair
+  14-symbol basket+hedge (T101)
+- **breakout ที่มีของใหม่จริง:** retest-zone + reversal-exit state machine (Breakout Retest Pro —
+  ต่อยอด Entry_Breakout เดิมได้ตรงๆ) · PA candle-pattern gate (Doji/Engulfing/Star/Tower, 2 ไฟล์ —
+  ไม่มี axis ไหนใช้ candle-pattern recognition) · auto-detected S/R + multi-level pyramid (Dark_Gold_Full)
+- **ตัดทิ้งจากการพิจารณาต่อทันที:** EX170 Zone Trading (entry เป็น manual chart-line ไม่ใช่ระบบอัตโนมัติ),
+  XPERT2 (kernel32.dll file I/O + obfuscated — ความเสี่ยง code ไม่ทราบที่มา), MoonKinght MASA
+  (obfuscated/decompiled + wininet auth code เหลืออยู่ในซอร์ส)
+- **ห้ามให้ verdict ที่นี่ตามกฎ** — ตัวไหนน่า build ต่อเป็น decision รอบ hunt ถัดไปของ Claude/user
 
 ---
 

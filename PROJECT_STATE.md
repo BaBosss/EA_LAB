@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-04 (รอบ 3 — review ORDER-019/020, queue ORDER-023) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-04 (รอบ 4 — ORDER-021 done by Claude, review 019/020) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -280,12 +280,19 @@ hunt เจอ 1 candidate ใหม่จริง **NZDUSD pass 29** (สม�
 (fresh-start OOS, mechanical, พร้อมรัน) · GBPAUD-SELL ตัดทิ้ง (dormancy เดียวกับ BUY) รายละเอียดเต็ม
 → `AGENT_TASKBOARD.md` ORDER-019/020 + `EA_SCORECARD_AND_REGISTRY.md` Boss_14_GridLog row
 
-**คิวเปิดใน taskboard ตอนนี้ (สั่งผ่าน Telegram ได้เลย):** ORDER-021 (สรุป 20 treasure sources,
-oc-dev) · ORDER-022 (plateau-sensitivity 6 demo configs × 8 variants, oc-btest เลน 2, ~2-3 ชม.) ·
-**ORDER-023 ใหม่** (NZDUSD-SELL fresh-start OOS, ZCode/Codex, งานเบา รันได้ทันที)
-**งาน Claude session หน้า:** review 021/022/023 เมื่อ DONE → ตัดสิน treasure curation +
-plateau-sensitivity flag + NZDUSD-SELL demo-หรือไม่ → (ถ้า user attach 6 EA เข้า account 60k
-แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+**✅ ORDER-021 done (Claude/Fable, 2026-07-04 — ทำเองแทน Codex ที่ token หมด):** สรุป 20 treasure
+sources ครบ → `_triage/shortlist_briefs.md`. ของใหม่จริงที่น่าพิจารณา build ต่อ (ยังไม่ตัดสิน แค่ triage):
+multi-symbol CCI strength ranking · ADX+DI filter (Boss V2 ยังไม่มี ADX module) · PA candle-pattern
+gate (Doji/Engulfing/Star/Tower) · retest-zone+reversal-exit บน breakout (ต่อยอด Entry_Breakout ตรงๆ) ·
+auto-S/R multi-level pyramid. ตัดทิ้ง: EX170 (manual chart-line ไม่อัตโนมัติ), XPERT2 (kernel32.dll
+file I/O + obfuscated), MoonKinght MASA (decompiled). รายละเอียดเต็ม → `AGENT_TASKBOARD.md` ORDER-021
+
+**คิวเปิดใน taskboard ตอนนี้ (สั่งผ่าน Telegram ได้เลย):** ORDER-022 (plateau-sensitivity 6 demo
+configs × 8 variants, oc-btest เลน 2, ~2-3 ชม.) · ORDER-023 (NZDUSD-SELL fresh-start OOS, ZCode/Codex,
+งานเบา รันได้ทันที)
+**งาน Claude session หน้า:** review 022/023 เมื่อ DONE + ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม
+build (candle-pattern gate กับ retest-zone ดูน่าสนใจสุด — ยังไม่มี module พวกนี้ใน Boss V2 เลย) →
+(ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
