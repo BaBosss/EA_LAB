@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-03 (รอบ 2 — direction alignment) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-04 (รอบ 3 — review ORDER-019/020, queue ORDER-023) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -274,10 +274,18 @@ scrutiny round-2 — ให้ risk-threshold ต่อ EA ตรงกับท
 user จะทำ "พรุ่งนี้" (2026-07-05)** · attach แล้ว demo-clock 3 เดือนเริ่มนับ → โหมดเงียบ: operate
 + hunt ช้าๆ ตาม ROADMAP §2.5
 
-**คิวเปิดใน taskboard (สั่งผ่าน Telegram ได้เลย):** ORDER-019 (corr matrix 6 ตัว — คำถาม risk
-ใหญ่สุด) · ORDER-020 (ขุด SELL-side จาก XML เดิม ฟรี) · ORDER-021 (สรุป 20 treasure sources)
-**งาน Claude session หน้า:** review 019-021 → ตัดสิน corr/sizing family → คัด treasure →
-(ถ้า user attach แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+**✅ ORDER-019/020 reviewed (Claude/Fable, 2026-07-04):** corr matrix 6-EA demo = พอร์ตกระจายตัวดี
+(ไม่มีคู่ >0.60, watch แค่ USDJPY-CADJPY 0.57 — ลด lot ไม่ตัด, ยังไม่ต้องทำอะไรตอนนี้) · SELL-side
+hunt เจอ 1 candidate ใหม่จริง **NZDUSD pass 29** (สม่ำเสมอ 2 window) → เข้าคิว **ORDER-023**
+(fresh-start OOS, mechanical, พร้อมรัน) · GBPAUD-SELL ตัดทิ้ง (dormancy เดียวกับ BUY) รายละเอียดเต็ม
+→ `AGENT_TASKBOARD.md` ORDER-019/020 + `EA_SCORECARD_AND_REGISTRY.md` Boss_14_GridLog row
+
+**คิวเปิดใน taskboard ตอนนี้ (สั่งผ่าน Telegram ได้เลย):** ORDER-021 (สรุป 20 treasure sources,
+oc-dev) · ORDER-022 (plateau-sensitivity 6 demo configs × 8 variants, oc-btest เลน 2, ~2-3 ชม.) ·
+**ORDER-023 ใหม่** (NZDUSD-SELL fresh-start OOS, ZCode/Codex, งานเบา รันได้ทันที)
+**งาน Claude session หน้า:** review 021/022/023 เมื่อ DONE → ตัดสิน treasure curation +
+plateau-sensitivity flag + NZDUSD-SELL demo-หรือไม่ → (ถ้า user attach 6 EA เข้า account 60k
+แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md

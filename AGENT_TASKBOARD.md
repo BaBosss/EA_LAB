@@ -893,7 +893,14 @@ Strategy counts:
 
 ---
 
-## ORDER-019 — corr matrix ของ Boss_14 family (6 ตัว demo) — `DONE` (role: oc-btest, ไม่ใช้ MT5)
+## ORDER-019 — corr matrix ของ Boss_14 family (6 ตัว demo) — `REVIEWED(Claude/Fable, 2026-07-04 — พอร์ตกระจายตัวดี ไม่มีคู่ redundant)` (role: oc-btest, ไม่ใช้ MT5)
+
+**Verdict (Claude/Fable):** ไม่มีคู่ไหน >0.60 (redundant) — พอร์ต 6 ตัวกระจายตัวดีเกินคาด (ตระกูล
+เดียวกัน กลไกเดียวกัน แต่ symbol ต่างกันพอที่จะไม่ลงพร้อมกัน) มีแค่ **USDJPY-CADJPY = 0.57 (watch)**
+→ ใช้กฎ user: **ลด lot ไม่ตัด** (ยังไม่ต้องทำอะไรตอนนี้ เพราะทั้งคู่ยัง 0.25x เท่ากันอยู่แล้ว —
+resize เมื่อ promote/scale ค่อยลด USDJPY หรือ CADJPY ตัวใดตัวหนึ่งพิเศษ) · **caveat สำคัญ:** เซลล์
+NA หลายจุด (โดยเฉพาะ EURUSD กับตัวอื่น) เพราะ shared months <4 — EURUSD demo history สั้นกว่าเพื่อน
+→ ต้องรัน corr_monthly.py ซ้ำหลัง demo สะสมข้อมูลจริงไปสัก 2-3 เดือน อย่าเชื่อ NA=ปลอดภัย
 
 **ทำไม:** คำถาม risk ใหญ่สุดตอนนี้ — 6 ตัวกลไกเดียวกัน (ซ้อน AUD/JPY/CAD) จะเจ๊งพร้อมกันไหม
 **งาน:** ใช้ `D:\EA_LAB\_mt5_auto\corr_monthly.py` (มีอยู่แล้ว — อ่าน usage ในไฟล์) คำนวณ
@@ -934,7 +941,18 @@ Pairs with corr >0.40:
 
 ---
 
-## ORDER-020 — ขุด SELL-side จาก optimizer XML ที่มีอยู่ (hunt queue #1, ฟรี — ไม่รันอะไรใหม่) — `DONE` (role: oc-dev)
+## ORDER-020 — ขุด SELL-side จาก optimizer XML ที่มีอยู่ (hunt queue #1, ฟรี — ไม่รันอะไรใหม่) — `REVIEWED(Claude/Fable, 2026-07-04 — 1 candidate ใหม่จริง (NZDUSD-SELL) → ORDER-023 · GBPAUD-SELL ตัดทิ้งด้วยเหตุผลเดิม (dormancy ทั้ง 2 ทิศ) · EURUSD-SELL/AUDCAD-SELL = ของเดิม/thin)` (role: oc-dev)
+
+**Verdict (Claude/Fable):** 4 symbol เจอ SELL-side pass ที่ผ่านเกณฑ์ — แยกทีละตัว:
+- **EURUSD** (6 rows) = ของเดิมที่ demo อยู่แล้ว (990206, pass 15/16/41 ตรงกับ set ที่ deploy) — ไม่ใช่ของใหม่
+- **GBPAUD** (6 rows, pass 3/9 ซ้ำทั้ง full/IS/IS2) = **ตัดทิ้ง ไม่ทดสอบต่อ** — ORDER-001 review เคย
+  ยืนยันแล้วว่า GBPAUD เข้า range แคบตั้งแต่กลาง 2025 ทำให้ **resting-stop ทั้ง BUY และ SELL ไม่โดน
+  trigger เหมือนกัน** (มีแค่ pass 36/37 spacing แคบสุดที่ยังเทรด) — SELL side จะเจอ dormancy เดียวกัน
+  กับที่ฆ่า GBPAUD-BUY ไปแล้วที่ ORDER-004 แน่ๆ ไม่ต้องเปลืองรอบทดสอบซ้ำ
+- **AUDCAD** (1 row, thin, IS-only) = หลักฐานน้อยเกินจะตาม
+- **NZDUSD** (16 rows) = **candidate ใหม่จริง — pass 29 สม่ำเสมอ 2 window** (full 1.94/76t · IS 2.03/55t,
+  คนละ trade count แต่ PF ใกล้กันมาก = ไม่ใช่ fluke ของ window เดียว) ต่างจาก NZDUSD-BUY เดิมที่เป็น
+  WATCH (ปีแพ้ 2025) — ทิศ SELL ยังไม่เคยผ่าน fresh-start OOS → **เข้าคิว ORDER-023**
 
 **ทำไม:** EURUSD SELL ผ่านถึง demo → ฝั่ง SELL อาจมีของอีก และข้อมูลอยู่ในมือแล้ว
 **งาน:** parse ทุกไฟล์ `D:\EA_LAB\_mt5_auto\optimizations\BOSS14_OPT_*.xml` (ทุก symbol ทุกรุ่น) →
@@ -989,6 +1007,37 @@ Summary:
 | NZDUSD | IS | 45 | 1.264449 | 117 | 7.0419 | 1.4 | 2 | 2.2 | 250 |
 | NZDUSD | IS | 46 | 1.218865 | 135 | 6.7875 | 2.2 | 2 | 2.2 | 250 |
 | NZDUSD | IS | 52 | 1.384072 | 62 | 3.8178 | 2.2 | 2 | 3.0 | 250 |
+
+---
+
+## ORDER-023 — NZDUSD-SELL: fresh-start OOS ของ pass 29 (จาก ORDER-020 hunt) — `OPEN` (role: ZCode/Codex)
+
+**ทำไม:** ORDER-020 เจอ NZDUSD `_14_Direction=2` (SELL) pass 29 สม่ำเสมอ 2 window (full 1.94/76t ·
+IS 2.03/55t) — GBPAUD/EURUSD/AUDCAD SELL candidates อื่นถูกตัดทิ้งหรือเป็นของเดิมแล้ว เหลือตัวนี้
+ตัวเดียวที่ยังไม่รู้ว่ารอด out-of-sample จริงไหม (กฎ: ห้ามเชื่อ in-sample opt เป็น verdict)
+
+**พารามิเตอร์ pass 29 (จาก XML เดิม, ไม่ต้อง optimize ซ้ำ):** `_9_StepATRmult=3.0`,
+`_14_Direction=2`, `_14_DistAtrMult=2.2`, `_2_BasketTP_Money=175`
+
+**ขั้นตอน:**
+1. สร้าง set: copy `D:\EA_LAB\ea_template\sets\Boss14_GridLog_screen_small.set` →
+   `Boss14_GridLog_NZDUSD_ISpick.set` แล้ว override 4 ค่าด้านบน
+2. รัน fresh-start OOS:
+```powershell
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol NZDUSD -Period H1 -FromDate 2025.07.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_NZDUSD_ISpick.set' -ReportName BOSS14_NZDUSD_SELL_OOS_M1
+```
+3. ถ้า OOS PF≥0.9 (หรือเทรด <5 = ข้อมูลไม่พอ ไม่ใช่ fail — ดูกฎเดียวกับ ORDER-004): รัน full-window
+   confirm + year-split ต่อทันที (รูปแบบเดียวกับ ORDER-010):
+```powershell
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol NZDUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_NZDUSD_ISpick.set' -ReportName BOSS14_NZDUSD_SELL_FULL_ISPICK_M1
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14_NZDUSD_SELL_FULL_ISPICK_M1.htm
+```
+**Acceptance:** OOS report (trades/PF/net/eqDD) + ถ้าเข้าเงื่อนไขข้อ 3 ให้ full+year-split ต่อด้วย ·
+commit `[tag] ORDER-023 done`
+**ห้าม:** verdict/promote เป็น candidate — Claude ตัดสิน demo เอง (เกณฑ์เดียวกับ ORDER-006/010)
+
+**ผล:** _(รอ)_
 
 ---
 
