@@ -28,4 +28,8 @@ $body += "## Recent commits"
 $body += $log
 $body | Set-Content $out -Encoding UTF8
 
-if (Test-Path (Split-Path $oneDrive)) { Copy-Item $out $oneDrive -Force }
+if (Test-Path (Split-Path $oneDrive)) {
+  Copy-Item $out $oneDrive -Force
+  Copy-Item (Join-Path $repo "EA_MASTER_INDEX.csv") "C:\Users\patip\OneDrive\EA_MASTER_INDEX.csv" -Force
+}
+

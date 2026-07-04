@@ -836,6 +836,26 @@ Main stats (raw MT5 report):
 
 ---
 
+## ORDER-018 — เติม EA_MASTER_INDEX.csv ให้ครบทะเบียน — `OPEN` (role: oc-dev)
+
+**เป้า:** ตารางรวม filter EA ได้ทุกมิติ (user 2026-07-04) · Claude seed 17 แถวแรกแล้ว (Boss_14 family
++ ศพล่าสุด) — เติมส่วนที่เหลือ **ตาม checklist เข้ม ห้ามตีความเอง:**
+1. **จาก `D:\EA_LAB\_triage\ea_src_triage.csv` (88 แถว):** ทุกแถว → 1 แถว index:
+   name=ชื่อไฟล์ · origin=downloaded · file_path=path เต็ม · lang=จากนามสกุล · home_cell=- ·
+   strategy=map จาก strategy_type เดิม · risk_mech=map จาก risk_mech เดิม (grid→grid, martingale→martingale,
+   pyramid→pyramid, fixed→fixed) · status=UNTESTED · confidence=0 · best_result=- ·
+   note=entry_signal จากคอลัมน์เดิม (ตัดให้ ≤60 ตัวอักษร) · next_action=- · detail_ref=_triage/ea_src_triage.csv
+2. **จาก `D:\EA_LAB\EA_SCORECARD_AND_REGISTRY.md` PART 2 registry tables:** แถว EA ที่มี verdict
+   ชัด (DEAD/PARKED/REJECT/LIVE/WATCH ใน cell) และยังไม่มีใน index → 1 แถว: กรอกเฉพาะข้อมูลที่
+   ปรากฏใน cell ตรงๆ (ชื่อ, status, best_result จากตัวเลขใน cell, confidence จากดาว ★=1★★=2★★★=3) ·
+   ช่องที่ไม่รู้ใส่ "-" — **ห้ามเดา strategy ถ้าตารางไม่ได้บอก**
+**Acceptance:** CSV รวม ≥100 แถว ไม่มีแถวซ้ำ (name+home_cell unique) · ทุกแถวครบ 15 คอลัมน์ ·
+สรุปจำนวนต่อ status + ต่อ strategy · commit `[oc-dev] ORDER-018 done`
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -918,6 +938,8 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
+
 
 
 
