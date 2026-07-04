@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ea_projects/EA_GoldenEmber_Pivot/00_README.md",
+                "file": "AGENT_TASKBOARD.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00_README"
+              "title": "AGENT_TASKBOARD"
             }
           }
         ]
@@ -185,6 +185,12 @@
   },
   "active": "48df931256f1330e",
   "lastOpenFiles": [
+    "EA_SCORECARD_AND_REGISTRY.md.tmp.12300.f00d8f153a67",
+    "go_agents.cmd",
+    "AGENT_TASKBOARD.md.tmp.12300.869871ea95f2",
+    "AGENT_TASKBOARD.md.tmp.12300.8b1f1a0bf3eb",
+    "AGENTS.md",
+    "ea_projects/EA_GoldenEmber_Pivot/00_README.md",
     "EDGE_CATALOG.md",
     "EA_STRATEGY_GUIDE.md",
     "AUTOMATION_GUIDE.md",

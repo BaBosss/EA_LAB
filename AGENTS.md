@@ -9,24 +9,24 @@
 
 ## 1. บทบาท (ตาม strength — อย่าสลับเอง)
 
-| Agent | บทบาท | ทำได้ | ห้ามเด็ดขาด |
-|---|---|---|---|
-| **Claude Code** | Lead engineer / judge — ทิศทาง, verdict, เขียน order, review งาน agent อื่น | ทุกอย่าง | — |
-| **Codex** | Peer engineer — execute order ที่ scope ชัด, second opinion เมื่อถูกถาม | โค้ดตาม spec ของ order, รันทดสอบ, **รายงานตัวเลขดิบ** | ตัดสิน verdict · แก้ VISION.md · แก้ Decision log (§3) · แก้กฎใน skill/ไฟล์นี้ · เปลี่ยนทิศทางงานเอง |
-| **ZCode** | Batch runner — รัน backtest/optimize/parse ตาม order | รัน script ที่มีอยู่, เก็บผลเป็นตาราง/CSV | เหมือน Codex + **ห้ามแก้ source code ทุกไฟล์** |
+| Agent           | บทบาท                                                                       | ทำได้                                                 | ห้ามเด็ดขาด                                                                                          |
+| --------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| **Claude Code** | Lead engineer / judge — ทิศทาง, verdict, เขียน order, review งาน agent อื่น | ทุกอย่าง                                              | —                                                                                                    |
+| **Codex**       | Peer engineer — execute order ที่ scope ชัด, second opinion เมื่อถูกถาม     | โค้ดตาม spec ของ order, รันทดสอบ, **รายงานตัวเลขดิบ** | ตัดสิน verdict · แก้ VISION.md · แก้ Decision log (§3) · แก้กฎใน skill/ไฟล์นี้ · เปลี่ยนทิศทางงานเอง |
+| **ZCode**       | Batch runner — รัน backtest/optimize/parse ตาม order                        | รัน script ที่มีอยู่, เก็บผลเป็นตาราง/CSV             | เหมือน Codex + **ห้ามแก้ source code ทุกไฟล์**                                                       |
 
 หลักเดียวที่ครอบทุกอย่าง: **agent อื่น "ผลิตหลักฐาน" — Claude/user เป็นคน "ตัดสิน"**
 เจองานที่ต้องตัดสินใจนอก order → หยุด, เขียน BLOCKED ลง taskboard พร้อมคำถาม, ไปทำ order ถัดไป
 
 ## 2. สิทธิ์การเขียนไฟล์ (single-writer — กัน drift)
 
-| ไฟล์ | ใครเขียนได้ |
-|---|---|
-| `VISION.md` · `PROJECT_STATE.md` §3 Decision log · verdict ใน `EA_SCORECARD_AND_REGISTRY.md` · `AGENTS.md` (นี่) | **Claude / user เท่านั้น** |
-| `AGENT_TASKBOARD.md` | ทุก agent — แต่เขียนได้เฉพาะ **แถว order ของตัวเอง** (claim/ผล/BLOCKED) · การเพิ่ม order ใหม่ = Claude/user |
-| `PROJECT_STATE.md` ส่วนอื่น (status one-liner, HANDOFF) | Claude เป็นหลัก · agent อื่นห้ามแก้ ให้เขียนผลลง taskboard แทน |
-| source code (`ea_template\`, `scripts\`, EA_Project) | Claude + Codex (ตาม order) · ZCode ห้าม |
-| reports/CSV/set files ใหม่ | ทุก agent (ตาม order) |
+| ไฟล์                                                                                                             | ใครเขียนได้                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `VISION.md` · `PROJECT_STATE.md` §3 Decision log · verdict ใน `EA_SCORECARD_AND_REGISTRY.md` · `AGENTS.md` (นี่) | **Claude / user เท่านั้น**                                                                                  |
+| `AGENT_TASKBOARD.md`                                                                                             | ทุก agent — แต่เขียนได้เฉพาะ **แถว order ของตัวเอง** (claim/ผล/BLOCKED) · การเพิ่ม order ใหม่ = Claude/user |
+| `PROJECT_STATE.md` ส่วนอื่น (status one-liner, HANDOFF)                                                          | Claude เป็นหลัก · agent อื่นห้ามแก้ ให้เขียนผลลง taskboard แทน                                              |
+| source code (`ea_template\`, `scripts\`, EA_Project)                                                             | Claude + Codex (ตาม order) · ZCode ห้าม                                                                     |
+| reports/CSV/set files ใหม่                                                                                       | ทุก agent (ตาม order)                                                                                       |
 
 ## 3. กฎเหล็กทางเทคนิค (ทุก agent — ผิดข้อใดข้อหนึ่ง = งานนั้นใช้ไม่ได้)
 

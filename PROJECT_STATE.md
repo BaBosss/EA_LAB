@@ -262,11 +262,16 @@ regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec +
 EURCAD (1.82) · USDJPY (1.51)** + AUDNZD WATCH · EURCHF DEAD-optimized · 9 ตัว
 PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_SCORECARD §FRESH TEMPLATE.
 เครื่องมือใหม่: `report_year_split.py` + probe set กลาง `Boss14_GridLog_GBPAUD_opt1.set`
-**Robustness phase (เริ่ม 2026-07-04):** ❌ **GBPAUD = PARKED ตัวแรก** — IS 1.71 + MC ผ่าน แต่ตก
-fresh-start OOS (23t PF 0.49) = regime-dependent · **บทเรียนระบบ: chained run ของ resting-stop
-mechanism หลับข้ามช่วงร้ายได้ → fresh-start OOS บังคับก่อน demo ทุก candidate** · คิวถัดไป =
-ORDER-005 (IS-opt 5 ตัว: AUDNZD นำ — ชนะ regime ล่าสุดจริง 1.52/2.21 ต่างจาก GBPAUD ที่หลับ)
-→ Claude เลือก center → fresh-start OOS → ตัวผ่านค่อย MC + corr-gate + demo
+**Robustness phase — HANDOFF สถานะล่าสุด (2026-07-04 ดึก, review ครบถึง ORDER-008):**
+ผ่าน IS-opt + fresh-start OOS แล้ว: 🥇 **USDJPY OOS PF 2.77/106t** (แข็งสุด — OOS ดีกว่า IS) ·
+🥈 **AUDNZD 3.02/42t** (⚠️ plateau บาง — pass เดียวที่ qualify) · 🥉 **EURJPY 2.15/23t** (thin) ·
+GBPJPY 1.12 = WATCH · ❌ EURCAD 0.67/140t + GBPAUD 0.49 = PARKED (regime) · ❌ USDCHF +
+EURCHF = DEAD-optimized (0/54) ปิดถาวร · ยังรอ pipeline: CADJPY/NZDUSD(SELL)/GBPUSD/USDCAD/
+AUDCAD/EURUSD (probe มี life 3-8 passes) · **คิวเปิดใน AGENT_TASKBOARD: ORDER-009 (MC 5 OOS),
+ORDER-010 (full confirm + year-split 3 ตัวผ่าน — ด่านสุดท้ายก่อน Claude ตัดสิน demo-list),
+ORDER-008B (probe LNBREAK/NRBreakout ศพเก่าตามกฎ re-exam)** · เมื่อ 009+010 จบ: Claude ตัดสิน
+demo-list + corr-gate (ระวัง USDJPY/EURJPY ซ้อน JPY exposure) · user มี `go_agents.cmd` สั่ง
+Codex ทำ taskboard ได้เองคลิกเดียว
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
