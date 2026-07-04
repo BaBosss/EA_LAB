@@ -1,4 +1,4 @@
-# AGENT_TASKBOARD — คิวงานกลางของทุก agent
+﻿# AGENT_TASKBOARD — คิวงานกลางของทุก agent
 
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
@@ -492,7 +492,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 > เป้าจริง: **ขุดกลไก/ไอเดียเข้าแม่พิมพ์** (เส้นทาง Zeus→Boss_14) ไม่ใช่หา EA พร้อม deploy
 > ชุดนี้ไม่ใช้ MT5 → ทำได้ทันทีแม้ MT5 ติด BLOCKED
 
-## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `DONE(Codex, 2026-07-04 16:35 ICT)` (role: Codex)
+## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `REVIEWED(Claude: งานครบ 88/88 ✅ แต่เกณฑ์ Y หลวม (61/88 รวม grid เพียบ) — Claude จะคัดจริงจาก momentum 13 + breakout 7 ก่อน; novelty list เก็บไว้ session หน้า)` (role: Codex)
 
 **Input:** แถว kind=`ea-src` ใน inventory.csv (ข้ามแถวที่ dup_of ไม่ว่าง) — path เต็ม = `D:\Forex\10_EA_PROJECTS\2. wait for test\<path>`
 **ต่อไฟล์ 1 แถวลง `D:\EA_LAB\_triage\ea_src_triage.csv`:**
@@ -523,7 +523,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 
 ---
 
-## ORDER-013 — PDF skim 289 ไฟล์ → catalog — `DONE(ZCode/operator, 2026-07-04 11:28 ICT)` (role: ZCode)
+## ORDER-013 — PDF skim 289 ไฟล์ → catalog — `REVIEWED(Claude: catalog ครบ 188/188 ✅ · strategy-book 49 + worth_deep_read 67 — คัดจริง session หน้า ไม่เร่ง)` (role: ZCode)
 
 **Input:** แถว kind=`pdf` ใน inventory.csv (ข้าม dup) · ต่อไฟล์: ดูชื่อ+เนื้อหาช่วงต้นพอจำแนก →
 เขียนแถวลง `D:\EA_LAB\_triage\pdf_catalog.csv`: `file, kb, category(strategy-book/ea-manual/broker-doc/course/junk/unknown), topic_hint(1 บรรทัด), worth_deep_read(Y/N — Y เฉพาะที่อธิบาย strategy ละเอียดพอสร้าง EA ได้)`
@@ -647,7 +647,7 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
 
 ---
 
-## ORDER-014 — Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว — `DONE(oc-btest, 2026-07-04 12:45 ICT)` (role: ZCode/Codex, MT5 = ต้อง full-approval)
+## ORDER-014 — Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว — `REVIEWED(Claude: DEMO ยืนทั้ง 3 บน real ticks ✅ — USDJPY 1.72/107t · AUDNZD 3.37/44t (แชมป์อีกรอบ) · ⚠️ EURJPY 1.51/110t eqDD 10.02% = FILL-SENSITIVE (จาก M1-คลาส ~2.5) → demo จับตาตัวนี้พิเศษ + ตอน promote ต้อง size ต่ำกว่าเพื่อน)` (role: ZCode/Codex, MT5 = ต้อง full-approval)
 
 **ทำไม (จาก /scrutinize 2026-07-04):** pipeline ข้าม every-tick confirm ที่ backtest-optimize-rigor บังคับ — Model 1 ไม่จำลอง spread/slippage จริงของ market-fill บน resting-stop
 ```powershell
@@ -689,3 +689,4 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
