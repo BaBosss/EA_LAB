@@ -419,7 +419,7 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14
 
 ---
 
-## ORDER-008B — รัน probe 81-pass ของ LNBREAK (GBPUSD H1) + NRBreakout (XAUUSD H1) — `BLOCKED(mt5_optimize.ps1 launched LNBREAK_OPT1 but produced no XML/report; should Codex switch to an alternate MT5 optimization export path or wait for Claude to fix the launcher?)` (role: Codex)
+## ORDER-008B — รัน probe 81-pass ของ LNBREAK (GBPUSD H1) + NRBreakout (XAUUSD H1) — `DONE(oc-btest, 2026-07-04)` (role: Codex)
 
 **ตาม ranges ที่ approve ใน ORDER-008A:** สร้าง opt set 2 ไฟล์ (`sets_opt\LNBREAK_opt1.set`,
 `sets_opt\NRBreakout_opt1.set` — วางที่ `D:\EA_LAB\ea_template\sets\`) ใส่ค่า default ทุก input ตามตาราง
@@ -443,6 +443,36 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert '<EA_NAME>' -Symbol 
   `NO XML (exited=True). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the LNBREAK_OPT1 files in C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355 and the Tester logs.`
 - filesystem check after run: no `LNBREAK_OPT1*` file under terminal data dir and no `LNBREAK_OPT1.xml` under `D:\EA_LAB\_mt5_auto\optimizations`
 - question for Claude/user: should Codex use an alternate MT5 optimization export path/collector for this order, or leave `ORDER-008B` blocked until the launcher is fixed?
+
+**ผลต่อ (oc-btest, Model 1, 2026-07-04):**
+- confirmed deployed `.ex5` files before run:
+  - `C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts\EA_LNBREAK.ex5`
+  - `C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts\Boss_NRBreakout_rev01.ex5`
+- LNBREAK command succeeded:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EA_LNBREAK' -Symbol GBPUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\LNBREAK_opt1.set' -ReportName LNBREAK_OPT1 -TimeoutSec 21600`
+- NRBreakout first run produced XML but **2592 rows** because MT5 carried optimizer flags for non-target bool inputs. Updated `D:\EA_LAB\ea_template\sets\NRBreakout_opt1.set` to explicitly lock non-target inputs with `||...||N`, then reran:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'Boss_NRBreakout_rev01' -Symbol XAUUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\NRBreakout_opt1.set' -ReportName NRBreakout_OPT1 -TimeoutSec 21600`
+- optimizer XML outputs:
+  - `D:\EA_LAB\_mt5_auto\optimizations\LNBREAK_OPT1.xml` — **81 rows**
+  - `D:\EA_LAB\_mt5_auto\optimizations\NRBreakout_OPT1.xml` — **81 rows**
+- qualifying pass count (`PF>=1.2 AND Trades>=60`):
+  - LNBREAK: **0**
+  - NRBreakout: **3**
+
+Top-5 raw rows by Profit Factor:
+
+| EA | Pass | PF | Trades | Profit | EqDD% | Params |
+|---|---:|---:|---:|---:|---:|---|
+| LNBREAK | 67 | 1.047911 | 490 | 49.18 | 0.5974 | `_01_BreakBuf=0.3`, `_02_SL_ATR_mult=2`, `_02_TP_ATR_mult=3.0`, `_04_TrailATR=3.0` |
+| LNBREAK | 13 | 1.047911 | 490 | 49.18 | 0.5974 | `_01_BreakBuf=0.3`, `_02_SL_ATR_mult=2`, `_02_TP_ATR_mult=3.0`, `_04_TrailATR=0` |
+| LNBREAK | 76 | 1.040545 | 434 | 43.41 | 0.7708 | `_01_BreakBuf=0.3`, `_02_SL_ATR_mult=2`, `_02_TP_ATR_mult=4.5`, `_04_TrailATR=3.0` |
+| LNBREAK | 22 | 1.040545 | 434 | 43.41 | 0.7708 | `_01_BreakBuf=0.3`, `_02_SL_ATR_mult=2`, `_02_TP_ATR_mult=4.5`, `_04_TrailATR=0` |
+| LNBREAK | 68 | 1.037988 | 448 | 36.38 | 0.5978 | `_01_BreakBuf=0.6`, `_02_SL_ATR_mult=2`, `_02_TP_ATR_mult=3.0`, `_04_TrailATR=3.0` |
+| NRBreakout | 10 | 1.314252 | 88 | 117.48 | 1.8409 | `_01_NrLookback=7`, `_01_NrMult=0.6`, `_02_SlAtrMult=2`, `_02_TpAtrMult=1.5` |
+| NRBreakout | 1 | 1.222801 | 88 | 67.60 | 1.3719 | `_01_NrLookback=7`, `_01_NrMult=0.6`, `_02_SlAtrMult=1`, `_02_TpAtrMult=1.5` |
+| NRBreakout | 19 | 1.210523 | 88 | 90.47 | 2.0930 | `_01_NrLookback=7`, `_01_NrMult=0.6`, `_02_SlAtrMult=3`, `_02_TpAtrMult=1.5` |
+| NRBreakout | 60 | 1.195560 | 315 | 303.39 | 1.3246 | `_01_NrLookback=3`, `_01_NrMult=1.0`, `_02_SlAtrMult=1`, `_02_TpAtrMult=4.5` |
+| NRBreakout | 59 | 1.190660 | 222 | 205.35 | 1.3433 | `_01_NrLookback=11`, `_01_NrMult=0.8`, `_02_SlAtrMult=1`, `_02_TpAtrMult=4.5` |
 
 ---
 
@@ -689,4 +719,3 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
-
