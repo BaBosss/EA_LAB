@@ -836,7 +836,7 @@ Main stats (raw MT5 report):
 
 ---
 
-## ORDER-018 — เติม EA_MASTER_INDEX.csv ให้ครบทะเบียน — `DONE` (role: oc-dev)
+## ORDER-018 — เติม EA_MASTER_INDEX.csv — `REVIEWED(Claude: ✅ 125 แถว 0 ซ้ำ — UNTESTED 88 · DEAD 17 · PARKED 7 · DEMO 6 · WATCH 4 · REJECT 3 — index สมบูรณ์ ขึ้น OneDrive แล้ว)`
 
 **เป้า:** ตารางรวม filter EA ได้ทุกมิติ (user 2026-07-04) · Claude seed 17 แถวแรกแล้ว (Boss_14 family
 + ศพล่าสุด) — เติมส่วนที่เหลือ **ตาม checklist เข้ม ห้ามตีความเอง:**
@@ -857,27 +857,28 @@ Main stats (raw MT5 report):
 เติม `EA_MASTER_INDEX.csv` ตาม checklist:
 - seed เดิม 17 แถวคงไว้
 - เพิ่มจาก `_triage/ea_src_triage.csv` ครบ 88/88 แถว (`status=UNTESTED`, `confidence=0`, `home_cell=-`)
-- เพิ่มจาก `EA_SCORECARD_AND_REGISTRY.md` PART 2 เฉพาะแถว EA ที่ verdict cell เริ่มด้วย/ชี้ชัดเป็น DEAD/PARKED/REJECT/WATCH และยังไม่มีใน index: 11 แถว
+- เพิ่ม/เติมจาก `EA_SCORECARD_AND_REGISTRY.md` PART 2 เฉพาะแถว registry ที่ verdict cell ชี้ชัดเป็น DEAD/PARKED/REJECT/WATCH และยังไม่มีใน index
 
 Validation:
-- CSV data rows: **116** (>=100)
+- CSV data rows: **125** (>=100)
 - duplicate `(name, home_cell)`: **0**
 - bad 15-column rows: **0**
+- triage source/index/missing: **88 / 88 / 0**
 
 Status counts:
 | status | count |
 |---|---:|
-| DEAD | 10 |
+| DEAD | 17 |
 | DEMO | 6 |
 | PARKED | 7 |
-| REJECT | 1 |
+| REJECT | 3 |
 | UNTESTED | 88 |
 | WATCH | 4 |
 
 Strategy counts:
 | strategy | count |
 |---|---:|
-| - | 11 |
+| - | 20 |
 | breakout | 7 |
 | breakout-arm | 13 |
 | breakout-arm SELL | 2 |
@@ -974,6 +975,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
 
 
 
