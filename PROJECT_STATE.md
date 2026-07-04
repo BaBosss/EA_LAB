@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-04 (รอบ 4 — ORDER-021 done by Claude, review 019/020) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-04 (รอบ 5 — ORDER-021/023 done by Claude, ORDER-022 running) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -287,12 +287,17 @@ gate (Doji/Engulfing/Star/Tower) · retest-zone+reversal-exit บน breakout (�
 auto-S/R multi-level pyramid. ตัดทิ้ง: EX170 (manual chart-line ไม่อัตโนมัติ), XPERT2 (kernel32.dll
 file I/O + obfuscated), MoonKinght MASA (decompiled). รายละเอียดเต็ม → `AGENT_TASKBOARD.md` ORDER-021
 
-**คิวเปิดใน taskboard ตอนนี้ (สั่งผ่าน Telegram ได้เลย):** ORDER-022 (plateau-sensitivity 6 demo
-configs × 8 variants, oc-btest เลน 2, ~2-3 ชม.) · ORDER-023 (NZDUSD-SELL fresh-start OOS, ZCode/Codex,
-งานเบา รันได้ทันที)
-**งาน Claude session หน้า:** review 022/023 เมื่อ DONE + ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม
-build (candle-pattern gate กับ retest-zone ดูน่าสนใจสุด — ยังไม่มี module พวกนี้ใน Boss V2 เลย) →
-(ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+**✅ ORDER-023 done (Claude/Fable, 2026-07-04 — รันเองแทน Codex/ZCode ที่ token หมด):** NZDUSD-SELL
+pass 29 = **❌ PARKED (regime-dependent)** — OOS ดูดีเพราะคาบเกี่ยวปี 2026 ที่แข็ง แต่ year-split เผย
+2024 แทบไม่เทรด + 2025 แพ้จริง (เหมือน pattern ที่ฆ่า GBPAUD/EURCAD ไปแล้ว) → ปิดการล่า SELL-side รอบนี้
+
+**⏳ ORDER-022 กำลังรัน (Claude/Fable, 2026-07-04 — รันเองแทน oc-btest, background batch):**
+plateau-sensitivity 6 demo configs × 8 variants = 48 full-window backtests, เลน 1 (default terminal,
+ไม่ใช่เลน 2 เพราะรันเองไม่ใช่ oc-btest) — ผลลัพธ์จะอยู่ที่ `_mt5_auto/ORDER022_SENSITIVITY.csv`
+**งาน Claude session หน้า:** เช็คผล ORDER-022 (ควรเสร็จแล้วถ้าไม่ได้เปิด session นี้ทิ้งไว้นาน) → ตัดสิน
+ที่ราบ/สันเขาต่อ config + ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม build (candle-pattern gate กับ
+retest-zone ดูน่าสนใจสุด) → (ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด
+/ea-monitor ครั้งแรก ~2 สัปดาห์
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md

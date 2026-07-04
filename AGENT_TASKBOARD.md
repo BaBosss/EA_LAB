@@ -1010,7 +1010,7 @@ Summary:
 
 ---
 
-## ORDER-023 — NZDUSD-SELL: fresh-start OOS ของ pass 29 (จาก ORDER-020 hunt) — `OPEN` (role: ZCode/Codex)
+## ORDER-023 — NZDUSD-SELL: fresh-start OOS ของ pass 29 (จาก ORDER-020 hunt) — `REVIEWED(Claude/Fable, 2026-07-04 — ทำเองแทน Codex/ZCode ที่ token หมด — ❌ PARKED regime-dependent)` (role: ZCode/Codex → done by Claude)
 
 **ทำไม:** ORDER-020 เจอ NZDUSD `_14_Direction=2` (SELL) pass 29 สม่ำเสมอ 2 window (full 1.94/76t ·
 IS 2.03/55t) — GBPAUD/EURUSD/AUDCAD SELL candidates อื่นถูกตัดทิ้งหรือเป็นของเดิมแล้ว เหลือตัวนี้
@@ -1037,7 +1037,29 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14
 commit `[tag] ORDER-023 done`
 **ห้าม:** verdict/promote เป็น candidate — Claude ตัดสิน demo เอง (เกณฑ์เดียวกับ ORDER-006/010)
 
-**ผล:** _(รอ)_
+**ผล + VERDICT (Claude/Fable, 2026-07-04 — รันเองแทน Codex/ZCode ที่ token หมด):**
+
+OOS fresh-start (2025.07–2026.07): 9 trades, PF 1.47, net +$81.91, eqDD 1.07% — ผ่านเกณฑ์ (PF≥0.9)
+→ รัน full-window confirm ต่อ:
+
+Full (2023.01–2026.07): 76 trades, PF 1.94, net +$782.83, balDD 2.18% — ตรงกับตัวเลข "full" ที่เจอใน
+ORDER-020 XML เป๊ะ (1.94/76t) ยืนยันว่าไม่ใช่ fluke ของการ parse
+
+**Year-split (`report_year_split.py`):**
+| Year | Trades | PF | Net | BalDD |
+|---|---:|---:|---:|---:|
+| FULL | 76 | 1.94 | +782.83 | 2.18% |
+| 2023 | 42 | 2.11 | +549.35 | 2.18% |
+| 2024 | 2 | 1.00 | -0.10 | 0.31% ⚠️ เกือบตาย |
+| 2025 | 18 | 0.88 | -28.99 | 1.73% ⚠️ ปีแพ้ |
+| 2026 | 14 | 5.10 | +262.57 | 0.64% |
+
+**❌ VERDICT: NZDUSD-SELL = PARKED (regime-dependent — ไม่ผ่านเกณฑ์ demo cohort)** — เหตุผล: fresh-start
+OOS ดูดีเพราะ window (2025.07–26.07) บังเอิญคาบเกี่ยวเข้าไปในช่วง 2026 ที่แข็งมาก แต่ full-window
+year-split เผยว่า **2024 แทบไม่เทรด (2t) + 2025 แพ้จริง (PF 0.88, -$29)** — กำไรทั้งหมดกระจุกอยู่แค่
+2023 กับ 2026 เท่านั้น (2/4 ปีบวก) ต่างจาก AUDNZD/USDJPY/EURJPY ในคอฮอร์ตปัจจุบันที่ **ทุกปีบวก** —
+แพทเทิร์นเดียวกับที่ทำให้ GBPAUD/EURCAD ถูก PARKED ไปแล้ว (chained-window ดูดีแต่ปีจริงมีปีตาย/ปีแพ้ซ่อนอยู่)
+· ไม่เข้า demo · ปิดการล่า SELL-side รอบนี้ (เหลือ EURUSD-SELL ที่ demo อยู่แล้วเป็นตัวแทนฝั่ง SELL เดียว)
 
 ---
 
