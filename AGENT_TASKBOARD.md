@@ -709,7 +709,7 @@ Files:
 
 ---
 
-## ORDER-016 — cohort-2 pipeline: full-confirm + year-split + MC ของ 5 ตัวจาก batch #2 (+NRBreakout OOS) — `DONE(oc-btest, 2026-07-04 16:45 ICT)` (role: oc-btest, เลน 2)
+## ORDER-016 — cohort-2 pipeline: full-confirm + year-split + MC ของ 5 ตัวจาก batch #2 (+NRBreakout OOS) — `REVIEWED(Claude, 2026-07-04): cohort-2 verdict — DEMO 3 ตัว: 🥇 AUDCAD (ทุกปี≥1.01, OOS 4.30, MC clean) · CADJPY-thin (2026 = -\.60 บน 13t = flat ไม่ใช่ปีแพ้) · EURUSD-SELL-thin (ทุกปี≥1.47 — เพิ่ม SELL-side + non-AUD diversity) · WATCH: USDCAD (2023 = 0.85 ปีแพ้จริง) + NZDUSD (2025 = 0.88) — ตกเกณฑ์ no-losing-year · NRBreakout = PARKED-final (probe แฟร์แล้ว: ceiling ~1.31, OOS 20t marginal — ไม่ตายแต่ไม่คุ้ม slot เทียบ Boss_14 family; กลับมาดูเมื่อ bench แห้ง)`
 
 **เป้า:** เดินด่านที่เหลือของ AUDCAD (นำ), CADJPY, USDCAD, EURUSD, NZDUSD — สูตรเดียวกับ cohort 1
 **ขั้นตอน (ทุกคำสั่ง MT5 ต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
@@ -804,6 +804,20 @@ Files:
 
 ---
 
+## ORDER-017 — Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets — `OPEN` (role: oc-btest)
+
+**เป้า:** ด่านสุดท้ายก่อน demo ตามมาตรฐาน cohort-1 (scrutiny rule)
+**ขั้นที่ 1 — DEMO sets (ทำก่อน):** copy `Boss14_GridLog_<SYM>_ISpick.set` → `Boss14_GridLog_<SYM>_DEMO.set`
+สำหรับ AUDCAD, CADJPY, EURUSD · แก้ 2 ค่าในไฟล์ใหม่: `_0_Magic` = AUDCAD 990204 · CADJPY 990205 · EURUSD 990206 และ `_4_DdAdaptiveOn=false`
+**ขั้นที่ 2 — Model 4 (⚠️ SERIAL เท่านั้น — เช็คว่าไม่มีอะไรรันอยู่ทั้งสองเลนก่อนเริ่ม, ใช้เลนหลัก default):**
+`mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol <SYM> -Period H1 -FromDate 2024.01.01 -ToDate 2026.07.01 -Model 4 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_<SYM>_DEMO.set' -ReportName BOSS14_<SYM>_M4CONFIRM`
+**Acceptance:** ต่อ symbol: trades/PF/net/eqDD + history quality% · commit `[oc-btest] ORDER-017 done`
+**ห้าม:** verdict — Claude เทียบ M1 เอง
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -886,6 +900,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
 
 
 
