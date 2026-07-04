@@ -421,6 +421,24 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert '<EA_NAME>' -Symbol 
 
 ---
 
+## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `OPEN` (role: Codex, งาน engineering)
+
+**ทำไม:** โหมด Recovery 81/82/83 + HEDGE_LOCK ใน Boss V2 ยังไม่เคยถูก backtest — Phase 2 ต้องการ
+เครื่องมือเทียบ "EA เดิม vs EA เดิม+เปิดโหมด" อย่างเป็นระบบ
+
+**Spec:** สร้าง `D:\EA_LAB\scripts\ab_mode_test.ps1` (ตามแบบ mt5_run.ps1/tpl_regression.ps1):
+- Params: `-Expert`, `-Symbol`, `-Period`, `-FromDate`, `-ToDate`, `-BaseSet` (path), `-Overrides` (เช่น `"RecoveryMode=81;_8_RecMult=1.3"`), `-Label`
+- ทำงาน: รัน 2 backtests (base และ base+overrides, Model 1) → parse report ทั้งคู่ → พิมพ์ตารางเทียบ
+  net / PF / trades / eqDD% / balDD% + delta ต่อคอลัมน์ → เขียน CSV ต่อท้าย `_mt5_auto\ab_results.csv`
+- ห้ามแตะ core code · reuse parsing pattern จาก tpl_regression.ps1
+**Acceptance test:** รันจริง 1 คู่: Boss_11_GridTrend XAUUSD H1 2024.01–2024.07 M1, base = smoke set
+ของ regression, overrides `RecoveryMode=81` → append ตารางผลใต้ order นี้ · commit `[codex] ORDER-011 done`
+**ห้าม:** ตีความว่าโหมดดี/แย่ — Claude อ่านผลเอง
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
