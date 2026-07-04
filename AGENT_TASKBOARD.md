@@ -644,3 +644,17 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
   (c) รันเฉพาะ USDJPY(106t)/EURCAD(140t) ที่ n เพียงพอก่อน.
 - หาก Claude ตั้งใจ review ORDER-005/006 เองโดยไม่ใช้ MC (ใช้แค่ PF+regime-read) ก็ปฏิเสธ
   proposal นี้ได้เลย — ZCode จะไม่ทำ.
+
+---
+
+## ORDER-014 — Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว — `OPEN` (role: ZCode/Codex, MT5 = ต้อง full-approval)
+
+**ทำไม (จาก /scrutinize 2026-07-04):** pipeline ข้าม every-tick confirm ที่ backtest-optimize-rigor บังคับ — Model 1 ไม่จำลอง spread/slippage จริงของ market-fill บน resting-stop
+```powershell
+# แทน <SYM> ด้วย USDJPY, AUDNZD, EURJPY (Model 4 = real ticks; ถ้า broker ไม่มี tick ช่วงเก่า ให้รายงานช่วงที่มีจริง)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol <SYM> -Period H1 -FromDate 2024.01.01 -ToDate 2026.07.01 -Model 4 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_<SYM>_DEMO.set' -ReportName BOSS14_<SYM>_M4CONFIRM
+```
+**Acceptance:** ต่อ symbol: trades/PF/net/eqDD + history quality % + ถ้า tick ไม่ครบช่วงให้ระบุช่วงจริง · commit `[tag] ORDER-014 done`
+**ห้าม:** verdict — Claude เทียบกับ Model 1 เอง (คาด PF ลดลงบ้าง; ลดมาก = fill-sensitivity สูง)
+
+**ผล:** _(รอ)_
