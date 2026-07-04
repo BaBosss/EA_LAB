@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-04 (รอบ 5 — ORDER-021/023 done by Claude, ORDER-022 running) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-04 (รอบ 6 — ORDER-021/022/023 ครบทั้ง 3, ทำเองแทน Codex/ZCode ที่ token หมด) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -291,13 +291,19 @@ file I/O + obfuscated), MoonKinght MASA (decompiled). รายละเอี�
 pass 29 = **❌ PARKED (regime-dependent)** — OOS ดูดีเพราะคาบเกี่ยวปี 2026 ที่แข็ง แต่ year-split เผย
 2024 แทบไม่เทรด + 2025 แพ้จริง (เหมือน pattern ที่ฆ่า GBPAUD/EURCAD ไปแล้ว) → ปิดการล่า SELL-side รอบนี้
 
-**⏳ ORDER-022 กำลังรัน (Claude/Fable, 2026-07-04 — รันเองแทน oc-btest, background batch):**
-plateau-sensitivity 6 demo configs × 8 variants = 48 full-window backtests, เลน 1 (default terminal,
-ไม่ใช่เลน 2 เพราะรันเองไม่ใช่ oc-btest) — ผลลัพธ์จะอยู่ที่ `_mt5_auto/ORDER022_SENSITIVITY.csv`
-**งาน Claude session หน้า:** เช็คผล ORDER-022 (ควรเสร็จแล้วถ้าไม่ได้เปิด session นี้ทิ้งไว้นาน) → ตัดสิน
-ที่ราบ/สันเขาต่อ config + ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม build (candle-pattern gate กับ
-retest-zone ดูน่าสนใจสุด) → (ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด
-/ea-monitor ครั้งแรก ~2 สัปดาห์
+**✅ ORDER-022 done (Claude/Fable, 2026-07-04 — 48/48 runs, รันเองแทน oc-btest ที่ token หมด):**
+plateau-sensitivity 6 demo configs × 8 variants — raw CSV `_mt5_auto/ORDER022_SENSITIVITY.csv`,
+verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัดอันดับความแข็ง:** 🏆 **AUDNZD = ที่ราบสมบูรณ์**
+(8/8 ผ่าน, ยืนยันแชมป์) · ✅ AUDCAD = ที่ราบ (5/8, ไม่มีพลิกลบ) · ⚠️ USDJPY = มีรอยร้าว (step/TP แคบลง
+พลิกขาดทุน — ห้ามลดสองค่านี้ต่ำกว่าเดิม) · ⚠️ EURUSD = ปานกลาง (ไม่มีพลิกลบ) · 🔴 **CADJPY = สันเขา**
+(ยืนยันธง "thin" เดิมด้วยหลักฐานใหม่ว่าไวต่อ param ด้วย ไม่ใช่แค่เทรดน้อย) · 🔴 **EURJPY = สันเขาชัดสุด**
+(baseline PF 2.49 คือจุดพีคไม่ใช่ที่ราบ, 6/8 ทิศตกฮวบ) — **หลักฐานอิสระคนละมิติมายืนยันธง "fill-sensitive"
+เดิมจาก Model-4 confirm ทางเดียวกัน → มั่นใจแล้วว่า EURJPY ต้อง size เบากว่าเพื่อนตอน promote จริง**
+
+**งาน Claude session หน้า:** ORDER-021/022/023 ครบทั้ง 3 แล้ว (ทำเองหมดเพราะ Codex/ZCode token หมด) →
+ต่อไป: ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม build (candle-pattern gate กับ retest-zone ดูน่าสนใจ
+สุด) · เอา plateau-sensitivity ผลไปปรับ sizing-plan ก่อน promote (EURJPY/CADJPY เบากว่าเพื่อน) →
+(ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
