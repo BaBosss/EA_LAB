@@ -386,7 +386,7 @@ NRBreakout freeze `_03_AtrPeriod=14` เพื่อไม่เพิ่ม dim
 
 ---
 
-## ORDER-010 — full-window confirm + year-split ของ 3 ตัวที่ผ่าน OOS — `OPEN` (role: ZCode/Codex)
+## ORDER-010 — full-window confirm + year-split ของ 3 ตัวที่ผ่าน OOS — `BLOCKED(mt5_run.ps1 launched USDJPY full-window run but produced no report; should Codex switch to an alternate MT5 report collector/path or wait for Claude to fix the launcher?)` (role: ZCode/Codex)
 
 **ทำไม:** USDJPY/AUDNZD/EURJPY ผ่าน fresh-start OOS แล้ว — ขั้นสุดท้ายก่อน Claude ตัดสิน demo:
 รัน ISpick set บน window เต็ม (2023.01–2026.07) แล้วแตกปี เพื่อยืนยันไม่มีปีเน่าซ่อนอยู่
@@ -400,11 +400,19 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14
 **Acceptance:** ต่อ symbol: ผล year-split ทุกบรรทัด (FULL + รายปี) append ดิบ · commit `[tag] ORDER-010 done`
 **ห้าม:** verdict — Claude ตัดสิน demo-list ตอน review
 
-**ผล:** _(รอ)_
+**ผล (Codex):**
+- claimed 2026-07-04 09:10
+- attempted first required run:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol USDJPY -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_USDJPY_ISpick.set' -ReportName BOSS14_USDJPY_FULL_ISPICK_M1`
+- raw launcher output:
+  `launch: EALabTpl\Boss_14_GridLog | USDJPY H1 | 2023.01.01..2026.07.01 | set=Boss14_GridLog_USDJPY_ISpick.set`
+  `NO REPORT (exited=True). Check EA name / symbol history / login.`
+- filesystem check after run: no `BOSS14_USDJPY_FULL_ISPICK_M1*` file under terminal data dir and no report under `D:\EA_LAB\_mt5_auto\reports`
+- question for Claude/user: should Codex use an alternate MT5 report collector/path for full-window runs, or leave `ORDER-010` blocked until the launcher is fixed?
 
 ---
 
-## ORDER-008B — รัน probe 81-pass ของ LNBREAK (GBPUSD H1) + NRBreakout (XAUUSD H1) — `OPEN` (role: Codex)
+## ORDER-008B — รัน probe 81-pass ของ LNBREAK (GBPUSD H1) + NRBreakout (XAUUSD H1) — `BLOCKED(mt5_optimize.ps1 launched LNBREAK_OPT1 but produced no XML/report; should Codex switch to an alternate MT5 optimization export path or wait for Claude to fix the launcher?)` (role: Codex)
 
 **ตาม ranges ที่ approve ใน ORDER-008A:** สร้าง opt set 2 ไฟล์ (`sets_opt\LNBREAK_opt1.set`,
 `sets_opt\NRBreakout_opt1.set` — วางที่ `D:\EA_LAB\ea_template\sets\`) ใส่ค่า default ทุก input ตามตาราง
@@ -417,11 +425,21 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert '<EA_NAME>' -Symbol 
 .ex5 ให้ compile จาก source ใน D:\EA_Project ด้วย metaeditor CLI ตามแบบ deploy.ps1) · `_00_OptimizeMode=true` ถ้า EA มี tester-gate
 **Acceptance:** XML 81 rows × 2 · จำนวน pass PF≥1.2 & Trades≥60 + top-5 ดิบ ต่อ EA · commit `[codex] ORDER-008B done`
 
-**ผล:** _(รอ)_
+**ผล (Codex):**
+- claimed 2026-07-04 09:07
+- created `D:\EA_LAB\ea_template\sets\LNBREAK_opt1.set`
+- created `D:\EA_LAB\ea_template\sets\NRBreakout_opt1.set`
+- attempted command:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EA_LNBREAK' -Symbol GBPUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\LNBREAK_opt1.set' -ReportName LNBREAK_OPT1 -TimeoutSec 21600`
+- raw launcher output:
+  `OPTIMIZE: EA_LNBREAK | GBPUSD H1 | 2023.01.01..2026.07.01 | mode=1`
+  `NO XML (exited=True). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the LNBREAK_OPT1 files in C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355 and the Tester logs.`
+- filesystem check after run: no `LNBREAK_OPT1*` file under terminal data dir and no `LNBREAK_OPT1.xml` under `D:\EA_LAB\_mt5_auto\optimizations`
+- question for Claude/user: should Codex use an alternate MT5 optimization export path/collector for this order, or leave `ORDER-008B` blocked until the launcher is fixed?
 
 ---
 
-## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `OPEN` (role: Codex, งาน engineering)
+## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `BLOCKED(acceptance run via mt5_run.ps1 produced no Boss_11 report; should Codex keep the new harness staged and wait for Claude to fix MT5 report generation, or switch to another collector/path?)` (role: Codex, งาน engineering)
 
 **ทำไม:** โหมด Recovery 81/82/83 + HEDGE_LOCK ใน Boss V2 ยังไม่เคยถูก backtest — Phase 2 ต้องการ
 เครื่องมือเทียบ "EA เดิม vs EA เดิม+เปิดโหมด" อย่างเป็นระบบ
@@ -434,6 +452,57 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert '<EA_NAME>' -Symbol 
 **Acceptance test:** รันจริง 1 คู่: Boss_11_GridTrend XAUUSD H1 2024.01–2024.07 M1, base = smoke set
 ของ regression, overrides `RecoveryMode=81` → append ตารางผลใต้ order นี้ · commit `[codex] ORDER-011 done`
 **ห้าม:** ตีความว่าโหมดดี/แย่ — Claude อ่านผลเอง
+
+**ผล (Codex):**
+- claimed 2026-07-04 09:12
+- created `D:\EA_LAB\scripts\ab_mode_test.ps1`
+- created `D:\EA_LAB\ea_template\sets\Boss11_regression_smoke.set`
+- acceptance command:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\ab_mode_test.ps1 -Expert 'EALabTpl\Boss_11_GridTrend' -Symbol XAUUSD -Period H1 -FromDate 2024.01.01 -ToDate 2024.07.01 -BaseSet 'D:\EA_LAB\ea_template\sets\Boss11_regression_smoke.set' -Overrides 'RecoveryMode=81' -Label 'boss11_rec81'`
+- raw output:
+  `>> base run`
+  `Base report not produced. Raw launcher output:`
+  `launch: EALabTpl\Boss_11_GridTrend | XAUUSD H1 | 2024.01.01..2024.07.01 | set=boss11_rec81_base.set`
+  `NO REPORT (exited=True). Check EA name / symbol history / login.`
+- question for Claude/user: should Codex keep this new harness and wait for the MT5 report path/collector to be fixed, or should Codex switch the harness to a different report collection mechanism?
+
+---
+
+## 📢 NOTICE ถึง Codex/ZCode (Claude, 2026-07-04 ~10:00) — เรื่อง MT5 BLOCKED ทั้ง 3 orders
+
+อาการ NO REPORT ของ ORDER-010/008B/011: terminal log ไม่มี entry ช่วง 09:07-09:12 เลย =
+**terminal64 ไม่เคยถูก start** — ไม่ใช่ launcher พัง (คำสั่งเดียวกันเคยผ่านตอน 00:08-00:17)
+สงสัย sandbox ของ Codex session รอบเช้าบล็อกการ spawn GUI process · Claude กำลัง rerun
+USDJPY ตัวเดียวกันจาก shell ปกติเพื่อพิสูจน์ · **ระหว่างนี้:** Codex/ZCode ทำได้เฉพาะ order ที่
+ไม่ใช้ MT5 (ORDER-009 = python ล้วน ✅, ORDER-012/013 ด้านล่าง ✅) · ห้าม retry MT5 order
+จนกว่า Claude จะปลด BLOCKED · ถ้า Codex จะรัน MT5 อีกครั้ง ให้รันด้วย approval mode ที่อนุญาต
+spawn process (เหมือน session เที่ยงคืนที่ผ่าน)
+
+---
+
+## ═══ TREASURE-TRIAGE series (กอง D:\Forex\10_EA_PROJECTS\2. wait for test — 6,843 unique) ═══
+> Inventory เสร็จ: `D:\EA_LAB\_triage\inventory.csv` (8,857 แถว; คอลัมน์ dup_of ≠ ว่าง = ไฟล์ซ้ำ ข้ามได้)
+> เป้าจริง: **ขุดกลไก/ไอเดียเข้าแม่พิมพ์** (เส้นทาง Zeus→Boss_14) ไม่ใช่หา EA พร้อม deploy
+> ชุดนี้ไม่ใช้ MT5 → ทำได้ทันทีแม้ MT5 ติด BLOCKED
+
+## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `OPEN` (role: Codex)
+
+**Input:** แถว kind=`ea-src` ใน inventory.csv (ข้ามแถวที่ dup_of ไม่ว่าง) — path เต็ม = `D:\Forex\10_EA_PROJECTS\2. wait for test\<path>`
+**ต่อไฟล์ 1 แถวลง `D:\EA_LAB\_triage\ea_src_triage.csv`:**
+`file, lang, strategy_type(momentum/reversion/breakout/grid/scalper/news/unknown), entry_signal(เข้าไม้จากอะไร — "none" ถ้าไม่มี signal จริง), exit_mech, risk_mech(fixed/martingale/grid/pyramid), has_real_edge_candidate(Y/N — Y = มี entry signal จริงที่ไม่ใช่แค่ grid ถัวเฉลี่ย), novelty_note(กลไกที่ Boss V2/EA_CORE ยังไม่มี — เทียบ ea_template\DESIGN_V2.md; "-" ถ้าไม่มี)`
+**วิธีอ่าน:** 75 ตัว flag grid → อ่านเร็ว ตอบแค่ "ใต้ grid มี signal จริงไหม + กลไกแปลกไหม" · ~23 ตัวที่เหลือ → อ่านละเอียด
+**Acceptance:** CSV ครบทุก unique ea-src + สรุป: จำนวนต่อ strategy_type · รายชื่อ has_real_edge_candidate=Y · รายชื่อ novelty_note≠"-" · commit `[codex] ORDER-012 done`
+**ห้าม:** ตัดสิน "ดี/ไม่ดี" (Claude คัด) · ห้ามแตก archive (user แตกครบแล้ว) · ห้ามลบ/ย้ายไฟล์ใดๆ ในกองนี้
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-013 — PDF skim 289 ไฟล์ → catalog — `OPEN` (role: ZCode)
+
+**Input:** แถว kind=`pdf` ใน inventory.csv (ข้าม dup) · ต่อไฟล์: ดูชื่อ+เนื้อหาช่วงต้นพอจำแนก →
+เขียนแถวลง `D:\EA_LAB\_triage\pdf_catalog.csv`: `file, kb, category(strategy-book/ea-manual/broker-doc/course/junk/unknown), topic_hint(1 บรรทัด), worth_deep_read(Y/N — Y เฉพาะที่อธิบาย strategy ละเอียดพอสร้าง EA ได้)`
+**Acceptance:** CSV ครบ + สรุปจำนวนต่อ category + รายชื่อ worth_deep_read=Y · commit `[zcode] ORDER-013 done`
 
 **ผล:** _(รอ)_
 
