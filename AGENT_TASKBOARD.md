@@ -492,7 +492,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 > เป้าจริง: **ขุดกลไก/ไอเดียเข้าแม่พิมพ์** (เส้นทาง Zeus→Boss_14) ไม่ใช่หา EA พร้อม deploy
 > ชุดนี้ไม่ใช้ MT5 → ทำได้ทันทีแม้ MT5 ติด BLOCKED
 
-## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `OPEN` (role: Codex)
+## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `CLAIMED(Codex, 2026-07-04 15:55 ICT)` (role: Codex)
 
 **Input:** แถว kind=`ea-src` ใน inventory.csv (ข้ามแถวที่ dup_of ไม่ว่าง) — path เต็ม = `D:\Forex\10_EA_PROJECTS\2. wait for test\<path>`
 **ต่อไฟล์ 1 แถวลง `D:\EA_LAB\_triage\ea_src_triage.csv`:**
