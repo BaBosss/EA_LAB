@@ -64,6 +64,20 @@
 
 ---
 
+## 2.5) HUNT QUEUE ถาวร — แหล่งไอเดีย EA ใหม่ เรียงตามลำดับขุด (ยืนยันโดย user 2026-07-04:
+"หาไอเดียใหม่ทำเพิ่มเรื่อยๆ = แผนยาวของเรา" — ตรง dual-track ใน VISION)
+
+| ลำดับ | เหมือง | ของที่มีรอแล้ว | วิธีเข้า pipeline |
+|---|---|---|---|
+| 1 | **แกนกลไกที่ยังไม่ sweep ในแม่พิมพ์เอง** | SELL-side GridLog เต็มรูป (EURUSD SELL ผ่านแล้ว = มีสัญญาณ!) · Boss_11/12/13 entries × mechanics ใหม่ · Hedge/Recovery A/B บน config ที่ชนะ | ถูกสุด — sweep สูตรเดิม (probe→OOS→M4) |
+| 2 | **Treasure trove (คัดแล้ว)** | source 20 ตัว (momentum 13 + breakout 7 จาก `_triage/ea_src_triage.csv`) + novelty list | Claude อ่าน → กลไกน่าสนใจ = เข้าแม่พิมพ์แบบ Zeus→Boss_14 |
+| 3 | **PDF strategy books** | 49 เล่ม (worth_deep_read 67 จาก `_triage/pdf_catalog.csv`) + STRATEGY_200 ที่เหลือ (#94 Turtle ฯลฯ) | อ่านสกัดกฎ → เขียน entry ใหม่ในแม่พิมพ์ |
+| 4 | **ของใหม่จากกลุ่ม LINE/Telegram** | user โยนไฟล์ลง `D:\Forex\10_EA_PROJECTS\2. wait for test` ได้เรื่อยๆ | รัน `ea_inventory.py` ซ้ำ → เข้าคิว triage อัตโนมัติ |
+
+**กติกาจังหวะ (กัน pipeline บวม):** คอขวดจริงคือกำลัง validate ไม่ใช่ไอเดีย — ป้อนเข้า smoke
+**~1 concept ใหม่/สัปดาห์พอ** · funnel จริงจากข้อมูลเรา: 21 symbols → 6 demo · 50 MT4 EA → 0 ·
+คาดหวังจากเหมือง = "กลไก" ไม่ใช่ "EA สำเร็จรูป" · ทุก concept ตายให้บันทึกใน scorecard เสมอ (กัน re-hunt)
+
 ## 3. Development backlog ของระบบ (delegate ได้ — Claude เขียนเป็น order เมื่อถึงคิว)
 
 | งาน | เฟส | มอบใคร |
