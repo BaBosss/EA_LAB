@@ -476,7 +476,7 @@ Top-5 raw rows by Profit Factor:
 
 ---
 
-## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `OPEN (UNBLOCKED 2026-07-04: harness เขียนเสร็จแล้ว เหลือ acceptance run — มอบ oc-btest รันบนเลน 2 (Boss_11 deploy ไป 5b แล้ว): เพิ่ม -Terminal/-DataDir/-Portable ใน ab_mode_test.ps1 ถ้ายังไม่รองรับ ให้ oc-dev เพิ่ม param ตามแบบ mt5_run.ps1 ก่อน)` (role: oc-dev + oc-btest)
+## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `DONE(oc-dev, 2026-07-04 14:25 +07)` (role: oc-dev + oc-btest)
 
 **ทำไม:** โหมด Recovery 81/82/83 + HEDGE_LOCK ใน Boss V2 ยังไม่เคยถูก backtest — Phase 2 ต้องการ
 เครื่องมือเทียบ "EA เดิม vs EA เดิม+เปิดโหมด" อย่างเป็นระบบ
@@ -502,6 +502,25 @@ Top-5 raw rows by Profit Factor:
   `launch: EALabTpl\Boss_11_GridTrend | XAUUSD H1 | 2024.01.01..2024.07.01 | set=boss11_rec81_base.set`
   `NO REPORT (exited=True). Check EA name / symbol history / login.`
 - question for Claude/user: should Codex keep this new harness and wait for the MT5 report path/collector to be fixed, or should Codex switch the harness to a different report collection mechanism?
+
+**ผล (oc-dev, MT5 เลน 2 `D:\Meta 5b`, 2026-07-04):**
+- updated `D:\EA_LAB\scripts\ab_mode_test.ps1` to accept `-Portable` and pass it through to `mt5_run.ps1` for both base and variant runs.
+- acceptance command:
+  `powershell -ExecutionPolicy Bypass -File D:\EA_LAB\scripts\ab_mode_test.ps1 -Expert 'EALabTpl\Boss_11_GridTrend' -Symbol XAUUSD -Period H1 -FromDate 2024.01.01 -ToDate 2024.07.01 -BaseSet 'D:\EA_LAB\ea_template\sets\Boss11_regression_smoke.set' -Overrides 'RecoveryMode=81' -Label 'boss11_rec81' -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`
+- raw A/B stats (Model 1):
+
+| Case | Net | PF | Trades | EqDD | BalDD | Delta net | Delta PF | Delta trades | Delta EqDD | Delta BalDD |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| base | -356.44 | 0.89 | 480 | 637.43 (6.21%) | 589.63 (5.76%) |  |  |  |  |  |
+| base+RecoveryMode=81 | -246.25 | 0.93 | 550 | 768.06 (7.32%) | 719.70 (6.88%) | +110.19 | +0.04 | +70.00 | +130.63 | +130.07 |
+
+- reports:
+  - `D:\EA_LAB\_mt5_auto\reports\AB_boss11_rec81_BASE.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\AB_boss11_rec81_VAR.htm`
+- generated set files:
+  - `D:\EA_LAB\_mt5_auto\ab_sets\boss11_rec81_base.set`
+  - `D:\EA_LAB\_mt5_auto\ab_sets\boss11_rec81_variant.set`
+- CSV appended: `D:\EA_LAB\_mt5_auto\ab_results.csv`
 
 ---
 
