@@ -647,7 +647,7 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
 
 ---
 
-## ORDER-014 — Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว — `OPEN` (role: ZCode/Codex, MT5 = ต้อง full-approval)
+## ORDER-014 — Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว — `DONE(oc-btest, 2026-07-04 12:45 ICT)` (role: ZCode/Codex, MT5 = ต้อง full-approval)
 
 **ทำไม (จาก /scrutinize 2026-07-04):** pipeline ข้าม every-tick confirm ที่ backtest-optimize-rigor บังคับ — Model 1 ไม่จำลอง spread/slippage จริงของ market-fill บน resting-stop
 ```powershell
@@ -657,4 +657,35 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog
 **Acceptance:** ต่อ symbol: trades/PF/net/eqDD + history quality % + ถ้า tick ไม่ครบช่วงให้ระบุช่วงจริง · commit `[tag] ORDER-014 done`
 **ห้าม:** verdict — Claude เทียบกับ Model 1 เอง (คาด PF ลดลงบ้าง; ลดมาก = fill-sensitivity สูง)
 
-**ผล:** _(รอ)_
+**ผล (oc-btest, Model 4 real ticks, 2026-07-04):**
+
+Reports:
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_USDJPY_M4CONFIRM.htm`
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_AUDNZD_M4CONFIRM.htm`
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_EURJPY_M4CONFIRM.htm`
+
+Main stats (raw MT5 report):
+
+| Symbol | Report period | History quality | Bars | Ticks | Trades | PF | Net | Equity DD maximal |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| USDJPY | 2024.01.01..2026.07.01 | 100% real ticks | 15,528 | 70,255,450 | 107 | 1.72 | +818.93 | 421.44 (3.84%) |
+| AUDNZD | 2024.01.01..2026.07.01 | 99% real ticks | 15,528 | 79,984,320 | 44 | 3.37 | +831.09 | 247.07 (2.26%) |
+| EURJPY | 2024.01.01..2026.07.01 | 99% real ticks | 15,528 | 104,690,336 | 110 | 1.51 | +1,250.04 | 1,102.21 (10.02%) |
+
+Tick/data range note: all three reports show the requested full report period `2024.01.01..2026.07.01`; no truncated report period was indicated. History quality is as listed above (AUDNZD/EURJPY are 99% real ticks, not 100%).
+
+Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
+
+| Symbol | Year | Trades | PF | Net | BalDD |
+|---|---:|---:|---:|---:|---:|
+| USDJPY | FULL | 107 | 1.72 | +818.93 | 2.83% |
+| USDJPY | 2024 | 89 | 1.98 | +826.64 | 2.83% |
+| USDJPY | 2026 | 18 | 0.97 | -7.71 | 2.18% |
+| AUDNZD | FULL | 44 | 3.37 | +831.09 | 0.97% |
+| AUDNZD | 2024 | 13 | 2.70 | +184.82 | 0.82% |
+| AUDNZD | 2025 | 2 | inf | +64.98 | 0.00% |
+| AUDNZD | 2026 | 29 | 3.40 | +581.29 | 0.99% |
+| EURJPY | FULL | 110 | 1.51 | +1,250.04 | 8.26% |
+| EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
+| EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
+| EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
