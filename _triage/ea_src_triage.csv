@@ -1,0 +1,89 @@
+﻿file,lang,strategy_type,entry_signal,exit_mech,risk_mech,has_real_edge_candidate,novelty_note
+(OH) EA\(OH) 2way EA v05G.mq5,mq5,grid,two-way grid using near_pip/base/diff/candle gate,basket TP + trailing + close_all_EQ,martingale/grid,N,-
+(OH) EA\(Oh) Arbitrage Super Profit V04.mq5,mq5,grid,3-symbol spread/arbitrage trigger with high/low thresholds,percent profit basket close,martingale/grid,Y,multi-symbol synthetic arbitrage spread trigger
+(OH) EA\(Oh) CCI Currencies Strength ATR  Ranking Nearby  V09.mq5,mq5,momentum,CCI currency-strength ranking across major currencies plus ATR nearby buffer,equity percent close + OCO/order aging,fixed/grid,Y,multi-currency strength ranking selector with ATR proximity
+(OH) EA\(oh) continue v06.mq5,mq5,grid,none; continuation/grid management from existing basket state,profit percent close + trailing,martingale/grid,N,-
+(OH) EA\(Oh) EA Dashboard V04A.mq5,mq5,unknown,dashboard/group controls; no standalone entry signal found,equity percent/pip profit controls,fixed/grid,N,dashboard-led basket controller
+(OH) EA\(Oh) Elliott Wave 14 Correction Price Action v01.mq5,mq5,reversion,"ZigZag/Elliott correction with PA patterns, EMA trend, Fibo level",TP as percent of SL + break-even + close/cut percent,martingale,Y,Elliott/ZigZag correction + PA pattern + Fibo gate
+(OH) EA\(oh) fibo gold v06.mq5,mq5,reversion,ZigZag/Fibo retracement with optional PA flag,loss counter / fibo target style close,grid,Y,Fibo retracement entry from ZigZag swing map
+(OH) EA\(oh) Grid Lot Full Hedging Snowball EA .mq5,mq5,grid,none; full hedging snowball/grid loop,TP/SL + equity percent close,martingale/grid,N,snowball hedging/rebate-oriented basket management
+(OH) EA\(oh) grid v04A.mq5,mq5,grid,none; distance grid from Near_By,TP/SL/profit money close,grid,N,-
+(OH) EA\(oh) grid v05.mq5,mq5,grid,none; distance grid from Near_By,TP/SL/profit money close,grid,N,-
+(OH) EA\(OH) Grid Lot Dif Hedging EA V04.mq5,mq5,grid,ADX-distance/base filter around grid entries,percent profit/cut-loss percent close,grid,Y,ADX-distance gated grid with lot-difference hedging
+(OH) EA\(oh) Master GRID ATR Accumulative Deduction -B V23.mq5,mq5,grid,ATR bucket plus first/next indicator gate,ATR/bucket close rules,martingale/grid,Y,accumulative deduction lot formula with ATR bucket gating
+(OH) EA\(oh) pun fix lot v05.mq5,mq5,grid,multi-symbol match field; no clear market signal beyond symbol matching,TP fixed basket,fixed,N,multi-symbol fixed-lot matching template
+(OH) EA\(oh) pun lot hedging v15.mq5,mq5,grid,ADX/ATR-ratio gate for hedging grid,equity/trailing money close,martingale/grid,Y,ATR-ratio plus ADX gated pun/hedging grid
+(OH) EA\(oh) TP Revenge v06.mq5,mq5,grid,none; revenge sequence starts from basket loss/profit state,revenge TP + trailing,martingale/grid,N,revenge TP sequencing
+(OH) EA\(Oh) ZZ EA V05A.mq5,mq5,reversion,ZigZag swing distance around Around_PIP,pip/money profit + trailing,martingale/grid,Y,ZigZag swing grid trigger
+(OH) EA\(Oh) ZZ EA V05B.mq5,mq5,reversion,ZigZag swing plus ADX distance filter,pip/money profit + trailing,martingale/grid,Y,ZigZag swing trigger with ADX distance filter
+(OH) EA\(oh)  Bot V00.mq5,mq5,momentum,fast/slow MA with ATR and volume candle filters,money-percent trailing,fixed,Y,volume-candle confirmation on MA/ATR entry
+(OH) EA\(oh)  Partial Arbitage add on lossing V04.mq5,mq5,grid,3-symbol partial arbitrage diff plus add-on-loss distance,percent profit + trailing,martingale/grid,Y,partial arbitrage trigger with loss-side add-on
+(OH) EA\(OH) Price Action - Trend Line -Fibo -Martingale  V20.mq5,mq5,breakout,PA patterns + trendline/ZigZag/Fibo context,close-all percent/cut-loss percent,martingale/grid,Y,PA pattern + trendline + Fibo stack
+(OH) EA\(OH) Recovery Hedging System with SL V05.mq5,mq5,grid,ADX base/distance filter around grid recovery,TP/SL + order-count close,grid,Y,recovery hedge with explicit SL and ADX distance gate
+2024-06\Flexy The Dragon v2.7.mq4,mq4,grid,optional BB/Stoch/RSI/CCI/custom-indicator signals; strict_signals can gate next grid orders,TP/profit lock/partial closing/outscale/cycle hedge,martingale/grid,Y,pluggable custom-indicator grid plus partial closing/outscaling/cycle hedge
+2024-10\IL BOSS DEL TRADING.mq4,mq4,grid,decompiled/obfuscated; PipsStep/OpenTime style grid trigger,TP + trailing,martingale/grid,N,-
+2024-10\MoonKinght MASA.mq4,mq4,momentum,EMA trend locations plus fractal/candle-hour filters,dynamic SLTP + partial close + breakeven,fixed,Y,EMA trend + fractal timing with partial-close manager
+2024-12\XAUUSD M5 SUPER SCALPER ROBOT for MT4.mq4,mq4,scalper,Parabolic SAR style period/step/acceleration trigger,SL + trailing stop,fixed,Y,SAR-parameterized M5 gold scalper
+2025-07  _all done\AI_StalkerEA Prototype.mq4,mq4,unknown,prototype skeleton; no robust entry signal visible beyond minimal OnTick,none,fixed,N,-
+2025-07  _all done\EX52 - Close First Order and Only Profit Order  RV2.mq4,mq4,grid,EMA trend fast/slow/distance gate over grid,close first + only-profit close money,grid,Y,close-first/only-profit basket reducer
+2025-08\(OH)  Fibo Harmonic Pattern V03_01.mq5,mq5,reversion,ZigZag harmonic/Fibo pattern with currency basket selection,profit percent/pip close,grid,Y,harmonic/Fibo pattern detector from ZigZag
+2025-08\AAA#IRSI SUMPIP LOT MARTINGLESEQUENCE.mq5,mq5,reversion,RSI1/RSI2 thresholds plus sum-pip trigger,SL/TP + pip sequence close,martingale/grid,Y,RSI sum-pip martingale sequence
+2025-08\EX52 - )XAUUSD Mua  Mua   v1[Lock].mq5,mq5,reversion,RSI overbought/oversold plus flow/time wait gates,close money/fast close/lock style exits,martingale/grid,Y,RSI grid with order-flow lock/wait controls
+2025-08\Grid Profit-2-way  RV1[LOCK]V3.mq5,mq5,grid,none; 2-way distance grid,close money/cut loss by order,grid,N,2-way lock grid template
+2025-08\V#IRSI SUMPIP LOT MARTINGLESEQUENCE.mq5,mq5,reversion,RSI1/RSI2 thresholds plus sum-pip trigger,SL/TP + pip sequence close,martingale/grid,Y,RSI sum-pip martingale sequence
+2025-08\[189] - MGS[FastClose].mq5,mq5,reversion,RSI period/OB/OS before grid entries,fast close / close money,martingale/grid,Y,RSI-gated fast-close grid
+2026-07\Breakout Retest Pro EA Source Code (1).mq5,mq5,breakout,swing high/low impulse break then ATR retest zone; SMA trend filter,ATR SL/TP + reversal exit by engulf/3-bar/EMA flip/consecutive ATR move,fixed,Y,breakout-retest state machine with reversal-exit module
+2026-07\Thanos EA Source Code.mq5,mq5,grid,RSI/fractal/trend option can make first order; then pending/grid steps,profit close both/one direction + drawdown loss close,martingale/grid,Y,first-order trend/fractal gate plus pending-grid controller
+EA fxdreema other id\(Niyombot B_3) Price Action ATR  Lot.D Group 3.mq5,mq5,breakout,Doji/Engulfing/Star/Tower PA patterns with ATR sizing context,money TP groups,fixed/grid,Y,multi-pattern PA gate with ATR lot grouping
+EA fxdreema other id\(Niyombot) B2 Gold Deng M15 TLM.mq5,mq5,momentum,fast/slow MA + ATR + volume candle filter,money trailing,fixed,Y,volume-candle + MA/ATR gold entry
+EA fxdreema other id\143 E4.7.4 v2.mq5,mq5,reversion,RSI OB/OS with mode buy/sell and time windows,trailing/fast close by order counts,martingale/grid,Y,RSI mode split with time-window grid
+EA fxdreema other id\43.Fast Shot Arbitrage 6.6.68.mq5,mq5,unknown,multi-currency fast-shot arbitrage symbol matrix,basket close/hedge fields,fixed/grid,Y,large multi-currency arbitrage matrix
+EA fxdreema other id\BMA 5   27.5.68.mq5,mq5,reversion,MA/ATR/RSI plus ATR-band style ranges,profit percent/near-pip close,grid,Y,BMA/ATR/RSI range grid gate
+EA fxdreema other id\BS Pofit888.mq5,mq5,grid,manual/pending buy-sell TP/SL levels; no market-derived signal evident,SL/TP/trailing for buy/sell and pending,fixed,N,separate live/pending TP-SL matrix
+EA fxdreema other id\candleanglepro10x.mq5,mq5,grid,manual/pending buy-sell TP/SL levels; name implies candle-angle but inputs show order matrix,SL/TP/trailing for buy/sell and pending,fixed,N,pending/live order matrix scaffold
+EA fxdreema other id\EA GOLD CENTER V.2 Expried 11.04.2025.mq5,mq5,grid,candle body-size filter before pip-step grid,percent cutloss + time filters,martingale/grid,Y,body-size gated grid
+EA fxdreema other id\EA Golden Fighter V.2.2.mq5,mq5,reversion,Bollinger Band levels plus max candle body/timeframe filters,close pips/money/all basket exits,martingale/grid,Y,multi-BB plus candle-body filter
+EA fxdreema other id\EA Hunter Pro - Interstellar  ID.mq5,mq5,grid,candle body-size filter before pip-step grid,percent cutloss + time filters,martingale/grid,Y,body-size gated grid
+EA fxdreema other id\EX170 - Zone Trading Strategy.mq5,mq5,breakout,manual LineBuy/LineSell zone trigger,SL/TP + break-even,fixed/grid,Y,explicit zone-line breakout template
+EA fxdreema other id\EX175 FastClose  By Natong V01.mq5,mq5,reversion,support/resistance and min-body-size filters,fast close / auto close / close money,grid,Y,support-resistance fast-close basket
+EA fxdreema other id\EX177 - Grid Trading System and Hedging Lots rev 2.2.mq5,mq5,grid,none; buy/sell mode plus grid distance,close money/cutloss money,martingale/grid,N,hedging lots grid with separate buy/sell starts
+EA fxdreema other id\EX97 X HFT Gold Robot Scalping V3.9 Balance Relot ATR off cut loss.mq5,mq5,scalper,buy/sell price offset and SEC timing for gold scalping,close pips + break-even + trailing,martingale/grid,Y,time/offset HFT-style scalper with balance relot
+EA fxdreema other id\min CCI 2Currencies Strength Carry Trade Trailing .mq5,mq5,momentum,CCI strong/weak currency ranking with carry/swap buy-sell fields,trailing + cut-loss money + hedge lots,fixed/grid,Y,CCI two-currency strength carry-trade selector with swap awareness
+EA fxdreema other id\so cool  AV  order  unlimit mt5 FINAL.mq5,mq5,reversion,EMA + Bollinger + ADX + StdDev range bands A/B/C,distance SL management,fixed/grid,Y,multi-band ADX/BB/StdDev range selector
+2024-06\New folder\(Oh) Supply Demand indy V07B.mq4,mq4,reversion,supply/demand indicator text buy/sell plus ATR/ADX filters,profit percent + trailing by mode,grid,Y,supply-demand indicator text trigger
+2024-06\New folder\AA_Supply Demand Zone22_3g91.mq4,mq4,reversion,supply/demand zone with EMA top/below and ADX level,SD SL/TP + trailing + close all,martingale/grid,Y,supply-demand zone + EMA/ADX filter
+2024-06\New folder\Add-On Artillery.mq4,mq4,grid,multi-symbol artillery basket; no clear standalone entry signal extracted,profit total pip + SL + multiply-if-loss,martingale/grid,N,very large multi-symbol artillery basket manager
+2024-06\New folder\EA News  COREJJ   27 Time filter .mq5,mq5,news,time/news window creates pending orders around event with offset_pip,pending delete + SL/TP/trailing,fixed/grid,Y,news-time pending-order straddle template
+2024-06\New folder\Melee com.mq4,mq4,reversion,previous candle + RSI + ZigZag context,day target/close safety/close percent,grid,Y,previous-candle plus RSI/ZigZag melee gate
+2024-06\New folder\PumLot V.1.1 exp mt5.mq5,mq5,grid,none; exponential lot progression M1/M2/M3 over pip step,profit dollar + DD cutloss percent,martingale/grid,N,exponential lot progression matrix
+2024-06\New folder\PumLot V.1.1 exp.mq4,mq4,grid,none; exponential lot progression M1/M2/M3 over pip step,profit dollar + DD cutloss percent,martingale/grid,N,exponential lot progression matrix
+2024-06\New folder\ycp zigzag vs ema  v04.mq5,mq5,momentum,ZigZag vs EMA comparison trigger,SL pip + trailing start/step/stop,fixed/grid,Y,ZigZag-vs-EMA direction comparator
+2025-08\Dark_Gold_Full\Dark_Gold_Full.mq5,mq5,breakout,Dark Support/Resistance or manual SR; trend breakout over resistance/support or counter near levels,weighted avg/BE/money-per-point close + grid add-ons,martingale/grid,Y,support/resistance first-order gate with ATR-expanded grid distance and multiple grid MM modes
+2025-08\GapFillRSI\GapFillRSI.mq5,mq5,reversion,daily gap fade: gap down/up then first-bar break with RSI confirmation,SL at first-bar extreme + target previous gap side + BE/partial close,fixed,Y,gap-fill state machine with RSI and anti-stacking
+2025-11\AutoTrading Scheduler MT4\AutoTrading Scheduler\AutoTrading Scheduler.mq4,mq4,unknown,none; scheduler toggles autotrading/time rules,close positions/orders by schedule,fixed,N,autotrading scheduler utility
+"2025-11\EMA 26,50 MACD\EMA 26,50 MACD\TEMPO_EMA_MACD_Dashboard V.4.mq5",mq5,momentum,price above/below EMA26/50 + MACD sign + ADX/+DI/-DI filter,fixed SL/TP + MACD zero-cross exit,fixed/pyramid,Y,EMA+MACD+ADX/DI dashboard with step-lot sizing
+Dashboard\MQL4\MQL4\Experts\MACD Sample.mq4,mq4,momentum,classic MACD level plus MA trend filter,TP + trailing stop,fixed,Y,-
+Dashboard\MQL4\MQL4\Experts\Moving Average.mq4,mq4,momentum,moving-average crossover/open-close sample,close on reverse MA signal,fixed,Y,-
+Dashboard\MQL4\MQL4\Experts\XIMA_DASH.mq4,mq4,momentum,MA cross/dashboard triggers across many symbols,basket target/stoploss + per-symbol target,fixed/grid,Y,multi-symbol MA-cross dashboard/trader
+Dashboard\MQL4\MQL4\Indicators\Basket_Stats_Time.mq4,mq4,unknown,none; indicator/stat dashboard only,none,fixed,N,basket stats time indicator
+Dashboard\MQL4\MQL4\Indicators\hft_ea(1).mq4,mq4,scalper,time-window HFT signal with hidden SLTP and max order filters,TP/SL/trailing/breakeven/close-half,fixed,Y,time-zone HFT entry with hidden stop manager
+Dashboard\MQL4\MQL4\Indicators\PatternFinding Correlation.mq4,mq4,unknown,pattern/correlation analysis can send order; exact pattern opaque,breakeven + trailing,fixed,Y,pattern-correlation analyzer feeding trade signal
+Dashboard\MQL4\MQL4\Indicators\T101 Basket Trader v2.2.mq4,mq4,momentum,basket market-read/TLE open-close logic across configured pairs,basket TP/SL/BE/trail/hedge,fixed/grid,Y,T101 basket trade logic engine
+Dashboard\MQL4\MQL4\Indicators\Universal_trailer.mq4,mq4,unknown,none; universal trailing manager using ATR/MA trail options,virtual/general trailing and no-loss,fixed,N,universal trailer utility
+Test EA ok3\Indicator and Template\DJFIBO MT4\MQL4\Indicators\#Pallada_Tralling.mq4,mq4,unknown,"Fibo levels used for order modification/trailing, not clear new-entry signal",trailing/partial close levels,fixed,N,Fibo-based trailing/order modifier
+wait for test\25 sep\AcceleratorBot_USDJPYH4.mq4,mq4,breakout,"morning/evening star, engulfing, doji plus ADX/Stoch context",TP/SL + trailing + autolot,fixed,Y,candlestick-pattern accelerator with ADX/Stoch context
+wait for test\25 sep\usdjpy  M30~.mq4,mq4,unknown,time-of-day systems A-E only; no indicator signal visible,TP/SL,fixed,N,multi-session time-window system
+wait for test\30 oct\template.mq4,mq4,grid,zone buy/sell + MA trend/candle window gate,profit close,grid,Y,zone line + MA trend fxdreema template
+wait for test\4\TrioDancer_4.4.5.mq4,mq4,grid,MA period plus three sub-systems Jaipong/Keroncong/Tortor delays,per-system loss limit/stop-after-TP/max trades,grid,Y,three-engine dancer grid with per-engine delays/loss limits
+wait for test\test 3\AI SCALPER v1.1.mq4,mq4,scalper,BB + RSI filter in scalper shell,SL + distance/start trailing,fixed,Y,BB/RSI scalper with compact trailing
+wait for test\test 3\FXCOREGOLD V9 MQ4.mq4,mq4,grid,engine A/B grid with MA timeframe filter and best-direction helper,daily target/min-profit/grid hedge,martingale/grid,Y,dual-engine gold grid with MA filter and hedge/min-profit controls
+wait for test\test 3\PSC-Trader.mq4,mq4,unknown,"script/helper for object/volume calculation, no EA entry signal",none,fixed,N,position-size/object helper
+wait for test\test 3\RoNz Auto SL-TS-TP.mq4,mq4,unknown,none; SL/TP/trailing manager for existing orders,SL/TP/lock profit/trailing,fixed,N,auto SL-TS-TP utility
+wait for test\test 3\WAYGROW.mq4,mq4,grid,profit-state filters and distance; no independent indicator signal found,trailing/breakeven/rapid manager,grid,N,profit-state growth manager
+wait for test\test 3\XPERT2.mq4,mq4,breakout,history-file/price-action main orders with time windows; details obfuscated,TP/SL/trailing/max floating P/L/time close,fixed/grid,Y,offline-history driven XPERT main-orders module
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\UniversalMACrossEA.mq4,mq4,momentum,universal MA cross entry,reverse-condition close/trailing,fixed,Y,-
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\UniversalMACrossEA_Martingale.mq4,mq4,momentum,universal MA cross entry,reverse-condition close/trailing,martingale,Y,MA-cross template with martingale option
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\Downloads\Basket_Stats.mq4,mq4,unknown,none; basket stats display only,none,fixed,N,basket stats indicator
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\Downloads\icarus_4.73 2022july27 EMA (1).mq4,mq4,grid,EMA/trend-filter options around Icarus grid,TP/profit lock/cycle equity risk/hedge,martingale/grid,Y,Icarus grid with EMA filter and cycle-risk controls
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\Downloads\Copiers\Copiers\TradeDuplicatorBeta\TradeDuplicatorClient.mq4,mq4,unknown,none; copies remote/master orders,stray close/order sync,fixed/grid,N,trade duplicator client
+wait for test\2- OK\Expert Advisor and indicator\Expert Advisor and indicator\Ea\Genie RSI\Genie RSI\genie_rsi(1).mq4,mq4,reversion,RSI period threshold entry,TP + trailing,fixed,Y,-

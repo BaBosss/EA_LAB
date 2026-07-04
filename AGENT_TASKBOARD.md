@@ -492,7 +492,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 > เป้าจริง: **ขุดกลไก/ไอเดียเข้าแม่พิมพ์** (เส้นทาง Zeus→Boss_14) ไม่ใช่หา EA พร้อม deploy
 > ชุดนี้ไม่ใช้ MT5 → ทำได้ทันทีแม้ MT5 ติด BLOCKED
 
-## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `CLAIMED(Codex, 2026-07-04 15:55 ICT)` (role: Codex)
+## ORDER-012 — อ่าน EA source ~98 ไฟล์ → ตาราง triage — `DONE(Codex, 2026-07-04 16:35 ICT)` (role: Codex)
 
 **Input:** แถว kind=`ea-src` ใน inventory.csv (ข้ามแถวที่ dup_of ไม่ว่าง) — path เต็ม = `D:\Forex\10_EA_PROJECTS\2. wait for test\<path>`
 **ต่อไฟล์ 1 แถวลง `D:\EA_LAB\_triage\ea_src_triage.csv`:**
@@ -501,7 +501,25 @@ spawn process (เหมือน session เที่ยงคืนที่�
 **Acceptance:** CSV ครบทุก unique ea-src + สรุป: จำนวนต่อ strategy_type · รายชื่อ has_real_edge_candidate=Y · รายชื่อ novelty_note≠"-" · commit `[codex] ORDER-012 done`
 **ห้าม:** ตัดสิน "ดี/ไม่ดี" (Claude คัด) · ห้ามแตก archive (user แตกครบแล้ว) · ห้ามลบ/ย้ายไฟล์ใดๆ ในกองนี้
 
-**ผล:** _(รอ)_
+**ผล (Codex):**
+- created `D:\EA_LAB\_triage\ea_src_triage.csv`
+- input rows after `kind=ea-src` and `dup_of` blank: **88 unique files** (not 98 after duplicate skip)
+- CSV validation: **88/88 rows**, missing **0**, extra **0**
+- strategy_type counts: breakout **7** · grid **31** · momentum **13** · news **1** · reversion **19** · scalper **4** · unknown **13**
+- `has_real_edge_candidate=Y`: **61 files**
+  - `(Oh) Arbitrage Super Profit V04.mq5`; `(Oh) CCI Currencies Strength ATR  Ranking Nearby  V09.mq5`; `(Oh) Elliott Wave 14 Correction Price Action v01.mq5`; `(oh) fibo gold v06.mq5`; `(OH) Grid Lot Dif Hedging EA V04.mq5`; `(oh) Master GRID ATR Accumulative Deduction -B V23.mq5`; `(oh) pun lot hedging v15.mq5`; `(Oh) ZZ EA V05A.mq5`
+  - `(Oh) ZZ EA V05B.mq5`; `(oh)  Bot V00.mq5`; `(oh)  Partial Arbitage add on lossing V04.mq5`; `(OH) Price Action - Trend Line -Fibo -Martingale  V20.mq5`; `(OH) Recovery Hedging System with SL V05.mq5`; `Flexy The Dragon v2.7.mq4`; `MoonKinght MASA.mq4`; `XAUUSD M5 SUPER SCALPER ROBOT for MT4.mq4`
+  - `EX52 - Close First Order and Only Profit Order  RV2.mq4`; `(OH)  Fibo Harmonic Pattern V03_01.mq5`; `AAA#IRSI SUMPIP LOT MARTINGLESEQUENCE.mq5`; `EX52 - )XAUUSD Mua  Mua   v1[Lock].mq5`; `V#IRSI SUMPIP LOT MARTINGLESEQUENCE.mq5`; `[189] - MGS[FastClose].mq5`; `Breakout Retest Pro EA Source Code (1).mq5`; `Thanos EA Source Code.mq5`
+  - `(Niyombot B_3) Price Action ATR  Lot.D Group 3.mq5`; `(Niyombot) B2 Gold Deng M15 TLM.mq5`; `143 E4.7.4 v2.mq5`; `43.Fast Shot Arbitrage 6.6.68.mq5`; `BMA 5   27.5.68.mq5`; `EA GOLD CENTER V.2 Expried 11.04.2025.mq5`; `EA Golden Fighter V.2.2.mq5`; `EA Hunter Pro - Interstellar  ID.mq5`
+  - `EX170 - Zone Trading Strategy.mq5`; `EX175 FastClose  By Natong V01.mq5`; `EX97 X HFT Gold Robot Scalping V3.9 Balance Relot ATR off cut loss.mq5`; `min CCI 2Currencies Strength Carry Trade Trailing .mq5`; `so cool  AV  order  unlimit mt5 FINAL.mq5`; `(Oh) Supply Demand indy V07B.mq4`; `AA_Supply Demand Zone22_3g91.mq4`; `EA News  COREJJ   27 Time filter .mq5`
+  - `Melee com.mq4`; `ycp zigzag vs ema  v04.mq5`; `Dark_Gold_Full.mq5`; `GapFillRSI.mq5`; `TEMPO_EMA_MACD_Dashboard V.4.mq5`; `MACD Sample.mq4`; `Moving Average.mq4`; `XIMA_DASH.mq4`
+  - `hft_ea(1).mq4`; `PatternFinding Correlation.mq4`; `T101 Basket Trader v2.2.mq4`; `AcceleratorBot_USDJPYH4.mq4`; `template.mq4`; `TrioDancer_4.4.5.mq4`; `AI SCALPER v1.1.mq4`; `FXCOREGOLD V9 MQ4.mq4`
+  - `XPERT2.mq4`; `UniversalMACrossEA.mq4`; `UniversalMACrossEA_Martingale.mq4`; `icarus_4.73 2022july27 EMA (1).mq4`; `genie_rsi(1).mq4`
+- `novelty_note != "-"`: **78 rows**; full mechanism notes are in `ea_src_triage.csv` (not duplicated here to keep the taskboard readable)
+- verification commands run:
+  - `. D:\EA_LAB\scripts\use_python.ps1; python - <inventory/triage validation script>`
+  - validation checked row count, exact path match against `inventory.csv`, strategy counts, edge-candidate count, and novelty-note count
+- no MT5 commands were run; no source files under `ea_template\core\*` were changed
 
 ---
 
