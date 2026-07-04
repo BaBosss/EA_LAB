@@ -1,4 +1,8 @@
-; Boss14_GridLog_GBPAUD_opt1.set - coarse optimize pass 1 (2026-07-03)
+﻿; Boss14_GridLog_GBPAUD_opt1.set - coarse optimize pass 1 (2026-07-03)
+; ⚠️ FX-ONLY (0.10 lot + TP in USD calibrated for FX pip values) - DO NOT use on
+; metals/indices/crypto: distance axes are ATR-relative (safe) but BasketTP $ and
+; FixedLot are NOT instrument-scaled - XAU at 0.10 lot = completely different risk.
+; For non-FX: rebuild TP/lot per OPTIMIZE_GUIDE instrument-scale table first.
 ; base = screen_small (0.25x sizing, no kill-DD truncation)
 ; ranges: DistAtrMult x StepATRmult x BasketTP x Direction = 3x3x3x2 = 54 passes
 ; SL fixed at Zeus default 4.0 (spacing/TP dominate grid behavior; SL sweep later if plateau found)
@@ -54,3 +58,4 @@ RC_MaxLevelsOverride=6
 _0_Magic=990101
 _0_Slippage=20
 _0_MaxSpread=0
+

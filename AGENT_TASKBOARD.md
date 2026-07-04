@@ -1004,6 +1004,26 @@ Summary:
 
 ---
 
+## ORDER-022 — Plateau-sensitivity test ของ 6 DEMO configs (ปิดจุดอ่อน optimize จาก self-review) — `OPEN` (role: oc-btest, เลน 2)
+
+**ทำไม (user ถาม 2026-07-04: 'รู้ได้ไงว่า optimize ดีจริง'):** grid เดิมหยาบ (3 ค่า/แกน) + SL/MaxLevels
+ไม่เคยทดสอบ — ต้องรู้ว่า config บน demo นั่งบน 'ที่ราบ' หรือ 'สันเขาแคบ'
+**งาน — ต่อ symbol (6 ตัว จาก `Boss14_GridLog_<SYM>_DEMO.set`): รัน 8 variants บน full window**
+(2023.01–2026.07, Model 1, เลน 2) โดยแก้ทีละค่าเดียวจาก DEMO set:
+1. `_9_StepATRmult` ×0.8   2. `_9_StepATRmult` ×1.2
+3. `_14_DistAtrMult` ×0.8  4. `_14_DistAtrMult` ×1.2
+5. `_2_BasketTP_Money` ×0.8  6. `_2_BasketTP_Money` ×1.2
+7. `_33_SL_ATRmult` 3.0    8. `_33_SL_ATRmult` 5.0
+(สร้าง set ชั่วคราวใน `_mt5_auto\ab_sets\` · ReportName `SENS_<SYM>_V<n>` · 48 runs รวม — ~2-3 ชม.)
+**Acceptance:** ตารางต่อ symbol: variant | PF | trades | eqDD% + แถว baseline จาก full-confirm เดิม ·
+commit `[oc-btest] ORDER-022 done`
+**ห้าม:** verdict — เกณฑ์ของ Claude: variant ส่วนใหญ่ PF ยัง ≥70% ของ baseline = ที่ราบ (ผ่าน),
+มี variant ไหนพลิกเป็นขาดทุน = สันเขา (ตัวนั้นต้องทบทวนก่อน promote — demo ต่อได้แต่ติดธง)
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -1086,6 +1106,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
 
 
 
