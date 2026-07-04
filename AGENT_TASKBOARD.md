@@ -419,7 +419,7 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14
 
 ---
 
-## ORDER-008B — รัน probe 81-pass ของ LNBREAK (GBPUSD H1) + NRBreakout (XAUUSD H1) — `DONE(oc-btest, 2026-07-04)` (role: Codex)
+## ORDER-008B — probe ศพเก่า — `REVIEWED(Claude: ❌ LNBREAK = DEAD-optimized ของจริง (0/81, best 1.048) — กฎ re-exam ครบวงจร: การฆ่าเดิมถูก validate แล้ว ปิดถาวร · NRBreakout = 3/81 qualifying → ยัง PARKED-thin, best-pass ได้ OOS check ราคาถูกใน ORDER-016 · 👏 oc-btest จับ gotcha ใหม่เอง: MT5 auto-sweep bool inputs (2592 rows!) → ต้อง lock ||N ทุก input ที่ไม่ sweep — เข้ากติกาแล้ว)` (role: Codex)
 
 **ตาม ranges ที่ approve ใน ORDER-008A:** สร้าง opt set 2 ไฟล์ (`sets_opt\LNBREAK_opt1.set`,
 `sets_opt\NRBreakout_opt1.set` — วางที่ `D:\EA_LAB\ea_template\sets\`) ใส่ค่า default ทุก input ตามตาราง
@@ -476,7 +476,7 @@ Top-5 raw rows by Profit Factor:
 
 ---
 
-## ORDER-011 — สร้าง Hedge/Recovery A/B harness (ROADMAP Phase-2 backlog) — `DONE(oc-dev, 2026-07-04 14:25 +07)` (role: oc-dev + oc-btest)
+## ORDER-011 — A/B harness — `REVIEWED(Claude: ✅ harness ACCEPTED ใช้งานได้จริง (+รองรับ -Portable) · ข้อมูล A/B แรก: Rec81 บน Boss_11 base ขาดทุน → net ดีขึ้น +$110 แต่ PF ยัง <1 และ DD แย่ลง +130 = ยังสรุปไม่ได้ (เอา recovery ไปแปะ strategy ที่แพ้ = วัดอะไรไม่ได้) · Phase-2 จริงต้อง A/B บน config ที่ชนะ เช่น demo cohort · หมายเหตุ: base set ที่ใช้ไม่ใช่ config regression (480t vs 168t) — เทียบภายในคู่ยัง valid)` (role: oc-dev + oc-btest)
 
 **ทำไม:** โหมด Recovery 81/82/83 + HEDGE_LOCK ใน Boss V2 ยังไม่เคยถูก backtest — Phase 2 ต้องการ
 เครื่องมือเทียบ "EA เดิม vs EA เดิม+เปิดโหมด" อย่างเป็นระบบ
@@ -656,7 +656,7 @@ spawn process (เหมือน session เที่ยงคืนที่�
 
 ---
 
-## ORDER-015 — pipeline batch #2: IS-opt + rule-based OOS ของ 6 symbol ที่เหลือ — `DONE(oc-btest, 2026-07-04 14:08 +07)` (role: oc-btest, เลน 2)
+## ORDER-015 — pipeline batch #2 — `REVIEWED(Claude: 🥇 AUDCAD OOS 4.30/41t = CANDIDATE เด่น (AUD family อีกแล้ว!) · CADJPY 1.98/26t = CANDIDATE-thin · USDCAD 2.07/13t + EURUSD 2.35/18t(SELL) + NZDUSD 1.47/9t = OOS บางเกินตัดสิน (กฎ: <20t = ข้อมูลไม่พอ ไม่ใช่ fail) → รอ full-confirm · ❌ GBPUSD 0.61/59t = PARKED — GBP-pair ตัวที่ 2 ที่ fail OOS (pattern: กลไกนี้ไม่ถูกกับ GBP) → ทั้งหมดไป ORDER-016)` (role: oc-btest, เลน 2)
 
 **Symbols (จาก ORDER-007 probe ที่มี life):** CADJPY, NZDUSD, GBPUSD, USDCAD, AUDCAD, EURUSD
 **ขั้นตอนต่อ symbol (ทำทีละตัวจนจบทั้ง 6 — ทุกคำสั่งต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
@@ -706,6 +706,21 @@ Files:
   - `D:\EA_LAB\_mt5_auto\reports\BOSS14_AUDCAD_OOS_M1.htm`
   - `D:\EA_LAB\_mt5_auto\reports\BOSS14_EURUSD_OOS_M1.htm`
 - Machine-readable summary: `D:\EA_LAB\_mt5_auto\ORDER015_results.json`
+
+---
+
+## ORDER-016 — cohort-2 pipeline: full-confirm + year-split + MC ของ 5 ตัวจาก batch #2 (+NRBreakout OOS) — `OPEN` (role: oc-btest, เลน 2)
+
+**เป้า:** เดินด่านที่เหลือของ AUDCAD (นำ), CADJPY, USDCAD, EURUSD, NZDUSD — สูตรเดียวกับ cohort 1
+**ขั้นตอน (ทุกคำสั่ง MT5 ต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
+1. ต่อ symbol (5 ตัว): full-window confirm `mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol <SYM> -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_<SYM>_ISpick.set' -ReportName BOSS14_<SYM>_FULL_ISPICK_M1`
+2. แตกปี: `report_year_split.py` บนทุก report → append ผลดิบทุกบรรทัด
+3. MC: `mt5_montecarlo.py <report> --deposit 10000 --iters 5000` → append DD median/95th/worst + ruin
+4. NRBreakout: เลือก pass PF สูงสุดที่ Trades≥60 จาก `NRBreakout_OPT1.xml` → สร้าง set (base = `NRBreakout_opt1.set` ค่า default, override params ของ pass) → รัน OOS 2025.07-2026.07 XAUUSD H1 M1 → รายงาน trades/PF/net/eqDD
+**Acceptance:** ต่อ symbol: year-split เต็ม + MC ครบ · NRBreakout: OOS 1 แถว · commit `[oc-btest] ORDER-016 done`
+**Progress:** ping ทุกรอบ poll ตาม brief · **ห้าม:** verdict — Claude ตัดสิน cohort-2 demo-list เอง
+
+**ผล:** _(รอ)_
 
 ---
 
@@ -791,4 +806,6 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
+
 
