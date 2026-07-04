@@ -262,16 +262,16 @@ regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec +
 EURCAD (1.82) · USDJPY (1.51)** + AUDNZD WATCH · EURCHF DEAD-optimized · 9 ตัว
 PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_SCORECARD §FRESH TEMPLATE.
 เครื่องมือใหม่: `report_year_split.py` + probe set กลาง `Boss14_GridLog_GBPAUD_opt1.set`
-**Robustness phase — HANDOFF สถานะล่าสุด (2026-07-04 ดึก, review ครบถึง ORDER-008):**
-ผ่าน IS-opt + fresh-start OOS แล้ว: 🥇 **USDJPY OOS PF 2.77/106t** (แข็งสุด — OOS ดีกว่า IS) ·
-🥈 **AUDNZD 3.02/42t** (⚠️ plateau บาง — pass เดียวที่ qualify) · 🥉 **EURJPY 2.15/23t** (thin) ·
-GBPJPY 1.12 = WATCH · ❌ EURCAD 0.67/140t + GBPAUD 0.49 = PARKED (regime) · ❌ USDCHF +
-EURCHF = DEAD-optimized (0/54) ปิดถาวร · ยังรอ pipeline: CADJPY/NZDUSD(SELL)/GBPUSD/USDCAD/
-AUDCAD/EURUSD (probe มี life 3-8 passes) · **คิวเปิดใน AGENT_TASKBOARD: ORDER-009 (MC 5 OOS),
-ORDER-010 (full confirm + year-split 3 ตัวผ่าน — ด่านสุดท้ายก่อน Claude ตัดสิน demo-list),
-ORDER-008B (probe LNBREAK/NRBreakout ศพเก่าตามกฎ re-exam)** · เมื่อ 009+010 จบ: Claude ตัดสิน
-demo-list + corr-gate (ระวัง USDJPY/EURJPY ซ้อน JPY exposure) · user มี `go_agents.cmd` สั่ง
-Codex ทำ taskboard ได้เองคลิกเดียว
+**Robustness phase — 🎉 จบรอบแรก (2026-07-04 สาย): Boss_14 DEMO cohort #1 = 3 ตัว**
+**AUDNZD (990202) · EURJPY (990203) · USDJPY (990201)** — ครบทุกด่าน (IS-opt → fresh-OOS →
+full-confirm ทุกปีบวก → MC ruin 0%) · sets `Boss14_GridLog_*_DEMO.set` (sizing 0.25x — วัด
+พฤติกรรม; resize ตอน promote) · **รอ user: attach 3 ชาร์ตบน demo terminal** (H1, set ตามชื่อ) ·
+⚠️ USDJPY+EURJPY short-JPY คู่ → demo วัด corr แล้วลด lot ตามกฎ · GBPJPY = WATCH ·
+PARKED: GBPAUD/EURCAD · DEAD-optimized: EURCHF/USDCHF · **คิวเปิด: ORDER-008B (MT5,
+ต้องรัน full-approval), ORDER-011 (harness — acceptance run ค้าง), ORDER-012/013
+(treasure-triage: อ่าน ea-src 98 + PDF 289, ไม่ใช้ MT5)** · เครื่องมือใหม่: `_triage/inventory.csv`
+(กอง 2.wait-for-test 8,857 ไฟล์) · หมายเหตุระบบ: Codex sandbox รอบเช้าบล็อก spawn MT5 —
+MT5 orders ต้องรันแบบ full-approval หรือให้ Claude/user รัน
 
 **งานที่เหลือ ตามลำดับที่ควรทำ:**
 1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD

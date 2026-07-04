@@ -375,7 +375,7 @@ NRBreakout freeze `_03_AtrPeriod=14` เพื่อไม่เพิ่ม dim
 
 ---
 
-## ORDER-009 — MC บน OOS reports 5 ตัว (= PROPOSAL-A ของ ZCode, APPROVED แบบ option a) — `OPEN` (role: ZCode)
+## ORDER-009 — MC บน OOS reports 5 ตัว — `SKIPPED (superseded — Claude รัน MC บน full reports ประกอบ verdict ใน ORDER-010 แล้ว)` (role: ZCode)
 
 **Approve (Claude/Fable, 2026-07-04):** ตามที่ ZCode เสนอ ทั้ง 5 ตัว (คำสั่ง 5 บรรทัดใน PROPOSAL-A
 ด้านล่าง) + **flag "thin-n" กับ GBPJPY/EURJPY/AUDNZD (n<50)** — MC พวกนั้นอ่านเป็น indicative
@@ -386,7 +386,14 @@ NRBreakout freeze `_03_AtrPeriod=14` เพื่อไม่เพิ่ม dim
 
 ---
 
-## ORDER-010 — full-window confirm + year-split ของ 3 ตัวที่ผ่าน OOS — `BLOCKED(mt5_run.ps1 launched USDJPY full-window run but produced no report; should Codex switch to an alternate MT5 report collector/path or wait for Claude to fix the launcher?)` (role: ZCode/Codex)
+## ORDER-010 — full-window confirm + year-split ของ 3 ตัวที่ผ่าน OOS — `REVIEWED(Claude/Fable, 2026-07-04 — Claude รันเองหลัง Codex ติด sandbox)` (role: ZCode/Codex)
+
+**ผล + VERDICT สุดท้าย (Claude/Fable, 2026-07-04): 🎉 ทั้ง 3 ตัว = DEMO (Boss_14 cohort #1)**
+- **AUDNZD** (1.4/BUY/1.4/175, magic 990202): full 1.56/195t **ทุกปีบวก 1.36/1.28/1.64/2.31 เทรดสม่ำเสมอทุกปี** · OOS 3.02 · MC worst 6.45% — สม่ำเสมอสุดของ family
+- **EURJPY** (2.2/BUY/1.4/250, magic 990203): full 2.49/114t ทุกปีบวก (2.05/2.89/3.65/1.91) · OOS 2.15 · MC worst 6.22%
+- **USDJPY** (1.4/BUY/3.0/100, magic 990201): full 1.51/138t ไม่มีปีลบ · OOS fresh-start 2.77/106t · MC worst 8.89% · ⚠️ trait: chained run dormant 2025 (เทรดกระจุก 2023) — fresh deploy จะ arm ใหม่เหมือน OOS ที่ active
+- **Caveat พอร์ต:** USDJPY+EURJPY = short-JPY ทั้งคู่ (corr คาดสูง) → กฎ user: ลด lot ไม่ตัด — demo จะวัด corr จริง · sizing demo = 0.25x เดิม (0.10 lot — วัดพฤติกรรม ไม่ใช่ผลตอบแทน; resize ตอน promote live)
+- Demo sets: `Boss14_GridLog_{USDJPY,AUDNZD,EURJPY}_DEMO.set` · MC ที่ Claude รันแทน ORDER-009 (full reports 5000 iters) — **ORDER-009 → SKIPPED (superseded)**
 
 **ทำไม:** USDJPY/AUDNZD/EURJPY ผ่าน fresh-start OOS แล้ว — ขั้นสุดท้ายก่อน Claude ตัดสิน demo:
 รัน ISpick set บน window เต็ม (2023.01–2026.07) แล้วแตกปี เพื่อยืนยันไม่มีปีเน่าซ่อนอยู่
