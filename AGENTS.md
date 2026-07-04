@@ -59,6 +59,10 @@ Codex/ZCode ที่รันหน้าคอม รายงานใน con
 6. Python = portable: dot-source `scripts\use_python.ps1` ก่อน (ไม่มี system python)
 7. **หลัง commit ทุกครั้ง รัน `powershell -File D:\EA_LAB\scripts\make_status.ps1`** — regenerate
    STATUS.md + สำเนาขึ้น OneDrive ให้ user ดูจากมือถือ (ห้ามแก้ STATUS.md ด้วยมือ)
+8. **`EA_MASTER_INDEX.csv` ต้องตรงกับ scorecard เสมอ:** ทุกครั้งที่ verdict/สถานะ EA เปลี่ยน
+   (ใน EA_SCORECARD หรือ taskboard REVIEWED) — คนที่ commit การเปลี่ยนนั้น (ปกติ = Claude)
+   ต้องแก้แถวใน index ใน **commit เดียวกัน** · agent อื่นเพิ่มแถว UNTESTED ใหม่ได้ตาม order
+   แต่ห้ามแก้แถวที่มี status อื่น
 
 ## 4. วงจรการทำงาน (ต่อ 1 order)
 
