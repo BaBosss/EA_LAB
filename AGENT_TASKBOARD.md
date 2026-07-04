@@ -523,13 +523,87 @@ spawn process (เหมือน session เที่ยงคืนที่�
 
 ---
 
-## ORDER-013 — PDF skim 289 ไฟล์ → catalog — `OPEN` (role: ZCode)
+## ORDER-013 — PDF skim 289 ไฟล์ → catalog — `DONE(ZCode/operator, 2026-07-04 11:28 ICT)` (role: ZCode)
 
 **Input:** แถว kind=`pdf` ใน inventory.csv (ข้าม dup) · ต่อไฟล์: ดูชื่อ+เนื้อหาช่วงต้นพอจำแนก →
 เขียนแถวลง `D:\EA_LAB\_triage\pdf_catalog.csv`: `file, kb, category(strategy-book/ea-manual/broker-doc/course/junk/unknown), topic_hint(1 บรรทัด), worth_deep_read(Y/N — Y เฉพาะที่อธิบาย strategy ละเอียดพอสร้าง EA ได้)`
 **Acceptance:** CSV ครบ + สรุปจำนวนต่อ category + รายชื่อ worth_deep_read=Y · commit `[zcode] ORDER-013 done`
 
-**ผล:** _(รอ)_
+**ผล (ZCode/operator):**
+- created `D:\EA_LAB\_triage\pdf_catalog.csv`
+- input rows after `kind=pdf` and `dup_of` blank: **188 unique PDFs** (not 289 after duplicate skip)
+- CSV validation: exact columns `file,kb,category,topic_hint,worth_deep_read`; rows **188/188**; missing **0**; extra **0**; bad category **0**; bad Y/N **0**
+- category counts: broker-doc **1** · course **20** · ea-manual **92** · junk **23** · strategy-book **49** · unknown **3**
+- `worth_deep_read=Y`: **67 files**
+  - `2025-06\6 ท่าไม้ตาย SMC.pdf`
+  - `2025-11\Profit Lock ใน fxDreema” แบบเป็นคู่มือทีละขั้น 👇.pdf`
+  - `.Forexbookthai\.EA\EA Simulator v2\Link download EA Simulator v2\Bonus\40 Simple and Complex Strategies.pdf`
+  - `.Forexbookthai\.EA\Link Download EA+VPS set 6990-20241008T104328Z-001\Link Download EA+VPS set 6990\Bonus E-book\The Black Book of Secret Data\The Black Book (35).pdf`
+  - `.Forexbookthai\.EA\Link Download EA+VPS set 6990-20241008T104328Z-001\Link Download EA+VPS set 6990\Bonus E-book\เรียนฟอเร็กซ์ตามระดับชั้น\Forex เกรด11-Breakout(32).pdf`
+  - `.Forexbookthai\.EA\Link Download EA+VPS set 6990-20241008T104328Z-001\Link Download EA+VPS set 6990\Bonus E-book\เรียนฟอเร็กซ์ตามระดับชั้น\Forex เกรด13-Advance(388).pdf`
+  - `.Forexbookthai\.EA\Link Download EA+VPS set 6990-20241008T104328Z-001\Link Download EA+VPS set 6990\Bonus E-book\เรียนฟอเร็กซ์ตามระดับชั้น\Forex เกรด9-Harmonic+EW+Divergence(52).pdf`
+  - `.Forexbookthai\.EA\Link Download EA+VPS set 6990-20241008T104328Z-001\Link Download EA+VPS set 6990\Bonus E-book\เรียนฟอเร็กซ์ตามระดับชั้น\Extra\Extra_Forex_Advance.pdf`
+  - `.Forexbookthai\.EA\Link Download Grid V3\Bonus\แถมฟรีโปรแกรมบันทึกของเทรดเดอร์\AG Trading Strategies\วิธีใช้ AG Trading Strategies\แถม EMA Power\EMA Power - TH.pdf`
+  - `.Forexbookthai\.EA\Money Management Toolbox\Link download MM Toolbox\Bonus 10 Indicators\Darvas Pointer\Forex Darvas Pointer Indicator.pdf`
+  - `.Forexbookthai\.EA\Money Management Toolbox\Link download MM Toolbox\Bonus 10 Indicators\Ghost Scalper Strategy\Forex Ghost Scalper Strategy_watermark.pdf`
+  - `.Forexbookthai\.Indicator\Indicator_Fibo Golden zone\Fibonacci Golden Zone Strategy.pdf`
+  - `.Forexbookthai\.Indicator\Cluster Trader System (Indicator)\Cluster Trader System (Indicator)\Important price patterns in trading.pdf`
+  - `.Forexbookthai\.Indicator\ลิงก์ดาวน์โหลด universal indy ea\ลิงก์ดาวน์โหลด universal indy ea\Bonus\Trading System\C15-Software\C15-Software\C-15 - System Manual.pdf`
+  - `.Forexbookthai\EA\Link Download 5 Signals\FSK The Forex Sniper Killer\The-FSK-User-Manual-Book.pdf`
+  - `2025-06\EABlackDragon_mt4_Sets_Manuals\Guide to trade with the trend using Black Dragon Indicator.pdf`
+  - `Dashboard\Dashboard V3+Manual\ManualDashboard Fibo.pdf`
+  - `Indicator and Template\Ultimate_Trend_Signals-Indicator-24April2023\Ultimate Trend Signals User Guide.pdf`
+  - `Test EA ok3\Order block\Order Block Forex Robot MT4 Manual.pdf`
+  - `wait for test\0 - MQ5\Galileo FX EA\How To Draw Supply Demand Level.pdf`
+  - `wait for test\2- OK\Adaptive Trading EA\Adaptive Trading EA -Daily Volatility 7 English.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\02 Bonus Indicators\Magic Breakout System.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\01. Trend Trading Cloud\TrendTradingCloud-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\02. Pullback Factor\PullbackFactor-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\03. Laser Reversal\LaserReversal-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\04. Scientific Scalper\ScientificScalper-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\05. Trend Focus\TrendFocus-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\07. Logic Trendline\LogicTrendline-User-Guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\08. Linear Regression Channel\LinearRegressionChannel-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\09. AB=CD Dashboard\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\10. Better Trend Trading\BetterTrend-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\12. Mean Reversion\MeanReversionr-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\13. Swing Force\SwingForce-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\14. Pin Bar Setup\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\17. Master MACD\MasterMACD-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\19. Harmonic Pattern Indicator\HarmonicIndicator-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\20. Trigger Zones\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\21. Logic Day Trading\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\22. Engulfing Setup Indicator\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\24. Easy Wolfe Wave Indicator\EasyWolfeWave-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\27. Candlestick Pattern Indicator\CandlestickPatterns-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\28. Chart Pattern Indicator\PricePatterns-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\29. Divergence Solution Indicator\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\30. Currency Strength Solution Indicator\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\32. Scalping Solution Indicator\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\35. Easy Supply Demand Indicator\EasySupplyDemand-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\36. Pullback Solution Indicator\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\37. Hidden Divergence Pro Indicator\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\38. Pin Bar Dashboard Indicator\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\39. Head and Shoulders Indicator\guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\40. Pro Stochastic Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\41. Pro CCI Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\42. Pro RSI Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\43. Pro OsMA Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\44. MACD Bollinger Pro\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\45. Pure MACD Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\46. Dual Divergence\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\47. Weis Wave Pro\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\48. Trend Symphony\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\49. Versatile Super Trend\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\51. Versatile Bollinger Bands\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\01 Indicators\52. Better Oscillator\user-guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\02 Bonus Indicators\02 Easy Darvas Box\EasyDarvasBox-UserGuide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\02 Bonus Indicators\05 Adaptive Stoploss Indicator\AdjustableStop-User-Guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\02 Bonus Indicators\06 Flex Pin Bar  Indicator\FlexPinBar-User-Guide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\02 Bonus Indicators\07 Solid Double Bar  Indicator\SolidDoublebar-Userguide.pdf`
+  - `wait for test\31 dec 23\Indicator Vault - All Indicators (incl. Bonus Indicators)\03 Super Bonus - Dashboards\06 Reversal Dashboard\guide.pdf`
+- verification command run: `. D:\EA_LAB\scripts\use_python.ps1; python - <inventory/pdf_catalog validation script>`
+- no MT5 commands were run; no source files were changed
 
 ---
 
