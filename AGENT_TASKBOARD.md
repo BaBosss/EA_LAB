@@ -893,7 +893,7 @@ Strategy counts:
 
 ---
 
-## ORDER-019 — corr matrix ของ Boss_14 family (6 ตัว demo) — `OPEN` (role: oc-btest, ไม่ใช้ MT5)
+## ORDER-019 — corr matrix ของ Boss_14 family (6 ตัว demo) — `DONE` (role: oc-btest, ไม่ใช้ MT5)
 
 **ทำไม:** คำถาม risk ใหญ่สุดตอนนี้ — 6 ตัวกลไกเดียวกัน (ซ้อน AUD/JPY/CAD) จะเจ๊งพร้อมกันไหม
 **งาน:** ใช้ `D:\EA_LAB\_mt5_auto\corr_monthly.py` (มีอยู่แล้ว — อ่าน usage ในไฟล์) คำนวณ
@@ -902,7 +902,35 @@ pairwise monthly-return correlation จาก 6 full reports:
 **Acceptance:** ตาราง 6×6 (ค่า corr 2 ตำแหน่ง) + list คู่ที่ >0.60 และ >0.40 · commit `[oc-btest] ORDER-019 done`
 **ห้าม:** สรุปว่าต้องตัด/ลดตัวไหน — Claude ใช้กฎ corr→ลด lot เอง
 
-**ผล:** _(รอ)_
+**ผล (oc-btest, 2026-07-04; ไม่ใช้ MT5):**
+
+ใช้ `D:\EA_LAB\_mt5_auto\corr_monthly.py` อ่าน closed-deal monthly net (`profit + commission + swap`)
+จาก full reports และคำนวณ Pearson บนเดือนที่ทั้งคู่มีข้อมูลร่วมกัน (`NA` = shared months <4 ตาม guard ใน script).
+
+Reports:
+- `BOSS14_USDJPY_FULL_ISPICK_M1.htm`
+- `BOSS14_AUDNZD_FULL_ISPICK_M1.htm`
+- `BOSS14_EURJPY_FULL_ISPICK_M1.htm`
+- `BOSS14_AUDCAD_FULL_ISPICK_M1.htm`
+- `BOSS14_CADJPY_FULL_ISPICK_M1.htm`
+- `BOSS14_EURUSD_FULL_ISPICK_M1.htm`
+
+Monthly-return correlation matrix:
+
+| Symbol | USDJPY | AUDNZD | EURJPY | AUDCAD | CADJPY | EURUSD |
+|---|---:|---:|---:|---:|---:|---:|
+| USDJPY | 1.00 | 0.10 | -0.03 | -0.11 | 0.57 | NA |
+| AUDNZD | 0.10 | 1.00 | -0.33 | -0.03 | 0.28 | 0.29 |
+| EURJPY | -0.03 | -0.33 | 1.00 | -0.16 | 0.05 | NA |
+| AUDCAD | -0.11 | -0.03 | -0.16 | 1.00 | -0.19 | -0.23 |
+| CADJPY | 0.57 | 0.28 | 0.05 | -0.19 | 1.00 | NA |
+| EURUSD | NA | 0.29 | NA | -0.23 | NA | 1.00 |
+
+Pairs with corr >0.60:
+- none
+
+Pairs with corr >0.40:
+- USDJPY-CADJPY: 0.57 (shared months 10)
 
 ---
 
