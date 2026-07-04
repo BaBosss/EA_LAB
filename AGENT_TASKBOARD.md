@@ -804,7 +804,7 @@ Files:
 
 ---
 
-## ORDER-017 — Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets — `OPEN` (role: oc-btest)
+## ORDER-017 — Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets — `DONE` (role: oc-btest)
 
 **เป้า:** ด่านสุดท้ายก่อน demo ตามมาตรฐาน cohort-1 (scrutiny rule)
 **ขั้นที่ 1 — DEMO sets (ทำก่อน):** copy `Boss14_GridLog_<SYM>_ISpick.set` → `Boss14_GridLog_<SYM>_DEMO.set`
@@ -814,7 +814,25 @@ Files:
 **Acceptance:** ต่อ symbol: trades/PF/net/eqDD + history quality% · commit `[oc-btest] ORDER-017 done`
 **ห้าม:** verdict — Claude เทียบ M1 เอง
 
-**ผล:** _(รอ)_
+**ผล (oc-btest, Model 4 real ticks, เลนหลัก default `D:\Meta 5`, 2026-07-04):**
+
+DEMO sets created before runs:
+- `D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDCAD_DEMO.set` (`_0_Magic=990204`, `_4_DdAdaptiveOn=false`)
+- `D:\EA_LAB\ea_template\sets\Boss14_GridLog_CADJPY_DEMO.set` (`_0_Magic=990205`, `_4_DdAdaptiveOn=false`)
+- `D:\EA_LAB\ea_template\sets\Boss14_GridLog_EURUSD_DEMO.set` (`_0_Magic=990206`, `_4_DdAdaptiveOn=false`)
+
+Reports:
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_AUDCAD_M4CONFIRM.htm`
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_CADJPY_M4CONFIRM.htm`
+- `D:\EA_LAB\_mt5_auto\reports\BOSS14_EURUSD_M4CONFIRM.htm`
+
+Main stats (raw MT5 report):
+
+| Symbol | Report period | History quality | Bars | Ticks | Trades | PF | Net | Equity DD maximal |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| AUDCAD | 2024.01.01..2026.07.01 | 99% real ticks | 15,528 | 79,917,764 | 52 | 2.79 | +1,017.65 | 340.90 (3.19%) |
+| CADJPY | 2024.01.01..2026.07.01 | 99% real ticks | 15,528 | 88,536,745 | 11 | 6.25 | +468.57 | 204.50 (1.95%) |
+| EURUSD | 2024.01.01..2026.07.01 | 100% real ticks | 15,528 | 53,291,853 | 126 | 1.52 | +705.88 | 460.49 (4.50%) |
 
 ---
 
@@ -900,6 +918,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2024 | 53 | 1.01 | +16.66 | 8.26% |
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
+
 
 
 
