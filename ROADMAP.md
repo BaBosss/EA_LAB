@@ -95,5 +95,6 @@
 - **Edge ผลิตไม่ทันความอยากขยาย** → gate เปิดพอร์ตผูกกับ bench ไม่ใช่วันที่
 - **AUD-heavy concentration** (Boss_14 family เกิดจาก AUD) → corr gate ข้ามพอร์ต + บังคับกระจายกลไก/สกุล
 - **Agent อื่นทำพัง** → single-writer + cage + review-before-build (AGENTS.md)
-- **Model เปลี่ยน (Fable→Opus 7 ก.ค.)** → ความรู้ทั้งหมดอยู่ในไฟล์+memory ไม่อยู่ในหัว model · ดู CLAUDE.md §Model transition
+- **Model เปลี่ยน (Fable→Opus ✅ ACTIVE 2026-07-04, เร็วกว่าแผน 07-07)** → ความรู้ทั้งหมดอยู่ในไฟล์+memory ไม่อยู่ในหัว model · seat=Opus · workflow ทีมรื้อใหม่ (Codex=สมองอิสระตัวเดียวที่เหลือ, batch เลี่ยง ChatGPT quota) · ดู `AGENTS.md` §1.5+§5 · `CLAUDE.md` §Model transition
+- **ChatGPT quota หมดเร็ว (Codex+oc-dev+oc-btest แชร์ก้อนเดียว)** → batch run โยนไป qwen/ZCode(GLM แยก) · oc-btest model ถูกสุด · ห้ามรัน Codex Desktop + OpenClaw หนักพร้อมกัน
 - **Regime เปลี่ยนหลัง validate** → backward-OOS บังคับ + re-opt 6 เดือน + demo ≥3 เดือนทุกตัว

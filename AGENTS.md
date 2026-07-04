@@ -23,6 +23,27 @@ Codex/ZCode ที่รันหน้าคอม รายงานใน con
 หลักเดียวที่ครอบทุกอย่าง: **agent อื่น "ผลิตหลักฐาน" — Claude/user เป็นคน "ตัดสิน"**
 เจองานที่ต้องตัดสินใจนอก order → หยุด, เขียน BLOCKED ลง taskboard พร้อมคำถาม, ไปทำ order ถัดไป
 
+### 1.5 Model assignment + tier ladder (post-Fable, ตั้งแต่ 2026-07-04 — Fable โควต้าหมดจริง)
+
+> Fable หมดโควต้าแล้ว (เร็วกว่าแผน 07-07). **seat lead/judge = Claude Code รันบน Opus** ตั้งแต่บัดนี้.
+> role อยู่ที่ seat ไม่ใช่ model — Opus ทำหน้าที่เดิมของ Fable ทุกอย่าง (ทิศทาง/verdict/เขียน order/review).
+
+**ยอดบันได escalation พังลงมา 1 ชั้น — ต้องเข้าใจก่อนใช้:** เดิม Opus = "deep-reasoner tier"
+(ตัว escalate เมื่องานยาก) ด้วย. พอ seat = Opus แล้ว การ spawn `deep-reasoner` subagent = **สมองตัว
+เดียวกัน context ใหม่** (offload context ได้ แต่ไม่ใช่ capability ที่ฉลาดกว่า). **ความหลากหลายเชิง
+capability ที่แท้จริงตอนนี้มาจาก Codex (GPT-5.4 = คนละ model family) ตัวเดียว** → Codex กลายเป็น
+"สมองที่สองอิสระ" ที่สำคัญขึ้น ไม่ใช่ทางเลือกเสริม.
+
+**tier ladder ใหม่ (ถูกสุดที่ตรวจงานได้ก่อนเสมอ — cost rule เดิมยังอยู่):**
+
+| ชั้นงาน | ใครทำ | quota lane |
+|---|---|---|
+| batch run ล้วน (powershell + parse, ตรวจด้วยตัวเลข/ไฟล์) | **oc-btest (ถูกสุด) / ZCode / qwen** | **ห้ามกิน ChatGPT** — ไป GLM(ZCode) หรือ qwen |
+| code ตาม pattern + มี cage (tpl_regression) | oc-dev / Codex / Sonnet(fast-worker) | ChatGPT (code คุ้มค่าเงิน) |
+| money/risk logic ใหม่, architecture, root-cause | **Opus-seat เอง** (ไม่มี deep-reasoner tier แยกแล้ว) | — |
+| verdict/ทิศทาง/เขียน order | **Opus-seat เท่านั้น** | — |
+| second opinion งานแพง/ย้อนไม่ได้ | **Codex** (สมองอิสระตัวเดียวที่เหลือ — ใช้ประหยัด ดู §5) | ChatGPT |
+
 **สถาปัตยกรรมการสื่อสาร (กันสับสน):** ไม่มี agent คุยกันตรงๆ — ทุกตัวสื่อสารผ่าน "กระดานกลาง"
 เท่านั้น (taskboard + git commits + STATUS.md) เหมือนกะพนักงานที่ส่งงานผ่านสมุดหน้างานเล่มเดียว ·
 ไม่มีใครปลุก Claude ได้ — Claude เข้ามาเมื่อ user เปิด session แล้ว review ทุก commit ที่เกิดระหว่าง
@@ -79,8 +100,36 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
   — ห้ามเขียนเกณฑ์แบบให้ agent ใช้วิจารณญาณ ("น่าสนใจ", "มี edge") เพราะจะได้ผลหลวมเสมอ
 - ไม่มี order OPEN เหลือ + Claude ไม่อยู่ → **หยุด อย่าคิดงานใหม่เอง** (บันทึกข้อเสนอเป็น comment ใน taskboard ได้)
 
-## 5. เมื่อไหร่ใช้ตัวไหน (มุมมอง user)
+## 5. เมื่อไหร่ใช้ตัวไหน (มุมมอง user) — ปรับใหม่ post-Fable 2026-07-04
 
-- งานคิด/ทิศทาง/verdict/ออกแบบ order → **Claude** (ใช้ quota ที่นี่ให้คุ้ม — ชั่วโมงของ Claude ควรจบที่ "order ชุดใหม่ + verdict ของผลเก่า" ไม่ใช่รัน backtest เอง)
-- Claude quota หมด + มี order ค้าง → **Codex** (งาน code/ผสม) หรือ **ZCode** (งานรันล้วน)
-- อยากได้ second opinion เรื่องใหญ่ → ถาม Codex คำถามเดียวกับที่ถาม Claude **โดยไม่ให้ดูคำตอบของอีกฝ่าย** แล้ว user/Claude สังเคราะห์เอง
+**หลักการเดียวที่ตอบทุกคำถาม: จับคู่ "ระดับสมองที่ต้องใช้" กับ "quota lane" — อย่าเอา quota แพง/หายาก
+ไปทำงานที่สมองถูกกว่าทำได้.** ตอนนี้ ChatGPT quota (Codex + oc-dev + oc-btest แชร์กัน) = ก้อนหายาก
+ที่หมดเร็ว · GLM (ZCode) = เลนแยก ใช้น้อย · qwen (`claude-9arm`) = เกือบฟรี.
+
+- **งานคิด/ทิศทาง/verdict/ออกแบบ order → Opus-seat** (ชั่วโมงของ seat ควรจบที่ "order ชุดใหม่ +
+  verdict ผลเก่า" ไม่ใช่รัน backtest เอง). งาน money/risk-logic ใหม่ + architecture + root-cause ที่เคย
+  escalate ให้ deep-reasoner → **Opus-seat ทำเองเลย** (มันคือ tier บนสุดแล้ว ไม่มีที่ให้ escalate ต่อ).
+- **batch run ล้วน (backtest/optimize/parse) → เลี่ยง ChatGPT quota:** ให้ **ZCode (GLM เลนแยก)** หรือ
+  **qwen** ก่อน · จะใช้ **oc-btest ก็ได้แต่ให้อยู่ model ถูกสุดของ OpenClaw** (ดูข้อ oc-btest ด้านล่าง).
+- **code ตาม pattern (มี cage tpl_regression) → oc-dev / Codex / Sonnet** — งาน code คุ้มค่า ChatGPT quota.
+- **Claude quota หมด + มี order ค้าง → Codex** (code/ผสม) หรือ **ZCode** (รันล้วน) เหมือนเดิม.
+
+**❓ Codex ต้องมา review ร่วมไหม → ใช่ แต่เลือกใช้ (ไม่ใช่ทุก verdict):** หลัง Fable ออก Codex = สมอง
+อิสระ (คนละ family) ตัวเดียวที่เหลือ → **บังคับขอ second opinion จาก Codex เฉพาะการตัดสินที่แพง/ย้อนไม่ได้:**
+(1) ปล่อย EA ลงเงินจริง (promote demo→live) (2) money/risk logic ใหม่ที่ยังไม่มี cage (3) architecture
+เปลี่ยนแม่พิมพ์. **verdict ประจำวัน (EA ตัวไหน demo/park/dead จาก backtest) = Opus-seat ตัดสินเดี่ยว**
+— Opus แข็งพอ + ประหยัด ChatGPT quota. วิธีถาม: คำถามเดียวกับที่ Opus คิด **โดยไม่ให้ Codex ดูคำตอบ Opus
+ก่อน** แล้ว Opus สังเคราะห์ (ห้ามให้ Codex เห็นคำตอบอีกฝ่าย = กัน anchoring).
+
+**❓ oc-btest ควรลดเหลือ GPT-5.4 ไหม → ใช่ ลดให้ถูกสุดเท่าที่รัน powershell+parse ได้เสถียร:** งาน
+oc-btest = zero-judgment (รัน script + อ่านตัวเลข) — ไม่ต้องใช้ reasoning เลย. รันบน model แพงคือเผา
+ChatGPT quota ทิ้ง. **ทางที่ดีกว่าการแค่ลด model: ย้ายงาน batch ของ oc-btest ไป ZCode (GLM เลนแยก)
+หรือ qwen ให้มากที่สุด** เพื่อ**กัน ChatGPT quota ไว้ให้ oc-dev/Codex (งาน code) อย่างเดียว**. เก็บ
+oc-btest ไว้เฉพาะตอน ZCode ไม่ว่าง + ให้อยู่ model ถูกสุด.
+
+**❓ OpenClaw ทำยังไงให้คุ้มสุด (สรุป):**
+- **oc-mgr** (manager) = คงไว้ — coordination/Telegram/heartbeat, งานเบา
+- **oc-dev** (code) = คงบน model เก่ง — code ต้องการ, คุ้ม ChatGPT quota
+- **oc-btest** (batch) = model ถูกสุด + งานส่วนใหญ่โยนไป ZCode/qwen แทน
+- **ห้ามรัน Codex Desktop/CLI + OpenClaw งานหนักพร้อมกัน** (แชร์ ChatGPT OAuth ก้อนเดียว = หมดเร็วเป็น 2 เท่า)
+- ลำดับความคุ้ม batch: **qwen → ZCode(GLM) → oc-btest(ถูกสุด) → [ห้าม] Codex/oc-dev บน batch**
