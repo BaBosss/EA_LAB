@@ -709,7 +709,7 @@ Files:
 
 ---
 
-## ORDER-016 — cohort-2 pipeline: full-confirm + year-split + MC ของ 5 ตัวจาก batch #2 (+NRBreakout OOS) — `OPEN` (role: oc-btest, เลน 2)
+## ORDER-016 — cohort-2 pipeline: full-confirm + year-split + MC ของ 5 ตัวจาก batch #2 (+NRBreakout OOS) — `DONE(oc-btest, 2026-07-04 16:45 ICT)` (role: oc-btest, เลน 2)
 
 **เป้า:** เดินด่านที่เหลือของ AUDCAD (นำ), CADJPY, USDCAD, EURUSD, NZDUSD — สูตรเดียวกับ cohort 1
 **ขั้นตอน (ทุกคำสั่ง MT5 ต่อท้าย `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`):**
@@ -720,7 +720,87 @@ Files:
 **Acceptance:** ต่อ symbol: year-split เต็ม + MC ครบ · NRBreakout: OOS 1 แถว · commit `[oc-btest] ORDER-016 done`
 **Progress:** ping ทุกรอบ poll ตาม brief · **ห้าม:** verdict — Claude ตัดสิน cohort-2 demo-list เอง
 
-**ผล:** _(รอ)_
+**ผล (oc-btest, Model 1, MT5 เลน 2 `D:\Meta 5b`, 2026-07-04):**
+
+No `NO REPORT` was encountered. Full-window reports completed for all 5 Boss14 symbols.
+
+Full-window main MT5 stats:
+
+| Symbol | Trades | PF | Net | EqDD% |
+|---|---:|---:|---:|---:|
+| AUDCAD | 146 | 1.88 | +1491.31 | 6.38 |
+| CADJPY | 77 | 1.89 | +1010.21 | 3.71 |
+| USDCAD | 67 | 1.82 | +753.95 | 3.61 |
+| EURUSD | 69 | 1.97 | +669.10 | 4.39 |
+| NZDUSD | 76 | 1.94 | +782.83 | 3.45 |
+
+Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
+
+| Symbol | Year | Trades | PF | Net | BalDD |
+|---|---:|---:|---:|---:|---:|
+| AUDCAD | FULL | 146 | 1.88 | +1491.31 | 4.06% |
+| AUDCAD | 2023 | 55 | 1.27 | +216.73 | 4.06% |
+| AUDCAD | 2024 | 41 | 1.01 | +7.29 | 2.45% |
+| AUDCAD | 2025 | 25 | 5.63 | +435.64 | 0.66% |
+| AUDCAD | 2026 | 25 | 4.91 | +831.65 | 1.23% |
+| CADJPY | FULL | 77 | 1.89 | +1010.21 | 3.09% |
+| CADJPY | 2023 | 44 | 1.97 | +611.37 | 1.68% |
+| CADJPY | 2024 | 20 | 2.96 | +403.44 | 1.68% |
+| CADJPY | 2026 | 13 | 0.98 | -4.60 | 2.16% |
+| USDCAD | FULL | 67 | 1.82 | +753.95 | 2.55% |
+| USDCAD | 2023 | 37 | 0.85 | -101.14 | 2.55% |
+| USDCAD | 2024 | 29 | 3.14 | +558.17 | 1.11% |
+| USDCAD | 2025 | 1 | inf | +296.92 | 0.00% |
+| EURUSD | FULL | 69 | 1.97 | +669.10 | 2.98% |
+| EURUSD | 2023 | 24 | 1.55 | +133.77 | 1.75% |
+| EURUSD | 2024 | 25 | 4.91 | +368.74 | 0.43% |
+| EURUSD | 2025 | 20 | 1.47 | +166.59 | 3.13% |
+| NZDUSD | FULL | 76 | 1.94 | +782.83 | 2.18% |
+| NZDUSD | 2023 | 42 | 2.11 | +549.35 | 2.18% |
+| NZDUSD | 2024 | 2 | 1.00 | -0.10 | 0.31% |
+| NZDUSD | 2025 | 18 | 0.88 | -28.99 | 1.73% |
+| NZDUSD | 2026 | 14 | 5.10 | +262.57 | 0.64% |
+
+Monte Carlo (`mt5_montecarlo.py --deposit 10000 --iters 5000`):
+
+| Symbol | Trades used | Actual net | DD median | DD 95th | DD worst | Ruin | P(loss) |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| AUDCAD | 146 | +1491.31 | 2.10% | 3.37% | 5.34% | 0.00% | 0.0% |
+| CADJPY | 77 | +1010.21 | 2.07% | 3.31% | 5.41% | 0.00% | 0.0% |
+| USDCAD | 67 | +753.95 | 2.01% | 3.23% | 5.31% | 0.00% | 0.0% |
+| EURUSD | 69 | +669.10 | 1.57% | 2.51% | 4.01% | 0.00% | 0.0% |
+| NZDUSD | 76 | +782.83 | 1.61% | 2.53% | 4.65% | 0.00% | 0.0% |
+
+NRBreakout mechanical pick from `D:\EA_LAB\_mt5_auto\optimizations\NRBreakout_OPT1.xml`: highest PF with `Trades>=60` = pass 10.
+
+| Pass | PF | Trades | Profit | EqDD% | _01_NrLookback | _01_NrMult | _02_SlAtrMult | _02_TpAtrMult |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 10 | 1.314252 | 88 | +117.48 | 1.8409 | 7 | 0.6 | 2 | 1.5 |
+
+NRBreakout OOS (`Boss_NRBreakout_rev01`, XAUUSD H1, 2025.07.01..2026.07.01, Model 1):
+
+| Report | Trades | PF | Net | EqDD% | History quality |
+|---|---:|---:|---:|---:|---:|
+| `NRBreakout_XAUUSD_OOS_P10_M1.htm` | 20 | 1.37 | +61.74 | 1.85 | 100% |
+
+NRBreakout OOS year split:
+
+| Year | Trades | PF | Net | BalDD |
+|---:|---:|---:|---:|---:|
+| FULL | 20 | 1.37 | +61.74 | 1.42% |
+| 2025 | 12 | 0.36 | -78.08 | 0.99% |
+| 2026 | 8 | 4.29 | +139.82 | 0.43% |
+
+Files:
+- Boss14 full reports:
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_AUDCAD_FULL_ISPICK_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_CADJPY_FULL_ISPICK_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_USDCAD_FULL_ISPICK_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_EURUSD_FULL_ISPICK_M1.htm`
+  - `D:\EA_LAB\_mt5_auto\reports\BOSS14_NZDUSD_FULL_ISPICK_M1.htm`
+- NRBreakout set/report:
+  - `D:\EA_LAB\ea_template\sets\NRBreakout_OPT1_p10_ISpick.set`
+  - `D:\EA_LAB\_mt5_auto\reports\NRBreakout_XAUUSD_OOS_P10_M1.htm`
 
 ---
 
