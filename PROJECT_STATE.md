@@ -355,8 +355,19 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 - **029B = ACCEPT** (verify tpl_regression CLEAN เอง — mold portable non-FX แล้ว) · **032 XAG = PARK-thin** (4 pass, ทองแข็งกว่า) ·
   **033 4-EA = ไม่มี survivor** (Retest/GapFill ไม่ติด, Bot V00 DD 42.9% churn) → ตอกย้ำต้อง mass-smoke เต็ม
 
-**👉 รันต่อทันที (unblocked): ORDER-031 = XAU Model-4 + MC (ด่านชี้ขาดทอง+grid)** · 👉 ZCode (M4 รันเดี่ยว) ·
-ถ้า M4 PF ไม่ร่วง + floating DD ยอมรับได้ (de-scaled) = **candidate #7 non-FX จริง** → de-scale lot → demo
+**🎉 ORDER-031 reviewed (Claude/Opus 2026-07-05): XAU ผ่านครบ = CANDIDATE #7 (non-FX diversifier ตัวแรก!)**
+Model-4 real ticks = net +$5,078/DD 19.95% (**edge รอด real ticks ไม่ร่วงแบบ Recovery**) · MC ruin 0%/P(loss) 0% ·
+DEMO set สร้างแล้ว `Boss14_GridLog_XAU_DEMO.set` (**lot 0.05 de-scaled, magic 990207**, DD ~2x FX จึงลดครึ่ง) →
+เพิ่มใน DEMO_DEPLOYMENT_PLAN เป็น EA ที่ 7 · **candidate พร้อมเข้า demo cohort เมื่อ user attach** (⚠️ leg เสี่ยงสุด จับตา DD)
+**บทเรียน:** grid บน non-FX ทำได้ **หลังแก้ 2 portability bug** (basket-TP ATR-scale ORDER-027 + SL cap ATR-relative 029B) —
+Model-4 คือด่านที่แยก "grid มี edge จริง" (ทอง) ออกจาก "Model-1 artifact" (Recovery)
+
+**✅ ORDER-034 reviewed:** worklist mass-smoke พร้อม = **1,521 tradeable (ex5 203 + ex4 1,318)** → 035/036 unblocked
+
+**👉 งานต่อไป (เลือกได้):**
+1. **corr check XAU vs 6 FX** (ก่อน demo จริง — ทองน่าจะ low-corr = diversifier ดี) · 👉 Claude/qwen (เบา)
+2. **ORDER-035/036 mass-smoke** (autonomous ช่วง token reset — ล่า treasure ที่ user จำได้) · 👉 oc-dev/Codex
+3. **demo attach** (รอ user ว่าง) → cohort เป็น 7 EA แล้ว
 
 **วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
 **ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)

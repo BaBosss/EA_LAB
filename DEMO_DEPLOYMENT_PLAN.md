@@ -52,12 +52,13 @@
 | 4 | AUDCAD | 990204 | `Boss14_GridLog_AUDCAD_DEMO.set` | 1.88 | OOS 4.30 ทุกปีบวก · ที่ราบ (sensitivity 5/8) |
 | 5 | CADJPY | 990205 | `Boss14_GridLog_CADJPY_DEMO.set` | 1.89 | 🔴 **สันเขา (sensitivity 2/8) + thin 77t** → **size เบากว่าเพื่อน + จับตาพิเศษ** |
 | 6 | EURUSD (SELL) | 990206 | `Boss14_GridLog_EURUSD_DEMO.set` | 1.97 | ฝั่ง SELL (diversity) · ที่ราบปานกลาง |
+| 7 | **XAUUSD (ทอง)** | 990207 | `Boss14_GridLog_XAU_DEMO.set` | 1.42 (OOS 1.15) | 🆕 **non-FX diversifier** (2026-07-05) — ผ่านครบ pipeline (IS-opt→OOS ทุกปีบวก→MC ruin0%→**Model-4 +$5078 edge รอด real ticks**) · **lot 0.05 (de-scaled ครึ่ง เพราะ DD ~2x FX)** · ⚠️ **leg เสี่ยงสุด จับตา DD พิเศษ** · SL cap off (ATR-SL คุม) |
 
 **Config ร่วม:** ทุก set = 0.25x (0.10 lot base) · `_4_DdAdaptiveOn=false` (ปิดเพราะบัญชีแชร์ DD จะปน) ·
 sizing นี้ = **วัดพฤติกรรม ไม่ใช่ผลตอบแทน** — ตัวเลข MC worst 6-9% เป็นที่ 0.25x เท่านั้น (live 3-4x → ~25-35%)
 
 **Attach checklist (user ทำใน MT5 ของบัญชี 60k):**
-1. เปิด 6 ชาร์ต **H1** — USDJPY · AUDNZD · EURJPY · AUDCAD · CADJPY · EURUSD
+1. เปิด **7 ชาร์ต** **H1** — USDJPY · AUDNZD · EURJPY · AUDCAD · CADJPY · EURUSD · **XAUUSD** (#7 ทอง, lot 0.05)
 2. ลาก `Boss_14_GridLog` (จาก Navigator, expert = `EALabTpl\Boss_14_GridLog`) ลงแต่ละชาร์ต
 3. แต่ละชาร์ต: F7 → Load → เลือก set ตามตาราง (symbol ให้ตรงชาร์ต!) → OK · เปิด AutoTrading
 4. เช็ค magic ในแต่ละ set ไม่ซ้ำกัน (990201-206) + ต่างจาก 9 EA เดิม (คนละบัญชีอยู่แล้ว ปลอดภัย)

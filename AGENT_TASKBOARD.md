@@ -1528,7 +1528,15 @@ Year split จาก full report:
 
 ---
 
-## ORDER-031 — XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังคับ) — `DONE (Codex, 2026-07-05 15:32 ICT)` · **ทำได้: ZCode** · 👉 **แนะ: ZCode** · ⚠️ **Model-4 รันเดี่ยว ห้ามคู่ขนาน** (freeze guard) · **ทำหลัง ORDER-030 ผ่านเท่านั้น** (role: batch, เลน 2)
+## ORDER-031 — XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังคับ) — `REVIEWED(Claude/Opus, 2026-07-05 — 🎉 XAU ผ่านครบ = candidate #7 non-FX; de-scaled DEMO set สร้างแล้ว)` · ทำได้: ZCode
+
+**VERDICT (Claude/Opus): 🎉 XAU GridLog = PASS ครบ pipeline → CANDIDATE #7 (non-FX diversifier ตัวแรก)**
+**Model-4 real ticks = edge รอด!** net +$5,078 / DD 19.95% (2024-26) — **ไม่ร่วงแบบ Recovery** (ทอง+grid ยืนบน
+every-tick ได้จริง = ต่างจาก mechanism ที่ Model-1 หลอก). MC: ruin 0% · P(loss) 0% · DD 95th 29.6%/worst 42.9%
+(@0.25x). **เงื่อนไขเดียว = DD สูง → de-scale:** สร้าง `Boss14_GridLog_XAU_DEMO.set` แล้ว (lot 0.10→**0.05**,
+magic **990207**=#7, ATR-TP auto-scale + ATR-SL → de-scale สะอาด). ที่ 0.05 คาด DD ~10-15% เข้า budget · **candidate
+#7 พร้อมเข้า demo cohort เมื่อ user attach** (รอ user "ยังไม่ว่าง" — ดู DEMO_DEPLOYMENT_PLAN §Boss_14 cohort).
+⚠️ ก่อน demo: (1) corr check vs 6 FX (ทองน่าจะ low-corr = diversifier ดี) (2) จับตา DD พิเศษ (leg เสี่ยงสุดในพอร์ต)
 
 **ทำไม:** ทอง+grid = floating DD ซ่อน (บทเรียน Recovery M4). closed-trade DD 9% ต้องยืนยันด้วย every-tick จริง
 ```powershell
@@ -1670,7 +1678,10 @@ Compile logs: `_mt5_auto\compile_waittest\`. OH warnings คือ deprecated
 > tooling ครบ: MT5 `mt5_run.ps1`+`smoke_all.ps1` · MT4 `mt4_run.ps1`+`parse_mt4_report.py` (`D:\Meta4`).
 > **funnel: 034 catalog → 035 MT5 smoke → 036 MT4 smoke.** ORDER-033 (4-EA) = subset ของ 035, ทำก่อนได้เป็น warm-up
 
-## ORDER-034 — catalog + dedup + กรอง tradeable-EA จาก `wait for test` — `DONE(Codex, 2026-07-05 12:06 +07:00)` · **ทำได้: Codex · Claude · oc-dev** · 👉 **แนะ: Codex-direct** (script เร็ว) (role: code)
+## ORDER-034 — catalog + dedup + กรอง tradeable-EA จาก `wait for test` — `REVIEWED(Claude/Opus, 2026-07-05 — worklist พร้อม: 1,521 candidates → 035/036 unblocked)` · ทำได้: Codex/Claude/oc-dev
+
+**REVIEW:** filter สะอาด — 3,161 ดิบ → 2,625 unique → **1,521 tradeable** (ตัด indicator/dashboard ~1,100) ·
+**ex5 203 + ex4 1,318** · `_triage/mass_smoke_worklist.csv` พร้อม → **ORDER-035 (MT5 203) + 036 (MT4 1,318 stage) unblocked**
 
 **ทำไม:** ห้าม smoke 2,623 ดิบ (ครึ่งเป็น indicator/dashboard/ตัวซ้ำ = เผา compute เปล่า) ต้องได้ worklist สะอาดก่อน
 **งาน (ต่อ `ea_inventory.py`):** (1) hash ทุก .ex4/.ex5 ใน `D:\Forex\10_EA_PROJECTS\2. wait for test` เก็บ 1 path/hash
