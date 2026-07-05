@@ -1229,7 +1229,7 @@ Year split (`scripts\report_year_split.py`, closed-deal balance stats):
 
 ---
 
-## ORDER-025 — Adaptive Recovery (mode 82): ตรวจ floating DD จริง + generalize ข้าม symbol — `OPEN` · 👉 **แนะรัน: ZCode** (batch ล้วน ฟรี) (role: ZCode/oc-btest, เลน 2)
+## ORDER-025 — Adaptive Recovery (mode 82): ตรวจ floating DD จริง + generalize ข้าม symbol — `DONE(ZCode, 2026-07-05)` · 👉 **แนะรัน: ZCode** (batch ล้วน ฟรี) (role: ZCode/oc-btest, เลน 2)
 
 **ทำไม:** ORDER-024 พบ mode 82 ยก PF บน AUDNZD แต่มี 2 คำถามที่ยังตอบไม่ได้ ก่อนจะเชื่อว่าเป็น mold
 upgrade: (1) closed-trade eqDD 4.63% ไม่จับ floating DD ของ recovery legs — ต้อง **Model 4 every-tick**
@@ -1256,7 +1256,50 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog
 **ห้าม:** verdict — เกณฑ์ Claude: 82 = mold upgrade ต่อเมื่อ (1) M4 floating DD ไม่พุ่งเกิน ~2x ของ closed-trade
 **และ** (2) PF-lift เกิดซ้ำอย่างน้อย 1/2 symbol โดยไม่สร้างปีลบใหม่ · ไม่งั้น = Recovery ปิดถาวร (เฉพาะ mode 82 บน AUDNZD เก็บเป็น note ไม่ deploy)
 
-**ผล:** _(รอ)_
+**ผล (ZCode, Model 4 + Model 1; ไม่มี verdict):**
+
+**Sets ใหม่ที่สร้าง:** `USDJPY_REC82.set` (DEMO base + RecoveryMode=82, magic 990201) ·
+`AUDCAD_REC82.set` (DEMO base + RecoveryMode=82, magic 990204) — ทั้งคู่ override แค่ RecoveryMode 80→82
+magic/DdAdaptive/everything else คง DEMO เดิม (เทียบเท่า AUDNZD_REC82 pattern)
+
+**ส่วน A — AUDNZD floating DD จริง (Model 4 real ticks, เลน 2, 99% history):**
+
+| Config | PF | Trades | Net | **Equity DD maximal % (floating)** | balDD% |
+|---|---:|---:|---:|---:|---:|
+| mode 80 baseline (ORDER-014 M4) | 3.37 | 44 | — | 2.26% | — |
+| **mode 82 (REC_AUDNZD_V82_M4)** | **1.50** | **118** | **+639.50** | **4.04%** | 3.19% |
+
+floating DD = 4.04% = ~1.8× ของ baseline 2.26% (ใต้เกณฑ์ ~2× borderline; trades เพิ่ม 3×).
+
+**ส่วน B — Generalize (Model 1 full-window 2023-2026 + year-split):**
+
+| Symbol | Config | PF | Trades | Net | EqDD% | balDD% |
+|---|---|---:|---:|---:|---:|---:|
+| USDJPY | mode 80 baseline (FULL_ISPICK_M1) | 1.51 | 138 | +841.72 | 6.15% | 4.38% |
+| USDJPY | **mode 82 (REC_USDJPY_V82)** | **1.65** | **141** | **+1044.73** | 6.44% | 4.29% |
+| AUDCAD | mode 80 baseline (FULL_ISPICK_M1) | 1.88 | 146 | +1491.31 | 6.38% | 4.06% |
+| AUDCAD | **mode 82 (REC_AUDCAD_V82)** | **1.78** | **207** | **+2040.62** | 4.80% | 2.89% |
+
+**Year-split (raw — ไม่ interpret):**
+
+| Symbol | Config | 2023 | 2024 | 2025 | 2026 |
+|---|---|---|---|---|---|
+| USDJPY | mode 80 | 1.51/122t/+476 | 6.82/14t/+361 | (missing) | 1.21/2t/+4 |
+| USDJPY | mode 82 | 1.44/125t/+679 | 6.82/14t/+361 | (missing) | 1.21/2t/+4 |
+| AUDCAD | mode 80 | 1.27/55t/+217 | 1.01/41t/+7 (thin) | 5.63/25t/+436 | 4.91/25t/+832 |
+| AUDCAD | mode 82 | 1.86/120t/+964 | 1.30/32t/+122 | 2.82/19t/+525 | 1.54/36t/+430 |
+
+**หมายเหตุดิบ (ไม่ใช่ verdict):**
+- USDJPY year-split baseline กับ V82 ตรงกันเกือบหมด — recovery เพิ่มเทรดนิดที่ 2023
+  (122→125t, PF 1.51→1.44) และยก net ปีนั้น (+476→+679) → net full +24% (841→1045)
+- USDJPY 2025 = 0 เทรดทั้งคู่ (baseline กับ V82) — config นี้ dormant ในช่วง 2025
+- AUDCAD mode 82 เพิ่ม trades เยอะ (146→207) แต่ PF ลด (1.88→1.78) — net สูงขึ้นเพราะเทรดมากขึ้น
+  ไม่ใช่ quality ดีขึ้น · DD ลดลง (6.38→4.80)
+- AUDCAD 2024 baseline = 1.01/41t = borderline-flat; V82 = 1.30/32t = ดีขึ้น
+- AUDCAD ทุกปีบวกทั้งสอง config
+
+**Files:** `REC_AUDNZD_V82_M4.htm` · `REC_USDJPY_V82.htm` · `REC_AUDCAD_V82.htm`
++ `_mt5_auto\ab_sets\USDJPY_REC82.set` · `_mt5_auto\ab_sets\AUDCAD_REC82.set`
 
 ---
 
