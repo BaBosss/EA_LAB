@@ -1400,7 +1400,7 @@ entries ถูก deprioritize** (FX breakout/reversion = optimize-killed แล
 
 ---
 
-## ORDER-028 — XAU GridLog: IS-optimize (axis tuning สำหรับทอง) — `OPEN` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (optimizer หนัก = 1 slot/วัน) (role: batch, เลน 2)
+## ORDER-028 — XAU GridLog: IS-optimize (axis tuning สำหรับทอง) — `DONE(Codex, 2026-07-05 10:01 +07:00; user override)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (optimizer หนัก = 1 slot/วัน) (role: batch, เลน 2)
 
 **ทำไม:** scan (ORDER-027) พบ XAU GridLog มีชีวิต (PF 1.76 in-sample @ mult=1) หลังปิด SL-cap ที่พัง —
 แต่นั่นใช้ axes ของ AUD (StepATR=1.4/DistATR=1.4) transplant มา ต้อง IS-optimize สำหรับทองเองก่อนเชื่อ
@@ -1421,7 +1421,24 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 commit `[tag] ORDER-028 done`
 **ห้าม:** verdict/เลือก plateau-center (Claude ทำ) · ⚠️ ทอง+grid = DD สูงเป็นปกติ, รายงานดิบ อย่ากรองด้วย DD
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1, MT5 เลน 2; ไม่มี verdict):** สร้าง
+`ea_template\sets\Boss14_GridLog_XAU_opt1.set`; lock input อื่นด้วย `||N`, ปิด fixed-money TP,
+ปิด SL pip-cap และใช้ magic 990301. เนื่องจาก MT5 range แทน `{0.5,1.0,2.0}` แบบ non-uniform
+สามค่าพอดีไม่ได้ จึงใช้ `0.5..2.0 step 0.5` ซึ่งเพิ่ม 1.5 เป็นค่าที่สี่.
+
+XML `BOSS14_OPT_XAU_IS.xml` ครบ **72 rows**; จำนวน pass ที่ `PF≥1.2 AND Trades≥60` = **11**.
+Top-8 ดิบเรียง PF:
+
+| Pass | PF | Trades | EqDD% | StepATR | Direction | DistATR | BasketTP_ATRmult |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 2 | 1.486584 | 275 | 9.3197 | 3.0 | 1 | 1.4 | 0.5 |
+| 20 | 1.479022 | 277 | 9.3377 | 3.0 | 1 | 1.4 | 1.0 |
+| 38 | 1.368226 | 285 | 10.3119 | 3.0 | 1 | 1.4 | 1.5 |
+| 14 | 1.334668 | 131 | 10.1337 | 3.0 | 1 | 3.0 | 0.5 |
+| 18 | 1.329613 | 348 | 18.7271 | 1.4 | 1 | 1.4 | 1.0 |
+| 0 | 1.319394 | 347 | 18.8011 | 1.4 | 1 | 1.4 | 0.5 |
+| 36 | 1.260917 | 362 | 19.3601 | 1.4 | 1 | 1.4 | 1.5 |
+| 32 | 1.253519 | 139 | 10.2949 | 3.0 | 1 | 3.0 | 1.0 |
 
 ---
 
