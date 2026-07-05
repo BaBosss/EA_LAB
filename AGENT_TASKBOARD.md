@@ -1489,7 +1489,7 @@ instrument class ทั้งหมด; ทาง B เป็น portability sea
 > **สถานะ: XAU GridLog = candidate #7 (in-sample PF 1.48). ต้องผ่านครบ pipeline เหมือน Boss_14 FX
 > ก่อนขึ้น demo. ทอง+grid = สงสัยสูงสุด, Model-4 บังคับ.** set = `Boss14_GridLog_XAU_ISpick.set` (สร้างแล้ว)
 
-## ORDER-030 — XAU: fresh-start OOS + full-window + year-split — `OPEN` · **ทำได้: ZCode · Codex · oc-btest** · 👉 **แนะ: ZCode** (heavy) (role: batch, เลน 2)
+## ORDER-030 — XAU: fresh-start OOS + full-window + year-split — `DONE(Codex, 2026-07-05 11:49 +07:00)` · **ทำได้: ZCode · Codex · oc-btest** · 👉 **แนะ: ZCode** (heavy) (role: batch, เลน 2)
 
 **ทำไม:** ด่านชี้ขาด — IS-opt เป็น in-sample, ต้องดูว่ารอด out-of-sample ไหม (GBPAUD/NZDUSD-SELL ตายด่านนี้มาแล้ว)
 ```powershell
@@ -1503,7 +1503,22 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14
 **Acceptance:** OOS (trades/PF/net/eqDD) + full year-split ทุกบรรทัด · commit `[tag] ORDER-030 done`
 **ห้าม:** verdict — เกณฑ์ Claude: OOS PF≥0.9 + ทุกปีไม่มีปีเน่าซ่อน (ทองต้องเข้มกว่า FX)
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1, MT5 เลน 2; ไม่มี verdict):**
+
+| Window | Trades | PF | Net | EqDD maximal |
+|---|---:|---:|---:|---:|
+| fresh OOS 2025.07–2026.07 | 196 | 1.15 | +897.71 | 27.02% |
+| full 2023.01–2026.07 | 426 | 1.42 | +3106.99 | 23.34% |
+
+Year split จาก full report:
+
+| Period | Trades | PF | Net | Balance DD |
+|---|---:|---:|---:|---:|
+| FULL | 426 | 1.42 | +3106.99 | 15.42% |
+| 2023 | 53 | 1.20 | +162.65 | 3.73% |
+| 2024 | 121 | 2.31 | +1015.95 | 3.21% |
+| 2025 | 215 | 1.31 | +1056.53 | 7.53% |
+| 2026 | 37 | 1.37 | +871.86 | 18.05% |
 
 ---
 
