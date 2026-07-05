@@ -1442,7 +1442,7 @@ Top-8 ดิบเรียง PF:
 
 ---
 
-## ORDER-029 — mold fix: `_33_SL_MaxPips` ให้ portable ข้าม instrument (bug จาก ORDER-027 scan) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **ต้องรัน tpl_regression CLEAN** · (priority: ต่ำ — workaround = ตั้ง =0 ใช้ได้แล้ว)
+## ORDER-029 — mold fix: `_33_SL_MaxPips` ให้ portable ข้าม instrument (bug จาก ORDER-027 scan) — `DONE(Codex, 2026-07-05 10:04 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **ต้องรัน tpl_regression CLEAN** · (priority: ต่ำ — workaround = ตั้ง =0 ใช้ได้แล้ว)
 
 **ทำไม:** `_33_SL_MaxPips` (ExitManager.mqh ~40) ใช้ `pipPrice=(digits==3||5?10:1)×Point` → บน XAU (2 digits)
 = Point = 0.01 → cap 150 กลายเป็น **$1.50** (ควรเป็นหลัก $ ใหญ่). ทำให้ SL cap พังบน non-FX. เป็น fixed-pip
@@ -1456,7 +1456,20 @@ param ตัวที่ 2 ที่ไม่ scale (ตัวแรก = fixed-
 proposal — **order นี้ให้ Codex เสนอ 2 ทางเลือก + ผลกระทบ ไม่ต้อง implement จนกว่า Claude เคาะ** (stage A แบบ ORDER-008A)
 **Acceptance:** ข้อเสนอ 2 ทาง + จุดกระทบ (บรรทัดไหน, EA ไหน) · ยังไม่แตะ core · commit `[tag] ORDER-029A done`
 
-**ผล:** _(รอ)_
+**ผล (Codex, stage A เท่านั้น — ไม่ได้แตะ core):** จุดกระทบปัจจุบันคือ
+`core/Inputs.mqh:219` (`_33_SL_MaxPips`), `core/ExitManager.mqh:36-42`
+(`Exit_CapATRDist`) และ caller สองจุดที่ `Exit_SLDistancePoints`/`Exit_InitialSL` (~52/~81).
+Boss_11/12/13/14 include core เดียวกัน จึงกระทบทุก wrapper เมื่อ `SLMode=33` และ cap > 0;
+set FX จำนวนมากใช้ 150 อยู่แล้ว ส่วน XAU opt set ใช้ workaround = 0.
+
+| ทางเลือก | การเปลี่ยน | พฤติกรรม/ผลกระทบ | Compatibility / test |
+|---|---|---|---|
+| **A — digit heuristic** | ใน `Exit_CapATRDist`, ใช้ `pipPrice=10×Point` เมื่อ digits ไม่ใช่ 3/5 ด้วย | XAU 2-digit: 150 cap เปลี่ยนจาก `$1.50` เป็น `$15`; ไม่ต้องเพิ่ม input/set แต่ 10×Point ยังเป็น heuristic และอาจไม่สื่อความหมายบน index/crypto หรือ broker digits อื่น | FX 3/5-digit ไม่เปลี่ยน; non-FX ที่ cap>0 เปลี่ยนทันที. ต้อง compile Boss 11–14 + tpl regression + XAU A/B |
+| **B — ATR-relative cap** | เพิ่ม `_33_SL_MaxATRmult=0`; ถ้า >0 ใช้ `cap=RiskATR×mult`, ถ้า =0 ใช้ `_33_SL_MaxPips` เดิม | portable ตาม volatility/instrument จริง; ผู้ใช้เลือก ceiling เช่น SL=4×ATR แต่ cap=3×ATR ได้. เพิ่ม input หนึ่งตัวและต้องระบุ/lock ใน opt sets ใหม่ | default 0 ทำให้ FX/sets เดิมเหมือนเดิม; XAU เปลี่ยนเฉพาะ set ที่ opt-in. ต้อง compile Boss 11–14 + tpl regression + A/B ค่า ATR cap |
+
+ข้อสังเกตเชิงวิศวกรรม: ทาง A แก้ XAU ได้เร็วและ diff เล็ก แต่ไม่ได้แก้ semantics ของ “pip” สำหรับ
+instrument class ทั้งหมด; ทาง B เป็น portability seam ที่ตรงกว่าและ additive จริง แต่เพิ่ม parameter/interface.
+จนกว่า Claude เคาะ ใช้ workaround `_33_SL_MaxPips=0` สำหรับ non-FX ต่อได้โดยไม่แก้ source.
 
 ---
 
