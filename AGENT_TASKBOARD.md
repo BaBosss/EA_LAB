@@ -1229,7 +1229,24 @@ Year split (`scripts\report_year_split.py`, closed-deal balance stats):
 
 ---
 
-## ORDER-025 — Adaptive Recovery (mode 82): ตรวจ floating DD จริง + generalize ข้าม symbol — `DONE(ZCode, 2026-07-05)` · 👉 **แนะรัน: ZCode** (batch ล้วน ฟรี) (role: ZCode/oc-btest, เลน 2)
+## ORDER-025 — Adaptive Recovery (mode 82): ตรวจ floating DD จริง + generalize ข้าม symbol — `REVIEWED(Claude/Opus, 2026-07-05 — ❌ Recovery REJECT ปิดถาวรทั้ง 81+82; Model-4 เผย Model-1 lift = artifact)` · 👉 แนะรัน: ZCode (batch ล้วน ฟรี) (role: ZCode/oc-btest, เลน 2)
+
+**VERDICT (Claude/Opus, 2026-07-05): ❌ Recovery mode 82 = REJECT → ปิดคำถาม Recovery ถาวร (ทั้ง 81+82) สำหรับ Boss_14 family**
+
+**หลักฐานชี้ขาด = Model-4 บน AUDNZD (apples-to-apples 2024-2026 real ticks):** mode 80 = PF 3.37/44t
+→ mode 82 = **PF 1.50/118t** — บน real ticks PF ร่วงกว่าครึ่ง + เทรดพุ่ง 3× = recovery legs churn
+คุณภาพต่ำ, fill ไม่สวยเหมือน Model 1. **นี่คือ fill-artifact ชั้นที่ลึกกว่า Model-2 ban** — Model-1 รอบ
+024 โชว์ 82 ดีกว่า (1.73 vs 1.56) เพราะ control-point fills recovery legs สวยเกินจริง; every-tick =
+ความจริง (ตรงกฎ "grid/martingale ต้อง every-tick ไม่ใช่ MC/M1 อย่างเดียว")
+
+**Generalize ก็ไม่ผ่าน (Model 1):** USDJPY PF 1.51→1.65 (ขึ้น **แต่** กระจุกที่ 2023 + 2025 dormant 0 เทรด
+= regime-concentrated เหมือนเดิม) · **AUDCAD PF 1.88→1.78 (ลด!)** net ขึ้นเพราะเทรด 146→207 (churn มาก
+ขึ้น ไม่ใช่ quality) → PF-lift ไม่ generalize (1 ขึ้น 1 ลง) + ตัวที่ Model-4 วัดจริงคือร่วง
+
+**สรุป:** Recovery (81 Light + 82 Adaptive) = ไม่มีค่าบน config ที่ดีอยู่แล้ว — เพิ่ม churn/floating DD
+โดยไม่ยก quality จริง. **HedgeMode/HEDGE_LOCK ยังไม่เคยเทส (แยกจาก Recovery)** — prior อ่อนลงหลัง
+Recovery ล่ม แต่ยังเปิดทดสอบได้ถ้าว่าง. **demo cohort = Recovery OFF ถูกต้องแล้ว ไม่ต้องเปลี่ยน** ·
+บทเรียน routing: Model-4 บังคับก่อนเชื่อ mechanism ตระกูล grid/recovery ทุกครั้ง (Model-1 หลอกได้)
 
 **ทำไม:** ORDER-024 พบ mode 82 ยก PF บน AUDNZD แต่มี 2 คำถามที่ยังตอบไม่ได้ ก่อนจะเชื่อว่าเป็น mold
 upgrade: (1) closed-trade eqDD 4.63% ไม่จับ floating DD ของ recovery legs — ต้อง **Model 4 every-tick**
@@ -1300,6 +1317,30 @@ floating DD = 4.04% = ~1.8× ของ baseline 2.26% (ใต้เกณฑ์ 
 
 **Files:** `REC_AUDNZD_V82_M4.htm` · `REC_USDJPY_V82.htm` · `REC_AUDCAD_V82.htm`
 + `_mt5_auto\ab_sets\USDJPY_REC82.set` · `_mt5_auto\ab_sets\AUDCAD_REC82.set`
+
+---
+
+## ORDER-026 — HedgeMode (HEDGE_LOCK) A/B บน AUDNZD — `REVIEWED(Claude/Opus, 2026-07-05 — รันเอง เพราะ ZCode โควต้าหมดวัน + งานเบา 1 run; ❌ Hedge = dormant no-op)` · 👉 แนะรัน: Claude/qwen (เบามาก) (role: batch)
+
+**ทำไม:** ปิดคำถาม loss-management layer ให้ครบ — Recovery ถูก reject ไปแล้ว (ORDER-024/025) เหลือ
+HEDGE_LOCK (mode 1) ที่ยังไม่เคยเทส (กลไกต่าง: ล็อกไม้สวนตอน DD ลอยสูง ไม่ใช่เติมไม้ทิศเดิม)
+
+**ผล (Claude/Opus, Model 1, AUDNZD full-window):** สร้าง `_mt5_auto\ab_sets\AUDNZD_HEDGE1.set`
+(DEMO base + HedgeMode=1, RecoveryMode คง 80) → รัน:
+
+| Config | PF | Trades | eqDD% | Net |
+|---|---:|---:|---:|---:|
+| HedgeMode=0 (baseline DEMO) | 1.56 | 195 | 4.26 | +1242.36 |
+| **HedgeMode=1 (HEDGE_LOCK)** | **1.56** | **195** | **4.26** | **+1242.36** |
+
+**VERDICT: ❌ HEDGE_LOCK = dormant no-op บน config ที่ดีอยู่แล้ว** — ตัวเลข**เหมือน baseline เป๊ะทุกหลัก**
+= hedge ไม่เคยยิงเลย. เหตุ: `_H_TriggerDDPct=8.0%` แต่ AUDNZD floating DD แตะแค่ ~4% (M1) / 2.26% (M4)
+ไม่ถึงเกณฑ์ → กลไกหลับตลอด. Model-4 ไม่ต้องรัน (DD ยิ่งต่ำ ยิ่งไม่ยิง).
+
+**สรุป loss-management layer ทั้งหมด (Recovery 81/82/83 + HEDGE_LOCK) = ไม่เพิ่มค่าบน Boss_14 cohort
+ปัจจุบัน ปิด branch นี้** — Recovery churn เสียคุณภาพ (M4), Hedge หลับเพราะ DD ต่ำเกินจะ trigger.
+demo config (ทั้ง 2 layer OFF) = ถูกต้องแล้ว · **re-examine trigger เดียว: ถ้าอนาคตมี config DD สูง (>8%)
+Hedge อาจมีบทบาท — ตอนนั้นค่อยลด `_H_TriggerDDPct` มาเทสจริง** (ไม่ใช่ตอนนี้)
 
 ---
 

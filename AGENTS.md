@@ -113,10 +113,12 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
 - **งานคิด/ทิศทาง/verdict/ออกแบบ order → Opus-seat** (ชั่วโมงของ seat ควรจบที่ "order ชุดใหม่ +
   verdict ผลเก่า" ไม่ใช่รัน backtest เอง). งาน money/risk-logic ใหม่ + architecture + root-cause ที่เคย
   escalate ให้ deep-reasoner → **Opus-seat ทำเองเลย** (มันคือ tier บนสุดแล้ว ไม่มีที่ให้ escalate ต่อ).
-- **batch run ล้วน (backtest/optimize/parse) → default = ZCode** (user directive 2026-07-05: "ใช้ ZCode
-  เยอะๆ เพราะฟรี" — GLM เลนแยก ไม่กิน ChatGPT quota). qwen ก็ได้ถ้างานเล็ก · **oc-btest เฉพาะตอน ZCode
-  ไม่ว่าง** + model ถูกสุด. **ทุก order ที่ Claude เขียน ต้องระบุ "👉 แนะรัน: <agent>" เสมอ** (default ZCode
-  สำหรับ batch, oc-dev/Codex สำหรับ code) — user เลือก override ได้ แต่ให้มี default ที่ประหยัดสุดติดมาทุก order.
+- **batch run ล้วน (backtest/optimize/parse) → ZCode แต่โควต้าฟรี/วัน ≈ 1 order หนักเท่านั้น** (บทเรียน
+  2026-07-05: ORDER-025 = 1 M4 + 2 M1 + year-split กิน ZCode หมดวันในคำสั่งเดียว!). ดังนั้น **ห้าม default
+  ทุก batch ไป ZCode** — ให้ **เก็บ ZCode slot วันละ 1 ไว้ให้ order สำคัญสุด** (ตัวที่ต้อง Model-4/optimizer
+  หนัก). batch เล็กๆ ที่เหลือ: **qwen** (ถ้า parse/รันเบา) หรือ **Claude รันเอง** (ไม่กี่ run เหมือน ORDER-022/023)
+  หรือ **oc-btest** (ถ้า ChatGPT quota ยังเหลือ). **ทุก order ที่ Claude เขียน ต้องระบุ "👉 แนะรัน: <agent>"**
+  — เลือกให้ตรงขนาด: heavy+สำคัญ→ZCode(1/วัน) · เล็ก→qwen/Claude · code→oc-dev/Codex. user override ได้เสมอ.
 - **code ตาม pattern (มี cage tpl_regression) → oc-dev / Codex / Sonnet** — งาน code คุ้มค่า ChatGPT quota.
 - **Claude quota หมด + มี order ค้าง → Codex** (code/ผสม) หรือ **ZCode** (รันล้วน) เหมือนเดิม.
 

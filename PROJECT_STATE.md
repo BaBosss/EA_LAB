@@ -308,20 +308,24 @@ verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัด
    (เดิมไม่มีเลย) + attach checklist + baked plateau-sensitivity/corr flags
 3. **stock taskboard:** ORDER-024 (Recovery-mode A/B บน AUDNZD champion = hunt mine #1, ready)
 
-**✅ ORDER-024 reviewed (Claude/Opus, 2026-07-05 — run by oc-dev):** Recovery A/B บน AUDNZD →
-**Mode 81 (Light) = ❌ REJECT ปิดถาวร** · **Mode 82 (Adaptive) = 🟡 PROMISING** (PF 1.56→1.73 แต่ 2024
-พลิกลบ + closed-DD ไม่จับ floating) ยังไม่ adopt, demo คง Recovery OFF → ORDER-025 ตรวจต่อ ·
-**routing rule ใหม่ (user 2026-07-05): default batch = ZCode (ฟรี), ทุก order ระบุ "👉 แนะรัน" (AGENTS §5)**
+**✅ Loss-management layer = ปิด branch (ORDER-024/025/026, 2026-07-05):**
+- **Recovery 81 Light = REJECT** · **Recovery 82 Adaptive = REJECT** (Model-1 โชว์ดีขึ้นแต่ Model-4 real
+  ticks เผย PF AUDNZD ร่วง 3.37→1.50 = artifact; generalize ไม่ผ่าน) · **HEDGE_LOCK = dormant no-op**
+  (trigger 8% แต่ DD แตะ ~4% ไม่เคยยิง) → **Recovery+Hedge ไม่เพิ่มค่าบน Boss_14, demo config (2 layer OFF) ถูกแล้ว**
+- **บทเรียนใหญ่: Model-4 บังคับก่อนเชื่อ mechanism grid/recovery — Model-1 เป็น fill-artifact ได้ (ลึกกว่า Model-2 ban)**
+- **routing rule (user 2026-07-05):** ZCode ฟรีแต่โควต้า ≈ **1 order หนัก/วัน** (ORDER-025 กินหมดวันในคำสั่งเดียว!)
+  → เก็บ ZCode slot ให้ order สำคัญสุด/วัน, batch เล็กให้ qwen/Claude รันเอง · ทุก order ระบุ "👉 แนะรัน" (AGENTS §5)
 
-**คิว taskboard ตอนนี้:** ORDER-025 OPEN (Adaptive Recovery: Model-4 floating DD + generalize ข้าม symbol
-· 👉 แนะรัน ZCode)
+**คิว taskboard ตอนนี้:** ว่าง (loss-mgmt layer ปิดครบ)
 **งาน session หน้า (เรียงลำดับ):**
-1. review ORDER-025 → ตัดสิน Recovery mode 82 = mold upgrade หรือปิดถาวร (เกณฑ์: floating DD ไม่พุ่ง + PF-lift generalize)
-2. **hunt mine #1 ต่อ:** ถัดจาก Recovery → probe Boss_12/13 entries บน FX (mold entries ที่ยังไม่ sweep)
-3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (ยังไม่ถึงคิว)
-4. **demo (ค้างไว้ตาม user 2026-07-05 "ยังไม่ว่าง"):** เมื่อ attach 6 EA แล้ว → จด start date + set demo-clock +
+1. **hunt mine #1 ต่อ = entry diversification** (loss-mgmt branch จบแล้ว): probe **Boss_12 Breakout** บน FX
+   — พอร์ตทั้งหมดเป็น grid/AUD-heavy, ตัว non-grid คือสิ่งที่ขาด · ⚠️ ต้องหา optimize axes ของ Boss_12 ก่อน
+   เขียน order (คนละ input กับ Boss_14) · scope ให้พอดี ZCode 1 วัน (~3-4 symbol) · prior FX breakout อ่อน
+   แต่กฎ "ห้าม DEAD ก่อน optimize" บังคับ probe · 👉 ZCode (heavy) หรือ Claude รันเอง (ถ้า scope เล็ก)
+2. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (ยังไม่ถึงคิว)
+3. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach 6 EA แล้ว → จด start date + set demo-clock +
    นัด /ea-monitor ~2 สัปดาห์ · เอกสาร cohort พร้อมแล้วใน DEMO_DEPLOYMENT_PLAN
-5. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
+4. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
