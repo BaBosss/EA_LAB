@@ -195,6 +195,7 @@ input group "=== 2x Exit / TP params ==="
 input double _21_TP_Pip       = 500;   // 21 Fixed TP
 input double _22_TP_ATRmult   = 3.0;   // 22 ATR TP (x Risk-ATR)
 input double _2_BasketTP_Money = 0;    // close basket at +money (0=off)
+input double _2_BasketTP_ATRmult = 0;  // close basket at +(Risk-ATR x mult x total lots) in money (0=use fixed money)
 input double _23_TrailStart   = 300;   // 23 trail start (pip gain)
 input double _23_TrailStep    = 100;   // 23 trail distance
 

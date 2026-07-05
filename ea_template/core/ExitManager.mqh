@@ -163,15 +163,33 @@ void Exit_ApplyTrailing()
 bool g_exit_partial1_done = false;
 bool g_exit_partial2_done = false;
 
+// Effective basket target in account currency. ATR mode scales the target by
+// current Risk-ATR and aggregate open volume, so it remains portable across
+// instruments whose price and tick-value scales differ. Default ATR mult=0
+// preserves the legacy fixed-money target exactly.
+double Exit_BasketTargetMoney()
+{
+   if(_2_BasketTP_ATRmult <= 0.0) return _2_BasketTP_Money;
+
+   double atr       = Indi_RiskATR(0);
+   double tickValue = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
+   double tickSize  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
+   double lots      = Exec_TotalLots();
+   if(atr <= 0.0 || tickValue <= 0.0 || tickSize <= 0.0 || lots <= 0.0) return 0.0;
+
+   return atr * _2_BasketTP_ATRmult * (tickValue / tickSize) * lots;
+}
+
 void Exit_ManagePartialClose()
 {
-   if(_2_BasketTP_Money <= 0.0) return;               // needs a target to measure % against
+   double targetMoney = Exit_BasketTargetMoney();
+   if(targetMoney <= 0.0) return;                      // needs a target to measure % against
    if(_2_PartialPct1 <= 0.0 && _2_PartialPct2 <= 0.0) return;   // both off
 
    double profit = Exec_BasketProfit();
    if(profit <= 0.0) { g_exit_partial1_done = false; g_exit_partial2_done = false; return; }
 
-   double pctOfTarget = profit / _2_BasketTP_Money * 100.0;
+   double pctOfTarget = profit / targetMoney * 100.0;
 
    if(!g_exit_partial1_done && _2_PartialPct1 > 0.0 && pctOfTarget >= _2_PartialPct1)
    {
@@ -193,7 +211,8 @@ bool Exit_ManageBasket()
    Exit_ManagePartialClose();   // no-op unless _2_PartialPct1/2 set
 
    double profit = Exec_BasketProfit();
-   if(_2_BasketTP_Money > 0.0 && profit >= _2_BasketTP_Money) { Exec_CloseAll(); return true; }
+   double targetMoney = Exit_BasketTargetMoney();
+   if(targetMoney > 0.0 && profit >= targetMoney) { Exec_CloseAll(); return true; }
    if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)          { Exec_CloseAll(); return true; }
 
    if(ExitMode == EXIT_RUN_TREND)

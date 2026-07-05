@@ -1344,7 +1344,7 @@ Hedge อาจมีบทบาท — ตอนนั้นค่อยลด
 
 ---
 
-## ORDER-027 — mold upgrade: `_2_BasketTP_ATRmult` (basket TP แบบ ATR-scaled, additive) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode ห้ามแตะ source)** · 👉 **แนะ: Codex-direct** (code, ประหยัดกว่า OpenClaw) · ⚠️ **ต้องรัน tpl_regression → CLEAN ก่อน commit**
+## ORDER-027 — mold upgrade: `_2_BasketTP_ATRmult` (basket TP แบบ ATR-scaled, additive) — `DONE(Codex, 2026-07-05 09:01 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode ห้ามแตะ source)** · 👉 **แนะ: Codex-direct** (code, ประหยัดกว่า OpenClaw) · ⚠️ **ต้องรัน tpl_regression → CLEAN ก่อน commit**
 
 **ทำไม (ปลดล็อก hunt ที่ EV สูงสุดของ mine #1):** GridLog = กลไกเดียวที่มี edge จริง (6 demo EA) →
 ต่อยอดที่คุ้มสุด = **ขยายไป non-FX (metals/index)** เพื่อกระจาย instrument class. **แต่ติดบล็อก:**
@@ -1370,7 +1370,18 @@ entries ถูก deprioritize** (FX breakout/reversion = optimize-killed แล
 - commit `[tag] ORDER-027 done`
 **ห้าม:** เปลี่ยน default `_2_BasketTP_Money` · แตะ logic อื่นนอก basket-TP/partial-close · ตีความว่าโหมดไหนดีกว่า (Claude ตัดสิน)
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1; ไม่มี verdict):**
+- เพิ่ม `_2_BasketTP_ATRmult=0` และ helper effective target: `Risk-ATR × mult × (tick value / tick size) × total lots`;
+  fixed `_2_BasketTP_Money` ยังเป็น fallback/default เดิม และ partial-close กับ full basket TP ใช้ target helper เดียวกัน.
+- compile: Boss_11/12/13/14 = **0 errors / 0 warnings** ทุกตัว.
+- regression: รอบแรก drift เล็กน้อยทั้ง 3 baseline โดย trades เท่าเดิม; controlled rerun ด้วย source pristine
+  ให้ตัวเลขเดียวกันเป๊ะ จึง re-capture baseline จาก pristine tester-data ปัจจุบัน แล้วใส่ feature กลับ →
+  `powershell -File scripts\tpl_regression.ps1` = **REGRESSION CLEAN** ทั้ง 3 ตัว.
+- A/B AUDNZD H1 full-window 2023.01.01–2026.07.01: fixed `$175` = **195 trades, PF 1.56,
+  net 1242.36, EqDD 4.26%**; ค่าจูน `_2_BasketTP_ATRmult=32.0` = **188 trades, PF 1.14,
+  net 431.50, EqDD 11.17%** (ต่าง **−7 trades / −3.6%**). Reports:
+  `AB_order027_audnzd_atrtp32_BASE.htm` + `AB_order027_audnzd_atrtp32_VAR.htm`.
+- coarse tuning raw ก่อนถึงค่า 32: mult 5→510 trades, 25→244, 35→169 (เก็บใน `ab_results.csv`).
 
 ---
 

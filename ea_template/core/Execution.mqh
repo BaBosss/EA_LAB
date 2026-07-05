@@ -71,6 +71,17 @@ int Exec_CountDir(const int direction)   // 0=any 1=buy 2=sell
 
 int Exec_CountAll() { return Exec_CountDir(0); }
 
+double Exec_TotalLots()
+{
+   double lots = 0.0;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsMine(i)) continue;
+      lots += PositionGetDouble(POSITION_VOLUME);
+   }
+   return lots;
+}
+
 double Exec_BasketProfit()
 {
    double p = 0.0;
