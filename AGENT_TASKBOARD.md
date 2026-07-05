@@ -1528,7 +1528,7 @@ Year split จาก full report:
 
 ---
 
-## ORDER-031 — XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังคับ) — `OPEN` · **ทำได้: ZCode** · 👉 **แนะ: ZCode** · ⚠️ **Model-4 รันเดี่ยว ห้ามคู่ขนาน** (freeze guard) · **ทำหลัง ORDER-030 ผ่านเท่านั้น** (role: batch, เลน 2)
+## ORDER-031 — XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังคับ) — `DONE (Codex, 2026-07-05 15:32 ICT)` · **ทำได้: ZCode** · 👉 **แนะ: ZCode** · ⚠️ **Model-4 รันเดี่ยว ห้ามคู่ขนาน** (freeze guard) · **ทำหลัง ORDER-030 ผ่านเท่านั้น** (role: batch, เลน 2)
 
 **ทำไม:** ทอง+grid = floating DD ซ่อน (บทเรียน Recovery M4). closed-trade DD 9% ต้องยืนยันด้วย every-tick จริง
 ```powershell
@@ -1542,7 +1542,23 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog
 commit `[tag] ORDER-031 done`
 **ห้าม:** verdict — เกณฑ์ Claude: M4 PF ไม่ร่วงหนัก (เทียบ M1 1.48) + floating DD ยอมรับได้ที่ de-scaled lot
 
-**ผล:** _(รอ)_
+**ผล (Codex; ไม่มี verdict):**
+
+Monte Carlo บน `D:\EA_LAB\_mt5_auto\reports\BOSS14_XAU_FULL_ISPICK_M1.htm`
+- trades used: **426** | deposit **10000** | iterations **5000**
+- actual net: **3106.99**
+- max drawdown %: **median 21.09 | 95th 29.62 | worst 42.94**
+- ruin risk (net <= -deposit): **0.00%**
+- P(net profit < 0): **0.0%**
+
+Model-4 every-tick บน `D:\EA_LAB\_mt5_auto\reports\BOSS14_XAU_M4CONFIRM.htm`
+- report period: **2024.01.01..2026.07.01**
+- history quality: **100% real ticks**
+- bars/ticks: **14,760 / 125,670,341**
+- trades: **364**
+- profit factor: **1.97**
+- net profit: **5078.12**
+- equity drawdown maximal: **589.10 (19.95%)**
 
 ---
 
