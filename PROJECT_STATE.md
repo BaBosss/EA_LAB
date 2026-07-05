@@ -316,15 +316,22 @@ verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัด
 - **routing rule (user 2026-07-05):** ZCode ฟรีแต่โควต้า ≈ **1 order หนัก/วัน** (ORDER-025 กินหมดวันในคำสั่งเดียว!)
   → เก็บ ZCode slot ให้ order สำคัญสุด/วัน, batch เล็กให้ qwen/Claude รันเอง · ทุก order ระบุ "👉 แนะรัน" (AGENTS §5)
 
-**คิว taskboard ตอนนี้:** ว่าง (loss-mgmt layer ปิดครบ)
+**🔍 REASSESS mine #1 (Claude/Opus 2026-07-05 — อ่าน Entry_Breakout + scorecard prior):** Boss_12/13
+entries บน FX = **EV ต่ำ deprioritize** — Boss_12 Breakout = Donchian ตัวเดียวกับ LabTpl ที่ **optimize-killed
+บน FX แล้ว (0/180, 0/175 survivors, "edge is XAU-specific")**, XAU ก็ซ้ำ live EA_BREAKOUT_XAU · Boss_13
+MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหลือ EV สูงสุด = ขยาย GridLog (ตัวชนะ)
+ไป non-FX (metals/index)** ไม่ใช่ probe entry ที่ตายแล้ว. ติดบล็อก = `_2_BasketTP_Money` ($ คงที่ ไม่ scale
+ข้าม instrument) → **ORDER-027 (ATR-TP mold upgrade) = prerequisite**
+
+**คิว taskboard ตอนนี้:** ORDER-027 OPEN (`_2_BasketTP_ATRmult` mold upgrade · ทำได้: Codex/Claude/oc-dev
+❌ZCode · 👉 Codex-direct · ต้อง tpl_regression CLEAN)
+**routing (user 2026-07-05):** ทุก order ระบุ "ทำได้: X · 👉 แนะ: Y" (AGENTS §5.1) · **Codex-direct ประหยัด
+กว่า OpenClaw** (quota เดียวกันแต่ OpenClaw มี overhead manager) → code งานส่ง Codex-direct เมื่ออยู่หน้าเครื่อง
 **งาน session หน้า (เรียงลำดับ):**
-1. **hunt mine #1 ต่อ = entry diversification** (loss-mgmt branch จบแล้ว): probe **Boss_12 Breakout** บน FX
-   — พอร์ตทั้งหมดเป็น grid/AUD-heavy, ตัว non-grid คือสิ่งที่ขาด · ⚠️ ต้องหา optimize axes ของ Boss_12 ก่อน
-   เขียน order (คนละ input กับ Boss_14) · scope ให้พอดี ZCode 1 วัน (~3-4 symbol) · prior FX breakout อ่อน
-   แต่กฎ "ห้าม DEAD ก่อน optimize" บังคับ probe · 👉 ZCode (heavy) หรือ Claude รันเอง (ถ้า scope เล็ก)
-2. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (ยังไม่ถึงคิว)
-3. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach 6 EA แล้ว → จด start date + set demo-clock +
-   นัด /ea-monitor ~2 สัปดาห์ · เอกสาร cohort พร้อมแล้วใน DEMO_DEPLOYMENT_PLAN
+1. review ORDER-027 (ATR-TP upgrade) → ถ้า CLEAN: เขียน ORDER-028 = **GridLog sweep บน XAU/XAG/indices**
+   (ขยายตัวชนะไป non-FX = diversification จริง · 👉 ZCode heavy 1/วัน)
+2. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (mine #1 non-FX ก่อน)
+3. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach 6 EA → จด start date + set demo-clock + นัด /ea-monitor ~2 สัปดาห์
 4. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·

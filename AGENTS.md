@@ -122,6 +122,24 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
 - **code ตาม pattern (มี cage tpl_regression) → oc-dev / Codex / Sonnet** — งาน code คุ้มค่า ChatGPT quota.
 - **Claude quota หมด + มี order ค้าง → Codex** (code/ผสม) หรือ **ZCode** (รันล้วน) เหมือนเดิม.
 
+### 5.1 Order-tag convention (user directive 2026-07-05 — user สั่งงานเอง จึงต้องเห็น "ใครทำได้บ้าง")
+
+ทุก order Claude เขียน ต้องมีบรรทัด **`ทำได้: <รายชื่อที่ทำได้> · 👉 แนะ: <default ประหยัดสุด>`** ให้ user
+เลือก dispatch เองตาม agent ที่ว่าง. จับกลุ่มตาม **ประเภทงาน** (ไม่ใช่ตัว agent):
+
+| ประเภทงาน | ใครทำได้ | 👉 แนะ default |
+|---|---|---|
+| **batch ล้วน** (รัน script + parse, ตรวจด้วยเลข) | ZCode · Codex · oc-btest · Claude | **ZCode** ถ้าหนัก+สำคัญ (1/วัน) · **Claude/qwen** ถ้าเบา |
+| **code** (แก้ .mq5/.ps1/.py, มี cage) | **Codex · Claude · oc-dev** (❌ ZCode ห้ามแตะ source) | **Codex-direct** (ดูหมายเหตุคุ้มค่าล่าง) |
+| **judgment/verdict/direction/design** | **Claude เท่านั้น** | Claude |
+
+**❓ Codex-direct vs OpenClaw — อันไหนคุ้มกว่า? → Codex-direct คุ้มกว่า (user คิดถูก, 2026-07-05):**
+ทั้งคู่ใช้ **ChatGPT quota ก้อนเดียวกัน (OAuth เดียว)** → token/งานเท่ากัน **แต่ OpenClaw มี layer manager
+(oc-mgr) + Telegram + heartbeat ที่กิน token เพิ่มจากก้อนเดียวกัน** → Codex-direct = ไม่มี overhead นั้น =
+**ประหยัดกว่า**. ต่างกันที่ความสะดวก: **Codex-direct** = ถูกกว่า แต่ต้องนั่งสั่งเองหน้าเครื่อง · **OpenClaw**
+= สั่งจากมือถือ/ทำตอนไม่อยู่ได้ แต่จ่าย overhead. **default: ChatGPT quota หายาก → Codex-direct เมื่ออยู่
+หน้าเครื่อง, ใช้ OpenClaw เฉพาะตอนต้องการ remote จริงๆ.** (ZCode = คนละ quota (GLM) ไม่เกี่ยวกับข้อนี้)
+
 **❓ Codex ต้องมา review ร่วมไหม → ใช่ แต่เลือกใช้ (ไม่ใช่ทุก verdict):** หลัง Fable ออก Codex = สมอง
 อิสระ (คนละ family) ตัวเดียวที่เหลือ. **หลักคิด: ไม่ได้ใช้เพราะ Codex เก่งเท่า Opus — ใช้เพราะคนละค่าย
 จับจุดบอดที่ Opus มองข้ามเป็นระบบได้** ("อิสระ + เก่งพอเถียง" > "เก่งเท่ากันแต่ค่ายเดียว"). งาน review ใช้

@@ -1344,6 +1344,36 @@ Hedge อาจมีบทบาท — ตอนนั้นค่อยลด
 
 ---
 
+## ORDER-027 — mold upgrade: `_2_BasketTP_ATRmult` (basket TP แบบ ATR-scaled, additive) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode ห้ามแตะ source)** · 👉 **แนะ: Codex-direct** (code, ประหยัดกว่า OpenClaw) · ⚠️ **ต้องรัน tpl_regression → CLEAN ก่อน commit**
+
+**ทำไม (ปลดล็อก hunt ที่ EV สูงสุดของ mine #1):** GridLog = กลไกเดียวที่มี edge จริง (6 demo EA) →
+ต่อยอดที่คุ้มสุด = **ขยายไป non-FX (metals/index)** เพื่อกระจาย instrument class. **แต่ติดบล็อก:**
+`_2_BasketTP_Money` เป็น $ คงที่ ไม่ scale ข้าม instrument class (self-review 2026-07-04: XAU ราคาคนละ
+scale กับ FX → $TP เดิมใช้ไม่ได้). ต้องเพิ่มโหมด TP แบบ ATR-scaled ก่อน sweep non-FX ครั้งแรก. **Boss_12/13
+entries ถูก deprioritize** (FX breakout/reversion = optimize-killed แล้วใน LabTpl, XAU ซ้ำ live EA — ดู reassess ใน PROJECT_STATE)
+
+**สเปคโค้ด (additive, default = พฤติกรรมเดิมเป๊ะ):**
+1. `core\Inputs.mqh` (~บรรทัด 197 ใกล้ `_2_BasketTP_Money`): เพิ่ม `input double _2_BasketTP_ATRmult = 0;`
+   `// close basket at +(ATR×mult ต่อ lot รวม) เป็น $ (0=ใช้ _2_BasketTP_Money แบบเดิม)`
+2. `core\ExitManager.mqh` `Exit_ManageBasket()` (~บรรทัด 189-196): คำนวณ **effective target $** —
+   ถ้า `_2_BasketTP_ATRmult > 0`: `targetMoney = ATR(price) × _2_BasketTP_ATRmult × (มูลค่า $ ต่อ 1 price-unit
+   ต่อ lot) × Exec_TotalLots()` (ใช้ `SymbolInfoDouble(TICK_VALUE/TICK_SIZE)` แปลง price→$ ให้ถูกต่อ instrument) ·
+   ถ้า `=0`: ใช้ `_2_BasketTP_Money` เดิม. ต้องแก้ **ทั้ง** จุด TP (บรรทัด ~196) **และ** จุด partial-close
+   % base (บรรทัด ~174 `pctOfTarget = profit/_2_BasketTP_Money`) ให้อ้าง effective target ตัวเดียวกัน (helper 1 ตัว)
+3. ATR ที่ใช้ = `_3_RiskATR_Period`/`_3_RiskATR_TF` (risk-ATR ตัวเดียวกับ SL) เพื่อ consistency
+
+**Acceptance:**
+- compile 0/0 ทั้ง 3 Boss EA (Boss_11/12/13/14 — ทุกตัวที่ include ExitManager)
+- **`powershell -File scripts\tpl_regression.ps1` = CLEAN** (default 0 = ไม่มี behavior drift — พิสูจน์ additive จริง)
+- A/B 1 ตัว (`ab_mode_test` หรือรันมือ): AUDNZD `_2_BasketTP_ATRmult=X` (จูนให้ ~เท่า $175 เดิม) เทียบ
+  `_2_BasketTP_Money=175` — trades ใกล้กัน = แปลง $↔ATR ถูก · report ค่าที่จูนได้
+- commit `[tag] ORDER-027 done`
+**ห้าม:** เปลี่ยน default `_2_BasketTP_Money` · แตะ logic อื่นนอก basket-TP/partial-close · ตีความว่าโหมดไหนดีกว่า (Claude ตัดสิน)
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
