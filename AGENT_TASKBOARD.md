@@ -1670,7 +1670,7 @@ Compile logs: `_mt5_auto\compile_waittest\`. OH warnings คือ deprecated
 > tooling ครบ: MT5 `mt5_run.ps1`+`smoke_all.ps1` · MT4 `mt4_run.ps1`+`parse_mt4_report.py` (`D:\Meta4`).
 > **funnel: 034 catalog → 035 MT5 smoke → 036 MT4 smoke.** ORDER-033 (4-EA) = subset ของ 035, ทำก่อนได้เป็น warm-up
 
-## ORDER-034 — catalog + dedup + กรอง tradeable-EA จาก `wait for test` — `OPEN` · **ทำได้: Codex · Claude · oc-dev** · 👉 **แนะ: Codex-direct** (script เร็ว) (role: code)
+## ORDER-034 — catalog + dedup + กรอง tradeable-EA จาก `wait for test` — `DONE(Codex, 2026-07-05 12:06 +07:00)` · **ทำได้: Codex · Claude · oc-dev** · 👉 **แนะ: Codex-direct** (script เร็ว) (role: code)
 
 **ทำไม:** ห้าม smoke 2,623 ดิบ (ครึ่งเป็น indicator/dashboard/ตัวซ้ำ = เผา compute เปล่า) ต้องได้ worklist สะอาดก่อน
 **งาน (ต่อ `ea_inventory.py`):** (1) hash ทุก .ex4/.ex5 ใน `D:\Forex\10_EA_PROJECTS\2. wait for test` เก็บ 1 path/hash
@@ -1679,7 +1679,16 @@ scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื�
 `_triage/mass_smoke_worklist.csv` (platform, hash, path, guess_symbol, guess_type)
 **Acceptance:** CSV + นับ unique tradeable EA ต่อ platform · commit `[tag] ORDER-034 done` · **ห้าม:** smoke จริง/verdict
 
-**ผล:** _(รอ)_
+**ผล (Codex; catalog เท่านั้น ไม่มี smoke/verdict):** เพิ่มโหมด
+`ea_inventory.py --worklist <root> <csv>` และสร้าง `_triage/mass_smoke_worklist.csv`.
+
+- compiled files ดิบ: **3,161** · unique hashes ทั้งหมด: **2,625**
+- หลังกรองชื่อ non-tradeable + dedup: **1,521 unique candidates**
+- platform: **EX4 1,318** · **EX5 203**
+- guess symbol: **XAUUSD 92** · **basket 1,429**
+- guess type: unknown-ea 1,253 · trend 107 · grid-recovery 94 · scalper 48 · breakout 19
+- validation: 1,521 rows = 1,521 unique hashes, ไม่มี blacklist-name leak, platform มีเฉพาะ ex4/ex5,
+  และ `guess_symbol` ตรงกฎ gold/XAU→XAUUSD ทุกแถว.
 
 ## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
 

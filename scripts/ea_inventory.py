@@ -6,6 +6,7 @@ cheap content sniff (mq4/mq5 source: grid/martingale keywords, EA vs
 indicator vs script), writes one CSV. Deterministic - no LLM needed.
 
 Usage: python ea_inventory.py "<root>" "<out.csv>"
+       python ea_inventory.py --worklist "<root>" "<worklist.csv>"
 """
 import csv
 import hashlib
@@ -20,6 +21,63 @@ GRID_PAT = re.compile(r'martingale|grid|recovery|averag|lotmult|multiplier\s*=|h
 IND_PAT = re.compile(r'#property\s+indicator|OnCalculate', re.I)
 SCRIPT_PAT = re.compile(r'#property\s+script|OnStart', re.I)
 EA_PAT = re.compile(r'OnTick|OrderSend|trade\.Buy|trade\.Sell|CTrade', re.I)
+NON_TRADEABLE_NAME_PAT = re.compile(
+    r'indicator|dashboard|scanner|copier|trailing|template|tool|panel|scheduler', re.I
+)
+
+
+def guess_compiled_type(path):
+    name = str(path).lower()
+    if re.search(r'grid|martingale|recovery|hedg', name):
+        return 'grid-recovery'
+    if re.search(r'breakout|break out|break_out', name):
+        return 'breakout'
+    if re.search(r'scalp', name):
+        return 'scalper'
+    if re.search(r'trend|macd|moving.average|\bma\b', name):
+        return 'trend'
+    return 'unknown-ea'
+
+
+def write_mass_smoke_worklist(root, out):
+    rows, seen = [], set()
+    candidates = sorted(
+        (p for p in root.rglob('*') if p.is_file() and p.suffix.lower() in ('.ex4', '.ex5')),
+        key=lambda p: str(p).lower(),
+    )
+    for path in candidates:
+        try:
+            digest = hashlib.md5(path.read_bytes()).hexdigest()
+        except OSError:
+            continue
+        relative = str(path.relative_to(root))
+        if NON_TRADEABLE_NAME_PAT.search(relative):
+            continue
+        if digest in seen:
+            continue
+        seen.add(digest)
+        lowered = relative.lower()
+        rows.append({
+            'platform': path.suffix.lower().lstrip('.'),
+            'hash': digest,
+            'path': relative,
+            'guess_symbol': 'XAUUSD' if ('gold' in lowered or 'xau' in lowered) else 'basket',
+            'guess_type': guess_compiled_type(path),
+        })
+
+    out.parent.mkdir(parents=True, exist_ok=True)
+    with out.open('w', newline='', encoding='utf-8-sig') as handle:
+        writer = csv.DictWriter(
+            handle, fieldnames=['platform', 'hash', 'path', 'guess_symbol', 'guess_type']
+        )
+        writer.writeheader()
+        writer.writerows(rows)
+
+    from collections import Counter
+    counts = Counter(row['platform'] for row in rows)
+    print(f'unique tradeable compiled EAs: {len(rows)}')
+    for platform in ('ex4', 'ex5'):
+        print(f'  {platform}: {counts[platform]}')
 
 
 def sniff(path):
@@ -40,6 +98,9 @@ def sniff(path):
 
 
 def main():
+    if len(sys.argv) == 4 and sys.argv[1] == '--worklist':
+        write_mass_smoke_worklist(Path(sys.argv[2]), Path(sys.argv[3]))
+        return
     root, out = Path(sys.argv[1]), sys.argv[2]
     rows, seen = [], {}
     for p in root.rglob('*'):
