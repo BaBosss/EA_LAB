@@ -1555,6 +1555,33 @@ commit `[tag] ORDER-029B done`
 
 ---
 
+## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `OPEN` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
+
+**ทำไม (user: อยากให้คอมมีงานทำช่วง token reset):** folder `D:\Forex\10_EA_PROJECTS\2. wait for test` มี 87 EA
+แต่ **mq4 37 ตัว = ใช้ไปป์ไลน์ MT5 ไม่ได้ (0/63 prior) · mq5 ส่วนใหญ่ grid/martingale = dead-family**. คัดเหลือ
+**4 ตัว mq5 risk=fixed (ไม่ใช่ grid)** ที่คุ้ม smoke — 2 ตัวแรกกลไกใหม่จริง (ORDER-021). base dir = `D:\Forex\10_EA_PROJECTS\2. wait for test\`
+
+**งาน — ต่อ EA: compile → smoke:**
+| # | ไฟล์ (relative จาก base) | home symbol/TF ลอง | หมายเหตุ |
+|---|---|---|---|
+| 1 | `2026-07\Breakout Retest Pro EA Source Code (1).mq5` | XAUUSD H1 + EURUSD H1 | native MT5 ⭐ retest-zone |
+| 2 | `2025-08\GapFillRSI\GapFillRSI.mq5` | XAUUSD H1 + US30 H1 (ถ้ามี) | native MT5 ⭐ gap-fade |
+| 3 | `(OH) EA\(oh)  Bot V00.mq5` | EURUSD H1 + XAUUSD H1 | fxdreema-origin, friction สูง |
+| 4 | `EA fxdreema other id\(Niyombot) B2 Gold Deng M15 TLM.mq5` | XAUUSD M15 | fxdreema-origin gold |
+
+ขั้นตอนต่อ EA: (1) compile ด้วย metaeditor CLI (ดู `ea_template\deploy.ps1` เป็นแบบ) → ถ้า compile ไม่ผ่าน/
+ไม่มี tester-gate ให้ note แล้วข้าม (2) หา input `AllowLive`/tester-gate เปิดให้ tester เทรดได้ (บทเรียน Bucket D)
+(3) Model 2 quick 3 เดือนล่าสุด — ถ้า 0 trades = non-functional port, note+ข้าม (4) ถ้าเทรด → Model 1 12 เดือน
+(2025.07-2026.07) home symbol · report PF/trades/net/eqDD
+**Acceptance:** ตารางต่อ EA×symbol: compile ok? / Model2 trades / Model1 PF·trades·net·eqDD (หรือเหตุที่ข้าม) ·
+commit `[tag] ORDER-033 done`
+**ห้าม:** verdict (Claude ตัดสิน) · **อย่าเสียเวลากับตัวที่ compile ไม่ผ่าน/hang เกิน 2 ครั้ง — note แล้วไปตัวถัดไป**
+(บทเรียน Bucket D: MT4-origin ports ส่วนใหญ่ไม่ทำงาน — คาดหวัง survivor น้อย, นี่คือ filter ราคาถูก ไม่ใช่ hunt หลัก)
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
