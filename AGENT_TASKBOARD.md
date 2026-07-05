@@ -1701,7 +1701,7 @@ scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื�
 - validation: 1,521 rows = 1,521 unique hashes, ไม่มี blacklist-name leak, platform มีเฉพาะ ex4/ex5,
   และ `guess_symbol` ตรงกฎ gold/XAU→XAUUSD ทุกแถว.
 
-## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
+## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `DONE (Codex, 2026-07-05 19:50 ICT)` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
 
 **งาน (reuse `smoke_all.ps1`):** ต่อ ex5: copy → `<Meta5b>\MQL5\Experts\_smoke\` → Model 2 quick 3 เดือน
 (2026.04-2026.07) basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1 (user 2026-07-05: ครบ character ทอง/EUR/เยน/AUD-cross)
@@ -1714,7 +1714,59 @@ default TF=H1 (EA ที่ design มาสำหรับ TF อื่นอ�
 priority ต่ำ) · **Reject** = PF≤1.0 หรือ trades<20 (noise/ไม่มี edge — ไม่ใช่ DEAD) · list Tier A+B ให้ Claude ·
 commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
 
-**ผล:** _(รอ)_
+**ผล (Codex; ไม่มี verdict):** เพิ่ม driver `scripts\mass_smoke_mt5.ps1` และรันครบ worklist ex5 ทั้งก้อนจาก
+`_triage\mass_smoke_worklist.csv` บน MT5 เลน 2 (`D:\Meta 5b`) ตาม basket `XAUUSD/EURUSD/USDJPY/AUDNZD`.
+ผลเต็มอยู่ที่ `D:\EA_LAB\_mt5_auto\mass_smoke_mt5.csv`
+
+- ex5 ที่รันครบ: **203/203**
+- CSV rows: **812** (= 203 EA × 4 symbols)
+- EA ที่ M2 ทุก symbol = 0 trades: **157**
+- EA ที่มีอย่างน้อย 1 symbol ได้ไปต่อ M1: **36**
+- survivor rows: **Tier A = 36** · **Tier B = 3**
+
+**Tier A / Tier B list ส่งให้ Claude:**
+
+| EA | Symbol | M2 trades | M1 PF | M1 trades | M1 net | M1 eqDD% | Tier |
+|---|---:|---:|---:|---:|---:|---:|---|
+| (Oh) Arbitrage Super Profit V04 | EURUSD | 36 | 1.46 | 1170 | 4300.18 | 2.39 | Tier A |
+| (oh) continue v06 | EURUSD | 120 | 2.35 | 705 | 8958.24 | 17.17 | Tier A |
+| (oh) continue v06 | USDJPY | 85 | 2.16 | 771 | 12002.82 | 36.55 | Tier A |
+| (oh) fibo gold v06 | USDJPY | 18 | 1.07 | 380 | 28.91 | 0.75 | Tier A |
+| (Oh) Grid Upper lower V23 | EURUSD | 139 | 1.65 | 561 | 1176.07 | 6.85 | Tier A |
+| (oh) grid v05 | EURUSD | 368 | 1.13 | 2981 | 518.88 | 7.70 | Tier A |
+| (oh) Master GRID ATR Accumulative Deduction -B V23 | EURUSD | 714 | 1.44 | 5551 | 2666.37 | 21.17 | Tier A |
+| (oh) Master GRID ATR Accumulative Deduction -B V23 | USDJPY | 630 | 1.38 | 5388 | 2501.33 | 9.36 | Tier A |
+| (oh) pun fix lot v05 | XAUUSD | 485 | 1.60 | 1840 | 632.06 | 3.41 | Tier A |
+| (oh) pun fix lot v05 | EURUSD | 500 | 1.63 | 1913 | 675.15 | 3.19 | Tier A |
+| (oh) pun fix lot v05 | USDJPY | 496 | 1.63 | 1913 | 681.33 | 3.18 | Tier A |
+| (oh) pun fix lot v05 | AUDNZD | 491 | 1.47 | 1913 | 559.52 | 3.29 | Tier A |
+| (oh) pun lot hedging v15 | EURUSD | 384 | 1.05 | 1280 | 1024.09 | 23.85 | Tier A |
+| (oh) pun lot hedging v15 | USDJPY | 221 | 1.17 | 1382 | 1878.87 | 27.06 | Tier A |
+| North East Way MT5 v1.309_fix | XAUUSD | 14 | 1.35 | 172 | 494.14 | 38.12 | Tier A |
+| North East Way MT5 v1.309_fix | EURUSD | 23 | 2.03 | 202 | 1482.66 | 30.22 | Tier A |
+| North East Way MT5 v1.309_fix | USDJPY | 15 | 2.07 | 199 | 1505.18 | 30.12 | Tier A |
+| North East Way MT5 v1.309_fix | AUDNZD | 23 | 1.98 | 203 | 1475.47 | 30.10 | Tier A |
+| PumLot V.1.1 exp mt5 | EURUSD | 51 | 1.03 | 163 | 56.21 | 3.70 | Tier A |
+| Scalping-EA-AsReMix | USDJPY | 24 | 1.23 | 155 | 971.49 | 14.66 | Tier A |
+| BOO - EA Gold Mean Reversion _ Fibo Scalping V4.2 | EURUSD | 11 | 1.18 | 33 | 149.63 | 9.29 | Tier A |
+| EX39.PU-test | XAUUSD | 14 | 3.46 | 130 | 500.82 | 9.96 | Tier A |
+| EX39.PU-test | EURUSD | 13 | 2.75 | 69 | 160.91 | 0.93 | Tier A |
+| AAA#IRSI SUMPIP LOT MARTINGLESEQUENCE | AUDNZD | 211 | 1.13 | 33212 | 326.15 | 30.12 | Tier A |
+| Breakout Retest Pro EA Source Code (1) | USDJPY | 16 | 1.03 | 63 | 147.86 | 18.15 | Tier A |
+| IR Whale Track Expiry | XAUUSD | 42 | 3.94 | 206 | 612.92 | 0.75 | Tier A |
+| IR Whale Track Expiry | EURUSD | 13 | 1.19 | 101 | 83.63 | 3.96 | Tier A |
+| IR Whale Track Expiry | USDJPY | 23 | 1.21 | 135 | 109.53 | 2.73 | Tier A |
+| IR Whale Track Expiry | AUDNZD | 16 | 1.95 | 57 | 74.47 | 0.93 | Tier A |
+| EA_GapinFX_MT5 | EURUSD | 26 | 2.34 | 160 | 728.37 | 3.66 | Tier A |
+| EA_GapinFX_MT5 | USDJPY | 47 | 2.74 | 394 | 1745.65 | 8.74 | Tier A |
+| SL=2GRIDE MQL5 | EURUSD | 103 | 1.69 | 700 | 645.70 | 4.03 | Tier A |
+| The One 1.0.3 EA V1.0 MT5@YoForexPremium | XAUUSD | 70 | 2.32 | 2941 | 1011468.07 | 3.70 | Tier A |
+| EA GOLD CENTER V.2 Expried 11.04.2025 | EURUSD | 210 | 1.44 | 931 | 815.16 | 22.13 | Tier A |
+| EA GOLD CENTER V.2 Expried 11.04.2025 | AUDNZD | 262 | 1.52 | 946 | 720.90 | 18.67 | Tier A |
+| PROFIT PLANET CURRENCY MT5 | XAUUSD | 21 | 1.14 | 84 | 461.49 | 13.57 | Tier A |
+| EA Black Dragon MT5 V13 @SoftechFX_Robot | EURUSD | 147 | 3.02 | 1216 | 10792.94 | 45.62 | Tier B |
+| SL=2GRIDE MQL5 | XAUUSD | 1859 | 1.11 | 130056 | 35624.15 | 52.75 | Tier B |
+| JMAR EXPERTS for CRASH AND BOOM trailstop strategy | XAUUSD | 296 | 1.10 | 1222 | 10822.93 | 60.86 | Tier B |
 
 ## ORDER-036 — MT4 mass-smoke driver (loop worklist ex4, `D:\Meta4`) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 035, stage ~200/รอบ** · autonomous (role: code+batch)
 
