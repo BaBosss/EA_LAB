@@ -364,10 +364,25 @@ Model-4 คือด่านที่แยก "grid มี edge จริง" 
 
 **✅ ORDER-034 reviewed:** worklist mass-smoke พร้อม = **1,521 tradeable (ex5 203 + ex4 1,318)** → 035/036 unblocked
 
-**👉 งานต่อไป (เลือกได้):**
-1. **corr check XAU vs 6 FX** (ก่อน demo จริง — ทองน่าจะ low-corr = diversifier ดี) · 👉 Claude/qwen (เบา)
-2. **ORDER-035/036 mass-smoke** (autonomous ช่วง token reset — ล่า treasure ที่ user จำได้) · 👉 oc-dev/Codex
-3. **demo attach** (รอ user ว่าง) → cohort เป็น 7 EA แล้ว
+**✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
+CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
+ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
+
+**🗺️ แผนที่ต้องทำ — เรียง priority (2026-07-05):**
+- **P0 = critical path (รอ user): DEMO ATTACH 7 EA** → บัญชี 60k · ทุกอย่าง validate + set + corr ครบแล้ว
+  รอแค่ user attach → **3-month demo clock เริ่มนับ** (นี่คือ gate เดียวสู่ validation จริง — งานอื่นรองทั้งหมด).
+  เมื่อ attach: จด start date + set demo-clock + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์. XAU #7 ต้อง de-scale
+  บัญชี 60k อาจต้องปรับ (7 EA แทน 6 — XAU lot 0.05 = ครึ่ง unit จึงเกือบพอดี, user เคาะตอน attach)
+- **P1 = autonomous idle-compute: ORDER-035 (MT5 203) → 036 (MT4 1,318 stage)** ล่า treasure ที่ user
+  เชื่อว่ามี · 👉 oc-dev/Codex · รันข้ามคืนได้ · survivor (M1 PF≥1.3) → Claude คัดเข้า intake funnel
+- **P2 = hunt ต่อ (mine #1 ใกล้หมด):** loss-mgmt ตาย · entries FX ตาย · XAU done · XAG parked · เหลือ:
+  GridLog บน **indices (US30/NAS)** เป็น non-FX ตัวถัดไป (มี ORDER-029B ATR-SL portable แล้ว) **หรือ**
+  ข้ามไป **mine #2 treasure** (candle-gate/retest-zone mold-port) — Claude เคาะเมื่อ mass-smoke ให้ผล/demo เดินแล้ว
+- **P3 = housekeeping:** XAU ยังไม่ผ่าน `robustness-validator` skill เป็นทางการ (แต่ OOS+MC+M4 = ครอบคลุมแล้ว) ·
+  audit เอกสารซ้ำ (ROADMAP §3)
+
+**คำแนะนำเด็ดขาด:** P0 (demo attach) คือสิ่งเดียวที่ปลดล็อกทุกอย่าง — เมื่อ user ว่างให้ทำก่อน · ระหว่างรอ =
+P1 mass-smoke เดินอัตโนมัติ · P2 hunt เก็บไว้ทำเมื่อ demo เดิน + มี Claude quota
 
 **วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
 **ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)
