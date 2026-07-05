@@ -1540,7 +1540,7 @@ commit `[tag] ORDER-031 done`
 
 ---
 
-## ORDER-032 — XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, ขนาน XAU) — `OPEN` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (heavy, วันแยกจาก 030/031) (role: batch, เลน 2)
+## ORDER-032 — XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, ขนาน XAU) — `DONE(Codex, 2026-07-05 11:53 +07:00; user override)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (heavy, วันแยกจาก 030/031) (role: batch, เลน 2)
 
 **ทำไม:** ถ้าทองมีชีวิต เงินอาจมีด้วย (non-FX เพิ่ม) — mirror ORDER-028 เป๊ะแต่ symbol=XAGUSD
 สร้าง `Boss14_GridLog_XAG_opt1.set` = copy `Boss14_GridLog_XAU_opt1.set` (มีแล้ว) เปลี่ยน magic=990302 ·
@@ -1552,7 +1552,21 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 **Acceptance:** XML ครบ + จำนวน pass PF≥1.2 & Trades≥60 + top-8 ดิบ · commit `[tag] ORDER-032 done`
 **ห้าม:** verdict/plateau-center (Claude ทำ)
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1, MT5 เลน 2; ไม่มี verdict):** สร้าง
+`ea_template\sets\Boss14_GridLog_XAG_opt1.set` จาก XAU set, magic=990302 และ lock input ใหม่
+`_33_SL_MaxATRmult=0`. XML `BOSS14_OPT_XAG_IS.xml` ครบ **72 rows**; จำนวน pass ที่
+`PF≥1.2 AND Trades≥60` = **4**. Top-8 ดิบเรียง PF:
+
+| Pass | PF | Trades | EqDD% | StepATR | Direction | DistATR | BasketTP_ATRmult |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 27 | 8.873273 | 27 | 2.0831 | 1.4 | 2 | 2.2 | 1.0 |
+| 28 | 8.873273 | 27 | 2.0831 | 2.2 | 2 | 2.2 | 1.0 |
+| 29 | 8.873273 | 27 | 2.0831 | 3.0 | 2 | 2.2 | 1.0 |
+| 9 | 8.873273 | 27 | 2.0831 | 1.4 | 2 | 2.2 | 0.5 |
+| 10 | 8.873273 | 27 | 2.0831 | 2.2 | 2 | 2.2 | 0.5 |
+| 11 | 8.873273 | 27 | 2.0831 | 3.0 | 2 | 2.2 | 0.5 |
+| 63 | 8.873273 | 27 | 2.0831 | 1.4 | 2 | 2.2 | 2.0 |
+| 64 | 8.873273 | 27 | 2.0831 | 2.2 | 2 | 2.2 | 2.0 |
 
 ---
 
@@ -1597,6 +1611,44 @@ commit `[tag] ORDER-029B done`
 commit `[tag] ORDER-033 done`
 **ห้าม:** verdict (Claude ตัดสิน) · **อย่าเสียเวลากับตัวที่ compile ไม่ผ่าน/hang เกิน 2 ครั้ง — note แล้วไปตัวถัดไป**
 (บทเรียน Bucket D: MT4-origin ports ส่วนใหญ่ไม่ทำงาน — คาดหวัง survivor น้อย, นี่คือ filter ราคาถูก ไม่ใช่ hunt หลัก)
+
+**ผล:** _(รอ)_
+
+---
+
+## 🗺️ MASS-SMOKE `wait for test` (user 2026-07-05: เคยเห็นตัวรันดีในนั้น — เทสทั้ง ex4+ex5, autonomous ช่วง token reset)
+
+> **ขนาดจริง: 337 unique .ex5 + 2,286 unique .ex4 = 2,623 ตัว** (dump ใหญ่ ปน indicator/utility/dashboard).
+> tooling ครบ: MT5 `mt5_run.ps1`+`smoke_all.ps1` · MT4 `mt4_run.ps1`+`parse_mt4_report.py` (`D:\Meta4`).
+> **funnel: 034 catalog → 035 MT5 smoke → 036 MT4 smoke.** ORDER-033 (4-EA) = subset ของ 035, ทำก่อนได้เป็น warm-up
+
+## ORDER-034 — catalog + dedup + กรอง tradeable-EA จาก `wait for test` — `OPEN` · **ทำได้: Codex · Claude · oc-dev** · 👉 **แนะ: Codex-direct** (script เร็ว) (role: code)
+
+**ทำไม:** ห้าม smoke 2,623 ดิบ (ครึ่งเป็น indicator/dashboard/ตัวซ้ำ = เผา compute เปล่า) ต้องได้ worklist สะอาดก่อน
+**งาน (ต่อ `ea_inventory.py`):** (1) hash ทุก .ex4/.ex5 ใน `D:\Forex\10_EA_PROJECTS\2. wait for test` เก็บ 1 path/hash
+(dedup) (2) กรองออกที่ไม่ใช่ EA เทรด (ชื่อมี indicator/dashboard/scanner/copier/trailing/template/tool/panel/
+scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื่อ (gold/XAU→XAUUSD, ไม่มี→basket) →
+`_triage/mass_smoke_worklist.csv` (platform, hash, path, guess_symbol, guess_type)
+**Acceptance:** CSV + นับ unique tradeable EA ต่อ platform · commit `[tag] ORDER-034 done` · **ห้าม:** smoke จริง/verdict
+
+**ผล:** _(รอ)_
+
+## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
+
+**งาน (reuse `smoke_all.ps1`):** ต่อ ex5: copy → `<Meta5b>\MQL5\Experts\_smoke\` → Model 2 quick 3 เดือน
+(2026.04-2026.07) basket **XAUUSD,EURUSD,GBPUSD,USDJPY** H1 → **0 trades ทุก symbol = skip+note** · เทรด≥1 →
+Model 1 12 เดือน (2025.07-2026.07) symbol ดีสุด → `_mt5_auto/mass_smoke_mt5.csv` (ea,symbol,m2_trades,m1_pf,m1_trades,m1_net,m1_eqdd)
+**guard autonomous:** timeout 180s/run + skip hang · try/catch ต่อ EA · log ทุก 25 ตัว
+**Acceptance:** CSV ครบ + list M1 PF≥1.3 (survivor shortlist) · commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
+
+**ผล:** _(รอ)_
+
+## ORDER-036 — MT4 mass-smoke driver (loop worklist ex4, `D:\Meta4`) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 035, stage ~200/รอบ** · autonomous (role: code+batch)
+
+**ทำไม:** treasure ที่ user จำได้อาจเป็น MT4 (2,286 = ส่วนใหญ่). prior 0/63 แต่ user มี signal → คุ้ม smoke
+**งาน:** เหมือน 035 แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** →
+window 2026.03-2026.07 · **stage ก้อน (folder ใหม่→เก่า / 200 ตัว)** อย่ารันรวด 2,286 คำสั่งเดียว
+**Acceptance:** ต่อ stage: CSV + survivor (PF≥1.3) · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
 
 **ผล:** _(รอ)_
 
