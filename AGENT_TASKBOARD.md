@@ -1157,7 +1157,19 @@ CADJPY > EURJPY (สันเขาทั้งคู่)
 
 ---
 
-## ORDER-024 — Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) — `DONE([oc-dev], 2026-07-05)` (role: oc-btest/ZCode, เลน 2 — batch ล้วน)
+## ORDER-024 — Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) — `REVIEWED(Claude/Opus, 2026-07-05 — 81 REJECT · 82 PROMISING แต่ยังไม่ adopt → ORDER-025 ตรวจ floating DD)` (role: oc-btest/ZCode → run by oc-dev)
+
+**VERDICT (Claude/Opus, 2026-07-05):**
+- **Mode 81 (Light Recovery) = ❌ REJECT ปิดถาวร** — แย่ลงทุกมิติ: PF 1.56→1.33, eqDD 4.26→5.13%,
+  net -$505, 2024 พลิกเป็นปีลบ (-$154). Light Recovery ไม่มีค่าบน config ที่ดีอยู่แล้ว
+- **Mode 82 (Adaptive Recovery) = 🟡 PROMISING แต่ยังไม่ adopt** — ผ่าน mechanical gate (PF 1.56→1.73 ↑,
+  eqDD 4.63% < baseline+50%=6.39% ✓, net +$121) **แต่ year-split เผย regime-amplification:** กำไรกระจุก
+  2025-26 (PF 3.34/5.85) โดย **2024 พลิกจากปีบวก 1.28 → ปีลบ 0.78** = พฤติกรรม recovery แท้ (ปีดีเร่ง,
+  ปีร้ายขุดลึก). eqDD 4.63% = closed-trade @0.25x → **ไม่จับ floating DD ตอน recovery legs ค้างขาดทุน**
+  ที่ live 3-4x ปีร้ายแบบ 2024 อาจลึกกว่านี้มาก (บทเรียน Zeus: MC worst 18% vs ปี hostile จริง 36%)
+- **ยังไม่แตะ demo cohort (คง Recovery OFF)** — 6 EA กำลัง attach/รันเป็นการทดลอง ห้ามเปลี่ยนกลางคัน
+- **คำถาม Recovery ยังไม่ปิด** — 82 น่าสนใจพอจะตรวจต่อ (floating DD จริง + generalize ข้าม symbol) →
+  ORDER-025. ถ้าผ่าน = mold-wide upgrade candidate; ถ้า floating DD บวมที่ live sizing = ปิดถาวร
 
 **ทำไม (hunt queue mine #1 = แกนกลไกในแม่พิมพ์ที่ยังไม่ sweep):** โหมด Recovery 81/82/83 + HEDGE_LOCK
 สร้างไว้ตั้งแต่ 2026-07-03 แต่ **ไม่เคยผ่าน backtest ใดๆ** (PROJECT_STATE: "เปิดใช้ครั้งแรก = validate
@@ -1214,6 +1226,37 @@ Year split (`scripts\report_year_split.py`, closed-deal balance stats):
 | 82 | 2024 | 29 | 0.78 | -105.08 | 3.79 |
 | 82 | 2025 | 50 | 3.34 | +667.86 | 0.82 |
 | 82 | 2026 | 20 | 5.85 | +506.39 | 1.00 |
+
+---
+
+## ORDER-025 — Adaptive Recovery (mode 82): ตรวจ floating DD จริง + generalize ข้าม symbol — `OPEN` · 👉 **แนะรัน: ZCode** (batch ล้วน ฟรี) (role: ZCode/oc-btest, เลน 2)
+
+**ทำไม:** ORDER-024 พบ mode 82 ยก PF บน AUDNZD แต่มี 2 คำถามที่ยังตอบไม่ได้ ก่อนจะเชื่อว่าเป็น mold
+upgrade: (1) closed-trade eqDD 4.63% ไม่จับ floating DD ของ recovery legs — ต้อง **Model 4 every-tick**
+ถึงเห็นจริง (กฎ grid/martingale: floating DD ซ่อน) (2) PF-lift เป็นของ AUDNZD ตัวเดียวหรือ generalize?
+
+**งาน 2 ส่วน:**
+
+**ส่วน A — floating DD จริงของ mode 82 (Model 4, ⚠️ รันเดี่ยว ห้ามคู่ขนานอะไรทั้งนั้น — freeze guard):**
+```powershell
+# เลน 2, Model 4 real ticks, ใช้ set เดิมที่ oc-dev สร้าง
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol AUDNZD -Period H1 -FromDate 2024.01.01 -ToDate 2026.07.01 -Model 4 -SetFile 'D:\EA_LAB\_mt5_auto\ab_sets\AUDNZD_REC82.set' -ReportName REC_AUDNZD_V82_M4 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+```
+เทียบกับ mode 80 M4 เดิม (มีแล้วจาก ORDER-014: AUDNZD M4 = 3.37/44t/eqDD 2.26%) — ดูว่า Recovery ทำ
+**equity DD maximal** (floating) พุ่งแค่ไหน
+
+**ส่วน B — generalize: mode 82 บน 2nd/3rd winner (Model 1, รันคู่ขนานได้):**
+```powershell
+# แทน <SYM> = USDJPY, AUDCAD (2 ตัวที่ plateau แข็ง). สร้าง set จาก DEMO เดิมแก้ RecoveryMode=82
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol <SYM> -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\_mt5_auto\ab_sets\<SYM>_REC82.set' -ReportName REC_<SYM>_V82 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+# แล้ว year-split ทุกไฟล์
+```
+**Acceptance:** (A) ตาราง AUDNZD mode 80 vs 82 บน M4: PF / trades / **equity DD maximal %** (floating) ·
+(B) ต่อ symbol: mode 80 baseline vs 82 — PF/trades/eqDD/net + year-split · commit `[tag] ORDER-025 done`
+**ห้าม:** verdict — เกณฑ์ Claude: 82 = mold upgrade ต่อเมื่อ (1) M4 floating DD ไม่พุ่งเกิน ~2x ของ closed-trade
+**และ** (2) PF-lift เกิดซ้ำอย่างน้อย 1/2 symbol โดยไม่สร้างปีลบใหม่ · ไม่งั้น = Recovery ปิดถาวร (เฉพาะ mode 82 บน AUDNZD เก็บเป็น note ไม่ deploy)
+
+**ผล:** _(รอ)_
 
 ---
 

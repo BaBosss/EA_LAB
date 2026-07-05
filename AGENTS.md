@@ -77,8 +77,10 @@ capability ที่แท้จริงตอนนี้มาจาก Codex
    ห้าม DEAD/REJECT ก่อน optimize probe · cap breach (DD/margin/ruin) = resize-first ห้าม reject ตรง ·
    เลข optimizer = in-sample เสมอ · backward-OOS บังคับเมื่อ IS/OOS อยู่ regime เดียว
    — agent อื่นไม่ต้องใช้กฎพวกนี้ตัดสินเอง แค่**อย่ารายงานสรุปที่ขัดกับมัน** (รายงานตัวเลขดิบพอ)
-5. **Git:** commit บ่อย, ข้อความ commit ขึ้นต้นด้วย tag ตัวเอง `[codex]` / `[zcode]` · ห้าม push/force/rebase/amend ·
-   ห้าม `--no-verify` (pre-commit guard คือกันชนของทุกคน) · ทำงานบน branch ปัจจุบัน อย่าสร้าง/สลับ branch เอง
+5. **Git:** commit บ่อย, ข้อความ commit ขึ้นต้นด้วย tag ตัวเอง `[codex]` / `[zcode]` / `[oc-*]` · ห้าม push/force/rebase/amend ·
+   ห้าม `--no-verify` (pre-commit guard คือกันชนของทุกคน) · ทำงานบน branch ปัจจุบัน อย่าสร้าง/สลับ branch เอง ·
+   **Claude commit ลงท้ายด้วย `Co-Authored-By:` ตาม seat model ปัจจุบัน** (ตั้งแต่ 2026-07-04 = `Claude Opus 4.8
+   <noreply@anthropic.com>` — ไม่ใช่ Fable แล้ว; ไม่มี git config สำหรับ trailer นี้ เป็น message trailer ที่ใส่มือทุก commit)
 6. Python = portable: dot-source `scripts\use_python.ps1` ก่อน (ไม่มี system python)
 7. **หลัง commit ทุกครั้ง รัน `powershell -File D:\EA_LAB\scripts\make_status.ps1`** — regenerate
    STATUS.md + สำเนาขึ้น OneDrive ให้ user ดูจากมือถือ (ห้ามแก้ STATUS.md ด้วยมือ)
@@ -111,8 +113,10 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
 - **งานคิด/ทิศทาง/verdict/ออกแบบ order → Opus-seat** (ชั่วโมงของ seat ควรจบที่ "order ชุดใหม่ +
   verdict ผลเก่า" ไม่ใช่รัน backtest เอง). งาน money/risk-logic ใหม่ + architecture + root-cause ที่เคย
   escalate ให้ deep-reasoner → **Opus-seat ทำเองเลย** (มันคือ tier บนสุดแล้ว ไม่มีที่ให้ escalate ต่อ).
-- **batch run ล้วน (backtest/optimize/parse) → เลี่ยง ChatGPT quota:** ให้ **ZCode (GLM เลนแยก)** หรือ
-  **qwen** ก่อน · จะใช้ **oc-btest ก็ได้แต่ให้อยู่ model ถูกสุดของ OpenClaw** (ดูข้อ oc-btest ด้านล่าง).
+- **batch run ล้วน (backtest/optimize/parse) → default = ZCode** (user directive 2026-07-05: "ใช้ ZCode
+  เยอะๆ เพราะฟรี" — GLM เลนแยก ไม่กิน ChatGPT quota). qwen ก็ได้ถ้างานเล็ก · **oc-btest เฉพาะตอน ZCode
+  ไม่ว่าง** + model ถูกสุด. **ทุก order ที่ Claude เขียน ต้องระบุ "👉 แนะรัน: <agent>" เสมอ** (default ZCode
+  สำหรับ batch, oc-dev/Codex สำหรับ code) — user เลือก override ได้ แต่ให้มี default ที่ประหยัดสุดติดมาทุก order.
 - **code ตาม pattern (มี cage tpl_regression) → oc-dev / Codex / Sonnet** — งาน code คุ้มค่า ChatGPT quota.
 - **Claude quota หมด + มี order ค้าง → Codex** (code/ผสม) หรือ **ZCode** (รันล้วน) เหมือนเดิม.
 

@@ -308,14 +308,20 @@ verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัด
    (เดิมไม่มีเลย) + attach checklist + baked plateau-sensitivity/corr flags
 3. **stock taskboard:** ORDER-024 (Recovery-mode A/B บน AUDNZD champion = hunt mine #1, ready)
 
-**คิว taskboard ตอนนี้:** ORDER-024 OPEN (Recovery A/B, batch — รอ agent token หรือ Claude รันเอง)
+**✅ ORDER-024 reviewed (Claude/Opus, 2026-07-05 — run by oc-dev):** Recovery A/B บน AUDNZD →
+**Mode 81 (Light) = ❌ REJECT ปิดถาวร** · **Mode 82 (Adaptive) = 🟡 PROMISING** (PF 1.56→1.73 แต่ 2024
+พลิกลบ + closed-DD ไม่จับ floating) ยังไม่ adopt, demo คง Recovery OFF → ORDER-025 ตรวจต่อ ·
+**routing rule ใหม่ (user 2026-07-05): default batch = ZCode (ฟรี), ทุก order ระบุ "👉 แนะรัน" (AGENTS §5)**
+
+**คิว taskboard ตอนนี้:** ORDER-025 OPEN (Adaptive Recovery: Model-4 floating DD + generalize ข้าม symbol
+· 👉 แนะรัน ZCode)
 **งาน session หน้า (เรียงลำดับ):**
-1. **ถ้า user attach 6 EA แล้ว** → จด demo start date จริง + set demo-clock + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
-2. **hunt mine #1 ต่อ** (ตาม ROADMAP §2.5 — mold mechanics ก่อน treasure): รัน ORDER-024 → ถ้า Recovery
-   ช่วย = mold upgrade · ถัดไป probe Boss_12/13 entries บน FX (mold entries ที่ยังไม่ sweep)
-3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout น่าสนใจสุด แต่ยังไม่ถึงคิว
-   (mine #1 ต้องหมดก่อนตามลำดับ user-confirmed)
-4. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
+1. review ORDER-025 → ตัดสิน Recovery mode 82 = mold upgrade หรือปิดถาวร (เกณฑ์: floating DD ไม่พุ่ง + PF-lift generalize)
+2. **hunt mine #1 ต่อ:** ถัดจาก Recovery → probe Boss_12/13 entries บน FX (mold entries ที่ยังไม่ sweep)
+3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (ยังไม่ถึงคิว)
+4. **demo (ค้างไว้ตาม user 2026-07-05 "ยังไม่ว่าง"):** เมื่อ attach 6 EA แล้ว → จด start date + set demo-clock +
+   นัด /ea-monitor ~2 สัปดาห์ · เอกสาร cohort พร้อมแล้วใน DEMO_DEPLOYMENT_PLAN
+5. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
