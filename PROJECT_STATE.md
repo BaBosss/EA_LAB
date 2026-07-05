@@ -323,16 +323,23 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 ไป non-FX (metals/index)** ไม่ใช่ probe entry ที่ตายแล้ว. ติดบล็อก = `_2_BasketTP_Money` ($ คงที่ ไม่ scale
 ข้าม instrument) → **ORDER-027 (ATR-TP mold upgrade) = prerequisite**
 
-**คิว taskboard ตอนนี้:** ORDER-027 OPEN (`_2_BasketTP_ATRmult` mold upgrade · ทำได้: Codex/Claude/oc-dev
-❌ZCode · 👉 Codex-direct · ต้อง tpl_regression CLEAN)
+**✅ ORDER-027 reviewed + accepted (Claude/Opus verify tpl_regression CLEAN เอง):** `_2_BasketTP_ATRmult`
+(ATR-scaled basket TP, additive) ทำงานถูก inert-on-default. **แล้ว Claude รัน XAU scan ต่อ → 2 การค้นพบ:**
+- **🥇 XAU GridLog มีชีวิต! PF 1.76 in-sample (@mult=1, 0.25x, +$5,569)** = **non-FX diversifier ตัวแรก**
+  (ทอง vs พอร์ต FX grid) — ⚠️ IN-SAMPLE + DD 18.73% สูง (de-scale ตอน promote) + ทอง+grid ต้อง Model-4 + สงสัยสูงสุด
+- **🐛 bug ตัวที่ 2 = `_33_SL_MaxPips` ไม่ portable** (XAU 2-digit → SL cap เพี้ยนเป็น $1.50 → รอบแรก PF 0.29
+  = artifact). workaround = ตั้ง `=0` (ATR-SL คุมเอง). fix ถาวร = ORDER-029
+
+**คิว taskboard ตอนนี้:** ORDER-028 (XAU GridLog IS-optimize · 👉 ZCode heavy) · ORDER-029A (fix `_33_SL_MaxPips`
+portable, proposal-only · 👉 Codex · priority ต่ำ workaround มีแล้ว)
 **routing (user 2026-07-05):** ทุก order ระบุ "ทำได้: X · 👉 แนะ: Y" (AGENTS §5.1) · **Codex-direct ประหยัด
-กว่า OpenClaw** (quota เดียวกันแต่ OpenClaw มี overhead manager) → code งานส่ง Codex-direct เมื่ออยู่หน้าเครื่อง
+กว่า OpenClaw** · **ZCode ฟรีแต่ ~1 order หนัก/วัน**
 **งาน session หน้า (เรียงลำดับ):**
-1. review ORDER-027 (ATR-TP upgrade) → ถ้า CLEAN: เขียน ORDER-028 = **GridLog sweep บน XAU/XAG/indices**
-   (ขยายตัวชนะไป non-FX = diversification จริง · 👉 ZCode heavy 1/วัน)
-2. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout (mine #1 non-FX ก่อน)
-3. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach 6 EA → จด start date + set demo-clock + นัด /ea-monitor ~2 สัปดาห์
-4. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
+1. review ORDER-028 (XAU IS-opt) → plateau-center → เขียน OOS/year-split/MC/**Model-4** (ทอง+grid บังคับ M4) ·
+   ถ้าผ่านครบ = candidate ที่ 7 (non-FX, กระจายจาก AUD/JPY จริง)
+2. review ORDER-029A proposal → เคาะทาง fix `_33_SL_MaxPips`
+3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout
+4. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach → จด start date + set demo-clock + นัด /ea-monitor ~2 สัปดาห์
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md

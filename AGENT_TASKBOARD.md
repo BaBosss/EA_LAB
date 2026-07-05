@@ -1344,7 +1344,22 @@ Hedge อาจมีบทบาท — ตอนนั้นค่อยลด
 
 ---
 
-## ORDER-027 — mold upgrade: `_2_BasketTP_ATRmult` (basket TP แบบ ATR-scaled, additive) — `DONE(Codex, 2026-07-05 09:01 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode ห้ามแตะ source)** · 👉 **แนะ: Codex-direct** (code, ประหยัดกว่า OpenClaw) · ⚠️ **ต้องรัน tpl_regression → CLEAN ก่อน commit**
+## ORDER-027 — mold upgrade: `_2_BasketTP_ATRmult` (basket TP แบบ ATR-scaled, additive) — `REVIEWED(Claude/Opus, 2026-07-05 — ✅ ACCEPT, verified tpl_regression CLEAN เอง; scan ต่อเจอ XAU GridLog มีชีวิต + bug ตัวที่ 2)` · ทำได้: Codex/Claude/oc-dev · 👉 Codex-direct
+
+**VERDICT (Claude/Opus): ✅ ORDER-027 ACCEPT.** verify เอง 3 ชั้น: (1) code inspection — `Exit_BasketTargetMoney()`
+คืน `_2_BasketTP_Money` เดิม literally เมื่อ mult=0 (default) = inert พิสูจน์ได้ (2) trades baseline เท่าเดิม
+เป๊ะ 168/164/107 = ถ้า logic เพี้ยนจะปิด basket เร็ว trades ต้องเปลี่ยน (3) **รัน tpl_regression เอง = CLEAN
+ทั้ง 3**. baseline ขยับ (net นิดเดียว) = data refill ระหว่าง 07-03→07-05 ไม่ใช่ bug (Codex ทำ pristine-rerun
+ยืนยันแล้ว, ผม verify ซ้ำ). A/B: ATR-TP ทำงานได้จริง บน FX แย่กว่า fixed-$ (คาดไว้ — fixed-$ จูนมาสำหรับ FX).
+
+**🔬 CONTINUE (Claude รัน XAU scan เอง เพื่อ scope ORDER-028): 2 การค้นพบใหญ่**
+- **🐛 bug ตัวที่ 2 = `_33_SL_MaxPips` ไม่ portable:** ใช้ `pip=(digits==3||5?10:1)×Point`. XAU=2 digits →
+  pip=Point=0.01 → cap 150×0.01 = **SL cap $1.50 บนทอง (ทองวิ่ง $1.50 ในวินาที)** → ไม้โดน stop รัวๆ.
+  รอบแรกทดสอบ XAU ได้ PF 0.29 = artifact ของ SL cap พัง ไม่ใช่กลยุทธ์. → **ORDER-029 (แก้ mold ให้ portable)**
+- **🥇 XAU GridLog มีชีวิตจริง (ปิด SL cap → ATR-SL คุม):** `_2_BasketTP_ATRmult=1` = **PF 1.76 / 508t /
+  net +$5,569 / eqDD 18.73%** (@0.25x lot, full-window in-sample) · mult ต่ำดีกว่า (2=1.65, 3.5=1.54, 5=0.96) ·
+  **= non-FX diversifier ตัวแรกที่เป็นไปได้** (ทอง vs พอร์ต FX grid เดิม). ⚠️ IN-SAMPLE + DD สูง (ต้อง de-scale
+  ตอน promote — edge=PF scale-invariant, DD=resize) + **ทอง+grid = ต้อง Model-4 + สงสัยสูงสุด** → ORDER-028 validate เต็ม
 
 **ทำไม (ปลดล็อก hunt ที่ EV สูงสุดของ mine #1):** GridLog = กลไกเดียวที่มี edge จริง (6 demo EA) →
 ต่อยอดที่คุ้มสุด = **ขยายไป non-FX (metals/index)** เพื่อกระจาย instrument class. **แต่ติดบล็อก:**
@@ -1382,6 +1397,49 @@ entries ถูก deprioritize** (FX breakout/reversion = optimize-killed แล
   net 431.50, EqDD 11.17%** (ต่าง **−7 trades / −3.6%**). Reports:
   `AB_order027_audnzd_atrtp32_BASE.htm` + `AB_order027_audnzd_atrtp32_VAR.htm`.
 - coarse tuning raw ก่อนถึงค่า 32: mult 5→510 trades, 25→244, 35→169 (เก็บใน `ab_results.csv`).
+
+---
+
+## ORDER-028 — XAU GridLog: IS-optimize (axis tuning สำหรับทอง) — `OPEN` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (optimizer หนัก = 1 slot/วัน) (role: batch, เลน 2)
+
+**ทำไม:** scan (ORDER-027) พบ XAU GridLog มีชีวิต (PF 1.76 in-sample @ mult=1) หลังปิด SL-cap ที่พัง —
+แต่นั่นใช้ axes ของ AUD (StepATR=1.4/DistATR=1.4) transplant มา ต้อง IS-optimize สำหรับทองเองก่อนเชื่อ
+(กฎ pipeline เดียวกับ Boss_14: IS-opt → fresh OOS → MC → Model-4)
+
+**สร้าง opt set** `Boss14_GridLog_XAU_opt1.set` — base = `Boss14_GridLog_AUDNZD_DEMO.set` แก้:
+`_2_BasketTP_Money=0` · **`_33_SL_MaxPips=0`** (ปิด cap ที่พังบนทอง — สำคัญ!) · `_0_Magic=990301` ·
+แล้วใส่บรรทัด optimize (`||start||step||stop||Y`):
+- `_9_StepATRmult` = 1.4, 2.2, 3.0
+- `_14_DistAtrMult` = 1.4, 2.2, 3.0
+- `_2_BasketTP_ATRmult` = **0.5, 1.0, 2.0** (scan ชี้ว่า mult ต่ำดีกว่าบนทอง — โฟกัสช่วงต่ำ)
+- `_14_Direction` = 1, 2 (ทั้ง BUY/SELL)
+- lock input อื่นทุกตัวด้วย `||N` (บทเรียน ORDER-008B: MT5 auto-sweep bool → row ระเบิด)
+```powershell
+powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol XAUUSD -Period H1 -FromDate 2023.01.01 -ToDate 2025.06.30 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_XAU_opt1.set' -ReportName BOSS14_OPT_XAU_IS -TimeoutSec 21600 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+```
+**Acceptance:** XML ครบทุก row · จำนวน pass ที่ PF≥1.2 AND Trades≥60 + top-8 ดิบ (Pass/PF/Trades/EqDD%/4 params) ·
+commit `[tag] ORDER-028 done`
+**ห้าม:** verdict/เลือก plateau-center (Claude ทำ) · ⚠️ ทอง+grid = DD สูงเป็นปกติ, รายงานดิบ อย่ากรองด้วย DD
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-029 — mold fix: `_33_SL_MaxPips` ให้ portable ข้าม instrument (bug จาก ORDER-027 scan) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **ต้องรัน tpl_regression CLEAN** · (priority: ต่ำ — workaround = ตั้ง =0 ใช้ได้แล้ว)
+
+**ทำไม:** `_33_SL_MaxPips` (ExitManager.mqh ~40) ใช้ `pipPrice=(digits==3||5?10:1)×Point` → บน XAU (2 digits)
+= Point = 0.01 → cap 150 กลายเป็น **$1.50** (ควรเป็นหลัก $ ใหญ่). ทำให้ SL cap พังบน non-FX. เป็น fixed-pip
+param ตัวที่ 2 ที่ไม่ scale (ตัวแรก = fixed-$ TP แก้แล้วใน 027). **workaround ตอนนี้: ตั้ง `_33_SL_MaxPips=0`
+(ปิด) ใน non-FX set** — ATR-SL คุมเอง portable อยู่แล้ว. แต่ default ที่พังบน XAU = foot-gun ควรแก้ถาวร
+
+**สเปค (additive, default พฤติกรรมเดิม):** เปลี่ยนนิยาม cap ให้ digit-aware สำหรับ 2-digit metals หรือ
+(ดีกว่า) เพิ่มโหมด **ATR-relative cap** — แต่ทางที่ง่าย+ปลอดภัยสุด: ถ้า `_33_SL_MaxPips>0` แต่ digits∉{3,5}
+(เช่น XAU 2-digit) ให้ตีความ pip เป็น `10×Point` เหมือนกัน (ให้ 150→$15 แทน $1.50) **หรือ** เพิ่ม input
+`_33_SL_MaxATRmult` (ATR-relative cap, default 0=ใช้ pip เดิม) แบบเดียวกับ ORDER-027. Claude เลือกทางตอน review
+proposal — **order นี้ให้ Codex เสนอ 2 ทางเลือก + ผลกระทบ ไม่ต้อง implement จนกว่า Claude เคาะ** (stage A แบบ ORDER-008A)
+**Acceptance:** ข้อเสนอ 2 ทาง + จุดกระทบ (บรรทัดไหน, EA ไหน) · ยังไม่แตะ core · commit `[tag] ORDER-029A done`
+
+**ผล:** _(รอ)_
 
 ---
 
