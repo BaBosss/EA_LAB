@@ -1,0 +1,77 @@
+; Boss14_GridLog_XAU_DEMO_exness3d.set
+; XAU GridLog candidate #7 (validated ORDER-027..031) — Exness DEMO, XAUUSD 3-DIGIT variant.
+; ONLY change vs Boss14_GridLog_XAU_DEMO.set = _0_Slippage 20 -> 300 (3-digit point = 0.001,
+; so 20 points was only $0.02 tolerance; grid fills on gold need more). Everything else is
+; ATR-relative (Step/Dist/SL by ATR mult, basket TP by ATR*tickvalue) = broker/digit agnostic,
+; the EA reads _Digits/_Point at runtime. Lot 0.05 (de-scaled half vs FX cohort for gold DD).
+;
+; Mode selectors
+ExitMode=22
+SLMode=33
+FirstLotMode=41
+LotProg=55
+TradeDir=60
+TrendFilter=70
+RecoveryMode=80
+HedgeMode=0
+DryRun=false
+_0_BarOpenOnly=true
+;
+; 9x Stack
+StackMode=92
+StackConfirm=0
+_9_StepUseATR=true
+_9_StepATRmult=3.0
+_9_StepPoints=300
+_9_StepMinPips=20.0
+_9_StepATRShift=1
+_9_MaxLevels=6
+;
+; 14 Entry: GridLog (BUY-only, gold long bias)
+_14_Direction=1
+_14_DistAtrMult=1.4
+_14_MinDistPips=20.0
+;
+; 2x Exit/TP + partial close (ATR-scaled basket TP)
+_22_TP_ATRmult=3.0
+_2_SuppressLegTP=true
+_2_BasketTP_Money=0
+_2_BasketTP_ATRmult=1.0
+_2_PartialPct1=50.0
+_2_PartialFrac1=0.30
+_2_PartialPct2=75.0
+_2_PartialFrac2=0.30
+;
+; 3x Stop loss (ATR-relative; fixed-pip cap OFF = portable across digits)
+_33_SL_ATRmult=4.0
+_33_SL_MaxPips=0
+_33_AdaptiveON=false
+_32_SL_Money=0
+;
+; ATR (signal + risk)
+_0_ATR_Period=14
+_0_ATR_TF=0
+_3_RiskATR_Period=14
+_3_RiskATR_TF=0
+;
+; 4x/5x Money management (0.05 lot = de-scaled for gold DD)
+_41_FixedLot=0.05
+_55_LogPowerFactor=1.3
+_55_UseLnNotLog10=true
+_4_DdAdaptiveOn=false
+_4_DdTier1Pct=10.0
+_4_DdTier1Mult=1.2
+_4_DdTier2Pct=20.0
+_4_DdTier2Mult=1.5
+_4_DdHardCapMult=1.5
+;
+; 0x Protection cage (KillDD 25%)
+ProtectLevel=2
+RC_MaxLot=3.0
+RC_RecMultMax=1.5
+RC_MaxLevelsOverride=6
+;
+; General — Slippage bumped for 3-digit gold (20 -> 300 points = ~$0.30 fill tolerance)
+_0_Magic=990207
+_0_Slippage=300
+_0_MaxSpread=0

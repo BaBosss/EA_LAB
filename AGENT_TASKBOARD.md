@@ -1773,7 +1773,8 @@ commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
 **ทำไม:** treasure ที่ user จำได้อาจเป็น MT4 (2,286 = ส่วนใหญ่). prior 0/63 แต่ user มี signal → คุ้ม smoke
 **งาน:** เหมือน 035 (basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1, M2 กรอง 0-trade → M1 confirm ทุก symbol ที่เทรด)
 แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** → window M2 2026.04-07,
-M1 2026.03-07 · **stage ก้อน (folder ใหม่→เก่า / 200 ตัว)** อย่ารันรวด ex4 คำสั่งเดียว (⚠️ MT4 symbol suffix อาจ
+M1 2026.03-07 · **stage 50 ตัว/batch** (user 2026-07-05: 50×4 symbol = ~200 run/batch พอดี, MT4 ช้ากว่า MT5 +
+checkpoint/resume ง่าย) เรียง folder ใหม่→เก่า · commit ต่อ batch · อย่ารันรวด (⚠️ MT4 symbol suffix อาจ
 ต่าง เช่น XAUUSDm/EURUSD. — ให้ driver match symbol ที่ broker Meta4 มีจริง ก่อนรัน ถ้าไม่มีตัวไหนข้าม+note)
 **Acceptance:** ต่อ stage: CSV + tier เดียวกับ 035 (**Tier A** PF>1&trades≥20&eqDD<40% · **Tier B** PF>1&eqDD≥40% grid-trap ·
 **Reject** PF≤1/trades<20) · list Tier A+B · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict

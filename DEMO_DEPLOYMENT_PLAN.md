@@ -2,7 +2,7 @@
 
 > ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **live portfolio** (EA/magic/lot/judge/monitor) เท่านั้น
 อัพเดท: 2026-07-05 | สถานะ: 🟢 RUNNING — **9 EA** บน account 10,000 cent (judge 2026-09-22) +
-🆕 **Boss_14 cohort 6 EA** บน account demo ที่ 2 (60,000 cent, attach ~2026-07-05 — ดูsection ล่าง)
+🟢 **Boss_14 cohort 7 EA** บน Exness demo (60,000 USD) — ✅ **ATTACHED 2026-07-05, clock เดินแล้ว** (ดูsection ล่าง)
 
 > **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
 > ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
@@ -38,11 +38,16 @@
 
 ---
 
-## 🆕 Boss_14 GridLog cohort — บัญชี demo ที่ 2 (60,000 cent, แยกจาก 9 EA เดิม)
+## 🟢 Boss_14 GridLog cohort — Exness demo (60,000 USD, 7 EA) — ✅ LIVE 2026-07-05
 
-> **บัญชีคนละก้อนกับ 9 EA ข้างบน** (ตาม scrutiny round-2: 6×10k = ให้ risk-threshold ต่อ EA ตรงกับที่
-> validate) · ทุกตัว = **EA เดียวกัน `EALabTpl\Boss_14_GridLog`** ต่างแค่ symbol/set/magic · TF = **H1 ทุกตัว**
-> · **demo clock เริ่มนับวันที่ attach** (แผน user: 2026-07-05) → judge เร็วสุด +3 เดือน
+> **บัญชีคนละก้อนกับ 9 EA ข้างบน** (Exness demo, 60,000 USD, 7 EA) · ทุกตัว = **EA เดียวกัน
+> `EALabTpl\Boss_14_GridLog`** ต่างแค่ symbol/set/magic · TF = **H1 ทุกตัว**
+> · ✅ **ATTACHED 2026-07-05 → demo clock เริ่มนับ → judge เร็วสุด 2026-10-05** (3 เดือน)
+> · 📅 **/ea-monitor ครั้งแรก ~2026-07-19** (2 สัปดาห์ · ส่ง live_deals.csv ตาม §6)
+> · ⚠️ **XAUUSD 3-digit (Exness) → ใช้ set `Boss14_GridLog_XAU_DEMO_exness3d.set`** (slippage 300, ต่างจาก
+>   backtest 2-digit — core ATR-relative เหมือนเดิม) · 6 FX ใช้ `*_DEMO.set` เดิมได้ (ATR-relative)
+> · ❓ **CONFIRM account type:** user บอก "60,000 USD" → ถ้า **Standard 60k USD** = ~$8.5k/EA ≈ validation
+>   deposit $10k (sizing ตรง ✅) · ถ้าเป็น **cent account** lots (0.10 FX / 0.05 XAU) จะ oversize มาก → รีบแจ้ง Claude
 
 | # | Symbol | Magic | Set File (`ea_template\sets\`) | full-confirm PF | หลักฐาน/ธง |
 |---|---|---|---|---|---|
@@ -52,7 +57,7 @@
 | 4 | AUDCAD | 990204 | `Boss14_GridLog_AUDCAD_DEMO.set` | 1.88 | OOS 4.30 ทุกปีบวก · ที่ราบ (sensitivity 5/8) |
 | 5 | CADJPY | 990205 | `Boss14_GridLog_CADJPY_DEMO.set` | 1.89 | 🔴 **สันเขา (sensitivity 2/8) + thin 77t** → **size เบากว่าเพื่อน + จับตาพิเศษ** |
 | 6 | EURUSD (SELL) | 990206 | `Boss14_GridLog_EURUSD_DEMO.set` | 1.97 | ฝั่ง SELL (diversity) · ที่ราบปานกลาง |
-| 7 | **XAUUSD (ทอง)** | 990207 | `Boss14_GridLog_XAU_DEMO.set` | 1.42 (OOS 1.15) | 🆕 **non-FX diversifier** (2026-07-05) — ผ่านครบ pipeline (IS-opt→OOS ทุกปีบวก→MC ruin0%→**Model-4 +$5078 edge รอด real ticks**) · **lot 0.05 (de-scaled ครึ่ง เพราะ DD ~2x FX)** · ⚠️ **leg เสี่ยงสุด จับตา DD พิเศษ** · SL cap off (ATR-SL คุม) · **corr ยืนยัน diversifier: AUDNZD -0.59 / CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง จับตา) · ไม่มีคู่ >0.60** |
+| 7 | **XAUUSD (ทอง)** | 990207 | **`Boss14_GridLog_XAU_DEMO_exness3d.set`** (3-digit, slippage 300) | 1.42 (OOS 1.15) | 🆕 **non-FX diversifier** (2026-07-05) — ผ่านครบ pipeline (IS-opt→OOS ทุกปีบวก→MC ruin0%→**Model-4 +$5078 edge รอด real ticks**) · **lot 0.05 (de-scaled ครึ่ง เพราะ DD ~2x FX)** · ⚠️ **leg เสี่ยงสุด จับตา DD พิเศษ** · SL cap off (ATR-SL คุม) · **corr ยืนยัน diversifier: AUDNZD -0.59 / CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง จับตา) · ไม่มีคู่ >0.60** |
 
 **Config ร่วม:** ทุก set = 0.25x (0.10 lot base) · `_4_DdAdaptiveOn=false` (ปิดเพราะบัญชีแชร์ DD จะปน) ·
 sizing นี้ = **วัดพฤติกรรม ไม่ใช่ผลตอบแทน** — ตัวเลข MC worst 6-9% เป็นที่ 0.25x เท่านั้น (live 3-4x → ~25-35%)

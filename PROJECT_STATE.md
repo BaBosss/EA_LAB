@@ -375,10 +375,10 @@ CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
 
 **🗺️ แผนที่ต้องทำ — เรียง priority (2026-07-05):**
-- **P0 = critical path (รอ user): DEMO ATTACH 7 EA** → บัญชี 60k · ทุกอย่าง validate + set + corr ครบแล้ว
-  รอแค่ user attach → **3-month demo clock เริ่มนับ** (นี่คือ gate เดียวสู่ validation จริง — งานอื่นรองทั้งหมด).
-  เมื่อ attach: จด start date + set demo-clock + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์. XAU #7 ต้อง de-scale
-  บัญชี 60k อาจต้องปรับ (7 EA แทน 6 — XAU lot 0.05 = ครึ่ง unit จึงเกือบพอดี, user เคาะตอน attach)
+- **P0 = ✅ DONE 2026-07-05: DEMO ATTACHED!** 7 EA บน Exness demo 60,000 USD · **demo clock เดินแล้ว →
+  judge เร็วสุด 2026-10-05** · 📅 **/ea-monitor ครั้งแรก ~2026-07-19** (2 สัปดาห์ · user ส่ง live_deals.csv ตาม §6) ·
+  XAU ใช้ set 3-digit `Boss14_GridLog_XAU_DEMO_exness3d.set` (slippage 300) · ❓ confirm account type
+  (Standard 60k USD = sizing ตรง validation / ถ้า cent = oversize รีบแจ้ง) → **โหมด operate เริ่มแล้ว**
 - **P1 = autonomous idle-compute: ORDER-035 (MT5 203) → 036 (MT4 1,318 stage)** ล่า treasure ที่ user
   เชื่อว่ามี · 👉 oc-dev/Codex · รันข้ามคืนได้ · survivor (Tier A: PF>1&trades≥20&DD<40%; Tier B grid-trap แยก) → Claude คัดเข้า intake funnel
 - **P2 = hunt ต่อ (mine #1 ใกล้หมด):** loss-mgmt ตาย · entries FX ตาย · XAU done · XAG parked · เหลือ:
