@@ -1701,7 +1701,7 @@ scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื�
 - validation: 1,521 rows = 1,521 unique hashes, ไม่มี blacklist-name leak, platform มีเฉพาะ ex4/ex5,
   และ `guess_symbol` ตรงกฎ gold/XAU→XAUUSD ทุกแถว.
 
-## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `DONE (Codex, 2026-07-05 19:50 ICT)` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
+## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `REVIEWED(Claude/Opus, 2026-07-05 — 39 survivor, ส่วนใหญ่กับดัก Model-1; คัด 3 → ORDER-037 artifact-check)` · ทำได้: Codex/oc-dev (ดู REVIEW note ใต้ตาราง survivor)
 
 **งาน (reuse `smoke_all.ps1`):** ต่อ ex5: copy → `<Meta5b>\MQL5\Experts\_smoke\` → Model 2 quick 3 เดือน
 (2026.04-2026.07) basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1 (user 2026-07-05: ครบ character ทอง/EUR/เยน/AUD-cross)
@@ -1777,6 +1777,34 @@ M1 2026.03-07 · **stage ก้อน (folder ใหม่→เก่า / 200 
 ต่าง เช่น XAUUSDm/EURUSD. — ให้ driver match symbol ที่ broker Meta4 มีจริง ก่อนรัน ถ้าไม่มีตัวไหนข้าม+note)
 **Acceptance:** ต่อ stage: CSV + tier เดียวกับ 035 (**Tier A** PF>1&trades≥20&eqDD<40% · **Tier B** PF>1&eqDD≥40% grid-trap ·
 **Reject** PF≤1/trades<20) · list Tier A+B · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-035-REVIEW note (Claude/Opus 2026-07-05): 39 survivor — ส่วนใหญ่กับดักคุ้นเคย, คัด 3 ตัวเข้า ORDER-037
+
+**สรุป:** 36 Tier A + 3 Tier B. **อ่านด้วยความสงสัยสูง — Model-1 หลอก grid/tight-TP** (บทเรียนหลักของแล็บ):
+- **tight-TP artifact suspects** (PF สูง+DD ต่ำมาก+เทรดถี่): IR Whale 3.94/0.75%/206t · The One 2.32/3.7%/2941t ·
+  Arbitrage 1.46/2.4%/1170t · EX39 3.46/9.96% — ต้อง Model-4 + widen-TP ก่อนเชื่อ
+- **grid DD สูง (30-60%):** North East Way · continue v06 · Black Dragon · IRSI martingale — grid family
+- **หมดอายุ/deploy ไม่ได้:** EA GOLD CENTER "Expried 11.04.2025" · IR Whale "Expiry" → เช็คก่อนเสียแรง
+- **คัดเข้า ORDER-037 (top robust, ไม่ใช่ grid ชัด):** (oh) pun fix lot v05 (4 sym fixed-lot) · EA_GapinFX (gap, 2 sym PF2+) · North East Way (4 sym PF2+ แต่ DD30%)
+
+## ORDER-037 — artifact-check top survivors จาก mass-smoke (Model-4 + expiry) — `OPEN` · **ทำได้: Codex · oc-dev** (deploy .ex5 + run) · 👉 **แนะ: oc-dev/Codex** · ⚠️ **Model-4 รันเดี่ยว** (role: code+batch, เลน 2)
+
+**ทำไม:** survivor เป็น Model-1 บน EA ที่ส่วนใหญ่ grid/tight-TP → Model-1 หลอกได้ (Elephant PF 85→1.41).
+ด่านแรกก่อนลงแรง intake funnel = **Model-4 every-tick** (จับ tight-TP collapse) + เช็คหมดอายุ
+**งาน — ต่อ EA (3 ตัว, ใช้ .ex5 ที่ deploy จาก 035 ใน `_smoke\`):**
+| EA | symbol ที่ดีสุด (M1) | เช็ค |
+|---|---|---|
+| (oh) pun fix lot v05 | USDJPY (1.63) + EURUSD (1.63) | Model-4 12mo — PF ร่วงไหม (tight-TP?) |
+| EA_GapinFX_MT5 | USDJPY (2.74) | Model-4 12mo + หา source เช็ค gap logic |
+| North East Way v1.309 | EURUSD (2.03) | Model-4 12mo + เช็ค "fix" = หมดอายุไหม + DD จริง |
+ขั้นตอน: (1) เช็คชื่อ/journal ว่าหมดอายุ/locked ไหม — ถ้าใช่ note+ข้าม (2) Model-4 every-tick 2025.07-2026.07
+บน symbol นั้น เทียบ M1 · (3) full-window 2023-2026 Model-1 + year-split (edge ยืนยาว+ทุกปีไหม)
+**Acceptance:** ต่อ EA: M1 vs M4 (PF/trades/DD) + full year-split + สถานะ expiry · commit `[tag] ORDER-037 done`
+**ห้าม:** verdict (Claude ตัดสิน: M4 PF ไม่ร่วง + ทุกปีบวก = เข้า intake funnel เต็ม; ร่วง = artifact ปิด)
 
 **ผล:** _(รอ)_
 

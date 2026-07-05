@@ -364,6 +364,12 @@ Model-4 คือด่านที่แยก "grid มี edge จริง" 
 
 **✅ ORDER-034 reviewed:** worklist mass-smoke พร้อม = **1,521 tradeable (ex5 203 + ex4 1,318)** → 035/036 unblocked
 
+**✅ ORDER-035 reviewed (Claude/Opus 2026-07-05): mass-smoke MT5 → 39 survivor แต่ส่วนใหญ่กับดัก Model-1**
+(tight-TP artifact suspect: IR Whale 3.94/DD0.75%, The One 2.32/2941t · grid DD30-60%: North East Way,
+continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 → ORDER-037 Model-4 artifact-check:** ⭐pun fix lot v05
+(4-sym fixed-lot 1.5-1.6) · EA_GapinFX (gap 2-sym PF2+) · North East Way (4-sym PF2+/DD30%). **036 MT4 = พรุ่งนี้.**
+treasure ที่ user จำได้อาจอยู่ในนี้ — ต้องผ่าน Model-4 ก่อน (Elephant lesson PF85→1.41)
+
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
