@@ -301,10 +301,21 @@ verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัด
 (baseline PF 2.49 คือจุดพีคไม่ใช่ที่ราบ, 6/8 ทิศตกฮวบ) — **หลักฐานอิสระคนละมิติมายืนยันธง "fill-sensitive"
 เดิมจาก Model-4 confirm ทางเดียวกัน → มั่นใจแล้วว่า EURJPY ต้อง size เบากว่าเพื่อนตอน promote จริง**
 
-**งาน Claude session หน้า:** ORDER-021/022/023 ครบทั้ง 3 แล้ว (ทำเองหมดเพราะ Codex/ZCode token หมด) →
-ต่อไป: ตัดสินว่า treasure ตัวไหนจาก ORDER-021 คุ้ม build (candle-pattern gate กับ retest-zone ดูน่าสนใจ
-สุด) · เอา plateau-sensitivity ผลไปปรับ sizing-plan ก่อน promote (EURJPY/CADJPY เบากว่าเพื่อน) →
-(ถ้า user attach 6 EA เข้า account 60k แล้ว) จด demo start date + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+**✅ 2026-07-05 (Opus session แรก): จัดระเบียบหลัง Fable ออก — เสร็จ 3 อย่าง:**
+1. **workflow ทีมรื้อใหม่** (seat=Opus, Codex=สมองอิสระ review เฉพาะงานแพง, batch เลี่ยง ChatGPT quota) →
+   `AGENTS.md` §1.5+§5 · `CLAUDE.md` · Decision log · memory `[[agent-workflow-post-fable]]`
+2. **demo go-live prep:** เติม cohort 6 EA (990201-206) บนบัญชี 60k ลง `DEMO_DEPLOYMENT_PLAN.md`
+   (เดิมไม่มีเลย) + attach checklist + baked plateau-sensitivity/corr flags
+3. **stock taskboard:** ORDER-024 (Recovery-mode A/B บน AUDNZD champion = hunt mine #1, ready)
+
+**คิว taskboard ตอนนี้:** ORDER-024 OPEN (Recovery A/B, batch — รอ agent token หรือ Claude รันเอง)
+**งาน session หน้า (เรียงลำดับ):**
+1. **ถ้า user attach 6 EA แล้ว** → จด demo start date จริง + set demo-clock + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์
+2. **hunt mine #1 ต่อ** (ตาม ROADMAP §2.5 — mold mechanics ก่อน treasure): รัน ORDER-024 → ถ้า Recovery
+   ช่วย = mold upgrade · ถัดไป probe Boss_12/13 entries บน FX (mold entries ที่ยังไม่ sweep)
+3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout น่าสนใจสุด แต่ยังไม่ถึงคิว
+   (mine #1 ต้องหมดก่อนตามลำดับ user-confirmed)
+4. cadence: ~1 concept ใหม่/สัปดาห์ (คอขวด = validate ไม่ใช่ไอเดีย)
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md

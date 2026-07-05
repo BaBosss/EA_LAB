@@ -1157,6 +1157,32 @@ CADJPY > EURJPY (สันเขาทั้งคู่)
 
 ---
 
+## ORDER-024 — Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) — `OPEN` (role: oc-btest/ZCode, เลน 2 — batch ล้วน)
+
+**ทำไม (hunt queue mine #1 = แกนกลไกในแม่พิมพ์ที่ยังไม่ sweep):** โหมด Recovery 81/82/83 + HEDGE_LOCK
+สร้างไว้ตั้งแต่ 2026-07-03 แต่ **ไม่เคยผ่าน backtest ใดๆ** (PROJECT_STATE: "เปิดใช้ครั้งแรก = validate
+เหมือน mechanism ใหม่"). คำถามที่ตอบได้ถูกสุด + info มากสุด: **เปิด Recovery บน config ที่ชนะแล้ว
+(AUDNZD = แชมป์ ที่ราบสมบูรณ์) ช่วยหรือพัง?** ถ้าช่วยโดย DD ไม่บวม = mold-wide upgrade · ถ้าพัง = ปิด
+คำถามนี้ถาวร. ทำ AUDNZD ตัวเดียวก่อน (แชมป์ = สัญญาณชัดสุด) — ไม่ต้องรัน 6 ตัว
+
+**งาน — 3 variants บน full window** (2023.01–2026.07, Model 1, เลน 2) จาก `Boss14_GridLog_AUDNZD_DEMO.set`
+แก้ **ค่าเดียว** `RecoveryMode`:
+1. `RecoveryMode=80` (OFF = baseline, ยืนยันตรงกับ full-confirm เดิม 1.56/195t)
+2. `RecoveryMode=81` (Light)
+3. `RecoveryMode=82` (Adaptive)
+(สร้าง set ใน `_mt5_auto\ab_sets\` ชื่อ `AUDNZD_REC<80/81/82>.set` · ReportName `REC_AUDNZD_V<mode>` ·
+`_8_` recovery params ปล่อย compiled default — นี่คือ first-look ยังไม่ tune)
+
+**Acceptance:** ตาราง 3 แถว: mode | PF | trades | eqDD% | net · + note ว่า variant 80 ตรง baseline เดิมไหม
+(ถ้าไม่ตรง = set/ค่าเพี้ยน หยุดรายงาน) · commit `[tag] ORDER-024 done`
+**ห้าม:** verdict — เกณฑ์ Claude: Recovery ผ่านต่อเมื่อ PF ขึ้น **และ** eqDD ไม่เกิน baseline +50% ·
+DD บวมโดย PF ไม่ขึ้น = ปิดคำถาม Recovery ถาวร (mechanism ไม่คุ้ม) · ⚠️ Recovery = เติมไม้แก้ →
+ต้องดู eqDD ทุก variant อย่าดูแค่ PF (กฎ grid/martingale: floating DD ซ่อน)
+
+**ผล:** _(รอ — agent token กลับมาค่อยหยิบ; Claude รันเองได้ถ้าจำเป็นเหมือน ORDER-022/023)*
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
