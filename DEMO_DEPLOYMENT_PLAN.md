@@ -1,7 +1,8 @@
 # Demo Deployment Plan — Portfolio v3
 
 > ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **live portfolio** (EA/magic/lot/judge/monitor) เท่านั้น
-อัพเดท: 2026-06-27 | สถานะ: 🟢 RUNNING — **7 EA active** + 2 pending deploy | รอ 2026-09-22 judge
+อัพเดท: 2026-07-05 | สถานะ: 🟢 RUNNING — **9 EA** บน account 10,000 cent (judge 2026-09-22) +
+🆕 **Boss_14 cohort 6 EA** บน account demo ที่ 2 (60,000 cent, attach ~2026-07-05 — ดูsection ล่าง)
 
 > **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
 > ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
@@ -34,6 +35,40 @@
 - EA 6: ถ้า XAU กลับเป็น bear trend ยาว → review BUY-only bias
 - EA 7: pause ถ้า DD > 1.5% หรือ 10 consecutive losses — เพิ่ม risk เป็น 1% หลัง 30 trades pass
 - EA 8: pause ถ้า monthly DD > 1% หรือ 10 consecutive losses — **อย่าเพิ่ม lot**
+
+---
+
+## 🆕 Boss_14 GridLog cohort — บัญชี demo ที่ 2 (60,000 cent, แยกจาก 9 EA เดิม)
+
+> **บัญชีคนละก้อนกับ 9 EA ข้างบน** (ตาม scrutiny round-2: 6×10k = ให้ risk-threshold ต่อ EA ตรงกับที่
+> validate) · ทุกตัว = **EA เดียวกัน `EALabTpl\Boss_14_GridLog`** ต่างแค่ symbol/set/magic · TF = **H1 ทุกตัว**
+> · **demo clock เริ่มนับวันที่ attach** (แผน user: 2026-07-05) → judge เร็วสุด +3 เดือน
+
+| # | Symbol | Magic | Set File (`ea_template\sets\`) | full-confirm PF | หลักฐาน/ธง |
+|---|---|---|---|---|---|
+| 1 | USDJPY | 990201 | `Boss14_GridLog_USDJPY_DEMO.set` | 1.51 | OOS 2.77/106t แน่นสุด · ⚠️ plateau มีรอยร้าว: **ห้าม tune step/TP ต่ำกว่าค่านี้** (พลิกขาดทุน) |
+| 2 | AUDNZD | 990202 | `Boss14_GridLog_AUDNZD_DEMO.set` | 1.56 | 🏆 ที่ราบสมบูรณ์ (sensitivity 8/8) + ทุกปีบวก = แข็งสุดในคอฮอร์ต |
+| 3 | EURJPY | 990203 | `Boss14_GridLog_EURJPY_DEMO.set` | 2.49 | 🔴 **สันเขา (sensitivity 1/8) + fill-sensitive** (M4 eqDD 10%) → **size เบากว่าเพื่อนตอน promote** |
+| 4 | AUDCAD | 990204 | `Boss14_GridLog_AUDCAD_DEMO.set` | 1.88 | OOS 4.30 ทุกปีบวก · ที่ราบ (sensitivity 5/8) |
+| 5 | CADJPY | 990205 | `Boss14_GridLog_CADJPY_DEMO.set` | 1.89 | 🔴 **สันเขา (sensitivity 2/8) + thin 77t** → **size เบากว่าเพื่อน + จับตาพิเศษ** |
+| 6 | EURUSD (SELL) | 990206 | `Boss14_GridLog_EURUSD_DEMO.set` | 1.97 | ฝั่ง SELL (diversity) · ที่ราบปานกลาง |
+
+**Config ร่วม:** ทุก set = 0.25x (0.10 lot base) · `_4_DdAdaptiveOn=false` (ปิดเพราะบัญชีแชร์ DD จะปน) ·
+sizing นี้ = **วัดพฤติกรรม ไม่ใช่ผลตอบแทน** — ตัวเลข MC worst 6-9% เป็นที่ 0.25x เท่านั้น (live 3-4x → ~25-35%)
+
+**Attach checklist (user ทำใน MT5 ของบัญชี 60k):**
+1. เปิด 6 ชาร์ต **H1** — USDJPY · AUDNZD · EURJPY · AUDCAD · CADJPY · EURUSD
+2. ลาก `Boss_14_GridLog` (จาก Navigator, expert = `EALabTpl\Boss_14_GridLog`) ลงแต่ละชาร์ต
+3. แต่ละชาร์ต: F7 → Load → เลือก set ตามตาราง (symbol ให้ตรงชาร์ต!) → OK · เปิด AutoTrading
+4. เช็ค magic ในแต่ละ set ไม่ซ้ำกัน (990201-206) + ต่างจาก 9 EA เดิม (คนละบัญชีอยู่แล้ว ปลอดภัย)
+5. จดวันที่ attach จริง → แจ้ง Claude เพื่อ set demo-clock + นัด `/ea-monitor` ครั้งแรก ~2 สัปดาห์
+
+**Promote conditions (หลัง demo ≥3 เดือน):** ≥30 real trades · PF ≥ 1.40 จาก live · ไม่ถึง stop rule ·
+**ตอน promote ขึ้น lot: EURJPY + CADJPY size เบากว่าเพื่อน (สันเขา), USDJPY คงค่า step/TP เดิม** (จาก
+plateau-sensitivity ORDER-022) · corr matrix (ORDER-019): ไม่มีคู่ >0.60, watch USDJPY-CADJPY 0.57 → ลด lot ตัวใดตัวหนึ่ง
+
+**Stop rules:** ตัวไหน eqDD account-wide > 25% (PROTECT_NORMAL KillDD) EA จะ close+halt เอง ·
+manual pause ถ้า EA ตัวใด DD ผิดปกติเทียบ backtest (ดูจาก /ea-monitor)
 
 ---
 
