@@ -1704,9 +1704,11 @@ scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื�
 ## ORDER-035 — MT5 mass-smoke driver (loop worklist ex5) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 034** · autonomous long-run (role: code+batch, เลน 2)
 
 **งาน (reuse `smoke_all.ps1`):** ต่อ ex5: copy → `<Meta5b>\MQL5\Experts\_smoke\` → Model 2 quick 3 เดือน
-(2026.04-2026.07) basket **XAUUSD,EURUSD,GBPUSD,USDJPY** H1 → **0 trades ทุก symbol = skip+note** · เทรด≥1 →
-Model 1 12 เดือน (2025.07-2026.07) symbol ดีสุด → `_mt5_auto/mass_smoke_mt5.csv` (ea,symbol,m2_trades,m1_pf,m1_trades,m1_net,m1_eqdd)
-**guard autonomous:** timeout 180s/run + skip hang · try/catch ต่อ EA · log ทุก 25 ตัว
+(2026.04-2026.07) basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1 (user 2026-07-05: ครบ character ทอง/EUR/เยน/AUD-cross)
+→ **0 trades ทุก symbol = skip+note** · เทรด ≥1 → **Model 1 12 เดือน (2025.07-2026.07) ทุก symbol ที่ M2 เทรด ≥10 ไม้**
+(ไม่ใช่แค่ตัวดีสุด — user ต้องการตรวจให้ครบข้าม symbol) → `_mt5_auto/mass_smoke_mt5.csv` (ea,symbol,m2_trades,m1_pf,m1_trades,m1_net,m1_eqdd)
+**guard autonomous:** timeout 180s/run + skip hang · try/catch ต่อ EA · log ทุก 25 ตัว · หมายเหตุ: รัน compiled
+default TF=H1 (EA ที่ design มาสำหรับ TF อื่นอาจเทรดน้อย — filter 0-trade จับ, ยอมรับได้สำหรับ mass-smoke)
 **Acceptance:** CSV ครบ + list M1 PF≥1.3 (survivor shortlist) · commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
 
 **ผล:** _(รอ)_
@@ -1714,8 +1716,10 @@ Model 1 12 เดือน (2025.07-2026.07) symbol ดีสุด → `_mt5_au
 ## ORDER-036 — MT4 mass-smoke driver (loop worklist ex4, `D:\Meta4`) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 035, stage ~200/รอบ** · autonomous (role: code+batch)
 
 **ทำไม:** treasure ที่ user จำได้อาจเป็น MT4 (2,286 = ส่วนใหญ่). prior 0/63 แต่ user มี signal → คุ้ม smoke
-**งาน:** เหมือน 035 แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** →
-window 2026.03-2026.07 · **stage ก้อน (folder ใหม่→เก่า / 200 ตัว)** อย่ารันรวด 2,286 คำสั่งเดียว
+**งาน:** เหมือน 035 (basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1, M2 กรอง 0-trade → M1 confirm ทุก symbol ที่เทรด)
+แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** → window M2 2026.04-07,
+M1 2026.03-07 · **stage ก้อน (folder ใหม่→เก่า / 200 ตัว)** อย่ารันรวด ex4 คำสั่งเดียว (⚠️ MT4 symbol suffix อาจ
+ต่าง เช่น XAUUSDm/EURUSD. — ให้ driver match symbol ที่ broker Meta4 มีจริง ก่อนรัน ถ้าไม่มีตัวไหนข้าม+note)
 **Acceptance:** ต่อ stage: CSV + survivor (PF≥1.3) · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
 
 **ผล:** _(รอ)_
