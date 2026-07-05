@@ -1709,7 +1709,10 @@ scheduler) (3) mark platform ex4/ex5 (4) เดา home symbol จากชื�
 (ไม่ใช่แค่ตัวดีสุด — user ต้องการตรวจให้ครบข้าม symbol) → `_mt5_auto/mass_smoke_mt5.csv` (ea,symbol,m2_trades,m1_pf,m1_trades,m1_net,m1_eqdd)
 **guard autonomous:** timeout 180s/run + skip hang · try/catch ต่อ EA · log ทุก 25 ตัว · หมายเหตุ: รัน compiled
 default TF=H1 (EA ที่ design มาสำหรับ TF อื่นอาจเทรดน้อย — filter 0-trade จับ, ยอมรับได้สำหรับ mass-smoke)
-**Acceptance:** CSV ครบ + list M1 PF≥1.3 (survivor shortlist) · commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
+**Acceptance:** CSV ครบ + จัด tier ต่อ survivor (user 2026-07-05: PF>1 ผ่านไป optimize, กฎ "ห้าม DEAD ก่อน optimize"):
+**Tier A** = PF>1.0 AND trades≥20 AND eqDD<40% (optimize candidate) · **Tier B** = PF>1.0 แต่ eqDD≥40% (grid-trap watch,
+priority ต่ำ) · **Reject** = PF≤1.0 หรือ trades<20 (noise/ไม่มี edge — ไม่ใช่ DEAD) · list Tier A+B ให้ Claude ·
+commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
 
 **ผล:** _(รอ)_
 
@@ -1720,7 +1723,8 @@ default TF=H1 (EA ที่ design มาสำหรับ TF อื่นอ�
 แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** → window M2 2026.04-07,
 M1 2026.03-07 · **stage ก้อน (folder ใหม่→เก่า / 200 ตัว)** อย่ารันรวด ex4 คำสั่งเดียว (⚠️ MT4 symbol suffix อาจ
 ต่าง เช่น XAUUSDm/EURUSD. — ให้ driver match symbol ที่ broker Meta4 มีจริง ก่อนรัน ถ้าไม่มีตัวไหนข้าม+note)
-**Acceptance:** ต่อ stage: CSV + survivor (PF≥1.3) · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
+**Acceptance:** ต่อ stage: CSV + tier เดียวกับ 035 (**Tier A** PF>1&trades≥20&eqDD<40% · **Tier B** PF>1&eqDD≥40% grid-trap ·
+**Reject** PF≤1/trades<20) · list Tier A+B · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
 
 **ผล:** _(รอ)_
 

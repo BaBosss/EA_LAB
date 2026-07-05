@@ -346,7 +346,7 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 **🗺️ MASS-SMOKE `wait for test` (user 2026-07-05 ยืนยัน: เคยเห็นตัวรันดี, เทสทั้ง ex4+ex5 autonomous):**
 ขนาดจริง = **337 unique .ex5 + 2,286 unique .ex4 = 2,623 ตัว** (dump ใหญ่). tooling ครบทั้ง 2 track (MT5
 `smoke_all.ps1` · MT4 `mt4_run.ps1`+`D:\Meta4`). funnel: **ORDER-034 catalog/dedup/กรอง → 035 MT5 smoke →
-036 MT4 smoke (stage ~200)** ทุกตัว autonomous มี timeout/skip-hang guard. survivor (M1 PF≥1.3) → Claude คัด
+036 MT4 smoke (stage ~200)** ทุกตัว autonomous มี timeout/skip-hang guard. survivor (Tier A: PF>1&trades≥20&DD<40%; Tier B grid-trap แยก) → Claude คัด
 เข้า intake funnel เต็ม. (ORDER-033 4-EA = warm-up subset). VISION: survivor = สกัดกลไกเข้าแม่พิมพ์
 
 **✅ reviewed 029B/030/032/033 (Claude/Opus 2026-07-05):**
@@ -374,7 +374,7 @@ CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo
   เมื่อ attach: จด start date + set demo-clock + นัด /ea-monitor ครั้งแรก ~2 สัปดาห์. XAU #7 ต้อง de-scale
   บัญชี 60k อาจต้องปรับ (7 EA แทน 6 — XAU lot 0.05 = ครึ่ง unit จึงเกือบพอดี, user เคาะตอน attach)
 - **P1 = autonomous idle-compute: ORDER-035 (MT5 203) → 036 (MT4 1,318 stage)** ล่า treasure ที่ user
-  เชื่อว่ามี · 👉 oc-dev/Codex · รันข้ามคืนได้ · survivor (M1 PF≥1.3) → Claude คัดเข้า intake funnel
+  เชื่อว่ามี · 👉 oc-dev/Codex · รันข้ามคืนได้ · survivor (Tier A: PF>1&trades≥20&DD<40%; Tier B grid-trap แยก) → Claude คัดเข้า intake funnel
 - **P2 = hunt ต่อ (mine #1 ใกล้หมด):** loss-mgmt ตาย · entries FX ตาย · XAU done · XAG parked · เหลือ:
   GridLog บน **indices (US30/NAS)** เป็น non-FX ตัวถัดไป (มี ORDER-029B ATR-SL portable แล้ว) **หรือ**
   ข้ามไป **mine #2 treasure** (candle-gate/retest-zone mold-port) — Claude เคาะเมื่อ mass-smoke ให้ผล/demo เดินแล้ว
