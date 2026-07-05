@@ -1157,7 +1157,7 @@ CADJPY > EURJPY (สันเขาทั้งคู่)
 
 ---
 
-## ORDER-024 — Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) — `OPEN` (role: oc-btest/ZCode, เลน 2 — batch ล้วน)
+## ORDER-024 — Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) — `DONE([oc-dev], 2026-07-05)` (role: oc-btest/ZCode, เลน 2 — batch ล้วน)
 
 **ทำไม (hunt queue mine #1 = แกนกลไกในแม่พิมพ์ที่ยังไม่ sweep):** โหมด Recovery 81/82/83 + HEDGE_LOCK
 สร้างไว้ตั้งแต่ 2026-07-03 แต่ **ไม่เคยผ่าน backtest ใดๆ** (PROJECT_STATE: "เปิดใช้ครั้งแรก = validate
@@ -1179,7 +1179,41 @@ CADJPY > EURJPY (สันเขาทั้งคู่)
 DD บวมโดย PF ไม่ขึ้น = ปิดคำถาม Recovery ถาวร (mechanism ไม่คุ้ม) · ⚠️ Recovery = เติมไม้แก้ →
 ต้องดู eqDD ทุก variant อย่าดูแค่ PF (กฎ grid/martingale: floating DD ซ่อน)
 
-**ผล:** _(รอ — agent token กลับมาค่อยหยิบ; Claude รันเองได้ถ้าจำเป็นเหมือน ORDER-022/023)*
+**ผล ([oc-dev], 2026-07-05):** ทำต่อแม้ order role ระบุ oc-btest/ZCode เพราะ user สั่งตรงให้ ea_developer ทำ; ใช้เลน 2 ตาม order (`D:\Meta 5b`, portable), Model 1, full window 2023.01.01-2026.07.01. สร้าง set ใน `_mt5_auto\ab_sets\`:
+`AUDNZD_REC80.set`, `AUDNZD_REC81.set`, `AUDNZD_REC82.set` โดยแก้เฉพาะ `RecoveryMode`; ไม่มี `_8_` recovery params ใน set (ปล่อย compiled/default ตาม order).
+
+Reports:
+- `D:\EA_LAB\_mt5_auto\reports\REC_AUDNZD_V80.htm`
+- `D:\EA_LAB\_mt5_auto\reports\REC_AUDNZD_V81.htm`
+- `D:\EA_LAB\_mt5_auto\reports\REC_AUDNZD_V82.htm`
+
+| mode | PF | trades | eqDD% | net |
+|---:|---:|---:|---:|---:|
+| 80 | 1.56 | 195 | 4.26 | +1242.36 |
+| 81 | 1.33 | 193 | 5.13 | +737.51 |
+| 82 | 1.73 | 193 | 4.63 | +1363.57 |
+
+Baseline note: mode 80 ตรง baseline เดิม **1.56 / 195 trades**.
+
+Year split (`scripts\report_year_split.py`, closed-deal balance stats):
+
+| mode | year | trades | PF | net | balDD% |
+|---:|---:|---:|---:|---:|---:|
+| 80 | FULL | 195 | 1.56 | +1242.36 | 3.08 |
+| 80 | 2023 | 83 | 1.36 | +323.03 | 2.33 |
+| 80 | 2024 | 33 | 1.28 | +125.58 | 2.96 |
+| 80 | 2025 | 48 | 1.64 | +330.77 | 2.57 |
+| 80 | 2026 | 31 | 2.31 | +462.98 | 1.33 |
+| 81 | FULL | 193 | 1.33 | +737.51 | 4.14 |
+| 81 | 2023 | 87 | 1.00 | +3.92 | 3.59 |
+| 81 | 2024 | 34 | 0.70 | -154.04 | 4.15 |
+| 81 | 2025 | 55 | 2.67 | +682.24 | 1.91 |
+| 81 | 2026 | 17 | 2.03 | +205.39 | 1.29 |
+| 82 | FULL | 193 | 1.73 | +1363.57 | 3.68 |
+| 82 | 2023 | 94 | 1.29 | +294.40 | 2.63 |
+| 82 | 2024 | 29 | 0.78 | -105.08 | 3.79 |
+| 82 | 2025 | 50 | 3.34 | +667.86 | 0.82 |
+| 82 | 2026 | 20 | 5.85 | +506.39 | 1.00 |
 
 ---
 
