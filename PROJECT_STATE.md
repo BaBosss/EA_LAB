@@ -330,16 +330,25 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 - **🐛 bug ตัวที่ 2 = `_33_SL_MaxPips` ไม่ portable** (XAU 2-digit → SL cap เพี้ยนเป็น $1.50 → รอบแรก PF 0.29
   = artifact). workaround = ตั้ง `=0` (ATR-SL คุมเอง). fix ถาวร = ORDER-029
 
-**คิว taskboard ตอนนี้:** ORDER-028 (XAU GridLog IS-optimize · 👉 ZCode heavy) · ORDER-029A (fix `_33_SL_MaxPips`
-portable, proposal-only · 👉 Codex · priority ต่ำ workaround มีแล้ว)
-**routing (user 2026-07-05):** ทุก order ระบุ "ทำได้: X · 👉 แนะ: Y" (AGENTS §5.1) · **Codex-direct ประหยัด
-กว่า OpenClaw** · **ZCode ฟรีแต่ ~1 order หนัก/วัน**
-**งาน session หน้า (เรียงลำดับ):**
-1. review ORDER-028 (XAU IS-opt) → plateau-center → เขียน OOS/year-split/MC/**Model-4** (ทอง+grid บังคับ M4) ·
-   ถ้าผ่านครบ = candidate ที่ 7 (non-FX, กระจายจาก AUD/JPY จริง)
-2. review ORDER-029A proposal → เคาะทาง fix `_33_SL_MaxPips`
-3. **treasure (mine #2) = ทีหลัง** — candle-pattern gate + retest-zone breakout
-4. **demo (ค้างไว้ตาม user "ยังไม่ว่าง"):** เมื่อ attach → จด start date + set demo-clock + นัด /ea-monitor ~2 สัปดาห์
+**✅ ORDER-028/029A reviewed (Claude/Opus 2026-07-05):** XAU IS-opt → plateau-center **Pass 20**
+(Step3.0/BUY/Dist1.4/BasketTP_ATRmult=1.0, PF 1.48/277t/DD 9.34% in-sample) · set `Boss14_GridLog_XAU_ISpick.set`
+สร้างแล้ว · 029A → เลือก **Option B** (ATR-relative SL cap) implement = ORDER-029B
+
+**🏭 คิว PIPELINE ยาว พร้อมให้คอมรันเอง (token Claude ใกล้หมด — user สั่งรันทดสอบยาวๆ):**
+| Order | งาน | ทำได้ · 👉 แนะ | ลำดับ |
+|---|---|---|---|
+| **ORDER-030** | XAU fresh-OOS + full + year-split | ZCode/Codex/oc-btest · 👉 ZCode | รันก่อน |
+| **ORDER-031** | XAU MC + Model-4 (ทองบังคับ M4, รันเดี่ยว) | ZCode · 👉 ZCode | **หลัง 030 ผ่าน** |
+| **ORDER-032** | XAG (เงิน) IS-optimize (non-FX ตัว 2, ขนาน) | ZCode/oc-btest · 👉 ZCode | วันแยก |
+| **ORDER-029B** | implement ATR-relative SL cap (code) | Codex/Claude/oc-dev · 👉 Codex-direct | ขนาน, ไม่เร่ง |
+
+**วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
+**ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)
+**routing:** "ทำได้: X · 👉 แนะ: Y" (AGENTS §5.1) · Codex-direct ประหยัดกว่า OpenClaw · ZCode ฟรี ~1 order หนัก/วัน
+
+**งาน Claude session หน้า:** review 030/031/032/029B ตามที่ DONE → ถ้า XAU ผ่านครบ (OOS+M4+MC) = **candidate #7
+non-FX จริง** (de-scale lot ให้ DD เข้า budget ก่อน demo) → ถ้าตก = mine #1 non-FX จบ → **mine #2 treasure**
+(candle-pattern gate + retest-zone) · demo cohort (ค้างตาม user) เมื่อ attach → จด start date + นัด /ea-monitor
 **เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
 (Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
 ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md

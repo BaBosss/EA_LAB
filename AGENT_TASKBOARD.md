@@ -1400,7 +1400,13 @@ entries ถูก deprioritize** (FX breakout/reversion = optimize-killed แล
 
 ---
 
-## ORDER-028 — XAU GridLog: IS-optimize (axis tuning สำหรับทอง) — `DONE(Codex, 2026-07-05 10:01 +07:00; user override)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (optimizer หนัก = 1 slot/วัน) (role: batch, เลน 2)
+## ORDER-028 — XAU GridLog: IS-optimize (axis tuning สำหรับทอง) — `REVIEWED(Claude/Opus, 2026-07-05 — plateau-center = Pass 20 → pipeline ORDER-030/031)` · ทำได้: ZCode/oc-btest · 👉 ZCode
+
+**REVIEW (Claude/Opus):** plateau ชัด+แข็ง — **Step=3.0/BUY/Dist=1.4** โดย BasketTP_ATRmult {0.5→PF1.49,
+1.0→1.48, 1.5→1.37} ทั้งกลุ่มผ่านที่ DD 9.3-10.3% (optimizer หา Step กว้าง → DD ลดจาก 18% เหลือ 9%). →
+**plateau-center = Pass 20 (Step3.0/BUY/Dist1.4/BasketTP_ATRmult=1.0, PF 1.48/277t/DD 9.34%)** (เลือก
+mult=1.0 กลาง plateau robust กว่าขอบ). set สร้างแล้ว `Boss14_GridLog_XAU_ISpick.set` (SL cap=0). ทุกเลข
+IN-SAMPLE → ต้อง OOS/MC/Model-4 (ORDER-030/031)
 
 **ทำไม:** scan (ORDER-027) พบ XAU GridLog มีชีวิต (PF 1.76 in-sample @ mult=1) หลังปิด SL-cap ที่พัง —
 แต่นั่นใช้ axes ของ AUD (StepATR=1.4/DistATR=1.4) transplant มา ต้อง IS-optimize สำหรับทองเองก่อนเชื่อ
@@ -1442,7 +1448,12 @@ Top-8 ดิบเรียง PF:
 
 ---
 
-## ORDER-029 — mold fix: `_33_SL_MaxPips` ให้ portable ข้าม instrument (bug จาก ORDER-027 scan) — `DONE(Codex, 2026-07-05 10:04 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **ต้องรัน tpl_regression CLEAN** · (priority: ต่ำ — workaround = ตั้ง =0 ใช้ได้แล้ว)
+## ORDER-029 — mold fix: `_33_SL_MaxPips` ให้ portable ข้าม instrument (bug จาก ORDER-027 scan) — `REVIEWED(Claude/Opus, 2026-07-05 — เลือก Option B → implement = ORDER-029B)` · ทำได้: Codex/Claude/oc-dev · 👉 Codex-direct
+
+**REVIEW (Claude/Opus): เลือก Option B (ATR-relative cap `_33_SL_MaxATRmult`, default 0=เดิม).** เหตุผล:
+เป็น portability seam จริงตาม volatility (ตรงกับที่ทั้ง GridLog scale ด้วย ATR อยู่แล้ว) + additive แท้ +
+กันพังซ้ำบน index/crypto (Option A = digit heuristic เป็น band-aid จะพังอีก). ไม่เร่ง — workaround `=0` ใช้ได้.
+→ implement = **ORDER-029B**
 
 **ทำไม:** `_33_SL_MaxPips` (ExitManager.mqh ~40) ใช้ `pipPrice=(digits==3||5?10:1)×Point` → บน XAU (2 digits)
 = Point = 0.01 → cap 150 กลายเป็น **$1.50** (ควรเป็นหลัก $ ใหญ่). ทำให้ SL cap พังบน non-FX. เป็น fixed-pip
@@ -1470,6 +1481,77 @@ set FX จำนวนมากใช้ 150 อยู่แล้ว ส่ว�
 ข้อสังเกตเชิงวิศวกรรม: ทาง A แก้ XAU ได้เร็วและ diff เล็ก แต่ไม่ได้แก้ semantics ของ “pip” สำหรับ
 instrument class ทั้งหมด; ทาง B เป็น portability seam ที่ตรงกว่าและ additive จริง แต่เพิ่ม parameter/interface.
 จนกว่า Claude เคาะ ใช้ workaround `_33_SL_MaxPips=0` สำหรับ non-FX ต่อได้โดยไม่แก้ source.
+
+---
+
+## 🏭 XAU GridLog VALIDATION PIPELINE (รันตามลำดับ 030→031; Claude review ตอนกลับมา) — ต่อ ORDER-028
+
+> **สถานะ: XAU GridLog = candidate #7 (in-sample PF 1.48). ต้องผ่านครบ pipeline เหมือน Boss_14 FX
+> ก่อนขึ้น demo. ทอง+grid = สงสัยสูงสุด, Model-4 บังคับ.** set = `Boss14_GridLog_XAU_ISpick.set` (สร้างแล้ว)
+
+## ORDER-030 — XAU: fresh-start OOS + full-window + year-split — `OPEN` · **ทำได้: ZCode · Codex · oc-btest** · 👉 **แนะ: ZCode** (heavy) (role: batch, เลน 2)
+
+**ทำไม:** ด่านชี้ขาด — IS-opt เป็น in-sample, ต้องดูว่ารอด out-of-sample ไหม (GBPAUD/NZDUSD-SELL ตายด่านนี้มาแล้ว)
+```powershell
+# (1) fresh-start OOS
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol XAUUSD -Period H1 -FromDate 2025.07.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_XAU_ISpick.set' -ReportName BOSS14_XAU_OOS_M1 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+# (2) full-window confirm + year-split
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol XAUUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_XAU_ISpick.set' -ReportName BOSS14_XAU_FULL_ISPICK_M1 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\BOSS14_XAU_FULL_ISPICK_M1.htm
+```
+**Acceptance:** OOS (trades/PF/net/eqDD) + full year-split ทุกบรรทัด · commit `[tag] ORDER-030 done`
+**ห้าม:** verdict — เกณฑ์ Claude: OOS PF≥0.9 + ทุกปีไม่มีปีเน่าซ่อน (ทองต้องเข้มกว่า FX)
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-031 — XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังคับ) — `OPEN` · **ทำได้: ZCode** · 👉 **แนะ: ZCode** · ⚠️ **Model-4 รันเดี่ยว ห้ามคู่ขนาน** (freeze guard) · **ทำหลัง ORDER-030 ผ่านเท่านั้น** (role: batch, เลน 2)
+
+**ทำไม:** ทอง+grid = floating DD ซ่อน (บทเรียน Recovery M4). closed-trade DD 9% ต้องยืนยันด้วย every-tick จริง
+```powershell
+# (1) MC บน full report
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\mt5_montecarlo.py D:\EA_LAB\_mt5_auto\reports\BOSS14_XAU_FULL_ISPICK_M1.htm --deposit 10000 --iters 5000
+# (2) Model-4 every-tick (2024-2026; รันเดี่ยว)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol XAUUSD -Period H1 -FromDate 2024.01.01 -ToDate 2026.07.01 -Model 4 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_XAU_ISpick.set' -ReportName BOSS14_XAU_M4CONFIRM -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+```
+**Acceptance:** MC (DD median/95th/worst, ruin, P(loss)) + M4 (PF/trades/net/**equity DD maximal %**/history quality) ·
+commit `[tag] ORDER-031 done`
+**ห้าม:** verdict — เกณฑ์ Claude: M4 PF ไม่ร่วงหนัก (เทียบ M1 1.48) + floating DD ยอมรับได้ที่ de-scaled lot
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-032 — XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, ขนาน XAU) — `OPEN` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (heavy, วันแยกจาก 030/031) (role: batch, เลน 2)
+
+**ทำไม:** ถ้าทองมีชีวิต เงินอาจมีด้วย (non-FX เพิ่ม) — mirror ORDER-028 เป๊ะแต่ symbol=XAGUSD
+สร้าง `Boss14_GridLog_XAG_opt1.set` = copy `Boss14_GridLog_XAU_opt1.set` (มีแล้ว) เปลี่ยน magic=990302 ·
+`_2_BasketTP_Money=0` · `_33_SL_MaxPips=0` · optimize axes เดิม (Step 1.4/2.2/3.0 · Dist 1.4/2.2/3.0 ·
+BasketTP_ATRmult 0.5/1.0/1.5/2.0 · Direction 1,2 · lock ที่เหลือ `||N`)
+```powershell
+powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_GridLog' -Symbol XAGUSD -Period H1 -FromDate 2023.01.01 -ToDate 2025.06.30 -Model 1 -Optimization 1 -SetFile 'D:\EA_LAB\ea_template\sets\Boss14_GridLog_XAG_opt1.set' -ReportName BOSS14_OPT_XAG_IS -TimeoutSec 21600 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+```
+**Acceptance:** XML ครบ + จำนวน pass PF≥1.2 & Trades≥60 + top-8 ดิบ · commit `[tag] ORDER-032 done`
+**ห้าม:** verdict/plateau-center (Claude ทำ)
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-029B — implement Option B: `_33_SL_MaxATRmult` (ATR-relative SL cap, additive) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **tpl_regression CLEAN + compile 0/0 ก่อน commit** · (priority: ต่ำ, workaround `_33_SL_MaxPips=0` ใช้ได้)
+
+**สเปค (Option B ที่ approve):** `core\Inputs.mqh`: เพิ่ม `input double _33_SL_MaxATRmult = 0;` (ใกล้ `_33_SL_MaxPips`) ·
+`core\ExitManager.mqh` `Exit_CapATRDist`: ถ้า `_33_SL_MaxATRmult > 0` → `cap = Indi_RiskATR(0) × _33_SL_MaxATRmult`
+(price units) แทน pip-cap · ถ้า `=0` → ใช้ `_33_SL_MaxPips` เดิมทุกอย่าง (default = พฤติกรรมเดิมเป๊ะ)
+**Acceptance:** compile 0/0 Boss_11-14 · **tpl_regression CLEAN** (default 0 = ไม่ drift) · A/B 1 ตัว: XAU
+`_33_SL_MaxATRmult=6` (≈SL 4×ATR แต่ cap 6×ATR = หลวมพอไม่บีบ) เทียบ `=0`+`_33_SL_MaxPips=0` — ควรใกล้กัน ·
+commit `[tag] ORDER-029B done`
+**ห้าม:** เปลี่ยน default `_33_SL_MaxPips` · แตะ SL logic อื่น
+
+**ผล:** _(รอ)_
 
 ---
 
