@@ -31,8 +31,10 @@ Codex/ZCode ที่รันหน้าคอม รายงานใน con
 **ยอดบันได escalation พังลงมา 1 ชั้น — ต้องเข้าใจก่อนใช้:** เดิม Opus = "deep-reasoner tier"
 (ตัว escalate เมื่องานยาก) ด้วย. พอ seat = Opus แล้ว การ spawn `deep-reasoner` subagent = **สมองตัว
 เดียวกัน context ใหม่** (offload context ได้ แต่ไม่ใช่ capability ที่ฉลาดกว่า). **ความหลากหลายเชิง
-capability ที่แท้จริงตอนนี้มาจาก Codex (GPT-5.4 = คนละ model family) ตัวเดียว** → Codex กลายเป็น
-"สมองที่สองอิสระ" ที่สำคัญขึ้น ไม่ใช่ทางเลือกเสริม.
+capability ที่แท้จริงตอนนี้มาจาก Codex (คนละ model family = GPT) ตัวเดียว** → Codex กลายเป็น
+"สมองที่สองอิสระ" ที่สำคัญขึ้น ไม่ใช่ทางเลือกเสริม. **คุณค่าของ Codex ไม่ได้อยู่ที่ "เก่งเท่า Opus" แต่
+อยู่ที่ "คนละค่าย = จุดบอดคนละที่"** (Opus 2 ตัวรีวิวกันเอง = พลาดจุดเดียวกัน เพราะ bias เดียวกัน) →
+งาน review ใช้ **Codex ตัวเก่งสุดที่มี** (review เป็นงานนานๆ ครั้ง ไม่ต้องประหยัด model).
 
 **tier ladder ใหม่ (ถูกสุดที่ตรวจงานได้ก่อนเสมอ — cost rule เดิมยังอยู่):**
 
@@ -115,11 +117,14 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
 - **Claude quota หมด + มี order ค้าง → Codex** (code/ผสม) หรือ **ZCode** (รันล้วน) เหมือนเดิม.
 
 **❓ Codex ต้องมา review ร่วมไหม → ใช่ แต่เลือกใช้ (ไม่ใช่ทุก verdict):** หลัง Fable ออก Codex = สมอง
-อิสระ (คนละ family) ตัวเดียวที่เหลือ → **บังคับขอ second opinion จาก Codex เฉพาะการตัดสินที่แพง/ย้อนไม่ได้:**
-(1) ปล่อย EA ลงเงินจริง (promote demo→live) (2) money/risk logic ใหม่ที่ยังไม่มี cage (3) architecture
-เปลี่ยนแม่พิมพ์. **verdict ประจำวัน (EA ตัวไหน demo/park/dead จาก backtest) = Opus-seat ตัดสินเดี่ยว**
-— Opus แข็งพอ + ประหยัด ChatGPT quota. วิธีถาม: คำถามเดียวกับที่ Opus คิด **โดยไม่ให้ Codex ดูคำตอบ Opus
-ก่อน** แล้ว Opus สังเคราะห์ (ห้ามให้ Codex เห็นคำตอบอีกฝ่าย = กัน anchoring).
+อิสระ (คนละ family) ตัวเดียวที่เหลือ. **หลักคิด: ไม่ได้ใช้เพราะ Codex เก่งเท่า Opus — ใช้เพราะคนละค่าย
+จับจุดบอดที่ Opus มองข้ามเป็นระบบได้** ("อิสระ + เก่งพอเถียง" > "เก่งเท่ากันแต่ค่ายเดียว"). งาน review ใช้
+**Codex ตัวเก่งสุดที่มี** (GPT รุ่นสูงสุดที่ setup ไว้ — เป็นงานนานๆ ครั้ง ไม่ต้องประหยัด model). →
+**บังคับขอ second opinion จาก Codex เฉพาะการตัดสินที่แพง/ย้อนไม่ได้:** (1) ปล่อย EA ลงเงินจริง
+(promote demo→live) (2) money/risk logic ใหม่ที่ยังไม่มี cage (3) architecture เปลี่ยนแม่พิมพ์.
+**verdict ประจำวัน (EA ตัวไหน demo/park/dead จาก backtest) = Opus-seat ตัดสินเดี่ยว** — Opus แข็งพอ +
+มี cage/rule ครบ + ประหยัด ChatGPT quota. วิธีถาม: คำถามเดียวกับที่ Opus คิด **โดยไม่ให้ Codex ดู
+คำตอบ Opus ก่อน** แล้ว Opus สังเคราะห์ (ห้ามให้ Codex เห็นคำตอบอีกฝ่าย = กัน anchoring).
 
 **❓ oc-btest ควรลดเหลือ GPT-5.4 ไหม → ใช่ ลดให้ถูกสุดเท่าที่รัน powershell+parse ได้เสถียร:** งาน
 oc-btest = zero-judgment (รัน script + อ่านตัวเลข) — ไม่ต้องใช้ reasoning เลย. รันบน model แพงคือเผา

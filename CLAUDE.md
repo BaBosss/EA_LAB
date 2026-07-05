@@ -14,8 +14,9 @@ Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_ST
 - **ยอดบันได escalation พังลง 1 ชั้น:** seat = Opus แล้ว → spawn `deep-reasoner`(Opus) subagent =
   สมองตัวเดียวกัน context ใหม่ (offload context ได้ ไม่ใช่ capability ที่ฉลาดกว่า). งานที่เคย escalate ให้
   deep-reasoner (money/risk logic ใหม่, architecture, root-cause) → **ทำเองใน main context**. สมองอิสระ
-  คนละ family ที่เหลือ = **Codex (GPT-5.4)** → บังคับขอ second opinion จาก Codex **เฉพาะการตัดสินที่แพง/
-  ย้อนไม่ได้** (promote demo→live · risk logic ที่ไม่มี cage · architecture) ไม่ใช่ทุก verdict.
+  คนละ family ที่เหลือ = **Codex (GPT รุ่นเก่งสุดที่ setup ไว้)** — คุณค่าอยู่ที่ "คนละค่าย จับจุดบอดคนละที่"
+  ไม่ใช่ "เก่งเท่า Opus" → บังคับขอ second opinion จาก Codex **เฉพาะการตัดสินที่แพง/ย้อนไม่ได้**
+  (promote demo→live · risk logic ที่ไม่มี cage · architecture) ไม่ใช่ทุก verdict.
 - Honor every user rule in the Decision log verbatim (Model-2 ban, no-DEAD-before-optimize,
   cap-breach-resize-first, correlation→reduce-lot-not-cut, 3-year window). These were each paid for
   with real mistakes — do not re-litigate them without new evidence.
@@ -50,5 +51,5 @@ You (the orchestrator model = **Opus-seat** ตั้งแต่ 2026-07-04) pl
 - **Sonnet** (`fast-worker`) — mechanical work that needs in-session tools, repo conventions, or minor judgment: multi-file config/.set edits, scaffolding to match existing patterns, MQL5 changes that follow an established pattern (the `tpl_regression.ps1` cage catches behavior drift — run it after every `ea_template\core\` edit), running pipelines that may need mid-course adjustment.
 - **Opus-seat เอง** — งานที่ mistake แพงและยังไม่มี cage: new risk/money logic, architecture, root-cause. **เดิม escalate ให้ `deep-reasoner`(Opus) — ตอนนี้ seat = Opus แล้ว จึงทำเองใน main context** (spawn deep-reasoner ได้เพื่อ offload context เฉยๆ ไม่ใช่เพื่อสมองที่ฉลาดกว่า).
 - Escalate, don't default up: try the cheaper tier first when a verification cage exists; move up one tier only after it fails.
-- **Codex** (`/codex:rescue --background`) = peer engineer สมองอิสระคนละ family (GPT-5.4) — **สมองที่สองตัวเดียวที่เหลือหลัง Fable ออก** → independent perspective ไม่ใช่ reviewer ตามงาน. Don't show it the other's answer (กัน anchoring).
+- **Codex** (`/codex:rescue --background`) = peer engineer สมองอิสระคนละ family (GPT รุ่นเก่งสุดที่มี) — **สมองที่สองตัวเดียวที่เหลือหลัง Fable ออก** → คุณค่า = คนละค่ายจับจุดบอดคนละที่ (ไม่ใช่เก่งเท่า Opus). independent perspective ไม่ใช่ reviewer ตามงาน. Don't show it the other's answer (กัน anchoring).
 - For high-stakes decisions (promote demo→live · risk logic ไม่มี cage · architecture): task **Codex** on the same problem you're deciding — **โดยไม่ให้ดูคำตอบ Opus ก่อน** — then synthesize yourself. ใช้ประหยัด (Codex แชร์ ChatGPT quota ที่หมดเร็ว) — verdict ประจำวันตัดสินเดี่ยวได้.
