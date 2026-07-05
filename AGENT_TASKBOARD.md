@@ -1589,7 +1589,7 @@ commit `[tag] ORDER-029B done`
 
 ---
 
-## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `OPEN` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
+## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `CLAIMED(Codex, 2026-07-05 11:52 +07:00)` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
 
 **ทำไม (user: อยากให้คอมมีงานทำช่วง token reset):** folder `D:\Forex\10_EA_PROJECTS\2. wait for test` มี 87 EA
 แต่ **mq4 37 ตัว = ใช้ไปป์ไลน์ MT5 ไม่ได้ (0/63 prior) · mq5 ส่วนใหญ่ grid/martingale = dead-family**. คัดเหลือ

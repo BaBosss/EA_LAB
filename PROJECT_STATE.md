@@ -343,10 +343,14 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 | **ORDER-029B** | implement ATR-relative SL cap (code) | Codex/Claude/oc-dev · 👉 Codex-direct | ขนาน, ไม่เร่ง |
 | **ORDER-033** | smoke 4 MT5 signal EAs จาก `wait for test` (idle filter) | Codex/oc-dev · 👉 Codex-direct | idle-compute, EV ต่ำ |
 
-**หมายเหตุ `wait for test` folder (2026-07-05):** 87 EA แต่ **mq4 37=ใช้ MT5 pipeline ไม่ได้ (0/63) · mq5
-ส่วนใหญ่ grid/martingale=dead-family** → คัดเหลือ **4 ตัว mq5 risk=fixed** (Breakout Retest Pro + GapFillRSI
-= กลไกใหม่จริง ⭐, Bot V00 + B2 Gold Deng = fxdreema friction สูง) = ORDER-033. **ไม่ mass-smoke ทั้ง 87
-(เสียเวลาเปล่า)** · VISION จริง = สกัดกลไกเข้าแม่พิมพ์ ไม่ใช่ deploy raw EA — smoke แค่กรองว่ากลไกมีชีวิตก่อนลงแรง port
+**🗺️ MASS-SMOKE `wait for test` (user 2026-07-05 ยืนยัน: เคยเห็นตัวรันดี, เทสทั้ง ex4+ex5 autonomous):**
+ขนาดจริง = **337 unique .ex5 + 2,286 unique .ex4 = 2,623 ตัว** (dump ใหญ่). tooling ครบทั้ง 2 track (MT5
+`smoke_all.ps1` · MT4 `mt4_run.ps1`+`D:\Meta4`). funnel: **ORDER-034 catalog/dedup/กรอง → 035 MT5 smoke →
+036 MT4 smoke (stage ~200)** ทุกตัว autonomous มี timeout/skip-hang guard. survivor (M1 PF≥1.3) → Claude คัด
+เข้า intake funnel เต็ม. (ORDER-033 4-EA = warm-up subset). VISION: survivor = สกัดกลไกเข้าแม่พิมพ์
+
+**⏳ ยังไม่ review (agent เพิ่งเสร็จ 2026-07-05, session หน้า):** ORDER-029B done (Codex, ATR-relative SL cap) ·
+**ORDER-030 done (Codex, XAU fresh-OOS — ด่านชี้ขาดทอง!)** → review ก่อนสิ่งอื่น (ถ้าทองผ่าน OOS = candidate #7 จริง)
 
 **วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
 **ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)
