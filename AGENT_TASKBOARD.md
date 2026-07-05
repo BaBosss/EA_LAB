@@ -1556,7 +1556,7 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 
 ---
 
-## ORDER-029B — implement Option B: `_33_SL_MaxATRmult` (ATR-relative SL cap, additive) — `OPEN` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **tpl_regression CLEAN + compile 0/0 ก่อน commit** · (priority: ต่ำ, workaround `_33_SL_MaxPips=0` ใช้ได้)
+## ORDER-029B — implement Option B: `_33_SL_MaxATRmult` (ATR-relative SL cap, additive) — `DONE(Codex, 2026-07-05 11:50 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **tpl_regression CLEAN + compile 0/0 ก่อน commit** · (priority: ต่ำ, workaround `_33_SL_MaxPips=0` ใช้ได้)
 
 **สเปค (Option B ที่ approve):** `core\Inputs.mqh`: เพิ่ม `input double _33_SL_MaxATRmult = 0;` (ใกล้ `_33_SL_MaxPips`) ·
 `core\ExitManager.mqh` `Exit_CapATRDist`: ถ้า `_33_SL_MaxATRmult > 0` → `cap = Indi_RiskATR(0) × _33_SL_MaxATRmult`
@@ -1566,7 +1566,12 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 commit `[tag] ORDER-029B done`
 **ห้าม:** เปลี่ยน default `_33_SL_MaxPips` · แตะ SL logic อื่น
 
-**ผล:** _(รอ)_
+**ผล (Codex, Model 1; ไม่มี verdict):** เพิ่ม `_33_SL_MaxATRmult=0` ใน `Inputs.mqh`; เมื่อ >0
+`Exit_CapATRDist()` ใช้ `Indi_RiskATR(0) × mult` เป็น ceiling และเมื่อ =0 ยังใช้ pip-cap เดิม.
+- compile Boss_11/12/13/14: **0 errors / 0 warnings**
+- `scripts\tpl_regression.ps1`: **REGRESSION CLEAN**
+- A/B XAU H1 full 2023.01–2026.07: baseline (`MaxPips=0`, ATR cap=0) เทียบ ATR cap=6.0 ให้ผลตรงกัน:
+  **426 trades, PF 1.42, net 3106.99, EqDD 23.34%, BalanceDD 15.42%** ทั้งคู่; delta ทุก metric = 0.
 
 ---
 

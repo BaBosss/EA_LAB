@@ -35,6 +35,11 @@ double Exit_RiskATR_Scaled()
 // pip = 10*point on 3/5-digit symbols. Zeus GridLog parity: SL = min(mult*ATR, 150 pips).
 double Exit_CapATRDist(const double distPrice)
 {
+   if(_33_SL_MaxATRmult > 0.0)
+   {
+      double atrCap = Indi_RiskATR(0) * _33_SL_MaxATRmult;
+      return (atrCap > 0.0 ? MathMin(distPrice, atrCap) : distPrice);
+   }
    if(_33_SL_MaxPips <= 0.0) return distPrice;
    int dg = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    double pipPrice = ((dg == 3 || dg == 5) ? 10.0 : 1.0) * Exit_Point();

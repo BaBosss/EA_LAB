@@ -217,6 +217,7 @@ input group "=== 3x Stop loss params ==="
 input double _31_SL_Pip        = 1000; // 31 fixed pip
 input double _33_SL_ATRmult    = 2.0;  // 33 ATR x mult (x Risk-ATR)
 input double _33_SL_MaxPips    = 0.0;  // 33 hard ceiling on ATR SL distance, in pips (0=off; pip=10*point on 3/5-digit)
+input double _33_SL_MaxATRmult = 0.0;  // 33 portable ATR-relative ceiling (0=use legacy pip cap)
 input bool   _33_AdaptiveON    = false;// 33 regime-scale: SL*=clamp(ATR/SMA(ATR,N),.7,1.5)
 input int    _33_AdaptiveN     = 50;   // 33 adaptive SMA period
 input double _32_SL_Money      = 0;    // 32 basket money stop (0=off)
