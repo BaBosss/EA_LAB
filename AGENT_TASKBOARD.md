@@ -1589,7 +1589,7 @@ commit `[tag] ORDER-029B done`
 
 ---
 
-## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `CLAIMED(Codex, 2026-07-05 11:52 +07:00)` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
+## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `DONE(Codex, 2026-07-05 11:57 +07:00)` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
 
 **ทำไม (user: อยากให้คอมมีงานทำช่วง token reset):** folder `D:\Forex\10_EA_PROJECTS\2. wait for test` มี 87 EA
 แต่ **mq4 37 ตัว = ใช้ไปป์ไลน์ MT5 ไม่ได้ (0/63 prior) · mq5 ส่วนใหญ่ grid/martingale = dead-family**. คัดเหลือ
@@ -1612,7 +1612,21 @@ commit `[tag] ORDER-033 done`
 **ห้าม:** verdict (Claude ตัดสิน) · **อย่าเสียเวลากับตัวที่ compile ไม่ผ่าน/hang เกิน 2 ครั้ง — note แล้วไปตัวถัดไป**
 (บทเรียน Bucket D: MT4-origin ports ส่วนใหญ่ไม่ทำงาน — คาดหวัง survivor น้อย, นี่คือ filter ราคาถูก ไม่ใช่ hunt หลัก)
 
-**ผล:** _(รอ)_
+**ผล (Codex; ไม่มี verdict):** compile ด้วย MetaEditor แล้ว deploy EX5 ชื่อ sanitized เข้า MT5 เลน 2.
+M2 = 2026.04–2026.07; M1 = 2025.07–2026.07. ไม่พบ AllowLive gate ที่ต้อง override.
+
+| EA | Symbol/TF | Compile | M2 trades | M1 PF | M1 trades | M1 net | M1 EqDD% / เหตุข้าม |
+|---|---|---|---:|---:|---:|---:|---|
+| Breakout Retest Pro | XAUUSD H1 | 0 errors / 0 warnings | 1 | 0.00 | 1 | -4950.75 | 67.19% |
+| Breakout Retest Pro | EURUSD H1 | 0 errors / 0 warnings | 18 | 0.76 | 53 | -965.49 | 15.71% |
+| GapFillRSI | XAUUSD H1 | 0 errors / 0 warnings | 0 | — | — | — | ข้าม M1: M2 zero-trade |
+| GapFillRSI | US30 H1 | 0 errors / 0 warnings | 0 | — | — | — | ข้าม M1: M2 zero-trade |
+| (oh) Bot V00 | EURUSD H1 | 0 errors / 2 deprecated warnings | 24 | 1.37 | 122 | +2307.69 | 42.90% |
+| (oh) Bot V00 | XAUUSD H1 | 0 errors / 2 deprecated warnings | 53 | 0.69 | 111 | -7916.33 | 89.50% |
+| Niyombot B2 Gold | XAUUSD M15 | 0 errors / 0 warnings | 1 | 0.16 | 16 | -9157.90 | 94.26% |
+
+Compile logs: `_mt5_auto\compile_waittest\`. OH warnings คือ deprecated
+`ACCOUNT_FREEMARGIN` และ `POSITION_COMMISSION`; ไม่ได้แก้ source ตาม scope smoke-only.
 
 ---
 
