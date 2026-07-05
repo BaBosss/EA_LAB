@@ -1489,7 +1489,13 @@ instrument class ทั้งหมด; ทาง B เป็น portability sea
 > **สถานะ: XAU GridLog = candidate #7 (in-sample PF 1.48). ต้องผ่านครบ pipeline เหมือน Boss_14 FX
 > ก่อนขึ้น demo. ทอง+grid = สงสัยสูงสุด, Model-4 บังคับ.** set = `Boss14_GridLog_XAU_ISpick.set` (สร้างแล้ว)
 
-## ORDER-030 — XAU: fresh-start OOS + full-window + year-split — `DONE(Codex, 2026-07-05 11:49 +07:00)` · **ทำได้: ZCode · Codex · oc-btest** · 👉 **แนะ: ZCode** (heavy) (role: batch, เลน 2)
+## ORDER-030 — XAU: fresh-start OOS + full-window + year-split — `REVIEWED(Claude/Opus, 2026-07-05 — ✅ ผ่าน OOS gate (CONDITIONAL) → ORDER-031 Model-4)` · ทำได้: ZCode/Codex/oc-btest
+
+**VERDICT (Claude/Opus): ✅ XAU GridLog ผ่านด่าน OOS — CONDITIONAL PASS (candidate non-FX ตัวแรกที่รอด OOS)**
+OOS 2025.07-26.07 = 196t/PF 1.15/+$897 (ผ่าน gate ≥0.9, เทรดเยอะพอ) · **ทุกปีบวก 1.20/2.31/1.31/1.37 =
+ไม่มีปีเน่า** (ผ่าน year-split ที่ฆ่า NZDUSD/GBPAUD) · full 1.42/426t. **⚠️ 2 เงื่อนไขก่อนเชื่อ:** (1) **DD สูงมาก
+27% @0.25x** → cap-breach = de-scale ไม่ reject, ต้องลด lot ~ครึ่ง FX cohort ให้เข้า budget 10-15% (2) **Model-1
+หลอกได้กับ grid (บทเรียน Recovery) → Model-4 = ด่านชี้ขาด** → **ORDER-031 (unblocked)** · edge จริงแต่ modest (1.15 vs FX 2-3)
 
 **ทำไม:** ด่านชี้ขาด — IS-opt เป็น in-sample, ต้องดูว่ารอด out-of-sample ไหม (GBPAUD/NZDUSD-SELL ตายด่านนี้มาแล้ว)
 ```powershell
@@ -1540,7 +1546,11 @@ commit `[tag] ORDER-031 done`
 
 ---
 
-## ORDER-032 — XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, ขนาน XAU) — `DONE(Codex, 2026-07-05 11:53 +07:00; user override)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode** (heavy, วันแยกจาก 030/031) (role: batch, เลน 2)
+## ORDER-032 — XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, ขนาน XAU) — `REVIEWED(Claude/Opus, 2026-07-05 — 🅿️ PARK-thin, ทองแข็งกว่า)` · ทำได้: ZCode/oc-btest
+
+**VERDICT (Claude/Opus): 🅿️ XAG = PARK (thin/weak)** — qualifying แค่ 4 pass ที่ PF≥1.2&≥60t (XAU มี 11) ·
+top-PF (8.87) เป็น **27 trades = thin artifact** ไม่ใช่ edge จริง · เงินบางกว่าทองชัด → **ไม่คุ้ม full pipeline
+ตอนนี้** โฟกัสทอง (XAU) ก่อน · re-examine XAG เฉพาะถ้า XAU ผ่านครบแล้วอยากได้ non-FX ตัวที่ 2
 
 **ทำไม:** ถ้าทองมีชีวิต เงินอาจมีด้วย (non-FX เพิ่ม) — mirror ORDER-028 เป๊ะแต่ symbol=XAGUSD
 สร้าง `Boss14_GridLog_XAG_opt1.set` = copy `Boss14_GridLog_XAU_opt1.set` (มีแล้ว) เปลี่ยน magic=990302 ·
@@ -1570,7 +1580,10 @@ powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert 'EALabTpl\Boss_14_Gr
 
 ---
 
-## ORDER-029B — implement Option B: `_33_SL_MaxATRmult` (ATR-relative SL cap, additive) — `DONE(Codex, 2026-07-05 11:50 +07:00)` · **ทำได้: Codex · Claude · oc-dev (❌ ZCode)** · 👉 **แนะ: Codex-direct** · ⚠️ **tpl_regression CLEAN + compile 0/0 ก่อน commit** · (priority: ต่ำ, workaround `_33_SL_MaxPips=0` ใช้ได้)
+## ORDER-029B — implement Option B: `_33_SL_MaxATRmult` (ATR-relative SL cap, additive) — `REVIEWED(Claude/Opus, 2026-07-05 — ✅ ACCEPT, verify tpl_regression CLEAN เอง)` · ทำได้: Codex/Claude/oc-dev
+
+**VERDICT: ✅ ACCEPT** — verify tpl_regression เอง = CLEAN ทั้ง 3 (additive default-off inert). mold portable
+สำหรับ non-FX แล้ว (ATR-relative SL cap). ต่อไป non-FX set ใช้ `_33_SL_MaxATRmult` ได้แทน workaround `_33_SL_MaxPips=0`
 
 **สเปค (Option B ที่ approve):** `core\Inputs.mqh`: เพิ่ม `input double _33_SL_MaxATRmult = 0;` (ใกล้ `_33_SL_MaxPips`) ·
 `core\ExitManager.mqh` `Exit_CapATRDist`: ถ้า `_33_SL_MaxATRmult > 0` → `cap = Indi_RiskATR(0) × _33_SL_MaxATRmult`
@@ -1589,7 +1602,12 @@ commit `[tag] ORDER-029B done`
 
 ---
 
-## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `DONE(Codex, 2026-07-05 11:57 +07:00)` · **ทำได้: Codex · oc-dev** (ต้อง compile source ก่อน — ❌ ZCode) · 👉 **แนะ: Codex-direct หรือ oc-dev** (งาน compile+run) (role: code+batch)
+## ORDER-033 — smoke-screen 4 MT5 signal EAs จาก `wait for test` (idle-compute filter) — `REVIEWED(Claude/Opus, 2026-07-05 — ❌ ไม่มี survivor; ตอกย้ำต้อง mass-smoke เต็ม)` · ทำได้: Codex/oc-dev
+
+**VERDICT: ❌ ไม่มี survivor** — Breakout Retest Pro (EUR PF 0.76 / XAU เจ๊ง -$4950) · GapFillRSI (0 trades =
+non-functional as-is) · Bot V00 (EUR PF 1.37 **แต่ DD 42.9%** = grid churn ไม่ใช่ edge). 2 "กลไกใหม่" ที่หวัง
+(Retest/GapFill) ไม่ติด — ตรง Bucket D lesson (MT4-origin ports ไม่ทำงาน). **แต่ user มี signal ว่ามี treasure
+→ ยังคุ้ม mass-smoke เต็ม (034-036, 2,623 ตัว) ไม่ใช่แค่ 4 ตัวนี้**
 
 **ทำไม (user: อยากให้คอมมีงานทำช่วง token reset):** folder `D:\Forex\10_EA_PROJECTS\2. wait for test` มี 87 EA
 แต่ **mq4 37 ตัว = ใช้ไปป์ไลน์ MT5 ไม่ได้ (0/63 prior) · mq5 ส่วนใหญ่ grid/martingale = dead-family**. คัดเหลือ

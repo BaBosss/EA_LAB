@@ -349,8 +349,14 @@ MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหล
 036 MT4 smoke (stage ~200)** ทุกตัว autonomous มี timeout/skip-hang guard. survivor (M1 PF≥1.3) → Claude คัด
 เข้า intake funnel เต็ม. (ORDER-033 4-EA = warm-up subset). VISION: survivor = สกัดกลไกเข้าแม่พิมพ์
 
-**⏳ ยังไม่ review (agent เพิ่งเสร็จ 2026-07-05, session หน้า):** ORDER-029B done (Codex, ATR-relative SL cap) ·
-**ORDER-030 done (Codex, XAU fresh-OOS — ด่านชี้ขาดทอง!)** → review ก่อนสิ่งอื่น (ถ้าทองผ่าน OOS = candidate #7 จริง)
+**✅ reviewed 029B/030/032/033 (Claude/Opus 2026-07-05):**
+- **🥇 ORDER-030 XAU = ผ่านด่าน OOS! CONDITIONAL PASS** — OOS PF 1.15/196t + **ทุกปีบวก** (1.20/2.31/1.31/1.37) ·
+  **= candidate non-FX ตัวแรกที่รอด OOS** · ⚠️ DD 27%@0.25x (de-scale ~ครึ่ง) + **ต้อง Model-4 (ORDER-031) ก่อนเชื่อ**
+- **029B = ACCEPT** (verify tpl_regression CLEAN เอง — mold portable non-FX แล้ว) · **032 XAG = PARK-thin** (4 pass, ทองแข็งกว่า) ·
+  **033 4-EA = ไม่มี survivor** (Retest/GapFill ไม่ติด, Bot V00 DD 42.9% churn) → ตอกย้ำต้อง mass-smoke เต็ม
+
+**👉 รันต่อทันที (unblocked): ORDER-031 = XAU Model-4 + MC (ด่านชี้ขาดทอง+grid)** · 👉 ZCode (M4 รันเดี่ยว) ·
+ถ้า M4 PF ไม่ร่วง + floating DD ยอมรับได้ (de-scaled) = **candidate #7 non-FX จริง** → de-scale lot → demo
 
 **วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
 **ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)
