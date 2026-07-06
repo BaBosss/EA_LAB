@@ -82,6 +82,13 @@ capability ที่แท้จริงตอนนี้มาจาก Codex
      ห้าม kill process · EA ใหม่ MT5 deploy อัตโนมัติผ่าน `ea_template\deploy.ps1` (เลน 1+2 — เลน 3
      ให้ copy `MQL5\Experts\EALabTpl` จากเลน 2 เมื่อต้องใช้ EA เวอร์ชันล่าสุด) · MT4b: EA ใหม่ต้อง copy
      .ex4 เข้า `D:\Meta4b\MQL4\Experts` เอง (สำเนา ณ 07-06 มี 308 ตัวรวม pool ที่ smoke แล้ว)
+   - **เพดานเครื่อง (i5-13500 = 14 cores / RAM 32GB — วัด 2026-07-06):** งานเบา (M1/M2 single run)
+     ≈ 1 core/เลน → **รันพร้อมกันได้จริง ~6 งาน** แต่ **ค่า default ให้หยุดที่ 5 เลนที่มี** เพราะ
+     (1) MT5 optimizer บนเลน 1 ตัวเดียว spawn agent 5+ ตัว = กินครึ่งเครื่องแล้ว — ตอน optimize วิ่ง
+     ให้นับมันเท่ากับ 3 เลน (2) ต้องเหลือ headroom ให้ Claude/Codex session + OS · เพิ่มเลนใหม่
+     **เฉพาะเมื่อคิวงานรอทั้งที่ทุกเลนไม่ว่างติดกันหลายวัน** ไม่ใช่เพิ่มเผื่อ (ทุกเลน = พื้นผิว
+     sync EA/history ที่ต้องดูแลเพิ่ม) · cache ขยะ: `<เลน>\Tester\` + `Tester\...\Agent-*\cache`
+     ลบได้เสมอ (regenerate เอง — เคลียร์ 5b ไป 80GB เมื่อ 07-06) · **Bases\ ห้ามลบ** (history จริง)
 3. **ตัวเลขที่รายงาน = Model 1 ขึ้นไป** (Model 2 ใช้กรอง zero-trade เท่านั้น) · ทุก full-window run แตกปีด้วย `scripts\report_year_split.py`
 4. **Verdict rules (สรุปจาก decision log — อ่านฉบับเต็มใน PROJECT_STATE §3):**
    ห้าม DEAD/REJECT ก่อน optimize probe · cap breach (DD/margin/ruin) = resize-first ห้าม reject ตรง ·
