@@ -1771,18 +1771,14 @@ commit `[tag] ORDER-035 done` · **ห้าม:** verdict/แก้ source
 | SL=2GRIDE MQL5 | XAUUSD | 1859 | 1.11 | 130056 | 35624.15 | 52.75 | Tier B |
 | JMAR EXPERTS for CRASH AND BOOM trailstop strategy | XAUUSD | 296 | 1.10 | 1222 | 10822.93 | 60.86 | Tier B |
 
-## ORDER-036 — MT4 mass-smoke driver (loop worklist ex4, `D:\Meta4`) — `OPEN` · **ทำได้: Codex · oc-dev** · 👉 **แนะ: oc-dev/Codex** · ⚠️ **หลัง 035, stage ~200/รอบ** · autonomous (role: code+batch)
+## ORDER-036 — MT4 mass-smoke (1,318 ex4) — `OPEN → แยกเป็น BATCH BOARD ไฟล์ตัวเอง (user 2026-07-06)` · **ทำได้: Codex · oc-dev**
 
-**ทำไม:** treasure ที่ user จำได้อาจเป็น MT4 (2,286 = ส่วนใหญ่). prior 0/63 แต่ user มี signal → คุ้ม smoke
-**งาน:** เหมือน 035 (basket **XAUUSD, EURUSD, USDJPY, AUDNZD** H1, M2 กรอง 0-trade → M1 confirm ทุก symbol ที่เทรด)
-แต่ `mt4_run.ps1`+`parse_mt4_report.py`+`D:\Meta4` · **MT4 ไม่มี tick <2026-03 (memory)** → window M2 2026.04-07,
-M1 2026.03-07 · **stage 50 ตัว/batch** (user 2026-07-05: 50×4 symbol = ~200 run/batch พอดี, MT4 ช้ากว่า MT5 +
-checkpoint/resume ง่าย) เรียง folder ใหม่→เก่า · commit ต่อ batch · อย่ารันรวด (⚠️ MT4 symbol suffix อาจ
-ต่าง เช่น XAUUSDm/EURUSD. — ให้ driver match symbol ที่ broker Meta4 มีจริง ก่อนรัน ถ้าไม่มีตัวไหนข้าม+note)
-**Acceptance:** ต่อ stage: CSV + tier เดียวกับ 035 (**Tier A** PF>1&trades≥20&eqDD<40% · **Tier B** PF>1&eqDD≥40% grid-trap ·
-**Reject** PF≤1/trades<20) · list Tier A+B · commit `[tag] ORDER-036 stageN done` · **ห้าม:** verdict
+**👉 spec + สถานะ + วิธีสั่งทั้งหมด = `ORDER-036_MT4_MASS_SMOKE.md`** (แยกไฟล์เพราะ 27 batches ×50 —
+กัน taskboard บวม). batch assignment deterministic = `_triage/mass_smoke_mt4_batches.csv` (คอลัมน์ batch 01-27).
+user สั่งเป็นก้อน เช่น "ทำ 036 batch 04-08" · batch จบ+review แล้ว archive ไป `_archive/ORDER-036_ARCHIVE.md` ·
+order แม่แถวนี้**คงอยู่จนครบ 27 batch** (กันหลุดจาก board) — Claude สรุป verdict รวมที่นี่ตอนจบ
 
-**ผล:** _(รอ)_
+**ผล:** _(ดูตารางสถานะในไฟล์ board — สรุปรวมจะมาเขียนที่นี่เมื่อครบ)_
 
 ---
 
