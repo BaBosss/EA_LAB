@@ -38,8 +38,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-04 | 50 | REVIEWED(Claude 07-06 — รันเองบนเลน MT4b ด้วย driver ใหม่) | 0 | 0 | 2 | 198 | **โซนตาย: 0 survivor ทั้ง batch** — กอง "FREE EA" bundle = indicator conversion เกือบทั้งหมด · precheck ทำงานจริง: จับ `missing-indicator:` พร้อมชื่อไฟล์ (เช่น BrainTrend2Sig.ex4) + ข้าม symbol ที่เหลือ = ไม่เผา timeout · timeout-kill พิสูจน์แล้ว (LRCChannelD โดน kill ที่ 180s แทนที่จะค้างเป็นชั่วโมงแบบเดิม) · stage-2 BWD-OOS = n/a (ไม่มี Tier A) |
 | 036-05 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 10 | 0 | 1 | 189 | ⚠️ **Tier A ทั้งหมด = 1 ตระกูลต้องสงสัย** — ดู triage ล่างตาราง (BWD-OOS กำลังรัน) |
 | 036-06 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | **โซนตาย 100%** — indicator-name pack อีกกอง (SHISIGNALARROW/SyncMA/StealthXXX ฯลฯ) |
-| 036-07 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
-| 036-08 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
+| 036-07 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 1 | 199 | โซนตาย — 291-TOIS.jrEURJPYGBPCHF (อีก "\*.jr\*" family) ไม่ผ่านแม้แต่ Tier A ระดับ smoke |
+| 036-08 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
+| 036-09 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
