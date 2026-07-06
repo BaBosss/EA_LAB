@@ -90,7 +90,10 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   (acct-DD gate `RC_AcctDDLimitPct` default 0 — regression CLEAN, trip พิสูจน์แล้ว 107→48 trades) ·
   ✅ MERGE-05B (`core\Persist.mqh` + persist hard-kill state, `RC_PersistHalt` default ON =
   ข้อยกเว้น additive ที่ signed off · Persist_Test 8/8 PASS · regression CLEAN โดย persist ON) ·
-  คิวถัดไป: **MERGE-03 (pyramid — ชิ้นใหญ่สุด) → 06 (tests) → 08 (ปิด EA_Project เป็น archive)**
+  ✅ MERGE-03 (**STACK_PYRAMID(93) pending ladder เข้าแม่พิมพ์แล้ว** — smoke: placed 24 =
+  filled 20 + cancelled 4 บัญชีปิดเป๊ะ, failed 0 · A/B 91 vs 93 = mechanism ต่างจริง · regression
+  CLEAN · one-exit-owner: ไม่มี per-leg TP, โหมด 93 ปิด Recovery/Hedge/partial · spec →
+  `ea_template/DESIGN_V2.md` §3c) · คิวถัดไป: **MERGE-06 (tests) → 08 (ปิด EA_Project เป็น archive)**
   · 07 Entry_ST03 = hold ถึง judge — จบ track = EA_Project ไม่มีงานใหม่อีก
 - **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
   (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
