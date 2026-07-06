@@ -10,6 +10,9 @@
 #include "Inputs.mqh"
 #include "Indicators.mqh"
 #include "Execution.mqh"
+#include "RiskControl.mqh"
+#include "MoneyManagement.mqh"
+#include "ExitManager.mqh"
 #include "entries/IEntry.mqh"
 
 // grid step in price (Signal-ATR based or fixed points), with an optional
@@ -69,9 +72,66 @@ bool Stack_ConfirmOK(const int dir, const double triggerLevel, const EntrySignal
    return false;
 }
 
+// ---- STACK_PYRAMID (93) - pending ladder (MERGE-03) ----------------------
+// Leg0 opens through LabCore's normal first-entry path; this places legs 1..N
+// as resting pendings ONCE per basket, then does nothing until flat again.
+// No per-leg TP, no market adds, Exec_CloseAll() clears leftovers on any exit.
+bool g_stack_ladder_placed = false;
+
+void Stack_ManagePyramid()
+{
+   if(StackMode != STACK_PYRAMID) return;
+
+   int filled  = Exec_CountAll();
+   int pending = Exec_CountPending();
+
+   if(filled == 0)
+   {
+      // flat: safety-net cancel (normal path already cancelled via CloseAll)
+      if(pending > 0) Exec_CancelAllPending();
+      g_stack_ladder_placed = false;
+      return;
+   }
+   if(g_stack_ladder_placed) return;
+   if(_9_PendingMode != 2 && _9_PendingMode != 3) { g_stack_ladder_placed = true; return; }
+   if(filled != 1 || pending > 0)
+   {
+      // mid-basket restart/recompile: ladder (or its fills) already exists at
+      // the broker - never re-place on top of it
+      g_stack_ladder_placed = true;
+      return;
+   }
+
+   double step = Stack_StepPrice();
+   if(step <= 0.0) return;
+   int dir = (Exec_CountDir(1) > 0 ? 1 : 2);
+   double leg0price = Exec_LastPriceDir(dir);
+   double leg0lot   = Exec_TotalLots();          // filled==1 -> exactly leg0's lot
+   if(leg0price <= 0.0 || leg0lot <= 0.0) return;
+
+   int maxLegs = RiskControl_MaxLevels();
+   int nPend   = _9_PendingLegs;
+   if(nPend > maxLegs - 1) nPend = maxLegs - 1;
+   if(nPend <= 0) { g_stack_ladder_placed = true; return; }
+   if(!RiskControl_AllowNewOrder()) return;      // deposit-load block: retry next tick
+
+   bool isStop = (_9_PendingMode == 3);
+   for(int k = 1; k <= nPend; k++)
+   {
+      double off   = k * step;
+      double price = (dir == 1 ? (isStop ? leg0price + off : leg0price - off)
+                               : (isStop ? leg0price - off : leg0price + off));
+      double lot   = MM_NextLot(leg0lot, k);
+      double sl    = Exit_InitialSL(dir, price);
+      Exec_PlacePending(dir, isStop, lot, price, sl, "PYR L" + IntegerToString(k));
+   }
+   g_stack_ladder_placed = true;
+}
+
 // Should we add a stacked order now? dir = current basket direction.
 bool Stack_DecideAdd(const int dir, const int have, const EntrySignal &sig)
 {
+   if(StackMode == STACK_PYRAMID) return false;         // 93: adds come from the resting ladder only
    if(StackMode == STACK_SINGLE) return false;          // 90: never add
    if(have >= RiskControl_MaxLevels()) return false;    // cage + stack cap
 

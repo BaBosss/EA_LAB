@@ -58,7 +58,7 @@ EA_CORE = ตัวให้, ทุกชิ้น additive (default OFF), cage
    Claude review ต้อง**เอะใจเป็นพิเศษ**กับแถว DONE จาก Codex ช่วงนี้ (ตรวจว่าไฟล์/ผลมีจริงครบ
    ไม่ใช่แค่ประกาศ) และแถว CLAIMED ที่เงียบนาน = สันนิษฐานว่า quota หมด → ปลด claim กลับ OPEN ได้
 5. ลำดับบังคับ (ปรับตาม synthesis MERGE-02 — เสี่ยงต่ำก่อน): MERGE-01 ✅ → MERGE-02 ✅ → MERGE-05A ✅ →
-   MERGE-04 ✅ → MERGE-05B ✅ → **MERGE-03 (pyramid — ตัวถัดไป, ชิ้นใหญ่สุด)** → MERGE-06 → MERGE-08 (07 = hold)
+   MERGE-04 ✅ → MERGE-05B ✅ → MERGE-03 ✅ → **MERGE-06 (tests — ตัวถัดไป) → MERGE-08 (ปิดคลัง)** (07 = hold)
 
 ---
 
@@ -116,7 +116,7 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 
 ---
 
-## MERGE-03 — port ScaleExecutor_v2 → Boss V2: โหมด `STACK_PYRAMID(93)` + pending ladder — `OPEN` (ปลดล็อคเมื่อ MERGE-04 + MERGE-05B REVIEWED — ชิ้นเสี่ยงสุดทำท้ายสุด ตาม synthesis MERGE-02) · **ทำได้: Codex-direct** (role: code)
+## MERGE-03 — port ScaleExecutor_v2 → Boss V2: โหมด `STACK_PYRAMID(93)` + pending ladder — `REVIEWED(Claude, 2026-07-06 — ✅ acceptance ครบ 4 ข้อ, อะไหล่ชิ้นใหญ่สุดเข้าแม่พิมพ์แล้ว)` (role: code)
 
 **ทำไม:** อะไหล่ชิ้นที่มีค่าสุดของ EA_CORE — Boss V2 ยิงได้แค่ market ทีละไม้ (`Stack.mqh` 90/91/92
 ล้วน market-add) ขาด pending LIMIT/STOP ladder + OCO ที่ `ScaleExecutor_v2.mqh` มี (360 บรรทัด,
@@ -148,7 +148,23 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 **ห้าม:** เปลี่ยน default ใดๆ · แตะ logic โหมด 90/91/92 · แตะ Boss_11–13 entry files · ตัดสินว่าโหมดไหน
 "ดีกว่า" (นั่นคืองาน optimize รอบหน้า ไม่ใช่งาน port)
 
-**ผล:** _(รอ)_
+**ผล (Claude ทำเอง, 2026-07-06):**
+- **โค้ด (ตาม mitigation "one mode, one exit owner" ทุกข้อ):** `Inputs.mqh` enum 93 +
+  `_9_PendingMode`/`_9_PendingLegs` (default 0) · `Execution.mqh` pending infra
+  (place/count/cancel — `Exec_CloseAll` cancel leftovers เสมอ, no-op โหมดเดิม) ·
+  `Stack.mqh` `Stack_ManagePyramid()` (วาง ladder ครั้งเดียว/basket, lot จาก `MM_NextLot` ของ
+  leg0 จริง, restart กลาง basket ไม่วางซ้ำ, ห้าม per-leg TP) · `LabCore.mqh` wire + ปิด
+  Recovery/Hedge ใต้โหมด 93 + WARN config ขาด · `ExitManager.mqh` guard partial-close ·
+  spec เต็ม → `DESIGN_V2.md` §3c
+- **compile 0/0 ทั้ง 5 ไฟล์**
+- **smoke โหมด 93 (Boss_11 GBPUSD H1 2024.01–07 M1, PendingMode=3, legs=3, MaxLevelsOverride=4):**
+  journal นับได้ **placed 24 · filled 20 · cancelled 4 → 24 = 20+4 บัญชีปิดลงตัวเป๊ะ** · failed 0 ·
+  ladder ถูกทิศทั้งสองฝั่ง (SELL: 1.26942→1.26429 ต่ำลง · BUY: 1.28330→1.28498 สูงขึ้น) ·
+  trades 28 = 8 leg0 + 20 fills · report `MERGE03_PYR_SMOKE.htm`
+- **A/B config เดียวกันต่างแค่ StackMode (ไม่ตัดสินว่าใครดีกว่า — พิสูจน์ mechanism ต่าง):**
+  mode 91 = 200 trades / PF 0.59 / eqDD 3.07% · mode 93 = 28 trades / PF 0.26 / eqDD 1.46% ·
+  report `MERGE03_AB_MODE91.htm`
+- **tpl_regression = CLEAN ทั้ง 4 EA** (โหมด 93 ปิด default → เลขเดิมตรง baseline เป๊ะทุกตัว)
 
 ---
 

@@ -166,6 +166,31 @@ param: `_9_StackConfirm` (enum) — logic อยู่ใน `Stack.mqh` คู�
 
 ---
 
+## 3c) STACK_PYRAMID (93) — pending ladder (ScaleExecutor_v2 port, MERGE-03 2026-07-06)
+
+กลไก: leg0 = market entry ปกติผ่าน LabCore · legs 1..N = **pending order พักที่ broker**
+(`_9_PendingMode`: 3=STOP pyramid ตามเทรนด์ · 2=LIMIT scale-in สวนเทรนด์) ระยะห่าง =
+`Stack_StepPrice()` เดิม (ATR-based + MinPips floor — ไม่มีสูตรใหม่) · lot ต่อ leg = `MM_NextLot`
+จาก lot จริงของ leg0 · จำนวน pendings = min(`_9_PendingLegs`, `RiskControl_MaxLevels()`-1) ·
+วาง**ครั้งเดียวต่อ basket** (flag reset เมื่อ flat) · restart กลาง basket → ไม่วางซ้ำ (เช็ค
+filled/pending จาก broker ก่อนเสมอ)
+
+**Intentional differences จาก CORE\ScaleExecutor_v2 (อย่า "แก้กลับ"):**
+- **ไม่มี per-leg TP / OCO** — basket TP/SL ใน ExitManager เป็น exit owner เดียว (pendings มีแค่
+  per-leg SL) · เหตุผล: split exit ownership = risk #1 จาก MERGE-02 synthesis, precedent =
+  `_2_SuppressLegTP` เกิดจาก conflict class เดียวกันตอน port GridLog
+- โหมด 93 ปิด Recovery / Hedge / partial-close / market-add (Stack_DecideAdd คืน false) —
+  one mode, one owner
+- `Exec_CloseAll()` cancel pendings ค้างเสมอ (ทุก exit path: basket TP, money SL, hard kill) —
+  no-op สำหรับโหมดเดิมเพราะไม่เคยมี pendings
+- ไม่ใช้ OnTradeTransaction — reconcile จาก `OrdersTotal()/PositionsTotal()` scan สดต่อ tick
+
+ไฟล์ที่แตะ: `Inputs.mqh` (enum 93 + `_9_PendingMode`/`_9_PendingLegs` default 0) ·
+`Execution.mqh` (pending infra: place/count/cancel) · `Stack.mqh` (`Stack_ManagePyramid`) ·
+`LabCore.mqh` (wire + WARN เมื่อ 93 แต่ PendingMode ว่าง) · `ExitManager.mqh` (guard partial-close)
+
+---
+
 ## 4) Module Map (อ้างอิงเร็ว)
 
 | Module | หน้าที่ | ปรับผ่าน |

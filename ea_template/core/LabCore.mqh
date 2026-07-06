@@ -55,6 +55,8 @@ int OnInit()
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
+   if(StackMode == STACK_PYRAMID && _9_PendingMode != 2 && _9_PendingMode != 3)
+      Print("[INIT] WARN: StackMode=93 but _9_PendingMode not 2/3 - ladder disabled, behaves like single");
    return INIT_SUCCEEDED;
 }
 
@@ -110,10 +112,16 @@ void OnTick()
    // (2) manage existing basket; stop if it fully closed this tick
    if(Exit_ManageBasket()) return;
 
-   // gated hooks (no-op unless enabled)
-   Recovery_OnTick();
-   Hedge_OnTick();
+   // gated hooks (no-op unless enabled). Mode 93 owns its basket lifecycle -
+   // Recovery/Hedge market-adds would fight the resting ladder (MERGE-02
+   // synthesis: one mode, one owner), so they are skipped under 93.
+   if(StackMode != STACK_PYRAMID)
+   {
+      Recovery_OnTick();
+      Hedge_OnTick();
+   }
    Basket_OnTick();
+   Stack_ManagePyramid();   // no-op unless StackMode==93
 
    // (3) entry signal
    EntrySignal sig = Entry_Evaluate();

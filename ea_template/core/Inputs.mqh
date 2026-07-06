@@ -81,7 +81,8 @@ enum ENUM_STACK_MODE
 {
    STACK_SINGLE       = 90,  // 90 Single (one order per signal)
    STACK_GRID_TREND   = 91,  // 91 Grid trend (add as trend extends)
-   STACK_GRID_AGAINST = 92   // 92 Grid against (DCA / average down)
+   STACK_GRID_AGAINST = 92,  // 92 Grid against (DCA / average down)
+   STACK_PYRAMID      = 93   // 93 Pending ladder (ScaleExecutor_v2 port, MERGE-03)
 };
 
 enum ENUM_STACK_CONFIRM
@@ -144,6 +145,15 @@ input int    _9_StepATRShift = 0;       // additive: Signal-ATR shift for the st
                                          // matches Boss_11/12/13 unchanged default; 1=last CLOSED bar, matches
                                          // standalone Zeus GetATR(1) - GridLog(14) parity .set uses 1).
 input int    _9_MaxLevels   = 5;        // max stacked orders
+// additive (MERGE-03, ScaleExecutor_v2 port): STACK_PYRAMID(93) pending ladder.
+// Active ONLY when StackMode=93 - all other modes ignore these two inputs.
+// Leg0 = normal market entry; legs 1..N = resting pendings at Stack_StepPrice()
+// spacing, placed once per basket. Basket close (TP/SL/kill) cancels leftovers.
+// One exit owner: basket TP/SL only - pendings carry per-leg SL, NEVER per-leg
+// TP. Mode 93 also disables Recovery/Hedge/partial-close/market-adds (see board
+// MERGE-02 synthesis: "one mode, one exit owner").
+input int _9_PendingMode = 0;   // 93 only: 0=none (warn) / 2=LIMIT scale-in / 3=STOP pyramid
+input int _9_PendingLegs = 0;   // 93 only: pendings after leg0 (capped by RiskControl_MaxLevels-1)
 
 //==================== ENTRY params (compile-time guarded) ==========
 #ifdef LAB_ENTRY_11

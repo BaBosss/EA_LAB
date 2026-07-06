@@ -125,6 +125,65 @@ datetime Exec_LastTimeDir(const int direction)
    return best;
 }
 
+// ---- pending-order infra (MERGE-03, STACK_PYRAMID 93) --------------------
+// Old modes never place pendings, so the cancel below is a no-op for them.
+
+bool Exec_OrdIsMine(const int index)
+{
+   ulong tk = OrderGetTicket(index);
+   if(tk == 0) return false;
+   if(OrderGetString(ORDER_SYMBOL) != _Symbol) return false;
+   if((long)OrderGetInteger(ORDER_MAGIC) != _0_Magic) return false;
+   return true;
+}
+
+int Exec_CountPending()
+{
+   int n = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+      if(Exec_OrdIsMine(i)) n++;
+   return n;
+}
+
+void Exec_CancelAllPending()
+{
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_OrdIsMine(i)) continue;
+      ulong tk = OrderGetTicket(i);
+      if(DryRun) { PrintFormat("[DRYRUN] cancel pending %I64u", tk); continue; }
+      if(g_trade.OrderDelete(tk))
+         PrintFormat("[EXEC] pending cancelled %I64u", tk);
+   }
+}
+
+// place one resting leg. isStop: true=STOP (pyramid, with-trend fill),
+// false=LIMIT (scale-in, against-trend fill). tp always 0 in mode 93
+// (basket exit is the single exit owner - see Inputs.mqh note).
+bool Exec_PlacePending(const int direction, const bool isStop, double lot,
+                       double price, const double sl, const string comment)
+{
+   lot = Exec_NormalizeLot(lot);
+   if(lot <= 0.0) return false;
+   price = NormalizeDouble(price, _Digits);
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] pending dir=%d stop=%d lot=%.2f at %.5f sl=%.5f %s",
+                  direction, (isStop ? 1 : 0), lot, price, sl, comment);
+      return true;
+   }
+   bool ok = false;
+   if(direction == 1) ok = (isStop ? g_trade.BuyStop(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment)
+                                   : g_trade.BuyLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
+   else               ok = (isStop ? g_trade.SellStop(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment)
+                                   : g_trade.SellLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
+   if(ok) PrintFormat("[EXEC] pending placed dir=%d stop=%d lot=%.2f at %.5f (%s)",
+                      direction, (isStop ? 1 : 0), lot, price, comment);
+   else   PrintFormat("[EXEC] pending FAILED dir=%d at %.5f retcode=%d",
+                      direction, price, (int)g_trade.ResultRetcode());
+   return ok;
+}
+
 void Exec_CloseAll()
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
@@ -133,6 +192,8 @@ void Exec_CloseAll()
       ulong tk = PositionGetInteger(POSITION_TICKET);
       if(!DryRun) g_trade.PositionClose(tk);
    }
+   // basket gone = ladder leftovers must go too (no-op when no pendings exist)
+   Exec_CancelAllPending();
 }
 
 bool Exec_ModifyPosition(const ulong ticket, const double sl, const double tp)

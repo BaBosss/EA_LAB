@@ -187,6 +187,9 @@ double Exit_BasketTargetMoney()
 
 void Exit_ManagePartialClose()
 {
+   // mode 93 (pending ladder): partial-close would fragment ladder legs while
+   // resting siblings are still armed - basket TP is the single exit owner
+   if(StackMode == STACK_PYRAMID) return;
    double targetMoney = Exit_BasketTargetMoney();
    if(targetMoney <= 0.0) return;                      // needs a target to measure % against
    if(_2_PartialPct1 <= 0.0 && _2_PartialPct2 <= 0.0) return;   // both off
