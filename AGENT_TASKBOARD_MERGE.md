@@ -54,6 +54,9 @@ EA_CORE = ตัวให้, ทุกชิ้น additive (default OFF), cage
 3. **additive เท่านั้น** — ห้ามเปลี่ยน default/behavior ของโหมดเดิม (บทเรียน ORDER-027/029B ใช้ต่อ)
 4. MT5 tester (`D:\Meta 5`) เป็นทรัพยากรร่วมกับบอร์ดหลัก (ORDER-038 ฯลฯ) — อย่ารันชนกัน,
    เช็ค process ก่อน claim งานที่ต้องรัน backtest
+4b. ⚠️ **Codex quota เหลือ ~5% weekly (user แจ้ง 2026-07-06)** — งานที่ Codex claim อาจตายกลางทาง:
+   Claude review ต้อง**เอะใจเป็นพิเศษ**กับแถว DONE จาก Codex ช่วงนี้ (ตรวจว่าไฟล์/ผลมีจริงครบ
+   ไม่ใช่แค่ประกาศ) และแถว CLAIMED ที่เงียบนาน = สันนิษฐานว่า quota หมด → ปลด claim กลับ OPEN ได้
 5. ลำดับบังคับ (ปรับตาม synthesis MERGE-02 — เสี่ยงต่ำก่อน): MERGE-01 ✅ → MERGE-02 ✅ → MERGE-05A ✅ →
    MERGE-04 ✅ → **MERGE-05B (persist) → MERGE-03 (pyramid)** → MERGE-06 → MERGE-08 (07 = hold)
 
