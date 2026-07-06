@@ -42,8 +42,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-08 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 0 | 0 | 0 | 200 | โซนตาย 100% — indicator pack ต่อเนื่อง (WSS*, X*, ZUP ฯลฯ) |
 | 036-09 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | โซนตาย 100% — 0 เทรดทั้งกอง (แม้แต่ Reject ก็ไม่มี) |
 | 036-10 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 5 | 0 | 5 | 190 | **0/3 survivor หลัง auto-flag lot-escalation** — ดู triage ล่างตาราง |
-| 036-11 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
-| 036-12 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
+| 036-11 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 3 | 0 | 6 | 191 | **0/3 survivor — ตัดสินจาก smoke เดิมได้เลย ไม่ต้องเสีย BWD** ดู triage ล่างตาราง |
+| 036-12 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
+| 036-13 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -142,6 +143,18 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 ทันที: ทั้งสองตัวมี DD ที่ BWD รายงานสูงอยู่แล้ว (33-49%) ซึ่ง**สอดคล้อง**กับ escalation จริง
 (ต่างจาก 2020v2 ที่ DD รายงานต่ำหลอกไว้) — แปลว่า BWD-OOS window ยาวพอที่จะเริ่มเผย DD จริงได้เอง
 บางส่วน แต่ lot-check ยังจำเป็นเพื่อยืนยันสาเหตุและปิดไม่ให้เถียงว่า "แค่โชคร้าย"
+
+## Triage batch 11 (Claude, 2026-07-07 — ตัดสินได้จากตาราง smoke เดิม ไม่ต้องรัน BWD-OOS เพิ่ม)
+
+| EA | EURUSD | USDJPY | Verdict |
+|---|---|---|---|
+| Blessing 3 v3.9.6.09 | PF 0.75 / -524 / **DD 31.52%** (Reject) | PF **67.82** / 25 เทรด / DD 0.72% (Tier A) | ❌ **REJECT** — **EA ตัวเดียวกันพังใน EURUSD แต่ "ชนะสวย" ใน USDJPY ด้วยตัวอย่างแค่ 25 เทรด** = thin-sample artifact + regime-lucky ไม่ใช่ edge (PF 67.82 คือค่าที่เป็นไปไม่ได้ในทางสถิติสำหรับกลไกทั่วไป — สัญญาณเดียวกับ Elephant/IR Whale ที่เจอมาก่อน) |
+| cci ma ea | PF 1.14 / +2,061 / DD 23.78% (Tier A, edge บาง) | PF 0.70 / **-5,285** / **DD 59.83%** (Reject, พังหนัก) | ❌ **REJECT** — EA เดียวกันระเบิดคนละคู่เงิน = regime-dependent ไม่ใช่ edge จริง (pattern เดียวกับ GBPAUD/EURCAD ที่ parked ไปแล้ว) |
+| Daily breakout16 | — | PF 1.01 / net **+$2.28** เท่านั้น / DD 0.58% | 🅿️ **PARKED-worthless** — เหนือ PF 1 จริงแต่ net ใกล้ศูนย์เกินกว่าจะมีความหมายทางเศรษฐศาสตร์ ไม่คุ้มเสียแรง BWD |
+
+**หลักการใหม่ที่ยืนยันจากรอบนี้:** ก่อนเสีย compute กับ BWD-OOS ให้เทียบผลข้าม symbol ของ EA
+เดียวกันในตาราง smoke ก่อนเสมอ — ถ้าคู่เงินหนึ่งพังหนักอีกคู่ "ชนะสวยเกินจริง" = ปิดเคสได้ทันที
+ไม่ต้องรอ BWD (ประหยัดเวลา 3-4 นาที/ตัวคืนนี้ ~10 นาที)
 
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
