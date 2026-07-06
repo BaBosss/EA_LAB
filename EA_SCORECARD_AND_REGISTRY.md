@@ -233,6 +233,11 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 | SL=2GRIDE · The One 1.0.3 | BWD 1.13/eqDD 11% · 1.14/DD 31% | ★★☆ | WATCH-thin (ไม่ลงแรงต่อ) | edge บางเกิน/DD สูง — เก็บชื่อไว้ ไม่เข้า funnel |
 | อีก 12 ตัว (IR Whale eqDD 106%! · BOO 91% · JMAR 99% · Grid UL 85% · pun hedging 79% · Master GRID 72% · Black Dragon 52% · IRSI 51% · grid v05 eqDD 94% · GOLD CENTER expired · continue · fibo gold flat) | BWD-OOS sweep `BWDOOS_SWEEP.csv` | ★★★ | **REJECT ยกแผง (2026-07-06)** | ตระกูล regime-harvester ครบทุกตัว — ตายปี 2020-22 ตามทฤษฎี · PumLot+PROFIT PLANET = NO_REPORT (non-functional BWD window) |
 
+### MT5 — GridLog × instrument class (mine #1)
+| Cell | best recon | Conf | Verdict | Reason |
+|---|---|---|---|---|
+| GridLog × US30 (index) | 4-variant recon (xau-axes/tp0.5/aud-axes/sell) ทั้งหมด **PF 0.78-0.96 ลบ** | ★☆☆ | **PARKED-pending-probe (2026-07-06) — EV ต่ำ ไม่เร่ง** | ต่างจากทองที่ life โผล่ตั้งแต่ scan แรก (1.76) — index ไม่ตอบ mechanism นี้ที่ default · ตามกฎ no-DEAD-before-optimize เหลือ ORDER-042 probe (optional, ZCode วันว่าง) · **mine #1 = จบ backbone แล้ว: FX 6 ✓ ทอง ✓ เงิน parked · index parked** |
+
 ### MT4 — MASS-SMOKE batch-01 BWD-OOS (ORDER-040, 2026-07-06)
 | EA | best smoke | Conf | Verdict | Reason |
 |---|---|---|---|---|

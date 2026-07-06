@@ -462,6 +462,12 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
   monitor = MT4 statement ทุก 2 สัปดาห์) — **รอ user attach + แจ้งวันเริ่ม** · **036 batch 02-05 = user
   dispatch แล้ว (2026-07-06)** — Claude review ตอน DONE (BWD-OOS gate ฝังใน board แล้ว)
 
+**🏁 mine #1 จบ backbone (Claude, 2026-07-06): GridLog × US30 recon 4 variants = PF 0.78-0.96 ทั้งหมด
+(ไม่มี life แบบทองที่โชว์ 1.76 ตั้งแต่ scan แรก)** → PARKED-pending-probe · ORDER-042 (US30 IS-opt probe)
+เปิดเป็น **optional priority ต่ำ** ตามกฎ no-DEAD-before-optimize · **แผนที่ mine #1 สรุป: FX 6 demo ✓ ·
+ทอง demo ✓ (#7) · เงิน parked-thin · index parked-low-EV → เหมืองถัดไป = mine #2 treasure mold-port
+(candle-pattern gate + retest-zone จาก ORDER-021) เมื่อ batch 02-27 + demo เดินครบ**
+
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล

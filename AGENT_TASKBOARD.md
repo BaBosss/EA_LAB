@@ -1975,6 +1975,19 @@ commit `[tag] ORDER-041 done` · **ห้าม:** verdict — เกณฑ์ C
 
 ---
 
+## ORDER-042 — US30 GridLog: IS-optimize probe (optional, EV ต่ำ) — `OPEN (priority ต่ำ — ทำวันที่ ZCode ว่างจริงๆ)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode slot วันว่าง** (role: batch, เลน 2)
+
+**ทำไม:** recon 4 variants (Claude 2026-07-06) ทั้งหมด PF 0.78-0.96 — ไม่มี life แบบทอง แต่กฎ no-DEAD-
+before-optimize ให้ 1 probe ก่อนปิดทะเบียน. **อย่าลัดคิวงานอื่น — นี่ optional**
+**งาน:** copy `Boss14_GridLog_XAU_opt1.set` → `Boss14_GridLog_US30_opt1.set` (แก้ magic=990303) รัน optimizer
+เหมือน ORDER-028 แต่ Symbol=US30 (IS 2023.01-2025.06, Model 1, เลน 2) → `BOSS14_OPT_US30_IS`
+**Acceptance:** XML + จำนวน pass PF≥1.2&n≥60 + top-5 ดิบ · commit `[tag] ORDER-042 done`
+**ห้าม:** verdict — 0 qualifying = Claude จะปิด DEAD-optimized (ปิดทะเบียนถาวรแบบ USDCHF)
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
