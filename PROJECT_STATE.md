@@ -368,11 +368,15 @@ Model-4 คือด่านที่แยก "grid มี edge จริง" 
 (tight-TP artifact suspect: IR Whale 3.94/DD0.75%, The One 2.32/2941t · grid DD30-60%: North East Way,
 continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 → ORDER-037 Model-4 artifact-check.**
 
-**🏆 ORDER-037 (Claude รัน pun fix lot เอง 2026-07-05): (oh) pun fix lot v05 = ผ่านครบทุกด่าน = external EA
-ที่แข็งสุดที่แล็บเคยเจอ!** M4 real ticks PF 1.51 (M1 1.63 = ไม่ collapse) · full-window ทุกปีบวก (1.80/1.45/1.29/1.34) ·
-MC ruin 0%/worst DD 4.10% · fixed-lot. **⚠️ ก่อนเชื่อจริง: (1) กลไกยังไม่รู้ ต้องอ่าน source (2) high-freq
-~8 ไม้/วัน = ไวต่อ spread/commission → demo Exness คือด่านตัดสิน** (backtest≠live profile). GapinFX + North
-East Way ยังไม่ M4 · **036 MT4 = พรุ่งนี้.** → user's treasure น่าจะจริง แต่ต้องอ่านกลไก + demo ยืนยัน
+**🔄 ORDER-037 pun fix lot — VERDICT แก้หลังอ่าน source (2026-07-06): "แข็งสุดที่เคยเจอ" → CONDITIONAL-tail-risk.**
+ตัวเลขผ่านทุกด่านจริง (M4 1.51 ไม่ collapse · ทุกปีบวก · MC ruin 0%) **แต่ source เผย: no-SL ทุกชนิด + TP 10 pips
+เท่านั้น = harvester เก็บไม้ชนะ ไม้แพ้ค้างจนราคาย้อน** — "ทุกปีบวก" สะท้อน regime ย้อนกลับ 2023-26 ไม่ใช่ signal
+edge (entry = candle body>2× ตื้น) · เทรดแค่ 3 คู่ hardcode EURUSD/GBPUSD/EURGBP ไม่สน chart → **ผล 4 ชาร์ต
+เกือบเหมือนกัน = พอร์ตเดียวรัน 4 รอบ ไม่ใช่ cross-symbol robust (แก้ verdict ที่เครดิตผิด)** · ที่ไม่ระเบิด:
+exposure cap 6 ไม้×0.01 (eqDD 3.42% รวม floating จริง ณ lot นี้) · **ด่านชี้ชะตา = ORDER-038 backward-OOS
+2020-2022** (EURUSD dive 0.95 = เทรนด์ไม่ย้อน = นรก no-SL): รอด→demo experiment · ตาย→ปิด regime-only ·
+**บทเรียน: อ่าน source ก่อนเชื่อ compiled EA เสมอ — เลขผ่านทุกด่านยังหลอกได้ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง**
+GapinFX M4 กำลังรัน · North East Way ค้าง · **036 MT4 = วันนี้ (batch 50).**
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →

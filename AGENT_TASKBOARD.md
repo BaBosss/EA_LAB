@@ -1794,15 +1794,21 @@ checkpoint/resume ง่าย) เรียง folder ใหม่→เก่�
 
 ## ORDER-037 — artifact-check top survivors จาก mass-smoke (Model-4 + expiry) — `PARTIAL(Claude รัน pun fix lot เอง = ผ่านทุกด่าน 🏆; GapinFX + North East Way ยังค้าง)` · ทำได้: Codex/oc-dev · 👉 oc-dev/Codex
 
-**✅ (oh) pun fix lot v05 = ผ่านครบ artifact + durability (Claude/Opus รันเอง 2026-07-05) — external EA ที่แข็งสุดที่แล็บเคยเจอ:**
-- **Model-4 every-tick (USDJPY, 2025.07-26.07, 100% real ticks): PF 1.51/1913t/DD 3.42%** (M1 1.63 → M4 1.51 =
-  **ไม่ collapse = ไม่ใช่ tight-TP artifact**, ต่างจาก Recovery 3.37→1.50)
-- **Full-window 2023-2026 year-split: ทุกปีบวก** 2023 PF1.80 / 2024 1.45 / 2025 1.29 / 2026 1.34 · FULL 1.46/6866t/balDD 1.93%
-- **MC 5000: ruin 0% · P(loss) 0% · worst DD 4.10%** · fixed-lot → DD จริงไม่ใช่ martingale
-- **⚠️ CAVEAT ก่อนเชื่อจริง:** (1) เป็น compiled EA **กลไกยังไม่รู้** — ต้องอ่าน source `(OH) EA\(oh) pun fix lot v05.mq5`
-  ก่อน (fixed-lot grid/averaging? scalper? มี SL ไหม) (2) **high-freq ~8 ไม้/วัน = ไวต่อ spread/commission มาก** —
-  backtest spread ≠ Exness จริง → **demo คือด่านตัดสิน** (นี่คือ profile ที่ backtest≠live บ่อยสุด) · reports: `ART_punfixlot_USDJPY_*`
-- **ยังค้าง: GapinFX (JPY 2.74) + North East Way (EUR 2.03, DD30%) — ยังไม่ M4** (Codex/oc-dev ทำต่อได้)
+**🔄 (oh) pun fix lot v05 — VERDICT แก้หลังอ่าน source (Claude, 2026-07-06): จาก "แข็งสุดที่เคยเจอ" → CONDITIONAL-tail-risk**
+ตัวเลขผ่านทุกด่านจริง (M4 PF 1.51/1913t/eqDD 3.42% ไม่ collapse · ทุกปีบวก 1.80/1.45/1.29/1.34 · MC ruin 0%) **แต่
+source (fxdreema, 12k บรรทัด, subagent แกะ block graph) เผยกลไกจริง:**
+- **เทรดแค่ 3 คู่ hardcode ของตัวเอง (EURUSD/GBPUSD/EURGBP) ไม่สน chart symbol** → ผล 4 ชาร์ตที่เกือบเหมือนกัน
+  (1913/1913/1913/1840) = **พอร์ตเดียวกันรัน 4 รอบ ไม่ใช่ cross-symbol robustness** (แก้ verdict เดิมที่เครดิตผิด)
+- **Entry:** candle body > 2× แท่งก่อน (สัญญาณตื้น) · **Exit: TP 10 pips เท่านั้น — ไม่มี SL ทุกชนิด**
+  (StopLossMode="none", virtual/emergency/basket/equity = ปิดหมด — subagent อ้าง line ครบ)
+- **= "no-SL harvester":** ไม้แพ้ไม่เคย realize ค้างจนราคาย้อนแตะ TP → PF สูงเพราะเก็บแต่ไม้ชนะใน regime ที่ย้อน
+  (EUR/GBP 2023-26 range) — "ทุกปีบวก" สะท้อน regime ไม่ใช่ signal edge
+- **ที่กันไม่ให้เป็นระเบิด:** LoopLimit=1/symbol/ทิศ + fixed 0.01 = exposure cap 6 ไม้เล็ก → eqDD 3.42% (รวม floating
+  ใน tester แล้ว) จริง ณ lot นี้ — **Step 0b penalty (no-SL) ไม่ auto-DQ ตามกฎ user แต่ risk = tail ไม่ใช่ variance**
+- **ด่านชี้ชะตาที่เหลือ = backward-OOS 2020-2022** (EURUSD dive 0.95 ปี 2022 = เทรนด์แรงไม่ย้อน = นรกของ no-SL
+  hold-forever): ถ้ารอด = harvester ทนเทรนด์จริง พิจารณา demo เป็น experiment · ถ้าตาย = ปิด (regime-only) →
+  **ORDER-038** · reports: `ART_punfixlot_USDJPY_*`
+- **ยังค้าง: GapinFX M4 (กำลังรัน) + North East Way M4** (Codex/oc-dev ทำต่อได้)
 
 **ทำไม:** survivor เป็น Model-1 บน EA ที่ส่วนใหญ่ grid/tight-TP → Model-1 หลอกได้ (Elephant PF 85→1.41).
 ด่านแรกก่อนลงแรง intake funnel = **Model-4 every-tick** (จับ tight-TP collapse) + เช็คหมดอายุ
@@ -1819,6 +1825,24 @@ checkpoint/resume ง่าย) เรียง folder ใหม่→เก่�
 บน symbol นั้น เทียบ M1 · (3) full-window 2023-2026 Model-1 + year-split (edge ยืนยาว+ทุกปีไหม)
 **Acceptance:** ต่อ EA: M1 vs M4 (PF/trades/DD) + full year-split + สถานะ expiry · commit `[tag] ORDER-037 done`
 **ห้าม:** verdict (Claude ตัดสิน: M4 PF ไม่ร่วง + ทุกปีบวก = เข้า intake funnel เต็ม; ร่วง = artifact ปิด)
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-038 — pun fix lot v05: backward-OOS 2020-2022 (ด่านชี้ชะตา no-SL harvester) — `OPEN` · **ทำได้: ZCode · Codex · oc-btest · Claude** · 👉 **แนะ: ZCode หรือ Claude** (1 รันเดียว เบา) (role: batch, เลน 2)
+
+**ทำไม:** source เผย pun fix lot = no-SL + TP10pips harvester บน EURUSD/GBPUSD/EURGBP — ตัวเลข 2023-26 สวย
+เพราะ regime ย้อนกลับ. **2020-2022 = COVID + EURUSD dive 1.15→0.95 (เทรนด์แรงไม่ย้อน) = stress จริงของ
+no-SL hold-forever.** ถ้ารอด (PF≥1 + eqDD ไม่ระเบิด) = ทนเทรนด์จริง · ถ้าตาย = regime-only ปิดถาวร
+```powershell
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert '_smoke\(oh) pun fix lot v05' -Symbol EURUSD -Period H1 -FromDate 2020.01.01 -ToDate 2023.01.01 -Model 1 -ReportName ART_punfixlot_BWDOOS -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\ART_punfixlot_BWDOOS.htm
+```
+(chart symbol ไม่สำคัญ — EA เทรด 3 คู่ hardcode ของมันเอง · ⚠️ ถ้า broker ไม่มี H1 data ย้อน 2020 ให้รายงานช่วงที่มีจริง)
+**Acceptance:** FULL + year-split ทุกปี (PF/trades/net/**eqDD**) — eqDD สำคัญสุด (จับ floating ค้าง) · commit `[tag] ORDER-038 done`
+**ห้าม:** verdict — เกณฑ์ Claude: 2022 (EUR เทรนด์เดียว) ต้อง PF≥0.9 + eqDD<15% ถึงรอด
 
 **ผล:** _(รอ)_
 
