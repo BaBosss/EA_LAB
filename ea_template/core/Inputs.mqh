@@ -265,6 +265,12 @@ input double RC_RecMultMax = 1.3;    // cap effective progression multiplier
 // Set > 0 to let a grid-heavy entry (e.g. GridLog/14) reach a deeper basket while
 // ProtectLevel still governs KillDD/DepositLoad independently of step-count.
 input int RC_MaxLevelsOverride = 0;
+// additive: account-level DD gate (PortfolioGuardian_v1 port, MERGE-04). 0 = OFF.
+// Blocks NEW first-entries (level 0) while account equity sits more than this %
+// below its high-water mark. Open baskets + their stack-adds finish normally
+// (resize-not-kill). HWM persists via GlobalVariable "Boss_<magic>_acct_hwm"
+// so a restart cannot forget the peak (tester GVs are sandboxed per pass).
+input double RC_AcctDDLimitPct = 0.0;
 
 //==================== 8x Recovery (offensive add-into-loss) ========
 // OFF unless RecoveryMode != 80. Every add clamped by the cage

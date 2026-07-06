@@ -94,6 +94,7 @@ void OnTick()
          if(RiskControl_IsHalted()) return;
          EntrySignal s = Entry_Evaluate();        // resting-stop trigger check
          if(!s.valid) return;
+         if(!RiskControl_AcctGateOK()) return;    // acct-DD gate (first-entry only, no-op when off)
          if(!RiskControl_AllowNewOrder()) return;
          if(_9_MaxLevels <= 0) return;
          Lab_OpenOrder(s.direction, 0);
@@ -125,6 +126,7 @@ void OnTick()
    {
       // first order requires a valid entry signal
       if(!sig.valid) return;
+      if(!RiskControl_AcctGateOK()) return;   // acct-DD gate (first-entry only, no-op when off)
       if(!RiskControl_AllowNewOrder()) return;
       if(_9_MaxLevels <= 0) return;
       Lab_OpenOrder(sig.direction, 0);

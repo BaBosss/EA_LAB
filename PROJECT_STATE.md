@@ -86,8 +86,9 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 - **🔀 EA_CORE merge track (เปิด 2026-07-06):** user สั่งรวมข้อดี EA_CORE เข้า Boss V2 ให้จบ —
   แผนเต็ม + คิวงาน = **`AGENT_TASKBOARD_MERGE.md`**. คืบหน้าวันแรก: ✅ MERGE-01 (cage ครอบ Boss_14,
   CLEAN×2) · ✅ MERGE-02 (Codex independent converge 4/4 — สลับลำดับเสี่ยงต่ำก่อน + exit-owner
-  mitigation) · ✅ MERGE-05A (restart audit: hard-kill state = 🔴 memory-only) · คิวถัดไป:
-  **MERGE-04 (acct-DD gate) → 05B (persist) → 03 (pyramid) → 06 (tests) → 08 (ปิด EA_Project เป็น archive)**
+  mitigation) · ✅ MERGE-05A (restart audit: hard-kill state = 🔴 memory-only) · ✅ MERGE-04
+  (acct-DD gate `RC_AcctDDLimitPct` default 0 — regression CLEAN, trip พิสูจน์แล้ว 107→48 trades) ·
+  คิวถัดไป: **MERGE-05B (persist) → 03 (pyramid) → 06 (tests) → 08 (ปิด EA_Project เป็น archive)**
   · 07 Entry_ST03 = hold ถึง judge — จบ track = EA_Project ไม่มีงานใหม่อีก
 - **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
   (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.

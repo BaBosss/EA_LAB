@@ -55,7 +55,7 @@ EA_CORE = ตัวให้, ทุกชิ้น additive (default OFF), cage
 4. MT5 tester (`D:\Meta 5`) เป็นทรัพยากรร่วมกับบอร์ดหลัก (ORDER-038 ฯลฯ) — อย่ารันชนกัน,
    เช็ค process ก่อน claim งานที่ต้องรัน backtest
 5. ลำดับบังคับ (ปรับตาม synthesis MERGE-02 — เสี่ยงต่ำก่อน): MERGE-01 ✅ → MERGE-02 ✅ → MERGE-05A ✅ →
-   **MERGE-04 (guardian) → MERGE-05B (persist) → MERGE-03 (pyramid)** → MERGE-06 → MERGE-08 (07 = hold)
+   MERGE-04 ✅ → **MERGE-05B (persist) → MERGE-03 (pyramid)** → MERGE-06 → MERGE-08 (07 = hold)
 
 ---
 
@@ -149,12 +149,13 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 
 ---
 
-## MERGE-04 — port PortfolioGuardian_v1 → RiskControl: account-level DD gate — `OPEN` 🟢 **พร้อมทำทันที (ตัวถัดไปในคิว)** · **ทำได้: Codex-direct / Claude** (role: code)
+## MERGE-04 — port PortfolioGuardian_v1 → RiskControl: account-level DD gate — `REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง+พิสูจน์ครบทุกข้อ)` (role: code)
 
 **ทำไม:** demo ปัจจุบัน = 7 EA บน account เดียว — RiskControl คุมแค่ระดับ EA ตัวเอง ไม่มีชั้น
 "ทั้ง account DD เกิน X% → หยุดเปิดไม้ใหม่ทุกตัว" ซึ่ง `PortfolioGuardian_v1.mqh` (76 บรรทัด) ทำอยู่แล้ว
 
-**Spec:** input ใหม่ `_3_AcctDDLimitPct` (double, **default 0 = off**) ใน group RiskControl —
+**Spec:** input ใหม่ `RC_AcctDDLimitPct` (double, **default 0 = off** — เปลี่ยนชื่อจากร่างเดิม
+`_3_AcctDDLimitPct` เพราะ `_3x_` เป็นเลขแกน SL อยู่แล้ว, cage ใช้ prefix `RC_`) ใน group RiskControl —
 เมื่อ account equity ต่ำกว่า high-water-mark เกิน limit → block **first-entry ใหม่เท่านั้น**
 (ไม้ที่เปิดอยู่ + stack-add ของ basket เดิม ปล่อยให้จบตามระบบ — ตามปรัชญา resize-not-kill ของ user) ·
 log 1 บรรทัดชัดเจนตอน gate trip/release · **HWM ต้อง persist ผ่าน GV helper ของ MERGE-05B**
@@ -165,7 +166,23 @@ limit จงใจต่ำ (เช่น 1%) บน config ที่มี DD �
 append เลขทั้งคู่
 **ห้าม:** ปิดไม้ที่เปิดอยู่ · เปลี่ยน default · ผูกกับ magic อื่น (อ่าน account equity รวมพอ)
 
-**ผล:** _(รอ)_
+**ผล (Claude ทำเอง, 2026-07-06):** ✅ acceptance ครบ 4 ข้อ —
+- **โค้ด:** `Inputs.mqh` เพิ่ม `RC_AcctDDLimitPct=0.0` · `RiskControl.mqh` เพิ่ม HWM tracking
+  (update ใน `RiskControl_CheckDD` ต่อ tick, no-op เมื่อปิด) + `RiskControl_AcctGateOK()` +
+  GV persist key `Boss_<magic>_acct_hwm` (restore ตอน init มี log) · `LabCore.mqh` เช็ค gate
+  เฉพาะจุด first-entry 2 จุด (bar-gate branch + have==0) — stack-add ไม่โดนแตะตาม resize-not-kill
+- **compile 0/0 ทั้ง 5 ไฟล์** · **tpl_regression = CLEAN** (gate ปิด default → เลขเดิมเป๊ะทั้ง 4 EA)
+- **gate-trip พิสูจน์แล้ว (Boss_13 defaults + limit 5%, XAU H1 2024H1 M1):** baseline 107 trades /
+  net -950.60 / eqDD 25.16% (ชน HARD KILL) → gate on = **48 trades / net +1,066 / eqDD 11.67%** ·
+  journal: `[RISK] acct-DD gate TRIP: DD 5.25% vs limit 5.00% (HWM 11679.71) - blocking new first-entries`
+  (2024.02.02) — report `MERGE04_ACCTGATE_TEST4.htm`
+- **บทเรียนที่จ่ายไประหว่างพิสูจน์ (สำคัญต่อคนใช้ input นี้):** ลอง trip กับ Boss_14 GridLog ก่อน
+  (limit 1%→0.1%→0.01%) แล้ว**ไม่ trip เลย = ถูกต้อง ไม่ใช่ bug** — config DCA ที่ปิดตะกร้าบวกทุกครั้ง
+  balance ตอน flat ไม่เคยต่ำกว่า HWM (gross loss ทั้งหมดเป็น "ขาข้างใน" ของตะกร้าที่ net บวก) →
+  gate ชนิดนี้จับเฉพาะ **realized loss ระดับ account** ไม่ใช่ floating DD (ตรงตามปรัชญา
+  PortfolioGuardian — floating คุมโดย KillDD/hedge อยู่แล้ว)
+- หมายเหตุ release semantics: trip แล้วปลดได้เมื่อ equity ฟื้นเหนือ threshold (ตะกร้าที่ยังเปิดลาก
+  equity ขึ้น หรือ EA อื่นบน account ทำกำไร) — flat ล้วนๆ จะ block ยาว = พฤติกรรมที่ตั้งใจ
 
 ---
 
@@ -201,7 +218,9 @@ Claude review แล้วจะออก stage B (implement) เฉพาะช
 
 ---
 
-## MERGE-05B — implement `core\Persist.mqh` (GV helper จิ๋ว) + persist hard-kill state — `OPEN` (หลัง MERGE-03 merge — ลด conflict ไฟล์) · **ทำได้: Codex-direct / Claude** (role: code)
+## MERGE-05B — implement `core\Persist.mqh` (GV helper จิ๋ว) + persist hard-kill state — `OPEN` 🟢 **พร้อมทำทันที (ตัวถัดไปในคิว — MERGE-04 merged แล้ว)** · **ทำได้: Codex-direct / Claude** (role: code)
+**หมายเหตุจาก MERGE-04:** HWM ของ acct-gate persist ผ่าน GV ตรงๆ แล้ว (key `Boss_<magic>_acct_hwm`
+ใน `RiskControl.mqh`) — order นี้ refactor เข้า helper เดียวกัน + เพิ่ม hard-kill state
 
 **ทำไม:** ผล audit MERGE-05A — hard-kill state เป็น memory-only = 🔴 CRITICAL บน live/VPS
 (restart แล้ว EA ที่ถูกฆ่าฟื้นมาเทรดต่อ + peak-equity anchor รีเซ็ต). tester มองไม่เห็นช่องนี้

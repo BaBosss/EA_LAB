@@ -43,12 +43,66 @@ int RC_MaxRecSteps()
    }
 }
 
+// additive: account-level DD gate (PortfolioGuardian_v1 port - MERGE-04).
+// OFF unless RC_AcctDDLimitPct > 0. Tracks the account-equity high-water mark
+// (persisted in a GlobalVariable so a restart/recompile cannot forget the peak)
+// and blocks NEW first-entries while DD-from-HWM >= limit. Open baskets and
+// their stack-adds are untouched (resize-not-kill).
+double g_rc_acct_hwm  = 0.0;
+bool   g_rc_acct_trip = false;
+
+string RiskControl_AcctHwmKey() { return "Boss_" + IntegerToString(_0_Magic) + "_acct_hwm"; }
+
+void RiskControl_AcctHwmUpdate()
+{
+   if(RC_AcctDDLimitPct <= 0.0) return;
+   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(eq > g_rc_acct_hwm)
+   {
+      g_rc_acct_hwm = eq;
+      GlobalVariableSet(RiskControl_AcctHwmKey(), g_rc_acct_hwm);
+   }
+}
+
+void RiskControl_AcctGateInit()
+{
+   g_rc_acct_trip = false;
+   g_rc_acct_hwm  = 0.0;
+   if(RC_AcctDDLimitPct <= 0.0) return;
+   string key = RiskControl_AcctHwmKey();
+   if(GlobalVariableCheck(key))
+   {
+      g_rc_acct_hwm = GlobalVariableGet(key);
+      PrintFormat("[RISK] acct-DD gate: HWM %.2f restored from %s", g_rc_acct_hwm, key);
+   }
+   RiskControl_AcctHwmUpdate();
+}
+
+// gate for NEW first-entries only (LabCore level-0 paths). true = allowed.
+bool RiskControl_AcctGateOK()
+{
+   if(RC_AcctDDLimitPct <= 0.0) return true;
+   if(g_rc_acct_hwm <= 0.0) return true;
+   double eq = AccountInfoDouble(ACCOUNT_EQUITY);
+   double dd = 100.0 * (g_rc_acct_hwm - eq) / g_rc_acct_hwm;
+   bool blocked = (dd >= RC_AcctDDLimitPct);
+   if(blocked != g_rc_acct_trip)
+   {
+      g_rc_acct_trip = blocked;
+      PrintFormat("[RISK] acct-DD gate %s: DD %.2f%% vs limit %.2f%% (HWM %.2f) - %s",
+                  (blocked ? "TRIP" : "RELEASE"), dd, RC_AcctDDLimitPct, g_rc_acct_hwm,
+                  (blocked ? "blocking new first-entries" : "first-entries allowed again"));
+   }
+   return !blocked;
+}
+
 void RiskControl_Init()
 {
    g_rc_halted      = false;
    g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
    g_rc_max_dd_pct  = 0.0;
    g_rc_cap_blocks  = 0;
+   RiskControl_AcctGateInit();
 }
 
 bool RiskControl_IsHalted() { return g_rc_halted; }
@@ -74,6 +128,7 @@ double RiskControl_CurrentDDPct()
 // HARD KILL - returns true if it fired this tick
 bool RiskControl_CheckDD()
 {
+   RiskControl_AcctHwmUpdate();   // no-op unless RC_AcctDDLimitPct > 0
    double kill = RC_KillDDPct();
    double dd   = RiskControl_CurrentDDPct();
    if(kill > 0.0 && dd >= kill)
