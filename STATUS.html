@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EA_LAB — Dashboard</title>
+<style>
+  :root{
+    --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#e6edf3; --dim:#8b949e;
+    --green:#3fb950; --red:#f85149; --amber:#d29922; --blue:#58a6ff; --purple:#bc8cff;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+       font-family:'Segoe UI',system-ui,-apple-system,'Noto Sans Thai',sans-serif;
+       font-size:15px;line-height:1.55;padding:0 0 40px}
+  header{position:sticky;top:0;background:linear-gradient(180deg,#161b22,#0d1117);
+         border-bottom:1px solid var(--border);padding:14px 18px;z-index:5}
+  header h1{margin:0;font-size:18px}
+  header .sub{color:var(--dim);font-size:12px;margin-top:2px}
+  .wrap{max-width:960px;margin:0 auto;padding:14px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+  .stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center}
+  .stat .n{font-size:26px;font-weight:700}
+  .stat .l{color:var(--dim);font-size:12px;margin-top:2px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:14px}
+  .card h2{margin:0 0 10px;font-size:15px;border-bottom:1px solid var(--border);padding-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{color:var(--dim);text-align:left;font-weight:600;padding:6px 8px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:6px 8px;border-bottom:1px solid #21262d;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tag{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap}
+  .t-live{background:rgba(63,185,80,.15);color:var(--green)}
+  .t-watch{background:rgba(210,153,34,.15);color:var(--amber)}
+  .t-open{background:rgba(88,166,255,.15);color:var(--blue)}
+  .t-claim{background:rgba(188,140,255,.15);color:var(--purple)}
+  .t-done{background:rgba(139,148,158,.15);color:var(--dim)}
+  .t-user{background:rgba(248,81,73,.15);color:var(--red)}
+  .todo{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid #21262d}
+  .todo:last-child{border-bottom:none}
+  .todo .dot{color:var(--red);font-size:18px;line-height:1.2}
+  .empty{color:var(--dim);font-style:italic}
+  .cal td:first-child{white-space:nowrap;color:var(--dim)}
+  .mono{font-family:Consolas,monospace;font-size:12px;color:var(--dim)}
+  footer{color:var(--dim);font-size:11px;text-align:center;margin-top:20px;padding:0 16px}
+  .note{color:var(--dim);font-size:12px;margin-top:8px}
+  @media (max-width:600px){ body{font-size:14px} .stat .n{font-size:22px} td,th{padding:5px 6px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🏭 EA_LAB — Dashboard</h1>
+  <div class="sub">generated 2026-07-06 14:31 · branch master · commit 675fe8f · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
+</header>
+<div class="wrap">
+
+  <div class="stats">
+    <div class="stat"><div class="n" style="color:var(--amber)">78</div><div class="l">วันถึง Judge (2026-09-22)</div></div>
+    <div class="stat"><div class="n" style="color:var(--red)">2</div><div class="l">งานรอมือคุณ</div></div>
+    <div class="stat"><div class="n" style="color:var(--blue)">2</div><div class="l">order เปิดค้าง</div></div>
+    <div class="stat"><div class="n" style="color:var(--green)">9 + 7</div><div class="l">EA live + demo</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🔴 งานที่รอมือคุณ (USER-ACTION)</h2>
+    <div class='todo'><span class='dot'>&#9679;</span><div>attach DealsExporter.ex5 บน terminal demo 1 chart (วิธีอยู่ใน ORDER-039 — 2 นาที)</div></div>
+<div class='todo'><span class='dot'>&#9679;</span><div>สมัคร Myfxbook ฟรี + เชื่อมบัญชี demo ด้วย investor password (ดูสุขภาพ account จากมือถือ — 5 นาที)</div></div>
+    <div class="note">ดึงจากบรรทัดที่มี marker <span class="mono">USER-ACTION:</span> ใน taskboard/PROJECT_STATE — ทำเสร็จแล้วบอก Claude ให้ลบ marker</div>
+  </div>
+
+  <div class="card">
+    <h2>📅 ปฏิทิน</h2>
+    <table class="cal">
+      <tr><td>2026-09-22</td><td><b>Judge day</b> — ตัดสิน keep/kill 9 EA live + ประกอบพอร์ต #1 → live micro</td></tr>
+      <tr><td>ทุก 2 สัปดาห์</td><td>รอบ monitor: <span class="mono">collect_live_deals.ps1</span> → <span class="mono">/ea-monitor</span></td></tr>
+      <tr><td>ต้นเดือน</td><td>บำรุงรักษา: memory compaction + นับ metrics (<span class="mono">AGENTS.md §6</span>)</td></tr>
+      <tr><td>รายไตรมาส</td><td>blind verdict audit + กวาดกฎ regime + ซ้อม restore</td></tr>
+      <tr><td>หลัง judge</td><td>Phase 3.5 <b>PORTFOLIO-QUANT</b> (portfolio risk layer · deflated gate · tracking-error)</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>🧪 Demo cohort — Boss_14 family (60k cent · judge ตัดสิน)</h2>
+    <div class="scroll"><table>
+      <tr><th>#</th><th>Symbol</th><th>Magic</th><th>PF</th><th>ธง/หมายเหตุ</th></tr>
+      <tr><td>1</td><td>USDJPY</td><td class='mono'>990201</td><td>1.51</td><td>OOS 2.77/106t แน่นสุด · ⚠️ plateau มีรอยร้าว: ห้าม tune step/TP ต่ำกว่าค่านี้ (พลิกขาดทุน)</td></tr>
+<tr><td>2</td><td>AUDNZD</td><td class='mono'>990202</td><td>1.56</td><td>🏆 ที่ราบสมบูรณ์ (sensitivity 8/8) + ทุกปีบวก = แข็งสุดในคอฮอร์ต</td></tr>
+<tr><td>3</td><td>EURJPY</td><td class='mono'>990203</td><td>2.49</td><td>🔴 สันเขา (sensitivity 1/8) + fill-sensitive (M4 eqDD 10%) → size เบากว่าเพื่อนตอน promote</td></tr>
+<tr><td>4</td><td>AUDCAD</td><td class='mono'>990204</td><td>1.88</td><td>OOS 4.30 ทุกปีบวก · ที่ราบ (sensitivity 5/8)</td></tr>
+<tr><td>5</td><td>CADJPY</td><td class='mono'>990205</td><td>1.89</td><td>🔴 สันเขา (sensitivity 2/8) + thin 77t → size เบากว่าเพื่อน + จับตาพิเศษ</td></tr>
+<tr><td>6</td><td>EURUSD (SELL)</td><td class='mono'>990206</td><td>1.97</td><td>ฝั่ง SELL (diversity) · ที่ราบปานกลาง</td></tr>
+<tr><td>7</td><td>XAUUSD (ทอง)</td><td class='mono'>990207</td><td>1.42 (OOS 1.15)</td><td>🆕 non-FX diversifier (2026-07-05) — ผ่านครบ pipeline (IS-opt→OOS ทุกปีบวก→MC ruin0%→Model-4 +$5078 edge รอด r...</td></tr>
+    </table></div>
+    <div class="note">sizing 0.25x = วัดพฤติกรรม ไม่ใช่ผลตอบแทน · รายละเอียดเต็ม → DEMO_DEPLOYMENT_PLAN.md</div>
+  </div>
+
+  <div class="card">
+    <h2>🟢 Live portfolio (10k cent · เริ่ม 2026-06-22)</h2>
+    <div class="scroll"><table>
+      <tr><th>#</th><th>EA</th><th>Symbol/TF</th><th>Magic</th><th>OOS PF</th><th>สถานะ</th></tr>
+      <tr><td>1</td><td>Matchagrid MG_v1</td><td>CHFJPY M15</td><td class='mono'>(GUI default)</td><td>2.08</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>2</td><td>NuiIndy RSI+ADX</td><td>EURUSD H1</td><td class='mono'>1524</td><td>2.00</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>3</td><td>ST_EA03 MACD</td><td>GBPUSD H1</td><td class='mono'>9397</td><td>2.47</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>4</td><td>ST_EA03 MACD</td><td>USDCAD H1</td><td class='mono'>9398</td><td>2.62</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>5</td><td>Gold Reaper 4.3</td><td>XAUUSD H1</td><td class='mono'>(default/GUI)</td><td>2.07</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>6</td><td>EA_BREAKOUT_XAU (Bars55)</td><td>XAUUSD H1</td><td class='mono'>991001</td><td>2.94–4.87</td><td><span class='tag t-live'>🟢 LIVE (v3 reloaded)</span></td></tr>
+<tr><td>7</td><td>LondonConsoBreakout</td><td>GBPUSD H1</td><td class='mono'>990005</td><td>2.08</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>9</td><td>EA_RUNNER_ST03 (replica)</td><td>GBPUSD H1</td><td class='mono'>990010</td><td>3.93*</td><td><span class='tag t-watch'>🟠 LIVE — WATCH</span></td></tr>
+<tr><td>10</td><td>EA_BREAKOUT_XAU (Bars8)</td><td>XAUUSD H1</td><td class='mono'>991002</td><td>3.92</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>📋 คิวงานเปิด (2)</h2>
+    <div class="scroll"><table>
+      <tr><th>Order</th><th>สถานะ</th><th>เรื่อง</th></tr>
+      <tr><td class='mono'>ORDER-017</td><td><span class='tag t-done'>DONE</span></td><td>Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets</td></tr>
+<tr><td class='mono'>ORDER-036</td><td><span class='tag t-open'>OPEN</span></td><td>MT4 mass-smoke (1,318 ex4)</td></tr>
+    </table></div>
+    <div class="note">ปิดไปแล้วทั้งหมด 51 order — ประวัติเต็มอยู่ใน AGENT_TASKBOARD*.md</div>
+  </div>
+
+  <div class="card">
+    <h2>🕐 Commits ล่าสุด</h2>
+    <div class="mono">675fe8f [claude] Fxcore DQ (user: pirated copy) + ClevrFX MT4 demo deploy plan written<br>39447f1 [claude] ORDER-041 closed: ClevrFX + Fxcore100_SELL pass everything backtests can answer -&gt; demo-experiment candidates<br>744c2dd [claude] ORDER-040 closed (ran it myself, ZCode quota died pre-start): batch-01 19 EAs -&gt; 2 REAL conditionals<br>7c55367 [claude] PROJECT_STATE handoff block for 2026-07-06 (full-day summary: MERGE 8/8, quant direction, monitoring stack, AI-OS adoption, open queue)<br>d21a165 [claude] MERGE-07 done (owner override) + ORDER-039 DealsExporter: mold now complete at entries 11-15<br>1624d64 [codex] ORDER-036 batches 02-03 done<br>b72764f [claude] direction locked: quant METHOD not quant firm -&gt; Phase 3.5 PORTFOLIO-QUANT in ROADMAP (post-judge)<br>df2fc63 [claude] MERGE-06 done (tests/run_tests.ps1 ALL PASS 3/3) + MERGE-08: track closed</div>
+  </div>
+
+  <footer>
+    ความจริงอยู่ที่ไฟล์ markdown ใน repo — หน้านี้เป็นกระจกมองอย่างเดียว (generated by scripts\make_status_html.ps1)<br>
+    เริ่มอ่านละเอียด: PROJECT_STATE.md → VISION.md → AGENT_TASKBOARD.md
+  </footer>
+</div>
+</body>
+</html>

@@ -33,3 +33,6 @@ if (Test-Path (Split-Path $oneDrive)) {
   Copy-Item (Join-Path $repo "EA_MASTER_INDEX.csv") "C:\Users\patip\OneDrive\EA_MASTER_INDEX.csv" -Force
 }
 
+# STATUS.html - single-file visual dashboard (same data, same OneDrive drop)
+& (Join-Path $PSScriptRoot "make_status_html.ps1")
+
