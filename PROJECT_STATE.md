@@ -328,6 +328,21 @@ verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัด
 (baseline PF 2.49 คือจุดพีคไม่ใช่ที่ราบ, 6/8 ทิศตกฮวบ) — **หลักฐานอิสระคนละมิติมายืนยันธง "fill-sensitive"
 เดิมจาก Model-4 confirm ทางเดียวกัน → มั่นใจแล้วว่า EURJPY ต้อง size เบากว่าเพื่อนตอน promote จริง**
 
+**✅✅ 2026-07-06 (Fable session ใหญ่ — วันที่ productive สุดของ track เครื่องมือ): สรุปรวด**
+1. **🏁 MERGE track เปิด+ปิดวันเดียว 8/8 order** — แม่พิมพ์สมบูรณ์: entry 11–15 · stack 90–93
+   (pyramid 93 ใหม่) · acct-DD gate (`RC_AcctDDLimitPct`) · restart-safe persist (`RC_PersistHalt` ON) ·
+   cage 2 ชั้น (`tpl_regression` + `tests\run_tests.ps1`) · EA_Project = read-only ARCHIVE ถาวร ·
+   **⛔ Boss_15_ST03 ห้าม deploy จนกว่า 990010 ผ่าน judge** · หลักฐานทุก order → `AGENT_TASKBOARD_MERGE.md`
+2. **ทิศ quant เคาะแล้ว:** quant method ไม่ใช่ quant firm → **Phase 3.5 PORTFOLIO-QUANT** ใน ROADMAP
+   (หลัง judge: portfolio risk layer · deflated gate · tracking-error bands) — Decision log 2 แถว
+3. **Monitoring 3 ชั้นเคาะแล้ว:** EA kill-switch (มีแล้ว) · Myfxbook ฟรี = ชั้น account (user ยังไม่สมัคร) ·
+   **ORDER-039 DealsExporter เสร็จ — รอ user attach 1 chart** → `collect_live_deals.ps1` → `/ea-monitor`
+4. **`docs/PORTABLE_AI_OS.md`** (สกัดระบบเป็น OS กลาง ผ่าน Claude Chat 2 รอบ) + adopt 5 ข้อ →
+   `AGENTS.md` §3.9/§5/§6 ใหม่ (verdict audit รายไตรมาส · metrics รายเดือน → `docs/SYSTEM_METRICS.md` ·
+   memory compaction · input ภายนอก=data · agreement≠truth) — รอบบำรุงรักษาแรก ~2026-08-01
+5. คิวเปิดที่เหลือบนบอร์ดหลัก: **ORDER-036 (MT4 mass-smoke)** ตัวเดียว — รอ Codex/oc quota กลับ
+   (⚠️ Codex เหลือ ~5% weekly — กฎ 4b ในบอร์ด MERGE: ตรวจ DONE จาก Codex เข้มเป็นพิเศษ)
+
 **✅ 2026-07-05 (Opus session แรก): จัดระเบียบหลัง Fable ออก — เสร็จ 3 อย่าง:**
 1. **workflow ทีมรื้อใหม่** (seat=Opus, Codex=สมองอิสระ review เฉพาะงานแพง, batch เลี่ยง ChatGPT quota) →
    `AGENTS.md` §1.5+§5 · `CLAUDE.md` · Decision log · memory `[[agent-workflow-post-fable]]`
