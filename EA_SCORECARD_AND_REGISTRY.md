@@ -225,8 +225,8 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 | EA | best smoke | Conf | Verdict | Reason |
 |---|---|---|---|---|
 | (oh) pun fix lot v05 | M1 1.63/M4 1.51, ทุกปีบวก 2023-26, MC ruin 0% — **ทุกด่านเลขผ่าน** | ★★★ | **REJECT (2026-07-06) — DO-NOT-RE-EXAMINE** | source read เผย **no-SL ทุกชนิด + TP 10 pips = harvester** (เทรด EURUSD/GBPUSD/EURGBP hardcode ไม่สนชาร์ต — "4-symbol robust" คือพอร์ตเดียวรัน 4 รอบ) → backward-OOS 2020-22: **2022 PF 0.36 / eqDD 83.08%** เกือบล้างพอร์ต. mechanism-fatal, resize ไม่ช่วย. **บทเรียนสำคัญสุดของ mass-smoke: เลขผ่านทุกด่านยังหลอกได้ — อ่าน source ก่อนเชื่อ compiled EA เสมอ** |
-| EA_GapinFX_MT5 | M1 USDJPY 2.74/EURUSD 2.34 DD<9% | ★☆☆ | **PENDING — M4 ค้าง (NO REPORT ครั้งแรก, retry)** | gap-fade = กลไกจริง; M4 + source read + backward-OOS ก่อนตัดสิน (ตามบทเรียน pun fix lot) |
-| North East Way v1.309_fix | M1 4 คู่ PF 2+ แต่ DD 30% | ★☆☆ | **PENDING — ยังไม่ M4** | commercial grid; ชื่อ "_fix" = สงสัย crack/expiry — เช็คก่อนเสียแรง |
+| EA_GapinFX_MT5 | M1 USDJPY 2.74/EURUSD 2.34 DD<9% | ★★★ | **REJECT (2026-07-06) — DO-NOT-RE-EXAMINE** | backward-OOS 2020-22: 2020 PF 2.54 / 2021 PF 22.56 สวยหรู → **2022 PF 0.02 / -$11,212 / balDD 111.87% (ล้างพอร์ตจริง, eqDD 95.7%)** — gap-fade = mean-reversion harvester, gap ไม่ fill ตอนเทรนด์แรง = ระเบิดปีเดียว. ตระกูลเดียวกับ pun fix lot. compiled-only ไม่มี source · M4 ไม่ต้องรันแล้ว |
+| North East Way v1.309_fix | M1 4 คู่ PF 2+ แต่ DD 30% | ★★☆ | **DISQUALIFIED (2026-07-06) — cracked commercial, ไม่ต้องเทสต่อ** | ทุกไฟล์ในเครื่อง = "_fix"/"_nodll" (แกะ DLL protection) = locked-ex class ตรง hard-gate เดิม (precedent: KRAPOOK DQ ทั้งที่ profile ดีสุดของ pool) — deploy จริงไม่ได้/binary ไม่น่าเชื่อถือ · เทคนิคเบื้องหลัง (multi-pair mean-reversion grid) รู้จักอยู่แล้วใน mold axes ไม่มีของใหม่ให้สกัด |
 | อีก ~33 survivor (Tier A/B) | ดู `mass_smoke_mt5.csv` | ★☆☆ | รอ triage | ส่วนใหญ่ tight-TP/grid-trap suspect — ห้ามเชื่อจนผ่าน M4+source read |
 
 ### MT4 — SCREENED (63 EAs, 0 deployed)

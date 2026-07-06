@@ -1791,7 +1791,17 @@ order แม่แถวนี้**คงอยู่จนครบ 27 batch** 
 - **หมดอายุ/deploy ไม่ได้:** EA GOLD CENTER "Expried 11.04.2025" · IR Whale "Expiry" → เช็คก่อนเสียแรง
 - **คัดเข้า ORDER-037 (top robust, ไม่ใช่ grid ชัด):** (oh) pun fix lot v05 (4 sym fixed-lot) · EA_GapinFX (gap, 2 sym PF2+) · North East Way (4 sym PF2+ แต่ DD30%)
 
-## ORDER-037 — artifact-check top survivors จาก mass-smoke (Model-4 + expiry) — `PARTIAL(Claude รัน pun fix lot เอง = ผ่านทุกด่าน 🏆; GapinFX + North East Way ยังค้าง)` · ทำได้: Codex/oc-dev · 👉 oc-dev/Codex
+## ORDER-037 — artifact-check top survivors จาก mass-smoke — `REVIEWED(Claude, 2026-07-06 — ❌ ตายครบทั้ง 3: pun fix lot REJECT (eqDD 83% ปี 2022) · GapinFX REJECT (balDD 112% ปี 2022!) · North East Way DQ (cracked "_fix/_nodll"))` · CLOSED
+
+**สรุปปิด order (Claude, 2026-07-06): top-3 ของ mass-smoke MT5 = ศูนย์ survivor**
+- **pun fix lot v05** → ORDER-038 BWD-OOS: 2022 eqDD 83% → REJECT (no-SL harvester)
+- **EA_GapinFX** → BWD-OOS: 2021 PF 22.56 หรูหรา → **2022 PF 0.02 / balDD 111.87% ล้างพอร์ต** → REJECT
+  (gap-fade = mean-reversion harvester ตระกูลเดียวกัน) · compiled-only ไม่มี source · M4 ไม่จำเป็นแล้ว
+- **North East Way** → DQ ไม่ต้องเทส: ไฟล์ทุกตัว "_fix"/"_nodll" = cracked commercial (hard-gate locked-ex,
+  precedent KRAPOOK) · เทคนิค multi-pair grid มีใน mold แล้ว
+**Pattern ยืนยัน:** Tier A จาก smoke 2023-26 ที่เลขสวย = ส่วนใหญ่ **regime harvester** (เก็บกำไรเล็กใน
+mean-reversion regime, ระเบิดปีเทรนด์) → **backward-OOS 2020-22 = ด่านบังคับอันดับแรกของทุก Tier A ต่อไป
+(ถูกกว่า M4 และฆ่าได้เด็ดขาดกว่า)** — กติกานี้เข้า ORDER-036 board แล้ว
 
 **🔄 (oh) pun fix lot v05 — VERDICT แก้หลังอ่าน source (Claude, 2026-07-06): จาก "แข็งสุดที่เคยเจอ" → CONDITIONAL-tail-risk**
 ตัวเลขผ่านทุกด่านจริง (M4 PF 1.51/1913t/eqDD 3.42% ไม่ collapse · ทุกปีบวก 1.80/1.45/1.29/1.34 · MC ruin 0%) **แต่

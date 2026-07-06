@@ -393,8 +393,13 @@ backward-OOS 2020-22: 2020/21 บวกบาง แต่ **2022 (EURUSD ดิ
 = floating เกือบล้างพอร์ต ตรงทฤษฎี no-SL เป๊ะ. "ทุกปีบวก 2023-26" = regime ล้วน. **วงจรสมบูรณ์ใน 1 วัน:
 เลขผ่านทุกด่าน → อ่าน source → ทำนาย failure → ทดสอบปี hostile → ยืนยัน → ปิด.**
 **บทเรียนถาวร (เข้า scorecard แล้ว): อ่าน source ก่อนเชื่อ compiled EA เสมอ — เลขผ่านทุกด่านยังหลอกได้
-ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง** · GapinFX M4 = NO REPORT ครั้งแรก (retry + ใช้บทเรียนเดียวกัน:
-source read ก่อน) · North East Way ค้าง · **036 MT4 = วันนี้ (batch 50).**
+ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง**
+
+**🏁 ORDER-037 CLOSED (2026-07-06): top-3 mass-smoke MT5 = ตายครบทั้ง 3** — pun fix lot REJECT (eqDD 83%
+ปี 22) · **GapinFX REJECT (2021 PF 22.56 หรู → 2022 PF 0.02 / balDD 111.87% ล้างพอร์ต — harvester ตระกูล
+เดียวกัน)** · North East Way DQ (cracked "_fix/_nodll" hard-gate, ไม่ต้องเทส). **กติกาใหม่เข้า 036 board:
+Tier A ทุกตัว → backward-OOS 2020-22 เป็นด่านแรกหลัง smoke** (ถูกกว่า M4, ฆ่า regime-harvester เด็ดขาด) ·
+ชื่อ "_fix/_nodll/crack" = DQ ทันที · **036 MT4 (27 batches) = user สั่งเป็นก้อนเมื่อพร้อม — board แยกไฟล์แล้ว**
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →

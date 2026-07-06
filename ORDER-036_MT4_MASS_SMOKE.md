@@ -22,9 +22,11 @@
 7. จบ batch: อัปเดตตารางข้างล่าง (สถานะ + นับ A/B/reject/skip) · commit `[tag] ORDER-036 batch NN done`
 8. **ห้าม:** verdict · แก้ source · รันเกิน batch ที่สั่ง
 
-## ⚠️ บทเรียนบังคับใช้ (จาก pun fix lot, 2026-07-06)
-Tier A ห้ามเชื่อจากเลข — ทุกตัวต้องผ่าน **source read (ถ้ามี .mq4) + Model-4/backward-OOS** ก่อนเข้า funnel.
-เลขผ่านทุกด่านยังหลอกได้ถ้ากลไก = no-SL/tight-TP harvester (ดู scorecard §MT5 MASS-SMOKE)
+## ⚠️ บทเรียนบังคับใช้ (จาก ORDER-037: top-3 MT5 ตายครบ, 2026-07-06)
+Tier A ห้ามเชื่อจากเลข — **ด่านแรกหลัง smoke = backward-OOS 2020-2022** (ถูกกว่า M4 + ฆ่า regime-harvester
+ได้เด็ดขาด: pun fix lot eqDD 83% ปี 22 · GapinFX balDD 112% ปี 22 ทั้งที่ 2021 PF 22.56) → รอดค่อย
+source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-reversion regime ไม่ใช่ edge จนพิสูจน์ปีเทรนด์
+· ชื่อไฟล์มี "_fix"/"_nodll"/"crack" = DQ ทันที (cracked commercial, hard-gate)
 
 ## ตารางสถานะ (agent อัปเดตแถวตัวเองตอนจบ batch)
 
