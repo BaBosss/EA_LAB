@@ -41,8 +41,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-07 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 1 | 199 | โซนตาย — 291-TOIS.jrEURJPYGBPCHF (อีก "\*.jr\*" family) ไม่ผ่านแม้แต่ Tier A ระดับ smoke |
 | 036-08 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 0 | 0 | 0 | 200 | โซนตาย 100% — indicator pack ต่อเนื่อง (WSS*, X*, ZUP ฯลฯ) |
 | 036-09 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | โซนตาย 100% — 0 เทรดทั้งกอง (แม้แต่ Reject ก็ไม่มี) |
-| 036-10 | 50 | CLAIMED(Claude, overnight — เลน 1, สมัค BWD-OOS 3 EA) | 5 | 0 | 5 | 190 | Tier A จริง 3 ตัว (AF-Global · Automated Forex Grail · BB SWING) ไม่มีชื่อน่าสงสัย — BWD-OOS กำลังรัน |
+| 036-10 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 5 | 0 | 5 | 190 | **0/3 survivor หลัง auto-flag lot-escalation** — ดู triage ล่างตาราง |
 | 036-11 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
+| 036-12 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -126,6 +127,21 @@ uncapped martingale/grid = ปฏิเสธเชิงโครงสร้�
 — resize ไม่ช่วยเพราะ risk อยู่ที่ตัวคูณ ไม่ใช่ lot ตั้งต้น
 **ผล batch 05 สุดท้าย: 0/5 survivor** (ตกทุกตัวหลัง mechanism-check ครบ — บทเรียนซ้ำเป็นครั้งที่ 3:
 เลข PF/DD สวยจาก tester โกหกได้เสมอถ้าไม่อ่าน trade list ประกอบ)
+
+## Triage batch 10 (Claude, 2026-07-07 — auto-flag rule จับผลได้ทันทีคืนแรกที่ใช้จริง 2/2)
+
+BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตาม spec ที่ harden ไว้:
+
+| EA | BWD 2020-22: PF/trades/DD | max lot ÷ base | Verdict |
+|---|---|---|---|
+| AF-Global Expert Unlimited | 1.57 / 14,591 / DD 48.76% | **0.01 → 94.86 = ×9,486** | ❌ **AUTO-REJECT** (≥10x) — grid/martingale ลึกมาก, DD จริงยืนยันตรงกับ escalation |
+| Automated Forex Grail | 1.53 / 1,063 / DD 33.02% | **1 → 99.04 = ×99** | ❌ **AUTO-REJECT** (≥10x) |
+| BB SWING | USDJPY 0 เทรดใน window 2020-22 | n/a | 🅿️ PARKED-no-data (ตัดสินไม่ได้) |
+
+**ผล batch 10 สุดท้าย: 0/3 survivor** — auto-flag rule (เพิ่งเขียนคืนนี้หลัง 2020v2) ทำงานตามที่ออกแบบ
+ทันที: ทั้งสองตัวมี DD ที่ BWD รายงานสูงอยู่แล้ว (33-49%) ซึ่ง**สอดคล้อง**กับ escalation จริง
+(ต่างจาก 2020v2 ที่ DD รายงานต่ำหลอกไว้) — แปลว่า BWD-OOS window ยาวพอที่จะเริ่มเผย DD จริงได้เอง
+บางส่วน แต่ lot-check ยังจำเป็นเพื่อยืนยันสาเหตุและปิดไม่ให้เถียงว่า "แค่โชคร้าย"
 
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
