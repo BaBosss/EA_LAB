@@ -236,7 +236,7 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 ### MT5 — GridLog × instrument class (mine #1)
 | Cell | best recon | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| GridLog × US30 (index) | 4-variant recon (xau-axes/tp0.5/aud-axes/sell) ทั้งหมด **PF 0.78-0.96 ลบ** | ★☆☆ | **PARKED-pending-probe (2026-07-06) — EV ต่ำ ไม่เร่ง** | ต่างจากทองที่ life โผล่ตั้งแต่ scan แรก (1.76) — index ไม่ตอบ mechanism นี้ที่ default · ตามกฎ no-DEAD-before-optimize เหลือ ORDER-042 probe (optional, ZCode วันว่าง) · **mine #1 = จบ backbone แล้ว: FX 6 ✓ ทอง ✓ เงิน parked · index parked** |
+| GridLog × US30 (index) | 4-variant recon (xau-axes/tp0.5/aud-axes/sell) ทั้งหมด **PF 0.78-0.96 ลบ** | ★☆☆ | **PARKED-pending-probe (2026-07-06) — EV ต่ำ ไม่เร่ง** | ต่างจากทองที่ life โผล่ตั้งแต่ scan แรก (1.76) — index ไม่ตอบ mechanism นี้ที่ default · ตามกฎ no-DEAD-before-optimize เหลือ ORDER-043 probe (optional, ZCode วันว่าง) · **mine #1 = จบ backbone แล้ว: FX 6 ✓ ทอง ✓ เงิน parked · index parked** |
 
 ### MT4 — MASS-SMOKE batch-01 BWD-OOS (ORDER-040, 2026-07-06)
 | EA | best smoke | Conf | Verdict | Reason |

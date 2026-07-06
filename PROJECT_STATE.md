@@ -463,7 +463,7 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
   dispatch แล้ว (2026-07-06)** — Claude review ตอน DONE (BWD-OOS gate ฝังใน board แล้ว)
 
 **🏁 mine #1 จบ backbone (Claude, 2026-07-06): GridLog × US30 recon 4 variants = PF 0.78-0.96 ทั้งหมด
-(ไม่มี life แบบทองที่โชว์ 1.76 ตั้งแต่ scan แรก)** → PARKED-pending-probe · ORDER-042 (US30 IS-opt probe)
+(ไม่มี life แบบทองที่โชว์ 1.76 ตั้งแต่ scan แรก)** → PARKED-pending-probe · ORDER-043 (US30 IS-opt probe, renumbered จาก 042 ที่ชนกับ DealsExporter)
 เปิดเป็น **optional priority ต่ำ** ตามกฎ no-DEAD-before-optimize · **แผนที่ mine #1 สรุป: FX 6 demo ✓ ·
 ทอง demo ✓ (#7) · เงิน parked-thin · index parked-low-EV → เหมืองถัดไป = mine #2 treasure mold-port
 (candle-pattern gate + retest-zone จาก ORDER-021) เมื่อ batch 02-27 + demo เดินครบ**
