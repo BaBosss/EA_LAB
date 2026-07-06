@@ -808,7 +808,7 @@ Files:
 
 ---
 
-## ORDER-017 — Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets — `DONE` (role: oc-btest)
+## ORDER-017 — Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets — `REVIEWED(Claude, 2026-07-06 — เก็บตกสถานะ: ผลถูก review+ใช้จริงตั้งแต่ 07-04 (cohort-2 เข้า DEMO bench, verdict อยู่ PROJECT_STATE HANDOFF 07-04 + DEMO_DEPLOYMENT_PLAN) แต่แถวนี้ไม่เคยถูก flip — dashboard STATUS.html จับได้)` (role: oc-btest)
 
 **เป้า:** ด่านสุดท้ายก่อน demo ตามมาตรฐาน cohort-1 (scrutiny rule)
 **ขั้นที่ 1 — DEMO sets (ทำก่อน):** copy `Boss14_GridLog_<SYM>_ISpick.set` → `Boss14_GridLog_<SYM>_DEMO.set`
@@ -2060,7 +2060,10 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 
 ---
 
-## ORDER-039 — DealsExporter: nightly deals snapshot สำหรับ /ea-monitor — `REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง สร้าง+พิสูจน์ครบ · เหลือ user attach 1 chart)` (role: code)
+## ORDER-042 — DealsExporter: nightly deals snapshot สำหรับ /ea-monitor — `REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง สร้าง+พิสูจน์ครบ · เหลือ user attach 1 chart)` (role: code)
+
+> ⚠️ renumbered จาก ORDER-039 (2026-07-06 ค่ำ) — เลขชนกับ AsReMix ของ session คู่ขนาน ·
+> **บทเรียน: สอง session ออก order พร้อมกันได้ → ตั้งเลขใหม่ต้องอ่าน git log/บอร์ดล่าสุดก่อนเสมอ**
 
 **ทำไม:** monitoring ชั้นตัดสิน (keep/kill ต่อ EA) ต้องใช้ deals history แตกตาม magic — เดิม export
 มือ พึ่งความขยันคน · Myfxbook ใช้เป็นแค่ชั้นดูสุขภาพ account (มองไม่เห็น magic)

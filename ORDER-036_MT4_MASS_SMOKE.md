@@ -33,9 +33,18 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | Batch | EAs | สถานะ | Tier A | Tier B | Reject | Skip/0-trade | หมายเหตุ |
 |---|---|---|---|---|---|---|---|
 | 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
-| 036-02 | 50 | DONE (Codex, 2026-07-06 10:09 ICT) | 5 | 0 | 4 | 191 | CSV=`_mt5_auto/mass_smoke_mt4.csv` · exact-history symbols only: EURUSD, USDJPY |
-| 036-03 | 50 | DONE (Codex, 2026-07-06 10:35 ICT) | 3 | 0 | 3 | 194 | CSV=`_mt5_auto/mass_smoke_mt4.csv` · exact-history symbols only: EURUSD, USDJPY · some guard-aborts folded into skip |
+| 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
+| 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
 | 036-04 | 50 | OPEN | | | | | |
+
+**Triage Tier A batch 02-03 (Claude, 2026-07-06 ค่ำ — verdict ตาม pattern ORDER-035/037, รอ BWD-OOS ก่อนเชื่อทุกตัว):**
+- ❌ **CITY-GOLD HUNTER PROx2_fix = DQ** — "_fix" cracked (hard-gate) + PF 259.99 = absurd artifact สองเด้ง
+- ⚠️ tight-TP artifact suspects (PF สูง/DD ต่ำผิดปกติ — ตระกูลเดียวกับ pun fix lot ที่ตายแล้ว):
+  Happy thaipop (6.6/70t/DD 1.06%) · 1 MINUTE SCALPER (1.3/199t/DD 0.62%) · 12431_Happy Fast Money (3.11/69t)
+- 🟡 ตัวมีลุ้น (เทรดเยอะ DD สมเหตุผล): DanceT (EURUSD 1.53/819t + USDJPY 1.51/657t สอง symbol สอดคล้อง) ·
+  CommunityPower 2.58.3 (1.94/114t — EA community ดังมี source จริง) · Flexy The Dragon (1.38/561t)
+- **คิวถัดไป:** 7 ตัวที่เหลือ (ไม่รวม DQ) เข้า **BWD-OOS 2020-22 sweep รวมกับ Tier A ของ batch ถัดไป**
+  (สูตรเดียวกับ ORDER-040 — อย่ารันแยกทีละ batch เปลือง setup)
 | 036-05 | 50 | OPEN | | | | | |
 | 036-06 | 50 | OPEN | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
