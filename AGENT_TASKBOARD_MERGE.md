@@ -58,7 +58,7 @@ EA_CORE = ตัวให้, ทุกชิ้น additive (default OFF), cage
    Claude review ต้อง**เอะใจเป็นพิเศษ**กับแถว DONE จาก Codex ช่วงนี้ (ตรวจว่าไฟล์/ผลมีจริงครบ
    ไม่ใช่แค่ประกาศ) และแถว CLAIMED ที่เงียบนาน = สันนิษฐานว่า quota หมด → ปลด claim กลับ OPEN ได้
 5. ลำดับบังคับ (ปรับตาม synthesis MERGE-02 — เสี่ยงต่ำก่อน): MERGE-01 ✅ → MERGE-02 ✅ → MERGE-05A ✅ →
-   MERGE-04 ✅ → **MERGE-05B (persist) → MERGE-03 (pyramid)** → MERGE-06 → MERGE-08 (07 = hold)
+   MERGE-04 ✅ → MERGE-05B ✅ → **MERGE-03 (pyramid — ตัวถัดไป, ชิ้นใหญ่สุด)** → MERGE-06 → MERGE-08 (07 = hold)
 
 ---
 
@@ -221,9 +221,7 @@ Claude review แล้วจะออก stage B (implement) เฉพาะช
 
 ---
 
-## MERGE-05B — implement `core\Persist.mqh` (GV helper จิ๋ว) + persist hard-kill state — `OPEN` 🟢 **พร้อมทำทันที (ตัวถัดไปในคิว — MERGE-04 merged แล้ว)** · **ทำได้: Codex-direct / Claude** (role: code)
-**หมายเหตุจาก MERGE-04:** HWM ของ acct-gate persist ผ่าน GV ตรงๆ แล้ว (key `Boss_<magic>_acct_hwm`
-ใน `RiskControl.mqh`) — order นี้ refactor เข้า helper เดียวกัน + เพิ่ม hard-kill state
+## MERGE-05B — implement `core\Persist.mqh` (GV helper จิ๋ว) + persist hard-kill state — `REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง acceptance ครบ + default ON signed off)` (role: code)
 
 **ทำไม:** ผล audit MERGE-05A — hard-kill state เป็น memory-only = 🔴 CRITICAL บน live/VPS
 (restart แล้ว EA ที่ถูกฆ่าฟื้นมาเทรดต่อ + peak-equity anchor รีเซ็ต). tester มองไม่เห็นช่องนี้
@@ -243,7 +241,23 @@ Claude review แล้วจะออก stage B (implement) เฉพาะช
 จำลอง set GV → init → อ่าน halted ถูกต้อง · append log บรรทัด restore
 **ห้าม:** persist อะไรที่ rebuild จาก positions ได้อยู่แล้ว (ห้ามซ้ำซ้อนกับ self-healing เดิม)
 
-**ผล:** _(รอ)_
+**ผล (Claude ทำเอง, 2026-07-06):** ✅ acceptance ครบ —
+- **โค้ด:** `core\Persist.mqh` ใหม่ (~30 บรรทัด, key `Boss_<magic>_<name>`, pattern จาก
+  StatePersistence_v1 ไม่มี dependency) · `RiskControl.mqh` persist `rc_halted`+`rc_peak_eq`
+  (เขียนตอน kill + ตอน peak ขยับ, restore ใน Init พร้อม log บอกวิธี un-halt) + refactor acct_hwm
+  ของ MERGE-04 เข้า helper (key เดิมเป๊ะ ไม่ break ของที่ persist ไว้แล้ว) · input `RC_PersistHalt`
+- **`RC_PersistHalt` default = ON — ข้อยกเว้น additive ข้อเดียวของ track, signed off (Claude ตาม
+  มอบหมาย user 2026-07-06):** เหตุผล: tester GV = sandbox ต่อ pass → เลขไม่ขยับ (พิสูจน์ด้าน
+  ล่าง) · default OFF จะไม่มีวันถูกเปิดจริงเพราะ .set เก่าไม่มี input นี้ — safety ที่ปิดไว้ = ไม่มี safety
+- **compile 0/0 ทั้ง 5 + Persist_Test** · **`tests\Persist_Test.mq5` = [PASS] 8/8 asserts** (Del/Has/
+  fallback/roundtrip/overwrite/key-isolation/restore-sim/cleanup) — test แรกของ `ea_template\tests\`
+  (หัวเชื้อ MERGE-06)
+- **tpl_regression = CLEAN ทั้ง 4 EA โดย persist ON** — จุดสำคัญ: Boss_13 ชน HARD KILL ใน
+  regression run (persist path ทำงานจริง) แล้วเลขยังตรง baseline เป๊ะ = ยืนยัน sandbox claim
+- **ขอบเขตที่จงใจไม่ทำ:** `g_gl_armed_level` (Entry_GridLog, 🟡 LOW-MED จาก audit) ยังไม่ persist —
+  ไม่อันตราย (แค่ trigger level ย้ายหลัง restart ไม่เปิดไม้ซ้ำ) เก็บเป็น optional ของ MERGE-06 ·
+  cross-restart survival บน live terminal = platform behavior (gvariables.dat) — ตรวจของจริงครั้งเดียว
+  ตอน attach demo chart ครั้งหน้า (จดใน checklist deploy)
 
 ---
 

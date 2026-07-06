@@ -271,6 +271,13 @@ input int RC_MaxLevelsOverride = 0;
 // (resize-not-kill). HWM persists via GlobalVariable "Boss_<magic>_acct_hwm"
 // so a restart cannot forget the peak (tester GVs are sandboxed per pass).
 input double RC_AcctDDLimitPct = 0.0;
+// additive-EXCEPTION (MERGE-05B, signed off 2026-07-06): persist hard-kill halt
+// + equity peak via GlobalVariables so restart/recompile cannot resurrect a
+// killed EA (audit MERGE-05A: memory-only halt = CRITICAL live gap). Default ON
+// deliberately: tester GVs are per-pass sandboxed -> backtest numbers unchanged
+// (regression-proven), live safety is the whole point. Manual un-halt: delete
+// GV "Boss_<magic>_rc_halted" or set this false + reattach.
+input bool RC_PersistHalt = true;
 
 //==================== 8x Recovery (offensive add-into-loss) ========
 // OFF unless RecoveryMode != 80. Every add clamped by the cage

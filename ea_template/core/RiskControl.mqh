@@ -8,6 +8,7 @@
 #define BOSS_LAB_RISKCONTROL_MQH
 #include "Inputs.mqh"
 #include "Execution.mqh"
+#include "Persist.mqh"
 
 bool   g_rc_halted      = false;
 double g_rc_peak_equity = 0.0;
@@ -51,8 +52,6 @@ int RC_MaxRecSteps()
 double g_rc_acct_hwm  = 0.0;
 bool   g_rc_acct_trip = false;
 
-string RiskControl_AcctHwmKey() { return "Boss_" + IntegerToString(_0_Magic) + "_acct_hwm"; }
-
 void RiskControl_AcctHwmUpdate()
 {
    if(RC_AcctDDLimitPct <= 0.0) return;
@@ -60,7 +59,7 @@ void RiskControl_AcctHwmUpdate()
    if(eq > g_rc_acct_hwm)
    {
       g_rc_acct_hwm = eq;
-      GlobalVariableSet(RiskControl_AcctHwmKey(), g_rc_acct_hwm);
+      Persist_Set("acct_hwm", g_rc_acct_hwm);
    }
 }
 
@@ -69,11 +68,10 @@ void RiskControl_AcctGateInit()
    g_rc_acct_trip = false;
    g_rc_acct_hwm  = 0.0;
    if(RC_AcctDDLimitPct <= 0.0) return;
-   string key = RiskControl_AcctHwmKey();
-   if(GlobalVariableCheck(key))
+   if(Persist_Has("acct_hwm"))
    {
-      g_rc_acct_hwm = GlobalVariableGet(key);
-      PrintFormat("[RISK] acct-DD gate: HWM %.2f restored from %s", g_rc_acct_hwm, key);
+      g_rc_acct_hwm = Persist_Get("acct_hwm", 0.0);
+      PrintFormat("[RISK] acct-DD gate: HWM %.2f restored from %s", g_rc_acct_hwm, Persist_Key("acct_hwm"));
    }
    RiskControl_AcctHwmUpdate();
 }
@@ -102,6 +100,26 @@ void RiskControl_Init()
    g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
    g_rc_max_dd_pct  = 0.0;
    g_rc_cap_blocks  = 0;
+   // MERGE-05B: restore hard-kill state so restart/recompile cannot resurrect
+   // a killed EA. Tester passes start with a clean GV sandbox -> no-op there.
+   if(RC_PersistHalt)
+   {
+      if(Persist_Get("rc_halted", 0.0) > 0.5)
+      {
+         g_rc_halted = true;
+         double p = Persist_Get("rc_peak_eq", g_rc_peak_equity);
+         if(p > g_rc_peak_equity) g_rc_peak_equity = p;
+         PrintFormat("[RISK] HALT restored from persist (peak %.2f) - manual un-halt: delete GV %s or set RC_PersistHalt=false",
+                     g_rc_peak_equity, Persist_Key("rc_halted"));
+      }
+      else if(Persist_Has("rc_peak_eq"))
+      {
+         // not halted, but keep the pre-restart equity peak so KillDD keeps
+         // measuring from the true high-water mark (anti slow-bleed reset)
+         double p = Persist_Get("rc_peak_eq", 0.0);
+         if(p > g_rc_peak_equity) g_rc_peak_equity = p;
+      }
+   }
    RiskControl_AcctGateInit();
 }
 
@@ -118,7 +136,11 @@ double RiskControl_DepositLoadPct()
 double RiskControl_CurrentDDPct()
 {
    double eq = AccountInfoDouble(ACCOUNT_EQUITY);
-   if(eq > g_rc_peak_equity) g_rc_peak_equity = eq;
+   if(eq > g_rc_peak_equity)
+   {
+      g_rc_peak_equity = eq;
+      if(RC_PersistHalt) Persist_Set("rc_peak_eq", g_rc_peak_equity);
+   }
    if(g_rc_peak_equity <= 0.0) return 0.0;
    double dd = 100.0 * (g_rc_peak_equity - eq) / g_rc_peak_equity;
    if(dd > g_rc_max_dd_pct) g_rc_max_dd_pct = dd;
@@ -135,8 +157,13 @@ bool RiskControl_CheckDD()
    {
       Exec_CloseAll();
       g_rc_halted = true;
-      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closed all + halt",
-                  dd, kill, ProtectLevel);
+      if(RC_PersistHalt)
+      {
+         Persist_Set("rc_halted", 1.0);
+         Persist_Set("rc_peak_eq", g_rc_peak_equity);
+      }
+      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closed all + halt%s",
+                  dd, kill, ProtectLevel, (RC_PersistHalt ? " (persisted)" : ""));
       return true;
    }
    return false;
