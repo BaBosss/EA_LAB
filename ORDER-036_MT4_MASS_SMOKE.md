@@ -35,7 +35,7 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
 | 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
 | 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
-| 036-04 | 50 | CLAIMED(Claude, 2026-07-06 20:3x — **เลน MT4b**; user ปลด claim Codex ที่ค้าง: 0 แถว + terminal ติดหล่ม missing-indicator spam) | | | | | driver อัปเกรดแล้ว: timeout-kill + indicator precheck (ดู spec ล่าง) |
+| 036-04 | 50 | REVIEWED(Claude 07-06 — รันเองบนเลน MT4b ด้วย driver ใหม่) | 0 | 0 | 2 | 198 | **โซนตาย: 0 survivor ทั้ง batch** — กอง "FREE EA" bundle = indicator conversion เกือบทั้งหมด · precheck ทำงานจริง: จับ `missing-indicator:` พร้อมชื่อไฟล์ (เช่น BrainTrend2Sig.ex4) + ข้าม symbol ที่เหลือ = ไม่เผา timeout · timeout-kill พิสูจน์แล้ว (LRCChannelD โดน kill ที่ 180s แทนที่จะค้างเป็นชั่วโมงแบบเดิม) · stage-2 BWD-OOS = n/a (ไม่มี Tier A) |
 | 036-05 | 50 | OPEN (ปลด claim Codex เดิม — ถ้า Codex กลับมาให้เริ่มที่ 05+ บน**เลน 1** และห้าม commit CSV พร้อมกับงาน batch อื่นที่กำลังวิ่ง — เช็ค git status ก่อน) | | | | | |
 | 036-06 | 50 | OPEN (เหตุเดียวกับ 05) | | | | | |
 | 036-07 | 50 | OPEN | | | | | |

@@ -1988,6 +1988,27 @@ before-optimize ให้ 1 probe ก่อนปิดทะเบียน. **
 
 ---
 
+## ORDER-044 — EURUSD Trading Forex Robot: full chain re-test (PARKED-thin จาก 63-EA screen เดิม) — `OPEN (Claude เริ่มแล้ว — ex4 copy เข้า Experts แล้ว, รอ tool กลับมารันต่อ)` · **ทำได้: Claude · Codex · oc-dev** · 👉 **แนะ: Claude รันต่อ / Codex ถ้า Claude ติด** (role: batch, MT4)
+
+**ทำไม (คำตอบ "MT4 demo ว่าง เทสอะไรต่อ" ของ user 2026-07-06):** ตัวเดียวจาก 63-EA MT4 screen เดิมที่ได้
+verdict "WATCH/PARKED — **NOT martingale** (scrutinize เคลียร์), ตกแค่ thin sample 48t, needs deep re-test"
+— ตอนนี้ filter chain ครบแล้ว. ถ้าผ่าน = MT4 demo slot ตัวที่ 2 อย่างถูกต้อง (คู่กับ ClevrFX)
+**สถานะ:** `.ex4` copy จาก `D:\Forex\01_INBOX_NEW\2.1 review EA\MT4 good\EURUSD Trading Forex Robot.ex4`
+→ data-dir Experts แล้ว
+**Chain (ตามกฎใหม่ + trade-list-first rule ของ session คู่ขนาน):**
+```powershell
+# (1) BWD-OOS 2020-2022 — ด่านแรก
+powershell -File D:\EA_LAB\scripts\mt4_run.ps1 -Expert 'EURUSD Trading Forex Robot' -Symbol EURUSD -Period H1 -FromDate 2020.01.01 -ToDate 2023.01.01 -Model 1 -ReportName BWD4_EURUSDForexRobot -TimeoutSec 600
+# (2) ถ้า PF>1 + DD<40%: อ่าน trade list ทันที (SL มีไหม + lot progression) — ก่อนเสีย compute ต่อ
+# (3) รอด → year-split 2020/21/22 แยกปี + spread-stress -Spread 30/45 บน 2026.03-07
+```
+**Acceptance:** BWD full + trade-list findings (SL/lot ladder) + year-split + spread 30/45 · commit `[tag] ORDER-044 done`
+**ห้าม:** verdict — เกณฑ์ Claude ชุดเดียวกับ ClevrFX (ทุกปีบวก + spread 2x PF>1.3 + ไม่มี martingale ladder)
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)

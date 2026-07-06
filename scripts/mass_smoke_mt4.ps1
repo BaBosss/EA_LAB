@@ -108,8 +108,11 @@ function Invoke-TestRun {
     [string]$ReportName
   )
 
-  $extra = @{}
-  if ($Portable) { $extra['Portable'] = $true }
+  # NOTE: child is invoked as `powershell -File` (string args) - a hashtable splat
+  # turns switches into "-Portable True" which the switch param rejects. An ARRAY
+  # splat appends the bare flag token, which -File parses correctly.
+  $extra = @()
+  if ($Portable) { $extra = @('-Portable') }
   & powershell -File $runScript `
     -Expert $Expert `
     -Symbol $Symbol `
