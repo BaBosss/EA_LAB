@@ -35,45 +35,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
 | 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
 | 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
-| 036-04 | 50 | OPEN | | | | | |
-
-**Triage Tier A batch 02-03 (Claude, 2026-07-06 ค่ำ — verdict ตาม pattern ORDER-035/037, รอ BWD-OOS ก่อนเชื่อทุกตัว):**
-- ❌ **CITY-GOLD HUNTER PROx2_fix = DQ** — "_fix" cracked (hard-gate) + PF 259.99 = absurd artifact สองเด้ง
-- ⚠️ tight-TP artifact suspects (PF สูง/DD ต่ำผิดปกติ — ตระกูลเดียวกับ pun fix lot ที่ตายแล้ว):
-  Happy thaipop (6.6/70t/DD 1.06%) · 1 MINUTE SCALPER (1.3/199t/DD 0.62%) · 12431_Happy Fast Money (3.11/69t)
-- 🟡 ตัวมีลุ้น (เทรดเยอะ DD สมเหตุผล): DanceT (EURUSD 1.53/819t + USDJPY 1.51/657t สอง symbol สอดคล้อง) ·
-  CommunityPower 2.58.3 (1.94/114t — EA community ดังมี source จริง) · Flexy The Dragon (1.38/561t)
-- ~~คิวถัดไป: BWD-OOS~~ → **✅ BWD-OOS 2020-22 รันแล้ว (Claude, 2026-07-06 เย็น — สูตร ORDER-040,
-  script `_mt5_auto\ab_sets\bwdoos_mt4_sweep_b0203.ps1`, ผลดิบ `_mt5_auto\BWDOOS_MT4_B0203.csv`):**
-
-| EA | Sym | 2020-22: PF / trades / net / DD | VERDICT (Claude) |
-|---|---|---|---|
-| DanceT | EURUSD | 0.09 / 486 / -10,293 / **DD 102.8%** 💀 | ❌ **REJECT ถาวร** — ล้างพอร์ตจริง (1.53 ใน 2023-26 = regime ล้วน) |
-| Flexy The Dragon v2.8 | EURUSD | 0.46 / 1448 / -8,748 / **DD 89.2%** | ❌ **REJECT ถาวร** — ตายแบบเดียวกัน |
-| 12431_Happy Fast Money | EURUSD | 0.24 / 485 / -9,890 / **DD 99.1%** | ❌ **REJECT ถาวร** — ยืนยัน tight-TP suspect |
-| Happy thaipop | EURUSD | 1.25 / 430 / +2,470 / **DD 73.2%** | 🅿️ **PARKED-resize-first** — PF>1 สองระบอบจริง (6.6→1.25) แต่ edge บางลงมาก + DD ทะลุ cap (กฎ user: cap breach ห้าม reject ตรง — แต่ priority ต่ำ) |
-| **CommunityPower 2.58.3** | EURUSD | **1.91 / 1212 / +40,573 / DD 74.1%** | ❌ **REJECT-as-configured (แก้จาก CONDITIONAL หลัง SL-check — ดูใต้ตาราง)** — trade list เผย martingale ×1.5 ไร้ cap ลึก ~16 ชั้น + no SL |
-| 1 MINUTE SCALPER | USDJPY | 0 trades ใน window | 🅿️ PARKED-no-data (ตัดสินไม่ได้ — อาจ time-gated/expiry; ไม่คุ้มไล่ต่อ) |
-
-**🔬 SL/mechanism-check CommunityPower (Claude, 2026-07-06 ค่ำ — ก่อนเสีย compute กับ spread-stress):**
-trade list `BWD4B23_CommunityPower_2_58_3.htm` เผย (1) **SL = 0.00000 ทุกไม้** (2) **ลำดับ lot =
-martingale ×1.5 ไร้ cap: 0.10→0.15→0.22→0.33→0.49→0.74→1.11→...→28.4→42.3→48.6 lots = ลึก ~16 ชั้น**
-→ PF 1.9 "สองระบอบ" ไม่ใช่ edge durability — คือ recovery mechanics ของ martingale (averaging กลบ
-ไม้แพ้) และ DD 74.1% ปี 2020-22 คือ tail ที่**เกิดจริงแล้ว** ไม่ใช่สมมติฐาน · precedent ตรง:
-GoldStuffV7 DQ (uncapped martingale DD 77%/yr) + decision 2026-06-23 (structural gate = กลไก
-uncapped mart/grid) · **ต่างจาก ClevrFX ชัด** (ClevrFX no-SL แต่ internal cut-loss ทำงานจริง DD
-ไม่ระเบิด — CommunityPower ระเบิดแล้วรอดเพราะ leverage ใน tester) · **VERDICT: ❌ REJECT-as-configured**
-— หมายเหตุ: CommunityPower เป็น framework EA ที่ config ได้ (source สาธารณะ) — config แบบ capped
-(mult=1, max trades จำกัด) = ถือเป็น EA คนละตัว validate ใหม่จากศูนย์ได้ในอนาคต **แต่ priority ต่ำ:
-Boss V2 มีกลไก grid ที่มี cage ครบอยู่แล้ว** · spread-stress ไม่รันแล้ว (moot หลัง verdict นี้ —
-ประหยัด compute) · Happy thaipop (PARKED, DD 73%) น่าจะตระกูลเดียวกัน — ใครจะ unpark ให้เช็ค trade list ก่อน
-
-**Pattern ยืนยันรอบที่ 3 (แก้ตัวเลขหลัง mechanism-check):** Tier A จาก smoke 2023-26 → BWD-OOS +
-mechanism-check ฆ่าได้ **5/6** · เหลือ 0 conditional จาก batch 02-03 (batch-01 ยังมี ClevrFX ตัวเดียว
-ที่ผ่านจริงจาก 222 EA) — **BWD-OOS 2020-22 + อ่าน trade list = สอง gate ถูกสุดที่ฆ่าเด็ดขาดสุด
-คงเป็นด่านบังคับof ทุก batch ต่อไป (ก่อน Model-4/spread-stress เสมอ)**
-| 036-05 | 50 | OPEN | | | | | |
-| 036-06 | 50 | OPEN | | | | | |
+| 036-04 | 50 | OPEN (ปลด claim Codex 10:38 — เงียบ 9 ชม. + 0 แถวใน CSV = quota death, กฎ 4b) | | | | | |
+| 036-05 | 50 | OPEN (ปลด claim — เหตุเดียวกับ 04) | | | | | |
+| 036-06 | 50 | OPEN (ปลด claim — เหตุเดียวกับ 04) | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
 | 036-08 | 50 | OPEN | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
@@ -95,6 +59,35 @@ mechanism-check ฆ่าได้ **5/6** · เหลือ 0 conditional จ�
 | 036-25 | 50 | OPEN | | | | | |
 | 036-26 | 50 | OPEN | | | | | |
 | 036-27 | 18 | OPEN | | | | | |
+
+## Triage + BWD-OOS batch 02-03 (Claude, 2026-07-06 — ย้ายลงมาจากกลางตาราง)
+
+- ❌ **CITY-GOLD HUNTER PROx2_fix = DQ** — "_fix" cracked (hard-gate) + PF 259.99 = absurd artifact สองเด้ง
+- **BWD-OOS 2020-22 (สูตร ORDER-040 · script `_mt5_auto\ab_sets\bwdoos_mt4_sweep_b0203.ps1` · ผลดิบ `_mt5_auto\BWDOOS_MT4_B0203.csv`):**
+
+| EA | Sym | 2020-22: PF / trades / net / DD | VERDICT (Claude) |
+|---|---|---|---|
+| DanceT | EURUSD | 0.09 / 486 / -10,293 / **DD 102.8%** 💀 | ❌ **REJECT ถาวร** — ล้างพอร์ตจริง (1.53 ใน 2023-26 = regime ล้วน) |
+| Flexy The Dragon v2.8 | EURUSD | 0.46 / 1448 / -8,748 / **DD 89.2%** | ❌ **REJECT ถาวร** |
+| 12431_Happy Fast Money | EURUSD | 0.24 / 485 / -9,890 / **DD 99.1%** | ❌ **REJECT ถาวร** — ยืนยัน tight-TP suspect |
+| Happy thaipop | EURUSD | 1.25 / 430 / +2,470 / **DD 73.2%** | 🅿️ **PARKED-resize-first** (PF>1 สองระบอบแต่ edge บาง + DD ทะลุ — กฎ cap-breach ห้าม reject ตรง · priority ต่ำ · unpark ต้องเช็ค trade list ก่อน) |
+| CommunityPower 2.58.3 | EURUSD | 1.91 / 1212 / +40,573 / DD 74.1% | ❌ **REJECT-as-configured** — trade list: **martingale ×1.5 ไร้ cap ลึก ~16 ชั้น (0.10→48.6 lots) + SL 0.00000 ทุกไม้** → PF 1.9 สองระบอบ = recovery mechanics ไม่ใช่ edge · DD 74% ปี 20-22 = tail เกิดจริง · precedent GoldStuffV7 · ต่างจาก ClevrFX (internal cut-loss ทำงานจริง) · config capped = EA ใหม่ validate จากศูนย์ได้อนาคต แต่ priority ต่ำ (Boss V2 มี grid มี cage แล้ว) |
+| 1 MINUTE SCALPER | USDJPY | 0 trades ใน window | 🅿️ PARKED-no-data (อาจ time-gated — ไม่คุ้มไล่ต่อ) |
+
+**Pattern ยืนยันรอบที่ 3: ฆ่า 5/6 · conditional = 0** (batch-01 เหลือ ClevrFX ตัวเดียวจริงจาก 222 EA)
+→ **BWD-OOS 2020-22 + อ่าน trade list (SL + ลำดับ lot) = สอง gate ถูกสุด/เด็ดขาดสุด — ด่านบังคับก่อน
+Model-4/spread-stress เสมอ** (spread-stress ทำเฉพาะตัวที่รอดสองด่านแรก)
+
+## 🆕 Stage-2 spec ต่อ batch (เพิ่ม 2026-07-06 ค่ำ — ให้ agent ทำเองได้ถึงหลักฐานดิบครบ ไม่ต้องรอ Claude คั่นกลาง)
+
+หลังจบ smoke ของ batch ใดๆ ให้ agent ทำต่อทันทีในคำสั่งเดียวกัน (ยังห้าม verdict เหมือนเดิม):
+1. **กรอง DQ ชื่อไฟล์:** `_fix|_nodll|crack` → mark DQ ใน CSV (คอลัมน์ note) ไม่ต้องรันต่อ
+2. **BWD-OOS 2020-22** ทุก Tier A ที่เหลือ: ใช้ pattern `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets
+   จาก CSV ของ batch ตัวเอง, สัญลักษณ์ที่ M1 PF ดีสุด) → append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`
+3. **Trade-list dump** ทุกตัวที่ BWD PF>0.9: จาก report BWD ให้สรุปเป็นตาราง 3 คอลัมน์ต่อ EA —
+   (a) SL เป็น 0.00000 ทุกไม้ไหม (b) ลำดับ lot 15 ค่าแรกของ chain ยาวสุด (จับ martingale) (c) lot สูงสุดที่เห็น
+4. append ทั้งหมดใต้แถว batch ในไฟล์นี้ · commit เดียว `[tag] ORDER-036 batch NN + stage2 done`
+**Claude เหลือแค่:** อ่านตาราง → verdict — ประหยัดรอบไปกลับ 1 วันต่อ batch
 
 ## Archive protocol
 batch ที่ Claude review แล้ว: (1) แถวตารางข้างบนเปลี่ยนเป็น `ARCHIVED` (2) ผลดิบ/รายละเอียดย้ายไป

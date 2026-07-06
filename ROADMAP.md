@@ -56,7 +56,9 @@
 ### Phase 3.5 — PORTFOLIO-QUANT track (หลัง judge — user เคาะทิศ 2026-07-06)
 
 > **ทิศที่ตกลง: ไม่ไล่เป็น "quant firm" (tick infra / low-latency / ML alpha = ไม่คุ้มที่สเกลทุนเรา) —
-> ไล่เป็น "quant method": พอร์ตที่บริหาร risk เชิงระบบ.** เปิดเป็นบอร์ดแยกแบบ MERGE track เมื่อถึงเวลา.
+> ไล่เป็น "quant method": พอร์ตที่บริหาร risk เชิงระบบ.**
+> **✅ design เสร็จล่วงหน้าแล้ว (Fable 2026-07-06): บอร์ด `AGENT_TASKBOARD_PQUANT.md` (🔒 LOCKED
+> ถึงหลัง judge — สูตร/เกณฑ์/acceptance ตรึงครบ เหลือ execute) · วันตัดสิน → `docs/JUDGE_DAY_RUNBOOK.md`**
 
 1. 🥇 **Portfolio risk layer** — vol-target sizing ต่อ EA + DD budget ระดับพอร์ต (ต่อยอดอิฐที่มีแล้ว:
    `RC_AcctDDLimitPct` + `Persist.mqh` + `corr_monthly.py`) — เปลี่ยนจาก "มี EA หลายตัว" เป็น
