@@ -7,13 +7,15 @@
 #ifndef BOSS_LAB_INPUTS_MQH
 #define BOSS_LAB_INPUTS_MQH
 
-// wrapper defines ONE of: LAB_ENTRY_11 / LAB_ENTRY_12 / LAB_ENTRY_13 / LAB_ENTRY_14 (+ LAB_ENTRY_TAG)
+// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 (+ LAB_ENTRY_TAG)
 // MQL5 preprocessor has no '#if EXPR==n' / '#elif' -> use token #ifdef only.
 #ifndef LAB_ENTRY_11
 #ifndef LAB_ENTRY_12
 #ifndef LAB_ENTRY_13
 #ifndef LAB_ENTRY_14
+#ifndef LAB_ENTRY_15
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -137,6 +139,10 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_PRICE_ACT;     // 3 (DCA needs stro
 input ENUM_STACK_MODE    StackMode    = STACK_GRID_AGAINST; // 92 default for GridLog (adds vs adverse move)
 input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // 0 (Zeus grid add = distance only, blind)
 #endif
+#ifdef LAB_ENTRY_15
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 default for ST03 (one order per edge signal)
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
+#endif
 input bool   _9_StepUseATR  = true;     // grid step from Signal-ATR (else points)
 input double _9_StepATRmult = 1.0;      // step = mult x Signal-ATR
 input double _9_StepPoints  = 300;      // step when not ATR
@@ -185,6 +191,16 @@ input group "=== 14 Entry: GridLog (Zeus-inspired breakout-arm) ==="
 input int    _14_Direction   = 1;      // 1=BUY only, 2=SELL only (fixed, never both - matches standalone)
 input double _14_DistAtrMult = 1.5;    // arm/grid-step distance = mult x Signal-ATR
 input double _14_MinDistPips = 20.0;   // floor under the ATR distance (pips; 3/5-digit symbols = 10xpoint)
+#endif
+
+#ifdef LAB_ENTRY_15
+input group "=== 15 Entry: ST03 (MACD consecutive-count, StrategySignal_v4 port) ==="
+input int  _15_MacdFast    = 12;    // MACD fast EMA (matches EA_RUNNER_ST03 defaults)
+input int  _15_MacdSlow    = 26;    // MACD slow EMA
+input int  _15_MacdSignal  = 9;     // MACD signal SMA
+input int  _15_CountBars   = 2;     // consecutive closed bars in one MACD state before firing
+input bool _15_EdgeTrigger = true;  // true=fire once per state-run (ST_EA03) / false=level (over-trades)
+input int  _15_RearmBars   = 0;     // re-fire every K bars within a run (0=pure edge, 1~=level)
 #endif
 
 //==================== Trend MA (shared: entry11 + filter + runtrend) =

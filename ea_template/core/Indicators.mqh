@@ -16,6 +16,9 @@ int g_hSD      = INVALID_HANDLE;   // StdDev (SL mode 36)
 int g_hBB      = INVALID_HANDLE;
 int g_hRSI     = INVALID_HANDLE;
 #endif
+#ifdef LAB_ENTRY_15
+int g_hMACD    = INVALID_HANDLE;   // built-in iMACD (entry 15 only)
+#endif
 
 ENUM_TIMEFRAMES Indi_TF(const ENUM_TIMEFRAMES tf) { return (tf == PERIOD_CURRENT ? _Period : tf); }
 
@@ -33,6 +36,10 @@ bool Indi_Init()
    g_hRSI = iRSI(_Symbol, _Period, _13_RSI_Period, PRICE_CLOSE);
    ok = ok && (g_hBB != INVALID_HANDLE && g_hRSI != INVALID_HANDLE);
 #endif
+#ifdef LAB_ENTRY_15
+   g_hMACD = iMACD(_Symbol, _Period, _15_MacdFast, _15_MacdSlow, _15_MacdSignal, PRICE_CLOSE);
+   ok = ok && (g_hMACD != INVALID_HANDLE);
+#endif
    return ok;
 }
 
@@ -48,6 +55,10 @@ void Indi_Deinit()
    if(g_hBB  != INVALID_HANDLE) IndicatorRelease(g_hBB);
    if(g_hRSI != INVALID_HANDLE) IndicatorRelease(g_hRSI);
    g_hBB = g_hRSI = INVALID_HANDLE;
+#endif
+#ifdef LAB_ENTRY_15
+   if(g_hMACD != INVALID_HANDLE) IndicatorRelease(g_hMACD);
+   g_hMACD = INVALID_HANDLE;
 #endif
 }
 
@@ -106,6 +117,19 @@ double Indi_Point() { double p = SymbolInfoDouble(_Symbol, SYMBOL_POINT); return
 
 double Indi_ATR_Points(const int shift = 0)      { double pt = Indi_Point(); return (pt > 0.0 ? Indi_ATR(shift)/pt : 0.0); }
 double Indi_RiskATR_Points(const int shift = 0)  { double pt = Indi_Point(); return (pt > 0.0 ? Indi_RiskATR(shift)/pt : 0.0); }
+
+#ifdef LAB_ENTRY_15
+// MACD main (buffer 0) + signal (buffer 1) at shift, success-flagged because
+// legitimate MACD values can be 0.0 (the Indi_CopyOne sentinel is ambiguous here)
+bool Indi_MACD(const int shift, double &mainOut, double &signalOut)
+{
+   double m[], s[];
+   if(CopyBuffer(g_hMACD, 0, shift, 1, m) < 1) return false;
+   if(CopyBuffer(g_hMACD, 1, shift, 1, s) < 1) return false;
+   mainOut = m[0]; signalOut = s[0];
+   return true;
+}
+#endif
 
 #ifdef LAB_ENTRY_13
 double Indi_BB_Upper(const int shift = 1) { return Indi_CopyOne(g_hBB, shift); }   // buffer 0

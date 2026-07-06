@@ -30,6 +30,9 @@
 #ifdef LAB_ENTRY_14
    #include "entries/Entry_GridLog.mqh"
 #endif
+#ifdef LAB_ENTRY_15
+   #include "entries/Entry_ST03.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -51,6 +54,9 @@ int OnInit()
    Recovery_Init();
 #ifdef LAB_ENTRY_14
    Entry_GridLog_Init();
+#endif
+#ifdef LAB_ENTRY_15
+   Entry_ST03_Init();
 #endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,

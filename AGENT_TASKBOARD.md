@@ -2005,6 +2005,26 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 | EURJPY | 2025 | 41 | 3.23 | +1,225.14 | 2.58% |
 | EURJPY | 2026 | 16 | 1.02 | +8.24 | 3.76% |
 
+---
+
+## ORDER-039 — DealsExporter: nightly deals snapshot สำหรับ /ea-monitor — `REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง สร้าง+พิสูจน์ครบ · เหลือ user attach 1 chart)` (role: code)
+
+**ทำไม:** monitoring ชั้นตัดสิน (keep/kill ต่อ EA) ต้องใช้ deals history แตกตาม magic — เดิม export
+มือ พึ่งความขยันคน · Myfxbook ใช้เป็นแค่ชั้นดูสุขภาพ account (มองไม่เห็น magic)
+
+**ของที่ได้:**
+- `tools\DealsExporter\DealsExporter.mq5` + `.ex5` — EA read-only (ไม่มี trade function ทั้งไฟล์)
+  แปะ 1 chart บน account ที่จะ monitor → เขียน deals ทั้งหมดเป็น CSV ลง
+  `Common\Files\EA_LAB_deals_<login>.csv` ตอน attach + ทุกวันเวลา `InpExportHour` (default 23)
+  · full-snapshot overwrite = idempotent
+- `scripts\collect_live_deals.ps1` — เก็บ CSV จาก Common\Files → `portfolio\live_deals\<ชื่อ>_<วันที่>.csv`
+  (เข้า git = audit trail) — รันก่อน `/ea-monitor` ทุกครั้ง
+- **พิสูจน์แล้ว:** compile 0/0 · รันใน tester → CSV โผล่ที่ Common\Files จริง (header ถูกต้อง) ·
+  collector เก็บเข้า repo สำเร็จ
+**งานที่เหลือ (user, 2 นาที):** copy `tools\DealsExporter\DealsExporter.ex5` เข้า `MQL5\Experts`
+ของ terminal demo (Exness) → ลาก EA ใส่ chart ไหนก็ได้ 1 chart → เปิด AlgoTrading →
+เช็ค journal เห็น `[EXPORT] N deal rows`
+
 
 
 

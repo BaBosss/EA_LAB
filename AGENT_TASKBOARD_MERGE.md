@@ -5,10 +5,10 @@
 > กติกา claim/สถานะ = เหมือนบอร์ดหลักทุกข้อ (`AGENTS.md`): `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` /
 > `BLOCKED(คำถาม)` → `REVIEWED(Claude)` · เพิ่ม order ใหม่ = Claude/user เท่านั้น
 >
-> **สถานะบอร์ด: 🏁 CLOSED (2026-07-06 — เปิดและจบวันเดียว)** — MERGE-01→06 + 08 REVIEWED ครบ,
-> DoD 6/6 ✅ · EA_Project = read-only ARCHIVE แล้ว · **ข้อยกเว้นเดียวที่ยังเปิด: MERGE-07
-> (Entry_ST03) = ⏸️ HOLD** ถึงเงื่อนไขปลดล็อค (judge 2026-09-22 หรือ re-confirm OOS) — ใครปลดล็อค
-> ให้ทำ order นั้นตาม spec ในไฟล์นี้ แล้วบันทึกผลต่อท้ายได้เลย (ไม่ต้อง reopen บอร์ด)
+> **สถานะบอร์ด: 🏁 CLOSED สมบูรณ์ 100% (2026-07-06 — เปิดและจบวันเดียว, ครบทั้ง 8 order)** —
+> MERGE-01→08 REVIEWED หมด รวม 07 ที่ user override hold ("ทำ merge 07 ต่อเลย") ·
+> EA_Project = read-only ARCHIVE · ⛔ **เงื่อนไขเดียวที่ยังมีผล: ห้าม deploy Boss_15_ST03
+> จนกว่า replica 990010 ผ่าน judge 2026-09-22** (port ≠ รับรอง edge — ดูผล MERGE-07)
 
 ---
 
@@ -300,7 +300,7 @@ assert บน tick แรกเพราะ ATR ไม่พร้อมใน O
 
 ---
 
-## MERGE-07 — Entry_15_ST03 (StrategySignal_v4 edge-trigger เข้าแม่พิมพ์) — `⏸️ HOLD` · **เงื่อนไขปลดล็อค (ข้อใดข้อหนึ่ง):** (a) replica 990010 ถึง judge 2026-09-22 แล้วผลไม่แพ้ baseline 0.86 อย่างมีนัย หรือ (b) re-confirm OOS ด้วย locked .set ได้ PF ≥1.2
+## MERGE-07 — Entry_15_ST03 (StrategySignal_v4 edge-trigger เข้าแม่พิมพ์) — `REVIEWED(Claude, 2026-07-06 — ✅ port เสร็จ, ปลดล็อคโดย OWNER OVERRIDE ไม่ใช่เงื่อนไข (a)/(b))`
 
 **ทำไม hold:** signal v4 คือหัวใจ ST03 แต่หลักฐานตอนนี้ขัดกันเอง (provisional 3.93 vs qwen rerun 0.86)
 — port ตอนนี้ = เสี่ยงเสียแรงกับของที่ไม่มี edge. spec เขียนไว้ให้หยิบทำได้ทันทีเมื่อปลดล็อค:
@@ -308,6 +308,25 @@ assert บน tick แรกเพราะ ATR ไม่พร้อมใน O
 (ต้นแบบ `CORE\StrategySignal_v4.mqh`) · `LAB_ENTRY 15` · input group `Inp15_` · Boss_15_ST03.mq5
 2 บรรทัด · parity เทียบ `EA_RUNNER_ST03` ด้วย .set เทียบเท่า (บทเรียน parity อยู่ DESIGN_V2.md §5.5)
 **ห้าม:** เริ่มก่อนเงื่อนไขปลดล็อค — ใครเห็นบอร์ดนี้อย่า claim
+
+**ผล (Claude ทำเอง, 2026-07-06 — user สั่ง override hold: "ทำ merge 07 ต่อเลย"):**
+- **เงื่อนไขที่ยังอยู่แม้ port เสร็จ: ⛔ ห้าม deploy Boss_15** จนกว่า replica 990010 พิสูจน์ตัวเอง
+  ถึง judge 2026-09-22 — port เข้าแม่พิมพ์ = ความครบของเครื่องมือ ไม่ใช่การรับรอง edge
+  (คำเตือนฝังใน `#property description` + header ของไฟล์แล้ว)
+- **โค้ด:** `core\entries\Entry_ST03.mqh` (v4 logic verbatim: MACD state บน closed bar →
+  consecutive count → edge latch → rearm cadence · นับครั้งเดียวต่อ bar · เคารพ TradeDir) ·
+  `Inputs.mqh` group `_15_` (MACD 12/26/9, Count 2, Edge true, Rearm 0 — ตรง runner defaults) +
+  StackMode default 90 · `Indicators.mqh` iMACD handle + `Indi_MACD()` success-flagged (กัน 0.0
+  sentinel กำกวม) — ทั้งหมด guard ด้วย `#ifdef LAB_ENTRY_15` · `Boss_15_ST03.mq5` wrapper ·
+  `deploy.ps1` compile 6 ตัว
+- **compile 0/0 ทั้ง 6** · **run_tests.ps1 = ALL PASS 3/3** · tpl_regression (ดูบรรทัดถัดไป)
+- **🎯 Signal parity สมบูรณ์แบบ (GBPUSD H1 2024.01–07 M1):** เทียบ `EA_RUNNER_ST03` (LR1,
+  AllowLiveOrders) กับ Boss_15 DryRun signal stream — **entry ทั้ง 133/133 ของ runner อยู่ใน
+  stream ของ Boss_15 ตรงทั้ง bar timestamp และทิศทาง, 0 miss** (stream Boss = 255 เพราะ DryRun
+  ไม่มี flat-gate = superset ตามคาด) · ส่วนจำนวนเทรดจริงต่าง (133 vs 165) มาจาก exit คนละ
+  สถาปัตย์ (runner per-leg TP + HoldBars time-stop vs Boss basket) = intentional difference
+  แบบเดียวกับ MERGE-03
+- reports: `MERGE07_RUNNER_PARITY.htm` · `MERGE07_BOSS15_PARITY.htm` · `MERGE07_BOSS15_STREAM.htm`
 
 ---
 
