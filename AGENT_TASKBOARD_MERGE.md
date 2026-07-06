@@ -54,7 +54,8 @@ EA_CORE = ตัวให้, ทุกชิ้น additive (default OFF), cage
 3. **additive เท่านั้น** — ห้ามเปลี่ยน default/behavior ของโหมดเดิม (บทเรียน ORDER-027/029B ใช้ต่อ)
 4. MT5 tester (`D:\Meta 5`) เป็นทรัพยากรร่วมกับบอร์ดหลัก (ORDER-038 ฯลฯ) — อย่ารันชนกัน,
    เช็ค process ก่อน claim งานที่ต้องรัน backtest
-5. ลำดับบังคับ: MERGE-01 → MERGE-02 → MERGE-03 → MERGE-04 → MERGE-05/06 → MERGE-08 (07 = hold)
+5. ลำดับบังคับ (ปรับตาม synthesis MERGE-02 — เสี่ยงต่ำก่อน): MERGE-01 ✅ → MERGE-02 ✅ → MERGE-05A ✅ →
+   **MERGE-04 (guardian) → MERGE-05B (persist) → MERGE-03 (pyramid)** → MERGE-06 → MERGE-08 (07 = hold)
 
 ---
 
@@ -78,7 +79,7 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 
 ---
 
-## MERGE-02 — Codex independent scope-check (second opinion ตามกฎ architecture) — `CLAIMED(Codex via Claude spawn, 2026-07-06 — ผลจะเขียนที่ handoff\MERGE-02_codex_proposal.md เพื่อกัน anchoring, Claude synthesize เข้าบอร์ดเอง)` (role: peer review, ห้ามใช้ agent อื่นแทน)
+## MERGE-02 — Codex independent scope-check (second opinion ตามกฎ architecture) — `REVIEWED(Claude, 2026-07-06 — ✅ converge 4/4 + รับ 2 ข้อเสนอของ Codex มาแก้แผน)` (role: peer review)
 
 **ทำไม:** track นี้ = การแก้ risk/execution logic เข้าแม่พิมพ์ที่ EA ทุกตัวต่อไปจะใช้ = การตัดสินที่แพง
 → กติกา CLAUDE.md บังคับสมองอิสระคนละค่าย ดูโจทย์เดียวกันโดยไม่เห็นคำตอบ Claude ก่อน
@@ -93,11 +94,26 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 **Acceptance:** ตารางข้อเสนอ (ก่อนเห็นของ Claude) + รายการจุดต่าง · commit `[codex] MERGE-02 done`
 **ห้าม:** แก้โค้ดใดๆ ใน order นี้ — เป็น review ล้วน
 
-**ผล:** _(รอ)_
+**ผล + Synthesis (Claude, 2026-07-06):** proposal เต็ม → `handoff\MERGE-02_codex_proposal.md`
+(Codex อ่าน source จริงทั้งสองฝั่ง ไม่เห็นทะเบียน Claude — anti-anchoring ทำงาน)
+- **Converge 4/4 กับทะเบียน Claude:** port = Guardian · StatePersistence · pending-ladder executor ·
+  test pattern / ไม่ port = contract stack, TradeIntent pipeline, RiskEngine ซ้ำ, signal modules —
+  สองสมองอิสระคนละค่ายได้คำตอบเดียวกัน = scope นี้เชื่อถือได้
+- **รับจาก Codex 2 ข้อ (แก้แผนแล้ว):**
+  1. **สลับลำดับ:** ชิ้นเล็กเสี่ยงต่ำก่อน — MERGE-04 (guardian) → MERGE-05B (persist) → แล้วค่อย
+     MERGE-03 (pyramid = ชิ้นเสี่ยงสุด) — ladder ใหม่อยู่ในกฎเหล็กข้อ 5 แล้ว
+  2. **MERGE-03 risk #1 = split exit ownership** (per-leg TP ของ executor ชนกับ basket-TP ของ
+     ExitManager — มี precedent จริงในโค้ด: `_2_SuppressLegTP` เกิดจาก conflict class เดียวกันนี้ตอน
+     port GridLog) → mitigation เข้า spec MERGE-03 แล้ว: slice 1 = pending placement/cancel/refresh
+     เท่านั้น, basket exit เป็น exit owner เดียว, **ไม่มี per-leg TP/OCO เลยในรอบแรก** + โหมด 93
+     ต้อง disable partial-close/Recovery/Hedge/Stack-add เดิมของ basket นั้น (one mode, one owner)
+- Codex MAYBE (PositionTracker/adapters/ConfigValidator/Logging แบบ selective) → Claude ยืน **ไม่ port**
+  ตามทะเบียนเดิม — audit MERGE-05A พิสูจน์แล้วว่า position state self-healing อยู่แล้ว ช่องจริงมีแค่
+  hard-kill state ซึ่ง MERGE-05B ปิด
 
 ---
 
-## MERGE-03 — port ScaleExecutor_v2 → Boss V2: โหมด `STACK_PYRAMID(93)` + pending ladder — `OPEN` (ปลดล็อคเมื่อ MERGE-01+02 REVIEWED) · **ทำได้: Codex-direct** (role: code)
+## MERGE-03 — port ScaleExecutor_v2 → Boss V2: โหมด `STACK_PYRAMID(93)` + pending ladder — `OPEN` (ปลดล็อคเมื่อ MERGE-04 + MERGE-05B REVIEWED — ชิ้นเสี่ยงสุดทำท้ายสุด ตาม synthesis MERGE-02) · **ทำได้: Codex-direct** (role: code)
 
 **ทำไม:** อะไหล่ชิ้นที่มีค่าสุดของ EA_CORE — Boss V2 ยิงได้แค่ market ทีละไม้ (`Stack.mqh` 90/91/92
 ล้วน market-add) ขาด pending LIMIT/STOP ladder + OCO ที่ `ScaleExecutor_v2.mqh` มี (360 บรรทัด,
@@ -111,6 +127,12 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
   basket ปิด (TP/SL/kill) → **cancel pending ค้างทั้งหมด** (pattern `ScaleExec2_CloseAll`)
 - **intentional difference จาก CORE (จดใน DESIGN_V2.md §5.x):** Boss ใช้ basket-TP ไม่ใช่ TP ต่อ leg —
   ห้าม port TP-per-leg เข้ามา (ชน ExitManager) · OnTradeTransaction refresh ใช้ pattern `ScaleExec2_Refresh`
+- **mitigation "one mode, one exit owner" (จาก MERGE-02 synthesis — บังคับ):** slice แรกนี้
+  pending ladder ทำแค่ place/refresh/cancel — **ExitManager (basket) เป็น exit owner เดียว ไม่มี
+  per-leg TP/OCO** · เมื่อโหมด 93 active: disable partial-close (`_2_PartialPct*`), Recovery, Hedge,
+  และ Stack-add ปกติของ basket นั้น (กัน orphaned pendings / re-entry หลัง basket close —
+  precedent: `_2_SuppressLegTP` เกิดจาก conflict class นี้) · per-leg TP/OCO เต็มรูป = ค่อยเป็น
+  order ใหม่หลัง slice นี้ผ่าน regression+harness (ถ้าจำเป็นจริง)
 - แตะไฟล์: `Inputs.mqh` · `Stack.mqh` · `Execution.mqh` (เพิ่ม pending place/cancel) · `LabCore.mqh` (wire)
   · `DESIGN_V2.md` (spec + เลขรหัส 93)
 **Acceptance (ครบทุกข้อ):**
@@ -127,7 +149,7 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 
 ---
 
-## MERGE-04 — port PortfolioGuardian_v1 → RiskControl: account-level DD gate — `OPEN` (หลัง MERGE-03) · **ทำได้: Codex-direct / Claude** (role: code)
+## MERGE-04 — port PortfolioGuardian_v1 → RiskControl: account-level DD gate — `OPEN` 🟢 **พร้อมทำทันที (ตัวถัดไปในคิว)** · **ทำได้: Codex-direct / Claude** (role: code)
 
 **ทำไม:** demo ปัจจุบัน = 7 EA บน account เดียว — RiskControl คุมแค่ระดับ EA ตัวเอง ไม่มีชั้น
 "ทั้ง account DD เกิน X% → หยุดเปิดไม้ใหม่ทุกตัว" ซึ่ง `PortfolioGuardian_v1.mqh` (76 บรรทัด) ทำอยู่แล้ว
@@ -135,7 +157,9 @@ Boss_14 GridLog คือตัวที่มี demo live 7 ตัว + จะ
 **Spec:** input ใหม่ `_3_AcctDDLimitPct` (double, **default 0 = off**) ใน group RiskControl —
 เมื่อ account equity ต่ำกว่า high-water-mark เกิน limit → block **first-entry ใหม่เท่านั้น**
 (ไม้ที่เปิดอยู่ + stack-add ของ basket เดิม ปล่อยให้จบตามระบบ — ตามปรัชญา resize-not-kill ของ user) ·
-log 1 บรรทัดชัดเจนตอน gate trip/release · HWM persist ผ่าน restart ไม่จำเป็นรอบแรก (จดเป็น known-gap)
+log 1 บรรทัดชัดเจนตอน gate trip/release · **HWM ต้อง persist ผ่าน GV helper ของ MERGE-05B**
+(audit 05A ยกเลิก known-gap เดิม — ถ้า 05B ยังไม่ merge ให้เขียน HWM ผ่าน GlobalVariables ตรงๆ
+ด้วย key pattern `Boss_<magic>_hwm` แล้ว 05B ค่อย refactor เข้า helper)
 **Acceptance:** compile 0/0 · `tpl_regression.ps1` CLEAN · พิสูจน์ gate trip: backtest 1 รันด้วย
 limit จงใจต่ำ (เช่น 1%) บน config ที่มี DD → journal มีบรรทัด gate trip + จำนวน trades ลดลง vs รัน limit=0 ·
 append เลขทั้งคู่
@@ -145,7 +169,7 @@ append เลขทั้งคู่
 
 ---
 
-## MERGE-05 — restart-safety audit (StatePersistence จำเป็นไหม) — `OPEN` (ขนาน MERGE-04 ได้ — read-only) · **ทำได้: Codex / oc-dev** (role: investigate, stage A ห้ามแก้โค้ด)
+## MERGE-05 — restart-safety audit (StatePersistence จำเป็นไหม) — `REVIEWED(Claude, 2026-07-06 — stage A ทำเองครบ: 1 CRITICAL + 2 LOW → ออก MERGE-05B)` (role: investigate, stage A ห้ามแก้โค้ด)
 
 **ทำไม:** EA_CORE มี `StatePersistence_v1.mqh` เพราะเจอปัญหา recompile/restart ทำ state หาย —
 Boss V2 grid EA กำลังจะ live จริง ต้องรู้ว่ามีช่องนี้ไหม **ก่อน** เจอบน live
@@ -159,7 +183,45 @@ rebuild จาก open positions (by magic) ได้เองไหม? ตั�
 Claude review แล้วจะออก stage B (implement) เฉพาะช่องที่อันตรายจริง
 **ห้าม:** แก้โค้ด · ตัดสินว่า "ไม่เป็นไร" เอง — รายงานดิบ
 
-**ผล:** _(รอ)__
+**ผล (Claude ทำเอง, 2026-07-06 — ไล่ code path ครบ LabCore/Execution/RiskControl/ExitManager/MM/Stack/Entry_GridLog):**
+
+| state | อยู่ที่ | rebuild หลัง restart/recompile ได้ไหม | ผลถ้าหาย | severity |
+|---|---|---|---|---|
+| โครง basket (dir/จำนวน level/lots/avg/last price/profit) | scan positions สดจาก (symbol,magic) ทุก tick (`Execution.mqh`) | ✅ self-healing สมบูรณ์ | — | OK |
+| `g_lab_last_bar` (bar-open gate) | `LabCore.mqh:38` reset ใน OnInit | ✅ by design | ประเมินซ้ำ 1 bar แรก — benign | OK |
+| **`g_rc_halted` + `g_rc_peak_equity` (hard-kill state)** | `RiskControl.mqh:12-13` memory-only, `RiskControl_Init()` เคลียร์ทุกครั้ง | ❌ | **hard-kill เด้งแล้ว → restart/recompile/VPS reboot → EA ฟื้นมาเทรดต่อเหมือนไม่เคยตาย + peak equity anchor ใหม่ที่ equity หลังขาดทุน → bleed ข้าม restart ไม่มีวันชน KillDD** — จุดที่ EA_CORE สร้าง StatePersistence มาแก้ตรงๆ | 🔴 **CRITICAL** (live เท่านั้น — tester มองไม่เห็นเพราะรันต่อเนื่อง) |
+| `g_gl_armed_level` (GridLog resting-stop emulation) | `Entry_GridLog.mqh:20` reset ใน Init | ⚠️ re-arm bar ถัดไปที่ราคา/ATR ใหม่ | ไม่เปิดไม้ซ้ำ แต่ trigger level ย้าย = live เพี้ยนจาก backtest หลัง restart (standalone Zeus ใช้ pending จริงที่ broker = restart-safe กว่า port!) | 🟡 LOW-MED |
+| `g_exit_partial1/2_done` (partial-close flags) | `ExitManager.mqh:168-169` memory-only | ⚠️ reset กลาง basket | partial อาจยิงซ้ำรอบเดียวกัน — โพซิชันเล็กลงกว่าแผน ไม่อันตรายต่อ account (semantics เดิมก็ re-arm เมื่อ profit ≤0 อยู่แล้ว) | 🟢 LOW |
+| DD-adaptive first lot / MM ทั้งหมด | stateless (อ่าน equity/balance สด) | ✅ | — | OK |
+| Recovery/Hedge/Basket | ปิดถาวร (ORDER-025) / dormant (ORDER-026) | n/a | — | skip |
+
+**ข้อสรุป:** ต้อง port แนวคิด StatePersistence จริง แต่จิ๋ว (GlobalVariables helper ~30 บรรทัด ไม่ใช่ 296)
+— เป้าเดียวที่บังคับ = hard-kill state · MERGE-04 (acct-DD HWM) ต้องใช้ helper เดียวกันตั้งแต่วันแรก
+(ยกเลิก known-gap ที่เขียนไว้ใน MERGE-04) → ออก **MERGE-05B** ด้านล่าง
+
+---
+
+## MERGE-05B — implement `core\Persist.mqh` (GV helper จิ๋ว) + persist hard-kill state — `OPEN` (หลัง MERGE-03 merge — ลด conflict ไฟล์) · **ทำได้: Codex-direct / Claude** (role: code)
+
+**ทำไม:** ผล audit MERGE-05A — hard-kill state เป็น memory-only = 🔴 CRITICAL บน live/VPS
+(restart แล้ว EA ที่ถูกฆ่าฟื้นมาเทรดต่อ + peak-equity anchor รีเซ็ต). tester มองไม่เห็นช่องนี้
+เพราะรันต่อเนื่อง — นี่คือ bug class "backtest เขียว live พัง" ตรงตำรา
+
+**Spec:**
+- สร้าง `core\Persist.mqh`: helper GlobalVariables คีย์ `Boss_<magic>_<name>` — `Persist_Set/Get/Del`
+  (~30 บรรทัด — เอา pattern จาก `CORE\StatePersistence_v1.mqh` ไม่เอา dependency)
+- `RiskControl.mqh`: input ใหม่ `_3_PersistHalt` — persist `g_rc_halted` + `g_rc_peak_equity`
+  (เขียนตอนเปลี่ยนค่า, อ่านตอน `RiskControl_Init`) · halt ที่ถูก restore ต้อง log ชัด 1 บรรทัด
+  ("HALT restored from GV — manual reset = ลบ GV หรือ input toggle")
+- **default ของ `_3_PersistHalt` = เสนอ ON (ข้อยกเว้น additive rule ข้อเดียวของ track — เหตุผล:
+  ใน tester GV เป็น sandbox ต่อ pass → เลข backtest ไม่ขยับ (พิสูจน์ด้วย regression CLEAN) แต่ live
+  ปิดช่อง critical ทันทีทุก EA ที่ compile จากแม่พิมพ์) — จุดนี้ต้องให้ user/Claude sign-off ตอน review**
+- (optional, ถ้าเวลาเหลือ) persist `g_gl_armed_level` ของ Entry_GridLog (🟡 จาก audit) ด้วย helper เดียวกัน
+**Acceptance:** compile 0/0 · `tpl_regression.ps1` CLEAN · พิสูจน์ restore: script/EA test ใน `tests\`
+จำลอง set GV → init → อ่าน halted ถูกต้อง · append log บรรทัด restore
+**ห้าม:** persist อะไรที่ rebuild จาก positions ได้อยู่แล้ว (ห้ามซ้ำซ้อนกับ self-healing เดิม)
+
+**ผล:** _(รอ)_
 
 ---
 
