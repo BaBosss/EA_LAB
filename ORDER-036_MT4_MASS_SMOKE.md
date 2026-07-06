@@ -41,8 +41,8 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-07 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 1 | 199 | โซนตาย — 291-TOIS.jrEURJPYGBPCHF (อีก "\*.jr\*" family) ไม่ผ่านแม้แต่ Tier A ระดับ smoke |
 | 036-08 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 0 | 0 | 0 | 200 | โซนตาย 100% — indicator pack ต่อเนื่อง (WSS*, X*, ZUP ฯลฯ) |
 | 036-09 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | โซนตาย 100% — 0 เทรดทั้งกอง (แม้แต่ Reject ก็ไม่มี) |
-| 036-10 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
-| 036-11 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
+| 036-10 | 50 | CLAIMED(Claude, overnight — เลน 1, สมัค BWD-OOS 3 EA) | 5 | 0 | 5 | 190 | Tier A จริง 3 ตัว (AF-Global · Automated Forex Grail · BB SWING) ไม่มีชื่อน่าสงสัย — BWD-OOS กำลังรัน |
+| 036-11 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
