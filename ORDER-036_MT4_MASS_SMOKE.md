@@ -38,8 +38,8 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-04 | 50 | REVIEWED(Claude 07-06 — รันเองบนเลน MT4b ด้วย driver ใหม่) | 0 | 0 | 2 | 198 | **โซนตาย: 0 survivor ทั้ง batch** — กอง "FREE EA" bundle = indicator conversion เกือบทั้งหมด · precheck ทำงานจริง: จับ `missing-indicator:` พร้อมชื่อไฟล์ (เช่น BrainTrend2Sig.ex4) + ข้าม symbol ที่เหลือ = ไม่เผา timeout · timeout-kill พิสูจน์แล้ว (LRCChannelD โดน kill ที่ 180s แทนที่จะค้างเป็นชั่วโมงแบบเดิม) · stage-2 BWD-OOS = n/a (ไม่มี Tier A) |
 | 036-05 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 10 | 0 | 1 | 189 | ⚠️ **Tier A ทั้งหมด = 1 ตระกูลต้องสงสัย** — ดู triage ล่างตาราง (BWD-OOS กำลังรัน) |
 | 036-06 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | **โซนตาย 100%** — indicator-name pack อีกกอง (SHISIGNALARROW/SyncMA/StealthXXX ฯลฯ) |
-| 036-07 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
-| 036-08 | 50 | OPEN | | | | | |
+| 036-07 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
+| 036-08 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -101,7 +101,28 @@ PF 2.6-2.83 ทั้งหมด) = สัญญาณเดียวกับ 
 | 215-SEMIS.jrUSDJPY | EURUSD | 3300 | 2.80 | +6,435 | 11.91% |
 | 215-SEMIS.jrUSDJPY | USDJPY | 3067 | 2.78 | +4,985 | 16.51% |
 
-**Verdict:** _(รอผล BWD-OOS ก่อนตัดสิน — ห้าม promote จากตารางนี้)_
+**Verdict (Claude, 2026-07-07 — BWD-OOS `_mt5_auto/BWDOOS_MT4_B05.csv`):**
+
+| EA | 2020-22 PF / trades / net / DD | Verdict |
+|---|---|---|
+| 2020v2 | 2.26 / 314 / +601 / DD 6.27% (รายงาน) | ❌ **REJECT (แก้ verdict ทันทีหลังอ่าน trade list — ดูใต้ตาราง)** — lot escalation ถึง **63.92 จาก base 0.10 = uncapped martingale/recovery** เดียวกับ CommunityPower/GoldStuffV7 |
+| 212-SEMIS.jrAUDCAD | 0.65 / 4190 / -9,907 / **DD 99.26%** 💀 | ❌ REJECT ถาวร |
+| 213-SEMIS.jrCHFJPY | 0.56 / 3962 / -9,593 / **DD 96.53%** 💀 | ❌ REJECT ถาวร |
+| 214-SEMIS.jrGBPJPY | 0.05 / 676 / -9,910 / **DD 99.11%** 💀 | ❌ REJECT ถาวร |
+| 215-SEMIS.jrUSDJPY | 0.16 / 678 / -9,775 / **DD 97.86%** 💀 | ❌ REJECT ถาวร |
+
+**สงสัยถูกต้องทั้งหมด (SEMIS.jr):** ตายยกกอง (DD 96-99%) ยืนยัน artifact/engine เดียวกันตามคาด
+
+**🔬 mechanism-check 2020v2 (Claude, 2026-07-07 — ทำตามบทเรียน CommunityPower: อ่าน trade list
+ก่อนเชื่อเลขสวย เสมอ):** report บอก "DD 6.27%" ($638) แต่ trade list เผย **lot escalation ถึง
+63.92 lots จาก base 0.10 (ผ่านขั้น 0.14→0.20→0.27→...→22→31.8→**63.92**)** — นี่คือ exposure
+ระดับล้างพอร์ตถ้า sequence ไม่กลับตัวทันเวลา (base 0.10 lot → 63.92 lots = คูณ ~640 เท่า) ·
+**"DD 6.27%" ที่ tester รายงานไม่สะท้อนความเสี่ยงจริง** เพราะวัดที่จุดปิด ไม่ใช่ตอน exposure พีค —
+เข้าเกณฑ์ structural gate เดียวกับ CommunityPower/GoldStuffV7 (decision 2026-06-23: กลไก
+uncapped martingale/grid = ปฏิเสธเชิงโครงสร้าง ไม่ใช่เรื่อง sizing) · **VERDICT แก้เป็น ❌ REJECT**
+— resize ไม่ช่วยเพราะ risk อยู่ที่ตัวคูณ ไม่ใช่ lot ตั้งต้น
+**ผล batch 05 สุดท้าย: 0/5 survivor** (ตกทุกตัวหลัง mechanism-check ครบ — บทเรียนซ้ำเป็นครั้งที่ 3:
+เลข PF/DD สวยจาก tester โกหกได้เสมอถ้าไม่อ่าน trade list ประกอบ)
 
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
@@ -119,7 +140,11 @@ PF 2.6-2.83 ทั้งหมด) = สัญญาณเดียวกับ 
 2. **BWD-OOS 2020-22** ทุก Tier A ที่เหลือ: ใช้ pattern `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets
    จาก CSV ของ batch ตัวเอง, สัญลักษณ์ที่ M1 PF ดีสุด) → append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`
 3. **Trade-list dump** ทุกตัวที่ BWD PF>0.9: จาก report BWD ให้สรุปเป็นตาราง 3 คอลัมน์ต่อ EA —
-   (a) SL เป็น 0.00000 ทุกไม้ไหม (b) ลำดับ lot 15 ค่าแรกของ chain ยาวสุด (จับ martingale) (c) lot สูงสุดที่เห็น
+   (a) SL เป็น 0.00000 ทุกไม้ไหม (b) ลำดับ lot 15 ค่าแรกของ chain ยาวสุด (จับ martingale) (c) **lot
+   สูงสุดที่เห็นทั้งไฟล์ (grep ทุกแถว ไม่ใช่แค่ 15 ค่าแรก — บทเรียน 2020v2 07-07: escalation ลึกอาจอยู่
+   กลาง/ท้ายไฟล์ ไม่ใช่ต้นไฟล์)** · **auto-flag: max lot ÷ base lot ≥ 10x → REJECT ทันที
+   ไม่ต้องรอ Claude** (uncapped martingale — DD ที่ tester รายงานไม่สะท้อนความเสี่ยงจริงเสมอ, บทเรียน
+   ซ้ำ 3 ครั้ง: CommunityPower ×486, pun fix lot, 2020v2 ×640 — ทุกครั้ง "DD ต่ำ" ที่รายงานคือกับดัก)
 4. append ทั้งหมดใต้แถว batch ในไฟล์นี้ · commit เดียว `[tag] ORDER-036 batch NN + stage2 done`
 **Claude เหลือแค่:** อ่านตาราง → verdict — ประหยัดรอบไปกลับ 1 วันต่อ batch
 
