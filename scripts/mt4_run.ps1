@@ -33,17 +33,21 @@ param(
   [string]$InstallDir = "D:\Meta4",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0",
   [int]$TimeoutSec = 900,
+  [switch]$Portable,                             # lane 2 (D:\Meta4b): pass -Portable with Terminal/InstallDir/DataDir all = D:\Meta4b
   [switch]$Force
 )
 $ErrorActionPreference = "Stop"
 
 if (-not $Force) {
+  # guard scoped to THIS install's exe path (like mt5_run) so two MT4 installs
+  # can run in parallel without aborting each other
+  $mine = { Get-Process terminal -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $Terminal } }
   $g = [Diagnostics.Stopwatch]::StartNew()
-  while ((Get-Process terminal -ErrorAction SilentlyContinue) -and $g.Elapsed.TotalSeconds -lt 25) {
+  while ((& $mine) -and $g.Elapsed.TotalSeconds -lt 25) {
     Start-Sleep -Seconds 2
   }
-  if (Get-Process terminal -ErrorAction SilentlyContinue) {
-    Write-Output "ABORT: an MT4 terminal is still running after 25s. Close it first, or pass -Force."; exit 2
+  if (& $mine) {
+    Write-Output "ABORT: this MT4 install ($Terminal) is still running after 25s. Close it first, or pass -Force."; exit 2
   }
 }
 if (-not (Test-Path $Terminal)) { Write-Output "ABORT: terminal not found: $Terminal"; exit 2 }
@@ -86,7 +90,10 @@ $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
 
 Write-Output "launch: $Expert | $Symbol $Period | $FromDate..$ToDate | model=$Model | set=$([IO.Path]::GetFileName($SetFile))"
-$proc = Start-Process -FilePath $Terminal -ArgumentList "`"$ini`"" -PassThru
+$args = @()
+if ($Portable) { $args += "/portable" }
+$args += "`"$ini`""
+$proc = Start-Process -FilePath $Terminal -ArgumentList $args -PassThru
 $sw = [Diagnostics.Stopwatch]::StartNew()
 $found = $null
 while ($sw.Elapsed.TotalSeconds -lt $TimeoutSec) {

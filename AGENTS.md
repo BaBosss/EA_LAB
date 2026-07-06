@@ -65,13 +65,23 @@ capability ที่แท้จริงตอนนี้มาจาก Codex
 ## 3. กฎเหล็กทางเทคนิค (ทุก agent — ผิดข้อใดข้อหนึ่ง = งานนั้นใช้ไม่ได้)
 
 1. **แก้ `ea_template\core\*` เมื่อไหร่ ต้องรัน `powershell -File scripts\tpl_regression.ps1` → ต้อง CLEAN** ก่อน commit
-2. **MT5 มี 2 เลน (ตั้งแต่ 2026-07-04):**
-   - **เลน 1 (หลัก):** `D:\Meta 5` — สำหรับ Claude/user/Codex desktop · default ของทุก script
-   - **เลน 2 (agent):** `D:\Meta 5b` portable — **ทีม OpenClaw (oc-btest) ใช้เลนนี้เสมอ**:
-     ต่อท้ายทุกคำสั่ง `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`
-   - รันคู่กันได้ (guard แยกตาม exe path) **ยกเว้น Model 4 (real ticks) ห้ามรันคู่กับอะไรทั้งนั้น**
-     (เครื่องเคย freeze — ดู memory freeze-guard) · ภายในเลนเดียวกันยังรันทีละงาน · ห้าม `-Force` ·
-     ห้าม kill process · EA ใหม่จะไปเลน 2 อัตโนมัติผ่าน `ea_template\deploy.ps1`
+2. **เลน tester (อัปเดต 2026-07-06: MT5 ×3 + MT4 ×2):**
+   - **MT5 เลน 1 (หลัก):** `D:\Meta 5` — Claude/user/Codex desktop · default ของทุก script
+   - **MT5 เลน 2 (agent):** `D:\Meta 5b` portable — ทีม OpenClaw (oc-btest):
+     `-Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable`
+   - **MT5 เลน 3 (ใหม่):** `D:\Meta 5c` portable — เลนเสริมสำหรับ screen/sweep เบา:
+     `-Terminal 'D:\Meta 5c\terminal64.exe' -DataDir 'D:\Meta 5c' -Portable`
+     ⚠️ **5c ไม่มี tick cache (จงใจ — ประหยัด 80GB) → ห้ามรัน Model 4/real-tick บนเลนนี้เด็ดขาด**
+     (M4 ต้อง SERIAL บนเลน 1 เท่านั้นอยู่แล้ว)
+   - **MT4 เลน 1 (หลัก):** `D:\Meta4` (data = AppData `2088...`) — default ของ `mt4_run.ps1` · งาน batch 036
+   - **MT4 เลน 2 (ใหม่):** `D:\Meta4b` portable (config+history+MQL4 ครบ):
+     `-Terminal 'D:\Meta4b\terminal.exe' -InstallDir 'D:\Meta4b' -DataDir 'D:\Meta4b' -Portable`
+     (guard `mt4_run.ps1` เป็น path-scoped แล้ว 2026-07-06 — สองเลนรันคู่ได้ · พิสูจน์แล้วรันคู่ Codex จริง)
+   - กติการวม: รันคู่ข้ามเลนได้ · **Model 4 (real ticks) ห้ามรันคู่กับอะไรทั้งนั้นทุกแพลตฟอร์ม**
+     (เครื่องเคย freeze — memory freeze-guard) · ภายในเลนเดียวกันทีละงาน · ห้าม `-Force` ·
+     ห้าม kill process · EA ใหม่ MT5 deploy อัตโนมัติผ่าน `ea_template\deploy.ps1` (เลน 1+2 — เลน 3
+     ให้ copy `MQL5\Experts\EALabTpl` จากเลน 2 เมื่อต้องใช้ EA เวอร์ชันล่าสุด) · MT4b: EA ใหม่ต้อง copy
+     .ex4 เข้า `D:\Meta4b\MQL4\Experts` เอง (สำเนา ณ 07-06 มี 308 ตัวรวม pool ที่ smoke แล้ว)
 3. **ตัวเลขที่รายงาน = Model 1 ขึ้นไป** (Model 2 ใช้กรอง zero-trade เท่านั้น) · ทุก full-window run แตกปีด้วย `scripts\report_year_split.py`
 4. **Verdict rules (สรุปจาก decision log — อ่านฉบับเต็มใน PROJECT_STATE §3):**
    ห้าม DEAD/REJECT ก่อน optimize probe · cap breach (DD/margin/ruin) = resize-first ห้าม reject ตรง ·

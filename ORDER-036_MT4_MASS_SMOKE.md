@@ -35,9 +35,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
 | 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
 | 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
-| 036-04 | 50 | OPEN (ปลด claim Codex 10:38 — เงียบ 9 ชม. + 0 แถวใน CSV = quota death, กฎ 4b) | | | | | |
-| 036-05 | 50 | OPEN (ปลด claim — เหตุเดียวกับ 04) | | | | | |
-| 036-06 | 50 | OPEN (ปลด claim — เหตุเดียวกับ 04) | | | | | |
+| 036-04 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | rerun from clean CSV after stale MT4 process from prior attempt |
+| 036-05 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | |
+| 036-06 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
 | 036-08 | 50 | OPEN | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
