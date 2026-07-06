@@ -44,8 +44,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-10 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 5 | 0 | 5 | 190 | **0/3 survivor หลัง auto-flag lot-escalation** — ดู triage ล่างตาราง |
 | 036-11 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 3 | 0 | 6 | 191 | **0/3 survivor — ตัดสินจาก smoke เดิมได้เลย ไม่ต้องเสีย BWD** ดู triage ล่างตาราง |
 | 036-12 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 20 | 0 | 8 | 172 | **0/11 survivor — ทุกตัวตายจาก lot-check ฟรี ไม่ต้องรัน BWD เลย** ดู triage ล่างตาราง |
-| 036-13 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
-| 036-14 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
+| 036-13 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 10 | 180 | **0/6 survivor — ทุกตัวตายจาก lot-check ฟรี (33x-38,750x)** ดู triage ล่างตาราง |
+| 036-14 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
+| 036-15 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -183,6 +184,24 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 **🔧 แก้ spec ถาวร (สำคัญที่สุดของคืนนี้):** สลับลำดับ — **lot-check จาก M1 smoke report เดิม (ฟรี,
 มีอยู่แล้ว) ต้องทำ "ก่อน" ส่ง BWD-OOS เสมอ ไม่ใช่หลัง** เดิม spec ให้ BWD-OOS ก่อนแล้วค่อย
 lot-check EA ที่ผ่าน — กลับด้านสิ้นเปลือง ดู stage-2 spec ที่แก้ด้านล่าง
+
+## Triage batch 13 (Claude, 2026-07-07 — batch ที่ 3 ติดกัน (11,12,13) ที่ปิดจบได้โดยไม่ต้องรัน BWD-OOS)
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| FoldXEA (EURUSD) | 0.01→387.5 = **×38,750** | ❌ AUTO-REJECT (แถมเป็น Tier B อยู่แล้วจาก DD 40.19%) |
+| FoldXEA (USDJPY) | 0.01→190.29 = **×19,029** | ❌ AUTO-REJECT |
+| Fxs (EURUSD) | 0.1→420 = **×4,200** | ❌ AUTO-REJECT |
+| Fxs (USDJPY) | 0.1→471.23 = **×4,712** | ❌ AUTO-REJECT (Tier B, DD 43.97%) |
+| FZ2 (EURUSD/USDJPY) | 0.02→78/44 = **×3,901 / ×2,207** | ❌ AUTO-REJECT ทั้งคู่ |
+| GBPJPY1H90PCWR | 1→977.41 = **×977** | ❌ AUTO-REJECT (net $71,152 จาก 187 เทรดก็ absurd อยู่แล้วโดยตัวมันเอง) |
+| gods gift ea v 4c | 0.1→10.3 = **×103** | ❌ AUTO-REJECT |
+| firebird v63f | 0.1→3.3 = **×33** | ❌ AUTO-REJECT (ตัวที่ดูเบาที่สุด PF1.15 ก็ยังเกิน 10x) |
+
+**ผล batch 13 สุดท้าย: 0/6 survivor — ไม่ต้องรัน BWD-OOS แม้แต่ตัวเดียว (batch ที่ 3 ติดกัน)**
+สังเกต: FoldXEA/Fxs เป็นตัวอย่างที่ระบบ Tier A/Tier B (จาก DD gate เดิม) **จับสัญญาณเดียวกันได้แล้ว
+ตั้งแต่ตอน smoke** (symbol หนึ่ง DD ต่ำ Tier A, อีก symbol DD พุ่ง 40-44% Tier B) — lot-check แค่ยืนยัน
+สาเหตุ ไม่ใช่ผู้ค้นพบคนแรก คราวนี้
 
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
