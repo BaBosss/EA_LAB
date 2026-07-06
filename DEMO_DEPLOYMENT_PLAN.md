@@ -78,6 +78,27 @@ manual pause ถ้า EA ตัวใด DD ผิดปกติเทีย�
 
 ---
 
+## 🆕 ClevrFX_EA — MT4 demo experiment (อนุมัติ 2026-07-06, รอ user attach)
+
+> **ตัวแรกจาก treasure hunt (222 EA) ที่ผ่านครบทุกด่าน** — BWD-OOS ทุกปีบวก (1.76/1.51/2.37) + 2026=2.04 ·
+> spread-stress 3x ไม่สะเทือน (sp45=1.93) · ไม่ระเบิดปี hostile · **compiled กลไกดำ → สถานะ demo-experiment
+> เท่านั้น** (Fxcore100 คู่กัน = DQ pirated — ตัวเลขเก็บเป็น prior ถ้าซื้อ official ในอนาคต)
+
+**Deploy checklist (user, บน MT4 demo ที่มีอยู่):**
+1. **บัญชี:** แนะนำ ClevrFX **ตัวเดียวบนบัญชี** (attribution ตรง + วัด kill-DD ระดับบัญชีได้) · balance
+   ใกล้ $10k = เทียบ validation ตรงสุด (ต่างได้ — ดู DD% ไม่ใช่ $)
+2. ก็อป `D:\Forex\10_EA_PROJECTS\2. wait for test\.EA OK\ClevrFX\ClevrFX_EA.ex4` → `MQL4\Experts\` → refresh Navigator
+3. **Chart: EURUSD H1 · attach ด้วย compiled defaults (ห้ามโหลด .set!)** — เรา validate ที่ default/H1
+   (vendor preset = M5-cap500 ≠ config ที่ validate)
+4. เปิด AutoTrading → **จดวันที่ attach → แจ้ง Claude** (demo-clock ≥3 เดือน)
+5. ⚠️ **no hard SL บนไม้ — เครื่อง/VPS ต้องออนไลน์ตลอด** (disconnect = ไม้เปลือยไม่มี SL บน server)
+
+**Kill-switch:** equity DD บัญชี >40% (= worst year backtest) → detach ทันที · **Monitor:** ~2 สัปดาห์/ครั้ง
+export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monitor MT5 pipeline — ใช้ statement แทน) ·
+**Judge:** ≥3 เดือน + ≥30 trades (ได้ในเดือนเดียว ~1 ไม้/วัน) → PF live ≥1.4 = คุยขั้นต่อ
+
+---
+
 ## Account Setup
 
 - **Account: 10,000 cent** (= $100 USD equivalent) — deploy 2026-06-22

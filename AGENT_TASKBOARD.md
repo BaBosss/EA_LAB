@@ -1951,9 +1951,10 @@ commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ C
 - **สรุป: 2 ตัวแรกจาก treasure ทั้งหมด (222 EA ทดสอบแล้ว) ที่ผ่านครบ: BWD-OOS ทุกปีบวก + spread 3x + ไม่
   ระเบิด + consistent 2026** — ⚠️ ยังเป็น compiled กลไกดำ (no-SL internal management) → เข้าได้แค่สถานะ
   **demo-experiment เท่านั้น ห้ามคิดถึง live จนพิสูจน์บน demo ≥3 เดือน**
-- **รอ user เคาะ 2 เรื่อง:** (1) **FXCore100 v5.1 ซื้อจริงหรือแชร์มา?** (สิทธิ์ deploy — ถ้า pirated = ตัดทิ้ง
-  แบบ North East Way ต่อให้เลขสวย) (2) **เปิด MT4 demo account ไหม?** (2 ตัวนี้ = MT4 — บัญชี demo ปัจจุบัน
-  ทั้งหมดเป็น MT5 ใช้ร่วมไม่ได้ ต้องเปิด MT4 demo แยก + attach 2 chart EURUSD)
+- **user เคาะแล้ว (2026-07-06):** (1) **Fxcore = ก็อปมา → DQ** (precedent North East Way — เลขเก็บเป็น prior
+  ถ้าซื้อ official ในอนาคต) (2) **MT4 demo มีอยู่ → ClevrFX เข้า demo-experiment** — deploy plan ครบใน
+  `DEMO_DEPLOYMENT_PLAN.md` §ClevrFX (EURUSD H1 **defaults ห้ามโหลด set** · ตัวเดียว/บัญชี · kill-DD 40% ·
+  no-SL → ออนไลน์ตลอด) — รอ user attach + แจ้งวันเริ่ม
 
 **ทำไม:** 2 ตัวรอด BWD-OOS ทุกปีบวก (ORDER-040) แต่เป็น compiled MT4 → จุดตายที่เหลือ: (1) **MT4 fixed-spread
 backtest หลอก** — โดยเฉพาะ Fxcore100 HFT ~13 ไม้/วัน spread จริง Exness กิน edge ได้หมด (2) time-lock/expiry
@@ -2076,6 +2077,8 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 **งานที่เหลือ (user, 2 นาที):** copy `tools\DealsExporter\DealsExporter.ex5` เข้า `MQL5\Experts`
 ของ terminal demo (Exness) → ลาก EA ใส่ chart ไหนก็ได้ 1 chart → เปิด AlgoTrading →
 เช็ค journal เห็น `[EXPORT] N deal rows`
+- USER-ACTION: attach DealsExporter.ex5 บน terminal demo 1 chart (วิธีอยู่ใน ORDER-039 — 2 นาที)
+- USER-ACTION: สมัคร Myfxbook ฟรี + เชื่อมบัญชี demo ด้วย investor password (ดูสุขภาพ account จากมือถือ — 5 นาที)
 
 
 

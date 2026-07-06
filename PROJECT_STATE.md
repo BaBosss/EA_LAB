@@ -456,9 +456,11 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
 - **SL-check: ทั้งคู่ no hard SL/TP ทุกไม้** — แต่ internal cut-loss ทำงานจริง (ผ่าน 2022 ไม่ระเบิด ต่างจาก
   pun fix lot) · ความเสี่ยงคงเหลือ = disconnect → ไม้เปลือย = ต้อง VPS เสถียร + จับตา demo
 - **สถานะ = demo-experiment เท่านั้น** (compiled กลไกดำ) — ห้ามคิด live จน demo ≥3 เดือนพิสูจน์
-- **❓รอ user เคาะ 2 เรื่อง: (1) FXCore100 v5.1 ซื้อจริงหรือแชร์มา (สิทธิ์ — pirated = ตัดทิ้ง)
-  (2) เปิด MT4 demo account แยกไหม** (2 ตัวนี้ MT4 — demo ปัจจุบันเป็น MT5 หมด; งาน = เปิดบัญชี MT4 demo
-  + attach 2 chart EURUSD) · MT4 pool ให้ผลดีกว่า MT5 ชัด → **batch 02-27 คุ้มรันต่อ**
+- **✅ user เคาะแล้ว (2026-07-06): Fxcore = ก็อปมา → DQ** (ตัดทิ้งตามกฎ — เลขเก็บเป็น prior ถ้าซื้อ official) ·
+  **ClevrFX → demo-experiment บน MT4 demo ที่ user มี** — deploy plan ครบใน `DEMO_DEPLOYMENT_PLAN.md`
+  §ClevrFX (EURUSD H1 **defaults ห้ามโหลด set** · ตัวเดียว/บัญชี · kill-DD 40% · no-SL → ออนไลน์ตลอด ·
+  monitor = MT4 statement ทุก 2 สัปดาห์) — **รอ user attach + แจ้งวันเริ่ม** · **036 batch 02-05 = user
+  dispatch แล้ว (2026-07-06)** — Claude review ตอน DONE (BWD-OOS gate ฝังใน board แล้ว)
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
