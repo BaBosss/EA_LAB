@@ -233,6 +233,15 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 | SL=2GRIDE · The One 1.0.3 | BWD 1.13/eqDD 11% · 1.14/DD 31% | ★★☆ | WATCH-thin (ไม่ลงแรงต่อ) | edge บางเกิน/DD สูง — เก็บชื่อไว้ ไม่เข้า funnel |
 | อีก 12 ตัว (IR Whale eqDD 106%! · BOO 91% · JMAR 99% · Grid UL 85% · pun hedging 79% · Master GRID 72% · Black Dragon 52% · IRSI 51% · grid v05 eqDD 94% · GOLD CENTER expired · continue · fibo gold flat) | BWD-OOS sweep `BWDOOS_SWEEP.csv` | ★★★ | **REJECT ยกแผง (2026-07-06)** | ตระกูล regime-harvester ครบทุกตัว — ตายปี 2020-22 ตามทฤษฎี · PumLot+PROFIT PLANET = NO_REPORT (non-functional BWD window) |
 
+### MT4 — MASS-SMOKE batch-01 BWD-OOS (ORDER-040, 2026-07-06)
+| EA | best smoke | Conf | Verdict | Reason |
+|---|---|---|---|---|
+| **ClevrFX_EA** | BWD ทุกปีบวก 1.76/1.51/**2.37** + 2026=2.04 (EURUSD H1, DD/ปี 20-40%) | ★★☆ | **🟡 CONDITIONAL → ORDER-041** | ตัวจริงเชิงเลข (ปีเทรนด์ดีสุด ≠ harvester) · compiled-only · preset ระบุ m5 แต่ H1 ก็กำไร · เหลือ: spread-stress + SL-check + lock-check |
+| **Fxcore100_SELL** | BWD ทุกปีบวก 1.72/2.21/1.89 + 2026=2.06 (DD/ปี 9-26%) | ★★☆ | **🟡 CONDITIONAL → ORDER-041** | สม่ำเสมอมากแต่ **HFT ~13 ไม้/วัน = spread-sensitivity สูงสุด (MT4 fixed-spread blind spot)** · คู่ BUY ของมัน 0-trade ในอดีต = สงสัย time-lock · ❓user: v5.1 ซื้อจริงไหม (สิทธิ์ deploy) |
+| CITY-GOLD HUNTER PROx2_fix | smoke PF 259.99(!) | ★★★ | **DQ-by-name** | "_fix" = cracked + PF อสุรกาย = artifact ซ้อน artifact |
+| 8 ตัว ZERO-TRADE 2020-22 (Broker Killer, Fxcore100_BUY, Mood, Elise, AW Recovery_NEW, Alpha Striker, Forexthai4pip, Hedgingprofit) | เทรดแค่ 2026 | ★★☆ | **REJECT-unverifiable** | ไม่เทรดอดีต = สงสัย time-lock/expiry ในตัว → วัด durability ไม่ได้ = เชื่อไม่ได้ |
+| 9 ตัวที่เหลือ (Forex Hacked DD108% · DanceT DD103% · FLy_HiGhEr · forexthaipop · Happy thaipop DD73 · MoneyTree×2 (binary เดียว!) · Miracle DD57 · CommunityPower DD74) | BWD ระเบิด/DD 57-108% | ★★★ | **REJECT** | harvester/grid ตระกูลเดิม — ตายปี hostile ตามทฤษฎี · ผลเต็ม `BWDOOS_MT4.csv` |
+
 ### MT4 — SCREENED (63 EAs, 0 deployed)
 | EA | screen PF | Conf | Verdict | Reason |
 |---|---|---|---|---|

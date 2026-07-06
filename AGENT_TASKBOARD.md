@@ -1903,9 +1903,24 @@ commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ C
 
 ---
 
-## ORDER-040 — BWD-OOS sweep ของ 036 batch-01 Tier A (24 ตัว MT4) — `OPEN` · **ทำได้: Codex · oc-dev** (ต้องแก้ driver quoting) · 👉 **แนะ: Codex-direct** (role: code+batch)
+## ORDER-040 — BWD-OOS sweep ของ 036 batch-01 Tier A — `REVIEWED(Claude, 2026-07-06 — ZCode token หมดก่อนเริ่ม → Claude รันเอง · 19 ตัว → 🟡 2 CONDITIONAL ผ่าน durability!)` · CLOSED
 
-**ทำไม:** batch-01 ให้ 24 Tier A แต่กติกาใหม่ = **เลขสวย 2026 ยังเชื่อไม่ได้ — BWD-OOS 2020-2022 เป็นด่านแรก**
+**VERDICT (Claude, 2026-07-06) — 19 ตัว (20 Tier A − CITY-GOLD_fix DQ-by-name PF259.99!):**
+- **💀 ZERO-TRADE 2020-22 = 8** (Broker Killer, Fxcore100_BUY, Mood, Elise, AW Recovery_NEW, Alpha Striker,
+  Forexthai4pip, Hedgingprofit) — เทรด 2026 แต่ไม่เทรดอดีต = สงสัย time-lock/expiry ในตัว → **REJECT-unverifiable**
+- **❌ ระเบิด 5:** Forex Hacked DD108% · DanceT DD103% · FLy_HiGhEr 0.03/DD91 · forexthaipop 0.03/DD87 · Happy thaipop DD73
+- **❌ PF>1 แต่ DD 57-74% = 4:** MoneyTree Buy+Sell (ผลเหมือนเป๊ะ = binary เดียว 2 ชื่อ!) · Miracle · CommunityPower
+- **🟡 CONDITIONAL 2 — ทุกปีบวกจริง (2020/21/22 + 2026):**
+  ClevrFX_EA (EURUSD): 1.76→1.51→2.37 · 2026=2.04 · DD/ปี 20-40% ·
+  Fxcore100_SELL (EURUSD): 1.72→2.21→1.89 · 2026=2.06 · DD/ปี 9-26% — **ไม่ใช่ harvester** (ปีเทรนด์
+  ดีสุด/สม่ำเสมอ) · DD สูง = resize-first · compiled-only ทั้งคู่ → **ORDER-041 (spread-stress + lock-check)**
+- **จุดต้องรู้:** ClevrFX preset = "eurusd-m5" (เรารัน H1 ยังกำไร) · Fxcore100_SELL = **HFT ~13 ไม้/วัน =
+  spread-sensitive สุด + MT4 fixed-spread blind spot (Zeus lesson)** · Fxcore100_BUY 0-trade อดีตแต่ SELL ปกติ =
+  แปลก · **❓user: FXCore100 v5.1 ซื้อจริงหรือแชร์มา?** (สิทธิ์ deploy)
+- driver v2 `_mt5_auto/ab_sets/bwdoos_mt4_sweep.ps1` (v1 fail — batch driver ไม่ทิ้งไฟล์ deploy; v2 copy จาก
+  source เอง) · ผล `BWDOOS_MT4.csv` + `BWDY_*`
+
+**ทำไม (เดิม):** batch-01 ให้ 24 Tier A แต่กติกาใหม่ = **เลขสวย 2026 ยังเชื่อไม่ได้ — BWD-OOS 2020-2022 เป็นด่านแรก**
 (MT5 sweep พิสูจน์แล้ว: 19 → รอด 1). ทำก่อนเริ่ม batch 02+ เพื่อรู้ว่า MT4 pool มีของจริงไหม
 **งาน:**
 1. **แก้ CSV quoting bug ก่อน:** EA ชื่อมี comma (เช่น "nzdcad 15 min)") ทำ column เพี้ยนใน
@@ -1917,6 +1932,27 @@ commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ C
    (Claude จะเคาะ window ทางเลือก) อย่าฝืนรันทั้ง 24 บน data สั้น
 **Acceptance:** CSV ครบ 24 (หรือรายงาน data-limit) + list ตัวที่ 2022 PF≥0.9 & eqDD<20% · commit `[tag] ORDER-040 done`
 **ห้าม:** verdict — Claude ตัดสิน (เกณฑ์เดียวกับ MT5 sweep)
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-041 — ClevrFX + Fxcore100_SELL: spread-stress + lock/expiry check (2 MT4 conditionals) — `OPEN` · **ทำได้: Codex · oc-dev · Claude** · 👉 **แนะ: Codex-direct** (role: code+batch)
+
+**ทำไม:** 2 ตัวรอด BWD-OOS ทุกปีบวก (ORDER-040) แต่เป็น compiled MT4 → จุดตายที่เหลือ: (1) **MT4 fixed-spread
+backtest หลอก** — โดยเฉพาะ Fxcore100 HFT ~13 ไม้/วัน spread จริง Exness กิน edge ได้หมด (2) time-lock/expiry
+ซ่อน (8 ตัวใน pool นี้มี!) (3) กลไกยังไม่รู้ (no-SL?)
+**งาน:**
+1. **Spread stress:** MT4 tester ตั้ง spread คงที่ได้ (Spread= ใน ini — เช็ค `mt4_run.ps1` รองรับไหม ถ้าไม่มี
+   เพิ่ม param `-Spread` ใส่ `[Tester] TestSpread=N`) → รันซ้ำ 2026.03-07 M1 ที่ **spread 2x และ 3x ของ default**
+   ต่อ EA · Fxcore ถ้า PF ร่วงแรงตาม spread = spread-arbitrage illusion ปิดเลย
+2. **Lock/expiry check:** เปิด Strategy Tester Journal ของ run ปกติ — หา error/warning/หมายเหตุ account/expiry ·
+   + behavior แปลก Fxcore100_BUY (0-trade อดีต แต่ SELL ปกติ) — รัน BUY บนปี 2024-25 ดูว่าจุดตัดเวลาอยู่ไหน
+3. **Journal param recovery** (locked-ea-analyzer style): log input params จาก tester journal → เดา mechanism
+   (มี SL จริงไหม สำคัญสุด — ดู order/SL ใน trade list ของ report ที่มีอยู่แล้วก็ได้: `BWD4_*`/`BWDY_*`)
+**Acceptance:** ต่อ EA: ตาราง spread 1x/2x/3x (PF/trades/net) + expiry findings + "มี SL ต่อไม้ไหม" จาก trade list ·
+commit `[tag] ORDER-041 done` · **ห้าม:** verdict — เกณฑ์ Claude: spread 2x แล้ว PF ยัง >1.3 + มี SL จริง + ไม่มี lock = คุยเรื่อง demo-experiment ต่อ
+**❓รอ user ตอบด้วย: FXCore100 v5.1 ซื้อจริงหรือแชร์มา** (ถ้าแชร์/pirated = สิทธิ์ deploy มีปัญหาแบบ North East Way)
 
 **ผล:** _(รอ)_
 

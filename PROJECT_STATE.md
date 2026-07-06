@@ -442,9 +442,16 @@ EX39 balDD 2.65% แต่ eqDD 69.5% = floating ซ่อน · ผลเต็
 re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ปิดสมบูรณ์: 203 → 39 เลขสวย → 1 edge จริง →
 0 deployable วันนี้** (แต่ระบบได้กติกากรองที่คมที่สุดเท่าที่เคยมี)
 
-**✅ 036 batch-01 reviewed (2026-07-06): 24 Tier A / 2 B / 10 reject / 164 skip** (exact-history แค่ EURUSD/
-USDJPY) → **ORDER-040 เปิด: BWD-OOS 2020-22 ทั้ง 24 ก่อนเชื่อ/ก่อนรัน batch 02+** (👉 Codex — ต้องแก้ CSV
-comma-quoting bug ด้วย) · ⚠️ ต้องเช็ค Meta4 มี M1-bar ย้อน 2020 ไหมที่ตัวแรก — ไม่มี = หยุดรอ Claude เคาะ window
+**🏁 ORDER-040 CLOSED (Claude รันเอง 2026-07-06 — ZCode token หมดก่อนเริ่ม): batch-01 Tier A 19 ตัว →
+🟡 2 CONDITIONAL รอดจริง!** (Meta4 มี M1-bar ย้อน 2020 ✓)
+- **ClevrFX_EA** (EURUSD): ทุกปีบวก 1.76/1.51/2.37 + 2026=2.04 — ตัวจริงเชิงเลข
+- **Fxcore100_SELL** (EURUSD): ทุกปีบวก 1.72/2.21/1.89 + 2026=2.06 — สม่ำเสมอมาก **แต่ HFT 13 ไม้/วัน =
+  spread-blind-spot MT4 เสี่ยงสุด**
+- ที่เหลือ: CITY-GOLD_fix DQ-by-name (PF 259.99!) · **8 ตัว ZERO-TRADE ในอดีต = สงสัย time-lock → REJECT-
+  unverifiable** (pattern ใหม่ที่ต้องจำ!) · 9 ระเบิด/DD 57-108% (MoneyTree Buy+Sell = binary เดียว 2 ชื่อ)
+→ **ORDER-041 เปิด: spread-stress (2x/3x) + lock/expiry + SL-check ทั้ง 2 ตัว** (👉 Codex-direct) ·
+**❓user ต้องตอบ: FXCore100 v5.1 ซื้อจริงหรือแชร์มา** (สิทธิ์ deploy) · MT4 pool ให้ผลดีกว่า MT5 (2 vs 1)
+— **batch 02-27 คุ้มรันต่อ** เมื่อ user ว่าง (BWD-OOS gate built-in ใน 036 board แล้ว)
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
