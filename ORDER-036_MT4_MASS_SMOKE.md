@@ -36,9 +36,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
 | 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
 | 036-04 | 50 | REVIEWED(Claude 07-06 — รันเองบนเลน MT4b ด้วย driver ใหม่) | 0 | 0 | 2 | 198 | **โซนตาย: 0 survivor ทั้ง batch** — กอง "FREE EA" bundle = indicator conversion เกือบทั้งหมด · precheck ทำงานจริง: จับ `missing-indicator:` พร้อมชื่อไฟล์ (เช่น BrainTrend2Sig.ex4) + ข้าม symbol ที่เหลือ = ไม่เผา timeout · timeout-kill พิสูจน์แล้ว (LRCChannelD โดน kill ที่ 180s แทนที่จะค้างเป็นชั่วโมงแบบเดิม) · stage-2 BWD-OOS = n/a (ไม่มี Tier A) |
-| 036-05 | 50 | CLAIMED(Claude, 2026-07-06 22:2x — เลน 1, overnight run ถึง ~04:30) | | | | | |
-| 036-06 | 50 | CLAIMED(Claude, 2026-07-06 22:2x — เลน MT4b, ขนานกับ 05) | | | | | |
-| 036-07 | 50 | OPEN | | | | | |
+| 036-05 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 10 | 0 | 1 | 189 | ⚠️ **Tier A ทั้งหมด = 1 ตระกูลต้องสงสัย** — ดู triage ล่างตาราง (BWD-OOS กำลังรัน) |
+| 036-06 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | **โซนตาย 100%** — indicator-name pack อีกกอง (SHISIGNALARROW/SyncMA/StealthXXX ฯลฯ) |
+| 036-07 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-08 | 50 | OPEN | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
@@ -77,6 +77,31 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 **Pattern ยืนยันรอบที่ 3: ฆ่า 5/6 · conditional = 0** (batch-01 เหลือ ClevrFX ตัวเดียวจริงจาก 222 EA)
 → **BWD-OOS 2020-22 + อ่าน trade list (SL + ลำดับ lot) = สอง gate ถูกสุด/เด็ดขาดสุด — ด่านบังคับก่อน
 Model-4/spread-stress เสมอ** (spread-stress ทำเฉพาะตัวที่รอดสองด่านแรก)
+
+## Triage batch 05 (Claude, 2026-07-07 — BWD-OOS 2020-22 กำลังรัน, script `bwdoos_mt4_sweep_b05.ps1` → `_mt5_auto/BWDOOS_MT4_B05.csv`)
+
+**⚠️ Pattern ต้องสงสัยก่อนเห็นผล BWD (ประวัติศาสตร์ซ้ำจาก batch-01 "Miracle MT4"):** Tier A ของ batch นี้
+มี 5 EA จริง — **4 ใน 5 เป็นตระกูล "SEMIS.jr" ที่ตั้งชื่อตามคู่เงิน (AUDCAD/CHFJPY/GBPJPY/USDJPY)
+แต่ broker นี้มีแค่ history EURUSD/USDJPY** → ทั้ง 4 ตัวถูกเทสบน**คู่เงินเดียวกัน**(ไม่ใช่คู่ที่ชื่อบอก)
+และให้ **trade count + PF แทบเหมือนกันทุกตัว** (3465/3161, 3518/3184, 3173/2899, 3300/3067 ไม้ ·
+PF 2.6-2.83 ทั้งหมด) = สัญญาณเดียวกับ Miracle MT4 (batch-01) ที่งานเดิมเคยตั้งข้อสงสัยว่าเป็น engine
+เดียวกันแปะป้ายคนละชื่อ หรือ EA ไม่สนใจ symbol ของ chart เลย (hardcode เหมือน pun fix lot) —
+**ห้ามเชื่อ PF จนกว่า BWD-OOS + (ถ้ามี source) เช็คว่า trade คู่เงินตามชื่อจริงไหม**
+
+| EA | ที่ทดสอบ (M1 full 4mo) | trades | PF | net | eqDD |
+|---|---|---|---|---|---|
+| 2020v2 | EURUSD | 24 | 3.57 | +42 | 0.39% |
+| 2020v2 | USDJPY | 42 | 1.68 | +53 | 1.87% |
+| 212-SEMIS.jrAUDCAD | EURUSD | 3465 | 2.64 | +9,830 | 17.23% |
+| 212-SEMIS.jrAUDCAD | USDJPY | 3161 | 2.82 | +6,886 | 16.57% |
+| 213-SEMIS.jrCHFJPY | EURUSD | 3518 | 2.77 | +7,080 | 12.78% |
+| 213-SEMIS.jrCHFJPY | USDJPY | 3184 | 2.83 | +4,803 | 12.44% |
+| 214-SEMIS.jrGBPJPY | EURUSD | 3173 | 2.68 | +1,677 | 3.03% |
+| 214-SEMIS.jrGBPJPY | USDJPY | 2899 | 2.58 | +1,344 | 5.11% |
+| 215-SEMIS.jrUSDJPY | EURUSD | 3300 | 2.80 | +6,435 | 11.91% |
+| 215-SEMIS.jrUSDJPY | USDJPY | 3067 | 2.78 | +4,985 | 16.51% |
+
+**Verdict:** _(รอผล BWD-OOS ก่อนตัดสิน — ห้าม promote จากตารางนี้)_
 
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
