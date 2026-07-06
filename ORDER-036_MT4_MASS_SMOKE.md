@@ -46,7 +46,8 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-12 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 20 | 0 | 8 | 172 | **0/11 survivor — ทุกตัวตายจาก lot-check ฟรี ไม่ต้องรัน BWD เลย** ดู triage ล่างตาราง |
 | 036-13 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 10 | 180 | **0/6 survivor — ทุกตัวตายจาก lot-check ฟรี (33x-38,750x)** ดู triage ล่างตาราง |
 | 036-14 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
-| 036-15 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
+| 036-15 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 8 | 1 | 11 | 180 | **0/5 survivor — lot-check ฆ่าทั้งหมด (1518x-10244x, ชื่อ "Ilan" = grid/martingale ชื่อดังในวงการ)** batch ที่ 4 ติดกันไม่ต้องรัน BWD |
+| 036-16 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -184,6 +185,21 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 **🔧 แก้ spec ถาวร (สำคัญที่สุดของคืนนี้):** สลับลำดับ — **lot-check จาก M1 smoke report เดิม (ฟรี,
 มีอยู่แล้ว) ต้องทำ "ก่อน" ส่ง BWD-OOS เสมอ ไม่ใช่หลัง** เดิม spec ให้ BWD-OOS ก่อนแล้วค่อย
 lot-check EA ที่ผ่าน — กลับด้านสิ้นเปลือง ดู stage-2 spec ที่แก้ด้านล่าง
+
+## Triage batch 15 (Claude, 2026-07-07)
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| Ilan__Z-Mod (EURUSD/USDJPY) | ×4,200 / ×6,576 | ❌ AUTO-REJECT — ชื่อ "Ilan" = grid/martingale ชื่อดังในวงการ retail EA |
+| Ilan_test (EURUSD/USDJPY) | ×3,408 / ×4,663 | ❌ AUTO-REJECT (ตระกูลเดียวกับ Ilan__Z-Mod) |
+| Lenhune Forward For free V2 (EURUSD/USDJPY) | ×10,244 / ×2,315 | ❌ AUTO-REJECT |
+| MA_MA_2-35_EA | ×1,518 | ❌ AUTO-REJECT |
+| killer_sell | ×1,551 | ❌ AUTO-REJECT |
+
+**ผล batch 15 สุดท้าย: 0/5 survivor — batch ที่ 4 ติดกัน (11,12,13,15) ปิดจบไม่ต้องรัน BWD-OOS**
+**หมายเหตุ tooling:** เจอ bug เล็ก `parse_mt4_report.py` — `UnicodeEncodeError` (cp1252) เมื่อ report
+มีตัวอักษรพิเศษ (เช่น GOLD999J ใน batch 14) → parse fail 1-2 EA/batch เป็นบางครั้ง ไม่กระทบ batch
+โดยรวม (แค่ EA นั้นไม่มี m1_pf ใน CSV) — ควรแก้ `encoding='utf-8'` ตอน print/write ในอนาคต (ไม่เร่งด่วน)
 
 ## Triage batch 13 (Claude, 2026-07-07 — batch ที่ 3 ติดกัน (11,12,13) ที่ปิดจบได้โดยไม่ต้องรัน BWD-OOS)
 
