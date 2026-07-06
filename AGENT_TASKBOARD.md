@@ -1937,7 +1937,23 @@ commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ C
 
 ---
 
-## ORDER-041 — ClevrFX + Fxcore100_SELL: spread-stress + lock/expiry check (2 MT4 conditionals) — `OPEN` · **ทำได้: Codex · oc-dev · Claude** · 👉 **แนะ: Codex-direct** (role: code+batch)
+## ORDER-041 — ClevrFX + Fxcore100_SELL: spread-stress + SL/lock check — `REVIEWED(Claude รันเอง, 2026-07-06 — ✅ ผ่านทั้งคู่ = MT4 candidates จริง 2 ตัวแรกของแล็บ; รอ user เคาะ 2 เรื่องก่อน demo)` · CLOSED
+
+**VERDICT (Claude, 2026-07-06): ✅ ทั้งคู่ผ่านทุกด่านที่ backtest ตอบได้ — เหลือแค่ live-condition proof + สิทธิ์**
+- **Spread-stress (window 2026.03-07, M1, `-Spread` param ใหม่ใน mt4_run.ps1):**
+  ClevrFX: base 2.04 → sp30 **2.04** → sp45 **1.93** (ไม่สะเทือน) · Fxcore100_SELL: 2.06 → **1.86** → **1.83**
+  (HFT 13 ไม้/วันยังยืนบน 3x spread!) — เกณฑ์ 2x>1.3 ผ่านห่าง · MT4 fixed-spread blind spot = ปิดข้อสงสัยแล้ว
+- **SL-check (trade list BWDY_*):** **ทั้งคู่ no hard SL/TP ทุกไม้ (0.00000)** — ปิดด้วย internal logic ล้วน ·
+  **แต่ต่างจาก pun fix lot:** ผ่านปี 2022 ทุกปีบวก + DD ไม่ระเบิด = internal cut-loss ทำงานจริง (ไม่ใช่
+  hold-forever) · ความเสี่ยงคงเหลือ = **disconnect/crash = ไม้เปลือยไม่มี SL บน server** → ต้องรันบน VPS
+  เสถียร + จับตา demo
+- **Lock:** ตัว SELL เทรดครบ 2020-26 = ไม่มี time-lock ในตัวที่ใช้ (BUY twin มี 0-trade อดีต — ไม่ใช้ตัว BUY)
+- **สรุป: 2 ตัวแรกจาก treasure ทั้งหมด (222 EA ทดสอบแล้ว) ที่ผ่านครบ: BWD-OOS ทุกปีบวก + spread 3x + ไม่
+  ระเบิด + consistent 2026** — ⚠️ ยังเป็น compiled กลไกดำ (no-SL internal management) → เข้าได้แค่สถานะ
+  **demo-experiment เท่านั้น ห้ามคิดถึง live จนพิสูจน์บน demo ≥3 เดือน**
+- **รอ user เคาะ 2 เรื่อง:** (1) **FXCore100 v5.1 ซื้อจริงหรือแชร์มา?** (สิทธิ์ deploy — ถ้า pirated = ตัดทิ้ง
+  แบบ North East Way ต่อให้เลขสวย) (2) **เปิด MT4 demo account ไหม?** (2 ตัวนี้ = MT4 — บัญชี demo ปัจจุบัน
+  ทั้งหมดเป็น MT5 ใช้ร่วมไม่ได้ ต้องเปิด MT4 demo แยก + attach 2 chart EURUSD)
 
 **ทำไม:** 2 ตัวรอด BWD-OOS ทุกปีบวก (ORDER-040) แต่เป็น compiled MT4 → จุดตายที่เหลือ: (1) **MT4 fixed-spread
 backtest หลอก** — โดยเฉพาะ Fxcore100 HFT ~13 ไม้/วัน spread จริง Exness กิน edge ได้หมด (2) time-lock/expiry

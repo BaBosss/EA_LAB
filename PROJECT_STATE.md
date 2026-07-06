@@ -449,9 +449,16 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
   spread-blind-spot MT4 เสี่ยงสุด**
 - ที่เหลือ: CITY-GOLD_fix DQ-by-name (PF 259.99!) · **8 ตัว ZERO-TRADE ในอดีต = สงสัย time-lock → REJECT-
   unverifiable** (pattern ใหม่ที่ต้องจำ!) · 9 ระเบิด/DD 57-108% (MoneyTree Buy+Sell = binary เดียว 2 ชื่อ)
-→ **ORDER-041 เปิด: spread-stress (2x/3x) + lock/expiry + SL-check ทั้ง 2 ตัว** (👉 Codex-direct) ·
-**❓user ต้องตอบ: FXCore100 v5.1 ซื้อจริงหรือแชร์มา** (สิทธิ์ deploy) · MT4 pool ให้ผลดีกว่า MT5 (2 vs 1)
-— **batch 02-27 คุ้มรันต่อ** เมื่อ user ว่าง (BWD-OOS gate built-in ใน 036 board แล้ว)
+**🏁 ORDER-041 CLOSED (Claude รันเอง 2026-07-06): ✅ ทั้งคู่ผ่านครบ = 🟢 DEMO-EXPERIMENT CANDIDATES
+2 ตัวแรกจาก treasure ทั้งหมด (222 EA ทดสอบ)!**
+- **Spread-stress ผ่านห่าง:** ClevrFX 2.04→sp45=1.93 (ไม่สะเทือน) · Fxcore100_SELL 2.06→sp45=1.83
+  (**HFT ยืนบน 3x spread!** — ปิดข้อสงสัย MT4 blind spot) · `-Spread` param เพิ่มใน mt4_run.ps1 แล้ว
+- **SL-check: ทั้งคู่ no hard SL/TP ทุกไม้** — แต่ internal cut-loss ทำงานจริง (ผ่าน 2022 ไม่ระเบิด ต่างจาก
+  pun fix lot) · ความเสี่ยงคงเหลือ = disconnect → ไม้เปลือย = ต้อง VPS เสถียร + จับตา demo
+- **สถานะ = demo-experiment เท่านั้น** (compiled กลไกดำ) — ห้ามคิด live จน demo ≥3 เดือนพิสูจน์
+- **❓รอ user เคาะ 2 เรื่อง: (1) FXCore100 v5.1 ซื้อจริงหรือแชร์มา (สิทธิ์ — pirated = ตัดทิ้ง)
+  (2) เปิด MT4 demo account แยกไหม** (2 ตัวนี้ MT4 — demo ปัจจุบันเป็น MT5 หมด; งาน = เปิดบัญชี MT4 demo
+  + attach 2 chart EURUSD) · MT4 pool ให้ผลดีกว่า MT5 ชัด → **batch 02-27 คุ้มรันต่อ**
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →

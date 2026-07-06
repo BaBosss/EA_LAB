@@ -27,6 +27,7 @@ param(
   [string]$SetFile = "",
   [int]$Model = 2,                               # 0=every tick, 1=control pts, 2=open prices
   [int]$Deposit = 10000,
+  [int]$Spread = 0,                              # tester fixed spread in POINTS (0 = current/default) — for spread-stress tests
   [Parameter(Mandatory)][string]$ReportName,
   [string]$Terminal = "D:\Meta4\terminal.exe",
   [string]$InstallDir = "D:\Meta4",
@@ -79,6 +80,7 @@ $lines = @(
   "TestShutdownTerminal=true",
   "TestVisualEnable=false"
 )
+if ($Spread -gt 0) { $lines += "TestSpread=$Spread" }
 if ($paramLine) { $lines += $paramLine }
 $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
