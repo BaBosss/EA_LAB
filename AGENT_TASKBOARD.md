@@ -1988,7 +1988,12 @@ before-optimize ให้ 1 probe ก่อนปิดทะเบียน. **
 
 ---
 
-## ORDER-044 — EURUSD Trading Forex Robot: full chain re-test (PARKED-thin จาก 63-EA screen เดิม) — `OPEN (Claude เริ่มแล้ว — ex4 copy เข้า Experts แล้ว, รอ tool กลับมารันต่อ)` · **ทำได้: Claude · Codex · oc-dev** · 👉 **แนะ: Claude รันต่อ / Codex ถ้า Claude ติด** (role: batch, MT4)
+## ORDER-044 — EURUSD Trading Forex Robot: full chain re-test — `REVIEWED(Claude, 2026-07-07 — ❌ REJECT ปิดถาวรที่ด่านแรก: BWD 2020-22 PF 0.39 / -$5,840)` · CLOSED
+
+**VERDICT: ❌ REJECT — DO-NOT-RE-EXAMINE.** BWD-OOS 2020-2022 = PF 0.39, net -$5,840 (จาก 10k) —
+"WATCH/PARKED-thin 48t" จากปี 63-EA screen จบเคสในรันเดียว: เลขสวย 2026 (3.89) = regime เท่านั้น.
+chain หยุดที่ด่านแรกตามออกแบบ (ไม่เสีย compute กับ trade-list/spread/year-split ของศพ) ·
+**re-exam queue จาก 63-EA screen เดิม = เคลียร์หมดแล้ว** (R3 คือตัวสุดท้าย) · report `BWD4_EURUSDForexRobot.htm`
 
 **ทำไม (คำตอบ "MT4 demo ว่าง เทสอะไรต่อ" ของ user 2026-07-06):** ตัวเดียวจาก 63-EA MT4 screen เดิมที่ได้
 verdict "WATCH/PARKED — **NOT martingale** (scrutinize เคลียร์), ตกแค่ thin sample 48t, needs deep re-test"
