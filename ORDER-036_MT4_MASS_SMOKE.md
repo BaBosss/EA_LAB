@@ -39,8 +39,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-05 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 10 | 0 | 1 | 189 | ⚠️ **Tier A ทั้งหมด = 1 ตระกูลต้องสงสัย** — ดู triage ล่างตาราง (BWD-OOS กำลังรัน) |
 | 036-06 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | **โซนตาย 100%** — indicator-name pack อีกกอง (SHISIGNALARROW/SyncMA/StealthXXX ฯลฯ) |
 | 036-07 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 1 | 199 | โซนตาย — 291-TOIS.jrEURJPYGBPCHF (อีก "\*.jr\*" family) ไม่ผ่านแม้แต่ Tier A ระดับ smoke |
-| 036-08 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
-| 036-09 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
+| 036-08 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 0 | 0 | 0 | 200 | โซนตาย 100% — indicator pack ต่อเนื่อง (WSS*, X*, ZUP ฯลฯ) |
+| 036-09 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
+| 036-10 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
