@@ -78,7 +78,10 @@ manual pause ถ้า EA ตัวใด DD ผิดปกติเทีย�
 
 ---
 
-## 🆕 ClevrFX_EA — MT4 demo experiment (อนุมัติ 2026-07-06, รอ user attach)
+## 🆕 ClevrFX_EA — MT4 demo experiment — 🟢 **ATTACHED แล้ว (user ยืนยัน 2026-07-06)**
+
+> **demo-clock เริ่ม 2026-07-06 → judge เร็วสุด ~2026-10-06** (≥3 เดือน + ≥30 trades) ·
+> monitor: ทุก ~2 สัปดาห์ user export MT4 account statement ส่ง Claude (รอบแรก ~2026-07-20)
 
 > **ตัวแรกจาก treasure hunt (222 EA) ที่ผ่านครบทุกด่าน** — BWD-OOS ทุกปีบวก (1.76/1.51/2.37) + 2026=2.04 ·
 > spread-stress 3x ไม่สะเทือน (sp45=1.93) · ไม่ระเบิดปี hostile · **compiled กลไกดำ → สถานะ demo-experiment

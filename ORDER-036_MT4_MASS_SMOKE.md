@@ -52,12 +52,26 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | Flexy The Dragon v2.8 | EURUSD | 0.46 / 1448 / -8,748 / **DD 89.2%** | ❌ **REJECT ถาวร** — ตายแบบเดียวกัน |
 | 12431_Happy Fast Money | EURUSD | 0.24 / 485 / -9,890 / **DD 99.1%** | ❌ **REJECT ถาวร** — ยืนยัน tight-TP suspect |
 | Happy thaipop | EURUSD | 1.25 / 430 / +2,470 / **DD 73.2%** | 🅿️ **PARKED-resize-first** — PF>1 สองระบอบจริง (6.6→1.25) แต่ edge บางลงมาก + DD ทะลุ cap (กฎ user: cap breach ห้าม reject ตรง — แต่ priority ต่ำ) |
-| **CommunityPower 2.58.3** | EURUSD | **1.91 / 1212 / +40,573 / DD 74.1%** | 🟡 **CONDITIONAL เด่นสุดของ batch 02-03** — PF ~1.9 **ทั้งสองระบอบ** (1.94 ใน 23-26, 1.91 ใน 20-22 ปี hostile!) = durability จริงแบบเดียวกับ ClevrFX · DD 74% ที่ default lot → **resize-first** + เป็น community EA มี source/doc จริง → คิวเดียวกับ ORDER-041 flow (spread-stress + หา lot input + SL check) |
+| **CommunityPower 2.58.3** | EURUSD | **1.91 / 1212 / +40,573 / DD 74.1%** | ❌ **REJECT-as-configured (แก้จาก CONDITIONAL หลัง SL-check — ดูใต้ตาราง)** — trade list เผย martingale ×1.5 ไร้ cap ลึก ~16 ชั้น + no SL |
 | 1 MINUTE SCALPER | USDJPY | 0 trades ใน window | 🅿️ PARKED-no-data (ตัดสินไม่ได้ — อาจ time-gated/expiry; ไม่คุ้มไล่ต่อ) |
 
-**Pattern ยืนยันรอบที่ 3:** Tier A จาก smoke 2023-26 → BWD-OOS 2020-22 ฆ่าได้ 4/6 ·
-รอดจริง 1 (CommunityPower) = อัตราเดียวกับ batch-01 (19→2) — **ด่านนี้ถูกและเด็ดขาด คงเป็น gate
-บังคับอันดับแรกของทุก batch ต่อไป**
+**🔬 SL/mechanism-check CommunityPower (Claude, 2026-07-06 ค่ำ — ก่อนเสีย compute กับ spread-stress):**
+trade list `BWD4B23_CommunityPower_2_58_3.htm` เผย (1) **SL = 0.00000 ทุกไม้** (2) **ลำดับ lot =
+martingale ×1.5 ไร้ cap: 0.10→0.15→0.22→0.33→0.49→0.74→1.11→...→28.4→42.3→48.6 lots = ลึก ~16 ชั้น**
+→ PF 1.9 "สองระบอบ" ไม่ใช่ edge durability — คือ recovery mechanics ของ martingale (averaging กลบ
+ไม้แพ้) และ DD 74.1% ปี 2020-22 คือ tail ที่**เกิดจริงแล้ว** ไม่ใช่สมมติฐาน · precedent ตรง:
+GoldStuffV7 DQ (uncapped martingale DD 77%/yr) + decision 2026-06-23 (structural gate = กลไก
+uncapped mart/grid) · **ต่างจาก ClevrFX ชัด** (ClevrFX no-SL แต่ internal cut-loss ทำงานจริง DD
+ไม่ระเบิด — CommunityPower ระเบิดแล้วรอดเพราะ leverage ใน tester) · **VERDICT: ❌ REJECT-as-configured**
+— หมายเหตุ: CommunityPower เป็น framework EA ที่ config ได้ (source สาธารณะ) — config แบบ capped
+(mult=1, max trades จำกัด) = ถือเป็น EA คนละตัว validate ใหม่จากศูนย์ได้ในอนาคต **แต่ priority ต่ำ:
+Boss V2 มีกลไก grid ที่มี cage ครบอยู่แล้ว** · spread-stress ไม่รันแล้ว (moot หลัง verdict นี้ —
+ประหยัด compute) · Happy thaipop (PARKED, DD 73%) น่าจะตระกูลเดียวกัน — ใครจะ unpark ให้เช็ค trade list ก่อน
+
+**Pattern ยืนยันรอบที่ 3 (แก้ตัวเลขหลัง mechanism-check):** Tier A จาก smoke 2023-26 → BWD-OOS +
+mechanism-check ฆ่าได้ **5/6** · เหลือ 0 conditional จาก batch 02-03 (batch-01 ยังมี ClevrFX ตัวเดียว
+ที่ผ่านจริงจาก 222 EA) — **BWD-OOS 2020-22 + อ่าน trade list = สอง gate ถูกสุดที่ฆ่าเด็ดขาดสุด
+คงเป็นด่านบังคับof ทุก batch ต่อไป (ก่อน Model-4/spread-stress เสมอ)**
 | 036-05 | 50 | OPEN | | | | | |
 | 036-06 | 50 | OPEN | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
