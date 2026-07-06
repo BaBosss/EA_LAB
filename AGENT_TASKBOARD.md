@@ -5,6 +5,9 @@
 >
 > สถานะ: `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` / `BLOCKED(คำถาม)` → `REVIEWED(Claude)`
 > agent อื่นแก้ได้เฉพาะแถว order ที่ตัว claim · เพิ่ม order ใหม่ = Claude/user เท่านั้น
+>
+> 🔀 **track แยก (2026-07-06): merge EA_CORE → Boss V2** อยู่คนละบอร์ด → **`AGENT_TASKBOARD_MERGE.md`**
+> (MERGE-01…08 — จบ track = ปิดบอร์ดนั้น) · งาน MERGE ใช้ MT5 tester ตัวเดียวกับบอร์ดนี้ อย่ารันชนกัน
 
 ---
 

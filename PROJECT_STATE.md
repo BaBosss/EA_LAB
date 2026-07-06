@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-04 (รอบ 6 — ORDER-021/022/023 ครบทั้ง 3, ทำเองแทน Codex/ZCode ที่ token หมด) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-06 (เปิด merge track EA_CORE→Boss V2 — บอร์ดใหม่ `AGENT_TASKBOARD_MERGE.md` + cage ครอบ Boss_14 แล้ว) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -83,6 +83,10 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
   2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
+- **🔀 EA_CORE merge track (เปิด 2026-07-06):** user สั่งรวมข้อดี EA_CORE เข้า Boss V2 ให้จบ —
+  แผนเต็ม + คิวงาน = **`AGENT_TASKBOARD_MERGE.md`** (MERGE-01 cage ครอบ Boss_14 ✅ กำลังปิด ·
+  02 Codex scope-check · 03 pyramid executor · 04 acct-DD gate · 05 restart audit · 06 test harness ·
+  07 Entry_ST03 hold · 08 ปิด EA_Project เป็น archive) — จบ track = EA_Project ไม่มีงานใหม่อีก
 - **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
   (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
   หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
@@ -137,6 +141,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 | วันที่ | การตัดสินใจ | เหตุผล |
 |---|---|---|
+| 2026-07-06 | **Merge EA_CORE → Boss V2 = "ดูดอะไหล่ทีละชิ้นภายใต้ cage" ไม่ใช่ merge repo — track แยกบอร์ด `AGENT_TASKBOARD_MERGE.md` (MERGE-01…08) จบแล้วปิด EA_Project เป็น read-only archive** · อะไหล่ที่ port: ScaleExecutor_v2 (pyramid/pending) · PortfolioGuardian (acct-DD gate) · StatePersistence (audit ก่อน) · วินัย test (pattern) — ไม่ port: Recovery/Hedge (ORDER-025/026 REJECT/no-op แล้ว) · signal v1–v3/v5 · harness เต็ม | user approve 2026-07-06 (เอาข้อดีสองฝั่งรวมเป็นแม่พิมพ์เดียวที่สมบูรณ์ แล้วจบ track EA_Project) — merge ตรงๆ ได้ลูกครึ่งเสียข้อดีทั้งคู่ + เสี่ยงกระทบ demo ก่อน judge · สอดคล้อง VISION แม่พิมพ์เดียว · ทุก order = additive + default OFF + tpl_regression CLEAN บังคับ |
 | 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |
 | 2026-07-02 | **EA_CORE loop ปิดแล้ว — FALLBACK: EA_CORE = R&D, ST_EA03 standalone = production** | STEP 3 grid 48/48 combos OOS PF<1.0 (complete enum, M2 ฝั่ง optimistic) + STEP 2 signal เพียว PF 0.67 → ไม่มี durable set. ห้าม re-tune ตระกูลนี้โดยไม่มี signal ใหม่. หลักฐาน: `EA_CORE_ST03_LOOP_PLAN.md` STEP 5 |
 | 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve · SUPERTREND XAU = PARKED** (ยังไม่ deploy) | re-confirm ผ่านทั้งคู่ แต่ corr ระหว่างกัน 0.946 = ตัวเดียวกัน → ถ้าจะ deploy เอา KER ตัวเดียว 0.01 lot (corr 0.75 vs BRK8). ดู EA_SCORECARD §VALIDATED RESERVE |
@@ -244,6 +249,11 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 (direction alignment): โหมดถาวรจากนี้ = dual-track** — (1) โรงงานเดินตลอด: ล่า edge ผ่านแม่พิมพ์ Boss V2
 (แกนใหม่ = กลไก×symbol) + งานค้าง Zeus (HANDOFF ด้านล่าง) + งานอัปเกรดแม่พิมพ์ (ด้านล่าง) ·
 (2) operate 9 EA live คู่กันจนถึง judge. ดูปรัชญา → `VISION.md`
+
+**🔀 (เพิ่ม 2026-07-06) track ที่ 3 ขนานกัน: merge EA_CORE → Boss V2 ให้จบ** — ดูดอะไหล่
+(pyramid executor · acct-DD gate · restart-safety · test pattern) เข้าแม่พิมพ์ภายใต้ tpl_regression
+cage แล้วปิด `D:\EA_Project` เป็น archive · คิวงาน+เกณฑ์รับ+ทะเบียนอะไหล่ครบ →
+**`AGENT_TASKBOARD_MERGE.md`** (บอร์ดแยก — จบ track ปิดบอร์ด)
 
 ### 🔴 HANDOFF — ZeusInspired_GridLog (เริ่มต่อจากตรงนี้ session หน้า)
 

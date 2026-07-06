@@ -30,6 +30,8 @@
   ก่อน deploy. ห้ามปล่อย standalone เป็นถาวร (ยกเว้น EA ที่ live อยู่แล้ว — grandfather ถึง judge)
 - ต้องการ execution ซับซ้อน (pyramid, OCO) → ยก module จาก **EA_CORE** มา port ใส่ Boss V2
   ไม่ใช่ย้ายงานไปทำบน EA_CORE
+- 🔀 **(2026-07-06) การยกอะไหล่ทั้งหมดถูกจัดเป็น track เดียวให้จบ:** แผน+คิวงาน →
+  `AGENT_TASKBOARD_MERGE.md` — จบ track แล้ว EA_Project = read-only archive (ไฟล์นี้จะถูกอัปเดตอีกครั้งตอน MERGE-08)
 
 ---
 

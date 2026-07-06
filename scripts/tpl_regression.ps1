@@ -25,7 +25,10 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $baseline = Join-Path $root "ea_template\regression_baseline.csv"
-$experts = @("EALabTpl\Boss_11_GridTrend", "EALabTpl\Boss_12_Breakout", "EALabTpl\Boss_13_MeanRev")
+$experts = @("EALabTpl\Boss_11_GridTrend", "EALabTpl\Boss_12_Breakout", "EALabTpl\Boss_13_MeanRev", "EALabTpl\Boss_14_GridLog")
+# Boss_14 compiled defaults barely trade on the pinned window (4 trades) - too thin to catch
+# drift, so it runs a PINNED set instead (frozen copy of XAU_DEMO; never edit during optimize work).
+$setOverride = @{ "EALabTpl\Boss_14_GridLog" = (Join-Path $root "ea_template\sets\Boss14_regression_smoke.set") }
 
 function Parse-Report([string]$htm) {
   # MT5 writes UTF-16LE with BOM; Get-Content -Raw decodes it via the BOM.
@@ -45,8 +48,13 @@ foreach ($e in $experts) {
   $name = ($e -split '\\')[-1]
   $rep = "TPLREG_$name"
   Write-Host ">> running $name ($Symbol $Period $FromDate-$ToDate Model $Model)" -ForegroundColor Cyan
-  $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
-          -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep
+  if ($setOverride.ContainsKey($e)) {
+    $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
+            -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep -SetFile $setOverride[$e]
+  } else {
+    $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
+            -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep
+  }
   $htm = Join-Path $root "_mt5_auto\reports\$rep.htm"
   if (-not (Test-Path $htm)) { Write-Host "[FAIL] $name - no report produced ($res)" -ForegroundColor Red; exit 1 }
   $m = Parse-Report $htm
