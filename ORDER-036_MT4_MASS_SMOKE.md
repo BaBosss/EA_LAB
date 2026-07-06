@@ -43,8 +43,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-09 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 0 | 0 | 0 | 200 | โซนตาย 100% — 0 เทรดทั้งกอง (แม้แต่ Reject ก็ไม่มี) |
 | 036-10 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 5 | 0 | 5 | 190 | **0/3 survivor หลัง auto-flag lot-escalation** — ดู triage ล่างตาราง |
 | 036-11 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 3 | 0 | 6 | 191 | **0/3 survivor — ตัดสินจาก smoke เดิมได้เลย ไม่ต้องเสีย BWD** ดู triage ล่างตาราง |
-| 036-12 | 50 | CLAIMED(Claude, overnight — เลน 1, กำลังรัน) | | | | | |
-| 036-13 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
+| 036-12 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 20 | 0 | 8 | 172 | **0/11 survivor — ทุกตัวตายจาก lot-check ฟรี ไม่ต้องรัน BWD เลย** ดู triage ล่างตาราง |
+| 036-13 | 50 | CLAIMED(Claude, overnight — เลน MT4b, กำลังรัน) | | | | | |
+| 036-14 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
 | 036-10 | 50 | OPEN | | | | | |
 | 036-11 | 50 | OPEN | | | | | |
@@ -156,6 +157,33 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 เดียวกันในตาราง smoke ก่อนเสมอ — ถ้าคู่เงินหนึ่งพังหนักอีกคู่ "ชนะสวยเกินจริง" = ปิดเคสได้ทันที
 ไม่ต้องรอ BWD (ประหยัดเวลา 3-4 นาที/ตัวคืนนี้ ~10 นาที)
 
+## Triage batch 12 (Claude, 2026-07-07 — บทเรียนใหญ่สุดของคืนนี้: lot-check ฟรีจาก M1 smoke report เดิม ฆ่าได้ทั้ง batch โดยไม่ต้องรัน BWD-OOS สักตัวเดียว)
+
+**การค้นพบ:** 20 แถว Tier A = 11 EA จริง ลองรัน `class=mspt` grep บน M1 report ที่มีอยู่แล้ว (จาก
+สมูกตอน 4 เดือนแรก — **ฟรี ไม่ต้องรอผลอะไร**) ก่อนคิดจะรัน BWD-OOS:
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| EAForexTH_Fibo v1.0_EU_M1 | 0.01→13.23 = **×1,323** | ❌ AUTO-REJECT |
+| EA - Budak Ubat v1.51 | 0.01→67.8 = **×6,780** | ❌ AUTO-REJECT |
+| EAForexTH_MultiHedge_1.0 | 0.01→15.14 = **×1,514** | ❌ AUTO-REJECT (ชื่อ "Hedge" ก็เป็นเช่นนั้นจริง) |
+| EA-Martin | 0.01→87.89 = **×8,789** | ❌ AUTO-REJECT (ชื่อ "Martin"=Martingale ตรงเป๊ะ) |
+| EA SCALP RENKO v2.3 | 0.1→29.3 = **×293** | ❌ AUTO-REJECT |
+| EAForexTH_Scalper_S3_1.0 | 0.22→42.02 = **×191** | ❌ AUTO-REJECT (PF 64.66 ก็ absurd อยู่แล้วด้วย) |
+| Envelope 2 | 0.2→78.44 = **×392** | ❌ AUTO-REJECT |
+| EAForexTH_CrawlingGrid_2.2 | 0.01→83.81 = **×8,381** | ❌ AUTO-REJECT (ชื่อ "Grid" ก็เป็นเช่นนั้นจริง) |
+| ema_crossmod | 2→99 = **×49.5** | ❌ AUTO-REJECT |
+| Expert | 4→96 = **×24** | ❌ AUTO-REJECT (PF อ่อนอยู่แล้วด้วย 1.11-1.26) |
+| EMA_Cross | (ไม่เช็ค) | 🅿️ PARKED-worthless — PF 1.02 เท่านั้น ไม่มีความหมายทางเศรษฐศาสตร์ |
+| EA_Easy2Gain_Gemini_3ex | (ไม่เช็ค) | 🅿️ PARKED-thin — 43 เทรดเดียว 1 symbol ข้อมูลไม่พอ |
+
+**ผล batch 12 สุดท้าย: 0/11 survivor — ตายสนิททั้งกอง โดยไม่เสีย BWD-OOS แม้แต่รันเดียว**
+(ประหยัด compute ~10 รัน เทียบกับ batch 10 ที่ต้องรอ BWD ก่อนถึงจะรู้)
+
+**🔧 แก้ spec ถาวร (สำคัญที่สุดของคืนนี้):** สลับลำดับ — **lot-check จาก M1 smoke report เดิม (ฟรี,
+มีอยู่แล้ว) ต้องทำ "ก่อน" ส่ง BWD-OOS เสมอ ไม่ใช่หลัง** เดิม spec ให้ BWD-OOS ก่อนแล้วค่อย
+lot-check EA ที่ผ่าน — กลับด้านสิ้นเปลือง ดู stage-2 spec ที่แก้ด้านล่าง
+
 ## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
 
 แก้ 2 ชั้นใน script กลาง (ทุก batch ต่อจากนี้ได้ผลอัตโนมัติ — อย่า workaround เอง):
@@ -167,18 +195,26 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 
 ## 🆕 Stage-2 spec ต่อ batch (เพิ่ม 2026-07-06 ค่ำ — ให้ agent ทำเองได้ถึงหลักฐานดิบครบ ไม่ต้องรอ Claude คั่นกลาง)
 
-หลังจบ smoke ของ batch ใดๆ ให้ agent ทำต่อทันทีในคำสั่งเดียวกัน (ยังห้าม verdict เหมือนเดิม):
+หลังจบ smoke ของ batch ใดๆ ให้ agent ทำต่อทันทีในคำสั่งเดียวกัน (ยังห้าม verdict เหมือนเดิม) —
+**ลำดับสลับแล้ว (2026-07-07 ดึก, บทเรียน batch 12: lot-check ฟรีต้องทำก่อน BWD เสมอ ไม่ใช่หลัง):**
 1. **กรอง DQ ชื่อไฟล์:** `_fix|_nodll|crack` → mark DQ ใน CSV (คอลัมน์ note) ไม่ต้องรันต่อ
-2. **BWD-OOS 2020-22** ทุก Tier A ที่เหลือ: ใช้ pattern `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets
-   จาก CSV ของ batch ตัวเอง, สัญลักษณ์ที่ M1 PF ดีสุด) → append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`
-3. **Trade-list dump** ทุกตัวที่ BWD PF>0.9: จาก report BWD ให้สรุปเป็นตาราง 3 คอลัมน์ต่อ EA —
-   (a) SL เป็น 0.00000 ทุกไม้ไหม (b) ลำดับ lot 15 ค่าแรกของ chain ยาวสุด (จับ martingale) (c) **lot
-   สูงสุดที่เห็นทั้งไฟล์ (grep ทุกแถว ไม่ใช่แค่ 15 ค่าแรก — บทเรียน 2020v2 07-07: escalation ลึกอาจอยู่
-   กลาง/ท้ายไฟล์ ไม่ใช่ต้นไฟล์)** · **auto-flag: max lot ÷ base lot ≥ 10x → REJECT ทันที
-   ไม่ต้องรอ Claude** (uncapped martingale — DD ที่ tester รายงานไม่สะท้อนความเสี่ยงจริงเสมอ, บทเรียน
-   ซ้ำ 3 ครั้ง: CommunityPower ×486, pun fix lot, 2020v2 ×640 — ทุกครั้ง "DD ต่ำ" ที่รายงานคือกับดัก)
-4. append ทั้งหมดใต้แถว batch ในไฟล์นี้ · commit เดียว `[tag] ORDER-036 batch NN + stage2 done`
-**Claude เหลือแค่:** อ่านตาราง → verdict — ประหยัดรอบไปกลับ 1 วันต่อ batch
+2. **Lot-escalation check ฟรี (ทำก่อน BWD เสมอ)** — ทุก Tier A ที่เหลือ มี M1 report จากสมูก 4 เดือน
+   อยู่แล้วในมือ (ไม่ต้องรันอะไรเพิ่ม): grep `class=mspt>(\d+\.\d\d)` ทั้งไฟล์ (ไม่ใช่ 15 ค่าแรก —
+   escalation ลึกอาจอยู่กลาง/ท้ายไฟล์) หา mode = base lot, max = lot สูงสุด · **auto-flag: max÷base
+   ≥10x → REJECT ทันที ไม่ต้องรอ Claude ไม่ต้องรอ BWD** (บทเรียนย้ำ 4 ครั้งคืนนี้: CommunityPower ×486 ·
+   2020v2 ×640 · batch-10 ×99-9486 · **batch-12 ทั้ง batch ×24-8789 — ล้าง 11/11 EA โดยไม่ต้องรัน
+   BWD สักครั้ง** — ชื่อ "Grid/Hedge/Martin/Martingale" ในชื่อ EA = สัญญาณล่วงหน้าเกือบเสมอ)
+3. **BWD-OOS 2020-22 เฉพาะตัวที่ผ่าน lot-check** (max÷base <10x): ใช้ pattern
+   `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets จาก CSV ของ batch ตัวเอง) →
+   append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`
+4. **Trade-list SL check** เฉพาะตัวที่ผ่านทั้ง lot-check + BWD: SL เป็น 0.00000 ทุกไม้ไหม (ไม่ auto-fail
+   แต่จดไว้ — no-SL ที่ lot ไม่ escalate ยังมีความเสี่ยง tail แบบ pun fix lot ต้องดู regime เพิ่ม)
+5. **Cross-symbol sanity check ฟรีอีกชั้น** (ทำคู่ข้อ 2 ได้เลย): ถ้า EA เดียวกันมีทั้ง symbol ที่ตกหนัก
+   (PF<0.8) และ symbol ที่ "ชนะสวยเกินจริง" (PF>10 ที่ trades<50) = REJECT ทันที (regime-lucky/thin-sample,
+   บทเรียน batch-11: Blessing 3, cci ma ea) — ไม่ต้องรอ BWD เช่นกัน
+6. append ทั้งหมดใต้แถว batch ในไฟล์นี้ · commit เดียว `[tag] ORDER-036 batch NN + stage2 done`
+**Claude เหลือแค่:** อ่านตาราง → verdict — ลำดับใหม่นี้ทำให้หลาย batch (เช่น 11, 12) ปิดจบได้โดย
+**ไม่ต้องรัน BWD-OOS เลยสักครั้ง** ประหยัด compute มหาศาลเทียบกับลำดับเดิม
 
 ## Archive protocol
 batch ที่ Claude review แล้ว: (1) แถวตารางข้างบนเปลี่ยนเป็น `ARCHIVED` (2) ผลดิบ/รายละเอียดย้ายไป
