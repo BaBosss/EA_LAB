@@ -385,10 +385,15 @@ continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 �
 เท่านั้น = harvester เก็บไม้ชนะ ไม้แพ้ค้างจนราคาย้อน** — "ทุกปีบวก" สะท้อน regime ย้อนกลับ 2023-26 ไม่ใช่ signal
 edge (entry = candle body>2× ตื้น) · เทรดแค่ 3 คู่ hardcode EURUSD/GBPUSD/EURGBP ไม่สน chart → **ผล 4 ชาร์ต
 เกือบเหมือนกัน = พอร์ตเดียวรัน 4 รอบ ไม่ใช่ cross-symbol robust (แก้ verdict ที่เครดิตผิด)** · ที่ไม่ระเบิด:
-exposure cap 6 ไม้×0.01 (eqDD 3.42% รวม floating จริง ณ lot นี้) · **ด่านชี้ชะตา = ORDER-038 backward-OOS
-2020-2022** (EURUSD dive 0.95 = เทรนด์ไม่ย้อน = นรก no-SL): รอด→demo experiment · ตาย→ปิด regime-only ·
-**บทเรียน: อ่าน source ก่อนเชื่อ compiled EA เสมอ — เลขผ่านทุกด่านยังหลอกได้ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง**
-GapinFX M4 กำลังรัน · North East Way ค้าง · **036 MT4 = วันนี้ (batch 50).**
+exposure cap 6 ไม้×0.01 (eqDD 3.42% รวม floating จริง ณ lot นี้)
+
+**❌ ORDER-038 ตัดสินแล้ว (Claude, 2026-07-06): pun fix lot = REJECT ปิดถาวร (DO-NOT-RE-EXAMINE)** —
+backward-OOS 2020-22: 2020/21 บวกบาง แต่ **2022 (EURUSD ดิ่งไม่ย้อน) PF 0.36 / -$3,352 / eqDD maximal 83.08%**
+= floating เกือบล้างพอร์ต ตรงทฤษฎี no-SL เป๊ะ. "ทุกปีบวก 2023-26" = regime ล้วน. **วงจรสมบูรณ์ใน 1 วัน:
+เลขผ่านทุกด่าน → อ่าน source → ทำนาย failure → ทดสอบปี hostile → ยืนยัน → ปิด.**
+**บทเรียนถาวร (เข้า scorecard แล้ว): อ่าน source ก่อนเชื่อ compiled EA เสมอ — เลขผ่านทุกด่านยังหลอกได้
+ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง** · GapinFX M4 = NO REPORT ครั้งแรก (retry + ใช้บทเรียนเดียวกัน:
+source read ก่อน) · North East Way ค้าง · **036 MT4 = วันนี้ (batch 50).**
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →

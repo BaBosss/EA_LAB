@@ -221,6 +221,14 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 | BREAKOUT (EA_BREAKOUT_XAU, both-dir) | **USDJPY H1** | smoke 1.16 → opt | ★★★ | **REJECT (2026-06-26)** | WATCH→optimized→dead. 12-combo (Bars×TpAtr) IS/OOS: 0 clear OOS≥1.40; high-TP curve-fit yen 2023-24 (IS 2.5/OOS 0.7), low-TP caps ~1.18. See [[signal-landscape]] |
 | Vol-gate / Trend-gate on ST03 | GBPUSD | — | ★★★ | **filters DEAD (2026-06-26)** | no-SL tail not reactively filterable: vol-gate=gap-only, ADX trend-gate counterproductive (lags). See ST03 row + EDGE_CATALOG |
 
+### MT5 — MASS-SMOKE `wait for test` (2026-07-05+, ORDER-034..038; worklist 1,521 · ex5 203 smoked)
+| EA | best smoke | Conf | Verdict | Reason |
+|---|---|---|---|---|
+| (oh) pun fix lot v05 | M1 1.63/M4 1.51, ทุกปีบวก 2023-26, MC ruin 0% — **ทุกด่านเลขผ่าน** | ★★★ | **REJECT (2026-07-06) — DO-NOT-RE-EXAMINE** | source read เผย **no-SL ทุกชนิด + TP 10 pips = harvester** (เทรด EURUSD/GBPUSD/EURGBP hardcode ไม่สนชาร์ต — "4-symbol robust" คือพอร์ตเดียวรัน 4 รอบ) → backward-OOS 2020-22: **2022 PF 0.36 / eqDD 83.08%** เกือบล้างพอร์ต. mechanism-fatal, resize ไม่ช่วย. **บทเรียนสำคัญสุดของ mass-smoke: เลขผ่านทุกด่านยังหลอกได้ — อ่าน source ก่อนเชื่อ compiled EA เสมอ** |
+| EA_GapinFX_MT5 | M1 USDJPY 2.74/EURUSD 2.34 DD<9% | ★☆☆ | **PENDING — M4 ค้าง (NO REPORT ครั้งแรก, retry)** | gap-fade = กลไกจริง; M4 + source read + backward-OOS ก่อนตัดสิน (ตามบทเรียน pun fix lot) |
+| North East Way v1.309_fix | M1 4 คู่ PF 2+ แต่ DD 30% | ★☆☆ | **PENDING — ยังไม่ M4** | commercial grid; ชื่อ "_fix" = สงสัย crack/expiry — เช็คก่อนเสียแรง |
+| อีก ~33 survivor (Tier A/B) | ดู `mass_smoke_mt5.csv` | ★☆☆ | รอ triage | ส่วนใหญ่ tight-TP/grid-trap suspect — ห้ามเชื่อจนผ่าน M4+source read |
+
 ### MT4 — SCREENED (63 EAs, 0 deployed)
 | EA | screen PF | Conf | Verdict | Reason |
 |---|---|---|---|---|

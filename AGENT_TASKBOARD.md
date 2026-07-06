@@ -1833,7 +1833,20 @@ source (fxdreema, 12k บรรทัด, subagent แกะ block graph) เผ
 
 ---
 
-## ORDER-038 — pun fix lot v05: backward-OOS 2020-2022 (ด่านชี้ชะตา no-SL harvester) — `OPEN` · **ทำได้: ZCode · Codex · oc-btest · Claude** · 👉 **แนะ: ZCode หรือ Claude** (1 รันเดียว เบา) (role: batch, เลน 2)
+## ORDER-038 — pun fix lot v05: backward-OOS 2020-2022 — `REVIEWED(Claude, 2026-07-06 — ❌ REJECT ปิดถาวร: eqDD 83% ปี 2022, no-SL harvester ตายตามทฤษฎีเป๊ะ)` (run by Claude)
+
+**VERDICT: ❌ (oh) pun fix lot v05 = REJECT ปิดถาวร (regime-only, tail risk เกิดจริง — DO-NOT-RE-EXAMINE)**
+| ปี | PF | net | balDD |
+|---|---|---|---|
+| 2020 | 1.62 | +714.55 | 1.14% |
+| 2021 | 1.19 | +306.77 | 1.59% |
+| **2022** (EURUSD ดิ่ง 1.15→0.95 ไม่ย้อน) | **0.36** | **-3,352.02** | **36.92%** |
+| FULL 2020-22 | 0.71 | -2,330.70 | 33.65% · **eqDD maximal 83.08%** 💀 |
+
+floating DD 83% = เกือบล้างพอร์ต — ตรงทฤษฎี no-SL hold-forever เป๊ะ. "ทุกปีบวก 2023-26" = regime ย้อนกลับ
+ล้วนๆ ไม่ใช่ edge. **วงจรสมบูรณ์: อ่าน source → ทำนาย failure mode → ทดสอบปี hostile → ยืนยันใน 1 รัน.**
+mechanism-fatal ไม่ใช่ param-fixable (resize ไม่ช่วย — risk มาจากโครงสร้าง no-SL ไม่ใช่ lot) ·
+report: `ART_punfixlot_BWDOOS.htm`
 
 **ทำไม:** source เผย pun fix lot = no-SL + TP10pips harvester บน EURUSD/GBPUSD/EURGBP — ตัวเลข 2023-26 สวย
 เพราะ regime ย้อนกลับ. **2020-2022 = COVID + EURUSD dive 1.15→0.95 (เทรนด์แรงไม่ย้อน) = stress จริงของ
