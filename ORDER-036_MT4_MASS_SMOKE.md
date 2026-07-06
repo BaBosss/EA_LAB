@@ -32,7 +32,7 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 
 | Batch | EAs | สถานะ | Tier A | Tier B | Reject | Skip/0-trade | หมายเหตุ |
 |---|---|---|---|---|---|---|---|
-| 036-01 | 50 | DONE (Codex, 2026-07-06 09:39 ICT) | 24 | 2 | 10 | 164 | CSV=`_mt5_auto/mass_smoke_mt4.csv` · exact-history symbols only: EURUSD, USDJPY |
+| 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
 | 036-02 | 50 | OPEN | | | | | |
 | 036-03 | 50 | OPEN | | | | | |
 | 036-04 | 50 | OPEN | | | | | |

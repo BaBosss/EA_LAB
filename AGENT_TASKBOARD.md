@@ -1870,7 +1870,16 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\ART_pu
 
 ---
 
-## ORDER-039 — Scalping-EA-AsReMix: Model-4 + MC (survivor เดียวจาก BWD-OOS sweep) — `OPEN` · **ทำได้: ZCode · Codex · oc-btest · Claude** · 👉 **แนะ: ZCode** · ⚠️ M4 รันเดี่ยว (role: batch, เลน 2)
+## ORDER-039 — Scalping-EA-AsReMix: Model-4 + MC — `REVIEWED(Claude, 2026-07-06 — 🅿️ PARKED trend-specialist edge-decay; ZCode รัน M4, Claude ปิด FULL6Y+MC เอง)` · CLOSED
+
+**VERDICT: 🅿️ PARKED — momentum edge จริง (ตัวเดียวจาก 203 ที่ไม่ใช่ harvester/artifact) แต่ edge จางแล้ว**
+- M4 (ZCode): 2025-26 = **1.09**/154t/eqDD 15.28% (จาก M1 1.23 → บวกบาง) · **2022 = 2.71/151t/eqDD 8.91%
+  (100% real ticks!)** — edge ปีเทรนด์รอด fill จริง = ของแท้
+- FULL 6.5yr (Claude): 2020-23 = 1.05/1.56/**2.99**/2.10 (ยุคทอง) → **2024-26 = 1.04/1.06/0.98(ลบ) +
+  balDD บวม 22→31→33%** = edge decay ชัด · MC worst DD 106%
+- **สรุป: trend-regime specialist ที่ regime หมดไป 3 ปีแล้ว — deploy วันนี้ = ซื้อของที่แพ้อยู่** → PARKED
+  reserve ตัวเดียวของ mass-smoke MT5 · re-examine เมื่อ JPY/USD trend/vol ใหญ่กลับมา ·
+  **treasure hunt MT5 ปิดสมบูรณ์: 203 → 39 (เลขสวย) → 1 edge จริง → 0 deployable วันนี้**
 
 **ทำไม:** BWD-OOS sweep 19 ตัว → รอดตัวเดียว: AsReMix (USDJPY) **2022 ปีเทรนด์แรงกลับ PF 2.99** (momentum-
 profile ตรงข้าม harvester) · full 20-22 = 1.88/+$8,697/eqDD 8.89% · 25-26 M1 = 1.23/DD 14.66. compiled-only
@@ -1888,6 +1897,25 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\ART_As
 ```
 **Acceptance:** M4 25-26 + M4 2022 (PF/trades/eqDD/quality) เทียบ M1 · FULL6Y year-split ทุกปี · MC (DD/ruin) ·
 commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ Claude: M4 PF ไม่ร่วง >30% จาก M1 + ไม่มีปีเน่าใน 6.5 ปี
+
+**ผล:** _(รอ)_
+
+---
+
+## ORDER-040 — BWD-OOS sweep ของ 036 batch-01 Tier A (24 ตัว MT4) — `OPEN` · **ทำได้: Codex · oc-dev** (ต้องแก้ driver quoting) · 👉 **แนะ: Codex-direct** (role: code+batch)
+
+**ทำไม:** batch-01 ให้ 24 Tier A แต่กติกาใหม่ = **เลขสวย 2026 ยังเชื่อไม่ได้ — BWD-OOS 2020-2022 เป็นด่านแรก**
+(MT5 sweep พิสูจน์แล้ว: 19 → รอด 1). ทำก่อนเริ่ม batch 02+ เพื่อรู้ว่า MT4 pool มีของจริงไหม
+**งาน:**
+1. **แก้ CSV quoting bug ก่อน:** EA ชื่อมี comma (เช่น "nzdcad 15 min)") ทำ column เพี้ยนใน
+   `mass_smoke_mt4.csv` — แก้ driver ให้ quote ทุก field + ซ่อมแถวเสีย 2 แถว
+2. เขียน BWD sweep (แบบ `bwdoos_sweep.ps1` ฝั่ง MT5): ต่อ Tier A EA (24) รัน `mt4_run.ps1` **M1
+   2020.01.01-2023.01.01** บน symbol ที่ M1 ดีสุดของมัน · year-split + eqDD ลง `_mt5_auto/BWDOOS_MT4.csv`
+3. **⚠️ เช็คก่อนรันจริง:** Meta4 มี M1-bar history ย้อนถึง 2020 ไหม (memory บอกแค่ tick <2026-03 ไม่มี —
+   bar อาจมี) — ตัวแรกที่รัน ถ้า report ช่วงสั้นกว่าที่ขอ = data ไม่ถึง → **หยุด รายงาน ช่วงที่มีจริง**
+   (Claude จะเคาะ window ทางเลือก) อย่าฝืนรันทั้ง 24 บน data สั้น
+**Acceptance:** CSV ครบ 24 (หรือรายงาน data-limit) + list ตัวที่ 2022 PF≥0.9 & eqDD<20% · commit `[tag] ORDER-040 done`
+**ห้าม:** verdict — Claude ตัดสิน (เกณฑ์เดียวกับ MT5 sweep)
 
 **ผล:** _(รอ)_
 

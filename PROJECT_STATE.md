@@ -406,10 +406,19 @@ Tier A ทุกตัว → backward-OOS 2020-22 เป็นด่านแ�
 
 **🏁 BWD-OOS SWEEP survivor ทั้งหมด (Claude, 2026-07-06 — 19 EA, 1 รัน/ตัว): REJECT ยกแผง 14 · WATCH-thin 2 ·
 NO_REPORT 2 · รอดจริง 1 เดียว = 🔥 Scalping-EA-AsReMix** (USDJPY: 2020 1.05 / 2021 1.56 / **2022 PF 2.99 —
-ปีเทรนด์แรงกลับดีสุด = momentum-profile ตรงข้าม harvester** · full 1.88/+$8,697/eqDD 8.89%) → **ORDER-039
-M4+MC เปิดแล้ว** (compiled-only, ชื่อ Scalping = fill-sensitive → M4 ชี้ขาด) · หลักฐานความคมของกติกา:
-IR Whale M1 โชว์ 3.94 → BWD eqDD 106% ล้างพอร์ต · Arbitrage +$99k/DD1.5% = tester-artifact REJECT ·
-EX39 balDD 2.65% แต่ eqDD 69.5% = floating ซ่อน REJECT · ผลเต็ม `_mt5_auto/BWDOOS_SWEEP.csv` + scorecard
+ปีเทรนด์แรงกลับดีสุด = momentum-profile ตรงข้าม harvester** · full 1.88/+$8,697/eqDD 8.89%) · หลักฐาน
+ความคมของกติกา: IR Whale M1 โชว์ 3.94 → BWD eqDD 106% ล้างพอร์ต · Arbitrage +$99k/DD1.5% = tester-artifact ·
+EX39 balDD 2.65% แต่ eqDD 69.5% = floating ซ่อน · ผลเต็ม `_mt5_auto/BWDOOS_SWEEP.csv`
+
+**🏁 ORDER-039 CLOSED (2026-07-06): AsReMix = 🅿️ PARKED trend-specialist edge-decay** — M4 2022 = **2.71 บน
+100% real ticks** (edge แท้!) แต่ FULL 6.5yr เผย decay: 2020-23 ยุคทอง (สูงสุด 2.99) → **2024-26 = 1.04/1.06/
+0.98(ลบ) + balDD บวม 22→31→33%** + MC worst DD 106% → deploy วันนี้ = ซื้อของที่แพ้อยู่. เก็บ reserve,
+re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ปิดสมบูรณ์: 203 → 39 เลขสวย → 1 edge จริง →
+0 deployable วันนี้** (แต่ระบบได้กติกากรองที่คมที่สุดเท่าที่เคยมี)
+
+**✅ 036 batch-01 reviewed (2026-07-06): 24 Tier A / 2 B / 10 reject / 164 skip** (exact-history แค่ EURUSD/
+USDJPY) → **ORDER-040 เปิด: BWD-OOS 2020-22 ทั้ง 24 ก่อนเชื่อ/ก่อนรัน batch 02+** (👉 Codex — ต้องแก้ CSV
+comma-quoting bug ด้วย) · ⚠️ ต้องเช็ค Meta4 มี M1-bar ย้อน 2020 ไหมที่ตัวแรก — ไม่มี = หยุดรอ Claude เคาะ window
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
