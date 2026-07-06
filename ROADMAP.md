@@ -42,7 +42,7 @@
 ### Phase 2 — Mechanism expansion + operate (ส.ค. → judge)
 - **Validate Hedge/Recovery ที่ยังไม่เคย backtest:** A/B order — EA เดิม + เปิดโหมดทีละตัว (81/82/83, HEDGE_LOCK) เทียบ PF/DD กับ baseline → โหมดไหนช่วยจริงถึงเข้า production set ได้
 - **Sweep แกนใหม่:** SELL-side GridLog (optimizer เห็นสัญญาณ PF สูงแต่บาง) · Boss_11/12/13 entries × mechanics ใหม่ × symbol ที่ยังไม่แตะ — ทุกรอบใช้สูตร: set 0.25x + year-split + probe-before-kill
-- port `ScaleExecutor_v2` จาก EA_CORE เป็น Stack mode — **เฉพาะเมื่อ**มี signal ผ่าน validate ที่ต้องการ pyramid จริง (อย่าสร้างเปล่า)
+- ~~port `ScaleExecutor_v2` จาก EA_CORE เป็น Stack mode~~ ✅ **ทำแล้ว 2026-07-06 (MERGE-03: `STACK_PYRAMID(93)`)** — เหลือแค่ "ใช้เมื่อมี signal ที่ต้องการ pyramid จริง" (โหมดปิดอยู่ default)
 - **Operate 9 EA:** `/ea-monitor` ทุก 2 สัปดาห์ (user ส่ง live_deals.csv) — จับตา ST03 replica (คาด kill), MG grid DD, Gold Reaper
 - **Gate → Phase 3:** ถึงวัน judge + มี candidate bench ≥3 ตัวที่ demo อยู่
 
@@ -52,6 +52,21 @@
 - demo account เดิม = โรงเพาะ cohort ถัดไป (EA ใหม่ทุกตัวยังต้อง demo ≥3 เดือนก่อน live — กฎเหล็กไม่เปลี่ยน)
 - ตั้ง **ปฏิทิน re-opt ทุก 6 เดือน** ของทุก EA live (เริ่มนับจากวัน live ของแต่ละตัว) — ใส่ MASTER_BACKLOG
 - **Gate → Phase 4:** พอร์ต #1 live ครบเดือนแรกโดย monitor loop ทำงานจริง
+
+### Phase 3.5 — PORTFOLIO-QUANT track (หลัง judge — user เคาะทิศ 2026-07-06)
+
+> **ทิศที่ตกลง: ไม่ไล่เป็น "quant firm" (tick infra / low-latency / ML alpha = ไม่คุ้มที่สเกลทุนเรา) —
+> ไล่เป็น "quant method": พอร์ตที่บริหาร risk เชิงระบบ.** เปิดเป็นบอร์ดแยกแบบ MERGE track เมื่อถึงเวลา.
+
+1. 🥇 **Portfolio risk layer** — vol-target sizing ต่อ EA + DD budget ระดับพอร์ต (ต่อยอดอิฐที่มีแล้ว:
+   `RC_AcctDDLimitPct` + `Persist.mqh` + `corr_monthly.py`) — เปลี่ยนจาก "มี EA หลายตัว" เป็น
+   "บริหารพอร์ตเชิงระบบ"
+2. 🥈 **Deflated gate (multiple-testing discipline)** — จดจำนวน hypothesis ที่ทดสอบต่อรอบ (mass-smoke
+   1,521 ตัว = ตัวอย่างจริง) → ปรับเกณฑ์ผ่านให้โหดขึ้นตามจำนวนที่ลอง · เข้า `SYSTEM_METRICS.md`
+3. 🥈 **Live tracking-error bands** — ต่อ EA: live เพี้ยนจาก backtest expectation เกินเกณฑ์ตัวเลข =
+   probation/kill (เสริม `/ea-monitor` ที่มีอยู่ ให้เกณฑ์เป็นเลขไม่ใช่ดุลยพินิจ)
+- **เงื่อนไขเริ่ม:** หลัง judge 2026-09-22 + พอร์ต #1 live แล้ว (อย่าแทรกก่อน — demo 3 เดือน =
+  experiment ที่แพงสุดที่กำลังรัน ห้ามรบกวน)
 
 ### Phase 4 — Scale ทีละพอร์ต (Q4 2026 → 2027+)
 - **กฎเปิดพอร์ตใหม่:** เปิดได้เมื่อ bench มี 2–3 EA validated + demo-proven + corr ≤0.40 กับ*ทุกพอร์ตที่ live อยู่* — ห้ามเปิดเพราะ "อยากครบ 10" (พอร์ตคุณภาพต่ำ = ลาก DD รวม)
@@ -86,6 +101,9 @@
 | Walk-forward automation (script รัน rolling window + สรุป) | 1 | Codex |
 | Hedge/Recovery A/B validation harness | 2 | Codex ออกแบบ order, ZCode รัน |
 | Portfolio equity combiner หลาย account (ต่อยอด zigl_correlation) | 3 | Codex |
+| **Portfolio risk layer** (vol-target sizing + พอร์ต DD budget — Phase 3.5 ข้อ 1) | 3.5 | Claude ออกแบบ (risk logic ใหม่) + Codex review |
+| **Deflated gate** — เกณฑ์ผ่านปรับตามจำนวน hypothesis ที่ทดสอบ (Phase 3.5 ข้อ 2) | 3.5 | Claude (rule) — แทบไม่มีโค้ด |
+| **Tracking-error bands ใน /ea-monitor** (Phase 3.5 ข้อ 3) | 3.5 | Codex |
 | Monthly monitor report รวมทุกพอร์ต (อ่าน live_deals หลายไฟล์) | 3–4 | Codex |
 | MT5 instance 2 (D:\Meta 5b) เข้า pipeline เมื่อคิวแน่น | 4 | ZCode ตาม guide memory |
 | เกษียณเอกสารซ้ำซ้อน (audit ตาม anti-drift) | ว่างเมื่อไหร่ก็ได้ | Claude |
