@@ -1870,6 +1870,29 @@ python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\ART_pu
 
 ---
 
+## ORDER-039 — Scalping-EA-AsReMix: Model-4 + MC (survivor เดียวจาก BWD-OOS sweep) — `OPEN` · **ทำได้: ZCode · Codex · oc-btest · Claude** · 👉 **แนะ: ZCode** · ⚠️ M4 รันเดี่ยว (role: batch, เลน 2)
+
+**ทำไม:** BWD-OOS sweep 19 ตัว → รอดตัวเดียว: AsReMix (USDJPY) **2022 ปีเทรนด์แรงกลับ PF 2.99** (momentum-
+profile ตรงข้าม harvester) · full 20-22 = 1.88/+$8,697/eqDD 8.89% · 25-26 M1 = 1.23/DD 14.66. compiled-only
+(zip ไม่มี source) → behavioral. **ชื่อ "Scalping" = fill-sensitivity risk สูงสุด → M4 คือด่านชี้ขาด**
+```powershell
+# (1) M4 every-tick 12 เดือนล่าสุด (รันเดี่ยว!)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert '_smoke\Scalping-EA-AsReMix' -Symbol USDJPY -Period H1 -FromDate 2025.07.01 -ToDate 2026.07.01 -Model 4 -ReportName ART_AsReMix_M4 -TimeoutSec 3600 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+# (2) M4 บนปีเทรนด์ 2022 ด้วย (ถ้า broker มี tick) — ยืนยัน 2.99 บน real ticks
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert '_smoke\Scalping-EA-AsReMix' -Symbol USDJPY -Period H1 -FromDate 2022.01.01 -ToDate 2023.01.01 -Model 4 -ReportName ART_AsReMix_M4_2022 -TimeoutSec 3600 -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+# (3) MC บน full 2020-2026 (ต่อ M1 2020-2026 ก่อน 1 รัน แล้ว montecarlo)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert '_smoke\Scalping-EA-AsReMix' -Symbol USDJPY -Period H1 -FromDate 2020.01.01 -ToDate 2026.07.01 -Model 1 -ReportName ART_AsReMix_FULL6Y -Terminal 'D:\Meta 5b\terminal64.exe' -DataDir 'D:\Meta 5b' -Portable
+. D:\EA_LAB\scripts\use_python.ps1
+python D:\EA_LAB\scripts\mt5_montecarlo.py D:\EA_LAB\_mt5_auto\reports\ART_AsReMix_FULL6Y.htm --deposit 10000 --iters 5000
+python D:\EA_LAB\scripts\report_year_split.py D:\EA_LAB\_mt5_auto\reports\ART_AsReMix_FULL6Y.htm
+```
+**Acceptance:** M4 25-26 + M4 2022 (PF/trades/eqDD/quality) เทียบ M1 · FULL6Y year-split ทุกปี · MC (DD/ruin) ·
+commit `[tag] ORDER-039 done` · **ห้าม:** verdict — เกณฑ์ Claude: M4 PF ไม่ร่วง >30% จาก M1 + ไม่มีปีเน่าใน 6.5 ปี
+
+**ผล:** _(รอ)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)

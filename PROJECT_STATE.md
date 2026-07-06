@@ -404,6 +404,13 @@ backward-OOS 2020-22: 2020/21 บวกบาง แต่ **2022 (EURUSD ดิ
 Tier A ทุกตัว → backward-OOS 2020-22 เป็นด่านแรกหลัง smoke** (ถูกกว่า M4, ฆ่า regime-harvester เด็ดขาด) ·
 ชื่อ "_fix/_nodll/crack" = DQ ทันที · **036 MT4 (27 batches) = user สั่งเป็นก้อนเมื่อพร้อม — board แยกไฟล์แล้ว**
 
+**🏁 BWD-OOS SWEEP survivor ทั้งหมด (Claude, 2026-07-06 — 19 EA, 1 รัน/ตัว): REJECT ยกแผง 14 · WATCH-thin 2 ·
+NO_REPORT 2 · รอดจริง 1 เดียว = 🔥 Scalping-EA-AsReMix** (USDJPY: 2020 1.05 / 2021 1.56 / **2022 PF 2.99 —
+ปีเทรนด์แรงกลับดีสุด = momentum-profile ตรงข้าม harvester** · full 1.88/+$8,697/eqDD 8.89%) → **ORDER-039
+M4+MC เปิดแล้ว** (compiled-only, ชื่อ Scalping = fill-sensitive → M4 ชี้ขาด) · หลักฐานความคมของกติกา:
+IR Whale M1 โชว์ 3.94 → BWD eqDD 106% ล้างพอร์ต · Arbitrage +$99k/DD1.5% = tester-artifact REJECT ·
+EX39 balDD 2.65% แต่ eqDD 69.5% = floating ซ่อน REJECT · ผลเต็ม `_mt5_auto/BWDOOS_SWEEP.csv` + scorecard
+
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
