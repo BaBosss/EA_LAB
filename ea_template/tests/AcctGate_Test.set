@@ -1,0 +1,2 @@
+; AcctGate_Test requires the gate enabled at a known limit
+RC_AcctDDLimitPct=5.0

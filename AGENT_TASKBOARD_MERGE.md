@@ -5,8 +5,10 @@
 > กติกา claim/สถานะ = เหมือนบอร์ดหลักทุกข้อ (`AGENTS.md`): `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` /
 > `BLOCKED(คำถาม)` → `REVIEWED(Claude)` · เพิ่ม order ใหม่ = Claude/user เท่านั้น
 >
-> **สถานะบอร์ด: 🟢 ACTIVE (เปิด 2026-07-06)** — เมื่อทุก order = REVIEWED/CLOSED ให้เปลี่ยนเป็น
-> `🏁 CLOSED` + ลบ pointer ในบอร์ดหลัก + อัปเดต PROJECT_STATE (ขั้นตอนอยู่ใน MERGE-08)
+> **สถานะบอร์ด: 🏁 CLOSED (2026-07-06 — เปิดและจบวันเดียว)** — MERGE-01→06 + 08 REVIEWED ครบ,
+> DoD 6/6 ✅ · EA_Project = read-only ARCHIVE แล้ว · **ข้อยกเว้นเดียวที่ยังเปิด: MERGE-07
+> (Entry_ST03) = ⏸️ HOLD** ถึงเงื่อนไขปลดล็อค (judge 2026-09-22 หรือ re-confirm OOS) — ใครปลดล็อค
+> ให้ทำ order นั้นตาม spec ในไฟล์นี้ แล้วบันทึกผลต่อท้ายได้เลย (ไม่ต้อง reopen บอร์ด)
 
 ---
 
@@ -277,7 +279,7 @@ Claude review แล้วจะออก stage B (implement) เฉพาะช
 
 ---
 
-## MERGE-06 — smoke-assert harness เล็กสำหรับ core\ (ดูดวินัย test จาก CORE เป็น pattern) — `OPEN` (หลัง MERGE-03/04 merge แล้ว) · **ทำได้: Codex / oc-dev** (role: code+test)
+## MERGE-06 — smoke-assert harness เล็กสำหรับ core\ (ดูดวินัย test จาก CORE เป็น pattern) — `REVIEWED(Claude, 2026-07-06 — ✅ ALL TESTS PASS 1 คำสั่ง)` (role: code+test)
 
 **ทำไม:** ข้อดีอันดับ 1 ของ EA_CORE คือทุก module มี test — Boss V2 มีแต่ regression ระดับ EA
 (เลข backtest) ยังไม่มี assert ระดับ module. เอา pattern มา ไม่เอา harness ทั้งชุด
@@ -289,7 +291,12 @@ Claude review แล้วจะออก stage B (implement) เฉพาะช
 README 5 บรรทัดวิธีเพิ่ม test · commit
 **ห้าม:** import ScenarioHarness/adapters จาก CORE ตรงๆ (พา dependency เข้า) — เขียนใหม่ให้จิ๋ว
 
-**ผล:** _(รอ)_
+**ผล (Claude ทำเอง, 2026-07-06):** ✅ `ea_template\tests\run_tests.ps1` = 1 คำสั่ง deploy→compile→
+รันทุก test ใน tester→grep verdict → **ALL TESTS PASS (3/3)**: `Persist_Test` (8 asserts) ·
+`AcctGate_Test` (boundary 5 asserts — 4.9% allow / 5.1% block / hwm=0 fail-open, ใช้ .set คู่ไฟล์
+เพราะ input เปลี่ยน runtime ไม่ได้) · `StackStep_Test` (pip digit-aware + ATR-step + MinPips floor,
+assert บน tick แรกเพราะ ATR ไม่พร้อมใน OnInit) · README วิธีเพิ่ม test แนบแล้ว · ไม่มี dependency
+จาก CORE (เอาแค่ pattern ตามข้อห้าม) · ไม่แตะ core\ → ไม่ต้องรัน regression รอบนี้
 
 ---
 
@@ -304,7 +311,7 @@ README 5 บรรทัดวิธีเพิ่ม test · commit
 
 ---
 
-## MERGE-08 — closeout: EA_Project → read-only ARCHIVE + sync เอกสารทุกจุด — `OPEN` (order สุดท้าย — เริ่มได้เมื่อ 01–06 REVIEWED ครบ) · **ทำได้: Claude เท่านั้น** (role: judge/docs)
+## MERGE-08 — closeout: EA_Project → read-only ARCHIVE + sync เอกสารทุกจุด — `REVIEWED(Claude, 2026-07-06 — ✅ track ปิดสมบูรณ์)` (role: judge/docs)
 
 **งาน:**
 1. `D:\EA_Project`: เพิ่ม banner ARCHIVE ใน `PROJECT_MASTER_SPEC.md` + README (ถ้ามี):
@@ -318,4 +325,8 @@ README 5 บรรทัดวิธีเพิ่ม test · commit
 5. memory: อัปเดต `agent-workflow-post-fable` / สร้าง memory ปิด track
 **Acceptance:** `scripts/check_state.ps1` ผ่าน · ทุกไฟล์ข้างบน commit เดียว `[claude] MERGE-08: track closed`
 
-**ผล:** _(รอ)_
+**ผล (Claude, 2026-07-06):** ✅ ครบทุกข้อ — banner ARCHIVE ใน `D:\EA_Project\CURRENT_BUILD\
+PROJECT_MASTER_SPEC.md` (ไม่มี root README — SPEC คือ source of truth ฝั่งนั้น) · GUIDE §1 ตาราง
++ §1 bullet + §4 flow อัปเดตเป็น archive · PROJECT_STATE §1/§2/Decision log · บอร์ดนี้ → 🏁 CLOSED ·
+pointer บอร์ดหลักเปลี่ยนเป็น "track ปิดแล้ว" · memory อัปเดต · หมายเหตุ: MERGE-07 คง HOLD
+ตาม design — ไม่บล็อกการปิด (DoD ระบุไว้แต่แรก)

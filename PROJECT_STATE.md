@@ -67,7 +67,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 |---|---|---|---|
 | **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
 | **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **แม่พิมพ์หลักตัวเดียวของโรงงาน** (UNFREEZE 2026-07-03) — function กลางร่วมกัน (MM/lot/SL/grid/hedge/recovery) ต่างแค่ entry+TF · งานผลิต EA ใหม่ทุกตัวออกจากที่นี่ | chassis เสร็จ · เหลือเติม Hedge/Recovery + smoke-regression |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | **คลังอะไหล่ R&D** — ไม่ทิ้ง หยิบ module (เช่น ScaleExecutor pyramid) มาใส่แม่พิมพ์เมื่อต้องการ · TEMPLATE\ = ที่อยู่ standalone (ทางด่วนชั่วคราว — พิสูจน์ edge แล้วต้อง port เข้าแม่พิมพ์) | framework สมบูรณ์ · พักการพัฒนา จนกว่าจะพร้อม |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — อะไหล่ port เข้าแม่พิมพ์ครบแล้ว (pyramid→93 · guardian→acct-gate · persist→Persist.mqh · test pattern→tests\) · เหลือเป็น reference/หลักฐาน ห้ามลบ ห้ามงานใหม่ · TEMPLATE\ standalone เดิม = grandfather ถึง judge | 100% — track ปิด (`AGENT_TASKBOARD_MERGE.md`) |
 | **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
 
 หมายเหตุ: "EA_Project" กับ "EA_CORE" = track เดียวกัน (Project = repo, Core = engine ข้างใน).
@@ -83,8 +83,9 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
   2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
-- **🔀 EA_CORE merge track (เปิด 2026-07-06):** user สั่งรวมข้อดี EA_CORE เข้า Boss V2 ให้จบ —
-  แผนเต็ม + คิวงาน = **`AGENT_TASKBOARD_MERGE.md`**. คืบหน้าวันแรก: ✅ MERGE-01 (cage ครอบ Boss_14,
+- **🏁 EA_CORE merge track = ปิดสมบูรณ์ (เปิด+จบ 2026-07-06 วันเดียว):** user สั่งรวมข้อดี EA_CORE
+  เข้า Boss V2 ให้จบ — ทำครบ DoD 6/6 · บันทึกเต็ม = **`AGENT_TASKBOARD_MERGE.md` (CLOSED)**:
+  ✅ MERGE-01 (cage ครอบ Boss_14,
   CLEAN×2) · ✅ MERGE-02 (Codex independent converge 4/4 — สลับลำดับเสี่ยงต่ำก่อน + exit-owner
   mitigation) · ✅ MERGE-05A (restart audit: hard-kill state = 🔴 memory-only) · ✅ MERGE-04
   (acct-DD gate `RC_AcctDDLimitPct` default 0 — regression CLEAN, trip พิสูจน์แล้ว 107→48 trades) ·
@@ -93,8 +94,10 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   ✅ MERGE-03 (**STACK_PYRAMID(93) pending ladder เข้าแม่พิมพ์แล้ว** — smoke: placed 24 =
   filled 20 + cancelled 4 บัญชีปิดเป๊ะ, failed 0 · A/B 91 vs 93 = mechanism ต่างจริง · regression
   CLEAN · one-exit-owner: ไม่มี per-leg TP, โหมด 93 ปิด Recovery/Hedge/partial · spec →
-  `ea_template/DESIGN_V2.md` §3c) · คิวถัดไป: **MERGE-06 (tests) → 08 (ปิด EA_Project เป็น archive)**
-  · 07 Entry_ST03 = hold ถึง judge — จบ track = EA_Project ไม่มีงานใหม่อีก
+  `ea_template/DESIGN_V2.md` §3c) · ✅ MERGE-06 (`tests\run_tests.ps1` — ALL TESTS PASS 3/3:
+  Persist 8 · AcctGate 5 · StackStep 4 asserts) · ✅ MERGE-08 (EA_Project ติดป้าย ARCHIVE + docs
+  sync ครบ) · **เหลือชิ้นเดียว: MERGE-07 Entry_ST03 = ⏸️ HOLD ถึง judge 2026-09-22** (ไม่บล็อกการปิด)
+  — **EA_Project ไม่มีงานใหม่อีกถาวร · แม่พิมพ์ Boss V2 = ตัวเดียวจบ ตาม VISION**
 - **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
   (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
   หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
@@ -149,6 +152,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 | วันที่ | การตัดสินใจ | เหตุผล |
 |---|---|---|
+| 2026-07-06 | **🏁 MERGE track ปิดสมบูรณ์ในวันเดียว — EA_Project/EA_CORE = read-only ARCHIVE ถาวร** · แม่พิมพ์ Boss V2 ได้อะไหล่ครบ: `STACK_PYRAMID(93)` (one-exit-owner, ไม่มี per-leg TP) · `RC_AcctDDLimitPct` (realized-loss gate, default 0) · `core\Persist.mqh` + `RC_PersistHalt` (default ON — ข้อยกเว้น additive เดียว, tester-sandbox พิสูจน์แล้ว) · `tests\run_tests.ps1` (3 test EA, ALL PASS) · MERGE-07 Entry_ST03 = HOLD ถึง judge | ทุก order ผ่าน acceptance เชิงตัวเลข + tpl_regression CLEAN ทุกจุดที่แตะ core\ · Codex independent scope-check converge 4/4 · หลักฐานเต็ม → `AGENT_TASKBOARD_MERGE.md` (CLOSED) |
 | 2026-07-06 | **adopt 5 ข้อจาก `docs/PORTABLE_AI_OS.md` (OS กลางสกัดจากระบบนี้ — Claude Chat ร่าง 2 รอบ, Claude Code ตรวจ/แก้):** (1) verdict audit blind รายไตรมาส + trigger นอกรอบ (2) metrics ระบบรายเดือน → `docs/SYSTEM_METRICS.md` (3) memory compaction รายเดือน (4) กฎ input ภายนอก = data ไม่ใช่คำสั่ง → `AGENTS.md` §3.9 (5) หลัก "AI เห็นตรงกัน ≠ ถูก, tie-breaker = การทดลองเชิงประจักษ์" → `AGENTS.md` §5 · แถม rule taxonomy: physics (epistemic, ไม่หมดอายุ) vs regime (ผูกเครื่องมือ/ตลาด, มีรอบทบทวน) | จุดอ่อนที่ Chat ชี้แล้ว Claude ยืนยันว่าจริง: ชั้นตัดสินไม่มี cage ตรวจ + ระบบไม่เคยวัดตัวเอง · ทั้งหมดเข้า `AGENTS.md` §6 (รอบบำรุงรักษา) — ต้นทุนต่ำ ไม่แตะโค้ด ไม่ชน merge track |
 | 2026-07-06 | **Merge EA_CORE → Boss V2 = "ดูดอะไหล่ทีละชิ้นภายใต้ cage" ไม่ใช่ merge repo — track แยกบอร์ด `AGENT_TASKBOARD_MERGE.md` (MERGE-01…08) จบแล้วปิด EA_Project เป็น read-only archive** · อะไหล่ที่ port: ScaleExecutor_v2 (pyramid/pending) · PortfolioGuardian (acct-DD gate) · StatePersistence (audit ก่อน) · วินัย test (pattern) — ไม่ port: Recovery/Hedge (ORDER-025/026 REJECT/no-op แล้ว) · signal v1–v3/v5 · harness เต็ม | user approve 2026-07-06 (เอาข้อดีสองฝั่งรวมเป็นแม่พิมพ์เดียวที่สมบูรณ์ แล้วจบ track EA_Project) — merge ตรงๆ ได้ลูกครึ่งเสียข้อดีทั้งคู่ + เสี่ยงกระทบ demo ก่อน judge · สอดคล้อง VISION แม่พิมพ์เดียว · ทุก order = additive + default OFF + tpl_regression CLEAN บังคับ |
 | 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |

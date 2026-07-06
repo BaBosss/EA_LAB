@@ -17,7 +17,7 @@
 | | **EA_Template (Boss V2)** | **EA_CORE_V1** |
 |---|---|---|
 | ที่อยู่ | `D:\EA_LAB\ea_template` | `D:\EA_Project\CURRENT_BUILD` |
-| บทบาท (2026-07-03) | **แม่พิมพ์หลักตัวเดียวของโรงงาน** — smoke + production ออกจากที่นี่ทั้งหมด | **คลังอะไหล่ R&D** — หยิบ module มาใส่แม่พิมพ์เมื่อต้องการ · พักพัฒนาจนกว่าจะพร้อม |
+| บทบาท (update 2026-07-06) | **แม่พิมพ์หลักตัวเดียวของโรงงาน** — smoke + production ออกจากที่นี่ทั้งหมด | 🏛️ **read-only ARCHIVE (MERGE-08)** — อะไหล่ถูก port เข้าแม่พิมพ์ครบแล้ว · เหลือแค่ reference/หลักฐาน · ห้ามมีงานใหม่ |
 | ปรัชญา | เร็ว ง่าย dropdown ทุกอย่าง — เจ้าของเข้าใจได้ทั้งตัว | contract-first, ทุก module มี test (regression 1417 PASS / 0 FAIL) |
 | ความลึก | 1 ไฟล์ .ex5 ต่อ entry, indicator built-in | module แยกชั้น: signal / executor / risk / adapter |
 | Execution | market order ขาเดียว (pyramid ยังไม่มี — อะไหล่ที่รอ port คือ ScaleExecutor_v2) | ScaleExecutor_v2 = multi-leg pyramid (pending LIMIT/STOP + OCO) |
@@ -28,10 +28,12 @@
 - เขียน **standalone** ได้เฉพาะเมื่อแม่พิมพ์ยังแสดงกลไกนั้นไม่ได้ = **ทางด่วนชั่วคราว** — พิสูจน์ edge
   เมื่อไหร่ **ต้อง port กลับเข้า Boss V2** (เพิ่ม entry/module ให้แม่พิมพ์) + re-confirm เลขตรงเดิม
   ก่อน deploy. ห้ามปล่อย standalone เป็นถาวร (ยกเว้น EA ที่ live อยู่แล้ว — grandfather ถึง judge)
-- ต้องการ execution ซับซ้อน (pyramid, OCO) → ยก module จาก **EA_CORE** มา port ใส่ Boss V2
-  ไม่ใช่ย้ายงานไปทำบน EA_CORE
-- 🔀 **(2026-07-06) การยกอะไหล่ทั้งหมดถูกจัดเป็น track เดียวให้จบ:** แผน+คิวงาน →
-  `AGENT_TASKBOARD_MERGE.md` — จบ track แล้ว EA_Project = read-only archive (ไฟล์นี้จะถูกอัปเดตอีกครั้งตอน MERGE-08)
+- 🏛️ **(MERGE-08, 2026-07-06) EA_CORE = read-only ARCHIVE แล้ว** — อะไหล่ถูกดูดเข้า Boss V2
+  ครบ: pyramid ladder = `STACK_PYRAMID(93)` (DESIGN_V2 §3c) · portfolio guard = `RC_AcctDDLimitPct` ·
+  state persist = `core\Persist.mqh` · test pattern = `ea_template\tests\` — ต้องการ execution/กลไก
+  ใหม่ = เขียนที่ Boss V2 เท่านั้น อ่าน CORE เป็น reference ได้ (ห้ามลบ) แต่ห้ามมีงานใหม่เข้า
+  บันทึก merge → `AGENT_TASKBOARD_MERGE.md` (CLOSED) · ชิ้นเดียวที่ยังรอเงื่อนไข = StrategySignal_v4
+  → Entry_ST03 (MERGE-07 hold ถึง judge 2026-09-22)
 
 ---
 
@@ -195,7 +197,7 @@ optimize หยาบ → IS/OOS → MC/WF  │
 corr gate ──► deploy demo จากแม่พิมพ์ (vps-deploy-ops) ──► /ea-monitor
 ```
 
-- Boss V2 = ทั้งด่านแรกและปลายทาง production (แม่พิมพ์เดียวตาม `VISION.md`) · EA_CORE = คลังอะไหล่
-  (ต้องการ pyramid/portfolio-guard → ยก module มาใส่แม่พิมพ์)
+- Boss V2 = ทั้งด่านแรกและปลายทาง production (แม่พิมพ์เดียวตาม `VISION.md`) · EA_CORE = archive
+  (pyramid/portfolio-guard/persist/test-pattern อยู่ในแม่พิมพ์แล้ว — MERGE track ปิด 2026-07-06)
 - standalone = ทางด่วนชั่วคราวเท่านั้น — พิสูจน์ edge แล้วต้อง port เข้าแม่พิมพ์ก่อน deploy
 - ทั้งหมดใช้ automation กลางชุดเดียวกัน: `D:\EA_LAB\scripts\` + `_mt5_auto\` (กฎ: ปิด GUI, Model 4 ก่อนตัดสินจริง, window 2023–2026)
