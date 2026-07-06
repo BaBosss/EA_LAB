@@ -35,9 +35,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-01 | 50 | REVIEWED(Claude 07-06) | 24 | 2 | 10 | 164 | Tier A 24 → **ORDER-040 BWD-OOS ก่อนเชื่อ** (กติกาใหม่) · ⚠️ CSV comma-bug 2 แถว (แก้ใน 040) · exact-history: EURUSD, USDJPY เท่านั้น (XAU/AUDNZD ไม่มี) |
 | 036-02 | 50 | REVIEWED(Claude 07-06 ค่ำ — Codex ผ่านตรวจเข้ม 4b: CSV 200 แถว ✓ · report 8/8 มีจริง ✓ · spot-check PF ตรง ✓) | 5 | 0 | 4 | 191 | Tier A triage ด้านล่างตาราง · ❌ CITY-GOLD "_fix" = **DQ ทันที (cracked, precedent North East Way)** |
 | 036-03 | 50 | REVIEWED(Claude 07-06 ค่ำ — ตรวจชุดเดียวกับ 02) | 3 | 0 | 3 | 194 | Tier A triage ด้านล่างตาราง |
-| 036-04 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | rerun from clean CSV after stale MT4 process from prior attempt |
-| 036-05 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | |
-| 036-06 | 50 | CLAIMED(Codex, 2026-07-06 19:38 ICT) | | | | | |
+| 036-04 | 50 | CLAIMED(Claude, 2026-07-06 20:3x — **เลน MT4b**; user ปลด claim Codex ที่ค้าง: 0 แถว + terminal ติดหล่ม missing-indicator spam) | | | | | driver อัปเกรดแล้ว: timeout-kill + indicator precheck (ดู spec ล่าง) |
+| 036-05 | 50 | OPEN (ปลด claim Codex เดิม — ถ้า Codex กลับมาให้เริ่มที่ 05+ บน**เลน 1** และห้าม commit CSV พร้อมกับงาน batch อื่นที่กำลังวิ่ง — เช็ค git status ก่อน) | | | | | |
+| 036-06 | 50 | OPEN (เหตุเดียวกับ 05) | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
 | 036-08 | 50 | OPEN | | | | | |
 | 036-09 | 50 | OPEN | | | | | |
@@ -77,6 +77,15 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 **Pattern ยืนยันรอบที่ 3: ฆ่า 5/6 · conditional = 0** (batch-01 เหลือ ClevrFX ตัวเดียวจริงจาก 222 EA)
 → **BWD-OOS 2020-22 + อ่าน trade list (SL + ลำดับ lot) = สอง gate ถูกสุด/เด็ดขาดสุด — ด่านบังคับก่อน
 Model-4/spread-stress เสมอ** (spread-stress ทำเฉพาะตัวที่รอดสองด่านแรก)
+
+## 🛡️ Indicator precheck (เพิ่ม 2026-07-06 ดึก — แก้อาการค้างที่ user เจอ: EA เรียก indicator ที่ไม่มี → journal spam "cannot open file ...\indicators\..." ค้างเป็นชั่วโมง)
+
+แก้ 2 ชั้นใน script กลาง (ทุก batch ต่อจากนี้ได้ผลอัตโนมัติ — อย่า workaround เอง):
+1. **`mt4_run.ps1`:** timeout → **kill process ทิ้งเสมอ** (เดิมปล่อยค้าง — gotcha ที่จดใน memory ตั้งแต่ 06-30 เพิ่งแก้จริง)
+2. **`mass_smoke_mt4.ps1`:**
+   - precheck static: path/ชื่อเป็น indicator (`\indicators\`, "indicator", "no repaint arrow") → note `precheck-indicator-file` ข้ามทันที ฟรี
+   - precheck dynamic: รันแรกไม่มี report → สแกน tester+terminal journal → เจอ `cannot open file ...\MQL4\indicators\X` → note `missing-indicator: <รายชื่อ>` + **ข้าม symbol ที่เหลือของ EA นั้นทั้งหมด** (ไม่เผา timeout ×4) · เจอ invalid ex4 → `not-an-ea-or-invalid`
+   - EA ที่ note = `missing-indicator` ไม่ใช่ REJECT — เป็น **INCOMPLETE-package** (อนาคตถ้าอยากฟื้นตัวไหน หา indicator ในโฟลเดอร์ต้นทางมาลง `MQL4\indicators` แล้วรันใหม่ได้)
 
 ## 🆕 Stage-2 spec ต่อ batch (เพิ่ม 2026-07-06 ค่ำ — ให้ agent ทำเองได้ถึงหลักฐานดิบครบ ไม่ต้องรอ Claude คั่นกลาง)
 

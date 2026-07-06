@@ -116,5 +116,13 @@ if ($found) {
   Write-Output "OK REPORT: $destHtm"
 }
 else {
-  Write-Output "NO REPORT (exited=$($proc.HasExited)). Check EA name / symbol history / login."
+  # MT4 does NOT honor shutdown on a hung test (EA spamming iCustom "cannot open
+  # file ...indicators..." can stall for hours) - kill OUR process on timeout so
+  # batch drivers never wedge the lane. (gotcha recorded 2026-06-30, fixed 07-06)
+  if (-not $proc.HasExited) {
+    Stop-Process -Id $proc.Id -Force -Confirm:$false -ErrorAction SilentlyContinue
+    Write-Output "NO REPORT - TIMEOUT-KILLED terminal PID $($proc.Id) after $([int]$sw.Elapsed.TotalSeconds)s."
+  } else {
+    Write-Output "NO REPORT (exited=$($proc.HasExited)). Check EA name / symbol history / login."
+  }
 }

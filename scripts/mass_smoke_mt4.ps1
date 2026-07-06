@@ -8,7 +8,8 @@ param(
   [string]$InstallDir = "D:\Meta4",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0",
   [int]$TimeoutSec = 180,
-  [int]$MaxEas = 0
+  [int]$MaxEas = 0,
+  [switch]$Portable   # lane 2 (D:\Meta4b): pass with Terminal/InstallDir/DataDir/SmokeDir all under D:\Meta4b
 )
 
 $ErrorActionPreference = "Stop"
@@ -107,6 +108,8 @@ function Invoke-TestRun {
     [string]$ReportName
   )
 
+  $extra = @{}
+  if ($Portable) { $extra['Portable'] = $true }
   & powershell -File $runScript `
     -Expert $Expert `
     -Symbol $Symbol `
@@ -118,11 +121,39 @@ function Invoke-TestRun {
     -Terminal $Terminal `
     -InstallDir $InstallDir `
     -DataDir $DataDir `
-    -TimeoutSec $TimeoutSec | Out-Host
+    -TimeoutSec $TimeoutSec @extra | Out-Host
 
   $reportPath = Join-Path $reportsDir "$ReportName.htm"
   if (-not (Test-Path $reportPath)) { return $null }
   return $reportPath
+}
+
+# --- EA-vs-indicator precheck (added 2026-07-06 after batch-04 hang) -----------
+# Static: pool files that live in an indicators folder / carry indicator-ish
+# names are not EAs at all. Dynamic: after a no-report run, the tester journal
+# spam "cannot open file '...\MQL4\indicators\X.ex4'" identifies an EA whose
+# required custom indicators are missing -> skip its remaining symbols entirely.
+
+function Test-IndicatorPath {
+  param([string]$RelPath)
+  return ($RelPath -match '(?i)(\\|^)indicators?\\' -or
+          [IO.Path]::GetFileNameWithoutExtension($RelPath) -match '(?i)(indicator|no repaint arrow|_arrows?$)')
+}
+
+function Get-RunFailureReason {
+  # scan tester + terminal journals for lines newer than $Since
+  param([datetime]$Since)
+  $tails = @()
+  foreach ($lg in @((Join-Path $DataDir ("tester\logs\" + (Get-Date -Format 'yyyyMMdd') + ".log")),
+                    (Join-Path $DataDir ("logs\"        + (Get-Date -Format 'yyyyMMdd') + ".log")))) {
+    if (Test-Path $lg) { $tails += Get-Content $lg -Tail 400 -ErrorAction SilentlyContinue }
+  }
+  if (-not $tails) { return "m2-no-report" }
+  $indi = $tails | Select-String -Pattern "cannot open file '.*\\MQL4\\indicators\\([^']+)'" -AllMatches |
+    ForEach-Object { $_.Matches | ForEach-Object { $_.Groups[1].Value } } | Sort-Object -Unique
+  if ($indi) { return ("missing-indicator: " + (($indi | Select-Object -First 5) -join '|')) }
+  if ($tails -match '(?i)cannot open .*expert|is not .*expert|invalid ex4') { return "not-an-ea-or-invalid" }
+  return "m2-no-report"
 }
 
 New-Item -ItemType Directory -Force $SmokeDir | Out-Null
@@ -156,11 +187,24 @@ foreach ($row in $worklist) {
     continue
   }
 
+  # precheck 1 (static, free): file is an indicator, not an EA
+  if (Test-IndicatorPath -RelPath $relativePath) {
+    foreach ($symbol in $targetSymbols) {
+      $results.Add((New-Row -BatchId $Batch -Index $eaCounter -EaName $expertName -RelPath $relativePath -Symbol $symbol -Note "precheck-indicator-file"))
+    }
+    continue
+  }
+
   Copy-Item -LiteralPath $sourcePath -Destination (Join-Path $SmokeDir $fileName) -Force
 
   $m2Rows = @()
   $m2TradeHits = 0
+  $eaDead = $null   # set when a no-report run classifies as missing-indicator / not-an-ea
   foreach ($symbolWanted in $targetSymbols) {
+    if ($eaDead) {
+      $m2Rows += New-Row -BatchId $Batch -Index $eaCounter -EaName $expertName -RelPath $relativePath -Symbol $symbolWanted -Note $eaDead
+      continue
+    }
     $symbolActual = Resolve-SymbolName -Wanted $symbolWanted -Available $availableSymbols
     if (-not $symbolActual) {
       $m2Rows += New-Row -BatchId $Batch -Index $eaCounter -EaName $expertName -RelPath $relativePath -Symbol $symbolWanted -Note "symbol-unavailable"
@@ -169,9 +213,14 @@ foreach ($row in $worklist) {
 
     $reportName = "MS4_{0}_{1:D4}_M2_{2}" -f $Batch, $eaCounter, $symbolWanted
     try {
+      $runStarted = Get-Date
       $reportPath = Invoke-TestRun -Expert $expertPath -Symbol $symbolActual -FromDate $m2From -ToDate $m2To -Model 2 -ReportName $reportName
       if (-not $reportPath) {
-        $rowObj = New-Row -BatchId $Batch -Index $eaCounter -EaName $expertName -RelPath $relativePath -Symbol $symbolWanted -Note "m2-no-report"
+        # precheck 2 (dynamic): classify the failure from tester/terminal journal;
+        # missing-indicator / not-an-ea kills the EA's remaining symbols (no wasted timeouts)
+        $reason = Get-RunFailureReason -Since $runStarted
+        if ($reason -ne "m2-no-report") { $eaDead = $reason }
+        $rowObj = New-Row -BatchId $Batch -Index $eaCounter -EaName $expertName -RelPath $relativePath -Symbol $symbolWanted -Note $reason
       } else {
         $parsed = Parse-ReportJson -ReportPath $reportPath
         $m2Trades = if ($parsed) { [double]$parsed.total_trades } else { 0 }
