@@ -43,8 +43,21 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
   Happy thaipop (6.6/70t/DD 1.06%) · 1 MINUTE SCALPER (1.3/199t/DD 0.62%) · 12431_Happy Fast Money (3.11/69t)
 - 🟡 ตัวมีลุ้น (เทรดเยอะ DD สมเหตุผล): DanceT (EURUSD 1.53/819t + USDJPY 1.51/657t สอง symbol สอดคล้อง) ·
   CommunityPower 2.58.3 (1.94/114t — EA community ดังมี source จริง) · Flexy The Dragon (1.38/561t)
-- **คิวถัดไป:** 7 ตัวที่เหลือ (ไม่รวม DQ) เข้า **BWD-OOS 2020-22 sweep รวมกับ Tier A ของ batch ถัดไป**
-  (สูตรเดียวกับ ORDER-040 — อย่ารันแยกทีละ batch เปลือง setup)
+- ~~คิวถัดไป: BWD-OOS~~ → **✅ BWD-OOS 2020-22 รันแล้ว (Claude, 2026-07-06 เย็น — สูตร ORDER-040,
+  script `_mt5_auto\ab_sets\bwdoos_mt4_sweep_b0203.ps1`, ผลดิบ `_mt5_auto\BWDOOS_MT4_B0203.csv`):**
+
+| EA | Sym | 2020-22: PF / trades / net / DD | VERDICT (Claude) |
+|---|---|---|---|
+| DanceT | EURUSD | 0.09 / 486 / -10,293 / **DD 102.8%** 💀 | ❌ **REJECT ถาวร** — ล้างพอร์ตจริง (1.53 ใน 2023-26 = regime ล้วน) |
+| Flexy The Dragon v2.8 | EURUSD | 0.46 / 1448 / -8,748 / **DD 89.2%** | ❌ **REJECT ถาวร** — ตายแบบเดียวกัน |
+| 12431_Happy Fast Money | EURUSD | 0.24 / 485 / -9,890 / **DD 99.1%** | ❌ **REJECT ถาวร** — ยืนยัน tight-TP suspect |
+| Happy thaipop | EURUSD | 1.25 / 430 / +2,470 / **DD 73.2%** | 🅿️ **PARKED-resize-first** — PF>1 สองระบอบจริง (6.6→1.25) แต่ edge บางลงมาก + DD ทะลุ cap (กฎ user: cap breach ห้าม reject ตรง — แต่ priority ต่ำ) |
+| **CommunityPower 2.58.3** | EURUSD | **1.91 / 1212 / +40,573 / DD 74.1%** | 🟡 **CONDITIONAL เด่นสุดของ batch 02-03** — PF ~1.9 **ทั้งสองระบอบ** (1.94 ใน 23-26, 1.91 ใน 20-22 ปี hostile!) = durability จริงแบบเดียวกับ ClevrFX · DD 74% ที่ default lot → **resize-first** + เป็น community EA มี source/doc จริง → คิวเดียวกับ ORDER-041 flow (spread-stress + หา lot input + SL check) |
+| 1 MINUTE SCALPER | USDJPY | 0 trades ใน window | 🅿️ PARKED-no-data (ตัดสินไม่ได้ — อาจ time-gated/expiry; ไม่คุ้มไล่ต่อ) |
+
+**Pattern ยืนยันรอบที่ 3:** Tier A จาก smoke 2023-26 → BWD-OOS 2020-22 ฆ่าได้ 4/6 ·
+รอดจริง 1 (CommunityPower) = อัตราเดียวกับ batch-01 (19→2) — **ด่านนี้ถูกและเด็ดขาด คงเป็น gate
+บังคับอันดับแรกของทุก batch ต่อไป**
 | 036-05 | 50 | OPEN | | | | | |
 | 036-06 | 50 | OPEN | | | | | |
 | 036-07 | 50 | OPEN | | | | | |
