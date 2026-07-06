@@ -1792,7 +1792,20 @@ checkpoint/resume ง่าย) เรียง folder ใหม่→เก่�
 - **หมดอายุ/deploy ไม่ได้:** EA GOLD CENTER "Expried 11.04.2025" · IR Whale "Expiry" → เช็คก่อนเสียแรง
 - **คัดเข้า ORDER-037 (top robust, ไม่ใช่ grid ชัด):** (oh) pun fix lot v05 (4 sym fixed-lot) · EA_GapinFX (gap, 2 sym PF2+) · North East Way (4 sym PF2+ แต่ DD30%)
 
-## ORDER-037 — artifact-check top survivors จาก mass-smoke (Model-4 + expiry) — `OPEN` · **ทำได้: Codex · oc-dev** (deploy .ex5 + run) · 👉 **แนะ: oc-dev/Codex** · ⚠️ **Model-4 รันเดี่ยว** (role: code+batch, เลน 2)
+## ORDER-037 — artifact-check top survivors จาก mass-smoke (Model-4 + expiry) — `PARTIAL(Claude รัน pun fix lot เอง = ผ่านทุกด่าน 🏆; GapinFX + North East Way ยังค้าง)` · ทำได้: Codex/oc-dev · 👉 oc-dev/Codex
+
+**✅ (oh) pun fix lot v05 = ผ่านครบ artifact + durability (Claude/Opus รันเอง 2026-07-05) — external EA ที่แข็งสุดที่แล็บเคยเจอ:**
+- **Model-4 every-tick (USDJPY, 2025.07-26.07, 100% real ticks): PF 1.51/1913t/DD 3.42%** (M1 1.63 → M4 1.51 =
+  **ไม่ collapse = ไม่ใช่ tight-TP artifact**, ต่างจาก Recovery 3.37→1.50)
+- **Full-window 2023-2026 year-split: ทุกปีบวก** 2023 PF1.80 / 2024 1.45 / 2025 1.29 / 2026 1.34 · FULL 1.46/6866t/balDD 1.93%
+- **MC 5000: ruin 0% · P(loss) 0% · worst DD 4.10%** · fixed-lot → DD จริงไม่ใช่ martingale
+- **⚠️ CAVEAT ก่อนเชื่อจริง:** (1) เป็น compiled EA **กลไกยังไม่รู้** — ต้องอ่าน source `(OH) EA\(oh) pun fix lot v05.mq5`
+  ก่อน (fixed-lot grid/averaging? scalper? มี SL ไหม) (2) **high-freq ~8 ไม้/วัน = ไวต่อ spread/commission มาก** —
+  backtest spread ≠ Exness จริง → **demo คือด่านตัดสิน** (นี่คือ profile ที่ backtest≠live บ่อยสุด) · reports: `ART_punfixlot_USDJPY_*`
+- **ยังค้าง: GapinFX (JPY 2.74) + North East Way (EUR 2.03, DD30%) — ยังไม่ M4** (Codex/oc-dev ทำต่อได้)
+
+**ทำไม:** survivor เป็น Model-1 บน EA ที่ส่วนใหญ่ grid/tight-TP → Model-1 หลอกได้ (Elephant PF 85→1.41).
+ด่านแรกก่อนลงแรง intake funnel = **Model-4 every-tick** (จับ tight-TP collapse) + เช็คหมดอายุ
 
 **ทำไม:** survivor เป็น Model-1 บน EA ที่ส่วนใหญ่ grid/tight-TP → Model-1 หลอกได้ (Elephant PF 85→1.41).
 ด่านแรกก่อนลงแรง intake funnel = **Model-4 every-tick** (จับ tight-TP collapse) + เช็คหมดอายุ

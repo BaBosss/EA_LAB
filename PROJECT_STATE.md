@@ -366,9 +366,13 @@ Model-4 คือด่านที่แยก "grid มี edge จริง" 
 
 **✅ ORDER-035 reviewed (Claude/Opus 2026-07-05): mass-smoke MT5 → 39 survivor แต่ส่วนใหญ่กับดัก Model-1**
 (tight-TP artifact suspect: IR Whale 3.94/DD0.75%, The One 2.32/2941t · grid DD30-60%: North East Way,
-continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 → ORDER-037 Model-4 artifact-check:** ⭐pun fix lot v05
-(4-sym fixed-lot 1.5-1.6) · EA_GapinFX (gap 2-sym PF2+) · North East Way (4-sym PF2+/DD30%). **036 MT4 = พรุ่งนี้.**
-treasure ที่ user จำได้อาจอยู่ในนี้ — ต้องผ่าน Model-4 ก่อน (Elephant lesson PF85→1.41)
+continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 → ORDER-037 Model-4 artifact-check.**
+
+**🏆 ORDER-037 (Claude รัน pun fix lot เอง 2026-07-05): (oh) pun fix lot v05 = ผ่านครบทุกด่าน = external EA
+ที่แข็งสุดที่แล็บเคยเจอ!** M4 real ticks PF 1.51 (M1 1.63 = ไม่ collapse) · full-window ทุกปีบวก (1.80/1.45/1.29/1.34) ·
+MC ruin 0%/worst DD 4.10% · fixed-lot. **⚠️ ก่อนเชื่อจริง: (1) กลไกยังไม่รู้ ต้องอ่าน source (2) high-freq
+~8 ไม้/วัน = ไวต่อ spread/commission → demo Exness คือด่านตัดสิน** (backtest≠live profile). GapinFX + North
+East Way ยังไม่ M4 · **036 MT4 = พรุ่งนี้.** → user's treasure น่าจะจริง แต่ต้องอ่านกลไก + demo ยืนยัน
 
 **✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
