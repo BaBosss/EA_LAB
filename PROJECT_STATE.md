@@ -472,6 +472,26 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
 
+**🌙 ORDER-036 overnight run batch 02-21 CLOSED (Claude, คืน 2026-07-06 → เช้า 07-07):** user สั่ง "รัน 036
+batch ไปเรื่อยๆจนถึง 4.30 เวลาไทย" — รันได้ถึง ~08:20 (เลยกำหนดเพราะ batch 20/21 กำลังวิ่งตอน 04:30 ปล่อยให้จบเอง
+ตามหลัก "หยุดเปิดใหม่ ไม่ตัดที่วิ่งอยู่") · **ผล 20 batch (02-21) ≈ 1,000 EA: survivor เข้าคิว BWD-OOS แค่ 3
+ตัว** — UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd,lot1x) · walid Ema(EURUSD+USDJPY,PF1.14-1.19,
+net~$1192รวม,consistent DD5-6%ทั้งคู่,lot1x) · TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,
+DD0.69%,lot1x) — **ยังไม่ได้รัน BWD-OOS จริง รอ session หน้า** (หยุดก่อนเพราะเลยเวลามากแล้ว)
+- **บทเรียน process ที่คุ้มที่สุดของคืนนี้ (เข้า spec ORDER-036 แล้ว): lot-check ฟรี (grep M1 report หา
+  Size column, mode=lot ฐาน vs max=lot สูงสุด, ratio≥10x=grid/martingale REJECT อัตโนมัติ) ต้องรันก่อน
+  BWD-OOS เสมอ** — ปิด batch 11-19 (9 ก้อนติด, ~450 EA) ได้ **0 BWD-OOS run เลย** เพราะ lot-check ฆ่าหมด
+  (ratio 222x-6048x พบทั่วไป) · ประหยัด compute มหาศาลเทียบกับรัน BWD ทุกตัวก่อน
+- **near-miss ที่กลายเป็นกฎ:** "2020v2" (batch 05) เกือบตัดสิน CANDIDATE จาก BWD PF2.26/DD6.27% สวย
+  แต่ grep เต็มไฟล์ trade-list เจอ lot escalation 0.10→63.92 (640x) ซ่อนกลางไฟล์ — MT4 "Max Drawdown"
+  วัดที่จุดปิดไม้ ไม่ใช่จุด exposure สูงสุด จึงโชว์ต่ำหลอกได้ **แก้ verdict เป็น REJECT ทันที** → ยืนยันกฎ
+  ≥10x auto-flag ต้อง scan "ทั้งไฟล์" ไม่ใช่ 15 แถวแรก
+- **กฎเสริมที่ยืนยันซ้ำคืนนี้:** ชื่อมี "Marti/Martin/Grid/Hedge/Ilan" = DQ ทันทีไม่ต้องเช็คเลข (VisualMartiEA
+  batch 21) · ชื่อสุภาพไม่ได้แปลว่าไม่ใช่ grid ("Take Profit" batch 20 = grid จริง lot 43x-69x ซ่อนอยู่)
+  · net profit เล็กเกิน (<$50/3mo บน default lot) = worthless แม้ PF>1 (FX Sniper, Two_MA_Cross)
+- **เหลือ:** batch 22-27 (6 ก้อน ~300 EA) ยัง OPEN — รอ session หน้าสั่งต่อ (ไม่เปิดเองแล้วเพราะเลยคัตออฟ) ·
+  3 candidate ค้างรอ BWD-OOS ก่อนอื่นเมื่อกลับมา
+
 **🗺️ แผนที่ต้องทำ — เรียง priority (2026-07-05):**
 - **P0 = ✅ DONE 2026-07-05: DEMO ATTACHED!** 7 EA บน Exness demo 60,000 USD · **demo clock เดินแล้ว →
   judge เร็วสุด 2026-10-05** · 📅 **/ea-monitor ครั้งแรก ~2026-07-19** (2 สัปดาห์ · user ส่ง live_deals.csv ตาม §6) ·
