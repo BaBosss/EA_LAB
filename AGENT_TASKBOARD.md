@@ -1991,6 +1991,26 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
+## ORDER-047 — RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวนี้ดี ลอง optimize + หลาย symbol + ปรับ TF") · swb reserve ขนาน — `RUNNING phase 1 (Claude, 2 เลน)`
+
+**⚠️ ข้อจำกัดสำคัญ: RSI from pips = .ex4 ล้วน ไม่มี source** (zip มีแต่ ex4) → optimize ได้แค่ input MT4
+optimizer บนกล่องดำ + มี recovery ladder (Lots_plus ×6) ข้างใน = **เสี่ยง overfit สูง** → ทำ breadth
+(ค่าจริง เสี่ยงต่ำ) ก่อน optimize (เสี่ยงสูง คุม IS/OOS เข้ม) · broker เลนเทส ThinkMarkets มี M1 10 คู่
+**แผน 3 เฟส:**
+1. **Breadth (RUNNING):** RSI (เลน1, `rsi_breadth_lane1.ps1`→`RSI_BREADTH.csv`) + swb flat (เลนMT4b,
+   `swb_breadth_mt4b.ps1`→`SWB_BREADTH.csv`) · default params · 10 symbol @ H1 + EURUSD TF sweep
+   M15/M30/H4 · forward 2026.03-07 (ข้อมูลแน่นอนทุกคู่) → หา symbol/TF ที่เทรด+กำไร
+2. **BWD confirm:** top symbol จากเฟส 1 → BWD 2020-22 (เฉพาะคู่ที่ data ถึง) ฆ่า regime-luck ก่อนเสีย
+   compute optimizer
+3. **Optimize:** เฉพาะตัวรอด → MT4 optimizer จูน signal params (RSI_period/over_s/over_b/TP_pips/
+   Distance_pips) IS 2020-2023 → OOS 2023-2026 + Model-0 · **ทุกเลข optimizer = in-sample ห้ามเชื่อจน
+   ผ่าน OOS+M0** (กฎ repo) · default (Period_5/TP15/Dist30/RSI14/30-70) = prior ที่ผ่านมาแล้ว
+**Acceptance:** ตาราง breadth/BWD/opt ต่อเฟส · verdict = Claude · **ห้าม:** เชื่อ in-sample · แก้ window นอก 3 ปี
+
+**ผล:** _(รอเฟส 1)_
+
+---
+
 ## ORDER-046 — Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool — `REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — 1 win ฟรี + 1 marginal-revive + 2 ยืนยันตายถาวร)` _(user ท้วง 2026-07-07: "จะไม่ optimize เลยเหรอ" — คำตอบ: probe เฉพาะตัวที่ input โครงสร้างเดียวปิดจุดตายได้ ไม่ใช่ tune หา PF สวย)_
 
 **🏁 VERDICT (Claude, 2026-07-07 ค่ำ — `BWDOOS_MT4_REVIVAL.csv` + `_REVIVAL2.csv`):**
