@@ -46,7 +46,8 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-12 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 20 | 0 | 8 | 172 | **0/11 survivor — ทุกตัวตายจาก lot-check ฟรี ไม่ต้องรัน BWD เลย** ดู triage ล่างตาราง |
 | 036-13 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 10 | 180 | **0/6 survivor — ทุกตัวตายจาก lot-check ฟรี (33x-38,750x)** ดู triage ล่างตาราง |
 | 036-14 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 7 | 0 | 5 | 188 | **0/5 survivor — lot-check ฆ่าทั้งหมด (656x-32,321x)** batch ที่ 5 ติดกัน (11-15) ไม่ต้องรัน BWD |
-| 036-17 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
+| 036-17 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 2 | 1 | 6 | 191 | **0/2 survivor — lot-check ฆ่าทั้งหมด (2691x, 717x)** batch ที่ 7 ติดกัน (11-17) ไม่ต้องรัน BWD |
+| 036-19 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-15 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 8 | 1 | 11 | 180 | **0/5 survivor — lot-check ฆ่าทั้งหมด (1518x-10244x, ชื่อ "Ilan" = grid/martingale ชื่อดังในวงการ)** batch ที่ 4 ติดกันไม่ต้องรัน BWD |
 | 036-16 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 0 | 7 | 186 | **0/5 survivor — lot-check ฆ่าทั้งหมด (1104x-4663x) + 2 ตัว worthless (net~$0-3)** batch ที่ 6 ติดกัน (11-16) ไม่ต้องรัน BWD |
 | 036-18 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
@@ -187,6 +188,16 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 **🔧 แก้ spec ถาวร (สำคัญที่สุดของคืนนี้):** สลับลำดับ — **lot-check จาก M1 smoke report เดิม (ฟรี,
 มีอยู่แล้ว) ต้องทำ "ก่อน" ส่ง BWD-OOS เสมอ ไม่ใช่หลัง** เดิม spec ให้ BWD-OOS ก่อนแล้วค่อย
 lot-check EA ที่ผ่าน — กลับด้านสิ้นเปลือง ดู stage-2 spec ที่แก้ด้านล่าง
+
+## Triage batch 17 (Claude, 2026-07-07)
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| Oracle EA | ×2,691 | ❌ AUTO-REJECT |
+| Phoenix_EA_v5_6_03 | ×717 | ❌ AUTO-REJECT |
+| No Sleep EA (Tier B) | (ไม่เช็ค) | ❌ REJECT — DD 43.42% อยู่แล้วจาก smoke gate + ชื่อ "No Sleep" บอกกลไกตรงตัว (เทรดตลอดไม่พัก = ไม่มีการป้องกัน) |
+
+**ผล batch 17 สุดท้าย: 0/2 survivor — batch ที่ 7 ติดกัน (11-17) ปิดจบไม่ต้องรัน BWD-OOS**
 
 ## Triage batch 16 (Claude, 2026-07-07)
 
