@@ -53,7 +53,7 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-19 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 6 | 0 | 4 | 190 | **0/4 survivor — lot-check ฆ่าทั้งหมด (720x-3055x)** batch ที่ 9 ติดกัน (11-19) ไม่ต้องรัน BWD |
 | 036-20 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 4 | 0 | 1 | 195 | **1 candidate เข้าคิว BWD-OOS: TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,560trd,DD0.69%,lot 1x clean)** — reject: "Take Profit"(ชื่อหลอก จริงๆ lot 43x-69x=grid ซ่อนอยู่), TradePad USDJPY-side worthless(net$36) |
 | 036-21 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 9 | 0 | 2 | 39 | **2 candidates เข้าคิว BWD-OOS: UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd), walid Ema(EURUSD+USDJPY,PF1.14-1.19,net~$1192 รวม,consistent 2 symbol)** — reject: TSR-2018 v5.0_Fix(lot 128x=grid), VisualMartiEA(ชื่อ=martingale), FX Sniper/Two_MA_Cross(worthless net<$40), Turbo-profit v3.0(อ่อน PF1.23 net$195 เดี่ยว symbol) |
-| 036-22 | 50 | REVIEWED(Claude 07-07 บ่าย — ยกเว้น EA 1-7 ที่โดน zombie-abort, re-smoke อยู่ท้าย post-chain) | 9 | 0 | 6 | 185 | **1 candidate เข้าคิว BWD: Yetti3+NewsSherry (EU PF1.51/+700/2911trd · JP PF4.35/+94 · lot ×5 ทั้งคู่)** — reject: Scalping XTendFX (lot ×32/×256 = martingale ladder จริง แม้ PF 3-5.9), Perceptrader/Signalspro007 ×3 = "_fix" DQ (cracked), PumLot worthless (net $45) · ดู triage ล่างตาราง | 
+| 036-22 | 50 | REVIEWED(Claude 07-07 — ครบทั้ง 50 รวม 22R re-smoke: 7 ตัว zombie-abort = 0 candidate เพิ่ม) | 10 | 0 | 8 | 182 | **1 candidate เข้าคิว BWD: Yetti3+NewsSherry (EU PF1.51/+700/2911trd · JP PF4.35/+94 · lot ×5 ทั้งคู่)** — reject: Scalping XTendFX (lot ×32/×256 = martingale ladder จริง แม้ PF 3-5.9), Perceptrader/Signalspro007 ×3 = "_fix" DQ (cracked), PumLot worthless (net $45) · ดู triage ล่างตาราง | 
 | 036-23 | 50 | REVIEWED(Claude 07-07 บ่าย — b9ulqxtba รันจบจริง exit 0, ไม่ต้อง relaunch: ABORT ท้าย log ตกแค่ M1 USDJPY ของ "EA HOPE V1.20_fix" ที่ DQ อยู่แล้วจากชื่อ ไม่กระทบ Tier A) | 5 | 0 | 2 | 193 | **1 candidate เข้าคิว BWD-OOS: 143 E4.7.4 v1(EURUSD,PF3.0,net$2016,522trd,DD9.03%,lot×3 clean via mt4_lotcheck.ps1)** — ✅ **append เข้า targets resurrect sweep แล้ว (แถวท้ายสุด, ทันก่อน Import-Csv)** · DQ ทันทีจากชื่อ "_fix": Gold Buster MT4-2.3-fix-1428+ (EU+JP), Zeus Gold Hedge V1.2_fix_1420 (EU+JP) |
 | 036-24 | 50 | REVIEWED(Claude 07-07 บ่าย — เลน MT4b, biakpwz4g) | 24 | 0 | 12 | 164 | **1 candidate เข้าคิว BWD-OOS: Z61(EURUSD PF2.1/net$1734/1201trd/DD6.04% + USDJPY PF2.45/net$978/1037trd/DD4.03%,lot×1/×5.6 clean — ⚠️ entries ดิบ 12,527/13,284 สูงกว่า total_trades มาก = ต้องดู trade-list ละเอียดตอน BWD ว่า basket/hedge เปิดหลายไม้/trade หรือไม่)** — reject: EABOT2.3(×281/×69) EABOT2.5(×176/×43) Gold Stuff EA V7.0(×61/×34, **ยืนยัน precedent decision 2026-06-23 เดิม — EA ตัวเดียวกันที่เคย DQ ไปแล้ว**) Z26(×21/×27) Z27(×46/×78) Z30(×210/×14) Z46(×210/×162) Z47(×183/×108) Z52(×162/×243) Z57(×365/×61) = 9 ตัวตาย lot-check · Bistion_v12 (EU PF18.02/70trd vs JP PF0.51/-169 = thin-sample/regime-lucky cross-symbol) · SkyFX EA_fix = DQ ชื่อ |
 | 036-25 | 50 | REVIEWED(Claude 07-07 บ่าย — เลน MT4b, b0f8qg3ag) | 14 | 1 | 8 | 177 | **0/10 survivor — ปิดสะอาดไม่ต้องรัน BWD-OOS เลย** — Bonnitta EA MT4 DOWNLOADMQ4.COM(lot×128/×26+ชื่อเว็บโหลดเถื่อน) EA FREEDOM PRO-FULL LICENSE(lot×9/×7 borderline+ชื่อ"FULL LICENSE"=license-crack signal เดียวกับ Bonnitta) EA-HOKKYDJONG(lot×110/×110) Yetti Pro. by @SoftechFX_Robot(lot×642.5/×110, **แฝดกับ Yetti Pro_fix ที่ DQ ชื่อ — เลขเกือบเหมือนกันเป๊ะ 662/1379/4221.9 vs 668/1379/4218.62 = ตัวเดียวกัน ก็อปมาแปะชื่อคนละอัน**) = 4 ตัวตาย lot-check/ชื่อ · **SL=2GRIDE NEW ชื่อมี"GRID"แต่ lot ×1 สะอาด — ตายด้วย cross-symbol แทน (EU PF1.86/+277 vs JP PF0.48/-539 = regime-dependent เหมือน cci ma ea เดิม)** · Nong Tom(Tier B DD66% EU vs DD19% JP ไม่นิ่ง) · FX SCALPER X New Fix + Yetti Pro_fix = DQ ชื่อ "_fix" · Forex Tramp 4.0.0 pb(lot×9.5 borderline+thin 27trd)→PARKED-marginal · Robot FX Saturn Scalping(lot×1 สะอาดแต่ USDJPY net$3.75)→PARKED-worthless |
@@ -112,6 +112,50 @@ batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-aud
 
 **🔧 แก้ spec ถาวร:** stage-2 ข้อ 2 ห้ามใช้ mspt-grep อีก — ใช้ `scripts/mt4_lotcheck.ps1`
 (อ่านคอลัมน์ Size ของแถว entry เท่านั้น) กับทุก lot-check ต่อจากนี้
+
+## 🏁 Resurrect sweep VERDICTS (Claude, 2026-07-07 เย็น — `_mt5_auto/BWDOOS_MT4_RESURRECT.csv` + lot-check 3 ปีด้วย mt4_lotcheck.ps1)
+
+**Spread-stress 30pts (2020-22):**
+
+| EA | baseline → SPR30 | Verdict |
+|---|---|---|
+| **UnNomGuaiV1.132** | PF 1.89→**1.83** · net 8527→7867 · DD 18.7→**19.0%** · lot ×2.3 เท่าเดิม | ✅ **ผ่าน spread-stress แทบไม่สะเทือน — finalist ตัวจริง** → Model-0 every-tick กำลังรัน (ด่านสุดท้าย) |
+| 2020v2 | PF 2.26→1.23 · DD 6.27%→**65.43%** 💀 + lot-check 3ปี ×14.5 (≥10x) | ❌ **REJECT ถาวร (ฆ่าสองเด้ง)** — edge = spread-dependent + ladder ลึกจริงเมื่อเจอ stress |
+| Automated Forex Grail | PF 1.53→**0.62** · net **-9,920** · DD **99.2%** 💀 | ❌ **REJECT ถาวร** — พังยกพอร์ตแค่เจอ spread 3 pips |
+
+**BWD 2020-22 ของกองคืนชีพ + lot-check บน report 3 ปี (ladder ลึกกว่าที่ 4 เดือนเห็นเสมอ):**
+
+| EA | BWD: PF/net/DD | lot 3ปี | Verdict |
+|---|---|---|---|
+| **Yetti3+NewsSherry** (b22) | 1.25 / +1,953 / 26.3% (12,005 trd) | ×5 | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** (PF บาง + 12k ไม้ = spread ชี้ขาด) |
+| **EAForexTH_MultiHedge_1.0** | 1.61 / +1,120 / 20.3% | ×1 แบน | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** |
+| **Oracle EA** | 1.90 / +9,988 / 36.1% | ×5.3 (54 entries จาก 1,276 trades — กลไก pending/partial ต้องอ่านถ้ารอด) | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** |
+| EAForexTH_Scalper_S3_1.0 | **10.71** / +19,155 / 13.0% (13,190 entries) | ×2 | ⏳ **absurd-PF สองระบอบ = สงสัย tick-model artifact หนัก** → spread-stress กำลังรัน (รอดแล้วต้อง Model-0 ซ้ำ) |
+| Expert | 1.11 / +12,904 / 31.6% | ×2 (4→8) | ⏳ ผ่าน BWD เส้นยาแดง (PF 1.11) → spread-stress กำลังรัน (คาดตาย) |
+| FZ2 | 3.05 / +9,855 / DD 4.77% (เลขสวยมาก!) | **×18.6** ≥10x | ❌ **AUTO-REJECT** — ladder ลึกจริงบน 3 ปี (4 เดือนเห็นแค่ ×6) · DD 4.77% = recovery ที่"ยังรอด" ไม่ใช่ความเสี่ยงจริง (structural gate 2026-06-23) |
+| swb grid | 2.10 / +14,265 / **DD 51.8%** | **×25.9** ≥10x | ❌ **AUTO-REJECT** — grid-trap ยืนยันสองสัญญาณ |
+| SUPERTRENDSURFER | 0.96 / -4,711 / DD 87.2% | ×104 | ❌ REJECT ถาวร |
+| Envelope 2 | 0.98 / -367 / DD 43.9% | ×2 | ❌ REJECT — regime EA |
+| MACrossoverMaster | 0.97 / -2,230 / DD 39.1% | ×1 | ❌ REJECT — regime EA |
+| ema_crossmod | 0.56 / -9,705 / DD 98.6% | ×1.5 | ❌ REJECT ถาวร |
+| EA SCALP RENKO v2.3 | 0.96 / -9,938 / DD 99.4% | ×1 | ❌ REJECT ถาวร |
+| MA_MA_2-35_EA | 0.80 / -3,529 / DD 39.5% | ×1 | ❌ REJECT |
+| firebird v63f | 0.87 / -2,339 / DD 29.2% | ×1 | ❌ REJECT |
+| Moving Average | 0.81 / -3,057 / DD 41.9% | — | ❌ REJECT |
+| 143 E4.7.4 v1 (b23) | 0.85 / -7,810 / **DD 94.4%** | ×9.8 | ❌ **REJECT ถาวร** — PF 3.0 ปี 2023-26 = regime ล้วน (ซ้ำรอย ORDER-037) |
+| Phoenix / GBPJPY1H90PCWR / killer_sell / GridMACDM | 0 trades ใน window (USDJPY ทั้งหมด) | — | 🅿️ PARKED-no-data |
+| TradePad · VisualMartiEA | TIMEOUT 902s (TradePad โดน 2 ครั้ง) | ×1 / ×5 (4 เดือน) | ⏳ retry 1800s อยู่ใน finalist round |
+
+**Batch-22R re-smoke (7 ตัว zombie-abort):** 0 candidate — LamBow (EU PF 0.3 พัง / JP net $6.75 =
+cross-symbol + worthless), KZM Reject, ที่เหลือ 0-trade/skip · AA_Supply Demand = m2-error parse
+(duplicate key TP_PIP/TP_pip — จดไว้ ไม่เร่งด่วน)
+
+**Finalist round กำลังรัน (เลน 1, `lane1_finalist_070707.ps1` → `BWDOOS_MT4_FINALIST.csv`):**
+UnNomGuai Model-0 · SPR30 ×5 (Yetti3/MultiHedge/Oracle/Scalper_S3/Expert) · retry 1800s ×2
+(TradePad/VisualMarti) · **คิวถัดไปหลังจบ: Z61 (b24) BWD EU+JP**
+
+**บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
+(FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
 
 ## Triage batch 22 (Claude, 2026-07-07 บ่าย — lot-check ด้วย mt4_lotcheck.ps1 ตัวใหม่)
 
