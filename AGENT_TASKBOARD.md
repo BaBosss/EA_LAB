@@ -2007,7 +2007,10 @@ optimizer บนกล่องดำ + มี recovery ladder (Lots_plus ×6) �
    ผ่าน OOS+M0** (กฎ repo) · default (Period_5/TP15/Dist30/RSI14/30-70) = prior ที่ผ่านมาแล้ว
 **Acceptance:** ตาราง breadth/BWD/opt ต่อเฟส · verdict = Claude · **ห้าม:** เชื่อ in-sample · แก้ window นอก 3 ปี
 
-**ผล:** _(รอเฟส 1)_
+**ผล phase 1 breadth (forward 2026.03-07 M1, default — ยังเชื่อไม่ได้จนผ่าน BWD):**
+- **RSI (`RSI_BREADTH.csv`):** เด่น = **AUDUSD (3.75/171trd/DD0.73) · AUDCAD (4.45/191/DD0.92)** (คู่ใหม่ นอกเหนือ EURUSD ที่ validate แล้ว, sample เยอะ DD ต่ำ) · EURUSD 2.59/149 · GBPUSD 3.09/71 · XAUUSD 40.78/724 (สูงผิดปกติ = gold forward เทรนด์ ต้อง BWD) · **TF sweep EURUSD เสถียรทุก TF (M15 2.65/M30 2.48/H1 2.59/H4 2.83) = edge ไม่ใช่ TF-artifact** · ตาย: USDJPY 0.08/USDCAD 0.26 · thin: CHFJPY/EURGBP/EURCHF (<60 ไม้ net<$65)
+- **swb flat (`SWB_BREADTH.csv`):** กำไรแทบทุกคู่ — AUDUSD 3.3 · AUDCAD 3.25 · CHFJPY 2.98 · GBPUSD 2.82 · XAUUSD **23.1/net$100k** (gold grid เทรนด์) · TF: H4 3.35 ดีสุด
+- **→ phase 2 RUNNING (`order047_phase2_bwd.ps1`→`ORDER047_BWD.csv`):** BWD 2020-22 · RSI {EURUSD,GBPUSD,AUDUSD,AUDCAD,XAUUSD} + swb {AUDUSD,AUDCAD,CHFJPY,XAUUSD} + lot-check
 
 ---
 
