@@ -1,0 +1,10 @@
+﻿"ea","symbol","full_pf","full_trades","full_net","full_dd_pct","note"
+"RSI from pips_EA","EURUSD",2.32,1591.0,3181.85,7.6,RSI
+"RSI from pips_EA","GBPUSD",,0.0,0.0,0.0,RSI
+"RSI from pips_EA","AUDUSD",2.33,1578.0,4037.08,50.46,RSI
+"RSI from pips_EA","AUDCAD",1.19,1050.0,521.11,51.94,RSI
+"RSI from pips_EA","XAUUSD",4.5,6390.0,7768.14,57.66,RSI
+"swb grid 4.1.0.3_h","AUDUSD",2.46,1610.0,12114.48,25.52,SWB-FLAT
+"swb grid 4.1.0.3_h","AUDCAD",2.51,1118.0,7281.01,8.63,SWB-FLAT
+"swb grid 4.1.0.3_h","CHFJPY",,0.0,0.0,0.0,SWB-FLAT
+"swb grid 4.1.0.3_h","XAUUSD",6.21,11786.0,194217.57,17.08,SWB-FLAT

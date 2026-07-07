@@ -2010,7 +2010,16 @@ optimizer บนกล่องดำ + มี recovery ladder (Lots_plus ×6) �
 **ผล phase 1 breadth (forward 2026.03-07 M1, default — ยังเชื่อไม่ได้จนผ่าน BWD):**
 - **RSI (`RSI_BREADTH.csv`):** เด่น = **AUDUSD (3.75/171trd/DD0.73) · AUDCAD (4.45/191/DD0.92)** (คู่ใหม่ นอกเหนือ EURUSD ที่ validate แล้ว, sample เยอะ DD ต่ำ) · EURUSD 2.59/149 · GBPUSD 3.09/71 · XAUUSD 40.78/724 (สูงผิดปกติ = gold forward เทรนด์ ต้อง BWD) · **TF sweep EURUSD เสถียรทุก TF (M15 2.65/M30 2.48/H1 2.59/H4 2.83) = edge ไม่ใช่ TF-artifact** · ตาย: USDJPY 0.08/USDCAD 0.26 · thin: CHFJPY/EURGBP/EURCHF (<60 ไม้ net<$65)
 - **swb flat (`SWB_BREADTH.csv`):** กำไรแทบทุกคู่ — AUDUSD 3.3 · AUDCAD 3.25 · CHFJPY 2.98 · GBPUSD 2.82 · XAUUSD **23.1/net$100k** (gold grid เทรนด์) · TF: H4 3.35 ดีสุด
-- **→ phase 2 RUNNING (`order047_phase2_bwd.ps1`→`ORDER047_BWD.csv`):** BWD 2020-22 · RSI {EURUSD,GBPUSD,AUDUSD,AUDCAD,XAUUSD} + swb {AUDUSD,AUDCAD,CHFJPY,XAUUSD} + lot-check
+**ผล phase 2 BWD 2020-22 (`ORDER047_BWD.csv` + lot-check — 3 ปีเผยความจริงที่ forward ซ่อน):**
+- **RSI = EURUSD-specific เท่านั้น** (คู่อื่นตายหมด): EURUSD DD 7.6%/×6 ✅ · **AUDUSD DD 50.5%/×11** ·
+  AUDCAD DD 51.9%/×11 · **XAUUSD DD 57.7%/×19** — forward DD <1% คือ regime trap เป๊ะ (ปีเทรนด์ grid
+  ลงลึก 11-19 ชั้น vs EURUSD 6) · GBPUSD 0 เทรด window → **สรุป: อย่า deploy RSI คู่อื่น**
+- **swb กลับน่าสนใจข้ามคู่:** AUDCAD DD 8.63%/×3 · AUDUSD DD 25.5%/×5 · XAUUSD DD 17.1%/×5 —
+  **ดีกว่า swb-EURUSD (M0 DD 42%) ชัด** → phase 3 spread+M0 กำลังรัน (`order047_phase3_swb.ps1`)
+- **RSI ไม่ optimize (ตัดสิน):** EURUSD ผ่านครบทุกด่านที่ default อยู่แล้ว + เป็น .ex4 ไม่มี source →
+  จูน black-box = overfit risk >> gain เล็กน้อย · TF ก็เสถียรทุก TF อยู่แล้ว = ไม่มีอะไรให้ปรับ · **คำตอบ
+  "หลาย symbol/ปรับ TF" = symbol เจาะจง EURUSD, TF ไหนก็ได้** · ต่อยอดจริง = สร้าง original RSI-MR ใน
+  Boss V2 (source ครบ optimize ได้เต็ม) ดู `RSI_FROM_PIPS_REVERSE_ENGINEERING.md`
 
 ---
 
