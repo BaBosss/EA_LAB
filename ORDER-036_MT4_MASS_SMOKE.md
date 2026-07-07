@@ -51,9 +51,9 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-17 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 2 | 1 | 6 | 191 | **0/2 survivor — lot-check ฆ่าทั้งหมด (2691x, 717x)** batch ที่ 7 ติดกัน (11-17) ไม่ต้องรัน BWD |
 | 036-18 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 11 | 179 | **0/5 survivor — lot-check ฆ่าทั้งหมด (222x-6048x)** batch ที่ 8 ติดกัน (11-18) ไม่ต้องรัน BWD |
 | 036-19 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 6 | 0 | 4 | 190 | **0/4 survivor — lot-check ฆ่าทั้งหมด (720x-3055x)** batch ที่ 9 ติดกัน (11-19) ไม่ต้องรัน BWD |
-| 036-20 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
-| 036-21 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
-| 036-22 | 50 | OPEN | | | | | |
+| 036-20 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 4 | 0 | 1 | 195 | **1 candidate เข้าคิว BWD-OOS: TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,560trd,DD0.69%,lot 1x clean)** — reject: "Take Profit"(ชื่อหลอก จริงๆ lot 43x-69x=grid ซ่อนอยู่), TradePad USDJPY-side worthless(net$36) |
+| 036-21 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 9 | 0 | 2 | 39 | **2 candidates เข้าคิว BWD-OOS: UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd), walid Ema(EURUSD+USDJPY,PF1.14-1.19,net~$1192 รวม,consistent 2 symbol)** — reject: TSR-2018 v5.0_Fix(lot 128x=grid), VisualMartiEA(ชื่อ=martingale), FX Sniper/Two_MA_Cross(worthless net<$40), Turbo-profit v3.0(อ่อน PF1.23 net$195 เดี่ยว symbol) |
+| 036-22 | 50 | OPEN (หยุดเปิดเพิ่ม — เกิน 04:30 คัตออฟ, ดู PROJECT_STATE overnight summary) | | | | | |
 | 036-23 | 50 | OPEN | | | | | |
 | 036-24 | 50 | OPEN | | | | | |
 | 036-25 | 50 | OPEN | | | | | |

@@ -73,6 +73,7 @@ _mt5_auto/*.log
 
 # MT4 auto artifacts
 _mt4_auto/reports/
+_mt4_auto/ini/
 _mt4_auto/optimizations/
 
 # Large zip archives (EA vendor zips, session archives)
