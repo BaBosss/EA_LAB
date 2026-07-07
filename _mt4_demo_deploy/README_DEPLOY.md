@@ -11,8 +11,11 @@ C6F31A2A3DF8F4A9D8D375D86801B9A6  RSI from pips_EA.ex4
 ```
 
 ## กติกาเหล็ก
-1. **ใช้ compiled DEFAULTS เท่านั้น — ห้ามแก้ input แม้แต่ตัวเดียว** (ทุกด่าน validate ด้วย default:
-   แก้เมื่อไหร่ = ผล validation เป็นโมฆะทันที)
+1. **ใช้ compiled DEFAULTS — ห้ามแก้ input ใดๆ ยกเว้นข้อเดียวที่พิสูจน์แล้ว:**
+   **UnNomGuai ให้ตั้ง `space3Orders=20`** (โหลด `UnNomGuai_cap20.set` หรือกรอกมือช่องเดียว) —
+   probe 2026-07-07 พิสูจน์แล้วว่าให้ผลย้อนหลัง 3 ปี**เหมือน default ทุกเซ็นต์** (1.89/3,640/+8,527.06
+   เพราะประวัติไม่เคยเกิน 9 ไม้) = validation ยกมาใช้ได้ทั้งชุด แต่ปิด tail-risk 99 ชั้นให้ฟรี ·
+   RSI from pips = defaults ล้วน ห้ามแตะ
 2. **บัญชี demo ใหม่ล้วนๆ** — balance 10,000 USD (match backtest deposit) · แนะ ThinkMarkets demo
    (history ที่ใช้เทสมาจาก broker ตระกูลนี้) · EURUSD ต้องไม่มี suffix (ถ้ามี suffix เช่น EURUSDm
    ให้เปิด chart ตัว suffix แล้วจดไว้ — spread โปรไฟล์ต่างกันได้)

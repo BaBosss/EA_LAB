@@ -2007,7 +2007,14 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 **Acceptance:** ต่อ probe: BWD PF/DD + lot-ratio ใหม่ · ตัวที่ผ่าน → spread+M0 chain ต่อ · verdict = Claude
 **หมายเหตุ magic:** swb/Oracle/FZ2 ใช้ magic=1 ชนกับ UnNomGuai (magicbuy=1) — ถ้าตัวไหนถึงขั้น demo ต้องแยกบัญชี
 
-**ผล:** _(รอ probes จบ)_
+**ผล probes รอบแรก (2026-07-07 ค่ำ — `BWDOOS_MT4_REVIVAL.csv`):**
+
+| Probe | ผล BWD 2020-22 | Verdict |
+|---|---|---|
+| FZ2 mult=0/MM=0 | **PF 0.36 / -9,884 / DD 99.1%** (ladder หายจริง ×2.3 = .set ทำงาน ✓) | ❌ **REJECT ถาวร — พิสูจน์แล้วว่า PF 3.05 คือ recovery mechanics ล้วน ไม่มี edge ใต้ martingale เลย** (หลักฐานเชิงประจักษ์ยืนยัน structural gate 2026-06-23) |
+| UnNomGuai space3Orders=20 | **เหมือน baseline ทุกเซ็นต์** (1.89/3,640/+8,527.06/DD18.74) | ✅ **cap ไม่เคย bind ย้อนหลัง → demo ใช้ `UnNomGuai_cap20.set`** (เพิ่มเข้า `_mt4_demo_deploy\` + README แก้แล้ว) — ปิด tail-risk 99 ชั้นฟรี |
+| swb grid lot_multiplier=0 | **PF 2.40 (จาก 2.10) / DD 30.2% (จาก 51.8) / ladder ×5** | ✅ **ฟื้นที่ด่าน BWD** → SPR30+M0 กำลังรัน (stage 2) |
+| Yetti3 Boost=1.0 | **PF 1.44 (จาก 1.25) / DD 6.6% / lot แบน ×1** | ⏳ ฟื้นที่ BWD แต่จุดตายเดิมคือ spread → SPR30+M0 กำลังรัน (stage 2) |
 
 ---
 
