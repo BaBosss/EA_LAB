@@ -46,24 +46,13 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-12 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 20 | 0 | 8 | 172 | **0/11 survivor — ทุกตัวตายจาก lot-check ฟรี ไม่ต้องรัน BWD เลย** ดู triage ล่างตาราง |
 | 036-13 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 10 | 180 | **0/6 survivor — ทุกตัวตายจาก lot-check ฟรี (33x-38,750x)** ดู triage ล่างตาราง |
 | 036-14 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 7 | 0 | 5 | 188 | **0/5 survivor — lot-check ฆ่าทั้งหมด (656x-32,321x)** batch ที่ 5 ติดกัน (11-15) ไม่ต้องรัน BWD |
-| 036-17 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 2 | 1 | 6 | 191 | **0/2 survivor — lot-check ฆ่าทั้งหมด (2691x, 717x)** batch ที่ 7 ติดกัน (11-17) ไม่ต้องรัน BWD |
-| 036-19 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
 | 036-15 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 8 | 1 | 11 | 180 | **0/5 survivor — lot-check ฆ่าทั้งหมด (1518x-10244x, ชื่อ "Ilan" = grid/martingale ชื่อดังในวงการ)** batch ที่ 4 ติดกันไม่ต้องรัน BWD |
 | 036-16 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 0 | 7 | 186 | **0/5 survivor — lot-check ฆ่าทั้งหมด (1104x-4663x) + 2 ตัว worthless (net~$0-3)** batch ที่ 6 ติดกัน (11-16) ไม่ต้องรัน BWD |
-| 036-18 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
-| 036-09 | 50 | OPEN | | | | | |
-| 036-10 | 50 | OPEN | | | | | |
-| 036-11 | 50 | OPEN | | | | | |
-| 036-12 | 50 | OPEN | | | | | |
-| 036-13 | 50 | OPEN | | | | | |
-| 036-14 | 50 | OPEN | | | | | |
-| 036-15 | 50 | OPEN | | | | | |
-| 036-16 | 50 | OPEN | | | | | |
-| 036-17 | 50 | OPEN | | | | | |
-| 036-18 | 50 | OPEN | | | | | |
-| 036-19 | 50 | OPEN | | | | | |
-| 036-20 | 50 | OPEN | | | | | |
-| 036-21 | 50 | OPEN | | | | | |
+| 036-17 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 2 | 1 | 6 | 191 | **0/2 survivor — lot-check ฆ่าทั้งหมด (2691x, 717x)** batch ที่ 7 ติดกัน (11-17) ไม่ต้องรัน BWD |
+| 036-18 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 7 | 3 | 11 | 179 | **0/5 survivor — lot-check ฆ่าทั้งหมด (222x-6048x)** batch ที่ 8 ติดกัน (11-18) ไม่ต้องรัน BWD |
+| 036-19 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 6 | 0 | 4 | 190 | **0/4 survivor — lot-check ฆ่าทั้งหมด (720x-3055x)** batch ที่ 9 ติดกัน (11-19) ไม่ต้องรัน BWD |
+| 036-20 | 50 | CLAIMED(Claude, overnight — เลน 1) | | | | | |
+| 036-21 | 50 | CLAIMED(Claude, overnight — เลน MT4b) | | | | | |
 | 036-22 | 50 | OPEN | | | | | |
 | 036-23 | 50 | OPEN | | | | | |
 | 036-24 | 50 | OPEN | | | | | |
@@ -188,6 +177,29 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 **🔧 แก้ spec ถาวร (สำคัญที่สุดของคืนนี้):** สลับลำดับ — **lot-check จาก M1 smoke report เดิม (ฟรี,
 มีอยู่แล้ว) ต้องทำ "ก่อน" ส่ง BWD-OOS เสมอ ไม่ใช่หลัง** เดิม spec ให้ BWD-OOS ก่อนแล้วค่อย
 lot-check EA ที่ผ่าน — กลับด้านสิ้นเปลือง ดู stage-2 spec ที่แก้ด้านล่าง
+
+## Triage batch 18+19 (Claude, 2026-07-07)
+
+**Batch 18:**
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| rbt (EURUSD/USDJPY) | ×6,048 / ×747 | ❌ AUTO-REJECT |
+| Scalping Strategy System V2.0 (EURUSD/USDJPY) | ×3,945 / ×2,022 | ❌ AUTO-REJECT |
+| Simple2020 / Simple_Inverse2020 | ×222 (ตัวเลขเหมือนกันเป๊ะทั้งคู่ — engine เดียวกันสลับทิศ) | ❌ AUTO-REJECT ทั้งคู่ |
+| Simple ZigZag EA+martingale | (ไม่เช็ค) | 🅿️ PARKED — ชื่อ "martingale" ตรงตัว + thin 27 เทรด |
+| RANGER M5 / Rebate Maker EA / SmartForex_V6 (Tier B) | (ไม่เช็ค) | ❌ REJECT — DD 47-67% อยู่แล้วจาก smoke gate (Rebate Maker = 40,793 เทรดใน 4 เดือน = HFT ผิดปกติ) |
+
+**Batch 19:**
+
+| EA | max lot ÷ base | Verdict |
+|---|---|---|
+| rbt/STARTUP FOREX ROBOT (EURUSD/USDJPY) | ×1,249 / ×720 | ❌ AUTO-REJECT |
+| SUPERTRENDSURFER | ×3,055 | ❌ AUTO-REJECT |
+| swb grid (EURUSD/USDJPY) | ×3,026 / ×1,523 | ❌ AUTO-REJECT (ชื่อ "grid" ก็เป็นเช่นนั้นจริง) |
+| SuperWinForexThai | (ไม่เช็ค) | 🅿️ PARKED-worthless — net $7.88/20 เทรด |
+
+**ผล batch 18+19: 0/5 + 0/4 survivor — batch ที่ 8 และ 9 ติดกัน (11-19) ปิดจบไม่ต้องรัน BWD-OOS**
 
 ## Triage batch 17 (Claude, 2026-07-07)
 
