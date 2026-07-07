@@ -1991,7 +1991,15 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
-## ORDER-046 — Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool — `RUNNING (Claude เลน 1, 2026-07-07 ค่ำ)` _(user ท้วง 2026-07-07: "จะไม่ optimize เลยเหรอ" — คำตอบ: probe เฉพาะตัวที่ input โครงสร้างเดียวปิดจุดตายได้ ไม่ใช่ tune หา PF สวย)_
+## ORDER-046 — Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool — `REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — 1 win ฟรี + 1 marginal-revive + 2 ยืนยันตายถาวร)` _(user ท้วง 2026-07-07: "จะไม่ optimize เลยเหรอ" — คำตอบ: probe เฉพาะตัวที่ input โครงสร้างเดียวปิดจุดตายได้ ไม่ใช่ tune หา PF สวย)_
+
+**🏁 VERDICT (Claude, 2026-07-07 ค่ำ — `BWDOOS_MT4_REVIVAL.csv` + `_REVIVAL2.csv`):**
+- ✅ **WIN ฟรี: UnNomGuai cap 99→20** = ผลย้อนหลังเหมือน default ทุกเซ็นต์ → demo ใช้ `UnNomGuai_cap20.set` (ปิด tail-risk 99 ชั้น โดย validation เดิมยังใช้ได้)
+- 🅿️ **swb grid flat-lot = PARKED-marginal (ฟื้นจริงแต่ไม่พอ demo):** BWD 2.40 → SPR30 **2.09 (ทน spread สวย!)** → Model-0 1.54/**DD 42.06%** — เกิน gate 40% แค่ 2 จุด · resize ไม่ช่วย DD% ของ grid · ladder ชั้นสอง (lot_multiplier_2=1.5) ยังเหลือ ×5 · **เก็บเป็น candidate สำรอง** ถ้าอยากได้ demo slot ที่ 3 อนาคต ค่อยลองปิด multiplier ชั้นสองอีก (แต่เริ่มเป็น tuning หลาย param = ระวัง overfit) — priority ต่ำกว่า 2 ตัวสะอาด
+- ❌ **Yetti3 no-boost = REJECT ถาวร:** SPR30 0.97 (ตายที่ spread เท่าเดิม) → จุดตายคือ scalper spread-sensitivity ไม่ใช่ boost · ปิด boost ไม่แก้อะไร
+- ❌ **FZ2 mult=0 = REJECT ถาวร:** BWD 0.36/DD99% — ใต้ martingale ไม่มี edge เลย (พิสูจน์เชิงประจักษ์ว่า structural gate ไม่ได้ฆ่าผิด)
+
+**บทเรียนปิด order:** กฎ "ห้าม DEAD ก่อน optimize" ให้ค่าจริง — แต่ค่าที่ได้ = **1 safety-win + ความรู้ว่ากลไกไหนตายเพราะอะไร** ไม่ใช่ candidate ใหม่ทะลัก · การ probe แบบ "แก้ 1 input โครงสร้าง → ด่านเดิมครบชุด" แยก luck จาก logic ได้จริง (ต่างจาก sweep หา PF สวย) · ✅ ยืนยัน 2 survivor สะอาด (UnNomGuai+RSI) ยังเป็นคำตอบหลัก swb เป็นตัวสำรอง
 
 **หลักการ (Claude ตัดสิน):** แก้ **หนึ่ง input โครงสร้าง** ที่ตรงกับ kill-cause แล้วส่งเข้า**ด่านเดิมครบชุดจากศูนย์**
 (BWD→lot-check→spread→M0) — ไม่ sweep หลาย param บน black box (= โรงงาน overfit, แยก luck จาก logic ไม่ได้)
