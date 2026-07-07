@@ -119,7 +119,7 @@ batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-aud
 
 | EA | baseline → SPR30 | Verdict |
 |---|---|---|
-| **UnNomGuaiV1.132** | PF 1.89→**1.83** · net 8527→7867 · DD 18.7→**19.0%** · lot ×2.3 เท่าเดิม | ✅ **ผ่าน spread-stress แทบไม่สะเทือน — finalist ตัวจริง** → Model-0 every-tick กำลังรัน (ด่านสุดท้าย) |
+| **UnNomGuaiV1.132** | PF 1.89→1.83(SPR30)→**1.63(Model-0 ทุก tick)** · net 8527→7867→**6472** · DD 18.7→19.0→**19.3%** · lot ×2.3 เท่าเดิม | ✅✅ **ผ่าน Model-0 every-tick — ด่านเข้มสุดที่มี — FINALIST ยืนยันแล้ว 🏆 ตัวเด่นที่สุดของ ORDER-036 ทั้งหมด** — PF ลดลงตามลำดับ (สมเหตุสมผล ไม่ใช่พัง) DD คงที่ ~19% ทุกด่าน → **แนะ demo-only + monitor ใกล้ชิด** (config เปิดถึง 99 ชั้นตามทฤษฎี แม้ประวัติจริงไม่เคยเกิน 9 ชั้น — tail-risk เชิงโครงสร้างยังไม่ปิด 100%) |
 | 2020v2 | PF 2.26→1.23 · DD 6.27%→**65.43%** 💀 + lot-check 3ปี ×14.5 (≥10x) | ❌ **REJECT ถาวร (ฆ่าสองเด้ง)** — edge = spread-dependent + ladder ลึกจริงเมื่อเจอ stress |
 | Automated Forex Grail | PF 1.53→**0.62** · net **-9,920** · DD **99.2%** 💀 | ❌ **REJECT ถาวร** — พังยกพอร์ตแค่เจอ spread 3 pips |
 
@@ -127,11 +127,11 @@ batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-aud
 
 | EA | BWD: PF/net/DD | lot 3ปี | Verdict |
 |---|---|---|---|
-| **Yetti3+NewsSherry** (b22) | 1.25 / +1,953 / 26.3% (12,005 trd) | ×5 | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** (PF บาง + 12k ไม้ = spread ชี้ขาด) |
-| **EAForexTH_MultiHedge_1.0** | 1.61 / +1,120 / 20.3% | ×1 แบน | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** |
-| **Oracle EA** | 1.90 / +9,988 / 36.1% | ×5.3 (54 entries จาก 1,276 trades — กลไก pending/partial ต้องอ่านถ้ารอด) | ⏳ **ผ่าน BWD → spread-stress กำลังรัน** |
-| EAForexTH_Scalper_S3_1.0 | **10.71** / +19,155 / 13.0% (13,190 entries) | ×2 | ⏳ **absurd-PF สองระบอบ = สงสัย tick-model artifact หนัก** → spread-stress กำลังรัน (รอดแล้วต้อง Model-0 ซ้ำ) |
-| Expert | 1.11 / +12,904 / 31.6% | ×2 (4→8) | ⏳ ผ่าน BWD เส้นยาแดง (PF 1.11) → spread-stress กำลังรัน (คาดตาย) |
+| **EAForexTH_MultiHedge_1.0** | BWD 1.61/+1,120/20.3% → **SPR30 1.61/+1,083/20.5%** (แทบไม่สะเทือนเลย) | ×1 แบน | ✅ **ผ่าน spread-stress เกือบสมบูรณ์ — candidate อันดับ 2 รองจาก UnNomGuai** |
+| **Oracle EA** | BWD 1.90/+9,988/36.1% → **SPR30 1.69/+7,863/26.7%** (ลดพอสมควรแต่ยังแข็งแรง) | ×5.3 (54 entries จาก 1,276 trades — กลไก pending/partial) | ✅ **ผ่าน spread-stress พอประมาณ — candidate อันดับ 3** (DD ยิ่งลดลงใต้ stress = ไม่น่ากลัว) |
+| Yetti3+NewsSherry (b22) | BWD 1.25/+1,953/26.3% (12,005 trd) → **SPR30 0.97/-311/27.7%** 💀 | ×5 | ❌ **REJECT — PF หลุดต่ำกว่า 1 ทันทีที่เจอ spread 30pts** ยืนยันความสงสัย heavy-scalper(12k ไม้) = spread-sensitive จริง |
+| EAForexTH_Scalper_S3_1.0 | BWD **10.71**/+19,155/13.0% (13,190 entries) → **SPR30: 0 เทรดเลย** | ×2 | ❌ **REJECT — ยืนยัน tester-artifact เต็มรูปแบบ**: PF สวยเหลือเชื่อที่ spread=0 หายวับไปกับสไปรด์จริง = กลไกพึ่งพา spread=0 ที่ไม่มีจริงในโลกจริง |
+| Expert | BWD 1.11/+12,904/31.6% → **SPR30 0.59/-9,914/DD 99.24%** 💀 | ×2 (4→8) | ❌ **REJECT — ทรุดยับใต้ spread 30pts** (PF บาง 1.11 = ไม่มี margin เหลือให้ spread จริงเลย) |
 | FZ2 | 3.05 / +9,855 / DD 4.77% (เลขสวยมาก!) | **×18.6** ≥10x | ❌ **AUTO-REJECT** — ladder ลึกจริงบน 3 ปี (4 เดือนเห็นแค่ ×6) · DD 4.77% = recovery ที่"ยังรอด" ไม่ใช่ความเสี่ยงจริง (structural gate 2026-06-23) |
 | swb grid | 2.10 / +14,265 / **DD 51.8%** | **×25.9** ≥10x | ❌ **AUTO-REJECT** — grid-trap ยืนยันสองสัญญาณ |
 | SUPERTRENDSURFER | 0.96 / -4,711 / DD 87.2% | ×104 | ❌ REJECT ถาวร |
@@ -144,15 +144,18 @@ batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-aud
 | Moving Average | 0.81 / -3,057 / DD 41.9% | — | ❌ REJECT |
 | 143 E4.7.4 v1 (b23) | 0.85 / -7,810 / **DD 94.4%** | ×9.8 | ❌ **REJECT ถาวร** — PF 3.0 ปี 2023-26 = regime ล้วน (ซ้ำรอย ORDER-037) |
 | Phoenix / GBPJPY1H90PCWR / killer_sell / GridMACDM | 0 trades ใน window (USDJPY ทั้งหมด) | — | 🅿️ PARKED-no-data |
-| TradePad · VisualMartiEA | TIMEOUT 902s (TradePad โดน 2 ครั้ง) | ×1 / ×5 (4 เดือน) | ⏳ retry 1800s อยู่ใน finalist round |
+| TradePad_Current_Timeframe | retry สำเร็จ: **BWD 0.90/-796/DD 9.83%** (5,208 trd) | ×1 (4 เดือน) | ❌ **REJECT — PF<1 ย้อนหลัง = regime-dependent** (batch-20 net$238/4mo ล่าสุดคือ regime lucky) |
+| VisualMartiEA | retry ครั้งที่ 2 ก็ NO_REPORT อีก (ทดสอบไม่ได้ทั้งสองรอบ) | ×5 (4 เดือน) | 🅿️ **PARKED-unverifiable** — มีปัญหาทางเทคนิคขวางการเทสช่วง 2020-22 (ไม่ใช่ REJECT เพราะไม่มีข้อมูลตัดสิน) ไม่คุ้มไล่ต่อ priority ต่ำ |
 
 **Batch-22R re-smoke (7 ตัว zombie-abort):** 0 candidate — LamBow (EU PF 0.3 พัง / JP net $6.75 =
 cross-symbol + worthless), KZM Reject, ที่เหลือ 0-trade/skip · AA_Supply Demand = m2-error parse
 (duplicate key TP_PIP/TP_pip — จดไว้ ไม่เร่งด่วน)
 
-**Finalist round กำลังรัน (เลน 1, `lane1_finalist_070707.ps1` → `BWDOOS_MT4_FINALIST.csv`):**
-UnNomGuai Model-0 · SPR30 ×5 (Yetti3/MultiHedge/Oracle/Scalper_S3/Expert) · retry 1800s ×2
-(TradePad/VisualMarti) · **คิวถัดไปหลังจบ: Z61 (b24) BWD EU+JP**
+**🏁 Finalist round DONE (เลน 1, 14:47 — `BWDOOS_MT4_FINALIST.csv`):** ผลสรุปข้างบนครบทุกแถวแล้ว ·
+**หมายเหตุ tooling:** VisualMartiEA retry ค้าง 25 นาที (เกิน timeout 900s ที่ควร auto-kill เอง) —
+timeout-kill logic มี edge case ที่ไม่ทำงานบางครั้ง ต้อง kill มือ (จดไว้ปรับปรุงภายหลัง ไม่เร่งด่วน) ·
+**คิวถัดไป:** Z61 (b24) + 4 candidate จาก batch-27 (Dark Mimas/Dark Venus/RSI from pips_EA/
+Yetti3_Mod2_newsWorking) BWD-OOS บนเลน 1
 
 **บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
 (FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
@@ -170,7 +173,7 @@ UnNomGuai Model-0 · SPR30 ×5 (Yetti3/MultiHedge/Oracle/Scalper_S3/Expert) · r
 
 | EA | BWD 2020-22: PF/trades/net/DD | lot (Size-col จริง) | Verdict |
 |---|---|---|---|
-| **UnNomGuaiV1.132** | **1.89 / 3,640 / +8,527 / DD 18.74%** | base 0.03 max 0.07 (×2.3) · เปิดพร้อมกันสูงสุด 9 ไม้ | ⏳ **CONDITIONAL — ตัวแรกที่ผ่าน BWD-OOS ตั้งแต่ ClevrFX (batch-01)** — mechanism อ่านจาก params: **grid ตะกร้า** (spaceOrders 1/9/14/99 ชั้น, ladder 0.01→0.03→0.05→0.07, ปิดยกตะกร้าที่กำไร $8, SL=0 ทุกไม้, maximaloss=0) — bounded จริงใน 3 ปี backward + 4 เดือน forward แต่ config เปิดถึง 99 ไม้ = tail-risk เชิงทฤษฎี · avg +$2.3/trade = **spread-sensitive สูง → spread-stress 30pts กำลังรัน (ด่านตัดสิน)** |
+| **UnNomGuaiV1.132** | **1.89 / 3,640 / +8,527 / DD 18.74%** | base 0.03 max 0.07 (×2.3) · เปิดพร้อมกันสูงสุด 9 ไม้ | ✅✅ **FINALIST — ผ่านครบทุกด่านถึง Model-0 every-tick (ดูรายละเอียดเต็มใน §Resurrect sweep VERDICTS) — 🏆 finding เด่นที่สุดของ ORDER-036** → แนะ demo-only + monitor ใกล้ชิด |
 | walid Ema (EURUSD) | 0.96 / 956 / -1,486 / DD 35.8% | ×1 แบน | ❌ **REJECT ถาวร** — PF<1 สองระบอบ = เลข 2023-26 เป็น regime ล้วน |
 | walid Ema (USDJPY) | 0 trades ใน window | — | ตกตาม EURUSD (EA เดียวกันพิสูจน์แล้วว่าไม่มี edge backward) |
 | TradePad_Current_Timeframe | **หลุดจาก sweep รอบเช้า** (โดน interrupt ~12:04 ก่อนถึงคิว — ไม่มีแม้แต่แถว NO_REPORT) | ×1 แบน 0.03 | ⏳ รันใหม่แล้วเป็น step แรกของ `lane1_chain_070707.ps1` |
