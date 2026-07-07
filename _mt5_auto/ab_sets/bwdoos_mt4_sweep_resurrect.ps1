@@ -35,6 +35,23 @@ function Run-Bwd {
 
 "[$(Get-Date -Format s)] resurrect sweep start" | Tee-Object $log -Append
 
+# --- preflight: lane 1 must be free. A zombie terminal from a killed session
+# blocked the lane for ~15 min on 07-07 (chain steps 1-2 + batch-22 EA 1-7 all
+# ABORTed). Wait up to 5 min, then kill the leftover. Safe here because this
+# script only runs when nothing else is scheduled on D:\Meta4.
+$deadline = (Get-Date).AddMinutes(5)
+while ((Get-Date) -lt $deadline) {
+  $z = Get-Process terminal -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq 'D:\Meta4\terminal.exe' }
+  if (-not $z) { break }
+  Start-Sleep -Seconds 15
+}
+Get-Process terminal -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq 'D:\Meta4\terminal.exe' } |
+  ForEach-Object { "[preflight] killing leftover terminal PID $($_.Id)" | Tee-Object $log -Append; Stop-Process -Id $_.Id -Force -Confirm:$false }
+
+# --- carry-over from lane1_chain_070707 (both ABORTed on the zombie terminal) ---
+Run-Bwd -Ea "TradePad_Current_Timeframe" -Sym "EURUSD" -RelPath "2024-06\FREE EA-20240608T074321Z-001\FREE EA\TradePad_Current_Timeframe.ex4"
+Run-Bwd -Ea "UnNomGuaiV1.132" -Sym "EURUSD" -RelPath "2024-06\FREE EA-20240608T074321Z-001\FREE EA\UnNomGuaiV1.132.ex4" -Spread 30 -Note "SPREAD30"
+
 # --- spread-stress for already-BWD-passed resurrections (highest priority) ---
 Run-Bwd -Ea "2020v2" -Sym "EURUSD" -RelPath "2024-06\FREE EA-20240608T074321Z-001\FREE EA\2020v2.ex4" -Spread 30 -Note "SPREAD30"
 Run-Bwd -Ea "2020v2" -Sym "USDJPY" -RelPath "2024-06\FREE EA-20240608T074321Z-001\FREE EA\2020v2.ex4" -Spread 30 -Note "SPREAD30"
