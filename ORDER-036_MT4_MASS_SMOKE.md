@@ -164,9 +164,19 @@ timeout-kill logic มี edge case ที่ไม่ทำงานบาง�
 | Yetti3_Mod2_newsWorking (b27) | 1.32/12,948/+3,020/DD23.26% | ⚠️ **ผ่านบางๆ — HFT family เดียวกับ Yetti3+NewsSherry ที่เพิ่งตายด้วย spread-stress (PF1.25→0.97)** ความน่าจะเป็นสูงว่าจะตายด่านเดียวกัน — priority ต่ำ, อย่าเชื่อจนกว่าจะรัน spread-stress |
 | Dark Mimas (b27) | 0.45/1,404/-9,540/DD **96.38%** 💀 | ❌ **REJECT ถาวร** — ล้างพอร์ตย้อนหลัง, เลข 4 เดือนล่าสุด (PF5) = regime ล้วน (รูปแบบซ้ำเป็นครั้งที่ ~10 ของ order นี้) |
 
-**สรุปคิวที่เหลือหลังปิด ORDER-036 (ยกไป session หน้า):** spread-stress 30pts ให้ Z61 / Dark Venus /
-RSI from pips_EA / Yetti3_Mod2_newsWorking (4 ตัว, ยังไม่ทำ) — ทำบนเลน 1 เท่านั้น (เลน MT4b ไม่มี
-ประวัติย้อนหลัง)
+**🏁🏁🏁 Round 3 DONE (เลน 1, `BWDOOS_MT4_ROUND3.csv` — session คู่ขนานรัน overlap กับ Z61 ของอีก run, ผลตรงกันเชิงคุณภาพ):**
+
+| EA | ผล round 3 | Verdict |
+|---|---|---|
+| **UnNomGuaiV1.132** | **fwd Model-0 (2026.03-07): PF 1.77 / 329trd / DD 4.77%** | ✅✅ **จบทุกด่านแล้วจริงๆ ทั้ง backward+forward every-tick** — scorecard = DEMO-EXPERIMENT CANDIDATE · **รอ user เคาะเปิด MT4 demo** |
+| Oracle EA | Model-0: PF **1.43** / +5,776 / **DD 39.0%** | 🟡 **CONDITIONAL อันดับ 3** — เสื่อมเป็นลำดับ (1.90→1.69→1.43) DD ชน gate · ต้องอ่าน trade list (54 entries/1,276 trades) ก่อนคิดต่อ |
+| EAForexTH_MultiHedge_1.0 | Model-0: PF **1.29** / +616 / DD 20.5% | 🟡 **CONDITIONAL-weak** — DD นิ่งแต่ edge บางลงเรื่อยๆ + net จิ๋ว · priority ต่ำ |
+| EAForexTH_Scalper_S3_1.0 | Model-0 (spread default): **PF 10.0 / +74,586 / DD 4.4%** | ❌ **REJECT ยืนยันซ้ำ** — Model-0 ก็ยัง PF 10 เพราะ tester ใช้ fixed spread ไม่มีวันถ่าง (blind spot ที่จดจาก Zeus) — spread-filter EA validate บน MT4 tester ไม่ได้เลย มีทางเดียวคือ forward demo (ไม่คุ้ม) |
+| Z61 (รันซ้ำโดย session นี้) | EU: 1.59/4,412/DD35.95 (อีก run: 1.65/5,668/DD27.0) | สอดคล้องกัน — ⏳ spread-stress อยู่ใน round 4 |
+
+**Round 4 กำลังรันแล้ว (ไม่ต้องรอ session หน้า — เลน 1 ว่างพอดี, `lane1_round4_070707.ps1` →
+`BWDOOS_MT4_ROUND4.csv`):** SPR30 ให้ RSI from pips_EA → Dark Venus → Z61 → Yetti3_Mod2_newsWorking
+(เรียงตามความหวัง)
 
 **บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
 (FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
