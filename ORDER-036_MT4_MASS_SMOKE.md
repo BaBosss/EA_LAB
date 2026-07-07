@@ -53,12 +53,74 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-19 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 6 | 0 | 4 | 190 | **0/4 survivor — lot-check ฆ่าทั้งหมด (720x-3055x)** batch ที่ 9 ติดกัน (11-19) ไม่ต้องรัน BWD |
 | 036-20 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 4 | 0 | 1 | 195 | **1 candidate เข้าคิว BWD-OOS: TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,560trd,DD0.69%,lot 1x clean)** — reject: "Take Profit"(ชื่อหลอก จริงๆ lot 43x-69x=grid ซ่อนอยู่), TradePad USDJPY-side worthless(net$36) |
 | 036-21 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 9 | 0 | 2 | 39 | **2 candidates เข้าคิว BWD-OOS: UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd), walid Ema(EURUSD+USDJPY,PF1.14-1.19,net~$1192 รวม,consistent 2 symbol)** — reject: TSR-2018 v5.0_Fix(lot 128x=grid), VisualMartiEA(ชื่อ=martingale), FX Sniper/Two_MA_Cross(worthless net<$40), Turbo-profit v3.0(อ่อน PF1.23 net$195 เดี่ยว symbol) |
-| 036-22 | 50 | CLAIMED(Claude, day-run — เลน 1, ต่อจาก BWD-OOS 3 candidate ค้าง) | | | | | |
-| 036-23 | 50 | CLAIMED(Claude, day-run — เลน MT4b) | | | | | |
+| 036-22 | 50 | CLAIMED(Claude, day-run — เลน 1; **relaunch 07-07 บ่าย** หลังรอบเช้าตายกลางทาง ~12:09 ไม่ทัน append CSV — อยู่ท้าย chain `lane1_chain_070707.ps1`: TradePad BWD → UnNomGuai spread-stress → batch 22) | | | | | |
+| 036-23 | 50 | CLAIMED(Claude, day-run — เลน MT4b; **relaunch 07-07 บ่าย** เหตุเดียวกัน — log `_mt5_auto/lane_mt4b_b23_070707.log`) | | | | | |
 | 036-24 | 50 | OPEN | | | | | |
 | 036-25 | 50 | OPEN | | | | | |
 | 036-26 | 50 | OPEN | | | | | |
 | 036-27 | 18 | OPEN | | | | | |
+
+## 🚨 Lot-check AUDIT (Claude, 2026-07-07 บ่าย — บั๊กใหญ่สุดของ order นี้: quick-grep เดิมกวาดคอลัมน์ผิด)
+
+**การค้นพบ:** ระหว่างอ่าน BWD report ของ UnNomGuai quick-grep `class=mspt>(\d+\.\d\d)` ให้ "max lot
+18,532.33" ซึ่งจริงๆ คือ **balance ปลายทาง** — regex นี้ match ทุก cell เลขทศนิยม 2 ตำแหน่ง =
+**คอลัมน์ Size + Profit + Balance ปนกัน** (≈3.6 ค่า/แถว) → ค่า "max lot" ที่ใช้ auto-reject
+batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-audit ทุก Tier A (batch 10-21, 85 แถว) ด้วย parser ที่อ่าน
+**คอลัมน์ Size ของแถว entry (buy/sell) เท่านั้น** → `scripts/mt4_lotcheck.ps1` (เครื่องมือถาวรใหม่) ·
+ผลดิบ `_mt5_auto/lotcheck_audit_b10_21.csv`
+
+**ผลกระทบ (สรุป):**
+- ❌→❌ **reject ที่ยืนตามเดิม (ratio จริงยัง ≥10x):** AF-Global(×114 บน BWD 3ปี), Budak Ubat(×30),
+  CrawlingGrid(×17), Fibo(×15), EA-Martin(×34), FoldXEA(×625), Fxs(×13), GoldenProfit(×69),
+  GridMaster_fixed(×11), HedgeMadness(×256), Ilan ทั้งคู่(×103-166), Lenhune(×37), Mm2019(×65),
+  rbt(×27), Scalping Strategy System(×15), Take Profit(×69), TSR-2018(×128+ชื่อ_Fix DQ),
+  CommunityPower(×40 ยืนยันจาก trade list เดิมด้วย) + ทุกตัวที่ตายด้วย BWD DD 96-99% (SEMIS.jr,
+  DanceT, Flexy, Happy Fast Money — ไม่เกี่ยว lot-check)
+- ✅ **REJECT ผิด → คืนสถานะ candidate (ratio จริง <10x, lot แบนหรือ ladder ตื้น):**
+
+| EA (batch) | ratio จริง (เดิมอ้าง) | smoke PF/net | สถานะใหม่ |
+|---|---|---|---|
+| **2020v2** (05) | **×5.4** (เดิม ×640 — เลข 63.92 คือ profit ไม่ใช่ lot) | BWD ผ่านแล้ว: PF 2.26/314trd/DD 6.27% | ✅ **คืน candidate — ผ่าน BWD อยู่แล้ว** → spread-stress คิวแรก |
+| **Automated Forex Grail** (10) | **×1 แบน** (เดิม ×99) | BWD ผ่านแล้ว: PF 1.53/1063trd/DD 33% | ✅ **คืน candidate — ผ่าน BWD อยู่แล้ว** → spread-stress คิวแรก |
+| Envelope 2 (12) | ×1 (เดิม ×392) | 1.5-1.61 / +677+880 สองคู่ | → คิว BWD |
+| FZ2 (13) | ×6 (เดิม ×2207-3901) | 2.57-3.41 / +640 สองคู่ | → คิว BWD |
+| Phoenix_EA_v5_6_03 (17) | ×1 (เดิม ×717) | 2.93 / +1977 | → คิว BWD |
+| MACrossoverMaster (16) | ×1 (เดิม ×1631) | 1.43 / +2537 EU | → คิว BWD |
+| swb grid (19) | ×2.2 (เดิม ×3026) | 2.38-2.96 / +1200 สองคู่ | → คิว BWD (ชื่อ grid แต่ ladder ตื้นจริง) |
+| SUPERTRENDSURFER (19) | ×6 (เดิม ×3055) | 1.54 / +3820 EU | → คิว BWD |
+| Oracle EA (17) | ×1 (เดิม ×2691) | 1.69 / +663 | → คิว BWD |
+| EA SCALP RENKO (12) | ×1 (เดิม ×293) | 1.3-1.48 / +520 สองคู่ | → คิว BWD |
+| ema_crossmod (12) | ×1 (เดิม ×49.5) | 1.78 / +4542 EU (JP 0.26 = regime-flag) | → คิว BWD |
+| Expert (12) | ×1 แบน 4 lot (เดิม ×24) | 1.11-1.26 / +1120+1595 | → คิว BWD (edge อ่อน) |
+| EAForexTH_Scalper_S3 (12) | ×1.1 (เดิม ×191) | PF 12-64 absurd-flag | → คิว BWD (BWD จะฆ่าเองถ้า artifact) |
+| GBPJPY1H90PCWR (13) | ×1 แบน 1 lot (เดิม ×977) | PF 8.15 / +71k absurd-flag | → คิว BWD |
+| killer_sell (15) | ×2.8 (เดิม ×1551) | 1.69 / +218 | → คิว BWD |
+| GridMACDMEURUSD (14) | ×1 (เดิม ×657) | 1.12 / +462 JP | → คิว BWD (อ่อน) |
+| MA_MA_2-35_EA (15) | ×1 (เดิม ×1518) | 1.17 / +215 | → คิว BWD (อ่อน) |
+| EAForexTH_MultiHedge (12) | ×1 EU (เดิม ×1514) | 2.54 / +158 | → คิว BWD |
+| VisualMartiEA (21) | ×5 (เดิม reject จากชื่อ) | 2.74 / +206 | → คิว BWD (ชื่อ Marti แต่ ladder จริง ×5) |
+| firebird v63f (13) | ×1 (เดิม ×33) | 1.15 / +143 | → คิว BWD (อ่อนสุด) |
+| Moving Average (16) | parser อ่าน entry ไม่ได้ (NO_ENTRIES — เดิม ×1434 ก็เชื่อไม่ได้) | 1.66 / +737 | → คิว BWD + inspect report |
+
+- 🅿️ ตัวที่ reject ผิดแต่ **net ใกล้ศูนย์** ไม่คุ้มไล่: gods gift(+57), STARTUP(+38-54), Simple2020/Inverse(+25) → PARKED-worthless ตามเดิม
+- verdict ที่ยืนด้วยเหตุ**อิสระ**จาก lot-check ไม่แตะ: cross-symbol (Blessing 3, cci ma ea), worthless,
+  Tier B DD gate, ชื่อ _fix DQ · **Happy thaipop (b02-03, PARKED)** — re-check ได้ ×16.3 จริง → ยกระดับเป็น ❌ REJECT ได้เลย (escalation จริง + DD 73%)
+
+**คิวรัน:** `_mt5_auto\ab_sets\bwdoos_mt4_sweep_resurrect.ps1` (26 BWD runs + 3 spread-stress
+2020v2/Grail นำหน้า) → **launch บนเลน 1 ทันทีที่ `lane1_chain_070707.ps1` จบ** · ผลลง
+`_mt5_auto/BWDOOS_MT4_RESURRECT.csv`
+
+**🔧 แก้ spec ถาวร:** stage-2 ข้อ 2 ห้ามใช้ mspt-grep อีก — ใช้ `scripts/mt4_lotcheck.ps1`
+(อ่านคอลัมน์ Size ของแถว entry เท่านั้น) กับทุก lot-check ต่อจากนี้
+
+## Triage batch 20-21 → BWD-OOS results (Claude, 2026-07-07 บ่าย — `_mt5_auto/BWDOOS_MT4_B2021.csv`)
+
+| EA | BWD 2020-22: PF/trades/net/DD | lot (Size-col จริง) | Verdict |
+|---|---|---|---|
+| **UnNomGuaiV1.132** | **1.89 / 3,640 / +8,527 / DD 18.74%** | base 0.03 max 0.07 (×2.3) · เปิดพร้อมกันสูงสุด 9 ไม้ | ⏳ **CONDITIONAL — ตัวแรกที่ผ่าน BWD-OOS ตั้งแต่ ClevrFX (batch-01)** — mechanism อ่านจาก params: **grid ตะกร้า** (spaceOrders 1/9/14/99 ชั้น, ladder 0.01→0.03→0.05→0.07, ปิดยกตะกร้าที่กำไร $8, SL=0 ทุกไม้, maximaloss=0) — bounded จริงใน 3 ปี backward + 4 เดือน forward แต่ config เปิดถึง 99 ไม้ = tail-risk เชิงทฤษฎี · avg +$2.3/trade = **spread-sensitive สูง → spread-stress 30pts กำลังรัน (ด่านตัดสิน)** |
+| walid Ema (EURUSD) | 0.96 / 956 / -1,486 / DD 35.8% | ×1 แบน | ❌ **REJECT ถาวร** — PF<1 สองระบอบ = เลข 2023-26 เป็น regime ล้วน |
+| walid Ema (USDJPY) | 0 trades ใน window | — | ตกตาม EURUSD (EA เดียวกันพิสูจน์แล้วว่าไม่มี edge backward) |
+| TradePad_Current_Timeframe | **หลุดจาก sweep รอบเช้า** (โดน interrupt ~12:04 ก่อนถึงคิว — ไม่มีแม้แต่แถว NO_REPORT) | ×1 แบน 0.03 | ⏳ รันใหม่แล้วเป็น step แรกของ `lane1_chain_070707.ps1` |
 
 ## Triage + BWD-OOS batch 02-03 (Claude, 2026-07-06 — ย้ายลงมาจากกลางตาราง)
 
@@ -105,7 +167,7 @@ PF 2.6-2.83 ทั้งหมด) = สัญญาณเดียวกับ 
 
 | EA | 2020-22 PF / trades / net / DD | Verdict |
 |---|---|---|
-| 2020v2 | 2.26 / 314 / +601 / DD 6.27% (รายงาน) | ❌ **REJECT (แก้ verdict ทันทีหลังอ่าน trade list — ดูใต้ตาราง)** — lot escalation ถึง **63.92 จาก base 0.10 = uncapped martingale/recovery** เดียวกับ CommunityPower/GoldStuffV7 |
+| 2020v2 | 2.26 / 314 / +601 / DD 6.27% (รายงาน) | ~~❌ REJECT~~ → ✅ **กลับ verdict 2026-07-07 (§Lot-check AUDIT): เลข "63.92" คือคอลัมน์ profit ไม่ใช่ lot — Size จริง base 0.1 max 0.54 = ×5.4 เท่านั้น** → คืน candidate, ผ่าน BWD อยู่แล้ว, spread-stress อยู่คิวแรกของ resurrect sweep |
 | 212-SEMIS.jrAUDCAD | 0.65 / 4190 / -9,907 / **DD 99.26%** 💀 | ❌ REJECT ถาวร |
 | 213-SEMIS.jrCHFJPY | 0.56 / 3962 / -9,593 / **DD 96.53%** 💀 | ❌ REJECT ถาวร |
 | 214-SEMIS.jrGBPJPY | 0.05 / 676 / -9,910 / **DD 99.11%** 💀 | ❌ REJECT ถาวร |
@@ -123,6 +185,9 @@ uncapped martingale/grid = ปฏิเสธเชิงโครงสร้�
 — resize ไม่ช่วยเพราะ risk อยู่ที่ตัวคูณ ไม่ใช่ lot ตั้งต้น
 **ผล batch 05 สุดท้าย: 0/5 survivor** (ตกทุกตัวหลัง mechanism-check ครบ — บทเรียนซ้ำเป็นครั้งที่ 3:
 เลข PF/DD สวยจาก tester โกหกได้เสมอถ้าไม่อ่าน trade list ประกอบ)
+**⚠️ CORRECTION 2026-07-07 (§Lot-check AUDIT):** mechanism-check ของ 2020v2 ข้างบน**อ่านคอลัมน์ผิด** —
+ลำดับ "0.14→...→63.92" คือค่า **profit** ไม่ใช่ lot (Size จริง ×5.4) → 2020v2 คืนสถานะ candidate ·
+SEMIS.jr 4 ตัวตายด้วย BWD DD 96-99% เอง verdict ไม่เปลี่ยน → **batch 05 แก้เป็น 1 pending (2020v2)**
 
 ## Triage batch 10 (Claude, 2026-07-07 — auto-flag rule จับผลได้ทันทีคืนแรกที่ใช้จริง 2/2)
 
@@ -131,7 +196,7 @@ BWD-OOS (`_mt5_auto/BWDOOS_MT4_B10.csv`) + full-file lot-escalation check ตา
 | EA | BWD 2020-22: PF/trades/DD | max lot ÷ base | Verdict |
 |---|---|---|---|
 | AF-Global Expert Unlimited | 1.57 / 14,591 / DD 48.76% | **0.01 → 94.86 = ×9,486** | ❌ **AUTO-REJECT** (≥10x) — grid/martingale ลึกมาก, DD จริงยืนยันตรงกับ escalation |
-| Automated Forex Grail | 1.53 / 1,063 / DD 33.02% | **1 → 99.04 = ×99** | ❌ **AUTO-REJECT** (≥10x) |
+| Automated Forex Grail | 1.53 / 1,063 / DD 33.02% | ~~1 → 99.04 = ×99~~ **Size จริง ×1 แบน (99.04 คือ profit cell)** | ~~❌ AUTO-REJECT~~ → ✅ **กลับ verdict 2026-07-07 (§Lot-check AUDIT)** — ผ่าน BWD อยู่แล้ว (PF 1.53 สองระบอบ, DD 33% < gate 40%) → spread-stress คิวแรกของ resurrect sweep |
 | BB SWING | USDJPY 0 เทรดใน window 2020-22 | n/a | 🅿️ PARKED-no-data (ตัดสินไม่ได้) |
 
 **ผล batch 10 สุดท้าย: 0/3 survivor** — auto-flag rule (เพิ่งเขียนคืนนี้หลัง 2020v2) ทำงานตามที่ออกแบบ
@@ -283,11 +348,12 @@ lot-check EA ที่ผ่าน — กลับด้านสิ้นเ�
 **ลำดับสลับแล้ว (2026-07-07 ดึก, บทเรียน batch 12: lot-check ฟรีต้องทำก่อน BWD เสมอ ไม่ใช่หลัง):**
 1. **กรอง DQ ชื่อไฟล์:** `_fix|_nodll|crack` → mark DQ ใน CSV (คอลัมน์ note) ไม่ต้องรันต่อ
 2. **Lot-escalation check ฟรี (ทำก่อน BWD เสมอ)** — ทุก Tier A ที่เหลือ มี M1 report จากสมูก 4 เดือน
-   อยู่แล้วในมือ (ไม่ต้องรันอะไรเพิ่ม): grep `class=mspt>(\d+\.\d\d)` ทั้งไฟล์ (ไม่ใช่ 15 ค่าแรก —
-   escalation ลึกอาจอยู่กลาง/ท้ายไฟล์) หา mode = base lot, max = lot สูงสุด · **auto-flag: max÷base
-   ≥10x → REJECT ทันที ไม่ต้องรอ Claude ไม่ต้องรอ BWD** (บทเรียนย้ำ 4 ครั้งคืนนี้: CommunityPower ×486 ·
-   2020v2 ×640 · batch-10 ×99-9486 · **batch-12 ทั้ง batch ×24-8789 — ล้าง 11/11 EA โดยไม่ต้องรัน
-   BWD สักครั้ง** — ชื่อ "Grid/Hedge/Martin/Martingale" ในชื่อ EA = สัญญาณล่วงหน้าเกือบเสมอ)
+   อยู่แล้วในมือ (ไม่ต้องรันอะไรเพิ่ม): **ใช้ `scripts/mt4_lotcheck.ps1` เท่านั้น** (อ่านคอลัมน์ Size
+   ของแถว entry buy/sell เท่านั้น) · **auto-flag: max÷base ≥10x → REJECT ทันที ไม่ต้องรอ Claude
+   ไม่ต้องรอ BWD** · ⚠️ **ห้ามใช้ quick-grep `class=mspt>(\d+\.\d\d)` เด็ดขาด (บั๊ก 2026-07-07:
+   regex นั้น match คอลัมน์ Profit/Balance ปนมาด้วย → เป่าค่า max 100-1000 เท่า สร้าง false
+   AUTO-REJECT ~15 ตัวใน batch 10-19 — ดู §Lot-check AUDIT)** — ชื่อ "Grid/Hedge/Martin/Martingale"
+   ในชื่อ EA = สัญญาณให้สงสัย แต่ตัดสินจาก Size จริงเท่านั้น (VisualMartiEA ชื่อ Marti แต่ ladder จริง ×5)
 3. **BWD-OOS 2020-22 เฉพาะตัวที่ผ่าน lot-check** (max÷base <10x): ใช้ pattern
    `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets จาก CSV ของ batch ตัวเอง) →
    append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`
