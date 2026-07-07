@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | code + compile 0/0 + mql-review PASS (2026-07-07) | — | 🔨 **BUILT — รอ validate จากศูนย์** | original จากหลักการ RSI-from-pips (RE) + ไอเดีย user (ATR spacing, EMA20 asymmetric lot, MACD/avgRSI v2 toggles) + real SL/caps ปิด tail no-SL · dual-side → guard HEDGING-account · L3 · **NEXT: smoke EURUSD → BWD 2020-22 → spread30 → Model-0 → opt IS/OOS → multi-symbol travel** · spec `_specs\RSI_MR_GridLog_SpecCard.yaml` · RE `RSI_FROM_PIPS_REVERSE_ENGINEERING.md` |
+| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | validate จากศูนย์ 2026-07-08: 2025-26 PF 1.43 · **BWD 2020-22 PF 0.78-0.87 (ขาดทุน)** DD 12-32% | ★★★ | ⚠️ **REGIME-DEPENDENT — ไม่ใช่ edge ยั่งยืนตามที่ออกแบบ** (mechanically sound: dual-side, DD คุมได้, ไม่ silent-fail) | safety-redesign (ATR spacing + basket-$ exit + real SL + LOG lot) เบี่ยงจากสูตรต้นฉบับ (fixed 30pip + per-pos ~15pip TP + linear lot + no-SL) จน edge หายในปีเทรนด์ · ต้นฉบับได้ PF 2.3 · **รอ user เลือก: (A) shelve · (B) rev02 = สูตรต้นฉบับ + เติม SL อย่างเดียว · (C) full opt (EV ต่ำ)** · หยุด hand-tune (กัน overfit) |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|

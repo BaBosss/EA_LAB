@@ -4,6 +4,30 @@ chain_id: "EA_RSI_MR_GRIDLOG_20260707_01"
 #   EA file: D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_RSI_MR_GridLog_rev01.mq5
 #   magic 990103 · review found+fixed 1 HIGH (dual-side => HEDGING-account guard in OnInit).
 #   NEXT: smoke EURUSD H1 -> BWD/spread/Model-0 (validate from scratch, per plan below).
+#
+# VALIDATION LOG (from scratch — not trusting the survivor's numbers):
+#   2026-07-08 smoke EURUSD H1 real-tick 2025-26:
+#     default (SL ATR x6): PF 0.77 net -297 DD 4.2% 289trd — mechanically correct
+#       (dual-side works, hedging guard OK, no silent fail) but net-NEGATIVE.
+#     DIAGNOSIS: the real SL I added (the tail-risk upgrade) was cutting mean-
+#       reversion positions the grid would have recovered. Confirmed by 1 probe:
+#     wide SL (ATR x25 / 600pip cap): PF 1.43 net +366 DD 3.6% 235trd.
+#     => real SL stays (closes the disconnect-naked tail the original lacked) but
+#        must be WIDE. SlAtrMult moved 6 -> ~20-25 as the working baseline.
+#        Tightening SL trades PF for tail-safety — the optimize target is the knee.
+#   2026-07-08 BWD 2020-22 EURUSD (trend-year stress), wide SL:
+#     LOG 1.3: PF 0.78 net -587 DD 12%   |  LOG 2.7: PF 0.87 net -739 DD 32%
+#   => REGIME-DEPENDENT: profitable 2025-26 (1.43) but LOSES in trend years no
+#      matter the SL width or grid depth. Original got PF ~2.3 there. The safety
+#      redesign (ATR spacing + basket-$ exit + real SL + LOG lot) diverged too far
+#      from the original's exact edge recipe (fixed 30-pip spacing + per-position
+#      ~15-pip virtual TP + linear +0.01 lot + no SL). Hand-tuning further = the
+#      overfit-fishing the repo rules forbid. STOPPED — decision to user 2026-07-08.
+#   VERDICT: rev01 = mechanically sound, NOT a durable edge as designed.
+#     Options: (A) shelve; (B) rev02 = original recipe (fixed-pip + per-pos pip TP
+#     + linear lot) with real-SL as the ONLY change, to isolate whether SL alone
+#     is survivable; (C) full IS/OOS optimize (low EV — diagnostics suggest no
+#     profitable-both-regimes plateau exists).
 
 # ============================================================================
 # Master EA Spec Card — RSI Mean-Reversion GridLog
