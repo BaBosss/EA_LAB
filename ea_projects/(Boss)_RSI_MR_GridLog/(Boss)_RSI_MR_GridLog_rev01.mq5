@@ -106,11 +106,17 @@ input double _04_PartialPct2   = 75.0;
 input double _04_PartialFrac2  = 0.30;
 
 //--------------------------------------------------------------------
-// [05] LOT SIZING — LOG escalation
+// [05] LOT SIZING — selectable law (FIXED / LINEAR / MARTINGALE / LOG)
+//   Original "RSI from pips" used LINEAR +0.01. LOG is the conservative
+//   default; LINEAR reproduces the original's recovery depth.
 //--------------------------------------------------------------------
 input string _g05_             = "── [05] LOT SIZING ────────────────────────";
+enum ENUM_LOTMODE { LOT_FIXED = 0, LOT_LINEAR = 1, LOT_MARTINGALE = 2, LOT_LOG = 3 };
+input ENUM_LOTMODE _05_LotMode = LOT_LINEAR;   // default now = original's law
 input double _05_BaseLot       = 0.01;
-input double _05_LogFactor     = 1.3;
+input double _05_LinearStep    = 0.01;   // LINEAR: lot_N = base + (N-1)*step
+input double _05_MartMult      = 1.3;    // MARTINGALE: lot_N = base * mult^(N-1)
+input double _05_LogFactor     = 5.0;    // LOG: lot_N = base * factor^(ln|log10 N)
 input bool   _05_UseLnNotLog10 = true;
 
 //--------------------------------------------------------------------
@@ -269,8 +275,21 @@ double SideAnchorPrice(const ENUM_POSITION_TYPE side)
 double CalcLogLot(const int orderN, const double baseLot)
 {
    double n = (double)orderN;
-   double exponent = _05_UseLnNotLog10 ? MathLog(n) : MathLog10(n);
-   return baseLot * MathPow(_05_LogFactor, exponent);
+   switch(_05_LotMode)
+   {
+      case LOT_FIXED:
+         return baseLot;
+      case LOT_LINEAR:                                   // original "RSI from pips" law
+         return baseLot + (n - 1.0) * _05_LinearStep;
+      case LOT_MARTINGALE:
+         return baseLot * MathPow(_05_MartMult, n - 1.0);
+      case LOT_LOG:                                      // orderN=1 -> exponent 0 -> baseLot
+      default:
+      {
+         double exponent = _05_UseLnNotLog10 ? MathLog(n) : MathLog10(n);
+         return baseLot * MathPow(_05_LogFactor, exponent);
+      }
+   }
 }
 
 // Asymmetric base lot for a side given the EMA trend context (evaluated at signal time).
