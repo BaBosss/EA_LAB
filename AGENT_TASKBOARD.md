@@ -1975,6 +1975,22 @@ commit `[tag] ORDER-041 done` · **ห้าม:** verdict — เกณฑ์ C
 
 ---
 
+## ORDER-045 — MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) — `WAITING-USER (attach) → แล้วค่อยเป็น monitoring loop` · **เจ้าของ: user (attach) + Claude (judge)** _(ออก 2026-07-07 หลัง user อนุมัติ)_
+
+**สถานะ:** ORDER-036 ปิดสมบูรณ์ (1,318 → 2 survivor: **UnNomGuaiV1.132 + RSI from pips_EA** ผ่านครบถึง
+Model-0 bwd+fwd) · user อนุมัติ demo คู่บนบัญชีเดียว (2026-07-07) · **bundle พร้อม: `_mt4_demo_deploy\`**
+(ex4 ×2 + `README_DEPLOY.md` มี MD5 lock, kill-switch, ค่าคาดหวัง) · แผนเต็ม: `DEMO_DEPLOYMENT_PLAN.md`
+§MT4 demo experiment #2
+**รอ user:** เปิดบัญชี demo ใหม่ ($10k, แนะ ThinkMarkets) → ลง MT4 portable `D:\Meta4demo` (ห้ามใช้เลนเทส)
+→ attach ตาม checklist → **แจ้งวันที่ attach = demo-clock เริ่ม (judge +3 เดือน)**
+**งาน agent หลัง attach (ทุก ~2 สัปดาห์ รอบเดียวกับ ClevrFX):** อ่าน statement ที่ user export → แยก P&L
+ตาม magic (1/2 = UnNom · 5888 = RSI) → เทียบตารางคาดหวังใน README → เช็ค kill-switch (UnNom >12 ไม้ ·
+RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้าม:** แก้ input EA · เพิ่ม EA อื่นในบัญชีนี้
+
+**ผล:** _(รอ attach)_
+
+---
+
 ## ORDER-043 — US30 GridLog: IS-optimize probe (optional, EV ต่ำ) — `OPEN (priority ต่ำ — ทำวันที่ ZCode ว่างจริงๆ)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode slot วันว่าง** (role: batch, เลน 2) _(renumbered 042→043: ชนกับ DealsExporter ของ session คู่ขนาน)_
 
 **ทำไม:** recon 4 variants (Claude 2026-07-06) ทั้งหมด PF 0.78-0.96 — ไม่มี life แบบทอง แต่กฎ no-DEAD-

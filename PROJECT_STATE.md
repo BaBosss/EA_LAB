@@ -489,10 +489,16 @@ DD คงที่ ~19% ทุกด่าน · net $8,527→$7,867→$6,472 (�
 - EAForexTH_MultiHedge_1.0 — แทบไม่สะเทือนจาก spread-stress เลย (PF1.61→1.61)
 - Oracle EA — ลดพอประมาณแต่ยังแข็งแรง (PF1.90→1.69, DD ดีขึ้น 36%→27%)
 
-**Candidate ที่ผ่าน BWD แต่ยังไม่ได้ทำ spread-stress (คิว session หน้า, รันบนเลน 1 เท่านั้น):**
-Dark Venus (PF2.26/DD17.25%) · RSI from pips_EA (PF2.32/DD7.6% ต่ำสุด) · Z61 (PF1.65 EU/DD27% แต่
-JP 0 เทรดใน BWD window = ยืนยันข้ามคู่ไม่ได้) · Yetti3_Mod2_newsWorking (ผ่านบางๆ PF1.32 + HFT family
-เสี่ยงซ้ำรอย Yetti3+NewsSherry ที่ตายด้วย spread-stress)
+**UPDATE 2026-07-07 ค่ำ (rounds 3-5 — คิวทั้งหมดเคลียร์จบ ไม่เหลือค้าง):**
+- **RSI from pips_EA = survivor เต็มตัวรายที่ 2** (คู่ UnNomGuai): BWD 2.32/DD7.6 → SPR30 2.25 (spread
+  แทบไม่กัด) → Model-0 2.07/DD25 → **fwd Model-0 2.39** · lot ×6 สะอาด · โปรไฟล์สะอาดสุดของ 1,318 ตัว
+- UnNomGuai ปิดด่านสุดท้ายเพิ่ม: **fwd Model-0 PF 1.77/DD4.8** — จบครบทั้ง backward+forward
+- ที่เหลือตายหมด: Z61 (lot-check เผย basket ซ่อน ×44-80, 107k entries) · Dark Venus (martingale ×10-15
+  + DD 17→51% ใต้ spread) · Yetti3_Mod2 (PF 1.02 ที่ spread — ตายแบบพี่มัน) · Oracle/MultiHedge =
+  CONDITIONAL ไม่เร่ง (M0 1.43/DD39 ชน gate · M0 1.29 net จิ๋ว)
+- **user อนุมัติ (2026-07-07): เปิด MT4 demo บัญชีใหม่ ใส่คู่ UnNomGuai + RSI from pips** (คนละ magic,
+  ได้ correlation จริงฟรี) → bundle พร้อมที่ `_mt4_demo_deploy\` · แผน+checklist: `DEMO_DEPLOYMENT_PLAN.md`
+  §MT4 demo experiment #2 · order ติดตาม: **ORDER-045** (รอ user attach = demo-clock เริ่ม, judge +3 เดือน)
 
 **ตายที่ด่านสุดท้าย (ดูดีตอน BWD baseline แต่พังใต้ spread-stress — บทเรียนว่าทำไมต้องมีด่านนี้):**
 Yetti3+NewsSherry (PF1.25→0.97) · EAForexTH_Scalper_S3_1.0 (PF absurd 10.71→0 เทรดเลย = ยืนยัน
