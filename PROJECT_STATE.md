@@ -472,25 +472,64 @@ re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ป
 CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
 ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
 
-**🌙 ORDER-036 overnight run batch 02-21 CLOSED (Claude, คืน 2026-07-06 → เช้า 07-07):** user สั่ง "รัน 036
-batch ไปเรื่อยๆจนถึง 4.30 เวลาไทย" — รันได้ถึง ~08:20 (เลยกำหนดเพราะ batch 20/21 กำลังวิ่งตอน 04:30 ปล่อยให้จบเอง
-ตามหลัก "หยุดเปิดใหม่ ไม่ตัดที่วิ่งอยู่") · **ผล 20 batch (02-21) ≈ 1,000 EA: survivor เข้าคิว BWD-OOS แค่ 3
-ตัว** — UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd,lot1x) · walid Ema(EURUSD+USDJPY,PF1.14-1.19,
-net~$1192รวม,consistent DD5-6%ทั้งคู่,lot1x) · TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,
-DD0.69%,lot1x) — **ยังไม่ได้รัน BWD-OOS จริง รอ session หน้า** (หยุดก่อนเพราะเลยเวลามากแล้ว)
-- **บทเรียน process ที่คุ้มที่สุดของคืนนี้ (เข้า spec ORDER-036 แล้ว): lot-check ฟรี (grep M1 report หา
-  Size column, mode=lot ฐาน vs max=lot สูงสุด, ratio≥10x=grid/martingale REJECT อัตโนมัติ) ต้องรันก่อน
-  BWD-OOS เสมอ** — ปิด batch 11-19 (9 ก้อนติด, ~450 EA) ได้ **0 BWD-OOS run เลย** เพราะ lot-check ฆ่าหมด
-  (ratio 222x-6048x พบทั่วไป) · ประหยัด compute มหาศาลเทียบกับรัน BWD ทุกตัวก่อน
-- **near-miss ที่กลายเป็นกฎ:** "2020v2" (batch 05) เกือบตัดสิน CANDIDATE จาก BWD PF2.26/DD6.27% สวย
-  แต่ grep เต็มไฟล์ trade-list เจอ lot escalation 0.10→63.92 (640x) ซ่อนกลางไฟล์ — MT4 "Max Drawdown"
-  วัดที่จุดปิดไม้ ไม่ใช่จุด exposure สูงสุด จึงโชว์ต่ำหลอกได้ **แก้ verdict เป็น REJECT ทันที** → ยืนยันกฎ
-  ≥10x auto-flag ต้อง scan "ทั้งไฟล์" ไม่ใช่ 15 แถวแรก
-- **กฎเสริมที่ยืนยันซ้ำคืนนี้:** ชื่อมี "Marti/Martin/Grid/Hedge/Ilan" = DQ ทันทีไม่ต้องเช็คเลข (VisualMartiEA
-  batch 21) · ชื่อสุภาพไม่ได้แปลว่าไม่ใช่ grid ("Take Profit" batch 20 = grid จริง lot 43x-69x ซ่อนอยู่)
-  · net profit เล็กเกิน (<$50/3mo บน default lot) = worthless แม้ PF>1 (FX Sniper, Two_MA_Cross)
-- **เหลือ:** batch 22-27 (6 ก้อน ~300 EA) ยัง OPEN — รอ session หน้าสั่งต่อ (ไม่เปิดเองแล้วเพราะเลยคัตออฟ) ·
-  3 candidate ค้างรอ BWD-OOS ก่อนอื่นเมื่อกลับมา
+**🏁🏁🏁 ORDER-036 FULLY CLOSED (Claude, คืน 2026-07-06 → บ่าย 07-07 — เต็ม 27 batch + resurrect sweep +
+finalist round เสร็จสมบูรณ์):** เริ่มจาก user สั่ง "รัน 036 batch ไปเรื่อยๆจนถึง 4.30 เวลาไทย" คืนแรก แล้ว
+สั่งต่อเป็น day-run ตอนบ่ายจนจบ order ทั้งหมด — **~1,318 EA ทดสอบครบทั้ง 27 batch** (batch 01 แยกรีวิวไปแล้ว
+ผ่าน ORDER-040/041) ดูตารางเต็ม + triage รายละเอียดทุก batch ที่ `ORDER-036_MT4_MASS_SMOKE.md`
+
+**🏆 ผลลัพธ์เด่นที่สุด — UnNomGuaiV1.132: ผ่านทุกด่านถึง Model-0 every-tick (ด่านเข้มสุดที่มี)**
+PF ลดลงตามลำดับสมเหตุสมผล ไม่ใช่พัง: BWD 1.89 → spread-stress30pt 1.83 → **Model-0 ทุก tick 1.63** ·
+DD คงที่ ~19% ทุกด่าน · net $8,527→$7,867→$6,472 (ลดลงแต่ยังบวกแข็งแรง) · mechanism = grid ตะกร้า
+(spaceOrders เปิดได้ถึง 99 ชั้นตามทฤษฎี แต่ประวัติจริง 3 ปี+4 เดือน ไม่เคยเกิน 9 ชั้น) · avg +$2.3/trade
+บาง (spread-sensitive) แต่**พิสูจน์แล้วว่าทนสไปรด์จริงได้** — นี่คือ EA ตัวเดียวในทั้ง treasure hunt (222+
+ตัวจาก MT5 sweep ก่อนหน้า + 1,318 ตัวจาก MT4 sweep นี้) ที่ผ่านด่านทดสอบครบทุกชั้นแบบไม่มีข้อกังขา
+**→ แนะนำ: demo-only ก่อน (ไม่ live) จับตาใกล้ชิด เพราะ config เปิด 99 ชั้นตามทฤษฎียังไม่เคยพิสูจน์ที่ขอบ**
+
+**Candidate รองลงมา (ผ่าน spread-stress แต่ยังไม่ผ่าน Model-0):**
+- EAForexTH_MultiHedge_1.0 — แทบไม่สะเทือนจาก spread-stress เลย (PF1.61→1.61)
+- Oracle EA — ลดพอประมาณแต่ยังแข็งแรง (PF1.90→1.69, DD ดีขึ้น 36%→27%)
+
+**Candidate ที่ผ่าน BWD แต่ยังไม่ได้ทำ spread-stress (คิว session หน้า, รันบนเลน 1 เท่านั้น):**
+Dark Venus (PF2.26/DD17.25%) · RSI from pips_EA (PF2.32/DD7.6% ต่ำสุด) · Z61 (PF1.65 EU/DD27% แต่
+JP 0 เทรดใน BWD window = ยืนยันข้ามคู่ไม่ได้) · Yetti3_Mod2_newsWorking (ผ่านบางๆ PF1.32 + HFT family
+เสี่ยงซ้ำรอย Yetti3+NewsSherry ที่ตายด้วย spread-stress)
+
+**ตายที่ด่านสุดท้าย (ดูดีตอน BWD baseline แต่พังใต้ spread-stress — บทเรียนว่าทำไมต้องมีด่านนี้):**
+Yetti3+NewsSherry (PF1.25→0.97) · EAForexTH_Scalper_S3_1.0 (PF absurd 10.71→0 เทรดเลย = ยืนยัน
+tester-artifact ที่พึ่ง spread=0 ไม่มีจริง) · Expert (PF1.11→0.59, DD31.6%→99.24% ล้างพอร์ต) ·
+TradePad_Current_Timeframe (PF0.90<1 ย้อนหลัง) · 2020v2 (DD6.3%→65.4%) · Automated Forex Grail
+(PF1.53→0.62, DD33%→99.2%) · 143 E4.7.4 v1 (PF3.0→0.85, DD94.4%) · Dark Mimas (PF5→0.45, DD96.4%)
+— **~10 ครั้งที่ EA "เลขสวย 4 เดือนล่าสุด" กลายเป็นระเบิดย้อนหลัง = ยืนยันธีมใหญ่: 2023-26 คือ
+mean-reversion regime เฉพาะตัว ไม่ใช่ edge สากล**
+
+**🔧 บทเรียนวิธีการที่สำคัญที่สุดของ order นี้ — lot-check regex bug:**
+regex เดิม `class=mspt>(\d+\.\d\d)` ที่ใช้ตรวจ lot-escalation กวาดคอลัมน์ Profit + Balance ปนกับ Size
+(3 คอลัมน์ใช้ class เดียวกัน) → ทำให้ auto-reject เท็จ ~15 ตัวใน batch 10-19 (max lot ที่รายงาน
+พองเกินจริง 100-1000 เท่า) จับได้ตอนอ่าน UnNomGuaiV1.132 BWD report เจอ "max lot 18,532" ที่แท้จริง
+คือ balance ปลายทาง — **แก้ด้วย `scripts/mt4_lotcheck.ps1` (เครื่องมือถาวรใหม่) ที่อ่านเฉพาะคอลัมน์ Size
+ของแถว entry buy/sell เท่านั้น** → re-audit ทุก batch 10-21 คืนสถานะ candidate ให้ ~15 ตัวที่โดน reject
+ผิด (ครึ่งหนึ่งตายจริงตอน BWD, อีกครึ่งกลายเป็น candidate ที่นำไปสู่ finalist round)
+
+**กฎถาวรที่เข้า spec ORDER-036 แล้ว (ใช้กับ mass-smoke ทุก order ในอนาคต):**
+1. lot-check ฟรี (จาก M1 report ที่มีอยู่แล้ว) ต้องทำ**ก่อน** BWD-OOS เสมอ — ประหยัด compute มหาศาล
+   (ปิด batch 11-19 ได้ 0 BWD run เลย)
+2. ใช้ `scripts/mt4_lotcheck.ps1` เท่านั้น ห้าม quick-grep แบบเดิมเด็ดขาด
+3. lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ (FZ2 ×6→×18.6, swb×2.2→×25.9)
+4. ชื่อไฟล์ = DQ ทันที: "_fix/_nodll/crack" (เดิม) **+ ใหม่: piracy-signal เช่น "DOWNLOADMQ4.COM"/
+   "FULL LICENSE"** (Bonnitta, EA FREEDOM PRO) · ชื่อ "Marti/Martin/Grid/Hedge/Ilan" = สงสัยแต่ต้องดู
+   Size จริงตัดสิน (VisualMartiEA ชื่อ Marti แต่ ladder จริงแค่×5)
+5. cross-symbol consistency check ฟรี — คู่หนึ่งพังหนัก อีกคู่ "ชนะสวยเกินจริง"(thin-sample) หรือ
+   กลับทิศกัน(regime-dependent) = reject ทันทีไม่ต้องรอ BWD
+6. precedent-reuse: EA ตระกูลเดิมโผล่ซ้ำหลาย batch ด้วย fingerprint เกือบเป๊ะ (Gold Stuff EA V7.0,
+   SEMIS.jr family, Yetti Pro family) — ตัดสินจาก precedent ได้เลยไม่ต้องเทสซ้ำ
+7. **ใหม่ล่าสุด: BWD-OOS/backward ทุกชนิดต้องรันบนเลน 1 (D:\Meta4) เท่านั้น** — เลน MT4b (D:\Meta4b)
+   ไม่มีข้อมูลย้อนหลัง 2020-2022 โหลดไว้ (portable copy ตั้งไว้สำหรับ smoke 4 เดือนล่าสุดเท่านั้น) —
+   เทสจะ launch สำเร็จแต่จบทันทีไม่มี report เลย (เจอกับ batch-27 candidates ก่อนแก้)
+
+**สถิติรวม order:** ~1,318 EA → Tier A หลายร้อยแถว → หลัง lot-check+cross-symbol+ชื่อ เหลือ ~30 ตัวเข้า
+BWD-OOS → เหลือ ~10 ตัวผ่าน BWD → **1 ตัวเดียวผ่านครบถึง Model-0 (UnNomGuaiV1.132)** + 2 ตัวผ่าน
+spread-stress (MultiHedge, Oracle) + 4 ตัวรอ spread-stress (Dark Venus, RSI from pips_EA, Z61,
+Yetti3_Mod2_newsWorking) — **funnel ratio ~1,300:1 ยืนยันความยากของการหา edge ที่ทนทุกด่านจริง**
 
 **🗺️ แผนที่ต้องทำ — เรียง priority (2026-07-05):**
 - **P0 = ✅ DONE 2026-07-05: DEMO ATTACHED!** 7 EA บน Exness demo 60,000 USD · **demo clock เดินแล้ว →
