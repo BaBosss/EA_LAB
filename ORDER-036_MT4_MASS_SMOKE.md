@@ -183,8 +183,24 @@ timeout-kill logic มี edge case ที่ไม่ทำงานบาง�
 | Z61 | 1.34 / DD 30.4% (เสื่อมจาก 1.59-1.65) | **×44-80 · entries 107k-111k(!) เทียบ trades ~5k** | ❌ **AUTO-REJECT** — basket ซ้อนหนักมากต่อ trade (คำเตือน batch-24 review เรื่อง entries ดิบสูงผิดปกติ = ถูกต้องเป๊ะ) |
 | Yetti3_Mod2_newsWorking | **1.02 / +265** | ×3 | ❌ **REJECT** — ตายที่ spread เหมือน Yetti3+NewsSherry ตามคาด (HFT family เดียวกัน) |
 
-**Round 5 (สุดท้ายจริง) กำลังรัน:** RSI from pips_EA Model-0 backward 2020-22 + forward 2026.03-07
-(บันไดเดียวกับที่ UnNomGuai ผ่าน) → ถ้าผ่าน = survivor เต็มตัวรายที่ 3 ของ MT4 pool
+**🏆 Round 5 (สุดท้าย) DONE — RSI from pips_EA ผ่านครบ:** Model-0 BWD 2.07/1,616trd/DD24.96% ·
+Model-0 FWD 2.39/163trd/DD2.2% · SL=0 ทุกไม้ (จดเป็นเงื่อนไข demo เหมือน UnNomGuai/ClevrFX) →
+**survivor เต็มตัวรายที่ 3 — เข้า scorecard = DEMO-EXPERIMENT CANDIDATE**
+
+## 🎯 FINAL TALLY ORDER-036 (2026-07-07 ค่ำ — ทุกคิวเคลียร์หมดแล้ว ไม่มีตกค้าง)
+
+**1,318 ex4 → 27 batch smoke → ~110 Tier A → 30+ BWD-OOS runs → spread-stress → Model-0:**
+
+| ชั้นสุดท้าย | EA |
+|---|---|
+| 🟢 **DEMO-EXPERIMENT CANDIDATE (ผ่านครบทุกด่านรวม Model-0 bwd+fwd)** | **UnNomGuaiV1.132** (grid ตะกร้าตื้น, PF 1.63-1.83, DD~19%) · **RSI from pips_EA** (สะอาดสุด, PF 2.07-2.39, DD 25%) — **รอ user เคาะเปิด MT4 demo** |
+| 🟡 CONDITIONAL (ผ่านแต่มีเงื่อนไข — ไม่เร่ง) | Oracle EA (PF เสื่อมลำดับ→1.43, DD39 ชน gate, ต้องอ่าน trade list ก่อน) · EAForexTH_MultiHedge (PF 1.29, net จิ๋ว) |
+| 🅿️ PARKED เด่น | VisualMartiEA (untestable ×2) · no-data 4 ตัว (JP window ว่าง) · worthless กลุ่มใหญ่ |
+| ❌ ที่เหลือทั้งหมด | ตายที่ smoke gate / lot-check(Size-col) / BWD 2020-22 / spread 30pts / Model-0 ตามลำดับ |
+
+บทเรียนถาวรของ order: (1) mspt-grep บั๊ก → `mt4_lotcheck.ps1` เท่านั้น (2) lot-check ซ้ำบน report
+ยาวสุด (3) spread-stress ฆ่า scalper บาง PF ได้เด็ดขาดสุด (4) MT4 fixed-spread = spread-filter EA
+validate ไม่ได้ (5) entries ดิบ >> trades = basket ซ่อน (Z61)
 
 **บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
 (FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
