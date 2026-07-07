@@ -1,0 +1,96 @@
+spec_card_version: "3.0"
+chain_id: "EA_RSI_MR_GRIDLOG_20260707_01"
+
+# ============================================================================
+# Master EA Spec Card — RSI Mean-Reversion GridLog
+# ----------------------------------------------------------------------------
+# ORIGIN: original design inspired by the reverse-engineered principle of
+# "RSI from pips_EA" (ORDER-036 survivor, fxDreema-built, compiled black box).
+# See RSI_FROM_PIPS_REVERSE_ENGINEERING.md. This is NOT a clone — fresh code,
+# source-complete, with the original's fatal weakness (no hard SL) removed.
+#
+# THESIS TENSION (stated openly): strategy-and-risk's prior = "mean-reversion is
+# dead, momentum only" (2023-26). Counter-evidence justifying this build: RSI
+# from pips (pure MR) passed the FULL gate chain (BWD 2020-22 + spread30 +
+# Model-0 every-tick + forward) on EURUSD, DD steady ~19-25%. Mechanism
+# understood. => validate from scratch, do NOT trust the survivor's numbers.
+#
+# USER DESIGN IDEAS folded in (2026-07-07):
+#  - ATR-based grid spacing (vs original fixed 30 pips) -> lower DD in calm vol,
+#    wider spacing in high vol; also the lever expected to help it travel to
+#    other symbols (original was EURUSD-specific because fixed pips don't adapt).
+#  - EMA20 directional filter with ASYMMETRIC base lot (with-trend larger,
+#    counter-trend smaller) -> "close > EMA20 => buy 0.02 / sell 0.01".
+#  - MACD confirm + average-RSI (multi-period RSI mean) = V2 signal options,
+#    specced as toggles, OFF by default for the clean first validation.
+# ============================================================================
+
+identity:
+  ea_name: "RSI_MR_GridLog"
+  symbol: "EURUSD"          # validated home of the principle; ATR spacing designed to travel — test AUDUSD/GBPUSD/USDJPY after EURUSD passes
+  timeframe: "H1"           # original edge was TF-stable M15..H4; H1 = primary
+
+strategy:
+  trade_style: "SWING"
+  entry:
+    indicator: "RSI(14) + EMA(20) directional filter"
+    condition: >
+      DUAL-SIDE MEAN-REVERSION with re-arm (from RE of original):
+        BUY  when RSI(14) < oversold(30)  AND no buy open within ATR-spacing of price
+        SELL when RSI(14) > overbought(70) AND no sell open within ATR-spacing of price
+        RE-ARM: after a side fires, block new same-side base entry until RSI
+                crosses back through 50 (prevents machine-gunning while RSI
+                sticks at an extreme — confirmed behavior in original).
+      EMA(20) DIRECTIONAL FILTER (user idea, asymmetric base lot):
+        if Close > EMA20 (uptrend bias): buy base = base_lot x with_trend_mult,
+                                         sell base = base_lot x counter_mult
+        if Close < EMA20 (downtrend bias): mirror.
+        default with_trend_mult = 2.0, counter_mult = 1.0  (=> 0.02 / 0.01)
+      V2 SIGNAL TOGGLES (OFF for first validation, wired but disabled):
+        use_macd_confirm   : require MACD histogram sign agree with entry side
+        use_avg_rsi         : replace single RSI with mean of RSI(9),RSI(14),RSI(21)
+                              (smoother extreme detection = fewer false extremes)
+  distance:
+    mode: "ATR"                 # user's core idea — replaces original fixed 30 pips
+    min_dist_pips: 20           # floor so ATR-spacing never gets absurdly tight in dead vol
+    atr_period: 14
+    atr_multiplier: 1.0         # grid add-level spacing = ATR(14) x 1.0 (opt target later)
+  lot_sizing:
+    mode: "LOG"                 # more conservative than original's linear +0.01; far from martingale
+    base_lot: 0.01
+    log_type: "LN"
+    log_factor: 1.3             # lot_N = base x 1.3^ln(N) — gentle averaging-down
+  take_profit:
+    mode: "DYNAMIC"
+    scope: "NET_ALL"            # basket closes together when averaged net >= target (from RE)
+    # per-side virtual TP ~ ATR x 0.5 (original was ~15 pips fixed); basket net TP in money
+  stop_loss:
+    mode: "STRUCTURE"           # <-- THE upgrade over the original (which had SL=0 always)
+    max_sl_pips: 200            # hard per-basket disaster stop; also basket-DD cap below
+
+recovery:
+  hedging:
+    enabled: false              # NO hedge — keeps risk at L3, not L4/L5. Grid+LOG only.
+
+risk:
+  risk_level: "L3"              # Grid averaging (one mechanism) + LOG lot (conservative, NOT martingale) + real SL. No hedge. Allowed with caps.
+  risk_per_trade_pct: 1.0
+  max_drawdown_target_percent: 20.0   # original held ~19-25% at Model-0; target <=20 with real SL
+  max_positions: 8                    # hard cap on grid depth (original max ever = 6-8 levels)
+  max_total_lot: 1.0                  # hard exposure cap across the whole basket
+  daily_loss_limit_pct: 5.0
+  emergency_exit_dd_pct: 40.0         # close-everything kill (well inside the 70 default; original's tail was the no-SL gap this closes)
+
+# ---------------------------------------------------------------------------
+# VALIDATION PLAN (post-codegen — do NOT skip, do NOT trust the survivor's PF):
+#   1. smoke EURUSD H1 forward 2026 (sanity: does it trade + roughly match RE?)
+#   2. BWD-OOS 2020-22 EURUSD (kills regime-luck)
+#   3. spread-stress 30pts
+#   4. Model-0 every-tick backward + forward
+#   5. ONLY then ea-optimization-orchestrator on {atr_multiplier, log_factor,
+#      RSI thresholds, with_trend_mult} — IS 2020-2023 / OOS 2023-2026, plateau
+#      select (repo 3-yr window rule, re-opt each 6mo)
+#   6. multi-symbol travel test (AUDUSD/GBPUSD/USDJPY) — the ATR-spacing payoff
+#   7. corr vs UnNomGuai + Boss V2 grids (portfolio-selector) — MR should be
+#      low-corr with the momentum/grid cohort = additive
+# ---------------------------------------------------------------------------
