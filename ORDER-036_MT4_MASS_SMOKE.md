@@ -53,7 +53,7 @@ source read (ถ้ามี .mq4) + Model-4. เลขสวย 2023-26 = mean-
 | 036-19 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 6 | 0 | 4 | 190 | **0/4 survivor — lot-check ฆ่าทั้งหมด (720x-3055x)** batch ที่ 9 ติดกัน (11-19) ไม่ต้องรัน BWD |
 | 036-20 | 50 | REVIEWED(Claude 07-07 — เลน 1) | 4 | 0 | 1 | 195 | **1 candidate เข้าคิว BWD-OOS: TradePad_Current_Timeframe(EURUSD,PF1.43,net$238.5,560trd,DD0.69%,lot 1x clean)** — reject: "Take Profit"(ชื่อหลอก จริงๆ lot 43x-69x=grid ซ่อนอยู่), TradePad USDJPY-side worthless(net$36) |
 | 036-21 | 50 | REVIEWED(Claude 07-07 — เลน MT4b) | 9 | 0 | 2 | 39 | **2 candidates เข้าคิว BWD-OOS: UnNomGuaiV1.132(EURUSD,PF2.06,net$819,329trd), walid Ema(EURUSD+USDJPY,PF1.14-1.19,net~$1192 รวม,consistent 2 symbol)** — reject: TSR-2018 v5.0_Fix(lot 128x=grid), VisualMartiEA(ชื่อ=martingale), FX Sniper/Two_MA_Cross(worthless net<$40), Turbo-profit v3.0(อ่อน PF1.23 net$195 เดี่ยว symbol) |
-| 036-22 | 50 | CLAIMED(Claude, day-run — เลน 1; **relaunch 07-07 บ่าย** หลังรอบเช้าตายกลางทาง ~12:09 ไม่ทัน append CSV — อยู่ท้าย chain `lane1_chain_070707.ps1`) · ⚠️ **EA 1-7 ของ batch โดน zombie terminal (จาก session เช้าที่ตาย) ล็อคเลนถึง ~12:20 → ABORT ปลอม ต้อง re-smoke 7 ตัวนี้ตอนปิด batch** (TradePad BWD + UnNomGuai SPR30 ที่ abort ด้วยเหตุเดียวกัน ย้ายไปหัวคิว resurrect sweep แล้ว + เพิ่ม preflight kill-zombie ในนั้น) | | | | | |
+| 036-22 | 50 | REVIEWED(Claude 07-07 บ่าย — ยกเว้น EA 1-7 ที่โดน zombie-abort, re-smoke อยู่ท้าย post-chain) | 9 | 0 | 6 | 185 | **1 candidate เข้าคิว BWD: Yetti3+NewsSherry (EU PF1.51/+700/2911trd · JP PF4.35/+94 · lot ×5 ทั้งคู่)** — reject: Scalping XTendFX (lot ×32/×256 = martingale ladder จริง แม้ PF 3-5.9), Perceptrader/Signalspro007 ×3 = "_fix" DQ (cracked), PumLot worthless (net $45) · ดู triage ล่างตาราง | 
 | 036-23 | 50 | CLAIMED(Claude, day-run — เลน MT4b; **relaunch 07-07 บ่าย** เหตุเดียวกัน — log `_mt5_auto/lane_mt4b_b23_070707.log`) | | | | | |
 | 036-24 | 50 | OPEN | | | | | |
 | 036-25 | 50 | OPEN | | | | | |
@@ -112,6 +112,15 @@ batch 10-19 เกือบทั้งหมดปนเปื้อน. Re-aud
 
 **🔧 แก้ spec ถาวร:** stage-2 ข้อ 2 ห้ามใช้ mspt-grep อีก — ใช้ `scripts/mt4_lotcheck.ps1`
 (อ่านคอลัมน์ Size ของแถว entry เท่านั้น) กับทุก lot-check ต่อจากนี้
+
+## Triage batch 22 (Claude, 2026-07-07 บ่าย — lot-check ด้วย mt4_lotcheck.ps1 ตัวใหม่)
+
+| EA | สถานะ | เหตุผล |
+|---|---|---|
+| Perceptrader AI v2.23 1420+_fix · Signalspro007_V12.1_fix · Signalspro007_V5_fix | ❌ DQ | ชื่อ "_fix" = cracked commercial (hard-gate) |
+| Scalping XTendFX (EU/JP) | ❌ AUTO-REJECT | lot จริง ×32 / ×256 (0.01→2.56 = martingale doubling) — PF 3.01/5.9 คือ recovery mechanics |
+| PumLot V.1.1 exp | 🅿️ PARKED-worthless | PF 1.08, net $44.75 |
+| **Yetti3+NewsSherry** | ✅ **คิว BWD** | EU PF 1.51/+700 (2,911 ไม้ = heavy scalper — spread-sensitive ต้องดูด่านหน้า) · JP PF 4.35/+94 · lot ×5 ทั้งคู่ · เพิ่มเข้า targets ของ resurrect sweep แล้ว (2 แถวท้าย) |
 
 ## Triage batch 20-21 → BWD-OOS results (Claude, 2026-07-07 บ่าย — `_mt5_auto/BWDOOS_MT4_B2021.csv`)
 
