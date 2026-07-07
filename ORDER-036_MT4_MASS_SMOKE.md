@@ -174,9 +174,17 @@ timeout-kill logic มี edge case ที่ไม่ทำงานบาง�
 | EAForexTH_Scalper_S3_1.0 | Model-0 (spread default): **PF 10.0 / +74,586 / DD 4.4%** | ❌ **REJECT ยืนยันซ้ำ** — Model-0 ก็ยัง PF 10 เพราะ tester ใช้ fixed spread ไม่มีวันถ่าง (blind spot ที่จดจาก Zeus) — spread-filter EA validate บน MT4 tester ไม่ได้เลย มีทางเดียวคือ forward demo (ไม่คุ้ม) |
 | Z61 (รันซ้ำโดย session นี้) | EU: 1.59/4,412/DD35.95 (อีก run: 1.65/5,668/DD27.0) | สอดคล้องกัน — ⏳ spread-stress อยู่ใน round 4 |
 
-**Round 4 กำลังรันแล้ว (ไม่ต้องรอ session หน้า — เลน 1 ว่างพอดี, `lane1_round4_070707.ps1` →
-`BWDOOS_MT4_ROUND4.csv`):** SPR30 ให้ RSI from pips_EA → Dark Venus → Z61 → Yetti3_Mod2_newsWorking
-(เรียงตามความหวัง)
+**🏁 Round 4 VERDICTS (SPR30 + lot-check ครบ, `BWDOOS_MT4_ROUND4.csv`):**
+
+| EA | SPR30 | lot 3ปี (Size-col) | Verdict |
+|---|---|---|---|
+| **RSI from pips_EA** | **2.25 / +3,108 / DD 7.67%** (จาก 2.32/DD7.6 — spread แทบไม่กัด) | **×6 สะอาด** (429 entries) | ✅ **ผ่านทุกด่านถึงตอนนี้ — โปรไฟล์สะอาดสุดของทั้ง order (DD ต่ำสุด)** → Model-0 bwd+fwd กำลังรัน (round 5, ด่านสุดท้าย) |
+| Dark Venus | PF ยืน 2.18 แต่ **DD 17.25→51.43%** 💀 | **×10-15 (0.02→0.2/0.3 = doubling ladder)** | ❌ **AUTO-REJECT (ฆ่าสองเด้ง)** — martingale ตามชื่อเสียงตระกูล Dark · spread เผย recovery fragility |
+| Z61 | 1.34 / DD 30.4% (เสื่อมจาก 1.59-1.65) | **×44-80 · entries 107k-111k(!) เทียบ trades ~5k** | ❌ **AUTO-REJECT** — basket ซ้อนหนักมากต่อ trade (คำเตือน batch-24 review เรื่อง entries ดิบสูงผิดปกติ = ถูกต้องเป๊ะ) |
+| Yetti3_Mod2_newsWorking | **1.02 / +265** | ×3 | ❌ **REJECT** — ตายที่ spread เหมือน Yetti3+NewsSherry ตามคาด (HFT family เดียวกัน) |
+
+**Round 5 (สุดท้ายจริง) กำลังรัน:** RSI from pips_EA Model-0 backward 2020-22 + forward 2026.03-07
+(บันไดเดียวกับที่ UnNomGuai ผ่าน) → ถ้าผ่าน = survivor เต็มตัวรายที่ 3 ของ MT4 pool
 
 **บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
 (FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
