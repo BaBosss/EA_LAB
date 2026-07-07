@@ -1991,7 +1991,13 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
-## ORDER-047 — RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวนี้ดี ลอง optimize + หลาย symbol + ปรับ TF") · swb reserve ขนาน — `RUNNING phase 1 (Claude, 2 เลน)`
+## ORDER-047 — RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวนี้ดี ลอง optimize + หลาย symbol + ปรับ TF") · swb reserve ขนาน — `REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — RSI=EURUSD-only ไม่ optimize · swb ฟื้นเป็น candidate #3 บน AUDCAD)`
+
+**🏁 VERDICT (Claude, 2026-07-07 — 3 เฟสจบ):**
+- **RSI from pips = EURUSD-specific · ไม่ optimize** (เหตุผลใต้ตาราง phase 2) — ใช้ default บน EURUSD เป็น demo ตามเดิม · ต่อยอดจริง = สร้าง original ใน Boss V2 (`RSI_FROM_PIPS_REVERSE_ENGINEERING.md`)
+- **🟢 swb flat-lot @ AUDCAD = DEMO-EXPERIMENT CANDIDATE #3** (ผลการท้วง "เทสตัวสำรองขนาน" ของ user ได้ candidate จริง!): BWD 2.40/DD8.6 → SPR30 2.23 → M0 1.80/DD20.4 · ladder ×3-4 · no-SL caveat · base 0.2 de-scale + magic=1 ชน UnNomGuai (คนละบัญชี/แก้ magic) — scorecard §ORDER-036 survivors
+- swb @ AUDUSD = 🟡 CONDITIONAL secondary (M0 1.66/DD32) · swb @ EURUSD/XAUUSD = ❌ REJECT (symbol-specific)
+- **บทเรียน:** (1) forward DD ต่ำหลอกได้เสมอ — RSI AUD คู่ DD<1% forward กลายเป็น 50%+ ที่ 3 ปี (ladder ×11-19) · (2) grid บางตัว symbol-specific — swb ตาย EURUSD แต่รอด AUDCAD (ต้องหาคู่ที่ ladder ตื้น) · (3) การเทสตัวสำรองขนานคุ้ม — ได้ candidate ที่ไม่คาด
 
 **⚠️ ข้อจำกัดสำคัญ: RSI from pips = .ex4 ล้วน ไม่มี source** (zip มีแต่ ex4) → optimize ได้แค่ input MT4
 optimizer บนกล่องดำ + มี recovery ladder (Lots_plus ×6) ข้างใน = **เสี่ยง overfit สูง** → ทำ breadth
