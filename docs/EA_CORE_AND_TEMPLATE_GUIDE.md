@@ -28,6 +28,12 @@
 - เขียน **standalone** ได้เฉพาะเมื่อแม่พิมพ์ยังแสดงกลไกนั้นไม่ได้ = **ทางด่วนชั่วคราว** — พิสูจน์ edge
   เมื่อไหร่ **ต้อง port กลับเข้า Boss V2** (เพิ่ม entry/module ให้แม่พิมพ์) + re-confirm เลขตรงเดิม
   ก่อน deploy. ห้ามปล่อย standalone เป็นถาวร (ยกเว้น EA ที่ live อยู่แล้ว — grandfather ถึง judge)
+  - 📁 **ที่อยู่ของ standalone EA = `D:\EA_LAB\ea_projects\<ชื่อ EA>\`** (1 โฟลเดอร์ต่อ EA: `.mq5`/`.ex5`
+    + `set_files\` + `reports\` + README — ดู `_TEMPLATE_EA_PROJECT\` เป็นแม่แบบ, ตัวอย่าง `Matchagrid`,
+    `Gold SMC continuous`, `(Boss)_RSI_MR_GridLog`). compile ในโฟลเดอร์นี้ (MetaEditor พ่น `.ex5` ข้างๆ `.mq5`).
+    design snapshot ที่ freeze (SpecCard + .mq5 ต้นฉบับ) เก็บที่ `_specs\`.
+  - ⛔ **ห้าม compile/เขียนไฟล์ EA ใหม่ลงใน `D:\EA_Project` เด็ดขาด** — นั่นคือ read-only ARCHIVE (ดูข้อถัดไป).
+    (Boss)_* รุ่นเก่าใน `EA_Project\CURRENT_BUILD\TEMPLATE\` = residents ที่ commit ก่อนปิดคลัง — ปล่อยไว้ ไม่ต้องย้าย
 - 🏛️ **(MERGE-08, 2026-07-06) EA_CORE = read-only ARCHIVE แล้ว** — อะไหล่ถูกดูดเข้า Boss V2
   ครบ: pyramid ladder = `STACK_PYRAMID(93)` (DESIGN_V2 §3c) · portfolio guard = `RC_AcctDDLimitPct` ·
   state persist = `core\Persist.mqh` · test pattern = `ea_template\tests\` — ต้องการ execution/กลไก
@@ -90,6 +96,8 @@ D:\EA_Project\CURRENT_BUILD\
 
 5. **compile** — ไม่มี build script กลาง ใช้ MetaEditor headless:
    `& "D:\Meta 5\MetaEditor64.exe" /compile:"...\TEMPLATE\EA_RUNNER_ST03.mq5"`
+   > ⚠️ **นี่คือ workflow ประวัติของ EA_CORE (archive) เท่านั้น** — path `...\TEMPLATE\` ชี้เข้า `D:\EA_Project`
+   > ซึ่งปิดเป็น read-only แล้ว. **EA standalone ตัวใหม่ compile ที่ `ea_projects\<ชื่อ>\` (EA_LAB) — ห้ามพ่น .ex5 เข้า archive** (ดู §1).
 6. **backtest** — ผ่าน automation ของ EA_LAB (`D:\EA_LAB\scripts\mt5_run.ps1`, ปิด MT5 GUI ก่อน)
 
 ### 2.5 ตระกูล ST03 ใน EA_CORE (ระวังสับสน — 3 ตัวคนละอย่าง)
