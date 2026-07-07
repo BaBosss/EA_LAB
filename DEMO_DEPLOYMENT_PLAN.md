@@ -102,29 +102,22 @@ export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monito
 
 ---
 
-## 🆕 UnNomGuaiV1.132 + RSI from pips_EA — MT4 demo experiment #2 — 🟡 **รอ user attach (อนุมัติ 2026-07-07)**
+## 🆕 MT4 demo experiment #2 — 3 treasure-hunt survivors — 🟡 **รอ user attach (อนุมัติ 2026-07-07)**
 
-> **2 survivor เต็มตัวจาก ORDER-036 (1,318 ex4)** — ผ่านครบ: BWD-OOS 2020-22 → spread 30pts →
-> Model-0 every-tick backward+forward · หลักฐาน: `ORDER-036_MT4_MASS_SMOKE.md` §FINAL TALLY +
-> scorecard §ORDER-036 survivors · bundle พร้อมใช้: **`_mt4_demo_deploy\`** (ex4 ×2 + README + MD5 lock)
+> **3 survivor จาก EA ~1,300 ตัว (ORDER-036/046/047)** ผ่าน funnel 5 ด่านครบ ·
+> **checklist + kill-switch + ค่าคาดหวังเต็ม = `_mt4_demo_deploy\README_DEPLOY.md`** (รวมครบในที่เดียว อ่านง่าย)
+> · bundle: ex4 ×3 + set ×2 + MD5 lock
 
-**ต่างจากกติกา ClevrFX (ตัวเดียว/บัญชี): คู่นี้อยู่บัญชีเดียวกันโดยเจตนา (user อนุมัติ 2026-07-07)** —
-กลไกคนละแบบ (grid-basket vs RSI-ladder) คู่เดียวกัน EURUSD → ได้ correlation จริงฟรี ·
-attribution ใช้ magic แยกขาด: UnNomGuai = 1(buy)/2(sell) · RSI = 5888
+| # | EA | Chart | Set | Magic |
+|---|---|---|---|---|
+| 1 | UnNomGuaiV1.132 | EURUSD H1 | `UnNomGuai_cap20.set` | 1/2 |
+| 2 | RSI from pips_EA | EURUSD H1 | defaults | 5888 |
+| 3 | swb grid 4.1.0.3_h | AUDCAD H1 | `swb_AUDCAD_demo.set` | 990 |
 
-**Deploy checklist (user):**
-1. **บัญชี demo ใหม่** (แยกจากบัญชี ClevrFX) · balance $10,000 · แนะ ThinkMarkets demo
-2. **ลง MT4 ใหม่ portable ที่ `D:\Meta4demo`** — ห้ามใช้ `D:\Meta4`/`D:\Meta4b` (เลนเทส script ฆ่า terminal)
-3. ก็อป ex4 ทั้งสองจาก `D:\EA_LAB\_mt4_demo_deploy\` → `MQL4\Experts\` (เช็ค MD5 ตาม README ถ้าไม่แน่ใจ)
-4. Chart EURUSD H1 สองหน้าต่าง ตัวละ chart · **attach ด้วย compiled defaults ห้ามแก้ input ใดๆ**
-5. AutoTrading เขียว · เซฟ profile · **จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม**
-6. ⚠️ ทั้งคู่ **no hard SL** — เครื่องต้องออนไลน์ตลอด (จุดอ่อนเดียวกับ ClevrFX)
-
-**Kill-switch + judge:** รายละเอียดเต็มใน `_mt4_demo_deploy\README_DEPLOY.md` — สรุป: หยุดทันทีถ้า
-UnNomGuai เปิด >12 ไม้พร้อมกัน (ประวัติไม่เคยเกิน 9) หรือ RSI ladder ทะลุ 0.08 lot (ไม่เคยเกิน 0.06) ·
-alert DD 20%/25% · kill DD 30%/35% หรือ net ลบ 8 สัปดาห์ติด · **judge ≥3 เดือนหลัง attach +
-≥30 trades/ตัว** · monitor รอบเดียวกับ ClevrFX: ทุก ~2 สัปดาห์ export statement ส่ง Claude
-(แยก P&L ตาม magic)
+**1 บัญชี demo ใหม่ ($10k, ThinkMarkets) รันทั้ง 3** (คนละ chart/magic ไม่ชน) · ลง MT4 portable
+`D:\Meta4demo` (ห้ามทับเลนเทส) · **ห้ามแก้ input · no hard SL ทุกตัว → online ตลอด** ·
+**จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม (judge +3 เดือน)** · monitor รอบเดียวกับ ClevrFX
+(statement ทุก ~2 สัปดาห์, แยก P&L ตาม magic) — รายละเอียดทั้งหมดใน README
 
 ---
 
