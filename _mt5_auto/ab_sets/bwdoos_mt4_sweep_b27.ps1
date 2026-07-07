@@ -1,10 +1,14 @@
 # BWD-OOS 2020-2022 sweep of 036 batch-27 Tier A survivors (lot-check already
-# passed clean, ratios 3x-6x, no grid signature). Lane MT4b (D:\Meta4b, -Portable), Model 1.
+# passed clean, ratios 3x-6x, no grid signature). Lane 1 (D:\Meta4) ONLY - lane
+# MT4b (D:\Meta4b) does not have 2020-2022 history loaded (confirmed 2026-07-07:
+# every test there exits instantly with NO REPORT despite launching fine - it's
+# a portable copy set up for the recent-4mo smoke basket only). All BWD-OOS/
+# backward work must run on lane 1.
 $ErrorActionPreference = "Continue"
 . D:\EA_LAB\scripts\use_python.ps1
 
 $src_base = "D:\Forex\10_EA_PROJECTS\2. wait for test"
-$dd_experts = "D:\Meta4b\MQL4\Experts\_smoke"
+$dd_experts = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0\MQL4\Experts"
 $targets = Import-Csv "D:\EA_LAB\_mt5_auto\ab_sets\bwd_mt4_targets_b27.csv"
 $out = "D:\EA_LAB\_mt5_auto\BWDOOS_MT4_B27.csv"
 '"ea","symbol","full_pf","full_trades","full_net","full_dd_pct","note"' | Out-File $out -Encoding utf8
@@ -21,7 +25,7 @@ foreach ($t in $targets) {
   }
   $safe = ($t.ea -replace '[^A-Za-z0-9]','_'); if ($safe.Length -gt 40) { $safe = $safe.Substring(0,40) }
   $rep = "BWD4B27_${safe}_$($t.symbol)"
-  powershell -File D:\EA_LAB\scripts\mt4_run.ps1 -Expert $t.ea -Symbol $t.symbol -Period H1 -FromDate 2020.01.01 -ToDate 2023.01.01 -Model 1 -ReportName $rep -TimeoutSec 900 -Portable -Terminal "D:\Meta4b\terminal.exe" -InstallDir "D:\Meta4b" -DataDir "D:\Meta4b" | Out-Null
+  powershell -File D:\EA_LAB\scripts\mt4_run.ps1 -Expert $t.ea -Symbol $t.symbol -Period H1 -FromDate 2020.01.01 -ToDate 2023.01.01 -Model 1 -ReportName $rep -TimeoutSec 900
   $htm = "D:\EA_LAB\_mt4_auto\reports\$rep.htm"
   if (-not (Test-Path $htm)) { "`"$($t.ea)`",`"$($t.symbol)`",,,,,NO_REPORT" | Add-Content $out; continue }
   try {
@@ -29,4 +33,4 @@ foreach ($t in $targets) {
     "`"$($t.ea)`",`"$($t.symbol)`",$($j.profit_factor),$($j.total_trades),$($j.net_profit),$($j.max_drawdown_pct)," | Add-Content $out
   } catch { "`"$($t.ea)`",`"$($t.symbol)`",,,,,PARSE_ERR" | Add-Content $out }
 }
-Write-Output "MT4 BWD SWEEP B27 (lane MT4b) DONE -> $out"
+Write-Output "MT4 BWD SWEEP B27 (lane 1) DONE -> $out"
