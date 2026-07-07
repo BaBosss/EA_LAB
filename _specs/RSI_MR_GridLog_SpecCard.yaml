@@ -1,5 +1,9 @@
 spec_card_version: "3.0"
 chain_id: "EA_RSI_MR_GRIDLOG_20260707_01"
+# BUILD STATUS 2026-07-07: code generated + compiled 0/0 + mql-review PASS.
+#   EA file: D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_RSI_MR_GridLog_rev01.mq5
+#   magic 990103 · review found+fixed 1 HIGH (dual-side => HEDGING-account guard in OnInit).
+#   NEXT: smoke EURUSD H1 -> BWD/spread/Model-0 (validate from scratch, per plan below).
 
 # ============================================================================
 # Master EA Spec Card — RSI Mean-Reversion GridLog
