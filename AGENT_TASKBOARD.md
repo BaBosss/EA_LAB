@@ -1991,6 +1991,26 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
+## ORDER-046 — Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool — `RUNNING (Claude เลน 1, 2026-07-07 ค่ำ)` _(user ท้วง 2026-07-07: "จะไม่ optimize เลยเหรอ" — คำตอบ: probe เฉพาะตัวที่ input โครงสร้างเดียวปิดจุดตายได้ ไม่ใช่ tune หา PF สวย)_
+
+**หลักการ (Claude ตัดสิน):** แก้ **หนึ่ง input โครงสร้าง** ที่ตรงกับ kill-cause แล้วส่งเข้า**ด่านเดิมครบชุดจากศูนย์**
+(BWD→lot-check→spread→M0) — ไม่ sweep หลาย param บน black box (= โรงงาน overfit, แยก luck จาก logic ไม่ได้)
+**Probes (script `lane1_revival_070707.ps1` → `BWDOOS_MT4_REVIVAL.csv` + lot-check ใน log):**
+1. **FZ2 + multiplier=0,MM=0** — เหตุผลแรงสุด: **engine เดียวกับ UnNomGuai เป๊ะ** ต่างแค่ multiplier=1.5 vs 0
+   → probe = แปลงเป็น config คลาสที่ผ่านครบทุกด่านแล้ว · เป็น canary ของกลไก -SetFile ด้วย (ladder ต้องหาย)
+2. **UnNomGuai + space3Orders=20 (จาก 99)** — cap probe ก่อน demo: ประวัติไม่เคยเกิน 9 ไม้ → ผลต้อง**เหมือน
+   baseline เป๊ะ** (1.89/3640/+8527) = ปิด tail-risk 99 ชั้นฟรี ถ้าเลขต่าง = cap bind ที่ไหนสักจุด → Claude ดู
+3. **swb grid + lot_multiplier=0** — ปิด ladder boolean เดียว เหลือ flat 0.1 BB+Stoch+RSI grid (PF 2.1 ทั้งที่มี ladder)
+4. Yetti3+NewsSherry + Boost=1.0 — อ่อนสุด (ตายที่ spread margin) ท้ายคิว
+**ไม่ probe:** Dark Venus (multiplier ฝังใน GridManagement ไม่มี input เดี่ยว + ตาย 2 เด้ง) · ตัวที่ BWD PF<1
+(ขาดทุนย้อนหลังด้วย logic ตัวเอง — fit ให้เขียว = artifact) · ตัว worthless/thin
+**Acceptance:** ต่อ probe: BWD PF/DD + lot-ratio ใหม่ · ตัวที่ผ่าน → spread+M0 chain ต่อ · verdict = Claude
+**หมายเหตุ magic:** swb/Oracle/FZ2 ใช้ magic=1 ชนกับ UnNomGuai (magicbuy=1) — ถ้าตัวไหนถึงขั้น demo ต้องแยกบัญชี
+
+**ผล:** _(รอ probes จบ)_
+
+---
+
 ## ORDER-043 — US30 GridLog: IS-optimize probe (optional, EV ต่ำ) — `OPEN (priority ต่ำ — ทำวันที่ ZCode ว่างจริงๆ)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode slot วันว่าง** (role: batch, เลน 2) _(renumbered 042→043: ชนกับ DealsExporter ของ session คู่ขนาน)_
 
 **ทำไม:** recon 4 variants (Claude 2026-07-06) ทั้งหมด PF 0.78-0.96 — ไม่มี life แบบทอง แต่กฎ no-DEAD-
