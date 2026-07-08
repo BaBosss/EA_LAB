@@ -106,6 +106,30 @@ NOT yet deployable — remaining before it's a validated candidate:
      second-order — sweep only if the holdout passes).
 Do NOT deploy on the in-sample plateau alone — the ATR-9 pick is now selection-fitted.
 
+## HOLDOUT 2023-24 — the honest arbiter (Claude, 2026-07-08)
+Ran the 4 coarse both-regime cells on 2023-2024 (NEVER used for selection):
+| cell | holdout 2023-24 | verdict |
+|---|---|---|
+| **EURUSD H1** | **PF 1.34 / DD 5.1 / 206 trd** | ✅ **PASS — validated across 3 independent windows** |
+| EURUSD M30 | 0.96 / DD 9.5 | ❌ selection-fit |
+| AUDUSD M30 | 0.89 / DD 6.2 | ❌ selection-fit |
+| EURJPY M30 | 0.79 / DD 14.8 | ❌ selection-fit |
+
+→ **The holdout did exactly its job:** 3 of 4 "both-regime" cells were selection artifacts (fail on
+untouched data); only EURUSD H1 is real. RSI-MR EURUSD H1 (LOG5/ATR9/wideSL) now clears **3 independent
+windows** — BWD 2020-22 PF 1.38, holdout 2023-24 PF 1.34, FWD 2025-26 PF 2.17 — all at DD 3-5%.
+
+## FINAL VERDICT (Claude, 2026-07-08)
+**RSI-MR EURUSD H1 = VALIDATED source-available EA** (the project's first original both-regime survivor
+that isn't a compiled black box). Honest caveats, stated not buried:
+  - Edge is CAPPED-RECOVERY driven, not signal (flat-lot loses in trend years). Legit because bounded
+    (8-leg cap + real SL + DD held 3-5% across all 3 windows) — but judge it as a recovery harvester.
+  - EURUSD-specific — does NOT travel (other symbols/TFs fail holdout or BWD).
+  - Modest edge (PF 1.3-1.4 in the harder windows), ~100 trades/yr.
+  - Remaining gate step: **Monte Carlo** (robustness-validator) before live/demo attach.
+Other RSI-MR cells + the UnNomGuai multi-symbol idea (AUDUSD/AUDCAD forward looked great, BWD DD 92-98%)
+= REJECTED regime traps. Lesson reinforced: forward-4mo is meaningless; the holdout/BWD is the arbiter.
+
 **Why it differs from the compiled original** (which passed BWD 2020-22 AND forward at PF ~2.3):
 the original ran NO stop loss + fixed 30-pip spacing + per-position 15-pip virtual TP. Our
 real-SL + ATR-spacing + basket-$ exit redesign — safer — changed the recovery dynamics enough

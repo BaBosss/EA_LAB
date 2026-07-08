@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | validate จากศูนย์ 2026-07-08 · **~52 backtest** (lot-law × ATR 0.5-10 × symbol × 2 regime) | ★★★ | 🟡 **ACTIVE-VALIDATION — เจอ both-regime plateau จริง (ATR 8-10)** ยังไม่ deploy | **config: LOG5 lot · ATR 9 · wide SL · EURUSD** → BWD PF 1.38/DD5.3 · FWD PF 2.17/DD3.4 · plateau 8-9-10 ไม่มีหลุม · ⚠️ trend-edge บาง (PF~1.1-1.4) + ไม่ travel (EURUSD-only เหมือนต้นฉบับ) · **เหลือ: holdout 2023-24 (ยังไม่แตะ) + MC ก่อนเชื่อ (ATR9 = selection-fitted แล้ว)** · 2 ครั้งที่เคยตัดสิน "dead" ผิด (LOG factor + ATR ตรึง 1.0) user จับถูกทั้งคู่ · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
+| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | ~60 backtest · **ผ่าน holdout 2023-24 (window ที่ไม่เคยใช้ select)** 2026-07-08 | ★★★ | 🟢 **VALIDATED (source-available!) — MC pending ก่อน deploy** | **config: LOG5 · ATR9 · wide SL · EURUSD H1** → 3 window อิสระ: BWD 1.38 · **holdout 1.34/DD5.1** · FWD 2.17 · DD 3-5% ทุกช่อง · ⚠️ edge = **capped-recovery** ไม่ใช่ signal (flat-lot BWD 0.78) แต่ capped (8 ไม้+SL) DD คุมได้ = legit L3 · **cell อื่น (M30/AUDUSD/EURJPY) ตก holdout = selection-fit → REJECT** · EURUSD-only (ไม่ travel) · เหลือแค่ **MC** · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|
