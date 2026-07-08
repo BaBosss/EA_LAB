@@ -449,12 +449,17 @@ lot-check EA ที่ผ่าน — กลับด้านสิ้นเ�
 **ลำดับสลับแล้ว (2026-07-07 ดึก, บทเรียน batch 12: lot-check ฟรีต้องทำก่อน BWD เสมอ ไม่ใช่หลัง):**
 1. **กรอง DQ ชื่อไฟล์:** `_fix|_nodll|crack` → mark DQ ใน CSV (คอลัมน์ note) ไม่ต้องรันต่อ
 2. **Lot-escalation check ฟรี (ทำก่อน BWD เสมอ)** — ทุก Tier A ที่เหลือ มี M1 report จากสมูก 4 เดือน
-   อยู่แล้วในมือ (ไม่ต้องรันอะไรเพิ่ม): **ใช้ `scripts/mt4_lotcheck.ps1` เท่านั้น** (อ่านคอลัมน์ Size
-   ของแถว entry buy/sell เท่านั้น) · **auto-flag: max÷base ≥10x → REJECT ทันที ไม่ต้องรอ Claude
-   ไม่ต้องรอ BWD** · ⚠️ **ห้ามใช้ quick-grep `class=mspt>(\d+\.\d\d)` เด็ดขาด (บั๊ก 2026-07-07:
-   regex นั้น match คอลัมน์ Profit/Balance ปนมาด้วย → เป่าค่า max 100-1000 เท่า สร้าง false
-   AUTO-REJECT ~15 ตัวใน batch 10-19 — ดู §Lot-check AUDIT)** — ชื่อ "Grid/Hedge/Martin/Martingale"
-   ในชื่อ EA = สัญญาณให้สงสัย แต่ตัดสินจาก Size จริงเท่านั้น (VisualMartiEA ชื่อ Marti แต่ ladder จริง ×5)
+   อยู่แล้วในมือ (ไม่ต้องรันอะไรเพิ่ม): **ใช้ `scripts/mt4_lotcheck.ps1`** (อ่านคอลัมน์ Size ของแถว
+   entry เท่านั้น) · ⚠️ **ห้ามใช้ quick-grep `class=mspt>(\d+\.\d\d)` เด็ดขาด (บั๊ก 2026-07-07 เป่าค่า
+   100-1000 เท่า จาก Profit/Balance ปน — ดู §Lot-check AUDIT).**
+   **🆕 กฎ ≥10x เดี่ยวๆ หยาบไป (user ท้วง 2026-07-08: "martingale ไม่ผิดเสมอ — เช็ค SL/capped/entry
+   ก่อนทิ้ง").** ก่อน AUTO-REJECT ให้รัน **`scripts/mt4_martingale_recheck.ps1`** (ดึง SL% + maxOpen +
+   step-law จาก report เดิม ฟรี):
+   - **STRUCTURAL-ruin** (ratio ≥10x **AND** SL ~0% **AND** maxOpen ≥8) → REJECT ได้ทันที (tune ไม่ช่วย)
+   - **HAS-SL (SL ≥50% ไม้)** หรือ **CAPPED (maxOpen ≤5)** → **อย่าเพิ่ง reject** — martingale ที่มี SL
+     ทุกไม้ + จำกัดชั้น = tail bounded ≠ uncapped ruin · ต้อง flat-lot test (ปิด escalation ดู PF ยัง >1?)
+     หรือ .set sweep ก่อน (ถ้ามี input names ใน report dump)
+   - ชื่อ "Grid/Martin" = สัญญาณสงสัย แต่ตัดสินจาก Size + SL + cap จริงเท่านั้น (VisualMartiEA ชื่อ Marti แต่ ×5)
 3. **BWD-OOS 2020-22 เฉพาะตัวที่ผ่าน lot-check** (max÷base <10x): ใช้ pattern
    `bwdoos_mt4_sweep_b0203.ps1` (copy → แก้ targets จาก CSV ของ batch ตัวเอง) →
    append ผลลง `_mt5_auto/BWDOOS_MT4_B<NN>.csv`

@@ -74,6 +74,19 @@ Honest answer: **it depends on WHY each was rejected. Two rejection classes:**
 - The RSI-from-pips compiled original was called "EURUSD-specific" from ONE ATR-implicit config (its
   own fixed 30-pip) — I did not (could not, no source) sweep ITS spacing across symbols.
 
+## PART 3b — Martingale recheck (user 2026-07-08: "martingale ไม่ผิดเสมอ — recheck ก่อนทิ้ง")
+Correct — "it's a martingale" is not a verdict. Built `scripts/mt4_martingale_recheck.ps1` (reads an
+EXISTING report, no re-test): base/max/ratio, step-law (doubles=martingale vs adds=linear), **SL% of
+entries**, **max concurrent open (is depth capped?)**. Classifies:
+- **STRUCTURAL-ruin** = ratio≥10x AND SL~0% AND maxOpen≥8 → the fat tail is unbounded, tuning can't
+  fix. Sampled reject pile: most ARE this (MARTINGALE ×2 doubling, 0% SL, maxOpen 20-471). Sound.
+- **HAS-SL / CAPPED** = SL on every order, or depth ≤5 → tail is bounded; NOT the same animal → recheck
+  entry-edge (flat-lot test) before reject.
+Sampled 14 rejects: the few flagged HAS-SL/CAPPED, when mapped to names, had a SECOND legit kill
+(PF<1, cross-symbol blowup, BWD DD99% already tested) — so few if any were truly killed for nothing.
+BUT the standalone "≥10x ratio = reject" rule was too crude; it now incorporates SL% + maxOpen
+(ORDER-036 stage-2 spec updated). Anti-recurrence: this is Verdict-Gate item 5.
+
 ## PART 4 — What I'm doing about it now
 1. RSI-MR: finishing the procedure properly (broad symbol×TF coarse scan running → fine on any
    both-regime cell → holdout 2023-24 → MC).

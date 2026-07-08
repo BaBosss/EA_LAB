@@ -2,6 +2,20 @@
 
 Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_STATE.md) — read that first every session. This file only holds instructions for how Claude Code itself should operate in this repo.
 
+## 🚦 VERDICT GATE — ห้ามตัดสิน EA (DEAD/PARKED/REJECT หรือ DEPLOY/PASS) จนกว่าจะเติม block นี้ครบ
+**(paid for with real mistakes 2026-07-08: ตัดสิน "dead" ผิด 2 ครั้งใน session เดียว เพราะ optimize
+ไม่ครบขั้นตอน — user จับได้ทั้งคู่. gate นี้คือกันไม่ให้ session ไหนพลาดซ้ำ. ถ้าจะเขียน verdict แล้ว
+block นี้ยังไม่ครบ = หยุด ทำให้ครบก่อน.)**
+
+1. **Levers swept?** list ทุก lever ที่เกี่ยว — `spacing · lot-law · SL-width · TP · entry-threshold · symbol · TF` — mark ตัวไหน swept / ตัวไหน held. **source-available EA ที่ verdict จาก <3 lever ที่ swept = INVALID.** ("ปรับแล้ว" มักแปลว่าปรับ 1 ใน 7 — ต้องเช็คจริง)
+2. **Coarse→surface?** เห็น *surface* (หลายจุด/axis) ไม่ใช่ 1-2 จุด? เป็น plateau (neighbor ไม่มีตัวขาดทุน) หรือ spike? — spike/hole = ยังไม่ผ่าน
+3. **Both regimes?** เทส candidate config บน **ทั้งปีเทรนด์ (BWD 2020-22) + ปีล่าสุด พร้อมกัน**? (lever ที่ดีที่สุด window นึงมัก invert อีก window)
+4. **REJECT เป็นแบบไหน?** STRUCTURAL (martingale-fat-tail / DD-blowup 90%+ / no-source / cracked) → ฆ่าได้ tune ไม่ช่วย · PARAMETRIC (แพ้ที่ window เดียว/setting เดียว) → **ต้อง sweep ก่อน reject**
+5. **Martingale ไม่ใช่ auto-reject** — recheck 4 ข้อก่อนทิ้ง: **มี SL ไหม · จำกัดจำนวนไม้ (capped steps) ไหม · entry มี edge จริงไหม (flat-lot test: ปิด escalation แล้ว PF ยัง >1?) · ดื้อ (add ตลอด) หรือมีเงื่อนไข**. capped-martingale + SL + entry-edge ≠ uncapped-ruin
+6. **DEPLOY/PASS เพิ่ม:** ผ่าน **holdout window ที่ไม่เคยใช้ select** + MC? plateau-center (ไม่ใช่ peak)? — in-sample plateau = selection-fit ยังไม่ใช่ validated
+
+รายละเอียดเต็ม + ตัวอย่าง = `OPTIMIZE_PROCEDURE_AND_AUDIT.md` + skill `backtest-optimize-rigor` (owns ขั้นตอน). gate นี้ = สรุปบังคับ อ่านทุก session.
+
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 
 **seat lead/judge = Claude Code รันบน Opus แล้ว.** role อยู่ที่ seat ไม่ใช่ model — Opus ทำหน้าที่เดิม
