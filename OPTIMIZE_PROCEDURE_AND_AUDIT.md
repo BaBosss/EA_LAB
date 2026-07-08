@@ -87,6 +87,19 @@ Sampled 14 rejects: the few flagged HAS-SL/CAPPED, when mapped to names, had a S
 BUT the standalone "≥10x ratio = reject" rule was too crude; it now incorporates SL% + maxOpen
 (ORDER-036 stage-2 spec updated). Anti-recurrence: this is Verdict-Gate item 5.
 
+## PART 3c — Full reject-pile recheck (2026-07-08, "ทำทั้งหมด")
+Ran `mt4_martingale_recheck.ps1` across ALL 356 M1 smoke reports (free, no re-test). Findings:
+- Most rejects = STRUCTURAL (martingale ×2 doubling, maxOpen 20-471) — sound.
+- **Tool refinement:** "HAS-SL" alone is too generous — a martingale ×2 with SL but maxOpen 36-97 is
+  still ruin (SL sits far, exposure stacks before it). The real Class-B filter = **CAPPED (maxOpen ≤6)
+  with a real lot law**, not SL-presence.
+- 25 genuinely-capped candidates surfaced. Mapped to names → **nearly ALL were already evaluated
+  downstream for real reasons**: ClevrFX (demo), 2020v2/Grail/FZ2 (spread-reject), Oracle/MultiHedge
+  (CONDITIONAL), swb/RSI-from-pips (demo), Dark Venus/Mimas (BWD-tested), Mood (zero-trade-2020 =
+  unverifiable), *_Fix (DQ). → **Essentially zero true "ตายเปล่า".** The reject process was sound; the
+  only real gap was the crude ratio-alone rule, now fixed (needs SL~0 AND maxOpen≥8 for auto-reject).
+- Raw: `_mt5_auto/MARTINGALE_RECHECK_ALL.txt`.
+
 ## PART 4 — What I'm doing about it now
 1. RSI-MR: finishing the procedure properly (broad symbol×TF coarse scan running → fine on any
    both-regime cell → holdout 2023-24 → MC).
