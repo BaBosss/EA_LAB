@@ -41,6 +41,15 @@
 
 ---
 
+## 🚨 WILL-IT-TRADE checklist (กัน "attach แล้วเงียบ 0 ไม้" — เช็คก่อนทุกครั้ง)
+1. **MT5 (#4-6): `.set` ต้องมี `AllowLive=true`** — set ในโฟลเดอร์นี้แก้ให้แล้ว (แต่ถ้า recompile/แก้เอง อย่าลืม) ·
+   ถ้า AllowLive=false บน demo = **ไม่ส่ง order เลย เงียบสนิท** (ใน tester ไม่เจอเพราะ MQL_TESTER bypass)
+2. **RSI-MR (#4) ต้องบัญชี HEDGING** — ถ้าเปิดบัญชี Netting EA จะ **INIT_FAILED** (มี guard) ไม่ยอมโหลด → บัญชี demo เลือก type **Hedge**
+3. **MT4 (#1-3):** ปุ่ม **AutoTrading เขียว** + Common tab **✅ Allow live trading** (commercial EA ไม่มี input AllowLive)
+4. **symbol ให้ตรง broker** — เปิด chart symbol ตามตาราง (ถ้า broker มี suffix เช่น XAUUSD.r ต้องเปิด chart ตัวนั้น; EA ใช้ _Symbol ของ chart)
+5. **magic ไม่ชนกัน** — MT5: 990103/990101/991001 · MT4: 1-2/5888/990 (distinct ✓)
+6. เช็ค 1 ชม.แรก: มี order เข้า หรือ Journal ขึ้น log EA (RSI-MR/Zeus/BRK พิมพ์ init line) = ทำงาน · ถ้าเงียบ → ย้อนดูข้อ 1-4
+
 ## ขั้นตอน attach (ต่อ EA)
 1. เปิด chart ตามตาราง (symbol + H1)
 2. ลาก EA ลง chart → ✅ Allow live trading · **โหลด set ตามตาราง** (RSI-orig ใช้ defaults)

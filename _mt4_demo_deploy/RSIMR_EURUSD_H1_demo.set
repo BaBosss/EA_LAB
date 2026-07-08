@@ -3,3 +3,5 @@ _02_SlMaxPips=600.0
 _05_LotMode=3
 _05_LogFactor=5.0
 _03_DistAtrMult=9
+
+_07_AllowLive=true
