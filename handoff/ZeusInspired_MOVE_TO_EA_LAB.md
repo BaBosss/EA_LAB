@@ -3,7 +3,7 @@
 > **สำหรับ:** session ที่กำลังทำ ZeusInspired_GridLog อยู่ (เจ้าของงาน)
 > **จาก:** session "Order-36 backtest analysis" (Opus-seat) + user · **วันที่:** 2026-07-08
 > **หยิบไปรันได้เลย** — order นี้ self-contained ไม่ต้องอ่านบทสนทนาต้นทาง
-> **สถานะ:** ⏳ ยังไม่ทำ — **รอจนเทส ZeusInspired ถึง checkpoint ก่อน** (ห้ามย้ายกลาง backtest ที่รันค้าง)
+> **สถานะ:** ✅ **เสร็จสมบูรณ์แล้ว 2026-07-08** — ย้ายครบทุกขั้นตอน: archive git rm (EA_Project commit `fbb4aed`) · ไฟล์อยู่ที่ `ea_projects/(Boss)_ZeusInspired_GridLog/` ครบ (source + .ex5 + 12 .set + reports) · path ใน scorecard/PROJECT_STATE ชี้มาที่ใหม่แล้ว · README banner อัปเดตแล้ว. **order นี้ obsolete — ไม่ต้องทำซ้ำ** (เก็บไว้เป็น audit trail เท่านั้น). ยืนยันซ้ำ session 2026-07-09.
 
 ---
 
