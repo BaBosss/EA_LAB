@@ -85,10 +85,17 @@ strategy:
     atr_period: 14
     atr_multiplier: 1.0         # grid add-level spacing = ATR(14) x 1.0 (opt target later)
   lot_sizing:
-    mode: "LOG"                 # more conservative than original's linear +0.01; far from martingale
+    mode: "LOG"                 # lot_N = base x factor^(ln N) = base x N^(ln factor) => POLYNOMIAL growth
     base_lot: 0.01
     log_type: "LN"
-    log_factor: 1.3             # lot_N = base x 1.3^ln(N) — gentle averaging-down
+    log_factor: 5.0             # validated config (2026-07-08). N^ln(5)=N^1.61. leg8=0.28, leg15=0.79.
+    # RISK NOTE (scrutiny 2026-07-08, user corrected me): LOG grows POLYNOMIAL (N^1.61) vs martingale
+    # EXPONENTIAL (mult^N). At leg15 LOG5=0.79 lot vs mart2.0=163 lot — LOG is categorically safer in
+    # the tail; NOT "dangerous like martingale" (my earlier claim was wrong). Capped at 8 legs + wide
+    # ATR spacing means it rarely goes deep anyway. HOWEVER: flat-lot test (LOT_FIXED) gives BWD PF 0.78
+    # vs LOG5 2.96 => the 2020-22 edge is RECOVERY/AVERAGING-driven, not signal-driven. Honest label:
+    # this is a CAPPED-RECOVERY mean-reversion harvester (legit L3), NOT a signal-edge EA. Judge it on
+    # whether the capped tail stays survivable (DD held <20% in tests), not on a signal it doesn't have.
   take_profit:
     mode: "DYNAMIC"
     scope: "NET_ALL"            # basket closes together when averaged net >= target (from RE)
