@@ -23,3 +23,21 @@ months/EA: UnNom 41 · RSIorig 41 · swb 42 · RSI_MR 77 · Zeus 30 · BRK 49
   MT5 demo account, watch combined XAUUSD exposure; consider a slightly smaller lot on the gold pair,
   or accept it and let the demo reveal the combined behaviour. All other cross-instrument pairs are
   additive-to-negative = the cohort as a whole is genuinely diversified.
+
+## Combined-portfolio simulation (2026-07-08, `scripts/portfolio_sim.py`, equal profit-weight)
+| | maxDD (% of gain) | positive months |
+|---|---|---|
+| RSI_MR solo | 12.0% | 78% |
+| Zeus solo | 10.4% | 80% |
+| BRK solo | 8.2% | 53% |
+| **COMBINED 6-EA** | **1.2%** | **91%** |
+| gold pair (Zeus+BRK) | 3.8% | 64% |
+
+- Running all 6 together: combined DD (1.2% of gain) is FAR below any single EA (8-12%) — the
+  diversification is real; 91% positive months. Confirms the corr matrix.
+- The gold pair (Zeus+BRK, shared XAUUSD) combined DD = 3.8% — safe to run on one account; the 0.42
+  correlation does NOT create a dangerous gold stack.
+- **HONEST caveat:** the 3 MT4 grid EAs show ~0% realized DD / 95-100% positive months — the signature
+  of no-SL grids whose tail (a disconnect / deep-grid blowup) isn't in the tested window. So the 1.2%
+  combined is backtest-realized, NOT true tail. This is exactly why the whole cohort is demo-only with
+  hard kill-switches. Trust the diversification shape, not the absolute smoothness.
