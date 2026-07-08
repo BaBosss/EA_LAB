@@ -9,7 +9,7 @@
 | platform | EA | ลง terminal ที่ |
 |---|---|---|
 | **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | portable ใหม่ `D:\Meta4demo` |
-| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU | portable ใหม่ `D:\Meta5demo` |
+| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK | portable ใหม่ `D:\Meta5demo` |
 
 - ทั้งคู่: บัญชีใหม่ **$10,000** · **ThinkMarkets demo** (broker ที่ validate) · type **Hedge** (RSI-MR ต้องการ hedging)
 - ❌ ห้ามใช้ `D:\Meta4`/`D:\Meta4b`/`D:\Meta 5`/`D:\Meta 5b` (เลนเทส script ฆ่า terminal ทิ้งประจำ)
@@ -27,6 +27,7 @@
 | 4 | **(Boss)_RSI_MR_GridLog_rev01** | MT5 | EURUSD H1 | `RSIMR_EURUSD_H1_demo.set` | 990103 | **มี (ATR)** |
 | 5 | **(Boss)_ZeusInspired_GridLog_rev01** | MT5 | **XAUUSD** H1 | `ZeusInspired_XAUUSD_H1_demo.set` | 990101 | **มี (ATR)** |
 | 6 | **EA_BREAKOUT_XAU** | MT5 | **XAUUSD** H1 | `EA_BREAKOUT_XAU_demo.set` | 991001 | **มี (ATR, RR 3.3)** |
+| 7 | **(BRK)_SqueezeBreakout_rev01** | MT5 | **XAUUSD** H1 | `SqueezeBreakout_XAU_demo.set` | 991004 | **มี (ATR, RR 5)** |
 
 **ค่าที่ผ่านการพิสูจน์ (ใช้เทียบตอน judge):**
 
@@ -37,7 +38,8 @@
 | swb @ AUDCAD | 1.80 (M0) | 20% | plateau-verified | ~35 |
 | RSI-MR | 1.34-2.17 (3 window) | ~5% | **ROBUST (MC+WFA)** | ~100/yr |
 | Zeus @ XAU | 1.38-2.16 (3 window) | **~4%** | MARGINAL (MC ✓, WFA อ่อน) | ~130/yr |
-| BRK-XAU | 1.74-2.94 (3 window) | **~2%** ต่ำสุด | MARGINAL (MC PF-5th 1.53 สูงสุด, thin) | ~13/yr (ต่ำ) |
+| BRK-XAU | 1.74-2.94 (3 window) | ~2% | MARGINAL (MC PF-5th 1.53 สูงสุด, thin) | ~13/yr (ต่ำ) |
+| SqueezeBRK | 2.07-2.67 (3 window) | **~1.6%** ต่ำสุด | MARGINAL→ROBUST (MC PF-5th 1.25, WFA 3/3 OOS) | ~15/yr · **uncorrelated กับ gold ตัวอื่น (-0.09/0.17)** |
 
 ---
 

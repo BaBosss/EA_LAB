@@ -1,0 +1,11 @@
+ea: "(BRK)_SqueezeBreakout_rev01 @ XAUUSD H1, config rb60/kc2/sl1.0/tp5, magic 991004"
+origin: "user idea 2026-07-08 (squeeze confluence) + re-opt (tight SL). Volatility-squeeze release +
+         60-bar Donchian break + EMA200, single-position L1, real SL."
+three_window: "BWD 2.07 / holdout 2.67 / FWD 1.65 (all strong)"
+monte_carlo: {trade_count: 96, pf_5th: 1.25, dd_95th_pct: 2.06, prob_of_ruin_pct: 0.0}   # PF-5th GREEN (>1.2)
+wfa: {oos_profitable_pct: 100, note: "3/3 OOS windows profitable (better than Zeus/BRK 2/3); ER mixed"}
+correlation: "vs BRK -0.09, vs Zeus 0.17, vs RSI_MR -0.23 -> UNCORRELATED, diversifies even on gold"
+verdict: "MARGINAL->ROBUST (score ~77) -> DEMO CANDIDATE #7"
+notes: "lowest DD of the whole cohort (1.63% full-span). Thin ~15/yr, OOS-split degrade 31%. The re-opt
+        (0.966->1.25 PF-5th) succeeded via tight SL 1.0 + wide TP 5 (momentum RR). demo-first."
+deploy: "XAUUSD H1, set SqueezeBreakout_XAU_demo.set (AllowLive=true), magic 991004, HEDGING not required (single-position)"
