@@ -251,7 +251,7 @@ deploy à¸—à¸³à¸•à¸²à¸¡ `DEPLOY_CHECKLIST_2026-06-29.md` â†�
 ### ðŸ†• SESSION 2026-07-08 (Opus) â€” EA hunt à¸£à¸­à¸šà¹ƒà¸«à¸à¹ˆ: 6 demo candidates + à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­/à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸–à¸²à¸§à¸£
 **ðŸ‘‰ à¸­à¹ˆà¸²à¸™ block à¸™à¸µà¹‰à¸à¹ˆà¸­à¸™ â€” à¸ªà¸£à¸¸à¸›à¸‡à¸²à¸™à¸£à¸­à¸šà¸¥à¹ˆà¸²à¸ªà¸¸à¸” + à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸•à¹ˆà¸­**
 
-**à¸œà¸¥à¸¥à¸±à¸žà¸˜à¹Œ: demo cohort = 6 candidates (à¸œà¹ˆà¸²à¸™ funnel à¹€à¸‚à¹‰à¸¡à¸„à¸£à¸šà¸—à¸¸à¸à¸•à¸±à¸§: instrument/TF/param/holdout/MC)** â€”
+**à¸œà¸¥à¸¥à¸±à¸žà¸˜à¹Œ: demo cohort = 7 candidates (à¸œà¹ˆà¸²à¸™ funnel à¹€à¸‚à¹‰à¸¡à¸„à¸£à¸šà¸—à¸¸à¸à¸•à¸±à¸§: instrument/TF/param/holdout/MC)** â€”
 bundle à¸žà¸£à¹‰à¸­à¸¡ attach à¸—à¸µà¹ˆ `_mt4_demo_deploy\README_DEPLOY.md` (2 à¸šà¸±à¸à¸Šà¸µ: MT4 + MT5):
 | # | EA | platform | à¸„à¸¹à¹ˆ/TF | tier | MaxDD | magic |
 |---|---|---|---|---|---|---|
@@ -692,3 +692,4 @@ hostile pattern) Â· EURCHF/USDCHF/LNBREAK = DEAD-optimized Â· NRBreakout = P
 - grid/martingale à¹ƒà¸Šà¹‰ report DD + every-tick à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ MC à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§.
 - monitor metric (Myfxbook/Excel/FX Blue) = à¸”à¸¹à¹€à¸žà¸·à¹ˆà¸­ "à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ" à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ **à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸•à¸±à¸§ reject EA** â€”
   à¸à¸²à¸£ reject à¹ƒà¸Šà¹‰ (magic,symbol) attribution + à¹€à¸—à¸µà¸¢à¸š backtest à¸•à¸²à¸¡ section 6 à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™.
+

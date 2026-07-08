@@ -1,4 +1,4 @@
-# Demo Experiment — Treasure-Hunt Survivors (5 EAs, MT4 + MT5)
+# Demo Experiment — Treasure-Hunt Survivors (7 EAs, MT4 + MT5)
 
 > **ที่มา:** 3 ตัวแรกคัดจาก EA ~1,300 (ORDER-036/046/047) · 2 ตัวหลัง = **สร้างเอง source ครบ**
 > (RSI-MR + Zeus, ผ่าน holdout+MC+WFA) · หลักฐาน: `EA_SCORECARD_AND_REGISTRY.md` + verdict YAML ต่อตัว
@@ -17,7 +17,7 @@
 
 ---
 
-## EA ทั้ง 5
+## EA ทั้ง 7
 
 | # | EA | Platform | Chart | Set | Magic | SL |
 |---|---|---|---|---|---|---|
@@ -44,7 +44,7 @@
 ---
 
 ## 🚨 WILL-IT-TRADE checklist (กัน "attach แล้วเงียบ 0 ไม้" — เช็คก่อนทุกครั้ง)
-1. **MT5 (#4-6): `.set` ต้องมี `AllowLive=true`** — set ในโฟลเดอร์นี้แก้ให้แล้ว (แต่ถ้า recompile/แก้เอง อย่าลืม) ·
+1. **MT5 (#4-7): `.set` ต้องมี `AllowLive=true`** — set ในโฟลเดอร์นี้แก้ให้แล้ว (แต่ถ้า recompile/แก้เอง อย่าลืม) ·
    ถ้า AllowLive=false บน demo = **ไม่ส่ง order เลย เงียบสนิท** (ใน tester ไม่เจอเพราะ MQL_TESTER bypass)
 2. **RSI-MR (#4) ต้องบัญชี HEDGING** — ถ้าเปิดบัญชี Netting EA จะ **INIT_FAILED** (มี guard) ไม่ยอมโหลด → บัญชี demo เลือก type **Hedge**
 3. **MT4 (#1-3):** ปุ่ม **AutoTrading เขียว** + Common tab **✅ Allow live trading** (commercial EA ไม่มี input AllowLive)
@@ -63,7 +63,7 @@
 
 ## ⚠️ กติกาเหล็ก
 - **ห้ามแก้ input** นอกจาก set ที่ให้ — validate ด้วยค่านี้ แก้ = โมฆะ
-- **#1-3 (MT4) ไม่มี hard SL** → เครื่อง/VPS **ต้องออนไลน์ตลอด** (หลุด = ไม้เปลือย) · #4-5 (MT5) มี SL แต่ก็ควรออนไลน์
+- **#1-3 (MT4) ไม่มี hard SL** → เครื่อง/VPS **ต้องออนไลน์ตลอด** (หลุด = ไม้เปลือย) · #4-7 (MT5) มี SL แต่ก็ควรออนไลน์
 - MT4: ห้ามเพิ่ม EA อื่นในบัญชี (magic 1/2 ชนง่าย)
 - เช็คทุกเช้าจันทร์: terminal รัน + AutoTrading เขียว (update ชอบ reset)
 
@@ -75,6 +75,7 @@
 - swb ladder ทะลุ **1.0 lot/ไม้** @ AUDCAD
 - RSI-MR เปิด **>8 ไม้** หรือ lot/ไม้ ทะลุที่ LOG5 ควรเป็น (cap 8 ไม้ในโค้ดแล้ว)
 - Zeus เปิด **>6 ไม้** (cap 6 ในโค้ด) หรือ DD เกิน 15% (backtest ไม่เคยเกิน ~4%)
+- BRK-XAU / SqueezeBRK: single-position (ควรมีไม้เดียว) — ถ้าเห็น >1 ไม้เปิดพร้อมกัน = ผิดปกติ · DD เกิน 10%
 
 **เตือน:** equity DD ตัวนั้นแตะ 25% (MT4) / 15% (MT5, เพราะ backtest DD ต่ำมาก)
 **Kill:** DD แตะ 35% (MT4) / 25% (MT5) · หรือ net ลบต่อเนื่อง 8 สัปดาห์
@@ -94,7 +95,7 @@ C6B6BCD443EFFC9D1098F5E8D0B5208D  UnNomGuaiV1.132.ex4
 C6F31A2A3DF8F4A9D8D375D86801B9A6  RSI from pips_EA.ex4
 35BFB25E93966DE1A9521A4A59313379  swb grid 4.1.0.3_h.ex4
 ```
-(MT5 .ex5 ของ #4/#5 = build จาก source ใน `ea_projects\` — recompile ได้ ไม่ต้อง lock)
+(MT5 .ex5 ของ #4-7 = build จาก source ใน `ea_projects\` — recompile ได้ ไม่ต้อง lock)
 
 ## หมายเหตุกลไก
 - **UnNomGuai** — grid ตะกร้า 0.01→0.07, ปิดยกชุด +$8, cap 20 ชั้น · EURUSD-only
@@ -103,3 +104,5 @@ C6F31A2A3DF8F4A9D8D375D86801B9A6  RSI from pips_EA.ex4
 - **RSI-MR** (source เรา) — RSI MR + ATR grid + LOG lot + real SL · edge=recovery(capped) · EURUSD-only · `ea_projects\(Boss)_RSI_MR_GridLog\`
 - **Zeus** (source เรา) — pending-stop **breakout** + ATR grid + LOG lot + real SL · edge=momentum (DD จิ๋วสุดในกอง) · **GOLD-only** · `ea_projects\(Boss)_ZeusInspired_GridLog\`
 - **BRK-XAU** — Donchian 40-bar **breakout** + EMA200 filter, single-position real SL (RR 3.3), **ไม่มี grid = ปลอดภัยสุด** · edge=momentum, DD ~2% ต่ำสุด, ความถี่ต่ำ ~13/yr (thin) · **GOLD-only** · `ea_projects\EA_BREAKOUT_XAU\` · kill: DD>10% หรือ >2 ไม้เปิดพร้อมกัน (ควรเป็น single)
+- **SqueezeBRK** (source เรา) — volatility-squeeze release (BB บีบใน Keltner) + Donchian-60 break + EMA200, single-position real SL (RR 5) · edge=momentum ที่จับ "vol บีบแล้วระเบิด" · **GOLD-only แต่ uncorrelated กับ Zeus/BRK (-0.09/0.17) = diversify gold** · DD ~1.6% ต่ำสุดในกอง · `ea_projects\(BRK)_SqueezeBreakout\`
+- **หมายเหตุ gold (3 ตัว: Zeus/BRK/Squeeze):** corr ต่ำ-ลบทั้งหมด (จับคนละ move) → รันทั้ง 3 บนบัญชี MT5 เดียวได้ ไม่ต้องลด lot · แต่ทั้ง 3 = XAUUSD → ถ้า gold มี gap/หยุดเทรด กระทบพร้อมกัน = จับตา combined gold exposure
