@@ -2234,6 +2234,50 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 - USER-ACTION: attach DealsExporter.ex5 บน terminal demo 1 chart (วิธีอยู่ใน ORDER-039 — 2 นาที)
 - USER-ACTION: สมัคร Myfxbook ฟรี + เชื่อมบัญชี demo ด้วย investor password (ดูสุขภาพ account จากมือถือ — 5 นาที)
 
+---
+
+## ORDER-057 — mold upgrade: `Regime.mqh` (market-state filter, additive) — `OPEN` · **ทำได้: Codex/Claude/oc-dev** · 👉 **Codex-direct** _(ออก 2026-07-09, user สั่ง: "อยากได้ตัวระบุสภาวะตลาด trend/sideway เป็น direction ให้ EA + ปิดได้")_
+
+**ทำไม:** cohort มี EA ที่ตายเพราะ regime เปลี่ยน (NZDUSD-SELL = PARKED regime-dependent ·
+Scalping-AsReMix = PARKED trend-specialist edge-decay) — ถ้ามี regime filter ในแม่พิมพ์ จะได้
+lever ใหม่ให้ sweep ทั้ง family และเป็นตัว "ปิดเครื่องเมื่อสภาวะไม่ใช่" ที่ demo cohort ยังไม่มี
+
+**Stage A — implement (Codex-direct, additive เท่านั้น):**
+- ไฟล์ใหม่ `ea_template\core\Regime.mqh` — enum `REGIME_TREND_UP / REGIME_TREND_DOWN / REGIME_RANGE / REGIME_STORM`
+- ตัวจับ (built-in handles เท่านั้น ตามธรรมเนียม Indicators.mqh):
+  - trend/range: **iADX** บน `_50_Regime_TF` — ADX ≥ `_50_ADX_TrendMin` = trend (ทิศจาก +DI/-DI), ต่ำกว่า = RANGE
+  - storm: ATR ปัจจุบัน > `_50_StormATRmult` × SMA(ATR, `_50_StormLookback`) = STORM (ทับทุกสถานะ, 0 = ปิดเช็คนี้)
+- inputs ใหม่ใน `Inputs.mqh` (prefix `_50_`):
+  `_50_RegimeMode` **0=OFF (default)** · 1=FILTER (เทรดเฉพาะ regime ที่อนุญาตผ่าน `_50_AllowTrendUp/_AllowTrendDown/_AllowRange`; STORM = block เสมอ) · 2=DIRECTION (อนุญาตเฉพาะฝั่งตาม trend; RANGE = block ทั้งคู่)
+  · `_50_Regime_TF` (default H4) · `_50_ADX_Period` (14) · `_50_ADX_TrendMin` (25.0) · `_50_StormATRmult` (2.0) · `_50_StormLookback` (100)
+- จุดเสียบ: gate **การเปิดไม้ใหม่เท่านั้น** (ก่อน entry signal ใน LabCore) — ห้ามแตะ exit/basket/recovery/ไม้ที่เปิดอยู่ · ประเมินที่ bar-open ของ `_50_Regime_TF` (bar-open gate)
+**Acceptance (Stage A):** compile 0/0 · **`tpl_regression.ps1` CLEAN ที่ mode 0** (default off = พฤติกรรมเดิมทุก byte) · sanity run 1 ครั้ง: XAU GridLog p20 set + mode 1 (AllowRange=false) → trade count ต้องเปลี่ยนจาก baseline · commit `[codex] ORDER-057A done`
+**ห้าม (Stage A):** แตะ ExitManager/RiskControl/Recovery logic · เปลี่ยน default พฤติกรรมใดๆ · ตัดสินว่า filter "ช่วย"
+
+**Stage B — A/B sweep (ZCode/oc-btest, หลัง A ผ่าน review):**
+- EA ทดสอบ 2 ตัว: XAU GridLog (Pass 20 set) + AUDNZD champion — รัน baseline (mode 0) vs mode 1 (3 ชุด allow) vs mode 2, บน**ทั้ง 2 window: 2023-2026 + BWD 2020-2022** (กฎ both-regimes)
+- sweep `_50_ADX_TrendMin` ∈ {20, 25, 30} — รายงานดิบ PF/Trades/DD ต่อ cell, append ใต้ order นี้
+**ห้าม (Stage B):** เลือก config "ดีสุด" — verdict = Claude ตาม VERDICT GATE (surface ไม่ใช่จุดเดียว)
+
+---
+
+## ORDER-058 — live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 วิ (ต่อยอด DealsExporter) — `OPEN` · **ทำได้: qwen/Sonnet/oc-dev** · 👉 **เลนถูก (mechanical)** _(ออก 2026-07-09, user เห็นตัวอย่างจากโพส FB Claude Thailand แล้วอยากได้แบบนั้น)_
+
+**ทำไม:** ORDER-042 ให้ deals CSV per-magic แล้ว แต่การอ่านยังเป็น manual/ea-live-monitor text —
+user อยากได้หน้าเดียวแบบโพส FB: แถวละ EA เห็น P&L / PF / DD / สถานะ kill-switch เป็นสีทันที
+
+**สั่งทำ:**
+- script `scripts\live_dashboard.ps1` (หรือ .py ใช้ portable python ของ repo): อ่าน CSV ล่าสุดจาก
+  `portfolio\live_deals\` → group ตาม magic → join ชื่อ EA + expectation จาก DEMO_DEPLOYMENT_PLAN
+- output `portfolio\LIVE_DASHBOARD.html` self-contained (ไม่มี external CDN): ตาราง 1 แถว/EA —
+  ชื่อ · magic · trades · net P&L · PF · maxDD% · วันเงียบล่าสุด (days-since-last-trade) ·
+  คอลัมน์สถานะสี: 🟢 ปกติ / 🟡 ใกล้เกณฑ์ kill-switch / 🔴 เข้าเกณฑ์ (เกณฑ์ = ตาราง kill-switch ใน README demo bundle)
+- sort: แดงขึ้นก่อน · มี timestamp ข้อมูล + ชื่อไฟล์ CSV ที่ใช้
+**Acceptance:** รันกับ CSV ตัวอย่างที่มีอยู่แล้วได้ HTML เปิดใน browser ได้จริง · ค่า P&L รวมตรงกับ
+ea-live-monitor ที่เคยรัน (ต่างได้ ≤ rounding) · commit `[tag] ORDER-058 done`
+**ห้าม:** ตัดสิน keep/kill ใน HTML (สีเป็นแค่ flag ตามเกณฑ์ที่ประกาศแล้ว — verdict = Claude/user) ·
+ห้ามแตะ scripts อื่น
+
 
 
 
