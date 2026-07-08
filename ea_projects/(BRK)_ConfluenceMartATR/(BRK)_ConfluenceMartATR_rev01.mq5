@@ -50,10 +50,14 @@ input int    _02_AtrPeriod    = 14;
 input bool   _02_UseEma       = true;
 input int    _02_EmaPeriod    = 200;
 
-input string _g03_            = "── [03] RECOVERY (martingale x ATR grid) ──";
+input string _g03_            = "── [03] RECOVERY (selectable lot law x ATR grid) ──";
+enum ENUM_LOTMODE { LOT_FIXED=0, LOT_LINEAR=1, LOT_MARTINGALE=2, LOT_LOG=3 };
+input ENUM_LOTMODE _03_LotMode = LOT_MARTINGALE; // recovery lot law
 input double _03_AddAtrMult   = 1.5;     // add a leg when price runs this x ATR adverse from the last leg
 input double _03_BaseLot      = 0.01;
-input double _03_MartMult     = 1.6;     // leg N lot = base x mult^(N-1)  (CAPPED)
+input double _03_LinearStep   = 0.01;    // LINEAR: lot_N = base + (N-1)*step
+input double _03_MartMult     = 1.6;     // MARTINGALE: lot_N = base * mult^(N-1)
+input double _03_LogFactor    = 3.0;     // LOG: lot_N = base * factor^(ln N)
 input double _03_TpUsd        = 8.0;     // basket net-profit target ($)
 
 input string _g06_            = "── [06] HARD CAPS (L4 mandatory) ──────────";
@@ -95,7 +99,14 @@ double WorstPrice(const ENUM_POSITION_TYPE side){ double a=0; for(int i=0;i<Posi
 
 double NormLot(double lot){ double mn=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN),mx=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MAX),st=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_STEP);
    lot=MathFloor(lot/st)*st; return MathMin(MathMax(lot,mn),mx); }
-double LegLot(const int stepN){ return NormLot(_03_BaseLot*MathPow(_03_MartMult,(double)(stepN-1))); }
+double LegLot(const int stepN){ double n=(double)stepN; double lot;
+   switch(_03_LotMode){
+      case LOT_FIXED:      lot=_03_BaseLot; break;
+      case LOT_LINEAR:     lot=_03_BaseLot+(n-1.0)*_03_LinearStep; break;
+      case LOT_LOG:        lot=_03_BaseLot*MathPow(_03_LogFactor,MathLog(n)); break;
+      case LOT_MARTINGALE:
+      default:             lot=_03_BaseLot*MathPow(_03_MartMult,n-1.0); break;
+   } return NormLot(lot); }
 
 void CloseAll(){ for(int i=PositionsTotal()-1;i>=0;i--){ ulong t=PositionGetTicket(i); if(!PositionSelectByTicket(t)) continue;
    if(PositionGetString(POSITION_SYMBOL)==_Symbol && PositionGetInteger(POSITION_MAGIC)==_07_Magic) g_trade.PositionClose(t); } }
