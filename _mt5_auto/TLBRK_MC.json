@@ -1,0 +1,44 @@
+{
+  "source_file": "D:\\EA_LAB\\_mt5_auto\\TLBRK_trades.csv",
+  "trade_count": 396,
+  "net_profit": 315.3,
+  "observed_pf": 1.107,
+  "observed_dd_pct": 2.85,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.107,
+    "pf_median": 1.107,
+    "pf_95th": 1.107,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 3.63,
+    "dd_95th_pct": 5.54,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 0.867,
+    "pf_median": 1.104,
+    "pf_95th": 1.38,
+    "pf_range_5_95": 0.513,
+    "dd_median_pct": 3.81,
+    "dd_95th_pct": 7.5,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "oos": {
+    "status": "COMPUTED",
+    "split": 0.7,
+    "is_trades": 277,
+    "oos_trades": 119,
+    "is_pf": 1.03,
+    "oos_pf": 1.178,
+    "pf_ratio": 1.144,
+    "pf_degradation_pct": -14.4,
+    "is_dd_pct": 1.11,
+    "oos_dd_pct": 2.86,
+    "dd_ratio": 2.579,
+    "oos_net_profit": 272.88,
+    "note": "OOS from date-split of the same backtest \u2014 weaker evidence than a true separate OOS run"
+  }
+}
