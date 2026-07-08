@@ -1,0 +1,11 @@
+ea: "(BRK)_TrendlineBreakout_rev01 @ XAUUSD H1, config sl1.5/tp8/converge, magic 991002"
+mechanism: "diagonal trendline (2-pivot fit) + triangle-convergence filter + EMA200 break, single-position L1"
+three_window: "BWD 1.23 / holdout 1.40 / FWD 1.22"
+monte_carlo: {trade_count: 351, pf_5th: 0.986, dd_95th_pct: 6.72, prob_of_ruin_pct: 0.0}  # PF-5th just under 1
+oos_split: {oos_pf: 1.36, degradation_pct: -6.1}  # OOS BEATS IS
+correlation: "vs BRK -0.14, vs RSI_MR -0.18 (both negative!), vs Zeus/SqzBRK 0.42-0.45 (watch)"
+verdict: "EXPERIMENTAL #8 (borderline) — PF-5th 0.986 just misses the 1.0 bar the other 7 cleared, BUT
+          351 trades (largest sample = 0.986 is reliable), OOS-beats-IS, high-freq (~55/yr), and
+          negative corr with BRK/RSI = strong diversifier. Added per user goal (find low-corr EAs).
+          Tighter watch: it is the weakest of the set."
+deploy: "XAUUSD H1, TrendlineBreakout_XAU_demo.set (AllowLive=true), magic 991002, single-position"

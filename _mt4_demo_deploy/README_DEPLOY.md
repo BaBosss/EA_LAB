@@ -1,4 +1,4 @@
-# Demo Experiment — Treasure-Hunt Survivors (7 EAs, MT4 + MT5)
+# Demo Experiment — Treasure-Hunt Survivors (7 + 1exp EAs, MT4 + MT5)
 
 > **ที่มา:** 3 ตัวแรกคัดจาก EA ~1,300 (ORDER-036/046/047) · 2 ตัวหลัง = **สร้างเอง source ครบ**
 > (RSI-MR + Zeus, ผ่าน holdout+MC+WFA) · หลักฐาน: `EA_SCORECARD_AND_REGISTRY.md` + verdict YAML ต่อตัว
@@ -9,7 +9,7 @@
 | platform | EA | ลง terminal ที่ |
 |---|---|---|
 | **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | portable ใหม่ `D:\Meta4demo` |
-| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK | portable ใหม่ `D:\Meta5demo` |
+| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK · #8 Trendline(exp) | portable ใหม่ `D:\Meta5demo` |
 
 - ทั้งคู่: บัญชีใหม่ **$10,000** · **ThinkMarkets demo** (broker ที่ validate) · type **Hedge** (RSI-MR ต้องการ hedging)
 - ❌ ห้ามใช้ `D:\Meta4`/`D:\Meta4b`/`D:\Meta 5`/`D:\Meta 5b` (เลนเทส script ฆ่า terminal ทิ้งประจำ)
@@ -28,6 +28,7 @@
 | 5 | **(Boss)_ZeusInspired_GridLog_rev01** | MT5 | **XAUUSD** H1 | `ZeusInspired_XAUUSD_H1_demo.set` | 990101 | **มี (ATR)** |
 | 6 | **EA_BREAKOUT_XAU** | MT5 | **XAUUSD** H1 | `EA_BREAKOUT_XAU_demo.set` | 991001 | **มี (ATR, RR 3.3)** |
 | 7 | **(BRK)_SqueezeBreakout_rev01** | MT5 | **XAUUSD** H1 | `SqueezeBreakout_XAU_demo.set` | 991004 | **มี (ATR, RR 5)** |
+| 8 | **(BRK)_TrendlineBreakout_rev01** (EXPERIMENTAL) | MT5 | **XAUUSD** H1 | `TrendlineBreakout_XAU_demo.set` | 991002 | **มี (ATR, RR 5.3)** |
 
 **ค่าที่ผ่านการพิสูจน์ (ใช้เทียบตอน judge):**
 
@@ -40,6 +41,7 @@
 | Zeus @ XAU | 1.38-2.16 (3 window) | **~4%** | MARGINAL (MC ✓, WFA อ่อน) | ~130/yr |
 | BRK-XAU | 1.74-2.94 (3 window) | ~2% | MARGINAL (MC PF-5th 1.53 สูงสุด, thin) | ~13/yr (ต่ำ) |
 | SqueezeBRK | 2.07-2.67 (3 window) | **~1.6%** ต่ำสุด | MARGINAL→ROBUST (MC PF-5th 1.25, WFA 3/3 OOS) | ~15/yr · **uncorrelated กับ gold ตัวอื่น (-0.09/0.17)** |
+| Trendline (exp) | 1.23-1.40 (3 window) | ~4% | EXPERIMENTAL (MC PF-5th 0.986 เฉียด, sample 351 ใหญ่, OOS>IS) | ~55/yr · **corr ลบกับ BRK/RSI (-0.14/-0.18)** |
 
 ---
 
@@ -76,6 +78,7 @@
 - RSI-MR เปิด **>8 ไม้** หรือ lot/ไม้ ทะลุที่ LOG5 ควรเป็น (cap 8 ไม้ในโค้ดแล้ว)
 - Zeus เปิด **>6 ไม้** (cap 6 ในโค้ด) หรือ DD เกิน 15% (backtest ไม่เคยเกิน ~4%)
 - BRK-XAU / SqueezeBRK: single-position (ควรมีไม้เดียว) — ถ้าเห็น >1 ไม้เปิดพร้อมกัน = ผิดปกติ · DD เกิน 10%
+- Trendline (#8 exp): single-position, RR 5.3 — weakest ของกอง (PF-5th 0.986) → kill เข้มกว่า: DD>8% หรือ net ลบ 6 สัปดาห์
 
 **เตือน:** equity DD ตัวนั้นแตะ 25% (MT4) / 15% (MT5, เพราะ backtest DD ต่ำมาก)
 **Kill:** DD แตะ 35% (MT4) / 25% (MT5) · หรือ net ลบต่อเนื่อง 8 สัปดาห์
@@ -105,4 +108,7 @@ C6F31A2A3DF8F4A9D8D375D86801B9A6  RSI from pips_EA.ex4
 - **Zeus** (source เรา) — pending-stop **breakout** + ATR grid + LOG lot + real SL · edge=momentum (DD จิ๋วสุดในกอง) · **GOLD-only** · `ea_projects\(Boss)_ZeusInspired_GridLog\`
 - **BRK-XAU** — Donchian 40-bar **breakout** + EMA200 filter, single-position real SL (RR 3.3), **ไม่มี grid = ปลอดภัยสุด** · edge=momentum, DD ~2% ต่ำสุด, ความถี่ต่ำ ~13/yr (thin) · **GOLD-only** · `ea_projects\EA_BREAKOUT_XAU\` · kill: DD>10% หรือ >2 ไม้เปิดพร้อมกัน (ควรเป็น single)
 - **SqueezeBRK** (source เรา) — volatility-squeeze release (BB บีบใน Keltner) + Donchian-60 break + EMA200, single-position real SL (RR 5) · edge=momentum ที่จับ "vol บีบแล้วระเบิด" · **GOLD-only แต่ uncorrelated กับ Zeus/BRK (-0.09/0.17) = diversify gold** · DD ~1.6% ต่ำสุดในกอง · `ea_projects\(BRK)_SqueezeBreakout\`
+| Trendline (exp) | 1.23-1.40 (3 window) | ~4% | EXPERIMENTAL (MC PF-5th 0.986 เฉียด, sample 351 ใหญ่, OOS>IS) | ~55/yr · **corr ลบกับ BRK/RSI (-0.14/-0.18)** |
 - **หมายเหตุ gold (3 ตัว: Zeus/BRK/Squeeze):** corr ต่ำ-ลบทั้งหมด (จับคนละ move) → รันทั้ง 3 บนบัญชี MT5 เดียวได้ ไม่ต้องลด lot · แต่ทั้ง 3 = XAUUSD → ถ้า gold มี gap/หยุดเทรด กระทบพร้อมกัน = จับตา combined gold exposure
+- **Trendline (#8 EXPERIMENTAL)** (source เรา) — diagonal trendline (2-pivot) + triangle-convergence + EMA200 break, single-position RR 5.3 · edge=momentum ที่จับ "ทะลุเส้นทแยง" (ต่างจาก Donchian/squeeze แนวนอน) · **GOLD-only แต่ corr ลบกับ BRK/RSI = diversifier ดี** · ⚠️ borderline (PF-5th 0.986 ต่ำกว่าเกณฑ์นิดเดียว, sample 351 ใหญ่ทำให้เชื่อได้) — user เพิ่มเพื่อ low-corr breadth · drop ได้ถ้า demo ไม่เข้าเป้า · `ea_projects\(BRK)_TrendlineBreakout\`
+- **FX travel = ตัน (2026-07-08):** trendline+squeeze บน EURUSD/GBPUSD ตกทุก window (gold-specific) → ไม่มี low-corr candidate เพิ่มจากคู่ FX · corr diversity ที่ได้มาจากกลไกต่างบน gold (Donchian/squeeze/diagonal) เท่านั้น
