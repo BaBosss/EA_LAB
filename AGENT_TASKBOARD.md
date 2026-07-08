@@ -1991,24 +1991,26 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
-## ORDER-055 — [NEXT SESSION START HERE] demo cohort 6 ตัว: attach + corr + monitor — `OPEN (รอ user attach)` · **ทำได้: Claude (judge) + user (attach)**
+## ORDER-055 — [NEXT SESSION START HERE] demo cohort 8 ตัว: attach + monitor — `OPEN (รอ user attach)` · **ทำได้: Claude (judge) + user (attach)**
 
-**สรุป session 2026-07-08 (Opus): EA hunt รอบใหญ่จบ → 6 demo candidates พร้อม attach.**
-รายละเอียดเต็ม = `PROJECT_STATE.md` §7 block "SESSION 2026-07-08" (บนสุดของ forward plan).
-bundle = `_mt4_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5, set/magic/SL/kill-switch ต่อตัว).
+**สรุป session 2026-07-08/09 (Opus): EA hunt รอบใหญ่จบ → 7 clean + 1 experimental candidate พร้อม attach.**
+รายละเอียดเต็ม = `PROJECT_STATE.md` §7 "SESSION 2026-07-08" block · handoff doc = `handoff/SESSION_2026-07-09_HANDOFF.md`
+bundle = `_mt4_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-IT-TRADE checklist + kill-switch + corr + portfolio-sim ครบ).
 
-**6 candidates:** UnNomGuai(EURUSD/MT4/m1-2) · RSI-orig(EURUSD/MT4/m5888) · swb(AUDCAD/MT4/m990) ·
-RSI-MR(EURUSD/MT5/m990103,ROBUST) · Zeus(XAUUSD/MT5/m990101) · BRK-XAU(XAUUSD/MT5/m991001).
+**8 candidates (magic distinct):**
+- MT4: UnNomGuai(EURUSD/1-2) · RSI-orig(EURUSD/5888) · swb(AUDCAD/990) — grid, validated
+- MT5: RSI-MR(EURUSD/990103,**ROBUST**) · Zeus(XAU/990101,MARGINAL) · BRK-XAU(XAU/991001,MARGINAL) · SqueezeBRK(XAU/991004,**ROBUST**) · **Trendline(XAU/991002,EXPERIMENTAL PF-5th 0.986)**
+
+**Claude-doable งานเสร็จหมดแล้ว (session นี้):** corr matrix 8-EA (ไม่มีคู่ >0.60, gold 3 ตัว uncorrelated) · portfolio-sim (รวม DD 1.2%, gold-pair 3.8%) · bundle verify + **AllowLive=true fix ทั้ง MT5 set (critical silent-stop catch)** · WILL-IT-TRADE checklist · tools ใหม่: corr_matrix/portfolio_sim/mt4_deals_to_csv/max_recovery_days.py
 
 **งาน session หน้า (เรียงตาม EV):**
-1. **รอ user attach** → รับวันเริ่ม → บันทึกใน DEMO_DEPLOYMENT_PLAN + ตั้งนัด judge +3 เดือน + /ea-monitor
-2. ~~corr matrix 6 candidate~~ ✅ **DONE 2026-07-08** (`_mt4_demo_deploy/CORRELATION_6EA.md`): **ไม่มีคู่ >0.60 = ไม่ต้องลด lot ตัวไหน** พอร์ตกระจายดี · watch: RSIorig×swb 0.59, Zeus×BRK 0.42 · ⚠️ **caveat: Zeus+BRK ทั้งคู่ XAUUSD → gold tail stack บนบัญชีเดียว, จับตา combined gold exposure ตอน live** (0.42 = watch ไม่ถึงเกณฑ์ลด lot แต่ instrument เดียวกัน) · tools ใหม่: `corr_matrix.py`, `mt4_deals_to_csv.py`
-3. หลัง attach: statement ทุก ~2 สัปดาห์ → แยก P&L ตาม magic → เทียบค่าคาดหวังใน README
-**ห้าม:** แก้ config ที่ validate แล้ว · เชื่อ hunt ต่อว่า EV สูง (6 ทางติดไม่เจอ — live คือด่านจริง)
+1. **[user] attach 8 ตัว** (MT4 3 + MT5 5) → รับวันเริ่ม → บันทึก DEMO_DEPLOYMENT_PLAN + judge +3 เดือน + /ea-monitor · **EV สูงสุด — live คือด่านจริง**
+2. หลัง attach: statement ทุก ~2 สัปดาห์ → แยก P&L ตาม magic → เทียบค่าคาดหวัง README · จับตา (a) MT4 grid no-SL tail (b) combined gold exposure (Zeus+BRK+Squeeze+Trendline ทั้ง 4 = XAU) (c) Trendline #8 borderline → drop ถ้าไม่เข้าเป้า
+3. [optoptional hunt] hunt space สำรวจหมด (instrument/TF/กลไก/lot-law/re-opt/FX-travel) → EV ต่ำ · ถ้าจะต่อต้องกลไกใหม่จริง (flag/pennant/order-flow) effort สูง
+4. [ค้าง] Boss V2 robustness track (GBPAUD ORDER-001 ฯลฯ)
+**ห้าม:** แก้ config ที่ validate แล้ว · เชื่อ hunt ว่า EV สูง (พิสูจน์แล้วว่าตัน)
 
-**สถานะ:** ✅ ทุกงาน Claude-doable เสร็จ (corr done, bundle verify 14 ไฟล์ครบ) · **เหลือแค่ user attach** → บอกวันเริ่ม
-
-**ผล:** corr done, bundle deploy-ready. รอ user attach.
+**ผล:** bundle deploy-ready (8 EA, safety-checked). รอ user attach.
 
 ---
 
