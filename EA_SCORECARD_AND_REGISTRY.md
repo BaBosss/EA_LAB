@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (magic 990103) | validate จากศูนย์ 2026-07-08 ครบ 22 backtest (lot-law×symbol×2regime) — เพิ่ม lot modes ครบ 4 แบบตาม user | ★★★ | ⚠️ **REGIME-DEPENDENT — ไม่มี edge ยั่งยืนข้าม regime บนคู่/โหมดใดที่เทส** (แต่กำไรแรง *in-regime* PF 2-3) | deep grid (LOG5/LIN+0.02) ชนะปีเทรนด์ 2.6-3.0 DD~18 แต่แพ้ปีล่าสุด 0.88 DD37 = **ความสัมพันธ์ผกผัน** · ข้ามคู่ก็ผกผัน (EUR/AUD ชนะเทรนด์ · GBP/JPY ชนะล่าสุด) · full-opt จะ overfit IS แน่ · sub-finding: multi-symbol basket อาจ diversify regime ได้แต่ DD แต่ละขา 34-47% สูงไป · **PARKED-research ไม่ deploy** · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
+| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | validate จากศูนย์ 2026-07-08 · **~52 backtest** (lot-law × ATR 0.5-10 × symbol × 2 regime) | ★★★ | 🟡 **ACTIVE-VALIDATION — เจอ both-regime plateau จริง (ATR 8-10)** ยังไม่ deploy | **config: LOG5 lot · ATR 9 · wide SL · EURUSD** → BWD PF 1.38/DD5.3 · FWD PF 2.17/DD3.4 · plateau 8-9-10 ไม่มีหลุม · ⚠️ trend-edge บาง (PF~1.1-1.4) + ไม่ travel (EURUSD-only เหมือนต้นฉบับ) · **เหลือ: holdout 2023-24 (ยังไม่แตะ) + MC ก่อนเชื่อ (ATR9 = selection-fitted แล้ว)** · 2 ครั้งที่เคยตัดสิน "dead" ผิด (LOG factor + ATR ตรึง 1.0) user จับถูกทั้งคู่ · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|
