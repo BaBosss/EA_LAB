@@ -22,10 +22,14 @@ monte_carlo:
   score: 85              # GREEN-dominant (1 YELLOW)
 
 wfa:
-  status: "SKIPPED_NO_DATA"   # no rolling IS-optimize-then-OOS windows built
-  note: "3 independent fixed-config windows exist (BWD 1.38 / holdout 1.34 / FWD 2.17) = strong,
-         but not a formal anchored WFA with per-window re-optimization -> honest SKIP"
-  verdict_cap_applied: true
+  status: "COMPUTED"          # 3 rolling windows, each IS-optimize ATR{8,9,10} -> OOS test
+  data_source: "_mt5_auto/RSIMR_WFA.csv"
+  efficiency_ratio: 1.25      # GREEN — mean(OOS PF / IS PF); OOS actually BEATS IS (W1 0.90/W2 1.20/W3 1.66)
+  oos_profitable_pct: 100.0   # GREEN — 3/3 OOS windows PF>1 (1.31 / 1.74 / 2.52)
+  score: 95
+  verdict_cap_applied: false
+  caveat: "ER>1 partly because OOS slices include the favorable recent regime; per-window IS edge is
+           modest (PF 1.13-1.52). Robust by the rubric, but rides on the recent regime staying kind."
 
 oos:
   status: "COMPUTED"
@@ -35,23 +39,27 @@ oos:
   score: 85
 
 score:
-  formula_used: "MC*0.60 + OOS*0.40 (WFA skipped)"
-  mode_a_robustness_score: 85
-  band: "capped by WFA-skip"
+  formula_used: "MC*0.40 + WFA*0.40 + OOS*0.20 (all tests computed)"
+  mode_a_robustness_score: 89
+  band: "ROBUST (>=75, no cap)"
 
 verdict:
-  result: "MARGINAL"
-  reason: "Strong MC (ruin 0%, PF-5th 1.34) + strong OOS (holdout + split both hold, 9.9% degrade),
-           but WFA not formally run -> skill hard rule caps any-test-skipped at MARGINAL. Also honest:
-           the edge is CAPPED-RECOVERY not signal (flat-lot loses) — appropriate for MARGINAL/watch."
-  skipped_tests: ["WFA"]
+  result: "ROBUST"
+  reason: "All three tests computed and GREEN-dominant: MC ruin 0% / PF-5th 1.34; WFA ER 1.25 (OOS beats
+           IS), 3/3 OOS windows profitable; OOS degradation 9.9%. Score 89, no hard override triggered
+           (DD95th 4.65 == 1.5xMaxDD exactly, not exceeded). HONEST caveat kept: the edge is
+           CAPPED-RECOVERY not signal (flat-lot loses in trend years) and modest per-window (IS PF
+           1.1-1.5); ROBUST by the rubric but rides on the recent regime staying favorable -> DEMO-first
+           is still the prudent path despite the ROBUST label."
+  skipped_tests: []
   forwardable: true
 
 deploy_guidance:
-  demo_only: true          # MARGINAL -> demo experiment, NOT live
-  rationale: "capped-recovery harvester, modest edge (PF 1.3-2.2 across 3 windows), EURUSD-only, ~100 trd/yr"
-  suggested: "join the MT4/MT5 demo experiment cohort as a WATCH candidate; magic 990103; EURUSD H1;
-              set = RSIMR_ATRf_9 (LOG5/ATR9/wide-SL); judge alongside the other demos at +3 months"
+  demo_first: true         # ROBUST by rubric, but modest recovery-driven edge -> prove on demo before live
+  rationale: "capped-recovery harvester, modest edge (per-window PF 1.1-1.5), EURUSD-only, ~100 trd/yr;
+              ROBUST score rides partly on the kind recent regime"
+  suggested: "join the demo cohort now (magic 990103, EURUSD H1, set RSIMR_ATRf_9); if it holds live
+              behaviour ~3mo alongside the others, THEN consider small live per live-deployment-controller"
 
 handoff:
-  next_skill: "live-deployment-controller (marginal_flag=true) — demo attach only"
+  next_skill: "live-deployment-controller — demo-first, then live if the demo period confirms"

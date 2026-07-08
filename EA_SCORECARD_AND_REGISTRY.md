@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | full pipeline จบ 2026-07-08: holdout ✅ + **Monte Carlo ✅** (~62 backtest) | ★★★ | 🟢 **MARGINAL (robustness-validator Mode A) → DEMO-only candidate** | 3 window อิสระ BWD 1.38/holdout 1.34/FWD 2.17 · **MC: ruin 0% · PF-5th 1.34 · DD95th 4.6% · OOS degrade 9.9%** (แข็ง) แต่ WFA ไม่ได้ทำ → cap MARGINAL · edge = capped-recovery ไม่ใช่ signal · EURUSD-only · **พร้อม attach demo (magic 990103, set RSIMR_ATRf_9)** เป็น WATCH candidate คู่กับ 3 ตัวเดิม · MC `_mt5_auto/RSIMR_MC.json` · verdict `ea_projects\(Boss)_RSI_MR_GridLog\ROBUSTNESS_VERDICT.yaml` |
+| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | full pipeline จบ 2026-07-08: holdout + MC + **WFA ครบ** (~74 backtest) | ★★★ | 🟢 **ROBUST (robustness-validator Mode A, score 89) → demo-first** | 3 window อิสระ 1.38/1.34/2.17 · MC ruin 0%/PF-5th 1.34 · **WFA: ER 1.25 (OOS ชนะ IS), 3/3 OOS profitable** · caveat ซื่อสัตย์: edge = capped-recovery (flat-lot แพ้) + per-window modest (PF 1.1-1.5) + EURUSD-only → **ROBUST ตาม rubric แต่ demo-first ก่อน live** · attach demo (magic 990103, set RSIMR_ATRf_9) · verdict `ea_projects\(Boss)_RSI_MR_GridLog\ROBUSTNESS_VERDICT.yaml` |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|
