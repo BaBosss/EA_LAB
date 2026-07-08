@@ -1,662 +1,694 @@
-# PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
+﻿# PROJECT_STATE â€” EA_LAB single living state (ðŸ‘‰ AI START HERE)
 
-> **last updated:** 2026-07-06 (เปิด merge track EA_CORE→Boss V2 — บอร์ดใหม่ `AGENT_TASKBOARD_MERGE.md` + cage ครอบ Boss_14 แล้ว) · **updated by:** Claude Fable 5 · **owner:** patip (p.atipayoon@gmail.com)
+> **last updated:** 2026-07-08 (EA hunt -> 6 demo candidates, see section 7 SESSION 2026-07-08 block) · updated by: Claude Opus 4.8 · owner: patip
 >
-> ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
-> "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
-> ไฟล์นี้ไม่ duplicate แต่ **ชี้ทาง + เก็บ decision + เก็บ protocol + เก็บแผนต่อ.**
+> à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰ = **à¸ˆà¸¸à¸”à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™à¹€à¸”à¸µà¸¢à¸§** à¸—à¸µà¹ˆ AI/session à¹ƒà¸”à¸à¹‡à¸•à¸²à¸¡à¸•à¹‰à¸­à¸‡à¸­à¹ˆà¸²à¸™à¸à¹ˆà¸­à¸™ à¹€à¸žà¸·à¹ˆà¸­à¹ƒà¸«à¹‰à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ
+> "à¹€à¸—à¹ˆà¸²à¸à¸±à¸šà¸„à¸™à¸—à¸µà¹ˆà¸—à¸³à¸¡à¸²à¸à¹ˆà¸­à¸™" à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¹„à¸¥à¹ˆà¸­à¹ˆà¸²à¸™ 20 à¹„à¸Ÿà¸¥à¹Œ. à¸‚à¸­à¸‡à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ canonical docs (section 8) â€”
+> à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰à¹„à¸¡à¹ˆ duplicate à¹à¸•à¹ˆ **à¸Šà¸µà¹‰à¸—à¸²à¸‡ + à¹€à¸à¹‡à¸š decision + à¹€à¸à¹‡à¸š protocol + à¹€à¸à¹‡à¸šà¹à¸œà¸™à¸•à¹ˆà¸­.**
 
 ---
 
-## 0. UPDATE PROTOCOL — กฎการดูแลไฟล์นี้ (อ่าน + ทำทุก session)
+## 0. UPDATE PROTOCOL â€” à¸à¸Žà¸à¸²à¸£à¸”à¸¹à¹à¸¥à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰ (à¸­à¹ˆà¸²à¸™ + à¸—à¸³à¸—à¸¸à¸ session)
 
-1. **เปิดไฟล์นี้ก่อนเสมอ** เมื่อเริ่ม session ใหม่ (ก่อน README, ก่อน MASTER_BACKLOG).
-2. **จบงานใหญ่ทุกครั้ง → อัปเดตไฟล์นี้:** แก้ section ที่เกี่ยว, bump `last updated`, เพิ่มบรรทัดใน
-   Decision log (section 3) ถ้ามีการตัดสินใจใหม่, อัปเดต Forward plan (section 7).
-3. **ความจริงอยู่ในไฟล์ ไม่ใช่ใน chat** — สิ่งที่ไม่ถูกเขียนลงที่นี่/canonical docs = หายเมื่อ session จบ.
-4. **อย่า duplicate เนื้อหา** — ถ้ามีอยู่ใน DEMO_DEPLOYMENT_PLAN / MASTER_BACKLOG / EA_SCORECARD แล้ว
-   ให้ลิงก์ไป ไม่ก็อปมาทั้งก้อน (กันข้อมูลขัดกันเอง). ที่นี่เก็บแค่ "สรุป + ตัวชี้".
-5. **commit git ทุกครั้งที่แก้ไฟล์นี้** (ไฟล์นี้คือ memory ข้ามคน/ข้าม AI).
+1. **à¹€à¸›à¸´à¸”à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰à¸à¹ˆà¸­à¸™à¹€à¸ªà¸¡à¸­** à¹€à¸¡à¸·à¹ˆà¸­à¹€à¸£à¸´à¹ˆà¸¡ session à¹ƒà¸«à¸¡à¹ˆ (à¸à¹ˆà¸­à¸™ README, à¸à¹ˆà¸­à¸™ MASTER_BACKLOG).
+2. **à¸ˆà¸šà¸‡à¸²à¸™à¹ƒà¸«à¸à¹ˆà¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡ â†’ à¸­à¸±à¸›à¹€à¸”à¸•à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰:** à¹à¸à¹‰ section à¸—à¸µà¹ˆà¹€à¸à¸µà¹ˆà¸¢à¸§, bump `last updated`, à¹€à¸žà¸´à¹ˆà¸¡à¸šà¸£à¸£à¸—à¸±à¸”à¹ƒà¸™
+   Decision log (section 3) à¸–à¹‰à¸²à¸¡à¸µà¸à¸²à¸£à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆà¹ƒà¸«à¸¡à¹ˆ, à¸­à¸±à¸›à¹€à¸”à¸• Forward plan (section 7).
+3. **à¸„à¸§à¸²à¸¡à¸ˆà¸£à¸´à¸‡à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¹„à¸Ÿà¸¥à¹Œ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹ƒà¸™ chat** â€” à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸–à¸¹à¸à¹€à¸‚à¸µà¸¢à¸™à¸¥à¸‡à¸—à¸µà¹ˆà¸™à¸µà¹ˆ/canonical docs = à¸«à¸²à¸¢à¹€à¸¡à¸·à¹ˆà¸­ session à¸ˆà¸š.
+4. **à¸­à¸¢à¹ˆà¸² duplicate à¹€à¸™à¸·à¹‰à¸­à¸«à¸²** â€” à¸–à¹‰à¸²à¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ DEMO_DEPLOYMENT_PLAN / MASTER_BACKLOG / EA_SCORECARD à¹à¸¥à¹‰à¸§
+   à¹ƒà¸«à¹‰à¸¥à¸´à¸‡à¸à¹Œà¹„à¸› à¹„à¸¡à¹ˆà¸à¹‡à¸­à¸›à¸¡à¸²à¸—à¸±à¹‰à¸‡à¸à¹‰à¸­à¸™ (à¸à¸±à¸™à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸‚à¸±à¸”à¸à¸±à¸™à¹€à¸­à¸‡). à¸—à¸µà¹ˆà¸™à¸µà¹ˆà¹€à¸à¹‡à¸šà¹à¸„à¹ˆ "à¸ªà¸£à¸¸à¸› + à¸•à¸±à¸§à¸Šà¸µà¹‰".
+5. **commit git à¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡à¸—à¸µà¹ˆà¹à¸à¹‰à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰** (à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰à¸„à¸·à¸­ memory à¸‚à¹‰à¸²à¸¡à¸„à¸™/à¸‚à¹‰à¸²à¸¡ AI).
 
 ---
 
-## 0.5 ANTI-DRIFT — กันเอกสารเพี้ยน (ทำให้ "อ่านครั้งหน้า = ครั้งก่อน")
+## 0.5 ANTI-DRIFT â€” à¸à¸±à¸™à¹€à¸­à¸à¸ªà¸²à¸£à¹€à¸žà¸µà¹‰à¸¢à¸™ (à¸—à¸³à¹ƒà¸«à¹‰ "à¸­à¹ˆà¸²à¸™à¸„à¸£à¸±à¹‰à¸‡à¸«à¸™à¹‰à¸² = à¸„à¸£à¸±à¹‰à¸‡à¸à¹ˆà¸­à¸™")
 
-ปัญหาเดิม: หลายไฟล์อ้าง authority ทับกัน + เขียน fact เดียวซ้ำหลายที่ → อัปเดตมือแล้วเพี้ยน. กฎ 3 ข้อ:
+à¸›à¸±à¸à¸«à¸²à¹€à¸”à¸´à¸¡: à¸«à¸¥à¸²à¸¢à¹„à¸Ÿà¸¥à¹Œà¸­à¹‰à¸²à¸‡ authority à¸—à¸±à¸šà¸à¸±à¸™ + à¹€à¸‚à¸µà¸¢à¸™ fact à¹€à¸”à¸µà¸¢à¸§à¸‹à¹‰à¸³à¸«à¸¥à¸²à¸¢à¸—à¸µà¹ˆ â†’ à¸­à¸±à¸›à¹€à¸”à¸•à¸¡à¸·à¸­à¹à¸¥à¹‰à¸§à¹€à¸žà¸µà¹‰à¸¢à¸™. à¸à¸Ž 3 à¸‚à¹‰à¸­:
 
-**1) 1 fact มี owner เดียว** — fact อยู่ไฟล์เดียว ที่อื่น **link ห้าม copy**:
+**1) 1 fact à¸¡à¸µ owner à¹€à¸”à¸µà¸¢à¸§** â€” fact à¸­à¸¢à¸¹à¹ˆà¹„à¸Ÿà¸¥à¹Œà¹€à¸”à¸µà¸¢à¸§ à¸—à¸µà¹ˆà¸­à¸·à¹ˆà¸™ **link à¸«à¹‰à¸²à¸¡ copy**:
 
-| fact | owner เดียว | ที่อื่นทำได้ |
+| fact | owner à¹€à¸”à¸µà¸¢à¸§ | à¸—à¸µà¹ˆà¸­à¸·à¹ˆà¸™à¸—à¸³à¹„à¸”à¹‰ |
 |---|---|---|
-| สถานะ% · decision · แผน · invariants | **PROJECT_STATE.md** (นี่) | link |
-| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **VISION.md** | link |
-| กติกา multi-agent (Claude/Codex/ZCode) | **AGENTS.md** | link |
-| คิวงานกลาง + ผลดิบรอ review | **AGENT_TASKBOARD.md** | link |
+| à¸ªà¸–à¸²à¸™à¸°% Â· decision Â· à¹à¸œà¸™ Â· invariants | **PROJECT_STATE.md** (à¸™à¸µà¹ˆ) | link |
+| à¸ à¸²à¸žà¹ƒà¸«à¸à¹ˆ/à¸›à¸£à¸±à¸Šà¸à¸²à¹‚à¸£à¸‡à¸‡à¸²à¸™à¸‚à¸­à¸‡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | **VISION.md** | link |
+| à¸à¸•à¸´à¸à¸² multi-agent (Claude/Codex/ZCode) | **AGENTS.md** | link |
+| à¸„à¸´à¸§à¸‡à¸²à¸™à¸à¸¥à¸²à¸‡ + à¸œà¸¥à¸”à¸´à¸šà¸£à¸­ review | **AGENT_TASKBOARD.md** | link |
 | live portfolio (EA/magic/lot/judge/monitor) | **DEMO_DEPLOYMENT_PLAN.md** | link |
-| backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
-| ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
-| แผนที่ไฟล์ · 5 ที่อยู่ | **PLATFORM_INDEX.md** | link |
+| backlog Â· coverage Â· hunt | **MASTER_BACKLOG.md** | link |
+| à¸—à¸°à¹€à¸šà¸µà¸¢à¸™ EA Â· scoring Â· kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
+| à¹à¸œà¸™à¸—à¸µà¹ˆà¹„à¸Ÿà¸¥à¹Œ Â· 5 à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆ | **PLATFORM_INDEX.md** | link |
 | EA_CORE framework | `D:\EA_Project` docs + `EA_CORE_ST03_LOOP_PLAN.md` | link |
 
-ถ้า 2 ไฟล์พูดเรื่องเดียวต่างกัน → **INVARIANTS (ข้อ 3) ชนะ** แล้วแก้ไฟล์ที่ผิดทันที.
+à¸–à¹‰à¸² 2 à¹„à¸Ÿà¸¥à¹Œà¸žà¸¹à¸”à¹€à¸£à¸·à¹ˆà¸­à¸‡à¹€à¸”à¸µà¸¢à¸§à¸•à¹ˆà¸²à¸‡à¸à¸±à¸™ â†’ **INVARIANTS (à¸‚à¹‰à¸­ 3) à¸Šà¸™à¸°** à¹à¸¥à¹‰à¸§à¹à¸à¹‰à¹„à¸Ÿà¸¥à¹Œà¸—à¸µà¹ˆà¸œà¸´à¸”à¸—à¸±à¸™à¸—à¸µ.
 
-**2) PROJECT_STATE = entry เดียว** — ไฟล์อื่นห้ามเขียน "เปิดไฟล์นี้ไฟล์เดียวพอ". secondary doc ขึ้นต้นด้วย
-banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: <X เท่านั้น>`.
+**2) PROJECT_STATE = entry à¹€à¸”à¸µà¸¢à¸§** â€” à¹„à¸Ÿà¸¥à¹Œà¸­à¸·à¹ˆà¸™à¸«à¹‰à¸²à¸¡à¹€à¸‚à¸µà¸¢à¸™ "à¹€à¸›à¸´à¸”à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰à¹„à¸Ÿà¸¥à¹Œà¹€à¸”à¸µà¸¢à¸§à¸žà¸­". secondary doc à¸‚à¸¶à¹‰à¸™à¸•à¹‰à¸™à¸”à¹‰à¸§à¸¢
+banner: `> âš ï¸ canonical entry = PROJECT_STATE.md Â· à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰ owns: <X à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™>`.
 
-**3) INVARIANTS — fact ที่ต้องตรงทุกที่ (ที่ไหนเขียนต่าง = ที่นั่นผิด):**
-- live portfolio = **9 EA** บน **1 account 10,000 cent** (#8 CB_EUR dropped)
-- live clock start **2026-06-22** · judge **2026-09-22**
-- backtest window **2023–2026** · re-opt ทุก 6 เดือน
-- **magic map (ห้ามชน):** 1524=NuiIndy · 9397=ST_EA03 GBP · 9398=ST_EA03 CAD · 990005=CB_GBP ·
-  990010=ST03 replica · 991001=BRK Bars55 · 991002=BRK Bars8 · MG_v1+GoldReaper=GUI default (ไม่อยู่ .set)
-- **bot บังคับเอง:** git **pre-commit hook** (`.githooks/pre-commit`) รัน `scripts/check_state.ps1 -Strict`
-  อัตโนมัติทุก commit → **block ถ้า hard-invariant เพี้ยน**. setup ครั้งเดียวต่อเครื่อง: `git config core.hooksPath .githooks`.
-  bypass ฉุกเฉิน: `git commit --no-verify`. รันมือ: `powershell -File scripts/check_state.ps1`
-  > ⚠️ **ขอบเขต guard:** คุมแค่ invariant เชิงโครงสร้างไม่กี่ตัว (entry เดียว · judge/start date · account ·
-  > 9 EA · magic present · banner) — **ไม่ใช่เนื้อหาทั้งหมด** (PF, สถานะ EA, ตัวเลขอื่น ยังต้องอ่าน/อัปเดตมือ).
-  > GUI commit client (VS Code ฯลฯ) อาจซ่อน output ของ hook — ถ้า commit ถูก block แบบงงๆ ให้รัน check มือดู.
+**3) INVARIANTS â€” fact à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸•à¸£à¸‡à¸—à¸¸à¸à¸—à¸µà¹ˆ (à¸—à¸µà¹ˆà¹„à¸«à¸™à¹€à¸‚à¸µà¸¢à¸™à¸•à¹ˆà¸²à¸‡ = à¸—à¸µà¹ˆà¸™à¸±à¹ˆà¸™à¸œà¸´à¸”):**
+- live portfolio = **9 EA** à¸šà¸™ **1 account 10,000 cent** (#8 CB_EUR dropped)
+- live clock start **2026-06-22** Â· judge **2026-09-22**
+- backtest window **2023â€“2026** Â· re-opt à¸—à¸¸à¸ 6 à¹€à¸”à¸·à¸­à¸™
+- **magic map (à¸«à¹‰à¸²à¸¡à¸Šà¸™):** 1524=NuiIndy Â· 9397=ST_EA03 GBP Â· 9398=ST_EA03 CAD Â· 990005=CB_GBP Â·
+  990010=ST03 replica Â· 991001=BRK Bars55 Â· 991002=BRK Bars8 Â· MG_v1+GoldReaper=GUI default (à¹„à¸¡à¹ˆà¸­à¸¢à¸¹à¹ˆ .set)
+- **bot à¸šà¸±à¸‡à¸„à¸±à¸šà¹€à¸­à¸‡:** git **pre-commit hook** (`.githooks/pre-commit`) à¸£à¸±à¸™ `scripts/check_state.ps1 -Strict`
+  à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´à¸—à¸¸à¸ commit â†’ **block à¸–à¹‰à¸² hard-invariant à¹€à¸žà¸µà¹‰à¸¢à¸™**. setup à¸„à¸£à¸±à¹‰à¸‡à¹€à¸”à¸µà¸¢à¸§à¸•à¹ˆà¸­à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡: `git config core.hooksPath .githooks`.
+  bypass à¸‰à¸¸à¸à¹€à¸‰à¸´à¸™: `git commit --no-verify`. à¸£à¸±à¸™à¸¡à¸·à¸­: `powershell -File scripts/check_state.ps1`
+  > âš ï¸ **à¸‚à¸­à¸šà¹€à¸‚à¸• guard:** à¸„à¸¸à¸¡à¹à¸„à¹ˆ invariant à¹€à¸Šà¸´à¸‡à¹‚à¸„à¸£à¸‡à¸ªà¸£à¹‰à¸²à¸‡à¹„à¸¡à¹ˆà¸à¸µà¹ˆà¸•à¸±à¸§ (entry à¹€à¸”à¸µà¸¢à¸§ Â· judge/start date Â· account Â·
+  > 9 EA Â· magic present Â· banner) â€” **à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹€à¸™à¸·à¹‰à¸­à¸«à¸²à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”** (PF, à¸ªà¸–à¸²à¸™à¸° EA, à¸•à¸±à¸§à¹€à¸¥à¸‚à¸­à¸·à¹ˆà¸™ à¸¢à¸±à¸‡à¸•à¹‰à¸­à¸‡à¸­à¹ˆà¸²à¸™/à¸­à¸±à¸›à¹€à¸”à¸•à¸¡à¸·à¸­).
+  > GUI commit client (VS Code à¸¯à¸¥à¸¯) à¸­à¸²à¸ˆà¸‹à¹ˆà¸­à¸™ output à¸‚à¸­à¸‡ hook â€” à¸–à¹‰à¸² commit à¸–à¸¹à¸ block à¹à¸šà¸šà¸‡à¸‡à¹† à¹ƒà¸«à¹‰à¸£à¸±à¸™ check à¸¡à¸·à¸­à¸”à¸¹.
 
 ---
 
-## 1. เป้าหมาย + ภาพรวม 4 ชั้น (โรงงาน 1 + แม่พิมพ์ 1 + คลังอะไหล่ 1 → พอร์ตจริง)
+## 1. à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢ + à¸ à¸²à¸žà¸£à¸§à¸¡ 4 à¸Šà¸±à¹‰à¸™ (à¹‚à¸£à¸‡à¸‡à¸²à¸™ 1 + à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ 1 + à¸„à¸¥à¸±à¸‡à¸­à¸°à¹„à¸«à¸¥à¹ˆ 1 â†’ à¸žà¸­à¸£à¹Œà¸•à¸ˆà¸£à¸´à¸‡)
 
-> **เป้าหมายสูงสุด:** 10 พอร์ต × 2–3 EA ที่ **ไม่ correlate กัน** × 10,000 cent → passive income.
-> **ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ → `VISION.md`** (อ่านคู่ไฟล์นี้ทุก session — ถ้างานขัดกับ VISION ให้หยุดถามเจ้าของ)
+> **à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¸ªà¸¹à¸‡à¸ªà¸¸à¸”:** 10 à¸žà¸­à¸£à¹Œà¸• Ã— 2â€“3 EA à¸—à¸µà¹ˆ **à¹„à¸¡à¹ˆ correlate à¸à¸±à¸™** Ã— 10,000 cent â†’ passive income.
+> **à¸ à¸²à¸žà¹ƒà¸«à¸à¹ˆ/à¸›à¸£à¸±à¸Šà¸à¸²à¹‚à¸£à¸‡à¸‡à¸²à¸™à¸‚à¸­à¸‡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ â†’ `VISION.md`** (à¸­à¹ˆà¸²à¸™à¸„à¸¹à¹ˆà¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰à¸—à¸¸à¸ session â€” à¸–à¹‰à¸²à¸‡à¸²à¸™à¸‚à¸±à¸”à¸à¸±à¸š VISION à¹ƒà¸«à¹‰à¸«à¸¢à¸¸à¸”à¸–à¸²à¸¡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡)
 
-| ชื่อ | ที่อยู่จริง | บทบาท (aligned 2026-07-03) | สถานะ % |
+| à¸Šà¸·à¹ˆà¸­ | à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆà¸ˆà¸£à¸´à¸‡ | à¸šà¸—à¸šà¸²à¸— (aligned 2026-07-03) | à¸ªà¸–à¸²à¸™à¸° % |
 |---|---|---|---|
-| **EA_LAB** | `D:\EA_LAB` (repo นี้) | โรงงาน — หา/validate/deploy EA + automation pipeline | 85% โตเต็มวัย |
-| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **แม่พิมพ์หลักตัวเดียวของโรงงาน** (UNFREEZE 2026-07-03) — function กลางร่วมกัน (MM/lot/SL/grid/hedge/recovery) ต่างแค่ entry+TF · งานผลิต EA ใหม่ทุกตัวออกจากที่นี่ | chassis เสร็จ · เหลือเติม Hedge/Recovery + smoke-regression |
-| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | 🏛️ **read-only ARCHIVE (MERGE-08, 2026-07-06)** — อะไหล่ port เข้าแม่พิมพ์ครบแล้ว (pyramid→93 · guardian→acct-gate · persist→Persist.mqh · test pattern→tests\) · เหลือเป็น reference/หลักฐาน ห้ามลบ ห้ามงานใหม่ · TEMPLATE\ standalone เดิม = grandfather ถึง judge | 100% — track ปิด (`AGENT_TASKBOARD_MERGE.md`) |
-| **Live Portfolio** | account 10,000 cent (demo) | **เป้าหมายจริง** — เงินจริง | 20% (9 EA live ครบ, รอ judge) |
+| **EA_LAB** | `D:\EA_LAB` (repo à¸™à¸µà¹‰) | à¹‚à¸£à¸‡à¸‡à¸²à¸™ â€” à¸«à¸²/validate/deploy EA + automation pipeline | 85% à¹‚à¸•à¹€à¸•à¹‡à¸¡à¸§à¸±à¸¢ |
+| **EA_Template (Boss V2)** | `D:\EA_LAB\ea_template` | **à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸«à¸¥à¸±à¸à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸‚à¸­à¸‡à¹‚à¸£à¸‡à¸‡à¸²à¸™** (UNFREEZE 2026-07-03) â€” function à¸à¸¥à¸²à¸‡à¸£à¹ˆà¸§à¸¡à¸à¸±à¸™ (MM/lot/SL/grid/hedge/recovery) à¸•à¹ˆà¸²à¸‡à¹à¸„à¹ˆ entry+TF Â· à¸‡à¸²à¸™à¸œà¸¥à¸´à¸• EA à¹ƒà¸«à¸¡à¹ˆà¸—à¸¸à¸à¸•à¸±à¸§à¸­à¸­à¸à¸ˆà¸²à¸à¸—à¸µà¹ˆà¸™à¸µà¹ˆ | chassis à¹€à¸ªà¸£à¹‡à¸ˆ Â· à¹€à¸«à¸¥à¸·à¸­à¹€à¸•à¸´à¸¡ Hedge/Recovery + smoke-regression |
+| **EA_Project / EA_CORE** | `D:\EA_Project\CURRENT_BUILD` (CORE = engine) | ðŸ›ï¸ **read-only ARCHIVE (MERGE-08, 2026-07-06)** â€” à¸­à¸°à¹„à¸«à¸¥à¹ˆ port à¹€à¸‚à¹‰à¸²à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸„à¸£à¸šà¹à¸¥à¹‰à¸§ (pyramidâ†’93 Â· guardianâ†’acct-gate Â· persistâ†’Persist.mqh Â· test patternâ†’tests\) Â· à¹€à¸«à¸¥à¸·à¸­à¹€à¸›à¹‡à¸™ reference/à¸«à¸¥à¸±à¸à¸à¸²à¸™ à¸«à¹‰à¸²à¸¡à¸¥à¸š à¸«à¹‰à¸²à¸¡à¸‡à¸²à¸™à¹ƒà¸«à¸¡à¹ˆ Â· TEMPLATE\ standalone à¹€à¸”à¸´à¸¡ = grandfather à¸–à¸¶à¸‡ judge | 100% â€” track à¸›à¸´à¸” (`AGENT_TASKBOARD_MERGE.md`) |
+| **Live Portfolio** | account 10,000 cent (demo) | **à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¸ˆà¸£à¸´à¸‡** â€” à¹€à¸‡à¸´à¸™à¸ˆà¸£à¸´à¸‡ | 20% (9 EA live à¸„à¸£à¸š, à¸£à¸­ judge) |
 
-หมายเหตุ: "EA_Project" กับ "EA_CORE" = track เดียวกัน (Project = repo, Core = engine ข้างใน).
-
----
-
-## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
-
-- **EA_LAB 90%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). housekeeping ปิดครบทุกข้อ 2026-07-02:
-  ~~fix path OneDrive→D:~~ ✅ + ~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅. เหลือ 10% =
-  งานที่ผูกกับเวลาจริง (operate จนถึง judge, ขยายจาก 1→หลายพอร์ต) ไม่ใช่งานสร้างเพิ่ม.
-  ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
-  RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
-  (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
-  2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
-- **🏁 EA_CORE merge track = ปิดสมบูรณ์ (เปิด+จบ 2026-07-06 วันเดียว):** user สั่งรวมข้อดี EA_CORE
-  เข้า Boss V2 ให้จบ — ทำครบ DoD 6/6 · บันทึกเต็ม = **`AGENT_TASKBOARD_MERGE.md` (CLOSED)**:
-  ✅ MERGE-01 (cage ครอบ Boss_14,
-  CLEAN×2) · ✅ MERGE-02 (Codex independent converge 4/4 — สลับลำดับเสี่ยงต่ำก่อน + exit-owner
-  mitigation) · ✅ MERGE-05A (restart audit: hard-kill state = 🔴 memory-only) · ✅ MERGE-04
-  (acct-DD gate `RC_AcctDDLimitPct` default 0 — regression CLEAN, trip พิสูจน์แล้ว 107→48 trades) ·
-  ✅ MERGE-05B (`core\Persist.mqh` + persist hard-kill state, `RC_PersistHalt` default ON =
-  ข้อยกเว้น additive ที่ signed off · Persist_Test 8/8 PASS · regression CLEAN โดย persist ON) ·
-  ✅ MERGE-03 (**STACK_PYRAMID(93) pending ladder เข้าแม่พิมพ์แล้ว** — smoke: placed 24 =
-  filled 20 + cancelled 4 บัญชีปิดเป๊ะ, failed 0 · A/B 91 vs 93 = mechanism ต่างจริง · regression
-  CLEAN · one-exit-owner: ไม่มี per-leg TP, โหมด 93 ปิด Recovery/Hedge/partial · spec →
-  `ea_template/DESIGN_V2.md` §3c) · ✅ MERGE-06 (`tests\run_tests.ps1` — ALL TESTS PASS 3/3:
-  Persist 8 · AcctGate 5 · StackStep 4 asserts) · ✅ MERGE-08 (EA_Project ติดป้าย ARCHIVE + docs
-  sync ครบ) · ✅ MERGE-07 (**user override hold 2026-07-06:** `Boss_15_ST03` + `Entry_ST03.mqh`
-  v4 verbatim — **signal parity 133/133 entry ตรง runner ทั้ง bar+ทิศ, 0 miss** · regression CLEAN ·
-  ALL TESTS PASS · **⛔ ห้าม deploy Boss_15 จนกว่า replica 990010 ผ่าน judge** — port ≠ รับรอง edge)
-  — **track ครบ 8/8 order · EA_Project ไม่มีงานใหม่อีกถาวร · แม่พิมพ์ Boss V2 = ตัวเดียวจบ ตาม
-  VISION (entry 11–15 + stack 90–93 + cage 2 ชั้น)**
-- **EA_CORE — บทบาทใหม่ 2026-07-03 = คลังอะไหล่ R&D (ดู VISION.md + Decision log):** loop ปิดแล้ว
-  (2026-07-02, fallback invoked): STEP 1→5 เดินครบ.
-  หลักฐานปิดเคส: STEP 2 A/B — signal v4 เพียวๆ PF 0.67 (overfit อยู่ที่ exit structure ไม่ใช่ signal) ·
-  STEP 3 coarse grid **complete 48 combos → OOS PF<1.0 ทั้งหมด** (ดีสุด 0.87 บน M2 ฝั่ง optimistic).
-  **ข้อสรุป: EA_CORE = R&D track** — framework สมบูรณ์เชิงวิศวกรรม (signals v2–v5, ScaleExecutor_v2,
-  risk stack, regression 1417 PASS) พร้อม reuse เมื่อมี signal ที่มี edge จริง; **production = ST_EA03
-  standalone** (live 9397/9398). replica 990010 บน demo = WATCH เก็บ data. ห้าม re-tune ตระกูล param นี้.
-  gotchas ที่บันทึกไว้: LR1 ต้อง `InpAllowLiveOrders=true` ใน tester · optimizer genetic mode พัง ใช้
-  Optimization=1 · portable python `tools/python312`. รายละเอียด → `EA_CORE_ST03_LOOP_PLAN.md` ·
-  architecture guide → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-- **EA_Template (Boss V2) — UNFREEZE 2026-07-03 → แม่พิมพ์หลักตัวเดียว** (supersede freeze 2026-07-02
-  ด้วยเหตุใหม่: ภาพจริงของเจ้าของเพิ่งถูก capture ใน `VISION.md` — แม่พิมพ์เดียว function กลางร่วมกัน
-  ต่างแค่ entry+TF). chassis compile 0/0 วัดเชื่อถือได้อยู่แล้ว · **งานค้างเพื่อเป็นแม่พิมพ์เต็มตัว:**
-  (1) เติม Hedge/Recovery module จริง (ตอนนี้เป็น stub ปิดไว้) (2) เพิ่ม smoke-regression ชุดเล็ก
-  (backtest ค่าคงที่ 1 ชุด เทียบเลขเดิมทุกครั้งที่แก้ core) (3) port Zeus grid/LOG เข้าเป็น entry
-  หลัง Zeus validate ผ่าน. architecture + วิธีใช้ → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
-  หมายเหตุ: `modules\`(V1) vs `core\`(V2) ซ้ำโดยตั้งใจ ไม่ใช่ขยะ.
-- **Live Portfolio 20%** — ✅ **9 EA live ครบแล้ว (user ยืนยัน deploy เสร็จ 2026-07-02)**. live clock เริ่ม 2026-06-22 →
-  judge เร็วสุด **2026-09-22**. ⚠️ **ST03 replica (990010) = WATCH**: qwen rerun OOS ได้ **PF 0.86 (585 trades)**
-  ขัดกับ 3.93 provisional เดิม — ต้อง re-confirm ด้วย locked .set ก่อนใช้เป็น baseline ตอน judge (คงไว้บน demo ได้
-  เพราะ demo มีไว้จับ overfit). ตัวบล็อก = เวลา (รอ demo 3 เดือน) + ยังไม่ขยายจาก 1 → หลายพอร์ต.
-- **Signal hunt — ⚠️ ไม่อิ่มตัวแล้ว หลัง 2026-07-03** เดิมเขียนว่า "98% อิ่มตัว รอไอเดียใหม่" (บรรทัดนี้
-  **ล้าสมัย**) — concept เก่าที่ตายแล้วยังตายอยู่ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
-  Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid ทั้งหมด — ดูรายละเอียด
-  ที่ `MASTER_BACKLOG.md`) **แต่มี candidate ใหม่จริงจากงาน 2026-07-03: `(Boss)_ZeusInspired_GridLog_rev01`
-  บน AUDUSD/AUDJPY (ผ่าน IS/OOS จริง)** — ดู bullet ถัดไปนี้ + `ZEUS_GOLD_HEDGE_ANALYSIS.md` +
-  `EA_SCORECARD_AND_REGISTRY.md` §FRESH TEMPLATE EAs
-- **🆕 (2026-07-03) Zeus Gold Hedge V1.2 วิเคราะห์ + ต่อยอด — สรุปรวด:**
-  วิเคราะห์ EA ปิด/ล็อคของ user (behavioral analysis เท่านั้น ไม่แตะไฟล์) → พบเป็น grid+martingale+hedge
-  ที่ **ไม่มี stop loss เลย** → REJECT ทั้ง XAU/EU (score ต่ำ ไม่ใช่ hard gate — ดู rubric fix ด้านล่าง)
-  → ออกแบบ EA ใหม่ `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign: ATR spacing, LOG lot, real SL,
-  partial-close, DD-adaptive first lot) → screen 27 FX symbol (ไม่รวมทอง) → **AUDUSD (IS 1.63→OOS 1.78,
-  retention 1.09) + AUDJPY (retention 0.87) = candidate ที่รอด IS/OOS จริง** · EURCAD/AUDCAD/AUDNZD
-  ตกหลัง confirm เข้ม (ดูดีตอน screen ผิว แต่ล้มตอนวัดจริง) · corr AUDUSD/AUDJPY = 0.554 (WATCH, ใช้คู่กัน
-  ได้แต่ลด lot) · EURJPY = diversifier เท่านั้น (corr ต่ำมากแต่ edge อ่อน) **ยังไม่ deploy — เหลือ Monte
-  Carlo บน config ที่ scale แล้ว + ทดสอบเป็นพอร์ตรวมกันจริง** รายละเอียดเต็ม + ทุกตัวเลข →
-  `ZEUS_GOLD_HEDGE_ANALYSIS.md` (มี timeline วันนี้ครบ §5.1-5.11)
-- **🔧 (2026-07-03) แก้ methodology 2 จุด ตาม user feedback — มีผลกับ EA ทุกตัวไปข้างหน้า ไม่ใช่แค่ Zeus:**
-  (1) `EA_SCORECARD_AND_REGISTRY.md` Step 0 hard-gate (uncapped grid/martingale) → เปลี่ยนเป็น score
-  penalty −25pt (Step 0b) เหลือ hard gate จริงแค่ expired/locked-ex + structural non-function
-  (2) **Model 2 (open price) ห้ามใช้รายงาน/จัดอันดับ PF เด็ดขาด — ใช้กรอง zero-trade เท่านั้น ตัวเลขที่
-  โชว์ user ต้อง Model 1 (control points) ขึ้นไปเสมอ** — พิสูจน์คุณค่าจริงวันเดียวกัน จับ false-positive
-  ได้ 3 ครั้ง (Zeus XAU M1 artifact PF1.89→M0 จริง1.01, AUDCAD M2 PF1.80→M1 จริง0.89, AUDNZD M2
-  PF1.96→M1 จริง1.06) — บันทึกไว้ทั้ง `EA_SCORECARD_AND_REGISTRY.md` และ skill `backtest-optimize-rigor`
-- **🆕 (2026-07-03) skill ใหม่ `locked-ea-analyzer`** — เก็บ methodology วิเคราะห์ EA ปิด/ล็อคทั้งหมดไว้ใช้ซ้ำ
-  (string-entropy check, ดึง param จาก .set/.ini/Journal, infer behavior, web search, screen, optimize,
-  validate) เรียกด้วย "วิเคราะห์ EA ตัวนี้อย่างละเอียด"
+à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸: "EA_Project" à¸à¸±à¸š "EA_CORE" = track à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ (Project = repo, Core = engine à¸‚à¹‰à¸²à¸‡à¹ƒà¸™).
 
 ---
 
-## 3. DECISION LOG — สิ่งที่ตัดสินใจไป (lock แล้ว อย่ารื้อโดยไม่มีเหตุใหม่)
+## 2. à¸ªà¸–à¸²à¸™à¸°à¸•à¸­à¸™à¸™à¸µà¹‰ (one-liner à¸•à¹ˆà¸­à¸Šà¸±à¹‰à¸™)
 
-| วันที่ | การตัดสินใจ | เหตุผล |
+- **EA_LAB 90%** â€” pipeline à¸„à¸£à¸š (intakeâ†’smokeâ†’IS/OOSâ†’MCâ†’corrâ†’deploy). housekeeping à¸›à¸´à¸”à¸„à¸£à¸šà¸—à¸¸à¸à¸‚à¹‰à¸­ 2026-07-02:
+  ~~fix path OneDriveâ†’D:~~ âœ… + ~~à¸£à¸§à¸¡ template à¸‹à¹‰à¸³~~ âœ… + ~~à¸¥à¸š ea_projects/Gold~~ âœ…. à¹€à¸«à¸¥à¸·à¸­ 10% =
+  à¸‡à¸²à¸™à¸—à¸µà¹ˆà¸œà¸¹à¸à¸à¸±à¸šà¹€à¸§à¸¥à¸²à¸ˆà¸£à¸´à¸‡ (operate à¸ˆà¸™à¸–à¸¶à¸‡ judge, à¸‚à¸¢à¸²à¸¢à¸ˆà¸²à¸ 1â†’à¸«à¸¥à¸²à¸¢à¸žà¸­à¸£à¹Œà¸•) à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸‡à¸²à¸™à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸žà¸´à¹ˆà¸¡.
+  âœ… à¸—à¸³à¹à¸¥à¹‰à¸§ 2026-06-29: à¸£à¸§à¸¡ central_resultsâ†’portfolio Â· deprecate
+  RUN_REGISTRY/_RESUME_HERE Â· anti-drift system (Â§0.5). âœ… 2026-06-29â€“30: qwen batch queue à¸£à¸±à¸™à¸ˆà¸š
+  (39 reports â€” baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) â†’ âœ… **review/à¸•à¸±à¸”à¸ªà¸´à¸™à¸„à¸£à¸šà¹à¸¥à¹‰à¸§
+  2026-07-02** (GR opt = null result, goldgrid = all fail, à¸”à¸¹ Â§2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
+- **ðŸ EA_CORE merge track = à¸›à¸´à¸”à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ (à¹€à¸›à¸´à¸”+à¸ˆà¸š 2026-07-06 à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§):** user à¸ªà¸±à¹ˆà¸‡à¸£à¸§à¸¡à¸‚à¹‰à¸­à¸”à¸µ EA_CORE
+  à¹€à¸‚à¹‰à¸² Boss V2 à¹ƒà¸«à¹‰à¸ˆà¸š â€” à¸—à¸³à¸„à¸£à¸š DoD 6/6 Â· à¸šà¸±à¸™à¸—à¸¶à¸à¹€à¸•à¹‡à¸¡ = **`AGENT_TASKBOARD_MERGE.md` (CLOSED)**:
+  âœ… MERGE-01 (cage à¸„à¸£à¸­à¸š Boss_14,
+  CLEANÃ—2) Â· âœ… MERGE-02 (Codex independent converge 4/4 â€” à¸ªà¸¥à¸±à¸šà¸¥à¸³à¸”à¸±à¸šà¹€à¸ªà¸µà¹ˆà¸¢à¸‡à¸•à¹ˆà¸³à¸à¹ˆà¸­à¸™ + exit-owner
+  mitigation) Â· âœ… MERGE-05A (restart audit: hard-kill state = ðŸ”´ memory-only) Â· âœ… MERGE-04
+  (acct-DD gate `RC_AcctDDLimitPct` default 0 â€” regression CLEAN, trip à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¹à¸¥à¹‰à¸§ 107â†’48 trades) Â·
+  âœ… MERGE-05B (`core\Persist.mqh` + persist hard-kill state, `RC_PersistHalt` default ON =
+  à¸‚à¹‰à¸­à¸¢à¸à¹€à¸§à¹‰à¸™ additive à¸—à¸µà¹ˆ signed off Â· Persist_Test 8/8 PASS Â· regression CLEAN à¹‚à¸”à¸¢ persist ON) Â·
+  âœ… MERGE-03 (**STACK_PYRAMID(93) pending ladder à¹€à¸‚à¹‰à¸²à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹à¸¥à¹‰à¸§** â€” smoke: placed 24 =
+  filled 20 + cancelled 4 à¸šà¸±à¸à¸Šà¸µà¸›à¸´à¸”à¹€à¸›à¹Šà¸°, failed 0 Â· A/B 91 vs 93 = mechanism à¸•à¹ˆà¸²à¸‡à¸ˆà¸£à¸´à¸‡ Â· regression
+  CLEAN Â· one-exit-owner: à¹„à¸¡à¹ˆà¸¡à¸µ per-leg TP, à¹‚à¸«à¸¡à¸” 93 à¸›à¸´à¸” Recovery/Hedge/partial Â· spec â†’
+  `ea_template/DESIGN_V2.md` Â§3c) Â· âœ… MERGE-06 (`tests\run_tests.ps1` â€” ALL TESTS PASS 3/3:
+  Persist 8 Â· AcctGate 5 Â· StackStep 4 asserts) Â· âœ… MERGE-08 (EA_Project à¸•à¸´à¸”à¸›à¹‰à¸²à¸¢ ARCHIVE + docs
+  sync à¸„à¸£à¸š) Â· âœ… MERGE-07 (**user override hold 2026-07-06:** `Boss_15_ST03` + `Entry_ST03.mqh`
+  v4 verbatim â€” **signal parity 133/133 entry à¸•à¸£à¸‡ runner à¸—à¸±à¹‰à¸‡ bar+à¸—à¸´à¸¨, 0 miss** Â· regression CLEAN Â·
+  ALL TESTS PASS Â· **â›” à¸«à¹‰à¸²à¸¡ deploy Boss_15 à¸ˆà¸™à¸à¸§à¹ˆà¸² replica 990010 à¸œà¹ˆà¸²à¸™ judge** â€” port â‰  à¸£à¸±à¸šà¸£à¸­à¸‡ edge)
+  â€” **track à¸„à¸£à¸š 8/8 order Â· EA_Project à¹„à¸¡à¹ˆà¸¡à¸µà¸‡à¸²à¸™à¹ƒà¸«à¸¡à¹ˆà¸­à¸µà¸à¸–à¸²à¸§à¸£ Â· à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ Boss V2 = à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸ˆà¸š à¸•à¸²à¸¡
+  VISION (entry 11â€“15 + stack 90â€“93 + cage 2 à¸Šà¸±à¹‰à¸™)**
+- **EA_CORE â€” à¸šà¸—à¸šà¸²à¸—à¹ƒà¸«à¸¡à¹ˆ 2026-07-03 = à¸„à¸¥à¸±à¸‡à¸­à¸°à¹„à¸«à¸¥à¹ˆ R&D (à¸”à¸¹ VISION.md + Decision log):** loop à¸›à¸´à¸”à¹à¸¥à¹‰à¸§
+  (2026-07-02, fallback invoked): STEP 1â†’5 à¹€à¸”à¸´à¸™à¸„à¸£à¸š.
+  à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸›à¸´à¸”à¹€à¸„à¸ª: STEP 2 A/B â€” signal v4 à¹€à¸žà¸µà¸¢à¸§à¹† PF 0.67 (overfit à¸­à¸¢à¸¹à¹ˆà¸—à¸µà¹ˆ exit structure à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ signal) Â·
+  STEP 3 coarse grid **complete 48 combos â†’ OOS PF<1.0 à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”** (à¸”à¸µà¸ªà¸¸à¸” 0.87 à¸šà¸™ M2 à¸à¸±à¹ˆà¸‡ optimistic).
+  **à¸‚à¹‰à¸­à¸ªà¸£à¸¸à¸›: EA_CORE = R&D track** â€” framework à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¹€à¸Šà¸´à¸‡à¸§à¸´à¸¨à¸§à¸à¸£à¸£à¸¡ (signals v2â€“v5, ScaleExecutor_v2,
+  risk stack, regression 1417 PASS) à¸žà¸£à¹‰à¸­à¸¡ reuse à¹€à¸¡à¸·à¹ˆà¸­à¸¡à¸µ signal à¸—à¸µà¹ˆà¸¡à¸µ edge à¸ˆà¸£à¸´à¸‡; **production = ST_EA03
+  standalone** (live 9397/9398). replica 990010 à¸šà¸™ demo = WATCH à¹€à¸à¹‡à¸š data. à¸«à¹‰à¸²à¸¡ re-tune à¸•à¸£à¸°à¸à¸¹à¸¥ param à¸™à¸µà¹‰.
+  gotchas à¸—à¸µà¹ˆà¸šà¸±à¸™à¸—à¸¶à¸à¹„à¸§à¹‰: LR1 à¸•à¹‰à¸­à¸‡ `InpAllowLiveOrders=true` à¹ƒà¸™ tester Â· optimizer genetic mode à¸žà¸±à¸‡ à¹ƒà¸Šà¹‰
+  Optimization=1 Â· portable python `tools/python312`. à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸” â†’ `EA_CORE_ST03_LOOP_PLAN.md` Â·
+  architecture guide â†’ `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
+- **EA_Template (Boss V2) â€” UNFREEZE 2026-07-03 â†’ à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸«à¸¥à¸±à¸à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§** (supersede freeze 2026-07-02
+  à¸”à¹‰à¸§à¸¢à¹€à¸«à¸•à¸¸à¹ƒà¸«à¸¡à¹ˆ: à¸ à¸²à¸žà¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹€à¸žà¸´à¹ˆà¸‡à¸–à¸¹à¸ capture à¹ƒà¸™ `VISION.md` â€” à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸”à¸µà¸¢à¸§ function à¸à¸¥à¸²à¸‡à¸£à¹ˆà¸§à¸¡à¸à¸±à¸™
+  à¸•à¹ˆà¸²à¸‡à¹à¸„à¹ˆ entry+TF). chassis compile 0/0 à¸§à¸±à¸”à¹€à¸Šà¸·à¹ˆà¸­à¸–à¸·à¸­à¹„à¸”à¹‰à¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§ Â· **à¸‡à¸²à¸™à¸„à¹‰à¸²à¸‡à¹€à¸žà¸·à¹ˆà¸­à¹€à¸›à¹‡à¸™à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸•à¹‡à¸¡à¸•à¸±à¸§:**
+  (1) à¹€à¸•à¸´à¸¡ Hedge/Recovery module à¸ˆà¸£à¸´à¸‡ (à¸•à¸­à¸™à¸™à¸µà¹‰à¹€à¸›à¹‡à¸™ stub à¸›à¸´à¸”à¹„à¸§à¹‰) (2) à¹€à¸žà¸´à¹ˆà¸¡ smoke-regression à¸Šà¸¸à¸”à¹€à¸¥à¹‡à¸
+  (backtest à¸„à¹ˆà¸²à¸„à¸‡à¸—à¸µà¹ˆ 1 à¸Šà¸¸à¸” à¹€à¸—à¸µà¸¢à¸šà¹€à¸¥à¸‚à¹€à¸”à¸´à¸¡à¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡à¸—à¸µà¹ˆà¹à¸à¹‰ core) (3) port Zeus grid/LOG à¹€à¸‚à¹‰à¸²à¹€à¸›à¹‡à¸™ entry
+  à¸«à¸¥à¸±à¸‡ Zeus validate à¸œà¹ˆà¸²à¸™. architecture + à¸§à¸´à¸˜à¸µà¹ƒà¸Šà¹‰ â†’ `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
+  à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸: `modules\`(V1) vs `core\`(V2) à¸‹à¹‰à¸³à¹‚à¸”à¸¢à¸•à¸±à¹‰à¸‡à¹ƒà¸ˆ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸‚à¸¢à¸°.
+- **Live Portfolio 20%** â€” âœ… **9 EA live à¸„à¸£à¸šà¹à¸¥à¹‰à¸§ (user à¸¢à¸·à¸™à¸¢à¸±à¸™ deploy à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-02)**. live clock à¹€à¸£à¸´à¹ˆà¸¡ 2026-06-22 â†’
+  judge à¹€à¸£à¹‡à¸§à¸ªà¸¸à¸” **2026-09-22**. âš ï¸ **ST03 replica (990010) = WATCH**: qwen rerun OOS à¹„à¸”à¹‰ **PF 0.86 (585 trades)**
+  à¸‚à¸±à¸”à¸à¸±à¸š 3.93 provisional à¹€à¸”à¸´à¸¡ â€” à¸•à¹‰à¸­à¸‡ re-confirm à¸”à¹‰à¸§à¸¢ locked .set à¸à¹ˆà¸­à¸™à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ baseline à¸•à¸­à¸™ judge (à¸„à¸‡à¹„à¸§à¹‰à¸šà¸™ demo à¹„à¸”à¹‰
+  à¹€à¸žà¸£à¸²à¸° demo à¸¡à¸µà¹„à¸§à¹‰à¸ˆà¸±à¸š overfit). à¸•à¸±à¸§à¸šà¸¥à¹‡à¸­à¸ = à¹€à¸§à¸¥à¸² (à¸£à¸­ demo 3 à¹€à¸”à¸·à¸­à¸™) + à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸‚à¸¢à¸²à¸¢à¸ˆà¸²à¸ 1 â†’ à¸«à¸¥à¸²à¸¢à¸žà¸­à¸£à¹Œà¸•.
+- **Signal hunt â€” âš ï¸ à¹„à¸¡à¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§à¹à¸¥à¹‰à¸§ à¸«à¸¥à¸±à¸‡ 2026-07-03** à¹€à¸”à¸´à¸¡à¹€à¸‚à¸µà¸¢à¸™à¸§à¹ˆà¸² "98% à¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§ à¸£à¸­à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆ" (à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
+  **à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢**) â€” concept à¹€à¸à¹ˆà¸²à¸—à¸µà¹ˆà¸•à¸²à¸¢à¹à¸¥à¹‰à¸§à¸¢à¸±à¸‡à¸•à¸²à¸¢à¸­à¸¢à¸¹à¹ˆ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
+  Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â€” à¸”à¸¹à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”
+  à¸—à¸µà¹ˆ `MASTER_BACKLOG.md`) **à¹à¸•à¹ˆà¸¡à¸µ candidate à¹ƒà¸«à¸¡à¹ˆà¸ˆà¸£à¸´à¸‡à¸ˆà¸²à¸à¸‡à¸²à¸™ 2026-07-03: `(Boss)_ZeusInspired_GridLog_rev01`
+  à¸šà¸™ AUDUSD/AUDJPY (à¸œà¹ˆà¸²à¸™ IS/OOS à¸ˆà¸£à¸´à¸‡)** â€” à¸”à¸¹ bullet à¸–à¸±à¸”à¹„à¸›à¸™à¸µà¹‰ + `ZEUS_GOLD_HEDGE_ANALYSIS.md` +
+  `EA_SCORECARD_AND_REGISTRY.md` Â§FRESH TEMPLATE EAs
+- **ðŸ†• (2026-07-03) Zeus Gold Hedge V1.2 à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ + à¸•à¹ˆà¸­à¸¢à¸­à¸” â€” à¸ªà¸£à¸¸à¸›à¸£à¸§à¸”:**
+  à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ EA à¸›à¸´à¸”/à¸¥à¹‡à¸­à¸„à¸‚à¸­à¸‡ user (behavioral analysis à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ à¹„à¸¡à¹ˆà¹à¸•à¸°à¹„à¸Ÿà¸¥à¹Œ) â†’ à¸žà¸šà¹€à¸›à¹‡à¸™ grid+martingale+hedge
+  à¸—à¸µà¹ˆ **à¹„à¸¡à¹ˆà¸¡à¸µ stop loss à¹€à¸¥à¸¢** â†’ REJECT à¸—à¸±à¹‰à¸‡ XAU/EU (score à¸•à¹ˆà¸³ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ hard gate â€” à¸”à¸¹ rubric fix à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡)
+  â†’ à¸­à¸­à¸à¹à¸šà¸š EA à¹ƒà¸«à¸¡à¹ˆ `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign: ATR spacing, LOG lot, real SL,
+  partial-close, DD-adaptive first lot) â†’ screen 27 FX symbol (à¹„à¸¡à¹ˆà¸£à¸§à¸¡à¸—à¸­à¸‡) â†’ **AUDUSD (IS 1.63â†’OOS 1.78,
+  retention 1.09) + AUDJPY (retention 0.87) = candidate à¸—à¸µà¹ˆà¸£à¸­à¸” IS/OOS à¸ˆà¸£à¸´à¸‡** Â· EURCAD/AUDCAD/AUDNZD
+  à¸•à¸à¸«à¸¥à¸±à¸‡ confirm à¹€à¸‚à¹‰à¸¡ (à¸”à¸¹à¸”à¸µà¸•à¸­à¸™ screen à¸œà¸´à¸§ à¹à¸•à¹ˆà¸¥à¹‰à¸¡à¸•à¸­à¸™à¸§à¸±à¸”à¸ˆà¸£à¸´à¸‡) Â· corr AUDUSD/AUDJPY = 0.554 (WATCH, à¹ƒà¸Šà¹‰à¸„à¸¹à¹ˆà¸à¸±à¸™
+  à¹„à¸”à¹‰à¹à¸•à¹ˆà¸¥à¸” lot) Â· EURJPY = diversifier à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ (corr à¸•à¹ˆà¸³à¸¡à¸²à¸à¹à¸•à¹ˆ edge à¸­à¹ˆà¸­à¸™) **à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ deploy â€” à¹€à¸«à¸¥à¸·à¸­ Monte
+  Carlo à¸šà¸™ config à¸—à¸µà¹ˆ scale à¹à¸¥à¹‰à¸§ + à¸—à¸”à¸ªà¸­à¸šà¹€à¸›à¹‡à¸™à¸žà¸­à¸£à¹Œà¸•à¸£à¸§à¸¡à¸à¸±à¸™à¸ˆà¸£à¸´à¸‡** à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¹€à¸•à¹‡à¸¡ + à¸—à¸¸à¸à¸•à¸±à¸§à¹€à¸¥à¸‚ â†’
+  `ZEUS_GOLD_HEDGE_ANALYSIS.md` (à¸¡à¸µ timeline à¸§à¸±à¸™à¸™à¸µà¹‰à¸„à¸£à¸š Â§5.1-5.11)
+- **ðŸ”§ (2026-07-03) à¹à¸à¹‰ methodology 2 à¸ˆà¸¸à¸” à¸•à¸²à¸¡ user feedback â€” à¸¡à¸µà¸œà¸¥à¸à¸±à¸š EA à¸—à¸¸à¸à¸•à¸±à¸§à¹„à¸›à¸‚à¹‰à¸²à¸‡à¸«à¸™à¹‰à¸² à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹à¸„à¹ˆ Zeus:**
+  (1) `EA_SCORECARD_AND_REGISTRY.md` Step 0 hard-gate (uncapped grid/martingale) â†’ à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¹€à¸›à¹‡à¸™ score
+  penalty âˆ’25pt (Step 0b) à¹€à¸«à¸¥à¸·à¸­ hard gate à¸ˆà¸£à¸´à¸‡à¹à¸„à¹ˆ expired/locked-ex + structural non-function
+  (2) **Model 2 (open price) à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¸£à¸²à¸¢à¸‡à¸²à¸™/à¸ˆà¸±à¸”à¸­à¸±à¸™à¸”à¸±à¸š PF à¹€à¸”à¹‡à¸”à¸‚à¸²à¸” â€” à¹ƒà¸Šà¹‰à¸à¸£à¸­à¸‡ zero-trade à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ à¸•à¸±à¸§à¹€à¸¥à¸‚à¸—à¸µà¹ˆ
+  à¹‚à¸Šà¸§à¹Œ user à¸•à¹‰à¸­à¸‡ Model 1 (control points) à¸‚à¸¶à¹‰à¸™à¹„à¸›à¹€à¸ªà¸¡à¸­** â€” à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸„à¸¸à¸“à¸„à¹ˆà¸²à¸ˆà¸£à¸´à¸‡à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ à¸ˆà¸±à¸š false-positive
+  à¹„à¸”à¹‰ 3 à¸„à¸£à¸±à¹‰à¸‡ (Zeus XAU M1 artifact PF1.89â†’M0 à¸ˆà¸£à¸´à¸‡1.01, AUDCAD M2 PF1.80â†’M1 à¸ˆà¸£à¸´à¸‡0.89, AUDNZD M2
+  PF1.96â†’M1 à¸ˆà¸£à¸´à¸‡1.06) â€” à¸šà¸±à¸™à¸—à¸¶à¸à¹„à¸§à¹‰à¸—à¸±à¹‰à¸‡ `EA_SCORECARD_AND_REGISTRY.md` à¹à¸¥à¸° skill `backtest-optimize-rigor`
+- **ðŸ†• (2026-07-03) skill à¹ƒà¸«à¸¡à¹ˆ `locked-ea-analyzer`** â€” à¹€à¸à¹‡à¸š methodology à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ EA à¸›à¸´à¸”/à¸¥à¹‡à¸­à¸„à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹„à¸§à¹‰à¹ƒà¸Šà¹‰à¸‹à¹‰à¸³
+  (string-entropy check, à¸”à¸¶à¸‡ param à¸ˆà¸²à¸ .set/.ini/Journal, infer behavior, web search, screen, optimize,
+  validate) à¹€à¸£à¸µà¸¢à¸à¸”à¹‰à¸§à¸¢ "à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ EA à¸•à¸±à¸§à¸™à¸µà¹‰à¸­à¸¢à¹ˆà¸²à¸‡à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”"
+
+---
+
+## 3. DECISION LOG â€” à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆà¹„à¸› (lock à¹à¸¥à¹‰à¸§ à¸­à¸¢à¹ˆà¸²à¸£à¸·à¹‰à¸­à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸¡à¸µà¹€à¸«à¸•à¸¸à¹ƒà¸«à¸¡à¹ˆ)
+
+| à¸§à¸±à¸™à¸—à¸µà¹ˆ | à¸à¸²à¸£à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆ | à¹€à¸«à¸•à¸¸à¸œà¸¥ |
 |---|---|---|
-| 2026-07-06 | **ทิศ "final" ของโปรเจกต์ (user เคาะ): ไม่ไล่เป็น quant firm — ไล่เป็น quant method** · ❌ ไม่ทำ: tick infra หลาย venue / low-latency / ML alpha / custom backtester (ยังไม่ถึงเวลา — คุ้มเมื่อ MT5 tester เป็นคอขวดจริง) · ✅ ทำหลัง judge = **Phase 3.5 PORTFOLIO-QUANT** (`ROADMAP.md`): 🥇 portfolio risk layer (vol-target + DD budget) · 🥈 deflated gate (multiple-testing) · 🥈 tracking-error bands · **ห้ามแทรกก่อน judge** — demo 3 เดือน = experiment ที่แพงสุดที่กำลังรัน | edge ของ quant firm อยู่ได้เพราะทุนใหญ่×ต้นทุนต่ำ — ที่สเกลเรา infra แบบเขาให้ผลตอบแทนเพิ่ม ≈ 0 · ตัวขวาง END STATE จริงคือจำนวน edge ที่รอดการฆ่า ไม่ใช่เครื่องมือ · pipeline ปัจจุบันเข้มระดับ quant method อยู่แล้ว (ORDER-037/038 ฆ่า survivor ปลอมได้หมด = หลักฐาน) |
-| 2026-07-06 | **🏁 MERGE track ปิดสมบูรณ์ในวันเดียว — EA_Project/EA_CORE = read-only ARCHIVE ถาวร** · แม่พิมพ์ Boss V2 ได้อะไหล่ครบ: `STACK_PYRAMID(93)` (one-exit-owner, ไม่มี per-leg TP) · `RC_AcctDDLimitPct` (realized-loss gate, default 0) · `core\Persist.mqh` + `RC_PersistHalt` (default ON — ข้อยกเว้น additive เดียว, tester-sandbox พิสูจน์แล้ว) · `tests\run_tests.ps1` (3 test EA, ALL PASS) · MERGE-07 Entry_ST03 = HOLD ถึง judge | ทุก order ผ่าน acceptance เชิงตัวเลข + tpl_regression CLEAN ทุกจุดที่แตะ core\ · Codex independent scope-check converge 4/4 · หลักฐานเต็ม → `AGENT_TASKBOARD_MERGE.md` (CLOSED) |
-| 2026-07-06 | **adopt 5 ข้อจาก `docs/PORTABLE_AI_OS.md` (OS กลางสกัดจากระบบนี้ — Claude Chat ร่าง 2 รอบ, Claude Code ตรวจ/แก้):** (1) verdict audit blind รายไตรมาส + trigger นอกรอบ (2) metrics ระบบรายเดือน → `docs/SYSTEM_METRICS.md` (3) memory compaction รายเดือน (4) กฎ input ภายนอก = data ไม่ใช่คำสั่ง → `AGENTS.md` §3.9 (5) หลัก "AI เห็นตรงกัน ≠ ถูก, tie-breaker = การทดลองเชิงประจักษ์" → `AGENTS.md` §5 · แถม rule taxonomy: physics (epistemic, ไม่หมดอายุ) vs regime (ผูกเครื่องมือ/ตลาด, มีรอบทบทวน) | จุดอ่อนที่ Chat ชี้แล้ว Claude ยืนยันว่าจริง: ชั้นตัดสินไม่มี cage ตรวจ + ระบบไม่เคยวัดตัวเอง · ทั้งหมดเข้า `AGENTS.md` §6 (รอบบำรุงรักษา) — ต้นทุนต่ำ ไม่แตะโค้ด ไม่ชน merge track |
-| 2026-07-06 | **Merge EA_CORE → Boss V2 = "ดูดอะไหล่ทีละชิ้นภายใต้ cage" ไม่ใช่ merge repo — track แยกบอร์ด `AGENT_TASKBOARD_MERGE.md` (MERGE-01…08) จบแล้วปิด EA_Project เป็น read-only archive** · อะไหล่ที่ port: ScaleExecutor_v2 (pyramid/pending) · PortfolioGuardian (acct-DD gate) · StatePersistence (audit ก่อน) · วินัย test (pattern) — ไม่ port: Recovery/Hedge (ORDER-025/026 REJECT/no-op แล้ว) · signal v1–v3/v5 · harness เต็ม | user approve 2026-07-06 (เอาข้อดีสองฝั่งรวมเป็นแม่พิมพ์เดียวที่สมบูรณ์ แล้วจบ track EA_Project) — merge ตรงๆ ได้ลูกครึ่งเสียข้อดีทั้งคู่ + เสี่ยงกระทบ demo ก่อน judge · สอดคล้อง VISION แม่พิมพ์เดียว · ทุก order = additive + default OFF + tpl_regression CLEAN บังคับ |
-| 2026-06-29 | **EA_CORE track = ทางเลือก 2: ปิด loop ด้วย ST03 edge** | standalone หา edge เร็วกว่า แต่ ST03 มี edge จริงอยู่แล้ว → ใช้ปิด framework loop ให้ได้ EA deploy-able. แผน: `EA_CORE_ST03_LOOP_PLAN.md` |
-| 2026-07-02 | **EA_CORE loop ปิดแล้ว — FALLBACK: EA_CORE = R&D, ST_EA03 standalone = production** | STEP 3 grid 48/48 combos OOS PF<1.0 (complete enum, M2 ฝั่ง optimistic) + STEP 2 signal เพียว PF 0.67 → ไม่มี durable set. ห้าม re-tune ตระกูลนี้โดยไม่มี signal ใหม่. หลักฐาน: `EA_CORE_ST03_LOOP_PLAN.md` STEP 5 |
-| 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve · SUPERTREND XAU = PARKED** (ยังไม่ deploy) | re-confirm ผ่านทั้งคู่ แต่ corr ระหว่างกัน 0.946 = ตัวเดียวกัน → ถ้าจะ deploy เอา KER ตัวเดียว 0.01 lot (corr 0.75 vs BRK8). ดู EA_SCORECARD §VALIDATED RESERVE |
-| 2026-07-02 | **EA_Template = FREEZE 100% เป็น smoke tool** | เครื่องมือเสร็จ วัดเชื่อถือได้ = จบงาน track; ไม่พัฒนา chassis ต่อ, ไอเดียใหม่ยังเสียบผ่าน Boss V2 ได้ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
-| 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 ขัด 3.93 provisional → ห้ามใช้เป็น baseline จนกว่า re-confirm ด้วย locked .set |
-| 2026-07-03 | **Zeus Gold Hedge V1.2 (MT4) = REJECT ทั้ง XAU/EU** (score ต่ำ ไม่ใช่ hard gate — ดู rubric fix ด้านล่าง) → ต่อยอดเป็น `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign) | วิเคราะห์เต็ม: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md` · methodology → skill `locked-ea-analyzer` |
-| 2026-07-03 | **แก้ scoring rubric: mechanism-risk hard-gate → score-penalty** + **Model 1 (control points) = ขั้นต่ำก่อน REJECT/DISQUALIFIED ใดๆ** (Model 2 = proof-of-concept เท่านั้น) | user-corrected — ป้องกัน reject EA ทิ้งก่อนวัดผลจริง. บันทึกใน `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. พิสูจน์คุณค่าทันที: จับ false-positive ได้ 2 ครั้งในวันเดียว (Zeus XAU Model 1 fill-artifact PF 1.89→Model 0 จริง 1.01; AUDCAD Model 2 PF 1.80→Model 1 จริง 0.89) |
-| 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` — AUDJPY = CANDIDATE แรกที่รอด** (PF 1.21 เท่ากันทั้ง Model 2/1 = ไม่ใช่ fill artifact; DD-scale เข้า 15% ได้ PF 1.91 net +$2,780/18mo) ยังไม่ IS/OOS/MC | AUDCAD ตกทั้ง baseline/tightened ที่ Model 1 — ทองถูกตัดออกทั้งหมดตามคำสั่ง user (Zeus family ไม่เหมาะกับ volatility ทอง) |
-| 2026-07-03 | **user rule: ห้ามตัดสิน DEAD/REJECT จนกว่าจะลอง optimize จริง** — verdict จาก param ชุดเดียว = PARKED-pending-optimize เสมอ | user-corrected ระหว่าง Boss_14 sweep — **พิสูจน์คุณค่าภายในชั่วโมงเดียว: 3/4 symbol ที่ถูกเรียก DEAD/REJECT ฟื้นหลัง probe 54-pass** (EURJPY 0.83→2.49 · EURCAD 0.65→1.82 · USDJPY 1.00→1.51) เหลือ EURCHF ตายจริง (0/54). ดู EA_SCORECARD §FRESH TEMPLATE |
-| 2026-07-03 | **ROADMAP.md เกิดขึ้น (user parameters: จบ=ระบบหมุนเอง · 10 account แยกจริง · live micro ทันทีหลัง judge · เวลา user 2–4 วัน/สัปดาห์)** — gate เลื่อนเฟสผูกกับ bench/หลักฐาน ไม่ใช่วันที่ · **Model transition: Fable → Opus หลัง 2026-07-07** (role อยู่ที่ seat ไม่ใช่ model — protocol ใน CLAUDE.md) | user ต้องการแผนจนจบเพื่อ delegate ให้ Codex/ZCode ต่อได้ + Fable access หมด 7 ก.ค. |
-| 2026-07-03 | **Multi-agent protocol: Claude = lead/judge เท่านั้น · Codex = peer engineer · ZCode = batch runner · ส่งไม้ผ่าน `AGENT_TASKBOARD.md` (order + acceptance criteria) · single-writer: VISION/Decision log/verdict = Claude/user เท่านั้น** | user ใช้ 3 agent ร่วมกัน (Claude quota จำกัด) — กัน "คนอื่นทำต่อแล้วพัง" ด้วย: order เล็ก+ตรวจได้ด้วยตัวเลข · agent อื่นผลิตหลักฐานไม่ตัดสิน · cage (check_state/tpl_regression) เป็น agent-agnostic · Claude กลับมาต้อง review ก่อน build ต่อ. กติกาเต็ม → `AGENTS.md` |
-| 2026-07-03 | **user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first ห้าม reject ตรงๆ** — reject จาก cap ได้เฉพาะเมื่อ (1) resize เข้า band แล้ว edge หลุด gate (2) ถึง min-lot แล้วยังเกิน (3) optimize probe ไม่เจอ config ที่เข้า band (4) ไม่เปิดไม้เลย · ส่วน fail เชิง edge (PF หลุด gate) reject ตรงได้เพราะ PF ไม่ขึ้นกับ scale | ขยาย decision 2026-06-23 ("DD ไม่ใช่ hard gate") ให้ครอบ cap ทุกชนิด + ระบุลำดับก่อน reject ชัด — บังคับใช้แล้วใน 4 skills: backtest-report-analyzer (RULE 1b resize-first, ถอน Dim-3 RED จาก hard-fail), robustness-validator (ruin resize-first), backtest-optimize-rigor (Verdict discipline), signal-scanner (smoke ห้ามฆ่าด้วย DD) |
-| 2026-07-03 | **Direction alignment (grill session): Boss V2 = แม่พิมพ์หลักตัวเดียว (UNFREEZE — supersede freeze 2026-07-02)** · EA_CORE = คลังอะไหล่ R&D (ไม่ทิ้ง ทำต่อเมื่อพร้อม) · standalone = ทางด่วนชั่วคราว ต้อง port เข้าแม่พิมพ์เมื่อพิสูจน์ edge | เหตุใหม่ที่ทำให้รื้อ decision เดิมได้: ภาพจริงของเจ้าของเพิ่งถูก capture ครั้งแรก (`VISION.md`) — แม่พิมพ์เดียว function กลางร่วม ต่างแค่ entry+TF · เจ้าของต้องเข้าใจระบบได้ทั้งตัว (EA_CORE อ่านไม่ออก = drift ซ้ำ) |
-| 2026-07-03 | **โหมดงาน = dual-track ถาวร** (โรงงานเดินตลอด + operate คู่กัน) — ยกเลิกคำว่า "operate ล้วน" | แกนล่าที่ยังไม่อิ่มตัว = **กลไก×symbol** (Zeus พิสูจน์: edge มาจาก grid+LOG บน AUD ไม่ใช่ entry เทพ) — ที่อิ่มตัวคือ entry เดี่ยวเท่านั้น |
-| 2026-07-03 | **Zeus: validate จบใน standalone ก่อน (MC + พอร์ตรวม) → PASS แล้วค่อย port เข้า Boss V2 เป็น pilot ของ workflow ใหม่ → deploy จากแม่พิมพ์** · 9 EA live ไม่แตะจนถึง judge | ไม่ทิ้งผล IS/OOS ที่ทำแล้ว · port ก่อน validate = ต้อง rerun ทั้งหมด · แตะ EA live = ทำลาย data การทดลอง |
-| 2026-07-03 | **เพิ่ม `VISION.md`** = owner ของ "ภาพใหญ่/ปรัชญาโรงงาน" — AI ทุก session อ่านคู่ PROJECT_STATE, งานขัด VISION ให้หยุดถาม | root cause ของ drift = ภาพในหัวเจ้าของไม่เคยถูกเขียนเป็นไฟล์ → ทุก session ตีความจาก status ที่ drift ไปแล้ว |
-| 2026-07-04 | **Model transition Fable→Opus = ACTIVE แล้ว (เร็วกว่าแผน 07-07 เพราะ Fable โควต้าหมดจริง) + รื้อ workflow ทีม:** seat=Opus · ยอดบันได escalation พังลง 1 ชั้น (deep-reasoner=seat แล้ว) → Codex (GPT รุ่นเก่งสุดที่มี = สมองอิสระตัวเดียวที่เหลือ, คนละค่ายจับจุดบอดคนละที่), ขอ review เฉพาะงานแพง/ย้อนไม่ได้ · batch run เลี่ยง ChatGPT quota (qwen→ZCode/GLM→oc-btest ถูกสุด) · oc-btest ลด model ถูกสุด/โยนงานไป ZCode · ห้ามรัน Codex+OpenClaw หนักพร้อมกัน | user: Fable หมด ต้องใช้ Opus แทน + ChatGPT quota (Codex+oc-dev+oc-btest แชร์) หมดเร็ว. กติกาเต็ม → `AGENTS.md` §1.5+§5 · `CLAUDE.md` Model transition |
-| 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
-| 2026-06-23 | **DD% ไม่ใช่ hard gate** | DD แก้ได้ด้วย sizing/spacing; structural gate คือ "กลไก" (uncapped martingale/grid). ดู EA_SCORECARD Step 0 |
-| ongoing | **correlation rule:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **ลด lot ไม่ใช่ตัดทิ้ง** | user rule (memory: correlation-vs-lotsize) |
-| ongoing | **backtest window = 3 ปี (2023–2026)** · re-opt ทุก 6 เดือน · ห้ามยืดเป็น 10 ปีเพื่อ "แก้ MC" | memory: backtest-window |
-| ongoing | **demo ≥3 เดือน ห้ามลัด** ก่อน live micro | README กฎเหล็ก |
+| 2026-07-06 | **à¸—à¸´à¸¨ "final" à¸‚à¸­à¸‡à¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ (user à¹€à¸„à¸²à¸°): à¹„à¸¡à¹ˆà¹„à¸¥à¹ˆà¹€à¸›à¹‡à¸™ quant firm â€” à¹„à¸¥à¹ˆà¹€à¸›à¹‡à¸™ quant method** Â· âŒ à¹„à¸¡à¹ˆà¸—à¸³: tick infra à¸«à¸¥à¸²à¸¢ venue / low-latency / ML alpha / custom backtester (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸–à¸¶à¸‡à¹€à¸§à¸¥à¸² â€” à¸„à¸¸à¹‰à¸¡à¹€à¸¡à¸·à¹ˆà¸­ MT5 tester à¹€à¸›à¹‡à¸™à¸„à¸­à¸‚à¸§à¸”à¸ˆà¸£à¸´à¸‡) Â· âœ… à¸—à¸³à¸«à¸¥à¸±à¸‡ judge = **Phase 3.5 PORTFOLIO-QUANT** (`ROADMAP.md`): ðŸ¥‡ portfolio risk layer (vol-target + DD budget) Â· ðŸ¥ˆ deflated gate (multiple-testing) Â· ðŸ¥ˆ tracking-error bands Â· **à¸«à¹‰à¸²à¸¡à¹à¸—à¸£à¸à¸à¹ˆà¸­à¸™ judge** â€” demo 3 à¹€à¸”à¸·à¸­à¸™ = experiment à¸—à¸µà¹ˆà¹à¸žà¸‡à¸ªà¸¸à¸”à¸—à¸µà¹ˆà¸à¸³à¸¥à¸±à¸‡à¸£à¸±à¸™ | edge à¸‚à¸­à¸‡ quant firm à¸­à¸¢à¸¹à¹ˆà¹„à¸”à¹‰à¹€à¸žà¸£à¸²à¸°à¸—à¸¸à¸™à¹ƒà¸«à¸à¹ˆÃ—à¸•à¹‰à¸™à¸—à¸¸à¸™à¸•à¹ˆà¸³ â€” à¸—à¸µà¹ˆà¸ªà¹€à¸à¸¥à¹€à¸£à¸² infra à¹à¸šà¸šà¹€à¸‚à¸²à¹ƒà¸«à¹‰à¸œà¸¥à¸•à¸­à¸šà¹à¸—à¸™à¹€à¸žà¸´à¹ˆà¸¡ â‰ˆ 0 Â· à¸•à¸±à¸§à¸‚à¸§à¸²à¸‡ END STATE à¸ˆà¸£à¸´à¸‡à¸„à¸·à¸­à¸ˆà¸³à¸™à¸§à¸™ edge à¸—à¸µà¹ˆà¸£à¸­à¸”à¸à¸²à¸£à¸†à¹ˆà¸² à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­ Â· pipeline à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¹€à¸‚à¹‰à¸¡à¸£à¸°à¸”à¸±à¸š quant method à¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§ (ORDER-037/038 à¸†à¹ˆà¸² survivor à¸›à¸¥à¸­à¸¡à¹„à¸”à¹‰à¸«à¸¡à¸” = à¸«à¸¥à¸±à¸à¸à¸²à¸™) |
+| 2026-07-06 | **ðŸ MERGE track à¸›à¸´à¸”à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¹ƒà¸™à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§ â€” EA_Project/EA_CORE = read-only ARCHIVE à¸–à¸²à¸§à¸£** Â· à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ Boss V2 à¹„à¸”à¹‰à¸­à¸°à¹„à¸«à¸¥à¹ˆà¸„à¸£à¸š: `STACK_PYRAMID(93)` (one-exit-owner, à¹„à¸¡à¹ˆà¸¡à¸µ per-leg TP) Â· `RC_AcctDDLimitPct` (realized-loss gate, default 0) Â· `core\Persist.mqh` + `RC_PersistHalt` (default ON â€” à¸‚à¹‰à¸­à¸¢à¸à¹€à¸§à¹‰à¸™ additive à¹€à¸”à¸µà¸¢à¸§, tester-sandbox à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¹à¸¥à¹‰à¸§) Â· `tests\run_tests.ps1` (3 test EA, ALL PASS) Â· MERGE-07 Entry_ST03 = HOLD à¸–à¸¶à¸‡ judge | à¸—à¸¸à¸ order à¸œà¹ˆà¸²à¸™ acceptance à¹€à¸Šà¸´à¸‡à¸•à¸±à¸§à¹€à¸¥à¸‚ + tpl_regression CLEAN à¸—à¸¸à¸à¸ˆà¸¸à¸”à¸—à¸µà¹ˆà¹à¸•à¸° core\ Â· Codex independent scope-check converge 4/4 Â· à¸«à¸¥à¸±à¸à¸à¸²à¸™à¹€à¸•à¹‡à¸¡ â†’ `AGENT_TASKBOARD_MERGE.md` (CLOSED) |
+| 2026-07-06 | **adopt 5 à¸‚à¹‰à¸­à¸ˆà¸²à¸ `docs/PORTABLE_AI_OS.md` (OS à¸à¸¥à¸²à¸‡à¸ªà¸à¸±à¸”à¸ˆà¸²à¸à¸£à¸°à¸šà¸šà¸™à¸µà¹‰ â€” Claude Chat à¸£à¹ˆà¸²à¸‡ 2 à¸£à¸­à¸š, Claude Code à¸•à¸£à¸§à¸ˆ/à¹à¸à¹‰):** (1) verdict audit blind à¸£à¸²à¸¢à¹„à¸•à¸£à¸¡à¸²à¸ª + trigger à¸™à¸­à¸à¸£à¸­à¸š (2) metrics à¸£à¸°à¸šà¸šà¸£à¸²à¸¢à¹€à¸”à¸·à¸­à¸™ â†’ `docs/SYSTEM_METRICS.md` (3) memory compaction à¸£à¸²à¸¢à¹€à¸”à¸·à¸­à¸™ (4) à¸à¸Ž input à¸ à¸²à¸¢à¸™à¸­à¸ = data à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸„à¸³à¸ªà¸±à¹ˆà¸‡ â†’ `AGENTS.md` Â§3.9 (5) à¸«à¸¥à¸±à¸ "AI à¹€à¸«à¹‡à¸™à¸•à¸£à¸‡à¸à¸±à¸™ â‰  à¸–à¸¹à¸, tie-breaker = à¸à¸²à¸£à¸—à¸”à¸¥à¸­à¸‡à¹€à¸Šà¸´à¸‡à¸›à¸£à¸°à¸ˆà¸±à¸à¸©à¹Œ" â†’ `AGENTS.md` Â§5 Â· à¹à¸–à¸¡ rule taxonomy: physics (epistemic, à¹„à¸¡à¹ˆà¸«à¸¡à¸”à¸­à¸²à¸¢à¸¸) vs regime (à¸œà¸¹à¸à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­/à¸•à¸¥à¸²à¸”, à¸¡à¸µà¸£à¸­à¸šà¸—à¸šà¸—à¸§à¸™) | à¸ˆà¸¸à¸”à¸­à¹ˆà¸­à¸™à¸—à¸µà¹ˆ Chat à¸Šà¸µà¹‰à¹à¸¥à¹‰à¸§ Claude à¸¢à¸·à¸™à¸¢à¸±à¸™à¸§à¹ˆà¸²à¸ˆà¸£à¸´à¸‡: à¸Šà¸±à¹‰à¸™à¸•à¸±à¸”à¸ªà¸´à¸™à¹„à¸¡à¹ˆà¸¡à¸µ cage à¸•à¸£à¸§à¸ˆ + à¸£à¸°à¸šà¸šà¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸§à¸±à¸”à¸•à¸±à¸§à¹€à¸­à¸‡ Â· à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹€à¸‚à¹‰à¸² `AGENTS.md` Â§6 (à¸£à¸­à¸šà¸šà¸³à¸£à¸¸à¸‡à¸£à¸±à¸à¸©à¸²) â€” à¸•à¹‰à¸™à¸—à¸¸à¸™à¸•à¹ˆà¸³ à¹„à¸¡à¹ˆà¹à¸•à¸°à¹‚à¸„à¹‰à¸” à¹„à¸¡à¹ˆà¸Šà¸™ merge track |
+| 2026-07-06 | **Merge EA_CORE â†’ Boss V2 = "à¸”à¸¹à¸”à¸­à¸°à¹„à¸«à¸¥à¹ˆà¸—à¸µà¸¥à¸°à¸Šà¸´à¹‰à¸™à¸ à¸²à¸¢à¹ƒà¸•à¹‰ cage" à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ merge repo â€” track à¹à¸¢à¸à¸šà¸­à¸£à¹Œà¸” `AGENT_TASKBOARD_MERGE.md` (MERGE-01â€¦08) à¸ˆà¸šà¹à¸¥à¹‰à¸§à¸›à¸´à¸” EA_Project à¹€à¸›à¹‡à¸™ read-only archive** Â· à¸­à¸°à¹„à¸«à¸¥à¹ˆà¸—à¸µà¹ˆ port: ScaleExecutor_v2 (pyramid/pending) Â· PortfolioGuardian (acct-DD gate) Â· StatePersistence (audit à¸à¹ˆà¸­à¸™) Â· à¸§à¸´à¸™à¸±à¸¢ test (pattern) â€” à¹„à¸¡à¹ˆ port: Recovery/Hedge (ORDER-025/026 REJECT/no-op à¹à¸¥à¹‰à¸§) Â· signal v1â€“v3/v5 Â· harness à¹€à¸•à¹‡à¸¡ | user approve 2026-07-06 (à¹€à¸­à¸²à¸‚à¹‰à¸­à¸”à¸µà¸ªà¸­à¸‡à¸à¸±à¹ˆà¸‡à¸£à¸§à¸¡à¹€à¸›à¹‡à¸™à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸”à¸µà¸¢à¸§à¸—à¸µà¹ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ à¹à¸¥à¹‰à¸§à¸ˆà¸š track EA_Project) â€” merge à¸•à¸£à¸‡à¹† à¹„à¸”à¹‰à¸¥à¸¹à¸à¸„à¸£à¸¶à¹ˆà¸‡à¹€à¸ªà¸µà¸¢à¸‚à¹‰à¸­à¸”à¸µà¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ + à¹€à¸ªà¸µà¹ˆà¸¢à¸‡à¸à¸£à¸°à¸—à¸š demo à¸à¹ˆà¸­à¸™ judge Â· à¸ªà¸­à¸”à¸„à¸¥à¹‰à¸­à¸‡ VISION à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸”à¸µà¸¢à¸§ Â· à¸—à¸¸à¸ order = additive + default OFF + tpl_regression CLEAN à¸šà¸±à¸‡à¸„à¸±à¸š |
+| 2026-06-29 | **EA_CORE track = à¸—à¸²à¸‡à¹€à¸¥à¸·à¸­à¸ 2: à¸›à¸´à¸” loop à¸”à¹‰à¸§à¸¢ ST03 edge** | standalone à¸«à¸² edge à¹€à¸£à¹‡à¸§à¸à¸§à¹ˆà¸² à¹à¸•à¹ˆ ST03 à¸¡à¸µ edge à¸ˆà¸£à¸´à¸‡à¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§ â†’ à¹ƒà¸Šà¹‰à¸›à¸´à¸” framework loop à¹ƒà¸«à¹‰à¹„à¸”à¹‰ EA deploy-able. à¹à¸œà¸™: `EA_CORE_ST03_LOOP_PLAN.md` |
+| 2026-07-02 | **EA_CORE loop à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ â€” FALLBACK: EA_CORE = R&D, ST_EA03 standalone = production** | STEP 3 grid 48/48 combos OOS PF<1.0 (complete enum, M2 à¸à¸±à¹ˆà¸‡ optimistic) + STEP 2 signal à¹€à¸žà¸µà¸¢à¸§ PF 0.67 â†’ à¹„à¸¡à¹ˆà¸¡à¸µ durable set. à¸«à¹‰à¸²à¸¡ re-tune à¸•à¸£à¸°à¸à¸¹à¸¥à¸™à¸µà¹‰à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸¡à¸µ signal à¹ƒà¸«à¸¡à¹ˆ. à¸«à¸¥à¸±à¸à¸à¸²à¸™: `EA_CORE_ST03_LOOP_PLAN.md` STEP 5 |
+| 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve Â· SUPERTREND XAU = PARKED** (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ deploy) | re-confirm à¸œà¹ˆà¸²à¸™à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ à¹à¸•à¹ˆ corr à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸à¸±à¸™ 0.946 = à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ â†’ à¸–à¹‰à¸²à¸ˆà¸° deploy à¹€à¸­à¸² KER à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§ 0.01 lot (corr 0.75 vs BRK8). à¸”à¸¹ EA_SCORECARD Â§VALIDATED RESERVE |
+| 2026-07-02 | **EA_Template = FREEZE 100% à¹€à¸›à¹‡à¸™ smoke tool** | à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¹€à¸ªà¸£à¹‡à¸ˆ à¸§à¸±à¸”à¹€à¸Šà¸·à¹ˆà¸­à¸–à¸·à¸­à¹„à¸”à¹‰ = à¸ˆà¸šà¸‡à¸²à¸™ track; à¹„à¸¡à¹ˆà¸žà¸±à¸’à¸™à¸² chassis à¸•à¹ˆà¸­, à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆà¸¢à¸±à¸‡à¹€à¸ªà¸µà¸¢à¸šà¸œà¹ˆà¸²à¸™ Boss V2 à¹„à¸”à¹‰ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
+| 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 à¸‚à¸±à¸” 3.93 provisional â†’ à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ baseline à¸ˆà¸™à¸à¸§à¹ˆà¸² re-confirm à¸”à¹‰à¸§à¸¢ locked .set |
+| 2026-07-03 | **Zeus Gold Hedge V1.2 (MT4) = REJECT à¸—à¸±à¹‰à¸‡ XAU/EU** (score à¸•à¹ˆà¸³ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ hard gate â€” à¸”à¸¹ rubric fix à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡) â†’ à¸•à¹ˆà¸­à¸¢à¸­à¸”à¹€à¸›à¹‡à¸™ `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign) | à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œà¹€à¸•à¹‡à¸¡: `ZEUS_GOLD_HEDGE_ANALYSIS.md` Â· registry: `EA_SCORECARD_AND_REGISTRY.md` Â· methodology â†’ skill `locked-ea-analyzer` |
+| 2026-07-03 | **à¹à¸à¹‰ scoring rubric: mechanism-risk hard-gate â†’ score-penalty** + **Model 1 (control points) = à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³à¸à¹ˆà¸­à¸™ REJECT/DISQUALIFIED à¹ƒà¸”à¹†** (Model 2 = proof-of-concept à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™) | user-corrected â€” à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ reject EA à¸—à¸´à¹‰à¸‡à¸à¹ˆà¸­à¸™à¸§à¸±à¸”à¸œà¸¥à¸ˆà¸£à¸´à¸‡. à¸šà¸±à¸™à¸—à¸¶à¸à¹ƒà¸™ `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸„à¸¸à¸“à¸„à¹ˆà¸²à¸—à¸±à¸™à¸—à¸µ: à¸ˆà¸±à¸š false-positive à¹„à¸”à¹‰ 2 à¸„à¸£à¸±à¹‰à¸‡à¹ƒà¸™à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§ (Zeus XAU Model 1 fill-artifact PF 1.89â†’Model 0 à¸ˆà¸£à¸´à¸‡ 1.01; AUDCAD Model 2 PF 1.80â†’Model 1 à¸ˆà¸£à¸´à¸‡ 0.89) |
+| 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` â€” AUDJPY = CANDIDATE à¹à¸£à¸à¸—à¸µà¹ˆà¸£à¸­à¸”** (PF 1.21 à¹€à¸—à¹ˆà¸²à¸à¸±à¸™à¸—à¸±à¹‰à¸‡ Model 2/1 = à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ fill artifact; DD-scale à¹€à¸‚à¹‰à¸² 15% à¹„à¸”à¹‰ PF 1.91 net +$2,780/18mo) à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ IS/OOS/MC | AUDCAD à¸•à¸à¸—à¸±à¹‰à¸‡ baseline/tightened à¸—à¸µà¹ˆ Model 1 â€” à¸—à¸­à¸‡à¸–à¸¹à¸à¸•à¸±à¸”à¸­à¸­à¸à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸„à¸³à¸ªà¸±à¹ˆà¸‡ user (Zeus family à¹„à¸¡à¹ˆà¹€à¸«à¸¡à¸²à¸°à¸à¸±à¸š volatility à¸—à¸­à¸‡) |
+| 2026-07-03 | **user rule: à¸«à¹‰à¸²à¸¡à¸•à¸±à¸”à¸ªà¸´à¸™ DEAD/REJECT à¸ˆà¸™à¸à¸§à¹ˆà¸²à¸ˆà¸°à¸¥à¸­à¸‡ optimize à¸ˆà¸£à¸´à¸‡** â€” verdict à¸ˆà¸²à¸ param à¸Šà¸¸à¸”à¹€à¸”à¸µà¸¢à¸§ = PARKED-pending-optimize à¹€à¸ªà¸¡à¸­ | user-corrected à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡ Boss_14 sweep â€” **à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸„à¸¸à¸“à¸„à¹ˆà¸²à¸ à¸²à¸¢à¹ƒà¸™à¸Šà¸±à¹ˆà¸§à¹‚à¸¡à¸‡à¹€à¸”à¸µà¸¢à¸§: 3/4 symbol à¸—à¸µà¹ˆà¸–à¸¹à¸à¹€à¸£à¸µà¸¢à¸ DEAD/REJECT à¸Ÿà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡ probe 54-pass** (EURJPY 0.83â†’2.49 Â· EURCAD 0.65â†’1.82 Â· USDJPY 1.00â†’1.51) à¹€à¸«à¸¥à¸·à¸­ EURCHF à¸•à¸²à¸¢à¸ˆà¸£à¸´à¸‡ (0/54). à¸”à¸¹ EA_SCORECARD Â§FRESH TEMPLATE |
+| 2026-07-03 | **ROADMAP.md à¹€à¸à¸´à¸”à¸‚à¸¶à¹‰à¸™ (user parameters: à¸ˆà¸š=à¸£à¸°à¸šà¸šà¸«à¸¡à¸¸à¸™à¹€à¸­à¸‡ Â· 10 account à¹à¸¢à¸à¸ˆà¸£à¸´à¸‡ Â· live micro à¸—à¸±à¸™à¸—à¸µà¸«à¸¥à¸±à¸‡ judge Â· à¹€à¸§à¸¥à¸² user 2â€“4 à¸§à¸±à¸™/à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ)** â€” gate à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹€à¸Ÿà¸ªà¸œà¸¹à¸à¸à¸±à¸š bench/à¸«à¸¥à¸±à¸à¸à¸²à¸™ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸§à¸±à¸™à¸—à¸µà¹ˆ Â· **Model transition: Fable â†’ Opus à¸«à¸¥à¸±à¸‡ 2026-07-07** (role à¸­à¸¢à¸¹à¹ˆà¸—à¸µà¹ˆ seat à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ model â€” protocol à¹ƒà¸™ CLAUDE.md) | user à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹à¸œà¸™à¸ˆà¸™à¸ˆà¸šà¹€à¸žà¸·à¹ˆà¸­ delegate à¹ƒà¸«à¹‰ Codex/ZCode à¸•à¹ˆà¸­à¹„à¸”à¹‰ + Fable access à¸«à¸¡à¸” 7 à¸.à¸„. |
+| 2026-07-03 | **Multi-agent protocol: Claude = lead/judge à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ Â· Codex = peer engineer Â· ZCode = batch runner Â· à¸ªà¹ˆà¸‡à¹„à¸¡à¹‰à¸œà¹ˆà¸²à¸™ `AGENT_TASKBOARD.md` (order + acceptance criteria) Â· single-writer: VISION/Decision log/verdict = Claude/user à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™** | user à¹ƒà¸Šà¹‰ 3 agent à¸£à¹ˆà¸§à¸¡à¸à¸±à¸™ (Claude quota à¸ˆà¸³à¸à¸±à¸”) â€” à¸à¸±à¸™ "à¸„à¸™à¸­à¸·à¹ˆà¸™à¸—à¸³à¸•à¹ˆà¸­à¹à¸¥à¹‰à¸§à¸žà¸±à¸‡" à¸”à¹‰à¸§à¸¢: order à¹€à¸¥à¹‡à¸+à¸•à¸£à¸§à¸ˆà¹„à¸”à¹‰à¸”à¹‰à¸§à¸¢à¸•à¸±à¸§à¹€à¸¥à¸‚ Â· agent à¸­à¸·à¹ˆà¸™à¸œà¸¥à¸´à¸•à¸«à¸¥à¸±à¸à¸à¸²à¸™à¹„à¸¡à¹ˆà¸•à¸±à¸”à¸ªà¸´à¸™ Â· cage (check_state/tpl_regression) à¹€à¸›à¹‡à¸™ agent-agnostic Â· Claude à¸à¸¥à¸±à¸šà¸¡à¸²à¸•à¹‰à¸­à¸‡ review à¸à¹ˆà¸­à¸™ build à¸•à¹ˆà¸­. à¸à¸•à¸´à¸à¸²à¹€à¸•à¹‡à¸¡ â†’ `AGENTS.md` |
+| 2026-07-03 | **user rule: cap breach (DD/margin/deposit-load/MC-ruin) = resize-first à¸«à¹‰à¸²à¸¡ reject à¸•à¸£à¸‡à¹†** â€” reject à¸ˆà¸²à¸ cap à¹„à¸”à¹‰à¹€à¸‰à¸žà¸²à¸°à¹€à¸¡à¸·à¹ˆà¸­ (1) resize à¹€à¸‚à¹‰à¸² band à¹à¸¥à¹‰à¸§ edge à¸«à¸¥à¸¸à¸” gate (2) à¸–à¸¶à¸‡ min-lot à¹à¸¥à¹‰à¸§à¸¢à¸±à¸‡à¹€à¸à¸´à¸™ (3) optimize probe à¹„à¸¡à¹ˆà¹€à¸ˆà¸­ config à¸—à¸µà¹ˆà¹€à¸‚à¹‰à¸² band (4) à¹„à¸¡à¹ˆà¹€à¸›à¸´à¸”à¹„à¸¡à¹‰à¹€à¸¥à¸¢ Â· à¸ªà¹ˆà¸§à¸™ fail à¹€à¸Šà¸´à¸‡ edge (PF à¸«à¸¥à¸¸à¸” gate) reject à¸•à¸£à¸‡à¹„à¸”à¹‰à¹€à¸žà¸£à¸²à¸° PF à¹„à¸¡à¹ˆà¸‚à¸¶à¹‰à¸™à¸à¸±à¸š scale | à¸‚à¸¢à¸²à¸¢ decision 2026-06-23 ("DD à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ hard gate") à¹ƒà¸«à¹‰à¸„à¸£à¸­à¸š cap à¸—à¸¸à¸à¸Šà¸™à¸´à¸” + à¸£à¸°à¸šà¸¸à¸¥à¸³à¸”à¸±à¸šà¸à¹ˆà¸­à¸™ reject à¸Šà¸±à¸” â€” à¸šà¸±à¸‡à¸„à¸±à¸šà¹ƒà¸Šà¹‰à¹à¸¥à¹‰à¸§à¹ƒà¸™ 4 skills: backtest-report-analyzer (RULE 1b resize-first, à¸–à¸­à¸™ Dim-3 RED à¸ˆà¸²à¸ hard-fail), robustness-validator (ruin resize-first), backtest-optimize-rigor (Verdict discipline), signal-scanner (smoke à¸«à¹‰à¸²à¸¡à¸†à¹ˆà¸²à¸”à¹‰à¸§à¸¢ DD) |
+| 2026-07-03 | **Direction alignment (grill session): Boss V2 = à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸«à¸¥à¸±à¸à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§ (UNFREEZE â€” supersede freeze 2026-07-02)** Â· EA_CORE = à¸„à¸¥à¸±à¸‡à¸­à¸°à¹„à¸«à¸¥à¹ˆ R&D (à¹„à¸¡à¹ˆà¸—à¸´à¹‰à¸‡ à¸—à¸³à¸•à¹ˆà¸­à¹€à¸¡à¸·à¹ˆà¸­à¸žà¸£à¹‰à¸­à¸¡) Â· standalone = à¸—à¸²à¸‡à¸”à¹ˆà¸§à¸™à¸Šà¸±à¹ˆà¸§à¸„à¸£à¸²à¸§ à¸•à¹‰à¸­à¸‡ port à¹€à¸‚à¹‰à¸²à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸¡à¸·à¹ˆà¸­à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ edge | à¹€à¸«à¸•à¸¸à¹ƒà¸«à¸¡à¹ˆà¸—à¸µà¹ˆà¸—à¸³à¹ƒà¸«à¹‰à¸£à¸·à¹‰à¸­ decision à¹€à¸”à¸´à¸¡à¹„à¸”à¹‰: à¸ à¸²à¸žà¸ˆà¸£à¸´à¸‡à¸‚à¸­à¸‡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹€à¸žà¸´à¹ˆà¸‡à¸–à¸¹à¸ capture à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸ (`VISION.md`) â€” à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹€à¸”à¸µà¸¢à¸§ function à¸à¸¥à¸²à¸‡à¸£à¹ˆà¸§à¸¡ à¸•à¹ˆà¸²à¸‡à¹à¸„à¹ˆ entry+TF Â· à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¸•à¹‰à¸­à¸‡à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¸£à¸°à¸šà¸šà¹„à¸”à¹‰à¸—à¸±à¹‰à¸‡à¸•à¸±à¸§ (EA_CORE à¸­à¹ˆà¸²à¸™à¹„à¸¡à¹ˆà¸­à¸­à¸ = drift à¸‹à¹‰à¸³) |
+| 2026-07-03 | **à¹‚à¸«à¸¡à¸”à¸‡à¸²à¸™ = dual-track à¸–à¸²à¸§à¸£** (à¹‚à¸£à¸‡à¸‡à¸²à¸™à¹€à¸”à¸´à¸™à¸•à¸¥à¸­à¸” + operate à¸„à¸¹à¹ˆà¸à¸±à¸™) â€” à¸¢à¸à¹€à¸¥à¸´à¸à¸„à¸³à¸§à¹ˆà¸² "operate à¸¥à¹‰à¸§à¸™" | à¹à¸à¸™à¸¥à¹ˆà¸²à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§ = **à¸à¸¥à¹„à¸Ã—symbol** (Zeus à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ: edge à¸¡à¸²à¸ˆà¸²à¸ grid+LOG à¸šà¸™ AUD à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ entry à¹€à¸—à¸ž) â€” à¸—à¸µà¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§à¸„à¸·à¸­ entry à¹€à¸”à¸µà¹ˆà¸¢à¸§à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ |
+| 2026-07-03 | **Zeus: validate à¸ˆà¸šà¹ƒà¸™ standalone à¸à¹ˆà¸­à¸™ (MC + à¸žà¸­à¸£à¹Œà¸•à¸£à¸§à¸¡) â†’ PASS à¹à¸¥à¹‰à¸§à¸„à¹ˆà¸­à¸¢ port à¹€à¸‚à¹‰à¸² Boss V2 à¹€à¸›à¹‡à¸™ pilot à¸‚à¸­à¸‡ workflow à¹ƒà¸«à¸¡à¹ˆ â†’ deploy à¸ˆà¸²à¸à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ** Â· 9 EA live à¹„à¸¡à¹ˆà¹à¸•à¸°à¸ˆà¸™à¸–à¸¶à¸‡ judge | à¹„à¸¡à¹ˆà¸—à¸´à¹‰à¸‡à¸œà¸¥ IS/OOS à¸—à¸µà¹ˆà¸—à¸³à¹à¸¥à¹‰à¸§ Â· port à¸à¹ˆà¸­à¸™ validate = à¸•à¹‰à¸­à¸‡ rerun à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” Â· à¹à¸•à¸° EA live = à¸—à¸³à¸¥à¸²à¸¢ data à¸à¸²à¸£à¸—à¸”à¸¥à¸­à¸‡ |
+| 2026-07-03 | **à¹€à¸žà¸´à¹ˆà¸¡ `VISION.md`** = owner à¸‚à¸­à¸‡ "à¸ à¸²à¸žà¹ƒà¸«à¸à¹ˆ/à¸›à¸£à¸±à¸Šà¸à¸²à¹‚à¸£à¸‡à¸‡à¸²à¸™" â€” AI à¸—à¸¸à¸ session à¸­à¹ˆà¸²à¸™à¸„à¸¹à¹ˆ PROJECT_STATE, à¸‡à¸²à¸™à¸‚à¸±à¸” VISION à¹ƒà¸«à¹‰à¸«à¸¢à¸¸à¸”à¸–à¸²à¸¡ | root cause à¸‚à¸­à¸‡ drift = à¸ à¸²à¸žà¹ƒà¸™à¸«à¸±à¸§à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸–à¸¹à¸à¹€à¸‚à¸µà¸¢à¸™à¹€à¸›à¹‡à¸™à¹„à¸Ÿà¸¥à¹Œ â†’ à¸—à¸¸à¸ session à¸•à¸µà¸„à¸§à¸²à¸¡à¸ˆà¸²à¸ status à¸—à¸µà¹ˆ drift à¹„à¸›à¹à¸¥à¹‰à¸§ |
+| 2026-07-04 | **Model transition Fableâ†’Opus = ACTIVE à¹à¸¥à¹‰à¸§ (à¹€à¸£à¹‡à¸§à¸à¸§à¹ˆà¸²à¹à¸œà¸™ 07-07 à¹€à¸žà¸£à¸²à¸° Fable à¹‚à¸„à¸§à¸•à¹‰à¸²à¸«à¸¡à¸”à¸ˆà¸£à¸´à¸‡) + à¸£à¸·à¹‰à¸­ workflow à¸—à¸µà¸¡:** seat=Opus Â· à¸¢à¸­à¸”à¸šà¸±à¸™à¹„à¸” escalation à¸žà¸±à¸‡à¸¥à¸‡ 1 à¸Šà¸±à¹‰à¸™ (deep-reasoner=seat à¹à¸¥à¹‰à¸§) â†’ Codex (GPT à¸£à¸¸à¹ˆà¸™à¹€à¸à¹ˆà¸‡à¸ªà¸¸à¸”à¸—à¸µà¹ˆà¸¡à¸µ = à¸ªà¸¡à¸­à¸‡à¸­à¸´à¸ªà¸£à¸°à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­, à¸„à¸™à¸¥à¸°à¸„à¹ˆà¸²à¸¢à¸ˆà¸±à¸šà¸ˆà¸¸à¸”à¸šà¸­à¸”à¸„à¸™à¸¥à¸°à¸—à¸µà¹ˆ), à¸‚à¸­ review à¹€à¸‰à¸žà¸²à¸°à¸‡à¸²à¸™à¹à¸žà¸‡/à¸¢à¹‰à¸­à¸™à¹„à¸¡à¹ˆà¹„à¸”à¹‰ Â· batch run à¹€à¸¥à¸µà¹ˆà¸¢à¸‡ ChatGPT quota (qwenâ†’ZCode/GLMâ†’oc-btest à¸–à¸¹à¸à¸ªà¸¸à¸”) Â· oc-btest à¸¥à¸” model à¸–à¸¹à¸à¸ªà¸¸à¸”/à¹‚à¸¢à¸™à¸‡à¸²à¸™à¹„à¸› ZCode Â· à¸«à¹‰à¸²à¸¡à¸£à¸±à¸™ Codex+OpenClaw à¸«à¸™à¸±à¸à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™ | user: Fable à¸«à¸¡à¸” à¸•à¹‰à¸­à¸‡à¹ƒà¸Šà¹‰ Opus à¹à¸—à¸™ + ChatGPT quota (Codex+oc-dev+oc-btest à¹à¸Šà¸£à¹Œ) à¸«à¸¡à¸”à¹€à¸£à¹‡à¸§. à¸à¸•à¸´à¸à¸²à¹€à¸•à¹‡à¸¡ â†’ `AGENTS.md` Â§1.5+Â§5 Â· `CLAUDE.md` Model transition |
+| 2026-06-29 | **PROJECT_STATE.md = living doc à¸à¸¥à¸²à¸‡** | à¹ƒà¸«à¹‰ AI à¸—à¸¸à¸à¸•à¸±à¸§à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¸•à¸£à¸‡à¸à¸±à¸™ (user request) |
+| 2026-06-23 | **DD% à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ hard gate** | DD à¹à¸à¹‰à¹„à¸”à¹‰à¸”à¹‰à¸§à¸¢ sizing/spacing; structural gate à¸„à¸·à¸­ "à¸à¸¥à¹„à¸" (uncapped martingale/grid). à¸”à¸¹ EA_SCORECARD Step 0 |
+| ongoing | **correlation rule:** â‰¤0.40 additive Â· 0.40â€“0.60 watch Â· >0.60 redundant â†’ **à¸¥à¸” lot à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸•à¸±à¸”à¸—à¸´à¹‰à¸‡** | user rule (memory: correlation-vs-lotsize) |
+| ongoing | **backtest window = 3 à¸›à¸µ (2023â€“2026)** Â· re-opt à¸—à¸¸à¸ 6 à¹€à¸”à¸·à¸­à¸™ Â· à¸«à¹‰à¸²à¸¡à¸¢à¸·à¸”à¹€à¸›à¹‡à¸™ 10 à¸›à¸µà¹€à¸žà¸·à¹ˆà¸­ "à¹à¸à¹‰ MC" | memory: backtest-window |
+| ongoing | **demo â‰¥3 à¹€à¸”à¸·à¸­à¸™ à¸«à¹‰à¸²à¸¡à¸¥à¸±à¸”** à¸à¹ˆà¸­à¸™ live micro | README à¸à¸Žà¹€à¸«à¸¥à¹‡à¸ |
 
 ---
 
-## 4. LIVE PORTFOLIO (สรุป — detail เต็มที่ `DEMO_DEPLOYMENT_PLAN.md`)
+## 4. LIVE PORTFOLIO (à¸ªà¸£à¸¸à¸› â€” detail à¹€à¸•à¹‡à¸¡à¸—à¸µà¹ˆ `DEMO_DEPLOYMENT_PLAN.md`)
 
-account เดียว 10,000 cent · judge **2026-09-22** · attribution key = **(magic, symbol)**.
+account à¹€à¸”à¸µà¸¢à¸§ 10,000 cent Â· judge **2026-09-22** Â· attribution key = **(magic, symbol)**.
 
-| # | EA | Symbol/TF | Magic | OOS PF | สถานะ |
+| # | EA | Symbol/TF | Magic | OOS PF | à¸ªà¸–à¸²à¸™à¸° |
 |---|---|---|---|---|---|
-| 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | 🟢 LIVE |
-| 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE |
-| 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | 🟢 LIVE |
-| 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | 🟢 LIVE |
-| 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | 🟢 LIVE |
-| 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94–4.87 | 🟢 LIVE (v3 reloaded) |
-| 7 | LondonConsoBreakout | GBPUSD H1 | 990005 | 2.08 | 🟢 LIVE |
-| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | 🟠 LIVE — **WATCH** |
-| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | 🟢 LIVE |
+| 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | ðŸŸ¢ LIVE |
+| 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | ðŸŸ¢ LIVE |
+| 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | ðŸŸ¢ LIVE |
+| 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | ðŸŸ¢ LIVE |
+| 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | ðŸŸ¢ LIVE |
+| 6 | EA_BREAKOUT_XAU (Bars55) | XAUUSD H1 | 991001 | 2.94â€“4.87 | ðŸŸ¢ LIVE (v3 reloaded) |
+| 7 | LondonConsoBreakout | GBPUSD H1 | 990005 | 2.08 | ðŸŸ¢ LIVE |
+| 9 | EA_RUNNER_ST03 (replica) | GBPUSD H1 | 990010 | 3.93* | ðŸŸ  LIVE â€” **WATCH** |
+| 10 | EA_BREAKOUT_XAU (Bars8) | XAUUSD H1 | 991002 | 3.92 | ðŸŸ¢ LIVE |
 
-(#8 CB_EUR EURUSD = ❌ DROPPED 2026-06-25, no durable edge. พอร์ตจริง = 9 EA — deploy ครบ ✅ 2026-07-02.)
+(#8 CB_EUR EURUSD = âŒ DROPPED 2026-06-25, no durable edge. à¸žà¸­à¸£à¹Œà¸•à¸ˆà¸£à¸´à¸‡ = 9 EA â€” deploy à¸„à¸£à¸š âœ… 2026-07-02.)
 
-> ***3.93 = คนละ window, ไม่ใช้เป็น baseline (verified 2026-07-02)** — 3.93 มาจาก OOS window รอบ 06-26
-> (regime ดี, ดู scorecard WFA "regime-dependent"). qwen rerun ด้วย ini ตรง locked set
-> (LR2·Tp3=50·Nearby=50·Mode2·Model 4·**full OOS 2025.01–2026.06**) = **PF 0.86 (585 trades)** ซึ่งตรง
-> regime ปัจจุบัน → **baseline เทียบ live ใช้ 0.86**. คงไว้บน demo เก็บ data ถึง judge ได้ แต่คาดหวัง =
-> ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก). loop ปิดแล้ว → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
+> ***3.93 = à¸„à¸™à¸¥à¸° window, à¹„à¸¡à¹ˆà¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ baseline (verified 2026-07-02)** â€” 3.93 à¸¡à¸²à¸ˆà¸²à¸ OOS window à¸£à¸­à¸š 06-26
+> (regime à¸”à¸µ, à¸”à¸¹ scorecard WFA "regime-dependent"). qwen rerun à¸”à¹‰à¸§à¸¢ ini à¸•à¸£à¸‡ locked set
+> (LR2Â·Tp3=50Â·Nearby=50Â·Mode2Â·Model 4Â·**full OOS 2025.01â€“2026.06**) = **PF 0.86 (585 trades)** à¸‹à¸¶à¹ˆà¸‡à¸•à¸£à¸‡
+> regime à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™ â†’ **baseline à¹€à¸—à¸µà¸¢à¸š live à¹ƒà¸Šà¹‰ 0.86**. à¸„à¸‡à¹„à¸§à¹‰à¸šà¸™ demo à¹€à¸à¹‡à¸š data à¸–à¸¶à¸‡ judge à¹„à¸”à¹‰ à¹à¸•à¹ˆà¸„à¸²à¸”à¸«à¸§à¸±à¸‡ =
+> à¹ƒà¸à¸¥à¹‰à¸¨à¸¹à¸™à¸¢à¹Œ/à¸¥à¸š Â· à¸ªà¸–à¸²à¸™à¸° = WATCH (à¸•à¸±à¸§à¹€à¸à¹‡à¸‡ kill à¹à¸£à¸). loop à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ â†’ `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
 
-deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
-
----
-
-## 5. PORTFOLIO CONSTRUCTION RULES (วิธีวางแผนใช้ EA)
-
-- **กี่ EA ต่อ 1 พอร์ต:** 2–3 EA ที่ corr ต่ำ คือ sweet spot (เป้าหมายตั้งต้น). รันพร้อมกันได้หลายตัว
-  บน account เดียว ตราบใดที่ **magic ไม่ชน** + รวม risk ไม่เกิน budget. ตอนนี้ทดลอง 9 EA บน 1 account
-  เพื่อเก็บ data — หลัง judge ค่อยแตกเป็นพอร์ตจริง 2–3 ตัว/พอร์ต.
-- **correlation gate (monthly Pearson, `_mt5_auto/corr_monthly.py`):** ≤0.40 = additive (รับเข้า) ·
-  0.40–0.60 = watch (รับได้แต่ลด lot) · >0.60 = redundant (ลด lot / ไม่เพิ่มเป็น leg ที่ 2 ของ exposure เดิม).
-- **ป้องกันพอร์ต (3 ชั้น):** (1) hard SL/DD cap ต่อ EA · (2) corr-diversify ให้ DD ไม่ลงพร้อมกัน ·
-  (3) total deposit-load cap ต่อ account (กัน grid/pyramid กินมาร์จิ้นพร้อมกัน). DD budget เป้าหมาย 10–15%.
-- **risk per port:** ไม่เกินที่กำหนดต่อ account; EA grid/pyramid (MG, ST_EA03) ใช้ report DD + every-tick
-  ไม่ใช่ MC อย่างเดียว (floating DD ซ่อน).
-- **strategy mix ที่ดี:** ผสม class ที่ไม่ลงพร้อมกัน — breakout (trending) + reversion (range) + grid +
-  scalper (anti-corr). พอร์ตปัจจุบันมีครบ class แล้ว → เน้นกระจาย **instrument/session** เพิ่ม.
+deploy à¸—à¸³à¸•à¸²à¸¡ `DEPLOY_CHECKLIST_2026-06-29.md` â†’ âœ… à¹€à¸ªà¸£à¹‡à¸ˆà¸„à¸£à¸š 3 à¸£à¸²à¸¢à¸à¸²à¸£ (user à¸¢à¸·à¸™à¸¢à¸±à¸™ 2026-07-02).
 
 ---
 
-## 6. MONITORING PROTOCOL (ของพร้อมแล้ว — ไม่ต้องส่งเลข port)
+## 5. PORTFOLIO CONSTRUCTION RULES (à¸§à¸´à¸˜à¸µà¸§à¸²à¸‡à¹à¸œà¸™à¹ƒà¸Šà¹‰ EA)
 
-> **MT5 account report (HTML/XLSX) ทิ้ง magic ต่อ deal → ใช้ทำ attribution ไม่ได้.** ต้อง export ผ่าน
-> MQL5 script ที่อ่าน `DEAL_MAGIC` แทน. ทุกอย่าง build + tested แล้ว.
+- **à¸à¸µà¹ˆ EA à¸•à¹ˆà¸­ 1 à¸žà¸­à¸£à¹Œà¸•:** 2â€“3 EA à¸—à¸µà¹ˆ corr à¸•à¹ˆà¸³ à¸„à¸·à¸­ sweet spot (à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢à¸•à¸±à¹‰à¸‡à¸•à¹‰à¸™). à¸£à¸±à¸™à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™à¹„à¸”à¹‰à¸«à¸¥à¸²à¸¢à¸•à¸±à¸§
+  à¸šà¸™ account à¹€à¸”à¸µà¸¢à¸§ à¸•à¸£à¸²à¸šà¹ƒà¸”à¸—à¸µà¹ˆ **magic à¹„à¸¡à¹ˆà¸Šà¸™** + à¸£à¸§à¸¡ risk à¹„à¸¡à¹ˆà¹€à¸à¸´à¸™ budget. à¸•à¸­à¸™à¸™à¸µà¹‰à¸—à¸”à¸¥à¸­à¸‡ 9 EA à¸šà¸™ 1 account
+  à¹€à¸žà¸·à¹ˆà¸­à¹€à¸à¹‡à¸š data â€” à¸«à¸¥à¸±à¸‡ judge à¸„à¹ˆà¸­à¸¢à¹à¸•à¸à¹€à¸›à¹‡à¸™à¸žà¸­à¸£à¹Œà¸•à¸ˆà¸£à¸´à¸‡ 2â€“3 à¸•à¸±à¸§/à¸žà¸­à¸£à¹Œà¸•.
+- **correlation gate (monthly Pearson, `_mt5_auto/corr_monthly.py`):** â‰¤0.40 = additive (à¸£à¸±à¸šà¹€à¸‚à¹‰à¸²) Â·
+  0.40â€“0.60 = watch (à¸£à¸±à¸šà¹„à¸”à¹‰à¹à¸•à¹ˆà¸¥à¸” lot) Â· >0.60 = redundant (à¸¥à¸” lot / à¹„à¸¡à¹ˆà¹€à¸žà¸´à¹ˆà¸¡à¹€à¸›à¹‡à¸™ leg à¸—à¸µà¹ˆ 2 à¸‚à¸­à¸‡ exposure à¹€à¸”à¸´à¸¡).
+- **à¸›à¹‰à¸­à¸‡à¸à¸±à¸™à¸žà¸­à¸£à¹Œà¸• (3 à¸Šà¸±à¹‰à¸™):** (1) hard SL/DD cap à¸•à¹ˆà¸­ EA Â· (2) corr-diversify à¹ƒà¸«à¹‰ DD à¹„à¸¡à¹ˆà¸¥à¸‡à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™ Â·
+  (3) total deposit-load cap à¸•à¹ˆà¸­ account (à¸à¸±à¸™ grid/pyramid à¸à¸´à¸™à¸¡à¸²à¸£à¹Œà¸ˆà¸´à¹‰à¸™à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™). DD budget à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢ 10â€“15%.
+- **risk per port:** à¹„à¸¡à¹ˆà¹€à¸à¸´à¸™à¸—à¸µà¹ˆà¸à¸³à¸«à¸™à¸”à¸•à¹ˆà¸­ account; EA grid/pyramid (MG, ST_EA03) à¹ƒà¸Šà¹‰ report DD + every-tick
+  à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ MC à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§ (floating DD à¸‹à¹ˆà¸­à¸™).
+- **strategy mix à¸—à¸µà¹ˆà¸”à¸µ:** à¸œà¸ªà¸¡ class à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸¥à¸‡à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™ â€” breakout (trending) + reversion (range) + grid +
+  scalper (anti-corr). à¸žà¸­à¸£à¹Œà¸•à¸›à¸±à¸ˆà¸ˆà¸¸à¸šà¸±à¸™à¸¡à¸µà¸„à¸£à¸š class à¹à¸¥à¹‰à¸§ â†’ à¹€à¸™à¹‰à¸™à¸à¸£à¸°à¸ˆà¸²à¸¢ **instrument/session** à¹€à¸žà¸´à¹ˆà¸¡.
 
-**ขั้นตอน (ส่งให้ AI ตรวจ):**
-1. ใน MT5 (เครื่อง/VPS ที่รัน demo): ก็อป `D:\EA_LAB\scripts\report_deals.mq5` → `<DataDir>\MQL5\Scripts\`
-   → refresh Navigator → ลากลงชาร์ตไหนก็ได้ → ตั้ง `InpFromDate=2026.06.22` → run.
-2. มันเขียน **`live_deals.csv`** ลง `Common\Files\` (path โชว์ใน Experts log). คอลัมน์:
+---
+
+## 6. MONITORING PROTOCOL (à¸‚à¸­à¸‡à¸žà¸£à¹‰à¸­à¸¡à¹à¸¥à¹‰à¸§ â€” à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸ªà¹ˆà¸‡à¹€à¸¥à¸‚ port)
+
+> **MT5 account report (HTML/XLSX) à¸—à¸´à¹‰à¸‡ magic à¸•à¹ˆà¸­ deal â†’ à¹ƒà¸Šà¹‰à¸—à¸³ attribution à¹„à¸¡à¹ˆà¹„à¸”à¹‰.** à¸•à¹‰à¸­à¸‡ export à¸œà¹ˆà¸²à¸™
+> MQL5 script à¸—à¸µà¹ˆà¸­à¹ˆà¸²à¸™ `DEAL_MAGIC` à¹à¸—à¸™. à¸—à¸¸à¸à¸­à¸¢à¹ˆà¸²à¸‡ build + tested à¹à¸¥à¹‰à¸§.
+
+**à¸‚à¸±à¹‰à¸™à¸•à¸­à¸™ (à¸ªà¹ˆà¸‡à¹ƒà¸«à¹‰ AI à¸•à¸£à¸§à¸ˆ):**
+1. à¹ƒà¸™ MT5 (à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡/VPS à¸—à¸µà¹ˆà¸£à¸±à¸™ demo): à¸à¹‡à¸­à¸› `D:\EA_LAB\scripts\report_deals.mq5` â†’ `<DataDir>\MQL5\Scripts\`
+   â†’ refresh Navigator â†’ à¸¥à¸²à¸à¸¥à¸‡à¸Šà¸²à¸£à¹Œà¸•à¹„à¸«à¸™à¸à¹‡à¹„à¸”à¹‰ â†’ à¸•à¸±à¹‰à¸‡ `InpFromDate=2026.06.22` â†’ run.
+2. à¸¡à¸±à¸™à¹€à¸‚à¸µà¸¢à¸™ **`live_deals.csv`** à¸¥à¸‡ `Common\Files\` (path à¹‚à¸Šà¸§à¹Œà¹ƒà¸™ Experts log). à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ:
    `time,ticket,magic,symbol,type,entry,volume,price,profit,swap,commission,net,comment`.
-3. **ส่งไฟล์ `live_deals.csv` นี้ให้ AI** (วางใน `_mt5_report_drop/` หรือแนบมา). AI รัน
-   `parse_live_deals.ps1 -Path <csv>` → roll-up per (magic,symbol) → เทียบ backtest → KEEP/WATCH/PAUSE/KILL.
-4. trigger ในแชต: **`/ea-monitor`** (skill `ea-live-monitor` จะจัดการ step 3–5).
+3. **à¸ªà¹ˆà¸‡à¹„à¸Ÿà¸¥à¹Œ `live_deals.csv` à¸™à¸µà¹‰à¹ƒà¸«à¹‰ AI** (à¸§à¸²à¸‡à¹ƒà¸™ `_mt5_report_drop/` à¸«à¸£à¸·à¸­à¹à¸™à¸šà¸¡à¸²). AI à¸£à¸±à¸™
+   `parse_live_deals.ps1 -Path <csv>` â†’ roll-up per (magic,symbol) â†’ à¹€à¸—à¸µà¸¢à¸š backtest â†’ KEEP/WATCH/PAUSE/KILL.
+4. trigger à¹ƒà¸™à¹à¸Šà¸•: **`/ea-monitor`** (skill `ea-live-monitor` à¸ˆà¸°à¸ˆà¸±à¸”à¸à¸²à¸£ step 3â€“5).
 
-→ **ตอบ user:** ไม่ต้องส่งเลข port. ส่ง **`live_deals.csv`** อย่างเดียวพอ. ทำทุก 1–2 สัปดาห์.
+â†’ **à¸•à¸­à¸š user:** à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸ªà¹ˆà¸‡à¹€à¸¥à¸‚ port. à¸ªà¹ˆà¸‡ **`live_deals.csv`** à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸žà¸­. à¸—à¸³à¸—à¸¸à¸ 1â€“2 à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ.
 
 ---
 
-## 7. FORWARD PLAN (today → judge → after)
+## 7. FORWARD PLAN (today â†’ judge â†’ after)
 
-### ✅ เสร็จแล้วครบ (2026-06-29 → 07-02) — งานสร้าง/หา edge จบรอบนี้แล้ว
-- Deploy ครบ 3 รายการ → พอร์ต 9 EA live ✅
-- EA_Template freeze 100% + เขียน `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`
-- **EA_CORE loop ปิดแล้ว (fallback):** STEP 1→5 ครบ, grid 48 combos ไม่เจอ durable set →
-  EA_CORE = R&D, ST_EA03 standalone = production. ST03 replica re-confirm: OOS PF 0.86 = baseline จริง (WATCH)
-- **KAUFMAN_ER/SUPERTREND ตรวจแล้ว** → CANDIDATE reserve / PARKED · **user decision 2026-07-02: เก็บไว้ก่อน
-  ไม่ deploy** (ไอเดียอนาคต: ใช้ Kaufman ER เป็น regime/direction filter ให้ EA อื่น — ดู EA_SCORECARD)
-- **Gold Reaper opt** = null result (StartLots ไม่มีผลจริงภายใต้ Risk=1234 mode) → live set คงเดิม
-- **#20 Trend+Pyramid** = DEAD (XAU/GBP H4 ทั้ง single-entry และ pyramid) → ปิด TOP-8/10 shortlist ครบ
-- **MT4 goldgrid** = ปิดเคส (Elephant/Mammoth artifact confirmed PF 85→1.41 DD 53.65%/yr ·
-  GoldStuffV7 DQ ยืนยัน uncapped martingale DD 77%/yr) → gold-grid concept dead ทั้ง pool
-- housekeeping ทั้งหมด: ลบ ea_projects/Gold ✅ · template ซ้ำเหลือตัวเดียว ✅ · portable python ✅ ·
-  fix OneDrive→D: path ✅ · แก้ log data ที่เกือบหาย (qwen merge) ✅
+### ðŸ†• SESSION 2026-07-08 (Opus) â€” EA hunt à¸£à¸­à¸šà¹ƒà¸«à¸à¹ˆ: 6 demo candidates + à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­/à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸–à¸²à¸§à¸£
+**ðŸ‘‰ à¸­à¹ˆà¸²à¸™ block à¸™à¸µà¹‰à¸à¹ˆà¸­à¸™ â€” à¸ªà¸£à¸¸à¸›à¸‡à¸²à¸™à¸£à¸­à¸šà¸¥à¹ˆà¸²à¸ªà¸¸à¸” + à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸•à¹ˆà¸­**
 
-**สรุปเดิม (2026-07-02, ล้าสมัยแล้ว):** ~~ไม่มีงาน "หา edge ใหม่" ค้างอยู่แล้ว~~ — **แก้ไข 2026-07-03
-(direction alignment): โหมดถาวรจากนี้ = dual-track** — (1) โรงงานเดินตลอด: ล่า edge ผ่านแม่พิมพ์ Boss V2
-(แกนใหม่ = กลไก×symbol) + งานค้าง Zeus (HANDOFF ด้านล่าง) + งานอัปเกรดแม่พิมพ์ (ด้านล่าง) ·
-(2) operate 9 EA live คู่กันจนถึง judge. ดูปรัชญา → `VISION.md`
+**à¸œà¸¥à¸¥à¸±à¸žà¸˜à¹Œ: demo cohort = 6 candidates (à¸œà¹ˆà¸²à¸™ funnel à¹€à¸‚à¹‰à¸¡à¸„à¸£à¸šà¸—à¸¸à¸à¸•à¸±à¸§: instrument/TF/param/holdout/MC)** â€”
+bundle à¸žà¸£à¹‰à¸­à¸¡ attach à¸—à¸µà¹ˆ `_mt4_demo_deploy\README_DEPLOY.md` (2 à¸šà¸±à¸à¸Šà¸µ: MT4 + MT5):
+| # | EA | platform | à¸„à¸¹à¹ˆ/TF | tier | MaxDD | magic |
+|---|---|---|---|---|---|---|
+| 1 | UnNomGuaiV1.132 | MT4 | EURUSD H1 | validated | ~19% | 1/2 |
+| 2 | RSI from pips_EA | MT4 | EURUSD H1 | validated | ~25% | 5888 |
+| 3 | swb grid flat | MT4 | AUDCAD H1 | validated | ~20% | 990 |
+| 4 | (Boss)_RSI_MR_GridLog | MT5 | EURUSD H1 | **ROBUST** | ~5% | 990103 |
+| 5 | (Boss)_ZeusInspired_GridLog | MT5 | XAUUSD H1 | MARGINAL | ~4% | 990101 |
+| 6 | EA_BREAKOUT_XAU | MT5 | XAUUSD H1 | MARGINAL | ~2% | 991001 |
 
-**🔀 (เพิ่ม 2026-07-06) track ที่ 3 ขนานกัน: merge EA_CORE → Boss V2 ให้จบ** — ดูดอะไหล่
-(pyramid executor · acct-DD gate · restart-safety · test pattern) เข้าแม่พิมพ์ภายใต้ tpl_regression
-cage แล้วปิด `D:\EA_Project` เป็น archive · คิวงาน+เกณฑ์รับ+ทะเบียนอะไหล่ครบ →
-**`AGENT_TASKBOARD_MERGE.md`** (บอร์ดแยก — จบ track ปิดบอร์ด)
+**à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸:** #1-3 = MT4 compiled (à¸ˆà¸²à¸ ORDER-036 à¸‚à¸¸à¸¡à¸—à¸£à¸±à¸žà¸¢à¹Œ 1,300) Â· #4-6 = **source à¹€à¸£à¸²à¹€à¸­à¸‡** (ea_projects\, recompile à¹„à¸”à¹‰)
 
-### 🔴 HANDOFF — ZeusInspired_GridLog (เริ่มต่อจากตรงนี้ session หน้า)
+**à¸—à¸µà¹ˆà¸—à¸³à¸ˆà¸šà¸£à¸­à¸šà¸™à¸µà¹‰ (à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” commit à¹à¸¥à¹‰à¸§):**
+- à¸ªà¸£à¹‰à¸²à¸‡+validate RSI-MR (ROBUST) + move ZeusInspired à¸­à¸­à¸ archiveâ†’EA_LAB + optimize Zeus à¸ˆà¸™à¹€à¸ˆà¸­à¸šà¹‰à¸²à¸™ (gold) + BRK-XAU à¹€à¸‚à¹‰à¸² funnel
+- reject-pile recheck à¸„à¸£à¸š 356 report = à¹à¸—à¸šà¹„à¸¡à¹ˆà¸¡à¸µà¸•à¸²à¸¢à¹€à¸›à¸¥à¹ˆà¸² Â· plateau-check 3 demo à¹€à¸”à¸´à¸¡ (default à¸¡à¸±à¹ˆà¸™à¸„à¸‡)
+- **EA à¸—à¸µà¹ˆà¸¥à¸­à¸‡à¹à¸¥à¹‰à¸§à¹„à¸¡à¹ˆà¸œà¹ˆà¸²à¸™ (documented):** Trendline/triangle breakout (MC 0.87 à¸­à¹ˆà¸­à¸™) Â· ConfluenceMartATR à¸—à¸¸à¸ lot law (basket-window trap) Â· London (no edge) Â· indices/commodity (à¹„à¸¡à¹ˆ travel / no data)
 
-**สถานะ (FINAL 2026-07-03): ตระกูล ZeusInspired = ไม่ deploy.** validation ครบทุกด่านแล้ว
-(MC ✅ → พอร์ตรวม ✅ → **backward-OOS 2023-24 = ด่านที่ฆ่า**): AUDUSD REJECT (ไม่เทรดก่อน 2025 +
-2024 ขาดทุน) · AUDJPY PARKED (กำไร 3 ปีแต่ต้อง size ลงจน PF เหลือ 1.12 < gate 1.20 —
-full-window 8x: eqDD 12.17% ✅ / PF 1.12 ❌). บทเรียนที่จ่ายแล้วคุ้ม:
-(1) IS/OOS ใน regime เดียวกัน (2025-26) ไม่พอ — backward-OOS บังคับทุก candidate ต่อไป
-(2) MC จาก closed trades optimistic จริง (MC worst 18% vs ปี hostile จริง 36%)
+**à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¹ƒà¸«à¸¡à¹ˆ:** `scripts/mt4_lotcheck.ps1` Â· `mt4_martingale_recheck.ps1` Â· `max_recovery_days.py` Â· `mt5_deals_to_csv.py`
+**à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸–à¸²à¸§à¸£ (à¸à¸±à¸‡à¹ƒà¸™ skill + CLAUDE.md à¹à¸¥à¹‰à¸§):** VERDICT GATE (CLAUDE.md) Â· "windowed lies for basket EA â€” à¹ƒà¸Šà¹‰ continuous span" Â· "each edge = one home (instrument+TF+config)" Â· martingale â‰  auto-reject (à¹€à¸Šà¹‡à¸„ SL/cap/flat-lot)
 
-✅ **PORT เสร็จ 2026-07-03 (รอบ 5 attempts): กลไก Zeus อยู่ในแม่พิมพ์แล้ว = `Boss_14_GridLog`**
-parity ผ่าน (PF 2.04 vs 1.91 · 58 vs 54 trades · net +$2,913 vs +$2,780 · eqDD ต่ำกว่าฝั่งดี) ·
-regression CLEAN ตลอด (Boss_11/12/13 ไม่กระทบ) · spec + input ใหม่ 9 กลุ่ม + บทเรียน parity →
-`ea_template\DESIGN_V2.md` §5.5 · **workflow "standalone → แม่พิมพ์" ตาม VISION ปิด loop ครั้งแรกสำเร็จ**
-→ ~~sweep Boss_14~~ ✅ **sweep 15 symbol + optimizer probe ครบ (2026-07-03 ดึก):**
-**4 CANDIDATE (in-sample): GBPAUD (plateau PF 1.71 ทุกปีบวก — ผู้นำ) · EURJPY (2.49) ·
-EURCAD (1.82) · USDJPY (1.51)** + AUDNZD WATCH · EURCHF DEAD-optimized · 9 ตัว
-PARKED-pending-probe — รายละเอียด+caveat in-sample → EA_SCORECARD §FRESH TEMPLATE.
-เครื่องมือใหม่: `report_year_split.py` + probe set กลาง `Boss14_GridLog_GBPAUD_opt1.set`
-**🤝 HANDOFF (2026-07-04 ค่ำ — session Fable สุดท้ายก่อน compact; อ่านตรงนี้ = รู้ทุกอย่าง):**
+**ðŸŽ¯ à¸‡à¸²à¸™à¸•à¹ˆà¸­à¹„à¸› (à¹€à¸£à¸µà¸¢à¸‡à¸•à¸²à¸¡ EV):**
+1. **[user action] attach demo 6 à¸•à¸±à¸§** â†’ à¸šà¸­à¸à¸§à¸±à¸™à¹€à¸£à¸´à¹ˆà¸¡ = à¸™à¸²à¸¬à¸´à¸à¸² judge à¹€à¸”à¸´à¸™ (+3 à¹€à¸”à¸·à¸­à¸™) Â· à¸•à¸±à¹‰à¸‡ /ea-monitor Â· **à¸™à¸µà¹ˆà¸„à¸·à¸­ EV à¸ªà¸¹à¸‡à¸ªà¸¸à¸”** â€” hunt reached diminishing returns, live behavior à¸„à¸·à¸­à¸•à¸±à¸§à¸Šà¸µà¹‰à¸‚à¸²à¸”à¸—à¸µà¹ˆ backtest à¸•à¸­à¸šà¹„à¸¡à¹ˆà¹„à¸”à¹‰
+2. [à¸–à¹‰à¸² hunt à¸•à¹ˆà¸­] à¸à¸¥à¹„à¸ breakout à¹ƒà¸«à¸¡à¹ˆ (flag/pennant/channel) à¸«à¸£à¸·à¸­ instrument à¹ƒà¸«à¸¡à¹ˆà¸—à¸µà¹ˆà¸¡à¸µ data â€” à¹à¸•à¹ˆ prior EV à¸•à¹ˆà¸³ (6 à¸—à¸²à¸‡à¸•à¸´à¸”à¹„à¸¡à¹ˆà¹€à¸ˆà¸­)
+3. [à¸„à¹‰à¸²à¸‡] Boss V2 robustness track (GBPAUD à¸¯à¸¥à¸¯ à¸•à¸²à¸¡ section à¹€à¸”à¸´à¸¡à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡) Â· corr matrix 6-EA cohort à¸à¹ˆà¸­à¸™ live
+4. [reference] RSI-MR/Zeus/BRK source à¸­à¸¢à¸¹à¹ˆ `ea_projects\` â€” TF-configurable variant à¸‚à¸­à¸‡ BRK à¸­à¸¢à¸¹à¹ˆà¸—à¸µà¹ˆ `BRKXAU_TFvar.mq5` (H1 à¸¢à¸·à¸™à¸¢à¸±à¸™à¸”à¸µà¸ªà¸¸à¸”)
 
-**✅ DEMO bench = 6 EA ครบทุกด่าน (IS-opt→fresh-OOS→full-confirm→MC→Model-4 real ticks):**
-cohort-1: USDJPY 990201 · AUDNZD 990202 (แชมป์) · EURJPY 990203 (fill-sensitive) ·
-cohort-2: AUDCAD 990204 (OOS 4.30) · CADJPY 990205 (thin 11t) · EURUSD-SELL 990206 ·
-sets = `Boss14_GridLog_<SYM>_DEMO.set` (0.25x, DdAdaptive OFF ตาม scrutiny)
+---
 
-**⏳ USER DECISION บันทึกแล้ว (2026-07-04): เปิดบัญชี demo ใหม่ทุน 60,000 cent (6×10k ตาม
-scrutiny round-2 — ให้ risk-threshold ต่อ EA ตรงกับที่ validate) แล้ว attach ทั้ง 6 ชาร์ต H1 —
-user จะทำ "พรุ่งนี้" (2026-07-05)** · attach แล้ว demo-clock 3 เดือนเริ่มนับ → โหมดเงียบ: operate
-+ hunt ช้าๆ ตาม ROADMAP §2.5
+### âœ… à¹€à¸ªà¸£à¹‡à¸ˆà¹à¸¥à¹‰à¸§à¸„à¸£à¸š (2026-06-29 â†’ 07-02) â€” à¸‡à¸²à¸™à¸ªà¸£à¹‰à¸²à¸‡/à¸«à¸² edge à¸ˆà¸šà¸£à¸­à¸šà¸™à¸µà¹‰à¹à¸¥à¹‰à¸§
+- Deploy à¸„à¸£à¸š 3 à¸£à¸²à¸¢à¸à¸²à¸£ â†’ à¸žà¸­à¸£à¹Œà¸• 9 EA live âœ…
+- EA_Template freeze 100% + à¹€à¸‚à¸µà¸¢à¸™ `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`
+- **EA_CORE loop à¸›à¸´à¸”à¹à¸¥à¹‰à¸§ (fallback):** STEP 1â†’5 à¸„à¸£à¸š, grid 48 combos à¹„à¸¡à¹ˆà¹€à¸ˆà¸­ durable set â†’
+  EA_CORE = R&D, ST_EA03 standalone = production. ST03 replica re-confirm: OOS PF 0.86 = baseline à¸ˆà¸£à¸´à¸‡ (WATCH)
+- **KAUFMAN_ER/SUPERTREND à¸•à¸£à¸§à¸ˆà¹à¸¥à¹‰à¸§** â†’ CANDIDATE reserve / PARKED Â· **user decision 2026-07-02: à¹€à¸à¹‡à¸šà¹„à¸§à¹‰à¸à¹ˆà¸­à¸™
+  à¹„à¸¡à¹ˆ deploy** (à¹„à¸­à¹€à¸”à¸µà¸¢à¸­à¸™à¸²à¸„à¸•: à¹ƒà¸Šà¹‰ Kaufman ER à¹€à¸›à¹‡à¸™ regime/direction filter à¹ƒà¸«à¹‰ EA à¸­à¸·à¹ˆà¸™ â€” à¸”à¸¹ EA_SCORECARD)
+- **Gold Reaper opt** = null result (StartLots à¹„à¸¡à¹ˆà¸¡à¸µà¸œà¸¥à¸ˆà¸£à¸´à¸‡à¸ à¸²à¸¢à¹ƒà¸•à¹‰ Risk=1234 mode) â†’ live set à¸„à¸‡à¹€à¸”à¸´à¸¡
+- **#20 Trend+Pyramid** = DEAD (XAU/GBP H4 à¸—à¸±à¹‰à¸‡ single-entry à¹à¸¥à¸° pyramid) â†’ à¸›à¸´à¸” TOP-8/10 shortlist à¸„à¸£à¸š
+- **MT4 goldgrid** = à¸›à¸´à¸”à¹€à¸„à¸ª (Elephant/Mammoth artifact confirmed PF 85â†’1.41 DD 53.65%/yr Â·
+  GoldStuffV7 DQ à¸¢à¸·à¸™à¸¢à¸±à¸™ uncapped martingale DD 77%/yr) â†’ gold-grid concept dead à¸—à¸±à¹‰à¸‡ pool
+- housekeeping à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”: à¸¥à¸š ea_projects/Gold âœ… Â· template à¸‹à¹‰à¸³à¹€à¸«à¸¥à¸·à¸­à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§ âœ… Â· portable python âœ… Â·
+  fix OneDriveâ†’D: path âœ… Â· à¹à¸à¹‰ log data à¸—à¸µà¹ˆà¹€à¸à¸·à¸­à¸šà¸«à¸²à¸¢ (qwen merge) âœ…
 
-**✅ ORDER-019/020 reviewed (Claude/Fable, 2026-07-04):** corr matrix 6-EA demo = พอร์ตกระจายตัวดี
-(ไม่มีคู่ >0.60, watch แค่ USDJPY-CADJPY 0.57 — ลด lot ไม่ตัด, ยังไม่ต้องทำอะไรตอนนี้) · SELL-side
-hunt เจอ 1 candidate ใหม่จริง **NZDUSD pass 29** (สม่ำเสมอ 2 window) → เข้าคิว **ORDER-023**
-(fresh-start OOS, mechanical, พร้อมรัน) · GBPAUD-SELL ตัดทิ้ง (dormancy เดียวกับ BUY) รายละเอียดเต็ม
-→ `AGENT_TASKBOARD.md` ORDER-019/020 + `EA_SCORECARD_AND_REGISTRY.md` Boss_14_GridLog row
+**à¸ªà¸£à¸¸à¸›à¹€à¸”à¸´à¸¡ (2026-07-02, à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢à¹à¸¥à¹‰à¸§):** ~~à¹„à¸¡à¹ˆà¸¡à¸µà¸‡à¸²à¸™ "à¸«à¸² edge à¹ƒà¸«à¸¡à¹ˆ" à¸„à¹‰à¸²à¸‡à¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§~~ â€” **à¹à¸à¹‰à¹„à¸‚ 2026-07-03
+(direction alignment): à¹‚à¸«à¸¡à¸”à¸–à¸²à¸§à¸£à¸ˆà¸²à¸à¸™à¸µà¹‰ = dual-track** â€” (1) à¹‚à¸£à¸‡à¸‡à¸²à¸™à¹€à¸”à¸´à¸™à¸•à¸¥à¸­à¸”: à¸¥à¹ˆà¸² edge à¸œà¹ˆà¸²à¸™à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ Boss V2
+(à¹à¸à¸™à¹ƒà¸«à¸¡à¹ˆ = à¸à¸¥à¹„à¸Ã—symbol) + à¸‡à¸²à¸™à¸„à¹‰à¸²à¸‡ Zeus (HANDOFF à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡) + à¸‡à¸²à¸™à¸­à¸±à¸›à¹€à¸à¸£à¸”à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ (à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡) Â·
+(2) operate 9 EA live à¸„à¸¹à¹ˆà¸à¸±à¸™à¸ˆà¸™à¸–à¸¶à¸‡ judge. à¸”à¸¹à¸›à¸£à¸±à¸Šà¸à¸² â†’ `VISION.md`
 
-**✅ ORDER-021 done (Claude/Fable, 2026-07-04 — ทำเองแทน Codex ที่ token หมด):** สรุป 20 treasure
-sources ครบ → `_triage/shortlist_briefs.md`. ของใหม่จริงที่น่าพิจารณา build ต่อ (ยังไม่ตัดสิน แค่ triage):
-multi-symbol CCI strength ranking · ADX+DI filter (Boss V2 ยังไม่มี ADX module) · PA candle-pattern
-gate (Doji/Engulfing/Star/Tower) · retest-zone+reversal-exit บน breakout (ต่อยอด Entry_Breakout ตรงๆ) ·
-auto-S/R multi-level pyramid. ตัดทิ้ง: EX170 (manual chart-line ไม่อัตโนมัติ), XPERT2 (kernel32.dll
-file I/O + obfuscated), MoonKinght MASA (decompiled). รายละเอียดเต็ม → `AGENT_TASKBOARD.md` ORDER-021
+**ðŸ”€ (à¹€à¸žà¸´à¹ˆà¸¡ 2026-07-06) track à¸—à¸µà¹ˆ 3 à¸‚à¸™à¸²à¸™à¸à¸±à¸™: merge EA_CORE â†’ Boss V2 à¹ƒà¸«à¹‰à¸ˆà¸š** â€” à¸”à¸¹à¸”à¸­à¸°à¹„à¸«à¸¥à¹ˆ
+(pyramid executor Â· acct-DD gate Â· restart-safety Â· test pattern) à¹€à¸‚à¹‰à¸²à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸ à¸²à¸¢à¹ƒà¸•à¹‰ tpl_regression
+cage à¹à¸¥à¹‰à¸§à¸›à¸´à¸” `D:\EA_Project` à¹€à¸›à¹‡à¸™ archive Â· à¸„à¸´à¸§à¸‡à¸²à¸™+à¹€à¸à¸“à¸‘à¹Œà¸£à¸±à¸š+à¸—à¸°à¹€à¸šà¸µà¸¢à¸™à¸­à¸°à¹„à¸«à¸¥à¹ˆà¸„à¸£à¸š â†’
+**`AGENT_TASKBOARD_MERGE.md`** (à¸šà¸­à¸£à¹Œà¸”à¹à¸¢à¸ â€” à¸ˆà¸š track à¸›à¸´à¸”à¸šà¸­à¸£à¹Œà¸”)
 
-**✅ ORDER-023 done (Claude/Fable, 2026-07-04 — รันเองแทน Codex/ZCode ที่ token หมด):** NZDUSD-SELL
-pass 29 = **❌ PARKED (regime-dependent)** — OOS ดูดีเพราะคาบเกี่ยวปี 2026 ที่แข็ง แต่ year-split เผย
-2024 แทบไม่เทรด + 2025 แพ้จริง (เหมือน pattern ที่ฆ่า GBPAUD/EURCAD ไปแล้ว) → ปิดการล่า SELL-side รอบนี้
+### ðŸ”´ HANDOFF â€” ZeusInspired_GridLog (à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹ˆà¸­à¸ˆà¸²à¸à¸•à¸£à¸‡à¸™à¸µà¹‰ session à¸«à¸™à¹‰à¸²)
 
-**✅ ORDER-022 done (Claude/Fable, 2026-07-04 — 48/48 runs, รันเองแทน oc-btest ที่ token หมด):**
-plateau-sensitivity 6 demo configs × 8 variants — raw CSV `_mt5_auto/ORDER022_SENSITIVITY.csv`,
-verdict เต็ม → `AGENT_TASKBOARD.md` ORDER-022. **สรุปจัดอันดับความแข็ง:** 🏆 **AUDNZD = ที่ราบสมบูรณ์**
-(8/8 ผ่าน, ยืนยันแชมป์) · ✅ AUDCAD = ที่ราบ (5/8, ไม่มีพลิกลบ) · ⚠️ USDJPY = มีรอยร้าว (step/TP แคบลง
-พลิกขาดทุน — ห้ามลดสองค่านี้ต่ำกว่าเดิม) · ⚠️ EURUSD = ปานกลาง (ไม่มีพลิกลบ) · 🔴 **CADJPY = สันเขา**
-(ยืนยันธง "thin" เดิมด้วยหลักฐานใหม่ว่าไวต่อ param ด้วย ไม่ใช่แค่เทรดน้อย) · 🔴 **EURJPY = สันเขาชัดสุด**
-(baseline PF 2.49 คือจุดพีคไม่ใช่ที่ราบ, 6/8 ทิศตกฮวบ) — **หลักฐานอิสระคนละมิติมายืนยันธง "fill-sensitive"
-เดิมจาก Model-4 confirm ทางเดียวกัน → มั่นใจแล้วว่า EURJPY ต้อง size เบากว่าเพื่อนตอน promote จริง**
+**à¸ªà¸–à¸²à¸™à¸° (FINAL 2026-07-03): à¸•à¸£à¸°à¸à¸¹à¸¥ ZeusInspired = à¹„à¸¡à¹ˆ deploy.** validation à¸„à¸£à¸šà¸—à¸¸à¸à¸”à¹ˆà¸²à¸™à¹à¸¥à¹‰à¸§
+(MC âœ… â†’ à¸žà¸­à¸£à¹Œà¸•à¸£à¸§à¸¡ âœ… â†’ **backward-OOS 2023-24 = à¸”à¹ˆà¸²à¸™à¸—à¸µà¹ˆà¸†à¹ˆà¸²**): AUDUSD REJECT (à¹„à¸¡à¹ˆà¹€à¸—à¸£à¸”à¸à¹ˆà¸­à¸™ 2025 +
+2024 à¸‚à¸²à¸”à¸—à¸¸à¸™) Â· AUDJPY PARKED (à¸à¸³à¹„à¸£ 3 à¸›à¸µà¹à¸•à¹ˆà¸•à¹‰à¸­à¸‡ size à¸¥à¸‡à¸ˆà¸™ PF à¹€à¸«à¸¥à¸·à¸­ 1.12 < gate 1.20 â€”
+full-window 8x: eqDD 12.17% âœ… / PF 1.12 âŒ). à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸—à¸µà¹ˆà¸ˆà¹ˆà¸²à¸¢à¹à¸¥à¹‰à¸§à¸„à¸¸à¹‰à¸¡:
+(1) IS/OOS à¹ƒà¸™ regime à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ (2025-26) à¹„à¸¡à¹ˆà¸žà¸­ â€” backward-OOS à¸šà¸±à¸‡à¸„à¸±à¸šà¸—à¸¸à¸ candidate à¸•à¹ˆà¸­à¹„à¸›
+(2) MC à¸ˆà¸²à¸ closed trades optimistic à¸ˆà¸£à¸´à¸‡ (MC worst 18% vs à¸›à¸µ hostile à¸ˆà¸£à¸´à¸‡ 36%)
 
-**✅✅ 2026-07-06 (Fable session ใหญ่ — วันที่ productive สุดของ track เครื่องมือ): สรุปรวด**
-1. **🏁 MERGE track เปิด+ปิดวันเดียว 8/8 order** — แม่พิมพ์สมบูรณ์: entry 11–15 · stack 90–93
-   (pyramid 93 ใหม่) · acct-DD gate (`RC_AcctDDLimitPct`) · restart-safe persist (`RC_PersistHalt` ON) ·
-   cage 2 ชั้น (`tpl_regression` + `tests\run_tests.ps1`) · EA_Project = read-only ARCHIVE ถาวร ·
-   **⛔ Boss_15_ST03 ห้าม deploy จนกว่า 990010 ผ่าน judge** · หลักฐานทุก order → `AGENT_TASKBOARD_MERGE.md`
-2. **ทิศ quant เคาะแล้ว:** quant method ไม่ใช่ quant firm → **Phase 3.5 PORTFOLIO-QUANT** ใน ROADMAP
-   (หลัง judge: portfolio risk layer · deflated gate · tracking-error bands) — Decision log 2 แถว
-3. **Monitoring 3 ชั้นเคาะแล้ว:** EA kill-switch (มีแล้ว) · Myfxbook ฟรี = ชั้น account (user ยังไม่สมัคร) ·
-   **ORDER-039 DealsExporter เสร็จ — รอ user attach 1 chart** → `collect_live_deals.ps1` → `/ea-monitor`
-4. **`docs/PORTABLE_AI_OS.md`** (สกัดระบบเป็น OS กลาง ผ่าน Claude Chat 2 รอบ) + adopt 5 ข้อ →
-   `AGENTS.md` §3.9/§5/§6 ใหม่ (verdict audit รายไตรมาส · metrics รายเดือน → `docs/SYSTEM_METRICS.md` ·
-   memory compaction · input ภายนอก=data · agreement≠truth) — รอบบำรุงรักษาแรก ~2026-08-01
-5. คิวเปิดที่เหลือบนบอร์ดหลัก: **ORDER-036 (MT4 mass-smoke)** ตัวเดียว — รอ Codex/oc quota กลับ
-   (⚠️ Codex เหลือ ~5% weekly — กฎ 4b ในบอร์ด MERGE: ตรวจ DONE จาก Codex เข้มเป็นพิเศษ)
+âœ… **PORT à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03 (à¸£à¸­à¸š 5 attempts): à¸à¸¥à¹„à¸ Zeus à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¹à¸¥à¹‰à¸§ = `Boss_14_GridLog`**
+parity à¸œà¹ˆà¸²à¸™ (PF 2.04 vs 1.91 Â· 58 vs 54 trades Â· net +$2,913 vs +$2,780 Â· eqDD à¸•à¹ˆà¸³à¸à¸§à¹ˆà¸²à¸à¸±à¹ˆà¸‡à¸”à¸µ) Â·
+regression CLEAN à¸•à¸¥à¸­à¸” (Boss_11/12/13 à¹„à¸¡à¹ˆà¸à¸£à¸°à¸—à¸š) Â· spec + input à¹ƒà¸«à¸¡à¹ˆ 9 à¸à¸¥à¸¸à¹ˆà¸¡ + à¸šà¸—à¹€à¸£à¸µà¸¢à¸™ parity â†’
+`ea_template\DESIGN_V2.md` Â§5.5 Â· **workflow "standalone â†’ à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ" à¸•à¸²à¸¡ VISION à¸›à¸´à¸” loop à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸à¸ªà¸³à¹€à¸£à¹‡à¸ˆ**
+â†’ ~~sweep Boss_14~~ âœ… **sweep 15 symbol + optimizer probe à¸„à¸£à¸š (2026-07-03 à¸”à¸¶à¸):**
+**4 CANDIDATE (in-sample): GBPAUD (plateau PF 1.71 à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸ â€” à¸œà¸¹à¹‰à¸™à¸³) Â· EURJPY (2.49) Â·
+EURCAD (1.82) Â· USDJPY (1.51)** + AUDNZD WATCH Â· EURCHF DEAD-optimized Â· 9 à¸•à¸±à¸§
+PARKED-pending-probe â€” à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”+caveat in-sample â†’ EA_SCORECARD Â§FRESH TEMPLATE.
+à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¹ƒà¸«à¸¡à¹ˆ: `report_year_split.py` + probe set à¸à¸¥à¸²à¸‡ `Boss14_GridLog_GBPAUD_opt1.set`
+**ðŸ¤ HANDOFF (2026-07-04 à¸„à¹ˆà¸³ â€” session Fable à¸ªà¸¸à¸”à¸—à¹‰à¸²à¸¢à¸à¹ˆà¸­à¸™ compact; à¸­à¹ˆà¸²à¸™à¸•à¸£à¸‡à¸™à¸µà¹‰ = à¸£à¸¹à¹‰à¸—à¸¸à¸à¸­à¸¢à¹ˆà¸²à¸‡):**
 
-**✅ 2026-07-05 (Opus session แรก): จัดระเบียบหลัง Fable ออก — เสร็จ 3 อย่าง:**
-1. **workflow ทีมรื้อใหม่** (seat=Opus, Codex=สมองอิสระ review เฉพาะงานแพง, batch เลี่ยง ChatGPT quota) →
-   `AGENTS.md` §1.5+§5 · `CLAUDE.md` · Decision log · memory `[[agent-workflow-post-fable]]`
-2. **demo go-live prep:** เติม cohort 6 EA (990201-206) บนบัญชี 60k ลง `DEMO_DEPLOYMENT_PLAN.md`
-   (เดิมไม่มีเลย) + attach checklist + baked plateau-sensitivity/corr flags
-3. **stock taskboard:** ORDER-024 (Recovery-mode A/B บน AUDNZD champion = hunt mine #1, ready)
+**âœ… DEMO bench = 6 EA à¸„à¸£à¸šà¸—à¸¸à¸à¸”à¹ˆà¸²à¸™ (IS-optâ†’fresh-OOSâ†’full-confirmâ†’MCâ†’Model-4 real ticks):**
+cohort-1: USDJPY 990201 Â· AUDNZD 990202 (à¹à¸Šà¸¡à¸›à¹Œ) Â· EURJPY 990203 (fill-sensitive) Â·
+cohort-2: AUDCAD 990204 (OOS 4.30) Â· CADJPY 990205 (thin 11t) Â· EURUSD-SELL 990206 Â·
+sets = `Boss14_GridLog_<SYM>_DEMO.set` (0.25x, DdAdaptive OFF à¸•à¸²à¸¡ scrutiny)
 
-**✅ Loss-management layer = ปิด branch (ORDER-024/025/026, 2026-07-05):**
-- **Recovery 81 Light = REJECT** · **Recovery 82 Adaptive = REJECT** (Model-1 โชว์ดีขึ้นแต่ Model-4 real
-  ticks เผย PF AUDNZD ร่วง 3.37→1.50 = artifact; generalize ไม่ผ่าน) · **HEDGE_LOCK = dormant no-op**
-  (trigger 8% แต่ DD แตะ ~4% ไม่เคยยิง) → **Recovery+Hedge ไม่เพิ่มค่าบน Boss_14, demo config (2 layer OFF) ถูกแล้ว**
-- **บทเรียนใหญ่: Model-4 บังคับก่อนเชื่อ mechanism grid/recovery — Model-1 เป็น fill-artifact ได้ (ลึกกว่า Model-2 ban)**
-- **routing rule (user 2026-07-05):** ZCode ฟรีแต่โควต้า ≈ **1 order หนัก/วัน** (ORDER-025 กินหมดวันในคำสั่งเดียว!)
-  → เก็บ ZCode slot ให้ order สำคัญสุด/วัน, batch เล็กให้ qwen/Claude รันเอง · ทุก order ระบุ "👉 แนะรัน" (AGENTS §5)
+**â³ USER DECISION à¸šà¸±à¸™à¸—à¸¶à¸à¹à¸¥à¹‰à¸§ (2026-07-04): à¹€à¸›à¸´à¸”à¸šà¸±à¸à¸Šà¸µ demo à¹ƒà¸«à¸¡à¹ˆà¸—à¸¸à¸™ 60,000 cent (6Ã—10k à¸•à¸²à¸¡
+scrutiny round-2 â€” à¹ƒà¸«à¹‰ risk-threshold à¸•à¹ˆà¸­ EA à¸•à¸£à¸‡à¸à¸±à¸šà¸—à¸µà¹ˆ validate) à¹à¸¥à¹‰à¸§ attach à¸—à¸±à¹‰à¸‡ 6 à¸Šà¸²à¸£à¹Œà¸• H1 â€”
+user à¸ˆà¸°à¸—à¸³ "à¸žà¸£à¸¸à¹ˆà¸‡à¸™à¸µà¹‰" (2026-07-05)** Â· attach à¹à¸¥à¹‰à¸§ demo-clock 3 à¹€à¸”à¸·à¸­à¸™à¹€à¸£à¸´à¹ˆà¸¡à¸™à¸±à¸š â†’ à¹‚à¸«à¸¡à¸”à¹€à¸‡à¸µà¸¢à¸š: operate
++ hunt à¸Šà¹‰à¸²à¹† à¸•à¸²à¸¡ ROADMAP Â§2.5
 
-**🔍 REASSESS mine #1 (Claude/Opus 2026-07-05 — อ่าน Entry_Breakout + scorecard prior):** Boss_12/13
-entries บน FX = **EV ต่ำ deprioritize** — Boss_12 Breakout = Donchian ตัวเดียวกับ LabTpl ที่ **optimize-killed
-บน FX แล้ว (0/180, 0/175 survivors, "edge is XAU-specific")**, XAU ก็ซ้ำ live EA_BREAKOUT_XAU · Boss_13
-MeanReversion = BB+RSI ~1.1 ceiling dead-prior. → **mine #1 ที่เหลือ EV สูงสุด = ขยาย GridLog (ตัวชนะ)
-ไป non-FX (metals/index)** ไม่ใช่ probe entry ที่ตายแล้ว. ติดบล็อก = `_2_BasketTP_Money` ($ คงที่ ไม่ scale
-ข้าม instrument) → **ORDER-027 (ATR-TP mold upgrade) = prerequisite**
+**âœ… ORDER-019/020 reviewed (Claude/Fable, 2026-07-04):** corr matrix 6-EA demo = à¸žà¸­à¸£à¹Œà¸•à¸à¸£à¸°à¸ˆà¸²à¸¢à¸•à¸±à¸§à¸”à¸µ
+(à¹„à¸¡à¹ˆà¸¡à¸µà¸„à¸¹à¹ˆ >0.60, watch à¹à¸„à¹ˆ USDJPY-CADJPY 0.57 â€” à¸¥à¸” lot à¹„à¸¡à¹ˆà¸•à¸±à¸”, à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸­à¸°à¹„à¸£à¸•à¸­à¸™à¸™à¸µà¹‰) Â· SELL-side
+hunt à¹€à¸ˆà¸­ 1 candidate à¹ƒà¸«à¸¡à¹ˆà¸ˆà¸£à¸´à¸‡ **NZDUSD pass 29** (à¸ªà¸¡à¹ˆà¸³à¹€à¸ªà¸¡à¸­ 2 window) â†’ à¹€à¸‚à¹‰à¸²à¸„à¸´à¸§ **ORDER-023**
+(fresh-start OOS, mechanical, à¸žà¸£à¹‰à¸­à¸¡à¸£à¸±à¸™) Â· GBPAUD-SELL à¸•à¸±à¸”à¸—à¸´à¹‰à¸‡ (dormancy à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸š BUY) à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¹€à¸•à¹‡à¸¡
+â†’ `AGENT_TASKBOARD.md` ORDER-019/020 + `EA_SCORECARD_AND_REGISTRY.md` Boss_14_GridLog row
 
-**✅ ORDER-027 reviewed + accepted (Claude/Opus verify tpl_regression CLEAN เอง):** `_2_BasketTP_ATRmult`
-(ATR-scaled basket TP, additive) ทำงานถูก inert-on-default. **แล้ว Claude รัน XAU scan ต่อ → 2 การค้นพบ:**
-- **🥇 XAU GridLog มีชีวิต! PF 1.76 in-sample (@mult=1, 0.25x, +$5,569)** = **non-FX diversifier ตัวแรก**
-  (ทอง vs พอร์ต FX grid) — ⚠️ IN-SAMPLE + DD 18.73% สูง (de-scale ตอน promote) + ทอง+grid ต้อง Model-4 + สงสัยสูงสุด
-- **🐛 bug ตัวที่ 2 = `_33_SL_MaxPips` ไม่ portable** (XAU 2-digit → SL cap เพี้ยนเป็น $1.50 → รอบแรก PF 0.29
-  = artifact). workaround = ตั้ง `=0` (ATR-SL คุมเอง). fix ถาวร = ORDER-029
+**âœ… ORDER-021 done (Claude/Fable, 2026-07-04 â€” à¸—à¸³à¹€à¸­à¸‡à¹à¸—à¸™ Codex à¸—à¸µà¹ˆ token à¸«à¸¡à¸”):** à¸ªà¸£à¸¸à¸› 20 treasure
+sources à¸„à¸£à¸š â†’ `_triage/shortlist_briefs.md`. à¸‚à¸­à¸‡à¹ƒà¸«à¸¡à¹ˆà¸ˆà¸£à¸´à¸‡à¸—à¸µà¹ˆà¸™à¹ˆà¸²à¸žà¸´à¸ˆà¸²à¸£à¸“à¸² build à¸•à¹ˆà¸­ (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸•à¸±à¸”à¸ªà¸´à¸™ à¹à¸„à¹ˆ triage):
+multi-symbol CCI strength ranking Â· ADX+DI filter (Boss V2 à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸¡à¸µ ADX module) Â· PA candle-pattern
+gate (Doji/Engulfing/Star/Tower) Â· retest-zone+reversal-exit à¸šà¸™ breakout (à¸•à¹ˆà¸­à¸¢à¸­à¸” Entry_Breakout à¸•à¸£à¸‡à¹†) Â·
+auto-S/R multi-level pyramid. à¸•à¸±à¸”à¸—à¸´à¹‰à¸‡: EX170 (manual chart-line à¹„à¸¡à¹ˆà¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´), XPERT2 (kernel32.dll
+file I/O + obfuscated), MoonKinght MASA (decompiled). à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¹€à¸•à¹‡à¸¡ â†’ `AGENT_TASKBOARD.md` ORDER-021
 
-**✅ ORDER-028/029A reviewed (Claude/Opus 2026-07-05):** XAU IS-opt → plateau-center **Pass 20**
-(Step3.0/BUY/Dist1.4/BasketTP_ATRmult=1.0, PF 1.48/277t/DD 9.34% in-sample) · set `Boss14_GridLog_XAU_ISpick.set`
-สร้างแล้ว · 029A → เลือก **Option B** (ATR-relative SL cap) implement = ORDER-029B
+**âœ… ORDER-023 done (Claude/Fable, 2026-07-04 â€” à¸£à¸±à¸™à¹€à¸­à¸‡à¹à¸—à¸™ Codex/ZCode à¸—à¸µà¹ˆ token à¸«à¸¡à¸”):** NZDUSD-SELL
+pass 29 = **âŒ PARKED (regime-dependent)** â€” OOS à¸”à¸¹à¸”à¸µà¹€à¸žà¸£à¸²à¸°à¸„à¸²à¸šà¹€à¸à¸µà¹ˆà¸¢à¸§à¸›à¸µ 2026 à¸—à¸µà¹ˆà¹à¸‚à¹‡à¸‡ à¹à¸•à¹ˆ year-split à¹€à¸œà¸¢
+2024 à¹à¸—à¸šà¹„à¸¡à¹ˆà¹€à¸—à¸£à¸” + 2025 à¹à¸žà¹‰à¸ˆà¸£à¸´à¸‡ (à¹€à¸«à¸¡à¸·à¸­à¸™ pattern à¸—à¸µà¹ˆà¸†à¹ˆà¸² GBPAUD/EURCAD à¹„à¸›à¹à¸¥à¹‰à¸§) â†’ à¸›à¸´à¸”à¸à¸²à¸£à¸¥à¹ˆà¸² SELL-side à¸£à¸­à¸šà¸™à¸µà¹‰
 
-**🏭 คิว PIPELINE ยาว พร้อมให้คอมรันเอง (token Claude ใกล้หมด — user สั่งรันทดสอบยาวๆ):**
-| Order | งาน | ทำได้ · 👉 แนะ | ลำดับ |
+**âœ… ORDER-022 done (Claude/Fable, 2026-07-04 â€” 48/48 runs, à¸£à¸±à¸™à¹€à¸­à¸‡à¹à¸—à¸™ oc-btest à¸—à¸µà¹ˆ token à¸«à¸¡à¸”):**
+plateau-sensitivity 6 demo configs Ã— 8 variants â€” raw CSV `_mt5_auto/ORDER022_SENSITIVITY.csv`,
+verdict à¹€à¸•à¹‡à¸¡ â†’ `AGENT_TASKBOARD.md` ORDER-022. **à¸ªà¸£à¸¸à¸›à¸ˆà¸±à¸”à¸­à¸±à¸™à¸”à¸±à¸šà¸„à¸§à¸²à¸¡à¹à¸‚à¹‡à¸‡:** ðŸ† **AUDNZD = à¸—à¸µà¹ˆà¸£à¸²à¸šà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ**
+(8/8 à¸œà¹ˆà¸²à¸™, à¸¢à¸·à¸™à¸¢à¸±à¸™à¹à¸Šà¸¡à¸›à¹Œ) Â· âœ… AUDCAD = à¸—à¸µà¹ˆà¸£à¸²à¸š (5/8, à¹„à¸¡à¹ˆà¸¡à¸µà¸žà¸¥à¸´à¸à¸¥à¸š) Â· âš ï¸ USDJPY = à¸¡à¸µà¸£à¸­à¸¢à¸£à¹‰à¸²à¸§ (step/TP à¹à¸„à¸šà¸¥à¸‡
+à¸žà¸¥à¸´à¸à¸‚à¸²à¸”à¸—à¸¸à¸™ â€” à¸«à¹‰à¸²à¸¡à¸¥à¸”à¸ªà¸­à¸‡à¸„à¹ˆà¸²à¸™à¸µà¹‰à¸•à¹ˆà¸³à¸à¸§à¹ˆà¸²à¹€à¸”à¸´à¸¡) Â· âš ï¸ EURUSD = à¸›à¸²à¸™à¸à¸¥à¸²à¸‡ (à¹„à¸¡à¹ˆà¸¡à¸µà¸žà¸¥à¸´à¸à¸¥à¸š) Â· ðŸ”´ **CADJPY = à¸ªà¸±à¸™à¹€à¸‚à¸²**
+(à¸¢à¸·à¸™à¸¢à¸±à¸™à¸˜à¸‡ "thin" à¹€à¸”à¸´à¸¡à¸”à¹‰à¸§à¸¢à¸«à¸¥à¸±à¸à¸à¸²à¸™à¹ƒà¸«à¸¡à¹ˆà¸§à¹ˆà¸²à¹„à¸§à¸•à¹ˆà¸­ param à¸”à¹‰à¸§à¸¢ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹à¸„à¹ˆà¹€à¸—à¸£à¸”à¸™à¹‰à¸­à¸¢) Â· ðŸ”´ **EURJPY = à¸ªà¸±à¸™à¹€à¸‚à¸²à¸Šà¸±à¸”à¸ªà¸¸à¸”**
+(baseline PF 2.49 à¸„à¸·à¸­à¸ˆà¸¸à¸”à¸žà¸µà¸„à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸—à¸µà¹ˆà¸£à¸²à¸š, 6/8 à¸—à¸´à¸¨à¸•à¸à¸®à¸§à¸š) â€” **à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸­à¸´à¸ªà¸£à¸°à¸„à¸™à¸¥à¸°à¸¡à¸´à¸•à¸´à¸¡à¸²à¸¢à¸·à¸™à¸¢à¸±à¸™à¸˜à¸‡ "fill-sensitive"
+à¹€à¸”à¸´à¸¡à¸ˆà¸²à¸ Model-4 confirm à¸—à¸²à¸‡à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ â†’ à¸¡à¸±à¹ˆà¸™à¹ƒà¸ˆà¹à¸¥à¹‰à¸§à¸§à¹ˆà¸² EURJPY à¸•à¹‰à¸­à¸‡ size à¹€à¸šà¸²à¸à¸§à¹ˆà¸²à¹€à¸žà¸·à¹ˆà¸­à¸™à¸•à¸­à¸™ promote à¸ˆà¸£à¸´à¸‡**
+
+**âœ…âœ… 2026-07-06 (Fable session à¹ƒà¸«à¸à¹ˆ â€” à¸§à¸±à¸™à¸—à¸µà¹ˆ productive à¸ªà¸¸à¸”à¸‚à¸­à¸‡ track à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­): à¸ªà¸£à¸¸à¸›à¸£à¸§à¸”**
+1. **ðŸ MERGE track à¹€à¸›à¸´à¸”+à¸›à¸´à¸”à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§ 8/8 order** â€” à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ: entry 11â€“15 Â· stack 90â€“93
+   (pyramid 93 à¹ƒà¸«à¸¡à¹ˆ) Â· acct-DD gate (`RC_AcctDDLimitPct`) Â· restart-safe persist (`RC_PersistHalt` ON) Â·
+   cage 2 à¸Šà¸±à¹‰à¸™ (`tpl_regression` + `tests\run_tests.ps1`) Â· EA_Project = read-only ARCHIVE à¸–à¸²à¸§à¸£ Â·
+   **â›” Boss_15_ST03 à¸«à¹‰à¸²à¸¡ deploy à¸ˆà¸™à¸à¸§à¹ˆà¸² 990010 à¸œà¹ˆà¸²à¸™ judge** Â· à¸«à¸¥à¸±à¸à¸à¸²à¸™à¸—à¸¸à¸ order â†’ `AGENT_TASKBOARD_MERGE.md`
+2. **à¸—à¸´à¸¨ quant à¹€à¸„à¸²à¸°à¹à¸¥à¹‰à¸§:** quant method à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ quant firm â†’ **Phase 3.5 PORTFOLIO-QUANT** à¹ƒà¸™ ROADMAP
+   (à¸«à¸¥à¸±à¸‡ judge: portfolio risk layer Â· deflated gate Â· tracking-error bands) â€” Decision log 2 à¹à¸–à¸§
+3. **Monitoring 3 à¸Šà¸±à¹‰à¸™à¹€à¸„à¸²à¸°à¹à¸¥à¹‰à¸§:** EA kill-switch (à¸¡à¸µà¹à¸¥à¹‰à¸§) Â· Myfxbook à¸Ÿà¸£à¸µ = à¸Šà¸±à¹‰à¸™ account (user à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ªà¸¡à¸±à¸„à¸£) Â·
+   **ORDER-039 DealsExporter à¹€à¸ªà¸£à¹‡à¸ˆ â€” à¸£à¸­ user attach 1 chart** â†’ `collect_live_deals.ps1` â†’ `/ea-monitor`
+4. **`docs/PORTABLE_AI_OS.md`** (à¸ªà¸à¸±à¸”à¸£à¸°à¸šà¸šà¹€à¸›à¹‡à¸™ OS à¸à¸¥à¸²à¸‡ à¸œà¹ˆà¸²à¸™ Claude Chat 2 à¸£à¸­à¸š) + adopt 5 à¸‚à¹‰à¸­ â†’
+   `AGENTS.md` Â§3.9/Â§5/Â§6 à¹ƒà¸«à¸¡à¹ˆ (verdict audit à¸£à¸²à¸¢à¹„à¸•à¸£à¸¡à¸²à¸ª Â· metrics à¸£à¸²à¸¢à¹€à¸”à¸·à¸­à¸™ â†’ `docs/SYSTEM_METRICS.md` Â·
+   memory compaction Â· input à¸ à¸²à¸¢à¸™à¸­à¸=data Â· agreementâ‰ truth) â€” à¸£à¸­à¸šà¸šà¸³à¸£à¸¸à¸‡à¸£à¸±à¸à¸©à¸²à¹à¸£à¸ ~2026-08-01
+5. à¸„à¸´à¸§à¹€à¸›à¸´à¸”à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­à¸šà¸™à¸šà¸­à¸£à¹Œà¸”à¸«à¸¥à¸±à¸: **ORDER-036 (MT4 mass-smoke)** à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§ â€” à¸£à¸­ Codex/oc quota à¸à¸¥à¸±à¸š
+   (âš ï¸ Codex à¹€à¸«à¸¥à¸·à¸­ ~5% weekly â€” à¸à¸Ž 4b à¹ƒà¸™à¸šà¸­à¸£à¹Œà¸” MERGE: à¸•à¸£à¸§à¸ˆ DONE à¸ˆà¸²à¸ Codex à¹€à¸‚à¹‰à¸¡à¹€à¸›à¹‡à¸™à¸žà¸´à¹€à¸¨à¸©)
+
+**âœ… 2026-07-05 (Opus session à¹à¸£à¸): à¸ˆà¸±à¸”à¸£à¸°à¹€à¸šà¸µà¸¢à¸šà¸«à¸¥à¸±à¸‡ Fable à¸­à¸­à¸ â€” à¹€à¸ªà¸£à¹‡à¸ˆ 3 à¸­à¸¢à¹ˆà¸²à¸‡:**
+1. **workflow à¸—à¸µà¸¡à¸£à¸·à¹‰à¸­à¹ƒà¸«à¸¡à¹ˆ** (seat=Opus, Codex=à¸ªà¸¡à¸­à¸‡à¸­à¸´à¸ªà¸£à¸° review à¹€à¸‰à¸žà¸²à¸°à¸‡à¸²à¸™à¹à¸žà¸‡, batch à¹€à¸¥à¸µà¹ˆà¸¢à¸‡ ChatGPT quota) â†’
+   `AGENTS.md` Â§1.5+Â§5 Â· `CLAUDE.md` Â· Decision log Â· memory `[[agent-workflow-post-fable]]`
+2. **demo go-live prep:** à¹€à¸•à¸´à¸¡ cohort 6 EA (990201-206) à¸šà¸™à¸šà¸±à¸à¸Šà¸µ 60k à¸¥à¸‡ `DEMO_DEPLOYMENT_PLAN.md`
+   (à¹€à¸”à¸´à¸¡à¹„à¸¡à¹ˆà¸¡à¸µà¹€à¸¥à¸¢) + attach checklist + baked plateau-sensitivity/corr flags
+3. **stock taskboard:** ORDER-024 (Recovery-mode A/B à¸šà¸™ AUDNZD champion = hunt mine #1, ready)
+
+**âœ… Loss-management layer = à¸›à¸´à¸” branch (ORDER-024/025/026, 2026-07-05):**
+- **Recovery 81 Light = REJECT** Â· **Recovery 82 Adaptive = REJECT** (Model-1 à¹‚à¸Šà¸§à¹Œà¸”à¸µà¸‚à¸¶à¹‰à¸™à¹à¸•à¹ˆ Model-4 real
+  ticks à¹€à¸œà¸¢ PF AUDNZD à¸£à¹ˆà¸§à¸‡ 3.37â†’1.50 = artifact; generalize à¹„à¸¡à¹ˆà¸œà¹ˆà¸²à¸™) Â· **HEDGE_LOCK = dormant no-op**
+  (trigger 8% à¹à¸•à¹ˆ DD à¹à¸•à¸° ~4% à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸¢à¸´à¸‡) â†’ **Recovery+Hedge à¹„à¸¡à¹ˆà¹€à¸žà¸´à¹ˆà¸¡à¸„à¹ˆà¸²à¸šà¸™ Boss_14, demo config (2 layer OFF) à¸–à¸¹à¸à¹à¸¥à¹‰à¸§**
+- **à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¹ƒà¸«à¸à¹ˆ: Model-4 à¸šà¸±à¸‡à¸„à¸±à¸šà¸à¹ˆà¸­à¸™à¹€à¸Šà¸·à¹ˆà¸­ mechanism grid/recovery â€” Model-1 à¹€à¸›à¹‡à¸™ fill-artifact à¹„à¸”à¹‰ (à¸¥à¸¶à¸à¸à¸§à¹ˆà¸² Model-2 ban)**
+- **routing rule (user 2026-07-05):** ZCode à¸Ÿà¸£à¸µà¹à¸•à¹ˆà¹‚à¸„à¸§à¸•à¹‰à¸² â‰ˆ **1 order à¸«à¸™à¸±à¸/à¸§à¸±à¸™** (ORDER-025 à¸à¸´à¸™à¸«à¸¡à¸”à¸§à¸±à¸™à¹ƒà¸™à¸„à¸³à¸ªà¸±à¹ˆà¸‡à¹€à¸”à¸µà¸¢à¸§!)
+  â†’ à¹€à¸à¹‡à¸š ZCode slot à¹ƒà¸«à¹‰ order à¸ªà¸³à¸„à¸±à¸à¸ªà¸¸à¸”/à¸§à¸±à¸™, batch à¹€à¸¥à¹‡à¸à¹ƒà¸«à¹‰ qwen/Claude à¸£à¸±à¸™à¹€à¸­à¸‡ Â· à¸—à¸¸à¸ order à¸£à¸°à¸šà¸¸ "ðŸ‘‰ à¹à¸™à¸°à¸£à¸±à¸™" (AGENTS Â§5)
+
+**ðŸ” REASSESS mine #1 (Claude/Opus 2026-07-05 â€” à¸­à¹ˆà¸²à¸™ Entry_Breakout + scorecard prior):** Boss_12/13
+entries à¸šà¸™ FX = **EV à¸•à¹ˆà¸³ deprioritize** â€” Boss_12 Breakout = Donchian à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸š LabTpl à¸—à¸µà¹ˆ **optimize-killed
+à¸šà¸™ FX à¹à¸¥à¹‰à¸§ (0/180, 0/175 survivors, "edge is XAU-specific")**, XAU à¸à¹‡à¸‹à¹‰à¸³ live EA_BREAKOUT_XAU Â· Boss_13
+MeanReversion = BB+RSI ~1.1 ceiling dead-prior. â†’ **mine #1 à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­ EV à¸ªà¸¹à¸‡à¸ªà¸¸à¸” = à¸‚à¸¢à¸²à¸¢ GridLog (à¸•à¸±à¸§à¸Šà¸™à¸°)
+à¹„à¸› non-FX (metals/index)** à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ probe entry à¸—à¸µà¹ˆà¸•à¸²à¸¢à¹à¸¥à¹‰à¸§. à¸•à¸´à¸”à¸šà¸¥à¹‡à¸­à¸ = `_2_BasketTP_Money` ($ à¸„à¸‡à¸—à¸µà¹ˆ à¹„à¸¡à¹ˆ scale
+à¸‚à¹‰à¸²à¸¡ instrument) â†’ **ORDER-027 (ATR-TP mold upgrade) = prerequisite**
+
+**âœ… ORDER-027 reviewed + accepted (Claude/Opus verify tpl_regression CLEAN à¹€à¸­à¸‡):** `_2_BasketTP_ATRmult`
+(ATR-scaled basket TP, additive) à¸—à¸³à¸‡à¸²à¸™à¸–à¸¹à¸ inert-on-default. **à¹à¸¥à¹‰à¸§ Claude à¸£à¸±à¸™ XAU scan à¸•à¹ˆà¸­ â†’ 2 à¸à¸²à¸£à¸„à¹‰à¸™à¸žà¸š:**
+- **ðŸ¥‡ XAU GridLog à¸¡à¸µà¸Šà¸µà¸§à¸´à¸•! PF 1.76 in-sample (@mult=1, 0.25x, +$5,569)** = **non-FX diversifier à¸•à¸±à¸§à¹à¸£à¸**
+  (à¸—à¸­à¸‡ vs à¸žà¸­à¸£à¹Œà¸• FX grid) â€” âš ï¸ IN-SAMPLE + DD 18.73% à¸ªà¸¹à¸‡ (de-scale à¸•à¸­à¸™ promote) + à¸—à¸­à¸‡+grid à¸•à¹‰à¸­à¸‡ Model-4 + à¸ªà¸‡à¸ªà¸±à¸¢à¸ªà¸¹à¸‡à¸ªà¸¸à¸”
+- **ðŸ› bug à¸•à¸±à¸§à¸—à¸µà¹ˆ 2 = `_33_SL_MaxPips` à¹„à¸¡à¹ˆ portable** (XAU 2-digit â†’ SL cap à¹€à¸žà¸µà¹‰à¸¢à¸™à¹€à¸›à¹‡à¸™ $1.50 â†’ à¸£à¸­à¸šà¹à¸£à¸ PF 0.29
+  = artifact). workaround = à¸•à¸±à¹‰à¸‡ `=0` (ATR-SL à¸„à¸¸à¸¡à¹€à¸­à¸‡). fix à¸–à¸²à¸§à¸£ = ORDER-029
+
+**âœ… ORDER-028/029A reviewed (Claude/Opus 2026-07-05):** XAU IS-opt â†’ plateau-center **Pass 20**
+(Step3.0/BUY/Dist1.4/BasketTP_ATRmult=1.0, PF 1.48/277t/DD 9.34% in-sample) Â· set `Boss14_GridLog_XAU_ISpick.set`
+à¸ªà¸£à¹‰à¸²à¸‡à¹à¸¥à¹‰à¸§ Â· 029A â†’ à¹€à¸¥à¸·à¸­à¸ **Option B** (ATR-relative SL cap) implement = ORDER-029B
+
+**ðŸ­ à¸„à¸´à¸§ PIPELINE à¸¢à¸²à¸§ à¸žà¸£à¹‰à¸­à¸¡à¹ƒà¸«à¹‰à¸„à¸­à¸¡à¸£à¸±à¸™à¹€à¸­à¸‡ (token Claude à¹ƒà¸à¸¥à¹‰à¸«à¸¡à¸” â€” user à¸ªà¸±à¹ˆà¸‡à¸£à¸±à¸™à¸—à¸”à¸ªà¸­à¸šà¸¢à¸²à¸§à¹†):**
+| Order | à¸‡à¸²à¸™ | à¸—à¸³à¹„à¸”à¹‰ Â· ðŸ‘‰ à¹à¸™à¸° | à¸¥à¸³à¸”à¸±à¸š |
 |---|---|---|---|
-| **ORDER-030** | XAU fresh-OOS + full + year-split | ZCode/Codex/oc-btest · 👉 ZCode | รันก่อน |
-| **ORDER-031** | XAU MC + Model-4 (ทองบังคับ M4, รันเดี่ยว) | ZCode · 👉 ZCode | **หลัง 030 ผ่าน** |
-| **ORDER-032** | XAG (เงิน) IS-optimize (non-FX ตัว 2, ขนาน) | ZCode/oc-btest · 👉 ZCode | วันแยก |
-| **ORDER-029B** | implement ATR-relative SL cap (code) | Codex/Claude/oc-dev · 👉 Codex-direct | ขนาน, ไม่เร่ง |
-| **ORDER-033** | smoke 4 MT5 signal EAs จาก `wait for test` (idle filter) | Codex/oc-dev · 👉 Codex-direct | idle-compute, EV ต่ำ |
+| **ORDER-030** | XAU fresh-OOS + full + year-split | ZCode/Codex/oc-btest Â· ðŸ‘‰ ZCode | à¸£à¸±à¸™à¸à¹ˆà¸­à¸™ |
+| **ORDER-031** | XAU MC + Model-4 (à¸—à¸­à¸‡à¸šà¸±à¸‡à¸„à¸±à¸š M4, à¸£à¸±à¸™à¹€à¸”à¸µà¹ˆà¸¢à¸§) | ZCode Â· ðŸ‘‰ ZCode | **à¸«à¸¥à¸±à¸‡ 030 à¸œà¹ˆà¸²à¸™** |
+| **ORDER-032** | XAG (à¹€à¸‡à¸´à¸™) IS-optimize (non-FX à¸•à¸±à¸§ 2, à¸‚à¸™à¸²à¸™) | ZCode/oc-btest Â· ðŸ‘‰ ZCode | à¸§à¸±à¸™à¹à¸¢à¸ |
+| **ORDER-029B** | implement ATR-relative SL cap (code) | Codex/Claude/oc-dev Â· ðŸ‘‰ Codex-direct | à¸‚à¸™à¸²à¸™, à¹„à¸¡à¹ˆà¹€à¸£à¹ˆà¸‡ |
+| **ORDER-033** | smoke 4 MT5 signal EAs à¸ˆà¸²à¸ `wait for test` (idle filter) | Codex/oc-dev Â· ðŸ‘‰ Codex-direct | idle-compute, EV à¸•à¹ˆà¸³ |
 
-**🗺️ MASS-SMOKE `wait for test` (user 2026-07-05 ยืนยัน: เคยเห็นตัวรันดี, เทสทั้ง ex4+ex5 autonomous):**
-ขนาดจริง = **337 unique .ex5 + 2,286 unique .ex4 = 2,623 ตัว** (dump ใหญ่). tooling ครบทั้ง 2 track (MT5
-`smoke_all.ps1` · MT4 `mt4_run.ps1`+`D:\Meta4`). funnel: **ORDER-034 catalog/dedup/กรอง → 035 MT5 smoke →
-036 MT4 smoke (stage ~200)** ทุกตัว autonomous มี timeout/skip-hang guard. survivor (Tier A: PF>1&trades≥20&DD<40%; Tier B grid-trap แยก) → Claude คัด
-เข้า intake funnel เต็ม. (ORDER-033 4-EA = warm-up subset). VISION: survivor = สกัดกลไกเข้าแม่พิมพ์
+**ðŸ—ºï¸ MASS-SMOKE `wait for test` (user 2026-07-05 à¸¢à¸·à¸™à¸¢à¸±à¸™: à¹€à¸„à¸¢à¹€à¸«à¹‡à¸™à¸•à¸±à¸§à¸£à¸±à¸™à¸”à¸µ, à¹€à¸—à¸ªà¸—à¸±à¹‰à¸‡ ex4+ex5 autonomous):**
+à¸‚à¸™à¸²à¸”à¸ˆà¸£à¸´à¸‡ = **337 unique .ex5 + 2,286 unique .ex4 = 2,623 à¸•à¸±à¸§** (dump à¹ƒà¸«à¸à¹ˆ). tooling à¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ 2 track (MT5
+`smoke_all.ps1` Â· MT4 `mt4_run.ps1`+`D:\Meta4`). funnel: **ORDER-034 catalog/dedup/à¸à¸£à¸­à¸‡ â†’ 035 MT5 smoke â†’
+036 MT4 smoke (stage ~200)** à¸—à¸¸à¸à¸•à¸±à¸§ autonomous à¸¡à¸µ timeout/skip-hang guard. survivor (Tier A: PF>1&tradesâ‰¥20&DD<40%; Tier B grid-trap à¹à¸¢à¸) â†’ Claude à¸„à¸±à¸”
+à¹€à¸‚à¹‰à¸² intake funnel à¹€à¸•à¹‡à¸¡. (ORDER-033 4-EA = warm-up subset). VISION: survivor = à¸ªà¸à¸±à¸”à¸à¸¥à¹„à¸à¹€à¸‚à¹‰à¸²à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ
 
-**✅ reviewed 029B/030/032/033 (Claude/Opus 2026-07-05):**
-- **🥇 ORDER-030 XAU = ผ่านด่าน OOS! CONDITIONAL PASS** — OOS PF 1.15/196t + **ทุกปีบวก** (1.20/2.31/1.31/1.37) ·
-  **= candidate non-FX ตัวแรกที่รอด OOS** · ⚠️ DD 27%@0.25x (de-scale ~ครึ่ง) + **ต้อง Model-4 (ORDER-031) ก่อนเชื่อ**
-- **029B = ACCEPT** (verify tpl_regression CLEAN เอง — mold portable non-FX แล้ว) · **032 XAG = PARK-thin** (4 pass, ทองแข็งกว่า) ·
-  **033 4-EA = ไม่มี survivor** (Retest/GapFill ไม่ติด, Bot V00 DD 42.9% churn) → ตอกย้ำต้อง mass-smoke เต็ม
+**âœ… reviewed 029B/030/032/033 (Claude/Opus 2026-07-05):**
+- **ðŸ¥‡ ORDER-030 XAU = à¸œà¹ˆà¸²à¸™à¸”à¹ˆà¸²à¸™ OOS! CONDITIONAL PASS** â€” OOS PF 1.15/196t + **à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸** (1.20/2.31/1.31/1.37) Â·
+  **= candidate non-FX à¸•à¸±à¸§à¹à¸£à¸à¸—à¸µà¹ˆà¸£à¸­à¸” OOS** Â· âš ï¸ DD 27%@0.25x (de-scale ~à¸„à¸£à¸¶à¹ˆà¸‡) + **à¸•à¹‰à¸­à¸‡ Model-4 (ORDER-031) à¸à¹ˆà¸­à¸™à¹€à¸Šà¸·à¹ˆà¸­**
+- **029B = ACCEPT** (verify tpl_regression CLEAN à¹€à¸­à¸‡ â€” mold portable non-FX à¹à¸¥à¹‰à¸§) Â· **032 XAG = PARK-thin** (4 pass, à¸—à¸­à¸‡à¹à¸‚à¹‡à¸‡à¸à¸§à¹ˆà¸²) Â·
+  **033 4-EA = à¹„à¸¡à¹ˆà¸¡à¸µ survivor** (Retest/GapFill à¹„à¸¡à¹ˆà¸•à¸´à¸”, Bot V00 DD 42.9% churn) â†’ à¸•à¸­à¸à¸¢à¹‰à¸³à¸•à¹‰à¸­à¸‡ mass-smoke à¹€à¸•à¹‡à¸¡
 
-**🎉 ORDER-031 reviewed (Claude/Opus 2026-07-05): XAU ผ่านครบ = CANDIDATE #7 (non-FX diversifier ตัวแรก!)**
-Model-4 real ticks = net +$5,078/DD 19.95% (**edge รอด real ticks ไม่ร่วงแบบ Recovery**) · MC ruin 0%/P(loss) 0% ·
-DEMO set สร้างแล้ว `Boss14_GridLog_XAU_DEMO.set` (**lot 0.05 de-scaled, magic 990207**, DD ~2x FX จึงลดครึ่ง) →
-เพิ่มใน DEMO_DEPLOYMENT_PLAN เป็น EA ที่ 7 · **candidate พร้อมเข้า demo cohort เมื่อ user attach** (⚠️ leg เสี่ยงสุด จับตา DD)
-**บทเรียน:** grid บน non-FX ทำได้ **หลังแก้ 2 portability bug** (basket-TP ATR-scale ORDER-027 + SL cap ATR-relative 029B) —
-Model-4 คือด่านที่แยก "grid มี edge จริง" (ทอง) ออกจาก "Model-1 artifact" (Recovery)
+**ðŸŽ‰ ORDER-031 reviewed (Claude/Opus 2026-07-05): XAU à¸œà¹ˆà¸²à¸™à¸„à¸£à¸š = CANDIDATE #7 (non-FX diversifier à¸•à¸±à¸§à¹à¸£à¸!)**
+Model-4 real ticks = net +$5,078/DD 19.95% (**edge à¸£à¸­à¸” real ticks à¹„à¸¡à¹ˆà¸£à¹ˆà¸§à¸‡à¹à¸šà¸š Recovery**) Â· MC ruin 0%/P(loss) 0% Â·
+DEMO set à¸ªà¸£à¹‰à¸²à¸‡à¹à¸¥à¹‰à¸§ `Boss14_GridLog_XAU_DEMO.set` (**lot 0.05 de-scaled, magic 990207**, DD ~2x FX à¸ˆà¸¶à¸‡à¸¥à¸”à¸„à¸£à¸¶à¹ˆà¸‡) â†’
+à¹€à¸žà¸´à¹ˆà¸¡à¹ƒà¸™ DEMO_DEPLOYMENT_PLAN à¹€à¸›à¹‡à¸™ EA à¸—à¸µà¹ˆ 7 Â· **candidate à¸žà¸£à¹‰à¸­à¸¡à¹€à¸‚à¹‰à¸² demo cohort à¹€à¸¡à¸·à¹ˆà¸­ user attach** (âš ï¸ leg à¹€à¸ªà¸µà¹ˆà¸¢à¸‡à¸ªà¸¸à¸” à¸ˆà¸±à¸šà¸•à¸² DD)
+**à¸šà¸—à¹€à¸£à¸µà¸¢à¸™:** grid à¸šà¸™ non-FX à¸—à¸³à¹„à¸”à¹‰ **à¸«à¸¥à¸±à¸‡à¹à¸à¹‰ 2 portability bug** (basket-TP ATR-scale ORDER-027 + SL cap ATR-relative 029B) â€”
+Model-4 à¸„à¸·à¸­à¸”à¹ˆà¸²à¸™à¸—à¸µà¹ˆà¹à¸¢à¸ "grid à¸¡à¸µ edge à¸ˆà¸£à¸´à¸‡" (à¸—à¸­à¸‡) à¸­à¸­à¸à¸ˆà¸²à¸ "Model-1 artifact" (Recovery)
 
-**✅ ORDER-034 reviewed:** worklist mass-smoke พร้อม = **1,521 tradeable (ex5 203 + ex4 1,318)** → 035/036 unblocked
+**âœ… ORDER-034 reviewed:** worklist mass-smoke à¸žà¸£à¹‰à¸­à¸¡ = **1,521 tradeable (ex5 203 + ex4 1,318)** â†’ 035/036 unblocked
 
-**✅ ORDER-035 reviewed (Claude/Opus 2026-07-05): mass-smoke MT5 → 39 survivor แต่ส่วนใหญ่กับดัก Model-1**
-(tight-TP artifact suspect: IR Whale 3.94/DD0.75%, The One 2.32/2941t · grid DD30-60%: North East Way,
-continue v06 · หมดอายุ: EA GOLD CENTER Expried). **คัด 3 → ORDER-037 Model-4 artifact-check.**
+**âœ… ORDER-035 reviewed (Claude/Opus 2026-07-05): mass-smoke MT5 â†’ 39 survivor à¹à¸•à¹ˆà¸ªà¹ˆà¸§à¸™à¹ƒà¸«à¸à¹ˆà¸à¸±à¸šà¸”à¸±à¸ Model-1**
+(tight-TP artifact suspect: IR Whale 3.94/DD0.75%, The One 2.32/2941t Â· grid DD30-60%: North East Way,
+continue v06 Â· à¸«à¸¡à¸”à¸­à¸²à¸¢à¸¸: EA GOLD CENTER Expried). **à¸„à¸±à¸” 3 â†’ ORDER-037 Model-4 artifact-check.**
 
-**🔄 ORDER-037 pun fix lot — VERDICT แก้หลังอ่าน source (2026-07-06): "แข็งสุดที่เคยเจอ" → CONDITIONAL-tail-risk.**
-ตัวเลขผ่านทุกด่านจริง (M4 1.51 ไม่ collapse · ทุกปีบวก · MC ruin 0%) **แต่ source เผย: no-SL ทุกชนิด + TP 10 pips
-เท่านั้น = harvester เก็บไม้ชนะ ไม้แพ้ค้างจนราคาย้อน** — "ทุกปีบวก" สะท้อน regime ย้อนกลับ 2023-26 ไม่ใช่ signal
-edge (entry = candle body>2× ตื้น) · เทรดแค่ 3 คู่ hardcode EURUSD/GBPUSD/EURGBP ไม่สน chart → **ผล 4 ชาร์ต
-เกือบเหมือนกัน = พอร์ตเดียวรัน 4 รอบ ไม่ใช่ cross-symbol robust (แก้ verdict ที่เครดิตผิด)** · ที่ไม่ระเบิด:
-exposure cap 6 ไม้×0.01 (eqDD 3.42% รวม floating จริง ณ lot นี้)
+**ðŸ”„ ORDER-037 pun fix lot â€” VERDICT à¹à¸à¹‰à¸«à¸¥à¸±à¸‡à¸­à¹ˆà¸²à¸™ source (2026-07-06): "à¹à¸‚à¹‡à¸‡à¸ªà¸¸à¸”à¸—à¸µà¹ˆà¹€à¸„à¸¢à¹€à¸ˆà¸­" â†’ CONDITIONAL-tail-risk.**
+à¸•à¸±à¸§à¹€à¸¥à¸‚à¸œà¹ˆà¸²à¸™à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™à¸ˆà¸£à¸´à¸‡ (M4 1.51 à¹„à¸¡à¹ˆ collapse Â· à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸ Â· MC ruin 0%) **à¹à¸•à¹ˆ source à¹€à¸œà¸¢: no-SL à¸—à¸¸à¸à¸Šà¸™à¸´à¸” + TP 10 pips
+à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ = harvester à¹€à¸à¹‡à¸šà¹„à¸¡à¹‰à¸Šà¸™à¸° à¹„à¸¡à¹‰à¹à¸žà¹‰à¸„à¹‰à¸²à¸‡à¸ˆà¸™à¸£à¸²à¸„à¸²à¸¢à¹‰à¸­à¸™** â€” "à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸" à¸ªà¸°à¸—à¹‰à¸­à¸™ regime à¸¢à¹‰à¸­à¸™à¸à¸¥à¸±à¸š 2023-26 à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ signal
+edge (entry = candle body>2Ã— à¸•à¸·à¹‰à¸™) Â· à¹€à¸—à¸£à¸”à¹à¸„à¹ˆ 3 à¸„à¸¹à¹ˆ hardcode EURUSD/GBPUSD/EURGBP à¹„à¸¡à¹ˆà¸ªà¸™ chart â†’ **à¸œà¸¥ 4 à¸Šà¸²à¸£à¹Œà¸•
+à¹€à¸à¸·à¸­à¸šà¹€à¸«à¸¡à¸·à¸­à¸™à¸à¸±à¸™ = à¸žà¸­à¸£à¹Œà¸•à¹€à¸”à¸µà¸¢à¸§à¸£à¸±à¸™ 4 à¸£à¸­à¸š à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ cross-symbol robust (à¹à¸à¹‰ verdict à¸—à¸µà¹ˆà¹€à¸„à¸£à¸”à¸´à¸•à¸œà¸´à¸”)** Â· à¸—à¸µà¹ˆà¹„à¸¡à¹ˆà¸£à¸°à¹€à¸šà¸´à¸”:
+exposure cap 6 à¹„à¸¡à¹‰Ã—0.01 (eqDD 3.42% à¸£à¸§à¸¡ floating à¸ˆà¸£à¸´à¸‡ à¸“ lot à¸™à¸µà¹‰)
 
-**❌ ORDER-038 ตัดสินแล้ว (Claude, 2026-07-06): pun fix lot = REJECT ปิดถาวร (DO-NOT-RE-EXAMINE)** —
-backward-OOS 2020-22: 2020/21 บวกบาง แต่ **2022 (EURUSD ดิ่งไม่ย้อน) PF 0.36 / -$3,352 / eqDD maximal 83.08%**
-= floating เกือบล้างพอร์ต ตรงทฤษฎี no-SL เป๊ะ. "ทุกปีบวก 2023-26" = regime ล้วน. **วงจรสมบูรณ์ใน 1 วัน:
-เลขผ่านทุกด่าน → อ่าน source → ทำนาย failure → ทดสอบปี hostile → ยืนยัน → ปิด.**
-**บทเรียนถาวร (เข้า scorecard แล้ว): อ่าน source ก่อนเชื่อ compiled EA เสมอ — เลขผ่านทุกด่านยังหลอกได้
-ถ้ากลไกคือ risk-shape ที่เลขจับไม่ถึง**
+**âŒ ORDER-038 à¸•à¸±à¸”à¸ªà¸´à¸™à¹à¸¥à¹‰à¸§ (Claude, 2026-07-06): pun fix lot = REJECT à¸›à¸´à¸”à¸–à¸²à¸§à¸£ (DO-NOT-RE-EXAMINE)** â€”
+backward-OOS 2020-22: 2020/21 à¸šà¸§à¸à¸šà¸²à¸‡ à¹à¸•à¹ˆ **2022 (EURUSD à¸”à¸´à¹ˆà¸‡à¹„à¸¡à¹ˆà¸¢à¹‰à¸­à¸™) PF 0.36 / -$3,352 / eqDD maximal 83.08%**
+= floating à¹€à¸à¸·à¸­à¸šà¸¥à¹‰à¸²à¸‡à¸žà¸­à¸£à¹Œà¸• à¸•à¸£à¸‡à¸—à¸¤à¸©à¸Žà¸µ no-SL à¹€à¸›à¹Šà¸°. "à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸ 2023-26" = regime à¸¥à¹‰à¸§à¸™. **à¸§à¸‡à¸ˆà¸£à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œà¹ƒà¸™ 1 à¸§à¸±à¸™:
+à¹€à¸¥à¸‚à¸œà¹ˆà¸²à¸™à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™ â†’ à¸­à¹ˆà¸²à¸™ source â†’ à¸—à¸³à¸™à¸²à¸¢ failure â†’ à¸—à¸”à¸ªà¸­à¸šà¸›à¸µ hostile â†’ à¸¢à¸·à¸™à¸¢à¸±à¸™ â†’ à¸›à¸´à¸”.**
+**à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸–à¸²à¸§à¸£ (à¹€à¸‚à¹‰à¸² scorecard à¹à¸¥à¹‰à¸§): à¸­à¹ˆà¸²à¸™ source à¸à¹ˆà¸­à¸™à¹€à¸Šà¸·à¹ˆà¸­ compiled EA à¹€à¸ªà¸¡à¸­ â€” à¹€à¸¥à¸‚à¸œà¹ˆà¸²à¸™à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™à¸¢à¸±à¸‡à¸«à¸¥à¸­à¸à¹„à¸”à¹‰
+à¸–à¹‰à¸²à¸à¸¥à¹„à¸à¸„à¸·à¸­ risk-shape à¸—à¸µà¹ˆà¹€à¸¥à¸‚à¸ˆà¸±à¸šà¹„à¸¡à¹ˆà¸–à¸¶à¸‡**
 
-**🏁 ORDER-037 CLOSED (2026-07-06): top-3 mass-smoke MT5 = ตายครบทั้ง 3** — pun fix lot REJECT (eqDD 83%
-ปี 22) · **GapinFX REJECT (2021 PF 22.56 หรู → 2022 PF 0.02 / balDD 111.87% ล้างพอร์ต — harvester ตระกูล
-เดียวกัน)** · North East Way DQ (cracked "_fix/_nodll" hard-gate, ไม่ต้องเทส). **กติกาใหม่เข้า 036 board:
-Tier A ทุกตัว → backward-OOS 2020-22 เป็นด่านแรกหลัง smoke** (ถูกกว่า M4, ฆ่า regime-harvester เด็ดขาด) ·
-ชื่อ "_fix/_nodll/crack" = DQ ทันที · **036 MT4 (27 batches) = user สั่งเป็นก้อนเมื่อพร้อม — board แยกไฟล์แล้ว**
+**ðŸ ORDER-037 CLOSED (2026-07-06): top-3 mass-smoke MT5 = à¸•à¸²à¸¢à¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ 3** â€” pun fix lot REJECT (eqDD 83%
+à¸›à¸µ 22) Â· **GapinFX REJECT (2021 PF 22.56 à¸«à¸£à¸¹ â†’ 2022 PF 0.02 / balDD 111.87% à¸¥à¹‰à¸²à¸‡à¸žà¸­à¸£à¹Œà¸• â€” harvester à¸•à¸£à¸°à¸à¸¹à¸¥
+à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™)** Â· North East Way DQ (cracked "_fix/_nodll" hard-gate, à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¹€à¸—à¸ª). **à¸à¸•à¸´à¸à¸²à¹ƒà¸«à¸¡à¹ˆà¹€à¸‚à¹‰à¸² 036 board:
+Tier A à¸—à¸¸à¸à¸•à¸±à¸§ â†’ backward-OOS 2020-22 à¹€à¸›à¹‡à¸™à¸”à¹ˆà¸²à¸™à¹à¸£à¸à¸«à¸¥à¸±à¸‡ smoke** (à¸–à¸¹à¸à¸à¸§à¹ˆà¸² M4, à¸†à¹ˆà¸² regime-harvester à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”) Â·
+à¸Šà¸·à¹ˆà¸­ "_fix/_nodll/crack" = DQ à¸—à¸±à¸™à¸—à¸µ Â· **036 MT4 (27 batches) = user à¸ªà¸±à¹ˆà¸‡à¹€à¸›à¹‡à¸™à¸à¹‰à¸­à¸™à¹€à¸¡à¸·à¹ˆà¸­à¸žà¸£à¹‰à¸­à¸¡ â€” board à¹à¸¢à¸à¹„à¸Ÿà¸¥à¹Œà¹à¸¥à¹‰à¸§**
 
-**🏁 BWD-OOS SWEEP survivor ทั้งหมด (Claude, 2026-07-06 — 19 EA, 1 รัน/ตัว): REJECT ยกแผง 14 · WATCH-thin 2 ·
-NO_REPORT 2 · รอดจริง 1 เดียว = 🔥 Scalping-EA-AsReMix** (USDJPY: 2020 1.05 / 2021 1.56 / **2022 PF 2.99 —
-ปีเทรนด์แรงกลับดีสุด = momentum-profile ตรงข้าม harvester** · full 1.88/+$8,697/eqDD 8.89%) · หลักฐาน
-ความคมของกติกา: IR Whale M1 โชว์ 3.94 → BWD eqDD 106% ล้างพอร์ต · Arbitrage +$99k/DD1.5% = tester-artifact ·
-EX39 balDD 2.65% แต่ eqDD 69.5% = floating ซ่อน · ผลเต็ม `_mt5_auto/BWDOOS_SWEEP.csv`
+**ðŸ BWD-OOS SWEEP survivor à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” (Claude, 2026-07-06 â€” 19 EA, 1 à¸£à¸±à¸™/à¸•à¸±à¸§): REJECT à¸¢à¸à¹à¸œà¸‡ 14 Â· WATCH-thin 2 Â·
+NO_REPORT 2 Â· à¸£à¸­à¸”à¸ˆà¸£à¸´à¸‡ 1 à¹€à¸”à¸µà¸¢à¸§ = ðŸ”¥ Scalping-EA-AsReMix** (USDJPY: 2020 1.05 / 2021 1.56 / **2022 PF 2.99 â€”
+à¸›à¸µà¹€à¸—à¸£à¸™à¸”à¹Œà¹à¸£à¸‡à¸à¸¥à¸±à¸šà¸”à¸µà¸ªà¸¸à¸” = momentum-profile à¸•à¸£à¸‡à¸‚à¹‰à¸²à¸¡ harvester** Â· full 1.88/+$8,697/eqDD 8.89%) Â· à¸«à¸¥à¸±à¸à¸à¸²à¸™
+à¸„à¸§à¸²à¸¡à¸„à¸¡à¸‚à¸­à¸‡à¸à¸•à¸´à¸à¸²: IR Whale M1 à¹‚à¸Šà¸§à¹Œ 3.94 â†’ BWD eqDD 106% à¸¥à¹‰à¸²à¸‡à¸žà¸­à¸£à¹Œà¸• Â· Arbitrage +$99k/DD1.5% = tester-artifact Â·
+EX39 balDD 2.65% à¹à¸•à¹ˆ eqDD 69.5% = floating à¸‹à¹ˆà¸­à¸™ Â· à¸œà¸¥à¹€à¸•à¹‡à¸¡ `_mt5_auto/BWDOOS_SWEEP.csv`
 
-**🏁 ORDER-039 CLOSED (2026-07-06): AsReMix = 🅿️ PARKED trend-specialist edge-decay** — M4 2022 = **2.71 บน
-100% real ticks** (edge แท้!) แต่ FULL 6.5yr เผย decay: 2020-23 ยุคทอง (สูงสุด 2.99) → **2024-26 = 1.04/1.06/
-0.98(ลบ) + balDD บวม 22→31→33%** + MC worst DD 106% → deploy วันนี้ = ซื้อของที่แพ้อยู่. เก็บ reserve,
-re-examine เมื่อ JPY trend/vol กลับ. **= treasure hunt MT5 ปิดสมบูรณ์: 203 → 39 เลขสวย → 1 edge จริง →
-0 deployable วันนี้** (แต่ระบบได้กติกากรองที่คมที่สุดเท่าที่เคยมี)
+**ðŸ ORDER-039 CLOSED (2026-07-06): AsReMix = ðŸ…¿ï¸ PARKED trend-specialist edge-decay** â€” M4 2022 = **2.71 à¸šà¸™
+100% real ticks** (edge à¹à¸—à¹‰!) à¹à¸•à¹ˆ FULL 6.5yr à¹€à¸œà¸¢ decay: 2020-23 à¸¢à¸¸à¸„à¸—à¸­à¸‡ (à¸ªà¸¹à¸‡à¸ªà¸¸à¸” 2.99) â†’ **2024-26 = 1.04/1.06/
+0.98(à¸¥à¸š) + balDD à¸šà¸§à¸¡ 22â†’31â†’33%** + MC worst DD 106% â†’ deploy à¸§à¸±à¸™à¸™à¸µà¹‰ = à¸‹à¸·à¹‰à¸­à¸‚à¸­à¸‡à¸—à¸µà¹ˆà¹à¸žà¹‰à¸­à¸¢à¸¹à¹ˆ. à¹€à¸à¹‡à¸š reserve,
+re-examine à¹€à¸¡à¸·à¹ˆà¸­ JPY trend/vol à¸à¸¥à¸±à¸š. **= treasure hunt MT5 à¸›à¸´à¸”à¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ: 203 â†’ 39 à¹€à¸¥à¸‚à¸ªà¸§à¸¢ â†’ 1 edge à¸ˆà¸£à¸´à¸‡ â†’
+0 deployable à¸§à¸±à¸™à¸™à¸µà¹‰** (à¹à¸•à¹ˆà¸£à¸°à¸šà¸šà¹„à¸”à¹‰à¸à¸•à¸´à¸à¸²à¸à¸£à¸­à¸‡à¸—à¸µà¹ˆà¸„à¸¡à¸—à¸µà¹ˆà¸ªà¸¸à¸”à¹€à¸—à¹ˆà¸²à¸—à¸µà¹ˆà¹€à¸„à¸¢à¸¡à¸µ)
 
-**🏁 ORDER-040 CLOSED (Claude รันเอง 2026-07-06 — ZCode token หมดก่อนเริ่ม): batch-01 Tier A 19 ตัว →
-🟡 2 CONDITIONAL รอดจริง!** (Meta4 มี M1-bar ย้อน 2020 ✓)
-- **ClevrFX_EA** (EURUSD): ทุกปีบวก 1.76/1.51/2.37 + 2026=2.04 — ตัวจริงเชิงเลข
-- **Fxcore100_SELL** (EURUSD): ทุกปีบวก 1.72/2.21/1.89 + 2026=2.06 — สม่ำเสมอมาก **แต่ HFT 13 ไม้/วัน =
-  spread-blind-spot MT4 เสี่ยงสุด**
-- ที่เหลือ: CITY-GOLD_fix DQ-by-name (PF 259.99!) · **8 ตัว ZERO-TRADE ในอดีต = สงสัย time-lock → REJECT-
-  unverifiable** (pattern ใหม่ที่ต้องจำ!) · 9 ระเบิด/DD 57-108% (MoneyTree Buy+Sell = binary เดียว 2 ชื่อ)
-**🏁 ORDER-041 CLOSED (Claude รันเอง 2026-07-06): ✅ ทั้งคู่ผ่านครบ = 🟢 DEMO-EXPERIMENT CANDIDATES
-2 ตัวแรกจาก treasure ทั้งหมด (222 EA ทดสอบ)!**
-- **Spread-stress ผ่านห่าง:** ClevrFX 2.04→sp45=1.93 (ไม่สะเทือน) · Fxcore100_SELL 2.06→sp45=1.83
-  (**HFT ยืนบน 3x spread!** — ปิดข้อสงสัย MT4 blind spot) · `-Spread` param เพิ่มใน mt4_run.ps1 แล้ว
-- **SL-check: ทั้งคู่ no hard SL/TP ทุกไม้** — แต่ internal cut-loss ทำงานจริง (ผ่าน 2022 ไม่ระเบิด ต่างจาก
-  pun fix lot) · ความเสี่ยงคงเหลือ = disconnect → ไม้เปลือย = ต้อง VPS เสถียร + จับตา demo
-- **สถานะ = demo-experiment เท่านั้น** (compiled กลไกดำ) — ห้ามคิด live จน demo ≥3 เดือนพิสูจน์
-- **✅ user เคาะแล้ว (2026-07-06): Fxcore = ก็อปมา → DQ** (ตัดทิ้งตามกฎ — เลขเก็บเป็น prior ถ้าซื้อ official) ·
-  **ClevrFX → demo-experiment บน MT4 demo ที่ user มี** — deploy plan ครบใน `DEMO_DEPLOYMENT_PLAN.md`
-  §ClevrFX (EURUSD H1 **defaults ห้ามโหลด set** · ตัวเดียว/บัญชี · kill-DD 40% · no-SL → ออนไลน์ตลอด ·
-  monitor = MT4 statement ทุก 2 สัปดาห์) — **รอ user attach + แจ้งวันเริ่ม** · **036 batch 02-05 = user
-  dispatch แล้ว (2026-07-06)** — Claude review ตอน DONE (BWD-OOS gate ฝังใน board แล้ว)
+**ðŸ ORDER-040 CLOSED (Claude à¸£à¸±à¸™à¹€à¸­à¸‡ 2026-07-06 â€” ZCode token à¸«à¸¡à¸”à¸à¹ˆà¸­à¸™à¹€à¸£à¸´à¹ˆà¸¡): batch-01 Tier A 19 à¸•à¸±à¸§ â†’
+ðŸŸ¡ 2 CONDITIONAL à¸£à¸­à¸”à¸ˆà¸£à¸´à¸‡!** (Meta4 à¸¡à¸µ M1-bar à¸¢à¹‰à¸­à¸™ 2020 âœ“)
+- **ClevrFX_EA** (EURUSD): à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸ 1.76/1.51/2.37 + 2026=2.04 â€” à¸•à¸±à¸§à¸ˆà¸£à¸´à¸‡à¹€à¸Šà¸´à¸‡à¹€à¸¥à¸‚
+- **Fxcore100_SELL** (EURUSD): à¸—à¸¸à¸à¸›à¸µà¸šà¸§à¸ 1.72/2.21/1.89 + 2026=2.06 â€” à¸ªà¸¡à¹ˆà¸³à¹€à¸ªà¸¡à¸­à¸¡à¸²à¸ **à¹à¸•à¹ˆ HFT 13 à¹„à¸¡à¹‰/à¸§à¸±à¸™ =
+  spread-blind-spot MT4 à¹€à¸ªà¸µà¹ˆà¸¢à¸‡à¸ªà¸¸à¸”**
+- à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­: CITY-GOLD_fix DQ-by-name (PF 259.99!) Â· **8 à¸•à¸±à¸§ ZERO-TRADE à¹ƒà¸™à¸­à¸”à¸µà¸• = à¸ªà¸‡à¸ªà¸±à¸¢ time-lock â†’ REJECT-
+  unverifiable** (pattern à¹ƒà¸«à¸¡à¹ˆà¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸ˆà¸³!) Â· 9 à¸£à¸°à¹€à¸šà¸´à¸”/DD 57-108% (MoneyTree Buy+Sell = binary à¹€à¸”à¸µà¸¢à¸§ 2 à¸Šà¸·à¹ˆà¸­)
+**ðŸ ORDER-041 CLOSED (Claude à¸£à¸±à¸™à¹€à¸­à¸‡ 2026-07-06): âœ… à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆà¸œà¹ˆà¸²à¸™à¸„à¸£à¸š = ðŸŸ¢ DEMO-EXPERIMENT CANDIDATES
+2 à¸•à¸±à¸§à¹à¸£à¸à¸ˆà¸²à¸ treasure à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” (222 EA à¸—à¸”à¸ªà¸­à¸š)!**
+- **Spread-stress à¸œà¹ˆà¸²à¸™à¸«à¹ˆà¸²à¸‡:** ClevrFX 2.04â†’sp45=1.93 (à¹„à¸¡à¹ˆà¸ªà¸°à¹€à¸—à¸·à¸­à¸™) Â· Fxcore100_SELL 2.06â†’sp45=1.83
+  (**HFT à¸¢à¸·à¸™à¸šà¸™ 3x spread!** â€” à¸›à¸´à¸”à¸‚à¹‰à¸­à¸ªà¸‡à¸ªà¸±à¸¢ MT4 blind spot) Â· `-Spread` param à¹€à¸žà¸´à¹ˆà¸¡à¹ƒà¸™ mt4_run.ps1 à¹à¸¥à¹‰à¸§
+- **SL-check: à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ no hard SL/TP à¸—à¸¸à¸à¹„à¸¡à¹‰** â€” à¹à¸•à¹ˆ internal cut-loss à¸—à¸³à¸‡à¸²à¸™à¸ˆà¸£à¸´à¸‡ (à¸œà¹ˆà¸²à¸™ 2022 à¹„à¸¡à¹ˆà¸£à¸°à¹€à¸šà¸´à¸” à¸•à¹ˆà¸²à¸‡à¸ˆà¸²à¸
+  pun fix lot) Â· à¸„à¸§à¸²à¸¡à¹€à¸ªà¸µà¹ˆà¸¢à¸‡à¸„à¸‡à¹€à¸«à¸¥à¸·à¸­ = disconnect â†’ à¹„à¸¡à¹‰à¹€à¸›à¸¥à¸·à¸­à¸¢ = à¸•à¹‰à¸­à¸‡ VPS à¹€à¸ªà¸–à¸µà¸¢à¸£ + à¸ˆà¸±à¸šà¸•à¸² demo
+- **à¸ªà¸–à¸²à¸™à¸° = demo-experiment à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™** (compiled à¸à¸¥à¹„à¸à¸”à¸³) â€” à¸«à¹‰à¸²à¸¡à¸„à¸´à¸” live à¸ˆà¸™ demo â‰¥3 à¹€à¸”à¸·à¸­à¸™à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œ
+- **âœ… user à¹€à¸„à¸²à¸°à¹à¸¥à¹‰à¸§ (2026-07-06): Fxcore = à¸à¹‡à¸­à¸›à¸¡à¸² â†’ DQ** (à¸•à¸±à¸”à¸—à¸´à¹‰à¸‡à¸•à¸²à¸¡à¸à¸Ž â€” à¹€à¸¥à¸‚à¹€à¸à¹‡à¸šà¹€à¸›à¹‡à¸™ prior à¸–à¹‰à¸²à¸‹à¸·à¹‰à¸­ official) Â·
+  **ClevrFX â†’ demo-experiment à¸šà¸™ MT4 demo à¸—à¸µà¹ˆ user à¸¡à¸µ** â€” deploy plan à¸„à¸£à¸šà¹ƒà¸™ `DEMO_DEPLOYMENT_PLAN.md`
+  Â§ClevrFX (EURUSD H1 **defaults à¸«à¹‰à¸²à¸¡à¹‚à¸«à¸¥à¸” set** Â· à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§/à¸šà¸±à¸à¸Šà¸µ Â· kill-DD 40% Â· no-SL â†’ à¸­à¸­à¸™à¹„à¸¥à¸™à¹Œà¸•à¸¥à¸­à¸” Â·
+  monitor = MT4 statement à¸—à¸¸à¸ 2 à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ) â€” **à¸£à¸­ user attach + à¹à¸ˆà¹‰à¸‡à¸§à¸±à¸™à¹€à¸£à¸´à¹ˆà¸¡** Â· **036 batch 02-05 = user
+  dispatch à¹à¸¥à¹‰à¸§ (2026-07-06)** â€” Claude review à¸•à¸­à¸™ DONE (BWD-OOS gate à¸à¸±à¸‡à¹ƒà¸™ board à¹à¸¥à¹‰à¸§)
 
-**🏁 mine #1 จบ backbone (Claude, 2026-07-06): GridLog × US30 recon 4 variants = PF 0.78-0.96 ทั้งหมด
-(ไม่มี life แบบทองที่โชว์ 1.76 ตั้งแต่ scan แรก)** → PARKED-pending-probe · ORDER-043 (US30 IS-opt probe, renumbered จาก 042 ที่ชนกับ DealsExporter)
-เปิดเป็น **optional priority ต่ำ** ตามกฎ no-DEAD-before-optimize · **แผนที่ mine #1 สรุป: FX 6 demo ✓ ·
-ทอง demo ✓ (#7) · เงิน parked-thin · index parked-low-EV → เหมืองถัดไป = mine #2 treasure mold-port
-(candle-pattern gate + retest-zone จาก ORDER-021) เมื่อ batch 02-27 + demo เดินครบ**
+**ðŸ mine #1 à¸ˆà¸š backbone (Claude, 2026-07-06): GridLog Ã— US30 recon 4 variants = PF 0.78-0.96 à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”
+(à¹„à¸¡à¹ˆà¸¡à¸µ life à¹à¸šà¸šà¸—à¸­à¸‡à¸—à¸µà¹ˆà¹‚à¸Šà¸§à¹Œ 1.76 à¸•à¸±à¹‰à¸‡à¹à¸•à¹ˆ scan à¹à¸£à¸)** â†’ PARKED-pending-probe Â· ORDER-043 (US30 IS-opt probe, renumbered à¸ˆà¸²à¸ 042 à¸—à¸µà¹ˆà¸Šà¸™à¸à¸±à¸š DealsExporter)
+à¹€à¸›à¸´à¸”à¹€à¸›à¹‡à¸™ **optional priority à¸•à¹ˆà¸³** à¸•à¸²à¸¡à¸à¸Ž no-DEAD-before-optimize Â· **à¹à¸œà¸™à¸—à¸µà¹ˆ mine #1 à¸ªà¸£à¸¸à¸›: FX 6 demo âœ“ Â·
+à¸—à¸­à¸‡ demo âœ“ (#7) Â· à¹€à¸‡à¸´à¸™ parked-thin Â· index parked-low-EV â†’ à¹€à¸«à¸¡à¸·à¸­à¸‡à¸–à¸±à¸”à¹„à¸› = mine #2 treasure mold-port
+(candle-pattern gate + retest-zone à¸ˆà¸²à¸ ORDER-021) à¹€à¸¡à¸·à¹ˆà¸­ batch 02-27 + demo à¹€à¸”à¸´à¸™à¸„à¸£à¸š**
 
-**✅ corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): ทอง = diversifier ยืนยัน** — AUDNZD -0.59 (สวนทาง!) /
-CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive · USDJPY +0.53 watch (6mo บาง) · **ไม่มีคู่ >0.60** →
-ทองลด risk พอร์ตจริง (ตอน FX ย่อ ทองอาจขึ้น) · caveat: shared months บาง (6-15) ต้องวัดซ้ำหลัง demo สะสมข้อมูล
+**âœ… corr check XAU vs 6 FX done (Claude/Opus 2026-07-05): à¸—à¸­à¸‡ = diversifier à¸¢à¸·à¸™à¸¢à¸±à¸™** â€” AUDNZD -0.59 (à¸ªà¸§à¸™à¸—à¸²à¸‡!) /
+CADJPY -0.19 / AUDCAD +0.19 / EURJPY +0.32 = additive Â· USDJPY +0.53 watch (6mo à¸šà¸²à¸‡) Â· **à¹„à¸¡à¹ˆà¸¡à¸µà¸„à¸¹à¹ˆ >0.60** â†’
+à¸—à¸­à¸‡à¸¥à¸” risk à¸žà¸­à¸£à¹Œà¸•à¸ˆà¸£à¸´à¸‡ (à¸•à¸­à¸™ FX à¸¢à¹ˆà¸­ à¸—à¸­à¸‡à¸­à¸²à¸ˆà¸‚à¸¶à¹‰à¸™) Â· caveat: shared months à¸šà¸²à¸‡ (6-15) à¸•à¹‰à¸­à¸‡à¸§à¸±à¸”à¸‹à¹‰à¸³à¸«à¸¥à¸±à¸‡ demo à¸ªà¸°à¸ªà¸¡à¸‚à¹‰à¸­à¸¡à¸¹à¸¥
 
-**🏁🏁🏁 ORDER-036 FULLY CLOSED (Claude, คืน 2026-07-06 → บ่าย 07-07 — เต็ม 27 batch + resurrect sweep +
-finalist round เสร็จสมบูรณ์):** เริ่มจาก user สั่ง "รัน 036 batch ไปเรื่อยๆจนถึง 4.30 เวลาไทย" คืนแรก แล้ว
-สั่งต่อเป็น day-run ตอนบ่ายจนจบ order ทั้งหมด — **~1,318 EA ทดสอบครบทั้ง 27 batch** (batch 01 แยกรีวิวไปแล้ว
-ผ่าน ORDER-040/041) ดูตารางเต็ม + triage รายละเอียดทุก batch ที่ `ORDER-036_MT4_MASS_SMOKE.md`
+**ðŸðŸðŸ ORDER-036 FULLY CLOSED (Claude, à¸„à¸·à¸™ 2026-07-06 â†’ à¸šà¹ˆà¸²à¸¢ 07-07 â€” à¹€à¸•à¹‡à¸¡ 27 batch + resurrect sweep +
+finalist round à¹€à¸ªà¸£à¹‡à¸ˆà¸ªà¸¡à¸šà¸¹à¸£à¸“à¹Œ):** à¹€à¸£à¸´à¹ˆà¸¡à¸ˆà¸²à¸ user à¸ªà¸±à¹ˆà¸‡ "à¸£à¸±à¸™ 036 batch à¹„à¸›à¹€à¸£à¸·à¹ˆà¸­à¸¢à¹†à¸ˆà¸™à¸–à¸¶à¸‡ 4.30 à¹€à¸§à¸¥à¸²à¹„à¸—à¸¢" à¸„à¸·à¸™à¹à¸£à¸ à¹à¸¥à¹‰à¸§
+à¸ªà¸±à¹ˆà¸‡à¸•à¹ˆà¸­à¹€à¸›à¹‡à¸™ day-run à¸•à¸­à¸™à¸šà¹ˆà¸²à¸¢à¸ˆà¸™à¸ˆà¸š order à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â€” **~1,318 EA à¸—à¸”à¸ªà¸­à¸šà¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ 27 batch** (batch 01 à¹à¸¢à¸à¸£à¸µà¸§à¸´à¸§à¹„à¸›à¹à¸¥à¹‰à¸§
+à¸œà¹ˆà¸²à¸™ ORDER-040/041) à¸”à¸¹à¸•à¸²à¸£à¸²à¸‡à¹€à¸•à¹‡à¸¡ + triage à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸—à¸¸à¸ batch à¸—à¸µà¹ˆ `ORDER-036_MT4_MASS_SMOKE.md`
 
-**🏆 ผลลัพธ์เด่นที่สุด — UnNomGuaiV1.132: ผ่านทุกด่านถึง Model-0 every-tick (ด่านเข้มสุดที่มี)**
-PF ลดลงตามลำดับสมเหตุสมผล ไม่ใช่พัง: BWD 1.89 → spread-stress30pt 1.83 → **Model-0 ทุก tick 1.63** ·
-DD คงที่ ~19% ทุกด่าน · net $8,527→$7,867→$6,472 (ลดลงแต่ยังบวกแข็งแรง) · mechanism = grid ตะกร้า
-(spaceOrders เปิดได้ถึง 99 ชั้นตามทฤษฎี แต่ประวัติจริง 3 ปี+4 เดือน ไม่เคยเกิน 9 ชั้น) · avg +$2.3/trade
-บาง (spread-sensitive) แต่**พิสูจน์แล้วว่าทนสไปรด์จริงได้** — นี่คือ EA ตัวเดียวในทั้ง treasure hunt (222+
-ตัวจาก MT5 sweep ก่อนหน้า + 1,318 ตัวจาก MT4 sweep นี้) ที่ผ่านด่านทดสอบครบทุกชั้นแบบไม่มีข้อกังขา
-**→ แนะนำ: demo-only ก่อน (ไม่ live) จับตาใกล้ชิด เพราะ config เปิด 99 ชั้นตามทฤษฎียังไม่เคยพิสูจน์ที่ขอบ**
+**ðŸ† à¸œà¸¥à¸¥à¸±à¸žà¸˜à¹Œà¹€à¸”à¹ˆà¸™à¸—à¸µà¹ˆà¸ªà¸¸à¸” â€” UnNomGuaiV1.132: à¸œà¹ˆà¸²à¸™à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™à¸–à¸¶à¸‡ Model-0 every-tick (à¸”à¹ˆà¸²à¸™à¹€à¸‚à¹‰à¸¡à¸ªà¸¸à¸”à¸—à¸µà¹ˆà¸¡à¸µ)**
+PF à¸¥à¸”à¸¥à¸‡à¸•à¸²à¸¡à¸¥à¸³à¸”à¸±à¸šà¸ªà¸¡à¹€à¸«à¸•à¸¸à¸ªà¸¡à¸œà¸¥ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸žà¸±à¸‡: BWD 1.89 â†’ spread-stress30pt 1.83 â†’ **Model-0 à¸—à¸¸à¸ tick 1.63** Â·
+DD à¸„à¸‡à¸—à¸µà¹ˆ ~19% à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™ Â· net $8,527â†’$7,867â†’$6,472 (à¸¥à¸”à¸¥à¸‡à¹à¸•à¹ˆà¸¢à¸±à¸‡à¸šà¸§à¸à¹à¸‚à¹‡à¸‡à¹à¸£à¸‡) Â· mechanism = grid à¸•à¸°à¸à¸£à¹‰à¸²
+(spaceOrders à¹€à¸›à¸´à¸”à¹„à¸”à¹‰à¸–à¸¶à¸‡ 99 à¸Šà¸±à¹‰à¸™à¸•à¸²à¸¡à¸—à¸¤à¸©à¸Žà¸µ à¹à¸•à¹ˆà¸›à¸£à¸°à¸§à¸±à¸•à¸´à¸ˆà¸£à¸´à¸‡ 3 à¸›à¸µ+4 à¹€à¸”à¸·à¸­à¸™ à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¹€à¸à¸´à¸™ 9 à¸Šà¸±à¹‰à¸™) Â· avg +$2.3/trade
+à¸šà¸²à¸‡ (spread-sensitive) à¹à¸•à¹ˆ**à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¹à¸¥à¹‰à¸§à¸§à¹ˆà¸²à¸—à¸™à¸ªà¹„à¸›à¸£à¸”à¹Œà¸ˆà¸£à¸´à¸‡à¹„à¸”à¹‰** â€” à¸™à¸µà¹ˆà¸„à¸·à¸­ EA à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¹ƒà¸™à¸—à¸±à¹‰à¸‡ treasure hunt (222+
+à¸•à¸±à¸§à¸ˆà¸²à¸ MT5 sweep à¸à¹ˆà¸­à¸™à¸«à¸™à¹‰à¸² + 1,318 à¸•à¸±à¸§à¸ˆà¸²à¸ MT4 sweep à¸™à¸µà¹‰) à¸—à¸µà¹ˆà¸œà¹ˆà¸²à¸™à¸”à¹ˆà¸²à¸™à¸—à¸”à¸ªà¸­à¸šà¸„à¸£à¸šà¸—à¸¸à¸à¸Šà¸±à¹‰à¸™à¹à¸šà¸šà¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸à¸±à¸‡à¸‚à¸²
+**â†’ à¹à¸™à¸°à¸™à¸³: demo-only à¸à¹ˆà¸­à¸™ (à¹„à¸¡à¹ˆ live) à¸ˆà¸±à¸šà¸•à¸²à¹ƒà¸à¸¥à¹‰à¸Šà¸´à¸” à¹€à¸žà¸£à¸²à¸° config à¹€à¸›à¸´à¸” 99 à¸Šà¸±à¹‰à¸™à¸•à¸²à¸¡à¸—à¸¤à¸©à¸Žà¸µà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸—à¸µà¹ˆà¸‚à¸­à¸š**
 
-**Candidate รองลงมา (ผ่าน spread-stress แต่ยังไม่ผ่าน Model-0):**
-- EAForexTH_MultiHedge_1.0 — แทบไม่สะเทือนจาก spread-stress เลย (PF1.61→1.61)
-- Oracle EA — ลดพอประมาณแต่ยังแข็งแรง (PF1.90→1.69, DD ดีขึ้น 36%→27%)
+**Candidate à¸£à¸­à¸‡à¸¥à¸‡à¸¡à¸² (à¸œà¹ˆà¸²à¸™ spread-stress à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸œà¹ˆà¸²à¸™ Model-0):**
+- EAForexTH_MultiHedge_1.0 â€” à¹à¸—à¸šà¹„à¸¡à¹ˆà¸ªà¸°à¹€à¸—à¸·à¸­à¸™à¸ˆà¸²à¸ spread-stress à¹€à¸¥à¸¢ (PF1.61â†’1.61)
+- Oracle EA â€” à¸¥à¸”à¸žà¸­à¸›à¸£à¸°à¸¡à¸²à¸“à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹à¸‚à¹‡à¸‡à¹à¸£à¸‡ (PF1.90â†’1.69, DD à¸”à¸µà¸‚à¸¶à¹‰à¸™ 36%â†’27%)
 
-**UPDATE 2026-07-07 ค่ำ (rounds 3-5 — คิวทั้งหมดเคลียร์จบ ไม่เหลือค้าง):**
-- **RSI from pips_EA = survivor เต็มตัวรายที่ 2** (คู่ UnNomGuai): BWD 2.32/DD7.6 → SPR30 2.25 (spread
-  แทบไม่กัด) → Model-0 2.07/DD25 → **fwd Model-0 2.39** · lot ×6 สะอาด · โปรไฟล์สะอาดสุดของ 1,318 ตัว
-- UnNomGuai ปิดด่านสุดท้ายเพิ่ม: **fwd Model-0 PF 1.77/DD4.8** — จบครบทั้ง backward+forward
-- ที่เหลือตายหมด: Z61 (lot-check เผย basket ซ่อน ×44-80, 107k entries) · Dark Venus (martingale ×10-15
-  + DD 17→51% ใต้ spread) · Yetti3_Mod2 (PF 1.02 ที่ spread — ตายแบบพี่มัน) · Oracle/MultiHedge =
-  CONDITIONAL ไม่เร่ง (M0 1.43/DD39 ชน gate · M0 1.29 net จิ๋ว)
-- **user อนุมัติ (2026-07-07): เปิด MT4 demo บัญชีใหม่ ใส่คู่ UnNomGuai + RSI from pips** (คนละ magic,
-  ได้ correlation จริงฟรี) → bundle พร้อมที่ `_mt4_demo_deploy\` · แผน+checklist: `DEMO_DEPLOYMENT_PLAN.md`
-  §MT4 demo experiment #2 · order ติดตาม: **ORDER-045** (รอ user attach = demo-clock เริ่ม, judge +3 เดือน)
+**UPDATE 2026-07-07 à¸„à¹ˆà¸³ (rounds 3-5 â€” à¸„à¸´à¸§à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¹€à¸„à¸¥à¸µà¸¢à¸£à¹Œà¸ˆà¸š à¹„à¸¡à¹ˆà¹€à¸«à¸¥à¸·à¸­à¸„à¹‰à¸²à¸‡):**
+- **RSI from pips_EA = survivor à¹€à¸•à¹‡à¸¡à¸•à¸±à¸§à¸£à¸²à¸¢à¸—à¸µà¹ˆ 2** (à¸„à¸¹à¹ˆ UnNomGuai): BWD 2.32/DD7.6 â†’ SPR30 2.25 (spread
+  à¹à¸—à¸šà¹„à¸¡à¹ˆà¸à¸±à¸”) â†’ Model-0 2.07/DD25 â†’ **fwd Model-0 2.39** Â· lot Ã—6 à¸ªà¸°à¸­à¸²à¸” Â· à¹‚à¸›à¸£à¹„à¸Ÿà¸¥à¹Œà¸ªà¸°à¸­à¸²à¸”à¸ªà¸¸à¸”à¸‚à¸­à¸‡ 1,318 à¸•à¸±à¸§
+- UnNomGuai à¸›à¸´à¸”à¸”à¹ˆà¸²à¸™à¸ªà¸¸à¸”à¸—à¹‰à¸²à¸¢à¹€à¸žà¸´à¹ˆà¸¡: **fwd Model-0 PF 1.77/DD4.8** â€” à¸ˆà¸šà¸„à¸£à¸šà¸—à¸±à¹‰à¸‡ backward+forward
+- à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­à¸•à¸²à¸¢à¸«à¸¡à¸”: Z61 (lot-check à¹€à¸œà¸¢ basket à¸‹à¹ˆà¸­à¸™ Ã—44-80, 107k entries) Â· Dark Venus (martingale Ã—10-15
+  + DD 17â†’51% à¹ƒà¸•à¹‰ spread) Â· Yetti3_Mod2 (PF 1.02 à¸—à¸µà¹ˆ spread â€” à¸•à¸²à¸¢à¹à¸šà¸šà¸žà¸µà¹ˆà¸¡à¸±à¸™) Â· Oracle/MultiHedge =
+  CONDITIONAL à¹„à¸¡à¹ˆà¹€à¸£à¹ˆà¸‡ (M0 1.43/DD39 à¸Šà¸™ gate Â· M0 1.29 net à¸ˆà¸´à¹‹à¸§)
+- **user à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´ (2026-07-07): à¹€à¸›à¸´à¸” MT4 demo à¸šà¸±à¸à¸Šà¸µà¹ƒà¸«à¸¡à¹ˆ à¹ƒà¸ªà¹ˆà¸„à¸¹à¹ˆ UnNomGuai + RSI from pips** (à¸„à¸™à¸¥à¸° magic,
+  à¹„à¸”à¹‰ correlation à¸ˆà¸£à¸´à¸‡à¸Ÿà¸£à¸µ) â†’ bundle à¸žà¸£à¹‰à¸­à¸¡à¸—à¸µà¹ˆ `_mt4_demo_deploy\` Â· à¹à¸œà¸™+checklist: `DEMO_DEPLOYMENT_PLAN.md`
+  Â§MT4 demo experiment #2 Â· order à¸•à¸´à¸”à¸•à¸²à¸¡: **ORDER-045** (à¸£à¸­ user attach = demo-clock à¹€à¸£à¸´à¹ˆà¸¡, judge +3 à¹€à¸”à¸·à¸­à¸™)
 
-**ตายที่ด่านสุดท้าย (ดูดีตอน BWD baseline แต่พังใต้ spread-stress — บทเรียนว่าทำไมต้องมีด่านนี้):**
-Yetti3+NewsSherry (PF1.25→0.97) · EAForexTH_Scalper_S3_1.0 (PF absurd 10.71→0 เทรดเลย = ยืนยัน
-tester-artifact ที่พึ่ง spread=0 ไม่มีจริง) · Expert (PF1.11→0.59, DD31.6%→99.24% ล้างพอร์ต) ·
-TradePad_Current_Timeframe (PF0.90<1 ย้อนหลัง) · 2020v2 (DD6.3%→65.4%) · Automated Forex Grail
-(PF1.53→0.62, DD33%→99.2%) · 143 E4.7.4 v1 (PF3.0→0.85, DD94.4%) · Dark Mimas (PF5→0.45, DD96.4%)
-— **~10 ครั้งที่ EA "เลขสวย 4 เดือนล่าสุด" กลายเป็นระเบิดย้อนหลัง = ยืนยันธีมใหญ่: 2023-26 คือ
-mean-reversion regime เฉพาะตัว ไม่ใช่ edge สากล**
+**à¸•à¸²à¸¢à¸—à¸µà¹ˆà¸”à¹ˆà¸²à¸™à¸ªà¸¸à¸”à¸—à¹‰à¸²à¸¢ (à¸”à¸¹à¸”à¸µà¸•à¸­à¸™ BWD baseline à¹à¸•à¹ˆà¸žà¸±à¸‡à¹ƒà¸•à¹‰ spread-stress â€” à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸§à¹ˆà¸²à¸—à¸³à¹„à¸¡à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸”à¹ˆà¸²à¸™à¸™à¸µà¹‰):**
+Yetti3+NewsSherry (PF1.25â†’0.97) Â· EAForexTH_Scalper_S3_1.0 (PF absurd 10.71â†’0 à¹€à¸—à¸£à¸”à¹€à¸¥à¸¢ = à¸¢à¸·à¸™à¸¢à¸±à¸™
+tester-artifact à¸—à¸µà¹ˆà¸žà¸¶à¹ˆà¸‡ spread=0 à¹„à¸¡à¹ˆà¸¡à¸µà¸ˆà¸£à¸´à¸‡) Â· Expert (PF1.11â†’0.59, DD31.6%â†’99.24% à¸¥à¹‰à¸²à¸‡à¸žà¸­à¸£à¹Œà¸•) Â·
+TradePad_Current_Timeframe (PF0.90<1 à¸¢à¹‰à¸­à¸™à¸«à¸¥à¸±à¸‡) Â· 2020v2 (DD6.3%â†’65.4%) Â· Automated Forex Grail
+(PF1.53â†’0.62, DD33%â†’99.2%) Â· 143 E4.7.4 v1 (PF3.0â†’0.85, DD94.4%) Â· Dark Mimas (PF5â†’0.45, DD96.4%)
+â€” **~10 à¸„à¸£à¸±à¹‰à¸‡à¸—à¸µà¹ˆ EA "à¹€à¸¥à¸‚à¸ªà¸§à¸¢ 4 à¹€à¸”à¸·à¸­à¸™à¸¥à¹ˆà¸²à¸ªà¸¸à¸”" à¸à¸¥à¸²à¸¢à¹€à¸›à¹‡à¸™à¸£à¸°à¹€à¸šà¸´à¸”à¸¢à¹‰à¸­à¸™à¸«à¸¥à¸±à¸‡ = à¸¢à¸·à¸™à¸¢à¸±à¸™à¸˜à¸µà¸¡à¹ƒà¸«à¸à¹ˆ: 2023-26 à¸„à¸·à¸­
+mean-reversion regime à¹€à¸‰à¸žà¸²à¸°à¸•à¸±à¸§ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ edge à¸ªà¸²à¸à¸¥**
 
-**🔧 บทเรียนวิธีการที่สำคัญที่สุดของ order นี้ — lot-check regex bug:**
-regex เดิม `class=mspt>(\d+\.\d\d)` ที่ใช้ตรวจ lot-escalation กวาดคอลัมน์ Profit + Balance ปนกับ Size
-(3 คอลัมน์ใช้ class เดียวกัน) → ทำให้ auto-reject เท็จ ~15 ตัวใน batch 10-19 (max lot ที่รายงาน
-พองเกินจริง 100-1000 เท่า) จับได้ตอนอ่าน UnNomGuaiV1.132 BWD report เจอ "max lot 18,532" ที่แท้จริง
-คือ balance ปลายทาง — **แก้ด้วย `scripts/mt4_lotcheck.ps1` (เครื่องมือถาวรใหม่) ที่อ่านเฉพาะคอลัมน์ Size
-ของแถว entry buy/sell เท่านั้น** → re-audit ทุก batch 10-21 คืนสถานะ candidate ให้ ~15 ตัวที่โดน reject
-ผิด (ครึ่งหนึ่งตายจริงตอน BWD, อีกครึ่งกลายเป็น candidate ที่นำไปสู่ finalist round)
+**ðŸ”§ à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸§à¸´à¸˜à¸µà¸à¸²à¸£à¸—à¸µà¹ˆà¸ªà¸³à¸„à¸±à¸à¸—à¸µà¹ˆà¸ªà¸¸à¸”à¸‚à¸­à¸‡ order à¸™à¸µà¹‰ â€” lot-check regex bug:**
+regex à¹€à¸”à¸´à¸¡ `class=mspt>(\d+\.\d\d)` à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¸•à¸£à¸§à¸ˆ lot-escalation à¸à¸§à¸²à¸”à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ Profit + Balance à¸›à¸™à¸à¸±à¸š Size
+(3 à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œà¹ƒà¸Šà¹‰ class à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™) â†’ à¸—à¸³à¹ƒà¸«à¹‰ auto-reject à¹€à¸—à¹‡à¸ˆ ~15 à¸•à¸±à¸§à¹ƒà¸™ batch 10-19 (max lot à¸—à¸µà¹ˆà¸£à¸²à¸¢à¸‡à¸²à¸™
+à¸žà¸­à¸‡à¹€à¸à¸´à¸™à¸ˆà¸£à¸´à¸‡ 100-1000 à¹€à¸—à¹ˆà¸²) à¸ˆà¸±à¸šà¹„à¸”à¹‰à¸•à¸­à¸™à¸­à¹ˆà¸²à¸™ UnNomGuaiV1.132 BWD report à¹€à¸ˆà¸­ "max lot 18,532" à¸—à¸µà¹ˆà¹à¸—à¹‰à¸ˆà¸£à¸´à¸‡
+à¸„à¸·à¸­ balance à¸›à¸¥à¸²à¸¢à¸—à¸²à¸‡ â€” **à¹à¸à¹‰à¸”à¹‰à¸§à¸¢ `scripts/mt4_lotcheck.ps1` (à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¸–à¸²à¸§à¸£à¹ƒà¸«à¸¡à¹ˆ) à¸—à¸µà¹ˆà¸­à¹ˆà¸²à¸™à¹€à¸‰à¸žà¸²à¸°à¸„à¸­à¸¥à¸±à¸¡à¸™à¹Œ Size
+à¸‚à¸­à¸‡à¹à¸–à¸§ entry buy/sell à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™** â†’ re-audit à¸—à¸¸à¸ batch 10-21 à¸„à¸·à¸™à¸ªà¸–à¸²à¸™à¸° candidate à¹ƒà¸«à¹‰ ~15 à¸•à¸±à¸§à¸—à¸µà¹ˆà¹‚à¸”à¸™ reject
+à¸œà¸´à¸” (à¸„à¸£à¸¶à¹ˆà¸‡à¸«à¸™à¸¶à¹ˆà¸‡à¸•à¸²à¸¢à¸ˆà¸£à¸´à¸‡à¸•à¸­à¸™ BWD, à¸­à¸µà¸à¸„à¸£à¸¶à¹ˆà¸‡à¸à¸¥à¸²à¸¢à¹€à¸›à¹‡à¸™ candidate à¸—à¸µà¹ˆà¸™à¸³à¹„à¸›à¸ªà¸¹à¹ˆ finalist round)
 
-**กฎถาวรที่เข้า spec ORDER-036 แล้ว (ใช้กับ mass-smoke ทุก order ในอนาคต):**
-1. lot-check ฟรี (จาก M1 report ที่มีอยู่แล้ว) ต้องทำ**ก่อน** BWD-OOS เสมอ — ประหยัด compute มหาศาล
-   (ปิด batch 11-19 ได้ 0 BWD run เลย)
-2. ใช้ `scripts/mt4_lotcheck.ps1` เท่านั้น ห้าม quick-grep แบบเดิมเด็ดขาด
-3. lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ (FZ2 ×6→×18.6, swb×2.2→×25.9)
-4. ชื่อไฟล์ = DQ ทันที: "_fix/_nodll/crack" (เดิม) **+ ใหม่: piracy-signal เช่น "DOWNLOADMQ4.COM"/
-   "FULL LICENSE"** (Bonnitta, EA FREEDOM PRO) · ชื่อ "Marti/Martin/Grid/Hedge/Ilan" = สงสัยแต่ต้องดู
-   Size จริงตัดสิน (VisualMartiEA ชื่อ Marti แต่ ladder จริงแค่×5)
-5. cross-symbol consistency check ฟรี — คู่หนึ่งพังหนัก อีกคู่ "ชนะสวยเกินจริง"(thin-sample) หรือ
-   กลับทิศกัน(regime-dependent) = reject ทันทีไม่ต้องรอ BWD
-6. precedent-reuse: EA ตระกูลเดิมโผล่ซ้ำหลาย batch ด้วย fingerprint เกือบเป๊ะ (Gold Stuff EA V7.0,
-   SEMIS.jr family, Yetti Pro family) — ตัดสินจาก precedent ได้เลยไม่ต้องเทสซ้ำ
-7. **ใหม่ล่าสุด: BWD-OOS/backward ทุกชนิดต้องรันบนเลน 1 (D:\Meta4) เท่านั้น** — เลน MT4b (D:\Meta4b)
-   ไม่มีข้อมูลย้อนหลัง 2020-2022 โหลดไว้ (portable copy ตั้งไว้สำหรับ smoke 4 เดือนล่าสุดเท่านั้น) —
-   เทสจะ launch สำเร็จแต่จบทันทีไม่มี report เลย (เจอกับ batch-27 candidates ก่อนแก้)
+**à¸à¸Žà¸–à¸²à¸§à¸£à¸—à¸µà¹ˆà¹€à¸‚à¹‰à¸² spec ORDER-036 à¹à¸¥à¹‰à¸§ (à¹ƒà¸Šà¹‰à¸à¸±à¸š mass-smoke à¸—à¸¸à¸ order à¹ƒà¸™à¸­à¸™à¸²à¸„à¸•):**
+1. lot-check à¸Ÿà¸£à¸µ (à¸ˆà¸²à¸ M1 report à¸—à¸µà¹ˆà¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§) à¸•à¹‰à¸­à¸‡à¸—à¸³**à¸à¹ˆà¸­à¸™** BWD-OOS à¹€à¸ªà¸¡à¸­ â€” à¸›à¸£à¸°à¸«à¸¢à¸±à¸” compute à¸¡à¸«à¸²à¸¨à¸²à¸¥
+   (à¸›à¸´à¸” batch 11-19 à¹„à¸”à¹‰ 0 BWD run à¹€à¸¥à¸¢)
+2. à¹ƒà¸Šà¹‰ `scripts/mt4_lotcheck.ps1` à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ à¸«à¹‰à¸²à¸¡ quick-grep à¹à¸šà¸šà¹€à¸”à¸´à¸¡à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”
+3. lot-check à¸•à¹‰à¸­à¸‡à¸—à¸³à¸‹à¹‰à¸³à¸šà¸™ **report à¸¢à¸²à¸§à¸ªà¸¸à¸”à¸—à¸µà¹ˆà¸¡à¸µ** â€” ladder 4 à¹€à¸”à¸·à¸­à¸™à¸•à¸·à¹‰à¸™à¸à¸§à¹ˆà¸² 3 à¸›à¸µà¹€à¸ªà¸¡à¸­ (FZ2 Ã—6â†’Ã—18.6, swbÃ—2.2â†’Ã—25.9)
+4. à¸Šà¸·à¹ˆà¸­à¹„à¸Ÿà¸¥à¹Œ = DQ à¸—à¸±à¸™à¸—à¸µ: "_fix/_nodll/crack" (à¹€à¸”à¸´à¸¡) **+ à¹ƒà¸«à¸¡à¹ˆ: piracy-signal à¹€à¸Šà¹ˆà¸™ "DOWNLOADMQ4.COM"/
+   "FULL LICENSE"** (Bonnitta, EA FREEDOM PRO) Â· à¸Šà¸·à¹ˆà¸­ "Marti/Martin/Grid/Hedge/Ilan" = à¸ªà¸‡à¸ªà¸±à¸¢à¹à¸•à¹ˆà¸•à¹‰à¸­à¸‡à¸”à¸¹
+   Size à¸ˆà¸£à¸´à¸‡à¸•à¸±à¸”à¸ªà¸´à¸™ (VisualMartiEA à¸Šà¸·à¹ˆà¸­ Marti à¹à¸•à¹ˆ ladder à¸ˆà¸£à¸´à¸‡à¹à¸„à¹ˆÃ—5)
+5. cross-symbol consistency check à¸Ÿà¸£à¸µ â€” à¸„à¸¹à¹ˆà¸«à¸™à¸¶à¹ˆà¸‡à¸žà¸±à¸‡à¸«à¸™à¸±à¸ à¸­à¸µà¸à¸„à¸¹à¹ˆ "à¸Šà¸™à¸°à¸ªà¸§à¸¢à¹€à¸à¸´à¸™à¸ˆà¸£à¸´à¸‡"(thin-sample) à¸«à¸£à¸·à¸­
+   à¸à¸¥à¸±à¸šà¸—à¸´à¸¨à¸à¸±à¸™(regime-dependent) = reject à¸—à¸±à¸™à¸—à¸µà¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¸£à¸­ BWD
+6. precedent-reuse: EA à¸•à¸£à¸°à¸à¸¹à¸¥à¹€à¸”à¸´à¸¡à¹‚à¸œà¸¥à¹ˆà¸‹à¹‰à¸³à¸«à¸¥à¸²à¸¢ batch à¸”à¹‰à¸§à¸¢ fingerprint à¹€à¸à¸·à¸­à¸šà¹€à¸›à¹Šà¸° (Gold Stuff EA V7.0,
+   SEMIS.jr family, Yetti Pro family) â€” à¸•à¸±à¸”à¸ªà¸´à¸™à¸ˆà¸²à¸ precedent à¹„à¸”à¹‰à¹€à¸¥à¸¢à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¹€à¸—à¸ªà¸‹à¹‰à¸³
+7. **à¹ƒà¸«à¸¡à¹ˆà¸¥à¹ˆà¸²à¸ªà¸¸à¸”: BWD-OOS/backward à¸—à¸¸à¸à¸Šà¸™à¸´à¸”à¸•à¹‰à¸­à¸‡à¸£à¸±à¸™à¸šà¸™à¹€à¸¥à¸™ 1 (D:\Meta4) à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™** â€” à¹€à¸¥à¸™ MT4b (D:\Meta4b)
+   à¹„à¸¡à¹ˆà¸¡à¸µà¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¸¢à¹‰à¸­à¸™à¸«à¸¥à¸±à¸‡ 2020-2022 à¹‚à¸«à¸¥à¸”à¹„à¸§à¹‰ (portable copy à¸•à¸±à¹‰à¸‡à¹„à¸§à¹‰à¸ªà¸³à¸«à¸£à¸±à¸š smoke 4 à¹€à¸”à¸·à¸­à¸™à¸¥à¹ˆà¸²à¸ªà¸¸à¸”à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™) â€”
+   à¹€à¸—à¸ªà¸ˆà¸° launch à¸ªà¸³à¹€à¸£à¹‡à¸ˆà¹à¸•à¹ˆà¸ˆà¸šà¸—à¸±à¸™à¸—à¸µà¹„à¸¡à¹ˆà¸¡à¸µ report à¹€à¸¥à¸¢ (à¹€à¸ˆà¸­à¸à¸±à¸š batch-27 candidates à¸à¹ˆà¸­à¸™à¹à¸à¹‰)
 
-**สถิติรวม order:** ~1,318 EA → Tier A หลายร้อยแถว → หลัง lot-check+cross-symbol+ชื่อ เหลือ ~30 ตัวเข้า
-BWD-OOS → เหลือ ~10 ตัวผ่าน BWD → **1 ตัวเดียวผ่านครบถึง Model-0 (UnNomGuaiV1.132)** + 2 ตัวผ่าน
-spread-stress (MultiHedge, Oracle) + 4 ตัวรอ spread-stress (Dark Venus, RSI from pips_EA, Z61,
-Yetti3_Mod2_newsWorking) — **funnel ratio ~1,300:1 ยืนยันความยากของการหา edge ที่ทนทุกด่านจริง**
+**à¸ªà¸–à¸´à¸•à¸´à¸£à¸§à¸¡ order:** ~1,318 EA â†’ Tier A à¸«à¸¥à¸²à¸¢à¸£à¹‰à¸­à¸¢à¹à¸–à¸§ â†’ à¸«à¸¥à¸±à¸‡ lot-check+cross-symbol+à¸Šà¸·à¹ˆà¸­ à¹€à¸«à¸¥à¸·à¸­ ~30 à¸•à¸±à¸§à¹€à¸‚à¹‰à¸²
+BWD-OOS â†’ à¹€à¸«à¸¥à¸·à¸­ ~10 à¸•à¸±à¸§à¸œà¹ˆà¸²à¸™ BWD â†’ **1 à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸œà¹ˆà¸²à¸™à¸„à¸£à¸šà¸–à¸¶à¸‡ Model-0 (UnNomGuaiV1.132)** + 2 à¸•à¸±à¸§à¸œà¹ˆà¸²à¸™
+spread-stress (MultiHedge, Oracle) + 4 à¸•à¸±à¸§à¸£à¸­ spread-stress (Dark Venus, RSI from pips_EA, Z61,
+Yetti3_Mod2_newsWorking) â€” **funnel ratio ~1,300:1 à¸¢à¸·à¸™à¸¢à¸±à¸™à¸„à¸§à¸²à¸¡à¸¢à¸²à¸à¸‚à¸­à¸‡à¸à¸²à¸£à¸«à¸² edge à¸—à¸µà¹ˆà¸—à¸™à¸—à¸¸à¸à¸”à¹ˆà¸²à¸™à¸ˆà¸£à¸´à¸‡**
 
-**🗺️ แผนที่ต้องทำ — เรียง priority (2026-07-05):**
-- **P0 = ✅ DONE 2026-07-05: DEMO ATTACHED!** 7 EA บน Exness demo 60,000 USD · **demo clock เดินแล้ว →
-  judge เร็วสุด 2026-10-05** · 📅 **/ea-monitor ครั้งแรก ~2026-07-19** (2 สัปดาห์ · user ส่ง live_deals.csv ตาม §6) ·
-  XAU ใช้ set 3-digit `Boss14_GridLog_XAU_DEMO_exness3d.set` (slippage 300) · ❓ confirm account type
-  (Standard 60k USD = sizing ตรง validation / ถ้า cent = oversize รีบแจ้ง) → **โหมด operate เริ่มแล้ว**
-- **P1 = autonomous idle-compute: ORDER-035 (MT5 203) → 036 (MT4 1,318 stage)** ล่า treasure ที่ user
-  เชื่อว่ามี · 👉 oc-dev/Codex · รันข้ามคืนได้ · survivor (Tier A: PF>1&trades≥20&DD<40%; Tier B grid-trap แยก) → Claude คัดเข้า intake funnel
-- **P2 = hunt ต่อ (mine #1 ใกล้หมด):** loss-mgmt ตาย · entries FX ตาย · XAU done · XAG parked · เหลือ:
-  GridLog บน **indices (US30/NAS)** เป็น non-FX ตัวถัดไป (มี ORDER-029B ATR-SL portable แล้ว) **หรือ**
-  ข้ามไป **mine #2 treasure** (candle-gate/retest-zone mold-port) — Claude เคาะเมื่อ mass-smoke ให้ผล/demo เดินแล้ว
-- **P3 = housekeeping:** XAU ยังไม่ผ่าน `robustness-validator` skill เป็นทางการ (แต่ OOS+MC+M4 = ครอบคลุมแล้ว) ·
-  audit เอกสารซ้ำ (ROADMAP §3)
+**ðŸ—ºï¸ à¹à¸œà¸™à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³ â€” à¹€à¸£à¸µà¸¢à¸‡ priority (2026-07-05):**
+- **P0 = âœ… DONE 2026-07-05: DEMO ATTACHED!** 7 EA à¸šà¸™ Exness demo 60,000 USD Â· **demo clock à¹€à¸”à¸´à¸™à¹à¸¥à¹‰à¸§ â†’
+  judge à¹€à¸£à¹‡à¸§à¸ªà¸¸à¸” 2026-10-05** Â· ðŸ“… **/ea-monitor à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸ ~2026-07-19** (2 à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ Â· user à¸ªà¹ˆà¸‡ live_deals.csv à¸•à¸²à¸¡ Â§6) Â·
+  XAU à¹ƒà¸Šà¹‰ set 3-digit `Boss14_GridLog_XAU_DEMO_exness3d.set` (slippage 300) Â· â“ confirm account type
+  (Standard 60k USD = sizing à¸•à¸£à¸‡ validation / à¸–à¹‰à¸² cent = oversize à¸£à¸µà¸šà¹à¸ˆà¹‰à¸‡) â†’ **à¹‚à¸«à¸¡à¸” operate à¹€à¸£à¸´à¹ˆà¸¡à¹à¸¥à¹‰à¸§**
+- **P1 = autonomous idle-compute: ORDER-035 (MT5 203) â†’ 036 (MT4 1,318 stage)** à¸¥à¹ˆà¸² treasure à¸—à¸µà¹ˆ user
+  à¹€à¸Šà¸·à¹ˆà¸­à¸§à¹ˆà¸²à¸¡à¸µ Â· ðŸ‘‰ oc-dev/Codex Â· à¸£à¸±à¸™à¸‚à¹‰à¸²à¸¡à¸„à¸·à¸™à¹„à¸”à¹‰ Â· survivor (Tier A: PF>1&tradesâ‰¥20&DD<40%; Tier B grid-trap à¹à¸¢à¸) â†’ Claude à¸„à¸±à¸”à¹€à¸‚à¹‰à¸² intake funnel
+- **P2 = hunt à¸•à¹ˆà¸­ (mine #1 à¹ƒà¸à¸¥à¹‰à¸«à¸¡à¸”):** loss-mgmt à¸•à¸²à¸¢ Â· entries FX à¸•à¸²à¸¢ Â· XAU done Â· XAG parked Â· à¹€à¸«à¸¥à¸·à¸­:
+  GridLog à¸šà¸™ **indices (US30/NAS)** à¹€à¸›à¹‡à¸™ non-FX à¸•à¸±à¸§à¸–à¸±à¸”à¹„à¸› (à¸¡à¸µ ORDER-029B ATR-SL portable à¹à¸¥à¹‰à¸§) **à¸«à¸£à¸·à¸­**
+  à¸‚à¹‰à¸²à¸¡à¹„à¸› **mine #2 treasure** (candle-gate/retest-zone mold-port) â€” Claude à¹€à¸„à¸²à¸°à¹€à¸¡à¸·à¹ˆà¸­ mass-smoke à¹ƒà¸«à¹‰à¸œà¸¥/demo à¹€à¸”à¸´à¸™à¹à¸¥à¹‰à¸§
+- **P3 = housekeeping:** XAU à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸œà¹ˆà¸²à¸™ `robustness-validator` skill à¹€à¸›à¹‡à¸™à¸—à¸²à¸‡à¸à¸²à¸£ (à¹à¸•à¹ˆ OOS+MC+M4 = à¸„à¸£à¸­à¸šà¸„à¸¥à¸¸à¸¡à¹à¸¥à¹‰à¸§) Â·
+  audit à¹€à¸­à¸à¸ªà¸²à¸£à¸‹à¹‰à¸³ (ROADMAP Â§3)
 
-**คำแนะนำเด็ดขาด:** P0 (demo attach) คือสิ่งเดียวที่ปลดล็อกทุกอย่าง — เมื่อ user ว่างให้ทำก่อน · ระหว่างรอ =
-P1 mass-smoke เดินอัตโนมัติ · P2 hunt เก็บไว้ทำเมื่อ demo เดิน + มี Claude quota
+**à¸„à¸³à¹à¸™à¸°à¸™à¸³à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”:** P0 (demo attach) à¸„à¸·à¸­à¸ªà¸´à¹ˆà¸‡à¹€à¸”à¸µà¸¢à¸§à¸—à¸µà¹ˆà¸›à¸¥à¸”à¸¥à¹‡à¸­à¸à¸—à¸¸à¸à¸­à¸¢à¹ˆà¸²à¸‡ â€” à¹€à¸¡à¸·à¹ˆà¸­ user à¸§à¹ˆà¸²à¸‡à¹ƒà¸«à¹‰à¸—à¸³à¸à¹ˆà¸­à¸™ Â· à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸£à¸­ =
+P1 mass-smoke à¹€à¸”à¸´à¸™à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´ Â· P2 hunt à¹€à¸à¹‡à¸šà¹„à¸§à¹‰à¸—à¸³à¹€à¸¡à¸·à¹ˆà¸­ demo à¹€à¸”à¸´à¸™ + à¸¡à¸µ Claude quota
 
-**วิธีรัน (user):** dispatch ORDER-030 ให้ ZCode ก่อน (ด่านชี้ขาด OOS) → ผ่านค่อย 031 (M4) · 032/029B ขนานได้ ·
-**ทุก order มีคำสั่ง+ไฟล์+acceptance ครบในตัว agent รันได้เลย** · verdict = Claude ทำตอนกลับมา (ห้าม agent ตัดสิน)
-**routing:** "ทำได้: X · 👉 แนะ: Y" (AGENTS §5.1) · Codex-direct ประหยัดกว่า OpenClaw · ZCode ฟรี ~1 order หนัก/วัน
+**à¸§à¸´à¸˜à¸µà¸£à¸±à¸™ (user):** dispatch ORDER-030 à¹ƒà¸«à¹‰ ZCode à¸à¹ˆà¸­à¸™ (à¸”à¹ˆà¸²à¸™à¸Šà¸µà¹‰à¸‚à¸²à¸” OOS) â†’ à¸œà¹ˆà¸²à¸™à¸„à¹ˆà¸­à¸¢ 031 (M4) Â· 032/029B à¸‚à¸™à¸²à¸™à¹„à¸”à¹‰ Â·
+**à¸—à¸¸à¸ order à¸¡à¸µà¸„à¸³à¸ªà¸±à¹ˆà¸‡+à¹„à¸Ÿà¸¥à¹Œ+acceptance à¸„à¸£à¸šà¹ƒà¸™à¸•à¸±à¸§ agent à¸£à¸±à¸™à¹„à¸”à¹‰à¹€à¸¥à¸¢** Â· verdict = Claude à¸—à¸³à¸•à¸­à¸™à¸à¸¥à¸±à¸šà¸¡à¸² (à¸«à¹‰à¸²à¸¡ agent à¸•à¸±à¸”à¸ªà¸´à¸™)
+**routing:** "à¸—à¸³à¹„à¸”à¹‰: X Â· ðŸ‘‰ à¹à¸™à¸°: Y" (AGENTS Â§5.1) Â· Codex-direct à¸›à¸£à¸°à¸«à¸¢à¸±à¸”à¸à¸§à¹ˆà¸² OpenClaw Â· ZCode à¸Ÿà¸£à¸µ ~1 order à¸«à¸™à¸±à¸/à¸§à¸±à¸™
 
-**งาน Claude session หน้า:** review 030/031/032/029B ตามที่ DONE → ถ้า XAU ผ่านครบ (OOS+M4+MC) = **candidate #7
-non-FX จริง** (de-scale lot ให้ DD เข้า budget ก่อน demo) → ถ้าตก = mine #1 non-FX จบ → **mine #2 treasure**
-(candle-pattern gate + retest-zone) · demo cohort (ค้างตาม user) เมื่อ attach → จด start date + นัด /ea-monitor
-**เครื่องมือครบแล้ว — ห้ามสร้างเพิ่มโดยไม่มี friction จริง (ตกลงกับ user แล้ว):** 2 เลน MT5
-(Meta 5 + Meta 5b bit-identical) · EA_MASTER_INDEX.csv 125 แถว (OneDrive) · STATUS.md (OneDrive) ·
-ทีม OpenClaw 3 ตัว ([oc-mgr/dev/btest], heartbeat, เลน 2) · A/B harness · กฎครบใน AGENTS.md
-**Verdict อื่นล่าสุด:** GBPJPY/USDCAD/NZDUSD = WATCH · GBPAUD/EURCAD/GBPUSD = PARKED (GBP
-hostile pattern) · EURCHF/USDCHF/LNBREAK = DEAD-optimized · NRBreakout = PARKED-final
+**à¸‡à¸²à¸™ Claude session à¸«à¸™à¹‰à¸²:** review 030/031/032/029B à¸•à¸²à¸¡à¸—à¸µà¹ˆ DONE â†’ à¸–à¹‰à¸² XAU à¸œà¹ˆà¸²à¸™à¸„à¸£à¸š (OOS+M4+MC) = **candidate #7
+non-FX à¸ˆà¸£à¸´à¸‡** (de-scale lot à¹ƒà¸«à¹‰ DD à¹€à¸‚à¹‰à¸² budget à¸à¹ˆà¸­à¸™ demo) â†’ à¸–à¹‰à¸²à¸•à¸ = mine #1 non-FX à¸ˆà¸š â†’ **mine #2 treasure**
+(candle-pattern gate + retest-zone) Â· demo cohort (à¸„à¹‰à¸²à¸‡à¸•à¸²à¸¡ user) à¹€à¸¡à¸·à¹ˆà¸­ attach â†’ à¸ˆà¸” start date + à¸™à¸±à¸” /ea-monitor
+**à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¸„à¸£à¸šà¹à¸¥à¹‰à¸§ â€” à¸«à¹‰à¸²à¸¡à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸žà¸´à¹ˆà¸¡à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸¡à¸µ friction à¸ˆà¸£à¸´à¸‡ (à¸•à¸à¸¥à¸‡à¸à¸±à¸š user à¹à¸¥à¹‰à¸§):** 2 à¹€à¸¥à¸™ MT5
+(Meta 5 + Meta 5b bit-identical) Â· EA_MASTER_INDEX.csv 125 à¹à¸–à¸§ (OneDrive) Â· STATUS.md (OneDrive) Â·
+à¸—à¸µà¸¡ OpenClaw 3 à¸•à¸±à¸§ ([oc-mgr/dev/btest], heartbeat, à¹€à¸¥à¸™ 2) Â· A/B harness Â· à¸à¸Žà¸„à¸£à¸šà¹ƒà¸™ AGENTS.md
+**Verdict à¸­à¸·à¹ˆà¸™à¸¥à¹ˆà¸²à¸ªà¸¸à¸”:** GBPJPY/USDCAD/NZDUSD = WATCH Â· GBPAUD/EURCAD/GBPUSD = PARKED (GBP
+hostile pattern) Â· EURCHF/USDCHF/LNBREAK = DEAD-optimized Â· NRBreakout = PARKED-final
 
-**งานที่เหลือ ตามลำดับที่ควรทำ:**
-1. ~~**Monte Carlo บน config ที่ DD-scale แล้วจริง**~~ ✅ **เสร็จ 2026-07-03 (รอบ 2):** AUDUSD DD
-   95th 16.55%/worst 26.04% · AUDJPY 95th 11.22%/worst 18.18% · ruin 0% ทั้งคู่ — PASS
-2. ~~**รัน AUDUSD+AUDJPY เป็นพอร์ตรวมกัน**~~ ✅ **เสร็จ 2026-07-03 (closed-trade merge):**
-   full-lot MC-DD 95th 16.92% เกิน budget → **แนะนำ 0.7x ทั้งคู่ (MC-95th 12.44%, net +$2,677/17mo,
-   PF 1.48)** — scale `_05_BaseLot`+`_04_TpUsd`+`_06_MaxTotalLot` พร้อมกัน · เดือนที่ลบพร้อมกันมีแค่
-   1/17 แต่คือ **2026-06 เดือนล่าสุด** → จับตาบน demo · caveat: วัดจาก closed trades — combined
-   floating DD ต้องพิสูจน์บน demo (ตัวเลขเต็ม → EA_SCORECARD §FRESH TEMPLATE EAs)
-3. ✅ **Backward-OOS 2023–2024 เสร็จ 2026-07-03 (รอบ 3) — VERDICT เปลี่ยน:** **AUDUSD = REJECT**
-   (แทบไม่เทรดก่อน 2025 + ปี 2024 ขาดทุน PF 0.41 — edge เป็น regime 2025-26 เท่านั้น) ·
-   **AUDJPY = CONDITIONAL** (กำไรทั้ง 3 ปีแต่ 2023 eqDD 36% ที่ 20x → ต้อง de-scale เป็น **lot8x**) ·
-   แผนพอร์ตรวม 0.7x = ยกเลิก → AUDJPY solo · ตัวเลข → `_mt5_auto/ZIGL_BWD_OOS.csv` + scorecard
-3b. **GBPAUD/USDJPY/EURCHF** ยังบางเกิน (12-18 เทรด) — ถ้าจะเก็บต่อ ต้องรอ history ยาวขึ้นหรือหา window อื่น
-   เพิ่ม ไม่ใช่เชื่อจากเทรดน้อยแบบนี้
-4. **ก่อน deploy จริง:** ผ่าน `robustness-validator` skill ให้ครบ (ยังไม่เคยเรียก skill นี้กับ EA ตัวนี้เลย)
-   + สร้าง magic number ใหม่ (990101/990102 มีอยู่แล้วใน .set แต่ยังไม่จองในระบบ live)
-   + ตาม `vps-deploy-ops` checklist ปกติ (ยังไม่ได้ build deploy bundle)
-5. **(ใหม่ 2026-07-03) ถ้า validate ผ่านทั้งหมด → port เข้า Boss V2 เป็น `Entry_GridLog` ก่อน deploy**
-   (Zeus = pilot ของ workflow "standalone → แม่พิมพ์" ตาม VISION) — port แล้วต้อง re-confirm เลข
-   ตรงกับ standalone เดิมก่อนถือว่า port สำเร็จ · deploy จากแม่พิมพ์ ไม่ใช่จากร่าง standalone
+**à¸‡à¸²à¸™à¸—à¸µà¹ˆà¹€à¸«à¸¥à¸·à¸­ à¸•à¸²à¸¡à¸¥à¸³à¸”à¸±à¸šà¸—à¸µà¹ˆà¸„à¸§à¸£à¸—à¸³:**
+1. ~~**Monte Carlo à¸šà¸™ config à¸—à¸µà¹ˆ DD-scale à¹à¸¥à¹‰à¸§à¸ˆà¸£à¸´à¸‡**~~ âœ… **à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03 (à¸£à¸­à¸š 2):** AUDUSD DD
+   95th 16.55%/worst 26.04% Â· AUDJPY 95th 11.22%/worst 18.18% Â· ruin 0% à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ â€” PASS
+2. ~~**à¸£à¸±à¸™ AUDUSD+AUDJPY à¹€à¸›à¹‡à¸™à¸žà¸­à¸£à¹Œà¸•à¸£à¸§à¸¡à¸à¸±à¸™**~~ âœ… **à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03 (closed-trade merge):**
+   full-lot MC-DD 95th 16.92% à¹€à¸à¸´à¸™ budget â†’ **à¹à¸™à¸°à¸™à¸³ 0.7x à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ (MC-95th 12.44%, net +$2,677/17mo,
+   PF 1.48)** â€” scale `_05_BaseLot`+`_04_TpUsd`+`_06_MaxTotalLot` à¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™ Â· à¹€à¸”à¸·à¸­à¸™à¸—à¸µà¹ˆà¸¥à¸šà¸žà¸£à¹‰à¸­à¸¡à¸à¸±à¸™à¸¡à¸µà¹à¸„à¹ˆ
+   1/17 à¹à¸•à¹ˆà¸„à¸·à¸­ **2026-06 à¹€à¸”à¸·à¸­à¸™à¸¥à¹ˆà¸²à¸ªà¸¸à¸”** â†’ à¸ˆà¸±à¸šà¸•à¸²à¸šà¸™ demo Â· caveat: à¸§à¸±à¸”à¸ˆà¸²à¸ closed trades â€” combined
+   floating DD à¸•à¹‰à¸­à¸‡à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸šà¸™ demo (à¸•à¸±à¸§à¹€à¸¥à¸‚à¹€à¸•à¹‡à¸¡ â†’ EA_SCORECARD Â§FRESH TEMPLATE EAs)
+3. âœ… **Backward-OOS 2023â€“2024 à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03 (à¸£à¸­à¸š 3) â€” VERDICT à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™:** **AUDUSD = REJECT**
+   (à¹à¸—à¸šà¹„à¸¡à¹ˆà¹€à¸—à¸£à¸”à¸à¹ˆà¸­à¸™ 2025 + à¸›à¸µ 2024 à¸‚à¸²à¸”à¸—à¸¸à¸™ PF 0.41 â€” edge à¹€à¸›à¹‡à¸™ regime 2025-26 à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™) Â·
+   **AUDJPY = CONDITIONAL** (à¸à¸³à¹„à¸£à¸—à¸±à¹‰à¸‡ 3 à¸›à¸µà¹à¸•à¹ˆ 2023 eqDD 36% à¸—à¸µà¹ˆ 20x â†’ à¸•à¹‰à¸­à¸‡ de-scale à¹€à¸›à¹‡à¸™ **lot8x**) Â·
+   à¹à¸œà¸™à¸žà¸­à¸£à¹Œà¸•à¸£à¸§à¸¡ 0.7x = à¸¢à¸à¹€à¸¥à¸´à¸ â†’ AUDJPY solo Â· à¸•à¸±à¸§à¹€à¸¥à¸‚ â†’ `_mt5_auto/ZIGL_BWD_OOS.csv` + scorecard
+3b. **GBPAUD/USDJPY/EURCHF** à¸¢à¸±à¸‡à¸šà¸²à¸‡à¹€à¸à¸´à¸™ (12-18 à¹€à¸—à¸£à¸”) â€” à¸–à¹‰à¸²à¸ˆà¸°à¹€à¸à¹‡à¸šà¸•à¹ˆà¸­ à¸•à¹‰à¸­à¸‡à¸£à¸­ history à¸¢à¸²à¸§à¸‚à¸¶à¹‰à¸™à¸«à¸£à¸·à¸­à¸«à¸² window à¸­à¸·à¹ˆà¸™
+   à¹€à¸žà¸´à¹ˆà¸¡ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹€à¸Šà¸·à¹ˆà¸­à¸ˆà¸²à¸à¹€à¸—à¸£à¸”à¸™à¹‰à¸­à¸¢à¹à¸šà¸šà¸™à¸µà¹‰
+4. **à¸à¹ˆà¸­à¸™ deploy à¸ˆà¸£à¸´à¸‡:** à¸œà¹ˆà¸²à¸™ `robustness-validator` skill à¹ƒà¸«à¹‰à¸„à¸£à¸š (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¹€à¸£à¸µà¸¢à¸ skill à¸™à¸µà¹‰à¸à¸±à¸š EA à¸•à¸±à¸§à¸™à¸µà¹‰à¹€à¸¥à¸¢)
+   + à¸ªà¸£à¹‰à¸²à¸‡ magic number à¹ƒà¸«à¸¡à¹ˆ (990101/990102 à¸¡à¸µà¸­à¸¢à¸¹à¹ˆà¹à¸¥à¹‰à¸§à¹ƒà¸™ .set à¹à¸•à¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸ˆà¸­à¸‡à¹ƒà¸™à¸£à¸°à¸šà¸š live)
+   + à¸•à¸²à¸¡ `vps-deploy-ops` checklist à¸›à¸à¸•à¸´ (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹„à¸”à¹‰ build deploy bundle)
+5. **(à¹ƒà¸«à¸¡à¹ˆ 2026-07-03) à¸–à¹‰à¸² validate à¸œà¹ˆà¸²à¸™à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â†’ port à¹€à¸‚à¹‰à¸² Boss V2 à¹€à¸›à¹‡à¸™ `Entry_GridLog` à¸à¹ˆà¸­à¸™ deploy**
+   (Zeus = pilot à¸‚à¸­à¸‡ workflow "standalone â†’ à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ" à¸•à¸²à¸¡ VISION) â€” port à¹à¸¥à¹‰à¸§à¸•à¹‰à¸­à¸‡ re-confirm à¹€à¸¥à¸‚
+   à¸•à¸£à¸‡à¸à¸±à¸š standalone à¹€à¸”à¸´à¸¡à¸à¹ˆà¸­à¸™à¸–à¸·à¸­à¸§à¹ˆà¸² port à¸ªà¸³à¹€à¸£à¹‡à¸ˆ Â· deploy à¸ˆà¸²à¸à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸ˆà¸²à¸à¸£à¹ˆà¸²à¸‡ standalone
 
-### 🔧 งานอัปเกรดแม่พิมพ์ Boss V2 (track ใหม่ 2026-07-03 — ทำขนานกับ Zeus ได้)
+### ðŸ”§ à¸‡à¸²à¸™à¸­à¸±à¸›à¹€à¸à¸£à¸”à¹à¸¡à¹ˆà¸žà¸´à¸¡à¸žà¹Œ Boss V2 (track à¹ƒà¸«à¸¡à¹ˆ 2026-07-03 â€” à¸—à¸³à¸‚à¸™à¸²à¸™à¸à¸±à¸š Zeus à¹„à¸”à¹‰)
 
-1. ~~เติม **Hedge/Recovery module จริง**~~ ✅ **เสร็จ 2026-07-03 (deep-reasoner + regression-verified):**
-   Recovery 81 Light / 82 Adaptive / 83 Aggressive + HEDGE_LOCK — ทุกโหมด cage-clamped,
-   default OFF ทุกตัว, compile 0/0 ทั้ง 3 Boss EA. spec + ข้อจำกัด (netting account, comment tag,
-   ยังไม่เคย backtest) → `ea_template\DESIGN_V2.md` §5
-2. ~~เพิ่ม **smoke-regression ชุดเล็ก**~~ ✅ **เสร็จ 2026-07-03:** `scripts\tpl_regression.ps1` +
-   `ea_template\regression_baseline.csv` (3 Boss EA, XAU H1 2024H1, Model 1) — รอบแรกจับ parity
-   หลังใส่ Hedge/Recovery แล้ว: **REGRESSION CLEAN ทั้ง 3 ตัว**. กฎ: แก้ `core\` ทุกครั้งต้องรัน
-   script นี้ก่อน commit
-3. ต่อไป: sweep แกน **กลไก×symbol** (grid/DCA/hedge/progression บนคู่เงินที่ยังไม่เคยลอง)
-   ผ่าน `/signal-scan` ตามปกติ · หมายเหตุ: โหมดใหม่ (82/83/HEDGE_LOCK) ยังไม่เคยผ่าน backtest ใดๆ —
-   เปิดใช้ครั้งแรก = validate เหมือน mechanism ใหม่
-4. gotcha ใหม่: `deploy.ps1` แก้แล้วให้ resolve junction `Roaming\MetaQuotes\Terminal →
-   D:\MetaTraderData\...` ก่อน robocopy (subdir-create ผ่าน junction เคย fail เงียบ)
+1. ~~à¹€à¸•à¸´à¸¡ **Hedge/Recovery module à¸ˆà¸£à¸´à¸‡**~~ âœ… **à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03 (deep-reasoner + regression-verified):**
+   Recovery 81 Light / 82 Adaptive / 83 Aggressive + HEDGE_LOCK â€” à¸—à¸¸à¸à¹‚à¸«à¸¡à¸” cage-clamped,
+   default OFF à¸—à¸¸à¸à¸•à¸±à¸§, compile 0/0 à¸—à¸±à¹‰à¸‡ 3 Boss EA. spec + à¸‚à¹‰à¸­à¸ˆà¸³à¸à¸±à¸” (netting account, comment tag,
+   à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢ backtest) â†’ `ea_template\DESIGN_V2.md` Â§5
+2. ~~à¹€à¸žà¸´à¹ˆà¸¡ **smoke-regression à¸Šà¸¸à¸”à¹€à¸¥à¹‡à¸**~~ âœ… **à¹€à¸ªà¸£à¹‡à¸ˆ 2026-07-03:** `scripts\tpl_regression.ps1` +
+   `ea_template\regression_baseline.csv` (3 Boss EA, XAU H1 2024H1, Model 1) â€” à¸£à¸­à¸šà¹à¸£à¸à¸ˆà¸±à¸š parity
+   à¸«à¸¥à¸±à¸‡à¹ƒà¸ªà¹ˆ Hedge/Recovery à¹à¸¥à¹‰à¸§: **REGRESSION CLEAN à¸—à¸±à¹‰à¸‡ 3 à¸•à¸±à¸§**. à¸à¸Ž: à¹à¸à¹‰ `core\` à¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡à¸•à¹‰à¸­à¸‡à¸£à¸±à¸™
+   script à¸™à¸µà¹‰à¸à¹ˆà¸­à¸™ commit
+3. à¸•à¹ˆà¸­à¹„à¸›: sweep à¹à¸à¸™ **à¸à¸¥à¹„à¸Ã—symbol** (grid/DCA/hedge/progression à¸šà¸™à¸„à¸¹à¹ˆà¹€à¸‡à¸´à¸™à¸—à¸µà¹ˆà¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸¥à¸­à¸‡)
+   à¸œà¹ˆà¸²à¸™ `/signal-scan` à¸•à¸²à¸¡à¸›à¸à¸•à¸´ Â· à¸«à¸¡à¸²à¸¢à¹€à¸«à¸•à¸¸: à¹‚à¸«à¸¡à¸”à¹ƒà¸«à¸¡à¹ˆ (82/83/HEDGE_LOCK) à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¹€à¸„à¸¢à¸œà¹ˆà¸²à¸™ backtest à¹ƒà¸”à¹† â€”
+   à¹€à¸›à¸´à¸”à¹ƒà¸Šà¹‰à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸ = validate à¹€à¸«à¸¡à¸·à¸­à¸™ mechanism à¹ƒà¸«à¸¡à¹ˆ
+4. gotcha à¹ƒà¸«à¸¡à¹ˆ: `deploy.ps1` à¹à¸à¹‰à¹à¸¥à¹‰à¸§à¹ƒà¸«à¹‰ resolve junction `Roaming\MetaQuotes\Terminal â†’
+   D:\MetaTraderData\...` à¸à¹ˆà¸­à¸™ robocopy (subdir-create à¸œà¹ˆà¸²à¸™ junction à¹€à¸„à¸¢ fail à¹€à¸‡à¸µà¸¢à¸š)
 
-**ไฟล์ที่เกี่ยวข้องทั้งหมด:**
-- EA source: `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\(Boss)_ZeusInspired_GridLog_rev01.mq5` (ย้ายออกจาก archive 2026-07-08)
-- .set variants ทั้งหมด (baseline/tightened/scaled): `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\set_files\ZeusInspired_*.set` (12 ไฟล์)
-- ผลทดสอบทั้งหมด: `D:\EA_LAB\_mt5_auto\reports\ZIGL_*.htm` + `D:\EA_LAB\_mt5_auto\ZIGL_*.csv`
+**à¹„à¸Ÿà¸¥à¹Œà¸—à¸µà¹ˆà¹€à¸à¸µà¹ˆà¸¢à¸§à¸‚à¹‰à¸­à¸‡à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”:**
+- EA source: `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\(Boss)_ZeusInspired_GridLog_rev01.mq5` (à¸¢à¹‰à¸²à¸¢à¸­à¸­à¸à¸ˆà¸²à¸ archive 2026-07-08)
+- .set variants à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” (baseline/tightened/scaled): `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\set_files\ZeusInspired_*.set` (12 à¹„à¸Ÿà¸¥à¹Œ)
+- à¸œà¸¥à¸—à¸”à¸ªà¸­à¸šà¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”: `D:\EA_LAB\_mt5_auto\reports\ZIGL_*.htm` + `D:\EA_LAB\_mt5_auto\ZIGL_*.csv`
 - Correlation script: `D:\EA_LAB\_mt5_auto\zigl_correlation.py`
 - Monte Carlo script: `D:\EA_LAB\scripts\mt5_montecarlo.py`
-- วิเคราะห์เต็ม + timeline: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md`
-  §FRESH TEMPLATE EAs
+- à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œà¹€à¸•à¹‡à¸¡ + timeline: `ZEUS_GOLD_HEDGE_ANALYSIS.md` Â· registry: `EA_SCORECARD_AND_REGISTRY.md`
+  Â§FRESH TEMPLATE EAs
 
-**Gotcha ที่ต้องรู้ก่อนรันต่อ (เจอมาแล้ววันนี้ อย่าเจอซ้ำ):**
-- `_04_TpUsd` เป็นดอลลาร์คงที่ ไม่ scale ตาม lot อัตโนมัติ — ขยาย `_05_BaseLot` ต้องขยาย `_04_TpUsd` +
-  `_06_MaxTotalLot` ตามสัดส่วนเดียวกันเสมอ ไม่งั้น strategy เปลี่ยนพฤติกรรม ไม่ใช่แค่ขนาดเปลี่ยน
-- **ห้ามรายงาน/ตัดสินใจจาก Model 2 (open price) เด็ดขาด** ใช้กรอง zero-trade เท่านั้น ทุกเลขที่จะเชื่อ
-  ต้อง Model 1 (control points) ขึ้นไป
-- MT5 headless run ไม่ผ่าน `-SetFile` = อาจ carry-over ค่าจาก run ก่อนหน้า ไม่ใช่ compiled default เสมอไป
-  ต้องส่ง .set ระบุค่าครบทุกครั้ง
+**Gotcha à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸£à¸¹à¹‰à¸à¹ˆà¸­à¸™à¸£à¸±à¸™à¸•à¹ˆà¸­ (à¹€à¸ˆà¸­à¸¡à¸²à¹à¸¥à¹‰à¸§à¸§à¸±à¸™à¸™à¸µà¹‰ à¸­à¸¢à¹ˆà¸²à¹€à¸ˆà¸­à¸‹à¹‰à¸³):**
+- `_04_TpUsd` à¹€à¸›à¹‡à¸™à¸”à¸­à¸¥à¸¥à¸²à¸£à¹Œà¸„à¸‡à¸—à¸µà¹ˆ à¹„à¸¡à¹ˆ scale à¸•à¸²à¸¡ lot à¸­à¸±à¸•à¹‚à¸™à¸¡à¸±à¸•à¸´ â€” à¸‚à¸¢à¸²à¸¢ `_05_BaseLot` à¸•à¹‰à¸­à¸‡à¸‚à¸¢à¸²à¸¢ `_04_TpUsd` +
+  `_06_MaxTotalLot` à¸•à¸²à¸¡à¸ªà¸±à¸”à¸ªà¹ˆà¸§à¸™à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™à¹€à¸ªà¸¡à¸­ à¹„à¸¡à¹ˆà¸‡à¸±à¹‰à¸™ strategy à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™à¸žà¸¤à¸•à¸´à¸à¸£à¸£à¸¡ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹à¸„à¹ˆà¸‚à¸™à¸²à¸”à¹€à¸›à¸¥à¸µà¹ˆà¸¢à¸™
+- **à¸«à¹‰à¸²à¸¡à¸£à¸²à¸¢à¸‡à¸²à¸™/à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆà¸ˆà¸²à¸ Model 2 (open price) à¹€à¸”à¹‡à¸”à¸‚à¸²à¸”** à¹ƒà¸Šà¹‰à¸à¸£à¸­à¸‡ zero-trade à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ à¸—à¸¸à¸à¹€à¸¥à¸‚à¸—à¸µà¹ˆà¸ˆà¸°à¹€à¸Šà¸·à¹ˆà¸­
+  à¸•à¹‰à¸­à¸‡ Model 1 (control points) à¸‚à¸¶à¹‰à¸™à¹„à¸›
+- MT5 headless run à¹„à¸¡à¹ˆà¸œà¹ˆà¸²à¸™ `-SetFile` = à¸­à¸²à¸ˆ carry-over à¸„à¹ˆà¸²à¸ˆà¸²à¸ run à¸à¹ˆà¸­à¸™à¸«à¸™à¹‰à¸² à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ compiled default à¹€à¸ªà¸¡à¸­à¹„à¸›
+  à¸•à¹‰à¸­à¸‡à¸ªà¹ˆà¸‡ .set à¸£à¸°à¸šà¸¸à¸„à¹ˆà¸²à¸„à¸£à¸šà¸—à¸¸à¸à¸„à¸£à¸±à¹‰à¸‡
 
-### 🟣 ถึง 2026-09-22 (judge) — track operate (9 EA เดิม — เดินคู่กับโรงงาน ไม่ใช่โหมดเดียว)
-- /ea-monitor ทุก 1–2 สัปดาห์ (ส่ง live_deals.csv) — จับตา Gold Reaper, MG grid DD, ST03 replica (คาดว่าจะ kill),
-  KAUFMAN_ER ถ้า user ตัดสินใจ deploy ระหว่างทาง
-- สะสม ≥30 real trades/EA
+### ðŸŸ£ à¸–à¸¶à¸‡ 2026-09-22 (judge) â€” track operate (9 EA à¹€à¸”à¸´à¸¡ â€” à¹€à¸”à¸´à¸™à¸„à¸¹à¹ˆà¸à¸±à¸šà¹‚à¸£à¸‡à¸‡à¸²à¸™ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¹‚à¸«à¸¡à¸”à¹€à¸”à¸µà¸¢à¸§)
+- /ea-monitor à¸—à¸¸à¸ 1â€“2 à¸ªà¸±à¸›à¸”à¸²à¸«à¹Œ (à¸ªà¹ˆà¸‡ live_deals.csv) â€” à¸ˆà¸±à¸šà¸•à¸² Gold Reaper, MG grid DD, ST03 replica (à¸„à¸²à¸”à¸§à¹ˆà¸²à¸ˆà¸° kill),
+  KAUFMAN_ER à¸–à¹‰à¸² user à¸•à¸±à¸”à¸ªà¸´à¸™à¹ƒà¸ˆ deploy à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸—à¸²à¸‡
+- à¸ªà¸°à¸ªà¸¡ â‰¥30 real trades/EA
 
-### 🟢 หลัง 2026-09-22
-- per-EA attribution → promote ตัวผ่าน (PF≥1.40, ≥30 trades) → เพิ่ม lot / เปิดพอร์ตที่ 2 → มุ่ง 10 พอร์ต
-- ถ้ามีไอเดีย signal ใหม่เข้ามา (นอก TOP-8/10 shortlist เดิม) → /signal-scan ตามปกติ
+### ðŸŸ¢ à¸«à¸¥à¸±à¸‡ 2026-09-22
+- per-EA attribution â†’ promote à¸•à¸±à¸§à¸œà¹ˆà¸²à¸™ (PFâ‰¥1.40, â‰¥30 trades) â†’ à¹€à¸žà¸´à¹ˆà¸¡ lot / à¹€à¸›à¸´à¸”à¸žà¸­à¸£à¹Œà¸•à¸—à¸µà¹ˆ 2 â†’ à¸¡à¸¸à¹ˆà¸‡ 10 à¸žà¸­à¸£à¹Œà¸•
+- à¸–à¹‰à¸²à¸¡à¸µà¹„à¸­à¹€à¸”à¸µà¸¢ signal à¹ƒà¸«à¸¡à¹ˆà¹€à¸‚à¹‰à¸²à¸¡à¸² (à¸™à¸­à¸ TOP-8/10 shortlist à¹€à¸”à¸´à¸¡) â†’ /signal-scan à¸•à¸²à¸¡à¸›à¸à¸•à¸´
 
 ---
 
-## 8. CANONICAL DOCS INDEX (ของละเอียดอยู่ที่ไหน)
+## 8. CANONICAL DOCS INDEX (à¸‚à¸­à¸‡à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸­à¸¢à¸¹à¹ˆà¸—à¸µà¹ˆà¹„à¸«à¸™)
 
-| ต้องรู้เรื่อง | เปิดไฟล์ |
+| à¸•à¹‰à¸­à¸‡à¸£à¸¹à¹‰à¹€à¸£à¸·à¹ˆà¸­à¸‡ | à¹€à¸›à¸´à¸”à¹„à¸Ÿà¸¥à¹Œ |
 |---|---|
-| สถานะ + แผนนี้ (hub) | **`PROJECT_STATE.md`** (ไฟล์นี้) |
-| ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
-| กติกา multi-agent + คิวงานกลาง | `AGENTS.md` · `AGENT_TASKBOARD.md` |
-| roadmap ระยะยาว + ภาพสุดท้าย + gate เลื่อนเฟส | `ROADMAP.md` |
-| deploy วันนี้ | `DEPLOY_CHECKLIST_2026-06-29.md` |
-| EA_CORE ปิด loop ด้วย ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
+| à¸ªà¸–à¸²à¸™à¸° + à¹à¸œà¸™à¸™à¸µà¹‰ (hub) | **`PROJECT_STATE.md`** (à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰) |
+| à¸ à¸²à¸žà¹ƒà¸«à¸à¹ˆ/à¸›à¸£à¸±à¸Šà¸à¸²à¹‚à¸£à¸‡à¸‡à¸²à¸™à¸‚à¸­à¸‡à¹€à¸ˆà¹‰à¸²à¸‚à¸­à¸‡ | **`VISION.md`** (à¸­à¹ˆà¸²à¸™à¸„à¸¹à¹ˆà¸à¸±à¸™à¸—à¸¸à¸ session) |
+| à¸à¸•à¸´à¸à¸² multi-agent + à¸„à¸´à¸§à¸‡à¸²à¸™à¸à¸¥à¸²à¸‡ | `AGENTS.md` Â· `AGENT_TASKBOARD.md` |
+| roadmap à¸£à¸°à¸¢à¸°à¸¢à¸²à¸§ + à¸ à¸²à¸žà¸ªà¸¸à¸”à¸—à¹‰à¸²à¸¢ + gate à¹€à¸¥à¸·à¹ˆà¸­à¸™à¹€à¸Ÿà¸ª | `ROADMAP.md` |
+| deploy à¸§à¸±à¸™à¸™à¸µà¹‰ | `DEPLOY_CHECKLIST_2026-06-29.md` |
+| EA_CORE à¸›à¸´à¸” loop à¸”à¹‰à¸§à¸¢ ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
 | live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
-| backlog + coverage matrix เต็ม | `MASTER_BACKLOG.md` |
-| ทะเบียน EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
-| แผนที่ไฟล์/5 ที่อยู่ | `PLATFORM_INDEX.md` · `README.md` |
-| สถาปัตยกรรม+วิธีใช้ EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
-| design "สมอง" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
-| automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
-| รับ source ใหม่ | `INTAKE_QUEUE.md` |
-| idea จาก 200-prompt PDF | `STRATEGY_200_ANALYSIS.md` |
+| backlog + coverage matrix à¹€à¸•à¹‡à¸¡ | `MASTER_BACKLOG.md` |
+| à¸—à¸°à¹€à¸šà¸µà¸¢à¸™ EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
+| à¹à¸œà¸™à¸—à¸µà¹ˆà¹„à¸Ÿà¸¥à¹Œ/5 à¸—à¸µà¹ˆà¸­à¸¢à¸¹à¹ˆ | `PLATFORM_INDEX.md` Â· `README.md` |
+| à¸ªà¸–à¸²à¸›à¸±à¸•à¸¢à¸à¸£à¸£à¸¡+à¸§à¸´à¸˜à¸µà¹ƒà¸Šà¹‰ EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
+| design "à¸ªà¸¡à¸­à¸‡" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
+| automation/MT5 headless | `AUTOMATION_GUIDE.md` Â· `docs/MT5_AUTOMATION.md` |
+| à¸£à¸±à¸š source à¹ƒà¸«à¸¡à¹ˆ | `INTAKE_QUEUE.md` |
+| idea à¸ˆà¸²à¸ 200-prompt PDF | `STRATEGY_200_ANALYSIS.md` |
 
 ---
 
-## 9. กฎเหล็ก (ย้ำ)
-- อย่าเชื่อ report เก่าบนดิสก์ — rerun ด้วย locked .set ก่อนตัดสินเสมอ.
-- ปิด MT5 GUI ก่อนรัน automation (script abort ถ้าเปิด).
-- ของก้อนใหญ่กลั่นด้วย script ไม่โหลดดิบเข้า context · ทุกงานใหญ่ commit git.
-- grid/martingale ใช้ report DD + every-tick ไม่ใช่ MC อย่างเดียว.
-- monitor metric (Myfxbook/Excel/FX Blue) = ดูเพื่อ "วิเคราะห์" เท่านั้น **ไม่ใช่ตัว reject EA** —
-  การ reject ใช้ (magic,symbol) attribution + เทียบ backtest ตาม section 6 เท่านั้น.
+## 9. à¸à¸Žà¹€à¸«à¸¥à¹‡à¸ (à¸¢à¹‰à¸³)
+- à¸­à¸¢à¹ˆà¸²à¹€à¸Šà¸·à¹ˆà¸­ report à¹€à¸à¹ˆà¸²à¸šà¸™à¸”à¸´à¸ªà¸à¹Œ â€” rerun à¸”à¹‰à¸§à¸¢ locked .set à¸à¹ˆà¸­à¸™à¸•à¸±à¸”à¸ªà¸´à¸™à¹€à¸ªà¸¡à¸­.
+- à¸›à¸´à¸” MT5 GUI à¸à¹ˆà¸­à¸™à¸£à¸±à¸™ automation (script abort à¸–à¹‰à¸²à¹€à¸›à¸´à¸”).
+- à¸‚à¸­à¸‡à¸à¹‰à¸­à¸™à¹ƒà¸«à¸à¹ˆà¸à¸¥à¸±à¹ˆà¸™à¸”à¹‰à¸§à¸¢ script à¹„à¸¡à¹ˆà¹‚à¸«à¸¥à¸”à¸”à¸´à¸šà¹€à¸‚à¹‰à¸² context Â· à¸—à¸¸à¸à¸‡à¸²à¸™à¹ƒà¸«à¸à¹ˆ commit git.
+- grid/martingale à¹ƒà¸Šà¹‰ report DD + every-tick à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ MC à¸­à¸¢à¹ˆà¸²à¸‡à¹€à¸”à¸µà¸¢à¸§.
+- monitor metric (Myfxbook/Excel/FX Blue) = à¸”à¸¹à¹€à¸žà¸·à¹ˆà¸­ "à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œ" à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™ **à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆà¸•à¸±à¸§ reject EA** â€”
+  à¸à¸²à¸£ reject à¹ƒà¸Šà¹‰ (magic,symbol) attribution + à¹€à¸—à¸µà¸¢à¸š backtest à¸•à¸²à¸¡ section 6 à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™.

@@ -1991,6 +1991,27 @@ RSI >0.06 lot · DD alert 20/25% kill 30/35%) → รายงาน · **ห้
 
 ---
 
+## ORDER-055 — [NEXT SESSION START HERE] demo cohort 6 ตัว: attach + corr + monitor — `OPEN (รอ user attach)` · **ทำได้: Claude (judge) + user (attach)**
+
+**สรุป session 2026-07-08 (Opus): EA hunt รอบใหญ่จบ → 6 demo candidates พร้อม attach.**
+รายละเอียดเต็ม = `PROJECT_STATE.md` §7 block "SESSION 2026-07-08" (บนสุดของ forward plan).
+bundle = `_mt4_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5, set/magic/SL/kill-switch ต่อตัว).
+
+**6 candidates:** UnNomGuai(EURUSD/MT4/m1-2) · RSI-orig(EURUSD/MT4/m5888) · swb(AUDCAD/MT4/m990) ·
+RSI-MR(EURUSD/MT5/m990103,ROBUST) · Zeus(XAUUSD/MT5/m990101) · BRK-XAU(XAUUSD/MT5/m991001).
+
+**งาน session หน้า (เรียงตาม EV):**
+1. **รอ user attach** → รับวันเริ่ม → บันทึกใน DEMO_DEPLOYMENT_PLAN + ตั้งนัด judge +3 เดือน + /ea-monitor
+2. **[ทำได้เลยก่อน attach]** corr matrix ของ 6 candidate (ตัวไหน corr สูงกว่า 0.6 → ลด lot ไม่ตัด, กฎ user) —
+   ใช้ trade CSV ที่มีแล้ว: `_mt5_auto/RSIMR_trades.csv` · `ZIGL_XAU_trades.csv` · `BRK_trades.csv` (MT5 3 ตัว) ·
+   MT4 3 ตัวต้อง export deals จาก report (mt4). corr_monthly.py ที่ `_mt5_auto/`
+3. หลัง attach: statement ทุก ~2 สัปดาห์ → แยก P&L ตาม magic → เทียบค่าคาดหวังใน README
+**ห้าม:** แก้ config ที่ validate แล้ว · เชื่อ hunt ต่อว่า EV สูง (6 ทางติดไม่เจอ — live คือด่านจริง)
+
+**ผล:** _(รอ user attach)_
+
+---
+
 ## ORDER-047 — RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวนี้ดี ลอง optimize + หลาย symbol + ปรับ TF") · swb reserve ขนาน — `REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — RSI=EURUSD-only ไม่ optimize · swb ฟื้นเป็น candidate #3 บน AUDCAD)`
 
 **🏁 VERDICT (Claude, 2026-07-07 — 3 เฟสจบ):**
