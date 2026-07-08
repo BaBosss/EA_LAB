@@ -604,8 +604,8 @@ hostile pattern) · EURCHF/USDCHF/LNBREAK = DEAD-optimized · NRBreakout = PARKE
    D:\MetaTraderData\...` ก่อน robocopy (subdir-create ผ่าน junction เคย fail เงียบ)
 
 **ไฟล์ที่เกี่ยวข้องทั้งหมด:**
-- EA source: `D:\EA_Project\CURRENT_BUILD\TEMPLATE\(Boss)_ZeusInspired_GridLog_rev01.mq5`
-- .set variants ทั้งหมด (baseline/tightened/scaled): `D:\EA_Project\CURRENT_BUILD\TEMPLATE\ZeusInspired_*.set`
+- EA source: `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\(Boss)_ZeusInspired_GridLog_rev01.mq5` (ย้ายออกจาก archive 2026-07-08)
+- .set variants ทั้งหมด (baseline/tightened/scaled): `D:\EA_LAB\ea_projects\(Boss)_ZeusInspired_GridLog\set_files\ZeusInspired_*.set` (12 ไฟล์)
 - ผลทดสอบทั้งหมด: `D:\EA_LAB\_mt5_auto\reports\ZIGL_*.htm` + `D:\EA_LAB\_mt5_auto\ZIGL_*.csv`
 - Correlation script: `D:\EA_LAB\_mt5_auto\zigl_correlation.py`
 - Monte Carlo script: `D:\EA_LAB\scripts\mt5_montecarlo.py`
