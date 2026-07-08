@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | ~60 backtest · **ผ่าน holdout 2023-24 (window ที่ไม่เคยใช้ select)** 2026-07-08 | ★★★ | 🟢 **VALIDATED (source-available!) — MC pending ก่อน deploy** | **config: LOG5 · ATR9 · wide SL · EURUSD H1** → 3 window อิสระ: BWD 1.38 · **holdout 1.34/DD5.1** · FWD 2.17 · DD 3-5% ทุกช่อง · ⚠️ edge = **capped-recovery** ไม่ใช่ signal (flat-lot BWD 0.78) แต่ capped (8 ไม้+SL) DD คุมได้ = legit L3 · **cell อื่น (M30/AUDUSD/EURJPY) ตก holdout = selection-fit → REJECT** · EURUSD-only (ไม่ travel) · เหลือแค่ **MC** · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
+| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | full pipeline จบ 2026-07-08: holdout ✅ + **Monte Carlo ✅** (~62 backtest) | ★★★ | 🟢 **MARGINAL (robustness-validator Mode A) → DEMO-only candidate** | 3 window อิสระ BWD 1.38/holdout 1.34/FWD 2.17 · **MC: ruin 0% · PF-5th 1.34 · DD95th 4.6% · OOS degrade 9.9%** (แข็ง) แต่ WFA ไม่ได้ทำ → cap MARGINAL · edge = capped-recovery ไม่ใช่ signal · EURUSD-only · **พร้อม attach demo (magic 990103, set RSIMR_ATRf_9)** เป็น WATCH candidate คู่กับ 3 ตัวเดิม · MC `_mt5_auto/RSIMR_MC.json` · verdict `ea_projects\(Boss)_RSI_MR_GridLog\ROBUSTNESS_VERDICT.yaml` |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|

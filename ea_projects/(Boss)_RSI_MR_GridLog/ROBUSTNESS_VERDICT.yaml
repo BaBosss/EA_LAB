@@ -1,0 +1,57 @@
+validator_version: "2.0"
+analysis_timestamp_utc: "2026-07-08"
+validation_mode: "MODE_A_FULL_ROBUSTNESS"
+upstream_verdict: "PASS (holdout 2023-24 cleared: PF 1.34 on a window never used for selection)"
+
+audit_trail:
+  chain_id: "EA_RSI_MR_GRIDLOG_20260707_01"
+  parent_skill: "backtest-optimize-rigor (holdout gate)"
+
+data_source:
+  computed_by_script: true
+  script_output_files:
+    - "_mt5_auto/RSIMR_MC.json"
+    - "_mt5_auto/RSIMR_trades.csv (578 trades, full-span 2020-2026 EURUSD H1 ATR9)"
+
+monte_carlo:
+  pf_5th: 1.342          # bootstrap 5th — GREEN (>1.2)
+  dd_95th_pct: 4.65      # GREEN (< observed MaxDD 3.1 + 5)
+  prob_of_ruin_pct: 0.0  # GREEN (<2%)
+  pf_range_5_95: 0.779   # YELLOW (0.5-1.0)
+  bootstrap_used: true
+  score: 85              # GREEN-dominant (1 YELLOW)
+
+wfa:
+  status: "SKIPPED_NO_DATA"   # no rolling IS-optimize-then-OOS windows built
+  note: "3 independent fixed-config windows exist (BWD 1.38 / holdout 1.34 / FWD 2.17) = strong,
+         but not a formal anchored WFA with per-window re-optimization -> honest SKIP"
+  verdict_cap_applied: true
+
+oos:
+  status: "COMPUTED"
+  data_source: "date-split 0.7 of full-span + TRUE holdout 2023-24 (separate run)"
+  oos_pf: 1.541
+  pf_degradation_pct: 9.9     # GREEN (<15%)
+  score: 85
+
+score:
+  formula_used: "MC*0.60 + OOS*0.40 (WFA skipped)"
+  mode_a_robustness_score: 85
+  band: "capped by WFA-skip"
+
+verdict:
+  result: "MARGINAL"
+  reason: "Strong MC (ruin 0%, PF-5th 1.34) + strong OOS (holdout + split both hold, 9.9% degrade),
+           but WFA not formally run -> skill hard rule caps any-test-skipped at MARGINAL. Also honest:
+           the edge is CAPPED-RECOVERY not signal (flat-lot loses) — appropriate for MARGINAL/watch."
+  skipped_tests: ["WFA"]
+  forwardable: true
+
+deploy_guidance:
+  demo_only: true          # MARGINAL -> demo experiment, NOT live
+  rationale: "capped-recovery harvester, modest edge (PF 1.3-2.2 across 3 windows), EURUSD-only, ~100 trd/yr"
+  suggested: "join the MT4/MT5 demo experiment cohort as a WATCH candidate; magic 990103; EURUSD H1;
+              set = RSIMR_ATRf_9 (LOG5/ATR9/wide-SL); judge alongside the other demos at +3 months"
+
+handoff:
+  next_skill: "live-deployment-controller (marginal_flag=true) — demo attach only"
