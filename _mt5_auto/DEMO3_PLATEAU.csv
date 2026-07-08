@@ -1,0 +1,19 @@
+﻿"ea","symbol","param","value","window","pf","net","dd_pct","trades"
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",5,"BWD",1.84,7776.33,18.84,4123.0
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",5,"FWD",2.2,755.67,5.14,433.0
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",8,"BWD",1.89,8527.06,18.74,3640.0
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",8,"FWD",2.06,819.12,4.73,329.0
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",12,"BWD",1.85,8716.29,18.85,3035.0
+"UnNomGuaiV1.132","EURUSD","pairglobalprofit",12,"FWD",2.15,809.5,4.29,303.0
+"RSI from pips_EA","EURUSD","TP_pips",10,"BWD",2.38,2808.99,6.25,1942.0
+"RSI from pips_EA","EURUSD","TP_pips",10,"FWD",3.07,293.45,1.54,215.0
+"RSI from pips_EA","EURUSD","TP_pips",15,"BWD",2.32,3181.85,7.6,1591.0
+"RSI from pips_EA","EURUSD","TP_pips",15,"FWD",2.59,277.57,1.99,149.0
+"RSI from pips_EA","EURUSD","TP_pips",20,"BWD",2.5,3788.61,8.66,1355.0
+"RSI from pips_EA","EURUSD","TP_pips",20,"FWD",2.76,296.01,1.98,126.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",3,"BWD",2.65,6630.21,10.73,1338.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",3,"FWD",4.95,1009.32,0.87,205.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",5,"BWD",2.51,7292.86,8.64,1122.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",5,"FWD",3.42,1135.65,5.77,164.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",8,"BWD",2.42,8002.62,8.64,957.0
+"swb grid 4.1.0.3_h","AUDCAD","tp_in_money",8,"FWD",3.39,1178.44,5.82,133.0
