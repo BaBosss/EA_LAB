@@ -1,0 +1,50 @@
+validator_version: "2.0"
+analysis_timestamp_utc: "2026-07-08"
+ea: "EA_BREAKOUT_XAU @ XAUUSD H1, BUY-only, magic 991001"
+mechanism: "Donchian 40-bar breakout + 200-EMA daily trend filter + ATR-expansion gate; SL 1.5xATR /
+            TP 5.0xATR (RR 3.3), single position, fixed lot 0.01 = L1 (real SL, NO grid) — safest type"
+upstream_verdict: "PASS 3 independent windows (BWD 1.74 / holdout 1.89 / FWD 2.94, DD 0.7-2.2%);
+                    BOTH-direction also passes all 3 (1.64/1.46/2.83) = 6/6 window-direction combos >1.4"
+
+monte_carlo:
+  trade_count: 86
+  pf_5th: 1.529         # GREEN — highest of any EA in the project
+  dd_95th_pct: 1.88     # GREEN (tiny)
+  prob_of_ruin_pct: 0.0 # GREEN
+  pf_range_5_95: 2.191  # RED — wide, because only 86 trades (thin sample = high variance)
+  score: 78
+
+wfa:
+  status: "COMPUTED"
+  detail: "W1 IS bars40 -> OOS 0.74 (9 trades = noise, FAIL); W2 bars30 -> OOS 1.39 OK; W3 bars50 -> OOS 3.44 OK"
+  oos_profitable_pct: 66.7   # YELLOW (2/3; W1 fails on a 9-trade window)
+  efficiency_ratio: 0.66     # mixed
+  score: 45
+
+oos:
+  status: "COMPUTED"
+  oos_pf: 2.826
+  pf_degradation_pct: -39.6  # OOS beats IS
+  score: 85
+
+score:
+  formula_used: "MC*0.40 + WFA*0.40 + OOS*0.20"
+  mode_a_robustness_score: 67
+  band: "MARGINAL (thin sample caps it: WFA mixed + MC PF-range RED)"
+
+verdict:
+  result: "MARGINAL"
+  reason: "Best risk profile in the whole cohort — PF-5th 1.53, MaxDD ~2%, ruin 0%, passes 3 independent
+           windows BOTH directions (6/6 combos). BUT ~13 trades/yr (86 total) = thin: MC PF-range RED,
+           WFA W1 fails on a 9-trade window. The cross-window/direction CONSISTENCY is the compensating
+           strength. L1 single-position breakout (real SL, no grid) = safest mechanism found. Honest
+           tier = MARGINAL -> demo; the thin frequency is the thing the demo period will clarify."
+
+deploy_guidance:
+  demo_first: true
+  config: "XAUUSD H1, BUY-only default (bars40, SL1.5xATR, TP5xATR, EMA200 filter, lot 0.01), magic 991001"
+  note: "demo candidate #6. Safest mechanism (L1, real SL, no grid) + lowest DD. BOTH-direction is the
+         direction-robust alternative if a gold downtrend is feared (also passed all 3 windows)."
+
+handoff:
+  next_skill: "live-deployment-controller — demo-first"

@@ -9,7 +9,7 @@
 | platform | EA | ลง terminal ที่ |
 |---|---|---|
 | **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | portable ใหม่ `D:\Meta4demo` |
-| **MT5** | #4 RSI-MR · #5 Zeus | portable ใหม่ `D:\Meta5demo` |
+| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU | portable ใหม่ `D:\Meta5demo` |
 
 - ทั้งคู่: บัญชีใหม่ **$10,000** · **ThinkMarkets demo** (broker ที่ validate) · type **Hedge** (RSI-MR ต้องการ hedging)
 - ❌ ห้ามใช้ `D:\Meta4`/`D:\Meta4b`/`D:\Meta 5`/`D:\Meta 5b` (เลนเทส script ฆ่า terminal ทิ้งประจำ)
@@ -26,6 +26,7 @@
 | 3 | **swb grid 4.1.0.3_h** | MT4 | AUDCAD H1 | `swb_AUDCAD_demo.set` | 990 | ไม่มี |
 | 4 | **(Boss)_RSI_MR_GridLog_rev01** | MT5 | EURUSD H1 | `RSIMR_EURUSD_H1_demo.set` | 990103 | **มี (ATR)** |
 | 5 | **(Boss)_ZeusInspired_GridLog_rev01** | MT5 | **XAUUSD** H1 | `ZeusInspired_XAUUSD_H1_demo.set` | 990101 | **มี (ATR)** |
+| 6 | **EA_BREAKOUT_XAU** | MT5 | **XAUUSD** H1 | `EA_BREAKOUT_XAU_demo.set` | 991001 | **มี (ATR, RR 3.3)** |
 
 **ค่าที่ผ่านการพิสูจน์ (ใช้เทียบตอน judge):**
 
@@ -36,6 +37,7 @@
 | swb @ AUDCAD | 1.80 (M0) | 20% | plateau-verified | ~35 |
 | RSI-MR | 1.34-2.17 (3 window) | ~5% | **ROBUST (MC+WFA)** | ~100/yr |
 | Zeus @ XAU | 1.38-2.16 (3 window) | **~4%** | MARGINAL (MC ✓, WFA อ่อน) | ~130/yr |
+| BRK-XAU | 1.74-2.94 (3 window) | **~2%** ต่ำสุด | MARGINAL (MC PF-5th 1.53 สูงสุด, thin) | ~13/yr (ต่ำ) |
 
 ---
 
@@ -89,3 +91,4 @@ C6F31A2A3DF8F4A9D8D375D86801B9A6  RSI from pips_EA.ex4
 - **swb** — BB+Stoch+RSI grid flat-lot · AUDCAD-only
 - **RSI-MR** (source เรา) — RSI MR + ATR grid + LOG lot + real SL · edge=recovery(capped) · EURUSD-only · `ea_projects\(Boss)_RSI_MR_GridLog\`
 - **Zeus** (source เรา) — pending-stop **breakout** + ATR grid + LOG lot + real SL · edge=momentum (DD จิ๋วสุดในกอง) · **GOLD-only** · `ea_projects\(Boss)_ZeusInspired_GridLog\`
+- **BRK-XAU** — Donchian 40-bar **breakout** + EMA200 filter, single-position real SL (RR 3.3), **ไม่มี grid = ปลอดภัยสุด** · edge=momentum, DD ~2% ต่ำสุด, ความถี่ต่ำ ~13/yr (thin) · **GOLD-only** · `ea_projects\EA_BREAKOUT_XAU\` · kill: DD>10% หรือ >2 ไม้เปิดพร้อมกัน (ควรเป็น single)
