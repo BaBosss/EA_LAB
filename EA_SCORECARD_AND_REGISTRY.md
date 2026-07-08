@@ -152,7 +152,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 ### MT5 — FRAMEWORK / IN-PROGRESS
 | EA | สถานะ | Conf | Verdict | Reason |
 |---|---|---|---|---|
-| **(Boss)_RSI_MR_GridLog_rev01** (EURUSD H1, magic 990103) | validate จากศูนย์ 2026-07-08: 2025-26 PF 1.43 · **BWD 2020-22 PF 0.78-0.87 (ขาดทุน)** DD 12-32% | ★★★ | ⚠️ **REGIME-DEPENDENT — ไม่ใช่ edge ยั่งยืนตามที่ออกแบบ** (mechanically sound: dual-side, DD คุมได้, ไม่ silent-fail) | safety-redesign (ATR spacing + basket-$ exit + real SL + LOG lot) เบี่ยงจากสูตรต้นฉบับ (fixed 30pip + per-pos ~15pip TP + linear lot + no-SL) จน edge หายในปีเทรนด์ · ต้นฉบับได้ PF 2.3 · **รอ user เลือก: (A) shelve · (B) rev02 = สูตรต้นฉบับ + เติม SL อย่างเดียว · (C) full opt (EV ต่ำ)** · หยุด hand-tune (กัน overfit) |
+| **(Boss)_RSI_MR_GridLog_rev01** (magic 990103) | validate จากศูนย์ 2026-07-08 ครบ 22 backtest (lot-law×symbol×2regime) — เพิ่ม lot modes ครบ 4 แบบตาม user | ★★★ | ⚠️ **REGIME-DEPENDENT — ไม่มี edge ยั่งยืนข้าม regime บนคู่/โหมดใดที่เทส** (แต่กำไรแรง *in-regime* PF 2-3) | deep grid (LOG5/LIN+0.02) ชนะปีเทรนด์ 2.6-3.0 DD~18 แต่แพ้ปีล่าสุด 0.88 DD37 = **ความสัมพันธ์ผกผัน** · ข้ามคู่ก็ผกผัน (EUR/AUD ชนะเทรนด์ · GBP/JPY ชนะล่าสุด) · full-opt จะ overfit IS แน่ · sub-finding: multi-symbol basket อาจ diversify regime ได้แต่ DD แต่ละขา 34-47% สูงไป · **PARKED-research ไม่ deploy** · ผลเต็ม `ea_projects\(Boss)_RSI_MR_GridLog\VALIDATION_RESULTS.md` |
 
 | EA | Sym/TF | Result | Conf | Verdict | Notes |
 |---|---|---|---|---|---|
