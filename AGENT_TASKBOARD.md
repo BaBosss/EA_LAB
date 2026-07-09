@@ -2435,7 +2435,18 @@ plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — patte
 
 ---
 
-## ORDER-067 — Trendline rev02 + ADX-regime gate: เส้นทาง promote #8 ที่ COT ทำไม่ได้ — `OPEN (build คิวแรก session หน้า)` · **ทำได้: Claude**
+## ORDER-067 — Trendline rev02 + ADX-regime gate: เส้นทาง promote #8 ที่ COT ทำไม่ได้ — `BUILT+CLOSED (Claude, 2026-07-09 ดึก — ❌ gate จริงแย่กว่า offline: artifact class ใหม่เข้าตำรา)`
+
+**VERDICT (rev02 build + A/B จริง, binary เดียวกัน):** UNGATED 1.26/1.40/1.23 MC 0.973 · GATED(ADX≥20 H4
+ณ ตอนเข้า) 1.25/1.60/**0.99** MC **0.861 = แย่ลง** — ตรงข้าม offline conditioning (1.208) สิ้นเชิง
+**Root cause = artifact class ใหม่: "close-time regime conditioning = survivorship"** — trendline
+breakout ที่กำไรสุดเข้า*ก่อน* ADX ยืนยัน (ADX lag) พอไม้วิ่งจนปิด ADX ขึ้นเกินเกณฑ์เอง → offline ที่ใช้
+ADX ณ เวลาปิดเลยนับไม้ชนะเข้า bucket TREND โดยอัตโนมัติ ไม่ใช่เพราะ gate ตอนเข้าใช้ได้จริง · gate จริง
+ฆ่าไม้ early-entry ที่เป็นหัวใจของ edge (กลไกเดียวกับ STF×Donchian ที่ล้มก่อนหน้า: lagging signal ×
+event ที่มาก่อน) · **#8 คงสถานะ EXPERIMENTAL + kill เข้มตามเดิม — ไม่มีทาง promote ผ่าน regime gate** ·
+บทเรียน bank เข้า backtest-optimize-rigor แล้ว: conditioning ต้องใช้ระดับตัวแปร ณ เวลา*เข้า*ไม้เท่านั้น
+และของ lagging indicator ต้อง confirm ด้วย in-EA run เสมอ · หมายเหตุ: USDJPY/EURJPY (ORDER-062) ไม่โดน
+artifact นี้ — สองตัวนั้นคือ in-EA run จริงตั้งแต่ต้น ✅
 
 **หลักฐาน offline conditioning (Claude, 2026-07-09 ดึก — ผลสวยสุดของการ conditioning ที่เคยทำ):**
 TLR_trades 351 ไม้ × H4 ADX (dump ผ่าน `tools\ADXDumper\ADXDumper.mq5` ตัวใหม่):

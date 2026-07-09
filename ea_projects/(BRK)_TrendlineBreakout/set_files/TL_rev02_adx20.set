@@ -1,0 +1,6 @@
+﻿_01_RequireConverge=true
+_01_BufferAtrMult=0.10
+_02_SlAtrMult=1.5
+_02_TpAtrMult=8.0
+_04_UseAdxGate=true
+_04_AdxMin=20.0
