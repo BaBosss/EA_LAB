@@ -2497,12 +2497,21 @@ BWD 2020-22 · main tester (เลน 1)
 
 ---
 
-## ORDER-065 — build: (TRD)_SuperTrendFlip @ XAUUSD H1 — `OPEN (คิวถัดไป — จาก ORDER-064 อันดับ 1)` · **ทำได้: Claude (build) → funnel มาตรฐาน**
+## ORDER-065 — build: (TRD)_SuperTrendFlip @ XAUUSD H1 — `BUILT+FUNNELED (Claude, 2026-07-09 — 🅿️ RESERVE: ผ่าน 3 windows แต่ MC PF-5th 0.865 <1 = naked-signal floor เดิม)`
 
 กลไก: trailing extreme ∓ ATR(p)×mult พลิกทิศ (SuperTrend-style) · เข้าเมื่อ flip ตามทิศ + EMA200 filter ·
-exit = เส้น SuperTrend วิ่งตาม (ไม่มี fixed TP) + hard SL ATR · L1 single-position โครง SqueezeBRK · magic 991006
-· levers ต้อง sweep: ATR period {10,14,22} × mult {2,3,4} × EMA on/off + RR โหมด fixed-TP เทียบ trail
-· funnel: 3 windows + MC + corr เทียบ Zeus/BRK/SqueezeBRK (ระวังซ้ำ family — ถ้า corr >0.6 = ไม่เพิ่ม)
+exit = เส้น SuperTrend วิ่งตาม (ไม่มี fixed TP) + hard SL = เส้น ST เสมอ · L1 โครง SqueezeBRK · magic 991006
+· source: `ea_projects\(TRD)_SuperTrendFlip\` compile 0/0 (ST คำนวณ recompute-from-lookback กัน recompile-reset)
+
+**ผล funnel (2026-07-09 ค่ำ):**
+- default smoke: มี life (n 264/183/119) · coarse sweep ATR{10,16,22}×mult{2,3,4} สอง window เลือก:
+  คอลัมน์ mult=4 เท่านั้นที่บวกทั้งคู่ · **atr22/m4 = config เดียวที่บวกครบ 3 windows: 1.02 / 1.11 / 1.32**
+  (FWD confirm ไม่ได้ใช้เลือก) · RR-exit (fixed TP 4/6/8) ไม่กู้ (TP6: 1.07/1.25 — ดีขึ้นจิ๋ว)
+- **MC 5000 บน 349 ไม้รวม: PF-5th 0.865 / med 1.185 → NOT_ROBUST** — พื้นเดียวกับ plain-squeeze 0.837 /
+  plain-trendline 0.867 = ยืนยัน meta-pattern "สัญญาณเปลือยบนทองตันที่ ~0.85"
+- **สถานะ: RESERVE (research)** — เส้นทางกู้ที่มีบทพิสูจน์ (SqueezeBRK 0.837→0.966→1.25): เติม confluence
+  (Donchian-60 break + squeeze state) + re-opt tight-SL/wide-TP → คิว session หน้า ถ้ากู้ได้ค่อย corr-check
+  เทียบ Zeus/BRK/SqueezeBRK (family เดียวกัน — corr สูง = ไม่เพิ่มค่าแม้ผ่าน)
 
 ## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `OPEN (หลัง 065)` · **ทำได้: Claude (design กลั่นจากสเปค 010) → funnel มาตรฐาน**
 

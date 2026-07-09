@@ -1,0 +1,17 @@
+﻿; SuperTrendFlip coarse sweep 1: ATR period x multiplier (exit mode 0 = line-trail)
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=10||10||0||10||N
+_01_Mult=4.0||4.0||0||4.0||N
+_01_Lookback=400||400||0||400||N
+_02_ExitMode=0||0||0||0||N
+_02_TpAtrMult=6.0||6.0||0||6.0||N
+_03_UseEma=true||true||0||true||N
+_03_EmaPeriod=200||200||0||200||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N
