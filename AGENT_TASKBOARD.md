@@ -2418,12 +2418,23 @@ plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — patte
 
 ---
 
-## ORDER-063 — smoke เทส EA จาก Downloads 3 ตัว — `IN-PROGRESS (ea-screener agent, 2026-07-09)`
+## ORDER-063 — smoke เทส EA จาก Downloads 3 ตัว — `REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ ตายครบ 3: GOD4+HedgingGrid untestable-locked · Degold REJECT ที่ martingale-recheck)`
 
 `wait for test\downloads_20260709\`: **Degold_hunter.mq5** (มี source → compile+อ่านกลไก) ·
 **V2_15_SEMI_ORI_FINAL_GOD4.ex5** (locked) · **Hedging Grid Pending Auto Lote v.1.ex5/.ex4** (locked, ชื่อบอก
 hedge-grid = เข้าเกณฑ์ martingale-recheck ก่อน reject) · smoke W1 2024-2026 → รอด (PF>1.1, n≥30) ได้ W2
 BWD 2020-22 · main tester (เลน 1)
+
+**ผล smoke (ea-screener agent, Claude review):**
+- ❌ **V2_15_SEMI_ORI_FINAL_GOD4.ex5 = REJECT (untestable)** — locked, init fail ทันทีทั้ง XAU/EURUSD
+- ❌ **Hedging Grid Pending Auto Lote v.1 = REJECT (untestable)** — locked, hang headless (น่าจะ dialog license)
+  ทั้งสอง symbol · ไม่มี source = no verdict possible ตามนิยาม (แบบเดียว North East Way ORDER-037)
+- ❌ **Degold_hunter = REJECT ถาวรที่ martingale-recheck** — ผ่าน smoke W1 สวย (XAU 2024-26: PF 1.79 /
+  n 9,896 / DD 13.99%) แต่ recheck 4 ข้อ**ตกครบทุกข้อ**: (1) SL ต่อไม้ = ไม่มี (Stoploss=0) (2) จำกัดไม้ =
+  ไม่ (margin-cap อย่างเดียว) (3) **flat-lot test (Multiply=1.0): PF 0.83 / net −4,706 / DD 81.94%** =
+  entry ไม่มี edge — PF 1.79 ทั้งก้อนคือ escalation เก็บกำไรใน window เข้าทาง (4) ดื้อ (re-grid สองทิศตลอด)
+  = ตระกูล uncapped-ruin ตามนิยาม · BWD retry ของ Claude ได้ report (ยืนยัน agent วินิจฉัย history ผิด)
+  แต่ 0 ไม้ = ยิ่ง fragile · reports: `DG_XAU_W1.htm` / `DG_XAU_W1_FLAT.htm` / `DG_XAU_BWD_RETRY.htm`
 
 ---
 
