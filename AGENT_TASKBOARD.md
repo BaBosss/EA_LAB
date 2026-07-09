@@ -2011,7 +2011,9 @@ bundle = `_mt4_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-
 > ☐ 2. attach `tools\DealsExporter\DealsExporter.ex5` 1 chart บน terminal demo MT5
 > ☐ 3. **บัญชี VPS → ไม่ต้องแตะ VPS เลย:** เปิด MT5 instance สำรองบนเครื่องนี้ (D:\Meta 5b) → login บัญชี VPS ด้วย **investor password** (read-only) → แปะ DealsExporter 1 chart · ทำซ้ำต่อบัญชีที่อยาก track (รวม Boss-TrendSwing 159475669 ถ้าจะให้ track)
 > ☐ 4. บอก Claude: วันที่ attach + รายชื่อบัญชี → Claude ลงทะเบียน DEMO_DEPLOYMENT_PLAN + ตั้ง judge date + scheduled task (collector + dashboard อัตโนมัติทุกเช้า)
-> · หมายเหตุ: บัญชี MT4 ใช้ DealsExporter ไม่ได้ (.mq5) — ใช้ statement export ~2 สัปดาห์/ครั้งไปก่อน จนกว่าจะมี MT4 exporter
+> · ~~หมายเหตุ: บัญชี MT4 ใช้ DealsExporter ไม่ได้~~ **อัปเดตบ่าย: MT4 exporter มีแล้ว (ORDER-060)** —
+> ☐ 5. attach `tools\DealsExporter\OrdersExporterMT4.ex4` 1 chart บน terminal demo MT4 ด้วย
+> (**สำคัญ: คลิกขวา tab Account History → เลือก "All History" ก่อน** ไม่งั้น export ไม่ครบ)
 2. **[Claude ทันทีที่รู้วัน attach]** บันทึก DEMO_DEPLOYMENT_PLAN + judge +3 เดือน + ตั้งรอบ /ea-monitor
 3. **[Codex] ORDER-057 Stage A** — `Regime.mqh` (ADX trend/sideway + ATR storm, default OFF) → Claude review + `tpl_regression.ps1` ต้อง CLEAN → ค่อยปล่อย Stage B (ZCode, A/B both-windows)
 4. **[qwen/Sonnet] ORDER-058** — live dashboard HTML per-magic (ต่อยอด DealsExporter · มีข้อมูลจริงหลัง user ทำข้อ 1)
@@ -2350,6 +2352,22 @@ ea-live-monitor ที่เคยรัน (ต่างได้ ≤ rounding)
 - **สรุป:** REJECT แบบ PARAMETRIC-มีหลักฐานครบ (ไม่ใช่ ban ข้อมูล external ทั้งชั้น — factor นี้ตัวเดียวที่ไม่รอด) ·
   ของที่เหลือใช้: `cot_pull.ps1` + แสดง COT pct เป็น**ไฟ context บน LIVE_DASHBOARD เท่านั้น ห้ามเป็นเงื่อนไข on/off** ·
   meta-lesson: exploratory เดียวที่ดูสวย = ยังไม่ใช่อะไรเลย — year-split + MC ฆ่าได้ในชั่วโมงเดียว (process ทำงาน)
+
+---
+
+## ORDER-060 — MT4 OrdersExporter + ท่อ monitoring MT4 ครบวงจร — `DONE+REVIEWED (Claude ทำเอง+ตรวจเอง, 2026-07-09)` _(ปิดช่องว่างจาก ORDER-042 ที่ครอบแค่ MT5)_
+
+**ของที่ได้:**
+- `tools\DealsExporter\OrdersExporterMT4.mq4` + `.ex4` (compile 0/0) — twin ของ DealsExporter.mq5:
+  read-only ไม่มี trade function, full-snapshot overwrite, export ตอน attach + ทุกวันชั่วโมง `InpExportHour`
+  → `Common\Files\EA_LAB_mt4_orders_<login>.csv` (order-based: 1 แถว = 1 ไม้ปิดแล้ว)
+- `collect_live_deals.ps1` — เก็บ pattern ใหม่ด้วย
+- `live_dashboard.ps1` — รองรับ **หลายบัญชี + สองรูปแบบพร้อมกัน** (MT5 deals + MT4 orders, เลือกไฟล์ใหม่สุด
+  ต่อบัญชี, ข้าม balance/pending rows, ข้ามแถว type เสีย)
+**Verify:** synthetic MT4 CSV (มี balance row + แถวคอลัมน์ตก) → ยอดตรง independent sum เป๊ะ (12.85),
+balance ถูกข้าม, แถวเสียถูกข้าม (เจอ+อุด bug TryParse-fail-เขียน-0 ระหว่างทดสอบ) · ลบไฟล์ test แล้ว
+**การใช้:** user attach `.ex4` บน MT4 demo 1 chart + **ต้องตั้ง Account History tab = "All History"** (MT4
+export ได้เท่าที่ tab โชว์ — journal ปริ๊นท์จำนวนแถวให้เช็คได้)
 
 **ทำไม:** สมมติฐาน (ตั้งก่อนดูข้อมูล — จากคอมเมนต์ CME/Spotgamma ในโพส FB): EA momentum/breakout
 บนทองควรทำงานดีเมื่อ speculator net-long สูง (= regime เทรนด์). ทดสอบครั้งเดียว ไม่ได้ sweep หา factor

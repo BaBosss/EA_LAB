@@ -31,31 +31,36 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ---------------------------------------------------------------------------
-# 1. locate newest CSV
+# 1. locate newest CSV per account (MT5 deals + MT4 orders formats)
+#    EA_LAB_deals_<login>[_<yyyyMMdd>].csv       (DealsExporter.mq5, deal rows)
+#    EA_LAB_mt4_orders_<login>[_<yyyyMMdd>].csv  (OrdersExporterMT4.mq4, closed orders)
 # ---------------------------------------------------------------------------
-$csvFiles = Get-ChildItem (Join-Path $LiveDealsDir "EA_LAB_deals_*.csv") -ErrorAction SilentlyContinue
+$csvFiles = @()
+$csvFiles += Get-ChildItem (Join-Path $LiveDealsDir "EA_LAB_deals_*.csv") -ErrorAction SilentlyContinue
+$csvFiles += Get-ChildItem (Join-Path $LiveDealsDir "EA_LAB_mt4_orders_*.csv") -ErrorAction SilentlyContinue
 if (-not $csvFiles) {
-  Write-Host "no EA_LAB_deals_*.csv in $LiveDealsDir"
+  Write-Host "no EA_LAB_deals_*/EA_LAB_mt4_orders_*.csv in $LiveDealsDir"
   exit 1
 }
-$newest = $csvFiles | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-Write-Host "using $($newest.FullName)"
-
-# ---------------------------------------------------------------------------
-# 2. parse login + date stamp from filename (EA_LAB_deals_<login>_<yyyyMMdd>.csv)
-# ---------------------------------------------------------------------------
-$acctLogin = "unknown"
-$fileDateStamp = "unknown"
-if ($newest.BaseName -match '^EA_LAB_deals_(\d+)_(\d{8})$') {
-  $acctLogin = $Matches[1]
-  $fileDateStamp = $Matches[2]
-} elseif ($newest.BaseName -match '^EA_LAB_deals_(\d+)$') {
-  $acctLogin = $Matches[1]
+# group by (format, login) -> newest snapshot of each account
+$selected = @()
+$acctLabels = @()
+foreach ($grp in ($csvFiles | Group-Object {
+    if ($_.BaseName -match '^(EA_LAB_deals|EA_LAB_mt4_orders)_(\d+)') { "$($Matches[1])|$($Matches[2])" } else { $_.BaseName } })) {
+  $newestOfAcct = $grp.Group | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  $selected += $newestOfAcct
+  Write-Host "using $($newestOfAcct.FullName)"
 }
-$fileDateDisplay = $fileDateStamp
-if ($fileDateStamp -match '^(\d{4})(\d{2})(\d{2})$') {
-  $fileDateDisplay = "$($Matches[1])-$($Matches[2])-$($Matches[3])"
+foreach ($f in $selected) {
+  $login = "?"; $stamp = ""
+  if ($f.BaseName -match '_(\d+)_(\d{8})$') { $login = $Matches[1]; $stamp = $Matches[2] }
+  elseif ($f.BaseName -match '_(\d+)$') { $login = $Matches[1] }
+  $plat = "MT5"; if ($f.BaseName -like 'EA_LAB_mt4_orders_*') { $plat = "MT4" }
+  if ($stamp -match '^(\d{4})(\d{2})(\d{2})$') { $stamp = "$($Matches[1])-$($Matches[2])-$($Matches[3])" }
+  $acctLabels += "$plat $login ($stamp)"
 }
+$acctLogin = ($acctLabels -join ' + ')
+$fileDateDisplay = ""   # folded into acctLabels per file
 
 # ---------------------------------------------------------------------------
 # 3. cohort static map: magic -> EA meta + declared kill-switch DD%
@@ -79,10 +84,12 @@ $cohort = [ordered]@{
 }
 
 # ---------------------------------------------------------------------------
-# 4. load deals, group by magic
+# 4. load rows from every selected file, normalize both formats, group by magic
 # ---------------------------------------------------------------------------
-$rawDeals = @()
-$rawDeals = @(Import-Csv -Path $newest.FullName)
+function Parse-TimeSafe([string]$s) {
+  try { return [datetime]::ParseExact($s, "yyyy.MM.dd HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture) }
+  catch { try { return [datetime]$s } catch { return (Get-Date "1970-01-01") } }
+}
 
 $grandTotalNet = 0.0
 $grandTotalRows = 0
@@ -90,42 +97,55 @@ $grandTotalRows = 0
 # magic (string) -> array of parsed deal objects
 $byMagic = @{}
 
-foreach ($d in $rawDeals) {
-  $magic = "$($d.magic)"
-  $profit = 0.0; $swap = 0.0; $commission = 0.0
-  [void][double]::TryParse($d.profit, [ref]$profit)
-  [void][double]::TryParse($d.swap, [ref]$swap)
-  [void][double]::TryParse($d.commission, [ref]$commission)
-  $volume = 0.0
-  [void][double]::TryParse($d.volume, [ref]$volume)
-  $entryVal = -1
-  [void][int]::TryParse($d.entry, [ref]$entryVal)
+foreach ($file in $selected) {
+  $isMT4 = $file.BaseName -like 'EA_LAB_mt4_orders_*'
+  foreach ($d in @(Import-Csv -Path $file.FullName)) {
+    $magic = "$($d.magic)"
+    $profit = 0.0; $swap = 0.0; $commission = 0.0; $volume = 0.0
+    [void][double]::TryParse($d.profit, [ref]$profit)
+    [void][double]::TryParse($d.swap, [ref]$swap)
+    [void][double]::TryParse($d.commission, [ref]$commission)
 
-  $dt = $null
-  try {
-    $dt = [datetime]::ParseExact($d.time, "yyyy.MM.dd HH:mm:ss", [System.Globalization.CultureInfo]::InvariantCulture)
-  } catch {
-    try { $dt = [datetime]$d.time } catch { $dt = Get-Date "1970-01-01" }
+    if ($isMT4) {
+      # MT4 closed-order row: one row = one whole closed trade. type>=2 = pending/balance -> skip.
+      # NOTE: use TryParse's return value - on failure it writes 0 to the ref (would fake a "buy").
+      $typeVal = -1
+      if (-not [int]::TryParse($d.type, [ref]$typeVal)) { continue }
+      if ($typeVal -lt 0 -or $typeVal -gt 1) { continue }
+      [void][double]::TryParse($d.lots, [ref]$volume)
+      $dt = Parse-TimeSafe $d.close_time
+      $entryVal = 1   # a closed order counts as a close (same as DEAL_ENTRY OUT)
+      $ticket = $d.ticket
+      $symbol = $d.symbol
+    } else {
+      # MT5 deal row (existing format)
+      [void][double]::TryParse($d.volume, [ref]$volume)
+      $entryVal = -1
+      [void][int]::TryParse($d.entry, [ref]$entryVal)
+      $dt = Parse-TimeSafe $d.time
+      $ticket = $d.ticket
+      $symbol = $d.symbol
+    }
+
+    $rowNet = $profit + $swap + $commission
+
+    $obj = [pscustomobject]@{
+      Ticket  = $ticket
+      Time    = $dt
+      Symbol  = $symbol
+      Magic   = $magic
+      Entry   = $entryVal
+      Volume  = $volume
+      RowNet  = $rowNet
+      Profit  = $profit
+    }
+
+    if (-not $byMagic.ContainsKey($magic)) { $byMagic[$magic] = New-Object System.Collections.Generic.List[object] }
+    $byMagic[$magic].Add($obj)
+
+    $grandTotalNet += $rowNet
+    $grandTotalRows++
   }
-
-  $rowNet = $profit + $swap + $commission
-
-  $obj = [pscustomobject]@{
-    Ticket  = $d.ticket
-    Time    = $dt
-    Symbol  = $d.symbol
-    Magic   = $magic
-    Entry   = $entryVal
-    Volume  = $volume
-    RowNet  = $rowNet
-    Profit  = $profit
-  }
-
-  if (-not $byMagic.ContainsKey($magic)) { $byMagic[$magic] = New-Object System.Collections.Generic.List[object] }
-  $byMagic[$magic].Add($obj)
-
-  $grandTotalNet += $rowNet
-  $grandTotalRows++
 }
 
 # ---------------------------------------------------------------------------
@@ -325,7 +345,7 @@ foreach ($r in $rowsSorted) {
 
 $grandTotalDisplay = Fmt-Money $grandTotalNet
 $generatedAt = $now.ToString("yyyy-MM-dd HH:mm:ss")
-$srcCsvName = HtmlEnc $newest.Name
+$srcCsvName = HtmlEnc (($selected | ForEach-Object { $_.Name }) -join ', ')
 $baseEquityStr = "{0:N0}" -f $BaseEquity
 
 $html = @"
@@ -397,7 +417,7 @@ $html = @"
 <h1>EA_LAB Live Dashboard</h1>
 <div class="meta">
   Generated: $generatedAt &middot; Source CSV: <code>$srcCsvName</code> &middot;
-  Account login: <code>$acctLogin</code> &middot; Data date (from filename): $fileDateDisplay
+  Accounts: <code>$acctLogin</code>
 </div>
 
 <div class="card legend">

@@ -15,8 +15,10 @@ param(
 )
 $ErrorActionPreference = "Stop"
 if (-not (Test-Path $DestDir)) { New-Item -ItemType Directory -Force $DestDir | Out-Null }
-$found = Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_deals_*.csv') -ErrorAction SilentlyContinue
-if (-not $found) { Write-Host "no EA_LAB_deals_*.csv in $CommonFiles (exporter not attached yet?)"; exit 1 }
+$found = @()
+$found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_deals_*.csv') -ErrorAction SilentlyContinue
+$found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_mt4_orders_*.csv') -ErrorAction SilentlyContinue
+if (-not $found) { Write-Host "no EA_LAB_deals_*/EA_LAB_mt4_orders_*.csv in $CommonFiles (exporter not attached yet?)"; exit 1 }
 foreach ($f in $found) {
   $stamp = Get-Date -Format 'yyyyMMdd'
   $dest = Join-Path $DestDir ($f.BaseName + "_$stamp.csv")
