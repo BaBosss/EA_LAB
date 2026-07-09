@@ -2391,7 +2391,37 @@ export ได้เท่าที่ tab โชว์ — journal ปริ๊�
   (TP กว้าง = ตาย) · **ทอง H1: โมเมนตัมถูกกินหมดใน pole — continuation-after-pause ไม่ใช่ edge ของสนามนี้**
 - สรุป hunt space: flag/pennant = ลองแล้ว ❌ → กลไกใหม่ที่เหลือใน list เดิม = order-flow (ไม่มีข้อมูล) เท่านั้น ·
   ทางที่ EV เหลือจริง: **regime-axis (_50_) re-funnel ของ Boss_14 family** (lever ใหม่บน infra เดิม — Stage B
-  พิสูจน์แล้วว่า lever มีชีวิตบน XAU) — เสนอเป็นแผนวันถัดไป รอ user เคาะ
+  พิสูจน์แล้วว่า lever มีชีวิตบน XAU) — user เคาะแล้ว 2026-07-09 บ่าย → ORDER-062
+
+---
+
+## ORDER-062 — regime-axis re-funnel ทั้ง Boss_14 family — `IN-PROGRESS (Claude, 2026-07-09 — user เคาะ "ทำข้อ 2 เลย")`
+
+8 symbols (GBPAUD_p26 · CADJPY/EURJPY/EURUSD/USDJPY/AUDCAD DEMO · NZDUSD/GBPJPY ISpick) ×
+{base, m1t20, m1t25} × {FWD 2023-26, BWD 2020-22} = 48 runs บนเลน 2 → `_mt5_auto\REGIME_FAMILY.csv` ·
+runner = `_mt5_auto\ab_sets\regime_sets\run_regime_family.ps1` · mode2 ตัดทิ้ง (Stage B: แพ้ mode1 ทุก cell)
+**เกณฑ์อ่านผล (ประกาศก่อนเห็นผล):** สนใจตัวที่ base อ่อน window นึงแล้ว m1 กู้โดยไม่ทำร้ายอีก window แบบ
+plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — pattern เดียวกับ XAU Stage B · ห้าม cherry-pick cell เดี่ยว
+
+---
+
+## ORDER-063 — smoke เทส EA จาก Downloads 3 ตัว — `IN-PROGRESS (ea-screener agent, 2026-07-09)`
+
+`wait for test\downloads_20260709\`: **Degold_hunter.mq5** (มี source → compile+อ่านกลไก) ·
+**V2_15_SEMI_ORI_FINAL_GOD4.ex5** (locked) · **Hedging Grid Pending Auto Lote v.1.ex5/.ex4** (locked, ชื่อบอก
+hedge-grid = เข้าเกณฑ์ martingale-recheck ก่อน reject) · smoke W1 2024-2026 → รอด (PF>1.1, n≥30) ได้ W2
+BWD 2020-22 · main tester (เลน 1)
+
+---
+
+## ORDER-064 — ขุดไอเดียจาก Open WebUI export 93MB (คุยกับ OpenAI ของบริษัท) — `IN-PROGRESS (Claude + 4 Sonnet agents, 2026-07-09)`
+
+- **Stage 1 ✅:** `scripts\chatgpt_export_inventory.py` (รองรับทั้ง OpenAI export และ Open WebUI format) →
+  45 บทสนทนา, จัดอันดับตาม MQL-keyword density → `_triage\chatgpt_inventory.csv` + top-12 แตกเป็น .txt ใน
+  `_triage\chatgpt_convs\` (⚠️ ข้อมูลบริษัท — .txt/.csv **ไม่เข้า git**, เก็บ local เท่านั้น)
+- **Stage 2 (กำลังรัน):** 4 Sonnet agents skim 12 ไฟล์ → catalog กลไก/โค้ด/ความใหม่เทียบ cohort
+- **Stage 3 (Claude):** judge catalog → เลือก build candidates (เกณฑ์: กลไกใหม่จริง + กติกาชัด — VWAP-based
+  น่าสนใจสุดเพราะ cohort ยังไม่มี) · ที่เหลืออีก 33 บทสนทนา = อ่านเฉพาะถ้า top-12 ให้ของดี
 
 **กลไก:** pole (impulse ≥ PoleAtrMult×ATR ใน PoleBars แท่ง) → flag (พักตัวแคบ ≤ FlagRangeAtrMult×ATR,
 retrace ≤ MaxRetrace ของ pole) → break ขอบ flag ตามทิศ pole · L1 single-position จริง SL/TP ATR-based,
