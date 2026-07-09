@@ -1,0 +1,22 @@
+; FlagPennant coarse sweep 1 - frequency levers (pole strength / flag width / flag length)
+; 3x2x2 = 12 passes. All other inputs locked ||N (ORDER-008B lesson: lock bools or rows explode)
+_00_OptimizeMode=true||false||0||true||N
+_01_PoleBars=5||5||0||5||N
+_01_PoleAtrMult=1.5||1.5||0.5||2.5||Y
+_02_FlagBars=4||4||2||6||Y
+_02_FlagRangeAtrMult=2.0||2.0||0.5||2.5||Y
+_02_MaxRetrace=0.5||0.5||0||0.5||N
+_02_BufAtrMult=0.10||0.10||0||0.10||N
+_03_AtrPeriod=14||14||0||14||N
+_03_SlAtrMult=1.5||1.5||0||1.5||N
+_03_TpAtrMult=4.0||4.0||0||4.0||N
+_04_UseEma=true||true||0||true||N
+_04_EmaPeriod=200||200||0||200||N
+_05_BuyBreaks=true||true||0||true||N
+_05_SellBreaks=true||true||0||true||N
+_05_LotSize=0.01||0.01||0||0.01||N
+_06_DailyLossPct=5.0||5.0||0||5.0||N
+_06_EmergencyDdPct=25.0||25.0||0||25.0||N
+_07_Magic=991005||991005||0||991005||N
+_07_Deviation=20||20||0||20||N
+_07_AllowLive=false||false||0||false||N

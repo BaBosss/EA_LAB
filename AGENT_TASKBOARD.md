@@ -2099,7 +2099,15 @@ optimizer บนกล่องดำ + มี recovery ladder (Lots_plus ×6) �
 
 ---
 
-## ORDER-043 — US30 GridLog: IS-optimize probe (optional, EV ต่ำ) — `OPEN (priority ต่ำ — ทำวันที่ ZCode ว่างจริงๆ)` · **ทำได้: ZCode · oc-btest** · 👉 **แนะ: ZCode slot วันว่าง** (role: batch, เลน 2) _(renumbered 042→043: ชนกับ DealsExporter ของ session คู่ขนาน)_
+## ORDER-043 — US30 GridLog: IS-optimize probe (optional, EV ต่ำ) — `REVIEWED/CLOSED (Claude รันเอง, 2026-07-09 — ❌ US30 = DEAD-optimized ปิดทะเบียนถาวรแบบ USDCHF)` _(renumbered 042→043: ชนกับ DealsExporter ของ session คู่ขนาน)_
+
+**ผล + verdict (Claude, 2026-07-09):** IS optimize 72 rows (เลน 2) → 13 pass ผ่านเกณฑ์ PF≥1.2&n≥60,
+BUY ล้วน, ดูเป็น plateau (Dist2.2×TP0.5 ยืน 3 Step: 1.62/1.53/1.49) → plateau-center Pass 7 (2.2/1/2.2/0.5,
+IS PF 1.53/218) → **fresh-start OOS 2025.07-2026.07 = PF 1.03 (flat) · BWD 2020-22 = PF 0.86 (ลบ)** —
+IS-plateau คือ selection-fit ของช่วง US30 ไต่ขึ้น 2023-25 ตรงกับ signature เดิมใน MASTER_BACKLOG
+("US30 IS 3.31/OOS 0.13 = pure regime artifact") · probe ครบตามกฎ no-DEAD-before-optimize: sweep แล้ว
+เห็น surface แล้ว ทดทั้งสอง regime แล้ว → **DEAD-optimized ถาวร** · set/XML: `Boss14_GridLog_US30_opt1.set`,
+`BOSS14_OPT_US30_IS.xml`, `US30_P7_OOS/BWD.htm`
 
 **ทำไม:** recon 4 variants (Claude 2026-07-06) ทั้งหมด PF 0.78-0.96 — ไม่มี life แบบทอง แต่กฎ no-DEAD-
 before-optimize ให้ 1 probe ก่อนปิดทะเบียน. **อย่าลัดคิวงานอื่น — นี่ optional**
@@ -2368,6 +2376,20 @@ ea-live-monitor ที่เคยรัน (ต่างได้ ≤ rounding)
 balance ถูกข้าม, แถวเสียถูกข้าม (เจอ+อุด bug TryParse-fail-เขียน-0 ระหว่างทดสอบ) · ลบไฟล์ test แล้ว
 **การใช้:** user attach `.ex4` บน MT4 demo 1 chart + **ต้องตั้ง Account History tab = "All History"** (MT4
 export ได้เท่าที่ tab โชว์ — journal ปริ๊นท์จำนวนแถวให้เช็คได้)
+
+---
+
+## ORDER-061 — hunt ใหม่: (BRK)_FlagPennant @ XAUUSD H1 (กลไก next-EV จาก handoff) — `IN-PROGRESS (Claude, 2026-07-09)` _(user สั่ง "hunt ใหม่เลย" — flag/pennant คือกลไกเดียวที่ handoff 07-09 ระบุว่า EV เหลือ)_
+
+**กลไก:** pole (impulse ≥ PoleAtrMult×ATR ใน PoleBars แท่ง) → flag (พักตัวแคบ ≤ FlagRangeAtrMult×ATR,
+retrace ≤ MaxRetrace ของ pole) → break ขอบ flag ตามทิศ pole · L1 single-position จริง SL/TP ATR-based,
+EMA200 filter, bar-open, magic **991005**, AllowLive=false · แตกต่างทุกกลไกใน cohort (ต้องมี impulse ก่อน)
+- source: `ea_projects\(BRK)_FlagPennant\(BRK)_FlagPennant_rev01.mq5` · compile 0/0
+- smoke default (pole 3.0×ATR): บางเกิน — 9/6/2 ไม้ 3 window → ห้ามตัดสิน, sweep ก่อนตามกฎ
+- coarse sweep 1 (pole {1.5,2.0,2.5} × flagRange {2.0,2.5} × flagBars {4,6}, 12 pass) บน BWD 2020-22 +
+  HOLDOUT 2023-24 (FWD 2025-26 เก็บไว้ confirm ห้ามใช้เลือก) — กำลังรัน
+**เกณฑ์ไปต่อ:** มี cell ที่ n≥60/window และ PF>1.2 ทั้งสอง window → fine sweep + FWD confirm + MC · ไม่มี = ปิดแบบ
+เดียวกับ plain-squeeze (บันทึกแล้วเลิก)
 
 **ทำไม:** สมมติฐาน (ตั้งก่อนดูข้อมูล — จากคอมเมนต์ CME/Spotgamma ในโพส FB): EA momentum/breakout
 บนทองควรทำงานดีเมื่อ speculator net-long สูง (= regime เทรนด์). ทดสอบครั้งเดียว ไม่ได้ sweep หา factor
