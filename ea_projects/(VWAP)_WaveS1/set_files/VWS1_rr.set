@@ -1,0 +1,21 @@
+﻿; VWAP WaveS1 coarse sweep 1: band width x acceptance bars (M15)
+_00_OptimizeMode=true||false||0||true||N
+_01_BandMult=1.0||1.0||0||1.0||N
+_01_AcceptBars=3||3||0||3||N
+_01_PullbackBufSigma=0.25||0.25||0||0.25||N
+_01_MinDayBars=12||12||0||12||N
+_02_AtrPeriod=14||14||0||14||N
+_02_SlAtrMult=1.0||1.0||0.5||1.5||Y
+_02_TpAtrMult=2.0||2.0||2.0||6.0||Y
+_03_UseEma=false||false||0||false||N
+_03_EmaPeriod=200||200||0||200||N
+_03_CloseEndOfDay=true||true||0||true||N
+_03_LastEntryHour=20||20||0||20||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991007||991007||0||991007||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

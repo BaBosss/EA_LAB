@@ -2513,11 +2513,22 @@ exit = เส้น SuperTrend วิ่งตาม (ไม่มี fixed TP) 
   (Donchian-60 break + squeeze state) + re-opt tight-SL/wide-TP → คิว session หน้า ถ้ากู้ได้ค่อย corr-check
   เทียบ Zeus/BRK/SqueezeBRK (family เดียวกัน — corr สูง = ไม่เพิ่มค่าแม้ผ่าน)
 
-## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `OPEN (หลัง 065)` · **ทำได้: Claude (design กลั่นจากสเปค 010) → funnel มาตรฐาน**
+## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `BUILT+FUNNELED (Claude, 2026-07-09 ค่ำ — ❌ NO EDGE ปิดพร้อม mechanism insight)`
 
 กลั่นจาก conv 010 เหลือ **setup เดียว**: VWAP daily-anchor + SD band 1.0/1.5 → Price-Discovery continuation
 (break 1.0SD + acceptance ≥3 แท่ง → เข้า pullback แตะ band) · ห้ามยก ML/Wyckoff/Volume-Profile มา (ตัดให้เหลือ
 VWAP+SD+ATR ล้วน) · ของใหม่แท้ต่อ cohort — ค่า EV อยู่ที่ความ uncorrelated · magic 991007
+- source: `ea_projects\(VWAP)_WaveS1\` compile 0/0 รอบแรก · intraday จริง (flat ก่อนวันใหม่ + one-shot/day)
+
+**VERDICT (levers swept 4: BandMult{1,1.5,2} × AcceptBars{2,3,4} × TF{M15,H1} × SL/TP{1-1.5×2-6} · both regimes):**
+- defaults M15: 0.78/1.03/1.08 (n 775/515/385 — ไม้สุขภาพดี กลไกทำงานตามออกแบบ) · H1 แย่กว่า (0.83)
+- coarse sweep 18 cells: **ลบทุก cell ใน BWD** (ดีสุด 0.96) · HOLDOUT ไม่มีอะไรเกิน 1.03 — surface เรียบตาย
+- RR sweep 12 cells: BWD ยังลบหมด (ดีสุด 0.88) — ไม่มีปาฏิหาริย์
+- **Mechanism insight (ของที่ได้จริง): VWAP บน XAU spot-CFD ใช้ tick volume ซึ่งไม่ใช่ volume จริง →
+  "fair-value anchor" ที่เป็นหัวใจของกลยุทธ์ตระกูล VWAP เป็นของปลอมบน instrument เรา** — VWAP มีความหมาย
+  ที่ตลาดที่ VWAP เป็น benchmark สถาบันจริง (ES/NQ futures มี real volume) ซึ่งเราไม่มี data →
+  **ปิดทั้ง family VWAP บน MT5 FX/CFD** ไม่ใช่แค่ EA ตัวนี้ (จนกว่าจะมี futures data จริง) · conv 010 ให้
+  เกรด "gold เหมาะกับ S1" = LLM เดา ไม่ใช่ข้อมูล — ยืนยันกฎเดิม: expected results จาก AI = ศูนย์หลักฐาน
 
 **กลไก:** pole (impulse ≥ PoleAtrMult×ATR ใน PoleBars แท่ง) → flag (พักตัวแคบ ≤ FlagRangeAtrMult×ATR,
 retrace ≤ MaxRetrace ของ pole) → break ขอบ flag ตามทิศ pole · L1 single-position จริง SL/TP ATR-based,
