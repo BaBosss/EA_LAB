@@ -229,3 +229,39 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 - Next: เปลี่ยน `ScaleExecutor_v1` ให้ส่ง ORDER_TYPE_BUY_LIMIT/SELL_LIMIT แทน market
 - Target: reproduce ST_EA03-level PF >> 1.11 บน GBPUSD/USDCAD H1
 - ⚠️ Model 4 required (TP < 20 pip trigger)
+
+
+---
+
+## 🚀 DEPLOYMENT REALITY 2026-07-09 (user attach จริง — โครงสร้างต่างจากแผน bundle เดิม, ทุกอย่างรันบน VPS 66.212.22.7)
+
+**5 บัญชี active · live-clock ชุดนี้เริ่ม 2026-07-09 · judge ชุดนี้ = 2026-10-09 (+3 เดือน)**
+
+### REAL — Exness Standard Cent, 10,000 USC/บัญชี (×3)
+| บัญชี | ชื่อ | Platform | รันอะไร | สถานะ validate |
+|---|---|---|---|---|
+| **159503454** | 08. Blazing Arrow | MT5 Hedge (Real20) | **MT5 cohort ทั้ง 5**: RSI-MR(990103) · Zeus(990101) · BRK-XAU(991001) · SqueezeBRK(991004) · Trendline(991002) | ✅ validated sets — นี่คือกองหลักที่ต้อง monitor เข้ม |
+| **159475669** | Boss - Trend Swing | MT5 Hedge (Real20) | mix: EA_BREAKOUT_XAU + **LondonConso (แล็บ REJECT)** + **Gold Reaper (แล็บ REJECT, ประวัติ DD>50%)** + MACD/NuiIndy/ST03/MatchaGrid | ⚠️ ทดลองของ user — แล็บไม่รับรอง ตัวแดง 2 ตัวมีสำนวน REJECT |
+| **141049900** | 01. Celestial Woodfire | MT4 (Real35) | Zeus Gold Hedge V1.2_fix + gold grid M15 (ฟลีท numerology) | ⚠️ ทดลองของ user · เห็นบนจอ −201 USC (−2%) |
+
+### DEMO — Exness Standard (×2)
+| บัญชี | ชื่อ | Platform | รันอะไร |
+|---|---|---|---|
+| **415573666** | Demo Mt5-2 | MT5 (Trial14) | **Boss_14_GridLog ×7 symbols** (USDJPYm/AUDNZDm/EURJPYm/AUDCADm/CADJPYm/EURUSDm/XAUUSDm H1) = Boss V2 bench ขึ้น demo แล้ว |
+| **69424711** | Demo EA3 | MT4 (Trial8) | **MT4 cohort**: UnNomGuai(1/2) · RSI-orig(5888) · swb(990) + ClevrFX_EA (ORDER-041 ผ่าน spread-stress) |
+
+**หมายเหตุ scaling:** บัญชี cent 10,000 USC — money-param ใน set (เช่น TpUsd) กับ balance สเกลอัตราส่วนเดียวกับ
+แผน $10,000 เป๊ะ → PF/DD%/เกณฑ์ kill-switch แบบ % ใช้ได้ตรง · เกณฑ์ $ ใน README อ่านเป็น USC แทน
+**Exness cent symbols ห้อย c** (XAUUSDc/EURUSDc) / demo standard ห้อย m — DealsExporter/dashboard ไม่สนใจ suffix (group ตาม magic)
+
+**Monitoring (คำตอบ "ต้อง attach อะไรเพิ่ม"): exporter 1 chart ต่อบัญชี รวม 5:**
+- DealsExporter.ex5 → 159503454 · 159475669 · 415573666 (MT5)
+- OrdersExporterMT4.ex4 → 141049900 · 69424711 (MT4, ตั้ง Account History = All History ก่อน)
+- attach บน **VPS** (terminal อยู่ที่นั่น + ออนไลน์ตลอด = จุดที่ถูกของ exporter) → CSV ตกที่ Common\Files ของ VPS →
+  ทางขน: (A) ติด OneDrive บน VPS + scheduled copy → เครื่องแล็บ sync อัตโนมัติ (เป้าหมาย) หรือ (B) ชั่วคราว: RDP
+  ก๊อป EA_LAB_*.csv มาใส่ portfolio\live_deals\ สัปดาห์ละครั้ง
+- ⚠️ ระวังชื่อไฟล์ export ชนกัน: exporter ตั้งชื่อตาม login → 5 บัญชี = 5 ไฟล์ ไม่ชน ✅
+
+**จับตาพิเศษ (จากภาพหน้าบัญชี Real):** พอร์ต MT4 cent อีกหลายตัว (Abyssal/Ember Strike/Twin Flares/Golden
+Ember/Iron Discipline) โชว์ **Free margin 0.00-0.35 USC** — ถ้าบัญชีพวกนี้มีเงิน+ไม้เปิดอยู่ = ชิด margin call
+มาก / ถ้ายังไม่ funded = ไม่เป็นไร → user ยืนยันสถานะด้วย
