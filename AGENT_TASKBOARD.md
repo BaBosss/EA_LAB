@@ -2310,7 +2310,19 @@ ea-live-monitor ที่เคยรัน (ต่างได้ ≤ rounding)
 
 ---
 
-## ORDER-059 — COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → ต้อง validate เต็ม — `OPEN (raw promising, ห้ามใช้จนกว่าผ่าน gate)` · **ทำได้: ZCode/oc-btest (validation) + Claude (judge)** _(ออก 2026-07-09 — ไอเดียจากโพส FB Claude Thailand, user เคาะ "ทำทั้งหมด")_
+## ORDER-059 — COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → ต้อง validate เต็ม — `REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ REJECT เป็น gating filter · เก็บไว้เป็นไฟบอกสถานะบน dashboard ได้เท่านั้น)` _(ออก 2026-07-09 — ไอเดียจากโพส FB Claude Thailand, user เคาะ "ทำทั้งหมด")_
+
+**VERDICT (Claude, 2026-07-09 — validation ครบใน session เดียวกับที่ตั้ง order):**
+- **Year-split ฆ่า pattern:** aggregate "HIGH ดีสุด" มาจากขาขึ้นทอง 2024-25 เกือบล้วน — รายปีพลิกไปมา
+  (Trendline 2023: LOW 1.46 > HIGH 0.85 · 2021: LOW 1.24 > HIGH 1.09 · SqueezeBRK 2021-22 LOW กำไรดี 4.88/2.03)
+- **Threshold sweep {33,50,67} ทั้ง BWD+FWD:** surface หยาบ ไม่มี plateau — ดีบาง cell แย่บาง cell
+- **MC ตัวชี้ขาด (bootstrap-with-replacement บน P&L จริงต่อไม้ 5000 iters):**
+  Trendline UNGATED PF-5th **1.011** vs GATED(≥33) **0.978** + n 351→213 = gate ทำให้ tail **แย่ลง** และทำลาย
+  จุดแข็งเดียวของ Trendline (sample ใหญ่) → เส้นทาง promote #8 ผ่าน COT = ตาย ·
+  BRK gated แย่ลง (1.529→1.355) · SqueezeBRK gated ดีขึ้น (1.241→2.078) แต่มัน ROBUST อยู่แล้ว ไม่คุ้มตัดไม้ 40%
+- **สรุป:** REJECT แบบ PARAMETRIC-มีหลักฐานครบ (ไม่ใช่ ban ข้อมูล external ทั้งชั้น — factor นี้ตัวเดียวที่ไม่รอด) ·
+  ของที่เหลือใช้: `cot_pull.ps1` + แสดง COT pct เป็น**ไฟ context บน LIVE_DASHBOARD เท่านั้น ห้ามเป็นเงื่อนไข on/off** ·
+  meta-lesson: exploratory เดียวที่ดูสวย = ยังไม่ใช่อะไรเลย — year-split + MC ฆ่าได้ในชั่วโมงเดียว (process ทำงาน)
 
 **ทำไม:** สมมติฐาน (ตั้งก่อนดูข้อมูล — จากคอมเมนต์ CME/Spotgamma ในโพส FB): EA momentum/breakout
 บนทองควรทำงานดีเมื่อ speculator net-long สูง (= regime เทรนด์). ทดสอบครั้งเดียว ไม่ได้ sweep หา factor
