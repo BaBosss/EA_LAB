@@ -4,7 +4,7 @@ $ErrorActionPreference = "Continue"
 $dd = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\208874223073CBC8F9A8DE40460E6DD0\MQL4\Experts"
 $sb = "D:\Forex\10_EA_PROJECTS\2. wait for test"
 $eas = @(
-  @{ea="UnNomGuaiV1.132"; sym="EURUSD"; src="2024-06\FREE EA-20240608T074321Z-001\FREE EA\UnNomGuaiV1.132.ex4"; set="D:\EA_LAB\_mt4_demo_deploy\UnNomGuai_cap20.set"},
+  @{ea="UnNomGuaiV1.132"; sym="EURUSD"; src="2024-06\FREE EA-20240608T074321Z-001\FREE EA\UnNomGuaiV1.132.ex4"; set="D:\EA_LAB\_demo_deploy\UnNomGuai_cap20.set"},
   @{ea="RSI from pips_EA"; sym="EURUSD"; src="wait for test\RSI from pips_EA.ex4"; set=""},
   @{ea="swb grid 4.1.0.3_h"; sym="AUDCAD"; src="2024-06\FREE EA-20240608T074321Z-001\FREE EA\swb grid 4.1.0.3_h.ex4"; set="D:\EA_LAB\_mt5_auto\ab_sets\swb_flat.set"}
 )

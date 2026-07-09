@@ -1,4 +1,4 @@
-﻿# PROJECT_STATE â€” EA_LAB single living state (ðŸ‘‰ AI START HERE)
+# PROJECT_STATE â€” EA_LAB single living state (ðŸ‘‰ AI START HERE)
 
 > **last updated:** 2026-07-08 (EA hunt -> 6 demo candidates, see section 7 SESSION 2026-07-08 block) · updated by: Claude Opus 4.8 · owner: patip
 >
@@ -252,7 +252,7 @@ deploy à¸—à¸³à¸•à¸²à¸¡ `DEPLOY_CHECKLIST_2026-06-29.md` â†�
 **ðŸ‘‰ à¸­à¹ˆà¸²à¸™ block à¸™à¸µà¹‰à¸à¹ˆà¸­à¸™ â€” à¸ªà¸£à¸¸à¸›à¸‡à¸²à¸™à¸£à¸­à¸šà¸¥à¹ˆà¸²à¸ªà¸¸à¸” + à¸ªà¸´à¹ˆà¸‡à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸—à¸³à¸•à¹ˆà¸­**
 
 **à¸œà¸¥à¸¥à¸±à¸žà¸˜à¹Œ: demo cohort = 7 + 1 experimental (Trendline #8) (à¸œà¹ˆà¸²à¸™ funnel à¹€à¸‚à¹‰à¸¡à¸„à¸£à¸šà¸—à¸¸à¸à¸•à¸±à¸§: instrument/TF/param/holdout/MC)** â€”
-bundle à¸žà¸£à¹‰à¸­à¸¡ attach à¸—à¸µà¹ˆ `_mt4_demo_deploy\README_DEPLOY.md` (2 à¸šà¸±à¸à¸Šà¸µ: MT4 + MT5):
+bundle à¸žà¸£à¹‰à¸­à¸¡ attach à¸—à¸µà¹ˆ `_demo_deploy\README_DEPLOY.md` (2 à¸šà¸±à¸à¸Šà¸µ: MT4 + MT5):
 | # | EA | platform | à¸„à¸¹à¹ˆ/TF | tier | MaxDD | magic |
 |---|---|---|---|---|---|---|
 | 1 | UnNomGuaiV1.132 | MT4 | EURUSD H1 | validated | ~19% | 1/2 |
@@ -529,7 +529,7 @@ DD à¸„à¸‡à¸—à¸µà¹ˆ ~19% à¸—à¸¸à¸à¸”à¹ˆà¸²
   + DD 17â†’51% à¹ƒà¸•à¹‰ spread) Â· Yetti3_Mod2 (PF 1.02 à¸—à¸µà¹ˆ spread â€” à¸•à¸²à¸¢à¹à¸šà¸šà¸žà¸µà¹ˆà¸¡à¸±à¸™) Â· Oracle/MultiHedge =
   CONDITIONAL à¹„à¸¡à¹ˆà¹€à¸£à¹ˆà¸‡ (M0 1.43/DD39 à¸Šà¸™ gate Â· M0 1.29 net à¸ˆà¸´à¹‹à¸§)
 - **user à¸­à¸™à¸¸à¸¡à¸±à¸•à¸´ (2026-07-07): à¹€à¸›à¸´à¸” MT4 demo à¸šà¸±à¸à¸Šà¸µà¹ƒà¸«à¸¡à¹ˆ à¹ƒà¸ªà¹ˆà¸„à¸¹à¹ˆ UnNomGuai + RSI from pips** (à¸„à¸™à¸¥à¸° magic,
-  à¹„à¸”à¹‰ correlation à¸ˆà¸£à¸´à¸‡à¸Ÿà¸£à¸µ) â†’ bundle à¸žà¸£à¹‰à¸­à¸¡à¸—à¸µà¹ˆ `_mt4_demo_deploy\` Â· à¹à¸œà¸™+checklist: `DEMO_DEPLOYMENT_PLAN.md`
+  à¹„à¸”à¹‰ correlation à¸ˆà¸£à¸´à¸‡à¸Ÿà¸£à¸µ) â†’ bundle à¸žà¸£à¹‰à¸­à¸¡à¸—à¸µà¹ˆ `_demo_deploy\` Â· à¹à¸œà¸™+checklist: `DEMO_DEPLOYMENT_PLAN.md`
   Â§MT4 demo experiment #2 Â· order à¸•à¸´à¸”à¸•à¸²à¸¡: **ORDER-045** (à¸£à¸­ user attach = demo-clock à¹€à¸£à¸´à¹ˆà¸¡, judge +3 à¹€à¸”à¸·à¸­à¸™)
 
 **à¸•à¸²à¸¢à¸—à¸µà¹ˆà¸”à¹ˆà¸²à¸™à¸ªà¸¸à¸”à¸—à¹‰à¸²à¸¢ (à¸”à¸¹à¸”à¸µà¸•à¸­à¸™ BWD baseline à¹à¸•à¹ˆà¸žà¸±à¸‡à¹ƒà¸•à¹‰ spread-stress â€” à¸šà¸—à¹€à¸£à¸µà¸¢à¸™à¸§à¹ˆà¸²à¸—à¸³à¹„à¸¡à¸•à¹‰à¸­à¸‡à¸¡à¸µà¸”à¹ˆà¸²à¸™à¸™à¸µà¹‰):**

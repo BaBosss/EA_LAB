@@ -105,7 +105,7 @@ export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monito
 ## 🆕 MT4 demo experiment #2 — 3 treasure-hunt survivors — 🟡 **รอ user attach (อนุมัติ 2026-07-07)**
 
 > **3 survivor จาก EA ~1,300 ตัว (ORDER-036/046/047)** ผ่าน funnel 5 ด่านครบ ·
-> **checklist + kill-switch + ค่าคาดหวังเต็ม = `_mt4_demo_deploy\README_DEPLOY.md`** (รวมครบในที่เดียว อ่านง่าย)
+> **checklist + kill-switch + ค่าคาดหวังเต็ม = `_demo_deploy\README_DEPLOY.md`** (รวมครบในที่เดียว อ่านง่าย)
 > · bundle: ex4 ×3 + set ×2 + MD5 lock
 
 | # | EA | Chart | Set | Magic |

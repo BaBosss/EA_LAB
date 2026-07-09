@@ -4,7 +4,7 @@ live_dashboard.ps1 - ORDER-058: per-EA live-monitor dashboard (ต่อยอ�
 Reads the newest EA_LAB_deals_*.csv snapshot in portfolio\live_deals\ (collected by
 collect_live_deals.ps1 from DealsExporter.mq5), groups deals by magic number, joins EA
 name/symbol/kill-switch DD% from the cohort table below (source: DEMO_DEPLOYMENT_PLAN.md
-"treasure-hunt survivors" + _mt4_demo_deploy\README_DEPLOY.md kill-switch section), and
+"treasure-hunt survivors" + _demo_deploy\README_DEPLOY.md kill-switch section), and
 writes a single self-contained HTML file: portfolio\LIVE_DASHBOARD.html
 
   powershell -File scripts\live_dashboard.ps1
@@ -65,7 +65,7 @@ $fileDateDisplay = ""   # folded into acctLabels per file
 # ---------------------------------------------------------------------------
 # 3. cohort static map: magic -> EA meta + declared kill-switch DD%
 #    Source: DEMO_DEPLOYMENT_PLAN.md (treasure-hunt table) +
-#            _mt4_demo_deploy\README_DEPLOY.md "Kill-switch" section
+#            _demo_deploy\README_DEPLOY.md "Kill-switch" section
 #    KillDD: EA-specific number where README states one, else platform
 #            default (MT4 kill 35% / MT5 kill 25%, per README general rule).
 #    WarnDD: README's declared เตือน level (MT4 25% / MT5 15%) for platform-
@@ -428,7 +428,7 @@ $html = @"
   <span>&#9898; white = 0 trades yet (no data)</span>
   <span>&#10067; unmapped magic (present in CSV, not in the declared cohort table)</span>
   <br><br>
-  Colors are flags against the declared kill-switch DD% from <code>_mt4_demo_deploy\README_DEPLOY.md</code>
+  Colors are flags against the declared kill-switch DD% from <code>_demo_deploy\README_DEPLOY.md</code>
   only - not a keep/kill verdict. Max DD% is computed from the cumulative per-magic P&amp;L curve
   (profit+swap+commission per deal, time-ordered) against an assumed $baseEquityStr USD starting equity
   (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.

@@ -6,10 +6,13 @@
 ---
 
 ## ต้องมี 2 บัญชี demo (คนละ platform)
-| platform | EA | ลง terminal ที่ |
-|---|---|---|
-| **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | portable ใหม่ `D:\Meta4demo` |
-| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK · #8 Trendline(exp) | portable ใหม่ `D:\Meta5demo` |
+| platform | EA | ไฟล์อยู่ที่ | ลง terminal ที่ |
+|---|---|---|---|
+| **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | `_demo_deploy\MT4\` (.ex4+.set) | portable ใหม่ `D:\Meta4demo` |
+| **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK · #8 Trendline(exp) | `_demo_deploy\MT5\` (.ex5+.set) | portable ใหม่ `D:\Meta5demo` |
+
+> โฟลเดอร์เปลี่ยนชื่อจาก `_mt4_demo_deploy` → `_demo_deploy` + แยกโฟลเดอร์ MT4/MT5 (2026-07-09 —
+> user จับได้ว่าชื่อเก่าตกยุคตั้งแต่ MT5 เข้าบันเดิล) · reference ทุกเอกสารตามแก้แล้ว
 
 - ทั้งคู่: บัญชีใหม่ **$10,000** · type **Hedge** (RSI-MR ต้องการ hedging)
 - **broker: user ใช้ Exness (ตัดสิน 2026-07-09) — ตรวจแล้วไม่ต้องแก้ set ไหน:** XAUUSD Exness = 3 ตำแหน่ง

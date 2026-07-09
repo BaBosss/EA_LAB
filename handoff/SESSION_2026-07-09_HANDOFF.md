@@ -2,7 +2,7 @@
 
 > **For:** next EA_LAB session. Self-contained pointers; do NOT re-derive.
 > **Canonical (read in order):** `PROJECT_STATE.md` §7 "SESSION 2026-07-08" block → `AGENT_TASKBOARD.md`
-> **ORDER-055** (START HERE) → `_mt4_demo_deploy\README_DEPLOY.md` (attach guide). This file = the
+> **ORDER-055** (START HERE) → `_demo_deploy\README_DEPLOY.md` (attach guide). This file = the
 > narrative + gotchas that aren't in those.
 
 ## Where things stand (one line)
@@ -14,7 +14,7 @@ is **user attaches them** (manual, not Claude-doable). Everything Claude could p
 - MT5 (source in `ea_projects\`): RSI-MR@EURUSD(m990103,ROBUST) · Zeus@XAU(m990101) · BRK-XAU@XAU(m991001) ·
   SqueezeBRK@XAU(m991004,ROBUST) · Trendline@XAU(m991002,**EXPERIMENTAL** PF-5th 0.986, can drop)
 - Correlation: no pair >0.60; the 4 gold EAs are mutually uncorrelated (different mechanisms). Details:
-  `_mt4_demo_deploy\CORRELATION_6EA.md` (note: has the portfolio-sim + 6-EA matrix; Trendline/Squeeze added later).
+  `_demo_deploy\CORRELATION_6EA.md` (note: has the portfolio-sim + 6-EA matrix; Trendline/Squeeze added later).
 
 ## What the next session must do (see ORDER-055 for the ordered list)
 1. **Wait for user's attach date** → record in `DEMO_DEPLOYMENT_PLAN.md`, set judge +3mo, schedule /ea-monitor.
