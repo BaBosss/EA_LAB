@@ -2423,6 +2423,33 @@ plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — patte
 - สถานะ: CANDIDATE (in-sample-selected แต่ evidence tier เท่า demo candidates เดิม) → รอ Boss V2 track
   unpark แล้วเข้า demo bench ตามคิว · set = `FAM_USDJPY_m1t25.set`
 
+**Recheck รอบดึก (user สั่ง "ทำ 1-4", 2026-07-09):**
+- ✅ **EURJPY m1t25 = CANDIDATE ตัวที่ 2** — fine-sweep t{23,25,27}: BWD 1.17/1.23/1.27 (ทุกจุด ≥ base
+  1.18 + DD 11.9→~6%) FWD 2.42/2.79/2.03 = **plateau จริง 3 จุด — t20 เมื่อวานคือขอบหน้าผา ไม่ใช่ตัวแทนโซน**
+  · year-split gated บวกทุกปี 2020-2026 · MC PF-5th base 1.202 → gated **1.346** · gate ทำหน้าที่ลด DD
+  มากกว่าสร้าง edge (base แข็งอยู่แล้ว) · set = `FAM_EURJPY_m1t25.set`
+- ❌ **AsReMix (PARKED) — ADX conditioning ไม่กู้**: aggregate ดูดี (TREND 1.45/RANGE 0.64) แต่ year-split
+  พลิก 2 ใน 7 ปี (2020 RANGE 3.65 > TREND 1.01 · 2024 RANGE 6.14 > TREND 0.98) + MC gated 1.14 < 1.2 +
+  **edge-decay ปีหลังยังอยู่ใน TREND bucket เอง** (2024-26: 0.98/1.17/1.18) — gate แก้ regime ได้ แก้ decay
+  ไม่ได้ · ยัง PARKED · trade list เก็บที่ `ASREMIX_trades.csv`
+
+---
+
+## ORDER-067 — Trendline rev02 + ADX-regime gate: เส้นทาง promote #8 ที่ COT ทำไม่ได้ — `OPEN (build คิวแรก session หน้า)` · **ทำได้: Claude**
+
+**หลักฐาน offline conditioning (Claude, 2026-07-09 ดึก — ผลสวยสุดของการ conditioning ที่เคยทำ):**
+TLR_trades 351 ไม้ × H4 ADX (dump ผ่าน `tools\ADXDumper\ADXDumper.mq5` ตัวใหม่):
+- **RANGE (ADX<20): PF 0.17** (thr25: 0.26) — ขาดทุนทั้งหมดของ Trendline กระจุกใน range regime
+- **TREND: PF 1.64** (thr20) / 2.05 (thr25) · **year-split บวกทุกปี 2020-2026** (1.38-2.17) — ไม่มีปีพลิก
+  (ต่างจาก COT ที่ตายตรงนี้) · RANGE ลบ 6/7 ปี
+- **MC: ungated PF-5th 1.011 → gated(ADX≥20) 1.208** โดยเก็บ sample 79% (278/351 = ไม่ thin)
+- threshold 20 กับ 25 ไปทางเดียวกัน = ไม่ใช่ spike
+**งาน:** เพิ่ม ADX-gate inputs ใน (BRK)_TrendlineBreakout → rev02 (default OFF ตามธรรมเนียม) → รัน funnel
+เต็ม 3-window + MC ยืนยัน (offline conditioning = approximation; single-position ทำให้ approx แม่น แต่ต้อง
+confirm ด้วย run จริง) → ถ้าผ่าน: เข้า bench เป็น rev02 (**ห้ามแตะ #8 ตัวที่ demo อยู่** — kill เข้มของมันคุมอยู่แล้ว)
+**caveat ที่ต้องจำ:** conditioning ใช้ ADX ณ เวลา*ปิด*ไม้ (list มีแค่ close time) — ไม้ถือเป็นชั่วโมง H4 ADX
+แทบไม่ต่าง แต่ run จริงจะ gate ที่*เปิด*ไม้ = ตัวเลขจะขยับ อย่ายึดเลข offline เป็น verdict
+
 ---
 
 ## ORDER-063 — smoke เทส EA จาก Downloads 3 ตัว — `REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ ตายครบ 3: GOD4+HedgingGrid untestable-locked · Degold REJECT ที่ martingale-recheck)`
@@ -2512,6 +2539,13 @@ exit = เส้น SuperTrend วิ่งตาม (ไม่มี fixed TP) 
 - **สถานะ: RESERVE (research)** — เส้นทางกู้ที่มีบทพิสูจน์ (SqueezeBRK 0.837→0.966→1.25): เติม confluence
   (Donchian-60 break + squeeze state) + re-opt tight-SL/wide-TP → คิว session หน้า ถ้ากู้ได้ค่อย corr-check
   เทียบ Zeus/BRK/SqueezeBRK (family เดียวกัน — corr สูง = ไม่เพิ่มค่าแม้ผ่าน)
+
+**Rescue #1 (Claude, 2026-07-09 ดึก — user สั่ง "ทำ 1-4"): ❌ ล้มเหลว พร้อมเหตุผลเชิงกลไก** —
+Donchian-60 AND-condition ทำ sample พัง 159/108 → **27/21 ไม้** และ PF ไม่เสถียร (line-trail BWD 0.39 ·
+RR cells บน n=27 = noise) · สาเหตุ: **ST flip เป็นสัญญาณตามหลัง — จังหวะ flip มาถึง Donchian break ผ่านไป
+นานแล้ว** เงื่อนไข AND แทบไม่ intersect (ต่างจาก squeeze-release ที่คือวินาทีเดียวกับ break = ทำไมสูตรกู้
+work ที่นั่นแต่ไม่ transfer มาที่นี่) · rescue ทางอื่นต้องเป็น confluence แบบ concurrent-state (ไม่ใช่ event)
+เช่น squeeze-state/ADX-state — เก็บไว้พิจารณา ไม่เร่ง · RESERVE คงเดิม ความหวังลดลง
 
 ## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `BUILT+FUNNELED (Claude, 2026-07-09 ค่ำ — ❌ NO EDGE ปิดพร้อม mechanism insight)`
 

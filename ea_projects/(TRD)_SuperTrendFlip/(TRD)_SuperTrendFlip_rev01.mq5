@@ -33,9 +33,14 @@ input int    _01_AtrPeriod    = 10;
 input double _01_Mult         = 3.0;
 input int    _01_Lookback     = 400;   // bars recomputed each bar-open (state-free)
 
+input string _g01b_           = "── [01b] CONFLUENCE (rescue levers) ───────";
+input bool   _01_UseDonchian  = false; // flip must coincide with a Donchian break
+input int    _01_DonBars      = 60;    // Donchian lookback (prior bars, excl. signal bar)
+
 input string _g02_            = "── [02] EXIT ──────────────────────────────";
-input int    _02_ExitMode     = 0;     // 0=trail SL on the ST line (no TP) · 1=fixed ATR RR TP + line trail
-input double _02_TpAtrMult    = 6.0;   // used in mode 1 only
+input int    _02_ExitMode     = 0;     // 0=trail SL on the ST line (no TP) · 1=fixed ATR RR TP + line trail · 2=fixed tight-SL/wide-TP (no line mgmt)
+input double _02_TpAtrMult    = 6.0;   // modes 1+2
+input double _02_SlAtrMult    = 1.0;   // mode 2 only (tight SL)
 
 input string _g03_            = "── [03] TREND FILTER ──────────────────────";
 input bool   _03_UseEma       = true;
@@ -136,6 +141,7 @@ void OnTick()
    ulong tk=0;
    if(OwnTicket(tk))
    {
+      if(_02_ExitMode==2) return;                                     // mode 2: SL/TP only, no management
       if(!PositionSelectByTicket(tk)) return;
       long ptype = PositionGetInteger(POSITION_TYPE);
       double psl = PositionGetDouble(POSITION_SL);
@@ -168,17 +174,25 @@ void OnTick()
 
    bool bull=_04_Buys  && flippedUp   && (!_03_UseEma||c1>ema);
    bool bear=_04_Sells && flippedDown && (!_03_UseEma||c1<ema);
+
+   if(_01_UseDonchian && (bull||bear))                                 // confluence: flip must break the prior range
+   {
+      double hi=-1, lo=1e18;
+      for(int i=2;i<=_01_DonBars+1;i++){ hi=MathMax(hi,iHigh(_Symbol,PERIOD_CURRENT,i)); lo=MathMin(lo,iLow(_Symbol,PERIOD_CURRENT,i)); }
+      if(bull && c1<=hi) bull=false;
+      if(bear && c1>=lo) bear=false;
+   }
    if(!bull && !bear) return;
 
    if(bull){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
-      double sl=NormalizeDouble(lineNow,digits);
-      double tp=(_02_ExitMode==1)?NormalizeDouble(ask+_02_TpAtrMult*atr,digits):0.0;
-      if(sl>=ask) return;                                              // line must be below price
+      double sl=(_02_ExitMode==2)?NormalizeDouble(ask-_02_SlAtrMult*atr,digits):NormalizeDouble(lineNow,digits);
+      double tp=(_02_ExitMode>=1)?NormalizeDouble(ask+_02_TpAtrMult*atr,digits):0.0;
+      if(sl>=ask) return;                                              // SL must be below price
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN ST-BUY @%.2f sl=%.2f",ask,sl); return; }
       g_trade.Buy(_04_LotSize,_Symbol,ask,sl,tp,"ST_BUY"); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
-      double sl=NormalizeDouble(lineNow,digits);
-      double tp=(_02_ExitMode==1)?NormalizeDouble(bid-_02_TpAtrMult*atr,digits):0.0;
+      double sl=(_02_ExitMode==2)?NormalizeDouble(bid+_02_SlAtrMult*atr,digits):NormalizeDouble(lineNow,digits);
+      double tp=(_02_ExitMode>=1)?NormalizeDouble(bid-_02_TpAtrMult*atr,digits):0.0;
       if(sl<=bid) return;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN ST-SELL @%.2f sl=%.2f",bid,sl); return; }
       g_trade.Sell(_04_LotSize,_Symbol,bid,sl,tp,"ST_SELL"); }
