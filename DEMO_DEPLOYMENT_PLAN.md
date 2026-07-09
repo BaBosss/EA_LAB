@@ -261,6 +261,11 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
   ทางขน: (A) ติด OneDrive บน VPS + scheduled copy → เครื่องแล็บ sync อัตโนมัติ (เป้าหมาย) หรือ (B) ชั่วคราว: RDP
   ก๊อป EA_LAB_*.csv มาใส่ portfolio\live_deals\ สัปดาห์ละครั้ง
 - ⚠️ ระวังชื่อไฟล์ export ชนกัน: exporter ตั้งชื่อตาม login → 5 บัญชี = 5 ไฟล์ ไม่ชน ✅
+- **สถานะจริง 2026-07-09 กลางคืน (rotation v3 ทดสอบผ่าน): 4/5 บัญชีไหลเข้า dashboard อัตโนมัติแล้ว**
+  (159503454 · 159475669 · 415573666 · 141049900 investor-mode) ผ่านเครื่องแล็บ `D:\Monitor` ไม่ใช่ VPS —
+  แผน VPS ด้านบนไม่ต้องทำแล้ว · **69424711 = ไว้ก่อน (user 2026-07-09)** login Exness-Trial8 ไม่สำเร็จ
+  (connect failed — server scan สดยังไม่ผ่าน) → rotation ยัง launch ให้ทุกคืนแต่ collector ข้าม login=0 เอง
+  ไม่มีขยะ · จะเปิดใช้เมื่อไหร่ = login สำเร็จครั้งเดียวใน `D:\Monitor\MT4 - 69424711` (/portable) จบ
 
 **จับตาพิเศษ (จากภาพหน้าบัญชี Real):** พอร์ต MT4 cent อีกหลายตัว (Abyssal/Ember Strike/Twin Flares/Golden
 Ember/Iron Discipline) โชว์ **Free margin 0.00-0.35 USC** — ถ้าบัญชีพวกนี้มีเงิน+ไม้เปิดอยู่ = ชิด margin call
