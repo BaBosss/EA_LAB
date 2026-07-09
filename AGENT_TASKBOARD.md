@@ -2264,7 +2264,7 @@ lever ใหม่ให้ sweep ทั้ง family และเป็นต�
 
 ---
 
-## ORDER-058 — live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 วิ (ต่อยอด DealsExporter) — `OPEN` · **ทำได้: qwen/Sonnet/oc-dev** · 👉 **เลนถูก (mechanical)** _(ออก 2026-07-09, user เห็นตัวอย่างจากโพส FB Claude Thailand แล้วอยากได้แบบนั้น)_
+## ORDER-058 — live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 วิ (ต่อยอด DealsExporter) — `REVIEWED(Claude, 2026-07-09 — ✅ Sonnet ทำ, Claude ตรวจ+แก้ 1 จุด: ระดับ 🟡 ต้องใช้เตือนที่ README ประกาศ (MT4 25%/MT5 15%) ไม่ใช่สูตร 80% ล้วน · verify: synthetic CSV ผ่าน (breach/PF/unmapped/deterministic) + real CSV header-only → 8 แถว ⚪ ตามคาด · เหลือรอข้อมูลจริงหลัง user attach)` _(ออก 2026-07-09, user เห็นตัวอย่างจากโพส FB Claude Thailand แล้วอยากได้แบบนั้น)_
 
 **ทำไม:** ORDER-042 ให้ deals CSV per-magic แล้ว แต่การอ่านยังเป็น manual/ea-live-monitor text —
 user อยากได้หน้าเดียวแบบโพส FB: แถวละ EA เห็น P&L / PF / DD / สถานะ kill-switch เป็นสีทันที

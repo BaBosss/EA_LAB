@@ -1,0 +1,216 @@
+﻿<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>EA_LAB Live Dashboard</title>
+<style>
+  :root { color-scheme: light dark; }
+  body {
+    font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    margin: 24px;
+    background: #f5f6f8;
+    color: #1b1e24;
+  }
+  @media (prefers-color-scheme: dark) {
+    body { background: #14161a; color: #e6e8eb; }
+    .card { background: #1d2026 !important; border-color: #33373f !important; }
+    table { background: #1d2026 !important; }
+    th { background: #262a31 !important; color: #cfd3d9 !important; }
+    td { border-color: #2c3038 !important; }
+    tr.st-red    { background: #3a1414 !important; }
+    tr.st-yellow { background: #3a3212 !important; }
+    tr.st-green  { background: #123a1a !important; }
+    tr.st-white  { background: #22252b !important; }
+    tr.st-grey   { background: #24242a !important; }
+    .pos { color: #6fe08a !important; }
+    .neg { color: #ff8a80 !important; }
+    .legend { background: #1d2026 !important; border-color: #33373f !important; }
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .meta { color: #666; font-size: 13px; margin-bottom: 16px; }
+  .card {
+    background: #fff;
+    border: 1px solid #dfe2e6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 16px;
+  }
+  .legend { font-size: 13px; }
+  .legend span { margin-right: 18px; white-space: nowrap; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    background: #fff;
+    font-size: 13px;
+  }
+  th, td {
+    border: 1px solid #e2e5e9;
+    padding: 6px 10px;
+    text-align: right;
+  }
+  th { background: #eef0f3; text-align: center; }
+  .name-cell, .label-cell { text-align: left; }
+  .status-cell { text-align: center; font-size: 16px; }
+  .pos { color: #17792f; font-weight: 600; }
+  .neg { color: #b3261e; font-weight: 600; }
+  .neu { color: #666; }
+  tr.st-red    { background: #fdeceb; }
+  tr.st-yellow { background: #fdf6e3; }
+  tr.st-green  { background: #eaf7ee; }
+  tr.st-white  { background: #fafafa; }
+  tr.st-grey   { background: #f1f1f1; }
+  .footer { color: #888; font-size: 12px; margin-top: 16px; }
+</style>
+</head>
+<body>
+<h1>EA_LAB Live Dashboard</h1>
+<div class="meta">
+  Generated: 2026-07-09 07:39:22 &middot; Source CSV: <code>EA_LAB_deals_146237_20260706.csv</code> &middot;
+  Account login: <code>146237</code> &middot; Data date (from filename): 2026-07-06
+</div>
+
+<div class="card legend">
+  <b>Legend:</b>
+  <span>&#128308; red = max DD hit/breached the EA's kill-switch DD%</span>
+  <span>&#128993; yellow = max DD hit the declared warn level (MT4 25% / MT5 15%; EA-specific: 80% of kill)</span>
+  <span>&#128994; green = normal, below warn band</span>
+  <span>&#9898; white = 0 trades yet (no data)</span>
+  <span>&#10067; unmapped magic (present in CSV, not in the declared cohort table)</span>
+  <br><br>
+  Colors are flags against the declared kill-switch DD% from <code>_mt4_demo_deploy\README_DEPLOY.md</code>
+  only - not a keep/kill verdict. Max DD% is computed from the cumulative per-magic P&amp;L curve
+  (profit+swap+commission per deal, time-ordered) against an assumed 10,000 USD starting equity
+  (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
+</div>
+
+<table>
+<tr>
+  <th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th>
+  <th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">(Boss)_RSI_MR_GridLog (RSI-MR)</td>
+<td class="num-cell">990103</td>
+<td class="num-cell">EURUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">25%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">(Boss)_ZeusInspired_GridLog (Zeus)</td>
+<td class="num-cell">990101</td>
+<td class="num-cell">XAUUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">15%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">(BRK)_SqueezeBreakout (SqueezeBRK)</td>
+<td class="num-cell">991004</td>
+<td class="num-cell">XAUUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">10%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)</td>
+<td class="num-cell">991002</td>
+<td class="num-cell">XAUUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">8%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">EA_BREAKOUT_XAU (BRK-XAU)</td>
+<td class="num-cell">991001</td>
+<td class="num-cell">XAUUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">10%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">RSI from pips_EA (RSI-orig)</td>
+<td class="num-cell">5888</td>
+<td class="num-cell">EURUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">swb grid 4.1.0.3_h</td>
+<td class="num-cell">990</td>
+<td class="num-cell">AUDCAD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">UnNomGuaiV1.132</td>
+<td class="num-cell">1</td>
+<td class="num-cell">EURUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+<tr class="st-white">
+<td class="status-cell" title="no data yet">&#9898;</td>
+<td class="name-cell">UnNomGuaiV1.132</td>
+<td class="num-cell">2</td>
+<td class="num-cell">EURUSD</td>
+<td class="num-cell">0</td>
+<td class="num-cell neu">0.00</td>
+<td class="num-cell">N/A</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">-</td>
+<td class="label-cell">no data yet</td>
+</tr>
+
+</table>
+
+<div class="footer">
+  Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): 0.00 &middot;
+  total deal rows: 0 &middot; generated by scripts\live_dashboard.ps1 (ORDER-058)
+</div>
+</body>
+</html>
