@@ -4,6 +4,8 @@
 # Safe to run with no data (collector exits 1, dashboard renders no-data rows).
 $log = "D:\EA_LAB\portfolio\daily_monitor.log"
 "=== $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ===" | Add-Content $log
+# 0) rotate read-only logins through the monitor terminals so exporters snapshot all 5 accounts
+powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log
 # commit the snapshot (audit trail) - quiet if nothing changed

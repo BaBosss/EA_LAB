@@ -62,11 +62,14 @@ void Exporter_Run()
          ") -> Common\\Files\\", Exporter_FileName());
 }
 
+int g_boot_ticks = 0;   // rotation-mode support: re-export shortly after login while history syncs
+
 int OnInit()
 {
-   EventSetTimer(600);   // check every 10 min whether the daily slot arrived
+   EventSetTimer(120);   // 2-min ticks: first two re-export (fresh-login history sync), then daily check
    Exporter_Run();       // snapshot immediately on attach (proof it works)
    g_last_export_day = 0;
+   g_boot_ticks = 0;
    return(INIT_SUCCEEDED);
 }
 
@@ -74,6 +77,12 @@ void OnDeinit(const int reason) { EventKillTimer(); }
 
 void OnTimer()
 {
+   if(g_boot_ticks < 2)  // rotation mode: terminal may live only minutes after a fresh login
+   {
+      g_boot_ticks++;
+      Exporter_Run();
+      return;
+   }
    datetime now = TimeCurrent();
    datetime day = now - (now % 86400);
    if(TimeHour(now) >= InpExportHour && day != g_last_export_day)
