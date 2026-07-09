@@ -2257,6 +2257,16 @@ refresh (trade count เท่าเดิมทุกตัว กำไรข�
 CLEAN 4/4 · บทเรียน: DRIFT ที่ trade count เท่าเดิม + กำไรขยับเล็กน้อย = สงสัย data-side ก่อน code-side,
 พิสูจน์ด้วย control run เสมอ** · sanity A/B ของ Codex: mode 1 (block RANGE) 426→378 ไม้ = gate กัดจริง
 
+**เก็บตกหลักฐาน (Claude, 2026-07-09 บ่าย):** เจอช่องว่าง — `mt5_run.ps1` ไม่ compile ดังนั้น control run
+แรกเทียบ binary เดียวกัน (พิสูจน์แค่ history ไม่ใช่ source) → ปิดช่องด้วยการ compile เอง 2 รอบ:
+source มี module (compile 0/0) vs source ก่อน module (checkout `36a6819`, compile 0/0) → regression
+เลขเท่ากันเป๊ะทุกหลักทั้งคู่ = **mode-0 no-op พิสูจน์ end-to-end ระดับ source ด้วยมือ lead แล้ว** ไม่พึ่งคำ Codex
+
+**Stage B — reassign เป็น Claude รันเอง (2026-07-09: user cancel Codex — quota หมด กลับ 2026-07-11 · ZCode n/a):**
+matrix 32 runs กำลังรัน: {XAU_ISpick, AUDNZD_DEMO} × {FWD 2023-26, BWD 2020-22} × {base, m1 trend-only
+thr20/25/30, m1 range-only thr25, m2 direction thr20/25/30} → `_mt5_auto\REGIME_AB.csv` · runner =
+`_mt5_auto\ab_sets\regime_sets\run_regime_ab.ps1`
+
 **ทำไม:** cohort มี EA ที่ตายเพราะ regime เปลี่ยน (NZDUSD-SELL = PARKED regime-dependent ·
 Scalping-AsReMix = PARKED trend-specialist edge-decay) — ถ้ามี regime filter ในแม่พิมพ์ จะได้
 lever ใหม่ให้ sweep ทั้ง family และเป็นตัว "ปิดเครื่องเมื่อสภาวะไม่ใช่" ที่ demo cohort ยังไม่มี
