@@ -4,6 +4,10 @@
 # each account gets ~5.5 min of terminal life (export fires at 0s/+2m/+4m via boot-ticks).
 # Configs (with investor passwords, user-maintained) live OUTSIDE the repo: D:\Monitor\configs\*.ini
 # Skips any config whose Password= line is still blank.
+# PREREQ: D:\Monitor\MT5 and D:\Monitor\MT4 must be EXNESS-branded terminals (download from
+# Exness), NOT copies of another broker's build — a ThinkMarkets/other build CANNOT log into
+# Exness servers (login returns 0). Install Exness MT5+MT4 to these paths, log into ONE Exness
+# account manually first so the Exness server list is cached, then this rotation works.
 $ErrorActionPreference = 'Continue'
 $mt5exe = 'D:\Monitor\MT5\terminal64.exe'
 $mt4exe = 'D:\Monitor\MT4\terminal.exe'
