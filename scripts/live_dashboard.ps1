@@ -31,6 +31,20 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ---------------------------------------------------------------------------
+# 0. per-account analysis window (user directive 2026-07-10): deals BEFORE the
+#    account's start date are the user's earlier hand experiments - exclude them
+#    from every metric or they poison PF/DD of the current cohort.
+#    159503454: old bot closes Mar-May 2026, current cohort attached 2026-07-09
+#    415573666: natural gap 2026-05-21..26 (old experiment ended 05-20, new set from 05-27)
+# ---------------------------------------------------------------------------
+$acctStart = @{
+  '141049900' = [datetime]'2026-05-26'
+  '159475669' = [datetime]'2026-05-26'
+  '415573666' = [datetime]'2026-05-26'
+  '159503454' = [datetime]'2026-07-01'
+}
+
+# ---------------------------------------------------------------------------
 # 1. locate newest CSV per account (MT5 deals + MT4 orders formats)
 #    EA_LAB_deals_<login>[_<yyyyMMdd>].csv       (DealsExporter.mq5, deal rows)
 #    EA_LAB_mt4_orders_<login>[_<yyyyMMdd>].csv  (OrdersExporterMT4.mq4, closed orders)
@@ -81,6 +95,14 @@ $cohort = [ordered]@{
   "991001" = @{ Name = "EA_BREAKOUT_XAU (BRK-XAU)";                       Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
   "991004" = @{ Name = "(BRK)_SqueezeBreakout (SqueezeBRK)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
   "991002" = @{ Name = "(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)"; Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.4 }
+  # Boss_14 GridLog demo bench on 415573666 (DEMO_DEPLOYMENT_PLAN cohort-1 table; MT5 platform default kill/warn)
+  "990201" = @{ Name = "Boss_14_GridLog USDJPY";                           Symbol = "USDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990202" = @{ Name = "Boss_14_GridLog AUDNZD";                           Symbol = "AUDNZD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990203" = @{ Name = "Boss_14_GridLog EURJPY (size-light)";              Symbol = "EURJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990204" = @{ Name = "Boss_14_GridLog AUDCAD";                           Symbol = "AUDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
 }
 
 # ---------------------------------------------------------------------------
@@ -97,8 +119,11 @@ $grandTotalRows = 0
 # magic (string) -> array of parsed deal objects
 $byMagic = @{}
 
+$filteredOld = 0
 foreach ($file in $selected) {
   $isMT4 = $file.BaseName -like 'EA_LAB_mt4_orders_*'
+  $fileLogin = ""; if ($file.BaseName -match '^(?:EA_LAB_deals|EA_LAB_mt4_orders)_(\d+)') { $fileLogin = $Matches[1] }
+  $startCut = $null; if ($fileLogin -and $acctStart.ContainsKey($fileLogin)) { $startCut = $acctStart[$fileLogin] }
   foreach ($d in @(Import-Csv -Path $file.FullName)) {
     $magic = "$($d.magic)"
     $profit = 0.0; $swap = 0.0; $commission = 0.0; $volume = 0.0
@@ -126,6 +151,8 @@ foreach ($file in $selected) {
       $ticket = $d.ticket
       $symbol = $d.symbol
     }
+
+    if ($startCut -and $dt -lt $startCut) { $filteredOld++; continue }   # pre-window hand experiments
 
     $rowNet = $profit + $swap + $commission
 
@@ -343,6 +370,7 @@ foreach ($r in $rowsSorted) {
   [void]$tableRowsHtml.AppendLine("</tr>")
 }
 
+$acctWindowsDisplay = HtmlEnc (($acctStart.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key) from $($_.Value.ToString('yyyy-MM-dd'))" }) -join ' | ')
 $grandTotalDisplay = Fmt-Money $grandTotalNet
 $generatedAt = $now.ToString("yyyy-MM-dd HH:mm:ss")
 $srcCsvName = HtmlEnc (($selected | ForEach-Object { $_.Name }) -join ', ')
@@ -417,7 +445,9 @@ $html = @"
 <h1>EA_LAB Live Dashboard</h1>
 <div class="meta">
   Generated: $generatedAt &middot; Source CSV: <code>$srcCsvName</code> &middot;
-  Accounts: <code>$acctLogin</code>
+  Accounts: <code>$acctLogin</code><br>
+  Analysis windows (deals before these dates = earlier hand experiments, excluded):
+  <code>$acctWindowsDisplay</code> &middot; excluded rows: $filteredOld
 </div>
 
 <div class="card legend">
