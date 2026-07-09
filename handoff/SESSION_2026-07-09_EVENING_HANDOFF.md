@@ -38,9 +38,30 @@ Cohort 8 ตัวรอ user attach (checklist 5 ข้อใน ORDER-055) · 
    (จาก Degold) เป็นงาน mold ชิ้นถัดไป (additive + cage)
 4. Z-score pairs feasibility (backlog) · เหมือง JSON เหลือ 33 convs (อ่านเฉพาะถ้าอยากได้ lead เพิ่ม)
 
-## บทเรียนใหม่วันนี้ (ยังไม่อยู่ใน skill — ควร bank เข้า backtest-optimize-rigor)
+## บทเรียนใหม่วันนี้ (✅ bank เข้า backtest-optimize-rigor แล้วทั้งหมด — 6 แถวใหม่ใน artifact catalog)
 - **Model-1 trap ตรวจง่าย:** n ผิดธรรมชาติ (หมื่น-แสนไม้) + PF สวย = ต้อง M1-vs-M4 same-window ก่อนเชื่อ
 - **Naked-signal floor บนทอง H1 = PF-5th ~0.85** (squeeze 0.837 / trendline 0.867 / supertrend 0.865)
   — อย่าเสียเวลา build สัญญาณเดี่ยวเพิ่ม ให้เริ่มจาก confluence เลย
 - **VWAP/volume-based กลยุทธ์ = ตายตั้งแต่ instrument** บน MT5 spot-CFD (tick volume ปลอม)
 - **Regime gate ห้ามใช้กับ grid ที่พึ่ง entry ถี่** (EURUSD พัง: ไม้ระเบิด 189→425)
+- **Close-time conditioning survivorship (ค้นพบดึก, ORDER-067):** offline bucket ด้วย lagging indicator
+  ณ เวลาปิดไม้ = นับไม้ชนะเข้า TREND อัตโนมัติ (ไม้ชนะเข้าก่อน ADX ยืนยันแล้วดัน ADX ขึ้นเอง) — Trendline
+  offline 1.208 แต่ in-EA gate จริง **0.861 แย่กว่า ungated 0.973** → conditioning ต้องใช้ค่าตอน*เข้า*ไม้ +
+  lagging gate ต้อง confirm ด้วย in-EA run เสมอ
+- **Doctrine ระดับสถาปัตยกรรม (คุยกับ user ปิดคืน):** lagging regime filter → ใส่ได้เฉพาะระบบยิงต่อเนื่อง
+  (grid/harvester — regime ยาวกว่า lag) · สัญญาณ event-driven → ใช้ได้แต่ leading state (compression:
+  BB-width/squeeze/ATR-ratio หด) — SqueezeBRK คือหลักฐานมีชีวิต · mode 2 (direction-lock) แพ้ mode 1 ทุก cell
+
+## Recheck รอบดึก (user สั่ง "ทำ 1-4") — ผลสุทธิ
+- ✅ **EURJPY m1t25 = Boss V2 bench CANDIDATE #2** (plateau t23-27 · year-split บวกทุกปี · MC 1.202→1.346)
+- ✅ USDJPY ยืนเดิม (CANDIDATE #1) — สองตัวนี้เป็น in-EA run จริง ไม่โดน survivorship artifact
+- ❌ STF rescue (Donchian AND-condition ทำ sample พัง 159→27: ST flip เป็น lagging event) — RESERVE ต่อ
+- ❌ AsReMix (gate แก้ regime ได้ แก้ edge-decay ไม่ได้ — decay อยู่ใน TREND bucket เอง) — PARKED ต่อ
+- ❌ Trendline rev02 ADX gate (survivorship artifact ข้างบน) — **#8 คง EXPERIMENTAL + kill เข้ม ไม่มีทาง
+  promote ผ่าน regime gate** · rev02 source เก็บไว้ที่ project (default OFF, magic 991008)
+
+## ไอเดียที่ user เคาะทิศไว้ (คิว session หน้า อันดับแรกหลัง attach)
+**"Pre-breakout compression gate" เป็น lever ใหม่:** ATR-ratio หด (ATR < ~0.8×SMA(ATR,100)) หรือ BB-width
+percentile ต่ำ ณ ก่อนสัญญาณ — leading state วัดตอนเข้าได้จริง ไม่โดน survivorship · A/B กับ BRK / Zeus /
+#8 / STF ใน pattern เดียวกับ ORDER-062 · ที่มา: doctrine ข้างบน + user วิเคราะห์เอง (ADX บอกหลัง = ช้าไป
+สำหรับ entry, หน้าที่จริงคือ on/off ระบบต่อเนื่อง)
