@@ -2379,7 +2379,19 @@ export ได้เท่าที่ tab โชว์ — journal ปริ๊�
 
 ---
 
-## ORDER-061 — hunt ใหม่: (BRK)_FlagPennant @ XAUUSD H1 (กลไก next-EV จาก handoff) — `IN-PROGRESS (Claude, 2026-07-09)` _(user สั่ง "hunt ใหม่เลย" — flag/pennant คือกลไกเดียวที่ handoff 07-09 ระบุว่า EV เหลือ)_
+## ORDER-061 — hunt ใหม่: (BRK)_FlagPennant @ XAUUSD H1 (กลไก next-EV จาก handoff) — `REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ NO EDGE, ปิดพร้อม mechanism insight)` _(user สั่ง "hunt ใหม่เลย" — flag/pennant คือกลไกเดียวที่ handoff 07-09 ระบุว่า EV เหลือ)_
+
+**VERDICT (levers swept 5/7: pole-strength · flag-length · flag-width · SL · TP — symbol/TF = home ที่พิสูจน์แล้ว):**
+- coarse 12 cells × 2 windows: **ไม่มี cell PF>1.2 ทั้งคู่** + lever พลิกขั้วข้าม window (BWD ชอบ flagBars 4 /
+  HOLDOUT ชอบ 6) = ลายเซ็น no-edge ตาม gate ข้อ 3
+- RR sweep (SL{1.0,1.5}×TP{3..8}) บน cell ที่ดีสุด (pole2.0/bars4/range2.5): BWD ดีสุด 1.19 · HOLDOUT ดีสุด 1.00
+  และ **TP กว้างขึ้น = แย่ลง monotone ทั้งสอง window** (TP8: 0.77-0.98 / 0.33-0.85)
+- **Mechanism insight (ของจริงที่ได้จาก order นี้):** flag-continuation ตรงข้าม squeeze — squeeze เข้า "ตอนเริ่ม"
+  vol expansion (TP กว้าง = ดี, กู้ด้วย RR ได้) แต่ flag เข้า "หลัง" impulse ใช้โมเมนตัมไปแล้ว → move ไม่วิ่งต่อ
+  (TP กว้าง = ตาย) · **ทอง H1: โมเมนตัมถูกกินหมดใน pole — continuation-after-pause ไม่ใช่ edge ของสนามนี้**
+- สรุป hunt space: flag/pennant = ลองแล้ว ❌ → กลไกใหม่ที่เหลือใน list เดิม = order-flow (ไม่มีข้อมูล) เท่านั้น ·
+  ทางที่ EV เหลือจริง: **regime-axis (_50_) re-funnel ของ Boss_14 family** (lever ใหม่บน infra เดิม — Stage B
+  พิสูจน์แล้วว่า lever มีชีวิตบน XAU) — เสนอเป็นแผนวันถัดไป รอ user เคาะ
 
 **กลไก:** pole (impulse ≥ PoleAtrMult×ATR ใน PoleBars แท่ง) → flag (พักตัวแคบ ≤ FlagRangeAtrMult×ATR,
 retrace ≤ MaxRetrace ของ pole) → break ขอบ flag ตามทิศ pole · L1 single-position จริง SL/TP ATR-based,
