@@ -216,6 +216,18 @@ input int    _71_ATRMA    = 20;    // ATR_EXPAND smoothing period
 input double _71_ATRRatio = 1.0;   // trade when ATR > ratio*ATR_MA
 input int    _72_SlopeBar = 3;     // MA_SLOPE bars back
 
+//==================== Regime (50x) =================================
+input group "=== 50x Regime (market-state gate) ==="
+input int             _50_RegimeMode      = 0;          // 0=off 1=filter 2=direction
+input bool            _50_AllowTrendUp    = true;       // mode 1 only
+input bool            _50_AllowTrendDown  = true;       // mode 1 only
+input bool            _50_AllowRange      = true;       // mode 1 only
+input ENUM_TIMEFRAMES _50_Regime_TF       = PERIOD_H4;
+input int             _50_ADX_Period      = 14;
+input double          _50_ADX_TrendMin    = 25.0;
+input double          _50_StormATRmult    = 2.0;        // 0=storm disabled
+input int             _50_StormLookback   = 100;
+
 //==================== Exit / TP (2x) ===============================
 input group "=== 2x Exit / TP params ==="
 input double _21_TP_Pip       = 500;   // 21 Fixed TP

@@ -8,6 +8,7 @@
 
 #include "Inputs.mqh"
 #include "Indicators.mqh"
+#include "Regime.mqh"
 #include "Execution.mqh"
 #include "RiskControl.mqh"
 #include "MoneyManagement.mqh"
@@ -49,6 +50,11 @@ int OnInit()
       return INIT_FAILED;
    }
    g_lab_last_bar = 0;
+   if(!Regime_Init())
+   {
+      Print("[INIT] regime handles failed");
+      return INIT_FAILED;
+   }
    Exec_Init();
    RiskControl_Init();
    Recovery_Init();
@@ -69,6 +75,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   Regime_Deinit();
    Indi_Deinit();
 }
 
@@ -100,8 +107,10 @@ void OnTick()
       {
          if(Exec_CountAll() > 0) return;          // basket open: fully bar-gated
          if(RiskControl_IsHalted()) return;
+         if(Regime_BlocksFlatEntry()) return;     // mode 0=no-op; only flat first-entries are gated
          EntrySignal s = Entry_Evaluate();        // resting-stop trigger check
          if(!s.valid) return;
+         if(!Regime_AllowsEntryDirection(s.direction)) return;
          if(!RiskControl_AcctGateOK()) return;    // acct-DD gate (first-entry only, no-op when off)
          if(!RiskControl_AllowNewOrder()) return;
          if(_9_MaxLevels <= 0) return;
@@ -139,7 +148,9 @@ void OnTick()
    if(have == 0)
    {
       // first order requires a valid entry signal
+      if(Regime_BlocksFlatEntry()) return;        // gate only the first entry; open baskets stay untouched
       if(!sig.valid) return;
+      if(!Regime_AllowsEntryDirection(sig.direction)) return;
       if(!RiskControl_AcctGateOK()) return;   // acct-DD gate (first-entry only, no-op when off)
       if(!RiskControl_AllowNewOrder()) return;
       if(_9_MaxLevels <= 0) return;
