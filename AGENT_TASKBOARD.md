@@ -2239,7 +2239,7 @@ Year split (`scripts\report_year_split.py`, raw closed-deal balance stats):
 
 ---
 
-## ORDER-057 — mold upgrade: `Regime.mqh` (market-state filter, additive) — `OPEN` · **ทำได้: Codex/Claude/oc-dev** · 👉 **Codex-direct** _(ออก 2026-07-09, user สั่ง: "อยากได้ตัวระบุสภาวะตลาด trend/sideway เป็น direction ให้ EA + ปิดได้")_
+## ORDER-057 — mold upgrade: `Regime.mqh` (market-state filter, additive) — `CLAIMED(codex, 2026-07-09 07:32 ICT)` · **ทำได้: Codex/Claude/oc-dev** · 👉 **Codex-direct** _(ออก 2026-07-09, user สั่ง: "อยากได้ตัวระบุสภาวะตลาด trend/sideway เป็น direction ให้ EA + ปิดได้")_
 
 **ทำไม:** cohort มี EA ที่ตายเพราะ regime เปลี่ยน (NZDUSD-SELL = PARKED regime-dependent ·
 Scalping-AsReMix = PARKED trend-specialist edge-decay) — ถ้ามี regime filter ในแม่พิมพ์ จะได้
@@ -2280,6 +2280,38 @@ user อยากได้หน้าเดียวแบบโพส FB: แ�
 ea-live-monitor ที่เคยรัน (ต่างได้ ≤ rounding) · commit `[tag] ORDER-058 done`
 **ห้าม:** ตัดสิน keep/kill ใน HTML (สีเป็นแค่ flag ตามเกณฑ์ที่ประกาศแล้ว — verdict = Claude/user) ·
 ห้ามแตะ scripts อื่น
+
+---
+
+## ORDER-059 — COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → ต้อง validate เต็ม — `OPEN (raw promising, ห้ามใช้จนกว่าผ่าน gate)` · **ทำได้: ZCode/oc-btest (validation) + Claude (judge)** _(ออก 2026-07-09 — ไอเดียจากโพส FB Claude Thailand, user เคาะ "ทำทั้งหมด")_
+
+**ทำไม:** สมมติฐาน (ตั้งก่อนดูข้อมูล — จากคอมเมนต์ CME/Spotgamma ในโพส FB): EA momentum/breakout
+บนทองควรทำงานดีเมื่อ speculator net-long สูง (= regime เทรนด์). ทดสอบครั้งเดียว ไม่ได้ sweep หา factor
+
+**ของที่มีแล้ว (Claude, 2026-07-09):**
+- `scripts\cot_pull.ps1` → `_mt5_auto\cot_gold.csv` — CFTC legacy COT gold (088691) รายสัปดาห์
+  2019→ปัจจุบัน 391 แถว + `net_pct_3y` (percentile ของ noncomm-net ใน trailing 156 รายงาน) ·
+  Socrata API ฟรี ไม่ต้องมี key · **join ต้อง lag +3 วัน** (รายงานข้อมูลวันอังคาร เผยแพร่ศุกร์ — ไม่งั้น lookahead)
+- **Exploratory (lag แล้ว, trade list จาก backtest funnel 07-08, bucket LOW<33 / MID 33-67 / HIGH>67):**
+
+| EA | LOW n/PF | MID n/PF | HIGH n/PF |
+|---|---|---|---|
+| SqueezeBRK | 37 / **0.72** | 25 / 2.98 | 33 / **3.96** |
+| Trendline (#8 exp) | 138 / 1.20 | 96 / 1.00 | 117 / **1.91** |
+| BRK-XAU | 26 / 2.63 | 28 / 1.81 | 32 / 2.80 |
+
+  อ่านดิบ: ทุกตัว HIGH ดีสุด · SqueezeBRK monotone ชัด (LOW ขาดทุนจริง) · BRK เกือบไม่แคร์ regime
+  (สอดคล้องที่มันผ่านทุกด่านอยู่แล้ว) · **use case ที่หอมสุด: Trendline #8** — ถ้า gate แล้ว PF-5th
+  ข้าม 1.0 ได้ = promote จาก EXPERIMENTAL
+
+**งาน validate (ก่อนใช้จริง — VERDICT GATE เต็ม):**
+1. per-year split 2020-2026 ทุก bucket (กัน pattern มาจากปีเดียว) + ทั้ง 2 window BWD/recent
+2. sweep threshold {50, 67, 75} — ดู surface ไม่ใช่จุดเดียว · นับ trade ที่หายไป (BRK ~13/yr บางอยู่แล้ว)
+3. ถ้ารอด: รัน MC บน trade list ที่ gate แล้วของ Trendline — PF-5th ต้อง >1.0 ถึง promote
+4. operational: filter นี้เป็น weekly on/off ที่มือคนทำได้ (ไม่ต้องแก้ EA) — ถ้าผ่าน ให้โชว์ COT pct
+   ปัจจุบันใน LIVE_DASHBOARD (ORDER-058) เป็นไฟบอกสถานะ
+**ห้าม:** เอา bucket ไป gate EA จริงตอนนี้ · ประกาศ "validated" จากตารางบนนี้ (single-factor,
+funnel-era trade lists, ยังไม่ split ปี)
 
 
 
