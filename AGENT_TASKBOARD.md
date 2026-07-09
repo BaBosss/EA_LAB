@@ -2416,6 +2416,13 @@ plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — patte
   m1t25 → ถ้ารอด เข้า Boss V2 bench (track ที่ park อยู่) — ไม่แตะ demo cohort ปัจจุบัน · สรุป lever _50_:
   ของจริงแบบ**เลือกบ้าน** (XAU ✅ USDJPY ✅ อีก 6 ❌) ไม่ใช่ universal — ตรง each-edge-one-home อีกครั้ง
 
+**Validation ต่อ (Claude, 2026-07-09 เย็น): ✅ USDJPY m1t25 = CANDIDATE เข้า Boss V2 bench**
+- year-split: การกู้กระจายทุกปีไม่ใช่ปีเดียว — 2020 (ปีเน่าของ base): −1,151/PF 0.58/n119 → gated −46/n18
+  (หน้าที่ filter เป๊ะ: เลิกเทรด chop) · 2021-2026 บวกทุกปีหลัง gate · 2022: 1.46→1.95
+- MC bootstrap 5000: base PF-5th **0.946** (<1) → gated **1.203** (ข้ามเกณฑ์) · med 1.18→1.57
+- สถานะ: CANDIDATE (in-sample-selected แต่ evidence tier เท่า demo candidates เดิม) → รอ Boss V2 track
+  unpark แล้วเข้า demo bench ตามคิว · set = `FAM_USDJPY_m1t25.set`
+
 ---
 
 ## ORDER-063 — smoke เทส EA จาก Downloads 3 ตัว — `REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ ตายครบ 3: GOD4+HedgingGrid untestable-locked · Degold REJECT ที่ martingale-recheck)`
@@ -2429,6 +2436,12 @@ BWD 2020-22 · main tester (เลน 1)
 - ❌ **V2_15_SEMI_ORI_FINAL_GOD4.ex5 = REJECT (untestable)** — locked, init fail ทันทีทั้ง XAU/EURUSD
 - ❌ **Hedging Grid Pending Auto Lote v.1 = REJECT (untestable)** — locked, hang headless (น่าจะ dialog license)
   ทั้งสอง symbol · ไม่มี source = no verdict possible ตามนิยาม (แบบเดียว North East Way ORDER-037)
+- 🚨 **Family2.2.ex5 (zip โหลด 07-09 เช้า, user ถามบ่าย) = DQ-SECURITY ห้ามรันห้าม attach ทุกกรณี** —
+  วิธีใช้สั่งเปิด **DLL imports** + whitelist WebRequest ไป **http://ea.sytes.net/** (dynamic-DNS ฟรี, HTTP
+  ไม่เข้ารหัส) + no source = โปรไฟล์ phone-home/exfil ตำราเป๊ะ · ไม่เทสแม้ใน tester (เปิด DLL ให้ binary
+  แปลกหน้า = ให้กุญแจเครื่อง) · แฟ้มกักไว้ที่ `wait for test\downloads_20260709\EA_Family22\` — **ห้าม copy
+  เข้า Experts folder ใดๆ** · ถ้าใครในกลุ่มเปิด DLL+URL ไปแล้วบนเครื่องบัญชีจริง: ถอด EA, ปิด DLL, ลบ URL,
+  เปลี่ยนรหัสเทรดทันที · user เคาะ "ไว้ก่อน" 2026-07-09
 - ❌ **Degold_hunter = REJECT ถาวร (optimize-complete + artifact-proven)** — ไล่ครบทุกชั้นตามที่ user ทัก:
   1. smoke W1 สวย (PF 1.79 / n 9,896 / DD 14%) แต่ **flat-lot: PF 0.83 / DD 81.94%** = escalation ล้วน
   2. **probe optimize** (user สั่ง): spacing {30,165,300} × target {10,80,150} × RSI-gate {off,on} × 2 windows
