@@ -14,8 +14,8 @@ $plan = @(
     @{ dir = 'D:\Monitor\MT5 - 159503454';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDc' },
     @{ dir = 'D:\Monitor\MT5 - 159475669';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDc' },
     @{ dir = 'D:\Monitor\MT5 - 415573666';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDm' },
-    @{ dir = 'D:\Monitor\Meta4 - 141049900'; exe = 'terminal.exe';  expert = 'OrdersExporterMT4'; symbol = 'EURUSDc' },
-    @{ dir = 'D:\Monitor\Meta4 - 69424711';  exe = 'terminal.exe';  expert = 'OrdersExporterMT4'; symbol = 'EURUSDm' }
+    @{ dir = 'D:\Monitor\MT4 - 141049900';  exe = 'terminal.exe';   expert = 'OrdersExporterMT4'; symbol = 'EURUSDc' },
+    @{ dir = 'D:\Monitor\MT4 - 69424711';   exe = 'terminal.exe';   expert = 'OrdersExporterMT4'; symbol = 'EURUSDm' }
 )
 
 $procs = @()

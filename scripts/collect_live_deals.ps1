@@ -19,6 +19,10 @@ $found = @()
 $found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_deals_*.csv') -ErrorAction SilentlyContinue
 $found += Get-ChildItem (Join-Path $CommonFiles 'EA_LAB_mt4_orders_*.csv') -ErrorAction SilentlyContinue
 if (-not $found) { Write-Host "no EA_LAB_deals_*/EA_LAB_mt4_orders_*.csv in $CommonFiles (exporter not attached yet?)"; exit 1 }
+# login=0 = terminal was not authorized when the exporter fired -> empty garbage, never collect
+foreach ($s in ($found | Where-Object { $_.BaseName -match '_0$' })) { Write-Host "skipped (login=0, terminal not authorized): $($s.Name)" }
+$found = @($found | Where-Object { $_.BaseName -notmatch '_0$' })
+if (-not $found) { Write-Host "nothing left after login=0 filter"; exit 1 }
 foreach ($f in $found) {
   $stamp = Get-Date -Format 'yyyyMMdd'
   $dest = Join-Path $DestDir ($f.BaseName + "_$stamp.csv")
