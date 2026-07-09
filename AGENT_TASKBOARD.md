@@ -2395,13 +2395,26 @@ export ได้เท่าที่ tab โชว์ — journal ปริ๊�
 
 ---
 
-## ORDER-062 — regime-axis re-funnel ทั้ง Boss_14 family — `IN-PROGRESS (Claude, 2026-07-09 — user เคาะ "ทำข้อ 2 เลย")`
+## ORDER-062 — regime-axis re-funnel ทั้ง Boss_14 family — `REVIEWED/CLOSED (Claude, 2026-07-09 — 🎯 1 hit ชัด: USDJPY · 1 borderline: EURJPY · 6 ไม่เอา)`
 
 8 symbols (GBPAUD_p26 · CADJPY/EURJPY/EURUSD/USDJPY/AUDCAD DEMO · NZDUSD/GBPJPY ISpick) ×
 {base, m1t20, m1t25} × {FWD 2023-26, BWD 2020-22} = 48 runs บนเลน 2 → `_mt5_auto\REGIME_FAMILY.csv` ·
 runner = `_mt5_auto\ab_sets\regime_sets\run_regime_family.ps1` · mode2 ตัดทิ้ง (Stage B: แพ้ mode1 ทุก cell)
 **เกณฑ์อ่านผล (ประกาศก่อนเห็นผล):** สนใจตัวที่ base อ่อน window นึงแล้ว m1 กู้โดยไม่ทำร้ายอีก window แบบ
 plateau (ทั้ง t20+t25 ไปทางเดียวกัน) — pattern เดียวกับ XAU Stage B · ห้าม cherry-pick cell เดี่ยว
+
+**VERDICT (ตามเกณฑ์ที่ประกาศ):**
+- ✅ **USDJPY = hit เต็มเกณฑ์ตัวเดียว** — BWD (window อ่อน) 1.07/306/DD14.9% → t20 **1.54**/203/DD4.4% ·
+  t25 **1.65**/184/DD4.4% (สอง threshold ไปทางเดียวกัน = plateau) · FWD ไม่เสีย (1.52→1.52/1.44) · net BWD
+  352→1350 — **shape เดียวกับ XAU Stage B เป๊ะ**
+- 🟡 EURJPY borderline — t25 ดีขึ้นทั้งคู่ (FWD 2.51→2.79 · BWD 1.18→1.23 + DD 11.9→5.9% ครึ่งเดียว!) แต่
+  t20 ทำ BWD พัง (0.96) = threshold เดี่ยวไม่ใช่ plateau → เก็บเป็น reserve ห้าม adopt จาก cell เดียว
+- ❌ GBPAUD (BWD n บางเกิน + FWD เสีย) · CADJPY (ไม่กู้) · **EURUSD (gate ทำ grid dynamics พัง — trades ระเบิด
+  189→425, DD 11→20-24%: บทเรียน gate ไม้แรกกับ grid ที่พึ่ง entry ถี่ = อันตราย)** · AUDCAD (base ดีอยู่แล้ว)
+  · NZDUSD (FWD พัง) · GBPJPY (t20/t25 พลิกขั้ว)
+- **ข้อจำกัด:** ทั้ง 2 window ถูกใช้ select = in-sample · **ทางต่อของ USDJPY:** year-split + MC บน trade list
+  m1t25 → ถ้ารอด เข้า Boss V2 bench (track ที่ park อยู่) — ไม่แตะ demo cohort ปัจจุบัน · สรุป lever _50_:
+  ของจริงแบบ**เลือกบ้าน** (XAU ✅ USDJPY ✅ อีก 6 ❌) ไม่ใช่ universal — ตรง each-edge-one-home อีกครั้ง
 
 ---
 
@@ -2422,6 +2435,43 @@ BWD 2020-22 · main tester (เลน 1)
 - **Stage 2 (กำลังรัน):** 4 Sonnet agents skim 12 ไฟล์ → catalog กลไก/โค้ด/ความใหม่เทียบ cohort
 - **Stage 3 (Claude):** judge catalog → เลือก build candidates (เกณฑ์: กลไกใหม่จริง + กติกาชัด — VWAP-based
   น่าสนใจสุดเพราะ cohort ยังไม่มี) · ที่เหลืออีก 33 บทสนทนา = อ่านเฉพาะถ้า top-12 ให้ของดี
+
+**VERDICT Stage 3 (Claude, 2026-07-09 — catalog ครบ 12/12):**
+- **ขยะ/ซ้ำของที่เรามี-REJECT แล้ว (7 ไฟล์):** 024 scaffold framework · 015 recovery-hedge spec (ตระกูล REJECT
+  81/82) · 041 AW-Recover clone (**ไม่มี SL ต่อไม้ทั้ง 5 เวอร์ชัน**) · 030 prompt-eng session · 036 triage PDF
+  ซ้ำ STRATEGY_200_ANALYSIS · 022+009 = 11-EA ตาม**โหราศาสตร์** (โค้ดครบแต่ allocation ไม่ใช่ market logic)
+- **ของจริงที่สกัดได้ — จัดอันดับ build EV:**
+  1. 🥇 **SuperTrend/HalfTrend/Chandelier "ATR-band flip"** — โผล่อิสระ **5 แหล่ง** (025 HalfTrend MTF ·
+     043 Smart Trail · 009 P10 · 022 P10 · STRATEGY_200 #68 top-pick) · กลไก: trailing extreme ∓ ATR×mult
+     พลิกทิศ = trend-follow ที่ exit ด้วยเส้นวิ่งตาม ไม่ใช่ fixed TP · บ้านที่ควรเทส: XAU H1 (edge class
+     momentum ที่พิสูจน์แล้ว) · build ถูกสุด (indicator เดียว + โครง L1 มีแล้ว) → **ORDER-065**
+  2. 🥈 **VWAP Wave (010 — สเปคเต็ม 4 setup)** — VWAP+SD band แยก Balance/Discovery + Initial Balance ·
+     กลไกใหม่แท้ต่อ cohort (ไม่มีตัวไหนใช้ fair-value anchor) · ต้องกลั่นเหลือ setup เดียวก่อน (S1 continuation
+     หรือ S4 VWAP-bounce) — ห้าม build ตามสเปค 30 ไฟล์ (บวม+ML+Wyckoff = overfit trap) → **ORDER-066**
+  3. 🥉 **Z-score pairs stat-arb EURUSD/USDCHF** (009 P5 + 022 P5 สองแหล่ง) — market-neutral = return stream
+     คนละจักรวาลกับ cohort ทั้งกอง · ติดเรื่อง infra (multi-symbol tester + ไม่มี price SL ในดีไซน์เดิม = ต้อง
+     ใส่ hard SL เอง) → วิจัยความเป็นไปได้ก่อน build → backlog
+  4. **Graft ideas ใส่ของที่มีอยู่ (ถูกมาก):** ATR>1.2×ATR_MA เป็น squeeze-proxy ราคาถูก (032) · vote N-of-M
+     gate (043/032) · asymmetric-lot MTF confluence (025 — เห็นต่างเข้าครึ่งไซส์) · time-stop 48 แท่ง (032)
+  5. **Anti-pattern เก็บเข้าคลัง:** virtual SL (043) · recovery-multiplier ซ้อน martingale (043) · equity-based
+     kill แทน price SL (041) · "AI/Neural" = ป้ายการตลาดของ EA ขายตลาด 90% (035 audit ชี้ Quantum Emperor
+     เจ้าของเติมเงินเข้า signal ปิด DD!)
+- Boring-Pips-style cross-pair reversion (035) + session-gate (022 P11) = MED เก็บ backlog ไม่เร่ง
+
+---
+
+## ORDER-065 — build: (TRD)_SuperTrendFlip @ XAUUSD H1 — `OPEN (คิวถัดไป — จาก ORDER-064 อันดับ 1)` · **ทำได้: Claude (build) → funnel มาตรฐาน**
+
+กลไก: trailing extreme ∓ ATR(p)×mult พลิกทิศ (SuperTrend-style) · เข้าเมื่อ flip ตามทิศ + EMA200 filter ·
+exit = เส้น SuperTrend วิ่งตาม (ไม่มี fixed TP) + hard SL ATR · L1 single-position โครง SqueezeBRK · magic 991006
+· levers ต้อง sweep: ATR period {10,14,22} × mult {2,3,4} × EMA on/off + RR โหมด fixed-TP เทียบ trail
+· funnel: 3 windows + MC + corr เทียบ Zeus/BRK/SqueezeBRK (ระวังซ้ำ family — ถ้า corr >0.6 = ไม่เพิ่ม)
+
+## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `OPEN (หลัง 065)` · **ทำได้: Claude (design กลั่นจากสเปค 010) → funnel มาตรฐาน**
+
+กลั่นจาก conv 010 เหลือ **setup เดียว**: VWAP daily-anchor + SD band 1.0/1.5 → Price-Discovery continuation
+(break 1.0SD + acceptance ≥3 แท่ง → เข้า pullback แตะ band) · ห้ามยก ML/Wyckoff/Volume-Profile มา (ตัดให้เหลือ
+VWAP+SD+ATR ล้วน) · ของใหม่แท้ต่อ cohort — ค่า EV อยู่ที่ความ uncorrelated · magic 991007
 
 **กลไก:** pole (impulse ≥ PoleAtrMult×ATR ใน PoleBars แท่ง) → flag (พักตัวแคบ ≤ FlagRangeAtrMult×ATR,
 retrace ≤ MaxRetrace ของ pole) → break ขอบ flag ตามทิศ pole · L1 single-position จริง SL/TP ATR-based,
