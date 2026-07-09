@@ -1,0 +1,35 @@
+; Degold_hunter entry-edge probe (ORDER-063 follow-up): flat-lot, sweep spacing x target
+; escalation OFF to isolate entry edge per VERDICT GATE #5 flat-lot rule
+Allow_BUY=true||true||0||true||N
+Allow_SELL=true||true||0||true||N
+EA_makes_first_order=true||true||0||true||N
+Open_order_on_trend=false||false||0||false||N
+First_step=10||10||0||10||N
+Minimum_price_distance=30||30||0||30||N
+Move_step=5||5||0||5||N
+Distance_between_orders=30||30||135||300||Y
+Maximum_allowed_loss=100000.0||100000.0||0||100000.0||N
+Close_loss_by_drawdown=10.0||10.0||0||10.0||N
+Order_lotsize=0.1||0.1||0||0.1||N
+Increase_lotsize_by=0.0||0.0||0||0.0||N
+Multiply_lotsize_by=1.0||1.0||0||1.0||N
+Round_lotsize_to_decimals=2||2||0||2||N
+Profit_for_closing_2_directions=10.0||10.0||70||150.0||Y
+Profit_for_closing_1_direction=50.0||50.0||0||50.0||N
+Auto_calculated_profit=50||50||0||50||N
+Loss_for_closing=100000.0||100000.0||0||100000.0||N
+Trailing_type=1||1||0||1||N
+Trailing_step=0||0||0||0||N
+Minimum_trailing_profit=10||10||0||10||N
+Padding_by_fractals_or_candles=0||0||0||0||N
+Timeframe_fractals_or_candles=15||15||0||15||N
+Magic=777||777||0||777||N
+Font_size=10||10||0||10||N
+Stoploss=0||0||0||0||N
+Takeprofit=0||0||0||0||N
+Opening_1_order_on_indicators=false||false||0||false||N
+Oversold_zone=15||15||0||15||N
+Overbought_zone=85||85||0||85||N
+RSI_Period=5||5||0||5||N
+StartHour=0||0||0||0||N
+EndHour=24||24||0||24||N

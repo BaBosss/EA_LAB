@@ -2429,12 +2429,25 @@ BWD 2020-22 · main tester (เลน 1)
 - ❌ **V2_15_SEMI_ORI_FINAL_GOD4.ex5 = REJECT (untestable)** — locked, init fail ทันทีทั้ง XAU/EURUSD
 - ❌ **Hedging Grid Pending Auto Lote v.1 = REJECT (untestable)** — locked, hang headless (น่าจะ dialog license)
   ทั้งสอง symbol · ไม่มี source = no verdict possible ตามนิยาม (แบบเดียว North East Way ORDER-037)
-- ❌ **Degold_hunter = REJECT ถาวรที่ martingale-recheck** — ผ่าน smoke W1 สวย (XAU 2024-26: PF 1.79 /
-  n 9,896 / DD 13.99%) แต่ recheck 4 ข้อ**ตกครบทุกข้อ**: (1) SL ต่อไม้ = ไม่มี (Stoploss=0) (2) จำกัดไม้ =
-  ไม่ (margin-cap อย่างเดียว) (3) **flat-lot test (Multiply=1.0): PF 0.83 / net −4,706 / DD 81.94%** =
-  entry ไม่มี edge — PF 1.79 ทั้งก้อนคือ escalation เก็บกำไรใน window เข้าทาง (4) ดื้อ (re-grid สองทิศตลอด)
-  = ตระกูล uncapped-ruin ตามนิยาม · BWD retry ของ Claude ได้ report (ยืนยัน agent วินิจฉัย history ผิด)
-  แต่ 0 ไม้ = ยิ่ง fragile · reports: `DG_XAU_W1.htm` / `DG_XAU_W1_FLAT.htm` / `DG_XAU_BWD_RETRY.htm`
+- ❌ **Degold_hunter = REJECT ถาวร (optimize-complete + artifact-proven)** — ไล่ครบทุกชั้นตามที่ user ทัก:
+  1. smoke W1 สวย (PF 1.79 / n 9,896 / DD 14%) แต่ **flat-lot: PF 0.83 / DD 81.94%** = escalation ล้วน
+  2. **probe optimize** (user สั่ง): spacing {30,165,300} × target {10,80,150} × RSI-gate {off,on} × 2 windows
+     = 36 cells → M1 โชว์เลขมหัศจรรย์ (PF 3-8, n สูงถึง 464k!) = โปรไฟล์กับดัก Model-1
+  3. **artifact check ชี้ขาด**: cell ดีสุด (RSI-on d30) window เดียวกัน 2026H1 —
+     **Model 1: +$343,880 PF 13.12 / Model 4 tick จริง: −$4,284 PF 0.56 DD 47.6%** = edge ทั้งหมดคือ
+     fantasy fill ของแท่งสังเคราะห์ (rolling straddle ระยะจิ๋วเลือดไหลค่า spread ตลอดเวลาบน tick จริง)
+  · levers swept 4 แกน + both windows + M1/M4 = REJECT สมบูรณ์ตาม gate ทุกข้อ ไม่มีชั้นค้าง
+  · reports: `DG_XAU_W1*.htm` / `DEGOLD_PROBE_*.xml` / `DG_ARTCHECK_M1/M4.htm`
+
+**หลักการที่สกัดจาก source (user ขอ "อ่าน logic เอาหลักการมาต่อ"):**
+- ✅ **น่าทดลองต่อ 1 ชิ้น: basket-trailing จาก volume-weighted average** — Degold trail SL ทั้ง basket
+  อ้างอิงราคาเฉลี่ยถ่วง lot (โหมด candles/fractals/points, ต้องกำไรขั้นต่ำก่อน trail) — ExitManager ของ
+  Boss chassis ยังไม่มีโหมดนี้ (มีแต่ basket TP money/ATR) → ลง backlog เป็น mold-lever candidate
+  (additive + cage มีอยู่แล้ว — งานสไตล์ ORDER-027)
+- 🟡 พอจด: auto-TP scale ตาม lots×tickvalue (เรามี ATR-scaled แล้ว ใกล้กัน) · direction-lock รายฝั่ง
+  (คล้าย RiskControl เราแบบ per-side)
+- ❌ อย่าเอา: rolling straddle chase (แกนกลางของมัน = ตัวที่ M4 ฆ่า — จ่าย spread ทุกการขยับ) ·
+  RSI gate เฉพาะไม้แรกแล้วปล่อย grid ดื้อ (blueprint RSI-MR เราทำถูกกว่า: signal คุมทุกไม้)
 
 ---
 
