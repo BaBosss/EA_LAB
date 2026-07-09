@@ -11,7 +11,13 @@
 | **MT4** | #1 UnNomGuai · #2 RSI-orig · #3 swb | portable ใหม่ `D:\Meta4demo` |
 | **MT5** | #4 RSI-MR · #5 Zeus · #6 BRK-XAU · #7 SqueezeBRK · #8 Trendline(exp) | portable ใหม่ `D:\Meta5demo` |
 
-- ทั้งคู่: บัญชีใหม่ **$10,000** · **ThinkMarkets demo** (broker ที่ validate) · type **Hedge** (RSI-MR ต้องการ hedging)
+- ทั้งคู่: บัญชีใหม่ **$10,000** · type **Hedge** (RSI-MR ต้องการ hedging)
+- **broker: user ใช้ Exness (ตัดสิน 2026-07-09) — ตรวจแล้วไม่ต้องแก้ set ไหน:** XAUUSD Exness = 3 ตำแหน่ง
+  แต่ EA ทองทั้ง 4 ปลอดภัย (BRK/Squeeze/Trendline = ATR-mult ล้วน · Zeus ใช้ PipSize digit-aware →
+  pip = $0.01 เท่ากันทุก broker) · FX pairs = 5 ตำแหน่งเท่า broker เดิม
+- **⚠️ Exness ต้องเปิดชนิด Standard ไม่ใช่ Cent** — cent ใช้ symbol ห้อย `c` และ P&L = 1/100 ของตาราง
+  expected values + kill-switch $ ด้านล่างจะเพี้ยนหมด (ถ้าจำเป็นต้องใช้ cent → ให้ Claude สเกลเกณฑ์ใหม่ก่อน)
+- spread/feed Exness ≠ broker ที่ validate (ThinkMarkets) = watch item ของรอบ monitor แรก ไม่ใช่ blocker
 - ❌ ห้ามใช้ `D:\Meta4`/`D:\Meta4b`/`D:\Meta 5`/`D:\Meta 5b` (เลนเทส script ฆ่า terminal ทิ้งประจำ)
 - 1 บัญชี/platform รันหลาย EA ได้ (คนละ chart/magic)
 
