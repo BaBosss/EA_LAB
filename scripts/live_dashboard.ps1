@@ -1,4 +1,4 @@
-<#
+﻿<#
 live_dashboard.ps1 - ORDER-058: per-EA live-monitor dashboard (ต่อยอด DealsExporter/ORDER-039+042)
 
 Reads the newest EA_LAB_deals_*.csv snapshot in portfolio\live_deals\ (collected by
@@ -40,8 +40,17 @@ $ErrorActionPreference = "Stop"
 $acctStart = @{
   '141049900' = [datetime]'2026-05-26'
   '159475669' = [datetime]'2026-05-26'
-  '415573666' = [datetime]'2026-05-26'
+  '415573666' = [datetime]'2026-07-06'   # was 05-26; user confirmed 2026-07-10 the magic-12345 XAU run (05-27..07-03, -3.5k) was an abandoned experiment -> window starts at Boss_14 attach
   '159503454' = [datetime]'2026-07-01'
+}
+
+# display meta per account (DEMO_DEPLOYMENT_PLAN "DEPLOYMENT REALITY 2026-07-09") - Order controls section order
+$acctMeta = [ordered]@{
+  '159503454' = @{ Label = "Blazing Arrow — REAL cent · MT5 cohort 5 EA (validated)";            Order = 1 }
+  '159475669' = @{ Label = "Boss - Trend Swing — REAL cent · user mix (lab ไม่รับรองบางตัว)";      Order = 2 }
+  '141049900' = @{ Label = "Celestial Woodfire — REAL cent · MT4 gold fleet (user experiment)";  Order = 3 }
+  '415573666' = @{ Label = "Demo Mt5-2 — DEMO · Boss_14_GridLog bench x7 symbols";               Order = 4 }
+  '69424711'  = @{ Label = "Demo EA3 — DEMO MT4 cohort (monitor deferred)";                      Order = 5 }
 }
 
 # ---------------------------------------------------------------------------
@@ -86,23 +95,29 @@ $fileDateDisplay = ""   # folded into acctLabels per file
 #            default rows; EA-specific kills have no declared warn -> 80% of kill.
 # ---------------------------------------------------------------------------
 $cohort = [ordered]@{
-  "1"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "2"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "5888"   = @{ Name = "RSI from pips_EA (RSI-orig)";                     Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "990"    = @{ Name = "swb grid 4.1.0.3_h";                              Symbol = "AUDCAD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "990103" = @{ Name = "(Boss)_RSI_MR_GridLog (RSI-MR)";                  Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990101" = @{ Name = "(Boss)_ZeusInspired_GridLog (Zeus)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 12.0 }
-  "991001" = @{ Name = "EA_BREAKOUT_XAU (BRK-XAU)";                       Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "991004" = @{ Name = "(BRK)_SqueezeBreakout (SqueezeBRK)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "991002" = @{ Name = "(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)"; Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.4 }
+  "69424711|1"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "69424711|2"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "69424711|5888"   = @{ Name = "RSI from pips_EA (RSI-orig)";                     Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "69424711|990"    = @{ Name = "swb grid 4.1.0.3_h";                              Symbol = "AUDCAD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "159503454|990103" = @{ Name = "(Boss)_RSI_MR_GridLog (RSI-MR)";                  Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "159503454|990101" = @{ Name = "(Boss)_ZeusInspired_GridLog (Zeus)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 12.0 }
+  "159503454|991001" = @{ Name = "EA_BREAKOUT_XAU (BRK-XAU)";                       Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
+  "159503454|991004" = @{ Name = "(BRK)_SqueezeBreakout (SqueezeBRK)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
+  "159503454|991002" = @{ Name = "(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)"; Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.4 }
   # Boss_14 GridLog demo bench on 415573666 (DEMO_DEPLOYMENT_PLAN cohort-1 table; MT5 platform default kill/warn)
-  "990201" = @{ Name = "Boss_14_GridLog USDJPY";                           Symbol = "USDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990202" = @{ Name = "Boss_14_GridLog AUDNZD";                           Symbol = "AUDNZD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990203" = @{ Name = "Boss_14_GridLog EURJPY (size-light)";              Symbol = "EURJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990204" = @{ Name = "Boss_14_GridLog AUDCAD";                           Symbol = "AUDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990201" = @{ Name = "Boss_14_GridLog USDJPY";                           Symbol = "USDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990202" = @{ Name = "Boss_14_GridLog AUDNZD";                           Symbol = "AUDNZD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990203" = @{ Name = "Boss_14_GridLog EURJPY (size-light)";              Symbol = "EURJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990204" = @{ Name = "Boss_14_GridLog AUDCAD";                           Symbol = "AUDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  # 159475669 user-mix magics we can name (no lab-declared kill for this account -> MT5 platform defaults)
+  "159475669|1524"   = @{ Name = "NuiIndy Dynamic RSI+ADX";                          Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "159475669|9398"   = @{ Name = "ST_EA03 Count-MACD USDCAD (lab live)";             Symbol = "USDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "159475669|939721" = @{ Name = "ST_EA03 Count-MACD GBP (user config, recovery-lot ⚠️)"; Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "159475669|990005" = @{ Name = "CB_GBP ConsoBreakout";                             Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "159475669|990010" = @{ Name = "ST03 replica (WATCH: OOS 0.86)";                   Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
 }
 
 # ---------------------------------------------------------------------------
@@ -116,7 +131,7 @@ function Parse-TimeSafe([string]$s) {
 $grandTotalNet = 0.0
 $grandTotalRows = 0
 
-# magic (string) -> array of parsed deal objects
+# "login|magic" (string) -> array of parsed deal objects
 $byMagic = @{}
 
 $filteredOld = 0
@@ -156,19 +171,31 @@ foreach ($file in $selected) {
 
     $rowNet = $profit + $swap + $commission
 
+    if (-not $isMT4) {
+      # MT5 deal type > 1 = balance/credit/correction op, not a trade: keep it out of every
+      # EA row and account subtotal (a 10k deposit is not P&L) - count in grand total only
+      $t5 = -1
+      if (-not [int]::TryParse($d.type, [ref]$t5) -or $t5 -lt 0 -or $t5 -gt 1) {
+        $grandTotalNet += $rowNet; $grandTotalRows++
+        continue
+      }
+    }
+
     $obj = [pscustomobject]@{
       Ticket  = $ticket
       Time    = $dt
       Symbol  = $symbol
       Magic   = $magic
+      Acc     = $fileLogin
       Entry   = $entryVal
       Volume  = $volume
       RowNet  = $rowNet
       Profit  = $profit
     }
 
-    if (-not $byMagic.ContainsKey($magic)) { $byMagic[$magic] = New-Object System.Collections.Generic.List[object] }
-    $byMagic[$magic].Add($obj)
+    $key = "$fileLogin|$magic"
+    if (-not $byMagic.ContainsKey($key)) { $byMagic[$key] = New-Object System.Collections.Generic.List[object] }
+    $byMagic[$key].Add($obj)
 
     $grandTotalNet += $rowNet
     $grandTotalRows++
@@ -237,17 +264,19 @@ function Compute-MagicMetrics {
 $now = Get-Date
 $rows = New-Object System.Collections.Generic.List[object]
 
-$allMagics = New-Object System.Collections.Generic.List[string]
-foreach ($k in $cohort.Keys) { $allMagics.Add($k) }
-foreach ($k in $byMagic.Keys) { if (-not $allMagics.Contains($k)) { $allMagics.Add($k) } }
+$allKeys = New-Object System.Collections.Generic.List[string]
+foreach ($k in $cohort.Keys) { $allKeys.Add($k) }
+foreach ($k in $byMagic.Keys) { if (-not $allKeys.Contains($k)) { $allKeys.Add($k) } }
 
-foreach ($magic in $allMagics) {
-  $inCohort = $cohort.Contains($magic)
+foreach ($key in $allKeys) {
+  $acc = "?"; $magic = $key
+  if ($key -match '^(\d+)\|(.*)$') { $acc = $Matches[1]; $magic = $Matches[2] }
+  $inCohort = $cohort.Contains($key)
   $meta = $null
-  if ($inCohort) { $meta = $cohort[$magic] }
+  if ($inCohort) { $meta = $cohort[$key] }
 
   $deals = New-Object System.Collections.Generic.List[object]
-  if ($byMagic.ContainsKey($magic)) { $deals = $byMagic[$magic] }
+  if ($byMagic.ContainsKey($key)) { $deals = $byMagic[$key] }
 
   $m = Compute-MagicMetrics -deals $deals -baseEquity $BaseEquity
 
@@ -286,6 +315,7 @@ foreach ($magic in $allMagics) {
 
   $rows.Add([pscustomobject]@{
     Rank       = $rank
+    Acc        = $acc
     Name       = $name
     Magic      = $magic
     Symbol     = $symbol
@@ -347,27 +377,51 @@ $rowClassMap = @{
   grey   = "st-grey"
 }
 
-$tableRowsHtml = New-Object System.Text.StringBuilder
-foreach ($r in $rowsSorted) {
-  $icon = $iconMap[$r.StatusIcon]
-  $rowClass = $rowClassMap[$r.StatusIcon]
-  $netClass = "neu"
-  if ($r.NetPL -gt 0) { $netClass = "pos" }
-  if ($r.NetPL -lt 0) { $netClass = "neg" }
+# --- one <section> per account: header (label + window + subtotal) + its own table ---
+$theadHtml = "<tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>"
 
-  [void]$tableRowsHtml.AppendLine("<tr class=`"$rowClass`">")
-  [void]$tableRowsHtml.AppendLine("<td class=`"status-cell`" title=`"$(HtmlEnc $r.StatusLabel)`">$icon</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"name-cell`">$(HtmlEnc $r.Name)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Magic)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Symbol)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$($r.Trades)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell $netClass`">$(Fmt-Money $r.NetPL)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-PF $r.PF)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$([Math]::Round($r.MaxDDPct,1))%</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.KillDD)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-Days $r.DaysSince)</td>")
-  [void]$tableRowsHtml.AppendLine("<td class=`"label-cell`">$(HtmlEnc $r.StatusLabel)</td>")
-  [void]$tableRowsHtml.AppendLine("</tr>")
+$accOrder = @{}
+foreach ($k in $acctMeta.Keys) { $accOrder[$k] = $acctMeta[$k].Order }
+
+$sectionsHtml = New-Object System.Text.StringBuilder
+$accGroups = $rowsSorted | Group-Object Acc | Sort-Object { if ($accOrder.ContainsKey($_.Name)) { $accOrder[$_.Name] } else { 99 } }, Name
+foreach ($ag in $accGroups) {
+  $accId = $ag.Name
+  $label = "account $accId"
+  if ($acctMeta.Contains($accId)) { $label = $acctMeta[$accId].Label }
+  $winTxt = "all history"
+  if ($acctStart.ContainsKey($accId)) { $winTxt = "from $($acctStart[$accId].ToString('yyyy-MM-dd'))" }
+  $subNet = ($ag.Group | Measure-Object NetPL -Sum).Sum
+  $subTrades = ($ag.Group | Measure-Object Trades -Sum).Sum
+  $subClass = "neu"; if ($subNet -gt 0) { $subClass = "pos" }; if ($subNet -lt 0) { $subClass = "neg" }
+
+  [void]$sectionsHtml.AppendLine("<div class=`"card acct-card`">")
+  [void]$sectionsHtml.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $accId)</b> &middot; $(HtmlEnc $label) &middot; window: $winTxt &middot; net <span class=`"$subClass`">$(Fmt-Money $subNet)</span> USC &middot; $subTrades trades</div>")
+  [void]$sectionsHtml.AppendLine("<table>")
+  [void]$sectionsHtml.AppendLine($theadHtml)
+  foreach ($r in $ag.Group) {
+    $icon = $iconMap[$r.StatusIcon]
+    $rowClass = $rowClassMap[$r.StatusIcon]
+    $netClass = "neu"
+    if ($r.NetPL -gt 0) { $netClass = "pos" }
+    if ($r.NetPL -lt 0) { $netClass = "neg" }
+
+    [void]$sectionsHtml.AppendLine("<tr class=`"$rowClass`">")
+    [void]$sectionsHtml.AppendLine("<td class=`"status-cell`" title=`"$(HtmlEnc $r.StatusLabel)`">$icon</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"name-cell`">$(HtmlEnc $r.Name)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Magic)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.Symbol)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$($r.Trades)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell $netClass`">$(Fmt-Money $r.NetPL)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-PF $r.PF)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$([Math]::Round($r.MaxDDPct,1))%</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(HtmlEnc $r.KillDD)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"num-cell`">$(Fmt-Days $r.DaysSince)</td>")
+    [void]$sectionsHtml.AppendLine("<td class=`"label-cell`">$(HtmlEnc $r.StatusLabel)</td>")
+    [void]$sectionsHtml.AppendLine("</tr>")
+  }
+  [void]$sectionsHtml.AppendLine("</table>")
+  [void]$sectionsHtml.AppendLine("</div>")
 }
 
 $acctWindowsDisplay = HtmlEnc (($acctStart.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key) from $($_.Value.ToString('yyyy-MM-dd'))" }) -join ' | ')
@@ -439,6 +493,13 @@ $html = @"
   tr.st-white  { background: #fafafa; }
   tr.st-grey   { background: #f1f1f1; }
   .footer { color: #888; font-size: 12px; margin-top: 16px; }
+  .acct-card { padding: 10px 12px; }
+  .acct-head { font-size: 14px; margin-bottom: 8px; }
+  .acct-card table { overflow-x: auto; display: block; }
+  @media (max-width: 640px) {
+    body { margin: 8px; }
+    th, td { padding: 4px 6px; font-size: 12px; }
+  }
 </style>
 </head>
 <body>
@@ -464,13 +525,7 @@ $html = @"
   (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
 </div>
 
-<table>
-<tr>
-  <th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th>
-  <th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th>
-</tr>
-$($tableRowsHtml.ToString())
-</table>
+$($sectionsHtml.ToString())
 
 <div class="footer">
   Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): $grandTotalDisplay &middot;
