@@ -2813,7 +2813,7 @@ conditioning = survivorship artifact (offline ADX gate สวย → in-EA จ�
 
 ---
 
-## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `OPEN` (build: Claude+Sonnet · runs: agent)
+## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE1-DONE(Claude-agent, 2026-07-10)` — Stage 2/3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent)
 
 **ทำไม rev02:** user ชี้ถูก — flat-lot 0.68 (ORDER-068) วัดด้วย exit เดิมของ EA (ปิด 5-20 pips เหนือ
 breakeven = scalp) ซึ่งขัดธรรมชาติ MACD "win rate ต่ำ/รันเทรนได้" → verdict "entry ไม่มี edge" ยัง
@@ -2837,6 +2837,37 @@ SL จริง · dollar-based release) แล้วเข้า funnel เต�
 **Build ก่อนรัน (Claude/Sonnet, session หน้า):** exit modes + gate inputs + spacing modes บน Boss V2
 (one-exit-owner ตามกติกา chassis) · compile 0/0 · `tpl_regression.ps1` CLEAN · ห้ามแตะไฟล์ fxDreema เดิม
 **ห้าม:** ข้าม stage · optimize หลายแกนพร้อมกันใน stage เดียว · ตัดสินผลก่อนครบทั้ง 2 symbol
+
+### RESULT Stage 1 (Claude-agent 2026-07-10) — raw numbers only, NO verdict (judge = main session)
+
+**เกณฑ์ pre-registered (quoted verbatim จาก order ด้านบน):**
+> **เกณฑ์ตั้งล่วงหน้า:** exit ตัวใดตัวหนึ่ง PF ≥1.0 ทั้ง 2 symbol → signal มีชีวิต ไป Stage 2 ·
+> ทุกตัว <0.85 (naked floor) ทั้งคู่ → entry ตายจริง ปิดเคส ห้ามขุดต่อ · ระหว่าง 0.85-1.0 = ไป Stage 2 แบบ WATCH
+
+Build: `ea_projects\(EXP)_ST03_Naked\(EXP)_ST03_Naked_rev00.mq5` (compile 0 err / 0 warn, MetaEditor headless) —
+EXPERIMENT EA แยกสัญญาณ Entry_ST03 เพียว: 1 ไม้/สัญญาณ flat 0.10 · ไม่มี grid/ทบ · ATR(14) SL 2.0×ATR ทุกไม้ ·
+bar-open gate · Entry_Evaluate() ทุก bar แม้ถือไม้อยู่ (LabCore parity — counter/latch เดินเหมือน Boss_15) ·
+magic 999071. ไฟล์ build: `(EXP)_ST03_Naked_rev00.mq5` + `entries\Entry_ST03.mqh` (**VERBATIM copy** ของ
+`ea_template\core\entries\Entry_ST03.mqh` + header provenance เท่านั้น — เหตุผล: include ข้าม directory ลาก
+core Inputs.mqh มาชนชื่อ enum `ExitMode`) + `entries\IEntry.mqh` (verbatim copy) + `Indicators.mqh`
+(shim ขั้นต่ำ: enum/inputs/_15_*/Indi_MACD ค่า verbatim จาก core) + `set_files\ST03NKD_*.set` (4 ชุด) ·
+**ไม่แตะ ea_template\ เลย** → regression cage ไม่ต้องรัน
+Runs: GBPUSD + USDCAD H1 · 2023.01.01–2026.07.01 · Model 1 · deposit 10000 · leverage 1:2000 · flat 0.10 ·
+ExitMode 1=fixed TP (TpAtrMult×ATR) / 2=ATR-trail 2.0×ATR / 3=opposite Donchian(20,H1)-break ·
+reports `_mt5_auto\reports\ST03NKD_*.htm` (gitignored) · ini `_mt5_auto\ini\ST03NKD_*.ini`
+
+| symbol | exit | PF | net | maxDD% (bal) | eqDD% | trades | win% |
+|---|---|---|---|---|---|---|---|
+| GBPUSD | 1 fixed TP 2.0×ATR | 0.88 | −2,376.44 | 28.02 | 28.16 | 1049 | 46.8 |
+| GBPUSD | 1 fixed TP 3.0×ATR | 0.84 | −3,268.85 | 33.43 | 33.85 | 891 | 36.0 |
+| GBPUSD | 2 ATR trail 2.0×ATR | 0.89 | −1,711.49 | 21.22 | 21.80 | 1300 | 34.8 |
+| GBPUSD | 3 Donchian(20,H1) break | 0.84 | −2,172.59 | 25.88 | 26.67 | 606 | 23.9 |
+| USDCAD | 1 fixed TP 2.0×ATR | 0.83 | −1,901.89 | 24.89 | 25.12 | 1027 | 46.1 |
+| USDCAD | 1 fixed TP 3.0×ATR | 0.80 | −2,279.02 | 26.70 | 26.82 | 864 | 35.2 |
+| USDCAD | 2 ATR trail 2.0×ATR | 0.77 | −2,117.77 | 24.39 | 24.57 | 1283 | 35.0 |
+| USDCAD | 3 Donchian(20,H1) break | 0.80 | −1,512.98 | 16.68 | 17.67 | 575 | 24.4 |
+| *baseline ORDER-068* GBPUSD | EA-เดิม scalp-exit, esc OFF | 0.68 | −10,054.49 | 100.24 | 100.31 | 561 | n/a |
+| *baseline ORDER-068* USDCAD | EA-เดิม scalp-exit, esc OFF | 0.40 | −9,941.62 | 99.59 | 99.69 | 350 | n/a |
 
 
 ---
