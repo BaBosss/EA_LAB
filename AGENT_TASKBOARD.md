@@ -3465,13 +3465,68 @@ sweep ครบ+MC refute) · SuperTrendFlip (MC 0.865 + rescue แล้วล�
 Oracle EA (จะให้อ่าน trade list เลยไหม) · GBPJPY1H90PCWR (รู้จักที่มา/เคยใช้ไหม) · MultiHedge (M0 1.29
 net จิ๋ว — คุ้มถือไหม)
 
-## ORDER-085 — SuperTrend XAU H4: un-park ตาม corr rule — `OPEN` (role: agent, งานเล็ก)
+## ORDER-085 — SuperTrend XAU H4: un-park ตาม corr rule — `DONE(Claude-agent, 2026-07-10)`
 
 **คำสั่ง:** (1) Model 0 + spread-stress confirm บน set validated เดิม (`EA_SUPERTREND.mq5`,
 KAUERMAN-era configs — หา set/params จาก signal-landscape entry 2026-06-27) XAU H4 2023-2026
 (2) คำนวณ corr/DD-overlap ปัจจุบัน vs BRK-XAU Bars55 + Boss_16 (ถ้ามี data) (3) ตาราง + ข้อเสนอ
 size ตามสูตร reduce-lot (เช่น 1/3 ของ BRK) **Acceptance:** ตาราง M0/SPR + corr + ร่าง EA-SCORE
 ต่อเกณฑ์ 8 ข้อ · commit `[tag] ORDER-085 done` · **ห้าม:** deploy/verdict (Claude+user ตัดสิน)
+
+**ผล (agent, 2026-07-10 — lane D:\Meta 5b เท่านั้น, main lane ไม่แตะ):**
+
+Config = `_mt5_auto\sweeps\_sets\ST_v1_naked_default.set` (default: ATR10×3, EMA200, ADX14≥20,
+SL=ATR×2 ทุกไม้, no TP, flip-exit, fixed 0.01 lot, 1 position) · deposit 10,000 / leverage 1:100 ·
+XAUUSD H4 2023.01.01-2026.07.01 · report `_mt5_auto\reports\ST_XAU_H4_M0_FULL.htm`
+
+**1) M0 + spread stress vs old M4 reference:**
+
+| Run | Window | PF | Net $ | Trades | DD | Sharpe |
+|---|---|---|---|---|---|---|
+| **M0 every-tick (ใหม่, gen-tick 141M, quality 98%)** | 2023.01-2026.07 | **2.93** | **1,690** | 56 | bal 2.85% / eq 4.85% | 1.95 |
+| **M0 + spread +30pt (arithmetic, −$0.30/ไม้)** | 2023.01-2026.07 | **2.88** | **1,674** | 56 | closed-trade 2.57% | — |
+| M4 ref IS (validated 2026-06-27) | 2023.01-2025.06 | 1.54 | — | 37 | 2.23% | 1.10 |
+| M4 ref OOS (validated 2026-06-27) | 2025.06-2026.06 | 4.49 | — | 18 | 4.94% | 1.75 |
+| M2 smoke ref (2026-06-27) | 2023-2026 | 3.32 | — | 50 | 4.8% | — |
+
+- ⚠️ **วิธี spread stress:** MT5 (build 5836) **ไม่รับ fixed spread จาก ini เลย** — พิสูจน์แล้ว:
+  `Spread=20/300` และ `TestSpread=300` ใน `[Tester]` ให้ผล **เหมือน baseline ทุกตัวเลข**
+  (reports `SPRCHK_ST_base/s20/s300/ts300`, M1 2026.01-07: net 256.49 / PF 3.42 / 5t ทั้ง 4 run)
+  → MT5 ใช้ spread จาก history/tick จริงเสมอ (ต่างจาก MT4 TestSpread) · stress จึงเป็นเลขคณิตบน
+  trade list: XAU point=0.01, 0.01 lot → 30pt = $0.30/ไม้ (แม่นตรงเพราะ flat-lot) · หมายเหตุใส่ไว้ใน
+  `scripts/mt5_run.ps1` แล้ว กันคนหลังเข้าใจผิดว่า ini stress ได้
+- **Trade profile (เผื่อใช้ตัดสิน):** win 35.7% · top-5 winners = **95.2% ของ net** (ไม้ใหญ่สุด
+  $723.9 = 43% ของ net) · yearly net: 2023 **−16.76** (8t) / 2024 +59 (20t) / 2025 +668 (22t) /
+  2026H1 +980 (6t) → กำไรกระจุก 2025-26 (gold bull) · **BWD 2020-22 ยังไม่เคยรัน**
+
+**2) Corr / DD-overlap (monthly P&L Pearson, `corr_monthly.py` logic, window 2023.01-2026.07):**
+
+| Baseline | corr (shared months) | DD-overlap (เดือนลบตรงกัน/เดือนลบรวม) | หมายเหตุ |
+|---|---|---|---|
+| **BRK_FULLSPAN (BRKXAU Bars40 buy-only H1, 2026-07-08 = report BRK-XAU ใหม่สุด)** | **0.421** (23 shared mo) | **4/27 = 0.15** | เกิน gate 0.40 นิดเดียว = WATCH |
+| QWEN_BRK55 IS+OOS (Bars55/TP8/EMA150 variant) | 0.217 (9 shared mo) | 4/23 = 0.17 | ⚠️ data บาง (24 ไม้) + เป็น config PF 1.07 ไม่ใช่ Bars55 validated |
+| BRKXAUH4_c0 (Bars8 — ref เดิม 2026-06-27) | 0.728 (30 shared mo) | 8/25 = 0.32 | ตรง ref เดิม 0.724 ✅ |
+
+⚠️ report HTML ของ Bars55 validated (TP4/6+EMA200) ไม่เหลือในเครื่อง (ไฟล์ `BRKXAUH4_c4/c5` ถูก sweep
+Bars8-20 เขียนทับ — เหลือแต่ตัวเลขใน `sweeps/DONCH_XAU_H4.csv`) → ใช้ BRK_FULLSPAN (Bars40 buy-only,
+ใหม่สุด+ไม้เยอะสุด) เป็น baseline หลักแทน · สูตร reduce-lot ตาม rule เดิม (corr>0.4 = ลด lot ไม่ตัด):
+ที่ corr 0.42-0.73 ≈ **1/3 ของ BRK leg** (เชิงกลไกตามสูตร — การตัดสิน size จริงเป็นของ Claude+user) ·
+Boss_16: ไม่มี monthly data ที่เทียบได้ใน repo ณ วันรัน (ORDER-078 ยังไม่ปิด) — ข้ามตามเงื่อนไข "ถ้ามี data"
+
+**3) ร่าง EA-SCORE v1 (หลักฐานต่อเกณฑ์ — ไม่รวมคะแนน ไม่ verdict ตามห้าม):**
+
+| # | เกณฑ์ | หลักฐาน | สถานะ |
+|---|---|---|---|
+| 1 | Entry edge เปล่า (หลัง spread+M0) | naked fixed-lot by design · M0 PF 2.93 → +30pt 2.88 | ✅ pass |
+| 2 | โครง MM ครบ | source ยืนยัน: hard SL=ATR×2 ทุกไม้ · 1 position · fixed 0.01 lot (ไม่มี grid/martingale) · flip-exit | ✅ pass |
+| 3 | สอง regime | 2023-26 บวกรวม **แต่ 2023 = −16.76** · **BWD 2020-22 ไม่เคยรัน** | ❓ unknown (ยังไม่ทดสอบ — จุดโหว่ใหญ่สุด: กำไร 97% มาจาก 2025-26) |
+| 4 | Plateau | ไม่เคย sweep รอบ ATR10/mult3/SL2.0 (validate ที่ default จุดเดียว) | ❓ unknown |
+| 5 | Holdout+MC | MC bootstrap 2026-06-27: PF-5th 1.57 / DD-95th 3.26% / ruin 0% ✅ · แต่ holdout ที่ไม่เคย select = ไม่มี (OOS 2025.06-2026.06 ถูกใช้ตัดสิน validate ไปแล้ว) | ◐ partial |
+| 6 | M0+spread confirm | run นี้: 2.93→2.88 ไม่ละลาย | ✅ pass |
+| 7 | Live tracking ≥2 เดือน | PARKED ตั้งแต่ 2026-07-02 ไม่เคย attach demo/live (มี `_vps_deploy\ST_XAU_H4_live_v1.set` เตรียมไว้เฉยๆ) | ❌ no data |
+| 8 | Portfolio additive | corr 0.421 vs BRK ปัจจุบัน (เกิน 0.40 นิด) / 0.728 vs Bars8 · DD-overlap ต่ำ 0.15 | ◐ borderline (ตาม rule = reduce-lot ไม่ใช่ตัด) |
+
+_(กุญแจเพดาน: ไม่มีข้อไหนโดน — มี SL+cap, มี source, ไม่มี crack/DLL)_
 
 
 ---

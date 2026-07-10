@@ -19,6 +19,10 @@ param(
   [Parameter(Mandatory)][string]$ToDate,
   [string]$SetFile = "",
   [int]$Model = 4,                              # 4 = every tick based on real ticks
+  # NOTE: no -Spread param on purpose. MT5 (verified build 5836, ORDER-085 2026-07-10) IGNORES both
+  # "Spread=" and "TestSpread=" in the /config [Tester] section — tester spread always comes from
+  # recorded history/ticks. Spread stress must be done arithmetically on the trade list (or via a
+  # custom symbol). Do NOT re-add the param without re-verifying: a silent no-op here fakes a "pass".
   [int]$Deposit = 10000,
   [int]$Leverage = 100,                         # tester account leverage (1:N)
   [Parameter(Mandatory)][string]$ReportName,
