@@ -3472,3 +3472,36 @@ KAUERMAN-era configs — หา set/params จาก signal-landscape entry 2026
 (2) คำนวณ corr/DD-overlap ปัจจุบัน vs BRK-XAU Bars55 + Boss_16 (ถ้ามี data) (3) ตาราง + ข้อเสนอ
 size ตามสูตร reduce-lot (เช่น 1/3 ของ BRK) **Acceptance:** ตาราง M0/SPR + corr + ร่าง EA-SCORE
 ต่อเกณฑ์ 8 ข้อ · commit `[tag] ORDER-085 done` · **ห้าม:** deploy/verdict (Claude+user ตัดสิน)
+
+
+---
+
+## ORDER-086 — swb grid AUDCAD: เตรียม bundle demo experiment #3 (user อนุมัติ 2026-07-10) — `CLAIMED(Claude-agent)`
+
+**คำสั่ง:** ตาม pattern `_demo_deploy\` เดิม (UnNomGuai/ClevrFX experiment): หา .ex4 + flat-lot set
+ของ swb grid 4.1.0.3_h ที่ผ่าน chain (ORDER-036 survivors + ORDER-046/047 — lot_multiplier=0,
+AUDCAD H1) → สร้าง `_demo_deploy\MT4\swb_experiment3\` = .ex4 + locked .set + README สั้น
+(magic 990 · kill: Model-0 อ้างอิง DD 20.4% → kill ที่ DD 30% · เกณฑ์ judge +3 เดือนหลัง attach ·
+สถานะ = bench tier 5-6 / premium-track กติกา VISION) + MD5 · **Acceptance:** bundle ครบ 3 ไฟล์ +
+แถวใหม่ใน DEMO_DEPLOYMENT_PLAN §experiment (mark: รอ user attach 69424711) · commit
+`[tag] ORDER-086 done` · **ห้าม:** แก้ set จาก validated ค่า · attach เอง
+
+## ORDER-087 — concept rescue batch #1: 6 smokes บน symbol-class ที่ไม่เคยลอง — `CLAIMED(Claude-agent)`
+
+**ทำไม:** ORDER-084: Keltner/Ichimoku/PrevDay/ZSCORE ปิดจาก XAU/EUR default cell เดียว · ceiling
+XAU (1.13-1.19) ห้ามซ้ำ XAU แต่ mechanism-matched class อื่นไม่เคยแตะ
+**คำสั่ง (Model 2 smoke ราคาถูก, main MT5 lane, 2023-2026, default params, บาร์ pre-registered:
+PF≥1.2 = ผ่านไปคิว rescue-ladder เต็ม · <1.0 ทั้งคู่ cell = ปิด concept ฝั่งนั้น):**
+- EA_KELTNER: GBPJPY H4 + USDJPY H4 (trend-follow → JPY movers)
+- EA_ICHIMOKU: GBPJPY H4 + AUDJPY H4 (kumo = JPY-native)
+- EA_ZSCORE: AUDNZD H4 + AUDCAD H4 (reversion → ranger ที่ Boss_14 พิสูจน์ว่า range จริง)
+(PrevDay ตัด — daily-level mechanism พิสูจน์อ่อนข้ามตลาดแล้ว EV ต่ำสุดในสี่ตัว)
+**Acceptance:** ตาราง 6 แถว PF/net/DD/trades + บาร์กำกับ · commit `[tag] ORDER-087 done` · **ห้าม:** verdict
+
+## ORDER-088 — Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" — `CLAIMED(Claude-agent)`
+
+**คำสั่ง:** ใช้ Model-0 report เดิมของ Oracle (ORDER-036 survivors, EURUSD H1, PF 1.43/DD39) —
+ถ้า report ไม่มี trade table ให้รันซ้ำ 1 ครั้งบน MT4 lane · วิเคราะห์ trade list ตามกฎ CommunityPower
+(2026-07-06): ลำดับ lot (ladder? cap?) · SL มีจริงไหม · การกระจุกกำไร (top-5 trades = กี่ % ของ net) ·
+พฤติกรรม DD 39% เกิดจากตะกร้าเดียวหรือสะสม **Acceptance:** ตาราง 4 คำตอบ + quote ไม้จริง ·
+append ใต้ order · commit `[tag] ORDER-088 done` · **ห้าม:** verdict (Claude ให้ EA-SCORE เอง)
