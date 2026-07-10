@@ -312,3 +312,36 @@ SessionBreakout (1200-pass + forward fail), MACD all-symbols (exhaustive), BREAK
 Canonical scoring reference: `D:\EA_LAB\docs\RECOVERED_PLATFORM_DESIGN_20260614.md` (BacktestScore v1).
 
 
+
+
+---
+
+## 🎯 EA-SCORE v1 — คะแนน = สิทธิ์ deploy (จารึก 2026-07-10, ออกแบบร่วม user+Claude)
+
+> ใช้คู่กับ screening score เดิม: score เดิม = คัดตอน intake · **EA-SCORE = ตัดสินสิทธิ์ตอน deploy/ปรับ size**
+> ปรัชญาเบื้องหลัง → VISION.md §ปรัชญาโรงงาน · เกณฑ์ rescue ก่อนตาย → CLAUDE.md VERDICT GATE ข้อ 4
+
+| # | เกณฑ์ | คะแนน | หลักฐานที่นับ |
+|---|---|---|---|
+| 1 | Entry มี edge เปล่า | **2** | flat-lot/naked PF>1 **หลัง spread-stress + Model 0** (ผ่านแค่ Model 1 = 1 คะแนน) |
+| 2 | โครง MM ครบ | **2** | SL ทุกไม้ + hard cap (lot+จำนวนไม้) + controlled-loss release (ครบ=2 บางส่วน=1) |
+| 3 | สอง regime | 1 | บวกทั้ง 2023-26 และ BWD 2020-22 |
+| 4 | Plateau | 1 | เพื่อนบ้าน param ±1 step ไม่มีตัวขาดทุน |
+| 5 | Holdout+MC | 1 | window ที่ไม่เคย select + MC PF-5th ผ่าน, ruin 0 |
+| 6 | M0+spread confirm | 1 | เลขไม่ละลายบน every-tick + spread จริง |
+| 7 | Live tracking | 1 | demo/live ≥2 เดือน วิ่งในกรอบ backtest |
+| 8 | Portfolio additive | 1 | corr <0.4 หรือ DD-overlap ต่ำ vs พอร์ตปัจจุบัน |
+
+**กุญแจเพดาน (คะแนนอื่นชดเชยไม่ได้):** ข้อ1=0 → **เพดาน 5 = premium track** (กรง 3 ชั้นตาม VISION) ·
+no-SL/no-cap → **เพดาน 3** · crack/DLL/timelock/no-source-phone-home → **เพดาน 2**
+
+**สิทธิ์ตามคะแนน:** 9-10 = เงินจริงเต็ม size แกนพอร์ต · 7-8 = เงินจริง cent size มาตรฐาน (ม้างานหลัก) ·
+5-6 = cent ครึ่ง size จับตาเข้ม / demo หนึ่งรอบ judge / premium-track · 3-4 = บัญชีทดลอง user เท่านั้น
+(แยก equity) · ≤2 = tester only
+
+**Calibration ณ วันจารึก (ยืนยันว่า rubric ตรง verdict จริงที่ผ่านมา):** BRK-XAU Bars55 ≈ 8 ·
+Boss_16 21/30 ≈ 5 (จะเป็น 7-8 ถ้าผ่าน ORDER-078) · ST03 family = เพดาน 3 (กุญแจ 2 ดอก) ·
+Zeus locked = เพดาน 3 · Gold_Kangaroo copy = เพดาน 2 (crack)
+
+**กติกาใช้งาน:** ให้คะแนนตอน (ก) จบ funnel (ข) ทุก judge day (ค) หลัง rescue sweep · คะแนนลด =
+สิทธิ์ลดทันที (ไม่มี grandfather) · คะแนนอยู่ในทะเบียน EA แต่ละตัวในไฟล์นี้
