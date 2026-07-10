@@ -3185,3 +3185,28 @@ regime artifact → หยุดสาย RSI-fade แล้วออกแบ�
 หมายเหตุกลไก: config 2 = smoke set เดิมเปลี่ยนบรรทัดเดียว `_16_RsiPeriod=21` · ini Leverage=2000
 (report แสดง 1:100 เหมือนรัน in-sample เดิม — convention เดียวกัน; margin level ต่ำสุด >4200%
 ทั้งสองรัน = leverage ไม่เป็นข้อจำกัด) · ไม่มี tune · ไม่มี verdict — Claude อ่านตามเกณฑ์ล่วงหน้า
+
+
+---
+
+## REVIEW ORDER-077 — `REVIEWED(Claude, 2026-07-10)` — **Boss_16 21/30 = CANDIDATE (ผ่าน both-regimes)** + เปิด ORDER-078
+
+**Verdict:** เกณฑ์ kill (ทั้งคู่ <0.9) ไม่โดน — RSI-fade v0 **ไม่ใช่ regime artifact** ·
+**21/30: IS 1.57/DD 7.1 + BWD 2020-22 1.31/DD 9.6 = บวกทั้งสองโลก** cadence ใกล้กัน (~90 ไม้/ปี)
+— ข้อกังวล peaky จาก 075 ถูกหักล้างบางส่วน (peak ฟลุคปกติพัง BWD แต่ตัวนี้ไม่พัง) · 14/30 อ่อนกว่า
+ข้าม regime (1.04, DD 17.3) = sibling เก็บไว้เทียบ ไม่ใช่ตัวนำ · หมายเหตุ: report โชว์ leverage 1:100
+ตาม convention ini เดิม แต่ margin ไม่เคย binding (>4200%) = ไม่กระทบเลข
+**สถานะ VERDICT GATE ของ 21/30:** levers — entry ✓(075) escalation ✓(flat by design) spacing/TP ✗ยัง ·
+surface — entry peaky แต่ BWD ยัน · both regimes ✓(077) · holdout+MC ✗ยัง → ยังห้ามพูดคำว่า deploy
+
+## ORDER-078 — Boss_16 BUY 21/30: validation funnel เต็ม — `OPEN` (role: agent, งานถัดไปอันดับ 1)
+
+**คำสั่ง (ทีละขั้น หยุดเมื่อตกด่าน):**
+1. **Lever sanity sweep** (กัน knife-edge ไม่ใช่ล่า peak): spacing (AtrMultFirst4 0.6/0.8/1.0 ×
+   AtrMultAfter 1.2/1.4/1.6) × BasketTpUsdPer01 (12/16/20) บน 21/30 H1 IS window — ต้องเห็น
+   neighbor ไม่มีตัวขาดทุน (plateau requirement) ไม่ต้องหาตัวดีกว่า
+2. Year-split 2020/21/22/23/24/25/26 ของ config กลาง — นับปีลบ
+3. Model 0 (every tick) confirm 1 รัน IS window — เลข Model 1 ต้องไม่ละลาย (บทเรียน M2-optimism)
+4. MC bootstrap (robustness-validator convention) — PF 5th percentile + ruin
+**Acceptance:** ตารางครบ 4 ขั้น · commit `[tag] ORDER-078 done` · **ห้าม:** เปลี่ยน entry/lot ·
+เลือก config ใหม่จาก sweep ขั้น 1 (มันคือ sanity check ไม่ใช่ optimization) · verdict (Claude)
