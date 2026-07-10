@@ -12,6 +12,8 @@
 //|    price (SL ratchet, favorable direction only), no fixed TP     |
 //|  - ExitMode 3 = Donchian-break: close when closed bar crosses    |
 //|    the opposite Donchian(20, H1) band, no fixed TP               |
+//| Stage 2 (same order): input GateMode 0-3 = H4 direction gate     |
+//| (MACD / ADX+DI / EMA50-slope) that blocks NEW entries only.      |
 //| Lab conventions: bar-open gate (whole pipeline once per new bar),|
 //| closed-bar indicator values (shift 1), digit/tick-aware price    |
 //| normalize, broker-aware lot normalize, magic-scoped positions.   |
@@ -34,6 +36,11 @@ input double TrailAtrMult = 2.0;    // ExitMode 2: trail distance = mult * ATR b
 input int    DonchianBars = 20;     // ExitMode 3: opposite-band lookback (H1)
 input int    AtrPeriod    = 14;     // ATR period (SL / TP / trail)
 
+input group "=== Experiment: HTF gate (Stage 2, ORDER-071 rev02) ==="
+// Gate blocks NEW entries only - it NEVER closes an open position.
+// All H4 values read on closed H4 bars (shift 1), bar-open evaluation.
+input int    GateMode     = 0;      // 0=none 1=H4 MACD direction 2=H4 ADX(14)>20 + DI direction 3=H4 EMA50 slope
+
 input group "=== Experiment: general ==="
 input double FixedLot     = 0.10;   // flat lot, every position
 input long   MagicNo      = 999071;
@@ -42,7 +49,15 @@ input int    SlippagePts  = 20;
 //==================== Globals =======================================
 CTrade   g_trade;
 int      g_hATR      = INVALID_HANDLE;
+int      g_hGateMACD = INVALID_HANDLE;  // GateMode 1: iMACD(12,26,9) on H4
+int      g_hGateADX  = INVALID_HANDLE;  // GateMode 2: iADX(14) on H4
+int      g_hGateEMA  = INVALID_HANDLE;  // GateMode 3: iMA(50,EMA) on H4
 datetime g_lastBar   = 0;           // bar-open gate
+
+// GateMode fixed params (Stage 2 spec - deliberately NOT swept this stage:
+// isolate one variable = gate direction logic)
+#define GATE_ADX_MIN       20.0    // mode 2: closed-bar H4 ADX(14) must exceed this
+#define GATE_EMA_SLOPE_REF 5       // mode 3: slope = EMA50[1] vs EMA50[5]
 
 //==================== Helpers =======================================
 double Atr1()                        // closed-bar ATR (deterministic on bar-open)
@@ -138,10 +153,60 @@ void ManagePosition(const ulong ticket)
    // ExitMode 1: broker-side SL/TP set at entry — nothing to manage.
 }
 
+//==================== HTF gate (Stage 2) ============================
+double GateBuf(const int handle, const int bufIdx, const int shift)
+{
+   double b[];
+   if(CopyBuffer(handle, bufIdx, shift, 1, b) < 1) return EMPTY_VALUE;
+   return b[0];
+}
+
+// true = direction dir (1=BUY 2=SELL) is allowed to open a NEW entry.
+// Fail-closed: if the H4 data is not ready, block (no half-warmed trades).
+bool GateAllows(const int dir)
+{
+   if(GateMode == 0) return true;
+
+   if(GateMode == 1)   // H4 MACD(12,26,9) main-vs-signal position
+   {
+      double m = GateBuf(g_hGateMACD, 0, 1);
+      double s = GateBuf(g_hGateMACD, 1, 1);
+      if(m == EMPTY_VALUE || s == EMPTY_VALUE) return false;
+      if(dir == 1) return (m > s);
+      if(dir == 2) return (m < s);
+      return false;
+   }
+
+   if(GateMode == 2)   // H4 ADX(14) > GATE_ADX_MIN AND DI+ vs DI- direction
+   {
+      double adx = GateBuf(g_hGateADX, 0, 1);   // MAIN_LINE
+      double dip = GateBuf(g_hGateADX, 1, 1);   // PLUSDI_LINE
+      double dim = GateBuf(g_hGateADX, 2, 1);   // MINUSDI_LINE
+      if(adx == EMPTY_VALUE || dip == EMPTY_VALUE || dim == EMPTY_VALUE) return false;
+      if(adx <= GATE_ADX_MIN) return false;
+      if(dir == 1) return (dip > dim);
+      if(dir == 2) return (dim > dip);
+      return false;
+   }
+
+   if(GateMode == 3)   // H4 EMA50 slope direction (EMA50[1] vs EMA50[5])
+   {
+      double emaNow  = GateBuf(g_hGateEMA, 0, 1);
+      double emaPrev = GateBuf(g_hGateEMA, 0, GATE_EMA_SLOPE_REF);
+      if(emaNow == EMPTY_VALUE || emaPrev == EMPTY_VALUE) return false;
+      if(dir == 1) return (emaNow > emaPrev);
+      if(dir == 2) return (emaNow < emaPrev);
+      return false;
+   }
+
+   return true;   // unknown mode is rejected in OnInit; defensive default
+}
+
 //==================== Entry =========================================
 void TryEnter(const EntrySignal &s)
 {
    if(!s.valid || s.direction == 0) return;
+   if(!GateAllows(s.direction)) return;   // Stage 2: gate blocks NEW entries only
 
    double atr = Atr1();
    if(atr <= 0.0) return;
@@ -189,6 +254,26 @@ int OnInit()
       Print("(EXP)_ST03_Naked: iATR handle failed");
       return INIT_FAILED;
    }
+   if(GateMode < 0 || GateMode > 3)
+   {
+      Print("(EXP)_ST03_Naked: GateMode must be 0/1/2/3, got ", GateMode);
+      return INIT_PARAMETERS_INCORRECT;
+   }
+   if(GateMode == 1)
+   {
+      g_hGateMACD = iMACD(_Symbol, PERIOD_H4, 12, 26, 9, PRICE_CLOSE);
+      if(g_hGateMACD == INVALID_HANDLE) { Print("(EXP)_ST03_Naked: H4 gate iMACD failed"); return INIT_FAILED; }
+   }
+   if(GateMode == 2)
+   {
+      g_hGateADX = iADX(_Symbol, PERIOD_H4, 14);
+      if(g_hGateADX == INVALID_HANDLE) { Print("(EXP)_ST03_Naked: H4 gate iADX failed"); return INIT_FAILED; }
+   }
+   if(GateMode == 3)
+   {
+      g_hGateEMA = iMA(_Symbol, PERIOD_H4, 50, 0, MODE_EMA, PRICE_CLOSE);
+      if(g_hGateEMA == INVALID_HANDLE) { Print("(EXP)_ST03_Naked: H4 gate iMA failed"); return INIT_FAILED; }
+   }
    Entry_ST03_Init();               // recompile-safe: resets latches + bar gate
    g_lastBar = 0;
    g_trade.SetExpertMagicNumber(MagicNo);
@@ -199,8 +284,11 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    Indi_Deinit();
-   if(g_hATR != INVALID_HANDLE) IndicatorRelease(g_hATR);
-   g_hATR = INVALID_HANDLE;
+   if(g_hATR      != INVALID_HANDLE) IndicatorRelease(g_hATR);
+   if(g_hGateMACD != INVALID_HANDLE) IndicatorRelease(g_hGateMACD);
+   if(g_hGateADX  != INVALID_HANDLE) IndicatorRelease(g_hGateADX);
+   if(g_hGateEMA  != INVALID_HANDLE) IndicatorRelease(g_hGateEMA);
+   g_hATR = g_hGateMACD = g_hGateADX = g_hGateEMA = INVALID_HANDLE;
 }
 
 void OnTick()

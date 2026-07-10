@@ -2813,7 +2813,7 @@ conditioning = survivorship artifact (offline ADX gate สวย → in-EA จ�
 
 ---
 
-## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE1-DONE(Claude-agent, 2026-07-10)` — Stage 2/3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent)
+## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE2-DONE(Claude-agent, 2026-07-10)` — Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent)
 
 **ทำไม rev02:** user ชี้ถูก — flat-lot 0.68 (ORDER-068) วัดด้วย exit เดิมของ EA (ปิด 5-20 pips เหนือ
 breakeven = scalp) ซึ่งขัดธรรมชาติ MACD "win rate ต่ำ/รันเทรนได้" → verdict "entry ไม่มี edge" ยัง
@@ -2868,6 +2868,28 @@ reports `_mt5_auto\reports\ST03NKD_*.htm` (gitignored) · ini `_mt5_auto\ini\ST0
 | USDCAD | 3 Donchian(20,H1) break | 0.80 | −1,512.98 | 16.68 | 17.67 | 575 | 24.4 |
 | *baseline ORDER-068* GBPUSD | EA-เดิม scalp-exit, esc OFF | 0.68 | −10,054.49 | 100.24 | 100.31 | 561 | n/a |
 | *baseline ORDER-068* USDCAD | EA-เดิม scalp-exit, esc OFF | 0.40 | −9,941.62 | 99.59 | 99.69 | 350 | n/a |
+
+### RESULT Stage 2 (Claude-agent 2026-07-10) — raw numbers only, NO verdict (judge = main session)
+
+**Scope ruling (lead, ตามเกณฑ์ band ที่ pre-registered ใน Stage 1):** USDCAD = dead — ทุก exit <0.85
+(naked floor) → ปิดฝั่ง CAD ตามเกณฑ์ "ทุกตัว <0.85 ... → entry ตายจริง ปิดเคส" · GBPUSD = WATCH band
+(trail 0.89 อยู่ใน 0.85-1.0) → Stage 2 รันเฉพาะ GBPUSD บน exit ผู้ชนะ Stage 1 (ExitMode 2 = ATR trail 2.0×ATR)
+**เกณฑ์ pre-registered ของ lead สำหรับ Stage 2 (ตั้งก่อนเห็นผล):** gate ต้องถึง **PF ≥ 1.05 พร้อม
+trades ≥ 300** จึงเก็บเคสไว้ต่อ
+
+Build เพิ่ม (rev00 เดิม, additive): `input GateMode` 0=none · 1=H4 MACD(12,26,9) direction ·
+2=H4 ADX(14)>20 + DI direction · 3=H4 EMA50 slope (EMA[1] vs EMA[5]) — gate บล็อกเฉพาะ NEW entry
+ไม่ปิดไม้ที่เปิดอยู่ · อ่าน closed H4 bar (shift 1) bar-open convention เดิม · fail-closed ถ้า H4 data
+ไม่พร้อม · compile 0/0 · sets `set_files\ST03NKD_G1/G2/G3.set` · ไม่แตะ ea_template\ เช่นเดิม
+Runs: GBPUSD H1 · 2023.01.01–2026.07.01 · Model 1 · deposit 10000 · leverage 1:2000 · flat 0.10 ·
+ExitMode=2 ทุกตัว · reports `_mt5_auto\reports\ST03NKD_GBP_G*.htm` (gitignored) · ini `_mt5_auto\ini\ST03NKD_GBP_G*.ini`
+
+| gate (บน ExitMode 2 trail) | PF | net | maxDD% (bal) | eqDD% | trades | win% |
+|---|---|---|---|---|---|---|
+| 0 none (Stage-1 baseline) | 0.89 | −1,711.49 | 21.22 | 21.80 | 1300 | 34.8 |
+| 1 H4 MACD direction | 0.99 | −57.70 | 5.45 | 5.69 | 623 | 37.1 |
+| 2 H4 ADX(14)>20 + DI | 0.82 | −956.28 | 10.88 | 11.49 | 443 | 33.2 |
+| 3 H4 EMA50 slope | 0.94 | −479.19 | 10.04 | 10.38 | 706 | 37.0 |
 
 
 ---
