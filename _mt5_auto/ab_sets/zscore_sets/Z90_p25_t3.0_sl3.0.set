@@ -1,0 +1,9 @@
+; ORDER-090 funnel cell ZPeriod=25 ZThreshold=3.0 SL_ATR=3.0 TP_ATR=0 (revert-only) flat lot 0.01
+_01_ZPeriod=25
+_01_ZThreshold=3.0
+_01_ATRPeriod=14
+_02_SL_ATR=3.0
+_02_TP_ATR=0.0
+_03_FixedLot=0.01
+_04_Magic=990050
+_04_AllowLive=false

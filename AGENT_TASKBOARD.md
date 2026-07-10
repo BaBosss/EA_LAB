@@ -3775,6 +3775,49 @@ SL_ATR 3.0 · TP_ATR 0 (revert-only) · flat lot
 **Acceptance:** ตารางทุกขั้น + สถานะผ่าน/ตกต่อด่าน · commit `[tag] ORDER-090 done` · **ห้าม:** tune เพิ่ม ·
 verdict (Claude ให้ EA-SCORE เมื่อจบ)
 
+### ORDER-090 RESULTS (Claude-agent, 2026-07-10) — STOPPED AT STAGE 2
+
+Run conditions: main MT5 lane (`D:\Meta 5`) · EA_ZSCORE · AUDCAD H4 · Model 1 (M1 OHLC) ทุกขั้นตามคำสั่ง ·
+deposit 10000 · leverage 1:100 · center set = `_mt5_auto/ab_sets/zscore_sets/Z90_p20_t2.5_sl3.0.set`
+(ZPeriod 20 · ZThreshold 2.5 · SL_ATR 3.0 · TP_ATR 0 · FixedLot 0.01 ตาม rescue1/ZSCORE_default) ·
+neighbor sets = `Z90_p*_t*_sl*.set` ที่โฟลเดอร์เดียวกัน · reports = `_mt5_auto/reports/Z90_*.htm`
+
+**Stage 1 — center + 8 neighbors + SL {2.5,3.5} · 2023.01.01–2026.07.01
+(บาร์ verbatim: "plateau requirement: ไม่มีเซลล์ขาดทุน") → ✅ ผ่าน 11/11 ไม่มีเซลล์ขาดทุน**
+
+| ZPeriod | ZThr | SL_ATR | PF | Net ($) | eqDD% | Trades |
+|---|---|---|---|---|---|---|
+| 15 | 2.0 | 3.0 | 1.07 | +24.01 | 0.57 | 299 |
+| 15 | 2.5 | 3.0 | 1.32 | +42.06 | 0.24 | 119 |
+| 15 | 3.0 | 3.0 | 2.25 | +19.70 | 0.12 | 18 |
+| 20 | 2.0 | 3.0 | 1.23 | +77.19 | 0.42 | 260 |
+| **20** | **2.5** | **3.0** | **1.64** | **+93.66** | **0.31** | **120** |
+| 20 | 3.0 | 3.0 | 1.15 | +7.73 | 0.24 | 29 |
+| 25 | 2.0 | 3.0 | 1.19 | +59.48 | 0.37 | 219 |
+| 25 | 2.5 | 3.0 | 1.28 | +46.91 | 0.34 | 106 |
+| 25 | 3.0 | 3.0 | 1.39 | +24.53 | 0.25 | 33 |
+| 20 | 2.5 | 2.5 | 1.54 | +86.35 | 0.33 | 125 |
+| 20 | 2.5 | 3.5 | 1.63 | +89.37 | 0.36 | 118 |
+
+(center Model-1 = PF 1.64/+93.66/120t ตรงแนว Model-2 ของ 089 (1.54-1.61 บริเวณเดียวกัน) —
+M2→M1 ไม่ละลายบน H4 · history quality 100% ทุก run, 5430 bars)
+
+**Stage 2 — center BWD 2020.01.01–2022.12.31
+(บาร์ verbatim: "PF ≥1.1 และ eqDD ≤15%") → ❌ ตก: PF 0.77 < 1.1**
+
+| Window | PF | Net ($) | eqDD% | Trades | Bars | Quality |
+|---|---|---|---|---|---|---|
+| 2020.01.01–2022.12.31 | 0.77 | -50.46 | 1.06 | 104 | 4674 | 99% |
+
+(coverage ครบ — 4674 bars H4 / quality 99% → ตกจริง ไม่ใช่ data gap · eqDD 1.06% ผ่านครึ่งหลังของบาร์
+แต่ PF ตกครึ่งแรก = ตกด่าน)
+
+**Stage 3-5 — ไม่รันตามกติกา "หยุดเมื่อตกด่าน".** หมายเหตุ: year-split 4 run แรกออกมาก่อนสั่งหยุด batch
+(raw evidence เฉยๆ ไม่ใช่การไปต่อ): 2020 PF 0.75/-22.00/35t · 2021 PF 0.66/-21.56/36t ·
+2022 PF 1.05/+2.81/31t · 2023 PF 2.89/+64.92/41t — สองปีลบติดกัน 2020-2021 สอดคล้องกับ BWD ที่ตก
+(ถ้าด่าน 3 ได้รันจริงก็ตกเช่นกัน: >1 ปีลบ)
+
+(no verdict, no tuning, no config changes — ตามห้าม · Claude ตัดสินเอง)
 
 ---
 
