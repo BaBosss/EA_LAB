@@ -2726,6 +2726,15 @@ tier1 10% ตอนเปิด basket) และหลายคู่ PartialFr
 ไม่เคย trigger ทั้ง 2 run = unverified (5) ยืนยัน "overlap" pair-close ไม้ใหม่สุด+เก่าสุด = กลไกกด DD ตัวจริง
 (6) `Multiplier_Martingale` เป็น input → flat-lot test (=1) กับตัว original ทำได้เลย — แนะนำทำก่อนตัดสิน build
 
+### ADDENDUM (Claude-agent 2026-07-10) — flat-lot test (Multiplier_Martingale=1.0, อื่นๆ default, Model 1, 10k, 2023.01.01–2026.07.01) — raw numbers only
+
+| Run | PF | Net $ | maxDD% | Trades | Win% | (เทียบ ×1.5 เดิม: PF / DD%) |
+|---|---|---|---|---|---|---|
+| H1 FLAT (`KANGAROO_XAU_H1_FLAT.htm`) | 5.71 | +15,216.87 | 11.53% | 6,166 | 86.41% | 4.86 / 11.04% |
+| M15 FLAT (`KANGAROO_XAU_M15_FLAT.htm`) | 2.17 | +17,714.56 | 19.91% | 15,477 | 82.01% | 2.30 / 22.54% |
+
+Inputs ยืนยันจาก Journal inputs line (Multiplier_Martingale=1) · set = `_mt4_auto\KANGAROO_flat.set` · Model 1 (Control points) = smoke-grade เท่าเดิม
+
 **ทำไม:** user directive 2026-07-10 — smoke 3.5ปี XAU H1 PF 4.86/DD 11% (6,242 ไม้) โครงสร้างดี:
 bidirectional hedged grid · martingale ×1.5 **มี cap** (1.0 lot, 10 ไม้/ฝั่ง) · SL จริง $90 ทุกไม้ ·
 equity stop 80% · ผ่านเช็คลิสต์ capped-martingale ของแล็บเกือบครบ → คุ้มแกะเป็นของเรา (VISION:

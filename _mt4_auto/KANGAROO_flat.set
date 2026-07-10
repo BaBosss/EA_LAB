@@ -1,0 +1,12 @@
+Starting_Lot=0.01
+Multiplier_Martingale=1.00000000
+Max_Lot_Martingale=1.00000000
+Stop_Loss_Pips=9000
+Distance_in_pips_between_the_first_four_trades=200
+NEW_distance_AFTER_four_first_trades=350
+Max_Sells=10
+Max_Buys=10
+TP_IN_PIPS_for_ONE_position=80
+TP_IN_PIPS_for_more_than_one_position=160
+Close_all_when_loss_is_greater_than_X_percent_of_equity=80
+MagicStart=1111

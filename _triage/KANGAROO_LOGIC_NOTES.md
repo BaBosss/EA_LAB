@@ -176,4 +176,17 @@ risk:
 4. Overlap pair-close threshold เป๊ะๆ ของ original ยัง unresolved — ถ้าอยากได้ต้องรัน controlled test (every-tick, ladder บังคับ) แต่สำหรับ rebuild ค่า sweep เองได้
 5. สมมุติฐาน multi-magic (1112–1115) ยังไม่ยืนยัน — อ่านจาก live report ก่อน fix แม่พิมพ์
 
-**สถานะ:** notes ครบ 4 หัวข้อตาม ORDER-070 · ไม่มี .mq5 · ไม่มี decompile · ไม่มี verdict
+---
+
+## Addendum 2026-07-10 — flat-lot test (ประเด็นเปิดข้อ 1 ทำแล้ว)
+
+รัน original ด้วย `Multiplier_Martingale=1.0` (อื่นๆ default, set = `_mt4_auto\KANGAROO_flat.set`, Journal ยืนยัน inputs applied) · Model 1 · deposit 10k · 2023.01.01–2026.07.01:
+
+| Run | PF | Net $ | maxDD% | Trades | Win% | เทียบ ×1.5: PF / DD% |
+|---|---|---|---|---|---|---|
+| H1 FLAT | 5.71 | +15,216.87 | 11.53% | 6,166 | 86.41% | 4.86 / 11.04% |
+| M15 FLAT | 2.17 | +17,714.56 | 19.91% | 15,477 | 82.01% | 2.30 / 22.54% |
+
+Reports: `_mt4_auto\reports\KANGAROO_XAU_H1_FLAT.htm` / `KANGAROO_XAU_M15_FLAT.htm` — raw numbers only (Model 1 = smoke-grade); การแปลผลเป็นงาน Claude lead
+
+**สถานะ:** notes ครบ 4 หัวข้อตาม ORDER-070 + flat-lot addendum · ไม่มี .mq5 · ไม่มี decompile · ไม่มี verdict
