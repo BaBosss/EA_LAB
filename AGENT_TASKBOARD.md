@@ -2664,7 +2664,7 @@ Runs: H1 · 2023.01.01–2026.07.01 · Model 1 · deposit 10000 · leverage 1:20
 
 ---
 
-## ORDER-069 — (Boss)_ZeusInspired_GridLog_rev01 บน EURUSD: coarse optimize — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent/qwen)
+## ORDER-069 — (Boss)_ZeusInspired_GridLog_rev01 บน EURUSD: coarse optimize — `DONE(Claude-agent, 2026-07-10)` (role: agent/qwen)
 
 **ทำไม:** user directive 2026-07-10 — Zeus MT4 ตัว locked บน EURUSD H1 = เซลล์เดียวที่รอด 3.5 ปี
 (PF 1.61 แต่ DD ลอย 47.8% ไม่มี SL = แก้ไม่ได้เพราะ locked) · แต่เรามี **ZeusInspired rev01 ที่เขียนเอง**
@@ -2680,6 +2680,37 @@ report ZEUSINS_OPT_EURUSD_1
 **Acceptance:** XML ครบทุก pass · append: จำนวน pass ที่ PF≥1.3 AND Trades≥60 AND eqDD≤15% + ตาราง top-10
 ดิบ (คอลัมน์ param ครบ) · commit `[tag] ORDER-069 done`
 **ห้าม:** เลือก "ตัวดีสุด"/plateau-center (งาน Claude) · ห้ามรันทับ lane ขณะ ORDER-068 ยังไม่จบ (MT5 ตัวเดียวกัน — ทำ 068 ให้จบก่อน)
+
+### RESULT (Claude-agent 2026-07-10) — raw numbers only, no verdict/no pick
+
+Run: EURUSD H1 · 2023.01.01–2026.07.01 · Model 1 · Optimization=1 (complete) · Criterion=0 · deposit 10000 ·
+leverage 1:2000 · base = copy of `ZeusInspired_V1_Medium.set` → `_mt5_auto\ab_sets\zeusins_opt\ZEUSINS_OPT_EURUSD_1.set`
+Levers (5 มิติ 216 combos ครบทุก pass): `_03_DistAtrMult` 1.0/1.5/2.0/2.5 · `_02_SlAtrMult` 2/4/6 ·
+`_05_BaseLot` 0.01/0.02/0.03 · `_05_DdAdaptive` false/true · `_04_PartialFrac1` 0.0/0.3/0.6
+XML: `_mt5_auto\optimizations\ZEUSINS_OPT_EURUSD_1.xml` (216/216 pass rows) + CSV แปลงแล้ว `..._passes.csv`
+
+**Gate count (PF≥1.3 AND Trades≥60 AND eqDD≤15%): 0 / 216**
+(แยกเงื่อนไข: PF≥1.3 = 0 ตัว · Trades≥60 = 182 · eqDD≤15% = 216/216 — eqDD max ทั้ง sweep 11.8%)
+Distribution ดิบ: PF max 1.138 · PF≥1.0 = 26/216 · Profit max +210.35 / min −1,045.67 (บน 10k)
+
+Top-10 by Profit (ดิบ, คอลัมน์ param ครบ):
+
+| Pass | Profit | PF | RF | Sharpe | eqDD% | Trades | SlAtrMult | DistAtrMult | PartialFrac1 | BaseLot | DdAdaptive |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| 97 | 210.35 | 1.138 | 0.465 | 0.616 | 4.48 | 357 | 4 | 1.0 | 0.6 | 0.03 | false |
+| 205 | 210.35 | 1.138 | 0.465 | 0.616 | 4.48 | 357 | 4 | 1.0 | 0.6 | 0.03 | true |
+| 104 | 151.23 | 1.113 | 0.397 | 0.394 | 3.76 | 319 | 6 | 2.0 | 0.6 | 0.03 | false |
+| 212 | 151.23 | 1.113 | 0.397 | 0.394 | 3.76 | 319 | 6 | 2.0 | 0.6 | 0.03 | true |
+| 98 | 80.40 | 1.033 | 0.127 | 0.133 | 6.04 | 508 | 6 | 1.0 | 0.6 | 0.03 | false |
+| 206 | 80.40 | 1.033 | 0.127 | 0.133 | 6.04 | 508 | 6 | 1.0 | 0.6 | 0.03 | true |
+| 56 | 70.47 | 1.108 | 0.234 | 0.404 | 2.93 | 99 | 6 | 2.0 | 0.3 | 0.02 | false |
+| 44 | 70.47 | 1.108 | 0.234 | 0.404 | 2.93 | 99 | 6 | 2.0 | 0.0 | 0.02 | false |
+| 164 | 70.47 | 1.108 | 0.234 | 0.404 | 2.93 | 99 | 6 | 2.0 | 0.3 | 0.02 | true |
+| 152 | 70.47 | 1.108 | 0.234 | 0.404 | 2.93 | 99 | 6 | 2.0 | 0.0 | 0.02 | true |
+
+หมายเหตุดิบ (observation ไม่ใช่ verdict): DdAdaptive true/false ให้ผลเหมือนกันทุกคู่ (eqDD ทั้ง sweep ไม่เคยแตะ
+tier1 10% ตอนเปิด basket) และหลายคู่ PartialFrac1 0 vs 0.3 เหมือนกัน (tier1 50% ของ target ไม่ถูก trigger
+ที่ setting เหล่านั้น) — มิติที่ขยับผลจริงใน sweep นี้คือ DistAtrMult / SlAtrMult / BaseLot / PartialFrac1=0.6
 
 ---
 
