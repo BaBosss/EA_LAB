@@ -205,6 +205,28 @@ validate ไม่ได้ (5) entries ดิบ >> trades = basket ซ่อ�
 **บทเรียนใหม่:** lot-check ต้องทำซ้ำบน **report ยาวสุดที่มี** — ladder 4 เดือนตื้นกว่า 3 ปีเสมอ
 (FZ2 ×6→×18.6 · swb ×2.2→×25.9 · 2020v2 ×5.4→×14.5): ปีเทรนด์บังคับให้ grid โชว์ความลึกจริง
 
+## 🔧 Lot-check striping bug FIXED + verdicts RE-VERIFIED (Claude, 2026-07-10)
+
+พบบั๊กที่สองใน `mt4_lotcheck.ps1`: MT4 stripe ตาราง trade — แถวสลับ**ไม่มี** attribute `bgcolor`
+→ regex เดิม `<tr bgcolor` เก็บ trade แค่ ~ครึ่งเดียว (KANGAROO_XAU_H1_3Y: เห็น 1,789 จาก
+6,242 entries จริง). แก้แล้ว: parse ทุก `<tr>` + กรองแถวที่ td แรกเป็นเลขไม้ + type ตรงเป๊ะ
+`buy`/`sell` (pending placement `buy stop`/`sell limit` ถูกกันออกโดยตั้งใจ — ถ้า report มีแต่
+pending จะ fallback ไปอ่าน placement rows พร้อม note ใน output).
+
+**Re-run ครบทั้ง 58 report ที่แบก verdict (BWD4RES_* 32 + BWD4B* 26) เทียบ old vs new:**
+- **ทุก verdict ยืนตามเดิม.** undersampling ทำได้แค่ *กด* ratio ให้ต่ำ ไม่มีทางสร้าง escalation
+  ปลอม → REJECT ทุกตัวยิ่งแน่นขึ้น (ratio จริงสูงกว่าที่เคยอ้าง เช่น SEMIS jrAUDCAD ×20.6→×103,
+  SUPERTRENDSURFER ×104→×416, swb ×25.9→×51.8)
+- flag พลิก 2 ตัว แต่ไม่กระทบ verdict เพราะตายด้วยเหตุอิสระอยู่แล้ว: **Flexy The Dragon v2.8**
+  ×8→×10.3 (REJECT ถาวรอยู่แล้วจาก PF 0.46 / DD 89.2%) · **Moving Average** NO_ENTRIES→×2 clean
+  (REJECT อยู่แล้วจาก BWD PF 0.81 / DD 41.9% — ปิดคิว "inspect report" ของ §Lot-check AUDIT ได้)
+- survivor ทุกตัวยัง <10x ด้วยเลขเต็มแถว: UnNomGuai ×2.3 (เท่าเดิมเป๊ะ ทั้ง 2 report) ·
+  RSI from pips ×6 · Automated Forex Grail ×1 แบน · Oracle ×5.3→×8 (ยังผ่าน แต่ใกล้เส้นขึ้น —
+  สอดคล้อง CONDITIONAL เดิม) · 143_E4 ×9.8 เท่าเดิม (เฉียดเส้นเหมือนเดิม)
+- cross-check ความถูกต้องวิธีใหม่: นับ executed close-rows (close/t/p/s/l) ตรงกับ entry count
+  ใหม่เป๊ะทุกตัวที่สุ่ม (Scalper_S3 1,044 · Envelope 377 · Flexy 1,448) — เลขเก่า 13,190 ของ
+  Scalper_S3 คือนับ pending placements+deletes ปน
+
 ## Triage batch 22 (Claude, 2026-07-07 บ่าย — lot-check ด้วย mt4_lotcheck.ps1 ตัวใหม่)
 
 | EA | สถานะ | เหตุผล |
