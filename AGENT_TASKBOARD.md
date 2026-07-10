@@ -3378,3 +3378,17 @@ GV bridge inert จริงเมื่อไม่มี NewsGuard)
 consumer เดียวของไฟล์คือ EA นี้ (dashboard ใช้ HTML แยก) (2) test จำลอง "stale 48h" ที่ระดับ decision function
 (`NG_IsStaleAge`) เพราะ mtime ในไฟล์ tester เป็นเวลาจริง ปลอมอายุไฟล์ไม่ได้ — path missing-file ทดสอบเต็ม flow จริง
 (3) ccy↔symbol match เพิ่ม fallback ชื่อ symbol (broker บางเจ้ารายงาน base ของ XAUUSD ไม่ใช่ "XAU" — เจอจริงใน tester)
+
+---
+
+## REVIEW ORDER-083 — `REVIEWED(Claude, 2026-07-10)`
+
+Verdict: ผ่าน — design ถูกจุด (veto ที่ choke point เดียวใน Execution.mqh = คุมทุก Boss build รวม pending ladder ·
+fail-safe ไม่เดา · GV bridge inert เมื่อไม่มี guard) · tests PASS ครบรวม edge cases (ccy ไม่เกี่ยว = ไม่แตะ,
+ไฟล์หาย = Alert อย่างเดียว) · deviations ทั้ง 3 สมเหตุผล (CSV format มี consumer เดียว + fallback parser)
+**GAP ที่พบระหว่าง review: NewsGuard เป็น MQL5 — คุมได้เฉพาะบัญชี MT5** แต่กอง no-SL ที่ต้องการ
+CLOSE_ALL ที่สุดอยู่บน **MT4 141049900** (Zeus 7777 + Kangaroo 1112-1115) → เปิด **ORDER-083B: port
+NewsGuard_Core เป็น .mq4** (logic เดิม, OrderClose แทน position API, test บน MT4 lane) — OPEN
+**ข้อควรระวังตอน attach (อยู่ในคู่มือแล้ว แต่ย้ำ):** ต้อง attach บน **terminal เทรดจริงบน VPS** —
+instance monitor ในเครื่องแล็บเป็น investor password (อ่านอย่างเดียว ปิดไม้ไม่ได้) · ห้ามใส่ magic 0
+ใน GuardConfig เด็ดขาด (จะไปปิดไม้มือของ user)
