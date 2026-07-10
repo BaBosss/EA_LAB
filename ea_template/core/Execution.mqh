@@ -196,6 +196,18 @@ void Exec_CloseAll()
    Exec_CancelAllPending();
 }
 
+// additive (ORDER-072, Kangaroo/16 overlap pair-close): close ONE own position
+// by ticket. No other build calls this - behavior of Boss_11..15 unchanged.
+bool Exec_CloseTicket(const ulong ticket)
+{
+   if(DryRun)
+   {
+      PrintFormat("[DRYRUN] close ticket %I64u", ticket);
+      return true;
+   }
+   return g_trade.PositionClose(ticket);
+}
+
 bool Exec_ModifyPosition(const ulong ticket, const double sl, const double tp)
 {
    if(DryRun) return true;

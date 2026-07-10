@@ -34,6 +34,12 @@
 #ifdef LAB_ENTRY_15
    #include "entries/Entry_ST03.mqh"
 #endif
+#ifdef LAB_ENTRY_16
+   // ORDER-072: entry 16 = self-contained Kangaroo basket engine (single exit
+   // owner). Entry module first (defines Entry_Evaluate), then the engine.
+   #include "entries/Entry_KangarooRSI.mqh"
+   #include "Kangaroo.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -63,6 +69,10 @@ int OnInit()
 #endif
 #ifdef LAB_ENTRY_15
    Entry_ST03_Init();
+#endif
+#ifdef LAB_ENTRY_16
+   Entry_KangarooRSI_Init();
+   Kangaroo_Init();
 #endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
@@ -95,6 +105,14 @@ void Lab_OpenOrder(const int dir, const int level)
 //+------------------------------------------------------------------+
 void OnTick()
 {
+#ifdef LAB_ENTRY_16
+   // entry 16 (KangarooGrid, ORDER-072): Kangaroo.mqh owns the ENTIRE pipeline
+   // (first entry, adverse grid adds, every exit, emergency DD) - one exit
+   // owner. Cage hard-kill runs inside it, first. Always returns true; the
+   // runtime guard (not a bare return) keeps the code below compiling without
+   // unreachable-code warnings. Other builds: this block does not exist.
+   if(Kangaroo_OnTick()) return;
+#endif
    // (0) optional Zeus-style once-per-bar gate (default false = every tick,
    // unchanged). Management/stack/recovery evaluate once per bar-open ONLY;
    // the flat-entry trigger still runs intrabar so an armed resting-stop

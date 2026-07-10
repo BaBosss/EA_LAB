@@ -7,14 +7,16 @@
 #ifndef BOSS_LAB_INPUTS_MQH
 #define BOSS_LAB_INPUTS_MQH
 
-// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 (+ LAB_ENTRY_TAG)
+// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 / _16 (+ LAB_ENTRY_TAG)
 // MQL5 preprocessor has no '#if EXPR==n' / '#elif' -> use token #ifdef only.
 #ifndef LAB_ENTRY_11
 #ifndef LAB_ENTRY_12
 #ifndef LAB_ENTRY_13
 #ifndef LAB_ENTRY_14
 #ifndef LAB_ENTRY_15
+#ifndef LAB_ENTRY_16
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -143,6 +145,10 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // 0 (Zeus grid add 
 input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 default for ST03 (one order per edge signal)
 input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
 #endif
+#ifdef LAB_ENTRY_16
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // informational only - Kangaroo.mqh owns its own grid pipeline (LabCore short-circuits)
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a (Kangaroo adds are distance-only by design)
+#endif
 input bool   _9_StepUseATR  = true;     // grid step from Signal-ATR (else points)
 input double _9_StepATRmult = 1.0;      // step = mult x Signal-ATR
 input double _9_StepPoints  = 300;      // step when not ATR
@@ -201,6 +207,38 @@ input int  _15_MacdSignal  = 9;     // MACD signal SMA
 input int  _15_CountBars   = 2;     // consecutive closed bars in one MACD state before firing
 input bool _15_EdgeTrigger = true;  // true=fire once per state-run (ST_EA03) / false=level (over-trades)
 input int  _15_RearmBars   = 0;     // re-fire every K bars within a run (0=pure edge, 1~=level)
+#endif
+
+#ifdef LAB_ENTRY_16
+// ORDER-072: KangarooInspired (Gold_Kangaroo behavioral rebuild, KANGAROO_LOGIC_NOTES.md).
+// Entry 16 bypasses the standard LabCore pipeline entirely - Kangaroo.mqh is the single
+// exit owner AND the single add owner (see that file's header). Only the cage
+// (RiskControl hard-kill / deposit load / RC_MaxLot) stays supreme above it.
+input group "=== 16 Entry: KangarooGrid (RSI fade, fixed direction) ==="
+input int    _16_Direction   = 1;      // 1=BUY instance, 2=SELL instance (fixed, never both - bidirectional = 2 instances w/ own magic, Boss_14 pattern)
+input int    _16_RsiPeriod   = 14;     // RSI period on chart TF
+input double _16_RsiLow      = 30.0;   // BUY instance arms when RSI(closed bar) < this
+input double _16_RsiHigh     = 70.0;   // SELL instance arms when RSI(closed bar) > this
+input group "=== 16 Grid (ATR spacing, ADVERSE adds only, hard cap) ==="
+input double _16_AtrMultFirst4    = 0.8;    // spacing = mult x Signal-ATR while side has < 4 orders (original: 200 fixed pips)
+input double _16_AtrMultAfter     = 1.4;    // spacing mult from order 5 on (original: 350 fixed pips)
+input double _16_MinDistPips      = 150.0;  // spacing floor in pips (digit-aware; XAU 2-digit: pip=point=$0.01)
+input int    _16_MaxOrdersPerSide = 10;     // HARD cap - adds refused beyond this (original advertised 10 but leaked to 14)
+input group "=== 16 Lots (FLAT default; capped ladder OFF at 1.0) ==="
+input double _16_BaseLot        = 0.01;  // every order when LadderMult <= 1.0 (flat-lot probe beat the x1.5 ladder: PF 5.71 vs 4.86)
+input double _16_LadderMult     = 1.0;   // >1.0 enables ladder: order N = max open lot x this; first 4 orders always BaseLot
+input double _16_MaxLotPerOrder = 1.0;   // per-order ceiling for the ladder (= original Max_Lot_Martingale; RC_MaxLot still clamps after)
+input group "=== 16 SL / Exits (Kangaroo engine = single exit owner) ==="
+input double _16_SlAtrMult        = 18.0;   // per-order broker SL = mult x Risk-ATR (~$90 at gold-1800-era ATR)
+input double _16_MaxSlPips        = 9000.0; // SL distance ceiling in pips, digit-aware (= original 9000 = $90 on XAU; 0=off)
+input double _16_TpSingleAtrMult  = 0.35;   // exit 1: single open order closes at mult x Risk-ATR profit (~80 gold pips at ATR ~$2.3)
+input double _16_BasketTpUsdPer01 = 16.0;   // exit 2: close whole side at net$ >= this x (total lots / 0.01) - dollar-true version of pip-sum 160
+input double _16_OverlapMinUsd    = 5.0;    // exit 3: overlap pair-close (newest+oldest) when combined net$ >= this
+input int    _16_OverlapMinOrders = 4;      // exit 3 active only from this many open orders
+input bool   _16_FlattenOn            = false; // exit 4 (ladder_flatten, A/B module): default OFF per ORDER-072 decision 5
+input int    _16_FlattenMinOrders     = 6;     // exit 4: allowed from this many open orders
+input double _16_MaxControlledLossUsd = 400.0; // exit 4: close-all side once net$ >= -this (controlled-loss DD release)
+input double _16_EmergencyDDPct       = 70.0;  // emergency close-all at equity DD% from peak (tighter than original's unverified 80; cage KillDD fires first at default profile)
 #endif
 
 //==================== Trend MA (shared: entry11 + filter + runtrend) =

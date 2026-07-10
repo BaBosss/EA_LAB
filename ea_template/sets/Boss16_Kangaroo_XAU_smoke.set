@@ -1,0 +1,64 @@
+; Boss16_Kangaroo_XAU_smoke.set - ORDER-072 smoke baseline (compiled defaults,
+; written out explicitly for the record). FLAT lot law (LadderMult=1.0).
+; Run: XAUUSD H1 2023.01.01-2026.07.01 Model 1 deposit 10000 leverage 1:2000,
+; lane "D:\Meta 5b" (portable). BUY instance; SELL instance = _16_Direction=2
+; (+ its own _0_Magic when co-deployed live/demo).
+; Comparison row (original Gold_Kangaroo flat, MT4 Model 1, bidirectional):
+; PF 5.71 / DD 11.53% / 6166 trades. Raw comparison only - do NOT tune to hit it.
+;
+; Mode selectors (informational for entry 16 - Kangaroo.mqh owns the pipeline;
+; ExitManager/Stack/MM/Recovery/Hedge never run for this build)
+ExitMode=22
+SLMode=33
+FirstLotMode=41
+LotProg=50
+TradeDir=60
+TrendFilter=70
+RecoveryMode=80
+HedgeMode=0
+DryRun=false
+_0_BarOpenOnly=false
+StackMode=90
+StackConfirm=0
+;
+; 16 Entry: RSI fade (chart TF)
+_16_Direction=1
+_16_RsiPeriod=14
+_16_RsiLow=30.0
+_16_RsiHigh=70.0
+;
+; 16 Grid: ATR spacing, ADVERSE adds only, hard cap
+_16_AtrMultFirst4=0.8
+_16_AtrMultAfter=1.4
+_16_MinDistPips=150.0
+_16_MaxOrdersPerSide=10
+;
+; 16 Lots: FLAT (ladder off)
+_16_BaseLot=0.01
+_16_LadderMult=1.0
+_16_MaxLotPerOrder=1.0
+;
+; 16 SL / exits (single exit owner = Kangaroo engine)
+_16_SlAtrMult=18.0
+_16_MaxSlPips=9000.0
+_16_TpSingleAtrMult=0.35
+_16_BasketTpUsdPer01=16.0
+_16_OverlapMinUsd=5.0
+_16_OverlapMinOrders=4
+_16_FlattenOn=false
+_16_FlattenMinOrders=6
+_16_MaxControlledLossUsd=400.0
+_16_EmergencyDDPct=70.0
+;
+; Protection cage (chassis defaults - supreme above the Kangaroo engine)
+ProtectLevel=2
+RC_MaxLot=0.20
+RC_RecMultMax=1.3
+RC_MaxLevelsOverride=0
+RC_AcctDDLimitPct=0.0
+RC_PersistHalt=true
+;
+; General
+_0_Magic=990016
+_0_Slippage=20
+_0_MaxSpread=0
