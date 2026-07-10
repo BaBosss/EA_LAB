@@ -3431,3 +3431,44 @@ commit `[tag] ORDER-084 extract done` · **ห้าม:** ตัดสิน/�
 13. Verdict ที่มี supersede-chain ถูกยุบเหลือ row เดียว (verdict ล่าสุด + ประวัติใน evidence): ST03 family (CORE→STRUCTURAL 07-10) · 2020v2 (REJECT→revive→REJECT) · Happy thaipop (PARKED→REJECT ×16.3) · Automated Forex Grail (AUTO-REJECT→revive→REJECT-spread) · LNBREAK/NRBreakout (DEAD→re-exam ORDER-008B)
 14. คอลัมน์ class_claimed = คำอ้างของ verdict เดิมเท่านั้น (STRUCTURAL/PARAMETRIC/artifact/unknown) — ยังไม่มีการจัดกอง rescue/dead/verify ตามข้อห้าม
 15. ขั้น judge (กอง ก/ข/ค + แผน rescue top 5-10) = รอ Claude lead อ่าน CSV
+
+
+---
+
+## REVIEW ORDER-084 — `REVIEWED(Claude, 2026-07-10)` — จัด 3 กอง + rescue queue + เปิด ORDER-085
+
+**ภาพรวม:** 154 verdicts · **92% เทสแค่ 1 TF · 29-44 ตายบน default-only** → สมมุติฐาน user ยืนยัน
+แต่เมื่อไล่หลักฐานรายตัว ก้อนใหญ่ตายถูกต้อง (BWD-OOS + lot-check ฆ่า regime-harvester family ถูกแล้ว —
+IR Whale eqDD 106% BWD, Dark Mimas wipeout, 143 E4.7.4 DD94, SUPERTRENDSURFER lot×416 = STRUCTURAL ยืน)
+
+**กอง ก — ตายจริง ยืน verdict (ห้าม re-hunt):** artifact ทั้งหมด (CITY-GOLD/Degold/Scalper_S3/
+Golden Elephant/gold-grid M2) · structural (FZ2, regime-harvester pool, no-SL family) · properly-swept
+(EMATREND 10+sym+11yr · Donchian multi-period · AsianRange/LNBREAK multi-cell · COT (ORDER-059
+sweep ครบ+MC refute) · SuperTrendFlip (MC 0.865 + rescue แล้วล้ม))
+
+**กอง ข — action queue (เรียง EV):**
+1. 🏆 **EA_SUPERTREND XAU H4 — ไม่ใช่ rescue: validated ครบ (IS 1.54/OOS 4.49 M4 + MC PF-5th 1.57
+   ruin 0) ถูก PARK ด้วยเหตุผล corr 0.72-0.95 vs BRK ซึ่งขัด user rule ที่จารึกไว้เอง: "corr สูง = ลด lot
+   ไม่ใช่ตัด"** → ORDER-085: M0+spread confirm + ข้อเสนอ size เล็กเข้าพอร์ต · EA-SCORE คาด ~7
+2. **swb grid flat-lot AUDCAD** (M0 1.80/DD20, ladder ×3-4 แล้ว) — ตรง premium/bench tier 5-6 ของ
+   ปรัชญาใหม่พอดี → PARKED-VERIFY(user): ตัดสิน attach demo experiment #3 ไหม
+3. **Oracle EA** (M0 1.43/DD39 ที่ขอบ, ค้างเงื่อนไข "อ่าน trade list ก่อน" ที่ไม่เคยทำ) → งานถูก 1 ชม.:
+   อ่าน trade list → ให้ EA-SCORE → จบซะที
+4. **Keltner / Ichimoku / PrevDay / ZSCORE / IB_OCO / XAU_NY** — concept ปิดจาก 1-2 default cell ·
+   ceiling-pattern XAU (1.13-1.19 สามแนวทาง) = หลักฐานระดับ mechanism ห้ามเทสซ้ำ XAU แต่**คลาส
+   symbol อื่นยังไม่เคยลอง** → rescue สูตรใหม่: JPY-cross/ranger H4 ละ 1 สายตาม mechanism fit
+   (สูตร 3 รอบ × 2 TF) — batch เดียว ~6 smokes ก่อน ค่อยเลือกตัว sweep
+5. Phoenix/GBPJPY1H90PCWR pool (PARKED-no-data, PF 8.15 = absurd-flag flat 1 lot) — EV ต่ำ:
+   รอ data window ใหม่หรือ user รู้จักที่มา → เข้า VERIFY list
+
+**กอง ค — PARKED-VERIFY(user) รอบแรก (สรุป 3 บรรทัดต่อตัวส่ง user):** swb grid AUDCAD (attach ไหม) ·
+Oracle EA (จะให้อ่าน trade list เลยไหม) · GBPJPY1H90PCWR (รู้จักที่มา/เคยใช้ไหม) · MultiHedge (M0 1.29
+net จิ๋ว — คุ้มถือไหม)
+
+## ORDER-085 — SuperTrend XAU H4: un-park ตาม corr rule — `OPEN` (role: agent, งานเล็ก)
+
+**คำสั่ง:** (1) Model 0 + spread-stress confirm บน set validated เดิม (`EA_SUPERTREND.mq5`,
+KAUERMAN-era configs — หา set/params จาก signal-landscape entry 2026-06-27) XAU H4 2023-2026
+(2) คำนวณ corr/DD-overlap ปัจจุบัน vs BRK-XAU Bars55 + Boss_16 (ถ้ามี data) (3) ตาราง + ข้อเสนอ
+size ตามสูตร reduce-lot (เช่น 1/3 ของ BRK) **Acceptance:** ตาราง M0/SPR + corr + ร่าง EA-SCORE
+ต่อเกณฑ์ 8 ข้อ · commit `[tag] ORDER-085 done` · **ห้าม:** deploy/verdict (Claude+user ตัดสิน)
