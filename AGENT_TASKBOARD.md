@@ -3527,13 +3527,46 @@ deposit 10000 · default params (sets = `_mt5_auto/ab_sets/rescue1_sets/`) · hi
 
 (no verdict — บาร์ตัดสินโดย lead ตามคำสั่ง)
 
-## ORDER-088 — Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" — `CLAIMED(Claude-agent)`
+## ORDER-088 — Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" — `DONE(Claude-agent, 2026-07-10)`
 
 **คำสั่ง:** ใช้ Model-0 report เดิมของ Oracle (ORDER-036 survivors, EURUSD H1, PF 1.43/DD39) —
 ถ้า report ไม่มี trade table ให้รันซ้ำ 1 ครั้งบน MT4 lane · วิเคราะห์ trade list ตามกฎ CommunityPower
 (2026-07-06): ลำดับ lot (ladder? cap?) · SL มีจริงไหม · การกระจุกกำไร (top-5 trades = กี่ % ของ net) ·
 พฤติกรรม DD 39% เกิดจากตะกร้าเดียวหรือสะสม **Acceptance:** ตาราง 4 คำตอบ + quote ไม้จริง ·
 append ใต้ order · commit `[tag] ORDER-088 done` · **ห้าม:** verdict (Claude ให้ EA-SCORE เอง)
+
+### ORDER-088 RESULTS (Claude-agent, 2026-07-10)
+
+Source report: `_mt4_auto/reports/BWD4R3_Oracle_EA_EURUSD_M0.htm` — ตรงกับตัวเลข order ทุกตัว
+(PF 1.43 / net +5,775.60 / max DD 5,487.36 = 39.00%) · EURUSD H1 · **window = BWD 2020.01.01–2023.01.01**
+· every tick, quality 90%, spread 11 · trade table ครบ (2,666 rows = 1,333 opens + 1,333 closes) →
+**ไม่ต้องรันซ้ำ**. Parse แบบ full-row (ทุก `<tr>`, ไม่พึ่ง striping class) —
+type counts: buy=700 sell=633 close=1332 close-at-stop=1, ผลรวม close = +5,775.45 ตรง report.
+
+Params ใน report เฉลยโครง: `start_lot=0.1; range=150; level=10; lot_multiplier=true; multiplier=1.5;
+use_sl_and_tp=false; tp_in_money=5; stealth_mode=true; use_stoch=true (5,3,3 30/70)` — grid-martingale
+สองฝั่งอิสระ (buy grid + sell grid รันพร้อมกันได้) ปิดทั้งตะกร้าด้วย TP-in-money.
+
+| # | คำถาม | คำตอบ (ตัวเลขจริงจาก trade list) |
+|---|---|---|
+| 1 | Lot sequence | **Geometric ladder ×1.5, step 150 pips**: 0.10 → 0.15 → 0.23 → 0.35 → 0.53 → 0.80. Distribution: 0.10×1257 · 0.15×46 · 0.23×16 · 0.35×8 · 0.53×4 · 0.80×2. Cap ตาม param = level 10 (lot ชั้น 10 จะ ≈ 3.84) แต่ลึกสุดที่แตะจริงในเทส = **ชั้น 6** (2 ครั้ง), ค้างพร้อมกัน 2.16 lots |
+| 2 | SL | **ไม่มีเลย** — ทั้ง 1,333 ไม้เปิดด้วย S/L=0.00000, T/P=0.00000 (`use_sl_and_tp=false` + `stealth_mode=true`) · ไม่มี close type `s/l` แม้แต่แถวเดียว · แถว "close at stop" 1 แถวคือ force-close ท้ายเทส: `#1333 2022.12.31 01:42 0.10 @1.07036 −67.10` |
+| 3 | Profit concentration | **Top-5 = $5,822.54 = 100.8% ของ net $5,775.45** (top-5 เกิน net ทั้งก้อน; top-10 = 139.3%) — และ 2 ไม้ใหญ่สุดคือไม้ rescue ชั้น 6 ของตะกร้าลึกเอง: `#367 sell 0.80 close 2020.09.08 +1,698.62` · `#862 buy 0.80 close 2022.05.19 +1,636.13`. ไม้ชนะ 1,255 ไม้ที่เหลือเฉลี่ยแค่ $15.28 |
+| 4 | DD-39% episode | **ตะกร้าเดียว ไม่ใช่สะสม** — buy grid #857–862: เปิด 2022.03.31 @1.11307 ถัวลงทุก 150 pips ถึง 1.03803 (2022.05.12) · equity peak 14,069.71 (2022.03.31) → 5,487.36/14,069.71 = **39.0% ตรงเป๊ะ** (equity trough ≈ 8,582 ที่ EURUSD low ~1.035, 2022.05.13) · ปิดยกตะกร้า 2022.05.19 @1.05905 **net −383.05** (ไม้ rescue +1,636.13 + #861 +214.71 vs 4 ไม้แพ้ −2,233.88 = สถิติ "4 consecutive losses" ใน report) · ตะกร้าลึกเทียบเท่าอีกลูก = sell grid #362–367 (Jul–Sep 2020, 1.12368→1.19871): equity ≈7,051 ตอนเปิดชั้น 6 ทั้งที่ balance 11,583.80 = ที่มาของ **Relative DD 42.39%** ใน report; ปิดยกตะกร้า 2020.09.08 @1.17769 net +211.44 |
+
+Quote ตะกร้าลึกสุด (sell grid 2020, จาก trade list ตรงๆ):
+```
+#362 sell 0.10 @1.12368 opened 2020.07.03 20:17
+#363 sell 0.15 @1.13868 opened 2020.07.14 17:45
+#364 sell 0.23 @1.15369 opened 2020.07.21 21:47
+#365 sell 0.35 @1.16869 opened 2020.07.27 04:38
+#366 sell 0.53 @1.18370 opened 2020.07.30 22:59
+#367 sell 0.80 @1.19871 opened 2020.09.01 06:38
+→ ปิดทั้ง 6 ไม้พร้อมกัน 2020.09.08 17:38 @1.17769: +1698.62 +379.76 −269.25 −517.74 −559.61 −520.34 = +211.44
+```
+
+หมายเหตุกลไก: balance โตต่อเนื่องระหว่างตะกร้า buy จม Mar–May 2022 (14,069→15,920) เพราะ sell grid
+อีกฝั่ง scalp ได้ตลอด — กำไรรายไม้เล็กบังตะกร้าจมจนกว่าจะ mark-to-market. (no verdict — ตามคำสั่ง)
 
 
 ---
