@@ -3315,6 +3315,36 @@ docstring ระบุไว้ว่าเป็น optimistic lower-bound เ�
 **ไม่ตกด่านไหนใน 4 ขั้น** (0/27 net<0 · 1/7 ปีลบ · Model0 PF 1.41≥1.25 net>0 · MC PF 5th pct
 1.41≥1.0 ruin 0%). ไม่มี anomaly อื่นนอกจาก optimizer-cache 324-pass ที่ระบุไว้ข้างบน.
 
+## REVIEW ORDER-078 — `REVIEWED(Claude, 2026-07-11)` — **Boss_16 BUY 21/30 = PASS-TO-BENCH (demo) — ยังไม่ใช่ PASS เงินจริง**
+
+**VERDICT GATE (ครบก่อนตัดสิน):**
+1. **Levers swept:** entry-threshold ✓(075: RsiPeriod 7-21 × RsiLow 25-40) · TF ✓(075: H1+M30) ·
+   spacing ✓(078: First4 0.6-1.0 × After 1.2-1.6) · TP/basket ✓(078: 12/16/20) · lot-law = FLAT
+   **held by design** (072 flat-lot probe ชนะ ladder — decision ไม่ใช่ unswept) · SL-width held
+   (18×ATR) · exit-mode held (Kangaroo engine = exit owner เดียว) · symbol held XAU
+   (mechanism-matched: spike-fade บ้าน XAU) — swept 4 แกน เกินขั้นต่ำ
+2. **Surface:** 27-cell plateau แท้ — 0 ตัวขาดทุน, PF 1.371-1.854, eqDD สม่ำเสมอ ~7%, center
+   อันดับ 20/27 ตาม PF = ไม่ได้นั่งบน peak · entry axis peaky (075) แต่ BWD ยันแล้ว (077)
+3. **Both regimes:** ✓ BWD aggregate PF 1.31 (077) + year-split 6/7 ปีบวก · ปีลบเดียว 2021
+   (PF 0.78, -256.56, eqDD 9.73 — ขาดทุนมีเพดาน ไม่ blowup)
+4. n/a (ไม่ใช่ REJECT)
+5. n/a (FLAT lot + hard cap 10 ไม้ + per-order SL — ไม่ใช่ martingale)
+6. **Holdout+MC สำหรับ PASS:** ⚠️ BWD 2020-22 ถูกใช้เลือก 21/30 เหนือ 14/30 ใน 077 (mild 2-way
+   selection) → **ยังไม่มี holdout สะอาด** · MC = permutation (DD-only): ruin 0%, DD95 4.6%,
+   **แกน PF ไม่ได้ถูกทดสอบ** (invariant by construction — บาร์ "PF 5th pct" ที่ pre-register ไว้
+   กลายเป็น vacuous, บันทึกตรง ๆ ไม่นับเป็นหลักฐาน) · plateau-center ✓
+
+**คำตัดสิน: PASS-TO-BENCH** — เสนอ deploy บน **demo bench** (experiment ถัดไปตามแบบ ORDER-086)
+ด้วย locked set `ea_template\sets\Boss16_Kangaroo_XAU_21_30.set` · **demo forward = holdout
+สะอาดตัวจริง** · ห้ามพูด real-money จนกว่าผ่าน judge ตาม hard-prerequisite gate #6 (scorecard)
+**เงื่อนไขก่อน attach (user เป็นคน attach):** (1) corr check vs พอร์ต live (corr_monthly.py,
+≤0.40 = additive) โดยเฉพาะกลุ่ม XAU (BRK Bars55/8) — corr สูง = ลด lot ไม่ใช่ตัด (user rule)
+(2) magic ใหม่ไม่ชน map ใน DEMO_DEPLOYMENT_PLAN (3) จด bias: BUY-only = long ทองข้างเดียว
+**Pre-registered judge criteria (เขียนก่อน attach):** คาดหวังจาก M0: PF ~1.4, ~90 ไม้/ปี (~22
+ไม้/3 เดือน) · kill = eqDD >12% เมื่อไหร่ก็ได้ (cage KillDD 25% เป็นชั้นสอง) · judge 3 เดือน:
+PF <0.8 ที่ ≥15 ไม้ = ถอด · งานคู่ขนานที่อนุญาต: SELL side / symbol สอง = order แยกภายหลัง
+**ของแถมจาก sweep (จดไว้ ห้าม act):** โซน 0.6/1.4/16-20 ดีกว่า center ทั้งแถบ — สลับตอนนี้ =
+select หลังเห็นข้อมูล · เก็บเป็น hypothesis รอบ re-opt 6 เดือนตามกฎ window
 
 ---
 
