@@ -16,7 +16,7 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
-git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html 2>> $log
+git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv 2>> $log
 $staged = git diff --cached --name-only
 if ($staged) {
     git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log
