@@ -3590,3 +3590,19 @@ Quote ตะกร้าลึกสุด (sell grid 2020, จาก trade list
   บน TF ใดหนึ่ง → เข้า funnel เต็ม (BWD/plateau/MC = order ถัดไป) · ไม่มี = ปิด concept อย่างสมบูรณ์
 **Acceptance:** ตารางต่อรอบ (top-5 + surface กว้าง) ทั้ง 2 TF · commit `[tag] ORDER-089 done` ·
 **ห้าม:** เลือก winner (Claude) · แตะ symbol อื่น · optimize เกิน 3 รอบที่กำหนด
+
+
+---
+
+## REVIEW ORDER-088 — `REVIEWED(Claude, 2026-07-10)` — **Oracle EA: CONDITIONAL → REJECT (EA-SCORE เพดาน 3)**
+
+**เหตุผลตาม rubric (ไม่ใช่ความเห็น):**
+- กุญแจเพดาน: **ไม่มี SL สักไม้ใน 1,333 orders** (stealth mode) → เพดาน 3 ทันที · cap level=10 มีจริง
+  แต่ non-binding (ladder ×1.5 จาก 0.1 → level10 = 3.84 lot/ไม้ = margin ตายก่อนถึง cap)
+- หลักฐาน no-edge โดยไม่ต้องรัน flat-lot: **top-5 trades = 100.8% ของ net** — กำไรทั้งระบบคือ rescue
+  trade 2 ไม้ (level-6 ×0.80) ที่เหลือ 1,255 ไม้เฉลี่ย $15 = ศูนย์สุทธิ · near-death 2 ครั้งใน 3 ปี
+  (39% + 42.4% relative) รอดเพราะ EURUSD กลับตัวที่ extreme พอดีทั้งคู่
+- **บทเรียนใหม่เข้าคลัง: "top-5 concentration > 100% ของ net" = ลายนิ้วมือ recovery-illusion
+  ที่อ่านได้จาก trade list โดยไม่ต้องรันอะไรเลย** — เพิ่มเป็นเช็คมาตรฐานคู่กับ flat-lot probe
+- สถานะ: ไม่ใช่ตายเปล่า — ตายพร้อมหลักฐานเต็มมือ ปิดเงื่อนไขค้างจาก 2026-07-07 สมบูรณ์ ·
+  ถ้า user อยากเลี้ยงเป็น premium-track ส่วนตัว = สิทธิ์ tier 3 (บัญชีทดลอง แยก equity) ตามกติกา
