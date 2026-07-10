@@ -7,10 +7,10 @@ Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_ST
 ไม่ครบขั้นตอน — user จับได้ทั้งคู่. gate นี้คือกันไม่ให้ session ไหนพลาดซ้ำ. ถ้าจะเขียน verdict แล้ว
 block นี้ยังไม่ครบ = หยุด ทำให้ครบก่อน.)**
 
-1. **Levers swept?** list ทุก lever ที่เกี่ยว — `spacing · lot-law · SL-width · TP · entry-threshold · symbol · TF` — mark ตัวไหน swept / ตัวไหน held. **source-available EA ที่ verdict จาก <3 lever ที่ swept = INVALID.** ("ปรับแล้ว" มักแปลว่าปรับ 1 ใน 7 — ต้องเช็คจริง)
+1. **Levers swept?** list ทุก lever ที่เกี่ยว — `spacing · lot-law · SL-width · TP · exit-mode · entry-threshold · symbol · TF` — mark ตัวไหน swept / ตัวไหน held. **source-available EA ที่ verdict จาก <3 lever ที่ swept = INVALID.** ("ปรับแล้ว" มักแปลว่าปรับ 1 ใน 8 — ต้องเช็คจริง · exit-mode เพิ่ม 2026-07-10: ST03 "no-edge" รอบแรกวัดใต้ scalp-exit เดียว user จับได้)
 2. **Coarse→surface?** เห็น *surface* (หลายจุด/axis) ไม่ใช่ 1-2 จุด? เป็น plateau (neighbor ไม่มีตัวขาดทุน) หรือ spike? — spike/hole = ยังไม่ผ่าน
 3. **Both regimes?** เทส candidate config บน **ทั้งปีเทรนด์ (BWD 2020-22) + ปีล่าสุด พร้อมกัน**? (lever ที่ดีที่สุด window นึงมัก invert อีก window)
-4. **REJECT เป็นแบบไหน?** STRUCTURAL (martingale-fat-tail / DD-blowup 90%+ / no-source / cracked) → ฆ่าได้ tune ไม่ช่วย · PARAMETRIC (แพ้ที่ window เดียว/setting เดียว) → **ต้อง sweep ก่อน reject**
+4. **REJECT เป็นแบบไหน?** STRUCTURAL (martingale-fat-tail / DD-blowup 90%+ / no-source / cracked) → ฆ่าได้ tune ไม่ช่วย · PARAMETRIC (แพ้ที่ window เดียว/setting เดียว) → **ต้อง sweep ก่อน reject — ขั้นต่ำเชิงตัวเลข (user rule 2026-07-10): ตัวที่ผ่านเกณฑ์เบื้องต้นแล้ว ห้ามตีตายจนกว่าจะ optimize ≥3 รอบ (ชุด lever ต่างกัน เลือกตาม strategy ของ EA นั้น) × ≥2 TF ต่อ symbol** และพิจารณา symbol อื่นที่เข้ากับ mechanism ก่อนปิด · **ตัวที่ idea ดีแต่ไม่ผ่าน = tag `PARKED-VERIFY(user)` + แจ้ง user เสมอ** (user มีประสบการณ์มือที่เครื่องมือไม่มี — หลาย EA ที่ใช้อยู่รอดมาเพราะ user เคยเทสเอง) — ห้ามปล่อยของดีตายเงียบ
 5. **Martingale ไม่ใช่ auto-reject** — recheck 4 ข้อก่อนทิ้ง: **มี SL ไหม · จำกัดจำนวนไม้ (capped steps) ไหม · entry มี edge จริงไหม (flat-lot test: ปิด escalation แล้ว PF ยัง >1?) · ดื้อ (add ตลอด) หรือมีเงื่อนไข**. capped-martingale + SL + entry-edge ≠ uncapped-ruin
 6. **DEPLOY/PASS เพิ่ม:** ผ่าน **holdout window ที่ไม่เคยใช้ select** + MC? plateau-center (ไม่ใช่ peak)? — in-sample plateau = selection-fit ยังไม่ใช่ validated
 
@@ -67,3 +67,10 @@ You (the orchestrator model = **Opus-seat** ตั้งแต่ 2026-07-04) pl
 - Escalate, don't default up: try the cheaper tier first when a verification cage exists; move up one tier only after it fails.
 - **Codex** (`/codex:rescue --background`) = peer engineer สมองอิสระคนละ family (GPT รุ่นเก่งสุดที่มี) — **สมองที่สองตัวเดียวที่เหลือหลัง Fable ออก** → คุณค่า = คนละค่ายจับจุดบอดคนละที่ (ไม่ใช่เก่งเท่า Opus). independent perspective ไม่ใช่ reviewer ตามงาน. Don't show it the other's answer (กัน anchoring).
 - For high-stakes decisions (promote demo→live · risk logic ไม่มี cage · architecture): task **Codex** on the same problem you're deciding — **โดยไม่ให้ดูคำตอบ Opus ก่อน** — then synthesize yourself. ใช้ประหยัด (Codex แชร์ ChatGPT quota ที่หมดเร็ว) — verdict ประจำวันตัดสินเดี่ยวได้.
+
+### Superpowers plugin (obra) — ใช้เฉพาะ 3 skill ที่ข้าม domain มาช่วยงาน EA ได้ (user directive 2026-07-10)
+งานเขียน/ตัดสิน EA ให้ใช้ **skill เฉพาะ repo เป็นตัวหลักเสมอ** (`strategy-and-risk` · `mql-code-generator` · `mql-code-reviewer` · `backtest-optimize-rigor` · VERDICT GATE ด้านบน · `vps-deploy-ops`). จาก superpowers ให้หยิบมาใช้ **แค่ 3 ตัวนี้ ตอนที่เหมาะเท่านั้น** — อย่าปล่อยตัวอื่น (TDD/worktrees/branch) auto-fire ชนกับ pipeline EA:
+- **`brainstorming`** — ตอนคิดกลยุทธ์/ไอเดียใหม่ที่ยังไม่ตกผลึก (ก่อนเข้า `strategy-and-risk`)
+- **`writing-plans`** — ตอนวางแผน build/sweep หลายขั้นที่ต้องเขียนแผนชัดก่อนลงมือ
+- **`verification-before-completion`** — ก่อนปิดงาน/เขียน verdict (เสริม VERDICT GATE: ต้องพิสูจน์ว่าเสร็จจริงด้วยหลักฐาน ไม่ใช่คำอ้าง)
+`systematic-debugging` ของ superpowers **ไม่ใช้** — `debug-mantra` เดิมคุมอยู่แล้ว.
