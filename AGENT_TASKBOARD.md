@@ -3199,7 +3199,7 @@ regime artifact → หยุดสาย RSI-fade แล้วออกแบ�
 **สถานะ VERDICT GATE ของ 21/30:** levers — entry ✓(075) escalation ✓(flat by design) spacing/TP ✗ยัง ·
 surface — entry peaky แต่ BWD ยัน · both regimes ✓(077) · holdout+MC ✗ยัง → ยังห้ามพูดคำว่า deploy
 
-## ORDER-078 — Boss_16 BUY 21/30: validation funnel เต็ม — `CLAIMED(Claude-agent, 2026-07-11)` (role: agent, งานถัดไปอันดับ 1)
+## ORDER-078 — Boss_16 BUY 21/30: validation funnel เต็ม — `DONE(Claude-agent, 2026-07-11)` (role: agent, งานถัดไปอันดับ 1)
 
 **Pre-registered bars (Claude lead เขียนก่อนเห็นข้อมูล, 2026-07-11 เช้า — กัน goalpost ขยับ):**
 - ขั้น 1 ตก = มี neighbor cell ใดใน 27 ที่ net < 0 (plateau requirement ตาม spec)
@@ -3217,6 +3217,103 @@ surface — entry peaky แต่ BWD ยัน · both regimes ✓(077) · hold
 4. MC bootstrap (robustness-validator convention) — PF 5th percentile + ruin
 **Acceptance:** ตารางครบ 4 ขั้น · commit `[tag] ORDER-078 done` · **ห้าม:** เปลี่ยน entry/lot ·
 เลือก config ใหม่จาก sweep ขั้น 1 (มันคือ sanity check ไม่ใช่ optimization) · verdict (Claude)
+
+### ORDER-078 result — `DONE(Claude-agent, 2026-07-11)` — ครบ 4 ขั้น ไม่ตกด่านไหน (raw data, NO verdict)
+
+**Setup ที่รันจริง:** `mt5_run.ps1`/`mt5_optimize.ps1` · Expert `EALabTpl\Boss_16_KangarooGrid` ·
+XAUUSD H1 · deposit 10000 · leverage 1:2000 · BUY instance (`_16_Direction=1`) · center config =
+21/30 (`_16_RsiPeriod=21`, `_16_RsiLow=30.0`, ทุกแกนอื่นตาม `Boss16_Kangaroo_XAU_smoke.set`,
+`_16_LadderMult=1.0`) · NEW set files: `ea_template\sets\Boss16_Kangaroo_XAU_21_30.set` (fixed
+center, ใช้กับ mt5_run.ps1 ทุกรันเดี่ยว) + `ea_template\sets\Boss16_Kangaroo_XAU_val078.set`
+(center + 3 optimize-range สำหรับ Step 1) · Steps 0/3/4 + IS-window ของ 2 รันปี รันบน lane หลัก
+(`D:\Meta 5`) · ปี BWD 2020-2022 รันบน lane 2 portable (`D:\Meta 5b`, ตามที่ ORDER-077 ยืนยัน
+history ครบ) · lane MT4 ไม่แตะ
+
+**Step 0 — wiring sanity:** รัน 21/30, Model 1, IS 2023.01.01-2026.07.01 → PF 1.57 / net
++1,174.45 / 285 trades / eqDD 7.08% — **ตรงเป๊ะกับ ORDER-075 pass 5** (PF 1.570/+1,174.45/285/7.08%)
+ทุกหลัก. Report: `B16VAL_STEP0_REPRO.htm`.
+
+**Step 1 — Lever sanity sweep (27 combo, optimize complete mode, Model 1, IS window, RSI 21/30
+คงที่):** ตารางเรียงตาม PF (ครบ 27 แถว):
+
+| AtrMultFirst4 | AtrMultAfter | BasketTpUsdPer01 | PF | Net USD | ExpPayoff | RecovF | Sharpe | eqDD% | Trades |
+|---|---|---|---|---|---|---|---|---|---|
+| 1.0 | 1.2 | 12 | 1.854 | +1249.61 | 4.84 | 1.59 | 3.70 | 7.65 | 258 |
+| 1.0 | 1.4 | 12 | 1.812 | +1191.32 | 4.69 | 1.57 | 3.63 | 7.39 | 254 |
+| 0.6 | 1.4 | 20 | 1.807 | +1901.40 | 5.46 | 2.47 | 2.92 | 7.29 | 348 |
+| 0.6 | 1.4 | 16 | 1.804 | +1636.51 | 5.23 | 2.13 | 3.23 | 7.36 | 313 |
+| 0.6 | 1.2 | 20 | 1.786 | +1886.17 | 5.36 | 2.49 | 2.87 | 7.21 | 352 |
+| 0.6 | 1.2 | 16 | 1.768 | +1606.15 | 5.02 | 2.12 | 3.17 | 7.28 | 320 |
+| 0.8 | 1.2 | 20 | 1.730 | +1578.78 | 5.00 | 2.12 | 2.77 | 7.07 | 316 |
+| 1.0 | 1.6 | 12 | 1.712 | +1091.31 | 4.35 | 1.50 | 3.29 | 7.09 | 251 |
+| 1.0 | 1.2 | 16 | 1.709 | +1285.06 | 4.64 | 1.64 | 2.45 | 7.57 | 277 |
+| 0.8 | 1.4 | 20 | 1.703 | +1474.61 | 5.03 | 2.01 | 2.25 | 7.04 | 293 |
+| 0.8 | 1.6 | 20 | 1.698 | +1486.43 | 5.11 | 2.06 | 2.45 | 6.92 | 291 |
+| 0.6 | 1.4 | 12 | 1.659 | +1319.44 | 4.24 | 1.72 | 3.06 | 7.43 | 311 |
+| 1.0 | 1.4 | 16 | 1.653 | +1170.89 | 4.50 | 1.54 | 1.98 | 7.36 | 260 |
+| 0.6 | 1.6 | 20 | 1.643 | +1618.38 | 4.86 | 2.20 | 2.53 | 7.00 | 333 |
+| 0.6 | 1.2 | 12 | 1.634 | +1306.52 | 4.12 | 1.72 | 2.99 | 7.34 | 317 |
+| 0.6 | 1.6 | 16 | 1.608 | +1401.21 | 4.35 | 1.90 | 2.47 | 7.03 | 322 |
+| 0.8 | 1.2 | 16 | 1.596 | +1269.41 | 4.09 | 1.71 | 2.39 | 7.11 | 310 |
+| 1.0 | 1.6 | 16 | 1.574 | +1066.07 | 4.21 | 1.46 | 1.79 | 7.06 | 253 |
+| 0.8 | 1.6 | 16 | 1.571 | +1205.54 | 4.20 | 1.67 | 2.13 | 6.95 | 287 |
+| 0.8 | 1.4 | 16 (=center) | 1.570 | +1174.45 | 4.12 | 1.60 | 1.89 | 7.08 | 285 |
+| 1.0 | 1.2 | 20 | 1.510 | +1106.11 | 3.96 | 1.41 | 1.97 | 7.54 | 279 |
+| 0.6 | 1.6 | 12 | 1.477 | +1039.02 | 3.44 | 1.41 | 2.47 | 7.12 | 302 |
+| 0.8 | 1.4 | 12 | 1.463 | +918.91 | 3.31 | 1.25 | 2.28 | 7.11 | 278 |
+| 1.0 | 1.4 | 20 | 1.453 | +974.23 | 3.72 | 1.28 | 1.56 | 7.34 | 262 |
+| 0.8 | 1.6 | 12 | 1.444 | +876.34 | 3.21 | 1.21 | 2.21 | 7.01 | 273 |
+| 0.8 | 1.2 | 12 | 1.442 | +891.47 | 3.15 | 1.20 | 2.16 | 7.22 | 283 |
+| 1.0 | 1.6 | 20 | 1.371 | +821.12 | 3.23 | 1.13 | 1.31 | 7.05 | 254 |
+
+**0 ของ 27 cell มี net < 0.** Range PF 1.371-1.854 ทั้งหมด. แถว AtrMultFirst4=0.8/AtrMultAfter=1.4/
+BasketTp=16 (center cell) ตรงกับ Step 0 ทุกหลัก (PF 1.570/+1174.45/285/7.08%) = ยืนยัน sweep คนละ
+ช่องทางแต่เลขตรงกัน. **หมายเหตุ anomaly:** optimizer XML คืนมา 324 passes (ไม่ใช่ 27) — MT5
+เก็บ optimize-checkbox state ของ `_16_RsiPeriod`/`_16_RsiLow` ค้างจาก session ORDER-075
+(`optRSI.set`) แม้ set ไฟล์ใหม่จะใส่ค่าคงที่ (ไม่มี `||...||Y`) ก็ตาม → ได้ full cartesian
+27×12=324 แถวจริง (RsiPeriod {7,14,21} × RsiLow {25,30,35,40} คูณเข้ากับ 27 combo ที่ตั้งใจสวีป)
+ตารางด้านบน = filter เฉพาะแถวที่ RsiPeriod=21 & RsiLow=30 (27 แถวตรงตามสเปค) จาก XML ดิบ
+`_mt5_auto\optimizations\B16VAL_SWEEP_XAU_H1.xml` — ข้อมูลไม่เสีย แค่เปลืองรอบคำนวณ
+
+**Step 2 — Year-split ของ center config (21/30, 0.8/1.4/16), Model 1, single run ต่อปี:**
+
+| ปี | Window | PF | Net USD | eqDD% | Trades | History Quality | Lane |
+|---|---|---|---|---|---|---|---|
+| 2020 | 2020.01.01-2021.01.01 | 1.27 | +152.00 | 6.14 | 74 | 100% | Meta 5b (portable) |
+| 2021 | 2021.01.01-2022.01.01 | **0.78** | **-256.56** | 9.73 | 97 | 99% | Meta 5b (portable) |
+| 2022 | 2022.01.01-2023.01.01 | 4.81 | +700.98 | 2.27 | 105 | 99% | Meta 5b (portable) |
+| 2023 | 2023.01.01-2024.01.01 | 1.19 | +139.94 | 7.08 | 96 | 99% | Meta 5 (main) |
+| 2024 | 2024.01.01-2025.01.01 | 1.83 | +275.69 | 5.92 | 70 | 100% | Meta 5 (main) |
+| 2025 | 2025.01.01-2026.01.01 | 1.86 | +166.60 | 2.61 | 34 | 100% | Meta 5 (main) |
+| 2026H1 | 2026.01.01-2026.07.01 | 1.75 | +592.22 | 4.17 | 85 | 100% | Meta 5 (main) |
+
+**1 ของ 7 ปีติดลบ (2021, PF 0.78, net -256.56).** Reports: `B16VAL_YR2020.htm` ... `B16VAL_YR2026H1.htm`.
+
+**Step 3 — Model 0 (every tick) confirm, center config, IS 2023.01.01-2026.07.01:**
+
+| Model | PF | Net USD | eqDD% | Trades | History Quality |
+|---|---|---|---|---|---|
+| Model 0 (every tick) | 1.41 | +947.55 | 7.15 | 318 | 98% |
+| Model 1 (reference, Step 0) | 1.57 | +1,174.45 | 7.08 | 285 | — |
+
+Report: `B16VAL_M0_CONFIRM.htm` (20,654 bars).
+
+**Step 4 — Monte Carlo bootstrap** (`mt5_montecarlo.py --deposit 10000 --iters 5000`, input =
+trade list จากรัน Step 3 Model 0 — 318 trades, seed default 42):
+
+| metric | 5th pct | median | 95th pct | worst |
+|---|---|---|---|---|
+| Net profit | 947.55 | 947.55 | 947.55 | 947.55 |
+| Max drawdown % | 1.95 | 2.90 | 4.60 | 7.30 |
+| Profit factor | 1.41 | 1.41 | 1.41 | 1.41 |
+
+ruin risk (net ≤ -deposit): 0.00% · P(net profit < 0): 0.0%. หมายเหตุกลไก: script รีชัฟเฟิล
+"ลำดับ" trade ไม่ใช่ resample-with-replacement — net/PF เป็นค่าคงที่ทุก percentile เพราะผลรวมไม่
+ขึ้นกับลำดับ (invariant ตามกลไกของสูตร), มีแค่ max-DD ที่กระจายตามลำดับสุ่ม (ตามที่ script
+docstring ระบุไว้ว่าเป็น optimistic lower-bound เพราะ trade ไม่ independent จริง)
+
+**ไม่ตกด่านไหนใน 4 ขั้น** (0/27 net<0 · 1/7 ปีลบ · Model0 PF 1.41≥1.25 net>0 · MC PF 5th pct
+1.41≥1.0 ruin 0%). ไม่มี anomaly อื่นนอกจาก optimizer-cache 324-pass ที่ระบุไว้ข้างบน.
 
 
 ---
