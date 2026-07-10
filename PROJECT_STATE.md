@@ -1,6 +1,6 @@
 # PROJECT_STATE â€” EA_LAB single living state (ðŸ‘‰ AI START HERE)
 
-> **last updated:** 2026-07-08 (EA hunt -> 6 demo candidates, see section 7 SESSION 2026-07-08 block) · updated by: Claude Opus 4.8 · owner: patip
+> **last updated:** 2026-07-10 (monitor rotation v3 + ST03-family/Zeus/Kangaroo retest verdicts — ORDER-068/069/070) · updated by: Claude Opus 4.8 · owner: patip
 >
 > à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰ = **à¸ˆà¸¸à¸”à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™à¹€à¸”à¸µà¸¢à¸§** à¸—à¸µà¹ˆ AI/session à¹ƒà¸”à¸à¹‡à¸•à¸²à¸¡à¸•à¹‰à¸­à¸‡à¸­à¹ˆà¸²à¸™à¸à¹ˆà¸­à¸™ à¹€à¸žà¸·à¹ˆà¸­à¹ƒà¸«à¹‰à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ
 > "à¹€à¸—à¹ˆà¸²à¸à¸±à¸šà¸„à¸™à¸—à¸µà¹ˆà¸—à¸³à¸¡à¸²à¸à¹ˆà¸­à¸™" à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¹„à¸¥à¹ˆà¸­à¹ˆà¸²à¸™ 20 à¹„à¸Ÿà¸¥à¹Œ. à¸‚à¸­à¸‡à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ canonical docs (section 8) â€”
@@ -122,6 +122,15 @@ banner: `> âš ï¸ canonical entry = PROJECT_STATE.md Â· à¹„à¸Ÿà�
   judge à¹€à¸£à¹‡à¸§à¸ªà¸¸à¸” **2026-09-22**. âš ï¸ **ST03 replica (990010) = WATCH**: qwen rerun OOS à¹„à¸”à¹‰ **PF 0.86 (585 trades)**
   à¸‚à¸±à¸”à¸à¸±à¸š 3.93 provisional à¹€à¸”à¸´à¸¡ â€” à¸•à¹‰à¸­à¸‡ re-confirm à¸”à¹‰à¸§à¸¢ locked .set à¸à¹ˆà¸­à¸™à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ baseline à¸•à¸­à¸™ judge (à¸„à¸‡à¹„à¸§à¹‰à¸šà¸™ demo à¹„à¸”à¹‰
   à¹€à¸žà¸£à¸²à¸° demo à¸¡à¸µà¹„à¸§à¹‰à¸ˆà¸±à¸š overfit). à¸•à¸±à¸§à¸šà¸¥à¹‡à¸­à¸ = à¹€à¸§à¸¥à¸² (à¸£à¸­ demo 3 à¹€à¸”à¸·à¸­à¸™) + à¸¢à¸±à¸‡à¹„à¸¡à¹ˆà¸‚à¸¢à¸²à¸¢à¸ˆà¸²à¸ 1 â†’ à¸«à¸¥à¸²à¸¢à¸žà¸­à¸£à¹Œà¸•.
+- 🔴 **(2026-07-10) ST03 family = entry ไม่มี edge — ยืนยันแล้ว (ORDER-068, STRUCTURAL):** flat-lot probe
+  ของ config live จริง: GBP(9397) PF 0.68 / CAD(9398) PF 0.40 — **ล้างพอร์ตทั้งคู่เมื่อปิด escalation** =
+  กำไร backtest ทั้งตระกูล (PF 2.51/1.67) มาจาก uncapped recovery ล้วน ๆ (no SL · no cap · ratchet defect
+  linear→doubling = ที่มาไม้ 33.73 lots บนบัญชี user 939721 ซึ่ง config เหมือน 9397 เป๊ะ) · eqDD ลอย 57-61%
+  ทุกปี · **ผลตัดสิน: 9397/9398/990010 อยู่บน demo ต่อเพื่อเก็บ data ได้ แต่ห้าม promote สู่เงินจริง
+  ไม่ว่า demo PF จะสวยแค่ไหน (structural — tune ไม่ช่วย) · บัญชีจริง user 159475669 แนะนำถอดทั้งตระกูล** ·
+  ทางสร้างใหม่ = Entry_ST03 บน Boss V2 + capped recovery (spec Kangaroo, ORDER-070) · หลักฐาน
+  AGENT_TASKBOARD ORDER-068 + `_mt5_auto\reports\ST03LAB_*` · เพิ่มเติม: ZeusInspired บน EURUSD =
+  dead cell (ORDER-069: 216 pass, PF สูงสุด 1.14, gate ผ่าน 0) — EURUSD ไม่ใช่บ้านของ reversion-grid ตัวนี้
 - **Signal hunt â€” âš ï¸ à¹„à¸¡à¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§à¹à¸¥à¹‰à¸§ à¸«à¸¥à¸±à¸‡ 2026-07-03** à¹€à¸”à¸´à¸¡à¹€à¸‚à¸µà¸¢à¸™à¸§à¹ˆà¸² "98% à¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§ à¸£à¸­à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆ" (à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
   **à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢**) â€” concept à¹€à¸à¹ˆà¸²à¸—à¸µà¹ˆà¸•à¸²à¸¢à¹à¸¥à¹‰à¸§à¸¢à¸±à¸‡à¸•à¸²à¸¢à¸­à¸¢à¸¹à¹ˆ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
   Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â€” à¸”à¸¹à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”
@@ -164,6 +173,7 @@ banner: `> âš ï¸ canonical entry = PROJECT_STATE.md Â· à¹„à¸Ÿà�
 | 2026-07-02 | **KAUFMAN_ER = CANDIDATE reserve Â· SUPERTREND XAU = PARKED** (à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ deploy) | re-confirm à¸œà¹ˆà¸²à¸™à¸—à¸±à¹‰à¸‡à¸„à¸¹à¹ˆ à¹à¸•à¹ˆ corr à¸£à¸°à¸«à¸§à¹ˆà¸²à¸‡à¸à¸±à¸™ 0.946 = à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§à¸à¸±à¸™ â†’ à¸–à¹‰à¸²à¸ˆà¸° deploy à¹€à¸­à¸² KER à¸•à¸±à¸§à¹€à¸”à¸µà¸¢à¸§ 0.01 lot (corr 0.75 vs BRK8). à¸”à¸¹ EA_SCORECARD Â§VALIDATED RESERVE |
 | 2026-07-02 | **EA_Template = FREEZE 100% à¹€à¸›à¹‡à¸™ smoke tool** | à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸¡à¸·à¸­à¹€à¸ªà¸£à¹‡à¸ˆ à¸§à¸±à¸”à¹€à¸Šà¸·à¹ˆà¸­à¸–à¸·à¸­à¹„à¸”à¹‰ = à¸ˆà¸šà¸‡à¸²à¸™ track; à¹„à¸¡à¹ˆà¸žà¸±à¸’à¸™à¸² chassis à¸•à¹ˆà¸­, à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆà¸¢à¸±à¸‡à¹€à¸ªà¸µà¸¢à¸šà¸œà¹ˆà¸²à¸™ Boss V2 à¹„à¸”à¹‰ (guide: `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`) |
 | 2026-07-02 | **ST03 replica (990010) = WATCH** | qwen rerun OOS PF 0.86 à¸‚à¸±à¸” 3.93 provisional â†’ à¸«à¹‰à¸²à¸¡à¹ƒà¸Šà¹‰à¹€à¸›à¹‡à¸™ baseline à¸ˆà¸™à¸à¸§à¹ˆà¸² re-confirm à¸”à¹‰à¸§à¸¢ locked .set |
+| 2026-07-10 | **ST03 family no-edge = STRUCTURAL (ORDER-068)** | flat-lot GBP 0.68 / CAD 0.40 ล้างพอร์ต → **ห้าม promote ตระกูล ST03 สู่เงินจริง** (demo เก็บ data ต่อได้) · บัญชีจริง user แนะนำถอด 939721+9398+990010 · ZeusInspired×EURUSD = dead cell (216 pass, PF max 1.14) · Gold_Kangaroo smoke PF 4.86/DD11% H1 = candidate แกะ logic (ORDER-070) |
 | 2026-07-03 | **Zeus Gold Hedge V1.2 (MT4) = REJECT à¸—à¸±à¹‰à¸‡ XAU/EU** (score à¸•à¹ˆà¸³ à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ hard gate â€” à¸”à¸¹ rubric fix à¸”à¹‰à¸²à¸™à¸¥à¹ˆà¸²à¸‡) â†’ à¸•à¹ˆà¸­à¸¢à¸­à¸”à¹€à¸›à¹‡à¸™ `(Boss)_ZeusInspired_GridLog_rev01.mq5` (L3 redesign) | à¸§à¸´à¹€à¸„à¸£à¸²à¸°à¸«à¹Œà¹€à¸•à¹‡à¸¡: `ZEUS_GOLD_HEDGE_ANALYSIS.md` Â· registry: `EA_SCORECARD_AND_REGISTRY.md` Â· methodology â†’ skill `locked-ea-analyzer` |
 | 2026-07-03 | **à¹à¸à¹‰ scoring rubric: mechanism-risk hard-gate â†’ score-penalty** + **Model 1 (control points) = à¸‚à¸±à¹‰à¸™à¸•à¹ˆà¸³à¸à¹ˆà¸­à¸™ REJECT/DISQUALIFIED à¹ƒà¸”à¹†** (Model 2 = proof-of-concept à¹€à¸—à¹ˆà¸²à¸™à¸±à¹‰à¸™) | user-corrected â€” à¸›à¹‰à¸­à¸‡à¸à¸±à¸™ reject EA à¸—à¸´à¹‰à¸‡à¸à¹ˆà¸­à¸™à¸§à¸±à¸”à¸œà¸¥à¸ˆà¸£à¸´à¸‡. à¸šà¸±à¸™à¸—à¸¶à¸à¹ƒà¸™ `EA_SCORECARD_AND_REGISTRY.md` Step 0/0b + `backtest-optimize-rigor` skill. à¸žà¸´à¸ªà¸¹à¸ˆà¸™à¹Œà¸„à¸¸à¸“à¸„à¹ˆà¸²à¸—à¸±à¸™à¸—à¸µ: à¸ˆà¸±à¸š false-positive à¹„à¸”à¹‰ 2 à¸„à¸£à¸±à¹‰à¸‡à¹ƒà¸™à¸§à¸±à¸™à¹€à¸”à¸µà¸¢à¸§ (Zeus XAU Model 1 fill-artifact PF 1.89â†’Model 0 à¸ˆà¸£à¸´à¸‡ 1.01; AUDCAD Model 2 PF 1.80â†’Model 1 à¸ˆà¸£à¸´à¸‡ 0.89) |
 | 2026-07-03 | **`(Boss)_ZeusInspired_GridLog_rev01` â€” AUDJPY = CANDIDATE à¹à¸£à¸à¸—à¸µà¹ˆà¸£à¸­à¸”** (PF 1.21 à¹€à¸—à¹ˆà¸²à¸à¸±à¸™à¸—à¸±à¹‰à¸‡ Model 2/1 = à¹„à¸¡à¹ˆà¹ƒà¸Šà¹ˆ fill artifact; DD-scale à¹€à¸‚à¹‰à¸² 15% à¹„à¸”à¹‰ PF 1.91 net +$2,780/18mo) à¸¢à¸±à¸‡à¹„à¸¡à¹ˆ IS/OOS/MC | AUDCAD à¸•à¸à¸—à¸±à¹‰à¸‡ baseline/tightened à¸—à¸µà¹ˆ Model 1 â€” à¸—à¸­à¸‡à¸–à¸¹à¸à¸•à¸±à¸”à¸­à¸­à¸à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸”à¸•à¸²à¸¡à¸„à¸³à¸ªà¸±à¹ˆà¸‡ user (Zeus family à¹„à¸¡à¹ˆà¹€à¸«à¸¡à¸²à¸°à¸à¸±à¸š volatility à¸—à¸­à¸‡) |
