@@ -3849,3 +3849,18 @@ trend-follow ยอมรับ BWD อ่อนกว่า reversion ได้
 {7,10,14} × Mult {2.5,3,3.5} × SL_ATR {1.5,2.0} full window Model 1 (บาร์: ไม่มี cell ขาดทุน + default
 ไม่ใช่ peak โดด) · **Acceptance:** 2 ตาราง + บาร์ verbatim · commit `[tag] ORDER-085B done` ·
 **ห้าม:** tune/เลือกใหม่ · verdict
+
+
+---
+
+## REVIEW ORDER-090 — `REVIEWED(Claude, 2026-07-10)` — ZSCORE×AUDCAD: ปิดตาม pre-registration · fragment เก็บเข้าคลัง
+
+**ตัดสิน:** Stage 1 plateau แท้ (11/11 ไม่มี cell ขาดทุน + M1 ไม่ละลายบน H4) แต่ Stage 2 BWD PF 0.77
+(2020 0.75 / 2021 0.66 สองปีลบติด) = **regime-dependent reversion** → ปิดตามบาร์ที่ล็อกไว้ ·
+rescue-ladder ครบทุกข้อก่อนตาย (entry+exit sweep ✓ · 2 TF ✓ · 2 symbol ✓ · BWD ✓) — **ตายแบบ
+สมบูรณ์ตามกติกาใหม่ ไม่ใช่ตายเปล่า**
+**Fragment เข้าคลังไอเดีย (หลัก user: mechanism ที่เคยพิมพ์เงินได้ต้องจดไว้):** "AUDCAD 2023+
+= range regime ที่ reversion รีดได้จริง (plateau กว้าง) แต่ naked reversion ตายปีเทรนด์ 2020-21 —
+ต้องมีโครงช่วย" · ข้อพิสูจน์เทียบ: **Boss_14 AUDCAD (990204) ครองเซลล์เดียวกันอยู่แล้วแบบผ่านทุกปี**
+(grid+cage structure ทำสิ่งที่ naked ทำไม่ได้) → เซลล์นี้มีผู้ครองที่ดีกว่า ไม่เสียดาย
+**ไม่เข้า PARKED-VERIFY(user):** ไม่มีอะไรให้ user เทสมือเพิ่ม — คำถามทุกข้อถูกตอบด้วยหลักฐานแล้ว
