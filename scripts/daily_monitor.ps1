@@ -8,6 +8,11 @@ $log = "D:\EA_LAB\portfolio\daily_monitor.log"
 powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log
+# push to the secret gist for phone viewing - only after the user has run
+# publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
+if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
+    powershell -NoProfile -File D:\EA_LAB\scripts\publish_dashboard_gist.ps1 *>> $log
+}
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
 git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html 2>> $log
