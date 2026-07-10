@@ -3018,7 +3018,19 @@ daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้อ�
   demo = NONE (เก็บ data ให้ judge เห็นพฤติกรรมจริง)
 - **ห้าม build จนกว่า user เคาะ policy ต่อบัญชี/ต่อ magic** (มันจะไปปิดไม้เงินจริง — ต้อง explicit)
 
-## ORDER-074 — fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลือง token — `CLAIMED(Claude-agent, 2026-07-10)`
+## ORDER-074 — fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลือง token — `DONE(Claude-agent, 2026-07-10)`
+
+**ผลลัพธ์:** corpus ใหญ่กว่าที่คิดมาก — **3,513 ไฟล์ / 1,050 unique EA (dedup by content-hash) / 1.22 GB**
+(mq4 583 · mq5 467; แหล่งหลัก `D:\Forex` 546 + `D:\EA_LAB\_intake_drop` ~500 + OneDrive `.Final EA`).
+`scripts\fxdreema_xray.py` (portable python) → `_triage\FXDREEMA_XRAY.md` (การ์ด/EA, 2.7MB) +
+`_triage\FXDREEMA_XRAY.csv`. Parser อ่านโครง fxDreema จริง: block labels (`// Block N (label)`),
+per-block overrides (StopLossMode/VolumeSize — template default มี cast, override ไม่มี),
+`v::var = formula()` mapping → lot law อ่านได้เป็นสมการ, `MDLIC_indicators_iX` = indicator ที่ wired จริง.
+**Spot-check ST03 ผ่านครบ:** iMACD ✓ · StopLossMode="none" ทั้ง 4 open blocks → NO_SL ✓ ·
+`v::LOTB = openLots.min + openLots.max` (min+max pattern) + LOT_Repeat → LOT_ESCALATION ✓ ·
+inputs Lots_divided/TP1/TP2/TP3/LOT_Repeat/Nearby_PIP ครบ ✓.
+**ภาพรวม flag (raw data ไม่ใช่ verdict):** NO_SL+LOT_ESCALATION+NO_CAP = 448 ตัว (combo ใหญ่สุด) ·
+has_sl=yes เพียง 76 · SL+no-escalation (โครงดี หายาก) = 41 · TIMELOCK 7 · DLL_IMPORT 4 · WEBREQUEST 15.
 
 **ทำไม:** user มีไฟล์ fxDreema export จากคอร์สจำนวนมาก อยากต่อยอด แต่ code generate บวมมาก
 (ST03 = 11k บรรทัด) อ่านตรง ๆ เปลือง token/quota มหาศาล · fxDreema เป็น template → โครงซ้ำ →
