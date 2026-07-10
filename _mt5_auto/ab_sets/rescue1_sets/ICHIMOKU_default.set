@@ -1,0 +1,15 @@
+_01_Tenkan=9
+_01_Kijun=26
+_01_Senkou=52
+_02_ATRPeriod=14
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_03_TrendEMA=200
+_04_TrailATR=2.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990070

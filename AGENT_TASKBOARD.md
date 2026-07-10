@@ -3486,7 +3486,7 @@ AUDCAD H1) → สร้าง `_demo_deploy\MT4\swb_experiment3\` = .ex4 + lock
 แถวใหม่ใน DEMO_DEPLOYMENT_PLAN §experiment (mark: รอ user attach 69424711) · commit
 `[tag] ORDER-086 done` · **ห้าม:** แก้ set จาก validated ค่า · attach เอง
 
-## ORDER-087 — concept rescue batch #1: 6 smokes บน symbol-class ที่ไม่เคยลอง — `CLAIMED(Claude-agent)`
+## ORDER-087 — concept rescue batch #1: 6 smokes บน symbol-class ที่ไม่เคยลอง — `DONE(Claude-agent 2026-07-10)`
 
 **ทำไม:** ORDER-084: Keltner/Ichimoku/PrevDay/ZSCORE ปิดจาก XAU/EUR default cell เดียว · ceiling
 XAU (1.13-1.19) ห้ามซ้ำ XAU แต่ mechanism-matched class อื่นไม่เคยแตะ
@@ -3497,6 +3497,26 @@ PF≥1.2 = ผ่านไปคิว rescue-ladder เต็ม · <1.0 ทั
 - EA_ZSCORE: AUDNZD H4 + AUDCAD H4 (reversion → ranger ที่ Boss_14 พิสูจน์ว่า range จริง)
 (PrevDay ตัด — daily-level mechanism พิสูจน์อ่อนข้ามตลาดแล้ว EV ต่ำสุดในสี่ตัว)
 **Acceptance:** ตาราง 6 แถว PF/net/DD/trades + บาร์กำกับ · commit `[tag] ORDER-087 done` · **ห้าม:** verdict
+
+### ORDER-087 RESULTS (Claude-agent, 2026-07-10)
+
+บาร์ pre-registered ตามคำสั่ง (quote verbatim): "บาร์ pre-registered:
+PF≥1.2 = ผ่านไปคิว rescue-ladder เต็ม · <1.0 ทั้งคู่ cell = ปิด concept ฝั่งนั้น"
+
+Run conditions: main MT5 lane (D:\Meta 5) · Model 2 open-price · H4 · 2023.01.01–2026.07.01 ·
+deposit 10000 · default params (sets = `_mt5_auto/ab_sets/rescue1_sets/`) · history quality 100%
+ทั้ง 6 run (5430 bars) · reports = `_mt5_auto/reports/RESCUE1_*.htm`
+
+| EA | Symbol | PF | Net ($) | DD% (equity max) | Trades |
+|---|---|---|---|---|---|
+| EA_KELTNER | GBPJPY H4 | 0.73 | -142.50 | 1.79 | 127 |
+| EA_KELTNER | USDJPY H4 | 0.72 | -120.43 | 1.56 | 143 |
+| EA_ICHIMOKU | GBPJPY H4 | 0.84 | -167.35 | 2.83 | 267 |
+| EA_ICHIMOKU | AUDJPY H4 | 0.78 | -150.82 | 1.74 | 273 |
+| EA_ZSCORE | AUDNZD H4 | 0.71 | -96.82 | 1.10 | 278 |
+| EA_ZSCORE | AUDCAD H4 | 1.34 | +124.91 | 0.28 | 283 |
+
+(no verdict — บาร์ตัดสินโดย lead ตามคำสั่ง)
 
 ## ORDER-088 — Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" — `CLAIMED(Claude-agent)`
 
