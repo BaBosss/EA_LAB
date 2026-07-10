@@ -3149,3 +3149,25 @@ platform ตามไฟล์ · **compiled .ex4/.ex5 เท่านั้น�
 ต่อ EA ต่อด่าน **Acceptance:** ตารางครบ 41 แถว (screened-before / smoked / DQ) + top-5 ตาม
 BWD-OOS PF · commit `[tag] ORDER-076 done` **ห้าม:** verdict PASS/REJECT (Claude ตัดสิน) ·
 แตะไฟล์ต้นฉบับ · แตะ 297 ตัว SL-unknown (รอ verification pass แยก ถ้าคุ้ม)
+
+
+---
+
+## REVIEW ORDER-075 — `REVIEWED(Claude, 2026-07-10)` + เปิด ORDER-077
+
+**Verdict:** gate ทางการ 0/24 · **surface = peaky ไม่ใช่ plateau** — H1 แกน period แกว่งแรง
+(7→21 ที่ RsiLow30: 1.17→1.49→1.57) และ 21/25 เป็นหลุม (86 ไม้) · M30 กลับลำดับ H1 (14/30 จากแชมป์
+กลายเป็นบ๊วย 1.11) = สัญญาณ fragility ข้าม TF ชัด · เพดาน RSI-fade v0 ≈ PF 1.5-1.6 ที่ DD 7-11%
+— **ห่างต้นฉบับ (5.71) มาก แต่ระดับนี้ถ้ารอด funnel ก็มีค่า** (เทียบมาตรฐาน judge PF≥1.40)
+**ตัดสินทางเดิน:** (1) ห้าม fine-grid RsiLow ต่อ (= ล่า peak) (2) ก่อนลงแรง entry v1 ใหม่ ให้ตอบคำถาม
+ถูกสุดก่อน: concept รอดคนละ regime ไหม → ORDER-077 (3) candidate ชั่วคราวถ้า 077 ผ่าน = โซน
+14/30 + 21/30 (ทดสอบคู่ ห้ามเลือกตัวเดียวจาก in-sample)
+
+## ORDER-077 — Boss_16 BUY: BWD-OOS 2020-2022 probe (กฎ both-regimes ก่อนทุ่มต่อ) — `OPEN` (role: agent)
+
+**คำสั่ง:** รัน Boss_16 BUY 2 config (RSI 14/30 และ 21/30, อื่นๆ default ORDER-072) บน XAUUSD H1
+window **2020.01.01-2022.12.31** (ปีเทรนด์ลง+ขึ้น+COVID = regime ตรงข้าม in-sample 2023-26)
+Model 1 · 10k · 1:2000 · report ZKANG_BWD_*
+**Acceptance:** ตาราง 2 แถว PF/net/eqDD/trades เทียบแถว in-sample · commit `[tag] ORDER-077 done`
+**ห้าม:** tune อะไรทั้งนั้น · verdict (Claude อ่าน — เกณฑ์ล่วงหน้า: BWD PF <0.9 ทั้งคู่ = entry v0 เป็น
+regime artifact → หยุดสาย RSI-fade แล้วออกแบบ entry v1 ใหม่ก่อนค่อยกลับมา)
