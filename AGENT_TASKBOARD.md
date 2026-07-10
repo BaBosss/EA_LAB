@@ -3864,3 +3864,45 @@ rescue-ladder ครบทุกข้อก่อนตาย (entry+exit sweep
 ต้องมีโครงช่วย" · ข้อพิสูจน์เทียบ: **Boss_14 AUDCAD (990204) ครองเซลล์เดียวกันอยู่แล้วแบบผ่านทุกปี**
 (grid+cage structure ทำสิ่งที่ naked ทำไม่ได้) → เซลล์นี้มีผู้ครองที่ดีกว่า ไม่เสียดาย
 **ไม่เข้า PARKED-VERIFY(user):** ไม่มีอะไรให้ user เทสมือเพิ่ม — คำถามทุกข้อถูกตอบด้วยหลักฐานแล้ว
+
+
+---
+
+## ORDER-091 — MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท — ลูก 091A-D จ่ายตาม pacing) — `OPEN`
+
+**ที่มา (user 2026-07-10 ค่ำ พร้อม annotation ต่อโฟลเดอร์ — เก็บคำต่อคำใน chat log):** คลังใหญ่กว่า
+ที่ X-ray รอบแรกกวาดมาก — coverage เช็คแล้ว: `10_EA_PROJECTS` โดนแค่ 211 path · `04_FxDreema_Learner`
+7 path · ขนาดจริง: ~1,100 src + ~9,600 binaries + **~1,100 report/set แนบ** (BOT MOGUL 713 + Final EA 389)
+
+**กฎยืนพื้นทุก wave:** pacing 1-2 order/รอบ · vendor report = claim ไม่ใช่หลักฐาน (memory
+wobr-botranking: BotMogul rank = adverse-selected overfit) · ทุกตัวจบ funnel ต้องได้ EA-SCORE ·
+mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG เสมอ · DD สูง ≠ ปัดตก → diagnosis→lever (คำ user:
+".Final EA อาจ DD เยอะแต่เอาไปทำต่อได้ เชื่อผม")
+
+**Wave 0 — 091A: ขยาย X-ray+concept ให้ครบ 9 โฟลเดอร์** (mechanical, dedupe hash vs 1,050 เดิม):
+`wait_Fxdreema MT5` (151 src) · `3. ready to use` (38+102) · `review EA\Jobot` (1,556 bin) ·
+`BOT MOGUL` (2,905 bin) · `AI_GEN` (168 src) · `Course jobot` (375 src) · `04_FxDreema_Learner`
+(221 src) · `.Final EA` (189 src + 4,514 bin) → merged catalog + ตาราง "ใหม่จริง vs ซ้ำของเดิม"
+
+**Wave 1 (ต่อจาก 085B/083B ที่ค้างคิว):**
+- **091B — BOT MOGUL report sweep:** parse 713 vendor reports → ตาราง claimed PF/DD/symbol/TF →
+  คัด top ตาม claim × โครงผ่าน X-ray → **BWD-OOS spot-kill ทีละ 5** (1 รัน/ตัว ฆ่าถูกสุด) —
+  ห้ามเชื่อ report แนบจนกว่า BWD เราเองผ่าน
+- **091C — .Final EA inventory + funnel queue:** ของ hand-validated โดย user = prior สูงสุดของคลัง ·
+  cross-ref กับ verdict เดิม (Kangaroo/Zeus/Hedging-Rebalance-TIMELOCK เจอแล้วจาก copy ฝั่ง OneDrive) ·
+  เรียงคิว funnel (MC+OOS ที่ user ไม่เคยทำ) ทีละ 1-2 ตัว/batch ตาม rescue-ladder + diagnosis→lever
+
+**Wave 2 — 091D: `3. ready to use`** (user optimize แล้ว ไม่เคย MC+OOS): funnel + idea extraction
+ทุกตัวแม้ตก (คำ user: "ทดลองไม่ผ่านก็ได้ แต่เอาไอเดียมาต่อยอดที")
+
+**Wave 3:** AI_GEN (concept-mine — user บอกไอเดียดี) · review-EA\Jobot (bin ล้วน → X-ray strings +
+smoke เฉพาะโครงสะอาด)
+
+**Wave 4 — ช้า ทำคู่กับ user เท่านั้น (ห้าม agent เดี่ยว):**
+- **Course jobot** (375 src จากคอร์สที่ user เรียน) — คำเตือน user ตรง ๆ: "ถ้าทำไว ๆ ตีความพลาดแน่
+  ว่างค่อยทำ" → session ละ 1 module คุยกับ user ประกอบ
+- **Document** (ตำรา price action: ใช้ performance ABC ของแท่งเทียนเป็นเงื่อนไขเปิดไม้ → เข้า template
+  เป็น entry option) — โฟลเดอร์โชว์ 0 ไฟล์ code/pdf = format อื่น (docx/รูป?) ต้องสำรวจก่อน แล้ว
+  ตบ spec กับ user ("เดี๋ยวเรามาตบ ๆ กันอีกที")
+- FxDreema_Learner = ตัวอย่างเรียน → concept-mine อย่างเดียว
+**หมายเหตุ:** FXDREEMA_XRAY.csv ซ่อม duplicate concept column แล้ว (2026-07-10 ค่ำ)
