@@ -3693,3 +3693,29 @@ H1 รอบ1 = 0/25 · H1 รอบ2 = 0/35 · รอบ3 = N/A ทั้ง 2 
   ที่อ่านได้จาก trade list โดยไม่ต้องรันอะไรเลย** — เพิ่มเป็นเช็คมาตรฐานคู่กับ flat-lot probe
 - สถานะ: ไม่ใช่ตายเปล่า — ตายพร้อมหลักฐานเต็มมือ ปิดเงื่อนไขค้างจาก 2026-07-07 สมบูรณ์ ·
   ถ้า user อยากเลี้ยงเป็น premium-track ส่วนตัว = สิทธิ์ tier 3 (บัญชีทดลอง แยก equity) ตามกติกา
+
+
+---
+
+## REVIEW ORDER-089 — `REVIEWED(Claude, 2026-07-10)` — H4 ผ่านบาร์ → funnel เต็ม (ORDER-090)
+
+**ตัดสินตาม pre-registration:** H4 ผ่าน (R1 3/25 = แถว threshold 2.5 ทั้งแถว coherent · R2 20/35,
+**zero losing cells**, SL_ATR≥2.5 ผ่านหมด, TP axis inert เพราะ exit จริงคือ revert-to-Z=0) ·
+H1 = ปิดถาวร (0/60 + M1 confirm 0.54) — single-TF edge ยอมรับได้ (precedent: BRK=H1-only, ST=H4-only)
+· ⚠️ ธงที่ต้องแบกไป funnel: M2-vs-M1 divergence บน H1 (0.91→0.54) = concept นี้ fill-sensitive —
+**M1/M0 confirm ใน funnel คือด่านชี้ขาดจริง** · R3 N/A มีหลักฐาน (EA ไม่มี filter inputs) — ยอมรับ
+เป็น 2 รอบ+โครงสร้าง exit ครบตามเจตนา rescue-ladder (แกน entry+exit sweep แล้วทั้งคู่)
+
+## ORDER-090 — ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) — `CLAIMED(Claude-agent)`
+
+**Config กลาง (plateau-center จาก 089, ประกอบข้ามรอบต้องเทสสด):** ZPeriod 20 · ZThreshold 2.5 ·
+SL_ATR 3.0 · TP_ATR 0 (revert-only) · flat lot
+**ขั้น (หยุดเมื่อตกด่าน · Model 1 ทุกขั้น):**
+1. Combined-config confirm H4 2023-2026 + neighbors ±1 step ทุกแกน (8 เซลล์รอบศูนย์กลาง —
+   plateau requirement: ไม่มีเซลล์ขาดทุน)
+2. BWD 2020-2022 (บาร์: PF ≥1.1 และ eqDD ≤15%)
+3. Year-split 2020-2026 (นับปีลบ — บาร์: ≤1 ปีลบ ตื้น)
+4. MC bootstrap (robustness-validator convention — บาร์: PF-5th ≥1.1, ruin 0)
+5. Model 0 confirm 1 รัน (ธง fill-sensitive จาก 089 — เลขละลาย >30% = ตก)
+**Acceptance:** ตารางทุกขั้น + สถานะผ่าน/ตกต่อด่าน · commit `[tag] ORDER-090 done` · **ห้าม:** tune เพิ่ม ·
+verdict (Claude ให้ EA-SCORE เมื่อจบ)
