@@ -1,6 +1,6 @@
 # PROJECT_STATE â€” EA_LAB single living state (ðŸ‘‰ AI START HERE)
 
-> **last updated:** 2026-07-10 (monitor rotation v3 + ST03-family/Zeus/Kangaroo retest verdicts — ORDER-068/069/070) · updated by: Claude Opus 4.8 · owner: patip
+> **last updated:** 2026-07-10 ค่ำ (ปรัชญาโรงงาน+EA-SCORE จารึก · retro-audit 154 verdicts รอบแรกจบ · ORDER-068→090) · updated by: Claude Opus 4.8 · owner: patip
 >
 > à¹„à¸Ÿà¸¥à¹Œà¸™à¸µà¹‰ = **à¸ˆà¸¸à¸”à¹€à¸£à¸´à¹ˆà¸¡à¸•à¹‰à¸™à¹€à¸”à¸µà¸¢à¸§** à¸—à¸µà¹ˆ AI/session à¹ƒà¸”à¸à¹‡à¸•à¸²à¸¡à¸•à¹‰à¸­à¸‡à¸­à¹ˆà¸²à¸™à¸à¹ˆà¸­à¸™ à¹€à¸žà¸·à¹ˆà¸­à¹ƒà¸«à¹‰à¹€à¸‚à¹‰à¸²à¹ƒà¸ˆà¹‚à¸›à¸£à¹€à¸ˆà¸à¸•à¹Œ
 > "à¹€à¸—à¹ˆà¸²à¸à¸±à¸šà¸„à¸™à¸—à¸µà¹ˆà¸—à¸³à¸¡à¸²à¸à¹ˆà¸­à¸™" à¹‚à¸”à¸¢à¹„à¸¡à¹ˆà¸•à¹‰à¸­à¸‡à¹„à¸¥à¹ˆà¸­à¹ˆà¸²à¸™ 20 à¹„à¸Ÿà¸¥à¹Œ. à¸‚à¸­à¸‡à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™ canonical docs (section 8) â€”
@@ -134,6 +134,13 @@ banner: `> âš ï¸ canonical entry = PROJECT_STATE.md Â· à¹„à¸Ÿà�
   · **UPDATE 2026-07-10 บ่าย (ORDER-071 ปิดเคส): entry ST03 ตายสมบูรณ์ทุกแกน** — sweep exit ×4 +
   symbol ×2 + H4 gate ×3 (18 config) ดีสุด 0.99 (บาร์ 1.05) → ห้ามขุด Count-MACD entry อีกทุกรูปแบบ ·
   ของที่รอด: H4-MACD-direction gate (ลด DD 21→5.5%) = อะไหล่ใช้กับสัญญาณอื่น · ทางต่อ = Boss_16 (ORDER-072)
+- 🧭 **(2026-07-10 ค่ำ) ปรัชญาโรงงาน + EA-SCORE v1 จารึกแล้ว** — สามชั้น edge/MM/portfolio → `VISION.md`
+  §ปรัชญาโรงงาน · rubric คะแนน→สิทธิ์ + กุญแจเพดาน 3 ดอก → `EA_SCORECARD` §EA-SCORE · กฎ user ชุดใหม่:
+  rescue-ladder ≥3 รอบ×2 TF ก่อน DEAD · PARKED-VERIFY(user) · diagnosis→lever · pacing batch เล็ก ·
+  **retro-audit 154 verdicts รอบแรกจบ (ORDER-084→090):** Keltner/Ichimoku/Oracle/ZSCORE ปิดหลักฐานเต็ม ·
+  **SuperTrend XAU H4 = 6/10 รอ 085B (BWD+plateau) — ผ่าน = เงินจริง 1/3 lot** · swb bundle รอ attach ·
+  เครื่องมือใหม่: top-5-concentration check · ⚠️ MT5 เมิน Spread= ใน ini (stress ต้อง arithmetic บน trade list) ·
+  NewsGuard MT5 พร้อม attach (คู่มือท้าย ORDER-083; 083B = MT4 port คิวถัดไป)
 - **Signal hunt â€” âš ï¸ à¹„à¸¡à¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§à¹à¸¥à¹‰à¸§ à¸«à¸¥à¸±à¸‡ 2026-07-03** à¹€à¸”à¸´à¸¡à¹€à¸‚à¸µà¸¢à¸™à¸§à¹ˆà¸² "98% à¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§ à¸£à¸­à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆ" (à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
   **à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢**) â€” concept à¹€à¸à¹ˆà¸²à¸—à¸µà¹ˆà¸•à¸²à¸¢à¹à¸¥à¹‰à¸§à¸¢à¸±à¸‡à¸•à¸²à¸¢à¸­à¸¢à¸¹à¹ˆ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
   Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â€” à¸”à¸¹à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”
