@@ -3163,7 +3163,7 @@ BWD-OOS PF · commit `[tag] ORDER-076 done` **ห้าม:** verdict PASS/REJEC
 ถูกสุดก่อน: concept รอดคนละ regime ไหม → ORDER-077 (3) candidate ชั่วคราวถ้า 077 ผ่าน = โซน
 14/30 + 21/30 (ทดสอบคู่ ห้ามเลือกตัวเดียวจาก in-sample)
 
-## ORDER-077 — Boss_16 BUY: BWD-OOS 2020-2022 probe (กฎ both-regimes ก่อนทุ่มต่อ) — `OPEN` (role: agent)
+## ORDER-077 — Boss_16 BUY: BWD-OOS 2020-2022 probe (กฎ both-regimes ก่อนทุ่มต่อ) — `DONE(agent, 2026-07-10)` (role: agent)
 
 **คำสั่ง:** รัน Boss_16 BUY 2 config (RSI 14/30 และ 21/30, อื่นๆ default ORDER-072) บน XAUUSD H1
 window **2020.01.01-2022.12.31** (ปีเทรนด์ลง+ขึ้น+COVID = regime ตรงข้าม in-sample 2023-26)
@@ -3171,3 +3171,17 @@ Model 1 · 10k · 1:2000 · report ZKANG_BWD_*
 **Acceptance:** ตาราง 2 แถว PF/net/eqDD/trades เทียบแถว in-sample · commit `[tag] ORDER-077 done`
 **ห้าม:** tune อะไรทั้งนั้น · verdict (Claude อ่าน — เกณฑ์ล่วงหน้า: BWD PF <0.9 ทั้งคู่ = entry v0 เป็น
 regime artifact → หยุดสาย RSI-fade แล้วออกแบบ entry v1 ใหม่ก่อนค่อยกลับมา)
+
+**ผลรัน (agent, 2026-07-10):** lane D:\Meta 5b (portable) · XAUUSD H1 history ครบถึง 2020 จริง
+(.hcc 2015-2026 · report: 17,761 bars / 4.24M ticks / history quality 99% ทั้งสองรัน — ไม่ใช่ 0-bar)
+
+| Config | Window | PF | Net | eqDD% | Trades | Win% | Report |
+|---|---|---|---|---|---|---|---|
+| 14/30 | BWD 2020-2022 | **1.04** | +197.21 | 17.33 | 512 | 69.9 | ZKANG_BWD_14_30.htm |
+| 21/30 | BWD 2020-2022 | **1.31** | +596.42 | 9.58 | 276 | 72.8 | ZKANG_BWD_21_30.htm |
+| 14/30 (ref) | IS 2023-2026 | 1.49 | +2242.42 | 10.85 | 588 | 76.4 | BOSS16_KANG_XAU_H1_BUY.htm |
+| 21/30 (ref) | IS 2023-2026 | 1.57 | — | — | 285 | — | (ORDER-075) |
+
+หมายเหตุกลไก: config 2 = smoke set เดิมเปลี่ยนบรรทัดเดียว `_16_RsiPeriod=21` · ini Leverage=2000
+(report แสดง 1:100 เหมือนรัน in-sample เดิม — convention เดียวกัน; margin level ต่ำสุด >4200%
+ทั้งสองรัน = leverage ไม่เป็นข้อจำกัด) · ไม่มี tune · ไม่มี verdict — Claude อ่านตามเกณฑ์ล่วงหน้า
