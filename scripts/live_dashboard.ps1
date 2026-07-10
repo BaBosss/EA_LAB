@@ -21,6 +21,15 @@ trade, and a status flag:
   grey ? = magic present in the CSV but not in the cohort table (unmapped, no criteria)
 Colors are flags against the DECLARED kill-switch numbers only - no keep/kill verdict
 logic here (that judgment stays with Claude/user per ORDER-058 "ห้าม").
+
+ORDER-092 (2026-07-11): a FLOATING RISK panel renders ABOVE the closed-deals sections
+from the newest EA_LAB_snapshot_<login>*.csv per account (AccountSnapshotExporter,
+collected into the same $LiveDealsDir): equity vs balance, floating total, margin level
+(green >500% / yellow 200-500% / red <200%), distance to stop-out, per-magic floating
+baskets joined against the cohort map (unmapped magics tagged UNMAPPED), plus cross-
+account aggregates (total XAU exposure, total floating). Snapshots older than 26h are
+greyed with a STALE banner and excluded from aggregates - never rendered as current.
+Shows "no snapshot data yet" when no snapshot CSVs exist; all prior behavior unchanged.
 #>
 [CmdletBinding()]
 param(
@@ -344,7 +353,12 @@ foreach ($key in $allKeys) {
 $rowsSorted = $rows | Sort-Object Rank, Name, Magic
 
 # ---------------------------------------------------------------------------
-# 7. render HTML
+# 6b. ORDER-092 FLOATING RISK panel - parse the newest EA_LAB_snapshot_<login>
+#     CSV per account (written by AccountSnapshotExporter every 60s, collected
+#     by collect_live_deals.ps1). This is the ONLY part of the dashboard that
+#     can see open baskets / margin pressure; everything below it is closed
+#     history. Snapshots older than 26h render GREYED with a STALE banner -
+#     never as current data.
 # ---------------------------------------------------------------------------
 Add-Type -AssemblyName System.Web -ErrorAction SilentlyContinue
 
@@ -353,6 +367,161 @@ function HtmlEnc {
   if ($null -eq $s) { return "" }
   try { return [System.Web.HttpUtility]::HtmlEncode($s) } catch { return $s }
 }
+
+function ToDbl([string]$s) {
+  $v = 0.0
+  [void][double]::TryParse($s, [System.Globalization.NumberStyles]::Any,
+                           [System.Globalization.CultureInfo]::InvariantCulture, [ref]$v)
+  return $v
+}
+
+$accOrder = @{}
+foreach ($k in $acctMeta.Keys) { $accOrder[$k] = $acctMeta[$k].Order }
+
+$snapStaleHours = 26
+$snapFiles = @(Get-ChildItem (Join-Path $LiveDealsDir "EA_LAB_snapshot_*.csv") -ErrorAction SilentlyContinue |
+               Where-Object { $_.BaseName -match '^EA_LAB_snapshot_(\d+)' })
+$snapByLogin = @{}
+foreach ($grp in ($snapFiles | Group-Object { if ($_.BaseName -match '^EA_LAB_snapshot_(\d+)') { $Matches[1] } else { '' } })) {
+  if (-not $grp.Name) { continue }
+  $snapByLogin[$grp.Name] = $grp.Group | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+}
+
+$fh = New-Object System.Text.StringBuilder
+[void]$fh.AppendLine('<div class="card">')
+[void]$fh.AppendLine('<h2 style="font-size:16px;margin:0 0 8px 0;">&#9888;&#65039; FLOATING RISK &mdash; open baskets / margin (snapshot exporter, ORDER-092)</h2>')
+
+if ($snapByLogin.Count -eq 0) {
+  [void]$fh.AppendLine('<div class="meta" style="margin:0;">no snapshot data yet &mdash; AccountSnapshotExporter not attached / not collected. Closed-deal tables below CANNOT see floating basket loss on no-SL grid EAs.</div>')
+} else {
+  # aggregates are computed from FRESH snapshots only; stale accounts are listed as excluded
+  $aggFloat = 0.0; $aggXauLots = 0.0; $aggXauFloat = 0.0
+  $aggFreshAccts = @(); $aggStaleAccts = @()
+
+  $snapLoginsOrdered = $snapByLogin.Keys | Sort-Object { if ($accOrder.ContainsKey($_)) { $accOrder[$_] } else { 99 } }, { $_ }
+  foreach ($login in $snapLoginsOrdered) {
+    $sf = $snapByLogin[$login]
+    $ageH = ((Get-Date) - $sf.LastWriteTime).TotalHours
+    $isStale = ($ageH -gt $snapStaleHours)
+
+    $acctRow = $null; $magicRows = @(); $symbolRows = @()
+    foreach ($r in @(Import-Csv -Path $sf.FullName)) {
+      switch ($r.row_type) {
+        'ACCOUNT' { $acctRow = $r }
+        'MAGIC'   { $magicRows += $r }
+        'SYMBOL'  { $symbolRows += $r }
+      }
+    }
+    $label = "account $login"
+    if ($acctMeta.Contains($login)) { $label = $acctMeta[$login].Label }
+
+    $cardClass = 'card acct-card'
+    if ($isStale) { $cardClass = 'card acct-card snap-stale' }
+    [void]$fh.AppendLine("<div class=`"$cardClass`">")
+
+    if ($isStale) {
+      $tsTxt = $sf.LastWriteTime.ToString('yyyy-MM-dd HH:mm')
+      if ($acctRow -and $acctRow.server_time) { $tsTxt = "$($acctRow.server_time) server time (file $tsTxt)" }
+      [void]$fh.AppendLine("<div class=`"stale-banner`">STALE &mdash; snapshot from $(HtmlEnc $tsTxt) ($([math]::Round($ageH,1)) h old &gt; $snapStaleHours h) &mdash; NOT current data</div>")
+      $aggStaleAccts += $login
+    } else {
+      $aggFreshAccts += $login
+    }
+
+    if (-not $acctRow) {
+      [void]$fh.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $login)</b> &middot; $(HtmlEnc $label) &middot; snapshot file has no ACCOUNT row (corrupt?)</div>")
+      [void]$fh.AppendLine('</div>')
+      continue
+    }
+
+    $eq   = ToDbl $acctRow.equity
+    $bal  = ToDbl $acctRow.balance
+    $mgn  = ToDbl $acctRow.margin
+    $ml   = ToDbl $acctRow.margin_level_pct
+    $so   = ToDbl $acctRow.stopout_level
+    $ccy  = $acctRow.currency
+    $floatTotal = $eq - $bal
+
+    # margin level color: green >500%, yellow 200-500%, red <200% (ORDER-092 spec)
+    $mlClass = 'neu'; $mlTxt = 'no margin used'
+    $distTxt = '-'
+    if ($mgn -gt 0) {
+      $mlTxt = ('{0:N1}%' -f $ml)
+      if ($ml -lt 200) { $mlClass = 'ml-red' } elseif ($ml -le 500) { $mlClass = 'ml-yellow' } else { $mlClass = 'ml-green' }
+      if ($acctRow.stopout_mode -eq 'PERCENT') {
+        $distTxt = ('{0:N1} pp above stop-out ({1:N1}%)' -f ($ml - $so), $so)
+      } else {
+        $fm = ToDbl $acctRow.free_margin
+        $distTxt = ('{0:N2} {1} free margin above stop-out ({2:N2} {1})' -f ($fm - $so), $ccy, $so)
+      }
+    }
+    $floatClass = 'neu'; if ($floatTotal -gt 0) { $floatClass = 'pos' }; if ($floatTotal -lt 0) { $floatClass = 'neg' }
+
+    if (-not $isStale) {
+      $aggFloat += $floatTotal
+      foreach ($sr in $symbolRows) {
+        if ($sr.symbols -match 'XAU') { $aggXauLots += (ToDbl $sr.open_lots); $aggXauFloat += (ToDbl $sr.float_pl) }
+      }
+    }
+
+    [void]$fh.AppendLine("<div class=`"acct-head`"><b>$(HtmlEnc $login)</b> &middot; $(HtmlEnc $label) &middot; snapshot $(HtmlEnc $acctRow.server_time)</div>")
+    [void]$fh.AppendLine("<div class=`"acct-head`">equity <b>$('{0:N2}' -f $eq)</b> vs balance <b>$('{0:N2}' -f $bal)</b> $(HtmlEnc $ccy) &middot; floating <span class=`"$floatClass`">$('{0:N2}' -f $floatTotal)</span> &middot; margin level <span class=`"$mlClass`">$mlTxt</span> &middot; distance to stop-out: $distTxt</div>")
+
+    if ($magicRows.Count -eq 0) {
+      [void]$fh.AppendLine('<div class="meta" style="margin:0;">no open positions / pending orders at snapshot time</div>')
+    } else {
+      [void]$fh.AppendLine('<table>')
+      [void]$fh.AppendLine('<tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>')
+      foreach ($mr in ($magicRows | Sort-Object { ToDbl $_.float_pl })) {
+        $magic = "$($mr.magic)"
+        $key = "$login|$magic"
+        $name = ''
+        $flag = ''
+        $rowCls = ''
+        if ($cohort.Contains($key)) {
+          $name = HtmlEnc $cohort[$key].Name
+          $killAbs = $cohort[$key].KillDD / 100.0 * $BaseEquity
+          if ((ToDbl $mr.float_pl) -le (-1.0 * $killAbs)) {
+            $flag = "float loss &ge; kill-DD equivalent ($($cohort[$key].KillDD)% of $('{0:N0}' -f $BaseEquity))"
+            $rowCls = ' class="st-red"'
+          } else {
+            $flag = "kill $($cohort[$key].KillDD)% ref"
+          }
+        } elseif ($magic -eq '0') {
+          $name = 'manual trades (magic 0)'
+          $flag = 'no declared criteria'
+        } else {
+          $name = "&#9888;&#65039; UNMAPPED (magic $magic)"
+          $flag = '&#9888;&#65039; UNMAPPED - not in cohort map'
+          $rowCls = ' class="st-grey"'
+        }
+        $fpl = ToDbl $mr.float_pl
+        $fplClass = 'neu'; if ($fpl -gt 0) { $fplClass = 'pos' }; if ($fpl -lt 0) { $fplClass = 'neg' }
+        [void]$fh.AppendLine("<tr$rowCls><td class=`"name-cell`">$name</td><td class=`"num-cell`">$(HtmlEnc $magic)</td><td class=`"num-cell`">$(HtmlEnc $mr.symbols)</td><td class=`"num-cell $fplClass`">$('{0:N2}' -f $fpl)</td><td class=`"num-cell`">$(HtmlEnc $mr.open_lots)</td><td class=`"num-cell`">$(HtmlEnc $mr.open_positions)</td><td class=`"num-cell`">$(HtmlEnc $mr.oldest_open_hours)</td><td class=`"num-cell`">$(HtmlEnc $mr.pending_orders)</td><td class=`"label-cell`">$flag</td></tr>")
+      }
+      [void]$fh.AppendLine('</table>')
+    }
+    [void]$fh.AppendLine('</div>')
+  }
+
+  # aggregate rows (fresh snapshots only - stale accounts are never summed as current)
+  $aggFloatClass = 'neu'; if ($aggFloat -gt 0) { $aggFloatClass = 'pos' }; if ($aggFloat -lt 0) { $aggFloatClass = 'neg' }
+  $aggXauClass = 'neu'; if ($aggXauFloat -gt 0) { $aggXauClass = 'pos' }; if ($aggXauFloat -lt 0) { $aggXauClass = 'neg' }
+  [void]$fh.AppendLine('<table>')
+  [void]$fh.AppendLine('<tr><th>Aggregate (across all accounts with a FRESH snapshot)</th><th>Value</th></tr>')
+  [void]$fh.AppendLine("<tr><td class=`"name-cell`">Total XAU-symbol exposure (all accounts)</td><td class=`"num-cell`">$('{0:N2}' -f $aggXauLots) lots &middot; floating <span class=`"$aggXauClass`">$('{0:N2}' -f $aggXauFloat)</span></td></tr>")
+  [void]$fh.AppendLine("<tr><td class=`"name-cell`">Total floating P&amp;L (all accounts)</td><td class=`"num-cell`"><span class=`"$aggFloatClass`">$('{0:N2}' -f $aggFloat)</span></td></tr>")
+  $cover = "fresh: $($aggFreshAccts -join ', ')"
+  if ($aggStaleAccts.Count -gt 0) { $cover += " &middot; EXCLUDED stale: $($aggStaleAccts -join ', ')" }
+  [void]$fh.AppendLine("<tr><td class=`"name-cell`">Coverage</td><td class=`"num-cell`">$cover</td></tr>")
+  [void]$fh.AppendLine('</table>')
+}
+[void]$fh.AppendLine('</div>')
+$floatingRiskHtml = $fh.ToString()
+
+# ---------------------------------------------------------------------------
+# 7. render HTML (Add-Type + HtmlEnc already loaded in section 6b)
+# ---------------------------------------------------------------------------
 
 function Fmt-Money {
   param([double]$v)
@@ -472,6 +641,10 @@ $html = @"
     .pos { color: #6fe08a !important; }
     .neg { color: #ff8a80 !important; }
     .legend { background: #1d2026 !important; border-color: #33373f !important; }
+    .ml-green  { color: #6fe08a !important; }
+    .ml-yellow { color: #ffd54f !important; }
+    .ml-red    { color: #ff8a80 !important; }
+    .snap-stale { background: #202226 !important; }
   }
   h1 { font-size: 20px; margin-bottom: 4px; }
   .meta { color: #666; font-size: 13px; margin-bottom: 16px; }
@@ -507,6 +680,15 @@ $html = @"
   tr.st-white  { background: #fafafa; }
   tr.st-grey   { background: #f1f1f1; }
   .footer { color: #888; font-size: 12px; margin-top: 16px; }
+  /* ORDER-092 floating-risk panel */
+  .ml-green  { color: #17792f; font-weight: 700; }
+  .ml-yellow { color: #9a7b00; font-weight: 700; }
+  .ml-red    { color: #b3261e; font-weight: 700; }
+  .snap-stale { opacity: 0.55; filter: grayscale(0.8); background: #ececec; }
+  .stale-banner {
+    background: #6d6d6d; color: #fff; font-weight: 700; font-size: 13px;
+    padding: 6px 10px; border-radius: 6px; margin-bottom: 8px;
+  }
   .acct-card { padding: 10px 12px; }
   .acct-head { font-size: 14px; margin-bottom: 8px; }
   .acct-card table { overflow-x: auto; display: block; }
@@ -540,6 +722,7 @@ $html = @"
 </div>
 
 $newsHtml
+$floatingRiskHtml
 $($sectionsHtml.ToString())
 
 <div class="footer">

@@ -4246,7 +4246,7 @@ attach demo (ศูนย์ต้นทุน) เก็บ live tracking ≥2 
 
 ---
 
-## ORDER-092 — P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่สุดของทั้งระบบ) — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-092 — P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่สุดของทั้งระบบ) — `DONE(Claude-agent, 2026-07-11)`
 
 **ทำไม:** CODEX-AUDIT A1+A6 — dashboard เห็นแต่ closed deals · no-SL grid (Zeus/Kangaroo/RSI-MR) ตาย
 ด้วย floating loss ที่มองไม่เห็น · ไม่มีตัวรวม exposure ข้ามบัญชี
@@ -4265,6 +4265,73 @@ attach demo (ศูนย์ต้นทุน) เก็บ live tracking ≥2 
 OneDrive folder = ทางเดียวกับ NewsGuard feed ขาไปใน 083C ข้อ 7)
 **Acceptance:** ไฟล์ครบ + test PASS + dashboard render จาก CSV ตัวอย่าง + คู่มือ attach ·
 commit `[tag] ORDER-092 done` · **ห้าม:** attach จริง · แตะ exporter เดิม · trade function
+
+### ORDER-092 RESULT (Claude-agent, 2026-07-11)
+
+**ไฟล์:**
+- ใหม่ `tools\AccountSnapshot\AccountSnapshotExporter.mq5` — EA wrapper read-only (OnInit + timer 60s)
+- ใหม่ `tools\AccountSnapshot\AccountSnapshot_Core.mqh` — logic ก้อนจริง (แชร์ให้ test harness แบบเดียว NewsGuard_Core)
+- ใหม่ `tools\AccountSnapshot\AccountSnapshotExporter.mq4` — MT4 twin (single-file ตาม OrdersExporterMT4)
+- ใหม่ `ea_template\tests\AcctSnapshot_Test.mq5` — tester assert harness (pattern NewsGuard_Test)
+- แก้ `ea_template\tests\run_tests.ps1` — เพิ่มบรรทัด copy core mqh ไปข้าง deployed tests (additive)
+- แก้ `scripts\collect_live_deals.ps1` — เก็บ `EA_LAB_snapshot_*.csv` เพิ่ม (section แยก, stale guard 30h เดิมไม่แตะ,
+  exit code เดิมยัง key กับ deals exporter เป๊ะ — daily chain ที่เพิ่ง harden ไม่กระทบ)
+- แก้ `scripts\live_dashboard.ps1` — FLOATING RISK panel เหนือ closed-deals sections
+- exporter เดิม (DealsExporter.mq5 / OrdersExporterMT4.mq4) + daily_monitor.ps1 **ไม่แตะ** (ตามห้าม)
+
+**CSV format:** `EA_LAB_snapshot_<login>.csv` ใน Common\Files, 18 คอลัมน์ 3 row type —
+`ACCOUNT` (login/server_time/currency/equity/balance/margin/free_margin/margin_level%/stopout mode+level) ·
+`MAGIC` ต่อ magic รวม magic 0 (float P&L รวม swap, lots รวม, จำนวนไม้, อายุไม้เก่าสุด ชม., pending count, symbols ที่ถือ) ·
+`SYMBOL` ต่อ symbol (ให้ dashboard รวม XAU exposure ข้ามบัญชีได้ตรงๆ) ·
+atomic: เขียน `.csv.tmp` แล้ว `FileMove(FILE_REWRITE)` — collector ไม่มีวันอ่านไฟล์ครึ่งเดียว; ถ้า move fail
+(ปลายทางโดน lock) fallback เป็น rewrite-in-place พร้อม log (self-heal รอบ 60s ถัดไป — จดตาม spec)
+
+**Compile:** `AccountSnapshotExporter.mq5` = **0 errors, 0 warnings** (D:\Meta 5\MetaEditor64.exe) ·
+`AccountSnapshotExporter.mq4` = **0 errors, 0 warnings** (D:\Meta4\metaeditor.exe) ·
+`AcctSnapshot_Test.mq5` (deployed) = **0 errors, 0 warnings**
+
+**Test results:**
+
+| test | result | หลักฐาน |
+|---|---|---|
+| MT5 tester harness (XAUUSD H1 Model 1, 2 magic + magic 0 + pending) | **PASS** | journal `[PASS] AcctSnapshot_Test: all asserts OK` — per-magic grouping (A=2 ไม้/0.03 lots, B=1 ไม้+1 pending, magic 0=1 ไม้), float ≠ 0 ขณะไม้เปิด, sum(magic float)==equity−balance, SYMBOL row 4 ไม้/0.05 lots, ACCOUNT row ครบ |
+| no-trade-function static grep บน exporter ทั้ง 3 ไฟล์ | **PASS** | hit เดียวคือค่าคงที่ `OP_BUYLIMIT..OP_SELLSTOP` ใช้จำแนก pending (read-only) — ไม่มี OrderSend/CTrade/PositionClose ฯลฯ (trade call อยู่ใน test harness เท่านั้น ซึ่ง gate `MQL_TESTER`) |
+| dashboard บน CSV ปลอม (fresh 1 บัญชี + stale 40h 1 บัญชี) | **PASS** | assert 20 ข้อผ่านหมด (รายละเอียดด้านล่าง) |
+| dashboard regression: dir จริงไม่มี snapshot | **PASS** | "no snapshot data yet" โผล่, 5 account section เดิมครบ, ไม่มี STALE banner, exit 0 |
+| collector: deals+snapshot / snapshot-only / stale / login=0 / TEST / .tmp | **PASS** | fresh snapshot ถูก copy, stale 40h SKIPPED-STALE, `_0`+`_TEST`+`.tmp` ถูกกรอง, snapshot-only case ยังเก็บ snapshot แล้ว exit 1 ตาม deals guard เดิม |
+
+**Dashboard screenshot-in-words (จาก CSV ปลอม):** ใต้ legend เห็น card "⚠️ FLOATING RISK — open baskets / margin
+(snapshot exporter, ORDER-092)" → บัญชี 159503454 (fresh): "equity 9,754.40 vs balance 10,062.25 USD · floating
+-307.85 (แดง) · margin level 342.4% (เหลือง — เกณฑ์ เขียว>500 / เหลือง 200-500 / แดง<200) · distance to stop-out:
+312.4 pp above stop-out (30.0%)" + ตาราง magic เรียงขาดทุนมากขึ้นก่อน: Zeus 990101 float −310.20 / 0.12 lots /
+basket depth 6 / oldest 43.7h / pending 2, RSI-MR 990103 +12.35, "manual trades (magic 0)", และ magic 555 =
+"⚠️ UNMAPPED — not in cohort map" แถวเทา → บัญชี 141049900 (ไฟล์อายุ 40h): การ์ดทั้งใบจางเป็นเทา + แถบ
+"STALE — snapshot from 2026.07.09 23:10:00 server time (40.0 h old > 26 h) — NOT current data" → ตาราง aggregate:
+"Total XAU-symbol exposure 0.12 lots · floating −310.20" (XAUUSDc ของบัญชี stale **ไม่ถูกนับ** — นับเฉพาะ fresh)
++ "Total floating P&L (all accounts) −307.85" + แถว Coverage บอกว่าบัญชีไหน fresh/EXCLUDED stale ·
+closed-deals sections เดิมอยู่ใต้ panel ครบทุกอย่างเหมือนเดิม
+
+**(a) ข้อจำกัดเครื่องแล็บ:** monitor rotation = login investor-mode สั้นๆ ตอนกลางคืนเท่านั้น → snapshot จากแล็บ
+คือ "ภาพนิ่งคืนละครั้ง" ไม่ใช่ near-real-time — floating ตอน 10 โมงเช้ายังมองไม่เห็นจนกว่า exporter จะไปนั่งบน
+**VPS trading terminal ที่เปิดตลอด** (user action — lab ห้าม attach เองตามข้อห้าม order นี้)
+
+**(b) Attach checklist (VPS, ต่อ terminal ละ ~3 นาที):**
+1. copy `AccountSnapshotExporter.ex5` (MT5) หรือ `.ex4` (MT4) จาก `tools\AccountSnapshot\` ไป
+   `MQL5\Experts\` / `MQL4\Experts\` ของ terminal นั้น แล้ว refresh Navigator
+2. เปิดชาร์ตใหม่ 1 ใบ symbol ไหนก็ได้ (แนะนำ TF สูงๆ ลด tick noise — EA ใช้ timer ไม่ใช้ tick) —
+   **ชาร์ตเดียวต่อ terminal พอ** ห้ามลากทับชาร์ตที่ EA จริงนั่งอยู่
+3. ลาก exporter ลงชาร์ต → tab Common: เช็ค "Allow Algo/Auto Trading" **ไม่จำเป็น** (EA read-only ไม่มี trade call)
+   แต่ terminal-level AutoTrading ปิดไว้ก็ยังทำงาน (timer + file API ไม่โดน block)
+4. ยืนยันใน Experts log: `[SNAP] n magic row(s) ... -> Common\Files\EA_LAB_snapshot_<login>.csv` ทุก 60s
+   และไฟล์โผล่ใน `<Common>\Files` ของเครื่องนั้น (login ต้องไม่ใช่ 0)
+5. เช็คว่า chart อยู่ใน profile ที่ terminal โหลดตอน restart (กัน VPS reboot แล้ว exporter หาย)
+
+**(c) VPS→lab transport (เสนอให้ user เคาะ — ช่องเดียวกับ NewsGuard feed ขาไปใน ORDER-083C ข้อ 7):**
+ติด OneDrive บน VPS แล้วให้ scheduled task เล็กๆ (xcopy ทุก 5 นาที) copy `EA_LAB_snapshot_*.csv` จาก
+`<Common>\Files` → โฟลเดอร์ OneDrive ที่ sync ลงเครื่องแล็บ; ฝั่งแล็บชี้ `collect_live_deals.ps1 -CommonFiles
+<OneDrive path>` (param มีอยู่แล้ว ไม่ต้องแก้ code) หรือเพิ่ม path ที่สองใน daily chain ทีหลัง — ขาไป (news feed)
+ใช้โฟลเดอร์เดียวกันกลับทิศ ตาม 083C · ทางเลือกถ้าไม่อยาก OneDrive เต็ม VPS: `rclone` + cloud drive
+เดิมที่ user มี — แต่ OneDrive ชนะเพราะ 083C ต้องใช้ช่องนี้อยู่แล้ว
 
 ---
 

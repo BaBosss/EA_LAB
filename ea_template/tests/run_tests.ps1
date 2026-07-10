@@ -31,6 +31,10 @@ $agentRoot = "D:\MetaTraderData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710F
 # same-directory include resolves. Additive: no other test is affected.
 Copy-Item (Join-Path $root 'ea_projects\(Boss)_NewsGuard\NewsGuard_Core.mqh') $deployedTests -Force
 
+# ORDER-092: AcctSnapshot_Test.mq5 includes AccountSnapshot_Core.mqh from its project
+# folder (canonical copy) - same-directory include, same pattern as NewsGuard above.
+Copy-Item (Join-Path $root 'tools\AccountSnapshot\AccountSnapshot_Core.mqh') $deployedTests -Force
+
 $results = @()
 foreach ($mq5 in Get-ChildItem (Join-Path $testDir '*.mq5')) {
   $name = $mq5.BaseName
