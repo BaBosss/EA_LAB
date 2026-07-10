@@ -123,7 +123,11 @@ distance-scaling insight) — note it, but the EA itself is out.
 
 ## PART 2 — REGISTRY (every EA with data, scored)
 
-### MT5 — LIVE PORTFOLIO (deployed 2026-06-22)
+### MT5 — LIVE PORTFOLIO (deployed 2026-06-22) — ⛔ HISTORICAL, SUPERSEDED 2026-07-09
+> **อย่าใช้ตารางนี้เป็นสถานะ deploy ปัจจุบัน** (CODEX-AUDIT 2026-07-11: ตารางนี้เคยถูกอ่านเป็น authority ทั้งที่ค้าง)
+> สถานะจริง = `DEMO_DEPLOYMENT_PLAN.md` §"DEPLOYMENT REALITY 2026-07-09" เท่านั้น · verdict ที่ทับแถวในนี้:
+> **ST_EA03 (ทั้ง GBP/USDCAD) = STRUCTURAL no-edge (ORDER-068/071, flat-lot PF 0.68/0.40) — ไม่ใช่ CORE แล้ว, แล็บแนะนำถอดจากบัญชีจริง** ·
+> **Gold Reaper + LondonConso = แล็บ REJECT** (ยังรันอยู่บน 159475669 เป็นการทดลองของ user เท่านั้น แล็บไม่รับรอง)
 | EA | Sym/TF | OOS PF | DD% | Conf | Verdict | Notes |
 |---|---|---|---|---|---|---|
 | MG_v1 MatchaGrid | CHFJPY M15 | 2.08 | — | ★★★ | **CORE** | grid but bounded+SL; passed deep-val |
@@ -338,6 +342,11 @@ no-SL/no-cap → **เพดาน 3** · crack/DLL/timelock/no-source-phone-hom
 **สิทธิ์ตามคะแนน:** 9-10 = เงินจริงเต็ม size แกนพอร์ต · 7-8 = เงินจริง cent size มาตรฐาน (ม้างานหลัก) ·
 5-6 = cent ครึ่ง size จับตาเข้ม / demo หนึ่งรอบ judge / premium-track · 3-4 = บัญชีทดลอง user เท่านั้น
 (แยก equity) · ≤2 = tester only
+
+**⛔ Hard prerequisite ก่อนใช้สิทธิ์เงินจริงทุกระดับ (inline จาก VERDICT GATE ข้อ 6 — CODEX-AUDIT C2 2026-07-11):**
+คะแนนอย่างเดียวไม่พอ — ต้องผ่าน **holdout window ที่ไม่เคยใช้ select + MC + เลือกที่ plateau-center** ก่อนเสมอ
+· score สูงแต่ criterion 5/7 ยังโหว่ = สิทธิ์สูงสุดแค่ demo · ข้อเสนอเพิ่ม rubric (รอ user เคาะ): min trade count
+ต่อ window (เช่น ≥100) — เคส SuperTrend 56 trades แสดงช่องนี้ชัด
 
 **Calibration ณ วันจารึก (ยืนยันว่า rubric ตรง verdict จริงที่ผ่านมา):** BRK-XAU Bars55 ≈ 8 ·
 Boss_16 21/30 ≈ 5 (จะเป็น 7-8 ถ้าผ่าน ORDER-078) · ST03 family = เพดาน 3 (กุญแจ 2 ดอก) ·

@@ -112,6 +112,16 @@ $cohort = [ordered]@{
   "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  # 141049900 REAL MT4 user-experiment cohort (CODEX-AUDIT A5 2026-07-11: was unmapped = the
+  # highest-risk no-SL magics had no dashboard row at all). MT4 platform default kill/warn.
+  # NOTE: closed-deal DD only - Zeus/Kangaroo real risk is FLOATING basket loss (Zeus floating
+  # kill guidance = 40% MANUAL per DEMO_DEPLOYMENT_PLAN); dashboard cannot see it until the
+  # floating-telemetry exporter (ORDER-092) ships.
+  "141049900|7777"   = @{ Name = "Zeus Gold Hedge V1.2 EURUSDc (no-SL grid ⚠️ manual kill float 40%)"; Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "141049900|1112"   = @{ Name = "Gold_Kangaroo XAUUSDc L1 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "141049900|1113"   = @{ Name = "Gold_Kangaroo XAUUSDc L2 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "141049900|1114"   = @{ Name = "Gold_Kangaroo XAUUSDc L3 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
+  "141049900|1115"   = @{ Name = "Gold_Kangaroo XAUUSDc L4 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
   # 159475669 user-mix magics we can name (no lab-declared kill for this account -> MT5 platform defaults)
   "159475669|1524"   = @{ Name = "NuiIndy Dynamic RSI+ADX";                          Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "159475669|9398"   = @{ Name = "ST_EA03 Count-MACD USDCAD (lab live)";             Symbol = "USDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }

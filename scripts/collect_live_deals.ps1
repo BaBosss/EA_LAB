@@ -23,10 +23,22 @@ if (-not $found) { Write-Host "no EA_LAB_deals_*/EA_LAB_mt4_orders_*.csv in $Com
 foreach ($s in ($found | Where-Object { $_.BaseName -match '_0$' })) { Write-Host "skipped (login=0, terminal not authorized): $($s.Name)" }
 $found = @($found | Where-Object { $_.BaseName -notmatch '_0$' })
 if (-not $found) { Write-Host "nothing left after login=0 filter"; exit 1 }
+# CODEX-AUDIT A4 (2026-07-11): never relabel a stale exporter file as today's snapshot.
+# Rotation rewrites every exporter CSV nightly, so a source older than 30h means the
+# rotation/exporter for that account is DEAD - copying it under today's date would hide that.
+$staleH = 30
+$fresh = 0
 foreach ($f in $found) {
+  $ageH = ((Get-Date) - $f.LastWriteTime).TotalHours
+  if ($ageH -gt $staleH) {
+    Write-Host ("SKIPPED-STALE: {0} last written {1:yyyy-MM-dd HH:mm} ({2:n1} h ago > {3} h) - exporter/rotation dead for this account?" -f $f.Name, $f.LastWriteTime, $ageH, $staleH) -ForegroundColor Yellow
+    continue
+  }
   $stamp = Get-Date -Format 'yyyyMMdd'
   $dest = Join-Path $DestDir ($f.BaseName + "_$stamp.csv")
   Copy-Item $f.FullName $dest -Force
+  $fresh++
   Write-Host "collected -> $dest ($([math]::Round($f.Length/1kb,1)) KB)"
 }
+if ($fresh -eq 0) { Write-Host "no FRESH exporter file collected (all stale or missing)"; exit 1 }
 exit 0

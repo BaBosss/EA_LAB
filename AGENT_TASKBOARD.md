@@ -4038,3 +4038,151 @@ CLOSE_ALL ที่สุด (Zeus magic 7777 + Kangaroo 1112-1115, ไม่ม
 `EA_LAB_news_week.csv` จริงใน Common (3) test จำลอง stale ที่ระดับ `NG_IsStaleAge` เหมือนฉบับ MT5
 (mtime ใน tester เป็นเวลาจริง ปลอมไม่ได้) — path ไฟล์หายเทสเต็ม flow จริง (4) CLOSE_ALL ปิดเฉพาะ
 market orders (OP_BUY/OP_SELL) — pending ไม่แตะ ตรงพฤติกรรม MT5 (position API ไม่เห็น pending อยู่แล้ว)
+
+---
+
+## REVIEW ORDER-083B — `REVIEWED(Claude, 2026-07-11)` — ผ่าน
+
+compile 0/0 ทั้งคู่ · test ครอบ assert ครบตาม spec รวม B→N downgrade + unlisted magic · deviation ทั้งหมด
+สมเหตุผล (ตัด GV ทั้งก้อน = ถูกกว่า port dead code · pending ไม่แตะ = ตรง MT5 โดยเจตนา — ช่องนี้ปิดพร้อมกัน
+สองแพลตฟอร์มใน ORDER-083C ข้อ 3) · **finding มีค่า: Common\Files MT4/MT5 บนแล็บ = junction ก้อนเดียว**
+(daily chain เขียนครั้งเดียวเห็นทั้งคู่) — แต่ **terminal เทรดจริงอยู่ VPS = คนละเครื่อง ช่อง transport ยังอยู่**
+(ORDER-083C ข้อ 7) · NewsGuard ทั้งสอง platform พร้อม attach หลัง 083C ปิด hardening
+
+---
+
+## REVIEW CODEX-AUDIT (`_triage\CODEX_AUDIT_FULL_2026-07-10.md`) — `REVIEWED(Claude, 2026-07-11)` — judge ทีละ finding, spot-check code/CSV จริงก่อนตัดสินทุกข้อที่สั่งแก้
+
+**วิธีตัดสิน:** ยอมรับเมื่อหลักฐานบังคับ (ไล่เช็คไฟล์:บรรทัดที่ Codex อ้างเองทุกข้อสำคัญ) · โต้กลับพร้อมเหตุผลเมื่ออ่านบริบท/doctrine พลาด
+
+### Layer A (live risk) — ยอมรับเกือบทั้งหมด นี่คือส่วนที่แรงและถูกที่สุดของ audit
+| # | คำตัดสิน | เหตุผล + action |
+|---|---|---|
+| A1 dashboard ตาบอด floating | **ACCEPT (P0)** | เช็คแล้ว: `Compute-MagicMetrics` สร้าง DD จาก closed-deal series จริง — no-SL grid ชิด margin call ได้โดยจอเขียว → **ORDER-092** |
+| A2 check_state เช็ค string ไม่ใช่ความจริง | **ACCEPT (P0)** | invariant ค้าง judge 2026-09-22/9EA/บัญชีเดียว ทั้งที่ reality = 5 บัญชี/judge 2026-10-09 → รวมใน **ORDER-093** (ห้ามแก้เฉพาะ checker — จะ warn ทุก commit จน doc sync ครบ) |
+| A3 daily_monitor fail-open | **ACCEPT — แก้แล้ววันนี้** | เพิ่ม per-step exit-code + ห้าม publish gist เมื่อ dashboard fail + exit 1 ให้ LastTaskResult เห็นจริง |
+| A4 relabel ไฟล์ stale เป็นวันนี้ | **ACCEPT — แก้แล้ววันนี้** | collect_live_deals เพิ่มด่านอายุ 30h: stale = SKIP+เตือน (rotation เขียนทุกคืน — เก่ากว่านั้น = exporter ตาย ต้องเห็น ไม่ใช่ซ่อน) |
+| A5 magic เสี่ยงสุดไม่มีในแผนที่ | **ACCEPT — แก้แล้ววันนี้** | เพิ่ม 141049900: Zeus 7777 + Kangaroo 1112-1115 ลง cohort map พร้อม annotation no-SL/float-40%-manual |
+| A6 concentration ต่อ failure domain | **ACCEPT (P0)** | ไม่มีตัวรวม XAU/USD exposure ข้ามบัญชี/VPS เดียว/broker เดียว → เข้า scope ORDER-092 (aggregate panel) + kill plan เข้า backlog |
+| A7 RSI-MR ขัด doctrine บนเงินจริง | **ACCEPT (P0 — ตัดสินใจของ user)** | RSIMR_LOTLAW.csv ยืนยัน flat-lot PF 0.78/−588 → กำไรทั้งหมดมาจาก recovery sizing = ขัดหลัก 3 ชั้นที่จารึกเอง (no grandfathering) · **ข้อเสนอเด็ดขาด: ถอดจาก 159503454 → ย้ายไป demo isolate เป็น premium-track experiment เดี่ยว** (mechanism ยังมีค่า) — รอ user เคาะ |
+| A-SUSPECT gist unlisted | ACCEPT (P1) | เลขบัญชี+P&L อยู่หลัง URL เดา-ยาก ไม่ใช่ private จริง → backlog: redact เลขบัญชี หรือย้าย private channel |
+
+### Layer B (verdict integrity) — ครึ่งรับครึ่งโต้
+| เคส | คำตัดสิน | เหตุผล |
+|---|---|---|
+| B1 ST03 "ปิดถาวร" เกินหลักฐาน | **PARTIAL ACCEPT** | จริง: Stage-2 spacing axis ประกาศไว้แต่ไม่ได้รัน (เช็ค taskboard แล้ว — รันแต่ gate) → แก้ record เป็น **"no edge under tested exits/gates; spacing = UNSWEPT"** + backlog probe 3 รันถูกๆ ปิดแกนให้สนิท · **แต่ verdict ถอดจากเงินจริงยืนเดิม** (flat-lot 0.68/0.40 ล้างพอร์ต 2 symbol ไม่ต้องรอ spacing) · บทเรียน process: pre-registered bar ต้อง commit ก่อนรัน ไม่ใช่มากับ result commit |
+| B2 Boss 16 | **ACCEPT (สอดคล้องอยู่แล้ว)** | review เดิมก็จัด validation-only, spacing/TP unswept จดไว้แล้ว — ไม่มี action ใหม่ |
+| B3 SuperTrend | **ACCEPT บางส่วน** | 56 trades บาง + OOS เคยใช้ select จริง → ห้ามโปรโมทด้วย score อย่างเดียว ต้องมี live/demo tracking (criterion 7) หรือ user เคาะเอง — สอดคล้อง REVIEW 085B ด้านล่าง (BWD ตกบาร์แล้วด้วย — คำถาม promotion ปิดไปเอง) |
+| B4 Oracle "no entry edge" แรงเกินหลักฐาน | **ACCEPT (แก้ wording เท่านั้น)** | top-5 = 100.8% ของ net คือ **risk fingerprint ไม่ใช่ proof of no-edge** (static normalization ≠ flat-lot rerun เพราะ exit timing เปลี่ยน) · **verdict REJECT ยืนเดิม** — cap-key no-SL ก็พอฆ่าอยู่แล้ว ไม่พึ่ง claim นั้น |
+| B5 Keltner/Ichimoku ปิดจาก Model-2 | **REJECT ส่วนใหญ่** | Codex อ่านทิศ bias ผิด: Model 2 = optimistic → **fail ใต้ Model 2 = ตายจริงยิ่งกว่า** (แพ้ทั้งที่ modeling เข้าข้าง) · ≥3-lever floor ใช้กับ "ตัวที่ผ่านเกณฑ์เบื้องต้น" — สองตัวนี้ไม่เคยผ่าน smoke ไหนเลยทั้ง 4 cell · ตัวที่ผ่าน Model-2 (ZSCORE) ก็ถูกส่ง Model-1 ladder ต่อ (ORDER-089) = process ถูกทิศแล้ว · **รับแค่ wording**: "ปิด = default-cell ของ class ที่เทส" ไม่ใช่ concept ตายสากล |
+| B5 ZSCORE "full ladder" ไม่จริง | **REJECT** | R3 = N/A เพราะ EA ไม่มี filter inputs ให้ sweep (จดหลักฐานไว้แล้ว) — ladder ครบเทียบ lever ที่มีจริง ไม่ใช่ข้าม |
+| B5 scorecard ค้าง CORE | **ACCEPT — แก้แล้ววันนี้** | ใส่ banner SUPERSEDED + verdict ทับ (ST_EA03 no-edge / Gold Reaper+LondonConso REJECT) เหนือตารางเก่า |
+
+### Layer C (doctrine/docs)
+| # | คำตัดสิน | เหตุผล |
+|---|---|---|
+| C1 ไม่มี single source of deployment truth | **ACCEPT (P0)** | 4 ที่ (PROJECT_STATE 0.5 / DEMO plan / scorecard / dashboard map) แก้มือแยกกัน → **ORDER-093**: inventory เดียว structured แล้ว generate ที่เหลือ |
+| C2 EA-SCORE ให้สิทธิ์เงินจริงโดยไม่มี holdout/MC/n-min | **PARTIAL** | VERDICT GATE ข้อ 6 คุมอยู่แล้วแต่ rubric ไม่ได้ inline → เพิ่มบรรทัด hard-prerequisite ใน scorecard (ทำวันนี้) · ส่วน min-trade-count/CI = ข้อเสนอแก้ rubric ให้ user เคาะ (rubric เป็นของ co-design แก้เองไม่ได้) |
+| C3 lever rule ไม่ consistent | **PARTIAL** | ตาม B5 — rule scope คือ prelim-passers; แต่ gate #1 เขียนกำกวมจริง → ชี้แจง scope ใน CLAUDE.md (แก้คำ ไม่เปลี่ยนกติกา) |
+| C4 PROJECT_STATE mojibake | **ACCEPT (ยืนยันเอง: 16,359 จุด double-encode vs Thai แท้ 725 ตัว)** | ไฟล์เสียบางส่วนจริงระดับอ่านไม่ได้ → ORDER-093 sub-task ซ่อม (reverse cp1252→UTF8 เฉพาะบรรทัดเสีย + human verify ต่อ section ห้าม auto ทั้งไฟล์) |
+| C5 backlog เก็บ Model-2 conclusion เก่าเป็นความจริง | **ACCEPT (P1)** | เพิ่ม SUPERSEDED marker — เข้า backlog hygiene |
+
+### Layer D (automation/cages) — ยอมรับหมด ต่างแค่ลำดับ
+| # | คำตัดสิน | action |
+|---|---|---|
+| D1 NewsGuard = zero live protection | **ACCEPT (P0-before-attach)** | จริงโดยโครงสร้าง: ยังไม่ attach + feed อยู่แค่เครื่องแล็บ แต่ terminal เทรดอยู่ VPS (Common junction ที่ 083B พบ = ในแล็บเท่านั้น) → **ORDER-083C** |
+| D2 NewsGuard 7 ช่อง | **ACCEPT 5 / PARTIAL 2** | ยืนยันจาก code: restart-stuck GV จริง (clear ผูก `ng_blockSet` memory) · evCount==0 ยัง newsOK=true จริง · pending ไม่ถูก cancel จริง (MT4 port ตรงกันโดยเจตนา) · churn จริง · alert local-only จริง → เข้า 083C · flat-magic = ตาม spec ที่ user เคาะเอง (ไม่ใช่ bug — เพิ่ม option ได้) · DST = จดในคู่มือแล้ว + 083C auto-derive ด้วย TimeGMT() |
+| D3 mt5_run stale dest | **ACCEPT (P1)** | ยืนยัน: ลบแต่ source-side + NO REPORT exit 0 → **ORDER-094** (ห้ามแก้ตอนมี batch in-flight) |
+| D4 tpl_regression | **ACCEPT (P1)** | ยืนยัน: เช็ค dest existence + ไม่เทียบ eqdd + Boss 15/16 นอก cage + UpdateBaseline ไม่มี guard → ORDER-094 |
+| D5 run_tests stale .ex5/journal | **ACCEPT (P1)** | ยืนยัน: `Test-Path .ex5` ผ่านทั้งที่ compile รอบนี้ fail + journal จับ log ใหม่สุด global → ORDER-094 |
+| D6 deploy.ps1 ไม่ fail-closed | **ACCEPT (P1-สูง)** | compile fail ไม่หยุด + mirror .ex5 stale ไป lane2 ได้ → ORDER-094 (ต้องเสร็จก่อน deploy ครั้งหน้า) |
+
+### Layer E (missing controls) → P0 = order แล้ว (092/093/083C) · P1+P2 เข้า MASTER_BACKLOG §CODEX-AUDIT ครบทุกข้อวันนี้
+
+**หลักการที่ audit สอนแพงสุด (จดเป็น doctrine):** ทุกชั้นของระบบ fail ไปทาง optimistic ทิศเดียวกันพร้อมกันได้
+(dashboard เขียว + checker CLEAN + task success + gist สด = โกหกพร้อมกันทั้งสี่ได้) — **cage ต้อง fail-visible เสมอ ไม่ใช่ fail-open**
+
+---
+
+## REVIEW ORDER-085B — `REVIEWED(Claude, 2026-07-11)` — SuperTrend: BWD ตกบาร์ / plateau ผ่านแท้ → คง PARKED-bench, เส้นทางที่เหลือ = demo tracking
+
+**ตัดสินตามบาร์ pre-registered เป๊ะ:** (1) BWD 2020-22 **FAIL** — PF 0.88 < 1.0 (net −91.49/64t/eqDD 3.27%) ·
+(2) plateau **PASS แท้** — 18/18 ไม่มี cell ขาดทุน (PF 1.90-3.40), default 2.93 มีเพื่อนบ้านประกบทุกแกน ไม่ใช่ peak
+(peak จริง = ATR10×M3.5×SL2.0 ที่ 3.40 — **ห้าม chase**: default คือ center ที่ validate มา) · sanity เด่น:
+Model-1 default reproduce Model-0 เป๊ะ (2.93/1691/4.85 vs 2.93/1690/4.85)
+**ความหมาย:** criterion 4 (plateau) ✅ ปิดรูแล้ว · criterion 3 (both regimes) ❌ ตามบาร์ — แต่โปรไฟล์ตก =
+"แพ้ตื้น ไม่ใช่ตาย" (−0.9% ใน 3 ปี trend-hostile, DD 3.27%) = regime-dependent แบบรอดข้ามหุบได้
+**Verdict: EA-SCORE คง ~6-7/10 = bench ไม่ขึ้นเงินจริง** (เงื่อนไข 085 review บอก "ผ่านทั้งคู่" — ผ่านข้อเดียว) ·
+สอดคล้อง CODEX-AUDIT B3 (56 trades บาง + no unused holdout) · **เส้นทางเดียวที่เหลือ = criterion 7:
+attach demo (ศูนย์ต้นทุน) เก็บ live tracking ≥2 เดือน** — `_vps_deploy\ST_XAU_H4_live_v1.set` มีอยู่แล้ว
+→ **PARKED-VERIFY(user): เสนอ user attach demo lane** · ห้าม re-tune ไปหา 3.40
+
+---
+
+## ORDER-092 — P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่สุดของทั้งระบบ) — `CLAIMED(Claude-agent, 2026-07-11)`
+
+**ทำไม:** CODEX-AUDIT A1+A6 — dashboard เห็นแต่ closed deals · no-SL grid (Zeus/Kangaroo/RSI-MR) ตาย
+ด้วย floating loss ที่มองไม่เห็น · ไม่มีตัวรวม exposure ข้ามบัญชี
+**Spec:**
+1. `AccountSnapshotExporter.mq5` (+`.mq4`): เขียน `EA_LAB_snapshot_<login>.csv` ลง Common\Files ทุก 60s:
+   equity/balance/margin/free-margin/margin-level + ต่อ magic: floating P&L, lots รวม, จำนวนไม้,
+   อายุไม้เก่าสุด, pending count · read-only (ห้ามมี trade function ใดๆ — pattern เดียว DealsExporter)
+2. `collect_live_deals.ps1` เก็บ snapshot ด้วย (stale guard เดียวกัน) · `live_dashboard.ps1` เพิ่ม
+   FLOATING RISK panel: ต่อบัญชี (equity vs balance, margin level, ระยะถึง stop-out) + ต่อ magic
+   (float P&L, basket depth) + **aggregate แถวรวม: XAU exposure รวมทุกบัญชี / USD-event exposure** ·
+   highlight ตาม threshold ของ cohort map · snapshot เก่า >26h = แถวเทา "STALE" (ห้ามโชว์เป็นสด)
+3. Test: exporter ใน tester (harness เปิดไม้ dummy หลาย magic → assert คอลัมน์/ค่า) + dashboard unit
+   บน CSV ปลอม · compile 0/0 ทั้งสอง platform
+**ข้อจำกัดที่ต้องจดใน result:** เครื่องแล็บ rotation กลางคืน = snapshot ได้แค่รอบ rotation · real-time จริง
+ต้องติดบน **VPS terminal** (user action — เขียน attach checklist + ทางขนไฟล์ VPS→แล็บใน result ให้ user เคาะ:
+OneDrive folder = ทางเดียวกับ NewsGuard feed ขาไปใน 083C ข้อ 7)
+**Acceptance:** ไฟล์ครบ + test PASS + dashboard render จาก CSV ตัวอย่าง + คู่มือ attach ·
+commit `[tag] ORDER-092 done` · **ห้าม:** attach จริง · แตะ exporter เดิม · trade function
+
+---
+
+## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `OPEN` (role: Claude นำ + agent ช่วย mechanical — งาน doc แตะ verdict ต้องมี lead คุม)
+
+**ทำไม:** CODEX-AUDIT A2+C1+C4 — ความจริง deploy กระจาย 4 ที่แก้มือ, checker เช็ค string ค้างยุค 06-22,
+PROJECT_STATE double-encode 16k จุด
+**Spec:** (1) สร้าง `portfolio\DEPLOYMENTS.csv` (structured: account/type/platform/host/EA/magic/set-hash/
+status/kill-rule/judge-date/owner) จาก DEPLOYMENT REALITY 2026-07-09 — นี่คือ inventory เดียว
+(2) `live_dashboard.ps1` cohort map + `check_state.ps1` invariants generate/validate จากไฟล์นี้
+(checker เปลี่ยนจาก "string มีอยู่" → "ทุก doc ไม่ขัดกับ inventory") (3) PROJECT_STATE §0.5 ชี้มาที่
+inventory แทน hardcode (4) ซ่อม mojibake: script reverse cp1252→UTF8 เฉพาะบรรทัดเสีย + human verify
+ต่อ section + commit ซ่อม encoding แยกไม่ปนไฟล์อื่นเพื่อ diff สะอาด **Acceptance:** check_state ผ่านกับ reality ใหม่ ·
+PROJECT_STATE อ่านออก 100% · commit `[tag] ORDER-093 done`
+
+---
+
+## ORDER-083C — P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport — `OPEN` (คิวถัดไปทันทีที่ lane ว่าง)
+
+**ทำไม:** CODEX-AUDIT D1+D2 — ช่องยืนยันจาก code แล้ว 5 ช่อง + feed ยังไปไม่ถึง VPS = attach ตอนนี้คุ้มครองศูนย์
+**Spec (ทุกข้อมี test ประกบ, แก้ทั้ง NewsGuard_Core.mqh และ NewsGuard_Core_MT4.mqh ให้ตรงกัน):**
+1. **Restart reconcile:** ทุก pass ถ้า GV `NEWSGUARD_BLOCK_<magic>` มีอยู่แต่คำนวณแล้วไม่ควร block → ลบทิ้ง
+   (เลิกผูกกับ `ng_blockSet` memory — MT5 เท่านั้น, MT4 ไม่มี GV)
+2. **Empty-feed fail-safe:** parse จบแล้ว `ng_evCount==0` → `ng_newsOK=false` + Alert (สัปดาห์ที่ไม่มีข่าว
+   high-impact เลยไม่มีจริง — 0 event = feed พัง)
+3. **Pending cancel:** policy C ลบ pending orders ของ magic นั้นในหน้าต่างข่าวด้วย (ladder GTC ตั้งก่อนข่าว
+   trigger ในหน้าต่างได้) — ทั้งสอง platform
+4. **Churn guard:** นับ re-close ต่อ window; เกิน 5 → Alert "owner EA re-entering during news window"
+5. **Offset auto-check:** MT5 คำนวณ server-GMT ด้วย `TimeTradeServer()-TimeGMT()` เทียบ input; mismatch →
+   Alert + ใช้ค่าคำนวณ (input = override) · MT4 ทำเท่าที่ API ให้ (จด limitation)
+6. **Remote alert:** Alert สำคัญยิง `SendNotification` ด้วย — MQID ไม่ตั้ง = Print เตือนตอน init
+7. **VPS transport:** เขียนขั้นตอน OneDrive folder VPS↔แล็บ (ขาไป: news CSV → VPS Common\Files ·
+   ขากลับ: exporter/snapshot CSV → แล็บ) + attach checklist ต่อ terminal (ห้าม magic 0 ย้ำ) — user ทำมือ
+**Acceptance:** tests PASS ครบทั้ง 2 platform + tpl_regression CLEAN + transport doc ·
+commit `[tag] ORDER-083C done` · **ห้าม:** attach จริง · เปลี่ยน policy semantics ที่ user เคาะ (flat-magic scope คงเดิม)
+
+---
+
+## ORDER-094 — P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) — `OPEN` (เงื่อนไข: MT5 lane ว่าง — ห้ามแก้ mt5_run.ps1 ระหว่างมี batch in-flight)
+
+**ทำไม:** CODEX-AUDIT D3-D6 ยืนยันครบ — cage ที่ pass ได้ทั้งที่หลักฐาน stale = อันตรายกว่าไม่มี cage
+**Spec:** (1) `mt5_run.ps1`: ลบ dest report เก่าก่อนรัน + exit 0/1 ตามมี report จริง (2) `tpl_regression.ps1`:
+เทียบ eqdd ด้วย + เพิ่ม Boss_15/16 เข้า expert list + `-UpdateBaseline` ต้องพิมพ์ diff เก่า/ใหม่ + confirm flag
+(3) `ea_template\tests\run_tests.ps1`: ลบ .ex5 เก่าก่อน compile (compile fail = COMPILE-FAIL จริง) + จับ journal
+เฉพาะ run ของ test นั้น (bind กับ ReportName/เวลา start) (4) `ea_template\deploy.ps1`: compile error → exit 1 +
+ห้าม mirror lane2 เมื่อ compile fail + ลบ .ex5 เก่าก่อน compile **Acceptance:** ทุก script มี negative-test
+พิสูจน์ fail-closed (จำลอง compile พัง/report หาย → ต้องแดง) · re-baseline พร้อม eqdd + Boss15/16 ·
+commit `[tag] ORDER-094 done` · **ห้าม:** เปลี่ยน semantics การรันปกติ
