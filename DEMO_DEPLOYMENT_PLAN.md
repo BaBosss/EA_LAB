@@ -121,6 +121,22 @@ export MT4 account statement ส่ง Claude (MT4 ไม่ใช้ /ea-monito
 
 ---
 
+## 🆕 MT4 demo experiment #3 — swb grid flat-lot @ AUDCAD — 🟡 **รอ user attach บน 69424711 (อนุมัติ 2026-07-10, ORDER-086)**
+
+> **candidate #3 จาก ORDER-036/046/047** — ฟื้นด้วย `lot_multiplier=0` + symbol ที่ใช่ (AUDCAD) ·
+> BWD 2.40/DD8.6 → SPR30 2.23/DD9.0 → **Model-0 1.80/DD20.44** · ladder linear ×3-4 (ไม่ใช่ martingale) ·
+> **bundle + checklist + kill-switch ครบ = `_demo_deploy\MT4\swb_experiment3\README.md`** (ex4 + locked set + MD5 lock)
+
+| # | EA | Chart | Set | Magic | Kill |
+|---|---|---|---|---|---|
+| 1 | swb grid 4.1.0.3_h | AUDCAD H1 | `swb_experiment3\swb_AUDCAD_demo.set` | 990 | DD 30% (M0 ref 20.4%) หรือ ladder >1.0 lot/ไม้ |
+
+**attach บนบัญชี demo MT4 69424711** (chart/magic ไม่ชน cohort เดิม UnNomGuai 1/2 · RSI-orig 5888) ·
+**ห้ามแก้ input · no hard SL → online ตลอด** · **จดวันที่ attach → แจ้ง Claude = demo-clock เริ่ม (judge +3 เดือน)** ·
+สถานะ = bench tier 5-6 / กรง premium-track ตาม `VISION.md` · monitor รอบเดียวกับ ClevrFX (statement ~2 สัปดาห์, แยกตาม magic)
+
+---
+
 ## Account Setup
 
 - **Account: 10,000 cent** (= $100 USD equivalent) — deploy 2026-06-22

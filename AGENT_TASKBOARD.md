@@ -3476,7 +3476,7 @@ size ตามสูตร reduce-lot (เช่น 1/3 ของ BRK) **Accepta
 
 ---
 
-## ORDER-086 — swb grid AUDCAD: เตรียม bundle demo experiment #3 (user อนุมัติ 2026-07-10) — `CLAIMED(Claude-agent)`
+## ORDER-086 — swb grid AUDCAD: เตรียม bundle demo experiment #3 (user อนุมัติ 2026-07-10) — `DONE(Claude-agent, 2026-07-10)`
 
 **คำสั่ง:** ตาม pattern `_demo_deploy\` เดิม (UnNomGuai/ClevrFX experiment): หา .ex4 + flat-lot set
 ของ swb grid 4.1.0.3_h ที่ผ่าน chain (ORDER-036 survivors + ORDER-046/047 — lot_multiplier=0,
@@ -3485,6 +3485,15 @@ AUDCAD H1) → สร้าง `_demo_deploy\MT4\swb_experiment3\` = .ex4 + lock
 สถานะ = bench tier 5-6 / premium-track กติกา VISION) + MD5 · **Acceptance:** bundle ครบ 3 ไฟล์ +
 แถวใหม่ใน DEMO_DEPLOYMENT_PLAN §experiment (mark: รอ user attach 69424711) · commit
 `[tag] ORDER-086 done` · **ห้าม:** แก้ set จาก validated ค่า · attach เอง
+
+**✅ ผลงาน (agent, 2026-07-10):** bundle `_demo_deploy\MT4\swb_experiment3\` ครบ 4 ไฟล์ —
+`swb grid 4.1.0.3_h.ex4` (copy unmodified, MD5 `35BFB25E93966DE1A9521A4A59313379` = ตรง lock เดิมใน
+`README_DEPLOY.md` ✓) · `swb_AUDCAD_demo.set` (locked copy จากบันเดิล #2 เดิม: lot_multiplier=false +
+lot_multiplier_2=1 + magic=990 — ไม่แตะค่า validated; input อื่น = compiled defaults ตามที่ chain รันด้วย
+`swb_flat.set`, ชุดเต็มอ้างใน `_mt4_auto\reports\O47P3_swb_AUDCAD_M0.htm` Parameters) · `README.md`
+(kill DD 30% vs M0 ref 20.44% · ladder >1.0 lot/ไม้ · judge attach+3mo ≥30t PF≥1.4 · bench tier 5-6 +
+กรง premium-track อ้าง VISION.md) · `MD5SUMS.txt` · เพิ่ม section experiment #3 ใน
+`DEMO_DEPLOYMENT_PLAN.md` (mark 🟡 รอ user attach บน 69424711) · ไม่ attach เอง
 
 ## ORDER-087 — concept rescue batch #1: 6 smokes บน symbol-class ที่ไม่เคยลอง — `DONE(Claude-agent 2026-07-10)`
 
