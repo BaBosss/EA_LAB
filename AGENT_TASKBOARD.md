@@ -3580,7 +3580,7 @@ Quote ตะกร้าลึกสุด (sell grid 2020, จาก trade list
   (ORDER-089)** — สอดคล้อง landscape: AUDCAD = ranger ที่ Boss_14 validate แล้ว · reversion เข้าบ้านถูก
 - เพิ่มลง signal-landscape ตอนปิดวัน: Keltner/Ichimoku closed-all-classes · ZSCORE AUDCAD = LEAD
 
-## ORDER-089 — EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแรกที่ใช้กฎใหม่ครบวงจร) — `CLAIMED(Claude-agent)`
+## ORDER-089 — EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแรกที่ใช้กฎใหม่ครบวงจร) — `DONE(Claude-agent, 2026-07-10)`
 
 **คำสั่ง (สูตร reversion จาก backtest-optimize-rigor: 3 รอบ × 2 TF บน AUDCAD):**
 - รอบ 1 (entry): zscore period × threshold (ค่า default ±2 ระดับต่อแกน) — H4 และ H1
@@ -3591,6 +3591,93 @@ Quote ตะกร้าลึกสุด (sell grid 2020, จาก trade list
 **Acceptance:** ตารางต่อรอบ (top-5 + surface กว้าง) ทั้ง 2 TF · commit `[tag] ORDER-089 done` ·
 **ห้าม:** เลือก winner (Claude) · แตะ symbol อื่น · optimize เกิน 3 รอบที่กำหนด
 
+### ORDER-089 RESULTS (Claude-agent, 2026-07-10)
+
+บาร์ pre-registered ตามคำสั่ง (quote verbatim): "**pre-registered:** มี config PF≥1.4 & trades≥100 & eqDD≤10%
+บน TF ใดหนึ่ง → เข้า funnel เต็ม (BWD/plateau/MC = order ถัดไป) · ไม่มี = ปิด concept อย่างสมบูรณ์"
+
+Run conditions: main MT5 lane (D:\Meta 5) · EA_ZSCORE.mq5 · AUDCAD · 2023.01.01–2026.07.01 ·
+Model 2 open-price · Optimization=1 (complete) · Criterion 0 (max balance) · deposit 10000 · leverage 1:100 ·
+fixed lot 0.01 · แต่ละรอบ = optimizer pass แยก, sweep บน **default ของรอบอื่น** (isolation ตามกฎ lab) ·
+sets = `_mt5_auto/ab_sets/zscore_sets/Z89_R1_entry.set`, `Z89_R2_exit.set` ·
+full surfaces = `_mt5_auto/optimizations/Z89_R1_H4.xml`, `Z89_R1_H1.xml`, `Z89_R2_H4.xml`, `Z89_R2_H1.xml`
+
+EA inputs จริง (อ่าน source ก่อน sweep): `_01_ZPeriod(20)`, `_01_ZThreshold(2.0)`, `_01_ATRPeriod(14)`,
+`_02_SL_ATR(2.0)`, `_02_TP_ATR(3.0; 0=ไม่มี TP → exit ที่ Z=0 เท่านั้น)`, `_03_FixedLot`, `_04_Magic`, `_04_AllowLive`
+
+**รอบ 1 (entry): ZPeriod 10–30 step 5 × ZThreshold 1.0–3.0 step 0.5 = 25 combos/TF (default ±2 ระดับต่อแกน)**
+
+H4 top-5 (เรียง PF) — **ผ่านบาร์ 3/25**:
+
+| ZPeriod | ZThr | PF | Net ($) | eqDD% | Trades | ผ่านบาร์? |
+|---|---|---|---|---|---|---|
+| 25 | 3.0 | 2.00 | +48.10 | 0.25 | 35 | ✗ (trades<100) |
+| 20 | 2.5 | 1.61 | +101.21 | 0.28 | 130 | ✓ |
+| 15 | 3.0 | 1.60 | +12.52 | 0.14 | 19 | ✗ (trades<100) |
+| 30 | 3.0 | 1.48 | +31.15 | 0.23 | 40 | ✗ (trades<100) |
+| 25 | 2.5 | 1.45 | +75.54 | 0.29 | 115 | ✓ |
+
+(ผ่านบาร์ตัวที่ 3 = 15/2.5: PF 1.44 / +59.14 / eqDD 0.18% / 122t · surface: threshold 2.5 = แถวที่ผ่านทั้งแถว
+ที่ period 15-25; threshold ≤1.5 = PF 1.05-1.17 ทุก period; baseline 20/2.0 reproduce ตรง ORDER-087 = PF 1.34/+124.91/283t ·
+cell 10/3.0 = 0 trades)
+
+H1 top-5 (เรียง PF) — **ผ่านบาร์ 0/25**:
+
+| ZPeriod | ZThr | PF | Net ($) | eqDD% | Trades |
+|---|---|---|---|---|---|
+| 15 | 3.0 | 1.22 | +21.16 | 0.17 | 137 |
+| 25 | 3.0 | 1.21 | +39.86 | 0.21 | 228 |
+| 25 | 2.5 | 1.12 | +54.37 | 0.32 | 578 |
+| 20 | 3.0 | 1.10 | +18.58 | 0.36 | 218 |
+| 30 | 2.5 | 1.08 | +35.01 | 0.33 | 536 |
+
+(surface H1: PF สูงสุดทั้งกริด = 1.22 · 16/25 cells ขาดทุน · default 20/2.0 = PF 0.91/-86.56 —
+ทั้ง surface ไม่มี cell ใดแตะ 1.4)
+
+**รอบ 2 (exit): SL_ATR 1.0–4.0 step 0.5 × TP_ATR {0, 1.5, 3.0, 4.5, 6.0} = 35 combos/TF
+บน round-1 DEFAULTS (ZPeriod=20, ZThr=2.0 held — ไม่ใช่ winner รอบ 1) · TP_ATR=0 = revert-to-mean exit
+เท่านั้น (toggle ในตัว EA) · EA ไม่มี time-stop input**
+
+H4 top-5 (เรียง PF) — **ผ่านบาร์ 20/35**:
+
+| SL_ATR | TP_ATR | PF | Net ($) | eqDD% | Trades | ผ่านบาร์? |
+|---|---|---|---|---|---|---|
+| 4.0 | 1.5 | 1.66 | +161.96 | 0.33 | 242 | ✓ |
+| 3.0 | 1.5 | 1.64 | +170.10 | 0.36 | 259 | ✓ |
+| 3.5 | 1.5 | 1.60 | +156.55 | 0.41 | 247 | ✓ |
+| 3.0 | 3.0 | 1.54 | +157.16 | 0.37 | 250 | ✓ |
+| 3.0 | 6.0/0 | 1.54 | +155.86 | 0.37 | 249 | ✓ |
+
+(surface H4: ทุก cell ที่ SL_ATR≥2.5 ผ่านบาร์ทั้งหมด (20 cells, PF 1.46-1.66) · SL_ATR=2.0 = PF 1.33-1.34 ·
+SL แคบลง (1.0-1.5) เสื่อมลงเรียบๆ ถึง PF 1.15 · แกน TP แทบไม่ขยับผล (TP 4.5/6.0/0 ให้เลขเกือบเท่ากัน =
+TP ไกลไม่เคยถูกชน exit จริงคือ Z=0) · ไม่มี cell ขาดทุนทั้ง 35)
+
+H1 top-5 (เรียง PF) — **ผ่านบาร์ 0/35**:
+
+| SL_ATR | TP_ATR | PF | Net ($) | eqDD% | Trades |
+|---|---|---|---|---|---|
+| 4.0 | 6.0 | 0.98 | -16.87 | 0.66 | 967 |
+| 4.0 | 0 | 0.97 | -22.30 | 0.69 | 966 |
+| 4.0 | 4.5 | 0.97 | -26.23 | 0.70 | 970 |
+| 4.0 | 3.0 | 0.96 | -29.59 | 0.72 | 974 |
+| 4.0 | 1.5 | 0.96 | -29.35 | 0.67 | 1012 |
+
+(surface H1: **ทั้ง 35 cells ขาดทุน** — PF สูงสุด 0.98 · exit lever กู้ H1 ไม่ได้เลย)
+
+**รอบ 3 (filter): N/A พร้อมหลักฐาน** — EA_ZSCORE.mq5 (`D:\Meta 5\MQL5\Experts\EA_ZSCORE.mq5`)
+มี input ทั้งหมด 8 ตัวตาม list ข้างบนเท่านั้น — **ไม่มี** session/time-window, day/hour, หรือ ADX/regime-gate
+input ใดๆ และ tester ini ไม่มีกลไก period-of-day โดยไม่มี input ใน EA → รอบนี้รันไม่ได้โดยไม่แก้ source
+(แก้ source = นอกเหนือคำสั่ง order)
+
+**Model 1 confirm (baseline default บน H1 — TF ที่ยังไม่มีเลข):** report = `_mt5_auto/reports/Z89_DEF_H1_M1.htm`
+— PF **0.54** / net **-584.46** / eqDD **6.00%** / **1376 trades** (history quality 100%, 21720 bars).
+หมายเหตุ observation (ไม่ใช่ verdict): แย่กว่า Model 2 open-price ของ config เดียวกัน (PF 0.91/-86.56/1243t)
+อย่างมีนัย — H1 เทรด intrabar ไวต่อ M1 path.
+
+**สรุปนับบาร์ (PF≥1.4 & trades≥100 & eqDD≤10%):** H4 รอบ1 = 3/25 · H4 รอบ2 = 20/35 ·
+H1 รอบ1 = 0/25 · H1 รอบ2 = 0/35 · รอบ3 = N/A ทั้ง 2 TF
+
+(no winner selection, no verdict — ตามห้าม)
 
 ---
 

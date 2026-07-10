@@ -1,0 +1,10 @@
+; ORDER-089 Round 2 (exit): SL_ATR x TP_ATR on top of round-1 DEFAULTS (ZPeriod=20, ZThreshold=2.0 held).
+; TP_ATR=0 = no TP -> revert-to-mean exit only (the EA's built-in Z=0 exit toggle). EA has no time-stop input.
+_01_ZPeriod=20||20||1||20||N
+_01_ZThreshold=2.0||2.0||0.5||2.0||N
+_01_ATRPeriod=14||14||1||14||N
+_02_SL_ATR=2.0||1.0||0.5||4.0||Y
+_02_TP_ATR=3.0||0.0||1.5||6.0||Y
+_03_FixedLot=0.01||0.01||0.01||0.01||N
+_04_Magic=990050
+_04_AllowLive=false
