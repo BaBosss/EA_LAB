@@ -3237,3 +3237,31 @@ commit `[tag] ORDER-079 done` · **ห้าม:** ตัดสินดี/ไ�
 ห้ามโผล่ใน catalog (คนละเอกสารกับ XRAY)
 
 **สถานะ:** CLAIMED -> DONE(Claude-inline, 2026-07-10) — agent ตายที่ session limit, Claude เขียน/รันสคริปต์เองต่อ (fxdreema_concepts.py + boilerplate fix รอบสอง: doji-string เคย inflate candle_pattern 224->16) · ผลเต็ม = _triage\FXDREEMA_IDEA_CATALOG.md + concept column ใน XRAY.csv + _concept_summary.json
+
+
+---
+
+## ORDER-080 — วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB ที่ user เอามาแกะ 2026-07-10) — `OPEN` (role: agent build+run)
+
+**สมมุติฐาน:** เข้าไม้ด้วย pending limit ที่ราคาดีกว่า signal price เล็กน้อย (แลกกับ fill ไม่ครบ)
+ให้ EV ดีกว่า market entry — โลก crypto พิสูจน์ด้วย fee; โลก MT5 = ประหยัด spread/slippage แทน
+**คำสั่ง:** เพิ่ม input `EntryMode` (0=market เดิม default · 1=limit offset) + `EntryLimitOffsetPips` +
+`EntryExpiryBars` ให้ **Boss_16_KangarooGrid** (additive, default = พฤติกรรมเดิม, ผ่าน regression cage)
+→ A/B บน config candidate 21/30 XAU H1: market vs limit offset {3, 6, 10 pips} expiry 1 bar ·
+ทั้ง IS 2023-26 และ BWD 2020-22 · Model 1 (+Model 0 confirm คู่ที่ต่างกันสุด)
+**Acceptance:** ตาราง market vs 3 offset × 2 window: PF/net/trades/**fill-rate** (นับไม้หาย) ·
+commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever อื่น · verdict (Claude อ่าน — สนใจ EV ต่อไม้
+หลังหัก opportunity cost ของไม้ที่ไม่ fill ไม่ใช่แค่ PF)
+
+## ORDER-081 — Crypto lane feasibility study (maker-fee scalper blueprint) — `OPEN` (role: research agent, web)
+
+**เป้า:** ตอบ go/no-go การเปิด lane crypto แบบแล็บ (ไม่ใช่ลอกบอทเขา — เอา blueprint engineering-first)
+**คำสั่ง (research + เอกสาร ไม่มี code):**
+1. Fee reality: Bybit/Binance perpetual maker/taker ปัจจุบัน + เงื่อนไข rebate/VIP + ต่างจากตัวเลขในโพสต์ไหม
+2. Data: kline/tick historical ดึงยังไง ฟรีแค่ไหน พอทำ backtest แบบแล็บ (flat-lot probe / BWD-OOS) ได้ไหม
+3. Backtest stack: แนวทาง python บนเครื่องนี้ (portable python มีแล้ว) + fee model + maker-fill model
+   (จุดยากสุด: จำลอง "ได้เป็น maker จริงไหม" — หาแนว literature/แนวปฏิบัติ)
+4. Infra จริงถ้า go: websocket uptime ต้องเท่าไหร่ รันบนเครื่องแล็บ/VPS เดิมได้ไหม · API key security
+5. ความเสี่ยงเฉพาะ crypto: funding rate, เหรียญ delist, weekend ไม่ปิด, leverage/liq engine
+**Acceptance:** `_triage\CRYPTO_LANE_FEASIBILITY.md` ครบ 5 หัวข้อ + ประเมิน effort (ชม.งาน) +
+คำถามเปิดสำหรับ user · commit `[tag] ORDER-081 done` · **ห้าม:** เขียน trading code · เปิดบัญชี/แตะ API จริง
