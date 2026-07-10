@@ -131,6 +131,9 @@ banner: `> âš ï¸ canonical entry = PROJECT_STATE.md Â· à¹„à¸Ÿà�
   ทางสร้างใหม่ = Entry_ST03 บน Boss V2 + capped recovery (spec Kangaroo, ORDER-070) · หลักฐาน
   AGENT_TASKBOARD ORDER-068 + `_mt5_auto\reports\ST03LAB_*` · เพิ่มเติม: ZeusInspired บน EURUSD =
   dead cell (ORDER-069: 216 pass, PF สูงสุด 1.14, gate ผ่าน 0) — EURUSD ไม่ใช่บ้านของ reversion-grid ตัวนี้
+  · **UPDATE 2026-07-10 บ่าย (ORDER-071 ปิดเคส): entry ST03 ตายสมบูรณ์ทุกแกน** — sweep exit ×4 +
+  symbol ×2 + H4 gate ×3 (18 config) ดีสุด 0.99 (บาร์ 1.05) → ห้ามขุด Count-MACD entry อีกทุกรูปแบบ ·
+  ของที่รอด: H4-MACD-direction gate (ลด DD 21→5.5%) = อะไหล่ใช้กับสัญญาณอื่น · ทางต่อ = Boss_16 (ORDER-072)
 - **Signal hunt â€” âš ï¸ à¹„à¸¡à¹ˆà¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§à¹à¸¥à¹‰à¸§ à¸«à¸¥à¸±à¸‡ 2026-07-03** à¹€à¸”à¸´à¸¡à¹€à¸‚à¸µà¸¢à¸™à¸§à¹ˆà¸² "98% à¸­à¸´à¹ˆà¸¡à¸•à¸±à¸§ à¸£à¸­à¹„à¸­à¹€à¸”à¸µà¸¢à¹ƒà¸«à¸¡à¹ˆ" (à¸šà¸£à¸£à¸—à¸±à¸”à¸™à¸µà¹‰
   **à¸¥à¹‰à¸²à¸ªà¸¡à¸±à¸¢**) â€” concept à¹€à¸à¹ˆà¸²à¸—à¸µà¹ˆà¸•à¸²à¸¢à¹à¸¥à¹‰à¸§à¸¢à¸±à¸‡à¸•à¸²à¸¢à¸­à¸¢à¸¹à¹ˆ (NR7/AsianRange/LNBREAK/EURCHF/Donchian/Keltner/
   Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid à¸—à¸±à¹‰à¸‡à¸«à¸¡à¸” â€” à¸”à¸¹à¸£à¸²à¸¢à¸¥à¸°à¹€à¸­à¸µà¸¢à¸”

@@ -2915,3 +2915,21 @@ default-off สำหรับ EA เดิม) ตาม pattern Boss_14_GridLo
 เทียบตาราง: Boss_16 flat vs original flat (PF 5.71/DD 11.5% = เป้าไล่)
 **Acceptance:** compile 0/0 · regression CLEAN · ตาราง smoke เทียบ original + set ไฟล์ · commit `[tag] ORDER-072 done`
 **ห้าม:** deploy/verdict · แก้ Boss_14/15 behavior · martingale default-on · แตะ .set live
+
+
+---
+
+## REVIEW ORDER-071 (Stage 1+2) — `REVIEWED(Claude, 2026-07-10)` — **เคส entry ST03 ปิดถาวร**
+
+**ตัดสินตามเกณฑ์ pre-registered ทุกชั้น ไม่มีข้อยกเว้น:**
+- Stage 1: USDCAD ตาย (ทุก exit <0.85) · GBPUSD โซน WATCH (trail 0.89) → ไปขั้น 2 GBP-only ✓ ตามกติกา
+- Stage 2: gate ดีสุด = H4 MACD direction **PF 0.99 / net −58 / DD 5.5% / 623 ไม้** — ต่ำกว่าบาร์
+  (≥1.05 & ≥300 ไม้) → **ไม่ผ่าน · ปิดเคส**
+- แกนที่ sweep ครบก่อนปิด (VERDICT GATE): escalation on/off · exit ×4 (scalp เดิม/TP 2-3×ATR/trail/
+  Donchian) · symbol ×2 · HTF gate ×3 — 18 configurations, ไม่มีตัวใด PF ≥1.0 ยกเว้น 0.99 หนึ่งจุด
+- **insight ที่ได้จริง (เครดิต user):** HTF MACD gate ช่วยแรง (0.89→0.99, DD 21%→5.5%) — ทิศคิดถูก
+  แต่สัญญาณฐานไม่มี expectancy บวกให้กู้ · pattern นี้ = "gate ดีบนสัญญาณตาย ≠ ระบบมีชีวิต"
+  (สอดคล้อง lesson ORDER-067) · แนวคิด H4-MACD-direction gate เก็บเป็นอะไหล่ให้สัญญาณอื่นได้
+- **มรดกที่ปิดพร้อมกัน:** ST03 family ทั้งหมด = no-edge สมบูรณ์ทุกแกนแล้ว (068+071) — คำแนะนำถอด
+  จากบัญชีจริงคงเดิม · demo 990010 เก็บ data ถึง judge แล้วปลด · Boss_15/Entry_ST03 = เก็บเป็น
+  reference module ไม่มี deploy path · ทางเดินต่อของ "แก้ไม้แบบมีเบรก" = Boss_16 (ORDER-072)
