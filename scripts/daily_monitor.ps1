@@ -8,6 +8,12 @@ $log = "D:\EA_LAB\portfolio\daily_monitor.log"
 powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\news_calendar.ps1 *>> $log
+# ORDER-083: publish the news CSV where the (Boss)_NewsGuard EA reads it (MT5 Common\Files)
+if (Test-Path 'D:\EA_LAB\portfolio\news_week.csv') {
+    try {
+        Copy-Item 'D:\EA_LAB\portfolio\news_week.csv' 'C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\EA_LAB_news_week.csv' -Force
+    } catch { "newsguard csv copy failed: $($_.Exception.Message)" | Add-Content $log }
+}
 powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)

@@ -61,8 +61,13 @@ foreach ($e in $xml.SelectNodes('//event')) {
   }
 }
 
-# CSV for the (future) NewsGuard EA: full filtered week
-$rows | Sort-Object BkkTime | Export-Csv $OutCsv -NoTypeInformation -Encoding UTF8
+# CSV for the NewsGuard EA (ORDER-083): full filtered week. BkkTime is written
+# as 'yyyy.MM.dd HH:mm' so MQL5 StringToTime() parses it directly (the EA also
+# keeps a fallback parser for the old US-culture datetime format).
+$rows | Sort-Object BkkTime |
+  Select-Object @{n='BkkTime';e={ if ($_.BkkTime) { $_.BkkTime.ToString('yyyy.MM.dd HH:mm') } else { '' } }},
+                Currency, Title, TimeRaw, Forecast, Previous |
+  Export-Csv $OutCsv -NoTypeInformation -Encoding UTF8
 
 # HTML fragment: today + tomorrow (Bangkok)
 $today = (Get-Date).Date

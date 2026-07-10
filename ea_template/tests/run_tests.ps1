@@ -26,6 +26,11 @@ $agentRoot = "D:\MetaTraderData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710F
 # deploy (copies ea_template incl. tests) - compile of Boss files comes free
 & (Join-Path $root 'ea_template\deploy.ps1') -Compile | Out-Null
 
+# ORDER-083: NewsGuard_Test.mq5 includes NewsGuard_Core.mqh from its project
+# folder (canonical copy) - place it beside the deployed tests so the
+# same-directory include resolves. Additive: no other test is affected.
+Copy-Item (Join-Path $root 'ea_projects\(Boss)_NewsGuard\NewsGuard_Core.mqh') $deployedTests -Force
+
 $results = @()
 foreach ($mq5 in Get-ChildItem (Join-Path $testDir '*.mq5')) {
   $name = $mq5.BaseName

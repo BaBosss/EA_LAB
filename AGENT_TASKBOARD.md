@@ -3314,7 +3314,7 @@ user ใช้ Kangaroo จริงมาพักใหญ่ สังเก�
 entry v1 ที่ควรลองใน funnel รอบหน้า: **velocity/spike fade** — bar range ≥ k×ATR หรือ move X จุด
 ใน Y นาที → เข้าสวน (มี distance + MM ต่อยอดเองตามที่ user ว่า) · ทดสอบเป็น lever แยกหลัง 078 จบ
 
-## ORDER-083 — build "(Boss)_NewsGuard" watchdog EA (user เคาะ policy ครบ 2026-07-10) — `CLAIMED(Claude-agent, 2026-07-10)`
+## ORDER-083 — build "(Boss)_NewsGuard" watchdog EA (user เคาะ policy ครบ 2026-07-10) — `DONE(Claude-agent, 2026-07-10)`
 
 **Design ที่ user ยืนยัน:** generic ใช้ได้ทุกบัญชีตลอดไป — attach 1 chart/บัญชี · **input list ของ
 magic + policy ต่อ magic** (configurable, ไม่ hardcode) · window default ก่อนข่าว 30 นาที / หลัง 15 นาที ·
@@ -3336,3 +3336,45 @@ magic + policy ต่อ magic** (configurable, ไม่ hardcode) · window de
 7. compile 0/0 · ห้ามแตะ behavior EA เดิม (chassis GV check = additive) · tpl_regression CLEAN
 **Acceptance:** EA + tests PASS ครบ + ตาราง test result + คู่มือ attach สั้น ๆ (รวม PostNews/timezone) ·
 commit `[tag] ORDER-083 done` · **ห้าม:** attach จริง (user ทำเอง) · verdict
+
+### RESULT (Claude-agent 2026-07-10) — built + tested, ยังไม่ attach จริงตามคำสั่ง
+
+**ไฟล์:**
+- `ea_projects\(Boss)_NewsGuard\(Boss)_NewsGuard.mq5` + `.ex5` (compile **0 errors, 0 warnings**) — EA wrapper (timer 10s)
+- `ea_projects\(Boss)_NewsGuard\NewsGuard_Core.mqh` — logic ทั้งหมด (canonical copy เดียว, test include ตรง)
+- `ea_template\core\Execution.mqh` — GV bridge additive: `Exec_NewsBlocked()` เช็ค `NEWSGUARD_BLOCK_<magic>`
+  ใน `Exec_Open` + `Exec_PlacePending` (จุดคอขวด OrderSend เดียวของ chassis → คุมทั้ง market/grid/ladder ทุก Boss build
+  รวม Kangaroo) · inert เมื่อ GV ไม่มี · จัดการ/ปิด/modify ไม่แตะ
+- `ea_template\tests\NewsGuard_Test.mq5` + `run_tests.ps1` (เพิ่มบรรทัด copy core mqh — additive)
+- `scripts\news_calendar.ps1` — BkkTime ใน news_week.csv เปลี่ยนเป็น `yyyy.MM.dd HH:mm` (StringToTime อ่านตรง;
+  EA มี fallback parser format US เก่าด้วย) · `scripts\daily_monitor.ps1` — เพิ่ม copy → `Common\Files\EA_LAB_news_week.csv`
+  (copy รอบแรกทำแล้ว ไฟล์อยู่ใน Common\Files แล้ว)
+
+**Test results (run_tests.ps1, XAUUSD H1 2024.01.02–05 Model 1):**
+
+| test | result | ครอบคลุม |
+|---|---|---|
+| NewsGuard_Test | **PASS** | C ปิดทุกไม้ใน window (log ยืนยันปิดที่ winStart ตรงนาที) · B: GV set ตอนเข้า window / ลบตอนออก, ไม้ไม่ถูกปิด · N ไม่แตะ · เหตุการณ์ NZD ที่ irrelevant (ถือแต่ XAUUSD) = ไม่ทำอะไร · fail-safe ไฟล์หาย = ไม่ปิดไม้/ไม่ตั้ง GV + Alert 1 ครั้ง · bridge: Exec_Open/Exec_PlacePending โดน veto เมื่อ GV=1, ผ่านเมื่อ GV=0/ไม่มี · unit: parse เวลา 2 format, staleness 49h/1h, ccy↔symbol, ParseConfig ทิ้ง token เสีย 3 ตัวถูก |
+| AcctGate_Test | PASS | (เดิม — ไม่กระทบ) |
+| Persist_Test | PASS | (เดิม) |
+| StackStep_Test | PASS | (เดิม) |
+
+**tpl_regression.ps1 = `REGRESSION CLEAN`** (Boss_11/12/13/14 net/pf/trades ตรง baseline ทุกตัว —
+GV bridge inert จริงเมื่อไม่มี NewsGuard)
+
+**คู่มือ attach (สั้น):**
+1. Attach `(Boss)_NewsGuard` **1 chart ต่อบัญชี** (symbol/TF ไหนก็ได้ — มันกวาดทุก symbol ตาม magic) · EA นี้ไม่เปิดไม้เอง
+2. `GuardConfig` = `"magic:policy;..."` เช่น `"990101:C;990102:B;990103:N"` — C=ปิดทุกไม้ของ magic ช่วงข่าว
+   (EA เจ้าของเปิดใหม่เองหลัง window), B=ห้ามเปิดไม้ใหม่ (ไม้เดิม+exit ทำงานปกติ — **ใช้ได้เฉพาะ EA แม่พิมพ์
+   Boss V2 ที่ recompile หลัง 2026-07-10**; EA locked ให้ใช้ C), N=ไม่แตะ (บันทึกไว้ว่าตั้งใจ)
+3. Window: `PreNewsMin=30` / `PostNewsMin=15` (default ตาม user) · ข่าว = High-impact ของ USD เสมอ + สกุลใน
+   symbol ที่ magic นั้นถือไม้อยู่
+4. **`ServerToBkkOffsetHours`** (default 4): Bkk = server + N · วิธีเช็ค: ดูนาฬิกา Market Watch เทียบเวลาไทย —
+   Exness ปกติ UTC+3 (หน้าร้อน) → 4, UTC+2 (หน้าหนาว) → 5 · **เช็คใหม่หลัง DST เปลี่ยนทุกครั้ง**
+5. ไฟล์ข่าว: daily chain 07:30 เขียน `Common\Files\EA_LAB_news_week.csv` ให้อัตโนมัติแล้ว · ไฟล์หาย/เก่า >48h
+   → EA เข้า fail-safe: ไม่ทำอะไร + Alert เตือน (ไม่เดา) · ทุก action พิมพ์ journal prefix `[NEWSGUARD]`
+
+**หมายเหตุ implementation (deviation เล็ก):** (1) BkkTime format ใน news_week.csv เปลี่ยนเป็น MQL5-parseable —
+consumer เดียวของไฟล์คือ EA นี้ (dashboard ใช้ HTML แยก) (2) test จำลอง "stale 48h" ที่ระดับ decision function
+(`NG_IsStaleAge`) เพราะ mtime ในไฟล์ tester เป็นเวลาจริง ปลอมอายุไฟล์ไม่ได้ — path missing-file ทดสอบเต็ม flow จริง
+(3) ccy↔symbol match เพิ่ม fallback ชื่อ symbol (broker บางเจ้ารายงาน base ของ XAUUSD ไม่ใช่ "XAU" — เจอจริงใน tester)

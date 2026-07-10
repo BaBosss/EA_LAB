@@ -40,8 +40,33 @@ double Exec_NormalizeLot(double lot)
    return NormalizeDouble(lot, 2);
 }
 
+// ---- NewsGuard bridge (ORDER-083, additive) ------------------------------
+// The (Boss)_NewsGuard watchdog EA may set GlobalVariable
+// NEWSGUARD_BLOCK_<magic> = 1 around high-impact news. While it exists and
+// reads >= 0.5, NEW orders (market opens + pending placement) are vetoed
+// here - the single OrderSend choke point. Management / modify / close
+// paths are untouched. Inert when the GV does not exist (tester GVs are
+// per-pass sandboxed, so regression numbers cannot move unless a test
+// sets the GV itself). Log throttled to once per minute to avoid spam
+// while grid/ladder modules keep retrying during the window.
+bool Exec_NewsBlocked()
+{
+   string gv = "NEWSGUARD_BLOCK_" + IntegerToString(_0_Magic);
+   if(!GlobalVariableCheck(gv)) return false;
+   if(GlobalVariableGet(gv) < 0.5) return false;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      PrintFormat("[EXEC] NEWSGUARD block active (%s) - new order skipped", gv);
+   }
+   return true;
+}
+
 bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)
 {
+   if(Exec_NewsBlocked()) return false;   // ORDER-083: news window veto (new orders only)
    lot = Exec_NormalizeLot(lot);
    if(lot <= 0.0) return false;
    g_exec_open_intents++;
@@ -163,6 +188,7 @@ void Exec_CancelAllPending()
 bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                        double price, const double sl, const string comment)
 {
+   if(Exec_NewsBlocked()) return false;   // ORDER-083: news window veto (new orders only)
    lot = Exec_NormalizeLot(lot);
    if(lot <= 0.0) return false;
    price = NormalizeDouble(price, _Digits);
