@@ -3761,7 +3761,7 @@ H1 = ปิดถาวร (0/60 + M1 confirm 0.54) — single-TF edge ยอม
 **M1/M0 confirm ใน funnel คือด่านชี้ขาดจริง** · R3 N/A มีหลักฐาน (EA ไม่มี filter inputs) — ยอมรับ
 เป็น 2 รอบ+โครงสร้าง exit ครบตามเจตนา rescue-ladder (แกน entry+exit sweep แล้วทั้งคู่)
 
-## ORDER-090 — ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) — `CLAIMED(Claude-agent)`
+## ORDER-090 — ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) — `DONE-STOPPED-AT-STAGE-2(Claude-agent, 2026-07-10)`
 
 **Config กลาง (plateau-center จาก 089, ประกอบข้ามรอบต้องเทสสด):** ZPeriod 20 · ZThreshold 2.5 ·
 SL_ATR 3.0 · TP_ATR 0 (revert-only) · flat lot
@@ -3774,3 +3774,35 @@ SL_ATR 3.0 · TP_ATR 0 (revert-only) · flat lot
 5. Model 0 confirm 1 รัน (ธง fill-sensitive จาก 089 — เลขละลาย >30% = ตก)
 **Acceptance:** ตารางทุกขั้น + สถานะผ่าน/ตกต่อด่าน · commit `[tag] ORDER-090 done` · **ห้าม:** tune เพิ่ม ·
 verdict (Claude ให้ EA-SCORE เมื่อจบ)
+
+
+---
+
+## REVIEW ORDER-085 — `REVIEWED(Claude, 2026-07-10)` — SuperTrend: แข็งกว่าที่คิด แต่ยัง un-park ไม่ได้ · EA-SCORE ปัจจุบัน ≈ 6/10 · เปิด ORDER-085B
+
+**ของดีที่ยืนยัน:** M0 every-tick PF 2.93 / eqDD 4.85% + spread+30pt แทบไม่สะเทือน (2.88 — โครง
+single-position + SL ATR×2 ทุกไม้ = spread-immune by design) · **corr กับ BRK ที่ deploy จริงตอนนี้
+(Bars40) = 0.421 ไม่ใช่ 0.72** (เลขเก่าวัดกับ Bars8) · DD-overlap 0.15 ต่ำ → ตาม user rule = เข้าได้ที่
+~1/3 lot ของ BRK **ถ้า**ผ่านรูที่เหลือ
+
+**รูที่ระบบเก่ามองข้าม (จับได้เพราะ rubric บังคับไล่ 8 ช่อง):**
+1. **ปี 2023 ติดลบ + 97% ของกำไรมาจาก gold bull 2025-26 + BWD 2020-22 ไม่เคยรัน** — validated
+   เดิมคือ IS/OOS ที่อยู่ใน regime เดียวกันทั้งคู่ (กฎ backward-OOS บังคับของเราเกิดทีหลัง EA นี้)
+2. **ไม่เคย sweep รอบ default เลย** (ATR10/mult3/SL2 = จุดเดียว) — plateau ไม่รู้
+- top-5 = 95.2% ของ net: สำหรับ single-position trend-follow = โปรไฟล์ธรรมชาติของ class ไม่ใช่
+  recovery-illusion (ไม่มี averaging) แต่มันตอกย้ำคำถาม regime ข้อ 1
+**คำตัดสิน:** ยังไม่ deploy · EA-SCORE ปัจจุบัน 2+2+0+0+0+1+0+1 = **6/10** (tier bench) · คำถามถูกสุด
+ที่ชี้ขาด = ORDER-085B (BWD + plateau ~12 รัน) — ผ่านทั้งคู่ → 8/10 = เงินจริง cent 1/3-lot ทันที
+
+**Method finding สำคัญ (agent พิสูจน์ด้วย A/B 4 รัน):** **MT5 build 5836 เมิน `Spread=`/`TestSpread=`
+ใน ini เสมอ** (ใช้ spread ประวัติจริงเท่านั้น ต่างจาก MT4) → spread-stress ฝั่ง MT5 ต้องทำแบบ
+arithmetic บน trade list · warning ใส่ใน mt5_run.ps1 แล้ว · ⚠️ audit เบา ๆ ภายหลัง: มี MT5 run ไหน
+ในอดีตอ้าง spread-stress ผ่าน ini บ้าง (ส่วนใหญ่ spread-stress เราทำฝั่ง MT4 ซึ่งไม่กระทบ)
+
+## ORDER-085B — SuperTrend XAU H4: อุดรูสองรูสุดท้าย — `OPEN` (คิว batch พรุ่งนี้ตาม pacing)
+
+**คำสั่ง:** (1) BWD 2020.01.01-2022.12.31 config default, Model 1 (บาร์: PF≥1.0 & eqDD≤10% —
+trend-follow ยอมรับ BWD อ่อนกว่า reversion ได้ แต่ห้ามเจ๊ง) (2) plateau sanity 3×3×2: ATRPeriod
+{7,10,14} × Mult {2.5,3,3.5} × SL_ATR {1.5,2.0} full window Model 1 (บาร์: ไม่มี cell ขาดทุน + default
+ไม่ใช่ peak โดด) · **Acceptance:** 2 ตาราง + บาร์ verbatim · commit `[tag] ORDER-085B done` ·
+**ห้าม:** tune/เลือกใหม่ · verdict
