@@ -3199,7 +3199,14 @@ regime artifact → หยุดสาย RSI-fade แล้วออกแบ�
 **สถานะ VERDICT GATE ของ 21/30:** levers — entry ✓(075) escalation ✓(flat by design) spacing/TP ✗ยัง ·
 surface — entry peaky แต่ BWD ยัน · both regimes ✓(077) · holdout+MC ✗ยัง → ยังห้ามพูดคำว่า deploy
 
-## ORDER-078 — Boss_16 BUY 21/30: validation funnel เต็ม — `OPEN` (role: agent, งานถัดไปอันดับ 1)
+## ORDER-078 — Boss_16 BUY 21/30: validation funnel เต็ม — `CLAIMED(Claude-agent, 2026-07-11)` (role: agent, งานถัดไปอันดับ 1)
+
+**Pre-registered bars (Claude lead เขียนก่อนเห็นข้อมูล, 2026-07-11 เช้า — กัน goalpost ขยับ):**
+- ขั้น 1 ตก = มี neighbor cell ใดใน 27 ที่ net < 0 (plateau requirement ตาม spec)
+- ขั้น 2 ตก = ปีลบ >2 จาก 7 ปี (2020-2026)
+- ขั้น 3 ตก = Model 0 PF < 1.25 (คือ M1 1.57 ละลายเกิน ~20%) หรือ net ≤ 0
+- ขั้น 4 อ่านตาม robustness-validator convention: PF 5th pct <1.0 หรือ ruin >1% = แดง
+- ตกด่านไหน = agent หยุดที่ด่านนั้น รายงานดิบ — คำตัดสินทั้งหมดเป็นของ Claude lead
 
 **คำสั่ง (ทีละขั้น หยุดเมื่อตกด่าน):**
 1. **Lever sanity sweep** (กัน knife-edge ไม่ใช่ล่า peak): spacing (AtrMultFirst4 0.6/0.8/1.0 ×
@@ -3966,7 +3973,7 @@ smoke เฉพาะโครงสะอาด)
 
 ---
 
-## ORDER-083B — port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049900) — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-083B — port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049900) — `DONE(Claude-agent, 2026-07-11)`
 
 **ทำไม:** REVIEW ORDER-083 พบ gap — NewsGuard เป็น MQL5 คุมได้เฉพาะ MT5 แต่กองที่ต้องการ
 CLOSE_ALL ที่สุด (Zeus magic 7777 + Kangaroo 1112-1115, ไม่มี SL) อยู่บน **MT4 141049900**
@@ -3986,3 +3993,48 @@ CLOSE_ALL ที่สุด (Zeus magic 7777 + Kangaroo 1112-1115, ไม่ม
 6. Compile 0 errors / 0 warnings (MT4 metaeditor headless) · **ห้ามแตะไฟล์ MT5 เดิมทุกไฟล์**
 **Acceptance:** .mq4 + .ex4 + test PASS table + คู่มือ attach diff จากฉบับ MT5 (สั้น) · commit
 `[tag] ORDER-083B done` · **ห้าม:** attach จริง (user ทำเอง) · แตะ EA เดิมบนบัญชี · verdict
+
+### ORDER-083B RESULT (Claude-agent, 2026-07-11)
+
+**ไฟล์ (ทั้งหมดใหม่ ใน `ea_projects\(Boss)_NewsGuard\` — ไฟล์ MT5 เดิมไม่แตะแม้ตัวเดียว, mtimes ยัง 07-10):**
+- `NewsGuard_Core_MT4.mqh` — logic port ทั้งก้อน (copy อิสระจาก NewsGuard_Core.mqh — sync มือถ้า MT5 เปลี่ยน)
+- `(Boss)_NewsGuard_MT4.mq4` + `(Boss)_NewsGuard_MT4.ex4` — EA wrapper (OnTimer live + OnTick throttle)
+- `NewsGuard_Test_MT4.mq4` — test harness (pattern เดียวกับ NewsGuard_Test.mq5 + case unlisted magic)
+- `run_mt4_tests.ps1` — deploy→compile→tester→journal-grep รันซ้ำได้คำสั่งเดียว (MT4 lane ไม่มี tests dir กลาง
+  เลยอยู่ใน project folder; ไม่แตะ ea_template\tests\run_tests.ps1)
+
+**Compile (D:\Meta4\metaeditor.exe headless):** `(Boss)_NewsGuard_MT4.mq4` = **0 errors, 0 warnings** ·
+`NewsGuard_Test_MT4.mq4` = **0 errors, 0 warnings**
+
+**Common\Files ยืนยันแล้ว (spec ข้อ 2):** MT4 (`%APPDATA%\MetaQuotes\Terminal\Common`) เป็น junction
+ชี้ก้อนเดียวกับที่ MT5 ใช้ (`D:\MetaTraderData\Roaming\MetaQuotes\Terminal\Common`) — พิสูจน์ด้วย probe file
+เขียนผ่าน path นึงโผล่อีก path ทันที + `EA_LAB_news_week.csv` จาก daily chain มองเห็นจาก MT4 อยู่แล้ว
+→ **ไม่ต้องเพิ่มบรรทัด copy ใน daily_monitor.ps1** (FILE_COMMON อ่าน CSV ก้อนเดียวกันทั้งสอง platform)
+
+**Test results (run_mt4_tests.ps1: XAUUSD M5 Model 0, 2026.04.01, tester journal ยืนยันทุกข้อ):**
+
+| assert | result | หลักฐาน journal |
+|---|---|---|
+| C ปิดถูก magic ถูกเวลา | **PASS** | window ENTER 03:30 ตรงนาที (event 04:00, pre 30) → ticket ของ magic C ตัวเดียวถูกปิดทันที |
+| N + unlisted magic ไม่แตะ | **PASS** | magic N และ magic ที่ไม่อยู่ใน config เปิดค้างครบทั้ง run (นับก่อน/ใน/หลัง window) |
+| irrelevant ccy ไม่ทำอะไร | **PASS** | NZD event ขณะถือแต่ XAUUSD → ไม่มี action ใน NZD window |
+| fail-safe ไฟล์หาย | **PASS** | ลบ CSV → guard INACTIVE, ไม้ C ที่เปิดใหม่รอด 15 นาที, **Alert 1 ครั้ง** ไม่มีปิดไม้ |
+| B → N downgrade + เตือน | **PASS** | parse "B" → `WARNING magic=…: policy B NOT available on MT4 … treating as N` + policy เก็บเป็น NONE + ไม้ B ไม่ถูกปิดใน window |
+| unit (ParseTime 2 format · staleness 49h/1h · ccy↔symbol · ParseConfig ทิ้ง junk 3 token) | **PASS** | asserts ใน P0 ผ่านหมด |
+
+**คู่มือ attach — diff จากฉบับ MT5 (ใช้คู่มือ ORDER-083 เป็นหลัก ต่างแค่นี้):**
+1. **Policy B ห้ามใช้บน MT4** — EA บนบัญชีนี้เป็น locked .ex4 ไม่มี GV bridge → EA จะเตือน + treat เป็น N เอง
+   · กอง no-SL ให้ใช้ **C**: แนะ `GuardConfig = "7777:C;1112:C;1113:C;1114:C;1115:C"`
+2. Tester ไม่มี OnTimer → EA เช็คผ่าน OnTick (throttle ≤ TimerSeconds) ด้วย — live ใช้ timer 10s เหมือน MT5
+   · ผลข้างเคียง: ช่วงตลาดเงียบไม่มี tick การเช็คอาจห่างกว่า 10s เล็กน้อย (timer ยัง fire ปกติบน live)
+3. นาฬิกาใช้ `TimeCurrent()` (MQL4 ไม่มี TimeTradeServer) — ความหมายเดียวกันในทางปฏิบัติ
+4. ไฟล์ข่าว: **ไม่ต้องตั้งอะไรเพิ่ม** — Common\Files ก้อนเดียวกับ MT5 (ยืนยันแล้วข้างบน) daily chain 07:30 เขียนให้แล้ว
+5. เหมือนเดิมทุกข้อ: attach 1 chart/บัญชี บน terminal เทรดจริง (instance monitor ในแล็บเป็น investor password ปิดไม้ไม่ได้)
+   · **ห้ามใส่ magic 0** (ไม้มือ user) · `ServerToBkkOffsetHours` เช็คใหม่หลัง DST · ทุก action มี `[NEWSGUARD]` ใน journal
+
+**หมายเหตุ implementation (deviation เล็ก + เหตุผล):** (1) GV/BLOCK code ตัดออกทั้งก้อนจาก port
+(B ถูก downgrade ตั้งแต่ parse → ไม่มีทางมี BLOCK state บน MT4 — ตาม spec ข้อ 3) (2) fake news CSV
+ของ test เขียนแบบ non-common (tester sandbox `tester\files`) — จงใจ ไม่ให้ test แตะ
+`EA_LAB_news_week.csv` จริงใน Common (3) test จำลอง stale ที่ระดับ `NG_IsStaleAge` เหมือนฉบับ MT5
+(mtime ใน tester เป็นเวลาจริง ปลอมไม่ได้) — path ไฟล์หายเทสเต็ม flow จริง (4) CLOSE_ALL ปิดเฉพาะ
+market orders (OP_BUY/OP_SELL) — pending ไม่แตะ ตรงพฤติกรรม MT5 (position API ไม่เห็น pending อยู่แล้ว)
