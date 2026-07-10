@@ -2767,3 +2767,19 @@ AUDUSD/AUDJPY ยังเป็น candidate เดิม · lesson ยืน�
 ที่ transfer ได้ — พอสร้างเวอร์ชันมีเบรก (SL จริง) edge หายเกลี้ยง = กำไรตัว locked มาจาก no-SL recovery
 อย่างเดียว เหมือน ST03 เป๊ะ · หมายเหตุ observation ของ agent (DdAdaptive inert, PartialFrac ต่ำไม่ trigger)
 = ข้อมูลออกแบบ ไม่ใช่ปัญหา sweep
+
+
+---
+
+## REVIEW ORDER-070 (+flat-lot addendum) — `REVIEWED(Claude, 2026-07-10)`
+
+**Verdict:** flat-lot H1 **PF 5.71 (สูงกว่ามี martingale 4.86) ที่ DD เท่าเดิม** = **entry/basket logic มี edge
+ของตัวเองจริง — martingale ไม่ใช่แหล่งกำไร (ตรงข้าม ST03 family เป๊ะ)** → **GREEN-LIGHT build
+"KangarooInspired" บน Boss V2** ตาม spec rev00 ใน `_triage\KANGAROO_LOGIC_NOTES.md` §4 (รอ user เคาะ) ·
+design notes จาก review: (1) ตัด martingale ทิ้งได้เลย — flat lot ดีกว่า (2) เก็บ "overlap pair-close"
+(กลไกกด DD ตัวจริง) + pip-sum DD-release แต่แปลงเป็น dollar-based (3) equity stop ต้องเป็นของเราเอง
+เพราะของเดิม unverified (4) fix 200/350 pips → ATR-mult ตามมาตรฐานแม่พิมพ์ · caveat คงเดิม: ทุกเลข
+= Model 1 smoke-grade บน symbol เดียว — build เสร็จต้องเข้า funnel เต็ม (M1→M0 confirm · year-split ·
+spread stress · MC) ก่อนคิดเรื่อง deploy · หมายเหตุ: ตัว original = Silver Kangaroo family (crack เกลื่อน)
+— ตัวที่ user รันจริงบน 141049900 ให้เช็คที่มา ถ้า crack = ถอดตามนโยบาย security (KangarooInspired
+ของเราคือทางแทนอยู่แล้ว)
