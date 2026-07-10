@@ -2622,3 +2622,62 @@ funnel-era trade lists, ยังไม่ split ปี)
 
 
 
+
+
+---
+
+## ORDER-068 — ST03 family: flat-lot probe ของ config แล็บ (9397 GBP / 9398 CAD) — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent/qwen)
+
+**ทำไม:** 2026-07-10 แกะ source (ST) EA03 Count MACD v1 พบ (a) entry ไม่มี edge ใน config user 939721
+(flat-lot PF 0.68 = ล้างพอร์ต, กำไรทั้งหมดมาจาก uncapped recovery escalation) (b) ratchet defect —
+LOTB reset เฉพาะตอนพอร์ตแบนสนิท → ตะกร้าซ้อน = ทบ 2 เท่า (ที่มาไม้ 33.73 lots บนบัญชีจริง) ·
+หลักฐาน `_mt5_auto\reports\ST03LIVE_*` · **คำถามที่ order นี้ต้องตอบ: config ของแล็บเอง (live 9397/9398)
+โดนโรคเดียวกันไหม?** ถ้า flat-lot ของ config แล็บ PF<1 ทั้งคู่ = กำไร ST03 ทั้ง family มาจาก escalation
+→ กระทบ judge 2026-09-22 + แผน Boss_15/Entry_ST03 ทั้งหมด
+
+**คำสั่ง:** หา .set/input จริงของ 9397 (GBPUSD) + 9398 (USDCAD) จาก _demo_deploy / DEMO_DEPLOYMENT_PLAN
+→ รัน 2 คู่ backtest H1 2023.01.01-2026.07.01 Model 1 deposit 10000 leverage 1:2000: (1) config ตรง
+(2) ปิด escalation (LOT_Repeat=999999 — ระวัง: =1 คือ "ทบทุกไม้" ไม่ใช่ปิด) · report prefix ST03LAB_
+
+**Acceptance:** ตาราง 4 แถว (symbol × esc on/off): PF · net · balDD% · eqDD% (floating) · max single lot ·
+append ใต้ order นี้ · commit `[tag] ORDER-068 done`
+**ห้าม:** verdict/ตัดสิน family · ห้ามแตะ .set ใน _demo_deploy (ก๊อปมาแก้ใน _mt5_auto\ab_sets เท่านั้น)
+
+---
+
+## ORDER-069 — (Boss)_ZeusInspired_GridLog_rev01 บน EURUSD: coarse optimize — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent/qwen)
+
+**ทำไม:** user directive 2026-07-10 — Zeus MT4 ตัว locked บน EURUSD H1 = เซลล์เดียวที่รอด 3.5 ปี
+(PF 1.61 แต่ DD ลอย 47.8% ไม่มี SL = แก้ไม่ได้เพราะ locked) · แต่เรามี **ZeusInspired rev01 ที่เขียนเอง**
+(ATR spacing + LOG lot + SL จริง + partial close) ซึ่งยังไม่เคย optimize บน EURUSD (screen 27 symbol
+รอบ 2026-07-03 EURUSD ไม่ติด top แต่ยังไม่เคยโดน sweep จริง — กฎ "ห้ามตายก่อน optimize")
+
+**คำสั่ง:** ใช้ `scripts\mt5_optimize.ps1` + EA `(Boss)_ZeusInspired_GridLog_rev01` (อยู่ ea_projects\...,
+ติดตั้งใน tester ตาม pattern เดิมของ 27-symbol screen) · EURUSD H1 · 2023.01.01-2026.07.01 · Model 1 ·
+Optimization=1 · base set = `ZeusInspired_V1_Medium.set` · sweep levers หลักที่มีใน set: ATR-spacing mult ·
+first-lot/DD-adaptive · SL mult · partial-close (อย่างน้อย 3 lever, grid หยาบ 3-4 ค่า/lever) ·
+report ZEUSINS_OPT_EURUSD_1
+
+**Acceptance:** XML ครบทุก pass · append: จำนวน pass ที่ PF≥1.3 AND Trades≥60 AND eqDD≤15% + ตาราง top-10
+ดิบ (คอลัมน์ param ครบ) · commit `[tag] ORDER-069 done`
+**ห้าม:** เลือก "ตัวดีสุด"/plateau-center (งาน Claude) · ห้ามรันทับ lane ขณะ ORDER-068 ยังไม่จบ (MT5 ตัวเดียวกัน — ทำ 068 ให้จบก่อน)
+
+---
+
+## ORDER-070 — Gold_Kangaroo: แกะ logic + หาข้อมูลเน็ต → spec "KangarooInspired" เข้าแม่พิมพ์ Boss V2 — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent)
+
+**ทำไม:** user directive 2026-07-10 — smoke 3.5ปี XAU H1 PF 4.86/DD 11% (6,242 ไม้) โครงสร้างดี:
+bidirectional hedged grid · martingale ×1.5 **มี cap** (1.0 lot, 10 ไม้/ฝั่ง) · SL จริง $90 ทุกไม้ ·
+equity stop 80% · ผ่านเช็คลิสต์ capped-martingale ของแล็บเกือบครบ → คุ้มแกะเป็นของเรา (VISION:
+EA ใหม่ทุกตัวออกจากแม่พิมพ์ Boss V2)
+
+**คำสั่ง:** (1) web research ชื่อ "Gold Kangaroo EA" + variants — vendor/myfxbook/forum/param docs
+บันทึก URL+ข้อค้นพบ (2) ดึง input list เต็มจาก tester (F7 dialog หรือ .set save) + Journal behaviors
+ตาม skill locked-ea-analyzer (3) confirm กลไกที่เหลือ: spacing 200/350 pips fix หรือ dynamic? ·
+TP 80/160 นับจากอะไร (breakeven?) · ×1.5 ladder เริ่ม reset เมื่อไหร่ · equity stop ทำงานยังไง
+(4) ร่าง spec card (strategy-and-risk format) ของ "KangarooInspired" เป็น entry+basket module บน
+Boss V2 chassis: เก็บโครง capped-ladder+SL, เปลี่ยน fix-pips → ATR-mult (มาตรฐานแม่พิมพ์) ·
+เขียนผลทั้งหมดเป็นไฟล์ `KANGAROO_LOGIC_NOTES.md` ใน _triage\
+
+**Acceptance:** ไฟล์ notes ครบ 4 หัวข้อ + spec card draft · commit `[tag] ORDER-070 done`
+**ห้าม:** เขียน .mq5 จริง (รอ user คุย logic + Claude ตัดสิน spec ก่อน) · ห้าม decompile .ex4
