@@ -3842,7 +3842,7 @@ single-position + SL ATR×2 ทุกไม้ = spread-immune by design) · **c
 arithmetic บน trade list · warning ใส่ใน mt5_run.ps1 แล้ว · ⚠️ audit เบา ๆ ภายหลัง: มี MT5 run ไหน
 ในอดีตอ้าง spread-stress ผ่าน ini บ้าง (ส่วนใหญ่ spread-stress เราทำฝั่ง MT4 ซึ่งไม่กระทบ)
 
-## ORDER-085B — SuperTrend XAU H4: อุดรูสองรูสุดท้าย — `OPEN` (คิว batch พรุ่งนี้ตาม pacing)
+## ORDER-085B — SuperTrend XAU H4: อุดรูสองรูสุดท้าย — `DONE(Claude-agent, 2026-07-11)`
 
 **คำสั่ง:** (1) BWD 2020.01.01-2022.12.31 config default, Model 1 (บาร์: PF≥1.0 & eqDD≤10% —
 trend-follow ยอมรับ BWD อ่อนกว่า reversion ได้ แต่ห้ามเจ๊ง) (2) plateau sanity 3×3×2: ATRPeriod
@@ -3850,6 +3850,63 @@ trend-follow ยอมรับ BWD อ่อนกว่า reversion ได้
 ไม่ใช่ peak โดด) · **Acceptance:** 2 ตาราง + บาร์ verbatim · commit `[tag] ORDER-085B done` ·
 **ห้าม:** tune/เลือกใหม่ · verdict
 
+### ORDER-085B RESULTS (Claude-agent, 2026-07-11)
+
+Run conditions: portable lane `D:\Meta 5b` only (main `D:\Meta 5` lane ไม่แตะ) · `EA_SUPERTREND` ·
+XAUUSD H4 · Model 1 (open-price) · deposit 10000 · leverage 1:100 · base set =
+`_mt5_auto/sweeps/_sets/ST_v1_naked_default.set` · 18 plateau variant sets generated at
+`_mt5_auto/ab_sets/st085b_sets/ST085B_ATR{7,10,14}_M{2.5,3.0,3.5}_SL{1.5,2.0}.set` (only
+`_01_ATRperiod` / `_01_Multiplier` / `_02_SL_ATR_mult` changed per cell, all other inputs held at
+default) · reports = `_mt5_auto/reports/ST085B_*.htm` · all 19 runs completed on first attempt, no
+retries needed, no 0-trade cells, no FAILED cells.
+
+**1) BWD 2020.01.01–2022.12.31, default config (ATR10 × Mult3.0 × SL_ATR2.0)**
+
+Bar pre-registered (quote verbatim): "PF≥1.0 & eqDD≤10%"
+
+| Window | PF | Net ($) | Trades | Balance DD% | Equity DD% | History Quality | Bars |
+|---|---|---|---|---|---|---|---|
+| 2020.01.01–2022.12.31 | 0.88 | -91.49 | 64 | 2.71% | 3.27% | 99% | 4645 |
+
+**2) Plateau sanity 3×3×2, full window 2023.01.01–2026.07.01 (all 18 cells, history quality 98%,
+5404 bars every cell — no coverage anomalies)**
+
+Bar pre-registered (quote verbatim): "ไม่มี cell ขาดทุน + default ไม่ใช่ peak โดด"
+
+| ATRperiod | Multiplier | SL_ATR | PF | Net ($) | Trades | Balance DD% | Equity DD% | |
+|---|---|---|---|---|---|---|---|---|
+| 7 | 2.5 | 1.5 | 2.03 | 1,092.06 | 68 | 2.90% | 5.53% | |
+| 7 | 2.5 | 2.0 | 1.90 | 1,072.55 | 68 | 2.58% | 5.23% | |
+| 7 | 3.0 | 1.5 | 3.06 | 1,472.79 | 50 | 2.09% | 4.19% | |
+| 7 | 3.0 | 2.0 | 2.78 | 1,443.64 | 50 | 2.56% | 4.40% | |
+| 7 | 3.5 | 1.5 | 2.91 | 1,542.92 | 51 | 2.23% | 4.14% | |
+| 7 | 3.5 | 2.0 | 2.74 | 1,581.00 | 51 | 2.59% | 4.17% | |
+| 10 | 2.5 | 1.5 | 2.94 | 1,778.56 | 66 | 1.60% | 4.49% | |
+| 10 | 2.5 | 2.0 | 2.56 | 1,658.11 | 66 | 2.35% | 4.73% | |
+| 10 | 3.0 | 1.5 | 2.90 | 1,593.22 | 56 | 2.38% | 5.02% | |
+| **10** | **3.0** | **2.0** | **2.93** | **1,691.23** | **56** | **2.85%** | **4.85%** | **← default** |
+| 10 | 3.5 | 1.5 | 2.15 | 955.10 | 51 | 2.63% | 4.26% | |
+| 10 | 3.5 | 2.0 | 3.40 | 1,928.42 | 51 | 2.89% | 4.10% | |
+| 14 | 2.5 | 1.5 | 2.19 | 1,310.86 | 65 | 3.27% | 5.40% | |
+| 14 | 2.5 | 2.0 | 2.18 | 1,414.50 | 65 | 2.48% | 4.97% | |
+| 14 | 3.0 | 1.5 | 2.46 | 1,239.80 | 57 | 2.42% | 3.86% | |
+| 14 | 3.0 | 2.0 | 3.08 | 1,998.90 | 57 | 2.73% | 4.24% | |
+| 14 | 3.5 | 1.5 | 1.98 | 829.52 | 53 | 2.22% | 3.83% | |
+| 14 | 3.5 | 2.0 | 1.91 | 886.85 | 53 | 2.40% | 3.85% | |
+
+Range check (raw, no judgment): PF spans 1.90 (ATR7×M2.5×SL2.0, min) to 3.40 (ATR10×M3.5×SL2.0, max)
+— all 18 cells PF>1 (no losing cell by the numbers). Default cell (ATR10×M3.0×SL2.0, PF 2.93) sits
+between its immediate one-step neighbors on every axis: ATR axis at M3.0/SL2.0 → ATR7=2.78 /
+ATR14=3.08 (both bracket 2.93); Mult axis at ATR10/SL2.0 → M2.5=2.56 / M3.5=3.40 (bracket 2.93);
+SL axis at ATR10/M3.0 → SL1.5=2.90 (near-identical to 2.93). Default M1-full-window number (PF 2.93 /
+net 1,691.23 / eqDD 4.85%) reproduces the ORDER-085 M0 every-tick reference (PF 2.93 / net 1,690 /
+eqDD 4.85%) almost exactly — M0→M1 does not decay this config.
+
+**Anomalies:** none. All 19 tester runs returned a report on the first attempt (no timeout, no retry,
+no 0-trade cell, no FAILED cell). History quality 99% (BWD window) / 98% (full window) on every run —
+no data-gap flags.
+
+(raw numbers only — no pass/fail verdict, per order ห้าม)
 
 ---
 
@@ -3906,3 +3963,26 @@ smoke เฉพาะโครงสะอาด)
   ตบ spec กับ user ("เดี๋ยวเรามาตบ ๆ กันอีกที")
 - FxDreema_Learner = ตัวอย่างเรียน → concept-mine อย่างเดียว
 **หมายเหตุ:** FXDREEMA_XRAY.csv ซ่อม duplicate concept column แล้ว (2026-07-10 ค่ำ)
+
+---
+
+## ORDER-083B — port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049900) — `CLAIMED(Claude-agent, 2026-07-11)`
+
+**ทำไม:** REVIEW ORDER-083 พบ gap — NewsGuard เป็น MQL5 คุมได้เฉพาะ MT5 แต่กองที่ต้องการ
+CLOSE_ALL ที่สุด (Zeus magic 7777 + Kangaroo 1112-1115, ไม่มี SL) อยู่บน **MT4 141049900**
+
+**Spec (logic เดิมจาก `ea_projects\(Boss)_NewsGuard\NewsGuard_Core.mqh` ทุกข้อ — port ไม่ใช่ redesign):**
+1. สร้าง `ea_projects\(Boss)_NewsGuard\(Boss)_NewsGuard_MT4.mq4` — logic ports: position API →
+   `OrdersTotal()/OrderSelect/OrderClose` loop กรองด้วย `OrderMagicNumber()` · timer 10s เดิม
+   (MT4 build เก่าไม่มี OnTimer ใน tester → ใช้ OnTick + throttle เวลาเช็คทุก ≤10s ด้วย)
+2. Input ชุดเดิมเป๊ะ: `GuardConfig` `"magic:policy;..."` (C/B/N) · `PreNewsMin=30` `PostNewsMin=15` ·
+   `NewsFile="EA_LAB_news_week.csv"` · `ServerToBkkOffsetHours` — อ่านจาก **Common\Files** (MT4/MT5
+   แชร์ Common เดียวกัน — ยืนยัน path จริงก่อน)
+3. **B (BLOCK_NEW) บน MT4 = ใช้ไม่ได้กับ EA locked** (Zeus/Kangaroo เป็น .ex4 ไม่มี GV check) →
+   validate config: เจอ B บนบัญชี MT4 ให้ Print เตือน + treat เป็น N · C กับ N ทำงานเต็ม
+4. Fail-safe เดิมเป๊ะ: ไฟล์ข่าวหาย/เก่า >48h = ไม่ทำอะไร + Alert · ทุก action พิมพ์ journal `[NEWSGUARD]`
+5. Tests: harness `.mq4` ตาม pattern NewsGuard_Test.mq5 — dummy orders หลาย magic ใน MT4 tester +
+   fake news file → assert C ปิดถูก magic/ถูกเวลา · N ไม่แตะ · fail-safe ทำงาน · irrelevant ccy ไม่แตะ
+6. Compile 0 errors / 0 warnings (MT4 metaeditor headless) · **ห้ามแตะไฟล์ MT5 เดิมทุกไฟล์**
+**Acceptance:** .mq4 + .ex4 + test PASS table + คู่มือ attach diff จากฉบับ MT5 (สั้น) · commit
+`[tag] ORDER-083B done` · **ห้าม:** attach จริง (user ทำเอง) · แตะ EA เดิมบนบัญชี · verdict

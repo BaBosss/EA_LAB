@@ -1,0 +1,14 @@
+﻿; EA_SUPERTREND v1 — naked default (ATR10/mult3, EMA200, ADX14>=20, SL=ATR*2, no TP)
+_01_ATRperiod=10
+_01_Multiplier=2.5
+_02_SL_ATR_mult=1.5
+_02_TP_ATR_mult=0.0
+_03_UseEmaFilter=true
+_03_EMAperiod=200
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_05_FixedLot=0.01
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990020
