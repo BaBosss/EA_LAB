@@ -2714,7 +2714,17 @@ tier1 10% ตอนเปิด basket) และหลายคู่ PartialFr
 
 ---
 
-## ORDER-070 — Gold_Kangaroo: แกะ logic + หาข้อมูลเน็ต → spec "KangarooInspired" เข้าแม่พิมพ์ Boss V2 — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent)
+## ORDER-070 — Gold_Kangaroo: แกะ logic + หาข้อมูลเน็ต → spec "KangarooInspired" เข้าแม่พิมพ์ Boss V2 — `DONE(Claude-agent, 2026-07-10)` (role: agent)
+
+### RESULT (Claude-agent 2026-07-10) — facts only, no verdict
+
+**ผลลัพธ์:** `_triage\KANGAROO_LOGIC_NOTES.md` ครบ 4 หัวข้อ + spec card draft rev00 (L4 — รอ user accept ก่อน implement)
+**Findings ที่แก้สมมุติฐานเดิม:** (1) fxDreema-built (builder signature ใน binary + Journal block line) — ตระกูลเดียวกับ
+"Silver Kangaroo EA" ($199, 2021, param list ตรง 100%) แจกซ้ำ/crack หลายเว็บ → ไม่ exclusive (2) "cap 10 ไม้/ฝั่ง"
+**หักล้าง** — นับจาก Journal เจอ concurrent 14/ฝั่ง ทั้ง buy และ sell (3) "basket TP 160 pips" = unweighted pip-sum
+→ ปิดทั้งฝั่งขาดทุนเงินจริงสุทธิได้ (2024-11-06 19:23 net ≈ −$379) = de-facto DD-release (4) equity stop 80%
+ไม่เคย trigger ทั้ง 2 run = unverified (5) ยืนยัน "overlap" pair-close ไม้ใหม่สุด+เก่าสุด = กลไกกด DD ตัวจริง
+(6) `Multiplier_Martingale` เป็น input → flat-lot test (=1) กับตัว original ทำได้เลย — แนะนำทำก่อนตัดสิน build
 
 **ทำไม:** user directive 2026-07-10 — smoke 3.5ปี XAU H1 PF 4.86/DD 11% (6,242 ไม้) โครงสร้างดี:
 bidirectional hedged grid · martingale ×1.5 **มี cap** (1.0 lot, 10 ไม้/ฝั่ง) · SL จริง $90 ทุกไม้ ·
@@ -2731,3 +2741,20 @@ Boss V2 chassis: เก็บโครง capped-ladder+SL, เปลี่ย�
 
 **Acceptance:** ไฟล์ notes ครบ 4 หัวข้อ + spec card draft · commit `[tag] ORDER-070 done`
 **ห้าม:** เขียน .mq5 จริง (รอ user คุย logic + Claude ตัดสิน spec ก่อน) · ห้าม decompile .ex4
+
+
+---
+
+## REVIEW ORDER-068 + ORDER-069 — `REVIEWED(Claude, 2026-07-10)`
+
+**068 verdict:** ตัวเลข agent ตรง report ✅ · config แล็บ GBP = identical กับ 939721 ของ user (ต่างแค่ magic)
+→ **ST03 family = no-edge entry, STRUCTURAL** (flat-lot 0.68/0.40 ล้างพอร์ตทั้งคู่ · no SL/no cap/ratchet
+defect) → ห้าม promote สู่เงินจริงทุกกรณี · demo (9397/9398/990010) เก็บ data ถึง judge ได้ · บัญชีจริง
+159475669 แนะนำถอดทั้งตระกูล · บันทึกแล้วที่ PROJECT_STATE §2 + Decision log + DEMO_DEPLOYMENT_PLAN
+
+**069 verdict:** sweep ครอบ 5 levers ครบตามสั่ง (216 pass) · gate 0/216, PF ceiling 1.14, ครึ่งหนึ่งขาดทุน →
+**ZeusInspired × EURUSD = dead cell (PARAMETRIC-swept — ตายหลัง sweep จริง ไม่ใช่ตายก่อน optimize)** ·
+AUDUSD/AUDJPY ยังเป็น candidate เดิม · lesson ยืนยัน: Zeus MT4 locked ที่ "รอด" EURUSD H1 = ไม่ใช่ edge
+ที่ transfer ได้ — พอสร้างเวอร์ชันมีเบรก (SL จริง) edge หายเกลี้ยง = กำไรตัว locked มาจาก no-SL recovery
+อย่างเดียว เหมือน ST03 เป๊ะ · หมายเหตุ observation ของ agent (DdAdaptive inert, PartialFrac ต่ำไม่ trigger)
+= ข้อมูลออกแบบ ไม่ใช่ปัญหา sweep
