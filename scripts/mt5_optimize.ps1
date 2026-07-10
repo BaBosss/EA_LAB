@@ -25,6 +25,7 @@ param(
   [int]$Optimization = 2,                       # 2 = fast genetic, 1 = slow complete
   [int]$Criterion = 0,                          # 0 = max balance
   [int]$Deposit = 10000,
+  [int]$Leverage = 100,                         # tester account leverage (1:N)
   [Parameter(Mandatory)][string]$ReportName,
   [string]$Terminal = "D:\Meta 5\terminal64.exe",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
@@ -66,7 +67,7 @@ $lines = @(
   "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
   "Optimization=$Optimization", "OptimizationCriterion=$Criterion",
   "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
-  "Deposit=$Deposit", "Currency=USD", "Leverage=100", "ExecutionMode=0", "Visual=0",
+  "Deposit=$Deposit", "Currency=USD", "Leverage=$Leverage", "ExecutionMode=0", "Visual=0",
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"

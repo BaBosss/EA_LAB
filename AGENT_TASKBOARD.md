@@ -3059,7 +3059,7 @@ compile 0/0 · regression CLEAN (DRIFT แรก = history refresh ยืนย�
 · อ่านเชิงกลยุทธ์: ทิศทางเดียวกับ BRK-XAU family = gold มี BUY bias เชิงโครงสร้าง — BUY-only อาจเป็น
 ตัว deploy จริงเหมือน XAGUSD BuyOnly precedent
 
-## ORDER-075 — Boss_16 entry sweep v1 (BUY-first) — `OPEN` (role: agent, MT5 lane ว่างตอนกลางคืน)
+## ORDER-075 — Boss_16 entry sweep v1 (BUY-first) — `DONE(Claude-agent, 2026-07-10)` (role: agent, MT5 lane ว่างตอนกลางคืน)
 
 **คำสั่ง:** sweep entry lever บน Boss_16 BUY instance เท่านั้น (SELL พักไว้จน entry ชนะบน BUY):
 RSI period {7,14,21} × RsiLow {25,30,35,40} × TF {H1,M30} = 24 pass optimize (complete mode,
@@ -3068,6 +3068,64 @@ default ORDER-072 ทั้งหมด
 **Acceptance:** XML ครบ + ตาราง pass ที่ PF≥1.5 & Trades≥400 & eqDD≤12% + top-10 ดิบ · commit
 `[tag] ORDER-075 done` · **ห้าม:** แตะแกน grid/exit (isolate entry) · เลือก winner (งาน Claude) ·
 ห้ามรันชนกับ order อื่นบน lane เดียวกัน
+
+### ORDER-075 result — `DONE(Claude-agent, 2026-07-10)` — 24/24 pass ครบ · **gate = 0 passers ทั้งสอง TF** (raw data, NO verdict)
+
+**Setup ที่รันจริง:** `mt5_optimize.ps1` complete mode (Optimization=1, Criterion=0) · XAUUSD
+2023.01.01–2026.07.01 Model 1 · deposit 10000 · **leverage 1:2000** · BUY instance
+(_16_Direction=1) · แกน grid/exit/lot ล็อคตาม ORDER-072 default ทุกตัว · H1 รัน lane หลัก
+(D:\Meta 5) + M30 รัน lane2 (D:\Meta 5b /portable) พร้อมกัน — ทั้งคู่ว่างตอนรัน
+- NEW `ea_template\sets\Boss16_Kangaroo_XAU_optRSI.set` = smoke set + optimize ranges เฉพาะ
+  `_16_RsiPeriod=14||7||7||21||Y` × `_16_RsiLow=30||25||5||40||Y` (12 combo/TF)
+- EDIT `scripts\mt5_optimize.ps1` (+`-Leverage` param additive, default 100 = พฤติกรรมเดิม —
+  ตาม pattern เดียวกับที่ ORDER-072 เพิ่มใน mt5_run.ps1; order อนุญาตไว้แล้ว)
+- XML: `_mt5_auto\optimizations\ZKANG_OPT_XAU_H1.xml` + `ZKANG_OPT_XAU_M30.xml` (13 แถว =
+  header+12 pass ครบทั้งคู่)
+- **Sanity ผ่าน:** H1 pass RSI 14/30 reproduce baseline ORDER-072 **เป๊ะทุกหลัก** (PF 1.4917 /
+  eqDD 10.85% / 588 trades / net +2,242.42) = ยืนยัน leverage/model/lane ต่อถูก
+
+**Gate (PF≥1.5 & Trades≥400 & eqDD≤12%): H1 = 0/12 · M30 = 0/12.** ตัวที่ PF ถึง 1.5 มี 2 ตัว
+แต่ตกที่ Trades: H1 21/30 (285 ไม้) · M30 21/25 (196 ไม้) — จดเป็นข้อมูล ไม่ใช่ข้อแก้ตัว
+
+**H1 ทั้ง 12 pass (เรียง PF; ครบทุก param column):**
+| Pass | RsiPeriod | RsiLow | PF | Net $ | ExpPayoff | RecovF | Sharpe | eqDD% | Trades |
+|---|---|---|---|---|---|---|---|---|---|
+| 5 | 21 | 30 | 1.570 | +1,174.45 | 4.12 | 1.60 | 1.89 | 7.08 | 285 |
+| 4 | 14 | 30 | 1.492 | +2,242.42 | 3.81 | 1.82 | 1.51 | 10.85 | 588 |
+| 1 | 14 | 25 | 1.243 | +632.22 | 2.03 | 0.52 | 0.92 | 11.40 | 311 |
+| 0 | 7 | 25 | 1.224 | +1,838.84 | 1.98 | 1.31 | 0.89 | 12.43 | 931 |
+| 7 | 14 | 35 | 1.195 | +1,773.83 | 1.87 | 1.15 | 0.85 | 11.98 | 949 |
+| 3 | 7 | 30 | 1.170 | +2,061.21 | 1.61 | 1.14 | 0.75 | 15.15 | 1,283 |
+| 9 | 7 | 40 | 1.093 | +1,792.21 | 0.95 | 0.82 | 0.46 | 16.10 | 1,888 |
+| 8 | 21 | 35 | 1.092 | +581.44 | 0.96 | 0.38 | 0.39 | 13.11 | 605 |
+| 11 | 21 | 40 | 1.092 | +996.16 | 0.98 | 0.58 | 0.43 | 13.78 | 1,017 |
+| 6 | 7 | 35 | 1.080 | +1,300.16 | 0.82 | 0.52 | 0.41 | 18.63 | 1,578 |
+| 10 | 14 | 40 | 1.067 | +964.90 | 0.71 | 0.53 | 0.35 | 15.50 | 1,364 |
+| 2 | 21 | 25 | 1.039 | +36.63 | 0.43 | 0.05 | 0.24 | 7.55 | 86 |
+
+**M30 ทั้ง 12 pass (เรียง PF; ครบทุก param column):**
+| Pass | RsiPeriod | RsiLow | PF | Net $ | ExpPayoff | RecovF | Sharpe | eqDD% | Trades |
+|---|---|---|---|---|---|---|---|---|---|
+| 2 | 21 | 25 | 1.517 | +721.37 | 3.68 | 1.24 | 2.59 | 5.64 | 196 |
+| 3 | 7 | 30 | 1.339 | +5,701.16 | 2.57 | 3.03 | 1.50 | 10.95 | 2,222 |
+| 7 | 14 | 35 | 1.256 | +3,683.50 | 2.11 | 1.68 | 1.30 | 14.17 | 1,743 |
+| 9 | 7 | 40 | 1.251 | +6,809.66 | 2.07 | 3.24 | 1.35 | 16.14 | 3,283 |
+| 5 | 21 | 30 | 1.249 | +1,389.20 | 2.17 | 0.96 | 1.11 | 12.00 | 639 |
+| 1 | 14 | 25 | 1.233 | +1,245.30 | 1.92 | 0.98 | 1.03 | 10.67 | 650 |
+| 6 | 7 | 35 | 1.232 | +5,244.26 | 1.91 | 2.59 | 1.18 | 11.99 | 2,746 |
+| 0 | 7 | 25 | 1.212 | +3,052.81 | 1.73 | 1.02 | 1.08 | 18.95 | 1,768 |
+| 11 | 21 | 40 | 1.198 | +3,272.29 | 1.76 | 1.46 | 1.11 | 14.82 | 1,863 |
+| 10 | 14 | 40 | 1.184 | +3,875.16 | 1.67 | 1.49 | 0.99 | 16.28 | 2,326 |
+| 8 | 21 | 35 | 1.155 | +1,564.56 | 1.40 | 0.96 | 0.75 | 12.90 | 1,116 |
+| 4 | 14 | 30 | 1.113 | +1,192.32 | 1.05 | 0.63 | 0.60 | 15.00 | 1,137 |
+
+**ข้อสังเกต (ข้อมูลดิบ ไม่ใช่ verdict — plateau/ทางไปต่อ = งาน Claude lead):**
+- H1: PF เรียงตาม "เลือกเข้มขึ้น" ชัด (RsiLow ต่ำ + period ยาว → PF ขึ้น แต่ Trades ร่วง) —
+  trade-off เดียวตลอดแกน; ไม่มีจุดที่ได้ทั้ง PF≥1.5 และ ≥400 ไม้พร้อมกัน
+- M30 กลับด้านจาก H1 หลายจุด: 14/30 (แชมป์ H1 โซน) ตกไปท้ายตารางบน M30 (PF 1.113/DD 15%) ·
+  net $ โตกว่า H1 มากที่ combo ยิงถี่ (7/40 = +6.8k แต่ DD 16%) — RSI+ATR คนละ TF = คนละบริบท
+- eqDD ของหลาย combo ทะลุ 12–19% = โซนที่ cage ProtectLevel 2 (KillDD 25%) ยังไม่ตัด
+  แต่เกิน gate order นี้
 
 
 ---
