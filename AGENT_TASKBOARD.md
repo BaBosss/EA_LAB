@@ -3265,3 +3265,31 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
 5. ความเสี่ยงเฉพาะ crypto: funding rate, เหรียญ delist, weekend ไม่ปิด, leverage/liq engine
 **Acceptance:** `_triage\CRYPTO_LANE_FEASIBILITY.md` ครบ 5 หัวข้อ + ประเมิน effort (ชม.งาน) +
 คำถามเปิดสำหรับ user · commit `[tag] ORDER-081 done` · **ห้าม:** เขียน trading code · เปิดบัญชี/แตะ API จริง
+
+
+---
+
+## ORDER-082 — Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) — `OPEN` (role: Claude spec → agent build/probe)
+
+**Rule จากปาก user (บันทึกตรงคำ — นี่คือ ground truth ของ spec):**
+- คนส่วนใหญ่พยายามเข้า wave 3 (เทรนด์ยาวสุด) แต่รู้ตัวก็ต่อเมื่อมัน confirm แล้ว (break S/R,
+  break trendline) → เข้าไม่ทัน/RR ไม่คุ้ม
+- **จุดได้เปรียบ: พอรู้ว่า wave 3 เกิดแล้ว → รอ pullback (wave 4) retrace ~23–38% ของ wave 3
+  → เริ่มเข้าได้ เพื่อกิน wave 5**
+- **SL = ยอด wave 1** (ตาม EW rule: wave 4 ห้าม overlap โซน wave 1)
+- **ออก: break ยอด wave 3 / Fibonacci expansion 100%** — บริเวณนั้นมักเกิด **RSI divergence**
+  ร่วม = สัญญาณเตรียมออก/เปิด trailing
+
+**การแปลงเป็นกลไก (draft ให้ user ยืนยันก่อน build):**
+1. Swing detection: ZigZag(H1/H4) label โครง 1-2-3: wave1 = impulse แรก, wave2 = retrace ไม่หลุดจุดเริ่ม,
+   wave3-confirm = ราคา break ยอด wave1 แล้ววิ่งต่อ ≥ K×|wave1| (เช่น 1.0-1.618) — "รู้หลัง confirm" ตาม user
+2. Arm entry เมื่อ: หลัง wave3-peak ราคา retrace เข้าโซน **23.6–38.2% ของ wave 3** (fib จาก zigzag) →
+   entry ตามทิศ wave 3 (bar-open + optional confluence: RSI ยังไม่ divergence)
+3. SL = ยอด wave 1 (± ATR buffer) — โครงสร้าง ไม่ใช่ระยะสุ่ม · invalid ทันทีถ้า retrace ลึกเกิน 50%
+4. TP/exit: ลำดับ (ก) แตะ 100% expansion (wave5 = wave1 length จากจุดเข้า wave4) หรือ break ยอด wave3
+   แล้วเปิด ATR trailing (ข) RSI divergence ที่ high ใหม่ = บังคับ trailing แน่น
+5. Naked probe ตามมาตรฐาน (1 ไม้/สัญญาณ, no grid): symbol แรก = **XAUUSD H1** (trending home) +
+   GBPUSD H1 · window 2023-26 + BWD 2020-22 · บาร์ผ่าน: naked PF ≥ 1.0 ทั้ง 2 window บน symbol ใดหนึ่ง
+**หมายเหตุ:** มีไฟล์คอร์ส (Jobot) Elliott Wave 5 Zone v1/AAA ให้เทียบ rule (block labels) — ใช้ตรวจว่า
+การตีความข้อ 1-4 ตรงกับที่คอร์สสอนไหม ก่อน build
+**ห้าม:** build ก่อน user ยืนยัน draft ข้อ 1-4 · ข้าม naked probe ไป grid/recovery
