@@ -3293,3 +3293,46 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
 **หมายเหตุ:** มีไฟล์คอร์ส (Jobot) Elliott Wave 5 Zone v1/AAA ให้เทียบ rule (block labels) — ใช้ตรวจว่า
 การตีความข้อ 1-4 ตรงกับที่คอร์สสอนไหม ก่อน build
 **ห้าม:** build ก่อน user ยืนยัน draft ข้อ 1-4 · ข้าม naked probe ไป grid/recovery
+
+
+---
+
+## ORDER-082 — AMENDMENT (user ยืนยัน 2026-07-10 ค่ำ)
+
+- ✅ ZigZag + Fibonacci = แนวที่ user ต้องการ (ตรงกับไฟล์คอร์สด้วย) · ข้อควรระวัง build:
+  **ZigZag ขาสุดท้าย repaint — ใช้เฉพาะ pivot ที่ confirm แล้วเท่านั้น** + พิจารณา ATR-adaptive
+  deviation แทน fixed (ให้ swing scale ตาม volatility)
+- Entry level = **input เลือกได้ {23.6, 38.2, 50, 61.8}** (user: "จุดสำคัญ ... ประมาณนี้") — sweep เป็น lever
+- Invalidation = **โครงสร้าง: wave 4 ห้าม overlap โซนยอด wave 1** (แทน fixed 50% เดิม — สอดคล้อง
+  SL ที่ยอด wave 1 พอดี ราคาแตะ SL = โครงพังเอง)
+- สถานะ: spec ครบ พร้อม build → คิวหลัง ORDER-078/083
+
+## ORDER-075/078 — NOTE เพิ่ม (user observation 2026-07-10 ค่ำ): Boss_16 entry v1 candidate = SPIKE-FADE
+
+user ใช้ Kangaroo จริงมาพักใหญ่ สังเกต: **มันสวนที่ปลายไส้เทียน — ราคา spike ขึ้นแรง ๆ = เปิด sell สวนทันที**
+(ไม่ใช่ oscillator threshold) → อธิบายได้ว่าทำไมต้นฉบับยิงถี่กว่า RSI-fade v0 ของเรา 7 เท่า ·
+entry v1 ที่ควรลองใน funnel รอบหน้า: **velocity/spike fade** — bar range ≥ k×ATR หรือ move X จุด
+ใน Y นาที → เข้าสวน (มี distance + MM ต่อยอดเองตามที่ user ว่า) · ทดสอบเป็น lever แยกหลัง 078 จบ
+
+## ORDER-083 — build "(Boss)_NewsGuard" watchdog EA (user เคาะ policy ครบ 2026-07-10) — `CLAIMED(Claude-agent, 2026-07-10)`
+
+**Design ที่ user ยืนยัน:** generic ใช้ได้ทุกบัญชีตลอดไป — attach 1 chart/บัญชี · **input list ของ
+magic + policy ต่อ magic** (configurable, ไม่ hardcode) · window default ก่อนข่าว 30 นาที / หลัง 15 นาที ·
+เฉพาะ High impact ของสกุลใน symbol ที่ magic นั้นถือ + USD เสมอ
+
+**Spec:**
+1. Input: `GuardConfig` string รูปแบบ `"magic:policy;magic:policy;..."` policy ∈ {C=CLOSE_ALL,
+   B=BLOCK_NEW, N=NONE} + `PreNewsMin=30` `PostNewsMin=15` + `NewsFile="EA_LAB_news_week.csv"`
+2. แหล่งข่าว: อ่าน CSV จาก Common\Files (โครงจาก scripts\news_calendar.ps1 → daily chain ก๊อปไป
+   Common\Files ให้ด้วย — เพิ่มบรรทัดใน daily_monitor.ps1) · แปลง BkkTime → server time ด้วย offset input
+3. CLOSE_ALL: ปิดทุก position ของ magic นั้น (ทุก symbol) เมื่อเข้าหน้าต่างข่าวของสกุลที่เกี่ยว ·
+   log ทุกครั้ง · ไม่เปิดคืนเอง (EA เจ้าของเปิดใหม่ตาม signal ของมัน)
+4. BLOCK_NEW: สื่อสารผ่าน **GlobalVariable** `NEWSGUARD_BLOCK_<magic>` = 1 ในหน้าต่างข่าว —
+   Boss V2 chassis เพิ่มเช็ค GV นี้ก่อนเปิดไม้ใหม่ (additive, default ทำงานเฉพาะเมื่อ GV มี) ·
+   EA นอก chassis (locked) ใช้ B ไม่ได้ → ตอน validate config ให้เตือน
+5. Fail-safe: ไฟล์ข่าวหาย/เก่าเกิน 48 ชม. = ไม่ทำอะไรเลย + Alert (อย่าเดา) · ทุก action พิมพ์ journal
+6. Tests (แบบ tests\ pattern): harness เปิด dummy positions หลาย magic ใน tester → จำลองไฟล์ข่าว
+   fake → assert: C ปิดถูกตัว/ถูกเวลา · B ตั้ง GV ถูกช่วง · N ไม่แตะ · fail-safe ทำงาน
+7. compile 0/0 · ห้ามแตะ behavior EA เดิม (chassis GV check = additive) · tpl_regression CLEAN
+**Acceptance:** EA + tests PASS ครบ + ตาราง test result + คู่มือ attach สั้น ๆ (รวม PostNews/timezone) ·
+commit `[tag] ORDER-083 done` · **ห้าม:** attach จริง (user ทำเอง) · verdict
