@@ -2992,3 +2992,67 @@ journal lane2: overlap pair-close ยิงจริง 168 ครั้ง (SEL
 - **มรดกที่ปิดพร้อมกัน:** ST03 family ทั้งหมด = no-edge สมบูรณ์ทุกแกนแล้ว (068+071) — คำแนะนำถอด
   จากบัญชีจริงคงเดิม · demo 990010 เก็บ data ถึง judge แล้วปลด · Boss_15/Entry_ST03 = เก็บเป็น
   reference module ไม่มี deploy path · ทางเดินต่อของ "แก้ไม้แบบมีเบรก" = Boss_16 (ORDER-072)
+
+
+---
+
+## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `OPEN`
+
+**เป้า user:** เห็นข่าวแรงที่เกี่ยวกับพอร์ตทุกวัน + มีตัวคุมเหนือ EA ทั้งหมด (ลด lot / ปิดไม้ / block entry
+ช่วงข่าวแรง ตาม policy ต่อ strategy)
+
+**Phase 1 (เสร็จ 2026-07-10):** `scripts\news_calendar.ps1` — ดึง ForexFactory weekly feed → filter
+High-impact 8 สกุลพอร์ต → (a) `portfolio\news_today.html` ฝังใน LIVE_DASHBOARD (มือถือเห็นทุกเช้า
+ผ่าน gist) (b) `portfolio\news_week.csv` = machine-readable ให้ Phase 2 · cache กัน 429 · อยู่ใน
+daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้องรู้: กันได้เฉพาะข่าวตามนัด — Brexit/SNB-type (gap ไม่มีนัด)
+กันด้วยปฏิทินไม่ได้ = เหตุผลที่ SL/cap ต้องมีเสมอ**
+
+**Phase 2 — NewsGuard watchdog EA (OPEN, ต้องคุย design กับ user ก่อน build):**
+- EA ตัวเดียว attach 1 chart/บัญชี อ่าน `news_week.csv` (คัดลอกไป Common\Files หรือ WebRequest ดึงเอง
+  บน VPS — ต้อง whitelist URL ครั้งเดียว) · นาฬิกา event เทียบ server time
+- policy ต่อ magic list (input): `BLOCK_NEW` (กันไม้ใหม่ N นาทีก่อน/หลัง event — ทำได้กับ EA เราเท่านั้น
+  ผ่าน GlobalVariable flag ที่ chassis อ่าน) · `CLOSE_ALL` (ปิดไม้ magic นั้นก่อน event — ทำได้กับทุก EA
+  รวม locked เพราะ watchdog มีสิทธิ์ระดับบัญชี) · `NONE`
+- ค่าเริ่มแนะนำ: CLOSE_ALL เฉพาะ strategy ไร้ SL/recovery (Zeus 7777, gold grids) ก่อนข่าว USD แรง
+  30 นาที · BLOCK_NEW สำหรับ breakout family (ข่าวคือ noise ไม่ใช่ signal ของมัน) · Boss_14 bench
+  demo = NONE (เก็บ data ให้ judge เห็นพฤติกรรมจริง)
+- **ห้าม build จนกว่า user เคาะ policy ต่อบัญชี/ต่อ magic** (มันจะไปปิดไม้เงินจริง — ต้อง explicit)
+
+## ORDER-074 — fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลือง token — `CLAIMED(Claude-agent, 2026-07-10)`
+
+**ทำไม:** user มีไฟล์ fxDreema export จากคอร์สจำนวนมาก อยากต่อยอด แต่ code generate บวมมาก
+(ST03 = 11k บรรทัด) อ่านตรง ๆ เปลือง token/quota มหาศาล · fxDreema เป็น template → โครงซ้ำ →
+parser เดียวถอดสาระได้ทุกไฟล์
+
+**คำสั่ง:** (1) หาไฟล์: กวาด D:\ + OneDrive Desktop Metatrader หา .mq4/.mq5 ที่มี signature fxDreema
+(2) เขียน `scripts\fxdreema_xray.py` (portable python `tools\python312`): ต่อไฟล์ → สกัด **การ์ดสรุป
+~40 บรรทัด**: ชื่อ/แพลตฟอร์ม · input ทั้งหมด+default · indicator ที่เรียก (iRSI/iMACD/iATR/...) ·
+โครง entry (block ไหนเรียก trade) · lot law (หา pattern multiply/divide/balance) · SL/TP มี-ไม่มี ·
+**danger flags**: no-SL / lot-multiplication / no-cap / DLL / WebRequest (3) รันทั้งคลัง → การ์ดรวมไฟล์กลาง
+`_triage\FXDREEMA_XRAY.md` + CSV summary (ชื่อ, #inputs, indicators, hasSL, hasMartingale, flags)
+**Acceptance:** X-ray ครบทุกไฟล์ที่เจอ · spot-check 2 ไฟล์ที่รู้คำตอบแล้ว (ST03: no-SL+escalation ✓,
+Count-MACD entry ✓) ต้องตรงกับที่แกะมือไว้ · commit `[tag] ORDER-074 done`
+**ห้าม:** verdict ต่อ EA (การ์ด = ข้อมูลดิบ) · แก้ไฟล์ต้นฉบับ user
+
+
+---
+
+## REVIEW ORDER-072 — `REVIEWED(Claude, 2026-07-10)` + เปิด ORDER-075
+
+**Verdict สถาปัตยกรรม: ผ่าน** — chassis engine ทำงานจริงครบ (overlap pair-close ยิง 168 ครั้ง ·
+grid spacing ATR ถูก · cage HARD KILL ตัด SELL ที่ 25% = ระบบเบรกที่ต้นฉบับไม่มี ทำงานให้เห็นแล้ว) ·
+compile 0/0 · regression CLEAN (DRIFT แรก = history refresh ยืนยันด้วย clean-HEAD control ไม่ใช่ code) ·
+**Verdict ตัวเลข v0: BUY PF 1.49/DD 10.9%/588t = มีชีวิตชัดเจน · SELL 0.46 = ตายใส่ gold mega-uptrend
+(คาดได้ — fade ขาขึ้นยักษ์) · ยังห่างต้นฉบับ 5.71 เพราะ entry v0 ยิงน้อยกว่า 7 เท่า + คนละ model/lane**
+· อ่านเชิงกลยุทธ์: ทิศทางเดียวกับ BRK-XAU family = gold มี BUY bias เชิงโครงสร้าง — BUY-only อาจเป็น
+ตัว deploy จริงเหมือน XAGUSD BuyOnly precedent
+
+## ORDER-075 — Boss_16 entry sweep v1 (BUY-first) — `OPEN` (role: agent, MT5 lane ว่างตอนกลางคืน)
+
+**คำสั่ง:** sweep entry lever บน Boss_16 BUY instance เท่านั้น (SELL พักไว้จน entry ชนะบน BUY):
+RSI period {7,14,21} × RsiLow {25,30,35,40} × TF {H1,M30} = 24 pass optimize (complete mode,
+`mt5_optimize.ps1`, XAUUSD 2023.01.01-2026.07.01 Model 1, lane ไหนว่างก็ได้) · แกนอื่นล็อคตาม
+default ORDER-072 ทั้งหมด
+**Acceptance:** XML ครบ + ตาราง pass ที่ PF≥1.5 & Trades≥400 & eqDD≤12% + top-10 ดิบ · commit
+`[tag] ORDER-075 done` · **ห้าม:** แตะแกน grid/exit (isolate entry) · เลือก winner (งาน Claude) ·
+ห้ามรันชนกับ order อื่นบน lane เดียวกัน

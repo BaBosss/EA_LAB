@@ -425,6 +425,10 @@ foreach ($ag in $accGroups) {
 }
 
 $acctWindowsDisplay = HtmlEnc (($acctStart.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key) from $($_.Value.ToString('yyyy-MM-dd'))" }) -join ' | ')
+# high-impact news fragment (written by scripts\news_calendar.ps1 in the daily chain)
+$newsHtml = ""
+$newsFrag = Join-Path (Split-Path $OutFile) "news_today.html"
+if (Test-Path $newsFrag) { $newsHtml = [System.IO.File]::ReadAllText($newsFrag, [System.Text.Encoding]::UTF8) }
 $grandTotalDisplay = Fmt-Money $grandTotalNet
 $generatedAt = $now.ToString("yyyy-MM-dd HH:mm:ss")
 $srcCsvName = HtmlEnc (($selected | ForEach-Object { $_.Name }) -join ', ')
@@ -525,6 +529,7 @@ $html = @"
   (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
 </div>
 
+$newsHtml
 $($sectionsHtml.ToString())
 
 <div class="footer">

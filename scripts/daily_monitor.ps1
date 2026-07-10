@@ -7,6 +7,7 @@ $log = "D:\EA_LAB\portfolio\daily_monitor.log"
 # 0) rotate read-only logins through the monitor terminals so exporters snapshot all 5 accounts
 powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log
+powershell -NoProfile -File D:\EA_LAB\scripts\news_calendar.ps1 *>> $log
 powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
