@@ -3534,3 +3534,26 @@ deposit 10000 · default params (sets = `_mt5_auto/ab_sets/rescue1_sets/`) · hi
 (2026-07-06): ลำดับ lot (ladder? cap?) · SL มีจริงไหม · การกระจุกกำไร (top-5 trades = กี่ % ของ net) ·
 พฤติกรรม DD 39% เกิดจากตะกร้าเดียวหรือสะสม **Acceptance:** ตาราง 4 คำตอบ + quote ไม้จริง ·
 append ใต้ order · commit `[tag] ORDER-088 done` · **ห้าม:** verdict (Claude ให้ EA-SCORE เอง)
+
+
+---
+
+## REVIEW ORDER-087 — `REVIEWED(Claude, 2026-07-10)` — ตัดสินตามบาร์ pre-registered
+
+- **EA_KELTNER = ปิดถาวรทั้ง concept** (XAU 1.04 เดิม + GBPJPY 0.73 + USDJPY 0.72 — trend-class
+  ทดสอบครบ 2 คลาสตลาดแล้ว) · **EA_ICHIMOKU = ปิดถาวร** (XAU 1.13 + GBPJPY 0.84 + AUDJPY 0.78 —
+  kumo บน JPY-native ก็ไม่รอด) — สองตัวนี้ตอนนี้ตายแบบ*ถูกกติกาใหม่*แล้ว ไม่ใช่ตายเปล่า
+- **EA_ZSCORE: AUDNZD 0.71 ปิด cell · AUDCAD 1.34/283t/DD0.28% ≥ บาร์ 1.2 → คิว rescue-ladder เต็ม
+  (ORDER-089)** — สอดคล้อง landscape: AUDCAD = ranger ที่ Boss_14 validate แล้ว · reversion เข้าบ้านถูก
+- เพิ่มลง signal-landscape ตอนปิดวัน: Keltner/Ichimoku closed-all-classes · ZSCORE AUDCAD = LEAD
+
+## ORDER-089 — EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแรกที่ใช้กฎใหม่ครบวงจร) — `CLAIMED(Claude-agent)`
+
+**คำสั่ง (สูตร reversion จาก backtest-optimize-rigor: 3 รอบ × 2 TF บน AUDCAD):**
+- รอบ 1 (entry): zscore period × threshold (ค่า default ±2 ระดับต่อแกน) — H4 และ H1
+- รอบ 2 (exit): TP/SL structure (fixed RR / revert-to-mean exit / time-stop ตามที่ EA มี input)
+- รอบ 3 (filter): session window / ADX-range gate (เทรดเฉพาะ ranging)
+- Model 2 → ผู้ชนะ confirm Model 1 · **pre-registered:** มี config PF≥1.4 & trades≥100 & eqDD≤10%
+  บน TF ใดหนึ่ง → เข้า funnel เต็ม (BWD/plateau/MC = order ถัดไป) · ไม่มี = ปิด concept อย่างสมบูรณ์
+**Acceptance:** ตารางต่อรอบ (top-5 + surface กว้าง) ทั้ง 2 TF · commit `[tag] ORDER-089 done` ·
+**ห้าม:** เลือก winner (Claude) · แตะ symbol อื่น · optimize เกิน 3 รอบที่กำหนด
