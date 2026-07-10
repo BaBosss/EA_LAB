@@ -3068,3 +3068,26 @@ default ORDER-072 ทั้งหมด
 **Acceptance:** XML ครบ + ตาราง pass ที่ PF≥1.5 & Trades≥400 & eqDD≤12% + top-10 ดิบ · commit
 `[tag] ORDER-075 done` · **ห้าม:** แตะแกน grid/exit (isolate entry) · เลือก winner (งาน Claude) ·
 ห้ามรันชนกับ order อื่นบน lane เดียวกัน
+
+
+---
+
+## REVIEW ORDER-074 — `REVIEWED(Claude, 2026-07-10)` + เปิด ORDER-076
+
+**Verdict เครื่องมือ: ผ่าน** — spot-check ST03 ตรงทุกจุดที่แกะมือไว้ (MACD ✓ no-SL ✓ min+max escalation ✓
+inputs ✓) · การ์ดอ้าง block number = ตรวจกลับได้ · corpus 1,050 unique / 1.22GB อ่านจบใน 1 order
+**ภาพรวมคลังคอร์ส user (ข้อมูล ไม่ใช่คำด่า):** 43% = NO_SL+ESCALATION+NO_CAP (โครง uncapped-ruin
+แบบเดียวกับ ST03/Zeus ที่เพิ่งปิดไป) · มี SL จริงแค่ 7% · **หัวกะทิธรรมชาติ = 41 ตัว (has_sl=yes +
+lot_escalation=no)** · ธงแดงพิเศษ: DragonFX 3.0 (NO_SL+ESCAL+WEBREQUEST+TIMELOCK ครบสแต็ค) ·
+`Hedging Rebalance [XauM1...]` ใน .Final EA ของ user มี TIMELOCK · DLL ×4 + WebRequest ×15 =
+ห้าม attach ก่อนตรวจ
+
+## ORDER-076 — smoke-screen หัวกะทิ 41 ตัวจาก X-ray — `OPEN` (role: agent/qwen lane)
+
+**คำสั่ง:** (1) cross-ref 41 ตัว (CSV filter has_sl=yes & lot_escalation=no) กับ EA_SCORECARD +
+ผล ORDER-036 (MT4 1,318 sweep) — ตัวที่เคย screen แล้วห้ามรันซ้ำ ใช้ผลเดิม (2) ตัวใหม่จริง:
+smoke ตาม filter chain มาตรฐาน (name-DQ → smoke PF>1 → BWD-OOS 2020-22 → spread-stress)
+platform ตามไฟล์ · **compiled .ex4/.ex5 เท่านั้นถ้ามี — .mq4/.mq5 คอมไพล์ก่อน** (3) ตาราง verdict-ดิบ
+ต่อ EA ต่อด่าน **Acceptance:** ตารางครบ 41 แถว (screened-before / smoked / DQ) + top-5 ตาม
+BWD-OOS PF · commit `[tag] ORDER-076 done` **ห้าม:** verdict PASS/REJECT (Claude ตัดสิน) ·
+แตะไฟล์ต้นฉบับ · แตะ 297 ตัว SL-unknown (รอ verification pass แยก ถ้าคุ้ม)
