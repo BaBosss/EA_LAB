@@ -2809,3 +2809,31 @@ conditioning = survivorship artifact (offline ADX gate สวย → in-EA จ�
 **Acceptance:** ตาราง 8 แถว PF/net/DD/trades + แถว baseline 068 เทียบ · commit `[tag] ORDER-071 done`
 **ห้าม:** ตัดสิน rescue สำเร็จ/ล้มเหลว (เกณฑ์ตายตัวด้านบน — Claude อ่านผลเอง) · ห้ามแตะ .set live ·
 ห้าม optimize param อื่นไปพร้อมกัน (isolate ตัวแปรเดียว: gate)
+
+
+---
+
+## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `OPEN` (build: Claude+Sonnet · runs: agent)
+
+**ทำไม rev02:** user ชี้ถูก — flat-lot 0.68 (ORDER-068) วัดด้วย exit เดิมของ EA (ปิด 5-20 pips เหนือ
+breakeven = scalp) ซึ่งขัดธรรมชาติ MACD "win rate ต่ำ/รันเทรนได้" → verdict "entry ไม่มี edge" ยัง
+สรุปไม่ได้จนกว่าจะ sweep แกน exit (VERDICT GATE ข้อ 1: <3 levers = INVALID) · แกนที่ user สั่งครบ:
+ATR spacing · spacing ถ่างตามไม้ · TP กว้างขึ้น · TP+trailing · Donchian-break exit · HTF gate (rev01)
+
+**Stage 1 — naked signal × trend exits (ตัดสินก่อนว่าสัญญาณมี edge ไหม):** ไม่มี grid ไม่มีทบ —
+1 ไม้ต่อ 1 สัญญาณ MACD-count(2) บน Boss V2 chassis (Entry_ST03) + ATR SL · exit 3 แบบ:
+(a) fixed RR (TP = 2×ATR / 3×ATR) (b) ATR trailing (c) opposite Donchian-20 break
+× GBPUSD + USDCAD H1 · 2023.01-2026.07 · Model 1 · flat 0.1 · ~8 runs
+**เกณฑ์ตั้งล่วงหน้า:** exit ตัวใดตัวหนึ่ง PF ≥1.0 ทั้ง 2 symbol → signal มีชีวิต ไป Stage 2 ·
+ทุกตัว <0.85 (naked floor) ทั้งคู่ → entry ตายจริง ปิดเคส ห้ามขุดต่อ · ระหว่าง 0.85-1.0 = ไป Stage 2 แบบ WATCH
+
+**Stage 2 (เฉพาะถ้า Stage 1 รอด) — โครงสร้างรอบสัญญาณ:** แกน HTF gate (rev01: H4 MACD/ADX+DI/EMA-slope)
+× spacing (fixed 20p / 1.5×ATR / progressive ถ่างตามลำดับไม้ 1×,1.5×,2×ATR ตามที่ user เสนอ)
+บน exit ผู้ชนะจาก Stage 1 · ยัง flat-lot
+
+**Stage 3 (เฉพาะถ้า Stage 2 ผ่าน):** ต่อ capped-recovery โครง KangarooInspired (cap lot · cap ไม้ ·
+SL จริง · dollar-based release) แล้วเข้า funnel เต็มตามปกติ
+
+**Build ก่อนรัน (Claude/Sonnet, session หน้า):** exit modes + gate inputs + spacing modes บน Boss V2
+(one-exit-owner ตามกติกา chassis) · compile 0/0 · `tpl_regression.ps1` CLEAN · ห้ามแตะไฟล์ fxDreema เดิม
+**ห้าม:** ข้าม stage · optimize หลายแกนพร้อมกันใน stage เดียว · ตัดสินผลก่อนครบทั้ง 2 symbol
