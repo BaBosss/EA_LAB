@@ -4380,3 +4380,17 @@ commit `[tag] ORDER-083C done` · **ห้าม:** attach จริง · เ�
 ห้าม mirror lane2 เมื่อ compile fail + ลบ .ex5 เก่าก่อน compile **Acceptance:** ทุก script มี negative-test
 พิสูจน์ fail-closed (จำลอง compile พัง/report หาย → ต้องแดง) · re-baseline พร้อม eqdd + Boss15/16 ·
 commit `[tag] ORDER-094 done` · **ห้าม:** เปลี่ยน semantics การรันปกติ
+
+
+---
+
+## REVIEW ORDER-092 — `REVIEWED(Claude, 2026-07-11)` — ผ่าน · P0-A1/A6 ฝั่ง build ปิดแล้ว เหลือฝั่ง attach (user)
+
+compile 0/0 ทั้ง 3 ไฟล์ · test PASS ครบ (รวม assert เด็ด: sum(per-magic float) == equity−balance · aggregate
+ไม่นับบัญชี stale · no-trade-function grep สะอาด) · lead verify ซ้ำ: รัน live_dashboard.ps1 จริงกับ data 5 บัญชี
+= exit 0, render ปกติ, path "no snapshot data yet" ทำงาน · deviation ทั้ง 4 สมเหตุผล (snapshot เก็บก่อน deals
+guard = VPS ที่มีแต่ snapshot exporter ก็เก็บได้, exit-code contract เดิมไม่แตะ · SYMBOL row ทำให้ XAU aggregate
+แม่นกว่า spec)
+**เหลือให้ user (บันทึกใน RESULT block แล้ว):** attach AccountSnapshotExporter บน VPS terminal ทั้ง 5 →
+จนกว่าจะ attach dashboard ยังเห็น floating เฉพาะรอบ rotation กลางคืนของเครื่องแล็บ · ทางขน OneDrive
+VPS↔แล็บ = อันเดียวกับ ORDER-083C ข้อ 7 เคาะทีเดียวได้สองงาน

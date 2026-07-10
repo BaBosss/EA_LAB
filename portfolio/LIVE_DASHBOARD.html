@@ -25,6 +25,10 @@
     .pos { color: #6fe08a !important; }
     .neg { color: #ff8a80 !important; }
     .legend { background: #1d2026 !important; border-color: #33373f !important; }
+    .ml-green  { color: #6fe08a !important; }
+    .ml-yellow { color: #ffd54f !important; }
+    .ml-red    { color: #ff8a80 !important; }
+    .snap-stale { background: #202226 !important; }
   }
   h1 { font-size: 20px; margin-bottom: 4px; }
   .meta { color: #666; font-size: 13px; margin-bottom: 16px; }
@@ -60,6 +64,15 @@
   tr.st-white  { background: #fafafa; }
   tr.st-grey   { background: #f1f1f1; }
   .footer { color: #888; font-size: 12px; margin-top: 16px; }
+  /* ORDER-092 floating-risk panel */
+  .ml-green  { color: #17792f; font-weight: 700; }
+  .ml-yellow { color: #9a7b00; font-weight: 700; }
+  .ml-red    { color: #b3261e; font-weight: 700; }
+  .snap-stale { opacity: 0.55; filter: grayscale(0.8); background: #ececec; }
+  .stale-banner {
+    background: #6d6d6d; color: #fff; font-weight: 700; font-size: 13px;
+    padding: 6px 10px; border-radius: 6px; margin-bottom: 8px;
+  }
   .acct-card { padding: 10px 12px; }
   .acct-head { font-size: 14px; margin-bottom: 8px; }
   .acct-card table { overflow-x: auto; display: block; }
@@ -72,7 +85,7 @@
 <body>
 <h1>EA_LAB Live Dashboard</h1>
 <div class="meta">
-  Generated: 2026-07-10 19:13:32 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260710.csv, EA_LAB_deals_159503454_20260710.csv, EA_LAB_deals_415573666_20260710.csv, EA_LAB_mt4_orders_141049900_20260710.csv</code> &middot;
+  Generated: 2026-07-11 06:56:20 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260710.csv, EA_LAB_deals_159503454_20260710.csv, EA_LAB_deals_415573666_20260710.csv, EA_LAB_mt4_orders_141049900_20260710.csv</code> &middot;
   Accounts: <code>MT5 146237 (2026-07-10) + MT5 159475669 (2026-07-10) + MT5 159503454 (2026-07-10) + MT5 415573666 (2026-07-10) + MT4 141049900 (2026-07-10)</code><br>
   Analysis windows (deals before these dates = earlier hand experiments, excluded):
   <code>141049900 from 2026-05-26 | 159475669 from 2026-05-26 | 159503454 from 2026-07-01 | 415573666 from 2026-07-06</code> &middot; excluded rows: 9287
@@ -93,11 +106,16 @@
 </div>
 
 <div class="card" id="news-card">
-<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-07-10 11:47 &middot; source: ForexFactory feed</span><br>
+<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-07-10 19:23 &middot; source: ForexFactory feed</span><br>
 <table style="font-size:12px"><tr><th>Bangkok</th><th>CCY</th><th>Event</th><th>F&#39;cast</th><th>Prev</th></tr>
 <tr style="font-weight:600"><td>Fri 23:30</td><td>CAD</td><td style="text-align:left">Unemployment Rate</td><td>6.6%</td><td>6.6%</td></tr>
 <tr style="font-weight:600"><td>Fri 23:30</td><td>CAD</td><td style="text-align:left">Employment Change</td><td>11.2K</td><td>87.8K</td></tr>
 </table>
+</div>
+
+<div class="card">
+<h2 style="font-size:16px;margin:0 0 8px 0;">&#9888;&#65039; FLOATING RISK &mdash; open baskets / margin (snapshot exporter, ORDER-092)</h2>
+<div class="meta" style="margin:0;">no snapshot data yet &mdash; AccountSnapshotExporter not attached / not collected. Closed-deal tables below CANNOT see floating basket loss on no-SL grid EAs.</div>
 </div>
 
 <div class="card acct-card">
@@ -198,7 +216,7 @@
 <td class="num-cell">6.86</td>
 <td class="num-cell">0.1%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 0.1% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -237,7 +255,7 @@
 <td class="num-cell">0.14</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 0.3% normal (kill 25%)</td>
 </tr>
 <tr class="st-white">
@@ -263,7 +281,7 @@
 <td class="num-cell">7.67</td>
 <td class="num-cell">5.2%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">3</td>
+<td class="num-cell">4</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -276,7 +294,7 @@
 <td class="num-cell">5.63</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">7</td>
+<td class="num-cell">8</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -289,7 +307,7 @@
 <td class="num-cell">1.16</td>
 <td class="num-cell">0.8%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">10</td>
+<td class="num-cell">11</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -302,7 +320,7 @@
 <td class="num-cell">0.72</td>
 <td class="num-cell">0.8%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">10</td>
+<td class="num-cell">11</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -315,7 +333,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">10</td>
+<td class="num-cell">11</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -328,7 +346,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">10</td>
+<td class="num-cell">11</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -354,7 +372,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">10</td>
+<td class="num-cell">11</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 <tr class="st-grey">
@@ -389,70 +407,70 @@
 <div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) &middot; window: from 2026-05-26 &middot; net <span class="pos">745.58</span> USC &middot; 203 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
-<tr class="st-grey">
-<td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
-<td class="name-cell">(unmapped magic 1112)</td>
+<tr class="st-green">
+<td class="status-cell" title="DD 1.8% normal (kill 35%)">&#128994;</td>
+<td class="name-cell">Gold_Kangaroo XAUUSDc L1 (capped-mart, not validated)</td>
 <td class="num-cell">1112</td>
 <td class="num-cell">XAUUSDc</td>
 <td class="num-cell">24</td>
 <td class="num-cell neg">-56.09</td>
 <td class="num-cell">0.80</td>
 <td class="num-cell">1.8%</td>
-<td class="num-cell">n/a</td>
-<td class="num-cell">0</td>
-<td class="label-cell">unmapped magic - no declared criteria</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">1</td>
+<td class="label-cell">DD 1.8% normal (kill 35%)</td>
 </tr>
-<tr class="st-grey">
-<td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
-<td class="name-cell">(unmapped magic 1113)</td>
+<tr class="st-green">
+<td class="status-cell" title="DD 0.3% normal (kill 35%)">&#128994;</td>
+<td class="name-cell">Gold_Kangaroo XAUUSDc L2 (capped-mart, not validated)</td>
 <td class="num-cell">1113</td>
 <td class="num-cell">XAUUSDc</td>
 <td class="num-cell">15</td>
 <td class="num-cell pos">89.71</td>
 <td class="num-cell">2.91</td>
 <td class="num-cell">0.3%</td>
-<td class="num-cell">n/a</td>
-<td class="num-cell">1</td>
-<td class="label-cell">unmapped magic - no declared criteria</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">2</td>
+<td class="label-cell">DD 0.3% normal (kill 35%)</td>
 </tr>
-<tr class="st-grey">
-<td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
-<td class="name-cell">(unmapped magic 1114)</td>
+<tr class="st-green">
+<td class="status-cell" title="DD 0.2% normal (kill 35%)">&#128994;</td>
+<td class="name-cell">Gold_Kangaroo XAUUSDc L3 (capped-mart, not validated)</td>
 <td class="num-cell">1114</td>
 <td class="num-cell">XAUUSDc</td>
 <td class="num-cell">18</td>
 <td class="num-cell pos">133.35</td>
 <td class="num-cell">5.78</td>
 <td class="num-cell">0.2%</td>
-<td class="num-cell">n/a</td>
-<td class="num-cell">0</td>
-<td class="label-cell">unmapped magic - no declared criteria</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">1</td>
+<td class="label-cell">DD 0.2% normal (kill 35%)</td>
 </tr>
-<tr class="st-grey">
-<td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
-<td class="name-cell">(unmapped magic 1115)</td>
+<tr class="st-green">
+<td class="status-cell" title="DD 0.1% normal (kill 35%)">&#128994;</td>
+<td class="name-cell">Gold_Kangaroo XAUUSDc L4 (capped-mart, not validated)</td>
 <td class="num-cell">1115</td>
 <td class="num-cell">XAUUSDc</td>
 <td class="num-cell">2</td>
 <td class="num-cell neg">-13.77</td>
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.1%</td>
-<td class="num-cell">n/a</td>
-<td class="num-cell">1</td>
-<td class="label-cell">unmapped magic - no declared criteria</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">2</td>
+<td class="label-cell">DD 0.1% normal (kill 35%)</td>
 </tr>
-<tr class="st-grey">
-<td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
-<td class="name-cell">(unmapped magic 7777)</td>
+<tr class="st-green">
+<td class="status-cell" title="DD 7.1% normal (kill 35%)">&#128994;</td>
+<td class="name-cell">Zeus Gold Hedge V1.2 EURUSDc (no-SL grid ⚠️ manual kill float 40%)</td>
 <td class="num-cell">7777</td>
 <td class="num-cell">EURUSDc</td>
 <td class="num-cell">144</td>
 <td class="num-cell pos">592.38</td>
 <td class="num-cell">1.44</td>
 <td class="num-cell">7.1%</td>
-<td class="num-cell">n/a</td>
-<td class="num-cell">0</td>
-<td class="label-cell">unmapped magic - no declared criteria</td>
+<td class="num-cell">35%</td>
+<td class="num-cell">1</td>
+<td class="label-cell">DD 7.1% normal (kill 35%)</td>
 </tr>
 </table>
 </div>
@@ -483,7 +501,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD 0.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -509,7 +527,7 @@
 <td class="num-cell">0.82</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 0.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -561,7 +579,7 @@
 <td class="num-cell">0.07</td>
 <td class="num-cell">3%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">4</td>
+<td class="num-cell">5</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
