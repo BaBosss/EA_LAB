@@ -2626,7 +2626,7 @@ funnel-era trade lists, ยังไม่ split ปี)
 
 ---
 
-## ORDER-068 — ST03 family: flat-lot probe ของ config แล็บ (9397 GBP / 9398 CAD) — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent/qwen)
+## ORDER-068 — ST03 family: flat-lot probe ของ config แล็บ (9397 GBP / 9398 CAD) — `DONE(Claude-agent, 2026-07-10)` (role: agent/qwen)
 
 **ทำไม:** 2026-07-10 แกะ source (ST) EA03 Count MACD v1 พบ (a) entry ไม่มี edge ใน config user 939721
 (flat-lot PF 0.68 = ล้างพอร์ต, กำไรทั้งหมดมาจาก uncapped recovery escalation) (b) ratchet defect —
@@ -2642,6 +2642,25 @@ LOTB reset เฉพาะตอนพอร์ตแบนสนิท → ต�
 **Acceptance:** ตาราง 4 แถว (symbol × esc on/off): PF · net · balDD% · eqDD% (floating) · max single lot ·
 append ใต้ order นี้ · commit `[tag] ORDER-068 done`
 **ห้าม:** verdict/ตัดสิน family · ห้ามแตะ .set ใน _demo_deploy (ก๊อปมาแก้ใน _mt5_auto\ab_sets เท่านั้น)
+
+### RESULT (Claude-agent 2026-07-10) — raw numbers only, no verdict
+
+Config provenance: ไม่มี .set ใน `_demo_deploy\MT5` สำหรับ ST03 — ใช้ `_mt5_auto\MACD_GBPUSD_locked.set` /
+`MACD_USDCAD_locked.set` (MACD_Count=2 · TP 20/10/5 (EA defaults) · LOT_Repeat=3 · Nearby_PIP=10 ·
+Magic 9397/9398) + deployed lot fix `Lots_divided=100000` (DEMO_DEPLOYMENT_PLAN.md 2026-06-22 line 146,
+locked.set เดิมเขียน 10000000 ก่อน fix). หมายเหตุ: ค่า config แล็บ GBP จึง **เท่ากับ config user 939721 ทุกตัว
+ยกเว้น magic** — แถว GBP esc-on ตรงกับ ST03LIVE_FULL (PF 2.51) เป๊ะ ตามคาด (deterministic).
+Runs: H1 · 2023.01.01–2026.07.01 · Model 1 · deposit 10000 · leverage 1:2000 · ini/set copies ใน
+`_mt5_auto\ini\ST03LAB_*.ini` + `_mt5_auto\ab_sets\st03lab_sets\` · reports `_mt5_auto\reports\ST03LAB_*.htm`
+
+| symbol | escalation | PF | net | balDD% | eqDD% (float) | max single lot | trades |
+|---|---|---|---|---|---|---|---|
+| GBPUSD (9397) | ON (LOT_Repeat=3) | 2.51 | +88,219.21 | 14.16% | 61.19% | 3.06 | 1002 |
+| GBPUSD (9397) | OFF (LOT_Repeat=999999) | 0.68 | −10,054.49 | 100.24% | 100.31% | 0.23 | 561 |
+| USDCAD (9398) | ON (LOT_Repeat=3) | 1.67 | +18,197.30 | 16.85% | 57.09% | 1.45 | 802 |
+| USDCAD (9398) | OFF (LOT_Repeat=999999) | 0.40 | −9,941.62 | 99.59% | 99.69% | 0.13 | 350 |
+
+(flat-lot ทั้งสอง symbol: บัญชีล้าง — margin level จบที่ 3.84% GBP / 17.94% CAD)
 
 ---
 

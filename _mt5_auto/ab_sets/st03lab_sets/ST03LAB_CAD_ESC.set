@@ -1,0 +1,9 @@
+; ST03 lab live config USDCAD magic 9398 — from MACD_*_locked.set defaults + deployed Lots_divided fix (DEMO_DEPLOYMENT_PLAN 2026-06-22)
+Lots_divided=100000.0
+MACD_Count=2
+TP1=20
+TP2=10
+TP3=5
+LOT_Repeat=3
+Nearby_PIP=10.0
+MagicStart=9398
