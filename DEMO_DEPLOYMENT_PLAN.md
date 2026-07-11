@@ -263,8 +263,17 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 ### DEMO — Exness Standard (×2)
 | บัญชี | ชื่อ | Platform | รันอะไร |
 |---|---|---|---|
-| **415573666** | Demo Mt5-2 | MT5 (Trial14) | **Boss_14_GridLog ×7 symbols** (USDJPYm/AUDNZDm/EURJPYm/AUDCADm/CADJPYm/EURUSDm/XAUUSDm H1) = Boss V2 bench ขึ้น demo แล้ว |
+| **415573666** | Demo Mt5-2 | MT5 (Trial14) | **Boss_14_GridLog ×7 symbols** (USDJPYm/AUDNZDm/EURJPYm/AUDCADm/CADJPYm/EURUSDm/XAUUSDm H1) = Boss V2 bench ขึ้น demo แล้ว · **➕ รอ attach (user approve 2026-07-11): EA_SUPERTREND XAUUSDm H4 magic 990020** set `_vps_deploy\ST_XAU_H4_live_v1.set` — เป้าหมาย = EA-SCORE criterion 7 (live tracking ≥2 เดือน) หลัง 085B: BWD ตกบาร์/plateau ผ่าน · ตลาดปิดวันที่อนุมัติ user จะ attach เมื่อว่าง |
 | **69424711** | Demo EA3 | MT4 (Trial8) | **MT4 cohort**: UnNomGuai(1/2) · RSI-orig(5888) · swb(990) + ClevrFX_EA (ORDER-041 ผ่าน spread-stress) |
+
+**📌 การตัดสินใจ user 2026-07-11 (หลัง CODEX-AUDIT + REVIEW 085B) — สถานะ pending จนกว่า user ลงมือ (ตลาดปิด):**
+1. **RSI-MR (990103) ถอดจาก real 159503454 → ย้ายไป demo isolate** (premium-track experiment เดี่ยว
+   ตามข้อเสนอ audit A7 — user: "demo อะลองได้") — ตอน user ถอดจริงให้ update ตาราง REAL ข้างบน + dashboard map
+2. **ST03 family (939721/9398/990010 บน 159475669): user จะถอด แต่ขอ optimize มือเองก่อน** แล้วเอาผลมาคุย —
+   นี่คือ `PARKED-VERIFY(user)` ตามกติกาเป๊ะ · verdict แล็บ (STRUCTURAL no-edge) ยืนไว้ ห้าม re-litigate จนกว่า
+   user มีผลใหม่มาเทียบ · ตอนคุยผล: เช็คด้วยบาร์เดิม (flat-lot PF>1 คือคำถามเดียวที่ชี้ขาด entry edge)
+3. SuperTrend demo = แถวบน ✅ · 4. AccountSnapshotExporter บน VPS + OneDrive transport = user ทำเมื่อว่าง
+   (checklist ใน taskboard ORDER-092 RESULT)
 
 **หมายเหตุ scaling:** บัญชี cent 10,000 USC — money-param ใน set (เช่น TpUsd) กับ balance สเกลอัตราส่วนเดียวกับ
 แผน $10,000 เป๊ะ → PF/DD%/เกณฑ์ kill-switch แบบ % ใช้ได้ตรง · เกณฑ์ $ ใน README อ่านเป็น USC แทน

@@ -4349,7 +4349,7 @@ PROJECT_STATE อ่านออก 100% · commit `[tag] ORDER-093 done`
 
 ---
 
-## ORDER-083C — P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport — `OPEN` (คิวถัดไปทันทีที่ lane ว่าง)
+## ORDER-083C — P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport — `CLAIMED(Codex, 2026-07-11)` (user เปิด Codex lane กลับมา — สั่งตรง)
 
 **ทำไม:** CODEX-AUDIT D1+D2 — ช่องยืนยันจาก code แล้ว 5 ช่อง + feed ยังไปไม่ถึง VPS = attach ตอนนี้คุ้มครองศูนย์
 **Spec (ทุกข้อมี test ประกบ, แก้ทั้ง NewsGuard_Core.mqh และ NewsGuard_Core_MT4.mqh ให้ตรงกัน):**
@@ -4370,7 +4370,7 @@ commit `[tag] ORDER-083C done` · **ห้าม:** attach จริง · เ�
 
 ---
 
-## ORDER-094 — P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) — `OPEN` (เงื่อนไข: MT5 lane ว่าง — ห้ามแก้ mt5_run.ps1 ระหว่างมี batch in-flight)
+## ORDER-094 — P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) — `CLAIMED(Claude-agent, 2026-07-11)` (MT5 lane ว่างยืนยันแล้ว — 085B จบ, ไม่มี batch in-flight)
 
 **ทำไม:** CODEX-AUDIT D3-D6 ยืนยันครบ — cage ที่ pass ได้ทั้งที่หลักฐาน stale = อันตรายกว่าไม่มี cage
 **Spec:** (1) `mt5_run.ps1`: ลบ dest report เก่าก่อนรัน + exit 0/1 ตามมี report จริง (2) `tpl_regression.ps1`:

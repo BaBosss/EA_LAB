@@ -121,6 +121,8 @@ $cohort = [ordered]@{
   "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  # SuperTrend demo bench (user approved 2026-07-11, attach pending) - mapped BEFORE attach per audit A5 lesson
+  "415573666|990020" = @{ Name = "EA_SUPERTREND XAU H4 (demo tracking, criterion-7)";  Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   # 141049900 REAL MT4 user-experiment cohort (CODEX-AUDIT A5 2026-07-11: was unmapped = the
   # highest-risk no-SL magics had no dashboard row at all). MT4 platform default kill/warn.
   # NOTE: closed-deal DD only - Zeus/Kangaroo real risk is FLOATING basket loss (Zeus floating
