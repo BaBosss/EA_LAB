@@ -119,3 +119,25 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
    counterproductive (lags). Don't expect a TA filter to unlock sizing — diversify instead. A
    *leading* regime signal (macro calendar / cross-asset stress), not a lagging indicator, is the
    only untested angle.
+
+
+---
+
+## IDEA: JUMSTOCH mean-reversion grid → build-on vehicle (user directive 2026-07-11)
+
+**แกะ entry logic (จาก JUMSTOCH_FIXEDLOT.mq4, ORDER-091C-D1):**
+- `ima = iMA(LWMA, maPereode, Close)` current TF · `stoch = iStochastic(k=32, d=12, slowing=12, MAIN)`
+- **BUY** เมื่อ `Close[1] < LWMA` (ราคาต่ำกว่า MA) **AND** `stoch > lo_level(25)` → คาดเด้งกลับขึ้น
+- **SELL** เมื่อ `Close[1] > LWMA` (ราคาเหนือ MA) **AND** `stoch < up_level(75)` → คาดย่อลง
+- = **mean-reversion เข้าหา LWMA + Stochastic filter** · averaging grid ≤12 legs spacing Range=21 · SL=253/leg · fixed-lot
+
+**ผล funnel (ORDER-091C-D1):** plateau สะอาด 9/9 ทั้ง EURUSD H1 + AUDUSD H1 · OOS +1.06~1.12 · MC ruin 0% ·
+= edge จริงแต่บาง (PF>1 = ต่อยอดได้ ตาม doctrine build-on)
+
+**ทางต่อยอด (เรียงตามคุณค่า):**
+1. **Pending-limit entry** (user idea + tie ORDER-080): mean-reversion วาง buy-limit ใต้ราคา/sell-limit เหนือ
+   ที่ระดับ grid = fill maker ไม่จ่าย spread → แก้ concern spread โดยตรง (grid 5-7k ไม้ ประหยัด spread = อาจดัน PF 1.12→1.3+)
+2. **ขยาย symbol×TF เต็ม** — D1 ลองแค่ 4 คู่ × 3 TF · เหลือ majors/crosses อีก 10+ คู่ × ทุก TF (home อาจดีกว่ามาก)
+3. **แกะ entry → Boss V2 chassis** (build-on #1): LWMA-displacement+Stoch = signal reusable บนโครง MM ที่ cap+SL พิสูจน์แล้ว
+
+**mechanism class:** reversion-to-MA (มีใน landscape แล้วแต่ variant นี้ = LWMA + Stoch dual-filter + capped SL'd grid = โครงสะอาดกว่า naked reversion ที่ตายในปีเทรนด์)

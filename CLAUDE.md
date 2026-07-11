@@ -16,6 +16,14 @@ block นี้ยังไม่ครบ = หยุด ทำให้คร�
 
 รายละเอียดเต็ม + ตัวอย่าง = `OPTIMIZE_PROCEDURE_AND_AUDIT.md` + skill `backtest-optimize-rigor` (owns ขั้นตอน). gate นี้ = สรุปบังคับ อ่านทุก session.
 
+**⚖️ BUILD-ON ≠ DEPLOY (user doctrine 2026-07-11 — gate ข้างบนคุม "ขึ้นเงินจริง" ไม่ใช่ "ทิ้ง"):** EA ที่ test
+**PF>1 แม้ครั้งเดียว/แม้ OOS ไม่ถึงบาร์ deploy = ของต่อยอด ไม่ใช่ bench-and-forget**. PARAMETRIC-marginal (PF>1
+ใต้บาร์) → **default ไป build-on branch ก่อนเขียน verdict:** (1) ขยาย symbol×TF ให้ครบ (10+ คู่ ทุก TF — home
+อาจดีกว่ามากที่อื่น) (2) **ปรับกลไก ไม่ใช่รับตามเดิม** — เช่น spread concern → เปลี่ยน market entry เป็น pending
+buy/sell limit (fill แบบ maker ไม่จ่าย spread) · grid/เทรดเยอะ = ไม่ใช่ข้อเสีย (3) แกะ entry logic เก็บ EDGE_CATALOG
+แม้ทั้ง EA ไม่ deploy. **เฉพาะ STRUCTURAL death (flat-lot PF<1 · uncapped-ruin · cracked) เท่านั้นที่ฆ่าทิ้งเลย** ·
+deploy-gate กับ discard-gate = คนละคำถาม. รายละเอียด = memory `feedback-buildon-pf-gt-1`.
+
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 
 **UPDATE 2026-07-11 (Fable-seat วันเดียวก่อนโควต้าเหลือ ~10%):** Opus กลับเป็น seat หลักตั้งแต่ session
