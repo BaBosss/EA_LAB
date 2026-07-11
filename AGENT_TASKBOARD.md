@@ -3387,7 +3387,9 @@ commit `[tag] ORDER-079 done` · **ห้าม:** ตัดสินดี/ไ�
 commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever อื่น · verdict (Claude อ่าน — สนใจ EV ต่อไม้
 หลังหัก opportunity cost ของไม้ที่ไม่ fill ไม่ใช่แค่ PF)
 
-## ORDER-081 — Crypto lane feasibility study (maker-fee scalper blueprint) — `OPEN` (role: research agent, web)
+## ORDER-081 — Crypto lane feasibility study (maker-fee scalper blueprint) — `DONE(Codex+research-subagent, 2026-07-11 — รอ Claude/user ตัดสิน go/no-go)` (role: research agent, web)
+
+> **Dispatch note:** user อนุมัติให้ Codex เดินคิวต่อระหว่าง Claude quota หมด · งานนี้ทำคู่ขนานกับ 083C เพราะเป็น read-only web/docs ไม่ใช้ tester laneและไม่ชน ORDER-094 · Codex ตรวจ primary-source fee claim ซ้ำแล้ว; ไม่มีการตัดสิน direction แทน Claude
 
 **เป้า:** ตอบ go/no-go การเปิด lane crypto แบบแล็บ (ไม่ใช่ลอกบอทเขา — เอา blueprint engineering-first)
 **คำสั่ง (research + เอกสาร ไม่มี code):**
@@ -3399,6 +3401,18 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
 5. ความเสี่ยงเฉพาะ crypto: funding rate, เหรียญ delist, weekend ไม่ปิด, leverage/liq engine
 **Acceptance:** `_triage\CRYPTO_LANE_FEASIBILITY.md` ครบ 5 หัวข้อ + ประเมิน effort (ชม.งาน) +
 คำถามเปิดสำหรับ user · commit `[tag] ORDER-081 done` · **ห้าม:** เขียน trading code · เปิดบัญชี/แตะ API จริง
+
+### ORDER-081 RESULT — Codex + research sub-agent, 2026-07-11 (raw research, no verdict)
+
+รายงาน `_triage\CRYPTO_LANE_FEASIBILITY.md` ครบ fee reality / data / maker-fill backtest / live infra /
+crypto-specific risk พร้อม primary official sources + research papers, decision matrix, คำถาม user และ effort
+**92–168 ชั่วโมง** · ยืนยันซ้ำจาก Bybit official: VIP0 perpetual maker **0.020%**, taker **0.055%**
+(maker-maker round trip = 4 bps ก่อน funding/adverse selection) · ไม่พบหลักฐาน retail maker rebate ถาวร;
+Binance rebate ที่พบเป็นโปรโมชัน LP แบบมีเงื่อนไข/ชั่วคราว จึงห้ามใส่ rebate เป็น baseline · bar data ใช้หา signal
+ได้แต่พิสูจน์ passive fill ไม่ได้ ต้องมี trade/L2 queue model และ shadow calibration
+
+**ข้อห้ามยืนยัน:** ไม่เปิดบัญชี · ไม่สร้าง/ใช้ API key · ไม่เขียน trading/backtest code · ไม่ออก go/no-go
+· Claude/user กลับมาอ่าน decision matrix แล้วตัดสิน direction
 
 
 ---
