@@ -60,6 +60,17 @@ def read_text(path):
         return raw.decode("utf-16", errors="replace")
     if raw[:3] == b"\xef\xbb\xbf":
         return raw[3:].decode("utf-8", errors="replace")
+    # ORDER-091A fix: BOM-less UTF-16 (MetaEditor sometimes saves without BOM).
+    # Detected by NUL-byte density -- ASCII-range UTF-16 text is ~50% NULs, while
+    # no legit UTF-8/legacy-codepage source contains NULs at all. Without this,
+    # such files decode as NUL-interleaved garbage: every regex (signature,
+    # inputs, blocks) silently matches nothing (this is why 539 Wave-0 files
+    # produced empty cards on the first ORDER-091A pass, and why the ORDER-074
+    # drive-wide scan never saw them).
+    sample = raw[:4096]
+    if sample and sample.count(b"\x00") > len(sample) // 3:
+        enc = "utf-16-le" if raw[1:2] == b"\x00" else "utf-16-be"
+        return raw.decode(enc, errors="replace")
     try:
         return raw.decode("utf-8")
     except UnicodeDecodeError:
@@ -254,6 +265,23 @@ def parse_ea(text):
         for b in open_blocks)
     d["n_ordersend"] = n_ordersend
 
+    # --- ORDER-091A: generic SL heuristic for non-fxDreema (block-less) sources ------
+    # fxDreema exports always parse into Block classes; hand-written/AI_GEN sources
+    # (Wave 0 folders: AI_GEN, Course jobot, .Final EA hand code, etc.) don't, so
+    # has_sl/sl_unknown above default to False/False ("no SL") regardless of truth.
+    # This additive-only fallback (guarded by `not blocks`) never touches fxDreema
+    # cards' results — it only fills the gap for cards that have zero open_blocks.
+    d["sl_heuristic"] = False
+    if not blocks:
+        sl_pat = re.compile(
+            r"(?i)\bOrderStopLoss\b|\bStopLoss\w*\b|\bstop\s*loss\b|"
+            r"\.sl\s*=|\bsl\s*=\s*(?!0\s*[;,)])[^;\n]+[;,)]|PositionModify\s*\(|request\.sl\b")
+        d["sl_heuristic"] = True
+        if sl_pat.search(text):
+            d["has_sl"] = True
+        else:
+            d["sl_unknown"] = True  # can't prove no-SL from regex alone — flag for manual spot-check
+
     # --- trailing stop presence ---------------------------------------------------
     d["has_trailing"] = bool(modify_blocks) or "TrailingStop" in text
 
@@ -359,10 +387,13 @@ def parse_ea(text):
 
     # --- danger flags --------------------------------------------------------------
     flags = []
-    if open_blocks and not has_sl and not sl_unknown:
+    have_open_evidence = bool(open_blocks) or d.get("sl_heuristic")
+    if have_open_evidence and not d["has_sl"] and not d["sl_unknown"]:
         flags.append("NO_SL")
-    elif open_blocks and not has_sl and sl_unknown:
+    elif have_open_evidence and not d["has_sl"] and d["sl_unknown"]:
         flags.append("SL_UNKNOWN")
+    if d.get("sl_heuristic"):
+        flags.append("SL_HEURISTIC")  # ORDER-091A: non-fxDreema file — SL verdict is regex-based, spot-check before trusting
     if escalation:
         flags.append("LOT_ESCALATION")
         if not cap:

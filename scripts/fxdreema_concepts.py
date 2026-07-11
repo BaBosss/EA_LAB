@@ -301,7 +301,11 @@ def main():
         return
 
     # ---------------- CSV rewrite (old columns + concept) ----------------------
-    fieldnames = [k for k in rows[0].keys() if not k.startswith("_")] + ["concept"]
+    # guard (ORDER-091A): the CSV already carries a concept column after ORDER-077 —
+    # appending unconditionally recreated the duplicate-concept-column bug (fixed 2026-07-10)
+    fieldnames = [k for k in rows[0].keys() if not k.startswith("_")]
+    if "concept" not in fieldnames:
+        fieldnames.append("concept")
     with open(XRAY_CSV, "w", encoding="utf-8-sig", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
         w.writeheader()

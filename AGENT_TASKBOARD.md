@@ -4084,7 +4084,7 @@ wobr-botranking: BotMogul rank = adverse-selected overfit) · ทุกตัว
 mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG เสมอ · DD สูง ≠ ปัดตก → diagnosis→lever (คำ user:
 ".Final EA อาจ DD เยอะแต่เอาไปทำต่อได้ เชื่อผม")
 
-**Wave 0 — 091A: ขยาย X-ray+concept ให้ครบ 9 โฟลเดอร์ — `CLAIMED(Claude-agent, 2026-07-11)`** (mechanical, dedupe hash vs 1,050 เดิม):
+**Wave 0 — 091A: ขยาย X-ray+concept ให้ครบ 9 โฟลเดอร์ — `DONE(Claude-agent, 2026-07-11)`** (mechanical, dedupe hash vs 1,050 เดิม):
 `wait_Fxdreema MT5` (151 src) · `3. ready to use` (38+102) · `review EA\Jobot` (1,556 bin) ·
 `BOT MOGUL` (2,905 bin) · `AI_GEN` (168 src) · `Course jobot` (375 src) · `04_FxDreema_Learner`
 (221 src) · `.Final EA` (189 src + 4,514 bin) → merged catalog + ตาราง "ใหม่จริง vs ซ้ำของเดิม"
@@ -4111,6 +4111,52 @@ smoke เฉพาะโครงสะอาด)
   ตบ spec กับ user ("เดี๋ยวเรามาตบ ๆ กันอีกที")
 - FxDreema_Learner = ตัวอย่างเรียน → concept-mine อย่างเดียว
 **หมายเหตุ:** FXDREEMA_XRAY.csv ซ่อม duplicate concept column แล้ว (2026-07-10 ค่ำ)
+
+### ORDER-091A RESULT (Claude-agent, 2026-07-11)
+
+**Headline: catalog 1,050 → 1,592 unique EAs (+542)** · binary inventory 9,693 rows (6,627 unique
+hashes) · attached report/set inventory 1,084 rows · full detail = `_triage\ORDER091A_COVERAGE.md`
+
+| folder | files | src | bin | reports | new-unique src | dup-of-existing | unreadable |
+|---|---|---|---|---|---|---|---|
+| wait_Fxdreema MT5 | 293 | 151 | 142 | 0 | 26 | 124 | 0 |
+| 3. ready to use | 182 | 38 | 103 | 0 | 1 | 37 | 0 |
+| review EA\Jobot | 1,556 | 0 | 1,556 | 0 | 0 | 0 | 0 |
+| BOT MOGUL Bundles | 9,686 | 3 | 2,905 | 711 | 1 | 2 | 0 |
+| AI_GEN | 852 | 168 | 336 | 0 | 2 | 164 | 0 |
+| Course jobot | 558 | 375 | 130 | 0 | 138 | 231 | 0 |
+| 04_FxDreema_Learner | 247 | 221 | 7 | 0 | 213 | 7 | 0 |
+| .Final EA | 6,857 | 189 | 4,514 | 373 | 161 | 14 | 0 |
+| **TOTAL** | **20,231** | **1,145** | **9,693** | **1,084** | **542** | **579** | **0** |
+
+**Finding สำคัญที่สุด (anomaly #1): encoding bug ไม่ใช่ path-coverage gap.** 374/542 ไฟล์ใหม่เป็น
+UTF-16 LE **ไม่มี BOM** — `read_text()` เดิมจับ UTF-16 จาก BOM เท่านั้น → decode เป็นขยะ NUL-interleaved
+→ regex ทุกตัว (รวม signature `fxdreema`) match ไม่ติด = **สาเหตุจริงที่ ORDER-074 กวาดทั้ง D:\ แล้ว
+มองไม่เห็นไฟล์พวกนี้** · แก้แล้ว (NUL-density heuristic ใน `scripts/fxdreema_xray.py`), rollback pass แรก
+แล้วรันใหม่ — หลังแก้ 374 ไฟล์นั้น parse เป็น fxDreema block card เต็มรูปแบบเป๊ะ ๆ (อีก 168 = hand-written/
+AI-gen จริง ใช้ SL regex heuristic + flag `SL_HEURISTIC` กำกับ)
+
+**Outputs:**
+- `_triage\FXDREEMA_XRAY.csv` + `.md` — 542 rows/cards ใหม่ append (ของเดิม 1,050 ไม่แตะ · concept
+  column ครบทุก row · กัน duplicate-concept-column bug ซ้ำใน `fxdreema_concepts.py` แล้ว)
+- `_triage\ORDER091A_BINARIES.csv` — hash inventory .ex4/.ex5 (path/size/sha1/dedup/compiled-twin;
+  433 ตัวมี source twin ชื่อเดียวกันข้างไฟล์) — feed Wave 3
+- `_triage\ORDER091A_REPORTS.csv` — 711 BOT MOGUL .html + (.Final EA: 23 .html + 350 .set) — feed 091B/091C
+- `_triage\ORDER091A_COVERAGE.md` — ตารางเต็ม + binary dedup + top-10 clusters + anomalies
+- `scripts\order091a_intake.py` ใหม่ (walk เฉพาะ 8 โฟลเดอร์ rerun ได้) · `scripts\fxdreema_xray.py` แก้
+  encoding + เพิ่ม SL heuristic สำหรับไฟล์ non-fxDreema (additive — card เดิมไม่เปลี่ยน)
+
+**นับเทียบตัวเลข user: ตรงเกือบเป๊ะทุกโฟลเดอร์** — BOT MOGUL "~713 reports" = 711 html + 2 pdf ·
+.Final EA "~389" = 23 html + 350 set + 16 pdf · ที่เหลือตรงตามประกาศ (คลาดมากสุด ±1)
+**Top new clusters:** 04_FxDreema_Learner root (204) · .Final EA\. MQL5 (119) · Course jobot\! JOBOT Week (106)
+· .Final EA\. MQL4 (31) — elliott deep-list หลัง merge = 154 hits (concept pass รันทับทั้ง 1,592 rows แล้ว)
+**Spot-check ผ่าน (2 ไฟล์ fxDreema ใหม่):** `EX113 - Gold Robot Scalping [RSI Divergence].mq4`
+(card hasSL=yes/esc=yes/NO_CAP ↔ grep เจอ `StopLossMode="dynamicLevel"` + `VolumeMode="martingale"`, ไม่มี cap) ·
+`(CPT) ETA FixMoney NextRound 360s AT Vary TF.mq5` (card NO_SL/esc=yes ↔ grep เจอ `StopLossMode="none"`
+ทั้ง 6 open block + lot formula 18 จุด)
+**ห้ามที่รักษาไว้:** ไม่แตะ/ย้ายไฟล์ใต้ D:\Forex (read-only ตลอด) · ไม่มี verdict · ไม่มี backtest ·
+BOT MOGUL อีก 2 copies ใต้ 50_KNOWLEDGE ไม่ scan (จดจำนวนไฟล์ 9,686 + 9,611 ใน coverage แทน — dedupe
+จะยุบเป็นก้อนเดียวกันอยู่แล้ว)
 
 ---
 
