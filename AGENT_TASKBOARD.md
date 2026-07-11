@@ -3346,6 +3346,20 @@ PF <0.8 ที่ ≥15 ไม้ = ถอด · งานคู่ขนาน�
 **ของแถมจาก sweep (จดไว้ ห้าม act):** โซน 0.6/1.4/16-20 ดีกว่า center ทั้งแถบ — สลับตอนนี้ =
 select หลังเห็นข้อมูล · เก็บเป็น hypothesis รอบ re-opt 6 เดือนตามกฎ window
 
+### เงื่อนไข (1) corr check — `DONE(Claude, 2026-07-11)` (ตอน ORDER-085B รันก่อนหน้า ข้ามไปเพราะ
+ORDER-078 ยังไม่ปิด/ไม่มี monthly data — เพิ่งปิดช่องว่างนี้)
+
+Monthly P&L Pearson (`B16VAL_STEP0_REPRO.htm` IS 2023-2026 vs `BRK_FULLSPAN.htm`, สคริปต์เดียวกับ
+`_mt5_auto\corr_monthly.py` แต่ปรับ path): **25 เดือนร่วม**
+
+| Baseline | corr (monthly P&L) | DD-overlap (เดือนลบตรงกัน/เดือนลบรวม) | Verdict |
+|---|---|---|---|
+| BRK_FULLSPAN (Bars40 buy-only H1) | **0.077** | 3/14 = 0.21 | **LOW — additive** (ต่ำกว่า SuperTrend 0.42-0.73 มาก) |
+
+**สรุป: corr ผ่านเกณฑ์สบาย ๆ ไม่ต้อง reduce-lot ตามสูตร** (ต่างจาก SuperTrend ที่ติด WATCH/HIGH) ·
+เงื่อนไข (2) magic ใหม่ + (3) BUY-only bias ยังเป็นของ user ตอน attach จริง · **Boss_16 21/30 พร้อม
+เข้าคิว demo-attach เต็มขั้นแล้ว** (funnel 078 + corr นี้ = ครบทุกเงื่อนไขก่อน attach ที่ REVIEW ระบุไว้)
+
 ---
 
 ## ORDER-079 — Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) — `CLAIMED(Claude-agent, 2026-07-10)`

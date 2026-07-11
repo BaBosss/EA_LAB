@@ -153,9 +153,11 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   Model 0 confirm PF 1.41 (ไม่ละลาย) · MC ruin 0% DD95 4.6% (permutation = DD-only, แกน PF
   ไม่ถูกทดสอบ — จดตรง ๆ) · **ยังไม่ใช่ PASS เงินจริง: BWD เคยใช้เลือก 21/30 เหนือ 14/30 → ไม่มี
   holdout สะอาด → demo forward = holdout ตัวจริง** · locked set `Boss16_Kangaroo_XAU_21_30.set` ·
-  ก่อน attach: corr check vs กลุ่ม XAU live + magic ใหม่ · judge criteria pre-registered ใน
-  REVIEW ORDER-078 (kill eqDD>12% · judge 3 เดือน PF<0.8 ที่ ≥15 ไม้) · ห้ามสลับไปโซน sweep
-  ที่สวยกว่า (select หลังเห็นข้อมูล) — เก็บไว้รอบ re-opt 6 เดือน
+  judge criteria pre-registered ใน REVIEW ORDER-078 (kill eqDD>12% · judge 3 เดือน PF<0.8 ที่
+  ≥15 ไม้) · ห้ามสลับไปโซน sweep ที่สวยกว่า (select หลังเห็นข้อมูล) — เก็บไว้รอบ re-opt 6 เดือน ·
+  **✅ (2026-07-11) corr check ปิดแล้ว: corr 0.077 vs BRK_FULLSPAN (25 เดือนร่วม) = LOW-additive**
+  ไม่ต้อง reduce-lot · **Boss_16 21/30 พร้อม attach demo ทุกเงื่อนไขแล้ว** เหลือแค่ magic+attach
+  จริง (งานของ user) — candidate real-money ตัวแรกหลัง funnel ครบตามที่บันทึกไว้ forward plan
 - 🧭 **(2026-07-10 ค่ำ) ปรัชญาโรงงาน + EA-SCORE v1 จารึกแล้ว** — สามชั้น edge/MM/portfolio → `VISION.md`
   §ปรัชญาโรงงาน · rubric คะแนน→สิทธิ์ + กุญแจเพดาน 3 ดอก → `EA_SCORECARD` §EA-SCORE · กฎ user ชุดใหม่:
   rescue-ladder ≥3 รอบ×2 TF ก่อน DEAD · PARKED-VERIFY(user) · diagnosis→lever · pacing batch เล็ก ·
