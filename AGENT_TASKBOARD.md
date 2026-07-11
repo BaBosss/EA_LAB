@@ -4825,3 +4825,24 @@ silent-failure ชั้นใหญ่ของ corpus นี้** — intake �
 30+ แบบ = การจัดการไม้ ไม่ใช่ edge) · สิ่งที่แบงก์ = **ตัวอย่างเลขจริงของ vendor cherry-pick** (สอน rescue-ladder
 + ยืนยัน "vendor report = claim") → เข้า signal-landscape เป็น dead-cell + memory update
 **ไม่เข้า PARKED-VERIFY(user):** ไม่มีอะไรให้ user เทสมือเพิ่ม — คำถามถูกตอบด้วย BWD ครบแล้ว · **091B ปิดสมบูรณ์**
+
+
+---
+
+## REVIEW ORDER-091C batch-1/2 smoke — `REVIEWED(Claude, 2026-07-11)` — market-mismatch caveat + JUMSTOCH ชนะ → full funnel
+
+**คำตัดสิน (ไม่มีตัวไหนตาย — smoke default EURUSD H1 ผิดตลาดสำหรับหลายตัว):**
+- **JUMSTOCH_FIXEDLOT = ผู้ชนะ → promote full funnel:** PF 1.18 fixed-lot / 7,052t / DD 8.5% (พลาดบาร์ 0.02) ·
+  fixed-lot = entry มี edge จริง sample ใหญ่ · `iStochastic(NULL,0,..)` ไม่ fix TF = home ที่แท้ = symbol×TF ยังไม่หา
+  → **ORDER-091C-D1: optimize (symbol/TF + k/d/level) → plateau → OOS → MC** (dispatched)
+- **NuiIndy Tri-Arb: flat-lot 65k = ARTIFACT ไม่ใช่ edge** — triangular arb รันคู่เดียว (EURUSD) ไร้ความหมาย
+  (ต้อง 3 คู่พร้อมกัน) · "ดีเกิน=พัง" · PARK จนกว่าจะมี multi-pair harness ถูก (build-on idea #2 ยังคุ้ม—ทำ harness ก่อน)
+- **Dark_Gold (มี set XAUUSD M5/M15 ระบุชัด) · EX197/EX140 breakout-scalp · SMC V2 = รันผิดตลาด** →
+  re-smoke บนตลาดจริง (Dark_Gold=XAUUSD M15 SAFE/BALANCED · EX197/EX140=XAU · SMC=ลอง H4) = ORDER-091C-D2 (คิว)
+- **OH Recovery+SL: PF 0.84 EURUSD H1** — recovery-hedge home ไม่ใช่ EURUSD H1 แน่ · WATCH รอตลาดจริง (ถาม user)
+**Coverage gap ปิดแล้ว:** MT5 good+MT4 good x-ray → catalog 1,592→1,598 (ZigZag = dup, indicator sample)
+
+## ORDER-091C-D1 — JUMSTOCH_FIXEDLOT full funnel — `CLAIMED(Claude-agent, 2026-07-11)`
+**คำสั่ง:** optimize coarse→fine หา home (symbol {EURUSD,GBPUSD,USDJPY,XAUUSD} × TF {M15,M30,H1} × k_period ×
+level) → plateau-center select → IS/OOS split → MC · flat-lot ตลอด (มันเป็น fixed-lot อยู่แล้ว) · pre-registered
+bar funnel: OOS PF≥1.2 & MC ruin<5% & plateau ไม่มี cell ขาดทุน → EA-SCORE · **ห้าม:** เปลี่ยนเป็น lot escalation · verdict (lead)
