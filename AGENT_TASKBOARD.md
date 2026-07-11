@@ -5460,3 +5460,21 @@ report BOSS14_*_FULL_ISPICK_M1): **cross-corr สูงสุด 0.52 (AUDJPY×X
 - **🆕 SMC/FVG = mechanism cluster ทั้ง 8 ตัว** (SMC V2 + FVG FollowTrend/RichShield/serie-Plus/... 7 ตัว) —
   landscape ว่างสนิท · ตัวโครงสะอาด (has SL): SMC V2, FVG FollowTrend · **worth ตั้ง exploration แยกถ้า SMC V2 port ได้ผล**
 **gotcha เจอ:** `FXDREEMA_XRAY.csv` header มี BOM (`﻿name`) → reader ต้องใช้ `utf-8-sig` (เพิ่มใน robust_text adoption TODO)
+
+
+---
+
+## REVIEW ORDER-091C-D1e — `REVIEWED(Claude, 2026-07-11)` — port สำเร็จ, JUMSTOCH ขยาย 3→5 ขา (EURGBP=ดาว)
+**gate ผ่าน:** MT5 port reproduce MT4 EURUSD H1 (PF 1.19 vs 1.18 · trades +6% · DD 8.23% vs 8.5% · compile 0/0 ไม่มี bug) =
+port เชื่อถือได้ · agent จับ 2 จุดถูก: "trend" block = trend-JOIN ไม่ใช่ reversion (แก้ที่ผมเดาไว้ก่อนหน้า), flat-lot ยืนยัน
+**symbol ใหม่ที่ MT4 เทสไม่ได้ (ปลดล็อกโดย port):** EURGBP H1 **1.48** (M15 1.46/H4 1.28, DD 5-7% = ดาว) · NZDUSD H4 **1.37** ·
+AUDUSD H1 1.22 (ตรง MT4 D1 = cross-platform agreement) · GBPUSD H4 1.18 · JPY crosses ตาย (grid pip-scale ผิด 3-digit, ตรง USDJPY-dead)
+**corr matrix 5 ขา (self-validated ทุก report): ไม่มีคู่ไหน >0.8 (max 0.44)** — EURGBP แทบอิสระกับทุกตัว (0.07/0.21/0.02/-0.05)
+**→ JUMSTOCH MT5 config = EURUSD H1 + AUDUSD H1 + GBPUSD H4 + EURGBP H1 + NZDUSD H4 = 5-leg uncorrelated mini-portfolio**
+(จาก MT4 3 ขา → MT5 5 ขา, ไอเดีย port ของ user จ่ายผลเต็ม) · **EA-SCORE ~6-7** · gate เหลือก่อน deploy: OOS split ของ
+2 ขาใหม่ (EURGBP/NZDUSD เพิ่งมี full-window smoke) · EURUSD/AUDUSD/GBPUSD inherit MT4 D1 OOS+D1b spread
+
+## ORDER-091C-D1f — OOS validate JUMSTOCH MT5 ขาใหม่ (EURGBP/NZDUSD) — `CLAIMED(Claude-agent, 2026-07-11)`
+**คำสั่ง:** `(EXP)_JUMSTOCH_MT5` config default · IS 2023.01-2025.03 vs OOS 2025.03-2026.07 บน EURGBP H1 + NZDUSD H4
+(+ re-confirm EURUSD H1/AUDUSD H1/GBPUSD H4 OOS บน MT5 ให้ครบชุด) · Model 1 fixed-lot · report `JUMT5OOS_*` ·
+**บาร์: OOS PF≥1.1 & DD<15% = ยืนยันเข้า 5-leg config · < 1.0 = ถอดขานั้น** · **ห้าม:** tune · verdict (lead) · commit `[tag] ORDER-091C-D1f done`
