@@ -5508,3 +5508,19 @@ both PF and DD. EURUSD H1 and AUDUSD H1 land in the unaddressed middle zone the 
 cover (OOS PF 1.09 and 1.04 respectively — above the 1.0 removal line but below the 1.1 confirm
 line); both still show OOS PF>1.0 (no reversal to negative) with DD well under 15%. No leg triggered
 the OOS PF<1.0 removal condition. Lead judges the two gray-zone legs and the 5-leg config decision.
+
+
+---
+
+## REVIEW ORDER-091C-D1f + JUMSTOCH thread CLOSE — `REVIEWED(Claude, 2026-07-11)` — validated พร้อม demo (3 core + 2 watch)
+**OOS:** NZDUSD H4 **1.75** (OOS>IS robust) · EURGBP H1 **1.34** · GBPUSD H4 **1.28** = ผ่านบาร์ · EURUSD H1 1.09 /
+AUDUSD H1 1.04 = gray-zone (บวก DD<15% แต่ <1.1) · ไม่มีขาตก <1.0
+**Finding สำคัญ (vindicate doctrine):** ขาที่ MT5-port ปลดล็อก (EURGBP/NZDUSD) OOS **แข็งกว่า** ขาเดิม (EURUSD/AUDUSD) —
+home ที่ดีที่สุดไม่ใช่ symbol แรก · "อย่า fixate home เดิม" ได้ผลจริงเป็นตัวเลข
+**VERDICT JUMSTOCH MT5 (`(EXP)_JUMSTOCH_MT5`):**
+- ✅ **core deploy (3 ขา uncorrelated): EURGBP H1 · NZDUSD H4 · GBPUSD H4** (OOS 1.28-1.75, DD 4.5-6.2%)
+- ◐ **WATCH (build-on ไม่ทิ้ง): EURUSD H1 · AUDUSD H1** (OOS 1.04-1.09) — allocation เล็ก หรือ filter-tweak (D1d/session filter)
+- **EA-SCORE ~7 = demo-bench** · gate ครบ (plateau MT4-D1 · spread MT4-D1b · port-reproduce D1e · OOS D1f) · เหลือ MC + live
+- **พร้อม attach demo** (user action + magic) · ยังไม่เข้า DEPLOYMENTS.csv รอ user
+**thread JUMSTOCH ปิด (D1→D1f):** EA ตัวแรกจากคลัง user ผ่านครบ funnel → MT5 port → 3-leg demo config · pipeline พิสูจน์แล้ว
+**build-on ต่อยอดที่เหลือ (คิว):** D1d pending-entry (บน MT5 port) · optimize/tweak 2 watch legs · ขยาย symbol เพิ่มบน MT5 (optimize ง่ายแล้ว)
