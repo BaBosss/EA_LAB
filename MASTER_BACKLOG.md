@@ -297,3 +297,34 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - [ ] Runbook มนุษย์ + backup operator (ตอนนี้ single-observer = user คนเดียว)
 - [ ] Quarterly blind verdict audit + monthly control metrics (ตาม VISION เดิม)
 - [ ] Schema validation/link check สำหรับ canonical docs (กัน drift แบบ C1 เกิดซ้ำ)
+
+
+---
+
+## §BUILD-ON ideas (lead thinking 2026-07-11 — เสนอ user เคาะทิศ, ยังไม่ commit เป็น order)
+
+**1. 🏭 LLM-entry × Boss-V2-chassis = generation pipeline (ceiling สูงสุด, ตรงปรัชญาโรงงาน)**
+user มี AI-LLM EA 10 ตัว (Scalper/Trend/Swing/Combine/News/Pending/Hedging/Martingale/Trailing/BO).
+AI-gen EA มักมี **entry idea ที่พอใช้ได้ แต่ MM ห่วย/อันตราย** (AI-5 = martingale ตรง ๆ). → อย่า funnel
+ทั้งตัว, **สกัดเฉพาะ entry signal → เสียบบน Boss V2 chassis** (ที่มี MM/SL/cap พิสูจน์แล้ว). ถ้า entry 2-3/10
+มี edge = ได้ EA ใหม่ MM ปลอดภัยเกือบฟรี. scale ได้: "LLM เสนอ entry → chassis + funnel" = pipeline ผลิต
+สัญญาณใหม่แบบทำซ้ำได้ = เหตุผลที่โรงงานมีแม่พิมพ์เดียว (edge=if สลับได้, MM=โครงคงที่). **ข้อเดียวที่ควรลอง
+เป็น order จริงถ้า smoke AI-batch โชว์ entry ดี**
+
+**2. 🔺 Triangular arbitrage = ตัว diversify พอร์ต (คุณค่าอยู่ที่ correlation ไม่ใช่ PF)**
+NuiIndy Tri-Arb = กลไกที่ landscape ว่างสนิท. ตามหลัก 10 พอร์ต × EA ไม่ correlate: arb leg ที่ทำงานได้
+= near-zero corr กับทุก trend/reversion/breakout ที่มี → **มีค่าเกินตัวต่อการประกอบพอร์ต แม้ PF ไม่หวือหวา**
+→ ให้ priority funnel สูงเพราะ correlation value ไม่ใช่เพราะ PF (ถ้ารอด = ชิ้นส่วนพอร์ตที่หายาก)
+
+**3. 🧰 read_text_robust() shared util (cheap infra win — queue ได้เลย)**
+วันนี้เจอ encoding silent-failure 3 ครั้ง (PROJECT_STATE mojibake · 091A UTF-16 · 091B UTF-16). สร้าง
+utility อ่านไฟล์ตัวเดียว (BOM sniff + NUL-density + cp1252-reverse detect) ให้ทุก script ใน repo เรียกใช้ →
+ฆ่า bug class นี้ถาวร. เล็ก ทำเมื่อ lane ว่าง (ให้ qwen/agent) — เพราะจะแตะ intake scripts อีกหลายรอบใน 091
+
+**4. 📉 fundability index เหนือ catalog 1,592 (เลิก triage มือ)**
+มี flag เชิงโครงครบแล้ว (has_sl/escalation/cap/concept/crack) → เขียน score = (ความปลอดภัยโครง × ความ
+หลากหลาย concept × ยังไม่มี verdict) จัดอันดับทั้ง 1,592 อัตโนมัติ → คิว funnel gen เองไม่ต้องเดา tier
+(บทเรียนวันนี้: parser จัด non-fxDreema ไม่ได้ → ต้อง flag ให้ครบก่อน score)
+
+**5. 📡 live drift-monitor (ต่อยอด 092 หลัง VPS attach)** — อยู่ P1 อยู่แล้ว · framing: เปลี่ยน "judge 3 เดือน"
+เป็น early-warning ต่อเนื่อง (จับ EA ที่เริ่มตายตั้งแต่สัปดาห์ 2 ไม่ใช่เดือน 3) = โครงสร้างที่ทำให้เงินจริงปลอดภัยจริง
