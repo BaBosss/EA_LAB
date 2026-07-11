@@ -4963,3 +4963,27 @@ MC optimistic · **M0/spread ไม่เคยรัน** · no live · no BWD 
 รัน 3 ระดับ spread ต่อ symbol ผ่าน MT4 TestSpread: {ปัจจุบัน/current, 15, 25 points} (EURUSD ~1.5-2.5 pip จริง) ·
 ตาราง PF/net/DD/trades ต่อ spread · **บาร์: PF ยัง ≥1.05 ที่ spread 15pt ทั้ง 2 symbol = รอด → demo-bench ·
 < 1.0 = ตาย (spread กิน edge)** · **ห้าม:** tune · verdict (lead) · commit `[tag] ORDER-091C-D1b done`
+
+
+---
+
+## 🔄 REFRAME JUMSTOCH ตาม BUILD-ON doctrine (user 2026-07-11) — D1 verdict ไม่ใช่ "bench" แต่เป็น "build-on branch"
+REVIEW D1 ด้านบนเขียน "WATCH gate=spread" ก่อน user ให้ doctrine · **แก้ framing:** JUMSTOCH PF>1 บน 2 symbol +
+plateau สะอาด = **ของต่อยอด** (deploy-gate ≠ discard-gate) · D1b spread ไม่ใช่ kill-gate แล้ว แต่ **quantify ว่า
+spread กินเท่าไหร่ = เหตุผลสนับสนุนการเปลี่ยนเป็น pending entry** · เปิด 2 branch build-on:
+
+## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `OPEN` (รอ D1b ปิด MT4 lane)
+**คำสั่ง:** plateau-center config (k32/75-25 fixed-lot) · grid **majors+crosses+metal** {EURUSD,GBPUSD,USDJPY,
+AUDUSD,USDCAD,NZDUSD,EURJPY,GBPJPY,AUDJPY,EURGBP,XAUUSD} × TF {M15,M30,H1,H4} · full window 2023-2026 Model 1 ·
+1 backtest/cell · ตาราง PF/net/DD/trades ทุก cell + mark cell ที่ผ่าน (PF≥1.1 & trades≥200 & DD<25%) ·
+เช็ค MT4 history ต่อ symbol ก่อน (data gap = ตัด ระบุ) · **ห้าม:** martingale · verdict · commit `[tag] ORDER-091C-D1c done`
+
+## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `OPEN` (role: Claude/Sonnet build → run)
+**ที่มา:** user + ORDER-080 · mean-reversion เข้าหา LWMA → วาง **buy-limit ใต้ราคา / sell-limit เหนือ** ที่ระดับ
+grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไม้ = ประหยัด spread เยอะ อาจดัน PF ขึ้นชัด)
+**คำสั่ง:** (1) สร้าง variant `(EXP)_JUMSTOCH_pending.mq4` (หรือ port entry เข้า Boss V2) — เปลี่ยน OrderSend market
+เป็น pending limit ที่ราคา entry logic เดิม + จัดการ expire/re-place · ห้ามแตะ lot/SL/exit logic (isolate ตัวแปรเดียว)
+(2) compile 0/0 (3) รันเทียบ market-vs-pending บน 2 home cell (EURUSD+AUDUSD H1) + spread จริง · ตาราง EV/ไม้
+เทียบ (fill-rate ของ pending ด้วย — limit ไม่ fill ทุกไม้) · **บาร์: pending PF > market PF ที่ spread จริง = ยืนยันคุณค่า**
+· **ห้าม:** เปลี่ยน lever อื่น · verdict · commit `[tag] ORDER-091C-D1d done`
+**หมายเหตุ:** นี่ตอบ ORDER-080 (limit vs market) ด้วย EA จริงตัวแรก → ปิด 080 ไปในตัวถ้าได้ผล
