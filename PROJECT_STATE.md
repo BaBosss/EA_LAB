@@ -291,7 +291,45 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 
 ## 7. FORWARD PLAN (today → judge → after)
 
-### 🆕 SESSION 2026-07-08 (Opus) — EA hunt รอบใหญ่: 6 demo candidates + เครื่องมือ/บทเรียนถาวร
+### 🆕 PLAN 2026-07-12+ (เขียนโดย Fable-seat 2026-07-11 ก่อนส่งมอบ → **Opus = seat หลักทุก session ถัดไป**)
+**👉 session ใหม่อ่าน block นี้ก่อน — งานเรียงตาม EV + การแบ่ง seat Fable/Opus/Codex ชัดแล้ว**
+
+**สถานะส่งมอบ:** CODEX-AUDIT ปิดครบ (Layer D ทั้งหมด + A/C ฝั่ง build · เหลือ user attach) · cage 4 ตัว
+fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate ทุก commit) · คลัง intake
+1,592 unique EA พร้อม Wave 1 · NewsGuard+SnapshotExporter พร้อม attach
+
+**คิวงาน (pacing 1-2 order/รอบ เหมือนเดิม):**
+1. **091B — BOT MOGUL report sweep** (agent parse 711 html → ตาราง claim → Opus คัด top ด้วย
+   claim × โครง X-ray → BWD spot-kill ทีละ 5) — ห้ามเชื่อ vendor report (memory wobr-botranking)
+2. **091C — .Final EA funnel queue** (Opus นำ — 161 new-unique + 350 set ที่ user validate มือ =
+   prior สูงสุดของคลัง · diagnosis→lever ห้าม DD-dismissal ตามคำ user)
+3. **076 — smoke หัวกะทิ 41 ตัวจาก X-ray** (agent batch, cage ใหม่พร้อมแล้ว) · ตามด้วย **080**
+   (limit-entry study — template แตะได้แล้ว regression ครอบ Boss_15/16)
+4. **082 — Wave5 spec** รอ user ยืนยัน draft → **ก่อน build ให้ยิง fable-advisor one-shot ตรวจ spec**
+   (กลไกจากมือ user เอง — ตีความพลาด = แพงสุด)
+5. **[user action ค้าง]** ชุด VPS ทีเดียวจบ (NewsGuard + SnapshotExporter + OneDrive สองทิศ ตาม
+   `VPS_TRANSPORT_AND_ATTACH.md`) · ย้าย RSI-MR real→demo · attach SuperTrend 990020 ·
+   ระบุบัญชี **146237** (โผล่ใน live_deals ไม่อยู่ใน 5 บัญชี) · ผล optimize ST03 ของ user → คุยด้วยบาร์ flat-lot
+6. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT) แทรกตอน lane ว่าง: gist redact (เร็วสุด) →
+   evidence lineage → drift monitor (ต่อยอด 092 หลัง snapshot ไหล) → backup drill
+
+**การแบ่ง seat (user directive 2026-07-11 — Fable เหลือ ~10%):**
+- **Opus = lead/judge ทุก session** (ตาม CLAUDE.md transition เดิม — role อยู่ที่ seat) · งานประจำทั้งหมด:
+  review agent, verdict ตาม VERDICT GATE, เขียน order, judge 091 waves
+- **Fable = จองเฉพาะ 4 กรณี ผ่าน `fable-advisor` one-shot เท่านั้น (ห้ามเผาเป็น session เต็ม):**
+  (1) ตัดสินผล ST03 ที่ user optimize มือ (เงินจริง + user ลงแรงเอง — ต้องแม่นและละมุน)
+  (2) ตรวจ spec ORDER-082 Wave5 ก่อน build (edge จากมือ user — misread แพง)
+  (3) การ promote เงินจริงครั้งแรกของ candidate ใหม่ (Boss_16 หลัง demo forward / ตัวแรกที่ผ่าน funnel เต็ม)
+  (4) RCA เหตุการณ์เงินจริงผิดปกติ (stop-out, EA เปิดผิด, NewsGuard ทำงานพลาด)
+- **Codex = สมองอิสระ + งาน code หนัก:** second-opinion การตัดสินแพง/ย้อนไม่ได้ (ห้ามให้ดูคำตอบ
+  Opus ก่อน) · builds ใหญ่ (Wave-3 Jobot binary-strings tooling · drift monitor P1 · ORDER-080) ·
+  คุม quota ChatGPT: batch → qwen/Sonnet เสมอ
+- **บทเรียน agent วันนี้ (อยู่ใน memory แล้ว):** brief งานรันยาวต้องบังคับ foreground synchronous —
+  agent ที่ background แล้วหยุดรอ notification = ตาย (เกิด 2 ครั้ง: 094, 091A)
+
+---
+
+### SESSION 2026-07-08 (Opus) — EA hunt รอบใหญ่: 6 demo candidates + เครื่องมือ/บทเรียนถาวร
 **👉 อ่าน block นี้ก่อน — สรุปงานรอบล่าสุด + สิ่งที่ต้องทำต่อ**
 
 **ผลลัพธ์: demo cohort = 7 + 1 experimental (Trendline #8) (ผ่าน funnel เข้มครบทุกตัว: instrument/TF/param/holdout/MC)** —

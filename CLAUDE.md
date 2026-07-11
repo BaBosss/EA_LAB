@@ -18,6 +18,12 @@ block นี้ยังไม่ครบ = หยุด ทำให้คร�
 
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 
+**UPDATE 2026-07-11 (Fable-seat วันเดียวก่อนโควต้าเหลือ ~10%):** Opus กลับเป็น seat หลักตั้งแต่ session
+ถัดไป · **Fable ที่เหลือ = จองให้ 4 กรณีนี้เท่านั้น ผ่าน skill `fable-advisor` (one-shot brief — ห้ามเผาเป็น
+session เต็ม):** (1) verdict ผล ST03 ที่ user optimize มือ (2) ตรวจ spec ORDER-082 Wave5 ก่อน build
+(3) การ promote เงินจริงครั้งแรกของ candidate ตัวถัดไป (4) RCA เหตุการณ์เงินจริงผิดปกติ · งานอื่นทุกอย่าง =
+Opus + Codex + agent lanes ตามเดิม · แผนงานเต็ม = `PROJECT_STATE.md` §7 PLAN 2026-07-12+
+
 **seat lead/judge = Claude Code รันบน Opus แล้ว.** role อยู่ที่ seat ไม่ใช่ model — Opus ทำหน้าที่เดิม
 ของ Fable ทุกอย่าง. รายละเอียด workflow ทีมหลัง transition (tier ladder + quota lane + Codex review) =
 **`AGENTS.md` §1.5 + §5** (owns เรื่อง multi-agent protocol — อ่านคู่กัน).
