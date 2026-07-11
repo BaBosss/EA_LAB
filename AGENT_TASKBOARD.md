@@ -5581,7 +5581,11 @@ marketplace + offline BOT MOGUL bundle (ORDER-091B) = ปิดในฐาน�
 
 ---
 
-## ORDER-096A — Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) — `OPEN` (role: Sonnet build → qwen smoke → Claude verdict)
+## ORDER-096A — Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) — `REVIEWED(Claude, 2026-07-11)` — DEAD, thesis holds
+**RESULT:** built `(EXP)_AlligatorAO_Naked_rev00` (compile 0/0, magic 999093), smoke M2 2023-2026: GBPUSD
+H1 0.67 / H4 0.47 = DEAD · EURUSD H1 1.37/**25t** · XAUUSD H1 1.39/**26t** = small-sample below freq floor
+(conjunction fires ~25×/3yr) · EUR-H4 5t / XAU-H4 3t = noise. ไม่ใช่ PROCEED. Both WOBR mano leads closed
+DEAD → marketplace intake fully closed. บันทึก signal-landscape. (detail ↓ original order)
 
 **GOAL:** ปิด lead สุดท้ายจาก WOBR — Bill Williams Alligator+AO trend บน FX/metal H1+H4. Prior: น่าจะตาย
 แบบเดียวกับ IchiADX (thesis momentum>reversion, FX=reversion) แต่ต้อง smoke ให้ครบเพื่อปิดเป็น dead-concept.
@@ -5605,7 +5609,10 @@ optimize ถ้า smoke ตายหมด · ใส่ grid/martingale (naked 
 
 ---
 
-## ORDER-096B — ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) — `OPEN` LOW-PRIORITY (role: qwen optimize → Claude verdict)
+## ORDER-096B — ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) — `REVIEWED(Claude, 2026-07-11)` — DEAD-optimized (ceiling PF 1.14)
+**RESULT:** 5-pass IS probe (2023.01-2025.06 M2) AdxMin{20,25,30}×exit/trail/TP → PF {1.06,1.10,1.11,1.13,1.14},
+ceiling **1.14** (AdxMin25+TP4×ATR, 131t), higher ADX WORSE (AdxMin30→0.87). ไม่มี pass แตะ 1.40 → PARKED
+resolved to DEAD, ไม่ต้อง OOS/BWD. USDJPY trend ตายครบ 4 ตัว. บันทึก signal-landscape. (detail ↓ original order)
 
 **GOAL:** ปิดเซลล์ USDJPY `(EXP)_IchiADX_Naked` ที่ session tag ไว้ PARKED-pending-probe (IS 1.13/195t ต่ำ
 กว่าเกณฑ์). Prior ต่ำมาก (USDJPY trend ตายมาแล้ว 4 ตัว: SuperTrend/Donchian/EMA/IchiADX) — probe นี้แค่
@@ -5622,7 +5629,7 @@ optimize ถ้า smoke ตายหมด · ใส่ grid/martingale (naked 
 
 ---
 
-## ORDER-096C — commit WOBR intake artifacts — `OPEN` blocked-by(096A,096B) (role: Claude)
+## ORDER-096C — commit WOBR intake artifacts — `DONE(Claude, 2026-07-11)`
 
 **GOAL:** commit ผลงาน WOBR triage เข้า git (ยังไม่ commit — รอ user). รันหลัง 096A/B เพื่อรวม artifacts.
 
