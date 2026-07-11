@@ -5137,6 +5137,14 @@ PF1.5–2.0 — would otherwise clear the numeric bar but sit on 2–4 months of
 
 No verdict issued (lead judges).
 
+### 📌 TODO(user action) — MT4 HISTORY GAP: user จะโหลด history เพิ่ม แล้ว ping ให้ re-run (2026-07-11)
+MT4 feed มี full-window history ครบแค่ **EURUSD/AUDUSD/XAUUSD** (+GBPUSD/USDJPY H4 ~97%) · **คู่ที่ขาด
+ต้องโหลด:** GBPUSD(M15/M30/H1) · USDJPY(M15/M30/H1) · USDCAD · NZDUSD · EURJPY · GBPJPY · AUDJPY · EURGBP
+**Priority re-run (โชว์ PF>1.5 บนข้อมูลบางส่วน — น่าได้ leg เพิ่ม):** NZDUSD H4 (~1.90) · AUDJPY H1 (~1.76) ·
+GBPJPY M30/H1 · EURGBP (~1.5-2.0) → re-run D1c grid บาร์เดิม + corr<0.8 · **confirmed legs ตอนนี้:** EURUSD
+M30/H1/H4 · AUDUSD M30/H1 · GBPUSD H4 · XAUUSD = artifact ตัด (grid pip-scale ผิดบนทอง ชน profit-cap DD 99%)
+· ทางเลือกแทนโหลด history = port entry → MT5/Boss V2 (MT5 มี history ครบ) · memory `mt4-history-gap-jumstoch`
+
 ## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `OPEN` (role: Claude/Sonnet build → run)
 **ที่มา:** user + ORDER-080 · mean-reversion เข้าหา LWMA → วาง **buy-limit ใต้ราคา / sell-limit เหนือ** ที่ระดับ
 grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไม้ = ประหยัด spread เยอะ อาจดัน PF ขึ้นชัด)
