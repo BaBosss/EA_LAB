@@ -5158,6 +5158,77 @@ grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไ
 
 ---
 
+## ORDER-091C-D1e — JUMSTOCH MT5 port + smoke — DONE(Claude-agent, 2026-07-11)
+**คำสั่ง (user directive):** port JUMSTOCH_FIXEDLOT.mq4 -> MT5 เพื่อใช้ full MT5 history (มีทุก symbol ไม่เหมือน MT4
+feed ที่ gap) + optimize ง่าย · VALIDATION GATE: reproduce MT4 EURUSD H1 baseline ก่อน trust symbol ใหม่ ·
+แล้ว smoke symbol ที่เคย gap บน MT4 (NZDUSD/AUDJPY/GBPJPY/EURGBP + cross-check AUDUSD/GBPUSD) × {M15,H1,H4} ·
+flat-lot · **ห้าม:** verdict (lead) · commit `[tag] ORDER-091C-D1e done`
+
+### ORDER-091C-D1e RESULT (Claude-agent, 2026-07-11)
+Raw numbers only — no verdict (lead judges). Port source: `ea_projects\(EXP)_JUMSTOCH_MT5\(EXP)_JUMSTOCH_MT5.mq5`
+(compiled `D:\Meta 5\MetaEditor64.exe` -> `.ex5` 47,948 bytes, **0 errors / 0 warnings, first try**). Runner
+`scripts\mt5_run.ps1`, MT5 lane-2 `D:\Meta 5b` (portable), Expert `c091c\(EXP)_JUMSTOCH_MT5`. Model 1,
+deposit 10000, leverage 1:100, fixed 0.01 lot, window 2023.01.01–2026.07.01, default compiled inputs
+(kperiod=32, k_period=32, lo_level=25, up_level=75, lolevel=30, uplevel=70, Range=21, Level_Max=12,
+SL=253, TP=30). Reports prefix `JUMT5_` in `_mt5_auto\reports\`. Hedging account (guard in OnInit).
+
+**Port notes (verified line-by-line vs the decompiled MT4 source, not paraphrased):**
+- `DiMarti=1.7` DECLARED but NEVER wired into any lot calc (confirmed D1) — kept as an inert input, every
+  leg opens at `Fixed_Lot`. `Lot_mode`/`Fix_lot`/`Manage_Lot` compound machinery is ALSO dead in the source
+  (every OrderSend uses the plain `Fixed_Lot` extern, never the computed `G_lots_392`) — dropped; the port
+  has one lot input used everywhere = exactly what the source does. Flat-lot, not martingale.
+- **The "Trend" block is NOT mean-reversion** (despite the LWMA+Stoch-filter look) — the source's call sites
+  invert the naive reading: BUY_Trend fires on `Close[1] > LWMA && stoch < up_level` (join uptrend),
+  SELL_Trend on `Close[1] < LWMA && stoch > lo_level` (join downtrend). The "Counter" block IS pure-Stoch-band
+  mean-reversion. Ported EXACTLY as coded (same f0_1 return codes 2/-2 and same call-site mapping) — this is
+  what produced the D1 MT4 baseline, so a faithful port keeps it, does NOT "fix" it to the naive reading.
+- Digit-aware pip = tick_size×10 on 3/5-digit (mirrors init()); Range/SL/TP/Trailing/Tp_from_Bep all in PIPS.
+- Cosmetic on-chart Comment()/ObjectLabel dashboard dropped (zero trading effect).
+- **NO port bugs needed fixing** — compiled clean and passed the gate on the first backtest.
+
+**VALIDATION GATE — MT4 baseline vs MT5 port (EURUSD H1, same window/settings):**
+| metric | MT4 baseline (D1 stage-1 default) | MT5 port | pass criterion | verdict |
+|---|---|---|---|---|
+| PF | 1.18 (D1); brief cites ~1.15 | **1.19** | within ~0.15 (1.0–1.3) | PASS |
+| trades | 7052 (default) / 6681 (plateau set) / brief ~6681 | **7486** | within ±30% | PASS (+6% vs 7052) |
+| EqDD% | ~8.5% | **8.23%** (balDD 7.04%) | same order of magnitude | PASS |
+| net | +1731 (D1) / brief ~+1380 | **+1832** | positive | PASS |
+**GATE = PASS on all 4 criteria.** Cross-platform port reproduces the MT4 EURUSD H1 baseline (tick-model
+differences give +6% trades and marginally higher PF, well inside ballpark). MT5 port is trustworthy.
+
+**NEW-SYMBOL SMOKE (MT5 full history, Model 1, default inputs, fixed 0.01):**
+| symbol | TF | PF | net | balDD% | eqDD% | trades |
+|---|---|---|---|---|---|---|
+| EURGBP | M15 | **1.46** | +1740.16 | 4.64 | 6.85 | 2940 |
+| EURGBP | H1  | **1.48** | +1458.98 | 3.33 | 5.66 | 2368 |
+| EURGBP | H4  | **1.28** | +830.92  | 4.33 | 6.78 | 2010 |
+| NZDUSD | M15 | 0.99 | −87.02   | 11.99 | 14.05 | 5217 |
+| NZDUSD | H1  | 1.12 | +740.31  | 10.54 | 12.34 | 4538 |
+| NZDUSD | H4  | **1.37** | +1606.81 | 6.07 | 7.81 | 3879 |
+| AUDUSD | M15 | 1.00 | −21.40   | 13.39 | 14.77 | 6423 |
+| AUDUSD | H1  | **1.22** | +1588.07 | 8.02 | 9.58 | 5713 |
+| AUDUSD | H4  | **1.20** | +1200.81 | 8.89 | 10.31 | 4564 |
+| GBPUSD | M15 | 1.13 | +2243.45 | 15.43 | 16.71 | 12096 |
+| GBPUSD | H1  | 1.13 | +1778.57 | 17.13 | 18.82 | 10161 |
+| GBPUSD | H4  | 1.18 | +2224.00 | 8.15 | 10.39 | 9043 |
+| AUDJPY | M15 | 1.06 | +915.19  | 14.49 | 15.05 | 14561 |
+| AUDJPY | H1  | 0.96 | −478.57  | 23.53 | 25.10 | 11998 |
+| AUDJPY | H4  | 1.02 | +211.39  | 16.83 | 18.30 | 10466 |
+| GBPJPY | M15 | 1.02 | +538.84  | 29.15 | 30.23 | 31844 |
+| GBPJPY | H1  | 0.98 | −486.86  | 28.43 | 29.01 | 27352 |
+| GBPJPY | H4  | 0.93 | −1756.79 | 38.14 | 39.32 | 23049 |
+
+**Cross-check vs MT4 (confirmed cells):** AUDUSD H1 MT5 PF 1.22 vs MT4 D1 1.19 (agrees); GBPUSD H1 MT5 1.13
+vs MT4 D1 1.03 (MT5 slightly better; higher trade count on full history). Cross-platform agreement good.
+**Raw observations (not a verdict):** EURGBP is the standout new cell (PF 1.46–1.48 M15/H1, 1.28 H4, all
+low-DD 5.7–6.9% eq) — a symbol MT4's gapped feed could not evaluate. NZDUSD H4 (1.37/7.8% eq) and the
+AUDUSD H1/H4 cluster (1.20–1.22) are the other clean cells. Both JPY crosses (AUDJPY, GBPJPY) are weak-to-
+negative with 15–39% DD and 10k–32k trades = point-scaled grid mismatch on 3-digit JPY quotes (mirrors the
+D1 USDJPY-dead finding). Lead judges home selection / demo-bench inclusion.
+
+
+---
+
 ## REVIEW ORDER-091C-D1b — `REVIEWED(Claude, 2026-07-11)` — JUMSTOCH ทน spread → เลื่อนขึ้น demo-bench candidate
 
 **ตัดสิน:** spread จริงไม่กิน edge — ที่ spread 15pt (1.5 pip) EURUSD PF **1.17** / AUDUSD **1.22** · แม้ 25pt (2.5 pip
