@@ -5044,3 +5044,34 @@ AUDUSD H1 มาก) แล้วค่อยเลือก config เข้า
 3. cell ที่เฉียด (PF 1.0-1.1) = **candidate build-on** (ใส่ session/vol filter หรือขยาย Range spacing) ไม่ทิ้ง →
    เข้า D1d หรือ tweak-probe แยก
 4. ผลลัพธ์ = JUMSTOCH multi-symbol demo-bench set (EA เดียว หลาย symbol) + คิว build-on ต่อ (D1d pending + tweaks)
+
+
+---
+
+## ORDER-095 — CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเยอะ") — `OPEN` (multi-session, pace 1 EA/batch)
+
+**หลักการ (build-on doctrine + multi-symbol reuse):** EA ที่ deploy แล้ว = validated ที่ home เดียว · ขยายไป
+symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว่างกัน) = เพิ่มไม้โดยไม่ต้องหา EA ใหม่.
+
+**⛔ CAVEAT ชี้ขาด (lead judgment — ขยายผิดตัว = กระจายทางแพ้):** ขยายได้เฉพาะ EA ที่ **entry มี edge จริง
+(flat-lot PF>1)** เท่านั้น. EA ที่ entry ไม่มี edge = ขยาย symbol ยิ่งเพิ่มวิธีเสียเงิน:
+- ✅ **ขยายได้ (source + flat-lot edge ยืนยัน):** EA_BREAKOUT_XAU (breakout, real, travels) · Boss_14_GridLog
+  (demo flagship, 7 symbol แล้ว) · EA_SUPERTREND (flat-lot PF 2.93 — pending demo) · CB_GBP ConsoBreakout ·
+  NuiIndy Dynamic RSI+ADX (source อยู่ .Final EA)
+- ❌ **ห้ามขยาย (entry ไม่มี edge — กำลังถอดอยู่แล้ว):** RSI-MR (flat-lot 0.78) · ST_EA03 family (0.68/0.40) ·
+  ST03 replica — พวกนี้ถอดเพราะ entry ไม่มี edge → ขยายยิ่งผิดหลัก
+- ⚠️ **compiled-only (.ex4 รันได้แก้ไม่ได้):** UnNomGuai/swb/RSI-orig (MT4 demo) = ขยายแบบ run-as-is บน symbol
+  อื่น + corr check (flat-lot check = ปิด escalation input ถ้ามี) · Zeus/Kangaroo = martingale locked, Zeus เปราะ
+  (stop-out gold) → ไม่ขยาย
+
+**Methodology ต่อ EA (เหมือน JUMSTOCH D1c):** (1) flat-lot smoke บน symbol candidate ที่ยังไม่ deploy → เอาที่
+entry PF>1 (2) full-config IS/OOS บนตัวที่ผ่าน (3) corr equity-curve vs leg เดิม → เก็บ corr<0.8, คู่ >0.8 บอก user
+(4) เพิ่มเข้า demo config. **pace 1 EA/batch** · Boss_14 = ตัวแรก (D1c-สไตล์)
+
+## ORDER-095-A — Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) — `CLAIMED(Claude-agent, 2026-07-11)`
+**คำสั่ง:** Boss_14_GridLog (EALabTpl\Boss_14_GridLog, source ของเรา) · deploy แล้ว 7 symbol
+(USDJPY/AUDNZD/EURJPY/AUDCAD/CADJPY/EURUSD/XAU H1) · ขยาย candidate ใหม่: {GBPUSD,AUDUSD,NZDUSD,USDCAD,
+GBPJPY,AUDJPY,NZDCAD,EURGBP,CHFJPY,GBPAUD} × TF {M15,H1,H4} · full window 2023-2026 Model 1 ·
+**(1) flat-lot edge check ก่อน** (ปิด lot escalation → LotMode fixed) ต่อ symbol: entry PF>1 flat = ผ่านไปข้อ 2 ·
+(2) config เต็ม (grid ปกติ) IS/OOS บนตัวที่ผ่าน · ตาราง flat-PF + full-PF/DD/trades ต่อ cell + บาร์:
+flat PF>1 & full OOS PF≥1.2 & DD<20% = candidate leg · **ห้าม:** verdict · corr step (lead ทำเอง) · commit `[tag] ORDER-095-A done`
