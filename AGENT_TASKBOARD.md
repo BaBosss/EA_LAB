@@ -5369,3 +5369,10 @@ optimize ง่ายกว่า). **Gate บังคับ: MT5 port ต้�
 grid spacing) เลขไร้ความหมาย · **candidates:** JUMSTOCH (ORDER-091C-D1e, กำลังทำ) → SMC V2 · Lots-ex1+4 ·
 "MT4 good" ที่เจอเพิ่ม · memory `feedback-buildon-pf-gt-1` Refinement 3
 **reframe D1d:** pending-limit entry ทำบน MT5 port (D1e) แทน MT4 — optimize maker-fill ง่ายกว่า + base เดียวกัน
+
+
+## Boss_14 new-vs-EXISTING corr — `DONE(Claude, 2026-07-11)` — 5 ขาใหม่ additive กับพอร์ต live ทั้งหมด
+5 candidate (AUDJPY/CHFJPY/GBPJPY/USDCAD/GBPAUD) × 7 legs เดิม (AUDCAD/AUDNZD/CADJPY/EURJPY/EURUSD/USDJPY/XAU,
+report BOSS14_*_FULL_ISPICK_M1): **cross-corr สูงสุด 0.52 (AUDJPY×XAU) ที่เหลือ <0.5 หลายคู่ ~0/ติดลบ** →
+ทั้ง 5 additive กับพอร์ตจริง ไม่ redundant กับ leg ไหน · **Boss_14 ขยาย 7→12 ขา corr-cleared** (เหลือ OOS+optimize
+ก่อน deploy — corr ผ่านแต่ PF ยัง screening)
