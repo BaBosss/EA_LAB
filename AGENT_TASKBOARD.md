@@ -4185,6 +4185,26 @@ folder codes (`1-1-1`, `202.5.3`, ...), essentially never matching `FXDREEMA_XRA
    xray_lot_escalation` from `FXDREEMA_XRAY.csv` where matched (2 rows) — everything
    else is blank by design (see join-rate note above).
 
+---
+
+## ORDER-091B เฟส 2 — BWD spot-kill 5 ตัว "least-bad" ของ BOT MOGUL — `CLAIMED(Claude-agent, 2026-07-11)`
+
+**Judge call (Claude lead หลัง review เฟส 1):** ทั้ง bundle = single-year cherry-pick 100% (0 report ข้าม ≥2 ปี) ·
+top PF = 1-trade artifact (symbol="TRUE" quality 54%) · 94% no-SL · 45% martingale · median PF 3.79 = ไม่จริง.
+**แต่กฎห้ามตีตายจาก vendor-flag อย่างเดียว** → รัน BWD เราเอง 5 ตัวที่ "ดูรอดที่สุด" (real forex + ไม้เยอะ + DD
+ต่ำ) เป็นตัวแทน — ถ้าตัวดูดีสุดยังตายนอกปี cherry-pick = ปิด bundle ด้วย run ของเราเอง (ยืนยัน wobr-botranking)
+
+**5 ตัวคัด (EURUSD H1 2023, DD ต่ำ = ลายเซ็น no-SL grid ที่ยังไม่เจอปีร้าย):** `1-18-26` (PF 23.7/DD 1.93%/679t) ·
+`1-16-31` (67.2/8.06%/845t) · `1-16-20` (35.0/9.99%/1615t) · `1-16-23` (41.8/10.73%/1436t) · `1-1-23` (64.0/34.87%/337t)
+
+**คำสั่ง (agent, foreground synchronous — ห้าม background แล้วรอ notification):** (1) หา ex5 ของแต่ละ ea_id
+ใน `D:\Forex\...\1000+ EA BOT MOGUL Bundles\MT5 (ex5)\` (READ-ONLY — copy ออกมา ห้ามแตะต้นฉบับ) → วางใน
+D:\Meta 5b lane (2) แปลง inputs_raw ของ ea_id นั้นจาก `BOTMOGUL_CLAIMS.csv` เป็น .set (3) รัน BWD
+**2020.01.01-2022.12.31 EURUSD H1 Model 1 deposit 10000 leverage 1:100** ด้วย vendor inputs · 1 รัน/ตัว ·
+report prefix `BM091B_` **บาร์ pre-registered (verbatim): รอด = PF≥1.1 AND eqDD≤25% (ทั้งคู่). ตกข้อใดข้อหนึ่ง = ตาย**
+**Acceptance:** ตาราง 5 แถว PF/net/eqDD/trades ที่ BWD + บาร์กำกับ verbatim · ระบุ ex5 ที่หาไม่เจอ/รันไม่ได้ (+เหตุผล) ·
+commit `[tag] ORDER-091B phase2 done` · **ห้าม:** verdict สุดท้าย (Claude ตัดสิน) · tune · เชื่อ claim · แตะ D:\Forex
+
 **No backtests run, no verdicts issued, `D:\Forex` untouched (read-only).** Phase 2
 (BWD spot-kill on top candidates) stays with Claude/Opus per the order.
 

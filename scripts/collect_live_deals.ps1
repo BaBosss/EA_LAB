@@ -64,6 +64,14 @@ if (-not $found) { Write-Host "no EA_LAB_deals_*/EA_LAB_mt4_orders_*.csv in $Com
 foreach ($s in ($found | Where-Object { $_.BaseName -match '_0$' })) { Write-Host "skipped (login=0, terminal not authorized): $($s.Name)" }
 $found = @($found | Where-Object { $_.BaseName -notmatch '_0$' })
 if (-not $found) { Write-Host "nothing left after login=0 filter"; exit 1 }
+# 2026-07-11: header-only file = a Strategy-Tester login (e.g. 146237 = MT5 backtest terminal)
+# that rotation authenticated but has ZERO trade history -> phantom account on the dashboard.
+# A real live account always has >=1 deal row. Skip files whose only line is the header.
+foreach ($s in ($found | Where-Object { @(Get-Content $_.FullName -TotalCount 2).Count -lt 2 })) {
+  Write-Host "skipped (header-only, no deal rows - tester/empty login): $($s.Name)" -ForegroundColor DarkGray
+}
+$found = @($found | Where-Object { @(Get-Content $_.FullName -TotalCount 2).Count -ge 2 })
+if (-not $found) { Write-Host "nothing left after header-only filter"; exit 1 }
 # CODEX-AUDIT A4 (2026-07-11): never relabel a stale exporter file as today's snapshot.
 # Rotation rewrites every exporter CSV nightly, so a source older than 30h means the
 # rotation/exporter for that account is DEAD - copying it under today's date would hide that.
