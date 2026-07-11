@@ -5358,3 +5358,14 @@ Total Net Profit) · ผ่าน validation ครบ 5 (extracted = reported �
 **caveat คงเดิม:** เป็น screening (baseline AUDCAD untuned + full-window ยังไม่ split OOS) → corr เชื่อได้
 (robust ต่อ config tweak) แต่ **ก่อน deploy ต้อง OOS + per-symbol optimize** · ยังไม่เข้า DEPLOYMENTS.csv
 **สรุป "ได้อีกเยอะ" เป็นตัวเลขแล้ว:** JUMSTOCH +3 ขาไม่ corr · Boss_14 +5 ขาไม่ corr = EA 2 ตัว → 8 ไม้กระจายเสี่ยง
+
+
+---
+
+## 🔧 PROCESS: "MT4-good → MT5 port → smoke → optimize" (user directive 2026-07-11, standard pipeline)
+เมื่อ MT4 EA backtest ค่อนข้างดี → แกะ logic → implement MT5 → smoke (MT5 มี history ครบทุก symbol,
+optimize ง่ายกว่า). **Gate บังคับ: MT5 port ต้อง reproduce MT4 baseline ballpark ก่อนเชื่อผล symbol ใหม่**
+(PF ±0.15, trades ±30%, DD same-order) — port ที่ reproduce ไม่ได้ = มี bug (digit/point · indicator handle ·
+grid spacing) เลขไร้ความหมาย · **candidates:** JUMSTOCH (ORDER-091C-D1e, กำลังทำ) → SMC V2 · Lots-ex1+4 ·
+"MT4 good" ที่เจอเพิ่ม · memory `feedback-buildon-pf-gt-1` Refinement 3
+**reframe D1d:** pending-limit entry ทำบน MT5 port (D1e) แทน MT4 — optimize maker-fill ง่ายกว่า + base เดียวกัน
