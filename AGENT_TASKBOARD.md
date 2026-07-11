@@ -5376,3 +5376,16 @@ grid spacing) เลขไร้ความหมาย · **candidates:** JUMS
 report BOSS14_*_FULL_ISPICK_M1): **cross-corr สูงสุด 0.52 (AUDJPY×XAU) ที่เหลือ <0.5 หลายคู่ ~0/ติดลบ** →
 ทั้ง 5 additive กับพอร์ตจริง ไม่ redundant กับ leg ไหน · **Boss_14 ขยาย 7→12 ขา corr-cleared** (เหลือ OOS+optimize
 ก่อน deploy — corr ผ่านแต่ PF ยัง screening)
+
+
+---
+
+## 🔧 PORT-PIPELINE queue + SMC/FVG cluster (lead prep 2026-07-11, ระหว่าง D1e port รัน)
+เช็คขนาด/โครง MT4-good candidates เพื่อจัดลำดับ port (จาก x-ray card ไม่ต้องอ่านหมื่นบรรทัด):
+- **JUMSTOCH (472 บรรทัด, clean hand-written)** = port ง่าย → กำลังทำ D1e (gate ผ่านแล้ว)
+- **SMC V2 (11,096 บรรทัด, fxDreema-gen)** concept=`smc+candle_pattern`, **has_sl=yes, no-esc = โครงสะอาด** →
+  port = **concept-rebuild** (FVG/imbalance entry + SL, ใช้การ์ด x-ray ไม่ใช่แปลบรรทัด) · **candidate port ถัดไปที่ดี**
+- **Lots ex1+4 (18,730 บรรทัด)** flags=`NO_SL;LOT_ESCALATION` → โครงเสี่ยง (no-SL esc) · **priority ต่ำ** (ต้อง cap analysis ก่อน)
+- **🆕 SMC/FVG = mechanism cluster ทั้ง 8 ตัว** (SMC V2 + FVG FollowTrend/RichShield/serie-Plus/... 7 ตัว) —
+  landscape ว่างสนิท · ตัวโครงสะอาด (has SL): SMC V2, FVG FollowTrend · **worth ตั้ง exploration แยกถ้า SMC V2 port ได้ผล**
+**gotcha เจอ:** `FXDREEMA_XRAY.csv` header มี BOM (`﻿name`) → reader ต้องใช้ `utf-8-sig` (เพิ่มใน robust_text adoption TODO)
