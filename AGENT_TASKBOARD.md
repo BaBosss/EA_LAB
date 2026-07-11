@@ -5005,7 +5005,7 @@ REVIEW D1 ด้านบนเขียน "WATCH gate=spread" ก่อน use
 plateau สะอาด = **ของต่อยอด** (deploy-gate ≠ discard-gate) · D1b spread ไม่ใช่ kill-gate แล้ว แต่ **quantify ว่า
 spread กินเท่าไหร่ = เหตุผลสนับสนุนการเปลี่ยนเป็น pending entry** · เปิด 2 branch build-on:
 
-## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `OPEN` (รอ D1b ปิด MT4 lane)
+## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `CLAIMED(Claude-agent, 2026-07-11)`
 **คำสั่ง:** plateau-center config (k32/75-25 fixed-lot) · grid **majors+crosses+metal** {EURUSD,GBPUSD,USDJPY,
 AUDUSD,USDCAD,NZDUSD,EURJPY,GBPJPY,AUDJPY,EURGBP,XAUUSD} × TF {M15,M30,H1,H4} · full window 2023-2026 Model 1 ·
 1 backtest/cell · ตาราง PF/net/DD/trades ทุก cell + mark cell ที่ผ่าน (PF≥1.1 & trades≥200 & DD<25%) ·
@@ -5020,3 +5020,18 @@ grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไ
 เทียบ (fill-rate ของ pending ด้วย — limit ไม่ fill ทุกไม้) · **บาร์: pending PF > market PF ที่ spread จริง = ยืนยันคุณค่า**
 · **ห้าม:** เปลี่ยน lever อื่น · verdict · commit `[tag] ORDER-091C-D1d done`
 **หมายเหตุ:** นี่ตอบ ORDER-080 (limit vs market) ด้วย EA จริงตัวแรก → ปิด 080 ไปในตัวถ้าได้ผล
+
+
+---
+
+## REVIEW ORDER-091C-D1b — `REVIEWED(Claude, 2026-07-11)` — JUMSTOCH ทน spread → เลื่อนขึ้น demo-bench candidate
+
+**ตัดสิน:** spread จริงไม่กิน edge — ที่ spread 15pt (1.5 pip) EURUSD PF **1.17** / AUDUSD **1.22** · แม้ 25pt (2.5 pip
+แย่กว่าโบรกทั่วไป) ยัง 1.12/1.15 · **current variable spread (ตัวเลขจริงสุด) = EURUSD 1.15 / AUDUSD 1.18** ·
+baseline reproduce D1 เป๊ะ (plumbing ยืนยัน) · **ผ่านบาร์ 1.05 สบาย ทั้ง 2 symbol**
+**สรุปสถานะ JUMSTOCH (concern spread คลายแล้ว):** edge จริง spread-robust PF 1.15-1.18 · plateau สะอาด 9/9 ·
+OOS บวก · ruin 0% · fixed-lot capped-SL grid = **demo-bench candidate ตัวแรกจากคลัง user** (EA-SCORE ~6)
+**รูที่เหลือก่อนเงินจริง (ไม่ใช่ blocker ของ demo):** OOS บาง (1.06-1.12) · MC optimistic-for-grid · no live · no
+BWD trend-years · no corr — ทั้งหมด = demo-forward + build-on แก้ได้
+**ลำดับที่ถูก (build-on doctrine):** ยังไม่ attach demo ทันที — **D1c หา home ที่ดีที่สุดก่อน** (อาจดีกว่า EURUSD/
+AUDUSD H1 มาก) แล้วค่อยเลือก config เข้า demo + D1d pending อาจดันขึ้นอีก → เลือก home จริงก่อนค่อย bench
