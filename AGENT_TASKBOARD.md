@@ -5345,3 +5345,16 @@ Profit ก่อนใช้** — parse ผิดคอลัมน์ = reject
 4th-leg option = EURUSD H4 (0.66 vs H1, ผ่าน gate แต่กระจุก EURUSD) · **ยังไม่เข้า DEPLOYMENTS.csv** — รอ user
 attach + assign magic (candidate demo-bench, spread-robust + plateau + corr ครบ) · เพิ่มขาอีกหลังโหลด MT4 history
 (NZDUSD/AUDJPY/GBPJPY/EURGBP priority)
+
+
+---
+
+## REVIEW ORDER-095-A corr preview — `REVIEWED(Claude, 2026-07-11)` — Boss_14 candidates 5 ตัวไม่ corr กันเลย
+`mt4_monthly.py` เพิ่ม `extract_monthly_mt5()` (self-validate เหมือน MT4 — sum profit+comm+swap ของ out-deal =
+Total Net Profit) · ผ่าน validation ครบ 5 (extracted = reported เป๊ะทุกตัว)
+**corr matrix (Boss_14 new candidates, monthly P&L):** AUDJPY/CHFJPY/GBPJPY/USDCAD/GBPAUD ทุกคู่ **-0.19 ถึง 0.44**
+(ไม่มีคู่ไหน >0.8) · หลายคู่ ~0 หรือติดลบ (USDCAD×AUDJPY -0.13, GBPAUD×AUDJPY -0.19 = hedge กัน) →
+**ทั้ง 5 additive กันหมด** = Boss_14 ขยายได้อีก 5 symbol ที่กระจายเสี่ยงจริง
+**caveat คงเดิม:** เป็น screening (baseline AUDCAD untuned + full-window ยังไม่ split OOS) → corr เชื่อได้
+(robust ต่อ config tweak) แต่ **ก่อน deploy ต้อง OOS + per-symbol optimize** · ยังไม่เข้า DEPLOYMENTS.csv
+**สรุป "ได้อีกเยอะ" เป็นตัวเลขแล้ว:** JUMSTOCH +3 ขาไม่ corr · Boss_14 +5 ขาไม่ corr = EA 2 ตัว → 8 ไม้กระจายเสี่ยง

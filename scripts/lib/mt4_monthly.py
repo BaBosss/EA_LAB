@@ -78,3 +78,32 @@ if __name__ == "__main__":
         mo, ok, ne, nr, nt = extract_monthly_mt4(p)
         flag = "OK" if ok else "FAIL-VALIDATION"
         print(f"{flag:16s} extracted_net={ne:>12} reported_net={nr} trades={nt} months={len(mo)}  {os.path.basename(p)}")
+
+
+def extract_monthly_mt5(path):
+    """MT5 backtest report: Deals table, 13 cells [Time,Deal,Symbol,Type,Direction,
+    Volume,Price,Order,Commission,Swap,Profit,Balance,Comment]. Sum profit+commission+swap
+    on Direction=out deals per close-month. Self-validate vs Total Net Profit."""
+    t = read_text_robust(path)
+    net_reported = None
+    m = re.search(r"Total\s*Net\s*Profit[^0-9\-]*([\-0-9 .,]+)", t, re.I)
+    if m:
+        net_reported = _num(m.group(1))
+    monthly, net_extracted, n = {}, 0.0, 0
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", t, re.S | re.I):
+        cells = [re.sub(r"<[^>]+>", "", c).strip()
+                 for c in re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S | re.I)]
+        if len(cells) != 13 or cells[4].lower() != "out":
+            continue
+        dm = re.match(r"(\d{4})\.(\d{2})\.(\d{2})", cells[0])
+        p, comm, sw = _num(cells[10]), _num(cells[8]), _num(cells[9])
+        if not dm or p is None:
+            continue
+        tot = p + (comm or 0) + (sw or 0)
+        ym = f"{dm.group(1)}-{dm.group(2)}"
+        monthly[ym] = monthly.get(ym, 0.0) + tot
+        net_extracted += tot
+        n += 1
+    ok = (net_reported is not None
+          and abs(net_extracted - net_reported) <= max(1.0, abs(net_reported) * 0.01))
+    return monthly, ok, round(net_extracted, 2), net_reported, n
