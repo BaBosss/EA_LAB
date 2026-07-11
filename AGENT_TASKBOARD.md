@@ -4512,3 +4512,16 @@ maker-maker round trip = **4 bps ก่อน funding/adverse selection** = เ�
 สูงกว่ามาก → **PARK** · เงื่อนไข un-park ข้อเดียว: user มีบัญชีจริง + ส่งหน้า fee page มายืนยัน F1 แล้วอยากลอง
 checkpoint แรก 18-32 ชม. (bar probe ใต้ fee โหดสุด — ฆ่าไอเดียถูก ๆ ได้ก่อนสร้างอะไรใหญ่) · ไม่มี rebate
 = ไม่มีเหตุให้รีบ
+
+
+---
+
+## REVIEW ORDER-094 — `REVIEWED(Claude, 2026-07-11)` — ผ่าน · cage ทั้ง 4 fail-closed แล้ว (audit D3-D6 ปิดครบ)
+
+**Verify อิสระโดย lead:** อ่าน diff mt5_run (minimal ตรง spec, output text เดิมทุกตัวอักษร) + รัน negative test
+เองซ้ำ: bogus expert + วางไฟล์ stale ปลอมที่ dest → **exit 1 + stale ถูกลบจริง** · หลักฐาน agent ครบ:
+negative 6 เคสแดงหมด · baseline ใหม่ Boss_11-14 ตรงของเดิมเป๊ะ (พิสูจน์ว่าแก้ harness ไม่แตะ behavior)
++ Boss_15/16 เข้า cage แล้ว (15 ติดลบบน window = ปกติ, baseline ตรึง behavior ไม่ใช่กำไร — เหตุผลถูก) ·
+REGRESSION CLEAN 6/6 + ALL TESTS PASS 5/5 สด · deviation (journal bind ด้วย run-start timestamp แทน
+resolve Agent folder) = การันตีเดียวกัน รับได้
+**ผลรวมวันนี้: CODEX-AUDIT Layer D ปิดครบทุกข้อ (D1-D6)** — เหลือ Layer A/C ฝั่ง user-action (attach) + ORDER-093
