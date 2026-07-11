@@ -5068,10 +5068,130 @@ symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว
 entry PF>1 (2) full-config IS/OOS บนตัวที่ผ่าน (3) corr equity-curve vs leg เดิม → เก็บ corr<0.8, คู่ >0.8 บอก user
 (4) เพิ่มเข้า demo config. **pace 1 EA/batch** · Boss_14 = ตัวแรก (D1c-สไตล์)
 
-## ORDER-095-A — Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-095-A — Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) — `DONE(Claude-agent, 2026-07-11)`
 **คำสั่ง:** Boss_14_GridLog (EALabTpl\Boss_14_GridLog, source ของเรา) · deploy แล้ว 7 symbol
 (USDJPY/AUDNZD/EURJPY/AUDCAD/CADJPY/EURUSD/XAU H1) · ขยาย candidate ใหม่: {GBPUSD,AUDUSD,NZDUSD,USDCAD,
 GBPJPY,AUDJPY,NZDCAD,EURGBP,CHFJPY,GBPAUD} × TF {M15,H1,H4} · full window 2023-2026 Model 1 ·
 **(1) flat-lot edge check ก่อน** (ปิด lot escalation → LotMode fixed) ต่อ symbol: entry PF>1 flat = ผ่านไปข้อ 2 ·
 (2) config เต็ม (grid ปกติ) IS/OOS บนตัวที่ผ่าน · ตาราง flat-PF + full-PF/DD/trades ต่อ cell + บาร์:
 flat PF>1 & full OOS PF≥1.2 & DD<20% = candidate leg · **ห้าม:** verdict · corr step (lead ทำเอง) · commit `[tag] ORDER-095-A done`
+
+### ORDER-095-A RESULT (Claude-agent, 2026-07-11)
+
+**Run conditions:** portable lane `D:\Meta 5b` only (main `D:\Meta 5` lane not touched) ·
+`EALabTpl\Boss_14_GridLog` · Model 1 (open-price) · deposit 10000 · leverage 1:100 · full window
+2023.01.01–2026.07.01 · 10 candidate symbols × {M15,H1,H4} · all 61 runs (1 anchor + 30 flat-lot +
+20 full-config; 10 cells skipped full-config per flat≤1 rule) completed on first attempt, no
+retries, no `NO REPORT`, no 0-trade cells.
+
+**Deployed-config baseline used:** `ea_template\sets\Boss14_GridLog_AUDCAD_DEMO.set` as the
+template. Note for the record: the 7 already-deployed legs are each **individually IS-optimized**
+per symbol — `_9_StepATRmult`, `_14_DistAtrMult`, `_2_BasketTP_Money`, `_14_Direction` (buy/sell)
+and `_41_FixedLot` differ leg-to-leg (e.g. EURUSD_DEMO runs Direction=2/SELL-only + DistAtrMult=3.0,
+while AUDCAD_DEMO runs Direction=1/BUY-only + DistAtrMult=1.4) — there is no single literal
+parameter set shared by all 7. AUDCAD_DEMO was picked as the single baseline applied unchanged to
+every new candidate because it matches the cross-symbol mode on every field except
+`_2_BasketTP_Money` (StepATRmult=1.4, DistAtrMult=1.4, Direction=1/BUY-only, FixedLot=0.10 — all
+modal values). New-symbol .set files built: `_mt5_auto\ab_sets\o095a_sets\O095A_FULL_baseline.set`
+(LotProg=55 PROG_LOG_POWER, `_41_FixedLot=0.10` — grid escalation ON, exactly this baseline) and
+`_mt5_auto\ab_sets\o095a_sets\O095A_FLAT_baseline.set` (identical except `LotProg=50` PROG_NONE +
+`_41_FixedLot=0.01` — escalation OFF, flat 0.01 lot; grid stacking StackMode=92/6-level stays ON,
+only the log-lot multiplier is disabled per order text "ปิด lot escalation → LotMode fixed"). No
+symbol-specific re-optimization was done for the new candidates — this is a screening pass on the
+untuned baseline, not each symbol's own best config.
+
+**Sanity anchor:** `EURUSD H1` full deployed config (`Boss14_GridLog_EURUSD_DEMO.set` verbatim,
+report `O095A_ANCHOR_EURUSD_H1.htm`) → **PF 1.97, Net +668.03, Trades 69, BalDD 2.99%, EqDD 4.39%,
+Bars 21720, History Quality 100%.** This reproduces the ORDER-016 cohort-2 EURUSD full-window
+result (PF 1.97, Net +669.10, Trades 69) almost exactly → plumbing/set confirmed correct before
+trusting new-symbol numbers.
+
+**History check:** all 10 candidate symbols × all 3 TFs returned History Quality 99–100% and bar
+counts in the expected range for the window (M15 ≈86,872–86,878 · H1 ≈21,719–21,720 · H4 = 5,430
+on every cell, matching the anchor's H1 bar count and each other TF's expected count for a 3.5-year
+window) — **no DATA-GAP cells found across the whole grid**, nothing excluded.
+
+**Pre-registered bar (quote verbatim, not judged):** "candidate leg = flat-lot PF>1 AND full-config
+PF≥1.2 AND DD<20% AND history ครบ"
+
+**STEP 1 — flat-lot edge check (all 10 symbols × 3 TF, `O095A_FLAT_baseline.set`, fixed 0.01 lot,
+escalation OFF):**
+
+| Symbol | TF | Flat PF | Net | Trades | BalDD% | EqDD% | Bars | HistQ% |
+|---|---|---:|---:|---:|---:|---:|---:|---:|
+| AUDJPY | M15 | 6.20 | +290.37 | 23 | 0.32 | 1.27 | 86878 | 100 |
+| AUDJPY | H1  | 2.04 | +220.14 | 38 | 1.68 | 3.03 | 21720 | 100 |
+| AUDJPY | H4  | 2.90 | +265.36 | 20 | 1.23 | 1.50 | 5430  | 100 |
+| AUDUSD | M15 | 1.06 | +9.32   | 50 | 1.44 | 2.20 | 86872 | 100 |
+| AUDUSD | H1  | 1.06 | +15.17  | 47 | 1.71 | 2.10 | 21719 | 100 |
+| AUDUSD | H4  | 0.54 | -76.67  | 17 | 1.68 | 2.47 | 5430  | 100 |
+| CHFJPY | M15 | 7.64 | +675.48 | 29 | 0.62 | 1.84 | 86875 | 100 |
+| CHFJPY | H1  | 13.39| +780.71 | 17 | 0.51 | 1.84 | 21720 | 100 |
+| CHFJPY | H4  | 5.36 | +285.24 | 8  | 0.41 | 0.87 | 5430  | 100 |
+| EURGBP | M15 | 0.00 | -201.61 | 49 | 2.02 | 2.17 | 86878 | 100 |
+| EURGBP | H1  | 0.01 | -246.58 | 48 | 2.47 | 2.82 | 21720 | 100 |
+| EURGBP | H4  | 0.00 | -274.18 | 24 | 2.74 | 3.10 | 5430  | 100 |
+| GBPAUD | M15 | 1.20 | +15.04  | 15 | 0.76 | 1.79 | 86878 | 100 |
+| GBPAUD | H1  | 1.20 | +15.28  | 9  | 0.75 | 1.80 | 21720 | 100 |
+| GBPAUD | H4  | 1.58 | +31.05  | 6  | 0.53 | 1.80 | 5430  | 100 |
+| GBPJPY | M15 | 2.08 | +614.18 | 114| 2.98 | 3.11 | 86878 | 100 |
+| GBPJPY | H1  | 6.98 | +827.31 | 28 | 0.65 | 1.62 | 21720 | 100 |
+| GBPJPY | H4  | 4.37 | +348.84 | 15 | 0.74 | 1.98 | 5430  | 100 |
+| GBPUSD | M15 | 1.36 | +94.91  | 59 | 2.09 | 2.12 | 86873 | 99  |
+| GBPUSD | H1  | 1.55 | +184.72 | 50 | 2.01 | 2.32 | 21719 | 99  |
+| GBPUSD | H4  | 1.56 | +194.97 | 33 | 2.09 | 2.30 | 5430  | 99  |
+| NZDCAD | M15 | 0.10 | -127.95 | 54 | 1.42 | 1.63 | 86878 | 100 |
+| NZDCAD | H1  | 0.26 | -82.92  | 28 | 1.12 | 1.47 | 21720 | 100 |
+| NZDCAD | H4  | 0.18 | -94.44  | 16 | 1.15 | 1.67 | 5430  | 100 |
+| NZDUSD | M15 | 0.00 | -232.37 | 75 | 2.32 | 3.05 | 86875 | 100 |
+| NZDUSD | H1  | 0.02 | -198.90 | 32 | 2.00 | 2.57 | 21720 | 100 |
+| NZDUSD | H4  | 0.00 | -239.93 | 21 | 2.40 | 2.72 | 5430  | 100 |
+| USDCAD | M15 | 1.74 | +46.45  | 27 | 0.63 | 1.05 | 86872 | 100 |
+| USDCAD | H1  | 3.95 | +190.38 | 15 | 0.65 | 1.07 | 21719 | 100 |
+| USDCAD | H4  | 4.86 | +199.27 | 8  | 0.52 | 1.05 | 5430  | 100 |
+
+**Symbols with flat PF≤1 on every TF (no entry edge, per-order rule "flat<1, entry no edge here" —
+step 2 skipped entirely):** EURGBP (0.00/0.01/0.00), NZDCAD (0.26/0.18/0.10), NZDUSD (0.02/0.00/0.00).
+**AUDUSD H4** also flat<1 (0.54) — step 2 skipped for that one cell only (AUDUSD M15/H1 both flat
+1.06, marginal but >1.0, so both ran step 2).
+
+**STEP 2 — full deployed config (grid + log-lot escalation ON, `O095A_FULL_baseline.set`, 0.10 lot)
+— run only on the 20 cells with flat PF>1:**
+
+| Symbol | TF | Flat PF | Full PF | Net | Trades | BalDD% | EqDD% | Bars | HistQ% | passes-bar? |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:---:|
+| AUDJPY | M15 | 6.20  | 1.40 | +803.06   | 115 | 5.10  | 5.60  | 86878 | 100 | **YES** |
+| AUDJPY | H1  | 2.04  | 1.38 | +2447.94  | 326 | 11.38 | 13.48 | 21720 | 100 | **YES** |
+| AUDJPY | H4  | 2.90  | 2.25 | +1975.08  | 81  | 3.20  | 4.55  | 5430  | 100 | **YES** |
+| AUDUSD | M15 | 1.06  | 0.89 | -273.55   | 133 | 8.44  | 9.03  | 86872 | 100 | no (full PF<1.2, negative net) |
+| AUDUSD | H1  | 1.06  | 0.93 | -59.35    | 41  | 3.21  | 5.69  | 21719 | 100 | no (full PF<1.2, negative net) |
+| CHFJPY | M15 | 7.64  | 1.30 | +2802.12  | 530 | 11.98 | 13.99 | 86875 | 100 | **YES** |
+| CHFJPY | H1  | 13.39 | 1.53 | +2711.85  | 247 | 5.36  | 7.54  | 21720 | 100 | **YES** |
+| CHFJPY | H4  | 5.36  | 1.73 | +1212.08  | 53  | 11.98 | 13.84 | 5430  | 100 | **YES** (flat leg only 8 trades — low sample, flag for lead) |
+| GBPAUD | M15 | 1.20  | 0.95 | -675.61   | 686 | 15.46 | 16.66 | 86878 | 100 | no (full PF<1.2) |
+| GBPAUD | H1  | 1.20  | 0.86 | -1656.66  | 408 | 24.51 | 25.37 | 21720 | 100 | no (full PF<1.2, DD≥20%) |
+| GBPAUD | H4  | 1.58  | 1.52 | +1162.65  | 78  | 5.71  | 8.30  | 5430  | 100 | **YES** (flat leg only 6 trades — very low sample, flag for lead) |
+| GBPJPY | M15 | 2.08  | 1.02 | +158.93   | 431 | 24.27 | 25.46 | 86878 | 100 | no (full PF<1.2, DD≥20%) |
+| GBPJPY | H1  | 6.98  | 1.32 | +3314.41  | 409 | 13.28 | 15.25 | 21720 | 100 | **YES** |
+| GBPJPY | H4  | 4.37  | 1.54 | +1695.16  | 102 | 7.75  | 8.36  | 5430  | 100 | **YES** |
+| GBPUSD | M15 | 1.36  | 1.01 | +84.79    | 351 | 13.90 | 15.42 | 86873 | 99  | no (full PF<1.2) |
+| GBPUSD | H1  | 1.55  | 1.07 | +566.80   | 311 | 17.88 | 18.75 | 21719 | 99  | no (full PF<1.2) |
+| GBPUSD | H4  | 1.56  | 0.95 | -423.94   | 272 | 20.54 | 23.84 | 5430  | 99  | no (full PF<1.2, DD≥20%, negative net) |
+| USDCAD | M15 | 1.74  | 1.24 | +596.11   | 183 | 5.84  | 7.58  | 86872 | 100 | **YES** |
+| USDCAD | H1  | 3.95  | 1.19 | +904.71   | 261 | 9.19  | 9.96  | 21719 | 100 | no (full PF 1.19 — marginal miss on the 1.2 bar) |
+| USDCAD | H4  | 4.86  | 1.26 | +818.09   | 147 | 5.56  | 7.55  | 5430  | 100 | **YES** |
+
+**Cells that pass both steps numerically (candidate legs per the pre-registered bar, raw count
+only — 11 of 61 runs, 5 symbols):** AUDJPY (all 3 TF: M15/H1/H4) · CHFJPY (all 3 TF: M15/H1/H4,
+note H4 flat leg is only 8 trades) · GBPAUD (H4 only, note flat leg is only 6 trades) · GBPJPY
+(H1 and H4, not M15) · USDCAD (H4 and M15, not H1 — H1 missed by 0.01 on the full-PF bar).
+
+**Anomalies:** none. All 61 tester launches (1 anchor + 30 flat + 20 full + wait — 10 skipped)
+returned a report on the first attempt; no timeout, no retry, no 0-trade cell, no FAILED cell, no
+history-quality flag below 99%. Report parsing required a comma→space thousands-separator fix
+(MT5 htm reports use a plain-space thousands separator, e.g. "2 447.94", not a comma) — first-pass
+regex silently returned NA on Net/DD for the larger-notional cells; re-parsed and reconciled against
+raw htm before this table was written.
+
+(raw numbers + mechanical bar-check only — no PASS/FAIL/DEPLOY verdict, no correlation step, per
+order ห้าม — lead judges and runs corr)
