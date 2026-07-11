@@ -4958,12 +4958,45 @@ MC optimistic · **M0/spread ไม่เคยรัน** · no live · no BWD 
 **gate ชี้ขาดถัดไป = spread:** H1 grid 5-7k ไม้ = spread-sensitive สุด · Model 1 ไม่คิด spread · **ถ้า spread จริง
 กิน PF < 1.0 = ตาย · ถ้ารอด = demo-bench candidate** → ORDER-091C-D1b (dispatched, MT4 TestSpread ใช้ได้)
 
-## ORDER-091C-D1b — JUMSTOCH spread stress (gate ก่อน demo) — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-091C-D1b — JUMSTOCH spread stress (gate ก่อน demo) — `DONE(Claude-agent, 2026-07-11)`
 **คำสั่ง:** plateau-center k32/75-25 บน EURUSD H1 + AUDUSD H1, full window 2023-2026 Model 1 fixed-lot ·
 รัน 3 ระดับ spread ต่อ symbol ผ่าน MT4 TestSpread: {ปัจจุบัน/current, 15, 25 points} (EURUSD ~1.5-2.5 pip จริง) ·
 ตาราง PF/net/DD/trades ต่อ spread · **บาร์: PF ยัง ≥1.05 ที่ spread 15pt ทั้ง 2 symbol = รอด → demo-bench ·
 < 1.0 = ตาย (spread กิน edge)** · **ห้าม:** tune · verdict (lead) · commit `[tag] ORDER-091C-D1b done`
 
+### ORDER-091C-D1b RESULT (Claude-agent, 2026-07-11)
+Raw numbers only — no verdict (lead judges). Runner: `scripts\mt4_run.ps1` (same MT4 lane/Expert as D1:
+`c091c\JUMSTOCH_FIXEDLOT`, `D:\Meta4`), same plateau-center set `JUM_D1_plateau_center.set` (k_period=32,
+up_level=75, lo_level=25, Fixed_Lot=0.01). Model 1, deposit 10000, window 2023.01.01–2026.07.01. Spread
+levels via the runner's `-Spread` param, which writes `TestSpread=<N>` into the MT4 tester `.ini` (confirmed
+in the generated ini files — MT4 honors it, unlike MT5). Digit convention: both symbols are 5-digit feeds
+(prices like `1.07016`), so 1 point = 0.00001 → 15 points = 1.5 pips, 25 points = 2.5 pips, matching the
+order's own annotation. Reports: `JUM_D1b_<sym>_sp<NN>.htm` in `_mt4_auto\reports\` (sp00 = current/default
+spread, no TestSpread line written).
+
+| symbol | spread | PF | net | DD% | trades |
+|---|---|---|---|---|---|
+| EURUSD | current (19pt) | 1.15 | +1380.21 | 9.09 | 6681 |
+| EURUSD | 15pt | 1.17 | +1529.86 | 8.64 | 6806 |
+| EURUSD | 25pt | 1.12 | +1134.34 | 9.44 | 6482 |
+| AUDUSD | current (22pt) | 1.18 | +1180.54 | 9.95 | 5161 |
+| AUDUSD | 15pt | 1.22 | +1454.43 | 9.76 | 5378 |
+| AUDUSD | 25pt | 1.15 | +1036.18 | 10.06 | 5065 |
+
+**Current-spread reproduction check:** EXACT match to the D1 Stage-2 plateau-center CENTER row — EURUSD
+(PF 1.15, net +1380, DD 9.09%, trades 6681) and AUDUSD (PF 1.18, net +1181→1180.54, DD 9.95%, trades 5161)
+both reproduce D1 to the same numbers → spread plumbing/lane setup confirmed correct, no drift from D1.
+
+**Note (raw observation, not a judgment):** at 15pt fixed spread, PF/net/trades are all HIGHER than the
+current/default-spread baseline for both symbols (EURUSD 1.15→1.17, AUDUSD 1.18→1.22), then drop at 25pt
+(EURUSD 1.12, AUDUSD 1.15) — i.e. the "current" variable historical spread on this feed evidently costs
+more than a flat 15pt on average but less than a flat 25pt for this window, on both symbols.
+
+**Pre-registered bar (quoted verbatim):** "PF ยัง ≥1.05 ที่ spread 15pt ทั้ง 2 symbol = รอด → demo-bench ·
+< 1.0 = ตาย (spread กิน edge)"
+- EURUSD @ 15pt: PF 1.17
+- AUDUSD @ 15pt: PF 1.22
+No verdict issued (lead).
 
 ---
 
