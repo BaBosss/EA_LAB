@@ -4120,6 +4120,9 @@ spot-check 2 report ตัวเลข parse ตรง html จริง · comm
 - **091C — .Final EA inventory + funnel queue:** ของ hand-validated โดย user = prior สูงสุดของคลัง ·
   cross-ref กับ verdict เดิม (Kangaroo/Zeus/Hedging-Rebalance-TIMELOCK เจอแล้วจาก copy ฝั่ง OneDrive) ·
   เรียงคิว funnel (MC+OOS ที่ user ไม่เคยทำ) ทีละ 1-2 ตัว/batch ตาม rescue-ladder + diagnosis→lever
+  · **PREP DONE(Claude, 2026-07-11):** triage tier + คิว funnel + ปมที่ต้องถาม user =
+  `_triage\ORDER091C_FINALEA_PREP.md` — Opus รอบหน้าเริ่มจากไฟล์นั้น (ข้อ 1 = ถาม user แยก keeper vs
+  indicator-sample noise ก่อน ประหยัดสุด)
 
 **Wave 2 — 091D: `3. ready to use`** (user optimize แล้ว ไม่เคย MC+OOS): funnel + idea extraction
 ทุกตัวแม้ตก (คำ user: "ทดลองไม่ผ่านก็ได้ แต่เอาไอเดียมาต่อยอดที")
