@@ -4093,6 +4093,30 @@ mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG 
 - **091B — BOT MOGUL report sweep:** parse 713 vendor reports → ตาราง claimed PF/DD/symbol/TF →
   คัด top ตาม claim × โครงผ่าน X-ray → **BWD-OOS spot-kill ทีละ 5** (1 รัน/ตัว ฆ่าถูกสุด) —
   ห้ามเชื่อ report แนบจนกว่า BWD เราเองผ่าน
+
+---
+
+## ORDER-091B — BOT MOGUL report sweep (เฟส 1: parse+rank+shortlist) — `DONE-PHASE1(Claude-agent, 2026-07-11)`
+
+**ที่มา:** ORDER-091A พบ 711 BOT MOGUL html = MT4 Strategy Tester report ของ vendor เอง (`ORDER091A_REPORTS.csv`) ·
+spot-check: window แคบ (เช่น 2023 ปีเดียว = cherry-pick) + inputs โชว์ `Multiple=1.6` = martingale · memory
+wobr-botranking: BotMogul rank = adverse-selected overfit → **report = claim ห้ามเชื่อจนกว่า BWD เราเองผ่าน**
+
+**คำสั่ง (เฟส 1 mechanical เท่านั้น — ห้ามรัน backtest, ห้าม verdict):**
+1. เขียน `scripts\botmogul_parse.py` (portable python `tools\python312`) parse 711 html (path จาก
+   `_triage\ORDER091A_REPORTS.csv` type=html scan_folder='BOT MOGUL Bundles') สกัดต่อไฟล์: EA id (parent_ea_folder) ·
+   symbol · period/TF · **test window (from-to)** · Total Net Profit · Profit Factor · Balance/Equity DD (%+abs) ·
+   Total Trades · Modeling Quality · **Inputs ทั้งบรรทัด** → parse หา danger flag จากชื่อ input:
+   `Multiple/Martingale/Mult>1` = MARTINGALE · `Lots_Per_Money/Risk%` = money-based-lot · ไม่มี SL/StopLoss ใน inputs = NO_SL_INPUT (heuristic)
+2. Output `_triage\BOTMOGUL_CLAIMS.csv` (1 แถว/report) + join กับ `FXDREEMA_XRAY.csv` ถ้า EA id ตรง
+   (ส่วนใหญ่เป็น .ex4 ไม่มี source → ใช้ flag จาก inputs แทน)
+3. **Ranked shortlist** `_triage\BOTMOGUL_SHORTLIST.md`: เรียงตาม claimed PF ที่ **window ≥ 2 ปี** (ตัด single-year
+   cherry-pick ขึ้นหัว) · แยกคอลัมน์ "structural red flag" (martingale/no-SL/DD>40%) · top-30 + เหตุผลกำกับ ·
+   **ตาราง window-distribution** (กี่ report เทสปีเดียว vs หลายปี = วัด cherry-pick ทั้ง bundle)
+**Acceptance:** CLAIMS.csv ครบ 711 (หรือรายงาน parse-fail ต่อไฟล์) · SHORTLIST.md + window-dist ·
+spot-check 2 report ตัวเลข parse ตรง html จริง · commit `[tag] ORDER-091B done` (เฟส 1)
+**ห้าม:** รัน backtest · verdict · เชื่อ claim · แตะไฟล์ D:\Forex
+**เฟส 2 (Claude/Opus judge เอง หลัง review shortlist):** คัด top 5 ที่ claim สูง × โครงไม่ตาย → BWD spot-kill
 - **091C — .Final EA inventory + funnel queue:** ของ hand-validated โดย user = prior สูงสุดของคลัง ·
   cross-ref กับ verdict เดิม (Kangaroo/Zeus/Hedging-Rebalance-TIMELOCK เจอแล้วจาก copy ฝั่ง OneDrive) ·
   เรียงคิว funnel (MC+OOS ที่ user ไม่เคยทำ) ทีละ 1-2 ตัว/batch ตาม rescue-ladder + diagnosis→lever
@@ -4111,6 +4135,58 @@ smoke เฉพาะโครงสะอาด)
   ตบ spec กับ user ("เดี๋ยวเรามาตบ ๆ กันอีกที")
 - FxDreema_Learner = ตัวอย่างเรียน → concept-mine อย่างเดียว
 **หมายเหตุ:** FXDREEMA_XRAY.csv ซ่อม duplicate concept column แล้ว (2026-07-10 ค่ำ)
+
+### ORDER-091B RESULT phase-1 (Claude-agent, 2026-07-11)
+
+**Parsed 711/711 (100% ok, 0 parse-fail, 0 partial)** — built `scripts\botmogul_parse.py`
+(portable `tools\python312\python.exe`), output `_triage\BOTMOGUL_CLAIMS.csv` (711 rows) +
+`_triage\BOTMOGUL_SHORTLIST.md`. Encoding gotcha caught before it silently nuked the whole
+run: these reports are **UTF-16 LE** (BOM `FF FE`), not ASCII/UTF-8 — a naive utf-8/cp1252
+decode doesn't raise, it just silently returns NUL-interleaved garbage that fails every
+regex (first run: parsed=0/711 fail). Fixed with a BOM-sniff in `read_text()`; worth
+remembering for any other script that touches this bundle's raw html.
+
+**Window-distribution headline — 100% single-year cherry-pick, confirmed not a bug:**
+all 711 reports fall into exactly 4 distinct test windows, all <1yr:
+2023.01.01–2023.12.31 (476), 2024.01.01–2024.12.31 (179), 2024.01.01–2024.11.09 (54),
+2024.01.01–2024.09.15 (2). **Zero reports span >=2 years** → the "top-30 PF at
+window_years>=2" table required by the order is genuinely empty (not a parser miss —
+spot-checked). This *is* the finding: the whole 711-report bundle is single-year vendor
+cherry-pick, exactly as the ORDER-091A spot-check + memory `wobr-botranking` predicted.
+
+**Top-5 preview (from the single-year table, since >=2yr table is empty — NOT ranked/validated):**
+| ea_id | symbol | PF | trades | window | red_flag |
+|---|---|---|---|---|---|
+| 202.5.3 | TRUE | 761.49 | 1 | 2024 (full yr) | MARTINGALE;NO_SL |
+| 202.3.3 | TRUE | 760.33 | 1 | 2024 (full yr) | MARTINGALE;NO_SL |
+| 202.4.3 | TRUE | 760.33 | 1 | 2024 (full yr) | NO_SL |
+| 202.2.3 | TRUE | 759.15 | 1 | 2024 (full yr) | NO_SL |
+| 204.3.3 | TRUE | 752.48 | 1 | 2024 (full yr) | MARTINGALE;NO_SL |
+
+All 15 top single-year rows are **degenerate 1-trade reports** with `Symbol: TRUE`
+(literal, confirmed in raw html, not a parse bug — a vendor report anomaly, see below)
+and `History Quality: 54%` (vs 100% everywhere else) — textbook broken/non-representative
+tester runs, not a real edge. Don't chase these for phase 2.
+
+**X-ray join rate: 2/711** — expected and confirmed: BOT MOGUL ea_id's are numeric/dotted
+folder codes (`1-1-1`, `202.5.3`, ...), essentially never matching `FXDREEMA_XRAY.csv`
+`name` (real EA filenames) since the bundle is almost entirely .ex4/.ex5 compiled-only.
+
+**Anomalies for the judge:**
+1. **Danger flags are near-universal:** MONEY_LOT 711/711 (100%), NO_SL_INPUT(heuristic)
+   667/711 (94%), MARTINGALE 317/711 (45%). Median claimed PF across all 711 = 3.79
+   (implausibly high for real forex trading — consistent with overfit/cherry-pick).
+2. **Symbol field is not always a forex pair:** 532 EURUSD, but 100 `CCET`, 61 `TRUE`
+   (literal boolean string — a vendor/generator artifact, not our parser), 7 `DELTA`,
+   5 `ITC`, plus `ADVANC`/`TLI`/`INTUCH`/`SCB` — these look like Thai SET-listed stock
+   tickers mixed into the "Forex" folder tree. Flagging in case phase 2 accidentally
+   treats a stock-market backtest as a forex one.
+3. `_triage\BOTMOGUL_CLAIMS.csv` left-joins `xray_concept/xray_flags/xray_has_sl/
+   xray_lot_escalation` from `FXDREEMA_XRAY.csv` where matched (2 rows) — everything
+   else is blank by design (see join-rate note above).
+
+**No backtests run, no verdicts issued, `D:\Forex` untouched (read-only).** Phase 2
+(BWD spot-kill on top candidates) stays with Claude/Opus per the order.
 
 ### ORDER-091A RESULT (Claude-agent, 2026-07-11)
 
