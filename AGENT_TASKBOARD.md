@@ -4408,7 +4408,7 @@ fallback, auto server/GMT offset ที่ re-check ทุก feed reload + manu
 
 ---
 
-## ORDER-094 — P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) — `CLAIMED(Claude-agent, 2026-07-11)` (MT5 lane ว่างยืนยันแล้ว — 085B จบ, ไม่มี batch in-flight)
+## ORDER-094 — P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) — `DONE(Claude-agent, 2026-07-11)`
 
 **ทำไม:** CODEX-AUDIT D3-D6 ยืนยันครบ — cage ที่ pass ได้ทั้งที่หลักฐาน stale = อันตรายกว่าไม่มี cage
 **Spec:** (1) `mt5_run.ps1`: ลบ dest report เก่าก่อนรัน + exit 0/1 ตามมี report จริง (2) `tpl_regression.ps1`:
@@ -4419,6 +4419,56 @@ fallback, auto server/GMT offset ที่ re-check ทุก feed reload + manu
 พิสูจน์ fail-closed (จำลอง compile พัง/report หาย → ต้องแดง) · re-baseline พร้อม eqdd + Boss15/16 ·
 commit `[tag] ORDER-094 done` · **ห้าม:** เปลี่ยน semantics การรันปกติ
 
+### ORDER-094 RESULT (Claude-agent, 2026-07-11)
+
+**Per-script changes (failure-path only — normal-run output text/behavior untouched per ห้าม):**
+
+1. `scripts\mt5_run.ps1` (D3)
+   - Pre-launch cleanup now also deletes the DESTINATION report `_mt5_auto\reports\<ReportName>*` (was: source-side DataDir only). A run that produces no fresh report can no longer leave last run's .htm as false evidence for downstream `Test-Path` readers.
+   - Explicit exit codes: `OK REPORT:` → exit 0 · `NO REPORT`/timeout → exit 1 (was: always fell through to exit 0). Output text byte-identical; existing exit 2 abort paths untouched; freeze-guard/priority/affinity/timeout-kill untouched.
+2. `scripts\tpl_regression.ps1` (D4)
+   - Compare now includes `eqdd` (was: net/pf/trades only).
+   - Expert list extended with `Boss_15_ST03` + `Boss_16_KangarooGrid` (both compile 0/0). Boss_16 runs a pinned set override (`ea_template\sets\Boss16_Kangaroo_XAU_smoke.set` — the frozen ORDER-072 smoke set) same pattern as Boss_14; Boss_15 compiled defaults trade fine on the window (216 trades) so no override needed.
+   - `-UpdateBaseline` alone = DRY RUN: prints old-vs-new diff table, does NOT write, exit 1. Writing requires `-UpdateBaseline -ConfirmBaseline`.
+3. `ea_template\tests\run_tests.ps1` (D5)
+   - Deletes the target `.ex5` BEFORE each compile → a failed compile is COMPILE-FAIL for real (stale binary can't answer `Test-Path`).
+   - Journal verdict bound to THIS run: `$runStart` captured before invoking mt5_run; only journal files with `LastWriteTime -gt $runStart` accepted; no fresh log = new red verdict `NO-FRESH-LOG` (never a stale-log PASS).
+4. `ea_template\deploy.ps1` (D6)
+   - Deletes old `.ex5` before compiling each target.
+   - Parses each compile log's `Result:` line — any errors (or missing Result line / missing log / missing .ex5) → `** COMPILE FAIL **` flagged, and after ALL targets reported: exit 1.
+   - Lane-2 mirror skipped entirely when any compile failed (stale/broken binary can't reach oc-btest lane).
+
+**Negative-test evidence (all throwaway files deleted after capture; no real EA touched):**
+
+| # | Script | Simulation | Observed | Exit |
+|---|---|---|---|---|
+| N1 | mt5_run.ps1 | bogus expert `EALabTpl\NoSuchExpert_ZZ094` | `NO REPORT (exited=True)...` | 1 |
+| N2 | mt5_run.ps1 | planted stale dest `NEGTEST_STALE.htm` + bogus expert | stale report deleted (`Test-Path` = False after run), `NO REPORT` | 1 |
+| N3 | run_tests.ps1 | throwaway `ZZNegativeCompileTest.mq5` with broken syntax | `ZZNegativeCompileTest COMPILE-FAIL` · `=== TESTS: 1 not passing ===` (real 5 still PASS) | 1 |
+| N4 | run_tests.ps1 (stale-.ex5 kill shot) | step 1: valid version compiled → real .ex5 on disk; step 2: broke the source, re-ran | COMPILE-FAIL again + `.ex5` gone after failed recompile (pre-fix this was a stale PASS) | 1 |
+| N5 | deploy.ps1 | throwaway `ZZNegativeDeployTest.mq5` (broken) added to targets temporarily | `Result: 14 errors` parsed → `** COMPILE FAIL **` ×2 · `skip lane2 mirror: compile failure(s) this run` · `=== DEPLOY: compile failure(s) ===` | 1 |
+| N6 | tpl_regression.ps1 | `-UpdateBaseline` WITHOUT `-ConfirmBaseline` | full diff table printed, `=== BASELINE NOT WRITTEN - re-run with -UpdateBaseline -ConfirmBaseline ===`, baseline file untouched | 1 |
+
+(tpl_regression's missing-report path rides on N1/N2: mt5_run now guarantees no stale dest .htm, so the existing `Test-Path → [FAIL] no report → exit 1` line is fail-closed for real.)
+
+**New regression baseline (XAUUSD H1 2024.01.01-2024.07.01 Model 1, written via `-UpdateBaseline -ConfirmBaseline`):**
+
+| ea | net | pf | trades | eqdd |
+|---|---|---|---|---|
+| Boss_11_GridTrend | 607.98 | 1.43 | 168 | 305.11(2.86%) |
+| Boss_12_Breakout | -140.81 | 0.88 | 164 | 255.19(2.54%) |
+| Boss_13_MeanRev | -885.51 | 0.91 | 107 | 3040.40(25.01%) |
+| Boss_14_GridLog (pinned set) | 589.82 | 16.72 | 56 | 153.50(1.50%) |
+| Boss_15_ST03 (compiled defaults) | -39.62 | 0.86 | 216 | 64.49(0.64%) |
+| Boss_16_KangarooGrid (pinned set Boss16_Kangaroo_XAU_smoke) | 507.72 | 3.44 | 73 | 421.04(4.07%) |
+
+Boss_11-14 rows identical to the pre-094 baseline (proof the harness changes altered zero tester behavior). Boss_15 losing on this window is EXPECTED (edge unproven per its header — the baseline pins behavior, not profitability).
+
+**Positive path (final proof, both fresh full runs):**
+- `scripts\tpl_regression.ps1` → 6/6 `[OK] ... matches baseline` → `=== REGRESSION CLEAN ===` exit 0
+- `ea_template\tests\run_tests.ps1` → 5/5 PASS → `=== ALL TESTS PASS ===` exit 0
+
+**Deviation note:** run_tests journal binding uses run-start timestamp filter (only logs with LastWriteTime after this run started, newest first) rather than parsing a specific agent-folder log path — same guarantee (a verdict can only come from a journal written during/after THIS run), simpler than tracking which Agent-127.0.0.1-300x folder the tester picked.
 
 ---
 

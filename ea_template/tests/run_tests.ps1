@@ -38,18 +38,33 @@ Copy-Item (Join-Path $root 'tools\AccountSnapshot\AccountSnapshot_Core.mqh') $de
 $results = @()
 foreach ($mq5 in Get-ChildItem (Join-Path $testDir '*.mq5')) {
   $name = $mq5.BaseName
-  # compile the test EA in the deployed location
+  $ex5 = "$deployedTests\$name.ex5"
+  # D5 fix (ORDER-094): delete the target .ex5 BEFORE compiling. Without this, a compile that
+  # fails this run leaves the PREVIOUS successful .ex5 sitting there, Test-Path sees it, and the
+  # test proceeds to run stale compiled code as if this run's source compiled clean.
+  if (Test-Path $ex5) { Remove-Item $ex5 -Force }
   & 'D:\Meta 5\MetaEditor64.exe' /compile:"$deployedTests\$name.mq5" /log | Out-Null
-  if (-not (Test-Path "$deployedTests\$name.ex5")) {
+  if (-not (Test-Path $ex5)) {
     $results += [pscustomobject]@{ test=$name; result='COMPILE-FAIL' }; continue
   }
   $setArg = @{}
   $set = Join-Path $testDir "$name.set"
   if (Test-Path $set) { $setArg['SetFile'] = $set }
+  # D5 fix (ORDER-094): bind the journal verdict to THIS run. Capture the start time BEFORE
+  # invoking mt5_run.ps1 and only accept journal files written after it - otherwise "newest log
+  # globally" can be a stale file from an unrelated earlier run/agent that happens to contain an
+  # old "[PASS] <name>" line, producing a false PASS when this run never actually verdicted.
+  $runStart = Get-Date
   & (Join-Path $root 'scripts\mt5_run.ps1') -Expert "EALabTpl\tests\$name" -Symbol $Symbol -Period $Period `
       -FromDate $FromDate -ToDate $ToDate -Model 1 -ReportName "TEST_$name" @setArg | Out-Null
-  # newest agent journal, last verdict line for this test
-  $log = Get-ChildItem $agentRoot -Recurse -Filter '*.log' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  # tester log of THIS specific run: newest journal file whose LastWriteTime is after $runStart.
+  # Falls back to NO-FRESH-LOG (never a silent stale PASS) if mt5_run produced nothing new.
+  $log = Get-ChildItem $agentRoot -Recurse -Filter '*.log' -ErrorAction SilentlyContinue |
+    Where-Object { $_.LastWriteTime -gt $runStart } |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+  if ($null -eq $log) {
+    $results += [pscustomobject]@{ test=$name; result='NO-FRESH-LOG' }; continue
+  }
   $hit = Select-String -Path $log.FullName -Pattern "\[(PASS|FAIL)\] $name" | Select-Object -Last 1
   $verdict = if ($null -eq $hit) { 'NO-VERDICT' } elseif ($hit.Line -match '\[PASS\]') { 'PASS' } else { 'FAIL' }
   $results += [pscustomobject]@{ test=$name; result=$verdict }

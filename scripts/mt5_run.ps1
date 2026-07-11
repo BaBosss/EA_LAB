@@ -57,7 +57,12 @@ $auto = "D:\EA_LAB\_mt5_auto"
 New-Item -ItemType Directory -Force "$auto\reports", "$auto\ini" | Out-Null
 $srcHtm = Join-Path $DataDir "$ReportName.htm"        # MT5 writes here (bare Report name)
 $destHtm = "$auto\reports\$ReportName.htm"
+# D3 fix (ORDER-094): a stale DESTINATION report from a previous run must not survive a run
+# that produces NO fresh report - otherwise every downstream reader (tpl_regression, run_tests,
+# any caller that just checks "does the .htm exist") sees old evidence and calls it a pass.
+# Clear both source-side (tester DataDir) and destination-side (_mt5_auto\reports) before launch.
 Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem "$auto\reports" -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 $inputs = @()
 if ($SetFile -and (Test-Path $SetFile)) {
@@ -114,7 +119,9 @@ if (Test-Path $srcHtm) {
   Get-ChildItem $DataDir -Filter "$ReportName*.png" -File -ErrorAction SilentlyContinue |
     Move-Item -Destination "$auto\reports\" -Force
   Write-Output "OK REPORT: $destHtm"
+  exit 0
 }
 else {
   Write-Output "NO REPORT (exited=$($proc.HasExited)). Check EA name / symbol history / login."
+  exit 1
 }

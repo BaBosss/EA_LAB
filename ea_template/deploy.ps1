@@ -26,12 +26,17 @@ robocopy "$src" "$dst" /MIR /R:1 /W:1 /XD .git /XF *.ex5 *.log /NFL /NDL /NJH /N
 if($LASTEXITCODE -ge 8){ Write-Host "robocopy error ($LASTEXITCODE) - is MT5 locking the folder?" -ForegroundColor Red; exit 1 }
 Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
+$compileFailed = $false
 if ($Compile) {
   # V2 = six Boss wrappers; V1 EA_LabTemplate kept for reference
   $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","Boss_14_GridLog.mq5","Boss_15_ST03.mq5","Boss_16_KangarooGrid.mq5","EA_LabTemplate.mq5")
   foreach($t in $targets){
     $mq5 = Join-Path $dst $t
     if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }
+    $ex5 = Join-Path $dst ([IO.Path]::GetFileNameWithoutExtension($t) + ".ex5")
+    # D6 fix (ORDER-094): delete the OLD .ex5 before compiling so a compile that fails this run
+    # cannot leave a stale, previously-good binary behind looking like a fresh clean build.
+    if(Test-Path $ex5){ Remove-Item $ex5 -Force }
     $log = Join-Path $dst ("compile_" + [IO.Path]::GetFileNameWithoutExtension($t) + ".log")
     if(Test-Path $log){ Remove-Item $log -Force }
     Start-Process -FilePath $meta -ArgumentList "/compile:`"$mq5`"","/log:`"$log`"" -Wait
@@ -40,17 +45,45 @@ if ($Compile) {
       $res = ($txt -split "`r?`n" | Where-Object { $_ -match "Result:|error|warning" })
       Write-Host "[$t]" -ForegroundColor Cyan
       $res | ForEach-Object { Write-Host "  $_" -ForegroundColor Green }
+      # D6 fix (ORDER-094): actually parse the Result line instead of just printing it. MetaEditor
+      # exits 0 regardless of compile errors, and a failed compile does not always skip writing an
+      # .ex5 (stale one could remain pre-fix) - the Result line is the only reliable pass/fail signal.
+      $resultLine = $txt -split "`r?`n" | Where-Object { $_ -match "Result:\s*\d+\s+errors?" } | Select-Object -Last 1
+      if ($resultLine -and ($resultLine -match "Result:\s*(\d+)\s+errors?")) {
+        if ([int]$Matches[1] -gt 0) {
+          Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors) **" -ForegroundColor Red
+          $compileFailed = $true
+        }
+      } else {
+        Write-Host "  ** COMPILE FAIL: $t (no Result: line found in log) **" -ForegroundColor Red
+        $compileFailed = $true
+      }
+      if (-not (Test-Path $ex5)) {
+        Write-Host "  ** COMPILE FAIL: $t (no .ex5 produced) **" -ForegroundColor Red
+        $compileFailed = $true
+      }
+    } else {
+      Write-Host "  ** COMPILE FAIL: $t (no log produced) **" -ForegroundColor Red
+      $compileFailed = $true
     }
   }
 }
 # lane 2: mirror compiled EAs (+source for reference) to the portable 2nd tester
 # (D:\Meta 5b, /portable mode) so oc-btest can run its own lane without touching
 # the main instance. .ex5 INCLUDED here on purpose (5b has no compiler wired up).
-$dst2 = "D:\Meta 5b\MQL5\Experts\EALabTpl"
-if (Test-Path "D:\Meta 5b\terminal64.exe") {
-  robocopy "$dst" "$dst2" /MIR /R:1 /W:1 /XF *.log /NFL /NDL /NJH /NJS | Out-Null
-  if($LASTEXITCODE -lt 8){ Write-Host "deployed lane2 -> $dst2" -ForegroundColor Cyan }
-  else { Write-Host "lane2 robocopy error ($LASTEXITCODE)" -ForegroundColor Yellow }
+# D6 fix (ORDER-094): never mirror when any compile failed this run - a stale/missing .ex5
+# reaching lane2 would let oc-btest silently run old or broken binaries.
+if ($compileFailed) {
+  Write-Host "skip lane2 mirror: compile failure(s) this run" -ForegroundColor Yellow
+} else {
+  $dst2 = "D:\Meta 5b\MQL5\Experts\EALabTpl"
+  if (Test-Path "D:\Meta 5b\terminal64.exe") {
+    robocopy "$dst" "$dst2" /MIR /R:1 /W:1 /XF *.log /NFL /NDL /NJH /NJS | Out-Null
+    if($LASTEXITCODE -lt 8){ Write-Host "deployed lane2 -> $dst2" -ForegroundColor Cyan }
+    else { Write-Host "lane2 robocopy error ($LASTEXITCODE)" -ForegroundColor Yellow }
+  }
 }
 
 Write-Host "Expert names: EALabTpl\Boss_11_GridTrend | Boss_12_Breakout | Boss_13_MeanRev | Boss_14_GridLog | Boss_15_ST03" -ForegroundColor Green
+if ($compileFailed) { Write-Host "=== DEPLOY: compile failure(s) - see COMPILE FAIL lines above ===" -ForegroundColor Red; exit 1 }
+exit 0

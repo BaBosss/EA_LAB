@@ -9,13 +9,15 @@ drift = investigate before merging. A default-value change also trips this on
 purpose - defaults ARE behavior.
 
 Usage:
-  powershell -File scripts\tpl_regression.ps1                  # compare vs baseline
-  powershell -File scripts\tpl_regression.ps1 -UpdateBaseline  # (re)capture baseline
-Requires: MT5 GUI closed (mt5_run.ps1 guard). ~3 sequential tester runs.
+  powershell -File scripts\tpl_regression.ps1                                       # compare vs baseline
+  powershell -File scripts\tpl_regression.ps1 -UpdateBaseline                       # DRY RUN: prints old-vs-new diff, does NOT write, exits 1
+  powershell -File scripts\tpl_regression.ps1 -UpdateBaseline -ConfirmBaseline      # accepts the diff and writes the baseline
+Requires: MT5 GUI closed (mt5_run.ps1 guard). ~6 sequential tester runs.
 #>
 [CmdletBinding()]
 param(
   [switch]$UpdateBaseline,
+  [switch]$ConfirmBaseline,
   [string]$Symbol = "XAUUSD",
   [string]$Period = "H1",
   [string]$FromDate = "2024.01.01",
@@ -25,10 +27,15 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $baseline = Join-Path $root "ea_template\regression_baseline.csv"
-$experts = @("EALabTpl\Boss_11_GridTrend", "EALabTpl\Boss_12_Breakout", "EALabTpl\Boss_13_MeanRev", "EALabTpl\Boss_14_GridLog")
+$experts = @("EALabTpl\Boss_11_GridTrend", "EALabTpl\Boss_12_Breakout", "EALabTpl\Boss_13_MeanRev", "EALabTpl\Boss_14_GridLog", "EALabTpl\Boss_15_ST03", "EALabTpl\Boss_16_KangarooGrid")
 # Boss_14 compiled defaults barely trade on the pinned window (4 trades) - too thin to catch
 # drift, so it runs a PINNED set instead (frozen copy of XAU_DEMO; never edit during optimize work).
-$setOverride = @{ "EALabTpl\Boss_14_GridLog" = (Join-Path $root "ea_template\sets\Boss14_regression_smoke.set") }
+# Boss_16 (ORDER-094): compiled defaults are also thin on this 6-month window - pinned to the
+# existing frozen ORDER-072 smoke set (Boss16_Kangaroo_XAU_smoke.set) instead.
+$setOverride = @{
+  "EALabTpl\Boss_14_GridLog"      = (Join-Path $root "ea_template\sets\Boss14_regression_smoke.set")
+  "EALabTpl\Boss_16_KangarooGrid" = (Join-Path $root "ea_template\sets\Boss16_Kangaroo_XAU_smoke.set")
+}
 
 function Parse-Report([string]$htm) {
   # MT5 writes UTF-16LE with BOM; Get-Content -Raw decodes it via the BOM.
@@ -63,20 +70,47 @@ foreach ($e in $experts) {
 }
 
 if ($UpdateBaseline) {
+  # D4 fix (ORDER-094): -UpdateBaseline used to silently overwrite the baseline with whatever
+  # this run produced - no diff shown, no confirmation required. That let a real behavior
+  # regression get baked in as the new "truth" by accident. Now: always print an old-vs-new
+  # diff table; only WRITE the file when -ConfirmBaseline is also passed.
+  $oldBase = if (Test-Path $baseline) { Import-Csv $baseline } else { @() }
+  Write-Host ""
+  Write-Host "=== BASELINE DIFF (old -> new) ===" -ForegroundColor Cyan
+  $diffRows = @()
+  foreach ($r in $rows) {
+    $b = $oldBase | Where-Object ea -eq $r.ea
+    $diffRows += [pscustomobject]@{
+      ea         = $r.ea
+      old_net    = if ($b) { $b.net } else { '(none)' }
+      new_net    = $r.net
+      old_pf     = if ($b) { $b.pf } else { '(none)' }
+      new_pf     = $r.pf
+      old_trades = if ($b) { $b.trades } else { '(none)' }
+      new_trades = $r.trades
+      old_eqdd   = if ($b) { $b.eqdd } else { '(none)' }
+      new_eqdd   = $r.eqdd
+    }
+  }
+  $diffRows | Format-Table -AutoSize
+  if (-not $ConfirmBaseline) {
+    Write-Host "=== BASELINE NOT WRITTEN - re-run with -UpdateBaseline -ConfirmBaseline to accept the diff above ===" -ForegroundColor Red
+    exit 1
+  }
   $rows | Export-Csv $baseline -NoTypeInformation -Encoding UTF8
   Write-Host "baseline written -> $baseline" -ForegroundColor Green
   exit 0
 }
 
-if (-not (Test-Path $baseline)) { Write-Host "no baseline - run with -UpdateBaseline first"; exit 1 }
+if (-not (Test-Path $baseline)) { Write-Host "no baseline - run with -UpdateBaseline -ConfirmBaseline first"; exit 1 }
 $base = Import-Csv $baseline
 $fail = 0
 foreach ($r in $rows) {
   $b = $base | Where-Object ea -eq $r.ea
   if (-not $b) { Write-Host "[WARN] $($r.ea) not in baseline" -ForegroundColor Yellow; $fail++; continue }
-  if (($b.net -ne $r.net) -or ($b.pf -ne $r.pf) -or ($b.trades -ne $r.trades)) {
-    Write-Host ("[DRIFT] {0}: baseline net={1} pf={2} n={3}  now net={4} pf={5} n={6}" -f `
-      $r.ea, $b.net, $b.pf, $b.trades, $r.net, $r.pf, $r.trades) -ForegroundColor Red
+  if (($b.net -ne $r.net) -or ($b.pf -ne $r.pf) -or ($b.trades -ne $r.trades) -or ($b.eqdd -ne $r.eqdd)) {
+    Write-Host ("[DRIFT] {0}: baseline net={1} pf={2} n={3} eqdd={4}  now net={5} pf={6} n={7} eqdd={8}" -f `
+      $r.ea, $b.net, $b.pf, $b.trades, $b.eqdd, $r.net, $r.pf, $r.trades, $r.eqdd) -ForegroundColor Red
     $fail++
   } else {
     Write-Host "[OK] $($r.ea) matches baseline" -ForegroundColor Green
