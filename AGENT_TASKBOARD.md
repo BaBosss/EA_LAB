@@ -4591,3 +4591,19 @@ case-insensitive — `$inv` data ชน `$INV` path ต้องใช้ `$rows
 **(4) encoding:** ปิดไปแล้วเมื่อรอบก่อน (commit 1e86479)
 **Anomaly ยกให้ user:** พบไฟล์ `EA_LAB_deals_146237_20260710.csv` ใน live_deals — **บัญชี 146237 ไม่อยู่ใน
 DEPLOYMENT REALITY 5 บัญชี** (exporter เคยยิงจาก login นี้เมื่อไหร่? บัญชีอะไร?) — inventory ยังไม่ใส่ รอ user ระบุ
+
+
+---
+
+## REVIEW ORDER-091A — `REVIEWED(Claude, 2026-07-11)` — ผ่าน · คลังโต 1,050 → 1,592 unique · root-cause coverage gap เจอแล้ว
+
+**Verify โดย lead:** นับจริงตรงทุกไฟล์ — XRAY 1,592 แถว / concept ครบ 1,592 / binaries 9,693 / reports 1,084 ·
+spot-check 2 ไฟล์ใหม่ vs grep = ตรง · coverage ตรงตัวเลขที่ user ประกาศแทบเป๊ะ (BOT MOGUL 711+2, Final EA 23+350+16)
+**Finding ที่มีค่าที่สุดของ order นี้ = root cause ว่าทำไม ORDER-074 กวาดไม่เจอ:** ไฟล์ 374 ตัวเป็น
+**UTF-16 LE ไม่มี BOM** — parser เดิม decode เป็นขยะ NUL-interleaved จน signature match ไม่ได้เลย →
+แก้ด้วย NUL-density heuristic ใน `read_text()` แล้ว rollback+rerun (process ถูกต้อง: agent จับ empty-card
+เองจาก blocks=0 บนไฟล์ 10k บรรทัด) · บทเรียนเดียวกับ mojibake PROJECT_STATE วันนี้ = **encoding คือ
+silent-failure ชั้นใหญ่ของ corpus นี้** — intake ทุก wave ถัดไปต้องสงสัย encoding ก่อนสรุปว่า "ไม่มี/ไม่เจอ"
+**พร้อมสำหรับ Wave 1:** 091B มี input ครบแล้ว (`ORDER091A_REPORTS.csv` 711 BOT MOGUL html) ·
+091C มี `.Final EA` 161 new-unique + 350 set แนบ · **คิวพรุ่งนี้ตาม pacing: 091B ก่อน** (parse claim →
+คัด top → BWD spot-kill ทีละ 5 — ห้ามเชื่อ vendor report ตาม memory wobr-botranking)
