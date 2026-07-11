@@ -1,0 +1,17 @@
+; ORDER-091B phase-2 BWD spot-kill — vendor inputs_raw verbatim from BOTMOGUL_CLAIMS.csv (ea_id 1-16-23)
+Lots_Per_Money=10000
+BB_Period=18
+BB_Deviations=1.0
+RSI_Period=10
+RSI_Buy=30
+RSI_Sell=70
+ATR_Period=13
+TL_Step_ATR=0.1
+TL_Stop_Level=20/5, 30/10, 40/15, 50/20
+Close_Profit_Percent=0.1
+TP_ATR_Period=18
+TP_ATRX=1
+SL_ATR_Period=17
+SL_ATRX=1
+Percent_Invest=1
+MagicStart=7376

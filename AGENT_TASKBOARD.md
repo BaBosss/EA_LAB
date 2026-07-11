@@ -4190,7 +4190,7 @@ folder codes (`1-1-1`, `202.5.3`, ...), essentially never matching `FXDREEMA_XRA
 
 ---
 
-## ORDER-091B เฟส 2 — BWD spot-kill 5 ตัว "least-bad" ของ BOT MOGUL — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-091B เฟส 2 — BWD spot-kill 5 ตัว "least-bad" ของ BOT MOGUL — `DONE(Claude-agent, 2026-07-11)`
 
 **Judge call (Claude lead หลัง review เฟส 1):** ทั้ง bundle = single-year cherry-pick 100% (0 report ข้าม ≥2 ปี) ·
 top PF = 1-trade artifact (symbol="TRUE" quality 54%) · 94% no-SL · 45% martingale · median PF 3.79 = ไม่จริง.
@@ -4208,8 +4208,40 @@ report prefix `BM091B_` **บาร์ pre-registered (verbatim): รอด = PF
 **Acceptance:** ตาราง 5 แถว PF/net/eqDD/trades ที่ BWD + บาร์กำกับ verbatim · ระบุ ex5 ที่หาไม่เจอ/รันไม่ได้ (+เหตุผล) ·
 commit `[tag] ORDER-091B phase2 done` · **ห้าม:** verdict สุดท้าย (Claude ตัดสิน) · tune · เชื่อ claim · แตะ D:\Forex
 
-**No backtests run, no verdicts issued, `D:\Forex` untouched (read-only).** Phase 2
-(BWD spot-kill on top candidates) stays with Claude/Opus per the order.
+### ORDER-091B phase-2 RESULT (Claude-agent, 2026-07-11)
+
+**Pre-registered bar (verbatim, not judged here):** "รอด = PF≥1.1 AND eqDD≤25% (ทั้งคู่). ตกข้อใดข้อหนึ่ง = ตาย"
+
+Setup: 5 .ex5 copied read-only from `D:\Forex\...\MT5 (ex5)\...` into `D:\Meta 5b\MQL5\Experts\BM091B\`
+(originals untouched). One EA (`1-18-26`, TTM7312) failed to load on first attempt —
+`cannot open file 'WorldBotAPI.ex5'` / `loading ... failed` / `tester didn't start` — traced to a
+missing shared library dependency; found and copied (read-only) from
+`D:\Forex\...\BOT MOGUL Bundles\WorldBotAPI Library V10\WorldBotAPI.ex5` into
+`D:\Meta 5b\MQL5\Libraries\`, then it loaded fine. Vendor inputs_raw converted verbatim from
+`BOTMOGUL_CLAIMS.csv` into `.set` files under `_mt5_auto\ab_sets\bm091b_sets\` (one line per
+`Name=Value`; the `TL_Stop_Level=20/5, 30/10, 40/15, 50/20` value kept as one raw string, unchanged).
+All runs: EURUSD H1 Model 1, 2020.01.01-2022.12.31, deposit 10000, leverage 1:100, `D:\Meta 5b`
+portable lane.
+
+| ea_id | ex5 ran? | PF | net profit | eqDD% | trades | quality | survives bar? |
+|---|---|---|---|---|---|---|---|
+| 1-18-26 | ran (after lib fix) | 2.32 | +16,606.79 | 28.61% | 2151 | 99% | no (PF ok, eqDD 28.61% > 25%) |
+| 1-16-31 | ran | 0.39 | -9,493.37 | 96.00% | 52 | 99% | no |
+| 1-16-20 | **NO-RUN** | — | — | — | — | — | no |
+| 1-16-23 | ran | 0.98 | -504.27 | 82.40% | 314 | 99% | no |
+| 1-1-23 | ran | 0.10 | -5,685.96 | 65.69% | 55 | 99% | no |
+
+**1-16-20 NO-RUN reason:** loaded and started fine (no library error), but the tester never produced
+a report inside the script's 1800s (30min) timeout — `mt5_run.ps1`'s freeze-guard killed the
+terminal64 process (CPU time was actively climbing throughout, so it was computing, not hung/idle).
+Consistent with a no-SL/no-cap grid EA generating a runaway order count once it hits a trending
+window outside its cherry-picked 2023 sample. Not re-attempted with a longer timeout per
+foreground-synchronous / no-tuning instructions — recorded as-is.
+
+All 4 EAs that produced a report fail the pre-registered bar; the 5th (1-16-20) could not complete
+a run at all inside the timeout budget. Raw numbers only — no verdict issued (per order: Claude/lead
+judges separately). `D:\Forex` untouched throughout (read-only; only .ex5/.ex5-library copies were
+made out to the `D:\Meta 5b` lane).
 
 ### ORDER-091A RESULT (Claude-agent, 2026-07-11)
 
