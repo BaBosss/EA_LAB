@@ -32,7 +32,8 @@
 | ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **VISION.md** | link |
 | กติกา multi-agent (Claude/Codex/ZCode) | **AGENTS.md** | link |
 | คิวงานกลาง + ผลดิบรอ review | **AGENT_TASKBOARD.md** | link |
-| live portfolio (EA/magic/lot/judge/monitor) | **DEMO_DEPLOYMENT_PLAN.md** | link |
+| live portfolio — **ข้อมูล** (account/EA/magic/status/kill/judge) | **`portfolio\DEPLOYMENTS.csv`** (inventory เดียว, ORDER-093) | link · checker validate ทุก commit |
+| live portfolio — **คำอธิบาย/บริบท** (ทำไม attach, คำเตือน, ประวัติ) | **DEMO_DEPLOYMENT_PLAN.md** | link |
 | backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
 | ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |
 | แผนที่ไฟล์ · 5 ที่อยู่ | **PLATFORM_INDEX.md** | link |
@@ -44,17 +45,18 @@
 banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: <X เท่านั้น>`.
 
 **3) INVARIANTS — fact ที่ต้องตรงทุกที่ (ที่ไหนเขียนต่าง = ที่นั่นผิด):**
-- live portfolio = **9 EA** บน **1 account 10,000 cent** (#8 CB_EUR dropped)
-- live clock start **2026-06-22** · judge **2026-09-22**
+- **deployment ทั้งหมด (account/EA/magic/status/kill/judge) = `portfolio\DEPLOYMENTS.csv` แถวต่อ magic**
+  (ORDER-093, 2026-07-11 — แทน invariant ชุดเก่า "9 EA/1 account/judge 09-22" ที่ค้างตั้งแต่ยุค 06-22;
+  reality ปัจจุบัน = 5 บัญชี ดู DEMO_DEPLOYMENT_PLAN §DEPLOYMENT REALITY 2026-07-09) · แก้ deploy ที่ไหน
+  ต้องแก้ CSV ก่อนเสมอ แล้ว checker จะบังคับ dashboard map + docs ให้ตรงเอง
 - backtest window **2023–2026** · re-opt ทุก 6 เดือน
-- **magic map (ห้ามชน):** 1524=NuiIndy · 9397=ST_EA03 GBP · 9398=ST_EA03 CAD · 990005=CB_GBP ·
-  990010=ST03 replica · 991001=BRK Bars55 · 991002=BRK Bars8 · MG_v1+GoldReaper=GUI default (ไม่อยู่ .set)
+- magic ห้ามชน — บังคับโดย checker จาก CSV (duplicate account|magic = WARN/block)
 - **bot บังคับเอง:** git **pre-commit hook** (`.githooks/pre-commit`) รัน `scripts/check_state.ps1 -Strict`
-  อัตโนมัติทุก commit → **block ถ้า hard-invariant เพี้ยน**. setup ครั้งเดียวต่อเครื่อง: `git config core.hooksPath .githooks`.
-  bypass ฉุกเฉิน: `git commit --no-verify`. รันมือ: `powershell -File scripts/check_state.ps1`
-  > ⚠️ **ขอบเขต guard:** คุมแค่ invariant เชิงโครงสร้างไม่กี่ตัว (entry เดียว · judge/start date · account ·
-  > 9 EA · magic present · banner) — **ไม่ใช่เนื้อหาทั้งหมด** (PF, สถานะ EA, ตัวเลขอื่น ยังต้องอ่าน/อัปเดตมือ).
-  > GUI commit client (VS Code ฯลฯ) อาจซ่อน output ของ hook — ถ้า commit ถูก block แบบงงๆ ให้รัน check มือดู.
+  อัตโนมัติทุก commit → validate ทุก doc/dashboard-map เทียบ `DEPLOYMENTS.csv` สองทิศ (แถว CSV ไม่มีใน map =
+  magic ไม่ถูก monitor · map มีแต่ CSV ไม่มี = ghost row) + entry เดียว + banner. setup ครั้งเดียวต่อเครื่อง:
+  `git config core.hooksPath .githooks`. bypass ฉุกเฉิน: `git commit --no-verify`. รันมือ: `powershell -File scripts/check_state.ps1`
+  > ⚠️ **ขอบเขต guard:** คุมโครงสร้าง deployment consistency — **ไม่ใช่เนื้อหาทั้งหมด** (PF, สถานะ EA,
+  > ตัวเลขอื่น ยังต้องอ่าน/อัปเดตมือ). GUI commit client อาจซ่อน output hook — commit ถูก block แบบงงๆ ให้รัน check มือ.
 
 ---
 

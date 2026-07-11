@@ -4084,7 +4084,7 @@ wobr-botranking: BotMogul rank = adverse-selected overfit) · ทุกตัว
 mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG เสมอ · DD สูง ≠ ปัดตก → diagnosis→lever (คำ user:
 ".Final EA อาจ DD เยอะแต่เอาไปทำต่อได้ เชื่อผม")
 
-**Wave 0 — 091A: ขยาย X-ray+concept ให้ครบ 9 โฟลเดอร์** (mechanical, dedupe hash vs 1,050 เดิม):
+**Wave 0 — 091A: ขยาย X-ray+concept ให้ครบ 9 โฟลเดอร์ — `CLAIMED(Claude-agent, 2026-07-11)`** (mechanical, dedupe hash vs 1,050 เดิม):
 `wait_Fxdreema MT5` (151 src) · `3. ready to use` (38+102) · `review EA\Jobot` (1,556 bin) ·
 `BOT MOGUL` (2,905 bin) · `AI_GEN` (168 src) · `Course jobot` (375 src) · `04_FxDreema_Learner`
 (221 src) · `.Final EA` (189 src + 4,514 bin) → merged catalog + ตาราง "ใหม่จริง vs ซ้ำของเดิม"
@@ -4349,7 +4349,7 @@ closed-deals sections เดิมอยู่ใต้ panel ครบทุก
 
 ---
 
-## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `PARTIAL: sub-task 4 DONE(Claude, 2026-07-11 — encoding ซ่อมแล้ว commit 1e86479) · sub-tasks 1-3 OPEN` (role: Claude นำ — คิวเปิด session หน้า)
+## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `DONE(Claude, 2026-07-11)` — inventory+checker+0.5 repoint+encoding ครบ 4 ข้อ
 
 **ทำไม:** CODEX-AUDIT A2+C1+C4 — ความจริง deploy กระจาย 4 ที่แก้มือ, checker เช็ค string ค้างยุค 06-22,
 PROJECT_STATE double-encode 16k จุด
@@ -4525,3 +4525,23 @@ negative 6 เคสแดงหมด · baseline ใหม่ Boss_11-14 ต�
 REGRESSION CLEAN 6/6 + ALL TESTS PASS 5/5 สด · deviation (journal bind ด้วย run-start timestamp แทน
 resolve Agent folder) = การันตีเดียวกัน รับได้
 **ผลรวมวันนี้: CODEX-AUDIT Layer D ปิดครบทุกข้อ (D1-D6)** — เหลือ Layer A/C ฝั่ง user-action (attach) + ORDER-093
+
+
+---
+
+### ORDER-093 RESULT (Claude lead, 2026-07-11) — sub-tasks 1-3 DONE → order ปิดครบ
+
+**(1) Inventory เดียว:** `portfolio\DEPLOYMENTS.csv` — 29 แถว / 5 บัญชี / 27 magic + 2 แถว UNVERIFIED
+(159475669 user-mix ที่ magic ยังไม่ enumerate + ClevrFX บน 69424711 — จะ enumerate จาก AccountSnapshot
+exporter หลัง user attach บน VPS) · สถานะวันนี้ฝังในแถว: PENDING_REMOVE (RSI-MR + ST03 family ตามที่
+user เคาะ) · PENDING_ATTACH (SuperTrend 990020)
+**(2) Checker rewrite:** `check_state.ps1` เลิกเช็ค string ค้างยุค 06-22 → validate จาก CSV จริง 13 ด่าน:
+parse/columns/dup-magic + ทุกบัญชีอยู่ใน DEMO plan + **dashboard map ↔ CSV สองทิศ (27/27)** (แถวไม่มีใน map
+= magic ไม่ถูก monitor · map ไม่มีใน CSV = ghost) + judge dates + entry-claim + banners · **negative-test แล้ว:
+ghost map row ปลอม → -Strict exit 1 · ถอน → CLEAN** (fail-visible doctrine) · gotcha ที่เจอ: PS ตัวแปร
+case-insensitive — `$inv` data ชน `$INV` path ต้องใช้ `$rows`
+**(3) §0.5 repoint:** ตาราง fact-owner แยก data (CSV) / narrative (DEMO plan) + INVARIANTS block เก่า
+(9 EA·1 account·judge 09-22·magic map มือ) แทนด้วย pointer → CSV — คำอธิบาย hook อัปเดตตามพฤติกรรมใหม่
+**(4) encoding:** ปิดไปแล้วเมื่อรอบก่อน (commit 1e86479)
+**Anomaly ยกให้ user:** พบไฟล์ `EA_LAB_deals_146237_20260710.csv` ใน live_deals — **บัญชี 146237 ไม่อยู่ใน
+DEPLOYMENT REALITY 5 บัญชี** (exporter เคยยิงจาก login นี้เมื่อไหร่? บัญชีอะไร?) — inventory ยังไม่ใส่ รอ user ระบุ
