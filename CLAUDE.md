@@ -23,6 +23,9 @@ block นี้ยังไม่ครบ = หยุด ทำให้คร�
 buy/sell limit (fill แบบ maker ไม่จ่าย spread) · grid/เทรดเยอะ = ไม่ใช่ข้อเสีย (3) แกะ entry logic เก็บ EDGE_CATALOG
 แม้ทั้ง EA ไม่ deploy. **เฉพาะ STRUCTURAL death (flat-lot PF<1 · uncapped-ruin · cracked) เท่านั้นที่ฆ่าทิ้งเลย** ·
 deploy-gate กับ discard-gate = คนละคำถาม. รายละเอียด = memory `feedback-buildon-pf-gt-1`.
+**เอาทุก home ที่ผ่านเกณฑ์ ไม่ใช่ home เดียวที่ดีสุด** (EA ตัวเดียวรันหลาย symbol ได้) · gate reuse ข้าม symbol
+ของ EA เดียวกัน = **pairwise corr < 0.8** (หลวมกว่า cross-EA portfolio 0.4/0.6) · เกิน 0.8 = redundant → บอก
+user เลือกเอง ไม่ auto-drop · cell ที่เฉียดบาร์ = ปรับได้ (filter/ขยาย grid spacing) ไม่ใช่ตายทันที.
 
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 

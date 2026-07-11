@@ -5035,3 +5035,12 @@ OOS บวก · ruin 0% · fixed-lot capped-SL grid = **demo-bench candidate �
 BWD trend-years · no corr — ทั้งหมด = demo-forward + build-on แก้ได้
 **ลำดับที่ถูก (build-on doctrine):** ยังไม่ attach demo ทันที — **D1c หา home ที่ดีที่สุดก่อน** (อาจดีกว่า EURUSD/
 AUDUSD H1 มาก) แล้วค่อยเลือก config เข้า demo + D1d pending อาจดันขึ้นอีก → เลือก home จริงก่อนค่อย bench
+
+
+## ORDER-091C-D1c PROCESSING (lead จะทำเมื่อ D1c เสร็จ — user doctrine 2026-07-11):
+1. เอา **ทุก cell ที่ผ่านบาร์** (PF≥1.1 & trades≥200 & DD<25% & ไม่ data-gap) = home set ไม่ใช่เลือกตัวเดียว
+2. คำนวณ **pairwise correlation ของ equity curve ระหว่าง symbol ที่ผ่าน** (corr_monthly.py logic) →
+   เก็บชุดที่ corr < 0.8 = multi-symbol demo config · คู่ที่ corr > 0.8 = surface ให้ user เลือก (ไม่ auto-drop)
+3. cell ที่เฉียด (PF 1.0-1.1) = **candidate build-on** (ใส่ session/vol filter หรือขยาย Range spacing) ไม่ทิ้ง →
+   เข้า D1d หรือ tweak-probe แยก
+4. ผลลัพธ์ = JUMSTOCH multi-symbol demo-bench set (EA เดียว หลาย symbol) + คิว build-on ต่อ (D1d pending + tweaks)
