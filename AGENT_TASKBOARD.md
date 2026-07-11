@@ -4432,3 +4432,33 @@ guard = VPS ที่มีแต่ snapshot exporter ก็เก็บได�
 **เหลือให้ user (บันทึกใน RESULT block แล้ว):** attach AccountSnapshotExporter บน VPS terminal ทั้ง 5 →
 จนกว่าจะ attach dashboard ยังเห็น floating เฉพาะรอบ rotation กลางคืนของเครื่องแล็บ · ทางขน OneDrive
 VPS↔แล็บ = อันเดียวกับ ORDER-083C ข้อ 7 เคาะทีเดียวได้สองงาน
+
+
+---
+
+## REVIEW ORDER-083C — `REVIEWED(Claude, 2026-07-11)` — ผ่าน · NewsGuard พร้อม attach แล้วทั้ง 2 platform (เหลือ user ลงมือ)
+
+**Verify อิสระโดย lead (กัน stale-pass เพราะ cage D5 ยังไม่แก้จนกว่า 094 จบ):** รัน `run_tests.ps1` ใหม่เองทั้งชุด
+= **ALL 5 PASS สด** (AcctGate/AcctSnapshot/NewsGuard/Persist/StackStep) + compile 0/0 ทั้ง 7 template EA ·
+อ่าน diff จริง: ทั้ง 7 ข้อ implement ถูกจุด — เด่นสุด (1) restart reconcile เปลี่ยนจากเช็ค memory flag เป็นเช็ค
+GV จริงทั้ง fail-safe path และ window-exit path = ช่อง stuck-GV ปิดสนิท (2) churn guard มี `ng_seenFlat`
+กันนับตะกร้าแรกเป็น re-entry (false alert ที่เจอตอน Codex review ภายใน — แก้ถูกทาง) (3) empty-feed →
+INACTIVE + alert ตามสั่ง (4) pending cancel ครอบ 6 ชนิด magic-scoped retry-next-pass
+**สถานะ NewsGuard ตอนนี้:** code+test ครบทั้ง MT5/MT4 · เหลือ **user ลงมือตาม
+`ea_projects\(Boss)_NewsGuard\VPS_TRANSPORT_AND_ATTACH.md`** (OneDrive สองทิศ + attach ต่อ terminal) —
+เป็นชุดเดียวกับ AccountSnapshotExporter (ORDER-092) ทำทีเดียวจบสองงาน · จนกว่าจะ attach = คุ้มครองยังเป็นศูนย์
+(ตาม audit D1 — ห้ามเข้าใจว่าเสร็จแล้วปลอดภัยแล้ว)
+
+---
+
+## REVIEW ORDER-081 — `REVIEWED(Claude, 2026-07-11)` — งาน research ผ่าน · คำแนะนำทิศทาง: **PARK crypto lane**
+
+**คุณภาพ:** ครบ scope ทุกข้อ ไม่ล้ำข้อห้าม (ไม่มีบัญชี/API/code) · แหล่ง primary + effort estimate สมจริง
+**สาระที่ชี้ขาด (จุดที่ต้องบอกตรง ๆ):** สมมุติฐานตั้งต้นจากโพสต์ FB — "maker rebate scalper" — **ถูกหักล้าง**:
+ไม่พบ retail maker rebate ถาวรที่ไหนเลย (Binance ที่เจอ = โปรโมชัน LP 14 วัน symbol เดียว) · Bybit VIP0
+maker-maker round trip = **4 bps ก่อน funding/adverse selection** = เกม HFT-lite ที่ต้องพิสูจน์ queue-fill
+ด้วย L2 data + engineering 92-168 ชม. ก่อนจะตัดสินใจลงเงินได้เลย
+**คำแนะนำเด็ดขาด (scenario จริง):** เวลา 92-168 ชม. = เท่ากับล้างคิว ORDER-091 ทั้งคลัง ~10k ไฟล์ที่ prior
+สูงกว่ามาก → **PARK** · เงื่อนไข un-park ข้อเดียว: user มีบัญชีจริง + ส่งหน้า fee page มายืนยัน F1 แล้วอยากลอง
+checkpoint แรก 18-32 ชม. (bar probe ใต้ fee โหดสุด — ฆ่าไอเดียถูก ๆ ได้ก่อนสร้างอะไรใหญ่) · ไม่มี rebate
+= ไม่มีเหตุให้รีบ
