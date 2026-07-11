@@ -1,4 +1,34 @@
-# ORDER-091C PREP — .Final EA funnel-queue triage (lead, 2026-07-11)
+# ORDER-091C PREP — user-priority funnel queue (lead, 2026-07-11)
+
+## ⭐ USER-CONFIRMED SCOPE 2026-07-11 (supersedes การเดา tier จาก parser ด้านล่าง)
+User ระบุ 5 โฟลเดอร์ = "backtest แล้วได้ผลค่อนข้างดี แต่ยังไม่ถึง MC/OOS/optimize — **รอ verify สุดท้ายก่อนใช้จริง**
+หรือไอเดียดีที่รอต่อยอด" = **prior สูงสุดของทั้งคลัง, งานที่เหลือคือ pipeline ที่เราถนัดพอดี (optimize→OOS→MC→EA-SCORE)**:
+1. `D:\Forex\10_EA_PROJECTS\.Final EA\. MQL5\Experts` — 20 src + 2,455 ex5
+2. `D:\Forex\10_EA_PROJECTS\.Final EA\. MQL4\Experts` — 2 src + 97 ex4
+3. `D:\Forex\01_INBOX_NEW\2.1 review EA\3. ready to use` — 38 src + 103 bin
+4. `D:\Forex\01_INBOX_NEW\2.1 review EA\MT5 good` — 3 src + 13 ex5  ⚠️ **ไม่อยู่ใน 091A scan (coverage gap ใหม่)**
+5. `D:\Forex\01_INBOX_NEW\2.1 review EA\MT4 good` — 4 src + 22 ex4  ⚠️ **ไม่อยู่ใน 091A scan (coverage gap ใหม่)**
+
+**source-available รวม = 67 ตัว = funnel target หลัก** (ที่เหลือ .ex compiled = behavioral-only / run-as-is)
+
+### คิว funnel ที่จัด (Opus 1-2/batch ตาม pacing · แต่ละตัว: reproduce → optimize coarse→plateau → OOS → MC → EA-SCORE)
+**Batch 1 — โครงสะอาดที่สุด/ทดสอบ edge ได้ทันที (ทำก่อน):**
+- **`JUMSTOCH_FIXEDLOT.mq4`** (MT4 good) — มี flat-lot variant ให้แล้ว (คู่กับ `Jum+StoCh v2.5F`) → flat-lot test = คำถาม edge ตอบได้ทันที ไม่ต้องแกะ
+- **`(OH) Recovery Hedging System with SL V05.mq5`** (.Final MQL5) — recovery+**มี SL จริง** (ต่างจากกอง no-SL) = capped structure ที่ VERDICT GATE ข้อ 5 มองหา
+**Batch 2 — กลไกใหม่เติม landscape gap:**
+- **`(NuiIndy) Perfect Tri Arbitrage`** — triangular arbitrage = เซลล์ที่ landscape ยังว่างสนิท
+- **`SMC V2.mq4`** — Smart Money Concepts (order-block/liquidity) = กลไกใหม่ · **`EX197 Multi Group Scalping [Breakout FVG]`** — FVG breakout
+**Batch 3 — ตรงตระกูล edge ที่ validate แล้ว (BRK-XAU family):**
+- **`EX140 Multi Group Scalping [Breakout]`** + **`Dark_Gold_Full`** — breakout scalp บนทอง = ตระกูลเดียวกับ BRK-XAU ที่ deploy อยู่ → corr check ก่อน (อาจ redundant)
+**Batch 4 — AI-LLM series (10 ตัว, user: "ไอเดียดี"):** concept-mine + smoke ทั้งชุด (Scalper/Trend/Swing/Combine/News/Pending/Hedging/Martingale/Trailing/BO) — extract idea แม้ไม่ผ่าน
+**ข้าม/cross-ref ก่อน:** `(NuiIndy) Dynamic RSI+ADX` = **live CORE อยู่แล้ว (magic 1524)** ห้าม re-funnel · `(Jobot) Close All Button` = utility ไม่ใช่ strategy · `ZigZag` = indicator sample
+
+**gotcha ต้องปิดก่อน batch:** (1) x-ray `MT5 good`+`MT4 good` (7 src — coverage gap 091A) แล้ว merge เข้า catalog
+(2) EA ส่วนใหญ่ compiled-only ในโฟลเดอร์เหล่านี้ → source 67 ตัว funnel เต็มได้ · .ex ที่ไม่มี source = locked-ea-analyzer (behavioral)
+
+---
+
+## (เดิม) .Final EA parser-triage — เก็บไว้อ้างอิง flag เชิงโครง แต่ scope จริงใช้บล็อกบนสุด
 
 **บทบาทเอกสาร:** เตรียมคิว funnel ให้ session หน้า (Opus นำ) เริ่มได้เลยโดยไม่ต้องแกะซ้ำ. ไม่ใช่ verdict —
 เป็นการจัด tier ตามโครง (concept + flags จาก catalog) + ธงเตือนที่ parser จับได้.

@@ -301,9 +301,10 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
 **คิวงาน (pacing 1-2 order/รอบ เหมือนเดิม):**
 1. ~~091A/091B~~ **ปิดแล้ว 2026-07-11:** 091A คลัง→1,592 unique · 091B BOT MOGUL bundle = DEAD
    (BWD ของเราเอง: vendor PF 67→0.39/DD 96% · ห้าม re-mine · memory wobr-botranking อัปเดตเลขจริงแล้ว)
-2. **091C — .Final EA funnel queue (คิวถัดไป, Opus นำ)** — **เริ่มจาก `_triage\ORDER091C_FINALEA_PREP.md`**
-   (triage tier พร้อม): ข้อ 1 = **ถาม user แยก keeper vs indicator-sample noise ก่อน** (ปลดล็อกทั้งกอง
-   ประหยัดสุด) → batch 1 Winning Pro 2.5 + TMA Bands nk · NuiIndy variant = live อยู่แล้ว cross-ref ก่อน
+2. **091C — user-priority funnel queue (คิวถัดไป, Opus นำ)** — **เริ่มจาก `_triage\ORDER091C_FINALEA_PREP.md`
+   บล็อก "USER-CONFIRMED SCOPE 2026-07-11"**: user ยืนยัน 5 โฟลเดอร์ = ของ backtest ดีแล้วรอ MC/OOS/optimize
+   (67 src = funnel target). batch 1 = `JUMSTOCH_FIXEDLOT` (มี flat-lot ให้แล้ว) + `(OH) Recovery Hedging w/ SL V05`
+   (มี SL จริง) · gotcha ปิดก่อน: x-ray `MT5 good`+`MT4 good` (7 src ยังไม่อยู่ใน 091A) · NuiIndy RSI+ADX = live แล้ว ข้าม
 3. **076 — smoke หัวกะทิ 41 ตัวจาก X-ray** (agent batch, cage ใหม่พร้อมแล้ว) · ตามด้วย **080**
    (limit-entry study — template แตะได้แล้ว regression ครอบ Boss_15/16)
 4. **082 — Wave5 spec** รอ user ยืนยัน draft → **ก่อน build ให้ยิง fable-advisor one-shot ตรวจ spec**
