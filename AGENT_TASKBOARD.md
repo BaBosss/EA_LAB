@@ -4738,3 +4738,28 @@ silent-failure ชั้นใหญ่ของ corpus นี้** — intake �
 **พร้อมสำหรับ Wave 1:** 091B มี input ครบแล้ว (`ORDER091A_REPORTS.csv` 711 BOT MOGUL html) ·
 091C มี `.Final EA` 161 new-unique + 350 set แนบ · **คิวพรุ่งนี้ตาม pacing: 091B ก่อน** (parse claim →
 คัด top → BWD spot-kill ทีละ 5 — ห้ามเชื่อ vendor report ตาม memory wobr-botranking)
+
+
+---
+
+## REVIEW ORDER-091B — `REVIEWED(Claude, 2026-07-11)` — BOT MOGUL bundle = DEAD as deployment source (ปิดด้วย BWD ของเราเอง ไม่ใช่แค่ vendor-flag)
+
+**Verify โดย lead:** report จริง 4/5 อยู่บน disk (BM091B_*.htm, quality 99% = run จริงไม่ใช่ artifact) ·
+1-16-20 ไม่มี report = runaway grid ตามคาด (CPU ไต่ตลอดจน timeout — no-SL/no-cap เจอปี trending นอก sample)
+
+**คำตัดสิน (ชี้ขาด):** ตัวที่ "ดูรอดที่สุด" ทั้ง 5 ตายหมดที่ BWD 2020-2022 นอกปี cherry-pick — เทียบ vendor claim:
+| ea_id | vendor claim (2023) | BWD เราเอง (2020-22) | ผล |
+|---|---|---|---|
+| 1-18-26 | PF 23.7 / DD 1.93% | PF 2.32 / **DD 28.6%** / 2151t | ตก (DD > 25%) — DD บวม 15 เท่า |
+| 1-16-31 | PF 67.2 / DD 8.06% | **PF 0.39 / DD 96%** / 52t | ตายยับ |
+| 1-16-23 | PF 41.8 / DD 10.7% | PF 0.98 / DD 82% / 314t | ตก |
+| 1-1-23 | PF 64.0 / DD 34.9% | **PF 0.10 / DD 66%** / 55t | ตายยับ |
+| 1-16-20 | PF 35.0 / DD 9.99% | runaway (ไม่จบใน 30 นาที) | ตาย (order explosion) |
+
+**verdict: ทั้ง bundle 711 report = ตายในฐานะแหล่ง deploy** — PF 67→0.39, DD 8%→96% พิสูจน์ว่า claim ทั้งชุด
+คือ overfit ปีเดียว + no-SL grid ที่ยังไม่เจอปีร้าย (ตรง memory wobr-botranking แต่ตอนนี้มี**เลขจริงจาก run
+ของเราเอง**ยืนยัน ไม่ใช่แค่ prior). ไม่ต้อง BWD เพิ่ม — ตัวที่ least-bad ตายหมด ตัวที่แย่กว่าไม่ต้องเสียเวลา
+**ไอเดียที่แบงก์:** ไม่มีกลไกใหม่ (entry = BB+RSI+ATR+Engulfing reversion = มีใน landscape แล้ว · exit-wrapper
+30+ แบบ = การจัดการไม้ ไม่ใช่ edge) · สิ่งที่แบงก์ = **ตัวอย่างเลขจริงของ vendor cherry-pick** (สอน rescue-ladder
++ ยืนยัน "vendor report = claim") → เข้า signal-landscape เป็น dead-cell + memory update
+**ไม่เข้า PARKED-VERIFY(user):** ไม่มีอะไรให้ user เทสมือเพิ่ม — คำถามถูกตอบด้วย BWD ครบแล้ว · **091B ปิดสมบูรณ์**
