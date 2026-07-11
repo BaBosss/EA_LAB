@@ -4939,3 +4939,27 @@ that contains no sustained adverse trend against a full 12-leg stack.**
 - **plateau center, no losing cell:** EURUSD MET (9/9 positive) · AUDUSD MET (9/9 positive)
 Funnel is an AND of the three; the OOS-PF condition is not met for either symbol. Raw evidence recorded;
 no verdict issued (lead). Both symbols cleared plateau + MC-ruin, missed only the OOS≥1.2 gate.
+
+
+---
+
+## REVIEW ORDER-091C-D1 — `REVIEWED(Claude, 2026-07-11)` — JUMSTOCH = real capped-grid edge แต่บาง + spread ยังไม่เทส → WATCH, gate ถัดไป = spread
+
+**โครง (สำคัญ):** fixed-lot averaging grid — 12 legs × 0.01, spacing Range=21, **SL=253 ทุก leg**, DiMarti=1.7
+ประกาศแต่ไม่ถูกใช้ใน OrderSend เลย = **ไม่ใช่ martingale, เป็น capped+SL'd grid** (โครง MM ผ่าน VERDICT GATE ข้อ 5)
+**หลักฐาน funnel:** home = H1 majors · winner EURUSD H1 (PF 1.18/7052t) + AUDUSD H1 (1.19/5406t) · USDJPY ตายทุก TF ·
+GBPUSD M15 = data gap ตัดถูก · **plateau สะอาดทั้ง 2 symbol 9/9 ไม่มี cell ขาดทุน** (center k32/75-25 ไม่ใช่ peak) ·
+OOS: EURUSD 1.16→**1.12** / AUDUSD 1.21→**1.06** (บวกทั้งคู่แต่ใต้บาร์ 1.2) · MC ruin 0% แต่ **optimistic** (bootstrap
+trade-order ไม่รักษา adverse-sequence ที่ stack 12 legs → MC-DD 4% vs historical 8-9%)
+**ตัดสินตามบาร์ pre-registered (AND):** OOS PF≥1.2 = **ไม่ผ่านทั้งคู่** · plateau = ผ่าน · MC-ruin = ผ่าน →
+**ไม่ผ่าน funnel bar ตามตัวอักษร แต่เป็น PARAMETRIC (edge จริงบาง) ไม่ใช่ structural death**
+**EA-SCORE ≈ 5-6/10** (edge จริงแต่บาง · plateau แข็ง · แต่ OOS ไม่ใช่ holdout สะอาด home-search ใช้ full window ·
+MC optimistic · **M0/spread ไม่เคยรัน** · no live · no BWD trend-years · no corr) = **bench/watch ไม่ใช่เงินจริง**
+**gate ชี้ขาดถัดไป = spread:** H1 grid 5-7k ไม้ = spread-sensitive สุด · Model 1 ไม่คิด spread · **ถ้า spread จริง
+กิน PF < 1.0 = ตาย · ถ้ารอด = demo-bench candidate** → ORDER-091C-D1b (dispatched, MT4 TestSpread ใช้ได้)
+
+## ORDER-091C-D1b — JUMSTOCH spread stress (gate ก่อน demo) — `CLAIMED(Claude-agent, 2026-07-11)`
+**คำสั่ง:** plateau-center k32/75-25 บน EURUSD H1 + AUDUSD H1, full window 2023-2026 Model 1 fixed-lot ·
+รัน 3 ระดับ spread ต่อ symbol ผ่าน MT4 TestSpread: {ปัจจุบัน/current, 15, 25 points} (EURUSD ~1.5-2.5 pip จริง) ·
+ตาราง PF/net/DD/trades ต่อ spread · **บาร์: PF ยัง ≥1.05 ที่ spread 15pt ทั้ง 2 symbol = รอด → demo-bench ·
+< 1.0 = ตาย (spread กิน edge)** · **ห้าม:** tune · verdict (lead) · commit `[tag] ORDER-091C-D1b done`
