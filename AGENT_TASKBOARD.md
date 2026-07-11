@@ -1,4 +1,4 @@
-﻿# AGENT_TASKBOARD — คิวงานกลางของทุก agent
+# AGENT_TASKBOARD — คิวงานกลางของทุก agent
 
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
@@ -5524,3 +5524,115 @@ home ที่ดีที่สุดไม่ใช่ symbol แรก · "�
 - **พร้อม attach demo** (user action + magic) · ยังไม่เข้า DEPLOYMENTS.csv รอ user
 **thread JUMSTOCH ปิด (D1→D1f):** EA ตัวแรกจากคลัง user ผ่านครบ funnel → MT5 port → 3-leg demo config · pipeline พิสูจน์แล้ว
 **build-on ต่อยอดที่เหลือ (คิว):** D1d pending-entry (บน MT5 port) · optimize/tweak 2 watch legs · ขยาย symbol เพิ่มบน MT5 (optimize ง่ายแล้ว)
+
+---
+
+## ORDER-096 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline backtest `OPEN` (role: agent/Claude — ต้องเช็ค hedging-account ก่อน)
+
+**ที่มา:** user ส่งสเปค HexaGrid เต็ม (6 ระบบอิสระ magic-scoped แชร์ grid engine ×1.33 cap 10 + SL จริงทุกไม้,
+regime EMA224-slope+ADX, 7 ชั้นจัดการ+global cap) แล้วสั่ง "เขียน EA ตัวนี้ + รอรันเลย" (optimize เองไม่ได้ — คอมเต็ม).
+brainstorm → standalone-port (core เดิม single-magic global-state #include ตรงไม่ได้) → user เคาะ standalone.
+
+**สถานะ build (DONE):**
+- source: `ea_projects\(HEX)_HexaGrid\(HEX)_HexaGrid_rev01.mq5` · compiled: `(HEX)_HexaGrid_rev01.ex5`
+  (อยู่ในโปรเจกต์ + deploy แล้วที่ `D:\Meta 5\MQL5\Experts\HEX_HexaGrid_rev01.ex5`)
+- **compile 0 errors / 0 warnings** (MetaEditor64, X64 Regular)
+- ผ่าน mql-code-reviewer: ไม่มี BLOCKER · แก้ 2 HIGH (sys4 ADX-only ไม่โดน slope-gate · g_suppress_log optimize)
+- **RISK CLASS L4** (capped-martingale+grid, ไม่มี rescue-hedge) — user รับทราบ (เลือก global cap 18% เอง)
+- default = conservative UNOPTIMIZED (spacing ATR-adaptive multi-symbol, risk 2%/basket, mult 1.33, maxLevels 10)
+
+**⚠️ GOTCHA ก่อนรัน (บันทึกไว้กันเสียเวลา):**
+1. **ต้องบัญชี HEDGING เท่านั้น** — OnInit มี guard: ถ้า `ACCOUNT_MARGIN_MODE != RETAIL_HEDGING` = INIT_FAILED
+   (netting จะ merge 6 ตะกร้าทับกัน). **เช็ค log หา `[HEX][FATAL]` ก่อนสรุป 0 trades = code bug** — ต้องมั่นใจ
+   server ของ terminal ที่รัน tester เป็น hedging ก่อน
+2. `_06_AllowLive=false` default แต่ tester-gate เปิดอัตโนมัติ (รัน Strategy Tester ได้เลย)
+3. weekend-cut `_G_CutHourServer=12` เป็น proxy 19:30 ไทย — ปรับตาม GMT offset ของ feed ที่เทสถ้าจะเอาชั้นนี้
+
+**คำสั่ง (baseline ก้อนแรก — both-regime, coarse Model 1 ก่อน, 1 symbol × 2 window ตาม pacing):**
+```powershell
+# ยืนยัน hedging ก่อน แล้วรัน 2 window (trend BWD + recent). แทน window ทีละรอบ:
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'HEX_HexaGrid_rev01' -Symbol XAUUSD -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -Model 1 -Deposit 10000 -Leverage 100 -ReportName HEX_BASE_XAU_BWD -Portable -Terminal 'D:\Meta 5\terminal64.exe'
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'HEX_HexaGrid_rev01' -Symbol XAUUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -Deposit 10000 -Leverage 100 -ReportName HEX_BASE_XAU_REC -Portable -Terminal 'D:\Meta 5\terminal64.exe'
+```
+**Acceptance (raw เท่านั้น — ห้าม verdict, lead ตัดสิน):** 2 report เข้า `_mt5_auto\reports\` · ต่อ window append:
+PF · net profit · trades · maxEqDD% · maxBalDD% · + **ยืนยันว่า OnInit ไม่ FATAL (มี trade เกิดจริง)** ·
+สังเกตว่าระบบไหน (magic 20260707-13) มี trade บ้างจาก comment/journal · commit `[tag] ORDER-096 baseline done`
+
+**ห้าม:**
+- **ห้ามตัดสิน edge จาก Model-1 pass** — grid fill-sensitive, Model-1 optimistic; ผ่าน M1 = แค่ "ผ่านเข้ารอบ Model-4"
+  ไม่ใช่ candidate (VERDICT GATE #6 + doctrine grid-EA ต้อง real-tick confirm)
+- ห้าม tune ก่อนเห็น baseline both-regime (VERDICT GATE #3)
+- ห้ามขยาย symbol×TF เต็มก่อน baseline โชว์ชีพจร (ถ้า XAU both-window PF>1 coarse → ค่อยเปิด funnel: Model-4 real-tick
+  → OOS split → MC ตาม robustness-validator · ถ้าติดลบทั้ง 2 window = กลับมาดู logic/default ก่อน ไม่ใช่ tune หนี)
+- ถ้า INIT FATAL (ไม่ใช่ hedging) = **หยุด แจ้ง user** ว่าต้องเทสบนบัญชี/เทอร์มินอล hedging ห้ามแก้ guard ออก
+
+---
+
+## CAMPAIGN ORDER-096 — WOBR/BotMogul marketplace intake: ปิด lead มือเปล่าให้ครบ (2026-07-11)
+
+**บริบท (session c9ec73fc, REVIEWED by Claude):** เจาะ marketplace online `wobr.ai/bot-ranking` ถึงระดับ
+Supabase (anon key ใน JS bundle) → ดึง 2,532 rankings + 12,481 EA catalog. สรุป: ranking key `new_total_ai`
+คัดกรอง overfit ขึ้นบน (median PF 5.95, 59% <30 trades), **ไม่มี forward column ต่อ preset**, ถูกสุด 19,599
+credits > เรามี 5,634 = **ซื้อไม่ได้**. Sane 6% slice = กลไก fxDreema ของเราเอง (BB+RSI+LogLot+Pyramid) +
+MARTINGATE = anti-edge เดิม. Lead มือเปล่า (build เองไม่ต้องซื้อ) เจอ 2 ตัว: (1) Ichimoku+ADX → **ทำแล้ว
+= dead** (EUR 0.99/GBP 0.88/JPY IS 1.13, PARKED-pending-probe) (2) Alligator+AO → **ยังไม่ทำ**. ทั้ง online
+marketplace + offline BOT MOGUL bundle (ORDER-091B) = ปิดในฐานะแหล่ง deploy แล้ว. เต็ม:
+`_triage/WOBR_BOTRANKING_TRIAGE.md` · memory `wobr-botranking-corpus` + `signal-landscape`.
+
+---
+
+## ORDER-096A — Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) — `OPEN` (role: Sonnet build → qwen smoke → Claude verdict)
+
+**GOAL:** ปิด lead สุดท้ายจาก WOBR — Bill Williams Alligator+AO trend บน FX/metal H1+H4. Prior: น่าจะตาย
+แบบเดียวกับ IchiADX (thesis momentum>reversion, FX=reversion) แต่ต้อง smoke ให้ครบเพื่อปิดเป็น dead-concept.
+
+**คำสั่ง:**
+1. Build `ea_projects\(EXP)_AlligatorAO_Naked\(EXP)_AlligatorAO_Naked_rev00.mq5` — คัด scaffold จาก
+   `ea_projects\(EXP)_IchiADX_Naked\(EXP)_IchiADX_Naked_rev00.mq5` **verbatim** (bar-open gate · closed-bar
+   shift-1 reads · NormPrice/NormLot · magic-scoped single position · ATR SL/TP · ExitMode 1 fixed-TP +
+   2 ATR-trail · OnTester=PF). Magic **999093**.
+   - Signal (naked trend): `iAlligator(_Symbol,_Period,13,8,5,3,3,2,MODE_SMMA,PRICE_MEDIAN)` + `iAO`.
+     BUY = lips>teeth>jaw (fanned up, closed bar) AND AO ข้ามขึ้น 0 (AO[2]<=0 && AO[1]>0). SELL สมมาตร.
+2. Compile headless: `D:\Meta 5\metaeditor64.exe /compile` → **ต้อง 0 errors 0 warnings**.
+3. Smoke M2 2023.01.01-2026.01.01: EURUSD/GBPUSD/XAUUSD × H1+H4 = **6 cells** (`scripts\mt5_run.ps1`,
+   ปิด MT5 GUI ก่อน). Parse PF/trades/DD ด้วย PowerShell regex (python ไม่อยู่ใน PATH).
+4. เซลล์ไหน full PF ≥ 1.2 & trades sane → split IS(2023.01-2025.06)/OOS(2025.06-2026.01) ก่อนตัดสิน.
+
+**Acceptance:** ตาราง 6-cell (PF/trades/DD) + IS/OOS ของเซลล์ที่ผ่าน 1.2 (ถ้ามี) + append ใต้ order นี้ ·
+commit `[tag] ORDER-096A done` · Claude เขียน verdict ลง signal-landscape.
+**ห้าม:** ตัดสิน LEAD จาก full-window PF อย่างเดียว (บทเรียน USDJPY IchiADX: full 1.25 แต่ IS 1.13) ·
+optimize ถ้า smoke ตายหมด · ใส่ grid/martingale (naked เท่านั้น) · ตัดสิน verdict สุดท้าย (งาน Claude)
+
+---
+
+## ORDER-096B — ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) — `OPEN` LOW-PRIORITY (role: qwen optimize → Claude verdict)
+
+**GOAL:** ปิดเซลล์ USDJPY `(EXP)_IchiADX_Naked` ที่ session tag ไว้ PARKED-pending-probe (IS 1.13/195t ต่ำ
+กว่าเกณฑ์). Prior ต่ำมาก (USDJPY trend ตายมาแล้ว 4 ตัว: SuperTrend/Donchian/EMA/IchiADX) — probe นี้แค่
+ทำ verdict ให้สมบูรณ์ตาม default-param-cell rule ไม่ใช่คาดว่ารอด.
+
+**คำสั่ง:**
+1. Optimize ~54-pass USDJPY H1 IS 2023.01-2025.06 Model 2: AdxMin{15,20,25} × SlAtrMult{1.5,2.0,2.5} ×
+   (ExitMode 1 TpAtrMult{2,3} + ExitMode 2 TrailAtrMult{2,2.5,3}). ใช้ `scripts\run_optimization.ps1`.
+2. plateau? มี ≥3 pass ข้างเคียง PF≥1.4 (n≥60) ไหม.
+3. มี plateau → center ไป OOS 2025.06-2026.01 + BWD 2020-2022. ไม่มี pass แตะ 1.4 → DEAD-optimized.
+
+**Acceptance:** ตาราง pass + คำตัดสิน → Claude อัปเดต signal-landscape (แก้ PARKED เป็น verdict สุดท้าย).
+**ห้าม:** promote จาก plateau in-sample เดี่ยว (ต้อง OOS+BWD) · ใช้เวลาเกิน ~20 นาที (prior ต่ำ)
+
+---
+
+## ORDER-096C — commit WOBR intake artifacts — `OPEN` blocked-by(096A,096B) (role: Claude)
+
+**GOAL:** commit ผลงาน WOBR triage เข้า git (ยังไม่ commit — รอ user). รันหลัง 096A/B เพื่อรวม artifacts.
+
+**คำสั่ง:**
+1. `git add` เฉพาะ: `_triage/WOBR_BOTRANKING_TRIAGE.md` · `_triage/WOBR_botranking_bestperEA.csv` ·
+   `_triage/WOBR_botranking_bestperEA.json` · `_triage/WOBR_ea_catalog.json` ·
+   `_triage/WOBR_sane_cohort_enriched.csv` · `ea_projects/(EXP)_IchiADX_Naked/` ·
+   `ea_projects/(EXP)_AlligatorAO_Naked/` (ถ้า 096A เสร็จ). **อย่า add ทั้ง repo.**
+2. commit msg: `[claude] WOBR marketplace intake closed: ranking=adverse-selected overfit (no forward data, unaffordable); IchiADX+Alligator FX-H1 trend probes = thesis-confirms-dead` + Co-Authored-By trailer.
+3. ถ้าอยู่ master → branch ก่อนตาม repo rule.
+
+**Acceptance:** commit เดียวสะอาด เฉพาะไฟล์ที่ระบุ + รายงาน hash.
+**ห้าม:** add report .htm / CSV ใน `_mt5_auto` (transient) · **push โดยไม่ถาม user** · แก้ไฟล์อื่นระหว่างทาง
