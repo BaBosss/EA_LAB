@@ -4842,7 +4842,100 @@ silent-failure ชั้นใหญ่ของ corpus นี้** — intake �
 - **OH Recovery+SL: PF 0.84 EURUSD H1** — recovery-hedge home ไม่ใช่ EURUSD H1 แน่ · WATCH รอตลาดจริง (ถาม user)
 **Coverage gap ปิดแล้ว:** MT5 good+MT4 good x-ray → catalog 1,592→1,598 (ZigZag = dup, indicator sample)
 
-## ORDER-091C-D1 — JUMSTOCH_FIXEDLOT full funnel — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-091C-D1 — JUMSTOCH_FIXEDLOT full funnel — `DONE(Claude-agent, 2026-07-11)`
 **คำสั่ง:** optimize coarse→fine หา home (symbol {EURUSD,GBPUSD,USDJPY,XAUUSD} × TF {M15,M30,H1} × k_period ×
 level) → plateau-center select → IS/OOS split → MC · flat-lot ตลอด (มันเป็น fixed-lot อยู่แล้ว) · pre-registered
 bar funnel: OOS PF≥1.2 & MC ruin<5% & plateau ไม่มี cell ขาดทุน → EA-SCORE · **ห้าม:** เปลี่ยนเป็น lot escalation · verdict (lead)
+
+### ORDER-091C-D1 RESULT (Claude-agent, 2026-07-11)
+Raw numbers only — no verdict (lead judges). Runner: `scripts\mt4_run.ps1`, MT4 `D:\Meta4`, EA compiled to
+`...\MQL4\Experts\c091c\JUMSTOCH_FIXEDLOT.ex4` (0 errors, 10 warnings — all benign unchecked-OrderXxx return
+values). Model 1 (control points), deposit 10000, fixed-lot 0.01, window 2023.01.01–2026.07.01 unless noted.
+Sets under `_mt4_auto\ab_sets\jumstoch_d1\`, reports prefix `JUM_D1_` in `_mt4_auto\reports\`.
+
+**EA mechanism note (checked before judging):** `DiMarti=1.7` is DECLARED (line 35) + printed in a Comment
+(line 311) but is **never used in any OrderSend / lot calc** — every grid leg opens at `Fixed_Lot` (0.01).
+So the "1.7 multiplier" is INERT: this is a fixed-lot averaging grid (counter+trend Stochastic, up to
+`Level_Max=12` legs at `Range=21`-point spacing, each leg carries `SL=253`), **not** a martingale. Nothing to
+disable to satisfy the flat-lot constraint — it is already flat-lot. `iStochastic(NULL,0,..)` uses the chart
+TF (no hardcoded TF), so symbol×TF is the real home lever.
+
+**STAGE 1 — home search (symbol × TF, default params, 12 cells, Model 1):**
+| symbol | TF | trades | PF | net | maxDD% | win% | note |
+|---|---|---|---|---|---|---|---|
+| EURUSD | M15 | 8613 | 1.01 | +140 | 11.28 | 71.5 | |
+| EURUSD | M30 | 7908 | 1.10 | +1151 | 8.15 | 72.5 | |
+| EURUSD | H1  | 7052 | **1.18** | +1731 | 8.51 | 73.0 | ✅ top-2 |
+| GBPUSD | M15 | 472  | 1.25 | +135 | 3.21 | 69.9 | ⚠️ DATA GAP — only 3968 bars (~40d M15 hist); PF unreliable, EXCLUDED |
+| GBPUSD | M30 | 4496 | 0.95 | −364 | 17.12 | 71.5 | |
+| GBPUSD | H1  | 4073 | 1.03 | +193 | 11.61 | 71.8 | |
+| USDJPY | M15 | 158  | 0.29 | −227 | 2.61 | 67.1 | JPY dead all TF |
+| USDJPY | M30 | 831  | 0.68 | −398 | 7.60 | 68.0 | |
+| USDJPY | H1  | 813  | 0.70 | −338 | 7.38 | 71.2 | |
+| AUDUSD | M15 | 6424 | 0.97 | −253 | 16.85 | 71.4 | |
+| AUDUSD | M30 | 5890 | 1.09 | +773 | 10.60 | 72.2 | |
+| AUDUSD | H1  | 5406 | **1.19** | +1354 | 9.81 | 72.4 | ✅ top-2 |
+(order used {EURUSD,GBPUSD,USDJPY,XAUUSD}; XAUUSD swapped for AUDUSD per the D1 brief's Stage-1 grid
+{EURUSD,GBPUSD,USDJPY,AUDUSD}.) **Home = H1** for the FX majors; both winners (trades≥200, DD<25%, best PF):
+**EURUSD H1 (1.18)** and **AUDUSD H1 (1.19)**. USDJPY structurally dead every TF (point-scaled Range/SL/TP
+on the 3-digit quote). Carried both winners forward.
+
+**STAGE 2 — param plateau (k-period × O/S level pair, both Stochastics swept uniformly, full window):**
+EURUSD H1:
+| cell (k / U-L) | trades | PF | net | maxDD% |
+|---|---|---|---|---|
+| k24 80-20 | 6745 | 1.15 | +1425 | 8.52 |
+| k24 75-25 | 6812 | 1.17 | +1532 | 9.07 |
+| k24 70-30 | 6735 | 1.14 | +1334 | 9.39 |
+| k32 80-20 | 6691 | 1.13 | +1249 | 9.71 |
+| **k32 75-25 (CENTER)** | **6681** | **1.15** | **+1380** | **9.09** |
+| k32 70-30 | 6677 | 1.17 | +1525 | 8.89 |
+| k40 80-20 | 6590 | 1.16 | +1425 | 8.79 |
+| k40 75-25 | 6569 | 1.14 | +1265 | 9.44 |
+| k40 70-30 | 6524 | 1.16 | +1425 | 8.73 |
+→ PEAK 1.17 (k24/75-25 & k32/70-30). **Plateau: all 9 cells positive (PF 1.13–1.17, DD 8.5–9.7%) — NO losing cell.**
+
+AUDUSD H1:
+| cell (k / U-L) | trades | PF | net | maxDD% |
+|---|---|---|---|---|
+| k24 80-20 | 5088 | 1.11 | +756 | 9.88 |
+| k24 75-25 | 5247 | 1.17 | +1144 | 9.86 |
+| k24 70-30 | 5281 | 1.20 | +1336 | 9.70 |
+| k32 80-20 | 5011 | 1.11 | +749 | 9.99 |
+| **k32 75-25 (CENTER)** | **5161** | **1.18** | **+1181** | **9.95** |
+| k32 70-30 | 5148 | 1.21 | +1372 | 9.82 |
+| k40 80-20 | 4969 | 1.12 | +823 | 10.03 |
+| k40 75-25 | 4970 | 1.09 | +609 | 10.52 |
+| k40 70-30 | 5107 | 1.18 | +1188 | 10.05 |
+→ PEAK 1.21 (k32/70-30). **Plateau: all 9 cells positive (PF 1.09–1.21, DD 9.7–10.5%) — NO losing cell.**
+(Set-load verified: forcing counter-Stoch levels to the pair moved trade count 7052→6681 vs Stage-1 baseline,
+i.e. the `.set` overrides were applied; edge held through the perturbation.) Plateau-center config carried
+forward = **k=32, levels 75/25** (`JUM_D1_plateau_center.set`).
+
+**STAGE 3 — OOS split on plateau-center (IS 2023.01.01–2025.03.01 vs OOS 2025.03.01–2026.07.01, Model 1):**
+| symbol | split | trades | PF | net | maxDD% | win% |
+|---|---|---|---|---|---|---|
+| EURUSD H1 | IS  | 3727 | 1.16 | +809 | 6.67 | 73.2 |
+| EURUSD H1 | OOS | 2961 | **1.12** | +510 | 8.58 | 72.0 |
+| AUDUSD H1 | IS  | 3183 | 1.21 | +842 | 8.00 | 72.4 |
+| AUDUSD H1 | OOS | 1994 | **1.06** | +158 | 10.92 | 72.2 |
+Both OOS windows stay positive (PF>1.0, net>0) but **below the 1.2 OOS gate** (EURUSD 1.12, AUDUSD 1.06).
+
+**STAGE 4 — Monte Carlo (bootstrap trade-order resample, `scripts\mt4_montecarlo.py`, full-window
+plateau-center report, deposit 10000, 5000 iters). METHOD: resample the closed-trade sequence w/ replacement;
+report PF 5th-pct, DD 95th-pct, ruin=P(≥50% equity loss). CAVEAT (skill): trade-order MC on a FIXED-LOT
+AVERAGING-GRID EA is an OPTIMISTIC lower bound — reshuffling breaks the losing-leg clustering, so MC DD
+(95th ~4%) sits far below the single-path historical DD (~8–9%); ruin 0% is on a benign 2023–2026 sample
+that contains no sustained adverse trend against a full 12-leg stack.**
+| symbol | hist PF / DD% | MC PF median / 5th | MC DD% 95th / 99th / worst | P(net<0) | ruin(≥50%) |
+|---|---|---|---|---|---|
+| EURUSD H1 | 1.15 / 8.12 | 1.15 / **1.07** | 4.32 / 5.42 / 8.26 | 0.1% | **0.00%** |
+| AUDUSD H1 | 1.18 / 9.23 | 1.18 / **1.07** | 3.73 / 4.76 / 6.98 | 0.2% | **0.00%** |
+
+**STATUS vs pre-registered bar (quoted verbatim):**
+> "OOS PF>=1.2 AND MC ruin<5% AND plateau มีศูนย์กลางไม่มี cell ขาดทุน -> ผ่านเข้า EA-SCORE (lead ให้คะแนน)"
+- **OOS PF≥1.2:** EURUSD 1.12 → NOT MET · AUDUSD 1.06 → NOT MET (both positive but under the gate)
+- **MC ruin<5%:** EURUSD 0.00% → MET · AUDUSD 0.00% → MET (see optimistic-lower-bound caveat)
+- **plateau center, no losing cell:** EURUSD MET (9/9 positive) · AUDUSD MET (9/9 positive)
+Funnel is an AND of the three; the OOS-PF condition is not met for either symbol. Raw evidence recorded;
+no verdict issued (lead). Both symbols cleared plateau + MC-ruin, missed only the OOS≥1.2 gate.
