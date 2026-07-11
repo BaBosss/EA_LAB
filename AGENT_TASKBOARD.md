@@ -5019,11 +5019,123 @@ REVIEW D1 ด้านบนเขียน "WATCH gate=spread" ก่อน use
 plateau สะอาด = **ของต่อยอด** (deploy-gate ≠ discard-gate) · D1b spread ไม่ใช่ kill-gate แล้ว แต่ **quantify ว่า
 spread กินเท่าไหร่ = เหตุผลสนับสนุนการเปลี่ยนเป็น pending entry** · เปิด 2 branch build-on:
 
-## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `DONE(Claude-agent, 2026-07-11)`
 **คำสั่ง:** plateau-center config (k32/75-25 fixed-lot) · grid **majors+crosses+metal** {EURUSD,GBPUSD,USDJPY,
 AUDUSD,USDCAD,NZDUSD,EURJPY,GBPJPY,AUDJPY,EURGBP,XAUUSD} × TF {M15,M30,H1,H4} · full window 2023-2026 Model 1 ·
 1 backtest/cell · ตาราง PF/net/DD/trades ทุก cell + mark cell ที่ผ่าน (PF≥1.1 & trades≥200 & DD<25%) ·
 เช็ค MT4 history ต่อ symbol ก่อน (data gap = ตัด ระบุ) · **ห้าม:** martingale · verdict · commit `[tag] ORDER-091C-D1c done`
+
+### ORDER-091C-D1c RESULT (Claude-agent, 2026-07-11)
+Raw numbers only — no verdict (lead judges). Runner: `scripts\mt4_run.ps1`, same MT4 lane/Expert as D1/D1b
+(`c091c\JUMSTOCH_FIXEDLOT`, `D:\Meta4`), same plateau-center set `JUM_D1_plateau_center.set` (k_period=32,
+up_level=75, lo_level=25 — EA-compiled defaults already carry d_period=12, slowing=12, Fixed_Lot=0.01,
+Range=21 unchanged). Model 1, deposit 10000, window 2023.01.01–2026.07.01. Reports prefix `JUM_D1c_<sym>_<tf>`
+in `_mt4_auto\reports\`.
+
+**Anchor reproduction check (plumbing sanity, run before the grid):** EURUSD H1 → PF 1.15 / net +1380.21 /
+DD 9.09% / 6681 trades — **exact match** to D1/D1b. AUDUSD H1 → PF 1.18 / net +1180.54 / DD 9.95% / 5161
+trades — **exact match**. Both anchors reproduced correctly; grid proceeded.
+
+**History-availability check (done before/observed during the grid, per the order's instruction):** the MT4
+terminal's local `.hst` cache only holds full-depth history (M1/M5/M15/M30/H1/H4/D1/W1/MN1) for **EURUSD and
+XAUUSD**; every other symbol only had H1 (`c60`) cached, or nothing at all (AUDJPY had zero cached files).
+The tester auto-downloads missing history from the live server (ThinkMarkets-Live) when a cell runs, so bar
+counts were checked per cell rather than assumed. Reference "full window" bar counts (from EURUSD, confirmed
+by AUDUSD matching to within 0.01%): M15≈87720, M30≈44372, H1≈22693, H4≈6615. Any cell measured against that
+reference:
+
+| status | rule | symbols/TFs affected |
+|---|---|---|
+| FULL (history ครบ) | ≥90% of reference (or, for XAUUSD, internally consistent M15/M30/H1/H4 ratios) | EURUSD (all 4 TF) · AUDUSD (all 4 TF) · XAUUSD (all 4 TF) · GBPUSD H4 · USDJPY H4 |
+| PARTIAL-GAP | 50–90% of reference | GBPUSD M15 (74%), M30 (82%) · USDJPY M15 (74%), M30 (82%) |
+| SEVERE-GAP | 0–50% of reference | GBPUSD H1 (41%) · USDJPY H1 (10%) · NZDUSD M30/H1/H4 (10/9/31%) · EURJPY M30/H1 (10/9%) · GBPJPY M30/H1 (10/9%) · AUDJPY H1 (9%) · EURGBP all 4 (2/10/10/31%) · USDCAD all 4 (2/10/10/32%) |
+| NO-DATA (0 trades, 0 bars) | terminal could not get any history for that cell | NZDUSD M15 · EURJPY M15+H4 · GBPJPY M15+H4 · AUDJPY M15+M30+H4 |
+
+Per-symbol note: **EURUSD, AUDUSD, XAUUSD** = clean full-window history, all 4 TFs usable. **GBPUSD, USDJPY**
+= only H4 is clean (97% of reference); M15/M30/H1 are gapped to varying degrees. **NZDUSD, EURJPY, GBPJPY,
+AUDJPY, EURGBP, USDCAD** = gapped or missing on every TF (this broker/feed evidently only serves ~2–4 months
+of history on these 6 symbols to this terminal, vs. the full 3.5-year window requested) — none of their
+cells can be treated as full-window results.
+
+**XAUUSD compute note:** M15 (81,011 trades) and H1 (249,517 trades) and H4 (134,305 trades) completed within
+the runner's default 900s timeout; **M30 timed out and was terminated at 902s on the first attempt** (437,240
+trades — the densest cell in the whole grid) and had to be re-run with `-TimeoutSec 2700`, which completed.
+**XAUUSD anomaly (raw observation, not a judgment):** M15 shows DD 99.93% (near-total equity loss) and M30
+shows DD 84.40% — both far outside anything seen on FX pairs — while H1/H4 show small DD (11.86%/2.79%) but
+an extreme trade-density (11–20 trades per bar, vs. <1/bar on FX majors) and a **net profit pinned at exactly
+100000.00–100015.67** on M30/H1/H4. Checked the EA source: `Target_Persen = 1000.0` is a declared input (a
+1000%-of-deposit profit target with deposit=10000 → 100,000). This strongly suggests the EA's own profit-cap
+logic is firing on XAUUSD (10000 → 100000 net) after the point-scaled `Range=21` grid (designed for 4-5 digit
+FX quotes) trades far too densely against gold's price scale — the same "point-scaled Range/SL/TP" mechanism
+flagged in D1 for USDJPY, but much more extreme on XAU. Raw numbers reported below as-is; not excluded via
+the data-gap rule (XAU history itself is clean) but flagged for the lead as likely an artifact, not edge.
+
+**Full 44-cell table:**
+
+| symbol | TF | PF | net | DD% | trades | bars | history | pass? |
+|---|---|---|---|---|---|---|---|---|
+| EURUSD | M15 | 1.01 | +105.86 | 10.47 | 8329 | 87727 | FULL | fail (PF) |
+| EURUSD | M30 | 1.10 | +1043.01 | 8.24 | 7478 | 44375 | FULL | **PASS** |
+| EURUSD | H1 | 1.15 | +1380.21 | 9.09 | 6681 | 22694 | FULL | **PASS** |
+| EURUSD | H4 | 1.25 | +1791.95 | 6.55 | 5299 | 6614 | FULL | **PASS** |
+| GBPUSD | M15 | 0.98 | -267.98 | 23.04 | 7818 | 65249 | PARTIAL-GAP (74%) | fail (PF+gap) |
+| GBPUSD | M30 | 1.00 | -28.07 | 20.91 | 7876 | 36476 | PARTIAL-GAP (82%) | fail (PF+gap) |
+| GBPUSD | H1 | 1.01 | +41.19 | 11.38 | 3869 | 9339 | SEVERE-GAP (41%) | fail (PF+gap) |
+| GBPUSD | H4 | 1.25 | +2489.81 | 7.15 | 6923 | 6432 | FULL (97%) | **PASS** |
+| USDJPY | M15 | 0.88 | -2161.24 | 24.86 | 14209 | 65249 | PARTIAL-GAP (74%) | fail (PF+gap) |
+| USDJPY | M30 | 0.85 | -2721.20 | 27.98 | 13793 | 36477 | PARTIAL-GAP (82%) | fail (PF+DD+gap) |
+| USDJPY | H1 | 0.66 | -368.13 | 7.40 | 763 | 2217 | SEVERE-GAP (10%) | fail (PF+gap) |
+| USDJPY | H4 | 0.93 | -1058.58 | 24.73 | 11108 | 6432 | FULL (97%) | fail (PF) |
+| AUDUSD | M15 | 1.04 | +342.95 | 10.31 | 6345 | 87718 | FULL | fail (PF) |
+| AUDUSD | M30 | 1.10 | +758.98 | 11.49 | 5629 | 44370 | FULL | **PASS** |
+| AUDUSD | H1 | 1.18 | +1180.54 | 9.95 | 5161 | 22692 | FULL | **PASS** |
+| AUDUSD | H4 | 1.07 | +434.30 | 10.59 | 4028 | 6617 | FULL | fail (PF) |
+| USDCAD | M15 | 0.18 | -367.49 | 4.14 | 129 | 2048 | SEVERE-GAP (2%) | fail (PF+trades+gap) |
+| USDCAD | M30 | 0.52 | -461.54 | 6.52 | 507 | 4431 | SEVERE-GAP (10%) | fail (PF+gap) |
+| USDCAD | H1 | 0.41 | -590.38 | 7.33 | 420 | 2216 | SEVERE-GAP (10%) | fail (PF+gap) |
+| USDCAD | H4 | 0.79 | -469.82 | 10.72 | 1566 | 2091 | SEVERE-GAP (32%) | fail (PF+gap) |
+| NZDUSD | M15 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| NZDUSD | M30 | 0.97 | -19.92 | 4.29 | 473 | 4359 | SEVERE-GAP (10%) | fail (PF+gap) |
+| NZDUSD | H1 | 0.86 | -75.41 | 4.09 | 343 | 1951 | SEVERE-GAP (9%) | fail (PF+gap) |
+| NZDUSD | H4 | 1.90 | +875.24 | 4.48 | 1237 | 2024 | SEVERE-GAP (31%) | fail (gap only — PF/trades/DD all pass) |
+| EURJPY | M15 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| EURJPY | M30 | 1.46 | +356.57 | 3.75 | 1153 | 4359 | SEVERE-GAP (10%) | fail (gap only) |
+| EURJPY | H1 | 1.16 | +114.81 | 3.58 | 832 | 1951 | SEVERE-GAP (9%) | fail (trades<200 + gap) |
+| EURJPY | H4 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| GBPJPY | M15 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| GBPJPY | M30 | 1.29 | +408.67 | 4.51 | 1859 | 4359 | SEVERE-GAP (10%) | fail (gap only) |
+| GBPJPY | H1 | 1.19 | +204.35 | 5.00 | 1278 | 1951 | SEVERE-GAP (9%) | fail (gap only) |
+| GBPJPY | H4 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| AUDJPY | M15 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| AUDJPY | M30 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| AUDJPY | H1 | 1.76 | +388.32 | 2.18 | 906 | 1951 | SEVERE-GAP (9%) | fail (gap only) |
+| AUDJPY | H4 | — | 0 | 0 | 0 | 0 | NO-DATA | fail (no data) |
+| EURGBP | M15 | 1.72 | +20.13 | 0.22 | 43 | 2048 | SEVERE-GAP (2%) | fail (trades<200 + gap) |
+| EURGBP | M30 | 1.96 | +141.22 | 1.13 | 194 | 4433 | SEVERE-GAP (10%) | fail (trades<200 + gap) |
+| EURGBP | H1 | 1.93 | +123.23 | 1.49 | 161 | 2217 | SEVERE-GAP (10%) | fail (trades<200 + gap) |
+| EURGBP | H4 | 1.55 | +476.79 | 4.96 | 680 | 2048 | SEVERE-GAP (31%) | fail (gap only) |
+| XAUUSD | M15 | 0.68 | -9992.84 | 99.93 | 81011 | 83224 | FULL | fail (PF+DD) |
+| XAUUSD | M30 | 1.64 | +100000.00 | 84.40 | 437240 | 42129 | FULL | fail (DD) — see anomaly note |
+| XAUUSD | H1 | 2.15 | +100010.23 | 11.86 | 249517 | 21580 | FULL | **PASS — see anomaly note** |
+| XAUUSD | H4 | 3.21 | +100015.67 | 2.79 | 134305 | 6530 | FULL | **PASS — see anomaly note** |
+
+**Pre-registered bar (quoted verbatim):** "cell ผ่าน = PF≥1.1 AND trades≥200 AND DD<25% AND history ครบ
+(ไม่ data-gap)"
+
+**Cells that pass ALL four conditions (clean history + numeric bar):** EURUSD M30/H1/H4 · AUDUSD M30/H1 ·
+GBPUSD H4 · XAUUSD H1/H4 — 8 of 44 cells. Every gapped/no-data cell is excluded from this set regardless of
+how good its raw PF looks (several — NZDUSD H4 PF1.90, GBPJPY M30/H1 PF1.29/1.19, AUDJPY H1 PF1.76, EURGBP
+PF1.5–2.0 — would otherwise clear the numeric bar but sit on 2–4 months of history, not the requested
+3.5-year window, so they are NOT counted as passing here).
+
+**Top 5 passing cells by PF (clean-history only):**
+1. XAUUSD H4 — PF 3.21 (anomaly-flagged, see note above)
+2. XAUUSD H1 — PF 2.15 (anomaly-flagged, see note above)
+3. EURUSD H4 / GBPUSD H4 — PF 1.25 (tie)
+4. AUDUSD H1 — PF 1.18
+5. EURUSD H1 — PF 1.15
+
+No verdict issued (lead judges).
 
 ## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `OPEN` (role: Claude/Sonnet build → run)
 **ที่มา:** user + ORDER-080 · mean-reversion เข้าหา LWMA → วาง **buy-limit ใต้ราคา / sell-limit เหนือ** ที่ระดับ
