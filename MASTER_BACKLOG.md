@@ -328,3 +328,13 @@ utility อ่านไฟล์ตัวเดียว (BOM sniff + NUL-densit
 
 **5. 📡 live drift-monitor (ต่อยอด 092 หลัง VPS attach)** — อยู่ P1 อยู่แล้ว · framing: เปลี่ยน "judge 3 เดือน"
 เป็น early-warning ต่อเนื่อง (จับ EA ที่เริ่มตายตั้งแต่สัปดาห์ 2 ไม่ใช่เดือน 3) = โครงสร้างที่ทำให้เงินจริงปลอดภัยจริง
+
+
+---
+
+## §BUILD-ON #3 SHIPPED (2026-07-11): scripts\lib\robust_text.py
+`read_text_robust(path)` = ตัวอ่านไฟล์ hardened ตัวเดียวของ intake pipeline. self-test ผ่าน 3 เคสจริงที่กัดวันนี้:
+utf-8 ปกติ · UTF-16 มี BOM (BOT MOGUL html) · **UTF-16 ไม่มี BOM (ตัวที่ทำ 091A พลาด 374 ไฟล์) — roundtrip ตรง**
++ double-encoded mojibake reverse. **TODO adoption (qwen/agent ตอน lane ว่าง):** retrofit `fxdreema_xray.py`,
+`order091a_intake.py`, `botmogul_parse.py` ให้ import ตัวนี้แทน read_text() เดิม → ปิด bug class ถาวร
+(ตอนนี้แต่ละ script มี BOM-sniff ของตัวเอง กระจาย — รวมเป็นตัวเดียว)
