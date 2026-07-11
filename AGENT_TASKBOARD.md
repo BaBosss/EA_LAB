@@ -5329,3 +5329,19 @@ raw htm before this table was written.
 
 (raw numbers + mechanical bar-check only — no PASS/FAIL/DEPLOY verdict, no correlation step, per
 order ห้าม — lead judges and runs corr)
+
+
+---
+
+## JUMSTOCH multi-symbol config — `DONE(Claude, 2026-07-11)` (corr จาก MT4 report จริง, ไม่ต้องรอ history)
+สร้าง `scripts\lib\mt4_monthly.py` (extract monthly P&L จาก MT4 report + **self-validate: sum profit = Total Net
+Profit ก่อนใช้** — parse ผิดคอลัมน์ = reject) · ผ่าน validation ครบ 6 leg (extracted net ตรง reported <0.4%, 42 เดือน)
+
+**corr matrix (monthly P&L Pearson, 42 เดือน):**
+- cross-symbol ทุกคู่ **< 0.52** (EURUSD×AUDUSD 0.22-0.40 · ×GBPUSD 0.40-0.52) = additive เต็ม
+- within-symbol ซ้ำ: EURUSD M30↔H1 0.84 · AUDUSD M30↔H1 **0.95** → เลือก TF เดียว/symbol
+
+**→ config demo (corr<0.8 ตาม user rule): `EURUSD H1 + AUDUSD H1 + GBPUSD H4`** = 3 ขาไม่ corr (0.25-0.49) ·
+4th-leg option = EURUSD H4 (0.66 vs H1, ผ่าน gate แต่กระจุก EURUSD) · **ยังไม่เข้า DEPLOYMENTS.csv** — รอ user
+attach + assign magic (candidate demo-bench, spread-robust + plateau + corr ครบ) · เพิ่มขาอีกหลังโหลด MT4 history
+(NZDUSD/AUDJPY/GBPJPY/EURGBP priority)
