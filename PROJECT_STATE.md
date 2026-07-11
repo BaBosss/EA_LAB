@@ -299,10 +299,11 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
 1,592 unique EA พร้อม Wave 1 · NewsGuard+SnapshotExporter พร้อม attach
 
 **คิวงาน (pacing 1-2 order/รอบ เหมือนเดิม):**
-1. **091B — BOT MOGUL report sweep** (agent parse 711 html → ตาราง claim → Opus คัด top ด้วย
-   claim × โครง X-ray → BWD spot-kill ทีละ 5) — ห้ามเชื่อ vendor report (memory wobr-botranking)
-2. **091C — .Final EA funnel queue** (Opus นำ — 161 new-unique + 350 set ที่ user validate มือ =
-   prior สูงสุดของคลัง · diagnosis→lever ห้าม DD-dismissal ตามคำ user)
+1. ~~091A/091B~~ **ปิดแล้ว 2026-07-11:** 091A คลัง→1,592 unique · 091B BOT MOGUL bundle = DEAD
+   (BWD ของเราเอง: vendor PF 67→0.39/DD 96% · ห้าม re-mine · memory wobr-botranking อัปเดตเลขจริงแล้ว)
+2. **091C — .Final EA funnel queue (คิวถัดไป, Opus นำ)** — **เริ่มจาก `_triage\ORDER091C_FINALEA_PREP.md`**
+   (triage tier พร้อม): ข้อ 1 = **ถาม user แยก keeper vs indicator-sample noise ก่อน** (ปลดล็อกทั้งกอง
+   ประหยัดสุด) → batch 1 Winning Pro 2.5 + TMA Bands nk · NuiIndy variant = live อยู่แล้ว cross-ref ก่อน
 3. **076 — smoke หัวกะทิ 41 ตัวจาก X-ray** (agent batch, cage ใหม่พร้อมแล้ว) · ตามด้วย **080**
    (limit-entry study — template แตะได้แล้ว regression ครอบ Boss_15/16)
 4. **082 — Wave5 spec** รอ user ยืนยัน draft → **ก่อน build ให้ยิง fable-advisor one-shot ตรวจ spec**
