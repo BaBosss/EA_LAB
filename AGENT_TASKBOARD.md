@@ -5474,7 +5474,37 @@ AUDUSD H1 1.22 (ตรง MT4 D1 = cross-platform agreement) · GBPUSD H4 1.18 �
 (จาก MT4 3 ขา → MT5 5 ขา, ไอเดีย port ของ user จ่ายผลเต็ม) · **EA-SCORE ~6-7** · gate เหลือก่อน deploy: OOS split ของ
 2 ขาใหม่ (EURGBP/NZDUSD เพิ่งมี full-window smoke) · EURUSD/AUDUSD/GBPUSD inherit MT4 D1 OOS+D1b spread
 
-## ORDER-091C-D1f — OOS validate JUMSTOCH MT5 ขาใหม่ (EURGBP/NZDUSD) — `CLAIMED(Claude-agent, 2026-07-11)`
+## ORDER-091C-D1f — OOS validate JUMSTOCH MT5 ขาใหม่ (EURGBP/NZDUSD) — `DONE(Claude-agent, 2026-07-11)`
 **คำสั่ง:** `(EXP)_JUMSTOCH_MT5` config default · IS 2023.01-2025.03 vs OOS 2025.03-2026.07 บน EURGBP H1 + NZDUSD H4
 (+ re-confirm EURUSD H1/AUDUSD H1/GBPUSD H4 OOS บน MT5 ให้ครบชุด) · Model 1 fixed-lot · report `JUMT5OOS_*` ·
 **บาร์: OOS PF≥1.1 & DD<15% = ยืนยันเข้า 5-leg config · < 1.0 = ถอดขานั้น** · **ห้าม:** tune · verdict (lead) · commit `[tag] ORDER-091C-D1f done`
+
+### ORDER-091C-D1f RESULT (Claude-agent, 2026-07-11)
+Raw numbers only — no verdict (lead judges). Runner `scripts\mt5_run.ps1 -Portable`, MT5 lane-2
+`D:\Meta 5b`, Expert `c091c\(EXP)_JUMSTOCH_MT5` (.ex5 already compiled/deployed on this lane from
+D1e, no recompile needed). Model 1, deposit 10000, leverage 1:100, fixed 0.01 lot, default compiled
+inputs (no .set — same as D1e's TesterInputs). IS window 2023.01.01–2025.03.01, OOS window
+2025.03.01–2026.07.01. Reports prefix `JUMT5OOS_` in `_mt5_auto\reports\`. All 10 runs (5 legs ×
+IS/OOS) completed on first attempt, no retries, no NO REPORT, History Quality 99–100% on every run,
+bar counts consistent with window length on each TF (no data-gap cells).
+
+| leg | IS-PF | IS-DD(eq%) | OOS-PF | OOS-DD(eq%) | OOS-trades | holds-bar? |
+|---|---:|---:|---:|---:|---:|:---:|
+| EURGBP H1 | 1.38 | 4.71 | **1.34** | 6.23 | 869  | YES |
+| NZDUSD H4 | 1.20 | 7.81 | **1.75** | 4.55 | 1487 | YES |
+| EURUSD H1 | 1.26 | 6.54 | **1.09** | 9.21 | 3272 | no (PF<1.1, but ≥1.0 — gray zone, neither confirms nor removes) |
+| AUDUSD H1 | 1.31 | 7.68 | **1.04** | 10.90 | 2183 | no (PF<1.1, but ≥1.0 — gray zone, neither confirms nor removes) |
+| GBPUSD H4 | 1.16 | 10.39 | **1.28** | 6.03 | 3520 | YES |
+
+(balance-DD% for the same OOS cells, for reference: EURGBP H1 3.67 · NZDUSD H4 2.54 · EURUSD H1
+7.70 · AUDUSD H1 9.13 · GBPUSD H4 3.72 — equity-DD used as the primary DD column above, it is the
+more conservative of the two on every cell here.)
+
+**Pre-registered bar (quote verbatim, not judged):** "OOS PF>=1.1 AND OOS DD<15% = ยืนยันขา · OOS
+PF<1.0 = ถอดขานั้น"
+
+**Raw observations (not a verdict):** EURGBP H1, NZDUSD H4, and GBPUSD H4 clear the confirm bar on
+both PF and DD. EURUSD H1 and AUDUSD H1 land in the unaddressed middle zone the bar text doesn't
+cover (OOS PF 1.09 and 1.04 respectively — above the 1.0 removal line but below the 1.1 confirm
+line); both still show OOS PF>1.0 (no reversal to negative) with DD well under 15%. No leg triggered
+the OOS PF<1.0 removal condition. Lead judges the two gray-zone legs and the 5-leg config decision.
