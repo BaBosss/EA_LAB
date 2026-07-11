@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-10 ค่ำ (ปรัชญาโรงงาน+EA-SCORE จารึก · retro-audit 154 verdicts รอบแรกจบ · ORDER-068→090) · updated by: Claude Opus 4.8 · owner: patip
+> **last updated:** 2026-07-11 บ่าย (วัน audit-hardening: CODEX_AUDIT judged ครบ · Layer D ปิดหมด D1-D6 · encoding ไฟล์นี้ซ่อมแล้ว · ORDER-080→094) · updated by: Claude (Fable-seat ชั่วคราว 2026-07-11) · owner: patip
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
@@ -134,6 +134,17 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   · **UPDATE 2026-07-10 บ่าย (ORDER-071 ปิดเคส): entry ST03 ตายสมบูรณ์ทุกแกน** — sweep exit ×4 +
   symbol ×2 + H4 gate ×3 (18 config) ดีสุด 0.99 (บาร์ 1.05) → ห้ามขุด Count-MACD entry อีกทุกรูปแบบ ·
   ของที่รอด: H4-MACD-direction gate (ลด DD 21→5.5%) = อะไหล่ใช้กับสัญญาณอื่น · ทางต่อ = Boss_16 (ORDER-072)
+- 🛡️ **(2026-07-11) วัน audit-hardening: CODEX_AUDIT ตัดสินครบ + Layer D ปิดหมด** — Codex audit เต็มระบบ
+  (`_triage\CODEX_AUDIT_FULL_2026-07-10.md`) ถูก judge ทีละข้อ (accept ส่วนใหญ่ Layer A/C/D · โต้กลับ
+  Keltner/Ichimoku Model-2 kill + ZSCORE ladder — เหตุผลใน taskboard §REVIEW CODEX-AUDIT) · **แก้วันเดียว:**
+  daily chain fail-visible + stale guard + dashboard map ครบ 141049900 · ORDER-092 floating-telemetry
+  (exporter+FLOATING RISK panel) · ORDER-083B/C NewsGuard MT4 port + hardening 7 ช่อง (พร้อม attach —
+  รอ user ทำ `VPS_TRANSPORT_AND_ATTACH.md`) · ORDER-094 cage 4 ตัว fail-closed + Boss_15/16 เข้า regression ·
+  ORDER-093(4) ซ่อม encoding ไฟล์นี้ 556 บรรทัด (อ่านออก 100% แล้ว — เหลือ sub-task 1-3 inventory+checker) ·
+  **SuperTrend 085B: BWD ตก (PF 0.88) / plateau ผ่าน 18/18 → bench + user อนุมัติ attach demo (magic 990020)** ·
+  **user เคาะ:** RSI-MR ออกจาก real→demo isolate · ST03 = user ขอ optimize มือก่อนถอด (PARKED-VERIFY) ·
+  crypto lane (ORDER-081) = **PARK** (ไม่มี maker rebate จริง — premise โพสต์ FB ถูกหักล้าง) ·
+  doctrine ใหม่จาก audit: **cage ต้อง fail-visible เสมอ** + Model-2 ใช้ฆ่าได้อย่างเดียวห้ามใช้ผ่าน
 - 🟢 **(2026-07-11 เช้า) Boss_16 BUY 21/30 XAU H1 = PASS-TO-BENCH (ORDER-078 REVIEWED)** — funnel
   ครบ 4 ขั้นไม่ตกด่าน pre-registered: 27-cell spacing/TP plateau 0 ตัวขาดทุน (PF 1.371-1.854,
   center อันดับ 20/27 = ไม่ใช่ peak) · year-split 6/7 ปีบวก (ลบเดียว 2021 PF 0.78 ขาดทุนมีเพดาน) ·

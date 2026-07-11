@@ -1,4 +1,4 @@
-# AGENT_TASKBOARD — คิวงานกลางของทุก agent
+﻿# AGENT_TASKBOARD — คิวงานกลางของทุก agent
 
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
@@ -4349,7 +4349,7 @@ closed-deals sections เดิมอยู่ใต้ panel ครบทุก
 
 ---
 
-## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `OPEN` (role: Claude นำ + agent ช่วย mechanical — งาน doc แตะ verdict ต้องมี lead คุม)
+## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `PARTIAL: sub-task 4 DONE(Claude, 2026-07-11 — encoding ซ่อมแล้ว commit 1e86479) · sub-tasks 1-3 OPEN` (role: Claude นำ — คิวเปิด session หน้า)
 
 **ทำไม:** CODEX-AUDIT A2+C1+C4 — ความจริง deploy กระจาย 4 ที่แก้มือ, checker เช็ค string ค้างยุค 06-22,
 PROJECT_STATE double-encode 16k จุด
