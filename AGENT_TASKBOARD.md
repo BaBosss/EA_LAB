@@ -4243,6 +4243,68 @@ a run at all inside the timeout budget. Raw numbers only — no verdict issued (
 judges separately). `D:\Forex` untouched throughout (read-only; only .ex5/.ex5-library copies were
 made out to the `D:\Meta 5b` lane).
 
+---
+
+### ORDER-091C batch-1/2 smoke RESULT (Claude-agent, 2026-07-11)
+
+**Raw numbers only — no verdicts (per order, lead judges).** All tester/compile steps run synchronously
+in the foreground, one EA at a time, per the four-agents-died-today rule.
+
+**Part A — 091A coverage-gap close (`MT5 good` + `MT4 good`, 7 named source files):**
+Reused `scripts/fxdreema_xray.py` `read_text()`/`parse_ea()` conventions in a small one-off script
+(dedupe by content-hash vs the existing 1,592/1,598-row catalog, same as `order091a_intake.py`).
+Gotcha confirmed: `EX140-...mq5` and `(OH) Recovery...` etc. use a **non-breaking space (U+00A0)**
+inside the filename, not a regular space — `os.path.isfile()` on the naive path silently returned
+False until located via `glob.glob()`. All 7 files decoded as real text (nul_ratio 0.00 for plain
+MQL, 0.50 for BOM-less UTF-16 fxDreema exports — consistent with the 091A NUL-density heuristic,
+no garbage).
+
+| file | result |
+|---|---|
+| Dark_Gold_Full.mq5 | NEW-UNIQUE |
+| EX140- Multi Group Scalping EA [Breakout strategy].mq5 | NEW-UNIQUE |
+| EX197- Multi Group Scalping EA [Breakout FVG].mq5 | NEW-UNIQUE |
+| ZigZag.mq4 (AlgoScalpPro EA\MQL4\Indicators) | DUP-existing (already in catalog — stock indicator sample) |
+| Jum+StoCh+v2.5F.mq4 | NEW-UNIQUE |
+| JUMSTOCH_FIXEDLOT.mq4 | NEW-UNIQUE |
+| Lots ex1+4 1111 P m1.mq4 | NEW-UNIQUE |
+
+**Part A total: 6 new-unique rows appended to `_triage\FXDREEMA_XRAY.csv`** (1,592 → 1,598), 1 dup
+(ZigZag.mq4). Catalog concept column left blank for the 6 new rows per existing convention (concept
+pass is separate). `.md` cards not appended this round — order only asked for the CSV.
+
+**Part B — smoke-screen 5 candidates.** Copied out of read-only `D:\Forex` (untouched) with clean
+ASCII filenames (source names carry the same U+00A0 gotcha) into `D:\Meta 5b\MQL5\Experts\c091c\`
+(MT5) and `...\MQL4\Experts\c091c\` under the default MT4 data dir (MT5) and the default MT4 data
+dir (MT4, `D:\Meta4` install). All 5 compiled **0 errors** (MetaEditor64 for MT5, metaeditor.exe for
+MT4; only benign warnings — deprecated ACCOUNT_FREEMARGIN, double→int narrowing, unchecked return
+values). No missing .ex4/.ex5/.dll dependencies — all 5 are single-file, zero `#include`/`#import`.
+
+Symbol/TF: none of the 5 sources/headers name a specific market → **defaulted EURUSD H1** for all
+per the FX-named fallback rule, except noted below. Baseline = 2023.01.01–2026.07.01, Model 1,
+deposit 10000, leverage 1:100 (MT4 tester has no leverage override key — account-default only),
+default compiled inputs. Flat-lot variant run only where the xray catalog already flags
+`LOT_ESCALATION` (verified applied by reading the Inputs table back out of each .htm afterward).
+
+**Pre-registered smoke bar (verbatim, not judged here): "baseline PF≥1.2 AND flat-lot PF≥1.0 →
+clears to full funnel (ORDER-091C batch). ต่ำกว่านั้น = lead ตัดสิน rescue-ladder หรือ concept-mine."**
+
+| EA | platform | symbol/TF (assumed) | baseline PF / net / DD% / trades | flat-lot PF / net / DD% / trades | clears bar? |
+|---|---|---|---|---|---|
+| JUMSTOCH_FIXEDLOT.mq4 | MT4 | EURUSD H1 | 1.18 / +1,730.55 / 8.51% / 7,052 | native (Fixed_Lot=0.01, Lot_mode=2 already default — no separate run) | NO (baseline PF 1.18 < 1.2, close) |
+| (OH) Recovery Hedging System with SL V05.mq5 | MT5 | EURUSD H1 (XAUUSD tester profile also exists in the bundle, same date range — not run this pass) | 0.84 / -433.13 / 24.57% bal, 15.79% eq / 76 (90.79% losing trades) | not run (xray flag = SL_UNKNOWN only, no LOT_ESCALATION) | NO (PF 0.84, net negative) |
+| (NuiIndy) Perfect Tri Arbitrage Any Symbols.mq5 | MT5 | EURUSD/GBPUSD/EURGBP triangle, H1 | 0.81 / -385.57 / 6.07% bal, 7.37% eq / 96 | **1.21 / +65,479.55 / 18.28% bal, 20.2–23.3% eq / 5,469** (Martingale 1.2→1.0) | NO by literal bar (baseline PF 0.81 < 1.2) — **flag for lead: flat-lot trade count jumped 96→5,469 and PF crossed 0.81→1.21, consistent with the default Martingale=1.2 multiplier causing lot sizes to blow through a broker/margin limit and silently choke order flow, not a normal "escalation adds risk" story — worth a second look before concept-mining away** |
+| SMC V2.mq4 | MT4 | EURUSD H1 | 1.10 / +113.38 / 2.00% / 122 (81% win) | native (Lots=0.1 fixed, no escalation flag) | NO (baseline PF 1.10 < 1.2, close) |
+| EX197- Multi Group Scalping EA [Breakout FVG].mq5 | MT5 | EURUSD H1 | 1.07 / +85.58 / 5.56% bal, 7.37% eq / 352 | 1.08 / +85.08 / 4.05% bal, 4.08% eq / 351 (Lot_plus_B/S 0.01→0) | NO (baseline PF 1.07 < 1.2; flat-lot near-identical to baseline — escalation isn't doing much either way at these small grid caps) |
+
+**NO-RUN / COMPILE-FAIL: none.** All 5 compiled clean and produced a report on the first attempt
+(no runaway timeouts, no missing libraries).
+
+**None of the 5 clears the pre-registered smoke bar as written** (all fail on baseline PF < 1.2).
+Two are close misses (SMC V2 1.10, JUMSTOCH_FIXEDLOT 1.18). The Tri-Arbitrage flat-lot divergence
+(PF 0.81→1.21, trades 96→5,469) is flagged above as the one result worth a closer read before
+any concept-mine/park call — raw numbers only, not a verdict.
+
 ### ORDER-091A RESULT (Claude-agent, 2026-07-11)
 
 **Headline: catalog 1,050 → 1,592 unique EAs (+542)** · binary inventory 9,693 rows (6,627 unique

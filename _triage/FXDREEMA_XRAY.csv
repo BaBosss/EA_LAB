@@ -1591,3 +1591,9 @@ Zapphire X Lot_Balance,mq4,512,9887,33,9,,4,0,1,1,unknown,no,yes,SL_UNKNOWN;LOT_
 ZigZag,mq4,8,254,0,3,iHighest;iLowest,0,0,0,0,unknown,no,no,SL_UNKNOWN;SL_HEURISTIC,1,D:\Forex\10_EA_PROJECTS\.Final EA\. MQL4\Indicators\ZigZag.mq4,indicator_generic
 ZigZag,mq5,18,294,0,3,,0,0,0,0,unknown,no,no,SL_UNKNOWN;SL_HEURISTIC,1,D:\Forex\10_EA_PROJECTS\.Final EA\. MQL5\Indicators\Examples\ZigZag.mq5,unclassified
 ZigzagColor,mq5,9,288,0,3,,0,0,0,0,unknown,no,no,SL_UNKNOWN;SL_HEURISTIC,1,D:\Forex\10_EA_PROJECTS\.Final EA\. MQL5\Indicators\Examples\ZigzagColor.mq5,unclassified
+Dark_Gold_Full,mq5,30,832,0,110,iATR;iCustom,0,0,0,0,unknown,no,no,SL_UNKNOWN;SL_HEURISTIC,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT5 good\Dark gold MT5 By touch\Dark_Gold_Full\Dark_Gold_Full.mq5,
+EX197- Multi Group Scalping EA [Breakout FVG],mq5,841,16157,113,26,iATR;iRSI,8,0,3,4,no,no,yes,NO_SL;LOT_ESCALATION;NO_CAP,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT5 good\EX197- Multi Group Scalping EA [Breakout FVG].mq5,
+Jum+StoCh+v2.5F,mq4,18,473,0,53,iMA;iRSI;iStochastic,0,0,0,6,yes,no,no,SL_HEURISTIC,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT4 good\Jum+StoCh+v2.5F.mq4,
+JUMSTOCH_FIXEDLOT,mq4,18,473,0,54,iMA;iRSI;iStochastic,0,0,0,6,yes,no,no,SL_HEURISTIC,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT4 good\JUMSTOCH_FIXEDLOT.mq4,
+Lots ex1+4 1111 P m1,mq4,966,18731,175,13,iAC,14,0,3,1,no,no,yes,NO_SL;LOT_ESCALATION;NO_CAP,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT4 good\Lots ex1+4 1111 P m1.mq4,
+EX140- Multi Group Scalping EA [Breakout strategy],mq5,891,17126,120,21,iAC;iMA,6,0,2,4,no,no,yes,NO_SL;LOT_ESCALATION;NO_CAP,1,D:\Forex\01_INBOX_NEW\2.1 review EA\MT5 good\EX140- Multi Group Scalping EA [Breakout strategy].mq5,
