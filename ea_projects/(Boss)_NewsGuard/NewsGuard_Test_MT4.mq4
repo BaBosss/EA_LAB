@@ -50,6 +50,15 @@ int CountMagic(const long magic)
    return n;
 }
 
+int CountPendingMagic(const long magic)
+{
+   int n = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+      if(OrderSelect(i, SELECT_BY_POS, MODE_TRADES) && OrderType() > OP_SELL &&
+         (long)OrderMagicNumber() == magic) n++;
+   return n;
+}
+
 void CloseMagicLocal(const long magic)
 {
    for(int i = OrdersTotal() - 1; i >= 0; i--)
@@ -74,6 +83,26 @@ bool OpenWithMagic(const long magic)
    int tk = OrderSend(_Symbol, OP_BUY, lot, Ask, 50, 0, 0, "NGtest", (int)magic, 0, clrNONE);
    if(tk < 0) PrintFormat("[NG-TEST] OrderSend magic=%I64d failed err=%d", magic, GetLastError());
    return (tk >= 0);
+}
+
+bool OpenPendingWithMagic(const long magic)
+{
+   RefreshRates();
+   double lot = MarketInfo(_Symbol, MODE_MINLOT);
+   if(lot <= 0) lot = 0.01;
+   // Far below market so the order remains pending throughout the synthetic day.
+   double px = NormalizeDouble(Ask * 0.50, Digits);
+   int tk = OrderSend(_Symbol, OP_BUYLIMIT, lot, px, 50, 0, 0, "NGpending", (int)magic, 0, clrNONE);
+   if(tk < 0) PrintFormat("[NG-TEST] pending OrderSend magic=%I64d failed err=%d", magic, GetLastError());
+   return (tk >= 0);
+}
+
+void WriteEmptyNewsFile()
+{
+   int h = FileOpen(NEWS_FILE, FILE_WRITE | FILE_TXT | FILE_ANSI);
+   if(h == INVALID_HANDLE) { TFail("cannot write empty fake news CSV"); return; }
+   FileWriteString(h, "\"BkkTime\",\"Currency\",\"Title\",\"TimeRaw\",\"Forecast\",\"Previous\"\r\n");
+   FileClose(h);
 }
 
 int FindMagicIdx(const long magic)
@@ -152,6 +181,11 @@ void OnTick()
       // ---- unit asserts: staleness decision ----------------------------
       if(!NG_IsStaleAge(49.0)) TFail("IsStaleAge(49h) must be stale (max 48)");
       if(NG_IsStaleAge(1.0))   TFail("IsStaleAge(1h) must be fresh");
+      bool offsetValid = false;
+      if(NG_BkkOffsetFromClocks(D'2026.07.10 12:00', D'2026.07.10 09:00', 5, offsetValid) != 4 || !offsetValid)
+         TFail("Bkk offset advisory: UTC+3 server must resolve to +4");
+      if(NG_BkkOffsetFromClocks(0, 0, 5, offsetValid) != 5 || offsetValid)
+         TFail("Bkk offset advisory: invalid clocks must use fallback");
 
       // ---- unit asserts: currency <-> symbol ----------------------------
       if(_Symbol == "XAUUSD" && !NG_CcyMatchesSymbol("XAU", _Symbol))
@@ -160,14 +194,25 @@ void OnTick()
          TFail("CcyMatchesSymbol EUR must not match XAUUSD");
 
       // ---- fake news + dummy orders -------------------------------------
+      WriteEmptyNewsFile();
+      if(NG_LoadNews(NEWS_FILE, false)) TFail("empty-feed: header-only CSV must fail safe");
+      if(ng_newsOK || ng_evCount != 0) TFail("empty-feed: guard must remain inactive with zero events");
+      int notifyBefore = ng_notificationAttempts;
+      ng_lastAlert = 0;
+      NG_Tick(g_t0);
+      if(ng_lastAlert == 0 || ng_notificationAttempts != notifyBefore + 1)
+         TFail("empty-feed: critical local/remote alert attempt missing");
+      ng_lastAlert = 0;
       WriteNewsFile();
       if(!NG_LoadNews(NEWS_FILE, false)) TFail("LoadNews on fresh fake CSV failed");
       if(ng_evCount != 2) TFail(StringFormat("expected 2 events, got %d", ng_evCount));
 
-      if(!OpenWithMagic(MAGIC_C) || !OpenWithMagic(MAGIC_B) ||
+      if(!OpenWithMagic(MAGIC_C)) TFail("could not open C dummy order");
+      if(!OpenWithMagic(MAGIC_B) ||
          !OpenWithMagic(MAGIC_N) || !OpenWithMagic(MAGIC_X))
          TFail("could not open dummy orders");
-      if(CountMagic(MAGIC_C) != 1 || CountMagic(MAGIC_B) != 1 ||
+      if(!OpenPendingWithMagic(MAGIC_C)) TFail("could not open C pending order");
+      if(CountMagic(MAGIC_C) != 1 || CountPendingMagic(MAGIC_C) != 1 || CountMagic(MAGIC_B) != 1 ||
          CountMagic(MAGIC_N) != 1 || CountMagic(MAGIC_X) != 1)
          TFail("dummy order count wrong after open");
 
@@ -186,13 +231,13 @@ void OnTick()
       if(!g_nzdChecked && now >= g_t0 + 3600 && now <= g_t0 + 3600 + 600)
       {
          g_nzdChecked = true;
-         if(CountMagic(MAGIC_C) != 1) TFail("NZD window: C order was touched (irrelevant event)");
+         if(CountMagic(MAGIC_C) != 1 || CountPendingMagic(MAGIC_C) != 1) TFail("NZD window: C order was touched (irrelevant event)");
       }
       // shortly before the USD window opens: still all quiet
       if(!g_preChecked && now >= g_winA - 600 && now < g_winA - 60)
       {
          g_preChecked = true;
-         if(CountMagic(MAGIC_C) != 1 || CountMagic(MAGIC_B) != 1 ||
+         if(CountMagic(MAGIC_C) != 1 || CountPendingMagic(MAGIC_C) != 1 || CountMagic(MAGIC_B) != 1 ||
             CountMagic(MAGIC_N) != 1 || CountMagic(MAGIC_X) != 1)
             TFail("pre-window: dummy orders already touched");
       }
@@ -203,6 +248,8 @@ void OnTick()
          // in-window asserts (2 min grace after window open)
          if(CountMagic(MAGIC_C) != 0)
             TFail("in-window: C-magic orders NOT closed");
+         if(CountPendingMagic(MAGIC_C) != 0)
+            TFail("in-window: C-magic pending order NOT deleted");
          if(CountMagic(MAGIC_B) != 1)
             TFail("in-window: B-magic order was closed (B must act as N on MT4)");
          if(CountMagic(MAGIC_N) != 1) TFail("in-window: N-magic order was touched");
@@ -212,8 +259,16 @@ void OnTick()
    }
    else if(g_phase == 2)
    {
+      int ci = FindMagicIdx(MAGIC_C);
+      if(now < g_winB && ng_windowActions[ci] <= 5 && CountMagic(MAGIC_C) == 0)
+      {
+         if(!OpenWithMagic(MAGIC_C)) TFail("churn fixture: could not reopen C order");
+      }
+      if(ng_windowActions[ci] > 5 && !ng_churnAlerted[ci])
+         TFail("churn guard: >5 re-entry closes did not trigger alert");
       if(now >= g_winB + 120)
       {
+         if(ng_windowActions[ci] <= 5) TFail("churn guard: test never reached >5 re-entry closes");
          if(CountMagic(MAGIC_B) != 1) TFail("post-window: B-magic order gone");
          if(CountMagic(MAGIC_N) != 1) TFail("post-window: N-magic order gone");
          if(CountMagic(MAGIC_X) != 1) TFail("post-window: unlisted-magic order gone");

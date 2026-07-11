@@ -51,6 +51,9 @@ long ng_magic[NG_MAX_MAGICS];
 int  ng_policy[NG_MAX_MAGICS];
 bool ng_winActive[NG_MAX_MAGICS];   // in-window state (for ENTER/EXIT logging)
 bool ng_blockSet[NG_MAX_MAGICS];    // we currently own a BLOCK GV for this magic
+int  ng_recloseCount[NG_MAX_MAGICS]; // positions closed during the current window
+bool ng_churnAlerted[NG_MAX_MAGICS];
+bool ng_seenFlat[NG_MAX_MAGICS];      // initial basket flattened; later actions are true re-entry
 int  ng_count = 0;
 
 // ---- loaded news events (server time) --------------------------------------
@@ -62,8 +65,27 @@ int      ng_evCount = 0;
 bool     ng_newsOK       = false;   // file found, fresh, parsed -> guard armed
 double   ng_fileAgeHours = -1.0;    // last observed file age (local clock)
 datetime ng_lastAlert    = 0;       // fail-safe Alert throttle (TimeLocal)
+int      ng_notificationAttempts = 0; // observable in tester; SendNotification call count
 
 CTrade ng_trade;
+
+void NG_AlertCritical(const string msg)
+{
+   Print("[NEWSGUARD] ALERT: ", msg);
+   Alert(msg);
+   ResetLastError();
+   ng_notificationAttempts++;
+   if(!SendNotification(msg))
+      PrintFormat("[NEWSGUARD] remote notification unavailable/failed (err %d); configure MetaQuotes ID in terminal Options > Notifications", GetLastError());
+}
+
+int NG_BkkOffsetFromClocks(const datetime serverNow, const datetime gmtNow,
+                           const int fallback, bool &valid)
+{
+   int serverUtc = (int)MathRound((double)(serverNow - gmtNow) / 3600.0);
+   valid = (serverNow > 0 && gmtNow > 0 && serverUtc >= -12 && serverUtc <= 14);
+   return (valid ? 7 - serverUtc : fallback);
+}
 
 //+------------------------------------------------------------------+
 void NG_Setup(const int preMin, const int postMin,
@@ -128,6 +150,9 @@ int NG_ParseConfig(const string cfg)
       ng_policy[ng_count]    = pol;
       ng_winActive[ng_count] = false;
       ng_blockSet[ng_count]  = false;
+      ng_recloseCount[ng_count] = 0;
+      ng_churnAlerted[ng_count] = false;
+      ng_seenFlat[ng_count] = false;
       PrintFormat("[NEWSGUARD] guard magic=%I64d policy=%s", m, NG_PolicyName(pol));
       if(pol == NG_POLICY_BLOCK)
          PrintFormat("[NEWSGUARD] NOTE magic=%I64d: BLOCK_NEW only works for Boss V2 chassis EAs "
@@ -271,6 +296,12 @@ bool NG_LoadNews(const string fname, const bool common)
       ng_evCount++;
    }
    FileClose(h);
+   if(ng_evCount == 0)
+   {
+      PrintFormat("[NEWSGUARD] news file '%s' parsed ZERO valid events (%d row(s) skipped) - guard INACTIVE",
+                  fname, skipped);
+      return false;
+   }
    ng_newsOK = true;
    PrintFormat("[NEWSGUARD] news loaded: %d event(s), %d row(s) skipped, file age %.1f h, Bkk = server %+d h",
                ng_evCount, skipped, ng_fileAgeHours, ng_offsetHours);
@@ -348,6 +379,44 @@ int NG_CloseMagic(const long magic, const string reason)
    return closed;
 }
 
+int NG_CancelPendingMagic(const long magic, const string reason)
+{
+   int removed = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = OrderGetTicket(i);
+      if(tk == 0 || (long)OrderGetInteger(ORDER_MAGIC) != magic) continue;
+      ENUM_ORDER_TYPE type = (ENUM_ORDER_TYPE)OrderGetInteger(ORDER_TYPE);
+      if(type != ORDER_TYPE_BUY_LIMIT && type != ORDER_TYPE_SELL_LIMIT &&
+         type != ORDER_TYPE_BUY_STOP && type != ORDER_TYPE_SELL_STOP &&
+         type != ORDER_TYPE_BUY_STOP_LIMIT && type != ORDER_TYPE_SELL_STOP_LIMIT) continue;
+      if(ng_trade.OrderDelete(tk))
+      {
+         PrintFormat("[NEWSGUARD] CLOSE_ALL magic=%I64d: cancelled pending %I64u (%s)", magic, tk, reason);
+         removed++;
+      }
+      else
+         PrintFormat("[NEWSGUARD] CLOSE_ALL magic=%I64d: cancel FAILED pending %I64u retcode=%d - retry next pass",
+                     magic, tk, (int)ng_trade.ResultRetcode());
+   }
+   return removed;
+}
+
+bool NG_HasMagicExposure(const long magic)
+{
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = PositionGetTicket(i);
+      if(tk > 0 && (long)PositionGetInteger(POSITION_MAGIC) == magic) return true;
+   }
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      ulong tk = OrderGetTicket(i);
+      if(tk > 0 && (long)OrderGetInteger(ORDER_MAGIC) == magic) return true;
+   }
+   return false;
+}
+
 //+------------------------------------------------------------------+
 void NG_ClearBlock(const int idx, const string why)
 {
@@ -368,15 +437,16 @@ void NG_Tick(const datetime nowServer)
       // own so no EA stays frozen, warn (throttled), do nothing else.
       for(int i = 0; i < ng_count; i++)
       {
-         if(ng_blockSet[i]) NG_ClearBlock(i, "fail-safe: news data unavailable");
+         string gv = NG_GVName(ng_magic[i]);
+         if(ng_policy[i] == NG_POLICY_BLOCK && GlobalVariableCheck(gv))
+            NG_ClearBlock(i, "fail-safe/restart reconcile: news data unavailable");
          ng_winActive[i] = false;
       }
       if(TimeLocal() - ng_lastAlert >= NG_ALERT_THROTTLE_SEC)
       {
          ng_lastAlert = TimeLocal();
          string msg = "NewsGuard INACTIVE: news file missing/stale - guarded EAs are UNPROTECTED";
-         Print("[NEWSGUARD] ALERT: ", msg);
-         Alert(msg);
+         NG_AlertCritical(msg);
       }
       return;
    }
@@ -385,9 +455,14 @@ void NG_Tick(const datetime nowServer)
       int  ev     = NG_ActiveEventFor(nowServer, i);
       bool active = (ev >= 0);
       if(active && !ng_winActive[i])
+      {
+         ng_recloseCount[i] = 0;
+         ng_churnAlerted[i] = false;
+         ng_seenFlat[i] = false;
          PrintFormat("[NEWSGUARD] window ENTER magic=%I64d policy=%s event='%s %s' @ server %s (-%d/+%d min)",
                      ng_magic[i], NG_PolicyName(ng_policy[i]), ng_evCcy[ev], ng_evTitle[ev],
                      TimeToString(ng_evServer[ev], TIME_DATE | TIME_MINUTES), ng_preMin, ng_postMin);
+      }
       if(!active && ng_winActive[i])
          PrintFormat("[NEWSGUARD] window EXIT magic=%I64d", ng_magic[i]);
       ng_winActive[i] = active;
@@ -395,7 +470,22 @@ void NG_Tick(const datetime nowServer)
       if(ng_policy[i] == NG_POLICY_CLOSE)
       {
          // keep the magic flat for the whole window (owner EA re-opens after)
-         if(active) NG_CloseMagic(ng_magic[i], ng_evCcy[ev] + " " + ng_evTitle[ev]);
+         if(active)
+         {
+            string reason = ng_evCcy[ev] + " " + ng_evTitle[ev];
+            int closed = NG_CloseMagic(ng_magic[i], reason);
+            int removed = NG_CancelPendingMagic(ng_magic[i], reason);
+            // Do not call the legitimate basket present at window entry
+            // "re-entry". Only count actions after a prior pass reached flat.
+            if(ng_seenFlat[i]) ng_recloseCount[i] += closed + removed;
+            if(!NG_HasMagicExposure(ng_magic[i])) ng_seenFlat[i] = true;
+            if(ng_recloseCount[i] > 5 && !ng_churnAlerted[i])
+            {
+               ng_churnAlerted[i] = true;
+               NG_AlertCritical(StringFormat("NewsGuard: owner EA re-entering during news window (magic %I64d, %d closes)",
+                                             ng_magic[i], ng_recloseCount[i]));
+            }
+         }
       }
       else if(ng_policy[i] == NG_POLICY_BLOCK)
       {
@@ -406,7 +496,8 @@ void NG_Tick(const datetime nowServer)
             ng_blockSet[i] = true;
             PrintFormat("[NEWSGUARD] BLOCK_NEW SET %s=1 (event '%s %s')", gv, ng_evCcy[ev], ng_evTitle[ev]);
          }
-         if(!active && ng_blockSet[i]) NG_ClearBlock(i, "window ended");
+         string gv = NG_GVName(ng_magic[i]);
+         if(!active && GlobalVariableCheck(gv)) NG_ClearBlock(i, "window ended/restart reconcile");
       }
       // NG_POLICY_NONE: never touched
    }

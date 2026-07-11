@@ -61,29 +61,34 @@ if (-not $compileOk) { Write-Host "=== COMPILE FAILED (need 0 errors / 0 warning
 Copy-Item -LiteralPath (Join-Path $experts '(Boss)_NewsGuard_MT4.ex4') -Destination $proj -Force
 
 # 4) tester run + journal grep -------------------------------------------------
+$testerLog = Join-Path $DataDir ("tester\logs\" + (Get-Date -Format 'yyyyMMdd') + ".log")
+$beforeLines = if (Test-Path $testerLog) { @(Get-Content $testerLog).Count } else { 0 }
 & powershell -File (Join-Path $root 'scripts\mt4_run.ps1') `
     -Expert 'NewsGuard_Test_MT4' -Symbol $Symbol -Period $Period `
     -FromDate $FromDate -ToDate $ToDate -Model $Model `
     -ReportName 'TEST_NewsGuard_MT4' | Out-Host
 
-$testerLog = Join-Path $DataDir ("tester\logs\" + (Get-Date -Format 'yyyyMMdd') + ".log")
 if (-not (Test-Path $testerLog)) { Write-Host "NO TESTER JOURNAL at $testerLog" -ForegroundColor Red; exit 1 }
-$tail = Get-Content $testerLog -Tail 800
+$tail = @(Get-Content $testerLog | Select-Object -Skip $beforeLines)
 
 $verdictHit = $tail | Select-String -Pattern '\[(PASS|FAIL)\] NewsGuard_Test_MT4' | Select-Object -Last 1
 $verdict = if ($null -eq $verdictHit) { 'NO-VERDICT' }
            elseif ($verdictHit.Line -match '\[PASS\]') { 'PASS' } else { 'FAIL' }
 $alerts    = @($tail | Select-String -Pattern '\[NEWSGUARD\] ALERT').Count
 $downgrade = @($tail | Select-String -Pattern 'WARNING magic=917202.*treating as N').Count
+$churn     = @($tail | Select-String -Pattern 'owner EA re-entering during news window').Count
+$pending   = @($tail | Select-String -Pattern 'deleted pending ticket').Count
 $failLines = $tail | Select-String -Pattern '\[NG-TEST FAIL\]'
 
 Write-Host ""
 Write-Host ("verdict            : {0}  ({1})" -f $verdict, $(if ($verdictHit) { $verdictHit.Line.Trim() } else { 'verdict line not found' }))
 Write-Host ("fail-safe ALERTs   : {0} (expect >=1: missing-file phase)" -f $alerts)
 Write-Host ("B->N warning lines : {0} (expect >=1)" -f $downgrade)
+Write-Host ("churn alerts        : {0} (expect >=1)" -f $churn)
+Write-Host ("pending deletes     : {0} (expect >=1)" -f $pending)
 $failLines | ForEach-Object { Write-Host ("  " + $_.Line.Trim()) }
 
-if ($verdict -eq 'PASS' -and $alerts -ge 1 -and $downgrade -ge 1) {
+if ($verdict -eq 'PASS' -and $alerts -ge 1 -and $downgrade -ge 1 -and $churn -ge 1 -and $pending -ge 1 -and @($failLines).Count -eq 0) {
   Write-Host "=== NEWSGUARD MT4 TESTS PASS ===" -ForegroundColor Green; exit 0
 }
 Write-Host "=== NEWSGUARD MT4 TESTS NOT PASSING ===" -ForegroundColor Red

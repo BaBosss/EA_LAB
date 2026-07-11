@@ -31,27 +31,68 @@ input int    PostNewsMin            = 15;                      // window closes 
 input string NewsFile               = "EA_LAB_news_week.csv";  // CSV name (see header)
 input bool   UseCommonFiles         = true;                    // true = Terminal\Common\Files (daily chain target)
 input int    ServerToBkkOffsetHours = 4;                       // Bangkok = server + N h (Exness UTC+3 -> 4; see header)
+input bool   AutoDetectServerOffset = true;                    // derive offset from TimeGMT; false = use manual input
 input int    StaleMaxHours          = 48;                      // file older than this = fail-safe (no action + Alert)
 input int    TimerSeconds           = 10;                      // watchdog poll period
 input int    ReloadMinutes          = 15;                      // re-read the news file every N min
 
 datetime g_ng_last_load = 0;
+datetime g_ng_last_offset_alert = 0;
+
+// Re-evaluate on every feed reload so a long-running terminal follows broker
+// DST changes. Alerts are throttled; the effective offset itself is not.
+int NG_ResolveServerOffset(const bool forceAlert)
+{
+   int effectiveOffset = ServerToBkkOffsetHours;
+   datetime serverNow = TimeTradeServer();
+   datetime gmtNow = TimeGMT();
+   int serverUtc = (int)MathRound((double)(serverNow - gmtNow) / 3600.0);
+   bool detectionValid = false;
+   int detectedOffset = NG_BkkOffsetFromClocks(serverNow, gmtNow, ServerToBkkOffsetHours, detectionValid);
+   bool mayAlert = forceAlert || (TimeLocal() - g_ng_last_offset_alert >= NG_ALERT_THROTTLE_SEC);
+   if(AutoDetectServerOffset)
+   {
+      if(detectionValid) effectiveOffset = detectedOffset;
+      else if(mayAlert)
+      {
+         g_ng_last_offset_alert = TimeLocal();
+         NG_AlertCritical(StringFormat("NewsGuard cannot derive a valid server/GMT offset; using input %+d h",
+                                       ServerToBkkOffsetHours));
+      }
+      if(detectionValid && detectedOffset != ServerToBkkOffsetHours && mayAlert)
+      {
+         g_ng_last_offset_alert = TimeLocal();
+         NG_AlertCritical(StringFormat("NewsGuard server offset mismatch: input Bkk=server%+d h, detected %+d h; using detected value",
+                                       ServerToBkkOffsetHours, detectedOffset));
+      }
+   }
+   else if(detectionValid && detectedOffset != ServerToBkkOffsetHours && mayAlert)
+   {
+      g_ng_last_offset_alert = TimeLocal();
+      NG_AlertCritical(StringFormat("NewsGuard manual server offset override active: input %+d h differs from detected %+d h",
+                                    ServerToBkkOffsetHours, detectedOffset));
+   }
+   return effectiveOffset;
+}
 
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   NG_Setup(PreNewsMin, PostNewsMin, ServerToBkkOffsetHours, StaleMaxHours);
+   int effectiveOffset = NG_ResolveServerOffset(true);
+   if(!TerminalInfoInteger(TERMINAL_NOTIFICATIONS_ENABLED))
+      Print("[NEWSGUARD] WARNING: MetaQuotes push notifications are disabled/unconfigured; critical alerts are local only");
+   NG_Setup(PreNewsMin, PostNewsMin, effectiveOffset, StaleMaxHours);
    if(NG_ParseConfig(GuardConfig) <= 0)
    {
       Print("[NEWSGUARD] INIT FAILED: GuardConfig is empty/invalid. Format: \"12345:C;23456:B;34567:N\"");
       return INIT_PARAMETERS_INCORRECT;
    }
-   NG_LoadNews(NewsFile, UseCommonFiles);   // fail-safe handles a missing file
+   bool loaded = NG_LoadNews(NewsFile, UseCommonFiles);   // fail-safe handles a missing file
    g_ng_last_load = TimeLocal();
    EventSetTimer(MathMax(1, TimerSeconds));
-   PrintFormat("[NEWSGUARD] armed: %d magic(s), window -%d/+%d min, file '%s' (%s), Bkk = server %+d h",
-               ng_count, PreNewsMin, PostNewsMin, NewsFile,
-               (UseCommonFiles ? "Common\\Files" : "MQL5\\Files"), ServerToBkkOffsetHours);
+   PrintFormat("[NEWSGUARD] initialized: %d magic(s), news=%s, window -%d/+%d min, file '%s' (%s), Bkk = server %+d h",
+               ng_count, (loaded ? "ARMED" : "INACTIVE"), PreNewsMin, PostNewsMin, NewsFile,
+               (UseCommonFiles ? "Common\\Files" : "MQL5\\Files"), effectiveOffset);
    return INIT_SUCCEEDED;
 }
 
@@ -68,6 +109,7 @@ void OnTimer()
 {
    if(TimeLocal() - g_ng_last_load >= (datetime)(ReloadMinutes * 60))
    {
+      ng_offsetHours = NG_ResolveServerOffset(false);
       NG_LoadNews(NewsFile, UseCommonFiles);
       g_ng_last_load = TimeLocal();
    }

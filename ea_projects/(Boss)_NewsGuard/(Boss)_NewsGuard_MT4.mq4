@@ -52,16 +52,28 @@ datetime g_ng_last_pass = 0;
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   // MT4 has no TimeTradeServer(). TimeCurrent() is the last quoted server time,
+   // so this check is advisory and can be stale while disconnected/weekends.
+   int serverUtc = (int)MathRound((double)(TimeCurrent() - TimeGMT()) / 3600.0);
+   bool detectionValid = false;
+   int derivedOffset = NG_BkkOffsetFromClocks(TimeCurrent(), TimeGMT(), ServerToBkkOffsetHours, detectionValid);
+   if(detectionValid && MathAbs(derivedOffset - ServerToBkkOffsetHours) >= 1)
+      NG_ImportantAlert(StringFormat("NewsGuard MT4 timezone mismatch: input Bkk=server%+d h, quote-derived=%+d h (UTC%+d). MT4 quote clock may be stale; input remains the explicit override.",
+                                     ServerToBkkOffsetHours, derivedOffset, serverUtc));
+   // MT4 exposes SendNotification but not a portable API for reading whether
+   // an MQID is configured; failed sends are journaled by NG_ImportantAlert.
+   Print("[NEWSGUARD] REMINDER: configure MetaQuotes ID in Options > Notifications; failed remote alerts fall back to journal/Alert");
    NG_Setup(PreNewsMin, PostNewsMin, ServerToBkkOffsetHours, StaleMaxHours);
    if(NG_ParseConfig(GuardConfig) <= 0)
    {
       Print("[NEWSGUARD] INIT FAILED: GuardConfig is empty/invalid. Format: \"7777:C;1112:C;1113:N\"");
       return INIT_PARAMETERS_INCORRECT;
    }
-   NG_LoadNews(NewsFile, UseCommonFiles);   // fail-safe handles a missing file
+   bool loaded = NG_LoadNews(NewsFile, UseCommonFiles);   // fail-safe handles missing/empty file
    g_ng_last_load = TimeLocal();
    EventSetTimer(MathMax(1, TimerSeconds)); // live only; tester falls back to OnTick throttle
-   PrintFormat("[NEWSGUARD] armed (MT4): %d magic(s), window -%d/+%d min, file '%s' (%s), Bkk = server %+d h",
+   PrintFormat("[NEWSGUARD] initialized (MT4, news=%s): %d magic(s), window -%d/+%d min, file '%s' (%s), Bkk = server %+d h",
+               (loaded ? "ARMED" : "INACTIVE"),
                ng_count, PreNewsMin, PostNewsMin, NewsFile,
                (UseCommonFiles ? "Common\\Files" : "MQL4\\Files"), ServerToBkkOffsetHours);
    return INIT_SUCCEEDED;

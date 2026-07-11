@@ -64,6 +64,9 @@ int ng_staleMaxHours = 48;   // file older than this = stale -> fail-safe
 long ng_magic[NG_MAX_MAGICS];
 int  ng_policy[NG_MAX_MAGICS];
 bool ng_winActive[NG_MAX_MAGICS];   // in-window state (for ENTER/EXIT logging)
+int  ng_windowActions[NG_MAX_MAGICS]; // closes/deletes in the current window
+bool ng_churnAlerted[NG_MAX_MAGICS];
+bool ng_seenFlat[NG_MAX_MAGICS];      // initial basket flattened; later actions are true re-entry
 int  ng_count       = 0;
 int  ng_bDowngraded = 0;            // how many B tokens were downgraded to N (MT4)
 
@@ -76,6 +79,25 @@ int      ng_evCount = 0;
 bool     ng_newsOK       = false;   // file found, fresh, parsed -> guard armed
 double   ng_fileAgeHours = -1.0;    // last observed file age (local clock)
 datetime ng_lastAlert    = 0;       // fail-safe Alert throttle (TimeLocal)
+int      ng_notificationAttempts = 0; // observable in tester; SendNotification call count
+
+void NG_ImportantAlert(const string msg)
+{
+   Print("[NEWSGUARD] ALERT: ", msg);
+   Alert(msg);
+   ResetLastError();
+   ng_notificationAttempts++;
+   if(!SendNotification(msg))
+      PrintFormat("[NEWSGUARD] REMOTE ALERT unavailable/failed (err=%d): configure MetaQuotes ID in terminal Options > Notifications", GetLastError());
+}
+
+int NG_BkkOffsetFromClocks(const datetime serverNow, const datetime gmtNow,
+                           const int fallback, bool &valid)
+{
+   int serverUtc = (int)MathRound((double)(serverNow - gmtNow) / 3600.0);
+   valid = (serverNow > 0 && gmtNow > 0 && serverUtc >= -12 && serverUtc <= 14);
+   return (valid ? 7 - serverUtc : fallback);
+}
 
 //+------------------------------------------------------------------+
 void NG_Setup(const int preMin, const int postMin,
@@ -176,6 +198,9 @@ int NG_ParseConfig(const string cfg)
       ng_magic[ng_count]     = m;
       ng_policy[ng_count]    = pol;
       ng_winActive[ng_count] = false;
+      ng_windowActions[ng_count] = 0;
+      ng_churnAlerted[ng_count] = false;
+      ng_seenFlat[ng_count] = false;
       PrintFormat("[NEWSGUARD] guard magic=%I64d policy=%s", m, NG_PolicyName(pol));
       ng_count++;
    }
@@ -312,6 +337,12 @@ bool NG_LoadNews(const string fname, const bool common)
       ng_evCount++;
    }
    FileClose(h);
+   if(ng_evCount == 0)
+   {
+      PrintFormat("[NEWSGUARD] news file '%s' parsed ZERO valid events (%d row(s) skipped) - guard INACTIVE",
+                  fname, skipped);
+      return false;
+   }
    ng_newsOK = true;
    PrintFormat("[NEWSGUARD] news loaded: %d event(s), %d row(s) skipped, file age %.1f h, Bkk = server %+d h",
                ng_evCount, skipped, ng_fileAgeHours, ng_offsetHours);
@@ -397,6 +428,38 @@ int NG_CloseMagic(const long magic, const string reason)
    return closed;
 }
 
+int NG_DeletePendingMagic(const long magic, const string reason)
+{
+   int deleted = 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if((long)OrderMagicNumber() != magic) continue;
+      if(OrderType() <= OP_SELL) continue;
+      int tk = OrderTicket();
+      if(OrderDelete(tk, clrNONE))
+      {
+         PrintFormat("[NEWSGUARD] CLOSE_ALL magic=%I64d: deleted pending ticket %d %s (%s)",
+                     magic, tk, OrderSymbol(), reason);
+         deleted++;
+      }
+      else
+         PrintFormat("[NEWSGUARD] CLOSE_ALL magic=%I64d: pending delete FAILED ticket %d err=%d - retry next pass",
+                     magic, tk, GetLastError());
+   }
+   return deleted;
+}
+
+bool NG_HasMagicExposure(const long magic)
+{
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!OrderSelect(i, SELECT_BY_POS, MODE_TRADES)) continue;
+      if((long)OrderMagicNumber() == magic) return true;
+   }
+   return false;
+}
+
 //+------------------------------------------------------------------+
 //| Main watchdog pass. Call with the server clock (TimeCurrent).    |
 //+------------------------------------------------------------------+
@@ -412,8 +475,7 @@ void NG_Tick(const datetime nowServer)
       {
          ng_lastAlert = TimeLocal();
          string msg = "NewsGuard INACTIVE: news file missing/stale - guarded EAs are UNPROTECTED";
-         Print("[NEWSGUARD] ALERT: ", msg);
-         Alert(msg);
+         NG_ImportantAlert(msg);
       }
       return;
    }
@@ -422,9 +484,14 @@ void NG_Tick(const datetime nowServer)
       int  ev     = NG_ActiveEventFor(nowServer, i);
       bool active = (ev >= 0);
       if(active && !ng_winActive[i])
+      {
+         ng_windowActions[i] = 0;
+         ng_churnAlerted[i] = false;
+         ng_seenFlat[i] = false;
          PrintFormat("[NEWSGUARD] window ENTER magic=%I64d policy=%s event='%s %s' @ server %s (-%d/+%d min)",
                      ng_magic[i], NG_PolicyName(ng_policy[i]), ng_evCcy[ev], ng_evTitle[ev],
                      TimeToString(ng_evServer[ev], TIME_DATE | TIME_MINUTES), ng_preMin, ng_postMin);
+      }
       if(!active && ng_winActive[i])
          PrintFormat("[NEWSGUARD] window EXIT magic=%I64d", ng_magic[i]);
       ng_winActive[i] = active;
@@ -432,7 +499,19 @@ void NG_Tick(const datetime nowServer)
       if(ng_policy[i] == NG_POLICY_CLOSE)
       {
          // keep the magic flat for the whole window (owner EA re-opens after)
-         if(active) NG_CloseMagic(ng_magic[i], ng_evCcy[ev] + " " + ng_evTitle[ev]);
+         if(active)
+         {
+            string why = ng_evCcy[ev] + " " + ng_evTitle[ev];
+            int acted = NG_CloseMagic(ng_magic[i], why) + NG_DeletePendingMagic(ng_magic[i], why);
+            if(ng_seenFlat[i]) ng_windowActions[i] += acted;
+            if(!NG_HasMagicExposure(ng_magic[i])) ng_seenFlat[i] = true;
+            if(ng_windowActions[i] > 5 && !ng_churnAlerted[i])
+            {
+               ng_churnAlerted[i] = true;
+               NG_ImportantAlert(StringFormat("NewsGuard magic %I64d: owner EA re-entering during news window (%d close/delete actions)",
+                                              ng_magic[i], ng_windowActions[i]));
+            }
+         }
       }
       // NG_POLICY_NONE (incl. downgraded B): never touched
    }

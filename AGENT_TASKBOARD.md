@@ -4349,7 +4349,9 @@ PROJECT_STATE อ่านออก 100% · commit `[tag] ORDER-093 done`
 
 ---
 
-## ORDER-083C — P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport — `CLAIMED(Codex, 2026-07-11)` (user เปิด Codex lane กลับมา — สั่งตรง)
+## ORDER-083C — P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport — `DONE(Codex, 2026-07-11 — รอ Claude review เมื่อ quota กลับ)` (user เปิด Codex lane กลับมา — สั่งตรง)
+
+> **CODEX CONTINUATION NOTE (2026-07-11):** user สั่งให้ Codex เดินงานนี้ต่อระหว่างที่ Claude quota หมด และให้ใช้ sub-agent ประหยัด token · แบ่ง scope เป็น MT5 / MT4 / transport-doc คนละไฟล์ โดย Codex หลักรวมงาน รัน cage ทำ independent code review และ commit · **Claude กลับมาให้เริ่มจาก REVIEW ORDER-083C commit/result ใต้หัวข้อนี้ ไม่ต้องเริ่ม implementation ซ้ำ** · ระหว่างนี้ Codex จะวาง dependency plan ของ ORDER-076/080/081/082/091 แต่ไม่เปลี่ยน verdict/direction แทน Claude
 
 **ทำไม:** CODEX-AUDIT D1+D2 — ช่องยืนยันจาก code แล้ว 5 ช่อง + feed ยังไปไม่ถึง VPS = attach ตอนนี้คุ้มครองศูนย์
 **Spec (ทุกข้อมี test ประกบ, แก้ทั้ง NewsGuard_Core.mqh และ NewsGuard_Core_MT4.mqh ให้ตรงกัน):**
@@ -4367,6 +4369,28 @@ PROJECT_STATE อ่านออก 100% · commit `[tag] ORDER-093 done`
    ขากลับ: exporter/snapshot CSV → แล็บ) + attach checklist ต่อ terminal (ห้าม magic 0 ย้ำ) — user ทำมือ
 **Acceptance:** tests PASS ครบทั้ง 2 platform + tpl_regression CLEAN + transport doc ·
 commit `[tag] ORDER-083C done` · **ห้าม:** attach จริง · เปลี่ยน policy semantics ที่ user เคาะ (flat-magic scope คงเดิม)
+
+### ORDER-083C RESULT — Codex + sub-agents, 2026-07-11 (ช่วง Claude quota หมด; raw evidence, no verdict)
+
+**Implementation:** MT5 แก้ restart reconciliation จาก persistent GV จริง, empty-feed fail-safe, policy C ยกเลิก pending,
+churn guard ที่นับเฉพาะการเปิดกลับ **หลังเคย flat แล้ว** (initial basket >5 ไม่ false-alert), `SendNotification`
+fallback, auto server/GMT offset ที่ re-check ทุก feed reload + manual override · MT4 ทำ parity เท่าที่ API อนุญาต
+(offset เป็น advisory/manual override, B→N เดิม) · operator state แสดง `ARMED/INACTIVE` ตรง feed จริง
+
+**Tests หลัง independent two-axis review แล้วแก้ finding:**
+- MT5 `ea_template\tests\run_tests.ps1` = **ALL 5 PASS**; NewsGuard test ครอบ stale-GV restart, zero-event +
+  local/remote alert attempt, pending cancel, >5 true re-entry churn, offset valid/fallback
+- MT4 `run_mt4_tests.ps1` = **PASS**, compile wrapper+harness **0 errors/0 warnings**, fail-safe alerts 3,
+  B→N warning 1, churn alerts 2, pending deletes 1; runner bind journal เฉพาะ current run
+- `(Boss)_NewsGuard.mq5` direct compile = **0 errors/0 warnings**
+- `scripts\tpl_regression.ps1` = **CLEAN 4/4**
+
+**Transport/user action (ยังไม่ได้ attach ตามข้อห้าม):** คู่มือ `ea_projects\(Boss)_NewsGuard\VPS_TRANSPORT_AND_ATTACH.md`
+กำหนด OneDrive สองทิศ, atomic copy/freshness, scheduled tasks, rollback, secrets, attach ต่อ terminal และห้าม magic 0
+· production MT5 ใช้ auto-offset default; MT4 ใช้ manual override · user ยังต้องติดตั้ง/attach บน VPS เอง
+
+**Claude-return note:** review commit `[codex] ORDER-083C done`; implementation/test ปิดแล้ว ไม่ต้องทำซ้ำ ·
+ผู้ตัดสิน deployment/attach ยังคงเป็น Claude/user
 
 ---
 
