@@ -510,6 +510,210 @@ Report "14. GLOBAL LANE LOCK FIX: 2 concurrent PROCESSES, same lane, different S
   ("procA.exit=$($procA.ExitCode) procB.exit=$($procB.ExitCode) jobA=[$($jA14.start)..$($jA14.end)] jobB=[$($jB14.start)..$($jB14.end)] noOverlap=$noOverlap14")
 
 # ============================================================================
+# Criterion 15 (fix #A regression): job marked exit_reliable=$false (simulating an
+# exit-unreliable runner like mt4_optimize.ps1) exits 0 but prints "NO OPT REPORT"
+# (mt4_optimize.ps1's real wording, which does NOT contain the contiguous substring
+# "NO REPORT") -> must still be caught as FAILED by the broadened regex. Under the
+# OLD narrower pattern ('NO REPORT|NO XML|ABORT|ERROR|FATAL') this stdout would NOT
+# match, and with no expect_artifact given the job would be silently marked done.
+# ============================================================================
+$c15 = Join-Path $TestRoot "case15"
+New-Item -ItemType Directory -Force $c15 | Out-Null
+$c15Markers = Join-Path $c15 "markers"
+$c15State   = Join-Path $c15 "state"
+
+$c15Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1; exit_reliable = $false;
+     args = @("-MarkerFile", (Join-Path $c15Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1",
+              "-StdoutText", "NO OPT REPORT (nothing found)") }
+)
+$c15Manifest = Join-Path $c15 "manifest.json"
+New-ManifestFile -Path $c15Manifest -Jobs $c15Jobs
+
+$r15 = Invoke-RunBatch -ManifestPath $c15Manifest -StateDirPath $c15State
+$rec15 = Get-StateRecords -StateDirPath $c15State
+$job1Rec15 = $rec15 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass15 = ($r15.ExitCode -ne 0) -and ($job1Rec15.state -eq "failed") -and ($job1Rec15.exit_code -eq 0) -and `
+          ($job1Rec15.fail_reason -match "stdout matched failure pattern")
+Report "15. FIX-A REGRESSION: unreliable runner exit=0 + stdout 'NO OPT REPORT' -> FAILED (old regex missed this)" `
+  $pass15 `
+  ("exit=$($r15.ExitCode) job1.state=$($job1Rec15.state) job1.exit_code=$($job1Rec15.exit_code) job1.fail_reason=$($job1Rec15.fail_reason)")
+
+# ============================================================================
+# Criterion 16 (fix #A / no-success-evidence): exit_reliable=$false job exits 0 with
+# CLEAN stdout (no negative marker) but also NO positive marker and no expect_artifact
+# -> must be FAILED ("no success evidence"), since exit==0 alone is not trustworthy
+# for an unreliable runner.
+# ============================================================================
+$c16 = Join-Path $TestRoot "case16"
+New-Item -ItemType Directory -Force $c16 | Out-Null
+$c16Markers = Join-Path $c16 "markers"
+$c16State   = Join-Path $c16 "state"
+
+$c16Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1; exit_reliable = $false;
+     args = @("-MarkerFile", (Join-Path $c16Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1") }
+)
+$c16Manifest = Join-Path $c16 "manifest.json"
+New-ManifestFile -Path $c16Manifest -Jobs $c16Jobs
+
+$r16 = Invoke-RunBatch -ManifestPath $c16Manifest -StateDirPath $c16State
+$rec16 = Get-StateRecords -StateDirPath $c16State
+$job1Rec16 = $rec16 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass16 = ($r16.ExitCode -ne 0) -and ($job1Rec16.state -eq "failed") -and ($job1Rec16.exit_code -eq 0) -and `
+          ($job1Rec16.fail_reason -match "unreliable runner: no success evidence")
+Report "16. FIX-A NO-EVIDENCE: unreliable runner exit=0, clean stdout, no marker, no expect_artifact -> FAILED" `
+  $pass16 `
+  ("exit=$($r16.ExitCode) job1.state=$($job1Rec16.state) job1.fail_reason=$($job1Rec16.fail_reason)")
+
+# ============================================================================
+# Criterion 17 (fix #A / positive marker): exit_reliable=$false job exits 0 and prints
+# "OK REPORT" -> positive success evidence present -> done, even with no expect_artifact.
+# ============================================================================
+$c17 = Join-Path $TestRoot "case17"
+New-Item -ItemType Directory -Force $c17 | Out-Null
+$c17Markers = Join-Path $c17 "markers"
+$c17State   = Join-Path $c17 "state"
+
+$c17Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1; exit_reliable = $false;
+     args = @("-MarkerFile", (Join-Path $c17Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1",
+              "-StdoutText", "OK REPORT: report_20260712.htm") }
+)
+$c17Manifest = Join-Path $c17 "manifest.json"
+New-ManifestFile -Path $c17Manifest -Jobs $c17Jobs
+
+$r17 = Invoke-RunBatch -ManifestPath $c17Manifest -StateDirPath $c17State
+$rec17 = Get-StateRecords -StateDirPath $c17State
+$job1Rec17 = $rec17 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass17 = ($r17.ExitCode -eq 0) -and ($job1Rec17.state -eq "done")
+Report "17. FIX-A POSITIVE MARKER: unreliable runner exit=0 + stdout 'OK REPORT' -> done" `
+  $pass17 `
+  ("exit=$($r17.ExitCode) job1.state=$($job1Rec17.state)")
+
+# ============================================================================
+# Criterion 18 (fix #A / expect_artifact substitutes for marker): exit_reliable=$false
+# job exits 0, no positive/negative marker, but expect_artifact points at the marker
+# file the mock runner itself just wrote (fresh mtime) -> done.
+# ============================================================================
+$c18 = Join-Path $TestRoot "case18"
+New-Item -ItemType Directory -Force $c18 | Out-Null
+$c18Markers = Join-Path $c18 "markers"
+$c18State   = Join-Path $c18 "state"
+$c18Marker  = Join-Path $c18Markers "m1.marker"
+
+$c18Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1; exit_reliable = $false;
+     args = @("-MarkerFile", $c18Marker, "-ExitCode", 0, "-JobId", "job1");
+     expect_artifact = $c18Marker }
+)
+$c18Manifest = Join-Path $c18 "manifest.json"
+New-ManifestFile -Path $c18Manifest -Jobs $c18Jobs
+
+$r18 = Invoke-RunBatch -ManifestPath $c18Manifest -StateDirPath $c18State
+$rec18 = Get-StateRecords -StateDirPath $c18State
+$job1Rec18 = $rec18 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass18 = ($r18.ExitCode -eq 0) -and ($job1Rec18.state -eq "done")
+Report "18. FIX-A EXPECT_ARTIFACT AS EVIDENCE: unreliable runner, no marker, expect_artifact fresh -> done" `
+  $pass18 `
+  ("exit=$($r18.ExitCode) job1.state=$($job1Rec18.state)")
+
+# ============================================================================
+# Criterion 19 (fix #B / physical-terminal lock, real cross-process test): launch TWO
+# run_batch.ps1 PROCESSES concurrently (Start-Process), with DIFFERENT lane LABELS
+# ("M5-1" and "primary") but the SAME -Terminal value in their job args (the mock
+# accepts and ignores -Terminal, per its documented contract). If the lock were still
+# keyed by lane LABEL (the old bug), these two different labels would get two
+# independent lock files and NOT mutually exclude -> their ~1s-sleep [start,end]
+# intervals would overlap. With the fix (lock keyed by the normalized -Terminal path),
+# the two runs must serialize -> no overlap, even though every lane label differs.
+# ============================================================================
+$c19 = Join-Path $TestRoot "case19"
+New-Item -ItemType Directory -Force $c19 | Out-Null
+$c19A = Join-Path $c19 "A"; $c19B = Join-Path $c19 "B"
+New-Item -ItemType Directory -Force $c19A | Out-Null
+New-Item -ItemType Directory -Force $c19B | Out-Null
+$c19MarkersA = Join-Path $c19A "markers"; $c19StateA = Join-Path $c19A "state"
+$c19MarkersB = Join-Path $c19B "markers"; $c19StateB = Join-Path $c19B "state"
+$c19Terminal = 'D:\Meta 5\terminal64.exe'
+
+$c19JobsA = @(
+  @{ id = "jobA"; runner = $MockRunner; lane = "M5-1"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c19MarkersA "mA.marker"), "-ExitCode", 0, "-JobId", "jobA",
+              "-SleepMs", 1000, "-Terminal", $c19Terminal) }
+)
+$c19ManifestA = Join-Path $c19A "manifest.json"
+New-ManifestFile -Path $c19ManifestA -Jobs $c19JobsA
+
+$c19JobsB = @(
+  @{ id = "jobB"; runner = $MockRunner; lane = "primary"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c19MarkersB "mB.marker"), "-ExitCode", 0, "-JobId", "jobB",
+              "-SleepMs", 1000, "-Terminal", $c19Terminal) }
+)
+$c19ManifestB = Join-Path $c19B "manifest.json"
+New-ManifestFile -Path $c19ManifestB -Jobs $c19JobsB
+
+$c19OutA = Join-Path $c19 "outA.txt"; $c19ErrA = Join-Path $c19 "errA.txt"
+$c19OutB = Join-Path $c19 "outB.txt"; $c19ErrB = Join-Path $c19 "errB.txt"
+
+$argStrA19 = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$c19ManifestA`" -StateDir `"$c19StateA`""
+$argStrB19 = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$c19ManifestB`" -StateDir `"$c19StateB`""
+
+$procA19 = Start-Process -FilePath "powershell" -ArgumentList $argStrA19 -RedirectStandardOutput $c19OutA -RedirectStandardError $c19ErrA -NoNewWindow -PassThru
+$procB19 = Start-Process -FilePath "powershell" -ArgumentList $argStrB19 -RedirectStandardOutput $c19OutB -RedirectStandardError $c19ErrB -NoNewWindow -PassThru
+
+# See criterion 14's comment re: .Handle -- forces the handle open early so
+# .ExitCode reads back correctly after the process exits. Not a kill/signal.
+$procA19.Handle | Out-Null
+$procB19.Handle | Out-Null
+
+$procA19.WaitForExit()
+$procB19.WaitForExit()
+
+$recA19 = Get-StateRecords -StateDirPath $c19StateA
+$recB19 = Get-StateRecords -StateDirPath $c19StateB
+$jA19 = $recA19 | Where-Object { $_.id -eq "jobA" } | Select-Object -First 1
+$jB19 = $recB19 | Where-Object { $_.id -eq "jobB" } | Select-Object -First 1
+
+$aStart19 = [DateTime]$jA19.start; $aEnd19 = [DateTime]$jA19.end
+$bStart19 = [DateTime]$jB19.start; $bEnd19 = [DateTime]$jB19.end
+$noOverlap19 = ($aEnd19 -le $bStart19) -or ($bEnd19 -le $aStart19)
+
+$pass19 = ($procA19.ExitCode -eq 0) -and ($procB19.ExitCode -eq 0) -and `
+          ($jA19.state -eq "done") -and ($jB19.state -eq "done") -and $noOverlap19
+Report "19. FIX-B PHYSICAL-TERMINAL LOCK: different lane labels, SAME -Terminal -> serialized (no overlap)" `
+  $pass19 `
+  ("procA.exit=$($procA19.ExitCode) procB.exit=$($procB19.ExitCode) jobA=[$($jA19.start)..$($jA19.end)] jobB=[$($jB19.start)..$($jB19.end)] noOverlap=$noOverlap19")
+
+# ============================================================================
+# Criterion 20 (fix #A / mt5_optimize.ps1's REAL positive-marker wording): mt5_optimize.ps1's
+# actual success text is "OK OPTIMIZER XML: ..." which is NOT the contiguous substring "OK XML" —
+# a naive 'OK XML' pattern would miss it and misclassify a genuinely successful optimization as
+# FAILED once the unreliable-runner evidence gate applies. Confirms the positive-marker regex
+# recognizes this real wording (not just the generic 'OK REPORT' used in criterion 17).
+# ============================================================================
+$c20 = Join-Path $TestRoot "case20"
+New-Item -ItemType Directory -Force $c20 | Out-Null
+$c20Markers = Join-Path $c20 "markers"
+$c20State   = Join-Path $c20 "state"
+
+$c20Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1; exit_reliable = $false;
+     args = @("-MarkerFile", (Join-Path $c20Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1",
+              "-StdoutText", "OK OPTIMIZER XML: opt_20260712.xml") }
+)
+$c20Manifest = Join-Path $c20 "manifest.json"
+New-ManifestFile -Path $c20Manifest -Jobs $c20Jobs
+
+$r20 = Invoke-RunBatch -ManifestPath $c20Manifest -StateDirPath $c20State
+$rec20 = Get-StateRecords -StateDirPath $c20State
+$job1Rec20 = $rec20 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass20 = ($r20.ExitCode -eq 0) -and ($job1Rec20.state -eq "done")
+Report "20. FIX-A REAL-WORDING: unreliable runner exit=0 + stdout 'OK OPTIMIZER XML' (mt5_optimize's real text) -> done" `
+  $pass20 `
+  ("exit=$($r20.ExitCode) job1.state=$($job1Rec20.state)")
+
+# ============================================================================
 Write-Output ""
 $totalPass = @($script:allResults | Where-Object pass).Count
 $total = $script:allResults.Count

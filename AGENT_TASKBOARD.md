@@ -895,7 +895,7 @@ Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุ
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT(Opus+Sonnet-subagent, 2026-07-12) — 6 fixes done · 14/14 tests · self-review ACCEPT · pending Codex re-review` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK-r1 fixed (2026-07-12) — 20/20 tests · self-ACCEPT · pending Codex re-review r2` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -989,7 +989,16 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 - ✅ no-kill/-Force clean (run_batch+mock) · runner เดิม 4 ไฟล์ byte-unchanged
 - **Minor limit (ยกไปทีหลัง ไม่ block):** failure-keyword scan กว้าง อาจ false-positive กับคำ "error" ที่ไม่ร้าย — fail-closed = ปลอดภัยกว่า แต่ signal ที่คมกว่าคือ require positive marker `OK REPORT` ที่ทั้ง mt5_run/mt4_run พ่นอยู่ · tune ทีหลังได้
 
-**Status:** REBUILT + Opus self-review = **ACCEPT** · **pending blind Codex re-review** ก่อน flip `REVIEWED` (routing บังคับ: ยัง ห้ามใช้รัน MT4/MT5 จริงจนกว่า Codex re-review ผ่าน 2 blocker).
+**Status (rebuild r1):** REBUILT + Opus self-review ACCEPT · pending Codex re-review.
+
+### Codex re-review round 1 (2026-07-12) = REWORK → fixed อีกชั้น (Opus verify ยืนยันถูกทั้ง 2)
+- **false-green ยังหลุด:** `mt4_optimize.ps1` พิมพ์ **`NO OPT REPORT`** exit 0 — regex เดิม `NO REPORT` ไม่จับ (มี "OPT" คั่น) → **FIX:** regex `NO( OPT)? REPORT|...` + **reliability model:** runner exit-unreliable (mt4_run/mt4_optimize/mt5_optimize, override ด้วย manifest `exit_reliable`) ต้องมี **positive evidence** (marker `OK( OPT)? REPORT|OK OPTIMIZER XML` หรือ expect_artifact) ไม่งั้น FAILED · (subagent จับเพิ่ม: mt5_optimize success จริง = "OK OPTIMIZER XML" ไม่ใช่ "OK XML" → กัน false-negative)
+- **lane-lock keyed by label:** 2 manifest lane label ต่างกันแต่ `-Terminal` เดียวกัน = คนละ lock (ไม่กันชน physical install) → **FIX:** `Get-LaneLockKey` derive จาก `-Terminal` (normalized) ถ้ามี, fallback label
+- Codex CLOSED อีก 4: atomic state · dup-ID · model-4 physical · resume · safety (no-kill/byte-unchanged)
+
+**Opus verify (รันเอง):** **20/20 PASS** (test 15 NO OPT REPORT→FAILED · test 19 diff-label same-terminal→serialized · test 20 OK OPTIMIZER XML→done) · runner เดิม byte-unchanged · no-kill clean.
+
+**Status หลัง r1-fix:** 8 fixes รวม · **self-ACCEPT** · **pending Codex re-review round 2** ก่อน flip `REVIEWED` · ยัง ห้ามใช้รัน MT4/MT5 จริงจน Codex re-review ผ่าน.
 
 ---
 

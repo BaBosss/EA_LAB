@@ -32,10 +32,21 @@ Manifest JSON shape (array of job objects):
                                        # lane-1/serial-style lane ("1", "lane1", or anything ending "-1"),
                                        # OR (if the job's args carry a "-Terminal" value) that value must
                                        # equal -Lane1Terminal exactly (physical check wins over label).
-      "expect_artifact": "D:\\...\\reports\\*.htm"   # OPTIONAL path or glob; if given, at least one
-    }                                  # matching file must exist with mtime >= this job's start time,
+      "expect_artifact": "D:\\...\\reports\\*.htm",  # OPTIONAL path or glob; if given, at least one
+                                       # matching file must exist with mtime >= this job's start time,
                                        # or the job is marked failed even if exit code is 0.
+      "exit_reliable": true           # OPTIONAL bool; overrides the built-in exit-unreliable-basename
+                                       # guess (mt4_run.ps1/mt4_optimize.ps1/mt5_optimize.ps1) for THIS
+                                       # job. Omit to use the built-in guess.
+    }
   ]
+
+Lane locking key: the lock a job takes is keyed by its PHYSICAL terminal install when known, not its
+lane LABEL — if the job's args carry a "-Terminal <path>" value, the lock key is that path
+(trim+lowercased); otherwise the lock key falls back to the lane label. This means two manifests using
+different lane labels (e.g. "M5-1" vs "primary") that both point -Terminal at the SAME install still
+mutually exclude, because a label is just a human name and two different callers could pick two
+different labels for the one physical terminal.
 
 State file (StateDir\state.json), one record per manifest job, in manifest order:
   { id, runner, lane, model, state (pending|running|done|failed), start, end, exit_code, fail_reason }
@@ -51,13 +62,23 @@ only "pending"/"failed" jobs execute.
 Failure detection (a job is "done" only if ALL of these hold):
   (a) $LASTEXITCODE -eq 0 from the invoked runner, AND
   (b) the runner's captured stdout+stderr does NOT match
-      /NO REPORT|NO XML|ABORT|ERROR|FATAL/i (PowerShell's -match is already case-insensitive), AND
+      /NO( OPT)? REPORT|NO XML|ABORT|ERROR|FATAL/i (PowerShell's -match is already case-insensitive;
+      the "( OPT)?" catches mt4_optimize.ps1's "NO OPT REPORT" wording, which does NOT contain the
+      contiguous substring "NO REPORT" and slipped past the older, narrower pattern), AND
   (c) if the job specifies "expect_artifact", at least one file matching that path/glob exists with
-      LastWriteTime >= the job's start timestamp.
+      LastWriteTime >= the job's start timestamp, AND
+  (d) reliability gate — for a runner whose exit code is known to be UNTRUSTWORTHY (see the built-in
+      exit-unreliable basename set + optional per-job "exit_reliable" manifest override, below),
+      exit-code==0 plus "no bad word" is NOT enough on its own: the job also needs POSITIVE success
+      evidence — either the stdout matches /OK( OPT)? REPORT|OK OPTIMIZER XML/i, or the job supplied
+      "expect_artifact" and it was satisfied. An unreliable runner that exits 0 with clean-but-silent
+      stdout and no expect_artifact is marked FAILED ("no success evidence"), not done. Exit-reliable
+      runners (mt5_run.ps1, the mock, and anything not on the unreliable list / not overridden) keep
+      the plain (a)+(b)+(c) logic — no positive-marker requirement.
 This matters because real runners are NOT uniformly reliable: mt5_run.ps1 exits 1 on "NO REPORT", but
-mt4_run.ps1 PRINTS "NO REPORT" and falls through to exit 0 — exit-code-only detection would silently
-report that failed backtest as success. See docs/memory_control/RUNNER_INVENTORY.md for the reliability
-of each runner's exit code.
+mt4_run.ps1 / mt4_optimize.ps1 / mt5_optimize.ps1 PRINT their failure text and fall through to exit 0 —
+exit-code-only detection would silently report that failed backtest/optimization as success. See
+docs/memory_control/RUNNER_INVENTORY.md for the reliability of each runner's exit code.
 
 No process-termination calls of any kind live in this file (this wrapper never
 ends a running process — each invoked runner owns that decision for the one
@@ -151,18 +172,63 @@ function Get-ArgValue {
   return $null
 }
 
+function Get-LaneLockKey {
+  # Fix #2 (physical-terminal locking): the lock key for a job is its PHYSICAL
+  # terminal install when known, not its lane LABEL. If the job's args carry a
+  # "-Terminal <path>" value, that value (trimmed + lowercased, so path case/
+  # whitespace differences between two manifests don't create two "different"
+  # keys for the same install) IS the key. Only when no -Terminal arg is
+  # present do we fall back to the lane label — jobs that never say which
+  # physical install they target can only be deduplicated by their label.
+  param([string]$Lane, [array]$ArgsArray)
+  $terminalVal = Get-ArgValue -ArgsArray $ArgsArray -Name "-Terminal"
+  if ($terminalVal) {
+    return $terminalVal.Trim().ToLowerInvariant()
+  }
+  return $Lane
+}
+
 function Get-LaneLockPath {
   # GLOBAL fixed location, independent of -StateDir — this is what makes two
   # run_batch.ps1 invocations pointed at the SAME physical lane but DIFFERENT
   # -StateDir values actually mutually exclude (a per-StateDir lock file would
   # not: two different callers, two different lock files, no exclusion at all).
-  param([string]$Lane)
+  # $Key is whatever Get-LaneLockKey resolved (a normalized -Terminal path, or
+  # a bare lane label when no -Terminal was given) — sanitized to a filename.
+  param([string]$Key)
   $globalLockDir = Join-Path $env:TEMP "ealab_run_batch_locks"
   if (-not (Test-Path $globalLockDir)) {
     New-Item -ItemType Directory -Force $globalLockDir | Out-Null   # dir scaffold, not process-related
   }
-  $safeLane = ($Lane -replace '[^A-Za-z0-9_\-]', '_')
-  return Join-Path $globalLockDir "lane_$safeLane.lock"
+  $safeKey = ($Key -replace '[^A-Za-z0-9_\-]', '_')
+  return Join-Path $globalLockDir "lane_$safeKey.lock"
+}
+
+# Fix #1 (false-green / reliability model): runners whose exit code is known,
+# from reading their own source (see docs/memory_control/RUNNER_INVENTORY.md),
+# to be UNTRUSTWORTHY on the failure path — they print a failure message but
+# fall off the end of the script with whatever $LASTEXITCODE the last
+# successful statement left behind (usually 0). Matched by basename, case-
+# insensitive, against the job's "runner" path.
+$script:ExitUnreliableBasenames = @('mt4_run.ps1', 'mt4_optimize.ps1', 'mt5_optimize.ps1')
+
+function Test-IsExitUnreliable {
+  # Per-job reliability determination: an explicit "exit_reliable" manifest
+  # field (bool) always wins when present (job.exit_reliable=$false forces the
+  # stricter unreliable-runner evidence requirement even for a runner not on
+  # the built-in list; =$true forces the plain exit-code+keyword logic even
+  # for a runner that IS on the list). Absent that override, fall back to the
+  # built-in basename guess. Anything not on the list and not overridden
+  # (including mt5_run.ps1 and the test mock) defaults to exit-reliable.
+  param($Job, [string]$RunnerPath)
+  if ($null -ne $Job.exit_reliable) {
+    return -not [bool]$Job.exit_reliable
+  }
+  $basename = Split-Path -Leaf "$RunnerPath"
+  foreach ($u in $script:ExitUnreliableBasenames) {
+    if ($basename -ieq $u) { return $true }
+  }
+  return $false
 }
 
 function Enter-LaneLock {
@@ -311,9 +377,14 @@ foreach ($rec in $records) {
 
   $job = $manifestJobs | Where-Object { $_.id -eq $rec.id } | Select-Object -First 1
   $lane = "$($job.lane)"
-  $lockPath = Get-LaneLockPath -Lane $lane
+  # Fix #2: args must be resolved BEFORE locking, since the lock key itself
+  # depends on whether the job's args carry a -Terminal value (physical
+  # install) — falls back to the lane label only when no -Terminal is given.
+  $argsArray = Get-ArgsArray -JobArgs $job.args
+  $lockKey  = Get-LaneLockKey -Lane $lane -ArgsArray $argsArray
+  $lockPath = Get-LaneLockPath -Key $lockKey
 
-  Enter-LaneLock -LockPath $lockPath -Lane $lane -TimeoutSec $LaneLockTimeoutSec -PollMs $LaneLockPollMs
+  Enter-LaneLock -LockPath $lockPath -Lane $lockKey -TimeoutSec $LaneLockTimeoutSec -PollMs $LaneLockPollMs
   try {
     $startDt = Get-Date
     $rec.state       = "running"
@@ -322,8 +393,7 @@ foreach ($rec in $records) {
     $rec.fail_reason = $null
     Write-StateFile -Records $records -Path $stateFile
 
-    $argsArray = Get-ArgsArray -JobArgs $job.args
-    Write-Output "RUN: id=$($rec.id) runner=$($job.runner) lane=$lane model=$($job.model) args=$($argsArray -join ' ')"
+    Write-Output "RUN: id=$($rec.id) runner=$($job.runner) lane=$lane lock_key=$lockKey model=$($job.model) args=$($argsArray -join ' ')"
 
     # Capture stdout+stderr (Out-String) so we can scan it for failure
     # keywords below — some runners exit 0 even when nothing was produced.
@@ -336,13 +406,34 @@ foreach ($rec in $records) {
     $rec.end       = (Get-Date).ToString("o")
     $rec.exit_code = $exitCode
 
-    $stdoutBad  = $out -match 'NO REPORT|NO XML|ABORT|ERROR|FATAL'
+    # Fix #1: broadened negative pattern catches mt4_optimize.ps1's "NO OPT
+    # REPORT" wording (the old 'NO REPORT' literal did not, since "NO OPT
+    # REPORT" doesn't contain the contiguous substring "NO REPORT").
+    $stdoutBad  = $out -match 'NO( OPT)? REPORT|NO XML|ABORT|ERROR|FATAL'
+    # Positive success marker — only load-bearing for exit-UNRELIABLE runners
+    # (see below); exit-reliable runners never need it. Covers every real
+    # success wording in the fleet: mt5_run.ps1/mt4_run.ps1 print "OK REPORT",
+    # mt4_optimize.ps1 prints "OK OPT REPORT", mt5_optimize.ps1 prints
+    # "OK OPTIMIZER XML" (NOT "OK XML" contiguously, hence the separate
+    # alternative — a plain 'OK XML' pattern would miss it).
+    $stdoutGood = $out -match 'OK( OPT)? REPORT|OK OPTIMIZER XML'
+    $hasExpectArtifact = [bool]$job.expect_artifact
     $artifactOk = Test-ExpectArtifact -Pattern $job.expect_artifact -Since $startDt
+    $isUnreliable = Test-IsExitUnreliable -Job $job -RunnerPath $job.runner
 
     $jobReasons = New-Object System.Collections.Generic.List[string]
     if ($exitCode -ne 0) { $jobReasons.Add("exit_code=$exitCode") }
-    if ($stdoutBad) { $jobReasons.Add("stdout matched failure pattern (NO REPORT/NO XML/ABORT/ERROR/FATAL)") }
-    if (-not $artifactOk) { $jobReasons.Add("expect_artifact not found/stale: $($job.expect_artifact)") }
+    if ($stdoutBad) { $jobReasons.Add("stdout matched failure pattern (NO REPORT/NO OPT REPORT/NO XML/ABORT/ERROR/FATAL)") }
+    if ($hasExpectArtifact -and -not $artifactOk) { $jobReasons.Add("expect_artifact not found/stale: $($job.expect_artifact)") }
+
+    # Fix #1 core: for an exit-UNRELIABLE runner, exit==0 + "no bad word" is
+    # NOT enough on its own — require POSITIVE success evidence too (a
+    # matching stdout marker, or a satisfied expect_artifact). Without this,
+    # a failed optimization that exits 0, prints nothing alarming, and was
+    # never given an expect_artifact would otherwise be marked done.
+    if ($isUnreliable -and $exitCode -eq 0 -and -not $stdoutBad -and -not $stdoutGood -and -not ($hasExpectArtifact -and $artifactOk)) {
+      $jobReasons.Add("unreliable runner: no success evidence (no OK marker, no expect_artifact)")
+    }
 
     if ($jobReasons.Count -eq 0) {
       $rec.state       = "done"
@@ -358,7 +449,7 @@ foreach ($rec in $records) {
       $failed = $true
     }
   } finally {
-    Exit-LaneLock -LockPath $lockPath -Lane $lane
+    Exit-LaneLock -LockPath $lockPath -Lane $lockKey
   }
 
   if ($failed) { break }
