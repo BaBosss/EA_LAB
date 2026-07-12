@@ -1,6 +1,10 @@
 # fxDreema YouTube corpus — Phase-3 concept catalog + build-on shortlist
 
-Built 2026-07-12 from 320 transcripts → 272 strategy cards (`CATALOG.jsonl` / `DIGEST.txt`) + 48 admin.
+Built 2026-07-12 from 320 transcripts → 272 strategy cards (`CATALOG.jsonl` / `DIGEST.txt`) + 46 admin.
+**Extraction re-run with Sonnet (2026-07-12, user directive "จบจริงๆ")** superseding the first haiku pass:
+318 cards, 0 malformed JSON, EX178 verified vs hand-anchor + richer. Family split held (ict-smc-zone 24→27,
+misc 20→6 = cleaner classification); shortlist below unchanged and now backed by uniform Sonnet-grade cards.
+Old haiku catalog kept at `CATALOG_haiku.jsonl.bak`.
 Cross-referenced vs `EDGE_CATALOG.md` + memory `signal-landscape`. **This is a discussion starter, not a verdict**
 (corpus-intake rule: user has hands-on knowledge these files lack). All "PF/backtest %" in cards are the
 narrator's own claims — unverified, treated as guilty until a flat-lot probe + funnel proves otherwise.
