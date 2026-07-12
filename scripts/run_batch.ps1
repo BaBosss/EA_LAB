@@ -189,6 +189,15 @@ function Get-LaneLockKey {
     # value if GetFullPath throws on a malformed path (still better than nothing).
     $t = $terminalVal.Trim().Trim('"')
     try { $t = [System.IO.Path]::GetFullPath($t) } catch { }
+    # KNOWN MVP-0 LIMITATION (Codex r3, accepted by lead): GetFullPath collapses
+    # "." / ".." / slash / case / trailing-sep spellings, but NOT filesystem
+    # ALIASES that point at the same exe by a different name — a UNC admin share
+    # (\\localhost\d$\Meta 5\...), a mapped drive, a junction, or an 8.3 short
+    # name would yield a DIFFERENT lock key for the same physical install. This
+    # is not closed here because (a) run_batch is gated OFF from real MT4/MT5 for
+    # now and (b) manifests use the canonical D:\Meta 5\... lane paths per
+    # AGENTS.md §3.2. The full fix (reject/allowlist -Terminal to the 5 canonical
+    # lane exes) is deferred to when the harness actually drives real runs.
     return $t.TrimEnd('\','/').ToLowerInvariant()
   }
   return $Lane
@@ -221,22 +230,27 @@ function Get-LaneLockPath {
 # mock_runner.ps1 is whitelisted so tests that aren't about the reliability model
 # keep exercising the plain path; reliability tests set exit_reliable=$false to
 # force the strict path regardless.
-$script:ExitReliableBasenames = @('mt5_run.ps1', 'mock_runner.ps1')
+# Reliable runners are matched by EXACT RESOLVED PATH, not basename (Codex r3):
+# a rogue script named "mt5_run.ps1" living outside this repo must NOT be
+# auto-trusted on its exit code. Paths resolve relative to THIS script's own
+# location so the whitelist survives the repo being moved/renamed.
+$script:ExitReliablePaths = @(
+  (Join-Path $PSScriptRoot 'mt5_run.ps1'),
+  (Join-Path $PSScriptRoot '_test\mock_runner.ps1')
+) | ForEach-Object { try { ([System.IO.Path]::GetFullPath($_)).ToLowerInvariant() } catch { "$_".ToLowerInvariant() } }
 
 function Test-IsExitUnreliable {
   # Per-job reliability: an explicit "exit_reliable" manifest field (bool) always
   # wins when present (=$false forces the strict evidence requirement even for a
   # whitelisted runner; =$true trusts the exit code even for a non-whitelisted
-  # one). Absent that override: whitelisted basename => reliable, otherwise =>
-  # UNRELIABLE (fail-closed default).
+  # one). Absent that override: the runner's EXACT resolved path must be on the
+  # reliable whitelist to be trusted, otherwise => UNRELIABLE (fail-closed).
   param($Job, [string]$RunnerPath)
   if ($null -ne $Job.exit_reliable) {
     return -not [bool]$Job.exit_reliable
   }
-  $basename = Split-Path -Leaf "$RunnerPath"
-  foreach ($r in $script:ExitReliableBasenames) {
-    if ($basename -ieq $r) { return $false }
-  }
+  $full = try { ([System.IO.Path]::GetFullPath("$RunnerPath")).ToLowerInvariant() } catch { "$RunnerPath".ToLowerInvariant() }
+  if ($script:ExitReliablePaths -contains $full) { return $false }
   return $true
 }
 

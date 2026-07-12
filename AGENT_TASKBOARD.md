@@ -895,7 +895,7 @@ Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุ
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK r1+r2 fixed (2026-07-12) — 22/22 tests · self-ACCEPT · pending Codex re-review r3` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK r1+r2+r3 fixed — 22/22 · MVP-0 self-ACCEPT (1 documented alias-limit) · lead recommends LOCK` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -1006,7 +1006,14 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 - RUNNER_INVENTORY.md อัปเดต callout fail-closed default (per-row notes เดิม superseded)
 
 **Opus verify (รันเอง): 22/22 PASS.** runner เดิม byte-unchanged · no-kill clean.
-**Status หลัง r2-fix:** 10 fixes รวม · **self-ACCEPT** · **pending Codex re-review round 3** ก่อน flip `REVIEWED` · ยัง ห้ามใช้รัน MT4/MT5 จริง.
+**Status หลัง r2-fix:** 10 fixes รวม · self-ACCEPT · pending Codex re-review round 3.
+
+### Codex re-review round 3 (2026-07-12) = REWORK → 1 fix + 1 lead-accepted limit
+- **reliable whitelist ใช้ basename:** rogue script ชื่อ `mt5_run.ps1` นอก repo จะถูก trust. **FIX:** whitelist เป็น **exact resolved path** (`$PSScriptRoot\mt5_run.ps1` + `_test\mock_runner.ps1`) — test 21 (unknown path→FAILED) ยืนยัน · 22/22 ยังผ่าน
+- **path canonicalize ไม่ครอบ filesystem aliases** (UNC `\\localhost\d$\...`, mapped-drive, junction, 8.3): **LEAD JUDGMENT = accept เป็น documented MVP-0 limit** (ไม่ใช่ fix ตอนนี้) — เพราะ (ก) harness ยัง gated ห้ามรัน MT4/MT5 จริง (ข) manifest ใช้ canonical `D:\Meta 5\...` ตาม AGENTS.md · full fix (allowlist -Terminal → 5 lane paths) เลื่อนไปตอน harness ขับ real runs · comment ใน `run_batch.ps1` + inventory บันทึกแล้ว
+- Codex CLOSED: regression, safety, mt5_run reliable ทุก path
+
+**Lead verdict (Opus):** ORDER-100 = **MVP-0 ACCEPT** (11 fixes · 22/22 · 1 documented alias-limit ที่ยอมรับได้สำหรับ MVP-0 gated). ไม่ใช่ทุก Codex finding ต้อง implement — receiving-code-review = verify แล้วตัดสิน. **แนะ user: LOCK ORDER-100 ที่นี่** (หรือสั่งให้ปิด alias-limit ถ้าอยากแกร่งสุดก่อน harness ขับจริง). ยัง ห้ามใช้รัน MT4/MT5 จริงจน user เคาะ deploy.
 
 ---
 
