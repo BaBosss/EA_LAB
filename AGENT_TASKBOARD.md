@@ -819,7 +819,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `OPEN` (SYSTEM ORDER 1 of ≤4 memory-control build)
+## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `DONE(Opus, 2026-07-12) — self-review ACCEPT, pending external reviewer` (SYSTEM ORDER 1 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (Contract A = §20.8) · pin **`B0_CUTOFF_SHA=4eb839df09b1911cec2de18ec4a2df51cf766606`**
 > **ทำได้:** Claude/Opus (judgment: cohort selection · incident taxonomy · owner conclusions) · qwen/fast-worker (mechanical extraction เท่านั้น) · **👉 แนะ:** **Opus-seat** (§20 บอก Opus-only for judgment)
@@ -855,3 +855,19 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **Rollback:** ลบเฉพาะ generated B0/map artifact ใน `docs\memory_control\`; design pointer ใน PROJECT_STATE คงไว้. canonical docs ต้องไม่เปลี่ยน.
 
 **Routing/mechanics:** mechanical extraction (grep taskboard, list ORDER IDs, pull evidence paths) → qwen/fast-worker ได้ · cohort selection + incident taxonomy + ทุก owner conclusion = **Opus-seat**. ผลดิบ append ใต้ order นี้ก่อน Opus mark REVIEWED. (B0 execution/result = commit แยกจาก canonicalization commit — ห้ามรวม.)
+
+### ผลดิบ (Opus, 2026-07-12) — executed by Opus-seat
+
+**Artifacts** (ใต้ `docs/memory_control/` — generated audit output, ไม่ใช่ authority ใหม่):
+- `FACT_OWNER_MAP.md` — 10 fact → owner/writers/consumers/freshness (ฐาน §20.7 + AGENTS.md §2) · **owner conflict = 0**
+- `B0_DATASET.csv` — **20 terminal order @ `4eb839d`** (INFRA 6 · CANDIDATE 7 · REJECT 5 · PARK 2, ไม่ซ้ำ ID)
+- `B0_REPORT.md` — selection rule + inclusion/exclusion list + metric method + reproducibility recipe
+- `README.md` — สรุป + reproduce จาก pinned SHA
+
+**Cohort rule:** 20 most-recently-closed eligible terminal orders @ cutoff (exclude umbrella/SKIPPED/OPEN/CLAIMED/annotation). universe = 110 headers.
+
+**Acceptance self-check (ครบ):** 20 distinct ✓ · owner conflict 0 ✓ · **16/20 traces มี evidence commit** (เกิน ≥5/20) ✓ · `context_rework`=0 + `wrong_order_file_scope`=0 นับซ้ำได้จาก git+taskboard ✓ · onboarding/lead-hours/context-incident = `NOT_RECORDED` ทุกแถว (ไม่มี 0 ปลอม/reconstruct) ✓ · canonical docs ไม่เปลี่ยนนอกจาก order lifecycle ✓
+
+**System note:** เจอ ORDER-ID collision 2 ครั้ง (042→043, 096→097) นอก cohort — บันทึกใน report ไม่ทิ้งเงียบ (เป็น class ปัญหาที่ Contract C ตั้งใจแก้).
+
+**Status:** DONE + Opus self-review = **ACCEPT** (ผ่าน acceptance ครบ). **ค้าง external reviewer** ตามที่ user แจ้ง ก่อน flip `REVIEWED`. ถ้า ACCEPT ยืน → เขียน Contract B (MVP-0 harness) เป็น system order 2 ได้.

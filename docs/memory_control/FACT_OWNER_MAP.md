@@ -1,0 +1,42 @@
+# FACT → CANONICAL OWNER MAP (ORDER-099 / Contract A)
+
+> Generated audit output. Base = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20.7 @ `4eb839d` +
+> `AGENTS.md` §2 (write-permission table). **Owns nothing** — records who already owns what, so no
+> second source of truth is created. **Owner conflicts found: 0.**
+
+## Legend
+
+- **Canonical owner / write path** = the single place a fact is authored and allowed to change.
+- **Permitted writers** = who may write it (from `AGENTS.md` §2).
+- **Generated consumers** = read-only surfaces that derive from it and must never write back.
+- **Freshness check** = the mechanism that catches the owner going stale.
+
+## Map
+
+| # | Fact / artifact | Canonical owner + write path | Permitted writers | Generated consumers (read-only) | Freshness check |
+|---|---|---|---|---|---|
+| 1 | Active order text, acceptance, execution state, raw result narrative | `AGENT_TASKBOARD.md` (each agent edits only its own order block) | all agents (own block); **new orders = Claude/user only** | future generated active view; STATUS.md/STATUS.html | `scripts\check_state.ps1` (state consistency); order-block status lifecycle |
+| 2 | Reviewed order history | immutable archive of `REVIEWED` blocks, verbatim + stable ORDER ID + anchor *(archive mechanism = Contract C, not yet built; today history stays inline in the taskboard / `PROJECT_STATE_SESSIONLOG_ARCHIVE.md`)* | Claude/user | generated index + active view | byte/round-trip validator (Contract C acceptance) |
+| 3 | Structured experiment timeline | monthly JSONL: occurrence metadata + hashes + references only *(utility = Contract D, not yet built)* | one locked append utility (Contract D) | dashboards / timelines | `RESULT_LINKED` / `REVIEW_LINKED` / `DECISION_LINKED` must resolve to live evidence |
+| 4a | Verdict / EA status | `EA_SCORECARD_AND_REGISTRY.md` (verdict) + `EA_MASTER_INDEX.csv` (mirror) | **Claude / user only** (verdict); other agents add UNTESTED rows only | Event Log (refs only) | index row must match scorecard on every verdict change (`AGENTS.md` §3.8) |
+| 4b | Decisions / decision log | `PROJECT_STATE.md` §3 Decision log | **Claude / user only** | forward-plan / docs-index pointers | anti-drift guard; single-writer rule |
+| 4c | Deployment truth (what runs where) | `portfolio/DEPLOYMENTS.csv` | Claude (per ORDER-093) | `DEMO_DEPLOYMENT_PLAN.md`, `scripts\live_dashboard.ps1` cohort map, STATUS | `check_state.ps1` — 13 checks incl. bidirectional dashboard-map ↔ inventory sync |
+| 5 | Decisive evidence | tracked artifact (report/CSV/set/commit) OR durable evidence store + manifest + existence check | all agents (per order, produce files) | Event Log stores path/hash/ref only | existence check; ignored/transient files are NOT permanent just because a path/hash exists |
+| 6 | Safety thresholds (DD / margin / risk / deployment config) | canonical risk / deployment config | Claude / user | AI monitoring = shadow / alert-only | deterministic layer enforces; AI explains/alerts only — never enforces |
+| 7 | Big-picture / factory philosophy | `VISION.md` | **Claude / user only** | — | "work conflicts with VISION → stop & ask" rule |
+| 8 | Agent roles / write-permissions / protocol | `AGENTS.md` | **Claude / user only** | CLAUDE.md pointers | single-writer; pre-commit guard |
+| 9 | Source code (`ea_template\`, `scripts\`, EA_Project) | the file itself | Claude + Codex (per order); **ZCode ❌** | compiled `.ex5`/`.ex4` | `tpl_regression.ps1` cage after any `ea_template\core\` edit |
+| 10 | Generated status dashboard | `STATUS.md` / `STATUS.html` | `scripts\make_status.ps1` only (**never hand-edit**) | OneDrive mobile copy | regenerated after every commit (`AGENTS.md` §7) |
+
+## Conflict scan
+
+- Every fact above resolves to **exactly one** canonical owner. Sub-scoped files (e.g. `PROJECT_STATE.md`
+  §3 = Claude/user, other sections = Claude) are **not** conflicts — the sub-scope has a single owner.
+- Overlap that could look like conflict, and why it is not:
+  - verdict (4a) vs decision log (4b) vs deployment (4c): three **distinct** facts, three files, three
+    owners — a verdict is not a deployment is not a decision. Event Log (fact 3) stores only references
+    to these, never copies, so it cannot become a rival owner.
+  - `EA_MASTER_INDEX.csv` mirrors the scorecard but is not an independent owner — it is bound to the
+    scorecard by the "must match on every verdict change" rule, so it is a **generated mirror**, not a
+    second source of truth.
+- **Unresolved owner conflicts: 0.**
