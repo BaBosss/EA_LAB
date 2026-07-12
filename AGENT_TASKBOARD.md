@@ -874,7 +874,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `OPEN` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `DONE(Opus + Sonnet-subagent build, 2026-07-12) — self-review ACCEPT` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -918,3 +918,29 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **Rollback:** ลบ/ปิด `run_batch.ps1` + fixtures + `RUNNER_INVENTORY.md`; runner เดิมต้องทำงานเป๊ะเหมือนก่อนมี wrapper (พิสูจน์ด้วย byte-unchanged + smoke 1 run ตรง runner).
 
 **Routing:** เฟส 1 (inventory) → qwen/fast-worker · เฟส 2 (wrapper+TDD) → Codex-direct · Opus review ผลดิบ + verify grep-no-kill + byte-unchanged ก่อน mark REVIEWED. (Contract B = commit แยก — ห้ามรวมกับ B0/canonicalization.)
+
+### ผลดิบ (Opus lead + Sonnet-subagent build, 2026-07-12) — executed
+
+**Build:** dispatch การ build ให้ Sonnet subagent (Claude quota ไม่เผา ChatGPT · Opus คุม commit เอง) ตาม interface+safety spec ในใบนี้เป๊ะ · Opus verify เอง (รัน test + อ่านโค้ด + grep + byte-check) ไม่เชื่อคำ subagent.
+
+**Files (ทั้งหมดใน allowlist):**
+- `scripts/run_batch.ps1` — wrapper (blocking · lane-lock advisory · fail-stop · resume · state.json)
+- `scripts/_test/mock_runner.ps1` + `scripts/_test/test_run_batch.ps1` — fixtures + test driver (ไม่แตะ MT5 จริง)
+- `docs/memory_control/RUNNER_INVENTORY.md` — เฟส 1 inventory ครบ 8 runner
+
+**Opus-verified acceptance (รันเอง 5/5 PASS):**
+- [x] mock success → exit 0 + ทุก job `done`
+- [x] mid-job fail → job ถัดไปไม่รัน + exit 1 + job=`failed` (marker ที่ 3 หายจริง)
+- [x] interrupt→resume → รันเฉพาะ not-done · job `done` marker frozen (idempotent)
+- [x] lane collision → 2 job lane เดียวกันไม่ overlap (timestamp พิสูจน์) + lock created/removed
+- [x] no-kill scan: 0 `Stop-Process`/`taskkill`/process-`-Force` (hit ทั้งหมด = comment หรือ file/dir op)
+- [x] runner เดิม 4 ไฟล์ **byte-unchanged** (`git status --porcelain` ว่าง)
+- [x] inventory ≥8 runner
+
+**Design note (Opus):** invoke runner เดิมด้วย `& powershell -File $runner @args` + เช็ค `$LASTEXITCODE` · lane-lock ใช้ `[System.IO.File]::Open(CreateNew)` (atomic exclusive-create, ไม่มี process primitive) release ด้วย try/finally · state เขียนทุก transition = interrupt-safe · Model-4 → pre-flight guard บังคับ lane-1/serial ก่อนรัน job แรก.
+
+**Known limitation (ยกไป iteration หน้า, ไม่ block MVP-0):** run ที่ crash ทิ้ง stale lane-lock ไว้ → resume จะ block 300s แล้ว fail-visible (ไม่เงียบ ไม่ kill). stale-lane detection = delegated item §20.5 — ทำเป็น order แยกทีหลัง.
+
+**Status:** DONE + Opus self-review = **ACCEPT**. **ค้าง external review** (เหมือน ORDER-099) ก่อน flip `REVIEWED`.
+
+⏸️ **STOP-POINT ก่อน system order 3 (Contract C):** Contract C = active/archive migration = แก้ **architectural write path** → §20/handoff บังคับ (ก) **maintenance window ที่ไม่มี taskboard writer** — ตอนนี้มี concurrent session เขียนอยู่ (ดู memory `shared-worktree-concurrent-writers`) = **ยังไม่ปลอดภัย** · (ข) **blind Codex review ก่อน accept**. → ไม่เขียน Contract C ต่อจนกว่า user เคาะ window + review ORDER-099/100.
