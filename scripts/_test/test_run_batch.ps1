@@ -714,6 +714,83 @@ Report "20. FIX-A REAL-WORDING: unreliable runner exit=0 + stdout 'OK OPTIMIZER 
   ("exit=$($r20.ExitCode) job1.state=$($job1Rec20.state)")
 
 # ============================================================================
+# Criterion 21 (fix #A / FAIL-CLOSED DEFAULT): a runner NOT on the reliable
+# whitelist (an unknown / batch runner), exit 0, clean stdout, no OK marker, no
+# expect_artifact -> FAILED. Proves the default is fail-closed (a batch runner
+# that exits 0 after an internal failure must not false-green). Uses a COPY of
+# the mock at a non-whitelisted basename so the reliability model sees "unknown".
+# ============================================================================
+$c21 = Join-Path $TestRoot "case21"
+New-Item -ItemType Directory -Force $c21 | Out-Null
+$c21Markers = Join-Path $c21 "markers"
+$c21State   = Join-Path $c21 "state"
+$c21Runner  = Join-Path $c21 "unknown_batch_runner.ps1"
+Copy-Item $MockRunner $c21Runner -Force
+
+$c21Jobs = @(
+  @{ id = "job1"; runner = $c21Runner; lane = "A"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c21Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1",
+              "-StdoutText", "finished; 3 passes written") }
+)
+$c21Manifest = Join-Path $c21 "manifest.json"
+New-ManifestFile -Path $c21Manifest -Jobs $c21Jobs
+
+$r21 = Invoke-RunBatch -ManifestPath $c21Manifest -StateDirPath $c21State
+$rec21 = Get-StateRecords -StateDirPath $c21State
+$job1Rec21 = $rec21 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass21 = ($r21.ExitCode -ne 0) -and ($job1Rec21.state -eq "failed")
+Report "21. FIX-A FAIL-CLOSED DEFAULT: unknown/batch runner exit=0, no evidence -> FAILED" `
+  $pass21 `
+  ("exit=$($r21.ExitCode) job1.state=$($job1Rec21.state) fail_reason=$($job1Rec21.fail_reason)")
+
+# ============================================================================
+# Criterion 22 (fix #B / PATH CANONICALIZATION): two processes, -Terminal spelled
+# "D:\Meta 5\terminal64.exe" vs "D:\Meta 5\.\terminal64.exe" (same install,
+# different spelling) -> must serialize (canonicalized to one lock key). Would
+# run in parallel if the lock key were the raw string.
+# ============================================================================
+$c22 = Join-Path $TestRoot "case22"
+New-Item -ItemType Directory -Force $c22 | Out-Null
+$c22A = Join-Path $c22 "A"; $c22B = Join-Path $c22 "B"
+New-Item -ItemType Directory -Force $c22A | Out-Null
+New-Item -ItemType Directory -Force $c22B | Out-Null
+$c22MarkersA = Join-Path $c22A "markers"; $c22MarkersB = Join-Path $c22B "markers"
+$c22StateA = Join-Path $c22A "state"; $c22StateB = Join-Path $c22B "state"
+
+$c22JobsA = @(
+  @{ id = "jobA"; runner = $MockRunner; lane = "laneA"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c22MarkersA "mA.marker"), "-ExitCode", 0, "-JobId", "jobA",
+              "-SleepMs", 1000, "-Terminal", "D:\Meta 5\terminal64.exe") }
+)
+New-ManifestFile -Path (Join-Path $c22A "manifest.json") -Jobs $c22JobsA
+$c22JobsB = @(
+  @{ id = "jobB"; runner = $MockRunner; lane = "laneB"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c22MarkersB "mB.marker"), "-ExitCode", 0, "-JobId", "jobB",
+              "-SleepMs", 1000, "-Terminal", "D:\Meta 5\.\terminal64.exe") }
+)
+New-ManifestFile -Path (Join-Path $c22B "manifest.json") -Jobs $c22JobsB
+
+$c22OutA = Join-Path $c22 "outA.txt"; $c22ErrA = Join-Path $c22 "errA.txt"
+$c22OutB = Join-Path $c22 "outB.txt"; $c22ErrB = Join-Path $c22 "errB.txt"
+$argStrA22 = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$(Join-Path $c22A 'manifest.json')`" -StateDir `"$c22StateA`""
+$argStrB22 = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$(Join-Path $c22B 'manifest.json')`" -StateDir `"$c22StateB`""
+$procA22 = Start-Process -FilePath "powershell" -ArgumentList $argStrA22 -RedirectStandardOutput $c22OutA -RedirectStandardError $c22ErrA -NoNewWindow -PassThru
+$procB22 = Start-Process -FilePath "powershell" -ArgumentList $argStrB22 -RedirectStandardOutput $c22OutB -RedirectStandardError $c22ErrB -NoNewWindow -PassThru
+$procA22.Handle | Out-Null
+$procB22.Handle | Out-Null
+$procA22.WaitForExit()
+$procB22.WaitForExit()
+$recA22 = Get-StateRecords -StateDirPath $c22StateA
+$recB22 = Get-StateRecords -StateDirPath $c22StateB
+$jA22 = $recA22 | Where-Object { $_.id -eq "jobA" } | Select-Object -First 1
+$jB22 = $recB22 | Where-Object { $_.id -eq "jobB" } | Select-Object -First 1
+$noOverlap22 = ([DateTime]$jA22.end -le [DateTime]$jB22.start) -or ([DateTime]$jB22.end -le [DateTime]$jA22.start)
+$pass22 = ($procA22.ExitCode -eq 0) -and ($procB22.ExitCode -eq 0) -and ($jA22.state -eq "done") -and ($jB22.state -eq "done") -and $noOverlap22
+Report "22. FIX-B PATH CANONICALIZATION: -Terminal '...\terminal64.exe' vs '...\.\terminal64.exe' -> serialized" `
+  $pass22 `
+  ("procA.exit=$($procA22.ExitCode) procB.exit=$($procB22.ExitCode) jobA=[$($jA22.start)..$($jA22.end)] jobB=[$($jB22.start)..$($jB22.end)] noOverlap=$noOverlap22")
+
+# ============================================================================
 Write-Output ""
 $totalPass = @($script:allResults | Where-Object pass).Count
 $total = $script:allResults.Count

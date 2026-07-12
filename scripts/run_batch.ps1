@@ -183,7 +183,13 @@ function Get-LaneLockKey {
   param([string]$Lane, [array]$ArgsArray)
   $terminalVal = Get-ArgValue -ArgsArray $ArgsArray -Name "-Terminal"
   if ($terminalVal) {
-    return $terminalVal.Trim().ToLowerInvariant()
+    # Canonicalize so two spellings of the SAME install collapse to one key:
+    # GetFullPath resolves "." / ".." and normalizes / vs \ separators; then
+    # lowercase and strip any trailing separator. Fall back to the raw trimmed
+    # value if GetFullPath throws on a malformed path (still better than nothing).
+    $t = $terminalVal.Trim().Trim('"')
+    try { $t = [System.IO.Path]::GetFullPath($t) } catch { }
+    return $t.TrimEnd('\','/').ToLowerInvariant()
   }
   return $Lane
 }
@@ -204,31 +210,34 @@ function Get-LaneLockPath {
   return Join-Path $globalLockDir "lane_$safeKey.lock"
 }
 
-# Fix #1 (false-green / reliability model): runners whose exit code is known,
-# from reading their own source (see docs/memory_control/RUNNER_INVENTORY.md),
-# to be UNTRUSTWORTHY on the failure path — they print a failure message but
-# fall off the end of the script with whatever $LASTEXITCODE the last
-# successful statement left behind (usually 0). Matched by basename, case-
-# insensitive, against the job's "runner" path.
-$script:ExitUnreliableBasenames = @('mt4_run.ps1', 'mt4_optimize.ps1', 'mt5_optimize.ps1')
+# Fix #1 (false-green / reliability model) — FAIL-CLOSED DEFAULT (Codex r2):
+# a runner is trusted on its exit code ONLY if we have verified from its source
+# that it exits non-zero on the failure path. That verified set is a small
+# WHITELIST; everything else — mt4_run, every optimizer, every batch runner
+# (mass_smoke_*, mt5_batch_shortlist, qwen_batch_runner), and any unknown/new
+# runner — is treated as exit-UNRELIABLE and must produce positive success
+# evidence (an OK marker or a satisfied expect_artifact). Default-reliable was
+# unsafe: a batch runner that exits 0 after an internal failure would false-green.
+# mock_runner.ps1 is whitelisted so tests that aren't about the reliability model
+# keep exercising the plain path; reliability tests set exit_reliable=$false to
+# force the strict path regardless.
+$script:ExitReliableBasenames = @('mt5_run.ps1', 'mock_runner.ps1')
 
 function Test-IsExitUnreliable {
-  # Per-job reliability determination: an explicit "exit_reliable" manifest
-  # field (bool) always wins when present (job.exit_reliable=$false forces the
-  # stricter unreliable-runner evidence requirement even for a runner not on
-  # the built-in list; =$true forces the plain exit-code+keyword logic even
-  # for a runner that IS on the list). Absent that override, fall back to the
-  # built-in basename guess. Anything not on the list and not overridden
-  # (including mt5_run.ps1 and the test mock) defaults to exit-reliable.
+  # Per-job reliability: an explicit "exit_reliable" manifest field (bool) always
+  # wins when present (=$false forces the strict evidence requirement even for a
+  # whitelisted runner; =$true trusts the exit code even for a non-whitelisted
+  # one). Absent that override: whitelisted basename => reliable, otherwise =>
+  # UNRELIABLE (fail-closed default).
   param($Job, [string]$RunnerPath)
   if ($null -ne $Job.exit_reliable) {
     return -not [bool]$Job.exit_reliable
   }
   $basename = Split-Path -Leaf "$RunnerPath"
-  foreach ($u in $script:ExitUnreliableBasenames) {
-    if ($basename -ieq $u) { return $true }
+  foreach ($r in $script:ExitReliableBasenames) {
+    if ($basename -ieq $r) { return $false }
   }
-  return $false
+  return $true
 }
 
 function Enter-LaneLock {

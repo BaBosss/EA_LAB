@@ -895,7 +895,7 @@ Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุ
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK-r1 fixed (2026-07-12) — 20/20 tests · self-ACCEPT · pending Codex re-review r2` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK r1+r2 fixed (2026-07-12) — 22/22 tests · self-ACCEPT · pending Codex re-review r3` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -998,7 +998,15 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 **Opus verify (รันเอง):** **20/20 PASS** (test 15 NO OPT REPORT→FAILED · test 19 diff-label same-terminal→serialized · test 20 OK OPTIMIZER XML→done) · runner เดิม byte-unchanged · no-kill clean.
 
-**Status หลัง r1-fix:** 8 fixes รวม · **self-ACCEPT** · **pending Codex re-review round 2** ก่อน flip `REVIEWED` · ยัง ห้ามใช้รัน MT4/MT5 จริงจน Codex re-review ผ่าน.
+**Status หลัง r1-fix:** 8 fixes รวม · self-ACCEPT · pending Codex re-review round 2.
+
+### Codex re-review round 2 (2026-07-12) = REWORK → fixed (Opus verify ยืนยันถูกทั้ง 2)
+- **batch runners ยัง default reliable:** reliability model เดิม = blacklist (default reliable) → mass_smoke/batch_shortlist/qwen_runner ที่ exit 0 แม้ sub-job ล้ม = false-green. **FIX:** flip เป็น **fail-closed whitelist** — trust exit code เฉพาะ `{mt5_run.ps1, mock_runner.ps1}` (หรือ `exit_reliable:true`) · ที่เหลือทั้งหมด default **unreliable → ต้องมี positive evidence** · test 21 พิสูจน์: unknown runner exit 0 no evidence → FAILED
+- **terminal lock ไม่ canonicalize path:** `.`/relative/slash ต่างกัน = คนละ lock สำหรับ install เดียว. **FIX:** `[System.IO.Path]::GetFullPath` + lowercase + trim trailing sep · test 22 พิสูจน์: `D:\Meta 5\terminal64.exe` vs `D:\Meta 5\.\terminal64.exe` → serialized
+- RUNNER_INVENTORY.md อัปเดต callout fail-closed default (per-row notes เดิม superseded)
+
+**Opus verify (รันเอง): 22/22 PASS.** runner เดิม byte-unchanged · no-kill clean.
+**Status หลัง r2-fix:** 10 fixes รวม · **self-ACCEPT** · **pending Codex re-review round 3** ก่อน flip `REVIEWED` · ยัง ห้ามใช้รัน MT4/MT5 จริง.
 
 ---
 

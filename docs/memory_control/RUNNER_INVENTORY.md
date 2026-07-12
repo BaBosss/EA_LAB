@@ -1,5 +1,18 @@
 # Runner Inventory (ORDER-100 Phase 1; reliability-model column added post-fix 2026-07-12)
 
+> **⚠️ RELIABILITY MODEL UPDATED 2026-07-12 (Codex re-review r2 → FAIL-CLOSED DEFAULT).**
+> The model flipped from a blacklist ("exit-unreliable set", default reliable) to a **whitelist**:
+> `run_batch.ps1` trusts a runner's exit code **only** if its basename is in the reliable whitelist
+> **`{mt5_run.ps1, mock_runner.ps1}`** (or the job sets `exit_reliable:true`). **Every other runner —
+> `mt4_run`, all optimizers, and all batch drivers (`mass_smoke_*`, `mt5_batch_shortlist`,
+> `qwen_batch_runner`), plus any unknown/new runner — now defaults to exit-UNRELIABLE** and must
+> produce positive success evidence (an `OK( OPT)? REPORT|OK OPTIMIZER XML` marker OR a satisfied
+> `expect_artifact`); exit 0 with no evidence = FAILED. This means the per-row notes below that say a
+> batch runner is "NOT in the unreliable set / default reliable / should set `exit_reliable:false`" are
+> **SUPERSEDED** — those runners are handled fail-closed automatically now (setting `exit_reliable:false`
+> is redundant but harmless; you'd only ever set `exit_reliable:true` to *opt back into* trusting a
+> non-whitelisted runner's exit code).
+
 Read directly from each script's `param(...)` block and its `exit` / abort lines
 on 2026-07-12. This is a description of EXISTING scripts — none of them were
 edited to produce this table. See `scripts/run_batch.ps1` (ORDER-100 Phase 2)
