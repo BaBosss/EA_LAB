@@ -581,6 +581,10 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
   SL ที่ยอด wave 1 พอดี ราคาแตะ SL = โครงพังเอง)
 - สถานะ: spec ครบ พร้อม build → คิวหลัง ORDER-078/083
 - **Task 0 gates CLEARED (Opus, 2026-07-12, commit `fc31d0b`):** Jobot ref = misnomer (RSI+CCI martingale ไม่มี wave logic → ไม่มี ref impl, plan = spec of record) · **fable-advisor spec-check PASS** (arch A sound + guards G1-G4) · user เคาะ: both-direction · TP วัดจากราคาเข้า (entry±\|W1\|) · **trailing ตั้งแต่แรก + RSI-divergence tighten** · แผน build 6 tasks พร้อม = `docs/superpowers/plans/2026-07-12-entry-wave5.md` → รอปล่อย Task 1-4 build
+- **Task 1-4 BUILT + Task 6 naked probe DONE (Opus, 2026-07-13):** build เสร็จ (commit `bfa048f`) — Opus verify เอง compile 0/0 + regression CLEAN (11-16 byte-identical) + **จับ+แก้บั๊กร้ายที่ subagent พลาด: labeling 3-pivot → wave1end/wave3peak ต่างประเภทเสมอ = Entry ยิงไม่ออก (zero-trade การันตี) → แก้เป็น 4-pivot + wave2-validity + fib วัดจาก wave3 จริง**
+  - **probe 4 cell (default params, ExitMode=TRAIL, MaxLevels=1, structural SL):** XAU main(23-26) **PF 1.57**/174t/DD1.66% · XAU BWD(20-22) 0.95/148t · GBP main **PF 1.18**/164t/DD0.66% · GBP BWD 0.96/137t
+  - **VERDICT (lead):** ✅ fix ยืนยัน (ยิงไม้ออกทั้ง 4 cell) · **deploy-gate (both-window≥1.0) ยังไม่ผ่าน** (ทั้ง 2 sym ตก BWD เฉียดๆ) · **แต่ ≠ ตาย** = PARAMETRIC-marginal · ALIVE · build-on (main>1 ทั้งคู่, BWD 0.95-0.96 เฉียดเส้น, DD จิ๋ว, 0 lever swept) · XAU main 1.57@win45% = mechanism มีของ
+  - **ค้าง = SWEEP (pace, ยังไม่รัน):** `_17_EntryFib{23.6,50,61.8}` · `_17_Wave3MinMult` · trail — both-regime หา config ยก BWD ข้าม 1.0 · 2020-22 = คนละ vol regime ทอง (อาจต้อง regime filter). reports = `_mt5_auto/reports/WAVE5_*`
 
 ## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `CLAIMED(Claude-agent, 2026-07-10)` ขั้น extract · ขั้น judge = Claude
 
@@ -1017,7 +1021,7 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK r1-r3 fixed (Codex, 2026-07-12→13) — 15/15 · md-escaped · temp-isolated · CRLF-compare=lead-decision · lead-ACCEPT (pending user/final Codex)` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `REVIEWED(Opus lead ACCEPT, user-approved 2026-07-13) — C0 COMPLETE · 3 Codex rounds · validator ถาวร + manifest/index/exceptions พร้อมให้ C1 ใช้` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
 > **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
@@ -1107,5 +1111,44 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 
 **Opus verify (รันเอง):** suite **15/15** · exceptions block_id escaped · suite ไม่ dirty fixture (0) · -Audit 0/-Strict 1 · read-only held · taskboard/archive ว่าง.
 
-**Lead verdict (Opus):** C0 = **ACCEPT** — 4 substantive defects + 3 tail-gaps ปิด · 1 CRLF finding = lead-decision มีหลักฐาน (ไม่ใช่ทุก finding ต้อง implement — verify แล้วตัดสิน). **แนะ user: accept C0 → เปิด C1** (หรือสั่ง strict raw-byte + .gitattributes ก่อนถ้าต้องการ). รอ user เคาะ.
+**Lead verdict (Opus):** C0 = **ACCEPT** — 4 substantive defects + 3 tail-gaps ปิด · 1 CRLF finding = lead-decision มีหลักฐาน (ไม่ใช่ทุก finding ต้อง implement — verify แล้วตัดสิน). **แนะ user: accept C0 → เปิด C1** (หรือสั่ง strict raw-byte + .gitattributes ก่อนถ้าต้องการ). รอ user เคาะ. → **user เคาะ 2026-07-13: Accept C0 → เปิด C1.**
+
+---
+
+## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `OPEN` (SYSTEM ORDER 4 of ≤4 memory-control build → then mandatory review gate)
+
+> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** (migration half) + ORDER-101 "→ C1" spec + §20.7
+> **ทำได้:** Opus (exception judgment + migration window + canonical workflow = own) · Codex/subagent (guard-hook code) · **👉 แนะ:** Opus เขียน+ตัดสิน → subagent build lock-hook → **Opus execute migration เอง (1 atomic commit)** → **blind Codex review ก่อน accept**
+> ⚠️ **นี่คือ order เดียวที่แก้ architectural write path จริง (taskboard/archive)** — ต้อง maintenance window ไม่มี writer อื่น (user ยืนยัน session อื่นปิด) · gate = C0 validator `-Strict` ต้อง exit 0 หลัง migration
+> **Prereq:** C0 (ORDER-101) REVIEWED ✓ — validator `check_taskboard_archive.ps1` + manifest/index/exceptions พร้อมใช้เป็น gate
+
+**REALITY:** manual split ทำไปแล้ว (archive มี 131 blocks) → C1 **ไม่ใช่ bulk-move** แต่ = (ก) **Opus resolve 12 policy exceptions** (ข) **แทน manual index block (active L15) ด้วย generated `ARCHIVE_INDEX.md`** (§20.7 index ต้อง generated/read-only) (ค) **freeze archive = immutable + validator เป็น guard**. เป้า: C0 `-Strict` = exit 0 (clean) หลังจบ.
+
+**Phase 1 — Opus exception resolution (judgment, บันทึกก่อนแตะไฟล์):** ต่อ 12 exceptions ใน `RECONCILE_EXCEPTIONS.md`:
+- **benign (accept archived, ไม่ต้องแก้ block — เพิ่มเป็น "reviewed-by-C1-audit" ให้ validator ผ่าน):** 003/009 SKIPPED · 065/066/067 BUILT+verdict-inline · 086/093/096C DONE-mechanical/infra · 091C-D1c DONE (campaign JUMSTOCH D1f REVIEWED ปิด thread)
+- **⚠️ ต้องแก้จริง (write):** (1) **ORDER-071** — rev02 `STAGE2-DONE(stage-3 รอตัดสิน)` = non-terminal ใน archive + rev01 `OPEN` (active L362) superseded → **Opus ตัดสินสถานะ ST03-rescue ก่อน** (parked/dead ตาม PROJECT_STATE ST03=no-edge → mark rev02 terminal-closed + ลบ/ปิด rev01) (2) **091C-D1c PROCESSING** annotation stale (active L665) → ลบ
+- glue: กลไก "reviewed-by-C1-audit" = วิธี validator รับรู้ว่า benign-terminal ถูก Opus รับรองแล้ว (เช่น manifest column `opus_disposition` หรือ allowlist file) — Codex/subagent ออกแบบ mechanism, Opus เขียน disposition
+
+**Phase 2 — write ใต้ ENFORCED lock (1 atomic commit):**
+- แทน manual index (L15) ด้วย **pointer ไป generated `docs/memory_control/ARCHIVE_INDEX.md`** (generated/read-only)
+- apply 071/091C-D1c resolutions
+- **ENFORCED maintenance lock (Codex-hardened):** `.githooks/pre-commit` guard: (i) ลง+test guard ใน commit ก่อนเข้า window (ii) **fail-CLOSED ถ้าไม่มี PowerShell** (ปิดช่อง fail-open เดิม) (iii) block ทุก commit ที่แตะ taskboard/archive ระหว่าง lock ยกเว้น migration — อนุญาตด้วย **staged-blob-hash allowlist ไม่ใช่ commit message** (iv) **recheck working-tree hash เทียบ staged ทันทีก่อน commit** (กัน session อื่น) (v) `--no-verify` = technical bypass, threat model อาศัยกฎ AGENTS
+- **hardened swap:** target-file clean check → เตรียม output ใน staging → pre-hash recheck → stage allowlist → abort ถ้า active/archive hash drift
+
+**Acceptance (ตัวเลข/ไฟล์):**
+- [ ] **C0 `-Strict` exit 0** หลัง migration (ทุก exception resolved: benign disposed + 071/091C-D1c แก้)
+- [ ] manual index block (L15) หายจาก active → แทนด้วย pointer ไป generated index
+- [ ] 071 resolved (rev02 terminal-closed หรือ pulled-back ตาม Opus) · rev01 OPEN + 091C-D1c PROCESSING ลบแล้ว
+- [ ] archive `-Audit` ยัง clean (immutable, bijection 131 หรือ +delta ที่ระบุ) · manifest/index regenerate zero-diff
+- [ ] **1 atomic commit** · git diff = เฉพาะ taskboard (index+071+091C-D1c) + generated artifacts + hook · ไม่แตะ unrelated
+- [ ] enforced-lock hook: negative test (commit แตะ taskboard ระหว่าง lock โดยไม่ใช่ migration → blocked) · fail-closed no-PS test
+- [ ] `[tag] ORDER-102 done` + ผลดิบ
+
+**ห้าม:** ลบ history · ย้าย non-terminal (071 ห้ามอยู่ archive จน resolve) · worker ตัดสิน exception เอง (Opus) · แตะ unrelated dirty files · implement Contract D (MVP-1-lite events — order ถัดไปหลัง review gate)
+
+**Rollback:** 1 atomic commit คืน pre-migration active (index block เดิม + 071/091C-D1c เดิม) + archive + ลบ hook/artifact delta. ไม่แตะงานอื่น.
+
+**Routing:** Opus resolve exceptions + execute migration + 1 atomic commit · subagent/Codex build lock-hook + disposition mechanism · **blind Codex review รอบผลจริง ก่อน accept** · Opus แก้ `AGENTS.md` ใน review commit ถ้า archive-immutability protocol ต้องการ (เช่น "archived block immutable; REVIEWED ใหม่เข้า archive ผ่าน validator -Strict"). C1 = commit แยก.
+
+**→ หลัง C1 accept = order ที่ 4 → MANDATORY REVIEW GATE** (§20.2 #5): หยุด ทบทวน ACCEPT/REWORK/ROLLBACK ต่อ component (A/B/C0/C1) ก่อนเริ่ม Contract D (MVP-1-lite events).
 **บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.
