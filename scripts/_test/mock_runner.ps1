@@ -12,6 +12,12 @@ Contract exercised by the tests:
     by the contents of -ExitCodeFile (a small text file the TEST can rewrite between two
     run_batch.ps1 invocations, to flip a job from "fails" to "succeeds" without editing
     the manifest — proves genuine resume-to-completion, not just "skip nothing changed")
+  - can print arbitrary extra stdout text (-StdoutText) WHILE STILL EXITING 0 — this is
+    what lets a test simulate mt4_run.ps1-style "NO REPORT but exit 0" false-green behavior
+    to exercise run_batch.ps1's stdout-keyword failure scan
+  - accepts (and ignores) a -Terminal value, purely so a test manifest can put a "-Terminal"
+    flag in a job's args (to exercise run_batch.ps1's model==4 physical-lane check) without
+    the invocation failing on an "unknown parameter" error
   - No process-termination call of any kind anywhere in this file.
 #>
 param(
@@ -19,7 +25,9 @@ param(
   [int]$ExitCode = 0,
   [string]$ExitCodeFile = "",
   [string]$JobId = "",
-  [int]$SleepMs = 0
+  [int]$SleepMs = 0,
+  [string]$StdoutText = "",
+  [string]$Terminal = ""   # accepted-but-unused: lets tests exercise run_batch's -Terminal parsing
 )
 $ErrorActionPreference = "Stop"
 
@@ -33,6 +41,7 @@ if ($ExitCodeFile -and (Test-Path $ExitCodeFile)) {
 
 $ts = (Get-Date).ToString("o")
 Write-Output "[mock_runner] job=$JobId exitcode=$effectiveExit invoked=$ts marker=$MarkerFile"
+if ($StdoutText) { Write-Output $StdoutText }
 
 # Marker dir may not exist yet on first invocation in a fresh test case folder —
 # -Force here is on a DIRECTORY create, not a process.

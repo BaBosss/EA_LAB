@@ -3,7 +3,8 @@ test_run_batch.ps1 — ORDER-100 Phase 3 acceptance driver for scripts\run_batch
 
 Runs every acceptance scenario against the MOCK runner only (scripts\_test\mock_runner.ps1)
 — never real MT4/MT5 — and prints one PASS/FAIL line per criterion. All scratch
-manifests/state/markers live under $env:TEMP\run_batch_test, never in the repo.
+manifests/state/markers live under $env:TEMP\run_batch_test (plus the global lane-lock
+dir under $env:TEMP\ealab_run_batch_locks), never in the repo.
 #>
 $ErrorActionPreference = "Stop"
 
@@ -11,12 +12,18 @@ $RepoRoot   = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)   # scripts\
 $RunBatch   = Join-Path $RepoRoot "scripts\run_batch.ps1"
 $MockRunner = Join-Path $RepoRoot "scripts\_test\mock_runner.ps1"
 $TestRoot   = Join-Path $env:TEMP "run_batch_test"
+$GlobalLockDir = Join-Path $env:TEMP "ealab_run_batch_locks"
 
 if (Test-Path $TestRoot) {
   # Clean scratch dir from a previous run — TEMP scratch only, not the repo, not a process.
   Remove-Item -Path $TestRoot -Recurse -Force
 }
 New-Item -ItemType Directory -Force $TestRoot | Out-Null   # scratch dir scaffold, not process-related
+
+if (Test-Path $GlobalLockDir) {
+  # Clean stale lane-lock files from a previous (possibly interrupted) test run — TEMP only.
+  Remove-Item -Path $GlobalLockDir -Recurse -Force
+}
 
 $script:allResults = New-Object System.Collections.Generic.List[object]
 
@@ -109,7 +116,7 @@ $marker3Absent = -not (Test-Path $c2M3)
 $pass2 = ($r2.ExitCode -ne 0) -and $marker3Absent -and ($job2Rec.state -eq "failed") -and ($job3Rec.state -eq "pending")
 Report "2. mid-job failure -> job3 never runs, exit!=0, job2=failed" `
   $pass2 `
-  ("exit=$($r2.ExitCode) job2.state=$($job2Rec.state) job3.state=$($job3Rec.state) marker3_absent=$marker3Absent")
+  ("exit=$($r2.ExitCode) job2.state=$($job2Rec.state) job3.state=$($job3Rec.state) marker3_absent=$marker3Absent job2.fail_reason=$($job2Rec.fail_reason)")
 
 # ============================================================================
 # Criterion 3: resume after an interrupted/failed run -> only not-done jobs execute;
@@ -167,8 +174,9 @@ Report "3. resume -> only pending/failed jobs re-run, done jobs' markers frozen 
    "resume: exit=$($r3b.ExitCode) job1MarkerUnchanged=$job1Unchanged allDone=$allDone3 job3Ran=$job3RanNow")
 
 # ============================================================================
-# Criterion 4: lane collision -> two same-lane jobs' [start,end] never overlap in
-# the state file (sequential/lane-safe); lane lock file created then removed.
+# Criterion 4: lane collision (same process, same StateDir) -> two same-lane jobs'
+# [start,end] never overlap in the state file (sequential/lane-safe); the GLOBAL
+# lane lock file is created then removed.
 # ============================================================================
 $c4 = Join-Path $TestRoot "case4"
 New-Item -ItemType Directory -Force $c4 | Out-Null
@@ -195,22 +203,28 @@ $j2Start = [DateTime]$j2.start; $j2End = [DateTime]$j2.end
 $noOverlap = ($j1End -le $j2Start) -or ($j2End -le $j1Start)
 
 $safeLaneName = ($c4Lane -replace '[^A-Za-z0-9_\-]', '_')
-$c4LockPath = Join-Path $c4State "lane_$safeLaneName.lock"
+$c4LockPath = Join-Path $GlobalLockDir "lane_$safeLaneName.lock"   # GLOBAL location (fix #2), not under StateDir
 $lockAbsentAfter = -not (Test-Path $c4LockPath)
-$lockAcquiredSeen = ($r4.Output -match [regex]::Escape("LANE-LOCK ACQUIRE lane=$c4Lane"))
-$lockReleasedSeen = ($r4.Output -match [regex]::Escape("LANE-LOCK RELEASE lane=$c4Lane"))
 $acquireCount = ([regex]::Matches($r4.Output, [regex]::Escape("LANE-LOCK ACQUIRE lane=$c4Lane"))).Count
 $releaseCount = ([regex]::Matches($r4.Output, [regex]::Escape("LANE-LOCK RELEASE lane=$c4Lane"))).Count
 
 $pass4 = ($r4.ExitCode -eq 0) -and $noOverlap -and $lockAbsentAfter -and ($acquireCount -eq 2) -and ($releaseCount -eq 2)
-Report "4. lane collision -> same-lane jobs never overlap, lock created+removed" `
+Report "4. lane collision (same process) -> same-lane jobs never overlap, global lock created+removed" `
   $pass4 `
-  ("job1=[$($j1.start)..$($j1.end)] job2=[$($j2.start)..$($j2.end)] noOverlap=$noOverlap lockAbsentAfter=$lockAbsentAfter acquireCount=$acquireCount releaseCount=$releaseCount")
+  ("job1=[$($j1.start)..$($j1.end)] job2=[$($j2.start)..$($j2.end)] noOverlap=$noOverlap lockPath=$c4LockPath lockAbsentAfter=$lockAbsentAfter acquireCount=$acquireCount releaseCount=$releaseCount")
 
 # ============================================================================
 # Criterion 5: self-scan -> no Stop-Process/taskkill, and no -Force on a process.
+# Scoped to run_batch.ps1 + the mock_runner.ps1 fixture (the two files that ship /
+# execute logic). test_run_batch.ps1 itself is deliberately EXCLUDED: it necessarily
+# contains the literal string 'Stop-Process|taskkill' as its OWN Select-String pattern
+# text below, so scanning the scanner against itself would always self-match and is
+# not a meaningful finding.
 # ============================================================================
-$scanPaths = @((Join-Path $RepoRoot "scripts\run_batch.ps1"), (Join-Path $RepoRoot "scripts\_test\mock_runner.ps1"))
+$scanPaths = @(
+  (Join-Path $RepoRoot "scripts\run_batch.ps1"),
+  (Join-Path $RepoRoot "scripts\_test\mock_runner.ps1")
+)
 $killHits = Select-String -Pattern 'Stop-Process|taskkill' -Path $scanPaths -ErrorAction SilentlyContinue
 $noKillHits = ($null -eq $killHits) -or (@($killHits).Count -eq 0)
 
@@ -219,9 +233,281 @@ $forceLines = Select-String -Pattern '-Force' -Path $scanPaths -ErrorAction Sile
 $processyForceHits = @($forceLines | Where-Object { $_.Line -match '(?i)(Stop-Process|taskkill|Get-Process|\$proc\b|\.Kill\(\))' })
 $noProcessyForce = (@($processyForceHits).Count -eq 0)
 
-Report "5. self-scan: no Stop-Process/taskkill, no -Force on a process" `
+Report "5. self-scan: no Stop-Process/taskkill, no -Force on a process (run_batch.ps1 + mock_runner.ps1 fixture)" `
   ($noKillHits -and $noProcessyForce) `
   ("killHits=$(@($killHits).Count) processyForceHits=$(@($processyForceHits).Count)")
+
+# ============================================================================
+# Criterion 6 (fix #1 / false-green): mock EXITS 0 but prints "NO REPORT" on stdout
+# (mimics mt4_run.ps1's real behavior) -> run_batch must mark the job FAILED, not done,
+# and stop the batch, even though $LASTEXITCODE was 0.
+# ============================================================================
+$c6 = Join-Path $TestRoot "case6"
+New-Item -ItemType Directory -Force $c6 | Out-Null
+$c6Markers = Join-Path $c6 "markers"
+$c6State   = Join-Path $c6 "state"
+
+$c6Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c6Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1",
+              "-StdoutText", "NO REPORT: nothing found") }
+)
+$c6Manifest = Join-Path $c6 "manifest.json"
+New-ManifestFile -Path $c6Manifest -Jobs $c6Jobs
+
+$r6 = Invoke-RunBatch -ManifestPath $c6Manifest -StateDirPath $c6State
+$rec6 = Get-StateRecords -StateDirPath $c6State
+$job1Rec6 = $rec6 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass6 = ($r6.ExitCode -ne 0) -and ($job1Rec6.state -eq "failed") -and ($job1Rec6.exit_code -eq 0) -and `
+         ($job1Rec6.fail_reason -match "stdout matched failure pattern")
+Report "6. FALSE-GREEN FIX: exit=0 + stdout 'NO REPORT' -> job marked FAILED (not done)" `
+  $pass6 `
+  ("exit=$($r6.ExitCode) job1.state=$($job1Rec6.state) job1.exit_code=$($job1Rec6.exit_code) job1.fail_reason=$($job1Rec6.fail_reason)")
+
+# ============================================================================
+# Criterion 7 (fix #1 / expect_artifact, negative control): exit=0, clean stdout,
+# but the job's expect_artifact glob matches NOTHING -> job marked FAILED anyway.
+# ============================================================================
+$c7 = Join-Path $TestRoot "case7"
+New-Item -ItemType Directory -Force $c7 | Out-Null
+$c7Markers = Join-Path $c7 "markers"
+$c7State   = Join-Path $c7 "state"
+$c7ExpectGlob = Join-Path $c7 "reports\*.htm"   # directory doesn't even exist -> never matches
+
+$c7Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c7Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1");
+     expect_artifact = $c7ExpectGlob }
+)
+$c7Manifest = Join-Path $c7 "manifest.json"
+New-ManifestFile -Path $c7Manifest -Jobs $c7Jobs
+
+$r7 = Invoke-RunBatch -ManifestPath $c7Manifest -StateDirPath $c7State
+$rec7 = Get-StateRecords -StateDirPath $c7State
+$job1Rec7 = $rec7 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass7 = ($r7.ExitCode -ne 0) -and ($job1Rec7.state -eq "failed") -and ($job1Rec7.exit_code -eq 0) -and `
+         ($job1Rec7.fail_reason -match "expect_artifact")
+Report "7. expect_artifact MISSING -> job marked FAILED despite exit=0 + clean stdout" `
+  $pass7 `
+  ("exit=$($r7.ExitCode) job1.state=$($job1Rec7.state) job1.fail_reason=$($job1Rec7.fail_reason)")
+
+# ============================================================================
+# Criterion 8 (fix #1 / expect_artifact, positive control): exit=0, clean stdout,
+# expect_artifact points at the marker file the mock runner itself just wrote -> done.
+# ============================================================================
+$c8 = Join-Path $TestRoot "case8"
+New-Item -ItemType Directory -Force $c8 | Out-Null
+$c8Markers = Join-Path $c8 "markers"
+$c8State   = Join-Path $c8 "state"
+$c8Marker  = Join-Path $c8Markers "m1.marker"
+
+$c8Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", $c8Marker, "-ExitCode", 0, "-JobId", "job1");
+     expect_artifact = $c8Marker }
+)
+$c8Manifest = Join-Path $c8 "manifest.json"
+New-ManifestFile -Path $c8Manifest -Jobs $c8Jobs
+
+$r8 = Invoke-RunBatch -ManifestPath $c8Manifest -StateDirPath $c8State
+$rec8 = Get-StateRecords -StateDirPath $c8State
+$job1Rec8 = $rec8 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass8 = ($r8.ExitCode -eq 0) -and ($job1Rec8.state -eq "done")
+Report "8. expect_artifact PRESENT (fresh mtime) -> job succeeds normally" `
+  $pass8 `
+  ("exit=$($r8.ExitCode) job1.state=$($job1Rec8.state)")
+
+# ============================================================================
+# Criterion 9 (fix #4): duplicate job id in manifest -> abort exit 2 BEFORE anything runs.
+# ============================================================================
+$c9 = Join-Path $TestRoot "case9"
+New-Item -ItemType Directory -Force $c9 | Out-Null
+$c9Markers = Join-Path $c9 "markers"
+$c9State   = Join-Path $c9 "state"
+$c9M1 = Join-Path $c9Markers "m1.marker"
+$c9M2 = Join-Path $c9Markers "m2.marker"
+
+$c9Jobs = @(
+  @{ id = "dup1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", $c9M1, "-ExitCode", 0, "-JobId", "dup1a") },
+  @{ id = "dup1"; runner = $MockRunner; lane = "B"; model = 1;
+     args = @("-MarkerFile", $c9M2, "-ExitCode", 0, "-JobId", "dup1b") }
+)
+$c9Manifest = Join-Path $c9 "manifest.json"
+New-ManifestFile -Path $c9Manifest -Jobs $c9Jobs
+
+$r9 = Invoke-RunBatch -ManifestPath $c9Manifest -StateDirPath $c9State
+$noMarkers9 = (-not (Test-Path $c9M1)) -and (-not (Test-Path $c9M2))
+$noState9   = -not (Test-Path (Join-Path $c9State "state.json"))
+$pass9 = ($r9.ExitCode -eq 2) -and $noMarkers9 -and $noState9 -and ($r9.Output -match "duplicate job id")
+Report "9. DUP-ID FIX: duplicate job id -> abort exit 2, nothing runs, no state written" `
+  $pass9 `
+  ("exit=$($r9.ExitCode) noMarkers=$noMarkers9 noState=$noState9 outputMentionsDup=$($r9.Output -match 'duplicate job id')")
+
+# ============================================================================
+# Criterion 10 (fix #5): model=4 job with a MISLEADING lane label ("fake-1", passes the
+# label-only check) but a -Terminal arg pointing at the lane-2 install -> abort exit 2.
+# ============================================================================
+$c10 = Join-Path $TestRoot "case10"
+New-Item -ItemType Directory -Force $c10 | Out-Null
+$c10Markers = Join-Path $c10 "markers"
+$c10State   = Join-Path $c10 "state"
+$c10M1 = Join-Path $c10Markers "m1.marker"
+
+$c10Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "fake-1"; model = 4;
+     args = @("-MarkerFile", $c10M1, "-ExitCode", 0, "-JobId", "job1", "-Terminal", "D:\Meta 5b\terminal64.exe") }
+)
+$c10Manifest = Join-Path $c10 "manifest.json"
+New-ManifestFile -Path $c10Manifest -Jobs $c10Jobs
+
+$r10 = Invoke-RunBatch -ManifestPath $c10Manifest -StateDirPath $c10State
+$noMarker10 = -not (Test-Path $c10M1)
+$pass10 = ($r10.ExitCode -eq 2) -and $noMarker10 -and ($r10.Output -match "lane-1 install")
+Report "10. MODEL-4 PHYSICAL FIX: lane label 'fake-1' but -Terminal=lane-2 install -> abort exit 2" `
+  $pass10 `
+  ("exit=$($r10.ExitCode) noMarker=$noMarker10 outputMentionsLane1Install=$($r10.Output -match 'lane-1 install')")
+
+# ============================================================================
+# Criterion 11 (fix #5, positive control): model=4 job whose -Terminal DOES match
+# -Lane1Terminal (default 'D:\Meta 5\terminal64.exe') -> allowed to run and succeed,
+# even though the lane label itself is nonstandard.
+# ============================================================================
+$c11 = Join-Path $TestRoot "case11"
+New-Item -ItemType Directory -Force $c11 | Out-Null
+$c11Markers = Join-Path $c11 "markers"
+$c11State   = Join-Path $c11 "state"
+$c11M1 = Join-Path $c11Markers "m1.marker"
+
+$c11Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "fake-1"; model = 4;
+     args = @("-MarkerFile", $c11M1, "-ExitCode", 0, "-JobId", "job1", "-Terminal", "D:\Meta 5\terminal64.exe") }
+)
+$c11Manifest = Join-Path $c11 "manifest.json"
+New-ManifestFile -Path $c11Manifest -Jobs $c11Jobs
+
+$r11 = Invoke-RunBatch -ManifestPath $c11Manifest -StateDirPath $c11State
+$rec11 = Get-StateRecords -StateDirPath $c11State
+$job1Rec11 = $rec11 | Where-Object { $_.id -eq "job1" } | Select-Object -First 1
+$pass11 = ($r11.ExitCode -eq 0) -and ($job1Rec11.state -eq "done")
+Report "11. MODEL-4 PHYSICAL FIX (positive control): -Terminal matches lane-1 install -> runs fine" `
+  $pass11 `
+  ("exit=$($r11.ExitCode) job1.state=$($job1Rec11.state)")
+
+# ============================================================================
+# Criterion 12 (fix #3): state.json exists but is CORRUPT (not valid JSON) -> abort
+# loudly (exit 2), nothing runs.
+# ============================================================================
+$c12 = Join-Path $TestRoot "case12"
+New-Item -ItemType Directory -Force $c12 | Out-Null
+$c12Markers = Join-Path $c12 "markers"
+$c12State   = Join-Path $c12 "state"
+New-Item -ItemType Directory -Force $c12State | Out-Null
+"{ this is not valid json !!" | Set-Content -Path (Join-Path $c12State "state.json") -Encoding utf8
+$c12M1 = Join-Path $c12Markers "m1.marker"
+
+$c12Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", $c12M1, "-ExitCode", 0, "-JobId", "job1") }
+)
+$c12Manifest = Join-Path $c12 "manifest.json"
+New-ManifestFile -Path $c12Manifest -Jobs $c12Jobs
+
+$r12 = Invoke-RunBatch -ManifestPath $c12Manifest -StateDirPath $c12State
+$noMarker12 = -not (Test-Path $c12M1)
+$pass12 = ($r12.ExitCode -eq 2) -and $noMarker12 -and ($r12.Output -match "not valid JSON")
+Report "12. ATOMIC-STATE FIX: corrupt state.json -> abort loudly exit 2, nothing runs" `
+  $pass12 `
+  ("exit=$($r12.ExitCode) noMarker=$noMarker12 outputMentionsInvalidJson=$($r12.Output -match 'not valid JSON')")
+
+# ============================================================================
+# Criterion 13 (fix #3): after a normal successful run, no leftover state.json.tmp
+# file remains (proves the write-tmp-then-move pattern cleans up after itself).
+# ============================================================================
+$c13 = Join-Path $TestRoot "case13"
+New-Item -ItemType Directory -Force $c13 | Out-Null
+$c13Markers = Join-Path $c13 "markers"
+$c13State   = Join-Path $c13 "state"
+
+$c13Jobs = @(
+  @{ id = "job1"; runner = $MockRunner; lane = "A"; model = 1;
+     args = @("-MarkerFile", (Join-Path $c13Markers "m1.marker"), "-ExitCode", 0, "-JobId", "job1") }
+)
+$c13Manifest = Join-Path $c13 "manifest.json"
+New-ManifestFile -Path $c13Manifest -Jobs $c13Jobs
+
+$r13 = Invoke-RunBatch -ManifestPath $c13Manifest -StateDirPath $c13State
+$noTmpLeftover = -not (Test-Path (Join-Path $c13State "state.json.tmp"))
+$stateJsonExists = Test-Path (Join-Path $c13State "state.json")
+$pass13 = ($r13.ExitCode -eq 0) -and $noTmpLeftover -and $stateJsonExists
+Report "13. ATOMIC-STATE FIX: no leftover state.json.tmp after a normal run" `
+  $pass13 `
+  ("exit=$($r13.ExitCode) noTmpLeftover=$noTmpLeftover stateJsonExists=$stateJsonExists")
+
+# ============================================================================
+# Criterion 14 (fix #2 / real cross-process test): launch TWO run_batch.ps1 PROCESSES
+# concurrently (Start-Process), same lane, DIFFERENT -StateDir. If the lane lock were
+# still keyed under -StateDir (the old bug), both would acquire "independent" locks and
+# their mock-runner [start,end] intervals (each ~1s sleep) would overlap. With the fix
+# (lock keyed by a GLOBAL fixed path), the two runs must serialize -> no overlap.
+# ============================================================================
+$c14 = Join-Path $TestRoot "case14"
+New-Item -ItemType Directory -Force $c14 | Out-Null
+$c14A = Join-Path $c14 "A"; $c14B = Join-Path $c14 "B"
+New-Item -ItemType Directory -Force $c14A | Out-Null
+New-Item -ItemType Directory -Force $c14B | Out-Null
+$c14MarkersA = Join-Path $c14A "markers"; $c14StateA = Join-Path $c14A "state"
+$c14MarkersB = Join-Path $c14B "markers"; $c14StateB = Join-Path $c14B "state"
+$c14Lane = "CONC-1"
+
+$c14JobsA = @(
+  @{ id = "jobA"; runner = $MockRunner; lane = $c14Lane; model = 1;
+     args = @("-MarkerFile", (Join-Path $c14MarkersA "mA.marker"), "-ExitCode", 0, "-JobId", "jobA", "-SleepMs", 1000) }
+)
+$c14ManifestA = Join-Path $c14A "manifest.json"
+New-ManifestFile -Path $c14ManifestA -Jobs $c14JobsA
+
+$c14JobsB = @(
+  @{ id = "jobB"; runner = $MockRunner; lane = $c14Lane; model = 1;
+     args = @("-MarkerFile", (Join-Path $c14MarkersB "mB.marker"), "-ExitCode", 0, "-JobId", "jobB", "-SleepMs", 1000) }
+)
+$c14ManifestB = Join-Path $c14B "manifest.json"
+New-ManifestFile -Path $c14ManifestB -Jobs $c14JobsB
+
+$c14OutA = Join-Path $c14 "outA.txt"; $c14ErrA = Join-Path $c14 "errA.txt"
+$c14OutB = Join-Path $c14 "outB.txt"; $c14ErrB = Join-Path $c14 "errB.txt"
+
+$argStrA = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$c14ManifestA`" -StateDir `"$c14StateA`""
+$argStrB = "-NoProfile -ExecutionPolicy Bypass -File `"$RunBatch`" -Manifest `"$c14ManifestB`" -StateDir `"$c14StateB`""
+
+$procA = Start-Process -FilePath "powershell" -ArgumentList $argStrA -RedirectStandardOutput $c14OutA -RedirectStandardError $c14ErrA -NoNewWindow -PassThru
+$procB = Start-Process -FilePath "powershell" -ArgumentList $argStrB -RedirectStandardOutput $c14OutB -RedirectStandardError $c14ErrB -NoNewWindow -PassThru
+
+# Touch .Handle on each process object WHILE IT IS STILL RUNNING — a documented
+# .NET/PowerShell quirk where Start-Process -PassThru's Process object otherwise
+# fails to retain proper access rights to read .ExitCode after the process exits
+# (it silently reads back as $null rather than throwing). Not a kill/signal of
+# any kind, just touching a property to force the handle to be opened early.
+$procA.Handle | Out-Null
+$procB.Handle | Out-Null
+
+$procA.WaitForExit()
+$procB.WaitForExit()
+
+$recA14 = Get-StateRecords -StateDirPath $c14StateA
+$recB14 = Get-StateRecords -StateDirPath $c14StateB
+$jA14 = $recA14 | Where-Object { $_.id -eq "jobA" } | Select-Object -First 1
+$jB14 = $recB14 | Where-Object { $_.id -eq "jobB" } | Select-Object -First 1
+
+$aStart14 = [DateTime]$jA14.start; $aEnd14 = [DateTime]$jA14.end
+$bStart14 = [DateTime]$jB14.start; $bEnd14 = [DateTime]$jB14.end
+$noOverlap14 = ($aEnd14 -le $bStart14) -or ($bEnd14 -le $aStart14)
+
+$pass14 = ($procA.ExitCode -eq 0) -and ($procB.ExitCode -eq 0) -and `
+          ($jA14.state -eq "done") -and ($jB14.state -eq "done") -and $noOverlap14
+Report "14. GLOBAL LANE LOCK FIX: 2 concurrent PROCESSES, same lane, different StateDir -> serialized (no overlap)" `
+  $pass14 `
+  ("procA.exit=$($procA.ExitCode) procB.exit=$($procB.ExitCode) jobA=[$($jA14.start)..$($jA14.end)] jobB=[$($jB14.start)..$($jB14.end)] noOverlap=$noOverlap14")
 
 # ============================================================================
 Write-Output ""

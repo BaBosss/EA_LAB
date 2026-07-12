@@ -895,7 +895,7 @@ Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุ
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REWORK(Codex blind review 2026-07-12) — 2 blockers + 4 correctness fixes · rebuild รอ user go · ห้ามใช้รัน MT4/MT5 จริงจนกว่าจะแก้` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT(Opus+Sonnet-subagent, 2026-07-12) — 6 fixes done · 14/14 tests · self-review ACCEPT · pending Codex re-review` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -977,6 +977,19 @@ Official tests ยัง 5/5 PASS แต่ mock ปิด case จริงไ�
 - Codex PASS: no-kill/-Force safety · runner เดิม byte-unchanged · stale-lock 300s ยอมรับได้ (แต่ต้อง global scope ก่อน = ผูกกับ BLOCKER-2)
 
 **Rebuild spec = 6 ข้อบน · commit แยก · re-test + re-review ก่อน accept · ห้าม flip REVIEWED จน 2 blocker ปิด. รอ user เคาะเริ่ม rebuild (routing เดิม: Codex-direct/subagent build → Opus verify).**
+
+### ผลดิบ rebuild (Sonnet-subagent build + Opus verify, 2026-07-12)
+Opus รัน test เอง + อ่านโค้ด safety-critical เอง (ไม่เชื่อคำ subagent). **14/14 PASS, exit 0.**
+- ✅ **BLOCKER-1 false-green:** success = `exit0 AND stdout ไม่มี /NO REPORT|NO XML|ABORT|ERROR|FATAL/ AND expect_artifact มีจริง (mtime≥start)` · capture stdout ผ่าน `2>&1 | Out-String` · `$LASTEXITCODE` ถูกต้อง (native exit ไม่ใช่ Out-String) · test 6 พิสูจน์: mock exit 0 + "NO REPORT" → **FAILED** ไม่ใช่ done
+- ✅ **BLOCKER-2 global lane-lock:** `$env:TEMP\ealab_run_batch_locks\lane_*.lock` (ไม่ใช่ StateDir) · **test 14 = 2 process จริง lane เดียว StateDir ต่าง → serialized no-overlap** (พิสูจน์ cross-process exclusion)
+- ✅ FIX-3 atomic state: temp+`Move-Item` · corrupt state.json → abort loud exit 2 · ไม่มี .tmp leftover
+- ✅ FIX-4 dup-ID: manifest id ซ้ำ → abort exit 2 ก่อนรัน
+- ✅ FIX-5 Model-4 physical: parse `-Terminal` เทียบ lane-1 install (`-Lane1Terminal` default `D:\Meta 5\terminal64.exe`) · label `fake-1` + terminal lane-2 → abort exit 2
+- ✅ FIX-6 real 2-process concurrency test (test 14 บน)
+- ✅ no-kill/-Force clean (run_batch+mock) · runner เดิม 4 ไฟล์ byte-unchanged
+- **Minor limit (ยกไปทีหลัง ไม่ block):** failure-keyword scan กว้าง อาจ false-positive กับคำ "error" ที่ไม่ร้าย — fail-closed = ปลอดภัยกว่า แต่ signal ที่คมกว่าคือ require positive marker `OK REPORT` ที่ทั้ง mt5_run/mt4_run พ่นอยู่ · tune ทีหลังได้
+
+**Status:** REBUILT + Opus self-review = **ACCEPT** · **pending blind Codex re-review** ก่อน flip `REVIEWED` (routing บังคับ: ยัง ห้ามใช้รัน MT4/MT5 จริงจนกว่า Codex re-review ผ่าน 2 blocker).
 
 ---
 
