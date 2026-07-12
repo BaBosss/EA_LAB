@@ -1,22 +1,33 @@
 # EA_LAB Evolution Plan — Memory-Controlled Investment Operating System
 
-> **สถานะ: DRAFT FOR FABLE / CLAUDE / USER REVIEW — DO NOT IMPLEMENT**  
+> **สถานะ: FINAL DESIGN RECONCILED AFTER SECOND REVIEW — PENDING CANONICALIZATION / IMPLEMENTATION ORDERS — DO NOT IMPLEMENT FROM THIS FILE**
 > **วันที่ร่าง:** 2026-07-11  
 > **ผู้ริเริ่ม:** user · **ผู้สังเคราะห์ร่าง:** Codex  
 > **เอกสารนี้ไม่มีอำนาจเปลี่ยน** `VISION.md`, `ROADMAP.md`, `PROJECT_STATE.md`, `AGENTS.md`, verdict, deployment, taskboard หรือ source code  
-> **ห้ามเปิด order / ย้ายไฟล์ / สร้างระบบ / migrate ข้อมูลจากร่างนี้** จนกว่า user + Fable/Claude จะเห็นพ้องและบันทึก approval ใน canonical decision owner
+> **ห้ามเปิด order / ย้ายไฟล์ / สร้างระบบ / migrate ข้อมูลจากร่างนี้** จนกว่า Claude/user จะเขียนและอนุมัติ implementation orders ตาม `AGENTS.md`
+
+> [!IMPORTANT]
+> **Normative rule:** ใช้เฉพาะ **§20 AUTHORITATIVE FINAL IMPLEMENTATION BRIEF** เป็นแหล่งแตก implementation orders
+> ส่วน §1–18 คือข้อเสนอเดิมที่ `SUPERSEDED` และ §19 คือ review history — ทั้งหมดเป็น non-executable appendix
+> ห้าม agent resolve ความขัดแย้งระหว่าง section เอง; ถ้า §1–19 ขัดกับ §20 ให้ §20 ชนะเสมอ
 
 **Consensus lock (ต้องครบทุกช่องก่อนเริ่ม):**
 
-- [ ] User เห็นชอบทิศทางร่าง
-- [ ] Fable review พร้อมข้อทักท้วง
-- [ ] Claude lead สังเคราะห์ข้อเห็นตรง/ต่างและตรวจ owner boundaries
-- [ ] User อนุมัติ final design อีกครั้ง
+- [x] User เห็นชอบทิศทางร่าง
+- [x] Fable review พร้อมข้อทักท้วง — `ACCEPT-WITH-CHANGES`, rubric 14/16, commit `4ff2051`
+- [x] Claude/Fable lead สังเคราะห์ข้อเห็นตรง/ต่างใน §19
+- [x] User อนุมัติ final design + ค่าแนะนำทั้งหมด — 2026-07-12
+- [x] Codex outsider review รอบสองถูก reconcile เข้า authoritative §20 — 2026-07-12
 - [ ] Claude/user เขียน implementation orders ตามสิทธิ์ใน `AGENTS.md`
 
 ความเงียบหรือการไม่มีข้อค้าน **ไม่ถือเป็น approval**
 
 ---
+
+# APPENDIX A — DESIGN AND REVIEW HISTORY (NON-EXECUTABLE)
+
+> §1–18 เก็บข้อเสนอเดิมเพื่อ audit trail เท่านั้น; §19 เก็บ Fable review เท่านั้น
+> ห้ามใช้ appendix นี้เป็น order source หรือ source of truth
 
 ## 1. คำขอการตัดสินจาก Fable
 
@@ -256,7 +267,7 @@ packet_hash: "..."
 
 ---
 
-## 7. Memory-control MVP — เริ่มแค่ 3 ชิ้น
+## 7. [SUPERSEDED] Memory-control MVP — เริ่มแค่ 3 ชิ้น
 
 Red-team recommendation: **ยังไม่สร้าง Wiki เต็มระบบ** ให้พิสูจน์ 3 ชิ้นก่อน
 
@@ -395,7 +406,7 @@ worker เลื่อนได้เฉพาะ execution states; DEMO/LIVE/RE
 
 ---
 
-## 10. Monitoring architecture
+## 10. [SUPERSEDED] Monitoring architecture
 
 ### 10.1 Deterministic safety layer
 
@@ -442,7 +453,7 @@ AI ล่มแล้ว safety layer ต้องยังทำงาน
 
 ---
 
-## 11. Strategy and portfolio direction
+## 11. [SUPERSEDED SNAPSHOT] Strategy and portfolio direction
 
 ทิศเสนอเพื่อ review ไม่ใช่ verdict ใหม่:
 
@@ -477,7 +488,7 @@ risk budget ต้องอิง loss contribution/floating risk ไม่ใ�
 
 ---
 
-## 12. Agent workflow and benchmark
+## 12. [SUPERSEDED] Agent workflow and benchmark
 
 ### 12.1 Roles remain unchanged
 
@@ -507,7 +518,7 @@ memory system เปลี่ยน “สิ่งที่แต่ละ seat
 
 ---
 
-## 13. Phased roadmap and gates
+## 13. [SUPERSEDED] Phased roadmap and gates
 
 ### Phase 0 — Consensus only
 
@@ -684,7 +695,7 @@ rollback = ปิด generated layer แล้วกลับ mandatory-doc work
 
 ---
 
-## 18. Final recommendation of this draft
+## 18. [SUPERSEDED] Final recommendation of this draft
 
 ทิศทางมีศักยภาพแก้ปัญหา agent memory/context drift ได้จริง แต่ความสำเร็จขึ้นกับการไม่สร้าง “ความจริงชุดที่สอง”
 
@@ -755,3 +766,176 @@ workstream (3) §10/§12.2 reference backlog แทน re-specify (4) แก้ 
 ข้อ 1(รายละเอียด),6,7,8,10,11,13 ให้ user+Claude เคาะตอน Phase 1 · **Consensus lock ช่อง "Fable review พร้อม
 ข้อทักท้วง" = ✅ ติ๊กได้** · ห้าม implement จนกว่า user อนุมัติ final design ตามเดิม
 
+---
+
+# 20. AUTHORITATIVE FINAL IMPLEMENTATION BRIEF (2026-07-12)
+
+## 20.1 Approval record
+
+User อนุมัติ **final design ตาม Fable changes ใน §19** และตอบ “ใช้คำแนะนำทั้งหมด” ต่อ defaults ที่ Codex
+สังเคราะห์ให้หลัง review จากนั้น Codex ทำ outsider review รอบสองและ user สั่งให้แก้ตามข้อแนะนำทั้งหมด
+section นี้จึงเป็น **order source เพียงชุดเดียว**; §1–19 เป็น design/review history และไม่มีอำนาจเชิงปฏิบัติ
+
+การอนุมัตินี้อนุมัติ **ทิศทางและค่า default** เท่านั้น เอกสารนี้ยังไม่ใช่ order และไม่มีสิทธิ์สั่ง agent ให้แก้
+canonical docs, source, monitoring, deployment หรือเงินจริง การเริ่มงานต้องรอ Claude/user แตก implementation
+orders ตาม `AGENTS.md`
+
+**Fable final review (2026-07-12, รอบปิด quota):** PASS-WITH-FIXES — fixes ถูก apply ในไฟล์นี้แล้วก่อน commit:
+(1) ยก locked MVP-2 constraints จาก §19 ขึ้น §20.4 (ไม่งั้นถูก orphan เพราะ §20.9 ห้ามอ้าง appendix)
+(2) เพิ่ม B0 reality clause — metric ประวัติศาสตร์ที่ไม่เคยบันทึก = `NOT_RECORDED` และ pin ว่า MVP-2 gate ใช้
+B1 absolute triggers (§20.3 ตารางกับ §20.4 เดิมพูดไม่ตรงกัน) (3) แก้ path `portfolio/DEPLOYMENTS.csv`
+(4) order ทุกใบต้องอ้าง §20 พร้อม commit SHA
+
+## 20.2 Final workstream sequence
+
+1. **B0 historical baseline + ownership map**
+2. **MVP-0 execution harness** — inventory runner เดิมก่อน; blocking, lane-aware, fail-visible, resume evidence
+3. **MVP-3 canonical active taskboard + immutable archive + generated read-only index/view**
+4. **MVP-1-lite append-only experiment events + durable evidence manifest** — JSONL รายเดือนใน git
+5. **หยุด review หลัง implementation order ที่ 4** แม้ workstream ใดยังไม่จบ; ห้ามบีบหลายงานให้เป็น order ใหญ่
+6. เก็บ **B1 post-change observation cohort 20 orders** หลัง MVP-3 และ MVP-1-lite ผ่าน acceptance
+7. **MVP-2 Context Packet generator เฉพาะเมื่อ B1 เข้า trigger**
+8. Generated cards/Wiki/AI monitoring/agent benchmark ทำภายหลังตาม canonical owner/backlog และ phase gates เท่านั้น
+
+## 20.3 Locked operating defaults
+
+| Decision | Approved default |
+|---|---|
+| Capacity ช่วงเริ่ม | **70% system improvement / 30% EA research เป็นเวลา 2 สัปดาห์ วัดจาก planned lead-attention hours**; agent runtime และ compute time รายงานแยก |
+| Research continuity | ไม่หยุดโรงงานทั้งหมด; ทำเฉพาะ campaign ที่กำลังเดินและ EV สูง · ห้ามเปิด mass intake ใหม่ช่วง pilot |
+| Backfill | งานใหม่ทุกงาน + historical canary 3 เคสเท่านั้น; ของเก่า backfill เมื่อถูกหยิบใช้อีกครั้ง |
+| Historical canaries | ST03 · Boss_16 · ORDER-095/Boss_14 |
+| Context Packet measurement | เปรียบเทียบ **B0 historical 20 orders** กับ **B1 post-change 20 orders** ก่อนตัดสินสร้าง MVP-2 |
+| User interface | **HTML/mobile = executive view · Markdown/Git = evidence + audit trail** |
+| AI monitoring authority | เริ่ม **shadow / alert-only**; canonical risk/deployment config owns thresholds และ deterministic layer เป็น runtime enforcer เท่านั้น |
+| Implementation time-box | ไม่เกิน **4 orders** แล้วหยุด review รอบแรก |
+| Critical error tolerance | factual/authority error ที่กระทบ money/live = **0** |
+| Rollback | component ใดทำ canonical write path, evidence หรือ safety แย่ลงให้ rollback component นั้นทันทีตาม §20.8; money/live critical incident หนึ่งครั้ง = หยุด pilot |
+
+### B0/B1 measurement contract
+
+- **B0 historical baseline:** 20 orders ที่ปิดก่อนเปลี่ยน component ใด; เก็บ onboarding time, context incident,
+  context-related rework, wrong order/file/scope และ lead-attention hours โดยไม่ย้ายข้อมูลเดิม
+- **B0 reality clause:** metric ที่ไม่เคยถูกบันทึกตอนงานประวัติศาสตร์วิ่ง (เช่น onboarding time, lead-attention
+  hours) ให้ mark `NOT_RECORDED` — ห้าม reconstruct จากความจำ; การเทียบ B0↔B1 ใช้เฉพาะ metric ที่มีจริงทั้งสองฝั่ง
+  (rework/wrong-scope นับจาก git + taskboard history ได้); **MVP-2 gate ตัดสินจาก B1 absolute triggers ใน §20.4
+  เท่านั้น** — B0 มีหน้าที่วัดว่า MVP-0/3/1 ทำให้ดีขึ้นจริงไหม ไม่ใช่เงื่อนไขเปิด MVP-2
+- **B1 observation cohort:** 20 orders ถัดจาก MVP-3 และ MVP-1-lite ผ่าน acceptance; ใช้นิยามและ denominator เดียวกับ B0
+- `context-related rework %` = จำนวน order ใน cohort ที่ต้องทำซ้ำเพราะบริบท/authority ผิด ÷ order ทั้งหมดใน cohort
+- `critical` = factual/authority error ที่อาจเปลี่ยนเงินจริง, live action, risk control, verdict หรือสิทธิ์ผู้ตัดสิน
+- monthly trigger วัดเมื่อครบทั้ง B1 และอย่างน้อย 30 วัน; เก็บ actual lead-attention hours ห้าม extrapolate จากช่วงสั้น
+
+## 20.4 MVP-2 evidence triggers
+
+สร้าง Context Packet machinery ต่อเมื่อ B1 พบอย่างน้อยหนึ่งข้อ:
+
+- noncritical context/authority misunderstanding ≥2 ครั้ง
+- context-related rework >10%
+- lead ใช้เวลาแก้ความเข้าใจผิดจาก context >2 ชั่วโมง/เดือน
+- wrong order/file/scope ≥2 ครั้ง
+- onboarding agent ใหม่ยังใช้เวลา >10 นาทีเพื่อระบุ current task/authority/ข้อห้าม
+
+critical incident ที่แตะ money/live **ไม่ใช่ trigger ให้รอสร้าง MVP-2** แต่เป็น stop/rollback trigger ตั้งแต่ครั้งแรก
+
+ถ้าไม่เข้า trigger ให้ใช้ order brief + active view + experiment events ต่อไป และ **ไม่สร้าง MVP-2 เพียงเพราะ
+architecture ออกแบบไว้แล้ว**
+
+**Locked MVP-2 constraints (ยกจาก §19 ให้มีผลใน §20 — ถ้าสร้าง MVP-2 ต้องถือตามนี้ ห้ามอ้างว่า appendix หมดอายุ):**
+
+- packet **ไม่ commit เข้า git** — generate ชั่วคราวเสมอ; commit เฉพาะ generator + ownership map; บันทึกเฉพาะ `packet_hash` ใน result block
+- packet **ห้ามแทน mandatory docs ในงาน money/verdict ตลอดไป**; งาน worker mechanical ที่ bounded อนุญาตได้หลัง Phase-3 gate เท่านั้น
+- packet ที่ `STALE` ห้ามใช้ทำ verdict หรือเงินจริง; generator ต้อง deterministic (input commit เดียวกัน → packet hash เดียวกัน) และแสดงสิ่งที่ omit
+- pilot campaign แรกของ MVP-2 = **ORDER-095 (Boss_14 expansion)** วัด A/B full-context vs packet
+
+## 20.5 Decisions delegated to Claude/Codex under orders
+
+ไม่ต้องย้อนถาม user สำหรับรายละเอียด reversible/mechanical ต่อไปนี้ ตราบใดที่ไม่เปลี่ยน owner/authority/เงินจริง:
+
+- JSONL field naming, `schema_version`, event ID และ monthly rotation ภายใต้ append contract ใน §20.7
+- evidence ID implementation; `path + git SHA + file hash` ใช้ได้เมื่อ artifact อยู่ใน git และกู้คืนได้เท่านั้น
+- PowerShell/Python runner design หลัง inventory runner เดิม; ห้ามสร้าง runner ซ้ำโดยไม่บันทึกเหตุผล
+- archive index/file naming
+- test fixtures, generated banners และ lint implementation
+- zombie/stale-lane detection แบบ path/lane scoped และ report-only; ห้าม terminate process หรือเลี่ยง no-kill rules
+
+## 20.6 Decisions deferred until evidence exists
+
+ยังไม่เคาะใน Phase 1:
+
+- exact DD/margin/monitoring thresholds
+- false/missed alert tolerance
+- automatic `BLOCK_NEW` หรือ emergency close
+- Regime Card canonical owner
+- RAG/vector database
+- premium-track risk budget
+- full agent benchmark
+
+หัวข้อ monitoring/benchmark/strategy/phase gates ที่มี owner อยู่ใน `MASTER_BACKLOG.md`, `ROADMAP.md`,
+`EDGE_CATALOG.md`, scorecard, deployment inventory หรือ taskboard ให้ reference owner เดิม ห้าม re-specify
+ค่า threshold, strategy snapshot, verdict หรือ roadmap ใน architecture plan; generated cards ต้อง derive จาก owner เดิม
+
+## 20.7 Artifact ownership and write contracts
+
+| Artifact/fact | Canonical owner and write path | Generated/reference rule |
+|---|---|---|
+| Active order text, acceptance, execution state, raw result narrative | `AGENT_TASKBOARD.md`; agent แก้ได้เฉพาะ order block ของตัวเองตาม `AGENTS.md` | ห้าม generated view รับ write-back |
+| Reviewed order history | immutable archive เก็บ REVIEWED block แบบ verbatim พร้อม stable ORDER ID/anchor | index และ active view เป็น generated/read-only |
+| Structured experiment timeline | monthly JSONL เก็บ occurrence metadata + hashes + references เท่านั้น | ใช้ `RESULT_LINKED`, `REVIEW_LINKED`, `DECISION_LINKED`; ห้ามคัดลอก result/verdict text |
+| Verdict/decision/deployment | scorecard, `PROJECT_STATE.md` decision owner และ `portfolio/DEPLOYMENTS.csv` ตามกติกาเดิม | Event Log เก็บเพียง owner path/hash/reference |
+| Decisive evidence | artifact ที่ tracked หรือ durable evidence store/backup พร้อม manifest และ existence check | ignored/transient report ห้ามถือว่าถาวรเพียงเพราะมี path/hash |
+| Safety thresholds | canonical risk/deployment config | deterministic layer enforce; AI อธิบาย/alert เท่านั้น |
+
+JSONL ต้องเขียนผ่าน append utility ตัวเดียวที่มี file lock, atomic append, schema validation, unique event ID,
+idempotency และ append-only correction/amendment ห้ามหลาย agent เขียนไฟล์รายเดือนโดยตรง
+
+## 20.8 Bounded implementation workstream contracts
+
+รายการนี้เป็น **design contract ไม่ใช่ implementation order**; Claude/user ต้องแตก order ตาม `AGENTS.md`
+
+### Contract A — B0 + ownership map
+
+- **Output:** fact→owner map, incident taxonomy และ B0 report จาก historical orders 20 งานที่คำนวณซ้ำได้
+- **Out of scope:** migrate data หรือเปลี่ยน authority
+- **Acceptance:** owner conflict = 0; sample trace กลับ canonical ได้; metrics คำนวณซ้ำได้หรือ mark `NOT_RECORDED` ตาม B0 reality clause (§20.3) — ห้ามใส่ตัวเลขที่ reconstruct จากความจำ
+- **Rollback:** ลบ generated report/map; canonical docs ต้องไม่เปลี่ยน
+
+### Contract B — MVP-0 harness
+
+- **Output:** inventory runner เดิม แล้วทำ blocking wrapper/adapter ที่ lane-aware, fail-visible และมี resume manifest
+- **Out of scope:** global process kill, `-Force` หรือเปลี่ยน tester safety
+- **Acceptance:** success/failure fixture, non-zero exit, stop-on-failure, lane-lock test และ interrupted-run resume ผ่าน
+- **Rollback:** กลับไปใช้ direct runner เดิมและเก็บ manifest เป็นหลักฐาน
+
+### Contract C — MVP-3 active/archive
+
+- **Output:** คง `AGENT_TASKBOARD.md` เป็น writable queue; archive REVIEWED blocks; สร้าง read-only index/view
+- **Out of scope:** เปลี่ยน worker authority หรือลบ history
+- **Acceptance:** claim/result path ยังทำงาน; block count/ORDER ID ตรง; anchors/links ผ่าน; archive round-trip ได้
+- **Rollback:** restore pre-migration copy และปิด generator
+
+### Contract D — MVP-1-lite events
+
+- **Output:** locked JSONL append utility, linked-event schema และ durable evidence manifest
+- **Out of scope:** verdict owner ใหม่, bulk backfill หรือ Context Packet generator
+- **Acceptance:** concurrent/idempotent/schema/corrupt-line tests ผ่าน; canary trace และ evidence existence = 100%
+- **Rollback:** ปิด append utility; rebuild จาก canonical refs; correction ใช้ amendment/tombstone event
+
+การครบสี่ order คือ **review gate** ไม่ใช่คำสั่งให้สี่ workstream จบภายในสี่ order
+
+## 20.9 Next review checklist
+
+review รอบถัดไปควรตรวจเฉพาะ:
+
+1. implementation orders อ้างเฉพาะ §20 และไม่ดึงข้อกำหนดจาก appendix หรือไม่
+2. owner/write path ตรง §20.7 และไม่มี source of truth ซ้ำหรือไม่
+3. harness reuse runner เดิมและไม่ละเมิด no-kill/lane rules หรือไม่
+4. B0/B1 ใช้นิยามเดียวกันและเก็บหลักฐานที่กู้คืนได้หรือไม่
+5. แต่ละ order เป็นงานจบในตัว มี acceptance/rollback และหยุด review หลัง order ที่ 4 หรือไม่
+
+**Current gate:** final design approved แล้ว แต่ implementation ยัง `LOCKED` จนกว่าช่องสุดท้ายของ Consensus lock
+ถูกติ๊กด้วย implementation orders ที่ Claude/user อนุมัติตามสิทธิ์
+
+**Canonicalization anchor:** ไฟล์นี้อยู่ใน `_triage/` — implementation order ทุกใบต้องอ้าง
+`_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md §20 @ <commit SHA>` (ไม่ใช่ "ตาม draft ล่าสุด") และตอนแตก order
+ชุดแรกให้เพิ่ม pointer หนึ่งบรรทัดใน `PROJECT_STATE.md` Decision log ชี้มาที่ SHA เดียวกัน — แก้ §20 หลังจากนั้น
+= ต้องเปิด review ใหม่ ห้าม edit เงียบ
