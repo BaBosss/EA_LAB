@@ -35,15 +35,22 @@ ZSCORE funnel that immediately preceded the 07-11 work).
 ## 4. Included cohort (20) — see `B0_DATASET.csv`
 
 By class: **INFRA/tool = 6** (083B, 083C, 092, 093, 094, 096C) · **EA-CANDIDATE/bench = 7** (078,
-091C-D1, -D1b, -D1c, -D1e, -D1f, 095-A) · **EA-REJECT/dead = 5** (096A, 096B, 091B, 088, 090)
-· **EA-PARK = 2** (085B, 089). Total **20 distinct canonical ORDER IDs**, no duplicates.
+091C-D1, -D1b, -D1c, -D1e, -D1f, 095-A) · **EA-REJECT/dead = 4** (096A, 096B, 091B, 090)
+· **EA-PARK = 2** (085B, 089) · **RESEARCH = 1** (081). Total **20 distinct canonical ORDER IDs**, no duplicates.
 
-> **REWORK fix (2026-07-12, after blind Codex review):** the first cut listed `ORDER-091B` *and*
-> `ORDER-091B เฟส 2` as two rows, but both headers carry the **same canonical ID `ORDER-091B`** (phase 1
-> + phase 2 of one order at pinned lines 4113 and 4207) — that is 1 distinct order, not 2, so the cut
-> had only 19 distinct IDs. Fixed by counting `ORDER-091B` once and admitting the next-most-recent
-> eligible terminal order, **`ORDER-088`** (DONE 2026-07-10). Also corrected two mis-attributed
-> evidence commits (see §7).
+The 20 = **18 eligible terminal orders closed 2026-07-11** (078, 081, 083B, 083C, 085B, 091B,
+091C-D1/-D1b/-D1c/-D1e/-D1f, 092, 093, 094, 095-A, 096A, 096B, 096C) **+ the 2 latest-closed
+2026-07-10 orders** (089, 090).
+
+> **REWORK fixes (2026-07-12, two blind Codex review rounds):**
+> - **Round 1:** the first cut listed `ORDER-091B` *and* `ORDER-091B เฟส 2` as two rows, but both
+>   headers carry the **same canonical ID `ORDER-091B`** (phase 1 + phase 2 of one order at pinned lines
+>   4113/4207) = 1 distinct order, not 2. Also fixed two mis-attributed evidence commits (see §7).
+> - **Round 2:** the round-1 patch wrongly back-filled the freed slot with `ORDER-088` (2026-07-10).
+>   That was still wrong: **`ORDER-081`** (Crypto lane feasibility, `DONE` 2026-07-11) is an eligible
+>   terminal 07-11 order that had been overlooked, so it belongs in the "18 from 07-11". With 081
+>   restored, `ORDER-088` is the **21st** most-recent and is excluded. Also fixed the `ORDER-085B`
+>   review commit (see §7) and the §9 query mapping.
 
 ## 5. Excluded (explicit)
 
@@ -56,7 +63,7 @@ By class: **INFRA/tool = 6** (083B, 083C, 092, 093, 094, 096C) · **EA-CANDIDATE
 | Non-terminal (`WAITING-USER` / deployment-ongoing) | ORDER-045, ORDER-055 |
 | Annotation lines, not orders | ORDER-035-REVIEW note, ORDER-082 AMENDMENT, ORDER-075/078 NOTE, ORDER-091C-D1c PROCESSING |
 | **Duplicate canonical ID (phase of an included order)** | `ORDER-091B เฟส 2` — same canonical ID as the included `ORDER-091B`; a phase is not a new distinct order (fix after Codex review) |
-| Eligible terminal but **older than the 20 most-recent** (not selected by the cohort rule) | all remaining REVIEWED/DONE/CLOSED orders older than the window (e.g. 068–077, 083, 085, 086, 087, 001–067 …) — `ORDER-088` **is** included as the 20th (it replaced the mis-counted 091B phase) |
+| Eligible terminal but **older than the 20 most-recent** (not selected by the cohort rule) | all remaining REVIEWED/DONE/CLOSED orders older than the window — including **`ORDER-088`** (DONE 2026-07-10), which is the **21st** most-recent (the two 07-10 slots go to the later 089/090); plus e.g. 068–077, 083, 085, 086, 087, 001–067 … |
 
 The last row is the reason the cohort is a **window**, not "every closed order": there are ~70+
 eligible terminal orders; B0 deliberately samples the 20 nearest the cutoff.
@@ -94,7 +101,9 @@ merge (`3acc39c2`). Every row also carries its line anchor in the pinned blob.
 > **REWORK fix (2026-07-12, Codex review):** two evidence commits were mis-attributed in the first cut
 > and are corrected in `B0_DATASET.csv` — `ORDER-078` pointed at `9e1d1acf` (a corr-check commit; that
 > was actually 085B-adjacent), now `00392e30` (`[tag] ORDER-078 done`, review `b93e4b9d`); `ORDER-085B`
-> pointed at `9e1d1acf`, now `b5b1b429` (`[tag] ORDER-085B done`, review `e481e00f`).
+> pointed at `9e1d1acf`, now `b5b1b429` (`[tag] ORDER-085B done`). **Round 2:** the 085B review commit
+> was `e481e00f`, but that is the `ORDER-085` review (which *opened* 085B); the real `ORDER-085B` review
+> is `ee0ae804` ("REVIEW 085B: BWD FAIL PF 0.88 … SuperTrend stays bench"). Corrected in the CSV.
 
 Sample deep traces:
 - ORDER-093 → `c910765c` → `portfolio/DEPLOYMENTS.csv` (29 rows) + `check_state.ps1` 13-check rewrite.
@@ -124,10 +133,12 @@ git log 4eb839d --oneline --grep='ORDER-<id>\b'
 
 # wrong_order_file_scope query (ID collision / renumber / wrong scope):
 git show 4eb839d:AGENT_TASKBOARD.md | grep -nE 'renumbered|ชนกับ|wrong (order|file|scope)'
-#   markers land at L2089 (magic note), L2102 (ORDER-043), L2236 (ORDER-039 note), L2914/L3070
-#   (lane-avoidance prose), L5530 (ORDER-097) — map each line to its enclosing ORDER header; NONE
-#   falls inside a cohort block (cohort blocks start at L3202 and none of these hits are within a
-#   cohort order's line range) => cohort wrong_order_file_scope = 0
+#   6 hits; mapping each to the nearest preceding "## ORDER-" header (verified by running the query):
+#     L2089 -> ORDER-046   L2102 -> ORDER-043   L2236 -> ORDER-042
+#     L2914 -> ORDER-072   L3070 -> ORDER-075   L5530 -> ORDER-097
+#   NONE of {046,043,042,072,075,097} is one of the 20 cohort IDs => cohort wrong_order_file_scope = 0
+#   (caveat: this regex is a narrow detector; it evidences "no collision/renumber marker inside a
+#    cohort block", not a proof of zero scope error of every conceivable kind.)
 
 # context_rework query (redo due to wrong context/authority):
 git show 4eb839d:AGENT_TASKBOARD.md | grep -nE 'rework|redo|รันซ้ำเพราะ|ทำใหม่เพราะ|context (ผิด|wrong)|authority (ผิด|wrong)'
