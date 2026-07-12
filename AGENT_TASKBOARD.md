@@ -993,39 +993,45 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C: MVP-3 PILOT — active/archive vertical slice (formalize + reconcile) — `OPEN` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `OPEN` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
-> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7 (owner: active=taskboard, archive=immutable REVIEWED history, index=generated/read-only)
-> **ทำได้:** Codex-direct/subagent (implement manifest/index/validator scripts) · Opus (migration window + canonical workflow + reconcile judgment = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept** (เปลี่ยน architectural write path — บังคับตาม handoff)
-> **Skills:** `tdd` (validator) · `scrutinize`/`code-review` (diff ก่อน REVIEWED)
-> ⚠️ **MVP-3 PILOT เท่านั้น — ห้ามประกาศ MVP-3 complete ตราบใดที่ยังมี reviewed history ค้าง**
+> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
+> **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
+> **Skills:** `tdd` (validator) · `scrutinize`/`code-review`
+> **⚠️ REVISED หลัง Codex design review (2026-07-12):** split Contract C เป็น **C0 (read-only, ใบนี้) + C1 (migration window, ใบถัดไป)**. C0 **พิสูจน์ partition + สร้าง manifest/index/validator แต่ไม่ย้าย/ไม่แก้เนื้อ taskboard หรือ archive เลย** → risk ของ write-path เลื่อนไป C1 หลัง Opus resolve exceptions.
 
-**REALITY (สำคัญ — Contract C ต่างจาก template handoff):** มี **manual archive อยู่แล้ว** จาก cleanup วันนี้ — `ARCHIVE_TASKBOARD_2026-07A.md` (131 blocks: REVIEWED/DONE/CLOSED/SKIPPED) แยกด้วย `scratchpad/gen_taskboard.py` (partition multiset + byte-accounting + containment). ดังนั้น Contract C **ไม่ใช่ migrate ใหม่** แต่ = **(ก) reconcile ของเดิมกับกฎ Contract C + (ข) เพิ่มชั้น systematic ที่ยังขาด** (integrity manifest + generated read-only index + validator). ⚠️ manual archive ยก DONE/CLOSED มาด้วย ซึ่ง**หลวมกว่ากฎ "move only REVIEWED"** → ต้อง reconcile.
+**REALITY:** cleanup วันนี้แยก board แล้ว (`ARCHIVE_TASKBOARD_2026-07A.md`) แต่ generator `scratchpad/gen_taskboard.py` **ไม่ tracked/หายแล้ว** → **ห้ามพึ่ง generator นั้น**. ต้อง reconcile กับ **git history `4aebbc37^:AGENT_TASKBOARD.md`** (pre-split = **115 `## ORDER-` headers**) เป็น ground truth. archive มี **131 `## ` blocks รวม** แต่ **91 เป็น `## ORDER-`** (ที่เหลือ 40 = review-note/annotation/merge-ref) → **"block" ต้องนิยามชัด**. manual pass ยก DONE/CLOSED/SKIPPED มาด้วย (หลวมกว่า "move only REVIEWED") + มี **manual index ฝังใน active taskboard** (~บรรทัด 15) = ละเมิด §20.7 (index ต้อง generated/read-only) → ทั้งคู่เป็น exception ที่ C0 ต้อง**ตรวจพบและ list** (แก้จริงใน C1).
 
-**เฟส 1 — inventory + reconcile (deliverable, mechanical + Opus judgment):**
-- บันทึก pre-state hash: SHA-256 ของ `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` (ก่อนแตะ)
-- **containment check:** ทุก ORDER block ที่เคยมี = อยู่ใน (active ∪ archive) ครบ, 0 หาย/ซ้ำ (re-run เช็คของ gen_taskboard.py หรือเทียบ git history)
-- **reconcile list:** หา block ใน archive ที่ **ไม่ใช่ REVIEWED** (DONE-unreviewed / CLOSED / SKIPPED / เผลอยก CLAIMED/OPEN) → ทำเป็นตาราง. **ถ้าเจอ DONE-unreviewed ในarchive = BLOCKED → Opus ตัดสิน** (ดึงกลับ active เพื่อ review หรือรับว่า terminal) — **worker ห้ามย้ายเอง**
+**Block model (นิยามบังคับ):** `block` = 1 top-level `## ` section. ต่อ block parse → `block_type ∈ {ORDER, REVIEW-NOTE, ANNOTATION, MERGE-REF, OTHER}` (จาก header pattern) · `canonical_id` = ORDER-id จาก **header เท่านั้น** (ไม่ค้นทั้ง body) · `block_id` unique = `canonical_id + block_type + source_anchor` (ORDER_ID เดี่ยวไม่ unique — 091B/phase/review ซ้ำได้).
 
-**เฟส 2 — systematic layer (deliverable, ตาม §20.7):**
-- **integrity manifest** `docs/memory_control/ARCHIVE_MANIFEST.csv`: ต่อ archived block = `ORDER_ID · sha256(verbatim block text) · source_anchor (original line/commit)`
-- **generated read-only index** (เช่น `ARCHIVE_INDEX.md`) derive จาก manifest — banner "generated, read-only, do not edit" · **rebuild = zero diff** (deterministic)
-- **validator** `scripts/check_taskboard_archive.ps1`: เช็ค (1) ไม่มี OPEN/CLAIMED/DONE-unreviewed ใน archive (2) ไม่มี ORDER-ID ซ้ำข้าม active+archive (3) ทุก block ใน archive → sha256 ตรง manifest (4) index rebuild zero-diff (5) active claim/result path ยังเขียนได้
+**เฟส 1 — reconcile vs git history (read-only, deliverable):**
+- pre-state SHA-256 ของ `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md`
+- **full reconciliation (ไม่ sample):** parse ทุก block ใน `4aebbc37^:AGENT_TASKBOARD.md` (pre-split) = universe. ทุก pre-split block ต้อง map **1:1** ไปยัง (active ปัจจุบัน ∪ archive) แบบ **byte-for-byte** · report: missing / mutated / duplicated / extra = ต้องเป็น 0 ทั้งหมด (นับ block ที่เพิ่มหลัง split เช่น 099/100/101 แยกกอง "post-split additions")
+- **exception scan (block-type-aware, ไม่ใช่ grep "REVIEWED" ลอย):** flag ใน archive → (a) `OPEN/CLAIMED/WAITING/mixed-open` = **hard fail** (b) `DONE/CLOSED/SKIPPED/BUILT/FUNNELED` ที่**ไม่มี linked REVIEW block/`REVIEW ORDER-x`** = **BLOCKED→Opus** (c) canonical_id ที่อยู่ทั้ง active+archive (เช่น 071/091B) = **hard fail จน Opus จัดชั้น** (annotation / obsolete-phase / active-continuation) (d) `CLOSED/SKIPPED` **ห้ามนับเป็น REVIEWED อัตโนมัติ**
+
+**เฟส 2 — systematic artifacts (สร้างไฟล์ใหม่เท่านั้น — ไม่แก้ taskboard/archive):**
+- **integrity manifest** `docs/memory_control/ARCHIVE_MANIFEST.csv`: **bijection** — ต่อ archived block 1 row = `block_id · canonical_id · block_type · sha256(verbatim block) · source_commit · source_anchor`. ทุก archive block → 1 row, ทุก row → resolve กลับ 1 block (พิสูจน์สองทาง)
+- **generated read-only index** `docs/memory_control/ARCHIVE_INDEX.md` derive จาก manifest (banner generated/read-only) · **rebuild zero-diff** · links/anchors ทุกตัว resolve ได้
+- **validator** `scripts/check_taskboard_archive.ps1`: (1) exception scan เฟส 1 = clean (2) manifest bijection holds (3) ทุก block sha256 ตรง manifest (4) source_commit/anchor มีจริง + hash ตรง (5) index rebuild zero-diff + links resolve (6) ไม่มี canonical_id ซ้ำข้าม active/archive (นอกที่ Opus จัดชั้นแล้ว) (7) active claim/result path ยังเขียนได้ (mock)
 
 **Acceptance (ตัวเลข/ไฟล์ล้วน):**
-- [ ] pre-state hash 2 ไฟล์ บันทึกไว้ · containment: active ∪ archive = original set (0 loss/dup, พิสูจน์)
-- [ ] `ARCHIVE_MANIFEST.csv` ครบทุก archived block พร้อม sha256 · re-hash reproduce ได้
-- [ ] reconcile list ออกมา · ถ้ามี DONE-unreviewed/OPEN/CLAIMED ใน archive → order = **BLOCKED** (Opus resolve, ไม่ auto-fix)
-- [ ] generated index **rebuild zero-diff** (รัน generator 2 ครั้ง = ไฟล์เหมือนเดิม)
-- [ ] validator **pass** + negative-test (ปลอม bad block เข้า archive → validator exit≠0)
-- [ ] active board ยัง writable · claim/result fixture ทำงาน (mock)
-- [ ] sampled byte-compare: สุ่ม 5 archived block = byte-identical กับ git history เดิม
-- [ ] `[tag] ORDER-101 done` + ผลดิบ append
+- [ ] pre-state hash 2 ไฟล์ บันทึก
+- [ ] **100% reconciliation vs `4aebbc37^`:** missing=0 · mutated=0 · duplicated=0 · unexplained-extra=0 (post-split additions list แยก)
+- [ ] `ARCHIVE_MANIFEST.csv` bijection: |rows| = |archive blocks| · re-hash reproduce · ทุก source_anchor valid
+- [ ] exception list ออกครบ: OPEN/CLAIMED/WAITING ใน archive=0 (ถ้ามี=hard fail) · DONE-unreviewed + cross-ID = **BLOCKED→Opus** (worker ห้ามตัดสิน/ย้าย)
+- [ ] generated index **rebuild zero-diff** + links resolve
+- [ ] validator **pass** + **negative tests แยกกรณี:** delete-block · mutate-byte · extra-manifest-row · dup-block_id · archived-OPEN · stale-index → validator exit≠0 ทุกเคส
+- [ ] active board ยัง writable (mock claim/result)
+- [ ] **ไม่มีการย้าย/แก้เนื้อ block ใน `AGENT_TASKBOARD.md` หรือ `ARCHIVE_TASKBOARD_2026-07A.md`** (git diff 2 ไฟล์นี้ = ว่าง; C0 สร้างเฉพาะไฟล์ใหม่ + validator script)
+- [ ] `[tag] ORDER-101 done` + ผลดิบ + exception list append
 
-**ห้าม (out of scope — §20.8 Contract C):**
-- ❌ ลบ history · ❌ เปลี่ยน worker authority · ❌ ย้าย OPEN/CLAIMED/DONE-unreviewed เข้า archive · ❌ re-migrate block ที่ archive ถูกแล้ว (ทำแค่ formalize)
-- ❌ implement events/packet (D/MVP-2) · ❌ แตะ unrelated dirty files (EDGE_CATALOG/live_dashboard/RSIMR ฯลฯ) · ❌ pre-open Contract D
+**ห้าม (out of scope):**
+- ❌ **ย้าย/แก้/ลบ block ใดๆ** ใน taskboard/archive (C0 = read-only proof; ย้ายจริง = C1) · ❌ แก้ manual index ใน active taskboard (แค่ flag ไว้ให้ C1)
+- ❌ ลบ history · ❌ เปลี่ยน worker authority · ❌ worker ตัดสิน DONE-unreviewed/cross-ID เอง (BLOCKED→Opus)
+- ❌ implement events/packet (D/MVP-2) · ❌ แตะ unrelated dirty files · ❌ pre-open Contract D
 
-**Rollback:** 1 atomic commit คืน pre-state (active board เดิม + ลบ manifest/index/validator) โดยไม่แตะงานอื่น. **ระหว่าง migration window: pause ทุก taskboard claim** (ไม่มี writer อื่น — user ยืนยัน session อื่นปิดแล้ว).
+**Rollback (C0 = ง่าย):** C0 สร้างเฉพาะไฟล์ใหม่ (manifest/index/validator) → rollback = ลบไฟล์เหล่านั้น. ไม่แตะ pre-state เลย.
 
-**Routing:** subagent/Codex build scripts → Opus verify + reconcile judgment → **blind Codex review ก่อน accept** (บังคับ) · Opus แก้ `AGENTS.md` ใน review commit **เฉพาะถ้า** archive protocol ที่ accept ต้องการ (เช่น "archived block = immutable; REVIEWED ใหม่เข้า archive ผ่าน validator"). Contract C = commit แยก.
+**→ C1 (migration window, ใบถัดไป หลัง C0 accept + Opus resolve exceptions):** ย้ายเฉพาะ REVIEWED blocks จริง + แทน manual index ด้วย generated + hardened swap: (1) target-file clean check (2) **pre-hash recheck ทันทีก่อน swap** — abort ถ้า active/archive hash เปลี่ยนระหว่าง inventory→swap (shared worktree!) (3) migration/maintenance-lock marker (4) เตรียม output ใน staging dir ก่อน (5) stage/commit ด้วย explicit allowlist (6) atomic rollback คืน **ทั้ง** `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` + ลบไฟล์ใหม่. C1 = commit แยก + blind Codex review รอบผลจริง.
+
+**Routing:** subagent/Codex build C0 scripts → Opus verify + exception judgment → **blind Codex review ก่อน accept C0**. Opus แก้ `AGENTS.md` เฉพาะใน C1 review commit ถ้า protocol ต้องการ. C0 = commit แยก.
