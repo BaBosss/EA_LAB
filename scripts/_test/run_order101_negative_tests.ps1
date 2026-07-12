@@ -50,6 +50,31 @@
                                real ORDER-071 case) must be flagged non-terminal-in-archive
                                despite the terminal verb (fix 4)
 
+    ORDER-101 blind-review round 2 cases (3 fixes + 1 polish):
+      stale-exceptions-caught-by-normal-run (fix 1)
+                            -> Audit=2, Strict=2, AND the on-disk RECONCILE_EXCEPTIONS.md
+                               bytes must be UNCHANGED after the run. Mirrors
+                               corrupt-committed-manifest-caught-by-normal-run above, but
+                               for the exceptions report: -Audit/-Strict never wrote it
+                               before this fix, so a stale/corrupted/deleted committed
+                               RECONCILE_EXCEPTIONS.md was never caught. Tested with a
+                               NORMAL run (deliberately NOT -SkipArtifacts).
+      generated-extra-zero-matches (fix 3)
+                            -> Audit=2, Strict=2 (integrity: generated-extra-ambiguous,
+                               count=0). The old guard (`-gt 1`) let 0 matches silently
+                               pass; fixed guard (`-ne 1`) requires EXACTLY 1.
+      generated-extra-two-matches (fix 3)
+                            -> Audit=2, Strict=2 (integrity: generated-extra-ambiguous,
+                               count=2). Already caught by the old guard too, but kept as
+                               an explicit regression case alongside zero-matches.
+
+    ORDER-101 fixture hygiene (fix 2): ALL generator output written by this harness goes
+    under a throwaway directory in $env:TEMP -- never into scripts/_test/fixtures/order101/
+    (tracked fixtures are INPUTS only). The handful of genuinely pre-corrupted INPUT
+    fixtures the tests read (corrupt_hash_manifest.csv, extra_row_manifest.csv,
+    dup_id_manifest.csv, stale_index.md) live directly under fixtures/order101/, not in a
+    generated-output directory.
+
     Run: powershell -NoProfile -File scripts\_test\run_order101_negative_tests.ps1
     Exit code: 0 if every case matched its expected outcome, 1 otherwise.
 #>
@@ -59,8 +84,14 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $fx = Join-Path $PSScriptRoot 'fixtures\order101'
-$out = Join-Path $fx 'out'
-if (-not (Test-Path $out)) { New-Item -ItemType Directory -Force -Path $out | Out-Null }
+# ORDER-101 fix 2: ALL test-generated output goes to a throwaway dir under $env:TEMP --
+# never into the tracked fixtures directory (a prior version wrote -Generate output over
+# scripts/_test/fixtures/order101/out/, leaving tracked fixtures dirty after every run).
+# Wiped and recreated at the start of every run so stale leftovers from a prior run can't
+# contaminate results.
+$out = Join-Path $env:TEMP 'order101_negtests'
+if (Test-Path $out) { Remove-Item -Recurse -Force $out }
+New-Item -ItemType Directory -Force -Path $out | Out-Null
 $validator = Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1'
 
 function Invoke-Validator {
@@ -184,9 +215,9 @@ $cleanP = New-CaseParams -Tag 'clean' `
 Invoke-Validator -Mode 'Generate' -Params $cleanP | Out-Null
 
 foreach ($corrupt in @(
-    @{ Name = 'extra-manifest-row'; ManifestFile = "$out\extra_row_manifest.csv" },
-    @{ Name = 'dup-block_id';       ManifestFile = "$out\dup_id_manifest.csv" },
-    @{ Name = 'corrupt-hash';       ManifestFile = "$out\corrupt_hash_manifest.csv" }
+    @{ Name = 'extra-manifest-row'; ManifestFile = "$fx\extra_row_manifest.csv" },
+    @{ Name = 'dup-block_id';       ManifestFile = "$fx\dup_id_manifest.csv" },
+    @{ Name = 'corrupt-hash';       ManifestFile = "$fx\corrupt_hash_manifest.csv" }
 )) {
     $p = New-CaseParams -Tag 'clean' `
         -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
@@ -198,7 +229,7 @@ foreach ($corrupt in @(
 $p = New-CaseParams -Tag 'clean' `
     -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
     -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\clean_current_archive.md" `
-    -ManifestOverride "$out\clean_manifest.csv" -IndexOverride "$out\stale_index.md"
+    -ManifestOverride "$out\clean_manifest.csv" -IndexOverride "$fx\stale_index.md"
 Add-CaseResult -Name 'stale-index' -Params $p -ExpectAudit 2 -ExpectStrict 2 -SkipArtifacts -SkipSeedGenerate
 
 # --- 9. FIX 1 (blocker): a corrupt COMMITTED manifest must be caught by a NORMAL -Audit/-Strict
@@ -226,6 +257,32 @@ $results.Add([pscustomobject]@{
     Pass = ($fix1Audit.ExitCode -eq 2) -and ($fix1Strict.ExitCode -eq 2) -and $fix1NotOverwritten
     AuditOut = $fix1Audit.StdOut + "`n[manifest file bytes unchanged after normal -Audit/-Strict run: $fix1NotOverwritten]"
     StrictOut = $fix1Strict.StdOut
+})
+
+# --- 9b. FIX 1, round 2 (blind-review blocker): -Audit/-Strict validated the manifest +
+#         index but never RECONCILE_EXCEPTIONS.md itself. A corrupt COMMITTED exceptions
+#         report must be caught by a NORMAL run (no -SkipArtifacts) -- and, critically,
+#         that normal run must NOT overwrite it. Mirrors the fix-1 manifest case above,
+#         but corrupting ExceptionsPath instead of ManifestPath. ---
+$fixExP = New-CaseParams -Tag 'fixex' `
+    -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
+    -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\clean_current_archive.md"
+Invoke-Validator -Mode 'Generate' -Params $fixExP | Out-Null   # seed a clean, "committed-style" manifest+index+exceptions
+'# CORRUPTED -- hand-edited stray content, generator was not re-run' | Set-Content -Path $fixExP['ExceptionsPath'] -Encoding UTF8 -NoNewline
+$fixExBefore = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($fixExP['ExceptionsPath']))
+
+$fixExAudit  = Invoke-Validator -Mode 'Audit'  -Params $fixExP   # NORMAL run -- deliberately NOT -SkipArtifacts
+$fixExStrict = Invoke-Validator -Mode 'Strict' -Params $fixExP   # NORMAL run -- deliberately NOT -SkipArtifacts
+$fixExAfter  = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($fixExP['ExceptionsPath']))
+$fixExNotOverwritten = ($fixExBefore -eq $fixExAfter)
+
+$results.Add([pscustomobject]@{
+    Name = 'stale-exceptions-caught-by-normal-run (fix 1)'
+    ExpectAudit = 2; ActualAudit = $fixExAudit.ExitCode
+    ExpectStrict = 2; ActualStrict = $fixExStrict.ExitCode
+    Pass = ($fixExAudit.ExitCode -eq 2) -and ($fixExStrict.ExitCode -eq 2) -and $fixExNotOverwritten
+    AuditOut = $fixExAudit.StdOut + "`n[exceptions file bytes unchanged after normal -Audit/-Strict run: $fixExNotOverwritten]"
+    StrictOut = $fixExStrict.StdOut
 })
 
 # --- 10. FIX 2 (blocker): manifest identity must be the ARCHIVE's git blob SHA, not repo HEAD.
@@ -304,6 +361,23 @@ $p = New-CaseParams -Tag 'partial' `
     -PreSplit "$fx\partialstage_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\partialstage_split_archive.md" `
     -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\partialstage_current_archive.md"
 Add-CaseResult -Name 'partial-stage-archived (fix 4, mirrors real ORDER-071)' -Params $p -ExpectAudit 0 -ExpectStrict 1
+
+# --- 13. FIX 3 off-by-one, zero matches: the generated-extra header pattern matches NO
+#         block in split-active+split-archive (the expected manual "## ... ARCHIVED
+#         ORDERS INDEX" block is missing/renamed). The OLD guard (`-gt 1`) let this
+#         through silently; the fixed guard (`-ne 1`) must catch it. ---
+$p = New-CaseParams -Tag 'zero' `
+    -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\zero_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
+    -CurrentActive "$fx\zero_current_active.md" -CurrentArchive "$fx\clean_current_archive.md"
+Add-CaseResult -Name 'generated-extra-zero-matches (fix 3)' -Params $p -ExpectAudit 2 -ExpectStrict 2
+
+# --- 14. FIX 3 off-by-one, two matches: the generated-extra header pattern matches TWO
+#         blocks (ambiguous exclusion). Already caught by the OLD guard too (`-gt 1`) --
+#         kept as an explicit regression case alongside zero-matches. ---
+$p = New-CaseParams -Tag 'two' `
+    -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\two_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
+    -CurrentActive "$fx\two_current_active.md" -CurrentArchive "$fx\clean_current_archive.md"
+Add-CaseResult -Name 'generated-extra-two-matches (fix 3)' -Params $p -ExpectAudit 2 -ExpectStrict 2
 
 # --- report ---
 Write-Host ''

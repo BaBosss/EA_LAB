@@ -1017,7 +1017,7 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK-fixed (Codex r1, 2026-07-12) — 12/12 tests · read-only+deterministic verified · 12 exceptions → Opus · pending Codex review r2` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK r1+r2 fixed (Codex, 2026-07-12) — 15/15 tests · exceptions-validated · test-isolated · 12 exceptions → Opus · pending Codex review r3` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
 > **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
@@ -1087,5 +1087,16 @@ Codex จับ 4 อย่างที่ self-verify ผมพลาด (ผ�
 
 **Opus verify (รันเอง เจาะ #1/#2 ที่พลาด):** negTests **12/12** (รวม 4 เคสใหม่) · **corrupt committed manifest → normal -Audit exit 2** (ยืนยันไม่ silently regenerate) · **regenerate 2 ครั้ง byte-identical** (deterministic) · -Audit/-Strict **ไม่แก้ manifest/index** (sha before=after) · **taskboard+archive git status ว่าง** · 071 ได้ non-terminal-in-archive แล้ว (12 exceptions).
 
-**Status หลัง rework:** C0 = self-ACCEPT (4 defects ปิด, verify เจาะจุดพลาด) · **pending Codex review round 2** ก่อน accept + เปิด C1.
+**Status หลัง rework:** C0 = self-ACCEPT (4 defects ปิด, verify เจาะจุดพลาด) · pending Codex review round 2.
+
+### Codex review r2 (2026-07-12) = 4 defect เดิม CLOSED + 3 tail-gap → fixed
+Codex ยืนยัน 4 defect หลักปิดจริง (read-only, determinism, bijection, 071). เจอ tail-gap 3:
+1. 🟡 **Audit/Strict ไม่ validate `RECONCILE_EXCEPTIONS.md`** (แก้/ลบได้แล้วเขียว) → **FIX:** rebuild-compare exceptions file → mismatch = integrity exit 2 · negTest `stale-exceptions`
+2. 🟡 **negTest suite แก้ tracked fixture** (เขียน output ทับ golden) → **FIX:** output ไป `$env:TEMP\order101_negtests`, ลบ scratch `out/*` (31 ไฟล์) ออกจาก tree, แยก input fixture ชัด
+3. 🟢 **generated-extra guard `-gt 1`** (0 match ก็ผ่าน) → **FIX:** `-ne 1` (exactly-one) · negTest 0-match + 2-match
++ 🟢 polish: escape `|` ใน block_id ของ md index
+
+**Opus verify (รันเอง):** negTests **15/15** (12+3) · **corrupt committed RECONCILE_EXCEPTIONS.md → normal -Audit exit 2** (`exceptions-rebuild-not-zero-diff`) · **suite ไม่ทำ tracked fixture drift** (before=after) · -Audit 0/-Strict 1 · artifacts sha before=after (read-only) · **taskboard+archive git status ว่าง** · ไม่แตะไฟล์ unrelated.
+
+**Status หลัง r2-fix:** C0 = self-ACCEPT · **pending Codex review round 3** ก่อน accept + เปิด C1.
 **บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.

@@ -22,16 +22,18 @@
     separately (read-only) to gate on policy debt.
 
 .PARAMETER Audit
-    READ-ONLY. Reads the EXISTING on-disk manifest/index (does NOT write them)
-    and validates them against the live archive. Report everything. Exit 0 if
-    clean OR only policy exceptions exist. Exit 2 if any INTEGRITY/tooling
-    failure exists -- including a corrupt or stale COMMITTED manifest/index,
-    which this mode must catch, never silently repair.
+    READ-ONLY. Reads the EXISTING on-disk manifest/index/exceptions report (does NOT
+    write them) and validates them against the live archive. Report everything. Exit 0
+    if clean OR only policy exceptions exist. Exit 2 if any INTEGRITY/tooling failure
+    exists -- including a corrupt or stale COMMITTED manifest/index/exceptions report
+    (ORDER-101 fix 1: RECONCILE_EXCEPTIONS.md is recomputed in-memory and compared
+    byte-for-byte to what's on disk, exactly like the manifest/index), which this mode
+    must catch, never silently repair.
 
 .PARAMETER Strict
-    READ-ONLY (same as -Audit: never writes the manifest/index). Exit 0 only if
-    fully clean. Exit 1 if any policy exceptions exist (no integrity failures).
-    Exit 2 if any INTEGRITY/tooling failure exists.
+    READ-ONLY (same as -Audit: never writes the manifest/index/exceptions report). Exit
+    0 only if fully clean. Exit 1 if any policy exceptions exist (no integrity
+    failures). Exit 2 if any INTEGRITY/tooling failure exists.
 
 .PARAMETER RepoRoot
     Repo root. Defaults to the parent of this script's directory.
@@ -824,6 +826,19 @@ function Test-ManifestBijection {
     return [pscustomobject]@{ IsClean = ($failures.Count -eq 0); Failures = @($failures) }
 }
 
+function Escape-MarkdownTableCell {
+    <#
+        Escapes a value for safe embedding in a `| ... |` markdown table cell. block_id
+        values are themselves built with literal '|' separators (e.g.
+        "001|ORDER|current-archive#1"), which -- unescaped -- renders as extra table
+        columns. Applied defensively to every cell (cheap, harmless on cells that never
+        contain a pipe, like canonical_id/block_type/source_anchor/sha256).
+    #>
+    param([string]$Value)
+    if ($null -eq $Value) { return '' }
+    return $Value.Replace('|', '\|')
+}
+
 function Build-ArchiveIndexMarkdown {
     param($ManifestRows, [string]$ArchiveBlobSha, [string]$ArchiveRawFileSha256)
     $sb = New-Object System.Text.StringBuilder
@@ -845,7 +860,12 @@ function Build-ArchiveIndexMarkdown {
     [void]$sb.AppendLine('|---|---|---|---|---|')
     $sorted = $ManifestRows | Sort-Object { [int]$_.source_anchor }
     foreach ($r in $sorted) {
-        [void]$sb.AppendLine('| ' + $r.block_id + ' | ' + $r.canonical_id + ' | ' + $r.block_type + ' | ' + $r.source_anchor + ' | ' + $r.sha256 + ' |')
+        $cBlockId   = Escape-MarkdownTableCell $r.block_id
+        $cCanonical = Escape-MarkdownTableCell $r.canonical_id
+        $cType      = Escape-MarkdownTableCell $r.block_type
+        $cAnchor    = Escape-MarkdownTableCell ([string]$r.source_anchor)
+        $cSha       = Escape-MarkdownTableCell $r.sha256
+        [void]$sb.AppendLine('| ' + $cBlockId + ' | ' + $cCanonical + ' | ' + $cType + ' | ' + $cAnchor + ' | ' + $cSha + ' |')
     }
     return $sb.ToString()
 }
@@ -950,12 +970,16 @@ function Invoke-TaskboardArchiveCheck {
     if (-not $archiveDrift.IsEmpty) {
         $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-not-append-only'; Severity = 'integrity'; Detail = "archive diverged from split-time content: $($archiveDrift.Diffs.Count) hash-count mismatch(es)" })
     }
-    if ($splitIntegrity.GeneratedExtras.Count -gt 1) {
-        # ORDER-101 hardening 5: the generated-extra exclusion is pinned to exactly the
-        # ONE known manual-index block. If the header pattern now matches more than one
-        # block, silently excluding all of them would be a silent multi-exclude -- that is
-        # an integrity failure to investigate, not something to wave through.
-        $integrityFailures.Add([pscustomobject]@{ Kind = 'generated-extra-ambiguous'; Severity = 'integrity'; Detail = "$($splitIntegrity.GeneratedExtras.Count) blocks matched the generated-extra header pattern (expected at most 1 -- the single known manual 'ARCHIVED ORDERS INDEX' block); ambiguous exclusion would silently multi-exclude, so it is an integrity failure instead" })
+    if ($splitIntegrity.GeneratedExtras.Count -ne 1) {
+        # ORDER-101 hardening 5 (tightened by the ORDER-101 blind review, off-by-one fix):
+        # the generated-extra exclusion is pinned to EXACTLY the ONE known manual-index
+        # block ("## ... ARCHIVED ORDERS INDEX"). The old guard only fired on -gt 1, so
+        # ZERO matches silently passed too -- meaning the expected block going missing (or
+        # its header being renamed/reworded so the pattern no longer matches) would never
+        # be caught. 0 matches = expected block missing/renamed (exclusion silently does
+        # nothing); >1 matches = ambiguous exclusion (would silently multi-exclude). Both
+        # are integrity failures to investigate, not something to wave through.
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'generated-extra-ambiguous'; Severity = 'integrity'; Detail = "$($splitIntegrity.GeneratedExtras.Count) block(s) matched the generated-extra header pattern (expected EXACTLY 1 -- the single known manual 'ARCHIVED ORDERS INDEX' block); 0 = missing/renamed expected block, >1 = ambiguous exclusion, so either is an integrity failure instead" })
     }
 
     # ORDER-101 fix 2: archive-content identity (git blob SHA), NOT repo HEAD. See
@@ -1004,6 +1028,35 @@ function Invoke-TaskboardArchiveCheck {
     $report.IntegrityFailures = $integrityFailures.ToArray()
     $report.PolicyExceptions = @($exceptions.Policy)
 
+    # ORDER-101 fix 1 (blind-review blocker): -Audit/-Strict validated the manifest CSV
+    # and the generated index but never RECONCILE_EXCEPTIONS.md itself -- the key input
+    # Opus/C1 consumes -- so a stale, hand-corrupted, or deleted committed exceptions
+    # report left Audit/Strict green. Recompute the expected exceptions content from the
+    # report state as accumulated so far (deliberately BEFORE this very check is added to
+    # it, to avoid self-reference) and compare byte-for-byte to whatever is on disk --
+    # exactly the same read-back pattern as the index-rebuild-not-zero-diff check above.
+    # -Generate writes the fresh file first (so the immediate read-back trivially
+    # matches); -Audit/-Strict never write, so this is what catches drift/corruption/
+    # deletion of a COMMITTED exceptions file.
+    $expectedExceptionsText = Build-ExceptionsMarkdown -Report $report
+    if ($writeArtifacts) {
+        Write-TextFileLfNoBom -Path $ExceptionsPath -Text $expectedExceptionsText
+    }
+    if (Test-Path $ExceptionsPath) {
+        $onDiskExceptionsBytes = [System.IO.File]::ReadAllBytes($ExceptionsPath)
+        $onDiskExceptionsText = Get-NormalizedTextFromBytes -Bytes $onDiskExceptionsBytes
+        $rebuiltExceptionsNormalized = $expectedExceptionsText.Replace("`r`n", "`n").Replace("`r", "`n")
+        $exceptionsZeroDiff = ($onDiskExceptionsText -eq $rebuiltExceptionsNormalized)
+    } else {
+        $exceptionsZeroDiff = $false
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'exceptions-missing'; Severity = 'integrity'; Detail = "no exceptions file found at '$ExceptionsPath' -- -Audit/-Strict are read-only and never create it; run -Generate first" })
+    }
+    $report.ExceptionsRebuildZeroDiff = $exceptionsZeroDiff
+    if ((Test-Path $ExceptionsPath) -and -not $exceptionsZeroDiff) {
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'exceptions-rebuild-not-zero-diff'; Severity = 'integrity'; Detail = 'RECONCILE_EXCEPTIONS.md on disk does not match a fresh rebuild from the current findings (stale or corrupted exceptions file)' })
+    }
+    $report.IntegrityFailures = $integrityFailures.ToArray()
+
     if ($integrityFailures.Count -gt 0) {
         $exitCode = $script:EXIT_INTEGRITY
     } elseif ($isStrict -and $exceptions.Policy.Count -gt 0) {
@@ -1016,8 +1069,18 @@ function Invoke-TaskboardArchiveCheck {
     return $report
 }
 
-function Write-ExceptionsMarkdown {
-    param($Report, [string]$Path)
+function Build-ExceptionsMarkdown {
+    <#
+        Returns the RECONCILE_EXCEPTIONS.md text for the given report, WITHOUT writing
+        anything. Split out from Write-ExceptionsMarkdown (ORDER-101 fix 1) so
+        Invoke-TaskboardArchiveCheck can recompute the expected content in-memory in
+        -Audit/-Strict and compare it byte-for-byte to whatever is already on disk --
+        the same pattern Build-ArchiveIndexMarkdown already uses for the index-rebuild
+        check. Deterministic: driven only by $Report.PolicyExceptions/$Report.IntegrityFailures,
+        which are themselves built by iterating fixed-order block lists -- no timestamps,
+        run-ids, or non-deterministic hashtable enumeration feed into this text.
+    #>
+    param($Report)
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine('# RECONCILE_EXCEPTIONS.md')
     [void]$sb.AppendLine('')
@@ -1064,7 +1127,13 @@ function Write-ExceptionsMarkdown {
     [void]$sb.AppendLine('- Review linking in the exception scan above is done at **canonical-id granularity**,')
     [void]$sb.AppendLine('  not full block_id-level many-to-many. See the final report deviations note for why.')
     [void]$sb.AppendLine('')
-    Write-TextFileLfNoBom -Path $Path -Text $sb.ToString()
+    return $sb.ToString()
+}
+
+function Write-ExceptionsMarkdown {
+    <# Thin wrapper kept for callers that want build+write in one step. #>
+    param($Report, [string]$Path)
+    Write-TextFileLfNoBom -Path $Path -Text (Build-ExceptionsMarkdown -Report $Report)
 }
 
 # ============================================================================
@@ -1084,15 +1153,15 @@ function Invoke-Main {
     $isGenerate = ($Mode -eq 'Generate')
     $writeArtifacts = ($isGenerate -and -not $SkipArtifacts)
 
+    # NOTE: RECONCILE_EXCEPTIONS.md is now written (under -Generate) AND validated
+    # (under all modes, ORDER-101 fix 1) INSIDE Invoke-TaskboardArchiveCheck, the same
+    # place ARCHIVE_MANIFEST.csv/ARCHIVE_INDEX.md are written+validated -- no separate
+    # write-after-the-fact call here anymore.
     $report = Invoke-TaskboardArchiveCheck -RepoRoot $RepoRoot `
         -PreSplitSource $PreSplitSource -SplitActiveSource $SplitActiveSource -SplitArchiveSource $SplitArchiveSource `
         -CurrentActiveSource $CurrentActiveSource -CurrentArchiveSource $CurrentArchiveSource `
         -Mode $Mode -SkipArtifacts $SkipArtifacts.IsPresent `
         -ManifestPath $ManifestPath -IndexPath $IndexPath -ExceptionsPath $ExceptionsPath
-
-    if ($writeArtifacts) {
-        Write-ExceptionsMarkdown -Report $report -Path $ExceptionsPath
-    }
 
     $modeLabel = $Mode.ToUpper()
     $roTag = if ($isGenerate) { '' } else { ' (READ-ONLY -- never writes manifest/index/exceptions)' }
@@ -1129,8 +1198,9 @@ function Invoke-Main {
         Write-Host ('  [' + $e.Kind + ']' + $tag + ' ' + $e.Detail)
     }
     Write-Host ''
-    Write-Host ('manifest bijection clean: ' + $report.ManifestBijection.IsClean)
-    Write-Host ('index rebuild zero-diff:  ' + $report.IndexRebuildZeroDiff)
+    Write-Host ('manifest bijection clean:    ' + $report.ManifestBijection.IsClean)
+    Write-Host ('index rebuild zero-diff:     ' + $report.IndexRebuildZeroDiff)
+    Write-Host ('exceptions rebuild zero-diff: ' + $report.ExceptionsRebuildZeroDiff)
     Write-Host ''
     Write-Host ('EXIT CODE: ' + $report.ExitCode)
 

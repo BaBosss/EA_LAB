@@ -1,4 +1,0 @@
-﻿"block_id","canonical_id","block_type","sha256","archive_blob_sha","source_anchor"
-"202|ORDER|current-archive#2","201","ORDER","36a5949d39f0922d2628f909c30566017df08daadb2f45a7c388dc557d262cf4","ea2d871b5eba5f24e66e8374571c32e078118059","1"
-"201|ORDER|current-archive#1","202","ORDER","74871ac0542596c5a81b37fdf9e4216cc9272e02903ac3fee6d978fe8cf22dc8","ea2d871b5eba5f24e66e8374571c32e078118059","2"
-"201|REVIEW-NOTE|current-archive#3","201","REVIEW-NOTE","5d20d7c7e2f5346e26ab4cde1a56722faa44eb0073519faf260c3e743d1fd6ab","ea2d871b5eba5f24e66e8374571c32e078118059","3"
