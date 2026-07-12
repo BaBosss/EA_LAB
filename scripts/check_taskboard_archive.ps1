@@ -1033,11 +1033,16 @@ function Invoke-TaskboardArchiveCheck {
     # Opus/C1 consumes -- so a stale, hand-corrupted, or deleted committed exceptions
     # report left Audit/Strict green. Recompute the expected exceptions content from the
     # report state as accumulated so far (deliberately BEFORE this very check is added to
-    # it, to avoid self-reference) and compare byte-for-byte to whatever is on disk --
-    # exactly the same read-back pattern as the index-rebuild-not-zero-diff check above.
-    # -Generate writes the fresh file first (so the immediate read-back trivially
-    # matches); -Audit/-Strict never write, so this is what catches drift/corruption/
-    # deletion of a COMMITTED exceptions file.
+    # it, to avoid self-reference) and compare it to whatever is on disk, using a
+    # CONTENT-CANONICAL (LF-normalized) comparison -- NOT raw bytes -- exactly like the
+    # index-rebuild-not-zero-diff check above. This is deliberate: core.autocrlf=true
+    # in this repo means the working-tree file is CRLF while git stores LF, so a raw
+    # byte compare of a canonical-LF rebuild vs the CRLF working-tree file would
+    # false-fail EVERY clean run. The canonical compare catches all content drift/
+    # corruption/deletion of a COMMITTED exceptions file (proven by the stale-exceptions
+    # test); a CRLF-only difference is autocrlf normalization noise, not corruption.
+    # -Generate writes the fresh file first (so the immediate read-back matches);
+    # -Audit/-Strict never write.
     $expectedExceptionsText = Build-ExceptionsMarkdown -Report $report
     if ($writeArtifacts) {
         Write-TextFileLfNoBom -Path $ExceptionsPath -Text $expectedExceptionsText
@@ -1098,9 +1103,10 @@ function Build-ExceptionsMarkdown {
         [void]$sb.AppendLine('| kind | block_id | header | detail |')
         [void]$sb.AppendLine('|---|---|---|---|')
         foreach ($e in $Report.PolicyExceptions) {
+            $bid    = $e.BlockId.Replace('|', '\|')   # block_id contains literal '|' (e.g. 003|ORDER|current-archive#4)
             $header = $e.Header.Replace('|', '\|')
             $detail = $e.Detail.Replace('|', '\|')
-            [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $e.BlockId + ' | ' + $header + ' | ' + $detail + ' |')
+            [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $bid + ' | ' + $header + ' | ' + $detail + ' |')
         }
     }
     [void]$sb.AppendLine('')
@@ -1112,7 +1118,7 @@ function Build-ExceptionsMarkdown {
         [void]$sb.AppendLine('| kind | block_id | header | detail |')
         [void]$sb.AppendLine('|---|---|---|---|')
         foreach ($e in $Report.IntegrityFailures) {
-            $bid = ''; if ($e.PSObject.Properties['BlockId']) { $bid = $e.BlockId }
+            $bid = ''; if ($e.PSObject.Properties['BlockId']) { $bid = $e.BlockId.Replace('|', '\|') }
             $hdr = ''; if ($e.PSObject.Properties['Header']) { $hdr = $e.Header.Replace('|', '\|') }
             $detail = $e.Detail.Replace('|', '\|')
             [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $bid + ' | ' + $hdr + ' | ' + $detail + ' |')

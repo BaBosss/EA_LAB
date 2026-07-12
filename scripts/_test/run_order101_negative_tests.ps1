@@ -89,7 +89,9 @@ $fx = Join-Path $PSScriptRoot 'fixtures\order101'
 # scripts/_test/fixtures/order101/out/, leaving tracked fixtures dirty after every run).
 # Wiped and recreated at the start of every run so stale leftovers from a prior run can't
 # contaminate results.
-$out = Join-Path $env:TEMP 'order101_negtests'
+# Per-process unique dir ($PID) so two suites running concurrently can't collide on
+# a shared scratch path (hygiene fix, Codex r3).
+$out = Join-Path $env:TEMP ("order101_negtests_" + $PID)
 if (Test-Path $out) { Remove-Item -Recurse -Force $out }
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $validator = Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1'

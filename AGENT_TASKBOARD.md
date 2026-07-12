@@ -1017,7 +1017,7 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK r1+r2 fixed (Codex, 2026-07-12) — 15/15 tests · exceptions-validated · test-isolated · 12 exceptions → Opus · pending Codex review r3` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK r1-r3 fixed (Codex, 2026-07-12→13) — 15/15 · md-escaped · temp-isolated · CRLF-compare=lead-decision · lead-ACCEPT (pending user/final Codex)` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
 > **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
@@ -1098,5 +1098,14 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 
 **Opus verify (รันเอง):** negTests **15/15** (12+3) · **corrupt committed RECONCILE_EXCEPTIONS.md → normal -Audit exit 2** (`exceptions-rebuild-not-zero-diff`) · **suite ไม่ทำ tracked fixture drift** (before=after) · -Audit 0/-Strict 1 · artifacts sha before=after (read-only) · **taskboard+archive git status ว่าง** · ไม่แตะไฟล์ unrelated.
 
-**Status หลัง r2-fix:** C0 = self-ACCEPT · **pending Codex review round 3** ก่อน accept + เปิด C1.
+**Status หลัง r2-fix:** C0 = self-ACCEPT · pending Codex review round 3.
+
+### Codex review r3 (2026-07-13) = FIX-2/3/invariants CLOSED · 1 nit fixed · 1 finding lead-overridden
+- 🟢 **exceptions md ไม่ escape block_id** → **FIX:** escape `|` ทั้ง policy+integrity table (verify: `003\|ORDER\|...`)
+- 🟢 **temp dir ชื่อคงที่ (concurrent collision)** → **FIX:** `$env:TEMP\order101_negtests_$PID`
+- ⚖️ **FIX-1 "ไม่ byte-for-byte จริง" (CRLF-only mutation ผ่าน) → LEAD OVERRIDE (Opus, มีหลักฐาน):** repo นี้ `core.autocrlf=true` → working-tree artifact = **CRLF** แต่ git blob = **LF**. raw-byte compare (canonical-LF expected vs ReadAllBytes CRLF) จะ **false-fail ทุก clean run** (พิสูจน์: working-tree exceptions = 37 CRLF lines, blob = 0). ดังนั้น **content-canonical (LF-normalized) compare = invariant ที่ถูกต้อง** สำหรับ autocrlf repo — และ **consistent กับ manifest canonical-LF hash ที่ Codex accept ไปแล้วรอบก่อน**. content corruption ทุกชนิดยังจับได้ (stale-exceptions test พิสูจน์ exit 2) · CRLF-only = autocrlf noise ไม่ใช่ corruption. โค้ด document เหตุผลที่ compare site แล้ว (line ~1036). *ถ้า user อยาก strict raw-byte จริง = ต้องเพิ่ม `.gitattributes` pin LF ให้ 3 artifact ก่อน (เลี่ยง false-fail) — เสนอได้ถ้าต้องการ.*
+
+**Opus verify (รันเอง):** suite **15/15** · exceptions block_id escaped · suite ไม่ dirty fixture (0) · -Audit 0/-Strict 1 · read-only held · taskboard/archive ว่าง.
+
+**Lead verdict (Opus):** C0 = **ACCEPT** — 4 substantive defects + 3 tail-gaps ปิด · 1 CRLF finding = lead-decision มีหลักฐาน (ไม่ใช่ทุก finding ต้อง implement — verify แล้วตัดสิน). **แนะ user: accept C0 → เปิด C1** (หรือสั่ง strict raw-byte + .gitattributes ก่อนถ้าต้องการ). รอ user เคาะ.
 **บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.
