@@ -13,13 +13,25 @@
     It only reads them (working tree + git history) and writes new artifact files
     under docs/memory_control/.
 
+.PARAMETER Generate
+    The ONLY mode that WRITES docs/memory_control/ARCHIVE_MANIFEST.csv +
+    ARCHIVE_INDEX.md + RECONCILE_EXCEPTIONS.md. Computes the manifest fresh from
+    the live archive and overwrites whatever was on disk. Exit code follows the
+    same Audit-style rule (0 clean-or-policy-only, 2 integrity/tooling failure) --
+    Generate is "regenerate truth", not "enforce cleanliness"; use -Strict
+    separately (read-only) to gate on policy debt.
+
 .PARAMETER Audit
-    Report everything. Exit 0 if clean OR only policy exceptions exist.
-    Exit 2 if any INTEGRITY/tooling failure exists.
+    READ-ONLY. Reads the EXISTING on-disk manifest/index (does NOT write them)
+    and validates them against the live archive. Report everything. Exit 0 if
+    clean OR only policy exceptions exist. Exit 2 if any INTEGRITY/tooling
+    failure exists -- including a corrupt or stale COMMITTED manifest/index,
+    which this mode must catch, never silently repair.
 
 .PARAMETER Strict
-    Exit 0 only if fully clean. Exit 1 if any policy exceptions exist (no
-    integrity failures). Exit 2 if any INTEGRITY/tooling failure exists.
+    READ-ONLY (same as -Audit: never writes the manifest/index). Exit 0 only if
+    fully clean. Exit 1 if any policy exceptions exist (no integrity failures).
+    Exit 2 if any INTEGRITY/tooling failure exists.
 
 .PARAMETER RepoRoot
     Repo root. Defaults to the parent of this script's directory.
@@ -33,12 +45,32 @@
     parsing/scoring logic is exercised without touching real repo content.
 
 .PARAMETER SkipArtifacts
-    Do not (re)write ARCHIVE_MANIFEST.csv / ARCHIVE_INDEX.md / RECONCILE_EXCEPTIONS.md.
-    Used by negative tests that want to feed a hand-corrupted manifest/index into
-    the checker without a normal run overwriting it back to clean first.
+    Under -Generate only: compute but do NOT write ARCHIVE_MANIFEST.csv /
+    ARCHIVE_INDEX.md / RECONCILE_EXCEPTIONS.md (dry-run generate). Has no effect
+    under -Audit/-Strict -- those modes never write regardless, by construction
+    (ORDER-101 fix 1: a corrupt/stale COMMITTED manifest must be caught, not
+    silently overwritten-then-reported-clean).
 
 .PARAMETER ManifestPath / IndexPath / ExceptionsPath
-    Override output artifact locations (tests point these at scripts/_test/fixtures/...).
+    Override output/input artifact locations (tests point these at
+    scripts/_test/fixtures/...). Under -Audit/-Strict these are READ from; under
+    -Generate they are WRITTEN to.
+
+.NOTES
+    HASH SEMANTICS (ORDER-101 hardening 6): the per-row `sha256` column in
+    ARCHIVE_MANIFEST.csv is a CANONICAL-TEXT hash -- computed after normalizing
+    CRLF/CR to LF (see Get-NormalizedTextFromBytes) -- NOT a raw-byte hash. A
+    CRLF-only edit inside one block does not change that block's sha256. To
+    catch file-level EOL/whitespace drift that the per-block hashes cannot see,
+    ARCHIVE_INDEX.md's generated header also carries a separate whole-file
+    RAW-BYTE SHA256 of ARCHIVE_TASKBOARD_2026-07A.md as committed (CRLF as-is).
+
+    ARCHIVE-CONTENT IDENTITY (ORDER-101 fix 2): each manifest row's
+    `archive_blob_sha` is the **git blob SHA of the archive file's content**
+    (see Get-ArchiveContentIdentity), NOT the repo's current HEAD commit.
+    Content-addressed identity means regenerating after any commit that does
+    not touch ARCHIVE_TASKBOARD_2026-07A.md reproduces a byte-identical
+    manifest + index -- committing unrelated work no longer rewrites all rows.
 #>
 [CmdletBinding(DefaultParameterSetName = 'Audit')]
 param(
@@ -47,6 +79,9 @@ param(
 
     [Parameter(ParameterSetName = 'Strict')]
     [switch]$Strict,
+
+    [Parameter(ParameterSetName = 'Generate')]
+    [switch]$Generate,
 
     [string]$RepoRoot = '',
 
@@ -121,6 +156,28 @@ $script:NonTerminalPatternsOrdered = @(
     'OPEN'
 )
 
+# Pending/partial-stage markers (ORDER-101 fix 4). A block whose backtick status verb
+# is terminal (e.g. `STAGE2-DONE(...)`) can still carry a pending-stage marker OUTSIDE
+# the backtick span (e.g. ORDER-071: "`STAGE2-DONE(...)` -- Stage 3 = รอ main session
+# ตัดสินตามเกณฑ์..."). Matching is done against the header with all backtick spans
+# stripped out first (see Get-HeaderTextOutsideBackticks) -- this deliberately does NOT
+# fire on a pending phrase that lives INSIDE the backticks (e.g. ORDER-081's
+# "`DONE(... -- รอ Claude/user ตัดสิน go/no-go)`" is a self-contained, already-terminal
+# DONE with descriptive commentary, not a genuine split/pending stage).
+# Thai literals built from [char] code points rather than literal source characters --
+# same reason as $script:EmDash above: Windows PowerShell 5.1 reads a BOM-less .ps1 using
+# the system ANSI codepage, not UTF-8, which would silently mangle a literal Thai string
+# in the source into the wrong regex (matching nothing) even though the fixture/repo
+# content being scanned is correctly-decoded UTF-8 in memory.
+$script:ThaiRor = -join (@(0x0E23, 0x0E2D) | ForEach-Object { [char]$_ })            # "รอ"
+$script:ThaiTudsin = -join (@(0x0E15, 0x0E31, 0x0E14, 0x0E2A, 0x0E34, 0x0E19) | ForEach-Object { [char]$_ })  # "ตัดสิน"
+$script:PendingStageMarkerPatterns = @(
+    ('Stage\s*\d+\s*=\s*' + $script:ThaiRor + '[^\r\n]*'),                # "Stage <n> = รอ..."
+    ($script:ThaiRor + '[^\r\n]*?' + $script:ThaiTudsin),                 # "รอ ... ตัดสิน"
+    ($script:ThaiRor + $script:ThaiTudsin),                               # "รอตัดสิน"
+    '(?i)\bpending\b'
+)
+
 New-Variable -Name EXIT_OK -Value 0 -Option Constant -Scope Script -Force
 New-Variable -Name EXIT_POLICY -Value 1 -Option Constant -Scope Script -Force
 New-Variable -Name EXIT_INTEGRITY -Value 2 -Option Constant -Scope Script -Force
@@ -180,6 +237,51 @@ function Get-SourceBytes {
     } else {
         throw "Unrecognized source spec (expected GIT:ref:path or FILE:path): $SourceSpec"
     }
+}
+
+function Get-ArchiveContentIdentity {
+    <#
+        ORDER-101 fix 2: a stable ARCHIVE-CONTENT identity, not repo HEAD.
+
+        Returns the git blob SHA of the archive file's content at the given source.
+        This is content-addressed: git only mints a new blob SHA when the file's
+        BYTES change, so as long as ARCHIVE_TASKBOARD_2026-07A.md is untouched,
+        this value is identical no matter which later commit HEAD happens to be
+        at when the generator runs. That is what makes "regenerate after an
+        unrelated commit -> byte-identical manifest+index" hold.
+
+        - SourceSpec "GIT:<ref>:<path>"  -> resolved directly as `git rev-parse <ref>:<path>`.
+        - SourceSpec "FILE:<abs-path>"   -> path is made repo-relative and resolved
+          as `git rev-parse HEAD:<rel-path>` (the working-tree file must be committed;
+          this is the normal real-repo case where CurrentArchiveSource defaults to
+          FILE:<RepoRoot>/ARCHIVE_TASKBOARD_2026-07A.md).
+    #>
+    param([string]$RepoRoot, [string]$SourceSpec)
+
+    if ($SourceSpec -match '^GIT:(.+?):(.+)$') {
+        $ref = $Matches[1]
+        $relPath = $Matches[2]
+    } elseif ($SourceSpec -match '^FILE:(.+)$') {
+        $absPath = $Matches[1]
+        $normRoot = ($RepoRoot -replace '\\', '/').TrimEnd('/')
+        $normAbs  = ($absPath  -replace '\\', '/')
+        $prefix = $normRoot + '/'
+        if ($normAbs.Length -gt $prefix.Length -and $normAbs.Substring(0, $prefix.Length) -eq $prefix) {
+            $relPath = $normAbs.Substring($prefix.Length)
+        } else {
+            throw "Get-ArchiveContentIdentity: FILE path is not under RepoRoot, cannot derive a repo-relative path for a stable archive-content identity: $absPath (RepoRoot=$RepoRoot)"
+        }
+        $ref = 'HEAD'
+    } else {
+        throw "Get-ArchiveContentIdentity: unrecognized source spec (expected GIT:ref:path or FILE:path): $SourceSpec"
+    }
+
+    $spec = '{0}:{1}' -f $ref, $relPath
+    $out = & git -C $RepoRoot rev-parse $spec 2>$null
+    if (-not $out) {
+        throw "Get-ArchiveContentIdentity: 'git rev-parse $spec' failed -- is the archive file committed at that ref/path?"
+    }
+    return ([string]$out).Trim()
 }
 
 # ============================================================================
@@ -282,6 +384,29 @@ function Get-StatusClass {
         return [pscustomobject]@{ Class = 'NA'; Label = '(no recognized status token -- OTHER block, not required)' }
     }
     return [pscustomobject]@{ Class = 'Unparseable'; Label = $null }
+}
+
+function Get-HeaderTextOutsideBackticks {
+    <# Strips all `...` spans out of a header, leaving only the text outside them. #>
+    param([string]$Header)
+    return [regex]::Replace($Header, '`[^`]*`', ' ')
+}
+
+function Test-HasPendingStageMarker {
+    <#
+        ORDER-101 fix 4: detects a mixed/partial-stage header -- a pending-stage
+        marker (e.g. "Stage 3 = รอ...", "รอ...ตัดสิน", "pending") appearing OUTSIDE
+        the backtick status span. Returns the matched text, or $null if none found.
+        Deliberately searches only the non-backtick remainder of the header so a
+        pending phrase embedded INSIDE an already-terminal backtick verb (e.g.
+        "`DONE(... -- รอ user ตัดสิน go/no-go)`") does not false-positive.
+    #>
+    param([string]$Header)
+    $remainder = Get-HeaderTextOutsideBackticks -Header $Header
+    foreach ($pat in $script:PendingStageMarkerPatterns) {
+        if ($remainder -match $pat) { return $Matches[0].Trim() }
+    }
+    return $null
 }
 
 function Add-Classification {
@@ -551,6 +676,23 @@ function Invoke-ExceptionScan {
         }
     }
 
+    # (a2) mixed/partial-stage archived block: header carries a pending-stage marker
+    # OUTSIDE the backtick status span (e.g. ORDER-071's `STAGE2-DONE(...)` followed by
+    # "-- Stage 3 = รอ main session ตัดสิน..."). The backtick verb alone is terminal, so
+    # the (a) StatusClass check above never flags it -- flag it here explicitly, IN
+    # ADDITION to whatever else this block already triggered (including possibly
+    # nothing else at all).
+    foreach ($b in $CurrentArchiveBlocks) {
+        $pendingLabel = Test-HasPendingStageMarker -Header $b.Header
+        if ($pendingLabel) {
+            $policyExceptions.Add([pscustomobject]@{
+                Kind = 'non-terminal-in-archive'; Severity = 'policy'
+                BlockId = $b.BlockId; Header = $b.Header
+                Detail = "mixed/partial status: header carries pending-stage marker '$pendingLabel' OUTSIDE the backtick status token (backtick status='$($b.StatusLabel)') -- treated as non-terminal-in-archive despite the terminal verb"
+            })
+        }
+    }
+
     # (c) canonical_id present in both current active AND current archive (ORDER blocks only)
     $activeIds = New-Object System.Collections.Generic.HashSet[string]
     $activeHeaderById = @{}
@@ -583,18 +725,18 @@ function Invoke-ExceptionScan {
 # ============================================================================
 
 function New-ArchiveManifestRows {
-    param($CurrentArchiveBlocks, [string]$SourceCommitSha)
+    param($CurrentArchiveBlocks, [string]$ArchiveBlobSha)
     $rows = New-Object System.Collections.Generic.List[object]
     foreach ($b in $CurrentArchiveBlocks) {
         $canon = ''
         if ($b.CanonicalIds.Count -gt 0) { $canon = $b.CanonicalIds[0] }
         $rows.Add([pscustomobject]@{
-            block_id      = $b.BlockId
-            canonical_id  = $canon
-            block_type    = $b.BlockType
-            sha256        = $b.Sha256
-            source_commit = $SourceCommitSha
-            source_anchor = $b.Ordinal
+            block_id         = $b.BlockId
+            canonical_id     = $canon
+            block_type       = $b.BlockType
+            sha256           = $b.Sha256
+            archive_blob_sha = $ArchiveBlobSha
+            source_anchor    = $b.Ordinal
         })
     }
     return $rows
@@ -608,10 +750,22 @@ function Write-ArchiveManifestCsv {
 function Test-ManifestBijection {
     <#
         Verifies: exactly one manifest row per current-archive block, every row
-        resolves back to exactly one block (by block_id / source_anchor), and
-        re-hashing the block named by source_anchor reproduces the row's sha256.
+        resolves back to exactly one block (by source_anchor), and that EVERY
+        tracked field of the resolved block matches the row -- not just hash +
+        source-identity + the overall ID-set (ORDER-101 fix 3). Concretely, for
+        each row: resolve source_anchor -> block, then assert
+            row.sha256           == block.Sha256
+            row.archive_blob_sha == ExpectedArchiveBlobSha
+            row.block_id         == block.BlockId
+            row.canonical_id     == block's own canonical id (first CanonicalIds entry, or '')
+            row.block_type       == block.BlockType
+        This is what catches a block_id (or canonical_id/block_type) SWAP between
+        two rows even when their anchors/hashes are individually untouched and the
+        archive-wide ID set still looks "complete" -- the pre-fix-3 checks below
+        (duplicate block_id, row count, "every block has a row") do not detect a
+        pure swap because both IDs are still present, just attached to the wrong row.
     #>
-    param($ManifestRows, $CurrentArchiveBlocks, [string]$ExpectedSourceCommit)
+    param($ManifestRows, $CurrentArchiveBlocks, [string]$ExpectedArchiveBlobSha)
 
     $failures = New-Object System.Collections.Generic.List[string]
 
@@ -639,11 +793,23 @@ function Test-ManifestBijection {
             continue
         }
         $block = $blocksByOrdinal[$ordinal]
+
         if ($block.Sha256 -ne $r.sha256) {
             $failures.Add("sha256 mismatch for block_id=$($r.block_id): manifest=$($r.sha256) recomputed=$($block.Sha256)")
         }
-        if ($r.source_commit -ne $ExpectedSourceCommit) {
-            $failures.Add("source_commit mismatch for block_id=$($r.block_id): manifest=$($r.source_commit) expected=$ExpectedSourceCommit")
+        if ($r.archive_blob_sha -ne $ExpectedArchiveBlobSha) {
+            $failures.Add("archive_blob_sha mismatch for block_id=$($r.block_id): manifest=$($r.archive_blob_sha) expected=$ExpectedArchiveBlobSha")
+        }
+        if ($r.block_id -ne $block.BlockId) {
+            $failures.Add("block_id mismatch at source_anchor=$($r.source_anchor): manifest row's own block_id='$($r.block_id)' but the block actually resolved at that anchor has block_id='$($block.BlockId)' (header='$($block.Header)')")
+        }
+        $expectedCanon = ''
+        if ($block.CanonicalIds.Count -gt 0) { $expectedCanon = $block.CanonicalIds[0] }
+        if ([string]$r.canonical_id -ne $expectedCanon) {
+            $failures.Add("canonical_id mismatch at source_anchor=$($r.source_anchor) (block_id=$($r.block_id)): manifest=$($r.canonical_id) resolved-block=$expectedCanon")
+        }
+        if ($r.block_type -ne $block.BlockType) {
+            $failures.Add("block_type mismatch at source_anchor=$($r.source_anchor) (block_id=$($r.block_id)): manifest=$($r.block_type) resolved-block=$($block.BlockType)")
         }
     }
 
@@ -659,14 +825,21 @@ function Test-ManifestBijection {
 }
 
 function Build-ArchiveIndexMarkdown {
-    param($ManifestRows, [string]$SourceCommitSha)
+    param($ManifestRows, [string]$ArchiveBlobSha, [string]$ArchiveRawFileSha256)
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine('# ARCHIVE_INDEX.md')
     [void]$sb.AppendLine('')
     [void]$sb.AppendLine('> **GENERATED -- read-only -- do not edit.** Derived from `ARCHIVE_MANIFEST.csv` by')
-    [void]$sb.AppendLine('> `scripts/check_taskboard_archive.ps1`. Re-running the generator against the same')
+    [void]$sb.AppendLine('> `scripts/check_taskboard_archive.ps1 -Generate` (only `-Generate` writes this file;')
+    [void]$sb.AppendLine('> `-Audit`/`-Strict` are read-only). Re-running the generator against the same')
     [void]$sb.AppendLine('> manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).')
-    [void]$sb.AppendLine('> Source archive commit: `' + $SourceCommitSha + '`')
+    [void]$sb.AppendLine('> Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --')
+    [void]$sb.AppendLine('> NOT repo HEAD; stable across any commit that does not touch that file): `' + $ArchiveBlobSha + '`')
+    [void]$sb.AppendLine('> Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level')
+    [void]$sb.AppendLine('> EOL/whitespace drift the per-block hashes below cannot see): `' + $ArchiveRawFileSha256 + '`')
+    [void]$sb.AppendLine('> HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR')
+    [void]$sb.AppendLine('> normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one')
+    [void]$sb.AppendLine('> block will not change that block''s sha256; rely on the whole-file raw-byte hash above.')
     [void]$sb.AppendLine('')
     [void]$sb.AppendLine('| block_id | canonical_id | block_type | source_anchor | sha256 |')
     [void]$sb.AppendLine('|---|---|---|---|---|')
@@ -698,12 +871,22 @@ function Invoke-TaskboardArchiveCheck {
         [string]$SplitArchiveSource,
         [string]$CurrentActiveSource,
         [string]$CurrentArchiveSource,
-        [bool]$IsStrict,
+        [ValidateSet('Audit', 'Strict', 'Generate')]
+        [string]$Mode,
         [bool]$SkipArtifacts,
         [string]$ManifestPath,
         [string]$IndexPath,
         [string]$ExceptionsPath
     )
+
+    $isStrict   = ($Mode -eq 'Strict')
+    $isGenerate = ($Mode -eq 'Generate')
+    # ORDER-101 fix 1: only -Generate ever writes ARCHIVE_MANIFEST.csv / ARCHIVE_INDEX.md /
+    # RECONCILE_EXCEPTIONS.md. -Audit and -Strict are read-only: they read whatever is
+    # ALREADY on disk at ManifestPath/IndexPath and validate it against the live archive --
+    # a corrupt or stale committed manifest/index must be caught (exit 2), never silently
+    # regenerated-then-reported-clean.
+    $writeArtifacts = ($isGenerate -and -not $SkipArtifacts)
 
     $report = [ordered]@{}
 
@@ -767,25 +950,41 @@ function Invoke-TaskboardArchiveCheck {
     if (-not $archiveDrift.IsEmpty) {
         $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-not-append-only'; Severity = 'integrity'; Detail = "archive diverged from split-time content: $($archiveDrift.Diffs.Count) hash-count mismatch(es)" })
     }
+    if ($splitIntegrity.GeneratedExtras.Count -gt 1) {
+        # ORDER-101 hardening 5: the generated-extra exclusion is pinned to exactly the
+        # ONE known manual-index block. If the header pattern now matches more than one
+        # block, silently excluding all of them would be a silent multi-exclude -- that is
+        # an integrity failure to investigate, not something to wave through.
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'generated-extra-ambiguous'; Severity = 'integrity'; Detail = "$($splitIntegrity.GeneratedExtras.Count) blocks matched the generated-extra header pattern (expected at most 1 -- the single known manual 'ARCHIVED ORDERS INDEX' block); ambiguous exclusion would silently multi-exclude, so it is an integrity failure instead" })
+    }
 
-    $currentCommit = (& git -C $RepoRoot rev-parse HEAD 2>$null)
-    if (-not $currentCommit) { $currentCommit = 'UNKNOWN' } else { $currentCommit = $currentCommit.Trim() }
-    $manifestRows = @(New-ArchiveManifestRows -CurrentArchiveBlocks $archiveCurrentBlocks -SourceCommitSha $currentCommit)
+    # ORDER-101 fix 2: archive-content identity (git blob SHA), NOT repo HEAD. See
+    # Get-ArchiveContentIdentity for why this makes regeneration after an unrelated
+    # commit byte-identical.
+    $archiveBlobSha = Get-ArchiveContentIdentity -RepoRoot $RepoRoot -SourceSpec $CurrentArchiveSource
+    $report.ArchiveBlobSha = $archiveBlobSha
+    $manifestRows = @(New-ArchiveManifestRows -CurrentArchiveBlocks $archiveCurrentBlocks -ArchiveBlobSha $archiveBlobSha)
 
-    if (-not $SkipArtifacts) {
+    if ($writeArtifacts) {
         Write-ArchiveManifestCsv -Rows $manifestRows -Path $ManifestPath
     }
-    # Re-read whatever is actually on disk at $ManifestPath for bijection-checking --
-    # this is what lets negative tests hand-corrupt the CSV and have the checker see it.
-    $manifestOnDisk = @(Import-Csv -Path $ManifestPath)
-    $bijection = Test-ManifestBijection -ManifestRows $manifestOnDisk -CurrentArchiveBlocks $archiveCurrentBlocks -ExpectedSourceCommit $currentCommit
+
+    # -Audit/-Strict: read whatever is ALREADY on disk (never written above) and validate
+    # it. -Generate (non-skip): re-read what was just written, same code path either way.
+    if (-not (Test-Path $ManifestPath)) {
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'manifest-missing'; Severity = 'integrity'; Detail = "no manifest file found at '$ManifestPath' -- -Audit/-Strict are read-only and never create it; run -Generate first" })
+        $manifestOnDisk = @()
+    } else {
+        $manifestOnDisk = @(Import-Csv -Path $ManifestPath)
+    }
+    $bijection = Test-ManifestBijection -ManifestRows $manifestOnDisk -CurrentArchiveBlocks $archiveCurrentBlocks -ExpectedArchiveBlobSha $archiveBlobSha
     $report.ManifestBijection = $bijection
     if (-not $bijection.IsClean) {
         foreach ($f in $bijection.Failures) { $integrityFailures.Add([pscustomobject]@{ Kind = 'manifest-bijection'; Severity = 'integrity'; Detail = $f }) }
     }
 
-    $indexText = Build-ArchiveIndexMarkdown -ManifestRows $manifestOnDisk -SourceCommitSha $currentCommit
-    if (-not $SkipArtifacts) {
+    $indexText = Build-ArchiveIndexMarkdown -ManifestRows $manifestOnDisk -ArchiveBlobSha $archiveBlobSha -ArchiveRawFileSha256 $report.PreStateHashes.CurrentArchiveFileSha256
+    if ($writeArtifacts) {
         Write-TextFileLfNoBom -Path $IndexPath -Text $indexText
     }
     if (Test-Path $IndexPath) {
@@ -795,10 +994,11 @@ function Invoke-TaskboardArchiveCheck {
         $indexZeroDiff = ($onDiskIndexText -eq $rebuiltNormalized)
     } else {
         $indexZeroDiff = $false
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'index-missing'; Severity = 'integrity'; Detail = "no index file found at '$IndexPath' -- -Audit/-Strict are read-only and never create it; run -Generate first" })
     }
     $report.IndexRebuildZeroDiff = $indexZeroDiff
-    if (-not $indexZeroDiff) {
-        $integrityFailures.Add([pscustomobject]@{ Kind = 'index-rebuild-not-zero-diff'; Severity = 'integrity'; Detail = 'ARCHIVE_INDEX.md on disk does not match a fresh rebuild from the manifest (stale index)' })
+    if ((Test-Path $IndexPath) -and -not $indexZeroDiff) {
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'index-rebuild-not-zero-diff'; Severity = 'integrity'; Detail = 'ARCHIVE_INDEX.md on disk does not match a fresh rebuild from the on-disk manifest (stale index)' })
     }
 
     $report.IntegrityFailures = $integrityFailures.ToArray()
@@ -806,7 +1006,7 @@ function Invoke-TaskboardArchiveCheck {
 
     if ($integrityFailures.Count -gt 0) {
         $exitCode = $script:EXIT_INTEGRITY
-    } elseif ($IsStrict -and $exceptions.Policy.Count -gt 0) {
+    } elseif ($isStrict -and $exceptions.Policy.Count -gt 0) {
         $exitCode = $script:EXIT_POLICY
     } else {
         $exitCode = $script:EXIT_OK
@@ -821,10 +1021,11 @@ function Write-ExceptionsMarkdown {
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine('# RECONCILE_EXCEPTIONS.md')
     [void]$sb.AppendLine('')
-    [void]$sb.AppendLine('> Generated by `scripts/check_taskboard_archive.ps1` (ORDER-101 Contract C0).')
+    [void]$sb.AppendLine('> Generated by `scripts/check_taskboard_archive.ps1 -Generate` (ORDER-101 Contract C0).')
     [void]$sb.AppendLine('> **Worker does not resolve or move anything here.** Every row below needs an Opus')
-    [void]$sb.AppendLine('> (or user) classification decision. This file is regenerated on each run -- do not')
-    [void]$sb.AppendLine('> hand-edit it; land Opus decisions in PROJECT_STATE.md / the taskboard instead.')
+    [void]$sb.AppendLine('> (or user) classification decision. This file is regenerated only by `-Generate`')
+    [void]$sb.AppendLine('> (`-Audit`/`-Strict` are read-only and never touch it) -- do not hand-edit it; land')
+    [void]$sb.AppendLine('> Opus decisions in PROJECT_STATE.md / the taskboard instead.')
     [void]$sb.AppendLine('')
     [void]$sb.AppendLine('## Policy exceptions (severity 1 -- worker may not resolve)')
     [void]$sb.AppendLine('')
@@ -872,7 +1073,7 @@ function Write-ExceptionsMarkdown {
 # ============================================================================
 
 function Invoke-Main {
-    param([bool]$IsStrict)
+    param([string]$Mode)
 
     if (-not $CurrentActiveSource)  { $script:CurrentActiveSource  = 'FILE:' + (Join-Path $RepoRoot 'AGENT_TASKBOARD.md') }
     if (-not $CurrentArchiveSource) { $script:CurrentArchiveSource = 'FILE:' + (Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md') }
@@ -880,21 +1081,25 @@ function Invoke-Main {
     if (-not $IndexPath)      { $script:IndexPath = Join-Path $RepoRoot 'docs/memory_control/ARCHIVE_INDEX.md' }
     if (-not $ExceptionsPath) { $script:ExceptionsPath = Join-Path $RepoRoot 'docs/memory_control/RECONCILE_EXCEPTIONS.md' }
 
+    $isGenerate = ($Mode -eq 'Generate')
+    $writeArtifacts = ($isGenerate -and -not $SkipArtifacts)
+
     $report = Invoke-TaskboardArchiveCheck -RepoRoot $RepoRoot `
         -PreSplitSource $PreSplitSource -SplitActiveSource $SplitActiveSource -SplitArchiveSource $SplitArchiveSource `
         -CurrentActiveSource $CurrentActiveSource -CurrentArchiveSource $CurrentArchiveSource `
-        -IsStrict $IsStrict -SkipArtifacts $SkipArtifacts.IsPresent `
+        -Mode $Mode -SkipArtifacts $SkipArtifacts.IsPresent `
         -ManifestPath $ManifestPath -IndexPath $IndexPath -ExceptionsPath $ExceptionsPath
 
-    if (-not $SkipArtifacts) {
+    if ($writeArtifacts) {
         Write-ExceptionsMarkdown -Report $report -Path $ExceptionsPath
     }
 
-    $modeLabel = 'AUDIT'
-    if ($IsStrict) { $modeLabel = 'STRICT' }
-    Write-Host "=== check_taskboard_archive.ps1 [$modeLabel] ==="
+    $modeLabel = $Mode.ToUpper()
+    $roTag = if ($isGenerate) { '' } else { ' (READ-ONLY -- never writes manifest/index/exceptions)' }
+    Write-Host "=== check_taskboard_archive.ps1 [$modeLabel]$roTag ==="
     Write-Host ('Pre-state hash  AGENT_TASKBOARD.md            = ' + $report.PreStateHashes.CurrentActiveFileSha256)
     Write-Host ('Pre-state hash  ARCHIVE_TASKBOARD_2026-07A.md = ' + $report.PreStateHashes.CurrentArchiveFileSha256)
+    Write-Host ('Archive content identity (git blob sha)       = ' + $report.ArchiveBlobSha)
     Write-Host ('Block counts: presplit H2=' + $report.BlockCounts.PreSplitH2 + ' | split-active H2=' + $report.BlockCounts.SplitActiveH2 + ' | split-archive H2=' + $report.BlockCounts.SplitArchiveH2 + ' | current-active H2=' + $report.BlockCounts.CurrentActiveH2 + ' | current-archive H2=' + $report.BlockCounts.CurrentArchiveH2)
     Write-Host ''
     Write-Host '--- 1a SPLIT-INTEGRITY (multiset-by-hash) ---'
@@ -934,6 +1139,7 @@ function Invoke-Main {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    $script:IsStrictMode = ($PSCmdlet.ParameterSetName -eq 'Strict')
-    Invoke-Main -IsStrict $script:IsStrictMode
+    # ParameterSetName is 'Audit' | 'Strict' | 'Generate' ('Audit' is also the default
+    # when the script is invoked with none of -Audit/-Strict/-Generate given).
+    Invoke-Main -Mode $PSCmdlet.ParameterSetName
 }

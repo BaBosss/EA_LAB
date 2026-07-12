@@ -8,13 +8,13 @@
 
 ## Policy exceptions (severity 1 -- worker may not resolve)
 
-_None found._
+| kind | block_id | header | detail |
+|---|---|---|---|
+| non-terminal-in-archive | 205|ORDER|current-archive#4 | ## ORDER-205 -- synthetic fixture order E, mixed/partial stage -- `STAGE2-DONE(tester, 2026-01-01)` -- Stage 2 = รอ main session ตัดสินตามเกณฑ์ | mixed/partial status: header carries pending-stage marker 'Stage 2 = รอ main session ตัดสินตามเกณฑ์' OUTSIDE the backtick status token (backtick status='STAGE2-DONE') -- treated as non-terminal-in-archive despite the terminal verb |
 
 ## Integrity / tooling failures (severity 2 -- blocks both -Audit and -Strict)
 
-| kind | block_id | header | detail |
-|---|---|---|---|
-| archive-not-append-only |  |  | archive diverged from split-time content: 2 hash-count mismatch(es) |
+_None found._
 
 ## Other findings (not policy/integrity exceptions, still worth Opus attention)
 

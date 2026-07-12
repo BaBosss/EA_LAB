@@ -1,9 +1,16 @@
 # ARCHIVE_INDEX.md
 
 > **GENERATED -- read-only -- do not edit.** Derived from `ARCHIVE_MANIFEST.csv` by
-> `scripts/check_taskboard_archive.ps1`. Re-running the generator against the same
+> `scripts/check_taskboard_archive.ps1 -Generate` (only `-Generate` writes this file;
+> `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
-> Source archive commit: `ecd142e463f62bebc9ff056915e7d884a6386a20`
+> Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
+> NOT repo HEAD; stable across any commit that does not touch that file): `25fa344c9ef0ba8ad4ccc87cd9e0adb8887b686e`
+> Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
+> EOL/whitespace drift the per-block hashes below cannot see): `9a45f6a1ccd094195638266aa32223db0dd4e844391fdd361c889a915e1ecb91`
+> HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
+> normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
+> block will not change that block's sha256; rely on the whole-file raw-byte hash above.
 
 | block_id | canonical_id | block_type | source_anchor | sha256 |
 |---|---|---|---|---|

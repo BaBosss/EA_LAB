@@ -7,7 +7,7 @@
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
 > NOT repo HEAD; stable across any commit that does not touch that file): `c52898984b57ff1a229d6df5fde85b5330545d23`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `4ab1a0b8e4091e83877bcb16acf34e41089370271d88d47daa143377146d3244`
+> EOL/whitespace drift the per-block hashes below cannot see): `dba52e7c8a2b071522ca4ff406249cc1f5d1ee1dd0fd095319354cbad674a47f`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.

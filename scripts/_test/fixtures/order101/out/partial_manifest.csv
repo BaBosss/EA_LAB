@@ -1,0 +1,6 @@
+﻿"block_id","canonical_id","block_type","sha256","archive_blob_sha","source_anchor"
+"201|ORDER|current-archive#1","201","ORDER","36a5949d39f0922d2628f909c30566017df08daadb2f45a7c388dc557d262cf4","HEAD:scripts/_test/fixtures/order101/partialstage_current_archive.md","1"
+"202|ORDER|current-archive#2","202","ORDER","74871ac0542596c5a81b37fdf9e4216cc9272e02903ac3fee6d978fe8cf22dc8","HEAD:scripts/_test/fixtures/order101/partialstage_current_archive.md","2"
+"201|REVIEW-NOTE|current-archive#3","201","REVIEW-NOTE","5d20d7c7e2f5346e26ab4cde1a56722faa44eb0073519faf260c3e743d1fd6ab","HEAD:scripts/_test/fixtures/order101/partialstage_current_archive.md","3"
+"205|ORDER|current-archive#4","205","ORDER","685366262a9abb1c439e2a87bbf33acbcc3b0fc4d55f407e8292101640503ec2","HEAD:scripts/_test/fixtures/order101/partialstage_current_archive.md","4"
+"205|REVIEW-NOTE|current-archive#5","205","REVIEW-NOTE","7f2735b3f12a6bd817fc8456b4f501f394c5a463caa9668ca9234102bd83b5f9","HEAD:scripts/_test/fixtures/order101/partialstage_current_archive.md","5"

@@ -1017,7 +1017,7 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 BUILT + Opus-verified (2026-07-12) — validator 0/1, negTests 8/8, bijection 131/131, read-only held · 11 policy exceptions → Opus · pending Codex review` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 REWORK-fixed (Codex r1, 2026-07-12) — 12/12 tests · read-only+deterministic verified · 12 exceptions → Opus · pending Codex review r2` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
 > **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
@@ -1075,4 +1075,17 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 **2 subagent judgment calls (flag ให้ Codex):** (1) `REVIEWED`/`REVIEWED/CLOSED` = self-attesting (ไม่ต้องมี companion REVIEW block) เฉพาะ DONE/BUILT/SKIPPED ที่ต้อง — sound (ตรง 2 ยุคของ archive: pre-068 inline vs 068+ split) กัน false-positive ~55 · (2) review linking = **canonical-id granularity ไม่ใช่ block_id m2m** ตาม spec — coarser (clear ทุก block ของ id) แต่ conservative + Opus review ทุก exception อยู่แล้ว → **documented C0 limit, upgrade block_id ใน C1**.
 
-**Status:** C0 BUILT + Opus self-review ACCEPT (หลัง RepoRoot bugfix) · **pending blind Codex review** ก่อน accept + เปิด C1. exception resolution ข้างบน = Opus judgment (worker ไม่ตัดสิน) รอ C1 ลงมือ.
+**Status:** C0 BUILT + Opus self-review ACCEPT (หลัง RepoRoot bugfix) · pending blind Codex review.
+
+### Codex review r1 (2026-07-12) = REWORK 4 defects → fixed (Opus verify เจาะจุดที่ตัวเองพลาด)
+Codex จับ 4 อย่างที่ self-verify ผมพลาด (ผมทดสอบใน HEAD/session เดียว):
+1. 🔴 **validator regenerate ก่อน check** → normal run ซ่อม corruption → **FIX:** แยก `-Generate` (เขียน) จาก `-Audit`/`-Strict` (read-only compare)
+2. 🔴 **source_commit=HEAD ไม่ deterministic** → **FIX:** `archive_blob_sha` = git blob SHA ของ archive (`c528989...`) ไม่ใช่ HEAD
+3. 🔴 **bijection ไม่ cross-check row fields** (สลับ block_id ผ่านได้) → **FIX:** cross-check block_id/canonical_id/type/sha256 ต่อ row
+4. 🟡 **071 partial-stage** (`STAGE2-DONE`+"Stage 3 รอตัดสิน" นอก backtick) → **FIX:** mixed-stage detection → 071 = non-terminal-in-archive
++ harden: generated-extra=exactly-one · hash=canonical-LF labeled + whole-file raw SHA
+
+**Opus verify (รันเอง เจาะ #1/#2 ที่พลาด):** negTests **12/12** (รวม 4 เคสใหม่) · **corrupt committed manifest → normal -Audit exit 2** (ยืนยันไม่ silently regenerate) · **regenerate 2 ครั้ง byte-identical** (deterministic) · -Audit/-Strict **ไม่แก้ manifest/index** (sha before=after) · **taskboard+archive git status ว่าง** · 071 ได้ non-terminal-in-archive แล้ว (12 exceptions).
+
+**Status หลัง rework:** C0 = self-ACCEPT (4 defects ปิด, verify เจาะจุดพลาด) · **pending Codex review round 2** ก่อน accept + เปิด C1.
+**บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.
