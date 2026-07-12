@@ -12,6 +12,38 @@
 
 double Exit_Point() { return Indi_Point(); }
 
+#ifdef LAB_ENTRY_17
+// ORDER-082 guard G4: SL must sit on the correct side of the current tick AND
+// beyond the broker's SYMBOL_TRADE_STOPS_LEVEL. If invalid, the caller (entry
+// seam) must return Entry_MakeNone - NEVER silently fall back to a distance
+// SL, which would change the strategy without telling anyone.
+// NOTE: structural mode (this entry) is banned with stacking (StackMode !=
+// STACK_SINGLE) until separately designed - naked probe only (guard G4).
+bool Wave5_SLValid(const int dir, const double slPrice)
+{
+   if(slPrice <= 0.0) return false;
+   MqlTick t;
+   if(!SymbolInfoTick(_Symbol, t)) return false;
+   double pt = Exit_Point();
+   long stopsLevelPts = SymbolInfoInteger(_Symbol, SYMBOL_TRADE_STOPS_LEVEL);
+   double minDist = stopsLevelPts * pt;
+
+   if(dir == 1) // long: SL below bid, at least minDist away
+   {
+      if(slPrice >= t.bid) return false;
+      if(minDist > 0.0 && (t.bid - slPrice) < minDist) return false;
+      return true;
+   }
+   if(dir == 2) // short: SL above ask, at least minDist away
+   {
+      if(slPrice <= t.ask) return false;
+      if(minDist > 0.0 && (slPrice - t.ask) < minDist) return false;
+      return true;
+   }
+   return false;
+}
+#endif
+
 // effective Risk-ATR (price), with optional regime adaptive scaling (mode 33)
 double Exit_RiskATR_Scaled()
 {
@@ -51,6 +83,17 @@ double Exit_CapATRDist(const double distPrice)
 double Exit_SLDistancePoints()
 {
    double pt = Exit_Point();
+#ifdef LAB_ENTRY_17
+   // guard G3: structural mode must feed the real distance to MM_FirstLot's
+   // risk sizing, not silently degrade to fixed lot. Direction is implicit in
+   // g_wave5_entry_ref vs g_wave5_sl_price (entry set on the same signal that
+   // set the SL, so the sign of the difference is always correct).
+   if(_17_UseStructLevels && g_wave5_sl_price > 0.0 && g_wave5_entry_ref > 0.0)
+   {
+      double d = MathAbs(g_wave5_entry_ref - g_wave5_sl_price);
+      return (pt > 0.0 ? d / pt : 0.0);
+   }
+#endif
    switch(SLMode)
    {
       case SL_FIXED_POINTS: return _31_SL_Pip;
@@ -77,6 +120,18 @@ double Exit_SLDistancePoints()
 double Exit_InitialSL(const int dir, const double entryPrice)
 {
    double pt = Exit_Point();
+#ifdef LAB_ENTRY_17
+   // guard G2: override at the TOP, before the switch - no shared-enum member
+   // added (byte-identical guard for builds 11-16). guard G4 already vetted
+   // g_wave5_sl_price in the entry seam (Entry_Wave5.mqh); Wave5_SLValid is a
+   // defense-in-depth re-check here (price may have moved between signal and
+   // order-open on the same tick sequence).
+   if(_17_UseStructLevels && g_wave5_sl_price > 0.0)
+   {
+      if(!Wave5_SLValid(dir, g_wave5_sl_price)) return 0.0;
+      return NormalizeDouble(g_wave5_sl_price, _Digits);
+   }
+#endif
    switch(SLMode)
    {
       case SL_FIXED_POINTS:
@@ -112,6 +167,15 @@ double Exit_InitialTP(const int dir, const double entryPrice)
    // fragmenting one basket-cycle into several partial trades (breaks parity).
    if(_2_SuppressLegTP) return 0.0;
    double pt = Exit_Point();
+#ifdef LAB_ENTRY_17
+   // guard G2: g_wave5_tp_price is a REFERENCE zone (100% expansion), not a
+   // hard broker TP per user answer 3 (Task 4: trailing-from-start owns the
+   // exit). Still published here so a downstream reader can attach it if a
+   // future variant wants a hard TP; probe leaves ExitMode=EXIT_TRAIL so this
+   // branch is not reached in the naked-probe run (defensive parity only).
+   if(_17_UseStructLevels && g_wave5_tp_price > 0.0 && ExitMode != EXIT_TRAIL && ExitMode != EXIT_RUN_TREND)
+      return NormalizeDouble(g_wave5_tp_price, _Digits);
+#endif
    switch(ExitMode)
    {
       case EXIT_FIXED_TP:
@@ -159,6 +223,127 @@ void Exit_ApplyTrailing()
       }
    }
 }
+
+#ifdef LAB_ENTRY_17
+// ORDER-082 Task 4: RSI-divergence tighten. Self-contained fractal scan
+// (fixed depth=2, independent of Wave5Swings.mqh which is included AFTER
+// ExitManager.mqh in LabCore - deliberate duplication to avoid an include-
+// order dependency) over closed bars, comparing the two most recent confirmed
+// price-pivots against Indi_RSI17 at the same shift (closed-bar RSI, shift 1+).
+#define WAVE5_DIVERG_DEPTH 2
+
+bool Wave5_IsPivotHigh(const int shift, const int depth)
+{
+   double c = iHigh(_Symbol, _Period, shift);
+   for(int k = 1; k <= depth; k++)
+   {
+      if(iHigh(_Symbol, _Period, shift - k) > c) return false;
+      if(iHigh(_Symbol, _Period, shift + k) > c) return false;
+   }
+   return true;
+}
+
+bool Wave5_IsPivotLow(const int shift, const int depth)
+{
+   double c = iLow(_Symbol, _Period, shift);
+   for(int k = 1; k <= depth; k++)
+   {
+      if(iLow(_Symbol, _Period, shift - k) < c) return false;
+      if(iLow(_Symbol, _Period, shift + k) < c) return false;
+   }
+   return true;
+}
+
+// dir=1 (long): bearish divergence = newer confirmed high > older confirmed
+// high, but RSI at the newer high < RSI at the older high. dir=2 mirrors on
+// lows (bullish divergence = newer low < older low, RSI newer > RSI older -
+// used here to tighten a SELL basket the same way).
+bool Wave5_DivergenceDetected(const int dir)
+{
+   int found = 0;
+   int shifts[2];
+   int scanCap = 200; // bounded lookback, plenty for a couple of swings
+   for(int s = WAVE5_DIVERG_DEPTH + 1; s <= scanCap && found < 2; s++)
+   {
+      bool isPivot = (dir == 1 ? Wave5_IsPivotHigh(s, WAVE5_DIVERG_DEPTH) : Wave5_IsPivotLow(s, WAVE5_DIVERG_DEPTH));
+      if(!isPivot) continue;
+      shifts[found] = s;
+      found++;
+   }
+   if(found < 2) return false;
+
+   int newerShift = shifts[0], olderShift = shifts[1]; // shifts[0] closer to now (smaller shift)
+   double rsiNewer = Indi_RSI17(newerShift);
+   double rsiOlder = Indi_RSI17(olderShift);
+   if(rsiNewer <= 0.0 || rsiOlder <= 0.0) return false; // RSI not ready
+
+   if(dir == 1)
+   {
+      double pxNewer = iHigh(_Symbol, _Period, newerShift);
+      double pxOlder = iHigh(_Symbol, _Period, olderShift);
+      return (pxNewer > pxOlder && rsiNewer < rsiOlder);
+   }
+   else
+   {
+      double pxNewer = iLow(_Symbol, _Period, newerShift);
+      double pxOlder = iLow(_Symbol, _Period, olderShift);
+      return (pxNewer < pxOlder && rsiNewer > rsiOlder);
+   }
+}
+
+// tighten every matching-direction open position to a near-touch trail
+// (small fraction of _23_TrailStep), regardless of current gain threshold -
+// this is the divergence "take it in, edge may be fading" tighten, distinct
+// from Exit_ApplyTrailing's normal _23_TrailStart-gated trail.
+void Wave5_TightenTrail(const int dir)
+{
+   MqlTick t;
+   if(!SymbolInfoTick(_Symbol, t)) return;
+   double pt = Exit_Point();
+   double tightDist = MathMax(_23_TrailStep * 0.25, 1.0) * pt;
+   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_PosIsMine(i)) continue;
+      long type = PositionGetInteger(POSITION_TYPE);
+      if(dir == 1 && type != POSITION_TYPE_BUY) continue;
+      if(dir == 2 && type != POSITION_TYPE_SELL) continue;
+      double curSL = PositionGetDouble(POSITION_SL);
+      double curTP = PositionGetDouble(POSITION_TP);
+      ulong  tk    = PositionGetInteger(POSITION_TICKET);
+      if(type == POSITION_TYPE_BUY)
+      {
+         double newSL = t.bid - tightDist;
+         if(newSL > curSL) Exec_ModifyPosition(tk, newSL, curTP);
+      }
+      else
+      {
+         double newSL = t.ask + tightDist;
+         if(curSL == 0.0 || newSL < curSL) Exec_ModifyPosition(tk, newSL, curTP);
+      }
+   }
+}
+
+// hook called from Exit_ManageBasket after the base trail. No-op unless
+// _17_DivergTrail and price has reached the target zone.
+void Wave5_DivergenceTightenHook()
+{
+   if(!_17_DivergTrail) return;
+   if(g_wave5_tp_price <= 0.0) return;
+   MqlTick t;
+   if(!SymbolInfoTick(_Symbol, t)) return;
+
+   if(Exec_CountDir(1) > 0)
+   {
+      bool inZone = (t.bid >= g_wave5_tp_price);
+      if(inZone && Wave5_DivergenceDetected(1)) Wave5_TightenTrail(1);
+   }
+   if(Exec_CountDir(2) > 0)
+   {
+      bool inZone = (t.ask <= g_wave5_tp_price);
+      if(inZone && Wave5_DivergenceDetected(2)) Wave5_TightenTrail(2);
+   }
+}
+#endif // LAB_ENTRY_17
 
 // additive: 2-stage partial close as basket floating profit approaches the
 // _2_BasketTP_Money target (Zeus GridLog port (14)). OFF unless both pct
@@ -234,6 +419,13 @@ bool Exit_ManageBasket()
    }
 
    if(ExitMode == EXIT_TRAIL) Exit_ApplyTrailing();
+
+#ifdef LAB_ENTRY_17
+   // Task 4: trailing-from-start owns the exit (ExitMode=EXIT_TRAIL, user
+   // answer 3); this hook only tightens once RSI divergence appears in the
+   // target zone. No-op unless _17_DivergTrail.
+   if(ExitMode == EXIT_TRAIL) Wave5_DivergenceTightenHook();
+#endif
 
    return false;
 }

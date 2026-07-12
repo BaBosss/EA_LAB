@@ -22,6 +22,9 @@ int g_hMACD    = INVALID_HANDLE;   // built-in iMACD (entry 15 only)
 #ifdef LAB_ENTRY_16
 int g_hRSI16   = INVALID_HANDLE;   // built-in iRSI (entry 16 only - own handle, chart TF)
 #endif
+#ifdef LAB_ENTRY_17
+int g_hRSI17   = INVALID_HANDLE;   // built-in iRSI (entry 17 only - divergence check, Task 4)
+#endif
 
 ENUM_TIMEFRAMES Indi_TF(const ENUM_TIMEFRAMES tf) { return (tf == PERIOD_CURRENT ? _Period : tf); }
 
@@ -47,6 +50,10 @@ bool Indi_Init()
    g_hRSI16 = iRSI(_Symbol, _Period, _16_RsiPeriod, PRICE_CLOSE);
    ok = ok && (g_hRSI16 != INVALID_HANDLE);
 #endif
+#ifdef LAB_ENTRY_17
+   g_hRSI17 = iRSI(_Symbol, _Period, _17_RSI_Period, PRICE_CLOSE);
+   ok = ok && (g_hRSI17 != INVALID_HANDLE);
+#endif
    return ok;
 }
 
@@ -70,6 +77,10 @@ void Indi_Deinit()
 #ifdef LAB_ENTRY_16
    if(g_hRSI16 != INVALID_HANDLE) IndicatorRelease(g_hRSI16);
    g_hRSI16 = INVALID_HANDLE;
+#endif
+#ifdef LAB_ENTRY_17
+   if(g_hRSI17 != INVALID_HANDLE) IndicatorRelease(g_hRSI17);
+   g_hRSI17 = INVALID_HANDLE;
 #endif
 }
 
@@ -144,6 +155,10 @@ bool Indi_MACD(const int shift, double &mainOut, double &signalOut)
 
 #ifdef LAB_ENTRY_16
 double Indi_RSI16(const int shift = 1) { return Indi_CopyOne(g_hRSI16, shift); }
+#endif
+
+#ifdef LAB_ENTRY_17
+double Indi_RSI17(const int shift = 1) { return Indi_CopyOne(g_hRSI17, shift); }
 #endif
 
 #ifdef LAB_ENTRY_13

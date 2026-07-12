@@ -40,6 +40,9 @@
    #include "entries/Entry_KangarooRSI.mqh"
    #include "Kangaroo.mqh"
 #endif
+#ifdef LAB_ENTRY_17
+   #include "entries/Entry_Wave5.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -73,6 +76,9 @@ int OnInit()
 #ifdef LAB_ENTRY_16
    Entry_KangarooRSI_Init();
    Kangaroo_Init();
+#endif
+#ifdef LAB_ENTRY_17
+   Entry_Wave5_Init();
 #endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,

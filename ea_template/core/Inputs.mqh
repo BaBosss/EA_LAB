@@ -7,7 +7,7 @@
 #ifndef BOSS_LAB_INPUTS_MQH
 #define BOSS_LAB_INPUTS_MQH
 
-// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 / _16 (+ LAB_ENTRY_TAG)
+// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 / _16 / _17 (+ LAB_ENTRY_TAG)
 // MQL5 preprocessor has no '#if EXPR==n' / '#elif' -> use token #ifdef only.
 #ifndef LAB_ENTRY_11
 #ifndef LAB_ENTRY_12
@@ -15,7 +15,9 @@
 #ifndef LAB_ENTRY_14
 #ifndef LAB_ENTRY_15
 #ifndef LAB_ENTRY_16
+#ifndef LAB_ENTRY_17
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -149,6 +151,10 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
 input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // informational only - Kangaroo.mqh owns its own grid pipeline (LabCore short-circuits)
 input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a (Kangaroo adds are distance-only by design)
 #endif
+#ifdef LAB_ENTRY_17
+input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 naked probe (Wave5): single order per signal, no grid/recovery/martingale
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
+#endif
 input bool   _9_StepUseATR  = true;     // grid step from Signal-ATR (else points)
 input double _9_StepATRmult = 1.0;      // step = mult x Signal-ATR
 input double _9_StepPoints  = 300;      // step when not ATR
@@ -239,6 +245,24 @@ input bool   _16_FlattenOn            = false; // exit 4 (ladder_flatten, A/B mo
 input int    _16_FlattenMinOrders     = 6;     // exit 4: allowed from this many open orders
 input double _16_MaxControlledLossUsd = 400.0; // exit 4: close-all side once net$ >= -this (controlled-loss DD release)
 input double _16_EmergencyDDPct       = 70.0;  // emergency close-all at equity DD% from peak (tighter than original's unverified 80; cage KillDD fires first at default profile)
+#endif
+
+#ifdef LAB_ENTRY_17
+// ORDER-082: Wave5 - Elliott wave-4 retrace entry, arms to catch wave-5.
+// Naked probe only (guard G4): StackMode=90 single, no grid/recovery/martingale.
+// Swings come from in-code confirmed fractals (Wave5Swings.mqh) - built-in only,
+// no iCustom/ZigZag (repaint ban). Structural SL/TP anchors published into the
+// globals below (guard G1: declared here so ExitManager, included before
+// entries in LabCore, can compile against them).
+input group "=== 17 Entry: Wave5 (Elliott wave-4 retrace arm, both directions) ==="
+input int    _17_FractalDepth   = 3;      // confirmed-fractal bars each side (repaint guard: newest usable pivot is always >= this many bars back)
+input double _17_Wave3MinMult   = 0.618;  // wave-3 confirm: must run >= this x |wave1| beyond the wave-1 break (permissive default - Fable D2, our addition)
+input double _17_EntryFib       = 38.2;   // wave-4 zone arm level, % retrace of wave3 (sweep {23.6,38.2,50,61.8})
+input double _17_SLbufferATR    = 0.5;    // SL = wave-1 top/bottom +/- this x Risk-ATR buffer (absorbs spread/wick)
+input bool   _17_UseStructLevels = true;  // ExitManager: use g_wave5_sl_price/g_wave5_tp_price instead of SLMode/ExitMode switch
+input bool   _17_DivergTrail    = true;   // tighten trail on RSI divergence once price reaches the target zone
+input int    _17_MaxSwings      = 8;      // pivots to collect per Wave5_CollectSwings call
+input int    _17_RSI_Period     = 14;     // RSI period for divergence check (own handle g_hRSI17)
 #endif
 
 //==================== Trend MA (shared: entry11 + filter + runtrend) =
@@ -377,5 +401,16 @@ input group "=== General ==="
 input long _0_Magic     = 990001;
 input int  _0_Slippage  = 20;
 input int  _0_MaxSpread = 0;         // 0 = ignore
+
+//==================== 17 Wave5 structural anchors (guard G1) =======
+// Published by Entry_Evaluate() (Entry_Wave5.mqh), consumed by ExitManager
+// overrides (#ifdef LAB_ENTRY_17). Declared here (not in Entry_Wave5.mqh) so
+// ExitManager.mqh, included BEFORE entries/ in LabCore.mqh, compiles against
+// them. Reset to 0 in Entry_Wave5_Init() (recompile-safe).
+#ifdef LAB_ENTRY_17
+double g_wave5_sl_price = 0.0;   // structural SL price (wave-1 top/bottom +/- ATR buffer)
+double g_wave5_tp_price = 0.0;   // 100% expansion target (entry_ref +/- |wave1|) - reference zone, not a hard broker TP
+double g_wave5_entry_ref = 0.0;  // price at signal time (0 = unset)
+#endif
 
 #endif // BOSS_LAB_INPUTS_MQH
