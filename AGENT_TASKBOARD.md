@@ -1017,7 +1017,7 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 
 ---
 
-## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `OPEN` (SYSTEM ORDER 3 of ≤4 memory-control build)
+## ORDER-101 — Contract C0: active/archive READ-ONLY reconcile + freeze (no block moves) — `C0 BUILT + Opus-verified (2026-07-12) — validator 0/1, negTests 8/8, bijection 131/131, read-only held · 11 policy exceptions → Opus · pending Codex review` (SYSTEM ORDER 3 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** + §20.2 seq #3 + §20.7
 > **ทำได้:** Codex-direct/subagent (build reconcile/manifest/index/validator scripts) · Opus (reconcile judgment + exception resolution = own) · **👉 แนะ:** subagent build → **Opus verify → BLIND CODEX REVIEW ก่อน accept**
@@ -1061,3 +1061,18 @@ Opus รัน test เอง + อ่านโค้ด safety-critical เอ�
 **→ C1 (migration window, ใบถัดไป หลัง C0 accept + Opus resolve exceptions):** ย้ายเฉพาะ REVIEWED blocks จริง + แทน manual index ด้วย generated + hardened swap: (1) target-file clean check (2) **pre-hash recheck ทันทีก่อน swap** — abort ถ้า active/archive hash เปลี่ยนระหว่าง inventory→swap (shared worktree!) (3) **ENFORCED maintenance lock (Codex r3 — ไม่ใช่ marker เฉยๆ):** `.githooks/pre-commit` guard (repo มี `core.hooksPath=.githooks` จริง) ที่: **(i) ลง+test guard ใน commit ก่อน**เข้า window (ไม่ใช่พร้อม migration) · **(ii) fail-CLOSED ถ้าหา PowerShell ไม่เจอ** (hook เดิม fail-open ที่บรรทัด 5 — ต้องปิดช่องนี้) · **(iii) block ทุก commit ที่แตะ taskboard/archive ระหว่างมี lock marker ยกเว้น migration commit** — อนุญาตด้วย **exact staged-blob-hash/allowlist ไม่ใช่ commit message** (message ปลอมได้) · **(iv) recheck working-tree hashes เทียบ staged blobs ทันทีก่อน commit** (กัน session อื่นแก้ working tree ระหว่าง window) · **(v) `git commit --no-verify` ยังเป็น technical bypass** — threat model อาศัยกฎ AGENTS.md ห้ามใช้ (ยอมรับตามจริง) (4) เตรียม output ใน staging dir ก่อน (5) stage/commit ด้วย explicit allowlist (6) atomic rollback คืน **ทั้ง** `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` + ลบไฟล์ใหม่. C1 = commit แยก + blind Codex review รอบผลจริง.
 
 **Routing:** subagent/Codex build C0 scripts → Opus verify + exception judgment → **blind Codex review ก่อน accept C0**. Opus แก้ `AGENTS.md` เฉพาะใน C1 review commit ถ้า protocol ต้องการ. C0 = commit แยก.
+
+### ผลดิบ C0 build (Sonnet-subagent build + Opus verify + Opus bugfix, 2026-07-12)
+**Files (ใหม่ล้วน):** `scripts/check_taskboard_archive.ps1` (validator 2-mode) · `docs/memory_control/ARCHIVE_MANIFEST.csv` (131 rows) · `ARCHIVE_INDEX.md` (generated read-only) · `RECONCILE_EXCEPTIONS.md` (11 exceptions) · `scripts/_test/run_order101_negative_tests.ps1` + fixtures.
+
+**Opus bugfix ก่อน verify:** subagent ทำ `$RepoRoot = Split-Path -Parent $PSScriptRoot` ใน param-default → throw เมื่อ `$PSScriptRoot` ว่างตอน `-File` invocation (PS 5.1). แก้เป็น resolve ใน body (fallback $MyInvocation/cwd) → validator รันได้.
+
+**Opus-verified (รันเอง หลัง fix):** -Audit **exit 0** · -Strict **exit 1** (policy) · **negTests 8/8** (delete/mutate/extra-row/dup-id/corrupt-hash/stale-index → exit 2 ทั้ง 2 โหมด = audit ไม่ซ่อน integrity · archived-OPEN → policy 0/1) · **bijection 131/131** · index rebuild **zero-diff** · **split-integrity: missing/mutated/duplicated=0** (manual-index = generated-extra excluded) · **post-split drift:** additions 100/101 · mutations 099(OPEN→REVIEWED)/082 · **archive diff ว่างสนิท** · **taskboard+archive git status ว่าง** (read-only held แม้หลังผมรัน).
+
+**11 policy exceptions — Opus classification (informs C1, ไม่ block C0):**
+- **benign (OK archive):** 003/009 SKIPPED (ไม่ต้อง review) · 067/065/066 BUILT+CLOSED/FUNNELED (verdict inline ใน header) · 086/093/096C DONE mechanical/infra (self-completed) · 091C-D1c DONE (ส่วนของ JUMSTOCH campaign ที่ D1f REVIEWED ปิด thread แล้ว)
+- **⚠️ real cleanup (C1 ต้องจัดการ):** **071** — rev02 `STAGE2-DONE (Stage-3 รอตัดสิน)` = **arguably non-terminal แต่ถูก archive** + rev01 `OPEN` ค้าง active (superseded) → C1 ต้อง (ก) ยืนยัน stage-3 หรือดึงกลับ (ข) ปิด rev01 · **091C-D1c** — "PROCESSING" annotation ค้าง active (stale) → C1 ลบ
+
+**2 subagent judgment calls (flag ให้ Codex):** (1) `REVIEWED`/`REVIEWED/CLOSED` = self-attesting (ไม่ต้องมี companion REVIEW block) เฉพาะ DONE/BUILT/SKIPPED ที่ต้อง — sound (ตรง 2 ยุคของ archive: pre-068 inline vs 068+ split) กัน false-positive ~55 · (2) review linking = **canonical-id granularity ไม่ใช่ block_id m2m** ตาม spec — coarser (clear ทุก block ของ id) แต่ conservative + Opus review ทุก exception อยู่แล้ว → **documented C0 limit, upgrade block_id ใน C1**.
+
+**Status:** C0 BUILT + Opus self-review ACCEPT (หลัง RepoRoot bugfix) · **pending blind Codex review** ก่อน accept + เปิด C1. exception resolution ข้างบน = Opus judgment (worker ไม่ตัดสิน) รอ C1 ลงมือ.
