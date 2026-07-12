@@ -35,8 +35,15 @@ ZSCORE funnel that immediately preceded the 07-11 work).
 ## 4. Included cohort (20) — see `B0_DATASET.csv`
 
 By class: **INFRA/tool = 6** (083B, 083C, 092, 093, 094, 096C) · **EA-CANDIDATE/bench = 7** (078,
-091C-D1, -D1b, -D1c, -D1e, -D1f, 095-A) · **EA-REJECT/dead = 5** (096A, 096B, 091B, 091B-phase2, 090)
-· **EA-PARK = 2** (085B, 089). Total 20 distinct IDs, no duplicates.
+091C-D1, -D1b, -D1c, -D1e, -D1f, 095-A) · **EA-REJECT/dead = 5** (096A, 096B, 091B, 088, 090)
+· **EA-PARK = 2** (085B, 089). Total **20 distinct canonical ORDER IDs**, no duplicates.
+
+> **REWORK fix (2026-07-12, after blind Codex review):** the first cut listed `ORDER-091B` *and*
+> `ORDER-091B เฟส 2` as two rows, but both headers carry the **same canonical ID `ORDER-091B`** (phase 1
+> + phase 2 of one order at pinned lines 4113 and 4207) — that is 1 distinct order, not 2, so the cut
+> had only 19 distinct IDs. Fixed by counting `ORDER-091B` once and admitting the next-most-recent
+> eligible terminal order, **`ORDER-088`** (DONE 2026-07-10). Also corrected two mis-attributed
+> evidence commits (see §7).
 
 ## 5. Excluded (explicit)
 
@@ -48,7 +55,8 @@ By class: **INFRA/tool = 6** (083B, 083C, 092, 093, 094, 096C) · **EA-CANDIDATE
 | Non-terminal (`CLAIMED` / `IN-PROGRESS`) | ORDER-064, ORDER-072, ORDER-079, ORDER-084 |
 | Non-terminal (`WAITING-USER` / deployment-ongoing) | ORDER-045, ORDER-055 |
 | Annotation lines, not orders | ORDER-035-REVIEW note, ORDER-082 AMENDMENT, ORDER-075/078 NOTE, ORDER-091C-D1c PROCESSING |
-| Eligible terminal but **older than the 20 most-recent** (not selected by the cohort rule) | all remaining REVIEWED/DONE/CLOSED orders ≤ ORDER-088 and the 07-09/07-10 tail not in the top-20 (e.g. 068–077, 083, 085, 086, 087, 088, 001–067 …) |
+| **Duplicate canonical ID (phase of an included order)** | `ORDER-091B เฟส 2` — same canonical ID as the included `ORDER-091B`; a phase is not a new distinct order (fix after Codex review) |
+| Eligible terminal but **older than the 20 most-recent** (not selected by the cohort rule) | all remaining REVIEWED/DONE/CLOSED orders older than the window (e.g. 068–077, 083, 085, 086, 087, 001–067 …) — `ORDER-088` **is** included as the 20th (it replaced the mis-counted 091B phase) |
 
 The last row is the reason the cohort is a **window**, not "every closed order": there are ~70+
 eligible terminal orders; B0 deliberately samples the 20 nearest the cutoff.
@@ -60,8 +68,12 @@ eligible terminal orders; B0 deliberately samples the 20 nearest the cutoff.
 | `onboarding_time` | never instrumented when the work ran | `NOT_RECORDED` (all rows) |
 | `context_incident` | never logged per-order | `NOT_RECORDED` (all rows) |
 | `lead_attention_hours` | never tracked per-order | `NOT_RECORDED` (all rows) |
-| `context_rework` | count of cohort orders re-run because of wrong **context/authority** (recoverable from git + taskboard) | **0** — the JUMSTOCH D1→D1f chain is *planned build-on expansion per doctrine, not rework*; no cohort order was redone due to a context/authority error |
-| `wrong_order_file_scope` | count of cohort orders that touched the wrong order/file/scope (recoverable from git + taskboard) | **0** within the cohort |
+| `context_rework` | **reproducible query** (see §9): count cohort blocks whose text matches a rework/redo-due-to-context marker | **0** (query returns 0 hits) — the JUMSTOCH D1→D1f chain is *planned build-on expansion per doctrine, not rework* |
+| `wrong_order_file_scope` | **reproducible query** (see §9): count cohort blocks whose text matches an ID-collision/renumber/wrong-scope marker | **0** (query returns 0 hits within the cohort) |
+
+> These two are the only counted (non-`NOT_RECORDED`) fields, so per §20.8 acceptance they must be
+> reproducible by a third party. The exact queries are in §9 — a reviewer runs them over the same 20
+> cohort blocks at the pinned SHA and gets the same 0/0. A 0 here is a *query result*, not a judgment.
 
 **System-level note (outside cohort metrics, but recoverable and worth recording):** two ORDER-ID
 **collisions** occurred adjacent to this window — `042→043` (collided with DealsExporter) and
@@ -75,17 +87,21 @@ zero. B0↔B1 comparison may only use fields present on both sides — at B0 tha
 
 ## 7. Evidence traceability
 
-Requirement: ≥5/20 traces reach canonical evidence. **Achieved 16/20** with a direct evidence commit
-(ancestor of cutoff) in `B0_DATASET.csv`. The other 4 (096A/096B/096C, 091B-phase2) anchor to the
-WOBR closeout commits (`3acc39c2` merge / `87e83792`). Every row also carries its line anchor in the
-pinned blob.
+Requirement: ≥5/20 traces reach canonical evidence. **Achieved 17/20** with a direct evidence commit
+(ancestor of cutoff) in `B0_DATASET.csv`. The other 3 (096A/096B/096C) anchor to the WOBR closeout
+merge (`3acc39c2`). Every row also carries its line anchor in the pinned blob.
+
+> **REWORK fix (2026-07-12, Codex review):** two evidence commits were mis-attributed in the first cut
+> and are corrected in `B0_DATASET.csv` — `ORDER-078` pointed at `9e1d1acf` (a corr-check commit; that
+> was actually 085B-adjacent), now `00392e30` (`[tag] ORDER-078 done`, review `b93e4b9d`); `ORDER-085B`
+> pointed at `9e1d1acf`, now `b5b1b429` (`[tag] ORDER-085B done`, review `e481e00f`).
 
 Sample deep traces:
 - ORDER-093 → `c910765c` → `portfolio/DEPLOYMENTS.csv` (29 rows) + `check_state.ps1` 13-check rewrite.
 - ORDER-092 → `f8a7eb9f` → floating-risk exporters + `live_dashboard.ps1` FLOATING RISK panel.
 - ORDER-094 → `45df678b` → 4 cages fail-closed (CODEX-AUDIT Layer D closed).
 - ORDER-091C-D1f → `0d85a525` → JUMSTOCH MT5 OOS (EURGBP H1 / NZDUSD H4) reports.
-- ORDER-078 → `9e1d1acf` → Boss_16 corr check (0.077 vs BRK_FULLSPAN).
+- ORDER-078 → `00392e30` → Boss_16 BUY 21/30 validation funnel (4/4 steps, 0 stop-bars).
 
 ## 8. Acceptance self-check (ORDER-099)
 
@@ -105,5 +121,18 @@ git show 4eb839d:AGENT_TASKBOARD.md | grep -nE '^## ORDER-'
 # a row's evidence
 git log 4eb839d --oneline --grep='ORDER-<id>\b'
 # line anchors are line numbers in the pinned blob above
+
+# wrong_order_file_scope query (ID collision / renumber / wrong scope):
+git show 4eb839d:AGENT_TASKBOARD.md | grep -nE 'renumbered|ชนกับ|wrong (order|file|scope)'
+#   markers land at L2089 (magic note), L2102 (ORDER-043), L2236 (ORDER-039 note), L2914/L3070
+#   (lane-avoidance prose), L5530 (ORDER-097) — map each line to its enclosing ORDER header; NONE
+#   falls inside a cohort block (cohort blocks start at L3202 and none of these hits are within a
+#   cohort order's line range) => cohort wrong_order_file_scope = 0
+
+# context_rework query (redo due to wrong context/authority):
+git show 4eb839d:AGENT_TASKBOARD.md | grep -nE 'rework|redo|รันซ้ำเพราะ|ทำใหม่เพราะ|context (ผิด|wrong)|authority (ผิด|wrong)'
+#   -> 0 hits anywhere => cohort context_rework = 0
 ```
-Same cutoff SHA + same rules → same 20 rows. The live (post-cleanup) taskboard is irrelevant to B0.
+To map a marker hit to its order: it belongs to the nearest `## ORDER-` header at or above its line.
+Cohort line ranges are the `cutoff_blob_line` column in `B0_DATASET.csv`. Same cutoff SHA + same rules
+→ same 20 rows and same 0/0. The live (post-cleanup) taskboard is irrelevant to B0.

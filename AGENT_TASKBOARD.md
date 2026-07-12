@@ -819,7 +819,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `DONE(Opus, 2026-07-12) — self-review ACCEPT, pending external reviewer` (SYSTEM ORDER 1 of ≤4 memory-control build)
+## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `DONE · Codex blind review = REWORK (3 defects) → FIXED 2026-07-12 → re-review pending` (SYSTEM ORDER 1 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (Contract A = §20.8) · pin **`B0_CUTOFF_SHA=4eb839df09b1911cec2de18ec4a2df51cf766606`**
 > **ทำได้:** Claude/Opus (judgment: cohort selection · incident taxonomy · owner conclusions) · qwen/fast-worker (mechanical extraction เท่านั้น) · **👉 แนะ:** **Opus-seat** (§20 บอก Opus-only for judgment)
@@ -870,11 +870,19 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 **System note:** เจอ ORDER-ID collision 2 ครั้ง (042→043, 096→097) นอก cohort — บันทึกใน report ไม่ทิ้งเงียบ (เป็น class ปัญหาที่ Contract C ตั้งใจแก้).
 
-**Status:** DONE + Opus self-review = **ACCEPT** (ผ่าน acceptance ครบ). **ค้าง external reviewer** ตามที่ user แจ้ง ก่อน flip `REVIEWED`. ถ้า ACCEPT ยืน → เขียน Contract B (MVP-0 harness) เป็น system order 2 ได้.
+**Status:** DONE + Opus self-review = ACCEPT — **แต่ Codex blind review (2026-07-12) = REWORK, ถูกต้อง 3 ข้อ (Opus verify ยืนยันทั้งหมด, self-ACCEPT ผิดจริง):**
+
+### Codex REWORK (ORDER-099) → resolution 2026-07-12
+1. **cohort 19 ไม่ใช่ 20 distinct** — `ORDER-091B` phase1 + "เฟส 2" = canonical ID เดียวกัน (header L4113+L4207) นับเป็น 2 ผิด → **FIX:** ตัด phase2, เลื่อน `ORDER-088` (DONE 07-10) เข้าแทน · CSV ยืนยัน 20 distinct, 0 dup
+2. **evidence SHA ผิด 2 แถว** — 078 อ้าง `9e1d1acf` (corr-check) → จริง `00392e30` (+review `b93e4b9d`) · 085B อ้าง `9e1d1acf` → จริง `b5b1b429` (+`e481e00f`) → **FIX:** แก้ CSV + report §7
+3. **rework/wrong-scope 0 ไม่ reproducible** — เดิมบอก 0 จาก inspection → **FIX:** เพิ่ม reproducible grep query ใน report §6/§9 (marker regex EN/TH) · รันแล้ว: wrong-scope hits = non-cohort (043/039/097), rework = 0 hits → cohort 0/0 ยืนยันซ้ำได้
+- Codex PASS: owner-conflict=0 · B0 reality clause (NOT_RECORDED ถูก) · canonical isolation
+
+**Status หลังแก้:** artifact แก้ครบใน `docs/memory_control/` (commit แยก) → **DONE, รอ re-review** (ให้ Codex/คุณดูรอบสองว่า 3 ข้อปิดจริง).
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `DONE(Opus + Sonnet-subagent build, 2026-07-12) — self-review ACCEPT` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REWORK(Codex blind review 2026-07-12) — 2 blockers + 4 correctness fixes · rebuild รอ user go · ห้ามใช้รัน MT4/MT5 จริงจนกว่าจะแก้` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
@@ -944,3 +952,15 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **Status:** DONE + Opus self-review = **ACCEPT**. **ค้าง external review** (เหมือน ORDER-099) ก่อน flip `REVIEWED`.
 
 ⏸️ **STOP-POINT ก่อน system order 3 (Contract C):** Contract C = active/archive migration = แก้ **architectural write path** → §20/handoff บังคับ (ก) **maintenance window ที่ไม่มี taskboard writer** — ตอนนี้มี concurrent session เขียนอยู่ (ดู memory `shared-worktree-concurrent-writers`) = **ยังไม่ปลอดภัย** · (ข) **blind Codex review ก่อน accept**. → ไม่เขียน Contract C ต่อจนกว่า user เคาะ window + review ORDER-099/100.
+
+### Codex blind review (ORDER-100) 2026-07-12 = REWORK — Opus verify: ยอมรับทุกข้อ (self-ACCEPT ผิด)
+Official tests ยัง 5/5 PASS แต่ mock ปิด case จริงไม่หมด. ต้องแก้ก่อนใช้รัน MT4/MT5 จริง:
+- **BLOCKER-1 false-green:** wrapper ตัดสินจาก `$LASTEXITCODE` อย่างเดียว (L209). **Opus verify:** `mt5_run.ps1` exit 1 ตอน NO REPORT (ok) **แต่ `mt4_run.ps1` ไม่มี `exit` บน path report → falls through = exit 0 แม้ NO REPORT** (L109-130) → false green จริงกับ mt4/optimizer/batch. **FIX:** success-detection ต้องเช็ค **artifact จริง (report/xml ถูกสร้าง)** หรือ parse `OK REPORT`/`NO REPORT` marker ต่อ-runner ไม่ใช่ exit code ล้วน
+- **BLOCKER-2 lane-lock ไม่ global:** lock อยู่ใต้ `$StateDir` (L89-93) → 2 batch คนละ StateDir แต่ physical lane เดียว = lock คนละไฟล์ = ไม่กันชนจริง (Codex รัน 2 wrapper overlap ได้). **FIX:** lane-lock ไปที่ **fixed global dir keyed by physical lane/terminal** ไม่ใช่ StateDir
+- **FIX-3 lane-collision test อ่อน:** test (L169) ใส่ 2 job ใน process เดียว = sequential อยู่แล้ว ถอด lock ออกก็ผ่าน → ต้อง test **2 process พร้อมกัน** lane เดียว assert no-overlap
+- **FIX-4 Model-4 guard เชื่อ label:** (L81) รับ lane ลงท้าย `-1` แต่ manifest ใส่ `-Terminal Meta 5b` ได้ → ไม่ผูก physical lane 1 จริง. **FIX:** parse `-Terminal` จาก args เทียบ lane-1 install จริง
+- **FIX-5 state write ไม่ atomic:** `Set-Content` ตรง (L73) → crash กลาง write = JSON ขาด resume ไม่ได้. **FIX:** write temp + atomic move
+- **FIX-6 manifest dup-ID ไม่ validate:** unique ID ใน contract (L21) แต่ lookup first-match (L195) → dup = รัน runner ผิด. **FIX:** validate unique ID, abort ถ้าซ้ำ
+- Codex PASS: no-kill/-Force safety · runner เดิม byte-unchanged · stale-lock 300s ยอมรับได้ (แต่ต้อง global scope ก่อน = ผูกกับ BLOCKER-2)
+
+**Rebuild spec = 6 ข้อบน · commit แยก · re-test + re-review ก่อน accept · ห้าม flip REVIEWED จน 2 blocker ปิด. รอ user เคาะเริ่ม rebuild (routing เดิม: Codex-direct/subagent build → Opus verify).**
