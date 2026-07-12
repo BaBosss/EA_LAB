@@ -5661,3 +5661,114 @@ resolved to DEAD, ไม่ต้อง OOS/BWD. USDJPY trend ตายครบ
 
 **Acceptance:** commit เดียวสะอาด เฉพาะไฟล์ที่ระบุ + รายงาน hash.
 **ห้าม:** add report .htm / CSV ใน `_mt5_auto` (transient) · **push โดยไม่ถาม user** · แก้ไฟล์อื่นระหว่างทาง
+
+---
+
+## ORDER-098 — CAMPAIGN: fxDreema YouTube corpus build-on — `OPEN` (multi-session · user prioritizes ใน session เดียวก่อนลงมือหนัก)
+
+**ที่มา (2026-07-12):** แกะช่อง @fxdreemalearner ครบ 320 คลิป → catalog กลไก 272 EA. ผล + shortlist เต็ม =
+`_triage/fxdreema_youtube/BUILDON_SHORTLIST.md` (+ `CATALOG.jsonl` · `DIGEST.txt`). pipeline/สถานะ = memory
+`fxdreema-youtube-corpus`. toolchain แกะคลิปเพิ่ม = `scripts/yt2text.ps1` (memory `yt-whisper-toolchain`).
+
+**Doctrine ที่บังคับทุก sub-order (paid rules):**
+- เกือบทุก EA = chassis ST03 (entry→grid→trailing→no-SL). **flat-lot probe = ด่านแรกบังคับทุก entry** —
+  ปิด escalation (single order, fixed lot, SL/TP) แล้ว PF ยัง >1 ไหม. ST03-dead vs Kangaroo-edge แยกตรงนี้.
+- **ห้ามตัด grid/martingale ทิ้ง** (user doctrine [[feedback-buildon-pf-gt-1]]) — ขุด entry + MM part มาแปะ
+  chassis ที่ validated แล้ว (MatchaGrid bounded+SL · Kangaroo DD-release · JUMSTOCH capped-SL'd reversion grid).
+- ตัวเลข % ในการ์ด = คำอ้างคนสอน **ยังไม่ verify** — guilty until flat-lot + funnel proves.
+- VERDICT GATE เต็มใช้ตามปกติ (≥3 lever × ≥2 TF ก่อน reject · both-regime · holdout+MC ก่อน deploy).
+
+**Sub-orders (A/B พร้อมรัน · C = library · user เลือกลำดับ):** 098-A FVG-fill entry · 098-B MACD-divergence entry ·
+098-C reusable MM-parts. **ห้ามเริ่ม build campaign เต็มจนกว่า user เคาะลำดับใน session ที่นัดไว้** — sub-orders
+ด้านล่าง stock ไว้ให้พร้อมเฉยๆ.
+
+---
+
+## ORDER-098-A — FVG-fill entry (EX009 algo) flat-lot smoke — `OPEN` (role: Claude/Sonnet build → agent smoke)
+
+**ทำไม:** FVG/ICT-zone (24 การ์ด) = angle ใหม่จริงที่ยังไม่มีใน landscape (มีแค่ PARKED-CONCEPT จาก FB reel ไม่มีตัวเลข).
+ทดสอบว่า **entry เปล่าๆ มี edge ไหม ก่อนแตะ grid/MM** (flat-lot probe).
+
+**สเปค entry (จาก EX009 + EX196):**
+- FVG bullish = `Low[1] > High[3]` (ช่องว่าง 3 แท่ง) · เข้าเมื่อ `Close[0]` ย้อนกลับมาปิด *ใน* ช่อง (ระหว่าง High[3]..Low[1])
+  + ยืนยัน bullish engulfing (body[0] > body[1]) · mirror สำหรับ SELL (`High[1] < Low[3]`)
+- **flat-lot บังคับ: single order, fixed 0.01, SL 20 pip / TP 15 pip** (ตาม EX009) — **ไม่มี grid ไม่มี martingale**
+- bar-open gate + digit-aware pip + magic-scoped (ผ่าน `mql-code-reviewer` ก่อน compile)
+
+**คำสั่ง:** build `ea_projects/(EXP)_FVGFill_Naked/` → compile headless → smoke Model 1, 2023.01-2026.01:
+EURUSD H1 · EURUSD H4 · XAUUSD H1 · XAUUSD H4 (4 cells).
+
+**Acceptance:** ตาราง 4 แถว (PF · Trades · EqDD% · Win%) append ใต้ order นี้ + path report ดิบ. commit `[tag] ORDER-098-A done`.
+**ห้าม:** ใส่ grid/martingale ก่อน flat-lot PF ผ่าน · ตัดสิน dead ก่อนครบ VERDICT GATE (≥3 lever × ≥2 TF) ·
+เขียน verdict (นั่นงาน lead) · Model-2 tight-TP (TP 15pip อาจ < spread บน XAU → ใช้ Model 1 + ตรวจ spread-artifact).
+
+---
+
+## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `OPEN` (role: Claude/Sonnet build → agent smoke)
+
+**ทำไม:** MACD *divergence* (price LL / MACD HL) ≠ naked MACD-cross ที่ตายไปแล้ว = reversion signal ที่ยังไม่เคย smoke.
+EX120 เสริม volume-confirm + low-freq (RR 1:3-1:5).
+
+**สเปค entry:** bullish divergence = price ทำ lower-low แต่ MACD main ทำ higher-low (lookback N swing) · เข้า BUY ·
+mirror SELL · **flat-lot single order fixed 0.01, SL = 3-bar extremum, TP = 200% SL** (จาก EX113/EX013 RR 1:2).
+
+**คำสั่ง:** build `ea_projects/(EXP)_MacdDiv_Naked/` → compile → smoke Model 1 2023.01-2026.01:
+EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
+
+**Acceptance:** ตาราง 4 แถว (PF/Trades/EqDD%/Win%) + report path. commit `[tag] ORDER-098-B done`.
+**ห้าม:** grid ก่อน flat-lot ผ่าน · verdict · reject ก่อนครบ gate.
+
+---
+
+## ORDER-098-C — reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) — `OPEN` (role: Claude · depends: chassis เป้า)
+
+**ทำไม:** 2 ชิ้นนี้ = "cap + linear/log" ที่ user สั่ง มีคนทำไว้แล้วในคลัง — เอาไปแปะ chassis ที่ผ่าน flat-lot (098-A/B)
+หรือ retrofit บน MatchaGrid/Kangaroo/JUMSTOCH ได้เลย (pure risk-mechanics ไม่ยุ่ง entry-edge).
+
+**สเปคที่จะสกัดเป็น module:**
+- **dynamic close_money** (EX183/EX078): `close_target = base + (open_order_count / C) * base` — เป้าโตตามจำนวนไม้
+- **Fibonacci-bounded lot** (EX191): sequence `0.01,0.02,0.03,0.05,0.08,0.13` cap ที่ step 13× (แทน martingale ×2) +
+  reset เมื่อ flat · EX211 variant มี SL30/TP50 อยู่แล้ว = bounded+capped ต้นแบบ
+
+**คำสั่ง:** เขียนเป็น include module (`ea_template/core/` ตาม pattern เดิม) + run `tpl_regression.ps1` cage หลังแก้ core.
+**Acceptance:** module compile ผ่าน + regression cage เขียว + unit note ว่าใส่กับ chassis ไหนได้. **ยังไม่ต้อง backtest** (งาน integrate อยู่ order ถัดไปหลัง 098-A/B รู้ผล).
+**ห้าม:** แก้ core โดยไม่รัน `tpl_regression.ps1` · integrate เข้า chassis จริงก่อน entry-edge ยืนยัน (จะปนตัวแปร).
+
+---
+
+## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `OPEN` (SYSTEM ORDER 1 of ≤4 memory-control build)
+
+> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (Contract A = §20.8) · pin **`B0_CUTOFF_SHA=4eb839df09b1911cec2de18ec4a2df51cf766606`**
+> **ทำได้:** Claude/Opus (judgment: cohort selection · incident taxonomy · owner conclusions) · qwen/fast-worker (mechanical extraction เท่านั้น) · **👉 แนะ:** **Opus-seat** (§20 บอก Opus-only for judgment)
+
+**ทำไม:** §20.2 workstream ที่ 1. ก่อนสร้าง harness/archive/events ต้องมี (ก) baseline B0 ของ 20 order ประวัติศาสตร์เพื่อวัดว่า MVP-0/3/1 ทำให้ดีขึ้นจริงไหม (ข) fact→canonical-owner map เพื่อกันสร้าง source-of-truth ชุดที่สอง. **นี่คือ audit output ไม่ใช่ authority ใหม่** — ไม่เปลี่ยนใครเป็นเจ้าของอะไร.
+
+**Outputs (ทั้งหมดอยู่ใต้ dir เดียว `docs\memory_control\` — generated artifact เท่านั้น):**
+1. **fact→owner map** — ต่อ fact แถวหนึ่ง: `fact · canonical_owner (ไฟล์/path) · permitted_writers · generated_consumers · freshness_check`. อ้างอิงตาราง §20.7 เป็นฐาน — ห้ามขัด.
+2. **B0 raw dataset** (CSV/JSONL reproducible) ของ **20 terminal orders ณ cutoff `4eb839d`** — ต่อแถว: `ORDER_ID · source_anchor (taskboard line/commit) · evidence_commit_or_path · classification (machine-checkable) · onboarding_time · context_incident · context_rework · wrong_order_file_scope · lead_attention_hours`.
+3. **B0 report สั้น** + inclusion/exclusion list ชัดเจน (เหตุผลต่อ order ที่ตัดออก).
+
+**Selection rule (bounded, machine-checkable):** เลือก 20 order ที่ **ปิดจริง (มี execution + result) ก่อน/ณ `4eb839d`** · **ตัดออก:** umbrella/CAMPAIGN order ที่ไม่มี execution เอง · `SKIPPED` · no-execution · order ที่ไม่มี evidence. ต่อแถวต้องมี ORDER ID + source anchor + evidence commit/path + classification.
+
+**B0 reality clause (§20.3 — บังคับ):** metric ที่ **ไม่เคยถูกบันทึกตอนงานวิ่งจริง** (onboarding time, lead-attention hours) = **`NOT_RECORDED`** — **ห้าม reconstruct จากความจำ, ห้ามใส่ 0**. metric ที่นับได้จาก git + taskboard history (rework, wrong-scope) ให้คำนวณจาก raw row และต้อง reproduce ได้.
+
+**Acceptance (ตัวเลขล้วน — ตรวจได้ทุกข้อ ได้/ไม่ได้):**
+- [ ] `docs\memory_control\` มี 3 artifact ครบ (map · B0 dataset · report)
+- [ ] B0 dataset = **20 distinct eligible orders** (ไม่ซ้ำ ORDER ID · ไม่มี umbrella-only/SKIPPED/no-execution)
+- [ ] **unresolved owner conflict = 0** ใน fact→owner map (ถ้าเจอ conflict → order = BLOCKED พร้อมคำถาม, **worker ห้ามเลือก owner เอง**)
+- [ ] **≥5/20 traces ถึง canonical evidence จริง** (commit/path เปิดได้)
+- [ ] rework / wrong-scope ทุกค่า **reproduce จาก raw row ได้** (สคริปต์/สูตรแนบ)
+- [ ] onboarding/lead-hour ที่ขาด = `NOT_RECORDED` ทุกช่อง (ไม่มี 0 ปลอม, ไม่มีเลข reconstruct)
+- [ ] canonical docs (`PROJECT_STATE.md`/`AGENTS.md`/scorecard/DEPLOYMENTS.csv/taskboard order เดิม) **ไม่ถูกแก้** นอกจาก bootstrap pointer/order lifecycle
+- [ ] `[tag] ORDER-099 done` + ผลดิบ append ใต้ order นี้
+
+**ห้าม (out of scope — §20.8 Contract A):**
+- ❌ migrate/archive data ใดๆ (นั่นคือ Contract C) · ❌ implement harness/events/packet (Contract B/D/MVP-2)
+- ❌ เปลี่ยน authority/owner/write-path จริง · ❌ แตะเงินจริง/deployment/verdict
+- ❌ worker ตัดสิน owner conflict เอง → **mark BLOCKED, ให้ Opus resolve แยก**
+- ❌ ใส่ metric ที่ reconstruct จากความจำ (ต้อง `NOT_RECORDED`)
+- ❌ pre-open Contract B/C/D — order ถัดไปเขียนหลัง Opus review ORDER-099 เท่านั้น
+
+**Rollback:** ลบเฉพาะ generated B0/map artifact ใน `docs\memory_control\`; design pointer ใน PROJECT_STATE คงไว้. canonical docs ต้องไม่เปลี่ยน.
+
+**Routing/mechanics:** mechanical extraction (grep taskboard, list ORDER IDs, pull evidence paths) → qwen/fast-worker ได้ · cohort selection + incident taxonomy + ทุก owner conclusion = **Opus-seat**. ผลดิบ append ใต้ order นี้ก่อน Opus mark REVIEWED. (B0 execution/result = commit แยกจาก canonicalization commit — ห้ามรวม.)

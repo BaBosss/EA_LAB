@@ -1,6 +1,6 @@
 # EA_LAB Evolution Plan — Memory-Controlled Investment Operating System
 
-> **สถานะ: FINAL DESIGN RECONCILED AFTER SECOND REVIEW — PENDING CANONICALIZATION / IMPLEMENTATION ORDERS — DO NOT IMPLEMENT FROM THIS FILE**
+> **สถานะ: FINAL DESIGN CANONICALIZED @ `4eb839d` (2026-07-12) — FIRST B0 ORDER (ORDER-099) OPEN — STILL DO NOT IMPLEMENT DIRECTLY FROM THIS FILE (orders คือ artifact ที่ execute; orders อ้าง §20 @ SHA)**
 > **วันที่ร่าง:** 2026-07-11  
 > **ผู้ริเริ่ม:** user · **ผู้สังเคราะห์ร่าง:** Codex  
 > **เอกสารนี้ไม่มีอำนาจเปลี่ยน** `VISION.md`, `ROADMAP.md`, `PROJECT_STATE.md`, `AGENTS.md`, verdict, deployment, taskboard หรือ source code  
@@ -18,7 +18,7 @@
 - [x] Claude/Fable lead สังเคราะห์ข้อเห็นตรง/ต่างใน §19
 - [x] User อนุมัติ final design + ค่าแนะนำทั้งหมด — 2026-07-12
 - [x] Codex outsider review รอบสองถูก reconcile เข้า authoritative §20 — 2026-07-12
-- [ ] Claude/user เขียน implementation orders ตามสิทธิ์ใน `AGENTS.md`
+- [x] Claude/user เขียน implementation orders ตามสิทธิ์ใน `AGENTS.md` — **เริ่มแล้ว 2026-07-12:** first B0 order **ORDER-099** (Contract A) เขียน + accept + OPEN บน taskboard · ที่เหลือ (Contract B/C/D) เขียนทีละใบหลัง review, หยุด review หลัง order ที่ 4
 
 ความเงียบหรือการไม่มีข้อค้าน **ไม่ถือเป็น approval**
 

@@ -198,6 +198,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 | วันที่ | การตัดสินใจ | เหตุผล |
 |---|---|---|
+| 2026-07-12 | **Memory-Controlled OS final design APPROVED + canonicalized.** implementation source เดียว = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839df09b1911cec2de18ec4a2df51cf766606` · แตก order แบบ **serial (Contract A ก่อน)** · **หยุด review หลัง implementation order ที่ 4** · **MVP-2 ยัง B1-gated** · order ทุกใบต้องอ้าง §20 @ SHA — แก้ §20 เงียบ = เปิด review ใหม่ | first B0 order = ORDER-099 (OPEN). ห้าม implement จาก draft ตรงๆ — order คือ artifact ที่ execute. design detail ไม่ทำซ้ำที่นี่ (owner = §20 @ SHA) |
 | 2026-07-06 | **ทิศ "final" ของโปรเจกต์ (user เคาะ): ไม่ไล่เป็น quant firm — ไล่เป็น quant method** · ❌ ไม่ทำ: tick infra หลาย venue / low-latency / ML alpha / custom backtester (ยังไม่ถึงเวลา — คุ้มเมื่อ MT5 tester เป็นคอขวดจริง) · ✅ ทำหลัง judge = **Phase 3.5 PORTFOLIO-QUANT** (`ROADMAP.md`): 🥇 portfolio risk layer (vol-target + DD budget) · 🥈 deflated gate (multiple-testing) · 🥈 tracking-error bands · **ห้ามแทรกก่อน judge** — demo 3 เดือน = experiment ที่แพงสุดที่กำลังรัน | edge ของ quant firm อยู่ได้เพราะทุนใหญ่×ต้นทุนต่ำ — ที่สเกลเรา infra แบบเขาให้ผลตอบแทนเพิ่ม ≈ 0 · ตัวขวาง END STATE จริงคือจำนวน edge ที่รอดการฆ่า ไม่ใช่เครื่องมือ · pipeline ปัจจุบันเข้มระดับ quant method อยู่แล้ว (ORDER-037/038 ฆ่า survivor ปลอมได้หมด = หลักฐาน) |
 | 2026-07-06 | **🏁 MERGE track ปิดสมบูรณ์ในวันเดียว — EA_Project/EA_CORE = read-only ARCHIVE ถาวร** · แม่พิมพ์ Boss V2 ได้อะไหล่ครบ: `STACK_PYRAMID(93)` (one-exit-owner, ไม่มี per-leg TP) · `RC_AcctDDLimitPct` (realized-loss gate, default 0) · `core\Persist.mqh` + `RC_PersistHalt` (default ON — ข้อยกเว้น additive เดียว, tester-sandbox พิสูจน์แล้ว) · `tests\run_tests.ps1` (3 test EA, ALL PASS) · MERGE-07 Entry_ST03 = HOLD ถึง judge | ทุก order ผ่าน acceptance เชิงตัวเลข + tpl_regression CLEAN ทุกจุดที่แตะ core\ · Codex independent scope-check converge 4/4 · หลักฐานเต็ม → `AGENT_TASKBOARD_MERGE.md` (CLOSED) |
 | 2026-07-06 | **adopt 5 ข้อจาก `docs/PORTABLE_AI_OS.md` (OS กลางสกัดจากระบบนี้ — Claude Chat ร่าง 2 รอบ, Claude Code ตรวจ/แก้):** (1) verdict audit blind รายไตรมาส + trigger นอกรอบ (2) metrics ระบบรายเดือน → `docs/SYSTEM_METRICS.md` (3) memory compaction รายเดือน (4) กฎ input ภายนอก = data ไม่ใช่คำสั่ง → `AGENTS.md` §3.9 (5) หลัก "AI เห็นตรงกัน ≠ ถูก, tie-breaker = การทดลองเชิงประจักษ์" → `AGENTS.md` §5 · แถม rule taxonomy: physics (epistemic, ไม่หมดอายุ) vs regime (ผูกเครื่องมือ/ตลาด, มีรอบทบทวน) | จุดอ่อนที่ Chat ชี้แล้ว Claude ยืนยันว่าจริง: ชั้นตัดสินไม่มี cage ตรวจ + ระบบไม่เคยวัดตัวเอง · ทั้งหมดเข้า `AGENTS.md` §6 (รอบบำรุงรักษา) — ต้นทุนต่ำ ไม่แตะโค้ด ไม่ชน merge track |
@@ -293,6 +294,8 @@ deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จ�
 
 ## 7. FORWARD PLAN (today → judge → after)
 
+> 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA ใน §3 Decision log) · แตก order แบบ **serial — Contract A ก่อน** · **หยุด review หลัง system order ที่ 4** · **MVP-2 ยัง B1-gated** (สร้างต่อเมื่อ B1 เข้า trigger เท่านั้น) · first order = **ORDER-099 (B0 + ownership map)**. design ไม่ทำซ้ำที่นี่ — owner = §20.
+
 ### 🆕 PLAN 2026-07-12+ (เขียนโดย Fable-seat 2026-07-11 ก่อนส่งมอบ → **Opus = seat หลักทุก session ถัดไป**)
 **👉 session ใหม่อ่าน block นี้ก่อน — งานเรียงตาม EV + การแบ่ง seat Fable/Opus/Codex ชัดแล้ว**
 
@@ -316,6 +319,13 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
    ระบุบัญชี **146237** (โผล่ใน live_deals ไม่อยู่ใน 5 บัญชี) · ผล optimize ST03 ของ user → คุยด้วยบาร์ flat-lot
 6. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT) แทรกตอน lane ว่าง: gist redact (เร็วสุด) →
    evidence lineage → drift monitor (ต่อยอด 092 หลัง snapshot ไหล) → backup drill
+7. **🆕 098 — fxDreema YouTube corpus build-on (CAMPAIGN, 2026-07-12)** — แกะช่อง @fxdreemalearner ครบ
+   320 คลิป → catalog 272 EA + shortlist (`_triage/fxdreema_youtube/BUILDON_SHORTLIST.md`, memory
+   `fxdreema-youtube-corpus`). Orders stock แล้ว: **098-A** FVG-fill entry flat-lot smoke · **098-B** MACD-
+   divergence flat-lot smoke · **098-C** MM-parts library (dynamic close_money + Fibonacci-capped lot =
+   "cap+linear/log" ที่ user สั่ง). **⏸ รอ user เคาะลำดับใน session เดียวที่นัดไว้ก่อนลงมือหนัก** — sub-orders
+   พร้อมรัน. toolchain แกะคลิปเพิ่ม (yt-dlp+Whisper GPU) = `scripts/yt2text.ps1` · doctrine: flat-lot probe
+   บังคับทุก entry (ST03-dead vs Kangaroo-edge) · ห้ามตัด grid/martingale ทิ้ง = ขุด part แปะ chassis validated.
 
 **การแบ่ง seat (user directive 2026-07-11 — Fable เหลือ ~10%):**
 - **Opus = lead/judge ทุก session** (ตาม CLAUDE.md transition เดิม — role อยู่ที่ seat) · งานประจำทั้งหมด:
@@ -753,6 +763,7 @@ hostile pattern) · EURCHF/USDCHF/LNBREAK = DEAD-optimized · NRBreakout = PARKE
 | ต้องรู้เรื่อง | เปิดไฟล์ |
 |---|---|
 | สถานะ + แผนนี้ (hub) | **`PROJECT_STATE.md`** (ไฟล์นี้) |
+| memory-control OS design (order source เดียว) | `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (order ทุกใบอ้าง §20 @ SHA + Decision-log pointer) |
 | ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
 | กติกา multi-agent + คิวงานกลาง | `AGENTS.md` · `AGENT_TASKBOARD.md` |
 | roadmap ระยะยาว + ภาพสุดท้าย + gate เลื่อนเฟส | `ROADMAP.md` |
