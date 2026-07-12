@@ -820,7 +820,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `DONE · Codex REWORK ×2 → FIXED 2026-07-12 → re-review (round 3) pending` (SYSTEM ORDER 1 of ≤4 memory-control build)
+## ORDER-099 — Contract A: B0 historical baseline + fact→owner map — `REVIEWED(Codex blind review round 3 = ACCEPT, 2026-07-12) — Contract A COMPLETE` (SYSTEM ORDER 1 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** (Contract A = §20.8) · pin **`B0_CUTOFF_SHA=4eb839df09b1911cec2de18ec4a2df51cf766606`**
 > **ทำได้:** Claude/Opus (judgment: cohort selection · incident taxonomy · owner conclusions) · qwen/fast-worker (mechanical extraction เท่านั้น) · **👉 แนะ:** **Opus-seat** (§20 บอก Opus-only for judgment)
@@ -885,7 +885,13 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 - **§9 mapping ไม่ตรงผลรันจริง:** enclosing header จริง = 046/043/042/072/075/097 (ไม่ใช่ "043/039/097" ที่เขียนไว้) → **FIX:** เขียน mapping ใหม่ให้ตรง grep จริง · cohort ยัง 0/0 (ทั้ง 6 hit = non-cohort)
 - Codex spot-check evidence อื่น (083B/092/093/091C-D1c/095-A) = ผ่าน · regression (owner-conflict 0, NOT_RECORDED, canonical isolation) = ผ่าน
 
-**Status หลังแก้ 2 รอบ:** artifact ปรับครบใน `docs/memory_control/` (commit แยก) → **DONE, รอ re-review รอบ 3**. บทเรียน: cohort selection = จุดอ่อนซ้ำ (ผิด 2 รอบ) — round 3 ต้อง re-derive 07-11 set แบบ mechanical (มี 18 distinct: ยืนยันด้วย grep '2026-07-11' + terminal filter) ก่อน sign-off.
+**Status หลังแก้ 2 รอบ:** artifact ปรับครบใน `docs/memory_control/` (commit แยก) → รอ re-review รอบ 3. บทเรียน: cohort selection = จุดอ่อนซ้ำ (ผิด 2 รอบ) — round 3 re-derive 07-11 set แบบ mechanical (18 distinct) ก่อน sign-off.
+
+### ✅ Codex re-review round 3 (2026-07-12) = ACCEPT → ORDER-099 REVIEWED / Contract A COMPLETE
+Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุกตัว (18×07-11 + 089/090; 088 = #21 ตัดออก) · evidence 085B→ee0ae804 + 081→ee62433f ยืนยัน ancestor · §9 query รันตรง mapping · regression (owner-conflict 0, NOT_RECORDED, canonical isolation) ผ่าน. **ไม่มี artifact defect เหลือ.**
+- **หมายเหตุ honesty (Codex จับ, non-blocking):** commit `286ea6b5` แตะ block ORDER-100 ด้วย (บันทึกผล blind review Contract B) — ดังนั้นข้อความ commit ที่ว่า "เฉพาะ ORDER-099 lifecycle" ไม่ตรงตามตัวอักษร. เป็นการบันทึก review status ของอีก order ไม่ใช่เปลี่ยน authority/canonical EA data · `1b9ce1b` ไม่ซ้ำจุดนี้ · ไม่ rewrite history (ห้ามตามกติกา) แค่บันทึกตรงนี้.
+
+**System order 1 ปิด.** เหลือ: ORDER-100 (Contract B) = REWORK รอ rebuild (user pause) · Contract C/D ยังไม่เริ่ม (C ต้อง window เงียบ).
 
 ---
 
