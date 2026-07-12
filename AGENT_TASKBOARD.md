@@ -895,7 +895,7 @@ Codex re-derive cohort เองจาก pinned blob = ตรง dataset ทุ
 
 ---
 
-## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REBUILT + Codex REWORK r1+r2+r3 fixed — 22/22 · MVP-0 self-ACCEPT (1 documented alias-limit) · lead recommends LOCK` (SYSTEM ORDER 2 of ≤4 memory-control build)
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `REVIEWED(Opus lead = MVP-0 ACCEPT, 2026-07-12) — Contract B COMPLETE · 11 fixes · 22/22 · 3 Codex rounds · 1 documented alias-limit (fix ก่อน deploy harness ขับ MT5 จริง)` (SYSTEM ORDER 2 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
 > **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
