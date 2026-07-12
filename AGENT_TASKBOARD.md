@@ -871,3 +871,50 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **System note:** เจอ ORDER-ID collision 2 ครั้ง (042→043, 096→097) นอก cohort — บันทึกใน report ไม่ทิ้งเงียบ (เป็น class ปัญหาที่ Contract C ตั้งใจแก้).
 
 **Status:** DONE + Opus self-review = **ACCEPT** (ผ่าน acceptance ครบ). **ค้าง external reviewer** ตามที่ user แจ้ง ก่อน flip `REVIEWED`. ถ้า ACCEPT ยืน → เขียน Contract B (MVP-0 harness) เป็น system order 2 ได้.
+
+---
+
+## ORDER-100 — Contract B: MVP-0 blocking execution harness (`run_batch.ps1`) — `OPEN` (SYSTEM ORDER 2 of ≤4 memory-control build)
+
+> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract B @ `4eb839d`** + §20.2 seq #2 + §20.5 (reversible details delegated)
+> **ทำได้:** Codex-direct (build wrapper + TDD) · qwen/fast-worker (runner inventory เฟส 1) · Claude/Opus (interface+safety = เขียนไว้ในใบนี้แล้ว) · **👉 แนะ:** **qwen** เฟส 1 (mechanical) → **Codex-direct** เฟส 2 (code+TDD)
+> **Skills:** `tdd` (wrapper + append manifest) · `karpathy-guidelines` (surgical, explicit success criteria)
+> **Gate note:** system order 2 จาก ≤4 · review gate อยู่หลัง order ที่ 4 · ORDER-099 = self-ACCEPT ค้าง external review (B ไม่กิน output ของ B0 → เขียนคู่ขนานได้ แต่ถ้า B0 ถูก REWORK ใบนี้ไม่กระทบ)
+
+**ทำไม:** วัดแล้ววันนี้เอง — ของเสียที่แพงสุดไม่ใช่ context แต่คือ **agent stall + concurrent-writer collision** (session นี้โดน 2 ครั้ง: broad `git add` กวาดไฟล์ + branch switch ใต้เท้า). harness นี้ = ชั้น orchestration ที่ทำให้ batch **หยุดเป็น (blocking), เห็น fail ชัด, กันชนกันข้ามเลน, และ resume ได้** โดย **ไม่แตะ tester logic เดิม**.
+
+**หลักการเหล็ก (Opus เขียน — ห้าม implementer เปลี่ยน):**
+1. **Adapter ไม่ reimplement** — wrapper *เรียก* runner เดิม (`mt5_run.ps1`/`mt4_run.ps1`/`mt5_optimize.ps1`/`mt4_optimize.ps1`/`mass_smoke_*`) ตามเดิมทุกตัว **ห้ามเขียน tester logic ใหม่**
+2. **No new kill / no new process `-Force`** — wrapper **ห้ามมี** `Stop-Process`/`taskkill`/global kill/`-Force` บน process. timeout-kill ต่อ-PID ที่ runner เดิมมีอยู่ (mt5_run:113, mt4_run:123) = ปล่อยไว้ในตัว runner **ห้ามยกมาไว้ wrapper และห้ามเพิ่มของใหม่** · (`-Force`/`New-Item -Force` บน **ไฟล์/โฟลเดอร์** = อนุญาต ไม่ใช่ process — แต่ห้ามเพิ่มบน process)
+3. **ห้ามแตะ tester-safety เดิม** — GUI-already-running abort (`exit 2`) + `-Force` override ของ runner = คงเดิมเป๊ะ
+4. **Lane model = ของเดิม** (AGENTS.md §3.2): MT5 lane1 `D:\Meta 5` · lane2 `D:\Meta 5b` · lane3 `D:\Meta 5c` (ห้าม Model-4) · MT4 lane1 `D:\Meta4` · lane2 `D:\Meta4b` · **Model-4 = SERIAL lane1 เท่านั้น** · ในเลนเดียว = ทีละ job
+
+**เฟส 1 — runner inventory (deliverable, mechanical → qwen):** ตาราง `docs/memory_control/RUNNER_INVENTORY.md` ต่อ runner: `path · purpose · key params (Terminal/DataDir/Portable/Model/Report) · lane ที่ใช้ · exit-code semantics · timeout/kill เดิม`. ครอบ ≥ `mt5_run · mt4_run · mt5_optimize · mt4_optimize · mass_smoke_mt5 · mass_smoke_mt4 · mt5_batch_shortlist · qwen_batch_runner`. **adapter design เฟส 2 ต้อง derive จากตารางนี้.**
+
+**เฟส 2 — `scripts/run_batch.ps1` (deliverable, Codex + TDD) ตาม interface contract:**
+- **Input:** job manifest (list ของ job — แต่ละ job มีอย่างน้อย `id · runner · args · lane · model`). รูปแบบไฟล์ manifest (JSON/CSV/PSD1) + ชื่อ param = **delegated to Codex** (§20.5) ตราบใดที่มี field ครบ
+- **Blocking:** รัน job แล้ว *รอ* ให้จบก่อนไป job ถัดที่ผูกกัน — ไม่ fire-and-forget
+- **Lane-aware:** ห้าม dispatch 2 job เข้าเลนเดียวกันพร้อมกัน (block/queue ไม่ใช่ fail) · Model-4 job → serial lane1
+- **Fail-visible:** job fail (runner exit ≠ 0) → **หยุด job ที่เหลือในลำดับนั้น + wrapper exit ≠ 0** + log เหตุชัด
+- **Resume:** รันซ้ำด้วย manifest เดิม → รันเฉพาะ job ที่ยัง `pending/failed` · job `done` = skip (idempotent)
+- **Manifest state file:** บันทึกต่อ job = `id · runner · lane · state(pending/running/done/failed) · start · end · exit_code` (append/update, กู้คืน resume ได้)
+
+**Acceptance (ตัวเลข/ไฟล์ล้วน — ตรวจได้ทุกข้อ ด้วย mock runner ไม่ต้องเปิด MT5 จริง):**
+- [ ] เฟส 1: `RUNNER_INVENTORY.md` ครบ ≥8 runner พร้อม 6 คอลัมน์
+- [ ] mock success path → wrapper **exit 0** + manifest ทุก job = `done`
+- [ ] mock 1 job fail → job ถัดไป **ไม่รัน** + wrapper **exit ≠ 0** + manifest job นั้น = `failed`
+- [ ] interrupt กลางคัน แล้วรันซ้ำ → **รันเฉพาะ job ที่ยังไม่ done** (job done เดิมไม่รันซ้ำ = idempotent) พิสูจน์ด้วย marker/timestamp
+- [ ] lane collision: 2 job lane เดียวกัน → **ไม่รันพร้อมกัน** (blocked/queued) พิสูจน์ด้วย overlap-check ใน manifest time
+- [ ] `grep -rInE 'Stop-Process|taskkill|-Force' scripts/run_batch.ps1 <fixtures>` → **ไม่มี** kill/process-`-Force` ใหม่ (เฉพาะ file-op `-Force` ที่จำเป็นเท่านั้น + ต้องมี comment)
+- [ ] runner เดิมทุกไฟล์ **byte-unchanged** (`git diff` ว่างสำหรับ mt5_run/mt4_run/*optimize) = wrapper adapt ไม่แก้ของเดิม
+- [ ] `[tag] ORDER-100 done` + ผลดิบ (test output ทุก fixture) append ใต้ order นี้
+
+**ห้าม (out of scope — §20.8 Contract B):**
+- ❌ `Stop-Process`/`taskkill`/global kill/process-`-Force` ใหม่ · ❌ แก้พฤติกรรม tester-safety เดิม (GUI-abort/exit-2)
+- ❌ reimplement tester logic (ต้องเรียก runner เดิม) · ❌ แก้ไฟล์ runner เดิม (adapt เท่านั้น)
+- ❌ รัน MT5/MT4 จริงใน fixture test (ใช้ mock runner ที่ echo + exit code ตามสั่ง) · ❌ implement MVP-3/events/packet
+- ❌ pre-open Contract C/D — เขียนหลัง review ORDER-100
+
+**Rollback:** ลบ/ปิด `run_batch.ps1` + fixtures + `RUNNER_INVENTORY.md`; runner เดิมต้องทำงานเป๊ะเหมือนก่อนมี wrapper (พิสูจน์ด้วย byte-unchanged + smoke 1 run ตรง runner).
+
+**Routing:** เฟส 1 (inventory) → qwen/fast-worker · เฟส 2 (wrapper+TDD) → Codex-direct · Opus review ผลดิบ + verify grep-no-kill + byte-unchanged ก่อน mark REVIEWED. (Contract B = commit แยก — ห้ามรวมกับ B0/canonicalization.)
