@@ -16,7 +16,18 @@
    2-MA crossover + 2 toggle: HP-filter denoise (causal, banded-Cholesky, **ยืนยันไม่ look-ahead**) + tanh
    vol-scale. **compile 0/0 + mql-review PASS.** ex5 copy เข้า `D:\Meta 5\MQL5\Experts\` แล้ว.
 
-## 🚀 NEXT STEP ทันที — รัน Smoke Stage A (launcher พร้อม, ยังไม่ได้รัน)
+## ⏳ SMOKE STAGE A — กำลังรันอยู่ (launched 2026-07-13 ~18:2x, background)
+batch `scripts\order104_smokeA.ps1` ปล่อยแล้ว 32 runs (Model 2) — verify run แรกผ่าน (base XAU H1 REC =
+**PF 1.24, 587 trades**). ผลรวม → `_mt5_auto\reports\P104_summary.csv`. **session หน้า: อ่าน CSV → judge ตาม
+acceptance ORDER-104** (ด้านล่าง). ถ้า batch ยังไม่จบ/ล่ม → rerun คำสั่งใน "NEXT STEP" ด้านล่าง.
+
+> 🔴 **GOTCHA ที่เพิ่งเสียเวลาไป (2026-07-13):** tester install `D:\Meta 5` เป็น **non-portable** → หา EA จาก
+> **roaming** `C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts\`
+> **ไม่ใช่** install folder `D:\Meta 5\MQL5\Experts`. compile ใน ea_projects แล้วต้อง **copy .ex5 ไป roaming Experts**
+> ถึงจะเทสได้ (ไม่งั้น "tester EX5 not found", report เงียบ). bash `cp` พังกับชื่อมี `()` — ใช้ PowerShell
+> `Copy-Item -LiteralPath ... -Force`. (EA อื่นที่เทสได้ทั้งหมดอยู่ roaming นั้น).
+
+## 🚀 rerun Smoke Stage A (ถ้าต้องปล่อยใหม่)
 **user รันเองได้ยาวๆ** (quota ไม่เกี่ยว): **ปิด MT5 GUI ก่อน** แล้ว:
 ```
 cd D:\EA_LAB ; powershell -ExecutionPolicy Bypass -File scripts\order104_smokeA.ps1
