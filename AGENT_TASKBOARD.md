@@ -77,6 +77,53 @@ bundle = `_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-IT-T
 
 ---
 
+## ORDER-104 — SSRN-151 W1 probe: HP-filter denoise + tanh vol-scale bolt-on (signal-quality A/B) — `BUILD DONE + compile CLEAN(0/0) + mql-review PASS (Claude, 2026-07-13) → SMOKE OPEN (Stage A)` · **ทำได้: agent smoke-batch (ea-screener/qwen)** · 👉 spec+build เคาะแล้ว (Claude, 2026-07-13)
+
+**BUILD:** `ea_projects\(TRD)_Probe_MAHP_TanhVol\(TRD)_Probe_MAHP_TanhVol_rev01.mq5` (+.ex5) · magic 991041 ·
+2-MA crossover + 2 toggle: `_02_UseHPFilter` (causal HP denoise, banded-Cholesky solve, one-sided ไม่ look-ahead —
+reviewer ยืนยันแล้ว) · `_03_UseTanhVol` (lot × |tanh(R/κ)|×TargetVol/σ, SIZING ONLY ไม่แตะ entry). compile 0/0.
+**SMOKE Stage A (รอ agent):** XAUUSD+EURUSD × {H1,H4} × {2020-22, 2023-26} × 4 toggle-combo (off/off · HP · tanh ·
+both) = 32 run. sweep `_02_HP_Lambda` ∈ {1600,14400,129600}. เทียบ combo vs off/off ต่อ cell — acceptance +
+ห้าม = ดู spec เดิมด้านล่าง. _(ที่มา: user แชร์เปเปอร์ Kakushadze&Serur "151 Trading Strategies" — `docs\ssrn_id3453295_code2224789.pdf` · แผน = `_triage/SSRN_151strategies_PBX_ebook_2026-07-13.md` W1 · กลไก = catalog 8.1 + 10.4)_
+
+**Objective:** วัดว่า 2 เทคนิคจากเปเปอร์ยก signal quality ของ MA-cross ได้จริงไหม (bolt-on ถูกสุด/เสี่ยงต่ำสุด):
+(1) **8.1 HP-filter denoise** — กรอง noise ความถี่สูงด้วย Hodrick-Prescott *ก่อน* คำนวณ MA → ลด false cross;
+(2) **10.4 tanh vol-scale** — สเกล signal/lot ด้วย `tanh(R/κ)` (กัน flip ถี่แถวศูนย์) + `1/σ` (ลด over-invest ตอนผันผวน).
+
+**Build spec — standalone probe EA `Probe_MAHP_TanhVol.mq5`** (อย่าแก้ EA production ตัวอื่น):
+- แกน = 2-MA crossover (fast/slow) เข้า long เมื่อ MA(T1)>MA(T2), short กลับกัน — 1 position, มี SL/TP ปกติ.
+- **Toggle A `UseHPFilter`** (bool, default false): true = คำนวณ MA บน series ที่ผ่าน HP-filter แทน raw price.
+  λ ปรับได้ (input `HP_Lambda`, default 100·n² ที่ n=หน่วยข้อมูล; ลอง 1600 / 14400 ด้วย).
+- **Toggle B `UseTanhVol`** (bool, default false): true = lot = risk% × |tanh(R/κ)|/σ_norm (cap ที่ risk%),
+  R = return ล่าสุดช่วง `T_ret`, κ = stdev(R) rolling `N_kappa` บาร์, σ = stdev(price-return) rolling.
+  false = fixed lot ตาม risk% เดิม.
+- **baseline = A off + B off** (2-MA ล้วน) → เทียบ 4 combo (off/off, HP-only, tanh-only, both).
+
+**🔴 Correctness gates (ห้ามผ่านถ้าไม่ครบ — ผ่าน `mql-code-reviewer` + `tpl_regression.ps1` CLEAN):**
+1. **HP filter ต้อง CAUSAL** — คำนวณจาก **บาร์ปิดที่ผ่านมาเท่านั้น** (rolling one-sided window). HP ต้นฉบับเป็น
+   two-sided (มองอนาคต) → ถ้าใช้ตรงๆ = **look-ahead, backtest หลอก**. ต้อง recompute บน window อดีตทุกบาร์
+   หรือใช้ one-sided approximation. **นี่คือ gate ที่ทำให้ผล valid** — reviewer ต้องยืนยันไม่มี future bar.
+2. bar-open gate (คิด/เข้าเฉพาะแท่งปิด ไม่ intrabar repaint), tester-gate, digit-aware pip, broker-aware lot normalize, magic เฉพาะตัว (เลือกเลขว่าง), hard risk cap. (ตาม `mql-code-reviewer` checklist)
+
+**Test matrix (per VERDICT GATE — coarse→surface, both regimes):**
+- **Stage A (คุ้มสุดก่อน):** XAUUSD + EURUSD × {H1, H4} × {BWD 2020-22 trend + ปีล่าสุด 2023-26} × 4 combo = 32 run.
+- **Stage B (ต่อเมื่อ Stage A มีสัญญาณ):** เพิ่ม GBPUSD + USDJPY (อีก 32 run).
+- ทุก run: same SL/TP/MA-period ต่อ cell (เปลี่ยนแค่ toggle) เพื่อ isolate ผลของเทคนิค. sweep HP_Lambda ≥3 ค่า.
+
+**Acceptance (treatment ชนะ baseline):** เทียบ combo ใดๆ vs off/off ในแต่ละ cell —
+- ✅ **PASS-signal** ถ้า: PF ยก **≥10%** *หรือ* จำนวน trade whipsaw (trade ที่ปิดขาดทุน < 0.3·SL ภายใน ≤3 บาร์) ลด
+  **≥20% โดย PF ไม่ตก**, และเกิดบน **≥ ครึ่งของ cell (≥ majority)** ทั้ง 2 window — ไม่ใช่ spike cell เดียว (ต้อง plateau).
+- ❌ ถ้าไม่ถึง = เทคนิคไม่ช่วยกับ MA-cross → เขียน verdict "no-edge บน MA-cross" (ตกได้ตาม gate เพราะเป็น
+  smoke ที่ตกเกณฑ์ pre-registered — **ห้ามเขียนเป็น concept ตายสากล**, แค่ปิด cell นี้).
+- ผ่าน → build-on: หา MA-period/SL ที่ plateau-center, แล้วค่อยพิจารณา promote (holdout+MC = เฟสถัดไป ไม่ใช่ order นี้).
+
+**ห้าม:** แก้ EA production/validate แล้ว · ใช้ HP two-sided (look-ahead) · ตัดสิน concept ตายจาก cell เดียว ·
+promote เงินจริงใน order นี้ (probe เท่านั้น) · background-run แล้วหยุดรอ (agent ต้อง foreground synchronous).
+
+**ผล:** _(รอ build)_
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
@@ -1031,3 +1078,90 @@ Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migr
 
 **§20.2 #5 บังคับ:** **ห้ามเริ่ม Contract D (MVP-1-lite events) จนกว่า C1 enforcement REWORK ปิด** (write path ยังไม่ tamper-safe เต็ม). → order ถัดไป = **C1-ENFORCE** (append-chain integrity validator + fail-closed staged-snapshot hook + Source-A exact-binding + hash-object atomicity), routing เดิม (subagent build → Opus verify → blind Codex review). **📄 HANDOFF เต็มสำหรับ session ใหม่ = `docs/memory_control/C1_ENFORCE_HANDOFF.md` (start here).**
 **บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.
+
+---
+
+## ORDER-103 — Contract C1-ENFORCE: append-CHAIN tamper integrity + fail-closed staged-snapshot hook (write-path hardening, ปิด C1 enforcement REWORK) — `REVISED r1 (Codex design-review needs-CHANGES 8 → ปิดครบ) · พร้อม build` · **ทำได้: Sonnet subagent (build) → Opus (verify เอง, cross-HEAD) → blind Codex (accept)** _(ออก 2026-07-13; ปิด hole ที่ Codex final review ของ C1 จับ — block 1007-1015)_
+
+> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** + Codex final review C1 (block 1007-1015) + `docs/memory_control/C1_ENFORCE_HANDOFF.md`
+> **เลขหมายเหตุ:** validator docstring อ้าง "living-log model (ORDER-103)" = Phase 0.5 ที่ fold เข้า C1b แล้ว (block 995-996). order นี้ใช้เลขเดียวกันเพราะเป็น workstream เดียว = **"ทำ append-only log ให้ tamper-safe จริง"** — Phase 0.5 สร้าง log, order นี้ทำให้ log แก้ย้อนไม่ได้.
+> ⚠️ **นี่คือ enforcement layer สุดท้ายของ write path** (taskboard/archive) — mistake = self-DoS หรือปล่อย tamper หลุด. gate = C0 validator `-Strict` ต้อง **exit 0 ทั้งก่อน+หลัง** ทุก fix (ห้าม regress) + negTests ทุกใบ green.
+> **Prereq:** C1b migration REVIEWED (data ACCEPT, block 1008) · HEAD ปัจจุบันถูกแล้ว (be45d4b/9e0bd8a) — **ห้าม rollback/rewrite migration commits.**
+
+**REALITY / hole ที่ปิด:** `Invoke-ArchiveAppendOnlyCheck` (validator L681) เทียบ current archive กับ **split baseline `4aebbc37` เท่านั้น** = frozen-prefix immutability คุมแค่ 131 split blocks. block ที่ append **หลัง** split (C1-CLOSURE เอง + rev01) → **mutate ได้แล้ว regenerate manifest → -Strict กลับ 0** (Codex พิสูจน์: forge closure evidence + mutate rev01 append ผ่านทั้งคู่). git history = tamper-evidence จริงอยู่แล้ว; order นี้ = **defense-in-depth ให้ validator จับ tamper ได้เองโดยไม่ต้องพึ่ง reflog manual.**
+
+> **⚙️ REVISED r1 (2026-07-13) หลัง Codex blind design-review = needs-CHANGES(8) — ทุกข้อ valid, Opus ยอมรับ.** 4 fix ด้านล่างเป็นเวอร์ชันแก้แล้ว. threat-model + build-order + disposition ของ 8 ข้อ = ท้าย block.
+
+**Threat model (ประกาศชัด — Codex #1):** เป้าหมาย = รักษาทุก accepted archive byte + อนุญาตเฉพาะ authenticated suffix-append. **defense-in-depth ใน reachable history + pinned checkpoint** — จับ mutate→regen ได้ · จับ history-rewrite ของ ancestry ที่ผ่าน pinned checkpoint ได้ (fail-closed). **สิ่งที่ order นี้ไม่การันตี:** attacker ที่ force-push rewrite ทั้งสาย + ควบคุม remote — full guarantee นั้นต้อง protected ref / signed checkpoint / external receipt (นอก scope, บันทึกไว้ ไม่แสร้งว่าปิด). git = tamper-evidence ตัวจริงยังอยู่.
+
+**Pinned commits (full 40-char — Codex #1/#2):**
+- **SPLIT-ROOT anchor** = `4aebbc375dd7f4fa6b649c53409d554a2fb66991` (immutable 131-block root)
+- **TRUSTED CHECKPOINT** = `0ced19485c6c6ce9a23541f785ab82bae4fcad25` (C1b migration accepted; archive blob = current trusted state, Codex byte-verified) — chain enforcement เริ่มจากจุดนี้
+
+### Fix 1 🔴 — Append-CHAIN integrity (raw-byte prefix-chain, checkpoint-pinned)
+เปลี่ยน model จาก "current archive ⊇ split-archive by block-content" เป็น **"archive blob เดินเป็น raw-byte prefix-chain จาก pinned checkpoint → HEAD, first-parent"**:
+- pin **CHECKPOINT `0ced194…`** (full SHA) เป็น trust root ของ chain · SPLIT-ROOT `4aebbc37…` = immutable prefix ที่ checkpoint ต้อง extend มา.
+- **fail-CLOSED (exit 2)** ถ้า: checkpoint SHA **missing / ไม่ใช่ ancestor ของ HEAD** (= history rewrite/force-push/squash detect) · shallow clone ที่ไม่มี checkpoint · git command fail · archive path ถูก rename/delete กลางสาย. **fresh full clone = pass · detached HEAD ที่ ancestry ครบ = ไม่ fail เพราะ detached เฉย ๆ.**
+- audit เดิน **first-parent chain checkpoint→HEAD** เฉพาะ commit ที่เปลี่ยน `ARCHIVE_TASKBOARD_2026-07A.md`: ทุกก้าว committed/staged archive bytes = **raw-byte prefix-extension** ของ archive blob ที่ (first-)parent (prefix เดิม identical เป๊ะ, เพิ่มเฉพาะ suffix). **merge ที่แก้ archive นอก first-parent = fail-closed** (DAG semantics ประกาศชัด, ไม่ปล่อยกำกวม — Codex #2).
+- ก้าวไหน prefix ไม่ตรง (แม้ 1 ไบต์) = exit 2 — manifest regen **bless mutation ไม่ได้** (identity = byte-chain ไม่ใช่ manifest).
+- **🔑 suffix ต้องเป็น new-block boundary (Codex #3):** append ที่ผ่านต้องเปิด **`## ` (H2) block ใหม่**. suffix ที่ **ต่อท้าย block สุดท้ายเดิม** (เช่นเพิ่มแถวตาราง/prose เข้า `C1-CLOSURE`) = **fail** — byte เดิมครบแต่ hash/ความหมายของ block เดิมเปลี่ยน = ละเมิด immutability.
+- **negTests:** (a) mutate C1-CLOSURE bytes → 2 · (b) mutate rev01 append (blob 6c8241d8) → 2 · (c) append **H2 block ใหม่** ไม่แตะ prefix → **pass** · (d) truncate/ลบ append → 2 · (e) reorder appends → 2 · (f) **suffix ต่อ block สุดท้ายไม่มี H2 ใหม่ → 2** · (g) checkpoint ไม่ใช่ ancestor (จำลอง rewrite) → 2 · (h) shallow clone ไม่มี checkpoint → 2 · (i) หลาย archive-touch commit คั่นด้วย unrelated commit → pass · (j) mutate แล้ว restore → chain ยังจับ (2 ที่ก้าว mutate ถ้า committed).
+
+### Fix 2 🔴 — Fail-CLOSED staged-snapshot pre-commit hook (Codex #6)
+`.githooks/pre-commit` ปัจจุบัน fail-OPEN + มี bypass-hint 2 จุด (L4 comment + L14). สร้าง hardened hook:
+- (i) **fail-CLOSED ถ้าไม่มี PowerShell** — no-PS test ต้อง assert **ข้อความ diagnostic เฉพาะตัว** (ไม่ใช่แค่ exit≠0 — กัน missing-git/harness-fail ปลอมว่า pass).
+- (ii) **enforce เฉพาะเมื่อมี protected file ใน staged set** — commit ปกติที่ไม่แตะ protected = ผ่านเหมือนเดิม (hook ไม่บล็อกงาน code ทั่วไป). **PROTECTED SET (enumerated):** `ARCHIVE_TASKBOARD_2026-07A.md` · `AGENT_TASKBOARD.md` · `docs/memory_control/ARCHIVE_MANIFEST.csv` · `docs/memory_control/ARCHIVE_INDEX.md` · `docs/memory_control/RECONCILE_EXCEPTIONS.md`. เมื่อ protected ใด ๆ staged → ทุก check ต่อไปนี้บังคับ.
+- (iii) อ่าน candidate จาก **git index** (`git show :path` bytes + `git rev-parse :path` identity — Fix 4) · staged archive = exact prefix-extension ของ `HEAD:archive` (reuse Fix 1 logic, HEAD→staged) · **staged snapshot ต้องรวม `AGENT_TASKBOARD.md`** (Source A อ่าน active blocks — check_taskboard_archive.ps1:1002).
+- (iv) staged manifest/index/exceptions **regen-in-temp จาก staged bytes** แล้วเทียบ byte (ไม่ใช่ working tree) · staged-set ต้อง = protected files ที่แก้ **พอดี** (protected file ที่ถูก delete/rename หรือ artifact ที่ขาด = fail).
+- test ใน **temp repo: `git commit` จริง + `core.hooksPath=.githooks` + real staged index + installed hook** (ไม่ใช่ PowerShell เรียก FILE:-fixture — harness เดิม `_test/run_order101_negative_tests.ps1:147` ไม่ครอบ production path) · **ลบ bypass-hint ทั้ง 2 จุด** (`--no-verify` = policy bypass ตาม AGENTS, hook ห้ามแนะ).
+- **negTests (real-commit):** mutate archived append staged → block · staged≠HEAD-extension → block · staged manifest ≠ staged archive → block · protected delete/rename → block · artifact ขาด → block · staged path นอก protected+ปกติ ผสม → เฉพาะ protected ที่ผิด block · staged≠working-tree divergence → ตัดสินจาก index · no-PS → fail-closed + diagnostic ตรง.
+
+### Fix 3 🟡 — Source-A exact-identity binding via APPENDED binding record (Codex #4/#5)
+validator L1089 ปิดทุก exception ของ canonical-id เดียวถ้ามี `## REVIEW ORDER-<id>` REVIEWED ใด ๆ → phase/forged review ปิดข้ามได้.
+- **ไม่แก้ byte ของ REVIEW block เดิม** (archive L2657–2674 = mid-file, insert = ละเมิด append-only + Fix 1 — Codex #4). แทนด้วย **binding record ที่ append เข้าท้าย archive** (append-only, H2 block ใหม่): ตาราง `kind | block_id | block_sha256 | review_ref` — review_ref ชี้ `REVIEW ORDER-<id>` ที่มีอยู่.
+- match **exact `kind + block_id + sha256`** (เท่า Source-B — check_taskboard_archive.ps1:1048) ไม่ใช่ block_id เดี่ยว ไม่ใช่ canonical-id. **1 block หลาย kind → 1 row/kind** (ไม่มี wildcard ปิดข้าม kind). **ไม่มี self-reference cycle** — hash เป็นของ exception block เป้าหมาย ไม่ใช่ของ binding/review block เอง.
+- sha mismatch = **STALE** (report, ไม่ปิด) · **precedence:** ถ้า exception เดียวถูกทั้ง Source-A binding + Source-B C1-CLOSURE ปิด → นิยาม deterministic (เช่น A ก่อน, report ทั้งคู่, ไม่ double-count).
+- 071 (2 exception blocks) ปิดโดย append binding record ระบุ kind+id+sha ของทั้งสอง — closure เดิมยังคง (REVIEW ORDER-071 = review_ref).
+- **negTests:** binding อ้าง hash ผิด → unresolved(STALE) · phase-review (id ตรง hash ไม่ตรง) → ไม่ปิด · exact → ปิด · **dup binding row → integrity 2** · **unknown target (ไม่ match exception) → integrity 2** · **malformed hash → integrity 2** · A/B ปิด exception เดียว → precedence ตามนิยาม.
+
+### Fix 4 🟡 — Single snapshot-source identity (bytes+identity แหล่งเดียวกัน — Codex #7)
+ปัญหาเดิม: `FILE:` bytes = working tree แต่ identity = `HEAD:path` (check_taskboard_archive.ps1:281) = mixed source → migration ต้อง 2 commit.
+- เพิ่ม **snapshot mode ที่ bytes + identity มาจาก source เดียวเสมอ**: staged = `git show :path` + `git rev-parse :path` · committed = `git show <sha>:path` + `git rev-parse <sha>:path` · working = file bytes + `git hash-object <file>`. **ห้ามผสม** working-bytes กับ HEAD-identity.
+- hook + append-chain ใช้ **staged source** (`git rev-parse :path` — **ไม่ใช่ `git hash-object <working-file>`** เพื่อกัน CRLF/clean-filter mismatch; archive ปัจจุบัน `text`/`eol` = unspecified แต่ guard ไว้).
+- **C0 Audit/Strict คง HEAD-default เดิม** (ไม่ regress) — staged/working identity เพิ่มเป็น input ของ hook+chain เท่านั้น, ไม่ใช่ second source-of-truth ของ Audit/Strict.
+- **negTests:** 1-atomic-commit archive change → hook pass + post-commit `HEAD:archive`==candidate (ไม่ต้อง re-pin) · **CRLF/filter parity:** `git rev-parse :path` == staged blob oid แม้ working tree มี CRLF.
+
+### Build order (บังคับ — Codex #8, กัน self-DoS + Strict=0 หลังทุก fix)
+1. **Fix 4** snapshot primitives (bytes+identity แหล่งเดียว) — foundation.
+2. **Fix 1** committed-chain gate + suffix-boundary (ใช้ Fix 4 primitives).
+3. **Fix 3** Source-A exact binding + **append 071 binding record** — code + record land **atomic** (หรือ record ก่อน enforcement) ให้ `-Strict` ยัง 0.
+4. **Fix 2** hook **ลงท้ายสุด** (หลัง 1/3/4 นิ่ง — hook ผิดตอน primitive ยังไม่ครบ = self-DoS).
+- `-Strict` exit 0 ต้องคงหลัง**ทุก** fix ที่ land (ห้าม intermediate red).
+
+**Acceptance (machine-checkable — ทุกข้อ pass ก่อน accept):**
+- [ ] Fix 1: chain audit checkpoint→HEAD first-parent · negTests (a)-(j) ครบ · `-Strict` exit 0 บน HEAD ปัจจุบัน (chain ปัจจุบันสะอาด) · mutate→regen ยัง exit 2 · checkpoint-not-ancestor & shallow → fail-closed 2
+- [ ] Fix 2: **real-commit test** (`core.hooksPath` + staged index + installed hook) · fail-closed no-PS + diagnostic ตรง · protected-set enumerated + ไม่บล็อก commit ปกติ · staged snapshot รวม AGENT_TASKBOARD.md · manifest/index/exceptions consistency จาก staged bytes · bypass-hint 2 จุดหาย · negTests ครบ
+- [ ] Fix 3: appended binding record (ไม่แก้ REVIEW เดิม) · exact kind+block_id+sha256 · 071 ยังปิด · phase/forged/dup/unknown/malformed → ตามนิยาม · A/B precedence deterministic
+- [ ] Fix 4: single snapshot-source · staged = `git rev-parse :path` (ไม่ใช่ hash-object working) · CRLF-parity test · 1-atomic-commit path ผ่าน · C0 Audit/Strict HEAD-default ไม่ regress
+- [ ] **รวม:** `check_taskboard_archive.ps1 -Strict` **exit 0** · `-Audit` clean · `check_state.ps1 -Strict` CLEAN · negTests ทุก fix **green** · **verify รันข้าม HEAD/commit จริง** (บทเรียน block 1033) · **Strict=0 หลังทุก fix ที่ land** · archived block bytes **unchanged** (append-only; 071 binding = appended record ไม่ใช่ mid-file edit)
+- [ ] `[tag] ORDER-103 done` + ผลดิบ (negTest output ครบ)
+
+**Judgment criteria (ไม่ใช่ machine-check — ระบุแยกตาม Codex #8):** crash-recovery ของ hook ต้องอธิบายเป็นเอกสาร (ไม่ auto-testable) · "commit แยกต่อ fix" = แนะนำ ไม่บังคับ (build-order ข้างบนคือของบังคับ).
+
+**ห้าม:** rollback/rewrite migration commits (`0ced194`/`be45d4b`/`0e67e1d`/`9e0bd8a` — HEAD ถูกแล้ว) · **แก้ bytes ของ archived/REVIEW block เดิม** (append-only; 071 = appended binding record เท่านั้น) · suffix ที่ต่อ block สุดท้ายเดิม (ต้อง H2 ใหม่) · hook message แนะ `--no-verify` · test hook ใน shared worktree (temp repo + real-commit เท่านั้น) · ผสม working-bytes กับ HEAD-identity (Fix 4) · แตะ unrelated dirty files (session อื่น commit บน master คู่กัน — commit path-limited, เช็ค HEAD ก่อน stage; memory `shared-worktree-concurrent-writers`) · เริ่ม Contract D จนกว่า order นี้ accept (§20.2 #5) · subagent ตัดสิน exception/verdict เอง (Opus)
+
+**Routing:** design-review r0 = ✅ ทำแล้ว (Codex blind, needs-CHANGES 8 → REVISED r1) → Sonnet subagent build ตาม build-order → **Opus verify เอง (รัน test + อ่านโค้ด + เจาะ cross-HEAD/rewrite/shallow path)** → **blind Codex review ผลจริง ก่อน accept.**
+
+**ผล:** _(r1 พร้อม build — รอ user เคาะเริ่ม build stage)_
+
+### Codex design-review r0 (2026-07-13, blind, gpt-5.6-sol) = needs-CHANGES(8) → REVISED r1 · Opus ยอมรับทุกข้อ
+Codex อ่าน order+validator+archive เอง จับ 8 (5 blocker + 3 major). disposition:
+1. 🔴 **Fix 1 ไม่รอด rewritten descendant history** (trust anchor เดียว; attacker squash/force-push forge chain ได้) → **FIX r1:** pin TRUSTED CHECKPOINT `0ced194…` (full SHA) + fail-closed ถ้า checkpoint ไม่ใช่ ancestor/shallow · threat-model ประกาศ boundary (full rewrite guard = protected ref, นอก scope)
+2. 🔴 **traversal semantics กำกวม** (merge/first-parent/rename/non-ancestor/git-fail ไม่นิยาม; full 40-char anchor) → **FIX r1:** first-parent DAG ประกาศชัด · full SHA · fail-closed git-fail/rename
+3. 🔴 **raw suffix ยัง mutate block สุดท้ายได้** (เพิ่มแถวเข้า C1-CLOSURE = byte เดิมครบแต่ hash เปลี่ยน) → **FIX r1:** suffix ต้องเปิด H2 ใหม่ · negTest (f) เพิ่ม
+4. 🔴 **Fix 3 071-migration เป็นไปไม่ได้ตามที่เขียน** (เติม hash ใน REVIEW block = insert mid-file, ชน append-only) → **FIX r1:** appended binding record ใหม่ ไม่แตะ REVIEW เดิม · ยืนยันไม่มี self-ref cycle
+5. 🟡 **Source-A identity กำกวม** (block_id+sha vs kind+block_id+sha; 1 block หลาย kind; ขาด dup/unknown/malformed/precedence test) → **FIX r1:** exact kind+block_id+sha256 + tests ครบ
+6. 🔴 **hook test ไม่ครอบ production path** (harness เดิมเรียก FILE:-fixture ไม่ใช่ git commit; allowlist ไม่ enumerate = อาจบล็อก commit ปกติ; staged ต้องมี AGENT_TASKBOARD.md; no-PS ต้อง assert diagnostic; ลบ bypass-hint 2 จุด) → **FIX r1:** real-commit test + protected-set enumerated + enforce-only-when-protected-staged + diagnostic assert
+7. 🔴 **Fix 4 snapshot ownership ขัดกัน** (bytes=working, identity=HEAD; Generate ทำ candidate-pinned ไม่ได้ถ้า HEAD-based; CRLF/filter) → **FIX r1:** single snapshot-source mode · `git rev-parse :path` ไม่ใช่ hash-object working · CRLF-parity test · Audit/Strict คง HEAD-default
+8. 🟡 **sequencing ไม่เป็น order เดียวที่ทำได้** (Fix4→Fix1→Source-A/071-atomic→hook-last; หลาย machine-test ขาด; crash-recovery/commit-แยก = judgment ไม่ใช่ machine-check) → **FIX r1:** build-order section + judgment-criteria แยก + missing tests เพิ่ม
+**Lead call:** ทั้ง 8 ถูกต้อง — design-review-ก่อน-build จับ hole ลึก (โดยเฉพาะ #1/#3/#4 ที่จะทำ build พังถ้าไม่จับ) = คุ้มตามที่ handoff คาด. r1 ปิดครบ · **พร้อมส่ง build** (รอ user เคาะ).
