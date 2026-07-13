@@ -12,7 +12,12 @@
 - **Probe (default fib38.2):** XAU main PF 1.57 / BWD 0.95 · GBP 1.18 / 0.96 = marginal.
 - **Sweep both-regime (XAU, 24 runs) → PLATEAU:** **fib=23.6/mult=0.618 = MAIN 1.11(271t) / BWD 1.12(217t), DD<3.4%** · adjacent (23.6,0.382)=1.09/1.07 ก็ผ่าน = plateau จริง. deep fib (38.2-61.8) = overfit ปีเทรนด์ (BWD พัง). **locked set = `_mt5_auto/ab_sets/wave5_sets/sw_F23.6_M0.618.set`**. raw = `_mt5_auto/wave5_sweep_results.csv`.
 
-**⏳ กำลังรัน (background batch, launched 2026-07-13):** cross-symbol OOS (GBP,EUR @ fib23.6) + XAU H4 (TF robustness) + MC บน plateau-center. **ผล → `_mt5_auto/wave5_validate_results.csv` + `wave5_mc.log`**.
+**✅ Validation batch DONE (2026-07-13, `wave5_validate_results.csv`):**
+- **GBP H1** @ fib23.6: MAIN 0.94 / BWD 0.91 ✗ · **EUR H1**: 0.71 / 0.88 ✗ → **cross-symbol ตก = edge เฉพาะทอง ไม่ generalize ไป FX majors**
+- **XAU H4** @ fib23.6: MAIN **1.74** (97t, win 71%) / BWD **1.01** (56t, win 57%) → **ผ่านทั้ง 2 window** = TF robustness บนทองยืน (H1 plateau + H4). H4 = window ไม่เคยใช้ select → **OOS evidence จริง**.
+- **MC ยังไม่ได้** — `python not found` ใน bash context. **session หน้ารันผ่าน PowerShell:** `. scripts\use_python.ps1; python scripts\mt5_montecarlo.py _mt5_auto\reports\SW_F23.6_M0.618_MAIN.htm --deposit 10000 --iters 5000` (+ BWD).
+
+**Verdict คมขึ้น: XAU-specific candidate, robust ข้าม TF (H1+H4), NOT cross-symbol.** ตาม BUILD-ON = ok (home-symbol EA). เหลือ = MC + demo consideration (gold — เช็ค corr กับ cohort ทอง 4 ตัวที่ deploy อยู่: Zeus/BRK/Squeeze/Trendline, gate pairwise <0.8).
 
 **👉 งานถัดของ thread นี้ (judge เมื่อ batch เสร็จ):**
 1. อ่าน `wave5_validate_results.csv` — GBP/EUR @ fib23.6 ผ่าน both-window ไหม? (cross-symbol = OOS จริง, ไม่เคยใช้ select) · XAU H4 ยืนไหม?
