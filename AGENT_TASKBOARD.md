@@ -1115,38 +1115,50 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 
 ---
 
-## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `OPEN` (SYSTEM ORDER 4 of ≤4 memory-control build → then mandatory review gate)
+## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `OPEN · REVISED r1 (Codex design review 2026-07-13) — canonical-review-linkage · use existing 071 verdict · split C1a/C1b · pending re-review + quiet window` (SYSTEM ORDER 4 of ≤4 memory-control build → then mandatory review gate)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** (migration half) + ORDER-101 "→ C1" spec + §20.7
 > **ทำได้:** Opus (exception judgment + migration window + canonical workflow = own) · Codex/subagent (guard-hook code) · **👉 แนะ:** Opus เขียน+ตัดสิน → subagent build lock-hook → **Opus execute migration เอง (1 atomic commit)** → **blind Codex review ก่อน accept**
 > ⚠️ **นี่คือ order เดียวที่แก้ architectural write path จริง (taskboard/archive)** — ต้อง maintenance window ไม่มี writer อื่น (user ยืนยัน session อื่นปิด) · gate = C0 validator `-Strict` ต้อง exit 0 หลัง migration
 > **Prereq:** C0 (ORDER-101) REVIEWED ✓ — validator `check_taskboard_archive.ps1` + manifest/index/exceptions พร้อมใช้เป็น gate
 
-**REALITY:** manual split ทำไปแล้ว (archive มี 131 blocks) → C1 **ไม่ใช่ bulk-move** แต่ = (ก) **Opus resolve 12 policy exceptions** (ข) **แทน manual index block (active L15) ด้วย generated `ARCHIVE_INDEX.md`** (§20.7 index ต้อง generated/read-only) (ค) **freeze archive = immutable + validator เป็น guard**. เป้า: C0 `-Strict` = exit 0 (clean) หลังจบ.
+**REALITY:** manual split ทำแล้ว (archive 131 blocks) → C1 **ไม่ bulk-move**. **REVISED r1 หลัง Codex C1 design review (2026-07-13):** เปลี่ยน "dispose exceptions" → **"canonical review linkage"** (§20.7: reviewed history/decision อยู่ owner เดิม ไม่ใช่ manifest column/allowlist ใหม่); ใช้ verdict เดิมที่มีอยู่; archived blocks **immutable — append-only**; แยก hook-install (C1a) จาก migration (C1b); pin staged-snapshot protocol.
 
-**Phase 1 — Opus exception resolution (judgment, บันทึกก่อนแตะไฟล์):** ต่อ 12 exceptions ใน `RECONCILE_EXCEPTIONS.md`:
-- **benign (accept archived, ไม่ต้องแก้ block — เพิ่มเป็น "reviewed-by-C1-audit" ให้ validator ผ่าน):** 003/009 SKIPPED · 065/066/067 BUILT+verdict-inline · 086/093/096C DONE-mechanical/infra · 091C-D1c DONE (campaign JUMSTOCH D1f REVIEWED ปิด thread)
-- **⚠️ ต้องแก้จริง (write):** (1) **ORDER-071** — rev02 `STAGE2-DONE(stage-3 รอตัดสิน)` = non-terminal ใน archive + rev01 `OPEN` (active L362) superseded → **Opus ตัดสินสถานะ ST03-rescue ก่อน** (parked/dead ตาม PROJECT_STATE ST03=no-edge → mark rev02 terminal-closed + ลบ/ปิด rev01) (2) **091C-D1c PROCESSING** annotation stale (active L665) → ลบ
-- glue: กลไก "reviewed-by-C1-audit" = วิธี validator รับรู้ว่า benign-terminal ถูก Opus รับรองแล้ว (เช่น manifest column `opus_disposition` หรือ allowlist file) — Codex/subagent ออกแบบ mechanism, Opus เขียน disposition
+**Phase 0 — validator upgrade (prereq, read-only, commit ของตัวเอง):** อัปเกรด `check_taskboard_archive.ps1` review-linkage เป็น **block-id/text level** (ที่ C0 เลื่อนไว้) → รู้จัก `REVIEW ORDER-x` block จริง. **หลัง upgrade: 071 exception ต้องหาย** เพราะมี `REVIEW ORDER-071 — REVIEWED — เคส entry ST03 ปิดถาวร` อยู่แล้ว (`ARCHIVE_TASKBOARD_2026-07A.md` L2657, preregistered-gate fail) — **C0 เดิม false-positive จาก canonical-id limit**. validator ต้องรายงานแยก `raw_detected / canonically_reviewed / unresolved`.
 
-**Phase 2 — write ใต้ ENFORCED lock (1 atomic commit):**
-- แทน manual index (L15) ด้วย **pointer ไป generated `docs/memory_control/ARCHIVE_INDEX.md`** (generated/read-only)
-- apply 071/091C-D1c resolutions
-- **ENFORCED maintenance lock (Codex-hardened):** `.githooks/pre-commit` guard: (i) ลง+test guard ใน commit ก่อนเข้า window (ii) **fail-CLOSED ถ้าไม่มี PowerShell** (ปิดช่อง fail-open เดิม) (iii) block ทุก commit ที่แตะ taskboard/archive ระหว่าง lock ยกเว้น migration — อนุญาตด้วย **staged-blob-hash allowlist ไม่ใช่ commit message** (iv) **recheck working-tree hash เทียบ staged ทันทีก่อน commit** (กัน session อื่น) (v) `--no-verify` = technical bypass, threat model อาศัยกฎ AGENTS
-- **hardened swap:** target-file clean check → เตรียม output ใน staging → pre-hash recheck → stage allowlist → abort ถ้า active/archive hash drift
+**Phase 1 — Opus canonical review (append-only, ไม่แก้ archived bytes):** สำหรับ exception ที่ **ไม่มี** linked review จริง → Opus เขียน **canonical consolidated review block** (append เข้า archive/taskboard ตาม owner) ระบุต่อรายการ: `kind · block_id · block_sha256 · disposition · evidence/review-ref`. validator **derive closure จาก canonical review block เท่านั้น** (key = exact exception identity `kind+block_id+sha256` ไม่ใช่ canonical-id — กัน 091C-D1c ที่มี 2 kind ปิดพลาด). **ห้าม manifest column/allowlist เป็น authority.** 
+- benign **แต่ต้อง review จริง ไม่ใช่ "disposed":** 086/093/096C (DONE-mechanical) · 003/009 (SKIPPED) · 065/066/067 (BUILT+verdict-inline) — Opus เขียน closure จริงต่อรายการ · **091C-D1c ต้อง review ผล D1c โดยตรง** (ห้ามถือว่า D1f ปิดย้อนหลังอัตโนมัติ)
+- benign list จริง = **9 canonical IDs** (003,009,065,066,067,086,093,091C-D1c,096C) ไม่ใช่ 10
 
-**Acceptance (ตัวเลข/ไฟล์):**
-- [ ] **C0 `-Strict` exit 0** หลัง migration (ทุก exception resolved: benign disposed + 071/091C-D1c แก้)
-- [ ] manual index block (L15) หายจาก active → แทนด้วย pointer ไป generated index
-- [ ] 071 resolved (rev02 terminal-closed หรือ pulled-back ตาม Opus) · rev01 OPEN + 091C-D1c PROCESSING ลบแล้ว
-- [ ] archive `-Audit` ยัง clean (immutable, bijection 131 หรือ +delta ที่ระบุ) · manifest/index regenerate zero-diff
-- [ ] **1 atomic commit** · git diff = เฉพาะ taskboard (index+071+091C-D1c) + generated artifacts + hook · ไม่แตะ unrelated
-- [ ] enforced-lock hook: negative test (commit แตะ taskboard ระหว่าง lock โดยไม่ใช่ migration → blocked) · fail-closed no-PS test
+**Phase 1b — จัดการ block ที่หลง active (append-only, verbatim):**
+- **ORDER-071 rev02:** มี verdict แล้ว (REVIEW ORDER-071) → **ห้ามตัดสินซ้ำ ห้ามแก้ bytes** · validator (Phase 0) รับรู้ linked review = ปิด pending-stage exception
+- **ORDER-071 rev01 (`OPEN` active L362):** superseded โดย rev02 → **ย้ายเข้า archive verbatim + append closure block** ("SUPERSEDED by rev02; final review = REVIEW ORDER-071") — **ห้ามลบทิ้งเฉย ๆ**
+- **091C-D1c PROCESSING (active L665):** annotation stale → ย้าย/ปิด verbatim + closure (D1c reviewed) — ไม่ทิ้งเงียบ
+
+**Phase 2 = C1a (hook) → C1b (migration) — 2 commit แยก:**
+- **C1a (commit แยก):** ติดตั้ง+test hardened lock hook · **machine-checkable contract:** marker `.git/ea_lab_c1_lock.json` (ไม่ tracked, atomic create) มี expected-preimage blobs + exact candidate blobs + staged-path allowlist · hook อ่าน candidate จาก **git index (`git show :path`) ไม่ใช่ working tree** · staged-vs-expected exact (partial/extra staged path = fail) · **fail-CLOSED ถ้าไม่มี PowerShell** (ปิด fail-open เดิม `.githooks/pre-commit` L5) · crash-recovery ระบุ · test ใน **temp repo/index ไม่ใช่ shared worktree** · hook message **ห้ามแนะ `--no-verify`** (bypass เทคนิคปิดไม่ได้ อาศัยกฎ AGENTS)
+- **C1b (1 atomic commit):** แทน manual index (L15) ด้วย **short pointer** (archive file + generated `ARCHIVE_INDEX.md` + validator command) · apply Phase-1/1b closures · regenerate manifest/index/exceptions · **archive preamble L4 stale banner** (บอกว่า index อยู่ taskboard) → append superseding notice **ไม่แก้ existing archived H2 blocks**
+
+**Acceptance (machine-checkable):**
+- [ ] Phase 0 validator upgrade: 071 exception หาย (linked review รับรู้) · validator รายงาน `raw_detected/canonically_reviewed/unresolved`
+- [ ] **C0 `-Strict` exit 0 หลัง migration ก็ต่อเมื่อ:** integrity=0 · unresolved policy=0 · **ทุก closed exception มี canonical review ตรง exact block_id+sha256** · ไม่มี wildcard/canonical-id-only approval · ไม่มี stale/missing approval-ref
+- [ ] manual index (L15) → pointer · agents ยังหา OPEN/CLAIMED order ได้ (test) · check_state.ps1 ยัง CLEAN
+- [ ] archived H2 blocks **byte-unchanged** (append-only; รวม rev02) · rev01+091C-D1c ย้าย verbatim+closure · archive `-Audit` clean
+- [ ] **C1b = 1 atomic commit** · staged set == expected allowlist exact · หลัง commit `HEAD:<path>`==candidate blobs · git diff --cached เท่านั้น (ไม่ whole-worktree)
+- [ ] **negative tests:** disposition kind เดียวห้าม suppress อีก kind ของ id เดียว · stale disposition-hash หลัง block เปลี่ยน→exit 2 · unknown/dup disposition→exit 2 · missing review-ref→Strict 1/integrity 2 · non-terminal archive ไม่มี linked terminal review→Strict fail · hook: commit แตะ taskboard ระหว่าง lock (ไม่ใช่ migration)→blocked · staged≠working-tree→hook fail · no-PS→fail-closed
 - [ ] `[tag] ORDER-102 done` + ผลดิบ
 
-**ห้าม:** ลบ history · ย้าย non-terminal (071 ห้ามอยู่ archive จน resolve) · worker ตัดสิน exception เอง (Opus) · แตะ unrelated dirty files · implement Contract D (MVP-1-lite events — order ถัดไปหลัง review gate)
+**ห้าม:** แก้ bytes ของ archived block เดิม (append-only) · ตัดสิน 071 ซ้ำ (verdict มีแล้ว) · manifest column/allowlist เป็น decision authority · ลบ block ที่หลง active ทิ้ง (ย้าย verbatim+closure) · whole-worktree restore/checkout · แตะ unrelated dirty files · implement Contract D
 
-**Rollback:** 1 atomic commit คืน pre-migration active (index block เดิม + 071/091C-D1c เดิม) + archive + ลบ hook/artifact delta. ไม่แตะงานอื่น.
+**Rollback (staged-blob protocol):** capture target preimage hashes ก่อนเริ่ม · C1b = explicit `git add -- <allowlist>` เท่านั้น · rollback = **revert/inverse ของ C1b ใต้ lock** + recheck target files ไม่มี later writes (มี = หยุด ไม่ restore ทับ) · **maintenance lock คงจน blind review ผ่าน หรือ rollback เสร็จ** · git commit atomic ต่อ repo state ไม่ใช่ทั้ง working tree.
+
+### Codex C1 design review (2026-07-13) = needs-CHANGES → order REVISED r1 (Opus verify ยืนยันทุกข้อ)
+- 🔴 **disposition = second authority (§20.7):** manifest column/allowlist กลายเป็น owner ใหม่ของ "reviewed" → **FIX:** canonical review block append-only, validator derive จาก review เท่านั้น, key = exact `kind+block_id+sha256` (ไม่ใช่ canonical-id — 091C-D1c มี 2 kind)
+- 🔴 **ORDER-071 มี verdict อยู่แล้ว:** `REVIEW ORDER-071 REVIEWED ปิดถาวร` @ archive L2657 (Opus verify: มีจริง) — **C0 false-positive จาก canonical-id linking limit** · **FIX:** ห้ามตัดสินซ้ำ, upgrade validator รับรู้ linked review (Phase 0), rev01 OPEN ย้าย verbatim+closure ไม่ลบ
+- 🔴 **lock ขัด acceptance:** "hook ใน commit ก่อน" vs "1 atomic commit รวม hook" ทำพร้อมกันไม่ได้ → **FIX:** แยก C1a (hook) / C1b (migration atomic) · lock marker ใต้ `.git/`, git-index-based, staged-vs-expected exact, fail-closed
+- 🟡 atomicity: `git diff --cached` + staged-blob verify (ไม่ whole-worktree restore) · archive preamble L4 stale banner (append notice ไม่แก้ archived) · Strict-gate ต้อง unresolved=0 + review ตรง exact hash + report raw/reviewed/unresolved · negative tests เพิ่ม
+
+**Status:** ORDER-102 = REVISED r1 (Codex needs-CHANGES ปิดครบ) · **pending Codex re-review** ก่อน execute · **execution ยังต้องรอ window เงียบจริง** (git log ยังเห็น session อื่น commit — ORDER-045/082/083C).
 
 **Routing:** Opus resolve exceptions + execute migration + 1 atomic commit · subagent/Codex build lock-hook + disposition mechanism · **blind Codex review รอบผลจริง ก่อน accept** · Opus แก้ `AGENTS.md` ใน review commit ถ้า archive-immutability protocol ต้องการ (เช่น "archived block immutable; REVIEWED ใหม่เข้า archive ผ่าน validator -Strict"). C1 = commit แยก.
 
