@@ -77,7 +77,18 @@ bundle = `_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-IT-T
 
 ---
 
-## ORDER-104 — SSRN-151 W1 probe: HP-filter denoise + tanh vol-scale bolt-on (signal-quality A/B) — `BUILD DONE + compile CLEAN(0/0) + mql-review PASS (Claude, 2026-07-13) → SMOKE OPEN (Stage A)` · **ทำได้: agent smoke-batch (ea-screener/qwen)** · 👉 spec+build เคาะแล้ว (Claude, 2026-07-13)
+## ORDER-104 — SSRN-151 W1 probe: HP-filter denoise + tanh vol-scale bolt-on (signal-quality A/B) — `SMOKE STAGE A DONE + REVIEWED(Claude 2026-07-13): HP@λ14400 ปิด cell (regime-invert) · tanh INERT (calib bug) · lambda-sweep + tanh-rescale = levers ที่เหลือ` · **ทำได้: agent smoke-batch** · 👉 spec+build+verdict = Claude 2026-07-13
+
+**🔎 STAGE A VERDICT (32 runs, `_mt5_auto/reports/P104_summary.csv`, Model 2, XAU+EUR × H1/H4 × BWD/REC):**
+- **tanh (Toggle B) = INERT** — `tanh`==`base` เป๊ะทุก cell. bug: `R`(20-bar) / `κ`(1-bar stdev) → R/κ ใหญ่ →
+  tanh อิ่ม ±1 → lot คงที่. **ต้อง rescale (R,κ horizon เดียวกัน)** ก่อนถึงจะ judge ได้ — ไม่ใช่ concept verdict.
+- **HP-denoise @ λ14400 = ตกเกณฑ์ → ปิด cell (ไม่ใช่ concept ตายสากล):** ตัด trade ~75% (whipsaw ลงจริง) แต่ PF
+  ไม่คงที่ — ช่วยเฉพาะ cell อ่อน (BWD base<1) **ทำลาย cell แข็ง REC** (XAU H4 1.40→0.32, XAU H1 1.24→0.98) =
+  regime-invert (VERDICT GATE #3). H4 hp บางมาก (n=28-39). spike ไม่ plateau.
+- **levers ที่ยังไม่ sweep (ถ้าจะกู้):** HP λ∈{1600,129600} (แก้ $combos ใน launcher) · tanh rescale · chassis
+  อื่นที่ไม่ใช่ 2-MA (HP อาจเหมาะ mean-revert มากกว่า trend). **แต่ regime-invert เป็น structural** (smooth มาก=lag
+  มาก=แย่ตอน REC trending) → **แนะนำ park HP, เด้งไป W2 (IBS) ที่เป็น signal สะอาดกว่า** เว้นแต่ user อยากดัน λ-sweep.
+- base 2-MA เอง = ไม่ใช่ keeper (แต่ละ cell ดี window เดียว) — เป็นแค่ chassis ทดสอบ bolt-on.
 
 **BUILD:** `ea_projects\(TRD)_Probe_MAHP_TanhVol\(TRD)_Probe_MAHP_TanhVol_rev01.mq5` (+.ex5) · magic 991041 ·
 2-MA crossover + 2 toggle: `_02_UseHPFilter` (causal HP denoise, banded-Cholesky solve, one-sided ไม่ look-ahead —
