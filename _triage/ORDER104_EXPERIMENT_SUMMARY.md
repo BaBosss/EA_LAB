@@ -51,23 +51,50 @@
 
 ---
 
-## Stage B — HP λ-sweep {1600, 129600} + IBS mean-reversion (24 runs)
-_(รอผล batch b6cr02qgg — จะเติมตาราง + เทรนด์เมื่อจบ)_
+## Stage B — HP λ-sweep {1600, 129600} + IBS mean-reversion (24 runs, DONE 2026-07-13)
 
-**สมมติฐานก่อนดูผล:**
-- **λ=1600 (smooth น้อย):** ใกล้ raw price มากขึ้น → trade เยอะกว่า λ14400, ผลควรใกล้ base มากขึ้น
-  (regime-invert น้อยลง แต่ denoise benefit ก็น้อยลง). ถ้า λ1600 ไม่ทำลาย REC = ยืนยันว่า over-smoothing คือปัญหา.
-- **λ=129600 (smooth มาก):** lag มากขึ้น → regime-invert ควรรุนแรงกว่าเดิม (REC ยับหนักกว่า λ14400).
-- **IBS mean-reversion:** เป็น signal คนละแบบ (mean-revert แท้ ไม่ lag). สมมติฐาน: น่าจะดีกว่าบน XAU (mean-revert
-  home) โดยเฉพาะ range period; H1 อาจ trade เยอะ. ดูว่าผ่านทั้ง 2 regime ไหม (ต่างจาก HP ที่ regime-invert).
+### 🎯 HP λ-sweep = พลิกข้อสรุป Stage A: **λ ต่ำ (1600) ใช้ได้จริงบน XAU ทั้ง 2 regime**
+เทียบ PF ตาม λ (base → λ1600 → λ14400 → λ129600):
+| cell | base | **λ1600** | λ14400 | λ129600 | trades λ1600 |
+|---|---|---|---|---|---|
+| XAU H1 BWD | 0.89 | **1.15** | 1.01 | 1.23(47) | 260 |
+| XAU H1 REC | 1.24 | **1.26** | 0.98 | 1.00(42) | 312 |
+| XAU H4 BWD | 0.80 | **1.35** | 1.39 | 3.16(10!) | 72 |
+| XAU H4 REC | 1.40 | **1.68** | 0.32 | 1.10(12) | 64 |
+| EUR H1 BWD | 0.90 | 0.75 | 0.94 | 1.23(38) | 294 |
+| EUR H1 REC | 1.06 | 1.12 | 1.06 | 0.99 | 339 |
+| EUR H4 BWD | 1.28 | 1.10 | 1.23 | 0.70 | 67 |
+| EUR H4 REC | 0.90 | 0.83 | 0.75 | 0.28 | 88 |
 
-_(ตาราง + เทรนด์ + verdict เติมที่นี่)_
+**เทรนด์ HP (ชัดเจนมาก) — PF เป็นฟังก์ชันของ λ, พีคที่ λ ต่ำ:**
+1. **λ=1600 (smooth เบา) บน XAU = ผ่านทั้ง 2 regime!** XAU H1 (1.15/1.26) + **XAU H4 (1.35/1.68)** ทั้งคู่ >1
+   ทั้ง BWD+REC, n เพียงพอ (64-312). = **plateau ข้าม regime จริง** — ต่างจาก λ14400 ที่ regime-invert.
+2. **ยิ่ง λ สูง ยิ่งแย่:** λ1600 (ดี) → λ14400 (regime-invert, REC พัง) → λ129600 (trade 10-50 = thin/noise,
+   PF เลขสวยแต่ n=10-12 เชื่อไม่ได้, REC collapse). **ยืนยันสมมติฐาน: over-smoothing คือตัวปัญหา.**
+3. **HP ช่วยเฉพาะ XAU ไม่ช่วย EUR** (EUR λ1600 mixed/ลง) → เป็น edge เฉพาะ instrument (XAU mean-revert-friendly).
+4. **best cell = XAU H4 @ λ1600: BWD 1.35 / REC 1.68, n=72/64** — ผ่าน both-regime gate → **candidate build-on.**
+
+### IBS mean-reversion (naked, threshold 0.2/0.8)
+| cell | XAU PF (trades) | EUR PF (trades) |
+|---|---|---|
+| H1 BWD | 0.99 (4217) | 0.88 (4767) |
+| H1 REC | 0.96 (4660) | 0.80 (5430) |
+| H4 BWD | **1.07** (967) | 0.98 (1150) |
+| H4 REC | 0.89 (1095) | 0.81 (1291) |
+**เทรนด์ IBS:** trade มหาศาล (4000-5400 บน H1) PF เกือบทั้งหมด <1 (0.80-1.07) → **naked IBS = ไม่มี edge**,
+churn จ่าย cost. เฉพาะ XAU H4 BWD แตะ 1.07. **park** — ต้อง filter (band กว้างขึ้น / trend-gate / session)
+ถึงจะมีลุ้น. IBS ดิบ = ตกเกณฑ์.
+
+**คำตัดสิน Stage B:**
+- **HP@λ1600 บน XAU = ผ่าน both-regime → PROMOTE ไป build-on** (แก้ Stage A verdict: HP ไม่ตาย, แค่ λ14400 มากไป).
+- **IBS naked = ตกเกณฑ์ → park** (ต้อง filter ก่อน).
 
 ---
 
 ## บทเรียนรวม (durable)
-1. **HP denoise ≠ ดีเสมอ** — บน trend chassis มันแลก whipsaw กับ signal ใน 규 regime ที่ดี (regime-invert).
-   ถ้าจะใช้ HP ควรจับคู่ mean-revert chassis ไม่ใช่ trend. → กัน W-tier อื่นพลาดซ้ำ.
+1. **HP denoise = ดีที่ λ ต่ำเท่านั้น (lever คือ λ, ต้องเล็ก)** — λ1600 บน XAU ผ่าน both-regime;
+   λ สูง (14400+) = over-smooth → lag → regime-invert/thin. **บทเรียน: อย่าตีตายจาก λ เดียว** (Stage A ตี HP
+   ตกเพราะ λ14400 — พอ sweep λ เจอ λ1600 ดีจริง = ตรงกฎ user "ห้าม DEAD ก่อน optimize ครบ ≥3 lever"). edge เฉพาะ XAU.
 2. **calibration ของ vol-scale ต้องระวัง horizon** — R กับ κ ต้อง horizon เดียวกัน ไม่งั้น tanh อิ่มตัว = no-op.
 3. **toolchain ครบวงจรใช้ซ้ำได้:** probe EA scaffold (bar-gate/tester-gate/risk-cap/state-free) + launcher +
    roaming-Experts fix ([[mt5-tester-experts-roaming]]) + summary CSV auto-scrape.
