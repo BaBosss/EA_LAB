@@ -5105,3 +5105,16 @@ conditioning = survivorship artifact (offline ADX gate สวย → in-EA จ�
 | terminal-no-linked-review | 093\|ORDER\|current-archive#102 | dafb9230d20c294eb7086f4337be8979fe6710395d1de9e6d1a8dcc957fdb3ca | ACCEPT-ARCHIVED (P0 infra self-completed) | deployment-truth + encoding, 4 items done |
 | terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | ca040636c91174c52e9742e9f204c67727152535509f12f620e952e0116c370d | ACCEPT-ARCHIVED (expansion step) | JUMSTOCH symbolxTF expand; fed D1e/D1f which were REVIEWED (thread demo-ready) |
 | terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | e06f1d21a9ead714cdaa672bb999a181bebc4e76298a898060f4fb9e5e0cc8dc | ACCEPT-ARCHIVED (mechanical DONE, no verdict) | commit WOBR intake artifacts |
+
+---
+
+## C1-ENFORCE-SOURCEA-BINDING — `REVIEWED(Opus, 2026-07-13)` — ORDER-103 Fix 3: exact-identity closure for ORDER-071 (closes the Source-A canonical-id-wildcard hole)
+
+> Appended by ORDER-103 (Contract C1-ENFORCE, build stage). Closes Source-A exceptions by EXACT `(kind, block_id, block_sha256)` match — never by canonical id alone (the old wildcard let ANY exception whose canonical_id matched a REVIEWED `## REVIEW ORDER-<id>` block close, which is the exact hole Codex's final C1 review found: a later, different `ORDER-071` block moved into the archive verbatim could be closed by the *unrelated* `## REVIEW ORDER-071 (Stage 1+2)` review just because the id matched). `review_ref` below points at that existing REVIEW block for traceability only — it is not re-hashed or re-verified, and this record does not edit the REVIEW block or either target block; it only appends this new H2 block to the end of the archive (append-only).
+>
+> Target 1: `## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได ...` (`STAGE2-DONE(...)` with a pending-stage marker outside the backticks — raises `non-terminal-in-archive`). Target 2: `## ORDER-071 — ST03 entry rescue: HTF trend-gate A/B บน flat-lot — \`OPEN\`` (the rev01 block moved verbatim from active → archive per the C1b migration side-effects note above — raises `non-terminal-in-archive` via its raw `OPEN` status). Both are legitimately closed: rev02 Stage 1+2 and rev01's supersession are exactly what `## REVIEW ORDER-071 (Stage 1+2)` reviewed and closed permanently.
+
+| kind | block_id | block_sha256 | review_ref |
+|---|---|---|---|
+| non-terminal-in-archive | 071\|ORDER\|current-archive#67 | 4892e9e80de828ae1e7ba4afee0efa2246405d8f8617a79585483e830ea6c9cc | ## REVIEW ORDER-071 (Stage 1+2) |
+| non-terminal-in-archive | 071\|ORDER\|current-archive#132 | 6c8241d8eaefd02dad2559db230bcddc77c95c7e55abe86cc2722625e5fb8fb9 | ## REVIEW ORDER-071 (Stage 1+2) |

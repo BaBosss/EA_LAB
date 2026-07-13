@@ -30,7 +30,7 @@
 
 | kind | block_id | closure_source | closure_detail |
 |---|---|---|---|
-| non-terminal-in-archive | 071\|ORDER\|current-archive#132 | A-review-block | canonical_id=071 covered by a REVIEWED '## REVIEW ORDER-071'-style block |
+| non-terminal-in-archive | 071\|ORDER\|current-archive#132 | A-sourcea-binding | closed by C1-ENFORCE-SOURCEA-BINDING row (review_ref='## REVIEW ORDER-071 (Stage 1+2)') |
 | terminal-no-linked-review | 003\|ORDER\|current-archive#4 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (SKIPPED, no verdict needed)'; evidence='subsumed into ORDER-004; MC ran there') |
 | terminal-no-linked-review | 009\|ORDER\|current-archive#9 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (SKIPPED, no verdict needed)'; evidence='superseded; MC ran in ORDER-010') |
 | terminal-no-linked-review | 067\|ORDER\|current-archive#58 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (verdict inline in header)'; evidence='BUILT+CLOSED gate worse than offline') |
@@ -40,7 +40,7 @@
 | terminal-no-linked-review | 093\|ORDER\|current-archive#102 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (P0 infra self-completed)'; evidence='deployment-truth + encoding, 4 items done') |
 | terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (expansion step)'; evidence='JUMSTOCH symbolxTF expand; fed D1e/D1f which were REVIEWED (thread demo-ready)') |
 | terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (mechanical DONE, no verdict)'; evidence='commit WOBR intake artifacts') |
-| non-terminal-in-archive | 071\|ORDER\|current-archive#67 | A-review-block | canonical_id=071 covered by a REVIEWED '## REVIEW ORDER-071'-style block |
+| non-terminal-in-archive | 071\|ORDER\|current-archive#67 | A-sourcea-binding | closed by C1-ENFORCE-SOURCEA-BINDING row (review_ref='## REVIEW ORDER-071 (Stage 1+2)') |
 
 ## Unresolved -- raw_detected minus canonically_reviewed (needs a C1-CLOSURE row)
 
