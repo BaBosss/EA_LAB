@@ -32,8 +32,28 @@
 
 .PARAMETER Strict
     READ-ONLY (same as -Audit: never writes the manifest/index/exceptions report). Exit
-    0 only if fully clean. Exit 1 if any policy exceptions exist (no integrity
-    failures). Exit 2 if any INTEGRITY/tooling failure exists.
+    0 only if fully clean -- fully clean now means every raw policy exception has been
+    CANONICALLY REVIEWED (ORDER-102 Contract C1: closed via a REVIEW-block linkage or a
+    C1-CLOSURE block; see the CONTRACT C1 section below), not merely "zero raw
+    exceptions". Exit 1 if any UNRESOLVED policy exception remains (raw minus
+    canonically-reviewed; no integrity failures). Exit 2 if any INTEGRITY/tooling
+    failure exists.
+
+.NOTES (CONTRACT C1 -- CANONICAL REVIEW LINKAGE, ORDER-102)
+    A raw policy exception from the exception scan can be closed two ways, both
+    READ-ONLY and both reported separately (raw_detected / canonically_reviewed /
+    unresolved counts, never silently merged):
+      Source A -- REVIEW-BLOCK LINKAGE: any raw exception whose canonical_id is
+        covered by a block matching header '^## REVIEW ORDER-<canonicalid>' with a
+        REVIEWED/REVIEWED-CLOSED status verb is closed.
+      Source B -- C1-CLOSURE BLOCK: a single '## C1-CLOSURE' block (status
+        REVIEWED(Opus, ...)) containing a markdown table with columns
+        kind | block_id | block_sha256 | disposition | evidence. Each row closes
+        the ONE raw exception whose EXACT (kind, block_id) matches AND whose
+        block_sha256 equals that exception's CURRENT block hash (the canonical-LF
+        sha256 recorded in ARCHIVE_MANIFEST.csv). A sha mismatch = STALE (reported,
+        not honored). An unknown or duplicate closure row is an INTEGRITY failure
+        (exit 2 under both -Audit and -Strict).
 
 .PARAMETER RepoRoot
     Repo root. Defaults to the parent of this script's directory.
@@ -635,9 +655,11 @@ function Invoke-ExceptionScan {
     # (a) non-terminal in archive / status-unparseable in archive
     foreach ($b in $CurrentArchiveBlocks) {
         if ($b.StatusClass -eq 'NonTerminal') {
+            $cid = ''; if ($b.CanonicalIds.Count -gt 0) { $cid = $b.CanonicalIds[0] }
             $policyExceptions.Add([pscustomobject]@{
                 Kind = 'non-terminal-in-archive'; Severity = 'policy'
                 BlockId = $b.BlockId; Header = $b.Header; Detail = "status='$($b.StatusLabel)'"
+                CanonicalId = $cid; Sha256 = $b.Sha256
             })
         }
         if ($b.StatusClass -eq 'Unparseable') {
@@ -673,6 +695,7 @@ function Invoke-ExceptionScan {
                     Kind = 'terminal-no-linked-review'; Severity = 'policy'
                     BlockId = $b.BlockId; Header = $b.Header
                     Detail = "canonical_id=$ownId terminal ($($b.StatusLabel)) but no REVIEW block in archive references it"
+                    CanonicalId = $ownId; Sha256 = $b.Sha256
                 })
             }
         }
@@ -687,10 +710,12 @@ function Invoke-ExceptionScan {
     foreach ($b in $CurrentArchiveBlocks) {
         $pendingLabel = Test-HasPendingStageMarker -Header $b.Header
         if ($pendingLabel) {
+            $cid = ''; if ($b.CanonicalIds.Count -gt 0) { $cid = $b.CanonicalIds[0] }
             $policyExceptions.Add([pscustomobject]@{
                 Kind = 'non-terminal-in-archive'; Severity = 'policy'
                 BlockId = $b.BlockId; Header = $b.Header
                 Detail = "mixed/partial status: header carries pending-stage marker '$pendingLabel' OUTSIDE the backtick status token (backtick status='$($b.StatusLabel)') -- treated as non-terminal-in-archive despite the terminal verb"
+                CanonicalId = $cid; Sha256 = $b.Sha256
             })
         }
     }
@@ -714,12 +739,280 @@ function Invoke-ExceptionScan {
                     Kind = 'cross-active-and-archive'; Severity = 'policy'
                     BlockId = $b.BlockId; Header = $b.Header
                     Detail = "canonical_id=$id also present in current active board: '$($activeHeaderById[$id])' -- needs Opus to classify (annotation / obsolete-phase / active-continuation)"
+                    CanonicalId = $id; Sha256 = $b.Sha256
                 })
             }
         }
     }
 
     return [pscustomobject]@{ Policy = $policyExceptions.ToArray(); Integrity = $integrityFailures.ToArray() }
+}
+
+# ============================================================================
+# CONTRACT C1 -- CANONICAL REVIEW LINKAGE (closure sources A + B)
+# ============================================================================
+#
+# ORDER-102 Contract C1 upgrade: policy exceptions raised by Invoke-ExceptionScan
+# above are "raw" -- unchanged from C0. This section is a READ-ONLY post-processing
+# layer that closes a subset of those raw exceptions via two canonical sources,
+# reported separately (never silently folded back into "raw"):
+#
+#   Source A -- REVIEW-BLOCK LINKAGE: a block whose header (after "## ") matches
+#   '^REVIEW ORDER-<canonicalid>' AND whose backtick status verb is terminal with
+#   label REVIEWED or REVIEWED/CLOSED is a canonical review of every ORDER-<id>
+#   referenced anywhere in that same header. ANY raw policy exception (of any of
+#   the 3 kinds Invoke-ExceptionScan can produce) whose CanonicalId is covered by
+#   such a block is CLOSED. This is deliberately broader than the pre-existing
+#   ad-hoc $reviewedIds check inside the terminal-no-linked-review branch above
+#   (which only ever suppressed that ONE kind, silently, before the exception was
+#   even counted as "raw") -- Source A additionally closes non-terminal-in-archive
+#   and cross-active-and-archive exceptions for the same canonical id, and reports
+#   the closure explicitly instead of hiding it. The two mechanisms overlap for
+#   terminal-no-linked-review by design (both keyed on canonical id); left as-is
+#   rather than deleted so raw_detected keeps its current, already-measured value.
+#
+#   Source B -- C1-CLOSURE BLOCK: a single canonical block, header starting
+#   '## C1-CLOSURE', status REVIEWED(Opus, ...), containing a markdown table with
+#   columns kind | block_id | block_sha256 | disposition | evidence. Each row
+#   closes the ONE raw exception whose (Kind, BlockId) matches the row AND whose
+#   CURRENT Sha256 equals the row's block_sha256 (keyed on kind+block_id, NOT
+#   canonical id -- a closure for one kind of a block must not silently close a
+#   DIFFERENT kind of the same block_id). A block_sha256 mismatch = STALE: the
+#   exception stays unresolved and the staleness is reported, never silently
+#   honored. An unknown or duplicate closure row is an INTEGRITY failure.
+#
+# Both sources are evaluated against blocks already read from the canonical
+# corpus (current-active + current-archive) -- no new IO.
+
+function Get-CanonicalReviewIds {
+    <#
+        Source A eligibility scan. Returns a HashSet[string] of every canonical id
+        covered by a qualifying REVIEW block found anywhere in $Blocks (both active
+        and archive corpora are expected to be passed in -- see the C1-CLOSURE spec
+        note "found in the canonical corpus (active taskboard or archive)").
+    #>
+    param($Blocks)
+    $ids = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($b in $Blocks) {
+        if ($b.BlockType -ne 'REVIEW-NOTE') { continue }
+        $headerBody = $b.Header.Substring(3)
+        if ($headerBody -notmatch '^REVIEW ORDER-\d') { continue }   # must be "REVIEW ORDER-<canonicalid>", not any bare "REVIEW ..." note
+        if ($b.StatusClass -ne 'Terminal') { continue }
+        if ($b.StatusLabel -notmatch '^REVIEWED') { continue }        # REVIEWED or REVIEWED/CLOSED only
+        foreach ($id in $b.CanonicalIds) { [void]$ids.Add($id) }
+    }
+    # NOTE: `return $ids` would let PowerShell auto-enumerate the HashSet into the
+    # pipeline (0 elements -> $null at the call site, 1 element -> a bare string, only
+    # >=2 elements -> something array-like) instead of returning the HashSet object
+    # itself. The unary comma operator suppresses that enumeration so the caller always
+    # gets exactly one HashSet[string], regardless of how many ids it contains.
+    return ,$ids
+}
+
+function Find-C1ClosureBlocks {
+    <# Returns every block whose header starts with the literal token "C1-CLOSURE". #>
+    param($Blocks)
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($b in $Blocks) {
+        $headerBody = $b.Header.Substring(3)
+        if ($headerBody -match '^C1-CLOSURE\b') { $found.Add($b) }
+    }
+    # See the comma-operator note in Get-CanonicalReviewIds -- without it, a
+    # single-match List[object] unrolls to the bare block object (losing .Count),
+    # which would silently skip processing the one real C1-CLOSURE block.
+    return ,$found
+}
+
+function ConvertFrom-MarkdownTableRow {
+    <#
+        Splits one "| a | b | c |" markdown table row into trimmed cell strings.
+        block_id values legitimately contain literal '|' (e.g.
+        "003|ORDER|current-archive#4") and must be escaped as '\|' when embedded in
+        a table cell (mirrors Escape-MarkdownTableCell used for OUTPUT elsewhere) --
+        this is the matching INPUT-side unescape: '\|' is protected with a sentinel
+        before splitting on bare '|', then restored per-cell.
+    #>
+    param([string]$Line)
+    $sentinel = [char]0xE000   # private-use-area char, will never appear in authored markdown
+    $tmp = $Line.Replace('\|', [string]$sentinel)
+    $trimmed = $tmp.Trim()
+    if ($trimmed.StartsWith('|')) { $trimmed = $trimmed.Substring(1) }
+    if ($trimmed.EndsWith('|')) { $trimmed = $trimmed.Substring(0, $trimmed.Length - 1) }
+    $cells = $trimmed -split '\|'
+    return @($cells | ForEach-Object { $_.Trim().Replace([string]$sentinel, '|') })
+}
+
+function Get-C1ClosureTableRows {
+    <#
+        Parses the kind|block_id|block_sha256|disposition|evidence table out of a
+        single C1-CLOSURE block's Content. Returns an array of pscustomobjects with
+        Kind/BlockId/BlockSha256/Disposition/Evidence. Tolerant of the header row
+        appearing anywhere in the block body (not just immediately after the H2
+        line) and of the markdown separator row ("|---|---|...").
+    #>
+    param($Block)
+    $lines = $Block.Content -split "`n"
+    $rows = New-Object System.Collections.Generic.List[object]
+    $headerIdx = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i].Trim()
+        if ($line -notmatch '^\|.*\|$') { continue }
+        $cells = @(ConvertFrom-MarkdownTableRow -Line $line)
+
+        if ($headerIdx -lt 0) {
+            $norm = @($cells | ForEach-Object { $_.ToLowerInvariant() })
+            if (($norm.Count -eq 5) -and ($norm[0] -eq 'kind') -and ($norm[1] -eq 'block_id') -and
+                ($norm[2] -eq 'block_sha256') -and ($norm[3] -eq 'disposition') -and ($norm[4] -eq 'evidence')) {
+                $headerIdx = $i
+            }
+            continue
+        }
+        if ($i -eq ($headerIdx + 1) -and ($line -match '^\|?[\s:|-]+\|?$')) { continue }  # separator row
+        if ($cells.Count -lt 5) { continue }
+
+        $rows.Add([pscustomobject]@{
+            Kind = $cells[0]; BlockId = $cells[1]; BlockSha256 = $cells[2]
+            Disposition = $cells[3]; Evidence = $cells[4]
+        })
+    }
+    return $rows.ToArray()
+}
+
+function Invoke-ExceptionClosure {
+    <#
+        Applies Source A + Source B to $PolicyExceptions (the raw list from
+        Invoke-ExceptionScan, each already carrying .Kind/.BlockId/.CanonicalId/.Sha256).
+        Returns @{ Reviewed = [...]; Unresolved = [...]; IntegrityFailures = [...] }.
+        Reviewed + Unresolved together are always a partition of $PolicyExceptions
+        (every raw exception appears in exactly one of the two output lists).
+    #>
+    param($PolicyExceptions, $ActiveBlocks, $ArchiveBlocks)
+
+    $corpus = New-Object System.Collections.Generic.List[object]
+    foreach ($b in $ActiveBlocks) { $corpus.Add($b) }
+    foreach ($b in $ArchiveBlocks) { $corpus.Add($b) }
+
+    $closureIntegrity = New-Object System.Collections.Generic.List[object]
+
+    # --- Source A ---
+    $reviewedIdsA = Get-CanonicalReviewIds -Blocks $corpus
+
+    # --- Source B: locate + parse the (at most one) C1-CLOSURE block ---
+    # NOTE: do NOT wrap this call in @(...) -- Find-C1ClosureBlocks already uses the
+    # comma operator internally (",$found") to guarantee it always emits exactly one
+    # List[object], however many blocks it found (0, 1, or many). Wrapping the call
+    # site in @() too would re-box that single List into a 1-element OUTER array,
+    # making .Count always report 1 regardless of the real match count.
+    $c1Blocks = Find-C1ClosureBlocks -Blocks $corpus
+    $c1Rows = @()
+    if ($c1Blocks.Count -gt 1) {
+        $closureIntegrity.Add([pscustomobject]@{
+            Kind = 'c1-closure-ambiguous'; Severity = 'integrity'
+            Detail = "$($c1Blocks.Count) blocks matched header '## C1-CLOSURE' (expected at most 1) -- ambiguous, not parsed"
+        })
+    } elseif ($c1Blocks.Count -eq 1) {
+        $block = $c1Blocks[0]
+        if (-not (($block.StatusClass -eq 'Terminal') -and ($block.StatusLabel -match '^REVIEWED'))) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'c1-closure-not-reviewed'; Severity = 'integrity'
+                BlockId = $block.BlockId; Header = $block.Header
+                Detail = "C1-CLOSURE block found but its status is not a REVIEWED(...) verb (status='$($block.StatusLabel)') -- not parsed/honored"
+            })
+        } else {
+            $c1Rows = @(Get-C1ClosureTableRows -Block $block)
+        }
+    }
+
+    # Index raw exceptions by (Kind, BlockId) -> list of array-indices (almost always
+    # singleton, but kept as a list defensively in case the same block ever produces
+    # two exceptions of the identical kind).
+    $excIndexByKey = @{}
+    for ($i = 0; $i -lt $PolicyExceptions.Count; $i++) {
+        $e = $PolicyExceptions[$i]
+        $key = $e.Kind + '||' + $e.BlockId
+        if (-not $excIndexByKey.ContainsKey($key)) { $excIndexByKey[$key] = New-Object System.Collections.Generic.List[int] }
+        $excIndexByKey[$key].Add($i)
+    }
+
+    # --- Source B row processing: unknown/duplicate rows = integrity; else match sha ---
+    $seenRowKeys = New-Object System.Collections.Generic.HashSet[string]
+    $bClosedIndex = @{}   # array-index -> row that closed it
+    $bStaleIndex  = @{}   # array-index -> row that matched key but had a stale sha
+
+    foreach ($row in $c1Rows) {
+        $rowKey = $row.Kind + '||' + $row.BlockId
+        if ($seenRowKeys.Contains($rowKey)) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'c1-closure-duplicate-row'; Severity = 'integrity'
+                Detail = "duplicate C1-CLOSURE row for kind='$($row.Kind)' block_id='$($row.BlockId)'"
+            })
+            continue
+        }
+        [void]$seenRowKeys.Add($rowKey)
+
+        if (-not $excIndexByKey.ContainsKey($rowKey)) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'c1-closure-unknown-row'; Severity = 'integrity'
+                Detail = "C1-CLOSURE row for kind='$($row.Kind)' block_id='$($row.BlockId)' matches no detected policy exception"
+            })
+            continue
+        }
+
+        foreach ($idx in $excIndexByKey[$rowKey]) {
+            $e = $PolicyExceptions[$idx]
+            if ($e.Sha256 -eq $row.BlockSha256) {
+                $bClosedIndex[$idx] = $row
+            } else {
+                $bStaleIndex[$idx] = $row
+            }
+        }
+    }
+
+    # --- Partition: every raw exception -> Reviewed (A or B) or Unresolved ---
+    $reviewed = New-Object System.Collections.Generic.List[object]
+    $unresolved = New-Object System.Collections.Generic.List[object]
+
+    for ($i = 0; $i -lt $PolicyExceptions.Count; $i++) {
+        $e = $PolicyExceptions[$i]
+
+        if ($e.CanonicalId -and $reviewedIdsA.Contains($e.CanonicalId)) {
+            $reviewed.Add([pscustomobject]@{
+                Kind = $e.Kind; BlockId = $e.BlockId; Header = $e.Header; Detail = $e.Detail
+                CanonicalId = $e.CanonicalId; Sha256 = $e.Sha256
+                ClosureSource = 'A-review-block'
+                ClosureDetail = "canonical_id=$($e.CanonicalId) covered by a REVIEWED '## REVIEW ORDER-$($e.CanonicalId)'-style block"
+            })
+            continue
+        }
+
+        if ($bClosedIndex.ContainsKey($i)) {
+            $row = $bClosedIndex[$i]
+            $reviewed.Add([pscustomobject]@{
+                Kind = $e.Kind; BlockId = $e.BlockId; Header = $e.Header; Detail = $e.Detail
+                CanonicalId = $e.CanonicalId; Sha256 = $e.Sha256
+                ClosureSource = 'B-C1-closure-block'
+                ClosureDetail = "closed by C1-CLOSURE row (disposition='$($row.Disposition)'; evidence='$($row.Evidence)')"
+            })
+            continue
+        }
+
+        $staleNote = $null
+        if ($bStaleIndex.ContainsKey($i)) {
+            $row = $bStaleIndex[$i]
+            $staleNote = "STALE C1-CLOSURE row found for kind='$($e.Kind)' block_id='$($e.BlockId)' but block_sha256 mismatch (row='$($row.BlockSha256)' current='$($e.Sha256)') -- closure NOT honored, exception stays unresolved"
+        }
+        $unresolved.Add([pscustomobject]@{
+            Kind = $e.Kind; BlockId = $e.BlockId; Header = $e.Header; Detail = $e.Detail
+            CanonicalId = $e.CanonicalId; Sha256 = $e.Sha256
+            StaleClosureNote = $staleNote
+        })
+    }
+
+    return [pscustomobject]@{
+        Reviewed = $reviewed.ToArray()
+        Unresolved = $unresolved.ToArray()
+        IntegrityFailures = $closureIntegrity.ToArray()
+    }
 }
 
 # ============================================================================
@@ -952,8 +1245,16 @@ function Invoke-TaskboardArchiveCheck {
     $exceptions = Invoke-ExceptionScan -CurrentActiveBlocks $activeCurrentBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
     $report.Exceptions = $exceptions
 
+    # ORDER-102 Contract C1: canonical-review-linkage closure (Source A: REVIEW-block
+    # linkage; Source B: a C1-CLOSURE block). READ-ONLY -- only classifies the raw
+    # exceptions above, never mutates AGENT_TASKBOARD.md/ARCHIVE_TASKBOARD_2026-07A.md.
+    $closure = Invoke-ExceptionClosure -PolicyExceptions $exceptions.Policy -ActiveBlocks $activeCurrentBlocks -ArchiveBlocks $archiveCurrentBlocks
+    $report.CanonicallyReviewed = @($closure.Reviewed)
+    $report.UnresolvedPolicyExceptions = @($closure.Unresolved)
+
     $integrityFailures = New-Object System.Collections.Generic.List[object]
     foreach ($f in $exceptions.Integrity) { $integrityFailures.Add($f) }
+    foreach ($f in $closure.IntegrityFailures) { $integrityFailures.Add($f) }
 
     if ($splitIntegrity.Missing.Count -gt 0) {
         $integrityFailures.Add([pscustomobject]@{ Kind = 'split-integrity-missing'; Severity = 'integrity'; Detail = "$($splitIntegrity.Missing.Count) pre-split block(s) missing from split active+archive union" })
@@ -1062,9 +1363,14 @@ function Invoke-TaskboardArchiveCheck {
     }
     $report.IntegrityFailures = $integrityFailures.ToArray()
 
+    # EXIT SEMANTICS (ORDER-102 Contract C1 update): -Strict now gates on UNRESOLVED
+    # exceptions (raw minus canonically-reviewed via Source A/B), not raw policy count
+    # -- a policy exception canonically closed by a REVIEW block or a C1-CLOSURE row
+    # no longer blocks -Strict. -Audit is unchanged: it only ever cared about
+    # integrity failures, never policy/unresolved count.
     if ($integrityFailures.Count -gt 0) {
         $exitCode = $script:EXIT_INTEGRITY
-    } elseif ($isStrict -and $exceptions.Policy.Count -gt 0) {
+    } elseif ($isStrict -and $report.UnresolvedPolicyExceptions.Count -gt 0) {
         $exitCode = $script:EXIT_POLICY
     } else {
         $exitCode = $script:EXIT_OK
@@ -1089,13 +1395,18 @@ function Build-ExceptionsMarkdown {
     $sb = New-Object System.Text.StringBuilder
     [void]$sb.AppendLine('# RECONCILE_EXCEPTIONS.md')
     [void]$sb.AppendLine('')
-    [void]$sb.AppendLine('> Generated by `scripts/check_taskboard_archive.ps1 -Generate` (ORDER-101 Contract C0).')
+    [void]$sb.AppendLine('> Generated by `scripts/check_taskboard_archive.ps1 -Generate` (ORDER-101 Contract C0 +')
+    [void]$sb.AppendLine('> ORDER-102 Contract C1 canonical-review-linkage).')
     [void]$sb.AppendLine('> **Worker does not resolve or move anything here.** Every row below needs an Opus')
     [void]$sb.AppendLine('> (or user) classification decision. This file is regenerated only by `-Generate`')
     [void]$sb.AppendLine('> (`-Audit`/`-Strict` are read-only and never touch it) -- do not hand-edit it; land')
     [void]$sb.AppendLine('> Opus decisions in PROJECT_STATE.md / the taskboard instead.')
     [void]$sb.AppendLine('')
-    [void]$sb.AppendLine('## Policy exceptions (severity 1 -- worker may not resolve)')
+    [void]$sb.AppendLine('> **Counts:** raw_detected=' + $Report.PolicyExceptions.Count +
+        ' | canonically_reviewed=' + $Report.CanonicallyReviewed.Count +
+        ' | unresolved=' + $Report.UnresolvedPolicyExceptions.Count)
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Policy exceptions -- raw_detected (severity 1, before any closure)')
     [void]$sb.AppendLine('')
     if ($Report.PolicyExceptions.Count -eq 0) {
         [void]$sb.AppendLine('_None found._')
@@ -1106,6 +1417,38 @@ function Build-ExceptionsMarkdown {
             $bid    = $e.BlockId.Replace('|', '\|')   # block_id contains literal '|' (e.g. 003|ORDER|current-archive#4)
             $header = $e.Header.Replace('|', '\|')
             $detail = $e.Detail.Replace('|', '\|')
+            [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $bid + ' | ' + $header + ' | ' + $detail + ' |')
+        }
+    }
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Canonically reviewed -- CLOSED (Contract C1 Source A: REVIEW-block linkage /')
+    [void]$sb.AppendLine('## Source B: C1-CLOSURE block; no further action needed)')
+    [void]$sb.AppendLine('')
+    if ($Report.CanonicallyReviewed.Count -eq 0) {
+        [void]$sb.AppendLine('_None found._')
+    } else {
+        [void]$sb.AppendLine('| kind | block_id | closure_source | closure_detail |')
+        [void]$sb.AppendLine('|---|---|---|---|')
+        foreach ($e in $Report.CanonicallyReviewed) {
+            $bid = $e.BlockId.Replace('|', '\|')
+            $csrc = $e.ClosureSource.Replace('|', '\|')
+            $cdet = $e.ClosureDetail.Replace('|', '\|')
+            [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $bid + ' | ' + $csrc + ' | ' + $cdet + ' |')
+        }
+    }
+    [void]$sb.AppendLine('')
+    [void]$sb.AppendLine('## Unresolved -- raw_detected minus canonically_reviewed (needs a C1-CLOSURE row)')
+    [void]$sb.AppendLine('')
+    if ($Report.UnresolvedPolicyExceptions.Count -eq 0) {
+        [void]$sb.AppendLine('_None found._')
+    } else {
+        [void]$sb.AppendLine('| kind | block_id | header | detail |')
+        [void]$sb.AppendLine('|---|---|---|---|')
+        foreach ($e in $Report.UnresolvedPolicyExceptions) {
+            $bid    = $e.BlockId.Replace('|', '\|')
+            $header = $e.Header.Replace('|', '\|')
+            $detail = $e.Detail.Replace('|', '\|')
+            if ($e.StaleClosureNote) { $detail = $detail + ' [' + $e.StaleClosureNote.Replace('|', '\|') + ']' }
             [void]$sb.AppendLine('| ' + $e.Kind + ' | ' + $bid + ' | ' + $header + ' | ' + $detail + ' |')
         }
     }
@@ -1130,8 +1473,13 @@ function Build-ExceptionsMarkdown {
     [void]$sb.AppendLine('- Manual `## ARCHIVED ORDERS INDEX` block embedded in the active taskboard violates')
     [void]$sb.AppendLine('  the "generated index must be read-only" rule (design source Sec 20.7). C0 is read-only')
     [void]$sb.AppendLine('  and does not touch it; replacing it with a generated view is C1 scope.')
-    [void]$sb.AppendLine('- Review linking in the exception scan above is done at **canonical-id granularity**,')
-    [void]$sb.AppendLine('  not full block_id-level many-to-many. See the final report deviations note for why.')
+    [void]$sb.AppendLine('- Source A (REVIEW-block linkage) closes by **canonical id** -- any of the 3 raw-')
+    [void]$sb.AppendLine('  exception kinds for a canonical id covered by a REVIEWED `## REVIEW ORDER-<id>`-style')
+    [void]$sb.AppendLine('  block are closed. Source B (a `## C1-CLOSURE` block) closes by the EXACT (kind,')
+    [void]$sb.AppendLine('  block_id, block_sha256) triple -- never by canonical id alone -- so one kind of a')
+    [void]$sb.AppendLine('  block can be closed without silently closing a different kind of the same block_id,')
+    [void]$sb.AppendLine('  and a stale block_sha256 (block edited since the closure row was written) is reported')
+    [void]$sb.AppendLine('  rather than silently honored.')
     [void]$sb.AppendLine('')
     return $sb.ToString()
 }
@@ -1193,8 +1541,19 @@ function Invoke-Main {
     Write-Host ('archive-now vs split-archive: empty diff = ' + $report.ArchiveDrift.IsEmpty)
     Write-Host ''
     Write-Host '--- EXCEPTION SCAN (current archive) ---'
-    Write-Host ('policy exceptions: ' + $report.PolicyExceptions.Count)
+    Write-Host ('raw_detected policy exceptions: ' + $report.PolicyExceptions.Count)
     foreach ($e in $report.PolicyExceptions) { Write-Host ('  [' + $e.Kind + '] ' + $e.BlockId + ' :: ' + $e.Detail) }
+    Write-Host ''
+    Write-Host ('canonically_reviewed (closed, Contract C1 Source A/B): ' + $report.CanonicallyReviewed.Count)
+    foreach ($e in $report.CanonicallyReviewed) { Write-Host ('  [' + $e.Kind + '] ' + $e.BlockId + ' :: closed via ' + $e.ClosureSource + ' -- ' + $e.ClosureDetail) }
+    Write-Host ''
+    Write-Host ('unresolved (raw minus canonically_reviewed): ' + $report.UnresolvedPolicyExceptions.Count)
+    foreach ($e in $report.UnresolvedPolicyExceptions) {
+        $staleTag = ''
+        if ($e.StaleClosureNote) { $staleTag = ' [STALE CLOSURE: ' + $e.StaleClosureNote + ']' }
+        Write-Host ('  [' + $e.Kind + '] ' + $e.BlockId + ' :: ' + $e.Detail + $staleTag)
+    }
+    Write-Host ''
     Write-Host ('integrity failures: ' + $report.IntegrityFailures.Count)
     foreach ($e in $report.IntegrityFailures) {
         $bid = ''; if ($e.PSObject.Properties['BlockId']) { $bid = $e.BlockId }

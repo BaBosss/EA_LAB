@@ -43,12 +43,19 @@
                                (fix 3: bijection now cross-checks every row field against
                                the block its anchor resolves to) -> Audit=2, Strict=2
       partial-stage-archived
-                            -> Audit=0, Strict=1 (POLICY only). A block whose backtick
-                               status verb is terminal (`STAGE2-DONE(...)`) but whose
-                               header ALSO carries a pending-stage marker outside the
-                               backticks (e.g. "-- Stage 2 = รอ...ตัดสิน...", mirroring the
-                               real ORDER-071 case) must be flagged non-terminal-in-archive
-                               despite the terminal verb (fix 4)
+                            -> Audit=0, Strict=0 (was Strict=1 before ORDER-102 Contract
+                               C1: this fixture's ORDER-205 carries a terminal backtick
+                               verb (`STAGE2-DONE(...)`) PLUS a pending-stage marker
+                               outside the backticks -- raising a raw non-terminal-in-
+                               archive exception (fix 4, unchanged) -- but the fixture
+                               also already ships a matching `## REVIEW ORDER-205`
+                               REVIEWED block (mirroring the real archive's `## REVIEW
+                               ORDER-071`). Contract C1 Source A now canonically closes
+                               any raw exception whose canonical id is covered by such a
+                               block, so this fixture's one raw exception is closed and
+                               unresolved=0 -- Strict flips to 0. See
+                               reviewmismatch-does-not-close below for the negative
+                               (wrong id = stays unresolved) counterpart.
 
     ORDER-101 blind-review round 2 cases (3 fixes + 1 polish):
       stale-exceptions-caught-by-normal-run (fix 1)
@@ -74,6 +81,47 @@
     fixtures the tests read (corrupt_hash_manifest.csv, extra_row_manifest.csv,
     dup_id_manifest.csv, stale_index.md) live directly under fixtures/order101/, not in a
     generated-output directory.
+
+    ORDER-102 Contract C1 cases (canonical review linkage: closes raw exceptions via a
+    REVIEW-block, Source A, or a C1-CLOSURE block, Source B -- see check_taskboard_archive.ps1's
+    "CONTRACT C1" section):
+      reviewmismatch-does-not-close
+                            -> Audit=0, Strict=1. ORDER-206 raises 2 raw exceptions
+                               (terminal-no-linked-review + non-terminal-in-archive,
+                               mirroring ORDER-205/real ORDER-071) but the only REVIEW
+                               block anywhere in this fixture targets a DIFFERENT
+                               canonical id (209, not 206) -- Source A must NOT close
+                               206's exceptions just because *a* REVIEWED REVIEW block
+                               exists somewhere in the corpus. Negative counterpart of
+                               partial-stage-archived above.
+      c1closure-correct-sha-closes-exactly-one-kind
+                            -> Audit=0, Strict=1. ORDER-210 raises 2 raw exceptions of
+                               DIFFERENT kinds against the SAME block_id
+                               (terminal-no-linked-review + cross-active-and-archive). A
+                               C1-CLOSURE block with one row keyed
+                               (terminal-no-linked-review, that block_id, its CURRENT
+                               sha256) must close ONLY that one kind -- the
+                               cross-active-and-archive exception for the identical
+                               block_id must remain unresolved (Source B keys on the
+                               EXACT (kind, block_id, block_sha256) triple, never on
+                               canonical id or block_id alone).
+      c1closure-stale-sha-stays-unresolved
+                            -> Audit=0, Strict=1 (still, not 0). Same fixture as above
+                               but the C1-CLOSURE row's block_sha256 is deliberately
+                               wrong (block "edited" since the row was written) -- the
+                               closure must be rejected as STALE, reported as such, and
+                               both raw exceptions must stay unresolved (never silently
+                               honored on a hash mismatch).
+      c1closure-unknown-row-is-integrity
+                            -> Audit=2, Strict=2. A C1-CLOSURE row whose (kind,
+                               block_id) matches no detected raw exception at all is an
+                               INTEGRITY failure (kind='c1-closure-unknown-row'), not a
+                               silently-ignored no-op.
+      c1closure-duplicate-row-is-integrity
+                            -> Audit=2, Strict=2. Two C1-CLOSURE rows for the identical
+                               (kind, block_id) is an INTEGRITY failure
+                               (kind='c1-closure-duplicate-row'), even though the first
+                               row alone would have closed its exception validly.
 
     Run: powershell -NoProfile -File scripts\_test\run_order101_negative_tests.ps1
     Exit code: 0 if every case matched its expected outcome, 1 otherwise.
@@ -362,7 +410,11 @@ $results.Add([pscustomobject]@{
 $p = New-CaseParams -Tag 'partial' `
     -PreSplit "$fx\partialstage_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\partialstage_split_archive.md" `
     -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\partialstage_current_archive.md"
-Add-CaseResult -Name 'partial-stage-archived (fix 4, mirrors real ORDER-071)' -Params $p -ExpectAudit 0 -ExpectStrict 1
+# ORDER-102 Contract C1: this fixture's ORDER-205 raises a raw non-terminal-in-archive
+# exception (fix 4, unchanged) but ships its own matching REVIEWED "## REVIEW ORDER-205"
+# block (mirroring the real "## REVIEW ORDER-071"), so Source A now canonically closes
+# it -> unresolved=0 -> Strict=0 (was Strict=1 pre-C1; see docstring above).
+Add-CaseResult -Name 'partial-stage-archived (fix 4, closed by C1 Source A via its own REVIEW ORDER-205)' -Params $p -ExpectAudit 0 -ExpectStrict 0
 
 # --- 13. FIX 3 off-by-one, zero matches: the generated-extra header pattern matches NO
 #         block in split-active+split-archive (the expected manual "## ... ARCHIVED
@@ -380,6 +432,82 @@ $p = New-CaseParams -Tag 'two' `
     -PreSplit "$fx\clean_presplit.md" -SplitActive "$fx\two_split_active.md" -SplitArchive "$fx\clean_split_archive.md" `
     -CurrentActive "$fx\two_current_active.md" -CurrentArchive "$fx\clean_current_archive.md"
 Add-CaseResult -Name 'generated-extra-two-matches (fix 3)' -Params $p -ExpectAudit 2 -ExpectStrict 2
+
+# ============================================================================
+# ORDER-102 Contract C1: canonical review linkage (Source A REVIEW-block / Source B
+# C1-CLOSURE block). See the docstring above for the full description of each case.
+# ============================================================================
+
+# --- 15. Source A negative: a REVIEW block exists in the corpus, but it targets a
+#         DIFFERENT canonical id than the one raising the raw exception -- must NOT
+#         close it. Negative counterpart of partial-stage-archived (test 12 above),
+#         which is the Source A POSITIVE case (REVIEW-block closes the matching
+#         exception). ---
+$p = New-CaseParams -Tag 'reviewmismatch' `
+    -PreSplit "$fx\reviewmismatch_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\reviewmismatch_split_archive.md" `
+    -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\reviewmismatch_current_archive.md"
+Add-CaseResult -Name 'reviewmismatch-does-not-close (Source A id must match exactly)' -Params $p -ExpectAudit 0 -ExpectStrict 1
+
+# --- 16-19. Source B (C1-CLOSURE block): ORDER-210 raises 2 raw exceptions of DIFFERENT
+#         kinds against the SAME block_id (terminal-no-linked-review archive-side +
+#         cross-active-and-archive, since 210 is unreviewed and appears in both boards).
+#         Each variant below is identical except for its C1-CLOSURE table's row(s). ---
+function New-C1ClosureParams {
+    param([string]$ActiveVariantFile, [string]$Tag)
+    return New-CaseParams -Tag $Tag `
+        -PreSplit "$fx\c1closure_presplit.md" -SplitActive "$fx\c1closure_split_active.md" -SplitArchive "$fx\c1closure_split_archive.md" `
+        -CurrentActive "$fx\$ActiveVariantFile" -CurrentArchive "$fx\c1closure_current_archive.md"
+}
+
+# --- 16. Correct sha closes EXACTLY the one (kind, block_id) it targets; the other
+#         kind of the identical block_id must remain unresolved. Checked both by exit
+#         code (Strict=1, not 0) AND by inspecting stdout for the specific kind that
+#         stayed unresolved, so a bug that closed BOTH (or neither) can't hide behind
+#         a coincidentally-matching exit code. ---
+$c1CorrectP = New-C1ClosureParams -ActiveVariantFile 'c1closure_current_active_correct.md' -Tag 'c1correct'
+Invoke-Validator -Mode 'Generate' -Params $c1CorrectP | Out-Null
+$c1CorrectAudit  = Invoke-Validator -Mode 'Audit'  -Params $c1CorrectP
+$c1CorrectStrict = Invoke-Validator -Mode 'Strict' -Params $c1CorrectP
+$c1CorrectClosedRight   = $c1CorrectStrict.StdOut -match 'closed via B-C1-closure-block'
+$c1CorrectOnlyOneLeft   = ($c1CorrectStrict.StdOut -match 'unresolved \(raw minus canonically_reviewed\): 1') -and
+                          ($c1CorrectStrict.StdOut -match '\[cross-active-and-archive\][^\r\n]*210\|ORDER\|current-archive#1')
+$results.Add([pscustomobject]@{
+    Name = 'c1closure-correct-sha-closes-exactly-one-kind'
+    ExpectAudit = 0; ActualAudit = $c1CorrectAudit.ExitCode
+    ExpectStrict = 1; ActualStrict = $c1CorrectStrict.ExitCode
+    Pass = ($c1CorrectAudit.ExitCode -eq 0) -and ($c1CorrectStrict.ExitCode -eq 1) -and $c1CorrectClosedRight -and $c1CorrectOnlyOneLeft
+    AuditOut = $c1CorrectAudit.StdOut + "`n[closed-via-B found: $c1CorrectClosedRight] [exactly cross-active-and-archive left unresolved: $c1CorrectOnlyOneLeft]"
+    StrictOut = $c1CorrectStrict.StdOut
+})
+
+# --- 17. Stale sha (block_sha256 in the C1-CLOSURE row does not match the block's
+#         CURRENT hash) must NOT be honored -- both raw exceptions stay unresolved and
+#         the staleness must be reported in the output, not silently swallowed. ---
+$c1StaleP = New-C1ClosureParams -ActiveVariantFile 'c1closure_current_active_stale.md' -Tag 'c1stale'
+Invoke-Validator -Mode 'Generate' -Params $c1StaleP | Out-Null
+$c1StaleAudit  = Invoke-Validator -Mode 'Audit'  -Params $c1StaleP
+$c1StaleStrict = Invoke-Validator -Mode 'Strict' -Params $c1StaleP
+$c1StaleReported = $c1StaleStrict.StdOut -match 'STALE'
+$c1StaleBothLeft = $c1StaleStrict.StdOut -match 'unresolved \(raw minus canonically_reviewed\): 2'
+$results.Add([pscustomobject]@{
+    Name = 'c1closure-stale-sha-stays-unresolved'
+    ExpectAudit = 0; ActualAudit = $c1StaleAudit.ExitCode
+    ExpectStrict = 1; ActualStrict = $c1StaleStrict.ExitCode
+    Pass = ($c1StaleAudit.ExitCode -eq 0) -and ($c1StaleStrict.ExitCode -eq 1) -and $c1StaleReported -and $c1StaleBothLeft
+    AuditOut = $c1StaleAudit.StdOut + "`n[STALE reported: $c1StaleReported] [both raw exceptions still unresolved: $c1StaleBothLeft]"
+    StrictOut = $c1StaleStrict.StdOut
+})
+
+# --- 18. A C1-CLOSURE row whose (kind, block_id) matches no detected raw exception at
+#         all is an INTEGRITY failure (c1-closure-unknown-row), not a silent no-op. ---
+$c1UnknownP = New-C1ClosureParams -ActiveVariantFile 'c1closure_current_active_unknown.md' -Tag 'c1unknown'
+Add-CaseResult -Name 'c1closure-unknown-row-is-integrity' -Params $c1UnknownP -ExpectAudit 2 -ExpectStrict 2
+
+# --- 19. Two C1-CLOSURE rows for the identical (kind, block_id) is an INTEGRITY
+#         failure (c1-closure-duplicate-row), even though the first row alone would
+#         have closed its exception validly. ---
+$c1DupP = New-C1ClosureParams -ActiveVariantFile 'c1closure_current_active_duplicate.md' -Tag 'c1dup'
+Add-CaseResult -Name 'c1closure-duplicate-row-is-integrity' -Params $c1DupP -ExpectAudit 2 -ExpectStrict 2
 
 # --- report ---
 Write-Host ''
