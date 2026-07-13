@@ -6,8 +6,14 @@
 .DESCRIPTION
     Proves the manual 2026-07-12 taskboard split lost/duplicated/mutated nothing
     (1a split-integrity, multiset-by-hash against committed states), tracks what
-    has changed since the split (1b post-split drift), scans the current archive
-    for policy/integrity exceptions, and emits a manifest + generated index.
+    has legitimately changed since the split under the LIVING APPEND-ONLY LOG model
+    (ORDER-103): the archive is a growing immutable log (1b-ARCHIVE append-only --
+    current archive must be a superset-by-content of the split-time archive; post-
+    split appends are allowed and reported) and the active board is the writable
+    queue (1b-ACTIVE conservation -- every split-active ORDER block's canonical id
+    must resolve in current-active OR current-archive; non-order removals like the
+    manual index are allowed). Scans the current archive for policy/integrity
+    exceptions, and emits a manifest + generated index.
 
     This script NEVER writes to AGENT_TASKBOARD.md or ARCHIVE_TASKBOARD_2026-07A.md.
     It only reads them (working tree + git history) and writes new artifact files
@@ -581,20 +587,39 @@ function Group-BlocksByIdType {
     return $g
 }
 
-function Invoke-ActiveDriftCheck {
+function Invoke-ActiveConservationCheck {
     <#
-        Group by (CanonicalId, BlockType) in file order to line up "the Nth ORDER-x
-        block" in the split snapshot with "the Nth ORDER-x block" now, even when a
-        canonical id has multiple blocks (e.g. ORDER-082 main + ORDER-082 AMENDMENT).
-    #>
-    param($SplitActiveBlocks, $CurrentActiveBlocks)
+        ORDER-103 living-log evolution (1b-ACTIVE -- CONSERVATION, replaces the old
+        frozen-snapshot "no removals allowed" drift check).
 
+        The active board is the writable queue: orders are added, statuses change, and
+        an order block may legitimately be REMOVED from active (moved into the archive,
+        e.g. a C1 migration). The invariant that matters is not "nothing left the file"
+        but "no ORDER was silently lost": every split-active block whose BlockType is
+        'ORDER' must have its canonical_id resolvable in CURRENT active OR CURRENT
+        archive. A split-active NON-order block (manual index, annotation) may vanish
+        from active with no failure -- it was never a conserved unit.
+
+        Returns:
+          Additions        - blocks in current-active not present at split (report only)
+          Mutations        - (Before,After) pairs for same (canonical id, type) whose
+                              hash changed -- status edits etc. (report only, always allowed)
+          RemovedNonOrder  - split-active blocks of BlockType != 'ORDER' absent from
+                              current-active (allowed removal, report only)
+          OrderLost        - split-active ORDER blocks whose canonical_id resolves to
+                              NEITHER current-active NOR current-archive (INTEGRITY failure)
+    #>
+    param($SplitActiveBlocks, $CurrentActiveBlocks, $CurrentArchiveBlocks)
+
+    # Group by (CanonicalId, BlockType) in file order to line up "the Nth ORDER-x
+    # block" in the split snapshot with "the Nth ORDER-x block" now, even when a
+    # canonical id has multiple blocks (e.g. ORDER-082 main + ORDER-082 AMENDMENT).
     $oldGroups = Group-BlocksByIdType -Blocks $SplitActiveBlocks
     $newGroups = Group-BlocksByIdType -Blocks $CurrentActiveBlocks
 
     $additions = New-Object System.Collections.Generic.List[object]
     $mutations = New-Object System.Collections.Generic.List[object]
-    $removals  = New-Object System.Collections.Generic.List[object]
+    $removedNonOrder = New-Object System.Collections.Generic.List[object]
 
     $allKeys = New-Object System.Collections.Generic.HashSet[string]
     foreach ($k in $oldGroups.Keys) { [void]$allKeys.Add($k) }
@@ -613,23 +638,72 @@ function Invoke-ActiveDriftCheck {
             if ($null -eq $old -and $null -ne $new) {
                 $additions.Add($new)
             } elseif ($null -ne $old -and $null -eq $new) {
-                $removals.Add($old)
+                # ORDER removals are NOT reported/gated here -- they are exactly what the
+                # conservation check below classifies (conserved-elsewhere vs lost).
+                # Only non-order removals (manual index, annotations) are unconditionally
+                # allowed and reported here for transparency.
+                if ($old.BlockType -ne 'ORDER') { $removedNonOrder.Add($old) }
             } elseif ($old.Sha256 -ne $new.Sha256) {
                 $mutations.Add([pscustomobject]@{ Before = $old; After = $new })
             }
         }
     }
 
-    return [pscustomobject]@{ Additions = $additions; Mutations = $mutations; Removals = $removals }
+    # CONSERVATION: every split-active ORDER block's own canonical id must resolve to
+    # an ORDER block (its own id) somewhere in the CURRENT corpus -- active or archive.
+    $currentActiveOrderIds = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($b in $CurrentActiveBlocks) {
+        if ($b.BlockType -eq 'ORDER' -and $b.CanonicalIds.Count -gt 0) { [void]$currentActiveOrderIds.Add($b.CanonicalIds[0]) }
+    }
+    $currentArchiveOrderIds = New-Object System.Collections.Generic.HashSet[string]
+    foreach ($b in $CurrentArchiveBlocks) {
+        if ($b.BlockType -eq 'ORDER' -and $b.CanonicalIds.Count -gt 0) { [void]$currentArchiveOrderIds.Add($b.CanonicalIds[0]) }
+    }
+
+    $orderLost = New-Object System.Collections.Generic.List[object]
+    foreach ($b in $SplitActiveBlocks) {
+        if ($b.BlockType -ne 'ORDER') { continue }
+        if ($b.CanonicalIds.Count -eq 0) { continue }   # can't identify -- nothing to conserve against
+        $id = $b.CanonicalIds[0]
+        if (-not $currentActiveOrderIds.Contains($id) -and -not $currentArchiveOrderIds.Contains($id)) {
+            $orderLost.Add($b)
+        }
+    }
+
+    return [pscustomobject]@{
+        Additions       = $additions
+        Mutations       = $mutations
+        RemovedNonOrder = $removedNonOrder
+        OrderLost       = $orderLost
+    }
 }
 
-function Invoke-ArchiveDriftCheck {
+function Invoke-ArchiveAppendOnlyCheck {
+    <#
+        ORDER-103 living-log evolution (1b-ARCHIVE -- APPEND-ONLY LOG, replaces the old
+        frozen-snapshot "exact multiset equality" drift check).
+
+        The archive is a growing immutable LOG, not a frozen snapshot: current archive
+        must be a SUPERSET of the split-time archive by block content (canonical-LF
+        sha256) -- every split-archive block must still be present, byte-unmutated, in
+        the current archive. Extra current-archive blocks (post-split appends, e.g. a
+        superseded order moved in from active, or a closure block) are ALLOWED and
+        reported, never a failure. Failure fires ONLY when a split-archive block is
+        missing or mutated.
+
+        Uses the same missing/duplicated(extra)-then-pair-by-header technique as
+        Invoke-SplitIntegrityCheck to additionally classify pure delete-vs-mutation
+        where the header text is unchanged (informational only -- either classification
+        triggers the same failure, so this never changes exit-code behavior).
+    #>
     param($SplitArchiveBlocks, $CurrentArchiveBlocks)
-    # Archive must be append-once after the split -> EXACT multiset equality required.
+
     $splitMultiset = Get-HashMultiset -Blocks $SplitArchiveBlocks
     $currentMultiset = Get-HashMultiset -Blocks $CurrentArchiveBlocks
 
-    $diffs = New-Object System.Collections.Generic.List[object]
+    $missingRaw = New-Object System.Collections.Generic.List[object]
+    $extraRaw = New-Object System.Collections.Generic.List[object]
+
     $allHashesSet = New-Object System.Collections.Generic.HashSet[string]
     foreach ($k in $splitMultiset.Keys) { [void]$allHashesSet.Add($k) }
     foreach ($k in $currentMultiset.Keys) { [void]$allHashesSet.Add($k) }
@@ -637,9 +711,46 @@ function Invoke-ArchiveDriftCheck {
     foreach ($h in $allHashesSet) {
         $sc = 0; if ($splitMultiset.ContainsKey($h)) { $sc = $splitMultiset[$h].Count }
         $cc = 0; if ($currentMultiset.ContainsKey($h)) { $cc = $currentMultiset[$h].Count }
-        if ($sc -ne $cc) { $diffs.Add([pscustomobject]@{ Sha256 = $h; SplitCount = $sc; CurrentCount = $cc }) }
+        if ($cc -lt $sc) {
+            $deficit = $sc - $cc
+            for ($i = 0; $i -lt $deficit; $i++) { $missingRaw.Add($splitMultiset[$h][$i]) }
+        } elseif ($cc -gt $sc) {
+            $excess = $cc - $sc
+            for ($i = $sc; $i -lt $cc; $i++) { $extraRaw.Add($currentMultiset[$h][$i]) }
+        }
     }
-    return [pscustomobject]@{ IsEmpty = ($diffs.Count -eq 0); Diffs = $diffs }
+
+    # Secondary pass: pair a leftover "missing" entry with a leftover "extra" entry that
+    # shares the exact same header text -- that pairing is a true content MUTATION
+    # (same header, different hash) rather than a pure delete or a pure append.
+    # Informational only: whether a given failure surfaces as Missing or as (the Before
+    # side of) Mutated, it is still counted as a split-archive block that did not survive
+    # unmutated, and both drive the identical archive-not-append-only failure below.
+    $missingByHeader = @{}
+    foreach ($m in $missingRaw) {
+        if (-not $missingByHeader.ContainsKey($m.Header)) { $missingByHeader[$m.Header] = New-Object System.Collections.Generic.List[object] }
+        $missingByHeader[$m.Header].Add($m)
+    }
+    $mutated = New-Object System.Collections.Generic.List[object]
+    $postSplitAppends = New-Object System.Collections.Generic.List[object]
+    foreach ($e in $extraRaw) {
+        if ($missingByHeader.ContainsKey($e.Header) -and $missingByHeader[$e.Header].Count -gt 0) {
+            $pair = $missingByHeader[$e.Header][0]
+            $missingByHeader[$e.Header].RemoveAt(0)
+            $mutated.Add([pscustomobject]@{ Before = $pair; After = $e })
+        } else {
+            $postSplitAppends.Add($e)
+        }
+    }
+    $missing = New-Object System.Collections.Generic.List[object]
+    foreach ($k in $missingByHeader.Keys) { foreach ($item in $missingByHeader[$k]) { $missing.Add($item) } }
+
+    return [pscustomobject]@{
+        Missing           = $missing
+        Mutated           = $mutated
+        PostSplitAppends  = $postSplitAppends
+        IsAppendOnlyClean = (($missing.Count -eq 0) -and ($mutated.Count -eq 0))
+    }
 }
 
 # ============================================================================
@@ -1237,10 +1348,10 @@ function Invoke-TaskboardArchiveCheck {
     $splitIntegrity = Invoke-SplitIntegrityCheck -PreBlocks $preBlocks -ActiveSplitBlocks $activeSplitBlocks -ArchiveSplitBlocks $archiveSplitBlocks
     $report.SplitIntegrity = $splitIntegrity
 
-    $activeDrift = Invoke-ActiveDriftCheck -SplitActiveBlocks $activeSplitBlocks -CurrentActiveBlocks $activeCurrentBlocks
-    $archiveDrift = Invoke-ArchiveDriftCheck -SplitArchiveBlocks $archiveSplitBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
-    $report.ActiveDrift = $activeDrift
-    $report.ArchiveDrift = $archiveDrift
+    $activeConservation = Invoke-ActiveConservationCheck -SplitActiveBlocks $activeSplitBlocks -CurrentActiveBlocks $activeCurrentBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
+    $archiveAppendOnly = Invoke-ArchiveAppendOnlyCheck -SplitArchiveBlocks $archiveSplitBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
+    $report.ActiveConservation = $activeConservation
+    $report.ArchiveAppendOnly = $archiveAppendOnly
 
     $exceptions = Invoke-ExceptionScan -CurrentActiveBlocks $activeCurrentBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
     $report.Exceptions = $exceptions
@@ -1265,11 +1376,18 @@ function Invoke-TaskboardArchiveCheck {
     if ($splitIntegrity.Duplicated.Count -gt 0) {
         $integrityFailures.Add([pscustomobject]@{ Kind = 'split-integrity-duplicated'; Severity = 'integrity'; Detail = "$($splitIntegrity.Duplicated.Count) block(s) duplicated across the split" })
     }
-    if ($activeDrift.Removals.Count -gt 0) {
-        $integrityFailures.Add([pscustomobject]@{ Kind = 'active-drift-unexpected-removal'; Severity = 'integrity'; Detail = "$($activeDrift.Removals.Count) block(s) present at split but missing from current active board" })
+    if ($activeConservation.OrderLost.Count -gt 0) {
+        foreach ($lost in $activeConservation.OrderLost) {
+            $cid = ''; if ($lost.CanonicalIds.Count -gt 0) { $cid = $lost.CanonicalIds[0] }
+            $integrityFailures.Add([pscustomobject]@{
+                Kind = 'active-order-lost'; Severity = 'integrity'
+                BlockId = $lost.BlockId; Header = $lost.Header
+                Detail = "canonical_id=$cid was an ORDER block in the split-active board but is resolvable in NEITHER current-active NOR current-archive -- order silently lost"
+            })
+        }
     }
-    if (-not $archiveDrift.IsEmpty) {
-        $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-not-append-only'; Severity = 'integrity'; Detail = "archive diverged from split-time content: $($archiveDrift.Diffs.Count) hash-count mismatch(es)" })
+    if (-not $archiveAppendOnly.IsAppendOnlyClean) {
+        $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-not-append-only'; Severity = 'integrity'; Detail = "archive diverged from append-only: $($archiveAppendOnly.Missing.Count) split-archive block(s) missing, $($archiveAppendOnly.Mutated.Count) mutated (post-split appends are allowed and reported separately: $($archiveAppendOnly.PostSplitAppends.Count))" })
     }
     if ($splitIntegrity.GeneratedExtras.Count -ne 1) {
         # ORDER-101 hardening 5 (tightened by the ORDER-101 blind review, off-by-one fix):
@@ -1533,12 +1651,18 @@ function Invoke-Main {
     foreach ($d in $report.SplitIntegrity.Duplicated) { Write-Host ('  DUPLICATED: ' + $d.Header) }
     foreach ($mu in $report.SplitIntegrity.Mutated) { Write-Host ('  MUTATED: ' + $mu.Before.Header + '  ->  ' + $mu.After.Header) }
     Write-Host ''
-    Write-Host '--- 1b POST-SPLIT DRIFT ---'
-    Write-Host ('active-now vs split-active: ' + $report.ActiveDrift.Additions.Count + ' addition(s), ' + $report.ActiveDrift.Mutations.Count + ' mutation(s), ' + $report.ActiveDrift.Removals.Count + ' unexpected removal(s)')
-    foreach ($a in $report.ActiveDrift.Additions) { Write-Host ('  ADD: ' + $a.Header) }
-    foreach ($m in $report.ActiveDrift.Mutations) { Write-Host ('  MUTATE: ' + $m.Before.Header + '  ->  ' + $m.After.Header) }
-    foreach ($r in $report.ActiveDrift.Removals) { Write-Host ('  REMOVED(!): ' + $r.Header) }
-    Write-Host ('archive-now vs split-archive: empty diff = ' + $report.ArchiveDrift.IsEmpty)
+    Write-Host '--- 1b POST-SPLIT: ACTIVE CONSERVATION (writable queue -- ORDER blocks must be conserved active-or-archive) ---'
+    Write-Host ('active-now vs split-active: ' + $report.ActiveConservation.Additions.Count + ' addition(s), ' + $report.ActiveConservation.Mutations.Count + ' mutation(s), ' + $report.ActiveConservation.RemovedNonOrder.Count + ' removed-non-order (allowed), ' + $report.ActiveConservation.OrderLost.Count + ' active-order-lost')
+    foreach ($a in $report.ActiveConservation.Additions) { Write-Host ('  ADD: ' + $a.Header) }
+    foreach ($m in $report.ActiveConservation.Mutations) { Write-Host ('  MUTATE: ' + $m.Before.Header + '  ->  ' + $m.After.Header) }
+    foreach ($r in $report.ActiveConservation.RemovedNonOrder) { Write-Host ('  removed-non-order (ok): ' + $r.Header) }
+    foreach ($l in $report.ActiveConservation.OrderLost) { Write-Host ('  ACTIVE-ORDER-LOST(!): ' + $l.Header) }
+    Write-Host ''
+    Write-Host '--- 1b POST-SPLIT: ARCHIVE APPEND-ONLY LOG (superset by block content; extras allowed) ---'
+    Write-Host ('archive-now vs split-archive: append-only clean = ' + $report.ArchiveAppendOnly.IsAppendOnlyClean + ' | missing=' + $report.ArchiveAppendOnly.Missing.Count + ' mutated=' + $report.ArchiveAppendOnly.Mutated.Count + ' post_split_archive_appends=' + $report.ArchiveAppendOnly.PostSplitAppends.Count)
+    foreach ($m in $report.ArchiveAppendOnly.Missing) { Write-Host ('  MISSING(!): ' + $m.Header) }
+    foreach ($mu in $report.ArchiveAppendOnly.Mutated) { Write-Host ('  MUTATED(!): ' + $mu.Before.Header + '  ->  ' + $mu.After.Header) }
+    foreach ($p in $report.ArchiveAppendOnly.PostSplitAppends) { Write-Host ('  post-split append (ok): ' + $p.Header) }
     Write-Host ''
     Write-Host '--- EXCEPTION SCAN (current archive) ---'
     Write-Host ('raw_detected policy exceptions: ' + $report.PolicyExceptions.Count)

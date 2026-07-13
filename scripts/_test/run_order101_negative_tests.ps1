@@ -509,6 +509,104 @@ Add-CaseResult -Name 'c1closure-unknown-row-is-integrity' -Params $c1UnknownP -E
 $c1DupP = New-C1ClosureParams -ActiveVariantFile 'c1closure_current_active_duplicate.md' -Tag 'c1dup'
 Add-CaseResult -Name 'c1closure-duplicate-row-is-integrity' -Params $c1DupP -ExpectAudit 2 -ExpectStrict 2
 
+# ============================================================================
+# ORDER-103: LIVING APPEND-ONLY LOG evolution (Contract C1 migration legitimacy).
+# Shared base fixtures: livinglog_presplit.md / livinglog_split_active.md
+# (manual index + ORDER-302 OPEN) / livinglog_split_archive.md (ORDER-301 DONE +
+# its REVIEW). Each case below varies only CurrentActiveSource/CurrentArchiveSource
+# to isolate exactly one behavior of the new (1b-ARCHIVE append-only) or
+# (1b-ACTIVE conservation) checks.
+# ============================================================================
+
+# --- 20. archive-append-allowed: current-archive = split-archive + one NEW terminal
+#         block (a self-attesting REVIEWED REVIEW-note for ORDER-302, appended after
+#         split -- mirrors a C1 migration landing a closure/review block). Must NOT be
+#         a failure -- it is a post-split append, reported not rejected. ---
+$p = New-CaseParams -Tag 'llappend' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_split_active.md" -CurrentArchive "$fx\livinglog_current_archive_append.md"
+$llAppendAudit  = Invoke-Validator -Mode 'Generate' -Params $p
+$llAppendAudit  = Invoke-Validator -Mode 'Audit'  -Params $p
+$llAppendStrict = Invoke-Validator -Mode 'Strict' -Params $p
+$llAppendListed = $llAppendAudit.StdOut -match 'post_split_archive_appends=1' -and $llAppendAudit.StdOut -match 'post-split append \(ok\):\s*## REVIEW ORDER-302'
+$results.Add([pscustomobject]@{
+    Name = 'archive-append-allowed (ORDER-103 1b-ARCHIVE)'
+    ExpectAudit = 0; ActualAudit = $llAppendAudit.ExitCode
+    ExpectStrict = 0; ActualStrict = $llAppendStrict.ExitCode
+    Pass = ($llAppendAudit.ExitCode -eq 0) -and ($llAppendStrict.ExitCode -eq 0) -and $llAppendListed
+    AuditOut = $llAppendAudit.StdOut + "`n[appended block listed as post-split append, not a failure: $llAppendListed]"
+    StrictOut = $llAppendStrict.StdOut
+})
+
+# --- 21. archive-mutate-split-block: ORDER-301's body byte-changed in current-archive
+#         vs split-archive (header unchanged) -- the immutable prefix must be caught. ---
+$p = New-CaseParams -Tag 'llmutate' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_split_active.md" -CurrentArchive "$fx\livinglog_current_archive_mutate.md"
+Add-CaseResult -Name 'archive-mutate-split-block (ORDER-103 1b-ARCHIVE)' -Params $p -ExpectAudit 2 -ExpectStrict 2
+
+# --- 22. archive-delete-split-block: REVIEW ORDER-301 removed entirely from
+#         current-archive vs split-archive -- a true deletion, not an append, must
+#         still be caught. ---
+$p = New-CaseParams -Tag 'lldelete' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_split_active.md" -CurrentArchive "$fx\livinglog_current_archive_delete.md"
+Add-CaseResult -Name 'archive-delete-split-block (ORDER-103 1b-ARCHIVE)' -Params $p -ExpectAudit 2 -ExpectStrict 2
+
+# --- 23. active-remove-nonorder: the manual "## ... ARCHIVED ORDERS INDEX" block is
+#         dropped from current-active (ORDER-302 untouched) -- a non-order removal is
+#         explicitly ALLOWED under the conservation model (it was never a conserved
+#         unit), must not be a failure. ---
+$p = New-CaseParams -Tag 'llnonorder' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_current_active_removenonorder.md" -CurrentArchive "$fx\livinglog_split_archive.md"
+Add-CaseResult -Name 'active-remove-nonorder (ORDER-103 1b-ACTIVE, allowed)' -Params $p -ExpectAudit 0 -ExpectStrict 0
+
+# --- 24. active-order-lost: ORDER-302 removed from current-active and NOT placed in
+#         current-archive either -- the order vanished with no trace. Must be caught
+#         as an INTEGRITY failure (active-order-lost), the one thing conservation
+#         actually gates on. ---
+$p = New-CaseParams -Tag 'lllost' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_current_active_orderlost.md" -CurrentArchive "$fx\livinglog_split_archive.md"
+$llLostAudit = Invoke-Validator -Mode 'Generate' -Params $p
+$llLostAudit  = Invoke-Validator -Mode 'Audit'  -Params $p
+$llLostStrict = Invoke-Validator -Mode 'Strict' -Params $p
+$llLostReported = $llLostAudit.StdOut -match 'active-order-lost' -and $llLostAudit.StdOut -match 'ACTIVE-ORDER-LOST'
+$results.Add([pscustomobject]@{
+    Name = 'active-order-lost (ORDER-103 1b-ACTIVE, integrity failure)'
+    ExpectAudit = 2; ActualAudit = $llLostAudit.ExitCode
+    ExpectStrict = 2; ActualStrict = $llLostStrict.ExitCode
+    Pass = ($llLostAudit.ExitCode -eq 2) -and ($llLostStrict.ExitCode -eq 2) -and $llLostReported
+    AuditOut = $llLostAudit.StdOut + "`n[active-order-lost kind reported: $llLostReported]"
+    StrictOut = $llLostStrict.StdOut
+})
+
+# --- 25. active-order-moved-verbatim: ORDER-302 removed from current-active but
+#         appended VERBATIM (byte-identical block) to current-archive -- conserved,
+#         not lost, so NOT an integrity failure. It DOES still carry its original
+#         `OPEN` status, which independently raises a raw non-terminal-in-archive
+#         POLICY exception now that it lives in the archive (Strict=1) -- proving the
+#         conservation (integrity) and policy-hygiene checks are decoupled: moving an
+#         order verbatim is always structurally safe even when it still needs a
+#         status cleanup. ---
+$p = New-CaseParams -Tag 'llmoved' `
+    -PreSplit "$fx\livinglog_presplit.md" -SplitActive "$fx\livinglog_split_active.md" -SplitArchive "$fx\livinglog_split_archive.md" `
+    -CurrentActive "$fx\livinglog_current_active_orderlost.md" -CurrentArchive "$fx\livinglog_current_archive_orderconserved.md"
+$llMovedAudit = Invoke-Validator -Mode 'Generate' -Params $p
+$llMovedAudit  = Invoke-Validator -Mode 'Audit'  -Params $p
+$llMovedStrict = Invoke-Validator -Mode 'Strict' -Params $p
+$llMovedNotLost = -not ($llMovedAudit.StdOut -match 'ACTIVE-ORDER-LOST\(!\)')
+$llMovedAppended = $llMovedAudit.StdOut -match 'post_split_archive_appends=1'
+$results.Add([pscustomobject]@{
+    Name = 'active-order-moved-verbatim (ORDER-103, conserved, integrity clean)'
+    ExpectAudit = 0; ActualAudit = $llMovedAudit.ExitCode
+    ExpectStrict = 1; ActualStrict = $llMovedStrict.ExitCode
+    Pass = ($llMovedAudit.ExitCode -eq 0) -and ($llMovedStrict.ExitCode -eq 1) -and $llMovedNotLost -and $llMovedAppended
+    AuditOut = $llMovedAudit.StdOut + "`n[not reported as active-order-lost: $llMovedNotLost] [counted as post-split append: $llMovedAppended]"
+    StrictOut = $llMovedStrict.StdOut
+})
+
 # --- report ---
 Write-Host ''
 Write-Host '=== ORDER-101 negative test suite results ==='
