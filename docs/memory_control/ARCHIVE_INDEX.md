@@ -5,7 +5,7 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `c52898984b57ff1a229d6df5fde85b5330545d23`
+> NOT repo HEAD; stable across any commit that does not touch that file): `f2c4dfea778a685377ddc3ce69411f89d8fe1bfc`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
 > EOL/whitespace drift the per-block hashes below cannot see): `4c5d16ed7f3643d380353018d977373978f6c10e7df9c30b34d91ed9e4dd9b42`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
