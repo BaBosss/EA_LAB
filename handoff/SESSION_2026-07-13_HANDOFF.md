@@ -46,7 +46,28 @@
 2. สร้าง `C:\rclone\{pull_news,push_snap}.cmd` (เนื้อจาก repo)
 3. test รันไม่ error
 4. `schtasks /create ... /ru SYSTEM /sc minute /mo 5` ×2
-**เหลือฝั่ง lab:** OneDrive client เขียน news + อ่าน snapshot · แปะ AccountSnapshotExporter บน MT5 VPS.
+**อัปเดต 2026-07-13 ค่ำ — VPS ทำเสร็จเกือบหมด:**
+- ✅ rclone remote ต่อ OneDrive (account `b12c15b80120230d` = pattarapon personal, ตัวเดียวกับ lab client) · scheduled task 2 ตัว (`EA_LAB_pull_news` + `EA_LAB_push_snap`) รันทุก 5 นาที (`/ru SYSTEM`) · scripts ที่ `C:\rclone\{pull_news,push_snap}.cmd`
+- ✅ AccountSnapshotExporter แปะแล้ว **5 บัญชี** (MT5 ×4 + MT4 141049900) → `EA_LAB_snapshot_<login>.csv` เข้า Common\Files ทุก 60 วิ
+- ✅ **push ครบ 5 ไฟล์ขึ้น OneDrive** (`onedrive:EA_LAB_VPS_SYNC/vps-to-lab/snapshots`) · gotcha ที่แก้แล้ว: push_snap.cmd ห้ามมี `--exclude` คู่ `--include` (rclone filter เพี้ยน → ส่งแค่ 2/5)
+- 🟡 **ค้างขั้นเดียว = OneDrive client ฝั่ง lab ยังไม่ sync `EA_LAB_VPS_SYNC` ลง `C:\Users\patip\OneDrive\` local** (folder อยู่ใน cloud ครบ แต่ client ไม่ดึงลง — ตั้ง online-only/ยังไม่ติ๊กใน Choose folders). **user จะ poke: OneDrive Settings → Account → Choose folders → ติ๊ก `EA_LAB_VPS_SYNC`** · rclone บน lab ลงไม่ได้ (proxy บล็อก download) จึงพึ่ง client
+- **หมายเหตุ:** storage account เหลือ 0.1GB เพราะ user ลบ backup เอง (ไม่ใช่ account ผิด — เคยเข้าใจผิดว่า mismatch แล้ว rule out)
+
+**👉 ต่อ dashboard เมื่อ snapshots ถึง `C:\Users\patip\OneDrive\EA_LAB_VPS_SYNC\vps-to-lab\snapshots\`:** wire `collect_live_deals.ps1 -CommonFiles <path นั้น>` → per-magic table. บัญชี 146237 ที่เคยค้าง = ไม่อยู่ใน 5 บัญชี snapshot (159503454/159475669/415573666/69424711/141049900) → เช็คว่าคืออะไร.
+
+---
+
+## 🌙 TOMORROW — long autonomous runs (user สั่ง 2026-07-13: "รันยาวๆ smoke, criteria ใหม่")
+
+**สั่งรันได้เลยด้วยคำสั่งเดียว (autonomous ~1hr, ไม่ต้องคุย):**
+
+1. **ORDER-082 Wave5 EXTENDED** — `bash _mt5_auto/wave5_extended_run.sh` → ผล `_mt5_auto/wave5_extended_results.csv` + `wave5_extended_mc.log`. ครอบ: (ก) finer plateau grid fib{20,23.6,27,30}×mult{0.5,0.618,0.75} XAU H1 both-window (ยืนยัน plateau ไม่ใช่ spike) (ข) XAG silver ที่ plateau-center (edge = gold-class หรือ XAU-only?) (ค) MC บน plateau-center. **judge criteria ใหม่:** both-window PF≥1.0 + plateau (neighbor ผ่านด้วย) + MC DD/ruin. baseline ที่ต้องชนะ: fib23.6/mult0.618 = MAIN 1.11/BWD 1.12 (XAU H1). ถ้า XAG ผ่าน = gold-class edge (ขยาย demo ได้).
+
+2. **ORDER-076 — smoke 41 หัวกะทิจาก X-ray** (OPEN, ยังไม่แตะ) — worklist + วิธีรันอยู่ใน taskboard ORDER-076. รันด้วย mass-smoke pattern (`scripts/mass_smoke_mt5.ps1` หรือ `mt5_run.ps1` loop). **criteria ใหม่ (VERDICT GATE + flat-lot doctrine):** ห้ามตัดตายจาก 1 symbol×1 TF×default · flat-lot probe บังคับ (grid/martingale = ปิด escalation ก่อน วัด edge จริง) · PF>1 แม้ครั้งเดียว = build-on ไม่ bench.
+
+3. **(optional) re-smoke ORDER-084 rescue candidates** — under-swept EAs (sweep <3 lever หรือ 1 TF) ใน `_triage/RETRO_AUDIT_VERDICTS.csv` กอง (ข). re-smoke ด้วย rescue-ladder (≥3 lever × ≥2 TF, both-regime). = judgment-heavy กว่า 1+2 → ทำหลัง.
+
+**routing:** batch = qwen/agent ได้ (verifiable by numbers) · judge = Opus lead. **pace:** 1+2 ก่อน, ผลออกค่อย judge เขียน verdict (ห้าม burst จน context เต็ม).
 
 ## Commits ของ session นี้ (ทั้งหมด local, ยังไม่ push — user สั่ง "รอก่อน")
 `fc31d0b` 082 Task0 gates · `bfa048f` 082 build · `9675ea7` VPS rclone · `c0b469b` 082 sweep+plateau verdict + C1-ENFORCE draft. + memory ใหม่: `vps-server2012-onedrive`.
