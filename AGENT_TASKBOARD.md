@@ -12,146 +12,9 @@
 
 ---
 
-## 🗂️ ARCHIVED ORDERS INDEX — orders ปิดแล้ว (เนื้อเต็มใน `ARCHIVE_TASKBOARD_2026-07A.md`)
+## 🗂️ ARCHIVED ORDERS — index ย้ายไป generated file (ORDER-102 Contract C1, 2026-07-13)
 
-> ย้ายออก 2026-07-12 (Opus) ลดขนาดบอร์ด · ทุก order อยู่ครบใน git history + ไฟล์ archive · ค้นเต็ม: grep ใน ARCHIVE_TASKBOARD_2026-07A.md
-
-| Order | เรื่อง | verdict |
-|---|---|---|
-| ORDER-001 | GBPAUD: re-optimize บน IS window (กัน in-sample bias) | REVIEWED(Claude/Fable, 2026-07-04 — ผ่านการสอบสวน 2 ชั้น) |
-| ORDER-002 | probe 3 symbol ที่ยังไม่เคย probe: AUDNZD / GBPJPY /.. | REVIEWED(Claude, 2026-07-04) |
-| ORDER-004 | GBPAUD p26: OOS-confirm (2025.07-2026.07) + MC | REVIEWED(Claude, 2026-07-04) |
-| ORDER-003 | Monte Carlo บน GBPAUD p26 report | SKIPPED |
-| ORDER-005 | IS-optimize 5 candidates: AUDNZD / GBPJPY / EURJPY /.. | REVIEWED(Claude/Fable, 2026-07-04 — verdict รวมอยู่ที่ ORDER-006) |
-| ORDER-006 | fresh-start OOS ของ 5 ตัวจาก ORDER-005 (rule-based, .. | REVIEWED(Claude/Fable, 2026-07-04) |
-| ORDER-007 | probe Boss_14 อีก 7 symbol ที่ค้างทะเบียน (กฎ: ห้ามต.. | REVIEWED(Claude/Fable, 2026-07-04) |
-| ORDER-008 | Re-exam ศพเก่าที่ตายโดยไม่เคย optimize: EA_LNBREAK +.. | REVIEWED(Claude/Fable, 2026-07-04 — ranges APPROVED → ORDER-008B) |
-| ORDER-009 | MC บน OOS reports 5 ตัว | SKIPPED (superseded — Claude รัน MC บน full reports ประกอบ verdict ใน .. |
-| ORDER-010 | full-window confirm + year-split ของ 3 ตัวที่ผ่าน OOS | REVIEWED(Claude/Fable, 2026-07-04 — Claude รันเองหลัง Codex ติด sandbox) |
-| ORDER-008B | probe ศพเก่า | REVIEWED(Claude: ❌ LNBREAK = DEAD-optimized ของจริง (0/81, best 1.048).. |
-| ORDER-011 | A/B harness | REVIEWED(Claude: ✅ harness ACCEPTED ใช้งานได้จริง (+รองรับ -Portable) .. |
-| 📢 NOTICE ถึง Codex/ZCode (Claude, 2026-07-04 ~.. | 📢 NOTICE ถึง Codex/ZCode (Claude, 2026-07-04 ~10:00) | — |
-| ═══ TREASURE-TRIAGE series (กอง D:\Forex\10_EA.. | ═══ TREASURE-TRIAGE series (กอง D:\Forex\10_EA_PROJE.. | — |
-| ORDER-012 | อ่าน EA source ~98 ไฟล์ → ตาราง triage | REVIEWED(Claude: งานครบ 88/88 ✅ แต่เกณฑ์ Y หลวม (61/88 รวม grid เพียบ).. |
-| ORDER-013 | PDF skim 289 ไฟล์ → catalog | REVIEWED(Claude: catalog ครบ 188/188 ✅ · strategy-book 49 + worth_deep.. |
-| ORDER-015 | pipeline batch #2 | REVIEWED(Claude: 🥇 AUDCAD OOS 4.30/41t = CANDIDATE เด่น (AUD family อี.. |
-| ORDER-016 | cohort-2 pipeline: full-confirm + year-split + MC ขอ.. | REVIEWED(Claude, 2026-07-04): cohort-2 verdict — DEMO 3 ตัว: 🥇 AUDCAD .. |
-| ORDER-017 | Model-4 confirm cohort-2 (3 ตัว) + สร้าง DEMO sets | REVIEWED(Claude, 2026-07-06 — เก็บตกสถานะ: ผลถูก review+ใช้จริงตั้งแต่.. |
-| ORDER-018 | เติม EA_MASTER_INDEX.csv | REVIEWED(Claude: ✅ 125 แถว 0 ซ้ำ — UNTESTED 88 · DEAD 17 · PARKED 7 · .. |
-| ORDER-019 | corr matrix ของ Boss_14 family (6 ตัว demo) | REVIEWED(Claude/Fable, 2026-07-04 — พอร์ตกระจายตัวดี ไม่มีคู่ redundant) |
-| ORDER-020 | ขุด SELL-side จาก optimizer XML ที่มีอยู่ (hunt queu.. | REVIEWED(Claude/Fable, 2026-07-04 — 1 candidate ใหม่จริง (NZDUSD-SELL).. |
-| ORDER-023 | NZDUSD-SELL: fresh-start OOS ของ pass 29 (จาก ORDER-.. | REVIEWED(Claude/Fable, 2026-07-04 — ทำเองแทน Codex/ZCode ที่ token หมด.. |
-| ORDER-021 | สรุป 20 treasure sources (momentum 13 + breakout 7) .. | REVIEWED(Claude/Fable, 2026-07-04 — ทำเองแทน Codex ที่ token หมด, ใช้ .. |
-| ORDER-022 | Plateau-sensitivity test ของ 6 DEMO configs (ปิดจุดอ.. | REVIEWED(Claude/Fable, 2026-07-04 — รันเองแทน oc-btest ที่ token หมด, .. |
-| ORDER-024 | Recovery-mode A/B บน config ที่ชนะ (AUDNZD champion) | REVIEWED(Claude/Opus, 2026-07-05 — 81 REJECT · 82 PROMISING แต่ยังไม่ .. |
-| ORDER-025 | Adaptive Recovery (mode 82): ตรวจ floating DD จริง +.. | REVIEWED(Claude/Opus, 2026-07-05 — ❌ Recovery REJECT ปิดถาวรทั้ง 81+82.. |
-| ORDER-026 | HedgeMode (HEDGE_LOCK) A/B บน AUDNZD | REVIEWED(Claude/Opus, 2026-07-05 — รันเอง เพราะ ZCode โควต้าหมดวัน + ง.. |
-| ORDER-027 | mold upgrade: | _2_BasketTP_ATRmult |
-| ORDER-028 | XAU GridLog: IS-optimize (axis tuning สำหรับทอง) | REVIEWED(Claude/Opus, 2026-07-05 — plateau-center = Pass 20 → pipeline.. |
-| ORDER-029 | mold fix: | _33_SL_MaxPips |
-| 🏭 XAU GridLog VALIDATION PIPELINE (รันตามลำดับ.. | 🏭 XAU GridLog VALIDATION PIPELINE (รันตามลำดับ 030→0.. | — |
-| ORDER-030 | XAU: fresh-start OOS + full-window + year-split | REVIEWED(Claude/Opus, 2026-07-05 — ✅ ผ่าน OOS gate (CONDITIONAL) → ORD.. |
-| ORDER-031 | XAU: Monte Carlo + Model-4 every-tick (ทอง+grid บังค.. | REVIEWED(Claude/Opus, 2026-07-05 — 🎉 XAU ผ่านครบ = candidate #7 non-FX.. |
-| ORDER-032 | XAG (silver) GridLog: IS-optimize (non-FX ตัวที่ 2, .. | REVIEWED(Claude/Opus, 2026-07-05 — 🅿️ PARK-thin, ทองแข็งกว่า) |
-| ORDER-029B | implement Option B: | _33_SL_MaxATRmult |
-| ORDER-033 | smoke-screen 4 MT5 signal EAs จาก | wait for test |
-| 🗺️ MASS-SMOKE `wait for test` (user 2026-07-05.. | 🗺️ MASS-SMOKE | wait for test |
-| ORDER-034 | catalog + dedup + กรอง tradeable-EA จาก | wait for test |
-| ORDER-035 | MT5 mass-smoke driver (loop worklist ex5) | REVIEWED(Claude/Opus, 2026-07-05 — 39 survivor, ส่วนใหญ่กับดัก Model-1.. |
-| ORDER-035-REVIEW | note (Claude/Opus 2026-07-05): 39 survivor | — |
-| ORDER-037 | artifact-check top survivors จาก mass-smoke | REVIEWED(Claude, 2026-07-06 — ❌ ตายครบทั้ง 3: pun fix lot REJECT (eqDD.. |
-| ORDER-038 | pun fix lot v05: backward-OOS 2020-2022 | REVIEWED(Claude, 2026-07-06 — ❌ REJECT ปิดถาวร: eqDD 83% ปี 2022, no-S.. |
-| ORDER-039 | Scalping-EA-AsReMix: Model-4 + MC | REVIEWED(Claude, 2026-07-06 — 🅿️ PARKED trend-specialist edge-decay; Z.. |
-| ORDER-040 | BWD-OOS sweep ของ 036 batch-01 Tier A | REVIEWED(Claude, 2026-07-06 — ZCode token หมดก่อนเริ่ม → Claude รันเอง.. |
-| ORDER-041 | ClevrFX + Fxcore100_SELL: spread-stress + SL/lock ch.. | REVIEWED(Claude รันเอง, 2026-07-06 — ✅ ผ่านทั้งคู่ = MT4 candidates จร.. |
-| ORDER-047 | RSI from pips_EA: symbol/TF breadth → BWD confirm → .. | REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — RSI=EURUSD-only ไม่ optimize.. |
-| ORDER-046 | Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ .. | REVIEWED/CLOSED (Claude, 2026-07-07 ค่ำ — 1 win ฟรี + 1 marginal-reviv.. |
-| ORDER-043 | US30 GridLog: IS-optimize probe (optional, EV ต่ำ) | REVIEWED/CLOSED (Claude รันเอง, 2026-07-09 — ❌ US30 = DEAD-optimized ป.. |
-| ORDER-044 | EURUSD Trading Forex Robot: full chain re-test | REVIEWED(Claude, 2026-07-07 — ❌ REJECT ปิดถาวรที่ด่านแรก: BWD 2020-22 .. |
-| ORDER-014 | Model-4 (real ticks) confirm ของ DEMO cohort 3 ตัว | REVIEWED(Claude: DEMO ยืนทั้ง 3 บน real ticks ✅ — USDJPY 1.72/107t · A.. |
-| ORDER-042 | DealsExporter: nightly deals snapshot สำหรับ /ea-mon.. | REVIEWED(Claude, 2026-07-06 — ✅ ทำเอง สร้าง+พิสูจน์ครบ · เหลือ user at.. |
-| ORDER-058 | live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 ว.. | REVIEWED(Claude, 2026-07-09 — ✅ Sonnet ทำ, Claude ตรวจ+แก้ 1 จุด: ระดั.. |
-| ORDER-059 | COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → .. | REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ REJECT เป็น gating filter · เก.. |
-| ORDER-060 | MT4 OrdersExporter + ท่อ monitoring MT4 ครบวงจร | DONE+REVIEWED (Claude ทำเอง+ตรวจเอง, 2026-07-09) |
-| ORDER-061 | hunt ใหม่: (BRK)_FlagPennant @ XAUUSD H1 (กลไก next-.. | REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ NO EDGE, ปิดพร้อม mechanism in.. |
-| ORDER-062 | regime-axis re-funnel ทั้ง Boss_14 family | REVIEWED/CLOSED (Claude, 2026-07-09 — 🎯 1 hit ชัด: USDJPY · 1 borderli.. |
-| ORDER-067 | Trendline rev02 + ADX-regime gate: เส้นทาง promote #.. | BUILT+CLOSED (Claude, 2026-07-09 ดึก — ❌ gate จริงแย่กว่า offline: art.. |
-| ORDER-063 | smoke เทส EA จาก Downloads 3 ตัว | REVIEWED/CLOSED (Claude, 2026-07-09 — ❌ ตายครบ 3: GOD4+HedgingGrid unt.. |
-| ORDER-065 | build: (TRD)_SuperTrendFlip @ XAUUSD H1 | BUILT+FUNNELED (Claude, 2026-07-09 — 🅿️ RESERVE: ผ่าน 3 windows แต่ MC.. |
-| ORDER-066 | build: (VWAP)_WaveS1 distilled @ XAUUSD | BUILT+FUNNELED (Claude, 2026-07-09 ค่ำ — ❌ NO EDGE ปิดพร้อม mechanism .. |
-| ORDER-068 | ST03 family: flat-lot probe ของ config แล็บ (9397 GB.. | DONE(Claude-agent, 2026-07-10) |
-| ORDER-069 | (Boss)_ZeusInspired_GridLog_rev01 บน EURUSD: coarse .. | DONE(Claude-agent, 2026-07-10) |
-| ORDER-070 | Gold_Kangaroo: แกะ logic + หาข้อมูลเน็ต → spec "Kang.. | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 68 + ORDER-069 | REVIEWED(Claude, 2026-07-10) |
-| REVIEW ORDER-0 | 70 (+flat-lot addendum) | REVIEWED(Claude, 2026-07-10) |
-| ORDER-071 | rev02 | STAGE2-DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 71 (Stage 1+2) | REVIEWED(Claude, 2026-07-10) |
-| ORDER-074 | fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลื.. | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 72 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-075 | Boss_16 entry sweep v1 (BUY-first) | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 74 | REVIEWED(Claude, 2026-07-10) |
-| REVIEW ORDER-0 | 75 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-077 | Boss_16 BUY: BWD-OOS 2020-2022 probe (กฎ both-regime.. | DONE(agent, 2026-07-10) |
-| REVIEW ORDER-0 | 77 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-078 | Boss_16 BUY 21/30: validation funnel เต็ม | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 78 | REVIEWED(Claude, 2026-07-11) |
-| ORDER-081 | Crypto lane feasibility study (maker-fee scalper blu.. | DONE(Codex+research-subagent, 2026-07-11 — รอ Claude/user ตัดสิน go/no.. |
-| ORDER-075 | /078 | — |
-| ORDER-083 | build "(Boss)_NewsGuard" watchdog EA (user เคาะ poli.. | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 83 | REVIEWED(Claude, 2026-07-10) |
-| REVIEW ORDER-0 | 84 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-085 | SuperTrend XAU H4: un-park ตาม corr rule | DONE(Claude-agent, 2026-07-10) |
-| ORDER-086 | swb grid AUDCAD: เตรียม bundle demo experiment #3 (u.. | DONE(Claude-agent, 2026-07-10) |
-| ORDER-087 | concept rescue batch #1: 6 smokes บน symbol-class ที.. | DONE(Claude-agent 2026-07-10) |
-| ORDER-088 | Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 87 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-089 | EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแร.. | DONE(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 88 | REVIEWED(Claude, 2026-07-10) |
-| REVIEW ORDER-0 | 89 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-090 | ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) | DONE-STOPPED-AT-STAGE-2(Claude-agent, 2026-07-10) |
-| REVIEW ORDER-0 | 85 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-085B | SuperTrend XAU H4: อุดรูสองรูสุดท้าย | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 90 | REVIEWED(Claude, 2026-07-10) |
-| ORDER-091B | BOT MOGUL report sweep (เฟส 1: parse+rank+shortlist) | DONE-PHASE1(Claude-agent, 2026-07-11) |
-| ORDER-091B | เฟส 2 | DONE(Claude-agent, 2026-07-11) |
-| ORDER-083B | port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049.. | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 83B | REVIEWED(Claude, 2026-07-11) |
-| REVIEW CODEX-AUDIT (`_triage\CODEX_AUDIT_FULL_.. | REVIEW CODEX-AUDIT ( | _triage\CODEX_AUDIT_FULL_2026-07-10.md |
-| REVIEW ORDER-0 | 85B | REVIEWED(Claude, 2026-07-11) |
-| ORDER-092 | P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่.. | DONE(Claude-agent, 2026-07-11) |
-| ORDER-093 | P0: Deployment truth เดียว + ซ่อม PROJECT_STATE enco.. | DONE(Claude, 2026-07-11) |
-| ORDER-083C | P0-before-attach: NewsGuard hardening (MT5+MT4) + VP.. | DONE(Codex, 2026-07-11 — รอ Claude review เมื่อ quota กลับ) |
-| ORDER-094 | P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 92 | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 83C | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 81 | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 94 | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 91A | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 91B | REVIEWED(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 91C batch-1/2 smoke | REVIEWED(Claude, 2026-07-11) |
-| ORDER-091C-D1 | JUMSTOCH_FIXEDLOT full funnel | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 91C-D1 | REVIEWED(Claude, 2026-07-11) |
-| ORDER-091C-D1b | JUMSTOCH spread stress (gate ก่อน demo) | DONE(Claude-agent, 2026-07-11) |
-| 🔄 REFRAME JUMSTOCH ตาม BUILD-ON doctrine (user.. | 🔄 REFRAME JUMSTOCH ตาม BUILD-ON doctrine (user 2026-.. | — |
-| ORDER-091C-D1c | JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็.. | DONE(Claude-agent, 2026-07-11) |
-| ORDER-091C-D1e | JUMSTOCH MT5 port + smoke | — |
-| REVIEW ORDER-0 | 91C-D1b | REVIEWED(Claude, 2026-07-11) |
-| ORDER-095-A | Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) | DONE(Claude-agent, 2026-07-11) |
-| JUMSTOCH multi-symbol config — `DONE(Claude, 2.. | JUMSTOCH multi-symbol config | DONE(Claude, 2026-07-11) |
-| REVIEW ORDER-0 | 95-A corr preview | REVIEWED(Claude, 2026-07-11) |
-| 🔧 PROCESS: "MT4-good → MT5 port → smoke → opti.. | 🔧 PROCESS: "MT4-good → MT5 port → smoke → optimize" .. | — |
-| Boss_14 new-vs-EXISTING corr — `DONE(Claude, 2.. | Boss_14 new-vs-EXISTING corr | DONE(Claude, 2026-07-11) |
-| 🔧 PORT-PIPELINE queue + SMC/FVG cluster (lead .. | 🔧 PORT-PIPELINE queue + SMC/FVG cluster (lead prep 2.. | — |
-| REVIEW ORDER-0 | 91C-D1e | REVIEWED(Claude, 2026-07-11) |
-| ORDER-091C-D1f | OOS validate JUMSTOCH MT5 ขาใหม่ (EURGBP/NZDUSD) | DONE(Claude-agent, 2026-07-11) |
-| REVIEW ORDER-0 | 91C-D1f + JUMSTOCH thread CLOSE | REVIEWED(Claude, 2026-07-11) |
-| CAMPAIGN ORDER-096 — WOBR/BotMogul marketplace.. | CAMPAIGN ORDER-096 | — |
-| ORDER-096A | Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) | REVIEWED(Claude, 2026-07-11) |
-| ORDER-096B | ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) | REVIEWED(Claude, 2026-07-11) |
-| ORDER-096C | commit WOBR intake artifacts | DONE(Claude, 2026-07-11) |
-
----
-
+> orders ปิดแล้ว = `ARCHIVE_TASKBOARD_2026-07A.md` (verbatim) · **index = generated/read-only** `docs/memory_control/ARCHIVE_INDEX.md` (§20.7 — ห้าม hand-edit ในบอร์ดนี้) · integrity guard: `powershell -File scripts/check_taskboard_archive.ps1 -Strict` (raw/reviewed/unresolved · archive append-only + active conservation)
 ## ORDER-036 — MT4 mass-smoke (1,318 ex4) — `OPEN → แยกเป็น BATCH BOARD ไฟล์ตัวเอง (user 2026-07-06)` · **ทำได้: Codex · oc-dev**
 
 **👉 spec + สถานะ + วิธีสั่งทั้งหมด = `ORDER-036_MT4_MASS_SMOKE.md`** (แยกไฟล์เพราะ 27 batches ×50 —
@@ -356,32 +219,6 @@ lever ใหม่ให้ sweep ทั้ง family และเป็นต�
      kill แทน price SL (041) · "AI/Neural" = ป้ายการตลาดของ EA ขายตลาด 90% (035 audit ชี้ Quantum Emperor
      เจ้าของเติมเงินเข้า signal ปิด DD!)
 - Boring-Pips-style cross-pair reversion (035) + session-gate (022 P11) = MED เก็บ backlog ไม่เร่ง
-
----
-
-## ORDER-071 — ST03 entry rescue: HTF trend-gate A/B บน flat-lot — `OPEN` (role: Claude+Sonnet build → agent runs)
-
-**ทำไม (user directive 2026-07-10):** user เสนอเอา higher-TF มาคุมทิศ entry ของ ST03 (filter ด้วย MACD /
-trend / ADX+DI) — สมมุติฐานถูกหลัก: ST03 คือ reversion-grid การบังคับให้ grid กางเฉพาะฝั่งเทรนด์ใหญ่
-อาจเปลี่ยน no-edge เป็น edge ได้ · **baseline ที่ต้องชนะ: flat-lot GBP PF 0.68 / CAD 0.40 (ORDER-068)**
-
-**เกณฑ์ตัดสินล่วงหน้า (ตั้งก่อนเห็นผล — กัน selection):** gate ตัวใดตัวหนึ่งต้องยก flat-lot PF ข้าม **1.0**
-บนทั้ง GBP และ CAD (สองตลาดพร้อมกัน) จึงนับว่า "entry รอด" → ค่อยต่อ capped-recovery (โครง Kangaroo)
-· ถ้าไม่มี gate ไหนข้าม = entry ตายจริง เลิกที่ signal นี้ ห้ามขุดต่อ
-
-**วิธี (in-EA A/B เท่านั้น — ห้าม offline bucketing):** บทเรียนจ่ายจริง ORDER-067: close-time regime
-conditioning = survivorship artifact (offline ADX gate สวย → in-EA จริง MC แย่ลง 0.973→0.861) ·
-และ STF: AND-filter ที่ lagging สับ sample 159→27 จนไร้ความหมาย — ระวังทั้งคู่
-1. build บน **Boss V2 + Entry_ST03.mqh** (ห้ามแตะไฟล์ fxDreema): เพิ่ม input gate mode =
-   0 none · 1 H4 MACD direction · 2 H4 ADX>th + DI-direction · 3 H4 EMA50-slope — gate คุมทิศที่
-   "อนุญาตให้เปิดตะกร้า" เท่านั้น (ไม่ปิดไม้ที่เปิดแล้ว)
-2. compile 0/0 + `tpl_regression.ps1` CLEAN ก่อนรัน (แก้ core = ต้องผ่าน cage)
-3. รัน flat-lot (no escalation) GBPUSD + USDCAD H1 · 2023.01.01-2026.07.01 · Model 1 · gate 0/1/2/3
-   = 8 runs · report ST03GATE_*
-**Acceptance:** ตาราง 8 แถว PF/net/DD/trades + แถว baseline 068 เทียบ · commit `[tag] ORDER-071 done`
-**ห้าม:** ตัดสิน rescue สำเร็จ/ล้มเหลว (เกณฑ์ตายตัวด้านบน — Claude อ่านผลเอง) · ห้ามแตะ .set live ·
-ห้าม optimize param อื่นไปพร้อมกัน (isolate ตัวแปรเดียว: gate)
-
 
 ---
 
@@ -658,17 +495,6 @@ grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไ
 เทียบ (fill-rate ของ pending ด้วย — limit ไม่ fill ทุกไม้) · **บาร์: pending PF > market PF ที่ spread จริง = ยืนยันคุณค่า**
 · **ห้าม:** เปลี่ยน lever อื่น · verdict · commit `[tag] ORDER-091C-D1d done`
 **หมายเหตุ:** นี่ตอบ ORDER-080 (limit vs market) ด้วย EA จริงตัวแรก → ปิด 080 ไปในตัวถ้าได้ผล
-
-
----
-
-## ORDER-091C-D1c PROCESSING (lead จะทำเมื่อ D1c เสร็จ — user doctrine 2026-07-11):
-1. เอา **ทุก cell ที่ผ่านบาร์** (PF≥1.1 & trades≥200 & DD<25% & ไม่ data-gap) = home set ไม่ใช่เลือกตัวเดียว
-2. คำนวณ **pairwise correlation ของ equity curve ระหว่าง symbol ที่ผ่าน** (corr_monthly.py logic) →
-   เก็บชุดที่ corr < 0.8 = multi-symbol demo config · คู่ที่ corr > 0.8 = surface ให้ user เลือก (ไม่ auto-drop)
-3. cell ที่เฉียด (PF 1.0-1.1) = **candidate build-on** (ใส่ session/vol filter หรือขยาย Range spacing) ไม่ทิ้ง →
-   เข้า D1d หรือ tweak-probe แยก
-4. ผลลัพธ์ = JUMSTOCH multi-symbol demo-bench set (EA เดียว หลาย symbol) + คิว build-on ต่อ (D1d pending + tweaks)
 
 
 ---
@@ -1115,7 +941,7 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 
 ---
 
-## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `OPEN · REVISED r1 (Codex design review 2026-07-13) — canonical-review-linkage · use existing 071 verdict · split C1a/C1b · pending re-review + quiet window` (SYSTEM ORDER 4 of ≤4 memory-control build → then mandatory review gate)
+## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `DONE(Opus migration, 2026-07-13) — C0 -Strict EXIT 0 · unresolved 0 · append-only clean · self-ACCEPT · pending final Codex review` (SYSTEM ORDER 4 of ≤4 memory-control build → then mandatory review gate)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** (migration half) + ORDER-101 "→ C1" spec + §20.7
 > **ทำได้:** Opus (exception judgment + migration window + canonical workflow = own) · Codex/subagent (guard-hook code) · **👉 แนะ:** Opus เขียน+ตัดสิน → subagent build lock-hook → **Opus execute migration เอง (1 atomic commit)** → **blind Codex review ก่อน accept**
@@ -1165,6 +991,18 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 - 🛑 **DESIGN GATE เจอตอน execute (surface ต่อ user):** C0 validator = **frozen-snapshot verifier** — append/แก้ archive ใด ๆ → `archive-not-append-only` **integrity exit 2** (พิสูจน์: append dummy block → audit exit 2) · ลบ manual-index block ออกจาก active (block นั้นอยู่ใน split-set 4aebbc37) → ตก (1b) drift ด้วย. **C1 โดยนิยาม mutate active+archive → incompatible กับ validator ปัจจุบัน.** → C1 execute ไม่ได้จนกว่า validator จะ evolve จาก "frozen snapshot" เป็น **"living append-only log (immutable split-prefix + tracked C1 appends)"** ก่อน. นี่คือ refinement ที่แผน+Codex C1 review ยังไม่ครอบ — **ผมหยุด surface แทนฝืน migrate พัง.**
 
 **Next (รอ user เคาะทิศ):** (ก) evolve validator → living-log model (Phase 0.5, bounded) → แล้ว execute migration (index-pointer + move rev01/annotation append-only + C1-CLOSURE 9 rows → -Strict 0) → Codex review · หรือ (ข) checkpoint ที่นี่.
+
+### C1b MIGRATION EXECUTED (Opus, 2026-07-13) — user: run to completion, window นิ่ง
+Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migration (Opus, deterministic script, preimage-captured):
+- **manual index block (active) → short pointer** ไป generated `ARCHIVE_INDEX.md` (§20.7 · index generated/read-only แล้ว)
+- **ORDER-071 rev01 (OPEN, superseded) → archive verbatim** (append-only) · closed via Source A (REVIEW ORDER-071 = ST03 ปิดถาวร)
+- **ORDER-091C-D1c PROCESSING** = stale scratch annotation (D1c DONE+archived) → **removed from active** (transient, ไม่ใช่ history)
+- **`## C1-CLOSURE` block (archive)** = Opus canonical closure 9 terminal-no-linked-review (003/009/065/066/067/086/093/091C-D1c/096C) key exact kind+block_id+sha256
+- **Opus lead call:** defer C1a enforced-lock hook (window เงียบ + hook ผิด=self-DoS เสี่ยงกว่า) — migration ทำใน manual staged-blob discipline + validator gate แทน
+
+**Opus-verified (รันเอง):** **C0 `-Strict` EXIT 0** · raw=11/reviewed=11/**unresolved=0** · **append-only clean** (0 mutated, 2 appends) · **0 active-order-lost** · integrity=0 · manifest/index/exceptions zero-diff · **check_state.ps1 CLEAN** · OPEN/CLAIMED orders ยังหาเจอ (15/4) · diff เฉพาะ 5 ไฟล์ (taskboard+archive+3 artifacts) ไม่แตะ unrelated · **106 bug caught by gate:** append lone-`\n` mutated 096C block (fixed) + statusless annotation ใน archive = status-unparseable (fixed = remove not archive) — validator gate จับทั้งคู่ก่อน commit.
+
+**Status:** C1b DONE + Opus self-review ACCEPT · **pending final blind Codex review** ก่อน flip REVIEWED + review gate. **= order ที่ 4 → MANDATORY REVIEW GATE ถัดไป.**
 
 **Routing:** Opus resolve exceptions + execute migration + 1 atomic commit · subagent/Codex build lock-hook + disposition mechanism · **blind Codex review รอบผลจริง ก่อน accept** · Opus แก้ `AGENTS.md` ใน review commit ถ้า archive-immutability protocol ต้องการ (เช่น "archived block immutable; REVIEWED ใหม่เข้า archive ผ่าน validator -Strict"). C1 = commit แยก.
 

@@ -5062,3 +5062,46 @@ resolved to DEAD, ไม่ต้อง OOS/BWD. USDJPY trend ตายครบ
 
 ---
 
+## ORDER-071 — ST03 entry rescue: HTF trend-gate A/B บน flat-lot — `OPEN` (role: Claude+Sonnet build → agent runs)
+
+**ทำไม (user directive 2026-07-10):** user เสนอเอา higher-TF มาคุมทิศ entry ของ ST03 (filter ด้วย MACD /
+trend / ADX+DI) — สมมุติฐานถูกหลัก: ST03 คือ reversion-grid การบังคับให้ grid กางเฉพาะฝั่งเทรนด์ใหญ่
+อาจเปลี่ยน no-edge เป็น edge ได้ · **baseline ที่ต้องชนะ: flat-lot GBP PF 0.68 / CAD 0.40 (ORDER-068)**
+
+**เกณฑ์ตัดสินล่วงหน้า (ตั้งก่อนเห็นผล — กัน selection):** gate ตัวใดตัวหนึ่งต้องยก flat-lot PF ข้าม **1.0**
+บนทั้ง GBP และ CAD (สองตลาดพร้อมกัน) จึงนับว่า "entry รอด" → ค่อยต่อ capped-recovery (โครง Kangaroo)
+· ถ้าไม่มี gate ไหนข้าม = entry ตายจริง เลิกที่ signal นี้ ห้ามขุดต่อ
+
+**วิธี (in-EA A/B เท่านั้น — ห้าม offline bucketing):** บทเรียนจ่ายจริง ORDER-067: close-time regime
+conditioning = survivorship artifact (offline ADX gate สวย → in-EA จริง MC แย่ลง 0.973→0.861) ·
+และ STF: AND-filter ที่ lagging สับ sample 159→27 จนไร้ความหมาย — ระวังทั้งคู่
+1. build บน **Boss V2 + Entry_ST03.mqh** (ห้ามแตะไฟล์ fxDreema): เพิ่ม input gate mode =
+   0 none · 1 H4 MACD direction · 2 H4 ADX>th + DI-direction · 3 H4 EMA50-slope — gate คุมทิศที่
+   "อนุญาตให้เปิดตะกร้า" เท่านั้น (ไม่ปิดไม้ที่เปิดแล้ว)
+2. compile 0/0 + `tpl_regression.ps1` CLEAN ก่อนรัน (แก้ core = ต้องผ่าน cage)
+3. รัน flat-lot (no escalation) GBPUSD + USDCAD H1 · 2023.01.01-2026.07.01 · Model 1 · gate 0/1/2/3
+   = 8 runs · report ST03GATE_*
+**Acceptance:** ตาราง 8 แถว PF/net/DD/trades + แถว baseline 068 เทียบ · commit `[tag] ORDER-071 done`
+**ห้าม:** ตัดสิน rescue สำเร็จ/ล้มเหลว (เกณฑ์ตายตัวด้านบน — Claude อ่านผลเอง) · ห้ามแตะ .set live ·
+ห้าม optimize param อื่นไปพร้อมกัน (isolate ตัวแปรเดียว: gate)
+
+
+---
+
+## C1-CLOSURE — `REVIEWED(Opus, 2026-07-13)` — 9 exception(s) closed (ORDER-102 Contract C1)
+
+> Opus canonical closure of RECONCILE_EXCEPTIONS policy exceptions = terminal orders archived without a separate REVIEW block. Append-only; validator derives closure (Source B) keyed exact kind+block_id+sha256. block_id `|` escaped as `\|`.
+>
+> **C1 migration side-effects:** (1) `## ORDER-071` rev01 (OPEN) moved from active → archive verbatim (SUPERSEDED by rev02; canonically reviewed via `## REVIEW ORDER-071` = ST03 entry ปิดถาวร). (2) `## ORDER-091C-D1c PROCESSING` = a **stale scratch processing-annotation** (the D1c work it describes is DONE + archived + closed by the row above) — **removed from active** (transient scratch, not reviewed history, so not archived). (3) manual index block replaced by a pointer to generated `ARCHIVE_INDEX.md`.
+
+| kind | block_id | block_sha256 | disposition | evidence |
+|---|---|---|---|---|
+| terminal-no-linked-review | 003\|ORDER\|current-archive#4 | a2b9b4a3ff39a430d042b639965b4630278b8961df8e53b566f8473887cb8245 | ACCEPT-ARCHIVED (SKIPPED, no verdict needed) | subsumed into ORDER-004; MC ran there |
+| terminal-no-linked-review | 009\|ORDER\|current-archive#9 | 965825bfddd8803cdbafae8b863e15a03718b5f5918a78e3343fa75060b519db | ACCEPT-ARCHIVED (SKIPPED, no verdict needed) | superseded; MC ran in ORDER-010 |
+| terminal-no-linked-review | 065\|ORDER\|current-archive#60 | 313db796c1b93eb7c8008b77bed95eb41d724e3b23e807e6d553076577671cb1 | ACCEPT-ARCHIVED (verdict inline in header) | BUILT+FUNNELED RESERVE, MC PF-5th 0.865 lt 1 |
+| terminal-no-linked-review | 066\|ORDER\|current-archive#61 | 975ba0025330557e0e7940cc114bc0a03470c019ae71188a32f2247f4caa4e57 | ACCEPT-ARCHIVED (verdict inline in header) | BUILT+FUNNELED NO EDGE |
+| terminal-no-linked-review | 067\|ORDER\|current-archive#58 | 39b4fda923635b41b1d0f6b2875f72edb08e4ccca7810dad0b5365777b17d43e | ACCEPT-ARCHIVED (verdict inline in header) | BUILT+CLOSED gate worse than offline |
+| terminal-no-linked-review | 086\|ORDER\|current-archive#84 | 50cf906ff6d1474a46b2c3b92956a37dcc3ad3255620739bd1b42124ecfa1f77 | ACCEPT-ARCHIVED (mechanical DONE, no verdict) | bundle-prep for demo experiment #3 |
+| terminal-no-linked-review | 093\|ORDER\|current-archive#102 | dafb9230d20c294eb7086f4337be8979fe6710395d1de9e6d1a8dcc957fdb3ca | ACCEPT-ARCHIVED (P0 infra self-completed) | deployment-truth + encoding, 4 items done |
+| terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | ca040636c91174c52e9742e9f204c67727152535509f12f620e952e0116c370d | ACCEPT-ARCHIVED (expansion step) | JUMSTOCH symbolxTF expand; fed D1e/D1f which were REVIEWED (thread demo-ready) |
+| terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | e06f1d21a9ead714cdaa672bb999a181bebc4e76298a898060f4fb9e5e0cc8dc | ACCEPT-ARCHIVED (mechanical DONE, no verdict) | commit WOBR intake artifacts |

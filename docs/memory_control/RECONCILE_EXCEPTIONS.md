@@ -7,12 +7,13 @@
 > (`-Audit`/`-Strict` are read-only and never touch it) -- do not hand-edit it; land
 > Opus decisions in PROJECT_STATE.md / the taskboard instead.
 
-> **Counts:** raw_detected=12 | canonically_reviewed=2 | unresolved=10
+> **Counts:** raw_detected=11 | canonically_reviewed=11 | unresolved=0
 
 ## Policy exceptions -- raw_detected (severity 1, before any closure)
 
 | kind | block_id | header | detail |
 |---|---|---|---|
+| non-terminal-in-archive | 071\|ORDER\|current-archive#132 | ## ORDER-071 — ST03 entry rescue: HTF trend-gate A/B บน flat-lot — `OPEN` (role: Claude+Sonnet build → agent runs) | status='OPEN' |
 | terminal-no-linked-review | 003\|ORDER\|current-archive#4 | ## ORDER-003 — Monte Carlo บน GBPAUD p26 report — `SKIPPED` (subsumed into ORDER-004) | canonical_id=003 terminal (SKIPPED) but no REVIEW block in archive references it |
 | terminal-no-linked-review | 009\|ORDER\|current-archive#9 | ## ORDER-009 — MC บน OOS reports 5 ตัว — `SKIPPED (superseded — Claude รัน MC บน full reports ประกอบ verdict ใน ORDER-010 แล้ว)` (role: ZCode) | canonical_id=009 terminal (SKIPPED) but no REVIEW block in archive references it |
 | terminal-no-linked-review | 067\|ORDER\|current-archive#58 | ## ORDER-067 — Trendline rev02 + ADX-regime gate: เส้นทาง promote #8 ที่ COT ทำไม่ได้ — `BUILT+CLOSED (Claude, 2026-07-09 ดึก — ❌ gate จริงแย่กว่า offline: artifact class ใหม่เข้าตำรา)` | canonical_id=067 terminal (BUILT+CLOSED) but no REVIEW block in archive references it |
@@ -23,31 +24,27 @@
 | terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | ## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `DONE(Claude-agent, 2026-07-11)` | canonical_id=091C-D1c terminal (DONE) but no REVIEW block in archive references it |
 | terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | ## ORDER-096C — commit WOBR intake artifacts — `DONE(Claude, 2026-07-11)` | canonical_id=096C terminal (DONE) but no REVIEW block in archive references it |
 | non-terminal-in-archive | 071\|ORDER\|current-archive#67 | ## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE2-DONE(Claude-agent, 2026-07-10)` — Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent) | mixed/partial status: header carries pending-stage marker 'Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent)' OUTSIDE the backtick status token (backtick status='STAGE2-DONE') -- treated as non-terminal-in-archive despite the terminal verb |
-| cross-active-and-archive | 071\|ORDER\|current-archive#67 | ## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE2-DONE(Claude-agent, 2026-07-10)` — Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent) | canonical_id=071 also present in current active board: '## ORDER-071 — ST03 entry rescue: HTF trend-gate A/B บน flat-lot — `OPEN` (role: Claude+Sonnet build → agent runs)' -- needs Opus to classify (annotation / obsolete-phase / active-continuation) |
-| cross-active-and-archive | 091C-D1c\|ORDER\|current-archive#116 | ## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `DONE(Claude-agent, 2026-07-11)` | canonical_id=091C-D1c also present in current active board: '## ORDER-091C-D1c PROCESSING (lead จะทำเมื่อ D1c เสร็จ — user doctrine 2026-07-11):' -- needs Opus to classify (annotation / obsolete-phase / active-continuation) |
 
 ## Canonically reviewed -- CLOSED (Contract C1 Source A: REVIEW-block linkage /
 ## Source B: C1-CLOSURE block; no further action needed)
 
 | kind | block_id | closure_source | closure_detail |
 |---|---|---|---|
+| non-terminal-in-archive | 071\|ORDER\|current-archive#132 | A-review-block | canonical_id=071 covered by a REVIEWED '## REVIEW ORDER-071'-style block |
+| terminal-no-linked-review | 003\|ORDER\|current-archive#4 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (SKIPPED, no verdict needed)'; evidence='subsumed into ORDER-004; MC ran there') |
+| terminal-no-linked-review | 009\|ORDER\|current-archive#9 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (SKIPPED, no verdict needed)'; evidence='superseded; MC ran in ORDER-010') |
+| terminal-no-linked-review | 067\|ORDER\|current-archive#58 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (verdict inline in header)'; evidence='BUILT+CLOSED gate worse than offline') |
+| terminal-no-linked-review | 065\|ORDER\|current-archive#60 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (verdict inline in header)'; evidence='BUILT+FUNNELED RESERVE, MC PF-5th 0.865 lt 1') |
+| terminal-no-linked-review | 066\|ORDER\|current-archive#61 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (verdict inline in header)'; evidence='BUILT+FUNNELED NO EDGE') |
+| terminal-no-linked-review | 086\|ORDER\|current-archive#84 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (mechanical DONE, no verdict)'; evidence='bundle-prep for demo experiment #3') |
+| terminal-no-linked-review | 093\|ORDER\|current-archive#102 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (P0 infra self-completed)'; evidence='deployment-truth + encoding, 4 items done') |
+| terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (expansion step)'; evidence='JUMSTOCH symbolxTF expand; fed D1e/D1f which were REVIEWED (thread demo-ready)') |
+| terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (mechanical DONE, no verdict)'; evidence='commit WOBR intake artifacts') |
 | non-terminal-in-archive | 071\|ORDER\|current-archive#67 | A-review-block | canonical_id=071 covered by a REVIEWED '## REVIEW ORDER-071'-style block |
-| cross-active-and-archive | 071\|ORDER\|current-archive#67 | A-review-block | canonical_id=071 covered by a REVIEWED '## REVIEW ORDER-071'-style block |
 
 ## Unresolved -- raw_detected minus canonically_reviewed (needs a C1-CLOSURE row)
 
-| kind | block_id | header | detail |
-|---|---|---|---|
-| terminal-no-linked-review | 003\|ORDER\|current-archive#4 | ## ORDER-003 — Monte Carlo บน GBPAUD p26 report — `SKIPPED` (subsumed into ORDER-004) | canonical_id=003 terminal (SKIPPED) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 009\|ORDER\|current-archive#9 | ## ORDER-009 — MC บน OOS reports 5 ตัว — `SKIPPED (superseded — Claude รัน MC บน full reports ประกอบ verdict ใน ORDER-010 แล้ว)` (role: ZCode) | canonical_id=009 terminal (SKIPPED) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 067\|ORDER\|current-archive#58 | ## ORDER-067 — Trendline rev02 + ADX-regime gate: เส้นทาง promote #8 ที่ COT ทำไม่ได้ — `BUILT+CLOSED (Claude, 2026-07-09 ดึก — ❌ gate จริงแย่กว่า offline: artifact class ใหม่เข้าตำรา)` | canonical_id=067 terminal (BUILT+CLOSED) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 065\|ORDER\|current-archive#60 | ## ORDER-065 — build: (TRD)_SuperTrendFlip @ XAUUSD H1 — `BUILT+FUNNELED (Claude, 2026-07-09 — 🅿️ RESERVE: ผ่าน 3 windows แต่ MC PF-5th 0.865 <1 = naked-signal floor เดิม)` | canonical_id=065 terminal (BUILT+FUNNELED) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 066\|ORDER\|current-archive#61 | ## ORDER-066 — build: (VWAP)_WaveS1 distilled @ XAUUSD — `BUILT+FUNNELED (Claude, 2026-07-09 ค่ำ — ❌ NO EDGE ปิดพร้อม mechanism insight)` | canonical_id=066 terminal (BUILT+FUNNELED) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 086\|ORDER\|current-archive#84 | ## ORDER-086 — swb grid AUDCAD: เตรียม bundle demo experiment #3 (user อนุมัติ 2026-07-10) — `DONE(Claude-agent, 2026-07-10)` | canonical_id=086 terminal (DONE) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 093\|ORDER\|current-archive#102 | ## ORDER-093 — P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding — `DONE(Claude, 2026-07-11)` — inventory+checker+0.5 repoint+encoding ครบ 4 ข้อ | canonical_id=093 terminal (DONE) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 091C-D1c\|ORDER\|current-archive#116 | ## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `DONE(Claude-agent, 2026-07-11)` | canonical_id=091C-D1c terminal (DONE) but no REVIEW block in archive references it |
-| terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | ## ORDER-096C — commit WOBR intake artifacts — `DONE(Claude, 2026-07-11)` | canonical_id=096C terminal (DONE) but no REVIEW block in archive references it |
-| cross-active-and-archive | 091C-D1c\|ORDER\|current-archive#116 | ## ORDER-091C-D1c — JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") — `DONE(Claude-agent, 2026-07-11)` | canonical_id=091C-D1c also present in current active board: '## ORDER-091C-D1c PROCESSING (lead จะทำเมื่อ D1c เสร็จ — user doctrine 2026-07-11):' -- needs Opus to classify (annotation / obsolete-phase / active-continuation) |
+_None found._
 
 ## Integrity / tooling failures (severity 2 -- blocks both -Audit and -Strict)
 
