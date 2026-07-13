@@ -91,6 +91,23 @@ churn จ่าย cost. เฉพาะ XAU H4 BWD แตะ 1.07. **park** —
 
 ---
 
+## 💡 BUILD-ON IDEAS (user directive 2026-07-13 — จดไว้ทดลองต่อ)
+
+### IDEA-1 ⭐ — HP = direction filter, ไม่ใช่ trade trigger (แก้ปัญหา thin)
+**ปัญหา:** HP@λ1600 บน XAU H4 ให้ PF ดี (1.35/1.68) แต่ **trade บาง** (n=64-72) เพราะ MA-cross บน HP ยิงน้อย.
+**ไอเดีย user:** thin ไม่ใช่จุดอ่อน — ให้ HP **ทำหน้าที่ "บอกทิศ" (direction/regime filter)** แทน แล้ว**แยก entry
+engine** มาเปิดไม้ในทิศที่ HP อนุญาต → เพิ่มจำนวนไม้ + เพิ่มไม้ (scale-in) ได้:
+- **direction gate:** HP-smoothed line slope (หรือ fast-HP vs slow-HP) = long-only / short-only / flat context.
+  (คือใช้ signal คุณภาพสูงของ HP เป็น "อนุญาตทิศ" ไม่ใช่จังหวะเข้า)
+- **entry engine (แยก, ยิงถี่กว่า):** เปิดไม้เมื่อเกิด **price-action event ในทิศที่ HP อนุญาต** เช่น
+  pullback + bullish engulfing · break ของ minor swing · RSI-dip เข้าหาทิศ. เปิดได้หลายไม้ (add เมื่อมี PA ใหม่
+  ในทิศเดิม — capped, มี SL) = แปลง "1 cross = 1 ไม้" เป็น "1 ทิศ = หลายไม้ตาม PA".
+- **ทำไมน่าจะ work:** เก็บ edge เชิงทิศของ HP (ที่ทำให้ PF สูง) แต่ไม่ทิ้งโอกาส (thin) — PA เติมความถี่.
+- **test plan:** probe ใหม่ `Probe_HPdir_PAentry` — HP direction (λ1600, XAU H4) × entry {engulfing / pullback /
+  swing-break} × scale-in {1,2,3 ไม้ capped}. เทียบ vs HP-cross เดิม: trade เพิ่ม + PF คง/ดีขึ้นทั้ง 2 regime ไหม.
+  ⚠️ VERDICT GATE: flat-lot ก่อน (edge จริงก่อน scale) · both-regime · holdout. ⚠️ scale-in = ระวัง martingale-fat-tail
+  (capped + SL + entry-edge test ตาม gate ข้อ 5).
+
 ## บทเรียนรวม (durable)
 1. **HP denoise = ดีที่ λ ต่ำเท่านั้น (lever คือ λ, ต้องเล็ก)** — λ1600 บน XAU ผ่าน both-regime;
    λ สูง (14400+) = over-smooth → lag → regime-invert/thin. **บทเรียน: อย่าตีตายจาก λ เดียว** (Stage A ตี HP

@@ -41,6 +41,14 @@ cd D:\EA_LAB ; powershell -ExecutionPolicy Bypass -File scripts\order104_smokeA.
 ใน launcher). ไม่ผ่าน → verdict "no-edge บน MA-cross" ปิด cell (ห้ามเขียน concept ตายสากล). ⚠️ ระวัง HP
 **endpoint instability** — ถ้า HP แย่ลง เช็คว่าเป็น endpoint noise ไม่ใช่ denoise ล้มเหลว.
 
+## ✅ STAGE A+B DONE (2026-07-13) — verdict + build-on ที่ผ่าน
+ผลเต็ม = `_triage/ORDER104_EXPERIMENT_SUMMARY.md`. สรุป:
+- **HP@λ1600 บน XAU ผ่าน both-regime** (XAU H4 1.35/1.68) = **candidate build-on** (Stage A ที่ตี HP ตกเป็น λ14400 artifact)
+- IBS naked ตก (park, ต้อง filter) · tanh inert (calib bug R/κ horizon)
+- **NEXT BUILD (priority):** build-on XAU-H4-HP-λ1600 → sweep MA-period/SL รอบ plateau + Model-4 confirm + holdout/MC
+- **IDEA-1 (user 2026-07-13, จดใน summary):** HP = direction filter (ไม่ใช่ trigger) + PA entry engine แยก + scale-in
+  capped → แก้ปัญหา thin. probe `Probe_HPdir_PAentry`. flat-lot ก่อน · capped+SL (กัน martingale) · both-regime.
+
 ## 📋 คิวถัดไป (SSRN W2-W5 + intake actions — ยังไม่เป็น ORDER, รอ user เคาะ)
 - **W2 IBS mean-reversion** (4.4) · **W3 Pivot(3.14)+Donchian(3.15)** · **W4 OU-model(9.6)** · **W5 KNN(3.17)**
   — spec ย่อใน `_triage/SSRN_151strategies_PBX_ebook_2026-07-13.md`.
