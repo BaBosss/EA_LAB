@@ -52,5 +52,38 @@ real edge before deciding whether HexaGrid is worth rebuilding around just that 
 Re-run S3_SL30 MAIN (failed this batch, stub report) if that combo specifically is wanted later
 — does not change the verdict (BWD leg of the same combo still failed at 0.82).
 
-**Not run (deferred, cheap if wanted):** per-system flat-lot isolation (S1..S6 individually,
-MaxLevels=1, both windows = 12 runs) — would directly answer "which system, if any, has edge."
+## (C) Per-system flat-lot isolation (S1..S6 alone, MaxLevels=1, both windows)
+`_mt5_auto/order097_hex_persystem_results.csv`
+
+| system | mechanism | MAIN PF | BWD PF | trades | win% | verdict |
+|---|---|---|---|---|---|---|
+| S1 | trend EMA14 cross H1 | 0.49 | 0.45 | 367/247 | 72/68 | no edge (bad RR despite high win%) |
+| S2 | trend Stoch 30/70 M5 | 0.80 | 0.76 | 1041/184 | 70/65 | no edge (closest, still <1) |
+| S3 | trend RSI+div M5 | 0.82 | 0.57 | 309/95 | 83/80 | no edge (BWD weak) |
+| S4 | trend DI-flip/ADX regime | 0.00 | 0.00 | 0/0 | — | never armed in isolation — inconclusive, not a pass |
+| S5 | range Stoch 20/80 M5 | 0.43 | 0.26 | 2964/2920 | 25/14 | clear no-edge, high-volume noise |
+| S6 | range RSI+div M15 | 0.53 | 0.00 | 2/3 | 50/100 | too thin to judge (n<5) |
+
+**No individual subsystem clears PF>1 in both windows.** S2 comes closest (0.80/0.76) but is
+still a loser both regimes. S1/S3 show high win% but poor reward:risk (SL 12xATR is wide relative
+to typical win, consistent with the combined-engine pattern). S5 is unambiguously bad (win 14-25%
+on ~3000 trades/window — real statistical signal of no edge, not noise). S4 and S6 didn't generate
+enough trades standalone to judge on their own (S4 may depend on interaction with other systems'
+timing/state that flat-lot isolation removed — worth a note, not a re-run priority given the
+uniform failure everywhere else).
+
+## FINAL VERDICT (lead) — funnel CLOSED
+**HexaGrid = STRUCTURAL DEAD at XAU H1, all levels checked:** combined-6-system flat-lot fails
+(PF<1 both windows), grid-math widening doesn't rescue it (PF<1 across 3 spacing×SL combos), and
+now **no individual subsystem carries standalone edge either** (best = S2 at 0.80/0.76, still
+losing both regimes). This is not an averaging artifact of mixing a good system with bad ones —
+the components themselves have no edge. Per VERDICT GATE this satisfies both breadth (spacing ×
+SL × escalation-cap × per-system = well over the 3-lever minimum) and depth (both regimes, every
+cell) requirements for a concept-level verdict.
+
+**Recommendation: park HexaGrid, do not sink further compute into tuning it.** The user-specified
+regime filter (EMA224-slope+ADX) and 7-layer risk management were sound engineering (no BLOCKER
+in code review, RISK CLASS L4 correctly capped) — the failure is upstream, in the 6 entry signals
+themselves, not the grid/risk chassis. If any of these entry ideas (EMA14 cross, Stoch, RSI+div,
+DI-flip) are wanted later, they'd need independent re-design (different TF, added confirmation
+filter, etc.) rather than reuse as-is — this is a concept/entry-logic finding, not a chassis one.
