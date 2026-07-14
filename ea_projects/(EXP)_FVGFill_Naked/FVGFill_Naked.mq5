@@ -7,16 +7,18 @@
 #property strict
 #property description "(EXP)_FVGFill_Naked — flat-lot FVG-fill probe, ORDER-098-A"
 
-// Signal (evaluated once per new closed bar — bar-open-only gate):
-//   Using shift 1..4 = last 4 fully-closed bars (shift1 = most recently closed).
-//   Bullish FVG gap:   Low[2]  > High[4]                      (3-bar gap, shift3 = middle impulse candle, unused in the check)
-//   Bullish fill entry: High[4] <= Close[1] <= Low[2]         (price closed back inside the gap)
-//                        AND Close[1] > Open[1]                (confirm candle is itself bullish)
-//                        AND |Close[1]-Open[1]| > |Close[2]-Open[2]|   (engulfing-size confirm, per spec "body[0]>body[1]")
-//   Bearish = mirror (High[2] < Low[4], retrace inside, bearish confirm candle, body-size confirm).
-//   NOTE: this is a one-shot check against the last 4 closed bars each new bar (no persistent gap-state
-//   tracking across many bars) — matches the literal fxDreema EX009 block logic. A gap that isn't retested
-//   within this 4-bar window is not tracked further. This is the intended MVP scope for a flat-lot probe.
+// Signal (evaluated once per new closed bar — bar-open-only gate), PERSISTENT gap-state version
+// (rev02 — the original one-shot 4-bar-snapshot check under-sampled badly: 0-5 trades over 3yr,
+// ORDER-098-A first smoke was ruled INCONCLUSIVE, not dead. Real FVG retests often happen many
+// bars after the gap forms, so the gap zone must be remembered, not re-derived from a fixed window):
+//   On each new closed bar, using shift 1..3 (shift1=newest closed):
+//     Bullish FVG forms when  Low[1] > High[3]   → store zone [High[3] .. Low[1]], bullish, age=0.
+//     Bearish FVG forms when  High[1] < Low[3]   → store zone [High[1] .. Low[3]], bearish, age=0.
+//   Every subsequent new bar, for each pending zone (age <= _01_MaxAgeBars):
+//     Bullish fill: Close[1] falls inside the zone AND Close[1]>Open[1] (confirm candle bullish)
+//                   AND body[1] > body[2] (engulfing-size confirm, per EX009 spec "body[0]>body[1]").
+//     Bearish = mirror. First zone that fires consumes itself (removed); zones older than the
+//     age cap are dropped unfilled. Fixed-size ring buffer, oldest dropped if buffer is full.
 
 #include <Trade\Trade.mqh>
 
@@ -30,6 +32,7 @@ input bool   _00_OptimizeMode  = false;
 //--------------------------------------------------------------------
 input bool   _01_AllowBuy      = true;
 input bool   _01_AllowSell     = true;
+input int    _01_MaxAgeBars    = 50;   // max bars a detected gap stays pending before being dropped unfilled
 
 //--------------------------------------------------------------------
 // [02] SL / TP  (fixed pips, digit-aware — locked per EX009 spec)
@@ -64,6 +67,15 @@ static bool     g_suppress_log   = false;
 static datetime g_last_bar_time  = 0;
 static bool     g_bar_checked    = false;
 static CTrade   g_trade;
+
+// Pending-gap ring buffer (persistent across bars, see header comment)
+#define ZONE_CAP 20
+static double   g_zone_hi[ZONE_CAP];
+static double   g_zone_lo[ZONE_CAP];
+static int      g_zone_dir[ZONE_CAP];   // 1 = bullish gap, -1 = bearish gap
+static int      g_zone_age[ZONE_CAP];   // bars since formed
+static int      g_zone_count = 0;
+static int      g_bar_counter = 0;
 
 //--------------------------------------------------------------------
 // Helpers
@@ -104,41 +116,74 @@ bool HasOpenPosition()
    return false;
 }
 
-// Returns 1 = bullish FVG-fill signal, -1 = bearish, 0 = none.
-// Uses shift 1..4 (all fully-closed bars) on the current chart TF.
+void AddZone(const int dir, const double hi, const double lo)
+{
+   // NOTE: if the buffer is full, this overwrites slot 0 without a true FIFO shift (probe-grade
+   // simplification — losing track of one old gap early is not a correctness bug, just an
+   // acceptable edge case at a 20-concurrent-pending-gap cap that H1/H4 majors are unlikely to hit).
+   int slot = (g_zone_count < ZONE_CAP) ? g_zone_count++ : 0;
+   g_zone_hi[slot] = hi; g_zone_lo[slot] = lo; g_zone_dir[slot] = dir; g_zone_age[slot] = 0;
+}
+
+void RemoveZone(const int idx)
+{
+   for(int i = idx; i < g_zone_count - 1; i++)
+   {
+      g_zone_hi[i] = g_zone_hi[i+1]; g_zone_lo[i] = g_zone_lo[i+1];
+      g_zone_dir[i] = g_zone_dir[i+1]; g_zone_age[i] = g_zone_age[i+1];
+   }
+   g_zone_count--;
+}
+
+// Detects new gaps on the freshest 3 closed bars, ages/prunes pending zones, and checks every
+// pending zone for a retrace-fill. Returns 1 = bullish fill signal, -1 = bearish, 0 = none.
 int CheckFvgFillSignal()
 {
-   const double high2 = iHigh(_Symbol, PERIOD_CURRENT, 2);
-   const double low2  = iLow (_Symbol, PERIOD_CURRENT, 2);
-   const double high4 = iHigh(_Symbol, PERIOD_CURRENT, 4);
-   const double low4  = iLow (_Symbol, PERIOD_CURRENT, 4);
+   g_bar_counter++;
+
+   const double high1 = iHigh(_Symbol, PERIOD_CURRENT, 1);
+   const double low1  = iLow (_Symbol, PERIOD_CURRENT, 1);
+   const double high3 = iHigh(_Symbol, PERIOD_CURRENT, 3);
+   const double low3  = iLow (_Symbol, PERIOD_CURRENT, 3);
    const double close1 = iClose(_Symbol, PERIOD_CURRENT, 1);
    const double open1  = iOpen (_Symbol, PERIOD_CURRENT, 1);
    const double close2 = iClose(_Symbol, PERIOD_CURRENT, 2);
    const double open2  = iOpen (_Symbol, PERIOD_CURRENT, 2);
 
-   if(high2 <= 0 || low2 <= 0 || high4 <= 0 || low4 <= 0) return 0;
+   if(high1 <= 0 || low1 <= 0 || high3 <= 0 || low3 <= 0) return 0;
+
+   // New gap detection (shift1 vs shift3, shift2 = middle impulse candle, unused in the check)
+   if(low1 > high3)  AddZone( 1, low1, high3);   // bullish: zone = [high3 .. low1]
+   if(high1 < low3)  AddZone(-1, low3, high1);   // bearish: zone = [low3 .. high1] (hi field holds low3)
 
    const double body1 = MathAbs(close1 - open1);
    const double body2 = MathAbs(close2 - open2);
+   int signal = 0;
+   int fired_idx = -1;
 
-   // Bullish FVG: gap between shift4-high and shift2-low
-   if(low2 > high4)
+   // Age + prune + fill-check, oldest-first
+   for(int i = 0; i < g_zone_count; i++)
    {
-      const bool retrace_in_gap = (close1 >= high4 && close1 <= low2);
-      const bool bullish_confirm = (close1 > open1) && (body1 > body2);
-      if(retrace_in_gap && bullish_confirm) return 1;
+      g_zone_age[i]++;
+      if(g_zone_age[i] > _01_MaxAgeBars) { RemoveZone(i); i--; continue; }
+      if(signal != 0) continue;  // one fill per bar; keep pruning the rest of the list
+
+      if(g_zone_dir[i] == 1)
+      {
+         const bool retrace_in_gap  = (close1 >= g_zone_lo[i] && close1 <= g_zone_hi[i]);
+         const bool bullish_confirm = (close1 > open1) && (body1 > body2);
+         if(retrace_in_gap && bullish_confirm) { signal = 1; fired_idx = i; }
+      }
+      else
+      {
+         const bool retrace_in_gap  = (close1 <= g_zone_hi[i] && close1 >= g_zone_lo[i]);
+         const bool bearish_confirm = (close1 < open1) && (body1 > body2);
+         if(retrace_in_gap && bearish_confirm) { signal = -1; fired_idx = i; }
+      }
    }
 
-   // Bearish FVG: gap between shift4-low and shift2-high
-   if(high2 < low4)
-   {
-      const bool retrace_in_gap = (close1 <= low4 && close1 >= high2);
-      const bool bearish_confirm = (close1 < open1) && (body1 > body2);
-      if(retrace_in_gap && bearish_confirm) return -1;
-   }
-
-   return 0;
+   if(fired_idx >= 0) RemoveZone(fired_idx);
+   return signal;
 }
 
 //--------------------------------------------------------------------
@@ -154,6 +199,8 @@ int OnInit()
 
    g_last_bar_time = 0;
    g_bar_checked   = false;
+   g_zone_count    = 0;
+   g_bar_counter   = 0;
 
    if(!g_suppress_log)
       PrintFormat("FVGFill_Naked init | AllowLive=%s OptMode=%s SL=%.1fpip TP=%.1fpip lot=%.2f magic=%d",

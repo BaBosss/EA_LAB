@@ -12,8 +12,8 @@ convention) so non-FX symbols get sane, broker-plausible distances. Re-reviewed 
 gate ✓, tester-gate (`_06_AllowLive || MQL_TESTER`) ✓, magic-scoped position check ✓, `OnTester`
 Sharpe-floor ✓. Compiled 0 errors (ex5 40276 bytes).
 
-## Acceptance result (Model 1, 2023.01-2026.01)
-`_mt5_auto/order098a_fvgfill_results.csv`
+## Acceptance result — rev01 (Model 1, 2023.01-2026.01, one-shot 4-bar detection)
+`_mt5_auto/order098a_fvgfill_results.csv` (superseded, see rev02 below)
 
 | symbol | tf | PF | Trades | DDpct | Win% |
 |---|---|---|---|---|---|
@@ -22,26 +22,41 @@ Sharpe-floor ✓. Compiled 0 errors (ex5 40276 bytes).
 | XAUUSD | H1 | 0.00 | 0 | 0.00 | 0.00 |
 | XAUUSD | H4 | 0.00 | 0 | 0.00 | 0.00 |
 
-## VERDICT (lead) — INCONCLUSIVE, not REJECT
-**Trade counts are too thin to judge (max 5) — this is a sampling failure, not an edge failure.**
-XAUUSD's 0 trades is not an init/code crash (the same binary fires fine on EURUSD) — it's the
-entry logic being too narrow to detect meaningfully within 3 years on either symbol.
+**rev01 finding:** trade counts too thin to judge (max 5) — sampling failure, not edge failure.
+Root cause: the detector checked only a fixed 4-bar snapshot per new bar with no persistent
+gap-state — a gap not retested within that exact window was never seen again.
 
-**Root cause (documented in the code's own header comment, known going in):** the detector checks
-only a fixed 4-bar snapshot on each newly-closed bar (shift1..4) with NO persistent gap-state —
-a gap that isn't retested within that exact window is never seen again. Real FVG fills in fxDreema-
-style ICT strategies often happen many bars after the gap forms; this MVP scope structurally
-under-samples the very pattern it's testing.
+## Fix (rev02) — persistent gap-state tracking
+Replaced the one-shot 4-bar check with a ring buffer (`ZONE_CAP=20`) that remembers every
+detected gap's zone + formation bar and checks it for a retrace-fill on every subsequent bar
+(aged out after `_01_MaxAgeBars=50`, default). FVG geometry and engulfing-confirm rule unchanged
+— only the detection window widened. Compiled 0/0 (terminal64 `/compile` hung twice on this
+rebuild — gotcha: use `MetaEditor64.exe /compile:<path> /log:<path>` directly instead, it
+completed in 456ms both times vs terminal64 opening an idle GUI and never returning).
 
-**Per VERDICT GATE:** cannot call this dead (0 lever swept in the sense that matters here — the
-detection window itself was never varied) and cannot call it validated (n=5 is statistically
-empty). This is neither PASS nor REJECT — it's an under-powered probe.
+## Acceptance result — rev02 (same 4 cells, Model 1, 2023.01-2026.01)
+| symbol | tf | PF | Trades | DDpct | Win% |
+|---|---|---|---|---|---|
+| EURUSD | H1 | 0.97 | 818 | 0.77 | 56.72 |
+| EURUSD | H4 | 0.74 | 263 | 0.89 | 49.81 |
+| XAUUSD | H1 | 0.83 | 942 | 1.73 | 52.55 |
+| XAUUSD | H4 | 0.83 | 283 | 0.48 | 52.65 |
 
-**Next step if pursued (build-on, cheap, same EA):** add persistent gap-state tracking — store
-each detected gap's zone + formation bar, check every subsequent bar (up to a max-age cap, e.g.
-50 bars) for a retrace-fill instead of only the bar immediately following. Re-run the same 4-cell
-acceptance matrix. This is a detection-scope fix, not an entry-logic redesign — the FVG geometry
-and engulfing-confirm rule are unchanged, only how many bars we're willing to wait for the retest.
+## VERDICT (lead) — PARAMETRIC, no edge at this RR (NOT a kill yet)
+**Now well-powered (263-942 trades/cell) and PF<1.0 in all 4 cells.** The pattern is informative,
+not noise: fixed SL20/TP15 = 0.75 RR needs win% ≥ 57.1% to break even (20/(20+15)). Win rates
+land at 49.8-56.7% — EURUSD H1 (56.72%) sits right at the breakeven line (PF 0.97, essentially
+flat before costs); the other three cells are further below it. The FVG-retrace geometry itself
+fires often enough (263-942 signals over 3yr) — the entry is not rare, it's just not accurate
+enough to clear this RR's breakeven bar.
 
-**Not touched (per order — no grid/MM until flat-lot proves PF>1 on a real sample):** MM-parts
-integration deferred regardless of this result.
+**Per VERDICT GATE: this is PARAMETRIC not STRUCTURAL — only 1 window tested (no BWD 2020-22 yet)
+and 0 levers swept (RR/TP never varied). Cannot reject yet.** The doctrine-consistent next step
+(if pursued) is NOT more code — it's the standard funnel: (1) BWD window on the same 4 cells,
+(2) vary RR (e.g. wider TP relative to SL, since win% is close to breakeven and a slightly better
+RR could flip several cells over 1.0) before any kill call. Given win% is this close to the line,
+a modest RR change plausibly rescues it — this is a "tune the exit, not redesign the entry" case,
+distinct from ORDER-097 HexaGrid where every lever failed uniformly.
+
+**Not touched (per order — no grid/MM until flat-lot clears the bar):** MM-parts integration
+deferred regardless of this result.
