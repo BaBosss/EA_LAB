@@ -1,0 +1,237 @@
+<#
+.SYNOPSIS
+    ORDER-103 Contract C1-ENFORCE Fix 2 -- fail-closed staged-snapshot pre-commit
+    check. Called by .githooks/pre-commit; enforces ONLY when a PROTECTED-SET file
+    is among the staged paths.
+
+.DESCRIPTION
+    PROTECTED SET (enumerated, exactly these 5):
+      ARCHIVE_TASKBOARD_2026-07A.md
+      AGENT_TASKBOARD.md
+      docs/memory_control/ARCHIVE_MANIFEST.csv
+      docs/memory_control/ARCHIVE_INDEX.md
+      docs/memory_control/RECONCILE_EXCEPTIONS.md
+
+    If none of these are staged (added/modified/deleted/renamed), exits 0
+    immediately -- this script never blocks an ordinary commit.
+
+    When any protected file IS staged, all of the following are enforced,
+    reading candidates from the git INDEX (never the working tree):
+      1. Staged ARCHIVE_TASKBOARD_2026-07A.md bytes must be an exact raw-byte
+         prefix-extension of HEAD's archive bytes, with a new-H2-block-boundary
+         suffix rule (reuses Invoke-ArchiveChainIntegrityCheck -IncludeStaged,
+         which also re-verifies the checkpoint->HEAD chain itself as
+         defense-in-depth at commit time).
+      2. The active-board content used for the Source-A exception scan is
+         ALWAYS read from the STAGED index (`git show :AGENT_TASKBOARD.md`),
+         never HEAD or the working tree -- so a commit that changes the
+         archive is judged against what AGENT_TASKBOARD.md will actually look
+         like after this commit, not some stale prior version.
+      3. Manifest/index/exceptions are regenerated IN A TEMP location from the
+         STAGED archive+active bytes and byte-compared (canonical, LF-normalized)
+         against the STAGED versions of the 3 artifact files. Mismatch = block.
+      4. Exactness: the full staged consistency check runs whenever ANY protected
+         file is staged, even if the archive itself is unchanged. If the archive
+         changed, all 3 artifacts MUST also be staged as changed in the same commit.
+         A protected file staged as DELETED or RENAMED is blocked outright.
+
+    Exit 0 = pass (commit may proceed). Exit 1 = policy/consistency block.
+    Exit 2 = tooling/integrity failure (git command failed, etc).
+#>
+param(
+    [string]$RepoRoot = (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path))
+)
+
+$ErrorActionPreference = 'Stop'
+
+# Dot-source the validator for its Get-Snapshot / Invoke-ArchiveChainIntegrityCheck /
+# Invoke-TaskboardArchiveCheck / Get-NormalizedTextFromBytes functions. The trailing
+# ".ps1" file is guarded (`if ($MyInvocation.InvocationName -ne '.')`) so dot-sourcing
+# it does NOT also run Invoke-Main / call `exit` -- only defines functions.
+. (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') -RepoRoot $RepoRoot 6>$null
+
+$ArchivePath    = 'ARCHIVE_TASKBOARD_2026-07A.md'
+$ActivePath     = 'AGENT_TASKBOARD.md'
+$ManifestPath   = 'docs/memory_control/ARCHIVE_MANIFEST.csv'
+$IndexPath      = 'docs/memory_control/ARCHIVE_INDEX.md'
+$ExceptionsPath = 'docs/memory_control/RECONCILE_EXCEPTIONS.md'
+$ProtectedSet = @($ArchivePath, $ActivePath, $ManifestPath, $IndexPath, $ExceptionsPath)
+
+function Get-StagedNameStatus {
+    param([string]$RepoRoot)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'diff --cached --name-status --no-renames'
+    if ($r.ExitCode -ne 0) { throw "git diff --cached --name-status failed: $($r.StdErr)" }
+    $rows = New-Object System.Collections.Generic.List[object]
+    foreach ($line in ($r.StdOut -split "`r?`n")) {
+        if (-not $line.Trim()) { continue }
+        $parts = $line -split "`t"
+        if ($parts.Count -lt 2) { continue }
+        $rows.Add([pscustomobject]@{ Status = $parts[0]; Path = ($parts[1] -replace '\\', '/') })
+    }
+    return $rows.ToArray()
+}
+
+Write-Host '[precommit-staged] ORDER-103 Fix 2 staged-snapshot check'
+
+$staged = Get-StagedNameStatus -RepoRoot $RepoRoot
+$stagedByPath = @{}
+foreach ($s in $staged) { $stagedByPath[$s.Path] = $s.Status }
+
+$protectedStaged = @($ProtectedSet | Where-Object { $stagedByPath.ContainsKey($_) })
+if ($protectedStaged.Count -eq 0) {
+    Write-Host '[precommit-staged] no protected-set file staged -- pass (ordinary commit)'
+    exit 0
+}
+
+Write-Host ('[precommit-staged] protected file(s) staged: ' + ($protectedStaged -join ', '))
+
+# --- deleted/renamed protected file = block outright ---
+foreach ($p in $protectedStaged) {
+    $st = $stagedByPath[$p]
+    if ($st -match '^D') {
+        Write-Host "[precommit-staged] BLOCK: protected file '$p' is staged for DELETION -- not permitted"
+        exit 1
+    }
+}
+
+# --- if the archive changed, all 3 generated artifacts must ALSO be staged as changed ---
+$archiveChanged = $stagedByPath.ContainsKey($ArchivePath)
+if ($archiveChanged) {
+    $missingArtifacts = @()
+    foreach ($a in @($ManifestPath, $IndexPath, $ExceptionsPath)) {
+        if (-not $stagedByPath.ContainsKey($a)) { $missingArtifacts += $a }
+    }
+    if ($missingArtifacts.Count -gt 0) {
+        Write-Host ("[precommit-staged] BLOCK: archive changed but required artifact(s) not staged: " + ($missingArtifacts -join ', ') + ' -- run -Generate and stage the refresh')
+        exit 1
+    }
+}
+
+# --- read staged snapshots (INDEX, never working tree) ---
+try {
+    $stagedArchive = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ArchivePath
+    $headArchive   = Get-Snapshot -RepoRoot $RepoRoot -Mode Committed -RelPath $ArchivePath -CommitSha 'HEAD'
+    $stagedActive  = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ActivePath
+} catch {
+    Write-Host "[precommit-staged] INTEGRITY: failed to read staged/HEAD snapshot: $($_.Exception.Message)"
+    exit 2
+}
+
+# --- 1. chain check: checkpoint->HEAD->staged, first-parent, raw-byte prefix + H2 boundary ---
+$chain = $null
+try {
+    $chain = Invoke-ArchiveChainIntegrityCheck -RepoRoot $RepoRoot `
+        -CheckpointSha '0ced19485c6c6ce9a23541f785ab82bae4fcad25' -ArchiveRelPath $ArchivePath `
+        -HeadRef 'HEAD' -IncludeStaged
+} catch {
+    Write-Host "[precommit-staged] INTEGRITY: chain check threw: $($_.Exception.Message)"
+    exit 2
+}
+if (-not $chain.IsClean) {
+    Write-Host "[precommit-staged] BLOCK: staged archive fails append-chain integrity -- $($chain.Reason)"
+    exit 1
+}
+Write-Host '[precommit-staged] staged archive is a valid checkpoint->HEAD->staged append-chain extension'
+
+# --- 2+3. regenerate manifest/index/exceptions IN TEMP from staged bytes, compare to staged artifacts ---
+# This runs for every protected-file commit. Unchanged protected paths are still
+# present in the index, so comparing the complete staged candidate catches an
+# artifact-only tamper or active-board-only edit that would make post-commit
+# -Strict fail even though the archive blob did not change.
+#
+# Deliberately does NOT call Invoke-TaskboardArchiveCheck here: that function's
+# archive-content identity (Get-ArchiveContentIdentity) and split-integrity/active-
+# conservation checks are HEAD-committed-history concepts (PreSplit/SplitActive/
+# SplitArchive GIT: refs resolved against $RepoRoot's real history) that do not apply
+# to an uncommitted staged snapshot being validated in isolation. Instead this builds
+# the manifest/index/exceptions directly from the staged blocks, using the Fix 4
+# STAGED identity (git rev-parse :path) computed above as the archive-content
+# identity -- which is in fact the semantically CORRECT identity for this snapshot,
+# not a workaround.
+$tempDir = $null
+try {
+    $tempActiveBlocks  = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedActive.Bytes) -SourceTag 'current-active')
+    $tempArchiveBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $stagedArchive.Bytes) -SourceTag 'current-archive')
+
+    # Candidate-level equivalent of the public Strict policy/integrity checks.
+    # The historical split sources are immutable; only the checks that can change
+    # with staged active/archive content need to be recomputed here.
+    $splitActiveBlocksForCandidate = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes (Get-SourceBytes -RepoRoot $RepoRoot -SourceSpec 'GIT:4aebbc37:AGENT_TASKBOARD.md')) -SourceTag 'split-active')
+    $tempActiveConservation = Invoke-ActiveConservationCheck -SplitActiveBlocks $splitActiveBlocksForCandidate -CurrentActiveBlocks $tempActiveBlocks -CurrentArchiveBlocks $tempArchiveBlocks
+
+    $tempExceptionsScan = Invoke-ExceptionScan -CurrentActiveBlocks $tempActiveBlocks -CurrentArchiveBlocks $tempArchiveBlocks
+    $tempClosure = Invoke-ExceptionClosure -PolicyExceptions $tempExceptionsScan.Policy -ActiveBlocks $tempActiveBlocks -ArchiveBlocks $tempArchiveBlocks
+
+    $candidateBlockingFindings = New-Object System.Collections.Generic.List[object]
+    foreach ($f in $tempExceptionsScan.Integrity) { $candidateBlockingFindings.Add($f) }
+    foreach ($f in $tempClosure.IntegrityFailures) { $candidateBlockingFindings.Add($f) }
+    foreach ($lost in $tempActiveConservation.OrderLost) {
+        $candidateBlockingFindings.Add([pscustomobject]@{ Kind = 'active-order-lost'; Detail = "staged active/archive candidate loses conserved order '$($lost.Header)'" })
+    }
+    foreach ($u in $tempClosure.Unresolved) {
+        $candidateBlockingFindings.Add([pscustomobject]@{ Kind = 'unresolved-policy-exception'; Detail = "staged candidate would leave -Strict non-clean: [$($u.Kind)] $($u.BlockId)" })
+    }
+
+    $tempReport = [ordered]@{
+        PolicyExceptions           = @($tempExceptionsScan.Policy)
+        CanonicallyReviewed        = @($tempClosure.Reviewed)
+        UnresolvedPolicyExceptions = @($tempClosure.Unresolved)
+        IntegrityFailures          = @($tempExceptionsScan.Integrity) + @($tempClosure.IntegrityFailures)
+    }
+
+    if ($candidateBlockingFindings.Count -gt 0) {
+        Write-Host '[precommit-staged] BLOCK: staged content fails its full candidate consistency check:'
+        foreach ($f in $candidateBlockingFindings) { Write-Host ('  [' + $f.Kind + '] ' + $f.Detail) }
+        exit 1
+    }
+
+    $tempDir = Join-Path $env:TEMP ('order103_precommit_' + [System.Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
+
+    $tempManifestRows = @(New-ArchiveManifestRows -CurrentArchiveBlocks $tempArchiveBlocks -ArchiveBlobSha $stagedArchive.Identity)
+    $tempManifestPath = Join-Path $tempDir 'manifest.csv'
+    Write-ArchiveManifestCsv -Rows $tempManifestRows -Path $tempManifestPath   # same Export-Csv code path -Generate uses
+    $tempIndexPath = Join-Path $tempDir 'index.md'
+    $tempExceptionsPath = Join-Path $tempDir 'exceptions.md'
+    Write-TextFileLfNoBom -Path $tempIndexPath -Text (Build-ArchiveIndexMarkdown -ManifestRows $tempManifestRows -ArchiveBlobSha $stagedArchive.Identity -ArchiveRawFileSha256 (Get-Sha256Hex -Bytes $stagedArchive.Bytes))
+    Write-TextFileLfNoBom -Path $tempExceptionsPath -Text (Build-ExceptionsMarkdown -Report $tempReport)
+
+    function Get-FilteredCandidateBlobId {
+        param([string]$RelPath, [string]$CandidatePath)
+        $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('hash-object --path="{0}" -- "{1}"' -f $RelPath, $CandidatePath)
+        if ($r.ExitCode -ne 0) { throw "git hash-object --path=$RelPath failed: $($r.StdErr)" }
+        return $r.StdOut.Trim()
+    }
+
+    function Get-StagedBlobIdOrNull {
+        param([string]$RelPath)
+        try { return Get-GitObjectId -RepoRoot $RepoRoot -Spec (':{0}' -f $RelPath) }
+        catch { return $null }
+    }
+
+    # Compare exact candidate blob identities after Git applies the path's clean
+    # filter. This is byte-exact for what the commit will contain and remains
+    # correct under core.autocrlf/attributes.
+    $freshManifestId = Get-FilteredCandidateBlobId -RelPath $ManifestPath -CandidatePath $tempManifestPath
+    $freshIndexId = Get-FilteredCandidateBlobId -RelPath $IndexPath -CandidatePath $tempIndexPath
+    $freshExceptionsId = Get-FilteredCandidateBlobId -RelPath $ExceptionsPath -CandidatePath $tempExceptionsPath
+    $stagedManifestId = Get-StagedBlobIdOrNull -RelPath $ManifestPath
+    $stagedIndexId = Get-StagedBlobIdOrNull -RelPath $IndexPath
+    $stagedExceptionsId = Get-StagedBlobIdOrNull -RelPath $ExceptionsPath
+
+    $mismatches = New-Object System.Collections.Generic.List[string]
+    if ($null -eq $stagedManifestId -or $stagedManifestId -ne $freshManifestId) { $mismatches.Add('ARCHIVE_MANIFEST.csv (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
+    if ($null -eq $stagedIndexId -or $stagedIndexId -ne $freshIndexId) { $mismatches.Add('ARCHIVE_INDEX.md (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
+    if ($null -eq $stagedExceptionsId -or $stagedExceptionsId -ne $freshExceptionsId) { $mismatches.Add('RECONCILE_EXCEPTIONS.md (staged blob) is not byte-identical to a fresh -Generate candidate after Git clean filters') }
+
+    if ($mismatches.Count -gt 0) {
+        Write-Host '[precommit-staged] BLOCK: staged artifact(s) inconsistent with staged archive+active:'
+        foreach ($m in $mismatches) { Write-Host ('  - ' + $m) }
+        exit 1
+    }
+} finally {
+    if ($tempDir) { Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue }
+}
+
+Write-Host '[precommit-staged] PASS -- staged protected-set content is chain-consistent and artifacts are in sync'
+exit 0

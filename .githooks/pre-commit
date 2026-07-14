@@ -1,16 +1,39 @@
 #!/bin/sh
-# EA_LAB anti-drift pre-commit guard (see PROJECT_STATE.md section 0.5).
-# Runs scripts/check_state.ps1 -Strict; blocks the commit if docs drift.
-# Bypass once with:  git commit --no-verify
+# EA_LAB anti-drift pre-commit guard (see PROJECT_STATE.md section 0.5) +
+# ORDER-103 Contract C1-ENFORCE Fix 2: fail-closed staged-snapshot protected-set
+# guard (scripts/check_precommit_staged.ps1).
+#
+# This hook enforces two independent things:
+#   1. scripts/check_state.ps1 -Strict on every commit (unchanged behavior).
+#   2. scripts/check_precommit_staged.ps1 -- ONLY does real work when a
+#      PROTECTED-SET file (the archive, AGENT_TASKBOARD.md, or one of the 3
+#      generated docs/memory_control artifacts) is staged; otherwise it is a
+#      fast no-op pass. Reads the git INDEX (staged bytes), never the working
+#      tree, so `git commit` always judges what will actually land.
+#
+# Fail-CLOSED: if PowerShell cannot be found at all, this hook BLOCKS the
+# commit (exit 1) with the diagnostic string below -- it does not silently
+# skip the checks the way the pre-ORDER-103 version of this hook used to.
 ps=$(command -v powershell.exe 2>/dev/null || command -v pwsh 2>/dev/null || true)
 if [ -z "$ps" ]; then
-  echo "[pre-commit] PowerShell not found - skipping check_state.ps1"
-  exit 0
+  echo "PRECOMMIT-FAIL-CLOSED: PowerShell not found (powershell.exe/pwsh) -- cannot run check_state.ps1 / check_precommit_staged.ps1, blocking commit"
+  exit 1
 fi
+
 "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_state.ps1 -Strict
 rc=$?
 if [ "$rc" -ne 0 ]; then
   echo ""
-  echo "[pre-commit] doc drift detected (above). fix it, or bypass: git commit --no-verify"
+  echo "[pre-commit] doc drift detected (above) -- check_state.ps1 -Strict failed."
+  exit $rc
 fi
-exit $rc
+
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_precommit_staged.ps1
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] protected-set staged-snapshot check failed (above) -- ORDER-103 Fix 2."
+  exit $rc
+fi
+
+exit 0

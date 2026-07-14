@@ -39,8 +39,8 @@
 .PARAMETER Strict
     READ-ONLY (same as -Audit: never writes the manifest/index/exceptions report). Exit
     0 only if fully clean -- fully clean now means every raw policy exception has been
-    CANONICALLY REVIEWED (ORDER-102 Contract C1: closed via a REVIEW-block linkage or a
-    C1-CLOSURE block; see the CONTRACT C1 section below), not merely "zero raw
+    CANONICALLY REVIEWED (Contract C1: closed by an exact Source-A binding record or
+    a C1-CLOSURE row; see the CONTRACT C1 section below), not merely "zero raw
     exceptions". Exit 1 if any UNRESOLVED policy exception remains (raw minus
     canonically-reviewed; no integrity failures). Exit 2 if any INTEGRITY/tooling
     failure exists.
@@ -49,9 +49,11 @@
     A raw policy exception from the exception scan can be closed two ways, both
     READ-ONLY and both reported separately (raw_detected / canonically_reviewed /
     unresolved counts, never silently merged):
-      Source A -- REVIEW-BLOCK LINKAGE: any raw exception whose canonical_id is
-        covered by a block matching header '^## REVIEW ORDER-<canonicalid>' with a
-        REVIEWED/REVIEWED-CLOSED status verb is closed.
+      Source A -- EXACT BINDING RECORD: an appended
+        '## C1-ENFORCE-SOURCEA-BINDING' block closes only the ONE raw exception
+        whose exact (kind, block_id, block_sha256) tuple matches its binding row.
+        A sha mismatch is STALE (reported, not honored); canonical id or a bare
+        REVIEW-block match is never a wildcard closure.
       Source B -- C1-CLOSURE BLOCK: a single '## C1-CLOSURE' block (status
         REVIEWED(Opus, ...)) containing a markdown table with columns
         kind | block_id | block_sha256 | disposition | evidence. Each row closes
@@ -122,7 +124,12 @@ param(
     [switch]$SkipArtifacts,
     [string]$ManifestPath = '',
     [string]$IndexPath = '',
-    [string]$ExceptionsPath = ''
+    [string]$ExceptionsPath = '',
+
+    # ORDER-103 Fix 1: append-CHAIN integrity gate (checkpoint-pinned, first-parent).
+    [string]$ChainCheckpointSha = '0ced19485c6c6ce9a23541f785ab82bae4fcad25',
+    [string]$ChainArchivePath = 'ARCHIVE_TASKBOARD_2026-07A.md',
+    [switch]$SkipChainCheck
 )
 
 # Resolve RepoRoot robustly (was a param default `Split-Path -Parent $PSScriptRoot`,
@@ -256,14 +263,43 @@ function Get-GitBlobBytes {
     return $ms.ToArray()
 }
 
+function Get-GitFilteredBlobBytes {
+    <# Materialize a committed blob exactly as Git would place it in the working
+       tree for $Path (attributes + checkout filters, including autocrlf). This
+       lets working-tree integrity checks compare raw bytes without treating the
+       checkout's legitimate smudge conversion as tamper. #>
+    param([string]$RepoRoot, [string]$Ref, [string]$Path)
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'git'
+    $psi.Arguments = 'cat-file --filters --path="{0}" "{1}:{0}"' -f $Path, $Ref
+    $psi.WorkingDirectory = $RepoRoot
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $ms = New-Object System.IO.MemoryStream
+    $proc.StandardOutput.BaseStream.CopyTo($ms)
+    $stderrText = $proc.StandardError.ReadToEnd()
+    $proc.WaitForExit()
+    if ($proc.ExitCode -ne 0) {
+        throw ('git cat-file --filters {0}:{1} failed (exit {2}): {3}' -f $Ref, $Path, $proc.ExitCode, $stderrText)
+    }
+    return $ms.ToArray()
+}
+
 function Get-SourceBytes {
     param([string]$RepoRoot, [string]$SourceSpec)
-    if ($SourceSpec -match '^GIT:(.+?):(.+)$') {
+    # An empty ref is the git-index/staged snapshot: GIT::<path> maps to
+    # `git show :<path>`.  This keeps the bytes and identity tied to the exact
+    # object that a pending commit will contain instead of mixing FILE bytes
+    # with HEAD:<path> identity.
+    if ($SourceSpec -match '^GIT:(.*?):(.+)$') {
         return Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $Matches[1] -Path $Matches[2]
     } elseif ($SourceSpec -match '^FILE:(.+)$') {
         return [System.IO.File]::ReadAllBytes($Matches[1])
     } else {
-        throw "Unrecognized source spec (expected GIT:ref:path or FILE:path): $SourceSpec"
+        throw "Unrecognized source spec (expected GIT:ref:path, GIT::path for staged content, or FILE:path): $SourceSpec"
     }
 }
 
@@ -279,6 +315,7 @@ function Get-ArchiveContentIdentity {
         unrelated commit -> byte-identical manifest+index" hold.
 
         - SourceSpec "GIT:<ref>:<path>"  -> resolved directly as `git rev-parse <ref>:<path>`.
+        - SourceSpec "GIT::<path>"       -> staged/index identity via `git rev-parse :<path>`.
         - SourceSpec "FILE:<abs-path>"   -> path is made repo-relative and resolved
           as `git rev-parse HEAD:<rel-path>` (the working-tree file must be committed;
           this is the normal real-repo case where CurrentArchiveSource defaults to
@@ -286,7 +323,7 @@ function Get-ArchiveContentIdentity {
     #>
     param([string]$RepoRoot, [string]$SourceSpec)
 
-    if ($SourceSpec -match '^GIT:(.+?):(.+)$') {
+    if ($SourceSpec -match '^GIT:(.*?):(.+)$') {
         $ref = $Matches[1]
         $relPath = $Matches[2]
     } elseif ($SourceSpec -match '^FILE:(.+)$') {
@@ -301,7 +338,7 @@ function Get-ArchiveContentIdentity {
         }
         $ref = 'HEAD'
     } else {
-        throw "Get-ArchiveContentIdentity: unrecognized source spec (expected GIT:ref:path or FILE:path): $SourceSpec"
+        throw "Get-ArchiveContentIdentity: unrecognized source spec (expected GIT:ref:path, GIT::path for staged content, or FILE:path): $SourceSpec"
     }
 
     $spec = '{0}:{1}' -f $ref, $relPath
@@ -310,6 +347,338 @@ function Get-ArchiveContentIdentity {
         throw "Get-ArchiveContentIdentity: 'git rev-parse $spec' failed -- is the archive file committed at that ref/path?"
     }
     return ([string]$out).Trim()
+}
+
+# ============================================================================
+# ORDER-103 Fix 4 -- SINGLE SNAPSHOT-SOURCE IDENTITY
+#
+# Problem this closes: the old FILE:/GIT: split had BYTES coming from one place
+# (working-tree file / a git blob) and IDENTITY coming from another (always
+# Get-ArchiveContentIdentity, which for a FILE: source resolves via HEAD:<path>
+# -- i.e. the COMMITTED blob, not the working-tree bytes actually being hashed).
+# That mixed-source design is fine for C0 Audit/Strict (deliberately left
+# unchanged below -- see the .NOTES on Get-ArchiveContentIdentity) but is unsafe
+# for the append-CHAIN gate (Fix 1) and the pre-commit hook (Fix 2), which must
+# reason about the STAGED candidate specifically: bytes and identity have to be
+# the *same* git object, not two different reads that can diverge (e.g. a clean
+# filter normalizing CRLF->LF on `git add` while a naive `git hash-object
+# <working-file>` would hash the raw un-normalized working-tree bytes instead).
+#
+# Get-Snapshot below is the one primitive both Fix 1 (chain walk) and Fix 2
+# (hook) use. It always reads BYTES and IDENTITY from the SAME underlying git
+# object:
+#   Staged    -> bytes = `git show :<path>`         identity = `git rev-parse :<path>`
+#   Committed -> bytes = `git show <sha>:<path>`     identity = `git rev-parse <sha>:<path>`
+#   Working   -> bytes = raw file bytes off disk     identity = `git hash-object <file>`
+#                (Working is provided for completeness/diagnostics only -- Fix 1's
+#                chain walk and Fix 2's hook both use Staged, never Working, for
+#                exactly the CRLF/clean-filter reason above; see the CRLF-parity
+#                negTest.)
+# ============================================================================
+
+function Invoke-GitRaw {
+    <# Generic `git <args>` runner (RepoRoot as cwd), returns ExitCode/StdOut/StdErr.
+       Used by every Fix 1/Fix 4 git primitive below so they share one process-spawn
+       implementation instead of each hand-rolling ProcessStartInfo. #>
+    param([string]$RepoRoot, [string]$Arguments)
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'git'
+    $psi.Arguments = $Arguments
+    $psi.WorkingDirectory = $RepoRoot
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+    $stdout = $proc.StandardOutput.ReadToEnd()
+    $stderr = $proc.StandardError.ReadToEnd()
+    $proc.WaitForExit()
+    return [pscustomobject]@{ ExitCode = $proc.ExitCode; StdOut = $stdout; StdErr = $stderr }
+}
+
+function Get-GitObjectId {
+    <# `git rev-parse <spec>` (e.g. ":path", "<sha>:path", "<sha>") -> trimmed 40-char sha. #>
+    param([string]$RepoRoot, [string]$Spec)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-parse "{0}"' -f $Spec)
+    if ($r.ExitCode -ne 0) { throw "git rev-parse $Spec failed (exit $($r.ExitCode)): $($r.StdErr)" }
+    $val = $r.StdOut.Trim()
+    if (-not $val) { throw "git rev-parse $Spec returned empty output" }
+    return $val
+}
+
+function Get-GitHashObjectId {
+    <# `git hash-object -- <relpath>` against the RAW working-tree bytes (no clean
+       filter applied) -- provided for the Working snapshot mode / diagnostics only.
+       NOT used by Fix 1 chain walk or Fix 2 hook (see module doc comment above). #>
+    param([string]$RepoRoot, [string]$RelPath)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('hash-object -- "{0}"' -f $RelPath)
+    if ($r.ExitCode -ne 0) { throw "git hash-object $RelPath failed (exit $($r.ExitCode)): $($r.StdErr)" }
+    return $r.StdOut.Trim()
+}
+
+function Get-Snapshot {
+    <#
+        ORDER-103 Fix 4 primitive. Returns [pscustomobject]@{ Bytes; Identity; Mode }
+        where Bytes and Identity always come from the SAME git object (never a
+        working-tree read paired with a committed-ref identity, or vice versa).
+    #>
+    param(
+        [string]$RepoRoot,
+        [ValidateSet('Staged', 'Committed', 'Working')]
+        [string]$Mode,
+        [string]$RelPath,
+        [string]$CommitSha = ''
+    )
+    switch ($Mode) {
+        'Staged' {
+            $bytes = Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $RelPath
+            $identity = Get-GitObjectId -RepoRoot $RepoRoot -Spec (':{0}' -f $RelPath)
+        }
+        'Committed' {
+            if (-not $CommitSha) { throw 'Get-Snapshot -Mode Committed requires -CommitSha' }
+            $bytes = Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $CommitSha -Path $RelPath
+            $identity = Get-GitObjectId -RepoRoot $RepoRoot -Spec ('{0}:{1}' -f $CommitSha, $RelPath)
+        }
+        'Working' {
+            $fullPath = Join-Path $RepoRoot $RelPath
+            $bytes = [System.IO.File]::ReadAllBytes($fullPath)
+            $identity = Get-GitHashObjectId -RepoRoot $RepoRoot -RelPath $RelPath
+        }
+    }
+    return [pscustomobject]@{ Bytes = $bytes; Identity = $identity; Mode = $Mode }
+}
+
+# ============================================================================
+# ORDER-103 Fix 1 -- APPEND-CHAIN INTEGRITY (checkpoint-pinned, first-parent,
+# raw-byte prefix-chain)
+# ============================================================================
+
+function Test-BytePrefix {
+    <# True iff $Prefix's bytes are byte-identical to the leading $Prefix.Length
+       bytes of $Full (Full may be longer -- that's the "extension" case). #>
+    param([byte[]]$Prefix, [byte[]]$Full)
+    if ($Prefix.Length -gt $Full.Length) { return $false }
+    for ($i = 0; $i -lt $Prefix.Length; $i++) {
+        if ($Prefix[$i] -ne $Full[$i]) { return $false }
+    }
+    return $true
+}
+
+function Test-SuffixOpensNewH2Block {
+    <# An appended archive block may be separated from the preceding block by
+       blank lines and at most one Markdown horizontal-rule line (`---`). The
+       first remaining line must be a column-zero H2 heading. Anything else is
+       prose/a table row/etc. extending the prior final block and must fail. #>
+    param([string]$NormalizedSuffixText)
+
+    $seenHorizontalRule = $false
+    foreach ($line in ($NormalizedSuffixText -split "`n")) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line.Trim() -eq '---') {
+            if ($seenHorizontalRule) { return $false }
+            $seenHorizontalRule = $true
+            continue
+        }
+        return $line.StartsWith('## ')
+    }
+    return $false
+}
+
+function Test-IsArchiveInterBlockSeparator {
+    <# True when the whole text is only the permitted separator region between
+       two H2 blocks: blank lines and at most one `---` line. #>
+    param([string]$Text)
+    if ($Text.Length -eq 0) { return $true }
+    $seenHorizontalRule = $false
+    foreach ($line in ($Text -split "`n")) {
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line.Trim() -eq '---') {
+            if ($seenHorizontalRule) { return $false }
+            $seenHorizontalRule = $true
+            continue
+        }
+        return $false
+    }
+    return $true
+}
+
+function Test-GitIsAncestor {
+    param([string]$RepoRoot, [string]$AncestorSha, [string]$Ref)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('merge-base --is-ancestor "{0}" "{1}"' -f $AncestorSha, $Ref)
+    if ($r.ExitCode -eq 0) { return $true }
+    if ($r.ExitCode -eq 1) { return $false }
+    throw "git merge-base --is-ancestor $AncestorSha $Ref failed unexpectedly (exit $($r.ExitCode)): $($r.StdErr)"
+}
+
+function Test-GitCommitObjectExists {
+    param([string]$RepoRoot, [string]$Sha)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('cat-file -e "{0}^{{commit}}"' -f $Sha)
+    return ($r.ExitCode -eq 0)
+}
+
+function Get-GitFirstParentChain {
+    <# Ordered array of full SHAs from $FromSha through $ToRef, inclusive, using
+       only the literal first-parent line of $ToRef. An any-path ancestor is not
+       sufficient: $FromSha itself must appear in that line. #>
+    param([string]$RepoRoot, [string]$FromSha, [string]$ToRef)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-list --first-parent --reverse "{0}"' -f $ToRef)
+    if ($r.ExitCode -ne 0) { throw "git rev-list --first-parent --reverse $ToRef failed (exit $($r.ExitCode)): $($r.StdErr)" }
+    $line = @($r.StdOut -split "`r?`n" | Where-Object { $_ -ne '' })
+    $checkpointIndex = -1
+    for ($i = 0; $i -lt $line.Count; $i++) {
+        if ([string]::Equals($line[$i], $FromSha, [System.StringComparison]::Ordinal)) {
+            $checkpointIndex = $i
+            break
+        }
+    }
+    if ($checkpointIndex -lt 0) {
+        throw "TRUSTED CHECKPOINT $FromSha is not a literal member of git rev-list --first-parent $ToRef"
+    }
+    return @($line[$checkpointIndex..($line.Count - 1)])
+}
+
+function Get-GitCommitParents {
+    <# Returns a commit's parent SHAs in Git's recorded order (first parent first).
+       Merge handling deliberately uses this order because ORDER-103 defines the
+       checkpoint walk by first-parent semantics. #>
+    param([string]$RepoRoot, [string]$CommitSha)
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-list --parents -n 1 "{0}"' -f $CommitSha)
+    if ($r.ExitCode -ne 0) { throw "git rev-list --parents -n 1 $CommitSha failed (exit $($r.ExitCode)): $($r.StdErr)" }
+    $parts = @($r.StdOut.Trim() -split '\s+' | Where-Object { $_ })
+    if ($parts.Count -eq 0 -or $parts[0] -ne $CommitSha) {
+        throw "git rev-list --parents returned an unexpected row for ${CommitSha}: '$($r.StdOut.Trim())'"
+    }
+    if ($parts.Count -le 1) { return @() }
+    return @($parts[1..($parts.Count - 1)])
+}
+
+function Invoke-ArchiveChainIntegrityCheck {
+    <#
+        ORDER-103 Fix 1. Walks the FIRST-PARENT commit chain from the TRUSTED
+        CHECKPOINT to $HeadRef (optionally one further synthetic step to the
+        STAGED index snapshot, for the pre-commit hook -- Fix 2/-IncludeStaged),
+        over the archive file, and requires every step's archive bytes to be a
+        raw-byte PREFIX-EXTENSION of the previous step's archive bytes, where any
+        non-empty suffix must open a NEW '## ' (H2) block boundary (a suffix that
+        only extends/mutates the meaning of the prior last block is rejected).
+
+        Merge rule (explicit first-parent DAG semantics): merges may exist in the
+        first-parent walk, but a merge commit MUST NOT change the archive relative
+        to its first parent. Legitimate archive appends are plain non-merge commits;
+        rejecting archive-changing merges prevents content from entering through a
+        non-first parent without being validated as a first-parent append.
+
+        FAIL-CLOSED (IsClean=$false) on: checkpoint object missing (shallow clone
+        lacking it, or wrong SHA); checkpoint not an ancestor of $HeadRef (history
+        rewrite/force-push/squash); checkpoint reachable only outside $HeadRef's
+        literal first-parent line; any git command failure; archive path unreadable
+        at any step (renamed/deleted mid-chain); a non-prefix mutation at any step;
+        a suffix that does not open a new H2 boundary. A fresh full clone passes; a
+        detached HEAD with full ancestry passes (detached-ness alone is never a
+        failure reason).
+
+        Threat-model boundary (documented, not silently promised): this defends
+        against tamper-then-regenerate within reachable history rooted at the
+        checkpoint, and detects checkpoint-severing history rewrites. It does NOT
+        guarantee safety against an attacker who controls the remote and force-
+        pushes a rewritten line that also rewrites/removes the checkpoint commit
+        itself out of every clone's reachable history -- that requires a
+        protected ref / signed checkpoint / external receipt, out of scope here.
+    #>
+    param(
+        [string]$RepoRoot,
+        [string]$CheckpointSha,
+        [string]$ArchiveRelPath,
+        [string]$HeadRef = 'HEAD',
+        [switch]$IncludeStaged
+    )
+
+    if (-not (Test-GitCommitObjectExists -RepoRoot $RepoRoot -Sha $CheckpointSha)) {
+        return [pscustomobject]@{ IsClean = $false; Reason = "TRUSTED CHECKPOINT $CheckpointSha not found as a commit object in this repository (missing/wrong SHA, or a shallow clone that does not carry it) -- fail-closed"; Steps = @(); IsShallow = $null }
+    }
+
+    $isShallowResult = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'rev-parse --is-shallow-repository'
+    $isShallow = ($isShallowResult.ExitCode -eq 0) -and ($isShallowResult.StdOut.Trim() -eq 'true')
+
+    $ancestorOk = $false
+    try {
+        $ancestorOk = Test-GitIsAncestor -RepoRoot $RepoRoot -AncestorSha $CheckpointSha -Ref $HeadRef
+    } catch {
+        return [pscustomobject]@{ IsClean = $false; Reason = "checkpoint-ancestry check failed: $($_.Exception.Message)"; Steps = @(); IsShallow = $isShallow }
+    }
+    if (-not $ancestorOk) {
+        return [pscustomobject]@{ IsClean = $false; Reason = "TRUSTED CHECKPOINT $CheckpointSha is NOT an ancestor of $HeadRef -- history rewrite/force-push/squash suspected (fail-closed)"; Steps = @(); IsShallow = $isShallow }
+    }
+
+    $chain = $null
+    try {
+        $chain = Get-GitFirstParentChain -RepoRoot $RepoRoot -FromSha $CheckpointSha -ToRef $HeadRef
+    } catch {
+        if ($_.Exception.Message -match 'not a literal member of git rev-list --first-parent') {
+            return [pscustomobject]@{ IsClean = $false; Reason = "TRUSTED CHECKPOINT $CheckpointSha is reachable only via a non-first-parent path relative to $HeadRef (for example, a merge's second parent) -- rejected, possible checkpoint laundering (fail-closed)"; Steps = @(); IsShallow = $isShallow }
+        }
+        return [pscustomobject]@{ IsClean = $false; Reason = "first-parent chain walk failed: $($_.Exception.Message)"; Steps = @(); IsShallow = $isShallow }
+    }
+    if ($IncludeStaged) { $chain = @($chain) + @('STAGED') }
+
+    $steps = New-Object System.Collections.Generic.List[object]
+
+    for ($i = 1; $i -lt $chain.Count; $i++) {
+        $prevSha = $chain[$i - 1]
+        $curSha  = $chain[$i]
+
+        try {
+            $prevBytes = if ($prevSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $prevSha -Path $ArchiveRelPath }
+        } catch {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+        try {
+            $curBytes = if ($curSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $curSha -Path $ArchiveRelPath }
+        } catch {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        if ($curSha -ne 'STAGED') {
+            try {
+                $parents = @(Get-GitCommitParents -RepoRoot $RepoRoot -CommitSha $curSha)
+            } catch {
+                return [pscustomobject]@{ IsClean = $false; Reason = "merge-parent inspection failed at ${curSha}: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            }
+            if ($parents.Count -gt 1) {
+                if ($parents[0] -ne $prevSha) {
+                    return [pscustomobject]@{ IsClean = $false; Reason = "first-parent chain mismatch at merge commit $curSha (walker previous=$prevSha, recorded first parent=$($parents[0])) -- fail-closed"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+                }
+                $mergeArchiveUnchanged = (($prevBytes.Length -eq $curBytes.Length) -and (Test-BytePrefix -Prefix $prevBytes -Full $curBytes))
+                if (-not $mergeArchiveUnchanged) {
+                    return [pscustomobject]@{ IsClean = $false; Reason = "archive changed via merge commit $curSha relative to first parent $prevSha -- rejected (merges must not change the archive; content may have arrived via a non-first-parent)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+                }
+            }
+        }
+
+        if (($prevBytes.Length -eq $curBytes.Length) -and (Test-BytePrefix -Prefix $prevBytes -Full $curBytes)) {
+            $steps.Add([pscustomobject]@{ From = $prevSha; To = $curSha; Changed = $false })
+            continue
+        }
+
+        if ($curBytes.Length -lt $prevBytes.Length) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive shrank from $prevSha ($($prevBytes.Length) bytes) to $curSha ($($curBytes.Length) bytes) -- truncation/removal detected (fail-closed)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        if (-not (Test-BytePrefix -Prefix $prevBytes -Full $curBytes)) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive at $curSha is NOT a raw-byte prefix-extension of $prevSha -- earlier bytes were mutated (fail-closed; manifest regeneration cannot bless this)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        $suffixBytes = New-Object 'byte[]' ($curBytes.Length - $prevBytes.Length)
+        [Array]::Copy($curBytes, $prevBytes.Length, $suffixBytes, 0, $suffixBytes.Length)
+        $suffixText = Get-NormalizedTextFromBytes -Bytes $suffixBytes
+        if (-not (Test-SuffixOpensNewH2Block -NormalizedSuffixText $suffixText)) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive suffix added between $prevSha and $curSha does not open with a new '## ' (H2) block boundary -- looks like it extends/mutates the prior final block's meaning (fail-closed)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        $steps.Add([pscustomobject]@{ From = $prevSha; To = $curSha; Changed = $true; AddedBytes = ($curBytes.Length - $prevBytes.Length) })
+    }
+
+    return [pscustomobject]@{ IsClean = $true; Reason = $null; Steps = $steps.ToArray(); IsShallow = $isShallow; ChainLength = $chain.Count }
 }
 
 # ============================================================================
@@ -476,6 +845,94 @@ function Add-Classification {
 function Get-ClassifiedBlocks {
     param([string]$Text, [string]$SourceTag)
     return @((Get-Blocks -Text $Text -SourceTag $SourceTag) | Add-Classification)
+}
+
+function Get-BytesBeforeFirstH2 {
+    <# Returns every raw byte before the first column-zero `## ` heading. The
+       pre-H2 region is not part of any parsed block and is never appendable; it
+       therefore needs its own comparison. If no H2 exists, the whole file is
+       preamble. #>
+    param([byte[]]$Bytes)
+    $start = -1
+    for ($i = 0; $i -le ($Bytes.Length - 3); $i++) {
+        $atLineStart = ($i -eq 0) -or ($Bytes[$i - 1] -eq 10)
+        if ($atLineStart -and $Bytes[$i] -eq 35 -and $Bytes[$i + 1] -eq 35 -and $Bytes[$i + 2] -eq 32) {
+            $start = $i
+            break
+        }
+    }
+    $length = if ($start -ge 0) { $start } else { $Bytes.Length }
+    $result = New-Object 'byte[]' $length
+    if ($length -gt 0) { [Array]::Copy($Bytes, 0, $result, 0, $length) }
+    return $result
+}
+
+function Invoke-ArchiveWorkingTreeExtensionCheck {
+    <# ORDER-103 rework, BLOCKER 1: close checkpoint->HEAD->working durability.
+       The committed chain remains raw-byte exact. This final HEAD->working leg
+       deliberately compares canonical-LF H2 block hashes because a checkout may
+       be CRLF/mixed while the git blob is LF (core.autocrlf=true). Every HEAD H2
+       block must remain byte-identical after LF normalization and in the same
+       ordinal position; only whole trailing blocks may be added. Bytes before
+       the first H2 are outside the parser and must match byte-for-byte against
+       HEAD materialized through Git's own checkout filters. #>
+    param(
+        [string]$RepoRoot,
+        [string]$ArchiveRelPath,
+        [byte[]]$CurrentBytes
+    )
+
+    try {
+        $headBytes = Get-GitBlobBytes -RepoRoot $RepoRoot -Ref 'HEAD' -Path $ArchiveRelPath
+        $headCheckoutBytes = Get-GitFilteredBlobBytes -RepoRoot $RepoRoot -Ref 'HEAD' -Path $ArchiveRelPath
+        $headPreamble = Get-BytesBeforeFirstH2 -Bytes $headCheckoutBytes
+        $currentPreamble = Get-BytesBeforeFirstH2 -Bytes $CurrentBytes
+        $headBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $headBytes) -SourceTag 'head-archive')
+        $currentBlocks = @(Get-ClassifiedBlocks -Text (Get-NormalizedTextFromBytes -Bytes $CurrentBytes) -SourceTag 'working-archive')
+    } catch {
+        return [pscustomobject]@{ IsClean = $false; Reason = "HEAD->working archive block-prefix check failed to read/classify content: $($_.Exception.Message)"; HeadBlockCount = $null; CurrentBlockCount = $null; AppendedBlockCount = $null }
+    }
+
+    $preambleMatches = (($headPreamble.Length -eq $currentPreamble.Length) -and (Test-BytePrefix -Prefix $headPreamble -Full $currentPreamble))
+    if (-not $preambleMatches) {
+        return [pscustomobject]@{
+            IsClean = $false
+            Reason = "working archive pre-H2 preamble differs byte-for-byte from HEAD materialized through Git checkout filters (expected=$($headPreamble.Length) bytes, working=$($currentPreamble.Length) bytes) -- prepended/mutated content before the first '## ' heading detected (fail-closed)"
+            HeadBlockCount = $headBlocks.Count
+            CurrentBlockCount = $currentBlocks.Count
+            AppendedBlockCount = [Math]::Max(0, $currentBlocks.Count - $headBlocks.Count)
+        }
+    }
+
+    if ($currentBlocks.Count -lt $headBlocks.Count) {
+        return [pscustomobject]@{ IsClean = $false; Reason = "working archive has fewer H2 blocks than HEAD ($($currentBlocks.Count) < $($headBlocks.Count)) -- removal/truncation detected (fail-closed)"; HeadBlockCount = $headBlocks.Count; CurrentBlockCount = $currentBlocks.Count; AppendedBlockCount = 0 }
+    }
+
+    for ($i = 0; $i -lt $headBlocks.Count; $i++) {
+        if ($headBlocks[$i].Sha256 -ne $currentBlocks[$i].Sha256) {
+            # Get-Blocks assigns bytes before the next H2 to the previous block.
+            # Therefore a legitimate `blank/---/blank + new H2` append makes the
+            # former HEAD-final block appear to have gained separator bytes. Treat
+            # that narrow region as delimiter ownership, not a content mutation.
+            $isFormerFinalBlockWithSeparator = $false
+            if (($i -eq ($headBlocks.Count - 1)) -and ($currentBlocks.Count -gt $headBlocks.Count) -and
+                $currentBlocks[$i].Content.StartsWith($headBlocks[$i].Content, [System.StringComparison]::Ordinal)) {
+                $separatorTail = $currentBlocks[$i].Content.Substring($headBlocks[$i].Content.Length)
+                $isFormerFinalBlockWithSeparator = Test-IsArchiveInterBlockSeparator -Text $separatorTail
+            }
+            if ($isFormerFinalBlockWithSeparator) { continue }
+
+            return [pscustomobject]@{
+                IsClean = $false
+                Reason = "working archive H2 block #$($i + 1) is not the canonical-LF byte-identical prefix block from HEAD (HEAD='$($headBlocks[$i].Header)', working='$($currentBlocks[$i].Header)') -- mutation/reorder detected (fail-closed; manifest regeneration cannot bless this)"
+                HeadBlockCount = $headBlocks.Count
+                CurrentBlockCount = $currentBlocks.Count
+                AppendedBlockCount = [Math]::Max(0, $currentBlocks.Count - $headBlocks.Count)
+            }
+        }
+    }
+
+    return [pscustomobject]@{ IsClean = $true; Reason = $null; HeadBlockCount = $headBlocks.Count; CurrentBlockCount = $currentBlocks.Count; AppendedBlockCount = ($currentBlocks.Count - $headBlocks.Count) }
 }
 
 # ============================================================================
@@ -860,7 +1317,7 @@ function Invoke-ExceptionScan {
 }
 
 # ============================================================================
-# CONTRACT C1 -- CANONICAL REVIEW LINKAGE (closure sources A + B)
+# CONTRACT C1 -- EXACT-ID CLOSURE SOURCES A + B
 # ============================================================================
 #
 # ORDER-102 Contract C1 upgrade: policy exceptions raised by Invoke-ExceptionScan
@@ -868,19 +1325,12 @@ function Invoke-ExceptionScan {
 # layer that closes a subset of those raw exceptions via two canonical sources,
 # reported separately (never silently folded back into "raw"):
 #
-#   Source A -- REVIEW-BLOCK LINKAGE: a block whose header (after "## ") matches
-#   '^REVIEW ORDER-<canonicalid>' AND whose backtick status verb is terminal with
-#   label REVIEWED or REVIEWED/CLOSED is a canonical review of every ORDER-<id>
-#   referenced anywhere in that same header. ANY raw policy exception (of any of
-#   the 3 kinds Invoke-ExceptionScan can produce) whose CanonicalId is covered by
-#   such a block is CLOSED. This is deliberately broader than the pre-existing
-#   ad-hoc $reviewedIds check inside the terminal-no-linked-review branch above
-#   (which only ever suppressed that ONE kind, silently, before the exception was
-#   even counted as "raw") -- Source A additionally closes non-terminal-in-archive
-#   and cross-active-and-archive exceptions for the same canonical id, and reports
-#   the closure explicitly instead of hiding it. The two mechanisms overlap for
-#   terminal-no-linked-review by design (both keyed on canonical id); left as-is
-#   rather than deleted so raw_detected keeps its current, already-measured value.
+#   Source A -- C1-ENFORCE-SOURCEA-BINDING: one or more appended, REVIEWED binding
+#   blocks contain kind | block_id | block_sha256 | review_ref rows. A row closes
+#   only the ONE raw exception matching the exact (kind, block_id, current sha256)
+#   tuple. Canonical id and review_ref are traceability metadata, never wildcard
+#   closure authority. A stale hash stays unresolved; malformed, unknown, or
+#   duplicate rows are integrity failures.
 #
 #   Source B -- C1-CLOSURE BLOCK: a single canonical block, header starting
 #   '## C1-CLOSURE', status REVIEWED(Opus, ...), containing a markdown table with
@@ -895,31 +1345,6 @@ function Invoke-ExceptionScan {
 # Both sources are evaluated against blocks already read from the canonical
 # corpus (current-active + current-archive) -- no new IO.
 
-function Get-CanonicalReviewIds {
-    <#
-        Source A eligibility scan. Returns a HashSet[string] of every canonical id
-        covered by a qualifying REVIEW block found anywhere in $Blocks (both active
-        and archive corpora are expected to be passed in -- see the C1-CLOSURE spec
-        note "found in the canonical corpus (active taskboard or archive)").
-    #>
-    param($Blocks)
-    $ids = New-Object System.Collections.Generic.HashSet[string]
-    foreach ($b in $Blocks) {
-        if ($b.BlockType -ne 'REVIEW-NOTE') { continue }
-        $headerBody = $b.Header.Substring(3)
-        if ($headerBody -notmatch '^REVIEW ORDER-\d') { continue }   # must be "REVIEW ORDER-<canonicalid>", not any bare "REVIEW ..." note
-        if ($b.StatusClass -ne 'Terminal') { continue }
-        if ($b.StatusLabel -notmatch '^REVIEWED') { continue }        # REVIEWED or REVIEWED/CLOSED only
-        foreach ($id in $b.CanonicalIds) { [void]$ids.Add($id) }
-    }
-    # NOTE: `return $ids` would let PowerShell auto-enumerate the HashSet into the
-    # pipeline (0 elements -> $null at the call site, 1 element -> a bare string, only
-    # >=2 elements -> something array-like) instead of returning the HashSet object
-    # itself. The unary comma operator suppresses that enumeration so the caller always
-    # gets exactly one HashSet[string], regardless of how many ids it contains.
-    return ,$ids
-}
-
 function Find-C1ClosureBlocks {
     <# Returns every block whose header starts with the literal token "C1-CLOSURE". #>
     param($Blocks)
@@ -928,9 +1353,8 @@ function Find-C1ClosureBlocks {
         $headerBody = $b.Header.Substring(3)
         if ($headerBody -match '^C1-CLOSURE\b') { $found.Add($b) }
     }
-    # See the comma-operator note in Get-CanonicalReviewIds -- without it, a
-    # single-match List[object] unrolls to the bare block object (losing .Count),
-    # which would silently skip processing the one real C1-CLOSURE block.
+    # Suppress pipeline enumeration so a single match remains a List[object] with
+    # a reliable .Count instead of unrolling to the bare block object.
     return ,$found
 }
 
@@ -989,6 +1413,53 @@ function Get-C1ClosureTableRows {
     return $rows.ToArray()
 }
 
+function Find-SourceABindingBlocks {
+    <# Returns every block whose header starts with the literal token
+       "C1-ENFORCE-SOURCEA-BINDING" (ORDER-103 Fix 3). #>
+    param($Blocks)
+    $found = New-Object System.Collections.Generic.List[object]
+    foreach ($b in $Blocks) {
+        $headerBody = $b.Header.Substring(3)
+        if ($headerBody -match '^C1-ENFORCE-SOURCEA-BINDING\b') { $found.Add($b) }
+    }
+    # See the comma-operator note on Find-C1ClosureBlocks -- without it a single-match
+    # List[object] unrolls to the bare block (losing .Count).
+    return ,$found
+}
+
+function Get-SourceABindingTableRows {
+    <#
+        Parses the kind|block_id|block_sha256|review_ref table out of a single
+        C1-ENFORCE-SOURCEA-BINDING block's Content. Same tolerant parsing shape as
+        Get-C1ClosureTableRows (header row anywhere, markdown separator row skipped).
+    #>
+    param($Block)
+    $lines = $Block.Content -split "`n"
+    $rows = New-Object System.Collections.Generic.List[object]
+    $headerIdx = -1
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i].Trim()
+        if ($line -notmatch '^\|.*\|$') { continue }
+        $cells = @(ConvertFrom-MarkdownTableRow -Line $line)
+
+        if ($headerIdx -lt 0) {
+            $norm = @($cells | ForEach-Object { $_.ToLowerInvariant() })
+            if (($norm.Count -eq 4) -and ($norm[0] -eq 'kind') -and ($norm[1] -eq 'block_id') -and
+                ($norm[2] -eq 'block_sha256') -and ($norm[3] -eq 'review_ref')) {
+                $headerIdx = $i
+            }
+            continue
+        }
+        if ($i -eq ($headerIdx + 1) -and ($line -match '^\|?[\s:|-]+\|?$')) { continue }  # separator row
+        if ($cells.Count -lt 4) { continue }
+
+        $rows.Add([pscustomobject]@{
+            Kind = $cells[0]; BlockId = $cells[1]; BlockSha256 = $cells[2]; ReviewRef = $cells[3]
+        })
+    }
+    return $rows.ToArray()
+}
+
 function Invoke-ExceptionClosure {
     <#
         Applies Source A + Source B to $PolicyExceptions (the raw list from
@@ -996,6 +1467,18 @@ function Invoke-ExceptionClosure {
         Returns @{ Reviewed = [...]; Unresolved = [...]; IntegrityFailures = [...] }.
         Reviewed + Unresolved together are always a partition of $PolicyExceptions
         (every raw exception appears in exactly one of the two output lists).
+
+        ORDER-103 Fix 3: Source A no longer closes by canonical-id wildcard (any raw
+        exception whose canonical id happened to be covered by ANY REVIEWED
+        '## REVIEW ORDER-<id>' block anywhere in the corpus -- which let a REVIEW of
+        one block silently close an unrelated later block sharing the same id, e.g.
+        the real ORDER-071 hole this order exists to close). Source A now requires an
+        APPENDED '## C1-ENFORCE-SOURCEA-BINDING' block (append-only -- never edits the
+        REVIEW block or the target block) whose table row matches the EXACT
+        (kind, block_id, current block_sha256) triple -- same discipline Source B
+        already used. review_ref is carried for traceability (must reference an
+        operator traceability metadata only; closure itself is keyed on
+        (kind, block_id, sha), never on canonical id or review_ref.
     #>
     param($PolicyExceptions, $ActiveBlocks, $ArchiveBlocks)
 
@@ -1005,8 +1488,23 @@ function Invoke-ExceptionClosure {
 
     $closureIntegrity = New-Object System.Collections.Generic.List[object]
 
-    # --- Source A ---
-    $reviewedIdsA = Get-CanonicalReviewIds -Blocks $corpus
+    # --- Source A: locate + parse ALL '## C1-ENFORCE-SOURCEA-BINDING' blocks (ORDER-103
+    # Fix 3). Unlike Source B's C1-CLOSURE (at most one block, singular), binding blocks
+    # may be appended incrementally over time (each migration appends its own), so every
+    # matching block's rows are pooled together before dup/unknown detection.
+    $bindingBlocks = Find-SourceABindingBlocks -Blocks $corpus
+    $aRows = New-Object System.Collections.Generic.List[object]
+    foreach ($block in $bindingBlocks) {
+        if (-not (($block.StatusClass -eq 'Terminal') -and ($block.StatusLabel -match '^REVIEWED'))) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'sourcea-binding-not-reviewed'; Severity = 'integrity'
+                BlockId = $block.BlockId; Header = $block.Header
+                Detail = "C1-ENFORCE-SOURCEA-BINDING block found but its status is not a REVIEWED(...) verb (status='$($block.StatusLabel)') -- not parsed/honored"
+            })
+            continue
+        }
+        foreach ($row in @(Get-SourceABindingTableRows -Block $block)) { $aRows.Add($row) }
+    }
 
     # --- Source B: locate + parse the (at most one) C1-CLOSURE block ---
     # NOTE: do NOT wrap this call in @(...) -- Find-C1ClosureBlocks already uses the
@@ -1043,6 +1541,49 @@ function Invoke-ExceptionClosure {
         $key = $e.Kind + '||' + $e.BlockId
         if (-not $excIndexByKey.ContainsKey($key)) { $excIndexByKey[$key] = New-Object System.Collections.Generic.List[int] }
         $excIndexByKey[$key].Add($i)
+    }
+
+    # --- Source A row processing: malformed hash / unknown / duplicate = integrity;
+    # else exact (kind, block_id, sha) match closes, mismatch = STALE (reported, not honored). ---
+    $shaHexPattern = '^[0-9a-f]{64}$'
+    $aSeenRowKeys = New-Object System.Collections.Generic.HashSet[string]
+    $aClosedIndex = @{}   # array-index -> row that closed it
+    $aStaleIndex  = @{}   # array-index -> row that matched key but had a stale sha
+
+    foreach ($row in $aRows) {
+        if ($row.BlockSha256 -notmatch $shaHexPattern) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'sourcea-binding-malformed-hash'; Severity = 'integrity'
+                Detail = "C1-ENFORCE-SOURCEA-BINDING row for kind='$($row.Kind)' block_id='$($row.BlockId)' has a malformed block_sha256 ('$($row.BlockSha256)') -- expected 64 lowercase hex chars"
+            })
+            continue
+        }
+        $rowKey = $row.Kind + '||' + $row.BlockId
+        if ($aSeenRowKeys.Contains($rowKey)) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'sourcea-binding-duplicate-row'; Severity = 'integrity'
+                Detail = "duplicate C1-ENFORCE-SOURCEA-BINDING row for kind='$($row.Kind)' block_id='$($row.BlockId)'"
+            })
+            continue
+        }
+        [void]$aSeenRowKeys.Add($rowKey)
+
+        if (-not $excIndexByKey.ContainsKey($rowKey)) {
+            $closureIntegrity.Add([pscustomobject]@{
+                Kind = 'sourcea-binding-unknown-row'; Severity = 'integrity'
+                Detail = "C1-ENFORCE-SOURCEA-BINDING row for kind='$($row.Kind)' block_id='$($row.BlockId)' matches no detected policy exception"
+            })
+            continue
+        }
+
+        foreach ($idx in $excIndexByKey[$rowKey]) {
+            $e = $PolicyExceptions[$idx]
+            if ($e.Sha256 -eq $row.BlockSha256) {
+                $aClosedIndex[$idx] = $row
+            } else {
+                $aStaleIndex[$idx] = $row
+            }
+        }
     }
 
     # --- Source B row processing: unknown/duplicate rows = integrity; else match sha ---
@@ -1086,12 +1627,18 @@ function Invoke-ExceptionClosure {
     for ($i = 0; $i -lt $PolicyExceptions.Count; $i++) {
         $e = $PolicyExceptions[$i]
 
-        if ($e.CanonicalId -and $reviewedIdsA.Contains($e.CanonicalId)) {
+        # Precedence (ORDER-103 Fix 3, deterministic, never double-counted): Source A
+        # (appended binding record) is checked first. If B would ALSO have closed the
+        # identical exception, that fact is noted in the closure detail rather than
+        # silently dropped -- A wins the ClosureSource classification either way.
+        if ($aClosedIndex.ContainsKey($i)) {
+            $row = $aClosedIndex[$i]
+            $alsoB = if ($bClosedIndex.ContainsKey($i)) { ' [also independently closable via B-C1-closure-block -- A precedence applied, not double-counted]' } else { '' }
             $reviewed.Add([pscustomobject]@{
                 Kind = $e.Kind; BlockId = $e.BlockId; Header = $e.Header; Detail = $e.Detail
                 CanonicalId = $e.CanonicalId; Sha256 = $e.Sha256
-                ClosureSource = 'A-review-block'
-                ClosureDetail = "canonical_id=$($e.CanonicalId) covered by a REVIEWED '## REVIEW ORDER-$($e.CanonicalId)'-style block"
+                ClosureSource = 'A-sourcea-binding'
+                ClosureDetail = "closed by C1-ENFORCE-SOURCEA-BINDING row (review_ref='$($row.ReviewRef)')$alsoB"
             })
             continue
         }
@@ -1108,7 +1655,10 @@ function Invoke-ExceptionClosure {
         }
 
         $staleNote = $null
-        if ($bStaleIndex.ContainsKey($i)) {
+        if ($aStaleIndex.ContainsKey($i)) {
+            $row = $aStaleIndex[$i]
+            $staleNote = "STALE C1-ENFORCE-SOURCEA-BINDING row found for kind='$($e.Kind)' block_id='$($e.BlockId)' but block_sha256 mismatch (row='$($row.BlockSha256)' current='$($e.Sha256)') -- closure NOT honored, exception stays unresolved"
+        } elseif ($bStaleIndex.ContainsKey($i)) {
             $row = $bStaleIndex[$i]
             $staleNote = "STALE C1-CLOSURE row found for kind='$($e.Kind)' block_id='$($e.BlockId)' but block_sha256 mismatch (row='$($row.BlockSha256)' current='$($e.Sha256)') -- closure NOT honored, exception stays unresolved"
         }
@@ -1300,7 +1850,11 @@ function Invoke-TaskboardArchiveCheck {
         [bool]$SkipArtifacts,
         [string]$ManifestPath,
         [string]$IndexPath,
-        [string]$ExceptionsPath
+        [string]$ExceptionsPath,
+        [string]$ChainCheckpointSha = '0ced19485c6c6ce9a23541f785ab82bae4fcad25',
+        [string]$ChainArchivePath = 'ARCHIVE_TASKBOARD_2026-07A.md',
+        [bool]$SkipChainCheck = $false,
+        [bool]$CheckRealWorkingArchive = $false
     )
 
     $isStrict   = ($Mode -eq 'Strict')
@@ -1356,8 +1910,8 @@ function Invoke-TaskboardArchiveCheck {
     $exceptions = Invoke-ExceptionScan -CurrentActiveBlocks $activeCurrentBlocks -CurrentArchiveBlocks $archiveCurrentBlocks
     $report.Exceptions = $exceptions
 
-    # ORDER-102 Contract C1: canonical-review-linkage closure (Source A: REVIEW-block
-    # linkage; Source B: a C1-CLOSURE block). READ-ONLY -- only classifies the raw
+    # Contract C1 exact closure (Source A: C1-ENFORCE-SOURCEA-BINDING;
+    # Source B: C1-CLOSURE). READ-ONLY -- only classifies the raw
     # exceptions above, never mutates AGENT_TASKBOARD.md/ARCHIVE_TASKBOARD_2026-07A.md.
     $closure = Invoke-ExceptionClosure -PolicyExceptions $exceptions.Policy -ActiveBlocks $activeCurrentBlocks -ArchiveBlocks $archiveCurrentBlocks
     $report.CanonicallyReviewed = @($closure.Reviewed)
@@ -1366,6 +1920,58 @@ function Invoke-TaskboardArchiveCheck {
     $integrityFailures = New-Object System.Collections.Generic.List[object]
     foreach ($f in $exceptions.Integrity) { $integrityFailures.Add($f) }
     foreach ($f in $closure.IntegrityFailures) { $integrityFailures.Add($f) }
+
+    # ORDER-103 Fix 1: committed append-CHAIN integrity gate. Independent of which
+    # Current*/Split*Source specs were passed in (those drive the block-content
+    # checks above) -- this always walks the REAL git history of $RepoRoot for
+    # $ChainArchivePath from $ChainCheckpointSha to HEAD. Read-only in every mode.
+    $chainResult = $null
+    if (-not $SkipChainCheck) {
+        try {
+            $chainResult = Invoke-ArchiveChainIntegrityCheck -RepoRoot $RepoRoot -CheckpointSha $ChainCheckpointSha -ArchiveRelPath $ChainArchivePath -HeadRef 'HEAD'
+        } catch {
+            $chainResult = [pscustomobject]@{ IsClean = $false; Reason = "chain integrity check threw: $($_.Exception.Message)"; Steps = @() }
+        }
+        if (-not $chainResult.IsClean) {
+            $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-chain-broken'; Severity = 'integrity'; Detail = $chainResult.Reason })
+        }
+    }
+    $report.ChainIntegrity = $chainResult
+
+    # ORDER-103 rework BLOCKER 1: Audit/Strict also close the final HEAD->working
+    # leg when CurrentArchiveSource is the real working archive. Compare the H2
+    # sequence as a canonical-LF block prefix so core.autocrlf/mixed EOL does not
+    # create false divergence. Generate intentionally does not enforce this leg:
+    # it may regenerate evidence for diagnostics, but the following read-only
+    # Strict/Audit invocation must still reject any mutation.
+    $workingTreeExtensionResult = $null
+    if ((-not $isGenerate) -and (-not $SkipChainCheck)) {
+        $realArchivePath = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $ChainArchivePath))
+        $workingBytesForCheck = $null
+
+        # Explicit FILE:<real archive> callers already supplied the working bytes.
+        # Default Audit/Strict callers deliberately validate artifacts against the
+        # committed HEAD snapshot (stable across CRLF and unrelated working-board
+        # edits), but still close the independent HEAD->working tamper leg here.
+        if ($CurrentArchiveSource -match '^FILE:(.+)$') {
+            $sourceArchivePath = [System.IO.Path]::GetFullPath($Matches[1])
+            if ($sourceArchivePath -eq $realArchivePath) { $workingBytesForCheck = $archiveCurrentBytes }
+        } elseif ($CheckRealWorkingArchive -and (Test-Path -LiteralPath $realArchivePath)) {
+            $workingBytesForCheck = [System.IO.File]::ReadAllBytes($realArchivePath)
+        }
+
+        if ($null -ne $workingBytesForCheck) {
+            try {
+                $workingTreeExtensionResult = Invoke-ArchiveWorkingTreeExtensionCheck -RepoRoot $RepoRoot -ArchiveRelPath $ChainArchivePath -CurrentBytes $workingBytesForCheck
+            } catch {
+                $workingTreeExtensionResult = [pscustomobject]@{ IsClean = $false; Reason = "HEAD->working archive block-prefix check threw: $($_.Exception.Message)" }
+            }
+            if (-not $workingTreeExtensionResult.IsClean) {
+                $integrityFailures.Add([pscustomobject]@{ Kind = 'archive-working-prefix-broken'; Severity = 'integrity'; Detail = $workingTreeExtensionResult.Reason })
+            }
+        }
+    }
+    $report.WorkingTreeExtensionIntegrity = $workingTreeExtensionResult
 
     if ($splitIntegrity.Missing.Count -gt 0) {
         $integrityFailures.Add([pscustomobject]@{ Kind = 'split-integrity-missing'; Severity = 'integrity'; Detail = "$($splitIntegrity.Missing.Count) pre-split block(s) missing from split active+archive union" })
@@ -1539,7 +2145,7 @@ function Build-ExceptionsMarkdown {
         }
     }
     [void]$sb.AppendLine('')
-    [void]$sb.AppendLine('## Canonically reviewed -- CLOSED (Contract C1 Source A: REVIEW-block linkage /')
+    [void]$sb.AppendLine('## Canonically reviewed -- CLOSED (Contract C1 Source A: exact binding record /')
     [void]$sb.AppendLine('## Source B: C1-CLOSURE block; no further action needed)')
     [void]$sb.AppendLine('')
     if ($Report.CanonicallyReviewed.Count -eq 0) {
@@ -1555,7 +2161,7 @@ function Build-ExceptionsMarkdown {
         }
     }
     [void]$sb.AppendLine('')
-    [void]$sb.AppendLine('## Unresolved -- raw_detected minus canonically_reviewed (needs a C1-CLOSURE row)')
+    [void]$sb.AppendLine('## Unresolved -- raw_detected minus canonically_reviewed (needs an exact Source A binding or C1-CLOSURE row)')
     [void]$sb.AppendLine('')
     if ($Report.UnresolvedPolicyExceptions.Count -eq 0) {
         [void]$sb.AppendLine('_None found._')
@@ -1591,10 +2197,10 @@ function Build-ExceptionsMarkdown {
     [void]$sb.AppendLine('- Manual `## ARCHIVED ORDERS INDEX` block embedded in the active taskboard violates')
     [void]$sb.AppendLine('  the "generated index must be read-only" rule (design source Sec 20.7). C0 is read-only')
     [void]$sb.AppendLine('  and does not touch it; replacing it with a generated view is C1 scope.')
-    [void]$sb.AppendLine('- Source A (REVIEW-block linkage) closes by **canonical id** -- any of the 3 raw-')
-    [void]$sb.AppendLine('  exception kinds for a canonical id covered by a REVIEWED `## REVIEW ORDER-<id>`-style')
-    [void]$sb.AppendLine('  block are closed. Source B (a `## C1-CLOSURE` block) closes by the EXACT (kind,')
-    [void]$sb.AppendLine('  block_id, block_sha256) triple -- never by canonical id alone -- so one kind of a')
+    [void]$sb.AppendLine('- Source A uses an appended `## C1-ENFORCE-SOURCEA-BINDING` record and closes only')
+    [void]$sb.AppendLine('  the exact **(kind, block_id, block_sha256)** tuple in a binding row; a canonical-id')
+    [void]$sb.AppendLine('  or bare REVIEW-block match is never a wildcard closure. Source B (a `## C1-CLOSURE`')
+    [void]$sb.AppendLine('  block) also closes by the EXACT (kind, block_id, block_sha256) triple, so one kind of a')
     [void]$sb.AppendLine('  block can be closed without silently closing a different kind of the same block_id,')
     [void]$sb.AppendLine('  and a stale block_sha256 (block edited since the closure row was written) is reported')
     [void]$sb.AppendLine('  rather than silently honored.')
@@ -1616,13 +2222,20 @@ function Write-ExceptionsMarkdown {
 function Invoke-Main {
     param([string]$Mode)
 
-    if (-not $CurrentActiveSource)  { $script:CurrentActiveSource  = 'FILE:' + (Join-Path $RepoRoot 'AGENT_TASKBOARD.md') }
-    if (-not $CurrentArchiveSource) { $script:CurrentArchiveSource = 'FILE:' + (Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md') }
+    $isGenerate = ($Mode -eq 'Generate')
+    $defaultActiveSource = -not $CurrentActiveSource
+    $defaultArchiveSource = -not $CurrentArchiveSource
+
+    if ($defaultActiveSource) {
+        $script:CurrentActiveSource = if ($isGenerate) { 'FILE:' + (Join-Path $RepoRoot 'AGENT_TASKBOARD.md') } else { 'GIT:HEAD:AGENT_TASKBOARD.md' }
+    }
+    if ($defaultArchiveSource) {
+        $script:CurrentArchiveSource = if ($isGenerate) { 'FILE:' + (Join-Path $RepoRoot 'ARCHIVE_TASKBOARD_2026-07A.md') } else { 'GIT:HEAD:ARCHIVE_TASKBOARD_2026-07A.md' }
+    }
     if (-not $ManifestPath)   { $script:ManifestPath = Join-Path $RepoRoot 'docs/memory_control/ARCHIVE_MANIFEST.csv' }
     if (-not $IndexPath)      { $script:IndexPath = Join-Path $RepoRoot 'docs/memory_control/ARCHIVE_INDEX.md' }
     if (-not $ExceptionsPath) { $script:ExceptionsPath = Join-Path $RepoRoot 'docs/memory_control/RECONCILE_EXCEPTIONS.md' }
 
-    $isGenerate = ($Mode -eq 'Generate')
     $writeArtifacts = ($isGenerate -and -not $SkipArtifacts)
 
     # NOTE: RECONCILE_EXCEPTIONS.md is now written (under -Generate) AND validated
@@ -1633,7 +2246,9 @@ function Invoke-Main {
         -PreSplitSource $PreSplitSource -SplitActiveSource $SplitActiveSource -SplitArchiveSource $SplitArchiveSource `
         -CurrentActiveSource $CurrentActiveSource -CurrentArchiveSource $CurrentArchiveSource `
         -Mode $Mode -SkipArtifacts $SkipArtifacts.IsPresent `
-        -ManifestPath $ManifestPath -IndexPath $IndexPath -ExceptionsPath $ExceptionsPath
+        -ManifestPath $ManifestPath -IndexPath $IndexPath -ExceptionsPath $ExceptionsPath `
+        -ChainCheckpointSha $ChainCheckpointSha -ChainArchivePath $ChainArchivePath -SkipChainCheck $SkipChainCheck.IsPresent `
+        -CheckRealWorkingArchive ((-not $isGenerate) -and $defaultArchiveSource)
 
     $modeLabel = $Mode.ToUpper()
     $roTag = if ($isGenerate) { '' } else { ' (READ-ONLY -- never writes manifest/index/exceptions)' }
@@ -1641,6 +2256,14 @@ function Invoke-Main {
     Write-Host ('Pre-state hash  AGENT_TASKBOARD.md            = ' + $report.PreStateHashes.CurrentActiveFileSha256)
     Write-Host ('Pre-state hash  ARCHIVE_TASKBOARD_2026-07A.md = ' + $report.PreStateHashes.CurrentArchiveFileSha256)
     Write-Host ('Archive content identity (git blob sha)       = ' + $report.ArchiveBlobSha)
+    if ($report.ChainIntegrity) {
+        Write-Host ('Chain integrity (checkpoint->HEAD, first-parent) clean = ' + $report.ChainIntegrity.IsClean + $(if (-not $report.ChainIntegrity.IsClean) { ' :: ' + $report.ChainIntegrity.Reason } else { '' }))
+    } else {
+        Write-Host 'Chain integrity check: SKIPPED (-SkipChainCheck)'
+    }
+    if ($report.WorkingTreeExtensionIntegrity) {
+        Write-Host ('Working extension (HEAD->FILE, canonical-LF H2 prefix) clean = ' + $report.WorkingTreeExtensionIntegrity.IsClean + $(if (-not $report.WorkingTreeExtensionIntegrity.IsClean) { ' :: ' + $report.WorkingTreeExtensionIntegrity.Reason } else { ' | appended_blocks=' + $report.WorkingTreeExtensionIntegrity.AppendedBlockCount }))
+    }
     Write-Host ('Block counts: presplit H2=' + $report.BlockCounts.PreSplitH2 + ' | split-active H2=' + $report.BlockCounts.SplitActiveH2 + ' | split-archive H2=' + $report.BlockCounts.SplitArchiveH2 + ' | current-active H2=' + $report.BlockCounts.CurrentActiveH2 + ' | current-archive H2=' + $report.BlockCounts.CurrentArchiveH2)
     Write-Host ''
     Write-Host '--- 1a SPLIT-INTEGRITY (multiset-by-hash) ---'

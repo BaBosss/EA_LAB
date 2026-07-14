@@ -411,10 +411,17 @@ $p = New-CaseParams -Tag 'partial' `
     -PreSplit "$fx\partialstage_presplit.md" -SplitActive "$fx\clean_split_active.md" -SplitArchive "$fx\partialstage_split_archive.md" `
     -CurrentActive "$fx\clean_current_active.md" -CurrentArchive "$fx\partialstage_current_archive.md"
 # ORDER-102 Contract C1: this fixture's ORDER-205 raises a raw non-terminal-in-archive
-# exception (fix 4, unchanged) but ships its own matching REVIEWED "## REVIEW ORDER-205"
-# block (mirroring the real "## REVIEW ORDER-071"), so Source A now canonically closes
-# it -> unresolved=0 -> Strict=0 (was Strict=1 pre-C1; see docstring above).
-Add-CaseResult -Name 'partial-stage-archived (fix 4, closed by C1 Source A via its own REVIEW ORDER-205)' -Params $p -ExpectAudit 0 -ExpectStrict 0
+# exception (fix 4, unchanged) and ships a matching REVIEWED "## REVIEW ORDER-205"
+# block (mirroring the real "## REVIEW ORDER-071") -- under the ORIGINAL C1 wildcard
+# Source A (canonical-id match), that alone closed it (Strict=0). ORDER-103 Fix 3
+# deliberately TIGHTENS Source A to require an APPENDED exact
+# (kind, block_id, block_sha256) '## C1-ENFORCE-SOURCEA-BINDING' row -- a bare
+# REVIEW-block id match is no longer sufficient (that wildcard was the exact hole
+# Codex's C1 final review found on the real ORDER-071). This fixture ships no binding
+# block, so under Fix 3 the exception now stays unresolved -> Strict=1 (was Strict=0
+# pre-ORDER-103; see run_order103_negative_tests.ps1's fix3-exact-binding-closes case
+# for the positive/exact-binding counterpart of this same mechanism).
+Add-CaseResult -Name 'partial-stage-archived (ORDER-103 Fix 3: bare REVIEW-id match no longer closes without a binding record)' -Params $p -ExpectAudit 0 -ExpectStrict 1
 
 # --- 13. FIX 3 off-by-one, zero matches: the generated-extra header pattern matches NO
 #         block in split-active+split-archive (the expected manual "## ... ARCHIVED
