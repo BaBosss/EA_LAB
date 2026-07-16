@@ -20,6 +20,10 @@
    swept) → build-on = จับคู่ ORDER-057 regime-gate ไม่ใช่ deploy
 8. **DEMO_DEPLOYMENT_PLAN.md restructure** — current-state บนสุด + archive เก่า (user บ่นอ่านยาก)
 9. **SMC×STO idea (user) triaged** → ORDER-107 staged (cheap 2-stage smoke plan)
+10. **🟩 ORDER-108 break-retest split (user idea) = BUILT + VALIDATED** — `(EXP)_BRK_SplitRetest` (market leg +
+   pending buy-limit at retest). A/B Model-4: fill-rate ~90%, adverse-selection real, split regime-robust on
+   Bars40 (1.93/1.97). **BUT retrofit on LIVE Bars55/TP8 = ไม่ยก** (config-conditional) → ห้าม retrofit ตัว live.
+   lever banked (EDGE_CATALOG). verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`
 
 ## 👉 คิวถัดไป (เรียง EV — pace 1-2/รอบ)
 
@@ -31,6 +35,8 @@
 2. **ORDER-098-B ด่าน demo** — user attach MacdDiv XAU H4 bundle (+ 4 bundle เดิม Wave5×2/Breakout×2)
 3. **ORDER-106 GBPJPY** — finer sweep dist{1.5,2,2.5} + corr<0.8 vs Boss_14 cohort → เสนอ leg-8
 4. **ORDER-107 SMC×STO** Stage-0 smoke · **ORDER-084 rescue #3** ZSCORE (ranger pairs)
+5. **ORDER-108 lever ต่อยอด (optional):** sweep offset/expiry บน Bars40 (ที่ split เวิร์ค) · หรือ build split
+   variant ของ LondonConso (คนละ codebase — ต้อง build ใหม่) · lever พร้อมใช้กับ breakout build ใหม่ทุกตัว
 
 ## รอ user (mobile-answerable)
 - ยืนยัน vehicle pending-limit ตัวแรก (JUMSTOCH?) · attach 5 bundle (บอกวัน → ลง DEPLOYMENTS.csv + judge)

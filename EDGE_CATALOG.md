@@ -187,8 +187,9 @@ holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับ
 (pending-only แพ้ market ในเทรนด์ 1.76<2.07 = พลาด runner → ต้องมีขา market) · **split = robust ทั้ง 2 regime**
 (1.93/1.97 ไม่มี window อ่อน ต่างจาก market-only 2.07/1.75 และ pending-only 1.76/2.55). live ได้ maker-fill ฟรี
 spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tester ประเมินต่ำ. **ใช้ได้กับ breakout EA ที่มี edge เท่านั้น**
-(ห้ามแปะ EA ที่ปัญหาคือ regime เช่น XAU_NY). verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`. next = sweep
-offset/expiry + retrofit บน BRK-XAU Bars55 (live) + LondonConso.
+(ห้ามแปะ EA ที่ปัญหาคือ regime เช่น XAU_NY). **config-conditional:** ช่วยเฉพาะเมื่อขา retest มี edge ในหน้าต่างที่ market
+อ่อน — Bars40/TP5 ช่วย (regime-robust) แต่ **live Bars55/TP8 ไม่ช่วย** (retest อ่อน BWD, TP กว้างต้องการ move ใหญ่)
+→ **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`.
 
 ## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) 🟨 PARKED-CONCEPT
 

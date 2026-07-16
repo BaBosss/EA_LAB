@@ -42,3 +42,27 @@ developing.
    (GBP/EUR). If it lifts regime-robustness there → candidate to retrofit as a demo config upgrade.
 4. Bank the lever in EDGE_CATALOG for any future breakout build.
 **ห้าม:** เอาไปแปะ EA ที่ปัญหาไม่ใช่ entry-cost/timing (เช่น XAU_NY = regime).
+
+---
+
+## FOLLOW-UP: retrofit บน LIVE config (Bars55/TP8/EMA150) — ❌ ไม่ยก, ห้าม retrofit ตัว live
+`_mt5_auto/order108b_bars55_ab.csv` (Model-4 XAU H1, พารามิเตอร์ตรง `BRK_XAU_live_v3.set`)
+
+| mode | MAIN | BWD |
+|---|---:|---:|
+| market-only (= live ปัจจุบัน) | **1.99** (40t) | 1.12 (26t) |
+| pending-only | 1.68 (37t) | 1.10 (22t) |
+| split | 1.89 (77t) | 1.12 (47t) |
+
+**split ไม่ปรับปรุง live config:** MAIN split 1.89 < market 1.99 · BWD เท่ากัน 1.12 ทุกโหมด (retest leg อ่อน BWD 1.10).
+
+## REFINED CONCLUSION (2 configs) — lever จริงแต่ config-conditional
+- **Bars40/TP5:** split = regime-robust (1.93/1.97) ดีกว่า weak-window ของทั้ง 2 pure mode ✅
+- **Bars55/TP8 (live):** split ≈ market ไม่ช่วย ❌ — retest leg ไม่มี edge ใน BWD (TP กว้างต้องการ move ใหญ่
+  ที่ปีชอป 2020-22 ไม่ให้ → retest เข้าแล้วก็ไม่วิ่งถึง TP8)
+- **กติกาที่ได้:** **split-retest เพิ่ม regime-robustness เฉพาะเมื่อขา retest มี edge จริงในหน้าต่างที่ market อ่อน.**
+  ขึ้นกับ TP-width × lookback ของ base config — ไม่ใช่ upgrade สากล. **ห้าม retrofit BRK-XAU Bars55 live** (ไม่ยก).
+- **Lever ยังมีค่า:** สำหรับ breakout build ใหม่ที่ config สมดุลกว่า หรืองานที่อยากได้ robustness แลก MAIN-peak.
+  banked ใน EDGE_CATALOG พร้อม caveat นี้.
+
+**ปิด ORDER-108:** ไอเดีย user = validated lever (Bars40) + คำเตือน config-conditional (Bars55). live ไม่แตะ.
