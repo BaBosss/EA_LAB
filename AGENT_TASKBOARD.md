@@ -208,6 +208,40 @@ net PF/DD. **บาร์:** split net-EV/signal > market-only ที่ spread 
 
 ---
 
+## ORDER-109 — regime-rescue #1: graft `_50_ Regime.mqh` เข้า Zeus chassis + sweep AUDJPY/AUDUSD both-window (user เคาะ 2026-07-16) — `BUILD+NO-OP+SWEEP+CONFIRM+YEARSPLIT DONE + REVIEWED(Claude 2026-07-16): 🟡 AUDJPY = PARTIAL RESCUE (regime-dependent, PARKED-VERIFY user) — range-only gate (m1rng25) ยก base both-window-fail (1.12/0.94) → Model-4 both-window-aggregate positive ทั้ง plateau thr20/25/30 (MAIN 1.24-1.63 / BWD 1.28-1.52) + BWD all-3-years-positive · **BUT year-split เผย 2023 ขาดทุนจริง (-1107/PF0.64, ปี trend yen) + 2025 breakeven + MAIN พึ่ง 2024 thin-lucky(28t) → ไม่ผ่าน all-years-positive → ไม่ deploy-ready**, แจ้ง user (demo+caveat หรือ park) · direction-lock m2 ตายบน real ticks (BWD 1.39→1.01) · AUDUSD = fragile spike (park) · no-op bit-identical ✅ · **meta-lesson: regime gate = orthogonal สำหรับ grid (Zeus กู้), redundant กับ breakout (XAU_NY ไม่ขยับ)** [[regime-gate-grids-not-breakouts]] · verdict = _triage/ORDER109_ZEUS_REGIME_VERDICT.md` (role: Claude build → self-run batch · verdict = Claude)
+
+**ที่มา + reframe สำคัญ (Claude scoping 2026-07-16):** START-HERE #1 "regime-rescue pipeline ~29 EA" — Explore ยืนยัน
+กอง regime จริง addressable **แค่ 4 cells ไม่ใช่ 29**: ~12 ตัวเป็น MT4 black-box (graft `_50_` ไม่ได้) · Boss_14 family
+เคยผ่าน regime-refunnel ครบใน ORDER-062 · เหลือ source-available ที่ยังไม่ผ่าน gate = **Zeus AUDJPY/AUDUSD**
+(ต้อง graft — standalone chassis ไม่มี lever) + **XAU_NY** (source หาย → ORDER-110 rebuild) + AsReMix (black-box ตาย).
+regime-rescue = **งาน build ไม่ใช่ batch**. user เคาะ "ทำ 1-2" = Zeus (นี่) + XAU_NY rebuild ต่อ.
+
+**BUILD (done, Claude):** port `ea_template/core/Regime.mqh` → `ea_projects/(Boss)_ZeusInspired_GridLog/Regime_Standalone.mqh`
+(self-contained: ประกาศ `_50_*` inputs เอง, logic verbatim reviewer-approved, ไม่ดึง LabCore Inputs). graft เข้า Zeus.mq5:
+include + `Regime_Init()` OnInit + `Regime_Deinit()` OnDeinit + gate `Regime_AllowsEntryDirection(dir)` **ก่อน arm first-entry
+เท่านั้น** (grid-add + exit ไม่แตะ — ตรง convention LabCore). compile 0/0 ผ่าน `D:\Meta 5\MetaEditor64.exe` (⚠️ gotcha:
+Meta5b MetaEditor resolve include ไม่ได้ — roaming B084 ไม่มี Include tree; ใช้ Meta5 primary เท่านั้น). mode 0 = no-op
+(Regime_Enabled() false → inert). ex5 deploy roaming 9CA16B\Experts + baseline pre-graft เก็บเป็น `_ZeusBaseline_pregraft.ex5`.
+
+**RUN (self, background — runner `_mt5_auto/ab_sets/zeus_regime/run_zeus_regime.ps1`):**
+- **Phase 1 no-op proof:** baseline(pre-graft) vs grafted(mode-0) บน AUDJPY_lot8x + AUDUSD_lot10x MAIN → net/pf/trades/eqdd
+  ต้อง **bit-identical** (sanity ผ่านแล้ว: grafted mode-0 = PF 1.12 ตรง parked AUDJPY 8x). ถ้าไม่ identical = STOP graft พฤติกรรมเพี้ยน.
+- **Phase 2 sweep:** grafted ex5 × 8 config {base·m1t20/25/30·m1rng25·m2t20/25/30} × 2 window {MAIN 2023-26 · BWD 2020-22}
+  × 2 symbol {AUDJPY_lot8x · AUDUSD_lot10x} = 32 run → `_mt5_auto/ZEUS_REGIME_AB.csv`.
+**Acceptance (Claude judge ตาม VERDICT GATE):** ✅ RESCUE = regime config ใด**ยก both-window พร้อมกัน** (MAIN≥base & BWD PF≥1.2)
+เป็น **plateau** (thr เพื่อนบ้านไม่พลิกขั้ว) ไม่ใช่ spike · mode 2 ≤ mode 1 คาดไว้ (ORDER-057 precedent) · ถ้าไม่มี config ยก
+both-window = regime lever ไม่กู้ Zeus (ปิด cell, บันทึก signal-landscape). ห้าม: verdict จาก window เดียว · retrofit demo cohort.
+**ผล:** _(sweep รันอยู่ — judge เมื่อ CSV ครบ)_
+
+---
+
+## ORDER-110 — regime-rescue #2: rebuild XAU_NY (NY-session breakout) บน LabCore chassis (มี `_50_` lever) — `DONE + REVIEWED(Claude 2026-07-16): 🟡 regime gate ไม่กู้ XAU_NY — rebuild = pure config บน Boss_12_Breakout (Entry-12 Donchian + session filter + _50_ ครบ ไม่ต้องเขียนโค้ด) · 48-run coarse (TF×Bars×session×regime × both-window): both-window cells มีแค่บน H4 แต่ BWD อ่อนหมด (≤1.06) · regime gate ให้ BWD nudge เล็ก (~+0.05) ไม่พอ + cell ที่ผ่าน = Bars-spike ไม่ใช่ plateau · **meta-lesson: regime-gate = orthogonal filter สำหรับ GRID (Zeus/XAU-grid สำเร็จ) แต่ redundant กับ BREAKOUT (ADX ซ้ำ momentum)** · naked H4/20/NY (1.47/1.05) = build-on lead low-priority (Model-1 only, likely corr>0.6 กับ XAU legs เดิม) → park · verdict = _triage/ORDER110_XAUNY_REGIME_VERDICT.md` (role: Claude build → self-run · verdict = Claude)
+
+**ที่มา:** XAU_NY (#83) source หาย (compiled-only) → graft ไม่ได้ → rebuild เป็น config บน Boss_12_Breakout (LabCore Entry-12
+Donchian มี session filter `_12_HourFrom/To` + `_50_` gate ครบ). ผล = regime ไม่ใช่ hero; breakout momentum ซ้ำกับ ADX gate.
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)

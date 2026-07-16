@@ -1,0 +1,17 @@
+﻿; ORDER-110 XAU_NY regime rescue variant
+_12_Bars=20
+_12_ConfirmBars=1
+_12_HourFrom=13
+_12_HourTo=21
+SLMode=33
+_33_SL_ATRmult=2.0
+ExitMode=22
+_22_TP_ATRmult=3.0
+StackMode=90
+TradeDir=60
+_0_BarOpenOnly=true
+_50_RegimeMode=1
+_50_AllowRange=false
+_50_AllowTrendUp=true
+_50_AllowTrendDown=true
+_50_ADX_TrendMin=25.0

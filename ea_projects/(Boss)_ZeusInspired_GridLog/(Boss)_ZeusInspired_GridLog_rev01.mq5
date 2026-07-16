@@ -52,6 +52,7 @@
 
 #include <Trade\Trade.mqh>
 #include "STANDALONE_RISK_BUNDLE.mqh"
+#include "Regime_Standalone.mqh"   // [50] additive market-state gate (ORDER-057 adoption)
 
 //--------------------------------------------------------------------
 // [00] TESTER / OPTIMIZER
@@ -379,6 +380,12 @@ int OnInit()
    SRB_Init(_Symbol, _06_MaxTotalLot);
    SRB_SetVerbose(!g_suppress_log);
 
+   if(!Regime_Init())
+   {
+      Print("ZeusInspired_GridLog: Regime_Init failed");
+      return INIT_FAILED;
+   }
+
    g_trade.SetExpertMagicNumber(_07_Magic);
    g_trade.SetDeviationInPoints(_07_Deviation);
    g_trade.SetTypeFilling(ORDER_FILLING_FOK);
@@ -401,6 +408,7 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    if(g_atr_handle != INVALID_HANDLE) { IndicatorRelease(g_atr_handle); g_atr_handle = INVALID_HANDLE; }
+   Regime_Deinit();
 }
 
 double OnTester()
@@ -537,6 +545,11 @@ void OnTick()
    }
 
    // ── No basket open: (re)arm the single pending-stop entry ────────
+   // [50] Regime gate — additive filter on NEW baskets only (first-entry).
+   //      Grid-adds + exits above are deliberately NOT gated. Mode 0 = no-op.
+   const int _regime_dir = (_01_Direction == DIR_BUY) ? 1 : 2;
+   if(!Regime_AllowsEntryDirection(_regime_dir)) return;
+
    if(HasPendingOrder()) return;
    if(!RiskCapsOk(NextGridLot(1))) return;
 
