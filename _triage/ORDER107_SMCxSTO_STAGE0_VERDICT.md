@@ -1,5 +1,12 @@
 # ORDER-107 — SMC×STO Stage-0 skeleton smoke — verdict (Claude, 2026-07-16)
 
+> ⚠️ **CORRECTION (2026-07-16, user จับถูก):** verdict "DEAD concept" ด้านล่าง**แรงเกินหลักฐาน** — ตีจาก
+> DEFAULT params + 0 lever swept = ผิด VERDICT GATE ของเราเอง (`source-available <3 lever = INVALID`).
+> Stage-0 default smoke ปิดได้แค่ cell "naked default" **ไม่ใช่ตัดสิน concept ตาย.** REOPENED → กำลัง
+> optimize STO+EMA-gate+SL+TP บน XAU H1 (rescue-ladder step ที่ผมข้าม). ผลด้านล่าง = default-only เท่านั้น.
+> ถ้า optimize ceiling ยัง <1.0 both-window = optimize-confirmed death (ค่อยเขียนใหม่). ถ้าข้าม → ลอง filter.
+
+
 EA `(EXP)_EmaStoRev` (HTF EMA100 gate + Stochastic-cross reversion + STO-reverse exit + BE@50, NO order
 block). Cheap-death test of the user's SMC×STO concept per the pre-registered plan. Model 1, MAIN
 2023-2026. Raw: `_mt5_auto/order107_emasto_smoke.csv`. Build commit `55c5e149`.

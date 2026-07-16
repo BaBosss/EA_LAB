@@ -172,7 +172,7 @@ Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช
 
 ---
 
-## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `DONE + REVIEWED(Claude 2026-07-16): ⬛ DEAD SKELETON — build (EXP)_EmaStoRev + smoke 6 cell ทุกตัว PF<1.0 (0.63-0.89, win% 58-67% = กับดัก mean-reversion) · แกนไม่มี edge → OB zone ไม่ช่วย → ปิด concept (cheap death สำเร็จ: 1 build+6run ฆ่าแทนที่จะ build SMC เต็มหลายชม.) · verdict = _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md` (role: Claude build → agent smoke · verdict = Claude)
+## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `🔄 REOPENED (Claude 2026-07-16, user จับถูก): verdict เดิม "DEAD skeleton" = แรงเกินหลักฐาน — ตีตายจาก DEFAULT params + 0 lever swept = ผิด VERDICT GATE (source-available <3 lever = INVALID). Stage-0 default smoke ปิดได้แค่ cell "naked default" ไม่ใช่ concept · กำลัง optimize STO+EMA-gate+SL+TP (rescue-ladder step ที่ข้าม) บน XAU H1 → ถ้า ceiling ยัง <1.0 both-window = optimize-confirmed death · ถ้าข้าม = ลอง filter (MACD/SuperTrend/HTF/momentum) ต่อ · smoke ดิบเดิม (0.63-0.89 default, win% สูง=MR trap) = _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md` (role: Claude build → agent optimize · verdict = Claude)
 
 **ที่มา:** user แชร์ระบบ class SMC×STO (triage เต็ม = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`, EDGE_CATALOG PARKED-CONCEPT).
 class = momentum-gated reversion · cheap-death: strip SMC/OB (แพง) เทส skeleton ก่อน.

@@ -1,0 +1,16 @@
+_00_OptimizeMode=true
+_01_EmaPeriod=100||50||50||200||Y
+_01_AtrPeriod=14
+_02_StoK=5||5||4||21||Y
+_02_StoD=3
+_02_StoSlow=3
+_02_OverSold=20||10||5||30||Y
+_02_OverBought=80||70||5||90||Y
+_02_BEatLevel=50
+_03_SlAtrMult=2.0||1.0||0.5||3.0||Y
+_03_AtrPeriod=14
+_03_TpAtrMult=0.0||0.0||1.0||3.0||Y
+_05_LotSize=0.01
+_06_Magic=991070
+_06_Deviation=20
+_06_AllowLive=false
