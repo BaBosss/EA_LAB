@@ -53,6 +53,21 @@ EXPECTED BEHAVIOUR (for the ~2-week monitor vs backtest)
     closed-equity DD > 15%  OR  3 consecutive losing months  OR  PF < 0.9 over 40+ trades.
 
 ------------------------------------------------------------------------
+EXNESS CENT (XAUUSDc, 3-digit) VARIANT — added 2026-07-16
+------------------------------------------------------------------------
+Set: MacdDiv_XAUc_exness3d_v1.set  (for the 10,000-cent real port, symbol XAUUSDc)
+- ONLY change vs the demo set = _06_Deviation 20 -> 300 (3-digit gold: 1 point = 0.001, so 300 pts
+  = 0.30 slippage room for the wider cent-feed spread). Everything else identical.
+- DIGIT-SAFE confirmed: SL = bar-extremum ± ATR-buffer, TP = 2×dist, all price-relative via
+  SymbolInfoDouble(POINT)/SYMBOL_DIGITS at runtime — NO 2-digit assumption, works on 3-digit as-is.
+- ⚠️ EXPERIMENT CAVEAT: MacdDiv was validated on ThinkMarkets XAUUSD (2-digit) history. Running it on
+  Exness XAUUSDc (3-digit, different spread/liquidity) is a LIVE spread-reality test on a NEW feed —
+  the live numbers may differ from the backtest. Treat this cent run as feed-validation, not a repeat
+  of the validated result. Watch first ~20 trades for entry-quality / spread drag vs the backtest PF.
+- MAGIC 999094 is free on the cent account 159503454 (existing: 990101/991001/991004/991002/990103).
+- Lot 0.01 on cent = tiny; the ATR SL/TP scale with price so risk% is the same as backtest.
+
+------------------------------------------------------------------------
 NEXT STEP (user)
 ------------------------------------------------------------------------
 Copy this folder to the VPS, attach MacdDiv_Naked on an XAUUSD H4 chart in a quiet window,
