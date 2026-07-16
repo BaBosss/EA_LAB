@@ -35,7 +35,11 @@ Probe เก่า sweep **ADX + exit + symbol** บน **Model-2 + recent-only(
 1. **"DEAD 2026-06-27" = ผิด** — under-swept: เทสผิด symbol (XAU capped) + ไม่เคยแตะ period lever. USDJPY med/slow periods = both-window Model-4 บวก + plateau. Concept มี momentum edge จริงบน JPY-trender. **แก้ backlog: DEAD → REVIVED-PARKED.**
 2. **ไม่ demo-ready** — 2 ปีขาดทุน/candidate = below GBPJPY bar. VERDICT GATE #6 (holdout) ไม่ผ่าน.
 3. **BUILD-ON leads (PF>1 both-window = buildable doctrine):**
-   - **🔑 diversified basket:** 2 config ขาดทุน**คนละปี** (medH4→2020/2023 · slowH1→2021/2025). รวม net รายปี = มีแค่ 2020 ที่ยังลบ (-167), 5/6 ปีบวก. med-H4 + slow-H1 basket = สมูทกว่ามาก → order ถัดไปคุ้มลอง.
+   - **🔑 diversified basket (ยืนยันเลข 2026-07-16B):** 2 config ขาดทุน**คนละปี** (medH4→2020/2023 · slowH1→2021/2025).
+     **basket (สอง magic รันพร้อมกัน, arithmetic combine): 5/6 ปีบวก** (เหลือแค่ 2020 ลบ -167 เล็ก) · **full-period PF = 1.448**
+     (2020 0.82 · 2021 1.45 · 2022 1.70 · 2023 1.04 · 2024 3.19 · 2025 1.32) · vs standalone 4/6 ปีบวกแต่ละตัว = diversification จริง.
+     ⚠️ ยังไม่ demo: 2020 ยังลบ + same-signal/same-symbol (decorrelation อาจเป็น period-luck ไม่ structural) → ต้อง wrapper build จริง
+     (2-config EA เดียว) เพื่อวัด merged-equity DD + MC ก่อน · หรือเติม trend-regime filter แก้ปี 2020 (USDJPY rangebound pre-recovery).
    - trend-regime filter: ปีขาดทุน = USDJPY choppy/pullback (2020 pre-breakout · 2023 pullback). ADX20→30 เคยลอง (probe p2 = 0.87 แย่ลง) → ต้องเป็น higher-TF trend-align ไม่ใช่ raise ADX เปล่า.
 4. thin sample: H4 ~19t/yr, H1 ~35t/yr.
 

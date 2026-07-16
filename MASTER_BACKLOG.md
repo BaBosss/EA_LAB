@@ -185,10 +185,12 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
       buf=0.5 WORSE (PF 1.15), H4 WORSE (PF 1.06, DD 8.85%). High false-breakout rate across all configs.
       Do not re-test Prev-Day H/L on any FX or XAU.
 
-- [x] **EA_KELTNER (#62 Keltner Channel breakout) = DEAD 2026-06-27**
-      XAU H4 PF=1.04. GBPJPY/USDJPY/GBPUSD H4: PF=0.68-0.70. All dead.
-      Same root cause as PrevDay: entering AFTER move has already happened (chasing).
-      EA_BREAKOUT_XAU (rolling H1 N-bar Donchian) is superior — not replicable by band-breakout variants.
+- [x] **EA_KELTNER (#62 Keltner Channel breakout) = DEAD 2026-06-27 → REJECT-CONFIRMED (ORDER-113, 2026-07-16B)**
+      Rescue swept channel-def lever (EMAPeriod/KeltMult) × TF × both-window Model-4 บน USDJPY (16 runs) → ยืนยันตาย:
+      **H4 = window-inversion** (BWD 1.22-1.48 แต่ MAIN 2023-26 พังหมด 0.71-0.76, DD 15%) = deploy ไม่ได้ ·
+      **H1 = churn** (both-window 1.0-1.14 ไม่แตะ 1.2, 450-530t = spread-fragile). ไม่มี cell both-window ≥1.2.
+      Build-on ปิด (breakout → regime-gate redundant · pending-limit ผิดทาง). original DEAD ถูก, ครั้งนี้ swept จริง.
+      verdict = `_triage/ORDER113_KELTNER_RESCUE_VERDICT.md`. (contrast: ICHIMOKU revived under same treatment → กระบวนการทำงาน ไม่ใช่ rubber-stamp)
 
 - [~] **EA_ICHIMOKU (#66 Kumo TK-cross + ADX) = ~~DEAD 2026-06-27~~ → REVIVED-PARKED (ORDER-112, 2026-07-16B)**
       ⚠️ "DEAD" ผิด — under-swept: เทสผิด symbol (XAU capped) + default periods เท่านั้น + ไม่เคยแตะ Kumo-period lever.

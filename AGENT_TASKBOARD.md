@@ -709,7 +709,15 @@ Model-4 (16 runs) · isolate: hold ExitMode2/AdxMin20/Sl2.0 · runner `_mt5_auto
 `_mt5_auto/ICHI_KUMO_BOTHWIN.csv`. **VERDICT = 🟡 REVIVED (คว่ำ "DEAD") → PARKED-BUILD-ON:** 6/8 cell both-window บวก >1.1 (plateau);
 med-H4(12/34/68)=1.48/1.39 + slow-H1(20/60/120)=1.31/1.22 ผ่าน ≥1.2 both. **แต่ year-split = ทั้งคู่ 2 ปีขาดทุน** (agg โดนปีเทรนด์กลบ)
 → ไม่ผ่าน all-years-positive = ยังไม่ demo. **DEAD 2026-06-27 = ผิด** (under-swept: เทสผิด symbol XAU + ไม่แตะ period lever).
-Build-on lead: 2 config ขาดทุนคนละปี → diversified basket (5/6 ปีบวกเมื่อรวม). verdict = `_triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md` · CSV year-split `_mt5_auto/ICHI_YEARSPLIT.csv`.
+Build-on lead: 2 config ขาดทุนคนละปี → diversified basket (5/6 ปีบวกเมื่อรวม, **full-period PF 1.448** ยืนยัน). verdict = `_triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md` · CSV year-split `_mt5_auto/ICHI_YEARSPLIT.csv`.
+
+**ผลรอบ rescue #5 KELTNER (#62) = ORDER-113 (2026-07-16B) = ❌ REJECT-CONFIRMED:** sweep channel-def (EMAPeriod/KeltMult)
+× TF × both-window Model-4 บน USDJPY (16 runs, `_mt5_auto/KELT_CH_BOTHWIN.csv`). **H4 = window-inversion** (BWD 1.22-1.48 แต่
+MAIN 2023-26 พังหมด 0.71-0.76 DD15%) · **H1 = churn** (1.0-1.14 ไม่แตะ 1.2, 450-530t spread-fragile) · ไม่มี cell both-window ≥1.2.
+original DEAD ถูก—ครั้งนี้ swept จริง = valid kill. Build-on ปิด (breakout→regime-gate redundant). verdict = `_triage/ORDER113_KELTNER_RESCUE_VERDICT.md`.
+**บทเรียน:** rescue-ladder ให้ผลต่างกัน — ICHIMOKU revived · KELTNER dead ภายใต้ treatment เดียวกัน = กระบวนการทำงาน (ไม่ rubber-stamp).
+
+**rescue queue เหลือ:** PREVDAY/NR7 (เคย iterate 2-3 รอบ, ต่อคิวถ้าอยากปิดให้ครบ) · regime-parked (Zeus/Boss_14 NZDUSD — full-funnel แล้ว). **ICHIMOKU basket build-on = candidate ต่อยอดที่มีของแล้ว (รอ user เคาะ build wrapper EA + MC).**
 
 
 ---

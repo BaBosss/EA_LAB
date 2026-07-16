@@ -1,0 +1,10 @@
+﻿_01_EMAPeriod=20
+_01_ATRPeriod=14
+_01_KeltMult=2.0
+_01_TrendEMA=200
+_02_SL_ATR_mult=2.0
+_02_TP_ATR_mult=0.0
+_03_UseAdxFilter=false
+_04_TrailATR=2.0
+_05_FixedLot=0.10
+_06_Magic=990062
