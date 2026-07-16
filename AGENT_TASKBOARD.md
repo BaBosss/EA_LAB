@@ -158,7 +158,7 @@ MA-period × SL แล้วค่อยส่ง Model-4 confirm — ตาม 
 
 ---
 
-## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `GBPJPY DONE + REVIEWED(Claude 2026-07-16): ✅ RESCUE สำเร็จ ไม่ตาย — H4 @ dist2.0 plateau both-window + Model-4 CONFIRM (MAIN 1.56/BWD 1.11 ดีขึ้น/HOLDOUT 1.50, grid ไม่ collapse บน real ticks) · high-PF cells = spike ทิ้ง · thin (n~50, DD~9%) · PARAMETRIC candidate = leg ที่ 8 ของ Boss_14 demo cohort (H4, magic ใหม่) → เหลือ finer sweep + corr<0.8 vs 7 legs ก่อนเสนอ user · verdict = _triage/ORDER106_GBPJPY_RESCUE_VERDICT.md · NZDUSD/USDCAD/AUDNZD = ใบถัดไป` (role: agent funnel-batch · verdict = Claude)
+## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `GBPJPY DONE + REVIEWED(Claude 2026-07-16): ✅ RESCUE สำเร็จ ไม่ตาย — H4 @ dist2.0 plateau both-window + Model-4 CONFIRM (MAIN 1.56/BWD 1.11 ดีขึ้น/HOLDOUT 1.50, grid ไม่ collapse บน real ticks) · high-PF cells = spike ทิ้ง · thin (n~50, DD~9%) · PARAMETRIC candidate = leg ที่ 8 ของ Boss_14 demo cohort (H4, magic ใหม่) · **d1.5 finer Model-4 = REJECT (2026-07-16): MAIN 1.92 แต่ BWD 0.92 fill-optimism → leg-8 config = d2.0/s4.0 (Model-4 confirmed 1.56/1.11) ไม่ใช่ d1.5** · เหลือด่านสุดท้าย corr<0.8 vs 7 legs (d2.0) ก่อนเสนอ user · verdict = _triage/ORDER106_GBPJPY_RESCUE_VERDICT.md · NZDUSD/USDCAD/AUDNZD = ใบถัดไป` (role: agent funnel-batch · verdict = Claude)
 
 **ที่มา:** ORDER-084 judge กอง ข อันดับ 1 — GBPJPY/NZDUSD/USDCAD/AUDNZD เคยเห็นแค่ defaults (0.68-1.13,
 GBPJPY OOS 1.12 เฉียดบาร์) บน chassis Boss_14 ที่ validated แล้ว = under-swept ชัดตามกฎ rescue-ladder.

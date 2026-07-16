@@ -59,6 +59,12 @@ holdout บวก = plateau นี้เป็นของจริงระด�
 **Model-4:** confirm แล้วที่ d2.0/s4.0 (1.56/1.11 = จุดใน plateau เดียวกัน) → plateau นี้ real-tick-validated ที่ 1 จุด ·
 d1.5 center ควร Model-4 confirm เพิ่มก่อน finalize (คิว — ห้ามรันคู่ Model-4 อื่น freeze).
 
+**🔴 d1.5 Model-4 RESULT (Claude, 2026-07-16 — `_mt5_auto/GBPJPY_D15_M4.csv`):** MAIN 1.92 (แข็งขึ้น) แต่
+**BWD 0.92 = FAIL บน real ticks** (Model-1 เคย 1.32 → fill-optimism, grid basket fills ที่ไม่เกิดจริง). **→ d1.5
+REJECT, leg-8 config ที่ถูกต้อง = d2.0/s4.0** (Model-4 both-window confirmed 1.56/1.11). บทเรียนซ้ำ: finer-sweep
+ที่ดูดีบน Model-1 (d1.5 1.40/1.32 > d2.0 1.55/1.06) เป็น mirage — **tighter grid spacing = fill-optimism มากขึ้น**;
+เชื่อ Model-4 เสมอ (pattern เดียวกับ Zeus m2 dir-lock ORDER-109). **leg-8 = GBPJPY H4 @ d2.0/s4.0, รอด่านสุดท้าย corr<0.8 vs 7 legs.**
+
 **Next (queue — ไม่ deploy เอง):** GBPJPY H4 = **candidate เพิ่มเป็น leg ที่ 8 ของ Boss_14 demo cohort**
 (415573666 มี 7 symbol H1 อยู่แล้ว 990201-207 — EA เดียวกัน magic ใหม่, GBPJPY H4). ด่านก่อนเสนอ user:
 (a) finer sweep dist∈{1.5,2.0,2.5}×basket-TP รอบ center ยืนยัน plateau + n เพิ่ม (b) corr vs 7 legs เดิม
