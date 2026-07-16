@@ -727,7 +727,13 @@ edge บวกจริง+MC-survive แต่ thin (PF_5th 1.036) = demo small
 1.66/1.39 ผ่าน both-window ≥1.2** → คว่ำ "XAU ceiling 1.13" (default-period only). year-split (`ICHI_XAU_YEARSPLIT.csv`): medH4 6/6 ปี ≥0.99 (thin 8-20t/yr) ·
 slowH1 5/6 ปีบวก (32-41t/yr). แข็งกว่า USDJPY basket แต่ **gate ชี้ขาด = corr vs XAU legs เดิม** (XAU แน่นมาก).
 
-## ORDER-112E — corr check: Ichimoku-XAU additive หรือ redundant? — `OPEN` (self-contained)
+## ORDER-112E — corr check: Ichimoku-XAU additive หรือ redundant? — `DONE(Claude 2026-07-16B) = 🎯 ADDITIVE (reduced-lot)`
+**ผล:** full-window XAU Model-4 → monthly Pearson (`_mt5_auto/ichi_xau_corr.ps1`): Ichimoku-XAU slowH1 PF 1.57/236t/Sharpe 3.0 ·
+**vs BRK 0.263 · Kaufman 0.574 · SuperTrend 0.646** = additive (max 0.646, ต่ำกว่า SuperTrend-0.724-block). **VERDICT: candidate จริง,
+deploy small-lot. Bundle #11 `_vps_deploy/ICHIADX_XAU/` (H1 slow magic 990068)** — เพิ่มใน roster แล้ว. medH4 = optional 2nd leg (990069 reserved).
+รายละเอียด original order ด้านล่าง (เก็บไว้ provenance):
+
+## ~~ORDER-112E — corr check~~ (spec เดิม, ปิดแล้ว)
 **ทำไม:** XAU Ichimoku (slowH1 20/60/120, both-window 1.66/1.39, 5/6 yr+) = edge จริง แต่ XAU portfolio แน่น (BRK/Kaufman/SuperTrend/Wave5/MacdDiv);
 SuperTrend เคยโดน corr 0.724 block. ต้องรู้ก่อนว่าเป็น leg ใหม่จริงหรือซ้ำ.
 **ขั้น:** (1) รัน (EXP)_IchiADX_Naked slowH1 (set `_mt5_auto/ab_sets/ichi_kumo/KUMO_slow_H1.set`) XAUUSD H1 full 2020-2026 Model-4 → report

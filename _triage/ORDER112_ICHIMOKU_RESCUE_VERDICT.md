@@ -57,6 +57,14 @@ Probe เก่า sweep **ADX + exit + symbol** บน **Model-2 + recent-only(
   XAU trend-follower มัก corr สูง (SuperTrend เคยโดน 0.724 block). ถ้า corr <0.6 = additive leg ใหม่จริง · >0.8 = redundant small-lot.
   **→ ORDER-112E (stocked): corr_monthly.py Ichimoku-XAU(slowH1) vs XAU legs → ตัดสิน additive/redundant.**
 
+### ORDER-112E — corr verdict (2026-07-16B) = 🎯 ADDITIVE LEG (reduced-lot)
+full-window XAU passes 2020-2026 Model-4 → monthly Pearson (`_mt5_auto/ichi_xau_corr.ps1`):
+- Ichimoku-XAU slowH1 full: **PF 1.57 · 236t · Sharpe 3.0** (77 months, net +$7,038)
+- **vs BRK_XAU 0.263 (LOW=additive) · vs KAUFMAN 0.574 (<0.6) · vs SuperTrend 0.646 (reduce-lot)**
+- max corr 0.646 → **ADDITIVE leg ที่ reduced lot** (user rule: high-corr = ลด lot ไม่ตัด). ต่ำกว่า SuperTrend-0.724-block ชัด.
+**VERDICT: XAU Ichimoku slowH1 = candidate จริง, additive ต่อ portfolio, deploy small-lot.** แข็งกว่า USDJPY basket
+(healthy sample + Sharpe 3.0 + additive). Bundle #11 `_vps_deploy/ICHIADX_XAU/`. medH4 (6/6yr ≥0.99 thin) = optional 2nd leg.
+
 ## ORDER-112B — merged-equity + MC (USDJPY basket)
 **สรุป build-on: DEMO-ELIGIBLE small-lot (thin edge).** edge บวกจริง both-window + MC-survive + ruin 0% แต่ PF_5th 1.036 = บาง (แข็งๆ ~1.3-1.7)
 → demo cohort เก็บ forward data ไม่ใช่ live leg แข็ง. **Bundle #9 พร้อม attach: `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (2 leg: H4 med magic 990066 + H1 slow magic 990067,
