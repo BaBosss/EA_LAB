@@ -196,9 +196,11 @@ spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tes
 `(EXP)_EmaStoRev` (HTF EMA-gate + STO reversion). **default-smoke หลอก** (0.63-0.89 — STO 5,3,3 noise เยอะ).
 **optimize จริงพลิกผล:** XAU (trender) = regime-fit (MAIN 2.30 / BWD ล่ม) · **EURUSD (ranger = บ้านถูก) = 2/3 top
 pass ยืน both-window** (1.30/1.13 · 1.22/1.02). survivor = **StoK17** (ไม่ใช่ 5) · OS10-15 · SL3.0 · TP1 · EMA50.
-= modest edge (1.1-1.3) both-window บน ranger. **next = plateau-confirm + ranger อื่น + filter (momentum/ADX/HTF/OB)
-ดันเหนือ 1.3 + Model-4.** verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
-**บทเรียนถาวร: default-smoke ≠ concept-kill — ต้อง optimize + right-home ก่อนตีตาย reversion (VERDICT GATE).**
+= edge **เฉพาะ EURUSD H1** (ไม่ travel: AUDNZD/EURGBP/XAU ล่ม BWD). **ADX filter (user idea) ยกดีขึ้น:** best =
+StoK13/OS30/AdxMax30/EMA50/SL3/TP1 = **MAIN 1.50 / BWD 1.24, 130 ไม้** (จาก no-filter 1.30/1.13). filter ต่อยอด
+edge ที่มี ไม่สร้าง edge (AUDNZD กู้ไม่ได้). = **EURUSD-specific candidate** (plateau+Model-4 ก่อน demo). verdict =
+`_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
+**บทเรียนถาวร: default-smoke ≠ concept-kill — optimize + right-home + filter ก่อนตีตาย reversion (user push ถูก 2 เรื่อง).**
 
 ## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
 

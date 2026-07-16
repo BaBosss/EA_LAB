@@ -17,8 +17,18 @@
 > `order107_opt_rangers.csv`) — top MAIN แตะแค่ ~1.0-1.1 + **BWD ล่มทั้งคู่** (AUDNZD 0.58-0.65 · EURGBP 0.43-0.68).
 > → EURUSD 2/3 ที่ยืน both-window = **EURUSD-specific หรือ in-sample luck** ไม่ใช่ robust cross-ranger edge. base อ่อน.
 >
-> **สถานะ (แก้): PARKED-marginal — reversion base อ่อน, both-window survival จำกัดที่ EURUSD เท่านั้น (1/4 instrument).**
-> ยังไม่ปิดสนิท เพราะ filter ยังไม่เทส (ADX อาจตัด counter-trend loser ที่ทำ BWD ล่มบน AUDNZD/EURGBP) — เทสต่อ.
+> **ADX FILTER TEST (2026-07-16, user idea) — `order107_adx_results.csv`:**
+> - **EURUSD (มี edge อยู่แล้ว): ADX filter ยกดีขึ้นชัด** — best both-window = StoK13/OS30/OB80/**AdxMax30**/SL3.0/TP1/EMA50
+>   = **MAIN 1.50 / BWD 1.24, trades 136/130** (ดีกว่า no-filter 1.30/1.13 ทั้ง PF และ sample). filter ช่วยจริง.
+> - **AUDNZD (ไม่มี edge): ADX filter กู้ไม่ได้** — top MAIN ยัง <1.0 (0.83-0.97), BWD ล่มต่อ. filter ตัด trade แต่ไม่สร้าง edge.
+> - **หลัก: filter ต่อยอด edge ที่มี ไม่สร้าง edge ใหม่** (ตรงกับบทเรียน pending-limit).
+>
+> ## FINAL STATUS — 🟩 EURUSD-specific reversion candidate (ไม่ portfolio-general, ไม่ dead)
+> SMC×STO = **edge เฉพาะ EURUSD H1** — optimized STO(K13-17) + deeper OS + ADX-filter(30) = **MAIN 1.50 / BWD 1.24**
+> both-window, 130 ไม้. **ไม่ travel** (AUDNZD/EURGBP/XAU ล่ม). **user push ถูก 2 เรื่อง** (optimize STO: default K5→K13-17
+> · ADX filter: ยก 1.30/1.13→1.50/1.24) — default-smoke ที่ผมรีบตัดสินจะทิ้ง candidate จริงตัวนี้ทิ้ง.
+> **Next (ต่อเนื่อง): plateau-confirm รอบ EURUSD ADX-winner + Model-4 (STO scalp fill-sensitive) → ถ้าผ่าน = EURUSD demo
+> candidate.** ยังไม่ deploy (optimizer-selected in-sample MAIN, BWD held OOS แต่ต้อง plateau + real-tick ก่อน).
 > **Next (ตาม user's filter ideas — ตอนนี้คุ้มเพราะ base both-window+ แล้ว):** (1) plateau-confirm neighbor รอบ
 > StoK17/OS10-15/EMA50 + ranger อื่น (EURGBP/AUDNZD) (2) เพิ่ม filter: **momentum/ADX gate** (ตัด counter-trend
 > loser = failure mode เดิม) · HTF confluence · OB zone (SMC ส่วนที่ถอด) → ดันเหนือ 1.3 (3) Model-4 confirm
