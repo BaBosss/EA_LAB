@@ -144,7 +144,7 @@ promote เงินจริงใน order นี้ (probe เท่านั
 
 **ผล:** _(Stage A+B done — ดู verdict ที่ header + `_triage/ORDER104_EXPERIMENT_SUMMARY.md`)_
 
-### ORDER-104 STAGE C — build-on XAU-H4-HP-λ1600 (W1 survivor) — `OPEN (รอเครื่องว่าง — Meta5/5b ติด 098-A/B อยู่)` (role: agent smoke-batch · spec = Claude 2026-07-16)
+### ORDER-104 STAGE C — build-on XAU-H4-HP-λ1600 (W1 survivor) — `DONE + REVIEWED(Claude 2026-07-16): plateau both-regime ยืนยัน — fast16/slow32 MAIN 1.59/BWD 1.33 + เพื่อนบ้าน 4 ทิศผ่าน + SL ทั้ง 3 ค่าผ่าน + λ1600=center → HP-denoise = validated noise-filter lever บน XAU trend-cross · chassis=probe testbed → next = Model-4 confirm หรือ graft เข้า production chassis (lead เลือกตอนถึงคิว) · verdict = _triage/ORDER104C_HP_PLATEAU_VERDICT.md` (role: agent smoke-batch · spec+verdict = Claude 2026-07-16)
 
 **เป้า:** ยืนยันว่า cell ที่ผ่าน both-regime (XAU H4 @ λ1600: 1.35/1.68 n=64-72) เป็น plateau จริงรอบแกน
 MA-period × SL แล้วค่อยส่ง Model-4 confirm — ตาม NEXT ของ Stage B.

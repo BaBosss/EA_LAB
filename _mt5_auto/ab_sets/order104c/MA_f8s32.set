@@ -1,0 +1,10 @@
+_01_FastMA=8
+_01_SlowMA=32
+_02_UseHPFilter=true
+_02_HP_Window=120
+_02_HP_Lambda=1600
+_03_UseTanhVol=false
+_04_SlAtrMult=2.0
+_05_LotSize=0.01
+_07_Magic=991041
+_07_AllowLive=false

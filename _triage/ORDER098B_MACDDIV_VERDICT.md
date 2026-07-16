@@ -37,3 +37,24 @@ Raw: `_mt5_auto/order098b_bwd_plateau.csv` · `order098b_macddiv_opt_summary.md`
 
 **Next stage (queue ตาม pacing — ห้ามรันคู่ order อื่น):** Model-4 confirm XAU H4 ×3 windows → ถ้า PF ยัง
 ผ่านบาร์ทั้งสาม → corr equity-curve vs gold cohort → เสนอ user เข้า demo. อย่า retune ระหว่างนี้.
+
+---
+
+## MODEL-4 REAL-TICK CONFIRM (Claude, 2026-07-16) — ✅ ผ่าน, edge ไม่ใช่ fill artifact
+
+`_mt5_auto/order098b_model4_confirm.csv` · deals = `_mt5_auto/O098B_M4_XAU_H4_MAIN_deals.csv` (280 trades)
+
+| window | Model 1 | **Model 4 (real ticks)** | Δ |
+|---|---:|---:|---:|
+| MAIN 23-26 | 1.91 | **1.89** (280t, DD 3.01%) | ~0 |
+| BWD 20-22 | 1.04 | **0.97** (240t, DD 3.98%) | -0.07 |
+| HOLDOUT 2026H1 | 1.30 | **1.28** (39t, DD 5.74%) | -0.02 |
+
+**อ่านผล:** Model-4 แทบไม่ต่างจาก Model-1 ทั้ง 3 window = **entry edge เป็นของจริง ไม่ใช่ Model-1 fill
+optimism** (ต่างจาก grid EA ที่มัก collapse ตอน real-tick). naked flat-lot จึงไม่มี fill-sensitivity ให้กังวล.
+BWD 0.97 ยัง ~breakeven (regime ตรงข้าม รอดตัว) — ไม่ใช่ deploy-window อยู่แล้ว, XAU H4 MAIN+holdout คือบ้าน.
+
+**สถานะ: CONFIRMED — เหลือด่านเดียวก่อน demo = corr equity-curve gate vs gold cohort ที่ deploy อยู่ 5 ตัว
+(Zeus 990101 · BRK-XAU 991001 · Squeeze 991004 · Trendline 991002 · Wave5-XAU 990301) — pairwise <0.8.**
+deals CSV พร้อมแล้ว. ถ้า corr ผ่าน → bundle magic ใหม่ (เสนอ 999094 ตาม set) → เสนอ user attach.
+**ยังไม่ retune, ไม่ promote เอง** — corr + user-nod ก่อน.
