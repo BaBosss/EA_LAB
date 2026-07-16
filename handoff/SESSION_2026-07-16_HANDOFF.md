@@ -28,6 +28,15 @@
    Bars40 (1.93/1.97). **BUT retrofit on LIVE Bars55/TP8 = ไม่ยก** (config-conditional) → ห้าม retrofit ตัว live.
    lever banked (EDGE_CATALOG). verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`
 
+## รอบ 2 (afternoon, user เคาะ 4 ทิศ + ทำต่อ)
+12. **MacdDiv Exness XAUUSDc set** = `_vps_deploy/MACDDIV_XAU/MacdDiv_XAUc_exness3d_v1.set` (Deviation 300 สำหรับ
+   3-digit cent · digit-safe · README มี caveat feed-validation) — user จะทดลองบน cent port 10000 คืนนี้
+13. **ORDER-106 GBPJPY finer sweep** → plateau ยกไป d1.5 (tp150 = 1.40/1.32, trades 93/51 = แก้ปม thin) =
+   candidate leg-8 แข็งขึ้น · d1.5 Model-4 confirm ยังค้าง (ห้ามรันคู่ Model-4 อื่น)
+14. **🟩 ORDER-091C-D1d pending-limit MT5 (Thread A) = BUILT + tested** `(EXP)_LwmaRev_Pending` · pending +0.05 PF/ไม้
+   แต่ base reversion no-edge · **สรุปรวม pending 2 ฝั่ง = `_triage/PENDING_LIMIT_SYNTHESIS.md`** (pending = refinement
+   ไม่ใช่ resurrector; split = form ที่ adoptable; spread-death revival คุ้มเฉพาะ post-spread PF≥0.95)
+
 ## 👉 คิวถัดไป (เรียง EV — pace 1-2/รอบ)
 
 1. **🔼 ORDER-091C-D1d JUMSTOCH pending-limit** — **user reaffirm 2026-07-16 แรง** ("EA ตายเพราะ spread ตั้ง
