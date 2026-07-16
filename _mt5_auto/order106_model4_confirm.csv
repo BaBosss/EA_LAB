@@ -1,0 +1,4 @@
+window,model,PF,Net,Trades,DDpct,WinPct,status
+MAIN,4,1.56,1057.99,55,9.23,58.18,OK
+BWD,4,1.11,209.77,50,9.4,58.0,OK
+HOLDOUT,4,1.5,123.0,10,3.75,70.0,OK

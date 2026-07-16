@@ -26,3 +26,25 @@ ORDER-084 retro-audit was for.
    vs the Boss_14 demo cohort (990201-207 already live — corr gate <0.8, and GBPJPY not yet in cohort).
 
 **Status: PARAMETRIC build-on — pending Model-4 (in flight). NOT deploy, NOT dead.** rescue queue #1 done.
+
+---
+
+## MODEL-4 CONFIRM (Claude, 2026-07-16) — ✅ ผ่าน, grid ไม่ collapse บน real ticks
+`_mt5_auto/order106_model4_confirm.csv` (GJ_d2.0_s4.0.set, plateau center)
+
+| window | Model 1 | **Model 4 (real ticks)** |
+|---|---:|---:|
+| MAIN 23-26 | 1.55 | **1.56** (55t, DD 9.23%) |
+| BWD 20-22 | 1.06 | **1.11** (50t, DD 9.40%) — ดีขึ้น |
+| HOLDOUT 2026H1 | — | **1.50** (10t, DD 3.75%) |
+
+**อ่านผล:** grid EA มัก collapse ตอน Model-4 (fill จริงแพงกว่า Model-1) — **ตัวนี้ไม่** MAIN เท่าเดิม BWD ดีขึ้น
+holdout บวก = plateau นี้เป็นของจริงระดับ real-tick. **rescue สำเร็จ: GBPJPY ไม่ตาย** (ORDER-084 flag ถูก).
+
+**Caveat ที่เหลือ:** (1) thin — n=50-55 ต่อ 3yr (~18 trades/ปี) + holdout n=10 = power ต่ำ (2) DD real-tick ~9%
+(สูงกว่า M1 5.3% ตามคาดของ grid) (3) risk class = capped-log grid (สูงกว่า naked MacdDiv).
+
+**Next (queue — ไม่ deploy เอง):** GBPJPY H4 = **candidate เพิ่มเป็น leg ที่ 8 ของ Boss_14 demo cohort**
+(415573666 มี 7 symbol H1 อยู่แล้ว 990201-207 — EA เดียวกัน magic ใหม่, GBPJPY H4). ด่านก่อนเสนอ user:
+(a) finer sweep dist∈{1.5,2.0,2.5}×basket-TP รอบ center ยืนยัน plateau + n เพิ่ม (b) corr vs 7 legs เดิม
+(gate reuse ข้าม symbol ของ EA เดียว = pairwise <0.8) → ถ้าผ่านเสนอเป็น cohort addition. = ORDER-095-style.
