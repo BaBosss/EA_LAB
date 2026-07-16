@@ -191,16 +191,14 @@ spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tes
 อ่อน — Bars40/TP5 ช่วย (regime-robust) แต่ **live Bars55/TP8 ไม่ช่วย** (retest อ่อน BWD, TP กว้างต้องการ move ใหญ่)
 → **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`.
 
-## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) 🔄 REOPENED (default-smoke ≠ concept-kill)
+## SMC × STO multi-TF reversion (user idea, 2026-07-16) 🟩 BUILD-ON candidate (optimized, ranger-home)
 
-**อัปเดต 2026-07-16:** Stage-0 cheap-death test แล้ว (`(EXP)_EmaStoRev` — แกน EMA100-gate + STO reversion, ถอด OB
-ออก). **ทุก cell PF<1.0** (EURUSD/GBPUSD/XAU × M15/H1 = 0.63-0.89) · win% สูง 58-67% แต่ PF<1 = **กับดัก
-mean-reversion** (ชนะบ่อยไม้เล็ก แพ้ใหญ่ตอนเทรนด์ทะลุ SL). แกนไม่มี edge → OB zone (Stage-1) ไม่ช่วย (zone แค่ relocate
-reversion เดิม ไม่เปลี่ยน negative-edge เป็น positive) → **ปิด concept สำหรับ build** ตาม pre-registered plan + prior
-momentum>reversion. verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`. (residual: reversion เฉพาะที่ OB
-อาจต่างจาก STO-cross สุ่ม — ยังไม่เทส แต่ prior ไม่คุ้ม build เต็ม เว้น user สั่งเจาะจง.)
-
-_เดิม (concept note): momentum-gated reversion (EMA gate + STO-at-zone entry) — same family as NuiIndy._
+`(EXP)_EmaStoRev` (HTF EMA-gate + STO reversion). **default-smoke หลอก** (0.63-0.89 — STO 5,3,3 noise เยอะ).
+**optimize จริงพลิกผล:** XAU (trender) = regime-fit (MAIN 2.30 / BWD ล่ม) · **EURUSD (ranger = บ้านถูก) = 2/3 top
+pass ยืน both-window** (1.30/1.13 · 1.22/1.02). survivor = **StoK17** (ไม่ใช่ 5) · OS10-15 · SL3.0 · TP1 · EMA50.
+= modest edge (1.1-1.3) both-window บน ranger. **next = plateau-confirm + ranger อื่น + filter (momentum/ADX/HTF/OB)
+ดันเหนือ 1.3 + Model-4.** verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
+**บทเรียนถาวร: default-smoke ≠ concept-kill — ต้อง optimize + right-home ก่อนตีตาย reversion (VERDICT GATE).**
 
 ## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
 

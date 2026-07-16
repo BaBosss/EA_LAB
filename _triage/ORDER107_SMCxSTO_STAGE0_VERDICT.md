@@ -1,10 +1,25 @@
 # ORDER-107 — SMC×STO Stage-0 skeleton smoke — verdict (Claude, 2026-07-16)
 
-> ⚠️ **CORRECTION (2026-07-16, user จับถูก):** verdict "DEAD concept" ด้านล่าง**แรงเกินหลักฐาน** — ตีจาก
-> DEFAULT params + 0 lever swept = ผิด VERDICT GATE ของเราเอง (`source-available <3 lever = INVALID`).
-> Stage-0 default smoke ปิดได้แค่ cell "naked default" **ไม่ใช่ตัดสิน concept ตาย.** REOPENED → กำลัง
-> optimize STO+EMA-gate+SL+TP บน XAU H1 (rescue-ladder step ที่ผมข้าม). ผลด้านล่าง = default-only เท่านั้น.
-> ถ้า optimize ceiling ยัง <1.0 both-window = optimize-confirmed death (ค่อยเขียนใหม่). ถ้าข้าม → ลอง filter.
+> ⚠️ **CORRECTED VERDICT (2026-07-16, user จับถูก) — SMC×STO ไม่ตาย, เป็น BUILD-ON candidate บนบ้าน ranger.**
+> default-smoke ด้านล่าง (0.63-0.89) = **หลอก** เพราะ STO default (5,3,3) noise เยอะ + เทสบนบ้านผสม.
+> optimize จริง (180 passes/symbol) พลิกผล:
+>
+> | optimize บน | top MAIN | top both-window | อ่าน |
+> |---|---|---|---|
+> | **XAU H1** (trender = บ้านผิด reversion) | 2.30 | ล่มหมด (BWD 0.29-0.78) | regime-fit (จูนเข้าปีทองขึ้น) |
+> | **EURUSD H1** (ranger = บ้านถูก) | 1.30 | **2/3 ยืน: 1.30/1.13 · 1.22/1.02** | ✅ **มี edge both-window** |
+>
+> **survivor config:** StoK=**17** (vs default 5 — user พูดถูกว่า STO ต้อง optimize) · OS 10-15 (deeper) · OB 75 ·
+> SL 3.0×ATR · TP 1×ATR (fixed, ไม่ใช่ STO-reverse) · EMA50. 2 pass ที่ยืนต่างกันแค่ OS (10 vs 15) = plateau-ish.
+> trades 90-115 MAIN / 61-75 BWD (H1 3yr, พอ). set = `_mt5_auto/ab_sets/order107_opt/top_eur/`.
+>
+> **สถานะ: PARAMETRIC build-on (ไม่ deploy) — modest edge (1.1-1.3) both-window บน EURUSD ranger.**
+> **Next (ตาม user's filter ideas — ตอนนี้คุ้มเพราะ base both-window+ แล้ว):** (1) plateau-confirm neighbor รอบ
+> StoK17/OS10-15/EMA50 + ranger อื่น (EURGBP/AUDNZD) (2) เพิ่ม filter: **momentum/ADX gate** (ตัด counter-trend
+> loser = failure mode เดิม) · HTF confluence · OB zone (SMC ส่วนที่ถอด) → ดันเหนือ 1.3 (3) Model-4 confirm
+> (STO scalp fill-sensitive). **บทเรียน (บันทึกถาวร): default-smoke ≠ concept-kill — optimize+right-home ก่อนตัดสินเสมอ.**
+>
+> _(ด้านล่าง = default-only smoke เดิม, เก็บไว้เป็นบันทึกว่าทำไม default หลอก)_
 
 
 EA `(EXP)_EmaStoRev` (HTF EMA100 gate + Stochastic-cross reversion + STO-reverse exit + BE@50, NO order

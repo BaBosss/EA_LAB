@@ -172,7 +172,7 @@ Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช
 
 ---
 
-## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `🔄 REOPENED (Claude 2026-07-16, user จับถูก): verdict เดิม "DEAD skeleton" = แรงเกินหลักฐาน — ตีตายจาก DEFAULT params + 0 lever swept = ผิด VERDICT GATE (source-available <3 lever = INVALID). Stage-0 default smoke ปิดได้แค่ cell "naked default" ไม่ใช่ concept · กำลัง optimize STO+EMA-gate+SL+TP (rescue-ladder step ที่ข้าม) บน XAU H1 → ถ้า ceiling ยัง <1.0 both-window = optimize-confirmed death · ถ้าข้าม = ลอง filter (MACD/SuperTrend/HTF/momentum) ต่อ · smoke ดิบเดิม (0.63-0.89 default, win% สูง=MR trap) = _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md` (role: Claude build → agent optimize · verdict = Claude)
+## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `CORRECTED + REVIEWED(Claude 2026-07-16): 🟩 BUILD-ON candidate ไม่ตาย (user จับถูก — default-smoke ผมรีบตัดสินผิด gate) · optimize จริง 180 passes/symbol: XAU (trender=บ้านผิด) regime-fit ล่ม BWD · EURUSD (ranger=บ้านถูก) 2/3 top pass ยืน both-window (1.30/1.13 · 1.22/1.02) · survivor StoK17 (vs default 5!)/OS10-15/SL3.0/TP1/EMA50 = modest edge 1.1-1.3 both-window · verdict = _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md · next = plateau-confirm + ranger อื่น + filter (momentum/ADX/HTF/OB) + Model-4` (role: Claude build → agent optimize · verdict = Claude)
 
 **ที่มา:** user แชร์ระบบ class SMC×STO (triage เต็ม = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`, EDGE_CATALOG PARKED-CONCEPT).
 class = momentum-gated reversion · cheap-death: strip SMC/OB (แพง) เทส skeleton ก่อน.
