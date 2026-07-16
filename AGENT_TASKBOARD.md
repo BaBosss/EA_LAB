@@ -158,7 +158,7 @@ MA-period × SL แล้วค่อยส่ง Model-4 confirm — ตาม 
 
 ---
 
-## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `OPEN (ยกเป็น order 2026-07-16 · ปล่อยเมื่อถึงคิว pacing — อย่ารันพร้อม 098-A/B/104-C)` (role: agent funnel-batch · verdict = Claude)
+## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `GBPJPY DONE + REVIEWED(Claude 2026-07-16): RESCUE JUSTIFIED ไม่ตาย — H4 @ dist2.0 = plateau both-window (SL{3,4,6} → MAIN 1.55-1.59/BWD 1.06-1.07) ที่ defaults พลาด · high-PF cells = spike ทิ้ง · grid → Model-4 confirm รันอยู่ (thin 31-40t, BWD เฉียด) · PARAMETRIC build-on ไม่ deploy · verdict = _triage/ORDER106_GBPJPY_RESCUE_VERDICT.md · NZDUSD/USDCAD/AUDNZD = ใบถัดไปถ้า Model-4 ผ่าน` (role: agent funnel-batch · verdict = Claude)
 
 **ที่มา:** ORDER-084 judge กอง ข อันดับ 1 — GBPJPY/NZDUSD/USDCAD/AUDNZD เคยเห็นแค่ defaults (0.68-1.13,
 GBPJPY OOS 1.12 เฉียดบาร์) บน chassis Boss_14 ที่ validated แล้ว = under-swept ชัดตามกฎ rescue-ladder.
@@ -169,6 +169,22 @@ Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช
 ใบถัดไป. ใช้ launcher/set ของ family เดิม (`_mt5_auto/ab_sets/` มี precedent ORDER-069 216-pass).
 **Acceptance:** CSV ทุก pass: PF/Net/Trades/DD ต่อ window · **ห้าม:** verdict · เลือก "ตัวดีสุด" เอง ·
 รันเกิน 1 symbol ในรอบเดียว · แตะ config demo cohort เดิม
+
+---
+
+## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `OPEN (build+smoke เมื่อ lane ว่าง — pace)` (role: Claude/Sonnet build → agent smoke · verdict = Claude)
+
+**ที่มา:** user แชร์ระบบ class SMC×STO (triage เต็ม = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`, EDGE_CATALOG PARKED-CONCEPT).
+class = momentum-gated reversion · cheap-death: strip SMC/OB (แพง) เทส skeleton ก่อน.
+
+**Stage 0 (คำสั่ง):** build standalone probe `(EXP)_EmaStoRev` — higher-TF EMA100 gate (buy-only ถ้า close>EMA100 บน
+resample/HTF handle · sell-only ถ้าต่ำกว่า) + Stochastic(5,3,3) cross ออกจาก OS(20)/OB(80) = entry, 1 flat-lot 0.01,
+SL 1.5-2.0×ATR, exit = STO-reverse ที่ opposite extreme + BE-move ที่ STO50. **ไม่มี OB zone, ไม่มี grid** (Stage 1
+ค่อยเพิ่มถ้ามีชีพจร). bar-open gate + tester-gate + digit-aware pip ผ่าน mql-code-reviewer ก่อน compile.
+smoke Model 1, 2023-2026: EURUSD + GBPUSD + XAUUSD × {M15, H1} = 6 cell.
+**Acceptance:** ตาราง 6 แถว PF/Trades/DD/Win + report path · **บาร์:** cell ใดก็ได้ PF≥1.1 naked = ไป Stage 1 (เพิ่ม OB
+gate) · ทุก cell PF<1.0 = DEAD concept (OB ไม่ช่วย — zone แค่ locate reversion เดิม) บันทึก signal-landscape ปิด.
+**ห้าม:** ใส่ OB/grid ก่อน skeleton ผ่าน · M1 ใน Stage 0 (spread noise — เก็บไว้ถ้าไป production) · verdict (lead).
 
 ---
 

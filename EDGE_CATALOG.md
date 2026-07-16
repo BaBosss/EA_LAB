@@ -179,6 +179,22 @@ MC reshuffle ruin 0%, DD worst 4.76%. **เหลือ:** Model-4 real-tick ×3
 **บทเรียนคู่กัน:** EUR H4 สวยทั้ง MAIN 1.71 + BWD 1.15 แต่ **holdout 0.35 = selection-fit** — ยืนยันคุณค่า
 holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับของปลอมที่ 2-window gate จับไม่ได้.
 
+## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) 🟨 PARKED-CONCEPT
+
+**Source:** user-shared class system. Rules: M15 EMA100 = direction bias (buy-only above / sell-only below) →
+M5 fresh untouched Order Block / POI zone (wait for price to re-enter) → M1 Stochastic cross out of OS/OB
+*inside the zone* = trigger → exit: SL→BE at STO50, close on STO opposite-extreme reverse.
+**Class = momentum-GATED REVERSION** (EMA gate = trend, STO-cross-at-zone entry = reversion). Same family as
+NuiIndy (the one reversion survivor) — not a new class. Against the standing momentum>reversion prior + M1 scalp
+= spread-exposed = double headwind. BUT: SMC Order-Block entry is genuinely untested here (FVG≠OB; flagged
+present-but-untested in ORDER-079 corpus) and the exit is fully mechanical (testable).
+**Cheap 2-stage smoke plan (build when a lane frees):** Stage 0 = strip the SMC/OB (expensive) → naked
+EMA100-gated STO-cross reversion probe on M15 (skip M1 for triage), EURUSD/GBPUSD/XAU, Model 1 — if core PF<1
+everywhere, OB won't save it → DEAD. Stage 1 (only if pulse) = add M5 OB-zone gate (ring-buffer state like
+ORDER-098-A) → should raise win%. Full plan + hard-parts = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`.
+**Verdict: worth a cheap Stage-0 smoke (~1-2h), NOT a build campaign on hope.** Sibling of the MACD-gate S/D
+concept above (both = untested reversion-at-zone).
+
 ## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
 
 **ไม่ใช่ EA — เป็น bolt-on lever:** กรอง noise ความถี่สูงด้วย causal HP filter *ก่อน* คำนวณ MA → ลด false cross.
