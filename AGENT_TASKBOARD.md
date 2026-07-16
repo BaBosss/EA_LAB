@@ -256,6 +256,13 @@ marginal จริง (pf 0.95-0.99, ยังขาดทุน) = **6 EA** · 
 flag self-contained vs indicator-dep) → IDEA_CATALOG. ไม่ใช่ "EA ผ่านไหม" แต่ "logic อะไรต่อยอดได้". batch 2 = .mq4 ทีหลัง.
 **caveat (user):** junk เยอะ ให้ข้าม · indicator-dependent ข้าม · error = flag ไม่จม. = ORDER-091 intake continuation + skill corpus-intake.
 
+**Part B RESULT (agent DONE 2026-07-16 — `_triage/ORDER111_mq5_source_catalog.csv` 599 families):** 1,708 .mq5 → 599 unique
+(324 indicator-dep flag+ข้าม · 139 self-contained-new **แต่ส่วนใหญ่ = boss* AI-gen ของแล็บเราเอง ไม่ใช่ external**). family split:
+grid-mart 281 · other 195 · trend 41 · MR 38 · breakout 14. **external ใหม่จริงต่อยอดได้ = ~4-5 กลไก:** Breakout Retest Pro
+(breakout+retest ← ตรง ORDER-108 lever), EX197 FVG scalper, POW BANKER (multi-confluence+news+trailing), TEMPO EMA/MACD,
+Boss Pivot Range. **สรุป: ไม่ใช่ขุมทรัพย์** (ตรง WOBR/intake lesson — family ตายแล้วเยอะ) แต่ 4-5 กลไกนี้เก็บเป็น build-lead.
+next: .mq4 (5,187) batch 2 · eyeball 195 "other" ทีหลัง.
+
 ---
 
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
