@@ -1,13 +1,45 @@
-# Demo Deployment Plan — Portfolio v3
+# Demo Deployment Plan — Portfolio
 
-> ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **live portfolio** (EA/magic/lot/judge/monitor) เท่านั้น
-อัพเดท: 2026-07-05 | สถานะ: 🟢 RUNNING — **9 EA** บน account 10,000 cent (judge 2026-09-22) +
-🟢 **Boss_14 cohort 7 EA** บน Exness demo (60,000 USD) — ✅ **ATTACHED 2026-07-05, clock เดินแล้ว** (ดูsection ล่าง)
+> ⚠️ canonical entry = **`PROJECT_STATE.md`** · machine-readable ownership ของ live portfolio =
+> **`portfolio/DEPLOYMENTS.csv`** (check_state บังคับความถูกต้องทุก commit) · ไฟล์ .md นี้ = human view +
+> monitor/kill-rule detail. **ถ้าตัวเลขในไฟล์นี้ขัดกับ DEPLOYMENTS.csv → เชื่อ CSV เสมอ.**
+>
+> 📖 อ่าน **§ CURRENT LIVE STATE** ข้างล่างก่อน (ของจริงวันนี้) · ทุกอย่างใต้ **🗂️ ARCHIVE** =
+> ประวัติแผน/experiment ก่อน 2026-07-09 เก็บไว้เป็น provenance (บางส่วน superseded — มีธงกำกับ)
 
-> **Live clock เริ่ม 2026-06-22** — judge ได้เร็วสุด **2026-09-22** (3 เดือน)
-> ทุก EA อยู่บน **account เดียวกัน** (10,000 cent = $100 USD equivalent)
+---
 
-> ✅ **ST_EA03 lot fix DONE (2026-06-22)** — Lots_divided แก้ 10M → 100,000 แล้ว
+## 📊 CURRENT LIVE STATE (2026-07-09 reality · judge ชุดนี้ = 2026-10-09) — canonical = `DEPLOYMENTS.csv`
+
+**โครงจริง = 5 บัญชีบน VPS 66.212.22.7** (ต่างจากแผน bundle เดิมที่คิดเป็น account เดียว — ดู detail §DEPLOYMENT REALITY ใน archive).
+Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื่องแล็บ `D:\Monitor` (4/5 ไหลอัตโนมัติ) · `/ea-monitor` ทุก ~2 สัปดาห์.
+
+| บัญชี | ประเภท | รันอะไร (magic) | สถานะแล็บ |
+|---|---|---|---|
+| **159503454** Blazing Arrow | REAL cent MT5 | **กองหลัก validated 5 ตัว:** Zeus(990101) · BRK-XAU(991001) · Squeeze(991004) · Trendline(991002 exp) · RSI-MR(990103→PENDING_REMOVE) | ✅ monitor เข้ม |
+| **159475669** Boss-Trend Swing | REAL cent MT5 | user mix: NuiIndy(1524) · CB_GBP(990005) + **ST03 family 9398/939721/990010 = PENDING_REMOVE** (uncapped-ruin/no-edge, user optimize มือก่อน) + unenumerated | ⚠️ user mix — แล็บไม่รับรอง |
+| **141049900** Celestial Woodfire | REAL cent MT4 | user exp: Zeus Gold Hedge(7777, no-SL) · Gold_Kangaroo L1-4(1112-1115) | ⚠️ user exp · kill floating DD 40% |
+| **415573666** Demo Mt5-2 | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) + EA_SUPERTREND(990020 PENDING_ATTACH) | ✅ Boss V2 bench |
+| **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
+
+**🟡 STAGED — bundle พร้อม รอ user attach (ยังไม่อยู่ใน DEPLOYMENTS.csv จนกว่า attach จริง):**
+| EA | Symbol/TF | Magic | Bundle | หลักฐาน |
+|---|---|---|---|---|
+| Boss_17_Wave5 | XAUUSD H1 | 990301 | `_vps_deploy/WAVE5_XAU/` | plateau both-window, MC ruin 0%, corr 0.415 |
+| Boss_17_Wave5 | XAGUSD H1 | 990302 | `_vps_deploy/WAVE5_XAG/` | 6/6 cell both-window (แข็งกว่า XAU) |
+| EA_BREAKOUT_XAU | USDJPY H4 | 991003 | `_vps_deploy/EA_BREAKOUT_USDJPY/` | flat-lot both-window 1.28/1.25 |
+| EA_BREAKOUT_XAU | US30 H4 | 991005 | `_vps_deploy/EA_BREAKOUT_US30/` | 1.46/1.39 (WATCH-thin) |
+| MacdDiv_Naked | XAUUSD H4 | 999094 | `_vps_deploy/MACDDIV_XAU/` | Model-4 confirm 1.89/0.97/1.28, corr 0.555 (2026-07-16) |
+
+**เมื่อ user attach ตัวใด → แจ้งวัน → Claude เพิ่ม row ใน DEPLOYMENTS.csv + judge +3 เดือน + dashboard map.**
+
+---
+
+## 🗂️ ARCHIVE — แผน/experiment log ก่อน 2026-07-09 (provenance; บางส่วน superseded โดย §CURRENT LIVE STATE)
+
+> ⚠️ **section ด้านล่างนี้ทั้งหมดเป็นประวัติ** — แผน v3 เดิม (9-EA cent account เดียว judge 2026-09-22) ถูกแทนที่ด้วย
+> โครง 5-บัญชี VPS ด้านบน. เก็บไว้เพราะมี monitor-rule/kill-switch/หลักฐานต่อ EA ที่ยังอ้างอิงได้. ตัวเลข judge date/
+> account structure ที่ขัดกับ §CURRENT LIVE STATE = ยึดด้านบน.
 
 ---
 
@@ -254,11 +286,11 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 **5 บัญชี active · live-clock ชุดนี้เริ่ม 2026-07-09 · judge ชุดนี้ = 2026-10-09 (+3 เดือน)**
 
 ### REAL — Exness Standard Cent, 10,000 USC/บัญชี (×3)
-| บัญชี | ชื่อ | Platform | รันอะไร | สถานะ validate |
-|---|---|---|---|---|
-| **159503454** | 08. Blazing Arrow | MT5 Hedge (Real20) | **MT5 cohort ทั้ง 5**: RSI-MR(990103) · Zeus(990101) · BRK-XAU(991001) · SqueezeBRK(991004) · Trendline(991002) | ✅ validated sets — นี่คือกองหลักที่ต้อง monitor เข้ม |
-| **159475669** | Boss - Trend Swing | MT5 Hedge (Real20) | mix: EA_BREAKOUT_XAU + **LondonConso (แล็บ REJECT)** + **Gold Reaper (แล็บ REJECT, ประวัติ DD>50%)** + MACD/NuiIndy/ST03/MatchaGrid + **939721 = ST_EA03 config user (GBP)** | ⚠️ ทดลองของ user — แล็บไม่รับรอง ตัวแดง 2 ตัวมีสำนวน REJECT · **🔴 939721 = uncapped-ruin ยืนยันจาก source+backtest 2026-07-10** (no SL · no cap · flat-lot PF 0.68 = entry ไม่มี edge, กำไรทั้งหมดมาจาก recovery escalation ที่มี ratchet defect ทำ linear→doubling — ที่มาไม้ 33.73 lots · ทุกปี float DD 40-69% · GBP วิ่งทางเดียว ~180-340 pips = ล้างพอร์ต ซึ่งเกิดปีละหลายครั้ง) → **คำแนะนำแล็บ (อัปเดตหลัง ORDER-068): ถอดตระกูล ST03 ทั้งหมดจากบัญชีจริงนี้ — 939721 + 9398 + 990010** (config แล็บก็ no-edge เท่ากัน: flat-lot GBP 0.68 / CAD 0.40 ล้างพอร์ต — มันแชร์ equity กับทุก EA ในบัญชี) · หลักฐาน `_mt5_auto\reports\ST03LIVE_*` + `ST03LAB_*` |
-| **141049900** | 01. Celestial Woodfire | MT4 (Real35) | Zeus Gold Hedge V1.2_fix **บน EURUSDc** (magic 7777) + Gold_Kangaroo XAUUSDc (magics 1112-1115, MagicStart=1111) | ⚠️ ทดลองของ user · magic map ยืนยันจาก tester 2026-07-10 · **Kangaroo smoke 3ปี: PF 4.86 H1 / DD 11% (capped martingale + SL จริง — ดีเกินคาด, ยังไม่ validated)** · **Zeus บน XAU = stop-out ใน 2 วัน DD 84-86% ทั้ง H1/M15 — ห้ามย้าย Zeus ไปทองเด็ดขาด** · **Zeus EURUSD (เซลล์ที่รันจริง): H1 = เซลล์เดียวใน 4 ที่รอด 3.5ปี (PF 1.61) แต่ DD 47.8% + ตะกร้าลบลอย ≥$5k สี่ครั้ง (ครั้งแรง −$9k บนทุน 10k, 53 ไม้/43 lots, no SL) · M15 stop-out เดือนที่ 3** → โปรไฟล์ = รอดเพราะ mean-revert ทัน ไม่ใช่เพราะมีเบรก — ถ้าคงไว้: ถอนกำไรเป็นระยะ + kill มือถ้า floating DD แตะ 40% · รายงาน `_mt4_auto\reports\KANGAROO_*/ZEUSMT4_*` |
+| บัญชี         | ชื่อ                   | Platform           | รันอะไร                                                                                                                                                                      | สถานะ validate                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------- | ---------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **159503454** | 08. Blazing Arrow      | MT5 Hedge (Real20) | **MT5 cohort ทั้ง 5**: RSI-MR(990103) · Zeus(990101) · BRK-XAU(991001) · SqueezeBRK(991004) · Trendline(991002)                                                              | ✅ validated sets — นี่คือกองหลักที่ต้อง monitor เข้ม                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| **159475669** | Boss - Trend Swing     | MT5 Hedge (Real20) | mix: EA_BREAKOUT_XAU + **LondonConso (แล็บ REJECT)** + **Gold Reaper (แล็บ REJECT, ประวัติ DD>50%)** + MACD/NuiIndy/ST03/MatchaGrid + **939721 = ST_EA03 config user (GBP)** | ⚠️ ทดลองของ user — แล็บไม่รับรอง ตัวแดง 2 ตัวมีสำนวน REJECT · **🔴 939721 = uncapped-ruin ยืนยันจาก source+backtest 2026-07-10** (no SL · no cap · flat-lot PF 0.68 = entry ไม่มี edge, กำไรทั้งหมดมาจาก recovery escalation ที่มี ratchet defect ทำ linear→doubling — ที่มาไม้ 33.73 lots · ทุกปี float DD 40-69% · GBP วิ่งทางเดียว ~180-340 pips = ล้างพอร์ต ซึ่งเกิดปีละหลายครั้ง) → **คำแนะนำแล็บ (อัปเดตหลัง ORDER-068): ถอดตระกูล ST03 ทั้งหมดจากบัญชีจริงนี้ — 939721 + 9398 + 990010** (config แล็บก็ no-edge เท่ากัน: flat-lot GBP 0.68 / CAD 0.40 ล้างพอร์ต — มันแชร์ equity กับทุก EA ในบัญชี) · หลักฐาน `_mt5_auto\reports\ST03LIVE_*` + `ST03LAB_*` |
+| **141049900** | 01. Celestial Woodfire | MT4 (Real35)       | Zeus Gold Hedge V1.2_fix **บน EURUSDc** (magic 7777) + Gold_Kangaroo XAUUSDc (magics 1112-1115, MagicStart=1111)                                                             | ⚠️ ทดลองของ user · magic map ยืนยันจาก tester 2026-07-10 · **Kangaroo smoke 3ปี: PF 4.86 H1 / DD 11% (capped martingale + SL จริง — ดีเกินคาด, ยังไม่ validated)** · **Zeus บน XAU = stop-out ใน 2 วัน DD 84-86% ทั้ง H1/M15 — ห้ามย้าย Zeus ไปทองเด็ดขาด** · **Zeus EURUSD (เซลล์ที่รันจริง): H1 = เซลล์เดียวใน 4 ที่รอด 3.5ปี (PF 1.61) แต่ DD 47.8% + ตะกร้าลบลอย ≥$5k สี่ครั้ง (ครั้งแรง −$9k บนทุน 10k, 53 ไม้/43 lots, no SL) · M15 stop-out เดือนที่ 3** → โปรไฟล์ = รอดเพราะ mean-revert ทัน ไม่ใช่เพราะมีเบรก — ถ้าคงไว้: ถอนกำไรเป็นระยะ + kill มือถ้า floating DD แตะ 40% · รายงาน `_mt4_auto\reports\KANGAROO_*/ZEUSMT4_*`                            |
 
 ### DEMO — Exness Standard (×2)
 | บัญชี | ชื่อ | Platform | รันอะไร |
