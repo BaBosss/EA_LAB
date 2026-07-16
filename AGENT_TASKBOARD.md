@@ -752,7 +752,7 @@ EURUSD H1 · EURUSD H4 · XAUUSD H1 · XAUUSD H4 (4 cells).
 
 ---
 
-## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `REVIEWED(Claude 2026-07-16) — 🥇 XAU H4 CONFIRMED (Model-1 funnel + Model-4 real-tick): MAIN M4 1.89 (=M1 1.91, edge ไม่ใช่ fill artifact) · BWD M4 0.97 · HOLDOUT M4 1.28 · plateau แท้ · MC ruin 0% → เหลือด่านเดียว = corr gate vs gold cohort 5 ตัว ก่อนเสนอ demo (deals CSV พร้อม) · EUR H4 = HOLDOUT FAIL 0.35 → PARK · H1 ปิด cell · verdict = _triage/ORDER098B_MACDDIV_VERDICT.md` (build+opt = Codex 2026-07-15 · funnel+M4 = agent/Claude 2026-07-16)
+## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `CLOSED — DEMO-ELIGIBLE (Claude 2026-07-16): 🥇 XAU H4 ผ่านครบทุกด่าน funnel — MAIN plateau 1.91 (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 1.30 · Model-4 real-tick 1.89/0.97/1.28 (edge จริงไม่ใช่ fill artifact) · MC ruin 0% · corr gate max|corr|0.555<0.8 (additive) · bundle staged _vps_deploy/MACDDIV_XAU magic 999094 (tester-gate จริง set AllowLive=true) → WAITING-USER attach · EUR H4 HOLDOUT FAIL 0.35 → PARK · H1 ปิด cell · verdict = _triage/ORDER098B_MACDDIV_VERDICT.md` (build+opt = Codex 2026-07-15 · funnel+M4+corr+bundle = agent/Claude 2026-07-16)
 
 **ทำไม:** MACD *divergence* (price LL / MACD HL) ≠ naked MACD-cross ที่ตายไปแล้ว = reversion signal ที่ยังไม่เคย smoke.
 EX120 เสริม volume-confirm + low-freq (RR 1:3-1:5).

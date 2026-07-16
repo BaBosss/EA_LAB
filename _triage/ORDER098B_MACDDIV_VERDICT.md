@@ -54,7 +54,24 @@ Raw: `_mt5_auto/order098b_bwd_plateau.csv` · `order098b_macddiv_opt_summary.md`
 optimism** (ต่างจาก grid EA ที่มัก collapse ตอน real-tick). naked flat-lot จึงไม่มี fill-sensitivity ให้กังวล.
 BWD 0.97 ยัง ~breakeven (regime ตรงข้าม รอดตัว) — ไม่ใช่ deploy-window อยู่แล้ว, XAU H4 MAIN+holdout คือบ้าน.
 
-**สถานะ: CONFIRMED — เหลือด่านเดียวก่อน demo = corr equity-curve gate vs gold cohort ที่ deploy อยู่ 5 ตัว
-(Zeus 990101 · BRK-XAU 991001 · Squeeze 991004 · Trendline 991002 · Wave5-XAU 990301) — pairwise <0.8.**
-deals CSV พร้อมแล้ว. ถ้า corr ผ่าน → bundle magic ใหม่ (เสนอ 999094 ตาม set) → เสนอ user attach.
-**ยังไม่ retune, ไม่ promote เอง** — corr + user-nod ก่อน.
+## CORR GATE + BUNDLE (Claude, 2026-07-16) — ✅ ผ่าน → DEMO-ELIGIBLE
+
+corr monthly-P&L vs gold cohort 5 ตัว (`_mt5_auto/corr_macddiv_cohort.py`, subject = MAIN M4 deals):
+
+| cohort EA | corr | shared mo | gate <0.8 |
+|---|---:|---:|---|
+| Zeus_GridLog | 0.400 | 23 | PASS |
+| Squeeze_BRK | 0.043 | 12 | PASS |
+| Trendline_BRK | -0.048 | 19 | PASS |
+| Breakout_XAU | **-0.555** | 22 | PASS (diversifying) |
+| Wave5_XAU | 0.204 | 35 | PASS |
+
+**max |corr| = 0.555 < 0.8 → additive ทั้งกอง.** MacdDiv XAU H4 ผ่านครบทุกด่าน funnel.
+
+**สถานะสุดท้าย: DEMO-ELIGIBLE (lead PASS 2026-07-16). ยังไม่ live-certified.**
+- **Bundle staged:** `_vps_deploy/MACDDIV_XAU/` (ex5 MD5 436DEE39… + locked set AllowLive=true/OptimizeMode=false
+  + README silent-stop checklist) · magic 999094 (ไม่ชน cohort)
+- ⚠️ **tester-gate จริง** (`_06_AllowLive || MQL_TESTER`) — set bundle ตั้ง true แล้ว แต่ต้องยืนยันหลัง attach
+  (silent-stop trap อันดับ 1)
+- **เหลือ user:** attach XAU H4 บน VPS → แจ้งวัน → Claude ลง DEPLOYMENTS.csv + judge +3 เดือน
+- **ไม่ retune, ไม่ attach เอง** (user ทำ VPS attach). promote demo→live ในอนาคต = ต้อง Codex second-opinion ตาม doctrine.
