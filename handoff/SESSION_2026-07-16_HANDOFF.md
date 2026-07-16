@@ -54,6 +54,24 @@
 - ยืนยัน vehicle pending-limit ตัวแรก (JUMSTOCH?) · attach 5 bundle (บอกวัน → ลง DEPLOYMENTS.csv + judge)
 - โหลด MT4 history (ปลด PARKED-VERIFY กอง ค: Phoenix/GBPJPY1H90PCWR)
 
+## รอบ 3 (เย็น/ค่ำ — SMC×STO saga + anti-recurrence + death review)
+15. **SMC×STO (ORDER-107) พลิกกลับเป็น candidate จริง** — ผมตีตายจาก default-smoke (ผิด gate) → user push →
+   optimize (StoK 5→13) + ADX filter → **EURUSD H1 = demo candidate: Model-4 MAIN 1.39/BWD 1.19/HOLDOUT 1.14,
+   plateau 6/7 neighbor.** EURUSD-only (ไม่ travel). bundle `_vps_deploy/SMCSTO_EURUSD` magic 991070.
+16. **🔴 ANTI-RECURRENCE ระบบ (สำคัญสุด) — แก้ pattern "ตีตายเปล่าจาก default-smoke":** (a) CLAUDE.md GATE #1 +=
+   ANTI-RATIONALIZATION block (b) signal-scanner Step 4 ลบ loophole "reversion-at-1.0=dead" (c) **warn-hook
+   `scripts/check_verdict_kill.ps1` + `.githooks/pre-commit`** เตือนตอน commit kill-verdict ที่ไม่มี optimize
+   evidence (warn-only exit 0) (d) memory `feedback-optimize-before-killing-reversion`.
+17. **EA death review** = `_triage/EA_DEATH_TAXONOMY_AND_IMPROVEMENT.md` — 107 dead-pile: ~25 ตายจริง vs ~50+ กู้ได้.
+
+## 🚀 START HERE — คิว session หน้า (เรียง EV, user เคาะให้ทำต่อ)
+1. **🥇 ORDER ใหม่: regime-rescue pipeline** — เอา 29 EA regime-parked (`RETRO_AUDIT_VERDICTS.csv` class regime)
+   รันผ่าน `Regime.mqh` (ORDER-057) both-window. กองใหญ่สุด+เทคนิคพร้อม. user เลือก #1 นี้ให้ทำก่อน. **แตกเป็น
+   order + ปล่อย agent (Boss_14 chassis มี _50_ regime lever อยู่แล้ว).**
+2. attach 6 bundle (Wave5×2/Breakout×2/MacdDiv/SMCSTO-EUR) + MacdDiv cent-test คืนนี้ (Exness XAUUSDc set พร้อม)
+3. GBPJPY d1.5 Model-4 confirm (leg-8) · ORDER-108 offset/expiry sweep · rescue #3 ZSCORE
+4. gap อื่นจาก death-review: flat-lot-probe sweep กองมาร์ติงเกล · re-audit killed-correctly · walk-forward re-opt cadence
+
 ## Gotcha ยืนยันซ้ำ session นี้
 - **ex5 ใน ea_projects/ หายได้** (ไม่ tracked) — FVGFill + MacdDiv หายทั้งคู่ → recompile `MetaEditor64.exe
   /compile:<path> /log:<log>` (~0.4s, 0/0) แล้วไปต่อ
