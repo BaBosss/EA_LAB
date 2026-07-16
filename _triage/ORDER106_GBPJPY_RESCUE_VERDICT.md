@@ -65,6 +65,13 @@ REJECT, leg-8 config ที่ถูกต้อง = d2.0/s4.0** (Model-4 both-
 ที่ดูดีบน Model-1 (d1.5 1.40/1.32 > d2.0 1.55/1.06) เป็น mirage — **tighter grid spacing = fill-optimism มากขึ้น**;
 เชื่อ Model-4 เสมอ (pattern เดียวกับ Zeus m2 dir-lock ORDER-109). **leg-8 = GBPJPY H4 @ d2.0/s4.0, รอด่านสุดท้าย corr<0.8 vs 7 legs.**
 
+**🟩 CORR RESULT (Claude 2026-07-16 — `corr_gbpjpy_cohort.py`, Model-4 monthly P&L 2023-26):** ทุกคู่ผ่าน <0.8:
+USDJPY 0.313 · AUDNZD -0.127 · EURJPY 0.307 · AUDCAD -0.220 · **CADJPY 0.791 (เฉียดบาร์ — JPY-cross sibling)** ·
+EURUSD -0.024 (4mo thin) · XAU 0.265 → **max |corr| 0.791 = additive.** GBPJPY leg-8 ผ่าน corr gate.
+bundle = `_vps_deploy/BOSS14_GBPJPY/Boss14_GridLog_GBPJPY_H4_demo_leg8.set` magic 990208 (EA=Boss_14_GridLog
+ตัวเดียวกับ cohort · DryRun=false). verify reproduces MAIN 1.43/BWD 1.11 (net 937.5 ตรง; 1.56→1.43 = data-refresh drift).
+⚠️ CADJPY 0.791 = flag user (JPY-cross คู่กัน, ทั้งคู่ grid). **เหลือ year-split ก่อนเสนอ (บทเรียน Zeus 2023).**
+
 **Next (queue — ไม่ deploy เอง):** GBPJPY H4 = **candidate เพิ่มเป็น leg ที่ 8 ของ Boss_14 demo cohort**
 (415573666 มี 7 symbol H1 อยู่แล้ว 990201-207 — EA เดียวกัน magic ใหม่, GBPJPY H4). ด่านก่อนเสนอ user:
 (a) finer sweep dist∈{1.5,2.0,2.5}×basket-TP รอบ center ยืนยัน plateau + n เพิ่ม (b) corr vs 7 legs เดิม
