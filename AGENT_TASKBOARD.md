@@ -242,6 +242,22 @@ Donchian มี session filter `_12_HourFrom/To` + `_50_` gate ครบ). ผ�
 
 ---
 
+## ORDER-111 — re-audit open-price-killed pile + source-catalog build-material (user เคาะ 2026-07-16) — `RUNNING (Claude 2026-07-16)` (role: Claude scope → agent batch · verdict = Claude)
+
+**ที่มา:** user ห่วงว่าผมฆ่า EA ด้วย open-price/math-cal. **Scope finding:** mass-smoke (ORDER-036) ตัดสิน PF บน
+**control-points (m1) ไม่ใช่ open-price** (m2 = แค่ด่านนับ trade) → **ไม่มีกองถูกฆ่าผิดขนาดใหญ่.** Reject-tier=143 (97 deep-dead),
+marginal จริง (pf 0.95-0.99, ยังขาดทุน) = **6 EA** · 0-trade ทุก symbol = 1,044 (ส่วนใหญ่ indicator-dep/junk/expired ตาม user caveat).
+
+**Part A (6-marginal recheck) — agent RUNNING:** re-run 6 EA (Auto SL-TS-TP/GridMACDM/RoNz/Sample_MA_Trader/smartass2/TCO FG)
+ด้วย every-tick (Model 0) via mt4_run.ps1. flag ตัวที่ PF jump >1.2 = wrongly-parked. time-box, skip junk/indicator/error.
+
+**Part B (source catalog) — build-material (user: ".mq4/.mq5 มีประโยชน์ต่อยอด"):** D:\Forex มี 5,188 .mq4 + 1,708 .mq5.
+**batch 1 = 1,708 .mq5** (MT5 platform เรา ใช้ตรง) → deterministic parser (dedupe vs catalog เดิม 091, extract mechanism/family,
+flag self-contained vs indicator-dep) → IDEA_CATALOG. ไม่ใช่ "EA ผ่านไหม" แต่ "logic อะไรต่อยอดได้". batch 2 = .mq4 ทีหลัง.
+**caveat (user):** junk เยอะ ให้ข้าม · indicator-dependent ข้าม · error = flag ไม่จม. = ORDER-091 intake continuation + skill corpus-intake.
+
+---
+
 ## เสนอ order ใหม่ (agent อื่นเขียนข้อเสนอได้ที่นี่ — Claude เป็นคนยกเป็น order จริง)
 
 ### 🟣 PROPOSAL-A (ZCode, 2026-07-04) — ✅ APPROVED → ยกเป็น ORDER-009 แล้ว (เก็บไว้เป็น reference)
