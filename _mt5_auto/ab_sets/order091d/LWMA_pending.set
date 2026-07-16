@@ -1,0 +1,13 @@
+_00_OptimizeMode=false
+_01_LwmaPeriod=34
+_01_AtrPeriod=14
+_02_EntryDevAtr=1.5
+_03_EntryMode=1
+_03_PendOffsetAtr=0.5
+_03_ExpiryBars=5
+_04_SlAtrMult=2.0
+_04_TpAtrMult=2.0
+_05_LotSize=0.01
+_06_Magic=991091
+_06_Deviation=20
+_06_AllowLive=false
