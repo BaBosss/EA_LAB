@@ -262,6 +262,11 @@ grid-mart 281 · other 195 · trend 41 · MR 38 · breakout 14. **external ใ�
 (breakout+retest ← ตรง ORDER-108 lever), EX197 FVG scalper, POW BANKER (multi-confluence+news+trailing), TEMPO EMA/MACD,
 Boss Pivot Range. **สรุป: ไม่ใช่ขุมทรัพย์** (ตรง WOBR/intake lesson — family ตายแล้วเยอะ) แต่ 4-5 กลไกนี้เก็บเป็น build-lead.
 next: .mq4 (5,187) batch 2 · eyeball 195 "other" ทีหลัง.
+**batch 2 DONE (Claude 2026-07-16B):** 5,187 .mq4 → **2,048 unique families** (dedup content-hash). parser `scripts/mq4_source_catalog.ps1`
+(PowerShell) · catalog `_triage/ORDER111_mq4_source_catalog.csv` · summary `_triage/ORDER111_mq4_catalog_SUMMARY.md`. dist: other 924 (iCustom-dep) ·
+**breakout 421 · trend 384** (momentum) · reversion 160 · oscillator 151 · grid-mart 8. **⚠️ boilerplate: "martingale" label = 95% ของไฟล์ (fxDreema template)
+→ exclude จาก family, เก็บ `has_mart_block` แยก.** **532 buildable momentum families** (self-contained+ใหม่) — top = classic public EA (firebird/tsd/awesome/universalMAcross).
+next (judgment รอ user): cross-ref lab status → NEVER-TOUCHED momentum ที่ user รู้จัก = คิว build.
 
 ---
 
