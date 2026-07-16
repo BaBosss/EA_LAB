@@ -701,6 +701,16 @@ build-on = จับคู่ ORDER-057 regime-gate; verdict `_triage/ORDER084_X
 ไม่มี edge แม้บนบ้านถูก → valid kill (optimize-on-right-home-fail) ตอกย้ำ momentum>reversion prior · CSV `_mt5_auto/ZSCORE_RESCUE_RANGER.csv`** ·
 next: ICHIMOKU → KELTNER (⚠️ agent delegation ต้องใส่ "foreground synchronous ห้าม background-wait" เสมอ — ZSCORE agent ตกหลุมนี้)
 
+**ผลรอบ rescue #4 ICHIMOKU (#66) = ORDER-112 (2026-07-16B):** เปิดพบว่า rescue ทำไปครึ่งทางแล้ว (probe 2026-07-11
+sweep ADX+exit+symbol) → USDJPY = cell เดียวที่รอด (smoke 1.25 / IS 1.13 / OOS 2.66-31t · GBPJPY/AUDJPY/GBPUSD/EURUSD ตาย).
+**แต่ probe นั้นบน Model-2 + recent-only(2023-25) + Kumo-period ไม่เคยแตะ = 3 ช่องโหว่ตรง VERDICT GATE.** ORDER-112 =
+เติม lever แกน: Ichimoku/Kumo periods {fast6/17/34 · def9/26/52 · med12/34/68 · slow20/60/120} × {H1,H4} × both-window
+Model-4 (16 runs) · isolate: hold ExitMode2/AdxMin20/Sl2.0 · runner `_mt5_auto/run_ichi_kumo_bothwin.ps1` · CSV
+`_mt5_auto/ICHI_KUMO_BOTHWIN.csv`. **VERDICT = 🟡 REVIVED (คว่ำ "DEAD") → PARKED-BUILD-ON:** 6/8 cell both-window บวก >1.1 (plateau);
+med-H4(12/34/68)=1.48/1.39 + slow-H1(20/60/120)=1.31/1.22 ผ่าน ≥1.2 both. **แต่ year-split = ทั้งคู่ 2 ปีขาดทุน** (agg โดนปีเทรนด์กลบ)
+→ ไม่ผ่าน all-years-positive = ยังไม่ demo. **DEAD 2026-06-27 = ผิด** (under-swept: เทสผิด symbol XAU + ไม่แตะ period lever).
+Build-on lead: 2 config ขาดทุนคนละปี → diversified basket (5/6 ปีบวกเมื่อรวม). verdict = `_triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md` · CSV year-split `_mt5_auto/ICHI_YEARSPLIT.csv`.
+
 
 ---
 

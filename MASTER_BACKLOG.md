@@ -190,12 +190,13 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
       Same root cause as PrevDay: entering AFTER move has already happened (chasing).
       EA_BREAKOUT_XAU (rolling H1 N-bar Donchian) is superior — not replicable by band-breakout variants.
 
-- [x] **EA_ICHIMOKU (#66 Kumo breakout + ADX) = DEAD 2026-06-27**
-      XAU H4 PF=1.13/T=265/Win%=40.75%/DD=9.96%. GBPJPY PF=0.80.
-      Best Win% of all tested (cloud regime-adaptive) but DD=9.96% unacceptable and PF<1.30.
-      Cloud lags price (Senkou spans are 26-bar delayed) → late entry → high false-reversal rate.
-      XAU breakout ceiling ~1.13-1.19 confirmed across 3 concepts (PrevDay/Keltner/Ichimoku).
-      EA_BREAKOUT_XAU (hardcoded H1 rolling Donchian) edge is unique. Do NOT build more XAU breakout variants.
+- [~] **EA_ICHIMOKU (#66 Kumo TK-cross + ADX) = ~~DEAD 2026-06-27~~ → REVIVED-PARKED (ORDER-112, 2026-07-16B)**
+      ⚠️ "DEAD" ผิด — under-swept: เทสผิด symbol (XAU capped) + default periods เท่านั้น + ไม่เคยแตะ Kumo-period lever.
+      **USDJPY (momentum→JPY-trender = บ้านถูก) + period sweep = both-window Model-4 บวก + plateau กว้าง (6/8 cell >1.1):**
+      med-H4(12/34/68) 1.48/1.39 · slow-H1(20/60/120) 1.31/1.22 (ผ่าน ≥1.2 both). แต่ year-split = ทั้งคู่ 2 ปีขาดทุน
+      (agg โดนปีเทรนด์กลบ) → ไม่ผ่าน all-years-positive = **PARKED-BUILD-ON ไม่ demo.** build-on lead: med-H4+slow-H1 ขาดทุนคนละปี
+      → diversified basket (5/6 ปีบวก). verdict = `_triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md`.
+      (เดิม: XAU H4 1.13/DD9.96 default — ceiling XAU breakout ~1.13-1.19 ยังจริงสำหรับ XAU; แต่ concept ไม่ตาย มันแค่คนละบ้าน.)
 
 - [x] **concept A: EA_NR7 (#105 NR7 volatility breakout) = FULLY DEAD 2026-06-28**
       All smoked cells (M2, 2023-2026): XAU H4 PF=1.31, XAU H1 PF=1.30, XAGUSD H4 PF=1.40, USDJPY H1 PF=0.88, GBPJPY H1 PF=0.65, H4 GBPJPY/GBPUSD/USDJPY PF=0.90-1.16.
