@@ -5,11 +5,16 @@ $out='D:\EA_LAB\_triage\ORDER111_mq4_BUILD_SHORTLIST.md'
 $b=$cat | Where-Object { ($_.rough_family -in 'breakout','trend') -and $_.uses_iCustom -eq 'n' -and $_.already_known -eq 'n' -and $_.mechanism_keywords -ne '' }
 function LabStatus($mk){
   $m=$mk.ToLower(); $n=($mk -split '\|').Count
-  if($m -eq 'ima'){ return 'TESTED-DEAD (naked MA-cross = EMATREND closed, 10+ sym)' }
+  # genuinely-novel indicators the lab has NEVER tested as a signal: Williams%R, Force, AO, Momentum
+  $novel = ($m -match 'iwpr|iforce|iao|imomentum')
+  # iMA+iADX = EMATREND family (EMA-cross + EMA200 + ADX gate) = concept CLOSED, 10+ symbols dead
+  if(($m -match 'ima') -and ($m -match 'iadx')){ return 'TESTED-DEAD (iMA+iADX = EMATREND family, concept closed 10+ sym)' }
+  if($m -eq 'ima'){ return 'TESTED-DEAD (naked MA-cross = EMATREND closed) unless famous EA' }
   if($m -eq 'imacd'){ return 'TESTED (MACD-cross ceiling ~1.16; MacdDiv divergence deployed)' }
-  if($m -eq 'isar'){ return 'PARTIAL (SAR ~ SuperTrend family, validated XAU-only)' }
-  if(($m -match 'ihighest|ilowest') -and ($m -notmatch 'ima|imacd|irsi')){ return 'TESTED (N-bar breakout = BRK validated XAU, most FX dead)' }
-  if($n -ge 3){ return 'NEVER-TOUCHED (3+ indicator combo - highest novelty)' }
+  if($m -match 'isar'){ if($novel){ return 'PARTIAL-NOVEL (SAR ~ SuperTrend + untested osc)' } return 'PARTIAL (SAR ~ SuperTrend family, XAU-only)' }
+  if(($m -match 'ihighest|ilowest') -and ($m -notmatch 'ima|imacd|irsi')){ return 'TESTED (N-bar breakout = BRK, XAU-only)' }
+  if($novel){ return 'NEVER-TOUCHED (uses WPR/Force/AO/Momentum - lab never tested these signals)' }
+  if($n -ge 3){ return 'LIGHTLY-TOUCHED (3+ combo of tested indicators)' }
   if($n -eq 2){ return 'LIGHTLY-TOUCHED (2-indicator combo)' }
   return 'review'
 }
