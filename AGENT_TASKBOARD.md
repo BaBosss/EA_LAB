@@ -142,7 +142,33 @@ both) = 32 run. sweep `_02_HP_Lambda` ∈ {1600,14400,129600}. เทียบ c
 **ห้าม:** แก้ EA production/validate แล้ว · ใช้ HP two-sided (look-ahead) · ตัดสิน concept ตายจาก cell เดียว ·
 promote เงินจริงใน order นี้ (probe เท่านั้น) · background-run แล้วหยุดรอ (agent ต้อง foreground synchronous).
 
-**ผล:** _(รอ build)_
+**ผล:** _(Stage A+B done — ดู verdict ที่ header + `_triage/ORDER104_EXPERIMENT_SUMMARY.md`)_
+
+### ORDER-104 STAGE C — build-on XAU-H4-HP-λ1600 (W1 survivor) — `OPEN (รอเครื่องว่าง — Meta5/5b ติด 098-A/B อยู่)` (role: agent smoke-batch · spec = Claude 2026-07-16)
+
+**เป้า:** ยืนยันว่า cell ที่ผ่าน both-regime (XAU H4 @ λ1600: 1.35/1.68 n=64-72) เป็น plateau จริงรอบแกน
+MA-period × SL แล้วค่อยส่ง Model-4 confirm — ตาม NEXT ของ Stage B.
+
+**Runs (Model 1, EA = `(TRD)_Probe_MAHP_TanhVol_rev01`, HP on @ λ1600, tanh off):**
+1. MAIN 2023-2026 + BWD 2020-2022, XAU H4: sweep MA fast∈{8,12,16} × slow∈{24,32,40} (9 combo ×2 window = 18)
+2. SL sweep รอบตัวชนะ MAIN ของข้อ 1: SL-ATR-mult ∈ {1.5, 2.0, 3.0} ×2 window (6 runs)
+3. λ neighbor: {800, 3200} บน center combo ×2 window (4 runs) — เช็คว่า λ1600 ไม่ใช่ spike บนแกน λ เอง
+รวม ~28 runs · **Acceptance:** CSV ดิบ PF/Net/Trades/DD/Win ต่อ run · **ห้าม:** verdict (lead ตัดสิน plateau
+ตาม VERDICT GATE #2-3) · Model-4 ใน order นี้ (แยกไปหลัง plateau ยืนยัน) · แตะ EUR cells (HP ไม่ช่วย EUR — ปิดแล้ว)
+
+---
+
+## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `OPEN (ยกเป็น order 2026-07-16 · ปล่อยเมื่อถึงคิว pacing — อย่ารันพร้อม 098-A/B/104-C)` (role: agent funnel-batch · verdict = Claude)
+
+**ที่มา:** ORDER-084 judge กอง ข อันดับ 1 — GBPJPY/NZDUSD/USDCAD/AUDNZD เคยเห็นแค่ defaults (0.68-1.13,
+GBPJPY OOS 1.12 เฉียดบาร์) บน chassis Boss_14 ที่ validated แล้ว = under-swept ชัดตามกฎ rescue-ladder.
+
+**คำสั่ง (เริ่ม GBPJPY ตัวเดียวก่อนตาม pacing):** funnel มาตรฐาน Boss_14 family — coarse sweep ≥3 lever
+(spacing/DistAtrMult × SL-mult × lot-law ตาม strategy) × {H1, H4} × both-window (MAIN 2023-26 + BWD 2020-22)
+Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช่ top) → lead ตัดสิน plateau → ถ้าผ่านค่อย NZDUSD/USDCAD/AUDNZD
+ใบถัดไป. ใช้ launcher/set ของ family เดิม (`_mt5_auto/ab_sets/` มี precedent ORDER-069 216-pass).
+**Acceptance:** CSV ทุก pass: PF/Net/Trades/DD ต่อ window · **ห้าม:** verdict · เลือก "ตัวดีสุด" เอง ·
+รันเกิน 1 symbol ในรอบเดียว · แตะ config demo cohort เดิม
 
 ---
 
