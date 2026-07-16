@@ -1,9 +1,10 @@
 ========================================================================
 ORDER-112E  IchiADX XAUUSD (slow periods) — ADDITIVE XAU LEG — reduced-lot
 ========================================================================
-Status:   DEMO-ELIGIBLE, ADDITIVE to the XAU book (corr-checked). Strongest find of the
-          2026-07-16B session. APPROVED-class candidate (user 2026-07-16B "เอาเข้าทั้งหมด"
-          approved adding session candidates to demo). Pending user attach.
+Status:   DEMO-ELIGIBLE — real both-window edge (PF 1.57 full-window, Sharpe 3.0). Strongest
+          find of 2026-07-16B. APPROVED for demo (user "เอาเข้าทั้งหมด"). DEMO = confirm it
+          works forward, run NORMAL lot. (Corr numbers below are for the future live decision,
+          NOT a demo gate.) Pending user attach.
 EA:       (EXP)_IchiADX_Naked_rev00.ex5  (bundled; probe-grade EA, demo-only)
           MD5 68b349fa6e3029eab6867db58173a2dd
 Source:   D:\EA_LAB\ea_projects\(EXP)_IchiADX_Naked\(EXP)_IchiADX_Naked_rev00.mq5
@@ -23,19 +24,21 @@ WHY DEPLOY (overturned "XAU Ichimoku ceiling 1.13" + additive to the book)
 - FULL 2020-2026 Model-4: PF 1.57, 236 trades (~36/yr), Sharpe 3.0, net +$7,038 on $10k.
 - YEAR-SPLIT: 5 of 6 years positive (2020 2.15 / 2021 0.84 down / 2022 1.25 / 2023 1.36 /
   2024 1.10 / 2025 2.25). Only 2021 down, modest.
-- CORRELATION (monthly Pearson) vs the saturated XAU book:
-      vs BRK_XAU 0.263 (LOW=additive) | vs KAUFMAN 0.574 (<0.6) | vs SuperTrend 0.646 (reduce-lot)
-  Max 0.646 => ADD at REDUCED LOT (user rule: high corr = smaller lot, NOT a cut). This is
-  meaningfully LESS correlated than SuperTrend was (0.724, which got flagged) => genuinely additive.
+- CORRELATION (monthly Pearson) vs the saturated XAU book — FOR THE FUTURE LIVE DECISION, NOT a
+  demo gate (user 2026-07-16B: corr isn't needed for demo; demo confirms the EA works, corr-based
+  sizing/cutting is a real-money call):
+      vs BRK_XAU 0.263 (LOW) | vs KAUFMAN 0.574 | vs SuperTrend 0.646
+  Low enough that it's genuinely additive (SuperTrend was 0.724). On DEMO: run at NORMAL lot to
+  confirm forward performance. Apply corr-based sizing only if/when promoting to real money.
 
 ------------------------------------------------------------------------
 CAVEATS
 ------------------------------------------------------------------------
 - "(EXP)_" EA = probe-grade (its header says "NOT FOR DEPLOY"). Fine on DEMO for data collection;
   harden before any real-money promotion.
-- Max corr 0.646 (vs SuperTrend) => size DOWN (e.g. 0.5x a normal XAU leg) so it doesn't just
-  double gold-trend exposure. XAU book is already crowded (BRK/Kaufman/SuperTrend/Wave5/MacdDiv).
 - 2021 was the one down year (0.84). MAIN window partly rides the 2023-25 gold bull.
+- (Live-only) corr max 0.646 vs SuperTrend — when this goes to real money, size it so it doesn't
+  just double gold-trend exposure. Irrelevant for demo.
 - OPTIONAL 2nd leg (basket): medH4 config (12/34/68 H4, 6/6 yrs >=0.99, thin 8-20t/yr) loses in
   DIFFERENT years than slow-H1 -> a 2-leg XAU basket would smooth further. Not corr-checked yet;
   add only after its own corr pass. Magic 990069 reserved if pursued.

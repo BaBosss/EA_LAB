@@ -729,8 +729,9 @@ slowH1 5/6 ปีบวก (32-41t/yr). แข็งกว่า USDJPY basket �
 
 ## ORDER-112E — corr check: Ichimoku-XAU additive หรือ redundant? — `DONE(Claude 2026-07-16B) = 🎯 ADDITIVE (reduced-lot)`
 **ผล:** full-window XAU Model-4 → monthly Pearson (`_mt5_auto/ichi_xau_corr.ps1`): Ichimoku-XAU slowH1 PF 1.57/236t/Sharpe 3.0 ·
-**vs BRK 0.263 · Kaufman 0.574 · SuperTrend 0.646** = additive (max 0.646, ต่ำกว่า SuperTrend-0.724-block). **VERDICT: candidate จริง,
-deploy small-lot. Bundle #11 `_vps_deploy/ICHIADX_XAU/` (H1 slow magic 990068)** — เพิ่มใน roster แล้ว. medH4 = optional 2nd leg (990069 reserved).
+**vs BRK 0.263 · Kaufman 0.574 · SuperTrend 0.646** = additive (max 0.646, ต่ำกว่า SuperTrend-0.724-block). **VERDICT: candidate จริง.
+Bundle #11 `_vps_deploy/ICHIADX_XAU/` (H1 slow magic 990068)** — เพิ่มใน roster แล้ว. medH4 = optional 2nd leg (990069 reserved).
+⚠️ **corr = live-decision gate เท่านั้น ไม่ใช่ demo gate** (user 2026-07-16B): demo เอาขึ้นเทส normal lot คอนเฟิร์มว่าเวิร์ค; corr sizing/cut ตอนเงินจริง. เก็บเลข corr ไว้ตอน promote live.
 รายละเอียด original order ด้านล่าง (เก็บไว้ provenance):
 
 ## ~~ORDER-112E — corr check~~ (spec เดิม, ปิดแล้ว)
