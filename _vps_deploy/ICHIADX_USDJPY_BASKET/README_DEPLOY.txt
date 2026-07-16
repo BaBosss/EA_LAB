@@ -3,7 +3,8 @@ ORDER-112B  IchiADX USDJPY BASKET — DEMO-ELIGIBLE (thin edge, small-lot) — 2
 ========================================================================
 Status:   DEMO-ONLY data-collection candidate (build-on from ORDER-112 ICHIMOKU revive).
           Positive-expectancy both-window + MC-survive, but THIN (MC PF_5th 1.036) =>
-          demo cohort to collect forward data, NOT a strong live leg. User decides inclusion.
+          demo cohort to collect forward data, NOT a strong live leg.
+          *** APPROVED for demo cohort by user 2026-07-16B ("เอาเข้าทั้งหมด"); pending user attach. ***
 EA:       (EXP)_IchiADX_Naked_rev00.ex5  (bundled here; probe-grade EA)
           MD5 68b349fa6e3029eab6867db58173a2dd
 Source:   D:\EA_LAB\ea_projects\(EXP)_IchiADX_Naked\(EXP)_IchiADX_Naked_rev00.mq5

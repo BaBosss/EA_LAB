@@ -22,16 +22,22 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 | **415573666** Demo Mt5-2 | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) + EA_SUPERTREND(990020 PENDING_ATTACH) | ✅ Boss V2 bench |
 | **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
 
-**🟡 STAGED — bundle พร้อม รอ user attach (ยังไม่อยู่ใน DEPLOYMENTS.csv จนกว่า attach จริง):**
+**🟢 APPROVED (user 2026-07-16B "เอาเข้าทั้งหมด") — bundle พร้อม, user จะ attach ตอนว่าง (ยังไม่อยู่ใน DEPLOYMENTS.csv จนกว่า attach จริง):**
 | EA | Symbol/TF | Magic | Bundle | หลักฐาน |
 |---|---|---|---|---|
 | Boss_17_Wave5 | XAUUSD H1 | 990301 | `_vps_deploy/WAVE5_XAU/` | plateau both-window, MC ruin 0%, corr 0.415 |
 | Boss_17_Wave5 | XAGUSD H1 | 990302 | `_vps_deploy/WAVE5_XAG/` | 6/6 cell both-window (แข็งกว่า XAU) |
 | EA_BREAKOUT_XAU | USDJPY H4 | 991003 | `_vps_deploy/EA_BREAKOUT_USDJPY/` | flat-lot both-window 1.28/1.25 |
 | EA_BREAKOUT_XAU | US30 H4 | 991005 | `_vps_deploy/EA_BREAKOUT_US30/` | 1.46/1.39 (WATCH-thin) |
-| MacdDiv_Naked | XAUUSD H4 | 999094 | `_vps_deploy/MACDDIV_XAU/` | Model-4 confirm 1.89/0.97/1.28, corr 0.555 (2026-07-16) |
+| MacdDiv_Naked | XAUUSD H4 | 999094 | `_vps_deploy/MACDDIV_XAU/` | Model-4 confirm 1.89/0.97/1.28, corr 0.555 |
+| Zeus (regime) | AUDJPY | 990110 | `_vps_deploy/ZEUS_AUDJPY_REGIME/` | range-gate Model-4 both-window; ⚠️ 2023 year down → deploy small |
+| Boss_14 GridLog | GBPJPY H4 | 990208 | `_vps_deploy/BOSS14_GBPJPY/` | all-years-positive; corr max 0.791 (CADJPY) |
+| SMC×STO | EURUSD H1 | 991070 | `_vps_deploy/SMCSTO_EURUSD/` | ADX-filter candidate (user push revived) |
+| IchiADX (basket A) | USDJPY H4 | 990066 | `_vps_deploy/ICHIADX_USDJPY_BASKET/` | basket PF 1.339/DD 6.09%/MC PF_5th 1.036; ⚠️ thin → small lot |
+| IchiADX (basket B) | USDJPY H1 | 990067 | `_vps_deploy/ICHIADX_USDJPY_BASKET/` | leg B ของ basket เดียวกัน (ต้องรันคู่ A) |
 
 **เมื่อ user attach ตัวใด → แจ้งวัน → Claude เพิ่ม row ใน DEPLOYMENTS.csv + judge +3 เดือน + dashboard map.**
+(EA_SUPERTREND 990020 = PENDING_ATTACH บนบัญชี 415573666 อยู่แล้ว — ดูตารางบน)
 
 ---
 
