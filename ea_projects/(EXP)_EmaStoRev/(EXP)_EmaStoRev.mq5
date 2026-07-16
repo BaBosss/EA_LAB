@@ -32,6 +32,11 @@ input double _03_SlAtrMult        = 2.0;
 input int    _03_AtrPeriod        = 14;
 input double _03_TpAtrMult        = 0.0;    // 0 = no fixed TP (exit is STO-reverse). >0 = ATR TP cap
 
+//--- [08] ADX regime filter (user idea — cut counter-trend losers; additive, default OFF)
+input bool   _08_UseAdxFilter     = false;  // true = only enter reversion when trend is weak (ADX < max)
+input int    _08_AdxPeriod        = 14;
+input double _08_AdxMax           = 25.0;   // block entry when ADX[1] >= this (strong trend = don't fade it)
+
 //--- [05] trade
 input double _05_LotSize          = 0.01;
 
@@ -42,6 +47,7 @@ input bool   _06_AllowLive        = false;
 
 //--------------------------------------------------------------------
 static bool     g_suppress_log   = false;
+static int      g_adx_handle     = INVALID_HANDLE;
 static int      g_sto_handle     = INVALID_HANDLE;
 static int      g_ema_handle     = INVALID_HANDLE;
 static int      g_atr_handle     = INVALID_HANDLE;
@@ -113,6 +119,12 @@ int OnInit()
    if(g_sto_handle == INVALID_HANDLE || g_ema_handle == INVALID_HANDLE || g_atr_handle == INVALID_HANDLE)
    { Print("EmaStoRev: indicator handle failed"); return INIT_FAILED; }
 
+   if(_08_UseAdxFilter)
+   {
+      g_adx_handle = iADX(_Symbol, PERIOD_CURRENT, _08_AdxPeriod);
+      if(g_adx_handle == INVALID_HANDLE) { Print("EmaStoRev: iADX handle failed"); return INIT_FAILED; }
+   }
+
    g_trade.SetExpertMagicNumber(_06_Magic);
    g_trade.SetDeviationInPoints(_06_Deviation);
    g_trade.SetTypeFilling(ORDER_FILLING_FOK);
@@ -125,6 +137,7 @@ void OnDeinit(const int reason)
    if(g_sto_handle != INVALID_HANDLE) IndicatorRelease(g_sto_handle);
    if(g_ema_handle != INVALID_HANDLE) IndicatorRelease(g_ema_handle);
    if(g_atr_handle != INVALID_HANDLE) IndicatorRelease(g_atr_handle);
+   if(g_adx_handle != INVALID_HANDLE) IndicatorRelease(g_adx_handle);
 }
 
 double OnTester()
@@ -176,6 +189,14 @@ void OnTick()
    //--- entry
    const int dir = TrendDir();
    if(dir == 0) return;
+
+   // [08] ADX regime filter — skip reversion entries when the trend is too strong to fade
+   if(_08_UseAdxFilter && g_adx_handle != INVALID_HANDLE)
+   {
+      double adx[];
+      if(CopyBuffer(g_adx_handle, 0, 1, 1, adx) < 1) return;   // data gap → skip (conservative)
+      if(adx[0] >= _08_AdxMax) return;                          // strong trend → don't fade
+   }
 
    const double atr = AtrAt(1);
    if(atr <= 0.0) return;

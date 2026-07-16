@@ -13,7 +13,12 @@
 > SL 3.0×ATR · TP 1×ATR (fixed, ไม่ใช่ STO-reverse) · EMA50. 2 pass ที่ยืนต่างกันแค่ OS (10 vs 15) = plateau-ish.
 > trades 90-115 MAIN / 61-75 BWD (H1 3yr, พอ). set = `_mt5_auto/ab_sets/order107_opt/top_eur/`.
 >
-> **สถานะ: PARAMETRIC build-on (ไม่ deploy) — modest edge (1.1-1.3) both-window บน EURUSD ranger.**
+> **RANGER TRAVEL-TEST (2026-07-16) — edge ไม่ travel, EURUSD-only:** optimize สด AUDNZD + EURGBP (H1 both-window,
+> `order107_opt_rangers.csv`) — top MAIN แตะแค่ ~1.0-1.1 + **BWD ล่มทั้งคู่** (AUDNZD 0.58-0.65 · EURGBP 0.43-0.68).
+> → EURUSD 2/3 ที่ยืน both-window = **EURUSD-specific หรือ in-sample luck** ไม่ใช่ robust cross-ranger edge. base อ่อน.
+>
+> **สถานะ (แก้): PARKED-marginal — reversion base อ่อน, both-window survival จำกัดที่ EURUSD เท่านั้น (1/4 instrument).**
+> ยังไม่ปิดสนิท เพราะ filter ยังไม่เทส (ADX อาจตัด counter-trend loser ที่ทำ BWD ล่มบน AUDNZD/EURGBP) — เทสต่อ.
 > **Next (ตาม user's filter ideas — ตอนนี้คุ้มเพราะ base both-window+ แล้ว):** (1) plateau-confirm neighbor รอบ
 > StoK17/OS10-15/EMA50 + ranger อื่น (EURGBP/AUDNZD) (2) เพิ่ม filter: **momentum/ADX gate** (ตัด counter-trend
 > loser = failure mode เดิม) · HTF confluence · OB zone (SMC ส่วนที่ถอด) → ดันเหนือ 1.3 (3) Model-4 confirm
