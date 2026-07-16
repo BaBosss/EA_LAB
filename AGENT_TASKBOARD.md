@@ -15,14 +15,16 @@
 ## 🗂️ ARCHIVED ORDERS — index ย้ายไป generated file (ORDER-102 Contract C1, 2026-07-13)
 
 > orders ปิดแล้ว = `ARCHIVE_TASKBOARD_2026-07A.md` (verbatim) · **index = generated/read-only** `docs/memory_control/ARCHIVE_INDEX.md` (§20.7 — ห้าม hand-edit ในบอร์ดนี้) · integrity guard: `powershell -File scripts/check_taskboard_archive.ps1 -Strict` (raw/reviewed/unresolved · archive append-only + active conservation)
-## ORDER-036 — MT4 mass-smoke (1,318 ex4) — `OPEN → แยกเป็น BATCH BOARD ไฟล์ตัวเอง (user 2026-07-06)` · **ทำได้: Codex · oc-dev**
+## ORDER-036 — MT4 mass-smoke (1,318 ex4) — `CLOSED (2026-07-07 — sweep จบ · 1,318 → 2 survivors → demo คู่ = ORDER-045)` · **ทำได้: Codex · oc-dev**
 
 **👉 spec + สถานะ + วิธีสั่งทั้งหมด = `ORDER-036_MT4_MASS_SMOKE.md`** (แยกไฟล์เพราะ 27 batches ×50 —
 กัน taskboard บวม). batch assignment deterministic = `_triage/mass_smoke_mt4_batches.csv` (คอลัมน์ batch 01-27).
 user สั่งเป็นก้อน เช่น "ทำ 036 batch 04-08" · batch จบ+review แล้ว archive ไป `_archive/ORDER-036_ARCHIVE.md` ·
 order แม่แถวนี้**คงอยู่จนครบ 27 batch** (กันหลุดจาก board) — Claude สรุป verdict รวมที่นี่ตอนจบ
 
-**ผล:** _(ดูตารางสถานะในไฟล์ board — สรุปรวมจะมาเขียนที่นี่เมื่อครบ)_
+**ผล (สรุปปิด 2026-07-07, header sync 2026-07-16):** 1,318 ex4 → 2 survivors ผ่านครบถึง Model-0 bwd+fwd
+(**UnNomGuaiV1.132 + RSI from pips_EA**) → เข้าคู่ demo = ORDER-045 · รายละเอียดต่อ batch = `ORDER-036_MT4_MASS_SMOKE.md`
++ `_archive/ORDER-036_ARCHIVE.md`
 
 ---
 
@@ -77,7 +79,16 @@ bundle = `_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-IT-T
 
 ---
 
-## ORDER-104 — SSRN-151 W1 probe: HP-filter denoise + tanh vol-scale bolt-on (signal-quality A/B) — `SMOKE STAGE A DONE + REVIEWED(Claude 2026-07-13): HP@λ14400 ปิด cell (regime-invert) · tanh INERT (calib bug) · lambda-sweep + tanh-rescale = levers ที่เหลือ` · **ทำได้: agent smoke-batch** · 👉 spec+build+verdict = Claude 2026-07-13
+## ORDER-104 — SSRN-151 W1/W2 probe: HP-denoise + tanh + IBS — `STAGE A+B DONE + REVIEWED(Claude 2026-07-13): HP@λ1600 บน XAU ผ่าน both-regime → BUILD-ON · IBS naked ตก(park) · tanh INERT` · **ทำได้: agent smoke-batch** · 👉 verdict = Claude · สรุปเต็ม = `_triage/ORDER104_EXPERIMENT_SUMMARY.md`
+
+**🎯 STAGE B พลิก Stage A (λ-sweep + IBS, P104b_summary.csv):**
+- **HP λ-sweep เผยว่า λ คือ lever — λ ต่ำดี:** **λ1600 บน XAU ผ่านทั้ง 2 regime** (XAU H1 1.15/1.26 · **XAU H4
+  1.35/1.68** n=64-72 = plateau จริง). λ14400 over-smooth (regime-invert) · λ129600 thin(n=10-50). **Stage A ที่ตี
+  HP ตก = artifact ของ λ เดียว** — ตรงกฎ "ห้าม DEAD ก่อน sweep ≥3 lever". HP ช่วยเฉพาะ XAU ไม่ช่วย EUR.
+  → **BUILD-ON: XAU H4 @ λ1600 = candidate** (sweep MA-period/SL รอบ plateau + Model-4 confirm + holdout/MC).
+- **IBS naked = ไม่มี edge** (trade 4000-5400 บน H1, PF 0.80-1.07 churn จ่าย cost) → park, ต้อง filter (band/trend-gate).
+- **tanh = INERT** (calib bug R/κ horizon ต่างกัน) — rescale ก่อนถึง judge.
+- **NEXT:** build-on XAU-H4-HP-λ1600 (W1 survivor) · W3 Pivot/Donchian · IBS+filter (ถ้าจะกู้).
 
 **🔎 STAGE A VERDICT (32 runs, `_mt5_auto/reports/P104_summary.csv`, Model 2, XAU+EUR × H1/H4 × BWD/REC):**
 - **tanh (Toggle B) = INERT** — `tanh`==`base` เป๊ะทุก cell. bug: `R`(20-bar) / `κ`(1-bar stdev) → R/κ ใหญ่ →
@@ -175,7 +186,7 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
 
 ---
 
-## ORDER-057 — mold upgrade: `Regime.mqh` (market-state filter, additive) — `Stage A REVIEWED(Claude, 2026-07-09 — ✅ ACCEPT · Stage B OPEN สำหรับ ZCode/oc-btest)` · **ทำได้: Codex/Claude/oc-dev** · 👉 **Codex-direct** _(ออก 2026-07-09, user สั่ง: "อยากได้ตัวระบุสภาวะตลาด trend/sideway เป็น direction ให้ EA + ปิดได้")_
+## ORDER-057 — mold upgrade: `Regime.mqh` (market-state filter, additive) — `CLOSED (Stage A+B+C REVIEWED Claude 2026-07-09 — m1 trend-only gate = ของจริง in-sample บน XAU · adoption = lever _50_ ใน optimize funnel ของ EA ตัวถัดไป · ห้าม retrofit demo cohort)` · **ทำได้: Codex/Claude/oc-dev** · 👉 **Codex-direct** _(ออก 2026-07-09, user สั่ง: "อยากได้ตัวระบุสภาวะตลาด trend/sideway เป็น direction ให้ EA + ปิดได้")_
 
 **Stage A review (Claude, 2026-07-09):** โค้ด Codex ผ่านทุกข้อ — closed-bar classify (shift 1, no repaint) +
 cache ต่อแท่ง regime-TF · gate เฉพาะ first-entry ทั้ง 2 path (resting-stop + market) ไม่แตะ exit/basket ·
@@ -247,7 +258,7 @@ lever ใหม่ให้ sweep ทั้ง family และเป็นต�
 
 ---
 
-## ORDER-064 — ขุดไอเดียจาก Open WebUI export 93MB (คุยกับ OpenAI ของบริษัท) — `IN-PROGRESS (Claude + 4 Sonnet agents, 2026-07-09)`
+## ORDER-064 — ขุดไอเดียจาก Open WebUI export 93MB (คุยกับ OpenAI ของบริษัท) — `CLOSED (Stage 3 verdict Claude 2026-07-09 — ลูกที่ spawn: ORDER-065 SuperTrendFlip = RESERVE · ORDER-066 VWAP WaveS1 = NO EDGE, ทั้งคู่ปิดแล้วใน archive)`
 
 - **Stage 1 ✅:** `scripts\chatgpt_export_inventory.py` (รองรับทั้ง OpenAI export และ Open WebUI format) →
   45 บทสนทนา, จัดอันดับตาม MQL-keyword density → `_triage\chatgpt_inventory.csv` + top-12 แตกเป็น .txt ใน
@@ -386,7 +397,7 @@ daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้อ�
   demo = NONE (เก็บ data ให้ judge เห็นพฤติกรรมจริง)
 - **ห้าม build จนกว่า user เคาะ policy ต่อบัญชี/ต่อ magic** (มันจะไปปิดไม้เงินจริง — ต้อง explicit)
 
-## ORDER-076 — smoke-screen หัวกะทิ 41 ตัวจาก X-ray — `OPEN` (role: agent/qwen lane)
+## ORDER-076 — smoke-screen หัวกะทิ 41 ตัวจาก X-ray — `CLOSED (Claude 2026-07-14 — 16 mq5 ใหม่จริง: 11 REJECT/PARK + 1 build-on-needs-data ((ICE) CCI = PARKED, basket 9-major ไม่รอด) · verdict = _triage/ORDER076_MQ5_SMOKE_VERDICT.md)` (role: agent/qwen lane)
 
 **คำสั่ง:** (1) cross-ref 41 ตัว (CSV filter has_sl=yes & lot_escalation=no) กับ EA_SCORECARD +
 ผล ORDER-036 (MT4 1,318 sweep) — ตัวที่เคย screen แล้วห้ามรันซ้ำ ใช้ผลเดิม (2) ตัวใหม่จริง:
@@ -399,7 +410,7 @@ BWD-OOS PF · commit `[tag] ORDER-076 done` **ห้าม:** verdict PASS/REJEC
 
 ---
 
-## ORDER-079 — Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) — `CLAIMED(Claude-agent, 2026-07-10)`
+## ORDER-079 — Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) — `DONE(Claude-inline, 2026-07-10 — catalog = _triage/FXDREEMA_IDEA_CATALOG.md)`
 
 **ทำไม (user directive):** คลัง 1,050 EA = สื่อการเรียน ไม่ใช่สินค้า — ห้ามตัดสินด้วยเกณฑ์ risk structure
 (43% no-SL คือ scaffold ของแบบฝึก ไม่ใช่ความผิด) · เป้า = **สกัดไอเดีย/แนวคิด** ที่ user เรียนมา
@@ -438,7 +449,7 @@ commit `[tag] ORDER-079 done` · **ห้าม:** ตัดสินดี/ไ�
 commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever อื่น · verdict (Claude อ่าน — สนใจ EV ต่อไม้
 หลังหัก opportunity cost ของไม้ที่ไม่ fill ไม่ใช่แค่ PF)
 
-## ORDER-082 — Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) — `OPEN` (role: Claude spec → agent build/probe)
+## ORDER-082 — Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) — `CLOSED — DEMO-ELIGIBLE (Claude 2026-07-14) · WAITING-USER attach · bundles = _vps_deploy/WAVE5_XAU (magic 990301) + WAVE5_XAG (990302)` (role: Claude spec → agent build/probe)
 
 **Rule จากปาก user (บันทึกตรงคำ — นี่คือ ground truth ของ spec):**
 - คนส่วนใหญ่พยายามเข้า wave 3 (เทรนด์ยาวสุด) แต่รู้ตัวก็ต่อเมื่อมัน confirm แล้ว (break S/R,
@@ -479,9 +490,13 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
 - **Task 1-4 BUILT + Task 6 naked probe DONE (Opus, 2026-07-13):** build เสร็จ (commit `bfa048f`) — Opus verify เอง compile 0/0 + regression CLEAN (11-16 byte-identical) + **จับ+แก้บั๊กร้ายที่ subagent พลาด: labeling 3-pivot → wave1end/wave3peak ต่างประเภทเสมอ = Entry ยิงไม่ออก (zero-trade การันตี) → แก้เป็น 4-pivot + wave2-validity + fib วัดจาก wave3 จริง**
   - **probe 4 cell (default params, ExitMode=TRAIL, MaxLevels=1, structural SL):** XAU main(23-26) **PF 1.57**/174t/DD1.66% · XAU BWD(20-22) 0.95/148t · GBP main **PF 1.18**/164t/DD0.66% · GBP BWD 0.96/137t
   - **VERDICT (lead):** ✅ fix ยืนยัน (ยิงไม้ออกทั้ง 4 cell) · **deploy-gate (both-window≥1.0) ยังไม่ผ่าน** (ทั้ง 2 sym ตก BWD เฉียดๆ) · **แต่ ≠ ตาย** = PARAMETRIC-marginal · ALIVE · build-on (main>1 ทั้งคู่, BWD 0.95-0.96 เฉียดเส้น, DD จิ๋ว, 0 lever swept) · XAU main 1.57@win45% = mechanism มีของ
-  - **ค้าง = SWEEP (pace, ยังไม่รัน):** `_17_EntryFib{23.6,50,61.8}` · `_17_Wave3MinMult` · trail — both-regime หา config ยก BWD ข้าม 1.0 · 2020-22 = คนละ vol regime ทอง (อาจต้อง regime filter). reports = `_mt5_auto/reports/WAVE5_*`
+  - ~~**ค้าง = SWEEP (pace, ยังไม่รัน)**~~ → **SWEEP DONE + DEMO-ELIGIBLE (Opus 2026-07-14):** plateau ยืนยัน 2 symbol
+    (XAU fib23.6→30 ต่อเนื่อง 1.11/1.11 · XAG 6/6 cell MAIN 1.30-1.45/BWD 1.28-1.35 แข็งกว่า XAU) · MC ruin 0.00% ·
+    holdout XAU H4 MAIN 1.74/BWD 1.01 · corr gate vs 4 gold cohort max|corr|=0.415 << 0.8 · bundle staged
+    `_vps_deploy/WAVE5_XAU|XAG` · ⚠️ template ไม่มี tester-gate — attach แล้วเทรดทันที · เหลือ: user attach บน VPS
+    (commits `0b4acdbc`+`86151de9`, spec-of-record = `docs/superpowers/plans/2026-07-12-entry-wave5.md`)
 
-## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `CLAIMED(Claude-agent, 2026-07-10)` ขั้น extract · ขั้น judge = Claude
+## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `ขั้น extract DONE(agent 2026-07-10, 154 rows) · ขั้น judge(Claude) + แผน rescue top 5-10 = OPEN ค้างคิว`
 
 **ทำไม:** กฎ rescue-ladder (optimize ≥3 รอบ lever ต่างชุด × ≥2 TF ก่อนตาย) + PARKED-VERIFY(user) +
 EA-SCORE เพิ่งเกิดวันนี้ — verdict เก่าจำนวนมากตัดสินก่อนกฎนี้ · user เชื่อ (ประสบการณ์ตรง: หลายตัวที่ live
@@ -557,7 +572,7 @@ grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไ
 
 ---
 
-## ORDER-095 — CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเยอะ") — `OPEN` (multi-session, pace 1 EA/batch)
+## ORDER-095 — CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเยอะ") — `OPEN (multi-session, pace 1 EA/batch) · batch 1 DONE(Claude 2026-07-14): EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_deploy/EA_BREAKOUT_USDJPY (991003) + EA_BREAKOUT_US30 (991005) · verdict = _triage/ORDER095_BREAKOUT_XAU_EXPAND_VERDICT.md`
 
 **หลักการ (build-on doctrine + multi-symbol reuse):** EA ที่ deploy แล้ว = validated ที่ home เดียว · ขยายไป
 symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว่างกัน) = เพิ่มไม้โดยไม่ต้องหา EA ใหม่.
@@ -577,7 +592,7 @@ symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว
 entry PF>1 (2) full-config IS/OOS บนตัวที่ผ่าน (3) corr equity-curve vs leg เดิม → เก็บ corr<0.8, คู่ >0.8 บอก user
 (4) เพิ่มเข้า demo config. **pace 1 EA/batch** · Boss_14 = ตัวแรก (D1c-สไตล์)
 
-## ORDER-097 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline `DONE(Claude, 2026-07-11)` · funnel `OPEN` (role: agent/Claude) _(renumbered 096→097: ชนกับ CAMPAIGN ORDER-096 WOBR)_
+## ORDER-097 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline `DONE(Claude, 2026-07-11)` · funnel `CLOSED (Claude 2026-07-14 — STRUCTURAL DEAD: sweep spacing×SL ไม่ช่วย + flat-lot isolate S1-S6 ไม่มีระบบไหนมี edge เดี่ยว (ดีสุด 0.80/0.76) · ปัญหาอยู่ที่ entry ทั้ง 6 ไม่ใช่ chassis · verdict = _triage/ORDER097_HEX_FUNNEL_VERDICT.md)` _(renumbered 096→097: ชนกับ CAMPAIGN ORDER-096 WOBR)_
 
 **ที่มา:** user ส่งสเปค HexaGrid เต็ม (6 ระบบอิสระ magic-scoped แชร์ grid engine ×1.33 cap 10 + SL จริงทุกไม้,
 regime EMA224-slope+ADX, 7 ชั้นจัดการ+global cap) แล้วสั่ง "เขียน EA ตัวนี้ + รอรันเลย" (optimize เองไม่ได้ — คอมเต็ม).
@@ -656,7 +671,7 @@ deposit 10000, leverage 1:100, XAUUSD H1. report เขียนลง `D:\Meta 
 
 ---
 
-## ORDER-098-A — FVG-fill entry (EX009 algo) flat-lot smoke — `OPEN` (role: Claude/Sonnet build → agent smoke)
+## ORDER-098-A — FVG-fill entry (EX009 algo) flat-lot smoke — `IN-PROGRESS (Claude 2026-07-16) — build+smoke DONE 07-14: rev02 well-powered, PARAMETRIC (PF 0.74-0.97 @ RR0.75, win% ใกล้ breakeven — ห้ามตัดตาย) · interim = _triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md · กำลังรัน BWD 2020-22 + TP sweep {20,25,30} บน Meta5b` (role: Claude/Sonnet build → agent smoke)
 
 **ทำไม:** FVG/ICT-zone (24 การ์ด) = angle ใหม่จริงที่ยังไม่มีใน landscape (มีแค่ PARKED-CONCEPT จาก FB reel ไม่มีตัวเลข).
 ทดสอบว่า **entry เปล่าๆ มี edge ไหม ก่อนแตะ grid/MM** (flat-lot probe).
@@ -676,7 +691,7 @@ EURUSD H1 · EURUSD H4 · XAUUSD H1 · XAUUSD H4 (4 cells).
 
 ---
 
-## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `OPEN` (role: Claude/Sonnet build → agent smoke)
+## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `IN-REVIEW (Claude 2026-07-16) — build+smoke+optimize DONE(Codex 2026-07-15, commits 5477a5ae+7e0825d0): baseline 3/4 cell PF<1 (EUR H4 1.08 = build-on) · genetic opt in-sample เจอ XAU H4 1.91 + EUR H4 1.71 (year-split ผ่านทุกปี) — ยังไม่ judge จนกว่า BWD both-regime + plateau neighbors เสร็จ (กำลังรันบน Meta5 หลัก) · ดิบ = _mt5_auto/order098b_*.csv` (role: Claude/Sonnet build → agent smoke)
 
 **ทำไม:** MACD *divergence* (price LL / MACD HL) ≠ naked MACD-cross ที่ตายไปแล้ว = reversion signal ที่ยังไม่เคย smoke.
 EX120 เสริม volume-confirm + low-freq (RR 1:3-1:5).
@@ -999,7 +1014,7 @@ Codex ยืนยัน 4 defect หลักปิดจริง (read-only, 
 
 ---
 
-## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `DATA-DONE+ACCEPT (migration correct, 0 history lost, gates green) · ENFORCEMENT-REWORK (Codex: post-split appends not tamper-protected + no fail-closed hook) · AT REVIEW GATE` (SYSTEM ORDER 4 of ≤4 memory-control build)
+## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `CLOSED (2026-07-14 — ENFORCEMENT-REWORK ปิดโดย ORDER-103 C1-ENFORCE = ACCEPT · Contract C1 complete ทั้ง data + enforcement)` (SYSTEM ORDER 4 of ≤4 memory-control build)
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** (migration half) + ORDER-101 "→ C1" spec + §20.7
 > **ทำได้:** Opus (exception judgment + migration window + canonical workflow = own) · Codex/subagent (guard-hook code) · **👉 แนะ:** Opus เขียน+ตัดสิน → subagent build lock-hook → **Opus execute migration เอง (1 atomic commit)** → **blind Codex review ก่อน accept**
@@ -1076,7 +1091,7 @@ Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migr
 
 **→ หลัง C1 accept = order ที่ 4 → MANDATORY REVIEW GATE** (§20.2 #5): หยุด ทบทวน ACCEPT/REWORK/ROLLBACK ต่อ component (A/B/C0/C1) ก่อนเริ่ม Contract D (MVP-1-lite events).
 
-## 🛑 MANDATORY REVIEW GATE — order ที่ 4 ครบ (2026-07-13, §20.2 #5)
+## ✅ MANDATORY REVIEW GATE — order ที่ 4 ครบ + C1-ENFORCE ปิด (gate ปลดล็อก 2026-07-14, §20.2 #5)
 ทบทวนต่อ component (ผ่าน Codex blind review รวม ~15 รอบตลอด build — จับ defect จริงทุกใบที่ Opus self-verify พลาด):
 | component | verdict | หมายเหตุ |
 |---|---|---|
@@ -1084,15 +1099,16 @@ Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migr
 | **B** ORDER-100 (execution harness) | **ACCEPT (MVP-0)** | 3 rounds · 22/22 · 1 documented alias-limit (fix ก่อน deploy harness ขับ MT5 จริง) |
 | **C0** ORDER-101 (read-only reconcile + validator) | **ACCEPT** | 3 rounds · validator ถาวร (review-linkage + living-log) |
 | **C1** ORDER-102 (migration) | **DATA ACCEPT · ENFORCEMENT REWORK** | migration ถูก 0 history lost · แต่ append-tamper hole + no fail-closed hook + Source-A broad + atomicity (ดู block บน) |
+| **C1-ENFORCE** ORDER-103 (write-path hardening) | **ACCEPT (Claude 2026-07-14)** | 6 rework + 6 blind Codex round (round 5 แรกที่ 0-blocker · round 6 = ACCEPT) · append-chain + fail-closed hook + Source-A exact-binding ปิดครบ · 41/41 negTest · commit `c0f7b0d` — **C1 enforcement REWORK ปิดสมบูรณ์** |
 
 **§20.4 review-gate checks:** critical money/live incidents = **0** · source-of-truth conflicts = **0** (index → generated read-only, §20.7 compliant) · missing evidence = **0** · rollback ทำได้ไม่เสีย canonical evidence (git history intact) · incomplete work named honestly = **C1 enforcement** (append-chain + fail-closed hook + Source-A binding + hash-object) แตกเป็น bounded order ถัดไป.
 
-**§20.2 #5 บังคับ:** **ห้ามเริ่ม Contract D (MVP-1-lite events) จนกว่า C1 enforcement REWORK ปิด** (write path ยังไม่ tamper-safe เต็ม). → order ถัดไป = **C1-ENFORCE** (append-chain integrity validator + fail-closed staged-snapshot hook + Source-A exact-binding + hash-object atomicity), routing เดิม (subagent build → Opus verify → blind Codex review). **📄 HANDOFF เต็มสำหรับ session ใหม่ = `docs/memory_control/C1_ENFORCE_HANDOFF.md` (start here).**
+**§20.2 #5 — ✅ GATE ปลดล็อกแล้ว (2026-07-14):** C1 enforcement REWORK ปิดสมบูรณ์ผ่าน ORDER-103 (C1-ENFORCE) — commit `c0f7b0d`, blind Codex review round 6 = ACCEPT. write path tamper-safe เต็มแล้ว (append-chain integrity + fail-closed hook + Source-A exact-binding). → **Contract D (MVP-1-lite event-log) เปิดทางได้แล้ว**. _(ประวัติ: order ถัดไป = C1-ENFORCE, routing subagent build → Opus verify → blind Codex review; HANDOFF ที่ใช้ = `docs/memory_control/C1_ENFORCE_HANDOFF.md`; ประวัติ rework/review เต็ม = `docs/memory_control/CODEX_ORDER103_REWORK_RESULT.md`.)**
 **บทเรียน:** self-verify ที่รันใน HEAD/session เดียว มองไม่เห็น non-determinism (#2) + ไม่ได้ทดสอบ corrupt-input path (#1) — Codex คนละ run/มุมจับได้. เพิ่ม negTests ครอบแล้ว.
 
 ---
 
-## ORDER-103 — Contract C1-ENFORCE: append-CHAIN tamper integrity + fail-closed staged-snapshot hook (write-path hardening, ปิด C1 enforcement REWORK) — `REVISED r1 (Codex design-review needs-CHANGES 8 → ปิดครบ) · พร้อม build` · **ทำได้: Sonnet subagent (build) → Opus (verify เอง, cross-HEAD) → blind Codex (accept)** _(ออก 2026-07-13; ปิด hole ที่ Codex final review ของ C1 จับ — block 1007-1015)_
+## ORDER-103 — Contract C1-ENFORCE: append-CHAIN tamper integrity + fail-closed staged-snapshot hook (write-path hardening, ปิด C1 enforcement REWORK) — `REVIEWED/ACCEPT (Claude 2026-07-14) — round 6 blind Codex (gpt-5.6-sol) = ACCEPT หลัง fresh from-scratch repro ทุก high-risk scenario · Opus spot-verify เอง (gates 0, scope 5 ไฟล์, HEAD intact) · commit c0f7b0d ผ่าน production hook (ไม่ --no-verify) · 6 rework + 6 blind review round` · **ทำได้: Sonnet subagent (build) → Opus (verify เอง, cross-HEAD) → blind Codex (accept)** _(ออก 2026-07-13; ปิด hole ที่ Codex final review ของ C1 จับ — block 1007-1015)_
 
 > **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20 @ `4eb839d`** + Codex final review C1 (block 1007-1015) + `docs/memory_control/C1_ENFORCE_HANDOFF.md`
 > **เลขหมายเหตุ:** validator docstring อ้าง "living-log model (ORDER-103)" = Phase 0.5 ที่ fold เข้า C1b แล้ว (block 995-996). order นี้ใช้เลขเดียวกันเพราะเป็น workstream เดียว = **"ทำ append-only log ให้ tamper-safe จริง"** — Phase 0.5 สร้าง log, order นี้ทำให้ log แก้ย้อนไม่ได้.
@@ -1176,3 +1192,124 @@ Codex อ่าน order+validator+archive เอง จับ 8 (5 blocker + 3 
 7. 🔴 **Fix 4 snapshot ownership ขัดกัน** (bytes=working, identity=HEAD; Generate ทำ candidate-pinned ไม่ได้ถ้า HEAD-based; CRLF/filter) → **FIX r1:** single snapshot-source mode · `git rev-parse :path` ไม่ใช่ hash-object working · CRLF-parity test · Audit/Strict คง HEAD-default
 8. 🟡 **sequencing ไม่เป็น order เดียวที่ทำได้** (Fix4→Fix1→Source-A/071-atomic→hook-last; หลาย machine-test ขาด; crash-recovery/commit-แยก = judgment ไม่ใช่ machine-check) → **FIX r1:** build-order section + judgment-criteria แยก + missing tests เพิ่ม
 **Lead call:** ทั้ง 8 ถูกต้อง — design-review-ก่อน-build จับ hole ลึก (โดยเฉพาะ #1/#3/#4 ที่จะทำ build พังถ้าไม่จับ) = คุ้มตามที่ handoff คาด. r1 ปิดครบ · **พร้อมส่ง build** (รอ user เคาะ).
+
+### BUILD EXECUTED (Sonnet subagent, 2026-07-13, build-order Fix4→1→3→2) + Opus verify
+**Files:** `scripts/check_taskboard_archive.ps1` (Fix4 snapshot primitives `Get-Snapshot`/`git rev-parse :path` · Fix1 `Invoke-ArchiveChainIntegrityCheck` checkpoint-pinned first-parent raw-byte prefix + H2-boundary + fail-closed · Fix3 exact `kind+block_id+sha256` binding via `## C1-ENFORCE-SOURCEA-BINDING`) · `scripts/check_precommit_staged.ps1` (new, Fix2 staged-index enforce) · `.githooks/pre-commit` (rewritten: fail-closed no-PS + exact diagnostic, bypass-hints ลบ 2 จุด) · `ARCHIVE_TASKBOARD_2026-07A.md` (**append-only +13 บรรทัด** = 071 binding block, 2 targets #67/#132) · manifest/index/exceptions regen · `scripts/_test/run_order103_negative_tests.ps1` (new, 18 cases, temp-repo real-commit) · `run_order101_negative_tests.ps1` (1 expectation ปรับ).
+**Opus verify (รันเอง, cross-HEAD/rewrite/shallow):** `-Strict`=0 · `-Audit`=0 · `check_state -Strict`=CLEAN · ORDER-103 **18/18** · chain check เดินบน archive path จริง clean=True · **Fix1 fail-closed พิสูจน์:** missing-checkpoint→2 · valid-ancestor(4aebbc37)→0 · **exists-but-not-ancestor(rewrite)→2** ("NOT an ancestor of HEAD -- history rewrite/force-push/squash suspected") · **Fix3 exact-binding พิสูจน์:** tamper #67 hash→ #67 reopens STALE (unresolved=1, "closure NOT honored") ขณะ #132 ยังปิด → restore→0 · scope สะอาด (9 build files, archive pure-append 13/0) · CRLF: append=LF, blob-vs-blob เทียบปลอดภัย.
+**Loose ends (honest, surface ให้ Codex):** (a) Sonnet build negTest subset 18 (ไม่ครบ ~40 lettered 1:1 — mechanism ครอบแต่ไม่ทุก case แยก) (b) ORDER-101 `cross-HEAD-zero-diff` **fail แต่ pre-existing** (Opus verify อิสระ: archive blob ต่างระหว่าง 4aebbc37 `c528989` vs HEAD `f2c4dfe` หลัง C1b migration — premise พังก่อน session นี้ ไม่ใช่ ORDER-103 regression) (c) `partial-stage-archived` expectation 0→1 = ผลตั้งใจของ Fix3 (bare REVIEW-id ไม่ปิดแล้วถ้าไม่มี binding record).
+**Status:** build DONE + Opus self-verify ~~ACCEPT~~ → **REWORK (blind Codex review + Opus repro จับ 2 blocker)** · ยังไม่ commit.
+
+### Blind Codex review of build (2026-07-13, gpt-5.6-sol, neutral-framing rerun) = REWORK(2) — Opus reproduced ทั้งคู่เอง
+Codex รัน -Strict/-Audit/suite เอง (เขียว) แต่ **adversarial checks เจอ 2 blocker ที่ self-verify 2 ชั้น (Sonnet suite + Opus cross-HEAD/rewrite/tamper) พลาด** เพราะไม่มีใครทดสอบ "mutate prose ของ post-split-append block + regen" หรือ "commit binding จริงผ่าน hook". **Opus repro ยืนยันทั้งคู่:**
+- 🔴 **BLOCKER 1 — durability hole ยังเปิดบน `-Strict` path (P0 เดิมที่ Fix 1 ควรปิด):** mutate prose เฉพาะของ appended block (`"canonical-id-wildcard hole"`→`"TAMPERED-PROSE-INJECTION"`) + `-Generate` + `-Strict` → **exit 0 (blessed)**. เหตุ: chain check เดินเฉพาะ **committed history** (checkpoint→HEAD) · superset check กันเฉพาะ 131 split blocks · post-split appends (C1-CLOSURE/binding) ไม่ถูก mutation-check บน working-tree path · manifest regen ตาม → bijection ผ่าน. โดน hook จับตอน commit แต่ **`-Strict` (gate ที่ check_state/CI/manual ใช้) ผ่านผิด** = ละเมิด acceptance "manifest regen หลัง mutate → ยัง exit 2". **FIX:** `-Strict`/`-Audit` ต้องเช็ค working-tree archive = raw-byte prefix-extension ของ `HEAD:archive` ด้วย (ขยาย chain เป็น checkpoint→HEAD→working) ไม่ใช่แค่ committed.
+- 🔴 **BLOCKER 2 — H2-boundary rule ปฏิเสธ binding ของตัวเอง (self-DoS):** real `git commit` ของ binding block ผ่าน hook จริง → **BLOCK** ("staged archive fails append-chain integrity -- suffix ... does not open with a new '## ' (H2) block boundary"). เหตุ: append convention มี separator (`---`/blank) ก่อน `## ` → suffix ไม่ได้ขึ้นต้นด้วย `## ` เป๊ะ. **แปลว่า build นี้ commit binding ผ่าน hook ตัวเองไม่ได้ = ไม่เคยถูก end-to-end commit-test.** **FIX:** boundary rule ต้องยอม separator/blank นำหน้า block ใหม่ (นิยาม "new H2 block" = หลัง normalize แล้ว suffix ประกอบด้วย [optional `---`/blank] + `## ...` ครบ block ไม่ใช่ต่อเนื้อ block เดิม). + ปม CRLF: working file (autocrlf=true) ต่างจาก HEAD blob → FILE: path เทียบเพี้ยน (Fix 4 ครอบ hook ผ่าน index แต่ -Strict FILE: ยังเสี่ยง) — รวมแก้กับ BLOCKER 1.
+- 🟡 minor (by-design, ไม่ใช่ bug): fake `review_ref` (`## REVIEW ORDER-DOES-NOT-EXIST`) ยังปิดได้ — เพราะ spec Fix 3 ตั้งใจให้ review_ref = traceability เท่านั้น (closure จาก exact hash ไม่ใช่ review_ref). ยืนยัน intended.
+
+**Opus repro evidence:** BLOCKER1 = mutate+regen+`-Strict`=0 (restore→0, archive diff 13/0 สะอาด) · BLOCKER2 = temp-clone real commit exit=1 "does not open with a new '## ' boundary". Real repo intact (working tree = binding append 13/0 + build files เท่านั้น, ยังไม่ commit).
+
+**Routing ต่อ:** REWORK 2 blocker (BLOCKER1+2 เกี่ยวพัน — แก้ chain ให้ครอบ HEAD→working + boundary ยอม separator พร้อมกัน) → Sonnet subagent แก้ → Opus verify (repro 2 blocker ต้องกลายเป็น fail-closed/pass ถูก + commit binding ผ่าน hook ได้จริง) → blind Codex re-review. **บทเรียนย้ำ (handoff block 1033):** self-verify 2 ชั้นยังปล่อยหลุด — blind Codex คนละค่าย/มุม adversarial จับ P0. negTest ที่ขาด = "mutate appended-block prose + regen" + "real-commit binding ผ่าน hook end-to-end" → เพิ่มใน rework.
+
+### FINALIZE (Codex, 2026-07-13, user สั่งเอง via prompt) — binding committed จริง + Opus independent re-verify
+User รัน `docs/memory_control/CODEX_ORDER103_FINALIZE_PROMPT.md` ผ่าน Codex เอง (ประหยัด quota Opus). Codex: regen artifact จาก staged identity จริง (`git rev-parse :path`, ไม่ผสม HEAD+working) → dry-run hook → **commit จริง `245f8f62c047ad843b01b1b2cfffcac3f21fc5ad`** (4 ไฟล์: archive+3 artifacts เท่านั้น, ผ่าน production hook, ไม่ `--no-verify`) → รายงาน `FINALIZE STATUS: DONE` ที่ `docs/memory_control/CODEX_ORDER103_REWORK_RESULT.md`.
+
+**Opus independent re-verify (ไม่เชื่อรายงาน Codex เฉยๆ — รันเอง reproduce ทุกข้อ):**
+- commit `245f8f62` มีจริง, scope = 4 ไฟล์พอดี (archive +13/-0 บวก 3 artifact regen), checkpoint `0ced194…` ยัง ancestor ของ HEAD ใหม่ ✓
+- live gates (รันเอง): `-Strict`=0 · `-Audit`=0 · `check_state -Strict`=CLEAN ✓
+- **BLOCKER1 tamper repro (รันเอง, temp clone):** รอบแรกได้ exit=0 ผิดคาด → เจอว่าเป็น**ความผิดพลาดของผมเอง**ที่ลืม copy script เวอร์ชัน uncommitted เข้า clone (เลย test กับ script เก่าที่ยังไม่มี `WorkingTreeExtensionIntegrity`) → แก้ test แล้วรัน**ใหม่ถูกวิธี**: mutate prose เฉพาะของ binding block ที่ commit แล้ว + `-Generate` + `-Strict` → **exit=2** พร้อม diagnostic ชัด ("H2 block #134 is not the canonical-LF byte-identical prefix ... mutation/reorder detected (fail-closed; manifest regeneration cannot bless this)") — **BLOCKER1 ปิดจริง ยืนยันแล้ว** ✓
+- ORDER-103 suite (รันเอง): **ALL CASES PASSED** ✓
+- ORDER-101 suite (รันเอง, fresh foreground run เพราะ background run แรกค้าง 8+ นาทีไม่ขยับ — kill แล้วรันใหม่): **25 PASS / 1 FAIL** — FAIL ตัวเดียว = `cross-HEAD-zero-diff` (pre-existing, ไม่เกี่ยว ORDER-103) ตรงกับที่ Codex รายงานเป๊ะ ✓
+- scope: ไฟล์ที่ยังไม่ commit = เฉพาะ `.githooks/pre-commit` · `scripts/check_taskboard_archive.ps1` · `scripts/check_precommit_staged.ps1` · `scripts/_test/run_order10{1,3}_negative_tests.ps1` (implementation candidates รอ review) — ไม่มีอะไรอื่นถูกแตะ ✓ ไม่ push ✓
+
+**Opus lead call:** ทั้ง 2 blocker ปิดจริง ยืนยันด้วยมือทุกข้อ ไม่ใช่แค่เชื่อรายงาน. **เหลือ 1 ด่านตาม routing เดิม: blind Codex review ของ diff ที่ยัง uncommitted (hook+checker+tests) ก่อนเรียกว่า ORDER-103 ACCEPT เต็มรูป** — ยังไม่ทำรอบนี้ (รอ user เคาะว่าจะให้ Opus ทำ หรือ user สั่ง Codex เองอีกรอบแบบ arm's-length).
+
+### FINAL BLIND CODEX REVIEW (2026-07-13, gpt-5.6-sol, user สั่ง Opus dispatch ให้) = REWORK(5) — เจอของจริงรอบที่ 3
+Codex อ่าน order+commit `245f8f62`+diff uncommitted ด้วยมุมใหม่ (ไม่เชื่อรายงานเดิม) รันเช็คเองทั้งหมด. **เจอ 3 blocker + 2 major ใหม่ ที่ Sonnet build + Opus verify 2 รอบก่อนหน้าไม่จับ** — ทั้งหมดเป็น git-plumbing edge case ระดับลึก (merge semantics/hook gating logic/pre-block content) ไม่ใช่การ mock ผิด:
+
+1. 🔴 **hook bypass เมื่อ archive ไม่เปลี่ยนแต่ protected file อื่นเปลี่ยน:** `check_precommit_staged.ps1:137` exit สำเร็จทุกครั้งที่ `$archiveChanged=false` — stage เฉพาะ `RECONCILE_EXCEPTIONS.md` (tamper) หรือ `AGENT_TASKBOARD.md` (duplicate) เดี่ยวๆ → commit ผ่าน hook ได้ทั้งคู่ (`exit=0`) **แล้วพัง `-Strict` ทันทีหลัง commit** (`post-commit-strict-exit=2`). Codex พิสูจน์ด้วย real-commit ใน temp clone.
+2. 🔴 **merge second-parent หลุด chain check:** walker เช็คแค่ `--first-parent` (`check_taskboard_archive.ps1:492,566`) — spec บังคับว่า archive เปลี่ยนนอก first-parent ต้อง fail-closed (`AGENT_TASKBOARD.md:1125`) แต่ยังไม่ implement. Codex ทำ side-branch แก้ archive + `--no-ff` merge → commit ที่แก้ archive ผ่าน second-parent **ไม่ถูก reject เลย** (`chain-IsClean=True`).
+3. 🔴 **เนื้อหาก่อน H2 แรกมองไม่เห็น:** `Invoke-ArchiveWorkingTreeExtensionCheck` (`:773`) เทียบแค่ parsed H2 block (`:786-822`) — prepend ข้อความปลอมก่อน `## ` แรก → `-Strict` exit=0 ทั้งที่ threat model บอกว่าต้องป้องกันทุกไบต์ที่ accept แล้ว (`AGENT_TASKBOARD.md:1115`).
+4. 🟡 **test suite ยังไม่ครอบ path พวกนี้ + 1 เทสต์ตายซาก:** `fix2-staged-archive-mutation-blocks` ที่คิดว่าเทส mutation จริงๆ หยุดที่ missing-artifacts check ก่อนถึง logic ที่ตั้งใจเทส (พิสูจน์ด้วย output จริง) — ต้องเพิ่ม regression case: artifact-only / active-only / second-parent-merge / pre-H2-tamper / mutation-ที่มี-artifact-ครบ.
+5. 🟡 **doc ไม่ตรง implementation:** header comment (`:52`) + generator (`:2121`) ยังพูดถึง canonical-id wildcard เดิมที่ถูกแทนด้วย exact-hash แล้ว → `RECONCILE_EXCEPTIONS.md:58` ที่ commit ไปแล้วมี operator-guidance ผิด (ยังไม่ใช่ security bug แต่ misleading).
+
+**ยืนยันว่ายังดีอยู่ (ไม่ regress):** live gates 0/0/CLEAN · ORDER-103 suite 22/0 · ORDER-101 25/1(pre-existing) · durability tamper (binding+C1-CLOSURE) ยัง exit 2 ถูกต้อง · legit append ผ่าน · checkpoint fail-closed cases ผ่านหมด (missing/non-ancestor/valid) · Source-A exact-hash ยืนยันตรง.
+
+**Minor/hygiene เพิ่ม:** `git status --porcelain` มี 63 entries ไม่ใช่แค่ 5 ไฟล์ implementation ตามที่คาด (ของ session อื่นปนอยู่ — shared worktree, ไม่ใช่ของ order นี้) · commit `245f8f62` ขาด `Co-Authored-By` trailer ตาม AGENTS.md · ยังไม่รัน `make_status.ps1` หลัง commit.
+
+**Opus lead call:** ทั้ง 3 blocker valid มีหลักฐาน repro ชัด (ไม่ใช่ false-positive) — **นี่คือรอบที่ 3 ที่ blind review จับของจริงที่ 2 ชั้นก่อนหน้าพลาด** ยืนยัน pattern ที่ handoff เตือนไว้ตั้งแต่ต้น (self-verify ไม่พอสำหรับ write-path enforcement ระดับนี้). **ยังไม่ ACCEPT.** ส่ง rework รอบใหม่ให้ Codex ต่อ (5 fix ข้างบน) → ต้อง blind review รอบ 4 ก่อนปิดจริง.
+
+### REWORK2 (Codex) = DONE — ปิดครบ 5 ข้อ (ดู `docs/memory_control/CODEX_ORDER103_REWORK_RESULT.md` section "Rework round 2") + Opus spot-check ยืนยัน (`-Strict`=0, HEAD ไม่ขยับที่ `245f8f62`, scope ยัง 5 ไฟล์เดิม)
+
+### FINAL BLIND CODEX REVIEW รอบ 4 (2026-07-13, gpt-5.6-sol) = **INTERRUPTED (content filter) แต่เจอ BLOCKER 6 ใหม่ก่อนโดนตัด — ลึกกว่าทุกข้อก่อนหน้า**
+Codex ยืนยัน 3/5 ข้อจากรอบ 3 ปิดจริง (hook-bypass · merge-second-parent-archive-change · pre-H2 tamper ทั้ง working/committed) + live gates เขียว (`-Strict`/`-Audit`/`check_state` = 0/0/CLEAN) **ก่อนจะโดน OpenAI cybersecurity-content-filter ตัดกลางทาง** ตอนกำลังจะรัน suite เต็ม (ปัญหาเดิมที่เจอมาก่อน — ยังไม่ได้ยืนยัน suite count รอบนี้).
+
+**🔴 BLOCKER 6 (ใหม่, อิสระจาก 5 ข้อเดิม, กระทบรากฐาน trust ของทั้งระบบ) — "checkpoint laundering ผ่าน merge":**
+`TRUSTED CHECKPOINT` คือรากฐานที่ทุกอย่างอ้างอิง (§design source Codex #1 เดิม) — ถ้า checkpoint SHA เข้าถึงได้จริงแค่ผ่าน **second-parent ของ merge** (ไม่อยู่ใน real first-parent lineage) validator จะเอา checkpoint ไป "ต่อ" เข้ากับ first-parent walk **เหมือนมันอยู่ใน chain จริง** ทั้งที่กราฟจริงไม่มี edge เชื่อมกันเลย (checkpoint กับ mainline ปัจจุบันเป็นคนละ history line ที่ merge มาประกบ) → รายงาน `IsClean=True` โดยไม่เคยพิสูจน์ chain-of-custody จริง.
+
+**repro (temp repo, Codex ทำเอง):** สร้าง branch `trusted` (checkpoint cp2) แยกจาก branch `master` ที่มี history คนละสาย (`main` commit ไม่สืบเชื้อสายจาก cp2) → merge `--no-ff` เอา cp2 เข้ามาทาง second-parent → `git rev-list --first-parent HEAD` = `[HEAD, 1bef697, root]` (**cp2 ไม่อยู่ในนี้เลย**) แต่ `git merge-base --is-ancestor cp2 HEAD` = true (ปกติของ git, ไม่ใช่บั๊ก) → **validator เดิน chain `cp2→1bef697→HEAD` (2 steps, Changed=False ทั้งคู่) และรายงาน `IsClean=True`** ทั้งที่ edge `cp2→1bef697` ไม่มีจริงในกราฟ (คนละ parent-child กันเลย).
+
+**FIX ที่ต้องทำ:** validator ต้องเช็คว่า checkpoint SHA อยู่ **ใน `git rev-list --first-parent HEAD` จริง** (exact membership) ไม่ใช่แค่ "เป็น ancestor by any path" (`--is-ancestor` เดิมหลวมเกินไป) — ถ้า checkpoint เป็น ancestor แต่ไม่อยู่ใน first-parent list = **fail-closed ทันที** ("trusted checkpoint reachable only via non-first-parent path -- possible checkpoint laundering via merge, rejected") ห้ามพยายาม "เดิน chain ทางอื่น" มาแทน.
+
+**สถานะ suite รอบ 4:** ยังไม่ครบ (โดนตัดก่อนถึง `run_order103_negative_tests.ps1`) — ต้องรันซ้ำหลังแก้ BLOCKER 6.
+
+**Opus lead call:** BLOCKER 6 นี้สำคัญกว่ารอบก่อนๆ เพราะกระทบ **root-of-trust** ของทั้งระบบ (ถ้า checkpoint เองโดน launder ผ่าน merge ได้ = ทุกการเดิน chain หลังจากนั้นไม่มีความหมาย) — **นี่คือรอบที่ 4 ที่ blind review จับของจริง**. ส่ง rework รอบ 3 ให้ Codex ต่อทันที (fix BLOCKER 6 + รัน suite เต็มที่ค้างไว้ให้จบ ด้วย framing ที่เลี่ยง content-filter) → ยังต้อง blind review รอบ 5 ก่อนปิดจริง.
+
+### REWORK3 (Codex) = DONE + Opus independent repro ยืนยันเอง (จุดนี้ = root-of-trust, ตรวจเข้มกว่ารอบทั่วไป)
+Codex แก้ `Get-GitFirstParentChain` (`check_taskboard_archive.ps1:519`) — บังคับ checkpoint ต้องเป็น **literal member ของ `git rev-list --first-parent`** ไม่ใช่แค่ ancestor-by-any-path · เพิ่ม regression test · suite ผลรอบนี้: **ORDER-103 33/0** · **ORDER-101 25/1(pre-existing)** · gates 0/0/CLEAN · สังเกต concurrent commit `c4e1a7d6` (VPS rclone, ไม่เกี่ยวกัน) ระหว่างทาง แล้ว re-run gate ยืนยันซ้ำเอง.
+
+**Opus independent repro (ไม่เชื่อรายงานเฉยๆ, สร้าง laundering scenario เองจากศูนย์ใน temp repo):** root commit → branch `trusted` (cp2) แยกจาก `master` ที่ history คนละสาย → merge `--no-ff` เอา cp2 เข้าทาง second-parent → confirm `git rev-list --first-parent HEAD` ไม่มี cp2 จริง แต่ `--is-ancestor` = true (ปกติ) → รัน validator ที่แก้แล้ว → **`IsClean=False`, Reason="TRUSTED CHECKPOINT ... reachable only via a non-first-parent path ... possible checkpoint laundering (fail-closed)"** ตรงตามที่ควรเป๊ะ ✓ · ยืนยัน production checkpoint จริง (`0ced194…`) ยัง `-Strict`=0 ไม่ regress ✓ · scope ยัง 5 ไฟล์เดิม, HEAD ไม่ถูก Codex แตะ ✓.
+
+**สถานะ:** BLOCKER 6 ปิดจริง ยืนยันด้วยมือ 2 ชั้น (Codex เอง + Opus repro อิสระ). รวม 6 blocker จากรอบ 3-4 ปิดครบแล้ว. **ส่ง blind review รอบ 5** เพื่อยืนยันไม่มีของใหม่หลุดอีก ก่อนเรียก ACCEPT.
+
+### BLIND CODEX REVIEW รอบ 5 (2026-07-13) = 🟢 **REWORK(2) แต่ 0 blocker — เจอ evidence-gap + hygiene nit เท่านั้น**
+Codex ทำ full run จนจบ (ไม่โดน content-filter ตัดรอบนี้) — **สรุปเอง: "None. The checkpoint-laundering fix and previously reported production-path defects behave correctly."**
+
+**ยืนยันซ้ำอิสระ (self-built repro, ไม่พึ่ง test เดิม):** checkpoint-laundering scenario → `CHAIN_CLEAN=False` พร้อม diagnostic ตรง (`check_taskboard_archive.ps1:519,618`) · production checkpoint จริง → `literal_first_parent=True, clean=True, chain_length=17` (ไม่ regress) · live gates 0/0/CLEAN · **ORDER-103 suite 33/0 (147s)** · **ORDER-101 suite 25/1-pre-existing (478s)** · merge-archive-change rejection / pre-H2 check / hook full-consistency-when-archive-unchanged — สุ่มตรวจซ้ำผ่านหมด (`:653,870, check_precommit_staged.ps1:137`) · HEAD ไม่ถูกแตะ, scope ยัง 5 ไฟล์เดิม, real archive parity ตรง (`ded1996b...`==`ded1996b...`).
+
+**เหลือ 2 เรื่อง (ไม่ใช่ bug จริง แต่ยัง REWORK ตามกติกา):**
+1. 🟡 **major (evidence-gap):** negTest (a)-(j) จาก spec เดิมยังไม่มีเทสต์แยกครบทุกตัว (reorder / commits คั่นด้วย unrelated / mutate-then-restore / non-ancestor-checkpoint / protected-delete-rename / mixed-staging / staged-vs-working-divergence / A-B-precedence). **Codex ตรวจมือเอง 4 ใน 8 กรณีที่ขาดแล้วผ่านหมด** (non-ancestor/reorder/mutate-restore/interspersed-append) — แปลว่าโค้ดถูก แค่ยังไม่มีหลักฐานถาวรเป็น regression test.
+2. 🟢 **minor (hygiene):** `run_order103_negative_tests.ps1` ไม่มี `finally`-cleanup ของ temp clone → ทิ้งขยะใน `%TEMP%` (เจอจริง 1 โฟลเดอร์ค้าง, Codex ลบเองหลังรัน).
+
+**Opus lead call:** นี่คือรอบแรกที่ blind review **ไม่เจอ blocker** — สัญญาณว่าใกล้ ACCEPT จริง. เรื่องที่เหลือเป็น "ทำให้ครบตามที่ตัวเองสัญญาไว้ใน acceptance list" ไม่ใช่รูรั่วใหม่ — ส่ง rework รอบสุดท้าย (เพิ่ม negTest ที่ขาด + cleanup) แล้วน่าจะ ACCEPT ได้ในรอบ 6.
+
+### REWORK4 (Codex) = DONE + Opus spot-check ยืนยัน
+เพิ่ม 8 negTest ที่ขาดครบ (reorder · unrelated-interspersed · mutate-then-restore · non-ancestor-checkpoint · protected-delete · protected-rename · mixed-staging · A/B-precedence) → **suite รวม 41/0 PASS**. แก้ temp-cleanup ด้วย `try/finally` + long-path-safe delete + clear read-only attr (เจอ edge case จริงระหว่างทำ: cleanup รอบแรก fail เพราะ read-only git object — แก้แล้ว verify ซ้ำ **TEMP before=0 after=0**). suite ORDER-101 ยัง 25/1(pre-existing) เหมือนเดิม. **ไม่แตะ production logic เลย** (เฉพาะ test file) ตามคาด. concurrent commit อื่นเกิดขึ้นอีก (`c4e1a7d6`, 1 ไฟล์ไม่เกี่ยวกัน) — Codex สังเกตแล้ว re-verify กับ HEAD ใหม่เอง.
+
+**Opus spot-check อิสระ:** HEAD/scope ตรง (5 ไฟล์เดิม), `-Strict`=0, **ยืนยันเอง TEMP leftover = 0 จริง** (`find $TEMP -iname 'order103_negtests_*' | wc -l` = 0). ตรงกับรายงาน.
+
+**สถานะ:** ปิดครบทั้ง 2 เรื่องจากรอบ 5 แล้ว — **ส่ง blind review รอบ 6 (final ACCEPT check)**.
+
+---
+
+## ORDER-105 — Contract D: MVP-1-lite Experiment Event Log (locked JSONL append utility + linked-event schema + durable evidence manifest) — `OPEN · ขั้นแรก = Codex design-review order นี้ก่อน build (แบบ ORDER-103 rework0)` · **ทำได้: Codex gpt-5.6-sol (design-review + build) → Claude (spot-verify จุด irreversible) → blind Codex fresh session (accept)** _(ออก 2026-07-16 หลัง MANDATORY REVIEW GATE §20.2#5 ปลดล็อกโดย ORDER-103)_
+
+> **Design source (อ้างเป๊ะ — ห้ามอ้าง "draft ล่าสุด"):** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract D + §20.7 ownership @ `4eb839d`** · event types/fields ตาม MVP-1 spec (ไฟล์เดิม บรรทัด 274-300 @ SHA เดียวกัน — สรุป verbatim ใน handoff) · **handoff + gotchas เต็ม (Codex binary path · content-filter framing · shared-worktree) = `docs/memory_control/CONTRACT_D_HANDOFF.md`** · Codex เขียนผลลง `docs/memory_control/CODEX_ORDER105_RESULT.md` (Claude เช็คเนื้อไฟล์จริง ไม่ใช่ exit code ของ wrapper)
+
+**Output (3 ชิ้น ตาม §20.8):**
+1. **locked JSONL append utility ตัวเดียว** — file lock · atomic append · schema validation · unique event ID · idempotency · append-only correction/amendment · monthly rotation ภายใต้ append contract (§20.7) · **ห้ามหลาย agent เขียนไฟล์ JSONL รายเดือนตรงๆ — ทุก write ผ่าน utility นี้เท่านั้น**
+2. **linked-event schema** — 1 experiment = event chain (ไม่ใช่แถวที่แก้ทับ): `IDEA_CREATED · HYPOTHESIS_REGISTERED · BAR_PREREGISTERED · RUN_STARTED · RESULT_ATTACHED · AMENDMENT_ADDED · REVIEW_RECORDED · DECISION_SIGNED` + link events `RESULT_LINKED / REVIEW_LINKED / DECISION_LINKED` ชี้กลับ canonical owner · ทุก event มี: experiment ID · timestamp · actor+role · prior event (chain link) · EA/source/set/data/tester hashes · trial family/count · evidence IDs · reason · **prereg กับ result = คนละ event เสมอ; เกณฑ์ที่ prereg แล้วแก้ไม่ได้ — เปลี่ยนได้ผ่าน `AMENDMENT_ADDED` เท่านั้น**
+3. **durable evidence manifest** — evidence ID → tracked artifact / durable store + existence check · ignored/transient path ห้ามนับเป็นถาวรเพียงเพราะมี path/hash
+
+**กฎเหล็ก ownership (§20.7 — กันเกิด source-of-truth ชุดที่ 2):** Event Log เก็บแค่ **occurrence metadata + hashes + references** — ห้ามคัดลอก result/verdict text เข้า JSONL · verdict/decision/deployment = owner เดิม (`EA_SCORECARD` · `PROJECT_STATE.md` decision log · `portfolio/DEPLOYMENTS.csv`) · active order text/result narrative = `AGENT_TASKBOARD.md` · reviewed history = immutable archive — Event Log ชี้กลับด้วย owner path/hash/reference เท่านั้น
+
+**Acceptance (machine-check ทุกข้อ — negTest suite ถาวรสไตล์ ORDER-103: temp-repo จริง + try/finally cleanup):**
+1. **concurrent-write:** ≥3 writers พร้อมกัน × ≥50 events/writer → corrupt line = 0 · interleave กลางบรรทัด = 0 · parse กลับได้ครบทุก event (≥150) · พิสูจน์ว่า lock ถูกใช้จริง (test สร้าง contention จริง ไม่ใช่รันเรียงกัน)
+2. **idempotency:** append event เดิม (event ID เดิม) ซ้ำ ≥3 ครั้ง → duplicate ในไฟล์ = 0 · utility รายงานสถานะ already-appended ชัดเจน
+3. **schema-validation fail-closed:** event ผิด schema ≥5 แบบ (ขาด field บังคับ · type ผิด · event type นอกรายการ · prior-event ชี้ ID ที่ไม่มีจริง · experiment ID ผิด format) → reject ครบทุกแบบ · exit non-zero · ไฟล์ JSONL byte-identical (ไม่มี partial write)
+4. **corrupt-line:** ทำ 1 บรรทัดให้เสีย (truncate/garbage) → ตรวจจับ + ระบุเลขบรรทัดได้ · event ดีที่เหลืออ่านได้ครบ · utility ปฏิเสธ append เพิ่มแบบ fail-closed จนกว่า correction ผ่าน amendment/tombstone event
+5. **canary trace = 100%:** สร้าง 1 experiment จริงครบ chain prereg→run→result→review→decision → ทุก link trace กลับ canonical owner ได้ (path + hash ตรง) ครบทุก event ไม่มีข้อยกเว้น
+6. **evidence existence = 100%:** ทุก evidence ID ใน manifest → ไฟล์มีจริง · negative case: evidence ชี้ ignored/transient path → reject
+7. **suite รวม PASS 100% + รันซ้ำได้ + TEMP leftover after run = 0**
+
+**Out of scope / ห้าม:**
+- ❌ verdict owner ใหม่ (Event Log ไม่ตัดสินอะไร) · ❌ bulk backfill event ย้อนหลัง · ❌ Context Packet generator (= MVP-2, contract แยก + ยัง B1-gated) · ❌ generated view รับ write-back
+- ❌ คัดลอก result/verdict text เข้า JSONL (ดูกฎเหล็ก ownership ด้านบน)
+- ❌ rollback/rewrite `c0f7b0d` · `eb06ac6` · `245f8f62` หรือ commit ใดที่เกิดแล้ว
+- ❌ แตะ unrelated dirty files ของ session อื่น — commit path-limited เสมอ (`git commit --only -- <paths>` + `-F msgfile`; `-m` หลัง `--` = โดนตีเป็น pathspec)
+- ❌ Codex/subagent ตัดสิน verdict/exception เอง — เป็นสิทธิ์ Claude/user เท่านั้น
+- ❌ แก้ §20 ของ draft — แก้เมื่อไหร่ = ต้องเปิด review ใหม่ ห้าม edit เงียบ
+
+**Rollback (§20.8):** ปิด append utility · rebuild จาก canonical refs · correction ใช้ amendment/tombstone event เท่านั้น (append-only — ห้ามลบ/แก้บรรทัดเก่า)
+
+**Routing (พิสูจน์คุ้มแล้วใน ORDER-103 — ห้ามข้ามด่าน blind review แม้ quota ตึง):** (1) Codex design-review order นี้ก่อน build → (2) Codex build utility + schema + manifest + negTest suite → รายงานลง result file → (3) Claude spot-verify (รัน negTest เอง · ตรวจ ownership ไม่ซ้ำ owner เดิม · เดิน canary trace เอง) → (4) blind Codex review (fresh session, neutral framing กัน content-filter) → ACCEPT แล้วจึง commit ผ่าน production hook (ไม่ `--no-verify`) + make_status + mark REVIEWED
+
+**ผล:** _(รอ design-review + build)_

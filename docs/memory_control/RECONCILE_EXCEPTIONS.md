@@ -25,7 +25,7 @@
 | terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | ## ORDER-096C — commit WOBR intake artifacts — `DONE(Claude, 2026-07-11)` | canonical_id=096C terminal (DONE) but no REVIEW block in archive references it |
 | non-terminal-in-archive | 071\|ORDER\|current-archive#67 | ## ORDER-071 rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-07-10) — `STAGE2-DONE(Claude-agent, 2026-07-10)` — Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent) | mixed/partial status: header carries pending-stage marker 'Stage 3 = รอ main session ตัดสินตามเกณฑ์ล่วงหน้า (build: Claude+Sonnet · runs: agent)' OUTSIDE the backtick status token (backtick status='STAGE2-DONE') -- treated as non-terminal-in-archive despite the terminal verb |
 
-## Canonically reviewed -- CLOSED (Contract C1 Source A: REVIEW-block linkage /
+## Canonically reviewed -- CLOSED (Contract C1 Source A: exact binding record /
 ## Source B: C1-CLOSURE block; no further action needed)
 
 | kind | block_id | closure_source | closure_detail |
@@ -42,7 +42,7 @@
 | terminal-no-linked-review | 096C\|ORDER\|current-archive#131 | B-C1-closure-block | closed by C1-CLOSURE row (disposition='ACCEPT-ARCHIVED (mechanical DONE, no verdict)'; evidence='commit WOBR intake artifacts') |
 | non-terminal-in-archive | 071\|ORDER\|current-archive#67 | A-sourcea-binding | closed by C1-ENFORCE-SOURCEA-BINDING row (review_ref='## REVIEW ORDER-071 (Stage 1+2)') |
 
-## Unresolved -- raw_detected minus canonically_reviewed (needs a C1-CLOSURE row)
+## Unresolved -- raw_detected minus canonically_reviewed (needs an exact Source A binding or C1-CLOSURE row)
 
 _None found._
 
@@ -55,10 +55,10 @@ _None found._
 - Manual `## ARCHIVED ORDERS INDEX` block embedded in the active taskboard violates
   the "generated index must be read-only" rule (design source Sec 20.7). C0 is read-only
   and does not touch it; replacing it with a generated view is C1 scope.
-- Source A (REVIEW-block linkage) closes by **canonical id** -- any of the 3 raw-
-  exception kinds for a canonical id covered by a REVIEWED `## REVIEW ORDER-<id>`-style
-  block are closed. Source B (a `## C1-CLOSURE` block) closes by the EXACT (kind,
-  block_id, block_sha256) triple -- never by canonical id alone -- so one kind of a
+- Source A uses an appended `## C1-ENFORCE-SOURCEA-BINDING` record and closes only
+  the exact **(kind, block_id, block_sha256)** tuple in a binding row; a canonical-id
+  or bare REVIEW-block match is never a wildcard closure. Source B (a `## C1-CLOSURE`
+  block) also closes by the EXACT (kind, block_id, block_sha256) triple, so one kind of a
   block can be closed without silently closing a different kind of the same block_id,
   and a stale block_sha256 (block edited since the closure row was written) is reported
   rather than silently honored.
