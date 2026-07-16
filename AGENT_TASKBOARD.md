@@ -743,7 +743,13 @@ SuperTrend เคยโดน corr 0.724 block. ต้องรู้ก่อ�
 **Acceptance:** ตาราง Pearson monthly Ichimoku-XAU vs {BRK, Kaufman, SuperTrend ถ้ามี}. **verdict = Claude:** corr <0.6 ทุกตัว = additive leg ใหม่
 (build bundle) · >0.8 ตัวใด = redundant (small-lot หรือ drop) · 0.6-0.8 = reduce-lot include. **ห้าม:** auto-drop (user rule: high-corr = ลด lot ไม่ตัด).
 
-**rescue queue เหลือ:** PREVDAY/NR7 (เคย iterate 2-3 รอบ, low-prior) · regime-parked (Zeus/Boss_14 NZDUSD — full-funnel แล้ว).
+**✅ ORDER-114 PREVDAY+NR7 = DEAD (ปิด rescue queue สมบูรณ์, 2026-07-16B):** swept lever แกน (NR_Period{4,7,10,14} · buffer{0.1,0.3,0.5})
+× both-window Model-4 บน XAU (28 runs, `_mt5_auto/PREVDAY_NR7_CLOSE.csv`). **NR7 = window-inversion 16/16 (BWD 0.62-0.92) + DD 27-83%
+= structural dead** · **PREVDAY = ไม่มี config แตะ 1.2 both-window (marginal churn)** = dead. verdict `_triage/ORDER114_PREVDAY_NR7_CLOSE_VERDICT.md`.
+
+**🏁 ORDER-084 RESCUE QUEUE = CLOSED (6/6 ยกจัดการครบ):** revive 2 (GBPJPY→leg#8 · ICHIMOKU→USDJPY+XAU basket) · dead 4 (ZSCORE·KELTNER·PREVDAY·NR7 —
+swept จริงทุกใบ) · XAU_NY = regime-dependent build-on. **regime-parked (Zeus AUDUSD · Boss_14 NZDUSD-SELL/USDCAD) = full-funnel แล้ว ไม่ใช่ under-swept
+→ ทางฟื้นเดียว = graft `_50_ Regime.mqh` (regime-rescue track, low-prior) — ไม่อยู่ใน rescue-ladder scope.** rescue archaeology จบ.
 
 
 ---

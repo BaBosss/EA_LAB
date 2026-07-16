@@ -180,10 +180,10 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
       XAU channel-breakout edge ถูก capture ดีกว่ามากโดย EA_BREAKOUT_XAU (Bars55, H1-signal, OOS 2.94-4.87)
       **VERDICT: DEAD. Donchian concept ไม่มี additive leg ใหม่. อย่าสร้าง Donchian EA ใหม่อีก.**
 
-- [x] **EA_PREVDAY (#9/#30 Prev-Day H/L breakout) = DEAD 2026-06-27**
-      XAU H1 PF=1.19/T=877/Win%=37.3%. GBPUSD/GBPJPY/USDJPY H1: PF=0.85-0.91.
-      buf=0.5 WORSE (PF 1.15), H4 WORSE (PF 1.06, DD 8.85%). High false-breakout rate across all configs.
-      Do not re-test Prev-Day H/L on any FX or XAU.
+- [x] **EA_PREVDAY (#9/#30 Prev-Day H/L breakout) = DEAD 2026-06-27 → RE-CONFIRMED (ORDER-114, 2026-07-16B)**
+      XAU H1 PF=1.19/T=877. Rescue-close: buffer{0.1,0.3,0.5}×{H1,H4}×both-window Model-4 (12 runs) — ไม่มี config
+      แตะ 1.2 both-window (ดีสุด b0.1-H4 1.07/1.06 = marginal churn, DD 22-72%). buffer lever swept = valid kill.
+      Do not re-test Prev-Day H/L on any FX or XAU. verdict `_triage/ORDER114_PREVDAY_NR7_CLOSE_VERDICT.md`.
 
 - [x] **EA_KELTNER (#62 Keltner Channel breakout) = DEAD 2026-06-27 → REJECT-CONFIRMED (ORDER-113, 2026-07-16B)**
       Rescue swept channel-def lever (EMAPeriod/KeltMult) × TF × both-window Model-4 บน USDJPY (16 runs) → ยืนยันตาย:
@@ -206,6 +206,9 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
       IS/OOS on XAU H1: IS PF=1.06 FAIL / OOS PF=1.43 — identical artifact.
       XAGUSD H4 smoke PF=1.40 (161t) is the highest result — IS/OOS pending but structural pattern predicts IS failure.
       VERDICT: concept FULLY DEAD. 100% of NR7 "proceeds" exposed as 2025-26 bull run artifacts. Do not re-test NR7 on any instrument.
+      **RE-CONFIRMED STRUCTURAL (ORDER-114, 2026-07-16B):** NR_Period{4,7,10,14}×{H1,H4}×both-window Model-4 (16 runs) =
+      window-inversion 16/16 (MAIN 1.15-1.64 rides gold-bull, BWD 0.62-0.92 all-losing) + **DD 27-83% (blowup-level even
+      flat-lot)**. Not just no-edge — structurally dangerous. period lever swept = definitively dead. `_triage/ORDER114_*`.
 
 - [x] **concept B: EA_ASIANRANGE (#70 Asia→London range breakout) = FULLY DEAD 2026-06-28**
       Smoke (M2, 2023-2026): GBPJPY H1 PF=0.82/T=543, USDJPY H1 PF=0.96/T=501 → dead.
