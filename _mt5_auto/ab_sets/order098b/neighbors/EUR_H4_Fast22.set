@@ -1,0 +1,13 @@
+_00_OptimizeMode=true
+_01_LookbackBars=120
+_01_SwingRadius=3
+_01_MinBarsApart=10
+_02_MacdFast=22
+_02_MacdSlow=36
+_02_MacdSignal=7
+_03_BufferAtrMult=0.05
+_03_AtrPeriod=14
+_05_LotSize=0.01
+_06_Magic=999094
+_06_Deviation=20
+_06_AllowLive=false

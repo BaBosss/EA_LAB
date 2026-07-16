@@ -60,3 +60,22 @@ distinct from ORDER-097 HexaGrid where every lever failed uniformly.
 
 **Not touched (per order — no grid/MM until flat-lot clears the bar):** MM-parts integration
 deferred regardless of this result.
+
+---
+
+## FINAL VERDICT (lead, 2026-07-16) — REJECT: naked FVG-fill entry has no edge at any exit geometry
+
+Follow-up funnel completed (22 runs total, `_mt5_auto/order098a_bwd_rr.csv`, Model 1, all well-powered):
+- **BWD 2020-22 (default RR 0.75):** all 4 cells PF 0.79-0.88 — worse than MAIN, both regimes negative.
+- **RR sweep MAIN (SL20, TP ∈ {15,20,25,30,40,60}):** PF rose monotonically with wider TP on XAU
+  (0.83→0.97 at H4) then **reversed at TP40/60 (0.90/0.92)** — the curve peaks at 0.97-0.98 and never
+  crosses 1.0. EURUSD H1 flat at 0.93-0.98 throughout. Max PF observed anywhere = **0.98**.
+- Interpretation: the TP-widening "improvement" was cost-dilution toward random-entry behavior, not
+  edge emergence. Win% tracks the RR breakeven line from below at every setting — the FVG-retrace +
+  engulfing-confirm entry carries no informational advantage on these instruments/TFs.
+
+**Scope per VERDICT GATE:** closes naked-FVG-fill-entry (EX009 geometry) on EURUSD/XAUUSD × H1/H4 —
+swept: exit-RR (6 values) × symbol (2) × TF (2) × window (both regimes). NOT a universal concept kill:
+FVG-as-confluence-filter for other entries remains untested and stays open in EDGE_CATALOG. Never
+produced PF>1 in any of 26 total cells (incl. rev02 smoke) → not build-on material per doctrine
+(build-on requires PF>1 at least once).

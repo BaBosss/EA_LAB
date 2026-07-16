@@ -141,3 +141,47 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 3. **แกะ entry → Boss V2 chassis** (build-on #1): LWMA-displacement+Stoch = signal reusable บนโครง MM ที่ cap+SL พิสูจน์แล้ว
 
 **mechanism class:** reversion-to-MA (มีใน landscape แล้วแต่ variant นี้ = LWMA + Stoch dual-filter + capped SL'd grid = โครงสะอาดกว่า naked reversion ที่ตายในปีเทรนด์)
+
+---
+
+## IDEA: MACD-gate + MTF Demand/Supply reversion + volume-confirm (external concept, 2026-07-11) 🟨
+
+**Source:** FB reel "Trading by sen" — ระบบชื่อ **MACD Trend Filter + MTF Demand/Supply Cloud**
+(https://www.facebook.com/share/v/1RRNjBc3Qm/). โพสต์ขายอินดิเคเตอร์ → **ตัวเลข threshold จริงไม่เปิด**
+(นั่นคือของที่เขาขาย). แกะได้จาก caption + ชื่อองค์ประกอบ = **concept-level เท่านั้น ยังไม่เห็นตัวเลข/ผลจริง.**
+
+**กลไกที่ประกอบออกมา (inferred, ยังไม่ verify):** "เทรนด์กรองทิศ → รอย่อเข้าโซน → volume ยืนยัน" —
+1. **MACD Trend Filter** = ประตูทิศทาง (ไม่ยิงสัญญาณเอง): MACD>0 อนุญาต Buy เท่านั้น / <0 Sell เท่านั้น
+2. **MTF Demand/Supply Cloud** = โซน S/D จาก TF ใหญ่ วาดลง TF เล็ก → รอราคาย่อกลับมา *แตะ* โซน (buy ที่ demand, sell ที่ supply) ที่ align หลาย TF
+3. **Pivot Volume Strength** = ยืนยันแรงฝั่งเดียวกับที่จะเข้า (pivot กลับตัว + volume สูงในโซน) = กรอง breakout ไร้แรง
+4. **Exit** = โซนตรงข้ามถัดไป หรือ MACD พลิกทิศ
+
+**แปลเป็น edge thesis เรา:** momentum-regime gate (MACD) + **reversion-entry** (แตะโซน S/D) + volume filter —
+ตรงกับ core thesis (momentum ทำนายทิศ, การแตะโซน = จุดเข้า reversion). class ซ้ำกับ NuiIndy (RSI+ADX filtered-reversion)
+และ ST03 harvester แต่ **entry ใช้ S/D zone แทน oscillator** = angle ใหม่ที่ยังไม่มีใน landscape.
+
+**gap ที่ต้องได้ก่อน build (ทั้งหมดยังไม่รู้ = ตัวชี้ขาด edge vs กราฟสวย):**
+① MACD params + line-cross vs histogram-zero · ② อัลกอวาดโซน S/D (swing-pivot? consolidation-before-impulse?) + TF mapping ·
+③ นิยาม "volume strength" (เทียบ MA กี่แท่ง? threshold?) · ④ กติกา exit จริง
+
+**สถานะ:** PARKED-CONCEPT — รอ (ก) user ดูวิดีโอ/ส่ง screenshot เติมตัวเลข **หรือ** (ข) ตัดสินใจ build เวอร์ชันเราเอง
+ตั้ง default params สมเหตุผลผ่าน `strategy-and-risk` → smoke-test. ยังไม่คุ้มเปิด build campaign จนกว่าจะเห็นตัวเลข/ผลจริงเพิ่ม.
+
+---
+
+## EDGE: MACD-divergence reversion @ XAUUSD H4 (ORDER-098-B, 2026-07-16) 🟩 BUILD-ON CANDIDATE
+
+**กลไก:** price LL แต่ MACD main HL (bullish, mirror bearish) · naked flat-lot 0.01 · SL = 3-bar extremum ·
+TP = 200% SL · EA = `ea_projects/(EXP)_MacdDiv_Naked/` (magic 999094) · set = `_mt5_auto/ab_sets/order098b/MacdDiv_Naked_XAUUSD_H4_optPF.set`
+**หลักฐาน (Model 1):** MAIN 23-26 PF 1.91/280t **plateau จริง** (9 neighbor 1.33-1.90 ไม่มีตัวขาดทุน) ·
+BWD 20-22 = 1.04 (เอาตัวรอด regime ตรงข้าม) · **HOLDOUT 2026H1 = 1.30/39t** (window ไม่เคยใช้ select) ·
+MC reshuffle ruin 0%, DD worst 4.76%. **เหลือ:** Model-4 real-tick ×3 windows + corr vs gold cohort → demo.
+**บทเรียนคู่กัน:** EUR H4 สวยทั้ง MAIN 1.71 + BWD 1.15 แต่ **holdout 0.35 = selection-fit** — ยืนยันคุณค่า
+holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับของปลอมที่ 2-window gate จับไม่ได้.
+
+## DEAD CELL: naked FVG-fill entry @ EUR/XAU H1+H4 (ORDER-098-A, 2026-07-16) ⬛
+
+EX009 geometry (3-bar gap retrace + engulfing confirm) **ไม่มี edge ที่ exit geometry ใดๆ**: 22 runs,
+RR sweep TP{15→60}@SL20, both regimes — PF peak 0.98 แล้วหักลง (cost-dilution ไม่ใช่ edge), ไม่เคย >1
+ใน 26 cells. **ปิดเฉพาะ naked-entry** — FVG-as-confluence-filter ให้ entry อื่นยังไม่เคยเทส (เปิดอยู่).
+verdict = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`

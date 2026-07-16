@@ -732,7 +732,7 @@ deposit 10000, leverage 1:100, XAUUSD H1. report เขียนลง `D:\Meta 
 
 ---
 
-## ORDER-098-A — FVG-fill entry (EX009 algo) flat-lot smoke — `IN-PROGRESS (Claude 2026-07-16) — build+smoke DONE 07-14: rev02 well-powered, PARAMETRIC (PF 0.74-0.97 @ RR0.75, win% ใกล้ breakeven — ห้ามตัดตาย) · interim = _triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md · กำลังรัน BWD 2020-22 + TP sweep {20,25,30} บน Meta5b` (role: Claude/Sonnet build → agent smoke)
+## ORDER-098-A — FVG-fill entry (EX009 algo) flat-lot smoke — `CLOSED — REJECT (Claude 2026-07-16): naked FVG-fill ไม่มี edge — 22 runs ครบ BWD both-regime (0.79-0.88) + RR sweep TP{15,20,25,30,40,60}: PF ไต่ถึง 0.97-0.98 แล้วหักลงที่ TP40/60 = cost-dilution ไม่ใช่ edge, ไม่เคย PF>1 สักครั้งใน 26 cells → ไม่เข้า build-on doctrine · ปิดเฉพาะ naked-entry บน EUR/XAU H1/H4 — FVG-as-filter ยังเปิดใน EDGE_CATALOG · verdict เต็ม = _triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md · ดิบ = _mt5_auto/order098a_bwd_rr.csv` (role: Claude/Sonnet build → agent smoke)
 
 **ทำไม:** FVG/ICT-zone (24 การ์ด) = angle ใหม่จริงที่ยังไม่มีใน landscape (มีแค่ PARKED-CONCEPT จาก FB reel ไม่มีตัวเลข).
 ทดสอบว่า **entry เปล่าๆ มี edge ไหม ก่อนแตะ grid/MM** (flat-lot probe).
@@ -752,7 +752,7 @@ EURUSD H1 · EURUSD H4 · XAUUSD H1 · XAUUSD H4 (4 cells).
 
 ---
 
-## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `IN-REVIEW (Claude 2026-07-16) — build+smoke+optimize DONE(Codex 2026-07-15, commits 5477a5ae+7e0825d0): baseline 3/4 cell PF<1 (EUR H4 1.08 = build-on) · genetic opt in-sample เจอ XAU H4 1.91 + EUR H4 1.71 (year-split ผ่านทุกปี) — ยังไม่ judge จนกว่า BWD both-regime + plateau neighbors เสร็จ (กำลังรันบน Meta5 หลัก) · ดิบ = _mt5_auto/order098b_*.csv` (role: Claude/Sonnet build → agent smoke)
+## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `REVIEWED(Claude 2026-07-16) — 🥇 XAU H4 = BUILD-ON CANDIDATE ผ่านครบ Model-1 funnel: MAIN 1.91 plateau (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 2026H1 1.30 · MC ruin 0% — เหลือ Model-4 confirm + corr gate ก่อนเสนอ demo · EUR H4 = HOLDOUT FAIL 0.35 (selection-fit) → PARK · H1 ปิด cell · verdict เต็ม = _triage/ORDER098B_MACDDIV_VERDICT.md · ดิบ = _mt5_auto/order098b_bwd_plateau.csv` (build+opt = Codex 2026-07-15 · funnel runs = agent 2026-07-16)
 
 **ทำไม:** MACD *divergence* (price LL / MACD HL) ≠ naked MACD-cross ที่ตายไปแล้ว = reversion signal ที่ยังไม่เคย smoke.
 EX120 เสริม volume-confirm + low-freq (RR 1:3-1:5).
