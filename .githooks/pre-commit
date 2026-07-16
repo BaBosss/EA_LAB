@@ -36,4 +36,19 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
+if [ -n "$event_staged" ]; then
+  "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo ""
+    echo "[pre-commit] experiment-event staged-snapshot check failed (above) -- ORDER-105 Contract D."
+    exit $rc
+  fi
+fi
+
+# WARN-ONLY (2026-07-16): remind on kill-verdict-without-optimize-evidence. Never blocks (script
+# always exits 0); we deliberately do NOT check its rc. Anti-recurrence for default-smoke concept-kills.
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_verdict_kill.ps1
+
 exit 0
