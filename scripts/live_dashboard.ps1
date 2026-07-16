@@ -121,8 +121,20 @@ $cohort = [ordered]@{
   "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
   "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  # SuperTrend demo bench (user approved 2026-07-11, attach pending) - mapped BEFORE attach per audit A5 lesson
-  "415573666|990020" = @{ Name = "EA_SUPERTREND XAU H4 (demo tracking, criterion-7)";  Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990110" = @{ Name = "Zeus regime AUDJPY (deploy-small, 2023 down)";     Symbol = "AUDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  "415573666|990208" = @{ Name = "Boss_14_GridLog GBPJPY leg8";                      Symbol = "GBPJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+  # 463666728 "Demo bundle 10" — 11 single-position + SuperTrend, attached 2026-07-16 (judge 2026-10-16)
+  "463666728|990301" = @{ Name = "Boss_17_Wave5 XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|990302" = @{ Name = "Boss_17_Wave5 XAG";                                Symbol = "XAGUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|991003" = @{ Name = "EA_BREAKOUT_XAU USDJPY (expand)";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|991005" = @{ Name = "EA_BREAKOUT_XAU US30 (expand, WATCH-thin)";        Symbol = "US30";   Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|999094" = @{ Name = "MacdDiv_Naked XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|991070" = @{ Name = "EmaStoRev EURUSD (SMCSTO)";                        Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|990066" = @{ Name = "IchiADX USDJPY basket A H4 med";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
+  "463666728|990067" = @{ Name = "IchiADX USDJPY basket B H1 slow";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
+  "463666728|990069" = @{ Name = "IchiADX XAU basket B H4 med";                      Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
+  "463666728|990068" = @{ Name = "IchiADX XAU basket A H1 slow";                     Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
+  "463666728|990020" = @{ Name = "EA_SUPERTREND XAU H4 (validated; EA-SCORE #7)";    Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.0 }
   # 141049900 REAL MT4 user-experiment cohort (CODEX-AUDIT A5 2026-07-11: was unmapped = the
   # highest-risk no-SL magics had no dashboard row at all). MT4 platform default kill/warn.
   # NOTE: closed-deal DD only - Zeus/Kangaroo real risk is FLOATING basket loss (Zeus floating
