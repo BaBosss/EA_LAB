@@ -695,7 +695,11 @@ breakout = pending-limit ผิดทาง มันต้อง chase). vehicl
 
 **ผลรอบ rescue 2026-07-16:** #1 GBPJPY = ✅ revive (Model-4 confirm, verdict `_triage/ORDER106_*`) ·
 #2 XAU_NY = 🟡 regime-dependent long-gold (edge จริง in-regime แต่ไม่ both-window; 3 lever swept รวม direction;
-build-on = จับคู่ ORDER-057 regime-gate; verdict `_triage/ORDER084_XAUNY_RESCUE_VERDICT.md`) · next: ZSCORE → ICHIMOKU → KELTNER
+build-on = จับคู่ ORDER-057 regime-gate; verdict `_triage/ORDER084_XAUNY_RESCUE_VERDICT.md`) · **#3 ZSCORE = ❌ REJECT (2026-07-16):
+ย้ายไป ranger (AUDNZD/EURGBP/EURCHF) × threshold{2.0,2.5,3.0} × {H1,H4} × both-window = 36 runs ไม่มี both-window survivor
+(≥1.1). ดีสุด EURGBP H4 t3.0 1.04/1.12 แต่ thin 36-42t + spike (t2.0/2.5 ตก) = high-threshold thin-artifact. reversion
+ไม่มี edge แม้บนบ้านถูก → valid kill (optimize-on-right-home-fail) ตอกย้ำ momentum>reversion prior · CSV `_mt5_auto/ZSCORE_RESCUE_RANGER.csv`** ·
+next: ICHIMOKU → KELTNER (⚠️ agent delegation ต้องใส่ "foreground synchronous ห้าม background-wait" เสมอ — ZSCORE agent ตกหลุมนี้)
 
 
 ---

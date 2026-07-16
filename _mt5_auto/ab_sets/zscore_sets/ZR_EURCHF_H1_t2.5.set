@@ -1,0 +1,8 @@
+﻿_01_ZPeriod=20
+_01_ATRPeriod=14
+_02_SL_ATR=2.0
+_02_TP_ATR=3.0
+_03_FixedLot=0.01
+_04_Magic=990050
+_04_AllowLive=false
+_01_ZThreshold=2.5
