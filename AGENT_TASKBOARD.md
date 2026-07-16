@@ -561,7 +561,12 @@ commit `[tag] ORDER-079 done` · **ห้าม:** ตัดสินดี/ไ�
 
 ---
 
-## ORDER-080 — วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB ที่ user เอามาแกะ 2026-07-10) — `OPEN` (role: agent build+run)
+## ORDER-080 — วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB) — `CLOSED (Claude 2026-07-17): ตอบผ่าน ORDER-108 + 091C-D1d ไม่ต้อง build Boss_16 ซ้ำ`
+**VERDICT (`_triage/ORDER080_LIMIT_ENTRY_VERDICT.md`):** pending-limit ≠ free win — (a) adverse-selection ในเทรนด์ (พลาด runner: ORDER-108 pending-only 1.76<market 2.07),
+(b) ~26-28% ไม้ไม่ fill (lwma). **split (market+pending) = robust** (1.93/1.97 ทั้ง 2 regime) แต่ **config-conditional** (ช่วย reversion/balanced, ทำร้าย trend-chaser — ห้าม retrofit live trend EA).
+กติกา: offer entry-mode เป็น input, default = validated mode, เปิด pending/split เฉพาะ reversion/balanced. lever อยู่ EDGE_CATALOG แล้ว.
+
+## ORDER-080-orig (spec เดิม — superseded)
 
 **สมมุติฐาน:** เข้าไม้ด้วย pending limit ที่ราคาดีกว่า signal price เล็กน้อย (แลกกับ fill ไม่ครบ)
 ให้ EV ดีกว่า market entry — โลก crypto พิสูจน์ด้วย fee; โลก MT5 = ประหยัด spread/slippage แทน
