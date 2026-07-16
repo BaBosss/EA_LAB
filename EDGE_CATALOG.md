@@ -191,7 +191,18 @@ spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tes
 อ่อน — Bars40/TP5 ช่วย (regime-robust) แต่ **live Bars55/TP8 ไม่ช่วย** (retest อ่อน BWD, TP กว้างต้องการ move ใหญ่)
 → **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`.
 
-## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) 🟨 PARKED-CONCEPT
+## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) ⬛ DEAD SKELETON (Stage-0 tested)
+
+**อัปเดต 2026-07-16:** Stage-0 cheap-death test แล้ว (`(EXP)_EmaStoRev` — แกน EMA100-gate + STO reversion, ถอด OB
+ออก). **ทุก cell PF<1.0** (EURUSD/GBPUSD/XAU × M15/H1 = 0.63-0.89) · win% สูง 58-67% แต่ PF<1 = **กับดัก
+mean-reversion** (ชนะบ่อยไม้เล็ก แพ้ใหญ่ตอนเทรนด์ทะลุ SL). แกนไม่มี edge → OB zone (Stage-1) ไม่ช่วย (zone แค่ relocate
+reversion เดิม ไม่เปลี่ยน negative-edge เป็น positive) → **ปิด concept สำหรับ build** ตาม pre-registered plan + prior
+momentum>reversion. verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`. (residual: reversion เฉพาะที่ OB
+อาจต่างจาก STO-cross สุ่ม — ยังไม่เทส แต่ prior ไม่คุ้ม build เต็ม เว้น user สั่งเจาะจง.)
+
+_เดิม (concept note): momentum-gated reversion (EMA gate + STO-at-zone entry) — same family as NuiIndy._
+
+## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
 
 **Source:** user-shared class system. Rules: M15 EMA100 = direction bias (buy-only above / sell-only below) →
 M5 fresh untouched Order Block / POI zone (wait for price to re-enter) → M1 Stochastic cross out of OS/OB

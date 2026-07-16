@@ -172,7 +172,7 @@ Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช
 
 ---
 
-## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `OPEN (build+smoke เมื่อ lane ว่าง — pace)` (role: Claude/Sonnet build → agent smoke · verdict = Claude)
+## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `DONE + REVIEWED(Claude 2026-07-16): ⬛ DEAD SKELETON — build (EXP)_EmaStoRev + smoke 6 cell ทุกตัว PF<1.0 (0.63-0.89, win% 58-67% = กับดัก mean-reversion) · แกนไม่มี edge → OB zone ไม่ช่วย → ปิด concept (cheap death สำเร็จ: 1 build+6run ฆ่าแทนที่จะ build SMC เต็มหลายชม.) · verdict = _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md` (role: Claude build → agent smoke · verdict = Claude)
 
 **ที่มา:** user แชร์ระบบ class SMC×STO (triage เต็ม = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`, EDGE_CATALOG PARKED-CONCEPT).
 class = momentum-gated reversion · cheap-death: strip SMC/OB (แพง) เทส skeleton ก่อน.
