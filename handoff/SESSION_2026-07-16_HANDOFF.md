@@ -20,6 +20,9 @@
    swept) → build-on = จับคู่ ORDER-057 regime-gate ไม่ใช่ deploy
 8. **DEMO_DEPLOYMENT_PLAN.md restructure** — current-state บนสุด + archive เก่า (user บ่นอ่านยาก)
 9. **SMC×STO idea (user) triaged** → ORDER-107 staged (cheap 2-stage smoke plan)
+11. **⬛ ORDER-107 SMC×STO (user idea) = DEAD SKELETON** — build `(EXP)_EmaStoRev` (EMA-gate + STO reversion,
+   no OB) + smoke 6 cell = ทุกตัว PF<1.0 (0.63-0.89, win% 58-67% = mean-reversion trap). แกนไม่มี edge → OB
+   ไม่ช่วย → concept parked. cheap-death สำเร็จ. verdict = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`
 10. **🟩 ORDER-108 break-retest split (user idea) = BUILT + VALIDATED** — `(EXP)_BRK_SplitRetest` (market leg +
    pending buy-limit at retest). A/B Model-4: fill-rate ~90%, adverse-selection real, split regime-robust on
    Bars40 (1.93/1.97). **BUT retrofit on LIVE Bars55/TP8 = ไม่ยก** (config-conditional) → ห้าม retrofit ตัว live.
