@@ -1,0 +1,10 @@
+_01_Bars=20
+_01_ATRPeriod=14
+_02_NYStart=15
+_02_NYEnd=22
+_03_SL_ATR=3.0
+_03_TP_ATR=3.0
+_03_BuyOnly=true
+_04_FixedLot=0.01
+_05_Magic=990083
+_05_AllowLive=false

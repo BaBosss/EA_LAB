@@ -1,39 +1,45 @@
-# HANDOFF → next session (2026-07-16, Opus, EA-lane) — 098-A/B judged + board reconciled
+# HANDOFF → next session (2026-07-16, Opus, EA-lane) — big clearing session
 
 > อ่าน `VISION.md` → `PROJECT_STATE.md` → this file. ขัดกันเชื่อ repo + `check_state.ps1`.
-> ⚠️ **มี session คู่ขนาน:** user เปิดเลน Contract D แยก (Codex gpt-5.6-sol เป็นมือหลัก, เริ่มจาก
-> `docs/memory_control/CONTRACT_D_HANDOFF.md` → ORDER-105). เลนนั้น owns `docs/memory_control/` + block
-> ORDER-105 ใน taskboard — อย่าแตะซ้ำ. commit path-limited เสมอ, เช็ค HEAD ก่อน stage.
+> ⚠️ **session คู่ขนาน (Contract D):** Codex gpt-5.6-sol build ORDER-105 event-log อยู่ (hook `[experiment-events]
+> ORDER-105` เห็นทุก commit). เลนนั้น owns `docs/memory_control/` + block ORDER-105. commit path-limited เสมอ.
 
-## สิ่งที่จบใน session นี้ (commits: `883f3402` → `67a96b87`)
+## HEAD chain ของ session นี้: `7e0825d0` (codex) → `01aed69`+ (14 commits, ทุกอันผ่าน production hook)
 
-1. **Taskboard reconcile** — header ค้าง 10 ใบ sync แล้ว (036/057/064/076/079/082/084/095-b1/097/102
-   ปิดหรืออัปเดตตามจริง) · ORDER-065/066 มีอยู่แล้วใน archive (อย่าสร้างซ้ำ)
-2. **ORDER-084 judge + CLOSED** — กอง ก ~95 ฆ่าถูกกติกา · กอง ข rescue queue: Boss_14-2nd-symbol >
-   XAU_NY > ZSCORE > ICHIMOKU > KELTNER · กอง ค PARKED-VERIFY(user): Phoenix/GBPJPY1H90PCWR (รอ MT4
-   history) + VisualMartiEA
-3. **ORDER-098-A CLOSED = REJECT** — naked FVG-fill ไม่มี edge ทุก exit geometry (22 runs, peak PF 0.98
-   ที่ TP30-40 แล้วหักลง) · FVG-as-filter ยังเปิด · verdict = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
-4. **ORDER-098-B REVIEWED = XAU H4 BUILD-ON CANDIDATE** — MAIN 1.91 plateau แท้ / BWD 1.04 / holdout
-   2026H1 1.30 / MC ruin 0% · EUR H4 holdout FAIL 0.35 = selection-fit (บทเรียน gate #6 ชัดมาก) ·
-   verdict = `_triage/ORDER098B_MACDDIV_VERDICT.md`
-5. **Stock orders พร้อมปล่อย:** ORDER-104 Stage C (HP λ1600 plateau sweep ~28 runs) · ORDER-106
-   (rescue Boss_14 GBPJPY funnel)
+## ✅ ปิดใน session นี้
 
-## 👉 คิวถัดไป (เรียง EV — ปล่อย 1-2 ใบ/รอบตาม pacing)
+1. **บอร์ด reconcile** — header ค้าง 10 ใบ sync (036/057/064/076/079/082/095-b1/097/102 + 065/066 ยืนยันปิดใน archive)
+2. **ORDER-084 retro-audit judge + CLOSED** — กอง ก ~95 ฆ่าถูกกติกา · rescue queue 5 ตัว · PARKED-VERIFY(user) 2
+3. **🥇 ORDER-098-B MacdDiv XAU H4 = DEMO-ELIGIBLE** — ผ่านครบ funnel (Model-1 plateau → Model-4 1.89/0.97/1.28
+   → holdout → MC ruin 0% → corr 0.555<0.8) · bundle `_vps_deploy/MACDDIV_XAU` magic 999094 · **รอ user attach**
+4. **ORDER-098-A FVGFill = REJECT** (no edge ทุก exit geometry, 22 runs)
+5. **ORDER-104C HP λ1600 = plateau confirmed** → HP-denoise = reusable lever (EDGE_CATALOG)
+6. **ORDER-106 GBPJPY rescue = ✅ REVIVE** (Model-4 confirm MAIN 1.56/BWD 1.11/holdout 1.50) → candidate leg-8
+   ของ Boss_14 cohort (เหลือ finer sweep + corr<0.8 vs 7 legs)
+7. **ORDER-084 rescue #2 XAU_NY = 🟡 regime-dependent** (H4 MAIN 2.0-2.43 แต่ BWD fail; ชอร์ตไม่ช่วย; 3 lever
+   swept) → build-on = จับคู่ ORDER-057 regime-gate ไม่ใช่ deploy
+8. **DEMO_DEPLOYMENT_PLAN.md restructure** — current-state บนสุด + archive เก่า (user บ่นอ่านยาก)
+9. **SMC×STO idea (user) triaged** → ORDER-107 staged (cheap 2-stage smoke plan)
 
-1. **ORDER-098-B ด่านถัดไป: Model-4 real-tick confirm XAU H4 ×3 windows** (MAIN/BWD/holdout, set =
-   `_mt5_auto/ab_sets/order098b/MacdDiv_Naked_XAUUSD_H4_optPF.set`) — Model 4 ต้อง **serial เท่านั้น**
-   (freeze guard) · ถ้าผ่าน → corr equity-curve vs gold cohort 5 ตัว → เสนอ user เข้า demo
-2. ORDER-104 Stage C (spec ในบอร์ดครบแล้ว)
-3. ORDER-106 rescue Boss_14 GBPJPY
-4. รอ user: attach Wave5 ×2 + Breakout ×2 bundles (`_vps_deploy/`) + MT4 history load (ปลดล็อกกอง ค)
+## 👉 คิวถัดไป (เรียง EV — pace 1-2/รอบ)
 
-## Gotcha ใหม่ session นี้
+1. **🔼 ORDER-091C-D1d JUMSTOCH pending-limit** — **user reaffirm 2026-07-16 แรง** ("EA ตายเพราะ spread ตั้ง
+   pending + ขยาย TP"). vehicle แรกของ pending-limit rescue. **นี่เป็น build (code) ไม่ใช่ batch** — user อยากลุย
+   แต่ผมถามว่าเอา JUMSTOCH เป็นตัวแรกไหม ยังไม่ตอบ (ถามตอน probe รันอยู่). **เริ่ม session ถัดไปได้เลยถ้า user ยืนยัน.**
+   spec อัปเดตครบใน taskboard: market-vs-pending × TP{+0,+2,+5} วัด fill-rate + EV/ไม้ (ไม่ใช่ PF เดี่ยว).
+   ⚠️ pending-limit ช่วยเฉพาะ reversion — ห้ามแปะ breakout.
+2. **ORDER-098-B ด่าน demo** — user attach MacdDiv XAU H4 bundle (+ 4 bundle เดิม Wave5×2/Breakout×2)
+3. **ORDER-106 GBPJPY** — finer sweep dist{1.5,2,2.5} + corr<0.8 vs Boss_14 cohort → เสนอ leg-8
+4. **ORDER-107 SMC×STO** Stage-0 smoke · **ORDER-084 rescue #3** ZSCORE (ranger pairs)
 
-- **ex5 ใน `ea_projects/` ไม่ tracked ใน git และหายได้** (FVGFill_Naked.ex5 หายทั้ง disk ทั้ง Experts
-  folders — สาเหตุไม่ชัด) → recompile ด้วย `MetaEditor64.exe /compile:<path> /log:<log>` (~0.5s, 0/0)
-  แล้วไปต่อ ไม่ต้องสอบสวน
-- Meta 5b portable lane ใช้งานได้ปกติ (Model 1 คู่ขนานกับ Meta 5 ทั้งวัน ไม่ freeze — Model 4 ห้ามคู่)
-- protected-set hook: commit ที่แตะ `AGENT_TASKBOARD.md` ต้อง stage `docs/memory_control/RECONCILE_EXCEPTIONS.md`
-  เวอร์ชัน working คู่กันเสมอ (regen candidate หลัง clean filter) ไม่งั้น BLOCK
+## รอ user (mobile-answerable)
+- ยืนยัน vehicle pending-limit ตัวแรก (JUMSTOCH?) · attach 5 bundle (บอกวัน → ลง DEPLOYMENTS.csv + judge)
+- โหลด MT4 history (ปลด PARKED-VERIFY กอง ค: Phoenix/GBPJPY1H90PCWR)
+
+## Gotcha ยืนยันซ้ำ session นี้
+- **ex5 ใน ea_projects/ หายได้** (ไม่ tracked) — FVGFill + MacdDiv หายทั้งคู่ → recompile `MetaEditor64.exe
+  /compile:<path> /log:<log>` (~0.4s, 0/0) แล้วไปต่อ
+- Meta5 (primary, hedging 146237) + Meta5b (portable) รัน Model-1 คู่ขนานทั้ง session ไม่ freeze · Model-4 เดี่ยว
+- protected-set commit: stage `docs/memory_control/RECONCILE_EXCEPTIONS.md` (working, regen หลัง clean filter) คู่กับ
+  AGENT_TASKBOARD.md เสมอ ไม่งั้น hook BLOCK
+- corr gate reuse: `_mt5_auto/corr_*_cohort.py` (monthly-P&L จาก report "Out" rows) — ก็อปแก้ subject/cohort report ได้เลย

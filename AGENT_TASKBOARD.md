@@ -610,6 +610,16 @@ priority อยู่แล้ว: NZDUSD-H4/AUDJPY-H1/GBPJPY/EURGBP) (2) **Visu
 **ขั้น 3 (แผน — ห้ามรันใน order นี้):** rescue 1-2 ตัว/รอบตาม pacing เริ่มจาก Boss_14 GBPJPY → XAU_NY →
 ZSCORE · รวม ~9-11 ชม.เครื่องสำหรับ top-5 · ยกเป็น order ใหม่ทีละใบตอนถึงคิว (อย่า burst)
 
+**🔧 แก้คำตัดสินกอง ก (user จับ 2026-07-16 — pending-limit lever):** spread-death subset (Yetti3 · Grail ·
+Expert · 2020v2 · Scalper_S3 ฯลฯ) ผมเคยจัด "ฆ่าถูกกติกา" — **แต่ฆ่าใต้ market entry เท่านั้น.** ตัวที่
+**(1) entry = reversion/mean-revert** (limit fill บน pullback ได้) **+ (2) มี source แก้ได้** → pending buy/sell
+limit = lever ที่ยังไม่เทส → **ย้ายจาก "ตายจริง" ไป rescue-verify** (compiled vendor แก้ entry ไม่ได้ = ตันตามเดิม ·
+breakout = pending-limit ผิดทาง มันต้อง chase). vehicle = ORDER-091C-D1d/080 ด้านล่าง (JUMSTOCH เหมาะสุด).
+
+**ผลรอบ rescue 2026-07-16:** #1 GBPJPY = ✅ revive (Model-4 confirm, verdict `_triage/ORDER106_*`) ·
+#2 XAU_NY = 🟡 regime-dependent long-gold (edge จริง in-regime แต่ไม่ both-window; 3 lever swept รวม direction;
+build-on = จับคู่ ORDER-057 regime-gate; verdict `_triage/ORDER084_XAUNY_RESCUE_VERDICT.md`) · next: ZSCORE → ICHIMOKU → KELTNER
+
 
 ---
 
@@ -636,15 +646,20 @@ mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG 
 
 ---
 
-## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `OPEN` (role: Claude/Sonnet build → run)
+## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `🔼 PRIORITIZED (user reaffirm 2026-07-16: "EA ตายเพราะ spread ตั้ง pending + ขยาย TP") — vehicle แรกของ pending-limit rescue · role: Claude/Sonnet build → run`
 **ที่มา:** user + ORDER-080 · mean-reversion เข้าหา LWMA → วาง **buy-limit ใต้ราคา / sell-limit เหนือ** ที่ระดับ
-grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไม้ = ประหยัด spread เยอะ อาจดัน PF ขึ้นชัด)
+grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไม้ = ประหยัด spread เยอะ อาจดัน PF ขึ้นชัด). **ทำไมเลือก
+ตัวนี้เป็น vehicle แรก:** reversion (limit-compatible เป๊ะ) + grid เทรดเยอะ (spread saving ทวีคูณ) + source แก้ได้.
 **คำสั่ง:** (1) สร้าง variant `(EXP)_JUMSTOCH_pending.mq4` (หรือ port entry เข้า Boss V2) — เปลี่ยน OrderSend market
 เป็น pending limit ที่ราคา entry logic เดิม + จัดการ expire/re-place · ห้ามแตะ lot/SL/exit logic (isolate ตัวแปรเดียว)
-(2) compile 0/0 (3) รันเทียบ market-vs-pending บน 2 home cell (EURUSD+AUDUSD H1) + spread จริง · ตาราง EV/ไม้
-เทียบ (fill-rate ของ pending ด้วย — limit ไม่ fill ทุกไม้) · **บาร์: pending PF > market PF ที่ spread จริง = ยืนยันคุณค่า**
-· **ห้าม:** เปลี่ยน lever อื่น · verdict · commit `[tag] ORDER-091C-D1d done`
-**หมายเหตุ:** นี่ตอบ ORDER-080 (limit vs market) ด้วย EA จริงตัวแรก → ปิด 080 ไปในตัวถ้าได้ผล
+(2) compile 0/0 (3) รันเทียบ market-vs-pending บน 2 home cell (EURUSD+AUDUSD H1) + spread จริง · **+ lever TP-widen
+(user 2026-07-16): A/B `TP +0/+2/+5 pip` คู่กับ pending** (spread/TP ratio ลด แลก win% — ต้องวัด net) · ตาราง EV/ไม้
+เทียบ (**fill-rate ของ pending ด้วย — limit ไม่ fill ทุกไม้ = ไม้ที่พลาด = โอกาสหาย · วัด EV/ไม้ + fill-rate ไม่ใช่ PF
+เดี่ยว** เพราะ PF อาจสวยขึ้นเพราะเหลือแต่ไม้ดีแต่กำไรรวมหด) · **บาร์: pending net-EV > market net-EV ที่ spread จริง
+(หลังหัก opportunity cost ของไม้ไม่ fill) = ยืนยันคุณค่า**
+· **ห้าม:** เปลี่ยน lever อื่นนอก {entry-type, TP-widen} · verdict · commit `[tag] ORDER-091C-D1d done`
+**หมายเหตุ:** นี่ตอบ ORDER-080 (limit vs market) + สมมติฐาน user 2026-07-16 ด้วย EA จริงตัวแรก → ปิด 080 ในตัวถ้าได้ผล
+· ⚠️ **pending-limit ช่วยเฉพาะ reversion — ห้ามเอาไปแปะ breakout EA** (limit ผิดทาง breakout ต้อง chase/stop-entry)
 
 
 ---
