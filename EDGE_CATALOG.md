@@ -179,6 +179,17 @@ MC reshuffle ruin 0%, DD worst 4.76%. **เหลือ:** Model-4 real-tick ×3
 **บทเรียนคู่กัน:** EUR H4 สวยทั้ง MAIN 1.71 + BWD 1.15 แต่ **holdout 0.35 = selection-fit** — ยืนยันคุณค่า
 holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับของปลอมที่ 2-window gate จับไม่ได้.
 
+## LEVER: break-and-retest split entry (market + pending-limit) on breakout EAs (ORDER-108, user idea 2026-07-16) 🟩 VALIDATED-LEVER
+
+**กลไก:** breakout ยิง → **market leg** ที่ราคาทันที (จับ runner ที่ไม่ retest) + **pending buy-limit** ที่แนวที่ทะลุ
+(retest, maker ไม่จ่าย spread, SL แคบชิดแนว). EA testbed = `(EXP)_BRK_SplitRetest` (`_07_UseSplitEntry` + market/pending lot).
+**หลักฐาน (Model-4 XAU H1, EA_BREAKOUT_XAU base):** retest fill-rate **~90%** (แตะบ่อยมาก) · adverse-selection จริง
+(pending-only แพ้ market ในเทรนด์ 1.76<2.07 = พลาด runner → ต้องมีขา market) · **split = robust ทั้ง 2 regime**
+(1.93/1.97 ไม่มี window อ่อน ต่างจาก market-only 2.07/1.75 และ pending-only 1.76/2.55). live ได้ maker-fill ฟรี
+spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tester ประเมินต่ำ. **ใช้ได้กับ breakout EA ที่มี edge เท่านั้น**
+(ห้ามแปะ EA ที่ปัญหาคือ regime เช่น XAU_NY). verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`. next = sweep
+offset/expiry + retrofit บน BRK-XAU Bars55 (live) + LondonConso.
+
 ## IDEA: SMC × STO multi-TF scalping (user-shared class system, 2026-07-16) 🟨 PARKED-CONCEPT
 
 **Source:** user-shared class system. Rules: M15 EMA100 = direction bias (buy-only above / sell-only below) →
