@@ -44,6 +44,21 @@ holdout บวก = plateau นี้เป็นของจริงระด�
 **Caveat ที่เหลือ:** (1) thin — n=50-55 ต่อ 3yr (~18 trades/ปี) + holdout n=10 = power ต่ำ (2) DD real-tick ~9%
 (สูงกว่า M1 5.3% ตามคาดของ grid) (3) risk class = capped-log grid (สูงกว่า naked MacdDiv).
 
+## FINER SWEEP (Claude, 2026-07-16) — plateau ยกไป spacing แคบ d1.5, sample เพิ่ม (แก้ปม thin)
+`_mt5_auto/order106_fine_sweep.csv` (dist × basketTP, H4 both-window Model 1)
+
+| dist | tp150 M/B | tp250 M/B | tp400 M/B |
+|---|---|---|---|
+| 1.5 | **1.40/1.32** (93t/51t) | 1.75/1.08 | 4.64/1.16 (n28 spike) |
+| 2.0 | 0.98/1.05 | 1.55/1.06 (coarse center) | 1.22/1.26 |
+| 2.5 | 1.89/0.94 | 1.74/1.11 | 1.72/0.83 |
+
+**d1.5 = plateau จริงทั้งแถว TP** (both-window ผ่าน 3/3) — ต่างจาก d2.5 (BWD พังที่ tp150/400) = ขอบ.
+**center ใหม่ที่ดีสุด = d1.5/tp150:** BWD 1.32 (แข็งกว่า coarse d2.0 1.06 ชัด) + **trades 93/51 = 2-3x coarse**
+(แก้ปม thin ที่ค้าง). DD สูงขึ้นเล็กน้อย (5-6% vs coarse 5%, tighter spacing = grid exposure เพิ่ม) ยังรับได้.
+**Model-4:** confirm แล้วที่ d2.0/s4.0 (1.56/1.11 = จุดใน plateau เดียวกัน) → plateau นี้ real-tick-validated ที่ 1 จุด ·
+d1.5 center ควร Model-4 confirm เพิ่มก่อน finalize (คิว — ห้ามรันคู่ Model-4 อื่น freeze).
+
 **Next (queue — ไม่ deploy เอง):** GBPJPY H4 = **candidate เพิ่มเป็น leg ที่ 8 ของ Boss_14 demo cohort**
 (415573666 มี 7 symbol H1 อยู่แล้ว 990201-207 — EA เดียวกัน magic ใหม่, GBPJPY H4). ด่านก่อนเสนอ user:
 (a) finer sweep dist∈{1.5,2.0,2.5}×basket-TP รอบ center ยืนยัน plateau + n เพิ่ม (b) corr vs 7 legs เดิม
