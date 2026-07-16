@@ -720,7 +720,21 @@ original DEAD ถูก—ครั้งนี้ swept จริง = valid ki
 **ORDER-112B ICHIMOKU basket build-on = DONE → DEMO-ELIGIBLE bundle #9:** merged-equity (2 config continuous Model-4, merge deal list ตามเวลา
 — deploy = 2 instance ไม่ต้อง build wrapper): **PF 1.339 · 357t · true max-DD 6.09% · MC PF_5th 1.036 · DD_95th 10.77% · ruin 0%.**
 edge บวกจริง+MC-survive แต่ thin (PF_5th 1.036) = demo small-lot ไม่ใช่ live leg แข็ง. **Bundle `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (H4 med 990066 + H1 slow 990067)
-พร้อม attach — user เคาะจะรวม demo cohort ไหม (9th bundle). script `_mt5_auto/ichi_basket_merge_mc.ps1`.
+พร้อม attach (user 2026-07-16B APPROVED "เอาเข้าทั้งหมด" → roster ใน DEMO_DEPLOYMENT_PLAN, register ตอน attach จริง). script `_mt5_auto/ichi_basket_merge_mc.ps1`.
+
+**🥇 ORDER-112C/D ICHIMOKU multi-home = XAU ฟื้นด้วย period lever (2026-07-16B):** เอา config USDJPY-winner ไป 6 trenders × both-window Model-4
+(`_mt5_auto/ICHI_MULTIHOME.csv`). GBPJPY/EURJPY/AUDJPY/GBPUSD ตาย/single-window · CADJPY 1.16/1.15 near-miss · **XAUUSD = medH4 3.94/1.25 + slowH1
+1.66/1.39 ผ่าน both-window ≥1.2** → คว่ำ "XAU ceiling 1.13" (default-period only). year-split (`ICHI_XAU_YEARSPLIT.csv`): medH4 6/6 ปี ≥0.99 (thin 8-20t/yr) ·
+slowH1 5/6 ปีบวก (32-41t/yr). แข็งกว่า USDJPY basket แต่ **gate ชี้ขาด = corr vs XAU legs เดิม** (XAU แน่นมาก).
+
+## ORDER-112E — corr check: Ichimoku-XAU additive หรือ redundant? — `OPEN` (self-contained)
+**ทำไม:** XAU Ichimoku (slowH1 20/60/120, both-window 1.66/1.39, 5/6 yr+) = edge จริง แต่ XAU portfolio แน่น (BRK/Kaufman/SuperTrend/Wave5/MacdDiv);
+SuperTrend เคยโดน corr 0.724 block. ต้องรู้ก่อนว่าเป็น leg ใหม่จริงหรือซ้ำ.
+**ขั้น:** (1) รัน (EXP)_IchiADX_Naked slowH1 (set `_mt5_auto/ab_sets/ichi_kumo/KUMO_slow_H1.set`) XAUUSD H1 full 2020-2026 Model-4 → report
+(2) ดึง monthly P&L จาก deal list (pattern เหมือน `ichi_basket_merge_mc.ps1`) (3) เทียบ `_mt5_auto/corr_monthly.py` กับ monthly ของ XAU legs เดิม
+(รัน full-window ของ EA_BREAKOUT_XAU Bars8 + KAUFMAN_ER buyonly เป็น reference — reports อาจมีแล้วใน `_mt5_auto/reports/`).
+**Acceptance:** ตาราง Pearson monthly Ichimoku-XAU vs {BRK, Kaufman, SuperTrend ถ้ามี}. **verdict = Claude:** corr <0.6 ทุกตัว = additive leg ใหม่
+(build bundle) · >0.8 ตัวใด = redundant (small-lot หรือ drop) · 0.6-0.8 = reduce-lot include. **ห้าม:** auto-drop (user rule: high-corr = ลด lot ไม่ตัด).
 
 **rescue queue เหลือ:** PREVDAY/NR7 (เคย iterate 2-3 รอบ, low-prior) · regime-parked (Zeus/Boss_14 NZDUSD — full-funnel แล้ว).
 

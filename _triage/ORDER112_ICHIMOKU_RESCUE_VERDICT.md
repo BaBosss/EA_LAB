@@ -46,6 +46,18 @@ Probe เก่า sweep **ADX + exit + symbol** บน **Model-2 + recent-only(
 - **MERGED (both @0.10, chronological): PF 1.339 · 357t · net +$1,955 · TRUE max-DD 6.09%** (ต่ำกว่าผลรวม = DD time-separated จริง)
 - **MC (2000 resample, N=357): PF_5th = 1.036 · DD_95th 10.77% · Ruin(DD≥30%) = 0%**
 
+## ORDER-112C/D — multi-home extension (2026-07-16B, "หางานทำต่อ") — 🥇 XAU ฟื้นด้วย period lever!
+เอา config ที่ชนะ USDJPY (med-H4 12/34/68 · slow-H1 20/60/120) ไปลอง 6 trenders อื่น × both-window Model-4 (`_mt5_auto/ICHI_MULTIHOME.csv`):
+- GBPJPY/EURJPY/AUDJPY/GBPUSD = ตาย หรือ single-window (window-inverted) · CADJPY = 1.16/1.15 both แต่ใต้บาร์ 1.2 (near-miss)
+- **🥇 XAUUSD = both-window ผ่าน! medH4 3.94/1.25 · slowH1 1.66/1.39** (ทั้งคู่ ≥1.2) → **คว่ำ backlog "XAU Ichimoku ceiling 1.13"**
+  (นั่นวัด default-period 9/26/52 เท่านั้น — เหมือน USDJPY เป๊ะ; period lever ปลดล็อก XAU ด้วย)
+- **year-split XAU** (`_mt5_auto/ICHI_XAU_YEARSPLIT.csv`): **medH4 6/6 ปี ≥0.99 (ไม่มีปีขาดทุนจริง!)** thin 8-20t/yr ·
+  slowH1 5/6 ปีบวก (2021 0.84 ลบ) sample ดีกว่า 32-41t/yr. edge จริง both-window + near-all-years — **แข็งกว่า USDJPY basket.**
+- **⚠️ gate ชี้ขาด = CORRELATION vs XAU portfolio เดิม** (BRK Bars8/55 · KAUFMAN_ER · SuperTrend · Wave5 XAU · MacdDiv XAU).
+  XAU trend-follower มัก corr สูง (SuperTrend เคยโดน 0.724 block). ถ้า corr <0.6 = additive leg ใหม่จริง · >0.8 = redundant small-lot.
+  **→ ORDER-112E (stocked): corr_monthly.py Ichimoku-XAU(slowH1) vs XAU legs → ตัดสิน additive/redundant.**
+
+## ORDER-112B — merged-equity + MC (USDJPY basket)
 **สรุป build-on: DEMO-ELIGIBLE small-lot (thin edge).** edge บวกจริง both-window + MC-survive + ruin 0% แต่ PF_5th 1.036 = บาง (แข็งๆ ~1.3-1.7)
 → demo cohort เก็บ forward data ไม่ใช่ live leg แข็ง. **Bundle #9 พร้อม attach: `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (2 leg: H4 med magic 990066 + H1 slow magic 990067,
 ex5 MD5 68b349fa..., README + silent-stop checklist ครบ). merge+MC script `_mt5_auto/ichi_basket_merge_mc.ps1`.
