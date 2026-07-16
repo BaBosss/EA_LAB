@@ -496,7 +496,7 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
     `_vps_deploy/WAVE5_XAU|XAG` · ⚠️ template ไม่มี tester-gate — attach แล้วเทรดทันที · เหลือ: user attach บน VPS
     (commits `0b4acdbc`+`86151de9`, spec-of-record = `docs/superpowers/plans/2026-07-12-entry-wave5.md`)
 
-## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `ขั้น extract DONE(agent 2026-07-10, 154 rows) · ขั้น judge(Claude) + แผน rescue top 5-10 = OPEN ค้างคิว`
+## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `CLOSED (extract DONE agent 2026-07-10 · judge DONE Claude 2026-07-16: กอง ก ~95 ฆ่าถูกกติกา · กอง ข rescue queue 5 ตัวเรียง EV · กอง ค PARKED-VERIFY(user) 2 รายการ — rescue ยกเป็น order ใหม่ทีละใบตาม pacing)`
 
 **ทำไม:** กฎ rescue-ladder (optimize ≥3 รอบ lever ต่างชุด × ≥2 TF ก่อนตาย) + PARKED-VERIFY(user) +
 EA-SCORE เพิ่งเกิดวันนี้ — verdict เก่าจำนวนมากตัดสินก่อนกฎนี้ · user เชื่อ (ประสบการณ์ตรง: หลายตัวที่ live
@@ -532,6 +532,41 @@ commit `[tag] ORDER-084 extract done` · **ห้าม:** ตัดสิน/�
 13. Verdict ที่มี supersede-chain ถูกยุบเหลือ row เดียว (verdict ล่าสุด + ประวัติใน evidence): ST03 family (CORE→STRUCTURAL 07-10) · 2020v2 (REJECT→revive→REJECT) · Happy thaipop (PARKED→REJECT ×16.3) · Automated Forex Grail (AUTO-REJECT→revive→REJECT-spread) · LNBREAK/NRBreakout (DEAD→re-exam ORDER-008B)
 14. คอลัมน์ class_claimed = คำอ้างของ verdict เดิมเท่านั้น (STRUCTURAL/PARAMETRIC/artifact/unknown) — ยังไม่มีการจัดกอง rescue/dead/verify ตามข้อห้าม
 15. ขั้น judge (กอง ก/ข/ค + แผน rescue top 5-10) = รอ Claude lead อ่าน CSV
+
+### ORDER-084 ขั้น 2 JUDGE (Claude lead, 2026-07-16) — จัดกอง 107 rows กลุ่มตาย + แผน rescue
+
+**กอง ก — ตายจริง ไม่แตะ (~95 rows):** ทุกตัวที่มี kill-chain ครบอย่างน้อย 1 ด่าน structural/artifact จริง:
+BWD wipeout (Dark Mimas 0.45 · EURUSD Robot 0.39 · SEMIS 0.05-0.65 · GapinFX 2022 0.02) · spread-stress
+(Grail · Yetti family · Expert · 2020v2) · lot-check (Z61 ×44-80 · AF-Global →94 lots · Dark Venus ×2+ ·
+Happy thaipop) · Model-ladder artifact (Elephant 85→1.41 · Scalper_S3 · Degold M1-fantasy · Zeus Gold Hedge
+M1-false-pass) · exhaustive sweep ถึง ceiling (MACD-cross 1.16 · SessionBreakout 1,200-pass 1.20 ·
+RSI_Swing_BB 27-combo · LNBREAK 0/81 · Boss_14 EURCHF 0/54 + US30 + BREAKOUT EU/GBPJPY 0/180-175 ·
+LondonConso rescue-sweep 48-combo แล้วยังตก) · no-source/cracked (CITY-GOLD · North East Way · KRAPOOK).
+**การ audit ยืนยัน: กองนี้ฆ่าตามกติกา ไม่ใช่ตายเปล่า.**
+
+**กอง ข — UNDER-SWEPT ตามกฎใหม่ (ตายจาก default-only/1-TF, ยังไม่เคยเห็น lever sweep) → คิว rescue เรียง EV:**
+1. **Boss_14_GridLog second-symbol pool (GBPJPY/NZDUSD/USDCAD/AUDNZD)** — defaults เท่านั้น (0.68-1.13,
+   GBPJPY OOS 1.12 เฉียดบาร์) · chassis validated แล้ว = EV สูงสุด · rescue = funnel มาตรฐาน ≥3 lever × H1+H4
+   (~2-3 ชม.เครื่อง/symbol, ใช้ launcher เดิมของ family ได้เลย)
+2. **EA_XAU_NY (#83 NY-session breakout)** — default smoke เดียว PF 1.12/350t · mechanism = breakout@XAU
+   (edge class ที่พิสูจน์แล้ว) · sweep session-window × buffer × SL × {M30,H1,H4} (~2 ชม.)
+3. **EA_ZSCORE (#100)** — default เดียว PF 1.15/0.95 H4 · reversion signal แต่เทสบน XAU (บ้าน momentum) —
+   ผิดบ้านตาม portfolio-edge thesis · rescue = ย้ายไป ranger pairs (AUDNZD/EURCHF/EURGBP) × H1/H4 ×
+   threshold sweep (~2 ชม.)
+4. **EA_ICHIMOKU (#66)** — claimed STRUCTURAL "cloud lags" แต่หลักฐาน = default 1 cell = overclaim ชัด ·
+   sweep Kumo period × TF บน XAU/JPY (~1.5 ชม.)
+5. **EA_KELTNER (#62)** — default เดียว PF 1.04 · momentum-class ถูกบ้านแล้ว แต่ PF ไกลบาร์ · ท้ายคิว (~1.5 ชม.)
+6. **EA_PREVDAY / EA_NR7** — เคย iterate 2-3 รอบแล้ว (เกือบครบ gate) · ต่อคิวเฉพาะถ้า 1-5 ให้ผลดี
+**หมายเหตุ regime-parked (Zeus AUDJPY/AUDUSD · Boss_14 NZDUSD-SELL · AsReMix):** full-funnel แล้ว ไม่ใช่
+under-swept — ทางฟื้นเดียว = lever `_50_ Regime.mqh` ใน funnel ใหม่ (ORDER-057 adoption path) ไม่ใช่ re-sweep เปล่า
+
+**กอง ค — PARKED-VERIFY(user):** (1) **Phoenix_EA_v5_6_03 + GBPJPY1H90PCWR** (PF 8.15 absurd-flag) —
+BWD ว่างเพราะ MT4 history ขาด · ปลดล็อกทันทีที่ user โหลด history (memory `mt4-history-gap-jumstoch` มีคิว
+priority อยู่แล้ว: NZDUSD-H4/AUDJPY-H1/GBPJPY/EURGBP) (2) **VisualMartiEA** — unverifiable ×2 (ladder ×5
+น่าจะ structural แต่ยังไม่มีหลักฐาน) — แจ้ง user ตามกติกา ห้ามปล่อยตายเงียบ
+
+**ขั้น 3 (แผน — ห้ามรันใน order นี้):** rescue 1-2 ตัว/รอบตาม pacing เริ่มจาก Boss_14 GBPJPY → XAU_NY →
+ZSCORE · รวม ~9-11 ชม.เครื่องสำหรับ top-5 · ยกเป็น order ใหม่ทีละใบตอนถึงคิว (อย่า burst)
 
 
 ---
