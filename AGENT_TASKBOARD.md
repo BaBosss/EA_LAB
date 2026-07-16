@@ -242,7 +242,7 @@ Donchian มี session filter `_12_HourFrom/To` + `_50_` gate ครบ). ผ�
 
 ---
 
-## ORDER-111 — re-audit open-price-killed pile + source-catalog build-material (user เคาะ 2026-07-16) — `RUNNING (Claude 2026-07-16)` (role: Claude scope → agent batch · verdict = Claude)
+## ORDER-111 — re-audit open-price-killed pile + source-catalog build-material (user เคาะ 2026-07-16) — `DONE + REVIEWED(Claude 2026-07-16): Part A 6-marginal recheck = **ไม่มี wrongly-parked** (every-tick แย่ลงทั้ง 6, PF ตกทุกตัว, 2 ตัวโผล่ DD~99% ที่ control-points บัง) → cheap-model parking แฟร์/ใจดีเกินด้วยซ้ำ, ความกังวล user ปิดด้วยหลักฐาน · Part B .mq5 catalog = 599 families, ~5 external build-lead (ไม่ใช่ขุมทรัพย์) · **meta: control-points บัง grid/basket blowup → grid ต้อง Model-4 เสมอ**` (role: Claude scope → agent batch · verdict = Claude)
 
 **ที่มา:** user ห่วงว่าผมฆ่า EA ด้วย open-price/math-cal. **Scope finding:** mass-smoke (ORDER-036) ตัดสิน PF บน
 **control-points (m1) ไม่ใช่ open-price** (m2 = แค่ด่านนับ trade) → **ไม่มีกองถูกฆ่าผิดขนาดใหญ่.** Reject-tier=143 (97 deep-dead),
