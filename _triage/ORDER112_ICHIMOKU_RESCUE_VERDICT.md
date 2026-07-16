@@ -62,8 +62,16 @@ full-window XAU passes 2020-2026 Model-4 → monthly Pearson (`_mt5_auto/ichi_xa
 - Ichimoku-XAU slowH1 full: **PF 1.57 · 236t · Sharpe 3.0** (77 months, net +$7,038)
 - **vs BRK_XAU 0.263 (LOW=additive) · vs KAUFMAN 0.574 (<0.6) · vs SuperTrend 0.646 (reduce-lot)**
 - max corr 0.646 → **ADDITIVE leg ที่ reduced lot** (user rule: high-corr = ลด lot ไม่ตัด). ต่ำกว่า SuperTrend-0.724-block ชัด.
-**VERDICT: XAU Ichimoku slowH1 = candidate จริง, additive ต่อ portfolio, deploy small-lot.** แข็งกว่า USDJPY basket
-(healthy sample + Sharpe 3.0 + additive). Bundle #11 `_vps_deploy/ICHIADX_XAU/`. medH4 (6/6yr ≥0.99 thin) = optional 2nd leg.
+**VERDICT: XAU Ichimoku slowH1 = candidate จริง, additive ต่อ portfolio.** แข็งกว่า USDJPY basket (Sharpe 3.0 + additive).
+(corr = live-decision gate ไม่ใช่ demo gate — user 2026-07-16B: demo เอาขึ้นเทส normal lot คอนเฟิร์มก่อน, corr sizing ตอนเงินจริง.)
+
+### ORDER-112F — XAU 2-leg basket (2026-07-16B) = 🏆 find แข็งสุด session
+เพิ่ม medH4 (12/34/68 H4) เป็น leg B (medH4 full PF 2.85/97t/Sharpe 2.76, year-split 6/6 ≥0.99). merge deal list กับ slowH1
+(`_mt5_auto/xau_basket_merge_mc.ps1`):
+- **COMBINED: PF 2.143 · 333t · net +$22,407 · true max-DD 10.5% · ALL 6 ปีบวก** (2 leg อ่อนคนละปี → กลบกัน)
+- **MC (2000): PF_5th = 1.544 · DD_95th 22.19% · Ruin 1.2%** — robust จริง (เทียบ USDJPY basket PF_5th 1.036 บาง)
+**VERDICT: XAU IchiADX basket (H1 slow 990068 + H4 med 990069) = candidate แข็งสุดของ session** — 6/6 ปี + PF_5th 1.544.
+Bundle `_vps_deploy/ICHIADX_XAU/` (2 leg). caveat: DD ลึกกว่า (MC 95th 22%), ride gold-bull บาง MAIN, ruin 1.2%.
 
 ## ORDER-112B — merged-equity + MC (USDJPY basket)
 **สรุป build-on: DEMO-ELIGIBLE small-lot (thin edge).** edge บวกจริง both-window + MC-survive + ruin 0% แต่ PF_5th 1.036 = บาง (แข็งๆ ~1.3-1.7)

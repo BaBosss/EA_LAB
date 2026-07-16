@@ -35,7 +35,8 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 | SMC×STO | EURUSD H1 | 991070 | `_vps_deploy/SMCSTO_EURUSD/` | ADX-filter candidate (user push revived) |
 | IchiADX (basket A) | USDJPY H4 | 990066 | `_vps_deploy/ICHIADX_USDJPY_BASKET/` | basket PF 1.339/DD 6.09%/MC PF_5th 1.036; ⚠️ thin → small lot |
 | IchiADX (basket B) | USDJPY H1 | 990067 | `_vps_deploy/ICHIADX_USDJPY_BASKET/` | leg B ของ basket เดียวกัน (ต้องรันคู่ A) |
-| IchiADX (XAU) | XAUUSD H1 | 990068 | `_vps_deploy/ICHIADX_XAU/` | PF 1.57/Sharpe 3.0/5-6yr+; demo=normal lot (corr 0.26/0.57/0.65 = live-decision only, ไม่ใช่ demo gate) |
+| **IchiADX XAU basket A** | XAUUSD H1 | 990068 | `_vps_deploy/ICHIADX_XAU/` | slow 20/60/120, PF 1.57/Sharpe 3.0 |
+| **IchiADX XAU basket B** | XAUUSD H4 | 990069 | `_vps_deploy/ICHIADX_XAU/` | med 12/34/68, PF 2.85. **basket 2-leg = 6/6 ปีบวก · PF 2.14 · MC PF_5th 1.544 · DD 10.5%** = find แข็งสุด session; demo normal lot |
 
 **เมื่อ user attach ตัวใด → แจ้งวัน → Claude เพิ่ม row ใน DEPLOYMENTS.csv + judge +3 เดือน + dashboard map.**
 (EA_SUPERTREND 990020 = PENDING_ATTACH บนบัญชี 415573666 อยู่แล้ว — ดูตารางบน)
