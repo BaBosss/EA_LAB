@@ -752,7 +752,7 @@ EURUSD H1 · EURUSD H4 · XAUUSD H1 · XAUUSD H4 (4 cells).
 
 ---
 
-## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `REVIEWED(Claude 2026-07-16) — 🥇 XAU H4 = BUILD-ON CANDIDATE ผ่านครบ Model-1 funnel: MAIN 1.91 plateau (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 2026H1 1.30 · MC ruin 0% — เหลือ Model-4 confirm + corr gate ก่อนเสนอ demo · EUR H4 = HOLDOUT FAIL 0.35 (selection-fit) → PARK · H1 ปิด cell · verdict เต็ม = _triage/ORDER098B_MACDDIV_VERDICT.md · ดิบ = _mt5_auto/order098b_bwd_plateau.csv` (build+opt = Codex 2026-07-15 · funnel runs = agent 2026-07-16)
+## ORDER-098-B — MACD-divergence entry (EX154/EX010 algo) flat-lot smoke — `REVIEWED(Claude 2026-07-16) — 🥇 XAU H4 CONFIRMED (Model-1 funnel + Model-4 real-tick): MAIN M4 1.89 (=M1 1.91, edge ไม่ใช่ fill artifact) · BWD M4 0.97 · HOLDOUT M4 1.28 · plateau แท้ · MC ruin 0% → เหลือด่านเดียว = corr gate vs gold cohort 5 ตัว ก่อนเสนอ demo (deals CSV พร้อม) · EUR H4 = HOLDOUT FAIL 0.35 → PARK · H1 ปิด cell · verdict = _triage/ORDER098B_MACDDIV_VERDICT.md` (build+opt = Codex 2026-07-15 · funnel+M4 = agent/Claude 2026-07-16)
 
 **ทำไม:** MACD *divergence* (price LL / MACD HL) ≠ naked MACD-cross ที่ตายไปแล้ว = reversion signal ที่ยังไม่เคย smoke.
 EX120 เสริม volume-confirm + low-freq (RR 1:3-1:5).
@@ -1341,7 +1341,7 @@ Codex ทำ full run จนจบ (ไม่โดน content-filter ตัด�
 
 ---
 
-## ORDER-105 — Contract D: MVP-1-lite Experiment Event Log (locked JSONL append utility + linked-event schema + durable evidence manifest) — `OPEN · ขั้นแรก = Codex design-review order นี้ก่อน build (แบบ ORDER-103 rework0)` · **ทำได้: Codex gpt-5.6-sol (design-review + build) → Claude (spot-verify จุด irreversible) → blind Codex fresh session (accept)** _(ออก 2026-07-16 หลัง MANDATORY REVIEW GATE §20.2#5 ปลดล็อกโดย ORDER-103)_
+## ORDER-105 — Contract D: MVP-1-lite Experiment Event Log (locked JSONL append utility + linked-event schema + durable evidence manifest) — `OPEN rev01 · design-review DONE (Codex NEEDS-CHANGES(13) → Claude ACCEPT 13/13 + pinned decisions #1-32) · พร้อม build` · **ทำได้: Codex gpt-5.6-sol (design-review + build) → Claude (spot-verify จุด irreversible) → blind Codex fresh session (accept)** _(ออก 2026-07-16 หลัง MANDATORY REVIEW GATE §20.2#5 ปลดล็อกโดย ORDER-103)_
 
 > **Design source (อ้างเป๊ะ — ห้ามอ้าง "draft ล่าสุด"):** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract D + §20.7 ownership @ `4eb839d`** · event types/fields ตาม MVP-1 spec (ไฟล์เดิม บรรทัด 274-300 @ SHA เดียวกัน — สรุป verbatim ใน handoff) · **handoff + gotchas เต็ม (Codex binary path · content-filter framing · shared-worktree) = `docs/memory_control/CONTRACT_D_HANDOFF.md`** · Codex เขียนผลลง `docs/memory_control/CODEX_ORDER105_RESULT.md` (Claude เช็คเนื้อไฟล์จริง ไม่ใช่ exit code ของ wrapper)
 
@@ -1373,4 +1373,10 @@ Codex ทำ full run จนจบ (ไม่โดน content-filter ตัด�
 
 **Routing (พิสูจน์คุ้มแล้วใน ORDER-103 — ห้ามข้ามด่าน blind review แม้ quota ตึง):** (1) Codex design-review order นี้ก่อน build → (2) Codex build utility + schema + manifest + negTest suite → รายงานลง result file → (3) Claude spot-verify (รัน negTest เอง · ตรวจ ownership ไม่ซ้ำ owner เดิม · เดิน canary trace เอง) → (4) blind Codex review (fresh session, neutral framing กัน content-filter) → ACCEPT แล้วจึง commit ผ่าน production hook (ไม่ `--no-verify`) + make_status + mark REVIEWED
 
-**ผล:** _(รอ design-review + build)_
+### DESIGN REVIEW rework0 (Codex gpt-5.6-sol, 2026-07-16) = NEEDS-CHANGES(13) → Claude ACCEPT 13/13 · rev01 พร้อม build
+- **ผลเต็ม + binding annex ของ order นี้ = `docs/memory_control/CODEX_ORDER105_DESIGNREVIEW.md`** (5 BLOCKER + 8 MAJOR + 1 MINOR · section "Decisions the builder needs pinned" **#1-32 = Claude อนุมัติทั้งชุด 2026-07-16** · section "Missing negTests" ทุกรายการ = acceptance surface บังคับ เพิ่มจาก 7 ข้อเดิม · soundness matrix = ตัวตีความ acceptance เดิมทุกข้อ)
+- **BLOCKER ที่ปิดด้วย pinned decisions:** F01 pin event enum v1 = `*_LINKED` family + `TOMBSTONE_ADDED`, reject `RESULT_ATTACHED/REVIEW_RECORDED/DECISION_SIGNED` (ตาม §20.7 ซึ่ง authoritative เหนือ list ก่อน §20) · F02 JSONL รายเดือน = **git-tracked** `docs/memory_control/experiment_events/events-YYYY-MM.jsonl` + **staged-snapshot event checker ใหม่ต่อเข้า production hook ใน build เดียวกัน** (split แล้วปล่อย unprotected interval = ขัด fail-closed philosophy — ไม่ split) · F03 ownership บังคับด้วย schema จริง (per-event whitelist · `additionalProperties=false` · `reason_code` enum + `reason_ref` — ไม่มี prose field) · F04 แยก logical correction (amendment/tombstone บน log ที่ valid) ออกจาก physical recovery (locked rebuild + authorization + quarantine) — แก้ deadlock ใน acceptance 4 เดิม · F05 evidence v1 = **committed Git artifacts เท่านั้น** (resolve ที่ commit OID + blob OID + raw SHA-256, ไม่รับ Test-Path)
+- **scope เพิ่มที่อนุมัติ:** `.githooks/pre-commit` เรียก event checker เพิ่ม (**ห้าม regress ORDER-103 machinery — suite 103 41 case ต้องยัง PASS**) · `.gitattributes` scoped LF rule · ไฟล์ใหม่ตาม pinned decisions #2/#5/#6/#7 (`scripts/experiment_event_log.ps1` · `scripts/check_experiment_events.ps1` · `scripts/_test/run_order105_negative_tests.ps1` · schema 2 ไฟล์)
+- design-review prompt ที่ใช้ = `docs/memory_control/CODEX_ORDER105_DESIGNREVIEW_PROMPT.md` (neutral framing ผ่าน content-filter รอบเดียว)
+
+**ผล:** _(design-review DONE 2026-07-16 · รอ build)_
