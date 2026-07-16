@@ -27,8 +27,18 @@
 > SMC×STO = **edge เฉพาะ EURUSD H1** — optimized STO(K13-17) + deeper OS + ADX-filter(30) = **MAIN 1.50 / BWD 1.24**
 > both-window, 130 ไม้. **ไม่ travel** (AUDNZD/EURGBP/XAU ล่ม). **user push ถูก 2 เรื่อง** (optimize STO: default K5→K13-17
 > · ADX filter: ยก 1.30/1.13→1.50/1.24) — default-smoke ที่ผมรีบตัดสินจะทิ้ง candidate จริงตัวนี้ทิ้ง.
-> **Next (ต่อเนื่อง): plateau-confirm รอบ EURUSD ADX-winner + Model-4 (STO scalp fill-sensitive) → ถ้าผ่าน = EURUSD demo
-> candidate.** ยังไม่ deploy (optimizer-selected in-sample MAIN, BWD held OOS แต่ต้อง plateau + real-tick ก่อน).
+> **CONFIRM (2026-07-16) — ✅ ผ่านครบ, EURUSD H1 = candidate จริง** (`order107_eur_confirm.csv`):
+> - **Plateau (Model-1 both-window): 6/7 neighbor ยืน** — StoK17 1.33/1.34 · OS25 1.29/1.26 · OS35 1.23/1.19 ·
+>   AdxMax35 1.43/1.14 · SL2.5 1.30/1.12 · AdxMax25 1.28/1.01 · (StoK9 ตก MAIN 0.82 = ขอบ, ค่าเข้าใกล้ default
+>   noisy = คาดได้) → **plateau แท้ ไม่ใช่ spike**.
+> - **Model-4 real-tick (center): 3/3 window ผ่าน** — MAIN 1.39 / BWD 1.19 / **HOLDOUT 2026H1 1.14** (never-selected).
+>   edge รอด real ticks (ไม่ใช่ STO fill artifact). win% 71-80% (low-RR TP1/SL3 high-win reversion). DD จิ๋ว.
+>
+> **FINAL: 🟩 SMC×STO EURUSD H1 = CONFIRMED candidate** (plateau + Model-4 + holdout ครบ, PF 1.14-1.39 ทุก window,
+> 130 ไม้). bundle staged `_vps_deploy/SMCSTO_EURUSD/` (magic 991070). **เหลือ corr (informational per user — demo) →
+> demo attach.** ไม่ portfolio-general (EURUSD-only) แต่เป็น additive EURUSD leg จริง.
+> **บทเรียนถาวร (memory `feedback-optimize-before-killing-reversion`): default-smoke ผมรีบตัดสิน = เกือบทิ้ง candidate
+> ตัวนี้. user push (optimize STO + ADX filter) ถูกทั้ง 2 — pipeline ครบ gate = ต่างจากเดา.**
 > **Next (ตาม user's filter ideas — ตอนนี้คุ้มเพราะ base both-window+ แล้ว):** (1) plateau-confirm neighbor รอบ
 > StoK17/OS10-15/EMA50 + ranger อื่น (EURGBP/AUDNZD) (2) เพิ่ม filter: **momentum/ADX gate** (ตัด counter-trend
 > loser = failure mode เดิม) · HTF confluence · OB zone (SMC ส่วนที่ถอด) → ดันเหนือ 1.3 (3) Model-4 confirm
