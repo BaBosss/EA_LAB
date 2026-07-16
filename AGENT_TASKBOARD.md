@@ -717,7 +717,12 @@ MAIN 2023-26 พังหมด 0.71-0.76 DD15%) · **H1 = churn** (1.0-1.14 ไ
 original DEAD ถูก—ครั้งนี้ swept จริง = valid kill. Build-on ปิด (breakout→regime-gate redundant). verdict = `_triage/ORDER113_KELTNER_RESCUE_VERDICT.md`.
 **บทเรียน:** rescue-ladder ให้ผลต่างกัน — ICHIMOKU revived · KELTNER dead ภายใต้ treatment เดียวกัน = กระบวนการทำงาน (ไม่ rubber-stamp).
 
-**rescue queue เหลือ:** PREVDAY/NR7 (เคย iterate 2-3 รอบ, ต่อคิวถ้าอยากปิดให้ครบ) · regime-parked (Zeus/Boss_14 NZDUSD — full-funnel แล้ว). **ICHIMOKU basket build-on = candidate ต่อยอดที่มีของแล้ว (รอ user เคาะ build wrapper EA + MC).**
+**ORDER-112B ICHIMOKU basket build-on = DONE → DEMO-ELIGIBLE bundle #9:** merged-equity (2 config continuous Model-4, merge deal list ตามเวลา
+— deploy = 2 instance ไม่ต้อง build wrapper): **PF 1.339 · 357t · true max-DD 6.09% · MC PF_5th 1.036 · DD_95th 10.77% · ruin 0%.**
+edge บวกจริง+MC-survive แต่ thin (PF_5th 1.036) = demo small-lot ไม่ใช่ live leg แข็ง. **Bundle `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (H4 med 990066 + H1 slow 990067)
+พร้อม attach — user เคาะจะรวม demo cohort ไหม (9th bundle). script `_mt5_auto/ichi_basket_merge_mc.ps1`.
+
+**rescue queue เหลือ:** PREVDAY/NR7 (เคย iterate 2-3 รอบ, low-prior) · regime-parked (Zeus/Boss_14 NZDUSD — full-funnel แล้ว).
 
 
 ---

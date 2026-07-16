@@ -1,0 +1,14 @@
+TenkanPeriod=12
+KijunPeriod=34
+SenkouPeriod=68
+AdxPeriod=14
+AdxMin=20.0
+RequireCloud=true
+ExitMode=2
+TpAtrMult=3.0
+SlAtrMult=2.0
+TrailAtrMult=2.5
+AtrPeriod=14
+FixedLot=0.10
+MagicNo=990066
+SlippagePts=20

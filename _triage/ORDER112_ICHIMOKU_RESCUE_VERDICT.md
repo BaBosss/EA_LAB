@@ -38,8 +38,17 @@ Probe เก่า sweep **ADX + exit + symbol** บน **Model-2 + recent-only(
    - **🔑 diversified basket (ยืนยันเลข 2026-07-16B):** 2 config ขาดทุน**คนละปี** (medH4→2020/2023 · slowH1→2021/2025).
      **basket (สอง magic รันพร้อมกัน, arithmetic combine): 5/6 ปีบวก** (เหลือแค่ 2020 ลบ -167 เล็ก) · **full-period PF = 1.448**
      (2020 0.82 · 2021 1.45 · 2022 1.70 · 2023 1.04 · 2024 3.19 · 2025 1.32) · vs standalone 4/6 ปีบวกแต่ละตัว = diversification จริง.
-     ⚠️ ยังไม่ demo: 2020 ยังลบ + same-signal/same-symbol (decorrelation อาจเป็น period-luck ไม่ structural) → ต้อง wrapper build จริง
-     (2-config EA เดียว) เพื่อวัด merged-equity DD + MC ก่อน · หรือเติม trend-regime filter แก้ปี 2020 (USDJPY rangebound pre-recovery).
+     ⚠️ same-signal/same-symbol (decorrelation อาจเป็น period-luck ไม่ structural) → forward-test บน demo จะเช็คให้.
+
+## ORDER-112B — merged-equity + MC (2026-07-16B, ทำต่อทันที)
+รัน 2 config full-window continuous Model-4 (USDJPY 2020-2026) → merge deal list ตามเวลา (ไม่ต้อง build wrapper — deploy = 2 instance):
+- **standalone:** med-H4 PF 1.44/127t/DD 6.83% · slow-H1 PF 1.28/230t/DD 5.26%
+- **MERGED (both @0.10, chronological): PF 1.339 · 357t · net +$1,955 · TRUE max-DD 6.09%** (ต่ำกว่าผลรวม = DD time-separated จริง)
+- **MC (2000 resample, N=357): PF_5th = 1.036 · DD_95th 10.77% · Ruin(DD≥30%) = 0%**
+
+**สรุป build-on: DEMO-ELIGIBLE small-lot (thin edge).** edge บวกจริง both-window + MC-survive + ruin 0% แต่ PF_5th 1.036 = บาง (แข็งๆ ~1.3-1.7)
+→ demo cohort เก็บ forward data ไม่ใช่ live leg แข็ง. **Bundle #9 พร้อม attach: `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (2 leg: H4 med magic 990066 + H1 slow magic 990067,
+ex5 MD5 68b349fa..., README + silent-stop checklist ครบ). merge+MC script `_mt5_auto/ichi_basket_merge_mc.ps1`.
    - trend-regime filter: ปีขาดทุน = USDJPY choppy/pullback (2020 pre-breakout · 2023 pullback). ADX20→30 เคยลอง (probe p2 = 0.87 แย่ลง) → ต้องเป็น higher-TF trend-align ไม่ใช่ raise ADX เปล่า.
 4. thin sample: H4 ~19t/yr, H1 ~35t/yr.
 
