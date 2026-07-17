@@ -2,17 +2,18 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-17 15:29 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
+**2026-07-17 15:43 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
-- WARN: LOADED_FUSE: USDJPY 162.41 at extreme - crowded short, snap-back risk high
+- WARN: TRIPWIRE_NEAR: AUDJPY 113.21 only 2.92% above pin 110
+- WARN: LOADED_FUSE: USDJPY 162.36 at extreme - crowded short, snap-back risk high
 
 ## barometer readout
 | instrument | signal | อ่านว่า |
 |---|---|---|
-| AUDJPY | 1 | above SMA200, 5d 0.524% -> risk-on intact |
-| USDJPY | 0.5 | extreme weak (162.413 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | 0 | VIX 18.19 mid-range -> neutral |
+| AUDJPY | 1 | above SMA200, 5d 0.436% -> risk-on intact |
+| USDJPY | 0.5 | extreme weak (162.361 >= 158) -> risk-on now BUT crowded/loaded |
+| VIX | 0 | VIX 18.42 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
 | XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |

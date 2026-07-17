@@ -30,21 +30,34 @@ foreach ($r in $snap) { $snapBy[$r.symbol] = $r }
 
 function AsNum($v) {
   if ($null -eq $v -or "$v".Trim() -eq "" -or "$v" -eq "NA") { return $null }
-  $d = 0.0; if ([double]::TryParse("$v", [ref]$d)) { return $d } else { return $null }
+  # InvariantCulture so a th-TH / de-DE host cannot misread "17.5" as 175 (Codex QA 2026-07-17)
+  $d = 0.0
+  if ([double]::TryParse("$v", [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$d)) { return $d } else { return $null }
+}
+
+# Effective status of a snapshot row = its data_status, then the freshness age-gate:
+# an OK row older than MaxAgeHours -> STALE_AGED; an OK row with a present-but-unparseable
+# asof -> STALE_INVALID_ASOF (fail closed); blank/missing asof stays ungated (back-compat).
+# Centralised so cross-row reads (e.g. gold's VIX co-move) see the SAME effective status
+# the Risk Index does, not the raw data_status (Codex QA 2026-07-17).
+function EffStatus($row) {
+  if ($null -eq $row) { return "MISSING" }
+  $s = "$($row.data_status)".ToUpper()
+  if ($s -eq "OK" -and $row.asof -and "$($row.asof)".Trim() -ne "") {
+    $asofDt = [datetime]::MinValue
+    if ([datetime]::TryParseExact("$($row.asof)", 'yyyy-MM-dd HH:mm', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$asofDt)) {
+      if (((Get-Date) - $asofDt).TotalHours -gt $MaxAgeHours) { return "STALE_AGED" }
+    } else {
+      return "STALE_INVALID_ASOF"
+    }
+  }
+  return $s
 }
 
 $results = @()
 foreach ($b in $cfg.barometers) {
   $row = $snapBy[$b.symbol]
-  $status = if ($row) { "$($row.data_status)".ToUpper() } else { "MISSING" }
-  # freshness gate: an OK row older than MaxAgeHours is downgraded to STALE so a frozen
-  # snapshot cannot masquerade as live. Rows without an asof stamp are left as-is (back-compat).
-  if ($status -eq "OK" -and $row -and $row.asof) {
-    try {
-      $asofDt = [datetime]::ParseExact("$($row.asof)", 'yyyy-MM-dd HH:mm', [Globalization.CultureInfo]::InvariantCulture)
-      if (((Get-Date) - $asofDt).TotalHours -gt $MaxAgeHours) { $status = "STALE_AGED" }
-    } catch {}
-  }
+  $status = EffStatus $row
   $spot   = if ($row) { AsNum $row.spot }       else { $null }
   $sma200 = if ($row) { AsNum $row.sma200 }     else { $null }
   $atr20  = if ($row) { AsNum $row.atr20 }       else { $null }
@@ -161,7 +174,7 @@ foreach ($b in $cfg.barometers) {
       # VIX % off a low base is noise); and only if the VIX row itself is fresh/OK, else
       # a stale VIX reading could not confirm anything.
       $vixRow = $snapBy["VIX"]
-      $vixOk  = ($vixRow -and "$($vixRow.data_status)".ToUpper() -eq "OK")
+      $vixOk  = ((EffStatus $vixRow) -eq "OK")   # effective (age-gated) status, not raw
       $vixChg = if ($vixOk) { AsNum $vixRow.chg5d_pct } else { $null }
       $th = AsNum $b.comove_5d_pct
       $vixMin = AsNum $b.comove_vix_min_pct

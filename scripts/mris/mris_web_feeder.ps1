@@ -44,25 +44,17 @@ $FEEDS = @(
 
 if (!(Test-Path $CacheDir)) { New-Item -ItemType Directory -Force -Path $CacheDir | Out-Null }
 
-function Get-YahooChart {
+function Get-CachePath { param([string]$Yahoo) Join-Path $CacheDir (($Yahoo -replace '[^A-Za-z0-9]', '_') + ".json") }
+
+function Fetch-Web {
   param([string]$Yahoo)
-  # returns raw JSON string, from web or fresh cache; throws if neither available
+  # web fetch ONLY - does NOT touch the cache (the caller caches a payload only after
+  # Compute-Row validates it, so a HTTP-200 error body cannot poison the good cache; Codex QA 2026-07-17)
   $enc = [Uri]::EscapeDataString($Yahoo)
   $url = "https://query1.finance.yahoo.com/v8/finance/chart/$enc" + "?range=1y&interval=1d"
-  $safe = ($Yahoo -replace '[^A-Za-z0-9]', '_')
-  $cache = Join-Path $CacheDir "$safe.json"
-  try {
-    $raw = (Invoke-WebRequest $url -UseBasicParsing -TimeoutSec $TimeoutSec -Headers @{ 'User-Agent' = 'Mozilla/5.0' }).Content
-    if ([string]::IsNullOrWhiteSpace($raw)) { throw "empty body" }
-    [System.IO.File]::WriteAllText($cache, $raw, (New-Object System.Text.UTF8Encoding($false)))
-    return @{ Raw = $raw; FromCache = $false }
-  } catch {
-    if ((Test-Path $cache) -and (((Get-Date) - (Get-Item $cache).LastWriteTime).TotalHours -lt $CacheMaxHours)) {
-      Write-Host "  $Yahoo fetch failed ($($_.Exception.Message)) - using cache"
-      return @{ Raw = [System.IO.File]::ReadAllText($cache); FromCache = $true }
-    }
-    throw
-  }
+  $raw = (Invoke-WebRequest $url -UseBasicParsing -TimeoutSec $TimeoutSec -Headers @{ 'User-Agent' = 'Mozilla/5.0' }).Content
+  if ([string]::IsNullOrWhiteSpace($raw)) { throw "empty body" }
+  return $raw
 }
 
 function Compute-Row {
@@ -124,18 +116,40 @@ function Compute-Row {
 }
 
 # ---- fetch + compute each web feed ----
+# Order: try fresh web -> validate via Compute-Row -> only THEN write cache. If the web
+# leg fails OR its payload is invalid, fall back to a fresh (<CacheMaxHours) cache. This
+# guarantees the cache only ever holds a payload we successfully parsed.
 $newRows = @{}
 $okCount = 0; $staleCount = 0; $failCount = 0
 foreach ($f in $FEEDS) {
+  $cache = Get-CachePath -Yahoo $f.Yahoo
+  $row = $null; $why = ""
+
+  # 1. fresh web
   try {
-    $g = Get-YahooChart -Yahoo $f.Yahoo
-    $row = Compute-Row -Symbol $f.Symbol -Note $f.Note -RawJson $g.Raw -FromCache $g.FromCache
+    $webRaw = Fetch-Web -Yahoo $f.Yahoo
+    $row = Compute-Row -Symbol $f.Symbol -Note $f.Note -RawJson $webRaw -FromCache $false
+    [System.IO.File]::WriteAllText($cache, $webRaw, (New-Object System.Text.UTF8Encoding($false)))  # validated-good only
+  } catch {
+    $why = "$($_.Exception.Message)"; $row = $null
+  }
+
+  # 2. fall back to a fresh cache (covers both HTTP failure and invalid live payload)
+  if ($null -eq $row -and (Test-Path $cache) -and (((Get-Date) - (Get-Item $cache).LastWriteTime).TotalHours -lt $CacheMaxHours)) {
+    try {
+      $cacheRaw = [System.IO.File]::ReadAllText($cache)
+      $row = Compute-Row -Symbol $f.Symbol -Note $f.Note -RawJson $cacheRaw -FromCache $true
+      Write-Host "  $($f.Symbol) web failed ($why) - using cache"
+    } catch { $why = "$why; cache: $($_.Exception.Message)"; $row = $null }
+  }
+
+  if ($null -ne $row) {
     $newRows[$f.Symbol] = $row
     if ($row.data_status -eq "OK") { $okCount++; Write-Host "  OK    $($f.Symbol) spot=$($row.spot) sma200=$($row.sma200) chg5d=$($row.chg5d_pct)% (atr=$($row.atr20))" }
     else { $staleCount++; Write-Host "  STALE $($f.Symbol) spot=$($row.spot) (from cache)" }
-  } catch {
+  } else {
     $failCount++
-    Write-Host "  FAIL  $($f.Symbol) [$($f.Yahoo)]: $($_.Exception.Message)"
+    Write-Host "  FAIL  $($f.Symbol) [$($f.Yahoo)]: $why"
   }
 }
 
@@ -179,7 +193,13 @@ foreach ($f in $FEEDS) {
 
 # ---- write CSV manually (minimal quoting; keeps broker rows byte-stable-ish) ----
 function CsvField($v) {
-  $s = if ($null -eq $v) { "" } else { "$v" }
+  # numeric values are serialised with InvariantCulture so the snapshot uses '.' as the
+  # decimal separator regardless of host locale (matches the classifier's invariant read).
+  if ($v -is [double] -or $v -is [single] -or $v -is [decimal]) {
+    $s = ([double]$v).ToString([Globalization.CultureInfo]::InvariantCulture)
+  } else {
+    $s = if ($null -eq $v) { "" } else { "$v" }
+  }
   if ($s -match '[",\r\n]' -or $s -match '^\s' -or $s -match '\s$') { '"' + ($s -replace '"', '""') + '"' } else { $s }
 }
 $sb = New-Object System.Text.StringBuilder
@@ -190,7 +210,11 @@ foreach ($r in $out) {
 }
 $dir = Split-Path $Snapshot -Parent
 if (!(Test-Path $dir)) { New-Item -ItemType Directory -Force -Path $dir | Out-Null }
-[System.IO.File]::WriteAllText($Snapshot, $sb.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+# atomic write: stage to a same-dir temp, then replace, so an interrupted write can never
+# truncate the live snapshot (Codex QA 2026-07-17).
+$tmpOut = "$Snapshot.tmp"
+[System.IO.File]::WriteAllText($tmpOut, $sb.ToString(), (New-Object System.Text.UTF8Encoding($false)))
+Move-Item -LiteralPath $tmpOut -Destination $Snapshot -Force
 
 Write-Host "web feeder: $okCount OK, $staleCount stale, $failCount fail -> $Snapshot"
 if ($failCount -gt 0 -and $okCount -eq 0 -and $staleCount -eq 0) { exit 1 }
