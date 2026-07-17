@@ -49,11 +49,16 @@ steps + SL cap the breakout tail** (this is why it passed deep-val where naked g
 **Idea seeds:** "bounded + SL" is the safe way to run a range harvester — the template for taming
 any grid/martingale that screened well but DQ'd on uncapped tail.
 
-### NuiIndy RSI+ADX — EURUSD H1 (CORE) 🟨
-**Mechanism (hypothesis):** RSI signal gated by ADX (trend-strength filter).
-**Why edge:** ADX gate keeps RSI entries out of dead chop / aligns them with a real move — a
-*filtered* reversion or pullback-continuation on the most liquid pair.
-**Verify:** read the actual entry rule before extending — direction (fade vs follow) unconfirmed.
+### NuiIndy RSI+ADX — EURUSD H1 (CORE, edge=escalation ⚠️) 🟥
+**Mechanism (VERIFIED 2026-07-17, source recovered):** RSI(24) new-low → BuyNow, gated ADX(14)>30 + DI
+= trend-aligned *pullback-continuation* (sells rallies in downtrend / buys dips in uptrend). Scale-in grid
+(spacing 10p) with **geometric lot `MathPow(Multiple3=1.2, order_count)`** = martingale.
+**Why "edge" (NOT transferable):** the profit is the escalation, not the signal — lever isolation on home:
+single-order PF **0.90**, flat-lot grid PF **0.72**, only escalated PF **2.20**. Entry has no standalone
+directional edge. As-shipped `MAX_Order=99999`/`CutLoss=100` = uncapped-ruin.
+**Do NOT mold-expand** (ORDER-095 rejected — no entry edge to replicate; expanding a no-edge geometric
+martingale multiplies correlated tail-risk). **LIVE guardrail (magic 1524):** `CutLoss_Percent=30` = free
+tail-insurance (both-window profitable 1.19/2.20, DD bounded ~15%). Verdict: `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md`.
 
 ### Gold Reaper 4.3 — XAUUSD H1 (CORE ⚠️ ruin 1.9%) 🟨
 **Why edge:** gold = trender → momentum/continuation edge. Watch flag = thin ruin margin.

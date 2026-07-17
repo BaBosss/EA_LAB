@@ -131,7 +131,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 | EA | Sym/TF | OOS PF | DD% | Conf | Verdict | Notes |
 |---|---|---|---|---|---|---|
 | MG_v1 MatchaGrid | CHFJPY M15 | 2.08 | — | ★★★ | **CORE** | grid but bounded+SL; passed deep-val |
-| NuiIndy RSI+ADX | EURUSD H1 | 2.00 | — | ★★★ | **CORE** | |
+| NuiIndy RSI+ADX | EURUSD H1 | 2.00 | — | ★★☆ | **CORE (edge=escalation ⚠️)** | 2026-07-17: PF2.0=geometric martingale, NOT signal edge (single-order 0.90/flat-lot 0.72). As-shipped uncapped-ruin (MAX_Order 99999/CutLoss 100). **Expansion REJECTED.** LIVE guardrail rec: CutLoss=30 (free tail-insurance, both-window 1.19/2.20). `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` |
 | ST_EA03 MACD | GBPUSD H1 | 2.47 | — | ★★★ | **CORE** | count+tiered-TP scalp |
 | ST_EA03 MACD | USDCAD H1 | 2.62 | — | ★★★ | **CORE** | |
 | Gold Reaper 4.3 | XAUUSD H1 | 2.07 | — | ★★★ | **CORE** ⚠️ | ruin 1.9% — watch. **Live set unchanged 2026-07-02** — see plateau-check note below (optimize attempt was a null result, not a real check) |
