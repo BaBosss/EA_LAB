@@ -499,7 +499,7 @@ journal lane2: overlap pair-close ยิงจริง 168 ครั้ง (SEL
 
 ---
 
-## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `OPEN`
+## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `BUILT(ORDER-083) → WAITING-USER (GuardConfig เคาะ + attach)` · Phase 3 `STUB (MacroGate — blocked on MRIS)`
 
 **เป้า user:** เห็นข่าวแรงที่เกี่ยวกับพอร์ตทุกวัน + มีตัวคุมเหนือ EA ทั้งหมด (ลด lot / ปิดไม้ / block entry
 ช่วงข่าวแรง ตาม policy ต่อ strategy)
@@ -520,6 +520,22 @@ daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้อ�
   30 นาที · BLOCK_NEW สำหรับ breakout family (ข่าวคือ noise ไม่ใช่ signal ของมัน) · Boss_14 bench
   demo = NONE (เก็บ data ให้ judge เห็นพฤติกรรมจริง)
 - **ห้าม build จนกว่า user เคาะ policy ต่อบัญชี/ต่อ magic** (มันจะไปปิดไม้เงินจริง — ต้อง explicit)
+- **UPDATE 2026-07-17:** build เสร็จแล้วภายใต้ ORDER-083 (MT5+MT4, .ex5/.ex4 compile แล้ว) · draft policy
+  ต่อ magic = `ea_projects\(Boss)_NewsGuard\GUARDCONFIG_2026-07-17.md` (รอ user เคาะ) · runbook transport
+  แก้เป็น rclone แล้ว (VPS 2012 R2 ลง OneDrive client ไม่ได้) · เหลือ user attach ตาม
+  `VPS_TRANSPORT_AND_ATTACH.md` เท่านั้น
+
+**Phase 3 — MacroGate watchdog (STUB 2026-07-17 — ห้ามหยิบไป build จนกว่า MRIS เคาะกติกา):**
+- แนวคิด: watchdog ตัวที่สองแบบ NewsGuard (per-magic, 1 chart/บัญชี) แต่ trigger จากราคา in-terminal
+  แทนไฟล์ข่าว — สภาวะ carry-unwind/risk-off (AUDJPY เป็นตัวนำ) → **ลด lot ×0.5 + BLOCK_NEW เฉพาะ
+  magic กลุ่ม JPY-cross/risk-on** (Zeus AUDJPY 990110 · Boss_14 990208/201/203/205 · IchiADX 990066-67 ·
+  BRK USDJPY 991003 · US30 991005) — **ไม่ปิด position** (user rule: reduce-lot-not-cut)
+- กติกา trigger ต้องเป็น relative (เช่น D1 หลุด SMA200 + ร่วง >N×ATR ใน M วัน) — ห้าม hardcode level 110
+  (เลขของรอบนี้ = input เสริมที่ user เคาะผ่าน MRIS)
+- **บังคับ A/B backtest ก่อน attach:** window ครอบ 2024-08-05 carry unwind + 2020-03 บน leg ที่จะใส่จริง
+  (คาดผลตาม Regime.mqh เดิม: ช่วย grid จริง · redundant กับ breakout — ถ้า A/B ไม่ต่าง = ไม่ใส่)
+- blocked-on: user เปิด session MRIS (`_triage/MACRO_REGIME_SYSTEM_PROMPT.md` #073-reimagined) เคาะ
+  tripwire/threshold ก่อน แล้ว Claude ค่อยยกเป็น order เต็ม (spec + acceptance + ห้าม)
 
 ## ORDER-076 — smoke-screen หัวกะทิ 41 ตัวจาก X-ray — `CLOSED (Claude 2026-07-14 — 16 mq5 ใหม่จริง: 11 REJECT/PARK + 1 build-on-needs-data ((ICE) CCI = PARKED, basket 9-major ไม่รอด) · verdict = _triage/ORDER076_MQ5_SMOKE_VERDICT.md)` (role: agent/qwen lane)
 

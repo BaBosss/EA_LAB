@@ -29,17 +29,41 @@ copy unrelated account data and can make partially-written files visible.
 
 ## One-time setup
 
-1. Install/sign in to OneDrive on the VPS using the least-privileged account
-   available. Restrict sharing to the owner; do not create a public or
-   link-accessible share.
-2. Mark both folders **Always keep on this device** on the VPS and lab PC.
-3. Find the real common directory from each terminal with **File -> Open Data
+The lab PC keeps its normal OneDrive desktop client. The VPS is Windows Server
+2012 R2, which the modern OneDrive and Google Drive desktop clients no longer
+support (the installer crashes with "Setup has stopped working"). The VPS
+therefore reaches the **same** OneDrive account through **rclone** — a portable,
+headless `rclone.exe` that talks to OneDrive over the Microsoft Graph API with
+no desktop client and no OS-level sign-in. No account change is required; only
+the VPS-side sync engine differs.
+
+1. On the VPS, place `rclone.exe` in a private tools directory (for example
+   `C:\rclone\`), outside any synced or repository folder. Restrict sharing of
+   the OneDrive folder to the owner; do not create a public or link-accessible
+   share.
+2. The VPS has no usable browser, so run the OAuth step on the lab PC (which
+   has one): `rclone authorize "onedrive"`. Sign in to the **same** OneDrive
+   account, approve the request, and copy the JSON token block it prints.
+3. On the VPS run `rclone config`, create a new remote of type `onedrive`, and
+   when it asks to auto-authenticate answer **no** ("Use auto config? n") so it
+   offers the "paste token from another machine" path. Paste the token block
+   from step 2. Scope the remote (or a remote path) at the dedicated
+   `EA_LAB_VPS_SYNC` folder only — not the whole OneDrive drive — so the token
+   grants access to nothing beyond the transport folders.
+4. Store `rclone.conf` (which contains the OAuth token) on the VPS outside any
+   synced or repository folder, readable only by the scheduled-task user. Treat
+   the token like a password: store no broker, OneDrive, or rclone credentials
+   in a `.ps1`, `.bat`, Task Scheduler argument, repository file, or log.
+5. On the lab PC, mark both folders **Always keep on this device** so the
+   OneDrive client retains a local copy. The VPS has no desktop client, so
+   "Always keep on this device" does not apply there — rclone pulls and pushes
+   on demand instead.
+6. Find the real common directory from each terminal with **File -> Open Data
    Folder**, then navigate to the shared MetaQuotes `Terminal\Common\Files`.
    Do not infer it from the terminal installation path.
-4. Grant the scheduled-task user read/write access only to the two sync folders
-   and `Common\Files`. Store no broker or OneDrive credentials in a `.ps1`,
-   `.bat`, Task Scheduler argument, repository file, or log.
-5. Record the resolved paths outside the repository's public artifacts. Account
+7. Grant the scheduled-task user read/write access only to the local rclone
+   staging folders and `Common\Files`.
+8. Record the resolved paths outside the repository's public artifacts. Account
    logins may appear in snapshot filenames; therefore the OneDrive folder must
    remain private.
 
@@ -51,15 +75,26 @@ publish: copy to `EA_LAB_news_week.csv.tmp`, verify the CSV is non-empty and has
 at least one data event, then rename it to `EA_LAB_news_week.csv`. Never replace
 the last good file with an empty or malformed download.
 
-On the VPS, run a path-scoped PowerShell task every 5 minutes:
+On the VPS, run a path-scoped PowerShell task every 5 minutes that first pulls
+the file with rclone, then validates and publishes it exactly as before:
 
-1. Read only `lab-to-vps\news\EA_LAB_news_week.csv`.
-2. Reject it if missing, zero bytes, older than 26 hours, or its header/event
+1. Pull the latest copy into a local staging folder with rclone (the remote is
+   already scoped to `EA_LAB_VPS_SYNC`):
+
+   ```text
+   rclone copy "onedrive:lab-to-vps/news/EA_LAB_news_week.csv" ^
+     "C:\rclone\staging\lab-to-vps\news" --config C:\rclone\rclone.conf
+   ```
+
+   Leave freshness/format checks to the wrapper below; do not push validation
+   into rclone flags.
+2. Read only the staged `EA_LAB_news_week.csv`.
+3. Reject it if missing, zero bytes, older than 26 hours, or its header/event
    rows do not match the NewsGuard feed format.
-3. Copy to `Common\Files\EA_LAB_news_week.csv.tmp`.
-4. Re-read/validate the temporary file and atomically rename it over
+4. Copy to `Common\Files\EA_LAB_news_week.csv.tmp`.
+5. Re-read/validate the temporary file and atomically rename it over
    `EA_LAB_news_week.csv`.
-5. Exit non-zero and retain the last good destination on any failure.
+6. Exit non-zero and retain the last good destination on any failure.
 
 Configure both tasks with `Run whether user is logged on or not`,
 `Start when available`, three retries five minutes apart, and a non-zero-exit
@@ -71,8 +106,16 @@ terminal. Logs must contain timestamps and file age, not credentials.
 On the VPS, every 5 minutes enumerate only files matching
 `EA_LAB_snapshot_[1-9][0-9]*.csv`. Reject login `0`, test names, `.tmp` files,
 and sources older than 10 minutes. Copy each through a same-directory `.tmp`
-file and rename into `vps-to-lab\snapshots` so OneDrive never sees a partial
-CSV.
+file and rename into a local staging folder so no partial CSV is ever
+published. Then push the staged snapshots up with rclone:
+
+```text
+rclone copy "C:\rclone\staging\vps-to-lab\snapshots" ^
+  "onedrive:vps-to-lab/snapshots" --config C:\rclone\rclone.conf
+```
+
+Because the atomic `.tmp`→rename completes in the staging folder before rclone
+runs, OneDrive never receives a partial CSV.
 
 On the lab PC, call:
 
@@ -129,16 +172,17 @@ For the first 24 hours, check at least twice:
 
 - Task Scheduler last result is `0` for successful copies and becomes non-zero
   when a test source is intentionally withheld.
-- News CSV age on the VPS, OneDrive sync status, parsed event count and detected
-  UTC offset are visible in logs.
+- News CSV age on the VPS, the rclone copy result (and the lab PC's OneDrive
+  sync status), parsed event count and detected UTC offset are visible in logs.
 - Every expected account produces a snapshot younger than 10 minutes; every
   magic is non-zero and mapped to an owner EA.
 - Push notifications arrive for a controlled init/config warning.
 - Outside a news window no stale block global variable or orphaned guard state
   remains.
 
-Keep a daily freshness check thereafter. OneDrive's green icon is not proof of
-end-to-end delivery; verify the final `Common\Files` file and the final lab CSV.
+Keep a daily freshness check thereafter. Neither a green OneDrive icon on the
+lab PC nor a zero rclone exit code on the VPS is proof of end-to-end delivery;
+verify the final `Common\Files` file and the final lab CSV.
 
 ## Rollback
 
@@ -157,11 +201,15 @@ end-to-end delivery; verify the final `Common\Files` file and the final lab CSV.
 
 ## Secrets and recovery boundaries
 
-- OneDrive authentication stays in Windows' credential store. Broker passwords,
-  investor passwords and MQID values stay outside Git and OneDrive payloads.
+- On the lab PC, OneDrive authentication stays in Windows' credential store. On
+  the VPS, the rclone OAuth token stays in `rclone.conf` outside any synced or
+  repository folder, readable only by the scheduled-task user, and is treated
+  like a password. Broker passwords, investor passwords and MQID values stay
+  outside Git and OneDrive payloads.
 - Do not put account screenshots, terminal configs, `.set` files containing
   secrets, or logs with credentials in the transport folders.
 - Give the scheduled-task account no interactive broker-login authority.
-- If OneDrive is unavailable, NewsGuard must expose a stale feed and follow its
-  approved fail-safe policy. Manual copying is an emergency action with the
-  same validation and audit log, not permission to disable freshness checks.
+- If OneDrive or rclone is unavailable, NewsGuard must expose a stale feed and
+  follow its approved fail-safe policy. Manual copying is an emergency action
+  with the same validation and audit log, not permission to disable freshness
+  checks.
