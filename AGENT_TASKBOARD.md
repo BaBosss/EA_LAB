@@ -895,6 +895,7 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 2. compile 0/0 + mql-code-reviewer (pending-order mgmt = bug surface).
 3. **regression cage ก่อน A/B:** EntryMode=0/TP+0 บน EURGBP H1 both-window Model-4 → ต้อง reproduce 07-11 baseline (±tolerance) มิฉะนั้น refactor drift = หยุดแก้.
 4. A/B Model-4 (mandatory — pending fill = tick-path-sensitive, **ห้าม Model-2**): market vs pending บน EURGBP H1 (primary) + NZDUSD H4 (secondary), both-window continuous span (recent 2023.01-2026.07 + BWD 2020.01-2022.12).
+   **🔧 AMENDMENT 2026-07-17 (ก่อนเห็น A/B PF ใดๆ — tooling constraint ไม่ใช่ peak-hunt):** Model-4 บนกล่องนี้ **รันไม่ออก report** (test รันจบจริง—journal เห็น trade—แต่ terminal+local-agent ไม่เขียน .htm; Model-1 เขียนปกติ). ตรงกับ 07-11 D1f ที่ JUMSTOCH ทั้งสายใช้ Model-1. → **ลด Model-4 → Model-1** (M1-OHLC จับ "ราคาแตะ limit level ในบาร์ไหม" ได้ = พอสำหรับคำถาม pending-fill; residual caveat = tick-ordering ภายในนาที ไม่ถูกจำลอง). **ห้าม Model-2 ยังคงอยู่.** บันทึกเป็น AMENDMENT_ADDED event (target = BAR_PREREGISTERED).
 5. ถ้า pending มี lift → เพิ่ม TP-widen arm {+0,+2,+5 pip}.
 6. วัด **PF + net-EV/ไม้ + fill-rate** (ไม่ใช่ net$ เดี่ยว — pending เทรดน้อยลง = exposure น้อยลง หลอกได้; ไม่ใช่ PF เดี่ยว) + basket-continuous MC.
 
