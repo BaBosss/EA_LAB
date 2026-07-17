@@ -4,26 +4,37 @@
 
 ---
 
-กลับมาต่องาน EA_LAB — รัน on-return protocol ก่อน: `git log --oneline -20` (หา [codex]/[zcode]),
-อ่าน `handoff/SESSION_2026-07-17_HANDOFF.md` §START HERE + `PROJECT_STATE.md`, เช็ค AGENT_TASKBOARD
-DONE/BLOCKED, รัน `scripts/check_state.ps1`. ต่อ HEAD จาก handoff ล่าสุด (rescue-close + demo-attach + TSD-reject).
+กลับมาต่องาน EA_LAB — รัน on-return protocol ก่อน: `git log --oneline -20` (หา [codex]/[zcode] +
+commit ของ MRIS session), อ่าน handoff ล่าสุด (scratchpad `HANDOFF_2026-07-17B.md`) + `PROJECT_STATE.md`,
+เช็ค AGENT_TASKBOARD DONE/BLOCKED, รัน `scripts/check_state.ps1`. HEAD ล่าสุด = `dafa8dc1`.
 
-⚠️ อ่านก่อนตัดสิน EA: CLAUDE.md VERDICT GATE + memory [[signal-landscape]] [[feedback-correlation-lotsize]]
-[[feedback-optimize-before-killing-reversion]]. บทเรียน session ก่อน 3 ข้อ:
-(1) entry-signal PERIOD/lever = lever แรกเสมอ — "ceiling" ที่ default ไม่จริง (ICHIMOKU/Wave5 พิสูจน์)
-(2) **corr = LIVE-money gate ไม่ใช่ demo gate** — demo เอาขึ้นเทส normal lot ก่อน, corr sizing ตอนเงินจริง
-(3) multi-home naked EA อื่น low-yield (symbol-specific จริง) — เน้น period-lever + grid-expansion แทน
+⚠️ **shared worktree:** อีก session ทำ MRIS (ORDER-073 Phase-2.5) อยู่ — เช็ค HEAD ก่อน stage, commit
+**path-limited**, HEAD ขยับ=หยุด ([[shared-worktree-concurrent-writers]]).
 
-งาน session นี้ (user เคาะ "ทำทั้งหมด", เรียง EV):
-1. **#4 095 symbol-expand** = **Boss_14 GridLog → ranger crosses ใหม่** (EURCHF/GBPCHF/NZDCAD/AUDCHF ฯลฯ —
-   grid=ranger mechanism, มี IS-pick pipeline ที่ ea_template/sets/) × both-window Model-4 (grid ต้อง Model-4).
-   pace 1-2 symbol/รอบ. naked EA อื่นข้าม (low-yield พิสูจน์แล้ว)
-2. **#098 corpus build-on** (ทำเรื่อยๆ) — fxDreema IDEA_CATALOG (`_triage/FXDREEMA_IDEA_CATALOG.md`) เลือก concept
-   ที่ user prioritize → spec (strategy-and-risk) → build (mql-code-generator) → mql-review → both-window Model-4
-3. **091 remaining leads** — prior ต่ำหลัง TSD OsMA+WPR reject; build เฉพาะถ้า user รู้จัก classic EA ตัวดัง
-   (`_triage/ORDER111_mq4_BUILD_SHORTLIST.md`)
+⚠️ อ่านก่อนตัดสิน EA: CLAUDE.md VERDICT GATE + memory [[feedback-course-files-extract-idea]] (ใหม่:
+Jobot/course no-SL = extract idea ไม่ skip) [[feedback-buildon-pf-gt-1]] [[signal-landscape]].
 
-รอ user: attach Wave5 UJ 990303 · #4 เริ่มไหม · git push (remote เข้าไม่ถึงจากเครื่องนี้ = TLS-proxy)
+## งาน session นี้ (เรียง EV):
 
-Gotchas: compile ea_projects = PowerShell Copy-Item -LiteralPath + D:\Meta 5\MetaEditor64 (roaming 9CA16B) ·
-python312 embed พัง → PowerShell · MT5 htm space-thousands-sep · ห้าม burst (pace 1-2) · เก็บ main context ไว้ judge
+1. **⭐ ORDER-098-G = validate stat-arb candidate** (งานหลัก — ผลเด่นสุด session ก่อน)
+   `PairSpread_StatArb` H4 EURUSD/GBPUSD EntryZ 2.5 = both-window PF 1.07/1.04 (candidate, ยัง selection-fit).
+   ใช้ skill `robustness-validator`: (1) plateau map รอบ z2.5 (EntryZ 2.0/2.25/2.75 · ExitZ 0.3/0.5/0.7 ·
+   ZWindow 80/100/120) both-window — ต้อง plateau ไม่ใช่ spike (z3.0 BWD dip 0.94 = ridge แคบ) (2) holdout
+   (3) Monte Carlo (4) cross-pair (GBPUSD/EURUSD, EURCHF/USDCHF H4 z2.5). ผ่านครบ → demo candidate (corr-check).
+   spec เต็ม = taskboard row ORDER-098-G · verdict = `_triage/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md`
+
+2. **#098 corpus ต่อ** (ถ้า 098-G เสร็จ) — concept ถัดจาก IDEA_CATALOG. currency-strength + FVG = สำรวจจบแล้ว
+   (parked/reject). เหลือน่าลอง: News-entry (ต่อ infra 073), Divergence, harmonic/fib (ท้ายคิว).
+
+3. **#4 crosses ที่เหลือ** — ปลดล็อกเมื่อ user โหลด history 2020-22 (GBPCHF/NZDCAD/AUDNZD/AUDCHF).
+
+## EAs ใหม่ session ก่อน (review PASS + compile 0/0):
+- `(EXP)_PairSpreadArb/PairSpread_StatArb.mq5` ← candidate (098-F/G)
+- `(EXP)_CurrencyStrength/` + `(EXP)_CurrStrengthRanked/` (currency-strength, parked, meter core reusable)
+- `(EXP)_FVGFill_RSIgate/` (reject)
+
+## รอ user: attach Wave5 UJ 990303 · โหลด history #4 crosses (ทำวันหลัง) · git push = ใช้ได้แล้ว (verified)
+
+Gotchas: compile `D:\Meta 5\MetaEditor64.exe /compile:` (exit 1 ปกติ เช็ค log "0 errors") · copy ex5 →
+roaming 9CA16B\MQL5\Experts · tester = HEDGING login (stat-arb ต้องการ) · multi-symbol EA เทสได้ (basket
+history ต้องมี) · ห้าม burst pace · ห้าม -ExecutionPolicy Bypass ใน agent brief · เก็บ main context ไว้ judge.

@@ -1,6 +1,6 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
-> **last updated:** 2026-07-12 (Opus — housekeeping: taskboard archive 6.7x + trim session-log เก่าไป `PROJECT_STATE_SESSIONLOG_ARCHIVE.md` · ORDER-098 fxDreema เข้าคิว) · ก่อนหน้า: 2026-07-11 บ่าย (audit-hardening: CODEX_AUDIT judged ครบ · Layer D ปิด D1-D6 · encoding ซ่อม · ORDER-080→094 · Fable-seat) · owner: patip
+> **last updated:** 2026-07-17B (Opus — #098 corpus build sprint: #4 EUR-cross expand CLOSED (no home, PARKED) · ORDER-098-C FVG+RSI=REJECT (FVG lineage exhausted) · 098-D/E currency-strength=marginal/parked · **098-F pairs-spread stat-arb = 🟢 CANDIDATE H4 z2.5 EURUSD/GBPUSD 1.07/1.04 both-window, new diversifier class — next=098-G validate (plateau+holdout+MC)** · 4 EAs ใหม่ compile 0/0 · new memory `feedback-course-files-extract-idea` (Jobot no-SL=extract idea ไม่ skip) · verdicts=`_triage/ORDER09*` · handoff=scratchpad `HANDOFF_2026-07-17B.md`) · ก่อนหน้า: 2026-07-12 (housekeeping: taskboard archive 6.7x + trim session-log) · owner: patip
 >
 > ไฟล์นี้ = **จุดเริ่มต้นเดียว** ที่ AI/session ใดก็ตามต้องอ่านก่อน เพื่อให้เข้าใจโปรเจกต์
 > "เท่ากับคนที่ทำมาก่อน" โดยไม่ต้องไล่อ่าน 20 ไฟล์. ของละเอียดอยู่ใน canonical docs (section 8) —
