@@ -136,6 +136,26 @@ STRONGER one (holdout 1.13→1.23, OOS 0.84→0.92). Edge is real + thickened; l
 
 ---
 
+# ORDER-098-K — Maker (pending-limit) entry build-on (2026-07-17) → **NO LIFT, market-entry stays**
+
+Build-on hypothesis (per CLAUDE.md spread→pending doctrine): the market-entry baseline pays 2× spread
+per basket = the cost-drag thinning the ExitZ0.3 edge; switching to LIMIT (maker) entry should lift PF.
+Built `PairSpread_StatArb_Maker.mq5` (magic 990985): both legs entered as limit orders at bid/ask, with
+a naked-leg guard (partial fill → market-complete the missing leg next bar; TTL-cancel un-filled pendings).
+Compile 0/0. Funnel (ExitZ0.3 config, `order098k_maker.csv`):
+| window | maker | market baseline |
+|---|---|---|
+| MAIN | 1.12 | 1.14 |
+| BWD  | 1.14 | 1.15 |
+| HLD  | 1.23 | 1.23 |
+Net MAIN 572 (maker) vs 682 (market). **Maker gives ≈ same-or-marginally-worse PF** → the cost-drag
+hypothesis is REJECTED: execution style does not move the edge. The thinness is **signal-inherent, not
+spread**. Backtest maker fills are optimistic anyway (real maker = missed fills, likely worse). **Verdict:
+keep the deployed market-entry ExitZ0.3 baseline; maker variant rejected.** Any further stat-arb lift must
+come from the z-signal logic (entry/exit), not execution. Artifacts `order098k_*`, `*_Maker.mq5`.
+
+---
+
 # ORDER-098-I — Divergence corpus: MacdDiv on untested right-home rangers (2026-07-17) → **DEAD, closed**
 
 The "#098 Divergence" concept was already largely explored as **ORDER-098-B** (MacdDiv_Naked, MACD
