@@ -884,7 +884,15 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 
 ---
 
-## ORDER-091C-D1g — JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 2026-07-16 full hypothesis) — `OPEN (Claude build→run, 2026-07-17) · event-log dogfood #1`
+## ORDER-091C-D1g — JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 2026-07-16 full hypothesis) — `DONE + REVIEWED (Claude 2026-07-17) = NULL (keep config) · ORDER-080 CLOSED · event-log dogfood #1 complete`
+
+### ORDER-091C-D1g RESULT + VERDICT (Claude 2026-07-17) — verdict เต็ม `_triage/ORDER091C_D1G_VERDICT.md` · raw `_mt5_auto/D1G_AB_RESULTS.csv`
+**regression cage PASS** (EntryMode=0 = original byte-behavior: PF 1.34/869t เป๊ะ + ตรง 07-11 baseline). ทั้ง 2 lever ทำงานจริง (เปลี่ยน trade count ได้) → null = ผลจริงไม่ใช่ toggle ตาย. **Model-4 เขียน report ไม่ออกบนกล่องนี้ → Model-1 (amended, pre-result, logged AMENDMENT_ADDED).**
+- **Pending-limit = NULL:** EURGBP H1 มาร์เก็ต 1.48/1.03 → pending 1.49/1.00 (Δ +0.01/−0.03) · NZDUSD H4 **identical ทั้ง 2 window**. กลไก: JUMSTOCH grid-add เข้าเมื่อ `ask≤trigger` อยู่แล้ว = ไม่จ่าย spread เกิน trigger → แปลงเป็น limit ที่ระดับเดิม = ไม่ประหยัดอะไร (แย่กว่านิดตอน gap). **premise "grid จ่าย spread เยอะ" ไม่ใช้กับ EA ที่ entry เป็น trigger-touch อยู่แล้ว.**
+- **TP-widen = inert/noise:** +2 identical, +5 = +0.01-0.02 both-window (ผ่านบาร์ ≥baseline แต่ noise-level, DD เท่าเดิม). กลไก: JUMSTOCH exit ด้วย BEP+trailing ไม่ใช่ raw TP.
+- **DECISION (config only):** คง demo config JUMSTOCH เดิม (market entry, TP เดิม) — ไม่มี lever คุ้มให้เปลี่ยน validated config. JUMSTOCH ยัง demo-eligible ตาม 07-11 (order นี้ไม่แตะ).
+- **doctrine banked:** pending-limit rescue = ใช้กับ EA ที่ entry **market-on-signal** (จ่าย spread) เท่านั้น — **ห้ามใช้กับ grid ที่เข้าที่ trigger-touch** (ไม่มี spread ให้ประหยัด). รวมกับ D1d → **pending doctrine characterized ครบ · ORDER-080 CLOSED.**
+
 
 **ที่มา:** D1d (07-16) วัด pending-save บน LWMA proxy ที่ **ไม่มี edge** → พิสูจน์ได้แค่ magnitude (~+0.05 PF/ไม้) ไม่ใช่คุณค่าจริง + TP-widen ครึ่งหลังของ user ยังไม่รัน. `_triage/PENDING_LIMIT_SYNTHESIS.md` สั่งชัด: "หา reversion base ที่ near-breakeven มาเป็น demonstrator". **JUMSTOCH = demonstrator นั้น** — thread D1→D1f REVIEWED = demo-ready, **flat-lot PF 1.18 (edge จริง ไม่ใช่ martingale artifact)**, capped-SL'd reversion grid เทรด 869-3272 ไม้/window = จ่าย spread เยอะ = ตรงเป้า maker-save. นี่คือที่เดียวที่ +0.05 PF/ไม้ × ไม้เป็นพันจะเห็นผลจริง บน base ที่ candidate อยู่แล้ว.
 
