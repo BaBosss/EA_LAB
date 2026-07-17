@@ -105,6 +105,48 @@ Add PairSpread_StatArb (H4 z2.5 EURUSD/GBPUSD) as a **small-weight DEMO diversif
 cap 25% × candidate 20% lot-cut → effective small size. Corr-check passed; edge real-but-thin. **DEMO
 only, NOT direct live** (Mode-B rule + user doctrine). Watch ST03 DD-timing overlap post-deploy.
 
-## Build-on (later, not now)
-ExitZ 0.3 looked stronger across the plateau (1.14/1.15) — a *fresh* both-window+holdout validation of
-ExitZ 0.3 (not a re-pick off this map) could lift the edge out of the thin band before committing weight.
+---
+
+# ORDER-098-H — Edge-thickening optimize (2026-07-17) → **ExitZ 0.3 = locked improvement**
+
+Ran the build-on: fresh-validate ExitZ 0.3 + sweep the two unexplored levers (StopZ cage, EntryZ down).
+Runner `_mt5_auto/order098h_optimize.ps1` (+`order098h2_combined.ps1`) · CSVs `order098h_optimize.csv`,
+`order098h2_combined.csv` · MC `order098h_x03_mc.json`.
+
+## OFAT results (both-window PF MAIN/BWD; base was ExitZ0.5 = 1.07/1.04, holdout 1.13)
+- **ExitZ neighbors:** 0.2 → 1.13/1.06 · **0.3 → 1.14/1.15** · 0.4 → 1.09/1.12. ExitZ 0.3 sits on a
+  plateau (neighbors hold), **not a lone spike** — fresh-validated, not a re-pick.
+- **EntryZ 2.0 × ExitZ 0.3:** 1.19/1.10 (192/176 trades — 2× sample).
+- **StopZ cage sweep** (unswept lever, at ExitZ0.3): 2.5→1.07/1.06 · 3.0→1.07/1.15 · 3.5→1.14/1.15 ·
+  4.0→1.16/1.19 (wider cage lets mean-reversion complete).
+- **Holdout 2017-19 @ ExitZ0.3: PF 1.23** (base ExitZ0.5 = 1.13).
+
+## Combined-config confirm (EntryZ2.0/ExitZ0.3/StopZ4.0) — does NOT beat single-lever OOS
+MAIN 1.19 / BWD 1.13 / **holdout 1.09**. Stacking all three OFAT winners raises in-sample PF but the
+holdout **regresses** (1.09 < ExitZ0.3-alone's 1.23) — classic OFAT-stacking overfit. **Rejected.**
+
+## Locked config = ExitZ 0.3 single-lever change (`_mt5_auto/ab_sets/order098g/g_x03.set`)
+EntryZ 2.5 / **ExitZ 0.3** / ZWindow 100 / StopZ 3.5. MC (`order098h_x03_mc.json`): observed PF 1.141,
+ruin **0%**, **date-split OOS PF 0.917** (was 0.837 — now clears the 0.9 line), true-holdout 1.23. BUT
+bootstrap PF_5th **0.753** (< 0.8, one RED) → still **CANDIDATE_WEAK by the letter**, but a materially
+STRONGER one (holdout 1.13→1.23, OOS 0.84→0.92). Edge is real + thickened; left-tail still thin.
+
+**Net:** upgrade the stat-arb candidate to **ExitZ 0.3 locked config**, still small-weight DEMO leg
+(corr-check already PASS, additive). Not CANDIDATE_OK (bootstrap tail thin) — but the build-on paid off.
+
+---
+
+# ORDER-098-I — Divergence corpus: MacdDiv on untested right-home rangers (2026-07-17) → **DEAD, closed**
+
+The "#098 Divergence" concept was already largely explored as **ORDER-098-B** (MacdDiv_Naked, MACD
+swing-pivot divergence): XAU H4 = demo-eligible winner (waiting user attach), EURUSD H4 = holdout FAIL
+0.35 (parked). Untested right-home rangers = EURGBP/AUDNZD. Smoked both H4 full funnel (default params,
+`order098i_macddiv_rangers.ps1` / `.csv`):
+- **EURGBP H4:** MAIN 0.72 / BWD 0.76 / HLD 0.89 — sub-1 all windows, win% 25-29%.
+- **AUDNZD H4:** MAIN 0.59 / BWD 0.52 / HLD 0.74 — worse.
+
+Divergence-as-reversion is now comprehensively weak on the right home: EURUSD got the full optimize
+(098-B) and failed holdout; EURGBP/AUDNZD smoke sub-1 both-window+holdout with no cell near 1.2.
+**Verdict: divergence-reversion on rangers = DEAD/closed** (record in [[signal-landscape]], don't
+re-hunt). The only live divergence edge remains MacdDiv **XAU H4** (momentum context, 098-B, already
+captured & waiting attach) — nothing new to build.
