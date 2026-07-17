@@ -64,10 +64,47 @@ bool Exec_NewsBlocked()
    return true;
 }
 
+// ---- MacroGate bridge (ORDER-073 Phase-3, additive) ----------------------
+// The (Boss)_MacroGate watchdog EA may set, per magic, during a RISK_OFF/STRESS
+// macro regime:
+//   MACROGATE_BLOCK_<magic>   = 1    -> veto NEW orders (same idea as NewsGuard)
+//   MACROGATE_LOTMULT_<magic> = 0.5  -> shrink the NEW-order lot by this factor
+// Both apply to the OPEN / PENDING paths ONLY - management, exits and partial-
+// close are untouched. Critically the multiplier is applied HERE (open path),
+// never inside Exec_NormalizeLot, which also sizes partial CLOSES. Inert when
+// the GVs are absent; fail-safe (clearing GVs on stale/missing regime data) is
+// the watchdog's job so the chassis stays dumb. Log throttled to 1/min.
+bool Exec_MacroBlocked()
+{
+   string gv = "MACROGATE_BLOCK_" + IntegerToString(_0_Magic);
+   if(!GlobalVariableCheck(gv)) return false;
+   if(GlobalVariableGet(gv) < 0.5) return false;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      PrintFormat("[EXEC] MACROGATE block active (%s) - new order skipped", gv);
+   }
+   return true;
+}
+
+// New-order lot multiplier from MacroGate. Default 1.0 (no change). Only values
+// in (0,1) take effect, so the gate can only REDUCE size (reduce-lot doctrine -
+// never scale up, never zero out).
+double Exec_MacroLotMult()
+{
+   string gv = "MACROGATE_LOTMULT_" + IntegerToString(_0_Magic);
+   if(!GlobalVariableCheck(gv)) return 1.0;
+   double m = GlobalVariableGet(gv);
+   if(m <= 0.0 || m >= 1.0) return 1.0;   // out of (0,1) -> treat as no-op
+   return m;
+}
+
 bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)
 {
-   if(Exec_NewsBlocked()) return false;   // ORDER-083: news window veto (new orders only)
-   lot = Exec_NormalizeLot(lot);
+   if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    g_exec_open_intents++;
    if(DryRun)
@@ -188,8 +225,8 @@ void Exec_CancelAllPending()
 bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                        double price, const double sl, const string comment)
 {
-   if(Exec_NewsBlocked()) return false;   // ORDER-083: news window veto (new orders only)
-   lot = Exec_NormalizeLot(lot);
+   if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    price = NormalizeDouble(price, _Digits);
    if(DryRun)
