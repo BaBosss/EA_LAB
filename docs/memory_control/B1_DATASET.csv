@@ -1,1 +1,2 @@
 order_id,close_date,status_at_cutoff,cutoff_blob_line,evidence_commit,class,outcome,onboarding_time,context_incident,context_rework,wrong_order_file_scope,lead_attention_hours,notes
+ORDER-115,2026-07-17,REVIEWED,1636,dc566d77,INFRA,tool,5,0,0,0,0.7,B1 cohort start + event-log adoption guide (first prospective row; all metrics recorded live)
