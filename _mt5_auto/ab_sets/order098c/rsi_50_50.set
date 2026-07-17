@@ -1,0 +1,4 @@
+_03_UseRsiGate=true
+_03_RsiPeriod=14
+_03_RsiBuyMax=50.0
+_03_RsiSellMin=50.0
