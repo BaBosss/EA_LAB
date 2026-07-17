@@ -35,3 +35,59 @@ config generalizes (unlike currency-strength, this is a cleaner mechanism so cro
 ## Artifacts
 - EA: `ea_projects/(EXP)_PairSpreadArb/PairSpread_StatArb.mq5` (+ .ex5)
 - Sets: `_mt5_auto/ab_sets/order098f/` · Reports: `_mt5_auto/reports/O098F_*.htm` · CSV above.
+
+---
+
+# ORDER-098-G — Robustness validation (Mode B, robustness-validator, 2026-07-17)
+
+Validated the H4 z2.5 EURUSD/GBPUSD center config (EntryZ 2.5 / ExitZ 0.5 / ZWindow 100 / StopZ 3.5).
+Runner `_mt5_auto/order098g_validate.ps1` · results `_mt5_auto/order098g_validate.csv` · MC JSON
+`_mt5_auto/order098g_mc.json` · center trade list `_mt5_auto/order098g_center_trades.csv` · reports `O098G_*.htm`.
+
+## Test 1 — Plateau map (OFAT around center, both-window PF MAIN/BWD) — **HOLDS**
+| axis | config | MAIN | BWD |
+|---|---|---|---|
+| EntryZ | 2.0 | 1.16 | 1.07 |
+| EntryZ | 2.25 | 1.07 | 1.06 |
+| **EntryZ** | **2.5 (center)** | **1.07** | **1.04** |
+| EntryZ | 2.75 | 1.02 | **0.92** ✗ |
+| ExitZ | 0.3 | 1.14 | 1.15 |
+| ExitZ | 0.7 | 1.02 | 1.01 |
+| ZWindow | 80 | 1.01 | 1.00 (flat) |
+| ZWindow | 120 | 1.07 | 1.14 |
+
+Broad plateau, **not a spike**: 6/8 neighbors clear PF≥1.0 in *both* windows. Only `EntryZ 2.75/BWD`
+(0.92) collapses — the edge is bounded above z2.5 (consistent with 098-F z3.0=0.94), so center sits on
+the SAFE lower-Z side of the ridge, not on a peak. `w80/BWD` is flat (1.00). Best cell = ExitZ 0.3
+(1.14/1.15) but NOT re-selected (would be selection-fit); center is mid-plateau. **PASS.**
+
+## Test 2 — True holdout 2017-2019 (window never used to select) — **PASS**
+PF **1.13**, 96 trades, eqDD 6.17%, net +527.87. Edge generalizes to genuinely unseen data — the
+strongest single piece of evidence that this is a real edge, not a both-window fit.
+
+## Test 3 — Monte Carlo (skill script, 1000 perm, shuffle+bootstrap, oos-split 0.7) — MIXED
+- Ruin prob **0.0%** (SL-cage works; deposit 10k, 50% ruin threshold) — GREEN.
+- Shuffle PF band degenerate (single realized sequence → 0 range); informative signal is bootstrap:
+  **bootstrap PF_5th = 0.721** (RED), PF_median 1.058, range 0.877 (YELLOW). Edge is **thin**.
+- DD_95th: shuffle 13.99% / bootstrap 19.65% (≈ worst-window MaxDD 13% × 1.5 — borderline).
+- **Date-split OOS (last 30% ≈ 2025 tail): PF 0.837, degradation 33.9%, oos net -312.5** — recent
+  sub-period softness. OOS PF 0.837 is in the 0.7-0.9 weak band (< CANDIDATE_OK's 0.9 floor).
+
+## Test 4 — Cross-pair generalization (center z2.5, both-window) — **DOES NOT GENERALIZE**
+- GBPUSD/EURUSD (legs reversed): 1.09 / **0.93** — fails BWD.
+- EURCHF/USDCHF: 1.15 / **0.88** — fails BWD.
+The edge is specific to the EURUSD/GBPUSD ordering; this is **one diversifier leg, not a family**.
+
+## VERDICT — **CANDIDATE_WEAK** (Mode B) → portfolio-selector with WARNING, NOT direct live
+Score band 40-54 / OOS PF 0.837 (<0.9) caps below CANDIDATE_OK. But true-holdout 1.13 + broad plateau +
+0% ruin keep it well clear of CANDIDATE_REJECT (OOS PF 0.837 > 0.7). The weakness is **edge thinness**
+(bootstrap PF_5th 0.72, OOS-tail 0.84), which is lot-scale-invariant → **RESIZE-FIRST does not apply**
+(not a ruin/DD breach). Verdict per user doctrine [[feedback-buildon-pf-gt-1]]: PF>1 both-window +
+holdout = **buildable diversifier candidate, not dead** — but promote as a SMALL-size portfolio leg
+under corr-check, watch the recent-regime softness. NOT a standalone deploy.
+
+## Next step
+Forward to portfolio-selector: corr-check EURUSD/GBPUSD stat-arb leg vs existing book (orthogonal class
+— pairs mean-reversion), allocate reduced weight, demo before live. Optional build-on (later, not now):
+ExitZ 0.3 looked stronger across the plateau (1.14/1.15) — a *fresh* both-window+holdout validation of
+ExitZ 0.3 (not a re-pick off this map) could lift the edge out of the thin band.

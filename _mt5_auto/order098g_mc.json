@@ -1,0 +1,44 @@
+{
+  "source_file": "D:\\EA_LAB\\_mt5_auto\\order098g_center_trades.csv",
+  "trade_count": 130,
+  "net_profit": 284.22,
+  "observed_pf": 1.068,
+  "observed_dd_pct": 5.48,
+  "deposit": 10000.0,
+  "ruin_dd_threshold_pct": 50.0,
+  "shuffle": {
+    "pf_5th": 1.068,
+    "pf_median": 1.068,
+    "pf_95th": 1.068,
+    "pf_range_5_95": 0.0,
+    "dd_median_pct": 9.21,
+    "dd_95th_pct": 13.99,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "bootstrap": {
+    "pf_5th": 0.721,
+    "pf_median": 1.058,
+    "pf_95th": 1.598,
+    "pf_range_5_95": 0.877,
+    "dd_median_pct": 9.44,
+    "dd_95th_pct": 19.65,
+    "prob_of_ruin_pct": 0.0,
+    "permutations": 1000
+  },
+  "oos": {
+    "status": "COMPUTED",
+    "split": 0.7,
+    "is_trades": 91,
+    "oos_trades": 39,
+    "is_pf": 1.266,
+    "oos_pf": 0.837,
+    "pf_ratio": 0.661,
+    "pf_degradation_pct": 33.9,
+    "is_dd_pct": 3.39,
+    "oos_dd_pct": 5.81,
+    "dd_ratio": 1.712,
+    "oos_net_profit": -312.5,
+    "note": "OOS from date-split of the same backtest \u2014 weaker evidence than a true separate OOS run"
+  }
+}
