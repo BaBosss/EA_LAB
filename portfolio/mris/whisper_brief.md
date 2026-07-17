@@ -2,20 +2,19 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-17 12:50 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.6) | Risk Index: 0.192
+**2026-07-17 15:29 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
-- WARN: TRIPWIRE_NEAR: AUDJPY 113.3 only 3% above pin 110
-- WARN: LOADED_FUSE: USDJPY 161 at extreme - crowded short, snap-back risk high
+- WARN: LOADED_FUSE: USDJPY 162.41 at extreme - crowded short, snap-back risk high
 
 ## barometer readout
 | instrument | signal | อ่านว่า |
 |---|---|---|
-| AUDJPY | 1 | above SMA200, 5d 0.5% -> risk-on intact |
-| USDJPY | 0.5 | extreme weak (161 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | 0 | VIX 16.73 mid-range -> neutral |
+| AUDJPY | 1 | above SMA200, 5d 0.524% -> risk-on intact |
+| USDJPY | 0.5 | extreme weak (162.413 >= 158) -> risk-on now BUT crowded/loaded |
+| VIX | 0 | VIX 18.19 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
-| XAUUSD | -1 | gold +1.2% WITH VIX rising -> risk-off confirmation |
+| XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |
 | US10Y_JP10Y | 0 | carry spread ~flat (3bps/5d) -> neutral |
 | COPPER | 0.5 | above SMA200 but soft 5d -> mild risk-on |

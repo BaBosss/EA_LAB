@@ -15,8 +15,8 @@ yet*, blocked on the user locking tripwire thresholds via an MRIS session).
 ## Pipeline
 
 ```
-Yahoo chart API        ──► mris_web_feeder.ps1 ─┐ (VIX/DXY/COPPER/US10Y proxy)
-Export_Barometers.mq5  ──► (AUDJPY/USDJPY/XAU/BTC)├─► barometer_snapshot.csv
+Yahoo chart API        ──► mris_web_feeder.ps1 ──► barometer_snapshot.csv  (all 8 rows)
+Export_Barometers.mq5  ──► (OPTIONAL later refine of AUDJPY/USDJPY/XAU/BTC)
                                                   │
 barometer_snapshot.csv ──► mris_classify.ps1 ──► regime_state.json
 DEPLOYMENTS.csv        ──► mris_exposure.ps1 ──► exposure_map.json
@@ -35,33 +35,48 @@ Run it:
 
 | File | Role |
 |---|---|
-| `mris_web_feeder.ps1` | **web feeder** for the barometers the broker does NOT price (VIX, DXY, COPPER, US10Y proxy). Pulls free no-key daily OHLC from the Yahoo chart API, computes spot/sma200/atr20/chg5d, **merges in-place** into `barometer_snapshot.csv` (never clobbers broker rows). Per-symbol cache + STALE fallback like `news_calendar.ps1`. |
+| `mris_web_feeder.ps1` | **web feeder for ALL 8 barometers.** Pulls free no-key daily OHLC from the Yahoo chart API, computes spot/sma200/atr20/chg5d + an `asof` stamp, **merges in-place** into `barometer_snapshot.csv`. Per-symbol JSON cache + STALE fallback like `news_calendar.ps1`. Owning all 8 stops half the Risk Index reading off a frozen hand-seed. |
 | `barometers.json` | barometer set + **tripwire rules** (relative: vs SMA200 / ATR-drop). `user_pin` = optional absolute line you set by hand (e.g. AUDJPY 110). Every threshold tunable. |
-| `mris_classify.ps1` | reads snapshot + config → Risk Index (weighted mean of signals) → state RISK_ON/NEUTRAL/RISK_OFF/STRESS + confidence + flags. Zero LLM tokens. |
+| `mris_classify.ps1` | reads snapshot + config → Risk Index (weighted mean of signals) → state RISK_ON/NEUTRAL/RISK_OFF/STRESS + confidence + flags. Age-gates any row whose `asof` is older than `-MaxAgeHours` (default 120). Zero LLM tokens. |
 | `mris_exposure.ps1` | joins `DEPLOYMENTS.csv` → tags legs DIRECT_CARRY / RISK_ON / HEDGE / NEUTRAL_FX → per-state suggested action (**reduce-lot, never cut** — user rule). |
 | `mris_brief.ps1` | state + exposure → Thai whisper brief (md) + HTML fragment for LIVE_DASHBOARD embed. |
 | `brief_templates.json` | all Thai/emoji phrasing (kept out of the .ps1 so scripts stay pure-ASCII; edit tone here). |
 | `mris_run.ps1` | one-shot orchestrator. |
 | `..\..\_mt5_auto\mris\Export_Barometers.mq5` | MT5 feeder: dumps broker-priced barometers (spot/SMA200/ATR20/chg5d) to `Common\Files\barometer_snapshot_mt5.csv`. |
 
-## Data feeds — what's live vs pending
+## Data feeds — all 8 live from Yahoo
 
-The classifier reads a **normalized snapshot CSV** so the data source is decoupled:
+The classifier reads a **normalized snapshot CSV** so the data source is decoupled.
+As of the 2026-07-17 hardening the web feeder owns **every** row:
 
-- **Broker-priced (MT5 exporter):** AUDJPY, USDJPY, XAUUSD, BTCUSD → `Export_Barometers.mq5`.
-  (Snapshot rows are still SEED spot levels until the exporter is wired into the run;
-  the web feeder never touches these rows.)
-- **Web-fed (`mris_web_feeder.ps1`, LIVE):** VIX (`^VIX`), DXY (`DX-Y.NYB`),
-  COPPER (`HG=F`), and US10Y_JP10Y via US10Y proxy (`^TNX`) — all from the free no-key
-  Yahoo chart API, computed from 1y daily OHLC. All 8 barometers now feed the Risk Index.
-- **JP10Y note:** there is no free headless daily JP 10Y source (JGB is BOJ-pinned near
-  1% and barely moves), so the US10Y_JP10Y spread barometer is fed with the **US leg only**
-  (`^TNX`) as a proxy — the 5d spread move is ~entirely the US side. The classifier's
-  `carry_fuel` branch converts the yield's 5d move to bps and scores narrowing vs
-  `narrowing_5d_bps` (user-lockable, default 15). `source_note` flags the proxy.
-- **Feeder resilience:** a fetch failure falls back to a fresh per-symbol JSON cache
-  (`portfolio\mris\webfeed_cache\`, <20h); with neither fresh data nor cache the row is
-  tagged `STALE` and the classifier excludes it (weights renormalise) — never crashes.
+| snapshot symbol | Yahoo ticker | note |
+|---|---|---|
+| AUDJPY | `AUDJPY=X` | FX spot (clean SMA/ATR) |
+| USDJPY | `JPY=X` | USD/JPY spot |
+| XAUUSD | `GC=F` | gold front future ~ spot |
+| BTCUSD | `BTC-USD` | crypto spot |
+| VIX | `^VIX` | equity fear gauge |
+| DXY | `DX-Y.NYB` | ICE dollar index |
+| COPPER | `HG=F` | copper front future |
+| US10Y_JP10Y | `^TNX` | US10Y **as spread proxy** |
+
+- **Why all 8 (not just the broker gaps):** a warning layer must never read half its scale
+  off a hand-seeded snapshot that silently ages. `Export_Barometers.mq5` stays an OPTIONAL
+  refinement — if wired later it can overwrite the 4 FX/metal/crypto rows with exact broker
+  prices; the daily macro read does not need that precision.
+- **JP10Y note:** no free headless daily JP 10Y source (JGB is BOJ-pinned near 1%), so the
+  US10Y_JP10Y spread barometer is fed with the **US leg only** (`^TNX`) as a proxy — the 5d
+  spread move is ~entirely the US side. `carry_fuel` converts the yield's 5d move to bps and
+  scores narrowing vs `narrowing_5d_bps` (user-lockable, default 15). `source_note` flags it.
+- **Futures-roll caveat:** `GC=F` / `HG=F` are continuous front-future series, so their
+  `sma200` can carry contract-roll steps. The classifier only uses gold/copper **`chg5d`**
+  (single-contract window) for their signals, not their SMA200 — so this does not affect the
+  regime read; treat their stored `sma200` as indicative only.
+- **Freshness / resilience:** every row carries an `asof` stamp. A fetch failure falls back
+  to a fresh per-symbol JSON cache (`portfolio\mris\webfeed_cache\`, <20h); with neither fresh
+  data nor cache the row is tagged `STALE`. The classifier **excludes** any non-OK row *and*
+  age-gates any OK row older than `-MaxAgeHours` (default 120) to `STALE_AGED` — weights
+  renormalise, it never crashes, and a frozen snapshot cannot masquerade as live.
 
 ## Design guardrails (do not "fix" these)
 
@@ -73,10 +88,12 @@ The classifier reads a **normalized snapshot CSV** so the data source is decoupl
 - **Not investment advice.** Signal ≠ certainty. The system surfaces parallel warning
   lines early; it does not predict.
 
-## Current read (2026-07-17, all 8 barometers live)
+## Current read (2026-07-17, all 8 barometers live from Yahoo)
 
-`NEUTRAL` · RI 0.192 · MED confidence · 8/8 active — risk-on intact but **two loaded
-lines flagged**: AUDJPY (~113) only ~3% above the 110 pin, and USDJPY (~161) at a 40-yr
-extreme = crowded carry / record JPY short. Web feeds read benign (VIX 16.7 calm-ish,
-DXY flat, copper mildly constructive, US10Y spread ~flat 3bps/5d). Not a crisis; a
-"prepare the umbrella" whisper. See `portfolio\mris\whisper_brief.md`.
+`NEUTRAL` · RI 0.269 · HIGH confidence · 8/8 active — risk-on intact. One loaded line
+flagged: USDJPY (~162) at a 40-yr extreme = crowded carry / record JPY short. AUDJPY
+(~113.3) sits *just past* the 3% early-warn band above the 110 pin — a good example of
+why the AUDJPY band may want widening to 4–5% so the whisper does not flicker off on a
+single up-day (a threshold-session decision). VIX ticked to ~18 (+21% 5d off a low base,
+still sub-elevated), gold/BTC soft. Not a crisis; a "prepare the umbrella" whisper.
+See `portfolio\mris\whisper_brief.md`.

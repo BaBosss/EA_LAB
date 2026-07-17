@@ -13,7 +13,10 @@
 param(
   [string]$Snapshot = "D:\EA_LAB\portfolio\mris\barometer_snapshot.csv",
   [string]$Config   = "D:\EA_LAB\scripts\mris\barometers.json",
-  [string]$OutJson  = "D:\EA_LAB\portfolio\mris\regime_state.json"
+  [string]$OutJson  = "D:\EA_LAB\portfolio\mris\regime_state.json",
+  # an OK row whose `asof` stamp is older than this is treated as STALE and excluded
+  # (defends against a snapshot that silently froze; 120h = weekend/holiday tolerant).
+  [int]$MaxAgeHours = 120
 )
 $ErrorActionPreference = "Stop"
 
@@ -34,6 +37,14 @@ $results = @()
 foreach ($b in $cfg.barometers) {
   $row = $snapBy[$b.symbol]
   $status = if ($row) { "$($row.data_status)".ToUpper() } else { "MISSING" }
+  # freshness gate: an OK row older than MaxAgeHours is downgraded to STALE so a frozen
+  # snapshot cannot masquerade as live. Rows without an asof stamp are left as-is (back-compat).
+  if ($status -eq "OK" -and $row -and $row.asof) {
+    try {
+      $asofDt = [datetime]::ParseExact("$($row.asof)", 'yyyy-MM-dd HH:mm', [Globalization.CultureInfo]::InvariantCulture)
+      if (((Get-Date) - $asofDt).TotalHours -gt $MaxAgeHours) { $status = "STALE_AGED" }
+    } catch {}
+  }
   $spot   = if ($row) { AsNum $row.spot }       else { $null }
   $sma200 = if ($row) { AsNum $row.sma200 }     else { $null }
   $atr20  = if ($row) { AsNum $row.atr20 }       else { $null }
@@ -146,14 +157,21 @@ foreach ($b in $cfg.barometers) {
       }
     }
     "comove_confirm" {
-      # Gold: only a risk-off confirm if rising WITH VIX rising; else structural
+      # Gold: only a risk-off confirm if rising WITH a MEANINGFUL VIX rise (a tiny +ve
+      # VIX % off a low base is noise); and only if the VIX row itself is fresh/OK, else
+      # a stale VIX reading could not confirm anything.
       $vixRow = $snapBy["VIX"]
-      $vixChg = if ($vixRow) { AsNum $vixRow.chg5d_pct } else { $null }
+      $vixOk  = ($vixRow -and "$($vixRow.data_status)".ToUpper() -eq "OK")
+      $vixChg = if ($vixOk) { AsNum $vixRow.chg5d_pct } else { $null }
       $th = AsNum $b.comove_5d_pct
-      if ($null -ne $th -and $null -ne $chg5d -and $chg5d -ge $th -and $null -ne $vixChg -and $vixChg -gt 0) {
-        $signal = -1; $reasons += "gold +$chg5d`% WITH VIX rising -> risk-off confirmation"
+      $vixMin = AsNum $b.comove_vix_min_pct
+      if ($null -eq $vixMin) { $vixMin = 10.0 }  # default: VIX must rise >=10% over 5d to count as fear
+      if ($null -ne $th -and $null -ne $chg5d -and $chg5d -ge $th -and $null -ne $vixChg -and $vixChg -ge $vixMin) {
+        $signal = -1; $reasons += "gold +$chg5d`% WITH VIX +$vixChg`% (>= $vixMin`%) -> risk-off confirmation"
+      } elseif (-not $vixOk) {
+        $signal = 0; $reasons += "gold move: VIX not fresh -> cannot confirm co-move -> neutral"
       } else {
-        $signal = 0; $reasons += "gold move is structural/USD-driven (no VIX co-move) -> neutral"
+        $signal = 0; $reasons += "gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral"
       }
     }
     default { $signal = 0; $reasons += "unknown polarity -> neutral" }
@@ -176,7 +194,10 @@ $ri = $ri / $wsum
 
 $t = $cfg.regime_thresholds
 $allFlags = @(); foreach ($a in $active) { $allFlags += $a.flags }
-$vixRow = $snapBy["VIX"]; $vixSpot = if ($vixRow) { AsNum $vixRow.spot } else { $null }
+# VIX STRESS override must read the ACTIVE VIX signal only - a STALE/failed VIX (e.g.
+# cache frozen mid-crisis after Yahoo went down) must not pin the whole state to STRESS.
+$vixActive = $active | Where-Object { $_.symbol -eq "VIX" } | Select-Object -First 1
+$vixSpot = if ($vixActive) { AsNum $vixActive.spot } else { $null }
 
 $state = ""
 if (($null -ne $vixSpot -and $vixSpot -ge $t.vix_stress_override) -or $ri -lt $t.stress_below) {

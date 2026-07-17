@@ -55,11 +55,12 @@
     },
     {
       "symbol": "XAUUSD",
-      "role": "gold - risk-off hedge ONLY when co-moving up with VIX; else structural/USD-driven",
+      "role": "gold - risk-off hedge ONLY when co-moving up with a MEANINGFUL VIX rise; else structural/USD-driven",
       "polarity": "comove_confirm",
       "weight": 1,
       "user_pin": null,
-      "comove_5d_pct": 1.0
+      "comove_5d_pct": 1.0,
+      "comove_vix_min_pct": 10.0
     },
     {
       "symbol": "BTCUSD",

@@ -1,9 +1,9 @@
-symbol,spot,sma200,atr20,chg5d_pct,data_status,source_note
-AUDJPY,113.30,108.20,1.05,0.50,OK,web 2026-07-16 spot; sma200/atr seeded from uptrend context (replace w/ MT5 exporter)
-USDJPY,161.00,152.50,1.25,0.40,OK,web ~2026-07-16; 40yr-low weak yen; extreme_weak
-VIX,16.73,18.6779,1.8375,5.619,OK,Yahoo ^VIX (CBOE Volatility Index) [2026-07-17 12:50]
-DXY,100.75,99.0105,0.4549,-0.218,OK,Yahoo DX-Y.NYB (ICE US Dollar Index) [2026-07-17 12:50]
-XAUUSD,3985.00,3410.00,42.00,1.20,OK,web 2026-07-17 ~3980-4000
-BTCUSD,64055.00,68000.00,2200.00,-0.60,OK,web 2026-07-16
-US10Y_JP10Y,4.569,4.2501,0.0543,0.661,OK,Yahoo ^TNX US10Y as spread proxy (JP10Y BOJ-pinned ~1%; 5d move = US leg) [2026-07-17 12:50]
-COPPER,6.2145,5.7208,0.114,-0.305,OK,Yahoo HG=F (COMEX copper front future) [2026-07-17 12:50]
+symbol,spot,sma200,atr20,chg5d_pct,data_status,asof,source_note
+AUDJPY,113.313,108.3113,0.7927,0.524,OK,2026-07-17 15:29,Yahoo AUDJPY=X (spot; broker exporter may refine)
+USDJPY,162.413,157.3336,0.7272,0.031,OK,2026-07-17 15:29,Yahoo JPY=X USD/JPY (spot; broker exporter may refine)
+VIX,18.19,18.6875,1.77,21.025,OK,2026-07-17 15:29,Yahoo ^VIX (CBOE Volatility Index)
+DXY,100.778,99.0106,0.4572,-0.19,OK,2026-07-17 15:29,Yahoo DX-Y.NYB (ICE US Dollar Index)
+XAUUSD,3994.5,4473.357,82.655,-2.671,OK,2026-07-17 15:29,Yahoo GC=F (COMEX gold front future ~ spot; broker exporter may refine)
+BTCUSD,62751.3594,73271.1529,1841.1061,-1.579,OK,2026-07-17 15:29,Yahoo BTC-USD (spot; broker exporter may refine)
+US10Y_JP10Y,4.569,4.2501,0.0543,0.661,OK,2026-07-17 15:29,Yahoo ^TNX US10Y as spread proxy (JP10Y BOJ-pinned ~1%; 5d move = US leg)
+COPPER,6.2285,5.7209,0.114,-0.08,OK,2026-07-17 15:29,Yahoo HG=F (COMEX copper front future)

@@ -1,14 +1,18 @@
 # mris_web_feeder.ps1 - MRIS web barometer feeder (ORDER-073 Phase-2 macro layer)
-# Fills the barometers the broker does NOT price (VIX, DXY, COPPER, US10Y proxy) by
-# pulling free, no-key daily OHLC from the Yahoo Finance chart API, computing the
-# same snapshot schema the classifier reads (spot / sma200 / atr20 / chg5d_pct), and
-# MERGING them in-place into barometer_snapshot.csv WITHOUT clobbering the broker rows
-# (AUDJPY / USDJPY / XAUUSD / BTCUSD written by Export_Barometers.mq5).
+# Refreshes ALL 8 barometers by pulling free, no-key daily OHLC from the Yahoo Finance
+# chart API, computing the snapshot schema the classifier reads (spot / sma200 / atr20 /
+# chg5d_pct) plus an `asof` stamp, and MERGING in-place into barometer_snapshot.csv.
+#
+# Owning all 8 (not just the 4 the broker lacks) is deliberate: a macro-regime warning
+# layer must never read half its scale off a hand-seeded snapshot that silently ages
+# (scrutinize finding 2026-07-17). Broker feed Export_Barometers.mq5 stays an OPTIONAL
+# refinement - if wired later it can overwrite the 4 FX/metal/crypto rows with exact
+# broker prices, but the daily macro read does not need that precision.
 #
 # Zero LLM tokens - pure script. Same resilience pattern as scripts\news_calendar.ps1:
 # per-symbol raw-JSON cache, fall back to a fresh cache on fetch failure, and if there
 # is neither fresh data nor cache, tag the row STALE so the classifier excludes it
-# (weights renormalise) instead of crashing.
+# (weights renormalise) instead of crashing. `asof` lets the classifier age-gate too.
 #
 # NOTE on US10Y_JP10Y: JP10Y has no free headless daily source (BOJ-pinned ~1%, near
 # static). Per user decision 2026-07-17 we feed US10Y (^TNX) as the spread proxy - the
@@ -24,8 +28,14 @@ param(
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-# web-owned barometers: snapshot symbol -> Yahoo ticker (+ how to note the source)
+# all 8 barometers: snapshot symbol -> Yahoo ticker (+ how to note the source).
+# The first 4 are broker-priceable (Export_Barometers.mq5 may later refine them);
+# the last 4 the broker cannot price at all.
 $FEEDS = @(
+  @{ Symbol="AUDJPY";       Yahoo="AUDJPY=X"; Note="Yahoo AUDJPY=X (spot; broker exporter may refine)" },
+  @{ Symbol="USDJPY";       Yahoo="JPY=X";    Note="Yahoo JPY=X USD/JPY (spot; broker exporter may refine)" },
+  @{ Symbol="XAUUSD";       Yahoo="GC=F";     Note="Yahoo GC=F (COMEX gold front future ~ spot; broker exporter may refine)" },
+  @{ Symbol="BTCUSD";       Yahoo="BTC-USD";  Note="Yahoo BTC-USD (spot; broker exporter may refine)" },
   @{ Symbol="VIX";          Yahoo="^VIX";     Note="Yahoo ^VIX (CBOE Volatility Index)" },
   @{ Symbol="DXY";          Yahoo="DX-Y.NYB"; Note="Yahoo DX-Y.NYB (ICE US Dollar Index)" },
   @{ Symbol="COPPER";       Yahoo="HG=F";     Note="Yahoo HG=F (COMEX copper front future)" },
@@ -108,7 +118,8 @@ function Compute-Row {
     atr20       = $atr20
     chg5d_pct   = $chg5d
     data_status = $status
-    source_note = "$Note$smaNote [$stamp]"
+    asof        = $stamp
+    source_note = "$Note$smaNote"
   }
 }
 
@@ -128,16 +139,19 @@ foreach ($f in $FEEDS) {
   }
 }
 
-# ---- merge-in-place into snapshot (preserve broker rows + row order) ----
-$cols = @('symbol','spot','sma200','atr20','chg5d_pct','data_status','source_note')
+# ---- merge-in-place into snapshot (preserve any non-fed rows + row order) ----
+$cols = @('symbol','spot','sma200','atr20','chg5d_pct','data_status','asof','source_note')
 $existing = @()
 if (Test-Path $Snapshot) { $existing = @(Import-Csv $Snapshot) }
 
-# for a failed web feed with an existing row: keep the old values but downgrade to STALE
+# for a failed web feed with an existing row: keep the old values + old asof (so the
+# classifier's age-gate can still see it is stale) but downgrade status to STALE. Strip
+# any prior '| feed-fail ...' marker first so the note cannot grow without bound.
 foreach ($f in $FEEDS) {
   if (-not $newRows.ContainsKey($f.Symbol)) {
     $prev = $existing | Where-Object { $_.symbol -eq $f.Symbol } | Select-Object -First 1
     if ($prev) {
+      $prevNote = ("$($prev.source_note)" -replace '\s*\|\s*feed-fail.*$', '')
       $newRows[$f.Symbol] = [pscustomobject]@{
         symbol      = $prev.symbol
         spot        = $prev.spot
@@ -145,7 +159,8 @@ foreach ($f in $FEEDS) {
         atr20       = $prev.atr20
         chg5d_pct   = $prev.chg5d_pct
         data_status = "STALE"
-        source_note = "$($prev.source_note) | feed-fail $((Get-Date).ToString('yyyy-MM-dd HH:mm'))"
+        asof        = $prev.asof
+        source_note = "$prevNote | feed-fail $((Get-Date).ToString('yyyy-MM-dd HH:mm'))"
       }
     }
   }
