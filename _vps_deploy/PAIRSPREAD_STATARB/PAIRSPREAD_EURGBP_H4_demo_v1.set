@@ -1,0 +1,14 @@
+_00_OptimizeMode=false
+_01_SymbolA=EURUSD
+_01_SymbolB=GBPUSD
+_01_ZWindow=100
+_01_EntryZ=2.5
+_01_ExitZ=0.3
+_01_StopZ=3.5
+_01_AllowLongA=true
+_01_AllowShortA=true
+_05_LotA=0.05
+_05_LotB=0.05
+_06_Magic=990984
+_06_Deviation=20
+_06_AllowLive=true
