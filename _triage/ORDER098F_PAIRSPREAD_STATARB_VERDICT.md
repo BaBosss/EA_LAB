@@ -86,8 +86,25 @@ Score band 40-54 / OOS PF 0.837 (<0.9) caps below CANDIDATE_OK. But true-holdout
 holdout = **buildable diversifier candidate, not dead** — but promote as a SMALL-size portfolio leg
 under corr-check, watch the recent-regime softness. NOT a standalone deploy.
 
-## Next step
-Forward to portfolio-selector: corr-check EURUSD/GBPUSD stat-arb leg vs existing book (orthogonal class
-— pairs mean-reversion), allocate reduced weight, demo before live. Optional build-on (later, not now):
+## Portfolio corr-check (portfolio-selector, 36-mo BWD overlap 2020-2022) — **ADDITIVE, not redundant**
+Merged stat-arb center-config BWD monthly P/L into the 6-EA cohort matrix (`order098g_corr_returns.csv`),
+ran `portfolio_analysis.py` (`order098g_corr.json`). StatArb_EURGBP vs cohort correlations:
+MACD_USDCAD **−0.73**, MG_v1 **−0.56**, MACD_GBPUSD **−0.52**, NuiIndy −0.13, GoldReaper +0.20,
+ST03_replica **+0.36**. Highest positive = +0.36 → **clears the ≤0.40 additive gate against every EA**;
+several strongly negative (hedges the MACD/MG_v1 momentum legs). Orthogonality thesis CONFIRMED — genuine
+new diversifier class. Combined-portfolio DD stays 5.25%, worst same-month −3.0% (< 10% target).
+
+**Watch-item:** StatArb~ST03_replica DD-overlap 69% RED (both GBP mean-reversion → soft the same months),
+though severe-overlap only 13.9% and both are small-DD EAs. → don't stack full weight on both GBP-reversion
+legs at once. NOTE: the skill's other RED dd-overlap/`corr>0.7` blocking flags are **cohort-internal
+artifacts** (the 4 always-profitable EAs compute MaxDD≈0 → degenerate 100% severe-overlap; the 0.768 pair
+is MG_v1~MACD_GBPUSD, not StatArb) — not attributable to the new leg. Corr-gate on the NEW leg = PASS.
+
+## Recommendation (Claude, sole judge)
+Add PairSpread_StatArb (H4 z2.5 EURUSD/GBPUSD) as a **small-weight DEMO diversifier leg**: CANDIDATE_WEAK
+cap 25% × candidate 20% lot-cut → effective small size. Corr-check passed; edge real-but-thin. **DEMO
+only, NOT direct live** (Mode-B rule + user doctrine). Watch ST03 DD-timing overlap post-deploy.
+
+## Build-on (later, not now)
 ExitZ 0.3 looked stronger across the plateau (1.14/1.15) — a *fresh* both-window+holdout validation of
-ExitZ 0.3 (not a re-pick off this map) could lift the edge out of the thin band.
+ExitZ 0.3 (not a re-pick off this map) could lift the edge out of the thin band before committing weight.
