@@ -2,3 +2,4 @@
 # (a CRLF '#!/bin/sh\r' breaks git pre-commit). See PROJECT_STATE.md section 0.5.
 .githooks/pre-commit text eol=lf
 *.sh text eol=lf
+docs/memory_control/experiment_events/** text eol=lf

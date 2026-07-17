@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ea-lab://experiment-events/event-v1",
+  "title": "EA_LAB experiment event v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "experiment_id",
+    "event_type",
+    "timestamp_utc",
+    "actor",
+    "role",
+    "prior_event_id",
+    "prior_event_sha256",
+    "artifact_hashes",
+    "trial_family",
+    "trial_count",
+    "evidence_ids",
+    "owner_refs",
+    "reason_code",
+    "reason_ref"
+  ],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "event_id": { "type": "string", "pattern": "^evt_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+    "experiment_id": { "type": "string", "pattern": "^exp_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+    "event_type": {
+      "type": "string",
+      "enum": ["IDEA_CREATED", "HYPOTHESIS_REGISTERED", "BAR_PREREGISTERED", "RUN_STARTED", "RESULT_LINKED", "AMENDMENT_ADDED", "REVIEW_LINKED", "DECISION_LINKED", "TOMBSTONE_ADDED"]
+    },
+    "timestamp_utc": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])-([0-2][0-9]|3[01])T([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]\\.[0-9]{3}Z$", "maxLength": 24 },
+    "actor": { "type": "string", "enum": ["user", "claude", "codex", "zcode", "oc-mgr", "oc-dev", "oc-btest", "system"] },
+    "role": { "type": "string", "enum": ["owner", "lead_judge", "peer_engineer", "batch_runner", "manager", "system"] },
+    "prior_event_id": { "type": ["string", "null"], "pattern": "^evt_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+    "prior_event_sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$", "maxLength": 64 },
+    "artifact_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ea", "source", "set", "data", "tester"],
+      "properties": {
+        "ea": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "source": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "set": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "data": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "tester": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "trial_family": { "type": ["string", "null"], "pattern": "^[a-z0-9][a-z0-9_\\-]{0,31}$", "maxLength": 32 },
+    "trial_count": { "type": ["integer", "null"], "minimum": 1, "maximum": 100000000 },
+    "evidence_ids": { "type": "array", "maxItems": 32, "uniqueItems": true, "items": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$", "maxLength": 75 } },
+    "owner_refs": { "type": "array", "minItems": 1, "maxItems": 8, "items": { "$ref": "#/$defs/owner_ref" } },
+    "reason_code": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$", "maxLength": 48 },
+    "reason_ref": { "type": "string", "pattern": "^(ORDER|ADR|EXP|RUN)-[A-Za-z0-9_.\\-]{1,35}$", "maxLength": 40 },
+    "target_event_id": { "type": "string", "pattern": "^evt_[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", "maxLength": 40 },
+    "target_event_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "maxLength": 64 },
+    "recovery_target_month": { "type": "string", "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$", "maxLength": 7 }
+  },
+  "$defs": {
+    "owner_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["owner_type", "path", "commit_oid", "blob_oid", "raw_sha256", "anchor"],
+      "properties": {
+        "owner_type": { "type": "string", "enum": ["taskboard_order", "taskboard_archive", "scorecard", "project_decision", "deployment", "preregistration", "evidence_manifest", "recovery_authorization"] },
+        "path": { "type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]{1,240}$", "maxLength": 240 },
+        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "maxLength": 40 },
+        "blob_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "maxLength": 40 },
+        "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "maxLength": 64 },
+        "anchor": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9#_.:\\-]{0,63}$", "maxLength": 64 }
+      }
+    }
+  },
+  "x-ea-lab-rules": {
+    "line_max_bytes": 32768,
+    "canonical_order": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref", "target_event_id", "target_event_sha256", "recovery_target_month"],
+    "artifact_order": ["ea", "source", "set", "data", "tester"],
+    "owner_ref_order": ["owner_type", "path", "commit_oid", "blob_oid", "raw_sha256", "anchor"],
+    "owner_path_patterns": {
+      "taskboard_order": "^AGENT_TASKBOARD\\.md$",
+      "taskboard_archive": "^ARCHIVE_TASKBOARD_[A-Za-z0-9._-]+\\.md$",
+      "scorecard": "^EA_SCORECARD_AND_REGISTRY\\.md$",
+      "project_decision": "^PROJECT_STATE\\.md$",
+      "deployment": "^portfolio/DEPLOYMENTS\\.csv$",
+      "preregistration": "^(AGENT_TASKBOARD\\.md|docs/[A-Za-z0-9._/-]+)$",
+      "evidence_manifest": "^docs/memory_control/experiment_events/evidence-manifest\\.jsonl$",
+      "recovery_authorization": "^(AGENT_TASKBOARD\\.md|docs/memory_control/[A-Za-z0-9._/-]+)$"
+    },
+    "actor_roles": {
+      "user": ["owner"],
+      "claude": ["lead_judge"],
+      "codex": ["peer_engineer"],
+      "zcode": ["batch_runner"],
+      "oc-mgr": ["manager"],
+      "oc-dev": ["peer_engineer"],
+      "oc-btest": ["batch_runner"],
+      "system": ["system"]
+    },
+    "event_rules": {
+      "IDEA_CREATED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "null", "trial": "null", "artifacts": "all_null", "reason_codes": ["experiment_initiated"], "owner_types": ["taskboard_order", "preregistration"] },
+      "HYPOTHESIS_REGISTERED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "null", "artifacts": "source_required", "reason_codes": ["hypothesis_registered"], "owner_types": ["taskboard_order", "preregistration"] },
+      "BAR_PREREGISTERED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "null", "artifacts": "all_required", "reason_codes": ["bar_preregistered"], "owner_types": ["taskboard_order", "preregistration"] },
+      "RUN_STARTED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "required", "artifacts": "all_required", "reason_codes": ["run_started"], "owner_types": ["taskboard_order", "preregistration"] },
+      "RESULT_LINKED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "required", "artifacts": "all_required", "reason_codes": ["result_available"], "owner_types": ["taskboard_order", "taskboard_archive"], "evidence_min": 1 },
+      "REVIEW_LINKED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "required", "artifacts": "all_required", "reason_codes": ["review_recorded"], "owner_types": ["taskboard_archive", "taskboard_order"], "evidence_min": 1 },
+      "DECISION_LINKED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref"], "prior": "required", "trial": "required", "artifacts": "all_required", "reason_codes": ["decision_recorded"], "owner_types": ["scorecard", "project_decision", "deployment"], "authorized_actors": ["user", "claude"] },
+      "AMENDMENT_ADDED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref", "target_event_id", "target_event_sha256", "recovery_target_month"], "prior": "required", "trial": "null", "artifacts": "all_null", "reason_codes": ["logical_correction", "physical_recovery"], "owner_types": ["taskboard_order", "taskboard_archive", "recovery_authorization"] },
+      "TOMBSTONE_ADDED": { "allowed_fields": ["schema_version", "event_id", "experiment_id", "event_type", "timestamp_utc", "actor", "role", "prior_event_id", "prior_event_sha256", "artifact_hashes", "trial_family", "trial_count", "evidence_ids", "owner_refs", "reason_code", "reason_ref", "target_event_id", "target_event_sha256", "recovery_target_month"], "prior": "required", "trial": "null", "artifacts": "all_null", "reason_codes": ["invalidated_occurrence", "physical_recovery"], "owner_types": ["taskboard_order", "taskboard_archive", "recovery_authorization"] }
+    },
+    "core_lifecycle": ["IDEA_CREATED", "HYPOTHESIS_REGISTERED", "BAR_PREREGISTERED", "RUN_STARTED", "RESULT_LINKED", "REVIEW_LINKED", "DECISION_LINKED"],
+    "forbidden_fields_case_insensitive": ["result", "verdict", "decision", "disposition", "status", "profit", "pf", "reason", "metadata", "notes", "summary", "excerpt", "metrics"]
+  }
+}

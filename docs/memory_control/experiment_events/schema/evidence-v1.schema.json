@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ea-lab://experiment-events/evidence-v1",
+  "title": "EA_LAB committed Git evidence locator v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "evidence_id", "path", "commit_oid", "blob_oid", "raw_sha256", "byte_length", "media_type"],
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "evidence_id": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$", "maxLength": 75 },
+    "path": { "type": "string", "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\)[A-Za-z0-9._/-]{1,240}$", "maxLength": 240 },
+    "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "maxLength": 40 },
+    "blob_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "maxLength": 40 },
+    "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "maxLength": 64 },
+    "byte_length": { "type": "integer", "minimum": 0, "maximum": 1073741824 },
+    "media_type": { "type": "string", "enum": ["text/plain", "text/markdown", "text/csv", "application/json", "application/jsonl", "application/octet-stream", "application/zip"] }
+  },
+  "x-ea-lab-rules": {
+    "line_max_bytes": 4096,
+    "canonical_order": ["schema_version", "evidence_id", "path", "commit_oid", "blob_oid", "raw_sha256", "byte_length", "media_type"],
+    "locator_kind": "committed_git_blob_only",
+    "id_from": "raw_sha256"
+  }
+}

@@ -138,6 +138,8 @@ function New-RealWorkingTreeFixture {
         '.githooks\pre-commit',
         'scripts\check_taskboard_archive.ps1',
         'scripts\check_precommit_staged.ps1',
+        'scripts\check_experiment_events.ps1',
+        'scripts\experiment_event_log.ps1',
         'ARCHIVE_TASKBOARD_2026-07A.md',
         'docs\memory_control\ARCHIVE_MANIFEST.csv',
         'docs\memory_control\ARCHIVE_INDEX.md',
@@ -149,6 +151,7 @@ function New-RealWorkingTreeFixture {
         if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
         Copy-Item -LiteralPath (Join-Path $RepoRoot $rel) -Destination $dest -Force
     }
+    [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
     return $dir
 }
 
@@ -534,10 +537,16 @@ function New-TempHookRepo {
     New-Item -ItemType Directory -Force -Path (Join-Path $dir 'scripts') | Out-Null
     Copy-Item (Join-Path $RepoRoot 'scripts\check_precommit_staged.ps1') (Join-Path $dir 'scripts\check_precommit_staged.ps1') -Force
     Copy-Item (Join-Path $RepoRoot 'scripts\check_taskboard_archive.ps1') (Join-Path $dir 'scripts\check_taskboard_archive.ps1') -Force
+    Copy-Item (Join-Path $RepoRoot 'scripts\check_experiment_events.ps1') (Join-Path $dir 'scripts\check_experiment_events.ps1') -Force
+    # ...and the event checker dot-sources the append utility (its rule engine),
+    # so the fixture must carry that dependency too or the hook fails on line 19
+    # of check_experiment_events.ps1 (missing-dependency = fail-closed, by design).
+    Copy-Item (Join-Path $RepoRoot 'scripts\experiment_event_log.ps1') (Join-Path $dir 'scripts\experiment_event_log.ps1') -Force
     # check_state.ps1 is repo-specific (checks EA_LAB docs) -- stub a trivial pass-through
     # so the temp-repo hook test isolates the ORDER-103 Fix 2 logic, not the unrelated
     # anti-drift guard.
     'exit 0' | Set-Content -Path (Join-Path $dir 'scripts\check_state.ps1') -Encoding UTF8
+    [System.IO.File]::WriteAllText((Join-Path $dir 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
     # NOTE: hooksPath deliberately NOT set here -- callers seed their checkpoint/setup
     # commits first (which may themselves touch protected files) and only call
     # Enable-TempHook right before the commit actually under test, so setup commits
@@ -590,7 +599,12 @@ function New-RealHookFixture {
     $dir = New-RealWorkingTreeFixture -Tag $Tag
     'exit 0' | Set-Content -Path (Join-Path $dir 'scripts\check_state.ps1') -Encoding UTF8
     Write-StagedArtifactsForHookRepo -Dir $dir
-    $baselineCommit = Invoke-GitRaw -RepoRoot $dir -Arguments 'commit -q -m "temp baseline: refresh generated artifacts"'
+    # --allow-empty: when HEAD's committed artifacts are already generator-fresh
+    # (true since 2026-07-16), the regenerated candidates are byte-identical and
+    # `git add` stages nothing -- a plain commit then exits 1 ("nothing to
+    # commit") and this fixture dies before any case runs. The baseline only
+    # needs a commit point on a consistent base, so an empty commit is correct.
+    $baselineCommit = Invoke-GitRaw -RepoRoot $dir -Arguments 'commit -q --allow-empty -m "temp baseline: refresh generated artifacts"'
     if ($baselineCommit.ExitCode -ne 0) { throw "real hook fixture baseline commit failed: $($baselineCommit.StdErr)" }
     Enable-TempHook -Dir $dir
     return $dir
@@ -832,12 +846,13 @@ $bindingParent = (Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-parse "{0}^
 $checkoutParent = Invoke-GitRaw -RepoRoot $hookRepoBinding -Arguments ('checkout -q "{0}"' -f $bindingParent)
 if ($checkoutParent.ExitCode -ne 0) { throw "binding parent checkout failed: $($checkoutParent.StdErr)" }
 
-foreach ($rel in @('.githooks/pre-commit','scripts/check_taskboard_archive.ps1','scripts/check_precommit_staged.ps1')) {
+foreach ($rel in @('.githooks/pre-commit','scripts/check_taskboard_archive.ps1','scripts/check_precommit_staged.ps1','scripts/check_experiment_events.ps1','scripts/experiment_event_log.ps1')) {
     $dest = Join-Path $hookRepoBinding $rel
     $parent = Split-Path -Parent $dest
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Force -Path $parent | Out-Null }
     Copy-Item -LiteralPath (Join-Path $RepoRoot $rel) -Destination $dest -Force
 }
+[System.IO.File]::WriteAllText((Join-Path $hookRepoBinding 'scripts\check_verdict_kill.ps1'),'exit 0',(New-Object System.Text.UTF8Encoding($false)))
 foreach ($rel in @('ARCHIVE_TASKBOARD_2026-07A.md','docs/memory_control/ARCHIVE_MANIFEST.csv','docs/memory_control/ARCHIVE_INDEX.md','docs/memory_control/RECONCILE_EXCEPTIONS.md')) {
     $dest = Join-Path $hookRepoBinding $rel
     $parent = Split-Path -Parent $dest
