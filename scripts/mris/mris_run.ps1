@@ -10,6 +10,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $steps = @(
+  @{ name="webfeed";  script="$Root\mris_web_feeder.ps1" },
   @{ name="classify"; script="$Root\mris_classify.ps1" },
   @{ name="exposure"; script="$Root\mris_exposure.ps1" },
   @{ name="brief";    script="$Root\mris_brief.ps1" }

@@ -2,7 +2,7 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-17 10:10 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.67) | Risk Index: 0.3
+**2026-07-17 12:50 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.6) | Risk Index: 0.192
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
 - WARN: TRIPWIRE_NEAR: AUDJPY 113.3 only 3% above pin 110
@@ -13,14 +13,12 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 |---|---|---|
 | AUDJPY | 1 | above SMA200, 5d 0.5% -> risk-on intact |
 | USDJPY | 0.5 | extreme weak (161 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | 0 | VIX 15.67 mid-range -> neutral |
+| VIX | 0 | VIX 16.73 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
-| XAUUSD | 0 | gold move is structural/USD-driven (no VIX co-move) -> neutral |
+| XAUUSD | -1 | gold +1.2% WITH VIX rising -> risk-off confirmation |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |
-| US10Y_JP10Y | - | _inactive (PENDING) - excluded from Risk Index_ |
-| COPPER | - | _inactive (PENDING) - excluded from Risk Index_ |
-
-> รอต่อ feed: US10Y_JP10Y, COPPER (ยังไม่นับเข้า Risk Index)
+| US10Y_JP10Y | 0 | carry spread ~flat (3bps/5d) -> neutral |
+| COPPER | 0.5 | above SMA200 but soft 5d -> mild risk-on |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม

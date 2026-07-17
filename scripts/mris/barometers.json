@@ -71,21 +71,19 @@
     },
     {
       "symbol": "US10Y_JP10Y",
-      "role": "carry fuel: rate spread; narrowing = carry less attractive (DATA_PENDING - needs yield feed)",
+      "role": "carry fuel: rate spread; narrowing = carry less attractive. FED via Yahoo ^TNX (US10Y) as spread proxy - JP10Y has no free headless daily source and is BOJ-pinned ~1%, so the 5d spread move is ~entirely the US leg (user decision 2026-07-17).",
       "polarity": "carry_fuel",
       "weight": 2,
       "user_pin": null,
-      "narrowing_5d_bps": 15,
-      "optional": true
+      "narrowing_5d_bps": 15
     },
     {
       "symbol": "COPPER",
-      "role": "China / commodity growth (DATA_PENDING - needs feed)",
+      "role": "China / commodity growth. FED via Yahoo HG=F (COMEX copper front future).",
       "polarity": "risk_on",
       "weight": 1,
       "user_pin": null,
-      "move_5d_pct": 3.0,
-      "optional": true
+      "move_5d_pct": 3.0
     }
   ]
 }

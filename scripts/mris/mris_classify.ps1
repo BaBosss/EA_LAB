@@ -85,21 +85,42 @@ foreach ($b in $cfg.barometers) {
       }
     }
     "carry_fuel" {
-      # USDJPY / rate-spread: danger is a SHARP REVERSAL, plus 'loaded' when extreme
-      $ext = AsNum $b.extreme_weak_level
-      $sharpMult = if ($b.sharp_reversal_atr_mult) { $b.sharp_reversal_atr_mult } else { $null }
-      $sharpRev = $false
-      if ($sharpMult -and $null -ne $atr20 -and $null -ne $chg5d) {
-        $revPct = -($sharpMult * $atr20 / $spot * 100.0)
-        if ($chg5d -le $revPct) { $sharpRev = $true }
-      }
-      if ($sharpRev) {
-        $signal = -2; $reasons += "sharp reversal down (5d $chg5d`%) -> JPY repatriation / carry unwind trigger"
-      } elseif ($null -ne $ext -and $spot -ge $ext) {
-        $signal = 0.5; $reasons += "extreme weak ($spot >= $ext) -> risk-on now BUT crowded/loaded"
-        $flags += "LOADED_FUSE: $($b.symbol) $([math]::Round($spot,2)) at extreme - crowded short, snap-back risk high"
+      # Two carry_fuel shapes, distinguished by which threshold the config sets:
+      #  (a) narrowing_5d_bps  -> a RATE-SPREAD proxy (US10Y_JP10Y via ^TNX). The 5d
+      #      move of the spread is ~entirely the US leg (JP10Y BOJ-pinned). A spread
+      #      NARROWING (US yield falling) = carry less attractive = risk-off lean.
+      #  (b) extreme_weak_level + sharp_reversal_atr_mult -> a PRICE level (USDJPY):
+      #      danger is a SHARP REVERSAL, plus 'loaded' when at a crowded extreme.
+      $narrowBps = AsNum $b.narrowing_5d_bps
+      if ($null -ne $narrowBps) {
+        # 5d change of the yield in bps (spot is the yield in %, chg5d its % change)
+        $bps5d = if ($null -ne $chg5d) { ($spot - ($spot / (1.0 + $chg5d / 100.0))) * 100.0 } else { $null }
+        if ($null -eq $bps5d) {
+          $signal = 0; $reasons += "spread proxy: no 5d data -> neutral"
+        } elseif ($bps5d -le -$narrowBps) {
+          $signal = -1; $reasons += "carry spread narrowed ~$([math]::Round($bps5d,1))bps/5d (US10Y proxy) -> carry fuel weakening"
+          $flags += "CARRY_NARROWING: US10Y proxy $([math]::Round($bps5d,1))bps/5d"
+        } elseif ($bps5d -ge $narrowBps) {
+          $signal = 0.5; $reasons += "carry spread widened ~$([math]::Round($bps5d,1))bps/5d -> carry more attractive"
+        } else {
+          $signal = 0; $reasons += "carry spread ~flat ($([math]::Round($bps5d,1))bps/5d) -> neutral"
+        }
       } else {
-        $signal = 0; $reasons += "no sharp reversal, not extreme -> neutral"
+        $ext = AsNum $b.extreme_weak_level
+        $sharpMult = if ($b.sharp_reversal_atr_mult) { $b.sharp_reversal_atr_mult } else { $null }
+        $sharpRev = $false
+        if ($sharpMult -and $null -ne $atr20 -and $null -ne $chg5d) {
+          $revPct = -($sharpMult * $atr20 / $spot * 100.0)
+          if ($chg5d -le $revPct) { $sharpRev = $true }
+        }
+        if ($sharpRev) {
+          $signal = -2; $reasons += "sharp reversal down (5d $chg5d`%) -> JPY repatriation / carry unwind trigger"
+        } elseif ($null -ne $ext -and $spot -ge $ext) {
+          $signal = 0.5; $reasons += "extreme weak ($spot >= $ext) -> risk-on now BUT crowded/loaded"
+          $flags += "LOADED_FUSE: $($b.symbol) $([math]::Round($spot,2)) at extreme - crowded short, snap-back risk high"
+        } else {
+          $signal = 0; $reasons += "no sharp reversal, not extreme -> neutral"
+        }
       }
     }
     "risk_off" {
