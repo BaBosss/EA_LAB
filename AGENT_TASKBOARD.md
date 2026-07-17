@@ -30,6 +30,14 @@
 
 ---
 
+## ORDER-098-F — Pairs-spread stat-arb (Jobot arbitrage idea + SL cage, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): 🟢 PARAMETRIC CANDIDATE (session's strongest). PairSpread_StatArb — 2-leg hedged, spread=log(A)-log(B) z-score fade, exit revert/z-stop cage (course NO_SL → SL cage rebuilt, blowup fixed: largest loss ~2% gross). mql-review PASS compile 0/0. funnel EntryZ×4·ExitZ×2·TF×2·2pairs. **H4 z2.5 EURUSD/GBPUSD = MAIN 1.07(130t)/BWD 1.04(110t) win 49-51% eqDD 4/13% = only both-window>1 cell**, lift จาก TF (H1→H4 ตัด cost drag) ไม่ใช่ Z. NEW diversifier class (pairs mean-rev, orthogonal). แต่ thin + selected-on-both → NOT deploy จนกว่า plateau+holdout+MC. verdict = _triage/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
+
+## ORDER-098-G — Validate stat-arb candidate H4 z2.5 EURUSD/GBPUSD (#098 corpus) — `OPEN (Claude 2026-07-17)`
+**why:** 098-F = both-window PF 1.07/1.04 candidate แต่ยัง selection-fit (เลือกจาก MAIN+BWD, margin thin, ridge แคบ — z3.0 BWD dip 0.94). ต้อง validate ก่อน demo.
+**spec:** robustness-validator funnel บน `PairSpread_StatArb` H4, EURUSD/GBPUSD, EntryZ 2.5 base. (1) **plateau map** รอบ z2.5: EntryZ {2.0,2.25,2.75} · ExitZ {0.3,0.5,0.7} · ZWindow {80,100,120} both-window — neighbor ต้องไม่ collapse (plateau ไม่ใช่ spike). (2) **holdout** window ที่ไม่เคยใช้ select (เช่น 2019 หรือ split MAIN). (3) **Monte Carlo** (trade-shuffle + start-date). (4) **cross-pair generalize:** ลอง 2-3 correlated pairs อื่น (GBPUSD/EURUSD, EURCHF/USDCHF) H4 z2.5 — ถ้า config generalize = แข็งกว่า currency-strength. **acceptance:** plateau-center + holdout PF>1 + MC survive → demo candidate leg ใหม่ (corr-check vs cohort ก่อน). **ห้าม:** deploy ก่อน 3 ข้อผ่าน · verdict = Claude. **ทำได้:** agent ea-validator/robustness batch.
+
+---
+
 ## 🗂️ ARCHIVED ORDERS — index ย้ายไป generated file (ORDER-102 Contract C1, 2026-07-13)
 
 > orders ปิดแล้ว = `ARCHIVE_TASKBOARD_2026-07A.md` (verbatim) · **index = generated/read-only** `docs/memory_control/ARCHIVE_INDEX.md` (§20.7 — ห้าม hand-edit ในบอร์ดนี้) · integrity guard: `powershell -File scripts/check_taskboard_archive.ps1 -Strict` (raw/reviewed/unresolved · archive append-only + active conservation)
