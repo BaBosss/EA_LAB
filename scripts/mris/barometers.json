@@ -1,6 +1,16 @@
 {
   "_doc": "MRIS barometer + tripwire config (ORDER-073 Phase-2 macro layer). Tripwires are RELATIVE rules (vs SMA200 / ATR-drop), NOT hardcoded price levels. 'user_pin' is an OPTIONAL absolute line the user sets by hand via the MRIS session (e.g. AUDJPY 110); leaving it null = pure relative mode. Every threshold here is user-tunable. Signal convention: +2..-2 where POSITIVE = risk-ON pressure, NEGATIVE = risk-OFF pressure.",
-  "version": "0.1",
+  "version": "1.0",
+  "_locked": "Thresholds LOCKED as user-sanctioned defaults 2026-07-17. Every value below is still a plain tunable number - change it and re-run mris_run.ps1; nothing is hardcoded in the scripts. See _tuning_guide for what each knob does and the sweep-derived alternatives.",
+  "_tuning_guide": {
+    "AUDJPY.user_pin": "110 = the AUD/JPY north-star line (article). null = pure relative (SMA200/ATR) mode with no pin flag.",
+    "AUDJPY.pin_warn_band_pct": "3.0 = early-warn band above the pin. NOTE: at spot ~113.3 the flag flickers on/off right at the 3% edge; set 4.0-5.0 for a steadier whisper that survives a single up-day.",
+    "VIX.calm_below/elevated_above/stress_above": "15/20/30 standard. Looser 17/22/32 would read ~16-18 VIX as calm (risk-on); tighter 13/18/28 warns earlier. stress_above also drives the STRESS override.",
+    "US10Y_JP10Y.narrowing_5d_bps": "15 ~= 1 ATR of the 10Y yield's 5d move. 10 = more sensitive to carry-fuel change, 20 = only large rate moves trip it.",
+    "USDJPY.extreme_weak_level": "158 = LOADED_FUSE crowded-carry line. 155 keeps the flag lit across the whole weak-yen band (155-162); 160 only flags the very extreme.",
+    "XAUUSD.comove_vix_min_pct": "10.0 = min VIX 5d rise (%) for a gold up-move to count as a risk-off co-move (not USD/structural). Lower = more sensitive.",
+    "regime_thresholds": "RI state bands 0.50 / -0.25 / -1.00 (risk_on / neutral floor / risk_off floor); vix_stress_override 30. Widen the neutral band to reduce state churn."
+  },
   "regime_thresholds": {
     "_doc": "Risk Index (RI) = weighted mean of barometer signals in [-2,+2]. State bands:",
     "risk_on_min": 0.50,
