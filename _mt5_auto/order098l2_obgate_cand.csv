@@ -1,0 +1,5 @@
+﻿gate,window,PF,trades,winpct,eqDDpct,netprofit,report
+obOFF,MAIN,1.5,136.0,77.21,0.18,36.23,D:\EA_LAB\_mt5_auto\reports\O098L2_obOFF_MAIN.htm
+obOFF,BWD,1.24,130.0,76.15,0.24,23.01,D:\EA_LAB\_mt5_auto\reports\O098L2_obOFF_BWD.htm
+obON,MAIN,1.38,57.0,75.44,0.16,11.79,D:\EA_LAB\_mt5_auto\reports\O098L2_obON_MAIN.htm
+obON,BWD,1.81,47.0,80.85,0.2,20.77,D:\EA_LAB\_mt5_auto\reports\O098L2_obON_BWD.htm

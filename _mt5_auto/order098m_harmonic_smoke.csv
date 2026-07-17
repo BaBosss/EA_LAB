@@ -1,0 +1,5 @@
+﻿symbol,tf,PF,trades,winpct,eqDDpct,netprofit,report
+EURUSD,H4,3.52,10.0,80.0,0.02,2.44,D:\EA_LAB\_mt5_auto\reports\O098M_EURUSD_H4.htm
+EURGBP,H4,0.19,9.0,44.44,0.08,-5.09,D:\EA_LAB\_mt5_auto\reports\O098M_EURGBP_H4.htm
+AUDNZD,H4,0.93,26.0,76.92,0.03,-0.4,D:\EA_LAB\_mt5_auto\reports\O098M_AUDNZD_H4.htm
+XAUUSD,H4,0.39,8.0,62.5,0.42,-23.6,D:\EA_LAB\_mt5_auto\reports\O098M_XAUUSD_H4.htm
