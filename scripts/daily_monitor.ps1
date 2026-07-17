@@ -20,6 +20,10 @@ function Step([string]$name, [scriptblock]$body) {
 Step 'rotation'  { powershell -NoProfile -File D:\EA_LAB\scripts\monitor_rotation.ps1 *>> $log }
 Step 'collect'   { powershell -NoProfile -File D:\EA_LAB\scripts\collect_live_deals.ps1 *>> $log }
 Step 'news'      { powershell -NoProfile -File D:\EA_LAB\scripts\news_calendar.ps1 *>> $log }
+# ORDER-073: refresh the MRIS macro-regime whisper (barometers -> regime -> brief) BEFORE
+# the dashboard so it embeds the fresh whisper_brief.html. Its own stages are non-fatal and
+# a mris failure never blocks the dashboard/gist (only a 'dashboard' failure skips the gist).
+Step 'mris'      { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_run.ps1 *>> $log }
 # ORDER-083: publish the news CSV where the (Boss)_NewsGuard EA reads it (MT5 Common\Files)
 if (Test-Path 'D:\EA_LAB\portfolio\news_week.csv') {
     try {
@@ -41,7 +45,7 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
-git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv 2>> $log
+git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv 2>> $log
 $staged = git diff --cached --name-only
 if ($staged) {
     git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log

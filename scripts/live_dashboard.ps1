@@ -622,6 +622,14 @@ $acctWindowsDisplay = HtmlEnc (($acctStart.GetEnumerator() | Sort-Object Name | 
 $newsHtml = ""
 $newsFrag = Join-Path (Split-Path $OutFile) "news_today.html"
 if (Test-Path $newsFrag) { $newsHtml = [System.IO.File]::ReadAllText($newsFrag, [System.Text.Encoding]::UTF8) }
+# MRIS macro "market whisper" fragment (written by scripts\mris\mris_run.ps1 in the daily
+# chain). Wrapped in a .card so it inherits the dashboard's light/dark box styling.
+$mrisHtml = ""
+$mrisFrag = Join-Path (Split-Path $OutFile) "mris\whisper_brief.html"
+if (Test-Path $mrisFrag) {
+  $mrisInner = [System.IO.File]::ReadAllText($mrisFrag, [System.Text.Encoding]::UTF8)
+  if ($mrisInner.Trim()) { $mrisHtml = "<div class=`"card`">$mrisInner</div>" }
+}
 $grandTotalDisplay = Fmt-Money $grandTotalNet
 $generatedAt = $now.ToString("yyyy-MM-dd HH:mm:ss")
 $srcCsvName = HtmlEnc (($selected | ForEach-Object { $_.Name }) -join ', ')
@@ -735,6 +743,7 @@ $html = @"
   (both treasure-hunt demo accounts are documented at 10,000 USD). Sorted red &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
 </div>
 
+$mrisHtml
 $newsHtml
 $floatingRiskHtml
 $($sectionsHtml.ToString())
