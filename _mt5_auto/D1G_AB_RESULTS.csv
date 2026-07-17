@@ -1,0 +1,15 @@
+symbol,period,window,lever,value,pf,trades,eqDD_pct,note
+EURGBP,H1,REC,entry,market,1.48,2368,5.66,baseline
+EURGBP,H1,REC,entry,pending,1.49,2421,5.85,+0.01 PF (noise)
+EURGBP,H1,BWD,entry,market,1.03,5248,22.44,baseline
+EURGBP,H1,BWD,entry,pending,1.00,5346,25.99,-0.03 PF (worse)
+NZDUSD,H4,REC,entry,market,1.37,3879,7.81,baseline
+NZDUSD,H4,REC,entry,pending,1.37,3879,7.81,identical
+NZDUSD,H4,BWD,entry,market,0.97,4937,16.36,baseline
+NZDUSD,H4,BWD,entry,pending,0.97,4937,16.36,identical
+EURGBP,H1,REC,tp_widen,+0,1.48,2368,5.66,baseline
+EURGBP,H1,REC,tp_widen,+2,1.48,2368,5.66,identical
+EURGBP,H1,REC,tp_widen,+5,1.50,2393,5.73,+0.02 PF (noise)
+EURGBP,H1,BWD,tp_widen,+0,1.03,5248,22.44,baseline
+EURGBP,H1,BWD,tp_widen,+2,1.03,5248,22.44,identical
+EURGBP,H1,BWD,tp_widen,+5,1.04,5283,22.42,+0.01 PF (noise)
