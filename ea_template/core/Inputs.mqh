@@ -58,7 +58,8 @@ enum ENUM_LOT_PROGRESSION
    PROG_MULTIPLIER = 52,  // 52 Multiplier lot*m^lv (martingale)
    PROG_PLUS       = 53,  // 53 Plus  lot+plus*lv
    PROG_LOG        = 54,  // 54 Log  lot*(1+f*ln(lv+1))
-   PROG_LOG_POWER  = 55   // 55 LogPower  lot*factor^(ln(orderN)) - Zeus GridLog port (14)
+   PROG_LOG_POWER  = 55,  // 55 LogPower  lot*factor^(ln(orderN)) - Zeus GridLog port (14)
+   PROG_FIBONACCI  = 56   // 56 Fibonacci  lot*fib(lv), capped at _56_FibMaxStep (corpus EX191)
 };
 
 enum ENUM_TRADE_DIR
@@ -312,6 +313,17 @@ input double _2_PartialFrac2 = 0.30;
 // exit is basket-money-TP only (+ per-leg SL). See Exit_InitialTP for detail.
 input bool _2_SuppressLegTP = false;
 
+// additive: dynamic basket close-money target that grows with the number of
+// open orders in the basket (corpus EX183/EX078). close_target = base +
+// (open_order_count / C) * base. Evaluated as an ADDITIONAL/alternative
+// basket-TP check alongside the existing _2_BasketTP_Money/_2_BasketTP_ATRmult
+// target (Exit_ManageBasket fires on whichever target is reached first) - it
+// does not replace or alter them. OFF by default (_57_DynCloseOn=false ->
+// no-op, identical to current behavior).
+input bool   _57_DynCloseOn      = false; // 57 dynamic close-money target on/off
+input double _57_DynCloseBase    = 10.0;  // 57 base $ target
+input double _57_DynCloseDivisor = 4.0;   // 57 C: divisor controlling growth per open order
+
 //==================== Stop loss (3x) ===============================
 input group "=== 3x Stop loss params ==="
 input double _31_SL_Pip        = 1000; // 31 fixed pip
@@ -342,6 +354,14 @@ input double _52_ProgMult   = 1.3;   // 52 multiplier
 input double _53_PlusLot    = 0.01;  // 53 additive step
 input double _55_LogPowerFactor  = 1.3;   // 55 PROG_LOG_POWER: lot = firstLot * factor^(ln(orderN))
 input bool   _55_UseLnNotLog10   = true;  // 55: true=ln, false=log10 (Zeus GridLog _05_UseLnNotLog10)
+
+// additive: PROG_FIBONACCI (corpus EX191). lot(lv) = firstLot * fib(lv), fib =
+// 1,2,3,5,8,13,... (fib(0)=1 -> level 0 = firstLot, same 1-indexing convention
+// as the other cases). Capped at the multiplier reached at _56_FibMaxStep so
+// the sequence stops growing past that step (default step 5 -> 13x cap) -
+// this is the whole point vs unbounded martingale (PROG_MULTIPLIER). Inert
+// unless LotProg == PROG_FIBONACCI is selected.
+input int    _56_FibMaxStep      = 5;     // 56 cap step index (default 5 -> 13x multiplier ceiling)
 
 // additive: DD-adaptive first-lot multiplier (Zeus GridLog _05_DdAdaptive).
 // Applied ONLY to the first order of a new basket (level 0), always capped by

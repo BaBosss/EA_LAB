@@ -370,6 +370,20 @@ double Exit_BasketTargetMoney()
    return atr * _2_BasketTP_ATRmult * (tickValue / tickSize) * lots;
 }
 
+// additive: dynamic close-money target (corpus EX183/EX078). close_target =
+// base + (open_order_count / C) * base - grows with how many orders are open
+// in the basket. Evaluated as an ADDITIONAL/alternative target check in
+// Exit_ManageBasket next to the existing fixed/ATR basket TP - whichever
+// target is reached first closes the basket. Returns 0 (= off) unless
+// _57_DynCloseOn is true, so behavior is unchanged by default.
+double Exit_DynCloseTargetMoney()
+{
+   if(!_57_DynCloseOn) return 0.0;
+   if(_57_DynCloseDivisor <= 0.0) return _57_DynCloseBase;
+   int openCount = Exec_CountAll();
+   return _57_DynCloseBase + ((double)openCount / _57_DynCloseDivisor) * _57_DynCloseBase;
+}
+
 void Exit_ManagePartialClose()
 {
    // mode 93 (pending ladder): partial-close would fragment ladder legs while
@@ -406,6 +420,8 @@ bool Exit_ManageBasket()
    double profit = Exec_BasketProfit();
    double targetMoney = Exit_BasketTargetMoney();
    if(targetMoney > 0.0 && profit >= targetMoney) { Exec_CloseAll(); return true; }
+   double dynTargetMoney = Exit_DynCloseTargetMoney();   // no-op (0.0) unless _57_DynCloseOn
+   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) { Exec_CloseAll(); return true; }
    if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)          { Exec_CloseAll(); return true; }
 
    if(ExitMode == EXIT_RUN_TREND)

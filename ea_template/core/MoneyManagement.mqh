@@ -85,6 +85,27 @@ double MM_NextLot(const double firstLot, const int level)
          lot = firstLot * MathPow(_55_LogPowerFactor, exponent);
          break;
       }
+      case PROG_FIBONACCI:
+      {
+         // corpus EX191: fib = 1,2,3,5,8,13,... (fib(0)=1, fib(1)=2, ...),
+         // lot(lv) = firstLot * fib(lv). Capped at the multiplier reached at
+         // _56_FibMaxStep - beyond the cap, HOLD the capped multiplier instead
+         // of continuing to grow (this is the anti-martingale point). Computed
+         // iteratively, no recursion; level index guarded >= 0.
+         int cap = (_56_FibMaxStep >= 0 ? _56_FibMaxStep : 0);
+         int idx = lv;
+         if(idx < 0) idx = 0;
+         if(idx > cap) idx = cap;
+         double fibPrev = 1.0, fibCur = 1.0; // fib(0)=1
+         for(int i = 1; i <= idx; i++)
+         {
+            double next = fibPrev + fibCur;
+            fibPrev = fibCur;
+            fibCur  = next;
+         }
+         lot = firstLot * fibCur;
+         break;
+      }
       case PROG_NONE:
       default:
          lot = firstLot;
