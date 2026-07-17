@@ -102,3 +102,50 @@ owner_ref · timestamps are utility-assigned UTC (monotonic per file, no backdat
 5. No backfill outside the 3 canaries. The log starts living with the next real experiment.
 6. `Disable`/`Enable`/`Recover` need explicit authorization refs — physical recovery is a locked,
    quarantined state machine; never hand-repair a corrupt month.
+
+## 6. Rough edges found in dogfood #1 (ORDER-091C-D1g, exp_93d9457a — first real experiment)
+
+Hard-won gotchas so the next experiment doesn't rediscover them. Rule owner is still the schema/util;
+these are workflow patches.
+
+**Artifacts & evidence**
+- **`data` has no git artifact (MT5 tick history isn't committable).** Write a small committed
+  *data-provenance descriptor* (symbol·TF·window·model·server) and use ITS sha256 for `data`. Template:
+  `_triage/ORDER091C_D1G_DATA_PROVENANCE.md`.
+- **`ea` (the .ex5) and other binaries are gitignored, yet `ea` must be a registered evidence artifact
+  (= committed blob).** Force-commit the exact tested binary: `git add -f <path>.ex5`. Verify it's
+  byte-identical to what the tester actually ran (sha256) before trusting the hash.
+- **Evidence `path` pattern forbids parens and spaces** — the repo's `(EXP)_Name/(EXP)_Name.mq5|.ex5`
+  filenames can't be registered directly. Stage **paren-free copies** at a clean path (e.g.
+  `_mt5_auto/ab_sets/<order>/Name.mq5`) and register those.
+- **Multi-arm A/B → one artifact hash.** An experiment with several .set/.ini arms still has ONE
+  `set`/`tester` slot per event. Pick a **canonical treatment set** + a **canonical tester-config file**
+  (`D1G_tester_canonical.ini`) for the hashes; per-arm variations live in the taskboard/results-CSV owner,
+  not the event.
+- **Evidence is content-keyed but stores `commit_oid`.** Registering the SAME content again after HEAD
+  moved (unrelated commits) → `reference_invalid: different canonical locator`. **Register each artifact
+  once**; on re-runs, reuse the known `raw_sha256` (don't re-register). Pin `-CommitOid` to a **full
+  40-hex** sha (short form is rejected).
+
+**Owner anchors**
+- **Anchor must occur EXACTLY once in the blob, and can't contain spaces.** Order IDs repeated in the
+  body break this — a commit-tag line (`` `[tag] ORDER-...` ``), a `### ORDER-... RESULT` subheader, etc.
+  Keep the bare ID **once** (the header); reference it elsewhere as the short form (`D1g`).
+- Owner-file edits move the blob, so re-derive `blob_oid/raw_sha256` at the current commit each event
+  (the util's `Get-CommittedBlobRecord` does this).
+
+**Chaining & tooling**
+- **`prior_event_sha256` is not exposed by `Append`/`Scan` output.** Compute it: read the month JSONL,
+  take the last line's bytes **excluding the trailing LF**, sha256 them. (Reusable helper `TailSha` /
+  `LineShaOf` in `_mt5_auto/d1g_event_chain.ps1`.)
+- **The util prints status to the console, not the PowerShell pipeline.** In-process `& $util` does NOT
+  capture it — call the util as a **child process** (`& powershell -NoProfile -File $util ... | Out-String`)
+  and regex the JSON out.
+- **Amending a preregistered bar works and is cheap** — `AMENDMENT_ADDED` with `target_event_id` +
+  `target_event_sha256` = the BAR event's line sha, `reason_code=logical_correction`. Used here to change
+  Model-4→Model-1 (tooling constraint) *before* seeing results. Do the visible taskboard amendment too.
+
+**Concurrency**
+- Under a shared worktree, a commit can **race** (a path-limited commit landed a stale blob once). After
+  any owner-file commit that an event will reference, **verify the committed blob** (`git cat-file blob
+  HEAD:<path> | grep -c <anchor>`) before emitting the event.
