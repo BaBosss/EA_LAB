@@ -1,0 +1,3 @@
+; ORDER-091C-D1g — pending-limit grid adds + TP widened +2 pip
+EntryMode=1
+TP_Widen_Pips=2.0

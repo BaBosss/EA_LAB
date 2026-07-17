@@ -882,6 +882,31 @@ pending fill-rate ~70-73% · pending PF ≥ market 3/4 cell (+0.03-0.06 = spread
 spread-death revival คุ้มเฉพาะตัวที่ post-spread PF ≥ ~0.95 (gap เล็กพอให้ +0.05 ดันข้าม) — ตัดตัวที่ collapse 0.5-0.7 ทิ้ง.
 **next (queue):** TP-widen A/B บน reversion vehicle · หา reversion base ที่ near-breakeven มาเป็น demonstrator ที่ดีกว่า.
 
+---
+
+## ORDER-091C-D1g — JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 2026-07-16 full hypothesis) — `OPEN (Claude build→run, 2026-07-17) · event-log dogfood #1`
+
+**ที่มา:** D1d (07-16) วัด pending-save บน LWMA proxy ที่ **ไม่มี edge** → พิสูจน์ได้แค่ magnitude (~+0.05 PF/ไม้) ไม่ใช่คุณค่าจริง + TP-widen ครึ่งหลังของ user ยังไม่รัน. `_triage/PENDING_LIMIT_SYNTHESIS.md` สั่งชัด: "หา reversion base ที่ near-breakeven มาเป็น demonstrator". **JUMSTOCH = demonstrator นั้น** — thread D1→D1f REVIEWED = demo-ready, **flat-lot PF 1.18 (edge จริง ไม่ใช่ martingale artifact)**, capped-SL'd reversion grid เทรด 869-3272 ไม้/window = จ่าย spread เยอะ = ตรงเป้า maker-save. นี่คือที่เดียวที่ +0.05 PF/ไม้ × ไม้เป็นพันจะเห็นผลจริง บน base ที่ candidate อยู่แล้ว.
+
+**scope (สำคัญ — VERDICT GATE):** นี่เป็น **refinement-lever test บน EA ที่ผ่าน full funnel แล้ว** (D1-D1f) ไม่ใช่ EA-life verdict → ตัดสินแค่ **demo CONFIG** (market vs pending entry · TP setting) ของ JUMSTOCH ที่ demo-eligible อยู่แล้ว. ไม่ใช่ตัดสินว่า JUMSTOCH ตาย/รอด.
+
+**คำสั่ง:**
+1. build `(EXP)_JUMSTOCH_Pending.mq5` = copy MT5 baseline + เพิ่ม **2 lever inputs เท่านั้น**: `EntryMode` (0=market baseline / 1=pending-limit) + `TP_Widen_Pips` (บวกเข้าทั้ง g_TP + Tp_from_Bep). **market path (EntryMode=0) = byte-identical original** (= regression cage). pending: grid-add → BuyLimit/SellLimit ที่ trigger price เดิม (fill ~100% ประหยัด spread ล้วน) · initial entry → limit-at-touch · จัดการ cancel/expire pending + magic-scope. **ห้ามแตะ** lot/SL/Range/Level_Max/signal/exit.
+2. compile 0/0 + mql-code-reviewer (pending-order mgmt = bug surface).
+3. **regression cage ก่อน A/B:** EntryMode=0/TP+0 บน EURGBP H1 both-window Model-4 → ต้อง reproduce 07-11 baseline (±tolerance) มิฉะนั้น refactor drift = หยุดแก้.
+4. A/B Model-4 (mandatory — pending fill = tick-path-sensitive, **ห้าม Model-2**): market vs pending บน EURGBP H1 (primary) + NZDUSD H4 (secondary), both-window continuous span (recent 2023.01-2026.07 + BWD 2020.01-2022.12).
+5. ถ้า pending มี lift → เพิ่ม TP-widen arm {+0,+2,+5 pip}.
+6. วัด **PF + net-EV/ไม้ + fill-rate** (ไม่ใช่ net$ เดี่ยว — pending เทรดน้อยลง = exposure น้อยลง หลอกได้; ไม่ใช่ PF เดี่ยว) + basket-continuous MC.
+
+**pre-registered bar (ล็อกก่อนเห็นผล):**
+- **CONFIRM (pending adopted):** pending net-EV/ไม้ > market net-EV/ไม้ ที่ spread จริง บน ≥1 home **both-window** (หลังหัก opportunity cost ของไม้ที่ไม่ fill) AND basket PF ไม่แย่ลง → ปรับ demo config JUMSTOCH เป็น pending entry, จด delta.
+- **NULL (no lift):** pending net-EV/ไม้ ≤ market ในกรอบ noise หรือ fill-loss หักล้าง spread-save → คง market entry, จดว่า JUMSTOCH ไม่ได้อะไรจาก pending (สอดคล้อง D1d generic +0.05 = immaterial ที่นี่).
+- **TP-widen:** ปรับได้ก็ต่อเมื่อ PF และ net-EV **ทั้งคู่** ≥ baseline ที่ +2 หรือ +5 both-window; ไม่งั้นคง TP เดิม.
+- **middle:** lift window เดียว = regime-fit → park lever ไม่ adopt.
+
+**ห้าม:** เปลี่ยน lever อื่นนอก {EntryMode, TP_Widen_Pips} · Model-2 เป็นตัวเลขรายงาน · เชื่อ A/B ก่อน regression cage ผ่าน · ตัดสิน JUMSTOCH ตาย/รอดจาก order นี้ (scope = config เท่านั้น) · commit `[tag] ORDER-091C-D1g ...` path-limited ผ่าน production hook.
+
+**event-log dogfood:** เดิน chain IDEA→HYPOTHESIS→BAR(pre-reg)→RUN→RESULT→REVIEW→DECISION ตาม `docs/memory_control/EVENT_LOG_ADOPTION.md` (experiment แรกที่ใช้จริง — เจอ rough edge = แก้ adoption guide). exp id + evt ids จด inline ตอนปิด.
 
 ---
 
