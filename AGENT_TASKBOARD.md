@@ -1045,7 +1045,9 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-098-C — reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) — `OPEN` (role: Claude · depends: chassis เป้า)
+## ORDER-098-C — reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) — `DONE(Claude 2026-07-17C, commit bd709fca)` (role: Claude, built via sonnet-agent + lead-verified)
+
+**RESULT:** 2 parts extracted OFF-by-default into Boss V2 core — `PROG_FIBONACCI` (56, MoneyManagement.mqh, lot*fib(lv) cap _56_FibMaxStep=5→13x) + `Exit_DynCloseTargetMoney()` (ExitManager.mqh, base+(openCount/C)*base, gated _57_DynCloseOn=false). Compile 7/7 EA 0 err. **Off-by-default lead-VERIFIED:** tpl_regression trade counts byte-identical to baseline all 6 EA (gated code changes 0 default behavior); 6 net/pf micro-drifts <2% = pre-existing stale baseline (Jul11) vs refreshed ticks NOT edits → **baseline refresh = separate lead maintenance (flagged, not done mid dual-session).** Integrate-into-chassis = future order (not backtested yet, per scope). Retrofit: Fib→MatchaGrid bounded / DynClose→Kangaroo DD-release + JUMSTOCH.
 
 **ทำไม:** 2 ชิ้นนี้ = "cap + linear/log" ที่ user สั่ง มีคนทำไว้แล้วในคลัง — เอาไปแปะ chassis ที่ผ่าน flat-lot (098-A/B)
 หรือ retrofit บน MatchaGrid/Kangaroo/JUMSTOCH ได้เลย (pure risk-mechanics ไม่ยุ่ง entry-edge).
