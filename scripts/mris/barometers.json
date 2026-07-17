@@ -1,0 +1,91 @@
+{
+  "_doc": "MRIS barometer + tripwire config (ORDER-073 Phase-2 macro layer). Tripwires are RELATIVE rules (vs SMA200 / ATR-drop), NOT hardcoded price levels. 'user_pin' is an OPTIONAL absolute line the user sets by hand via the MRIS session (e.g. AUDJPY 110); leaving it null = pure relative mode. Every threshold here is user-tunable. Signal convention: +2..-2 where POSITIVE = risk-ON pressure, NEGATIVE = risk-OFF pressure.",
+  "version": "0.1",
+  "regime_thresholds": {
+    "_doc": "Risk Index (RI) = weighted mean of barometer signals in [-2,+2]. State bands:",
+    "risk_on_min": 0.50,
+    "neutral_min": -0.25,
+    "risk_off_min": -1.00,
+    "stress_below": -1.00,
+    "vix_stress_override": 30
+  },
+  "confidence": {
+    "_doc": "confidence = fraction of active barometers whose signal sign agrees with RI sign ('parallel warning lines' from the article). >=0.75 HIGH, >=0.5 MED, else LOW.",
+    "high_min": 0.75,
+    "med_min": 0.50
+  },
+  "barometers": [
+    {
+      "symbol": "AUDJPY",
+      "role": "carry / risk-appetite pulse (article north-star: leads risk-off)",
+      "polarity": "risk_on",
+      "weight": 3,
+      "user_pin": 110,
+      "pin_warn_band_pct": 3.0,
+      "fast_drop_atr_mult": 3.0,
+      "fast_drop_window_days": 5
+    },
+    {
+      "symbol": "USDJPY",
+      "role": "BOJ / US-JP rate-diff / carry fuel; danger = sharp reversal DOWN (JPY repatriation)",
+      "polarity": "carry_fuel",
+      "weight": 2,
+      "user_pin": null,
+      "extreme_weak_level": 158,
+      "sharp_reversal_atr_mult": 2.0,
+      "sharp_reversal_window_days": 3
+    },
+    {
+      "symbol": "VIX",
+      "role": "equity fear gauge",
+      "polarity": "risk_off",
+      "weight": 2,
+      "user_pin": null,
+      "calm_below": 15,
+      "elevated_above": 20,
+      "stress_above": 30
+    },
+    {
+      "symbol": "DXY",
+      "role": "USD flight-to-safety proxy (ambiguous, low weight)",
+      "polarity": "risk_off_soft",
+      "weight": 1,
+      "user_pin": null,
+      "strong_move_5d_pct": 1.5
+    },
+    {
+      "symbol": "XAUUSD",
+      "role": "gold - risk-off hedge ONLY when co-moving up with VIX; else structural/USD-driven",
+      "polarity": "comove_confirm",
+      "weight": 1,
+      "user_pin": null,
+      "comove_5d_pct": 1.0
+    },
+    {
+      "symbol": "BTCUSD",
+      "role": "liquidity / risk proxy",
+      "polarity": "risk_on",
+      "weight": 1,
+      "user_pin": null,
+      "move_5d_pct": 3.0
+    },
+    {
+      "symbol": "US10Y_JP10Y",
+      "role": "carry fuel: rate spread; narrowing = carry less attractive (DATA_PENDING - needs yield feed)",
+      "polarity": "carry_fuel",
+      "weight": 2,
+      "user_pin": null,
+      "narrowing_5d_bps": 15,
+      "optional": true
+    },
+    {
+      "symbol": "COPPER",
+      "role": "China / commodity growth (DATA_PENDING - needs feed)",
+      "polarity": "risk_on",
+      "weight": 1,
+      "user_pin": null,
+      "move_5d_pct": 3.0,
+      "optional": true
+    }
+  ]
+}

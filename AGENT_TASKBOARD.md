@@ -537,6 +537,17 @@ daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้อ�
   แก้เป็น rclone แล้ว (VPS 2012 R2 ลง OneDrive client ไม่ได้) · เหลือ user attach ตาม
   `VPS_TRANSPORT_AND_ATTACH.md` เท่านั้น
 
+**Phase 2.5 — MRIS macro-regime layer (PROTOTYPE BUILT 2026-07-17, Claude inline):** #073 reimagined
+(user directive) = อ่านสัญญาณมหภาค→บอกทิศ+เฝ้าระวังล่วงหน้า สไตล์บทความ AUD/JPY carry. **รันได้จริง**
+ที่ `scripts\mris\` (PowerShell, zero-token, sibling ของ news_calendar):
+- `mris_classify.ps1` — barometer(AUDJPY/USDJPY/VIX/DXY/XAU/BTC)+tripwire relative(SMA200/ATR ไม่ hardcode)
+  → state RISK_ON/NEUTRAL/RISK_OFF/STRESS + Risk Index + confidence(เส้นขนาน) · verified RISK_ON↔STRESS พลิกจริง
+- `mris_exposure.ps1` — join DEPLOYMENTS → tag DIRECT_CARRY(8 JPY legs)/RISK_ON → action reduce-lot-not-cut
+- `mris_brief.ps1` — Thai whisper brief (md+html embed dashboard) · `mris_run.ps1` = one-shot
+- feed: MT5 exporter `_mt5_auto\mris\Export_Barometers.mq5` (broker symbols) · VIX/DXY/yields/copper = PENDING (web feeder TODO)
+- seed snapshot 2026-07-16 อ่านได้ = **NEUTRAL แต่ 2 loaded lines** (AUDJPY ~3% เหนือ pin 110 · USDJPY 161 crowded)
+- **รอ user:** เคาะ tripwire/threshold จริง (`_triage/MACRO_REGIME_SYSTEM_PROMPT.md`) + wire web feeder → แล้ว MacroGate (Phase 3) ยกเป็น order เต็ม
+
 **Phase 3 — MacroGate watchdog (STUB 2026-07-17 — ห้ามหยิบไป build จนกว่า MRIS เคาะกติกา):**
 - แนวคิด: watchdog ตัวที่สองแบบ NewsGuard (per-magic, 1 chart/บัญชี) แต่ trigger จากราคา in-terminal
   แทนไฟล์ข่าว — สภาวะ carry-unwind/risk-off (AUDJPY เป็นตัวนำ) → **ลด lot ×0.5 + BLOCK_NEW เฉพาะ

@@ -1,0 +1,417 @@
+﻿{
+    "generated_utc":  "2026-07-17T03:10:50Z",
+    "state":  "NEUTRAL",
+    "note":  "PROPOSAL ONLY - reduce-lot not cut (user rule). No terminal action taken.",
+    "direct_carry_legs":  [
+                              "Boss_14_GridLog [990201] USDJPYm (DEMO) -\u003e watch",
+                              "Boss_14_GridLog size-light [990203] EURJPYm (DEMO) -\u003e watch",
+                              "Boss_14_GridLog size-light thin [990205] CADJPYm (DEMO) -\u003e watch",
+                              "EA_BREAKOUT_XAU [991003] USDJPYm (DEMO) -\u003e watch",
+                              "(EXP)_IchiADX_Naked_rev00 [990066] USDJPYm (DEMO) -\u003e watch",
+                              "(EXP)_IchiADX_Naked_rev00 [990067] USDJPYm (DEMO) -\u003e watch",
+                              "(Boss)_ZeusInspired_GridLog [990110] AUDJPYm (DEMO) -\u003e watch",
+                              "Boss_14_GridLog [990208] GBPJPYm (DEMO) -\u003e watch"
+                          ],
+    "risk_on_legs":  [
+                         "(Boss)_ZeusInspired_GridLog [990101] XAUUSD (REAL_CENT) -\u003e watch",
+                         "Gold_Kangaroo L1 [1112] XAUUSDc (REAL_CENT) -\u003e watch",
+                         "Gold_Kangaroo L2 [1113] XAUUSDc (REAL_CENT) -\u003e watch",
+                         "Gold_Kangaroo L3 [1114] XAUUSDc (REAL_CENT) -\u003e watch",
+                         "Gold_Kangaroo L4 [1115] XAUUSDc (REAL_CENT) -\u003e watch",
+                         "Boss_14_GridLog [990207] XAUUSDm (DEMO) -\u003e watch",
+                         "Boss_17_Wave5 [990302] XAGUSDm (DEMO) -\u003e watch",
+                         "EA_BREAKOUT_XAU [991005] US30m (DEMO) -\u003e watch"
+                     ],
+    "all":  [
+                {
+                    "account":  "159503454",
+                    "ea":  "(Boss)_RSI_MR_GridLog",
+                    "magic":  "990103",
+                    "symbol":  "EURUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "PENDING_REMOVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159503454",
+                    "ea":  "(Boss)_ZeusInspired_GridLog",
+                    "magic":  "990101",
+                    "symbol":  "XAUUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "159503454",
+                    "ea":  "EA_BREAKOUT_XAU",
+                    "magic":  "991001",
+                    "symbol":  "XAUUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159503454",
+                    "ea":  "(BRK)_SqueezeBreakout",
+                    "magic":  "991004",
+                    "symbol":  "XAUUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159503454",
+                    "ea":  "(BRK)_TrendlineBreakout",
+                    "magic":  "991002",
+                    "symbol":  "XAUUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159475669",
+                    "ea":  "NuiIndy Dynamic RSI+ADX",
+                    "magic":  "1524",
+                    "symbol":  "EURUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159475669",
+                    "ea":  "ST_EA03 Count-MACD",
+                    "magic":  "9398",
+                    "symbol":  "USDCAD",
+                    "type":  "REAL_CENT",
+                    "status":  "PENDING_REMOVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159475669",
+                    "ea":  "ST_EA03 Count-MACD user config",
+                    "magic":  "939721",
+                    "symbol":  "GBPUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "PENDING_REMOVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159475669",
+                    "ea":  "CB_GBP ConsoBreakout",
+                    "magic":  "990005",
+                    "symbol":  "GBPUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "159475669",
+                    "ea":  "ST03 replica",
+                    "magic":  "990010",
+                    "symbol":  "GBPUSD",
+                    "type":  "REAL_CENT",
+                    "status":  "PENDING_REMOVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "141049900",
+                    "ea":  "Zeus Gold Hedge V1.2_fix",
+                    "magic":  "7777",
+                    "symbol":  "EURUSDc",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "141049900",
+                    "ea":  "Gold_Kangaroo L1",
+                    "magic":  "1112",
+                    "symbol":  "XAUUSDc",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "141049900",
+                    "ea":  "Gold_Kangaroo L2",
+                    "magic":  "1113",
+                    "symbol":  "XAUUSDc",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "141049900",
+                    "ea":  "Gold_Kangaroo L3",
+                    "magic":  "1114",
+                    "symbol":  "XAUUSDc",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "141049900",
+                    "ea":  "Gold_Kangaroo L4",
+                    "magic":  "1115",
+                    "symbol":  "XAUUSDc",
+                    "type":  "REAL_CENT",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog",
+                    "magic":  "990201",
+                    "symbol":  "USDJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog",
+                    "magic":  "990202",
+                    "symbol":  "AUDNZDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog size-light",
+                    "magic":  "990203",
+                    "symbol":  "EURJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog",
+                    "magic":  "990204",
+                    "symbol":  "AUDCADm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog size-light thin",
+                    "magic":  "990205",
+                    "symbol":  "CADJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog SELL",
+                    "magic":  "990206",
+                    "symbol":  "EURUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog",
+                    "magic":  "990207",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "69424711",
+                    "ea":  "UnNomGuaiV1.132",
+                    "magic":  "1",
+                    "symbol":  "EURUSD",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "69424711",
+                    "ea":  "UnNomGuaiV1.132",
+                    "magic":  "2",
+                    "symbol":  "EURUSD",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "69424711",
+                    "ea":  "RSI from pips_EA",
+                    "magic":  "5888",
+                    "symbol":  "EURUSD",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "69424711",
+                    "ea":  "swb grid 4.1.0.3_h",
+                    "magic":  "990",
+                    "symbol":  "AUDCAD",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "Boss_17_Wave5",
+                    "magic":  "990301",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "Boss_17_Wave5",
+                    "magic":  "990302",
+                    "symbol":  "XAGUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "EA_BREAKOUT_XAU",
+                    "magic":  "991003",
+                    "symbol":  "USDJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "EA_BREAKOUT_XAU",
+                    "magic":  "991005",
+                    "symbol":  "US30m",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "RISK_ON",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "MacdDiv_Naked",
+                    "magic":  "999094",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "EmaStoRev",
+                    "magic":  "991070",
+                    "symbol":  "EURUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "NEUTRAL_FX",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "(EXP)_IchiADX_Naked_rev00",
+                    "magic":  "990066",
+                    "symbol":  "USDJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "(EXP)_IchiADX_Naked_rev00",
+                    "magic":  "990067",
+                    "symbol":  "USDJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "(EXP)_IchiADX_Naked_rev00",
+                    "magic":  "990069",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "(EXP)_IchiADX_Naked_rev00",
+                    "magic":  "990068",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "463666728",
+                    "ea":  "EA_SUPERTREND",
+                    "magic":  "990020",
+                    "symbol":  "XAUUSDm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "HEDGE",
+                    "suggested_action":  "normal"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "(Boss)_ZeusInspired_GridLog",
+                    "magic":  "990110",
+                    "symbol":  "AUDJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                },
+                {
+                    "account":  "415573666",
+                    "ea":  "Boss_14_GridLog",
+                    "magic":  "990208",
+                    "symbol":  "GBPJPYm",
+                    "type":  "DEMO",
+                    "status":  "ACTIVE",
+                    "carry_tag":  "DIRECT_CARRY",
+                    "suggested_action":  "watch"
+                }
+            ]
+}

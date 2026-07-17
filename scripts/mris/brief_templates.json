@@ -1,0 +1,45 @@
+{
+  "_doc": "Thai/emoji phrasing for the MRIS whisper brief. Kept OUT of the .ps1 so the script stays pure-ASCII (Windows PowerShell 5.1 mis-reads non-ASCII .ps1 without a BOM). Read at runtime with -Encoding UTF8. Edit tone here.",
+  "epigraph": "ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน.",
+  "emoji": { "RISK_ON": "🟢", "NEUTRAL": "🟡", "RISK_OFF": "🟠", "STRESS": "🔴", "UNKNOWN": "⚪" },
+  "state_th": {
+    "RISK_ON": "เปิดรับความเสี่ยง (RISK-ON)",
+    "NEUTRAL": "สมดุล/เฝ้าระวัง (NEUTRAL)",
+    "RISK_OFF": "ถอยรับความเสี่ยง (RISK-OFF)",
+    "STRESS": "เครียด (STRESS)",
+    "UNKNOWN": "ไม่ทราบสถานะ"
+  },
+  "analog": {
+    "STRESS": "คล้ายจังหวะ carry-unwind ปี 2008 และ ส.ค. 2024 — เงินไหลกลับเยนพร้อมกัน สินทรัพย์เสี่ยงร่วงเป็นโดมิโน",
+    "RISK_OFF": "รูปแบบเริ่มคล้ายต้นทางปี 2013-16 (จีนชะลอ+คอมมอดิตี้ตก) และก่อน ส.ค. 2024 — AUD/JPY ร่วงนำตลาด",
+    "NEUTRAL": "ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม",
+    "RISK_ON": "โหมด risk-on — บทเรียนคือ leverage สะสมช่วงนี้แหละที่กลายเป็นเชื้อไฟรอบหน้า ถ้า BOJ ขยับกะทันหัน"
+  },
+  "action": {
+    "STRESS": "ทบทวน exposure carry/JPY ทันที · พิจารณาลด lot ขา DIRECT_CARRY ครึ่งหนึ่ง + block ไม้ใหม่ · สำรอง cash · อย่ารอข่าว BOJ confirm",
+    "RISK_OFF": "ลด lot ขา DIRECT_CARRY/RISK_ON ×0.5 + block ไม้ใหม่ · ทยอยสำรอง cash เผื่อของถูก Q4 · ตั้ง alert ที่ tripwire",
+    "NEUTRAL": "ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)",
+    "RISK_ON": "เดินตามระบบปกติ · จดระดับ leverage/JPY ไว้ว่าตอนนี้คือฐานสะสม · คง SL/cap ทุกตัว (ข่าว gap ไม่มีนัดกันด้วยปฏิทินไม่ได้)"
+  },
+  "labels": {
+    "title": "🫧 MRIS — Market Whisper Brief",
+    "bkk": "Bangkok",
+    "state": "สถานะ",
+    "bias": "bias",
+    "conf": "ความมั่นใจ",
+    "ri": "Risk Index",
+    "h_tripwire": "เส้นเตือนที่ใกล้ทริกเกอร์",
+    "no_tripwire": "ไม่มีเส้นไหนใกล้ทริกเกอร์ในรอบนี้",
+    "h_readout": "barometer readout",
+    "col_read": "อ่านว่า",
+    "pending_prefix": "รอต่อ feed",
+    "pending_suffix": "(ยังไม่นับเข้า Risk Index)",
+    "h_analog": "บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้",
+    "h_exposure": "exposure ในพอร์ต (ขาที่โดน carry/risk ตรง)",
+    "direct_carry_head": "DIRECT_CARRY (JPY-cross — ร่วงก่อนเพื่อนถ้า carry unwind):",
+    "risk_on_head": "RISK_ON (risk-beta/leverage):",
+    "no_exposure": "ยังไม่มี exposure map (รัน mris_exposure.ps1 ก่อน)",
+    "h_action": "สิ่งที่ควรทำวันนี้",
+    "disclaimer": "ระบบเสนอ 'เฝ้าระวัง/ทบทวน' ไม่ใช่คำแนะนำการลงทุน และไม่ auto-trade — คนตัดสินใจคือคุณ. tripwire ทุกเส้นคุณเป็นคนเคาะเอง."
+  }
+}

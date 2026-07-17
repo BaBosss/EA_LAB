@@ -1,0 +1,9 @@
+symbol,spot,sma200,atr20,chg5d_pct,data_status,source_note
+AUDJPY,113.30,108.20,1.05,0.50,OK,web 2026-07-16 spot; sma200/atr seeded from uptrend context (replace w/ MT5 exporter)
+USDJPY,161.00,152.50,1.25,0.40,OK,web ~2026-07-16; 40yr-low weak yen; extreme_weak
+VIX,15.67,17.20,NA,-3.00,OK,cboe prev close 2026-07-16
+DXY,100.73,101.10,NA,0.30,OK,tradingeconomics 2026-07-16
+XAUUSD,3985.00,3410.00,42.00,1.20,OK,web 2026-07-17 ~3980-4000
+BTCUSD,64055.00,68000.00,2200.00,-0.60,OK,web 2026-07-16
+US10Y_JP10Y,NA,NA,NA,NA,PENDING,needs yield feed (FRED/investing) - not yet wired
+COPPER,NA,NA,NA,NA,PENDING,needs commodity feed - not yet wired
