@@ -12,6 +12,17 @@
 
 ---
 
+## ORDER-095 / #4 — Boss_14 GridLog EUR-cross symbol-expand — `CLOSED + REVIEWED(Claude 2026-07-17): EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่ kill (Boss_14 live @GBPJPY leg-8). ยืนยัน grid=symbol-specific. GBPCHF/NZDCAD/AUDNZD/AUDCHF = BLOCKED-ON-DATA (ไม่มี history 2020-22 → user โหลดก่อนถึงเทสได้; user เคาะ stop-at-2). verdict = _triage/ORDER095_EURCROSS_EXPAND_VERDICT.md` (role: agent ea-validator ×2 · verdict = Claude)
+
+## ORDER-098-C — FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold swept 30/70 (~0 trades) /40/60 (thin spike XAU MAIN 1.23 BWD 0.63) /50/50 (well-powered 350-370t both-win, PF 0.76-0.94 ไม่เคย >1.0). FVG-fill ไม่มี edge naked หรือ RSI-gated. Gold SMC = FVG-retest อยู่แล้ว → FVG-as-primary ปิด, fxDreema FVG lineage exhausted. verdict = _triage/ORDER098C_FVG_RSIGATE_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
+
+## ORDER-098-D — Currency-strength meter EA (fxDreema CCI-Strength lineage, #098 corpus) — `OPEN (Claude 2026-07-17)`
+**concept:** คลาสสัญญาณใหม่ = currency-strength meter (diversifier จริง, non-martingale). corpus lineage: PK/ICE CCI Currencies Strength + Jobot Basic Correlation. **ห้าม build ตระกูล Jobot Arbitage/Cal-3 basket** (NO_SL;LOT_ESCALATION;NO_CAP = uncapped-martingale = structural skip).
+**spec (Claude เคาะ design — lead's call):** (1) compute per-currency strength จาก basket majors 7-8 คู่ (EURUSD/GBPUSD/USDJPY/USDCHF/AUDUSD/USDCAD/NZDUSD) — normalize %change หรือ CCI-avg ต่อ currency ต่อ bar (bar-open gate); (2) rank → เข้า strongest-vs-weakest pair (buy strongest/sell weakest ที่ implied pair); (3) flat-lot naked probe ก่อน (doctrine: entry ต้องมี edge ก่อนใส่ MM); SL/TP ATR-based; (4) tester-gate + magic-scope + digit-aware pip (ดู FVGFill chassis เป็น template ความปลอดภัย).
+**acceptance:** compile 0/0 · mql-review PASS · both-window Model-1 (MAIN 2023-26 / BWD 2020-22) บน implied major pairs · **ห้าม:** verdict PASS/REJECT (Claude) · ใส่ grid/martingale ก่อน naked ผ่านบาร์ · Model-4 (ยังไม่มี grid). **ทำได้:** Claude build → agent batch-run.
+
+---
+
 ## 🗂️ ARCHIVED ORDERS — index ย้ายไป generated file (ORDER-102 Contract C1, 2026-07-13)
 
 > orders ปิดแล้ว = `ARCHIVE_TASKBOARD_2026-07A.md` (verbatim) · **index = generated/read-only** `docs/memory_control/ARCHIVE_INDEX.md` (§20.7 — ห้าม hand-edit ในบอร์ดนี้) · integrity guard: `powershell -File scripts/check_taskboard_archive.ps1 -Strict` (raw/reviewed/unresolved · archive append-only + active conservation)
