@@ -1,0 +1,7 @@
+﻿symbol,tf,window,PF,trades,winpct,eqDDpct,netprofit,largestWin,largestLoss,report
+XAUUSD,H4,BWD,0.42,42.0,21.43,1.01,-89.99,14.94,-37.03,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H4_BWD.htm
+XAUUSD,H4,HLD,0.35,29.0,17.24,0.23,-23.31,4.34,-3.58,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H4_HLD.htm
+XAUUSD,H4,MAIN_M1,1.46,44.0,38.64,0.58,53.25,34.56,-16.97,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H4_MAIN_M1.htm
+XAUUSD,H1,BWD,1.02,170.0,31.18,0.68,3.51,12.31,-6.22,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H1_BWD.htm
+XAUUSD,H1,HLD,0.93,158.0,27.22,0.26,-7.52,12.97,-5.8,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H1_HLD.htm
+XAUUSD,H1,MAIN_M1,1.34,167.0,34.73,0.79,91.2,58.6,-19.72,D:\EA_LAB\_mt5_auto\reports\O098J2_XAUUSD_H1_MAIN_M1.htm
