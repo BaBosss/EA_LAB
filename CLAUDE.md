@@ -21,6 +21,8 @@ block นี้ยังไม่ครบ = หยุด ทำให้คร�
 
 รายละเอียดเต็ม + ตัวอย่าง = `OPTIMIZE_PROCEDURE_AND_AUDIT.md` + skill `backtest-optimize-rigor` (owns ขั้นตอน). gate นี้ = สรุปบังคับ อ่านทุก session.
 
+**🔑 LAST-OPTIMIZE-BEFORE-VERDICT (user rule 2026-07-18 — กันปัดตกเร็วเกินไป):** ก่อนเขียน **PARKED หรือ REJECT** กับ EA/candidate ที่**เคยโชว์ชีพจร** (smoke/IS PF>1 หรือ idea ดี) — **ต้องลอง optimize รอบสุดท้ายอีก 1 รอบบน lever ที่ยังไม่ได้แตะเสมอ** (เลือกจาก diagnosis→lever: ตกที่ holdout/regime → regime-gate หรือ TF อื่น หรือ adaptive-exit · ตกที่ DD → sizing/spacing · ตกที่ thin → TF เล็ก/threshold หลวม). **ถ้ารอบสุดท้ายไม่ดีขึ้น → ค่อย park/reject.** ต่างจาก "≥3 รอบก่อน DEAD" ตรงที่นี่ = ด่านสุดท้ายบังคับ **ทันทีก่อนลั่นไก** แม้ optimize มาเยอะแล้ว (เช่น validator ที่ REJECT เพราะ holdout พลิก — ก่อน final ต้องลอง rescue-lever ที่ validator เองชี้ก่อน เช่น TF อื่น/regime-gate). ยกเว้น STRUCTURAL death (flat-lot PF<1 · uncapped-ruin · cracked · no-source) = ลั่นได้เลย ไม่ต้อง last-optimize.
+
 **⚖️ BUILD-ON ≠ DEPLOY (user doctrine 2026-07-11 — gate ข้างบนคุม "ขึ้นเงินจริง" ไม่ใช่ "ทิ้ง"):** EA ที่ test
 **PF>1 แม้ครั้งเดียว/แม้ OOS ไม่ถึงบาร์ deploy = ของต่อยอด ไม่ใช่ bench-and-forget**. PARAMETRIC-marginal (PF>1
 ใต้บาร์) → **default ไป build-on branch ก่อนเขียน verdict:** (1) ขยาย symbol×TF ให้ครบ (10+ คู่ ทุก TF — home
