@@ -283,3 +283,23 @@ Cage green (run_tests ALL PASS; neutrality byte-identical OLD-vs-NEW when StackC
 PA-on +8.7 exp in 23-26 but −1.8 in 19-22; EURGBP-rev negative both) — PA does NOT create a standalone edge.
 Its value is as a CONFIRM on an existing basket's adds. Matches the session lesson: confirm/MM layers multiply
 or protect an existing edge, they don't manufacture one. Probe + evidence: `ea_projects/(TRD)_PA_Probe/`.
+
+## DEAD CELL: JumStoch Trend-seed (LWMA-displacement + Stoch) on Boss V2 DCA chassis (Boss_18, 2026-07-18) ⬛
+
+Ported the JUMSTOCH "Trend" block (LWMA(25) displacement + Stoch(32,12,12) filter) as a chassis SEED signal
+(grid/DCA = StackMode 92). **28 Model-4 runs, uniformly sub-1.0 both-window** (base fixed-TP 0.58–0.71 →
+faithful basket-ATR-TP exit 0.82–0.94 → H4 0.85–0.92). Swept DirMode(faithful momentum-join / reversion) ×
+symbol(EUR/AUD) × direction(BUY/SELL) × exit-mode × TF(H1/H4) × window. **Both direction mappings score equal
+and both lose** → the seed is directionless; the brief-vs-source direction discrepancy was moot. **The JUMSTOCH
+edge lives in the standalone's combined 4-basket (Trend+Counter) + BEP-shift + trailing engine, NOT the seed
+signal** — stripping the seed onto a generic DCA chassis removes the edge source. Matches the standing lesson:
+MM/exit layers multiply an existing edge, they don't manufacture one. Standalone `(EXP)_JUMSTOCH_MT5` untouched.
+Boss_18 code kept + caged (documented dead-seed, not deploy). verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
+
+## LEVER: basket-close beats per-leg-TP on flat-lot DCA (JumStoch exit sweep, 2026-07-18) 🟩 REUSABLE
+
+On a flat-lot DCA grid, a crude **fixed per-leg TP(30pip) + big SL(253pip)** bleeds (PF 0.65) — small wins can't
+pay for the occasional multi-leg SL. Swapping to a **basket-level ATR-TP** (`_2_SuppressLegTP=true` +
+`_2_BasketTP_ATRmult`, the proven Boss_14 pattern) lifted the SAME entry ~0.30 PF (0.65→0.94) across every cell.
+Basket-close (all legs exit together near basket-BEP+) is structurally right for DCA; per-leg TP fragments the
+basket. Confirms the Boss_14 GridLog exit design; use basket-TP (not per-leg fixed-TP) as the default DCA exit.

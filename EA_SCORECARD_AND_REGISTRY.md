@@ -304,7 +304,10 @@ lot/spacing targeting 10–15% DD, then MC + trend-stress. If uncapped martingal
 
 **DO-NOT-RE-EXAMINE (★★★ exhaustively killed — re-testing wastes tokens):**
 SessionBreakout (1200-pass + forward fail), MACD all-symbols (exhaustive), BREAKOUT LabTpl EUR/GBPJPY
-(optimizer 0 survivors), Elephant/BRN207/GameChanger (artifact/martingale proven by sweep).
+(optimizer 0 survivors), Elephant/BRN207/GameChanger (artifact/martingale proven by sweep),
+**JumStoch Trend-seed on chassis (Boss_18)** — DEAD-OPTIMIZED 2026-07-18, 28 M4 runs uniformly 0.58–0.94
+both-window (2 DirMode × 2 sym × 2 dir × 2 exit × 2 TF); edge was the standalone's 4-basket+BEP engine, not
+the LWMA+Stoch seed. Standalone JUMSTOCH untouched. verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
 
 ---
 

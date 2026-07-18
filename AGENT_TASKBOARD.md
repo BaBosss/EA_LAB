@@ -12,7 +12,7 @@
 
 ---
 
-## ORDER-LANEA-AB — JumStoch (Boss_18) direction×lever A/B, Model-4 both-window — `OPEN`
+## ORDER-LANEA-AB — JumStoch (Boss_18) direction×lever A/B, Model-4 both-window — `DONE + REVIEWED(Claude 2026-07-18): DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed-TP → Boss14 basket-ATR-TP) lifted to 0.82–0.94 but still <1.0 both-window → H4 TF round 0.85–0.92 same. 28 runs total, ≥4 levers × 2 TF × both-window all sub-1. Both DirMode equal+losing = direction A/B moot; edge was standalone's 4-basket+BEP engine not the seed. Lever matrix NOT run (base-gate STOP per pre-registered bar). Boss_18 kept+caged (dead-seed, not deploy). verdict=_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md; EDGE_CATALOG dead-cell + basket-close-DCA lever added.` (role: Claude build+judge · M4 batch driver)
 **pre-req DONE:** Boss_18 built + caged green (compile 0/0 · run_tests PASS · tpl_regression RED-benign,
 n identical). Build note = `_triage/ORDER_LANEA_JUMSTOCH_BUILD.md`. Expert = `EALabTpl\Boss_18_JumStoch`.
 **flat-lot probe:** N/A at entry-signal level (chassis grid; the escalation is StackMode DCA not lot-martingale —
