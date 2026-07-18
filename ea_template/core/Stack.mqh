@@ -10,6 +10,7 @@
 #include "Inputs.mqh"
 #include "Indicators.mqh"
 #include "Execution.mqh"
+#include "Regime.mqh"          // add-gating: Stack_DecideAdd may consult Regime_AllowsEntryDirection
 #include "RiskControl.mqh"
 #include "MoneyManagement.mqh"
 #include "ExitManager.mqh"
@@ -134,6 +135,15 @@ bool Stack_DecideAdd(const int dir, const int have, const EntrySignal &sig)
    if(StackMode == STACK_PYRAMID) return false;         // 93: adds come from the resting ladder only
    if(StackMode == STACK_SINGLE) return false;          // 90: never add
    if(have >= RiskControl_MaxLevels()) return false;    // cage + stack cap
+
+   // add-gating (opt-in, default off): don't extend a basket when the 5x Regime
+   // disallows its direction. The LabCore Regime gate only blocks the flat seed;
+   // this closes the gap for the grid ADDS. Reuses the ADX Regime module.
+   if(_9_RegimeGateAdds)
+   {
+      const int regimeDir = (dir == 1) ? 1 : 2;   // Stack dir 1=long/else short -> Regime 1/2
+      if(!Regime_AllowsEntryDirection(regimeDir)) return false;
+   }
 
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) return false;

@@ -1,0 +1,5 @@
+﻿label,expert,PF,net,eqDDpct,trades,winpct,maxLoss,recovery,report
+NEUT_OLD,Boss_14_GridLog_OLD,1.67,833.96,3.95,120.0,62.5,-76.68,1.99,ADGATE_NEUT_OLD
+NEUT_NEWoff,Boss_14_GridLog,1.67,833.96,3.95,120.0,62.5,-76.68,1.99,ADGATE_NEUT_NEWoff
+AB_off_M4,Boss_14_GridLog,0.91,-500.97,12.29,348.0,48.56,-69.68,-0.4,ADGATE_AB_off_M4
+AB_on_M4,Boss_14_GridLog,1.04,61.98,5.39,85.0,47.06,-57.71,0.11,ADGATE_AB_on_M4

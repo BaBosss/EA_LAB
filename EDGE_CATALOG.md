@@ -259,3 +259,12 @@ Per-symbol optimize found AUDNZD d1.0/t1.2 with a textbook Model-2 both-window p
 (99% real ticks) it lost: PF 0.61 / 0.75, maxLoss −138→−631.** The 1-min-OHLC fill path flatters a
 grid's intra-bar entries/exits; real tick sequencing kills it. **Never trust a Model-2 grid result —
 confirm on Model 4. Tell-tale = largest-loss jumps hard when you switch models.**
+**✅ NOW IN THE CHASSIS (2026-07-18): `_9_RegimeGateAdds` (default false, additive).** Wired into
+`Stack_DecideAdd` — when on, refuses a grid ADD whose direction the 5x ADX Regime disallows (the LabCore
+Regime gate only blocked the flat seed; a grid is never flat, so adds sailed through). Validated on
+Boss_14 GridLog: neutrality byte-identical OLD-vs-NEW when off (PF 1.67/net 833.96 exact); **Model-4 A/B
+on AUDNZD full 2019-26: gate ON cut eqDD 12.3%→5.4%, maxLoss −70→−58, PF 0.91→1.04** (defensive — trims
+the DCA tail, doesn't chase PF). Cage green (run_tests ALL PASS; tpl_regression drift = pre-existing
+stale-baseline, trade-counts identical). Opt-in per EA (esp. useful for GRID_AGAINST/DCA on trend-prone
+symbols); needs `_50_RegimeMode!=0`. Best config found: mode 1 + AllowTrendDown=false for a long DCA
+(add in range+uptrend, stop adding into a downtrend).

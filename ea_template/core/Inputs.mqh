@@ -164,6 +164,13 @@ input int    _9_StepATRShift = 0;       // additive: Signal-ATR shift for the st
                                          // matches Boss_11/12/13 unchanged default; 1=last CLOSED bar, matches
                                          // standalone Zeus GetATR(1) - GridLog(14) parity .set uses 1).
 input int    _9_MaxLevels   = 5;        // max stacked orders
+// additive (AdaptiveGrid_Oil finding 2026-07-17): gate grid ADDS by the 5x Regime
+// module too, not just the flat seed. The Regime gate in LabCore only blocks the
+// FIRST (flat) entry; a grid is almost never flat, so adds sail through unfiltered.
+// When true, Stack_DecideAdd refuses to extend a basket whose direction the Regime
+// disallows (reuses the ADX Regime; needs _50_RegimeMode!=0 to have any effect).
+// Default false = behaviour byte-identical to before. See EDGE_CATALOG "add-gating".
+input bool   _9_RegimeGateAdds = false;
 // additive (MERGE-03, ScaleExecutor_v2 port): STACK_PYRAMID(93) pending ladder.
 // Active ONLY when StackMode=93 - all other modes ignore these two inputs.
 // Leg0 = normal market entry; legs 1..N = resting pendings at Stack_StepPrice()
