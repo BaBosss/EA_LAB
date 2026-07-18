@@ -238,3 +238,18 @@ EX009 geometry (3-bar gap retrace + engulfing confirm) **ไม่มี edge �
 RR sweep TP{15→60}@SL20, both regimes — PF peak 0.98 แล้วหักลง (cost-dilution ไม่ใช่ edge), ไม่เคย >1
 ใน 26 cells. **ปิดเฉพาะ naked-entry** — FVG-as-confluence-filter ให้ entry อื่นยังไม่เคยเทส (เปิดอยู่).
 verdict = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
+
+## LEVER: add-gating a grid (gate the ADDS, not just the seed) — from AdaptiveGrid_Oil (2026-07-17) 🟩 REUSABLE
+
+**Facebook "Adaptive Grid Oil" build → the EA has no portable edge (PARKED-VERIFY, see
+`ea_projects/(Boss)_AdaptiveGrid_Oil/VERDICT.md`), but one lever is worth keeping.** A trend filter that
+gates only the FIRST seed is **inert on a grid** — a grid is almost never flat, so it spends its life
+managing an open basket and adding legs, none of which the seed-gate touches (proven: SlopeThresh 0.01→0.15
+had ~0 effect, counter-trend still bled ~−4150). **Fix = gate the grid-ADDS**: stop adding legs once the
+trend has turned against the basket (FilterMode=AGREE + GateAdds). Structural improvement on the
+with-trend direction: DD 40%→11–20%, largest-loss −312→−92, PF 1.2→2.0. Bolt-on for any averaging/grid EA
+that bleeds counter-trend. Caveats that sank *this* EA (do not repeat): (a) fixed-direction grid P&L = pure
+window drift-capture (inverts up↔down years); (b) dynamic single-instance direction **whipsaws** on
+counter-trend pullbacks; (c) slower LinReg/EMA filter made it WORSE not smoother; (d) spacing×TP surface
+was spike/hole, and no config was portable across symbol (WTI↔BRENT) + TF (H1↔H4). Slope-on-EMA as a
+regime detector = too weak/noisy — try ADX or Donchian if reusing the add-gate idea elsewhere.
