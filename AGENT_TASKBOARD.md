@@ -12,7 +12,7 @@
 
 ---
 
-## ORDER-LANEC-REBUILD — SMC×STO rebuild for an SL plateau (parallel to live demo 991070) — `OPEN`
+## ORDER-LANEC-REBUILD — SMC×STO rebuild for an SL plateau (parallel to live demo 991070) — `DONE + REVIEWED(Claude 2026-07-18): NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+holdout, magic 991071). Center MAIN 1.38/BWD 1.02 but holdout 1.09<1.2 (soft ~0.94-1.18 across whole plateau = 2026H1 regime weak, not config) + SL still not clean plateau (fragility moved to SL+20%=4.2 BWD 0.94) + rebuild BWD 1.02 < demo BWD 1.19. No decisive improvement → keep 991070 as-is, 991071 not deployed. SMCxSTO EURUSD-H1 = genuinely marginal reversion edge; further build-on = different HOME (TF/symbol) not more EURUSD-H1 SL tuning. verdict=_triage/ORDER_LANEC_REBUILD_VERDICT.md` (role: Claude judge · M4 driver)
 **why:** ORDER-LANEC-FAN found the demo config (SL=3.0) edge-positive both-window but **SL-fragile** — SL−20%
 (2.4×ATR) flips 0.94/0.99 both-window (center = cliff, not plateau). User (2026-07-18): keep 991070 on demo AS-IS,
 rebuild in parallel, swap only if the rebuild tests+builds better. verdict src = `_triage/ORDER_LANEC_SMCSTO_FAN_VERDICT.md`.
