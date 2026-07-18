@@ -20,6 +20,8 @@ input bool    _00_OptimizeMode  = false;
 input string  _g01_  = "── [01] SIGNAL ─────────────────────────";
 input int     _01_DonchPeriod   = 35;
 input int     _01_ATRPeriod     = 10;
+input ENUM_TIMEFRAMES _01_SignalTF = PERIOD_H4;  // trend/breakout TF; adds run on CHART TF
+                                                 // (run tester on H1 chart => LTF adds; on H4 => same-TF adds)
 
 //--- [02] SL / TP
 input string  _g02_  = "── [02] SL / TP ────────────────────────";
@@ -37,7 +39,7 @@ input double  _03_ADXthreshold  = 20.0;
 //--- [04] Pyramid / adds
 input string  _g04_  = "── [04] PYRAMID / ADDS ─────────────────";
 input int     _04_MaxPyramid    = 3;     // total legs cap (1 = no adds)
-input int     _04_AddMode       = 1;     // 0=repeat-breakout adds · 1=STO pullback adds
+input int     _04_AddMode       = 1;     // 0=repeat-breakout · 1=STO pullback (chart TF) · 2=PA engulf/pin (chart TF)
 input int     _04_StoK          = 14;    // %K period (sweep 9/14/21 — default-noise lesson)
 input int     _04_StoD          = 3;
 input int     _04_StoSlow       = 3;
@@ -124,11 +126,11 @@ int OnInit()
 {
    g_suppress_log = _00_OptimizeMode || (bool)MQLInfoInteger(MQL_OPTIMIZATION);
 
-   g_atr_handle = iATR(_Symbol, PERIOD_CURRENT, _01_ATRPeriod);
+   g_atr_handle = iATR(_Symbol, _01_SignalTF, _01_ATRPeriod);
    if(_03_UseEmaFilter)
-      g_ema_handle = iMA(_Symbol, PERIOD_CURRENT, _03_EMAperiod, 0, MODE_EMA, PRICE_CLOSE);
+      g_ema_handle = iMA(_Symbol, _01_SignalTF, _03_EMAperiod, 0, MODE_EMA, PRICE_CLOSE);
    if(_03_UseAdxFilter)
-      g_adx_handle = iADX(_Symbol, PERIOD_CURRENT, _03_ADXperiod);
+      g_adx_handle = iADX(_Symbol, _01_SignalTF, _03_ADXperiod);
    if(_04_AddMode == 1)
       g_sto_handle = iStochastic(_Symbol, PERIOD_CURRENT, _04_StoK, _04_StoD, _04_StoSlow,
                                  MODE_SMA, STO_LOWHIGH);
@@ -181,17 +183,25 @@ void OnTick()
    const bool adx_ok = (!_03_UseAdxFilter || adx_buf[0] >= _03_ADXthreshold);
 
    // Donchian channel (identical to v1: bars 2..N+1, bar-1 = breakout candle)
-   int hi_idx = iHighest(_Symbol, PERIOD_CURRENT, MODE_HIGH, _01_DonchPeriod, 2);
-   int lo_idx = iLowest (_Symbol, PERIOD_CURRENT, MODE_LOW,  _01_DonchPeriod, 2);
+   int hi_idx = iHighest(_Symbol, _01_SignalTF, MODE_HIGH, _01_DonchPeriod, 2);
+   int lo_idx = iLowest (_Symbol, _01_SignalTF, MODE_LOW,  _01_DonchPeriod, 2);
    if(hi_idx < 0 || lo_idx < 0) return;
 
-   double upper  = iHigh (_Symbol, PERIOD_CURRENT, hi_idx);
-   double lower  = iLow  (_Symbol, PERIOD_CURRENT, lo_idx);
-   double close1 = iClose(_Symbol, PERIOD_CURRENT, 1);
+   double upper  = iHigh (_Symbol, _01_SignalTF, hi_idx);
+   double lower  = iLow  (_Symbol, _01_SignalTF, lo_idx);
+   double close1 = iClose(_Symbol, _01_SignalTF, 1);
    double ema_v  = _03_UseEmaFilter ? ema_buf[0] : 0.0;
 
    bool long_brk  = (close1 > upper) && (!_03_UseEmaFilter || close1 > ema_v);
    bool short_brk = (close1 < lower) && (!_03_UseEmaFilter || close1 < ema_v);
+
+   // First-entry (and breakout-add) may fire only ONCE per new SignalTF bar —
+   // on a smaller chart TF the same H4 breakout close repeats for several bars
+   // and would re-enter immediately after an intra-bar SL hit.
+   static datetime g_last_sig_bar = 0;
+   const datetime sig_bar = iTime(_Symbol, _01_SignalTF, 0);
+   const bool new_sig_bar = (sig_bar != g_last_sig_bar);
+   g_last_sig_bar = sig_bar;
 
    // Exit on reverse signal (regardless of ADX — same as v1 close path)
    if(CountOwn(POSITION_TYPE_BUY)  > 0 && short_brk) CloseAll(POSITION_TYPE_BUY);
@@ -222,13 +232,33 @@ void OnTick()
                       && (!_03_UseEmaFilter || close1 < ema_v);
    }
 
+   // ---- PA pullback add signal (AddMode 2): bullish/bearish engulfing or pin
+   // bar on the CHART TF while the SignalTF trend position is open
+   bool add_long_pa = false, add_short_pa = false;
+   if(_04_AddMode == 2 && (n_longs > 0 || n_shorts > 0))
+   {
+      double o1 = iOpen(_Symbol, PERIOD_CURRENT, 1), c1 = iClose(_Symbol, PERIOD_CURRENT, 1);
+      double h1 = iHigh(_Symbol, PERIOD_CURRENT, 1), l1 = iLow (_Symbol, PERIOD_CURRENT, 1);
+      double o2 = iOpen(_Symbol, PERIOD_CURRENT, 2), c2 = iClose(_Symbol, PERIOD_CURRENT, 2);
+      double body = MathAbs(c1 - o1), range = h1 - l1;
+      bool engulf_bull = (c1 > o1) && (c2 < o2) && (c1 >= o2) && (o1 <= c2);
+      bool engulf_bear = (c1 < o1) && (c2 > o2) && (c1 <= o2) && (o1 >= c2);
+      bool pin_bull = (range > 0) && ((MathMin(o1,c1) - l1) >= 2.0*body) && (c1 >= l1 + 0.66*range);
+      bool pin_bear = (range > 0) && ((h1 - MathMax(o1,c1)) >= 2.0*body) && (c1 <= h1 - 0.66*range);
+      add_long_pa  = (n_longs  > 0) && (engulf_bull || pin_bull)
+                     && (!_03_UseEmaFilter || close1 > ema_v);
+      add_short_pa = (n_shorts > 0) && (engulf_bear || pin_bear)
+                     && (!_03_UseEmaFilter || close1 < ema_v);
+   }
+
    // ---- LONG side
    if(n_shorts == 0 && n_longs < max_pos)
    {
-      bool first    = (n_longs == 0) && long_brk && adx_ok;
-      bool add_brk  = (n_longs > 0) && (_04_AddMode == 0) && long_brk && adx_ok;
+      bool first    = new_sig_bar && (n_longs == 0) && long_brk && adx_ok;
+      bool add_brk  = new_sig_bar && (n_longs > 0) && (_04_AddMode == 0) && long_brk && adx_ok;
       bool add_sto  = add_long_sto;
-      if(first || add_brk || add_sto)
+      bool add_pa   = add_long_pa;
+      if(first || add_brk || add_sto || add_pa)
       {
          double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
          bool gap_ok = true;
@@ -241,7 +271,7 @@ void OnTick()
          {
             double sl = ask - sl_dist;
             double tp = (tp_dist > 0.0) ? ask + tp_dist : 0.0;
-            string tag = first ? "DONCH_L" : (add_sto ? "ADD_STO_L" : "ADD_BRK_L");
+            string tag = first ? "DONCH_L" : (add_sto ? "ADD_STO_L" : (add_pa ? "ADD_PA_L" : "ADD_BRK_L"));
             if(!g_suppress_log) Print(tag, " ask=", ask, " sl=", sl, " lot=", lot);
             Trade.Buy(lot, _Symbol, ask, sl, tp, tag);
          }
@@ -252,10 +282,11 @@ void OnTick()
    // OUTER condition is always true at 0 positions)
    if(n_longs == 0 && n_shorts < max_pos)
    {
-      bool first    = (n_shorts == 0) && short_brk && adx_ok;
-      bool add_brk  = (n_shorts > 0) && (_04_AddMode == 0) && short_brk && adx_ok;
+      bool first    = new_sig_bar && (n_shorts == 0) && short_brk && adx_ok;
+      bool add_brk  = new_sig_bar && (n_shorts > 0) && (_04_AddMode == 0) && short_brk && adx_ok;
       bool add_sto  = add_short_sto;
-      if(first || add_brk || add_sto)
+      bool add_pa   = add_short_pa;
+      if(first || add_brk || add_sto || add_pa)
       {
          double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
          bool gap_ok = true;
@@ -268,7 +299,7 @@ void OnTick()
          {
             double sl = bid + sl_dist;
             double tp = (tp_dist > 0.0) ? bid - tp_dist : 0.0;
-            string tag = first ? "DONCH_S" : (add_sto ? "ADD_STO_S" : "ADD_BRK_S");
+            string tag = first ? "DONCH_S" : (add_sto ? "ADD_STO_S" : (add_pa ? "ADD_PA_S" : "ADD_BRK_S"));
             if(!g_suppress_log) Print(tag, " bid=", bid, " sl=", sl, " lot=", lot);
             Trade.Sell(lot, _Symbol, bid, sl, tp, tag);
          }

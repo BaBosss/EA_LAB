@@ -79,6 +79,23 @@ StoK surface เป็น slope 9>14>21 ไม่ใช่ plateau = กลิ�
 STO add-mode = PARKED (โค้ดเก็บใน `ea_projects/CRYPTO_TRENDRIDER/` เป็น lever ธนาคาร — อาจกลับมาลองบน TF อื่น/symbol อื่น)
 หมายเหตุ: ADD0 ≠ v1 เป๊ะ (โค้ดใหม่แยก ADX gate ออกจาก exit path — v1 ข้าม reverse-exit ตอน ADX ต่ำ) — deploy ใช้ **v1 EA_DONCHIAN + pyr3** ที่ M4-confirmed แล้ว
 
+## ✅ ORDER-125b รอบขยาย (user 2026-07-18): H1-STO + PA — จบ ปิดคำถาม add-trigger
+
+EA_DONCHIAN_ADD v2: แยก `_01_SignalTF` (เทรนด์ H4) ออกจาก chart TF (จังหวะ add) + AddMode 2 = PA engulf/pin ·
+compile clean · **regression check ผ่านเป๊ะ** (ADD0 หลัง refactor = 1.68/885.81 ตรงเดิมทุกหลัก)
+
+| add trigger (ETH, trend H4) | IS PF/net/DD | BWD PF/net/DD | vs breakout adds |
+|---|---|---|---|
+| breakout-STOP (แชมป์เดิม) | 1.68 / 886 / 5.7% | 2.18 / 1,100 / 5.2% | — |
+| STO H4 (K9 ดีสุด) | 1.81 / 854 / 5.3% | 2.11 / 952 / 5.0% | แพ้ BWD |
+| **STO H1 (LTF)** | 1.46 / 696 / 7.0% | 2.32 / ~1,100 / 5.3% | ชนะ BWD แพ้ IS หนัก |
+| **PA H4 (engulf/pin)** | 1.68 / 924 / 5.9% | 1.75 / 903 / 5.8% | เสมอ IS แพ้ BWD |
+
+**VERDICT สุดท้าย 125b: ลอง 3 ตระกูล trigger (oscillator H4 · oscillator H1 · price action) — ไม่มีตัวไหนชนะ
+breakout-STOP ทั้งสอง window** → คำถาม add-trigger ปิดอย่างมีหลักฐาน ไม่ใช่ปัดตกเร็ว. **finding เข้าคลัง:
+บน crypto trend EA, การ add ตอน "ราคายืนยันต่อ (breakout)" ชนะการ add ตอน "ราคาย่อ (pullback)" อย่างสม่ำเสมอ**
+— pullback-add เพิ่มไม้ที่ราคาดีกว่าแต่แลกกับการเก็บไม้ในจังหวะที่เทรนด์อาจกำลังจบ. deploy path = **EA_DONCHIAN v1 + pyr3** เดิม.
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
