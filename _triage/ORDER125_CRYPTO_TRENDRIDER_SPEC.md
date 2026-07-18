@@ -29,11 +29,40 @@
 **pattern ที่เห็น: mechanism×symbol matching จริง** — SuperTrend=บ้าน BTC · Donchian=บ้าน ETH · SOL เข้ากับ ST ไม่เข้ากับ DON.
 ⚠ portfolio note: crypto majors corr กันเองสูง (BTC-ETH มัก >0.8) — ตอน portfolio phase ใช้ gate pairwise <0.8 ของ same-EA-cross-symbol แล้วอาจต้องเลือก/ลด lot ไม่ใช่เอาหมด.
 
-## NEXT (เฟส optimize — ยังไม่ทำ รอคิว/pacing)
-1. per-year split ของ 4 รันหลัก (กัน aggregate PF ซ่อนปีขาดทุน)
-2. optimize ≥3 lever: ATR period/mult (entry) · exit (flip vs trail vs structure) · SL width — coarse Model 1, plateau ไม่ใช่ peak
-3. เช็คว่า ThinkMarkets มี real-tick BTC ลึกพอสำหรับ Model-4 ไหม (ถ้าไม่มี = ต้องบอกตรงๆ ใน verdict)
-4. pyramid A/B (Mode2/STACK_PYRAMID) → snowball MC → holdout → corr → demo bundle ตาม ladder ข้างล่าง
+## ✅ ผล OPTIMIZE รอบ 1 + VALIDATE (2026-07-18 รอบสาม — Model 1)
+
+**Windows:** sweep = 2023.01–2026.01 · BWD = 2020–2022 · **holdout 2026.01–2026.07 = สงวนไว้ ไม่เคยใช้เลือกอะไร**
+
+**ST-BTC** (sweep 45 combos complete-mode, ทุก combo กำไร = plateau แท้) → lock **`ST_BTC_c1.set`** (ATR 14 · Mult 2.5 · SL 2.25×ATR, plateau-center ไม่ใช่ peak):
+sweep PF 1.91 (76t) · BWD **1.55** (84t) · holdout **2.16** (15t) · MC(BWD) PF_5th 1.04 Ruin 0%
+
+**DON-ETH** (15 combos, ทุก combo กำไร) → lock **`DON_ETH_c1.set`** (Donch 35 · SL 2.25×ATR):
+sweep PF 2.06 (68t) · BWD **1.91** (58t) · holdout **1.94** (13t)
+
+**PYRAMID A/B (DON-ETH, `_04_MaxPyramid` 0→3, `DON_ETH_c1_pyr3.set`):**
+| | naked | pyramid 3 |
+|---|---|---|
+| IS net/DD | 461 / 1.9% | **1,109 / 5.8%** (PF 1.90, 161t) |
+| BWD net/DD | 374 / 2.1% | **1,100 / 5.2%** (PF 2.13, 135t) |
+| MC pyramid | — | PF_5th **1.37** · DD_95th 2.5% · Ruin 0% |
+
+→ **pyramid บน crypto = ขยาย edge จริง** (net ×2.4–2.9, PF ยืน, ต่างจาก XAU/GBP ที่ PF พังเหลือ ~1.0) — thesis "BTC/ETH คือบ้าน trend+pyramid" ยืนยันแล้วชั้นแรก
+
+## NEXT — ORDER-125b: STO/PA pullback add-entry (user idea 2026-07-18, design พร้อม รอ build)
+
+**Concept:** ตอนนี้ pyramid เพิ่มไม้แบบ breakout-STOP (ไล่ราคา) — user เสนอเพิ่มไม้แบบ **pullback-in-trend**:
+เทรนด์ยืนอยู่ (SuperTrend/Donchian direction) + **Stochastic ลง oversold แล้ว cross กลับตามเทรนด์** (หรือ PA: pin bar/engulfing ที่ pullback) = add ไม้ตามเทรนด์ราคาถูกกว่า
+- **Vehicle:** เพิ่ม input `_04_AddMode` ใน EA_DONCHIAN (0=STOP-pyramid เดิม · 1=STO-pullback · 2=PA-pullback) — A/B ตรงๆ กับ pyramid เดิมบน set เดียวกัน
+- **Prior เตือน:** StoK default noise (บทเรียน SMC×STO: K 5→17 พลิกผล) → sweep StoK {9,14,21} ก่อนตัดสิน · candle = confirm filter ไม่ใช่ naked (doctrine PA-module)
+- **บาร์:** add-mode ใหม่ต้องชนะ pyramid เดิมทั้ง net-per-DD และ PF ทั้งสอง window ถึงจะแทน — ไม่งั้นเก็บ STOP-pyramid
+- ⚠️ ก่อน build: รัน `mql-code-reviewer` + tpl regression ตามปกติ · commit code เอง (Claude เขียน, Codex audit)
+
+## ค้างในคิว validate ก่อน demo
+1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
+2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
+3. snowball A/B (FIRSTLOT_RISK) ตัดสินด้วย MC ruin
+4. corr BTC-leg vs ETH-leg (คาดสูง — อาจต้องลด lot ฝั่งนึง) + corr vs live portfolio
+5. demo bundle
 **Origin:** user ขอ EA crypto run-trend + snowball + pyramid (มองว่า bull run ใกล้มา)
 
 ## หลักคิด (สำคัญ — อ่านก่อน dispatch)
