@@ -57,6 +57,28 @@ sweep PF 2.06 (68t) · BWD **1.91** (58t) · holdout **1.94** (13t)
 - **บาร์:** add-mode ใหม่ต้องชนะ pyramid เดิมทั้ง net-per-DD และ PF ทั้งสอง window ถึงจะแทน — ไม่งั้นเก็บ STOP-pyramid
 - ⚠️ ก่อน build: รัน `mql-code-reviewer` + tpl regression ตามปกติ · commit code เอง (Claude เขียน, Codex audit)
 
+## ✅ ผลรอบสี่ (2026-07-18) — Model-4 confirm + per-year + ORDER-125b A/B จบ
+
+**Model-4 real ticks (History Quality 99%, ThinkMarkets tick ลึกพอทั้งคู่):**
+- ST-BTC c1 (2023–2026.07): **PF 1.88 · 91t · DD 1.9% · RF 3.56** — ยืนยันจาก M1 1.91 ✅
+- DON-ETH c1 pyr3 (2023–2026.07): **PF 1.99 · 186t · DD 5.8%** ✅
+
+**Per-year split:** แพ้ 1 ปีจาก 6 = ETH 2023 (chop, PF 0.73, −59 เล็กเทียบปีเทรนด์ +346/+822) · BWD ไม่มีปีแพ้เลย
+(2022 ปีหมียังบวกทั้งคู่ — ฝั่ง short ทำงาน) · **missing regime = chop ยาว, แผลจำกัดด้วย SL+ADX gate**
+
+**ORDER-125b (EA_DONCHIAN_ADD, compile clean, บั๊ก short-side else-if จับได้ตอน self-review แก้แล้ว):**
+| adds mode | IS PF/net/DD | BWD PF/net/DD |
+|---|---|---|
+| breakout-STOP (AddMode0) | 1.68 / 886 / 5.7% | **2.18 / 1,100 / 5.2%** |
+| STO K9 | 1.81 / 854 / 5.3% | 2.11 / 952 / 5.0% |
+| STO K14 | 1.71 / 726 / 4.8% | 2.10 / 903 / 5.0% |
+| STO K21 | 1.40 / 383 / 3.5% | — |
+
+**VERDICT 125b: STO-pullback adds ไม่ชนะ breakout adds เด็ดขาดสักด้าน** (K9 ชนะ net-per-DD เฉพาะ IS แพ้ BWD ·
+StoK surface เป็น slope 9>14>21 ไม่ใช่ plateau = กลิ่น noise-fit) → **เก็บ breakout-STOP pyramid เป็นทางหลัก** ·
+STO add-mode = PARKED (โค้ดเก็บใน `ea_projects/CRYPTO_TRENDRIDER/` เป็น lever ธนาคาร — อาจกลับมาลองบน TF อื่น/symbol อื่น)
+หมายเหตุ: ADD0 ≠ v1 เป๊ะ (โค้ดใหม่แยก ADX gate ออกจาก exit path — v1 ข้าม reverse-exit ตอน ADX ต่ำ) — deploy ใช้ **v1 EA_DONCHIAN + pyr3** ที่ M4-confirmed แล้ว
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
