@@ -1,20 +1,47 @@
-# docs/memory_control/ — B0 baseline + ownership audit (ORDER-099 / Contract A)
+# docs/memory_control/ — Memory-Controlled OS build (status + file map)
 
-> **Generated audit output — NOT a new authority.** These files do not own any fact, verdict, or
-> deployment decision. They describe the state of the taskboard/ownership at a pinned point in time so
-> MVP-0/3/1 can later be measured against a baseline (B0 vs B1).
+> **Generated audit + coordination machinery — NOT a new authority.** Nothing here owns a fact,
+> verdict, or deployment decision; those stay with `AGENT_TASKBOARD.md` / `EA_SCORECARD_AND_REGISTRY.md`
+> / `PROJECT_STATE.md` / `portfolio/DEPLOYMENTS.csv`.
 >
-> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (Contract A = §20.8).
+> **Design source (single):** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d`.
 > **B0_CUTOFF_SHA:** `4eb839df09b1911cec2de18ec4a2df51cf766606`
-> **Produced by:** ORDER-099 (Opus-seat), 2026-07-12.
 
-## Files
+## Build status — 2026-07-18: all 4 contracts COMPLETE, B1 window OPEN
+
+| Piece | Contract / order | Status | Key commit |
+|---|---|---|---|
+| MVP-0 execution harness (`run_batch.ps1`) | Contract B / ORDER-100 | ✅ REVIEWED | — |
+| MVP-3 active/archive + generated index + fail-closed hook | Contract C0/C1 / ORDER-101,102,103 | ✅ REVIEWED | `c0f7b0d` |
+| MVP-1-lite experiment event log + evidence manifest | Contract D / ORDER-105 | ✅ REVIEWED (8 blind rounds) | `0e13699` |
+| B0 baseline + fact→owner map | Contract A / ORDER-099 | ✅ REVIEWED | — |
+| **B1 observation window** (measures whether MVP helped; gates MVP-2) | ORDER-115 | 🟢 **OPEN** since 2026-07-17 | `dc566d77` |
+| **MVP-2 Context Packet generator** | — | ⛔ **NOT BUILT — B1-gated** (evaluate ≥2026-08-16) | — |
+
+**The event log is LIVE:** first real experiment = ORDER-091C-D1g (`exp_93d9457a`), full 8-event chain
+committed. Do NOT backfill except the 3 approved canaries (ST03 · Boss_16 · ORDER-095/Boss_14), lazily.
+
+## What each session must keep doing (standing duties)
+
+1. **Order closes → append one row to `B1_DATASET.csv`** in the same commit (defs = `B1_COHORT.md`;
+   unobserved values = `NOT_RECORDED`, never a guessed 0). Stops when 20 rows collected.
+2. **Experiment-shaped order → emit the event chain** per `EVENT_LOG_ADOPTION.md`.
+3. **MVP-2 stays unbuilt** until B1 triggers fire (`B1_COHORT.md` §5). Do not build it because it was designed.
+
+## File map
 
 | file | what it is |
 |---|---|
-| `FACT_OWNER_MAP.md` | fact → canonical owner / permitted writers / generated consumers / freshness check. Base = §20.7 + `AGENTS.md` §2. |
-| `B0_DATASET.csv` | 20 terminal orders @ cutoff, machine-checkable. Metrics never logged historically = `NOT_RECORDED`. |
-| `B0_REPORT.md` | selection rule, inclusion/exclusion list, metric method, and the reproducibility recipe. |
+| `EVENT_LOG_ADOPTION.md` | **how to use the event log** on a new experiment (commands + dogfood gotchas). Rule owner = the schemas. |
+| `B1_COHORT.md` | B1 register + eligibility/metric protocol + the MVP-2 trigger gate. |
+| `B1_DATASET.csv` | append-only B1 rows (header byte-identical to `B0_DATASET.csv`). |
+| `experiment_events/` | the live event log: `events-YYYY-MM.jsonl`, `evidence-manifest.jsonl`, `schema/*.json`. |
+| `FACT_OWNER_MAP.md` | fact → canonical owner / permitted writers / generated consumers. Base = §20.7 + `AGENTS.md` §2. |
+| `B0_DATASET.csv` / `B0_REPORT.md` | Contract-A baseline: 20 terminal orders @ cutoff + selection/metric rules. |
+| `ARCHIVE_INDEX.md` / `ARCHIVE_MANIFEST.csv` / `RECONCILE_EXCEPTIONS.md` | MVP-3 archive machinery (generated/checked by `check_taskboard_archive.ps1`). |
+| `CODEX_ORDER10*_*.md` | build/review transcripts for Contracts C1-ENFORCE (103) and D (105) — history, not authority. |
+
+## Reproduce B0
 
 ## Reproduce
 
