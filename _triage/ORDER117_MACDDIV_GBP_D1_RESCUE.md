@@ -98,6 +98,27 @@ CONCEPT stays alive at its validated home (XAU H4, shipped magic 999094)**. Same
 signature as EUR H4 MacdDiv (holdout 0.35, ORDER-098-B). Recorded [[signal-landscape]]. No B1 row
 (closes an ORDER-117 residual, not a numbered terminal order). No user brief (DEAD not PARKED).
 
+## 🔁 ENTRY-SIGNAL LEVER ROUND (added 2026-07-18 after user challenge "optimize ครบไหม")
+
+The first funnel swept only the divergence-DETECTION frequency levers, NOT the MACD
+entry-signal params (`_02_MacdFast/Slow/Signal`) — which the ladder names **lever #1 for
+indicator entries**. Closed that gap:
+- **18-combo MACD-param sweep** (Fast{8,12,16}×Slow{21,26,34}×Signal{7,9}, both-window):
+  TWO combos DO clear both-window in-sample — **Fast16/Slow26 MAIN 1.50/BWD 1.35** and
+  **Fast12/Slow34 1.29/1.42** — and it's plateau-ish (Fast16: Slow21→26→34 = MAIN 1.06/1.50/1.14),
+  NOT an isolated spike. (Signal 7 vs 9 = no-op: this EA never reads the MACD signal buffer.)
+  ⇒ the earlier "ceiling <1.0 both-window" premise was WRONG; entry-params flip it in-sample.
+- **Holdout on both winners** (the deciding test): F16/S26 → 2026H1 **0.00**(4t) / 2017-19 **0.47**(84t) ·
+  F12/S34 → 2026H1 **0.00**(4t) / 2017-19 **0.53**(74t). **Both collapse on both unseen windows.**
+
+**Net: verdict UNCHANGED (DEAD-OPTIMIZED) but now EARNED with the entry-signal lever swept.**
+The both-window pass is real (plateau, not spike) but is selection-fit to 2020-2025 — every config
+(frequency cells AND the MACD-param both-window winners) dies on the 2017-19 + 2026H1 holdouts.
+No home/window clears the holdout bar → not BUILD-ON. Cell closed, correctly this time.
+Sets: `_mt5_auto/sweeps/order117_holdout/MDX_D1_{F16S26,F12S34}.set` · reports `CONF_HO_*`.
+Credit: user's "did you optimize everything?" challenge caught the missing lever-1 round — the
+conclusion held, but the process gap was real and could have hidden a candidate.
+
 ## Reports / evidence paths
 - Baseline: `_mt5_auto\reports\MACDDIV_GBP_D1_{MAIN,BWD,HOLDOUT2026,HOLDOUT2017}.htm`
 - Sweep runs: `_mt5_auto\reports\O117D1_LB*_MAIN.htm` / `_BWD.htm` (54 files)
