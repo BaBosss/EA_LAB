@@ -1,5 +1,5 @@
 ﻿account,account_name,type,platform,host,ea_name,magic,symbol,status,kill_rule,judge_date,start_date,notes
-159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(Boss)_RSI_MR_GridLog,990103,EURUSD,PENDING_REMOVE,closedDD 25%,2026-10-09,2026-07-09,user approved 2026-07-11: move to demo isolate (flat-lot PF 0.78 = doctrine breach A7)
+159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(Boss)_RSI_MR_GridLog,990103,EURUSD,REMOVED,closedDD 25%,2026-10-09,2026-07-09,user REMOVED from real acct 2026-07-18 (confirmed in chat); demo-isolate re-attach = optional future step
 159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(Boss)_ZeusInspired_GridLog,990101,XAUUSD,ACTIVE,closedDD 15%,2026-10-09,2026-07-09,validated set
 159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,EA_BREAKOUT_XAU,991001,XAUUSD,ACTIVE,closedDD 10%,2026-10-09,2026-07-09,validated set (Bars40 compiled defaults)
 159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(BRK)_SqueezeBreakout,991004,XAUUSD,ACTIVE,closedDD 10%,2026-10-09,2026-07-09,validated set
