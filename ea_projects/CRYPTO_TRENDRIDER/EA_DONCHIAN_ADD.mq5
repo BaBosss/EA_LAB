@@ -26,7 +26,8 @@ input ENUM_TIMEFRAMES _01_SignalTF = PERIOD_H4;  // trend/breakout TF; adds run 
 //--- [02] SL / TP
 input string  _g02_  = "── [02] SL / TP ────────────────────────";
 input double  _02_SL_ATR_mult   = 2.25;
-input double  _02_TP_ATR_mult   = 0.0;   // 0 = off, ride trend
+input double  _02_TP_ATR_mult   = 0.0;   // 0 = off, ride trend to flip
+input double  _02_TrailATR_mult = 0.0;   // 0 = off; else ratchet SL at price -/+ this*ATR(SignalTF)
 
 //--- [03] Filters
 input string  _g03_  = "── [03] FILTERS ────────────────────────";
@@ -46,6 +47,8 @@ input int     _04_StoSlow       = 3;
 input double  _04_StoLevel      = 30.0;  // long add: K crosses UP through this after dipping below
                                          // short add: K crosses DOWN through (100 - this)
 input double  _04_MinAddGapATR  = 0.5;   // min |price - last own entry| in ATR before an add
+input double  _04_AddTP_ATR     = 0.0;   // 0 = adds ride like the core leg; else per-ADD-leg fixed TP
+                                         // = this * ATR(CHART TF) — scalp the pullback legs, let leg #1 ride
 
 //--- [05] Trade management
 input string  _g05_  = "── [05] TRADE MGMT ─────────────────────";
@@ -63,6 +66,7 @@ int  g_atr_handle = INVALID_HANDLE;
 int  g_ema_handle = INVALID_HANDLE;
 int  g_adx_handle = INVALID_HANDLE;
 int  g_sto_handle = INVALID_HANDLE;
+int  g_atrcur_handle = INVALID_HANDLE;   // chart-TF ATR (per-ADD-leg TP scale)
 bool g_suppress_log = false;
 static datetime g_last_bar = 0;
 
@@ -127,6 +131,12 @@ int OnInit()
    g_suppress_log = _00_OptimizeMode || (bool)MQLInfoInteger(MQL_OPTIMIZATION);
 
    g_atr_handle = iATR(_Symbol, _01_SignalTF, _01_ATRPeriod);
+   if(_04_AddTP_ATR > 0.0)
+   {
+      g_atrcur_handle = iATR(_Symbol, PERIOD_CURRENT, _01_ATRPeriod);
+      if(g_atrcur_handle == INVALID_HANDLE)
+      { Print("EA_DONCHIAN_ADD: chart-TF ATR init FAILED"); return(INIT_FAILED); }
+   }
    if(_03_UseEmaFilter)
       g_ema_handle = iMA(_Symbol, _01_SignalTF, _03_EMAperiod, 0, MODE_EMA, PRICE_CLOSE);
    if(_03_UseAdxFilter)
@@ -156,6 +166,34 @@ void OnDeinit(const int reason)
    if(g_ema_handle != INVALID_HANDLE) IndicatorRelease(g_ema_handle);
    if(g_adx_handle != INVALID_HANDLE) IndicatorRelease(g_adx_handle);
    if(g_sto_handle != INVALID_HANDLE) IndicatorRelease(g_sto_handle);
+   if(g_atrcur_handle != INVALID_HANDLE) IndicatorRelease(g_atrcur_handle);
+}
+
+// ratchet trailing stop at price -/+ TrailATR*ATR(SignalTF); never loosens
+void TrailOwn(double atr_sig)
+{
+   if(_02_TrailATR_mult <= 0.0 || atr_sig <= 0.0) return;
+   double dist = _02_TrailATR_mult * atr_sig;
+   for(int i = PositionsTotal()-1; i >= 0; i--)
+   {
+      ulong tk = PositionGetTicket(i);
+      if(!PositionSelectByTicket(tk)) continue;
+      if(PositionGetString(POSITION_SYMBOL)  != _Symbol)    continue;
+      if(PositionGetInteger(POSITION_MAGIC)  != _06_Magic)  continue;
+      ENUM_POSITION_TYPE pt = (ENUM_POSITION_TYPE)PositionGetInteger(POSITION_TYPE);
+      double cur_sl = PositionGetDouble(POSITION_SL);
+      double cur_tp = PositionGetDouble(POSITION_TP);
+      if(pt == POSITION_TYPE_BUY)
+      {
+         double want = SymbolInfoDouble(_Symbol, SYMBOL_BID) - dist;
+         if(want > cur_sl) Trade.PositionModify(tk, want, cur_tp);
+      }
+      else
+      {
+         double want = SymbolInfoDouble(_Symbol, SYMBOL_ASK) + dist;
+         if(cur_sl <= 0.0 || want < cur_sl) Trade.PositionModify(tk, want, cur_tp);
+      }
+   }
 }
 
 //+------------------------------------------------------------------+
@@ -206,6 +244,8 @@ void OnTick()
    // Exit on reverse signal (regardless of ADX — same as v1 close path)
    if(CountOwn(POSITION_TYPE_BUY)  > 0 && short_brk) CloseAll(POSITION_TYPE_BUY);
    if(CountOwn(POSITION_TYPE_SELL) > 0 && long_brk)  CloseAll(POSITION_TYPE_SELL);
+
+   TrailOwn(atr_buf[0]);
 
    int n_longs  = CountOwn(POSITION_TYPE_BUY);
    int n_shorts = CountOwn(POSITION_TYPE_SELL);
@@ -284,6 +324,12 @@ void OnTick()
          {
             double sl = ask - sl_dist;
             double tp = (tp_dist > 0.0) ? ask + tp_dist : 0.0;
+            if(!first && _04_AddTP_ATR > 0.0)
+            {
+               double atrc[1];
+               if(CopyBuffer(g_atrcur_handle, 0, 1, 1, atrc) == 1 && atrc[0] > 0.0)
+                  tp = ask + _04_AddTP_ATR * atrc[0];
+            }
             string tag = first ? "DONCH_L" : (add_sto ? "ADD_STO_L" : (add_pa ? "ADD_PA_L" : "ADD_BRK_L"));
             if(!g_suppress_log) Print(tag, " ask=", ask, " sl=", sl, " lot=", lot);
             Trade.Buy(lot, _Symbol, ask, sl, tp, tag);
@@ -312,6 +358,12 @@ void OnTick()
          {
             double sl = bid + sl_dist;
             double tp = (tp_dist > 0.0) ? bid - tp_dist : 0.0;
+            if(!first && _04_AddTP_ATR > 0.0)
+            {
+               double atrc[1];
+               if(CopyBuffer(g_atrcur_handle, 0, 1, 1, atrc) == 1 && atrc[0] > 0.0)
+                  tp = bid - _04_AddTP_ATR * atrc[0];
+            }
             string tag = first ? "DONCH_S" : (add_sto ? "ADD_STO_S" : (add_pa ? "ADD_PA_S" : "ADD_BRK_S"));
             if(!g_suppress_log) Print(tag, " bid=", bid, " sl=", sl, " lot=", lot);
             Trade.Sell(lot, _Symbol, bid, sl, tp, tag);

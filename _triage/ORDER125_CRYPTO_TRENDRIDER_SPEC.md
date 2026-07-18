@@ -110,6 +110,26 @@ v3: PA detector = engulfing · pin · **inside-bar breakout · morning/evening s
 อ่อนกว่า backtest ค่อยหยิบ PA-H4 มา revisit (มัน "เกือบ" — ไม่ใช่ตาย). **การตัดสินย้ายไปที่ demo แล้ว — หยุด
 sweep add-trigger เพิ่ม (diminishing returns ชัดเจน 6/6).**
 
+## ✅ EXIT-MODE CAMPAIGN (user ask 2026-07-18): "ควร TP แบบไหน" — คำตอบ: ห้าม TP, flip-exit ชนะขาด
+
+v4: เพิ่ม `_02_TrailATR_mult` (ratchet trailing) + `_04_AddTP_ATR` (TP เฉพาะไม้ add, scale = ATR chart-TF) · compile clean
+· รันบน **Meta 5b portable** (terminal หลักถูก session คู่ขนานใช้รัน MacdDiv GBPUSD — จับได้จาก tester log)
+
+| exit style (DON-ETH, IS 2023–26) | PF / net / trades | vs flip-exit 1.68/886 |
+|---|---|---|
+| **flip-exit + SL 2.25ATR (ปัจจุบัน)** | **1.68 / 886** | แชมป์ |
+| fixed TP 4×ATR ทุกไม้ | 1.07 / 178 (313t) | 💀 ตัดหางกำไร = ฆ่า edge |
+| fixed TP 8×ATR ทุกไม้ | 1.12 / 261 | 💀 |
+| trailing 2×ATR | 1.29 / 377 | แย่ลงชัด (ออกก่อน flip ทุกเทรนด์ใหญ่) |
+| STO-H1 adds + scalp TP 1.5×ATR(H1) | 1.15 / 317 (630t) | winrate 68% แต่ expectancy จิ๋ว — churn กิน |
+| PA-H1 adds + scalp TP 1.5×ATR(H1) | **0.96 / −173 (1,305t)** | 💀 ขาดทุนจริง — scalp adds จ่าย cost มากกว่า edge |
+| trailing 3×ATR | ยังไม่ได้รัน (Meta5b launch fail ซ้ำ 3 รอบ — infra ไม่ใช่ verdict-blocking: trail หลวมกว่า = converge เข้า flip-exit) |
+
+**หลักฐานเชิงตัวเลขของ doctrine "trend EA winrate ต่ำ-หางยาว":** ทุกรูปแบบ TP ยก winrate ขึ้น (38-68%)
+แต่ PF/net พังหมด เพราะกำไรทั้งระบบอยู่ที่ไม้หางยาวไม่กี่ไม้ (avg win 58.5 vs avg loss 10.2 = 5.7:1) —
+**ตัด tail = ตัด edge. Exit ownership ล็อกเป็น flip-exit + hard SL — คำถาม exit ปิด.**
+(จุดอ่อน chop-year แก้ด้วย TP ไม่ได้โดยไม่ฆ่าปีเทรนด์ — ทางแก้ที่เหลือคือ regime-gate ซึ่งเป็นงาน future ไม่ block demo)
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
