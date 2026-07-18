@@ -23,7 +23,25 @@ US30 / NAS100 / XAGUSD / GBPUSD, market vs split, both-window Model-4 (D:\Meta 5
    (XAG DD 17%). Same law as pending (D1g) — **check the base breakout edge FIRST, then decide split.**
 3. XAG/GBP buy-only breakout = dead for this lever. NAS100 = data-blocked.
 
-## DECISION → Phase 2b (validate US30)
+## ⚠️ RECONCILIATION + plateau (Claude 2026-07-18, added after checking ORDER-095)
+- **US30 is NOT a new leg** — ORDER-095 already validated it (H4 both-window 1.46/1.39, **corr vs XAU
+  −0.249 = additive gate PASSED**, staged demo bundle 991005 "WATCH-thin"). My Phase-2 re-found the same
+  edge (H1 1.46/1.40). Split on US30 = 1.54/1.38 (adds trend, costs chop) = **no clear upgrade** — US30
+  market-only has NO weak window (already balanced), so split has nothing to fill.
+- **Plateau check (`_mt5_auto/O116_P2B_PLATEAU.csv`) = US30 40/5 is a SPIKE, not a plateau:** neighbors
+  drop below 1.2 both-window (b30 1.17/1.11 · b50 1.23/1.14) or invert (tp4 1.64/**1.11** · tp6 **1.36**/1.68)
+  on a thin 24–39t sample. → **US30 991005 stays WATCH (spike-fragile) — feed this caveat back to ORDER-095.**
+- **Sharpened doctrine:** split fills a weak window ONLY on a base that has (a) both-window edge AND (b) an
+  **asymmetric** weak window (strong one regime, weak the other — e.g. XAU Bars40/TP5: trend 2.49 / chop 1.75).
+  A base already balanced (US30 1.46/1.40) gains nothing. A base with no edge (XAG/GBP) can't be rescued.
+
+## REVISED DECISION → Phase 2 CLOSED NEGATIVE (no new legs) → pivot to Phase 3
+Split is a **narrow lever**, not a portfolio-wide upgrade. The one concrete positive = Phase 1's
+regime-robust **XAU Bars40/TP5-split (2.40/1.96)**. Next value = validate THAT as a demo config
+(corr vs existing XAU legs + MC + holdout) — is it additive, or a more-robust replacement for the
+chop-weak live Bars55 (1.99/1.12)? Superseded plan below (kept for provenance).
+
+## ~~DECISION → Phase 2b (validate US30)~~ (superseded — US30 already ORDER-095, spike-fragile)
 US30 buy-only Donchian breakout = **candidate new leg → full funnel before any demo:**
 plateau (BreakoutBars/TP sensitivity) · holdout (a window not used to select) · **corr vs existing XAU
 BRK + GBP London legs** (deciding gate — expect low, index vs metal/FX) · MC on continuous run ·
