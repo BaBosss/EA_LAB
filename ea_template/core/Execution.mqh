@@ -251,24 +251,29 @@ int Exec_CountPending()
    return n;
 }
 
-// ORDER-132 (Codex system-review SEV-1 #5): projected margin of every OWN resting
-// pending if it filled at its order price. A GTC ladder consumes margin at FILL
-// time, when the deposit-load cage can no longer refuse it - Stack's budget gate
-// (Stack_MarginBudgetOK) reserves this ahead of placement. Unpriceable orders
-// contribute 0 here; the per-leg gate is the fail-closed side.
+// ORDER-132 (Codex system-review SEV-1 #5): projected margin of every resting
+// pending ON THE ACCOUNT if it filled at its order price. A GTC ladder consumes
+// margin at FILL time, when the deposit-load cage can no longer refuse it -
+// Stack's budget gate (Stack_MarginBudgetOK) reserves this ahead of placement.
+// ORDER-132b (Codex E4): deliberately NOT filtered to own symbol/magic - the
+// deposit-load cap is an ACCOUNT-level cage, so a sibling EA's resting ladder
+// must count against the same budget (double-reserving across EAs errs safe).
+// Unpriceable orders contribute 0 here; the per-leg gate is the fail-closed side.
 double Exec_PendingMarginProjection()
 {
    double sum = 0.0;
    for(int i = OrdersTotal() - 1; i >= 0; i--)
    {
-      if(!Exec_OrdIsMine(i)) continue;
+      ulong tk = OrderGetTicket(i);
+      if(tk == 0) continue;
+      string sym   = OrderGetString(ORDER_SYMBOL);
       double lot   = OrderGetDouble(ORDER_VOLUME_CURRENT);
       double price = OrderGetDouble(ORDER_PRICE_OPEN);
       long   type  = OrderGetInteger(ORDER_TYPE);
       bool   isBuy = (type == ORDER_TYPE_BUY_STOP || type == ORDER_TYPE_BUY_LIMIT ||
                       type == ORDER_TYPE_BUY_STOP_LIMIT);
       double m = 0.0;
-      if(OrderCalcMargin(isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, lot, price, m))
+      if(OrderCalcMargin(isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, sym, lot, price, m))
          sum += m;
    }
    return sum;
@@ -317,6 +322,13 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                                    : g_trade.BuyLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
    else               ok = (isStop ? g_trade.SellStop(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment)
                                    : g_trade.SellLimit(lot, price, _Symbol, sl, 0.0, ORDER_TIME_GTC, 0, comment));
+   // ORDER-132b (Codex E3): the CTrade boolean alone proves only the client-side
+   // structure check - require a server-accepted retcode before reporting success.
+   if(ok)
+   {
+      uint rc = g_trade.ResultRetcode();
+      if(rc != TRADE_RETCODE_DONE && rc != TRADE_RETCODE_PLACED) ok = false;
+   }
    if(ok) PrintFormat("[EXEC] pending placed dir=%d stop=%d lot=%.2f at %.5f (%s)",
                       direction, (isStop ? 1 : 0), lot, price, comment);
    else   PrintFormat("[EXEC] pending FAILED dir=%d at %.5f retcode=%d",
@@ -393,7 +405,19 @@ double Exec_NormalizeCloseLot(double lot)
 // marked its milestone done. Skipped (unrepresentable-volume) legs do not fail
 // the call: they can never become executable at this volume, so retrying them
 // is noise, not risk reduction.
-bool Exec_ClosePartialFraction(const double frac)
+// ORDER-132b (Codex E1+E2): success now requires a server-accepted retcode (the
+// CTrade boolean alone proves only the structure check), and `doneTickets`
+// carries per-ticket completion across retries - without it, a milestone retry
+// re-fractioned legs that already succeeded, repeatedly draining the cushion
+// leg while the broker kept rejecting its sibling (unbounded over-close).
+bool Exec_TicketInList(const ulong tk, const ulong &list[])
+{
+   for(int i = ArraySize(list) - 1; i >= 0; i--)
+      if(list[i] == tk) return true;
+   return false;
+}
+
+bool Exec_ClosePartialFraction(const double frac, ulong &doneTickets[])
 {
    if(frac <= 0.0) return true;   // nothing requested = vacuous success
    bool allOk = true;
@@ -401,6 +425,7 @@ bool Exec_ClosePartialFraction(const double frac)
    {
       if(!Exec_PosIsMine(i)) continue;
       ulong  tk  = PositionGetInteger(POSITION_TICKET);
+      if(Exec_TicketInList(tk, doneTickets)) continue;   // already reduced in this milestone
       double vol = PositionGetDouble(POSITION_VOLUME);
       double closeVol = Exec_NormalizeCloseLot(vol * frac);
       if(closeVol <= 0.0 || closeVol >= vol) continue;   // skip if it would close the whole leg
@@ -409,10 +434,18 @@ bool Exec_ClosePartialFraction(const double frac)
          PrintFormat("[DRYRUN] partial-close ticket=%I64u vol=%.2f frac=%.2f -> %.2f", tk, vol, frac, closeVol);
          continue;
       }
-      if(!g_trade.PositionClosePartial(tk, closeVol))
+      bool sent = g_trade.PositionClosePartial(tk, closeVol);
+      uint rc   = g_trade.ResultRetcode();
+      if(sent && (rc == TRADE_RETCODE_DONE || rc == TRADE_RETCODE_DONE_PARTIAL || rc == TRADE_RETCODE_PLACED))
+      {
+         int n = ArraySize(doneTickets);
+         ArrayResize(doneTickets, n + 1);
+         doneTickets[n] = tk;
+      }
+      else
       {
          allOk = false;
-         PrintFormat("[EXEC] partial-close FAILED %I64u vol=%.2f retcode=%d", tk, closeVol, (int)g_trade.ResultRetcode());
+         PrintFormat("[EXEC] partial-close FAILED %I64u vol=%.2f sent=%d retcode=%d", tk, closeVol, (sent ? 1 : 0), (int)rc);
       }
    }
    return allOk;

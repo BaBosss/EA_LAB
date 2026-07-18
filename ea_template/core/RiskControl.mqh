@@ -68,7 +68,7 @@ void RiskControl_AcctHwmUpdate()
    if(eq > g_rc_acct_hwm)
    {
       g_rc_acct_hwm = eq;
-      Persist_Set("acct_hwm", g_rc_acct_hwm);
+      if(!DryRun) Persist_Set("acct_hwm", g_rc_acct_hwm);   // ORDER-132b (Codex R2): observation instances never write terminal GVs
    }
 }
 
@@ -187,7 +187,7 @@ double RiskControl_CurrentDDPct()
    if(eq > g_rc_peak_equity)
    {
       g_rc_peak_equity = eq;
-      if(RC_PersistHalt) Persist_Set("rc_peak_eq", g_rc_peak_equity);
+      if(RC_PersistHalt && !DryRun) Persist_Set("rc_peak_eq", g_rc_peak_equity);   // ORDER-132b (Codex R2)
    }
    if(g_rc_peak_equity <= 0.0) return 0.0;
    double dd = 100.0 * (g_rc_peak_equity - eq) / g_rc_peak_equity;
@@ -209,6 +209,7 @@ bool RiskControl_KillReconcile()
       // ORDER-129b (Codex audit): DryRun performs no real closes, so its "flat" is
       // simulated - never let an observation instance persist HALT into the terminal
       // GVs that a later REAL attach on this magic would inherit.
+      bool persisted = false;
       if(RC_PersistHalt && !DryRun)
       {
          // ORDER-132 (F6): checked writes + durable flush - a crash right after an
@@ -217,9 +218,12 @@ bool RiskControl_KillReconcile()
          ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;
          Persist_Flush();
          if(!ok) Print("[RISK] ERROR: HALT persist incomplete - halt state may not survive a restart");
+         persisted = ok;
       }
+      // ORDER-132b (Codex R1): the log must state what actually happened - never
+      // claim "(persisted)" off the config flag while the write failed.
       PrintFormat("[RISK] HARD KILL complete: broker flat verified -> halt%s",
-                  (RC_PersistHalt ? " (persisted)" : ""));
+                  (persisted ? " (persisted)" : ""));
       return true;
    }
    static datetime last_log = 0;
@@ -232,9 +236,30 @@ bool RiskControl_KillReconcile()
    return false;
 }
 
+// ORDER-132b (Codex R3): MT5 deletes terminal GlobalVariables ~4 weeks after
+// their last use. A HALTED EA returns every tick without touching rc_state, and
+// a long-flat EA touches rc_peak_eq only on new highs - both could silently
+// expire and resurrect a killed EA as RUNNING after a much-later restart.
+// Re-touch every critical key daily. Live/demo only: the tester sandbox has no
+// TTL and stays byte-identical without this churn.
+void RiskControl_PersistRefresh()
+{
+   if(!RC_PersistHalt || DryRun) return;
+   if(MQLInfoInteger(MQL_TESTER)) return;
+   static datetime last = 0;
+   datetime now = TimeCurrent();
+   if(last != 0 && now - last < 86400) return;
+   last = now;
+   if(g_rc_halted)            Persist_Set("rc_state", RC_STATE_HALTED);
+   else if(g_rc_kill_pending) Persist_Set("rc_state", RC_STATE_KILL_PENDING);
+   if(g_rc_peak_equity > 0.0 && Persist_Has("rc_peak_eq")) Persist_Set("rc_peak_eq", g_rc_peak_equity);
+   if(RC_AcctDDLimitPct > 0.0 && g_rc_acct_hwm > 0.0)      Persist_Set("acct_hwm", g_rc_acct_hwm);
+}
+
 // HARD KILL - returns true while the kill state owns this tick
 bool RiskControl_CheckDD()
 {
+   RiskControl_PersistRefresh();  // TTL keep-alive (no-op in tester/DryRun/off)
    RiskControl_AcctHwmUpdate();   // no-op unless RC_AcctDDLimitPct > 0
    if(g_rc_kill_pending)          // reconcile first, independent of current DD
    {

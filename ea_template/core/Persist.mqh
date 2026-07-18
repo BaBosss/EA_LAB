@@ -16,19 +16,21 @@
 #define BOSS_LAB_PERSIST_MQH
 #include "Inputs.mqh"
 
-// scope id: <srvhash4>_<login>_<symbol>_<magic>. The server folds in as a djb2
-// checksum (4 hex chars) because full server names would blow the 63-char
-// GlobalVariable name limit. NOT cached: an account switch reloads the EA
-// WITHOUT resetting program globals, so a cached scope would silently keep the
-// old account's identity - the exact bug class this scoping removes.
+// scope id: <srvhash8>_<login>_<symbol>_<magic>. The server folds in as a djb2
+// checksum (8 hex chars - ORDER-132b Codex P2: 16-bit aliased too easily) because
+// full server names would blow the 63-char GlobalVariable name limit. NOT cached:
+// an account switch reloads the EA WITHOUT resetting program globals, so a cached
+// scope would silently keep the old account's identity - the exact bug class this
+// scoping removes. Key-length overflow is guarded fail-closed in LabCore OnInit
+// (ORDER-132b Codex P1).
 string Persist_ScopeId()
 {
    string srv = AccountInfoString(ACCOUNT_SERVER);
    uint h = 5381;
    for(int i = 0; i < StringLen(srv); i++)
       h = ((h << 5) + h) + (uint)StringGetCharacter(srv, i);
-   return StringFormat("%04x_%I64d_%s_%I64d",
-                       (int)(h & 0xFFFF),
+   return StringFormat("%08x_%I64d_%s_%I64d",
+                       h,
                        AccountInfoInteger(ACCOUNT_LOGIN),
                        _Symbol,
                        _0_Magic);
@@ -82,10 +84,15 @@ double Persist_GetLegacy(const string name, const double fallback)
    return GlobalVariableGet(key);
 }
 
-void Persist_DelLegacy(const string name)
+// ORDER-132b (Codex P4): checked deletion - a failed GlobalVariableDel used to
+// vanish silently, leaving a stale magic-only key a later scope could import.
+bool Persist_DelLegacy(const string name)
 {
    string key = Persist_LegacyKey(name);
-   if(GlobalVariableCheck(key)) GlobalVariableDel(key);
+   if(!GlobalVariableCheck(key)) return true;
+   if(GlobalVariableDel(key)) return true;
+   PrintFormat("[PERSIST] ERROR: legacy key %s could not be deleted - remove it manually (F3 dialog)", key);
+   return false;
 }
 
 // one-shot migration: copy legacy value to the scoped key ONLY when the scoped
@@ -97,7 +104,18 @@ void Persist_DelLegacy(const string name)
 // Returns true when a migration write happened.
 bool Persist_MigrateLegacy(const string name)
 {
-   if(Persist_Has(name)) return false;         // already scoped - scoped value wins
+   if(Persist_Has(name))
+   {
+      // ORDER-132b (Codex P4): scoped key already exists but a legacy leftover is
+      // still lying around (earlier deletion failed / binary rollback re-created
+      // it) - retry the cleanup on every init, else it stays cross-importable.
+      if(Persist_HasLegacy(name) && !DryRun)
+      {
+         if(Persist_DelLegacy(name))
+            PrintFormat("[PERSIST] stale legacy key %s cleaned up (scoped key already present)", Persist_LegacyKey(name));
+      }
+      return false;
+   }
    if(!Persist_HasLegacy(name)) return false;  // nothing to migrate
    double v = Persist_GetLegacy(name, 0.0);
    if(DryRun)
@@ -107,7 +125,7 @@ bool Persist_MigrateLegacy(const string name)
       return false;
    }
    if(!Persist_Set(name, v)) return false;     // keep legacy on failed write
-   Persist_DelLegacy(name);
+   Persist_DelLegacy(name);                    // failure already logged inside (checked)
    PrintFormat("[PERSIST] migrated legacy %s -> %s (%.2f)", Persist_LegacyKey(name), Persist_Key(name), v);
    return true;
 }

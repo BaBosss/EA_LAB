@@ -352,6 +352,30 @@ void Wave5_DivergenceTightenHook()
 // approach to target within the same basket).
 bool g_exit_partial1_done = false;
 bool g_exit_partial2_done = false;
+// ORDER-132b (Codex E2): tickets already reduced within the CURRENT milestone
+// arming - a retry after a mixed success must only touch the legs that failed.
+ulong g_exit_partial1_tk[];
+ulong g_exit_partial2_tk[];
+// ORDER-132b (Codex X2): full-basket close intent latch. Once an exit predicate
+// fires, the close is owned until broker-flat proof - previously a partially
+// failed Exec_CloseAll() was forgotten whenever the predicate (profit/trend)
+// stopped being true on the next tick, leaving residual exposure managed as a
+// normal basket. In-memory (restart falls back to predicate-based exits).
+bool g_exit_closeall_pending = false;
+
+bool Exit_CloseBasket()
+{
+   if(Exec_CloseAll()) { g_exit_closeall_pending = false; return true; }
+   g_exit_closeall_pending = true;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      Print("[EXIT] basket close incomplete - residual position/pending remains, retrying every tick");
+   }
+   return true;   // the close intent owns this tick either way (blocks adds/management)
+}
 
 // Effective basket target in account currency. ATR mode scales the target by
 // current Risk-ATR and aggregate open volume, so it remains portable across
@@ -394,23 +418,28 @@ void Exit_ManagePartialClose()
    if(_2_PartialPct1 <= 0.0 && _2_PartialPct2 <= 0.0) return;   // both off
 
    double profit = Exec_BasketProfit();
-   if(profit <= 0.0) { g_exit_partial1_done = false; g_exit_partial2_done = false; return; }
+   if(profit <= 0.0)
+   {
+      g_exit_partial1_done = false; g_exit_partial2_done = false;
+      ArrayResize(g_exit_partial1_tk, 0); ArrayResize(g_exit_partial2_tk, 0);
+      return;
+   }
 
    double pctOfTarget = profit / targetMoney * 100.0;
 
    // ORDER-132 (Codex F3): a milestone latches DONE only when the broker accepted
    // every attempted partial close - a rejected close now leaves the milestone
    // armed and it retries next tick while the profit predicate still holds.
-   // (A mixed-success retry re-fractions the already-reduced legs, closing
-   // slightly more than one clean pass would - risk-REDUCING direction, accepted.)
+   // ORDER-132b (Codex E2): retries skip tickets already reduced (per-ticket
+   // done list), so a stubbornly rejected leg can no longer drain its siblings.
    if(!g_exit_partial1_done && _2_PartialPct1 > 0.0 && pctOfTarget >= _2_PartialPct1)
    {
-      if(Exec_ClosePartialFraction(_2_PartialFrac1))
+      if(Exec_ClosePartialFraction(_2_PartialFrac1, g_exit_partial1_tk))
          g_exit_partial1_done = true;
    }
    if(!g_exit_partial2_done && _2_PartialPct2 > 0.0 && pctOfTarget >= _2_PartialPct2)
    {
-      if(Exec_ClosePartialFraction(_2_PartialFrac2))
+      if(Exec_ClosePartialFraction(_2_PartialFrac2, g_exit_partial2_tk))
          g_exit_partial2_done = true;
    }
 }
@@ -422,40 +451,50 @@ void Exit_ManagePartialClose()
 // Returns true if it flattened the basket this tick.
 bool Exit_SafetyMoneyStop()
 {
+   if(Exec_CountAll() <= 0) { g_exit_closeall_pending = false; return false; }
+   // ORDER-132b (Codex X2): an armed close (from here or any basket exit) is
+   // finished FIRST, pre-bar-gate - a partial CloseAll must never be forgotten
+   // just because the money predicate stopped being true.
+   if(g_exit_closeall_pending) return Exit_CloseBasket();
    if(_32_SL_Money <= 0.0) return false;
-   if(Exec_CountAll() <= 0) return false;
    double profit = Exec_BasketProfit();
    if(profit <= -_32_SL_Money)
    {
       PrintFormat("[EXIT] basket money-stop (safety, intrabar): net %.2f <= -%.2f -> close all",
                   profit, _32_SL_Money);
-      Exec_CloseAll();
-      return true;
+      return Exit_CloseBasket();
    }
    return false;
 }
 
 // per-tick basket management; returns true if it closed the whole basket
+// (or while an armed close is still reconciling - either way the basket owns
+// no further management/adds this tick)
 bool Exit_ManageBasket()
 {
-   if(Exec_CountAll() <= 0) return false;
+   if(Exec_CountAll() <= 0)
+   {
+      g_exit_closeall_pending = false;   // basket gone (own retry / SL / manual) - intent done
+      return false;
+   }
+   if(g_exit_closeall_pending) return Exit_CloseBasket();   // ORDER-132b (Codex X2): finish first
 
    Exit_ManagePartialClose();   // no-op unless _2_PartialPct1/2 set
 
    double profit = Exec_BasketProfit();
    double targetMoney = Exit_BasketTargetMoney();
-   if(targetMoney > 0.0 && profit >= targetMoney) { Exec_CloseAll(); return true; }
+   if(targetMoney > 0.0 && profit >= targetMoney) return Exit_CloseBasket();
    double dynTargetMoney = Exit_DynCloseTargetMoney();   // no-op (0.0) unless _57_DynCloseOn
-   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) { Exec_CloseAll(); return true; }
-   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)          { Exec_CloseAll(); return true; }
+   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket();
+   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket();
 
    if(ExitMode == EXIT_RUN_TREND)
    {
       double f = Indi_FastMA(0), s = Indi_SlowMA(0);
       if(f > 0.0 && s > 0.0)
       {
-         if(Exec_CountDir(1) > 0 && f < s) { Exec_CloseAll(); return true; }
-         if(Exec_CountDir(2) > 0 && f > s) { Exec_CloseAll(); return true; }
+         if(Exec_CountDir(1) > 0 && f < s) return Exit_CloseBasket();
+         if(Exec_CountDir(2) > 0 && f > s) return Exit_CloseBasket();
       }
    }
 

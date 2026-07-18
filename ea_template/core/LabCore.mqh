@@ -82,6 +82,16 @@ int OnInit()
       Print("[INIT] FATAL: _0_Magic is still the compiled default (990001) - load a .set with this EA's unique magic before attaching to an account");
       return INIT_FAILED;
    }
+   // ORDER-132b (Codex P1): scoped persist keys must fit MT5's 63-char GlobalVariable
+   // name limit - an over-length key makes every kill/halt persist silently fail and a
+   // restart resurrects a killed EA as RUNNING. Probe with the longest state name and
+   // refuse the live/demo attach fail-closed (tester sandbox is exempt).
+   if(!MQLInfoInteger(MQL_TESTER) && StringLen(Persist_Key("rc_peak_eq")) > 63)
+   {
+      PrintFormat("[INIT] FATAL: persist key exceeds the 63-char GV limit (%s) - symbol/login/magic too long for persisted safety state",
+                  Persist_Key("rc_peak_eq"));
+      return INIT_FAILED;
+   }
    if(!Indi_Init())
    {
       Print("[INIT] indicator handles failed");

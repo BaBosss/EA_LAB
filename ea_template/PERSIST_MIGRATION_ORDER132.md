@@ -8,15 +8,19 @@ numbers cannot move).
 
 | | Pre-132 (legacy) | Post-132 (scoped) |
 |---|---|---|
-| Key format | `Boss_<magic>_<name>` | `Boss2_<srvhash4>_<login>_<symbol>_<magic>_<name>` |
+| Key format | `Boss_<magic>_<name>` | `Boss2_<srvhash8>_<login>_<symbol>_<magic>_<name>` |
 | Halt/kill state | 2 flags: `rc_halted`, `rc_kill_pending` | 1 enum: `rc_state` (0 RUNNING / 1 KILL_PENDING / 2 HALTED) |
 | Other keys | `rc_peak_eq`, `acct_hwm` | same names, scoped format |
-| Write checking | fire-and-forget | checked + `GlobalVariablesFlush()` on kill/halt transitions |
+| New keys (Boss_16 only) | — | `k16_pair_a` / `k16_pair_b` — in-flight overlap pair-close intent (132b); auto-cleared once both legs are broker-confirmed closed |
+| Write checking | fire-and-forget | checked + `GlobalVariablesFlush()` on kill/halt transitions + **daily TTL keep-alive** (MT5 expires GVs ~4 weeks after last use — 132b Codex R3) |
 
-`srvhash4` = 4-hex djb2 checksum of `ACCOUNT_SERVER` (full server name would blow the
-63-char GV name limit). **Why:** Codex F4 — magic-only keys let a terminal that switched
-accounts (or one magic reused on two symbols) inherit another instance's halt/kill state
-and reconcile a kill against the WRONG account's positions.
+`srvhash8` = 8-hex djb2 checksum of `ACCOUNT_SERVER` (full server name would blow the
+63-char GV name limit; 132b widened from 4-hex after Codex flagged 16-bit aliasing).
+`OnInit` refuses a live/demo attach **fail-closed** if a scoped key would exceed the
+63-char limit (extreme symbol/login/magic lengths — 132b Codex P1). **Why scoped:**
+Codex F4 — magic-only keys let a terminal that switched accounts (or one magic reused
+on two symbols) inherit another instance's halt/kill state and reconcile a kill against
+the WRONG account's positions.
 
 ## Auto-migration (first attach of a post-132 binary)
 
@@ -63,5 +67,6 @@ step below.
 - **Boss_14 GBPJPY (live):** has `RC_PersistHalt=true` state → follows checklist above.
 - **ST03 (Boss_15):** removed from live 159475669 (ORDER-118 CLOSED-OBSOLETE) — no live
   GVs to migrate; demo instances follow the same checklist.
-- Kangaroo pair-close residual state (ORDER-132 F3) is **in-memory only** — nothing to
-  migrate; after a restart the residual leg simply rejoins normal grid management.
+- Kangaroo pair-close intent (ORDER-132b Codex K2) **is persisted** (`k16_pair_a/b`) —
+  a restart mid-liquidation resumes closing both legs; restored tickets are re-validated
+  against symbol+magic before any close. New keys, no legacy form → nothing to migrate.

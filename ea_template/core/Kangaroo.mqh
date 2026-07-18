@@ -34,18 +34,74 @@
 // recompile-safe state (reset in Kangaroo_Init from OnInit)
 datetime g_k16_last_bar = 0;   // bar-open gate for first entries
 
-// ORDER-132 (Codex F3): overlap pair-close residual. When exactly ONE of the two
-// pair legs closes (the profitable cushion realized, the deep-red tail rejected),
-// the pair predicate may never fire again - this ticket is retried every tick
-// until the broker confirms it gone. In-memory only: after a restart the leg
-// simply rejoins normal grid management (oldest leg, still under emergency-DD +
-// cage), which is the pre-existing safe baseline.
-ulong g_k16_pair_residual = 0;
+// ORDER-132 (Codex F3) + 132b (Codex K1/K2/K3): overlap pair-close INTENT.
+// Once the pair predicate fires, BOTH tickets are armed (before any close is
+// sent - two simultaneous rejects must not lose the decision, and the predicate
+// is not guaranteed to re-fire after prices move). Each slot is reconciled
+// against broker state every tick until confirmed gone; while armed, the intent
+// owns the tick (no new pairs, no grid adds). Persisted via scoped GVs so a
+// restart mid-liquidation resumes it (K2); tester GVs are sandboxed per pass.
+ulong g_k16_pair_a = 0;   // newest-leg ticket of the armed pair (0 = none)
+ulong g_k16_pair_b = 0;   // oldest-leg ticket of the armed pair (0 = none)
+// ORDER-132b (Codex K4): full-basket close latch - same X2 pattern as ExitManager.
+bool  g_k16_closeall_pending = false;
+
+void Kangaroo_PairPersist()
+{
+   if(!RC_PersistHalt || DryRun) return;
+   if(g_k16_pair_a != 0) Persist_Set("k16_pair_a", (double)g_k16_pair_a); else Persist_Del("k16_pair_a");
+   if(g_k16_pair_b != 0) Persist_Set("k16_pair_b", (double)g_k16_pair_b); else Persist_Del("k16_pair_b");
+   Persist_Flush();
+}
 
 void Kangaroo_Init()
 {
-   g_k16_last_bar      = 0;
-   g_k16_pair_residual = 0;
+   g_k16_last_bar         = 0;
+   g_k16_pair_a           = 0;
+   g_k16_pair_b           = 0;
+   g_k16_closeall_pending = false;
+   if(RC_PersistHalt && !DryRun)
+   {
+      g_k16_pair_a = (ulong)Persist_Get("k16_pair_a", 0.0);
+      g_k16_pair_b = (ulong)Persist_Get("k16_pair_b", 0.0);
+      if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
+         PrintFormat("[K16] pair-close intent restored from persist (a=%I64u b=%I64u) - resuming liquidation",
+                     g_k16_pair_a, g_k16_pair_b);
+   }
+}
+
+// reconcile one pair-intent slot: close if still open (and still OURS - a
+// restored ticket is re-validated against symbol+magic), clear when gone.
+// Returns true while the slot still holds a live position.
+bool Kangaroo_PairSlotOpen(ulong &tk)
+{
+   if(tk == 0) return false;
+   if(!PositionSelectByTicket(tk)) { tk = 0; return false; }   // gone (closed/SL/manual)
+   if(PositionGetString(POSITION_SYMBOL) != _Symbol ||
+      (long)PositionGetInteger(POSITION_MAGIC) != _0_Magic)
+   {
+      PrintFormat("[K16] pair intent ticket %I64u no longer matches symbol+magic - dropping intent", tk);
+      tk = 0;
+      return false;
+   }
+   Exec_CloseTicket(tk);
+   if(!PositionSelectByTicket(tk)) { tk = 0; return false; }   // broker-confirmed gone
+   return true;
+}
+
+// full-basket close with broker-flat proof (K4): retried until confirmed.
+bool Kangaroo_CloseBasket()
+{
+   if(Exec_CloseAll()) { g_k16_closeall_pending = false; return true; }
+   g_k16_closeall_pending = true;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      Print("[K16] basket close incomplete - residual remains, retrying every tick");
+   }
+   return true;   // close intent owns the tick either way
 }
 
 int Kangaroo_Dir() { return (_16_Direction == 1 ? 1 : 2); }
@@ -204,34 +260,42 @@ bool Kangaroo_SingleTPHit()
 bool Kangaroo_ManageExits()
 {
    int have = Exec_CountAll();
-   if(have <= 0) { g_k16_pair_residual = 0; return false; }
-
-   // ORDER-132 (F3): finish an asymmetric pair-close FIRST - the partner already
-   // realized its profit, so this leg's exit intent stands regardless of the
-   // current pair predicate. Broker-state confirmation, retried every tick.
-   if(g_k16_pair_residual != 0)
+   if(have <= 0)
    {
-      if(!PositionSelectByTicket(g_k16_pair_residual))
-         g_k16_pair_residual = 0;   // gone (retry succeeded / SL / manual) - done
-      else
+      if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
       {
-         Exec_CloseTicket(g_k16_pair_residual);
-         if(!PositionSelectByTicket(g_k16_pair_residual))
+         g_k16_pair_a = 0; g_k16_pair_b = 0;
+         Kangaroo_PairPersist();
+      }
+      g_k16_closeall_pending = false;
+      return false;
+   }
+
+   // ORDER-132b (Codex K4): an armed full-basket close is finished FIRST -
+   // partial success changes have/net, so its original predicate cannot be
+   // trusted to re-fire.
+   if(g_k16_closeall_pending) return Kangaroo_CloseBasket();
+
+   // ORDER-132/132b (F3, K1/K2/K3): reconcile an armed pair-close intent.
+   // While any slot is live, the intent owns the tick: no other exits are
+   // evaluated and (via OnTick) no grid adds - never add exposure on top of an
+   // unresolved liquidation.
+   if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
+   {
+      bool aOpen = Kangaroo_PairSlotOpen(g_k16_pair_a);
+      bool bOpen = Kangaroo_PairSlotOpen(g_k16_pair_b);
+      Kangaroo_PairPersist();
+      if(aOpen || bOpen)
+      {
+         static datetime last_log = 0;
+         datetime now = TimeCurrent();
+         if(now - last_log >= 60)
          {
-            PrintFormat("[K16] pair-close residual %I64u closed on retry", g_k16_pair_residual);
-            g_k16_pair_residual = 0;
+            last_log = now;
+            PrintFormat("[K16] pair-close intent unresolved (a=%I64u b=%I64u, retcode=%d) - retrying",
+                        g_k16_pair_a, g_k16_pair_b, (int)g_trade.ResultRetcode());
          }
-         else
-         {
-            static datetime last_log = 0;
-            datetime now = TimeCurrent();
-            if(now - last_log >= 60)
-            {
-               last_log = now;
-               PrintFormat("[K16] pair-close residual %I64u still open (retcode=%d) - retrying",
-                           g_k16_pair_residual, (int)g_trade.ResultRetcode());
-            }
-         }
+         return true;
       }
    }
 
@@ -239,10 +303,7 @@ bool Kangaroo_ManageExits()
 
    // exit 1: single-order TP (original TP_80 role)
    if(have == 1 && Kangaroo_SingleTPHit())
-   {
-      Exec_CloseAll();
-      return true;
-   }
+      return Kangaroo_CloseBasket();   // ORDER-132b (K4): broker-flat proof or retry
 
    // exit 2: basket net-$ close (dollar-true replacement of the original's
    // unweighted pip-sum 160 - the confirmed real-loss-at-"TP" defect)
@@ -250,10 +311,7 @@ bool Kangaroo_ManageExits()
    {
       double target = _16_BasketTpUsdPer01 * (Exec_TotalLots() / 0.01);
       if(target > 0.0 && net >= target)
-      {
-         Exec_CloseAll();
-         return true;
-      }
+         return Kangaroo_CloseBasket();
    }
 
    // exit 4 (ladder_flatten, default OFF): deep ladder + controlled loss ->
@@ -263,17 +321,17 @@ bool Kangaroo_ManageExits()
    {
       PrintFormat("[K16] ladder_flatten: %d orders, net %.2f >= -%.2f -> close all",
                   have, net, _16_MaxControlledLossUsd);
-      Exec_CloseAll();
-      return true;
+      return Kangaroo_CloseBasket();
    }
 
    // exit 3: overlap pair-close - newest (big/near) + oldest (deep red) close
    // together when their combined net-$ clears the threshold ("intelligent
    // overlapping system" - the confirmed DD-eater of the original).
-   // ORDER-132 (F3): both close results are now verified against broker state.
-   // Both-fail -> predicate still true next tick, the whole pair re-fires.
-   // One-fails -> residual ticket armed above. No NEW pair while one is armed.
-   if(g_k16_pair_residual == 0 && have >= _16_OverlapMinOrders && _16_OverlapMinUsd > 0.0)
+   // ORDER-132b (Codex K1): the intent is armed (and persisted) BEFORE any close
+   // is sent - a double reject must not lose the decision, because prices move
+   // and the pair predicate is not guaranteed to be true again next tick.
+   // (Slots can only be empty here: a live intent already returned above.)
+   if(have >= _16_OverlapMinOrders && _16_OverlapMinUsd > 0.0)
    {
       ulong nTk, oTk; double nP, oP;
       int n = Kangaroo_FindEnds(nTk, oTk, nP, oP);
@@ -282,19 +340,22 @@ bool Kangaroo_ManageExits()
       {
          PrintFormat("[K16] overlap pair-close: newest %I64u (%.2f) + oldest %I64u (%.2f) = %.2f >= %.2f",
                      nTk, nP, oTk, oP, nP + oP, _16_OverlapMinUsd);
-         Exec_CloseTicket(nTk);
-         Exec_CloseTicket(oTk);
-         // broker-state re-scan, never the call results alone (129 doctrine).
-         // DryRun: both legs remain -> goneNew==goneOld -> residual never arms.
-         bool goneNew = !PositionSelectByTicket(nTk);
-         bool goneOld = !PositionSelectByTicket(oTk);
-         if(goneNew != goneOld)
+         g_k16_pair_a = nTk;
+         g_k16_pair_b = oTk;
+         Kangaroo_PairPersist();
+         // close + broker-state reconcile (never trust call results alone - 129
+         // doctrine). DryRun: legs remain but the intent stays armed and keeps
+         // logging intents (no real writes: PairPersist is DryRun-inert).
+         bool aOpen = Kangaroo_PairSlotOpen(g_k16_pair_a);
+         bool bOpen = Kangaroo_PairSlotOpen(g_k16_pair_b);
+         Kangaroo_PairPersist();
+         if(aOpen || bOpen)
          {
-            g_k16_pair_residual = (goneNew ? oTk : nTk);
-            PrintFormat("[K16] pair-close ASYMMETRIC: %I64u closed, %I64u remains -> retrying until closed",
-                        (goneNew ? nTk : oTk), g_k16_pair_residual);
+            PrintFormat("[K16] pair-close unresolved this tick (a=%I64u b=%I64u) - intent armed, retrying",
+                        g_k16_pair_a, g_k16_pair_b);
+            return true;   // own the tick: no adds on top of an in-flight liquidation
          }
-         // side still open - not a full basket close
+         // both broker-confirmed gone - side still open, not a full basket close
       }
    }
 
@@ -357,7 +418,7 @@ bool Kangaroo_OnTick()
    {
       PrintFormat("[K16] EMERGENCY close-all: equity DD %.2f%% >= %.2f%%",
                   RiskControl_CurrentDDPct(), _16_EmergencyDDPct);
-      Exec_CloseAll();
+      Kangaroo_CloseBasket();   // ORDER-132b (K4): broker-flat proof or per-tick retry
       return true;
    }
 

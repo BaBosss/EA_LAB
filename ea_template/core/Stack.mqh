@@ -154,6 +154,26 @@ bool Stack_MarginBudgetOK(const int dir, const double lot, const double price)
    return true;
 }
 
+// ORDER-132b (Codex E3): find an OWN resting pending within `tol` of a target
+// price that is not already claimed by another leg - used to adopt the result
+// of an ambiguous placement (timeout) instead of duplicating the leg. Ladder
+// legs sit a full step apart, so half a step is an unambiguous match radius.
+ulong Stack_FindPendingNear(const double price, const double tol)
+{
+   if(tol <= 0.0) return 0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_OrdIsMine(i)) continue;
+      ulong tk = OrderGetTicket(i);
+      if(MathAbs(OrderGetDouble(ORDER_PRICE_OPEN) - price) > tol) continue;
+      bool taken = false;
+      for(int j = 1; j <= g_stack_ladder_legs; j++)
+         if(g_stack_leg_ticket[j] != 0 && g_stack_leg_ticket[j] == tk) { taken = true; break; }
+      if(!taken) return tk;
+   }
+   return 0;
+}
+
 void Stack_ManagePyramid()
 {
    if(StackMode != STACK_PYRAMID) return;
@@ -214,13 +234,32 @@ void Stack_ManagePyramid()
       double off   = k * step;
       double price = (g_stack_dir == 1 ? (isStop ? g_stack_leg0_price + off : g_stack_leg0_price - off)
                                        : (isStop ? g_stack_leg0_price - off : g_stack_leg0_price + off));
+      // ORDER-132b (Codex E3): an earlier AMBIGUOUS attempt (timeout reported as
+      // failure, broker created the order anyway) must not be re-placed as a
+      // duplicate leg - adopt an own resting pending near the target first.
+      ulong adopted = Stack_FindPendingNear(price, step * 0.5);
+      if(adopted != 0)
+      {
+         g_stack_leg_ok[k]     = true;
+         g_stack_leg_ticket[k] = adopted;
+         PrintFormat("[STACK] leg %d adopted existing pending %I64u (earlier ambiguous placement)", k, adopted);
+         continue;
+      }
       double lot   = MM_NextLot(g_stack_leg0_lot, k);
       if(!Stack_MarginBudgetOK(g_stack_dir, lot, price)) { allOk = false; continue; }   // budget: leg waits
       double sl    = Exit_InitialSL(g_stack_dir, price);
       if(Exec_PlacePending(g_stack_dir, isStop, lot, price, sl, "PYR L" + IntegerToString(k)))
       {
-         g_stack_leg_ok[k]     = true;
-         g_stack_leg_ticket[k] = g_trade.ResultOrder();   // 0 in DryRun (intent only)
+         // ORDER-132b (Codex E3): a confirmed leg needs a real ticket, not just a
+         // true-ish call result (DryRun keeps intent-only semantics with ticket 0)
+         ulong tkNew = (DryRun ? 0 : g_trade.ResultOrder());
+         if(DryRun || tkNew != 0)
+         {
+            g_stack_leg_ok[k]     = true;
+            g_stack_leg_ticket[k] = tkNew;
+         }
+         else
+            allOk = false;   // accepted-looking call without a ticket: NOT confirmed
       }
       else
          allOk = false;                                   // vetoed/rejected: retry next tick
