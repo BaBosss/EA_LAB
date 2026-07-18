@@ -96,6 +96,54 @@ Claude + user) · single-window ranking
 **ทำได้:** Claude sets+judge · qwen/ea-screener batch M1 · M4 serial เลน 1 · 👉 แนะ: **Claude ออก .set →
 qwen รัน C → Claude อ่าน surface → A/B เฉพาะเมื่อผ่าน GATE**
 
+## ORDER-120 — implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table — `OPEN`
+**source:** `_triage/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` Part 4(b) (user approve ครบใน grill 2026-07-18 —
+decision log แถว 2026-07-18). **spec:** แทน prose gate ด้วย (1) decision tree STRUCTURAL→PARAMETRIC→
+DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE (2) bar table 7 แถวตาม framework (MAIN≥1.2·BWD≥1.0
+soft-gate ตามที่ user เคาะ Q3 — BWD-fail → PARKED-VERIFY(user) เคาะ demo-isolate ได้แต่ปิดทางเงินจริงอัตโนมัติ)
+(3) Row-X write-checklist 5 บรรทัด (scorecard·index·EDGE_CATALOG·B1·user-brief) (4) ตั้งชื่อ window
+MAIN/BWD/HOLDOUT ตาม rolling-36 ใหม่. **acceptance:** vocab 7 ตัวครบ · บรรทัด "paid for" history เดิมคงอยู่เป็น
+footnote (ห้ามลบบทเรียน) · ไม่มี section อื่นใน CLAUDE.md ถูกแตะ · เลขบาร์ตรง framework ทุกตัว.
+**ห้าม:** เปลี่ยนเลขบาร์เองโดยไม่มี decision ใหม่. **ทำได้:** Claude เท่านั้น (แก้กฎ) · 👉 แนะ: **Opus-seat**
+
+## ORDER-121 — implement framework Part 3: rewrite skill backtest-optimize-rigor เป็น ladder 0-9 — `OPEN`
+**source:** framework Part 3(b). **spec:** (1) แทน Phase D-F ด้วย ladder Step 0-9 (2) **ลบบรรทัด "Model 2
+throughout optimize for bar-open EAs" (drift ที่ Codex จับเป็น BLOCKER)** → Model-2 = zero-trade preflight +
+kill-only, coarse sweep = Model 1+ (3) pin windows: MAIN = rolling 36 เดือนที่ไม่กิน holdout (convention
+2023.01–2025.12) · BWD 2020.01–2022.12 · HOLDOUT 2026H1/unseen-symbol (4) ย้ายตาราง Model-4-mandatory เข้า
+(grid/DCA/basket · pending-ladder · TP<20pip · largest-loss cliff) (5) ย้ายเลข MC จาก robustness-validator เข้า
+(ruin ≤2% green · 2-10% resize-first · PF-5th ≥1.0) (6) `OPTIMIZE_PROCEDURE_AND_AUDIT.md` ติด superseded
+banner ชี้ skill. **acceptance:** grep "Model 2" ใน skill เหลือเฉพาะบริบท preflight/kill · ladder ครบ 10 ขั้น ·
+เลขตรง framework. **ทำได้:** Claude · 👉 แนะ: **Opus-seat** (แก้กฎ optimize = law)
+
+## ORDER-122 — implement framework Part 2+5: สร้าง docs/PIPELINE.md + sync FINAL RULE 9 skills + AGENTS §1.5 — `OPEN`
+**source:** framework Part 2(b) kill-list + Part 5(b) routing table. **spec:** (1) สร้าง `docs/PIPELINE.md` =
+owner ของ flow เดียว + ตาราง 10 boundary (artifact·gate·who·written-where) ยกจาก framework ตรงๆ + banner
+"canonical entry = PROJECT_STATE · ไฟล์นี้ owns: stage routing เท่านั้น" (2) แก้ FINAL RULE/handoff ใน 9 skills:
+strategy-and-risk (ลบ standalone-faster-path block) · mql-code-generator (→ mql-code-reviewer ก่อน compile,
+ลบ "standalone preferred") · signal-scanner · backtest-optimize-rigor · mql-code-reviewer ·
+robustness-validator + backtest-report-analyzer (ติด banner "calculator ไม่ใช่ pipeline gate — vocab เดิม retired") ·
+portfolio-selector (**แก้ corr: pair>0.7-block → ladder ≤0.40/0.40-0.60 reduce-lot/>0.60 reduce-not-cut ตามกฎ
+user**) · live-deployment-controller (= gate ก่อน vps-deploy-ops) · vps-deploy-ops (ต้องรับ output จาก gate)
+(3) AGENTS.md §1.5 sync สถานะ Fable → จอง 4 กรณี one-shot ตาม CLAUDE.md 2026-07-11 + fallback Opus+Codex.
+**acceptance:** ทุก skill ชี้ next-stage ตรง PIPELINE.md · ไม่มี "PASS/CONDITIONAL/ROBUST" เป็นด่านเหลือใน
+FINAL RULE ไหน · check_state ผ่าน. **ทำได้:** Claude (Sonnet ช่วย mechanical edits ได้) · 👉 แนะ: **Opus นำ + Sonnet แก้ตาม list**
+
+## ORDER-123 — order template: เพิ่ม field บังคับ 2 ช่อง (pre-registered bars · flat-lot probe) — `OPEN` (เล็ก)
+**source:** framework Part 5(b) enforcement #1. **spec:** เพิ่ม template block ใน header taskboard นี้ (ใต้กติกา
+สถานะ): order ทดสอบทุกใบต้องมีบรรทัด `bars:` (pass=X/dead=Y/กลาง=Z) และ `flat-lot: done/N-A/pending`.
+**acceptance:** header มี template + ORDER ใหม่ตั้งแต่ 124 ขึ้นไปใช้ครบ. **ทำได้:** Claude · 👉 แนะ: ทำพ่วงกับ 120-122
+
+## ORDER-124 — chassis chores ×3 ตาม framework Part 1 (additive, cage) — `OPEN` ⏸ แนะทำหลัง user refresh regression baseline
+**source:** framework Part 1(b) rules 5-6. **spec:** (1) ย้าย `core/Kangaroo.mqh` → `core/entries/`
+(แก้ include ใน LabCore #ifdef 16) (2) ย้าย input block `_MG_*` จาก LabCore.mqh → Inputs.mqh (3) exit-owner
+assert ที่ OnInit — fail/hard-WARN เฉพาะ combo ที่ close path รันพร้อมกันได้จริง (STACK_PYRAMID+Recovery ON;
+**ห้าม trip เคส dormant** เช่น entry-16 ที่ Kangaroo return ก่อน ExitManager — Codex catch) + ตาราง legal
+combos ลง DESIGN_V2 §3c. **acceptance ต่อข้อ:** compile 0/0 ทั้ง 8 Boss EA · run_tests PASS · neutrality:
+trade count + net identical ก่อน/หลังบน regression set (baseline stale ใช้เทียบ n ได้) · .set เดิมโหลดได้
+(ชื่อ input ไม่เปลี่ยน). **ห้าม:** เปลี่ยนชื่อ input ใดๆ (พัง .set) · แตะ logic. **ทำได้:** Claude · Codex ·
+👉 แนะ: **Claude เขียน + Codex blind review** (แตะ core = โค้ดสำคัญตาม routing flip)
+
 ## ORDER-095 / #4 — Boss_14 GridLog EUR-cross symbol-expand — `CLOSED + REVIEWED(Claude 2026-07-17): EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่ kill (Boss_14 live @GBPJPY leg-8). ยืนยัน grid=symbol-specific. GBPCHF/NZDCAD/AUDNZD/AUDCHF = BLOCKED-ON-DATA (ไม่มี history 2020-22 → user โหลดก่อนถึงเทสได้; user เคาะ stop-at-2). verdict = _triage/ORDER095_EURCROSS_EXPAND_VERDICT.md` (role: agent ea-validator ×2 · verdict = Claude)
 
 ## ORDER-098-C — FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold swept 30/70 (~0 trades) /40/60 (thin spike XAU MAIN 1.23 BWD 0.63) /50/50 (well-powered 350-370t both-win, PF 0.76-0.94 ไม่เคย >1.0). FVG-fill ไม่มี edge naked หรือ RSI-gated. Gold SMC = FVG-retest อยู่แล้ว → FVG-as-primary ปิด, fxDreema FVG lineage exhausted. verdict = _triage/ORDER098C_FVG_RSIGATE_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
