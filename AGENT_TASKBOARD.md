@@ -12,6 +12,21 @@
 
 ---
 
+## ORDER-LANEC-REBUILD — SMC×STO rebuild for an SL plateau (parallel to live demo 991070) — `OPEN`
+**why:** ORDER-LANEC-FAN found the demo config (SL=3.0) edge-positive both-window but **SL-fragile** — SL−20%
+(2.4×ATR) flips 0.94/0.99 both-window (center = cliff, not plateau). User (2026-07-18): keep 991070 on demo AS-IS,
+rebuild in parallel, swap only if the rebuild tests+builds better. verdict src = `_triage/ORDER_LANEC_SMCSTO_FAN_VERDICT.md`.
+**pre-registered bars:** pass = a config whose **SL axis is a PLATEAU** (SL and SL±20% ALL ≥1.0 both-window) AND
+MAIN≥1.2/BWD≥1.0 AND holdout(2026H1)≥1.2 → new demo row (new magic **991071**, run alongside 991070). middle =
+edge but SL still marginal → BUILD-ON note. dead = no SL-plateau exists on EURUSD H1 → keep 991070 only, close.
+**flat-lot probe:** N/A (EmaStoRev single-position, flat 0.01 — no escalation).
+**method (⚠️ anti-overfit — do NOT re-center on the 07-18 fan, that data is now "seen"):** proper coarse→fine
+SL×TP grid on MAIN only (SL {2.0,2.5,3.0,3.5,4.0} × TP {0.8,1.0,1.2,1.5}), pick the **plateau center** (not the
+peak) where neighbors incl. SL±1 step all profitable → both-window → fresh sensitivity fan → holdout 2026H1 (never
+used to select) → Model-4. Keep other axes at the ORDER-107 center (StoK13/OS30/AdxMax30/EMA50). EA=`(EXP)_EmaStoRev`,
+Expert `EmaStoRev`, EURUSD H1. **verdict = Claude** (VERDICT GATE + Row-X). **ห้าม:** report Model-2; re-center on
+seen fan; swap 991070 before the rebuild clears the pre-registered bars. role: agent runs coarse/fine M4 serial · Claude judges.
+
 ## ORDER-LANEA-AB — JumStoch (Boss_18) direction×lever A/B, Model-4 both-window — `DONE + REVIEWED(Claude 2026-07-18): DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed-TP → Boss14 basket-ATR-TP) lifted to 0.82–0.94 but still <1.0 both-window → H4 TF round 0.85–0.92 same. 28 runs total, ≥4 levers × 2 TF × both-window all sub-1. Both DirMode equal+losing = direction A/B moot; edge was standalone's 4-basket+BEP engine not the seed. Lever matrix NOT run (base-gate STOP per pre-registered bar). Boss_18 kept+caged (dead-seed, not deploy). verdict=_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md; EDGE_CATALOG dead-cell + basket-close-DCA lever added.` (role: Claude build+judge · M4 batch driver)
 **pre-req DONE:** Boss_18 built + caged green (compile 0/0 · run_tests PASS · tpl_regression RED-benign,
 n identical). Build note = `_triage/ORDER_LANEA_JUMSTOCH_BUILD.md`. Expert = `EALabTpl\Boss_18_JumStoch`.
