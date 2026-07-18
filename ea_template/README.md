@@ -1,5 +1,7 @@
 # EA_LabTemplate — dropdown-mode EA chassis
 
+> ⚠️ **DOC STALE-STAMP 2026-07-18:** ข้อความ "tester-only / Recovery-Hedge stub / ยังไม่ demo-live" ด้านล่าง = สถานะเก่า. ปัจจุบัน V2 มี Recovery/Hedge/Stack ใช้จริง + demo bundles staged (`_vps_deploy/`). อ่านสถานะจริงจาก PROJECT_STATE.md · การแก้เนื้อหาเต็มรอ ORDER-130 follow-up.
+
 Standalone MQL5 EA สำหรับ EA_LAB funnel. เสียบ entry หลายแบบเข้า chassis เดียว
 ที่ใช้ MM / Exit / Risk ร่วมกัน → ห่อ strategy ใหม่ให้ backtest+optimize ได้เร็วและสม่ำเสมอ.
 **Phase 3a: รันใน Strategy Tester เท่านั้น** (ยังไม่ต่อ demo/live). built-in indicator เท่านั้น (iMA/iATR) เพื่อ backtest ง่าย.

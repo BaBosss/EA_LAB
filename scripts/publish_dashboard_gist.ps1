@@ -16,6 +16,7 @@ Copy-Item $Dashboard $tmp -Force
 
 if (-not (Test-Path $IdFile)) {
   $out = gh gist create $tmp --desc "EA_LAB live portfolio dashboard (auto-updated daily 07:30)"
+  if ($LASTEXITCODE -ne 0) { Write-Host "gist create FAILED (gh exit $LASTEXITCODE): $out"; exit 1 }
   $url = ($out | Select-String 'https://gist.github.com/\S+').Matches.Value
   if (-not $url) { throw "gist create failed: $out" }
   $id = ($url -split '/')[-1]
@@ -28,5 +29,9 @@ if (-not (Test-Path $IdFile)) {
 } else {
   $id = (Get-Content $IdFile -TotalCount 1).Trim()
   gh gist edit $id $tmp -f dashboard.html
+  # gh is a native exe: a 401/network failure does NOT trip $ErrorActionPreference=Stop,
+  # so without this check the script prints "updated" and exits 0 on a dead publish
+  # (Codex system review 2026-07-18, ORDER-128).
+  if ($LASTEXITCODE -ne 0) { Write-Host "gist $id update FAILED (gh exit $LASTEXITCODE)"; exit 1 }
   Write-Host "gist $id updated $(Get-Date -Format 'yyyy-MM-dd HH:mm')"
 }

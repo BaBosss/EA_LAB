@@ -6,7 +6,20 @@
 # captured; failures are logged, gist publish is skipped when the dashboard step failed
 # (never republish a stale dashboard), and the task exits non-zero so LastTaskResult
 # shows the failure instead of a false green.
+param([switch]$Force)   # -Force = manual run, bypass the freshness guard
 $log = "D:\EA_LAB\portfolio\daily_monitor.log"
+$successMarker = "D:\EA_LAB\portfolio\daily_monitor_last_success.txt"
+$alertFile     = "D:\EA_LAB\portfolio\MONITOR_ALERT.txt"
+# ORDER-128 freshness guard: the task now also fires at logon (to catch up runs the
+# 07:30 trigger missed while logged out / asleep). Skip quietly when the last full
+# success is recent so the logon trigger can't double-run the chain.
+if (-not $Force -and (Test-Path $successMarker)) {
+    $ageH = ((Get-Date) - (Get-Item $successMarker).LastWriteTime).TotalHours
+    if ($ageH -lt 20) {
+        "=== $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') === skipped (last success $([math]::Round($ageH,1))h ago < 20h)" | Add-Content $log
+        exit 0
+    }
+}
 "=== $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') ===" | Add-Content $log
 $failed = @()
 function Step([string]$name, [scriptblock]$body) {
@@ -54,9 +67,22 @@ $staged = git diff --cached --name-only
 if ($staged) {
     git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log
 }
+# ORDER-128 health check: stale exporter data means the chain "ran" but the eyes are
+# still blind — surface it as loudly as a step failure instead of a quiet green.
+$newest = Get-ChildItem 'D:\EA_LAB\portfolio\live_deals' -File -ErrorAction SilentlyContinue |
+          Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$dataAgeH = if ($newest) { ((Get-Date) - $newest.LastWriteTime).TotalHours } else { [double]::MaxValue }
+if ($dataAgeH -gt 26) {
+    $failed += 'stale-data'
+    "ALERT: newest live_deals snapshot is $([math]::Round($dataAgeH,1))h old (>26h)" | Add-Content $log
+}
 if ($failed.Count -gt 0) {
+    $msg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm') monitoring chain UNHEALTHY: $($failed -join ', ') (newest data $([math]::Round($dataAgeH,1))h old)"
+    Set-Content $alertFile $msg -Encoding utf8
     "done WITH FAILURES: $($failed -join ', ')" | Add-Content $log
     exit 1
 }
+if (Test-Path $alertFile) { Remove-Item $alertFile -Force }
+Set-Content $successMarker (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -Encoding ASCII
 "done" | Add-Content $log
 exit 0

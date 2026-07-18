@@ -26,6 +26,8 @@
 
 ## 2. เฟสงาน (เงื่อนไขเลื่อนเฟส = gate จริง ไม่ใช่วันที่)
 
+> ⚠️ **HISTORICAL SNAPSHOT — superseded.** Phase 0/1 ด้านล่างเขียนไว้ 2026-07-03 และค้างสถานะ "operate 9 EA" — สถานะปัจจุบันจริงดู `PROJECT_STATE.md` (รวม decision log + forward plan §7).
+
 ### Phase 0 — ปิด Fable window (ตอนนี้ → 7 ก.ค.) ✅ เกือบครบ
 - [x] VISION / AGENTS / TASKBOARD / regression cage / Boss_14 + candidates / กฎ verdict ครบ 3 ข้อ
 - [ ] Codex/ZCode เคลียร์ ORDER-001..003 (GBPAUD IS-opt, probe 3 symbol, MC)

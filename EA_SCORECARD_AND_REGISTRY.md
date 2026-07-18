@@ -28,6 +28,8 @@ New verdicts must NOT introduce PASS/CONDITIONAL/ROBUST/etc. — write the canon
 
 ---
 
+> ⚠️ **HISTORICAL RUBRIC (frozen 2026-07-18)** — คะแนน/แถบคะแนนด้านล่างใช้เป็น intake evidence เท่านั้น **ห้ามใช้ตัดสิน deploy** — verdict authority เดียว = VERDICT GATE ใน CLAUDE.md (vocabulary: DEAD-STRUCTURAL/DEAD-OPTIMIZED/PARKED-VERIFY/BUILD-ON/CANDIDATE/DEMO/LIVE)
+
 ## PART 1 — THE SCORING RUBRIC
 
 ### Step 0 — HARD GATES (any one fails → DISQUALIFIED, do not score further)
@@ -331,6 +333,8 @@ both-window (2 DirMode × 2 sym × 2 dir × 2 exit × 2 TF); edge was the standa
 the LWMA+Stoch seed. Standalone JUMSTOCH untouched. verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
 
 ---
+
+> ⚠️ **HISTORICAL RUBRIC (frozen 2026-07-18)** — คะแนน/แถบคะแนนด้านล่างใช้เป็น intake evidence เท่านั้น **ห้ามใช้ตัดสิน deploy** — verdict authority เดียว = VERDICT GATE ใน CLAUDE.md (vocabulary: DEAD-STRUCTURAL/DEAD-OPTIMIZED/PARKED-VERIFY/BUILD-ON/CANDIDATE/DEMO/LIVE)
 
 ## HOW TO USE
 1. New or revisited EA → run Step-0 gates first. Any fail = DISQUALIFIED, stop.

@@ -6,7 +6,7 @@ Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_ST
 **gate นี้ = owner ของ verdict ทั้งหมด · อ่านทุก session · ถ้าจะเขียน verdict แล้ว tree ยังไม่ครบ = หยุด เดินให้ครบก่อน.**
 ขั้นตอน optimize เต็ม = skill `backtest-optimize-rigor` (owns THE LADDER 0-9). gate นี้ = **ต้นไม้ตัดสิน** ที่ ladder ป้อนหลักฐานเข้ามา.
 
-**Window names (pin เดียวใช้ทุกที่):** **MAIN** = 36 เดือนล่าสุด re-pin ทุก re-opt 6 เดือน (วันนี้ ≈ 2023.07–2026.07) · **BWD** = 2020–2022 (trend/stress regime) · **HOLDOUT** = window/symbol ที่ไม่เคยใช้ select (default 2026H1 จนกว่าจะถูกใช้ — ใช้แล้วไหม้; หลังจากนั้น demo-forward = holdout และ verdict ต้องระบุ).
+**Window names (pin เดียวใช้ทุกที่):** **MAIN** = 36 เดือนล่าสุดที่**ไม่กิน HOLDOUT** — จบก่อน holdout เริ่มเสมอ (วันนี้ = **2023.01–2025.12**) re-pin ทุก re-opt 6 เดือน · **BWD** = 2020–2022 (trend/stress regime) · **HOLDOUT** = window/symbol ที่ไม่เคยใช้ select (default 2026H1 จนกว่าจะถูกใช้ — ใช้แล้วไหม้; หลังจากนั้น demo-forward = holdout และ verdict ต้องระบุ). **กฎเหล็ก: MAIN ∩ HOLDOUT = ∅** — ถ้า re-pin MAIN เลื่อนไปทับ holdout ปัจจุบัน ต้องประกาศ holdout ใหม่ก่อน (Codex system review 2026-07-18 จับ overlap 2023.07–2026.07 vs 2026H1 = ช่อง leakage).
 
 ```
 EVIDENCE IN

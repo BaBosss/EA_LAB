@@ -49,7 +49,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   (ORDER-093, 2026-07-11 — แทน invariant ชุดเก่า "9 EA/1 account/judge 09-22" ที่ค้างตั้งแต่ยุค 06-22;
   reality ปัจจุบัน = 5 บัญชี ดู DEMO_DEPLOYMENT_PLAN §DEPLOYMENT REALITY 2026-07-09) · แก้ deploy ที่ไหน
   ต้องแก้ CSV ก่อนเสมอ แล้ว checker จะบังคับ dashboard map + docs ให้ตรงเอง
-- backtest window **2023–2026** · re-opt ทุก 6 เดือน
+- backtest window: **MAIN 2023.01–2025.12** (36 เดือน ไม่กิน holdout 2026H1) · re-opt/re-pin ทุก 6 เดือน
 - magic ห้ามชน — บังคับโดย checker จาก CSV (duplicate account|magic = WARN/block)
 - **bot บังคับเอง:** git **pre-commit hook** (`.githooks/pre-commit`) รัน `scripts/check_state.ps1 -Strict`
   อัตโนมัติทุก commit → validate ทุก doc/dashboard-map เทียบ `DEPLOYMENTS.csv` สองทิศ (แถว CSV ไม่มีใน map =
@@ -239,10 +239,12 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 | 2026-06-29 | **PROJECT_STATE.md = living doc กลาง** | ให้ AI ทุกตัวเข้าใจตรงกัน (user request) |
 | 2026-06-23 | **DD% ไม่ใช่ hard gate** | DD แก้ได้ด้วย sizing/spacing; structural gate คือ "กลไก" (uncapped martingale/grid). ดู EA_SCORECARD Step 0 |
 | ongoing | **correlation rule:** ≤0.40 additive · 0.40–0.60 watch · >0.60 redundant → **ลด lot ไม่ใช่ตัดทิ้ง** | user rule (memory: correlation-vs-lotsize) |
-| ongoing | **backtest window = 3 ปี (2023–2026)** · re-opt ทุก 6 เดือน · ห้ามยืดเป็น 10 ปีเพื่อ "แก้ MC" | memory: backtest-window |
+| ongoing | **backtest window = MAIN 36 เดือน (2023.01–2025.12, ห้ามทับ holdout)** · re-opt ทุก 6 เดือน · ห้ามยืดเป็น 10 ปีเพื่อ "แก้ MC" | memory: backtest-window · โดน re-pin ชัดโดย decision 2026-07-18 |
 | ongoing | **demo ≥3 เดือน ห้ามลัด** ก่อน live micro | README กฎเหล็ก |
 
 ---
+
+> ⚠️ **HISTORICAL SNAPSHOT — superseded.** ตารางด้านล่างค้างจากช่วงก่อน 2026-07-18 (ST03 ออกจากเงินจริงแล้ว) — ความจริงปัจจุบันดูไฟล์เดียว: `portfolio/DEPLOYMENTS.csv`
 
 ## 4. LIVE PORTFOLIO (สรุป — detail เต็มที่ `DEMO_DEPLOYMENT_PLAN.md`)
 
