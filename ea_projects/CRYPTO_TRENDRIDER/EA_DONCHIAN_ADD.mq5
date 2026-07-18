@@ -240,14 +240,27 @@ void OnTick()
       double o1 = iOpen(_Symbol, PERIOD_CURRENT, 1), c1 = iClose(_Symbol, PERIOD_CURRENT, 1);
       double h1 = iHigh(_Symbol, PERIOD_CURRENT, 1), l1 = iLow (_Symbol, PERIOD_CURRENT, 1);
       double o2 = iOpen(_Symbol, PERIOD_CURRENT, 2), c2 = iClose(_Symbol, PERIOD_CURRENT, 2);
-      double body = MathAbs(c1 - o1), range = h1 - l1;
+      double h2 = iHigh(_Symbol, PERIOD_CURRENT, 2), l2 = iLow (_Symbol, PERIOD_CURRENT, 2);
+      double o3 = iOpen(_Symbol, PERIOD_CURRENT, 3), c3 = iClose(_Symbol, PERIOD_CURRENT, 3);
+      double h3 = iHigh(_Symbol, PERIOD_CURRENT, 3), l3 = iLow (_Symbol, PERIOD_CURRENT, 3);
+      double body  = MathAbs(c1 - o1), range  = h1 - l1;
+      double body2 = MathAbs(c2 - o2), range2 = h2 - l2;
+      double body3 = MathAbs(c3 - o3);
+      // 2-bar reversal at the pullback
       bool engulf_bull = (c1 > o1) && (c2 < o2) && (c1 >= o2) && (o1 <= c2);
       bool engulf_bear = (c1 < o1) && (c2 > o2) && (c1 <= o2) && (o1 >= c2);
       bool pin_bull = (range > 0) && ((MathMin(o1,c1) - l1) >= 2.0*body) && (c1 >= l1 + 0.66*range);
       bool pin_bear = (range > 0) && ((h1 - MathMax(o1,c1)) >= 2.0*body) && (c1 <= h1 - 0.66*range);
-      add_long_pa  = (n_longs  > 0) && (engulf_bull || pin_bull)
+      // inside-bar breakout: bar2 inside bar3, bar1 breaks bar2 extreme in trend direction
+      bool inside2   = (h2 <= h3) && (l2 >= l3);
+      bool ib_bull   = inside2 && (c1 > h2) && (c1 > o1);
+      bool ib_bear   = inside2 && (c1 < l2) && (c1 < o1);
+      // morning/evening star: big bar3 against trend, small-body bar2, bar1 closes past bar3 midpoint
+      bool star_bull = (c3 < o3) && (body2 <= 0.5*body3) && (c1 > o1) && (c1 >= (o3 + c3)*0.5) && (body3 > 0);
+      bool star_bear = (c3 > o3) && (body2 <= 0.5*body3) && (c1 < o1) && (c1 <= (o3 + c3)*0.5) && (body3 > 0);
+      add_long_pa  = (n_longs  > 0) && (engulf_bull || pin_bull || ib_bull || star_bull)
                      && (!_03_UseEmaFilter || close1 > ema_v);
-      add_short_pa = (n_shorts > 0) && (engulf_bear || pin_bear)
+      add_short_pa = (n_shorts > 0) && (engulf_bear || pin_bear || ib_bear || star_bear)
                      && (!_03_UseEmaFilter || close1 < ema_v);
    }
 

@@ -96,6 +96,20 @@ breakout-STOP ทั้งสอง window** → คำถาม add-trigger ป
 บน crypto trend EA, การ add ตอน "ราคายืนยันต่อ (breakout)" ชนะการ add ตอน "ราคาย่อ (pullback)" อย่างสม่ำเสมอ**
 — pullback-add เพิ่มไม้ที่ราคาดีกว่าแต่แลกกับการเก็บไม้ในจังหวะที่เทรนด์อาจกำลังจบ. deploy path = **EA_DONCHIAN v1 + pyr3** เดิม.
 
+## ✅ 125b รอบสุดท้าย (user 2026-07-18): PA-H1 + ขยาย PA เป็น 4 pattern — จบจริง
+
+v3: PA detector = engulfing · pin · **inside-bar breakout · morning/evening star** (compile clean)
+| | IS PF/net/DD | BWD PF/net/DD | vs breakout adds |
+|---|---|---|---|
+| PA 4-pattern H1 | 1.45 / 780 / 6.2% | 1.82 / ~1,000 / 5.5% | แพ้ทั้งคู่ |
+| PA 4-pattern H4 | **1.72 / 976 / 5.3%** | 1.81 / 978 / 6.1% | **ชนะ IS ชัด (net/DD 183 vs 155)** แต่แพ้ BWD (161 vs 211) |
+| breakout-STOP | 1.68 / 886 / 5.7% | 2.18 / 1,100 / 5.2% | แชมป์ |
+
+รวมทั้ง campaign: **6 variant** (STO-H4 ×3K · STO-H1 · PA-H1 · PA-H4 ×2รุ่น) — ไม่มีตัวไหนชนะ breakout adds
+ทั้งสอง window. PA-H4 4-pattern = ตัวเดียวที่ชนะ IS → เก็บเป็น **WATCH-lever**: ถ้า forward/demo ของ breakout adds
+อ่อนกว่า backtest ค่อยหยิบ PA-H4 มา revisit (มัน "เกือบ" — ไม่ใช่ตาย). **การตัดสินย้ายไปที่ demo แล้ว — หยุด
+sweep add-trigger เพิ่ม (diminishing returns ชัดเจน 6/6).**
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
