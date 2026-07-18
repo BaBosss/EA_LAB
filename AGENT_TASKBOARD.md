@@ -884,6 +884,20 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 
 ---
 
+## ORDER-117 — CAMPAIGN: รีด EA ที่ validated แล้ว — coverage (symbol×TF) + precision-filter (user 2026-07-18: "symbol×TF ยังไม่หมด + เพิ่ม Sto/RSI/CCI/volume/PA/MTF จับจังหวะแม่นขึ้นได้") — `OPEN (multi-session, pace 1 batch/รอบ) · Claude lead + subagent batch · Phase A batch 1 RUNNING`
+
+**ที่มา (user จับถูก, lead ยอมรับ):** "corpus-mining exhausted" ≠ "improvement exhausted". lane ที่ตันจริง = split-lever + .Final-EA corpus + naked-signal hunt. **ที่ยังเปิดกว้าง + EV สูง + เสี่ยงต่ำ (ต่อยอด edge ที่พิสูจน์แล้ว) = 3 อย่าง:** (A) ขยาย symbol×TF ของ EA ที่ validated (ORDER-095 ทำแค่ 1/6 EA) (B) เพิ่ม entry-quality filter (Sto/RSI/CCI/volume/candle-PA) ให้ "ออกไม้น้อยแต่แม่นขึ้น" (C) MTF: ออกไม้ดีแล้วดู higher-TF (เลือกมากขึ้น) / lower-TF (ไม้เยอะขึ้น). **doctrine ต่อยอด: ต้อง base ที่มี flat-lot edge จริงก่อน (เหมือน split/pending — filter เติม precision ไม่สร้าง edge).**
+
+**Phase A — coverage (symbol×TF ของ validated EAs) — batch 1 RUNNING (Claude 2026-07-18, subagent):** MacdDiv (home XAU H4 1.91/1.04/holdout1.30) × {USDJPY/GBPUSD/EURJPY/AUDUSD/XAG/US30 @H4} + XAU@{H1,H2,D1} both-window Model-1 → `_mt5_auto/MDX_EXPAND.csv`. bar: both-window PF≥1.0 + ≥40t = candidate leg (→ full funnel + corr). next EAs: SuperTrend (flat-lot 2.93) · IchiADX (098) · (BRK) family.
+
+**Phase B — precision-filter A/B (per validated EA, toggle default OFF = byte-identical):** เพิ่ม filter ทีละตัวแล้ว A/B on/off both-window: (B1) **higher-TF trend gate (MTF)** — เข้าเฉพาะทางเดียวกับ HTF (EMA-slope/SuperTrend HTF) (B2) **Sto/RSI timing** — เข้าเฉพาะตอน oscillator ยืนยันจังหวะ (B3) **CCI** (B4) **volume filter** (B5) **candle/PA confirm** (engulf/pin ที่ระดับ). **bar: filter ต้องยก PF **และ** win% ทั้ง both-window (ไม่ใช่แค่ตัดไม้) — ถ้าตัดไม้เฉยๆ PF ไม่ขึ้น = decoration, park.** (แพทเทิร์นเดียวกับ 098-J OB-gate). สร้าง filter บน EA ที่ flat-lot edge จริง (breakout / MacdDiv / SuperTrend).
+
+**Phase C — TF re-home:** ต่อจาก Phase A — ตัวที่ผ่าน ลอง lower-TF (ไม้เยอะ, เช็ค precision ไม่หลุด) + higher-TF (เลือก, ไม้น้อยแต่ PF สูง) หา sweet spot.
+
+**ห้าม:** filter/expand บน base ที่ flat-lot ไม่มี edge (สร้าง edge ไม่ได้ — บทเรียน split/pending) · verdict ก่อน both-window + (filter: win%↑ ด้วย) · deploy ก่อน holdout+corr · burst หลาย EA รอบเดียว (pace) · Model-2 เป็นเลขรายงาน · commit path-limited.
+
+---
+
 ## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `CORE DONE(Claude 2026-07-18) = split narrow lever, no new legs · conclusion _triage/ORDER116_CAMPAIGN_CONCLUSION.md · Phase 3 (London retrofit) = optional low-prior residual`
 
 **สรุป (conclusion เต็ม `_triage/ORDER116_CAMPAIGN_CONCLUSION.md`):** split = **narrow config-refinement ไม่ใช่ portfolio-wide upgrade / leg-generator.** ✅ Phase 1: XAU 40/5-split regime-robust (2.40/1.96 · full PF 2.26/149t/DD3.9% · **MC PF_5th 1.71 ruin0%**) = chop-robust กว่า live Bars55 (1.99/1.12) **แต่ corr 0.861 vs XAU-BRK leg = same-slot redundant** → replacement candidate ตอน XAU re-opt ไม่ใช่ leg เพิ่ม. ❌ Phase 2: ไม่เปิด leg ใหม่ (US30=ORDER-095 leg+spike · XAG/GBP/NAS dead). **doctrine: pending/split = weak-window-filler บน base ที่มี both-window edge + asymmetric weak window เท่านั้น — เช็ค base edge ก่อน.** residual: Phase 3 retrofit London/CB_GBP (build task, low-prior — GBP generic-Donchian ไม่มี edge แล้ว, value อยู่ที่ session-logic ของ London เอง) · Phase 4 (Bars55 TP) ORDER-108 ปิดแล้ว.
