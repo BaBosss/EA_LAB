@@ -25,6 +25,14 @@
   InpMagicsCsv=990120 + stale=200 → copy CSV ทับทุกสัปดาห์ตอน RDP)
 - runbook เดิม (`MACROGATE/ATTACH_RUNBOOK.md`) = เวอร์ชันท่ออัตโนมัติ เก็บไว้ทำทีหลังพร้อม NewsGuard
 
+## 4) CRYPTO TRENDRIDER — 2 leg ใหม่ (ORDER-125, ~4 นาที) 🆕
+- โฟลเดอร์: `_vps_deploy/CRYPTO_TRENDRIDER/` — คู่มือเต็ม `README_ATTACH.md`
+- บัญชี: **463666728 (Demo bundle 10)** — ⚠️ ต้องมี **BTCUSD + ETHUSD** ใน Market Watch (เช็ค suffix)
+- leg1: **BTCUSD H4** · EA_SUPERTREND · Magic **990025** · `ST_BTC_deploy.set` (RiskPct=1.0)
+- leg2: **ETHUSD H4** · EA_DONCHIAN · Magic **990030** · `DON_ETH_deploy.set` (RiskPct=0.35, MaxPyramid=3)
+- ⚠️ ST-BTC ใช้ **990025** ไม่ใช่ 990020 (990020 = SuperTrend XAU ใช้แล้ว)
+- 🔴 **GATE ก่อนเงินจริง:** demo ≥1 เดือน วัด swap-adjusted PF > 1.3 (live swap BTC −14.67%/yr, backtest คิด 0)
+
 ## ⛔ ห้าม attach (bundle เก่าที่ obsolete แล้ว — อยู่ในโฟลเดอร์เดียวกัน อย่าหยิบผิด)
 - `ST03_GBPUSD/` — ตระกูล ST03 ถอดจากเงินจริงแล้ว 2026-07-18 (STRUCTURAL no-edge)
 - `CB_EUR/` — DROPPED 2026-06-25 (no durable edge)
