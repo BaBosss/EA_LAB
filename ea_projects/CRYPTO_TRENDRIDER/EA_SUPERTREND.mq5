@@ -97,13 +97,16 @@ double RiskLot(double slDist)
 {
    if(_05_RiskPct <= 0.0 || slDist <= 0.0) return NormalizeLot(_05_FixedLot);
    double equity   = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(equity <= 0.0) return 0.0;
    double tickVal  = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_VALUE);
    double tickSize = SymbolInfoDouble(_Symbol, SYMBOL_TRADE_TICK_SIZE);
-   if(tickVal <= 0.0 || tickSize <= 0.0) return NormalizeLot(_05_FixedLot);
+   if(tickVal <= 0.0 || tickSize <= 0.0) return 0.0;
    double lossPerLot = (slDist / tickSize) * tickVal;
-   if(lossPerLot <= 0.0) return NormalizeLot(_05_FixedLot);
-   double riskMoney = equity * (_05_RiskPct / 100.0);
-   return NormalizeLot(riskMoney / lossPerLot);
+   if(lossPerLot <= 0.0) return 0.0;
+   double rawLot = (equity * (_05_RiskPct / 100.0)) / lossPerLot;
+   // do NOT floor up to broker min lot in risk-mode — that would silently exceed RiskPct. Skip instead.
+   if(rawLot < SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN)) return 0.0;
+   return NormalizeLot(rawLot);
 }
 
 //+------------------------------------------------------------------+

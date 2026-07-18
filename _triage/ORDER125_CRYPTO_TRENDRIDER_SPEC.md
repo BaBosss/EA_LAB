@@ -188,7 +188,13 @@ notional ≈ 0.29× equity (จาก risk 1% ÷ SL ~3.4% ของราคา)
 
 ## 🔍 CODE REVIEW — RiskLot snowball sizing (risk logic ใหม่ = ต้อง review)
 ตรวจแล้ว (manual, checklist mql-code-reviewer): division-by-zero guarded ครบ (RiskPct/slDist/tickVal/tickSize/lossPerLot ทุกตัวมี early-return) · NormalizeLot floor→min-lot ok · digit-aware ผ่าน tickValue/tickSize (ไม่ hardcode pip).
-**⚠️ 1 ข้อสังเกต (by-design ไม่ใช่บั๊ก):** `ACCOUNT_EQUITY` รวม floating P&L → ไม้ pyramid ไม้หลังๆ size จาก equity ที่มีกำไรลอยของไม้แรก = compound เร็วขึ้นตอนกำไร (นี่คือ snowball ที่ต้องการ แต่ขยาย DD — เป็นเหตุผลที่ DON-ETH ต้องลดเหลือ 0.35%). **ยังต้อง Codex blind audit ก่อน live** (iron rule: risk logic ใหม่ไม่มี cage).
+**⚠️ 1 ข้อสังเกต (by-design ไม่ใช่บั๊ก):** `ACCOUNT_EQUITY` รวม floating P&L → ไม้ pyramid ไม้หลังๆ size จาก equity ที่มีกำไรลอยของไม้แรก = compound เร็วขึ้นตอนกำไร (นี่คือ snowball ที่ต้องการ แต่ขยาย DD — เป็นเหตุผลที่ DON-ETH ต้องลดเหลือ 0.35%).
+
+**✅ CODEX BLIND AUDIT ทำแล้ว (2026-07-18) — เจอ 3 defect จริง (money math ถูก) แก้ครบ + regression ผ่าน:**
+1. **[High] min-lot floor override risk cap** — NormalizeLot floor lot ที่คำนวณได้ขึ้นเป็น broker min → risk เกิน RiskPct เงียบๆ. แก้: risk-mode ถ้า rawLot < min → `return 0.0` (skip) ไม่ floor ขึ้น.
+2. **[High] equity≤0 เปิดไม้ min-lot** — ไม่มี guard. แก้: `if(equity<=0) return 0.0`.
+3. **[Med] Donchian volume-step div-by-zero** — SuperTrend มี guard, Donchian ไม่มี. แก้: `if(st<=0) st=0.01`.
++ เพิ่ม `if(lot<=0) return` ใน Donchian caller (เดิมไม่เช็ค 0). **Regression fixed-binary: ST 2.22/91/DD5.62% · DON 2.52/186 = ตรงก่อนแก้เป๊ะ** (fix เป็น no-op ที่ deploy risk level, ทำงานเฉพาะ edge case) → **risk logic ผ่าน cage แล้ว, พร้อม demo**.
 
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ

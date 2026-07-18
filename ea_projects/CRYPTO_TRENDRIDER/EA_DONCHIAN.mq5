@@ -69,22 +69,27 @@ double NormalizeLot(const string sym, double lot)
    double mn = SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN);
    double mx = SymbolInfoDouble(sym, SYMBOL_VOLUME_MAX);
    double st = SymbolInfoDouble(sym, SYMBOL_VOLUME_STEP);
+   if(st <= 0.0) st = 0.01;
    lot = MathFloor(lot / st) * st;
    return MathMin(MathMax(lot, mn), mx);
 }
 
 // snowball sizing: lot such that a full SL hit costs RiskPct% of current equity.
+// returns 0.0 when risk-mode cannot be honored (skip the trade) — caller must treat 0 as no-trade.
 double RiskLot(const string sym, double slDist)
 {
    if(_05_RiskPct <= 0.0 || slDist <= 0.0) return NormalizeLot(sym, _05_FixedLot);
    double equity   = AccountInfoDouble(ACCOUNT_EQUITY);
+   if(equity <= 0.0) return 0.0;
    double tickVal  = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_VALUE);
    double tickSize = SymbolInfoDouble(sym, SYMBOL_TRADE_TICK_SIZE);
-   if(tickVal <= 0.0 || tickSize <= 0.0) return NormalizeLot(sym, _05_FixedLot);
+   if(tickVal <= 0.0 || tickSize <= 0.0) return 0.0;
    double lossPerLot = (slDist / tickSize) * tickVal;
-   if(lossPerLot <= 0.0) return NormalizeLot(sym, _05_FixedLot);
-   double riskMoney = equity * (_05_RiskPct / 100.0);
-   return NormalizeLot(sym, riskMoney / lossPerLot);
+   if(lossPerLot <= 0.0) return 0.0;
+   double rawLot = (equity * (_05_RiskPct / 100.0)) / lossPerLot;
+   // do NOT floor up to broker min lot in risk-mode — that would silently exceed RiskPct. Skip instead.
+   if(rawLot < SymbolInfoDouble(sym, SYMBOL_VOLUME_MIN)) return 0.0;
+   return NormalizeLot(sym, rawLot);
 }
 
 int CountOwn(ENUM_POSITION_TYPE pt)
@@ -192,6 +197,7 @@ void OnTick()
    double sl_dist = atr_buf[0] * _02_SL_ATR_mult;
    double lot     = (_05_RiskPct > 0.0 && sl_dist > 0.0) ? RiskLot(_Symbol, sl_dist)
                                                          : NormalizeLot(_Symbol, _05_FixedLot);
+   if(lot <= 0.0) return;   // RiskLot skipped (equity/spec bad, or risk-lot < broker min)
    double tp_dist = (_02_TP_ATR_mult > 0.0) ? atr_buf[0] * _02_TP_ATR_mult : 0.0;
    int    max_pos = (_04_MaxPyramid > 0) ? _04_MaxPyramid : 1;
 
