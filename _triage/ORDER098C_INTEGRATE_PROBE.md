@@ -39,15 +39,31 @@ level-1 lot (2×) is inherently steeper than LogPower's (1.2×), changing basket
 **Decisive:** Fib cap2×'s extra benign return is a false economy — it loses 2.5× more in the stress year
 (−$678 vs −$275), so across the regime cycle LogPower wins outright (−$101 vs −$397).
 
-## Conclusion (lane closed)
-098-C `PROG_FIBONACCI` is a **validated, functional, tunable bounded-martingale module** — but on a chassis
-already tuned with gentle LogPower it is a **strict downgrade at every FibMaxStep**, both-window confirmed.
-The Fibonacci sequence is structurally too steep at low levels; capping bounds the tail but not the early
-aggressiveness. **Use only where the target chassis has NO progression / a too-flat lot law** (adds bounded
-recovery power); do NOT blanket-apply over a tuned LogPower. `dynamic close-money` module still untested
-(separate future probe). Also noted: Boss_14 AUDNZD itself loses in 2022 (PF 0.72) = regime-dependent grid
-(known demo-first caveat, not new). **098-C integration lane = characterized & closed; module shelved as
-conditional-use, not a portfolio upgrade.**
+## Part 2 — dynamic close-money module (`_57_DynClose*`) both-window (Boss_14 AUDNZD)
+Existing exit = fixed `_2_BasketTP_Money=175`. dyn-close adds a depth-scaling target
+`base + (openCount/C)*base` (whichever target hits first closes the basket).
+| config | benign 2024–25 | stress 2022 | 2-yr net |
+|---|---|---|---|
+| baseline fixed $175 | +$174 (PF3.20/DD2.18%) | −$275 (PF0.72/DD6.71%) | −$101 |
+| dyn base50/C4 (target 62→150, **below** $175 = tighter everywhere) | −$349 (PF0.69/DD7.0%) | +$99 (PF1.07/DD2.7%) | −$250 ❌ |
+| **dyn base100/C4 (target 125→300, **exceeds** $175 at depth≥4)** | +$123 (PF1.25/DD2.95%) | −$171 (PF0.87/DD6.33%) | **−$48 ✅** |
+
+**Direction matters:** a target that scales *below* the baseline (base50) = premature exit = worse both-window.
+A target that scales *above* baseline at depth (base100 = "demand more profit when deep, let deep baskets run")
+= genuine **regime-robustness dial**: trades some benign upside ($174→$123) for materially smaller stress loss
+(−$275→−$171) → best 2-yr net of all configs (−$48 vs baseline −$101) with lower stress DD. (Still net-negative
+because AUDNZD Boss_14 loses across this regime cycle anyway — the module makes a losing config *less* losing;
+on a profitable chassis it should genuinely improve robustness.)
+
+## Conclusion (098-C lane fully characterized & closed — BOTH modules tested)
+- **`PROG_FIBONACCI`** = strict downgrade at every FibMaxStep on a tuned-LogPower chassis (Fib sequence too
+  steep at low levels; loses both-window). Use only on flat/no-progression chassis. **Shelved.**
+- **`dynamic close-money`** = **conditional WIN** when tuned to demand-more-at-depth (base>baseline TP): a real
+  regime-robustness dial (best 2-yr net here). Tighter-everywhere config (base<TP) hurts. **Keep as an
+  opt-in robustness modifier**; worth a proper follow-up on a *profitable* stacking chassis + Model-4 + multi-symbol.
+- Both modules function correctly (OFF-by-default, byte-identical regression). Neither is a blanket upgrade;
+  dyn-close (deep-scale) is the one with demonstrated positive value. Also noted: Boss_14 AUDNZD loses in 2022
+  (PF 0.72) = known regime-dependent grid caveat, not new.
 
 ## Artifacts
 sets: `_mt5_auto/ab_sets/kangaroo_fib/{Boss14_AUDNZD_BASE,Boss14_AUDNZD_FIB,Kangaroo_XAU_BASE,Kangaroo_XAU_FIB}.set`

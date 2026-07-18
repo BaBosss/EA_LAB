@@ -884,7 +884,9 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 
 ---
 
-## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `OPEN (multi-session, pace 1 batch/รอบ) · Phase 1 DONE(Claude 2026-07-18) → recipe locked · Phase 2 execute-ready`
+## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `CORE DONE(Claude 2026-07-18) = split narrow lever, no new legs · conclusion _triage/ORDER116_CAMPAIGN_CONCLUSION.md · Phase 3 (London retrofit) = optional low-prior residual`
+
+**สรุป (conclusion เต็ม `_triage/ORDER116_CAMPAIGN_CONCLUSION.md`):** split = **narrow config-refinement ไม่ใช่ portfolio-wide upgrade / leg-generator.** ✅ Phase 1: XAU 40/5-split regime-robust (2.40/1.96 · full PF 2.26/149t/DD3.9% · **MC PF_5th 1.71 ruin0%**) = chop-robust กว่า live Bars55 (1.99/1.12) **แต่ corr 0.861 vs XAU-BRK leg = same-slot redundant** → replacement candidate ตอน XAU re-opt ไม่ใช่ leg เพิ่ม. ❌ Phase 2: ไม่เปิด leg ใหม่ (US30=ORDER-095 leg+spike · XAG/GBP/NAS dead). **doctrine: pending/split = weak-window-filler บน base ที่มี both-window edge + asymmetric weak window เท่านั้น — เช็ค base edge ก่อน.** residual: Phase 3 retrofit London/CB_GBP (build task, low-prior — GBP generic-Donchian ไม่มี edge แล้ว, value อยู่ที่ session-logic ของ London เอง) · Phase 4 (Bars55 TP) ORDER-108 ปิดแล้ว.
 
 ### ORDER-116 Phase 1 RESULT (Claude 2026-07-18) — verdict `_triage/ORDER116_PHASE1_VERDICT.md` · raw `_mt5_auto/O116_P1.csv`
 offset sweep XAU H1 Bars40/TP5 both-window Model-4 (D:\Meta 5). **split ยกหน้าต่างอ่อน (BWD chop) 1.75→~1.96** แลก REC นิด (2.49→2.33-2.40) = regime-robust (คอนเฟิร์ม ORDER-108 บน tick ใหม่). **plateau offset ∈ {−0.30,−0.15,0.00}** · +0.15 ตก (retest ตื้นไป BWD 1.67) → edge อยู่ฝั่ง retest ลึก. bar ผ่าน (≥1.80 both). **LOCKED RECIPE = split 0.02mkt/0.01pend · RetestOffset −0.15 · Expiry 5** (`BRK40_split_offm0p15.set`). → Phase 2: พก recipe ไป GBPUSD/EURUSD/US30/XAG both-window หา leg ใหม่ (≥1.4 both + corr<0.8).
@@ -939,7 +941,7 @@ offset sweep XAU H1 Bars40/TP5 both-window Model-4 (D:\Meta 5). **split ยก�
 
 ---
 
-## ORDER-095 — CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเยอะ") — `OPEN (multi-session, pace 1 EA/batch) · batch 1 DONE(Claude 2026-07-14): EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_deploy/EA_BREAKOUT_USDJPY (991003) + EA_BREAKOUT_US30 (991005) · verdict = _triage/ORDER095_BREAKOUT_XAU_EXPAND_VERDICT.md`
+## ORDER-095 — CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเยอะ") — `OPEN (multi-session, pace 1 EA/batch) · batch 1 DONE(Claude 2026-07-14): EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_deploy/EA_BREAKOUT_USDJPY (991003) + EA_BREAKOUT_US30 (991005) · verdict = _triage/ORDER095_BREAKOUT_XAU_EXPAND_VERDICT.md` ⚠️ **US30 991005 UPDATE (ORDER-116, 2026-07-18): plateau check เผยว่าเป็น SPIKE ไม่ใช่ plateau** (b30/b50 ตก <1.2 both · tp4/tp6 invert · thin 24-39t) → **คง WATCH/small, ห้าม graduate จาก single-cell evidence** (ดู `_triage/ORDER116_PHASE2_VERDICT.md`)
 
 **หลักการ (build-on doctrine + multi-symbol reuse):** EA ที่ deploy แล้ว = validated ที่ home เดียว · ขยายไป
 symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว่างกัน) = เพิ่มไม้โดยไม่ต้องหา EA ใหม่.
