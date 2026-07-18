@@ -11,6 +11,7 @@
 #include "Indicators.mqh"
 #include "Execution.mqh"
 #include "Regime.mqh"          // add-gating: Stack_DecideAdd may consult Regime_AllowsEntryDirection
+#include "PriceAction.mqh"     // StackConfirm=CONF_PA_ENGULF uses PA_Bull/BearEngulf
 #include "RiskControl.mqh"
 #include "MoneyManagement.mqh"
 #include "ExitManager.mqh"
@@ -69,6 +70,12 @@ bool Stack_ConfirmOK(const int dir, const double triggerLevel, const EntrySignal
          if(dir == 1) return (c1 >= triggerLevel);   // long add: closed above
          else         return (c1 <= triggerLevel);   // short add: closed below
       }
+
+      case CONF_PA_ENGULF:
+         // add only when an engulfing confirms the add direction: a long add
+         // needs a bullish engulfing (real bounce), a short add a bearish one.
+         // Turns a blind distance grid into "add at a confirmed turn/continuation".
+         return (dir == 1) ? PA_BullEngulf() : PA_BearEngulf();
    }
    return false;
 }

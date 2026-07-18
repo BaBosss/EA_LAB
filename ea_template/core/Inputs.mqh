@@ -97,7 +97,8 @@ enum ENUM_STACK_CONFIRM
    CONF_DISTANCE   = 0,  // 0 Distance only (blind)
    CONF_SIG_VALID  = 1,  // 1 Distance + signal still valid (= V1)
    CONF_RETRIGGER  = 2,  // 2 Distance + signal re-trigger
-   CONF_PRICE_ACT  = 3   // 3 Distance + bar CLOSE beyond level (PA)
+   CONF_PRICE_ACT  = 3,  // 3 Distance + bar CLOSE beyond level (PA)
+   CONF_PA_ENGULF  = 4   // 4 Distance + engulfing candle in the ADD direction (PriceAction.mqh)
 };
 
 enum ENUM_PROTECT_PROFILE
@@ -171,6 +172,10 @@ input int    _9_MaxLevels   = 5;        // max stacked orders
 // disallows (reuses the ADX Regime; needs _50_RegimeMode!=0 to have any effect).
 // Default false = behaviour byte-identical to before. See EDGE_CATALOG "add-gating".
 input bool   _9_RegimeGateAdds = false;
+// additive (PriceAction Phase 0, 2026-07-18): body-size ratio for the engulfing
+// used by StackConfirm=CONF_PA_ENGULF(4). 1.0 = classic (signal body >= prior body).
+// Only read when StackConfirm=4; inert otherwise. Default keeps all EAs unchanged.
+input double _9_PA_MinBodyRatio = 1.0;
 // additive (MERGE-03, ScaleExecutor_v2 port): STACK_PYRAMID(93) pending ladder.
 // Active ONLY when StackMode=93 - all other modes ignore these two inputs.
 // Leg0 = normal market entry; legs 1..N = resting pendings at Stack_StepPrice()

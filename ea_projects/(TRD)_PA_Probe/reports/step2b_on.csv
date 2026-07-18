@@ -1,0 +1,3 @@
+﻿label,PF,net,eqDDpct,trades,winpct,maxLoss,recovery,report
+ON_UP_M4,1.0,4.11,4.69,66.0,48.48,-49.72,0.01,PAGRID2_ON_UP_M4
+ON_DN_M4,,,,,,,,PAGRID2_ON_DN_M4

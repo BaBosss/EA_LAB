@@ -268,3 +268,18 @@ the DCA tail, doesn't chase PF). Cage green (run_tests ALL PASS; tpl_regression 
 stale-baseline, trade-counts identical). Opt-in per EA (esp. useful for GRID_AGAINST/DCA on trend-prone
 symbols); needs `_50_RegimeMode!=0`. Best config found: mode 1 + AllowTrendDown=false for a long DCA
 (add in range+uptrend, stop adding into a downtrend).
+
+## LEVER: PA-confirm on grid ADDS (engulfing) — StackConfirm=CONF_PA_ENGULF (2026-07-18) 🟩 REUSABLE (defensive)
+
+Sibling of add-gating: gate the grid ADD on a **candle pattern** instead of blind distance. `Stack_ConfirmOK`
+mode 4 (`CONF_PA_ENGULF`, additive) requires an engulfing in the add direction — a long add needs a bullish
+engulfing (real bounce), a short add a bearish one. Detector = `core/PriceAction.mqh` (`PA_Bull/BearEngulf`,
+`_9_PA_MinBodyRatio`). Validated on Boss_14 GridLog AUDNZD **Model-4 real ticks, both-window**: distance-only
+DCA was net −286 / worst-DD 9.6% (bleeds the 2019-22 window −711); PA-confirm adds → net **+98 / worst-DD 4.7%**
+(UP −711→+4, DN +425→+94), trades cut ~60%. **It is a RISK-TRIMMER / bleed-stopper, not a profit-maximiser** —
+it sacrifices upside in the good window to kill the bleed in the bad one, netting both-window-positive + half DD.
+Cage green (run_tests ALL PASS; neutrality byte-identical OLD-vs-NEW when StackConfirm≠4).
+**⚠️ Context split (Phase 0 + Step 1):** PA as a NAKED entry filter FAILED both-window (window-fit; XAU-H1-cont
+PA-on +8.7 exp in 23-26 but −1.8 in 19-22; EURGBP-rev negative both) — PA does NOT create a standalone edge.
+Its value is as a CONFIRM on an existing basket's adds. Matches the session lesson: confirm/MM layers multiply
+or protect an existing edge, they don't manufacture one. Probe + evidence: `ea_projects/(TRD)_PA_Probe/`.
