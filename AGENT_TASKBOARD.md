@@ -545,7 +545,12 @@ journal lane2: overlap pair-close ยิงจริง 168 ครั้ง (SEL
 
 ---
 
-## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `BUILT(ORDER-083) → WAITING-USER (GuardConfig เคาะ + attach)` · Phase 3 `STUB (MacroGate — blocked on MRIS)`
+## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `BUILT(ORDER-083) → WAITING-USER (GuardConfig เคาะ + attach)` · Phase 2.5 MRIS `DONE(Claude 2026-07-18)` · Phase 3 MacroGate `DONE — VALIDATED deploy-candidate (Claude 2026-07-18) → WAITING-USER (live attach)`
+
+**✅ SESSION 2026-07-18 CLOSE (commits `7ee6bbd8`→`e219db8e`, branch `order073-macrogate-safe`):**
+- **Phase 2.5 MRIS = SHIPPED, live daily.** web feeder (all 8 barometers from Yahoo — VIX/DXY/COPPER/US10Y-proxy + broker pairs, no stooq), thresholds LOCKED as user-sanctioned defaults + in-file `_tuning_guide` (`barometers.json` v1.0), whisper embedded top of `LIVE_DASHBOARD.html` + wired into `daily_monitor.ps1` (mris_run before dashboard). Codex-hardened (5 fixes: cache-poison, atomic write, effective-status, culture-parse, asof fail-open). Reads NEUTRAL RI 0.269 HIGH.
+- **Phase 3 MacroGate = VALIDATED deploy-candidate (was STUB).** Standalone watchdog + chassis GV bridge (`Execution.mqh` block+lot-mult, open-path only) + in-chassis `_MG_SelfGate` for single-EA A/B. Concept: MRIS flags Aug-2024 + Mar-2020 unwinds with lead time. **A/B (Boss_12_Breakout, full-year 2024, 2 symbols): eqDD −54..−56%, P&L flat→much better** (USDJPY −58→+2.8). Manage-only grid (Boss_14) = no-op (harmless). Cage: core edits inert (identical trade counts). Codex QA fix-then-ship → all 7 fixed. Verdict: `ea_projects\(Boss)_MacroGate\MACROGATE_AB_VERDICT.md`; review: `docs\memory_control\CODEX_MACROGATE_REVIEW.md`.
+- **WAITING-USER:** (1) NewsGuard GuardConfig เคาะ + VPS attach (Phase 2, unchanged) (2) MacroGate live attach = user decision (deploy on breakout carry legs; use standalone watchdog or `_MG_SelfGate`; regime CSV → VPS via rclone; add `mris_export_regime` to daily chain) (3) refresh `tpl_regression` baseline for a formal GREEN (Jul-11 ticks stale). ⚠️ MacroGate evidence = 1 window (2024, in-sample); test a holdout year before sizing up.
 
 **เป้า user:** เห็นข่าวแรงที่เกี่ยวกับพอร์ตทุกวัน + มีตัวคุมเหนือ EA ทั้งหมด (ลด lot / ปิดไม้ / block entry
 ช่วงข่าวแรง ตาม policy ต่อ strategy)
