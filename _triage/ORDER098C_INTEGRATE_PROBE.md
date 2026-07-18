@@ -17,16 +17,37 @@
 | trades | 12 | 34 |
 | recovery | 0.78 | 0.24 |
 
-## Reading
-The `PROG_FIBONACCI` module **functions correctly** (clearly different, valid behavior — lot changes shift
-basket-close timing → more baskets). But the Fibonacci sequence (1,2,3,5,8,13) is **far steeper** than
-Boss_14's tuned `LogPower(1.3^ln(orderN))` at these levels → same net profit but **3× the drawdown and PF
-1.26 vs 3.20**. On an already-well-tuned chassis, Fib-cap is a *downgrade*.
+## Tuning sweep — `_56_FibMaxStep` (AUDNZD H1 2024–25 benign, Model 1)
+| config | PF | net | eqDD% | trades |
+|---|---|---|---|---|
+| LogPower base | **3.20** | 173.7 | **2.18** | 12 |
+| Fib cap 2× (step1) | 1.53 | **280.6** | 5.55 | 34 |
+| Fib cap 3× (step2) | 1.35 | 208.1 | 6.25 | 34 |
+| Fib cap 5× (step3) | 1.26 | 166.7 | 6.65 | 34 |
+| Fib cap 13× (step5, default) | 1.26 | 166.7 | 6.65 | 34 |
 
-**Conclusion:** 098-C Fib-cap is a validated drop-in that **needs its own tuning** (lower `_56_FibMaxStep`
-or a gentler custom sequence), NOT a free upgrade. It helps a chassis with NO progression or a too-flat
-lot law (bounded recovery power added); it hurts one already tuned with gentle LogPower. `dynamic
-close-money` module untested here (separate probe). Integration = per-chassis tuning exercise, not blanket apply.
+Lower cap helps (cap2× = best Fib: highest net, even beats baseline net $281>$174). cap5×==cap13× because
+`MaxLevels=6` never reaches level>5. But every Fib variant runs 34 baskets vs LogPower's 12 — Fib's
+level-1 lot (2×) is inherently steeper than LogPower's (1.2×), changing basket turnover.
+
+## Both-window (VERDICT GATE) — LogPower vs best-Fib (cap2×), + 2022 stress
+| config | benign 2024–25 | stress 2022 | 2-yr net |
+|---|---|---|---|
+| LogPower base | +$174 (PF3.20/DD2.18%) | −$275 (PF0.72/DD6.71%) | **−$101** |
+| Fib cap2× | +$281 (PF1.53/DD5.55%) | **−$678** (PF0.53/DD8.89%) | **−$397** |
+
+**Decisive:** Fib cap2×'s extra benign return is a false economy — it loses 2.5× more in the stress year
+(−$678 vs −$275), so across the regime cycle LogPower wins outright (−$101 vs −$397).
+
+## Conclusion (lane closed)
+098-C `PROG_FIBONACCI` is a **validated, functional, tunable bounded-martingale module** — but on a chassis
+already tuned with gentle LogPower it is a **strict downgrade at every FibMaxStep**, both-window confirmed.
+The Fibonacci sequence is structurally too steep at low levels; capping bounds the tail but not the early
+aggressiveness. **Use only where the target chassis has NO progression / a too-flat lot law** (adds bounded
+recovery power); do NOT blanket-apply over a tuned LogPower. `dynamic close-money` module still untested
+(separate future probe). Also noted: Boss_14 AUDNZD itself loses in 2022 (PF 0.72) = regime-dependent grid
+(known demo-first caveat, not new). **098-C integration lane = characterized & closed; module shelved as
+conditional-use, not a portfolio upgrade.**
 
 ## Artifacts
 sets: `_mt5_auto/ab_sets/kangaroo_fib/{Boss14_AUDNZD_BASE,Boss14_AUDNZD_FIB,Kangaroo_XAU_BASE,Kangaroo_XAU_FIB}.set`
