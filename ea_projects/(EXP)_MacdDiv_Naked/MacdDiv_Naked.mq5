@@ -21,10 +21,16 @@ input long   _06_Magic        = 999094;
 input ulong  _06_Deviation    = 20;
 input bool   _06_AllowLive    = false;
 
+//--- [07] RSI-timing precision filter (ORDER-117 Track B — filter on a RAW base, no existing filter)
+input bool   _07_UseRsiGate   = false; // false = byte-identical baseline. true = require RSI to confirm reversal timing
+input int    _07_RsiPeriod    = 14;
+input double _07_RsiBuyMax     = 45.0; // buy (bullish div) only if RSI(1) <= this (oversold confirms the reversal)
+input double _07_RsiSellMin    = 55.0; // sell (bearish div) only if RSI(1) >= this (overbought confirms)
+
 static bool g_suppress_log=false;
 static datetime g_last_bar_time=0;
 static bool g_bar_checked=false;
-static int g_macd=INVALID_HANDLE, g_atr=INVALID_HANDLE;
+static int g_macd=INVALID_HANDLE, g_atr=INVALID_HANDLE, g_rsi=INVALID_HANDLE;
 static CTrade g_trade;
 
 bool HasOpenPosition()
@@ -70,11 +76,12 @@ int OnInit()
    g_suppress_log=_00_OptimizeMode || (bool)MQLInfoInteger(MQL_OPTIMIZATION);
    g_macd=iMACD(_Symbol,PERIOD_CURRENT,_02_MacdFast,_02_MacdSlow,_02_MacdSignal,PRICE_CLOSE);
    g_atr=iATR(_Symbol,PERIOD_CURRENT,_03_AtrPeriod);
-   if(g_macd==INVALID_HANDLE || g_atr==INVALID_HANDLE) return INIT_FAILED;
+   g_rsi=iRSI(_Symbol,PERIOD_CURRENT,_07_RsiPeriod,PRICE_CLOSE);
+   if(g_macd==INVALID_HANDLE || g_atr==INVALID_HANDLE || g_rsi==INVALID_HANDLE) return INIT_FAILED;
    g_trade.SetExpertMagicNumber(_06_Magic); g_trade.SetDeviationInPoints(_06_Deviation); g_trade.SetTypeFilling(ORDER_FILLING_FOK);
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int reason) { if(g_macd!=INVALID_HANDLE) IndicatorRelease(g_macd); if(g_atr!=INVALID_HANDLE) IndicatorRelease(g_atr); }
+void OnDeinit(const int reason) { if(g_macd!=INVALID_HANDLE) IndicatorRelease(g_macd); if(g_atr!=INVALID_HANDLE) IndicatorRelease(g_atr); if(g_rsi!=INVALID_HANDLE) IndicatorRelease(g_rsi); }
 double OnTester() { double t=TesterStatistics(STAT_TRADES); if(t<15) return -1.0; double s=TesterStatistics(STAT_SHARPE_RATIO); return s>0?s:-1.0; }
 
 void OnTick()
@@ -82,6 +89,8 @@ void OnTick()
    datetime bt=iTime(_Symbol,PERIOD_CURRENT,1); if(bt!=g_last_bar_time) { g_last_bar_time=bt; g_bar_checked=false; }
    if(g_bar_checked) return; g_bar_checked=true; if(HasOpenPosition()) return;
    double p,m; int dir=Divergence(p,m); if(dir==0) return;
+   // [07] RSI-timing gate (default OFF = identical): only take the divergence entry when RSI confirms the reversal
+   if(_07_UseRsiGate) { double rb[1]; if(CopyBuffer(g_rsi,0,1,1,rb)<1) return; if(dir==1 && rb[0]>_07_RsiBuyMax) return; if(dir==-1 && rb[0]<_07_RsiSellMin) return; }
    double atr[1]; if(CopyBuffer(g_atr,0,1,1,atr)<1 || atr[0]<=0) return;
    int d=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS); double point=SymbolInfoDouble(_Symbol,SYMBOL_POINT); double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK),bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
    double ext=(dir==1?iLow(_Symbol,PERIOD_CURRENT,1):iHigh(_Symbol,PERIOD_CURRENT,1));
