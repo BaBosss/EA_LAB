@@ -53,6 +53,27 @@ counter-trend pullbacks.
 
 No config is portable across symbol **and** timeframe → the positive cells are noise, not edge.
 
+## Cross-market screen (Phase 5 — config A dynamic, H1, 2021–2026)
+Was oil the wrong home? No. The concept fails to transfer AND exposes a structural risk flaw:
+| symbol | PF | net | eqDD% | note |
+|---|---|---|---|---|
+| BTCUSD | 1.00 | +300 | **76** | breakeven, near-ruin DD |
+| ETHUSD | 0.34 | −5971 | 64 | dead |
+| SOLUSD | 1.90 | +119 | 1.45 | artifact (trivial net, thin data) |
+| EURUSD | 1.20 | +1632 | 35 | only mild positive (FX-major = mean-reversion home, per portfolio thesis) |
+| GBPUSD | 0.88 | −2109 | 54 | loss |
+| USDJPY | 0.67 | −7828 | **92** | near account wipeout |
+| AUDUSD | 0.62 | −5282 | 63 | loss |
+| XAUUSD | 1.01 | +1494 | **88** | breakeven, near-ruin DD |
+| NAS100 | 0.69 | −3284 | 53 | loss |
+
+**🔴 STRUCTURAL FLAW exposed:** DD reached 76–92% despite a 25% circuit breaker, because the breaker
+checks on **bar-open (H1)** — on volatile instruments (BTC/XAU/JPY) a fast intra-bar excursion blows a
+no-per-order-SL grid past 25% before the next bar closes. Safe-ish only on low-vol oil (~22–33%).
+**→ per-order SL is NOT optional on anything volatile; the bar-gated breaker alone is unsafe.**
+Only EURUSD transferred mildly positive — the one lead worth a *separate* build-on if pursued, but the
+oil-proven fragility (spike/hole) makes a robust EURUSD result unlikely without real work.
+
 ## Reusable insight (→ EDGE_CATALOG)
 **Add-gating a grid** (stop adding legs once the trend has turned against the basket) structurally
 cuts counter-trend bleed: with-trend DD 40%→11–20%, maxLoss −312→−92. The rev01 lesson — **gating only
