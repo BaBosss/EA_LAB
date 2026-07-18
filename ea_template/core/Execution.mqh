@@ -35,9 +35,45 @@ double Exec_NormalizeLot(double lot)
    if(step <= 0.0) step = 0.01;
    if(RC_MaxLot > 0.0 && lot > RC_MaxLot) lot = RC_MaxLot;   // final hard ceiling
    if(lot > maxv) lot = maxv;
-   if(lot < minv) lot = minv;
    lot = MathFloor(lot / step + 0.0000001) * step;
-   return NormalizeDouble(lot, 2);
+   // ORDER-129 (ORDER-125 RiskLot pattern): digits follow the broker's volume step —
+   // NormalizeDouble(,2) corrupted 0.001-step symbols. Below-minimum after caps/rounding
+   // returns 0 (callers skip): the old floor-to-minimum could send MORE than the RC_MaxLot
+   // ceiling claimed to allow.
+   int stepDigits = 0;
+   double s = step;
+   while(stepDigits < 8 && MathAbs(s - MathRound(s)) > 1e-9) { s *= 10.0; stepDigits++; }
+   lot = NormalizeDouble(lot, stepDigits);
+   if(lot < minv)
+   {
+      static datetime last_log = 0;
+      datetime now = TimeCurrent();
+      if(now - last_log >= 60)
+      {
+         last_log = now;
+         PrintFormat("[EXEC] lot %.4f below broker min %.4f after caps - order skipped (not floored up)", lot, minv);
+      }
+      return 0.0;
+   }
+   return lot;
+}
+
+// ORDER-129: _0_MaxSpread was a declared-but-never-read input (operator sets it believing
+// entries are blocked, EA opens through news/rollover widening anyway). One predicate,
+// checked in BOTH open paths (market + pending). 0 keeps the historical no-op default.
+bool Exec_SpreadOK()
+{
+   if(_0_MaxSpread <= 0) return true;
+   long spr = SymbolInfoInteger(_Symbol, SYMBOL_SPREAD);   // points
+   if(spr <= (long)_0_MaxSpread) return true;
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      PrintFormat("[EXEC] spread %d > max %d - new order blocked", (int)spr, _0_MaxSpread);
+   }
+   return false;
 }
 
 // ---- NewsGuard bridge (ORDER-083, additive) ------------------------------
@@ -111,6 +147,7 @@ double Exec_MacroLotMult()
 bool Exec_Open(const int direction, double lot, const double sl, const double tp, const string comment)
 {
    if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   if(!Exec_SpreadOK()) return false;                            // ORDER-129: enforce _0_MaxSpread
    lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    g_exec_open_intents++;
@@ -214,8 +251,11 @@ int Exec_CountPending()
    return n;
 }
 
-void Exec_CancelAllPending()
+// ORDER-129: reports completion — a failed delete used to vanish silently, leaving a live
+// GTC order behind an EA that believed itself flat (Codex system review SEV-1).
+bool Exec_CancelAllPending()
 {
+   bool allOk = true;
    for(int i = OrdersTotal() - 1; i >= 0; i--)
    {
       if(!Exec_OrdIsMine(i)) continue;
@@ -223,7 +263,13 @@ void Exec_CancelAllPending()
       if(DryRun) { PrintFormat("[DRYRUN] cancel pending %I64u", tk); continue; }
       if(g_trade.OrderDelete(tk))
          PrintFormat("[EXEC] pending cancelled %I64u", tk);
+      else
+      {
+         allOk = false;
+         PrintFormat("[EXEC] pending cancel FAILED %I64u retcode=%d", tk, (int)g_trade.ResultRetcode());
+      }
    }
+   return allOk;
 }
 
 // place one resting leg. isStop: true=STOP (pyramid, with-trend fill),
@@ -233,6 +279,7 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
                        double price, const double sl, const string comment)
 {
    if(Exec_NewsBlocked() || Exec_MacroBlocked()) return false;   // news + macro veto (new orders only)
+   if(!Exec_SpreadOK()) return false;                            // ORDER-129: enforce _0_MaxSpread
    lot = Exec_NormalizeLot(lot * Exec_MacroLotMult());           // macro reduce-lot (open path only)
    if(lot <= 0.0) return false;
    price = NormalizeDouble(price, _Digits);
@@ -254,16 +301,26 @@ bool Exec_PlacePending(const int direction, const bool isStop, double lot,
    return ok;
 }
 
-void Exec_CloseAll()
+// ORDER-129: close-all now PROVES flatness instead of assuming it. Returns true only when,
+// after issuing every close/cancel, a broker-state re-scan finds zero own positions AND zero
+// own pendings. The hard-kill persists HALT only on a true return (reconciliation loop in
+// RiskControl retries every tick otherwise) — previously every PositionClose result was
+// discarded and HALT latched with residual exposure still live (Codex system review SEV-1).
+bool Exec_CloseAll()
 {
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!Exec_PosIsMine(i)) continue;
       ulong tk = PositionGetInteger(POSITION_TICKET);
-      if(!DryRun) g_trade.PositionClose(tk);
+      if(DryRun) continue;
+      if(!g_trade.PositionClose(tk))
+         PrintFormat("[EXEC] close FAILED %I64u retcode=%d", tk, (int)g_trade.ResultRetcode());
    }
    // basket gone = ladder leftovers must go too (no-op when no pendings exist)
    Exec_CancelAllPending();
+   if(DryRun) return true;   // intent mode: nothing real to verify
+   // broker-state confirmation - never trust the per-call results alone
+   return (Exec_CountAll() == 0 && Exec_CountPending() == 0);
 }
 
 // additive (ORDER-072, Kangaroo/16 overlap pair-close): close ONE own position

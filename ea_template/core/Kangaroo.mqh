@@ -133,7 +133,22 @@ bool Kangaroo_Open(const int have)
    if(!SymbolInfoTick(_Symbol, t)) return false;
    double entry = (dir == 1 ? t.ask : t.bid);
    double slD   = Kangaroo_SLDist();
-   double sl    = (slD > 0.0 ? (dir == 1 ? entry - slD : entry + slD) : 0.0);
+   if(slD <= 0.0)
+   {
+      // ORDER-129 fail-closed (Codex system review SEV-1): this module PROMISES a
+      // per-order SL. Risk-ATR unavailable (fresh attach / risk-TF not synced) used
+      // to fall through as sl=0 -> a naked first order right after restart. Skip the
+      // entry instead; the signal re-fires once the buffer is ready.
+      static datetime last_log = 0;
+      datetime now = TimeCurrent();
+      if(now - last_log >= 60)
+      {
+         last_log = now;
+         Print("[16] SL distance unavailable (risk-ATR not ready) - entry skipped, will retry");
+      }
+      return false;
+   }
+   double sl    = (dir == 1 ? entry - slD : entry + slD);
    double lot   = Kangaroo_NextLot(have);
    return Exec_Open(dir, lot, sl, 0.0, LAB_ENTRY_TAG + " L" + IntegerToString(have));
 }

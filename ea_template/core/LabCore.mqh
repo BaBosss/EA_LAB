@@ -72,6 +72,16 @@ input int    _MG_OffsetHours    = 0;                         // server = CSV tim
 //+------------------------------------------------------------------+
 int OnInit()
 {
+   // ORDER-129 magic-collision guard (Codex system review SEV-1): every Boss wrapper
+   // compiles with the same default magic (990001). Ownership is symbol+magic only, so
+   // two Boss EAs attached with compiled defaults would count, stack, partially close
+   // and hard-kill EACH OTHER's positions. On any real/demo account the default is
+   // therefore refused; the tester keeps working so default-param smokes still run.
+   if(!MQLInfoInteger(MQL_TESTER) && _0_Magic == 990001)
+   {
+      Print("[INIT] FATAL: _0_Magic is still the compiled default (990001) - load a .set with this EA's unique magic before attaching to an account");
+      return INIT_FAILED;
+   }
    if(!Indi_Init())
    {
       Print("[INIT] indicator handles failed");
@@ -158,6 +168,14 @@ void OnTick()
    // unreachable-code warnings. Other builds: this block does not exist.
    if(Kangaroo_OnTick()) return;
 #endif
+   // (1) hard kill FIRST - before any cadence gate. ORDER-129 (Codex system review
+   // SEV-1): the bar gate below used to early-return before the kill check, so with
+   // _0_BarOpenOnly=true and a basket open, an intrabar equity crash went unexamined
+   // until the next bar-open (H4 = up to 4 hours of unmanaged free-fall). Safety is
+   // never bar-gated; only signal/management cadence is.
+   if(RiskControl_CheckDD()) return;
+   if(RiskControl_IsHalted()) return;
+
    // (0) optional Zeus-style once-per-bar gate (default false = every tick,
    // unchanged). Management/stack/recovery evaluate once per bar-open ONLY;
    // the flat-entry trigger still runs intrabar so an armed resting-stop
@@ -168,8 +186,7 @@ void OnTick()
       datetime b = iTime(_Symbol, _Period, 0);
       if(b == g_lab_last_bar)
       {
-         if(Exec_CountAll() > 0) return;          // basket open: fully bar-gated
-         if(RiskControl_IsHalted()) return;
+         if(Exec_CountAll() > 0) return;          // basket open: management stays bar-gated (kill already ran above)
          if(Regime_BlocksFlatEntry()) return;     // mode 0=no-op; only flat first-entries are gated
          EntrySignal s = Entry_Evaluate();        // resting-stop trigger check
          if(!s.valid) return;
@@ -182,10 +199,6 @@ void OnTick()
       }
       g_lab_last_bar = b;
    }
-
-   // (1) hard kill first
-   if(RiskControl_CheckDD()) return;
-   if(RiskControl_IsHalted()) return;
 
    // (2) manage existing basket; stop if it fully closed this tick
    if(Exit_ManageBasket()) return;

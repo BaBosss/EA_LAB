@@ -11,6 +11,7 @@
 #include "Persist.mqh"
 
 bool   g_rc_halted      = false;
+bool   g_rc_kill_pending = false;   // ORDER-129: kill fired, broker flatness not yet verified
 double g_rc_peak_equity = 0.0;
 double g_rc_max_dd_pct  = 0.0;
 int    g_rc_cap_blocks  = 0;
@@ -102,8 +103,16 @@ void RiskControl_Init()
    g_rc_cap_blocks  = 0;
    // MERGE-05B: restore hard-kill state so restart/recompile cannot resurrect
    // a killed EA. Tester passes start with a clean GV sandbox -> no-op there.
+   g_rc_kill_pending = false;
    if(RC_PersistHalt)
    {
+      // ORDER-129: a restart/crash in the middle of an unconfirmed kill must resume the
+      // kill, even if equity has bounced back above the threshold by the time we return.
+      if(Persist_Get("rc_kill_pending", 0.0) > 0.5)
+      {
+         g_rc_kill_pending = true;
+         Print("[RISK] KILL-PENDING restored from persist - resuming close-all reconciliation");
+      }
       if(Persist_Get("rc_halted", 0.0) > 0.5)
       {
          g_rc_halted = true;
@@ -147,23 +156,55 @@ double RiskControl_CurrentDDPct()
    return dd;
 }
 
-// HARD KILL - returns true if it fired this tick
-bool RiskControl_CheckDD()
+// ORDER-129 kill reconciliation: KILL_PENDING -> (broker verified flat) -> HALTED.
+// Exec_CloseAll() now returns proof-of-flat; HALT (and its persist) only latch on that
+// proof. While pending, this retries EVERY tick regardless of current DD — previously a
+// single failed close during a liquidity gap left residual exposure unmanaged forever
+// once DD drifted back under the threshold (Codex system review SEV-1).
+bool RiskControl_KillReconcile()
 {
-   RiskControl_AcctHwmUpdate();   // no-op unless RC_AcctDDLimitPct > 0
-   double kill = RC_KillDDPct();
-   double dd   = RiskControl_CurrentDDPct();
-   if(kill > 0.0 && dd >= kill)
+   if(Exec_CloseAll())
    {
-      Exec_CloseAll();
-      g_rc_halted = true;
+      g_rc_kill_pending = false;
+      g_rc_halted       = true;
       if(RC_PersistHalt)
       {
          Persist_Set("rc_halted", 1.0);
          Persist_Set("rc_peak_eq", g_rc_peak_equity);
+         Persist_Set("rc_kill_pending", 0.0);
       }
-      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closed all + halt%s",
-                  dd, kill, ProtectLevel, (RC_PersistHalt ? " (persisted)" : ""));
+      PrintFormat("[RISK] HARD KILL complete: broker flat verified -> halt%s",
+                  (RC_PersistHalt ? " (persisted)" : ""));
+      return true;
+   }
+   static datetime last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - last_log >= 60)
+   {
+      last_log = now;
+      Print("[RISK] kill reconciliation: residual position/pending remains - retrying close-all");
+   }
+   return false;
+}
+
+// HARD KILL - returns true while the kill state owns this tick
+bool RiskControl_CheckDD()
+{
+   RiskControl_AcctHwmUpdate();   // no-op unless RC_AcctDDLimitPct > 0
+   if(g_rc_kill_pending)          // reconcile first, independent of current DD
+   {
+      RiskControl_KillReconcile();
+      return true;
+   }
+   double kill = RC_KillDDPct();
+   double dd   = RiskControl_CurrentDDPct();
+   if(kill > 0.0 && dd >= kill)
+   {
+      PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closing all",
+                  dd, kill, ProtectLevel);
+      g_rc_kill_pending = true;
+      if(RC_PersistHalt) Persist_Set("rc_kill_pending", 1.0);   // restart mid-kill keeps killing
+      RiskControl_KillReconcile();
       return true;
    }
    return false;

@@ -28,8 +28,10 @@ Write-Host "deployed -> $dst" -ForegroundColor Cyan
 
 $compileFailed = $false
 if ($Compile) {
-  # V2 = six Boss wrappers; V1 EA_LabTemplate kept for reference
-  $targets = @("Boss_11_GridTrend.mq5","Boss_12_Breakout.mq5","Boss_13_MeanRev.mq5","Boss_14_GridLog.mq5","Boss_15_ST03.mq5","Boss_16_KangarooGrid.mq5","Boss_18_JumStoch.mq5","EA_LabTemplate.mq5")
+  # ORDER-129: dynamic discovery — the old static list silently omitted Boss_17_Wave5
+  # (Codex system review 2026-07-18), leaving a stale binary deployable. Every Boss_*.mq5
+  # in the template root now compiles; V1 EA_LabTemplate kept for reference.
+  $targets = @(Get-ChildItem (Join-Path $src "Boss_*.mq5") | Sort-Object Name | ForEach-Object { $_.Name }) + @("EA_LabTemplate.mq5")
   foreach($t in $targets){
     $mq5 = Join-Path $dst $t
     if(-not (Test-Path $mq5)){ Write-Host "skip (missing): $t" -ForegroundColor DarkGray; continue }

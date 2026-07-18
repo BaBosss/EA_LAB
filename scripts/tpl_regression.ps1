@@ -27,7 +27,18 @@ param(
 $ErrorActionPreference = "Stop"
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $baseline = Join-Path $root "ea_template\regression_baseline.csv"
-$experts = @("EALabTpl\Boss_11_GridTrend", "EALabTpl\Boss_12_Breakout", "EALabTpl\Boss_13_MeanRev", "EALabTpl\Boss_14_GridLog", "EALabTpl\Boss_15_ST03", "EALabTpl\Boss_16_KangarooGrid")
+# ORDER-129 cage fix (Codex system review 2026-07-18): the cage used to run whatever .ex5
+# was already installed — an agent could edit core\, run this, and get CLEAN from a stale
+# binary. Now every run first mirrors + compiles CURRENT source (deploy.ps1 deletes old
+# .ex5 before compiling and fails on any compile error), so the numbers always describe
+# the source tree being judged.
+Write-Host ">> deploy + compile current source (deploy.ps1 -Compile)" -ForegroundColor Cyan
+& (Join-Path $root "ea_template\deploy.ps1") -Compile
+if ($LASTEXITCODE -ne 0) { Write-Host "[FAIL] deploy/compile failed - regression aborted (never test stale binaries)" -ForegroundColor Red; exit 1 }
+# ORDER-129: dynamic discovery so a new Boss wrapper can never be silently absent from the
+# cage (Boss_17/18 were missing from the old static list).
+$experts = @(Get-ChildItem (Join-Path $root "ea_template\Boss_*.mq5") | Sort-Object Name |
+             ForEach-Object { "EALabTpl\" + $_.BaseName })
 # Boss_14 compiled defaults barely trade on the pinned window (4 trades) - too thin to catch
 # drift, so it runs a PINNED set instead (frozen copy of XAU_DEMO; never edit during optimize work).
 # Boss_16 (ORDER-094): compiled defaults are also thin on this 6-month window - pinned to the
