@@ -88,9 +88,13 @@ lever ที่ปิดแล้วยังปิดอยู่ (exit ×4 · 
 **คำถามแกน (pre-registered): มี config ไหนทำ flat-lot PF≥1.0 both-window ได้ไหม** — ถ้าไม่มี = entry ยังไม่มี
 edge, campaign ปิด, ผลตัดสินระยะยาวกลับไปทางถอด/แทนด้วย Boss_16 (แจ้ง user, Fable case-1 ถ้า quota มี)
 **lever C ก่อน (ถูกสุด ชี้ขาดสุด) — entry-signal params:** MACD fast/slow/signal + count-threshold N
-(บทเรียน StoK 5→17: default ≠ ceiling) · flat-lot (LOT_Repeat=999999 semantics — ระวังกลับด้าน) ·
-homes: GBPUSD+EURUSD+EURGBP (ranger prior) × H1+H4 · Model 1 · **windows: MAIN 2023.01–2025.12 +
-BWD 2020.01–2022.12 พร้อมกัน** · coarse ≤50 combos/symbol
+(บทเรียน StoK 5→17: default ≠ ceiling) · homes: GBPUSD+EURUSD+EURGBP (ranger prior) × H1+H4 · Model 1
+· **windows: MAIN 2023.07–2026.07 (rolling-36 ตาม framework ใหม่) + BWD 2020.01–2022.12 พร้อมกัน** · coarse ≤50 combos/symbol
+**🔧 DISPATCH-READY SCHEMA (Opus 2026-07-18 — de-risked, ไม่ต้อง re-derive):**
+- vehicle = `ea_template/Boss_15_ST03.ex5` (chassis) · **flat-lot = `LotProg=PROG_NONE` = chassis DEFAULT อยู่แล้ว** (ไม่ต้องยุ่ง LOT_Repeat — นั่นคือ param ตัว standalone `EA_RUNNER_ST03`, คนละตัว!) · escalation = `LotProg=PROG_LOG_POWER`+`_55_LogPowerFactor` (ไว้ lever A ทีหลัง)
+- sweep params (ชื่อ chassis จริง จาก `core/Inputs.mqh` L229-232): `_15_MacdFast {8,12,16}` × `_15_MacdSlow {26,34}` × `_15_MacdSignal {9}` × `_15_CountBars {2,3,4}` = **18 combos** (default 12/26/9/2)
+- runner: `scripts/mt5_optimize.ps1` complete-mode ต่อ cell (deterministic grid, XML out) — **ไม่ใช้** `robust_sweep_st03.ps1` (ตัวนั้น target standalone + exit-params ผิด lever). base .set = pin `LotProg=PROG_NONE` + FirstLotMode=FIRSTLOT_FIXED + base lot เล็ก ให้ DD อ่านได้ · **⚠️ Model-4 หมายเหตุ: lever C = flat-lot single-position → Model 1 พอ (ไม่ใช่ basket ยัง)**
+- 12 optimize passes = 6 cell × 2 window · แต่ละ pass ≤18 combos → รวม ~216 config-runs
 **GATE:** ไม่มี cell flat-lot ≥1.0 both-window (n≥100 ต่อ type intraday) → **STOP รายงาน ห้าม optimize ต่อ**
 **lever A (เฉพาะเมื่อ C ผ่าน):** capped basket บน cell ที่ผ่าน — _9_MaxLevels {4,6,8} × emergency-DD
 (RC_AcctDDLimitPct / kill-DD) — **ไม่ใช่ SL รายไม้** · Model 4 confirm (basket)
