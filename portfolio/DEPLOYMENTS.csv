@@ -42,3 +42,4 @@
 415573666,Demo Mt5-2,DEMO,MT5,VPS 66.212.22.7,Boss_14_GridLog,990208,GBPJPYm,ACTIVE,closedDD 25%,2026-10-16,2026-07-16,GBPJPY leg8 all-years-positive
 463666728,Demo bundle 10,DEMO,MT5,VPS 66.212.22.7,Boss_17_Wave5,990303,USDJPYm,ACTIVE,DD 15%,2026-10-16,2026-07-18,Wave5 USDJPY H1 (M4 1.56/1.92 all-years-positive; THIN 11-17t/yr size light)
 463666728,Demo bundle 10,DEMO,MT5,VPS 66.212.22.7,PairSpread_StatArb,990984,EURUSDm,ACTIVE,DD 15%,2026-10-16,2026-07-18,pairs-spread stat-arb EURUSD/GBPUSD z2.5 (098-F CANDIDATE_WEAK demo data-collection; 2-leg basket)
+146237,Exness demo (user pool),DEMO,MT5,user terminal (host TBC),unenumerated user EAs (~10),,VARIOUS,UNVERIFIED,,,2026-07-18,user confirmed 2026-07-18: Exness demo ~10 EAs wants monitoring; enumerate magics from live_deals at next /ea-monitor
