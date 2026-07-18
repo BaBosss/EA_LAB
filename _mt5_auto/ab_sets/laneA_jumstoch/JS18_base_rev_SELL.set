@@ -1,0 +1,37 @@
+; Lane A base-gate: JumStoch(18) on chassis DCA, flat-lot, faithful ORDER-091C-D1 grid
+; DirMode=2 (1=faithful momentum-join / 2=reversion) Direction=2 (1=BUY 2=SELL)
+ExitMode=21
+SLMode=31
+FirstLotMode=41
+LotProg=50
+TradeDir=60
+TrendFilter=70
+RecoveryMode=80
+HedgeMode=0
+DryRun=false
+_0_BarOpenOnly=true
+StackMode=92
+StackConfirm=0
+_9_StepUseATR=false
+_9_StepPoints=210
+_9_StepMinPips=0
+_9_StepATRShift=0
+_9_MaxLevels=12
+_18_DirMode=2
+_18_Direction=2
+_18_MaPeriod=25
+_18_KPeriod=32
+_18_DPeriod=12
+_18_Slowing=12
+_18_LoLevel=25
+_18_UpLevel=75
+_21_TP_Pip=30
+_2_SuppressLegTP=false
+_31_SL_Pip=253
+_41_FixedLot=0.01
+ProtectLevel=2
+RC_MaxLot=1.0
+RC_MaxLevelsOverride=12
+_0_Magic=9903122
+_0_Slippage=20
+_0_MaxSpread=0
