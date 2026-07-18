@@ -19,12 +19,11 @@
 - Magic: **990984** · Set: `PAIRSPREAD_EURGBP_H4_demo_v1.set`
 - ⚠️ S6: broker suffix ต้องตรงทั้ง EURUSD และ GBPUSD (เช็ค input SymbolB ให้ตรง suffix m)
 
-## 3) MACROGATE + demo leg — ชุดเดียวทำตาม runbook (มีขั้น rclone เพิ่ม 1 ไฟล์)
-- ทำตาม **`_vps_deploy/MACROGATE/ATTACH_RUNBOOK.md`** ทีละขั้น (ครบจบในไฟล์เดียว):
-  STEP 1 เพิ่ม `EA_LAB_mris_regime.csv` เข้า rclone pipe เดิมของ NewsGuard (lab→VPS)
-  → STEP 2 attach `Boss_12_Breakout.ex5` (MACROGATE_DEMOLEG) **Magic 990120**
-  → STEP 3 attach `(Boss)_MacroGate.ex5` (watchdog) ตั้ง `InpMagicsCsv=990120`
-  → เช็ค Experts log เห็น `gate ON magic=990120` ตอน regime = RISK_OFF/STRESS
+## 3) MACROGATE — ใช้แพ็คใหม่ `MACROGATE_READY/` (2026-07-18: จัดไฟล์ครบให้แล้ว รวม regime CSV)
+- ✅ อัปเดต: ไม่ต้องทำ rclone แล้วในรอบนี้ — เปิด **`_vps_deploy/MACROGATE_READY/README_TH.md`**
+  ทำตาม 4 ขั้น (copy 3 ไฟล์ → attach Boss_12 @USDJPYm H1 magic 990120 → attach watchdog
+  InpMagicsCsv=990120 + stale=200 → copy CSV ทับทุกสัปดาห์ตอน RDP)
+- runbook เดิม (`MACROGATE/ATTACH_RUNBOOK.md`) = เวอร์ชันท่ออัตโนมัติ เก็บไว้ทำทีหลังพร้อม NewsGuard
 
 ## ⛔ ห้าม attach (bundle เก่าที่ obsolete แล้ว — อยู่ในโฟลเดอร์เดียวกัน อย่าหยิบผิด)
 - `ST03_GBPUSD/` — ตระกูล ST03 ถอดจากเงินจริงแล้ว 2026-07-18 (STRUCTURAL no-edge)
