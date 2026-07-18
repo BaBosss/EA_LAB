@@ -25,6 +25,10 @@ int g_hRSI16   = INVALID_HANDLE;   // built-in iRSI (entry 16 only - own handle,
 #ifdef LAB_ENTRY_17
 int g_hRSI17   = INVALID_HANDLE;   // built-in iRSI (entry 17 only - divergence check, Task 4)
 #endif
+#ifdef LAB_ENTRY_18
+int g_hLWMA18  = INVALID_HANDLE;   // iMA LWMA (entry 18 only - JumStoch displacement)
+int g_hStoch18 = INVALID_HANDLE;   // iStochastic (entry 18 only - JumStoch filter, main %K)
+#endif
 
 ENUM_TIMEFRAMES Indi_TF(const ENUM_TIMEFRAMES tf) { return (tf == PERIOD_CURRENT ? _Period : tf); }
 
@@ -54,6 +58,11 @@ bool Indi_Init()
    g_hRSI17 = iRSI(_Symbol, _Period, _17_RSI_Period, PRICE_CLOSE);
    ok = ok && (g_hRSI17 != INVALID_HANDLE);
 #endif
+#ifdef LAB_ENTRY_18
+   g_hLWMA18  = iMA(_Symbol, _Period, _18_MaPeriod, 0, MODE_LWMA, PRICE_CLOSE);
+   g_hStoch18 = iStochastic(_Symbol, _Period, _18_KPeriod, _18_DPeriod, _18_Slowing, MODE_SMA, STO_LOWHIGH);
+   ok = ok && (g_hLWMA18 != INVALID_HANDLE && g_hStoch18 != INVALID_HANDLE);
+#endif
    return ok;
 }
 
@@ -81,6 +90,11 @@ void Indi_Deinit()
 #ifdef LAB_ENTRY_17
    if(g_hRSI17 != INVALID_HANDLE) IndicatorRelease(g_hRSI17);
    g_hRSI17 = INVALID_HANDLE;
+#endif
+#ifdef LAB_ENTRY_18
+   if(g_hLWMA18  != INVALID_HANDLE) IndicatorRelease(g_hLWMA18);
+   if(g_hStoch18 != INVALID_HANDLE) IndicatorRelease(g_hStoch18);
+   g_hLWMA18 = g_hStoch18 = INVALID_HANDLE;
 #endif
 }
 
@@ -159,6 +173,16 @@ double Indi_RSI16(const int shift = 1) { return Indi_CopyOne(g_hRSI16, shift); }
 
 #ifdef LAB_ENTRY_17
 double Indi_RSI17(const int shift = 1) { return Indi_CopyOne(g_hRSI17, shift); }
+#endif
+
+#ifdef LAB_ENTRY_18
+double Indi_LWMA18(const int shift = 1)    { return Indi_CopyOne(g_hLWMA18, shift); }
+double Indi_StochJum18(const int shift = 1)   // buffer 0 = main %K; -1.0 = copy failed (0 is a valid extreme)
+{
+   double buf[];
+   if(CopyBuffer(g_hStoch18, 0, shift, 1, buf) < 1) return -1.0;
+   return buf[0];
+}
 #endif
 
 #ifdef LAB_ENTRY_13

@@ -12,6 +12,38 @@
 
 ---
 
+## ORDER-LANEA-AB — JumStoch (Boss_18) direction×lever A/B, Model-4 both-window — `OPEN`
+**pre-req DONE:** Boss_18 built + caged green (compile 0/0 · run_tests PASS · tpl_regression RED-benign,
+n identical). Build note = `_triage/ORDER_LANEA_JUMSTOCH_BUILD.md`. Expert = `EALabTpl\Boss_18_JumStoch`.
+**flat-lot probe:** N/A at entry-signal level (chassis grid; the escalation is StackMode DCA not lot-martingale —
+BaseLot flat by default). Run the base once with StackMode=90 (single) as the flat-lot reference if the grid passes.
+**spec:** grid/spacing/SL config mirror ORDER-091C-D1 validated JUMSTOCH (Range≈21pip spacing, SL≈253pip,
+Level_Max≈12, BEP-shift) mapped to chassis `_9_` params — **⚠️ this mapping is the first real task; verify a
+sane .set before the matrix** (StackMode=92, _9_StepUseATR + _9_StepATRmult OR _9_StepPoints to hit ~21pip on
+EURUSD/AUDUSD H1, _9_MaxLevels=12, SL via SLMode). Build one base .set per DirMode.
+**matrix (Model-4 MANDATORY — grid/DCA; serial lane-1 only):** 2 DirMode {1 faithful, 2 reversion} × 2 symbols
+{EURUSD H1, AUDUSD H1} × 4 lever-configs {base OFF · `_9_RegimeGateAdds` ON (+_50_RegimeMode≠0) ·
+StackConfirm=CONF_PA_ENGULF · both ON} × both windows {MAIN 2023.01–2025.12, BWD 2020.01–2022.12}.
+**GATE (pre-registered — STOP if unmet):** run the 4 BASE cells (DirMode×symbol, no levers) FIRST. **base must
+yield PF≥1.0 both-window Model-4** on ≥1 (DirMode,symbol) home before running any lever cell. If NO base home
+clears PF≥1.0 both-window → **STOP the lane, report, do NOT optimize further** (right-home reminder: faithful=
+momentum→trender may need XAU not EURUSD; reversion→ranger fits EURUSD/AUDUSD — if both ranger homes die on
+faithful mode, note it, that's expected). **lever wins only if:** expectancy/trade ↑ AND DD ↓ both-window vs its
+own base (Part-1 rule 4: confirms judged by expectancy-per-trade, not net/PF). **verdict = Claude** (VERDICT GATE
++ Row-X write-list). role: agent runs M4 batch serial (ea-validator or qwen driver) · Claude judges.
+
+## ORDER-LANEC-FAN — SMC×STO EURUSD H1 sensitivity fan + Model-4 — `OPEN`
+**EA:** `(EXP)_EmaStoRev` · candidate config (ORDER-107, EDGE_CATALOG): **StoK13/OS30/AdxMax30/EMA50/SL3/TP1 =
+MAIN 1.50 / BWD 1.24, 130t**. verdict src = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
+**spec:** ±20% single-axis sensitivity fan around center **including the frozen axes** — StoK13 {10,13,16},
+OS30 {24,30,36}, AdxMax30 {24,30,36}, EMA50 {40,50,60}, SL3 {2.4,3.0,3.6}, TP1 {0.8,1.0,1.2}. Model-4
+both-window {MAIN 2023.01–2025.12, BWD 2020.01–2022.12}. **bar (pre-registered):** most variants hold ≥70% of
+baseline PF AND none flips to a loss (PF<1) in either window → PASS → candidate demo. Any axis where a ±20%
+step drops PF<1.0 both-window = fragile → NOT demo, report which axis. **verdict = Claude.** role: agent runs
+M4 fan serial · Claude judges. **ห้าม:** report Model-2 numbers; single-window ranking.
+
+---
+
 ## ORDER-095 / #4 — Boss_14 GridLog EUR-cross symbol-expand — `CLOSED + REVIEWED(Claude 2026-07-17): EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่ kill (Boss_14 live @GBPJPY leg-8). ยืนยัน grid=symbol-specific. GBPCHF/NZDCAD/AUDNZD/AUDCHF = BLOCKED-ON-DATA (ไม่มี history 2020-22 → user โหลดก่อนถึงเทสได้; user เคาะ stop-at-2). verdict = _triage/ORDER095_EURCROSS_EXPAND_VERDICT.md` (role: agent ea-validator ×2 · verdict = Claude)
 
 ## ORDER-098-C — FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold swept 30/70 (~0 trades) /40/60 (thin spike XAU MAIN 1.23 BWD 0.63) /50/50 (well-powered 350-370t both-win, PF 0.76-0.94 ไม่เคย >1.0). FVG-fill ไม่มี edge naked หรือ RSI-gated. Gold SMC = FVG-retest อยู่แล้ว → FVG-as-primary ปิด, fxDreema FVG lineage exhausted. verdict = _triage/ORDER098C_FVG_RSIGATE_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)

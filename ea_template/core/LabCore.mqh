@@ -44,6 +44,9 @@
 #ifdef LAB_ENTRY_17
    #include "entries/Entry_Wave5.mqh"
 #endif
+#ifdef LAB_ENTRY_18
+   #include "entries/Entry_JumStoch.mqh"
+#endif
 #ifndef LAB_ENTRY_TAG
    #define LAB_ENTRY_TAG "??"
 #endif
@@ -103,6 +106,9 @@ int OnInit()
 #endif
 #ifdef LAB_ENTRY_17
    Entry_Wave5_Init();
+#endif
+#ifdef LAB_ENTRY_18
+   Entry_JumStoch_Init();
 #endif
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,

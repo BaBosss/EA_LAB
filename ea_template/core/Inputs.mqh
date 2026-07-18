@@ -7,7 +7,7 @@
 #ifndef BOSS_LAB_INPUTS_MQH
 #define BOSS_LAB_INPUTS_MQH
 
-// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 / _16 / _17 (+ LAB_ENTRY_TAG)
+// wrapper defines ONE of: LAB_ENTRY_11 / _12 / _13 / _14 / _15 / _16 / _17 / _18 (+ LAB_ENTRY_TAG)
 // MQL5 preprocessor has no '#if EXPR==n' / '#elif' -> use token #ifdef only.
 #ifndef LAB_ENTRY_11
 #ifndef LAB_ENTRY_12
@@ -16,7 +16,9 @@
 #ifndef LAB_ENTRY_15
 #ifndef LAB_ENTRY_16
 #ifndef LAB_ENTRY_17
+#ifndef LAB_ENTRY_18
 #define LAB_ENTRY_11          // fallback build
+#endif
 #endif
 #endif
 #endif
@@ -157,6 +159,10 @@ input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a (Kangaroo add
 input ENUM_STACK_MODE    StackMode    = STACK_SINGLE;       // 90 naked probe (Wave5): single order per signal, no grid/recovery/martingale
 input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // n/a for single
 #endif
+#ifdef LAB_ENTRY_18
+input ENUM_STACK_MODE    StackMode    = STACK_GRID_AGAINST; // 92 DCA for JumStoch (adds vs adverse move - matches standalone Range grid)
+input ENUM_STACK_CONFIRM StackConfirm = CONF_DISTANCE;      // 0 distance-only base (A/B flips to CONF_PA_ENGULF)
+#endif
 input bool   _9_StepUseATR  = true;     // grid step from Signal-ATR (else points)
 input double _9_StepATRmult = 1.0;      // step = mult x Signal-ATR
 input double _9_StepPoints  = 300;      // step when not ATR
@@ -276,6 +282,18 @@ input bool   _17_UseStructLevels = true;  // ExitManager: use g_wave5_sl_price/g
 input bool   _17_DivergTrail    = true;   // tighten trail on RSI divergence once price reaches the target zone
 input int    _17_MaxSwings      = 8;      // pivots to collect per Wave5_CollectSwings call
 input int    _17_RSI_Period     = 14;     // RSI period for divergence check (own handle g_hRSI17)
+#endif
+
+#ifdef LAB_ENTRY_18
+input group "=== Entry 18: JumStoch (LWMA displacement + Stoch filter) ==="
+input int    _18_Direction = 1;    // 1=BUY instance, 2=SELL instance (fixed; bidirectional = 2 instances w/ own magic)
+input int    _18_DirMode   = 1;    // 1=FAITHFUL momentum-join (validated source mapping) · 2=REVERSION (Lane-A brief) - A/B this
+input int    _18_MaPeriod  = 25;   // LWMA period (source maPereode=25)
+input int    _18_KPeriod   = 32;   // Stoch %K (source kperiod=32)
+input int    _18_DPeriod   = 12;   // Stoch %D (source dperiod=12)
+input int    _18_Slowing   = 12;   // Stoch slowing (source slowing=12)
+input double _18_LoLevel   = 25.0; // lower stoch band (source lo_level=25)
+input double _18_UpLevel   = 75.0; // upper stoch band (source up_level=75)
 #endif
 
 //==================== Trend MA (shared: entry11 + filter + runtrend) =
