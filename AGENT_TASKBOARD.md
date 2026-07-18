@@ -32,7 +32,7 @@ faithful mode, note it, that's expected). **lever wins only if:** expectancy/tra
 own base (Part-1 rule 4: confirms judged by expectancy-per-trade, not net/PF). **verdict = Claude** (VERDICT GATE
 + Row-X write-list). role: agent runs M4 batch serial (ea-validator or qwen driver) · Claude judges.
 
-## ORDER-LANEC-FAN — SMC×STO EURUSD H1 sensitivity fan + Model-4 — `OPEN`
+## ORDER-LANEC-FAN — SMC×STO EURUSD H1 sensitivity fan + Model-4 — `DONE + REVIEWED(Claude 2026-07-18): WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema/OS/StoK/Tp all >1 both-win) but SlAtrMult-20%(2.4)=0.94/0.99 FLIPS both-window + AdxMax-20% BWD 0.91. Center not a plateau on SL (sits above a cliff). Deployed SL=3.0 = safe side, not broken. DEMO-KEEP with SL-lock>=3.0 flag (updated DEPLOYMENTS note 991070); demo-forward=judge. Cannot re-center wider (anti-overfit). verdict=_triage/ORDER_LANEC_SMCSTO_FAN_VERDICT.md` (role: Claude judge · M4 fan driver)
 **EA:** `(EXP)_EmaStoRev` · candidate config (ORDER-107, EDGE_CATALOG): **StoK13/OS30/AdxMax30/EMA50/SL3/TP1 =
 MAIN 1.50 / BWD 1.24, 130t**. verdict src = `_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
 **spec:** ±20% single-axis sensitivity fan around center **including the frozen axes** — StoK13 {10,13,16},
@@ -42,7 +42,44 @@ baseline PF AND none flips to a loss (PF<1) in either window → PASS → candid
 step drops PF<1.0 both-window = fragile → NOT demo, report which axis. **verdict = Claude.** role: agent runs
 M4 fan serial · Claude judges. **ห้าม:** report Model-2 numbers; single-window ranking.
 
----
+## ORDER-118 — ST03 real-money CutLoss guardrail: calibrate + deliver value to user — `OPEN` 🔴 เร่ง (เงินจริงเปิด tail อยู่)
+**why (owner decision 2026-07-18, Fable grill session):** user เคาะเก็บตระกูล ST03 บนบัญชีจริง 159475669
+ต่อ (override คำแนะนำถอด 2026-07-10) **โดยมีเงื่อนไขต้องใส่กรง CutLoss ก่อน** — pattern เดียวกับ NuiIndy
+`CutLoss=30` (tail-insurance ฟรี, DD มีเพดาน). ST03 = uncapped recovery (ที่มาไม้ 33.73 lots) → เปลี่ยน
+uncapped→capped โดยไม่ใส่ SL รายไม้ (SL รายไม้ฆ่า edge — ทดสอบแล้ว 2026-06-26).
+**spec:**
+1. **X-ray inputs ก่อน:** ST_EA03 (source/`.set` ของ config live 9397 GBPUSD H1 + 9398 USDCAD H1) มี input
+   ตระกูล CutLoss/MaxDD/equity-stop ไหม — อ่านจาก .set + source + Journal (locked-ea-analyzer วิธีเดิม)
+2. **มี input →** grid CutLoss% {10,15,20,25,30,40} รัน **continuous span 2020.01–2026.06** (basket EA =
+   ห้าม stitched windows) Model 1 → confirm ค่าเลือกด้วย Model 4 (serial เลน 1) · ทั้ง GBPUSD+USDCAD
+3. **ไม่มี input →** arithmetic จาก equity curve ของ ST03LAB continuous runs ที่มีอยู่ (`_mt5_auto\reports\
+   ST03LAB_*`): simulate close-all-at-X%-แล้วไปต่อ สำหรับ X เดิม → เลือกค่า + แนะกลไก (guardian watchdog
+   เล็กที่ force-close ตาม magic ที่ DD threshold — spec build แยกเป็น order ใหม่ ห้ามลงมือในใบนี้)
+**acceptance (pre-registered):** ค่าที่เลือก = ค่า**เล็กสุด**ที่ (a) หน้าต่าง benign 2025-26 trigger ≤1 ครั้ง
+และ cost ≤20% ของ net (b) ตัด worst eqDD ของหน้าต่าง hostile 2023-24 ลง ≥50% · deliverable = ตาราง
+X% × {net, worstEqDD, #triggers} ต่อ symbol + **ค่าแนะนำ 1 ค่า** ส่ง user ใส่เอง (บัญชีจริง = มือ user เท่านั้น)
+**ห้าม:** แตะ EA/บัญชี live เอง · report Model-2 · ตีความผลเป็น verdict (Claude เท่านั้น)
+**ทำได้:** Claude · qwen (arithmetic route) · ZCode (backtest route) · 👉 แนะ: **Claude x-ray ก่อน → route ตามข้อ 2/3**
+
+## ORDER-119 — CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) — `OPEN`
+**why:** user สั่งต่อยอด ST03 (filter/MM/optimize) 2026-07-18. **ORDER-071 ban ถูก owner แก้ขอบเขต:
+lever ที่ปิดแล้วยังปิดอยู่ (exit ×4 · reactive vol-gate/ADX filter · symbol GBP/CAD ที่ default params) —
+เปิดเฉพาะ 3 lever ที่ไม่เคยเทส.** vehicle = **Boss_15_ST03 (chassis, signal parity 133/133)** — ห้ามแตะ live.
+**คำถามแกน (pre-registered): มี config ไหนทำ flat-lot PF≥1.0 both-window ได้ไหม** — ถ้าไม่มี = entry ยังไม่มี
+edge, campaign ปิด, ผลตัดสินระยะยาวกลับไปทางถอด/แทนด้วย Boss_16 (แจ้ง user, Fable case-1 ถ้า quota มี)
+**lever C ก่อน (ถูกสุด ชี้ขาดสุด) — entry-signal params:** MACD fast/slow/signal + count-threshold N
+(บทเรียน StoK 5→17: default ≠ ceiling) · flat-lot (LOT_Repeat=999999 semantics — ระวังกลับด้าน) ·
+homes: GBPUSD+EURUSD+EURGBP (ranger prior) × H1+H4 · Model 1 · **windows: MAIN 2023.01–2025.12 +
+BWD 2020.01–2022.12 พร้อมกัน** · coarse ≤50 combos/symbol
+**GATE:** ไม่มี cell flat-lot ≥1.0 both-window (n≥100 ต่อ type intraday) → **STOP รายงาน ห้าม optimize ต่อ**
+**lever A (เฉพาะเมื่อ C ผ่าน):** capped basket บน cell ที่ผ่าน — _9_MaxLevels {4,6,8} × emergency-DD
+(RC_AcctDDLimitPct / kill-DD) — **ไม่ใช่ SL รายไม้** · Model 4 confirm (basket)
+**lever B (เฉพาะเมื่อ C ผ่าน):** leading regime gate — `_MG_SelfGate` A/B (MRIS regime CSV — validated
+ORDER-073 แล้ว) on/off บน config เดียวกัน · ชนะ = expectancy/trade ↑ AND DD ↓ both-window
+**ห้าม:** Model-2 numbers · รันซ้ำ lever ที่ปิดแล้ว · แตะ 9397/9398/990010/บัญชีจริง · deploy (verdict =
+Claude + user) · single-window ranking
+**ทำได้:** Claude sets+judge · qwen/ea-screener batch M1 · M4 serial เลน 1 · 👉 แนะ: **Claude ออก .set →
+qwen รัน C → Claude อ่าน surface → A/B เฉพาะเมื่อผ่าน GATE**
 
 ## ORDER-095 / #4 — Boss_14 GridLog EUR-cross symbol-expand — `CLOSED + REVIEWED(Claude 2026-07-17): EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่ kill (Boss_14 live @GBPJPY leg-8). ยืนยัน grid=symbol-specific. GBPCHF/NZDCAD/AUDNZD/AUDCHF = BLOCKED-ON-DATA (ไม่มี history 2020-22 → user โหลดก่อนถึงเทสได้; user เคาะ stop-at-2). verdict = _triage/ORDER095_EURCROSS_EXPAND_VERDICT.md` (role: agent ea-validator ×2 · verdict = Claude)
 
