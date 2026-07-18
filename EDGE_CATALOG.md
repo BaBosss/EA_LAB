@@ -103,6 +103,7 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 |---|---|---|
 | Naked MACD crossover | GBP+7 majors/crosses | structural ceiling ~1.1 — crossovers carry no edge on FX |
 | BB+RSI naked reversion | EUR/XAU | same ~1.1 ceiling — reversion needs an *engine* (no-SL wait, or bounds), not a bare signal |
+| RSI-momentum naked (RSI/SMA cross · RSI-50 break · RSI breakout) | XAU+GBP (both momentum homes) | 2026-07-18: no plateau both-window anywhere, all 3 modes entry-swept ×2 TF — flat ~1.0 breakeven, lone winners are isolated spikes. RSI carries no standalone momentum edge; usable only as a confirm-FILTER, never a primary signal |
 | TrendRegression (reversion) | XAU | reversion-on-a-trender = no edge (confirms momentum>reversion for gold) |
 | SessionBreakout | XAU | 1,200-pass ceiling 1.20, forward 0.91 — breakout needs a real range to break |
 | Grid/martingale (Golden Elephant, BuRengNong, Setka…) | XAU mostly | "martingale WAS the edge" — strip the doubling, signal is breakeven; DD 60–125% |
