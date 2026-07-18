@@ -84,7 +84,7 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
   ✅ ทำแล้ว 2026-06-29: รวม central_results→portfolio · deprecate
   RUN_REGISTRY/_RESUME_HERE · anti-drift system (§0.5). ✅ 2026-06-29–30: qwen batch queue รันจบ
   (39 reports — baseline 9 EA, GR opt PF 2.35, MT4 goldgrid, split-period) → ✅ **review/ตัดสินครบแล้ว
-  2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `QWEN_RUN_LOG.md`).
+  2026-07-02** (GR opt = null result, goldgrid = all fail, ดู §2 EA_CORE/signal hunt) (log: `_archive_docs/QWEN_RUN_LOG.md`).
 - **🏁 EA_CORE merge track = ปิดสมบูรณ์ (เปิด+จบ 2026-07-06 วันเดียว):** user สั่งรวมข้อดี EA_CORE
   เข้า Boss V2 ให้จบ — ทำครบ DoD 6/6 · บันทึกเต็ม = **`AGENT_TASKBOARD_MERGE.md` (CLOSED)**:
   ✅ MERGE-01 (cage ครอบ Boss_14,
