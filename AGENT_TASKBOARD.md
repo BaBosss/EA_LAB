@@ -884,6 +884,23 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 
 ---
 
+## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `OPEN (multi-session, pace 1 batch/รอบ) · Claude build→run`
+
+**ที่มา:** ORDER-108 พิสูจน์ split-entry (market leg เก็บ runner + pending retest leg fill maker ~90%) = **lever จริงเพิ่ม regime-robustness** แต่ **config-conditional**: ยก Bars40/TP5 (1.93/1.97 both-window) · ไม่ยก Bars55/TP8 live (retest leg อ่อน BWD). กติกา: **split ช่วยก็ต่อเมื่อ retest leg มี edge ในหน้าต่างที่ market อ่อน** (ขึ้นกับ TP-width × lookback). EA `(EXP)_BRK_SplitRetest` = generic Donchian breakout, input ATR-relative → รันข้าม symbol ได้. ห้าม: แปะ EA ที่ปัญหา = regime ไม่ใช่ entry-cost/timing (XAU_NY).
+
+**เป้า campaign:** map envelope ของ lever + หา **breakout leg ใหม่ที่ split ทำให้ regime-robust** (diversification) + retrofit demo config ที่ยกได้. Model-4 บังคับ (pending fill = tick-sensitive) → **รันบน D:\Meta 5 non-portable** (Meta5b portable เขียน report M4 ไม่ออก — บทเรียน D1g). ทุก phase = 1 experiment ใน event log (adoption guide RE-fixes ทำให้ลื่นแล้ว).
+
+**Phase 1 (batch 1, this session): retest-param sweep บน working config (XAU H1 Bars40/TP5)** — หา "retest recipe" ที่ดีที่สุดก่อนพก symbol อื่น. sweep `_07_RetestOffsetAtr {−0.3,−0.15,0,+0.15}` @ `_07_ExpiryBars=5`, split 0.02mkt+0.01pend, both-window Model-4. reference = market-only (2.07/1.75 จาก ORDER-108). **pre-registered bar:** offset ที่ให้ split ≥1.80 **both-window** (ไม่มี weak window) + retest fill-rate ≥80% = recipe ผ่าน → พก Phase 2 · ถ้าไม่มี offset ไหนยก BWD เหนือ market-weak = lever แค่ robustness-neutral, ปรับแผน Phase 2 เป็น config-rebalance · negative offset (retest ลึก=ราคาดีขึ้นแต่ fill น้อย) = สมมติฐานหลักว่าจะยก retest edge.
+
+**Phase 2 (ถัดไป):** พก recipe ดีสุดไป breakout symbol อื่น (GBPUSD/EURUSD/US30/XAG) both-window → หา leg ที่ split ผ่าน ≥1.4 both-window + corr<0.8 vs legs เดิม.
+**Phase 3:** retrofit LondonConso (GBP) + CB_GBP — build split เข้า code, A/B ว่ายก demo config ไหม.
+**Phase 4:** config-rebalance — config ที่ split ไม่ช่วย (Bars55/TP8) ลอง TP แคบลง + split เทียบ market-only live.
+**Phase 5:** EDGE_CATALOG + demo-config upgrade ที่ผ่าน holdout.
+
+**ห้าม:** verdict ก่อนครบ both-window + fill-rate · retrofit ตัว live โดยไม่ผ่าน holdout · burst หลาย phase รอบเดียว (pace 1 batch) · Model-2 เป็นตัวเลขรายงาน · commit path-limited ผ่าน hook.
+
+---
+
 ## ORDER-091C-D1g — JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 2026-07-16 full hypothesis) — `DONE + REVIEWED (Claude 2026-07-17) = NULL (keep config) · ORDER-080 CLOSED · event-log dogfood #1 complete`
 
 ### D1g RESULT + VERDICT (Claude 2026-07-17) — verdict เต็ม `_triage/ORDER091C_D1G_VERDICT.md` · raw `_mt5_auto/D1G_AB_RESULTS.csv`
