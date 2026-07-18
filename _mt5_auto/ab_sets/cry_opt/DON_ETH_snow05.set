@@ -1,0 +1,16 @@
+_00_OptimizeMode=false
+_01_DonchPeriod=35
+_01_ATRPeriod=10
+_02_SL_ATR_mult=2.25
+_02_TP_ATR_mult=0.0
+_03_UseEmaFilter=true
+_03_EMAperiod=200
+_03_UseAdxFilter=true
+_03_ADXperiod=14
+_03_ADXthreshold=20.0
+_04_MaxPyramid=3
+_05_FixedLot=0.01
+_05_RiskPct=0.5
+_05_MaxSpreadPts=0
+_06_AllowLive=false
+_06_Magic=990030

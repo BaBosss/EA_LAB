@@ -130,6 +130,46 @@ v4: เพิ่ม `_02_TrailATR_mult` (ratchet trailing) + `_04_AddTP_ATR` (TP
 **ตัด tail = ตัด edge. Exit ownership ล็อกเป็น flip-exit + hard SL — คำถาม exit ปิด.**
 (จุดอ่อน chop-year แก้ด้วย TP ไม่ได้โดยไม่ฆ่าปีเทรนด์ — ทางแก้ที่เหลือคือ regime-gate ซึ่งเป็นงาน future ไม่ block demo)
 
+## ✅ LAST-OPTIMIZE audit (user push 2026-07-18 "confirm optimize ก่อน park ครบไหม") — สำคัญ
+
+**สารภาพ:** รอบก่อนๆ park STO/PA จาก A/B จุดเดียว (swept แค่ StoK, ถือ StoLevel+MinAddGap ที่ default ตลอด) =
+**ยังไม่ครบตาม LAST-OPTIMIZE rule.** รอบนี้ optimize lever ที่ยังไม่แตะบนตัวที่มีชีพจรสุด:
+
+| variant (ETH H4) | IS PF/net | BWD PF/net | vs champion (brk 1.68/2.18) |
+|---|---|---|---|
+| **breakout-STOP (champion)** | 1.68 / 886 | **2.18 / 1,100** | — |
+| STO K9 **lv20** (lever ใหม่) | **1.94 / 924** ⬆ชนะ IS | 1.68 / 602 | แพ้ BWD ชัด (602 vs 1,100) |
+| STO K9 lv25 | 1.87 / 904 | — | |
+| PA **gap0.8** (lever ใหม่) | 1.79 / 991 ⬆ชนะ IS | 1.96 / ~1,000 | แพ้ BWD เฉียด (1.96 vs 2.18) |
+
+**ผลหลัง optimize จริง:** ทั้ง STO(lv20) และ PA(gap0.8) **ดีขึ้นจริงจาก lever ใหม่ — ชนะ champion บน IS ทั้งคู่** แต่
+**ยังแพ้ champion บน BWD (out-of-sample) ทั้งคู่** → champion ชนะเพราะ**robust กว่าบนหน้าต่างที่ไม่เคยเห็น** ไม่ใช่เพราะคู่แข่งถูกเทสน้อย. verdict เดิม (breakout-STOP = deploy) **ยืนหลัง fair fight แล้ว**
+- **PA gap0.8 = ยกจาก WATCH → STRONG-ALT** (BWD 1.96 เฉียด 2.18, IS ชนะ) — candidate co-deploy leg ที่ 2 ของ ETH ถ้าอยากได้ diversification ภายใน ETH (แต่ corr กับ champion สูงเพราะ base เดียวกัน — เลือกอันเดียว)
+- **Exit-mode TP/trail = ยกเว้น last-optimize โดยชอบ** (STRUCTURAL: ตัด tail = ตัด edge, กลไกพิสูจน์แล้วด้วยตัวเลข winrate↑/PF↓ ทุกค่า — ไม่ใช่ under-test)
+- ST-BTC champion (SuperTrend) = optimize แล้ว 45-combo + M4 · DON-ETH champion = 15-combo + pyramid A/B + M4
+
+## ✅ SNOWBALL + CORRELATION (ปิด 2 ใน 3 ขั้นสุดท้าย, 2026-07-18)
+
+เพิ่ม `_05_RiskPct` (risk%/equity ต่อ SL — snowball แท้) ทั้ง 2 EA · regression ผ่าน (fixed = 1.91 ตรงเดิม):
+| | fixed 0.01 | snowball (deploy risk%) | equity DD |
+|---|---|---|---|
+| ST-BTC (RiskPct 1.0%) | net 731 / DD 1.9% | **net 5,935 / PF 2.22 / RF 6.68** | **5.6%** ✅ |
+| DON-ETH pyr3 (RiskPct 1.0%) | net 1,378 / DD 5.8% | net ~33k | 35.5% ❌ เกิน cap |
+| DON-ETH pyr3 (RiskPct 0.5%) | | net 11,733 | 20.5% ❌ เฉียด |
+| **DON-ETH pyr3 (RiskPct 0.35%)** | | **net 7,576 / PF 2.52** | **14.3%** ✅ lock |
+
+cap-breach → resize (ไม่ reject) ตามกติกา · **snowball ให้ผลมหาศาลจาก compounding ในปีเทรนด์ แต่ตัดสินที่ DD band ไม่ใช่ net**
+
+**CORRELATION BTC-leg vs ETH-leg = 0.030** (30 เดือน monthly-return) = **แทบไม่สัมพันธ์เลย → additive เต็มที่**
+(ต่ำกว่า cross-EA gate 0.4 มาก) — คนละสัญญาณ+คนละ symbol → กำไรมาคนละจังหวะ. **ทั้ง 2 leg เข้าพอร์ตได้เต็มไซส์**
+= crypto lane เพิ่ม diversification จริงให้พอร์ต (เดิมไม่มี crypto exposure เลย)
+
+## ✅ DEMO BUNDLE พร้อม attach — `_vps_deploy/CRYPTO_TRENDRIDER/`
+- `EA_SUPERTREND.ex5` + `ST_BTC_deploy.set` (BTCUSD H4, RiskPct 1.0%, Magic 990020)
+- `EA_DONCHIAN.ex5` + `DON_ETH_deploy.set` (ETHUSD H4, pyr3, RiskPct 0.35%, Magic 990030)
+- account: HEDGING, crypto-enabled (ThinkMarkets/Exness) · leverage สูงพอ (margin level >2000% ที่เทส) · **24/7 → ต้อง VPS**
+- ⚠️ ก่อน live จริง: RCA swap (trend-ride ถือยาว) + mql-code-reviewer pass + Codex blind audit (มี risk logic ใหม่ = RiskLot sizing)
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
