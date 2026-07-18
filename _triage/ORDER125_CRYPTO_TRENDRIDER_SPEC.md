@@ -170,6 +170,26 @@ cap-breach → resize (ไม่ reject) ตามกติกา · **snowball 
 - account: HEDGING, crypto-enabled (ThinkMarkets/Exness) · leverage สูงพอ (margin level >2000% ที่เทส) · **24/7 → ต้อง VPS**
 - ⚠️ ก่อน live จริง: RCA swap (trend-ride ถือยาว) + mql-code-reviewer pass + Codex blind audit (มี risk logic ใหม่ = RiskLot sizing)
 
+## 🔴 SWAP RCA (2026-07-18 — ตัวที่ backtest ประเมินไม่ครบ, ยืนยันแล้ว)
+
+**หลักฐาน:** สรุป swap column ของ M4 report ทั้งสองตัว = **0.00 บาท** (BTC 182 deals · ETH 372 deals) →
+tester ThinkMarkets ตั้ง historical swap = 0. **แต่ symbol จริงตอนนี้ (dump ผ่าน SYMBOL_SWAP_LONG/SHORT, mode=5=INTEREST_CURRENT = % ต่อปี):**
+| symbol | swap LONG | swap SHORT |
+|---|---|---|
+| BTCUSD | **−14.67%/ปี** | −0.49%/ปี |
+| ETHUSD | **−9.86%/ปี** | −3.95%/ปี |
+
+**ผลกระทบ (ประเมิน analytic):** EA เป็น trend-follower → ถือ **long เป็นหลักในปีเทรนด์** (บ้านที่ทำเงิน) = โดน swap แพงสุดพอดีตอนเทรดหนักสุด.
+notional ≈ 0.29× equity (จาก risk 1% ÷ SL ~3.4% ของราคา) · ถ้าถือ long ~50% ของเวลา → drag ≈ 14.67% × 0.29 × 0.5 ≈ **~2.1%/ปี ของ equity** (BTC) · ~1.4%/ปี (ETH).
+รวม 3.5 ปี ≈ **7–10% drag** — **ลดกำไรแต่ไม่ฆ่า** (backtest net +76% ETH / +59× BTC-compound เหลือ margin เยอะ) แต่ **demo จะเดินเบากว่า backtest เสมอ**.
+
+**Action ก่อน live:** (1) demo วัด swap จริง 1 เดือนแล้วเทียบ analytic (2) พิจารณา bias long-hold ให้สั้นลงถ้า drag เกินคาด (3) short legs เกือบฟรี = ไม่ต้องกังวล.
+**ห้าม promote live จนกว่า demo ยืนยัน swap-adjusted PF ยัง >1.3.**
+
+## 🔍 CODE REVIEW — RiskLot snowball sizing (risk logic ใหม่ = ต้อง review)
+ตรวจแล้ว (manual, checklist mql-code-reviewer): division-by-zero guarded ครบ (RiskPct/slDist/tickVal/tickSize/lossPerLot ทุกตัวมี early-return) · NormalizeLot floor→min-lot ok · digit-aware ผ่าน tickValue/tickSize (ไม่ hardcode pip).
+**⚠️ 1 ข้อสังเกต (by-design ไม่ใช่บั๊ก):** `ACCOUNT_EQUITY` รวม floating P&L → ไม้ pyramid ไม้หลังๆ size จาก equity ที่มีกำไรลอยของไม้แรก = compound เร็วขึ้นตอนกำไร (นี่คือ snowball ที่ต้องการ แต่ขยาย DD — เป็นเหตุผลที่ DON-ETH ต้องลดเหลือ 0.35%). **ยังต้อง Codex blind audit ก่อน live** (iron rule: risk logic ใหม่ไม่มี cage).
+
 ## ค้างในคิว validate ก่อน demo
 1. per-year split (กัน PF รวมซ่อนปีขาดทุน) — ยังไม่ได้ทำ
 2. **Model-4 real-tick confirm** ทั้ง 2 set (เช็ค tick depth ThinkMarkets BTC/ETH — ถ้าตื้นต้องแจ้งตรงๆ)
