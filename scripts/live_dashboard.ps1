@@ -128,6 +128,7 @@ $cohort = [ordered]@{
   "463666728|990302" = @{ Name = "Boss_17_Wave5 XAG";                                Symbol = "XAGUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
   "463666728|990303" = @{ Name = "Boss_17_Wave5 USDJPY";                             Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
   "463666728|990984" = @{ Name = "PairSpread_StatArb EURUSD-GBPUSD";                 Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
+  "463666728|990120" = @{ Name = "Boss_12_Breakout MacroGate-leg";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
   "463666728|991003" = @{ Name = "EA_BREAKOUT_XAU USDJPY (expand)";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
   "463666728|991005" = @{ Name = "EA_BREAKOUT_XAU US30 (expand, WATCH-thin)";        Symbol = "US30";   Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
   "463666728|999094" = @{ Name = "MacdDiv_Naked XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
