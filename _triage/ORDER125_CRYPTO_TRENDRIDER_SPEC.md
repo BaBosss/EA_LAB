@@ -16,6 +16,19 @@
 หมายเหตุ: ทั้งสอง window มีเทรนด์ใหญ่ (2021 bull / 2022 bear / 2024 bull) — **missing regime = chop ยาวๆ**
 ต้องดู per-year split ตอน optimize · DD จิ๋วเพราะ default lot จิ๋ว = under-leveraged screen (PF lot-invariant, ตามกติกา)
 
+## ผล MULTI-SYMBOL SCAN (2026-07-18 รอบสอง — Model 1, default, flat lot)
+
+| Symbol | ST H4 recent | ST H4 BWD | DON H4 recent | DON H4 BWD | สถานะ |
+|---|---|---|---|---|---|
+| BTCUSD | 1.27 (79t) | 2.35 (69t) | 1.20 (76t) | 2.07 (50t) | ✅ ทั้งคู่ both-window |
+| ETHUSD | 1.41 (85t) | 1.05 (68t) | **2.16** (67t) | **1.84** (54t) | ✅ **DON เด่นสุดในสแกน** · ST = recent-fit |
+| SOLUSD | 1.34 (78t) | 2.14 (25t)⚠ | 0.93 (91t) | — | ST pulse · ⚠ history เริ่มช้า (~ปลาย 2021) BWD จริงๆ = ปีหมี 2022 |
+| XRPUSD / DOGEUSD | 0 trades | | | | data มีครบ (เริ่ม ธ.ค. 2021) แต่ราคา <$3 = param scale ไม่ยิง → แก้ด้วย ATR-scaled set เฟส optimize |
+| LTCUSD / ADAUSD / BCHUSD | — | | | | ❌ history download error ซ้ำ 2 รอบ (server feed) — ลองเปิดกราฟใน GUI ให้ terminal ดึงเอง หรือข้าม |
+
+**pattern ที่เห็น: mechanism×symbol matching จริง** — SuperTrend=บ้าน BTC · Donchian=บ้าน ETH · SOL เข้ากับ ST ไม่เข้ากับ DON.
+⚠ portfolio note: crypto majors corr กันเองสูง (BTC-ETH มัก >0.8) — ตอน portfolio phase ใช้ gate pairwise <0.8 ของ same-EA-cross-symbol แล้วอาจต้องเลือก/ลด lot ไม่ใช่เอาหมด.
+
 ## NEXT (เฟส optimize — ยังไม่ทำ รอคิว/pacing)
 1. per-year split ของ 4 รันหลัก (กัน aggregate PF ซ่อนปีขาดทุน)
 2. optimize ≥3 lever: ATR period/mult (entry) · exit (flip vs trail vs structure) · SL width — coarse Model 1, plateau ไม่ใช่ peak
