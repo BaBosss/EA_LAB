@@ -12,6 +12,14 @@
 
 bool   g_rc_halted      = false;
 bool   g_rc_kill_pending = false;   // ORDER-129: kill fired, broker flatness not yet verified
+
+// ORDER-132 (Codex F6): ONE persisted state value ("rc_state") replaces the old
+// rc_halted + rc_kill_pending flag pair - two independent writes could crash
+// into the contradictory HALTED&&KILL_PENDING combination, and a manual reset
+// that deleted only one flag immediately re-derived the other.
+#define RC_STATE_RUNNING      0.0
+#define RC_STATE_KILL_PENDING 1.0
+#define RC_STATE_HALTED       2.0
 double g_rc_peak_equity = 0.0;
 double g_rc_max_dd_pct  = 0.0;
 int    g_rc_cap_blocks  = 0;
@@ -69,6 +77,7 @@ void RiskControl_AcctGateInit()
    g_rc_acct_trip = false;
    g_rc_acct_hwm  = 0.0;
    if(RC_AcctDDLimitPct <= 0.0) return;
+   Persist_MigrateLegacy("acct_hwm");   // ORDER-132: magic-only -> scoped key (one-shot, no-op in tester)
    if(Persist_Has("acct_hwm"))
    {
       g_rc_acct_hwm = Persist_Get("acct_hwm", 0.0);
@@ -106,22 +115,52 @@ void RiskControl_Init()
    g_rc_kill_pending = false;
    if(RC_PersistHalt)
    {
-      // ORDER-129: a restart/crash in the middle of an unconfirmed kill must resume the
-      // kill, even if equity has bounced back above the threshold by the time we return.
-      if(Persist_Get("rc_kill_pending", 0.0) > 0.5)
+      // ORDER-132 (Codex F4): migrate pre-132 magic-only keys to the scoped
+      // format ONCE (Persist_MigrateLegacy deletes the legacy key after a
+      // confirmed copy; DryRun never writes). Must run BEFORE any scoped read.
+      Persist_MigrateLegacy("rc_peak_eq");
+
+      // ORDER-132 (Codex F6): single persisted state enum. Read scoped rc_state;
+      // when absent, derive once from the legacy two-flag format and persist it.
+      double st = RC_STATE_RUNNING;
+      if(Persist_Has("rc_state"))
+         st = Persist_Get("rc_state", RC_STATE_RUNNING);
+      else
       {
+         if(Persist_GetLegacy("rc_kill_pending", 0.0) > 0.5)   st = RC_STATE_KILL_PENDING;
+         else if(Persist_GetLegacy("rc_halted", 0.0) > 0.5)    st = RC_STATE_HALTED;
+         if(st != RC_STATE_RUNNING && !DryRun)
+         {
+            if(Persist_Set("rc_state", st))
+               PrintFormat("[RISK] migrated legacy halt/kill flags -> %s=%.0f", Persist_Key("rc_state"), st);
+         }
+      }
+      // consume legacy flags once superseded - stale leftovers must never be
+      // re-imported by a later account switch (F4) or resurrect a manually
+      // cleared halt. Never delete on a failed migration write or from DryRun.
+      if(!DryRun && (Persist_Has("rc_state") || st == RC_STATE_RUNNING))
+      {
+         Persist_DelLegacy("rc_kill_pending");
+         Persist_DelLegacy("rc_halted");
+      }
+      if(!DryRun) Persist_Flush();
+
+      if(st == RC_STATE_KILL_PENDING)
+      {
+         // ORDER-129: a restart/crash in the middle of an unconfirmed kill must resume the
+         // kill, even if equity has bounced back above the threshold by the time we return.
          g_rc_kill_pending = true;
          Print("[RISK] KILL-PENDING restored from persist - resuming close-all reconciliation");
       }
-      if(Persist_Get("rc_halted", 0.0) > 0.5)
+      else if(st == RC_STATE_HALTED)
       {
          g_rc_halted = true;
          double p = Persist_Get("rc_peak_eq", g_rc_peak_equity);
          if(p > g_rc_peak_equity) g_rc_peak_equity = p;
          PrintFormat("[RISK] HALT restored from persist (peak %.2f) - manual un-halt: delete GV %s or set RC_PersistHalt=false",
-                     g_rc_peak_equity, Persist_Key("rc_halted"));
+                     g_rc_peak_equity, Persist_Key("rc_state"));
       }
-      else if(Persist_Has("rc_peak_eq"))
+      if(!g_rc_halted && Persist_Has("rc_peak_eq"))
       {
          // not halted, but keep the pre-restart equity peak so KillDD keeps
          // measuring from the true high-water mark (anti slow-bleed reset)
@@ -172,9 +211,12 @@ bool RiskControl_KillReconcile()
       // GVs that a later REAL attach on this magic would inherit.
       if(RC_PersistHalt && !DryRun)
       {
-         Persist_Set("rc_halted", 1.0);
-         Persist_Set("rc_peak_eq", g_rc_peak_equity);
-         Persist_Set("rc_kill_pending", 0.0);
+         // ORDER-132 (F6): checked writes + durable flush - a crash right after an
+         // unflushed HALT write must not come back RUNNING with the kill forgotten.
+         bool ok = Persist_Set("rc_state", RC_STATE_HALTED);
+         ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;
+         Persist_Flush();
+         if(!ok) Print("[RISK] ERROR: HALT persist incomplete - halt state may not survive a restart");
       }
       PrintFormat("[RISK] HARD KILL complete: broker flat verified -> halt%s",
                   (RC_PersistHalt ? " (persisted)" : ""));
@@ -206,7 +248,14 @@ bool RiskControl_CheckDD()
       PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closing all",
                   dd, kill, ProtectLevel);
       g_rc_kill_pending = true;
-      if(RC_PersistHalt && !DryRun) Persist_Set("rc_kill_pending", 1.0);   // restart mid-kill keeps killing (never from DryRun)
+      if(RC_PersistHalt && !DryRun)
+      {
+         // ORDER-132 (F6): persist KILL_PENDING checked + flushed BEFORE the first
+         // close attempt - a crash mid-close must resume the kill on restart
+         if(!Persist_Set("rc_state", RC_STATE_KILL_PENDING))
+            Print("[RISK] ERROR: kill-pending persist failed - a restart mid-kill would forget the kill");
+         Persist_Flush();
+      }
       RiskControl_KillReconcile();
       return true;
    }

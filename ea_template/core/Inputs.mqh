@@ -418,15 +418,17 @@ input int RC_MaxLevelsOverride = 0;
 // additive: account-level DD gate (PortfolioGuardian_v1 port, MERGE-04). 0 = OFF.
 // Blocks NEW first-entries (level 0) while account equity sits more than this %
 // below its high-water mark. Open baskets + their stack-adds finish normally
-// (resize-not-kill). HWM persists via GlobalVariable "Boss_<magic>_acct_hwm"
-// so a restart cannot forget the peak (tester GVs are sandboxed per pass).
+// (resize-not-kill). HWM persists via a scoped GlobalVariable ("Boss2_..._acct_hwm",
+// ORDER-132) so a restart cannot forget the peak (tester GVs are sandboxed per pass).
 input double RC_AcctDDLimitPct = 0.0;
 // additive-EXCEPTION (MERGE-05B, signed off 2026-07-06): persist hard-kill halt
 // + equity peak via GlobalVariables so restart/recompile cannot resurrect a
 // killed EA (audit MERGE-05A: memory-only halt = CRITICAL live gap). Default ON
 // deliberately: tester GVs are per-pass sandboxed -> backtest numbers unchanged
-// (regression-proven), live safety is the whole point. Manual un-halt: delete
-// GV "Boss_<magic>_rc_halted" or set this false + reattach.
+// (regression-proven), live safety is the whole point. Manual un-halt: delete the
+// "Boss2_..._rc_state" GV (exact name is printed in the HALT restore log line;
+// ORDER-132 scoped key, one enum RUNNING/KILL_PENDING/HALTED) or set this false
+// + reattach. Pre-132 "Boss_<magic>_rc_halted" keys migrate automatically.
 input bool RC_PersistHalt = true;
 
 //==================== 8x Recovery (offensive add-into-loss) ========

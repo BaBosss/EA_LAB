@@ -398,15 +398,20 @@ void Exit_ManagePartialClose()
 
    double pctOfTarget = profit / targetMoney * 100.0;
 
+   // ORDER-132 (Codex F3): a milestone latches DONE only when the broker accepted
+   // every attempted partial close - a rejected close now leaves the milestone
+   // armed and it retries next tick while the profit predicate still holds.
+   // (A mixed-success retry re-fractions the already-reduced legs, closing
+   // slightly more than one clean pass would - risk-REDUCING direction, accepted.)
    if(!g_exit_partial1_done && _2_PartialPct1 > 0.0 && pctOfTarget >= _2_PartialPct1)
    {
-      Exec_ClosePartialFraction(_2_PartialFrac1);
-      g_exit_partial1_done = true;
+      if(Exec_ClosePartialFraction(_2_PartialFrac1))
+         g_exit_partial1_done = true;
    }
    if(!g_exit_partial2_done && _2_PartialPct2 > 0.0 && pctOfTarget >= _2_PartialPct2)
    {
-      Exec_ClosePartialFraction(_2_PartialFrac2);
-      g_exit_partial2_done = true;
+      if(Exec_ClosePartialFraction(_2_PartialFrac2))
+         g_exit_partial2_done = true;
    }
 }
 

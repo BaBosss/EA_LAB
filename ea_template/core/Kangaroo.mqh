@@ -34,9 +34,18 @@
 // recompile-safe state (reset in Kangaroo_Init from OnInit)
 datetime g_k16_last_bar = 0;   // bar-open gate for first entries
 
+// ORDER-132 (Codex F3): overlap pair-close residual. When exactly ONE of the two
+// pair legs closes (the profitable cushion realized, the deep-red tail rejected),
+// the pair predicate may never fire again - this ticket is retried every tick
+// until the broker confirms it gone. In-memory only: after a restart the leg
+// simply rejoins normal grid management (oldest leg, still under emergency-DD +
+// cage), which is the pre-existing safe baseline.
+ulong g_k16_pair_residual = 0;
+
 void Kangaroo_Init()
 {
-   g_k16_last_bar = 0;
+   g_k16_last_bar      = 0;
+   g_k16_pair_residual = 0;
 }
 
 int Kangaroo_Dir() { return (_16_Direction == 1 ? 1 : 2); }
@@ -195,7 +204,36 @@ bool Kangaroo_SingleTPHit()
 bool Kangaroo_ManageExits()
 {
    int have = Exec_CountAll();
-   if(have <= 0) return false;
+   if(have <= 0) { g_k16_pair_residual = 0; return false; }
+
+   // ORDER-132 (F3): finish an asymmetric pair-close FIRST - the partner already
+   // realized its profit, so this leg's exit intent stands regardless of the
+   // current pair predicate. Broker-state confirmation, retried every tick.
+   if(g_k16_pair_residual != 0)
+   {
+      if(!PositionSelectByTicket(g_k16_pair_residual))
+         g_k16_pair_residual = 0;   // gone (retry succeeded / SL / manual) - done
+      else
+      {
+         Exec_CloseTicket(g_k16_pair_residual);
+         if(!PositionSelectByTicket(g_k16_pair_residual))
+         {
+            PrintFormat("[K16] pair-close residual %I64u closed on retry", g_k16_pair_residual);
+            g_k16_pair_residual = 0;
+         }
+         else
+         {
+            static datetime last_log = 0;
+            datetime now = TimeCurrent();
+            if(now - last_log >= 60)
+            {
+               last_log = now;
+               PrintFormat("[K16] pair-close residual %I64u still open (retcode=%d) - retrying",
+                           g_k16_pair_residual, (int)g_trade.ResultRetcode());
+            }
+         }
+      }
+   }
 
    double net = Exec_BasketProfit();
 
@@ -231,8 +269,11 @@ bool Kangaroo_ManageExits()
 
    // exit 3: overlap pair-close - newest (big/near) + oldest (deep red) close
    // together when their combined net-$ clears the threshold ("intelligent
-   // overlapping system" - the confirmed DD-eater of the original)
-   if(have >= _16_OverlapMinOrders && _16_OverlapMinUsd > 0.0)
+   // overlapping system" - the confirmed DD-eater of the original).
+   // ORDER-132 (F3): both close results are now verified against broker state.
+   // Both-fail -> predicate still true next tick, the whole pair re-fires.
+   // One-fails -> residual ticket armed above. No NEW pair while one is armed.
+   if(g_k16_pair_residual == 0 && have >= _16_OverlapMinOrders && _16_OverlapMinUsd > 0.0)
    {
       ulong nTk, oTk; double nP, oP;
       int n = Kangaroo_FindEnds(nTk, oTk, nP, oP);
@@ -243,6 +284,16 @@ bool Kangaroo_ManageExits()
                      nTk, nP, oTk, oP, nP + oP, _16_OverlapMinUsd);
          Exec_CloseTicket(nTk);
          Exec_CloseTicket(oTk);
+         // broker-state re-scan, never the call results alone (129 doctrine).
+         // DryRun: both legs remain -> goneNew==goneOld -> residual never arms.
+         bool goneNew = !PositionSelectByTicket(nTk);
+         bool goneOld = !PositionSelectByTicket(oTk);
+         if(goneNew != goneOld)
+         {
+            g_k16_pair_residual = (goneNew ? oTk : nTk);
+            PrintFormat("[K16] pair-close ASYMMETRIC: %I64u closed, %I64u remains -> retrying until closed",
+                        (goneNew ? nTk : oTk), g_k16_pair_residual);
+         }
          // side still open - not a full basket close
       }
    }

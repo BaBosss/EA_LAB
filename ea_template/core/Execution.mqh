@@ -251,6 +251,29 @@ int Exec_CountPending()
    return n;
 }
 
+// ORDER-132 (Codex system-review SEV-1 #5): projected margin of every OWN resting
+// pending if it filled at its order price. A GTC ladder consumes margin at FILL
+// time, when the deposit-load cage can no longer refuse it - Stack's budget gate
+// (Stack_MarginBudgetOK) reserves this ahead of placement. Unpriceable orders
+// contribute 0 here; the per-leg gate is the fail-closed side.
+double Exec_PendingMarginProjection()
+{
+   double sum = 0.0;
+   for(int i = OrdersTotal() - 1; i >= 0; i--)
+   {
+      if(!Exec_OrdIsMine(i)) continue;
+      double lot   = OrderGetDouble(ORDER_VOLUME_CURRENT);
+      double price = OrderGetDouble(ORDER_PRICE_OPEN);
+      long   type  = OrderGetInteger(ORDER_TYPE);
+      bool   isBuy = (type == ORDER_TYPE_BUY_STOP || type == ORDER_TYPE_BUY_LIMIT ||
+                      type == ORDER_TYPE_BUY_STOP_LIMIT);
+      double m = 0.0;
+      if(OrderCalcMargin(isBuy ? ORDER_TYPE_BUY : ORDER_TYPE_SELL, _Symbol, lot, price, m))
+         sum += m;
+   }
+   return sum;
+}
+
 // ORDER-129: reports completion — a failed delete used to vanish silently, leaving a live
 // GTC order behind an EA that believed itself flat (Codex system review SEV-1).
 bool Exec_CancelAllPending()
@@ -365,9 +388,15 @@ double Exec_NormalizeCloseLot(double lot)
 // (skips legs where the resulting close volume would be <=0 or >= full volume,
 // i.e. below broker min-lot step after normalize). Used by ExitManager's
 // milestone partial-close (_2_PartialPct1/2) - Zeus GridLog port (14).
-void Exec_ClosePartialFraction(const double frac)
+// ORDER-132 (Codex F3): returns whether every ATTEMPTED close was accepted by
+// the broker - a rejected partial used to vanish silently while the caller
+// marked its milestone done. Skipped (unrepresentable-volume) legs do not fail
+// the call: they can never become executable at this volume, so retrying them
+// is noise, not risk reduction.
+bool Exec_ClosePartialFraction(const double frac)
 {
-   if(frac <= 0.0) return;
+   if(frac <= 0.0) return true;   // nothing requested = vacuous success
+   bool allOk = true;
    for(int i = PositionsTotal() - 1; i >= 0; i--)
    {
       if(!Exec_PosIsMine(i)) continue;
@@ -380,8 +409,13 @@ void Exec_ClosePartialFraction(const double frac)
          PrintFormat("[DRYRUN] partial-close ticket=%I64u vol=%.2f frac=%.2f -> %.2f", tk, vol, frac, closeVol);
          continue;
       }
-      g_trade.PositionClosePartial(tk, closeVol);
+      if(!g_trade.PositionClosePartial(tk, closeVol))
+      {
+         allOk = false;
+         PrintFormat("[EXEC] partial-close FAILED %I64u vol=%.2f retcode=%d", tk, closeVol, (int)g_trade.ResultRetcode());
+      }
    }
+   return allOk;
 }
 
 #endif // BOSS_LAB_EXECUTION_MQH
