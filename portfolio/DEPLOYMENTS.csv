@@ -5,10 +5,10 @@
 159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(BRK)_SqueezeBreakout,991004,XAUUSD,ACTIVE,closedDD 10%,2026-10-09,2026-07-09,validated set
 159503454,08. Blazing Arrow,REAL_CENT,MT5,VPS 66.212.22.7,(BRK)_TrendlineBreakout,991002,XAUUSD,ACTIVE,closedDD 8%,2026-10-09,2026-07-09,EXPERIMENTAL
 159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,NuiIndy Dynamic RSI+ADX,1524,EURUSD,ACTIVE,closedDD 25%,,2026-05-26,user mix - lab does not certify this account
-159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST_EA03 Count-MACD,9398,USDCAD,PENDING_REMOVE,closedDD 25%,,2026-05-26,STRUCTURAL no-edge ORDER-068; user optimizing by hand first (2026-07-11)
-159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST_EA03 Count-MACD user config,939721,GBPUSD,PENDING_REMOVE,closedDD 25%,,2026-05-26,uncapped-ruin confirmed; user optimizing by hand first (2026-07-11)
+159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST_EA03 Count-MACD,9398,USDCAD,REMOVED,closedDD 25%,,2026-05-26,STRUCTURAL no-edge ORDER-068; user REMOVED from VPS 2026-07-18 (confirmed via RDP Navigator)
+159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST_EA03 Count-MACD user config,939721,GBPUSD,REMOVED,closedDD 25%,,2026-05-26,uncapped-ruin confirmed; user REMOVED from VPS 2026-07-18 (confirmed via RDP Navigator)
 159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,CB_GBP ConsoBreakout,990005,GBPUSD,ACTIVE,closedDD 25%,,2026-05-26,user mix
-159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST03 replica,990010,GBPUSD,PENDING_REMOVE,closedDD 25%,,2026-05-26,WATCH OOS 0.86; same removal set as ST03 family
+159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,ST03 replica,990010,GBPUSD,REMOVED,closedDD 25%,,2026-05-26,WATCH OOS 0.86; user REMOVED from VPS 2026-07-18 (confirmed via RDP Navigator)
 159475669,Boss - Trend Swing,REAL_CENT,MT5,VPS 66.212.22.7,unenumerated user EAs (LondonConso/GoldReaper/MatchaGrid/BRK-XAU),,VARIOUS,UNVERIFIED,,,2026-05-26,magics unknown - enumerate from AccountSnapshot exporter after VPS attach (ORDER-092)
 141049900,01. Celestial Woodfire,REAL_CENT,MT4,VPS 66.212.22.7,Zeus Gold Hedge V1.2_fix,7777,EURUSDc,ACTIVE,manual kill floating DD 40%,,2026-05-26,no-SL grid - user experiment; NewsGuard policy C recommended
 141049900,01. Celestial Woodfire,REAL_CENT,MT4,VPS 66.212.22.7,Gold_Kangaroo L1,1112,XAUUSDc,ACTIVE,closedDD 35%,,2026-05-26,capped-mart not validated; NewsGuard policy C recommended
