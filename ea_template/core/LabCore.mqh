@@ -10,6 +10,7 @@
 #include "Indicators.mqh"
 #include "Regime.mqh"
 #include "Execution.mqh"
+#include "MacroGate_Core.mqh"   // ORDER-073 Phase-3: optional in-EA macro self-gate (backtest A/B)
 #include "RiskControl.mqh"
 #include "MoneyManagement.mqh"
 #include "ExitManager.mqh"
@@ -50,6 +51,21 @@
 // _0_BarOpenOnly state (recompile-safe: reset in OnInit)
 datetime g_lab_last_bar = 0;
 
+// ---- MacroGate self-gate (ORDER-073 Phase-3) -----------------------------
+// OFF by default = fully inert (the cage and every live EA see no change). When
+// ON, THIS EA reads the MRIS regime timeline and sets its own MACROGATE_* GVs,
+// which the Execution bridge above then honours - this is how a SINGLE-EA
+// strategy-tester A/B (gate off vs on) is run, since the tester cannot also run
+// the standalone (Boss)_MacroGate watchdog. In LIVE, leave this OFF and use the
+// standalone watchdog instead.
+input bool   _MG_SelfGate       = false;                     // enable in-EA macro gate (backtest A/B only)
+input string _MG_RegimeFile     = "EA_LAB_mris_regime.csv";  // regime timeline CSV
+input bool   _MG_InCommon       = true;                      // read from Common\Files
+input double _MG_LotMult        = 0.5;                       // new-order lot multiplier while gated
+input bool   _MG_BlockNew       = true;                      // also veto new orders while gated
+input bool   _MG_TriggerRiskOff = true;                      // gate on RISK_OFF too (false = STRESS only)
+input int    _MG_OffsetHours    = 0;                         // server = CSV time + N hours
+
 //+------------------------------------------------------------------+
 int OnInit()
 {
@@ -65,6 +81,14 @@ int OnInit()
       return INIT_FAILED;
    }
    Exec_Init();
+   if(_MG_SelfGate)
+   {
+      // self-gate this EA on its own magic (RowStaleMaxHours huge: tester rows are dense daily)
+      MG_Setup(_MG_LotMult, _MG_BlockNew, _MG_TriggerRiskOff, _MG_OffsetHours, 8760, 168);
+      MG_ParseMagics(IntegerToString(_0_Magic));
+      MG_LoadRegime(_MG_RegimeFile, _MG_InCommon);
+      MG_Tick(TimeCurrent());
+   }
    RiskControl_Init();
    Recovery_Init();
 #ifdef LAB_ENTRY_14
@@ -91,6 +115,7 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+   if(_MG_SelfGate) MG_Deinit();   // clear any MACROGATE_* GVs we set
    Regime_Deinit();
    Indi_Deinit();
 }
@@ -111,6 +136,14 @@ void Lab_OpenOrder(const int dir, const int level)
 //+------------------------------------------------------------------+
 void OnTick()
 {
+   if(_MG_SelfGate)
+   {
+      // refresh the macro gate once per M1 bar (regime is daily; this runs BEFORE any
+      // entry logic below so Exec_Open/PlacePending see the current GV state this tick)
+      static datetime mg_lastbar = 0;
+      datetime mg_cb = iTime(_Symbol, PERIOD_M1, 0);
+      if(mg_cb != mg_lastbar) { mg_lastbar = mg_cb; MG_Tick(TimeCurrent()); }
+   }
 #ifdef LAB_ENTRY_16
    // entry 16 (KangarooGrid, ORDER-072): Kangaroo.mqh owns the ENTIRE pipeline
    // (first entry, adverse grid adds, every exit, emergency DD) - one exit

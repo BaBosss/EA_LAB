@@ -11,7 +11,9 @@
 #property version   "1.00"
 #property strict
 
-#include "MacroGate_Core.mqh"
+// canonical core lives in the chassis template (so LabCore self-gate + this standalone
+// share one source of truth); resolves at compile time from this project folder.
+#include "../../ea_template/core/MacroGate_Core.mqh"
 
 input string InpRegimeFile      = "EA_LAB_mris_regime.csv"; // regime timeline CSV (Common\Files)
 input bool   InpRegimeInCommon  = true;                     // read from Common\Files (rclone target)
