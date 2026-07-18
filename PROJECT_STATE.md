@@ -249,7 +249,7 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 | # | EA | Symbol/TF | Magic | OOS PF | สถานะ |
 |---|---|---|---|---|---|
 | 1 | Matchagrid MG_v1 | CHFJPY M15 | (GUI default) | 2.08 | 🟢 LIVE |
-| 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE |
+| 2 | NuiIndy RSI+ADX | EURUSD H1 | 1524 | 2.00 | 🟢 LIVE ⚠️ edge=geometric martingale (2026-07-18) — guardrail rec `CutLoss=30` (`NUI_cut30only.set`); `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` |
 | 3 | ST_EA03 MACD | GBPUSD H1 | 9397 | 2.47 | 🟢 LIVE |
 | 4 | ST_EA03 MACD | USDCAD H1 | 9398 | 2.62 | 🟢 LIVE |
 | 5 | Gold Reaper 4.3 | XAUUSD H1 | (default/GUI) | 2.07 | 🟢 LIVE |
