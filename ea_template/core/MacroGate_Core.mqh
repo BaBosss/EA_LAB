@@ -59,6 +59,8 @@ bool     mg_ok           = false;
 double   mg_fileAgeHours = -1.0;
 datetime mg_lastAlert    = 0;
 int      mg_notificationAttempts = 0;
+string   mg_fname        = "";      // remembered for per-pass freshness re-check
+bool     mg_common       = true;
 
 //+------------------------------------------------------------------+
 void MG_AlertCritical(const string msg)
@@ -161,6 +163,7 @@ bool MG_IsStaleAge(const double ageHours)
 bool MG_LoadRegime(const string fname, const bool common)
 {
    mg_rowCount = 0; mg_ok = false; mg_fileAgeHours = -1.0;
+   mg_fname = fname; mg_common = common;   // remember for MG_Tick's per-pass freshness re-check
    int cflag = (common ? FILE_COMMON : 0);
    if(!FileIsExist(fname, cflag))
    {
@@ -192,6 +195,10 @@ bool MG_LoadRegime(const string fname, const bool common)
       string f[6];
       if(MG_SplitCsv(l, f) < 2) { skipped++; continue; }
       string ts = f[0]; StringTrimLeft(ts); StringTrimRight(ts);
+      // require a real "yyyy.MM.dd HH:mm" shape (a '.' inside the date part before the
+      // space) so StringToTime cannot silently coerce a malformed token (Codex QA 2026-07-18)
+      int sp = StringFind(ts, " ");
+      if(sp < 0 || StringFind(StringSubstr(ts, 0, sp), ".") < 0) { skipped++; continue; }
       datetime t = StringToTime(ts);
       if(t <= 0) { skipped++; continue; }
       t += (datetime)(mg_offsetHours * 3600);
@@ -210,7 +217,13 @@ bool MG_LoadRegime(const string fname, const bool common)
       return false;
    }
    if(!ascending)
-      Print("[MACROGATE] WARNING: regime rows not strictly ascending - lookup assumes ascending; check the exporter");
+   {
+      // MG_RowAsOf assumes ascending and breaks early; an unsorted file could skip a valid
+      // as-of STRESS row and permit orders. Fail SAFE instead of trusting it (Codex QA 2026-07-18).
+      Print("[MACROGATE] regime rows NOT strictly ascending - guard INACTIVE (fix the exporter/sort)");
+      mg_rowCount = 0; mg_ok = false;
+      return false;
+   }
    mg_ok = true;
    PrintFormat("[MACROGATE] regime loaded: %d row(s), %d skipped, file age %.1f h, server = CSV %+d h",
                mg_rowCount, skipped, mg_fileAgeHours, mg_offsetHours);
@@ -258,6 +271,19 @@ void MG_ClearAll(const string why)
 //+------------------------------------------------------------------+
 void MG_Tick(const datetime nowServer)
 {
+   // per-pass freshness re-check (LIVE only): a file that goes stale or is deleted BETWEEN
+   // reloads must fail safe promptly, not wait for the next reload (Codex QA 2026-07-18).
+   // Skipped in the tester, where the CSV is static/fresh and StaleMaxHours is set huge.
+   if(mg_ok && !MQLInfoInteger(MQL_TESTER) && StringLen(mg_fname) > 0)
+   {
+      int cflag2 = (mg_common ? FILE_COMMON : 0);
+      if(!FileIsExist(mg_fname, cflag2)) { mg_ok = false; }
+      else
+      {
+         long mod = FileGetInteger(mg_fname, FILE_MODIFY_DATE, mg_common);
+         if(mod > 0 && MG_IsStaleAge((double)(TimeLocal() - (datetime)mod) / 3600.0)) mg_ok = false;
+      }
+   }
    if(!mg_ok)
    {
       MG_ClearAll("fail-safe: regime data unavailable");
@@ -295,6 +321,7 @@ void MG_Tick(const datetime nowServer)
       if(trig)
       {
          if(mg_blockNew) GlobalVariableSet(MG_BlockGV(mg_magic[i]), 1.0);
+         else { string bgv = MG_BlockGV(mg_magic[i]); if(GlobalVariableCheck(bgv)) GlobalVariableDel(bgv); }  // lot-only: never leave a stale block (Codex QA 2026-07-18)
          GlobalVariableSet(MG_LotMultGV(mg_magic[i]), mg_lotMult);
          if(!mg_gated[i])
             PrintFormat("[MACROGATE] gate ON magic=%I64d state=%s lotMult=%.2f block=%s @ %s",

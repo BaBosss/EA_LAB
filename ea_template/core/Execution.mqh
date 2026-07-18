@@ -74,10 +74,16 @@ bool Exec_NewsBlocked()
 // never inside Exec_NormalizeLot, which also sizes partial CLOSES. Inert when
 // the GVs are absent; fail-safe (clearing GVs on stale/missing regime data) is
 // the watchdog's job so the chassis stays dumb. Log throttled to 1/min.
+#define MACROGATE_GV_MAX_AGE_SEC 3600   // live: if the watchdog stops refreshing a GV, fail open within this
+
 bool Exec_MacroBlocked()
 {
    string gv = "MACROGATE_BLOCK_" + IntegerToString(_0_Magic);
    if(!GlobalVariableCheck(gv)) return false;
+   // fail open if a dead/removed watchdog stranded this GV (Codex QA 2026-07-18). Skip the
+   // age check in the tester, where the self-gate refreshes GVs in sim time each bar and there
+   // is no crash-strand risk (single EA) - GlobalVariableTime vs sim TimeCurrent is unreliable.
+   if(!MQLInfoInteger(MQL_TESTER) && (TimeCurrent() - GlobalVariableTime(gv)) > MACROGATE_GV_MAX_AGE_SEC) return false;
    if(GlobalVariableGet(gv) < 0.5) return false;
    static datetime last_log = 0;
    datetime now = TimeCurrent();
@@ -96,8 +102,9 @@ double Exec_MacroLotMult()
 {
    string gv = "MACROGATE_LOTMULT_" + IntegerToString(_0_Magic);
    if(!GlobalVariableCheck(gv)) return 1.0;
+   if(!MQLInfoInteger(MQL_TESTER) && (TimeCurrent() - GlobalVariableTime(gv)) > MACROGATE_GV_MAX_AGE_SEC) return 1.0; // stale watchdog -> fail open
    double m = GlobalVariableGet(gv);
-   if(m <= 0.0 || m >= 1.0) return 1.0;   // out of (0,1) -> treat as no-op
+   if(!MathIsValidNumber(m) || m <= 0.0 || m >= 1.0) return 1.0;   // NaN / out of (0,1) -> no-op
    return m;
 }
 
