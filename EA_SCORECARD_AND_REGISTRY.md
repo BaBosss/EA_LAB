@@ -7,6 +7,27 @@ A kill made on a smoke test (★) is LOW confidence and must be re-examined befo
 
 ---
 
+## PART 0 — CANONICAL VERDICT VOCABULARY (adopted 2026-07-18, framework Part 4)
+
+**Every NEW verdict uses ONE of these 7 terms** (owner = `CLAUDE.md` VERDICT GATE tree + bar table):
+`DEAD-STRUCTURAL · DEAD-OPTIMIZED · PARKED-VERIFY(user) · BUILD-ON · CANDIDATE · DEMO · LIVE`
+
+Legacy verdicts below are **kept verbatim in historical rows** (audit trail — do not rewrite them) but
+read them through this one-time map. The retired vocabulary (PASS/CONDITIONAL/ROBUST/MARGINAL/Mode-B) came
+from the now-demoted robustness-validator + backtest-report-analyzer calculators and no longer decides anything.
+
+| Legacy term | Canonical reading | Note |
+|---|---|---|
+| DISQUALIFIED (hard gate) / REJECT-structural | **DEAD-STRUCTURAL** | uncapped-ruin · cracked · expired · flat-lot PF<1 · fill-artifact |
+| DEAD / REJECT-after-optimize | **DEAD-OPTIMIZED** | earned terminal after full ladder + last-optimize on right home |
+| PASS / ROBUST (Mode A) | **CANDIDATE** (→ DEMO if deploy funnel cleared) | passed screening/robustness ≠ deployed |
+| CONDITIONAL / MARGINAL / Mode-B / CANDIDATE_WEAK | **BUILD-ON** or **PARKED-VERIFY(user)** | PF>1 under deploy bars → buildable, never a silent kill |
+| WATCH | (interim) **BUILD-ON** band | smoke 1.0–1.2, not yet optimized |
+
+New verdicts must NOT introduce PASS/CONDITIONAL/ROBUST/etc. — write the canonical term, tag confidence, record kill-reason.
+
+---
+
 ## PART 1 — THE SCORING RUBRIC
 
 ### Step 0 — HARD GATES (any one fails → DISQUALIFIED, do not score further)
