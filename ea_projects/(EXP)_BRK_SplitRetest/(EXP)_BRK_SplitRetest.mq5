@@ -57,6 +57,10 @@ input double _07_PendingLot       = 0.01; // pending buy-limit leg at the retest
 input double _07_RetestOffsetAtr  = 0.0;  // limit = channel_high + offset×ATR. <0 = deeper retest (fills less, better price)
 input int    _07_ExpiryBars       = 5;    // pending order lifetime in H1 bars, then auto-cancels
 
+//--- [08] PRECISION FILTER (ORDER-117 Track B) — candle/PA bar-strength confirm
+input bool   _08_UseBarStrength   = false; // false = byte-identical baseline. true = only take the breakout if the just-closed bar is a conviction candle
+input double _08_MinBodyAtr       = 0.5;   // breakout bar's body (in trade direction) must be >= this × ATR
+
 //--------------------------------------------------------------------
 static bool     g_suppress_log     = false;
 static int      g_atr_handle       = INVALID_HANDLE;
@@ -223,6 +227,17 @@ void OnTick()
    else if(!_05_BuyOnly && bid < g_channel_low) dir = -1;
    if(dir == 0) return;
    if(_05_BuyOnly && dir == -1) return;
+
+   // [08] candle/PA conviction gate (default OFF = identical): breakout bar must have a strong body in the trade direction
+   if(_08_UseBarStrength)
+   {
+      const double o1 = iOpen(_Symbol, PERIOD_H1, 1);
+      const double c1 = iClose(_Symbol, PERIOD_H1, 1);
+      const double body = c1 - o1;                 // signed body of the just-closed bar
+      const double need = _08_MinBodyAtr * atr_now;
+      if(dir ==  1 && body  < need) return;         // buy  → need a strong bullish bar
+      if(dir == -1 && -body < need) return;         // sell → need a strong bearish bar
+   }
 
    const double sl_dist = atr_now * _02_SlAtrMult;
    const double tp_dist = atr_now * _02_TpAtrMult;
