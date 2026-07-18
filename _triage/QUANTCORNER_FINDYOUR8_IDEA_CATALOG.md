@@ -50,3 +50,28 @@
 
 ที่เหลือ (CANSLIM, Options/Delta-hedge, Hedge-fund strategy list, Sentiment NLP) เก็บไว้เป็นความรู้พื้นหลัง
 ไม่ต้อง build เพราะไม่ตรง mechanism ปัจจุบันหรือ infra ไม่พร้อม
+
+---
+
+## 🧭 LEAD TRIAGE (Claude/Opus 2026-07-18 — signal-scan pass, dedup vs พอร์ตจริง)
+
+> catalog ข้างบน = "อ่านมาได้อะไร" (ไม่ตัดสิน). ส่วนนี้ = lead ตัดสินว่าอันไหน **actionable-new** จริง หลัง dedup.
+
+- **#1 Pairs Trading = ❌ ALREADY COVERED — ไม่ใช่ของใหม่.** catalog จัดอันดับ "สูงสุด" แต่เขียนโดยไม่รู้ว่า
+  **PairSpread stat-arb (ORDER-098-F/G/K) สร้าง+validate ไปแล้ว** = log(A)-log(B) z-score fade, CANDIDATE_WEAK,
+  ลง demo เป็น diversifier leg แล้ว. sliver เดียวที่ยังใหม่จริง = **cointegration/ADF pre-filter สำหรับเลือกคู่**
+  (PairSpread ใช้ z-score เฉยๆ ไม่ได้เทส cointegration ก่อน) — minor, ไม่เร่ง.
+- **#2 Vertical-barrier exit (max-holding time-stop) = ✅ actionable-new lever** → ORDER-125 (chassis 2x
+  additive, default OFF). fit จริง = grid/DCA ที่ค้าง basket ใต้น้ำนาน (recovery-days tail). ⚠️ แตะ core/ → **blocked
+  ร่วมกับ ORDER-124 จน user refresh regression baseline**.
+- **#3 ATR-adaptive SL + round-number avoidance = ✅ actionable-new, ตรงปัญหาสด** → ORDER-126. ตรง SMCxSTO
+  991070 SL-fragility (Lane C session ก่อน: SL−20% พลิก 0.94/0.99). เป็น ea_projects probe (standalone EA) →
+  **ไม่ติด baseline blocker** = ทำได้เมื่อ user เคาะ priority.
+- **#4 Multi-EMA stacked filter** = MED prior (EMA-stack = momentum filter ทั่วไป, novelty ต่ำ) — เก็บเป็น optional
+  entry-filter สำหรับ trender ถ้าคิวว่าง.
+- **#5 Granger pre-filter · #6 Risk-Parity · #8/#10 QA caveats** = tooling/methodology ที่ดี แต่ไม่ใช่ EA-lever —
+  บันทึกไว้, ไม่ queue เป็น build.
+- **momentum/reversion class:** ไม่มีตัวไหนเป็น **signal ใหม่แบบ momentum** (ที่ prior สูงสุดของพอร์ต) — ทั้งหมดเป็น
+  exit/SL/filter lever หรือ reversion (pairs) ที่ทำแล้ว. = catalog นี้ให้ **lever ต่อยอด ไม่ใช่ edge ใหม่**.
+
+**สรุป: actionable-new = 2 lever (vertical-barrier ORDER-125 · ATR-SL/round-number ORDER-126). ที่เหลือ covered/tooling/infra.**
