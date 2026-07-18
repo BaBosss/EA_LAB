@@ -1,0 +1,13 @@
+_00_OptimizeMode=true||false||0||true||N
+_01_LookbackBars=110||70||10||150||Y
+_01_SwingRadius=4||2||1||5||Y
+_01_MinBarsApart=3||2||1||6||Y
+_02_MacdFast=11||8||1||14||Y
+_02_MacdSlow=48||36||2||60||Y
+_02_MacdSignal=4||2||1||8||Y
+_03_BufferAtrMult=0.10||0.05||0.025||0.15||Y
+_03_AtrPeriod=18||12||2||26||Y
+_05_LotSize=0.01||0.01||0||0.01||N
+_06_Magic=999094||999094||0||999094||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

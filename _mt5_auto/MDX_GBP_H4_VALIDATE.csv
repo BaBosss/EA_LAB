@@ -1,0 +1,13 @@
+stage,window,PF,DD_pct,RF,Sharpe,trades,net_profit,notes
+coarse_opt,2023.01.01-2025.06.30,,,,,,,"passes=2294 survivors=814 (35.5%) plateau=GOOD center-pick neighbours=115"
+fine_opt_r1,2023.01.01-2025.06.30,,,,,,,"passes=3460 survivors=1784 (51.6%) plateau=GOOD center-pick neighbours=87; center params LB=110 SR=4 MBA=3 Fast=11 Slow=48 Sig=4 Buf=0.10 ATR=18"
+fine_opt_r2_boundarycheck,2023.01.01-2025.06.30,,,,,,,"passes=3083 survivors=1194 (38.7%) plateau=GOOD center-pick neighbours=46; confirms r1 center is interior not edge-artifact"
+IS_locked,2023.01.01-2025.06.30,1.68,0.65,3.02,1.67,154,198.53,"locked plateau-center config, Model 1"
+HOLDOUT_locked,2025.07.01-2026.07.01,0.55,0.80,-0.59,-3.27,47,-46.88,"FAILS gate: PF<1.0, net negative, expected_payoff -1.0"
+BWD_locked,2020.01.01-2022.12.31,1.04,1.00,0.18,0.20,205,18.10,"barely PF>=1.0 but RF/Sharpe near zero - weak, not a clean pass"
+FULL_2020_2026_locked,2020.01.01-2026.07.01,1.22,1.00,1.92,0.85,403,194.39,"continuous full-window run used for MC input"
+MC_full_window,2020.01.01-2026.07.01,1.22,1.48(95th DD%),,,,,"5000-iter trade-reshuffle; PF is order-invariant so PF_5th=PF_95th=1.22; ruin=0.00%; DD 5th/median/95th = 0.62/0.92/1.48%"
+sensitivity_MacdSlow_-20pct(38),2023.01.01-2025.06.30,1.52,0.87,,,158,163.85,"90% of baseline PF - holds"
+sensitivity_MacdSlow_+20pct(58),2023.01.01-2025.06.30,1.39,0.65,,,171,137.61,"83% of baseline PF - holds"
+sensitivity_BufferAtrMult_-20pct(0.08),2023.01.01-2025.06.30,1.52,0.65,,,159,158.28,"90% of baseline PF - holds"
+sensitivity_BufferAtrMult_+20pct(0.12),2023.01.01-2025.06.30,1.48,0.89,,,155,145.82,"88% of baseline PF - holds"
