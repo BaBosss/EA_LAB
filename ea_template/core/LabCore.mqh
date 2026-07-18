@@ -175,6 +175,7 @@ void OnTick()
    // never bar-gated; only signal/management cadence is.
    if(RiskControl_CheckDD()) return;
    if(RiskControl_IsHalted()) return;
+   if(Exit_SafetyMoneyStop()) return;   // ORDER-129b: basket money-STOP never bar-gated (Codex audit F1)
 
    // (0) optional Zeus-style once-per-bar gate (default false = every tick,
    // unchanged). Management/stack/recovery evaluate once per bar-open ONLY;

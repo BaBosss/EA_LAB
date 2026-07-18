@@ -450,7 +450,7 @@ input double _H_MaxLot       = 0.0;  // hedge lot ceiling (0 = use RC_MaxLot onl
 input group "=== General ==="
 input long _0_Magic     = 990001;
 input int  _0_Slippage  = 20;
-input int  _0_MaxSpread = 0;         // 0 = ignore
+input int  _0_MaxSpread = 0;         // max spread in POINTS (broker SYMBOL_SPREAD units; 0 = ignore). Blocks NEW market+pending placement only - an accepted GTC pending can still fill later at a wide spread
 
 //==================== 17 Wave5 structural anchors (guard G1) =======
 // Published by Entry_Evaluate() (Entry_Wave5.mqh), consumed by ExitManager

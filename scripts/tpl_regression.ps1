@@ -116,6 +116,15 @@ if ($UpdateBaseline) {
 if (-not (Test-Path $baseline)) { Write-Host "no baseline - run with -UpdateBaseline -ConfirmBaseline first"; exit 1 }
 $base = Import-Csv $baseline
 $fail = 0
+# ORDER-129b (Codex audit): two-way set comparison. A deleted/renamed wrapper used to
+# vanish from the run silently while its baseline row went unchecked -> false CLEAN.
+if ($rows.Count -eq 0) { Write-Host "[FAIL] zero experts discovered - refusing to declare CLEAN on an empty run" -ForegroundColor Red; exit 1 }
+foreach ($b in $base) {
+  if (-not ($rows | Where-Object ea -eq $b.ea)) {
+    Write-Host "[MISSING] $($b.ea) is in the baseline but was not tested (source deleted/renamed?)" -ForegroundColor Red
+    $fail++
+  }
+}
 foreach ($r in $rows) {
   $b = $base | Where-Object ea -eq $r.ea
   if (-not $b) { Write-Host "[WARN] $($r.ea) not in baseline" -ForegroundColor Yellow; $fail++; continue }

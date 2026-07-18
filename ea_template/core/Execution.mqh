@@ -341,6 +341,26 @@ bool Exec_ModifyPosition(const ulong ticket, const double sl, const double tp)
    return g_trade.PositionModify(ticket, sl, tp);
 }
 
+// ORDER-129b (Codex audit): close-volume normalizer. Same broker min/step/max arithmetic
+// as Exec_NormalizeLot but WITHOUT the RC_MaxLot cage clamp - RC_MaxLot is a ceiling on
+// new RISK, and capping a partial CLOSE with it would silently shrink risk REDUCTION
+// (e.g. 50% of a 1.0-lot legacy position "closed" as 0.10 with the milestone marked done).
+double Exec_NormalizeCloseLot(double lot)
+{
+   double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   double maxv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
+   double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
+   if(step <= 0.0) step = 0.01;
+   if(lot > maxv) lot = maxv;
+   lot = MathFloor(lot / step + 0.0000001) * step;
+   int stepDigits = 0;
+   double s = step;
+   while(stepDigits < 8 && MathAbs(s - MathRound(s)) > 1e-9) { s *= 10.0; stepDigits++; }
+   lot = NormalizeDouble(lot, stepDigits);
+   if(lot < minv) return 0.0;
+   return lot;
+}
+
 // additive: partial-close every own position by `frac` of its current volume
 // (skips legs where the resulting close volume would be <=0 or >= full volume,
 // i.e. below broker min-lot step after normalize). Used by ExitManager's
@@ -353,7 +373,7 @@ void Exec_ClosePartialFraction(const double frac)
       if(!Exec_PosIsMine(i)) continue;
       ulong  tk  = PositionGetInteger(POSITION_TICKET);
       double vol = PositionGetDouble(POSITION_VOLUME);
-      double closeVol = Exec_NormalizeLot(vol * frac);
+      double closeVol = Exec_NormalizeCloseLot(vol * frac);
       if(closeVol <= 0.0 || closeVol >= vol) continue;   // skip if it would close the whole leg
       if(DryRun)
       {

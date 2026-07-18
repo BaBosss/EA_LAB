@@ -124,6 +124,7 @@ void Stack_ManagePyramid()
    if(!RiskControl_AllowNewOrder()) return;      // deposit-load block: retry next tick
 
    bool isStop = (_9_PendingMode == 3);
+   bool anyPlaced = false;
    for(int k = 1; k <= nPend; k++)
    {
       double off   = k * step;
@@ -131,9 +132,14 @@ void Stack_ManagePyramid()
                                : (isStop ? leg0price - off : leg0price + off));
       double lot   = MM_NextLot(leg0lot, k);
       double sl    = Exit_InitialSL(dir, price);
-      Exec_PlacePending(dir, isStop, lot, price, sl, "PYR L" + IntegerToString(k));
+      if(Exec_PlacePending(dir, isStop, lot, price, sl, "PYR L" + IntegerToString(k)))
+         anyPlaced = true;
    }
-   g_stack_ladder_placed = true;
+   // ORDER-129b (Codex audit): a tick where EVERY leg is vetoed (news/macro/spread window)
+   // must not latch the ladder as placed - that left the basket permanently single-leg
+   // after conditions normalized. Zero placed -> retry next tick. (A partial ladder still
+   // latches; full transactional per-leg tracking = ORDER-132.)
+   g_stack_ladder_placed = anyPlaced;
 }
 
 // Should we add a stacked order now? dir = current basket direction.

@@ -167,7 +167,10 @@ bool RiskControl_KillReconcile()
    {
       g_rc_kill_pending = false;
       g_rc_halted       = true;
-      if(RC_PersistHalt)
+      // ORDER-129b (Codex audit): DryRun performs no real closes, so its "flat" is
+      // simulated - never let an observation instance persist HALT into the terminal
+      // GVs that a later REAL attach on this magic would inherit.
+      if(RC_PersistHalt && !DryRun)
       {
          Persist_Set("rc_halted", 1.0);
          Persist_Set("rc_peak_eq", g_rc_peak_equity);
@@ -203,7 +206,7 @@ bool RiskControl_CheckDD()
       PrintFormat("[RISK] HARD KILL: DD %.2f%% >= %.2f%% (profile %d) -> closing all",
                   dd, kill, ProtectLevel);
       g_rc_kill_pending = true;
-      if(RC_PersistHalt) Persist_Set("rc_kill_pending", 1.0);   // restart mid-kill keeps killing
+      if(RC_PersistHalt && !DryRun) Persist_Set("rc_kill_pending", 1.0);   // restart mid-kill keeps killing (never from DryRun)
       RiskControl_KillReconcile();
       return true;
    }

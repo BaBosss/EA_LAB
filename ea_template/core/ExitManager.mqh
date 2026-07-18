@@ -410,6 +410,26 @@ void Exit_ManagePartialClose()
    }
 }
 
+// ORDER-129b (Codex audit F1): the basket money-STOP is a safety exit, not management
+// cadence - it must run every tick even when _0_BarOpenOnly gates the rest of the
+// pipeline. Only the LOSS leg lives here; profit targets/trailing stay bar-gateable in
+// Exit_ManageBasket (they can only leave money on the table, not compound a loss).
+// Returns true if it flattened the basket this tick.
+bool Exit_SafetyMoneyStop()
+{
+   if(_32_SL_Money <= 0.0) return false;
+   if(Exec_CountAll() <= 0) return false;
+   double profit = Exec_BasketProfit();
+   if(profit <= -_32_SL_Money)
+   {
+      PrintFormat("[EXIT] basket money-stop (safety, intrabar): net %.2f <= -%.2f -> close all",
+                  profit, _32_SL_Money);
+      Exec_CloseAll();
+      return true;
+   }
+   return false;
+}
+
 // per-tick basket management; returns true if it closed the whole basket
 bool Exit_ManageBasket()
 {

@@ -51,9 +51,11 @@ if ($Compile) {
       # exits 0 regardless of compile errors, and a failed compile does not always skip writing an
       # .ex5 (stale one could remain pre-fix) - the Result line is the only reliable pass/fail signal.
       $resultLine = $txt -split "`r?`n" | Where-Object { $_ -match "Result:\s*\d+\s+errors?" } | Select-Object -Last 1
-      if ($resultLine -and ($resultLine -match "Result:\s*(\d+)\s+errors?")) {
-        if ([int]$Matches[1] -gt 0) {
-          Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors) **" -ForegroundColor Red
+      if ($resultLine -and ($resultLine -match "Result:\s*(\d+)\s+errors?(?:,\s*(\d+)\s+warnings?)?")) {
+        # ORDER-129b (Codex audit): enforce the 0/0 policy - warnings used to pass silently
+        $warn = if ($Matches[2]) { [int]$Matches[2] } else { 0 }
+        if ([int]$Matches[1] -gt 0 -or $warn -gt 0) {
+          Write-Host "  ** COMPILE FAIL: $t ($([int]$Matches[1]) errors, $warn warnings - 0/0 required) **" -ForegroundColor Red
           $compileFailed = $true
         }
       } else {
