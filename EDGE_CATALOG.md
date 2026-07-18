@@ -124,7 +124,21 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
    counterproductive (lags). Don't expect a TA filter to unlock sizing — diversify instead. A
    *leading* regime signal (macro calendar / cross-asset stress), not a lagging indicator, is the
    only untested angle.
+6. **Pairs trading / stat-arb spread reversion** (source: quant-corner.com + Blockdit sweep,
+   2026-07-18) — trade the spread between 2 correlated instruments (EURUSD-GBPUSD, Gold-Silver)
+   instead of price directly. Whole new signal class — fills the "correlation-as-strategy" gap
+   already flagged in `_triage/FXDREEMA_IDEA_CATALOG.md`. Full writeup:
+   `_triage/QUANTCORNER_FINDYOUR8_IDEA_CATALOG.md` #1.
+7. **ATR-adaptive SL + round-number avoidance** (same source) — pre-placed SL at round-number
+   levels gets stop-hunted; use ATR-width SL with a small offset off round numbers. Directly
+   addresses the SL-fragility diagnosis from Lane C SMCxSTO (2026-07-18). Catalog #3.
+8. **Vertical-barrier exit / max-holding force-close** (Triple Barrier Method, Lopez de Prado —
+   same source) — most EAs here only have TP/SL (horizontal barriers), none has a pure
+   time-based force-close. Untested exit-mode lever, applicable to existing grid/DCA EAs without
+   a rebuild. Catalog #2.
 
+Full idea sweep (15 items ranked, incl. Granger-causality indicator pre-filter, risk-parity
+portfolio weighting, multi-EMA stacked entry filter) → `_triage/QUANTCORNER_FINDYOUR8_IDEA_CATALOG.md`.
 
 ---
 
