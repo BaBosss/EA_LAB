@@ -33,6 +33,10 @@ if (Test-Path 'D:\EA_LAB\portfolio\news_week.csv') {
         "newsguard csv copy failed: $($_.Exception.Message)" | Add-Content $log
     }
 }
+# ORDER-073 Phase-3: append today's MRIS macro state to the rolling regime CSV that the
+# (Boss)_MacroGate watchdog reads. Runs after 'mris' so regime_state.json is fresh. The
+# script mirrors the CSV to local Common\Files; the VPS copy is delivered by rclone (runbook).
+Step 'export-regime' { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_export_regime.ps1 *>> $log }
 Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log }
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
@@ -45,7 +49,7 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
-git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv 2>> $log
+git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv portfolio/EA_LAB_mris_regime.csv 2>> $log
 $staged = git diff --cached --name-only
 if ($staged) {
     git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log
