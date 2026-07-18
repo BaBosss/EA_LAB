@@ -6,6 +6,11 @@
 > สถานะ: `OPEN` → `CLAIMED(agent, เวลา)` → `DONE` / `BLOCKED(คำถาม)` → `REVIEWED(Claude)`
 > agent อื่นแก้ได้เฉพาะแถว order ที่ตัว claim · เพิ่ม order ใหม่ = Claude/user เท่านั้น
 >
+> 📋 **ORDER TEMPLATE (บังคับตั้งแต่ ORDER-124+ · framework Part 5 enforcement #1):** order ทดสอบ/optimize ทุกใบ
+> ต้องมี 2 บรรทัดนี้ในสเปก — pre-register ก่อนรัน ห้ามเติมย้อนหลัง:
+> - `bars:` pass = X · dead = Y · กลาง(WATCH/build-on) = Z   ← เลขตัดสินที่ล็อกก่อนเห็นผล
+> - `flat-lot probe:` done / N-A(single-order) / pending   ← ถ้ามี escalation ต้อง done ก่อนตัดสิน STRUCTURAL
+>
 > 🏁 **track merge EA_CORE → Boss V2: ปิดแล้ว (เปิด+จบ 2026-07-06)** — อะไหล่เข้าแม่พิมพ์ครบ
 > (pyramid 93 · acct-DD gate · Persist · tests\) + EA_Project = read-only archive · บันทึกเต็ม →
 > `AGENT_TASKBOARD_MERGE.md` (เหลือ MERGE-07 Entry_ST03 = HOLD ถึง judge — เงื่อนไขอยู่ในบอร์ดนั้น)
@@ -96,7 +101,7 @@ Claude + user) · single-window ranking
 **ทำได้:** Claude sets+judge · qwen/ea-screener batch M1 · M4 serial เลน 1 · 👉 แนะ: **Claude ออก .set →
 qwen รัน C → Claude อ่าน surface → A/B เฉพาะเมื่อผ่าน GATE**
 
-## ORDER-120 — implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table — `OPEN`
+## ORDER-120 — implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table — `DONE(Opus 2026-07-18): CLAUDE.md gate = decision tree (STRUCTURAL→PARAMETRIC→DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE) + bar table 7 แถว (MAIN≥1.2 hard / BWD≥1.0 soft-gate→PARKED-VERIFY / holdout≥1.2 / MC ruin≤2% PF-5th≥1.0 / demo→live PF≥1.40@30) + Row-X write-checklist 5 บรรทัด + window names MAIN/BWD/HOLDOUT rolling-36 + paid-for history เป็น footnote. vocab 7 ตัวครบ. section อื่นไม่แตะ.`
 **source:** `_triage/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` Part 4(b) (user approve ครบใน grill 2026-07-18 —
 decision log แถว 2026-07-18). **spec:** แทน prose gate ด้วย (1) decision tree STRUCTURAL→PARAMETRIC→
 DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE (2) bar table 7 แถวตาม framework (MAIN≥1.2·BWD≥1.0
@@ -106,7 +111,7 @@ MAIN/BWD/HOLDOUT ตาม rolling-36 ใหม่. **acceptance:** vocab 7 ต�
 footnote (ห้ามลบบทเรียน) · ไม่มี section อื่นใน CLAUDE.md ถูกแตะ · เลขบาร์ตรง framework ทุกตัว.
 **ห้าม:** เปลี่ยนเลขบาร์เองโดยไม่มี decision ใหม่. **ทำได้:** Claude เท่านั้น (แก้กฎ) · 👉 แนะ: **Opus-seat**
 
-## ORDER-121 — implement framework Part 3: rewrite skill backtest-optimize-rigor เป็น ladder 0-9 — `OPEN`
+## ORDER-121 — implement framework Part 3: rewrite skill backtest-optimize-rigor เป็น ladder 0-9 — `DONE(Opus 2026-07-18): skill = THE OPTIMIZE LADDER Step 0-9 (windows pin MAIN rolling-36/BWD 2020-22/HOLDOUT 2026H1 · Model-4-mandatory table ย้ายเข้า · MC bars ruin≤2%/resize 2-10%/PF-5th≥1.0 ย้ายเข้า). ลบ "Model 2 throughout optimize" (Codex BLOCKER) → Model-2 = preflight+kill-only, coarse=Model 1+. grep "Model 2" เหลือเฉพาะ preflight/kill/artifact-detect. OPTIMIZE_PROCEDURE_AND_AUDIT.md ติด superseded banner. NEXT STAGE → VERDICT GATE.`
 **source:** framework Part 3(b). **spec:** (1) แทน Phase D-F ด้วย ladder Step 0-9 (2) **ลบบรรทัด "Model 2
 throughout optimize for bar-open EAs" (drift ที่ Codex จับเป็น BLOCKER)** → Model-2 = zero-trade preflight +
 kill-only, coarse sweep = Model 1+ (3) pin windows: MAIN = rolling 36 เดือนที่ไม่กิน holdout (convention
@@ -116,7 +121,7 @@ kill-only, coarse sweep = Model 1+ (3) pin windows: MAIN = rolling 36 เดื�
 banner ชี้ skill. **acceptance:** grep "Model 2" ใน skill เหลือเฉพาะบริบท preflight/kill · ladder ครบ 10 ขั้น ·
 เลขตรง framework. **ทำได้:** Claude · 👉 แนะ: **Opus-seat** (แก้กฎ optimize = law)
 
-## ORDER-122 — implement framework Part 2+5: สร้าง docs/PIPELINE.md + sync FINAL RULE 9 skills + AGENTS §1.5 — `OPEN`
+## ORDER-122 — implement framework Part 2+5: สร้าง docs/PIPELINE.md + sync FINAL RULE 9 skills + AGENTS §1.5 — `DONE(Opus+Sonnet 2026-07-18): docs/PIPELINE.md สร้างแล้ว (flow owner + routing table 10 boundary + skill roster). FINAL RULE sync 9 skills: strategy-and-risk (ลบ standalone-faster block→chassis-first) · mql-code-generator (→mql-code-reviewer ก่อน compile) · signal-scanner · backtest-optimize-rigor (→VERDICT GATE) · mql-code-reviewer (mandatory cage) · robustness-validator + backtest-report-analyzer (DEMOTED banner, vocab retired) · portfolio-selector (corr ladder ≤0.40/0.40-0.60/>0.60 reduce-not-cut/same-EA<0.8) · live-deployment-controller (=GATE) · vps-deploy-ops (=SHIP, requires gate output). AGENTS §1.5 sync Fable→4 reserved cases. check_state CLEAN. Opus นำ+verify · Sonnet แก้ 8 skills+AGENTS ตาม list.`
 **source:** framework Part 2(b) kill-list + Part 5(b) routing table. **spec:** (1) สร้าง `docs/PIPELINE.md` =
 owner ของ flow เดียว + ตาราง 10 boundary (artifact·gate·who·written-where) ยกจาก framework ตรงๆ + banner
 "canonical entry = PROJECT_STATE · ไฟล์นี้ owns: stage routing เท่านั้น" (2) แก้ FINAL RULE/handoff ใน 9 skills:
@@ -129,7 +134,7 @@ user**) · live-deployment-controller (= gate ก่อน vps-deploy-ops) · vp
 **acceptance:** ทุก skill ชี้ next-stage ตรง PIPELINE.md · ไม่มี "PASS/CONDITIONAL/ROBUST" เป็นด่านเหลือใน
 FINAL RULE ไหน · check_state ผ่าน. **ทำได้:** Claude (Sonnet ช่วย mechanical edits ได้) · 👉 แนะ: **Opus นำ + Sonnet แก้ตาม list**
 
-## ORDER-123 — order template: เพิ่ม field บังคับ 2 ช่อง (pre-registered bars · flat-lot probe) — `OPEN` (เล็ก)
+## ORDER-123 — order template: เพิ่ม field บังคับ 2 ช่อง (pre-registered bars · flat-lot probe) — `DONE(Opus 2026-07-18): เพิ่ม ORDER TEMPLATE block ใน header taskboard (ใต้กติกาสถานะ) — order ทดสอบทุกใบตั้งแต่ 124+ ต้องมี bars: (pass/dead/กลาง) + flat-lot probe: done/N-A/pending.`
 **source:** framework Part 5(b) enforcement #1. **spec:** เพิ่ม template block ใน header taskboard นี้ (ใต้กติกา
 สถานะ): order ทดสอบทุกใบต้องมีบรรทัด `bars:` (pass=X/dead=Y/กลาง=Z) และ `flat-lot: done/N-A/pending`.
 **acceptance:** header มี template + ORDER ใหม่ตั้งแต่ 124 ขึ้นไปใช้ครบ. **ทำได้:** Claude · 👉 แนะ: ทำพ่วงกับ 120-122

@@ -25,8 +25,21 @@ Codex/ZCode ที่รันหน้าคอม รายงานใน con
 
 ### 1.5 Model assignment + tier ladder (post-Fable, ตั้งแต่ 2026-07-04 — Fable โควต้าหมดจริง)
 
-> Fable หมดโควต้าแล้ว (เร็วกว่าแผน 07-07). **seat lead/judge = Claude Code รันบน Opus** ตั้งแต่บัดนี้.
+> **[SUPERSEDED 2026-07-11 — ดู UPDATE ด้านล่างก่อนใช้ history line นี้]** Fable หมดโควต้าแล้ว
+> (เร็วกว่าแผน 07-07). **seat lead/judge = Claude Code รันบน Opus** ตั้งแต่บัดนี้.
 > role อยู่ที่ seat ไม่ใช่ model — Opus ทำหน้าที่เดิมของ Fable ทุกอย่าง (ทิศทาง/verdict/เขียน order/review).
+
+**UPDATE 2026-07-11 (Fable-seat วันเดียวก่อนโควต้าเหลือ ~10%):** Opus กลับเป็น seat หลักตั้งแต่ session
+ถัดไป. **Fable ที่เหลือ (~10% quota) = จองให้ 4 กรณีนี้เท่านั้น** ผ่าน skill `fable-advisor` (one-shot
+brief — ห้ามเผาเป็น session เต็ม):
+1. verdict ผล ST03 ที่ user optimize มือ
+2. ตรวจ spec ORDER-082 Wave5 ก่อน build
+3. การ promote เงินจริงครั้งแรกของ candidate ตัวถัดไป
+4. RCA เหตุการณ์เงินจริงผิดปกติ
+
+งานอื่นทุกอย่าง = Opus-seat + Codex + agent lanes ตามเดิม (ดูตาราง tier ladder ด้านล่าง). **Fallback
+เมื่อ Fable ใช้ไม่ได้ (โควต้าหมด/ไม่ใช่ 1 ใน 4 กรณี) = Opus-seat ตัดสินเอง + บังคับขอ Codex second
+opinion เสมอ** (ไม่ใช่ optional สำหรับ 4 กรณีนี้ — ต่างจากกฎทั่วไปใน §5 ที่ Codex เป็น "เลือกใช้").
 
 **ยอดบันได escalation พังลงมา 1 ชั้น — ต้องเข้าใจก่อนใช้:** เดิม Opus = "deep-reasoner tier"
 (ตัว escalate เมื่องานยาก) ด้วย. พอ seat = Opus แล้ว การ spawn `deep-reasoner` subagent = **สมองตัว

@@ -2,37 +2,78 @@
 
 Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_STATE.md) — read that first every session. This file only holds instructions for how Claude Code itself should operate in this repo.
 
-## 🚦 VERDICT GATE — ห้ามตัดสิน EA (DEAD/PARKED/REJECT หรือ DEPLOY/PASS) จนกว่าจะเติม block นี้ครบ
-**(paid for with real mistakes 2026-07-08: ตัดสิน "dead" ผิด 2 ครั้งใน session เดียว เพราะ optimize
-ไม่ครบขั้นตอน — user จับได้ทั้งคู่. gate นี้คือกันไม่ให้ session ไหนพลาดซ้ำ. ถ้าจะเขียน verdict แล้ว
-block นี้ยังไม่ครบ = หยุด ทำให้ครบก่อน.)**
+## 🚦 VERDICT GATE — decision tree + bar table (ห้ามตัดสิน EA จนกว่าจะเดินครบ tree นี้)
+**gate นี้ = owner ของ verdict ทั้งหมด · อ่านทุก session · ถ้าจะเขียน verdict แล้ว tree ยังไม่ครบ = หยุด เดินให้ครบก่อน.**
+ขั้นตอน optimize เต็ม = skill `backtest-optimize-rigor` (owns THE LADDER 0-9). gate นี้ = **ต้นไม้ตัดสิน** ที่ ladder ป้อนหลักฐานเข้ามา.
 
-1. **Levers swept?** list ทุก lever ที่เกี่ยว — `spacing · lot-law · SL-width · TP · exit-mode · entry-threshold · symbol · TF` — mark ตัวไหน swept / ตัวไหน held. **source-available EA ที่ verdict จาก <3 lever ที่ swept = INVALID.** ("ปรับแล้ว" มักแปลว่าปรับ 1 ใน 8 — ต้องเช็คจริง · exit-mode เพิ่ม 2026-07-10: ST03 "no-edge" รอบแรกวัดใต้ scalp-exit เดียว user จับได้ · scope ชัดขึ้น 2026-07-11 หลัง Codex audit C3: กติกานี้ใช้กับ **verdict ระดับ EA/concept** — smoke ที่ตกบาร์ pre-registered = "ปิด cell" ได้โดยไม่ต้อง sweep แต่**ห้ามเขียนเป็น concept ตายสากล** · Model-2 ใช้ได้เฉพาะทิศฆ่า (optimistic bias) ห้ามใช้ทิศผ่าน)
-   **🔴 ANTI-RATIONALIZATION (paid 2026-07-16 — ตี SMC×STO ตายจาก default-smoke, user push optimize+ADX filter → กลายเป็น EURUSD candidate จริง PF 1.14-1.39 both-window+holdout+Model-4. ถ้า user ไม่จับ = ตายเปล่า. นี่คือ pattern ซ้ำ ไม่ใช่ครั้งเดียว):**
-   - **default-param smoke ปิดได้แค่ CELL นั้น — ห้ามลามเป็น "park/kill concept" หรือ "concept parked for build" เด็ดขาด.** source-available concept ตายได้**ทางเดียว** = optimize ceiling ยัง <1.0 both-window บน **RIGHT HOME** (reversion→ranger EURUSD/EURGBP/AUDNZD · momentum→trender XAU/GBP — เทสผิดบ้านแล้วตก ≠ ตาย).
-   - **momentum>reversion prior = ยก "บาร์ผ่าน" เป็น PF≥1.2 หลัง optimize — ไม่ใช่ใบอนุญาตข้าม optimize.** prior ทำให้ demand มากขึ้น ไม่ใช่ test น้อยลง. reversion ก็ต้อง optimize ≥3 lever บนบ้านมันก่อนตาย เหมือนทุกตัว.
-   - **"cheap death" ใช้เฉพาะ STRUCTURAL เท่านั้น** (recovery-dependent/uncapped-ruin/cracked/no-source) — **ห้ามใช้กับ signal ที่แค่ smoke ~1.0.** signal ที่ PF 0.6-1.0 บน default = "ยังไม่ optimize" ไม่ใช่ "ตาย".
-   - **STO/oscillator noisy ที่ default เป็นเรื่องปกติ** — StoK default 5 → 13-17 พลิกผลได้ (2026-07-16). optimize entry-signal params คือ lever แรกเสมอ ไม่ใช่ทางเลือก.
-2. **Coarse→surface?** เห็น *surface* (หลายจุด/axis) ไม่ใช่ 1-2 จุด? เป็น plateau (neighbor ไม่มีตัวขาดทุน) หรือ spike? — spike/hole = ยังไม่ผ่าน
-3. **Both regimes?** เทส candidate config บน **ทั้งปีเทรนด์ (BWD 2020-22) + ปีล่าสุด พร้อมกัน**? (lever ที่ดีที่สุด window นึงมัก invert อีก window)
-4. **REJECT เป็นแบบไหน?** STRUCTURAL (martingale-fat-tail / DD-blowup 90%+ / no-source / cracked) → ฆ่าได้ tune ไม่ช่วย · PARAMETRIC (แพ้ที่ window เดียว/setting เดียว) → **ต้อง sweep ก่อน reject — ขั้นต่ำเชิงตัวเลข (user rule 2026-07-10): ตัวที่ผ่านเกณฑ์เบื้องต้นแล้ว ห้ามตีตายจนกว่าจะ optimize ≥3 รอบ (ชุด lever ต่างกัน เลือกตาม strategy ของ EA นั้น) × ≥2 TF ต่อ symbol** และพิจารณา symbol อื่นที่เข้ากับ mechanism ก่อนปิด · **ตัวที่ idea ดีแต่ไม่ผ่าน = tag `PARKED-VERIFY(user)` + แจ้ง user เสมอ** (user มีประสบการณ์มือที่เครื่องมือไม่มี — หลาย EA ที่ใช้อยู่รอดมาเพราะ user เคยเทสเอง) — ห้ามปล่อยของดีตายเงียบ
-5. **Martingale ไม่ใช่ auto-reject** — recheck 4 ข้อก่อนทิ้ง: **มี SL ไหม · จำกัดจำนวนไม้ (capped steps) ไหม · entry มี edge จริงไหม (flat-lot test: ปิด escalation แล้ว PF ยัง >1?) · ดื้อ (add ตลอด) หรือมีเงื่อนไข**. capped-martingale + SL + entry-edge ≠ uncapped-ruin
-6. **DEPLOY/PASS เพิ่ม:** ผ่าน **holdout window ที่ไม่เคยใช้ select** + MC? plateau-center (ไม่ใช่ peak)? — in-sample plateau = selection-fit ยังไม่ใช่ validated
+**Window names (pin เดียวใช้ทุกที่):** **MAIN** = 36 เดือนล่าสุด re-pin ทุก re-opt 6 เดือน (วันนี้ ≈ 2023.07–2026.07) · **BWD** = 2020–2022 (trend/stress regime) · **HOLDOUT** = window/symbol ที่ไม่เคยใช้ select (default 2026H1 จนกว่าจะถูกใช้ — ใช้แล้วไหม้; หลังจากนั้น demo-forward = holdout และ verdict ต้องระบุ).
 
-รายละเอียดเต็ม + ตัวอย่าง = `OPTIMIZE_PROCEDURE_AND_AUDIT.md` + skill `backtest-optimize-rigor` (owns ขั้นตอน). gate นี้ = สรุปบังคับ อ่านทุก session.
+```
+EVIDENCE IN
+│
+1. STRUCTURAL?  (เจอข้อใดข้อหนึ่ง ⇒ ฆ่าทันที — ความตายถูกอย่างเดียว ไม่ต้อง optimize)
+   · flat-lot/escalation-off PF<1 ขณะ escalated PF>1        → "martingale คือ edge เอง"
+   · uncapped ruin: ไม่มี SL AND ไม่มี depth cap (maxOpen≥8) AND geometric ladder
+     — เช็ค 4 ข้อ martingale ก่อน (SL? · capped steps? · flat-lot edge? · conditional adds?) —
+       capped+SL+edge ≠ ruin
+   · cracked / expired / locked-no-source (legal-ops DQ)
+   · pure fill-artifact: M4 พลิกเครื่องหมายทั้ง surface / tight-TP fiction
+   ⇒ DEAD-STRUCTURAL → EDGE_CATALOG dead pile + scorecard kill-reason
+     (course-file rule: แกะ entry CONCEPT ก่อนทิ้ง vehicle — [[feedback-course-files-extract-idea]])
+│
+2. else PARAMETRIC — ยังฆ่าไม่ได้.
+   RIGHT HOME ก่อน (reversion→EURUSD/EURGBP/AUDNZD ranger · momentum→XAU/GBP trender;
+   ตกที่บ้านผิด ≠ ตาย). เดิน ladder ≥3 lever × ≥2 TF บนบ้านที่ถูก.
+   │
+   ├─ 2a. ceiling < 1.0 both-window บน RIGHT home  AND  ทำ LAST-OPTIMIZE รอบสุดท้ายแล้ว
+   │      (บังคับ 1 รอบบน lever ที่ยังไม่แตะ เลือกจาก diagnosis→lever table ทันทีก่อนลั่นไก
+   │       แม้ optimize มาเยอะแล้ว)
+   │      ⇒ DEAD-OPTIMIZED. ปิดระดับ CELL เป็น default · CONCEPT ตายได้เฉพาะเมื่อพิสูจน์ right-home
+   │        ceiling แล้ว. default-param smoke ปิดได้แค่ CELL เท่านั้น เสมอ.
+   │
+   ├─ 2b. PF>1 ที่ไหนก็ได้ แต่ยังใต้ deploy bars
+   │      ⇒ BUILD-ON (DEFAULT ไม่ใช่ bench-and-forget):
+   │        · ขยาย symbol×TF (เอาทุก home ที่ผ่านบาร์ · pairwise corr<0.8)
+   │        · ปรับกลไกก่อนรับตามเดิม (เช่น pending-limit entry — แต่ pending-rescue ใช้ได้เฉพาะ
+   │          market-on-signal entry ห้ามใช้กับ grid trigger-touch; doctrine 2026-07-17)
+   │        · แกะ entry mechanism เข้า EDGE_CATALOG แม้ EA ไม่ deploy
+   │        idea ดีแต่ยังไม่ผ่าน ⇒ PARKED-VERIFY(user): tag + brief 3 บรรทัด
+   │        (มันคืออะไร · gate ไหนฆ่า · ทำไมยังน่าสนใจ). ห้ามตายเงียบ.
+   │
+   └─ 2c. ผ่าน pre-registered bars ⇒ VALIDATED CANDIDATE → deploy funnel:
+          lock plateau-center .set → both-window → sensitivity fan → holdout (หรือประกาศ
+          demo-forward-as-holdout เมื่อ selection กิน BWD ไปแล้ว — Boss_16 precedent) →
+          MC (resize-first เมื่อ cap breach) → Model-4 ถ้า fill-sensitive → corr vs cohort
+          ⇒ DEMO  (DEPLOYMENTS.csv row + judge criteria pre-register ตอน attach)
+          ⇒ ≥3 เดือน demo forward → judge ⇒ LIVE (เงินจริง)
+             (irreversible: Codex second opinion บังคับ ห้าม anchor · + Fable-advisor one-shot
+              case-3 ระหว่างมี quota — Fable ไม่ว่าง = Opus-seat ตัดสิน แต่ leg Codex ไม่มีทางข้าม)
+```
 
-**🔑 LAST-OPTIMIZE-BEFORE-VERDICT (user rule 2026-07-18 — กันปัดตกเร็วเกินไป):** ก่อนเขียน **PARKED หรือ REJECT** กับ EA/candidate ที่**เคยโชว์ชีพจร** (smoke/IS PF>1 หรือ idea ดี) — **ต้องลอง optimize รอบสุดท้ายอีก 1 รอบบน lever ที่ยังไม่ได้แตะเสมอ** (เลือกจาก diagnosis→lever: ตกที่ holdout/regime → regime-gate หรือ TF อื่น หรือ adaptive-exit · ตกที่ DD → sizing/spacing · ตกที่ thin → TF เล็ก/threshold หลวม). **ถ้ารอบสุดท้ายไม่ดีขึ้น → ค่อย park/reject.** ต่างจาก "≥3 รอบก่อน DEAD" ตรงที่นี่ = ด่านสุดท้ายบังคับ **ทันทีก่อนลั่นไก** แม้ optimize มาเยอะแล้ว (เช่น validator ที่ REJECT เพราะ holdout พลิก — ก่อน final ต้องลอง rescue-lever ที่ validator เองชี้ก่อน เช่น TF อื่น/regime-gate). ยกเว้น STRUCTURAL death (flat-lot PF<1 · uncapped-ruin · cracked · no-source) = ลั่นได้เลย ไม่ต้อง last-optimize.
+**Bar table (หนึ่งเลขต่อ transition):**
 
-**⚖️ BUILD-ON ≠ DEPLOY (user doctrine 2026-07-11 — gate ข้างบนคุม "ขึ้นเงินจริง" ไม่ใช่ "ทิ้ง"):** EA ที่ test
-**PF>1 แม้ครั้งเดียว/แม้ OOS ไม่ถึงบาร์ deploy = ของต่อยอด ไม่ใช่ bench-and-forget**. PARAMETRIC-marginal (PF>1
-ใต้บาร์) → **default ไป build-on branch ก่อนเขียน verdict:** (1) ขยาย symbol×TF ให้ครบ (10+ คู่ ทุก TF — home
-อาจดีกว่ามากที่อื่น) (2) **ปรับกลไก ไม่ใช่รับตามเดิม** — เช่น spread concern → เปลี่ยน market entry เป็น pending
-buy/sell limit (fill แบบ maker ไม่จ่าย spread) · grid/เทรดเยอะ = ไม่ใช่ข้อเสีย (3) แกะ entry logic เก็บ EDGE_CATALOG
-แม้ทั้ง EA ไม่ deploy. **เฉพาะ STRUCTURAL death (flat-lot PF<1 · uncapped-ruin · cracked) เท่านั้นที่ฆ่าทิ้งเลย** ·
-deploy-gate กับ discard-gate = คนละคำถาม. รายละเอียด = memory `feedback-buildon-pf-gt-1`.
-**เอาทุก home ที่ผ่านเกณฑ์ ไม่ใช่ home เดียวที่ดีสุด** (EA ตัวเดียวรันหลาย symbol ได้) · gate reuse ข้าม symbol
-ของ EA เดียวกัน = **pairwise corr < 0.8** (หลวมกว่า cross-EA portfolio 0.4/0.6) · เกิน 0.8 = redundant → บอก
-user เลือกเอง ไม่ auto-drop · cell ที่เฉียดบาร์ = ปรับได้ (filter/ขยาย grid spacing) ไม่ใช่ตายทันที.
+| Transition | Bar |
+|---|---|
+| smoke pulse → PROCEED | หนึ่ง cell naked PF ≥ **1.2** ที่ n เหมาะกับ type (WATCH = 1.0–1.2) |
+| optimize pass → CANDIDATE | **MAIN ≥ 1.2** (hard) AND **BWD ≥ 1.0** (soft-gate) + plateau ไม่ใช่ spike. **BWD-fail = ไม่ auto-kill → PARKED-VERIFY(user): เคาะ demo-isolate ได้ แต่ปิดทางเงินจริงอัตโนมัติ** (user Q3 2026-07-18) |
+| holdout | PF ≥ **1.2** ที่ n เหมาะ ⇒ deploy track · **1.0–1.2 ⇒ BUILD-ON** (JUMSTOCH precedent) · <1.0 ⇒ selection-fit กลับไป diagnosis |
+| MC | ruin ≤ **2%** (resize-first ได้ถึง 10%) · PF-5th ≥ **1.0** |
+| Model-4 (เมื่อถึงคิว) | both-window PF ≥ **1.0** retained AND largest-loss ไม่ระเบิด (ไม่มี model-switch cliff) |
+| demo → LIVE | ≥ **3 เดือน** · judge PF ≥ **1.40** ที่ ≥ **30 trades** · ไม่มี pre-registered kill trip |
+| demo kill (default, override ต่อ-EA ตอน attach ได้) | eqDD > **12%** · 3-mo PF < **0.8** ที่ ≥ **15 trades** |
+
+**Canonical verdict vocabulary (retire ทุกคำอื่น):**
+`DEAD-STRUCTURAL · DEAD-OPTIMIZED · PARKED-VERIFY(user) · BUILD-ON · CANDIDATE · DEMO · LIVE`
+(PASS/CONDITIONAL/ROBUST/MARGINAL/Mode-B จาก skill เก่า = retired). **discard semantics:** STRUCTURAL = ความตายถูกอย่างเดียว (ฆ่าทันที ไม่ owe optimize · แกะ concept ได้) · DEAD-OPTIMIZED = terminal ที่ต้อง *earn* (ปิด cell/concept หลัง ladder เต็ม + last-optimize) · **ที่เหลือทั้งหมดห้ามทิ้ง**.
+
+**📋 Row-X write-checklist — ก่อนเขียน verdict ใดๆ ต้องเช็ค 5 บรรทัดนี้:**
+- [ ] **scorecard** (`EA_SCORECARD_AND_REGISTRY.md`) update verdict + kill-reason
+- [ ] **EA_MASTER_INDEX** update ใน commit เดียวกัน (hook-enforced)
+- [ ] **EDGE_CATALOG** — dead pile หรือ reusable-lever/mechanism entry
+- [ ] **B1_DATASET.csv** row ใน REVIEWED commit เดียวกัน (นิยาม = B1_COHORT.md)
+- [ ] **user brief** ถ้า PARKED-VERIFY (3 บรรทัด: อะไร/gate ไหนฆ่า/ทำไมน่าสนใจ)
+
+<sub>**paid-for history (บทเรียนจริง — ห้ามลบ):** 2026-07-08 ตัด "dead" ผิด 2 ครั้ง/session เพราะ optimize ไม่ครบ (→ tree ข้อ 2) · 2026-07-10 ST03 "no-edge" วัดใต้ scalp-exit เดียว (→ exit-mode เป็น lever) · 2026-07-16 SMC×STO ตายจาก default-smoke แล้ว optimize+ADX กลายเป็น EURUSD candidate จริง (→ ข้อ 2a: default-smoke ปิดได้แค่ cell; StoK 5→17 พลิกผล = optimize entry-signal เป็น lever แรก) · 2026-07-17 Model-2 ปั้น fake grid plateau AUDNZD PF 3-4→M4 0.61 (→ grid = Model-2 ไม่ใช่หลักฐาน) · 2026-07-18 last-optimize-before-verdict + BWD soft-gate (user rule). ที่มาเต็ม = memory `feedback-last-optimize-before-verdict` · `feedback-buildon-pf-gt-1` · `feedback-optimize-before-killing-reversion`.</sub>
 
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 

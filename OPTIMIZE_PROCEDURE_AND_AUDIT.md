@@ -1,3 +1,7 @@
+> ⚠️ **SUPERSEDED (2026-07-18) — procedure owner = skill `backtest-optimize-rigor` (THE OPTIMIZE LADDER, Step 0-9).**
+> This file is kept for the honest self-audit history (Parts 2-3) only. For the current method, windows pin,
+> Model policy, Model-4-mandatory table, and MC bars, read the skill — not this file. Do not cite Phase D-F here as live procedure.
+
 # Optimization Procedure + Honest Self-Audit (2026-07-08)
 
 User challenge (fair, after I made 2 premature "dead" calls on RSI-MR): *is my earlier optimize
