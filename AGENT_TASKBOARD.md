@@ -57,7 +57,7 @@ baseline PF AND none flips to a loss (PF<1) in either window → PASS → candid
 step drops PF<1.0 both-window = fragile → NOT demo, report which axis. **verdict = Claude.** role: agent runs
 M4 fan serial · Claude judges. **ห้าม:** report Model-2 numbers; single-window ranking.
 
-## ORDER-118 — ST03 real-money CutLoss guardrail: calibrate + deliver value to user — `OPEN` 🔴 เร่ง (เงินจริงเปิด tail อยู่)
+## ORDER-118 — ST03 real-money CutLoss guardrail — `CLOSED-OBSOLETE (Claude 2026-07-18): user ถอดตระกูล ST03 ออกจากบัญชีจริง 159475669 ทั้ง 3 ตัว (9398/939721/990010 — DEPLOYMENTS.csv = REMOVED, ยืนยัน RDP) → ไม่มี tail เปิดบนเงินจริงแล้ว กรง CutLoss หมดเหตุ. ถ้าอนาคตเอาตระกูลนี้กลับขึ้นเงินจริง ต้องเปิด order นี้ใหม่ก่อนเสมอ (spec เดิมด้านล่างใช้ได้เลย)`
 **why (owner decision 2026-07-18, Fable grill session):** user เคาะเก็บตระกูล ST03 บนบัญชีจริง 159475669
 ต่อ (override คำแนะนำถอด 2026-07-10) **โดยมีเงื่อนไขต้องใส่กรง CutLoss ก่อน** — pattern เดียวกับ NuiIndy
 `CutLoss=30` (tail-insurance ฟรี, DD มีเพดาน). ST03 = uncapped recovery (ที่มาไม้ 33.73 lots) → เปลี่ยน
@@ -76,7 +76,7 @@ X% × {net, worstEqDD, #triggers} ต่อ symbol + **ค่าแนะนำ 
 **ห้าม:** แตะ EA/บัญชี live เอง · report Model-2 · ตีความผลเป็น verdict (Claude เท่านั้น)
 **ทำได้:** Claude · qwen (arithmetic route) · ZCode (backtest route) · 👉 แนะ: **Claude x-ray ก่อน → route ตามข้อ 2/3**
 
-## ORDER-119 — CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) — `OPEN`
+## ORDER-119 — CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) — `OPEN` (ลดระดับจากเร่ง→คิวปกติ 2026-07-18: ตระกูล ST03 ออกจากเงินจริงแล้ว = ไม่มี exposure ระหว่างทดลอง — งานนี้กลายเป็น backtest-only ปลอดภัยเต็มตัว)
 **why:** user สั่งต่อยอด ST03 (filter/MM/optimize) 2026-07-18. **ORDER-071 ban ถูก owner แก้ขอบเขต:
 lever ที่ปิดแล้วยังปิดอยู่ (exit ×4 · reactive vol-gate/ADX filter · symbol GBP/CAD ที่ default params) —
 เปิดเฉพาะ 3 lever ที่ไม่เคยเทส.** vehicle = **Boss_15_ST03 (chassis, signal parity 133/133)** — ห้ามแตะ live.
