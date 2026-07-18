@@ -884,7 +884,10 @@ spread-death revival คุ้มเฉพาะตัวที่ post-spread P
 
 ---
 
-## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `OPEN (multi-session, pace 1 batch/รอบ) · Claude build→run`
+## ORDER-116 — CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2026-07-18 "รีดออกมาทำยาวๆ") — `OPEN (multi-session, pace 1 batch/รอบ) · Phase 1 DONE(Claude 2026-07-18) → recipe locked · Phase 2 execute-ready`
+
+### ORDER-116 Phase 1 RESULT (Claude 2026-07-18) — verdict `_triage/ORDER116_PHASE1_VERDICT.md` · raw `_mt5_auto/O116_P1.csv`
+offset sweep XAU H1 Bars40/TP5 both-window Model-4 (D:\Meta 5). **split ยกหน้าต่างอ่อน (BWD chop) 1.75→~1.96** แลก REC นิด (2.49→2.33-2.40) = regime-robust (คอนเฟิร์ม ORDER-108 บน tick ใหม่). **plateau offset ∈ {−0.30,−0.15,0.00}** · +0.15 ตก (retest ตื้นไป BWD 1.67) → edge อยู่ฝั่ง retest ลึก. bar ผ่าน (≥1.80 both). **LOCKED RECIPE = split 0.02mkt/0.01pend · RetestOffset −0.15 · Expiry 5** (`BRK40_split_offm0p15.set`). → Phase 2: พก recipe ไป GBPUSD/EURUSD/US30/XAG both-window หา leg ใหม่ (≥1.4 both + corr<0.8).
 
 **ที่มา:** ORDER-108 พิสูจน์ split-entry (market leg เก็บ runner + pending retest leg fill maker ~90%) = **lever จริงเพิ่ม regime-robustness** แต่ **config-conditional**: ยก Bars40/TP5 (1.93/1.97 both-window) · ไม่ยก Bars55/TP8 live (retest leg อ่อน BWD). กติกา: **split ช่วยก็ต่อเมื่อ retest leg มี edge ในหน้าต่างที่ market อ่อน** (ขึ้นกับ TP-width × lookback). EA `(EXP)_BRK_SplitRetest` = generic Donchian breakout, input ATR-relative → รันข้าม symbol ได้. ห้าม: แปะ EA ที่ปัญหา = regime ไม่ใช่ entry-cost/timing (XAU_NY).
 
