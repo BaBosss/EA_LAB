@@ -1,0 +1,8 @@
+_08_DirMode=1
+_01_FilterMode=2
+_01_GateAdds=true
+_01_SlopeThresh=0.05
+_03_DistAtrMult=1.5
+_04_BasketTpAtrMult=1.2
+_01_EmaPeriod=50
+_01_LrLookback=20

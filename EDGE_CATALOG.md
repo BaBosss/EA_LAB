@@ -253,3 +253,9 @@ window drift-capture (inverts up↔down years); (b) dynamic single-instance dire
 counter-trend pullbacks; (c) slower LinReg/EMA filter made it WORSE not smoother; (d) spacing×TP surface
 was spike/hole, and no config was portable across symbol (WTI↔BRENT) + TF (H1↔H4). Slope-on-EMA as a
 regime detector = too weak/noisy — try ADX or Donchian if reusing the add-gate idea elsewhere.
+**⚠️ METHODOLOGY LESSON (paid 2026-07-17): Model 2 (1-min OHLC) manufactures fake grid plateaus.**
+Per-symbol optimize found AUDNZD d1.0/t1.2 with a textbook Model-2 both-window plateau (PF 3.96 up /
+3.19 down, DD 7–14%, win 86%, flat in spacing) — looked like a validated ranger edge. On **Model 4
+(99% real ticks) it lost: PF 0.61 / 0.75, maxLoss −138→−631.** The 1-min-OHLC fill path flatters a
+grid's intra-bar entries/exits; real tick sequencing kills it. **Never trust a Model-2 grid result —
+confirm on Model 4. Tell-tale = largest-loss jumps hard when you switch models.**

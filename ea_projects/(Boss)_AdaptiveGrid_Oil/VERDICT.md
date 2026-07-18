@@ -5,9 +5,19 @@
 
 ## One-line verdict
 The concept builds and runs, and a real mechanism insight fell out of it (add-gating), but **it has no
-robust, portable edge**: fixed-direction P&L is just window drift-capture, the spacing×TP surface is
-spike/hole (no plateau), and no single config survives across symbol **and** timeframe. The marketed
-PF 5x is not reproducible — it was almost certainly short-only curve-fit to oil's down years.
+robust, portable edge**. Oil = spike/hole surface. Cross-market = doesn't transfer + near-ruin DD on
+volatile symbols. Per-symbol optimization (Phase 6) surfaced an apparent winner — **AUDNZD showed a
+clean Model-2 both-window plateau (PF 3–4, DD 7–14%)** — but the **Model-4 real-tick truth test
+demolished it (PF 0.61/0.75)**: it was fill fiction, not edge. Marketed PF 5x not reproducible.
+
+## ⚠️ The most important lesson (Phase 6–8)
+**Model 2 (1-min OHLC) can manufacture a PF 3–4 both-window "plateau" on a grid EA that is pure fill
+fiction.** AUDNZD d1.0/t1.2 looked like a textbook validated edge on Model 2 (both windows PF 3–4,
+DD 7–14%, win 86%, plateau flat in spacing). On Model 4 (99% real ticks, verified) the same config
+lost: PF 0.61 (up) / 0.75 (down), maxLoss −138 → −631. **Always confirm grid EAs on Model 4 before
+believing any Model-2 result. Tell: largest-loss jumps hard when you switch models.** Credit: the user
+forced the per-symbol optimization that surfaced this — without it the concept looked flatly dead on
+the WTI-config screen; with it, it looked alive; only real ticks settled it.
 
 ## VERDICT GATE block (all filled)
 1. **Levers swept:** entry-threshold (SlopeThresh ×5) · filter-mode (permissive/agree) · gate-adds (on/off) ·
@@ -73,6 +83,18 @@ no-per-order-SL grid past 25% before the next bar closes. Safe-ish only on low-v
 **→ per-order SL is NOT optional on anything volatile; the bar-gated breaker alone is unsafe.**
 Only EURUSD transferred mildly positive — the one lead worth a *separate* build-on if pursued, but the
 oil-proven fragility (spike/hole) makes a robust EURUSD result unlikely without real work.
+
+## Per-symbol optimization (Phase 6–8 — answering "did you optimize each symbol?")
+The cross-market screen (Phase 5) used ONE WTI-tuned config — a screen, not optimization. Proper
+per-symbol Dist×TP sweeps then ran:
+- **AUDNZD (Model 2):** flat plateau — PF 6.4–8.4 @ tp1.2–1.8 across ALL dist, DD 14%. Both-window
+  split also passed (UP PF 3.96 / DN 3.19, DD 7–14%). Looked like a real ranger edge (correct home).
+- **AUDNZD (Model 4 real ticks):** COLLAPSES — UP PF 0.61 / DN 0.75, maxLoss −631. Fill fiction.
+- **EURUSD (Model 2):** plateau @ tp1.8 (PF ~4.4 full) but both-window split FAILS — DN 2023–26 PF 0.34,
+  DD 85% (window-fit, carried entirely by the up-years).
+- **Sister rangers both-window (Model 2):** none pass cleanly — AUDCAD UP 0.78/DN 0.22; NZDCAD UP 3.19/
+  DN 1.03; EURCHF UP 0.72/DN 5.01 (inverts). And Model 2 flatters grids, so even these overstate.
+- **BTCUSD:** PF 1.2–1.3 achievable but DD 73–99% (no-SL grid on crypto) — unsafe, not a home.
 
 ## Reusable insight (→ EDGE_CATALOG)
 **Add-gating a grid** (stop adding legs once the trend has turned against the basket) structurally
