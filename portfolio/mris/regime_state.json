@@ -1,7 +1,7 @@
 ﻿{
-    "generated_utc":  "2026-07-19T00:37:10Z",
+    "generated_utc":  "2026-07-19T13:31:33Z",
     "state":  "NEUTRAL",
-    "risk_index":  0.269,
+    "risk_index":  0.308,
     "bias":  "balanced - watch for tilt",
     "confidence":  "HIGH",
     "confidence_frac":  0.75,
@@ -74,9 +74,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  4012.7,
-                           "sma200":  4473.448,
-                           "chg5d_pct":  -2.227,
+                           "spot":  4018.8,
+                           "sma200":  4473.4785,
+                           "chg5d_pct":  -2.078,
                            "signal":  0,
                            "reason":  "gold move is structural/USD-driven (no meaningful VIX co-move) -\u003e neutral",
                            "flags":  [
@@ -88,9 +88,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  64738.8281,
-                           "sma200":  73158.4369,
-                           "chg5d_pct":  4.016,
+                           "spot":  64402.4414,
+                           "sma200":  73043.1938,
+                           "chg5d_pct":  -0.852,
                            "signal":  -1,
                            "reason":  "below SMA200 -\u003e risk-off lean",
                            "flags":  [
@@ -116,11 +116,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  6.22,
-                           "sma200":  5.7209,
-                           "chg5d_pct":  -0.217,
-                           "signal":  0.5,
-                           "reason":  "above SMA200 but soft 5d -\u003e mild risk-on",
+                           "spot":  6.265,
+                           "sma200":  5.7211,
+                           "chg5d_pct":  0.505,
+                           "signal":  1,
+                           "reason":  "above SMA200, 5d 0.505% -\u003e risk-on intact",
                            "flags":  [
 
                                      ]

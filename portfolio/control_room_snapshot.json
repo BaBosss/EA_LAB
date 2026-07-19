@@ -1,9 +1,9 @@
 {
     "meta":  {
                  "schema":  "ControlRoomSnapshot",
-                 "version":  1,
-                 "generated_at":  "2026-07-19T16:24:42",
-                 "git_head":  "5034025f",
+                 "version":  2,
+                 "generated_at":  "2026-07-19T20:31:35",
+                 "git_head":  "445a1b75",
                  "stale_bar_hours":  30,
                  "decision_bar_trades":  30,
                  "sources":  [
@@ -11,13 +11,19 @@
                                      "path":  "portfolio\\DEPLOYMENTS.csv",
                                      "sha256":  "35762717f1f2af08a4282dd596a8d3e8011456d6e85f29be76f008db8eb869a9",
                                      "mtime":  "2026-07-18T21:19:48",
-                                     "age_hours":  19.1
+                                     "age_hours":  23.2
                                  },
                                  {
                                      "path":  "portfolio\\LIVE_DASHBOARD.html",
-                                     "sha256":  "fb32272391630b1f8e006cd4d78bf70ce1e81fa10558b39164f9aef8287c0e2a",
-                                     "mtime":  "2026-07-19T07:37:11",
-                                     "age_hours":  8.8
+                                     "sha256":  "3f0b9b6df0a2e96f1aa52d7f6059b99d71175310091ad09406f188edeffe94c8",
+                                     "mtime":  "2026-07-19T20:31:34",
+                                     "age_hours":  0
+                                 },
+                                 {
+                                     "path":  "portfolio\\ATTESTATION_MAP.csv",
+                                     "sha256":  "0a12e1a1a905dccdab8602f8a3dc9b77193cfd8c5a7d75ef72c4d2bed631fcf2",
+                                     "mtime":  "2026-07-19T20:18:32",
+                                     "age_hours":  0.2
                                  }
                              ],
                  "counting_method":  "MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic."
@@ -28,28 +34,28 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159503454_20260719.csv",
-                              "age_hours":  8.8
+                              "age_hours":  0.1
                           },
                           {
                               "account":  "159475669",
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159475669_20260719.csv",
-                              "age_hours":  8.8
+                              "age_hours":  0.1
                           },
                           {
                               "account":  "141049900",
                               "collector":  "MT4",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_mt4_orders_141049900_20260719.csv",
-                              "age_hours":  8.8
+                              "age_hours":  0.1
                           },
                           {
                               "account":  "415573666",
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_415573666_20260719.csv",
-                              "age_hours":  8.8
+                              "age_hours":  0.1
                           },
                           {
                               "account":  "69424711",
@@ -70,7 +76,7 @@
                               "collector":  "MT5",
                               "state":  "STALE",
                               "latest_file":  "EA_LAB_deals_146237_20260710.csv",
-                              "age_hours":  315.1
+                              "age_hours":  319.3
                           }
                       ],
     "deployments":  {
@@ -816,7 +822,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  9,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0.7,
+                                "needed_trades_per_week":  2.5
                             },
                             {
                                 "account":  "159503454",
@@ -828,7 +836,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0,
+                                "needed_trades_per_week":  2.6
                             },
                             {
                                 "account":  "159503454",
@@ -840,7 +850,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0,
+                                "needed_trades_per_week":  2.6
                             },
                             {
                                 "account":  "159503454",
@@ -852,7 +864,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  9,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0.7,
+                                "needed_trades_per_week":  2.5
                             },
                             {
                                 "account":  "159475669",
@@ -864,7 +878,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "159475669",
@@ -876,7 +892,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "141049900",
@@ -888,7 +906,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "141049900",
@@ -900,7 +920,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "141049900",
@@ -912,7 +934,9 @@
                                 "judge_date":  "",
                                 "readiness":  "PARTIAL",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "141049900",
@@ -924,7 +948,9 @@
                                 "judge_date":  "",
                                 "readiness":  "PARTIAL",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "141049900",
@@ -936,7 +962,9 @@
                                 "judge_date":  "",
                                 "readiness":  "PARTIAL",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "415573666",
@@ -948,7 +976,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  44,
-                                "forecast":  "PROJECTED_CAPABLE"
+                                "forecast":  "PROJECTED_CAPABLE",
+                                "obs_trades_per_week":  3.2,
+                                "needed_trades_per_week":  2
                             },
                             {
                                 "account":  "415573666",
@@ -960,7 +990,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  7,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0.5,
+                                "needed_trades_per_week":  2.5
                             },
                             {
                                 "account":  "415573666",
@@ -972,7 +1004,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  7,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0.5,
+                                "needed_trades_per_week":  2.5
                             },
                             {
                                 "account":  "415573666",
@@ -984,7 +1018,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  29,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  2.2,
+                                "needed_trades_per_week":  2.2
                             },
                             {
                                 "account":  "415573666",
@@ -996,7 +1032,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  7,
-                                "forecast":  "PROJECTED_SHORTFALL"
+                                "forecast":  "PROJECTED_SHORTFALL",
+                                "obs_trades_per_week":  0.5,
+                                "needed_trades_per_week":  2.5
                             },
                             {
                                 "account":  "415573666",
@@ -1008,7 +1046,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  44,
-                                "forecast":  "PROJECTED_CAPABLE"
+                                "forecast":  "PROJECTED_CAPABLE",
+                                "obs_trades_per_week":  3.2,
+                                "needed_trades_per_week":  2
                             },
                             {
                                 "account":  "415573666",
@@ -1020,7 +1060,9 @@
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  80,
-                                "forecast":  "PROJECTED_CAPABLE"
+                                "forecast":  "PROJECTED_CAPABLE",
+                                "obs_trades_per_week":  5.9,
+                                "needed_trades_per_week":  1.6
                             },
                             {
                                 "account":  "69424711",
@@ -1032,7 +1074,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "69424711",
@@ -1044,7 +1088,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "69424711",
@@ -1056,7 +1102,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "69424711",
@@ -1068,7 +1116,9 @@
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1080,7 +1130,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1092,7 +1144,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1104,7 +1158,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1116,7 +1172,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1128,7 +1186,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1140,7 +1200,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1152,7 +1214,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1164,7 +1228,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1176,7 +1242,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1188,7 +1256,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1200,7 +1270,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "415573666",
@@ -1212,7 +1284,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  2.4
                             },
                             {
                                 "account":  "415573666",
@@ -1224,7 +1298,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  2.4
                             },
                             {
                                 "account":  "463666728",
@@ -1236,7 +1312,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1248,7 +1326,9 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             },
                             {
                                 "account":  "463666728",
@@ -1260,9 +1340,817 @@
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
-                                "forecast":  "FORECAST_NA"
+                                "forecast":  "FORECAST_NA",
+                                "obs_trades_per_week":  null,
+                                "needed_trades_per_week":  null
                             }
                         ],
+    "judge_cohorts":  [
+                          {
+                              "judge_date":  "2026-10-09",
+                              "days_to_judge":  82,
+                              "deployments":  11,
+                              "decision_capable_now":  0,
+                              "projected_capable":  3,
+                              "projected_shortfall":  8,
+                              "no_sensor":  0,
+                              "no_sensor_magics":  [
+
+                                                   ],
+                              "shortfall_detail":  [
+                                                       "159503454|990101 (Boss)_ZeusInspired_GridLog XAUUSD: 1t, obs 0.7/wk, needs 2.5/wk",
+                                                       "159503454|991001 EA_BREAKOUT_XAU XAUUSD: 0t, obs 0/wk, needs 2.6/wk",
+                                                       "159503454|991004 (BRK)_SqueezeBreakout XAUUSD: 0t, obs 0/wk, needs 2.6/wk",
+                                                       "159503454|991002 (BRK)_TrendlineBreakout XAUUSD: 1t, obs 0.7/wk, needs 2.5/wk",
+                                                       "415573666|990202 Boss_14_GridLog AUDNZDm: 1t, obs 0.5/wk, needs 2.5/wk",
+                                                       "415573666|990203 Boss_14_GridLog size-light EURJPYm: 1t, obs 0.5/wk, needs 2.5/wk",
+                                                       "415573666|990204 Boss_14_GridLog AUDCADm: 4t, obs 2.2/wk, needs 2.2/wk",
+                                                       "415573666|990205 Boss_14_GridLog size-light thin CADJPYm: 1t, obs 0.5/wk, needs 2.5/wk"
+                                                   ]
+                          },
+                          {
+                              "judge_date":  "2026-10-16",
+                              "days_to_judge":  89,
+                              "deployments":  16,
+                              "decision_capable_now":  0,
+                              "projected_capable":  0,
+                              "projected_shortfall":  0,
+                              "no_sensor":  14,
+                              "no_sensor_magics":  [
+                                                       "463666728|990301",
+                                                       "463666728|990302",
+                                                       "463666728|991003",
+                                                       "463666728|991005",
+                                                       "463666728|999094",
+                                                       "463666728|991070",
+                                                       "463666728|990066",
+                                                       "463666728|990067",
+                                                       "463666728|990069",
+                                                       "463666728|990068",
+                                                       "463666728|990020",
+                                                       "463666728|990303",
+                                                       "463666728|990984",
+                                                       "463666728|990120"
+                                                   ],
+                              "shortfall_detail":  [
+
+                                                   ]
+                          }
+                      ],
+    "attestation":  [
+                        {
+                            "account":  "159503454",
+                            "magic":  "990101",
+                            "ea":  "(Boss)_ZeusInspired_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Zeus XAU live - no _vps_deploy bundle in repo (attached pre-bundle-discipline); locked set location unknown - user/repo archaeology needed"
+                        },
+                        {
+                            "account":  "159503454",
+                            "magic":  "991001",
+                            "ea":  "EA_BREAKOUT_XAU",
+                            "status":  "ACTIVE",
+                            "state":  "PARTIAL",
+                            "confidence":  "low",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/EA_BREAKOUT_XAU.ex5",
+                                        "sha256":  "4ec90db8b288b49bef877f82ef6c7aea76d9388961fce62631b4730a3c512f40",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  null,
+                            "note":  "set lineage AMBIGUOUS: root README (2026-06-22) says BRK_XAU_live_v2.set but v3 exists and CSV notes say Bars40 compiled defaults - user confirm which is on VPS"
+                        },
+                        {
+                            "account":  "159503454",
+                            "magic":  "991004",
+                            "ea":  "(BRK)_SqueezeBreakout",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "SqueezeBreakout - no _vps_deploy bundle in repo"
+                        },
+                        {
+                            "account":  "159503454",
+                            "magic":  "991002",
+                            "ea":  "(BRK)_TrendlineBreakout",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "TrendlineBreakout EXPERIMENTAL - no _vps_deploy bundle in repo"
+                        },
+                        {
+                            "account":  "159475669",
+                            "magic":  "1524",
+                            "ea":  "NuiIndy Dynamic RSI+ADX",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA NuiIndy - user mix account; lab does not own artifacts"
+                        },
+                        {
+                            "account":  "159475669",
+                            "magic":  "990005",
+                            "ea":  "CB_GBP ConsoBreakout",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/CB_GBP/(Boss)_LondonConsoBreakout_rev01.ex5",
+                                        "sha256":  "a0aaea6f4308e01dc1adb0748b4809714c1f93338278ececfa128073d2bfa33e",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/CB_GBP/CB_GBP_H1_live_v1.set",
+                                        "sha256":  "7e1e859cb2f351c82315dd6cdfce8694819455e1ab08270a98c7f5d660fa08c9",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990005 confirmed"
+                        },
+                        {
+                            "account":  "141049900",
+                            "magic":  "7777",
+                            "ea":  "Zeus Gold Hedge V1.2_fix",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA Zeus Gold Hedge MT4 - user experiment; lab does not own artifacts"
+                        },
+                        {
+                            "account":  "141049900",
+                            "magic":  "1112",
+                            "ea":  "Gold_Kangaroo L1",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA Gold_Kangaroo L1 MT4 - user experiment"
+                        },
+                        {
+                            "account":  "141049900",
+                            "magic":  "1113",
+                            "ea":  "Gold_Kangaroo L2",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA Gold_Kangaroo L2 MT4 - user experiment"
+                        },
+                        {
+                            "account":  "141049900",
+                            "magic":  "1114",
+                            "ea":  "Gold_Kangaroo L3",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA Gold_Kangaroo L3 MT4 - user experiment"
+                        },
+                        {
+                            "account":  "141049900",
+                            "magic":  "1115",
+                            "ea":  "Gold_Kangaroo L4",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "USER_EA Gold_Kangaroo L4 MT4 - user experiment"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990201",
+                            "ea":  "Boss_14_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench attached 2026-07-06 pre-_vps_deploy discipline - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990202",
+                            "ea":  "Boss_14_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990203",
+                            "ea":  "Boss_14_GridLog size-light",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990204",
+                            "ea":  "Boss_14_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990205",
+                            "ea":  "Boss_14_GridLog size-light thin",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990206",
+                            "ea":  "Boss_14_GridLog SELL",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990207",
+                            "ea":  "Boss_14_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "Boss_14 bench - no locked bundle in repo"
+                        },
+                        {
+                            "account":  "69424711",
+                            "magic":  "1",
+                            "ea":  "UnNomGuaiV1.132",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "MT4 treasure-hunt cohort predates _vps_deploy - artifacts in _demo_deploy history if any"
+                        },
+                        {
+                            "account":  "69424711",
+                            "magic":  "2",
+                            "ea":  "UnNomGuaiV1.132",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "MT4 treasure-hunt cohort predates _vps_deploy"
+                        },
+                        {
+                            "account":  "69424711",
+                            "magic":  "5888",
+                            "ea":  "RSI from pips_EA",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "MT4 treasure-hunt cohort predates _vps_deploy"
+                        },
+                        {
+                            "account":  "69424711",
+                            "magic":  "990",
+                            "ea":  "swb grid 4.1.0.3_h",
+                            "status":  "ACTIVE",
+                            "state":  "NO_BUNDLE",
+                            "confidence":  "none",
+                            "ex5":  null,
+                            "set":  null,
+                            "note":  "MT4 treasure-hunt cohort predates _vps_deploy"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990301",
+                            "ea":  "Boss_17_Wave5",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/WAVE5_XAU/Boss_17_Wave5.ex5",
+                                        "sha256":  "653482d450d8ba29ee4d57bbbfc7b747c64a16b5bcfa08c164187cab9121ba3c",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/WAVE5_XAU/WAVE5_XAU_H1_demo_v1.set",
+                                        "sha256":  "d57d0ac5fae5d81e039b698fd61e88449b0f95b953c85cf5d08f3b603447701a",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990301 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990302",
+                            "ea":  "Boss_17_Wave5",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/WAVE5_XAG/Boss_17_Wave5.ex5",
+                                        "sha256":  "653482d450d8ba29ee4d57bbbfc7b747c64a16b5bcfa08c164187cab9121ba3c",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/WAVE5_XAG/WAVE5_XAG_H1_demo_v1.set",
+                                        "sha256":  "42b852e2e98fb9ba9becaf0517a5e5542bbd7d554ff8c2f26e326780ea07f963",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990302 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "991003",
+                            "ea":  "EA_BREAKOUT_XAU",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/EA_BREAKOUT_USDJPY/EA_BREAKOUT_XAU.ex5",
+                                        "sha256":  "51a3f0af34c6b54114f630d189c872f47814a510ca01e9415ffd5191ed2fe9f5",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/EA_BREAKOUT_USDJPY/EA_BREAKOUT_USDJPY_demo_v1.set",
+                                        "sha256":  "bfa8d98b0aba3dd845862518c109cf58d90d4ea88ef7f75d0b1288d15939c8cd",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 991003 confirmed (shared binary with 991001/991005)"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "991005",
+                            "ea":  "EA_BREAKOUT_XAU",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/EA_BREAKOUT_US30/EA_BREAKOUT_XAU.ex5",
+                                        "sha256":  "51a3f0af34c6b54114f630d189c872f47814a510ca01e9415ffd5191ed2fe9f5",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/EA_BREAKOUT_US30/EA_BREAKOUT_US30_demo_v1.set",
+                                        "sha256":  "a1f4371bbefcffc8a57028e387c981e9796154af05bf48ed3b00a2a2ce26a56a",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 991005 confirmed (shared binary)"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "999094",
+                            "ea":  "MacdDiv_Naked",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/MACDDIV_XAU/MacdDiv_Naked.ex5",
+                                        "sha256":  "56d2fcf6f74b7e8909afb4c7ca24b41a0a5b120d3097c445adb4c104303c9c93",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/MACDDIV_XAU/MacdDiv_XAU_H4_demo_v1.set",
+                                        "sha256":  "622e5edc812b49d98f7241e4fcde5bff6826afcae4d158bdea44c838f4338af7",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 999094 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "991070",
+                            "ea":  "EmaStoRev",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/SMCSTO_EURUSD/EmaStoRev.ex5",
+                                        "sha256":  "a0fd414ab6c525a463c95f24b690dce2fde25f7ed7286d06fd7162303d164492",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/SMCSTO_EURUSD/SMCSTO_EURUSD_H1_demo_v1.set",
+                                        "sha256":  "5d2feff7ab08b858de841c1d349aa84d3caf6954e743d7aaa9e6160caebe67e6",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 991070 confirmed; SL-lock \u003e=3.0 policy in DEPLOYMENTS notes"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990066",
+                            "ea":  "(EXP)_IchiADX_Naked_rev00",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/ICHIADX_USDJPY_BASKET/(EXP)_IchiADX_Naked_rev00.ex5",
+                                        "sha256":  "299e24df5babe9eb85ab25baacf5633e6608d133f546176a8c3cd5940d8e8cf4",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/ICHIADX_USDJPY_BASKET/IchiADX_USDJPY_H4_med_leg_A.set",
+                                        "sha256":  "eed84683501f5577ceaaca0d3f217ca4a42325710100e493b269d83a74fae594",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README leg A magic 990066 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990067",
+                            "ea":  "(EXP)_IchiADX_Naked_rev00",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/ICHIADX_USDJPY_BASKET/(EXP)_IchiADX_Naked_rev00.ex5",
+                                        "sha256":  "299e24df5babe9eb85ab25baacf5633e6608d133f546176a8c3cd5940d8e8cf4",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/ICHIADX_USDJPY_BASKET/IchiADX_USDJPY_H1_slow_leg_B.set",
+                                        "sha256":  "70e065d0df799f53dd56144f684d23055106ba5f6623aa55c21c8e8dab7a6124",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README leg B magic 990067 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990069",
+                            "ea":  "(EXP)_IchiADX_Naked_rev00",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/ICHIADX_XAU/(EXP)_IchiADX_Naked_rev00.ex5",
+                                        "sha256":  "299e24df5babe9eb85ab25baacf5633e6608d133f546176a8c3cd5940d8e8cf4",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/ICHIADX_XAU/IchiADX_XAUUSD_H4_med.set",
+                                        "sha256":  "901bf276f8f37965f68d5f5e9717c8ec5c9fc9dda91223c0c79775b5a3d262f3",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README leg B magic 990069 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990068",
+                            "ea":  "(EXP)_IchiADX_Naked_rev00",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/ICHIADX_XAU/(EXP)_IchiADX_Naked_rev00.ex5",
+                                        "sha256":  "299e24df5babe9eb85ab25baacf5633e6608d133f546176a8c3cd5940d8e8cf4",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/ICHIADX_XAU/IchiADX_XAUUSD_H1_slow.set",
+                                        "sha256":  "523dbd9a2e244377590921de5461de30724164ccf30d786cf4fa5040038232c0",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README leg A magic 990068 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990020",
+                            "ea":  "EA_SUPERTREND",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/EA_SUPERTREND_XAU/EA_SUPERTREND.ex5",
+                                        "sha256":  "6b5ded2395919b625002b6f57cad8d8fd7c871557ce6de5cbd28bac72eb8a81c",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/EA_SUPERTREND_XAU/ST_XAUUSD_H4_demo_v1.set",
+                                        "sha256":  "bd9eefcfad6a1c40562572ca5016392e305fa2874d90d2c2333b7afdaea76aba",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "note":  "README magic 990020 confirmed; set file NOT git-tracked as of 2026-07-19"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990110",
+                            "ea":  "(Boss)_ZeusInspired_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/ZEUS_AUDJPY_REGIME/(Boss)_ZeusInspired_GridLog_rev01.ex5",
+                                        "sha256":  "159678f0f025bef8fe25ab8959390986e7ac64fc6a5d73cf7398e175d7b16435",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/ZEUS_AUDJPY_REGIME/ZeusAUDJPY_regime_demo_v1.set",
+                                        "sha256":  "b74830b9aba929f89691fe189b77fa51c5f5b65f8ab97def06e3e9ff2d952f5e",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990110 confirmed"
+                        },
+                        {
+                            "account":  "415573666",
+                            "magic":  "990208",
+                            "ea":  "Boss_14_GridLog",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/BOSS14_GBPJPY/Boss_14_GridLog.ex5",
+                                        "sha256":  "dd6abe24ccff4ad0262e21e327207c7e176cb6952b74d041aa78257b4a1e9407",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/BOSS14_GBPJPY/Boss14_GridLog_GBPJPY_H4_demo_leg8.set",
+                                        "sha256":  "8d4ef0a532c2df7d3a47c6755d4cb596d20591f00fd1459b157cfced283e5275",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990208 confirmed"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990303",
+                            "ea":  "Boss_17_Wave5",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/WAVE5_USDJPY/Boss_17_Wave5.ex5",
+                                        "sha256":  "653482d450d8ba29ee4d57bbbfc7b747c64a16b5bcfa08c164187cab9121ba3c",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/WAVE5_USDJPY/WAVE5_USDJPY_H1_demo_v1.set",
+                                        "sha256":  "68ad4f5dcd0738dc3022d817184e3040c171c2f25a5471372618336992c4fd85",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "note":  "README magic 990303 confirmed; set file NOT git-tracked as of 2026-07-19"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990984",
+                            "ea":  "PairSpread_StatArb",
+                            "status":  "ACTIVE",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/PAIRSPREAD_STATARB/PairSpread_StatArb.ex5",
+                                        "sha256":  "29b015f4b45e93cde7883a45be93c945ecbf24d72b18f3290892767b16a62818",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/PAIRSPREAD_STATARB/PAIRSPREAD_EURGBP_H4_demo_v1.set",
+                                        "sha256":  "f29c82cf58a880e90036228ca2cd54096bff60c4b5df0f6af139bb1eeef58f47",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990984 confirmed; set filename says EURGBP = spread synthetic name (EA trades EURUSD/GBPUSD legs)"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990120",
+                            "ea":  "Boss_12_Breakout (MacroGate leg)",
+                            "status":  "ACTIVE",
+                            "state":  "PARTIAL",
+                            "confidence":  "medium",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/MACROGATE_DEMOLEG/Boss_12_Breakout.ex5",
+                                        "sha256":  "30eaefd948f1f2912af44ac3059af1f62006eb8c075ff7797cc18f33163ba70d",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  null,
+                            "note":  "no .set in bundle - inputs set manually per README (attestation gap: lock a .set)"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990025",
+                            "ea":  "EA_SUPERTREND (crypto ST-BTC)",
+                            "status":  "PENDING_ATTACH",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/CRYPTO_TRENDRIDER/EA_SUPERTREND.ex5",
+                                        "sha256":  "569e04c2a0c35f458627224afce5f76476e0fa758cf9f985797a7218b0333c78",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/CRYPTO_TRENDRIDER/ST_BTC_deploy.set",
+                                        "sha256":  "6722e3f34ac244cd919a51bfc974fc364ade1e0dfbf254c0797219d4dd2a6fb0",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990025 confirmed; PENDING_ATTACH"
+                        },
+                        {
+                            "account":  "463666728",
+                            "magic":  "990030",
+                            "ea":  "EA_DONCHIAN (crypto DON-ETH pyr3)",
+                            "status":  "PENDING_ATTACH",
+                            "state":  "HASHED",
+                            "confidence":  "high",
+                            "ex5":  {
+                                        "file":  "_vps_deploy/CRYPTO_TRENDRIDER/EA_DONCHIAN.ex5",
+                                        "sha256":  "27193bbb83e4f447085bb0d27ee1cbdb74fc07f4211594f85dd3a86db35604a4",
+                                        "missing":  false,
+                                        "git_tracked":  false
+                                    },
+                            "set":  {
+                                        "file":  "_vps_deploy/CRYPTO_TRENDRIDER/DON_ETH_deploy.set",
+                                        "sha256":  "ecae7c3a39a199b61363c16a890b5a41a05a8ccf1db60eb6df8bcb27a906a98c",
+                                        "missing":  false,
+                                        "git_tracked":  true
+                                    },
+                            "note":  "README magic 990030 confirmed; PENDING_ATTACH"
+                        }
+                    ],
+    "unknown_magics":  [
+                           {
+                               "account":  "159503454",
+                               "magic":  "1851",
+                               "closed_trades":  1842,
+                               "first_seen":  "2026.03.22 23:46:40",
+                               "last_seen":  "2026.05.07 07:12:09",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159503454",
+                               "magic":  "7810",
+                               "closed_trades":  122,
+                               "first_seen":  "2026.03.23 09:35:52",
+                               "last_seen":  "2026.05.07 07:12:09",
+                               "symbols":  "EURUSDc"
+                           },
+                           {
+                               "account":  "159503454",
+                               "magic":  "4378",
+                               "closed_trades":  200,
+                               "first_seen":  "2026.04.08 17:27:34",
+                               "last_seen":  "2026.05.07 07:00:00",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "20240001",
+                               "closed_trades":  36,
+                               "first_seen":  "2026.06.23 09:07:41",
+                               "last_seen":  "2026.07.14 14:03:36",
+                               "symbols":  "CHFJPYc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8002",
+                               "closed_trades":  5,
+                               "first_seen":  "2026.06.23 09:35:07",
+                               "last_seen":  "2026.07.16 13:29:40",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8015",
+                               "closed_trades":  7,
+                               "first_seen":  "2026.06.23 05:01:21",
+                               "last_seen":  "2026.07.16 15:25:30",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8009",
+                               "closed_trades":  5,
+                               "first_seen":  "2026.06.23 06:00:04",
+                               "last_seen":  "2026.07.16 15:30:16",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8014",
+                               "closed_trades":  5,
+                               "first_seen":  "2026.06.23 06:01:41",
+                               "last_seen":  "2026.07.16 19:53:33",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8012",
+                               "closed_trades":  4,
+                               "first_seen":  "2026.06.23 05:58:05",
+                               "last_seen":  "2026.07.16 15:27:43",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8001",
+                               "closed_trades":  2,
+                               "first_seen":  "2026.06.24 12:56:36",
+                               "last_seen":  "2026.06.30 05:16:44",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8008",
+                               "closed_trades":  2,
+                               "first_seen":  "2026.06.24 12:28:39",
+                               "last_seen":  "2026.06.30 01:08:30",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "159475669",
+                               "magic":  "8005",
+                               "closed_trades":  2,
+                               "first_seen":  "2026.06.24 12:27:08",
+                               "last_seen":  "2026.06.30 01:08:30",
+                               "symbols":  "XAUUSDc"
+                           },
+                           {
+                               "account":  "415573666",
+                               "magic":  "1114",
+                               "closed_trades":  557,
+                               "first_seen":  "2026.04.19 22:06:02",
+                               "last_seen":  "2026.04.21 05:38:22",
+                               "symbols":  "XAUUSDm"
+                           },
+                           {
+                               "account":  "415573666",
+                               "magic":  "12345",
+                               "closed_trades":  1139,
+                               "first_seen":  "2026.04.19 23:28:49",
+                               "last_seen":  "2026.07.03 14:12:27",
+                               "symbols":  "XAUUSDm+BTCUSDm"
+                           },
+                           {
+                               "account":  "415573666",
+                               "magic":  "2670",
+                               "closed_trades":  6,
+                               "first_seen":  "2026.04.20 14:51:07",
+                               "last_seen":  "2026.04.21 01:07:02",
+                               "symbols":  "BTCUSDm"
+                           }
+                       ],
     "summary":  {
                     "accounts_total":  7,
                     "accounts_fresh":  4,
@@ -1277,6 +2165,9 @@
                     "judge_data_collection":  14,
                     "judge_data_insufficient":  18,
                     "judge_projected_capable":  3,
-                    "judge_projected_shortfall":  8
+                    "judge_projected_shortfall":  8,
+                    "attestation_ok":  18,
+                    "attestation_gaps":  22,
+                    "unknown_magics":  15
                 }
 }

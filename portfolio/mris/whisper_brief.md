@@ -2,7 +2,7 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-19 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
+**2026-07-19 20:31 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.308
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
 - WARN: LOADED_FUSE: USDJPY 162.35 at extreme - crowded short, snap-back risk high
@@ -17,7 +17,7 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 | XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |
 | US10Y_JP10Y | 0 | carry spread ~flat (-2.8bps/5d) -> neutral |
-| COPPER | 0.5 | above SMA200 but soft 5d -> mild risk-on |
+| COPPER | 1 | above SMA200, 5d 0.505% -> risk-on intact |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม
