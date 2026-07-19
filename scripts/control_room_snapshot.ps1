@@ -9,7 +9,20 @@
    system_health     per-account collector freshness (stale bar 30h, aligned with daily chain guard)
    deployments       inventory pass-through + gap lists (UNVERIFIED / missing kill_rule / judge_date)
    judge_readiness   per ACTIVE magic: closed-trade count vs the 30-trade decision bar
-                     (CLAUDE.md demo->LIVE judge bar), days-to-judge, decision_capable flag
+                     (CLAUDE.md demo->LIVE judge bar), days-to-judge, decision_capable flag,
+                     observed vs needed trades/week (CR-005-lite vertical slice)
+   judge_cohorts     per-judge-date rollup (2026-10-09 / 2026-10-16 cohorts): capable now,
+                     projected capable/shortfall at judge date, no-sensor magics
+   attestation       CR-002: per ACTIVE/PENDING_ATTACH deployment, sha256 of the APPROVED
+                     bundle artifacts (.ex5 + locked .set) from portfolio\ATTESTATION_MAP.csv
+                     (owner of deployment->bundle expectations) vs what is on disk in
+                     _vps_deploy. States: HASHED / PARTIAL (a mapped artifact slot is empty,
+                     e.g. ambiguous set lineage) / FILE_MISSING / NO_BUNDLE / NO_MAP.
+                     LOCAL attestation only - hashes prove what the repo says was approved;
+                     comparing against the VPS terminal needs a VPS-side step (user).
+   unknown_magics    CR-002: closed-deal magics present in collector CSVs but absent from
+                     DEPLOYMENTS.csv for that account (any status) - candidate ghosts or
+                     un-enumerated user EAs. magic 0 (manual) excluded.
    summary           TODAY-style one-screen counts (also printed to console)
 
  Judge-readiness counting method (documented so numbers are reproducible):
@@ -90,16 +103,95 @@ foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -matc
   if ($r.judge_date -match '^\d{4}-\d{2}-\d{2}$') { $d2j = [int]([datetime]$r.judge_date - $now.Date).TotalDays }
   # CR-005-lite forecast: project closed trades at judge_date from the observed rate since
   # start_date. Needs >=7 days of history to be meaningful; otherwise FORECAST_NA.
-  $proj = $null; $fstate = 'FORECAST_NA'
+  $proj = $null; $fstate = 'FORECAST_NA'; $obsWk = $null
   if ($null -ne $trades -and $r.start_date -match '^\d{4}-\d{2}-\d{2}$' -and $r.judge_date -match '^\d{4}-\d{2}-\d{2}$') {
     $daysActive = [int]($now.Date - [datetime]$r.start_date).TotalDays
     $daysTotal  = [int]([datetime]$r.judge_date - [datetime]$r.start_date).TotalDays
     if ($daysActive -ge 7 -and $daysTotal -gt 0) {
+      $obsWk = [math]::Round($trades * 7.0 / $daysActive, 1)
       $proj = [int][math]::Round($trades * ($daysTotal / [double]$daysActive))
       if ($proj -ge $decisionBar) { $fstate = 'PROJECTED_CAPABLE' } else { $fstate = 'PROJECTED_SHORTFALL' }
     }
   }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate }
+  # vertical-slice extra: the weekly close rate this magic must sustain from TODAY to reach
+  # the 30-trade decision bar by its judge date (null = already there / no judge date).
+  $needWk = $null
+  if ($null -ne $trades -and $null -ne $d2j -and $d2j -gt 0 -and $trades -lt $decisionBar) {
+    $needWk = [math]::Round(($decisionBar - $trades) * 7.0 / $d2j, 1)
+  }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk }
+}
+
+# --- CR-005-lite vertical slice: per-judge-date cohort rollup ---
+$cohorts = @()
+foreach($g in ($jr | Where-Object { $_.judge_date -match '^\d{4}-\d{2}-\d{2}$' } | Group-Object { $_.judge_date } | Sort-Object Name)){
+  $cg = @($g.Group)
+  $noSensor = @($cg | Where-Object { $_.readiness -eq 'DATA_INSUFFICIENT' })
+  $short    = @($cg | Where-Object { $_.forecast -eq 'PROJECTED_SHORTFALL' })
+  $cohorts += [ordered]@{
+    judge_date            = $g.Name
+    days_to_judge         = ($cg | Select-Object -First 1).days_to_judge
+    deployments           = $cg.Count
+    decision_capable_now  = @($cg | Where-Object { $_.readiness -eq 'DECISION_CAPABLE' }).Count
+    projected_capable     = @($cg | Where-Object { $_.forecast -eq 'PROJECTED_CAPABLE' }).Count
+    projected_shortfall   = $short.Count
+    no_sensor             = $noSensor.Count
+    no_sensor_magics      = @($noSensor | ForEach-Object { "$($_.account)|$($_.magic)" })
+    shortfall_detail      = @($short | ForEach-Object { "$($_.account)|$($_.magic) $($_.ea) $($_.symbol): $($_.closed_trades)t, obs $($_.obs_trades_per_week)/wk, needs $($_.needed_trades_per_week)/wk" })
+  }
+}
+
+# --- CR-002 attestation: hash the APPROVED bundle artifacts per deployment ---
+$ATT = Join-Path $Root 'portfolio\ATTESTATION_MAP.csv'
+$gitTracked = @{}
+foreach($f in @(git -C $Root ls-files 2>$null)) { $gitTracked[$f] = $true }
+$attMap = @{}
+if (Test-Path $ATT) { foreach($m in @(Import-Csv $ATT)) { $attMap["$($m.account)|$($m.magic)"] = $m } }
+function ArtifactMeta([string]$bundleDir,[string]$fileName){
+  if (-not $fileName) { return $null }
+  $rel = ($bundleDir.TrimEnd('/')) + '/' + $fileName
+  $p = Join-Path $Root ($rel -replace '/','\')
+  if (-not (Test-Path $p)) { return [ordered]@{ file=$rel; sha256=$null; missing=$true; git_tracked=$false } }
+  return [ordered]@{ file=$rel; sha256=(Get-FileHash $p -Algorithm SHA256).Hash.ToLower(); missing=$false; git_tracked=[bool]$gitTracked[$rel] }
+}
+$attest = @()
+foreach($r in ($rows | Where-Object { ($_.status -eq 'ACTIVE' -or $_.status -eq 'PENDING_ATTACH') -and $_.magic -match '^\d+$' })){
+  $key = "$($r.account)|$($r.magic)"
+  $m = $attMap[$key]
+  $state = 'NO_MAP'; $ex5 = $null; $set = $null; $conf = $null; $note = $null
+  if ($null -ne $m) {
+    $conf = $m.confidence; $note = $m.notes
+    if (-not $m.bundle_dir) { $state = 'NO_BUNDLE' }
+    else {
+      $ex5 = ArtifactMeta $m.bundle_dir $m.ex5_file
+      $set = ArtifactMeta $m.bundle_dir $m.set_file
+      $state = 'HASHED'
+      if (($null -ne $ex5 -and $ex5.missing) -or ($null -ne $set -and $set.missing)) { $state = 'FILE_MISSING' }
+      elseif ($null -eq $ex5 -or $null -eq $set) { $state = 'PARTIAL' }   # a mapped slot is empty (e.g. ambiguous set)
+    }
+  }
+  $attest += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; status=$r.status; state=$state; confidence=$conf; ex5=$ex5; set=$set; note=$note }
+}
+$attHashed = @($attest | Where-Object { $_.state -eq 'HASHED' -and $_.confidence -eq 'high' })
+$attGaps   = @($attest | Where-Object { -not ($_.state -eq 'HASHED' -and $_.confidence -eq 'high') })
+
+# --- CR-002 unknown-magic detection: collector magics absent from the inventory ---
+$knownKeys = @{}
+foreach($r in ($rows | Where-Object { $_.magic -match '^\d+$' })) { $knownKeys["$($r.account)|$($r.magic)"] = $true }
+$unknown = @()
+foreach($a in $accounts){
+  $c = LatestCollector $a
+  if ($null -eq $c) { continue }
+  $key = $c.file.FullName
+  if (-not $dealCache.ContainsKey($key)) { $dealCache[$key] = @(Import-Csv $key) }
+  foreach($g in ($dealCache[$key] | Where-Object { $_.magic -match '^\d+$' -and $_.magic -ne '0' } | Group-Object magic)){
+    if ($knownKeys.ContainsKey("$a|$($g.Name)")) { continue }
+    if ($c.kind -eq 'MT5') { $t = @($g.Group | Where-Object { $_.entry -eq '1' }); $timeCol = 'time' }
+    else                   { $t = @($g.Group | Where-Object { $_.close_time -and $_.close_time.Trim() -ne '' }); $timeCol = 'close_time' }
+    if ($t.Count -eq 0) { continue }
+    $times = @($t | ForEach-Object { $_.$timeCol } | Sort-Object)
+    $unknown += [ordered]@{ account=$a; magic=$g.Name; closed_trades=$t.Count; first_seen=$times[0]; last_seen=$times[-1]; symbols=(@($g.Group | Select-Object -ExpandProperty symbol -Unique | Where-Object { $_ }) -join '+') }
+  }
 }
 
 # --- summary (TODAY block) ---
@@ -119,17 +211,20 @@ $sum = [ordered]@{
   judge_data_insufficient = @($jr | Where-Object { $_.readiness -eq 'DATA_INSUFFICIENT' }).Count
   judge_projected_capable   = @($jr | Where-Object { $_.forecast -eq 'PROJECTED_CAPABLE' }).Count
   judge_projected_shortfall = @($jr | Where-Object { $_.forecast -eq 'PROJECTED_SHORTFALL' }).Count
+  attestation_ok            = $attHashed.Count
+  attestation_gaps          = $attGaps.Count
+  unknown_magics            = $unknown.Count
 }
 
 $snapshot = [ordered]@{
   meta = [ordered]@{
     schema  = 'ControlRoomSnapshot'
-    version = 1
+    version = 2
     generated_at = $now.ToString('s')
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
     decision_bar_trades = $decisionBar
-    sources = @((FileMeta $INV), (FileMeta $DASH)) | Where-Object { $_ }
+    sources = @((FileMeta $INV), (FileMeta $DASH), (FileMeta $ATT)) | Where-Object { $_ }
     counting_method = 'MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic.'
   }
   system_health   = $health
@@ -142,6 +237,9 @@ $snapshot = [ordered]@{
     }
   }
   judge_readiness = $jr
+  judge_cohorts   = $cohorts
+  attestation     = $attest
+  unknown_magics  = $unknown
   summary         = $sum
 }
 
@@ -153,4 +251,9 @@ Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f
 Write-Host ("FLEET    {0} rows, {1} ACTIVE | gaps: {2} UNVERIFIED, {3} no-kill, {4} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.gaps_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
 Write-Host ("JUDGE    {0} decision-capable | {1} partial | {2} collecting | {3} no-data" -f $sum.judge_decision_capable, $sum.judge_partial, $sum.judge_data_collection, $sum.judge_data_insufficient)
 Write-Host ("FORECAST {0} projected-capable at judge date | {1} projected SHORTFALL (<30 trades)" -f $sum.judge_projected_capable, $sum.judge_projected_shortfall)
+foreach($cRoll in $cohorts){
+  Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
+}
+Write-Host ("ATTEST   {0} fully hashed (high-confidence) | {1} gaps (NO_BUNDLE/PARTIAL/FILE_MISSING/low-conf)" -f $sum.attestation_ok, $sum.attestation_gaps)
+Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv" -f $sum.unknown_magics)
 Write-Host ("OUTPUT   {0}" -f $OutFile)

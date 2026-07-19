@@ -1,0 +1,41 @@
+account,magic,bundle_dir,ex5_file,set_file,confidence,notes
+159503454,990101,,,,none,Zeus XAU live - no _vps_deploy bundle in repo (attached pre-bundle-discipline); locked set location unknown - user/repo archaeology needed
+159503454,991001,_vps_deploy,EA_BREAKOUT_XAU.ex5,,low,set lineage AMBIGUOUS: root README (2026-06-22) says BRK_XAU_live_v2.set but v3 exists and CSV notes say Bars40 compiled defaults - user confirm which is on VPS
+159503454,991004,,,,none,SqueezeBreakout - no _vps_deploy bundle in repo
+159503454,991002,,,,none,TrendlineBreakout EXPERIMENTAL - no _vps_deploy bundle in repo
+159475669,1524,,,,none,USER_EA NuiIndy - user mix account; lab does not own artifacts
+159475669,990005,_vps_deploy/CB_GBP,(Boss)_LondonConsoBreakout_rev01.ex5,CB_GBP_H1_live_v1.set,high,README magic 990005 confirmed
+141049900,7777,,,,none,USER_EA Zeus Gold Hedge MT4 - user experiment; lab does not own artifacts
+141049900,1112,,,,none,USER_EA Gold_Kangaroo L1 MT4 - user experiment
+141049900,1113,,,,none,USER_EA Gold_Kangaroo L2 MT4 - user experiment
+141049900,1114,,,,none,USER_EA Gold_Kangaroo L3 MT4 - user experiment
+141049900,1115,,,,none,USER_EA Gold_Kangaroo L4 MT4 - user experiment
+415573666,990201,,,,none,Boss_14 bench attached 2026-07-06 pre-_vps_deploy discipline - no locked bundle in repo
+415573666,990202,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990203,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990204,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990205,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990206,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990207,,,,none,Boss_14 bench - no locked bundle in repo
+415573666,990110,_vps_deploy/ZEUS_AUDJPY_REGIME,(Boss)_ZeusInspired_GridLog_rev01.ex5,ZeusAUDJPY_regime_demo_v1.set,high,README magic 990110 confirmed
+415573666,990208,_vps_deploy/BOSS14_GBPJPY,Boss_14_GridLog.ex5,Boss14_GridLog_GBPJPY_H4_demo_leg8.set,high,README magic 990208 confirmed
+69424711,1,,,,none,MT4 treasure-hunt cohort predates _vps_deploy - artifacts in _demo_deploy history if any
+69424711,2,,,,none,MT4 treasure-hunt cohort predates _vps_deploy
+69424711,5888,,,,none,MT4 treasure-hunt cohort predates _vps_deploy
+69424711,990,,,,none,MT4 treasure-hunt cohort predates _vps_deploy
+463666728,990301,_vps_deploy/WAVE5_XAU,Boss_17_Wave5.ex5,WAVE5_XAU_H1_demo_v1.set,high,README magic 990301 confirmed
+463666728,990302,_vps_deploy/WAVE5_XAG,Boss_17_Wave5.ex5,WAVE5_XAG_H1_demo_v1.set,high,README magic 990302 confirmed
+463666728,990303,_vps_deploy/WAVE5_USDJPY,Boss_17_Wave5.ex5,WAVE5_USDJPY_H1_demo_v1.set,high,README magic 990303 confirmed; set file NOT git-tracked as of 2026-07-19
+463666728,991003,_vps_deploy/EA_BREAKOUT_USDJPY,EA_BREAKOUT_XAU.ex5,EA_BREAKOUT_USDJPY_demo_v1.set,high,README magic 991003 confirmed (shared binary with 991001/991005)
+463666728,991005,_vps_deploy/EA_BREAKOUT_US30,EA_BREAKOUT_XAU.ex5,EA_BREAKOUT_US30_demo_v1.set,high,README magic 991005 confirmed (shared binary)
+463666728,999094,_vps_deploy/MACDDIV_XAU,MacdDiv_Naked.ex5,MacdDiv_XAU_H4_demo_v1.set,high,README magic 999094 confirmed
+463666728,991070,_vps_deploy/SMCSTO_EURUSD,EmaStoRev.ex5,SMCSTO_EURUSD_H1_demo_v1.set,high,README magic 991070 confirmed; SL-lock >=3.0 policy in DEPLOYMENTS notes
+463666728,990066,_vps_deploy/ICHIADX_USDJPY_BASKET,(EXP)_IchiADX_Naked_rev00.ex5,IchiADX_USDJPY_H4_med_leg_A.set,high,README leg A magic 990066 confirmed
+463666728,990067,_vps_deploy/ICHIADX_USDJPY_BASKET,(EXP)_IchiADX_Naked_rev00.ex5,IchiADX_USDJPY_H1_slow_leg_B.set,high,README leg B magic 990067 confirmed
+463666728,990068,_vps_deploy/ICHIADX_XAU,(EXP)_IchiADX_Naked_rev00.ex5,IchiADX_XAUUSD_H1_slow.set,high,README leg A magic 990068 confirmed
+463666728,990069,_vps_deploy/ICHIADX_XAU,(EXP)_IchiADX_Naked_rev00.ex5,IchiADX_XAUUSD_H4_med.set,high,README leg B magic 990069 confirmed
+463666728,990020,_vps_deploy/EA_SUPERTREND_XAU,EA_SUPERTREND.ex5,ST_XAUUSD_H4_demo_v1.set,high,README magic 990020 confirmed; set file NOT git-tracked as of 2026-07-19
+463666728,990984,_vps_deploy/PAIRSPREAD_STATARB,PairSpread_StatArb.ex5,PAIRSPREAD_EURGBP_H4_demo_v1.set,high,README magic 990984 confirmed; set filename says EURGBP = spread synthetic name (EA trades EURUSD/GBPUSD legs)
+463666728,990120,_vps_deploy/MACROGATE_DEMOLEG,Boss_12_Breakout.ex5,,medium,no .set in bundle - inputs set manually per README (attestation gap: lock a .set)
+463666728,990025,_vps_deploy/CRYPTO_TRENDRIDER,EA_SUPERTREND.ex5,ST_BTC_deploy.set,high,README magic 990025 confirmed; PENDING_ATTACH
+463666728,990030,_vps_deploy/CRYPTO_TRENDRIDER,EA_DONCHIAN.ex5,DON_ETH_deploy.set,high,README magic 990030 confirmed; PENDING_ATTACH
