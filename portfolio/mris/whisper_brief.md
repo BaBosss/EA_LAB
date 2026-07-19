@@ -2,7 +2,7 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-18 21:16 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
+**2026-07-19 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
 - WARN: LOADED_FUSE: USDJPY 162.35 at extreme - crowded short, snap-back risk high
@@ -44,6 +44,7 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 - Boss_14_GridLog [990207] XAUUSDm (DEMO) -> watch
 - Boss_17_Wave5 [990302] XAGUSDm (DEMO) -> watch
 - EA_BREAKOUT_XAU [991005] US30m (DEMO) -> watch
+- EA_SUPERTREND (crypto ST-BTC) [990025] BTCUSD (DEMO) -> watch
 
 ## สิ่งที่ควรทำวันนี้
 ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)

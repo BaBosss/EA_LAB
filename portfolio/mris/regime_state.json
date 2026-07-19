@@ -1,5 +1,5 @@
 ﻿{
-    "generated_utc":  "2026-07-18T14:16:22Z",
+    "generated_utc":  "2026-07-19T00:37:10Z",
     "state":  "NEUTRAL",
     "risk_index":  0.269,
     "bias":  "balanced - watch for tilt",
@@ -88,9 +88,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  64099.4492,
-                           "sma200":  73155.24,
-                           "chg5d_pct":  2.989,
+                           "spot":  64738.8281,
+                           "sma200":  73158.4369,
+                           "chg5d_pct":  4.016,
                            "signal":  -1,
                            "reason":  "below SMA200 -\u003e risk-off lean",
                            "flags":  [
