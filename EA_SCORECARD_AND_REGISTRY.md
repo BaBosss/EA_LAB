@@ -331,6 +331,12 @@ SessionBreakout (1200-pass + forward fail), MACD all-symbols (exhaustive), BREAK
 **JumStoch Trend-seed on chassis (Boss_18)** — DEAD-OPTIMIZED 2026-07-18, 28 M4 runs uniformly 0.58–0.94
 both-window (2 DirMode × 2 sym × 2 dir × 2 exit × 2 TF); edge was the standalone's 4-basket+BEP engine, not
 the LWMA+Stoch seed. Standalone JUMSTOCH untouched. verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
+**StoMultiTap (multi-tap S/R + Stoch cycle fade, (EXP)_StoMultiTap)** — DEAD-OPTIMIZED 2026-07-19 (ORDER-133).
+Idea from FB Miissterkiiss/Bitnefit book. Novel lever `MinTaps` (count Stoch OB/OS "รอบ" at S/R zone before
+entry, never first-touch) **falsified by direct A/B twice:** naked MinTaps=2 lost to =1 in 5/6 cells (cut
+trades 90%+), and with MTF+ADX filters on → 0.00 PF / 0-3 trades. Last-optimize (StoK{5-21}×MTF×ADX =
+SMCxSTO recipe) best EURGBP-H1-K17 MAIN 1.44 = StoK spike / BWD 0.64 selection-fit. kill-reason = novel
+lever no mechanical edge + base redundant with SMCxSTO 991070. EDGE_CATALOG dead pile + signal-landscape.
 
 ---
 
