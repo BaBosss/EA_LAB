@@ -1,0 +1,23 @@
+; RSI Momentum test kit - B_best-XAU-H4_P9-L55
+_00_OptimizeMode=false
+_01_RsiMode=1
+_01_RsiPeriod=9
+_01_Level=55.0
+_01_SmaPeriod=20
+_01_Lookback=20
+_03_AtrPeriod=14
+_03_BufferAtrMult=0.5
+_03_RR=2.0
+_05_LotSize=0.01
+_06_Magic=999097
+_06_Deviation=20
+_06_AllowLive=false
+_07_UseEmaFilter=false
+_07_EmaPeriod=200
+_08_UseMacdFilter=false
+_08_MacdFast=12
+_08_MacdSlow=26
+_08_MacdSignal=9
+_09_UseBbFilter=false
+_09_BbPeriod=20
+_09_BbDev=2.0
