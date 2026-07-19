@@ -17,7 +17,7 @@
 
 ## 2. รอ USER ทำ (ปลดล็อคแล้ว — ก่อน roll binary ใหม่ขึ้นบัญชีจริง)
 
-เดิน checklist `ea_template/PERSIST_MIGRATION_ORDER132.md` ตามลำดับ: F3 snapshot GV → demo attach → เช็ค journal `[PERSIST] migrated` → restart 1 รอบยืนยัน state → ค่อย Boss_14 GBPJPY live. จุดเพิ่มจาก 138: upgrade บัญชีตัวเองที่มี legacy state ต้องตั้ง **`RC_AdoptLegacyHalt=true` หนึ่ง attach แล้วปิดกลับ false** (ไม่ตั้ง = OnInit FAIL โดยตั้งใจ, กัน state ข้ามบัญชี)
+เดิน checklist `ea_template/PERSIST_MIGRATION_ORDER132.md` ตามลำดับ: F3 snapshot GV → demo attach → เช็ค journal `[PERSIST] migrated` → restart 1 รอบยืนยัน state → ค่อย Boss_14 GBPJPY live. จุดเพิ่มจาก 138: upgrade บัญชีตัวเองที่มี legacy state ต้องตั้ง **`RC_AdoptLegacyHalt=true` หนึ่ง attach แล้วปิดกลับ false** (ไม่ตั้ง = OnInit FAIL โดยตั้งใจ, กัน state ข้ามบัญชี — gate ครอบทุก legacy key รวม `rc_peak_eq`). Boss_16: เช็ค F3 หา `Boss2_..._k16_pair_a/b` (pair liquidation in-flight) ก่อน swap binary — มี = รอ resolve/flat ก่อน. อีกงานเร่งของ user: **`gh auth login -h github.com`** (token BaBosss ตาย — dashboard มือถือเน่าเงียบ, ORDER-128 leg ค้าง)
 
 ## 3. คิวงานถัดไป (เรียงแล้ว)
 
@@ -31,13 +31,15 @@
 - **0-trade artifact โผล่ได้แม้ tester ว่าง** (Boss_18 เจอวันนี้ทั้งที่ไม่มี sweep ชน) → เจอ 0-trade ผิดคาด = **re-run เดี่ยวก่อนสรุป drift เสมอ** ห้ามรีบ isolate
 - **Boss_18 = FP-boundary-sensitive** (kill fire ที่ eqDD~25% พอดี, 6020 trades) — drift เล็กๆ เฉพาะตัวนี้ = เช็ค class benign ตาม ORDER-131 ก่อนตกใจ
 - **cage ไม่มี cell StackMode=93** — แตะ `Stack.mqh` เมื่อไหร่ ต้อง A/B ด้วย `_mt5_auto/ab_sets/order132_93probe.set` (Boss_11 XAU H1 2024.01-07 M1 → ต้องได้ **net 347.16 / PF 62.01 / 6 trades / eqDD 3.46%** เป๊ะ)
-- แก้ `ea_template/core/*` = compile 0/0 ×9 + `tests/run_tests.ps1` 6/6 + `scripts/tpl_regression.ps1` CLEAN ก่อน commit เสมอ · Codex blind-audit บังคับเฉพาะ money/irreversible code
+- แก้ `ea_template/core/*` = compile 0/0 ×9 + `tests/run_tests.ps1` **7/7** (138 เพิ่ม `PersistIntent_Test`; `PersistMigrate_Test` มี `.set` เปิด acct gate) + `scripts/tpl_regression.ps1` CLEAN ก่อน commit เสมอ · Codex blind-audit บังคับเฉพาะ money/irreversible code
+- codex-rescue agent เคย **background-แล้วหยุดรอ ×2** (2026-07-19) — brief ต้องสั่ง foreground ชัด; ถ้าหยุดกลางคัน = SendMessage nudge กู้ได้, อ่าน result file ไม่ใช่ exit code
 - `PersistMigrate_Test` = **tester-only โดยตั้งใจ** (มัน `GlobalVariablesDeleteAll("Boss")` — attach chart จริง = ล้าง state ทุก Boss) — อย่าถอด guard
 - shared worktree: เช็ค `git log` + HEAD ก่อน stage ทุกครั้ง, commit path-limited
 
 ## 5. เอกสารอ้างอิงเร็ว
 
-- Audit ทั้งสาม: `_triage/CODEX_ORDER129_AUDIT.md` · `_triage/CODEX_ORDER132_AUDIT.md` · (138 อยู่ใน commit messages `29b31b76`/`ef24a267`)
+- Audit: `_triage/CODEX_ORDER129_AUDIT.md` · `_triage/CODEX_ORDER132_AUDIT.md` · 138 สองรอบ = `_triage/CODEX_ORDER138_AUDIT.md` + `_triage/CODEX_ORDER138B_REAUDIT.md` + triage `_triage/CODEX_ORDER138_AUDIT_TRIAGE.md`
 - Migration doc: `ea_template/PERSIST_MIGRATION_ORDER132.md`
 - แผน implementation 132: `docs/superpowers/plans/2026-07-19-order132-transactional-exits-persist-scoping.md`
-- B1 rows ครบถึง ORDER-132 แล้ว (`docs/memory_control/B1_DATASET.csv`)
+- B1 rows ครบถึง ORDER-138 แล้ว (`docs/memory_control/B1_DATASET.csv`)
+- Roadmap ทิศทาง (FIX-THEN-SCALE, FIX=ops/evidence 80/20): `_triage/CODEX_ROADMAP_2026-07-19.md` — direction 2 (terminal attestation/judge-readiness) = ops order ถัดไปหลังคิว §3
