@@ -1,0 +1,7 @@
+config,window,PF,Trades
+SMC_ra0_sl2p4,MAIN,0.94,138
+SMC_ra0_sl2p4,BWD,0.99,133
+SMC_ra10_sl2p4,MAIN,0.90,138
+SMC_ra10_sl2p4,BWD,1.14,132
+SMC_ra0_sl3,MAIN,1.39,136
+SMC_ra0_sl3,BWD,NA,NA
