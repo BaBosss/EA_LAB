@@ -39,7 +39,7 @@
    // ORDER-072: entry 16 = self-contained Kangaroo basket engine (single exit
    // owner). Entry module first (defines Entry_Evaluate), then the engine.
    #include "entries/Entry_KangarooRSI.mqh"
-   #include "Kangaroo.mqh"
+   #include "entries/Kangaroo.mqh"   // ORDER-124: moved core/ -> core/entries/
 #endif
 #ifdef LAB_ENTRY_17
    #include "entries/Entry_Wave5.mqh"
@@ -55,19 +55,8 @@
 datetime g_lab_last_bar = 0;
 
 // ---- MacroGate self-gate (ORDER-073 Phase-3) -----------------------------
-// OFF by default = fully inert (the cage and every live EA see no change). When
-// ON, THIS EA reads the MRIS regime timeline and sets its own MACROGATE_* GVs,
-// which the Execution bridge above then honours - this is how a SINGLE-EA
-// strategy-tester A/B (gate off vs on) is run, since the tester cannot also run
-// the standalone (Boss)_MacroGate watchdog. In LIVE, leave this OFF and use the
-// standalone watchdog instead.
-input bool   _MG_SelfGate       = false;                     // enable in-EA macro gate (backtest A/B only)
-input string _MG_RegimeFile     = "EA_LAB_mris_regime.csv";  // regime timeline CSV
-input bool   _MG_InCommon       = true;                      // read from Common\Files
-input double _MG_LotMult        = 0.5;                       // new-order lot multiplier while gated
-input bool   _MG_BlockNew       = true;                      // also veto new orders while gated
-input bool   _MG_TriggerRiskOff = true;                      // gate on RISK_OFF too (false = STRESS only)
-input int    _MG_OffsetHours    = 0;                         // server = CSV time + N hours
+// _MG_* inputs moved to Inputs.mqh (ORDER-124 chore 2 - one input home). Names
+// unchanged so every existing .set still loads.
 
 //+------------------------------------------------------------------+
 int OnInit()
@@ -146,6 +135,22 @@ int OnInit()
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
    if(StackMode == STACK_PYRAMID && _9_PendingMode != 2 && _9_PendingMode != 3)
       Print("[INIT] WARN: StackMode=93 but _9_PendingMode not 2/3 - ladder disabled, behaves like single");
+   // ORDER-124 chore 3: exit-owner assert. Mode 93 declares the pending ladder the
+   // single exit owner; LabCore's runtime guard already SKIPS Recovery/Hedge/partial
+   // under 93 (OnTick + Exit_ManagePartialClose), so a .set that turns them on is a
+   // declared-but-ignored config, not a live conflict -> hard-WARN, never fail
+   // (Codex catch: do not trip dormant combos - e.g. entry 16, where Kangaroo owns
+   // everything and returns before ExitManager, stays silent here by design).
+   // Legal-combo table: DESIGN_V2.md section 3c.
+   if(StackMode == STACK_PYRAMID)
+   {
+      if(RecoveryMode != REC_NONE)
+         Print("[INIT] WARN: exit-owner - StackMode=93 disables Recovery; RecoveryMode!=80 in this .set is IGNORED (DESIGN_V2 3c)");
+      if(HedgeMode != HEDGE_OFF)
+         Print("[INIT] WARN: exit-owner - StackMode=93 disables Hedge; HedgeMode!=0 in this .set is IGNORED (DESIGN_V2 3c)");
+      if(_2_PartialPct1 > 0.0 || _2_PartialPct2 > 0.0)
+         Print("[INIT] WARN: exit-owner - StackMode=93 disables partial-close; _2_PartialPct1/2 in this .set are IGNORED (DESIGN_V2 3c)");
+   }
    return INIT_SUCCEEDED;
 }
 

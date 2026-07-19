@@ -468,6 +468,23 @@ input double _H_ReleaseDDPct = 3.0;  // close hedge when basket DD% recovers <= 
 input double _H_Ratio        = 1.0;  // hedge lots = ratio * net exposed lots
 input double _H_MaxLot       = 0.0;  // hedge lot ceiling (0 = use RC_MaxLot only)
 
+//==================== MacroGate self-gate (ORDER-073 Phase-3) ======
+// Moved here from LabCore.mqh (ORDER-124 chore 2 - all inputs live in Inputs.mqh).
+// OFF by default = fully inert (the cage and every live EA see no change). When
+// ON, THIS EA reads the MRIS regime timeline and sets its own MACROGATE_* GVs,
+// which the Execution bridge then honours - this is how a SINGLE-EA
+// strategy-tester A/B (gate off vs on) is run, since the tester cannot also run
+// the standalone (Boss)_MacroGate watchdog. In LIVE, leave this OFF and use the
+// standalone watchdog instead.
+input group "=== MacroGate self-gate (backtest A/B only) ==="
+input bool   _MG_SelfGate       = false;                     // enable in-EA macro gate (backtest A/B only)
+input string _MG_RegimeFile     = "EA_LAB_mris_regime.csv";  // regime timeline CSV
+input bool   _MG_InCommon       = true;                      // read from Common\Files
+input double _MG_LotMult        = 0.5;                       // new-order lot multiplier while gated
+input bool   _MG_BlockNew       = true;                      // also veto new orders while gated
+input bool   _MG_TriggerRiskOff = true;                      // gate on RISK_OFF too (false = STRESS only)
+input int    _MG_OffsetHours    = 0;                         // server = CSV time + N hours
+
 //==================== General ======================================
 input group "=== General ==="
 input long _0_Magic     = 990001;

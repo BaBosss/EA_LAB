@@ -12,7 +12,7 @@
 // Kangaroo_TryFirstEntry links against the entry seam; this test never trades
 EntrySignal Entry_Evaluate() { return Entry_MakeNone("test-stub"); }
 #include "../core/ExitManager.mqh"
-#include "../core/Kangaroo.mqh"
+#include "../core/entries/Kangaroo.mqh"   // ORDER-124: moved core/ -> core/entries/
 
 int OnInit()
 {

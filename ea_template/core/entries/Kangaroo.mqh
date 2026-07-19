@@ -21,11 +21,13 @@
 //+------------------------------------------------------------------+
 #ifndef BOSS_LAB_KANGAROO_MQH
 #define BOSS_LAB_KANGAROO_MQH
-#include "Inputs.mqh"
-#include "Indicators.mqh"
-#include "Execution.mqh"
-#include "RiskControl.mqh"
-#include "entries/IEntry.mqh"
+// ORDER-124: file moved core/ -> core/entries/ (entry-owned engine lives with
+// the entries). Include paths are relative to THIS file's new location.
+#include "../Inputs.mqh"
+#include "../Indicators.mqh"
+#include "../Execution.mqh"
+#include "../RiskControl.mqh"
+#include "IEntry.mqh"
 
 #ifndef LAB_ENTRY_TAG
 #define LAB_ENTRY_TAG "16_KangarooGrid"

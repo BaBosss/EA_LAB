@@ -189,6 +189,17 @@ filled/pending จาก broker ก่อนเสมอ)
 `Execution.mqh` (pending infra: place/count/cancel) · `Stack.mqh` (`Stack_ManagePyramid`) ·
 `LabCore.mqh` (wire + WARN เมื่อ 93 แต่ PendingMode ว่าง) · `ExitManager.mqh` (guard partial-close)
 
+### Legal exit-owner combos (ORDER-124 chore 3 — OnInit assert อ้างตารางนี้)
+
+| StackMode | Recovery (8x) | Hedge | partial-close (_2_PartialPct*) | exit owner | หมายเหตุ |
+|---|---|---|---|---|---|
+| 90 single / 91 / 92 | ✅ ได้ | ✅ ได้ | ✅ ได้ | ExitManager (basket TP/SL/trail) | Recovery/Hedge = add/lock path ไม่ใช่ close owner ที่สอง — close ทุกทางรวมที่ ExitManager + cage |
+| **93 PYRAMID** | ❌ IGNORED | ❌ IGNORED | ❌ IGNORED | ExitManager basket TP/SL เท่านั้น (pendings มีแค่ per-leg SL) | runtime skip ใน LabCore.OnTick + `Exit_ManagePartialClose`; .set ที่เปิดไว้ = declared-but-ignored → OnInit **hard-WARN** (ไม่ fail — ไม่มี close path ชนจริง) |
+| entry 16 (Kangaroo) | n/a (short-circuit) | n/a | n/a | Kangaroo.mqh ทั้ง pipeline | `Kangaroo_OnTick()` return ก่อน ExitManager ทั้งหมด = dormant โดยโครงสร้าง — assert **ห้าม trip** เคสนี้ (Codex catch) · `_2_MaxHoldBars>0` มี WARN เฉพาะของมันอยู่แล้ว (ORDER-125) |
+
+กติกา: combo ใหม่ใดๆ ที่เพิ่ม close path ที่สอง (รันพร้อม ExitManager ได้จริง) = ต้องเพิ่มแถวที่นี่ +
+assert ใน OnInit ก่อน merge — "one mode, one exit owner" (MERGE-02 synthesis).
+
 ---
 
 ## 4) Module Map (อ้างอิงเร็ว)
