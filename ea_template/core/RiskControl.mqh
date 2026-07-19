@@ -104,7 +104,16 @@ bool RiskControl_AcctGateOK()
    return !blocked;
 }
 
-void RiskControl_Init()
+// ORDER-138 #1 + 138b (Codex roadmap SEV-1 + audit F1): legacy pre-132 keys are
+// magic-only - no server/login identity. Adopting ANY of them can act against
+// the WRONG account: an active kill/halt executes an irreversible close-all,
+// and a foreign higher-equity rc_peak_eq makes KillDD liquidate this account on
+// the first tick. Every legacy key this init would read therefore needs
+// explicit operator consent via the RC_AdoptLegacyHalt input. Returns false =
+// caller must INIT_FAILED (nothing was migrated or deleted). Split into
+// _Ex(flag) so PersistMigrate_Test can exercise BOTH consent paths in one
+// tester pass; production callers use RiskControl_Init().
+bool RiskControl_InitEx(const bool adoptLegacyHalt)
 {
    g_rc_halted      = false;
    g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
@@ -113,6 +122,33 @@ void RiskControl_Init()
    // MERGE-05B: restore hard-kill state so restart/recompile cannot resurrect
    // a killed EA. Tester passes start with a clean GV sandbox -> no-op there.
    g_rc_kill_pending = false;
+   // ORDER-138 #1 + 138b (Codex F1): fail-closed BEFORE any migration/cleanup
+   // while any legacy key THIS init would read exists without consent. The gate
+   // covers more than active kill/halt: a foreign (higher-equity) legacy
+   // rc_peak_eq would migrate in, KillDD would measure DD from the wrong
+   // account's peak and could liquidate THIS account on the first tick; a
+   // foreign acct_hwm false-trips the entry gate the same way. Inactive 0.0
+   // kill/halt leftovers are benign residue - normal cleanup below handles them.
+   {
+      bool legacyKill = RC_PersistHalt && (Persist_GetLegacy("rc_kill_pending", 0.0) > 0.5);
+      bool legacyHalt = RC_PersistHalt && (Persist_GetLegacy("rc_halted", 0.0) > 0.5);
+      bool legacyPeak = RC_PersistHalt && Persist_HasLegacy("rc_peak_eq");
+      bool legacyHwm  = (RC_AcctDDLimitPct > 0.0) && Persist_HasLegacy("acct_hwm");
+      if((legacyKill || legacyHalt || legacyPeak || legacyHwm) && !adoptLegacyHalt)
+      {
+         string which = "";
+         if(legacyKill) which += Persist_LegacyKey("rc_kill_pending") + " ";
+         if(legacyHalt) which += Persist_LegacyKey("rc_halted") + " ";
+         if(legacyPeak) which += Persist_LegacyKey("rc_peak_eq") + " ";
+         if(legacyHwm)  which += Persist_LegacyKey("acct_hwm");
+         PrintFormat("[RISK] FATAL: legacy pre-132 state found (%s- magic-only keys, account identity unknown) and RC_AdoptLegacyHalt=false. "
+                     "Upgrading THIS account's own pre-132 state: set RC_AdoptLegacyHalt=true for one attach, verify the migration journal lines, then set it back to false. "
+                     "State imported from ANOTHER account (terminal switched login): delete the Boss_%I64d_* GlobalVariables via Tools->Global Variables (F3) instead. "
+                     "Nothing was migrated or deleted.",
+                     which, _0_Magic);
+         return false;
+      }
+   }
    if(RC_PersistHalt)
    {
       // ORDER-132 (Codex F4): migrate pre-132 magic-only keys to the scoped
@@ -169,7 +205,10 @@ void RiskControl_Init()
       }
    }
    RiskControl_AcctGateInit();
+   return true;
 }
+
+bool RiskControl_Init() { return RiskControl_InitEx(RC_AdoptLegacyHalt); }
 
 bool RiskControl_IsHalted() { return g_rc_halted; }
 

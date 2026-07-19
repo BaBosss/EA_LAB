@@ -86,10 +86,11 @@ int OnInit()
    // name limit - an over-length key makes every kill/halt persist silently fail and a
    // restart resurrects a killed EA as RUNNING. Probe with the longest state name and
    // refuse the live/demo attach fail-closed (tester sandbox is exempt).
-   if(!MQLInfoInteger(MQL_TESTER) && StringLen(Persist_Key("rc_peak_eq")) > 63)
+   // ORDER-138: longest key is now "exit_closeall" (13 chars), not "rc_peak_eq".
+   if(!MQLInfoInteger(MQL_TESTER) && StringLen(Persist_Key("exit_closeall")) > 63)
    {
       PrintFormat("[INIT] FATAL: persist key exceeds the 63-char GV limit (%s) - symbol/login/magic too long for persisted safety state",
-                  Persist_Key("rc_peak_eq"));
+                  Persist_Key("exit_closeall"));
       return INIT_FAILED;
    }
    if(!Indi_Init())
@@ -112,7 +113,11 @@ int OnInit()
       MG_LoadRegime(_MG_RegimeFile, _MG_InCommon);
       MG_Tick(TimeCurrent());
    }
-   RiskControl_Init();
+   // ORDER-138 #1: an identity-less ACTIVE legacy kill/halt without explicit
+   // RC_AdoptLegacyHalt consent must fail the attach (details in the [RISK] log)
+   if(!RiskControl_Init())
+      return INIT_FAILED;
+   ExitManager_Init();   // ORDER-138 #3: restore a persisted full-basket close intent
    Recovery_Init();
 #ifdef LAB_ENTRY_14
    Entry_GridLog_Init();

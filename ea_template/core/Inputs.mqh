@@ -430,6 +430,19 @@ input double RC_AcctDDLimitPct = 0.0;
 // ORDER-132 scoped key, one enum RUNNING/KILL_PENDING/HALTED) or set this false
 // + reattach. Pre-132 "Boss_<magic>_rc_halted" keys migrate automatically.
 input bool RC_PersistHalt = true;
+// ORDER-138 #1 + 138b (Codex roadmap SEV-1 + audit F1): legacy pre-132
+// "Boss_<magic>_*" keys carry NO account identity - a terminal that switched
+// logins (magic reused) would migrate ANOTHER account's state into this one:
+// an active kill/halt closes the WRONG positions, and even a foreign (higher-
+// equity) rc_peak_eq makes KillDD liquidate this account on the first tick.
+// Default false = OnInit refuses the attach fail-closed while ANY legacy key
+// this init would read exists (active kill/halt · rc_peak_eq · acct_hwm when
+// the acct gate is on). In-place upgrade (pre-132 -> post-132, SAME account):
+// set true for the upgrade attach, verify the "[RISK]/[PERSIST] migrated ..."
+// journal lines, then set back false. Contamination (keys from another
+// account): delete the Boss_<magic>_* rows via Tools->Global Variables (F3)
+// instead of setting this true.
+input bool RC_AdoptLegacyHalt = false;
 
 //==================== 8x Recovery (offensive add-into-loss) ========
 // OFF unless RecoveryMode != 80. Every add clamped by the cage

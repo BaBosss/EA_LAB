@@ -46,12 +46,35 @@ ulong g_k16_pair_b = 0;   // oldest-leg ticket of the armed pair (0 = none)
 // ORDER-132b (Codex K4): full-basket close latch - same X2 pattern as ExitManager.
 bool  g_k16_closeall_pending = false;
 
-void Kangaroo_PairPersist()
+// ORDER-138 #2 (Codex roadmap SEV-1): the pair intent is two tickets + a COMMIT
+// MARKER written as a transaction. Pre-138 the two slots were written separately
+// and unchecked - a failed write or crash between them could restore a one-
+// legged intent (close half the pair, leave the tail). Protocol: drop the
+// marker, write both legs checked, re-set the marker, flush. Restore trusts the
+// legs ONLY under the marker, so a torn write restores as NO intent
+// (complete-or-none), never as half a pair.
+// Returns true when the intent is durable (or persistence is not in play:
+// tester-sandbox / DryRun / RC_PersistHalt=false keep in-memory semantics).
+bool Kangaroo_PairPersist()
 {
-   if(!RC_PersistHalt || DryRun) return;
-   if(g_k16_pair_a != 0) Persist_Set("k16_pair_a", (double)g_k16_pair_a); else Persist_Del("k16_pair_a");
-   if(g_k16_pair_b != 0) Persist_Set("k16_pair_b", (double)g_k16_pair_b); else Persist_Del("k16_pair_b");
+   if(!RC_PersistHalt || DryRun) return true;
+   if(g_k16_pair_a == 0 && g_k16_pair_b == 0)
+   {
+      // clear: marker first - leftover legs without a marker are ignored+wiped
+      // on the next restore, so a partial delete can never resurrect an intent
+      Persist_Del("k16_pair_ok");
+      Persist_Del("k16_pair_a");
+      Persist_Del("k16_pair_b");
+      Persist_Flush();
+      return true;
+   }
+   Persist_Del("k16_pair_ok");   // invalidate while the legs are in flux
+   bool ok = true;
+   if(g_k16_pair_a != 0) ok = Persist_Set("k16_pair_a", (double)g_k16_pair_a) && ok; else Persist_Del("k16_pair_a");
+   if(g_k16_pair_b != 0) ok = Persist_Set("k16_pair_b", (double)g_k16_pair_b) && ok; else Persist_Del("k16_pair_b");
+   if(ok) ok = Persist_Set("k16_pair_ok", 1.0);
    Persist_Flush();
+   return ok;
 }
 
 void Kangaroo_Init()
@@ -62,11 +85,29 @@ void Kangaroo_Init()
    g_k16_closeall_pending = false;
    if(RC_PersistHalt && !DryRun)
    {
-      g_k16_pair_a = (ulong)Persist_Get("k16_pair_a", 0.0);
-      g_k16_pair_b = (ulong)Persist_Get("k16_pair_b", 0.0);
-      if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
-         PrintFormat("[K16] pair-close intent restored from persist (a=%I64u b=%I64u) - resuming liquidation",
-                     g_k16_pair_a, g_k16_pair_b);
+      // ORDER-138 #2: legs are trusted only under the commit marker
+      if(Persist_Has("k16_pair_ok"))
+      {
+         g_k16_pair_a = (ulong)Persist_Get("k16_pair_a", 0.0);
+         g_k16_pair_b = (ulong)Persist_Get("k16_pair_b", 0.0);
+         if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
+            PrintFormat("[K16] pair-close intent restored from persist (a=%I64u b=%I64u) - resuming liquidation",
+                        g_k16_pair_a, g_k16_pair_b);
+      }
+      else if(Persist_Has("k16_pair_a") || Persist_Has("k16_pair_b"))
+      {
+         Print("[K16] torn pair-intent persist (legs without commit marker) - discarded, complete-or-none");
+         Persist_Del("k16_pair_a");
+         Persist_Del("k16_pair_b");
+         Persist_Flush();
+      }
+      // ORDER-138 #3: a restart mid full-basket liquidation resumes it - the
+      // trigger predicate (net-$ / emergency DD) is NOT required to re-fire
+      if(Persist_Get("k16_closeall", 0.0) > 0.5)
+      {
+         g_k16_closeall_pending = true;
+         Print("[K16] full-basket close intent restored from persist - resuming liquidation");
+      }
    }
 }
 
@@ -90,16 +131,43 @@ bool Kangaroo_PairSlotOpen(ulong &tk)
 }
 
 // full-basket close with broker-flat proof (K4): retried until confirmed.
+// ORDER-138 #3 (Codex roadmap SEV-1): the intent is persisted+flushed BEFORE the
+// first close is sent and cleared ONLY on broker-flat proof - a restart after a
+// partial close resumes the liquidation even though the original predicate
+// (net-$ / emergency DD) may no longer be true.
 bool Kangaroo_CloseBasket()
 {
-   if(Exec_CloseAll()) { g_k16_closeall_pending = false; return true; }
-   g_k16_closeall_pending = true;
+   if(!g_k16_closeall_pending)
+   {
+      g_k16_closeall_pending = true;
+      if(RC_PersistHalt && !DryRun)
+      {
+         if(!Persist_Set("k16_closeall", 1.0))
+            Print("[K16] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (closing anyway: reducing exposure beats durability)");
+         Persist_Flush();
+      }
+   }
+   if(Exec_CloseAll())
+   {
+      // ORDER-138b (Codex F4): latch releases only after the persisted intent is
+      // confirmed deleted - a stale intent=1 + restart would liquidate a future,
+      // unrelated basket. Retry the delete while owning the tick.
+      if(RC_PersistHalt && !DryRun)
+      {
+         if(!Persist_DelChecked("k16_closeall")) return true;
+         Persist_Flush();
+      }
+      g_k16_closeall_pending = false;
+      return true;
+   }
    static datetime last_log = 0;
    datetime now = TimeCurrent();
    if(now - last_log >= 60)
    {
       last_log = now;
       Print("[K16] basket close incomplete - residual remains, retrying every tick");
+      // ORDER-138b (Codex F9): TTL keep-alive while the liquidation is unresolved
+      if(RC_PersistHalt && !DryRun) Persist_Set("k16_closeall", 1.0);
    }
    return true;   // close intent owns the tick either way
 }
@@ -267,7 +335,10 @@ bool Kangaroo_ManageExits()
          g_k16_pair_a = 0; g_k16_pair_b = 0;
          Kangaroo_PairPersist();
       }
-      g_k16_closeall_pending = false;
+      // ORDER-138 #3: an armed close-all releases only on broker-flat PROOF via
+      // Kangaroo_CloseBasket (positions AND pendings, + persisted-intent cleanup)
+      // - CountAll()==0 alone is not proof and would leak the persisted intent.
+      if(g_k16_closeall_pending) return Kangaroo_CloseBasket();
       return false;
    }
 
@@ -284,7 +355,12 @@ bool Kangaroo_ManageExits()
    {
       bool aOpen = Kangaroo_PairSlotOpen(g_k16_pair_a);
       bool bOpen = Kangaroo_PairSlotOpen(g_k16_pair_b);
-      Kangaroo_PairPersist();
+      // ORDER-138b (Codex F3): the committed on-disk record is NOT rewritten
+      // while a leg is still live - a failed rewrite would destroy the only
+      // durable copy of the intent (marker drops first). The original record is
+      // safe to keep: restore revalidates every ticket against the broker, so an
+      // already-closed leg inside it is harmless. Clear only when both are gone.
+      if(!aOpen && !bOpen) Kangaroo_PairPersist();
       if(aOpen || bOpen)
       {
          static datetime last_log = 0;
@@ -294,6 +370,14 @@ bool Kangaroo_ManageExits()
             last_log = now;
             PrintFormat("[K16] pair-close intent unresolved (a=%I64u b=%I64u, retcode=%d) - retrying",
                         g_k16_pair_a, g_k16_pair_b, (int)g_trade.ResultRetcode());
+            // ORDER-138b (Codex F9): TTL keep-alive - touch the committed record
+            // so an unresolved intent cannot expire out of the terminal GVs
+            if(RC_PersistHalt && !DryRun)
+            {
+               Persist_Get("k16_pair_a", 0.0);
+               Persist_Get("k16_pair_b", 0.0);
+               Persist_Set("k16_pair_ok", 1.0);
+            }
          }
          return true;
       }
@@ -342,13 +426,27 @@ bool Kangaroo_ManageExits()
                      nTk, nP, oTk, oP, nP + oP, _16_OverlapMinUsd);
          g_k16_pair_a = nTk;
          g_k16_pair_b = oTk;
-         Kangaroo_PairPersist();
+         // ORDER-138 #2: the arm must be DURABLE before the first close is sent -
+         // otherwise a crash mid-close restores half a pair. Not durable = abort
+         // this liquidation (un-arm, wipe partial keys); the predicate re-fires
+         // when conditions still hold. Own the tick meanwhile: no adds on top of
+         // an ambiguous state.
+         if(!Kangaroo_PairPersist())
+         {
+            g_k16_pair_a = 0;
+            g_k16_pair_b = 0;
+            Kangaroo_PairPersist();   // best-effort cleanup of partial keys
+            Print("[K16] pair-close intent not durable (GV write failed) - liquidation ABORTED this tick");
+            return true;
+         }
          // close + broker-state reconcile (never trust call results alone - 129
          // doctrine). DryRun: legs remain but the intent stays armed and keeps
          // logging intents (no real writes: PairPersist is DryRun-inert).
+         // ORDER-138b (Codex F3): no mid-flight rewrite of the committed record -
+         // clear it only once both legs are broker-confirmed gone.
          bool aOpen = Kangaroo_PairSlotOpen(g_k16_pair_a);
          bool bOpen = Kangaroo_PairSlotOpen(g_k16_pair_b);
-         Kangaroo_PairPersist();
+         if(!aOpen && !bOpen) Kangaroo_PairPersist();
          if(aOpen || bOpen)
          {
             PrintFormat("[K16] pair-close unresolved this tick (a=%I64u b=%I64u) - intent armed, retrying",

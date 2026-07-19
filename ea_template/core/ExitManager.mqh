@@ -9,6 +9,7 @@
 #include "Inputs.mqh"
 #include "Indicators.mqh"
 #include "Execution.mqh"
+#include "Persist.mqh"   // ORDER-138 #3: full-basket close intent survives restart
 
 double Exit_Point() { return Indi_Point(); }
 
@@ -360,19 +361,69 @@ ulong g_exit_partial2_tk[];
 // fires, the close is owned until broker-flat proof - previously a partially
 // failed Exec_CloseAll() was forgotten whenever the predicate (profit/trend)
 // stopped being true on the next tick, leaving residual exposure managed as a
-// normal basket. In-memory (restart falls back to predicate-based exits).
+// normal basket.
+// ORDER-138 #3 (Codex roadmap SEV-1): no longer memory-only - the intent is
+// persisted+flushed BEFORE the first close and cleared only on broker-flat
+// proof, so a restart after a partial liquidation resumes it instead of
+// returning the residual legs to ordinary management.
 bool g_exit_closeall_pending = false;
+
+// reset chassis exit state + restore a persisted close intent (LabCore OnInit).
+// Explicit init matters: an account switch reloads the EA WITHOUT resetting
+// program globals (Persist.mqh header), so file-scope initializers are not
+// enough to guarantee a clean start.
+void ExitManager_Init()
+{
+   g_exit_partial1_done = false;
+   g_exit_partial2_done = false;
+   ArrayResize(g_exit_partial1_tk, 0);
+   ArrayResize(g_exit_partial2_tk, 0);
+   g_exit_closeall_pending = false;
+   if(RC_PersistHalt && !DryRun && Persist_Get("exit_closeall", 0.0) > 0.5)
+   {
+      g_exit_closeall_pending = true;
+      Print("[EXIT] full-basket close intent restored from persist - resuming liquidation");
+   }
+}
 
 bool Exit_CloseBasket()
 {
-   if(Exec_CloseAll()) { g_exit_closeall_pending = false; return true; }
-   g_exit_closeall_pending = true;
+   // ORDER-138 #3: arm durable BEFORE the first close attempt. A failed persist
+   // is logged but never blocks the close - flattening reduces exposure, and
+   // holding a losing basket hostage to a GV write would be the wrong trade-off.
+   if(!g_exit_closeall_pending)
+   {
+      g_exit_closeall_pending = true;
+      if(RC_PersistHalt && !DryRun)
+      {
+         if(!Persist_Set("exit_closeall", 1.0))
+            Print("[EXIT] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (closing anyway)");
+         Persist_Flush();
+      }
+   }
+   if(Exec_CloseAll())
+   {
+      // ORDER-138b (Codex F4): never release the latch while intent=1 could
+      // survive on disk - a stale intent + restart would liquidate a future,
+      // unrelated basket. Keep owning the tick and retry the delete.
+      if(RC_PersistHalt && !DryRun)
+      {
+         if(!Persist_DelChecked("exit_closeall")) return true;
+         Persist_Flush();
+      }
+      g_exit_closeall_pending = false;
+      return true;
+   }
    static datetime last_log = 0;
    datetime now = TimeCurrent();
    if(now - last_log >= 60)
    {
       last_log = now;
       Print("[EXIT] basket close incomplete - residual position/pending remains, retrying every tick");
+      // ORDER-138b (Codex F9): re-touch the armed intent so MT5's ~4-week GV TTL
+      // cannot expire it while a liquidation stays unresolved (no-tick symbols
+      // get no retouch, but they get no retries either - documented limitation)
+      if(RC_PersistHalt && !DryRun) Persist_Set("exit_closeall", 1.0);
    }
    return true;   // the close intent owns this tick either way (blocks adds/management)
 }
@@ -451,7 +502,14 @@ void Exit_ManagePartialClose()
 // Returns true if it flattened the basket this tick.
 bool Exit_SafetyMoneyStop()
 {
-   if(Exec_CountAll() <= 0) { g_exit_closeall_pending = false; return false; }
+   // ORDER-138 #3: with an armed intent, CountAll()==0 is NOT proof of flat -
+   // own pendings can remain and the persisted intent must be cleaned up. Route
+   // through Exit_CloseBasket for the real broker-flat proof.
+   if(Exec_CountAll() <= 0)
+   {
+      if(g_exit_closeall_pending) return Exit_CloseBasket();
+      return false;
+   }
    // ORDER-132b (Codex X2): an armed close (from here or any basket exit) is
    // finished FIRST, pre-bar-gate - a partial CloseAll must never be forgotten
    // just because the money predicate stopped being true.
@@ -474,7 +532,9 @@ bool Exit_ManageBasket()
 {
    if(Exec_CountAll() <= 0)
    {
-      g_exit_closeall_pending = false;   // basket gone (own retry / SL / manual) - intent done
+      // ORDER-138 #3: basket positions gone, but an armed intent still needs
+      // broker-flat proof (pendings) + persisted-intent cleanup before release
+      if(g_exit_closeall_pending) return Exit_CloseBasket();
       return false;
    }
    if(g_exit_closeall_pending) return Exit_CloseBasket();   // ORDER-132b (Codex X2): finish first

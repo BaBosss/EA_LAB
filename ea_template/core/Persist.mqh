@@ -72,6 +72,18 @@ void Persist_Del(const string name)
    if(GlobalVariableCheck(key)) GlobalVariableDel(key);
 }
 
+// ORDER-138b (Codex F4): checked delete for keys whose stale survival is
+// DANGEROUS - a leftover close-all intent=1 that outlives its basket would
+// liquidate a FUTURE unrelated basket after a restart. Missing key = success.
+bool Persist_DelChecked(const string name)
+{
+   string key = Persist_Key(name);
+   if(!GlobalVariableCheck(key)) return true;
+   if(GlobalVariableDel(key)) return true;
+   PrintFormat("[PERSIST] ERROR: %s could not be deleted - caller must retry before releasing state", key);
+   return false;
+}
+
 // ---- legacy (pre-ORDER-132) magic-only keys ------------------------------
 string Persist_LegacyKey(const string name) { return "Boss_" + IntegerToString(_0_Magic) + "_" + name; }
 
