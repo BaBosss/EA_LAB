@@ -179,6 +179,7 @@ trade count + net identical ก่อน/หลังบน regression set (base
 ## ORDER-136 — CAMPAIGN: escalation-MM overlay บน validated PF>1 cohort (user directive 2026-07-19 "เทสใหม่หมดบนระบบใหม่") — `OPEN` (multi-session · pace 1-2 cell/รอบ) ⚠️ renumbered จาก 134 (กัน collision session คู่ขนาน)
 **source:** user 2026-07-19 — EA ที่ PF>1 ทั้งหมดลองใส่ escalation ได้ (MM lever ปกติ ไม่ใช่ ENGINE-EDGE เพราะ signal มี edge อยู่แล้ว) + chassis ผ่าน safety overhaul ครบ = โครงพร้อม. **judge ที่ expectancy + worst-case DD ไม่ใช่ PF อย่างเดียว — คาด: PF ต่อ window สวยขึ้น tail อ้วนขึ้น.**
 **Wave 1 (เริ่มได้เลย — chassis-native ถูกสุด):** Boss_17 Wave5 (validated, demo 990301-303) — sweep `StackMode {90 base, 92 DCA}` × `_9_MaxLevels {4,6}` × `LotProg {NONE, LINEAR, LOG}` บน XAU H4 (home หลัก) both-window M1 → M4 survivor. bar: overlay ชนะ = expectancy/trade ≥ base AND worstDD ≤ base×1.5 AND both-window ≥1.0 · แพ้ = คง single-position (บันทึกแล้วปิด wave).
+**PROGRESS (Opus 2026-07-19, รอบ 1 — pace 1 cell):** base XAU H4 M1 pinned: MAIN PF 1.60 / payoff 5.16 / eqDD 1.53% (81t) · BWD PF 1.00 / 1.78% (56t — ปริ่มพอดี). **Cell 92/L4/NONE = FAIL bar 2/3:** MAIN PF 1.82 payoff 5.91 ✅ แต่ eqDD 5.46% = 3.6×base (bar ≤2.3%) ❌ + BWD 0.94 <1.0 ❌ — DCA ยก winner-window แต่ leverage regime-dependence ฝั่ง BWD (กลไกซ้ำ ORDER-135). พยากรณ์: NONE = lot curve อ่อนสุด → LINEAR/LOG คาดแย่กว่าฝั่ง BWD; เหลือ MaxLevels{6}×LotProg cells ไว้ยืนยัน/หักล้างรอบถัดไป. sets `_mt5_auto/ab_sets/order136_w1/` · reports `O136_W1_*`.
 **Wave 2+ (รอ Wave 1 + user เคาะ):** MacdDiv XAU / EmaStoRev = standalone ต้อง port entry เข้า chassis ก่อน (build order แยก) · Boss_14/RSI_MR = grid อยู่แล้ว (เทส LotProg เพิ่มได้) · crypto = pyramid อยู่แล้ว. **ห้าม:** burst ทุก wave พร้อมกัน (pacing rule) · deploy โดยไม่ผ่าน funnel เต็ม · แตะ set demo ที่ attach อยู่. **ทำได้:** Claude ออก .set → agent batch → Opus judge ต่อ wave.
 
 ## ORDER-138 — template SEV-1 pack #2 (Codex roadmap 2026-07-19): persist/kill transactional hardening — `DONE + REVIEWED(Opus 2026-07-19): #1-4 + 138b + 138c ครบ, Codex audit 2 รอบครบ loop → live-rollout blocker ปลด (ฝั่ง code); user ยังต้องเดิน PERSIST_MIGRATION_ORDER132.md checklist ก่อน roll จริง`
@@ -1948,3 +1949,13 @@ Codex ทำ full run จนจบ (ไม่โดน content-filter ตัด�
 **ห้าม (สืบทอดจาก §20):** ❌ สร้าง MVP-2 ก่อน trigger เข้า · ❌ backfill นอก 3 canaries · ❌ reconstruct metric จากความจำ (NOT_RECORDED เท่านั้น) · ❌ แก้ §20 draft
 
 **ผล:** B1 window **OPEN ตั้งแต่ 2026-07-17** — order แรกที่ปิดหลัง `0e13699` = แถวแรกของ cohort · ORDER-115 เองปิดหลัง anchor จึงเป็นแถวที่ 1 ใน B1_DATASET.csv (บันทึก prospective ครบ: onboarding≈5m · incident 0 · rework 0 · wrong-scope 0 · lead≈0.7h)
+
+## CR-TRACK — Control Room (ROADMAP Phase 4.5) — `CR-001 CLOSED + CR-002 first pass DONE (Claude 2026-07-19F)` · role: Claude lead (ops/evidence — no verdict authority touched)
+
+> ไม่ mint เลข ORDER ใหม่ (กัน collision 135/136/137/138 ข้าม session) — track นี้อ้างเป็น CR-001..007 ตาม ROADMAP Phase 4.5.
+> Records เต็ม: `_triage/CR002_ATTESTATION_REPORT_2026-07-19.md` + `_triage/CR002_EVIDENCE_RECONSTRUCTION_999094.md` · commits `50f9ff7b` `deead551` `e8d653a1`
+
+- **CR-001 CLOSED:** `$cohort` hardcode ออกจาก `live_dashboard.ps1` → generate จาก `DEPLOYMENTS.csv` · checker 4/5 = generation-link guard · ทดสอบ `daily_monitor.ps1 -Force` เต็ม chain ผ่าน (auto-commit `5ef41b98`)
+- **CR-002 first pass DONE:** owner ใหม่ `portfolio/ATTESTATION_MAP.csv` + snapshot v2 (attestation/unknown_magics/judge_cohorts) · 18/40 hashed · 20 NO_BUNDLE · promotion-evidence reconstruction 999094 พิสูจน์แล้ว (+6 evidence-manifest, Scan valid)
+- **WAITING-USER (จาก report §2-3):** (1) จับคู่ชื่อ EA ให้ 9 unknown magics บน 159475669 แล้วเพิ่มแถว CSV (2) ยืนยัน set จริงของ 991001 (v2/v3/defaults) (3) judge_date 11 แถว user-lane (ข้อเสนอ: 990005 → 2026-10-09, ที่เหลือ mark USER-LANE ใน notes) (4) sensor 463666728 (สร้าง `D:\Monitor\MT5 - 463666728` + login) — ตัวบล็อกใหญ่สุดของ judge ต.ค. (5) 146237 DealsExporter ส่งไฟล์ header-only ต้องเช็ค terminal
+- **OPEN (agent-able รอบหน้า):** lock bundle ให้ 990101/991004/991002 + Boss_14 bench ×7 (ต้องได้ .set จริงจาก user ก่อน) · VPS-side hash compare step (design ใน CR-002 gate) · CR-003 health engine ยังไม่เริ่ม
