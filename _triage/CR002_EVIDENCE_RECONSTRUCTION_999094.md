@@ -16,8 +16,7 @@
 | ชิ้น | ที่อยู่ | pin | evidence-manifest id |
 |---|---|---|---|
 | Hypothesis/order | `AGENT_TASKBOARD.md` §ORDER-098-B (บรรทัด ~1306) | git history | — (owner ref) |
-| Source (ปัจจุบัน) | `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` | blob `ad55103d` @ `598239a8` | ⛔ ลง manifest ไม่ได้ — path มีวงเล็บ `(EXP)_` นอก charset `[A-Za-z0-9._/-]` ของ schema (ดู Gaps ข้อ 2) |
-| Source (ตอน verdict) | เดียวกัน ณ commit `1402de1f` (Lane B M4 done 2026-07-18) | `git ls-tree 1402de1f -- "ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5"` | หมายเหตุ: หลัง verdict มี ORDER-117 เพิ่ม RSI-gate **default OFF** (`d25eebe1`) — source ปัจจุบัน ≠ byte-identical กับตอน compile |
+| Source | `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` | blob `ad55103d` — **byte-identical ทั้งที่ verdict commit `1402de1f` และ HEAD ปัจจุบัน** (verify: `git ls-tree 1402de1f -- "<path>"`) · last touch `d25eebe1` = ORDER-117 RSI-gate **default OFF** ซึ่งอยู่ในไฟล์ก่อน verdict แล้ว | ⛔ ลง manifest ไม่ได้ — path มีวงเล็บ `(EXP)_` นอก charset `[A-Za-z0-9._/-]` ของ schema (ดู Gaps ข้อ 2) |
 | Locked set (optimize) | `_mt5_auto/ab_sets/order098b/MacdDiv_Naked_XAUUSD_H4_optPF.set` | sha256 `e8a2d212…f1683` · blob `f8e6b691` | `evd_sha256_e8a2d21296bc0cc070181ac7f979f23f998cea2494af6010ec22fee04a2f1683` |
 | Deployed set (demo) | `_vps_deploy/MACDDIV_XAU/MacdDiv_XAU_H4_demo_v1.set` | sha256 `622e5edc…8af7` · blob `33bb6703` | `evd_sha256_622e5edc812b49d98f7241e4fcde5bff6826afcae4d158bdea44c838f4338af7` |
 | **Set drift proof** | diff ทั้งสองไฟล์ = **2 บรรทัด operational เท่านั้น**: `_00_OptimizeMode true→false` · `_06_AllowLive false→true` — strategy params ตรงกัน 100% | ทำซ้ำ: `diff <(sort optPF.set) <(sort demo_v1.set)` | — |
