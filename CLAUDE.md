@@ -12,10 +12,17 @@ Project state, decisions, and forward plan live in [PROJECT_STATE.md](PROJECT_ST
 EVIDENCE IN
 │
 1. STRUCTURAL?  (เจอข้อใดข้อหนึ่ง ⇒ ฆ่าทันที — ความตายถูกอย่างเดียว ไม่ต้อง optimize)
-   · flat-lot/escalation-off PF<1 ขณะ escalated PF>1        → "martingale คือ edge เอง"
    · uncapped ruin: ไม่มี SL AND ไม่มี depth cap (maxOpen≥8) AND geometric ladder
      — เช็ค 4 ข้อ martingale ก่อน (SL? · capped steps? · flat-lot edge? · conditional adds?) —
        capped+SL+edge ≠ ruin
+   · ⚠️ **แก้กฎ 2026-07-19 (user ratified):** flat-lot PF<1 ขณะ escalated PF>1 = **ไม่ auto-kill แล้ว**
+     → จัดเข้า **ENGINE-EDGE class** (edge อยู่ที่ escalation engine ไม่ใช่สัญญาณ) เดินต่อได้เมื่อผ่าน
+     **กรง 5 ข้อครบ**: (1) worst-case คำนวณได้ — hard depth cap + basket-SL/DD-kill + ระบุเลข
+     "แพ้ครั้งเดียวเสีย ≤15% equity" ที่ sizing จริง (2) **BWD 2020-22 = HARD gate** (engine ต้องโดน
+     stress จริง — soft-gate ปกติไม่พอสำหรับ class นี้) (3) **Model-4 บังคับเสมอ** (4) MC ruin ≤2%
+     ที่ sizing จริง (5) scorecard label = **engine-edge** → sizing เล็กถาวรแบบ NuiIndy ห้าม size-up
+     ตาม PF. flat-lot probe ยังบังคับรัน แต่หน้าที่ = วินิจฉัยว่า edge อยู่ไหน ไม่ใช่ใบมรณะ.
+     (precedent: NuiIndy live PF~2.0 + CutLoss=30 พิสูจน์ class นี้รอดได้ถ้ามีกรง)
    · cracked / expired / locked-no-source (legal-ops DQ)
    · pure fill-artifact: M4 พลิกเครื่องหมายทั้ง surface / tight-TP fiction
    ⇒ DEAD-STRUCTURAL → EDGE_CATALOG dead pile + scorecard kill-reason
