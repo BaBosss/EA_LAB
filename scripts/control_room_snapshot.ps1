@@ -88,7 +88,18 @@ foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -matc
   }
   $d2j = $null
   if ($r.judge_date -match '^\d{4}-\d{2}-\d{2}$') { $d2j = [int]([datetime]$r.judge_date - $now.Date).TotalDays }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state }
+  # CR-005-lite forecast: project closed trades at judge_date from the observed rate since
+  # start_date. Needs >=7 days of history to be meaningful; otherwise FORECAST_NA.
+  $proj = $null; $fstate = 'FORECAST_NA'
+  if ($null -ne $trades -and $r.start_date -match '^\d{4}-\d{2}-\d{2}$' -and $r.judge_date -match '^\d{4}-\d{2}-\d{2}$') {
+    $daysActive = [int]($now.Date - [datetime]$r.start_date).TotalDays
+    $daysTotal  = [int]([datetime]$r.judge_date - [datetime]$r.start_date).TotalDays
+    if ($daysActive -ge 7 -and $daysTotal -gt 0) {
+      $proj = [int][math]::Round($trades * ($daysTotal / [double]$daysActive))
+      if ($proj -ge $decisionBar) { $fstate = 'PROJECTED_CAPABLE' } else { $fstate = 'PROJECTED_SHORTFALL' }
+    }
+  }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate }
 }
 
 # --- summary (TODAY block) ---
@@ -106,6 +117,8 @@ $sum = [ordered]@{
   judge_partial          = @($jr | Where-Object { $_.readiness -eq 'PARTIAL' }).Count
   judge_data_collection  = @($jr | Where-Object { $_.readiness -eq 'DATA_COLLECTION' }).Count
   judge_data_insufficient = @($jr | Where-Object { $_.readiness -eq 'DATA_INSUFFICIENT' }).Count
+  judge_projected_capable   = @($jr | Where-Object { $_.forecast -eq 'PROJECTED_CAPABLE' }).Count
+  judge_projected_shortfall = @($jr | Where-Object { $_.forecast -eq 'PROJECTED_SHORTFALL' }).Count
 }
 
 $snapshot = [ordered]@{
@@ -139,4 +152,5 @@ Write-Host "=== CONTROL ROOM TODAY ($($now.ToString('yyyy-MM-dd HH:mm'))) ==="
 Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f $sum.accounts_fresh, $sum.accounts_total, $sum.accounts_stale_or_no_sensor, $staleBarHours)
 Write-Host ("FLEET    {0} rows, {1} ACTIVE | gaps: {2} UNVERIFIED, {3} no-kill, {4} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.gaps_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
 Write-Host ("JUDGE    {0} decision-capable | {1} partial | {2} collecting | {3} no-data" -f $sum.judge_decision_capable, $sum.judge_partial, $sum.judge_data_collection, $sum.judge_data_insufficient)
+Write-Host ("FORECAST {0} projected-capable at judge date | {1} projected SHORTFALL (<30 trades)" -f $sum.judge_projected_capable, $sum.judge_projected_shortfall)
 Write-Host ("OUTPUT   {0}" -f $OutFile)

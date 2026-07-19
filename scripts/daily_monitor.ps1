@@ -51,6 +51,10 @@ if (Test-Path 'D:\EA_LAB\portfolio\news_week.csv') {
 # script mirrors the CSV to local Common\Files; the VPS copy is delivered by rclone (runbook).
 Step 'export-regime' { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_export_regime.ps1 *>> $log }
 Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.ps1 *>> $log }
+# CR-001b (ROADMAP Phase 4.5, 2026-07-19): regenerate the ControlRoomSnapshot after collect+
+# dashboard so it reads the freshest data. Read-only projection (never writes owners); a
+# failure here is fail-visible like any step but never blocks dashboard/gist above.
+Step 'snapshot'  { powershell -NoProfile -File D:\EA_LAB\scripts\control_room_snapshot.ps1 *>> $log }
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
 if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
@@ -62,7 +66,7 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
-git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv portfolio/EA_LAB_mris_regime.csv 2>> $log
+git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv portfolio/EA_LAB_mris_regime.csv portfolio/control_room_snapshot.json 2>> $log
 $staged = git diff --cached --name-only
 if ($staged) {
     git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log

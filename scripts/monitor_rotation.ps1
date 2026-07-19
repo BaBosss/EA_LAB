@@ -15,7 +15,13 @@ $plan = @(
     @{ dir = 'D:\Monitor\MT5 - 159475669';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDc' },
     @{ dir = 'D:\Monitor\MT5 - 415573666';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDm' },
     @{ dir = 'D:\Monitor\MT4 - 141049900';  exe = 'terminal.exe';   expert = 'OrdersExporterMT4'; symbol = 'EURUSDc' },
-    @{ dir = 'D:\Monitor\MT4 - 69424711';   exe = 'terminal.exe';   expert = 'OrdersExporterMT4'; symbol = 'EURUSDm' }
+    @{ dir = 'D:\Monitor\MT4 - 69424711';   exe = 'terminal.exe';   expert = 'OrdersExporterMT4'; symbol = 'EURUSDm' },
+    # CR-002 sensor gap (2026-07-19): pre-registered entries. They [SKIP] gracefully until the
+    # user creates the folder (copy an Exness terminal of the right platform + log in ONCE with
+    # saved credentials). 463666728 = Demo bundle 10 on VPS - 14+ ACTIVE candidates currently
+    # BLIND for judge evidence (judge 2026-10). 146237 = Exness user-pool demo, stale since 07-06.
+    @{ dir = 'D:\Monitor\MT5 - 463666728';  exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDm' },
+    @{ dir = 'D:\Monitor\MT5 - 146237';     exe = 'terminal64.exe'; expert = 'DealsExporter';     symbol = 'EURUSDm' }
 )
 
 $procs = @()
