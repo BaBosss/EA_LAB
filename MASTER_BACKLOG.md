@@ -291,8 +291,8 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - [ ] **Evidence lineage:** hash source/binary/set/report/tester-build/history-range ของทุก verdict ที่เข้าเงินจริง · เลิก gitignore report ชี้ขาด (เคส Bars55 report โดนเขียนทับ = ตัวอย่างจริง)
 - [ ] **Cage hardening = ORDER-094** (เปิดแล้ว — อยู่ taskboard)
 - [ ] **Backup/restore drill:** VPS terminals · `D:\Monitor` · Common\Files · reports ที่ gitignore · sets · scheduler config — ซ้อม restore จริง 1 ครั้ง
-- [ ] **Credential inventory:** บัญชี/investor password/gist token — owner, rotation date, recovery procedure (นอก git แต่ต้องมี inventory)
-- [ ] **Gist privacy:** redact เลขบัญชีใน dashboard ที่ publish หรือย้ายช่องทาง private จริง (ตอนนี้ unlisted = เดา URL ได้เห็นหมด)
+- [x] **Credential inventory:** ✅ skeleton `docs/CREDENTIAL_INVENTORY.md` (2026-07-19, ORDER-119-wave ops) — ตาราง 12 แถว pre-populated (gist token + 7 บัญชี + investor-pw REAL 3 + VPS RDP) ช่อง Owner/Rotation/Recovery เว้นให้ user กรอก · ไม่มี secret ใน git
+- [x] **Gist privacy:** ✅ redact เลขบัญชีใน published copy (2026-07-19) — `publish_dashboard_gist.ps1` mask ทุกบัญชีเป็น `...<last4>` บน `$tmp` ก่อน upload (local dashboard ยังเต็ม) · verified: 0 leftover, magic/dollar ไม่โดน clip, 21 masked tokens · ⏸ ยังเหลือ option "ย้ายช่องทาง private จริง" ถ้าต้องการมากกว่า mask
 - [ ] **Judge date ต่อ cohort:** generate จาก DEPLOYMENTS.csv (ORDER-093) — ห้ามนาฬิกาเดียวทั้งระบบ (ชุด 07-09 judge = 2026-10-09, ชุดเก่า = ตามวัน attach จริง)
 - [ ] **C5 hygiene:** ใส่ SUPERSEDED marker บน Model-2 conclusion เก่าในไฟล์นี้ (ห้ามลบ — mark ว่าใช้ตัดสินไม่ได้แล้ว)
 - [ ] **ST03 spacing probe (ปิดแกนที่ค้าง):** 3 รัน Model 1 spacing fixed/ATR/progressive บน GBP trail-exit — ปิด record "spacing UNSWEPT" ให้สนิท (ไม่เปลี่ยน verdict ถอดเงินจริง — ทำเมื่อ lane ว่างจริงๆ เท่านั้น, priority ต่ำ)
