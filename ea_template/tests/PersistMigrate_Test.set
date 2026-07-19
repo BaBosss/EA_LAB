@@ -1,0 +1,3 @@
+; ORDER-138c (Codex re-audit F7): S10 exercises the legacy acct_hwm consent gate,
+; which is compiled out unless the account-DD gate is enabled
+RC_AcctDDLimitPct=5.0

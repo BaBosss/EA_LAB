@@ -55,20 +55,34 @@ bool  g_k16_closeall_pending = false;
 // (complete-or-none), never as half a pair.
 // Returns true when the intent is durable (or persistence is not in play:
 // tester-sandbox / DryRun / RC_PersistHalt=false keep in-memory semantics).
+// ORDER-138c (Codex re-audit NEW-1): the marker transaction is CHECKED on every
+// edge. Arm refuses to write legs under a live old marker (checked invalidation
+// first - a stale marker over mixed-generation legs was the one path that could
+// still certify a half pair). Clear deletes the marker CHECKED first and touches
+// the legs only after it is gone - a stuck marker leaves the complete old record
+// intact, which restores harmlessly (tickets revalidate dead) and the next arm
+// retries the delete. Clearing existing keys is NOT gated on RC_PersistHalt
+// (NEW-2: a durable intent must never outlive its liquidation just because
+// persistence of new intents is configured off).
 bool Kangaroo_PairPersist()
 {
-   if(!RC_PersistHalt || DryRun) return true;
+   if(DryRun) return true;
    if(g_k16_pair_a == 0 && g_k16_pair_b == 0)
    {
-      // clear: marker first - leftover legs without a marker are ignored+wiped
-      // on the next restore, so a partial delete can never resurrect an intent
-      Persist_Del("k16_pair_ok");
-      Persist_Del("k16_pair_a");
-      Persist_Del("k16_pair_b");
+      if(Persist_DelChecked("k16_pair_ok"))
+      {
+         Persist_Del("k16_pair_a");
+         Persist_Del("k16_pair_b");
+      }
       Persist_Flush();
       return true;
    }
-   Persist_Del("k16_pair_ok");   // invalidate while the legs are in flux
+   if(!RC_PersistHalt) return true;   // new-intent persistence configured off
+   if(!Persist_DelChecked("k16_pair_ok"))
+   {
+      Persist_Flush();
+      return false;   // never write legs under a live old marker (NEW-1)
+   }
    bool ok = true;
    if(g_k16_pair_a != 0) ok = Persist_Set("k16_pair_a", (double)g_k16_pair_a) && ok; else Persist_Del("k16_pair_a");
    if(g_k16_pair_b != 0) ok = Persist_Set("k16_pair_b", (double)g_k16_pair_b) && ok; else Persist_Del("k16_pair_b");
@@ -83,16 +97,34 @@ void Kangaroo_Init()
    g_k16_pair_a           = 0;
    g_k16_pair_b           = 0;
    g_k16_closeall_pending = false;
-   if(RC_PersistHalt && !DryRun)
+   // ORDER-138c (Codex NEW-2): existing scoped intents are handled regardless of
+   // RC_PersistHalt - the manual-unhalt route (RC_PersistHalt=false + reattach)
+   // must never silently ignore a persisted in-flight liquidation. Only DryRun
+   // (observation instance) skips: it neither resumes nor deletes real intents.
+   if(!DryRun)
    {
-      // ORDER-138 #2: legs are trusted only under the commit marker
+      // ORDER-138 #2 + 138c (NEW-1): legs are trusted only under the commit
+      // marker AND only as a COMPLETE two-ticket record - an armed pair always
+      // has both tickets, so marker+one-leg = torn/mixed generation, wipe it.
       if(Persist_Has("k16_pair_ok"))
       {
          g_k16_pair_a = (ulong)Persist_Get("k16_pair_a", 0.0);
          g_k16_pair_b = (ulong)Persist_Get("k16_pair_b", 0.0);
-         if(g_k16_pair_a != 0 || g_k16_pair_b != 0)
+         if(g_k16_pair_a != 0 && g_k16_pair_b != 0)
             PrintFormat("[K16] pair-close intent restored from persist (a=%I64u b=%I64u) - resuming liquidation",
                         g_k16_pair_a, g_k16_pair_b);
+         else
+         {
+            Print("[K16] committed pair record incomplete (marker without both legs) - discarded, complete-or-none");
+            g_k16_pair_a = 0;
+            g_k16_pair_b = 0;
+            if(Persist_DelChecked("k16_pair_ok"))
+            {
+               Persist_Del("k16_pair_a");
+               Persist_Del("k16_pair_b");
+            }
+            Persist_Flush();
+         }
       }
       else if(Persist_Has("k16_pair_a") || Persist_Has("k16_pair_b"))
       {
@@ -135,24 +167,38 @@ bool Kangaroo_PairSlotOpen(ulong &tk)
 // first close is sent and cleared ONLY on broker-flat proof - a restart after a
 // partial close resumes the liquidation even though the original predicate
 // (net-$ / emergency DD) may no longer be true.
-bool Kangaroo_CloseBasket()
+// ORDER-138c (Codex F2 contested-accepted): `safety` splits the degraded-mode
+// policy. Safety exits (emergency-DD / controlled-loss flatten / resume of an
+// armed intent) close even when the arm write fails - flattening a losing
+// basket beats durability. Discretionary exits (single-TP / basket net-$ TP)
+// ABORT when the arm is not durable: they must not start a liquidation they
+// cannot resume after a restart; the profit predicate re-fires.
+bool Kangaroo_CloseBasket(const bool safety = true)
 {
    if(!g_k16_closeall_pending)
    {
-      g_k16_closeall_pending = true;
+      bool armed = true;
       if(RC_PersistHalt && !DryRun)
       {
-         if(!Persist_Set("k16_closeall", 1.0))
-            Print("[K16] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (closing anyway: reducing exposure beats durability)");
+         armed = Persist_Set("k16_closeall", 1.0);
          Persist_Flush();
       }
+      if(!armed && !safety)
+      {
+         Print("[K16] close-all intent not durable - discretionary exit deferred (predicate will re-fire)");
+         return false;
+      }
+      if(!armed)
+         Print("[K16] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (safety exit: closing anyway)");
+      g_k16_closeall_pending = true;
    }
    if(Exec_CloseAll())
    {
       // ORDER-138b (Codex F4): latch releases only after the persisted intent is
       // confirmed deleted - a stale intent=1 + restart would liquidate a future,
       // unrelated basket. Retry the delete while owning the tick.
-      if(RC_PersistHalt && !DryRun)
+      // 138c (NEW-2): existing-key cleanup is NOT gated on RC_PersistHalt.
+      if(!DryRun)
       {
          if(!Persist_DelChecked("k16_closeall")) return true;
          Persist_Flush();
@@ -385,27 +431,29 @@ bool Kangaroo_ManageExits()
 
    double net = Exec_BasketProfit();
 
-   // exit 1: single-order TP (original TP_80 role)
+   // exit 1: single-order TP (original TP_80 role) - discretionary (138c F2)
    if(have == 1 && Kangaroo_SingleTPHit())
-      return Kangaroo_CloseBasket();   // ORDER-132b (K4): broker-flat proof or retry
+      return Kangaroo_CloseBasket(false);   // ORDER-132b (K4): broker-flat proof or retry
 
    // exit 2: basket net-$ close (dollar-true replacement of the original's
-   // unweighted pip-sum 160 - the confirmed real-loss-at-"TP" defect)
+   // unweighted pip-sum 160 - the confirmed real-loss-at-"TP" defect).
+   // Discretionary (138c F2): profit exit, aborts if the arm is not durable.
    if(have >= 2 && _16_BasketTpUsdPer01 > 0.0)
    {
       double target = _16_BasketTpUsdPer01 * (Exec_TotalLots() / 0.01);
       if(target > 0.0 && net >= target)
-         return Kangaroo_CloseBasket();
+         return Kangaroo_CloseBasket(false);
    }
 
    // exit 4 (ladder_flatten, default OFF): deep ladder + controlled loss ->
    // flatten the side (the de-facto DD-release that let the original survive
-   // 2024-11-06; explicit module here, A/B separately per spec decision 5)
+   // 2024-11-06; explicit module here, A/B separately per spec decision 5).
+   // Safety (138c F2): loss containment closes even on a failed arm write.
    if(_16_FlattenOn && have >= _16_FlattenMinOrders && net >= -_16_MaxControlledLossUsd)
    {
       PrintFormat("[K16] ladder_flatten: %d orders, net %.2f >= -%.2f -> close all",
                   have, net, _16_MaxControlledLossUsd);
-      return Kangaroo_CloseBasket();
+      return Kangaroo_CloseBasket(true);
    }
 
    // exit 3: overlap pair-close - newest (big/near) + oldest (deep red) close

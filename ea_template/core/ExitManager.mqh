@@ -379,34 +379,50 @@ void ExitManager_Init()
    ArrayResize(g_exit_partial1_tk, 0);
    ArrayResize(g_exit_partial2_tk, 0);
    g_exit_closeall_pending = false;
-   if(RC_PersistHalt && !DryRun && Persist_Get("exit_closeall", 0.0) > 0.5)
+   // ORDER-138c (Codex NEW-2): an existing scoped intent is restored regardless
+   // of RC_PersistHalt - the manual-unhalt route (RC_PersistHalt=false +
+   // reattach) must never silently ignore a persisted in-flight liquidation.
+   // Only DryRun (observation instance) skips real intent handling.
+   if(!DryRun && Persist_Get("exit_closeall", 0.0) > 0.5)
    {
       g_exit_closeall_pending = true;
       Print("[EXIT] full-basket close intent restored from persist - resuming liquidation");
    }
 }
 
-bool Exit_CloseBasket()
+// ORDER-138c (Codex F2 contested-accepted): `safety` splits the degraded-mode
+// policy at this shared helper. Safety exits (basket money-stop / resume of an
+// armed intent) close even when the arm write fails - flattening a losing
+// basket beats durability. Discretionary exits (basket TP / dynamic target /
+// run-trend flip) ABORT when the arm is not durable: they must not start a
+// liquidation they cannot resume after a restart; their predicate re-fires.
+bool Exit_CloseBasket(const bool safety = true)
 {
-   // ORDER-138 #3: arm durable BEFORE the first close attempt. A failed persist
-   // is logged but never blocks the close - flattening reduces exposure, and
-   // holding a losing basket hostage to a GV write would be the wrong trade-off.
+   // ORDER-138 #3: arm durable BEFORE the first close attempt.
    if(!g_exit_closeall_pending)
    {
-      g_exit_closeall_pending = true;
+      bool armed = true;
       if(RC_PersistHalt && !DryRun)
       {
-         if(!Persist_Set("exit_closeall", 1.0))
-            Print("[EXIT] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (closing anyway)");
+         armed = Persist_Set("exit_closeall", 1.0);
          Persist_Flush();
       }
+      if(!armed && !safety)
+      {
+         Print("[EXIT] close-all intent not durable - discretionary exit deferred (predicate will re-fire)");
+         return false;
+      }
+      if(!armed)
+         Print("[EXIT] WARN: close-all intent persist failed - a restart mid-liquidation would forget it (safety exit: closing anyway)");
+      g_exit_closeall_pending = true;
    }
    if(Exec_CloseAll())
    {
       // ORDER-138b (Codex F4): never release the latch while intent=1 could
       // survive on disk - a stale intent + restart would liquidate a future,
       // unrelated basket. Keep owning the tick and retry the delete.
-      if(RC_PersistHalt && !DryRun)
+      // 138c (NEW-2): existing-key cleanup is NOT gated on RC_PersistHalt.
+      if(!DryRun)
       {
          if(!Persist_DelChecked("exit_closeall")) return true;
          Persist_Flush();
@@ -543,18 +559,20 @@ bool Exit_ManageBasket()
 
    double profit = Exec_BasketProfit();
    double targetMoney = Exit_BasketTargetMoney();
-   if(targetMoney > 0.0 && profit >= targetMoney) return Exit_CloseBasket();
+   // 138c (F2): profit/trend exits = discretionary (abort on non-durable arm);
+   // the money-STOP leg = safety (always closes)
+   if(targetMoney > 0.0 && profit >= targetMoney) return Exit_CloseBasket(false);
    double dynTargetMoney = Exit_DynCloseTargetMoney();   // no-op (0.0) unless _57_DynCloseOn
-   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket();
-   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket();
+   if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket(false);
+   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket(true);
 
    if(ExitMode == EXIT_RUN_TREND)
    {
       double f = Indi_FastMA(0), s = Indi_SlowMA(0);
       if(f > 0.0 && s > 0.0)
       {
-         if(Exec_CountDir(1) > 0 && f < s) return Exit_CloseBasket();
-         if(Exec_CountDir(2) > 0 && f > s) return Exit_CloseBasket();
+         if(Exec_CountDir(1) > 0 && f < s) return Exit_CloseBasket(false);
+         if(Exec_CountDir(2) > 0 && f > s) return Exit_CloseBasket(false);
       }
    }
 

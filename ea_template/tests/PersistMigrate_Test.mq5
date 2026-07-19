@@ -97,19 +97,33 @@ int OnInit()
    if(!GlobalVariableCheck("Boss_" + mg + "_rc_peak_eq"))     { Print("[FAIL] S8: legacy peak deleted on refused init");            fail++; }
    if(Persist_Has("rc_peak_eq"))                              { Print("[FAIL] S8: legacy peak migrated without consent");           fail++; }
 
-   // --- scenario 9 (ORDER-138b Codex F7): active legacy HALT branch + mixed keys,
-   // no consent -> fail closed with EVERY legacy key preserved, nothing scoped
+   // --- scenario 9 (ORDER-138b Codex F7): active legacy HALT branch + mixed keys
+   // (halt + peak + acct_hwm), no consent -> fail closed with EVERY legacy key
+   // preserved, nothing scoped (the .set enables the acct gate: RC_AcctDDLimitPct=5)
    GlobalVariablesDeleteAll("Boss");
    GlobalVariableSet("Boss_" + mg + "_rc_halted", 1.0);
    GlobalVariableSet("Boss_" + mg + "_rc_peak_eq", 55555.0);
+   GlobalVariableSet("Boss_" + mg + "_acct_hwm", 66666.0);
    if(RiskControl_InitEx(false))                              { Print("[FAIL] S9: init did not fail closed on active legacy halt"); fail++; }
    if(RiskControl_IsHalted())                                 { Print("[FAIL] S9: halt adopted without consent");                   fail++; }
    if(!GlobalVariableCheck("Boss_" + mg + "_rc_halted") ||
-      !GlobalVariableCheck("Boss_" + mg + "_rc_peak_eq"))     { Print("[FAIL] S9: legacy keys not fully preserved");                fail++; }
-   if(Persist_Has("rc_state") || Persist_Has("rc_peak_eq"))   { Print("[FAIL] S9: partial migration on refused init");              fail++; }
+      !GlobalVariableCheck("Boss_" + mg + "_rc_peak_eq") ||
+      !GlobalVariableCheck("Boss_" + mg + "_acct_hwm"))       { Print("[FAIL] S9: legacy keys not fully preserved");                fail++; }
+   if(Persist_Has("rc_state") || Persist_Has("rc_peak_eq") ||
+      Persist_Has("acct_hwm"))                                { Print("[FAIL] S9: partial migration on refused init");              fail++; }
+
+   // --- scenario 10 (ORDER-138c Codex re-audit F7): legacy acct_hwm ALONE trips the
+   // consent gate (RC_AcctDDLimitPct=5 via .set), and the consented path migrates it
+   GlobalVariablesDeleteAll("Boss");
+   GlobalVariableSet("Boss_" + mg + "_acct_hwm", 77777.0);
+   if(RiskControl_InitEx(false))                              { Print("[FAIL] S10: init did not fail closed on legacy acct_hwm");   fail++; }
+   if(!GlobalVariableCheck("Boss_" + mg + "_acct_hwm"))       { Print("[FAIL] S10: legacy acct_hwm deleted on refused init");      fail++; }
+   if(!RiskControl_InitEx(true))                              { Print("[FAIL] S10: consented init failed");                        fail++; }
+   if(Persist_Get("acct_hwm", 0.0) < 77776.0)                 { Print("[FAIL] S10: acct_hwm not migrated after consent");          fail++; }
+   if(GlobalVariableCheck("Boss_" + mg + "_acct_hwm"))        { Print("[FAIL] S10: legacy acct_hwm not consumed after consent");   fail++; }
 
    GlobalVariablesDeleteAll("Boss");
-   if(fail == 0) Print("[PASS] PersistMigrate_Test: all 9 scenarios OK");
+   if(fail == 0) Print("[PASS] PersistMigrate_Test: all 10 scenarios OK");
    else          PrintFormat("[FAIL] PersistMigrate_Test: %d assert(s) failed", fail);
    return INIT_SUCCEEDED;
 }

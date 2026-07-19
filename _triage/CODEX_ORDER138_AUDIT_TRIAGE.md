@@ -48,3 +48,24 @@ Migration doc now requires a pre-upgrade F3/journal check for an in-flight
 - compile 0/0 ×9 wrappers + tests (zero-warning)
 - unit tests 7/7 PASS — `PersistMigrate_Test` 9 scenarios · `PersistIntent_Test` (new) 6 scenarios
 - regression cage 8/8 CLEAN (Boss_18 6020 trades exact) — post-138b run = final proof
+
+---
+
+# 138c — Codex RE-audit triage (commit `29b31b7` reviewed → `CODEX_ORDER138B_REAUDIT.md`)
+
+Re-audit verdicts: F1/F3/F4/F8 **CLOSED** · F7/F9 partial · 2 NEW findings · F2/F6 contested.
+
+## ✅ FIXED (138c)
+
+| # | Finding | Fix |
+|---|---|---|
+| NEW-1 SEV-1 | Marker could certify an incomplete/mixed-generation pair record: restore accepted `a!=0 \|\| b!=0`; arm/clear used unchecked marker deletes → stale marker + crash mid-arm = half-pair liquidation (the exact class the marker exists to kill) | Restore requires marker **AND both legs nonzero** (armed pair always has two tickets; anything less = wiped on sight, incl. marker-only post-TTL shape). Arm refuses to write legs under a live old marker (`Persist_DelChecked` first, fail = abort liquidation). Clear deletes marker checked-first and touches legs only after it is gone — a stuck marker leaves the complete old record intact, which restores harmlessly via ticket revalidation. Tests S7/S8 added |
+| NEW-2 SEV-2 | `RC_PersistHalt=false` (documented manual-unhalt route) bypassed existing persisted intents → residual returns to ordinary management, or stale intent later fires on a different basket | Existing-key handling un-gated from `RC_PersistHalt` everywhere (restore in `ExitManager_Init`/`Kangaroo_Init`, delete-after-proof in both CloseBasket paths, pair-record clear). Flag now gates only persistence of NEW intents. Only DryRun skips real intent handling |
+| F2 (contested → accepted) | My safety-exit rationale didn't hold at the shared helpers — `Exit_CloseBasket`/`Kangaroo_CloseBasket` also serve profit TP / dyn target / run-trend / single-TP | Policy split via `safety` param: money-stop, emergency-DD, flatten, armed-intent resume = safety (close degraded on failed arm); TP/dyn/trend exits = discretionary (abort on non-durable arm, predicate re-fires). Tester-neutral: arm writes always succeed in the sandbox |
+| F7 (partial → closed) | `legacyHwm` gate branch never exercised (needs `RC_AcctDDLimitPct>0`) | `PersistMigrate_Test.set` (RC_AcctDDLimitPct=5) + S10 (hwm-alone fail-closed + consented recovery) + S9 widened to halt+peak+hwm preservation |
+| F6 (contested → partial accept) | NEW-1 was indeed an untested failure mode | NEW-1's certification rule is now covered by static-seed scenarios S7/S8 (no fault-injection seam needed). Full persistence fault-injection framework stays deferred — same 132b rationale, revisit on any live incident |
+
+## ⏭ STILL DEFERRED / REJECTED (unchanged)
+
+- **F9 remainder (OnTimer keep-alive for no-tick symbols):** the residual window = intent unresolved AND zero ticks for ~4 weeks AND restart after expiry — retries need ticks anyway, so the intent is only consumed when trading resumes. Documented limitation; adding a timer surface to the money path is not worth the window. Revisit if a Boss ever trades a symbol with scheduled month-long halts.
+- **F5 (ticket >2^53):** re-audit itself concedes "no rollout blocker". Unchanged.

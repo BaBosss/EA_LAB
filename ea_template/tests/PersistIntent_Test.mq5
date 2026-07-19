@@ -75,8 +75,27 @@ int OnInit()
    if(g_k16_closeall_pending || g_exit_closeall_pending)
                                               { Print("[FAIL] S6: intent fabricated from clean slate");   fail++; }
 
+   // --- scenario 7 (ORDER-138c Codex NEW-1): marker + ONE leg = mixed/incomplete
+   // generation -> restore must discard it entirely (an armed pair always has two
+   // tickets; certifying one leg would drive a half-pair liquidation)
    GlobalVariablesDeleteAll("Boss");
-   if(fail == 0) Print("[PASS] PersistIntent_Test: all 6 scenarios OK");
+   Persist_Set("k16_pair_a", 333.0);
+   Persist_Set("k16_pair_ok", 1.0);
+   Kangaroo_Init();
+   if(g_k16_pair_a != 0 || g_k16_pair_b != 0) { Print("[FAIL] S7: one-leg committed record restored");    fail++; }
+   if(Persist_Has("k16_pair_ok") || Persist_Has("k16_pair_a"))
+                                              { Print("[FAIL] S7: mixed record not wiped");               fail++; }
+
+   // --- scenario 8 (ORDER-138c Codex NEW-1): marker with NO legs (post-TTL-expiry
+   // shape) -> no intent restored, marker cleaned up
+   GlobalVariablesDeleteAll("Boss");
+   Persist_Set("k16_pair_ok", 1.0);
+   Kangaroo_Init();
+   if(g_k16_pair_a != 0 || g_k16_pair_b != 0) { Print("[FAIL] S8: marker-only record restored");          fail++; }
+   if(Persist_Has("k16_pair_ok"))             { Print("[FAIL] S8: orphan marker not wiped");              fail++; }
+
+   GlobalVariablesDeleteAll("Boss");
+   if(fail == 0) Print("[PASS] PersistIntent_Test: all 8 scenarios OK");
    else          PrintFormat("[FAIL] PersistIntent_Test: %d assert(s) failed", fail);
    return INIT_SUCCEEDED;
 }
