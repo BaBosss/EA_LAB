@@ -11,6 +11,17 @@
 
 int OnInit()
 {
+   // ORDER-138 (Codex roadmap SEV-1 2026-07-19): this test calls GlobalVariablesDeleteAll("Boss"),
+   // whose prefix matches BOTH legacy "Boss_*" AND live scoped "Boss2_*" keys. In the Strategy
+   // Tester every pass gets a sandboxed GV space, so the deletes only touch this pass. But
+   // deploy.ps1 mirrors the whole template (incl tests\) into the terminal Experts tree, so an
+   // accidental CHART attach would wipe halt/kill/HWM/pair state for EVERY Boss instance on the
+   // live terminal. Refuse to run anywhere but the tester - fail closed.
+   if(!MQLInfoInteger(MQL_TESTER))
+   {
+      Print("[PersistMigrate_Test] FATAL: tester-only (it calls GlobalVariablesDeleteAll - would wipe live Boss safety GVs). Refusing chart/live attach.");
+      return INIT_FAILED;
+   }
    int fail = 0;
    string mg = IntegerToString(_0_Magic);
 
