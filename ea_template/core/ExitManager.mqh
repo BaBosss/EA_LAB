@@ -566,6 +566,33 @@ bool Exit_ManageBasket()
    if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket(false);
    if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket(true);
 
+   // ORDER-125: vertical barrier - force-close once the OLDEST leg has been
+   // open >= _2_MaxHoldBars closed bars on the chart TF (0 = off). Counted
+   // from the first leg so a DCA/grid basket cannot reset its own clock by
+   // adding legs. Discretionary close policy (138c): deferring on a
+   // non-durable arm is safe here because the bar count only grows - the
+   // predicate re-fires every subsequent bar until the basket is flat.
+   if(_2_MaxHoldBars > 0)
+   {
+      datetime firstOpen = 0;
+      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      {
+         if(!Exec_PosIsMine(i)) continue;
+         datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
+         if(firstOpen == 0 || ot < firstOpen) firstOpen = ot;
+      }
+      if(firstOpen > 0)
+      {
+         int heldBars = iBarShift(_Symbol, _Period, firstOpen);
+         if(heldBars >= _2_MaxHoldBars)
+         {
+            PrintFormat("[EXIT] vertical barrier: basket held %d bars >= _2_MaxHoldBars=%d -> close all",
+                        heldBars, _2_MaxHoldBars);
+            return Exit_CloseBasket(false);
+         }
+      }
+   }
+
    if(ExitMode == EXIT_RUN_TREND)
    {
       double f = Indi_FastMA(0), s = Indi_SlowMA(0);

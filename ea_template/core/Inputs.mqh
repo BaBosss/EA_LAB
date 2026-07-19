@@ -343,6 +343,13 @@ input double _2_PartialFrac2 = 0.30;
 // exit is basket-money-TP only (+ per-leg SL). See Exit_InitialTP for detail.
 input bool _2_SuppressLegTP = false;
 
+// additive ORDER-125: vertical-barrier exit (QuantCorner Triple Barrier, time
+// leg). Force-closes the WHOLE basket once its oldest leg has been open for N
+// closed bars on the chart TF - the time-based force-close the grid/DCA family
+// lacked (recovery-days tail that the equity curve hides). 0 = off (default,
+// byte-identical). Basket-level close, so it does not fragment mode-93 ladders.
+input int _2_MaxHoldBars = 0;          // force-close basket after N bars from first leg (0=off)
+
 // additive: dynamic basket close-money target that grows with the number of
 // open orders in the basket (corpus EX183/EX078). close_target = base +
 // (open_order_count / C) * base. Evaluated as an ADDITIONAL/alternative
