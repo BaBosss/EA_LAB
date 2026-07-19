@@ -144,6 +144,23 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 Full idea sweep (15 items ranked, incl. Granger-causality indicator pre-filter, risk-parity
 portfolio weighting, multi-EMA stacked entry filter) → `_triage/QUANTCORNER_FINDYOUR8_IDEA_CATALOG.md`.
 
+9. **Volatility/statistics-scaled grid zone+spacing+sizing** (source: FINDYOUR8 free-book PDFs,
+   Wongsakon, 2026-07-19 — logged-in deep dive of 9 strategy decks). The recurring edge across all
+   his systems = derive grid geometry from volatility + statistics instead of fixed naive steps.
+   Reusable levers (each = build-on candidate, ALL crypto-spot homes → mind swap when porting to CFD):
+   - **⭐ Monte-Carlo block-bootstrap grid zone** — 10k paths × 60d, 24d blocks → P10/P90 = grid
+     bounds; spacing = 0.3·ATR(RMA30); flat lot + capped band + hard −20% kill (SAFE, not martingale).
+     THIS is the "MC+bootstrap+ATR grid zone" flagged "ยังไม่แตะ" in the 07-18 sweep — now fully spec'd.
+   - **geometric constant-% spacing** `ratio=(hi/lo)^(1/N)` (replaces fixed-step grids)
+   - **inverse-ATR anti-martingale lot** `lot = base×baseATR/curATR`
+   - **Lower-BB(EMA30−1σ)-as-trailing-VolStop** + **vol-normalized sizing `size% = RPT%/band-dist%`**
+     — directly addresses the Lane C SMCxSTO SL-fragility (seed #7 sibling)
+   - **KAMA continuous adaptive-MA block** (ER→SC²→recursive MA) — a continuous adaptive filter ≠ our
+     discrete `_50_Regime.mqh` on/off gate
+   - **fee/swap cost-model as first-class backtest input** (notional taker + crypto funding drag)
+   Full writeup + red flags + per-deck spec → `_triage/FINDYOUR8_STRATEGY_PDF_CATALOG.md`.
+   Recommended first probe = Adaptive Grid MC-zone on BTC/ETH CFD (crypto lane, TrendRider precedent).
+
 ---
 
 ## IDEA: JUMSTOCH mean-reversion grid → build-on vehicle (user directive 2026-07-11)
@@ -249,6 +266,13 @@ EA testbed = `(TRD)_Probe_MAHP_TanhVol_rev01` (`_02_UseHPFilter`/`_02_HP_Lambda`
 λ1600 = center (λ800 MAIN พัง, λ3200 เสื่อม). **HP ช่วยเฉพาะ XAU ไม่ช่วย EUR** (Stage A/B). chassis 2-MA เปล่า
 ไม่ใช่ keeper — คุณค่า = lever ไปแปะ production trend chassis (BREAKOUT/SuperTrend) เป็น axis ใหม่ใน funnel.
 verdict = `_triage/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำให้ valid = HP one-sided causal (reviewer ยืนยันไม่มี look-ahead).
+
+## LEVER: vertical-barrier time exit `_2_MaxHoldBars` (ORDER-125, 2026-07-19) 🟨 BUILT — DEAD-ON-GRID, untested elsewhere
+
+- **What:** basket-level force-close after N chart-TF bars from basket inception (QuantCorner Triple Barrier time leg). In chassis, default 0=off byte-identical, Codex-hardened (inception latch กัน clock-reset เมื่อ leg ปิดเอง · iBarShift −1 guard · Boss_16 no-op warn · partial-milestone leak fix).
+- **A/B host Boss_14 GBPJPY H4 (locked leg8 set): DEAD ทุกค่าที่ M4** — MH130 ตาย M1 (BWD 0.73; MAIN lift 2.16 = regime-fit ห้ามไล่) · MH390 ผ่าน M1 แต่ **M4 พลิก** (BWD 1.11→0.85, net +210→−368). verdict `_triage/ORDER125_VERTBARRIER_VERDICT.md`.
+- **Mechanism lesson (จ่ายแล้ว):** (1) **recovery tail ของ grid คือเครื่องยนต์** — basket 203 วันใน BWD สุดท้าย recover; time-cut = realize tail loss = ตัด edge ตัวเอง. ห้าม enable lever นี้บน grid/DCA family. (2) **M1→M4 flip บน exit lever** — M1 มองไม่เห็น path ใต้น้ำ; exit/time lever บน grid = M4-deciding เสมอ (ยืนยันซ้ำ precedent ORDER-126 SL-fan).
+- **Open home (ยังไม่ทดสอบ):** single-position trend-following (SuperTrend/TrendRider) ที่ time-stop เป็น convention — ถ้าจะใช้ ต้อง A/B บน host นั้นก่อน.
 
 ## DEAD CELL: naked FVG-fill entry @ EUR/XAU H1+H4 (ORDER-098-A, 2026-07-16) ⬛
 

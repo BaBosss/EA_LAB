@@ -128,6 +128,12 @@ int OnInit()
 #ifdef LAB_ENTRY_16
    Entry_KangarooRSI_Init();
    Kangaroo_Init();
+   // ORDER-125 (Codex MAJOR-3): Boss_16 exits exclusively through Kangaroo's
+   // own exit owner (Kangaroo_OnTick returns before Exit_ManageBasket), so the
+   // shared vertical-barrier input is a silent no-op here. Warn loudly rather
+   // than fail - the input is an inert dial, not a safety promise.
+   if(_2_MaxHoldBars > 0)
+      Print("[INIT] WARN: _2_MaxHoldBars has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored");
 #endif
 #ifdef LAB_ENTRY_17
    Entry_Wave5_Init();

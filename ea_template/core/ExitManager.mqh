@@ -367,17 +367,33 @@ ulong g_exit_partial2_tk[];
 // proof, so a restart after a partial liquidation resumes it instead of
 // returning the residual legs to ordinary management.
 bool g_exit_closeall_pending = false;
+// ORDER-125 (Codex MAJOR-1): basket-inception timestamp for the vertical
+// barrier, latched on the flat->non-flat transition and cleared only on
+// broker-flat proof. In-memory only: after a restart it re-derives from the
+// oldest OPEN leg (can fire later than true inception, never earlier).
+datetime g_exit_basket_inception = 0;
 
 // reset chassis exit state + restore a persisted close intent (LabCore OnInit).
 // Explicit init matters: an account switch reloads the EA WITHOUT resetting
 // program globals (Persist.mqh header), so file-scope initializers are not
 // enough to guarantee a clean start.
-void ExitManager_Init()
+// ORDER-125 (Codex MINOR-5): one basket-cycle reset used by EVERY flat path.
+// Pre-existing leak the new time-exit made reachable: partial milestones only
+// re-armed when profit dipped <= 0, so a basket closed while profitable left
+// done-flags latched and the NEXT basket could inherit them and skip its
+// partial close. Reset cycle state on broker-flat instead.
+void Exit_ResetBasketCycleState()
 {
    g_exit_partial1_done = false;
    g_exit_partial2_done = false;
    ArrayResize(g_exit_partial1_tk, 0);
    ArrayResize(g_exit_partial2_tk, 0);
+   g_exit_basket_inception = 0;
+}
+
+void ExitManager_Init()
+{
+   Exit_ResetBasketCycleState();
    g_exit_closeall_pending = false;
    // ORDER-138c (Codex NEW-2): an existing scoped intent is restored regardless
    // of RC_PersistHalt - the manual-unhalt route (RC_PersistHalt=false +
@@ -428,6 +444,7 @@ bool Exit_CloseBasket(const bool safety = true)
          Persist_Flush();
       }
       g_exit_closeall_pending = false;
+      Exit_ResetBasketCycleState();   // ORDER-125 (Codex MINOR-5): broker-flat proof = new cycle
       return true;
    }
    static datetime last_log = 0;
@@ -524,6 +541,7 @@ bool Exit_SafetyMoneyStop()
    if(Exec_CountAll() <= 0)
    {
       if(g_exit_closeall_pending) return Exit_CloseBasket();
+      Exit_ResetBasketCycleState();   // ORDER-125: natural flat (broker SL/TP) = new cycle
       return false;
    }
    // ORDER-132b (Codex X2): an armed close (from here or any basket exit) is
@@ -551,6 +569,7 @@ bool Exit_ManageBasket()
       // ORDER-138 #3: basket positions gone, but an armed intent still needs
       // broker-flat proof (pendings) + persisted-intent cleanup before release
       if(g_exit_closeall_pending) return Exit_CloseBasket();
+      Exit_ResetBasketCycleState();   // ORDER-125: natural flat = new cycle
       return false;
    }
    if(g_exit_closeall_pending) return Exit_CloseBasket();   // ORDER-132b (Codex X2): finish first
@@ -566,25 +585,48 @@ bool Exit_ManageBasket()
    if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket(false);
    if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket(true);
 
-   // ORDER-125: vertical barrier - force-close once the OLDEST leg has been
-   // open >= _2_MaxHoldBars closed bars on the chart TF (0 = off). Counted
-   // from the first leg so a DCA/grid basket cannot reset its own clock by
-   // adding legs. Discretionary close policy (138c): deferring on a
-   // non-durable arm is safe here because the bar count only grows - the
-   // predicate re-fires every subsequent bar until the basket is flat.
+   // ORDER-125: vertical barrier - force-close once the basket has been alive
+   // >= _2_MaxHoldBars closed bars on the chart TF (0 = off). Codex review
+   // (2026-07-19) MAJOR-1: the clock is the BASKET-INCEPTION time latched on
+   // the flat->non-flat transition (g_exit_basket_inception), NOT the oldest
+   // still-open leg - a per-leg SL closing leg 0 must not reset the barrier.
+   // Restart limitation (documented): the in-memory latch re-derives from the
+   // oldest OPEN leg after a terminal restart, which can only fire LATER than
+   // the true inception, never earlier - degraded, not dangerous.
+   // Codex MINOR-6: the horizon is chart-TF bars by design; reattaching on a
+   // different TF rescales it. Discretionary close policy (138c): with a
+   // latched inception the predicate is monotonic while the basket lives, so
+   // deferring on a non-durable arm re-fires next bar.
    if(_2_MaxHoldBars > 0)
    {
-      datetime firstOpen = 0;
-      for(int i = PositionsTotal() - 1; i >= 0; i--)
+      if(g_exit_basket_inception == 0)
       {
-         if(!Exec_PosIsMine(i)) continue;
-         datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
-         if(firstOpen == 0 || ot < firstOpen) firstOpen = ot;
+         datetime firstOpen = 0;
+         for(int i = PositionsTotal() - 1; i >= 0; i--)
+         {
+            if(!Exec_PosIsMine(i)) continue;
+            datetime ot = (datetime)PositionGetInteger(POSITION_TIME);
+            if(firstOpen == 0 || ot < firstOpen) firstOpen = ot;
+         }
+         g_exit_basket_inception = firstOpen;
       }
-      if(firstOpen > 0)
+      if(g_exit_basket_inception > 0)
       {
-         int heldBars = iBarShift(_Symbol, _Period, firstOpen);
-         if(heldBars >= _2_MaxHoldBars)
+         // Codex MAJOR-2: iBarShift returns -1 when the inception bar is not in
+         // loaded history / series not ready. Never treat that as "0 bars held"
+         // and never fall back to wall-clock (weekends would over-count and
+         // fire EARLIER than N market bars). Log and retry next tick.
+         int heldBars = iBarShift(_Symbol, _Period, g_exit_basket_inception);
+         if(heldBars < 0)
+         {
+            static datetime mh_last_log = 0;
+            if(TimeCurrent() - mh_last_log >= 3600)
+            {
+               mh_last_log = TimeCurrent();
+               Print("[EXIT] vertical barrier: iBarShift failed (history not ready) - retrying");
+            }
+         }
+         else if(heldBars >= _2_MaxHoldBars)
          {
             PrintFormat("[EXIT] vertical barrier: basket held %d bars >= _2_MaxHoldBars=%d -> close all",
                         heldBars, _2_MaxHoldBars);
