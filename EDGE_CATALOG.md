@@ -24,6 +24,8 @@ What has NEVER worked here (anti-edges):
 ## LIVE / CANDIDATE EAs — edge mechanism
 
 ### ST_EA03 MACD — GBPUSD/USDCAD H1 (CORE) · replica = EA_RUNNER_ST03 ✅
+> ⚠️ **ENTRY-SIGNAL VERDICT (ORDER-119, 2026-07-19): flat-lot MACD-state entry = NO robust both-window edge.** chassis Boss_15 lever-C sweep (MACD Fast/Slow/Signal × CountBars, 18 combo × GBPUSD/EURUSD/EURGBP × H1/H4 × MAIN+BWD) = **0/6 cells flat-lot PF≥1.0 both-window** (best EURUSD H4 MAIN 1.15 / BWD 0.98 same combo). The historical "edge" lives in the **no-SL averaging engine (escalation), not the MACD entry** — so escalation on this entry = martingale-is-the-edge (DEAD-STRUCTURAL). MACD-state-run as a naked reversal trigger on rangers = dead. Reusable only as a *state gate* feeding a different entry, never as the edge itself.
+
 **Mechanism:** enter once per MACD-state run (2-bar count) → market leg + LIMIT leg 5pip below
 (scale into dip) → **NO stop-loss** → close the whole OCO group when combined P/L hits +5pip →
 80-bar time-stop backstop. Tiny lots.
