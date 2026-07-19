@@ -3,9 +3,9 @@ live_dashboard.ps1 - ORDER-058: per-EA live-monitor dashboard (ต่อยอ�
 
 Reads the newest EA_LAB_deals_*.csv snapshot in portfolio\live_deals\ (collected by
 collect_live_deals.ps1 from DealsExporter.mq5), groups deals by magic number, joins EA
-name/symbol/kill-switch DD% from the cohort table below (source: DEMO_DEPLOYMENT_PLAN.md
-"treasure-hunt survivors" + _demo_deploy\README_DEPLOY.md kill-switch section), and
-writes a single self-contained HTML file: portfolio\LIVE_DASHBOARD.html
+name/symbol/kill-switch DD% from the cohort map generated from portfolio\DEPLOYMENTS.csv
+(single inventory owner, ORDER-093; generation replaced the hardcoded table per CR-001
+2026-07-19), and writes a single self-contained HTML file: portfolio\LIVE_DASHBOARD.html
 
   powershell -File scripts\live_dashboard.ps1
   powershell -File scripts\live_dashboard.ps1 -LiveDealsDir <dir> -OutFile <path>   (testing)
@@ -95,67 +95,50 @@ $acctLogin = ($acctLabels -join ' + ')
 $fileDateDisplay = ""   # folded into acctLabels per file
 
 # ---------------------------------------------------------------------------
-# 3. cohort static map: magic -> EA meta + declared kill-switch DD%
-#    Source: DEMO_DEPLOYMENT_PLAN.md (treasure-hunt table) +
-#            _demo_deploy\README_DEPLOY.md "Kill-switch" section
-#    KillDD: EA-specific number where README states one, else platform
-#            default (MT4 kill 35% / MT5 kill 25%, per README general rule).
-#    WarnDD: README's declared เตือน level (MT4 25% / MT5 15%) for platform-
-#            default rows; EA-specific kills have no declared warn -> 80% of kill.
+# 3. cohort map: magic -> EA meta + declared kill-switch DD%
+#    CR-001 (ROADMAP Phase 4.5, 2026-07-19): GENERATED from portfolio\DEPLOYMENTS.csv
+#    (the single deployment inventory owner, ORDER-093) - the old hardcoded table is
+#    gone, so a new CSV row is monitored automatically and a removed row can never
+#    linger as a ghost. check_state.ps1 checks 4/5 now verify this generation link
+#    instead of literal map entries.
+#    KillDD: parsed from kill_rule ("closedDD N%" / "DD N%"). Rules that are not a
+#            closed-DD number (e.g. "manual kill floating DD 40%") and empty rules
+#            fall back to the platform default (MT4 35% / MT4 warn 25% · MT5 25% /
+#            warn 15%) and keep the raw rule text in the display name.
+#    WarnDD: platform warn for platform-default kills; else uniformly 80% of kill.
+#            NOTE this changed a few advisory warn thresholds vs the old hand table
+#            (old table was ad-hoc: e.g. kill15 -> warn10; now kill15 -> warn12).
+#            Kill thresholds (the red flag + DEPLOYMENTS.csv) are unchanged.
+#    Rows with non-numeric magic (UNVERIFIED) are skipped; non-ACTIVE rows are kept
+#    (their closed-deal history still renders) with the status tagged in the name.
 # ---------------------------------------------------------------------------
-$cohort = [ordered]@{
-  "69424711|1"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|2"      = @{ Name = "UnNomGuaiV1.132";                                 Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|5888"   = @{ Name = "RSI from pips_EA (RSI-orig)";                     Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "69424711|990"    = @{ Name = "swb grid 4.1.0.3_h";                              Symbol = "AUDCAD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "159503454|990103" = @{ Name = "(Boss)_RSI_MR_GridLog (RSI-MR)";                  Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159503454|990101" = @{ Name = "(Boss)_ZeusInspired_GridLog (Zeus)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 12.0 }
-  "159503454|991001" = @{ Name = "EA_BREAKOUT_XAU (BRK-XAU)";                       Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "159503454|991004" = @{ Name = "(BRK)_SqueezeBreakout (SqueezeBRK)";              Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 10.0; WarnDD = 8.0 }
-  "159503454|991002" = @{ Name = "(BRK)_TrendlineBreakout (Trendline, EXPERIMENTAL)"; Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.4 }
-  # Boss_14 GridLog demo bench on 415573666 (DEMO_DEPLOYMENT_PLAN cohort-1 table; MT5 platform default kill/warn)
-  "415573666|990201" = @{ Name = "Boss_14_GridLog USDJPY";                           Symbol = "USDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990202" = @{ Name = "Boss_14_GridLog AUDNZD";                           Symbol = "AUDNZD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990203" = @{ Name = "Boss_14_GridLog EURJPY (size-light)";              Symbol = "EURJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990204" = @{ Name = "Boss_14_GridLog AUDCAD";                           Symbol = "AUDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990205" = @{ Name = "Boss_14_GridLog CADJPY (size-light, thin)";        Symbol = "CADJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990206" = @{ Name = "Boss_14_GridLog EURUSD SELL";                      Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990207" = @{ Name = "Boss_14_GridLog XAUUSD";                           Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990110" = @{ Name = "Zeus regime AUDJPY (deploy-small, 2023 down)";     Symbol = "AUDJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "415573666|990208" = @{ Name = "Boss_14_GridLog GBPJPY leg8";                      Symbol = "GBPJPY"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  # 463666728 "Demo bundle 10" — 11 single-position + SuperTrend, attached 2026-07-16 (judge 2026-10-16)
-  "463666728|990301" = @{ Name = "Boss_17_Wave5 XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990302" = @{ Name = "Boss_17_Wave5 XAG";                                Symbol = "XAGUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990303" = @{ Name = "Boss_17_Wave5 USDJPY";                             Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990984" = @{ Name = "PairSpread_StatArb EURUSD-GBPUSD";                 Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990120" = @{ Name = "Boss_12_Breakout MacroGate-leg";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990025" = @{ Name = "TrendRider ST-BTC (SuperTrend)";                   Symbol = "BTCUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990030" = @{ Name = "TrendRider DON-ETH (Donchian pyr3)";               Symbol = "ETHUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991003" = @{ Name = "EA_BREAKOUT_XAU USDJPY (expand)";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991005" = @{ Name = "EA_BREAKOUT_XAU US30 (expand, WATCH-thin)";        Symbol = "US30";   Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|999094" = @{ Name = "MacdDiv_Naked XAU";                                Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|991070" = @{ Name = "EmaStoRev EURUSD (SMCSTO)";                        Symbol = "EURUSD"; Platform = "MT5"; KillDD = 15.0; WarnDD = 10.0 }
-  "463666728|990066" = @{ Name = "IchiADX USDJPY basket A H4 med";                   Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
-  "463666728|990067" = @{ Name = "IchiADX USDJPY basket B H1 slow";                  Symbol = "USDJPY"; Platform = "MT5"; KillDD = 12.0; WarnDD = 9.0 }
-  "463666728|990069" = @{ Name = "IchiADX XAU basket B H4 med";                      Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
-  "463666728|990068" = @{ Name = "IchiADX XAU basket A H1 slow";                     Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 18.0; WarnDD = 12.0 }
-  "463666728|990020" = @{ Name = "EA_SUPERTREND XAU H4 (validated; EA-SCORE #7)";    Symbol = "XAUUSD"; Platform = "MT5"; KillDD = 8.0;  WarnDD = 6.0 }
-  # 141049900 REAL MT4 user-experiment cohort (CODEX-AUDIT A5 2026-07-11: was unmapped = the
-  # highest-risk no-SL magics had no dashboard row at all). MT4 platform default kill/warn.
-  # NOTE: closed-deal DD only - Zeus/Kangaroo real risk is FLOATING basket loss (Zeus floating
-  # kill guidance = 40% MANUAL per DEMO_DEPLOYMENT_PLAN); dashboard cannot see it until the
-  # floating-telemetry exporter (ORDER-092) ships.
-  "141049900|7777"   = @{ Name = "Zeus Gold Hedge V1.2 EURUSDc (no-SL grid ⚠️ manual kill float 40%)"; Symbol = "EURUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1112"   = @{ Name = "Gold_Kangaroo XAUUSDc L1 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1113"   = @{ Name = "Gold_Kangaroo XAUUSDc L2 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1114"   = @{ Name = "Gold_Kangaroo XAUUSDc L3 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  "141049900|1115"   = @{ Name = "Gold_Kangaroo XAUUSDc L4 (capped-mart, not validated)";              Symbol = "XAUUSD"; Platform = "MT4"; KillDD = 35.0; WarnDD = 25.0 }
-  # 159475669 user-mix magics we can name (no lab-declared kill for this account -> MT5 platform defaults)
-  "159475669|1524"   = @{ Name = "NuiIndy Dynamic RSI+ADX";                          Symbol = "EURUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|9398"   = @{ Name = "ST_EA03 Count-MACD USDCAD (lab live)";             Symbol = "USDCAD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|939721" = @{ Name = "ST_EA03 Count-MACD GBP (user config, recovery-lot ⚠️)"; Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|990005" = @{ Name = "CB_GBP ConsoBreakout";                             Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
-  "159475669|990010" = @{ Name = "ST03 replica (WATCH: OOS 0.86)";                   Symbol = "GBPUSD"; Platform = "MT5"; KillDD = 25.0; WarnDD = 15.0 }
+$deploymentsCsv = Join-Path (Split-Path $LiveDealsDir -Parent) 'DEPLOYMENTS.csv'
+$cohort = [ordered]@{}
+foreach ($dep in @(Import-Csv $deploymentsCsv)) {
+  if ($dep.magic -notmatch '^\d+$') { continue }
+  $key = "$($dep.account)|$($dep.magic)"
+  if ($cohort.Contains($key)) { continue }   # checker guards duplicates; first row wins
+  $plat = 'MT5'; if ($dep.platform -match 'MT4') { $plat = 'MT4' }
+  $defKill = 25.0; $defWarn = 15.0
+  if ($plat -eq 'MT4') { $defKill = 35.0; $defWarn = 25.0 }
+  $killDD = $null
+  $rule = "$($dep.kill_rule)".Trim()
+  if ($rule -notmatch 'floating' -and $rule -match '(?:closedDD|DD)\s*([0-9]+(?:\.[0-9]+)?)\s*%') {
+    $killDD = [double]$Matches[1]
+  }
+  $name = $dep.ea_name
+  if ($null -eq $killDD) {
+    $killDD = $defKill; $warnDD = $defWarn
+    if ($rule) { $name += " (kill: $rule)" }   # non-closedDD rule stays visible
+  } elseif ($killDD -eq $defKill) {
+    $warnDD = $defWarn
+  } else {
+    $warnDD = [math]::Round($killDD * 0.8, 1)
+  }
+  if ($dep.status -ne 'ACTIVE') { $name += " [$($dep.status)]" }
+  # deals CSV symbol (broker-suffixed) overrides this; strip common m/c suffix for the fallback
+  $sym = "$($dep.symbol)" -replace '[mc]$',''
+  $cohort[$key] = @{ Name = $name; Symbol = $sym; Platform = $plat; KillDD = $killDD; WarnDD = $warnDD }
 }
 
 # ---------------------------------------------------------------------------

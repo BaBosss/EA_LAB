@@ -67,14 +67,15 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   $missA = @($accts | Where-Object { $demoRaw -notmatch [regex]::Escape($_) })
   Check ($missA.Count -eq 0) "all $($accts.Count) inventory accounts present in DEMO_DEPLOYMENT_PLAN" ("accounts missing from DEMO plan: " + ($missA -join ', '))
 
-  # 4/5. dashboard cohort map <-> inventory (bidirectional)
+  # 4/5. dashboard cohort map <-> inventory. CR-001 (2026-07-19): the map is GENERATED
+  # from DEPLOYMENTS.csv inside live_dashboard.ps1, so coverage/ghost parity is now
+  # guaranteed by construction. What can still drift: (4) the generation link itself
+  # (someone points the dashboard elsewhere), (5) someone re-introduces a hardcoded
+  # "account|magic" literal table that would shadow the inventory.
   $dashRaw = if (Test-Path $DASH) { Get-Content $DASH -Raw -Encoding UTF8 } else { '' }
-  $mapKeys = @([regex]::Matches($dashRaw,'"(\d+)\|(\d+)"\s*=') | ForEach-Object { "$($_.Groups[1].Value)|$($_.Groups[2].Value)" })
-  $invKeys = @($withMagic | Where-Object { $_.status -ne 'UNVERIFIED' } | ForEach-Object { "$($_.account)|$($_.magic)" })
-  $notMapped = @($invKeys | Where-Object { $mapKeys -notcontains $_ })
-  Check ($notMapped.Count -eq 0) "all $($invKeys.Count) inventory magics mapped in dashboard cohort" ("inventory rows with NO dashboard map entry (unmonitored magic - audit A5): " + ($notMapped -join ', '))
-  $ghost = @($mapKeys | Where-Object { $k = $_; -not ($withMagic | Where-Object { "$($_.account)|$($_.magic)" -eq $k }) })
-  Check ($ghost.Count -eq 0) "no ghost dashboard map entries (all $($mapKeys.Count) map keys exist in inventory)" ("dashboard map entries NOT in inventory (stale map or missing inventory row): " + ($ghost -join ', '))
+  Check ($dashRaw -match 'DEPLOYMENTS\.csv') "dashboard cohort map is generated from DEPLOYMENTS.csv" "live_dashboard.ps1 no longer references DEPLOYMENTS.csv - cohort map generation link broken (audit A5)"
+  $hardKeys = @([regex]::Matches($dashRaw,'"(\d+)\|(\d+)"\s*=') | ForEach-Object { "$($_.Groups[1].Value)|$($_.Groups[2].Value)" })
+  Check ($hardKeys.Count -eq 0) "no hardcoded cohort map literals in dashboard (generation only)" ("hardcoded account|magic literals back in live_dashboard.ps1 (would shadow the inventory): " + ($hardKeys -join ', '))
 
   # 6. judge dates in narrative doc
   $judges = @($rows | Where-Object { $_.judge_date -match '^\d{4}-\d{2}-\d{2}$' } | Select-Object -ExpandProperty judge_date -Unique)
