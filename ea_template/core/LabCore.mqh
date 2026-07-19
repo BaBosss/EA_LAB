@@ -142,15 +142,29 @@ int OnInit()
    // (Codex catch: do not trip dormant combos - e.g. entry 16, where Kangaroo owns
    // everything and returns before ExitManager, stays silent here by design).
    // Legal-combo table: DESIGN_V2.md section 3c.
+   // Codex review 445a1b7 (MINOR-1): entry 16 short-circuits into Kangaroo before any
+   // of these paths, so its informational StackMode value must not trip the assert.
+#ifndef LAB_ENTRY_16
    if(StackMode == STACK_PYRAMID)
    {
       if(RecoveryMode != REC_NONE)
          Print("[INIT] WARN: exit-owner - StackMode=93 disables Recovery; RecoveryMode!=80 in this .set is IGNORED (DESIGN_V2 3c)");
       if(HedgeMode != HEDGE_OFF)
          Print("[INIT] WARN: exit-owner - StackMode=93 disables Hedge; HedgeMode!=0 in this .set is IGNORED (DESIGN_V2 3c)");
+      // note: this can also fire when the basket target is 0 (partial would be off
+      // anyway) - accepted, the message stays true: 93 skips partial regardless.
       if(_2_PartialPct1 > 0.0 || _2_PartialPct2 > 0.0)
          Print("[INIT] WARN: exit-owner - StackMode=93 disables partial-close; _2_PartialPct1/2 in this .set are IGNORED (DESIGN_V2 3c)");
+      // Codex review 445a1b7 (SEV-2): under 93, leg0 still receives a broker TP from
+      // Exit_InitialTP when ExitMode=21/22 and _2_SuppressLegTP=false - a genuinely
+      // CONCURRENT second close path (leg0 broker TP vs basket exit owner) that can
+      // fragment the ladder. WARN, not fail: the pinned 93 probe set
+      // (_mt5_auto/ab_sets/order132_93probe.set) runs exactly this combo and its cage
+      // numbers were pinned with it - failing here would brick the regression probe.
+      if((ExitMode == EXIT_FIXED_TP || ExitMode == EXIT_ATR_TP) && !_2_SuppressLegTP)
+         Print("[INIT] WARN: exit-owner - StackMode=93 with ExitMode 21/22 and _2_SuppressLegTP=false gives leg0 a live per-leg broker TP (second close path vs basket owner) - set _2_SuppressLegTP=true (DESIGN_V2 3c)");
    }
+#endif
    return INIT_SUCCEEDED;
 }
 

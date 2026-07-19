@@ -194,7 +194,7 @@ filled/pending จาก broker ก่อนเสมอ)
 | StackMode | Recovery (8x) | Hedge | partial-close (_2_PartialPct*) | exit owner | หมายเหตุ |
 |---|---|---|---|---|---|
 | 90 single / 91 / 92 | ✅ ได้ | ✅ ได้ | ✅ ได้ | ExitManager (basket TP/SL/trail) | Recovery/Hedge = add/lock path ไม่ใช่ close owner ที่สอง — close ทุกทางรวมที่ ExitManager + cage |
-| **93 PYRAMID** | ❌ IGNORED | ❌ IGNORED | ❌ IGNORED | ExitManager basket TP/SL เท่านั้น (pendings มีแค่ per-leg SL) | runtime skip ใน LabCore.OnTick + `Exit_ManagePartialClose`; .set ที่เปิดไว้ = declared-but-ignored → OnInit **hard-WARN** (ไม่ fail — ไม่มี close path ชนจริง) |
+| **93 PYRAMID** | ❌ IGNORED | ❌ IGNORED | ❌ IGNORED | ExitManager basket TP/SL เท่านั้น (pendings มีแค่ per-leg SL) | runtime skip ใน LabCore.OnTick + `Exit_ManagePartialClose`; .set ที่เปิดไว้ = declared-but-ignored → OnInit **hard-WARN** (ไม่ fail — ไม่มี close path ชนจริง) · ⚠️ ช่องจริงที่ยังชน (Codex 445a1b7 SEV-2): ExitMode 21/22 + `_2_SuppressLegTP=false` → **leg0 มี broker TP จริง** = close path ที่สอง → WARN แนะ `_2_SuppressLegTP=true` (ไม่ fail เพราะ probe set 93 ที่ pin cage ไว้รัน combo นี้เอง) |
 | entry 16 (Kangaroo) | n/a (short-circuit) | n/a | n/a | Kangaroo.mqh ทั้ง pipeline | `Kangaroo_OnTick()` return ก่อน ExitManager ทั้งหมด = dormant โดยโครงสร้าง — assert **ห้าม trip** เคสนี้ (Codex catch) · `_2_MaxHoldBars>0` มี WARN เฉพาะของมันอยู่แล้ว (ORDER-125) |
 
 กติกา: combo ใหม่ใดๆ ที่เพิ่ม close path ที่สอง (รันพร้อม ExitManager ได้จริง) = ต้องเพิ่มแถวที่นี่ +

@@ -145,7 +145,7 @@ FINAL RULE ไหน · check_state ผ่าน. **ทำได้:** Claude (S
 สถานะ): order ทดสอบทุกใบต้องมีบรรทัด `bars:` (pass=X/dead=Y/กลาง=Z) และ `flat-lot: done/N-A/pending`.
 **acceptance:** header มี template + ORDER ใหม่ตั้งแต่ 124 ขึ้นไปใช้ครบ. **ทำได้:** Claude · 👉 แนะ: ทำพ่วงกับ 120-122
 
-## ORDER-124 — chassis chores ×3 ตาม framework Part 1 (additive, cage) — `OPEN` ✅ ปลดบล็อคแล้ว (ORDER-129 re-pin baseline 8-EA compile-current-source 2026-07-18 = baseline สดกว่าที่รอ)
+## ORDER-124 — chassis chores ×3 ตาม framework Part 1 (additive, cage) — `DONE+REVIEWED(Opus 2026-07-19, commits 445a1b7 + fix-pack): (1) Kangaroo.mqh → core/entries/ + include fix 3 จุด (2) _MG_* ×7 → Inputs.mqh ชื่อไม่เปลี่ยน (.set เดิมโหลดได้) (3) exit-owner assert OnInit hard-WARN + legal-combo table DESIGN_V2 §3c. Codex blind review = 1 SEV-2 + 2 MINOR → fix 2 / accept-doc 1: SEV-2 จริง — assert แรกพลาด close path ที่ชนจริง (93 + ExitMode 21/22 + _2_SuppressLegTP=false → leg0 มี broker TP สด = second owner) → เพิ่ม WARN แนะ SuppressLegTP=true (ไม่ fail เพราะ probe set 93 ที่ pin cage รัน combo นี้เอง) · MINOR-1 Boss_16 false-positive → #ifndef LAB_ENTRY_16 exempt ทั้ง block · MINOR-2 partial-warn เมื่อ target=0 = accept-doc (ข้อความยังจริง). cage ×2 รอบ: compile 0/0 ×9 · tests 7/7 · tpl_regression 8/8 CLEAN (Boss_14 n=84 · Boss_18 6020 เป๊ะ) = byte-identical for defaults`
 **source:** framework Part 1(b) rules 5-6. **spec:** (1) ย้าย `core/Kangaroo.mqh` → `core/entries/`
 (แก้ include ใน LabCore #ifdef 16) (2) ย้าย input block `_MG_*` จาก LabCore.mqh → Inputs.mqh (3) exit-owner
 assert ที่ OnInit — fail/hard-WARN เฉพาะ combo ที่ close path รันพร้อมกันได้จริง (STACK_PYRAMID+Recovery ON;
