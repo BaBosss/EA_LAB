@@ -164,7 +164,18 @@ SL-fragility + trender family. **ทั้งหมดต้องผ่าน V
 **FINDYOUR8 timeline:** = โพสต์ปักหมุด (คลาส 101 ขุดครบ) + โพสต์ส่วนตัว (ดนตรี ไม่เกี่ยว) + mirror
 Blockdit (07-18 อ่านครบ 7 โพสต์). ไม่มีเนื้อ trading ใหม่เกินคลัง PDF.
 
-**QuantCorner (facebook.com/quantcornerthailand, 1.7万):** = ชุมชน quant analyst (Discord + Meetup),
+**quant-corner.com re-assessment (2026-07-19, login):** เว็บโตเป็น **61 บทความ** (07-18 อ่าน ~16). โครงสร้าง
+= 2 สาย: (1) **Wix blog 2024** หมวด What-is 19/Quant 9/Factor 8/ML 7/Python 6/Portfolio 4/SKLearn 3/
+Derivative-pricing/Risk — ส่วนใหญ่ทฤษฎี SET-equity + ML/Python tutorial (relevance EA ต่ำ) (2) **Research Log
+2026 (weekly)** = Thai-equity factor studies: momentum-with-real-fees (SET 2015-25), vol-targeting position
+sizing (SET100), RSI-signal failed-replication. **verdict: ไม่มี actionable EA lever ใหม่เกิน 07-18 + PDF catalog** —
+methodology (vol-normalized sizing, fee-model, replication rigor) ครอบคลุมแล้วใน catalog นี้ + IDEA SEEDS #6-8.
+ยืนยัน: บทความ "Monte Carlo Option Pricing" = GBM derivative-pricing ตำรา ≠ block-bootstrap grid-zone ของ
+Adaptive Grid (คนละเรื่อง). = quant-corner เป็นเว็บ quant สาย SET-equity/ML การ transfer มา FX/Gold/crypto EA
+ยิลด์ต่ำ; ของที่ใช้ได้ถูกสกัดครบแล้ว. ⚠️ FB feed ของเพจ paginate ไม่ได้ใน automation (server-side stall) — โพสต์
+เก่าเข้าถึงไม่ได้; ถ้าต้องการเจาะ ให้ user ส่ง permalink เฉพาะโพสต์.
+
+**QuantCorner (facebook.com/quantcornerthailand, 1.7→1.8万):** = ชุมชน quant analyst (Discord + Meetup),
 tagline "EVIDENCE OVER INTUITION", ชี้ quant-corner.com (07-18 ขุด 16 บทความครบแล้ว). โพสต์เด่น =
 **event "AI BATTLE IN FINANCE" 22 ส.ค. 2026 @Glofish สาธร** — ตรง stack EA_LAB:
 - **AI BATTLE: Claude Code vs Codex vs Claude Cowork** (workflow ประชันสด แก้โจทย์การเงิน)
