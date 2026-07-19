@@ -1,7 +1,7 @@
 # HANDOFF 2026-07-19 — template hardening จบแล้ว · คุมงานต่อผ่าน session เดียว
 
 **สำหรับ:** session ถัดไปที่ user ใช้คุมงานทั้งหมด (แทนการเปิดหลาย session คู่ขนาน)
-**สถานะ ณ handoff:** HEAD = `ef24a267` · working tree มีไฟล์ค้างของ session อื่น (.obsidian/STATUS.html/_mt5_auto ต่างๆ) — **อย่ากวาด commit รวม, path-limit เสมอ**
+**สถานะ ณ handoff:** อัปเดต 2026-07-19 ท้าย session (single-session control) · working tree มีไฟล์ค้างของ session อื่น (.obsidian/STATUS.html/_mt5_auto ต่างๆ) — **อย่ากวาด commit รวม, path-limit เสมอ** · ⚠️ order numbering เคยชน (133 StoMultiTap ของ session คู่ขนาน · ST03-leverA = 135 · overlay = 136 · StoMultiTap = 137) — collision reconcile แล้ว
 
 ## 1. อะไรปิดไปแล้ววันนี้ (อย่ารื้อ)
 
@@ -9,9 +9,15 @@
 |---|---|---|
 | ORDER-132 + 132b | DONE+REVIEWED — transactional exits + persist scoping, Codex 20 findings → fix 12 / defer 4 / reject 2 | `0dcf60e2` + `1a0dd7ff` |
 | ORDER-138 (#1-4) + 138b + 138c | DONE+REVIEWED (session คู่ขนาน) — `RC_AdoptLegacyHalt` fail-closed migration consent · atomic pair persist + commit-marker · closing-intent persisted · test tester-only guard · Codex audit 2 รอบ | `a1d0a54a` → `29b31b76` → `ef24a267` |
-| ORDER-119 | REVIEWED: DEAD-OPTIMIZED (ST03 flat-lot MACD-reversion) — campaign ปิด | (session คู่ขนาน) |
+| ORDER-119 | REVIEWED: chassis-cell DEAD (ST03 flat-lot MACD signal 0/6 both-window) | `09b34913` |
+| ORDER-135 | REVIEWED: ST03 lever-A engine test chassis-cell DEAD (generic DCA 0/9, แค่ leverage regime-dep) — **แต่ scope = chassis-cell ไม่ใช่ concept ถาวร** | `2dcbc239` + `754d2a60` |
 | ORDER-126 | DONE+REVIEWED: NO LIFT, keep demo 991070 as-is | (session คู่ขนาน) |
 | ORDER-131 | CLOSED: Boss_18 drift = benign FP layout | `1217b1da` |
+| ORDER-125 | DONE+REVIEWED: MaxHoldBars = NO LIFT DEAD-ON-GRID; Boss_14 baseline re-pin n=84 (partial-leak bugfix, money-identical) | `b6ca0f6e` + `5252f24d` |
+| P1 ops | DONE: gist account-redact + credential-inventory skeleton (2 MASTER_BACKLOG P1 ปิด) | `a241176b` |
+
+### 🆕 กฎใหม่ที่ user ratify วันนี้ (สำคัญ — อ่านก่อน judge EA ตัวถัดไป)
+**ENGINE-EDGE class (CLAUDE.md VERDICT GATE ข้อ 1 · decision log 2026-07-19 · memory `feedback-engine-edge-class`):** "flat-lot PF<1 ขณะ escalated PF>1" **เลิก auto-kill** → เดินต่อได้ภายใต้กรง 5 ข้อ (worst-case ≤15% equity · **BWD 2020-22 HARD** · Model-4 บังคับ · MC ruin ≤2% · label engine-edge = sizing เล็กถาวรห้าม size-up ตาม PF). flat-lot probe = เครื่องวินิจฉัยว่า edge อยู่ signal/engine ไม่ใช่ใบมรณะ. **uncapped ruin (no SL + no cap + geometric) ยังฆ่าทันที.** precedent = NuiIndy (geometric+CutLoss30 live PF~2.0). first application = ORDER-135 (ผ่านกรงแล้วยังตาย = earned, กฎ balance ถูก).
 
 **ผลรวมเชิงระบบ:** template core (Persist/RiskControl/Execution/ExitManager/Stack/Kangaroo/LabCore) ผ่าน SEV-1 pack 3 รอบ (129 → 132 → 138) + Codex audit ครบทุกรอบ · cage 8/8 CLEAN · **code blocker ของ live rollout = ปลดหมดแล้ว**
 
@@ -19,12 +25,15 @@
 
 เดิน checklist `ea_template/PERSIST_MIGRATION_ORDER132.md` ตามลำดับ: F3 snapshot GV → demo attach → เช็ค journal `[PERSIST] migrated` → restart 1 รอบยืนยัน state → ค่อย Boss_14 GBPJPY live. จุดเพิ่มจาก 138: upgrade บัญชีตัวเองที่มี legacy state ต้องตั้ง **`RC_AdoptLegacyHalt=true` หนึ่ง attach แล้วปิดกลับ false** (ไม่ตั้ง = OnInit FAIL โดยตั้งใจ, กัน state ข้ามบัญชี — gate ครอบทุก legacy key รวม `rc_peak_eq`). Boss_16: เช็ค F3 หา `Boss2_..._k16_pair_a/b` (pair liquidation in-flight) ก่อน swap binary — มี = รอ resolve/flat ก่อน. อีกงานเร่งของ user: **`gh auth login -h github.com`** (token BaBosss ตาย — dashboard มือถือเน่าเงียบ, ORDER-128 leg ค้าง)
 
-## 3. คิวงานถัดไป (เรียงแล้ว)
+## 3. คิวงานถัดไป (เรียงแล้ว — ORDER-125 ปิดแล้ว ออกจากคิว)
 
-1. **ORDER-125** — vertical-barrier exit `_2_MaxHoldBars` (spec+bars ครบใน taskboard :158; default 0=off byte-identical; host test = Boss_14; bar: recovery-days ลง AND both-window PF ≥1.0 retained)
-2. **ORDER-124** — chassis chores ×3 (taskboard :148)
-3. **ORDER-136** — escalation-MM overlay campaign บน validated cohort (Wave1=Boss_17) — **pace 1-2 cell/รอบ ห้าม burst** (memory: feedback-pacing-batch-small)
-4. Backlog มีเงื่อนไข (จาก 132b defer — เปิด order ใหม่เฉพาะเมื่อมี EA mode-93 หรือ partial-close ขึ้น live จริง): X1 milestone persist ข้าม restart · S1/S2 ladder restart/cancel reconcile · S3 continuous margin re-budget
+1. **ORDER-124** — chassis chores ×3 (taskboard :148; baseline ปลดบล็อคแล้ว)
+2. **ORDER-136** — escalation-MM overlay campaign บน validated cohort (Wave1=Boss_17 Wave5, XAU H4) — **money-adjacent (escalation), judge ที่ expectancy+worst-case DD ไม่ใช่ PF อย่างเดียว · pace 1-2 cell/รอบ ห้าม burst** (memory: feedback-pacing-batch-small). ⚠️ ตัวนี้ = signal-edge + MM overlay (funnel ปกติ) ต่างจาก ENGINE-EDGE (ST03)
+3. Backlog มีเงื่อนไข (จาก 132b defer — เปิด order ใหม่เฉพาะเมื่อมี EA mode-93 หรือ partial-close ขึ้น live จริง): X1 milestone persist ข้าม restart · S1/S2 ladder restart/cancel reconcile · S3 continuous margin re-budget
+
+### งานฝั่ง USER (ไม่ใช่ Claude queue)
+- **ST03 standalone optimize** — chassis dead แต่ standalone (LOT_Repeat/tp3/near/spacing/vol-gate tuned, 30+ sets ใน worktree `_mt5_auto/`) = **PARKED-VERIFY(user)** ไม่ตายถาวร. handoff เต็ม + open levers (spacing UNSWEPT/per-sym TP/LR×vol-gate) = `_triage/HANDOFF_ST03_OPTIMIZE_2026-07-19.md`. both-window winner → ping lead → funnel
+- **ORDER-137** StoMultiTap ADX-gate fork (`_triage/HANDOFF_ORDER137_STOMULTITAP.md`, PARKED-VERIFY)
 
 ## 4. Gotchas ที่จ่ายเงินเรียนมาแล้ว (session ใหม่ต้องรู้)
 
