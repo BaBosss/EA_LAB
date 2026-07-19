@@ -331,12 +331,7 @@ SessionBreakout (1200-pass + forward fail), MACD all-symbols (exhaustive), BREAK
 **JumStoch Trend-seed on chassis (Boss_18)** — DEAD-OPTIMIZED 2026-07-18, 28 M4 runs uniformly 0.58–0.94
 both-window (2 DirMode × 2 sym × 2 dir × 2 exit × 2 TF); edge was the standalone's 4-basket+BEP engine, not
 the LWMA+Stoch seed. Standalone JUMSTOCH untouched. verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
-**StoMultiTap (multi-tap S/R + Stoch cycle fade, (EXP)_StoMultiTap)** — DEAD-OPTIMIZED 2026-07-19 (ORDER-135, renumbered from 133).
-Idea from FB Miissterkiiss/Bitnefit book. Novel lever `MinTaps` (count Stoch OB/OS "รอบ" at S/R zone before
-entry, never first-touch) **falsified by direct A/B twice:** naked MinTaps=2 lost to =1 in 5/6 cells (cut
-trades 90%+), and with MTF+ADX filters on → 0.00 PF / 0-3 trades. Last-optimize (StoK{5-21}×MTF×ADX =
-SMCxSTO recipe) best EURGBP-H1-K17 MAIN 1.44 = StoK spike / BWD 0.64 selection-fit. kill-reason = novel
-lever no mechanical edge + base redundant with SMCxSTO 991070. EDGE_CATALOG dead pile + signal-landscape.
+**StoMultiTap (multi-tap S/R + Stoch cycle fade, (EXP)_StoMultiTap)** — PARKED-VERIFY(user) 2026-07-19 (ORDER-137, renumbered 133→135→137 concurrent-session collisions). ⚠️ **NOT dead** — an earlier premature DEAD-OPTIMIZED call was reversed after user challenge. Idea from FB Miissterkiiss/Bitnefit book. Novel lever `MinTaps` (count Stoch OB/OS "รอบ" at S/R zone, never first-touch) **WORKS on XAU M15:** K17 tap2 lifts PF 0.91(1039t)→1.45(27t); ZoneTol-tuned zt40 = MAIN 1.51/64t (real structure). First "dead" was frequency-starvation from MTF+ADX filters (tap2→0-3 trades), not no-edge. **NOT redundant** with SMCxSTO 991070 (measured monthly corr −0.10). PARKED not CANDIDATE because **BWD-fails every variant** (zt40 1.51→0.58, zt60 1.02→0.90) = XAU 2023-25 chop-regime, reversion-fade-on-trender not both-window robust. User decision: demo-isolate XAU-M15 zt40 (try ADX-gate, holdout not burned) or shelve. EDGE_CATALOG + signal-landscape.
 
 ---
 
