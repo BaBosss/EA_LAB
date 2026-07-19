@@ -90,4 +90,7 @@ ARCHIVE/
 *.fxt
 *.hcc
 
+# FINDYOUR8 free-book PDF library (887MB, study material — catalog .md is tracked, blobs are not)
+_triage/findyour8_pdfs/
+
 STATUS.md
