@@ -21,7 +21,7 @@
 **source:** ORDER-LANEC-REBUILD close note ("further build-on = different HOME (TF/symbol) not more EURUSD-H1"). **spec:** EA `(EXP)_EmaStoRev` center ORDER-107 (StoK13/OS30/AdxMax30/EMA50/SL3.0/TP1.2) **ห้ามแก้ param อื่น**. homes ใหม่: EURGBP + AUDNZD + EURCHF + USDCHF × H1 + H4 = 8 cells × MAIN+BWD M1 = 16 runs → M4 ซ้ำเฉพาะ cell ที่ M1 both-window ≥1.0 (คาด ≤4 → ~24 runs). Reports `ESR_{SYM}_{TF}_{WIN}_{MODEL}`.
 **bars:** mark PASS เมื่อ MAIN≥1.2 AND BWD≥1.0 ทั้ง M1+M4 · 1.0–1.2 = WATCH · ต่ำกว่า = FAIL. **flat-lot: N-A** (single-position 0.01 real SL). **ห้าม:** แตะ 991070/991071 · tune ใดๆ · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER146_ESR_NEWHOME_RESULTS.md`.
 
-## ORDER-147 — S1 TrendRider XAU (992004 CANDIDATE) symbol expansion — `OPEN` (agent batch ~20 runs · BUILD-ON doctrine หลัง validate)
+## ORDER-147 — S1 TrendRider XAU (992004 CANDIDATE) symbol expansion — `DONE(2026-07-20, Opus-seat driver, qwen summarizer) — 10 M1 runs + 6 M4 runs (3 survivors), 3 PASS (XAGUSD/USDJPY/EURJPY H4) · ผลดิบ _triage/ORDER147_S1_EXPAND_RESULTS.md + CSV _mt5_auto/ORDER147_S1X.csv · รอ Claude REVIEW`
 **source:** ORDER-139 (S1 = VALIDATED CANDIDATE XAU H4). doctrine 2b: ขยาย symbol×TF เอาทุก home ที่ผ่านบาร์. **spec:** locked center a20/s0.5/c2.5 **verbatim ห้าม re-tune**. symbols: XAGUSD + GBPJPY + USDJPY + EURJPY × H4 (+ H1 เฉพาะ XAG) = ~5 cells × MAIN+BWD M1 = 10 runs → M4 survivors (~20 runs รวม). Reports `S1X_{SYM}_{TF}_{WIN}_{MODEL}`.
 **bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · corr Claude รันเองตอน review (agent แค่เก็บ report ครบ). **flat-lot: N-A** (single-position). **ห้าม:** แตะ set/demo 992004 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER147_S1_EXPAND_RESULTS.md`.
 
