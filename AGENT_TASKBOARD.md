@@ -17,7 +17,7 @@
 
 ---
 
-## ORDER-146 — EmaStoRev (SMCxSTO) NEW-HOME sweep — `OPEN` (agent batch ~24 runs · doctrine: build-on = different HOME ไม่ใช่ SL เดิม)
+## ORDER-146 — EmaStoRev (SMCxSTO) NEW-HOME sweep — `DONE(2026-07-20, Opus-seat driver + qwen summarizer) — 16/16 M1 runs, 0 survivor (ไม่มี cell M1≥1.0 both-window → M4 NOT RUN per gate) · ทุก cell FAIL, H4 ทั้ง 4 cell THIN (n 10-24) · ผลดิบ _triage/ORDER146_ESR_NEWHOME_RESULTS.md + CSV _mt5_auto/ORDER146_ESR.csv · รอ Claude REVIEW`
 **source:** ORDER-LANEC-REBUILD close note ("further build-on = different HOME (TF/symbol) not more EURUSD-H1"). **spec:** EA `(EXP)_EmaStoRev` center ORDER-107 (StoK13/OS30/AdxMax30/EMA50/SL3.0/TP1.2) **ห้ามแก้ param อื่น**. homes ใหม่: EURGBP + AUDNZD + EURCHF + USDCHF × H1 + H4 = 8 cells × MAIN+BWD M1 = 16 runs → M4 ซ้ำเฉพาะ cell ที่ M1 both-window ≥1.0 (คาด ≤4 → ~24 runs). Reports `ESR_{SYM}_{TF}_{WIN}_{MODEL}`.
 **bars:** mark PASS เมื่อ MAIN≥1.2 AND BWD≥1.0 ทั้ง M1+M4 · 1.0–1.2 = WATCH · ต่ำกว่า = FAIL. **flat-lot: N-A** (single-position 0.01 real SL). **ห้าม:** แตะ 991070/991071 · tune ใดๆ · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER146_ESR_NEWHOME_RESULTS.md`.
 
