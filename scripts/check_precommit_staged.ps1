@@ -57,6 +57,62 @@ $IndexPath      = 'docs/memory_control/ARCHIVE_INDEX.md'
 $ExceptionsPath = 'docs/memory_control/RECONCILE_EXCEPTIONS.md'
 $ProtectedSet = @($ArchivePath, $ActivePath, $ManifestPath, $IndexPath, $ExceptionsPath)
 
+# ORDER-144 staged-bytes validation. These checks are deliberately separate from
+# the ORDER-103 archive contract: they read the index blobs and only activate when
+# one of the named operational artifacts is staged.
+$DeploymentPath = 'portfolio/DEPLOYMENTS.csv'
+$ScorecardPath = 'EA_SCORECARD_AND_REGISTRY.md'
+$MasterIndexPath = 'EA_MASTER_INDEX.csv'
+$B1DatasetPath = 'docs/memory_control/B1_DATASET.csv'
+$RegressionBaselinePath = 'ea_template/regression_baseline.csv'
+
+function Get-StagedBytesOrNull {
+    param([string]$RelPath)
+    try { return (Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $RelPath).Bytes }
+    catch { return $null }
+}
+
+function Get-HeadBytesOrNull {
+    param([string]$RelPath)
+    try { return (Get-Snapshot -RepoRoot $RepoRoot -Mode Committed -RelPath $RelPath -CommitSha 'HEAD').Bytes }
+    catch { return $null }
+}
+
+function Compare-BytesExact {
+    param([byte[]]$A, [byte[]]$B)
+    if ($null -eq $A -or $null -eq $B -or $A.Length -ne $B.Length) { return $false }
+    for ($i = 0; $i -lt $A.Length; $i++) { if ($A[$i] -ne $B[$i]) { return $false } }
+    return $true
+}
+
+function Test-DeploymentInventoryBlob {
+    param([byte[]]$Bytes)
+    $tmp = Join-Path $env:TEMP ('order144_deploy_' + [guid]::NewGuid().ToString('N') + '.csv')
+    try {
+        [IO.File]::WriteAllBytes($tmp, $Bytes)
+        $rows = @(Import-Csv -LiteralPath $tmp -Encoding UTF8)
+        if ($rows.Count -eq 0) { return 'portfolio/DEPLOYMENTS.csv is empty or has no data rows' }
+        $required = @('account','magic')
+        $cols = @($rows[0].PSObject.Properties.Name)
+        $missing = @($required | Where-Object { $cols -notcontains $_ })
+        if ($missing.Count -gt 0) { return ('portfolio/DEPLOYMENTS.csv missing required column(s): ' + ($missing -join ', ')) }
+        $dups = @($rows | Where-Object { $_.magic -match '^d+$' } | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)
+        if ($dups.Count -gt 0) { return ('portfolio/DEPLOYMENTS.csv duplicate account|magic: ' + (($dups | ForEach-Object Name) -join ', ')) }
+        return $null
+    } catch { return ('portfolio/DEPLOYMENTS.csv parse failed: ' + $_.Exception.Message) }
+    finally { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
+}
+
+function Test-B1AppendOnly {
+    param([byte[]]$HeadBytes, [byte[]]$StagedBytes)
+    if ($null -eq $HeadBytes) { return $null }
+    if ($StagedBytes.Length -lt $HeadBytes.Length) { return 'B1_DATASET.csv may only append rows; staged bytes are shorter than HEAD' }
+    for ($i = 0; $i -lt $HeadBytes.Length; $i++) {
+        if ($StagedBytes[$i] -ne $HeadBytes[$i]) { return 'B1_DATASET.csv may only append rows; existing HEAD bytes were modified' }
+    }
+    return $null
+}
+
 function Get-StagedNameStatus {
     param([string]$RepoRoot)
     $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'diff --cached --name-status --no-renames'
@@ -76,6 +132,52 @@ Write-Host '[precommit-staged] ORDER-103 Fix 2 staged-snapshot check'
 $staged = Get-StagedNameStatus -RepoRoot $RepoRoot
 $stagedByPath = @{}
 foreach ($s in $staged) { $stagedByPath[$s.Path] = $s.Status }
+
+# ORDER-144: validate operational staged blobs before the legacy protected-set
+# early return. No working-tree bytes are consulted for these checks.
+$order144Paths = @($DeploymentPath, $ScorecardPath, $MasterIndexPath, $B1DatasetPath, $RegressionBaselinePath)
+$order144Staged = @($order144Paths | Where-Object { $stagedByPath.ContainsKey($_) })
+if ($order144Staged.Count -gt 0) {
+    Write-Host ('[precommit-staged] ORDER-144 staged-bytes check: ' + ($order144Staged -join ', '))
+    $order144Failures = New-Object System.Collections.Generic.List[string]
+
+    if ($stagedByPath.ContainsKey($DeploymentPath)) {
+        $deploymentError = Test-DeploymentInventoryBlob -Bytes (Get-StagedBytesOrNull $DeploymentPath)
+        if ($deploymentError) { $order144Failures.Add($deploymentError) }
+    }
+
+    # Scorecard and master index are a single registry transaction. A change to
+    # either without the other would leave the two canonical surfaces divergent.
+    $registryPair = @($ScorecardPath, $MasterIndexPath)
+    $registryChanged = @($registryPair | Where-Object { $stagedByPath.ContainsKey($_) })
+    if ($registryChanged.Count -gt 0) {
+        $registryMissing = @($registryPair | Where-Object { -not $stagedByPath.ContainsKey($_) })
+        if ($registryMissing.Count -gt 0) {
+            $order144Failures.Add('EA_SCORECARD_AND_REGISTRY.md and EA_MASTER_INDEX.csv must be staged in the same commit; missing: ' + ($registryMissing -join ', '))
+        }
+    }
+
+    if ($stagedByPath.ContainsKey($B1DatasetPath)) {
+        $b1Error = Test-B1AppendOnly -HeadBytes (Get-HeadBytesOrNull $B1DatasetPath) -StagedBytes (Get-StagedBytesOrNull $B1DatasetPath)
+        if ($b1Error) { $order144Failures.Add($b1Error) }
+    }
+
+    if ($stagedByPath.ContainsKey($RegressionBaselinePath)) {
+        $baselineHead = Get-HeadBytesOrNull $RegressionBaselinePath
+        $baselineStaged = Get-StagedBytesOrNull $RegressionBaselinePath
+        $commitMessage = if (Test-Path (Join-Path $RepoRoot '.git\COMMIT_EDITMSG')) { Get-Content (Join-Path $RepoRoot '.git\COMMIT_EDITMSG') -Raw -ErrorAction SilentlyContinue } else { '' }
+        if (-not (Compare-BytesExact $baselineHead $baselineStaged) -and $commitMessage -notmatch '(?i)re-pin') {
+            $order144Failures.Add('ea_template/regression_baseline.csv changed, but the commit message does not contain re-pin')
+        }
+    }
+
+    if ($order144Failures.Count -gt 0) {
+        Write-Host '[precommit-staged] BLOCK: ORDER-144 staged-bytes validation failed:'
+        foreach ($failure in $order144Failures) { Write-Host ('  - ' + $failure) }
+        exit 1
+    }
+    Write-Host '[precommit-staged] ORDER-144 staged-bytes validation PASS'
+}
 
 $protectedStaged = @($ProtectedSet | Where-Object { $stagedByPath.ContainsKey($_) })
 if ($protectedStaged.Count -eq 0) {
@@ -235,3 +337,11 @@ try {
 
 Write-Host '[precommit-staged] PASS -- staged protected-set content is chain-consistent and artifacts are in sync'
 exit 0
+
+# ORDER-144 rule summary (keep adjacent to the executable guard):
+#   portfolio/DEPLOYMENTS.csv      -> staged UTF-8 parse + duplicate account|magic block
+#   scorecard + EA_MASTER_INDEX.csv -> both must be staged in one registry transaction
+#   docs/memory_control/B1_DATASET.csv -> existing HEAD bytes must be an exact prefix
+#   ea_template/regression_baseline.csv -> changed bytes require `re-pin` in COMMIT_EDITMSG
+# All checks use staged snapshots (`git show :<path>` through Get-Snapshot), never the
+# working tree. Ordinary commits and unrelated paths remain a fast no-op/pass.
