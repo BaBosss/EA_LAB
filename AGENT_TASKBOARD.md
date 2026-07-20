@@ -25,7 +25,7 @@
 **source:** ORDER-139 (S1 = VALIDATED CANDIDATE XAU H4). doctrine 2b: ขยาย symbol×TF เอาทุก home ที่ผ่านบาร์. **spec:** locked center a20/s0.5/c2.5 **verbatim ห้าม re-tune**. symbols: XAGUSD + GBPJPY + USDJPY + EURJPY × H4 (+ H1 เฉพาะ XAG) = ~5 cells × MAIN+BWD M1 = 10 runs → M4 survivors (~20 runs รวม). Reports `S1X_{SYM}_{TF}_{WIN}_{MODEL}`.
 **bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · corr Claude รันเองตอน review (agent แค่เก็บ report ครบ). **flat-lot: N-A** (single-position). **ห้าม:** แตะ set/demo 992004 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER147_S1_EXPAND_RESULTS.md`.
 
-## ORDER-148 — Boss_17 Wave5 symbol expansion (JPY crosses) — `OPEN` (agent batch ~16 runs)
+## ORDER-148 — Boss_17 Wave5 symbol expansion (JPY crosses) — `DONE(2026-07-20, Opus-seat driver, qwen summarizer) — 8 M1 MAIN runs (GBPJPY/EURJPY/AUDJPY/CHFJPY H1/H4), 0 survivor gate ≥1.1 → M4 NOT RUN · all 8 cells FAIL (EURIJPY H1 only 1.08 < gate; 4 H4 cells THIN n 54-62) · ผลดิบ _triage/ORDER148_W5_EXPAND_RESULTS.md + CSV _mt5_auto/ORDER148_W5X.csv · รอ Claude REVIEW`
 **source:** Wave5 validated XAU/XAG/USDJPY (990301-303). ยังไม่เคยเทส JPY crosses. **spec:** params จาก `_vps_deploy/WAVE5_XAU/WAVE5_XAU_H1_demo_v1.set` (fib23.6/mult0.618/trail 2000-800, ExitMode=23, _9_MaxLevels=1) **ห้าม tune**. symbols: GBPJPY + EURJPY + AUDJPY + CHFJPY × H1 + H4 = 8 cells × MAIN M1 ก่อน (8 runs) → เฉพาะ MAIN≥1.1 ค่อยรัน BWD + M4 (~16 runs รวม). Reports `W5X_{SYM}_{TF}_{WIN}_{MODEL}`.
 **bars:** PASS=MAIN≥1.2 AND BWD≥1.0 · n ต่อ cell ≥30 มิฉะนั้น mark THIN ห้ามนับ (Wave5 เทรดบาง). **flat-lot: N-A**. **ห้าม:** แตะ 990301-303 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER148_W5_EXPAND_RESULTS.md`.
 
