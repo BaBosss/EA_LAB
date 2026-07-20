@@ -83,7 +83,11 @@
 
 ## NEXT SESSION RESEARCH PLAN (2026-06-27 update) — symbol+TF ครบ
 
-> **กฎ:** smoke = Model 2, 2023.01.01-2026.06.01, default params. IS = 2023.01-2025.01 / OOS = 2025.01-2026.06.
+> ⚠️ **SUPERSEDED (C5 hygiene 2026-07-20 — ห้ามใช้ตัดสิน):** กฎ block นี้เขียนยุค Model-2-smoke.
+> **Model-2 ใช้ฆ่าได้อย่างเดียว ห้ามใช้ผ่าน** (doctrine 2026-07-11) + window ปัจจุบัน = MAIN 2023.01–2025.12 /
+> BWD 2020-22 / holdout 2026H1 (CLAUDE.md VERDICT GATE). ผล DEAD ด้านล่างที่ตายด้วย Model-2 = ยังตายได้
+> (kill-side valid) แต่ผล "ผ่าน/PROCEED" ยุคนั้นใช้ไม่ได้แล้ว.
+> ~~**กฎ:** smoke = Model 2, 2023.01.01-2026.06.01, default params. IS = 2023.01-2025.01 / OOS = 2025.01-2026.06.~~
 > ทุก concept ต้องเทสอย่างน้อย 3 symbol×TF เพื่อให้รู้ว่า dead จริงหรือแค่ wrong instrument.
 
 ### ~~TASK 1~~ — EA_NR7 ขยาย TF+Symbol ✅ DONE — DEAD 2026-06-28
@@ -249,7 +253,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
   Do not re-test any FX pair with EMA-cross H4 concept.
   **XAU gap closed 2026-07-02** (was "not fully tested"): /signal-scan via Boss_11_GridTrend chassis
   (MA20/50 cross, ATR-expand trend filter), IS-era 2023-2026 (the era EMA-cross performed BEST elsewhere),
-  Model 2 — XAU H4 naked PF 0.87 (138t) → pyramid (StackMode 91) PF 0.99 (201t, DD 18→20%): **still dead,
+  Model 2 ⚠️(SUPERSEDED-method note C5 2026-07-20: Model-2 = kill-only — ผล dead นี้ยังใช้ได้ แต่ถ้าจะ REVIVE ต้องวัดใหม่ M1/M4) — XAU H4 naked PF 0.87 (138t) → pyramid (StackMode 91) PF 0.99 (201t, DD 18→20%): **still dead,
   pyramiding does not rescue it** (more trades + more DD, no real PF gain — the "pyramid edge" the concept
   hoped for doesn't exist). GBP H4 same test: PF 1.02 single / 1.00 pyramid — breakeven noise, not an edge.
   **#20 Trend+Pyramid = fully closed, DEAD across the shortlisted symbols.** Do not revisit without a
@@ -295,7 +299,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - [x] **Gist privacy:** ✅ redact เลขบัญชีใน published copy (2026-07-19) — `publish_dashboard_gist.ps1` mask ทุกบัญชีเป็น `...<last4>` บน `$tmp` ก่อน upload (local dashboard ยังเต็ม) · verified: 0 leftover, magic/dollar ไม่โดน clip, 21 masked tokens · ⏸ ยังเหลือ option "ย้ายช่องทาง private จริง" ถ้าต้องการมากกว่า mask
 - [ ] **Judge date ต่อ cohort:** generate จาก DEPLOYMENTS.csv (ORDER-093) — ห้ามนาฬิกาเดียวทั้งระบบ (ชุด 07-09 judge = 2026-10-09, ชุดเก่า = ตามวัน attach จริง)
 - [ ] **C5 hygiene:** ใส่ SUPERSEDED marker บน Model-2 conclusion เก่าในไฟล์นี้ (ห้ามลบ — mark ว่าใช้ตัดสินไม่ได้แล้ว)
-- [ ] **ST03 spacing probe (ปิดแกนที่ค้าง):** 3 รัน Model 1 spacing fixed/ATR/progressive บน GBP trail-exit — ปิด record "spacing UNSWEPT" ให้สนิท (ไม่เปลี่ยน verdict ถอดเงินจริง — ทำเมื่อ lane ว่างจริงๆ เท่านั้น, priority ต่ำ)
+- [x] **ST03 spacing probe:** ✅ ปิดแกน 2026-07-20 — 3 รัน M1 GBPUSD H1 (cell near-miss 12/26/9 cnt3, DCA L4, trail 23): FIXED 300pts PF 0.90 (986t) · ATR×1.0 PF 1.03 (2213t) · ATR×2.0 PF 0.94 (1254t) — เพดาน 1.03 = breakeven noise, **spacing ไม่ rescue, verdict ไม่เปลี่ยน**. หมายเหตุวิธี: chassis ไม่มี progressive-per-level step input → แกนปิดเป็น fixed/ATR1.0/ATR2.0 (standalone ST03 มี spacing กลไกต่างออกไป = ยังเป็น user lane ตาม `_triage/HANDOFF_ST03_OPTIMIZE_2026-07-19.md`). reports `ST03SP_*` · sets `_mt5_auto/ab_sets/st03_spacing_probe/`
 
 ### P2 — resilience/governance (ทำเมื่อ P0+P1 จบ)
 - [ ] Attach/config/build attestation อัตโนมัติจากทุก terminal (รวม magic collision + hedging/netting mode)
