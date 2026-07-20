@@ -17,9 +17,10 @@
 
 ---
 
-## ORDER-142 — AdaptGridMC backtest campaign (ต่อจาก 141 build) — `OPEN` (agent batch lane: qwen/ZCode — Claude quota out ~3 วัน, ตัดสินเมื่อกลับ)
+## ORDER-142 — AdaptGridMC backtest campaign (ต่อจาก 141 build) — `BLOCKED(Codex, 2026-07-20: main MT5 D1 export unavailable)` (agent batch lane: qwen/ZCode — Claude quota out ~3 วัน, ตัดสินเมื่อกลับ)
 **source:** ORDER-141 (build DONE, backtest ยังไม่เริ่ม) + FINDYOUR8 catalog #1. **spec (mechanical ทั้งหมด — ห้าม agent ตีความ):**
 (1) export D1 CSV จริง BTCUSD+ETHUSD จาก MT5 (`Meta 5` GUI ปิดก่อน headless) ≥1000 bars ล่าสุด → (2) รัน `_mt5_auto/adaptgrid_mc_zone.py` ต่อ symbol (params ตาม default ใน ORDER-141: 10k paths × 60d, block 24d) เก็บ P10/P90/N ลง `_mt5_auto/adaptgrid_zones.txt` → (3) tester `(EXP)_AdaptGridMC_rev01` M1 flat-lot 0.01: MAIN 2023.01–2025.12 + BWD เท่าที่ data มี (BTC CFD history อาจเริ่มหลัง 2020 — **บันทึกช่วงจริงที่ใช้ ห้ามเงียบ**) ต่อ symbol → (4) M4 ซ้ำเฉพาะ cell ที่ M1 PF≥1.0. Reports `AGMC_{SYM}_{WIN}_{MODEL}`.
+**BLOCKED evidence:** `D:\Meta 5\terminal64.exe` exists but could not be opened as a separate target; only `D:\Monitor\MT5\terminal64.exe` was targetable/running. No BTC/ETH D1 CSV found under `D:\EA_LAB` or `D:\Meta 5`; Python `MetaTrader5` bridge unavailable. No zone, tester, or verdict work performed.
 **bars (pre-registered):** pass=MAIN≥1.2 AND BWD(หรือ oldest-available window)≥1.0 ทั้ง M1+M4 → รอ Claude funnel · dead=ทุก cell <1.0 → รอ Claude ปิด (agent ห้ามเขียน verdict) · กลาง=1.0–1.2 → mark WATCH. **flat-lot: done** (spec บังคับ 0.01 flat). **ห้าม:** แก้ EA/zone script · optimize param ใดๆ · เขียน verdict/scorecard · แตะบัญชี. **swap-drag note บังคับ:** BTC long swap −14.67%/yr (memory crypto lane) — ใส่บรรทัดนี้ใน result file เสมอ. **ทำได้:** qwen/ZCode (มี checklist ครบ) · ผลดิบ → `_triage/ORDER142_AGMC_RESULTS.md` + สถานะ DONE รอ REVIEW.
 
 ## ORDER-143 — SS1 LondonORB lever ค้าง: partial-TP + trend-filter sweep — `OPEN` (agent batch lane — ต่อจาก 140)
