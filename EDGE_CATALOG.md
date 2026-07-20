@@ -346,3 +346,21 @@ pay for the occasional multi-leg SL. Swapping to a **basket-level ATR-TP** (`_2_
 `_2_BasketTP_ATRmult`, the proven Boss_14 pattern) lifted the SAME entry ~0.30 PF (0.65→0.94) across every cell.
 Basket-close (all legs exit together near basket-BEP+) is structurally right for DCA; per-leg TP fragments the
 basket. Confirms the Boss_14 GridLog exit design; use basket-TP (not per-leg fixed-TP) as the default DCA exit.
+
+## EDGE: XAU H4 trend pullback-continuation (TrendRider, ORDER-139, 2026-07-20) 🟩 VALIDATED CANDIDATE
+Entry = established trend (EMA50>200 + ADX≥20 + EMA separation ≥0.5×ATR) + pullback ที่แตะ EMA21 แล้วปิดกลับ
+ทิศ trend · SL 2×ATR · **Chandelier trail (HH10 − 2.5×ATR) ไม่มี fixed TP**. Funnel เต็มผ่านหมด (plateau 6-cell /
+holdout 1.33 / M4 retained / MC ruin 0 / corr ≤0.32). **Insight สำคัญ: AdxMin 20 (หลวม) ชนะ 25/30 ทั้ง BWD —
+EMA-separation ทำหน้าที่กรองแทน; ADX floor สูง = ตัด early-trend entries ที่เป็นกำไร BWD.** และ ChAtr กว้าง (3.0)
+ช่วย BWD เสมอ (trail แน่น = โดน whipsaw เขย่าออก). Reusable levers: Chandelier-trail exit + separation-gate.
+⚠️ BWD ~1.0 borderline → ห้ามใช้เป็น host DCA overlay (กฎ ORDER-136: BWD~1.0 base = overlay auto-fail).
+
+## DEAD-CELL: XAU M15 sweep-and-reject reversion (SweepReversal, ORDER-139, 2026-07-20) 🟨 PARKED-VERIFY(user)
+Sweep prior-day H/L + $25 grid ≥0.3ATR แล้วปิดกลับ + RSI confirm + ADX(H4) stand-down = **MAIN 1.31–1.85 จริง
+แต่ BWD <1 ทุก cell ที่ n สุขภาพดี** (2020-22 trend years: sweep ไม่ reject มัน continue) · ladder ครบ 4 lever × 2 TF.
+กลไก sweep-detect (wick beyond structural level + close-back) = อะไหล่ reversion ที่ reusable บน ranger home
+(EURUSD/EURGBP/AUDNZD ยังไม่เทส — ถ้าจะฟื้นให้ไปบ้านนั้น ไม่ใช่ tune XAU ต่อ).
+
+## NULL: LondonORB symbol expansion (ORDER-140, 2026-07-20)
+ORB plateau XAU M15 (1.17/1.07) ขยาย: GBP MAIN 0.79 ตาย · EUR ตายทั้งคู่ · USDJPY M15 1.14/1.10 + XAU M30
+1.13/1.08 @n~700 = **edge จริงแต่บางใต้ bar ทุกบ้าน** — ORB-with-ATR-band เป็น broad thin edge ไม่ใช่ deploy edge.

@@ -39,3 +39,4 @@ account,magic,bundle_dir,ex5_file,set_file,confidence,notes
 463666728,990120,_vps_deploy/MACROGATE_DEMOLEG,Boss_12_Breakout.ex5,,medium,no .set in bundle - inputs set manually per README (attestation gap: lock a .set)
 463666728,990025,_vps_deploy/CRYPTO_TRENDRIDER,EA_SUPERTREND.ex5,ST_BTC_deploy.set,high,README magic 990025 confirmed; PENDING_ATTACH
 463666728,990030,_vps_deploy/CRYPTO_TRENDRIDER,EA_DONCHIAN.ex5,DON_ETH_deploy.set,high,README magic 990030 confirmed; PENDING_ATTACH
+463666728,992004,_vps_deploy/W2_S1_TRENDRIDER_XAU,TrendRider_XAU.ex5,S1_TrendRider_XAU_deploy.set,high,bundle created same session as verdict (ORDER-139 2026-07-20)

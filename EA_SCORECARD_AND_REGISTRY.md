@@ -240,6 +240,17 @@ DEMO set `Boss14_GridLog_XAU_DEMO.set` (lot 0.05 de-scaled, magic 990207)** = no
 | EA_GoldenEmber_Pivot (Boss 6 MTF Range Pivot) | NZDUSD H1 PF 1.01 | ★★★ | **DEAD (2026-06-28)** | IS 2023-2026 PF=1.01, DD=24.66%, 116t / OOS 2021-2023 PF=1.05, DD=25.79% — flat + massive DD. Robust pass (best optimizer result) still gives no IS edge. GEP DQ — do NOT revisit |
 | EA_LNBREAK (London NY breakout) | GBPUSD H1 PF 1.09 | ★★★ | **DEAD (2026-06-28)** | Multi-symbol smoke 2023-2026 M2: GBPUSD 1.09 / EURUSD 1.02 / XAUUSD 1.07 / GBPJPY 0.78 / USDJPY 0.87. Best PF=1.09 after tp_mult=4 tweak — below gate 1.20. London breakout has no durable H1 edge on these symbols |
 
+### MT5 — WAVE-1/2 XAU STRATEGY EAs (15-strategy design 2026-07-19; verdicts 2026-07-19/20 · ORDER-139/140/141)
+| EA (magic) | Home | Conf | Verdict | Reason / evidence |
+|---|---|---|---|---|
+| (TRND)_TrendRider_XAU (992004) | XAU H4 | ★★★ | **CANDIDATE → DEMO-ready (PENDING_ATTACH)** | full funnel 2026-07-20: 27-cell ladder → 6-cell plateau AdxMin20×Sep{.3,.5}×Ch{2..3} all-pass; center a20/s0.5/c2.5 MAIN 1.63/112t eqDD 2.64 · BWD 1.03/139t · holdout 2026H1 **1.33**/23t (burned; n thin) · M4 1.61/1.01 retained · MC ruin 0% DD95 4.15 PF-5th 1.61 · corr cohort ≤0.32 LOW. ⚠️ BWD borderline → demo isolate, no auto-live. Bundle `_vps_deploy/W2_S1_TRENDRIDER_XAU` |
+| (MR)_SweepReversal_XAU (992006) | XAU M15 | ★★★ | **PARKED-VERIFY(user)** | ladder complete 4 lever (AdxMax/SweepAtr/TpAtr/RSI band) × 2 TF, 26 both-window cells: MAIN real pulse 1.31–1.85 แต่ BWD <1 ทุก cell ที่ n สุขภาพดี (0.65–0.97); last-opt RSI75/30 "pass" 1.43/1.01 ที่ n=27/33 = spike ไม่ใช่ plateau. Regime-dependent reversion (S2-class) |
+| (BRK)_LondonORB_XAU (992003) | XAU M15 | ★★★ | **BUILD-ON (คงเดิม — expand ไม่พบ home ใหม่)** | ORDER-140: plateau set (MinOr.5/TpRR3) บน GBP 0.79/1.10 · EUR 0.88/0.89 · **USDJPY M15 1.14/1.10** · **XAU M30 1.13/1.08** — UJ+XAU-M30 both-window >1 @n~700 = edge กว้างแต่บางใต้ bar. Lever ค้าง: partial-TP, trend filter |
+| (TRND)_TsMom_XAU (992001) | XAU D1 | ★★★ | **PARKED-VERIFY(user)** | 2026-07-19: MAIN 2.8–4.9 ทุก cell, BWD 0.52–0.77 ทุก cell + ADX last-opt ไม่ช่วย (V-reversal ≠ ADX-filterable). Real bull-only momentum edge; deploy path = demo-isolate หรือ macro regime-overlay (MRIS) |
+| (BRK)_AsianRange_XAU (992002) | XAU M30 | ★★★ | **DEAD-OPTIMIZED (cell)** | 2026-07-19: ladder ครบ (MaxRange×SellOk×TpRR last-opt); healthy-n ceiling MAIN 0.81/BWD~0.9; PF>1.2 cells = n 5–18 spikes. Breakout concept alive ที่ XAU H4 NY (คนละ cell) |
+| (MOM)_NyIgnition_XAU (992005) | XAU M15 | ★★☆ | **WATCH (smoke 1.02/639t)** | thin naked; ยังไม่ optimize — คิว Wave-3 |
+| (EXP)_AdaptGridMC (992007) | BTC/ETH CFD | ★☆☆ | **BUILT (no backtest yet)** | ORDER-141: MC block-bootstrap P10/P90 zone grid, flat-lot L3, band cap + −20% kill persisted; compile 0/0 + review PASS + zone script self-tested. ก่อน test: export D1 CSV จริง → gen zone → BWD hard-gate |
+
 ### MT5 — SIGNAL/FILTER RESEARCH (EA_RUNNER family)
 | Signal | Sym | IS PF | Conf | Verdict | Reason |
 |---|---|---|---|---|---|

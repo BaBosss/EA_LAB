@@ -17,6 +17,33 @@
 
 ---
 
+## ORDER-139 — Wave-2 XAU optimize ladders: S1 TrendRider H4 + SS4 SweepReversal M15 — `DONE + REVIEWED(Claude 2026-07-20): S1 = VALIDATED CANDIDATE → DEMO-ready 992004 (plateau 6-cell a20×s{.3,.5}×c{2..3}; center a20/s0.5/c2.5 MAIN 1.63/BWD 1.03/holdout 2026H1 1.33 (burned)/M4 1.61-1.01 retained/MC ruin 0 DD95 4.15/corr ≤0.32; BWD borderline → demo isolate) · SS4 = PARKED-VERIFY(user) (MAIN pulse 1.31–1.85, BWD <1 ทุก healthy-n cell; RSI last-opt pass เดียว = n=27 spike). bundle _vps_deploy/W2_S1_TRENDRIDER_XAU + DEPLOYMENTS row PENDING_ATTACH`
+**why:** Wave-2 smoke (2026-07-19): S1 MAIN 1.77/72t, SS4 1.31/146t — both PROCEED. Stage A (this session)
+pinned homes: S1 = H4 (H1 MAIN 1.02/BWD 0.76) · SS4 = M15 (M30 worse both windows). Naked BWD: S1 0.84, SS4 0.88.
+**bars (pre-registered ก่อนรัน Stage B):** optimize pass = MAIN ≥1.2 AND BWD ≥1.0 (soft) on a PLATEAU (center
+not peak, neighbors pass) · holdout 2026H1 ≥1.2 = deploy-track / 1.0–1.2 = BUILD-ON / <1.0 = selection-fit ·
+M4 both-window PF ≥1.0 retained, no model-switch cliff · dead = ceiling <1.0 both-window after ladder ≥3 lever
+× 2 TF + last-optimize.
+**flat-lot probe:** N/A (both single-position flat 0.01, real SL — no escalation).
+**method:** Stage B both-window grids (S1: AdxMin×SepAtr×ChAtr 27 cells · SS4: AdxMax×SweepAtr×TpAtr 18 cells)
+→ S1 funnel (holdout+M4 on locked plateau center) · SS4 last-optimize RSI band ก่อน verdict. CSVs
+`_mt5_auto/W2_*.csv`, sets `_mt5_auto/ab_sets/w2_s1|w2_ss4`.
+
+## ORDER-140 — SS1 LondonORB BUILD-ON: symbol×TF expansion — `DONE + REVIEWED(Claude 2026-07-20): ไม่มี home ใหม่ผ่าน bar — GBP 0.79 MAIN / EUR 0.88-0.89 ตาย · USDJPY M15 1.14/1.10 + XAU M30 1.13/1.08 @n~700 = both-window>1 แต่ใต้ 1.2 ทุกบ้าน → SS1 คง BUILD-ON; lever ค้าง = partial-TP + trend filter. CSV W2_SS1_EXPAND.csv`
+**why:** SS1 = BUILD-ON (plateau MAIN 1.14–1.17 / BWD 1.02–1.07 @n700, MAIN ใต้ hard bar 1.2). Doctrine
+build-on = ขยาย symbol×TF ก่อนตัดสิน.
+**bars (pre-registered):** cell ใหม่นับเป็น home เพิ่มเมื่อ MAIN ≥1.2 AND BWD ≥1.0 · 1.0–1.2 both = BUILD-ON คงเดิม ·
+corr pairwise <0.8 กับ cohort ก่อนเสนอ deploy. **flat-lot probe:** N/A (single-position OCO, real SL).
+**method:** plateau-center set (MinOr 0.5 / TpRR 3) บน GBPUSD/EURUSD/USDJPY M15 + XAUUSD M30, both-window.
+CSV `_mt5_auto/W2_SS1_EXPAND.csv`.
+
+## ORDER-141 — (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) — `DONE(build-only 2026-07-20) — backtest ยังไม่เริ่ม (ตามคิว user: spec→code→compile+tests พอ)`
+Spec: standalone (EXP)_ L3 flat-lot BUY ladder ระหว่าง P10/P90 จาก offline `_mt5_auto/adaptgrid_mc_zone.py`
+(10k paths × 60d, 24-day block bootstrap, 1000 D1 bars) · spacing 0.3×ATR(D1,30) หรือ geometric · band cap +
+MaxLevels ≤40 + MaxTotalLot + hard kill −20% equity persisted GV · magic 992007. mql-review PASS (C3 benign note) ·
+compile 0/0 · zone script self-tested (synthetic 1100-bar, 2k paths → sane P10/P90/N). **ก่อน backtest ต้อง:**
+export D1 CSV จริง (BTCUSD/ETHUSD) → gen zone → BWD 2020-22 = HARD gate + flat-lot per spec + swap-drag บันทึกใน verdict.
+
 ## ORDER-LANEC-REBUILD — SMC×STO rebuild for an SL plateau (parallel to live demo 991070) — `DONE + REVIEWED(Claude 2026-07-18): NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+holdout, magic 991071). Center MAIN 1.38/BWD 1.02 but holdout 1.09<1.2 (soft ~0.94-1.18 across whole plateau = 2026H1 regime weak, not config) + SL still not clean plateau (fragility moved to SL+20%=4.2 BWD 0.94) + rebuild BWD 1.02 < demo BWD 1.19. No decisive improvement → keep 991070 as-is, 991071 not deployed. SMCxSTO EURUSD-H1 = genuinely marginal reversion edge; further build-on = different HOME (TF/symbol) not more EURUSD-H1 SL tuning. verdict=_triage/ORDER_LANEC_REBUILD_VERDICT.md` (role: Claude judge · M4 driver)
 **why:** ORDER-LANEC-FAN found the demo config (SL=3.0) edge-positive both-window but **SL-fragile** — SL−20%
 (2.4×ATR) flips 0.94/0.99 both-window (center = cliff, not plateau). User (2026-07-18): keep 991070 on demo AS-IS,
