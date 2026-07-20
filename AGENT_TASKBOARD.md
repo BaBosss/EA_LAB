@@ -17,6 +17,22 @@
 
 ---
 
+## ORDER-146 — EmaStoRev (SMCxSTO) NEW-HOME sweep — `OPEN` (agent batch ~24 runs · doctrine: build-on = different HOME ไม่ใช่ SL เดิม)
+**source:** ORDER-LANEC-REBUILD close note ("further build-on = different HOME (TF/symbol) not more EURUSD-H1"). **spec:** EA `(EXP)_EmaStoRev` center ORDER-107 (StoK13/OS30/AdxMax30/EMA50/SL3.0/TP1.2) **ห้ามแก้ param อื่น**. homes ใหม่: EURGBP + AUDNZD + EURCHF + USDCHF × H1 + H4 = 8 cells × MAIN+BWD M1 = 16 runs → M4 ซ้ำเฉพาะ cell ที่ M1 both-window ≥1.0 (คาด ≤4 → ~24 runs). Reports `ESR_{SYM}_{TF}_{WIN}_{MODEL}`.
+**bars:** mark PASS เมื่อ MAIN≥1.2 AND BWD≥1.0 ทั้ง M1+M4 · 1.0–1.2 = WATCH · ต่ำกว่า = FAIL. **flat-lot: N-A** (single-position 0.01 real SL). **ห้าม:** แตะ 991070/991071 · tune ใดๆ · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER146_ESR_NEWHOME_RESULTS.md`.
+
+## ORDER-147 — S1 TrendRider XAU (992004 CANDIDATE) symbol expansion — `OPEN` (agent batch ~20 runs · BUILD-ON doctrine หลัง validate)
+**source:** ORDER-139 (S1 = VALIDATED CANDIDATE XAU H4). doctrine 2b: ขยาย symbol×TF เอาทุก home ที่ผ่านบาร์. **spec:** locked center a20/s0.5/c2.5 **verbatim ห้าม re-tune**. symbols: XAGUSD + GBPJPY + USDJPY + EURJPY × H4 (+ H1 เฉพาะ XAG) = ~5 cells × MAIN+BWD M1 = 10 runs → M4 survivors (~20 runs รวม). Reports `S1X_{SYM}_{TF}_{WIN}_{MODEL}`.
+**bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · corr Claude รันเองตอน review (agent แค่เก็บ report ครบ). **flat-lot: N-A** (single-position). **ห้าม:** แตะ set/demo 992004 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER147_S1_EXPAND_RESULTS.md`.
+
+## ORDER-148 — Boss_17 Wave5 symbol expansion (JPY crosses) — `OPEN` (agent batch ~16 runs)
+**source:** Wave5 validated XAU/XAG/USDJPY (990301-303). ยังไม่เคยเทส JPY crosses. **spec:** params จาก `_vps_deploy/WAVE5_XAU/WAVE5_XAU_H1_demo_v1.set` (fib23.6/mult0.618/trail 2000-800, ExitMode=23, _9_MaxLevels=1) **ห้าม tune**. symbols: GBPJPY + EURJPY + AUDJPY + CHFJPY × H1 + H4 = 8 cells × MAIN M1 ก่อน (8 runs) → เฉพาะ MAIN≥1.1 ค่อยรัน BWD + M4 (~16 runs รวม). Reports `W5X_{SYM}_{TF}_{WIN}_{MODEL}`.
+**bars:** PASS=MAIN≥1.2 AND BWD≥1.0 · n ต่อ cell ≥30 มิฉะนั้น mark THIN ห้ามนับ (Wave5 เทรดบาง). **flat-lot: N-A**. **ห้าม:** แตะ 990301-303 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER148_W5_EXPAND_RESULTS.md`.
+
+## ORDER-149 — MacdDiv divergence: majors D1/H4 sweep (ต่อยอด 999094 + GBPUSD-D1 parked) — `OPEN` (agent batch ~28 runs)
+**source:** MacdDiv XAU H4 = demo 999094 (M4 confirmed) + ORDER-117 พบ GBPUSD MacdDiv D1 PARKED-VERIFY. ยังไม่เคย sweep majors เป็นระบบ. **spec:** EA MacdDiv เดิม (source เดียวกับ bundle 999094) default/locked param **ห้าม tune**. symbols: GBPUSD + EURUSD + USDJPY + AUDUSD + XAGUSD + GBPJPY × D1 + H4 = 12 cells × MAIN M1 (12 runs) → BWD เฉพาะ MAIN≥1.1 → M4 survivors (~28 runs รวม). Reports `MDX_{SYM}_{TF}_{WIN}_{MODEL}`.
+**bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · D1 cells n≥20/window มิฉะนั้น THIN. **flat-lot: N-A** (single-position). **ห้าม:** แตะ 999094 demo · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/ORDER149_MDX_SWEEP_RESULTS.md`.
+
 ## ORDER-142 — AdaptGridMC backtest campaign (ต่อจาก 141 build) — `BLOCKED(Codex, 2026-07-20: main MT5 D1 export unavailable)` (agent batch lane: qwen/ZCode — Claude quota out ~3 วัน, ตัดสินเมื่อกลับ)
 **source:** ORDER-141 (build DONE, backtest ยังไม่เริ่ม) + FINDYOUR8 catalog #1. **spec (mechanical ทั้งหมด — ห้าม agent ตีความ):**
 (1) export D1 CSV จริง BTCUSD+ETHUSD จาก MT5 (`Meta 5` GUI ปิดก่อน headless) ≥1000 bars ล่าสุด → (2) รัน `_mt5_auto/adaptgrid_mc_zone.py` ต่อ symbol (params ตาม default ใน ORDER-141: 10k paths × 60d, block 24d) เก็บ P10/P90/N ลง `_mt5_auto/adaptgrid_zones.txt` → (3) tester `(EXP)_AdaptGridMC_rev01` M1 flat-lot 0.01: MAIN 2023.01–2025.12 + BWD เท่าที่ data มี (BTC CFD history อาจเริ่มหลัง 2020 — **บันทึกช่วงจริงที่ใช้ ห้ามเงียบ**) ต่อ symbol → (4) M4 ซ้ำเฉพาะ cell ที่ M1 PF≥1.0. Reports `AGMC_{SYM}_{WIN}_{MODEL}`.
