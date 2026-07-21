@@ -1138,9 +1138,11 @@ mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG 
 (221 src) · `.Final EA` (189 src + 4,514 bin) → merged catalog + ตาราง "ใหม่จริง vs ซ้ำของเดิม"
 
 **Wave 1 (ต่อจาก 085B/083B ที่ค้างคิว):**
-- **091B — BOT MOGUL report sweep:** parse 713 vendor reports → ตาราง claimed PF/DD/symbol/TF →
+- **091B — BOT MOGUL report sweep:** `BLOCKED(Codex, 2026-07-21 18:25 +07:00: required vendor-report inputs absent)` · parse 713 vendor reports → ตาราง claimed PF/DD/symbol/TF →
   คัด top ตาม claim × โครงผ่าน X-ray → **BWD-OOS spot-kill ทีละ 5** (1 รัน/ตัว ฆ่าถูกสุด) —
   ห้ามเชื่อ report แนบจนกว่า BWD เราเองผ่าน
+
+**091B Codex check (2026-07-21):** `_intake_drop` contains source/binary files but no vendor report artifacts required by this sub-order (`.htm/.html/.xml/.set`); `_mt5_report_drop` and `_inbox` contain unrelated legacy artifacts only. No parse/spot-kill performed; no verdict.
 
 ---
 
