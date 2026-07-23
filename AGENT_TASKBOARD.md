@@ -129,6 +129,23 @@
 **ห้าม:** ลบ 4 script เดิมก่อน regression ผ่าน · ตั้ง window เอง (ต้องอ่านจาก pin) · ใช้ผล WFA ตัดสิน EA ตัวใดในใบนี้ · Model-2.
 **ทำได้:** qwen/ZCode/Codex (mechanical + มี regression cage เทียบ CSV เดิม) · 👉 แนะ: qwen (ถูกสุด, ตรวจด้วยตัวเลขได้).
 
+## ORDER-168 — RSI-MR (990103) full WFA re-run บน pinned config — `REVIEWED(Claude 2026-07-23) — แก้คำตัดสิน ORDER-166 ให้ตรงหลักฐานเต็ม: 3/3 OOS ยัง profitable แต่ margin ไม่เท่ากัน ไม่ใช่ "invalidated" เหมาว่าตายหมด`
+> ⚠️ **แก้ ORDER-166 ที่เขียนไว้ก่อนหน้า:** ตอนนั้นสรุป "EVIDENCE-INVALIDATED, ห้าม attach" จาก **1 data point เดียว** (fold2-OOS 1.08 vs 1.74) — ถูกทางแต่ด่วนไป ตอนนี้มี WFA เต็ม 3 window/12 run แล้วเห็นภาพจริง.
+**ผล (full-pinned, Model 4, leverage asserted, 3 window แบบเดิมของ script ต้นฉบับ):**
+| Window | IS best (atr) | **OOS** | เทียบของเดิม |
+|---|---|---|---|
+| 1 (2020-21→21-22) | 1.44 (atr8) | **1.30**/140t | เดิม ~1.31 — **ตรงกัน** |
+| 2 (2021-23→23-24) | 1.43 (atr9) | **1.08**/130t | เดิม ~1.74 — **นี่คือรอยที่ ORDER-157/166 เจอ — ยืนยันซ้ำ** |
+| 3 (2023-25→25-26) | 1.50 (atr10) | **2.51**/90t DD2.58% | ตัวเลขสูง แต่ n พอ (90) + DD ต่ำ + M4 อยู่แล้ว — ไม่ใช่ artifact ชัดเจน แค่ควรระวัง (PF>~3 เกณฑ์สงสัย ตัวนี้ยังไม่ถึง) |
+**สรุปที่ถูกต้องกว่า:** WFA ยัง **3/3 OOS profitable บน pinned config จริง** (ไม่ตายทั้งชุดแบบที่เขียนไว้) แต่ **window 2 margin บางมาก (1.08)** ตรงกับที่ ORDER-157 เจอเป๊ะ — average OOS PF ~1.63 (เทียบ IS-best เฉลี่ย 1.46 = WFE>1 แต่ลากขึ้นด้วย window 3 เป็นหลัก) **การอ่านที่ตรงหลักฐานที่สุด: edge มีจริง แต่ไม่สม่ำเสมอเท่าที่ score 89 บอกไว้** (window ที่แย่สุด = แค่เฉียดกำไร ไม่ใช่ลบ).
+**verdict:** ปลด "ห้าม attach เด็ดขาด" → เปลี่ยนเป็น **PARKED-VERIFY(user) ระดับความเชื่อมั่นลดลง** — attach ได้ถ้า user ยอมรับว่า margin จริงบางกว่าที่คิด (ไม่ใช่ ROBUST-89 อีกต่อไป) ไม่ใช่ CANDIDATE ปกติ. raw `_mt5_auto/RSIMR_WFA_PINNED.csv` + sets `_mt5_auto/ab_sets/order168_rsimr_wfa/`.
+
+## ORDER-169 — SS4 SweepReversal EURUSD coarse grid (RoundStep×AdxMax) — `REVIEWED(Claude 2026-07-23): ceiling ~1.08-1.21 บน n สุขภาพดี — ยังไม่ผ่าน deploy bar, คง PARKED-VERIFY`
+**grid:** RoundStep{0.0015,0.0030,0.0050,0.0080} × AdxMax{20,25,28,35}, full-pinned, MAIN 2023-2025, 16 cells.
+**อ่านผล — หา plateau ไม่ใช่ peak:** cell ที่ PF สูงสุด (rs0.008/ax20=**5.40**, rs0.005/ax20=**2.46**) ล้วน **n=6-7 บางเกินไป** = spike ไม่ใช่ edge (ตรง skill catalog "coarse-grid spiky surface"). **plateau จริงอยู่ที่ rs0.0030:** ax25=1.06/n31 · ax28=1.08/n40 · ax35=0.99/n65 — ไล่ลงมาราบเรียบ ไม่ใช่กระโดด = สัญญาณจริงแต่บาง · **ตรง ORDER-150 เป๊ะ** (default ax28/rs0.0030 = 1.08/n40 คนละรันแต่ได้เลขเดียวกัน = สอดคล้อง). แถว rs0.0080 (ax25-35: 1.50→1.25→1.15) ก็ไล่ลงราบเรียบเหมือนกันแต่ n บางกว่า (17-40) — plateau รอง.
+**verdict:** ceiling ทั้ง 2 พื้นที่ที่ดูน่าเชื่อ (rs0.0030 และ rs0.0080) อยู่แค่ **1.06-1.21 ที่ n พอ** — ไม่ผ่าน deploy bar 1.2 อย่างมั่นใจ (1.21 เดียวที่ทะลุ = n=13 บางไป). **คง PARKED-VERIFY** — ตอบคำถามที่ค้างไว้ (RoundStep×AdxMax ไม่ใช่ lever ที่ปลดล็อกได้) lever ที่เหลือยังไม่แตะ = SweepAtr/TpAtr (ตามที่บันทึกไว้ตั้งแต่ ORDER-150).
+**ห้าม:** เลือก rs0.008/ax20 (PF5.40/n6) หรือ rs0.005/ax20 (2.46/n7) เป็น candidate — n ต่ำกว่าเกณฑ์ต่ำสุดของ type นี้ (M15 reversion ควรมีหลักร้อย). raw `_mt5_auto/O169_SS4_EURUSD_COARSE.csv`.
+
 ## ORDER-167 — [funnel completion] holdout ที่ค้างของ ORDER-147/149 บน pinned config — `REVIEWED(Claude/Opus 2026-07-23) — 4/5 cells ตายที่ holdout · 1 เหลือ BUILD-ON`
 **source:** ORDER-166 ปลด blocker แล้ว → เคลียร์ของค้าง 2 ใบที่ "ผ่าน both-window แต่ยังไม่ holdout" ซึ่งเป็นด่านที่ยังไม่เคยเดิน. รันทั้งหมดบน **full-pinned .set + leverage asserted** (มาตรฐานใหม่หลัง ORDER-165).
 **ผลรวม (รายละเอียดอยู่ในบล็อก ORDER-147/149 ตามลำดับ):**
