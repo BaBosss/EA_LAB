@@ -84,11 +84,15 @@ EVIDENCE IN
 
 ## Model transition (Fable → Opus) — ✅ ACTIVE ตั้งแต่ 2026-07-04 (Fable โควต้าหมดจริง เร็วกว่าแผน 07-07)
 
-**UPDATE 2026-07-11 (Fable-seat วันเดียวก่อนโควต้าเหลือ ~10%):** Opus กลับเป็น seat หลักตั้งแต่ session
-ถัดไป · **Fable ที่เหลือ = จองให้ 4 กรณีนี้เท่านั้น ผ่าน skill `fable-advisor` (one-shot brief — ห้ามเผาเป็น
-session เต็ม):** (1) verdict ผล ST03 ที่ user optimize มือ (2) ตรวจ spec ORDER-082 Wave5 ก่อน build
-(3) การ promote เงินจริงครั้งแรกของ candidate ตัวถัดไป (4) RCA เหตุการณ์เงินจริงผิดปกติ · งานอื่นทุกอย่าง =
-Opus + Codex + agent lanes ตามเดิม · แผนงานเต็ม = `PROJECT_STATE.md` §7 PLAN 2026-07-12+
+**UPDATE 2026-07-23 (user ratified):** **Fable-seat กลับมาใช้ได้ถาวรแล้ว** — เงื่อนไข trial 1-week
+เดิมจบไป กฎ "จองให้ 4 กรณี" ด้านล่างล้าสมัย · seat ปัจจุบันรันบน model ไหนก็ทำหน้าที่ lead/judge
+เต็มรูปแบบ · ถ้า Fable หายไปอีก → กลับ Opus ต่อเนื่อง · commit trailer รับทั้ง Fable/Opus (AGENTS.md §5) ·
+**เงื่อนไขเดียวที่ user ย้ำ: Fable แพง — ต้องกระจายงาน mechanical ให้ tier ถูกกว่าเสมอ (qwen/Sonnet/Codex
+ตาม cost ladder) ห้ามเผา Fable เป็นแรงงาน batch**
+
+<sub>UPDATE เดิม 2026-07-11 (ล้าสมัย — เก็บไว้เป็นประวัติ): Fable เหลือโควต้า ~10% จึงจองให้ 4 กรณีผ่าน
+skill `fable-advisor`: (1) verdict ST03 ที่ user optimize มือ (2) ตรวจ spec ORDER-082 Wave5 (3) promote
+เงินจริงครั้งแรกของ candidate ถัดไป (4) RCA เหตุการณ์เงินจริงผิดปกติ · แผนงานเต็ม = `PROJECT_STATE.md` §7</sub>
 
 **seat lead/judge = Claude Code รันบน Opus แล้ว.** role อยู่ที่ seat ไม่ใช่ model — Opus ทำหน้าที่เดิม
 ของ Fable ทุกอย่าง. รายละเอียด workflow ทีมหลัง transition (tier ladder + quota lane + Codex review) =

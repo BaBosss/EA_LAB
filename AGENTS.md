@@ -110,8 +110,12 @@ capability ที่แท้จริงตอนนี้มาจาก Codex
    — agent อื่นไม่ต้องใช้กฎพวกนี้ตัดสินเอง แค่**อย่ารายงานสรุปที่ขัดกับมัน** (รายงานตัวเลขดิบพอ)
 5. **Git:** commit บ่อย, ข้อความ commit ขึ้นต้นด้วย tag ตัวเอง `[codex]` / `[zcode]` / `[oc-*]` · ห้าม push/force/rebase/amend ·
    ห้าม `--no-verify` (pre-commit guard คือกันชนของทุกคน) · ทำงานบน branch ปัจจุบัน อย่าสร้าง/สลับ branch เอง ·
-   **Claude commit ลงท้ายด้วย `Co-Authored-By:` ตาม seat model ปัจจุบัน** (ตั้งแต่ 2026-07-04 = `Claude Opus 4.8
-   <noreply@anthropic.com>` — ไม่ใช่ Fable แล้ว; ไม่มี git config สำหรับ trailer นี้ เป็น message trailer ที่ใส่มือทุก commit)
+   **Claude commit ลงท้ายด้วย `Co-Authored-By:` ตาม seat model ปัจจุบัน — รับได้ทั้งสอง trailer**
+   (user ratified 2026-07-23): `Claude Opus 4.8 <noreply@anthropic.com>` หรือ `Claude Fable 5
+   <noreply@anthropic.com>` แล้วแต่ seat ที่รันอยู่จริง (Fable-seat กลับมาใช้งานได้แล้ว — เงื่อนไข trial
+   1-week เดิมจบไปแล้ว ถ้า Fable หายไปอีกก็กลับ Opus ต่อเนื่อง) · ไม่มี git config สำหรับ trailer นี้
+   เป็น message trailer ที่ใส่มือทุก commit · **เงื่อนไขสำคัญของ Fable-seat: ต้องกระจายงาน mechanical
+   ให้ tier ถูกกว่าเสมอ (qwen/Sonnet/Codex ตาม cost ladder) — Fable แพง ห้ามเผาเป็นแรงงาน batch**
 6. Python = portable: dot-source `scripts\use_python.ps1` ก่อน (ไม่มี system python)
 7. **หลัง commit ทุกครั้ง รัน `powershell -File D:\EA_LAB\scripts\make_status.ps1`** — regenerate
    STATUS.md + สำเนาขึ้น OneDrive ให้ user ดูจากมือถือ (ห้ามแก้ STATUS.md ด้วยมือ)
