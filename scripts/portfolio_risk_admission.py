@@ -332,15 +332,26 @@ def _read_report_text(path):
 def _extract_backtest_monthly(paths):
     """Monthly realized P&L (profit+commission+swap of 'out' deals) from MT5 backtest
     report HTML files -- the same bucket method as _mt5_auto/corr_monthly.py
-    (ORDER-154 DESIGN source), with this module's corruption discipline on top:
-    a present-but-unparseable or non-finite money cell poisons the WHOLE series
-    (returns None), it never becomes a fabricated observation."""
+    (ORDER-154 DESIGN source), with this module's corruption discipline on top.
+
+    Returns (monthly, None) on success or (None, reason) when the series must be
+    POISONED -- a poisoned series never contributes observations. Poison causes
+    (ORDER-174 round-2, audit F2/F3/F5): unreadable file · unparseable or
+    non-finite money cell · an impossible calendar month (a '2026.13' is corrupt
+    data, not a 13th month) · the SAME month appearing in two mapped reports
+    (windows must be non-overlapping and month-boundary-aligned; a month summed
+    from two files double-counts deals and biases the correlation)."""
     monthly = defaultdict(float)
+    months_by_file = []
     row_re = re.compile(r"<tr[^>]*>(.*?)</tr>", re.S)
     cell_re = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.S)
     tag_re = re.compile(r"<[^>]+>")
     for path in paths:
-        text = _read_report_text(path)
+        try:
+            text = _read_report_text(path)
+        except OSError as e:
+            return None, f"unreadable mapped report {Path(path).name}: {e}"
+        file_months = set()
         for r in row_re.findall(text):
             cells = [tag_re.sub("", c).strip() for c in cell_re.findall(r)]
             if len(cells) != 13 or cells[4].lower() != "out":
@@ -348,16 +359,33 @@ def _extract_backtest_monthly(paths):
             mm = re.match(r"(\d{4})\.(\d{2})", cells[0])
             if not mm:
                 continue
+            if not (1 <= int(mm.group(2)) <= 12):
+                return None, (
+                    f"impossible calendar month {cells[0]!r} in {Path(path).name} "
+                    "-- report data corrupt"
+                )
             parts = []
             for idx in (10, 8, 9):  # profit, commission, swap
                 v = _num(cells[idx].replace("\xa0", "").replace(" ", "").replace(",", ""))
                 if v is CORRUPT:
-                    return None  # poisoned -- same rule as the live-deals path
+                    return None, f"corrupt money cell in {Path(path).name}"
                 parts.append(v)
-            monthly[f"{mm.group(1)}-{mm.group(2)}"] += sum(parts)
+            ym = f"{mm.group(1)}-{mm.group(2)}"
+            file_months.add(ym)
+            monthly[ym] += sum(parts)
+        months_by_file.append(file_months)
+    for i in range(len(months_by_file)):
+        for j in range(i + 1, len(months_by_file)):
+            overlap = months_by_file[i] & months_by_file[j]
+            if overlap:
+                return None, (
+                    f"month(s) {sorted(overlap)} appear in more than one mapped report "
+                    "-- overlapping windows double-count deals; map only "
+                    "non-overlapping, month-boundary-aligned reports"
+                )
     if any(not math.isfinite(v) for v in monthly.values()):
-        return None  # aggregation overflow poisons the series too
-    return monthly
+        return None, "aggregation overflow (non-finite monthly total)"
+    return monthly, None
 
 
 def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
@@ -368,9 +396,13 @@ def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
     monthly_by_magic = {}
     skipped = []
     p = Path(map_csv)
-    if not p.exists():
+    if not p.is_file():
         return monthly_by_magic, skipped
     paths_by_magic = defaultdict(list)
+    # ORDER-174 round-2 (audit F1): a magic whose mapped rows are not ALL present and
+    # readable is excluded ENTIRELY -- a partial series (IS present, OOS missing)
+    # would be published as if complete and can bias the measured correlation.
+    bad_magic = {}
     with open(p, encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             magic = (row.get("magic") or "").strip()
@@ -378,14 +410,21 @@ def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
             if not magic or not rel:
                 continue
             rp = (ROOT / rel) if not Path(rel).is_absolute() else Path(rel)
-            if not rp.exists():
-                skipped.append(f"{magic}: report not found: {rel}")
+            if not rp.is_file():  # F5: a directory passes exists() but crashes reads
+                bad_magic.setdefault(
+                    magic, f"mapped path missing or not a regular file: {rel}")
                 continue
             paths_by_magic[magic].append(rp)
+    for magic, reason in bad_magic.items():
+        skipped.append(
+            f"{magic}: {reason} -- WHOLE magic excluded (a partial series would "
+            "understate risk); its pairs fall back to the 1.0 default"
+        )
+        paths_by_magic.pop(magic, None)
     for magic, paths in paths_by_magic.items():
-        monthly = _extract_backtest_monthly(paths)
-        if monthly is None:
-            skipped.append(f"{magic}: corrupt/non-finite cell in report -- series poisoned")
+        monthly, reason = _extract_backtest_monthly(paths)
+        if reason is not None:
+            skipped.append(f"{magic}: {reason} -- series poisoned, pairs default to 1.0")
             continue
         if not monthly:
             skipped.append(f"{magic}: no realized 'out' deals parsed from mapped report(s)")
@@ -2007,6 +2046,65 @@ def _cage_28_backtest_corr_provenance():
         assert any("333" in s for s in cc["backtest_skipped"])
 
 
+def _cage_29_backtest_map_fail_soft_hardening():
+    """ORDER-174 round-2 (audit F1-F5): partial-missing magic excluded WHOLE,
+    impossible months poison, overlapping windows poison, directory paths fail soft,
+    and the output guard refuses the map and mapped reports as destinations."""
+    import argparse as _ap
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        months = ("2026.01", "2026.02", "2026.03", "2026.04")
+        _write_tmp_report(td / "good.htm", [(f"{m}.15 10:00:00", "10") for m in months])
+        _write_tmp_report(td / "b.htm",
+                          [(f"{m}.15 10:00:00", str(5.0 * (i + 1))) for i, m in enumerate(months)])
+        _write_tmp_report(td / "badmonth.htm",
+                          [(f"2026.1{d}.15 10:00:00", "1") for d in "3456"])
+        _write_tmp_report(td / "d1.htm",
+                          [(f"{m}.15 10:00:00", str(float(i + 1))) for i, m in enumerate(months)])
+        _write_tmp_report(td / "d2.htm",
+                          [(f"2026.0{d}.15 10:00:00", "1") for d in "4567"])  # April overlaps d1
+        (td / "subdir").mkdir()
+        with open(td / "map.csv", "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["magic", "report_path", "notes"])
+            w.writerow(["A", str(td / "good.htm"), "present segment"])
+            w.writerow(["A", str(td / "missing.htm"), "missing segment"])
+            w.writerow(["B", str(td / "b.htm"), "clean"])
+            w.writerow(["C", str(td / "badmonth.htm"), "months 13-16"])
+            w.writerow(["D", str(td / "d1.htm"), "IS"])
+            w.writerow(["D", str(td / "d2.htm"), "overlapping OOS"])
+            w.writerow(["E", str(td / "subdir"), "a directory"])
+        monthly, skipped = load_backtest_monthly_by_magic(td / "map.csv")
+        assert set(monthly) == {"B"}, (
+            f"only the clean magic may survive, got {sorted(monthly)} / skipped={skipped!r}"
+        )
+        joined = " | ".join(skipped)
+        assert "A:" in joined and "WHOLE magic excluded" in joined, joined
+        assert "C:" in joined and "impossible calendar month" in joined, joined
+        assert "D:" in joined and "more than one mapped report" in joined, joined
+        assert "E:" in joined and "not a regular file" in joined, joined
+
+        # F4: the map and every mapped report are refused as output destinations
+        dep = td / "dep.csv"
+        exp = td / "exp.csv"
+        dep.write_text("magic\n", encoding="utf-8")
+        exp.write_text("magic\n", encoding="utf-8")
+        args = _ap.Namespace(deployments=str(dep), expectations=str(exp),
+                             backtest_map=str(td / "map.csv"))
+
+        def refused(dest):
+            try:
+                _assert_safe_output_path("--out-md", str(dest), args)
+            except SystemExit:
+                return True
+            return False
+
+        assert refused(td / "map.csv"), "the corr map must be a protected destination"
+        assert refused(td / "good.htm"), "a mapped report must be a protected destination"
+        assert not refused(td / "fresh_report.md"), "a plain new report path must be allowed"
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -2036,6 +2134,7 @@ CAGE_TESTS = [
     ("26_pearson_result_stays_in_range", _cage_26_pearson_result_stays_in_range),
     ("27_strict_budget_and_type_conflict", _cage_27_strict_budget_and_type_conflict),
     ("28_backtest_corr_provenance", _cage_28_backtest_corr_provenance),
+    ("29_backtest_map_fail_soft_hardening", _cage_29_backtest_map_fail_soft_hardening),
 ]
 
 
@@ -2059,6 +2158,26 @@ def run_selftest():
 # main
 # --------------------------------------------------------------------------- #
 
+def _backtest_protected_paths(map_csv):
+    """ORDER-174 round-2 (audit F4): the corr map and every report it points at are
+    INPUTS -- collect their resolved paths so the output-path guard can refuse to
+    overwrite them. Fail-soft: an unreadable map just protects the map path itself."""
+    out = {}
+    p = Path(map_csv)
+    out[p.resolve()] = "the backtest corr map it reads"
+    try:
+        if p.is_file():
+            with open(p, encoding="utf-8-sig", newline="") as f:
+                for row in csv.DictReader(f):
+                    rel = (row.get("report_path") or "").strip()
+                    if rel:
+                        rp = (ROOT / rel) if not Path(rel).is_absolute() else Path(rel)
+                        out[rp.resolve()] = f"a mapped backtest report it reads ({rel})"
+    except OSError:
+        pass
+    return out
+
+
 def _assert_safe_output_path(label, dest, args):
     """Refuse to write over the script's own inputs or any .set file (ORDER-170 SEV-2 #8).
     This script is advisory-only; a run must never be able to destroy the inventory it
@@ -2072,6 +2191,7 @@ def _assert_safe_output_path(label, dest, args):
         Path(DEPLOYMENTS_CSV).resolve(): "portfolio/DEPLOYMENTS.csv",
         Path(EXPECTATIONS_CSV).resolve(): "portfolio/expectations.csv",
     }
+    protected.update(_backtest_protected_paths(getattr(args, "backtest_map", BACKTEST_CORR_MAP)))
     if p in protected:
         raise SystemExit(f"REFUSED: {label}={dest} would overwrite {protected[p]}")
     # ORDER-170 round-3 SEV-2 #7: Path.resolve() equality cannot see NTFS hard links
