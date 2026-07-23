@@ -543,7 +543,9 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
         existing_dd = 0.0
     sum_sq_others = existing_dd * existing_dd
 
-    if existing_dd > budget_pct:
+    # round-10 audit MINOR: route through the same mutation-locked strict helper --
+    # no hand-written DD-vs-budget comparison may remain anywhere in this function.
+    if not _fits_budget(existing_dd, budget_pct):
         return {
             "magic": candidate_magic,
             "status": "DEFER_ESCALATE",
@@ -1736,6 +1738,12 @@ def _cage_27_strict_budget_and_type_conflict():
     assert _fits_budget(25.0, 25.0) is True
     assert _fits_budget(25.0 + 1e-10, 25.0) is False, (
         "_fits_budget must be strict -- no tolerance may return on any call site"
+    )
+    # round-10 audit MINOR: the pre-existing-over-budget branch must be strict too
+    pre = admit_candidate("C", 1.0, {"A": 25.0000000005}, {}, 25.0,
+                          broker_min_lot_factor=0.0001)
+    assert pre["status"] == "DEFER_ESCALATE", (
+        f"existing portfolio a hair over budget must defer, not admit: {pre!r}"
     )
 
 

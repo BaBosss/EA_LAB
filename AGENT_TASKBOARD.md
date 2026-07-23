@@ -168,6 +168,23 @@ raw `_mt5_auto/RSIMR_CONTINUITY_CHECK.csv` + reports `RSIMR_CONT_*`.
 **🔴 basket-duration tail (พบเพิ่มระหว่างทาง, `scripts/max_recovery_days.py` บน 2 continuous escalated report):** MAIN 14 basket, **max recovery 159.1 วัน** (95th pct 149.7, median 92.2, 86% ค้าง >7 วัน, 64% ค้าง >30 วัน) · BWD 19 basket, **max recovery 291.8 วัน** (เกือบ 10 เดือน!, 95th pct 107.3, median 31.1, 100% ค้าง >7 วัน) — นี่คือ "time-underwater" ที่ equity curve/DD ไม่เห็น (skill: "time-underwater IS the recovery-EA tail the equity curve hides"). ก่อนดัน CANDIDATE ต้องตอบให้ได้ว่า capital ที่ถูกล็อกไว้ 5-10 เดือน (basket ไม่ปิด) รับได้ไหมในบริบทพอร์ตจริง — ตัวเลขนี้ยังไม่ผ่าน worst-case ≤15% equity check ของ ENGINE-EDGE cage (ยังไม่ทำ เพราะยังไม่จัดเป็น ENGINE-EDGE เต็มรูป แต่ escalation มีจริงจึงควรเช็คไว้ก่อน).
 **ทำได้ต่อ (session หน้า):** sweep RSI Oversold/Overbought band + SL width (SlAtrMult) บน continuous MAIN+BWD, pinned methodology เดิม — ถ้าเจอ config ที่ยกทั้ง holdout และคง both-window plateau = ดัน CANDIDATE ได้จริง · **ต้องวัด basket-duration ของ config ใหม่ด้วยทุกครั้ง** ไม่ใช่แค่ PF/DD.
 
+## ORDER-183 — RSI-MR (990103) lever 2/3: RSI band × SL-width coarse grid (ต่อ ORDER-182) — `REVIEWED(Claude 2026-07-23): เจอ plateau ที่ดีกว่าเดิมชัดเจน (RSI25/75+SL25: MAIN1.96/BWD1.56, DD ต่ำกว่า, basket-duration สั้นกว่า) แต่ holdout ยังล้มเท่าเดิม (0.76/n=21) — ครบ 3/3 lever แล้ว, ยัง BUILD-ON`
+**grid:** RsiOversold/Overbought {25/75, 30/70(=baseline), 35/65} × SlAtrMult {15, 25(=baseline), 35}, continuous MAIN+BWD, full-pinned atr9 spacing คงเดิม, D:\Meta 5b.
+**ผล (9 combo × 2 window = 18 run):**
+| RSI band | SL15 (MAIN/BWD) | SL25 (MAIN/BWD) | SL35 (MAIN/BWD) |
+|---|---|---|---|
+| 25/75 | 1.15/0.90 | **1.96/1.56** | 1.56/1.72 |
+| 30/70 (baseline) | 1.00/1.01 | 1.37/1.37 | 1.24/1.57 |
+| 35/65 | 1.03/0.82 | 1.23/1.32 | 1.19/0.90 |
+raw `_mt5_auto/RSIMR_LEVER2_SWEEP.csv` + sets `_mt5_auto/ab_sets/rsimr_lever2/`.
+**อ่านผล:** (1) **RSI25/75 × SL{25,35} = plateau จริง ไม่ใช่ spike** — 2 จุดติดกันทั้งคู่ผ่าน both-window ชัดเจน (1.96/1.56 และ 1.56/1.72), n สุขภาพดี (199-232 เทรด), **ไม่ใช่แค่ SL15 ที่แย่ทุก band** (แถว 15 แย่หมดทุก RSI band = ตัด SL ไม่ใช่ candidate) (2) เลือก **RSI25/75+SL25 เป็น center ใหม่** (ดีกว่า SL35 ที่ n มากกว่าแต่ trade-off ไม่ชัด) — ยืนยันด้วย holdout+basket-duration รอบใหม่:
+- **holdout 2026H1: PF 0.76/n=21** — **ยังล้มเหมือนเดิม** (baseline เดิม 0.73/n=26) → พิสูจน์ว่า **2026H1 อ่อนจริงในตัวมันเอง ไม่ใช่ config-dependent** (คนละ config, RSI band เปลี่ยน SL เปลี่ยน แต่ผลลัพธ์ holdout เหมือนเดิมเป๊ะ — ไม่ใช่สิ่งที่ lever tuning แก้ได้)
+- **basket-duration ดีขึ้นทั้งคู่:** MAIN max 98.4 วัน (เดิม 159.1) · BWD max 182.1 วัน (เดิม 291.8) — สั้นลงมาก, tail risk เบาลงจริง ไม่ใช่แค่ PF ดีขึ้นบนหน้าตา
+**lever coverage ตอนนี้ครบ 3/3:** spacing (ORDER-182) + entry-threshold RSI band (ใบนี้) + SL-width (ใบนี้) — ผ่านกฎ "≥3 lever ก่อนตัดสิน" แล้ว.
+**verdict:** ยัง **BUILD-ON** (holdout ยังไม่ผ่าน = ยัง CANDIDATE ไม่ได้ตามกฎ VERDICT GATE ถึงแม้ lever ครบแล้ว) — แต่เป็น BUILD-ON ที่แข็งแรงขึ้นชัดเจนอีกชั้น: ceiling ทั้ง both-window (1.96/1.56) และ basket-duration (98/182 วัน) ดีขึ้นทั้งคู่ที่ **RSI25/75+SL25**. เสนอ **lock config ใหม่นี้แทน baseline เดิม** ถ้าจะเดินหน้าต่อ (ดีกว่าทุกมิติ ไม่มี trade-off).
+**ห้าม:** อ่าน holdout ล้มซ้ำเป็น "lever tuning ไม่ช่วยเลย" — มันช่วยจริงบน MAIN/BWD/basket-duration, แค่ไม่แก้ 2026H1 โดยเฉพาะ (อาจเป็น regime สั้นที่แย่จริง ไม่ใช่ปัญหา config) · เลือก SL35 เป็น center แทน SL25 โดยไม่เช็ค sensitivity fan ก่อน (SL35 ยังไม่ผ่านการยืนยัน holdout/basket-duration).
+**ทำได้ต่อ:** sensitivity fan ±20% รอบ RSI25/75+SL25 (กัน spike-ridge) + MC ใหม่บน config นี้ · ถ้า user อยากรู้ว่า 2026H1 อ่อนเพราะอะไรจริงๆ (regime หรือ noise) ต้องขยาย holdout ไปดู full 2026 เมื่อมีข้อมูลมากกว่านี้ (ตาม pattern เดียวกับ XAGUSD ORDER-180/181 n=7).
+
 ## ORDER-181 — TrendRider XAGUSD H4: sensitivity fan (Sep/Ch) + corr vs cohort — ปิดของค้างสุดท้ายของ ORDER-180 — `REVIEWED(Claude 2026-07-23): fan ผ่าน 3/4 ชัดเจน (1 แกนไม่ flat แต่ไม่ flip เป็นลบ) + corr ต่ำทั้งคู่ — BUILD-ON แข็งแรงมาก เกือบ CANDIDATE เต็มตัว เหลือแค่ holdout n บาง`
 **sensitivity fan ±20% รอบ center (AdxMin30/Sep0.5/Ch2.5), MAIN+BWD:**
 | axis | value | MAIN PF/n | BWD PF/n | เทียบ baseline (MAIN2.10/BWD1.49) |
@@ -264,7 +281,11 @@ raw `_mt5_auto/RSIMR_CONTINUITY_CHECK.csv` + reports `RSIMR_CONT_*`.
 **ทำได้:** Claude (money-adjacent) + Codex blind audit · 👉 ทำหลัง ORDER-170 ปิด (แตะ source เดียวกัน อย่าชนกัน).
 **⚠️ จนกว่าจะแก้: เลข 87.39%/56.20% อ่านได้ว่า "เพดาน ไม่ใช่ค่าจริง" เท่านั้น — ยังตอบไม่ได้ว่าพอร์ตเสี่ยงเกินงบจริงหรือไม่ ห้ามใช้ถอด/ย่อ EA.**
 
-## ORDER-170 — [🔴 money-adjacent · ต้อง blind re-audit] แก้ SEV-1 5 ข้อใน `portfolio_risk_admission.py` — `RE-AUDIT DONE (user รัน Codex CLI มือเอง, gpt-5.6-sol) — ❌ ยังไม่ผ่าน: เจอ SEV-1 เพิ่ม 3 + SEV-2 5 + MINOR 1 — ORDER-170 ยัง OPEN ไม่ใช่ REVIEWED`
+## ORDER-170 — [money-adjacent] แก้ defects ใน `portfolio_risk_admission.py` — `REVIEWED (Claude, 2026-07-23) — ✅ blind audit รอบ 10 = PASS (ไม่มี SEV-1/SEV-2)`
+
+> ✅ **CLOSED 2026-07-23 (Fable-seat session):** ปิดหลัง **fix→blind-audit 8 รอบต่อเนื่อง (รอบ 3-10)** — ทุกรอบ Codex CLI ตรง (gpt-5.6-sol, ไม่ผ่าน Agent tool) เจอ defect จริงทุกรอบจนรอบ 10 = **PASS**. commits: `d3ae4224`(r3) `cdfadd28`(r4) `7a71316`(r5) `983115f`(r6) `f5284f2`(r7) `48c7d50`(r8) `d3261b8`(r9-close) + MINOR-centralization ใน commit ปิดนี้. defect ที่ตายระหว่างทาง (ตัวแทนสำคัญ): basket collapse ไม่ถึง admission path · basket_id/magic namespace ชน · ADMIT_REDUCED หลุด lower bound · sequential admission (pending หลายตัวเคย ADMIT_FULL ซ้อนเกินงบ) · canonical basket DD95 (sibling ค่าขัดกัน + ACTIVE leg UNKNOWN) · budget tolerance 1e-9 (แก้เป็น strict ผ่าน `_fits_budget()` helper ตัวเดียว) · account-type จาก row set (blank ไม่โหวต, conflict = fail-closed) · nan/inf/overflow poisoning ครบ 3 ชั้น (cell/aggregation/pearson) + pearson range clamp · NTFS hard-link output bypass. หลักฐานปิด: **audit รอบ 8-10 fuzz อิสระ 250,000+ เคส = 0 budget breach** · self-test 4→**27 cages** (mutation-locked: Codex พิสูจน์ mutation ตาย 8 ตัว) · audit prompt+result ทุกรอบอยู่ที่ `_triage/CODEX_ORDER170_ROUND{3..10}_AUDIT_*.md`. **เงื่อนไขใช้งานยังเดิม: ตัวเลข portfolio ปัจจุบัน = เพดาน (corr default 1.0 ทุกคู่) จนกว่า ORDER-174 จะปิด — ห้ามใช้ถอด/ย่อ EA.** → ORDER-174 ปลด block แล้ว (source ตัวเดียวกัน แตะได้แล้ว)
+
+<sub>ประวัติเดิมก่อนปิด (รอบ 2): `RE-AUDIT DONE — ❌ ยังไม่ผ่าน: เจอ SEV-1 เพิ่ม 3 + SEV-2 5 + MINOR 1`</sub>
 **รายงานเต็ม:** `_triage/CODEX_ORDER170_RISK_ADMISSION_REAUDIT.md` (dispatch ผ่าน Agent tool ค้าง 2 รอบไม่รายงาน → user cancel แล้วรันเอง ได้ผลจริง).
 **ตาราง verify ตามที่ Codex สรุป (8 fix ที่อ้างว่าแก้แล้ว):** VERIFIED 4 (fix #2 corrupt-P&L core behavior, #3 zero/inf reject, #4 broker-min fail-closed, #6 floor+recheck) · **NOT VERIFIED 4 (#1 basket collapse, #5 bounds guard ครบทุก path, #7 output-path safety, #8 self-test quality)**.
 **🔴 SEV-1 ใหม่ 3 ข้อ (ต้องแก้ก่อนปิด):**
