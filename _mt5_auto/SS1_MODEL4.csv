@@ -1,0 +1,5 @@
+﻿test,tprr,model,window,pf,trades,net,largest_loss
+holdout,3.5,1,2026H1,1.24,86,265.82,-56.33
+model4,4.0,4,MAIN,1.14,499,327.42,-28.13
+model4,4.0,4,HOLD,1.18,86,205.43,-56.60
+model4,4.0,4,BWD,0.99,492,-11.02,-23.36
