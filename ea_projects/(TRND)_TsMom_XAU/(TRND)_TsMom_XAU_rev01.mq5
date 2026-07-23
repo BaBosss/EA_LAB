@@ -149,10 +149,17 @@ void OnTick()
    const bool allow=_05_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
    double slDist=_02_SlAtrMult*atr;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_03_LotSize < minLot){ if(!g_suppress_log) PrintFormat("TsMom: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_03_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN TSMOM-BUY @%.2f",ask); return; }
-      if(g_trade.Buy(_03_LotSize,_Symbol,ask,NormalizeDouble(ask-slDist,digits),0.0,"TSMOM_BUY")) g_ext_close=ask; }
+      if(g_trade.Buy(_03_LotSize,_Symbol,ask,NormalizeDouble(ask-slDist,digits),0.0,"TSMOM_BUY")) g_ext_close=ask;
+      else if(!g_suppress_log) PrintFormat("TSMOM-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN TSMOM-SELL @%.2f",bid); return; }
-      if(g_trade.Sell(_03_LotSize,_Symbol,bid,NormalizeDouble(bid+slDist,digits),0.0,"TSMOM_SELL")) g_ext_close=bid; }
+      if(g_trade.Sell(_03_LotSize,_Symbol,bid,NormalizeDouble(bid+slDist,digits),0.0,"TSMOM_SELL")) g_ext_close=bid;
+      else if(!g_suppress_log) PrintFormat("TSMOM-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

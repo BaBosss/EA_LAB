@@ -98,5 +98,9 @@ void OnTick()
    double entry=dir==1?ask:bid, buffer=MathMax(atr[0]*_03_BufferAtrMult,point); double sl=dir==1?ext-buffer:ext+buffer; double dist=MathAbs(entry-sl); if(dist<=point) return; double tp=dir==1?entry+2.0*dist:entry-2.0*dist;
    sl=NormalizeDouble(sl,d); tp=NormalizeDouble(tp,d);
    const bool allow=_06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER); if(!allow) return;
-   if(dir==1) g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"MACDDIV_BUY"); else g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"MACDDIV_SELL");
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("MacdDiv: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+   bool ok;
+   if(dir==1) ok=g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"MACDDIV_BUY"); else ok=g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"MACDDIV_SELL");
+   if(!ok && !g_suppress_log) PrintFormat("MACDDIV FAILED retcode=%d",g_trade.ResultRetcode());
 }

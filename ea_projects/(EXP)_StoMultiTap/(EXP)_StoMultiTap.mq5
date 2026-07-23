@@ -300,6 +300,11 @@ void OnTick()
    const bool allow = _06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER);
    if(!allow) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("StoMultiTap: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    const int    digits = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    const double ask = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    const double bid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -311,9 +316,10 @@ void OnTick()
       const double risk     = sl_price - bid;
       if(risk <= 0.0) return;
       const double tp_price = bid - _04_RR * risk;       // TP back into range
-      g_trade.Sell(_05_LotSize, _Symbol, bid,
+      if(!g_trade.Sell(_05_LotSize, _Symbol, bid,
                    NormalizeDouble(sl_price, digits),
-                   NormalizeDouble(tp_price, digits), "STMT_SELL");
+                   NormalizeDouble(tp_price, digits), "STMT_SELL") && !g_suppress_log)
+         PrintFormat("STMT_SELL FAILED retcode=%d",g_trade.ResultRetcode());
       g_res_active = false;                              // consume the zone after entry
    }
    else // buy_sig
@@ -322,9 +328,10 @@ void OnTick()
       const double risk     = ask - sl_price;
       if(risk <= 0.0) return;
       const double tp_price = ask + _04_RR * risk;
-      g_trade.Buy(_05_LotSize, _Symbol, ask,
+      if(!g_trade.Buy(_05_LotSize, _Symbol, ask,
                   NormalizeDouble(sl_price, digits),
-                  NormalizeDouble(tp_price, digits), "STMT_BUY");
+                  NormalizeDouble(tp_price, digits), "STMT_BUY") && !g_suppress_log)
+         PrintFormat("STMT_BUY FAILED retcode=%d",g_trade.ResultRetcode());
       g_sup_active = false;
    }
 }

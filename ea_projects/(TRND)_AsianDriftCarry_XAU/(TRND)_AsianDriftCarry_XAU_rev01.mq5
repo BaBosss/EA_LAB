@@ -137,10 +137,17 @@ void OnTick()
    const bool allow=_06_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
    const double sl=_02_SlAtrMult*atrTf, tp=_02_TpRR*sl;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("AsianDriftCarry: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN DRIFT-BUY @%.2f",ask); g_traded_day=gmtDay; return; }
-      if(g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"DRIFT_BUY")) g_traded_day=gmtDay; }
+      if(g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"DRIFT_BUY")) g_traded_day=gmtDay;
+      else if(!g_suppress_log) PrintFormat("DRIFT-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN DRIFT-SELL @%.2f",bid); g_traded_day=gmtDay; return; }
-      if(g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"DRIFT_SELL")) g_traded_day=gmtDay; }
+      if(g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"DRIFT_SELL")) g_traded_day=gmtDay;
+      else if(!g_suppress_log) PrintFormat("DRIFT-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

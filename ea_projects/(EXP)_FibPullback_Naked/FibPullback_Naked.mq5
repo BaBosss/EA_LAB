@@ -102,6 +102,14 @@ void OnTick()
    sl=NormalizeDouble(sl,d); tp=NormalizeDouble(tp,d);
 
    const bool allow=_06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER); if(!allow) return;
-   if(dir==1) g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"FIBPB_BUY");
-   else       g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"FIBPB_SELL");
+
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("FibPullback: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
+   bool ok;
+   if(dir==1) ok=g_trade.Buy(_05_LotSize,_Symbol,ask,sl,tp,"FIBPB_BUY");
+   else       ok=g_trade.Sell(_05_LotSize,_Symbol,bid,sl,tp,"FIBPB_SELL");
+   if(!ok && !g_suppress_log) PrintFormat("FIBPB FAILED retcode=%d",g_trade.ResultRetcode());
 }

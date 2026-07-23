@@ -130,10 +130,17 @@ void OnTick()
    bool bear=_05_SellBreaks && !bullPole && (c1<innLo-buf) && (!_04_UseEma||c1<ema);
    if(!bull && !bear) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("FlagPennant: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    if(bull){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN FLAG-BUY @%.2f",ask); return; }
-      g_trade.Buy(_05_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"FLAG_BUY"); }
+      if(!g_trade.Buy(_05_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"FLAG_BUY") && !g_suppress_log)
+         PrintFormat("FLAG-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN FLAG-SELL @%.2f",bid); return; }
-      g_trade.Sell(_05_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"FLAG_SELL"); }
+      if(!g_trade.Sell(_05_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"FLAG_SELL") && !g_suppress_log)
+         PrintFormat("FLAG-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

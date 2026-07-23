@@ -156,10 +156,18 @@ void OnTick()
    if(!longSig && !shortSig) return;
 
    double sl=_02_SlAtrMult*atr, tp=_02_TpAtrMult*atr;
+
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("NyIgnition: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN NYIG-BUY @%.2f",ask); return; }
-      if(g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"NYIG_BUY")) g_traded_day=GmtDayOf(TimeCurrent()); }
+      if(g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"NYIG_BUY")) g_traded_day=GmtDayOf(TimeCurrent());
+      else if(!g_suppress_log) PrintFormat("NYIG-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN NYIG-SELL @%.2f",bid); return; }
-      if(g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"NYIG_SELL")) g_traded_day=GmtDayOf(TimeCurrent()); }
+      if(g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"NYIG_SELL")) g_traded_day=GmtDayOf(TimeCurrent());
+      else if(!g_suppress_log) PrintFormat("NYIG-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

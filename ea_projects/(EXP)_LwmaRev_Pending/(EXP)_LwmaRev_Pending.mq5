@@ -129,6 +129,11 @@ void OnTick()
    const bool allow = _06_AllowLive || (bool)MQLInfoInteger(MQL_TESTER);
    if(!allow) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("LwmaRev: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    const int    digits  = (int)SymbolInfoInteger(_Symbol, SYMBOL_DIGITS);
    const double ask     = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    const double bid     = SymbolInfoDouble(_Symbol, SYMBOL_BID);
@@ -142,12 +147,14 @@ void OnTick()
       if(dir == 1)
       {
          double sl = NormalizeDouble(ask - sl_dist, digits), tp = NormalizeDouble(ask + tp_dist, digits);
-         g_trade.Buy(_05_LotSize, _Symbol, ask, sl, tp, "LWMAREV_MKT_B");
+         if(!g_trade.Buy(_05_LotSize, _Symbol, ask, sl, tp, "LWMAREV_MKT_B") && !g_suppress_log)
+            PrintFormat("LWMAREV_MKT_B FAILED retcode=%d",g_trade.ResultRetcode());
       }
       else
       {
          double sl = NormalizeDouble(bid + sl_dist, digits), tp = NormalizeDouble(bid - tp_dist, digits);
-         g_trade.Sell(_05_LotSize, _Symbol, bid, sl, tp, "LWMAREV_MKT_S");
+         if(!g_trade.Sell(_05_LotSize, _Symbol, bid, sl, tp, "LWMAREV_MKT_S") && !g_suppress_log)
+            PrintFormat("LWMAREV_MKT_S FAILED retcode=%d",g_trade.ResultRetcode());
       }
    }
    else
@@ -160,7 +167,8 @@ void OnTick()
          if(px < ask - minstop)
          {
             double sl = NormalizeDouble(px - sl_dist, digits), tp = NormalizeDouble(px + tp_dist, digits);
-            g_trade.BuyLimit(_05_LotSize, px, _Symbol, sl, tp, ORDER_TIME_SPECIFIED, exp, "LWMAREV_PEND_B");
+            if(!g_trade.BuyLimit(_05_LotSize, px, _Symbol, sl, tp, ORDER_TIME_SPECIFIED, exp, "LWMAREV_PEND_B") && !g_suppress_log)
+               PrintFormat("LWMAREV_PEND_B FAILED retcode=%d",g_trade.ResultRetcode());
          }
       }
       else
@@ -169,7 +177,8 @@ void OnTick()
          if(px > bid + minstop)
          {
             double sl = NormalizeDouble(px + sl_dist, digits), tp = NormalizeDouble(px - tp_dist, digits);
-            g_trade.SellLimit(_05_LotSize, px, _Symbol, sl, tp, ORDER_TIME_SPECIFIED, exp, "LWMAREV_PEND_S");
+            if(!g_trade.SellLimit(_05_LotSize, px, _Symbol, sl, tp, ORDER_TIME_SPECIFIED, exp, "LWMAREV_PEND_S") && !g_suppress_log)
+               PrintFormat("LWMAREV_PEND_S FAILED retcode=%d",g_trade.ResultRetcode());
          }
       }
    }

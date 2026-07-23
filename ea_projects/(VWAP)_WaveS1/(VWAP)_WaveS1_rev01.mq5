@@ -191,12 +191,19 @@ void OnTick()
    bool bear=_04_Sells && acceptDn && (c1 >= lower1-buf) && (c1 < vw1) && (!_03_UseEma||c1<ema);
    if(!bull && !bear) return;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("WaveS1: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(bull){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN VWAP-BUY @%.2f",ask); return; }
       if(g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"VWAP_BUY"))
-         g_traded_day = today; }
+         g_traded_day = today;
+      else if(!g_suppress_log) PrintFormat("VWAP-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN VWAP-SELL @%.2f",bid); return; }
       if(g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"VWAP_SELL"))
-         g_traded_day = today; }
+         g_traded_day = today;
+      else if(!g_suppress_log) PrintFormat("VWAP-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

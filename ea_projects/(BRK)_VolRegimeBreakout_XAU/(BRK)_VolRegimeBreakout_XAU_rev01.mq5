@@ -113,10 +113,17 @@ void OnTick()
    const bool allow=_06_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
    const double sl=_03_SlAtrMult*atr, tp=_03_TpRR*sl;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("VolRegimeBreakout: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN VOLREG-BUY @%.2f",ask); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"VOLREG_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(ask-sl,digits),NormalizeDouble(ask+tp,digits),"VOLREG_BUY") && !g_suppress_log)
+         PrintFormat("VOLREG-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN VOLREG-SELL @%.2f",bid); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"VOLREG_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(bid+sl,digits),NormalizeDouble(bid-tp,digits),"VOLREG_SELL") && !g_suppress_log)
+         PrintFormat("VOLREG-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }
