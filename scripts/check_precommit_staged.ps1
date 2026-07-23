@@ -196,16 +196,23 @@ foreach ($p in $protectedStaged) {
     }
 }
 
-# --- if the archive changed, all 3 generated artifacts must ALSO be staged as changed ---
+# --- if the archive changed, each generated artifact must be staged as changed
+#     UNLESS it is legitimately byte-identical to a fresh -Generate (e.g. a
+#     REVIEWED-only archive append raises no new exceptions, so
+#     RECONCILE_EXCEPTIONS.md does not change and git cannot stage a no-op diff).
+#     An unstaged artifact has index-blob == HEAD-blob by definition; the
+#     authoritative content-consistency check further below (staged-blob vs a
+#     fresh -Generate candidate, lines ~320-333) independently BLOCKS if that
+#     HEAD content is actually stale, so exempting a provably-unchanged artifact
+#     here removes a false-block without weakening the guard.
 $archiveChanged = $stagedByPath.ContainsKey($ArchivePath)
 if ($archiveChanged) {
-    $missingArtifacts = @()
+    $unstagedArtifacts = @()
     foreach ($a in @($ManifestPath, $IndexPath, $ExceptionsPath)) {
-        if (-not $stagedByPath.ContainsKey($a)) { $missingArtifacts += $a }
+        if (-not $stagedByPath.ContainsKey($a)) { $unstagedArtifacts += $a }
     }
-    if ($missingArtifacts.Count -gt 0) {
-        Write-Host ("[precommit-staged] BLOCK: archive changed but required artifact(s) not staged: " + ($missingArtifacts -join ', ') + ' -- run -Generate and stage the refresh')
-        exit 1
+    if ($unstagedArtifacts.Count -gt 0) {
+        Write-Host ("[precommit-staged] NOTE: archive changed; artifact(s) not staged as changed: " + ($unstagedArtifacts -join ', ') + ' -- allowed only if byte-identical to a fresh -Generate (verified by the consistency check below)')
     }
 }
 

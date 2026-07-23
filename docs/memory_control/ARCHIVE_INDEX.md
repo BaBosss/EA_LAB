@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `ded1996b007275b726f1830b48619cfa1864595c`
+> NOT repo HEAD; stable across any commit that does not touch that file): `5c5269ad4ed4163dafd57078c8c52671cee44547`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `3f99f46de36decda0bb09d9b35d95b2ae2d9d65979d580006cc5f926b5a39b34`
+> EOL/whitespace drift the per-block hashes below cannot see): `2f1f43ef1757ec2c2968a997caeef7ba37c4842fe13eb1efa0f1a0e5aa608bc4`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -147,4 +147,56 @@
 | 096C\|ORDER\|current-archive#131 | 096C | ORDER | 131 | e06f1d21a9ead714cdaa672bb999a181bebc4e76298a898060f4fb9e5e0cc8dc |
 | 071\|ORDER\|current-archive#132 | 071 | ORDER | 132 | 6c8241d8eaefd02dad2559db230bcddc77c95c7e55abe86cc2722625e5fb8fb9 |
 | NA\|OTHER\|current-archive#133 |  | OTHER | 133 | 1294f1750c124568b45b8ff057bc3831e4ed04b75471051ae13fde3fc9bce012 |
-| NA\|OTHER\|current-archive#134 |  | OTHER | 134 | 1d46ba4cdb18c05853d75f2ad4294573038eb2a9428ec462945e9cb208d35b13 |
+| NA\|OTHER\|current-archive#134 |  | OTHER | 134 | b46a5b6c761d1ace2d70f04e884b611fe71db6299c6928327e51eee4cc5cc33c |
+| 153\|ORDER\|current-archive#135 | 153 | ORDER | 135 | 4a28ab95b1fca8c9218637e3468dfbae1163d7c43e75b511021ad0a483173d3c |
+| 154\|ORDER\|current-archive#136 | 154 | ORDER | 136 | 7aa662c22ead8f91f400d61a72f8d57f34fe84aec9a42224f706aa985d384ab6 |
+| 155\|ORDER\|current-archive#137 | 155 | ORDER | 137 | 58007016b7ca0d9140754d487809940fd0e0bea292bc65a7b5704d8cdba0406b |
+| 159\|ORDER\|current-archive#138 | 159 | ORDER | 138 | a7249d853756bed3d99873cd8ed3ced132b0196499ecef16d1bfad6716911337 |
+| 156\|ORDER\|current-archive#139 | 156 | ORDER | 139 | db382d832339889829db1482c1501096bdee46865ae503145bdc8d0a7b08966d |
+| 157\|ORDER\|current-archive#140 | 157 | ORDER | 140 | 00fd3da90c6e76be78e897c227090607457ff21ab874a78632f2af5f35036837 |
+| 168\|ORDER\|current-archive#141 | 168 | ORDER | 141 | d459dc27b9a5fb32972398ef0ae87e3b47eccf0c11bdaccf3cc8a5fcadd5a26c |
+| 180\|ORDER\|current-archive#142 | 180 | ORDER | 142 | ad321a01a441b7902cee5fdb8c326496b21cfd0ae75a038844b51fa8399a1d55 |
+| 173\|ORDER\|current-archive#143 | 173 | ORDER | 143 | dd8f8ccef716ac15dbfa3c559a1d6f75a9876fafa4099bd239aa49fd069fca7d |
+| 169\|ORDER\|current-archive#144 | 169 | ORDER | 144 | ec989cc48a22c944870aad2487728a7019845e56c774a6b1988a523ff2e0ac68 |
+| 166\|ORDER\|current-archive#145 | 166 | ORDER | 145 | 5a75c2f04acf14d637d2f9d76975ecf865f70072ecc7e1fad8a3ba54a880a6ba |
+| 171\|ORDER\|current-archive#146 | 171 | ORDER | 146 | a28109ef1dd5ee42f08645aecc5986e6dd2c3d5db6ab7ace94f1a2f1459dc1c6 |
+| 172\|ORDER\|current-archive#147 | 172 | ORDER | 147 | 9782889cc9224673c34375734c83dd444160e0574367e95bc8b6688075897886 |
+| 174\|ORDER\|current-archive#148 | 174 | ORDER | 148 | bc1c434616672687588c8481442cf3b5cb8b7fc6fca3a3a4b6d513ceec887998 |
+| 184\|ORDER\|current-archive#149 | 184 | ORDER | 149 | 0ecdea06b43e31a69fdcc9f9f6040dd07eed7784c19167eba93b775a1fac671a |
+| 170\|ORDER\|current-archive#150 | 170 | ORDER | 150 | e7d4a7206ddb8972de7fce521c5ed4f5945b34e121f8232a57ac3371e4c168ff |
+| 163\|ORDER\|current-archive#151 | 163 | ORDER | 151 | 723944e50e99285f31321f3e9601b86c712e9dcbfb7b9f98e03ce388c797e646 |
+| 164\|ORDER\|current-archive#152 | 164 | ORDER | 152 | 199e3e7f0772ef28bdad07546ce2b53f14e099b4d83522ae0cf48f6890902fd7 |
+| 158\|ORDER\|current-archive#153 | 158 | ORDER | 153 | 6d81c6407a641df76dee1d4949a3004d9e45f74921ba2f80e3bac6e7a4479588 |
+| 160\|ORDER\|current-archive#154 | 160 | ORDER | 154 | 34bc3b78be01c7ab68373bb8680cf3764dfbe9b0469cf4c2b90ab20e61ceed56 |
+| 150\|ORDER\|current-archive#155 | 150 | ORDER | 155 | f7da275f0fdb47e612c8b7b640bb59489acbae21a5b34ac68ae4cc6db975fafd |
+| 146\|ORDER\|current-archive#156 | 146 | ORDER | 156 | b94616b4bc5e2a632781c44f1e863a696486ad599c2c741627fd5b246a43872b |
+| 148\|ORDER\|current-archive#157 | 148 | ORDER | 157 | 380115c7211353715fe522a995bc99395b30177510e059bd6287555ab0ebbcda |
+| 142\|ORDER\|current-archive#158 | 142 | ORDER | 158 | 745ee2e011e807b4fec3436d8a4d700f08d9f194026549e93d93e07496b17db3 |
+| 140\|ORDER\|current-archive#159 | 140 | ORDER | 159 | 3c7f18954577bbf170799df2db00ab4e2400c49598c6dc7c9df5600359efc4dc |
+| 124\|ORDER\|current-archive#160 | 124 | ORDER | 160 | 9736d48dbe968054dce65352ab4124d17493e05c3f972b784c08ef19158661c9 |
+| 125\|ORDER\|current-archive#161 | 125 | ORDER | 161 | 2c7c29b3f2af7b50cc84fdcee3c0112a722a9ae22050fb5b1d8dd55f931659bd |
+| 126\|ORDER\|current-archive#162 | 126 | ORDER | 162 | 9cfc082ee3af8fe61f2e0a1ab89f547d7464b05752d95394ae556cab4ac036fe |
+| 127\|ORDER\|current-archive#163 | 127 | ORDER | 163 | bc96d3efe171e8a3389221c5f31ca84b2de58220c872822c1162d9ff837b830a |
+| 135\|ORDER\|current-archive#164 | 135 | ORDER | 164 | a3c0fda0aed7cb84bbb129b1a34226163cef643db011c524bdd22d1396d44523 |
+| 138\|ORDER\|current-archive#165 | 138 | ORDER | 165 | cd5d6e7acc7dd9d5320c438be860aba1eb3c02100aafc14c570660aa9f42dda8 |
+| 129\|ORDER\|current-archive#166 | 129 | ORDER | 166 | c259c5da61695106f32341b4fc661f884f7ae422edb4cc76ae67a695541ccaa3 |
+| 132\|ORDER\|current-archive#167 | 132 | ORDER | 167 | 6eebaa40433cf7179db959e84168f9cc6d2fb4ddea5f75186e663d385dc33397 |
+| 131\|ORDER\|current-archive#168 | 131 | ORDER | 168 | 933e14036921756d6df59fc37f718c89b962ec9a541b14c4e05cd7626344bcea |
+| 130\|ORDER\|current-archive#169 | 130 | ORDER | 169 | 7fced73656b639a561022b6936a2a1306f78b286e5261adc96a2807699ee1877 |
+| 137\|ORDER\|current-archive#170 | 137 | ORDER | 170 | abd27e77d1dc07182f5f3155a55f6f12a6f97fefba6d0dca1f9b64f784562999 |
+| 098-E\|ORDER\|current-archive#171 | 098-E | ORDER | 171 | 85e6d31db8bc81795a50a41419ea16b36b9c052fb096f95bc96d78f1f4919797 |
+| 098-G\|ORDER\|current-archive#172 | 098-G | ORDER | 172 | 42c1630c32d47eb9d8a342e1d975823b8745efc2d375e5cfbf0ea051a4637e53 |
+| 098-J\|ORDER\|current-archive#173 | 098-J | ORDER | 173 | bff79641ea63555176844b7723a687350b859b663bd715f6b527a917dc25ad5b |
+| 098-L\|ORDER\|current-archive#174 | 098-L | ORDER | 174 | d68360f57b924f93d7b738dc4dc1469e0ff4f6523d6f81e27d6c7ab8db928b15 |
+| 098-M\|ORDER\|current-archive#175 | 098-M | ORDER | 175 | 0d3af5103f315fab0f234973af1bcf9ee3994612311ef3e8626bfa46350c0186 |
+| 104\|ORDER\|current-archive#176 | 104 | ORDER | 176 | 53c4c518dcf4c1ec6a2230c55fa71ca7177b598b15b28be02ef6fa8b07837598 |
+| 109\|ORDER\|current-archive#177 | 109 | ORDER | 177 | defccfa816c1690394d2ba08d65435d049835903dc77c5316ca7f33453514f14 |
+| 110\|ORDER\|current-archive#178 | 110 | ORDER | 178 | e85c0a5b932a4f72dc8d27cae82999882dfc46299f08aa945a27e6c544760d85 |
+| 111\|ORDER\|current-archive#179 | 111 | ORDER | 179 | d16b0b1db7e4b61533e81a967417174d5972c79406dc6a9e5f221a1366d691fc |
+| 057\|ORDER\|current-archive#180 | 057 | ORDER | 180 | 6cc79a6bf820b96280c56f04c993f44d3afd742f51f0adedfcdc4f2913c0903f |
+| 099\|ORDER\|current-archive#181 | 099 | ORDER | 181 | fc6b672809a5848da552e3bdfbe62064aa81755f52731d11949a6d464376f176 |
+| 100\|ORDER\|current-archive#182 | 100 | ORDER | 182 | ce718720de121c813898b15890b1d1d34e064d2970ee9c35b62da92001195c29 |
+| 101\|ORDER\|current-archive#183 | 101 | ORDER | 183 | 19cd37d1182db4be6568a515bd30579138e1ca04c0669cc0762e65c7519f2e6a |
+| 103\|ORDER\|current-archive#184 | 103 | ORDER | 184 | 88557c1a48a9c194299aea9941d1b5d5ebe69666085643c57eea62b4c2b45f1b |
+| 105\|ORDER\|current-archive#185 | 105 | ORDER | 185 | d2b9f7f4b5f3175587d97c33c9fefef6b5d753568297ec9c780dd92543b41425 |
+| 115\|ORDER\|current-archive#186 | 115 | ORDER | 186 | 2a012d1da9a5b8a1643716efa728dff951a9d8928a42d6216ab573c86fe2aabe |
