@@ -5,7 +5,7 @@
       "account_name": "Demo bundle 10",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -62.39,
+      "headroom_pct": -47.9531,
       "known_magics": [
         "990020",
         "990025",
@@ -23,18 +23,19 @@
         "999094"
       ],
       "n_known_dd95": 14,
-      "n_total_magics": 18,
-      "n_unknown_dd95": 4,
+      "n_total_magics": 19,
+      "n_unknown_dd95": 5,
       "over_budget": true,
-      "portfolio_dd_est": 87.39,
-      "status_note": "computed from 14/18 magics (4 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "portfolio_dd_est": 72.95314076400015,
+      "status_note": "computed from 14/19 magics (5 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
       "type": "DEMO",
       "type_conflict": false,
       "unknown_magics": [
         "990067",
         "990069",
         "992001",
-        "992003"
+        "992003",
+        "992017"
       ]
     },
     {
@@ -42,7 +43,7 @@
       "account_name": "Demo Mt5-2",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -31.2,
+      "headroom_pct": -7.3466,
       "known_magics": [
         "990110",
         "990201",
@@ -59,7 +60,7 @@
       "n_total_magics": 10,
       "n_unknown_dd95": 0,
       "over_budget": true,
-      "portfolio_dd_est": 56.2,
+      "portfolio_dd_est": 32.34659333679384,
       "status_note": "computed from 10/10 magics (full coverage on this account)",
       "type": "DEMO",
       "type_conflict": false,
@@ -118,7 +119,7 @@
       "n_known_dd95": 4,
       "n_total_magics": 4,
       "n_unknown_dd95": 0,
-      "portfolio_dd_est": 13.44,
+      "portfolio_dd_est": 10.669543067856424,
       "status_note": "computed from 4/4 magics (full coverage on this account)",
       "type": "REAL_CENT",
       "type_conflict": false,
@@ -150,7 +151,7 @@
       "account": "463666728",
       "budget_pct": 25.0,
       "ea_name": "EA_SUPERTREND (crypto ST-BTC)",
-      "existing_portfolio_dd_est": 74.18,
+      "existing_portfolio_dd_est": 65.74372317378476,
       "lot_factor": null,
       "magic": "990025",
       "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
@@ -160,7 +161,7 @@
       "account": "463666728",
       "budget_pct": 25.0,
       "ea_name": "EA_DONCHIAN (crypto DON-ETH pyr3)",
-      "existing_portfolio_dd_est": 74.18,
+      "existing_portfolio_dd_est": 65.74372317378476,
       "lot_factor": null,
       "magic": "990030",
       "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
@@ -179,26 +180,1724 @@
       "magic": "992003",
       "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
       "status": "CANNOT_RUN"
+    },
+    {
+      "account": "463666728",
+      "ea_name": "PivotBreakout_XAU",
+      "magic": "992017",
+      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
+      "status": "CANNOT_RUN"
     }
   ],
   "corr_coverage": {
     "backtest_map_found": true,
     "backtest_map_path": "D:\\EA_LAB\\portfolio\\backtest_corr_reports.csv",
     "backtest_skipped": [],
-    "default_1_0_pairs": 903,
-    "measured_pairs": 0,
-    "measured_pairs_backtest": 0,
+    "default_1_0_pairs": 608,
+    "measured_pairs": 338,
+    "measured_pairs_backtest": 338,
     "measured_pairs_live": 0,
     "note": "every pair NOT listed above used the conservative default corr=1.0 (fully additive); live pairs outrank backtest pairs when both exist",
-    "pairs": [],
-    "possible_pairs_active_or_pending": 903
+    "pairs": [
+      {
+        "corr": -0.0731,
+        "pair": "990020~990025",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2431,
+        "pair": "990020~990030",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0236,
+        "pair": "990020~990066",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6985,
+        "pair": "990020~990068",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0498,
+        "pair": "990020~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1075,
+        "pair": "990020~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1222,
+        "pair": "990020~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.045,
+        "pair": "990020~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1329,
+        "pair": "990020~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0426,
+        "pair": "990020~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.285,
+        "pair": "990020~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2655,
+        "pair": "990020~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5321,
+        "pair": "990020~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7656,
+        "pair": "990020~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.201,
+        "pair": "990020~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0388,
+        "pair": "990020~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1145,
+        "pair": "990020~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1343,
+        "pair": "990020~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1185,
+        "pair": "990020~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4071,
+        "pair": "990020~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3468,
+        "pair": "990020~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4337,
+        "pair": "990020~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0483,
+        "pair": "990020~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2405,
+        "pair": "990020~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.754,
+        "pair": "990020~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2051,
+        "pair": "990020~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0265,
+        "pair": "990025~990030",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.258,
+        "pair": "990025~990066",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0482,
+        "pair": "990025~990068",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0774,
+        "pair": "990025~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1065,
+        "pair": "990025~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2112,
+        "pair": "990025~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0732,
+        "pair": "990025~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0703,
+        "pair": "990025~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2368,
+        "pair": "990025~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0821,
+        "pair": "990025~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0696,
+        "pair": "990025~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.13,
+        "pair": "990025~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.062,
+        "pair": "990025~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0136,
+        "pair": "990025~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0635,
+        "pair": "990025~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3069,
+        "pair": "990025~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0465,
+        "pair": "990025~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0487,
+        "pair": "990025~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4836,
+        "pair": "990025~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1815,
+        "pair": "990025~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4534,
+        "pair": "990025~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3296,
+        "pair": "990025~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0002,
+        "pair": "990025~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1672,
+        "pair": "990025~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1042,
+        "pair": "990025~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0952,
+        "pair": "990030~990066",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1658,
+        "pair": "990030~990068",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1691,
+        "pair": "990030~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.5483,
+        "pair": "990030~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.082,
+        "pair": "990030~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0036,
+        "pair": "990030~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0514,
+        "pair": "990030~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0561,
+        "pair": "990030~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1699,
+        "pair": "990030~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1576,
+        "pair": "990030~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4625,
+        "pair": "990030~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0579,
+        "pair": "990030~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0654,
+        "pair": "990030~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0044,
+        "pair": "990030~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2796,
+        "pair": "990030~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2616,
+        "pair": "990030~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1067,
+        "pair": "990030~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7223,
+        "pair": "990030~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3227,
+        "pair": "990030~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2535,
+        "pair": "990030~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1879,
+        "pair": "990030~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0958,
+        "pair": "990030~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1889,
+        "pair": "990030~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0831,
+        "pair": "990030~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.004,
+        "pair": "990066~990068",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0521,
+        "pair": "990066~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3796,
+        "pair": "990066~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6189,
+        "pair": "990066~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1844,
+        "pair": "990066~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1637,
+        "pair": "990066~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0434,
+        "pair": "990066~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2718,
+        "pair": "990066~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0818,
+        "pair": "990066~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1975,
+        "pair": "990066~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1058,
+        "pair": "990066~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0279,
+        "pair": "990066~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2357,
+        "pair": "990066~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0043,
+        "pair": "990066~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2236,
+        "pair": "990066~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2694,
+        "pair": "990066~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1858,
+        "pair": "990066~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5269,
+        "pair": "990066~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0769,
+        "pair": "990066~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0438,
+        "pair": "990066~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.315,
+        "pair": "990066~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4008,
+        "pair": "990066~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0531,
+        "pair": "990066~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1222,
+        "pair": "990068~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0249,
+        "pair": "990068~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3213,
+        "pair": "990068~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2931,
+        "pair": "990068~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1026,
+        "pair": "990068~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0926,
+        "pair": "990068~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1072,
+        "pair": "990068~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.355,
+        "pair": "990068~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.283,
+        "pair": "990068~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6442,
+        "pair": "990068~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0639,
+        "pair": "990068~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.055,
+        "pair": "990068~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2307,
+        "pair": "990068~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0048,
+        "pair": "990068~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0934,
+        "pair": "990068~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5645,
+        "pair": "990068~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2203,
+        "pair": "990068~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1998,
+        "pair": "990068~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1668,
+        "pair": "990068~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0208,
+        "pair": "990068~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3941,
+        "pair": "990068~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4103,
+        "pair": "990068~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.131,
+        "pair": "990101~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.587,
+        "pair": "990101~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0358,
+        "pair": "990101~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4058,
+        "pair": "990101~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7089,
+        "pair": "990101~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1195,
+        "pair": "990101~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.8211,
+        "pair": "990101~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1021,
+        "pair": "990101~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.5714,
+        "pair": "990101~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2106,
+        "pair": "990101~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.242,
+        "pair": "990101~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4359,
+        "pair": "990101~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1828,
+        "pair": "990101~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1314,
+        "pair": "990101~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4715,
+        "pair": "990101~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5305,
+        "pair": "990101~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1413,
+        "pair": "990101~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1618,
+        "pair": "990101~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0053,
+        "pair": "990101~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1383,
+        "pair": "990101~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3559,
+        "pair": "990110~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2791,
+        "pair": "990110~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4471,
+        "pair": "990110~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1606,
+        "pair": "990110~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0947,
+        "pair": "990110~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5341,
+        "pair": "990110~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2077,
+        "pair": "990110~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7277,
+        "pair": "990110~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1886,
+        "pair": "990110~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2591,
+        "pair": "990110~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2857,
+        "pair": "990110~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2378,
+        "pair": "990110~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3946,
+        "pair": "990110~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4441,
+        "pair": "990110~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4821,
+        "pair": "990110~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0394,
+        "pair": "990110~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3021,
+        "pair": "990110~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1613,
+        "pair": "990110~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2527,
+        "pair": "990110~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.6019,
+        "pair": "990120~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6971,
+        "pair": "990120~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1625,
+        "pair": "990120~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.7763,
+        "pair": "990120~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0717,
+        "pair": "990120~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.5549,
+        "pair": "990120~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5173,
+        "pair": "990120~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3973,
+        "pair": "990120~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3971,
+        "pair": "990120~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0015,
+        "pair": "990120~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.376,
+        "pair": "990120~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1302,
+        "pair": "990120~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1655,
+        "pair": "990120~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3795,
+        "pair": "990120~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4828,
+        "pair": "990120~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0578,
+        "pair": "990120~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.54,
+        "pair": "990120~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2035,
+        "pair": "990201~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4395,
+        "pair": "990201~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0742,
+        "pair": "990201~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6714,
+        "pair": "990201~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.073,
+        "pair": "990201~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2596,
+        "pair": "990201~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3107,
+        "pair": "990201~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2128,
+        "pair": "990201~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.5348,
+        "pair": "990201~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0265,
+        "pair": "990201~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0299,
+        "pair": "990201~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2085,
+        "pair": "990201~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1053,
+        "pair": "990201~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4095,
+        "pair": "990201~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1858,
+        "pair": "990201~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0465,
+        "pair": "990201~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1383,
+        "pair": "990201~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1468,
+        "pair": "990202~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5524,
+        "pair": "990202~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2889,
+        "pair": "990202~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0994,
+        "pair": "990202~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1663,
+        "pair": "990202~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3772,
+        "pair": "990202~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2262,
+        "pair": "990202~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0334,
+        "pair": "990202~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.162,
+        "pair": "990202~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0866,
+        "pair": "990202~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1333,
+        "pair": "990202~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.112,
+        "pair": "990202~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0789,
+        "pair": "990202~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5561,
+        "pair": "990202~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0265,
+        "pair": "990202~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2342,
+        "pair": "990202~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2548,
+        "pair": "990203~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5054,
+        "pair": "990203~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.374,
+        "pair": "990203~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2709,
+        "pair": "990203~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1084,
+        "pair": "990203~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1132,
+        "pair": "990203~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1849,
+        "pair": "990203~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.7106,
+        "pair": "990203~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1601,
+        "pair": "990203~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0863,
+        "pair": "990203~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.082,
+        "pair": "990203~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0189,
+        "pair": "990203~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3541,
+        "pair": "990203~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1414,
+        "pair": "990203~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0044,
+        "pair": "990203~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3255,
+        "pair": "990203~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.086,
+        "pair": "990204~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2432,
+        "pair": "990204~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.05,
+        "pair": "990204~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1739,
+        "pair": "990204~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1711,
+        "pair": "990204~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.5468,
+        "pair": "990204~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2076,
+        "pair": "990204~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.385,
+        "pair": "990204~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.6757,
+        "pair": "990204~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0891,
+        "pair": "990204~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0417,
+        "pair": "990204~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1883,
+        "pair": "990204~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3827,
+        "pair": "990204~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2731,
+        "pair": "990204~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4287,
+        "pair": "990205~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1627,
+        "pair": "990205~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0284,
+        "pair": "990205~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3034,
+        "pair": "990205~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2617,
+        "pair": "990205~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3289,
+        "pair": "990205~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.106,
+        "pair": "990205~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4267,
+        "pair": "990205~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1851,
+        "pair": "990205~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.6143,
+        "pair": "990205~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0193,
+        "pair": "990205~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1474,
+        "pair": "990205~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3986,
+        "pair": "990205~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5447,
+        "pair": "990206~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0522,
+        "pair": "990206~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5063,
+        "pair": "990206~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6641,
+        "pair": "990206~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0236,
+        "pair": "990206~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4814,
+        "pair": "990206~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6413,
+        "pair": "990206~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2107,
+        "pair": "990206~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3026,
+        "pair": "990207~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0371,
+        "pair": "990207~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5483,
+        "pair": "990207~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3084,
+        "pair": "990207~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4701,
+        "pair": "990207~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.29,
+        "pair": "990207~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1219,
+        "pair": "990207~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2802,
+        "pair": "990207~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.066,
+        "pair": "990207~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2608,
+        "pair": "990207~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7171,
+        "pair": "990207~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2115,
+        "pair": "990207~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.015,
+        "pair": "990208~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1821,
+        "pair": "990208~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1237,
+        "pair": "990208~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0679,
+        "pair": "990208~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4568,
+        "pair": "990208~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0037,
+        "pair": "990208~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0559,
+        "pair": "990208~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1748,
+        "pair": "990208~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2584,
+        "pair": "990208~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1876,
+        "pair": "990208~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0194,
+        "pair": "990208~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3212,
+        "pair": "990301~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1345,
+        "pair": "990301~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1272,
+        "pair": "990301~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3474,
+        "pair": "990301~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.045,
+        "pair": "990301~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0447,
+        "pair": "990301~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.007,
+        "pair": "990301~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0624,
+        "pair": "990301~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2988,
+        "pair": "990301~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2022,
+        "pair": "990301~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0271,
+        "pair": "990302~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1712,
+        "pair": "990302~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3139,
+        "pair": "990302~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1483,
+        "pair": "990302~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0168,
+        "pair": "990302~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1893,
+        "pair": "990302~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0598,
+        "pair": "990302~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3759,
+        "pair": "990302~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3152,
+        "pair": "990302~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1621,
+        "pair": "990303~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3652,
+        "pair": "990303~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.149,
+        "pair": "990303~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.486,
+        "pair": "990303~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0828,
+        "pair": "990303~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1293,
+        "pair": "990303~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4567,
+        "pair": "990303~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4257,
+        "pair": "990303~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1333,
+        "pair": "990984~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1643,
+        "pair": "990984~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3779,
+        "pair": "990984~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1513,
+        "pair": "990984~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.23,
+        "pair": "990984~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2502,
+        "pair": "990984~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0643,
+        "pair": "990984~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1046,
+        "pair": "991002~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3086,
+        "pair": "991002~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.4836,
+        "pair": "991002~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1246,
+        "pair": "991002~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4288,
+        "pair": "991002~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0691,
+        "pair": "991002~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1256,
+        "pair": "991003~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0607,
+        "pair": "991003~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1285,
+        "pair": "991003~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1732,
+        "pair": "991003~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0232,
+        "pair": "991003~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2354,
+        "pair": "991004~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3237,
+        "pair": "991004~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3429,
+        "pair": "991004~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.054,
+        "pair": "991004~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1162,
+        "pair": "991005~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1533,
+        "pair": "991005~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2182,
+        "pair": "991005~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4446,
+        "pair": "991070~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1532,
+        "pair": "991070~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0437,
+        "pair": "992004~999094",
+        "source": "backtest"
+      }
+    ],
+    "possible_pairs_active_or_pending": 946
   },
   "coverage": {
     "expectations_csv_found": true,
     "expectations_path": "D:\\EA_LAB\\portfolio\\expectations.csv",
     "known_dd95": 28,
-    "total_active_or_pending_magics": 43,
-    "unknown_dd95": 15
+    "total_active_or_pending_magics": 44,
+    "unknown_dd95": 16
   },
   "demo_budget_pct": 25.0,
   "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
