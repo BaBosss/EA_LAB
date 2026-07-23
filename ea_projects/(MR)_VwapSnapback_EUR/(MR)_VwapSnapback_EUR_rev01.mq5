@@ -18,7 +18,7 @@
 //| (skip the illiquid EOD/weekend edges). VWAP resets daily.          |
 //|                                                                    |
 //| L1: one position, real SL, fixed lot, bar-open gated, magic-scoped |
-//| hard caps. No grid/martingale. Magic 992007.                      |
+//| hard caps. No grid/martingale. Magic 992010.                      |
 //+------------------------------------------------------------------+
 #property strict
 #property description "(MR)_VwapSnapback_EUR_rev01 — daily-VWAP extreme-distance snapback, single-position, real SL"
@@ -48,7 +48,7 @@ input double _04_DailyLossPct = 5.0;
 input double _04_EmergencyDdPct = 25.0;
 
 input string _g05_            = "── [05] SYSTEM ────────────────────────────";
-input long   _05_Magic        = 992007;
+input long   _05_Magic        = 992010;
 input ulong  _05_Deviation    = 20;
 input bool   _05_AllowLive    = false;
 
