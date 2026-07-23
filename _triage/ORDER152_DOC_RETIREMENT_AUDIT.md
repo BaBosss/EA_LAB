@@ -18,17 +18,19 @@
 | `AGENTS.md` §1.5 + §5.1 | ระบุ default งาน code = Codex-direct ขัดกับ Decision log 2026-07-16 (Claude-author + Codex audit-only) | ✅ แก้แล้ว — แยกเป็น core/money code (Claude เขียน) vs tooling (Codex/Sonnet เขียนได้) + เพิ่ม §5.2 อธิบายเส้นแบ่งและเหตุผล |
 | `ea_template/OPTIMIZATION_PROCEDURE_V2.md` | ยัง DRAFT + ใช้ศัพท์ verdict ที่ retire แล้ว (`DEAD`/`PARKED`/`SYMBOL_LOCAL`) ชนกับ VERDICT GATE | ✅ แก้แล้ว — banner "ไฟล์นี้ไม่ own verdict" + §13.0 ตาราง map stage-label → canonical vocabulary + ชี้ ENGINE-EDGE / M4-on-grid ที่บทนี้ขาด |
 
-## B. เสนอให้ retire / merge (รอ user เคาะ)
+## B. เสนอให้ retire / merge — ✅ EXECUTED 2026-07-23 (session ORDER-152(c) continuation, path-limited commit)
 
-| ไฟล์ | สถานะที่พบ | เสนอ | เหตุผล |
+| ไฟล์ | สถานะที่พบ | เสนอ | ผลจริง |
 |---|---|---|---|
-| `OPTIMIZE_PROCEDURE_AND_AUDIT.md` | มี banner `⚠️ SUPERSEDED (2026-07-18)` เองอยู่แล้ว | **ย้ายเข้า `_archive_docs/`** | owner ย้ายไป skill `backtest-optimize-rigor` แล้ว · เก็บไว้ที่ root = เสี่ยงมีคนอ่านผิดฉบับ |
-| `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` | artifact กู้คืน date-stamped | **ตรวจว่าเนื้อถูกดูดเข้า `PLATFORM_INDEX.md`/`docs/PIPELINE.md` ครบหรือยัง → ถ้าครบ ย้าย archive** | ห้ามย้ายก่อนเช็ค — อาจมีเนื้อที่ไม่ถูก port |
-| `DEPLOY_CHECKLIST_2026-06-29.md` | date-stamped, deployment plan ตัวที่ 3 | **merge เข้า `DEMO_DEPLOYMENT_PLAN.md` แล้ว archive** | anti-drift: deployment context ต้องมี owner เดียว |
-| `DEPLOYMENT_PLAN.md` | ทับกับ `DEMO_DEPLOYMENT_PLAN.md` | **ตรวจว่าต่างกันจริงไหม → ถ้าเป็นรุ่นเก่า archive** | ถ้าเก็บทั้งคู่ ต้องใส่ banner ระบุว่าแต่ละไฟล์ own อะไร |
-| one-off analysis ที่ root: `EA_CORE_ST03_LOOP_PLAN.md` · `MT4_GOLDGRID_RETEST_PLAN.md` · `RSI_FROM_PIPS_REVERSE_ENGINEERING.md` · `STRATEGY_200_ANALYSIS.md` · `ZEUS_GOLD_HEDGE_ANALYSIS.md` | เป็นเอกสารวิเคราะห์จบแล้ว ไม่ใช่ doc ที่ยังเดิน | **ย้าย `_archive_docs/`** (ST03 ถูกถอดจากบัญชีจริงแล้ว, goldgrid = all fail) | ลด root จาก 29 → ~24 · เนื้อยังค้นได้ + memory ชี้อยู่แล้ว |
-| `portfolio/port_01/` | 5 โฟลเดอร์ว่าง มีแต่ `.gitkeep` ไม่ถูกแตะตั้งแต่ 2026-05-29 | **ลบทิ้ง** (scaffolding ที่ไม่เคยใช้) | โครงพอร์ตจริงใช้ `DEPLOYMENTS.csv` + `live_deals/` แทนไปแล้ว |
-| `_archive_docs/QWEN_RUN_LOG.md` + `QWEN_RUN_LOG_updated.md` | ชื่อซ้ำคู่ | **รวมเป็นไฟล์เดียว** | อยู่ใน archive แล้ว priority ต่ำ |
+| `OPTIMIZE_PROCEDURE_AND_AUDIT.md` | มี banner `⚠️ SUPERSEDED (2026-07-18)` เองอยู่แล้ว | ย้ายเข้า `_archive_docs/` | ⏸ ยังไม่ทำรอบนี้ (out of scope ของรอบนี้ — เหลือถ้ามีรอบถัดไป) |
+| `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` | artifact กู้คืน date-stamped | ตรวจว่าเนื้อถูกดูดเข้า `PLATFORM_INDEX.md`/`docs/PIPELINE.md` ครบหรือยัง | ⏸ ยังไม่ทำรอบนี้ (ต้องเช็คเนื้อละเอียด — เหลือถ้ามีรอบถัดไป) |
+| `DEPLOY_CHECKLIST_2026-06-29.md` | date-stamped, deployment plan ตัวที่ 3, README เองระบุ "ephemeral — ลบได้หลัง deploy เสร็จ" | merge เข้า `DEMO_DEPLOYMENT_PLAN.md` แล้ว archive | ✅ **เช็คแล้ว — เนื้อ (3 magic 990010/991001/991002 + set path + verify step) ถูก capture ครบใน `DEMO_DEPLOYMENT_PLAN.md` §ARCHIVE (บรรทัด 70-71, 215-221) อยู่แล้วตั้งแต่ก่อนหน้า ไม่ต้อง merge เพิ่ม** → ย้าย `_archive_docs/DEPLOY_CHECKLIST_2026-06-29.md` + แก้ path reference ใน PROJECT_STATE.md/README.md |
+| `DEPLOYMENT_PLAN.md` | ทับกับ `DEMO_DEPLOYMENT_PLAN.md` | ตรวจว่าต่างกันจริงไหม → ถ้าเป็นรุ่นเก่า archive | ✅ **ตรวจแล้ว — ไม่ใช่รุ่นเก่าซ้ำกัน** เป็น plan คนละเรื่อง (EA_RUNNER_v1 standalone magic 5001 + GSMC/MatchaGrid basket, ไม่อยู่ใน 9-EA demo portfolio) ไฟล์มี banner ระบุ scope แยกอยู่แล้ว ("แยกคนละเรื่องกับ 9-EA demo portfolio") → **เก็บไว้ตามเดิม ไม่ย้าย** (ย้ายไปอยู่กลุ่ม D แทน) |
+| one-off analysis ที่ root: `EA_CORE_ST03_LOOP_PLAN.md` · `MT4_GOLDGRID_RETEST_PLAN.md` · `RSI_FROM_PIPS_REVERSE_ENGINEERING.md` · `STRATEGY_200_ANALYSIS.md` · `ZEUS_GOLD_HEDGE_ANALYSIS.md` | เป็นเอกสารวิเคราะห์จบแล้ว ไม่ใช่ doc ที่ยังเดิน | ย้าย `_archive_docs/` | ✅ ย้ายครบ 5 ไฟล์ + แก้ path reference ใน PROJECT_STATE.md/README.md/MASTER_BACKLOG.md (เฉพาะ hub doc ที่ไม่มี concurrent-session edit ค้าง — `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` ข้ามไว้เพราะ session อื่นกำลังแก้ไฟล์นั้นอยู่) |
+| `portfolio/port_01/` | 5 โฟลเดอร์ว่าง มีแต่ `.gitkeep` ไม่ถูกแตะตั้งแต่ 2026-05-29 | ลบทิ้ง | ✅ ลบแล้ว (`git rm -r`) |
+| `_archive_docs/QWEN_RUN_LOG.md` + `QWEN_RUN_LOG_updated.md` | ชื่อซ้ำคู่ | รวมเป็นไฟล์เดียว | ✅ **ตรวจแล้ว — `QWEN_RUN_LOG_updated.md` (84 บรรทัด) เป็น subset ล้วนของ `QWEN_RUN_LOG.md` (189 บรรทัด, ทุกบรรทัดตรงกัน 100%)** ทั้งที่ชื่อ "_updated" แต่จริงๆเก่ากว่า/สั้นกว่า (จบที่ 2026-06-29 20:00 vs อีกไฟล์จบ 2026-06-30 08:34) → ลบ `_updated` ทิ้ง ไม่มีเนื้อหาหาย |
+
+**เช็คหลังย้าย/ลบทุกไฟล์:** `powershell -File scripts/check_state.ps1 -Strict` → CLEAN.
 
 ## C. 🔴 ไม่ใช่แค่รก — เสี่ยงจริง (เสนอให้จัดการก่อนข้ออื่น)
 

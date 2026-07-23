@@ -73,7 +73,7 @@
   PSAR trailing exit / session filter → graft ใส่ breakout ถ้า exit ต้องปรับ. ไม่ใช่ standalone screening.
 - **Phase 3 — concept ใหม่ (ยังไม่ smoke):** EURCHF bounded-range · London→NY breakout.
   - **idea source จริง = `200 AI Prompt` PDF** (ไม่ใช่ folder EA ที่ตายแล้ว). วิเคราะห์ครบ 200 ตัวที่
-    [STRATEGY_200_ANALYSIS.md](STRATEGY_200_ANALYSIS.md). TOP 8/10 shortlist (trend-follower ที่พอร์ตยังไม่มี)
+    [STRATEGY_200_ANALYSIS.md](_archive_docs/STRATEGY_200_ANALYSIS.md). TOP 8/10 shortlist (trend-follower ที่พอร์ตยังไม่มี)
     **ปิดครบทั้ง 3 แล้ว (2026-07-02):** #68 SuperTrend → tested XAU H4, PARKED as reserve (corr 0.946 vs
     Kaufman ER ที่ดีกว่า, ดู `EA_SCORECARD_AND_REGISTRY.md`) · #94 Donchian/Turtle → DEAD (0 additive legs,
     line above) · #20 Trend+Pyramid → DEAD (line above, XAU gap closed today). **ไม่มี candidate เหลือจาก
@@ -239,7 +239,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - Bucket D (martingale ports) = 0 survivors · CB new-symbol 4/4 DEAD · CB_EUR rescue DROP · R1 RSI_Swing / R2 TrendRegression = DEAD ·
   USDJPY breakout opt→REJECT · ST03 multi-symbol/SL/rearm = DEAD · MACD all-symbols exhaustive REJECT.
 - **EA_SUPERTREND** = XAU-specific edge, 12-symbol hunt 0 additive legs · **EA_DONCHIAN** = 0 additive legs (USDJPY regime artifact, XAU below 1.30 all periods).
-- ✅ **MT4 gold-grid re-test = DONE 2026-07-02** (`MT4_GOLDGRID_RETEST_PLAN.md` §CLOSED) — Elephant/Mammoth
+- ✅ **MT4 gold-grid re-test = DONE 2026-07-02** (`_archive_docs/MT4_GOLDGRID_RETEST_PLAN.md` §CLOSED) — Elephant/Mammoth
   artifact confirmed (PF 85→1.41 at Model 1, DD 53.65%/yr) · Gold Stuff V7 DQ confirmed (uncapped
   martingale + DD 77%/yr) · KRAPOOK not re-tested (expired, technique-only regardless). All 3 fail —
   gold-grid concept dead. Do not re-open without a different gold-grid EA.
@@ -277,7 +277,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 | `INTAKE_QUEUE.md` | Bucket D CLOSED · C/E = martingale skip |
 | ~~`QWEN_WORK_PLAN.md`~~ | archived → `_archive_docs/` (Q1/Q2/R1/R2 DONE) |
 | `EA_SCORECARD_AND_REGISTRY.md` | rubric + audit trail · Part 3 RE-EXAM → ข้อ 3 |
-| `MT4_GOLDGRID_RETEST_PLAN.md` | ✅ CLOSED 2026-07-02 (all 3 targets fail) → ข้อ 3 |
+| ~~`MT4_GOLDGRID_RETEST_PLAN.md`~~ | archived → `_archive_docs/` (✅ CLOSED 2026-07-02, all 3 targets fail) → ข้อ 3 |
 | `DEMO_DEPLOYMENT_PLAN.md` | live portfolio source of truth → ข้อ 3 |
 </content>
 </invoke>

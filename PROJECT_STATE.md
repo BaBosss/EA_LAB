@@ -273,7 +273,7 @@ account เดียว 10,000 cent · judge **2026-09-22** · attribution key =
 > regime ปัจจุบัน → **baseline เทียบ live ใช้ 0.86**. คงไว้บน demo เก็บ data ถึง judge ได้ แต่คาดหวัง =
 > ใกล้ศูนย์/ลบ · สถานะ = WATCH (ตัวเก็ง kill แรก). loop ปิดแล้ว → `EA_CORE_ST03_LOOP_PLAN.md` STEP 5.
 
-deploy ทำตาม `DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
+deploy ทำตาม `_archive_docs/DEPLOY_CHECKLIST_2026-06-29.md` → ✅ เสร็จครบ 3 รายการ (user ยืนยัน 2026-07-02).
 
 ---
 
@@ -424,8 +424,7 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
 | ภาพใหญ่/ปรัชญาโรงงานของเจ้าของ | **`VISION.md`** (อ่านคู่กันทุก session) |
 | กติกา multi-agent + คิวงานกลาง | `AGENTS.md` · `AGENT_TASKBOARD.md` |
 | roadmap ระยะยาว + ภาพสุดท้าย + gate เลื่อนเฟส | `ROADMAP.md` |
-| deploy วันนี้ | `DEPLOY_CHECKLIST_2026-06-29.md` |
-| EA_CORE ปิด loop ด้วย ST03 | `EA_CORE_ST03_LOOP_PLAN.md` |
+| EA_CORE ปิด loop ด้วย ST03 | `_archive_docs/EA_CORE_ST03_LOOP_PLAN.md` |
 | live portfolio (source of truth) | `DEMO_DEPLOYMENT_PLAN.md` |
 | backlog + coverage matrix เต็ม | `MASTER_BACKLOG.md` |
 | ทะเบียน EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
@@ -434,7 +433,7 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
 | design "สมอง" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
 | automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
 | รับ source ใหม่ | `INTAKE_QUEUE.md` |
-| idea จาก 200-prompt PDF | `STRATEGY_200_ANALYSIS.md` |
+| idea จาก 200-prompt PDF | `_archive_docs/STRATEGY_200_ANALYSIS.md` |
 
 ---
 
