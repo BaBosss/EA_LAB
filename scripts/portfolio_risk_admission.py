@@ -292,6 +292,14 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
                     corrupted.add(magic)
                     continue
                 monthly[magic][ym] += sum(parts)
+
+    # ORDER-170 round-4 SEV-2: individually finite cells can still overflow the
+    # monthly aggregation to inf (e.g. two 1e308 deals in one month). A non-finite
+    # monthly total is corrupt data exactly like an unparseable cell -- poison the
+    # magic so its pairs fall back to the conservative 1.0 default.
+    for magic, months in monthly.items():
+        if any(not math.isfinite(v) for v in months.values()):
+            corrupted.add(magic)
     return monthly, corrupted
 
 
@@ -330,7 +338,10 @@ def compute_corr_matrix(magics, live_deals_dir=LIVE_DEALS_DIR):
             xs = [monthly[a][m] for m in common]
             ys = [monthly[b][m] for m in common]
             c = pearson(xs, ys)
-            if c is None:
+            # ORDER-170 round-4 SEV-2: overflow inside pearson (finite inputs, huge
+            # magnitudes) can yield nan/inf -- a non-finite correlation must never
+            # enter the matrix; leaving the pair out applies the 1.0 default instead.
+            if c is None or not math.isfinite(c):
                 continue
             corr[frozenset((a, b))] = c
     return corr
@@ -381,6 +392,14 @@ def portfolio_dd_est(dd95_by_magic, corr_matrix, tol=1e-9):
         for j in magics:
             sum_sq += get_corr(corr_matrix, i, j) * dd95_by_magic[i] * dd95_by_magic[j]
 
+    # ORDER-170 round-4: individually finite but extreme inputs can overflow the
+    # aggregation to inf/nan, and inf sails through the bounds check below
+    # (inf <= inf is True). A non-finite intermediate is a data error -- refuse.
+    if not math.isfinite(sum_sq):
+        raise RiskAdmissionError(
+            f"non-finite sum-of-squares ({sum_sq!r}) -- inputs overflow the formula; "
+            "refusing to emit a risk number"
+        )
     if sum_sq < -tol:
         raise RiskAdmissionError(
             f"negative sum-of-squares ({sum_sq!r}) -- corr matrix is not a valid "
@@ -496,8 +515,17 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
         }
 
     cross = sum(get_corr(corr_matrix, candidate_magic, m) * others[m] for m in others)
-    a = candidate_dd95 ** 2
+    # ORDER-170 round-4 MINOR: candidate_dd95 ** 2 raises a raw OverflowError for an
+    # extreme-but-finite value (e.g. 1e308) -- use multiplication (-> inf) and refuse
+    # through the documented error type instead of leaking a foreign exception.
+    a = candidate_dd95 * candidate_dd95
     b = 2.0 * candidate_dd95 * cross
+    if not (math.isfinite(cross) and math.isfinite(a) and math.isfinite(b)):
+        raise RiskAdmissionError(
+            f"quadratic coefficients overflow for {candidate_magic!r} "
+            f"(cross={cross!r}, a={a!r}, b={b!r}) -- inputs are outside any plausible "
+            "percent-of-equity range; refusing to size"
+        )
 
     combined = dict(others)
     combined[candidate_magic] = candidate_dd95
@@ -522,6 +550,10 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
             f"no real solution for a fitting lot scale -- corr matrix invalid for {candidate_magic}"
         )
     x = (-b + math.sqrt(disc)) / (2 * a)
+    if not math.isfinite(x):
+        raise RiskAdmissionError(
+            f"solved lot_factor is non-finite for {candidate_magic!r} -- refusing to size"
+        )
     x = min(x, 1.0)   # never scale UP past the validated locked .set
     if x <= 0:
         raise RiskAdmissionError(
@@ -738,10 +770,20 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                     ),
                 })
                 continue
+            # ORDER-170 round-4 SEV-1: a basketed candidate must be admitted under the
+            # SAME risk-unit identity the account summary collapses it to
+            # ('basket::<id>'), not its raw magic. Otherwise admission resolves a
+            # measured raw-magic correlation the summary (conservatively) does not,
+            # and the two paths can disagree -- round 3 showed ADMIT_FULL next to an
+            # OVER-BUDGET summary in the same report.
+            cand_key = f"basket::{cand_basket}" if cand_basket else m
             try:
                 decision = admit_candidate(
-                    m, dd95_map[m], active_units, corr_matrix, acct_summary["budget_pct"]
+                    cand_key, dd95_map[m], active_units, corr_matrix, acct_summary["budget_pct"]
                 )
+                decision["magic"] = m
+                if cand_key != m:
+                    decision["risk_unit"] = cand_key
                 decision["account"] = acct
                 decision["ea_name"] = cand["ea_name"]
                 admission_demo.append(decision)
@@ -1255,6 +1297,68 @@ def _cage_18_safe_output_path_guard():
             assert refused(alias), "hard-link alias of a protected file must be refused"
 
 
+def _cage_19_basketed_candidate_same_identity_both_paths():
+    """Round-4 SEV-1: a PENDING candidate that itself has a basket_id must be admitted
+    under the same 'basket::<id>' risk-unit identity the summary collapses it to.
+    Round-3 audit reproducer: summary said 30.0/OVER BUDGET while admission resolved a
+    measured raw-magic correlation and said ADMIT_FULL at 22.36 in the same report."""
+    deployments = [_mk_row("111", "A", "ACTIVE"), _mk_row("111", "C", "PENDING_ATTACH")]
+    dd95 = {"A": 20.0, "C": 10.0}
+    basket_of = {"C": "BX"}
+    corr = {frozenset(("A", "C")): 0.0}   # measured raw-magic corr the summary ignores
+    report = build_report(deployments, dd95, corr, basket_of=basket_of)
+    acct = report["accounts"][0]
+    assert abs(acct["portfolio_dd_est"] - 30.0) < 1e-9, f"summary drifted: {acct!r}"
+    assert acct.get("over_budget") is True
+    d = report["admission_demo"][0]
+    assert d["status"] != "ADMIT_FULL", (
+        f"admission approved full size while the summary says OVER BUDGET: {d!r}"
+    )
+    assert d["status"] == "DEFER_ESCALATE", f"expected escalation (no broker min): {d!r}"
+    assert d["magic"] == "C" and d.get("risk_unit") == "basket::BX", (
+        f"decision must report the real magic and the risk-unit identity used: {d!r}"
+    )
+
+
+def _cage_20_overflowing_pnl_poisons_magic():
+    """Round-4 SEV-2: individually finite deal cells that overflow the monthly
+    aggregation (or pearson) must poison the magic / stay out of the matrix -- a nan
+    correlation must never be stored."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "EA_LAB_deals_998_20260101.csv"
+        with open(p, "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["time", "magic", "entry", "profit", "swap", "commission"])
+            for i, ym in enumerate(("2026.01", "2026.02", "2026.03", "2026.04")):
+                w.writerow([f"{ym}.15 10:00:00", "111", "1", "1e308", "0", "0"])
+                w.writerow([f"{ym}.15 10:30:00", "111", "1", "1e308", "0", "0"])  # sum -> inf
+                w.writerow([f"{ym}.15 11:00:00", "222", "1", str(float(i + 1)), "0", "0"])
+        monthly, corrupted = load_monthly_pnl_by_magic(td)
+        assert "111" in corrupted, "overflowed monthly total must poison the magic"
+        corr = compute_corr_matrix(["111", "222"], td)
+    for pair, v in corr.items():
+        assert math.isfinite(v), f"non-finite correlation stored: {pair}={v!r}"
+        assert "111" not in pair, f"poisoned magic still measured: {pair}"
+    assert get_corr(corr, "111", "222") == 1.0
+
+
+def _cage_21_extreme_finite_inputs_fail_closed_with_domain_error():
+    """Round-4 MINOR + formula guard: extreme-but-finite inputs must raise
+    RiskAdmissionError (the documented refusal type), never a raw OverflowError,
+    and portfolio_dd_est() must refuse a sum-of-squares that overflows to inf."""
+    try:
+        admit_candidate("C", 1e308, {}, {}, 1.0, broker_min_lot_factor=0.01)
+        raise AssertionError("admit_candidate accepted a 1e308%% DD95")
+    except RiskAdmissionError:
+        pass
+    try:
+        portfolio_dd_est({"A": 1e308, "B": 1e308}, {})
+        raise AssertionError("portfolio_dd_est emitted a number from overflowing inputs")
+    except RiskAdmissionError:
+        pass
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1274,6 +1378,9 @@ CAGE_TESTS = [
     ("16_nonfinite_pnl_poisons_magic_end_to_end", _cage_16_nonfinite_pnl_poisons_magic_end_to_end),
     ("17_admission_validates_own_inputs", _cage_17_admission_validates_own_inputs),
     ("18_safe_output_path_guard", _cage_18_safe_output_path_guard),
+    ("19_basketed_candidate_same_identity", _cage_19_basketed_candidate_same_identity_both_paths),
+    ("20_overflowing_pnl_poisons_magic", _cage_20_overflowing_pnl_poisons_magic),
+    ("21_extreme_finite_inputs_fail_closed", _cage_21_extreme_finite_inputs_fail_closed_with_domain_error),
 ]
 
 
