@@ -1,0 +1,13 @@
+﻿idea,cellname,main_pf,main_tr,main_net,bwd_pf,bwd_tr,bwd_net,candidate
+A_VwapSnapback,es2_lb40,0.63,1895,-223.61,0.58,2017,-306.67,no
+A_VwapSnapback,es2_lb90,0.74,1295,-128.79,0.56,1429,-270.90,no
+A_VwapSnapback,es3_lb40,0.69,544,-56.74,0.59,623,-101.48,no
+A_VwapSnapback,es3_lb90,0.76,325,-31.58,0.91,326,-12.48,no
+B_AsianDrift,md0p3_tp1p5,1.1,682,183.11,0.86,668,-169.64,no
+B_AsianDrift,md0p3_tp3,1.08,682,169.43,0.99,668,-15.40,no
+B_AsianDrift,md0p8_tp1p5,1.22,516,286.55,0.86,458,-121.40,no
+B_AsianDrift,md0p8_tp3,1.18,516,307.45,0.94,458,-63.30,no
+C_VolRegime,dn10_em1,0.95,491,-299.68,0.86,459,-542.99,no
+C_VolRegime,dn10_em1p3,0.91,177,-220.91,0.87,179,-237.34,no
+C_VolRegime,dn30_em1,1.01,365,37.72,0.88,361,-363.97,no
+C_VolRegime,dn30_em1p3,0.96,146,-73.41,0.87,144,-177.47,no
