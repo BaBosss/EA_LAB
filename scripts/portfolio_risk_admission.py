@@ -816,6 +816,18 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # already on the account -- sizing an unrelated candidate against the
         # ACTIVE-only 10 admitted it into a 40% portfolio against a 25% budget.
         existing_units = {k: units_all[k] for k in existing_units}
+        # ORDER-170 round-8 (audit round-7 F1): a basket with an ACTIVE leg belongs in
+        # the existing portfolio even when that leg's OWN DD95 is UNKNOWN -- the known
+        # basket-level value may be supplied by a PENDING sibling row, in which case
+        # the key never appears in active_units and the upgrade above cannot add it.
+        for r in rows:
+            if r["status"] != "ACTIVE":
+                continue
+            b = (basket_of or {}).get(r["magic"])
+            if b:
+                k = _basket_key(b)
+                if k in units_all and k not in existing_units:
+                    existing_units[k] = units_all[k]
 
         def _with_provenance(entry):
             if admitted_prior:
@@ -1559,6 +1571,22 @@ def _cage_25_conflicting_siblings_use_canonical_basket_dd95():
         assert demo["G"]["status"] == "DEFER_ESCALATE", (
             f"order {order}: G sized against the understated ACTIVE-only basket value: "
             f"{demo['G']!r}"
+        )
+    # round-7 audit F1: an ACTIVE basket leg with UNKNOWN own-DD95 whose PENDING
+    # sibling supplies the known basket-level value is STILL existing risk -- the
+    # sibling must be CANNOT_RUN and an unrelated candidate must see that risk,
+    # in both pending orders.
+    for order in (("F", "G"), ("G", "F")):
+        deployments = [_mk_row("111", "E", "ACTIVE")] + [
+            _mk_row("111", mg, "PENDING_ATTACH") for mg in order]
+        report = build_report(deployments, {"F": 20.0, "G": 10.0}, {},
+                              basket_of={"E": "BY", "F": "BY"})   # E's own DD95 UNKNOWN
+        demo = {d["magic"]: d for d in report["admission_demo"]}
+        assert demo["F"]["status"] == "CANNOT_RUN", (
+            f"order {order}: sibling of an ACTIVE basket must not be sized: {demo['F']!r}"
+        )
+        assert demo["G"]["status"] == "DEFER_ESCALATE", (
+            f"order {order}: G must see the ACTIVE basket's known risk 20: {demo['G']!r}"
         )
     # round-6 audit F4: a REFUSED record after an admission must carry provenance
     report3 = build_report(
