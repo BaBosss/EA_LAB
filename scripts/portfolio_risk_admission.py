@@ -331,7 +331,18 @@ def pearson(xs, ys):
     dy = math.sqrt(dy2)
     if dx == 0 or dy == 0:
         return None
-    return numer / (dx * dy)
+    r = numer / (dx * dy)
+    # ORDER-170 round-6 (audit F3): finite underflow can push the quotient outside
+    # the mathematical range [-1, 1] (observed 1.0000673 from subnormal inputs).
+    # Clamp a machine-epsilon overshoot; anything materially out of range means the
+    # inputs are numerically degenerate -- treat as unmeasurable (None -> 1.0 default).
+    if not math.isfinite(r):
+        return None
+    if abs(r) > 1.0:
+        if abs(r) <= 1.0 + 1e-9:
+            return math.copysign(1.0, r)
+        return None
+    return r
 
 
 def compute_corr_matrix(magics, live_deals_dir=LIVE_DEALS_DIR):
@@ -786,15 +797,28 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # candidate is sized against, and each decision names that assumption.
         existing_units = dict(active_units)
         admitted_prior = []
+        # ORDER-170 round-6 (audit F1): the canonical DD95 of every risk unit on this
+        # account, collapsed across ALL known rows (ACTIVE and PENDING). A basketed
+        # candidate must be sized at its basket's conservative canonical value (the
+        # max across conflicting siblings -- same rule the summary uses), never at
+        # whichever sibling row happens to come first in inventory order.
+        all_known = {r["magic"]: dd95_map[r["magic"]] for r in rows if r["magic"] in dd95_map}
+        units_all, _ = collapse_basket_risk_units(all_known, basket_of or {})
+
+        def _with_provenance(entry):
+            if admitted_prior:
+                entry["assumes_admitted_first"] = list(admitted_prior)
+            return entry
+
         for cand in pending:
             m = cand["magic"]
             if m not in dd95_map:
-                admission_demo.append({
+                admission_demo.append(_with_provenance({
                     "account": acct, "magic": m, "ea_name": cand["ea_name"],
                     "status": "CANNOT_RUN",
                     "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- "
                                "admission function needs it before it can size anything",
-                })
+                }))
                 continue
             cand_basket = (basket_of or {}).get(m)
             # ORDER-170 round-4 SEV-1: a basketed candidate must be admitted under the
@@ -805,7 +829,7 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
             # OVER-BUDGET summary in the same report.
             cand_key = _basket_key(cand_basket) if cand_basket else m
             if cand_key in existing_units:
-                admission_demo.append({
+                admission_demo.append(_with_provenance({
                     "account": acct, "magic": m, "ea_name": cand["ea_name"],
                     "status": "CANNOT_RUN",
                     "message": (
@@ -814,15 +838,23 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                         "admitted earlier in this report) -- independent admission is "
                         "ill-defined, escalate to user"
                     ),
-                })
+                }))
                 continue
+            cand_dd95 = units_all[cand_key]
             try:
                 decision = admit_candidate(
-                    cand_key, dd95_map[m], existing_units, corr_matrix, acct_summary["budget_pct"]
+                    cand_key, cand_dd95, existing_units, corr_matrix, acct_summary["budget_pct"]
                 )
                 decision["magic"] = m
                 if cand_key != m:
                     decision["risk_unit"] = cand_key
+                if abs(cand_dd95 - dd95_map[m]) > 1e-9:
+                    decision["basket_dd95_used"] = cand_dd95
+                    decision["message"] = (
+                        f"{decision.get('message', '')} (sized at the basket's canonical "
+                        f"DD95 {cand_dd95}, not this row's {dd95_map[m]} -- conflicting "
+                        "sibling values, larger kept)"
+                    )
                 decision["account"] = acct
                 decision["ea_name"] = cand["ea_name"]
                 if admitted_prior:
@@ -833,14 +865,14 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                     )
                 lf = decision.get("lot_factor")
                 if decision["status"] in ("ADMIT_FULL", "ADMIT_REDUCED") and lf:
-                    existing_units[cand_key] = dd95_map[m] * lf
+                    existing_units[cand_key] = cand_dd95 * lf
                     admitted_prior.append(m)
                 admission_demo.append(decision)
             except RiskAdmissionError as e:
-                admission_demo.append({
+                admission_demo.append(_with_provenance({
                     "account": acct, "magic": m, "ea_name": cand["ea_name"],
                     "status": "REFUSED", "message": str(e),
-                })
+                }))
 
     report = {
         "limitation": LIMITATION,
@@ -1478,6 +1510,53 @@ def _cage_24_exact_budget_defers_not_refuses():
     assert over["status"] == "DEFER_ESCALATE" and "existing portfolio" in over["message"]
 
 
+def _cage_25_conflicting_siblings_use_canonical_basket_dd95():
+    """Round-6 audit F1: PENDING basket siblings with CONFLICTING DD95 values must be
+    sized at the basket's canonical conservative value (the larger -- same rule the
+    summary uses), never at whichever sibling row comes first. Audit repro: E=10,
+    F=30 sharing basket BY, budget 25 -- the old code admitted E at 10 while the
+    summary said 30/OVER BUDGET; reversing row order changed the outcome."""
+    for order in (("E", "F"), ("F", "E")):
+        deployments = [_mk_row("111", mg, "PENDING_ATTACH") for mg in order]
+        report = build_report(deployments, {"E": 10.0, "F": 30.0}, {},
+                              basket_of={"E": "BY", "F": "BY"})
+        first = report["admission_demo"][0]
+        assert first["status"] == "DEFER_ESCALATE", (
+            f"order {order}: first sibling must be sized at canonical 30 (> budget 25), "
+            f"got {first!r}"
+        )
+        assert first.get("basket_dd95_used", 30.0) == 30.0
+        # no decision in either order may grant a lot at the understated 10
+        for d in report["admission_demo"]:
+            assert d["status"] not in ("ADMIT_FULL", "ADMIT_REDUCED"), (
+                f"order {order}: understated sibling was granted a lot: {d!r}"
+            )
+    # F2: a later CANNOT_RUN sibling must carry the sequential provenance list
+    report2 = build_report(
+        [_mk_row("111", "E", "PENDING_ATTACH"), _mk_row("111", "F", "PENDING_ATTACH")],
+        {"E": 10.0, "F": 10.0}, {}, basket_of={"E": "BY", "F": "BY"},
+    )
+    demo2 = {d["magic"]: d for d in report2["admission_demo"]}
+    assert demo2["E"]["status"] == "ADMIT_FULL"
+    assert demo2["F"]["status"] == "CANNOT_RUN"
+    assert demo2["F"].get("assumes_admitted_first") == ["E"], (
+        f"CANNOT_RUN after an admission must name the assumption: {demo2['F']!r}"
+    )
+
+
+def _cage_26_pearson_result_stays_in_range():
+    """Round-6 audit F3: a finite pearson quotient outside [-1, 1] (subnormal
+    underflow) must be clamped (epsilon overshoot) or unmeasurable (None) -- never
+    stored out of range where it breaks the bounds invariant downstream."""
+    xs = [0.0, -1e-200, -1e-200, -1e-320, 1e-160]
+    ys = [-1e-320, -5e-324, -5e-324, -5e-324, 1e-100]
+    r = pearson(xs, ys)
+    assert r is None or abs(r) <= 1.0, f"pearson emitted out-of-range {r!r}"
+    # a clean series still measures normally
+    ok = pearson([1.0, 2.0, 3.0, 4.0], [2.0, 4.0, 6.0, 8.0])
+    assert ok is not None and abs(ok - 1.0) < 1e-12
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1503,6 +1582,8 @@ CAGE_TESTS = [
     ("22_multiple_pending_decisions_compose", _cage_22_multiple_pending_decisions_compose),
     ("23_pearson_overflow_is_unmeasurable", _cage_23_pearson_overflow_is_unmeasurable),
     ("24_exact_budget_defers_not_refuses", _cage_24_exact_budget_defers_not_refuses),
+    ("25_conflicting_siblings_canonical_dd95", _cage_25_conflicting_siblings_use_canonical_basket_dd95),
+    ("26_pearson_result_stays_in_range", _cage_26_pearson_result_stays_in_range),
 ]
 
 
