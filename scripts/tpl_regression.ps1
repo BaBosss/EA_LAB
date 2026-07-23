@@ -44,9 +44,19 @@ $experts = @(Get-ChildItem (Join-Path $root "ea_template\Boss_*.mq5") | Sort-Obj
 # Boss_16 (ORDER-094): compiled defaults are also thin on this 6-month window - pinned to the
 # existing frozen ORDER-072 smoke set (Boss16_Kangaroo_XAU_smoke.set) instead.
 $setOverride = @{
-  "EALabTpl\Boss_14_GridLog"      = (Join-Path $root "ea_template\sets\Boss14_regression_smoke.set")
-  "EALabTpl\Boss_16_KangarooGrid" = (Join-Path $root "ea_template\sets\Boss16_Kangaroo_XAU_smoke.set")
+  "EALabTpl\Boss_14_GridLog"      = (Join-Path $root "ea_template\sets\regression\Boss_14_GridLog_regression_full.set")
+  "EALabTpl\Boss_16_KangarooGrid" = (Join-Path $root "ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set")
 }
+# ORDER-165 (2026-07-23): EVERY expert now runs with a FULL pinned .set. Root cause of the
+# 8/8 false-drift: [TesterInputs] only overrides listed inputs - every UNLISTED input comes
+# from the per-terminal tester cache (MQL5\Profiles\Tester\<Expert>.set = last-used values,
+# rewritten by any GUI/batch session touching that EA). The old cage ran 6 of 8 EAs with NO
+# set at all (and 14/16 with PARTIAL sets), so its numbers silently tracked whatever the
+# cache held - reproducible only while nobody else touched the terminal. Full default
+# surfaces were captured 2026-07-23 (cache wiped -> compiled defaults -> report harvest);
+# 14/16 overlay their frozen smoke params on that surface. Leverage is pinned to 1:100 by
+# mt5_run (ini "1:N" form + post-run assertion, exit 3 on mismatch).
+$defaultSetDir = Join-Path $root "ea_template\sets\regression"
 
 function Parse-Report([string]$htm) {
   # MT5 writes UTF-16LE with BOM; Get-Content -Raw decodes it via the BOM.
@@ -66,13 +76,12 @@ foreach ($e in $experts) {
   $name = ($e -split '\\')[-1]
   $rep = "TPLREG_$name"
   Write-Host ">> running $name ($Symbol $Period $FromDate-$ToDate Model $Model)" -ForegroundColor Cyan
-  if ($setOverride.ContainsKey($e)) {
-    $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
-            -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep -SetFile $setOverride[$e]
-  } else {
-    $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
-            -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep
-  }
+  # ORDER-165: full pinned set for every expert - never run the cage on cached inputs.
+  $setFile = if ($setOverride.ContainsKey($e)) { $setOverride[$e] } else { Join-Path $defaultSetDir "${name}_defaults.set" }
+  if (-not (Test-Path $setFile)) { Write-Host "[FAIL] $name - pinned set missing: $setFile (capture defaults per ORDER-165 before running the cage)" -ForegroundColor Red; exit 1 }
+  $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
+          -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep -SetFile $setFile
+  if ($LASTEXITCODE -eq 3) { Write-Host "[FAIL] $name - LEVERAGE MISMATCH (see mt5_run output above) - cage numbers would not be comparable" -ForegroundColor Red; exit 1 }
   $htm = Join-Path $root "_mt5_auto\reports\$rep.htm"
   if (-not (Test-Path $htm)) { Write-Host "[FAIL] $name - no report produced ($res)" -ForegroundColor Red; exit 1 }
   $m = Parse-Report $htm

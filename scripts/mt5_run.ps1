@@ -24,7 +24,23 @@ param(
   # recorded history/ticks. Spread stress must be done arithmetically on the trade list (or via a
   # custom symbol). Do NOT re-add the param without re-verifying: a silent no-op here fakes a "pass".
   [int]$Deposit = 10000,
-  [int]$Leverage = 100,                         # tester account leverage (1:N)
+  # ⚠️ ORDER-165 (2026-07-23, corrected same day): leverage ini format matters.
+  #   - numeric form ("Leverage=100")   -> SILENTLY IGNORED; tester uses its own cached
+  #     last-used leverage setting (mutated by any GUI session) = non-reproducible.
+  #   - "1:N" form   ("Leverage=1:100") -> WORKS - sets the real simulation leverage
+  #     (verified against tester agent logs "initial deposit ... leverage 1:N", 4/4 samples;
+  #     the report's "Leverage:" line agrees with the agent = report is truthful).
+  # This script wrote the numeric form since inception -> every historical run used whatever
+  # leverage the terminal's tester cache happened to hold. Now writes 1:N AND asserts the
+  # report's leverage post-run (exit 3 on mismatch) - belt and suspenders.
+  # ⚠️ SAME CLASS, BIGGER BUG - INPUT CACHE: [TesterInputs] only overrides the inputs you list;
+  # every UNLISTED input comes from the per-terminal cache MQL5\Profiles\Tester\<Expert>.set
+  # (last-used values, rewritten by ANY run/GUI session). A run without a FULL -SetFile is
+  # therefore non-reproducible. Proven 2026-07-23: identical Boss_11 binary + identical ticks
+  # gave BUY 0.2-lot n=9 (lane1: cached SLMode=30-no-SL + Recovery82 + risk-sizing) vs SELL
+  # 0.01-lot n=480 (lane2: pristine defaults) - this, not leverage and not "engine drift",
+  # was the ORDER-162 8/8 regression false alarm. The script now WARNS on missing -SetFile.
+  [int]$Leverage = 100,                         # tester leverage 1:N - written as 1:N AND asserted post-run
   [Parameter(Mandatory)][string]$ReportName,
   [string]$Terminal = "D:\Meta 5\terminal64.exe",
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
@@ -70,12 +86,21 @@ if ($SetFile -and (Test-Path $SetFile)) {
     $t = $l.Trim()
     if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
   }
+} else {
+  # ORDER-165: without a set file, every input comes from the per-terminal tester cache
+  # (MQL5\Profiles\Tester\<Expert>.set = last-used values, rewritten by any session that
+  # touches this EA in this terminal) - the run is NOT reproducible and not comparable to
+  # any other run of the "same" EA. Loud warning, not a hard fail: some callers (default-
+  # capture, throwaway probes) do this deliberately.
+  Write-Output "WARN: no -SetFile - unlisted inputs come from this terminal's tester cache (MQL5\Profiles\Tester) = NON-REPRODUCIBLE. Pass a FULL .set for any number you intend to keep."
 }
 
+# ORDER-165: leverage MUST be the "1:N" string form - the numeric form is silently ignored
+# and the tester then uses its own cached last-used leverage (see -Leverage note above).
 $lines = @(
   "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
   "Optimization=0", "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
-  "Deposit=$Deposit", "Currency=USD", "Leverage=$Leverage", "ExecutionMode=0", "Visual=0",
+  "Deposit=$Deposit", "Currency=USD", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"
@@ -118,7 +143,46 @@ if (Test-Path $srcHtm) {
   Move-Item $srcHtm $destHtm -Force
   Get-ChildItem $DataDir -Filter "$ReportName*.png" -File -ErrorAction SilentlyContinue |
     Move-Item -Destination "$auto\reports\" -Force
-  Write-Output "OK REPORT: $destHtm"
+  # ORDER-165 LEVERAGE ASSERTION: verify the tester actually used the leverage we pinned.
+  # The report's "Leverage:" line reflects the real simulation leverage (agrees with the
+  # tester agent log's "initial deposit ... leverage 1:N" - verified 4/4 samples 2026-07-23,
+  # +4 more independent samples same day: 100/500/9999/250 all matched exactly via the 1:N
+  # ini form, while numeric-only form gave a fixed 1:7 regardless of the requested number).
+  # Mismatch = ini didn't take (format regression / future build change) -> fail loudly
+  # (exit 3, distinct from no-report exit 1) instead of letting a silently-wrong margin
+  # context poison downstream verdicts.
+  # Sidecar JSON (ORDER-165, added because a real caller — tpl_regression.ps1 — never checks
+  # mt5_run.ps1's exit code at all; a printed warning + exit 3 alone would pass through it
+  # silently). Written every time so callers have one stable path to check instead of each
+  # re-implementing the report regex. requested/actual are null when the report has no usable
+  # leverage line (0-trade / degenerate report) — that's "unknown", not "match" or "mismatch".
+  $rpt = [IO.File]::ReadAllText($destHtm, [Text.Encoding]::Unicode)
+  $lm = [regex]::Match(($rpt -replace '<[^>]+>', ' '), 'Leverage:\s*1:(\d+)')
+  $sidecar = "$auto\reports\$ReportName.leverage_check.json"
+  if ($lm.Success) {
+    $actualLev = [int]$lm.Groups[1].Value
+    # "1:0" shows up on some no-trade/degenerate reports (seen: TPLREG_B18_bisect1.htm) -
+    # that's "not recorded", not "account leverage is zero". Warn, don't false-fail.
+    if ($actualLev -eq 0) {
+      [PSCustomObject]@{ report_name=$ReportName; requested_leverage=$Leverage; actual_leverage=$null; match=$null; status='NOT_RECORDED' } |
+        ConvertTo-Json | Set-Content -Path $sidecar -Encoding UTF8
+      Write-Output "OK REPORT: $destHtm (WARN: report shows leverage 1:0 = not recorded - assertion skipped)"
+      exit 0
+    }
+    $isMatch = ($actualLev -eq $Leverage)
+    [PSCustomObject]@{ report_name=$ReportName; requested_leverage=$Leverage; actual_leverage=$actualLev; match=$isMatch; status=$(if ($isMatch) { 'MATCH' } else { 'MISMATCH' }) } |
+      ConvertTo-Json | Set-Content -Path $sidecar -Encoding UTF8
+    if (-not $isMatch) {
+      Write-Output ("LEVERAGE MISMATCH: asserted 1:{0} but tester ran at the account's 1:{1} - report kept at {2} but numbers are NOT comparable to 1:{0} runs. Log this lane into a 1:{0} account or pass -Leverage {1} deliberately. Machine-readable: $sidecar" -f $Leverage, $actualLev, $destHtm)
+      exit 3
+    }
+    Write-Output "OK REPORT: $destHtm (leverage verified 1:$actualLev)"
+    exit 0
+  }
+  # 0-trade reports can omit the Leverage line - surface it rather than guess.
+  [PSCustomObject]@{ report_name=$ReportName; requested_leverage=$Leverage; actual_leverage=$null; match=$null; status='NO_LEVERAGE_LINE' } |
+    ConvertTo-Json | Set-Content -Path $sidecar -Encoding UTF8
+  Write-Output "OK REPORT: $destHtm (WARN: leverage line not found in report - assertion skipped)"
   exit 0
 }
 else {
