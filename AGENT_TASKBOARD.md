@@ -204,6 +204,18 @@ raw `_mt5_auto/RSIMR_SENS_FAN.csv` + sets `_mt5_auto/ab_sets/rsimr_fan/`.
 **ห้าม:** ไล่ปรับ center ไปทาง OS20/Dist7 ที่ดูดีกว่า โดยไม่รู้ตัวว่ากำลัง re-fit MAIN/BWD ซ้ำ (ทั้งคู่เป็น window ที่ใช้ select ไปแล้ว) · ข้าม MC เต็มรูปแบบบน config ใหม่ก่อนจะเรียก CANDIDATE.
 **ทำได้ต่อ:** MC เต็มบน RSI25/75+SL25 (ตอนนี้ยังอิง MC เดิมของ baseline คนละ config) · ถ้า user อยากดัน CANDIDATE จริง ต้องรอ n เพิ่มใน holdout (รอเวลา ไม่ใช่รอ optimize) หรือยอมรับ demo-isolate ทั้งที่ holdout อ่อน (precedent StoMultiTap/XAGUSD).
 
+## ORDER-186 — RSI-MR (990103) full MC บน RSI25/75+SL25 (ปิด LADDER Step 7 บน center ใหม่, ปิด funnel วันนี้) — `REVIEWED(Claude 2026-07-23): MC ผ่าน comfortable bar ทั้งคู่ (MAIN PF-5th 1.544, BWD 1.209) ดีขึ้นชัดเจนจาก baseline (1.116) — funnel ครบทุกด่านยกเว้น holdout เดียว, ปิดงาน RSI-MR วันนี้ที่นี่`
+**MC (bootstrap 5000 iter, `mc_from_summary.ps1`, GP/GL จริงจาก report):**
+| window | trades | win% | PF-5th | PF-median | DD95 | ruin |
+|---|---|---|---|---|---|---|
+| MAIN | 216 | 66.2 | **1.544** | 1.963 | 1.38% | 0% |
+| BWD | 199 | 65.8 | **1.209** | 1.533 | 2.40% | 0% |
+เทียบ baseline (atr9 เดิม, MAIN only): PF-5th 1.116 (ผ่านแค่ hard floor) → center ใหม่ **ผ่าน comfortable bar (≥1.2) ทั้ง 2 window** ชัดเจน, DD95 ต่ำกว่าเดิมมาก (เดิม 3.07% MAIN).
+**สรุปรวม funnel RSI-MR วันนี้ (ORDER-182→186):** methodology fix (continuous vs stitched) → lever spacing/entry-threshold/SL ครบ 3/3 → sensitivity fan สะอาดที่สุดของวันนี้ (ไม่มี flip ลบเลยสักตัวรวม frozen axis) → MC ผ่าน comfortable ทั้งคู่ → basket-duration tail ดีขึ้น (98d/182d จาก 159d/292d) → **เหลือ holdout 2026H1 เป็นด่านเดียวที่ยังไม่ผ่าน (0.76/n=21) และพิสูจน์แล้วว่าเป็น regime feature จริง ไม่ใช่ config bug** (2 config อิสระตกที่เดียวกัน). ครบทุกด่านของ VERDICT GATE 2c ยกเว้น holdout — เป็น pattern เดียวกับ XAGUSD (ORDER-180/181) และ LondonORB วันนี้ (ซึ่งเพิ่งถูก attach demo ไปแล้วทั้งที่ holdout บาง — precedent ตรงกัน).
+**verdict:** คง **BUILD-ON** (VERDICT GATE ไม่อนุญาต CANDIDATE จนกว่า holdout ผ่าน แม้ funnel ที่เหลือครบและแข็งแรงมาก) — RSI-MR พร้อมสำหรับ **user ตัดสินใจ demo-isolate** ถ้ายอมรับ holdout อ่อนแบบเดียวกับที่เพิ่งอนุมัติให้ LondonORB. lock config แนะนำ = `_mt5_auto/ab_sets/rsimr_lever2/RSIMR_RSI30_70_SL25.set` ต้นแบบเดิม **เปลี่ยนเป็น RSI25/75+SL25** (`_mt5_auto/ab_sets/rsimr_fan/RSIMR_CENTER.set` — ไฟล์นี้คือ config ที่แนะนำ).
+**ห้าม:** เขียน CANDIDATE จาก MC/fan ที่ผ่านโดยไม่รอ holdout · ลืมว่า config recommend เปลี่ยนจาก atr9/RSI30-70/SL25 เดิม เป็น RSI25/75/SL25/Dist9 ใหม่ (คนละไฟล์ .set).
+**ปิดงาน RSI-MR สำหรับวันนี้** — งานถัดไปที่มีค่าจริงคือรอเวลา (holdout n เพิ่ม) ไม่ใช่ optimize เพิ่ม.
+
 ## ORDER-181 — TrendRider XAGUSD H4: sensitivity fan (Sep/Ch) + corr vs cohort — ปิดของค้างสุดท้ายของ ORDER-180 — `REVIEWED(Claude 2026-07-23): fan ผ่าน 3/4 ชัดเจน (1 แกนไม่ flat แต่ไม่ flip เป็นลบ) + corr ต่ำทั้งคู่ — BUILD-ON แข็งแรงมาก เกือบ CANDIDATE เต็มตัว เหลือแค่ holdout n บาง`
 **sensitivity fan ±20% รอบ center (AdxMin30/Sep0.5/Ch2.5), MAIN+BWD:**
 | axis | value | MAIN PF/n | BWD PF/n | เทียบ baseline (MAIN2.10/BWD1.49) |
