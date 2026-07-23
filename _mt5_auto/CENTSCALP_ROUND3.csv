@@ -1,0 +1,5 @@
+﻿thread,cellname,tf,pf,trades,net,dd_pct
+A_S5isolate,extend0_sb1p5,M5,0,0,0.00,0
+B_S2push,rb30_mr2500,M5,2.1,57,38.31,0.23
+B_S2push,rb30_mr3000,M5,1.7,33,14.41,0.2
+B_S2bwd,rb30_mr2000,M5,0,37,-24.45,0.27

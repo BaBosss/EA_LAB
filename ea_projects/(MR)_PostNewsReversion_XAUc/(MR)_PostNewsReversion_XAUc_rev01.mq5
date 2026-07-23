@@ -49,7 +49,11 @@ input int    _03_SlPoints     = 150;
 input string _g04_            = "── [04] TRADE MGMT ────────────────────────";
 input bool   _04_BuyOk        = true;
 input bool   _04_SellOk       = true;
-input double _04_LotSize      = 0.005;  // half of the cohort's standard 0.01 per the brief
+input double _04_LotSize      = 0.01;   // ⚠️ rev01 bug: default 0.005 (brief's "half lot") was BELOW
+                                          // XAU's broker min-lot (0.01) -> every order silently rejected,
+                                          // 0 trades at ANY threshold (confirmed by isolation test 2026-07-23).
+                                          // 0.01 is the smallest valid size on this symbol; "half of the
+                                          // cohort's 0.01" is not achievable with fixed-lot sizing here.
 
 input string _g05_            = "── [05] RISK CAPS ─────────────────────────";
 input double _05_DailyLossPct = 3.0;
@@ -131,12 +135,17 @@ void OnTick()
    const int digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
    const bool allow=_06_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
 
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("PostNewsReversion: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=ask-_03_SlPoints*pt, tp=ask+_03_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN POSTNEWS-BUY @%.2f",ask); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"POSTNEWS_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"POSTNEWS_BUY") && !g_suppress_log)
+         PrintFormat("POSTNEWS-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=bid+_03_SlPoints*pt, tp=bid-_03_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN POSTNEWS-SELL @%.2f",bid); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"POSTNEWS_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"POSTNEWS_SELL") && !g_suppress_log)
+         PrintFormat("POSTNEWS-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }
