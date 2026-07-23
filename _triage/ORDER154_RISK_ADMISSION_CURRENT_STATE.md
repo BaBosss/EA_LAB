@@ -4,7 +4,7 @@
 
 **Formula:** `portfolio_DD_est = sqrt( sum_i sum_j corr_ij * DD95_i * DD95_j ), corr_ii = 1`
 
-## Data coverage: **28/42 magics have real DD95 data (67%)** -- 14 are UNKNOWN
+## Data coverage: **28/43 magics have real DD95 data (65%)** -- 15 are UNKNOWN
 
 Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3)). REAL_CENT accounts: computed/reported only, **no budget assigned -- user decision needed**.
 
@@ -12,12 +12,12 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 
 ## Account 463666728 -- Demo bundle 10 (DEMO)
 
-- magics (ACTIVE+PENDING_ATTACH): **17** | known DD95: **14** | UNKNOWN: **3**
-- UNKNOWN magics: 990067, 990069, 992001
+- magics (ACTIVE+PENDING_ATTACH): **18** | known DD95: **14** | UNKNOWN: **4**
+- UNKNOWN magics: 990067, 990069, 992001, 992003
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
 - **portfolio_DD_est = 87.39%**
   - headroom vs budget: -62.39 pts (OVER BUDGET)
-- computed from 14/17 magics (3 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
+- computed from 14/18 magics (4 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
 
 ## Account 415573666 -- Demo Mt5-2 (DEMO)
 
@@ -64,6 +64,7 @@ This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows wha
 - **463666728 / magic 990025** (EA_SUPERTREND (crypto ST-BTC)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
 - **463666728 / magic 990030** (EA_DONCHIAN (crypto DON-ETH pyr3)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
 - **463666728 / magic 992001** (TsMom_XAU (S2)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
+- **463666728 / magic 992003** (LondonORB_XAU (SS1 +trend filter)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
 
 ---
 

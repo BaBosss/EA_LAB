@@ -170,7 +170,21 @@ def collapse_basket_risk_units(dd95_by_magic, basket_of):
     units = {}
     dropped = []
     for magic, val in dd95_by_magic.items():
-        key = basket_of.get(magic, magic)
+        basket = basket_of.get(magic)
+        # ORDER-170 round-3 SEV-1 #2: basket ids and standalone magics must NOT share
+        # one raw-string namespace -- a basket_id equal to an unrelated magic would
+        # silently merge two independent risk units (an undercount, the dangerous
+        # direction). Basket units get an explicit prefix; standalone magics keep
+        # their raw key so measured correlations (keyed by magic) still resolve.
+        if basket:
+            key = f"basket::{basket}"
+        else:
+            if magic.startswith("basket::"):
+                raise RiskAdmissionError(
+                    f"magic {magic!r} collides with the reserved basket key namespace "
+                    "'basket::' -- rename the magic; refusing to build risk units"
+                )
+            key = magic
         if key in units:
             prev = units[key]
             if abs(prev - val) > 1e-9:
@@ -213,9 +227,16 @@ def _num(x):
     if s == "":
         return 0.0
     try:
-        return float(s)
+        v = float(s)
     except ValueError:
         return CORRUPT
+    # ORDER-170 round-3 SEV-2 #5: Python's float() happily accepts "nan", "inf" and
+    # overflow spellings like "1e309". A non-finite P&L observation is exactly as
+    # corrupted as unparseable text -- it must poison the magic (-> corr falls back to
+    # the conservative 1.0), never enter correlation arithmetic as a nan/inf point.
+    if not math.isfinite(v):
+        return CORRUPT
+    return v
 
 
 def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
@@ -414,6 +435,29 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
     0 < lot_factor <= 1.0 -- this function only ever scales DOWN from the validated
     locked .set, never up, and never emits a negative number.
     """
+    # ORDER-170 round-3 SEV-2 #6: this function must validate its OWN numeric inputs
+    # instead of trusting callers. An inf candidate used to propagate into
+    # required_lot_factor=nan, and a broker minimum of 0.0 (or nan) passed both
+    # comparisons and could emit lot_factor=0.0 -- violating the documented
+    # 0 < lot_factor <= 1.0 invariant. Refuse loudly instead.
+    def _reject(name, v, why):
+        raise RiskAdmissionError(f"{name}={v!r} for magic {candidate_magic!r} -- {why}; refusing to size")
+
+    def _is_real_number(v):
+        return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+    if not _is_real_number(candidate_dd95) or not math.isfinite(candidate_dd95) or candidate_dd95 <= 0.0:
+        _reject("candidate_dd95", candidate_dd95, "must be a finite number > 0")
+    if budget_pct is not None and (
+            not _is_real_number(budget_pct) or not math.isfinite(budget_pct) or budget_pct <= 0.0):
+        _reject("budget_pct", budget_pct, "must be a finite number > 0, or None for REPORT_ONLY")
+    if broker_min_lot_factor is not None and (
+            not _is_real_number(broker_min_lot_factor)
+            or not math.isfinite(broker_min_lot_factor)
+            or not (0.0 < broker_min_lot_factor <= 1.0)):
+        _reject("broker_min_lot_factor", broker_min_lot_factor,
+                "must be finite and in (0, 1] (broker_min_lot / locked_set_lot), or None when unknown")
+
     if budget_pct is None:
         return {
             "magic": candidate_magic,
@@ -423,24 +467,20 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
         }
 
     others = dict(existing_dd95_by_magic)
-    sum_sq_others = 0.0
-    for i in others:
-        for j in others:
-            sum_sq_others += get_corr(corr_matrix, i, j) * others[i] * others[j]
-    if sum_sq_others < -1e-9:
+    if candidate_magic in others:
         raise RiskAdmissionError(
-            "negative sum-of-squares in the existing portfolio -- corr matrix invalid"
+            f"candidate {candidate_magic!r} already appears in the existing portfolio -- "
+            "admitting it again would double-count one risk unit; refusing to size"
         )
-    # ORDER-170 SEV-1 #5: the existing-portfolio figure must pass the SAME bounds
-    # invariant as every other emitted number. Previously this path computed the
-    # square root inline and skipped the guard, so admit_candidate() could return a
-    # sizing decision built on an existing_dd that portfolio_dd_est() would refuse
-    # outright (e.g. corr = -1 collapsing two 10% EAs to 0%). Route it through the
-    # guarded function so there is exactly one validated way to produce this number.
+    # ORDER-170 SEV-1 #5 (round 3 extended): EVERY portfolio figure this function
+    # uses -- existing, full-size, and the emitted reduced point -- must come from
+    # portfolio_dd_est(), the single guarded way to produce this number. Round 2
+    # proved that any hand-rolled sqrt kept alongside it eventually skips a bound.
     if others:
         existing_dd = portfolio_dd_est(others, corr_matrix)
     else:
         existing_dd = 0.0
+    sum_sq_others = existing_dd * existing_dd
 
     if existing_dd > budget_pct:
         return {
@@ -455,28 +495,13 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
             ),
         }
 
-    if candidate_dd95 <= 0:
-        raise RiskAdmissionError(f"candidate DD95 <= 0 for magic {candidate_magic} -- cannot size")
-
     cross = sum(get_corr(corr_matrix, candidate_magic, m) * others[m] for m in others)
     a = candidate_dd95 ** 2
     b = 2.0 * candidate_dd95 * cross
 
-    full_sum_sq = sum_sq_others + a + b
-    if full_sum_sq < -1e-9:
-        raise RiskAdmissionError(
-            f"negative sum-of-squares at full size for {candidate_magic} -- corr matrix invalid"
-        )
-    full_dd = math.sqrt(max(full_sum_sq, 0.0))
-
     combined = dict(others)
     combined[candidate_magic] = candidate_dd95
-    max_dd = max(combined.values())
-    total_dd = sum(combined.values())
-    if not (max_dd - 1e-9 <= full_dd <= total_dd + 1e-9):
-        raise RiskAdmissionError(
-            f"bounds violated at full size for {candidate_magic} -- refusing to emit"
-        )
+    full_dd = portfolio_dd_est(combined, corr_matrix)
 
     if full_dd <= budget_pct + 1e-9:
         return {
@@ -550,7 +575,13 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
             "budget_pct": budget_pct,
             "message": "cannot fit even at broker-minimum lot after rounding -- defer attach, escalate to user",
         }
-    dd_at_emit = math.sqrt(max(sum_sq_others + a * x_emit * x_emit + b * x_emit, 0.0))
+    # ORDER-170 round-3 SEV-1 #3: the EMITTED reduced portfolio must itself pass the
+    # full max(DD95) <= est <= sum(DD95) invariant, not just the budget upper bound.
+    # With a valid negative correlation, flooring can land the point just below the
+    # lower bound; portfolio_dd_est() refuses that instead of emitting it.
+    scaled = dict(others)
+    scaled[candidate_magic] = candidate_dd95 * x_emit
+    dd_at_emit = portfolio_dd_est(scaled, corr_matrix)
     if dd_at_emit > budget_pct + 1e-9:
         raise RiskAdmissionError(
             f"post-rounding budget check failed for {candidate_magic}: "
@@ -651,7 +682,8 @@ def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
     return result
 
 
-def build_report(deployments, dd95_map, corr_matrix, basket_of=None):
+def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
+                 expectations_path=EXPECTATIONS_CSV):
     active_rows = [r for r in deployments if r["status"] in ("ACTIVE", "PENDING_ATTACH")]
     by_account = defaultdict(list)
     for r in active_rows:
@@ -679,6 +711,11 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None):
             r["magic"]: dd95_map[r["magic"]]
             for r in rows if r["status"] == "ACTIVE" and r["magic"] in dd95_map
         }
+        # ORDER-170 round-3 SEV-1 #1: the admission decision must see the SAME
+        # collapsed risk units as the account summary, or the two paths disagree on
+        # the same input (summary said 20%, admission sized against 30%). Collapse
+        # basket legs BEFORE handing the existing portfolio to admit_candidate().
+        active_units, _active_folded = collapse_basket_risk_units(active_known, basket_of or {})
         for cand in pending:
             m = cand["magic"]
             if m not in dd95_map:
@@ -689,9 +726,21 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None):
                                "admission function needs it before it can size anything",
                 })
                 continue
+            cand_basket = (basket_of or {}).get(m)
+            if cand_basket and f"basket::{cand_basket}" in active_units:
+                admission_demo.append({
+                    "account": acct, "magic": m, "ea_name": cand["ea_name"],
+                    "status": "CANNOT_RUN",
+                    "message": (
+                        f"candidate is a sibling leg of ACTIVE basket '{cand_basket}' whose "
+                        "basket-level DD95 is already counted in the existing portfolio -- "
+                        "independent admission is ill-defined, escalate to user"
+                    ),
+                })
+                continue
             try:
                 decision = admit_candidate(
-                    m, dd95_map[m], active_known, corr_matrix, acct_summary["budget_pct"]
+                    m, dd95_map[m], active_units, corr_matrix, acct_summary["budget_pct"]
                 )
                 decision["account"] = acct
                 decision["ea_name"] = cand["ea_name"]
@@ -711,7 +760,10 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None):
             "total_active_or_pending_magics": total_magics,
             "known_dd95": total_known,
             "unknown_dd95": total_unknown,
-            "expectations_csv_found": Path(EXPECTATIONS_CSV).exists(),
+            # ORDER-170 round-3 MINOR #9: reflect the expectations file this run
+            # actually read (--expectations), not the hardcoded default path.
+            "expectations_csv_found": Path(expectations_path).exists(),
+            "expectations_path": str(expectations_path),
         },
         "accounts": accounts_out,
         "admission_demo": admission_demo,
@@ -733,10 +785,11 @@ def render_markdown(report):
         f"## Data coverage: **{cov['known_dd95']}/{cov['total_active_or_pending_magics']} magics "
         f"have real DD95 data ({pct:.0f}%)** -- {cov['unknown_dd95']} are UNKNOWN"
     )
-    if not Path(EXPECTATIONS_CSV).exists():
+    if not cov["expectations_csv_found"]:
         lines.append("")
         lines.append(
-            "**`portfolio/expectations.csv` does not exist on this run** (ORDER-153 has not "
+            f"**the expectations file for this run (`{cov.get('expectations_path', 'portfolio/expectations.csv')}`) "
+            "does not exist** (ORDER-153 has not "
             "produced it yet). Every magic below is therefore UNKNOWN and every "
             "`portfolio_dd_est` in this report is absent/None. Re-run this script after "
             "ORDER-153 lands."
@@ -777,6 +830,12 @@ def render_markdown(report):
                 flag = "OVER BUDGET" if a.get("over_budget") else "within budget"
                 lines.append(f"  - headroom vs budget: {a['headroom_pct']:.2f} pts ({flag})")
         lines.append(f"- {a['status_note']}")
+        # ORDER-170 round-3 SEV-2 #4: basket-fold details (including CONFLICTING
+        # sibling DD95 values) must be visible in the human-readable report too,
+        # not only in the JSON -- a hidden data contradiction is how a wrong risk
+        # number survives review.
+        for msg in a.get("basket_folded", []):
+            lines.append(f"  - basket fold: {msg}")
         lines.append("")
 
     if report["admission_demo"]:
@@ -1033,6 +1092,169 @@ def _cage_11_rounded_factor_still_within_budget():
     assert implied <= 10.001 + 1e-9, f"emitted factor implies DD {implied} over budget 10.001"
 
 
+def _mk_row(account, magic, status, ea_name="EA"):
+    return {"account": account, "account_name": "test", "type": "DEMO",
+            "ea_name": ea_name, "magic": magic, "symbol": "X", "status": status}
+
+
+def _cage_12_admission_path_collapses_baskets():
+    """Round-3 SEV-1 #1: build_report()'s admission demo must size against the SAME
+    collapsed risk units as the account summary. Fixture: two ACTIVE legs of one
+    basket (DD95 10 measured at basket level) + one PENDING candidate (DD95 10),
+    budget 25. Collapsed existing = 10 -> full-size portfolio = 20 -> ADMIT_FULL.
+    An uncollapsed admission path sees existing 20, full 30 > 25, and fails this."""
+    deployments = [
+        _mk_row("111", "L1", "ACTIVE"), _mk_row("111", "L2", "ACTIVE"),
+        _mk_row("111", "C", "PENDING_ATTACH"),
+    ]
+    dd95 = {"L1": 10.0, "L2": 10.0, "C": 10.0}
+    basket_of = {"L1": "BX", "L2": "BX"}
+    report = build_report(deployments, dd95, {}, basket_of=basket_of)
+    demo = report["admission_demo"]
+    assert len(demo) == 1, f"expected exactly one admission decision, got {demo!r}"
+    d = demo[0]
+    assert d["status"] == "ADMIT_FULL", f"admission path did not collapse baskets: {d!r}"
+    assert abs(d["portfolio_dd_est_after"] - 20.0) < 1e-9, f"wrong full-size figure: {d!r}"
+    acct = report["accounts"][0]
+    assert abs(acct["portfolio_dd_est"] - 20.0) < 1e-9, (
+        "account summary and admission path disagree on the same input"
+    )
+    # a candidate that is itself a sibling of an ACTIVE basket must not be sized
+    report2 = build_report(
+        [_mk_row("111", "L1", "ACTIVE"), _mk_row("111", "L3", "PENDING_ATTACH")],
+        {"L1": 10.0, "L3": 10.0}, {}, basket_of={"L1": "BX", "L3": "BX"},
+    )
+    d2 = report2["admission_demo"][0]
+    assert d2["status"] == "CANNOT_RUN", (
+        f"sibling-of-active-basket candidate must escalate, not be sized: {d2!r}"
+    )
+
+
+def _cage_13_basket_id_magic_namespace_separation():
+    """Round-3 SEV-1 #2: a basket_id equal to an unrelated standalone magic must NOT
+    merge two independent risk units."""
+    dd95 = {"BASKET_X": 20.0, "LEG": 10.0}
+    basket_of = {"LEG": "BASKET_X"}   # the LEG's basket shares its name with a real magic
+    units, _ = collapse_basket_risk_units(dd95, basket_of)
+    assert len(units) == 2, f"basket id collided with an unrelated magic: {units!r}"
+    got = portfolio_dd_est(units, {})
+    assert abs(got - 30.0) < 1e-9, f"expected 30.0 (independent units, corr default 1.0), got {got!r}"
+
+
+def _cage_14_emitted_reduced_point_respects_lower_bound():
+    """Round-3 SEV-1 #3: the EMITTED reduced portfolio must satisfy the full
+    max(DD95) <= est <= sum(DD95) invariant. With this negative correlation the
+    floored factor lands just below the lower bound -- the function must refuse
+    (or defer), never hand back that point."""
+    corr = {frozenset(("A", "C")): -0.23456}
+    try:
+        res = admit_candidate("C", 20.0, {"A": 10.0}, corr, 10.0, broker_min_lot_factor=0.001)
+    except RiskAdmissionError:
+        return  # correct: refused to emit a bounds-violating point
+    assert res["status"] != "ADMIT_REDUCED" or res["lot_factor"] is None or (
+        # if it DID emit, the emitted point must itself survive the guarded formula
+        portfolio_dd_est({"A": 10.0, "C": 20.0 * res["lot_factor"]}, corr) is not None
+    ), f"emitted a reduced point that violates the lower bound: {res!r}"
+
+
+def _cage_15_formula_guard_mutation_protection():
+    """Round-3 SEV-2 #8: directly exercise the type/finite/positive guard inside
+    portfolio_dd_est() (removing it must fail THIS test) + legitimate int acceptance."""
+    for bad in ({"A": float("inf")}, {"A": float("nan")}, {"A": 0.0}, {"A": -1.0},
+                {"A": True}, {"A": "5"}):
+        try:
+            portfolio_dd_est(bad, {})
+            raise AssertionError(f"portfolio_dd_est accepted invalid DD95 {bad!r}")
+        except RiskAdmissionError:
+            pass
+    got = portfolio_dd_est({"A": 5}, {})   # legitimate integer must be accepted
+    assert abs(got - 5.0) < 1e-12, f"integer DD95 mishandled: {got!r}"
+
+
+def _cage_16_nonfinite_pnl_poisons_magic_end_to_end():
+    """Round-3 SEV-2 #5, on the PRODUCTION path (not just _num): a 'nan' P&L cell in
+    a real deals CSV must poison that magic so compute_corr_matrix() excludes it and
+    get_corr() falls back to the conservative 1.0 -- and no nan may enter the matrix."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "EA_LAB_deals_999_20260101.csv"
+        with open(p, "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["time", "magic", "entry", "profit", "swap", "commission"])
+            for i, ym in enumerate(("2026.01", "2026.02", "2026.03", "2026.04")):
+                w.writerow([f"{ym}.15 10:00:00", "111", "1", str(10.0 + i), "0", "0"])
+                w.writerow([f"{ym}.15 11:00:00", "222", "1", str(20.0 - i), "0", "0"])
+            w.writerow(["2026.02.20 12:00:00", "111", "1", "nan", "0", "0"])  # the poison
+        corr = compute_corr_matrix(["111", "222"], td)
+    for pair, v in corr.items():
+        assert math.isfinite(v), f"non-finite correlation leaked into the matrix: {pair}={v!r}"
+        assert "111" not in pair, f"poisoned magic 111 still produced a measured pair: {pair}"
+    assert get_corr(corr, "111", "222") == 1.0, "poisoned magic must fall back to corr=1.0"
+
+
+def _cage_17_admission_validates_own_inputs():
+    """Round-3 SEV-2 #6: malformed numeric inputs must raise, never propagate into a
+    nan factor or a lot_factor=0.0 that violates the 0 < lot_factor <= 1 invariant."""
+    bad_calls = [
+        dict(candidate_dd95=float("inf")),
+        dict(candidate_dd95=float("nan")),
+        dict(candidate_dd95=True),
+        dict(budget=float("nan")),
+        dict(bmf=0.0),           # the audit's ADMIT_REDUCED-with-lot_factor-0.0 case
+        dict(bmf=float("nan")),
+        dict(bmf=1.5),
+        dict(bmf=-0.1),
+    ]
+    for kw in bad_calls:
+        try:
+            admit_candidate("C", kw.get("candidate_dd95", 300000.0), {"A": 1.0}, {},
+                            kw.get("budget", 0.01),
+                            broker_min_lot_factor=kw.get("bmf", 0.01))
+            raise AssertionError(f"admit_candidate accepted malformed input {kw!r}")
+        except RiskAdmissionError:
+            pass
+    ok = admit_candidate("C", 1.0, {}, {}, 25.0)
+    assert ok["status"] == "ADMIT_FULL", f"valid input wrongly rejected: {ok!r}"
+    # flooring below the broker minimum must escalate, never emit below-minimum
+    res = admit_candidate("C", 100.0, {}, {}, 5.00045, broker_min_lot_factor=0.05001)
+    assert res["status"] == "DEFER_ESCALATE", f"floored-below-minimum factor was emitted: {res!r}"
+
+
+def _cage_18_safe_output_path_guard():
+    """Round-3 SEV-2 #7/#8: _assert_safe_output_path must refuse .set targets,
+    protected inputs, and hard-link aliases of protected files -- and allow a plain
+    fresh report path."""
+    import argparse as _ap
+    import os
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        dep = Path(td) / "dep.csv"
+        exp = Path(td) / "exp.csv"
+        dep.write_text("magic\n", encoding="utf-8")
+        exp.write_text("magic\n", encoding="utf-8")
+        args = _ap.Namespace(deployments=str(dep), expectations=str(exp))
+
+        def refused(dest):
+            try:
+                _assert_safe_output_path("--out-md", str(dest), args)
+            except SystemExit:
+                return True
+            return False
+
+        assert refused(Path(td) / "anything.set"), ".set destination must be refused"
+        assert refused(dep), "the deployments input it reads must be refused"
+        assert refused(exp), "the expectations input it reads must be refused"
+        assert not refused(Path(td) / "fresh_report.md"), "a plain new report path must be allowed"
+
+        alias = Path(td) / "innocent_report.txt"
+        try:
+            os.link(dep, alias)   # NTFS hard link -- same file, different name+suffix
+        except OSError:
+            alias = None  # filesystem without hard-link support: lexical checks stand
+        if alias is not None:
+            assert refused(alias), "hard-link alias of a protected file must be refused"
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1045,6 +1267,13 @@ CAGE_TESTS = [
     ("9_admit_bounds_guard_on_existing", _cage_9_admit_candidate_bounds_guard_on_existing),
     ("10_broker_min_fails_closed", _cage_10_broker_min_fails_closed),
     ("11_rounded_factor_within_budget", _cage_11_rounded_factor_still_within_budget),
+    ("12_admission_path_collapses_baskets", _cage_12_admission_path_collapses_baskets),
+    ("13_basket_id_magic_namespace_separation", _cage_13_basket_id_magic_namespace_separation),
+    ("14_emitted_reduced_respects_lower_bound", _cage_14_emitted_reduced_point_respects_lower_bound),
+    ("15_formula_guard_mutation_protection", _cage_15_formula_guard_mutation_protection),
+    ("16_nonfinite_pnl_poisons_magic_end_to_end", _cage_16_nonfinite_pnl_poisons_magic_end_to_end),
+    ("17_admission_validates_own_inputs", _cage_17_admission_validates_own_inputs),
+    ("18_safe_output_path_guard", _cage_18_safe_output_path_guard),
 ]
 
 
@@ -1083,6 +1312,29 @@ def _assert_safe_output_path(label, dest, args):
     }
     if p in protected:
         raise SystemExit(f"REFUSED: {label}={dest} would overwrite {protected[p]}")
+    # ORDER-170 round-3 SEV-2 #7: Path.resolve() equality cannot see NTFS hard links
+    # -- an alias named report.txt hard-linked to a protected CSV/.set passes both
+    # lexical checks above, and writing it truncates the protected file. If the
+    # destination already exists, compare file identity (st_dev, st_ino), and refuse
+    # any multi-hard-link destination outright: this script only ever writes plain
+    # single-link report files, so nlink > 1 means an alias we cannot certify.
+    try:
+        st = p.stat()
+    except OSError:
+        st = None  # destination does not exist yet -- nothing it can alias
+    if st is not None:
+        if getattr(st, "st_nlink", 1) > 1:
+            raise SystemExit(
+                f"REFUSED: {label}={dest} has {st.st_nlink} hard links -- cannot certify it is "
+                "not an alias of a protected file; this script only writes single-link report files"
+            )
+        for q, why in protected.items():
+            try:
+                qst = q.stat()
+            except OSError:
+                continue
+            if st.st_ino and qst.st_ino and (st.st_dev, st.st_ino) == (qst.st_dev, qst.st_ino):
+                raise SystemExit(f"REFUSED: {label}={dest} is the same file as {why} (hard-link alias)")
 
 
 def main(argv=None):
@@ -1111,7 +1363,8 @@ def main(argv=None):
     magics = sorted({r["magic"] for r in deployments})
     corr_matrix = compute_corr_matrix(magics, args.live_deals)
 
-    report = build_report(deployments, dd95_map, corr_matrix, basket_of=basket_of)
+    report = build_report(deployments, dd95_map, corr_matrix, basket_of=basket_of,
+                          expectations_path=args.expectations)
     md = render_markdown(report)
 
     Path(args.out_md).parent.mkdir(parents=True, exist_ok=True)

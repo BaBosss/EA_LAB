@@ -23,16 +23,17 @@
         "999094"
       ],
       "n_known_dd95": 14,
-      "n_total_magics": 17,
-      "n_unknown_dd95": 3,
+      "n_total_magics": 18,
+      "n_unknown_dd95": 4,
       "over_budget": true,
       "portfolio_dd_est": 87.39,
-      "status_note": "computed from 14/17 magics (3 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "status_note": "computed from 14/18 magics (4 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
       "type": "DEMO",
       "unknown_magics": [
         "990067",
         "990069",
-        "992001"
+        "992001",
+        "992003"
       ]
     },
     {
@@ -165,13 +166,21 @@
       "magic": "992001",
       "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
       "status": "CANNOT_RUN"
+    },
+    {
+      "account": "463666728",
+      "ea_name": "LondonORB_XAU (SS1 +trend filter)",
+      "magic": "992003",
+      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
+      "status": "CANNOT_RUN"
     }
   ],
   "coverage": {
     "expectations_csv_found": true,
+    "expectations_path": "D:\\EA_LAB\\portfolio\\expectations.csv",
     "known_dd95": 28,
-    "total_active_or_pending_magics": 42,
-    "unknown_dd95": 14
+    "total_active_or_pending_magics": 43,
+    "unknown_dd95": 15
   },
   "demo_budget_pct": 25.0,
   "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
