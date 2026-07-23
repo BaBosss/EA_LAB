@@ -70,12 +70,24 @@ PRE-ATTACH CHECKLIST (vps-deploy-ops silent-stop list)
 [S5] MAGIC UNIQUENESS: 990103 was freed when removed from 159503454 on
      2026-07-18 -- confirm no other currently-active EA has claimed 990103
      in portfolio/DEPLOYMENTS.csv before attaching.
-[S6] SYMBOL NAME: confirm the broker's exact symbol string (EURUSD vs
-     EURUSD.r/EURUSDm/EURUSDc suffix) matches what this account uses.
+[S6] SYMBOL NAME: queued for account 463666728 ("Demo bundle 10"), where the
+     confirmed EURUSD symbol string is EURUSDm -- update the .set's implicit
+     chart symbol accordingly when actually attaching (backtest above used
+     plain EURUSD from the dev-terminal broker).
 [S7] SESSION HOURS: this EA is not session-gated (RSI mean-reversion, no
      London/NY time window) -- n/a.
-[HEDGE] This EA REQUIRES a hedging-mode account (holds simultaneous BUY and
-     SELL baskets) -- confirm the target account is Hedge mode, not Netting.
+[HEDGE] *** UNRESOLVED -- CHECK BEFORE ATTACHING ***
+     This EA REQUIRES a hedging-mode account (source: INIT_FAILED if
+     AccountInfoInteger(ACCOUNT_MARGIN_MODE) != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING
+     -- it holds simultaneous BUY and SELL baskets). The only account
+     confirmed Hedge-mode in project docs is 159503454 (the REAL account
+     this EA was removed FROM -- not usable, wrong type and wrong goal).
+     463666728 ("Demo bundle 10") currently hosts 11 EAs all described as
+     "single-position" -- its margin mode is NOT confirmed either way in
+     DEMO_DEPLOYMENT_PLAN.md. If it turns out to be Netting-mode, this EA
+     will fail to initialize (loud failure, not a silent-loss risk, but
+     still a dead-on-arrival attach). CONFIRM the account's margin mode
+     before physically attaching -- do not assume.
 
 ---------------------------------------------------------------
 NEXT STEP (per vps-deploy-ops FINAL RULE)
