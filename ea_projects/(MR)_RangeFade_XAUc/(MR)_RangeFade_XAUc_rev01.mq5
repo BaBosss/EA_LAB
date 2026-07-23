@@ -56,8 +56,17 @@ input long   _07_Magic        = 992012;
 input ulong  _07_Deviation    = 20;
 input bool   _07_AllowLive    = false;
 
+input string _g08_            = "── [08] D1 REGIME OVERLAY (default OFF, shared design, ADDS to the M15 ADX kill-switch) ";
+input bool   _08_UseRegimeGate = false;  // default OFF = byte-identical baseline
+input int    _08_AdxD1Period   = 14;
+input double _08_AdxD1Max      = 20.0;   // require D1 ADX <= this (this EA WANTS non-trend, opposite sense of MomentumBurst)
+input int    _08_SlopePersistDays = 10;  // require EMA(D1,50) slope NOT persistently one-way for this many days
+                                          // (S2 wants a range regime: reject if D1 shows a real persistent
+                                          // trend, complementing the existing M15 ADX kill-switch which is
+                                          // shorter-horizon and noisier)
+
 static bool     g_suppress_log=false;
-static int      g_adxM15=INVALID_HANDLE;
+static int      g_adxM15=INVALID_HANDLE, g_adxD1=INVALID_HANDLE, g_emaD1=INVALID_HANDLE;
 static datetime g_last_bar=0;
 static CTrade   g_trade;
 static double   g_day_start_balance=0.0; static datetime g_day_stamp=0; static bool g_halted_today=false;
@@ -75,12 +84,31 @@ int OnInit()
    g_suppress_log=_00_OptimizeMode||(bool)MQLInfoInteger(MQL_OPTIMIZATION);
    g_adxM15=iADX(_Symbol,PERIOD_M15,_02_AdxM15Period);
    if(g_adxM15==INVALID_HANDLE){ Print("RangeFade: ADX handle fail"); return INIT_FAILED; }
+   if(_08_UseRegimeGate){
+      g_adxD1=iADX(_Symbol,PERIOD_D1,_08_AdxD1Period);
+      g_emaD1=iMA(_Symbol,PERIOD_D1,50,0,MODE_EMA,PRICE_CLOSE);
+      if(g_adxD1==INVALID_HANDLE||g_emaD1==INVALID_HANDLE){ Print("RangeFade: regime handle fail"); return INIT_FAILED; }
+   }
    g_trade.SetExpertMagicNumber(_07_Magic); g_trade.SetDeviationInPoints(_07_Deviation); g_trade.SetTypeFilling(ORDER_FILLING_FOK);
    g_last_bar=0; g_day_start_balance=AccountInfoDouble(ACCOUNT_BALANCE); g_day_stamp=0; g_halted_today=false;
    if(!g_suppress_log) PrintFormat("RangeFade init magic=%d AllowLive=%s",_07_Magic,_07_AllowLive?"Y":"N");
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int r){ if(g_adxM15!=INVALID_HANDLE)IndicatorRelease(g_adxM15); }
+void OnDeinit(const int r){ if(g_adxM15!=INVALID_HANDLE)IndicatorRelease(g_adxM15); if(g_adxD1!=INVALID_HANDLE)IndicatorRelease(g_adxD1); if(g_emaD1!=INVALID_HANDLE)IndicatorRelease(g_emaD1); }
+
+// true = OK to trade a range-fade (D1 is NOT in a persistent trend): ADX(D1) below AdxD1Max OR
+// slope sign hasn't held for SlopePersistDays. Complements the shorter-horizon M15 kill-switch.
+bool RegimeOkForRange()
+{
+   if(!_08_UseRegimeGate) return true;
+   double a[1]; if(CopyBuffer(g_adxD1,0,1,1,a)<1) return false;
+   if(a[0] > _08_AdxD1Max) return false;
+   double e[]; if(CopyBuffer(g_emaD1,0,1,_08_SlopePersistDays+1,e)<_08_SlopePersistDays+1) return false;
+   ArraySetAsSeries(e,true);
+   bool allUp=true, allDown=true;
+   for(int i=0;i<_08_SlopePersistDays;i++){ if(e[i]<=e[i+1]) allUp=false; if(e[i]>=e[i+1]) allDown=false; }
+   return !(allUp||allDown);   // reject if D1 has been persistently one-directional
+}
 double OnTester(){ double t=TesterStatistics(STAT_TRADES); if(t<30) return -1; double dd=TesterStatistics(STAT_EQUITY_DDREL_PERCENT),pf=TesterStatistics(STAT_PROFIT_FACTOR); if(dd<=0) return -1; return pf/(1.0+dd/100.0); }
 void CheckNewDay(){ MqlDateTime dt; TimeToStruct(TimeCurrent(),dt); datetime d=(datetime)(dt.year*10000+dt.mon*100+dt.day); if(d!=g_day_stamp){ g_day_stamp=d; g_day_start_balance=AccountInfoDouble(ACCOUNT_BALANCE); g_halted_today=false; } }
 bool RiskOk(){ if(g_halted_today) return false; double eq=AccountInfoDouble(ACCOUNT_EQUITY),bal=AccountInfoDouble(ACCOUNT_BALANCE);
@@ -97,6 +125,7 @@ void OnTick()
    if(!RiskOk()) return;
    if(!InSession(GmtHourOf(TimeCurrent()))) return;
    if(Buf1(g_adxM15,1) > _02_AdxKillLevel) return;               // trend kill-switch
+   if(!RegimeOkForRange()) return;                               // optional D1-level trend-persistence gate
 
    const double pt=_Point;
    const double rHi=RangeHigh(_01_RangeBars,1), rLo=RangeLow(_01_RangeBars,1);
