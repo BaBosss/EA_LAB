@@ -10,6 +10,8 @@
 #include "Indicators.mqh"
 #include "Execution.mqh"
 #include "Persist.mqh"   // ORDER-138 #3: full-basket close intent survives restart
+#include "MoneyManagement.mqh"   // 2026-07-23: MM_BalancePct for the _*_BalPct targets
+                                 // (no cycle: MM -> Inputs/RiskControl only, never ExitManager)
 
 double Exit_Point() { return Indi_Point(); }
 
@@ -467,6 +469,13 @@ bool Exit_CloseBasket(const bool safety = true)
 // preserves the legacy fixed-money target exactly.
 double Exit_BasketTargetMoney()
 {
+   // additive (2026-07-23): percent-of-balance target takes precedence when set. Highest
+   // priority of the three because it is the most portable form (unitless across cent/USD
+   // accounts + auto-scaling with account size). 0 = off -> falls through to the legacy
+   // ATRmult/Money precedence exactly as before.
+   double balPctTarget = MM_BalancePct(_2_BasketTP_BalPct);
+   if(balPctTarget > 0.0) return balPctTarget;
+
    if(_2_BasketTP_ATRmult <= 0.0) return _2_BasketTP_Money;
 
    double atr       = Indi_RiskATR(0);
@@ -478,6 +487,17 @@ double Exit_BasketTargetMoney()
    return atr * _2_BasketTP_ATRmult * (tickValue / tickSize) * lots;
 }
 
+// additive (2026-07-23): effective basket money-STOP in account currency. Percent-of-balance
+// (_32_SL_BalPct) wins when set, else the legacy absolute _32_SL_Money. Single resolver so the
+// two call sites (intrabar safety stop + per-tick basket management) can never disagree about
+// what the stop is - a split-brain there would mean one path halts and the other does not.
+double Exit_BasketStopMoney()
+{
+   double balPctStop = MM_BalancePct(_32_SL_BalPct);
+   if(balPctStop > 0.0) return balPctStop;
+   return _32_SL_Money;
+}
+
 // additive: dynamic close-money target (corpus EX183/EX078). close_target =
 // base + (open_order_count / C) * base - grows with how many orders are open
 // in the basket. Evaluated as an ADDITIONAL/alternative target check in
@@ -487,9 +507,13 @@ double Exit_BasketTargetMoney()
 double Exit_DynCloseTargetMoney()
 {
    if(!_57_DynCloseOn) return 0.0;
-   if(_57_DynCloseDivisor <= 0.0) return _57_DynCloseBase;
+   // additive (2026-07-23): resolve the BASE from % of balance when set (portable), else
+   // the legacy absolute base. The growth term is already unitless so it is untouched.
+   double base = MM_BalancePct(_57_DynCloseBalPct);
+   if(base <= 0.0) base = _57_DynCloseBase;
+   if(_57_DynCloseDivisor <= 0.0) return base;
    int openCount = Exec_CountAll();
-   return _57_DynCloseBase + ((double)openCount / _57_DynCloseDivisor) * _57_DynCloseBase;
+   return base + ((double)openCount / _57_DynCloseDivisor) * base;
 }
 
 void Exit_ManagePartialClose()
@@ -548,12 +572,13 @@ bool Exit_SafetyMoneyStop()
    // finished FIRST, pre-bar-gate - a partial CloseAll must never be forgotten
    // just because the money predicate stopped being true.
    if(g_exit_closeall_pending) return Exit_CloseBasket();
-   if(_32_SL_Money <= 0.0) return false;
+   double stopMoney = Exit_BasketStopMoney();
+   if(stopMoney <= 0.0) return false;
    double profit = Exec_BasketProfit();
-   if(profit <= -_32_SL_Money)
+   if(profit <= -stopMoney)
    {
       PrintFormat("[EXIT] basket money-stop (safety, intrabar): net %.2f <= -%.2f -> close all",
-                  profit, _32_SL_Money);
+                  profit, stopMoney);
       return Exit_CloseBasket();
    }
    return false;
@@ -583,7 +608,8 @@ bool Exit_ManageBasket()
    if(targetMoney > 0.0 && profit >= targetMoney) return Exit_CloseBasket(false);
    double dynTargetMoney = Exit_DynCloseTargetMoney();   // no-op (0.0) unless _57_DynCloseOn
    if(dynTargetMoney > 0.0 && profit >= dynTargetMoney) return Exit_CloseBasket(false);
-   if(_32_SL_Money > 0.0 && profit <= -_32_SL_Money)    return Exit_CloseBasket(true);
+   double stopMoney = Exit_BasketStopMoney();            // _32_SL_BalPct if set, else _32_SL_Money
+   if(stopMoney > 0.0 && profit <= -stopMoney)          return Exit_CloseBasket(true);
 
    // ORDER-125: vertical barrier - force-close once the basket has been alive
    // >= _2_MaxHoldBars closed bars on the chart TF (0 = off). Codex review

@@ -20,7 +20,7 @@ V2 = รื้อ usability ของ chassis เดิม 3 เรื่อง�
 | **1x Entry** | (compile-time, เป็นชื่อ EA) | `11` GridTrendMA · `12` Breakout · `13` MeanReversion · `14` GridLog (Zeus port) | per-build |
 | **2x Exit/TP** | InpExitMode | `21` FixTP(pip) · `22` TP_ATR · `23` Trail · `24` RunTrend | 22 |
 | **3x SL** | InpSLMode | `30` None · `31` FixPip · `32` Money · `33` ATR · `34` Donchian · `35` SR | 33 |
-| **4x FirstLot** | InpFirstLotMode | `41` Fixed · `42` Risk% | 41 |
+| **4x FirstLot** | InpFirstLotMode | `41` Fixed · `42` Risk%(ต้องมี SL) · `43` Balance-scaled (2026-07-23, ไม่ต้องมี SL — `lot = _43_LotPerAnchor × balance/_43_BalanceAnchor`) | 41 |
 | **5x Progression** | InpLotProgression | `50` None · `51` Linear · `52` Multiplier · `53` Plus · `54` Log · `55` LogPower (Zeus `factor^ln(N)`) | 50 |
 | **6x Direction** | InpTradeDir | `60` Both · `61` LongOnly · `62` ShortOnly | 60 |
 | **7x Filter** | InpTrendFilter | `70` None · `71` ATR_Expand · `72` MA_Slope | 70 |
@@ -324,6 +324,12 @@ _2_BasketTP_Money   = ปิดทั้งตะกร้าเมื่อก�
 _32_BasketSL_Money  = ปิดทั้งตะกร้าเมื่อขาดทุนรวม <= -X (0=off)  ← STOP ตะกร้าที่แท้จริง
 ```
 > grid/recovery **ต้อง** มี `_32_BasketSL_Money` เสมอ = เพดานขาดทุนตะกร้า (กันทบไม่จบ)
+
+> ⚠️ **2026-07-23 — เลขเงินแบบ absolute ข้างบนไม่ portable ข้าม cent/USD account** (`25` = $25 บน USD
+> แต่ = $0.25 บน cent = ต่างกัน 100 เท่าโดยเงียบ). ใช้ฝาแฝดแบบ % of balance แทน (default 0 = ปิด,
+> ของเดิมไม่เปลี่ยน): `_2_BasketTP_BalPct` · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`
+> — precedence = BalPct > ATRmult > Money. ratio ไม่มีหน่วย → ความหมายเท่ากันทุก account type +
+> scale ตามพอร์ตเอง. รายละเอียด + ตาราง pip ต่อ instrument = `ea_template/INSTRUMENT_SCALE_REFERENCE.md`
 
 ### 8x Recovery (⚔️ offensive — build แล้ว 2026-07-03, เปิดได้แต่ cap แข็ง)
 ```

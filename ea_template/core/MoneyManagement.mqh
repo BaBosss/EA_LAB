@@ -18,6 +18,26 @@ double MM_MoneyPerPointPerLot()
    return tickVal * (point / tickSize);
 }
 
+// additive (2026-07-23): convert a "% of balance" input into an absolute money figure in
+// ACCOUNT CURRENCY. The one shared helper behind every _*_BalPct input, so all of them
+// resolve identically and there is a single place to audit.
+//
+// Why percent instead of absolute money: a bare "25" means $25 on a USD account but $0.25
+// on a cent account - the same .set silently trades a 100x different target. A percentage
+// of balance is unitless, so it means the same thing on both, AND it scales as the account
+// grows (no re-tuning a hard-coded money target after a deposit).
+//
+// Returns 0.0 when pct <= 0 (caller treats 0 as "feature off" and falls back to its legacy
+// absolute input), or when balance is unavailable/non-positive - fail-safe: a broken
+// balance read disables the percentage target rather than inventing one.
+double MM_BalancePct(const double pct)
+{
+   if(pct <= 0.0) return 0.0;
+   double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+   if(balance <= 0.0) return 0.0;
+   return balance * pct / 100.0;
+}
+
 // additive: DD-adaptive first-lot multiplier (Zeus GridLog _05_DdAdaptive port).
 // Applied ONLY to the first order of a new basket, tiered on current floating
 // account DD%, always clamped by _4_DdHardCapMult. OFF by default (returns 1.0).
@@ -41,10 +61,23 @@ double MM_FirstLot(const double slDistancePoints)
    double lot = _41_FixedLot;
    if(FirstLotMode == FIRSTLOT_RISK && slDistancePoints > 0.0)
    {
-      double riskMoney = AccountInfoDouble(ACCOUNT_BALANCE) * _42_RiskPct / 100.0;
+      double riskMoney = MM_BalancePct(_42_RiskPct);   // same math as before, shared helper
       double perPoint  = MM_MoneyPerPointPerLot();
-      if(perPoint > 0.0)
+      if(perPoint > 0.0 && riskMoney > 0.0)
          lot = riskMoney / (slDistancePoints * perPoint);
+   }
+   // additive (2026-07-23): balance-scaled sizing that does NOT need an SL distance, so
+   // grid/basket entries (no per-order SL) can also scale with account size - FIRSTLOT_RISK
+   // silently falls back to _41_FixedLot for those, which is the gap this closes.
+   //   lot = _43_LotPerAnchor x (balance / _43_BalanceAnchor)
+   // Ratio is unitless -> identical behavior on cent and USD accounts (set the anchor in
+   // whatever units the account displays). Guarded: a non-positive anchor or unreadable
+   // balance leaves lot at _41_FixedLot rather than dividing by zero / sizing off garbage.
+   else if(FirstLotMode == FIRSTLOT_BALANCE && _43_BalanceAnchor > 0.0 && _43_LotPerAnchor > 0.0)
+   {
+      double balance = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(balance > 0.0)
+         lot = _43_LotPerAnchor * (balance / _43_BalanceAnchor);
    }
    lot *= MM_DdAdaptiveMultiplier();   // no-op unless _4_DdAdaptiveOn
    return RiskControl_ClampLot(lot);

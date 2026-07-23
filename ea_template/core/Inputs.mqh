@@ -49,8 +49,9 @@ enum ENUM_SL_MODE
 
 enum ENUM_FIRST_LOT_MODE
 {
-   FIRSTLOT_FIXED = 41,   // 41 Fixed lot
-   FIRSTLOT_RISK  = 42    // 42 Risk% / SL distance (ATR-sized)
+   FIRSTLOT_FIXED   = 41,   // 41 Fixed lot
+   FIRSTLOT_RISK    = 42,   // 42 Risk% / SL distance (ATR-sized)
+   FIRSTLOT_BALANCE = 43    // 43 Balance-scaled: lot grows linearly with account size (no SL needed)
 };
 
 enum ENUM_LOT_PROGRESSION
@@ -325,8 +326,15 @@ input int             _50_StormLookback   = 100;
 input group "=== 2x Exit / TP params ==="
 input double _21_TP_Pip       = 500;   // 21 Fixed TP
 input double _22_TP_ATRmult   = 3.0;   // 22 ATR TP (x Risk-ATR)
-input double _2_BasketTP_Money = 0;    // close basket at +money (0=off)
+input double _2_BasketTP_Money = 0;    // close basket at +money (0=off) - ⚠️ ABSOLUTE, see _2_BasketTP_BalPct
 input double _2_BasketTP_ATRmult = 0;  // close basket at +(Risk-ATR x mult x total lots) in money (0=use fixed money)
+// additive (2026-07-23): basket TP as % of CURRENT BALANCE instead of an absolute figure.
+// Fixes the cent-vs-USD account confusion ("TP at 25" means $25 on a USD account but
+// $0.25 on a cent account - same number, 100x different meaning). A percentage means the
+// same thing everywhere AND auto-scales as the account grows.
+// PRECEDENCE (highest first): _2_BasketTP_BalPct > _2_BasketTP_ATRmult > _2_BasketTP_Money.
+// 0 = off (default) -> existing ATRmult/Money behavior completely unchanged.
+input double _2_BasketTP_BalPct = 0;   // close basket at +this % of balance (0=off, portable)
 input double _23_TrailStart   = 300;   // 23 trail start (pip gain)
 input double _23_TrailStep    = 100;   // 23 trail distance
 
@@ -358,7 +366,11 @@ input int _2_MaxHoldBars = 0;          // force-close basket after N bars from f
 // does not replace or alter them. OFF by default (_57_DynCloseOn=false ->
 // no-op, identical to current behavior).
 input bool   _57_DynCloseOn      = false; // 57 dynamic close-money target on/off
-input double _57_DynCloseBase    = 10.0;  // 57 base $ target
+input double _57_DynCloseBase    = 10.0;  // 57 base $ target - ⚠️ ABSOLUTE, see _57_DynCloseBalPct
+// additive (2026-07-23): dyn-close BASE as % of balance instead of absolute money
+// (the per-order growth factor _57_DynCloseDivisor is already unitless). Wins over
+// _57_DynCloseBase when > 0. 0 = off (default) -> unchanged.
+input double _57_DynCloseBalPct  = 0;     // 57 base target as % of balance (0=off, portable)
 input double _57_DynCloseDivisor = 4.0;   // 57 C: divisor controlling growth per open order
 
 //==================== Stop loss (3x) ===============================
@@ -369,7 +381,11 @@ input double _33_SL_MaxPips    = 0.0;  // 33 hard ceiling on ATR SL distance, in
 input double _33_SL_MaxATRmult = 0.0;  // 33 portable ATR-relative ceiling (0=use legacy pip cap)
 input bool   _33_AdaptiveON    = false;// 33 regime-scale: SL*=clamp(ATR/SMA(ATR,N),.7,1.5)
 input int    _33_AdaptiveN     = 50;   // 33 adaptive SMA period
-input double _32_SL_Money      = 0;    // 32 basket money stop (0=off)
+input double _32_SL_Money      = 0;    // 32 basket money stop (0=off) - ⚠️ ABSOLUTE, see _32_SL_BalPct
+// additive (2026-07-23): basket money-stop as % of CURRENT BALANCE (portable across
+// cent/USD accounts + auto-scales with account size). Wins over _32_SL_Money when > 0.
+// 0 = off (default) -> _32_SL_Money behavior unchanged.
+input double _32_SL_BalPct     = 0;    // 32 basket stop at -this % of balance (0=off, portable)
 input int    _34_DonchianBars  = 50;   // 34 Donchian lookback
 input int    _35_SRBars        = 20;   // 35 swing S/R lookback
 input double _36_SD_Mult       = 2.0;  // 36 n x SD
@@ -386,6 +402,25 @@ input ENUM_TIMEFRAMES _3_RiskATR_TF     = PERIOD_CURRENT;// raise 1-2 steps for 
 input group "=== 4x/5x Money management ==="
 input double _41_FixedLot   = 0.01;  // 41 fixed first lot
 input double _42_RiskPct    = 1.0;   // 42 risk% balance per first order
+
+// additive (2026-07-23, user request): FIRSTLOT_BALANCE = 43 - lot scales linearly
+// with account size, WITHOUT needing an SL distance (FIRSTLOT_RISK=42 falls back to
+// fixed lot when the EA has no per-order SL, e.g. grid/basket entries - this mode
+// covers that gap).   lot = _43_LotPerAnchor x (balance / _43_BalanceAnchor)
+// Default anchor 1000 + lot 0.01 reads as "0.01 lot per 1000 of account currency".
+//
+// 💡 WHY THIS IS CENT/USD-ACCOUNT SAFE (the whole point):  balance and _43_BalanceAnchor
+// are BOTH in account currency, so their ratio is UNITLESS - it means the same thing on a
+// USD account and on a cent account. Set the anchor in whatever units YOUR account shows:
+//   USD acct,  $1,000 shown as 1000    -> anchor 1000
+//   cent acct, $1,000 shown as 100000  -> anchor 100000
+// Both then scale identically as the account grows. This is the general fix for the
+// "money params are confusing across cent/USD ports" problem: express money as a RATIO
+// (percent-of-balance / balance-anchor), never as an absolute figure. Same trick is now
+// available for every basket money target below (_2_BasketTP_BalPct etc).
+// Inert unless FirstLotMode == FIRSTLOT_BALANCE is selected.
+input double _43_LotPerAnchor  = 0.01;    // 43 lot per one _43_BalanceAnchor of balance
+input double _43_BalanceAnchor = 1000.0;  // 43 balance unit the lot above refers to (account currency)
 input double _51_ProgFactor = 0.5;   // 51/54 coefficient
 input double _52_ProgMult   = 1.3;   // 52 multiplier
 input double _53_PlusLot    = 0.01;  // 53 additive step
@@ -458,7 +493,10 @@ input group "=== 8x Recovery (cage-capped) ==="
 input double _8_TriggerATR = 1.5;   // start recovering when adverse >= x * Risk-ATR
 input double _8_StepATR    = 1.0;   // add one order per x * Risk-ATR of further adverse
 input double _8_RecMult    = 1.3;   // 83 Aggressive per-step multiplier (clamped by RC_RecMultMax)
-input double _8_DDRefMoney = 100.0; // 82 Adaptive DD reference ($ of basket loss = +1x size)
+input double _8_DDRefMoney = 100.0; // 82 Adaptive DD reference ($ of basket loss = +1x size) - ⚠️ ABSOLUTE, see below
+// additive (2026-07-23): same reference as % of balance (portable cent/USD + scales with
+// account). Wins over _8_DDRefMoney when > 0. 0 = off (default) -> unchanged.
+input double _8_DDRefBalPct = 0;    // 82 Adaptive DD reference as % of balance (0=off, portable)
 
 //==================== Hedge (defensive opposite lock) ==============
 // OFF unless HedgeMode != 0. One hedge leg at a time; released by DD.
