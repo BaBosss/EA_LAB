@@ -320,10 +320,13 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
     return monthly, corrupted
 
 
-_MONEY_GROUPED_RE = re.compile(r"^-?\d{1,3}(?:[ ,]\d{3})+(?:\.\d+)?$")
-# strict full MT5 deal timestamp: YYYY.MM.DD HH:MM[:SS] -- prefix-only matching let
-# '2026.013...' count month '01' as a real observation (round-3, audit F2)
-_DEAL_TS_RE = re.compile(r"^(\d{4})\.(\d{2})\.(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$")
+# ORDER-174 round-4 (audit F1): ONE consistent thousands separator per number --
+# the per-group class [ ,] let '3,000 000' fabricate 3000000.0
+_MONEY_GROUPED_RE = re.compile(r"^-?\d{1,3}(?:(?:,\d{3})+|(?: \d{3})+)(?:\.\d+)?$")
+# strict full MT5 deal timestamp: 'YYYY.MM.DD HH:MM[:SS]' -- space separator ONLY
+# (round-4 audit F2: '[ T]' accepted a 'T' MT5 never emits), full-match anchored
+# (prefix-only matching let '2026.013...' count month '01' as a real observation)
+_DEAL_TS_RE = re.compile(r"^(\d{4})\.(\d{2})\.(\d{2}) (\d{2}):(\d{2})(?::(\d{2}))?$")
 
 
 def _parse_money_cell(s):
@@ -394,7 +397,9 @@ def _extract_backtest_monthly(paths):
                 )
             month, day = int(mm.group(2)), int(mm.group(3))
             hour, minute = int(mm.group(4)), int(mm.group(5))
-            if not (1 <= month <= 12) or not (1 <= day <= 31) or hour > 23 or minute > 59:
+            second = int(mm.group(6)) if mm.group(6) is not None else 0
+            if (not (1 <= month <= 12) or not (1 <= day <= 31)
+                    or hour > 23 or minute > 59 or second > 59):
                 return None, (
                     f"impossible calendar month/date {cells[0]!r} in {Path(path).name} "
                     "-- report data corrupt"
@@ -466,7 +471,10 @@ def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
             )
             continue
         if not monthly:
-            skipped.append(f"{magic}: no realized 'out' deals parsed from mapped report(s)")
+            skipped.append(
+                f"{magic}: no realized 'out' deals parsed from mapped report(s) -- "
+                "WHOLE magic excluded, pairs default to 1.0"
+            )
             continue
         monthly_by_magic[magic] = monthly
     return monthly_by_magic, skipped
@@ -2169,6 +2177,13 @@ def _cage_30_malformed_report_rows_poison():
         _write_tmp_report(td / "x.htm",
                           [(f"2026.0{d}3.15 10:00:00", str(float(d))) for d in "1234"])
         _write_tmp_report(td / "y.htm", [("2026.01THIS_IS_NOT_A_DATE", "1.0")])
+        # round-4 audit F2/F4: 'T' separator, out-of-range seconds, and a valid
+        # PREFIX followed by trailing junk (locks the regex end anchor)
+        _write_tmp_report(td / "t.htm", [("2026.01.15T10:00:00", "1.0")])
+        _write_tmp_report(td / "s.htm", [("2026.01.15 10:00:99", "1.0")])
+        _write_tmp_report(td / "j.htm", [("2026.01.15 10:00:00JUNK", "1.0")])
+        # round-4 audit F1: mixed thousands separators are malformed
+        _write_tmp_report(td / "mix.htm", [("2026.01.15 10:00:00", "3,000 000")])
         # F3: malformed money grouping vs well-formed thousands grouping
         _write_tmp_report(td / "n.htm", [("2026.01.15 10:00:00", "1,0")])
         _write_tmp_report(td / "m.htm", [("2026.01.15 10:00:00", "1,234.5"),
@@ -2182,6 +2197,10 @@ def _cage_30_malformed_report_rows_poison():
             w.writerow(["Y", str(td / "y.htm"), "trailing junk timestamp"])
             w.writerow(["N", str(td / "n.htm"), "money 1,0"])
             w.writerow(["M", str(td / "m.htm"), "well-formed thousands"])
+            w.writerow(["T", str(td / "t.htm"), "T separator"])
+            w.writerow(["S", str(td / "s.htm"), "seconds 99"])
+            w.writerow(["J", str(td / "j.htm"), "trailing junk after valid prefix"])
+            w.writerow(["MIX", str(td / "mix.htm"), "mixed separators"])
         monthly, skipped = load_backtest_monthly_by_magic(td / "map.csv")
         assert set(monthly) == {"M"}, f"{sorted(monthly)} / {skipped!r}"
         assert abs(monthly["M"]["2026-01"] - 1234.5) < 1e-9
@@ -2193,9 +2212,17 @@ def _cage_30_malformed_report_rows_poison():
         assert any("unparseable deal timestamp" in s for s in by_magic["X"]), by_magic
         assert any("unparseable deal timestamp" in s for s in by_magic["Y"]), by_magic
         assert any("corrupt money cell" in s for s in by_magic["N"]), by_magic
+        # round-4: T separator, seconds range, end anchor, mixed separators
+        assert any("unparseable deal timestamp" in s for s in by_magic["T"]), by_magic
+        assert any("impossible calendar month/date" in s for s in by_magic["S"]), by_magic
+        assert any("unparseable deal timestamp" in s for s in by_magic["J"]), by_magic
+        assert any("corrupt money cell" in s for s in by_magic["MIX"]), by_magic
         # direct helper checks
         assert _parse_money_cell("1,0") is CORRUPT
+        assert _parse_money_cell("3,000 000") is CORRUPT   # mixed separators
+        assert _parse_money_cell("1,234 567") is CORRUPT   # mixed separators
         assert _parse_money_cell("1 234.5") == 1234.5
+        assert _parse_money_cell("1,234,567.5") == 1234567.5
         assert _parse_money_cell("-12.5") == -12.5
 
 
