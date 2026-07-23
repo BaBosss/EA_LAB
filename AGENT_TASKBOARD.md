@@ -150,9 +150,27 @@ SEV-2 อีก 4: ปัดเศษ factor แล้วไม่เช็ค�
 **สรุปที่ถูกต้องกว่า:** WFA ยัง **3/3 OOS profitable บน pinned config จริง** (ไม่ตายทั้งชุดแบบที่เขียนไว้) แต่ **window 2 margin บางมาก (1.08)** ตรงกับที่ ORDER-157 เจอเป๊ะ — average OOS PF ~1.63 (เทียบ IS-best เฉลี่ย 1.46 = WFE>1 แต่ลากขึ้นด้วย window 3 เป็นหลัก) **การอ่านที่ตรงหลักฐานที่สุด: edge มีจริง แต่ไม่สม่ำเสมอเท่าที่ score 89 บอกไว้** (window ที่แย่สุด = แค่เฉียดกำไร ไม่ใช่ลบ).
 **verdict:** ปลด "ห้าม attach เด็ดขาด" → เปลี่ยนเป็น **PARKED-VERIFY(user) ระดับความเชื่อมั่นลดลง** — attach ได้ถ้า user ยอมรับว่า margin จริงบางกว่าที่คิด (ไม่ใช่ ROBUST-89 อีกต่อไป) ไม่ใช่ CANDIDATE ปกติ. raw `_mt5_auto/RSIMR_WFA_PINNED.csv` + sets `_mt5_auto/ab_sets/order168_rsimr_wfa/`.
 
-## ORDER-171 — SS4 SweepReversal EURUSD last lever: SweepAtr×TpAtr (บน RoundStep=0.0030 plateau center) — `REVIEWED(Claude 2026-07-23): ไม่มี lever ไหนปลด SS4 ได้แล้ว — ทุกแกนที่มี (RoundStep/AdxMax/SweepAtr/TpAtr/RsiHi/RsiLo) แตะครบ`
+## ORDER-174 — TrendRider XAGUSD H4 optimize-for-silver (ต่อจาก ORDER-167 BUILD-ON, BWD-fail บน center ที่ยืมจาก XAU) — `REVIEWED(Claude 2026-07-23): พลิกจาก BUILD-ON (BWD 0.97) → funnel เกือบครบ, ผ่านทุกด่านที่ทำแล้ว — เหลือ sensitivity fan (2 แกน) + corr ก่อน CANDIDATE`
+**source:** ORDER-167 พบว่า XAGUSD H4 รอด holdout (1.37) แต่ BWD ตกที่ 0.97 บน config ที่ *ยืม* center ของ XAU (a20/s0.5/c2.5) ทั้งดุ้น — lever ที่ไม่เคยแตะคือ tune ให้ XAG เองจริงๆ ใบนี้ปิดของค้างนั้น.
+**coarse grid (AdxMin×SepAtr, ChAtr fix 2.5, both-window):**
+| AdxMin | SepAtr | MAIN PF/n | BWD PF/n |
+|---|---|---|---|
+| 15 | 0.3/0.5/0.7 | 1.42-1.48 / 133-146 | 0.95-1.00 / 155-170 |
+| 20 (XAU's center) | 0.3/0.5/0.7 | 1.47-1.60 / 103-114 | 0.95-0.98 / 135-147 |
+| **25** | 0.3/0.5/0.7 | 1.63-1.91 / 65-70 | **1.10-1.14** / 90-97 ✅ |
+**เจอ plateau จริง ไม่ใช่ spike:** AdxMin=25 ผ่าน BWD≥1.0 **ทั้ง 3 ค่า SepAtr พร้อมกัน** (1.10/1.14/1.06) — ตรงข้ามกับ AdxMin 15/20 (XAU's center) ที่ตกทุกจุด. เช็คทิศทางต่อ (ไม่ใช่แค่รับพีคแรกที่เจอ): **AdxMin=30 (s0.5)** ดีขึ้นอีก (MAIN **2.10**/n42, BWD **1.49**/n46) · **AdxMin=35** MAIN กลับหัวลง (1.51) + n ร่วง (20-24) = spike territory เริ่มแล้ว → **ล็อก AdxMin=30/SepAtr=0.5/ChAtr=2.5 เป็น plateau center** (30 คือจุดที่ยังไม่ thin แต่ 35 thin แล้ว).
+**funnel ที่ทำแล้วบน center ที่ล็อก:**
+- both-window: MAIN **2.10**/42t eqDD1.77% · BWD **1.49**/46t eqDD2.25%
+- M4 confirm: MAIN **2.09**/42t · BWD **1.49**/46t — **ตรงกับ M1 เป๊ะ ไม่มี fill-cliff**
+- holdout 2026H1: PF **1.01**/**n=7 บางมาก** win28.57% DD9.67% (สูงกว่า MAIN/BWD DD ชัดเจน) — ผ่านตัวเลขดิบ (≥1.0 = BUILD-ON bar) **แต่ n บางเกินจะเชื่อมั่นเต็มที่** ถือเป็น "ยังไม่ล้ม" ไม่ใช่ "ผ่านมั่นคง"
+- MC (5k iter, จาก M4 MAIN gross P/L: win19×$38.13 loss23×$15.06): **PF-5th 1.266** (≥1.2 = comfortable ตาม bar) · ruin **0%** · DD95 1.49%
+**ยังไม่ทำ (ห้ามข้ามไป CANDIDATE จนกว่าจะครบ):** sensitivity fan ±20% บน SepAtr/ChAtr (ทำแค่ AdxMin axis) · corr vs cohort (XAU 992004 sibling + Boss_14 XAU leg 990207 ที่เพิ่งพบว่าแข็งสุดวันนี้ — เสี่ยง concentration บน XAU/metals ถ้า corr สูง) · holdout n=7 บางไป ควรขยายเป็น full 2026 ถ้ามีข้อมูลเพิ่ม.
+**verdict:** ยกจาก **BUILD-ON (BWD-fail)** → **BUILD-ON แข็งแรงขึ้นมาก (both-window+M4+MC ผ่านหมด, holdout ไม่ล้มแต่บาง)** — ยังไม่ CANDIDATE จนกว่า sensitivity fan + corr จะจบ. sets `_mt5_auto/ab_sets/order170_xag_optimize/` (`TRD_XAG_a30_s0.5.set` = locked center) · raw `_mt5_auto/O170_XAG_COARSE.csv` + reports `O170_XAG_*`.
+
+## ORDER-173 — SS4 SweepReversal EURUSD last lever: SweepAtr×TpAtr (บน RoundStep=0.0030 plateau center) — `REVIEWED(Claude 2026-07-23): ไม่มี lever ไหนปลด SS4 ได้แล้ว — ทุกแกนที่มี (RoundStep/AdxMax/SweepAtr/TpAtr/RsiHi/RsiLo) แตะครบ`
+> 🔧 **renumbered 171→173 (Claude, 2026-07-23):** เลข collision จริงกับ session คู่ขนาน (commit `447952d9` ใช้ ORDER-170/171/172 ไปแล้วก่อนที่ผมจะ commit `81158111`) — เนื้อหา/ผลการทดลอง/สถานะข้างล่างไม่ถูกแตะเลย แค่เปลี่ยนเลข heading + self-reference (ตาม precedent 133→135/134→136 เดิม)
 **grid:** SweepAtr{0.3,0.5,0.8} × TpAtr{1.2,1.8,2.5}, MAIN only, full-pinned. ผล: sa0.3 row (n~83) = 0.93-0.99 · sa0.5 row (n=40) = 0.97-1.08 · sa0.8 row = **1.20/n22, 1.18/n22** แล้ว **0 trades ที่ tp2.5** (discontinuity — ไม่ใช่ trend ราบเรียบ, config ขอบตัดสัญญาณหมด). **ไม่ใช่ plateau** — n ลดฮวบตาม sweepAtr ที่กว้างขึ้น (84→40→22→0) และค่าที่ดูดีสุด (1.20) อยู่ **ขอบบนสุดของช่วงที่กวาด** (ยังไม่รู้ว่าถ้ากวาดกว้างกว่านี้จะพีคจริงหรือแค่ต่อยอด edge-of-range).
-**สรุป SS4 ทั้งตัว (ORDER-150→169→171):** กวาดครบทุก lever ที่มีแล้ว (RoundStep, AdxMax, SweepAtr, TpAtr, RSI band ผ่านมาแต่เดิม) ceiling บน n สุขภาพดีอยู่ที่ **1.06-1.21** ไม่เคยทะลุ 1.2 อย่างมั่นใจ (แตะได้แค่ที่ n บาง). **นี่คือ "last-optimize" ที่ครบแล้วจริง** ตามกฎ user (ก่อนเขียน PARKED/REJECT ต้อง optimize รอบสุดท้ายบน lever ที่ยังไม่แตะ) — **ตอนนี้ไม่เหลือ lever ที่ยังไม่แตะแล้ว**. คง PARKED-VERIFY(user) เพราะ VERDICT GATE ไม่ให้ DEAD-OPTIMIZED เว้นแต่ผ่าน right-home check (EURUSD = ranger ที่ถูกอยู่แล้ว) — ตัวเลขสุดท้ายพูดเอง: ไม่ตายแต่ก็ไม่ผ่าน. raw `_mt5_auto/O171_SS4_LEVERC.csv`.
+**สรุป SS4 ทั้งตัว (ORDER-150→169→173):** กวาดครบทุก lever ที่มีแล้ว (RoundStep, AdxMax, SweepAtr, TpAtr, RSI band ผ่านมาแต่เดิม) ceiling บน n สุขภาพดีอยู่ที่ **1.06-1.21** ไม่เคยทะลุ 1.2 อย่างมั่นใจ (แตะได้แค่ที่ n บาง). **นี่คือ "last-optimize" ที่ครบแล้วจริง** ตามกฎ user (ก่อนเขียน PARKED/REJECT ต้อง optimize รอบสุดท้ายบน lever ที่ยังไม่แตะ) — **ตอนนี้ไม่เหลือ lever ที่ยังไม่แตะแล้ว**. คง PARKED-VERIFY(user) เพราะ VERDICT GATE ไม่ให้ DEAD-OPTIMIZED เว้นแต่ผ่าน right-home check (EURUSD = ranger ที่ถูกอยู่แล้ว) — ตัวเลขสุดท้ายพูดเอง: ไม่ตายแต่ก็ไม่ผ่าน. raw `_mt5_auto/O171_SS4_LEVERC.csv`.
 
 ## ORDER-169 — SS4 SweepReversal EURUSD coarse grid (RoundStep×AdxMax) — `REVIEWED(Claude 2026-07-23): ceiling ~1.08-1.21 บน n สุขภาพดี — ยังไม่ผ่าน deploy bar, คง PARKED-VERIFY`
 **grid:** RoundStep{0.0015,0.0030,0.0050,0.0080} × AdxMax{20,25,28,35}, full-pinned, MAIN 2023-2025, 16 cells.
