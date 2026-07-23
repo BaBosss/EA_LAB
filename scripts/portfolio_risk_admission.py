@@ -565,7 +565,12 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
     combined[candidate_magic] = candidate_dd95
     full_dd = portfolio_dd_est(combined, corr_matrix)
 
-    if full_dd <= budget_pct + 1e-9:
+    # ORDER-170 round-9 (audit round-8 F1): STRICT budget comparison. The former
+    # +1e-9 tolerance could grant a full lot while the summary (strict) said OVER
+    # BUDGET in the same report. Equality is allowed; any excess -- however tiny --
+    # defers instead. Conservative direction: a float-noise refusal is acceptable,
+    # a granted breach is not.
+    if full_dd <= budget_pct:
         return {
             "magic": candidate_magic,
             "status": "ADMIT_FULL",
@@ -661,7 +666,8 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
     scaled = dict(others)
     scaled[candidate_magic] = candidate_dd95 * x_emit
     dd_at_emit = portfolio_dd_est(scaled, corr_matrix)
-    if dd_at_emit > budget_pct + 1e-9:
+    # round-9: strict, matching the full-size check and the summary's over_budget rule
+    if dd_at_emit > budget_pct:
         raise RiskAdmissionError(
             f"post-rounding budget check failed for {candidate_magic}: "
             f"factor {x_emit} implies DD {dd_at_emit:.6f} > budget {budget_pct:.6f}. "
@@ -695,7 +701,19 @@ def _account_order(accounts):
 def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
     acct_type = rows[0]["type"] if rows else ""
     acct_name = rows[0]["account_name"] if rows else ""
-    budget_pct, budget_note = budget_pct_for_account_type(acct_type)
+    # ORDER-170 round-9 (audit round-8 F2): an account whose rows disagree on the
+    # account TYPE is a data error -- silently taking rows[0] made inventory order
+    # select between DEMO sizing and REAL_CENT report-only. Fail closed: no budget,
+    # and build_report() refuses to size any candidate on this account.
+    types_seen = sorted({r["type"] for r in rows if r["type"]})
+    type_conflict = len(types_seen) > 1
+    if type_conflict:
+        budget_pct, budget_note = None, (
+            f"CONFLICTING account-type metadata in DEPLOYMENTS.csv ({' vs '.join(types_seen)}) "
+            "-- data error, no budget assigned, fix the inventory before sizing anything"
+        )
+    else:
+        budget_pct, budget_note = budget_pct_for_account_type(acct_type)
 
     known = {}
     known_rows = []
@@ -714,6 +732,7 @@ def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
         "type": acct_type,
         "budget_pct": budget_pct,
         "budget_note": budget_note,
+        "type_conflict": type_conflict,
         "n_total_magics": len(rows),
         "n_known_dd95": len(known),
         "n_unknown_dd95": len(unknown_rows),
@@ -785,6 +804,17 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         rows = by_account[acct]
         pending = [r for r in rows if r["status"] == "PENDING_ATTACH"]
         if not pending:
+            continue
+        # ORDER-170 round-9 (audit round-8 F2): conflicting account-type metadata =
+        # data error; refuse to size anything on this account (REPORT_ONLY via a None
+        # budget would look like a normal REAL_CENT outcome -- be explicit instead).
+        if acct_summary.get("type_conflict"):
+            for cand in pending:
+                admission_demo.append({
+                    "account": acct, "magic": cand["magic"], "ea_name": cand["ea_name"],
+                    "status": "CANNOT_RUN",
+                    "message": acct_summary["budget_note"],
+                })
             continue
         active_known = {
             r["magic"]: dd95_map[r["magic"]]
@@ -1633,6 +1663,39 @@ def _cage_26_pearson_result_stays_in_range():
     assert ok is not None and abs(ok - 1.0) < 1e-12
 
 
+def _cage_27_strict_budget_and_type_conflict():
+    """Round-9 (audit round-8 F1/F2): (a) the budget comparison is STRICT -- a
+    candidate a hair over budget must not get ADMIT_FULL while the summary says
+    OVER BUDGET; equality is still admitted. (b) an account whose rows disagree on
+    the account type is a data error: no budget, nothing sized, order-independent."""
+    # (a) strict budget
+    report = build_report([_mk_row("111", "C", "PENDING_ATTACH")],
+                          {"C": 25.0000000005}, {})
+    acct = report["accounts"][0]
+    d = report["admission_demo"][0]
+    assert acct["over_budget"] is True
+    assert d["status"] != "ADMIT_FULL", (
+        f"granted a full lot above the strict budget while summary says OVER BUDGET: {d!r}"
+    )
+    exact = admit_candidate("C", 25.0, {}, {}, 25.0)
+    assert exact["status"] == "ADMIT_FULL", f"exact-equality fit must still admit: {exact!r}"
+    # (b) conflicting type metadata -- identical fail-closed outcome in both orders
+    for order in (("C", "D"), ("D", "C")):
+        rows = []
+        for mg in order:
+            r = _mk_row("111", mg, "PENDING_ATTACH")
+            if mg == "D":
+                r["type"] = "REAL_CENT"
+            rows.append(r)
+        report2 = build_report(rows, {"C": 10.0, "D": 10.0}, {})
+        acct2 = report2["accounts"][0]
+        assert acct2["type_conflict"] is True and acct2["budget_pct"] is None, f"{acct2!r}"
+        for dec in report2["admission_demo"]:
+            assert dec["status"] == "CANNOT_RUN", (
+                f"order {order}: type-conflicted account must not size anything: {dec!r}"
+            )
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1660,6 +1723,7 @@ CAGE_TESTS = [
     ("24_exact_budget_defers_not_refuses", _cage_24_exact_budget_defers_not_refuses),
     ("25_conflicting_siblings_canonical_dd95", _cage_25_conflicting_siblings_use_canonical_basket_dd95),
     ("26_pearson_result_stays_in_range", _cage_26_pearson_result_stays_in_range),
+    ("27_strict_budget_and_type_conflict", _cage_27_strict_budget_and_type_conflict),
 ]
 
 

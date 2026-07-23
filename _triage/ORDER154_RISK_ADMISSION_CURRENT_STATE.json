@@ -29,6 +29,7 @@
       "portfolio_dd_est": 87.39,
       "status_note": "computed from 14/18 magics (4 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
       "type": "DEMO",
+      "type_conflict": false,
       "unknown_magics": [
         "990067",
         "990069",
@@ -61,6 +62,7 @@
       "portfolio_dd_est": 56.2,
       "status_note": "computed from 10/10 magics (full coverage on this account)",
       "type": "DEMO",
+      "type_conflict": false,
       "unknown_magics": []
     },
     {
@@ -75,6 +77,7 @@
       "portfolio_dd_est": null,
       "status_note": "cannot compute -- 0/5 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
       "type": "REAL_CENT",
+      "type_conflict": false,
       "unknown_magics": [
         "1112",
         "1113",
@@ -95,6 +98,7 @@
       "portfolio_dd_est": null,
       "status_note": "cannot compute -- 0/2 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
       "type": "REAL_CENT",
+      "type_conflict": false,
       "unknown_magics": [
         "1524",
         "990005"
@@ -117,6 +121,7 @@
       "portfolio_dd_est": 13.44,
       "status_note": "computed from 4/4 magics (full coverage on this account)",
       "type": "REAL_CENT",
+      "type_conflict": false,
       "unknown_magics": []
     },
     {
@@ -131,6 +136,7 @@
       "portfolio_dd_est": null,
       "status_note": "cannot compute -- 0/4 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
       "type": "DEMO",
+      "type_conflict": false,
       "unknown_magics": [
         "1",
         "2",
