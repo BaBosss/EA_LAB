@@ -59,7 +59,7 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 
 ## Admission-function demo (PENDING_ATTACH candidates, illustrative only)
 
-This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows what `admit_candidate()` currently says, for whoever reviews the actual attach.
+This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows what `admit_candidate()` currently says, for whoever reviews the actual attach. Decisions are SEQUENTIAL in inventory order: each one assumes every earlier granted candidate on the same account is attached at its granted lot -- they compose within the budget and are NOT independent alternatives.
 
 - **463666728 / magic 990025** (EA_SUPERTREND (crypto ST-BTC)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
 - **463666728 / magic 990030** (EA_DONCHIAN (crypto DON-ETH pyr3)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)

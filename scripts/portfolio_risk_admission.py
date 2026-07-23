@@ -154,6 +154,12 @@ def load_expectations_with_baskets(path=EXPECTATIONS_CSV):
     return dd95, basket_of
 
 
+def _basket_key(basket_id):
+    """Single place the namespaced basket risk-unit key is built (round-4 audit
+    maintainability note: three hand-built f-strings can drift apart)."""
+    return f"basket::{basket_id}"
+
+
 def collapse_basket_risk_units(dd95_by_magic, basket_of):
     """Collapse magics that share a basket_id into ONE risk unit so a basket-level
     DD95 is counted once, not once per leg (ORDER-170 SEV-1 #1).
@@ -177,7 +183,7 @@ def collapse_basket_risk_units(dd95_by_magic, basket_of):
         # direction). Basket units get an explicit prefix; standalone magics keep
         # their raw key so measured correlations (keyed by magic) still resolve.
         if basket:
-            key = f"basket::{basket}"
+            key = _basket_key(basket)
         else:
             if magic.startswith("basket::"):
                 raise RiskAdmissionError(
@@ -309,9 +315,20 @@ def pearson(xs, ys):
         return None
     mx = sum(xs) / n
     my = sum(ys) / n
+    # ORDER-170 round-5 (audit F2): use multiplication, never ** 2 -- Python raises a
+    # raw OverflowError from float ** on large finite operands, which aborted matrix
+    # ingestion. Multiplication overflows to inf instead, and any non-finite
+    # intermediate makes this pair UNMEASURABLE (None -> conservative 1.0 fallback).
+    # Returning a number computed through inf would be worse: finite/inf gives 0.0,
+    # which would UNDERSTATE risk from garbage data.
     numer = sum((x - mx) * (y - my) for x, y in zip(xs, ys))
-    dx = sum((x - mx) ** 2 for x in xs) ** 0.5
-    dy = sum((y - my) ** 2 for y in ys) ** 0.5
+    dx2 = sum((x - mx) * (x - mx) for x in xs)
+    dy2 = sum((y - my) * (y - my) for y in ys)
+    if not (math.isfinite(mx) and math.isfinite(my) and math.isfinite(numer)
+            and math.isfinite(dx2) and math.isfinite(dy2)):
+        return None
+    dx = math.sqrt(dx2)
+    dy = math.sqrt(dy2)
     if dx == 0 or dy == 0:
         return None
     return numer / (dx * dy)
@@ -556,9 +573,22 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
         )
     x = min(x, 1.0)   # never scale UP past the validated locked .set
     if x <= 0:
-        raise RiskAdmissionError(
-            f"solved lot_factor <= 0 for {candidate_magic} -- corr matrix invalid"
-        )
+        # ORDER-170 round-5 (audit F3): with a VALID matrix this occurs exactly when
+        # the existing portfolio already consumes the entire budget (existing_dd ==
+        # budget under additive correlation) -- no positive lot can fit. That is a
+        # defer condition per this function's contract, not a broken corr matrix.
+        return {
+            "magic": candidate_magic,
+            "status": "DEFER_ESCALATE",
+            "lot_factor": None,
+            "required_lot_factor": None,
+            "existing_portfolio_dd_est": existing_dd,
+            "budget_pct": budget_pct,
+            "message": (
+                "existing portfolio consumes the entire budget -- no positive lot "
+                "factor fits; defer attach, escalate to user"
+            ),
+        }
 
     # ORDER-170 SEV-1 #4: broker_min_lot_factor is (broker_min_lot / locked_set_lot)
     # and is NOT derivable from any file this script reads. It used to default to a
@@ -748,6 +778,14 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # the same input (summary said 20%, admission sized against 30%). Collapse
         # basket legs BEFORE handing the existing portfolio to admit_candidate().
         active_units, _active_folded = collapse_basket_risk_units(active_known, basket_of or {})
+        # ORDER-170 round-5 (audit F1): decisions for MULTIPLE pending candidates must
+        # COMPOSE, not each pretend it is the only attach. Previously two ADMIT_FULL
+        # decisions could sit side by side whose combined risk breaches the budget.
+        # Admission is therefore SEQUENTIAL in inventory order: every granted candidate
+        # is carried forward (at its granted lot) into the existing portfolio the next
+        # candidate is sized against, and each decision names that assumption.
+        existing_units = dict(active_units)
+        admitted_prior = []
         for cand in pending:
             m = cand["magic"]
             if m not in dd95_map:
@@ -759,33 +797,44 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                 })
                 continue
             cand_basket = (basket_of or {}).get(m)
-            if cand_basket and f"basket::{cand_basket}" in active_units:
-                admission_demo.append({
-                    "account": acct, "magic": m, "ea_name": cand["ea_name"],
-                    "status": "CANNOT_RUN",
-                    "message": (
-                        f"candidate is a sibling leg of ACTIVE basket '{cand_basket}' whose "
-                        "basket-level DD95 is already counted in the existing portfolio -- "
-                        "independent admission is ill-defined, escalate to user"
-                    ),
-                })
-                continue
             # ORDER-170 round-4 SEV-1: a basketed candidate must be admitted under the
             # SAME risk-unit identity the account summary collapses it to
             # ('basket::<id>'), not its raw magic. Otherwise admission resolves a
             # measured raw-magic correlation the summary (conservatively) does not,
             # and the two paths can disagree -- round 3 showed ADMIT_FULL next to an
             # OVER-BUDGET summary in the same report.
-            cand_key = f"basket::{cand_basket}" if cand_basket else m
+            cand_key = _basket_key(cand_basket) if cand_basket else m
+            if cand_key in existing_units:
+                admission_demo.append({
+                    "account": acct, "magic": m, "ea_name": cand["ea_name"],
+                    "status": "CANNOT_RUN",
+                    "message": (
+                        f"candidate's risk unit '{cand_key}' is already counted in the "
+                        "existing portfolio (ACTIVE basket leg, or a pending sibling "
+                        "admitted earlier in this report) -- independent admission is "
+                        "ill-defined, escalate to user"
+                    ),
+                })
+                continue
             try:
                 decision = admit_candidate(
-                    cand_key, dd95_map[m], active_units, corr_matrix, acct_summary["budget_pct"]
+                    cand_key, dd95_map[m], existing_units, corr_matrix, acct_summary["budget_pct"]
                 )
                 decision["magic"] = m
                 if cand_key != m:
                     decision["risk_unit"] = cand_key
                 decision["account"] = acct
                 decision["ea_name"] = cand["ea_name"]
+                if admitted_prior:
+                    decision["assumes_admitted_first"] = list(admitted_prior)
+                    decision["message"] = (
+                        f"{decision.get('message', '')} (sequential: assumes "
+                        f"{', '.join(admitted_prior)} attached first at the granted lot)"
+                    )
+                lf = decision.get("lot_factor")
+                if decision["status"] in ("ADMIT_FULL", "ADMIT_REDUCED") and lf:
+                    existing_units[cand_key] = dd95_map[m] * lf
+                    admitted_prior.append(m)
                 admission_demo.append(decision)
             except RiskAdmissionError as e:
                 admission_demo.append({
@@ -887,7 +936,10 @@ def render_markdown(report):
         lines.append("")
         lines.append(
             "This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows "
-            "what `admit_candidate()` currently says, for whoever reviews the actual attach."
+            "what `admit_candidate()` currently says, for whoever reviews the actual attach. "
+            "Decisions are SEQUENTIAL in inventory order: each one assumes every earlier "
+            "granted candidate on the same account is attached at its granted lot -- they "
+            "compose within the budget and are NOT independent alternatives."
         )
         lines.append("")
         for d in report["admission_demo"]:
@@ -1359,6 +1411,73 @@ def _cage_21_extreme_finite_inputs_fail_closed_with_domain_error():
         pass
 
 
+def _cage_22_multiple_pending_decisions_compose():
+    """Round-5 audit F1: with several PENDING candidates, decisions must compose within
+    the budget (sequential), never emit side-by-side full-size approvals whose sum
+    breaches it. Audit repro: A ACTIVE 10 + C,D PENDING 10 each, budget 25 -- the old
+    code said ADMIT_FULL for BOTH (composing to 30)."""
+    deployments = [_mk_row("111", "A", "ACTIVE"),
+                   _mk_row("111", "C", "PENDING_ATTACH"), _mk_row("111", "D", "PENDING_ATTACH")]
+    dd95 = {"A": 10.0, "C": 10.0, "D": 10.0}
+    report = build_report(deployments, dd95, {})
+    demo = {d["magic"]: d for d in report["admission_demo"]}
+    assert demo["C"]["status"] == "ADMIT_FULL", f"first candidate should fit: {demo['C']!r}"
+    assert demo["D"]["status"] == "DEFER_ESCALATE", (
+        f"second candidate must see the first one's risk: {demo['D']!r}"
+    )
+    assert demo["D"].get("assumes_admitted_first") == ["C"], (
+        f"sequential assumption must be explicit on the decision: {demo['D']!r}"
+    )
+    # pending siblings of ONE basket: first is sized, second must escalate
+    report2 = build_report(
+        [_mk_row("111", "E", "PENDING_ATTACH"), _mk_row("111", "F", "PENDING_ATTACH")],
+        {"E": 10.0, "F": 10.0}, {}, basket_of={"E": "BY", "F": "BY"},
+    )
+    demo2 = {d["magic"]: d for d in report2["admission_demo"]}
+    assert demo2["E"]["status"] == "ADMIT_FULL"
+    assert demo2["F"]["status"] == "CANNOT_RUN", (
+        f"pending sibling of an admitted basket must not be sized again: {demo2['F']!r}"
+    )
+
+
+def _cage_23_pearson_overflow_is_unmeasurable():
+    """Round-5 audit F2: finite monthly observations that overflow inside pearson()
+    must yield an UNMEASURABLE pair (conservative 1.0 fallback) -- never a raw
+    OverflowError, and never a stored 0.0/non-finite correlation."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = Path(td) / "EA_LAB_deals_997_20260101.csv"
+        with open(p, "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["time", "magic", "entry", "profit", "swap", "commission"])
+            vals = ("1e308", "-1e308", "1e308", "-1e308")
+            for i, ym in enumerate(("2026.01", "2026.02", "2026.03", "2026.04")):
+                w.writerow([f"{ym}.15 10:00:00", "111", "1", vals[i], "0", "0"])
+                w.writerow([f"{ym}.15 11:00:00", "222", "1", str(float(i + 1)), "0", "0"])
+        corr = compute_corr_matrix(["111", "222"], td)   # must not raise
+    assert frozenset(("111", "222")) not in corr, (
+        f"overflowing pair must be unmeasurable, got {corr!r}"
+    )
+    for v in corr.values():
+        assert math.isfinite(v)
+    assert get_corr(corr, "111", "222") == 1.0
+    # direct probe: pearson on the overflowing series itself
+    assert pearson([1e308, -1e308, 1e308, -1e308], [1.0, 2.0, 3.0, 4.0]) is None
+
+
+def _cage_24_exact_budget_defers_not_refuses():
+    """Round-5 audit F3: an existing portfolio exactly AT budget is a valid state --
+    the candidate must get DEFER_ESCALATE (no positive lot fits), not a REFUSED
+    'corr matrix invalid' misclassification."""
+    for bmf in (None, 0.01):
+        res = admit_candidate("C", 1.0, {"A": 25.0}, {}, 25.0, broker_min_lot_factor=bmf)
+        assert res["status"] == "DEFER_ESCALATE", f"bmf={bmf!r}: {res!r}"
+        assert res["lot_factor"] is None
+    # just over budget still takes the pre-existing-over-budget branch
+    over = admit_candidate("C", 1.0, {"A": 25.000001}, {}, 25.0)
+    assert over["status"] == "DEFER_ESCALATE" and "existing portfolio" in over["message"]
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1381,6 +1500,9 @@ CAGE_TESTS = [
     ("19_basketed_candidate_same_identity", _cage_19_basketed_candidate_same_identity_both_paths),
     ("20_overflowing_pnl_poisons_magic", _cage_20_overflowing_pnl_poisons_magic),
     ("21_extreme_finite_inputs_fail_closed", _cage_21_extreme_finite_inputs_fail_closed_with_domain_error),
+    ("22_multiple_pending_decisions_compose", _cage_22_multiple_pending_decisions_compose),
+    ("23_pearson_overflow_is_unmeasurable", _cage_23_pearson_overflow_is_unmeasurable),
+    ("24_exact_budget_defers_not_refuses", _cage_24_exact_budget_defers_not_refuses),
 ]
 
 
