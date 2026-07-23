@@ -5,33 +5,33 @@
       "account_name": "Demo bundle 10",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -36.03,
+      "headroom_pct": -62.39,
       "known_magics": [
         "990020",
+        "990025",
         "990030",
         "990066",
         "990068",
-        "990984",
-        "999094"
-      ],
-      "n_known_dd95": 6,
-      "n_total_magics": 17,
-      "n_unknown_dd95": 11,
-      "over_budget": true,
-      "portfolio_dd_est": 61.03,
-      "status_note": "computed from 6/17 magics (11 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
-      "type": "DEMO",
-      "unknown_magics": [
-        "990025",
-        "990067",
-        "990069",
         "990120",
         "990301",
         "990302",
         "990303",
+        "990984",
         "991003",
         "991005",
         "991070",
+        "999094"
+      ],
+      "n_known_dd95": 14,
+      "n_total_magics": 17,
+      "n_unknown_dd95": 3,
+      "over_budget": true,
+      "portfolio_dd_est": 87.39,
+      "status_note": "computed from 14/17 magics (3 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "type": "DEMO",
+      "unknown_magics": [
+        "990067",
+        "990069",
         "992001"
       ]
     },
@@ -40,18 +40,8 @@
       "account_name": "Demo Mt5-2",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": 20.85,
+      "headroom_pct": -31.2,
       "known_magics": [
-        "992004"
-      ],
-      "n_known_dd95": 1,
-      "n_total_magics": 10,
-      "n_unknown_dd95": 9,
-      "over_budget": false,
-      "portfolio_dd_est": 4.15,
-      "status_note": "computed from 1/10 magics (9 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
-      "type": "DEMO",
-      "unknown_magics": [
         "990110",
         "990201",
         "990202",
@@ -60,8 +50,17 @@
         "990205",
         "990206",
         "990207",
-        "990208"
-      ]
+        "990208",
+        "992004"
+      ],
+      "n_known_dd95": 10,
+      "n_total_magics": 10,
+      "n_unknown_dd95": 0,
+      "over_budget": true,
+      "portfolio_dd_est": 56.2,
+      "status_note": "computed from 10/10 magics (full coverage on this account)",
+      "type": "DEMO",
+      "unknown_magics": []
     },
     {
       "account": "141049900",
@@ -142,16 +141,19 @@
   "admission_demo": [
     {
       "account": "463666728",
+      "budget_pct": 25.0,
       "ea_name": "EA_SUPERTREND (crypto ST-BTC)",
+      "existing_portfolio_dd_est": 74.18,
+      "lot_factor": null,
       "magic": "990025",
-      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
-      "status": "CANNOT_RUN"
+      "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
+      "status": "DEFER_ESCALATE"
     },
     {
       "account": "463666728",
       "budget_pct": 25.0,
       "ea_name": "EA_DONCHIAN (crypto DON-ETH pyr3)",
-      "existing_portfolio_dd_est": 58.53,
+      "existing_portfolio_dd_est": 74.18,
       "lot_factor": null,
       "magic": "990030",
       "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
@@ -167,9 +169,9 @@
   ],
   "coverage": {
     "expectations_csv_found": true,
-    "known_dd95": 11,
+    "known_dd95": 28,
     "total_active_or_pending_magics": 42,
-    "unknown_dd95": 31
+    "unknown_dd95": 14
   },
   "demo_budget_pct": 25.0,
   "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",

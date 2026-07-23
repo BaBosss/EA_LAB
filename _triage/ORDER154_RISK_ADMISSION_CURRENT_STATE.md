@@ -4,9 +4,7 @@
 
 **Formula:** `portfolio_DD_est = sqrt( sum_i sum_j corr_ij * DD95_i * DD95_j ), corr_ii = 1`
 
-## Data coverage: **11/42 magics have real DD95 data (26%)** -- 31 are UNKNOWN
-
-**MOST magics are UNKNOWN (31/42).** Any `portfolio_dd_est` numbers below are computed from a MINORITY of each account's EAs and must NOT be read as that account's full portfolio risk.
+## Data coverage: **28/42 magics have real DD95 data (67%)** -- 14 are UNKNOWN
 
 Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3)). REAL_CENT accounts: computed/reported only, **no budget assigned -- user decision needed**.
 
@@ -14,21 +12,20 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 
 ## Account 463666728 -- Demo bundle 10 (DEMO)
 
-- magics (ACTIVE+PENDING_ATTACH): **17** | known DD95: **6** | UNKNOWN: **11**
-- UNKNOWN magics: 990025, 990067, 990069, 990120, 990301, 990302, 990303, 991003, 991005, 991070, 992001
+- magics (ACTIVE+PENDING_ATTACH): **17** | known DD95: **14** | UNKNOWN: **3**
+- UNKNOWN magics: 990067, 990069, 992001
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
-- **portfolio_DD_est = 61.03%**
-  - headroom vs budget: -36.03 pts (OVER BUDGET)
-- computed from 6/17 magics (11 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
+- **portfolio_DD_est = 87.39%**
+  - headroom vs budget: -62.39 pts (OVER BUDGET)
+- computed from 14/17 magics (3 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
 
 ## Account 415573666 -- Demo Mt5-2 (DEMO)
 
-- magics (ACTIVE+PENDING_ATTACH): **10** | known DD95: **1** | UNKNOWN: **9**
-- UNKNOWN magics: 990110, 990201, 990202, 990203, 990204, 990205, 990206, 990207, 990208
+- magics (ACTIVE+PENDING_ATTACH): **10** | known DD95: **10** | UNKNOWN: **0**
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
-- **portfolio_DD_est = 4.15%**
-  - headroom vs budget: 20.85 pts (within budget)
-- computed from 1/10 magics (9 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
+- **portfolio_DD_est = 56.20%**
+  - headroom vs budget: -31.20 pts (OVER BUDGET)
+- computed from 10/10 magics (full coverage on this account)
 
 ## Account 141049900 -- 01. Celestial Woodfire (REAL_CENT)
 
@@ -64,7 +61,7 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 
 This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows what `admit_candidate()` currently says, for whoever reviews the actual attach.
 
-- **463666728 / magic 990025** (EA_SUPERTREND (crypto ST-BTC)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
+- **463666728 / magic 990025** (EA_SUPERTREND (crypto ST-BTC)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
 - **463666728 / magic 990030** (EA_DONCHIAN (crypto DON-ETH pyr3)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
 - **463666728 / magic 992001** (TsMom_XAU (S2)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
 
