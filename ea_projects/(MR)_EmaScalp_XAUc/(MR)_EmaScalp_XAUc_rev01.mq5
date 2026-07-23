@@ -41,7 +41,7 @@ input double _01_ExtendAtrMult= 1.5;   // fade when |close-EMA| >= this * ATR(14
 
 input string _g02_            = "── [02] STOP / TARGET / TIME-EXIT ─────────";
 input int    _02_TpPoints     = 60;    // in symbol points (_Point) -- must beat the spread on its own
-input int    _02_SlPoints     = 90;
+input int    _02_SlPoints     = 60;    // rev01 default was 90 (needs 60% WR to breakeven); 60 = 1:1 RR, 50% WR breakeven
 input int    _02_TimeExitSec  = 420;   // 7 minutes; checked every tick, not bar-gated
 
 input string _g03_            = "── [03] SPREAD + SESSION ──────────────────";
