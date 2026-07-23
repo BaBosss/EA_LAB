@@ -452,6 +452,14 @@ def portfolio_dd_est(dd95_by_magic, corr_matrix, tol=1e-9):
     return portfolio_dd
 
 
+def _fits_budget(dd, budget):
+    """ORDER-170 round-10: THE single budget comparison -- strict, equality admits.
+    Both admit_candidate() call sites (full-size and emitted-reduced) must use this
+    helper so a tolerance can never quietly return on one of them (round-9 audit F2:
+    the reduced-path comparison was not mutation-locked while it was hand-written)."""
+    return dd <= budget
+
+
 def budget_pct_for_account_type(acct_type):
     """Returns (budget_pct_or_None, note). REAL_CENT NEVER gets a budget assigned
     by this script -- compute/report only, per the order's explicit prohibition."""
@@ -570,7 +578,7 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
     # BUDGET in the same report. Equality is allowed; any excess -- however tiny --
     # defers instead. Conservative direction: a float-noise refusal is acceptable,
     # a granted breach is not.
-    if full_dd <= budget_pct:
+    if _fits_budget(full_dd, budget_pct):
         return {
             "magic": candidate_magic,
             "status": "ADMIT_FULL",
@@ -667,7 +675,7 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
     scaled[candidate_magic] = candidate_dd95 * x_emit
     dd_at_emit = portfolio_dd_est(scaled, corr_matrix)
     # round-9: strict, matching the full-size check and the summary's over_budget rule
-    if dd_at_emit > budget_pct:
+    if not _fits_budget(dd_at_emit, budget_pct):
         raise RiskAdmissionError(
             f"post-rounding budget check failed for {candidate_magic}: "
             f"factor {x_emit} implies DD {dd_at_emit:.6f} > budget {budget_pct:.6f}. "
@@ -699,20 +707,25 @@ def _account_order(accounts):
 
 
 def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
-    acct_type = rows[0]["type"] if rows else ""
     acct_name = rows[0]["account_name"] if rows else ""
-    # ORDER-170 round-9 (audit round-8 F2): an account whose rows disagree on the
-    # account TYPE is a data error -- silently taking rows[0] made inventory order
-    # select between DEMO sizing and REAL_CENT report-only. Fail closed: no budget,
-    # and build_report() refuses to size any candidate on this account.
-    types_seen = sorted({r["type"] for r in rows if r["type"]})
+    # ORDER-170 round-9/10 (audit F2 + round-9 F1/F3): the account TYPE must be
+    # derived from the ROW SET, never from rows[0] -- inventory order was selecting
+    # between DEMO sizing and REAL_CENT report-only. Rules: normalize case; blank
+    # rows are missing metadata and do not vote; exactly one distinct non-blank type
+    # -> that type (order-independent); two or more -> data-error conflict: no
+    # budget, deterministic CONFLICT(...) label, and build_report() refuses to size
+    # any candidate on this account.
+    types_seen = sorted({(r["type"] or "").strip().upper() for r in rows
+                         if (r["type"] or "").strip()})
     type_conflict = len(types_seen) > 1
     if type_conflict:
+        acct_type = "CONFLICT(" + "|".join(types_seen) + ")"
         budget_pct, budget_note = None, (
             f"CONFLICTING account-type metadata in DEPLOYMENTS.csv ({' vs '.join(types_seen)}) "
             "-- data error, no budget assigned, fix the inventory before sizing anything"
         )
     else:
+        acct_type = types_seen[0] if types_seen else ""
         budget_pct, budget_note = budget_pct_for_account_type(acct_type)
 
     known = {}
@@ -1269,7 +1282,7 @@ def _cage_11_rounded_factor_still_within_budget():
     res = admit_candidate("C", 30.0, {}, {}, 10.001, broker_min_lot_factor=0.001)
     assert res["status"] == "ADMIT_REDUCED", f"unexpected: {res!r}"
     implied = 30.0 * res["lot_factor"]
-    assert implied <= 10.001 + 1e-9, f"emitted factor implies DD {implied} over budget 10.001"
+    assert implied <= 10.001, f"emitted factor implies DD {implied} over budget 10.001 (strict)"
 
 
 def _mk_row(account, magic, status, ea_name="EA"):
@@ -1690,10 +1703,40 @@ def _cage_27_strict_budget_and_type_conflict():
         report2 = build_report(rows, {"C": 10.0, "D": 10.0}, {})
         acct2 = report2["accounts"][0]
         assert acct2["type_conflict"] is True and acct2["budget_pct"] is None, f"{acct2!r}"
+        # round-9 audit F3: the reported type must be deterministic, not rows[0]
+        assert acct2["type"] == "CONFLICT(DEMO|REAL_CENT)", f"order {order}: {acct2['type']!r}"
         for dec in report2["admission_demo"]:
             assert dec["status"] == "CANNOT_RUN", (
                 f"order {order}: type-conflicted account must not size anything: {dec!r}"
             )
+    # round-9 audit F1: a BLANK type does not vote -- the sole non-blank type wins
+    # in every row order (blank+DEMO used to flip REPORT_ONLY vs ADMIT_FULL)
+    for order in (("C", "D"), ("D", "C")):
+        rows = []
+        for mg in order:
+            r = _mk_row("111", mg, "PENDING_ATTACH")
+            if mg == "C":
+                r["type"] = ""
+            rows.append(r)
+        report3 = build_report(rows, {"C": 10.0, "D": 10.0}, {})
+        acct3 = report3["accounts"][0]
+        assert acct3["type"] == "DEMO" and acct3["budget_pct"] == 25.0, (
+            f"order {order}: blank row must not decide the account type: {acct3!r}"
+        )
+        assert acct3["type_conflict"] is False
+        for dec in report3["admission_demo"]:
+            assert dec["status"] == "ADMIT_FULL", f"order {order}: {dec!r}"
+    # case difference is NOT a conflict (normalization)
+    rows = [_mk_row("111", "C", "PENDING_ATTACH"), _mk_row("111", "D", "PENDING_ATTACH")]
+    rows[0]["type"] = "demo"
+    report4 = build_report(rows, {"C": 10.0, "D": 10.0}, {})
+    acct4 = report4["accounts"][0]
+    assert acct4["type_conflict"] is False and acct4["budget_pct"] == 25.0, f"{acct4!r}"
+    # round-9 audit F2: THE budget comparison is a single strict helper -- lock it
+    assert _fits_budget(25.0, 25.0) is True
+    assert _fits_budget(25.0 + 1e-10, 25.0) is False, (
+        "_fits_budget must be strict -- no tolerance may return on any call site"
+    )
 
 
 CAGE_TESTS = [
