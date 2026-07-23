@@ -15,7 +15,7 @@
 | **`EA_SCORECARD_AND_REGISTRY.md`** | ทะเบียน EA ทุกตัว + scoring rubric + kill-reason |
 | **`INTAKE_QUEUE.md`** | funnel รับ source/strategy ใหม่ (drop ลง `_intake_drop/`) |
 | **`PLATFORM_INDEX.md`** | แผนที่ไฟล์/โฟลเดอร์ทั้งหมด |
-| **`docs/RECOVERED_PLATFORM_DESIGN_20260614.md`** | design "สมอง" — scoring v1, gate chain, optimize Pass 0/1/2/4 |
+| `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md` | design "สมอง" เดิม (scoring v1, gate chain, optimize Pass 0/1/2/4) — archived, superseded by `docs/PIPELINE.md` + `CLAUDE.md` VERDICT GATE |
 | **`AUTOMATION_GUIDE.md`** + `docs/MT5_AUTOMATION.md` | pipeline funnel + MT5 headless mechanics |
 | **`EA_STRATEGY_GUIDE.md`** | reference strategy ทุกตัวที่เคย screen |
 

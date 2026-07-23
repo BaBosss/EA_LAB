@@ -7,7 +7,9 @@ Importable: `from score_backtest import score` -> score(parsed_dict, strategy).
 Usage (CLI):
   python score_backtest.py <parsed.json> [--strategy mean_reversion] [-o verdict.json]
 
-Reference: D:\\EA_LAB\\docs\\RECOVERED_PLATFORM_DESIGN_20260614.md  section 3.
+Reference: D:\\EA_LAB\\_archive_docs\\RECOVERED_PLATFORM_DESIGN_20260614.md  section 3 (archived/superseded
+spec - this script still implements the old BacktestScore v1 formula; not re-verified against the
+current VERDICT GATE / backtest-optimize-rigor LADDER as part of ORDER-152(c)).
 """
 import json
 import sys

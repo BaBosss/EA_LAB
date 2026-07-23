@@ -430,7 +430,7 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validate 
 | ทะเบียน EA + scoring rubric + kill-reason | `EA_SCORECARD_AND_REGISTRY.md` |
 | แผนที่ไฟล์/5 ที่อยู่ | `PLATFORM_INDEX.md` · `README.md` |
 | สถาปัตยกรรม+วิธีใช้ EA_CORE / EA_Template | `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` |
-| design "สมอง" (scoring/gate/optimize) | `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
+| design "สมอง" เดิม (archived, superseded) | `_archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md` |
 | automation/MT5 headless | `AUTOMATION_GUIDE.md` · `docs/MT5_AUTOMATION.md` |
 | รับ source ใหม่ | `INTAKE_QUEUE.md` |
 | idea จาก 200-prompt PDF | `_archive_docs/STRATEGY_200_ANALYSIS.md` |

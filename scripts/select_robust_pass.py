@@ -10,7 +10,9 @@ survivor = overfit peak).
 Importable: from select_robust_pass import select_robust
 CLI: python select_robust_pass.py <optimizer.xml> [--strategy mean_reversion]
 
-Reference: RECOVERED_PLATFORM_DESIGN_20260614.md sections 3 & 5.
+Reference: _archive_docs/RECOVERED_PLATFORM_DESIGN_20260614.md sections 3 & 5 (archived/superseded spec —
+this script still implements the old BacktestScore v1 gate; not re-verified against the current
+VERDICT GATE / backtest-optimize-rigor LADDER as part of ORDER-152(c)).
 """
 import argparse
 import os
