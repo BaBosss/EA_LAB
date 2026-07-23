@@ -113,14 +113,21 @@ void OnTick()
    const int digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
    const bool allow=_07_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_05_LotSize < minLot){ if(!g_suppress_log) PrintFormat("RangeFade: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_05_LotSize,minLot); return; }
+
    if(shortSig){ double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=rHi+_03_SlPoints*pt;
       double tp=(_03_TpMode==0)? mid : bid-_03_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN RANGEFADE-SELL @%.2f",bid); return; }
-      g_trade.Sell(_05_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"RANGEFADE_SELL"); }
+      if(!g_trade.Sell(_05_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"RANGEFADE_SELL") && !g_suppress_log)
+         PrintFormat("RANGEFADE-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=rLo-_03_SlPoints*pt;
       double tp=(_03_TpMode==0)? mid : ask+_03_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN RANGEFADE-BUY @%.2f",ask); return; }
-      g_trade.Buy(_05_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"RANGEFADE_BUY"); }
+      if(!g_trade.Buy(_05_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"RANGEFADE_BUY") && !g_suppress_log)
+         PrintFormat("RANGEFADE-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

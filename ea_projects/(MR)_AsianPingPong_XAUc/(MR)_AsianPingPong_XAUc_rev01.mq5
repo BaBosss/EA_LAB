@@ -116,12 +116,19 @@ void OnTick()
    const bool allow=_06_AllowLive||(bool)MQLInfoInteger(MQL_TESTER);
    const double slDist=_02_SlSpreadMult*spread*pt;
 
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("AsianPingPong: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(shortSig){ double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=upBand+slDist, tp=midBand;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN PINGPONG-SELL @%.2f",bid); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"PINGPONG_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"PINGPONG_SELL") && !g_suppress_log)
+         PrintFormat("PINGPONG-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=loBand-slDist, tp=midBand;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN PINGPONG-BUY @%.2f",ask); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"PINGPONG_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"PINGPONG_BUY") && !g_suppress_log)
+         PrintFormat("PINGPONG-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

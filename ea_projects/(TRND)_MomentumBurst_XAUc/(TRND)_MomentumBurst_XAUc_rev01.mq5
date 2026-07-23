@@ -159,12 +159,20 @@ void OnTick()
    if(!longSig && !shortSig) return;
 
    const int digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
+
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("MomentumBurst: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=ask-_02_SlPoints*pt, tp=ask+_02_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN MOMBURST-BUY @%.2f",ask); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"MOMBURST_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"MOMBURST_BUY") && !g_suppress_log)
+         PrintFormat("MOMBURST-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=bid+_02_SlPoints*pt, tp=bid-_02_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN MOMBURST-SELL @%.2f",bid); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"MOMBURST_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"MOMBURST_SELL") && !g_suppress_log)
+         PrintFormat("MOMBURST-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }

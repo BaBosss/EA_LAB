@@ -134,12 +134,20 @@ void OnTick()
 
    const int digits=(int)SymbolInfoInteger(_Symbol,SYMBOL_DIGITS);
    const double pt=_Point;
+
+   // silent-rejection guard: a lot below the broker minimum is refused by the server with NO visible
+   // error, which reads as "no signal" (0 trades) in the tester -- see PostNewsReversion rev01 bug.
+   const double minLot=SymbolInfoDouble(_Symbol,SYMBOL_VOLUME_MIN);
+   if(_04_LotSize < minLot){ if(!g_suppress_log) PrintFormat("EmaScalp: LotSize %.3f < broker min %.3f -- every order would silently reject, refusing to trade",_04_LotSize,minLot); return; }
+
    if(longSig){ double ask=SymbolInfoDouble(_Symbol,SYMBOL_ASK);
       double sl=ask-_02_SlPoints*pt, tp=ask+_02_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN EMASCALP-BUY @%.5f",ask); return; }
-      g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"EMASCALP_BUY"); }
+      if(!g_trade.Buy(_04_LotSize,_Symbol,ask,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"EMASCALP_BUY") && !g_suppress_log)
+         PrintFormat("EMASCALP-BUY FAILED retcode=%d",g_trade.ResultRetcode()); }
    else { double bid=SymbolInfoDouble(_Symbol,SYMBOL_BID);
       double sl=bid+_02_SlPoints*pt, tp=bid-_02_TpPoints*pt;
       if(!allow){ if(!g_suppress_log) PrintFormat("DRYRUN EMASCALP-SELL @%.5f",bid); return; }
-      g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"EMASCALP_SELL"); }
+      if(!g_trade.Sell(_04_LotSize,_Symbol,bid,NormalizeDouble(sl,digits),NormalizeDouble(tp,digits),"EMASCALP_SELL") && !g_suppress_log)
+         PrintFormat("EMASCALP-SELL FAILED retcode=%d",g_trade.ResultRetcode()); }
 }
