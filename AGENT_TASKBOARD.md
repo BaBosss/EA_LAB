@@ -150,7 +150,23 @@ SEV-2 อีก 4: ปัดเศษ factor แล้วไม่เช็ค�
 **สรุปที่ถูกต้องกว่า:** WFA ยัง **3/3 OOS profitable บน pinned config จริง** (ไม่ตายทั้งชุดแบบที่เขียนไว้) แต่ **window 2 margin บางมาก (1.08)** ตรงกับที่ ORDER-157 เจอเป๊ะ — average OOS PF ~1.63 (เทียบ IS-best เฉลี่ย 1.46 = WFE>1 แต่ลากขึ้นด้วย window 3 เป็นหลัก) **การอ่านที่ตรงหลักฐานที่สุด: edge มีจริง แต่ไม่สม่ำเสมอเท่าที่ score 89 บอกไว้** (window ที่แย่สุด = แค่เฉียดกำไร ไม่ใช่ลบ).
 **verdict:** ปลด "ห้าม attach เด็ดขาด" → เปลี่ยนเป็น **PARKED-VERIFY(user) ระดับความเชื่อมั่นลดลง** — attach ได้ถ้า user ยอมรับว่า margin จริงบางกว่าที่คิด (ไม่ใช่ ROBUST-89 อีกต่อไป) ไม่ใช่ CANDIDATE ปกติ. raw `_mt5_auto/RSIMR_WFA_PINNED.csv` + sets `_mt5_auto/ab_sets/order168_rsimr_wfa/`.
 
-## ORDER-174 — TrendRider XAGUSD H4 optimize-for-silver (ต่อจาก ORDER-167 BUILD-ON, BWD-fail บน center ที่ยืมจาก XAU) — `REVIEWED(Claude 2026-07-23): พลิกจาก BUILD-ON (BWD 0.97) → funnel เกือบครบ, ผ่านทุกด่านที่ทำแล้ว — เหลือ sensitivity fan (2 แกน) + corr ก่อน CANDIDATE`
+## ORDER-181 — TrendRider XAGUSD H4: sensitivity fan (Sep/Ch) + corr vs cohort — ปิดของค้างสุดท้ายของ ORDER-180 — `REVIEWED(Claude 2026-07-23): fan ผ่าน 3/4 ชัดเจน (1 แกนไม่ flat แต่ไม่ flip เป็นลบ) + corr ต่ำทั้งคู่ — BUILD-ON แข็งแรงมาก เกือบ CANDIDATE เต็มตัว เหลือแค่ holdout n บาง`
+**sensitivity fan ±20% รอบ center (AdxMin30/Sep0.5/Ch2.5), MAIN+BWD:**
+| axis | value | MAIN PF/n | BWD PF/n | เทียบ baseline (MAIN2.10/BWD1.49) |
+|---|---|---|---|---|
+| SepAtr | 0.4 | 2.10/42 | 1.51/48 | ✅ เท่าเดิม |
+| SepAtr | 0.6 | 2.36/40 | 1.42/45 | ✅ ดีขึ้น |
+| ChAtr | 2.0 | **1.20**/42 | 1.27/48 | ⚠️ MAIN เหลือ 57% ของ baseline (ต่ำกว่าเกณฑ์ hold-70%) แต่ **ไม่ flip เป็นลบ** ทั้งสองหน้าต่างยังกำไร |
+| ChAtr | 3.0 | **3.50**/40 | 1.34/42 | ✅ ดีขึ้นอีก (167% ของ baseline) |
+**อ่านผล:** แกน SepAtr = plateau จริง (แบนราบทั้งสองข้าง). แกน **ChAtr ไม่ใช่ plateau — เป็น trend ทางเดียว** (trail กว้างขึ้น = กำไรมากขึ้นเรื่อยๆ ไม่ reverse) เพราะเป็น Chandelier-trail ที่ยิ่งหลวมยิ่งปล่อยให้กำไรวิ่งไกล — ตรงไปตรงมาตามกลไก ไม่ใช่ artifact แต่หมายความว่า **center 2.5 ที่ล็อกไว้ conservative กว่าที่ได้จริง** ไม่ไล่ตามต่อ (2.0 ก็ยังไม่ตาย, พอแล้วสำหรับยืนยันว่าไม่ใช่ ridge).
+**corr vs cohort (Pearson จาก monthly P&L, deal-list extraction, script ใหม่ `scripts/corr_monthly_quick.ps1` เพราะตัวเก่า hardcode ไฟล์เดิม):**
+- vs **XAU TrendRider sibling (992004, attached)**: corr **-0.244** (24 เดือนร่วม) = LOW-additive
+- vs **Boss_14 XAU leg (990207, แข็งสุดของวันนี้)**: corr **0.236** (16 เดือนร่วม) = LOW-additive
+ทั้งคู่ต่ำกว่า 0.40 มาก **ไม่มี concentration risk แม้เป็นโลหะเหมือนกันทั้งคู่** — กลไก pullback-continuation จับจังหวะเข้าคนละเวลากับ trend/breakout ของอีกสองตัว.
+**สรุป funnel เต็ม:** lock → both-window ✅ → sensitivity fan (3/4 แข็งแรง, 1 แกนไม่แบนแต่ไม่ตาย) → holdout **1.01/n=7 บาง** (จุดอ่อนเดียวที่เหลือ) → MC PF-5th 1.266 ruin0% ✅ → M4 ตรง M1 ✅ → corr ต่ำ ✅. **นี่คือ funnel ที่ครบเกือบทุกด่านของ VERDICT GATE 2c** เหลือแค่ holdout ที่ n ไม่พอให้มั่นใจเต็มร้อย — verdict คง **BUILD-ON** (ไม่ยกเป็น CANDIDATE เต็มตัวเพราะ holdout, ไม่ใช่เพราะกลัวอย่างอื่น) แต่เป็น BUILD-ON ที่แข็งแรงที่สุดในบรรดา expansion cell ทั้งหมดที่ทดสอบวันนี้ — **สมควรให้ user พิจารณา demo-isolate ได้เลยถ้ายอมรับ holdout บาง** (เหมือน precedent StoMultiTap/ORDER-137 ที่ demo-isolate ทั้งที่ funnel ไม่ครบ 100%). raw `_mt5_auto/O175_XAG_FAN.csv`.
+
+## ORDER-180 — TrendRider XAGUSD H4 optimize-for-silver (ต่อจาก ORDER-167 BUILD-ON, BWD-fail บน center ที่ยืมจาก XAU) — `REVIEWED(Claude 2026-07-23): พลิกจาก BUILD-ON (BWD 0.97) → funnel เกือบครบ, ผ่านทุกด่านที่ทำแล้ว — เหลือ sensitivity fan (2 แกน) + corr ก่อน CANDIDATE`
+> 🔧 **renumbered 174→180 (Claude, 2026-07-23):** เลข collision รอบที่ 2 กับ session คู่ขนาน (commit `d5ceb18e` ใช้ ORDER-174 ไปก่อนที่ผมจะ commit `f447336b`) — เนื้อหา/ผลข้างล่างไม่ถูกแตะเลย แค่เปลี่ยนเลข heading + self-reference. กระโดดไป 180 (ไม่ใช่ 175 ติดกัน) เพราะชนถี่มากวันนี้ ให้มี buffer
 **source:** ORDER-167 พบว่า XAGUSD H4 รอด holdout (1.37) แต่ BWD ตกที่ 0.97 บน config ที่ *ยืม* center ของ XAU (a20/s0.5/c2.5) ทั้งดุ้น — lever ที่ไม่เคยแตะคือ tune ให้ XAG เองจริงๆ ใบนี้ปิดของค้างนั้น.
 **coarse grid (AdxMin×SepAtr, ChAtr fix 2.5, both-window):**
 | AdxMin | SepAtr | MAIN PF/n | BWD PF/n |
