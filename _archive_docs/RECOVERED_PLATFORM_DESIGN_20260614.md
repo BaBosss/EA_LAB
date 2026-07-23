@@ -1,5 +1,19 @@
 # RECOVERED PLATFORM DESIGN — distilled from GPT chats (2026-06-14)
 
+> ⚠️ **SUPERSEDED (2026-07-23) for live procedure/scoring/windows — kept for historical provenance only.**
+> Checked against current canonical docs during ORDER-152(c): the scoring system in §3 (BacktestScore v1,
+> PASS/WATCH/REJECT) and the gate chain in §4 are the **retired verdict vocabulary** per `docs/PIPELINE.md`
+> ("Demoted to calculators... PASS/CONDITIONAL/ROBUST/MARGINAL/Mode-B is retired") — current authority =
+> `CLAUDE.md` VERDICT GATE (`DEAD-STRUCTURAL/DEAD-OPTIMIZED/PARKED-VERIFY/BUILD-ON/CANDIDATE/DEMO/LIVE` +
+> bar table). The optimize pass framework in §5 (Pass 0/1/2/4) = current owner is skill
+> `backtest-optimize-rigor` (THE LADDER Step 0-9). The backtest/OOS window in §6 (IS 2025.01-2026.05 /
+> OOS-1 2024 / OOS-2 2023) is superseded by the pinned **MAIN 2023.01-2025.12 / BWD 2020-2022 / HOLDOUT
+> 2026H1** windows (`CLAUDE.md` VERDICT GATE). The validated-EA table in §7 is stale — Gold SMC (GSMC) is
+> already **DISQUALIFIED** per `PLATFORM_INDEX.md`'s own banner. §1-2 (EA_TEMPLATE gating concept:
+> risk/recovery/hedge always-on, entry-only differs) is still historically accurate and is now embodied
+> live in `ea_template/DESIGN_V2.md` (Boss V2). §8 top-level vision lines (don't live a single EA, 10
+> ports × 2-3 uncorrelated EA) still hold and match `VISION.md`.
+>
 > Source: 3 large ChatGPT design chats recovered from the 290 MB export and
 > distilled via subagents. Originals (full + distilled) live in
 > `D:\Forex\50_KNOWLEDGE\IDEA_BANK\_chat_archive\gpt_export_20260612\`.
