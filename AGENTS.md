@@ -54,7 +54,8 @@ capability ที่แท้จริงตอนนี้มาจาก Codex
 | ชั้นงาน | ใครทำ | quota lane |
 |---|---|---|
 | batch run ล้วน (powershell + parse, ตรวจด้วยตัวเลข/ไฟล์) | **oc-btest (ถูกสุด) / ZCode / qwen** | **ห้ามกิน ChatGPT** — ไป GLM(ZCode) หรือ qwen |
-| code ตาม pattern + มี cage (tpl_regression) | oc-dev / Codex / Sonnet(fast-worker) | ChatGPT (code คุ้มค่าเงิน) |
+| **core/parity/money code** (`ea_template\core\*`, EA .mq5, port/parity, risk logic) | **Claude เขียนเอง + Codex blind-audit** (ห้าม Codex เป็นคนเขียน — ดู §5.2) | — |
+| **tooling code** ที่ไม่แตะเงิน + มี cage ชัด (script/parser/checker) | oc-dev / Codex / Sonnet(fast-worker) | ChatGPT (code คุ้มค่าเงิน) |
 | money/risk logic ใหม่, architecture, root-cause | **Opus-seat เอง** (ไม่มี deep-reasoner tier แยกแล้ว) | — |
 | verdict/ทิศทาง/เขียน order | **Opus-seat เท่านั้น** | — |
 | second opinion งานแพง/ย้อนไม่ได้ | **Codex** (สมองอิสระตัวเดียวที่เหลือ — ใช้ประหยัด ดู §5) | ChatGPT |
@@ -164,7 +165,8 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
 | ประเภทงาน | ใครทำได้ | 👉 แนะ default |
 |---|---|---|
 | **batch ล้วน** (รัน script + parse, ตรวจด้วยเลข) | ZCode · Codex · oc-btest · Claude | **ZCode** ถ้าหนัก+สำคัญ (1/วัน) · **Claude/qwen** ถ้าเบา |
-| **code** (แก้ .mq5/.ps1/.py, มี cage) | **Codex · Claude · oc-dev** (❌ ZCode ห้ามแตะ source) | **Codex-direct** (ดูหมายเหตุคุ้มค่าล่าง) |
+| **code — core/parity/money** (`ea_template\core\*`, EA .mq5, risk/MM logic, port parity) | **Claude เท่านั้น** (Codex = blind audit หลังเขียนเสร็จ · ❌ ZCode) | **Claude เขียน → Codex audit** (§5.2) |
+| **code — tooling** (script/parser/checker ที่ไม่แตะเงิน, มี cage) | **Codex · Claude · oc-dev · Sonnet** (❌ ZCode ห้ามแตะ source) | **Codex-direct** (ดูหมายเหตุคุ้มค่าล่าง) |
 | **judgment/verdict/direction/design** | **Claude เท่านั้น** | Claude |
 
 **❓ Codex-direct vs OpenClaw — อันไหนคุ้มกว่า? → Codex-direct คุ้มกว่า (user คิดถูก, 2026-07-05):**
@@ -199,6 +201,22 @@ oc-btest ไว้เฉพาะตอน ZCode ไม่ว่าง + ให�
 - **oc-btest** (batch) = model ถูกสุด + งานส่วนใหญ่โยนไป ZCode/qwen แทน
 - **ห้ามรัน Codex Desktop/CLI + OpenClaw งานหนักพร้อมกัน** (แชร์ ChatGPT OAuth ก้อนเดียว = หมดเร็วเป็น 2 เท่า)
 - ลำดับความคุ้ม batch: **qwen → ZCode(GLM) → oc-btest(ถูกสุด) → [ห้าม] Codex/oc-dev บน batch**
+
+### 5.2 เส้นแบ่ง "ใครเขียนโค้ด" (reconciliation 2026-07-23 — ORDER-152, แก้ doc ที่ขัดกันเอง)
+
+**ปัญหาที่แก้:** ตาราง §1.5 และ §5.1 เดิมเขียนว่า default ของงาน code = **Codex-direct** · แต่ Decision log
+2026-07-16 (`PROJECT_STATE.md` §3) + `docs/PIPELINE.md` สั่งตรงข้าม: **โค้ดสำคัญ Claude เขียนเอง Codex เป็น
+blind auditor** — ตัดสินหลัง Codex-builder ตาย 3 ครั้งใน 1 วัน (capacity/filter) ขณะที่ Codex-reviewer
+จับ defect จริงได้ตลอด. สอง doc ขัดกันอยู่ ~1 สัปดาห์ = agent อ่านคนละกฎ. **เส้นแบ่งที่ถูก ไม่ใช่
+"Codex ห้ามเขียนโค้ด" แต่คือแบ่งตามความเสียหายเมื่อพลาด:**
+
+| ชนิดโค้ด | ใครเขียน | ทำไม |
+|---|---|---|
+| `ea_template\core\*` · EA `.mq5` · risk/MM/parity logic · อะไรก็ตามที่ทำให้เสียเงินจริงได้ | **Claude เขียน → Codex blind-audit** | พลาดแล้วแพง + audit คือจุดแข็งที่พิสูจน์แล้วของ Codex |
+| script/parser/checker/tooling ที่ไม่แตะเงิน และมี cage ตรวจได้ | **Codex / oc-dev / Sonnet เขียนได้** | ผิดแล้วถูกจับด้วย cage ทันที · ประหยัด Claude quota · precedent = **ORDER-144** (Codex เขียน `check_precommit_staged.ps1` ผ่านรอบเดียว) |
+
+**เวลาสงสัยว่าอันไหน ให้ถามข้อเดียว:** โค้ดนี้พลาดแล้วทำให้ *ส่งคำสั่งเทรดผิด / ขนาดไม้ผิด / กันความเสี่ยง
+ไม่ทำงาน* ได้ไหม — ได้ = Claude เขียน · ไม่ได้ (แค่รายงาน/parse/ตรวจ) = ปล่อย tier ถูกกว่าได้.
 
 ## 6. รอบบำรุงรักษาระบบ (adopt จาก `docs/PORTABLE_AI_OS.md` 2026-07-06 — Claude เป็นคนทำ)
 

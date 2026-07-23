@@ -1,0 +1,175 @@
+{
+  "accounts": [
+    {
+      "account": "463666728",
+      "account_name": "Demo bundle 10",
+      "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
+      "budget_pct": 25.0,
+      "headroom_pct": -49.8,
+      "known_magics": [
+        "990067",
+        "990068",
+        "990069",
+        "990984"
+      ],
+      "n_known_dd95": 4,
+      "n_total_magics": 17,
+      "n_unknown_dd95": 13,
+      "over_budget": true,
+      "portfolio_dd_est": 74.8,
+      "status_note": "computed from 4/17 magics (13 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "type": "DEMO",
+      "unknown_magics": [
+        "990020",
+        "990025",
+        "990030",
+        "990066",
+        "990120",
+        "990301",
+        "990302",
+        "990303",
+        "991003",
+        "991005",
+        "991070",
+        "992001",
+        "999094"
+      ]
+    },
+    {
+      "account": "415573666",
+      "account_name": "Demo Mt5-2",
+      "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
+      "budget_pct": 25.0,
+      "headroom_pct": 20.85,
+      "known_magics": [
+        "992004"
+      ],
+      "n_known_dd95": 1,
+      "n_total_magics": 10,
+      "n_unknown_dd95": 9,
+      "over_budget": false,
+      "portfolio_dd_est": 4.15,
+      "status_note": "computed from 1/10 magics (9 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "type": "DEMO",
+      "unknown_magics": [
+        "990110",
+        "990201",
+        "990202",
+        "990203",
+        "990204",
+        "990205",
+        "990206",
+        "990207",
+        "990208"
+      ]
+    },
+    {
+      "account": "141049900",
+      "account_name": "01. Celestial Woodfire",
+      "budget_note": "REAL_CENT: computed/reported only -- NO budget assigned, user decision needed",
+      "budget_pct": null,
+      "known_magics": [],
+      "n_known_dd95": 0,
+      "n_total_magics": 5,
+      "n_unknown_dd95": 5,
+      "portfolio_dd_est": null,
+      "status_note": "cannot compute -- 0/5 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
+      "type": "REAL_CENT",
+      "unknown_magics": [
+        "1112",
+        "1113",
+        "1114",
+        "1115",
+        "7777"
+      ]
+    },
+    {
+      "account": "159475669",
+      "account_name": "Boss - Trend Swing",
+      "budget_note": "REAL_CENT: computed/reported only -- NO budget assigned, user decision needed",
+      "budget_pct": null,
+      "known_magics": [],
+      "n_known_dd95": 0,
+      "n_total_magics": 2,
+      "n_unknown_dd95": 2,
+      "portfolio_dd_est": null,
+      "status_note": "cannot compute -- 0/2 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
+      "type": "REAL_CENT",
+      "unknown_magics": [
+        "1524",
+        "990005"
+      ]
+    },
+    {
+      "account": "159503454",
+      "account_name": "08. Blazing Arrow",
+      "budget_note": "REAL_CENT: computed/reported only -- NO budget assigned, user decision needed",
+      "budget_pct": null,
+      "known_magics": [],
+      "n_known_dd95": 0,
+      "n_total_magics": 4,
+      "n_unknown_dd95": 4,
+      "portfolio_dd_est": null,
+      "status_note": "cannot compute -- 0/4 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
+      "type": "REAL_CENT",
+      "unknown_magics": [
+        "990101",
+        "991001",
+        "991002",
+        "991004"
+      ]
+    },
+    {
+      "account": "69424711",
+      "account_name": "Demo EA3",
+      "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
+      "budget_pct": 25.0,
+      "known_magics": [],
+      "n_known_dd95": 0,
+      "n_total_magics": 4,
+      "n_unknown_dd95": 4,
+      "portfolio_dd_est": null,
+      "status_note": "cannot compute -- 0/4 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
+      "type": "DEMO",
+      "unknown_magics": [
+        "1",
+        "2",
+        "5888",
+        "990"
+      ]
+    }
+  ],
+  "admission_demo": [
+    {
+      "account": "463666728",
+      "ea_name": "EA_SUPERTREND (crypto ST-BTC)",
+      "magic": "990025",
+      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
+      "status": "CANNOT_RUN"
+    },
+    {
+      "account": "463666728",
+      "ea_name": "EA_DONCHIAN (crypto DON-ETH pyr3)",
+      "magic": "990030",
+      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
+      "status": "CANNOT_RUN"
+    },
+    {
+      "account": "463666728",
+      "ea_name": "TsMom_XAU (S2)",
+      "magic": "992001",
+      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
+      "status": "CANNOT_RUN"
+    }
+  ],
+  "coverage": {
+    "expectations_csv_found": true,
+    "known_dd95": 5,
+    "total_active_or_pending_magics": 42,
+    "unknown_dd95": 37
+  },
+  "demo_budget_pct": 25.0,
+  "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
+  "formula": "portfolio_DD_est = sqrt( sum_i sum_j corr_ij * DD95_i * DD95_j ), corr_ii = 1",
+  "limitation": "DD95 values are drawdown quantiles, not returns; combining them through a return-correlation matrix is a screening heuristic, not a theorem. This output is a prior for admission control, never a verdict, and does not replace per-EA Monte Carlo."
+}
