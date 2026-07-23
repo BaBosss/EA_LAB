@@ -193,14 +193,20 @@ def collapse_basket_risk_units(dd95_by_magic, basket_of):
             key = magic
         if key in units:
             prev = units[key]
+            # ORDER-170 round-7 (audit F2): ALWAYS keep the max, even inside the
+            # near-equal tolerance -- keeping the first-seen value made the collapsed
+            # figure depend on inventory order, which flipped a sizing decision at
+            # the budget boundary. The tolerance now only picks the MESSAGE wording.
+            units[key] = max(prev, val)
             if abs(prev - val) > 1e-9:
                 dropped.append(
                     f"{magic}: basket '{key}' has conflicting DD95 values "
                     f"({prev} vs {val}) -- kept the larger"
                 )
-                units[key] = max(prev, val)
             else:
-                dropped.append(f"{magic}: duplicate of basket '{key}' DD95 {val} -- counted once")
+                dropped.append(
+                    f"{magic}: duplicate of basket '{key}' DD95 {units[key]} -- counted once"
+                )
         else:
             units[key] = val
     return units, dropped
@@ -804,6 +810,12 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # whichever sibling row happens to come first in inventory order.
         all_known = {r["magic"]: dd95_map[r["magic"]] for r in rows if r["magic"] in dd95_map}
         units_all, _ = collapse_basket_risk_units(all_known, basket_of or {})
+        # ORDER-170 round-7 (audit F1): the EXISTING portfolio must also carry each
+        # basket at its canonical all-row value. An ACTIVE basket leg at 10 whose
+        # PENDING sibling declares the basket-level DD95 as 30 is a 30% risk unit
+        # already on the account -- sizing an unrelated candidate against the
+        # ACTIVE-only 10 admitted it into a 40% portfolio against a 25% budget.
+        existing_units = {k: units_all[k] for k in existing_units}
 
         def _with_provenance(entry):
             if admitted_prior:
@@ -1525,12 +1537,48 @@ def _cage_25_conflicting_siblings_use_canonical_basket_dd95():
             f"order {order}: first sibling must be sized at canonical 30 (> budget 25), "
             f"got {first!r}"
         )
-        assert first.get("basket_dd95_used", 30.0) == 30.0
+        # round-6 audit F3: the understated row's decision must CARRY the field
+        # (no .get default -- deleting the field must fail this test)
+        d_e = next(d for d in report["admission_demo"] if d["magic"] == "E")
+        assert d_e["basket_dd95_used"] == 30.0, f"order {order}: {d_e!r}"
         # no decision in either order may grant a lot at the understated 10
         for d in report["admission_demo"]:
             assert d["status"] not in ("ADMIT_FULL", "ADMIT_REDUCED"), (
                 f"order {order}: understated sibling was granted a lot: {d!r}"
             )
+    # round-6 audit F1: an ACTIVE basket leg must be carried at the basket's
+    # canonical ALL-row value (PENDING sibling declares 30) before sizing an
+    # unrelated candidate -- G must not be admitted into a 40% portfolio.
+    for order in (("F", "G"), ("G", "F")):
+        deployments = [_mk_row("111", "E", "ACTIVE")] + [
+            _mk_row("111", mg, "PENDING_ATTACH") for mg in order]
+        report = build_report(deployments, {"E": 10.0, "F": 30.0, "G": 10.0}, {},
+                              basket_of={"E": "BY", "F": "BY"})
+        demo = {d["magic"]: d for d in report["admission_demo"]}
+        assert demo["F"]["status"] == "CANNOT_RUN", f"order {order}: {demo['F']!r}"
+        assert demo["G"]["status"] == "DEFER_ESCALATE", (
+            f"order {order}: G sized against the understated ACTIVE-only basket value: "
+            f"{demo['G']!r}"
+        )
+    # round-6 audit F4: a REFUSED record after an admission must carry provenance
+    report3 = build_report(
+        [_mk_row("111", "C", "PENDING_ATTACH"), _mk_row("111", "D", "PENDING_ATTACH")],
+        {"C": 10.0, "D": 10.0}, {frozenset(("C", "D")): -1.0},
+    )
+    demo3 = {d["magic"]: d for d in report3["admission_demo"]}
+    assert demo3["C"]["status"] == "ADMIT_FULL"
+    assert demo3["D"]["status"] == "REFUSED", f"{demo3['D']!r}"
+    assert demo3["D"]["assumes_admitted_first"] == ["C"], (
+        f"REFUSED after an admission must name the assumption: {demo3['D']!r}"
+    )
+    # round-6 audit F2: near-equal siblings (inside the 1e-9 message tolerance)
+    # must still collapse to the MAX in both insertion orders
+    bof = {"E": "BY", "F": "BY"}
+    u1, _ = collapse_basket_risk_units({"E": 10.0, "F": 10.0000000005}, bof)
+    u2, _ = collapse_basket_risk_units({"F": 10.0000000005, "E": 10.0}, bof)
+    assert u1 == u2 == {_basket_key("BY"): 10.0000000005}, (
+        f"near-equal collapse is order-dependent: {u1!r} vs {u2!r}"
+    )
     # F2: a later CANNOT_RUN sibling must carry the sequential provenance list
     report2 = build_report(
         [_mk_row("111", "E", "PENDING_ATTACH"), _mk_row("111", "F", "PENDING_ATTACH")],
