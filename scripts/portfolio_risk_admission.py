@@ -54,6 +54,11 @@ ROOT = Path(__file__).resolve().parent.parent
 DEPLOYMENTS_CSV = ROOT / "portfolio" / "DEPLOYMENTS.csv"
 EXPECTATIONS_CSV = ROOT / "portfolio" / "expectations.csv"
 LIVE_DEALS_DIR = ROOT / "portfolio" / "live_deals"
+# ORDER-174: explicit magic -> backtest-report mapping. Reports in _mt5_auto/reports
+# have ad-hoc names (4,700+ files) -- NEVER inferred/guessed; every row in this file
+# is placed deliberately and is auditable. Missing file => backtest corr simply
+# unavailable (pairs stay at the conservative 1.0 default).
+BACKTEST_CORR_MAP = ROOT / "portfolio" / "backtest_corr_reports.csv"
 OUT_MD = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.md"
 OUT_JSON = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.json"
 
@@ -313,6 +318,126 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
         if any(not math.isfinite(v) for v in months.values()):
             corrupted.add(magic)
     return monthly, corrupted
+
+
+def _read_report_text(path):
+    """MT5 saves .htm reports as UTF-16 (BOM) or UTF-8 -- mirror of the decoder in
+    _mt5_auto/corr_monthly.py, whose parsing method ORDER-154's DESIGN specified."""
+    raw = Path(path).read_bytes()
+    if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):
+        return raw.decode("utf-16", errors="replace")
+    return raw.decode("utf-8", errors="replace")
+
+
+def _extract_backtest_monthly(paths):
+    """Monthly realized P&L (profit+commission+swap of 'out' deals) from MT5 backtest
+    report HTML files -- the same bucket method as _mt5_auto/corr_monthly.py
+    (ORDER-154 DESIGN source), with this module's corruption discipline on top:
+    a present-but-unparseable or non-finite money cell poisons the WHOLE series
+    (returns None), it never becomes a fabricated observation."""
+    monthly = defaultdict(float)
+    row_re = re.compile(r"<tr[^>]*>(.*?)</tr>", re.S)
+    cell_re = re.compile(r"<t[dh][^>]*>(.*?)</t[dh]>", re.S)
+    tag_re = re.compile(r"<[^>]+>")
+    for path in paths:
+        text = _read_report_text(path)
+        for r in row_re.findall(text):
+            cells = [tag_re.sub("", c).strip() for c in cell_re.findall(r)]
+            if len(cells) != 13 or cells[4].lower() != "out":
+                continue
+            mm = re.match(r"(\d{4})\.(\d{2})", cells[0])
+            if not mm:
+                continue
+            parts = []
+            for idx in (10, 8, 9):  # profit, commission, swap
+                v = _num(cells[idx].replace("\xa0", "").replace(" ", "").replace(",", ""))
+                if v is CORRUPT:
+                    return None  # poisoned -- same rule as the live-deals path
+                parts.append(v)
+            monthly[f"{mm.group(1)}-{mm.group(2)}"] += sum(parts)
+    if any(not math.isfinite(v) for v in monthly.values()):
+        return None  # aggregation overflow poisons the series too
+    return monthly
+
+
+def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
+    """magic -> {YYYY-MM: P&L} from the explicit report map. Fail-soft by design:
+    a missing map file, a missing report file, or a poisoned series just leaves that
+    magic OUT (its pairs fall back to the conservative 1.0 default) and the reason
+    is returned in `skipped` for the report. Never guesses, never crashes the run."""
+    monthly_by_magic = {}
+    skipped = []
+    p = Path(map_csv)
+    if not p.exists():
+        return monthly_by_magic, skipped
+    paths_by_magic = defaultdict(list)
+    with open(p, encoding="utf-8-sig", newline="") as f:
+        for row in csv.DictReader(f):
+            magic = (row.get("magic") or "").strip()
+            rel = (row.get("report_path") or "").strip()
+            if not magic or not rel:
+                continue
+            rp = (ROOT / rel) if not Path(rel).is_absolute() else Path(rel)
+            if not rp.exists():
+                skipped.append(f"{magic}: report not found: {rel}")
+                continue
+            paths_by_magic[magic].append(rp)
+    for magic, paths in paths_by_magic.items():
+        monthly = _extract_backtest_monthly(paths)
+        if monthly is None:
+            skipped.append(f"{magic}: corrupt/non-finite cell in report -- series poisoned")
+            continue
+        if not monthly:
+            skipped.append(f"{magic}: no realized 'out' deals parsed from mapped report(s)")
+            continue
+        monthly_by_magic[magic] = monthly
+    return monthly_by_magic, skipped
+
+
+def _pairs_from_monthly(monthly_by_magic, magics):
+    """Measured Pearson pairs from monthly series -- shared measurement rule for both
+    live and backtest sources (>= MIN_SHARED_MONTHS overlap, finite result only)."""
+    corr = {}
+    mags = [m for m in magics if m in monthly_by_magic]
+    for i in range(len(mags)):
+        for j in range(i + 1, len(mags)):
+            a, b = mags[i], mags[j]
+            common = sorted(set(monthly_by_magic[a]) & set(monthly_by_magic[b]))
+            if len(common) < MIN_SHARED_MONTHS:
+                continue
+            c = pearson([monthly_by_magic[a][m] for m in common],
+                        [monthly_by_magic[b][m] for m in common])
+            if c is None or not math.isfinite(c):
+                continue
+            corr[frozenset((a, b))] = c
+    return corr
+
+
+def compute_corr_with_backtest(magics, live_deals_dir=LIVE_DEALS_DIR,
+                               backtest_map_csv=BACKTEST_CORR_MAP):
+    """ORDER-174: correlation from BOTH sources with explicit per-pair provenance.
+    LIVE wins over BACKTEST when both measured a pair (live is the higher-quality
+    evidence); any pair neither could measure stays absent -> get_corr() applies the
+    conservative 1.0 default exactly as before. The formula and the default are NOT
+    touched here -- this only widens what can be measured.
+
+    Returns (corr, quality, backtest_skipped):
+      corr     {frozenset(pair): float}
+      quality  {frozenset(pair): "live" | "backtest"}  (absent pair = default 1.0)
+      backtest_skipped  [str] -- mapped magics that could not be used, with reasons
+    """
+    live_corr = compute_corr_matrix(magics, live_deals_dir)
+    bt_monthly, bt_skipped = load_backtest_monthly_by_magic(backtest_map_csv)
+    bt_corr = _pairs_from_monthly(bt_monthly, magics)
+    corr = {}
+    quality = {}
+    for pair, v in bt_corr.items():
+        corr[pair] = v
+        quality[pair] = "backtest"
+    for pair, v in live_corr.items():  # live overwrites backtest -- higher tier
+        corr[pair] = v
+        quality[pair] = "live"
+    return corr, quality, bt_skipped
 
 
 def pearson(xs, ys):
@@ -796,7 +921,9 @@ def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
 
 
 def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
-                 expectations_path=EXPECTATIONS_CSV):
+                 expectations_path=EXPECTATIONS_CSV,
+                 corr_quality=None, backtest_skipped=None,
+                 backtest_map_path=BACKTEST_CORR_MAP):
     active_rows = [r for r in deployments if r["status"] in ("ACTIVE", "PENDING_ATTACH")]
     by_account = defaultdict(list)
     for r in active_rows:
@@ -943,8 +1070,39 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                     "status": "REFUSED", "message": str(e),
                 }))
 
+    # ORDER-174: per-pair correlation provenance -- live and backtest are DIFFERENT
+    # evidence quality and must never look the same; every pair not listed here ran
+    # on the conservative 1.0 default.
+    quality = corr_quality or {}
+    active_magics = sorted({r["magic"] for r in active_rows})
+    n_possible = len(active_magics) * (len(active_magics) - 1) // 2
+    measured = []
+    for pair, v in sorted(corr_matrix.items(), key=lambda kv: sorted(kv[0])):
+        if not all(m in active_magics for m in pair):
+            continue  # a pair with a removed/inactive magic backs no number above
+        a, b = sorted(pair)
+        measured.append({
+            "pair": f"{a}~{b}",
+            "corr": round(v, 4),
+            "source": quality.get(pair, "live" if not quality else "unknown"),
+        })
+    corr_coverage = {
+        "possible_pairs_active_or_pending": n_possible,
+        "measured_pairs": len(measured),
+        "measured_pairs_live": sum(1 for m in measured if m["source"] == "live"),
+        "measured_pairs_backtest": sum(1 for m in measured if m["source"] == "backtest"),
+        "default_1_0_pairs": n_possible - len(measured),
+        "pairs": measured,
+        "backtest_map_found": Path(backtest_map_path).exists(),
+        "backtest_map_path": str(backtest_map_path),
+        "backtest_skipped": list(backtest_skipped or []),
+        "note": ("every pair NOT listed above used the conservative default corr=1.0 "
+                 "(fully additive); live pairs outrank backtest pairs when both exist"),
+    }
+
     report = {
         "limitation": LIMITATION,
+        "corr_coverage": corr_coverage,
         "formula": "portfolio_DD_est = sqrt( sum_i sum_j corr_ij * DD95_i * DD95_j ), corr_ii = 1",
         "demo_budget_pct": DEMO_BUDGET_PCT,
         "demo_budget_source": BUDGET_SOURCE_NOTE,
@@ -1000,6 +1158,35 @@ def render_markdown(report):
         "**no budget assigned -- user decision needed**."
     )
     lines.append("")
+    cc = report.get("corr_coverage")
+    if cc:
+        lines.append(
+            f"## Correlation coverage (ORDER-174): **{cc['measured_pairs']}/{cc['possible_pairs_active_or_pending']} "
+            f"pairs measured** ({cc['measured_pairs_live']} live, {cc['measured_pairs_backtest']} backtest) "
+            f"-- **{cc['default_1_0_pairs']} pairs on the conservative default 1.0**"
+        )
+        lines.append("")
+        if cc["pairs"]:
+            lines.append("| pair | corr | source |")
+            lines.append("|---|---|---|")
+            for m in cc["pairs"]:
+                lines.append(f"| {m['pair']} | {m['corr']} | **{m['source']}** |")
+            lines.append("")
+        lines.append(
+            "_Live and backtest correlations are different evidence quality -- live "
+            "outranks backtest when both exist. Every pair not listed used corr=1.0 "
+            "(fully additive, conservative)._"
+        )
+        if not cc["backtest_map_found"]:
+            lines.append("")
+            lines.append(
+                f"**Backtest corr map not found** (`{cc['backtest_map_path']}`) -- backtest-derived "
+                "correlation is OFF; populate the map (magic,report_path per row, deliberate "
+                "entries only) to widen coverage before live history matures."
+            )
+        for s in cc["backtest_skipped"]:
+            lines.append(f"- backtest map skipped: {s}")
+        lines.append("")
     lines.append("---")
     lines.append("")
 
@@ -1747,6 +1934,79 @@ def _cage_27_strict_budget_and_type_conflict():
     )
 
 
+def _write_tmp_report(path, rows):
+    """Minimal MT5-report-shaped deals table: 13 cells per row, direction 'out'."""
+    parts = ["<html><body><table>"]
+    for t, profit in rows:
+        cells = [t, "1", "XAUUSD", "buy", "out", "0.10", "2000.0", "1",
+                 "0", "0", str(profit), "1000", ""]
+        parts.append("<tr>" + "".join(f"<td>{c}</td>" for c in cells) + "</tr>")
+    parts.append("</table></body></html>")
+    Path(path).write_text("".join(parts), encoding="utf-8")
+
+
+def _cage_28_backtest_corr_provenance():
+    """ORDER-174: backtest-derived correlation from the explicit report map --
+    measured pairs carry 'backtest' provenance, LIVE overrides backtest when both
+    exist, corrupt reports poison their magic (skipped, pair falls back to 1.0),
+    and a missing map file cleanly disables the feature."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        months = ("2026.01", "2026.02", "2026.03", "2026.04")
+        _write_tmp_report(td / "a.htm",
+                          [(f"{m}.15 10:00:00", str(10.0 * (i + 1))) for i, m in enumerate(months)])
+        _write_tmp_report(td / "b.htm",
+                          [(f"{m}.15 10:00:00", str(10.0 * (4 - i))) for i, m in enumerate(months)])
+        _write_tmp_report(td / "c.htm", [("2026.01.15 10:00:00", "not-a-number")])
+        with open(td / "map.csv", "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["magic", "report_path", "notes"])
+            w.writerow(["111", str(td / "a.htm"), ""])
+            w.writerow(["222", str(td / "b.htm"), ""])
+            w.writerow(["333", str(td / "c.htm"), "corrupt fixture"])
+            w.writerow(["444", str(td / "missing.htm"), "missing fixture"])
+        live_dir = td / "live"
+        live_dir.mkdir()
+
+        corr, quality, skipped = compute_corr_with_backtest(
+            ["111", "222", "333", "444"], live_dir, td / "map.csv")
+        pair = frozenset(("111", "222"))
+        assert pair in corr and quality[pair] == "backtest", f"{corr!r} {quality!r}"
+        assert abs(corr[pair] - (-1.0)) < 1e-9, f"anti-correlated fixture: {corr[pair]!r}"
+        assert not any("333" in p for p in corr), "corrupt report must poison its magic"
+        assert any("333" in s for s in skipped) and any("444" in s for s in skipped), f"{skipped!r}"
+        assert get_corr(corr, "111", "333") == 1.0
+
+        # LIVE data for the same pair must OUTRANK the backtest measurement
+        with open(live_dir / "EA_LAB_deals_1_20260101.csv", "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["time", "magic", "entry", "profit", "swap", "commission"])
+            for i, m in enumerate(months):
+                w.writerow([f"{m}.15 10:00:00", "111", "1", str(1.0 + i), "0", "0"])
+                w.writerow([f"{m}.15 11:00:00", "222", "1", str(2.0 + 2 * i), "0", "0"])
+        corr2, quality2, _ = compute_corr_with_backtest(
+            ["111", "222"], live_dir, td / "map.csv")
+        assert quality2[pair] == "live", f"live must outrank backtest: {quality2!r}"
+        assert abs(corr2[pair] - 1.0) < 1e-9, f"live series is perfectly correlated: {corr2[pair]!r}"
+
+        # missing map file -> feature off, live-only, no crash
+        corr3, quality3, skipped3 = compute_corr_with_backtest(
+            ["111", "222"], live_dir, td / "no_such_map.csv")
+        assert quality3.get(pair) == "live" and skipped3 == []
+
+        # report JSON carries the provenance split
+        report = build_report(
+            [_mk_row("111", "111", "ACTIVE"), _mk_row("111", "222", "PENDING_ATTACH")],
+            {"111": 10.0, "222": 10.0}, corr, basket_of={},
+            corr_quality=quality, backtest_skipped=skipped,
+            backtest_map_path=td / "map.csv")
+        cc = report["corr_coverage"]
+        assert cc["measured_pairs_backtest"] == 1 and cc["measured_pairs_live"] == 0, f"{cc!r}"
+        assert cc["default_1_0_pairs"] == 0 and cc["backtest_map_found"] is True
+        assert any("333" in s for s in cc["backtest_skipped"])
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -1775,6 +2035,7 @@ CAGE_TESTS = [
     ("25_conflicting_siblings_canonical_dd95", _cage_25_conflicting_siblings_use_canonical_basket_dd95),
     ("26_pearson_result_stays_in_range", _cage_26_pearson_result_stays_in_range),
     ("27_strict_budget_and_type_conflict", _cage_27_strict_budget_and_type_conflict),
+    ("28_backtest_corr_provenance", _cage_28_backtest_corr_provenance),
 ]
 
 
@@ -1844,6 +2105,7 @@ def main(argv=None):
     ap.add_argument("--deployments", default=str(DEPLOYMENTS_CSV))
     ap.add_argument("--expectations", default=str(EXPECTATIONS_CSV))
     ap.add_argument("--live-deals", default=str(LIVE_DEALS_DIR))
+    ap.add_argument("--backtest-map", default=str(BACKTEST_CORR_MAP))
     ap.add_argument("--out-md", default=str(OUT_MD))
     ap.add_argument("--out-json", default=str(OUT_JSON))
     args = ap.parse_args(argv)
@@ -1862,10 +2124,13 @@ def main(argv=None):
     deployments = load_deployments(args.deployments)
     dd95_map, basket_of = load_expectations_with_baskets(args.expectations)
     magics = sorted({r["magic"] for r in deployments})
-    corr_matrix = compute_corr_matrix(magics, args.live_deals)
+    corr_matrix, corr_quality, bt_skipped = compute_corr_with_backtest(
+        magics, args.live_deals, args.backtest_map)
 
     report = build_report(deployments, dd95_map, corr_matrix, basket_of=basket_of,
-                          expectations_path=args.expectations)
+                          expectations_path=args.expectations,
+                          corr_quality=corr_quality, backtest_skipped=bt_skipped,
+                          backtest_map_path=args.backtest_map)
     md = render_markdown(report)
 
     Path(args.out_md).parent.mkdir(parents=True, exist_ok=True)

@@ -181,6 +181,18 @@
       "status": "CANNOT_RUN"
     }
   ],
+  "corr_coverage": {
+    "backtest_map_found": true,
+    "backtest_map_path": "D:\\EA_LAB\\portfolio\\backtest_corr_reports.csv",
+    "backtest_skipped": [],
+    "default_1_0_pairs": 903,
+    "measured_pairs": 0,
+    "measured_pairs_backtest": 0,
+    "measured_pairs_live": 0,
+    "note": "every pair NOT listed above used the conservative default corr=1.0 (fully additive); live pairs outrank backtest pairs when both exist",
+    "pairs": [],
+    "possible_pairs_active_or_pending": 903
+  },
   "coverage": {
     "expectations_csv_found": true,
     "expectations_path": "D:\\EA_LAB\\portfolio\\expectations.csv",

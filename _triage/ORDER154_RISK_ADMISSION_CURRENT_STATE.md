@@ -8,6 +8,10 @@
 
 Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3)). REAL_CENT accounts: computed/reported only, **no budget assigned -- user decision needed**.
 
+## Correlation coverage (ORDER-174): **0/903 pairs measured** (0 live, 0 backtest) -- **903 pairs on the conservative default 1.0**
+
+_Live and backtest correlations are different evidence quality -- live outranks backtest when both exist. Every pair not listed used corr=1.0 (fully additive, conservative)._
+
 ---
 
 ## Account 463666728 -- Demo bundle 10 (DEMO)
