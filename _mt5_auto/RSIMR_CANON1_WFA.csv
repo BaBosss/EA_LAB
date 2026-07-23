@@ -1,0 +1,5 @@
+﻿"fold","phase","params","pf","dd_pct","trades","window_from","window_to","model","set_path","report_path"
+1,"IS","_03_DistAtrMult=8",1.43,4.18,99.0,2020.01.01,2021.03.01,4,"D:\EA_LAB\_mt5_auto\ab_sets\walkforward\RSIMR_CANON1\_03_DistAtrMult=8.set","D:\EA_LAB\_mt5_auto\reports\WF_RSIMR_CANON1_F1_IS__03_DistAtrMult=8.htm"
+1,"IS","_03_DistAtrMult=9",1.23,3.77,91.0,2020.01.01,2021.03.01,4,"D:\EA_LAB\_mt5_auto\ab_sets\walkforward\RSIMR_CANON1\_03_DistAtrMult=9.set","D:\EA_LAB\_mt5_auto\reports\WF_RSIMR_CANON1_F1_IS__03_DistAtrMult=9.htm"
+1,"IS","_03_DistAtrMult=10",0.91,4.74,73.0,2020.01.01,2021.03.01,4,"D:\EA_LAB\_mt5_auto\ab_sets\walkforward\RSIMR_CANON1\_03_DistAtrMult=10.set","D:\EA_LAB\_mt5_auto\reports\WF_RSIMR_CANON1_F1_IS__03_DistAtrMult=10.htm"
+1,"OOS(is_best=_03_DistAtrMult=8;isPF=1.43)","_03_DistAtrMult=8",1.59,4.04,91.0,2021.03.01,2022.01.01,4,"D:\EA_LAB\_mt5_auto\ab_sets\walkforward\RSIMR_CANON1\_03_DistAtrMult=8.set","D:\EA_LAB\_mt5_auto\reports\WF_RSIMR_CANON1_F1_OOS__03_DistAtrMult=8.htm"

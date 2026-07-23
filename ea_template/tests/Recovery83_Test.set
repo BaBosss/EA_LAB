@@ -1,0 +1,5 @@
+; Recovery83_Test requires REC_AGGRESSIVE fixed at known cage values
+RecoveryMode=83
+_8_RecMult=2.0
+RC_RecMultMax=1.5
+RC_MaxLot=3.0

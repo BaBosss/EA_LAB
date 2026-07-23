@@ -5,25 +5,26 @@
       "account_name": "Demo bundle 10",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -49.8,
+      "headroom_pct": -36.03,
       "known_magics": [
-        "990067",
-        "990068",
-        "990069",
-        "990984"
-      ],
-      "n_known_dd95": 4,
-      "n_total_magics": 17,
-      "n_unknown_dd95": 13,
-      "over_budget": true,
-      "portfolio_dd_est": 74.8,
-      "status_note": "computed from 4/17 magics (13 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
-      "type": "DEMO",
-      "unknown_magics": [
         "990020",
-        "990025",
         "990030",
         "990066",
+        "990068",
+        "990984",
+        "999094"
+      ],
+      "n_known_dd95": 6,
+      "n_total_magics": 17,
+      "n_unknown_dd95": 11,
+      "over_budget": true,
+      "portfolio_dd_est": 61.03,
+      "status_note": "computed from 6/17 magics (11 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "type": "DEMO",
+      "unknown_magics": [
+        "990025",
+        "990067",
+        "990069",
         "990120",
         "990301",
         "990302",
@@ -31,8 +32,7 @@
         "991003",
         "991005",
         "991070",
-        "992001",
-        "999094"
+        "992001"
       ]
     },
     {
@@ -105,19 +105,19 @@
       "account_name": "08. Blazing Arrow",
       "budget_note": "REAL_CENT: computed/reported only -- NO budget assigned, user decision needed",
       "budget_pct": null,
-      "known_magics": [],
-      "n_known_dd95": 0,
-      "n_total_magics": 4,
-      "n_unknown_dd95": 4,
-      "portfolio_dd_est": null,
-      "status_note": "cannot compute -- 0/4 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
-      "type": "REAL_CENT",
-      "unknown_magics": [
+      "known_magics": [
         "990101",
         "991001",
         "991002",
         "991004"
-      ]
+      ],
+      "n_known_dd95": 4,
+      "n_total_magics": 4,
+      "n_unknown_dd95": 0,
+      "portfolio_dd_est": 13.44,
+      "status_note": "computed from 4/4 magics (full coverage on this account)",
+      "type": "REAL_CENT",
+      "unknown_magics": []
     },
     {
       "account": "69424711",
@@ -149,10 +149,13 @@
     },
     {
       "account": "463666728",
+      "budget_pct": 25.0,
       "ea_name": "EA_DONCHIAN (crypto DON-ETH pyr3)",
+      "existing_portfolio_dd_est": 58.53,
+      "lot_factor": null,
       "magic": "990030",
-      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
-      "status": "CANNOT_RUN"
+      "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
+      "status": "DEFER_ESCALATE"
     },
     {
       "account": "463666728",
@@ -164,9 +167,9 @@
   ],
   "coverage": {
     "expectations_csv_found": true,
-    "known_dd95": 5,
+    "known_dd95": 11,
     "total_active_or_pending_magics": 42,
-    "unknown_dd95": 37
+    "unknown_dd95": 31
   },
   "demo_budget_pct": 25.0,
   "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
