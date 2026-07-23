@@ -320,6 +320,25 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
     return monthly, corrupted
 
 
+_MONEY_GROUPED_RE = re.compile(r"^-?\d{1,3}(?:[ ,]\d{3})+(?:\.\d+)?$")
+# strict full MT5 deal timestamp: YYYY.MM.DD HH:MM[:SS] -- prefix-only matching let
+# '2026.013...' count month '01' as a real observation (round-3, audit F2)
+_DEAL_TS_RE = re.compile(r"^(\d{4})\.(\d{2})\.(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$")
+
+
+def _parse_money_cell(s):
+    """Money-cell parse with separator discipline (ORDER-174 round-3, audit F3):
+    commas/spaces are accepted ONLY as well-formed thousands grouping ('1,234.5',
+    '1 234'). '1,0' is malformed (or a locale decimal) and must be CORRUPT --
+    blind comma deletion turned it into 10.0, a different finite number."""
+    s = str(s).replace("\xa0", " ").strip()
+    if "," in s or " " in s:
+        if not _MONEY_GROUPED_RE.match(s):
+            return CORRUPT
+        s = s.replace(" ", "").replace(",", "")
+    return _num(s)
+
+
 def _read_report_text(path):
     """MT5 saves .htm reports as UTF-16 (BOM) or UTF-8 -- mirror of the decoder in
     _mt5_auto/corr_monthly.py, whose parsing method ORDER-154's DESIGN specified."""
@@ -354,19 +373,35 @@ def _extract_backtest_monthly(paths):
         file_months = set()
         for r in row_re.findall(text):
             cells = [tag_re.sub("", c).strip() for c in cell_re.findall(r)]
-            if len(cells) != 13 or cells[4].lower() != "out":
+            # ORDER-174 round-3 (audit F1): a row that carries a realized-deal
+            # direction cell ('out') but NOT the 13-cell deals shape is structural
+            # corruption -- silently skipping it published the remaining segment as
+            # a complete series. Poison instead of pretending the row never existed.
+            if len(cells) != 13:
+                if any(c.lower() == "out" for c in cells):
+                    return None, (
+                        f"deals-shaped row with {len(cells)} cells (expected 13) in "
+                        f"{Path(path).name} -- report structurally malformed"
+                    )
                 continue
-            mm = re.match(r"(\d{4})\.(\d{2})", cells[0])
+            if cells[4].lower() != "out":
+                continue
+            mm = _DEAL_TS_RE.match(cells[0])
             if not mm:
-                continue
-            if not (1 <= int(mm.group(2)) <= 12):
                 return None, (
-                    f"impossible calendar month {cells[0]!r} in {Path(path).name} "
+                    f"unparseable deal timestamp {cells[0]!r} in {Path(path).name} "
+                    "-- report data corrupt"
+                )
+            month, day = int(mm.group(2)), int(mm.group(3))
+            hour, minute = int(mm.group(4)), int(mm.group(5))
+            if not (1 <= month <= 12) or not (1 <= day <= 31) or hour > 23 or minute > 59:
+                return None, (
+                    f"impossible calendar month/date {cells[0]!r} in {Path(path).name} "
                     "-- report data corrupt"
                 )
             parts = []
             for idx in (10, 8, 9):  # profit, commission, swap
-                v = _num(cells[idx].replace("\xa0", "").replace(" ", "").replace(",", ""))
+                v = _parse_money_cell(cells[idx])
                 if v is CORRUPT:
                     return None, f"corrupt money cell in {Path(path).name}"
                 parts.append(v)
@@ -424,7 +459,11 @@ def load_backtest_monthly_by_magic(map_csv=BACKTEST_CORR_MAP):
     for magic, paths in paths_by_magic.items():
         monthly, reason = _extract_backtest_monthly(paths)
         if reason is not None:
-            skipped.append(f"{magic}: {reason} -- series poisoned, pairs default to 1.0")
+            # round-3 (audit F5): every exclusion carries the same explicit wording
+            skipped.append(
+                f"{magic}: {reason} -- series poisoned, WHOLE magic excluded, "
+                "pairs default to 1.0"
+            )
             continue
         if not monthly:
             skipped.append(f"{magic}: no realized 'out' deals parsed from mapped report(s)")
@@ -2079,11 +2118,15 @@ def _cage_29_backtest_map_fail_soft_hardening():
         assert set(monthly) == {"B"}, (
             f"only the clean magic may survive, got {sorted(monthly)} / skipped={skipped!r}"
         )
-        joined = " | ".join(skipped)
-        assert "A:" in joined and "WHOLE magic excluded" in joined, joined
-        assert "C:" in joined and "impossible calendar month" in joined, joined
-        assert "D:" in joined and "more than one mapped report" in joined, joined
-        assert "E:" in joined and "not a regular file" in joined, joined
+        # round-3 (audit F4): assert PER-MAGIC reasons -- a joined-string check let
+        # unrelated records satisfy each other's phrases
+        by_magic = {}
+        for s in skipped:
+            by_magic.setdefault(s.split(":", 1)[0], []).append(s)
+        assert any("WHOLE magic excluded" in s for s in by_magic["A"]), by_magic
+        assert any("impossible calendar month" in s for s in by_magic["C"]), by_magic
+        assert any("more than one mapped report" in s for s in by_magic["D"]), by_magic
+        assert any("not a regular file" in s for s in by_magic["E"]), by_magic
 
         # F4: the map and every mapped report are refused as output destinations
         dep = td / "dep.csv"
@@ -2103,6 +2146,57 @@ def _cage_29_backtest_map_fail_soft_hardening():
         assert refused(td / "map.csv"), "the corr map must be a protected destination"
         assert refused(td / "good.htm"), "a mapped report must be a protected destination"
         assert not refused(td / "fresh_report.md"), "a plain new report path must be allowed"
+
+
+def _cage_30_malformed_report_rows_poison():
+    """ORDER-174 round-3 (audit F1-F3): a deals-shaped row with the wrong cell count,
+    a prefix-only-valid timestamp, and malformed money grouping must each poison the
+    WHOLE magic (conservative 1.0 fallback) -- never publish a partial/fabricated
+    series. Well-formed thousands grouping still parses."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        td = Path(td)
+        months = ("2026.01", "2026.02", "2026.03", "2026.04")
+        _write_tmp_report(td / "good.htm",
+                          [(f"{m}.15 10:00:00", str(float(i + 1))) for i, m in enumerate(months)])
+        # F1: readable segment holding a 12-cell row that still carries direction 'out'
+        cells12 = ["2026.05.15 10:00:00", "1", "XAUUSD", "buy", "out", "0.10",
+                   "2000.0", "1", "0", "0", "100", "1000"]  # one cell short
+        (td / "degen.htm").write_text(
+            "<html><body><table><tr>" + "".join(f"<td>{c}</td>" for c in cells12) +
+            "</tr></table></body></html>", encoding="utf-8")
+        # F2: prefix-only timestamps ('month' 013) and trailing-junk timestamps
+        _write_tmp_report(td / "x.htm",
+                          [(f"2026.0{d}3.15 10:00:00", str(float(d))) for d in "1234"])
+        _write_tmp_report(td / "y.htm", [("2026.01THIS_IS_NOT_A_DATE", "1.0")])
+        # F3: malformed money grouping vs well-formed thousands grouping
+        _write_tmp_report(td / "n.htm", [("2026.01.15 10:00:00", "1,0")])
+        _write_tmp_report(td / "m.htm", [("2026.01.15 10:00:00", "1,234.5"),
+                                         ("2026.02.15 10:00:00", "-2,000")])
+        with open(td / "map.csv", "w", encoding="utf-8", newline="") as f:
+            w = csv.writer(f)
+            w.writerow(["magic", "report_path", "notes"])
+            w.writerow(["A", str(td / "good.htm"), "IS"])
+            w.writerow(["A", str(td / "degen.htm"), "OOS with malformed deals row"])
+            w.writerow(["X", str(td / "x.htm"), "month 013"])
+            w.writerow(["Y", str(td / "y.htm"), "trailing junk timestamp"])
+            w.writerow(["N", str(td / "n.htm"), "money 1,0"])
+            w.writerow(["M", str(td / "m.htm"), "well-formed thousands"])
+        monthly, skipped = load_backtest_monthly_by_magic(td / "map.csv")
+        assert set(monthly) == {"M"}, f"{sorted(monthly)} / {skipped!r}"
+        assert abs(monthly["M"]["2026-01"] - 1234.5) < 1e-9
+        assert abs(monthly["M"]["2026-02"] - (-2000.0)) < 1e-9
+        by_magic = {}
+        for s in skipped:
+            by_magic.setdefault(s.split(":", 1)[0], []).append(s)
+        assert any("deals-shaped row with 12 cells" in s for s in by_magic["A"]), by_magic
+        assert any("unparseable deal timestamp" in s for s in by_magic["X"]), by_magic
+        assert any("unparseable deal timestamp" in s for s in by_magic["Y"]), by_magic
+        assert any("corrupt money cell" in s for s in by_magic["N"]), by_magic
+        # direct helper checks
+        assert _parse_money_cell("1,0") is CORRUPT
+        assert _parse_money_cell("1 234.5") == 1234.5
+        assert _parse_money_cell("-12.5") == -12.5
 
 
 CAGE_TESTS = [
@@ -2135,6 +2229,7 @@ CAGE_TESTS = [
     ("27_strict_budget_and_type_conflict", _cage_27_strict_budget_and_type_conflict),
     ("28_backtest_corr_provenance", _cage_28_backtest_corr_provenance),
     ("29_backtest_map_fail_soft_hardening", _cage_29_backtest_map_fail_soft_hardening),
+    ("30_malformed_report_rows_poison", _cage_30_malformed_report_rows_poison),
 ]
 
 
