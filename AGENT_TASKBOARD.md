@@ -185,6 +185,25 @@ raw `_mt5_auto/RSIMR_LEVER2_SWEEP.csv` + sets `_mt5_auto/ab_sets/rsimr_lever2/`.
 **ห้าม:** อ่าน holdout ล้มซ้ำเป็น "lever tuning ไม่ช่วยเลย" — มันช่วยจริงบน MAIN/BWD/basket-duration, แค่ไม่แก้ 2026H1 โดยเฉพาะ (อาจเป็น regime สั้นที่แย่จริง ไม่ใช่ปัญหา config) · เลือก SL35 เป็น center แทน SL25 โดยไม่เช็ค sensitivity fan ก่อน (SL35 ยังไม่ผ่านการยืนยัน holdout/basket-duration).
 **ทำได้ต่อ:** sensitivity fan ±20% รอบ RSI25/75+SL25 (กัน spike-ridge) + MC ใหม่บน config นี้ · ถ้า user อยากรู้ว่า 2026H1 อ่อนเพราะอะไรจริงๆ (regime หรือ noise) ต้องขยาย holdout ไปดู full 2026 เมื่อมีข้อมูลมากกว่านี้ (ตาม pattern เดียวกับ XAGUSD ORDER-180/181 n=7).
 
+## ORDER-185 — RSI-MR (990103) sensitivity fan รอบ RSI25/75+SL25 (ปิด LADDER Step 5, ต่อ ORDER-183) — `REVIEWED(Claude 2026-07-23): plateau ที่แข็งแรงที่สุดในบรรดา EA ที่เทสวันนี้ทั้งหมด — ทุก cell ผ่าน both-window ไม่มี flip ลบเลยสักตัว — ยัง BUILD-ON (holdout ยังเป็นด่านเดียวที่ค้าง)`
+**fan ±20% single-axis รอบ center (Os25/Ob75/SL25/Dist9), รวม frozen axis (DistAtrMult) ตามกฎ, continuous MAIN+BWD:**
+| axis | value | MAIN PF/n | BWD PF/n | % ของ baseline (MAIN1.96/BWD1.56) |
+|---|---|---|---|---|
+| center | os25/ob75/sl25/d9 | 1.96/216 | 1.56/199 | 100%/100% |
+| RsiOversold | 20 | **2.04**/160 | **1.96**/156 | 104%/126% ✅ ดีขึ้นทั้งคู่ |
+| RsiOversold | 30 | 1.32/254 | 1.82/232 | 67%/117% ⚠️ MAIN หลุด 70% เล็กน้อยแต่ยังกำไร |
+| RsiOverbought | 60 | 1.99/272 | 1.28/286 | 102%/82% ✅ |
+| RsiOverbought | 90 | 1.65/106 | 1.27/114 | 84%/81% ✅ (n บางลงหน่อย) |
+| SlAtrMult | 20 | 1.73/203 | 1.39/179 | 88%/89% ✅ |
+| SlAtrMult | 30 | **2.16**/231 | 1.43/211 | 110%/92% ✅ |
+| DistAtrMult (frozen) | 7 | **2.17**/265 | **1.62**/289 | 111%/104% ✅ ดีขึ้นทั้งคู่ |
+| DistAtrMult (frozen) | 11 | 1.98/173 | 1.10/160 | 101%/71% ⚠️ ขอบ threshold พอดี |
+raw `_mt5_auto/RSIMR_SENS_FAN.csv` + sets `_mt5_auto/ab_sets/rsimr_fan/`.
+**อ่านผล:** **plateau ผ่านชัดเจนที่สุดในบรรดา sensitivity fan ที่ทำวันนี้ทั้งหมด** — ทุก 1 ใน 8 variant (รวม frozen axis DistAtrMult ที่ไม่เคยแตะมาก่อน) ยัง **PF>1 ทั้ง MAIN และ BWD ไม่มีตัวไหน flip เป็นลบเลย**; มีแค่ 2 จุด (RSI_OS_HIGH MAIN 67%, DIST_HIGH BWD 71%) ที่หลุดเกณฑ์ hold-70% เล็กน้อยแต่ยังกำไรจริง ไม่ใช่ ridge. **สังเกตเพิ่ม (ไม่ chase):** RSI_OS_LOW (20) และ DIST_LOW (7) ดีขึ้นกว่า center ทั้งคู่ (2.04/1.96 และ 2.17/1.62) — บ่งว่า true peak อาจอยู่ทาง OS ต่ำกว่า/spacing แคบกว่านี้อีกหน่อย แต่ **ไม่ไล่ตามตอนนี้** (anti-overfit: MAIN/BWD ถูกใช้ select ไปแล้ว, ไล่ต่อ = fit หน้าต่างเดิมซ้ำ) — center RSI25/75+SL25+Dist9 ที่ล็อกไว้ปลอดภัยอยู่กลาง plateau ไม่ใช่ขอบ.
+**verdict:** ยัง **BUILD-ON** — sensitivity fan (LADDER Step 5) ผ่านสมบูรณ์ที่สุดเท่าที่เคยเจอ, **lever ครบ 3/3 + fan ผ่าน = เหลือแค่ holdout เป็นด่านเดียวที่ยังไม่ผ่าน** (เหมือน pattern เดียวกับ XAGUSD ORDER-180/181, LondonORB — holdout thin/fail คือจุดอ่อนร่วมของหลาย EA วันนี้ ไม่ใช่แค่ตัวนี้). ครบทุกด่านของ VERDICT GATE 2c ยกเว้น holdout+MC เต็ม (ยังใช้ MC แบบ simplified bootstrap จาก baseline เดิม ไม่ใช่ config ใหม่นี้).
+**ห้าม:** ไล่ปรับ center ไปทาง OS20/Dist7 ที่ดูดีกว่า โดยไม่รู้ตัวว่ากำลัง re-fit MAIN/BWD ซ้ำ (ทั้งคู่เป็น window ที่ใช้ select ไปแล้ว) · ข้าม MC เต็มรูปแบบบน config ใหม่ก่อนจะเรียก CANDIDATE.
+**ทำได้ต่อ:** MC เต็มบน RSI25/75+SL25 (ตอนนี้ยังอิง MC เดิมของ baseline คนละ config) · ถ้า user อยากดัน CANDIDATE จริง ต้องรอ n เพิ่มใน holdout (รอเวลา ไม่ใช่รอ optimize) หรือยอมรับ demo-isolate ทั้งที่ holdout อ่อน (precedent StoMultiTap/XAGUSD).
+
 ## ORDER-181 — TrendRider XAGUSD H4: sensitivity fan (Sep/Ch) + corr vs cohort — ปิดของค้างสุดท้ายของ ORDER-180 — `REVIEWED(Claude 2026-07-23): fan ผ่าน 3/4 ชัดเจน (1 แกนไม่ flat แต่ไม่ flip เป็นลบ) + corr ต่ำทั้งคู่ — BUILD-ON แข็งแรงมาก เกือบ CANDIDATE เต็มตัว เหลือแค่ holdout n บาง`
 **sensitivity fan ±20% รอบ center (AdxMin30/Sep0.5/Ch2.5), MAIN+BWD:**
 | axis | value | MAIN PF/n | BWD PF/n | เทียบ baseline (MAIN2.10/BWD1.49) |
