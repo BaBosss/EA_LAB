@@ -59,8 +59,13 @@ OUT_JSON = ROOT / "_triage" / "ORDER154_RISK_ADMISSION_CURRENT_STATE.json"
 
 DEMO_BUDGET_PCT = 25.0  # fixed project number -- docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3
 MIN_SHARED_MONTHS = 4   # same threshold _mt5_auto/corr_monthly.py uses before trusting a pearson r
-DEFAULT_BROKER_MIN_LOT_FACTOR = 0.01  # placeholder floor (1% of locked-set lot) when the
-                                       # real broker minimum-lot / locked-lot ratio isn't wired in
+# ORDER-170 SEV-1 #4: this MUST default to None (fail closed), not to a placeholder.
+# The real value is (broker_min_lot / locked_set_lot) and is not derivable from any
+# file this script reads. A placeholder made the "cannot fit at broker minimum" branch
+# effectively unreachable, so the script could hand back a reduced lot that is smaller
+# than the broker will actually accept. With None, a run that needs a reduced lot
+# escalates instead of emitting an uncertifiable sizing instruction.
+DEFAULT_BROKER_MIN_LOT_FACTOR = None
 
 LIMITATION = (
     "DD95 values are drawdown quantiles, not returns; combining them through a "
@@ -103,32 +108,114 @@ def load_deployments(path=DEPLOYMENTS_CSV):
 
 def load_expectations(path=EXPECTATIONS_CSV):
     """magic -> DD95 float. A magic is simply ABSENT from the returned dict when its
-    DD95 is unknown (file missing entirely, row missing, literal "UNKNOWN" string, or
-    unparseable) -- callers must treat "absent" as UNKNOWN and never invent 0.0."""
+    DD95 is unknown (file missing entirely, row missing, literal "UNKNOWN" string,
+    unparseable, or NOT a finite positive number) -- callers must treat "absent" as
+    UNKNOWN and never invent 0.0.
+
+    ORDER-170 SEV-1 #3: a literal numeric 0 (or inf/nan) previously passed float()
+    and was counted as a KNOWN DD95, so a single such row could make the whole
+    account report portfolio_DD_est = 0.0 -- a silent understatement of risk, which
+    is the dangerous direction. A DD95 of exactly 0 is not a real risk measurement
+    for a trading strategy; it is a data error. Both are now rejected as UNKNOWN.
+    """
+    dd95, _basket_of = load_expectations_with_baskets(path)
+    return dd95
+
+
+def load_expectations_with_baskets(path=EXPECTATIONS_CSV):
+    """Same as load_expectations() but also returns magic -> basket_id (only for
+    magics that declare one). ORDER-170 SEV-1 #1: several magics can be legs of ONE
+    basket whose DD95 was measured at basket level; counting that figure once per
+    leg multiplies a single risk unit. Callers must collapse by basket via
+    collapse_basket_risk_units() before summing."""
     dd95 = {}
+    basket_of = {}
     p = Path(path)
     if not p.exists():
-        return dd95  # ORDER-153 hasn't produced the file yet -- every magic is UNKNOWN
+        return dd95, basket_of  # file not produced yet -- every magic is UNKNOWN
     with open(p, encoding="utf-8-sig", newline="") as f:
         for row in csv.DictReader(f):
             magic = (row.get("magic") or "").strip()
             if not magic:
                 continue
+            basket = (row.get("basket_id") or "").strip()
+            if basket and basket.upper() != "UNKNOWN":
+                basket_of[magic] = basket
             raw = (row.get("dd95_expected") or "").strip()
             if raw == "" or raw.upper() == "UNKNOWN":
                 continue
             try:
-                dd95[magic] = float(raw)
+                val = float(raw)
             except ValueError:
                 continue  # unparseable -- treat as UNKNOWN, never guess
-    return dd95
+            if not math.isfinite(val) or val <= 0.0:
+                continue  # 0 / inf / nan are data errors, NOT a measured risk of zero
+            dd95[magic] = val
+    return dd95, basket_of
+
+
+def collapse_basket_risk_units(dd95_by_magic, basket_of):
+    """Collapse magics that share a basket_id into ONE risk unit so a basket-level
+    DD95 is counted once, not once per leg (ORDER-170 SEV-1 #1).
+
+    Returns (units, dropped) where `units` is {key: dd95} keyed by basket id (for
+    basketed magics) or by magic (for standalone ones), and `dropped` lists the
+    sibling magics whose duplicate figure was folded away, for reporting.
+
+    If two legs of the SAME basket carry DIFFERENT numbers, that is a genuine data
+    contradiction we cannot silently pick a winner for -- take the LARGER (the
+    conservative direction for a risk budget) and record it in `dropped` so the
+    disagreement stays visible rather than being resolved invisibly.
+    """
+    units = {}
+    dropped = []
+    for magic, val in dd95_by_magic.items():
+        key = basket_of.get(magic, magic)
+        if key in units:
+            prev = units[key]
+            if abs(prev - val) > 1e-9:
+                dropped.append(
+                    f"{magic}: basket '{key}' has conflicting DD95 values "
+                    f"({prev} vs {val}) -- kept the larger"
+                )
+                units[key] = max(prev, val)
+            else:
+                dropped.append(f"{magic}: duplicate of basket '{key}' DD95 {val} -- counted once")
+        else:
+            units[key] = val
+    return units, dropped
+
+
+class _Corrupt:
+    """Sentinel: a numeric cell existed but could not be parsed. Distinct from an
+    absent cell -- see _num()."""
+    __slots__ = ()
+
+    def __repr__(self):  # pragma: no cover -- debug aid only
+        return "<CORRUPT>"
+
+
+CORRUPT = _Corrupt()
 
 
 def _num(x):
-    try:
-        return float(x)
-    except (TypeError, ValueError):
+    """Return float, 0.0 for a genuinely EMPTY/absent cell, or CORRUPT when a value
+    is present but unparseable.
+
+    ORDER-170 SEV-1 #2: this used to return 0.0 for unparseable text, which turned a
+    corrupted P&L cell into a real zero observation. That can drag a measured monthly
+    correlation BELOW 1.0 and so bypass the conservative missing-correlation default
+    -- understating portfolio risk. Corrupted input must poison the magic instead, so
+    its pairs fall back to corr = 1.0 (fully additive)."""
+    if x is None:
         return 0.0
+    s = str(x).strip()
+    if s == "":
+        return 0.0
+    try:
+        return float(s)
+    except ValueError:
+        return CORRUPT
 
 
 def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
@@ -139,8 +226,9 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
     across both the MT5 "deals" export schema and the MT4 "orders" export schema."""
     d = Path(live_deals_dir)
     monthly = defaultdict(lambda: defaultdict(float))
+    corrupted = set()
     if not d.exists():
-        return monthly
+        return monthly, corrupted
 
     latest_by_account = {}
     name_re = re.compile(r"EA_LAB_(?:deals|mt4_orders)_(\d+)_(\d{8})\.csv$")
@@ -175,9 +263,15 @@ def load_monthly_pnl_by_magic(live_deals_dir=LIVE_DEALS_DIR):
                 if not mm:
                     continue
                 ym = f"{mm.group(1)}-{mm.group(2)}"
-                pnl = _num(row.get("profit")) + _num(row.get("swap")) + _num(row.get("commission"))
-                monthly[magic][ym] += pnl
-    return monthly
+                parts = (_num(row.get("profit")), _num(row.get("swap")), _num(row.get("commission")))
+                if any(p is CORRUPT for p in parts):
+                    # ORDER-170 SEV-1 #2: do NOT let a corrupted cell become a 0.0
+                    # observation -- that would fabricate a data point and can pull a
+                    # measured correlation below the conservative 1.0 default.
+                    corrupted.add(magic)
+                    continue
+                monthly[magic][ym] += sum(parts)
+    return monthly, corrupted
 
 
 def pearson(xs, ys):
@@ -199,9 +293,13 @@ def compute_corr_matrix(magics, live_deals_dir=LIVE_DEALS_DIR):
     history actually on disk. A pair with fewer than MIN_SHARED_MONTHS overlapping
     months is simply left OUT of the returned dict -- get_corr() is what applies the
     1.0-default safety rule, this function only reports what it could measure."""
-    monthly = load_monthly_pnl_by_magic(live_deals_dir)
+    monthly, corrupted = load_monthly_pnl_by_magic(live_deals_dir)
     corr = {}
-    mags = [m for m in magics if m in monthly]
+    # ORDER-170 SEV-1 #2: a magic with ANY corrupted P&L cell is excluded from
+    # measurement entirely, so every pair involving it stays missing and get_corr()
+    # applies the conservative 1.0 default instead of a correlation computed from
+    # partly-fabricated data.
+    mags = [m for m in magics if m in monthly and m not in corrupted]
     for i in range(len(mags)):
         for j in range(i + 1, len(mags)):
             a, b = mags[i], mags[j]
@@ -244,6 +342,18 @@ def portfolio_dd_est(dd95_by_magic, corr_matrix, tol=1e-9):
     magics = list(dd95_by_magic.keys())
     if not magics:
         raise RiskAdmissionError("no magic with known DD95 -- nothing to compute")
+
+    # ORDER-170 SEV-1 #3 / SEV-2 #7, defence in depth: the parser already refuses
+    # 0/negative/inf/nan, but this function is public and callers can pass computed
+    # values. Validate here too -- a 0.0 slipping in silently understates the whole
+    # portfolio, and an inf sails through the bounds check (max == sum == inf).
+    for m, v in dd95_by_magic.items():
+        if not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v) or v <= 0.0:
+            raise RiskAdmissionError(
+                f"DD95 for {m!r} is {v!r} -- must be a finite number > 0. A zero or "
+                "non-finite drawdown quantile is a data error, not a measured risk; "
+                "exclude the magic as UNKNOWN instead of passing a placeholder."
+            )
 
     sum_sq = 0.0
     for i in magics:
@@ -321,7 +431,16 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
         raise RiskAdmissionError(
             "negative sum-of-squares in the existing portfolio -- corr matrix invalid"
         )
-    existing_dd = math.sqrt(max(sum_sq_others, 0.0))
+    # ORDER-170 SEV-1 #5: the existing-portfolio figure must pass the SAME bounds
+    # invariant as every other emitted number. Previously this path computed the
+    # square root inline and skipped the guard, so admit_candidate() could return a
+    # sizing decision built on an existing_dd that portfolio_dd_est() would refuse
+    # outright (e.g. corr = -1 collapsing two 10% EAs to 0%). Route it through the
+    # guarded function so there is exactly one validated way to produce this number.
+    if others:
+        existing_dd = portfolio_dd_est(others, corr_matrix)
+    else:
+        existing_dd = 0.0
 
     if existing_dd > budget_pct:
         return {
@@ -384,6 +503,27 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
             f"solved lot_factor <= 0 for {candidate_magic} -- corr matrix invalid"
         )
 
+    # ORDER-170 SEV-1 #4: broker_min_lot_factor is (broker_min_lot / locked_set_lot)
+    # and is NOT derivable from any file this script reads. It used to default to a
+    # placeholder 0.01, which meant the "cannot fit at broker minimum" branch almost
+    # never fired and the caller could be handed a reduced lot that is physically
+    # unplaceable. With no real value supplied we must fail CLOSED: escalate rather
+    # than emit a lot factor we cannot certify is placeable.
+    if broker_min_lot_factor is None:
+        return {
+            "magic": candidate_magic,
+            "status": "DEFER_ESCALATE",
+            "lot_factor": None,
+            "required_lot_factor": round(x, 6),
+            "broker_min_lot_factor": None,
+            "budget_pct": budget_pct,
+            "message": (
+                "a reduced lot is required to fit the budget, but broker_min_lot_factor "
+                "(broker_min_lot / locked_set_lot) was not supplied, so it cannot be verified "
+                "as placeable -- defer attach, escalate to user"
+            ),
+        }
+
     if x < broker_min_lot_factor:
         return {
             "magic": candidate_magic,
@@ -395,13 +535,37 @@ def admit_candidate(candidate_magic, candidate_dd95, existing_dd95_by_magic, cor
             "message": "cannot fit even at broker-minimum lot -- defer attach, escalate to user",
         }
 
+    # ORDER-170 SEV-2 #6: rounding the solved factor for display can round UP and push
+    # the portfolio back over budget. Round DOWN (floor at 4dp) so the emitted number
+    # is always <= the exact solution, then re-verify against the budget before
+    # emitting -- never emit a factor that has not itself been checked.
+    x_emit = math.floor(x * 10000) / 10000
+    if x_emit < broker_min_lot_factor:
+        return {
+            "magic": candidate_magic,
+            "status": "DEFER_ESCALATE",
+            "lot_factor": None,
+            "required_lot_factor": round(x, 6),
+            "broker_min_lot_factor": broker_min_lot_factor,
+            "budget_pct": budget_pct,
+            "message": "cannot fit even at broker-minimum lot after rounding -- defer attach, escalate to user",
+        }
+    dd_at_emit = math.sqrt(max(sum_sq_others + a * x_emit * x_emit + b * x_emit, 0.0))
+    if dd_at_emit > budget_pct + 1e-9:
+        raise RiskAdmissionError(
+            f"post-rounding budget check failed for {candidate_magic}: "
+            f"factor {x_emit} implies DD {dd_at_emit:.6f} > budget {budget_pct:.6f}. "
+            "Refusing to emit a sizing instruction."
+        )
+
     return {
         "magic": candidate_magic,
         "status": "ADMIT_REDUCED",
-        "lot_factor": round(x, 4),
+        "lot_factor": x_emit,
+        "portfolio_dd_est_after": dd_at_emit,
         "portfolio_dd_est_after_full_size": full_dd,
         "budget_pct": budget_pct,
-        "message": f"reduce to {x:.2%} of the locked-set lot to fit the budget",
+        "message": f"reduce to {x_emit:.2%} of the locked-set lot to fit the budget",
     }
 
 
@@ -418,7 +582,7 @@ def _account_order(accounts):
     return ordered
 
 
-def summarize_account(account, rows, dd95_map, corr_matrix):
+def summarize_account(account, rows, dd95_map, corr_matrix, basket_of=None):
     acct_type = rows[0]["type"] if rows else ""
     acct_name = rows[0]["account_name"] if rows else ""
     budget_pct, budget_note = budget_pct_for_account_type(acct_type)
@@ -456,14 +620,27 @@ def summarize_account(account, rows, dd95_map, corr_matrix):
         )
         return result
 
+    # ORDER-170 SEV-1 #1: collapse basket legs into one risk unit BEFORE summing, so a
+    # basket-level DD95 measured once is not counted once per leg.
+    units, folded = collapse_basket_risk_units(known, basket_of or {})
+    if folded:
+        result["basket_folded"] = folded
+
     try:
-        pdd = portfolio_dd_est(known, corr_matrix)
+        pdd = portfolio_dd_est(units, corr_matrix)
         result["portfolio_dd_est"] = pdd
+        basket_note = (
+            f" · {len(folded)} sibling leg(s) folded into their basket risk unit "
+            f"({len(known)} known magics -> {len(units)} risk units)"
+            if folded else ""
+        )
         result["status_note"] = (
             f"computed from {len(known)}/{len(rows)} magics ({len(unknown_rows)} UNKNOWN "
             "excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage"
+            + basket_note
             if unknown_rows else
             f"computed from {len(known)}/{len(rows)} magics (full coverage on this account)"
+            + basket_note
         )
         if budget_pct is not None:
             result["headroom_pct"] = round(budget_pct - pdd, 4)
@@ -474,7 +651,7 @@ def summarize_account(account, rows, dd95_map, corr_matrix):
     return result
 
 
-def build_report(deployments, dd95_map, corr_matrix):
+def build_report(deployments, dd95_map, corr_matrix, basket_of=None):
     active_rows = [r for r in deployments if r["status"] in ("ACTIVE", "PENDING_ATTACH")]
     by_account = defaultdict(list)
     for r in active_rows:
@@ -486,7 +663,7 @@ def build_report(deployments, dd95_map, corr_matrix):
 
     accounts_out = []
     for acct in _account_order(list(by_account.keys())):
-        accounts_out.append(summarize_account(acct, by_account[acct], dd95_map, corr_matrix))
+        accounts_out.append(summarize_account(acct, by_account[acct], dd95_map, corr_matrix, basket_of=basket_of))
 
     # admission-demo: for every PENDING_ATTACH candidate on a DEMO account, show what
     # admit_candidate() would say right now (illustrative -- attach itself is a human/
@@ -718,7 +895,13 @@ def _cage_4_lot_factor_bounds():
     seen_defer = False
     for i, (cand_dd95, existing, budget) in enumerate(scenarios):
         corr = {}
-        decision = admit_candidate(f"CAND{i}", cand_dd95, existing, corr, budget)
+        # ORDER-170 SEV-1 #4: broker_min_lot_factor now defaults to None (fail closed),
+        # so this test must supply a real one to reach the ADMIT_REDUCED path at all.
+        # Passing it explicitly is also the honest way to exercise resize behaviour --
+        # the previous implicit placeholder is exactly what made the "cannot fit at
+        # broker minimum" branch unreachable in production.
+        decision = admit_candidate(f"CAND{i}", cand_dd95, existing, corr, budget,
+                                   broker_min_lot_factor=0.01)
         lf = decision.get("lot_factor")
         if lf is not None:
             assert lf > 0, f"scenario {i}: lot_factor must be > 0, got {lf!r}"
@@ -741,27 +924,113 @@ def _cage_4_lot_factor_bounds():
     assert d["status"] == "REPORT_ONLY" and d["lot_factor"] is None
 
 
-def _cage_5_bonus_missing_dd95_excluded_not_zeroed():
-    """Bonus: a magic absent from the expectations map must be excluded from the
-    sum entirely, never substituted as 0.0 (0.0 would silently understate risk)."""
-    dd95_map = {"KNOWN1": 5.0}  # KNOWN2 deliberately absent -> UNKNOWN
-    known_only = {m: v for m, v in dd95_map.items() if m in dd95_map}
-    got = portfolio_dd_est(known_only, {})
-    assert abs(got - 5.0) < 1e-12, f"expected single-EA result 5.0, got {got!r}"
-    # if UNKNOWN2 had been silently zeroed and included, the set would be {'KNOWN1':5.0,'UNKNOWN2':0.0}
-    zeroed = {"KNOWN1": 5.0, "UNKNOWN2": 0.0}
-    got_if_zeroed = portfolio_dd_est(zeroed, {})
-    assert abs(got_if_zeroed - 5.0) < 1e-12  # (0.0 happens to be a no-op here numerically,
-    # which is exactly why "exclude" vs "zero" must be enforced by the CALLER filtering the
-    # dict before calling portfolio_dd_est -- prove load_expectations() does that filtering:
-    assert "UNKNOWN2" not in dd95_map, "UNKNOWN magic leaked into the known-DD95 map"
+def _write_tmp_expectations(tmpdir, rows, header=None):
+    """Write a real CSV so the parser is exercised end-to-end. The old version of
+    test 5 built a dict inline and never called load_expectations() at all, which is
+    why it could not have caught SEV-1 #3 (Codex audit, ORDER-154)."""
+    header = header or ["magic", "basket_id", "dd95_expected"]
+    p = Path(tmpdir) / "expectations_fixture.csv"
+    with open(p, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        for r in rows:
+            w.writerow(r)
+    return p
 
 
-def _cage_6_bonus_expectations_file_absent():
-    """Bonus: load_expectations() on a nonexistent path must return an empty dict
-    cleanly (no crash), and the literal string 'UNKNOWN' must be excluded."""
+def _cage_5_parser_rejects_every_unknown_form():
+    """SEV-1 #3 + audit gap: drive load_expectations() with a REAL csv covering every
+    absence/garbage form. Must reject all of them, and must accept only the good row.
+    Deliberately constructed so that inverting the parser default (mapping any of
+    these to 0.0) FAILS this test -- the old test could not detect that."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = _write_tmp_expectations(td, [
+            ["GOOD", "", "12.5"],
+            ["EMPTY", "", ""],
+            ["WORD", "", "UNKNOWN"],
+            ["LOWER", "", "unknown"],
+            ["SPACES", "", "   "],
+            ["TEXT", "", "10.77% (MC DD_95th; basket-level)"],
+            ["ZERO", "", "0"],
+            ["ZEROF", "", "0.0"],
+            ["NEG", "", "-4"],
+            ["INF", "", "inf"],
+            ["NAN", "", "nan"],
+        ])
+        got = load_expectations(p)
+    assert got == {"GOOD": 12.5}, f"parser accepted something it must reject: {got!r}"
+    for bad in ("ZERO", "ZEROF", "NEG", "INF", "NAN", "TEXT", "EMPTY", "WORD", "LOWER", "SPACES"):
+        assert bad not in got, f"{bad} leaked into the known-DD95 map as {got.get(bad)!r}"
+
+
+def _cage_6_expectations_file_absent():
+    """load_expectations() on a nonexistent path must return an empty dict cleanly."""
     got = load_expectations(ROOT / "portfolio" / "__does_not_exist__.csv")
     assert got == {}, f"missing expectations.csv should yield an empty map, got {got!r}"
+
+
+def _cage_7_basket_counted_once():
+    """SEV-1 #1: two legs sharing a basket_id must contribute their basket DD95 ONCE."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        p = _write_tmp_expectations(td, [
+            ["LEG1", "BASKET_X", "10"],
+            ["LEG2", "BASKET_X", "10"],
+            ["SOLO", "", "10"],
+        ])
+        dd95, basket_of = load_expectations_with_baskets(p)
+    units, folded = collapse_basket_risk_units(dd95, basket_of)
+    assert len(units) == 2, f"basket legs not collapsed: {units!r}"
+    got = portfolio_dd_est(units, {})
+    assert abs(got - 20.0) < 1e-9, f"expected 20.0 (basket once + solo), got {got!r}"
+    naive = portfolio_dd_est(dd95, {})
+    assert abs(naive - 30.0) < 1e-9, "fixture no longer demonstrates the double-count"
+    assert folded, "the folded-away sibling must be reported, not silently dropped"
+
+
+def _cage_8_corrupt_pnl_does_not_become_zero():
+    """SEV-1 #2: an unparseable P&L cell must poison the magic (-> corr falls back to
+    the conservative 1.0), NOT become a 0.0 observation that lowers measured corr."""
+    assert _num("") == 0.0 and _num(None) == 0.0, "genuinely empty cell should be 0.0"
+    assert _num("12.5") == 12.5
+    assert _num("not-a-number") is CORRUPT, "unparseable cell must be CORRUPT, never 0.0"
+    assert _num("1,234.5x") is CORRUPT
+
+
+def _cage_9_admit_candidate_bounds_guard_on_existing():
+    """SEV-1 #5: admit_candidate must not build a decision on an existing-portfolio
+    figure that portfolio_dd_est() would refuse."""
+    existing = {"A": 10.0, "B": 10.0}
+    corr = {frozenset(("A", "B")): -1.0}   # collapses to 0.0 -> violates lower bound
+    try:
+        portfolio_dd_est(existing, corr)
+        raise AssertionError("fixture is wrong: guarded path should have refused")
+    except RiskAdmissionError:
+        pass
+    try:
+        res = admit_candidate("C", 5.0, existing, corr, 25.0)
+    except RiskAdmissionError:
+        return  # correct: refused rather than sizing off an invalid figure
+    raise AssertionError(f"admit_candidate accepted a bounds-violating portfolio: {res!r}")
+
+
+def _cage_10_broker_min_fails_closed():
+    """SEV-1 #4: with no broker_min_lot_factor supplied, a run that needs a reduced
+    lot must ESCALATE, never emit an uncertifiable factor."""
+    res = admit_candidate("C", 20.0, {"A": 20.0}, {}, 21.0)   # needs a big reduction
+    assert res["status"] == "DEFER_ESCALATE", f"expected escalation, got {res!r}"
+    assert res["lot_factor"] is None, "escalation must not carry a usable lot factor"
+    ok = admit_candidate("C", 20.0, {"A": 20.0}, {}, 21.0, broker_min_lot_factor=0.01)
+    assert ok["status"] == "ADMIT_REDUCED" and 0 < ok["lot_factor"] <= 1.0
+
+
+def _cage_11_rounded_factor_still_within_budget():
+    """SEV-2 #6: the EMITTED (rounded) factor must itself satisfy the budget."""
+    res = admit_candidate("C", 30.0, {}, {}, 10.001, broker_min_lot_factor=0.001)
+    assert res["status"] == "ADMIT_REDUCED", f"unexpected: {res!r}"
+    implied = 30.0 * res["lot_factor"]
+    assert implied <= 10.001 + 1e-9, f"emitted factor implies DD {implied} over budget 10.001"
 
 
 CAGE_TESTS = [
@@ -769,8 +1038,13 @@ CAGE_TESTS = [
     ("2_bounds_assert", _cage_2_bounds_assert),
     ("3_missing_corr_defaults_to_one", _cage_3_missing_corr_defaults_to_one),
     ("4_lot_factor_bounds", _cage_4_lot_factor_bounds),
-    ("5_bonus_missing_dd95_excluded_not_zeroed", _cage_5_bonus_missing_dd95_excluded_not_zeroed),
-    ("6_bonus_expectations_file_absent", _cage_6_bonus_expectations_file_absent),
+    ("5_parser_rejects_every_unknown_form", _cage_5_parser_rejects_every_unknown_form),
+    ("6_expectations_file_absent", _cage_6_expectations_file_absent),
+    ("7_basket_counted_once", _cage_7_basket_counted_once),
+    ("8_corrupt_pnl_does_not_become_zero", _cage_8_corrupt_pnl_does_not_become_zero),
+    ("9_admit_bounds_guard_on_existing", _cage_9_admit_candidate_bounds_guard_on_existing),
+    ("10_broker_min_fails_closed", _cage_10_broker_min_fails_closed),
+    ("11_rounded_factor_within_budget", _cage_11_rounded_factor_still_within_budget),
 ]
 
 
@@ -794,6 +1068,23 @@ def run_selftest():
 # main
 # --------------------------------------------------------------------------- #
 
+def _assert_safe_output_path(label, dest, args):
+    """Refuse to write over the script's own inputs or any .set file (ORDER-170 SEV-2 #8).
+    This script is advisory-only; a run must never be able to destroy the inventory it
+    reads, the expectations it consumes, or a live trading configuration."""
+    p = Path(dest).resolve()
+    if p.suffix.lower() == ".set":
+        raise SystemExit(f"REFUSED: {label}={dest} targets a .set file -- this script never writes trading configs")
+    protected = {
+        Path(args.deployments).resolve(): "the deployments inventory it reads",
+        Path(args.expectations).resolve(): "the expectations file it reads",
+        Path(DEPLOYMENTS_CSV).resolve(): "portfolio/DEPLOYMENTS.csv",
+        Path(EXPECTATIONS_CSV).resolve(): "portfolio/expectations.csv",
+    }
+    if p in protected:
+        raise SystemExit(f"REFUSED: {label}={dest} would overwrite {protected[p]}")
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--selftest", action="store_true", help="run the CAGE tests and exit")
@@ -808,12 +1099,19 @@ def main(argv=None):
         ok = run_selftest()
         sys.exit(0 if ok else 1)
 
+    # ORDER-170 SEV-2 #8: --out-md/--out-json previously accepted ANY path, so
+    # `--out-md portfolio/DEPLOYMENTS.csv` would read the inventory and then overwrite
+    # it with markdown -- directly contradicting this script's "never writes to
+    # DEPLOYMENTS/expectations/.set" guarantee. Refuse protected destinations.
+    for label, dest in (("--out-md", args.out_md), ("--out-json", args.out_json)):
+        _assert_safe_output_path(label, dest, args)
+
     deployments = load_deployments(args.deployments)
-    dd95_map = load_expectations(args.expectations)
+    dd95_map, basket_of = load_expectations_with_baskets(args.expectations)
     magics = sorted({r["magic"] for r in deployments})
     corr_matrix = compute_corr_matrix(magics, args.live_deals)
 
-    report = build_report(deployments, dd95_map, corr_matrix)
+    report = build_report(deployments, dd95_map, corr_matrix, basket_of=basket_of)
     md = render_markdown(report)
 
     Path(args.out_md).parent.mkdir(parents=True, exist_ok=True)
