@@ -82,8 +82,8 @@ enum ENUM_RECOVERY_MODE
 {
    REC_NONE       = 80,  // 80 None
    REC_LIGHT      = 81,  // 81 Light (capped by cage)
-   REC_ADAPTIVE   = 82,  // 82 Adaptive (stub)
-   REC_AGGRESSIVE = 83   // 83 Aggressive (stub, gated)
+   REC_ADAPTIVE   = 82,  // 82 Adaptive (DD-scaled lot, capped by RC_RecMultMax)
+   REC_AGGRESSIVE = 83   // 83 Aggressive (geometric MathPow escalation, capped by RC_RecMultMax)
 };
 
 enum ENUM_STACK_MODE
