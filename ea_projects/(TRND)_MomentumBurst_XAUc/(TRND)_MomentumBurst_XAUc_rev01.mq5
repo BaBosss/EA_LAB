@@ -48,13 +48,23 @@ input string _g05_            = "── [05] RISK CAPS ────────�
 input double _05_DailyLossPct = 3.0;
 input double _05_EmergencyDdPct = 25.0;
 
+input string _g07_            = "── [07] REGIME OVERLAY (default OFF, shared design) ";
+input bool   _07_UseRegimeGate = false;  // default OFF = byte-identical baseline
+input int    _07_AdxD1Period   = 14;
+input double _07_AdxD1Min      = 20.0;   // require D1 ADX >= this (real trend strength, not chop)
+input int    _07_SlopePersistDays = 10;  // require EMA(D1,50) slope sign unchanged for this many days
+                                          // (distinguishes a persistent trend from a whipsaw regime --
+                                          // this session's own finding: 2020-22 BWD failures were mostly
+                                          // V-reversals, i.e. ADX can spike in EITHER a real trend or a
+                                          // sharp whipsaw reversal -- slope PERSISTENCE is what a whipsaw lacks)
+
 input string _g06_            = "── [06] SYSTEM ────────────────────────────";
 input long   _06_Magic        = 992013;
 input ulong  _06_Deviation    = 20;
 input bool   _06_AllowLive    = false;
 
 static bool     g_suppress_log=false;
-static int      g_atr=INVALID_HANDLE;
+static int      g_atr=INVALID_HANDLE, g_adxD1=INVALID_HANDLE, g_emaD1=INVALID_HANDLE;
 static datetime g_last_bar=0;
 static CTrade   g_trade;
 static double   g_day_start_balance=0.0; static datetime g_day_stamp=0; static bool g_halted_today=false;
@@ -72,12 +82,32 @@ int OnInit()
    g_suppress_log=_00_OptimizeMode||(bool)MQLInfoInteger(MQL_OPTIMIZATION);
    g_atr=iATR(_Symbol,PERIOD_CURRENT,_01_AtrPeriod);
    if(g_atr==INVALID_HANDLE){ Print("MomentumBurst: ATR handle fail"); return INIT_FAILED; }
+   if(_07_UseRegimeGate){
+      g_adxD1=iADX(_Symbol,PERIOD_D1,_07_AdxD1Period);
+      g_emaD1=iMA(_Symbol,PERIOD_D1,50,0,MODE_EMA,PRICE_CLOSE);
+      if(g_adxD1==INVALID_HANDLE||g_emaD1==INVALID_HANDLE){ Print("MomentumBurst: regime handle fail"); return INIT_FAILED; }
+   }
    g_trade.SetExpertMagicNumber(_06_Magic); g_trade.SetDeviationInPoints(_06_Deviation); g_trade.SetTypeFilling(ORDER_FILLING_FOK);
    g_last_bar=0; g_day_start_balance=AccountInfoDouble(ACCOUNT_BALANCE); g_day_stamp=0; g_halted_today=false;
    if(!g_suppress_log) PrintFormat("MomentumBurst init magic=%d AllowLive=%s",_06_Magic,_06_AllowLive?"Y":"N");
    return INIT_SUCCEEDED;
 }
-void OnDeinit(const int r){ if(g_atr!=INVALID_HANDLE)IndicatorRelease(g_atr); }
+void OnDeinit(const int r){ if(g_atr!=INVALID_HANDLE)IndicatorRelease(g_atr); if(g_adxD1!=INVALID_HANDLE)IndicatorRelease(g_adxD1); if(g_emaD1!=INVALID_HANDLE)IndicatorRelease(g_emaD1); }
+
+// true = persistent-trend regime (real trend, not a whipsaw): D1 ADX strong AND EMA(D1,50) slope
+// sign has held for _07_SlopePersistDays consecutive days. A whipsaw can spike ADX too (a sharp
+// V-reversal is itself a strong directional move) but it does NOT hold slope sign for long.
+bool RegimeOk()
+{
+   if(!_07_UseRegimeGate) return true;
+   double a[1]; if(CopyBuffer(g_adxD1,0,1,1,a)<1) return false;
+   if(a[0] < _07_AdxD1Min) return false;
+   double e[]; if(CopyBuffer(g_emaD1,0,1,_07_SlopePersistDays+1,e)<_07_SlopePersistDays+1) return false;
+   ArraySetAsSeries(e,true);
+   bool allUp=true, allDown=true;
+   for(int i=0;i<_07_SlopePersistDays;i++){ if(e[i]<=e[i+1]) allUp=false; if(e[i]>=e[i+1]) allDown=false; }
+   return allUp||allDown;
+}
 double OnTester(){ double t=TesterStatistics(STAT_TRADES); if(t<30) return -1; double dd=TesterStatistics(STAT_EQUITY_DDREL_PERCENT),pf=TesterStatistics(STAT_PROFIT_FACTOR); if(dd<=0) return -1; return pf/(1.0+dd/100.0); }
 void CheckNewDay(){ MqlDateTime dt; TimeToStruct(TimeCurrent(),dt); datetime d=(datetime)(dt.year*10000+dt.mon*100+dt.day); if(d!=g_day_stamp){ g_day_stamp=d; g_day_start_balance=AccountInfoDouble(ACCOUNT_BALANCE); g_halted_today=false; } }
 bool RiskOk(){ if(g_halted_today) return false; double eq=AccountInfoDouble(ACCOUNT_EQUITY),bal=AccountInfoDouble(ACCOUNT_BALANCE);
@@ -116,6 +146,7 @@ void OnTick()
 
    if(!RiskOk()) return;
    if(!InSession(GmtHourOf(TimeCurrent()))) return;
+   if(!RegimeOk()) return;
 
    const double atr=Buf1(g_atr,1); if(atr<=0.0) return;
    const double c1=iClose(_Symbol,PERIOD_CURRENT,1), o1=iOpen(_Symbol,PERIOD_CURRENT,1);
