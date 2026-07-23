@@ -1,0 +1,15 @@
+_00_OptimizeMode=false
+_01_ZoneLo=12748.93
+_01_ZoneHi=22711.25
+_01_SpacingAtrMult=0.3
+_01_GeoSpacing=false
+_01_MaxLevels=40
+_02_BaseLot=0.01
+_02_InvAtrLot=false
+_02_BaseAtr=0.0
+_05_KillDdPct=20.0
+_05_MaxTotalLot=0.40
+_05_ResetHalt=false
+_06_Magic=992007
+_06_Deviation=30
+_06_AllowLive=false

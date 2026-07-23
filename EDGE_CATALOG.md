@@ -112,6 +112,7 @@ Set: `_mt5_auto/sweeps/_sets/KAUERMAN_buyonly.set`, Magic=990127, Deploy: XAUUSD
 | SessionBreakout | XAU | 1,200-pass ceiling 1.20, forward 0.91 — breakout needs a real range to break |
 | Grid/martingale (Golden Elephant, BuRengNong, Setka…) | XAU mostly | "martingale WAS the edge" — strip the doubling, signal is breakeven; DD 60–125% |
 | Tight-TP (Game Changer/GMGS) | XAU | Model-2 open-price artifact; TP×10 collapses PF |
+| Static (one-time, never re-based) MC-derived price zone as grid bounds | BTC/ETH CFD, AdaptGridMC (ORDER-142, 2026-07-23) | MAIN-window PF 500-1200+ looked like a huge edge — was a **realized-path artifact**: zone computed once from pre-2023 data, BTC's 2023-25 rally exited it permanently after one pass, proven by a 2026H1 holdout on the same zone producing **zero trades**. Not a fill artifact (M4 confirmed M1) — a *dormancy* artifact: the strategy silently stops trading once price leaves its one-time-computed range, and a great-looking backtest hides that it already "died" partway through the window. Lesson: any zone/band/level computed once from historical data (P10/P90, support/resistance, volatility bands) needs a walk-forward re-basing cadence before it can be trusted on trending instruments — check trade-count-over-time within the window, not just aggregate PF, for exactly this signature (front-loaded trades, then nothing) |
 
 ---
 
