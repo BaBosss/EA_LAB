@@ -15,7 +15,8 @@ $steps = @(
   @{ name="classify";     script="$Root\mris_classify.ps1" },
   @{ name="crisismodels"; script="$Root\mris_crisis_models.ps1" },
   @{ name="exposure";     script="$Root\mris_exposure.ps1" },
-  @{ name="brief";        script="$Root\mris_brief.ps1" }
+  @{ name="brief";        script="$Root\mris_brief.ps1" },
+  @{ name="alert";        script="$Root\mris_alert.ps1" }
 )
 $fail = 0
 foreach ($s in $steps) {

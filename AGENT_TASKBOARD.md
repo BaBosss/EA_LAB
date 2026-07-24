@@ -39,6 +39,7 @@
 - `scripts/mris/mris_crisis_models.ps1` + `crisis_models.json` (Opus-seat, risk logic ไม่ delegate) → `crisis_models_state.json`: 3 โมเดล YIELD_SHOCK/CREDIT_STRESS/INFLATION_OIL คะแนน 0-100 = weighted linear-ramp ของ component ที่อธิบายได้ทุกตัว. **advisory-only ไม่แตะ regime_state.json/MacroGate.**
 - brief + `mris_run.ps1` wiring (Sonnet): chain = webfeed→macrofeed→classify→crisismodels→exposure→brief, 6 steps clean; core regime ยัง NEUTRAL ไม่เปลี่ยน (พิสูจน์ non-invasive).
 **Phase-B concept-check** (`mris_crisis_backtest.ps1`, 4 windows): **4/4 PASS** — CREDIT_STRESS ติด covid_2020, INFLATION_OIL ติด 2022, YIELD_SHOCK ติด yield-spike 2023, ทุกโมเดลสงบใน calm_2019.
+**delta-alert** (`mris_alert.ps1`, step 7 ของ chain): เงียบเมื่อไม่เปลี่ยน, เตือนเฉพาะ transition จริง (state เปลี่ยน / crisis model ข้ามขึ้น band / flag ใหม่) → append `portfolio/mris/ALERTS.md`. ตอบโจทย์ "ตั้งแล้วลืม" (user ดูนานๆที). tested seed/silent/fire 3 path.
 **bars (pre-registered):** each model peak ≥60 ใน matching episode = fire · calm window ทุกโมเดล <60. → met 4/4.
 **flat-lot probe:** N-A (ไม่ใช่ EA — เป็น macro sensor layer).
 **KNOWN LIMIT:** FRED HY history cap ~3yr keyless (2023+) → covid-2020 credit ติดผ่าน MOVE+VIX (HY component drop+renorm = graceful degrade) ไม่ใช่ HY ลึกจริง. live ใช้ HY จริงได้ (ครอบคลุมปัจจุบัน).
