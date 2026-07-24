@@ -382,3 +382,24 @@ Boss_14 XAU leg's live `.set` (`Boss14_GridLog_XAU_DEMO.set`) untouched, still `
 `_mt5_auto/reports/ORDER197_{BASELINE,FIB}_{MAIN,BWD}.htm`. **Do not re-test this exact swap on Boss_14 XAU
 again without new evidence** — `_56_FibMaxStep` sweep or a different chassis/leg would be new evidence,
 re-running the same two configs would not.
+
+## LEVER: LOG-power escalation beats flat-lot on a grid in the STRESS regime (Boss_14 GBPJPY, ORDER-136 Wave 2, 2026-07-24) 🟩 CONFIRMED (regime-conditional)
+
+First positive result of the escalation-MM overlay campaign (ORDER-136) after Wave 1 lost. On Boss_14 GridLog
+GBPJPY H4 (live leg-8, magic 990208, the ORDER-166-revalidated `dist=2.0` config), **LOG13 escalation
+(`LotProg=55`, LogPower factor 1.3) beats flat lot (`LotProg=50`) on the BWD stress window under real-tick
+Model-4: PF 1.32 vs 1.07, ~4× net profit, AND lower eqDD (8.08% vs 10.71%) despite the escalating lot size.**
+On MAIN (calmer 2023-2025 regime) the two are effectively tied — the grid rarely stacks past level 1 there, so
+the lever never engages (Model-1 identical 1.57/40t; proxy 2.7yr Model-4 near-identical 3.51 vs 3.57). Reading:
+a bounded log-power lot ramp adds real edge specifically where the grid actually deepens (volatile/trending
+stress years pull price through more grid levels), and costs nothing where it doesn't — the opposite failure
+mode from Wave 1, where a DCA overlay on a BWD≈1.0 host amplified regime-dependence and lost. **The
+differentiator is the host's BWD strength: escalation overlay is worth it on a host whose BWD is comfortably
+>1.0 (GBPJPY leg-8 = 1.32 flat-ish base), harmful on a host teetering at ~1.0.** Practical: keep the live
+GBPJPY leg-8 on `LotProg=55`, do not revert to flat. Contrast with ORDER-197 (Fibonacci step-function lot on
+Boss_14 XAU) which LOST — bounded ≠ automatically good; the progression *shape* and the host regime both matter.
+Raw: `_mt5_auto/reports/O136_W2RETEST_*`. ⚠️ paid-for tooling gotcha from this order: MT5's error
+`"no disk space in ticks generating function"` is a generic allocation-failure message — it fired here from a
+memory/pagefile commit ceiling (RAM ~4GB free of 32, pagefile+TEMP on the tight C: drive) while both disks had
+ample free space; do not chase it as a literal disk problem. Model-4 pre-generates the whole window's tick
+array upfront, so a big window can hit the commit ceiling and abort ~10s in with zero trades.
