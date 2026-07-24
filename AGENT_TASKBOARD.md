@@ -89,6 +89,23 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 **ห้าม:** ทำ (b) ก่อน registry ผ่าน check script (จะ guard จากข้อมูลเก่า) · เพิ่ม input ใหม่เพื่อเปิด/ปิด summary (log อย่างเดียวพอ)
 **ทำได้:** (a) Claude/Sonnet · (b) Sonnet/Codex
 
+## ORDER-194 — [core/safety] hard-kill ยิงซ้ำทุก tick หลัง halt แล้ว (ไม่มี `g_rc_halted` guard ใน `RiskControl_CheckDD`) — `OPEN` ⚠️ รอ user เคาะ (แตะ risk logic)
+**source:** เจอโดยบังเอิญตอนไล่ตอบคำถาม user เรื่อง KillDD 25% (2026-07-24) — grep หา `HARD KILL` ใน tester log แล้วเจอตัวเลขที่เป็นไปไม่ได้
+**หลักฐานดิบ (log จริง ไม่ใช่การอนุมาน):**
+```
+06:57:49  2024.05.09 16:10:40  [RISK] HARD KILL: DD 25.09% >= 25.00% (profile 2) -> closing all
+06:57:49  2024.05.09 16:10:40  [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
+06:57:49  2024.05.09 16:10:59  [RISK] HARD KILL: DD 25.09% >= 25.00% (profile 2) -> closing all   ← ยิงซ้ำหลัง halt แล้ว
+```
+จำนวน match ต่อไฟล์ log: **07-19 = 14.4M · 07-23 = 11.8M · 07-24 = 3.5M** · ไฟล์ log วันเดียว **777 MB**
+**กลไก (ยืนยันที่ `RiskControl.mqh:299-327`):** `RiskControl_CheckDD()` เช็ค `g_rc_kill_pending` แต่ **ไม่เคยเช็ค `g_rc_halted`**. พอ kill เสร็จ → `kill_pending=false`, `halted=true` → tick ถัดไปเข้ามาใหม่ → `dd` ยังสูงกว่าเพดาน (peak equity ไม่ถูก reset, equity ยังต่ำ) → **print + `kill_pending=true` + `KillReconcile()` อีกรอบ ทุก tick จนจบ run**. ใน `LabCore.OnTick` ลำดับคือ `RiskControl_CheckDD()` ก่อน `RiskControl_IsHalted()` — CheckDD จึงยิงก่อนที่ halt check จะได้ทำงาน
+**ผลกระทบ:** (1) **live: พยายาม close-all ซ้ำทุก tick ทั้งที่พอร์ตแบนแล้ว** = ยิง request ใส่โบรกเกอร์รัวๆ โดยไม่จำเป็น (2) tester log บวมระดับ GB → เปลืองดิสก์ + ทำให้ทุกงานที่ต้อง scan log ช้ามาก (3) กลบ log อื่นจนหาอะไรไม่เจอ
+**ที่ยังไม่รู้ (ต้องตรวจก่อนแก้):** `KillReconcile` ที่ถูกเรียกซ้ำ ส่งคำสั่งปิดจริงทุกครั้ง หรือเจอว่า flat แล้ว return เร็ว — ต่างกันมากระหว่าง "log spam เฉยๆ" กับ "ยิง order ใส่โบรกจริง"
+**fix ที่เสนอ (1 บรรทัด แต่แตะ risk logic → ห้ามทำเองก่อน user เคาะ):** ใส่ `if(g_rc_halted) return true;` ต่อจาก block `g_rc_kill_pending` — halted แล้วคือจบ ไม่ต้องประเมิน DD ซ้ำ
+**bars:** N-A. **flat-lot probe:** N-A.
+**ห้าม:** แก้แล้วไม่รัน `tpl_regression.ps1` (ต้อง 8/8 เท่าเดิม — ถ้าเลขขยับแปลว่า kill ซ้ำเคยมีผลต่อ trade จริง ไม่ใช่แค่ log) · ถือว่าเป็นแค่เรื่อง log แล้วลด priority ก่อนตรวจข้อ "ที่ยังไม่รู้" ข้างบน
+**ทำได้:** Claude เขียน + audit (risk logic)
+
 ## ORDER-193 — [tooling/integrity] ตรวจจับ backtest ที่ถูก hard-kill ตัดกลางคัน (truncated-run detector) — `OPEN` ⚠️ ผลกระทบต่อความน่าเชื่อถือของ funnel
 **source:** user 2026-07-24 ถามว่า "KillDD 25% เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอาก็ได้". ไล่โค้ดแล้วเจอว่าคำถามนี้ชี้ไปที่ปัญหาที่ **ใหญ่กว่าตัวเลข 25** และไม่มีใครเห็นมาก่อน:
 **ข้อเท็จจริงที่ตรวจแล้ว:** `RiskControl_CheckDD()` **ไม่ถูก tester-gate** (มีแค่ `RiskControl_PersistRefresh` ที่ gate ไว้ที่ `RiskControl.mqh:287`) → **hard-kill ยิงใน backtest ด้วย** และเมื่อยิงแล้วจะ `close all + halt ตลอดที่เหลือของ run` (`g_rc_kill_pending` → `RiskControl_IsHalted` early-return ใน OnTick)
@@ -776,9 +793,9 @@ journal lane2: overlap pair-close ยิงจริง 168 ครั้ง (SEL
 
 ---
 
-## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `ATTACHED 2026-07-24 (user) on all 3 real accounts (141049900 MT4 / 159503454 MT5 / 159475669 MT5) -- ⚠️ news file still not being read on at least 141049900, see note below` · Phase 2.5 MRIS `DONE(Claude 2026-07-18)` · Phase 3 MacroGate `DONE — VALIDATED deploy-candidate (Claude 2026-07-18) → ATTACHED 2026-07-18 (demo carry-leg 990120, manual-weekly mode)`
+## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `ATTACHED 2026-07-24 (user) on all 3 real accounts (141049900 MT4 / 159503454 MT5 / 159475669 MT5) — filename-mismatch finding below FIXED(user, 2026-07-24)` · Phase 2.5 MRIS `DONE(Claude 2026-07-18)` · Phase 3 MacroGate `DONE — VALIDATED deploy-candidate (Claude 2026-07-18) → ATTACHED 2026-07-18 (demo carry-leg 990120, manual-weekly mode)`
 
-**⚠️ 2026-07-24 finding — NewsGuard "file missing/stale" root cause = FILENAME mismatch, not missing file:** user's VPS screenshot (`Common\Files` directory listing) shows the file present as **`news_week.csv`** but every NewsGuard instance's `NewsFile` input expects **`EA_LAB_news_week.csv`** — the copy step ran but was never renamed. Fix: rename (or re-copy with the correct name) `news_week.csv` → `EA_LAB_news_week.csv` in `Common\Files` on the VPS. This affects **all** NewsGuard-guarded terminals sharing that folder, not just the MT4 one that was being debugged when it was spotted — **159503454 and 159475669 need re-checking too, don't assume MT5 side is done just because the attach step is done.** User has deprioritized fixing this on the MT4 leg (141049900) specifically (reducing MT4 EA footprint anyway) but it likely still blocks the MT5 accounts' protection. Also unresolved: MT4 `ServerToBkkOffsetHours` timezone input (should be 7, not default 4, per the quote-derived mismatch alert) -- same low-priority-on-MT4 call applies.
+**✅ 2026-07-24 finding RESOLVED(user) — NewsGuard "file missing/stale" root cause was a FILENAME mismatch:** `Common\Files` on the VPS had the file as `news_week.csv` but every NewsGuard instance's `NewsFile` input expects `EA_LAB_news_week.csv` (copy step ran but was never renamed). **User fixed the rename on the VPS 2026-07-24** — not independently re-verified by Claude via a fresh alert/log snapshot, logged here on user attestation. If the "missing/stale" alert reappears on 159503454/159475669/141049900, re-open this finding first before assuming a new cause. Still unresolved/deprioritized separately: MT4 `ServerToBkkOffsetHours` timezone input (should be 7, not default 4) on 141049900 — user call, low-priority (MT4 footprint being reduced anyway).
 
 **✅ SESSION 2026-07-18 CLOSE (commits `7ee6bbd8`→`e219db8e`, branch `order073-macrogate-safe`):**
 - **Phase 2.5 MRIS = SHIPPED, live daily.** web feeder (all 8 barometers from Yahoo — VIX/DXY/COPPER/US10Y-proxy + broker pairs, no stooq), thresholds LOCKED as user-sanctioned defaults + in-file `_tuning_guide` (`barometers.json` v1.0), whisper embedded top of `LIVE_DASHBOARD.html` + wired into `daily_monitor.ps1` (mris_run before dashboard). Codex-hardened (5 fixes: cache-poison, atomic write, effective-status, culture-parse, asof fail-open). Reads NEUTRAL RI 0.269 HIGH.
