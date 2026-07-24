@@ -611,7 +611,10 @@ FINAL RULE ไหน · check_state ผ่าน. **ทำได้:** Claude (S
 สถานะ): order ทดสอบทุกใบต้องมีบรรทัด `bars:` (pass=X/dead=Y/กลาง=Z) และ `flat-lot: done/N-A/pending`.
 **acceptance:** header มี template + ORDER ใหม่ตั้งแต่ 124 ขึ้นไปใช้ครบ. **ทำได้:** Claude · 👉 แนะ: ทำพ่วงกับ 120-122
 
-## ORDER-136 — CAMPAIGN: escalation-MM overlay บน validated PF>1 cohort (user directive 2026-07-19 "เทสใหม่หมดบนระบบใหม่") — `Wave1 CLOSED 2026-07-19 (แพ้) · Wave2 REVIEWED(Claude 2026-07-24, แพ้) · 👉 แนะ: ปิด campaign — อ่านเหตุผลก่อน Wave 3` (multi-session · pace 1-2 cell/รอบ) ⚠️ renumbered จาก 134 (กัน collision session คู่ขนาน)
+## ORDER-136 — CAMPAIGN: escalation-MM overlay บน validated PF>1 cohort (user directive 2026-07-19 "เทสใหม่หมดบนระบบใหม่") — `Wave1 CLOSED 2026-07-19 (แพ้) · Wave2 RETRACTED(Claude 2026-07-24) — ใช้ .set ผิด, re-test กำลังรัน` (multi-session · pace 1-2 cell/รอบ) ⚠️ renumbered จาก 134 (กัน collision session คู่ขนาน)
+
+**⚠️ Wave 2 verdict RETRACTED (Claude 2026-07-24, user challenge — correctly caught a last-optimize-before-verdict gap):** user pushed back on closing anything with BWD<1 without one more optimize round on an untried lever. Checking the side-finding I'd flagged (three magics/two spacings all claiming to be "the GBPJPY leg-8 config") turned up a real bug in the test itself, not just an untried lever: **Wave 2's BASE .set used `_14_DistAtrMult=3.0`, but the actual current, ORDER-166-revalidated live-equivalent config (`_mt5_auto/ab_sets/order166_revalidate/B14_GBPJPY_full.set`, magic **990208** — matches `DEPLOYMENTS.csv`) uses `_14_DistAtrMult=2.0`.** Wave 2 tested a spacing that doesn't correspond to any validated pin — its BWD=0.92 does not represent this host's real behavior. Re-running flat-vs-LOG13 now with the correct baseline (dist=2.0, magic 990208) — see result below once it lands. **The earlier "recommend closing the campaign" read is ON HOLD pending this retest — do not treat it as final.**
+
 
 **Wave 2 REVIEWED(Claude 2026-07-24) — NOT ADOPTED, gate failed before reaching a real overlay comparison:** Codex ran Boss_14 GBPJPY H4 (magic 990218 test config, `_14_DistAtrMult=3.0/_9_StepATRmult=3.0`), BASE=LotProg50(flat) vs LOG13=LotProg55(factor1.3), M1, both windows (raw: `_triage/ORDER136_W2_B14_GJ_RESULTS.md`).
 | Variant | MAIN | BWD |
