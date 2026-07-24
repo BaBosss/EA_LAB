@@ -117,6 +117,10 @@ bool RiskControl_AcctGateOK()
 bool RiskControl_InitEx(const bool adoptLegacyHalt)
 {
    g_rc_halted      = false;
+   // ORDER-194c (Codex review 2): globals survive an OnInit cycle triggered by a symbol,
+   // timeframe or input change, so a dirty flag left over from a previous chart state
+   // would drive a pointless write under the newly restored scope. Reset with the rest.
+   g_rc_persist_dirty = false;
    g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY);
    g_rc_max_dd_pct  = 0.0;
    g_rc_cap_blocks  = 0;
@@ -298,7 +302,14 @@ void RiskControl_PersistRefresh()
    datetime now = TimeCurrent();
    if(last != 0 && now - last < 86400) return;
    last = now;
-   if(g_rc_halted)            Persist_Set("rc_state", RC_STATE_HALTED);
+   // ORDER-194c (Codex review 2): a failed refresh write used to be discarded silently.
+   // This is the keep-alive that stops MT5's ~4-week GlobalVariable TTL from expiring a
+   // halt, so losing it is exactly as bad as losing the original write - mark it dirty so
+   // the halted path retries instead of waiting another 24h.
+   if(g_rc_halted)
+   {
+      if(!Persist_Set("rc_state", RC_STATE_HALTED)) g_rc_persist_dirty = true;
+   }
    else if(g_rc_kill_pending) Persist_Set("rc_state", RC_STATE_KILL_PENDING);
    if(g_rc_peak_equity > 0.0 && Persist_Has("rc_peak_eq")) Persist_Set("rc_peak_eq", g_rc_peak_equity);
    if(RC_AcctDDLimitPct > 0.0 && g_rc_acct_hwm > 0.0)      Persist_Set("acct_hwm", g_rc_acct_hwm);
@@ -329,7 +340,12 @@ bool RiskControl_CheckDD()
       // ORDER-194b (Codex audit SEV-1): retry ONLY the failed persist write - not the
       // whole close-all path. Cheap (two GV writes + a flush) and it stops as soon as it
       // succeeds, so the idle halted path still costs nothing in the normal case.
-      else if(g_rc_persist_dirty && RC_PersistHalt && !DryRun)
+      // ORDER-194c (Codex review 2): this was an `else if` on the sweep above, which meant
+      // that if same-magic exposure kept reappearing - a broker rejection loop, a pending
+      // fill race, another instance - the sweep branch won every tick and the persist retry
+      // NEVER ran. That is precisely the long-running, messy scenario where a crash is most
+      // likely and durable halt state matters most. Both must be able to run on one tick.
+      if(g_rc_persist_dirty && RC_PersistHalt && !DryRun)
       {
          bool ok = Persist_Set("rc_state", RC_STATE_HALTED);
          ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;

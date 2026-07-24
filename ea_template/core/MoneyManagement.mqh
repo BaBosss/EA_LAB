@@ -98,10 +98,11 @@ bool MM_ConfigValid()
       // "fall back to fixed".
       bool slGivesDistance = (SLMode == SL_FIXED_POINTS || SLMode == SL_ATR || SLMode == SL_SD ||
                               SLMode == SL_STRUCT_DONCHIAN || SLMode == SL_STRUCT_SR);
+      bool structProvides = false;
 #ifdef LAB_ENTRY_17
       // Wave5 publishes its own structural distance (ExitManager guard G3), which is a
       // valid distance source regardless of SLMode.
-      if(_17_UseStructLevels) slGivesDistance = true;
+      if(_17_UseStructLevels) { slGivesDistance = true; structProvides = true; }
 #endif
       if(!slGivesDistance)
       {
@@ -113,13 +114,22 @@ bool MM_ConfigValid()
       // _31_SL_Pip=0 used to attach cleanly and then skip every single signal forever, which
       // contradicts the whole point of validating configuration at OnInit: the operator sees
       // a healthy attach and an EA that never trades.
+      // ORDER-194c (Codex review 2): only meaningful when SLMode is the distance SOURCE.
+      // Exit_SLDistancePoints returns the published Wave5 structural distance BEFORE it
+      // ever reaches the SLMode switch, so on build 17 with struct levels on, SLMode's own
+      // parameter is never read - and rejecting the attach over it (e.g. SLMode=31 with
+      // _31_SL_Pip=0, a perfectly workable config there) is a false alarm this check
+      // introduced. Skip it when the structural source is in force.
       bool slParamOK = true;
       string slWhy = "";
+      if(structProvides) { slParamOK = true; }
+      else {
       if(SLMode == SL_FIXED_POINTS    && _31_SL_Pip      <= 0.0) { slParamOK = false; slWhy = "_31_SL_Pip <= 0"; }
       if(SLMode == SL_ATR             && _33_SL_ATRmult  <= 0.0) { slParamOK = false; slWhy = "_33_SL_ATRmult <= 0"; }
       if(SLMode == SL_SD              && (_36_SD_Mult <= 0.0 || _36_SD_Period <= 0)) { slParamOK = false; slWhy = "_36_SD_Mult/_36_SD_Period <= 0"; }
       if(SLMode == SL_STRUCT_DONCHIAN && _34_DonchianBars <= 0) { slParamOK = false; slWhy = "_34_DonchianBars <= 0"; }
       if(SLMode == SL_STRUCT_SR       && _35_SRBars       <= 0) { slParamOK = false; slWhy = "_35_SRBars <= 0"; }
+      }
       if(!slParamOK)
       {
          PrintFormat("[INIT] FATAL: FirstLotMode=42 with SLMode=%d cannot produce a distance (%s) - every order would be skipped", SLMode, slWhy);
@@ -158,18 +168,28 @@ bool MM_ConfigValid()
 // skip the order (Exec_NormalizeLot already returns 0 below the broker minimum and
 // Exec_Open refuses lot <= 0). Returning 0.0 rather than _41_FixedLot is the whole
 // point: a runtime data failure must cost a missed trade, never a differently-sized one.
-double MM_SizingUnavailable(const string why)
+// reason slots for MM_SizingUnavailable's throttle - one timestamp each, so a fault that
+// alternates with another still gets its own 60s window.
+#define MM_WHY_NO_SL_DIST   0
+#define MM_WHY_NO_TICKVAL   1
+#define MM_WHY_NO_BALANCE   2
+#define MM_WHY_SLOTS        3
+
+double MM_SizingUnavailable(const int reasonId, const string why)
 {
-   // ORDER-194b (Codex audit, low): throttle per REASON, not globally. One shared timestamp
-   // meant a "no SL distance" message could swallow a "tick value unreadable" ten seconds
-   // later - two different faults, one of them never seen. A changed reason always prints.
-   static datetime mm_last_log = 0;
-   static string   mm_last_why = "";
+   // ORDER-194b (Codex audit, low): one shared timestamp let a "no SL distance" message
+   // swallow a "tick value unreadable" ten seconds later - two different faults, one never
+   // seen.
+   // ORDER-194c (Codex review 2): the first repair keyed the throttle on "did the reason
+   // CHANGE", which is not the same thing: reasons alternating A-B-A-B differ from their
+   // immediate predecessor every single time, so every call logged and the 60s window did
+   // nothing. Genuine per-reason throttling needs one timestamp PER reason.
+   static datetime mm_last_log[MM_WHY_SLOTS];
+   if(reasonId < 0 || reasonId >= MM_WHY_SLOTS) return 0.0;   // unreachable; keeps the index safe
    datetime now = TimeCurrent();
-   if(why != mm_last_why || now - mm_last_log >= 60)
+   if(now - mm_last_log[reasonId] >= 60)
    {
-      mm_last_log = now;
-      mm_last_why = why;
+      mm_last_log[reasonId] = now;
       PrintFormat("[MM] first-lot sizing unavailable (%s) - order skipped, NO fallback to _41_FixedLot", why);
    }
    return 0.0;
@@ -187,11 +207,11 @@ double MM_FirstLot(const double slDistancePoints)
       double riskMoney = MM_BalancePct(_42_RiskPct);   // same math as before, shared helper
       double perPoint  = MM_MoneyPerPointPerLot();
       if(slDistancePoints <= 0.0)
-         return MM_SizingUnavailable("mode 42: no SL distance this tick");
+         return MM_SizingUnavailable(MM_WHY_NO_SL_DIST, "mode 42: no SL distance this tick");
       if(perPoint <= 0.0)
-         return MM_SizingUnavailable("mode 42: tick value/size unreadable");
+         return MM_SizingUnavailable(MM_WHY_NO_TICKVAL, "mode 42: tick value/size unreadable");
       if(riskMoney <= 0.0)
-         return MM_SizingUnavailable("mode 42: account balance unreadable");
+         return MM_SizingUnavailable(MM_WHY_NO_BALANCE, "mode 42: account balance unreadable");
       lot = riskMoney / (slDistancePoints * perPoint);
    }
    // additive (2026-07-23): balance-scaled sizing that does NOT need an SL distance, so
@@ -206,7 +226,7 @@ double MM_FirstLot(const double slDistancePoints)
    {
       double balance = AccountInfoDouble(ACCOUNT_BALANCE);
       if(balance <= 0.0)
-         return MM_SizingUnavailable("mode 43: account balance unreadable");
+         return MM_SizingUnavailable(MM_WHY_NO_BALANCE, "mode 43: account balance unreadable");
       lot = _43_LotPerAnchor * (balance / _43_BalanceAnchor);
    }
    lot *= MM_DdAdaptiveMultiplier();   // no-op unless _4_DdAdaptiveOn

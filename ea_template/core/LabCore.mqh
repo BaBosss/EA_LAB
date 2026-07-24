@@ -74,19 +74,33 @@ void Lab_LogEffectiveConfig()
    // became a LIE the moment _16_BaseLotMode=1 existed - the log claimed a flat 0.01 while
    // the EA actually traded a balance-scaled 0.20. A summary whose whole job is "say what
    // really wins" must never be the thing that misreports the newest dial.
+   // ORDER-194c (Codex review 2): report the lot that can actually REACH the broker, not
+   // the raw formula output. Printing a raw 2.00 while _16_MaxLotPerOrder=0.50 and
+   // RC_MaxLot=0.10 cap it at 0.10 is the same class of lie this block was fixed for once
+   // already - a summary that is confidently wrong is worse than no summary.
+   double raw16 = _16_BaseLot;
    if(_16_BaseLotMode == 1)
    {
       double bal16 = AccountInfoDouble(ACCOUNT_BALANCE);
-      PrintFormat("[CFG] sizing: Kangaroo owns lots - BALANCE-SCALED base %.4f lot per %.2f balance; at the current balance %.2f that is %.4f lot (_16_BaseLot %.4f IGNORED, FirstLotMode=%d IGNORED)",
-                  _43_LotPerAnchor, _43_BalanceAnchor, bal16,
-                  (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal16 / _43_BalanceAnchor) : 0.0),
-                  _16_BaseLot, FirstLotMode);
+      raw16 = (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal16 / _43_BalanceAnchor) : 0.0);
+      PrintFormat("[CFG] sizing: Kangaroo owns lots - BALANCE-SCALED %.4f lot per %.2f balance; at the current balance %.2f the raw base is %.4f (_16_BaseLot %.4f IGNORED, FirstLotMode=%d IGNORED)",
+                  _43_LotPerAnchor, _43_BalanceAnchor, bal16, raw16, _16_BaseLot, FirstLotMode);
    }
    else
-      PrintFormat("[CFG] sizing: Kangaroo owns lots - flat base, every order = _16_BaseLot %.4f (FirstLotMode=%d IGNORED)",
+      PrintFormat("[CFG] sizing: Kangaroo owns lots - flat base, raw base = _16_BaseLot %.4f (FirstLotMode=%d IGNORED)",
                   _16_BaseLot, FirstLotMode);
+   double eff16 = raw16;
+   if(_16_MaxLotPerOrder > 0.0 && eff16 > _16_MaxLotPerOrder) eff16 = _16_MaxLotPerOrder;
+   if(RC_MaxLot > 0.0 && eff16 > RC_MaxLot) eff16 = RC_MaxLot;
+   if(eff16 < raw16)
+      PrintFormat("[CFG] entry-16 EFFECTIVE base after caps: %.4f (raw %.4f was cut by %s)", eff16, raw16,
+                  (RC_MaxLot > 0.0 && RC_MaxLot <= _16_MaxLotPerOrder ? "RC_MaxLot" : "_16_MaxLotPerOrder"));
+   // Kangaroo treats a non-positive per-order ceiling as DISABLED, so never print 0.00 as
+   // if it were a ceiling of zero.
    if(_16_LadderMult > 1.0)
-      PrintFormat("[CFG] entry-16 ladder ON: order 5+ = max open lot x %.2f, per-order ceiling %.2f", _16_LadderMult, _16_MaxLotPerOrder);
+      PrintFormat("[CFG] entry-16 ladder ON: order 5+ = max open lot x %.2f, per-order ceiling %s",
+                  _16_LadderMult,
+                  (_16_MaxLotPerOrder > 0.0 ? DoubleToString(_16_MaxLotPerOrder, 2) : "OFF (<=0)"));
 #else
    if(FirstLotMode == FIRSTLOT_FIXED)
       PrintFormat("[CFG] sizing: 41 FIXED -> first lot %.4f", _41_FixedLot);
@@ -96,9 +110,15 @@ void Lab_LogEffectiveConfig()
    else
    {
       double bal = AccountInfoDouble(ACCOUNT_BALANCE);
-      PrintFormat("[CFG] sizing: 43 BALANCE_SCALED -> %.4f lot per %.2f balance; at the current balance %.2f that is %.4f lot",
-                  _43_LotPerAnchor, _43_BalanceAnchor, bal,
-                  (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal / _43_BalanceAnchor) : 0.0));
+      double raw43 = (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal / _43_BalanceAnchor) : 0.0);
+      double eff43 = (RC_MaxLot > 0.0 && raw43 > RC_MaxLot ? RC_MaxLot : raw43);
+      // ORDER-194c: same rule as the entry-16 branch - say what actually reaches the broker.
+      if(eff43 < raw43)
+         PrintFormat("[CFG] sizing: 43 BALANCE_SCALED -> %.4f lot per %.2f balance; at the current balance %.2f that is %.4f raw, CUT TO %.4f by RC_MaxLot",
+                     _43_LotPerAnchor, _43_BalanceAnchor, bal, raw43, eff43);
+      else
+         PrintFormat("[CFG] sizing: 43 BALANCE_SCALED -> %.4f lot per %.2f balance; at the current balance %.2f that is %.4f lot",
+                     _43_LotPerAnchor, _43_BalanceAnchor, bal, raw43);
       // the cent/USD trap: an anchor left at a USD figure on a cent account sizes 100x
       // too big and only RC_MaxLot stops it - by which point sizing is meaningless.
       if(bal > 0.0 && _43_BalanceAnchor > 0.0 && (bal / _43_BalanceAnchor) >= 50.0)

@@ -83,6 +83,27 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 - **bar ใหม่ที่ถูกเรื่อง:** คุณค่าของ mode นี้ไม่ใช่ PF สูงขึ้น แต่คือ (1) risk เท่ากันข้ามขนาดบัญชี (deposit invariance) (2) หด lot เองตอน DD ลึกจนไม่ไปชน hard-kill — ข้อ (2) วัดได้แล้วบน chassis mode 43 (ORDER-188: fixed ตายที่ 115/164 ไม้ eqDD 25.09% · scaled จบครบ 164 ที่ 22.66%) → **ถ้าจะรับ lever นี้ ให้ตัดสินจากสองข้อนี้ ไม่ใช่จาก PF**
 - **ยังไม่ได้ทำ:** ตัดสินใจว่าจะเปิดใช้ mode 1 กับ Boss_16 ตัวจริงไหม = **user เคาะ** (โค้ดพร้อม default ปิด ปลอดภัยอยู่แล้ว)
 
+## ORDER-194c — [core/safety] แก้อีก 4 ข้อจาก Codex review รอบสอง (ตรวจ "ของที่เพิ่งซ่อม") — `DONE(Claude/Fable 2026-07-24)`
+**source:** user ถามว่า "ต้องให้ codex รีวิวไหม" → ตอบว่าใช่ แต่**แคบ** คือให้ตรวจเฉพาะ 4 จุดที่เพิ่งซ่อม ไม่ใช่ audit ใหม่ทั้งชุด **เหตุผล: fix ของ SEV-1 เป็น risk logic ที่ไม่มี cage** — `tpl_regression.ps1` จำลอง "GlobalVariableSet ล้มเหลว" ไม่ได้ ดังนั้น "cage CLEAN" ไม่ได้พิสูจน์อะไรเกี่ยวกับมันเลย ตรงกับ trigger ใน CLAUDE.md ที่ว่า risk logic ไม่มีกรง = ต้องขอความเห็นที่สอง
+**ผลรอบสอง: ซ่อมถูก 2 · ซ่อมไม่ครบ 2 · สร้างบั๊กใหม่ 1** (คุ้มมากที่ตรวจซ้ำ)
+1. **ซ่อมไม่ครบ — persist retry ไม่มีวันได้รัน:** ผมเขียน retry เป็น `else if` ต่อจาก sweep → ถ้ามีไม้โผล่บน magic เดิมเรื่อยๆ (โบรกปฏิเสธวน / pending fill race / instance อื่น) sweep จะชนะทุก tick แล้ว **retry ไม่เคยทำงาน** ซึ่งคือสถานการณ์ยืดเยื้อที่ crash มีโอกาสสูงสุดพอดี → เปลี่ยนเป็น `if` แยก ทำงานได้ทั้งคู่ใน tick เดียว
+2. **ซ่อมไม่ครบ — flag ไม่ถูก reset:** `RiskControl_InitEx` ไม่ล้าง `g_rc_persist_dirty` (global อยู่ข้าม OnInit cycle ตอนเปลี่ยน symbol/TF) → เพิ่ม reset
+3. **ซ่อมไม่ครบ — daily refresh เขียนพลาดยังเงียบ:** `PersistRefresh` คือ keep-alive กัน TTL 4 สัปดาห์ของ MT5 เสียมันไปแย่พอกับเสีย write แรก → set dirty เมื่อพลาด
+4. **🔴 บั๊กใหม่ที่ผมสร้างเอง:** การเช็คพารามิเตอร์ราย SLMode (ที่เพิ่งเพิ่มตาม 194b ข้อ 3) **ยิงแม้ตอนที่ Wave5 struct SL เป็นแหล่งระยะจริง** — `Exit_SLDistancePoints` คืนระยะ structural **ก่อน**ถึง switch ของ SLMode ด้วยซ้ำ ⇒ `_17_UseStructLevels=true + SLMode=31 + _31_SL_Pip=0` เป็น config ที่ใช้ได้จริงแต่โดน INIT_FAILED = false alarm → ข้ามการเช็คเมื่อ struct เป็นแหล่ง
+5. **ซ่อมไม่ครบ — throttle:** ของที่ผมทำคือ "log เมื่อเหตุผล*เปลี่ยน*" ซึ่งไม่ใช่ per-reason จริง — เหตุผลสลับ A-B-A-B จะต่างจากตัวก่อนหน้าทุกครั้ง = log ทุกครั้ง หน้าต่าง 60 วิไม่ทำงานเลย → ใช้ timestamp แยกต่อ reason (array)
+6. **`[CFG]` ยังเข้าใจผิดได้:** พิมพ์ lot ดิบก่อน clamp (raw 2.00 ขณะ `_16_MaxLotPerOrder=0.50` + `RC_MaxLot=0.10` ตัดเหลือ 0.10) และเรียก `0.00` ว่า "per-order ceiling" ทั้งที่ Kangaroo ถือว่า ≤0 = ปิด → พิมพ์ค่าหลัง clamp + บอกว่าตัวไหนตัด + แสดง `OFF (<=0)`
+**ที่ Codex ยืนยันว่าถูกแล้ว:** guard Wave5 (ไล่ทุก path ที่เปิดไม้ได้แล้ว ไม่มี path ที่สาม) · lever `_16_BaseLotMode` (flat/scaled เข้า pipeline เดียวกัน, fail-closed 0.0 ปลอดภัยกับ caller เดียวที่มี)
+**หลักฐาน:** compile 0 error ทั้ง 9 · **`tpl_regression.ps1` CLEAN 8/8**
+
+## ORDER-193(d) — retro-scan: verdict เก่าใบไหนตั้งอยู่บน backtest ที่ถูกตัดกลางคัน — `DONE(Claude/Fable 2026-07-24) — พบของจริง ต้องให้ user/Claude ตัดสินต่อ`
+**วิธี:** `scripts/truncation_retro_scan.ps1` (เขียนใหม่แบบ in-process — เวอร์ชันแรกที่วน `check_truncated_run.ps1` ต่อไฟล์ใช้เวลาเป็นชั่วโมง) + ทำให้ detector อ่าน window จากตัวรายงานเองได้ (`Period: H1 (from - to)`) จึงไม่ต้องมีบัญชีคุมว่ารันไหนใช้ window ไหน
+**ผลบน 4,233 รายงาน:** OK 3,748 · QUIET_TAIL 344 · **SUSPECT 141**
+**⚠️ ตีความก่อนใช้ (สำคัญ):** ใน 141 ใบนั้น **76 ใบ eqDD ≥45% (สูงสุด 131%) = บัญชีระเบิด/margin stop-out ไม่ใช่ cage เราตัด** — ส่วนใหญ่เป็น EA จาก corpus ภายนอก (MS5_*/BWD_*/O076_*) ที่ไม่มี RiskControl ของเราอยู่ด้วยซ้ำ. **เหลือ 65 ใบที่เข้าข่าย chassis hard-kill จริง** และในนั้นมี **cluster ที่ eqDD = 25.0-26.7% เป๊ะ = KillDD ของ ProtectLevel NORMAL**
+**ใบที่ควรดูก่อน (chassis + ถูกตัดลึก):** `BOSS14_SWEEP_*` (EURCHF gap 84% · EURCAD 78% · USDJPY 72% · EURJPY 48% · GBPAUD 35%) · `BOSS16_KANG_XAU_H1_SELL` (gap 66%) · `O095A_FULL_GBPJPY_M15` (52%) · `ZIGL_SELL1_FWD` (43%) · `TPLREG_B18_*`/`ORDER125_B18_rerun`/`O132_B18_recheck` (eqDD 25.00% เป๊ะ, gap 33% — ชุด probe ที่ใช้สืบ "engine drift" ORDER-162/165 ก็ถูกตัดเอง)
+**ทิศทางของความเสียหาย (อย่าตื่นเกินจริง):** run ที่โดน kill คือ run ที่**กำลังเจ๊งหนัก** PF ที่รายงานจึงเป็น PF ของช่วงก่อนตาย = **ต่ำกว่าความจริงไม่ใช่สูงกว่า** ⇒ ความเสี่ยงไม่ใช่ "เราเชียร์ตัวแย่" แต่เป็น **"การเทียบใน sweep พัง"** — cell A ถูกตัดที่ 40% ของ window ส่วน cell B รันจบ เอา PF สองตัวมาเทียบกันแล้วเลือกผู้ชนะ = เลือกจากคนละการทดลอง
+**งานต่อ (ยังไม่ทำ):** ไล่ว่า 65 ใบนี้ใบไหนถูกอ้างใน scorecard/verdict จริง แล้ว re-run เฉพาะที่กระทบด้วย lot เล็กลงจนไม่ชน cage — **เป็นงานตัดสิน ไม่ใช่ mechanical** raw = `_triage/TRUNCATION_RETRO_SCAN.csv`
+**ห้าม:** สรุปจากคอลัมน์ verdict ตรงๆ โดยไม่แยก eqDD ≥45% ออกก่อน (จะได้ตัวเลข 141 ที่เว่อร์เกินจริงเท่าตัว)
+
 ## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `OPEN` (งานเล็ก ~15 นาที + 1 cage)
 **source:** ORDER-191(c) นับได้ว่า registry มี **override pair 11 คู่ และ 9 คู่ (82%) เป็น SILENT** — คือแถวของ input ที่*แพ้*ไม่มีหมายเหตุบอกเลยว่ามันถูกทับได้ คนอ่านจะรู้ก็ต่อเมื่อบังเอิญไปอ่านแถวของตัวที่*ชนะ*
 **ช่องว่างที่เหลือ:** บล็อก `[CFG]` (ORDER-192) ครอบไปแล้ว **4 คู่** (BasketTP 3 ชั้น · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`) **ยังไม่ครอบอีก 4-5 คู่:**

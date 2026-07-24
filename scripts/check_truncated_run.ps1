@@ -38,7 +38,7 @@ EXIT CODES
 [CmdletBinding()]
 param(
   [Parameter(Mandatory)][string]$Report,
-  [Parameter(Mandatory)][string]$ToDate,          # yyyy.MM.dd - the window end handed to the tester
+  [string]$ToDate = "",                           # yyyy.MM.dd; omit to read it out of the report itself
   [string]$FromDate = "",                         # optional; enables the "% of window" figure
   [string]$TesterLog = "",                        # optional; confirms a cage kill outright
   [double]$GapPctThreshold = 10.0,                # flag when the idle tail exceeds this share of the window
@@ -64,6 +64,18 @@ for ($i = 0; $i -lt $parts.Count - 4; $i++) {
   }
 }
 if (-not $lastDeal) { Write-Host "[INFO] no deals in report - nothing to judge" -ForegroundColor Yellow; exit 0 }
+
+# The report states its own window ("Period: | H1 (2024.01.01 - 2024.07.01)"), so neither
+# date has to be supplied. That is what makes a retro-scan over the whole reports/ folder
+# possible: no external bookkeeping about which run covered which window.
+if (-not $ToDate -or -not $FromDate) {
+  $pm = [regex]::Match($flat, '\(\s*(\d{4}\.\d{2}\.\d{2})\s*-\s*(\d{4}\.\d{2}\.\d{2})\s*\)')
+  if ($pm.Success) {
+    if (-not $FromDate) { $FromDate = $pm.Groups[1].Value }
+    if (-not $ToDate)   { $ToDate   = $pm.Groups[2].Value }
+  }
+}
+if (-not $ToDate) { Write-Host "[INFO] could not read the test window from the report and none was supplied - skipping" -ForegroundColor Yellow; exit 0 }
 
 $end      = [datetime]::ParseExact($ToDate, 'yyyy.MM.dd', $null)
 $lastTime = [datetime]::ParseExact($lastDeal, 'yyyy.MM.dd HH:mm:ss', $null)
