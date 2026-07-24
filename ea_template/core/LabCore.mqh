@@ -228,6 +228,22 @@ int OnInit()
       PrintFormat("[INIT] FATAL: Boss_17 structural SL (_17_UseStructLevels=true) is naked-probe only - StackMode must be 90, got %d (ORDER-082 guard G4)", StackMode);
       return INIT_FAILED;
    }
+   // ORDER-194b (Codex audit, high): StackMode was only one of the three ways to get a
+   // SECOND order onto the one structural level. The documented invariant is "no grid /
+   // recovery / martingale" (Inputs.mqh entry-17 header), and Recovery_OnTick runs for
+   // every StackMode except 93 - so StackMode=90 + RecoveryMode=81 passed the check above
+   // and still opened adds against a stop computed for a different entry at a different
+   // price. Hedge can likewise add an opposite leg. Close both doors.
+   if(_17_UseStructLevels && RecoveryMode != REC_NONE)
+   {
+      PrintFormat("[INIT] FATAL: Boss_17 structural SL is naked-probe only - RecoveryMode must be 80, got %d (recovery adds would reuse the wave-1 invalidation level of a different entry)", RecoveryMode);
+      return INIT_FAILED;
+   }
+   if(_17_UseStructLevels && HedgeMode != HEDGE_OFF)
+   {
+      PrintFormat("[INIT] FATAL: Boss_17 structural SL is naked-probe only - HedgeMode must be 0, got %d", HedgeMode);
+      return INIT_FAILED;
+   }
 #endif
 #ifdef LAB_ENTRY_18
    Entry_JumStoch_Init();

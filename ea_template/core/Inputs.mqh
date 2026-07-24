@@ -251,6 +251,16 @@ input double _16_AtrMultAfter     = 1.4;    // spacing mult from order 5 on (ori
 input double _16_MinDistPips      = 150.0;  // spacing floor in pips (digit-aware; XAU 2-digit: pip=point=$0.01)
 input int    _16_MaxOrdersPerSide = 10;     // HARD cap - adds refused beyond this (original advertised 10 but leaked to 14)
 input group "=== 16 Lots (FLAT default; capped ladder OFF at 1.0) ==="
+// ORDER-190: Kangaroo owns its own lot law and never calls MM_FirstLot, so the chassis
+// FirstLotMode (41/42/43) has no effect here at all - MM_ConfigValid warns about that at
+// attach. This input is the opt-in that lets entry 16 scale with the account the same way
+// chassis mode 43 does, WITHOUT changing what mode 0 (the default) does by a single tick.
+//   0 = FLAT     : every base order = _16_BaseLot          <- default, unchanged behavior
+//   1 = SCALED   : base order = _43_LotPerAnchor x (balance / _43_BalanceAnchor)
+// Mode 1 reuses the chassis mode-43 pair on purpose: one anchor concept to learn, one
+// place to get the cent-vs-USD units right (see EA_CORE_AND_TEMPLATE_GUIDE section 3.6).
+// The ladder (_16_LadderMult), the per-order ceiling and the cage all still apply after.
+input int    _16_BaseLotMode    = 0;     // 0=flat _16_BaseLot (default) / 1=balance-scaled via _43_LotPerAnchor+_43_BalanceAnchor
 input double _16_BaseLot        = 0.01;  // every order when LadderMult <= 1.0 (flat-lot probe beat the x1.5 ladder: PF 5.71 vs 4.86)
 input double _16_LadderMult     = 1.0;   // >1.0 enables ladder: order N = max open lot x this; first 4 orders always BaseLot
 input double _16_MaxLotPerOrder = 1.0;   // per-order ceiling for the ladder (= original Max_Lot_Martingale; RC_MaxLot still clamps after)

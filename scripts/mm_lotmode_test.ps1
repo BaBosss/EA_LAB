@@ -56,8 +56,9 @@ Write-Host ">> deploy + compile current source" -ForegroundColor Cyan
 & (Join-Path $root "ea_template\deploy.ps1") -Compile | Out-Null
 if ($LASTEXITCODE -ne 0) { Write-Host "[FAIL] compile failed - aborting" -ForegroundColor Red; exit 1 }
 
-function New-VariantSet([string]$name, [hashtable]$over) {
-  $lines = Get-Content $baseSet
+function New-VariantSet([string]$name, [hashtable]$over, [string]$from = "") {
+  $src = if ($from) { $from } else { $baseSet }
+  $lines = Get-Content $src
   $seen  = @{}
   $out = foreach ($l in $lines) {
     if ($l -match '^([A-Za-z_][\w]*)=') {
@@ -97,15 +98,26 @@ $cases = @(
   @{ id='E_unit_indep';     dep=2000;  expect=0.20; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='1000.0';  RC_MaxLot='5.0' } },
   @{ id='F_maxlot_clamp';   dep=20000; expect=0.15; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='0.15' } },
   @{ id='G_bad_anchor';     dep=10000; expect=0.0;  over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='0.0';     RC_MaxLot='5.0' } },
-  @{ id='H_mode42_no_sl';   dep=10000; expect=0.0;  over=@{ FirstLotMode='42'; _42_RiskPct='1.0'; SLMode='30';                       RC_MaxLot='5.0' } }
+  @{ id='H_mode42_no_sl';   dep=10000; expect=0.0;  over=@{ FirstLotMode='42'; _42_RiskPct='1.0'; SLMode='30';                       RC_MaxLot='5.0' } },
+  # ORDER-190: entry 16 has its OWN lot law - Kangaroo never calls MM_FirstLot, so none of
+  # A-H above says anything about it. These three cover the opt-in scaler on its own terms:
+  # mode 0 must still be the flat lot, mode 1 must scale, and it must scale with the account.
+  @{ id='K0_flat_default';  dep=10000; expect=0.01; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
+     over=@{ _16_BaseLotMode='0'; _16_BaseLot='0.01'; RC_MaxLot='5.0' } },
+  @{ id='K1_scaled_1x';     dep=10000; expect=0.10; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
+     over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
+  @{ id='K1_scaled_2x';     dep=20000; expect=0.20; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
+     over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } }
 )
 
 $rows = @(); $fail = 0
 foreach ($c in $cases) {
-  $set = New-VariantSet $c.id $c.over
+  $caseEa   = if ($c.ContainsKey('ea'))   { $c.ea } else { $expert }
+  $caseBase = if ($c.ContainsKey('base')) { Join-Path $root $c.base } else { $baseSet }
+  $set = New-VariantSet $c.id $c.over $caseBase
   $rep = "MMLOT_$($c.id)"
   Write-Host ">> $($c.id) (deposit $($c.dep), expect first lot $($c.expect))" -ForegroundColor Cyan
-  $null = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $Symbol -Period $Period `
+  $null = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $caseEa -Symbol $Symbol -Period $Period `
             -FromDate $FromDate -ToDate $ToDate -Model $Model -Deposit $c.dep -ReportName $rep -SetFile $set
   $rc  = $LASTEXITCODE
   $htm = Join-Path $root "_mt5_auto\reports\$rep.htm"

@@ -69,7 +69,21 @@ bool MM_ConfigValid()
    // therefore inert here - warn (an inert dial is not a safety promise), never fail:
    // the pinned Boss_16 regression set must keep loading.
    if(FirstLotMode != FIRSTLOT_FIXED)
-      PrintFormat("[INIT] WARN: FirstLotMode=%d has NO EFFECT on Boss_16/Kangaroo - every lot comes from _16_BaseLot (see MM_ConfigValid)", FirstLotMode);
+      PrintFormat("[INIT] WARN: FirstLotMode=%d has NO EFFECT on Boss_16/Kangaroo - the base lot comes from _16_BaseLot / _16_BaseLotMode (see MM_ConfigValid)", FirstLotMode);
+   // ORDER-190: entry 16's own opt-in scaler borrows the chassis mode-43 anchor pair, so
+   // it needs the same config-time validation - an unusable anchor must brick the attach
+   // here too, not surface later as skipped orders.
+   if(_16_BaseLotMode == 1 && (_43_BalanceAnchor <= 0.0 || _43_LotPerAnchor <= 0.0))
+   {
+      PrintFormat("[INIT] FATAL: _16_BaseLotMode=1 (balance-scaled) needs _43_BalanceAnchor > 0 and _43_LotPerAnchor > 0 (got %.2f / %.4f)",
+                  _43_BalanceAnchor, _43_LotPerAnchor);
+      return false;
+   }
+   if(_16_BaseLotMode != 0 && _16_BaseLotMode != 1)
+   {
+      PrintFormat("[INIT] FATAL: _16_BaseLotMode=%d is not a defined mode (0=flat, 1=balance-scaled)", _16_BaseLotMode);
+      return false;
+   }
    return true;
 #else
    if(FirstLotMode == FIRSTLOT_RISK)
@@ -94,6 +108,23 @@ bool MM_ConfigValid()
          PrintFormat("[INIT] FATAL: FirstLotMode=42 needs a per-order SL distance but SLMode=%d yields none (30 NONE / 32 MONEY) - use SLMode 31/33/34/35/36, or FirstLotMode 41/43", SLMode);
          return false;
       }
+      // ORDER-194b (Codex audit, medium): picking the right SLMode CATEGORY is not enough -
+      // that mode's own parameter still has to produce a positive distance. SLMode=31 with
+      // _31_SL_Pip=0 used to attach cleanly and then skip every single signal forever, which
+      // contradicts the whole point of validating configuration at OnInit: the operator sees
+      // a healthy attach and an EA that never trades.
+      bool slParamOK = true;
+      string slWhy = "";
+      if(SLMode == SL_FIXED_POINTS    && _31_SL_Pip      <= 0.0) { slParamOK = false; slWhy = "_31_SL_Pip <= 0"; }
+      if(SLMode == SL_ATR             && _33_SL_ATRmult  <= 0.0) { slParamOK = false; slWhy = "_33_SL_ATRmult <= 0"; }
+      if(SLMode == SL_SD              && (_36_SD_Mult <= 0.0 || _36_SD_Period <= 0)) { slParamOK = false; slWhy = "_36_SD_Mult/_36_SD_Period <= 0"; }
+      if(SLMode == SL_STRUCT_DONCHIAN && _34_DonchianBars <= 0) { slParamOK = false; slWhy = "_34_DonchianBars <= 0"; }
+      if(SLMode == SL_STRUCT_SR       && _35_SRBars       <= 0) { slParamOK = false; slWhy = "_35_SRBars <= 0"; }
+      if(!slParamOK)
+      {
+         PrintFormat("[INIT] FATAL: FirstLotMode=42 with SLMode=%d cannot produce a distance (%s) - every order would be skipped", SLMode, slWhy);
+         return false;
+      }
       return true;
    }
    if(FirstLotMode == FIRSTLOT_BALANCE)
@@ -104,6 +135,15 @@ bool MM_ConfigValid()
          return false;
       }
       return true;
+   }
+   // ORDER-194b (Codex audit): anything reaching here that is not 41 is an undefined mode -
+   // a hand-edited or corrupted .set carrying e.g. FirstLotMode=44. The runtime switch in
+   // MM_FirstLot branches only on 42/43, so such a value would silently trade _41_FixedLot:
+   // the same "you asked for one thing and got another" failure this whole change removes.
+   if(FirstLotMode != FIRSTLOT_FIXED)
+   {
+      PrintFormat("[INIT] FATAL: FirstLotMode=%d is not a defined mode (41 fixed / 42 risk%% / 43 balance-scaled)", FirstLotMode);
+      return false;
    }
    if(_41_FixedLot <= 0.0)
    {
@@ -120,11 +160,16 @@ bool MM_ConfigValid()
 // point: a runtime data failure must cost a missed trade, never a differently-sized one.
 double MM_SizingUnavailable(const string why)
 {
+   // ORDER-194b (Codex audit, low): throttle per REASON, not globally. One shared timestamp
+   // meant a "no SL distance" message could swallow a "tick value unreadable" ten seconds
+   // later - two different faults, one of them never seen. A changed reason always prints.
    static datetime mm_last_log = 0;
+   static string   mm_last_why = "";
    datetime now = TimeCurrent();
-   if(now - mm_last_log >= 60)
+   if(why != mm_last_why || now - mm_last_log >= 60)
    {
       mm_last_log = now;
+      mm_last_why = why;
       PrintFormat("[MM] first-lot sizing unavailable (%s) - order skipped, NO fallback to _41_FixedLot", why);
    }
    return 0.0;

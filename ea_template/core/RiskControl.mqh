@@ -20,6 +20,7 @@ bool   g_rc_kill_pending = false;   // ORDER-129: kill fired, broker flatness no
 #define RC_STATE_RUNNING      0.0
 #define RC_STATE_KILL_PENDING 1.0
 #define RC_STATE_HALTED       2.0
+bool   g_rc_persist_dirty = false;   // ORDER-194b: a HALT persist write failed and needs retrying
 double g_rc_peak_equity = 0.0;
 double g_rc_max_dd_pct  = 0.0;
 int    g_rc_cap_blocks  = 0;
@@ -258,6 +259,14 @@ bool RiskControl_KillReconcile()
          Persist_Flush();
          if(!ok) Print("[RISK] ERROR: HALT persist incomplete - halt state may not survive a restart");
          persisted = ok;
+         // ORDER-194b (Codex audit SEV-1): remember a FAILED write so the halted path can
+         // retry it. Before the halted guard existed, the still-breached DD branch re-ran
+         // this whole function every tick and retried the write as a side effect of that
+         // bug; removing the re-fire removed the accidental retry with it. Without this
+         // flag a transient GlobalVariableSet failure plus a terminal crash before the
+         // daily refresh brings the EA back RUNNING with the kill forgotten - the exact
+         // resurrection ORDER-132/138 exist to prevent.
+         g_rc_persist_dirty = !ok;
       }
       // ORDER-132b (Codex R1): the log must state what actually happened - never
       // claim "(persisted)" off the config flag while the write failed.
@@ -317,6 +326,20 @@ bool RiskControl_CheckDD()
    if(g_rc_halted)
    {
       if(Exec_CountAll() > 0 || Exec_CountPending() > 0) RiskControl_KillReconcile();
+      // ORDER-194b (Codex audit SEV-1): retry ONLY the failed persist write - not the
+      // whole close-all path. Cheap (two GV writes + a flush) and it stops as soon as it
+      // succeeds, so the idle halted path still costs nothing in the normal case.
+      else if(g_rc_persist_dirty && RC_PersistHalt && !DryRun)
+      {
+         bool ok = Persist_Set("rc_state", RC_STATE_HALTED);
+         ok = Persist_Set("rc_peak_eq", g_rc_peak_equity) && ok;
+         Persist_Flush();
+         if(ok)
+         {
+            g_rc_persist_dirty = false;
+            Print("[RISK] HALT persist retry succeeded - kill state is now durable");
+         }
+      }
       return true;
    }
    double kill = RC_KillDDPct();

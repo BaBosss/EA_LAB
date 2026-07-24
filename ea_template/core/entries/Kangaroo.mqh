@@ -290,7 +290,29 @@ double Kangaroo_ExtremePrice(const int dir)
 // base). Per-order cap MaxLotPerOrder, then the cage (RC_MaxLot) clamps last.
 double Kangaroo_NextLot(const int have)
 {
+   // ORDER-190: opt-in balance scaling. Mode 0 is the compiled default and returns exactly
+   // _16_BaseLot, so every existing .set and the pinned regression baseline are untouched.
+   // Mode 1 fails CLOSED (0.0 = caller skips the order) rather than falling back to the
+   // flat lot - same rule as MM_FirstLot after MM-SAFETY-001: a sizing mode that cannot
+   // compute must cost a missed trade, never a differently-sized one. The anchor pair is
+   // validated at OnInit, so only an unreadable balance can reach the guard below.
    double lot = _16_BaseLot;
+   if(_16_BaseLotMode == 1)
+   {
+      double bal = AccountInfoDouble(ACCOUNT_BALANCE);
+      if(bal <= 0.0 || _43_BalanceAnchor <= 0.0 || _43_LotPerAnchor <= 0.0)
+      {
+         static datetime k_last_log = 0;
+         datetime now = TimeCurrent();
+         if(now - k_last_log >= 60)
+         {
+            k_last_log = now;
+            Print("[16] balance-scaled base lot unavailable (balance/anchor unreadable) - order skipped, NO fallback to _16_BaseLot");
+         }
+         return 0.0;
+      }
+      lot = _43_LotPerAnchor * (bal / _43_BalanceAnchor);
+   }
    if(_16_LadderMult > 1.0 && have >= 4)
    {
       double maxOpen = 0.0;
