@@ -143,6 +143,25 @@ if (Test-Path $srcHtm) {
   Move-Item $srcHtm $destHtm -Force
   Get-ChildItem $DataDir -Filter "$ReportName*.png" -File -ErrorAction SilentlyContinue |
     Move-Item -Destination "$auto\reports\" -Force
+  # ORDER-193 TRUNCATION CHECK: the safety cage hard-kills on equity DD and then halts for
+  # the rest of the run, and it is NOT gated out of the tester. The report gives no hint:
+  # you get a PF computed over however much of the window ran before the kill, formatted
+  # exactly like a full-window result. Worse, the kill point moves with -Deposit, which is
+  # a run setting - so two runs that look comparable may not be.
+  # Warning only: never changes this script's exit code (callers depend on 0/1/3). Sidecar
+  # written for the same reason the leverage one is - tpl_regression.ps1 and friends do not
+  # read exit codes, so a print alone would vanish.
+  $truncOut = ""; $truncCode = 0
+  try {
+    $truncOut  = & (Join-Path $PSScriptRoot 'check_truncated_run.ps1') -Report $destHtm -FromDate $FromDate -ToDate $ToDate 2>&1 | Out-String
+    $truncCode = $LASTEXITCODE
+  } catch { $truncOut = "truncation check failed: $_"; $truncCode = -1 }
+  [PSCustomObject]@{ report_name=$ReportName; truncated=($truncCode -eq 2); detail=$truncOut.Trim() } |
+    ConvertTo-Json | Set-Content "$auto\reports\$ReportName.truncation_check.json" -Encoding utf8
+  if ($truncCode -eq 2) {
+    Write-Output "WARN TRUNCATED-RUN: $ReportName stopped trading well before its window ended - metrics may cover only part of the window. Detail: $($truncOut.Trim())"
+  }
+  $global:LASTEXITCODE = 0   # the check is advisory; do not let its code leak into ours
   # ORDER-165 LEVERAGE ASSERTION: verify the tester actually used the leverage we pinned.
   # The report's "Leverage:" line reflects the real simulation leverage (agrees with the
   # tester agent log's "initial deposit ... leverage 1:N" - verified 4/4 samples 2026-07-23,

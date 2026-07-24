@@ -305,6 +305,20 @@ bool RiskControl_CheckDD()
       RiskControl_KillReconcile();
       return true;
    }
+   // ORDER-194: HALTED is terminal - never re-evaluate DD from here. g_rc_peak_equity is
+   // frozen at the pre-kill peak and equity is (by definition) below the kill line, so the
+   // breach below stays permanently true: without this guard the whole kill path re-ran
+   // EVERY TICK for the rest of the run. Measured 2026-07-24: 14.4M / 11.8M / 3.5M
+   // "[RISK] HARD KILL" lines in single tester logs, one log file 777 MB. On live it also
+   // meant a GlobalVariablesFlush() (disk write) per tick forever via KillReconcile's
+   // persist block - a halted EA quietly hammering the terminal's gvariables.dat.
+   // Still sweep anything that appears on this magic AFTER the halt (halted must stay
+   // flat), but only when something actually exists - the idle path must cost nothing.
+   if(g_rc_halted)
+   {
+      if(Exec_CountAll() > 0 || Exec_CountPending() > 0) RiskControl_KillReconcile();
+      return true;
+   }
    double kill = RC_KillDDPct();
    double dd   = RiskControl_CurrentDDPct();
    if(kill > 0.0 && dd >= kill)

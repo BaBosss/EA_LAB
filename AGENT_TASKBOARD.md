@@ -101,10 +101,11 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 **กลไก (ยืนยันที่ `RiskControl.mqh:299-327`):** `RiskControl_CheckDD()` เช็ค `g_rc_kill_pending` แต่ **ไม่เคยเช็ค `g_rc_halted`**. พอ kill เสร็จ → `kill_pending=false`, `halted=true` → tick ถัดไปเข้ามาใหม่ → `dd` ยังสูงกว่าเพดาน (peak equity ไม่ถูก reset, equity ยังต่ำ) → **print + `kill_pending=true` + `KillReconcile()` อีกรอบ ทุก tick จนจบ run**. ใน `LabCore.OnTick` ลำดับคือ `RiskControl_CheckDD()` ก่อน `RiskControl_IsHalted()` — CheckDD จึงยิงก่อนที่ halt check จะได้ทำงาน
 **ผลกระทบ:** (1) **live: พยายาม close-all ซ้ำทุก tick ทั้งที่พอร์ตแบนแล้ว** = ยิง request ใส่โบรกเกอร์รัวๆ โดยไม่จำเป็น (2) tester log บวมระดับ GB → เปลืองดิสก์ + ทำให้ทุกงานที่ต้อง scan log ช้ามาก (3) กลบ log อื่นจนหาอะไรไม่เจอ
 **ที่ยังไม่รู้ (ต้องตรวจก่อนแก้):** `KillReconcile` ที่ถูกเรียกซ้ำ ส่งคำสั่งปิดจริงทุกครั้ง หรือเจอว่า flat แล้ว return เร็ว — ต่างกันมากระหว่าง "log spam เฉยๆ" กับ "ยิง order ใส่โบรกจริง"
-**fix ที่เสนอ (1 บรรทัด แต่แตะ risk logic → ห้ามทำเองก่อน user เคาะ):** ใส่ `if(g_rc_halted) return true;` ต่อจาก block `g_rc_kill_pending` — halted แล้วคือจบ ไม่ต้องประเมิน DD ซ้ำ
+**✅ DONE (Claude/Fable 2026-07-24, user สั่ง "แก้ตามงานที่นายเปิดไว้เลย"):** ตอบข้อ "ที่ยังไม่รู้" ก่อนแก้แล้ว — **ไม่ได้ยิง order ใส่โบรก** (`Exec_CloseAll` วนหาไม้ของตัวเอง ไม่เจอ ก็ไม่เรียก `PositionClose`) **แต่หนักกว่าที่คิดในอีกทาง: `KillReconcile` เข้า block persist ทุกครั้งที่ผ่าน → `Persist_Set`×2 + `Persist_Flush()` = `GlobalVariablesFlush()` เขียนดิสก์ทุก tick ตลอดไปบน live/demo** บวก log 2 บรรทัดต่อ tick
+**fix ที่ลง:** ไม่ใช้ early-return เปล่าตามที่เสนอไว้ตอนแรก — ใช้แบบที่**รักษาคุณสมบัติ "halted ต้องแบน" ไว้ด้วย**: ถ้า halted แล้วจะไม่ประเมิน DD ซ้ำ แต่ยัง sweep ไม้ที่โผล่มาบน magic นี้*หลัง* halt (เรียก reconcile เฉพาะตอนมีของจริงให้ปิด — idle path ต้องไม่มีต้นทุน)
+**หลักฐาน:** `tpl_regression.ps1` = **CLEAN 8/8 ไม่ขยับสักตัว** → ยืนยันว่า kill ซ้ำเป็นเรื่อง log/disk ล้วน ไม่เคยมีผลต่อ trade
 **bars:** N-A. **flat-lot probe:** N-A.
-**ห้าม:** แก้แล้วไม่รัน `tpl_regression.ps1` (ต้อง 8/8 เท่าเดิม — ถ้าเลขขยับแปลว่า kill ซ้ำเคยมีผลต่อ trade จริง ไม่ใช่แค่ log) · ถือว่าเป็นแค่เรื่อง log แล้วลด priority ก่อนตรวจข้อ "ที่ยังไม่รู้" ข้างบน
-**ทำได้:** Claude เขียน + audit (risk logic)
+**ห้าม:** ตีความ CLEAN 8/8 ว่า "ไม่มีอะไรเสียหาย" — ผลจริงอยู่ที่ live (disk I/O) และที่ log ขนาด GB ซึ่งทำให้ ORDER-193 ทำงานไม่ไหวถ้าไม่แก้ก่อน
 
 ## ORDER-193 — [tooling/integrity] ตรวจจับ backtest ที่ถูก hard-kill ตัดกลางคัน (truncated-run detector) — `OPEN` ⚠️ ผลกระทบต่อความน่าเชื่อถือของ funnel
 **source:** user 2026-07-24 ถามว่า "KillDD 25% เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอาก็ได้". ไล่โค้ดแล้วเจอว่าคำถามนี้ชี้ไปที่ปัญหาที่ **ใหญ่กว่าตัวเลข 25** และไม่มีใครเห็นมาก่อน:

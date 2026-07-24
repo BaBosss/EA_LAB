@@ -54,6 +54,92 @@
 // _0_BarOpenOnly state (recompile-safe: reset in OnInit)
 datetime g_lab_last_bar = 0;
 
+// ORDER-192: effective-configuration summary, printed once at attach.
+// The problem it solves: this chassis has 183 inputs and several pairs where one
+// SILENTLY overrides another (a _*_BalPct twin beats its absolute sibling, an ATR
+// target beats a money target). Reading a .set tells you what was REQUESTED; nothing
+// told you what actually WON. Every line below is log-only - this function must never
+// influence a trading decision.
+void Lab_LogEffectiveConfig()
+{
+   Print("[CFG] ---- effective configuration (what actually wins at runtime) ----");
+
+   // --- first lot. Deliberately NOT calling MM_FirstLot here: mode 42 needs an SL
+   // distance from indicator buffers that are not filled yet at OnInit, so a number
+   // printed now would be a lie (or would trip MM's "sizing unavailable" throttle).
+   // Print the inputs that decide it instead, and resolve a real lot only for the
+   // modes that can be resolved from account state alone.
+#ifdef LAB_ENTRY_16
+   PrintFormat("[CFG] sizing: Kangaroo owns lots - every order = _16_BaseLot %.4f (FirstLotMode=%d IGNORED)",
+               _16_BaseLot, FirstLotMode);
+#else
+   if(FirstLotMode == FIRSTLOT_FIXED)
+      PrintFormat("[CFG] sizing: 41 FIXED -> first lot %.4f", _41_FixedLot);
+   else if(FirstLotMode == FIRSTLOT_RISK)
+      PrintFormat("[CFG] sizing: 42 RISK_PERCENT -> %.2f%% of balance per order, divided by the SL distance from SLMode=%d (lot varies per signal)",
+                  _42_RiskPct, SLMode);
+   else
+   {
+      double bal = AccountInfoDouble(ACCOUNT_BALANCE);
+      PrintFormat("[CFG] sizing: 43 BALANCE_SCALED -> %.4f lot per %.2f balance; at the current balance %.2f that is %.4f lot",
+                  _43_LotPerAnchor, _43_BalanceAnchor, bal,
+                  (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal / _43_BalanceAnchor) : 0.0));
+      // the cent/USD trap: an anchor left at a USD figure on a cent account sizes 100x
+      // too big and only RC_MaxLot stops it - by which point sizing is meaningless.
+      if(bal > 0.0 && _43_BalanceAnchor > 0.0 && (bal / _43_BalanceAnchor) >= 50.0)
+         PrintFormat("[CFG] WARN: balance is %.0fx the anchor - if this is a cent account, _43_BalanceAnchor is probably in the wrong units (see EA_CORE_AND_TEMPLATE_GUIDE section 3.6)",
+                     bal / _43_BalanceAnchor);
+   }
+#endif
+   PrintFormat("[CFG] caps: RC_MaxLot %.2f | ProtectLevel %d (killDD %.0f%% / depositLoad %.0f%% / recSteps %d) | maxLevels %d",
+               RC_MaxLot, ProtectLevel, RC_KillDDPct(), RC_MaxDepositLoadPct(), RC_MaxRecSteps(), RiskControl_MaxLevels());
+
+   // --- inputs that are silently superseded by a twin. Name the loser explicitly:
+   // "ignored" in a log line is what stops someone tuning a dead number for an hour.
+   double bp;
+   bp = MM_BalancePct(_2_BasketTP_BalPct);
+   if(bp > 0.0)
+      PrintFormat("[CFG] basket TP: _2_BasketTP_BalPct %.3f%% = %.2f money -- IGNORING _2_BasketTP_ATRmult %.2f and _2_BasketTP_Money %.2f",
+                  _2_BasketTP_BalPct, bp, _2_BasketTP_ATRmult, _2_BasketTP_Money);
+   else if(_2_BasketTP_ATRmult > 0.0)
+      PrintFormat("[CFG] basket TP: _2_BasketTP_ATRmult %.2f -- IGNORING _2_BasketTP_Money %.2f",
+                  _2_BasketTP_ATRmult, _2_BasketTP_Money);
+   else if(_2_BasketTP_Money > 0.0)
+      PrintFormat("[CFG] basket TP: _2_BasketTP_Money %.2f", _2_BasketTP_Money);
+
+   bp = MM_BalancePct(_32_SL_BalPct);
+   if(bp > 0.0)
+      PrintFormat("[CFG] basket STOP: _32_SL_BalPct %.3f%% = %.2f money -- IGNORING _32_SL_Money %.2f", _32_SL_BalPct, bp, _32_SL_Money);
+   else if(_32_SL_Money > 0.0)
+      PrintFormat("[CFG] basket STOP: _32_SL_Money %.2f", _32_SL_Money);
+
+   if(_57_DynCloseOn)
+   {
+      bp = MM_BalancePct(_57_DynCloseBalPct);
+      if(bp > 0.0)
+         PrintFormat("[CFG] dyn close: base from _57_DynCloseBalPct %.3f%% = %.2f -- IGNORING _57_DynCloseBase %.2f", _57_DynCloseBalPct, bp, _57_DynCloseBase);
+      else
+         PrintFormat("[CFG] dyn close: base _57_DynCloseBase %.2f", _57_DynCloseBase);
+   }
+
+   if(RecoveryMode == REC_ADAPTIVE)
+   {
+      bp = MM_BalancePct(_8_DDRefBalPct);
+      if(bp > 0.0)
+         PrintFormat("[CFG] recovery 82 DD reference: _8_DDRefBalPct %.3f%% = %.2f -- IGNORING _8_DDRefMoney %.2f", _8_DDRefBalPct, bp, _8_DDRefMoney);
+      else
+         PrintFormat("[CFG] recovery 82 DD reference: _8_DDRefMoney %.2f", _8_DDRefMoney);
+   }
+
+   // --- the compounding stack. Three independent multipliers can stack on one order,
+   // and the registry/guide both flag this as the most dangerous combination in the
+   // chassis. If they are on together, say so where an operator will actually see it.
+   if(_4_DdAdaptiveOn && (LotProg != PROG_NONE || RecoveryMode != REC_NONE))
+      PrintFormat("[CFG] WARN: three lot multipliers are live at once - DD-adaptive (x up to %.2f) then LotProg %d then Recovery %d. Worst-case single-order lot must be checked by hand; RC_MaxLot %.2f is the only backstop.",
+                  _4_DdHardCapMult, LotProg, RecoveryMode, RC_MaxLot);
+   Print("[CFG] ---- end effective configuration ----");
+}
+
 // ---- MacroGate self-gate (ORDER-073 Phase-3) -----------------------------
 // _MG_* inputs moved to Inputs.mqh (ORDER-124 chore 2 - one input home). Names
 // unchanged so every existing .set still loads.
@@ -149,6 +235,7 @@ int OnInit()
    PrintFormat("[INIT] Boss_%s | exit=%d sl=%d stack=%d conf=%d firstLot=%d prog=%d protect=%d dry=%s",
                LAB_ENTRY_TAG, ExitMode, SLMode, StackMode, StackConfirm,
                FirstLotMode, LotProg, ProtectLevel, (DryRun ? "Y" : "N"));
+   Lab_LogEffectiveConfig();   // ORDER-192: log-only summary of which inputs actually win
    if(StackMode == STACK_PYRAMID && _9_PendingMode != 2 && _9_PendingMode != 3)
       Print("[INIT] WARN: StackMode=93 but _9_PendingMode not 2/3 - ladder disabled, behaves like single");
    // ORDER-124 chore 3: exit-owner assert. Mode 93 declares the pending ladder the
