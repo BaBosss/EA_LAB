@@ -114,7 +114,13 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XAU_OOS_M1_FULLWINDOW`
 **ห้าม:** สรุปจากคอลัมน์ verdict ตรงๆ โดยไม่แยก eqDD ≥45% ออกก่อน (จะได้ตัวเลข 141 ที่เว่อร์เกินจริงเท่าตัว)
 
-## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `OPEN` (งานเล็ก ~15 นาที + 1 cage)
+## ORDER-196 — [infra] ประกาศเลิกใช้ chassis V1 (`EA_LabTemplate.mq5` + `ea_template/modules/`) — `CLAIMED(Sonnet 2026-07-24)`
+**source:** Codex audit ชี้ว่า V1 ยังมี silent lot-mode fallback เดิม **และ normalizer ของมันปัด lot ที่ต่ำกว่าขั้นต่ำ *ขึ้น* เป็น min lot** (V2 คืน 0 แล้วข้ามไม้) — คำถามคือจะไปเสริมความแข็งแรงหรือเลิกใช้
+**ตรวจแล้ว = ตายจริง ไม่ต้องเสริม:** 0 แถวใน deployment inventory · 0 รายงาน backtest · 0 ไฟล์ `.set` อ้างถึง · `ea_template/modules/` ไม่ถูกแตะตั้งแต่ **2026-06-18** · Boss V2 ไม่มี dependency (Codex ยืนยัน 0 จุด) ⇒ **การไปแก้ money code ที่ตายแล้วคือรับความเสี่ยงฟรีๆ**
+**สั่งทำแค่:** ใส่ banner DEPRECATED ที่หัวไฟล์ทั้งสอง + คู่มือ · **ห้ามลบไฟล์ · ห้ามแก้ `deploy.ps1` · ห้ามแตะ logic** (comment-only) — เก็บของไว้ในประวัติ แค่ปิดทางไม่ให้ใครหยิบไปใช้
+
+## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `CLAIMED(Sonnet 2026-07-24)` + เพิ่มงาน: เติม `classification_note` ให้ 9 แถวฝั่งที่แพ้ใน registry ด้วย
+<sub>⚠️ การจัดคิว 2026-07-24: ปล่อย Sonnet 2 ตัวคู่ขนาน โดย **195 เป็นเจ้าของ MT5 แต่ผู้เดียว** ส่วน 192(b)+196 ถูกสั่งห้ามแตะ MT5/`_mt5_auto/` เด็ดขาด — สอง agent รัน tester พร้อมกันจะได้ report ปนกัน (บทเรียน ORDER-128 เรื่อง 0-trade artifact จาก session คู่ขนาน)</sub>
 **source:** ORDER-191(c) นับได้ว่า registry มี **override pair 11 คู่ และ 9 คู่ (82%) เป็น SILENT** — คือแถวของ input ที่*แพ้*ไม่มีหมายเหตุบอกเลยว่ามันถูกทับได้ คนอ่านจะรู้ก็ต่อเมื่อบังเอิญไปอ่านแถวของตัวที่*ชนะ*
 **ช่องว่างที่เหลือ:** บล็อก `[CFG]` (ORDER-192) ครอบไปแล้ว **4 คู่** (BasketTP 3 ชั้น · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`) **ยังไม่ครอบอีก 4-5 คู่:**
 - `_17_UseStructLevels` ทับ `SLMode` **และ** `ExitMode` (build 17)
