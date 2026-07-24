@@ -120,6 +120,16 @@ foreach($a in $accounts){
   $health += [ordered]@{ account=$a; collector=$c.kind; state=$state; latest_file=$c.file.Name; age_hours=$age; governance_scope=$scope }
 }
 
+# --- CR-005-lite-b: expected-vs-actual reference (portfolio\expectations.csv is the owner of
+# per-magic expected profile). We use it ONLY for a trade-RATE flag here (the cheapest, most
+# actionable "has this EA gone silent?" signal) plus surfacing expected pf/dd95 for context.
+# Live-PF-vs-band and DD-vs-dd95 comparison need per-magic profit summation and belong to the
+# full CR-005 drift engine - deliberately NOT computed in this lite slice. Never touches the
+# CLAUDE.md promotion bar (PF>=1.40 / >=30 trades / >=3 months) - advisory only.
+$EXP = Join-Path $Root 'portfolio\expectations.csv'
+$expMeta = @{}
+if (Test-Path $EXP) { foreach($e in @(Import-Csv $EXP)) { $expMeta["$($e.account)|$($e.magic)"] = $e } }
+
 # --- judge readiness per ACTIVE row with a magic ---
 $decisionBar = 30   # CLAUDE.md judge bar: PF>=1.40 at >=30 trades
 $watchBar    = 15   # CLAUDE.md demo-kill floor sample
@@ -142,12 +152,17 @@ foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -matc
   if ($r.judge_date -match '^\d{4}-\d{2}-\d{2}$') { $d2j = [int]([datetime]$r.judge_date - $now.Date).TotalDays }
   # CR-005-lite forecast: project closed trades at judge_date from the observed rate since
   # start_date. Needs >=7 days of history to be meaningful; otherwise FORECAST_NA.
-  $proj = $null; $fstate = 'FORECAST_NA'; $obsWk = $null
-  if ($null -ne $trades -and $r.start_date -match '^\d{4}-\d{2}-\d{2}$' -and $r.judge_date -match '^\d{4}-\d{2}-\d{2}$') {
-    $daysActive = [int]($now.Date - [datetime]$r.start_date).TotalDays
+  $daysActive = $null
+  if ($r.start_date -match '^\d{4}-\d{2}-\d{2}$') { $daysActive = [int]($now.Date - [datetime]$r.start_date).TotalDays }
+  # observed weekly close rate only needs trades + >=7d history (NOT a judge_date), so it is
+  # available for every deployment incl. non-cohort MT4 rows - the rate_flag below uses it.
+  $obsWk = $null
+  if ($null -ne $trades -and $null -ne $daysActive -and $daysActive -ge 7) { $obsWk = [math]::Round($trades * 7.0 / $daysActive, 1) }
+  # forecast/projection additionally needs a judge_date (project trades AT the judge date).
+  $proj = $null; $fstate = 'FORECAST_NA'
+  if ($null -ne $obsWk -and $r.judge_date -match '^\d{4}-\d{2}-\d{2}$') {
     $daysTotal  = [int]([datetime]$r.judge_date - [datetime]$r.start_date).TotalDays
-    if ($daysActive -ge 7 -and $daysTotal -gt 0) {
-      $obsWk = [math]::Round($trades * 7.0 / $daysActive, 1)
+    if ($daysTotal -gt 0) {
       $proj = [int][math]::Round($trades * ($daysTotal / [double]$daysActive))
       if ($proj -ge $decisionBar) { $fstate = 'PROJECTED_CAPABLE' } else { $fstate = 'PROJECTED_SHORTFALL' }
     }
@@ -158,7 +173,24 @@ foreach($r in ($rows | Where-Object { $_.status -eq 'ACTIVE' -and $_.magic -matc
   if ($null -ne $trades -and $null -ne $d2j -and $d2j -gt 0 -and $trades -lt $decisionBar) {
     $needWk = [math]::Round(($decisionBar - $trades) * 7.0 / $d2j, 1)
   }
-  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk }
+  # CR-005-lite-b expected-vs-actual: attach expected profile + a trade-rate flag.
+  # rate_flag = UNDER_RATE only when we have >=14d of history AND observed weekly close rate
+  # is below half the expected rate (gone-quiet detector); ON_RATE when meeting it; NA otherwise
+  # (too little history, no expectation row, or no numeric expected rate). Advisory only.
+  $em = $expMeta["$($r.account)|$($r.magic)"]
+  $expPf = $null; $expDd95 = $null; $expWk = $null; $rateFlag = 'NA'
+  if ($null -ne $em) {
+    $expPf   = $em.pf_expected
+    $expDd95 = $em.dd95_expected
+    $tpm = 0.0
+    if ([double]::TryParse($em.trades_per_month_expected, [ref]$tpm) -and $tpm -gt 0) {
+      $expWk = [math]::Round($tpm / 4.33, 1)
+      if ($null -ne $obsWk -and $null -ne $daysActive -and $daysActive -ge 14) {
+        if ($obsWk -lt (0.5 * $expWk)) { $rateFlag = 'UNDER_RATE' } else { $rateFlag = 'ON_RATE' }
+      }
+    }
+  }
+  $jr += [ordered]@{ account=$r.account; magic=$r.magic; ea=$r.ea_name; symbol=$r.symbol; closed_trades=$trades; days_active=$daysActive; days_to_judge=$d2j; judge_date=$r.judge_date; readiness=$state; projected_trades_at_judge=$proj; forecast=$fstate; obs_trades_per_week=$obsWk; needed_trades_per_week=$needWk; expected_pf=$expPf; expected_dd95=$expDd95; expected_trades_per_week=$expWk; rate_flag=$rateFlag }
 }
 
 # --- CR-005-lite vertical slice: per-judge-date cohort rollup ---
@@ -309,12 +341,13 @@ $sum = [ordered]@{
   unknown_magics_active     = @($unknown | Where-Object { $_.age_class -eq 'ACTIVE' }).Count
   unknown_magics_historical = @($unknown | Where-Object { $_.age_class -eq 'HISTORICAL' }).Count
   accounts_floating_blind   = @($floating | Where-Object { $_.state -ne 'FRESH' }).Count
+  judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
 }
 
 $snapshot = [ordered]@{
   meta = [ordered]@{
     schema  = 'ControlRoomSnapshot'
-    version = 3   # v3 (CR-003b/002c/002d): +governance_scope on health, +floating_risk, +unknown age_class. Additive - v2 readers still work.
+    version = 3   # v3 (CR-003b/002c/002d/005-lite-b): +governance_scope, +floating_risk, +unknown age_class, +judge rate_flag/expected_*. Additive - v2 readers still work.
     generated_at = $now.ToString('s')
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
@@ -347,6 +380,7 @@ Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f
 Write-Host ("FLEET    {0} rows, {1} ACTIVE | gaps: {2} UNVERIFIED, {3} no-kill, {4} no-judge" -f $sum.deployments_total, $sum.deployments_active, $sum.gaps_unverified, $sum.gaps_missing_kill, $sum.gaps_missing_judge)
 Write-Host ("JUDGE    {0} decision-capable | {1} partial | {2} collecting | {3} no-data" -f $sum.judge_decision_capable, $sum.judge_partial, $sum.judge_data_collection, $sum.judge_data_insufficient)
 Write-Host ("FORECAST {0} projected-capable at judge date | {1} projected SHORTFALL (<30 trades)" -f $sum.judge_projected_capable, $sum.judge_projected_shortfall)
+Write-Host ("RATE     {0} magic(s) UNDER_RATE (obs weekly closes < 50% of expectations.csv, >=14d history)" -f $sum.judge_under_rate)
 foreach($cRoll in $cohorts){
   Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
 }

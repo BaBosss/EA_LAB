@@ -2,8 +2,8 @@
     "meta":  {
                  "schema":  "ControlRoomSnapshot",
                  "version":  3,
-                 "generated_at":  "2026-07-24T14:59:16",
-                 "git_head":  "fb24adfa",
+                 "generated_at":  "2026-07-24T15:02:53",
+                 "git_head":  "2539d11c",
                  "stale_bar_hours":  30,
                  "decision_bar_trades":  30,
                  "sources":  [
@@ -23,7 +23,7 @@
                                      "path":  "portfolio\\ATTESTATION_MAP.csv",
                                      "sha256":  "bcaee6887e954da151b5e43f03993b869d0d02c795b311d56f76043d4711aeee",
                                      "mtime":  "2026-07-20T07:22:55",
-                                     "age_hours":  103.6
+                                     "age_hours":  103.7
                                  }
                              ],
                  "counting_method":  "MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic."
@@ -34,7 +34,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159503454_20260724.csv",
-                              "age_hours":  7.4,
+                              "age_hours":  7.5,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -42,7 +42,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159475669_20260724.csv",
-                              "age_hours":  7.4,
+                              "age_hours":  7.5,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -50,7 +50,7 @@
                               "collector":  "MT4",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_mt4_orders_141049900_20260724.csv",
-                              "age_hours":  7.4,
+                              "age_hours":  7.5,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -58,7 +58,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_415573666_20260724.csv",
-                              "age_hours":  7.4,
+                              "age_hours":  7.5,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -66,7 +66,7 @@
                               "collector":  "MT5",
                               "state":  "STALE",
                               "latest_file":  "EA_LAB_deals_463666728_20260724.csv",
-                              "age_hours":  32.6,
+                              "age_hours":  32.7,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -1046,13 +1046,18 @@
                                 "ea":  "(Boss)_ZeusInspired_GridLog",
                                 "symbol":  "XAUUSD",
                                 "closed_trades":  7,
+                                "days_active":  15,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  43,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  3.3,
-                                "needed_trades_per_week":  2.1
+                                "needed_trades_per_week":  2.1,
+                                "expected_pf":  "UNKNOWN",
+                                "expected_dd95":  "2.78",
+                                "expected_trades_per_week":  2.5,
+                                "rate_flag":  "ON_RATE"
                             },
                             {
                                 "account":  "159503454",
@@ -1060,13 +1065,18 @@
                                 "ea":  "EA_BREAKOUT_XAU",
                                 "symbol":  "XAUUSD",
                                 "closed_trades":  1,
+                                "days_active":  15,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  6,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.5,
-                                "needed_trades_per_week":  2.6
+                                "needed_trades_per_week":  2.6,
+                                "expected_pf":  "UNKNOWN",
+                                "expected_dd95":  "1.88",
+                                "expected_trades_per_week":  0.2,
+                                "rate_flag":  "ON_RATE"
                             },
                             {
                                 "account":  "159503454",
@@ -1074,13 +1084,18 @@
                                 "ea":  "(BRK)_SqueezeBreakout",
                                 "symbol":  "XAUUSD",
                                 "closed_trades":  0,
+                                "days_active":  15,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.7
+                                "needed_trades_per_week":  2.7,
+                                "expected_pf":  "UNKNOWN",
+                                "expected_dd95":  "2.06",
+                                "expected_trades_per_week":  0.3,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "159503454",
@@ -1088,13 +1103,18 @@
                                 "ea":  "(BRK)_TrendlineBreakout",
                                 "symbol":  "XAUUSD",
                                 "closed_trades":  1,
+                                "days_active":  15,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  6,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.5,
-                                "needed_trades_per_week":  2.6
+                                "needed_trades_per_week":  2.6,
+                                "expected_pf":  "UNKNOWN",
+                                "expected_dd95":  "6.72",
+                                "expected_trades_per_week":  1.1,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "159475669",
@@ -1102,13 +1122,18 @@
                                 "ea":  "NuiIndy Dynamic RSI+ADX",
                                 "symbol":  "EURUSD",
                                 "closed_trades":  88,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  10.4,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "2.00",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1116,13 +1141,18 @@
                                 "ea":  "(Boss)_LondonConsoBreakout_rev01",
                                 "symbol":  "EURUSDc",
                                 "closed_trades":  1,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.1,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "2.08",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1130,13 +1160,18 @@
                                 "ea":  "MatchaGrid",
                                 "symbol":  "CHFJPYc",
                                 "closed_trades":  43,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  5.1,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1144,13 +1179,18 @@
                                 "ea":  "GoldReaper leg1",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  2,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.2,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1158,13 +1198,18 @@
                                 "ea":  "GoldReaper leg2",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  5,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.6,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1172,13 +1217,18 @@
                                 "ea":  "GoldReaper leg3",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  2,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.2,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1186,13 +1236,18 @@
                                 "ea":  "GoldReaper leg4",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  2,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.2,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1200,13 +1255,18 @@
                                 "ea":  "GoldReaper leg5",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  7,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.8,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1214,13 +1274,18 @@
                                 "ea":  "GoldReaper leg6",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  8,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.9,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1228,13 +1293,18 @@
                                 "ea":  "GoldReaper leg7",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  6,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  0.7,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1242,13 +1312,18 @@
                                 "ea":  "GoldReaper leg8",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  9,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  1.1,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1256,13 +1331,18 @@
                                 "ea":  "(Boss)_LondonConsoBreakout_rev01",
                                 "symbol":  "GBPUSDc",
                                 "closed_trades":  0,
+                                "days_active":  0,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "159475669",
@@ -1270,13 +1350,18 @@
                                 "ea":  "EA_BREAKOUT_XAU",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  0,
+                                "days_active":  0,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "141049900",
@@ -1284,13 +1369,18 @@
                                 "ea":  "Zeus Gold Hedge V1.2_fix",
                                 "symbol":  "EURUSDc",
                                 "closed_trades":  250,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  29.7,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "1.61",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "141049900",
@@ -1298,13 +1388,18 @@
                                 "ea":  "Gold_Kangaroo L1",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  58,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  6.9,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "4.86",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  34.3,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "141049900",
@@ -1312,13 +1407,18 @@
                                 "ea":  "Gold_Kangaroo L2",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  34,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  4,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "4.86",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  34.3,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "141049900",
@@ -1326,13 +1426,18 @@
                                 "ea":  "Gold_Kangaroo L3",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  37,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DECISION_CAPABLE",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  4.4,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "4.86",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  34.3,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "141049900",
@@ -1340,13 +1445,18 @@
                                 "ea":  "Gold_Kangaroo L4",
                                 "symbol":  "XAUUSDc",
                                 "closed_trades":  22,
+                                "days_active":  59,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "PARTIAL",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
-                                "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "obs_trades_per_week":  2.6,
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "4.86",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  34.3,
+                                "rate_flag":  "UNDER_RATE"
                             },
                             {
                                 "account":  "415573666",
@@ -1354,13 +1464,18 @@
                                 "ea":  "Boss_14_GridLog",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  8,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  42,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  3.1,
-                                "needed_trades_per_week":  2
+                                "needed_trades_per_week":  2,
+                                "expected_pf":  "1.51",
+                                "expected_dd95":  "7.25",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1368,13 +1483,18 @@
                                 "ea":  "Boss_14_GridLog",
                                 "symbol":  "AUDNZDm",
                                 "closed_trades":  1,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  5,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.4,
-                                "needed_trades_per_week":  2.6
+                                "needed_trades_per_week":  2.6,
+                                "expected_pf":  "1.56",
+                                "expected_dd95":  "5.97",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1382,13 +1502,18 @@
                                 "ea":  "Boss_14_GridLog size-light",
                                 "symbol":  "EURJPYm",
                                 "closed_trades":  1,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  5,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.4,
-                                "needed_trades_per_week":  2.6
+                                "needed_trades_per_week":  2.6,
+                                "expected_pf":  "2.49",
+                                "expected_dd95":  "7.28",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1396,13 +1521,18 @@
                                 "ea":  "Boss_14_GridLog",
                                 "symbol":  "AUDCADm",
                                 "closed_trades":  6,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  32,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  2.3,
-                                "needed_trades_per_week":  2.2
+                                "needed_trades_per_week":  2.2,
+                                "expected_pf":  "1.88",
+                                "expected_dd95":  "6.03",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1410,13 +1540,18 @@
                                 "ea":  "Boss_14_GridLog size-light thin",
                                 "symbol":  "CADJPYm",
                                 "closed_trades":  1,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  5,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.4,
-                                "needed_trades_per_week":  2.6
+                                "needed_trades_per_week":  2.6,
+                                "expected_pf":  "1.89",
+                                "expected_dd95":  "5.36",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1424,13 +1559,18 @@
                                 "ea":  "Boss_14_GridLog SELL",
                                 "symbol":  "EURUSDm",
                                 "closed_trades":  7,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  37,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  2.7,
-                                "needed_trades_per_week":  2.1
+                                "needed_trades_per_week":  2.1,
+                                "expected_pf":  "1.97",
+                                "expected_dd95":  "2.99",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1438,13 +1578,18 @@
                                 "ea":  "Boss_14_GridLog",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  13,
+                                "days_active":  18,
                                 "days_to_judge":  77,
                                 "judge_date":  "2026-10-09",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  69,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  5.1,
-                                "needed_trades_per_week":  1.5
+                                "needed_trades_per_week":  1.5,
+                                "expected_pf":  "1.42",
+                                "expected_dd95":  "5.44",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "69424711",
@@ -1452,13 +1597,18 @@
                                 "ea":  "UnNomGuaiV1.132",
                                 "symbol":  "EURUSD",
                                 "closed_trades":  null,
+                                "days_active":  32,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "1.63",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  20.8,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "69424711",
@@ -1466,13 +1616,18 @@
                                 "ea":  "UnNomGuaiV1.132",
                                 "symbol":  "EURUSD",
                                 "closed_trades":  null,
+                                "days_active":  32,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "1.63",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  20.8,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "69424711",
@@ -1480,13 +1635,18 @@
                                 "ea":  "RSI from pips_EA",
                                 "symbol":  "EURUSD",
                                 "closed_trades":  null,
+                                "days_active":  32,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "2.07",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  10.4,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "69424711",
@@ -1494,13 +1654,18 @@
                                 "ea":  "swb grid 4.1.0.3_h",
                                 "symbol":  "AUDCAD",
                                 "closed_trades":  null,
+                                "days_active":  32,
                                 "days_to_judge":  null,
                                 "judge_date":  "",
                                 "readiness":  "DATA_INSUFFICIENT",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  null
+                                "needed_trades_per_week":  null,
+                                "expected_pf":  "1.80",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  8.1,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1508,13 +1673,18 @@
                                 "ea":  "Boss_17_Wave5",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  2,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  23,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  1.8,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  "1.11",
+                                "expected_dd95":  "5.76",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1522,13 +1692,18 @@
                                 "ea":  "Boss_17_Wave5",
                                 "symbol":  "XAGUSDm",
                                 "closed_trades":  3,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  34,
                                 "forecast":  "PROJECTED_CAPABLE",
                                 "obs_trades_per_week":  2.6,
-                                "needed_trades_per_week":  2.2
+                                "needed_trades_per_week":  2.2,
+                                "expected_pf":  "1.35",
+                                "expected_dd95":  "7.65",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1536,13 +1711,18 @@
                                 "ea":  "EA_BREAKOUT_XAU",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.28",
+                                "expected_dd95":  "0.36",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1550,13 +1730,18 @@
                                 "ea":  "EA_BREAKOUT_XAU",
                                 "symbol":  "US30m",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.46",
+                                "expected_dd95":  "0.18",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1564,13 +1749,18 @@
                                 "ea":  "MacdDiv_Naked",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.88",
+                                "expected_dd95":  "2.66",
+                                "expected_trades_per_week":  1.8,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1578,13 +1768,18 @@
                                 "ea":  "EmaStoRev",
                                 "symbol":  "EURUSDm",
                                 "closed_trades":  1,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  12,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0.9,
-                                "needed_trades_per_week":  2.4
+                                "needed_trades_per_week":  2.4,
+                                "expected_pf":  "1.39",
+                                "expected_dd95":  "0.33",
+                                "expected_trades_per_week":  0.9,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1592,13 +1787,18 @@
                                 "ea":  "(EXP)_IchiADX_Naked_rev00",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.339",
+                                "expected_dd95":  "10.77",
+                                "expected_trades_per_week":  1.1,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1606,13 +1806,18 @@
                                 "ea":  "(EXP)_IchiADX_Naked_rev00",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.339",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  1.1,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1620,13 +1825,18 @@
                                 "ea":  "(EXP)_IchiADX_Naked_rev00",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "2.143",
+                                "expected_dd95":  "UNKNOWN",
+                                "expected_trades_per_week":  1,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1634,13 +1844,18 @@
                                 "ea":  "(EXP)_IchiADX_Naked_rev00",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "2.143",
+                                "expected_dd95":  "22.19",
+                                "expected_trades_per_week":  1,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1648,13 +1863,18 @@
                                 "ea":  "EA_SUPERTREND",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.54",
+                                "expected_dd95":  "3.26",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1662,13 +1882,18 @@
                                 "ea":  "(Boss)_ZeusInspired_GridLog",
                                 "symbol":  "AUDJPYm",
                                 "closed_trades":  2,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  23,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  1.8,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  "1.24",
+                                "expected_dd95":  "5.22",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1676,13 +1901,18 @@
                                 "ea":  "Boss_14_GridLog",
                                 "symbol":  "GBPJPYm",
                                 "closed_trades":  0,
+                                "days_active":  8,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  0,
                                 "forecast":  "PROJECTED_SHORTFALL",
                                 "obs_trades_per_week":  0,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.43",
+                                "expected_dd95":  "6.51",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1690,13 +1920,18 @@
                                 "ea":  "Boss_17_Wave5",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  0,
+                                "days_active":  6,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.56",
+                                "expected_dd95":  "0.55",
+                                "expected_trades_per_week":  0.3,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1704,13 +1939,18 @@
                                 "ea":  "PairSpread_StatArb",
                                 "symbol":  "EURUSDm",
                                 "closed_trades":  0,
+                                "days_active":  6,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.5
+                                "needed_trades_per_week":  2.5,
+                                "expected_pf":  "1.14",
+                                "expected_dd95":  "19.65",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1718,13 +1958,18 @@
                                 "ea":  "Boss_12_Breakout (MacroGate leg)",
                                 "symbol":  "USDJPYm",
                                 "closed_trades":  3,
+                                "days_active":  6,
                                 "days_to_judge":  84,
                                 "judge_date":  "2026-10-16",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.2
+                                "needed_trades_per_week":  2.2,
+                                "expected_pf":  "1.01",
+                                "expected_dd95":  "0.82",
+                                "expected_trades_per_week":  4.5,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1732,13 +1977,18 @@
                                 "ea":  "EA_SUPERTREND (crypto ST-BTC)",
                                 "symbol":  "BTCUSDm",
                                 "closed_trades":  0,
+                                "days_active":  1,
                                 "days_to_judge":  91,
                                 "judge_date":  "2026-10-23",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1746,13 +1996,18 @@
                                 "ea":  "EA_DONCHIAN (crypto DON-ETH pyr3)",
                                 "symbol":  "ETHUSDm",
                                 "closed_trades":  0,
+                                "days_active":  1,
                                 "days_to_judge":  91,
                                 "judge_date":  "2026-10-23",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1760,13 +2015,18 @@
                                 "ea":  "TrendRider_XAU (W2 S1)",
                                 "symbol":  "XAUUSD",
                                 "closed_trades":  0,
+                                "days_active":  1,
                                 "days_to_judge":  91,
                                 "judge_date":  "2026-10-23",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  "1.63",
+                                "expected_dd95":  "4.15",
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1774,13 +2034,18 @@
                                 "ea":  "TsMom_XAU (S2)",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  1,
                                 "days_to_judge":  91,
                                 "judge_date":  "2026-10-23",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "415573666",
@@ -1788,13 +2053,18 @@
                                 "ea":  "LondonORB_XAU (SS1 +trend filter)",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  1,
                                 "days_to_judge":  91,
                                 "judge_date":  "2026-10-23",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1802,13 +2072,18 @@
                                 "ea":  "PivotBreakout_XAU",
                                 "symbol":  "XAUUSDm",
                                 "closed_trades":  0,
+                                "days_active":  0,
                                 "days_to_judge":  92,
                                 "judge_date":  "2026-10-24",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             },
                             {
                                 "account":  "463666728",
@@ -1816,13 +2091,18 @@
                                 "ea":  "(Boss)_RSI_MR_GridLog",
                                 "symbol":  "EURUSDm",
                                 "closed_trades":  0,
+                                "days_active":  0,
                                 "days_to_judge":  92,
                                 "judge_date":  "2026-10-24",
                                 "readiness":  "DATA_COLLECTION",
                                 "projected_trades_at_judge":  null,
                                 "forecast":  "FORECAST_NA",
                                 "obs_trades_per_week":  null,
-                                "needed_trades_per_week":  2.3
+                                "needed_trades_per_week":  2.3,
+                                "expected_pf":  null,
+                                "expected_dd95":  null,
+                                "expected_trades_per_week":  null,
+                                "rate_flag":  "NA"
                             }
                         ],
     "judge_cohorts":  [
@@ -2841,6 +3121,7 @@
                     "unknown_magics":  6,
                     "unknown_magics_active":  0,
                     "unknown_magics_historical":  6,
-                    "accounts_floating_blind":  6
+                    "accounts_floating_blind":  6,
+                    "judge_under_rate":  6
                 }
 }
