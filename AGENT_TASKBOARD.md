@@ -1627,37 +1627,40 @@ Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migr
 
 **⏸ CR-P0 (มือ user — ไม่มีโค้ด, ทำก่อนทุกอย่าง):** (1) กู้ sensor `463666728` — login/restart `D:\Monitor\MT5 - 463666728` (ถือ candidate 13-14 ตัว = จุดบอดใหญ่สุด) · (2) สร้าง sensor `69424711` (terminal + attach DealsExporter) · (3) attach **AccountSnapshotExporter.ex5/.ex4** (compile พร้อมใน `tools\AccountSnapshot\`) เข้าทุก monitor terminal → floating-risk panel ขึ้นเองไม่ต้องแก้โค้ด. **CR-002c/CR-002 unknown-split รันได้เต็มผลก็ต่อเมื่อ P0 เสร็จ** (ก่อนหน้านั้นทำ code path ไว้รอได้ แต่ output ยังบอด).
 
-## CR-003a — false-green fix: daily_monitor fail เมื่อบัญชี governance=LAB_MANAGED ไม่ FRESH — `OPEN`
+### ✅ Phase-1 ปิดครบ 6/6 (Claude/Fable 2026-07-24, commits `fb24adf` orders · `2539d11` code · `2875d0b` CR-005-lite-b)
+> Sonnet lane เขียน script edits (CR-003a/b·002c/d·TOOL-01) · Claude review+verify+owner files+CR-005-lite-b. **Regression cage: 13 ตัวเลข summary byte-identical ทุก commit.** snapshot schema v2→v3 (additive). ผลจริงวันนี้: chain **แดงถูกต้อง** (463666728 STALE + 69424711 NO_SENSOR ทั้งคู่ LAB_MANAGED) · unknown 6 = HISTORICAL หมด (0 ghost สด) · floating 6/6 BLIND (รอ P0 attach) · rate_flag เจอ 6 UNDER_RATE (991004/991002 บนบัญชี judge = ของจริง · Kangaroo L1-4 = น่าจะ expectation-basis mismatch, advisory). **เหลือ P0 (มือ user) เท่านั้น** → attach เสร็จ floating หายบอดเอง.
+
+## CR-003a — false-green fix: daily_monitor fail เมื่อบัญชี governance=LAB_MANAGED ไม่ FRESH — `DONE(Claude/Fable 2026-07-24) — verified exit 1 + "4/6 LAB_MANAGED fresh; missing: 463666728, 69424711"`
 **problem (trace ยืนยัน):** `daily_monitor.ps1:76-82` เช็คแค่ "ไฟล์ใหม่สุด **1 ไฟล์รวมทุกบัญชี** อายุ <26h" → 4/6 fresh + 463666728 stale 30.2h = chain จบ **เขียว** ทั้งที่ตาบอด 1 บัญชี. วันนี้เกิดจริง (snapshot=STALE, task=green).
 **spec:** หลัง step `snapshot` (line 57) อ่าน `portfolio\control_room_snapshot.json` ที่เพิ่ง gen → เดินทุกบัญชีที่ `governance_scope=LAB_MANAGED` (จาก CR-003b) → ถ้าตัวใด `state≠FRESH` เพิ่มเข้า `$failed` เป็น `sensor-<acct>` + เขียน `MONITOR_ALERT.txt` ที่ระบุ "N/M LAB_MANAGED fresh, missing: <accts>". `USER_OBSERVED`/`ARCHIVED` ไม่ทำ chain แดง (เตือนใน log เฉยๆ). แยกข้อความ `chain ran` ออกจาก `coverage healthy` ให้ชัด.
 **acceptance:** (1) inject 1 บัญชี LAB_MANAGED ให้ stale (mtime เก่า) → `daily_monitor.ps1 -Force` exit **1** + alert ระบุบัญชีถูกตัว · (2) ทุกบัญชี LAB_MANAGED fresh → exit **0** · (3) บัญชี USER_OBSERVED stale → exit **0** (ไม่แดง) · (4) รันจริงวันนี้ (463666728 stale) → exit 1.
 **ห้าม:** ลบ/อ่อน stale guard เดิม (line 76-82) — เพิ่มชั้น per-account ทับ ไม่ใช่แทน · ทำ snapshot เป็น owner (มัน read-only projection) · ให้ chain แดงเพราะ USER_OBSERVED.
 
-## CR-003b — `portfolio\ACCOUNTS.csv` registry + snapshot อ่าน account list จากไฟล์นี้ — `OPEN`
+## CR-003b — `portfolio\ACCOUNTS.csv` registry + snapshot อ่าน account list จากไฟล์นี้ — `DONE(Claude/Fable 2026-07-24) — 6 acct LAB_MANAGED, registered PROJECT_STATE §0.5, fallback verified`
 **problem:** ตอนนี้รายชื่อบัญชี derive จาก `DEPLOYMENTS.csv` (`control_room_snapshot.ps1:71`) → บัญชีที่ควรมี sensor แต่ยังไม่มี deployment (เช่น 69424711) หายจากเรดาร์ + governance policy ฝังในหัวคน.
 **spec:** สร้าง `portfolio\ACCOUNTS.csv` columns: `account,account_name,platform,environment,governance_scope,expected_sensor,monitor_sla_minutes,base_equity,currency,start_date,alert_policy,notes`. `governance_scope ∈ {LAB_MANAGED,USER_OBSERVED,ARCHIVED}`. เติม 6 บัญชีปัจจุบัน (159503454/159475669/141049900/415573666=LAB_MANAGED · 463666728=LAB_MANAGED · 69424711=ตาม user ว่า observed/managed). `control_room_snapshot.ps1` อ่าน account universe จากไฟล์นี้ (fallback = DEPLOYMENTS ถ้าไฟล์ไม่มี, กัน regression) + ใส่ `governance_scope` ลง `system_health[]` แต่ละ entry.
 **acceptance:** (1) snapshot `system_health` มี field `governance_scope` ทุก entry · (2) 69424711 โผล่ใน system_health เป็น NO_SENSOR (ก่อนหน้านี้โผล่จาก DEPLOYMENTS อยู่แล้ว — verify ไม่หาย) · (3) ไฟล์หาย → snapshot ยังรันได้ด้วย fallback · (4) `governance_scope` ผิดค่า → warn ไม่ crash.
 **ห้าม:** ยัด per-account data ซ้ำลง DEPLOYMENTS (คงเป็น per-EA) · ทำ ACCOUNTS.csv เป็น generated (มันคือ owner ใหม่ระดับบัญชี — เพิ่มใน PROJECT_STATE §0.5 owner map ด้วย).
 
-## CR-002c — section `floating_risk` ใน snapshot (wire ท่อ AccountSnapshotExporter ที่สร้างเสร็จแล้ว) — `OPEN`
+## CR-002c — section `floating_risk` ใน snapshot (wire ท่อ AccountSnapshotExporter ที่สร้างเสร็จแล้ว) — `DONE(Claude/Fable 2026-07-24) — 6/6 BLIND ก่อน P0 (ถูกต้อง), column names ตรง exporter header เป๊ะ`
 **problem:** exporter + collector + dashboard panel สร้างครบ (`collect_live_deals.ps1:37` · `live_dashboard.ps1:358`) แต่ snapshot JSON ไม่มี floating-risk เลย → AI advisor/TODAY มองไม่เห็น open exposure.
 **spec:** อ่าน `EA_LAB_snapshot_<acct>.csv` ใหม่สุดต่อบัญชีจาก `portfolio\live_deals` → เพิ่ม section `floating_risk` ต่อบัญชี: equity/balance/margin_level/floating_pl (ACCOUNT row) + per-magic floating_pl/open_lots/pos_count/oldest_age_h (MAGIC rows). ใส่ `age_hours` + flag `BLIND` ถ้าไม่มีไฟล์. summary เพิ่ม `accounts_floating_blind` count.
 **acceptance:** (1) ก่อน CR-P0 attach: ทุกบัญชี `floating_risk.state=BLIND`, summary `accounts_floating_blind=6`, snapshot ไม่ crash · (2) หลัง attach ≥1 บัญชี: floating_pl/lots โผล่ตรงกับ dashboard panel เลขเดียวกัน · (3) ไฟล์เก่า >26h → flag stale ไม่ใช้เป็นสด.
 **ห้าม:** อ่าน `Common\Files` ตรงใน snapshot (นั่น CR-007 fast-lane; snapshot อ่านจาก repo copy เท่านั้นเพื่อ reproducible) · ให้ floating section ทำ snapshot crash เมื่อไม่มีข้อมูล (บอดต้อง degrade ไม่ตาย).
 
-## CR-002d — แยก unknown-magic เป็น HISTORICAL vs ACTIVE — `OPEN`
+## CR-002d — แยก unknown-magic เป็น HISTORICAL vs ACTIVE — `DONE(Claude/Fable 2026-07-24) — 6/6 HISTORICAL วันนี้ (0 active ghost, ยืนยันข้อสังเกต Codex)`
 **problem:** `unknown_magics` (`control_room_snapshot.ps1:181`) รวม ghost ที่เลิกเทรดไปนานกับที่กำลังเทรดสดเป็นก้อนเดียว → 6 ตัววันนี้ทำให้ตกใจเกินจริง (Codex เองก็ตั้งข้อสังเกตว่า "น่าจะเป็น historical").
 **spec:** ใช้ `last_seen` (มีอยู่แล้ว) เทียบ now: `ACTIVE` ถ้า last_seen ≤ 14 วัน, `HISTORICAL` ถ้าเก่ากว่า. summary แยก `unknown_magics_active` / `unknown_magics_historical`. เฉพาะ ACTIVE เข้า alert/TODAY; HISTORICAL เก็บไว้ใน section เฉยๆ.
 **acceptance:** (1) 6 unknown วันนี้ถูกจำแนกครบ (ตรวจ last_seen แต่ละตัว) · (2) summary มี 2 count ใหม่ · (3) magic ที่ last_seen วันนี้ = ACTIVE.
 **ห้าม:** ลบ historical ทิ้ง (ต้องเห็นได้ตอน audit) · ใช้ first_seen ตัดสิน (ต้องใช้ last_seen).
 
-## CR-TOOL-01 — pathspec commit ใน daily_monitor กัน index race — `OPEN`
+## CR-TOOL-01 — pathspec commit ใน daily_monitor กัน index race — `DONE(Claude/Fable 2026-07-24) — $monitorPaths ใช้ร่วม add+commit, พิสูจน์เอง commit นี้ pathspec แล้ว`
 **problem:** `daily_monitor.ps1:72` `git commit` (ไม่มี pathspec) จะกวาดของที่ **session อื่น stage ค้าง** เข้า auto-commit ด้วย (2 Claude share worktree — บทเรียน ORDER-170 + memory `shared-worktree-concurrent-writers`). วันนี้มี session ORDER-136 commit คู่ขนานอยู่จริง.
 **spec:** เปลี่ยน line 72 เป็น `git commit <same pathspec list as line 69> -m ...` (pathspec commit ผูกเฉพาะไฟล์ monitoring ชุดเดิม) → auto-commit แตะเฉพาะ 11 path นั้น ไม่แตะ staged ของ session อื่น.
 **acceptance:** (1) stage ไฟล์ปลอมนอกชุด monitoring ไว้ + รัน chain → ไฟล์นั้น **ไม่** เข้า auto-commit · (2) ไฟล์ monitoring เปลี่ยนจริง → commit ปกติ · (3) ไม่มีอะไรเปลี่ยน → quiet เหมือนเดิม.
 **ห้าม:** ใช้ `git add -A`/broad commit · เพิ่ม path นอกชุด 11 ไฟล์เดิมโดยไม่ตั้งใจ.
 
-## CR-005-lite-b — expected-vs-actual ต่อ magic (เชื่อม expectations.csv) — `CLAUDE (งานตีความ ไม่ delegate)`
+## CR-005-lite-b — expected-vs-actual ต่อ magic (เชื่อม expectations.csv) — `DONE(Claude/Fable 2026-07-24) — rate_flag เจอ 6 UNDER_RATE; scope rate-only, PF/DD-vs-band เลื่อน CR-005 เต็ม`
 **problem:** `expectations.csv` มี `pf_expected/trades_per_month_expected/dd95_expected` ครบ 61 แถว แต่ snapshot forecast ใช้แค่ observed rate → ตอบไม่ได้ว่า "EA เงียบผิดปกติ" หรือ "sample ยังน้อยตามคาด".
 **spec (ทำหลัง CR-003 นิ่ง):** join expectations เข้า `judge_readiness[]` → เทียบ observed trades/week กับ `trades_per_month_expected/4.33` (flag `UNDER_RATE` เมื่อ observed < 50% ของคาด ที่ days_active≥14) + PF live เทียบ band + DD เทียบ dd95. **บทบาท = เตือน/probation เท่านั้น ไม่แตะ promotion bar (CLAUDE.md VERDICT GATE คงเดิม PF≥1.40/≥30t/≥3เดือน).**
 **ห้าม:** ให้ expected-vs-actual เขียน verdict หรือเลื่อน judge bar · delegate (นี่ judgment work).
