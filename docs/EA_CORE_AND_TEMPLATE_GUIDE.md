@@ -153,17 +153,20 @@ ea_template\
 
 - **Risk 3 ชั้น** (`RiskControl.mqh`): hard-kill DD% · caps (MaxLot / MaxDepositLoad% / MaxRecoverySteps) · adherence score
 - **Exit** (`ExitManager.mqh`): TP/SL โหมด FIXED / MONEY / ATR / RUN_TREND (+Donchian/SR)
-- **Lot** (`MoneyManagement.mqh`): first lot FIXED/RISK% · progression NONE/LINEAR/MULT/PLUS/LOG
+- **Lot** (`MoneyManagement.mqh`): first lot FIXED/RISK%/BALANCE-SCALED (→ §3.6) · progression NONE/LINEAR/MULT/PLUS/LOG/LOG-POWER/FIB
 - **Stack** (`Stack.mqh`): single / grid-trend / DCA ต่อ entry
 - **Dry-run guard** (`InpDryRun`) + indicator built-in เท่านั้น (iMA/iATR/iHighest/iLowest — ไม่พึ่ง custom)
 
 ### 3.3 เลขรหัส V2 (อ่าน report/optimize ได้โดยไม่ต้องเปิด lookup)
 
-หลักสิบ = แกน, ค่า enum = ตัวเลขดิบใน XML: **1x** entry (11 Grid·12 Breakout·13 MR) · **2x** TP
-(21 FixPip·22 ATR·23 Trail·24 RunTrend) · **3x** SL (30 None·31 FixPip·32 Money·33 ATR·34 Donchian·35 SR) ·
-**4x** first lot (41 Fixed·42 Risk%) · **5x** progression (50–54) · **6x** direction (60 Both·61 L·62 S) ·
-**7x** filter (70 None·71 ATR-expand·72 MA-slope) · **8x** recovery (80–83) · **9x** stack (90–92).
-input prefix ตามแกน: `Inp11_`, `Inp22_`, `Inp33_` … (รายละเอียด → `DESIGN_V2.md`)
+หลักสิบ = แกน, ค่า enum = ตัวเลขดิบใน XML: **1x** entry (11 Grid·12 Breakout·13 MR·14 GridLog·15 ST03·
+16 KangarooGrid·17 Wave5·18 JumStoch) · **2x** TP (21 FixPip·22 ATR·23 Trail·24 RunTrend) ·
+**3x** SL (30 None·31 FixPip·32 Money·33 ATR·34 Donchian·35 SR·36 SD) ·
+**4x** first lot (41 Fixed·42 Risk%·**43 Balance-scaled**) · **5x** progression (50–56) ·
+**6x** direction (60 Both·61 L·62 S) · **7x** filter (70 None·71 ATR-expand·72 MA-slope) ·
+**8x** recovery (80–83) · **9x** stack (90 Single·91 GridTrend·92 DCA·93 PendingLadder).
+input prefix ตามแกน: `_11_`, `_22_`, `_33_` … (รายละเอียด → `DESIGN_V2.md` · รายการ input ครบทุกตัวพร้อม
+owner/active-when → `docs/PARAM_REGISTRY.csv`)
 
 ### 3.4 วิธีเสียบ signal ใหม่ (4 ขั้น)
 
@@ -184,6 +187,68 @@ input prefix ตามแกน: `Inp11_`, `Inp22_`, `Inp33_` … (รายล�
 ```
 
 เกณฑ์ตาย/รอด + ลำดับ smoke เต็ม → skill `signal-scanner` + `MASTER_BACKLOG.md`
+
+### 3.6 Lot sizing (4x) — เลือกโหมดไหน + กติกา cent/USD
+
+<sub>เพิ่ม 2026-07-24 (PARAM-SYNC-004). โหมด 43 เกิด 2026-07-23 แต่ยังไม่มีที่ไหนอธิบาย —
+เอกสารนี้คือที่เดียวที่อธิบาย. โค้ดจริง = `ea_template/core/MoneyManagement.mqh`</sub>
+
+**เลือกโหมด:**
+
+| Mode | ใช้เมื่อไหร่ | ความหมายจริงๆ |
+|---|---|---|
+| **41 FIXED** | **ตอน optimize ทุกครั้ง** + A/B + วัด edge | lot คงที่ → compounding ไม่บิดผล PF. เป็น default และควรอยู่ 41 ตลอด funnel |
+| **42 RISK_PERCENT** | EA ที่มี **SL จริงต่อ order** (single-position) | "เสี่ยง X% ของ balance ต่อไม้" จริง — จริงเฉพาะเมื่อไม้นั้นมี SL ตามที่คำนวณ |
+| **43 BALANCE_SCALED** | grid/basket ที่**ไม่มี SL ต่อไม้** จึงใช้ 42 ไม่ได้ | "0.01 lot ต่อทุนทุก X หน่วย" — **ไม่ใช่ risk percentage** อย่าอ่านว่าเสี่ยงกี่ % |
+
+**สูตรโหมด 43:** `lot = _43_LotPerAnchor × (balance ÷ _43_BalanceAnchor)`
+
+**⚠️ Account Profile — anchor ผูกกับบัญชี ไม่ใช่กับกลยุทธ์:**
+*ratio* พกพาข้ามบัญชีได้ แต่ *ตัวเลข anchor* พกไม่ได้ — บัญชี cent ที่ฝาก $1,000 จะแสดง balance = `100000`
+ถ้าใส่ anchor 1000 เหมือนบัญชี USD จะได้ lot **ใหญ่ขึ้น 100 เท่า** แล้วไปโดน `RC_MaxLot` clamp เอาข้างหน้า
+(clamp ช่วยไม่ให้ระเบิด แต่แปลว่า sizing ที่ตั้งใจไว้ไม่ได้ทำงานเลย). ดังนั้น **หนึ่ง .set ใช้ข้าม USD/Cent ไม่ได้
+ถ้าไม่เปลี่ยน anchor** — ต้องมี profile แยก:
+
+| Profile | บัญชีแสดงเงิน $1,000 เป็น | `_43_BalanceAnchor` | `_43_LotPerAnchor` | ได้ lot ที่ balance นั้น |
+|---|---|---|---|---|
+| **USD** | `1000` | `1000` | `0.01` | 0.01 |
+| **CENT** | `100000` | `100000` | `0.01` | 0.01 |
+
+**Linkage — lot ผ่านกี่ด่านกว่าจะถึง broker (อ่านเป็นสายเดียว ห้ามมองแยกตัว):**
+
+```
+balance ──► FirstLotMode ──┬─ 41: _41_FixedLot
+                           ├─ 42: balance×_42_RiskPct ÷ (SL distance × ค่าเงินต่อ point)
+                           └─ 43: _43_LotPerAnchor × balance ÷ _43_BalanceAnchor
+                                        │
+                     ×_4_DdAdaptive* ◄──┘   (ถ้าเปิด: DD ลึก = lot ใหญ่ขึ้น ⚠️)
+                                        │
+                          RC_MaxLot clamp
+                                        │
+              LotProg 5x (ไม้ที่ 2,3,4…)  →  Recovery 8x (add ตอนติดลบ)
+                                        │
+         cage: _9_MaxLevels · DepositLoad% · KillDD%
+                                        │
+              Exec_NormalizeLot (volume step + min lot ของโบรก)
+```
+
+จุดที่อันตรายสุดคือ **`_4_DdAdaptive*` คูณ lot ตอนกำลังขาดทุน** แล้ว `LotProg` กับ `Recovery` ยังคูณซ้ำได้อีก —
+สาม dial นี้เปิดพร้อมกันเมื่อไหร่ต้องคิด worst-case เป็นตัวเลขจริงก่อนเสมอ (กฎ ENGINE-EDGE ใน `CLAUDE.md`)
+
+**ข้อบังคับก่อนใช้ 43 กับเงินจริง:** ใช้คู่กับ `RC_MaxLot` + DepositLoad + KillDD + `_9_MaxLevels` เสมอ ·
+ห้าม optimize `_42_RiskPct`/`_43_LotPerAnchor` เพื่อไล่กำไร (เลือกขนาดหลังยืนยัน edge แล้วเท่านั้น)
+
+**Fail-closed (MM-SAFETY-001, 2026-07-24):** config ที่ใช้โหมดไม่ได้จะ **INIT_FAILED ทันทีตอน attach**
+(เช่น 42 คู่กับ `SLMode=30/32` ที่ไม่มีระยะ SL, หรือ 43 ที่ anchor ≤ 0) และ runtime ที่อ่านข้อมูลไม่ได้จะ
+**ข้ามไม้นั้น** — **ไม่มีการถอยไปใช้ `_41_FixedLot` เงียบๆ อีกแล้ว** (พฤติกรรมเก่าทำให้ .set ที่สั่ง "เสี่ยง 1%"
+เทรด 0.01 lot คงที่ตลอดโดยรายงานดูปกติทุกอย่าง)
+
+**⚠️ Boss_16/Kangaroo ไม่ฟัง 4x เลย** — lot ทุกไม้มาจาก `_16_BaseLot` (Kangaroo เป็นเจ้าของ lot law เอง
+ตาม ORDER-072) ตั้ง FirstLotMode เป็นอะไรก็ไม่มีผล จะเห็น `[INIT] WARN` ตอน attach
+
+**ทดสอบว่าโหมดทำงานจริง:** `powershell -File scripts\mm_lotmode_test.ps1` (8 เคส: ratio 0.5×/1×/2×,
+unit-independence, RC_MaxLot clamp, anchor พัง, 42 ไม่มี SL) — ต่างจาก `tpl_regression.ps1` ที่พิสูจน์แค่ว่า
+"ของใหม่ปิดอยู่แล้วไม่กระทบของเก่า"
 
 ---
 

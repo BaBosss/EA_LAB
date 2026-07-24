@@ -82,6 +82,11 @@ int OnInit()
                   Persist_Key("exit_closeall"));
       return INIT_FAILED;
    }
+   // MM-SAFETY-001 (Codex review 2026-07-24): a sizing mode whose ingredients are missing
+   // used to degrade to _41_FixedLot silently at the first order. Config errors now die
+   // here instead; only runtime data failures are handled (as skipped orders) in MM_FirstLot.
+   if(!MM_ConfigValid())
+      return INIT_FAILED;
    if(!Indi_Init())
    {
       Print("[INIT] indicator handles failed");
@@ -126,6 +131,17 @@ int OnInit()
 #endif
 #ifdef LAB_ENTRY_17
    Entry_Wave5_Init();
+   // MM-SAFETY-001: ORDER-082 guard G4 documented "structural mode is banned with
+   // stacking - naked probe only", but nothing enforced it. Unenforced, a .set with
+   // StackMode 91/92/93 put grid adds and resting pendings on Wave5's published
+   // structural SL - a level computed for ONE entry at ONE price, reused for orders
+   // it was never validated against (the 93 ladder never re-checks it at all). Fail
+   // the attach instead of trading a design that was never designed.
+   if(_17_UseStructLevels && StackMode != STACK_SINGLE)
+   {
+      PrintFormat("[INIT] FATAL: Boss_17 structural SL (_17_UseStructLevels=true) is naked-probe only - StackMode must be 90, got %d (ORDER-082 guard G4)", StackMode);
+      return INIT_FAILED;
+   }
 #endif
 #ifdef LAB_ENTRY_18
    Entry_JumStoch_Init();
@@ -183,6 +199,7 @@ void Lab_OpenOrder(const int dir, const int level)
    if(!SymbolInfoTick(_Symbol, t)) return;
    double entry    = (dir == 1 ? t.ask : t.bid);
    double sl       = Exit_InitialSL(dir, entry);
+   if(Exit_StructSLMissing(sl)) return;   // MM-SAFETY-001: never open on a broken structural-SL promise
    double tp       = Exit_InitialTP(dir, entry);
    double firstLot = MM_FirstLot(Exit_SLDistancePoints());
    double lot      = MM_NextLot(firstLot, level);

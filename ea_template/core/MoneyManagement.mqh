@@ -55,29 +55,114 @@ double MM_DdAdaptiveMultiplier()
    return mult;
 }
 
-// first-order lot. slDistancePoints required for RISK mode (else fixed).
+// MM-SAFETY-001 (Codex review 2026-07-24): config-time validation of the sizing mode,
+// called once from OnInit. A sizing mode whose ingredients are missing is a CONFIG bug -
+// it must brick the attach, not quietly become a different mode at the first order. The
+// old code degraded 42/43 to _41_FixedLot with no log at all, so a .set asking for
+// "1% risk" could trade a flat 0.01 lot forever and look like it worked.
+// Returns false -> caller returns INIT_FAILED.
+bool MM_ConfigValid()
+{
+#ifdef LAB_ENTRY_16
+   // Kangaroo owns the entire lot law (_16_BaseLot -> Kangaroo_NextLot) and LabCore
+   // short-circuits into it before MM_FirstLot can ever run. Every FirstLotMode is
+   // therefore inert here - warn (an inert dial is not a safety promise), never fail:
+   // the pinned Boss_16 regression set must keep loading.
+   if(FirstLotMode != FIRSTLOT_FIXED)
+      PrintFormat("[INIT] WARN: FirstLotMode=%d has NO EFFECT on Boss_16/Kangaroo - every lot comes from _16_BaseLot (see MM_ConfigValid)", FirstLotMode);
+   return true;
+#else
+   if(FirstLotMode == FIRSTLOT_RISK)
+   {
+      if(_42_RiskPct <= 0.0)
+      {
+         Print("[INIT] FATAL: FirstLotMode=42 (risk%) with _42_RiskPct <= 0 - nothing to size from");
+         return false;
+      }
+      // 42 divides by an SL distance. SL_NONE(30) and SL_MONEY(32) publish no per-order
+      // distance, so the division has no input - that combination is unsizeable, not
+      // "fall back to fixed".
+      bool slGivesDistance = (SLMode == SL_FIXED_POINTS || SLMode == SL_ATR || SLMode == SL_SD ||
+                              SLMode == SL_STRUCT_DONCHIAN || SLMode == SL_STRUCT_SR);
+#ifdef LAB_ENTRY_17
+      // Wave5 publishes its own structural distance (ExitManager guard G3), which is a
+      // valid distance source regardless of SLMode.
+      if(_17_UseStructLevels) slGivesDistance = true;
+#endif
+      if(!slGivesDistance)
+      {
+         PrintFormat("[INIT] FATAL: FirstLotMode=42 needs a per-order SL distance but SLMode=%d yields none (30 NONE / 32 MONEY) - use SLMode 31/33/34/35/36, or FirstLotMode 41/43", SLMode);
+         return false;
+      }
+      return true;
+   }
+   if(FirstLotMode == FIRSTLOT_BALANCE)
+   {
+      if(_43_BalanceAnchor <= 0.0 || _43_LotPerAnchor <= 0.0)
+      {
+         PrintFormat("[INIT] FATAL: FirstLotMode=43 needs _43_BalanceAnchor > 0 and _43_LotPerAnchor > 0 (got %.2f / %.4f)", _43_BalanceAnchor, _43_LotPerAnchor);
+         return false;
+      }
+      return true;
+   }
+   if(_41_FixedLot <= 0.0)
+   {
+      PrintFormat("[INIT] FATAL: FirstLotMode=41 with _41_FixedLot=%.4f - no lot to trade", _41_FixedLot);
+      return false;
+   }
+   return true;
+#endif
+}
+
+// MM-SAFETY-001: one throttled "cannot size" log plus the 0.0 that makes every caller
+// skip the order (Exec_NormalizeLot already returns 0 below the broker minimum and
+// Exec_Open refuses lot <= 0). Returning 0.0 rather than _41_FixedLot is the whole
+// point: a runtime data failure must cost a missed trade, never a differently-sized one.
+double MM_SizingUnavailable(const string why)
+{
+   static datetime mm_last_log = 0;
+   datetime now = TimeCurrent();
+   if(now - mm_last_log >= 60)
+   {
+      mm_last_log = now;
+      PrintFormat("[MM] first-lot sizing unavailable (%s) - order skipped, NO fallback to _41_FixedLot", why);
+   }
+   return 0.0;
+}
+
+// first-order lot. Returns 0.0 = "could not size this order" -> caller skips.
+// Config errors are already dead at OnInit (MM_ConfigValid); what remains here is
+// runtime data failure (unreadable balance / tick value, or an SL distance the exit
+// side could not produce this tick).
 double MM_FirstLot(const double slDistancePoints)
 {
    double lot = _41_FixedLot;
-   if(FirstLotMode == FIRSTLOT_RISK && slDistancePoints > 0.0)
+   if(FirstLotMode == FIRSTLOT_RISK)
    {
       double riskMoney = MM_BalancePct(_42_RiskPct);   // same math as before, shared helper
       double perPoint  = MM_MoneyPerPointPerLot();
-      if(perPoint > 0.0 && riskMoney > 0.0)
-         lot = riskMoney / (slDistancePoints * perPoint);
+      if(slDistancePoints <= 0.0)
+         return MM_SizingUnavailable("mode 42: no SL distance this tick");
+      if(perPoint <= 0.0)
+         return MM_SizingUnavailable("mode 42: tick value/size unreadable");
+      if(riskMoney <= 0.0)
+         return MM_SizingUnavailable("mode 42: account balance unreadable");
+      lot = riskMoney / (slDistancePoints * perPoint);
    }
    // additive (2026-07-23): balance-scaled sizing that does NOT need an SL distance, so
    // grid/basket entries (no per-order SL) can also scale with account size - FIRSTLOT_RISK
-   // silently falls back to _41_FixedLot for those, which is the gap this closes.
+   // cannot size those at all, which is the gap this closes.
    //   lot = _43_LotPerAnchor x (balance / _43_BalanceAnchor)
-   // Ratio is unitless -> identical behavior on cent and USD accounts (set the anchor in
-   // whatever units the account displays). Guarded: a non-positive anchor or unreadable
-   // balance leaves lot at _41_FixedLot rather than dividing by zero / sizing off garbage.
-   else if(FirstLotMode == FIRSTLOT_BALANCE && _43_BalanceAnchor > 0.0 && _43_LotPerAnchor > 0.0)
+   // Ratio is unitless -> identical behavior on cent and USD accounts PROVIDED the anchor
+   // is expressed in the units that account displays (a $1,000 cent account reads 100000,
+   // so its anchor is 100000 - see the Account Profile table in EA_CORE_AND_TEMPLATE_GUIDE).
+   // Anchor/lot-per-anchor validity is enforced at OnInit, so only balance can fail here.
+   else if(FirstLotMode == FIRSTLOT_BALANCE)
    {
       double balance = AccountInfoDouble(ACCOUNT_BALANCE);
-      if(balance > 0.0)
-         lot = _43_LotPerAnchor * (balance / _43_BalanceAnchor);
+      if(balance <= 0.0)
+         return MM_SizingUnavailable("mode 43: account balance unreadable");
+      lot = _43_LotPerAnchor * (balance / _43_BalanceAnchor);
    }
    lot *= MM_DdAdaptiveMultiplier();   // no-op unless _4_DdAdaptiveOn
    return RiskControl_ClampLot(lot);
@@ -86,6 +171,11 @@ double MM_FirstLot(const double slDistancePoints)
 // lot for stacked order at given level (0 = first).
 double MM_NextLot(const double firstLot, const int level)
 {
+   // MM-SAFETY-001: propagate a failed first-lot sizing. Every multiplicative branch
+   // already yields 0 from 0, but PROG_PLUS is additive - firstLot=0 at level 3 would
+   // invent a lot of 3 x _53_PlusLot out of a sizing FAILURE. Refuse explicitly.
+   if(firstLot <= 0.0) return 0.0;
+
    int lv    = level;
    int maxLv = RiskControl_MaxLevels();
    if(lv > maxLv) lv = maxLv;

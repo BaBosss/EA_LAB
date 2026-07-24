@@ -88,6 +88,7 @@ void Recovery_OpenAdd(const int dir, const int level, const double lot)
    if(!SymbolInfoTick(_Symbol, t)) return;
    double entry = (dir == 1 ? t.ask : t.bid);
    double sl    = Exit_InitialSL(dir, entry);
+   if(Exit_StructSLMissing(sl)) return;   // MM-SAFETY-001: same fail-closed rule as the flat entry
    double tp    = Exit_InitialTP(dir, entry);
    Exec_Open(dir, lot, sl, tp, LAB_ENTRY_TAG + " R" + IntegerToString(level));
 }

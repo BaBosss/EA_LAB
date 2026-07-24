@@ -158,6 +158,36 @@ double Exit_InitialSL(const int dir, const double entryPrice)
    }
 }
 
+// MM-SAFETY-001 (Codex review 2026-07-24): fail-closed seam for the structural-SL
+// promise. Exit_InitialSL returns 0.0 for two very different reasons: "this config
+// wants no per-order SL" (SL_NONE / SL_MONEY - legitimate, basket owns the stop) and
+// "this order's promised structural SL just failed re-validation" (Wave5 defense-in-
+// depth check at line ~134). The open paths could not tell them apart and treated
+// both as "no SL wanted", so a Wave5 order whose SL went invalid between signal and
+// fill was opened NAKED - the exact failure the entry-seam guard G4 exists to prevent.
+//
+// Call this right after Exit_InitialSL in every open path: true = skip the order.
+// Returns false in every non-17 build (the #ifdef makes it a compile-time constant),
+// so Boss_11..16/18 behavior is byte-identical.
+bool Exit_StructSLMissing(const double sl)
+{
+   if(sl > 0.0) return false;
+#ifdef LAB_ENTRY_17
+   if(_17_UseStructLevels && g_wave5_sl_price > 0.0)
+   {
+      static datetime w5_last_log = 0;
+      datetime now = TimeCurrent();
+      if(now - w5_last_log >= 60)
+      {
+         w5_last_log = now;
+         Print("[17] structural SL failed re-validation at order-open (price moved / stops-level) - entry SKIPPED rather than opened naked");
+      }
+      return true;
+   }
+#endif
+   return false;
+}
+
 // initial TP price (0 = managed dynamically)
 double Exit_InitialTP(const int dir, const double entryPrice)
 {
