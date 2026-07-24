@@ -1,9 +1,9 @@
 {
     "meta":  {
                  "schema":  "ControlRoomSnapshot",
-                 "version":  2,
-                 "generated_at":  "2026-07-24T12:36:08",
-                 "git_head":  "a19652b4",
+                 "version":  3,
+                 "generated_at":  "2026-07-24T14:59:16",
+                 "git_head":  "fb24adfa",
                  "stale_bar_hours":  30,
                  "decision_bar_trades":  30,
                  "sources":  [
@@ -11,19 +11,19 @@
                                      "path":  "portfolio\\DEPLOYMENTS.csv",
                                      "sha256":  "efa9e36abba944777d09f17497000a3f0ee7ed609eefd2517ece95f71497db74",
                                      "mtime":  "2026-07-24T00:48:19",
-                                     "age_hours":  11.8
+                                     "age_hours":  14.2
                                  },
                                  {
                                      "path":  "portfolio\\LIVE_DASHBOARD.html",
                                      "sha256":  "a8ccfc206e643fa6988d3ff9d1ce23b69588558fecdf077a9646846d2d3e03ef",
                                      "mtime":  "2026-07-24T07:37:20",
-                                     "age_hours":  5
+                                     "age_hours":  7.4
                                  },
                                  {
                                      "path":  "portfolio\\ATTESTATION_MAP.csv",
                                      "sha256":  "bcaee6887e954da151b5e43f03993b869d0d02c795b311d56f76043d4711aeee",
                                      "mtime":  "2026-07-20T07:22:55",
-                                     "age_hours":  101.2
+                                     "age_hours":  103.6
                                  }
                              ],
                  "counting_method":  "MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic."
@@ -34,42 +34,48 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159503454_20260724.csv",
-                              "age_hours":  5
+                              "age_hours":  7.4,
+                              "governance_scope":  "LAB_MANAGED"
                           },
                           {
                               "account":  "159475669",
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159475669_20260724.csv",
-                              "age_hours":  5
+                              "age_hours":  7.4,
+                              "governance_scope":  "LAB_MANAGED"
                           },
                           {
                               "account":  "141049900",
                               "collector":  "MT4",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_mt4_orders_141049900_20260724.csv",
-                              "age_hours":  5
+                              "age_hours":  7.4,
+                              "governance_scope":  "LAB_MANAGED"
                           },
                           {
                               "account":  "415573666",
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_415573666_20260724.csv",
-                              "age_hours":  5
-                          },
-                          {
-                              "account":  "69424711",
-                              "collector":  "NONE",
-                              "state":  "NO_SENSOR",
-                              "latest_file":  null,
-                              "age_hours":  null
+                              "age_hours":  7.4,
+                              "governance_scope":  "LAB_MANAGED"
                           },
                           {
                               "account":  "463666728",
                               "collector":  "MT5",
                               "state":  "STALE",
                               "latest_file":  "EA_LAB_deals_463666728_20260724.csv",
-                              "age_hours":  30.2
+                              "age_hours":  32.6,
+                              "governance_scope":  "LAB_MANAGED"
+                          },
+                          {
+                              "account":  "69424711",
+                              "collector":  "NONE",
+                              "state":  "NO_SENSOR",
+                              "latest_file":  null,
+                              "age_hours":  null,
+                              "governance_scope":  "LAB_MANAGED"
                           }
                       ],
     "deployments":  {
@@ -2692,6 +2698,7 @@
                                "closed_trades":  1842,
                                "first_seen":  "2026.03.22 23:46:40",
                                "last_seen":  "2026.05.07 07:12:09",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "XAUUSDc"
                            },
                            {
@@ -2700,6 +2707,7 @@
                                "closed_trades":  122,
                                "first_seen":  "2026.03.23 09:35:52",
                                "last_seen":  "2026.05.07 07:12:09",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "EURUSDc"
                            },
                            {
@@ -2708,6 +2716,7 @@
                                "closed_trades":  200,
                                "first_seen":  "2026.04.08 17:27:34",
                                "last_seen":  "2026.05.07 07:00:00",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "XAUUSDc"
                            },
                            {
@@ -2716,6 +2725,7 @@
                                "closed_trades":  557,
                                "first_seen":  "2026.04.19 22:06:02",
                                "last_seen":  "2026.04.21 05:38:22",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "XAUUSDm"
                            },
                            {
@@ -2724,6 +2734,7 @@
                                "closed_trades":  1139,
                                "first_seen":  "2026.04.19 23:28:49",
                                "last_seen":  "2026.07.03 14:12:27",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "XAUUSDm+BTCUSDm"
                            },
                            {
@@ -2732,9 +2743,84 @@
                                "closed_trades":  6,
                                "first_seen":  "2026.04.20 14:51:07",
                                "last_seen":  "2026.04.21 01:07:02",
+                               "age_class":  "HISTORICAL",
                                "symbols":  "BTCUSDm"
                            }
                        ],
+    "floating_risk":  [
+                          {
+                              "account":  "159503454",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          },
+                          {
+                              "account":  "159475669",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          },
+                          {
+                              "account":  "141049900",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          },
+                          {
+                              "account":  "415573666",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          },
+                          {
+                              "account":  "463666728",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          },
+                          {
+                              "account":  "69424711",
+                              "state":  "BLIND",
+                              "age_hours":  null,
+                              "equity":  null,
+                              "balance":  null,
+                              "margin_level":  null,
+                              "floating_pl":  null,
+                              "magics":  [
+
+                                         ]
+                          }
+                      ],
     "summary":  {
                     "accounts_total":  6,
                     "accounts_fresh":  4,
@@ -2752,6 +2838,9 @@
                     "judge_projected_shortfall":  18,
                     "attestation_ok":  16,
                     "attestation_gaps":  40,
-                    "unknown_magics":  6
+                    "unknown_magics":  6,
+                    "unknown_magics_active":  0,
+                    "unknown_magics_historical":  6,
+                    "accounts_floating_blind":  6
                 }
 }

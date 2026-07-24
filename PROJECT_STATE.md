@@ -34,6 +34,7 @@
 | คิวงานกลาง + ผลดิบรอ review | **AGENT_TASKBOARD.md** | link |
 | live portfolio — **ข้อมูล** (account/EA/magic/status/kill/judge) | **`portfolio\DEPLOYMENTS.csv`** (inventory เดียว, ORDER-093) | link · checker validate ทุก commit |
 | deployment → approved bundle artifacts (attestation expectations) | **`portfolio\ATTESTATION_MAP.csv`** (CR-002, 2026-07-19) | link · snapshot v2 hash เทียบรายวัน |
+| live portfolio — **บัญชี** (governance_scope/expected_sensor/SLA/alert_policy ระดับ account) | **`portfolio\ACCOUNTS.csv`** (CR-003b, 2026-07-24) | link · snapshot อ่าน account universe จากไฟล์นี้ · DEPLOYMENTS = per-EA เท่านั้น |
 | live portfolio — **คำอธิบาย/บริบท** (ทำไม attach, คำเตือน, ประวัติ) | **DEMO_DEPLOYMENT_PLAN.md** | link |
 | backlog · coverage · hunt | **MASTER_BACKLOG.md** | link |
 | ทะเบียน EA · scoring · kill-reason | **EA_SCORECARD_AND_REGISTRY.md** | link |

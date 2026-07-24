@@ -20,6 +20,9 @@
                      e.g. ambiguous set lineage) / FILE_MISSING / NO_BUNDLE / NO_MAP.
                      LOCAL attestation only - hashes prove what the repo says was approved;
                      comparing against the VPS terminal needs a VPS-side step (user).
+   floating_risk     CR-002c: per account, newest EA_LAB_snapshot_<acct> from AccountSnapshot
+                     Exporter (equity/balance/margin_level/floating_pl + per-magic open lots/
+                     float_pl/oldest age). state=BLIND (no file) / STALE (>26h) / FRESH.
    unknown_magics    CR-002: closed-deal magics present in collector CSVs but absent from
                      DEPLOYMENTS.csv for that account (any status) - candidate ghosts or
                      un-enumerated user EAs. magic 0 (manual) excluded.
@@ -44,6 +47,7 @@ if ($Root -eq "") { $Root = Split-Path (Split-Path $MyInvocation.MyCommand.Path 
 $INV   = Join-Path $Root 'portfolio\DEPLOYMENTS.csv'
 $DEALS = Join-Path $Root 'portfolio\live_deals'
 $DASH  = Join-Path $Root 'portfolio\LIVE_DASHBOARD.html'
+$ACCTS = Join-Path $Root 'portfolio\ACCOUNTS.csv'
 if ($OutFile -eq "") { $OutFile = Join-Path $Root 'portfolio\control_room_snapshot.json' }
 $now = Get-Date
 
@@ -51,6 +55,17 @@ function FileMeta([string]$p){
   if (-not (Test-Path $p)) { return $null }
   $fi = Get-Item $p
   return [ordered]@{ path = $p.Replace($Root + '\','' ); sha256 = (Get-FileHash $p -Algorithm SHA256).Hash.ToLower(); mtime = $fi.LastWriteTime.ToString('s'); age_hours = [math]::Round(($now - $fi.LastWriteTime).TotalHours,1) }
+}
+function TryParseTradeTime([string]$s){
+  # CR-002d: trade-time strings from MT5/MT4 reports look like "2026.05.07 07:12:09"
+  # (dot-separated date). Normalize the date part to hyphens so [datetime]::TryParse
+  # (culture-invariant enough for this fixed shape) can read it. Returns $null on any
+  # unexpected shape - callers must treat $null as "could not classify" and stay safe.
+  if ([string]::IsNullOrWhiteSpace($s)) { return $null }
+  $norm = $s.Trim() -replace '^(\d{4})\.(\d{2})\.(\d{2})','$1-$2-$3'
+  $dt = [datetime]::MinValue
+  if ([datetime]::TryParse($norm, [ref]$dt)) { return $dt }
+  return $null
 }
 function LatestCollector([string]$acct){
   $mt5 = @(Get-ChildItem $DEALS -Filter ("EA_LAB_deals_" + $acct + "_*.csv") -ErrorAction SilentlyContinue | Sort-Object Name)
@@ -68,17 +83,41 @@ $gapJudge = @($rows | Where-Object { $_.status -eq 'ACTIVE' -and ($_.judge_date 
 
 # --- system health: collector freshness per account in the inventory ---
 $staleBarHours = 30
-$accounts = @($rows | Select-Object -ExpandProperty account -Unique)
+# CR-003b: account universe = union of portfolio\ACCOUNTS.csv (owner file for governance
+# metadata) and DEPLOYMENTS.csv (so accounts pending their first deployment row, or
+# deployments for an account not yet registered, both still show up). Falls back to the
+# old DEPLOYMENTS-only behavior if ACCOUNTS.csv is missing (no crash).
+$accountsFromDeployments = @($rows | Select-Object -ExpandProperty account -Unique)
+$acctMeta = @{}
+if (Test-Path $ACCTS) {
+  $acctRows = @(Import-Csv $ACCTS)
+  foreach($ar in $acctRows) { $acctMeta[$ar.account] = $ar }
+  $accounts = @()
+  $seenAcct = @{}
+  foreach($a in ($acctRows | Select-Object -ExpandProperty account)) {
+    if (-not $seenAcct.ContainsKey($a)) { $seenAcct[$a] = $true; $accounts += $a }
+  }
+  foreach($a in $accountsFromDeployments) {
+    if (-not $seenAcct.ContainsKey($a)) { $seenAcct[$a] = $true; $accounts += $a }
+  }
+} else {
+  $accounts = $accountsFromDeployments
+}
+# expected governance_scope values: LAB_MANAGED / USER_OBSERVED / ARCHIVED - anything else
+# (typo, new value not yet documented) is passed through as-is rather than crashing.
 $health = @()
 foreach($a in $accounts){
+  $scope = 'UNREGISTERED'
+  if ($acctMeta.ContainsKey($a) -and $acctMeta[$a].governance_scope) { $scope = $acctMeta[$a].governance_scope }
+  # unexpected values are kept as-is (not crashed on) - just noted, matching per CR-003b spec
   $c = LatestCollector $a
   if ($null -eq $c) {
-    $health += [ordered]@{ account=$a; collector='NONE'; state='NO_SENSOR'; latest_file=$null; age_hours=$null }
+    $health += [ordered]@{ account=$a; collector='NONE'; state='NO_SENSOR'; latest_file=$null; age_hours=$null; governance_scope=$scope }
     continue
   }
   $age = [math]::Round(($now - $c.file.LastWriteTime).TotalHours,1)
   $state = 'FRESH'; if ($age -gt $staleBarHours) { $state = 'STALE' }
-  $health += [ordered]@{ account=$a; collector=$c.kind; state=$state; latest_file=$c.file.Name; age_hours=$age }
+  $health += [ordered]@{ account=$a; collector=$c.kind; state=$state; latest_file=$c.file.Name; age_hours=$age; governance_scope=$scope }
 }
 
 # --- judge readiness per ACTIVE row with a magic ---
@@ -190,8 +229,61 @@ foreach($a in $accounts){
     else                   { $t = @($g.Group | Where-Object { $_.close_time -and $_.close_time.Trim() -ne '' }); $timeCol = 'close_time' }
     if ($t.Count -eq 0) { continue }
     $times = @($t | ForEach-Object { $_.$timeCol } | Sort-Object)
-    $unknown += [ordered]@{ account=$a; magic=$g.Name; closed_trades=$t.Count; first_seen=$times[0]; last_seen=$times[-1]; symbols=(@($g.Group | Select-Object -ExpandProperty symbol -Unique | Where-Object { $_ }) -join '+') }
+    # CR-002d: ACTIVE = still trading recently (last close within 14d) vs HISTORICAL
+    # (dormant/dead ghost magic). Unparseable last_seen defaults to HISTORICAL - the
+    # safer bucket (does not falsely raise an "active unknown EA" alarm).
+    $lastSeenDt = TryParseTradeTime $times[-1]
+    $ageClass = 'HISTORICAL'
+    if ($null -ne $lastSeenDt -and ($now - $lastSeenDt).TotalDays -le 14) { $ageClass = 'ACTIVE' }
+    $unknown += [ordered]@{ account=$a; magic=$g.Name; closed_trades=$t.Count; first_seen=$times[0]; last_seen=$times[-1]; age_class=$ageClass; symbols=(@($g.Group | Select-Object -ExpandProperty symbol -Unique | Where-Object { $_ }) -join '+') }
   }
+}
+
+# --- CR-002c floating risk: newest EA_LAB_snapshot_<acct>_*.csv per account, written by
+# AccountSnapshotExporter (tools\AccountSnapshot\AccountSnapshot_Core.mqh). Layout is one
+# ACCOUNT row (login/equity/balance/margin/margin_level_pct, magic columns blank) plus one
+# MAGIC row per magic with open positions/pendings (float_pl/open_lots/open_positions/
+# oldest_open_hours). Stale bar mirrors collect_live_deals.ps1's snapshot guard (26h - the
+# exporter rewrites every 60s while attached, so a few stale hours already means it's dead).
+$floatStaleHours = 26
+function LatestFloatSnapshot([string]$acct){
+  $f = @(Get-ChildItem $DEALS -Filter ("EA_LAB_snapshot_" + $acct + "_*.csv") -ErrorAction SilentlyContinue | Sort-Object Name)
+  if ($f.Count -eq 0) { return $null }
+  return $f[-1]
+}
+$floating = @()
+foreach($a in $accounts){
+  $fsFile = LatestFloatSnapshot $a
+  if ($null -eq $fsFile) {
+    $floating += [ordered]@{ account=$a; state='BLIND'; age_hours=$null; equity=$null; balance=$null; margin_level=$null; floating_pl=$null; magics=@() }
+    continue
+  }
+  $ageH = [math]::Round(($now - $fsFile.LastWriteTime).TotalHours,1)
+  if ($ageH -gt $floatStaleHours) {
+    $floating += [ordered]@{ account=$a; state='STALE'; age_hours=$ageH; equity=$null; balance=$null; margin_level=$null; floating_pl=$null; magics=@() }
+    continue
+  }
+  try {
+    $srows = @(Import-Csv $fsFile.FullName)
+  } catch {
+    # unreadable/corrupt csv - treat like BLIND rather than crashing the whole snapshot
+    $floating += [ordered]@{ account=$a; state='BLIND'; age_hours=$ageH; equity=$null; balance=$null; margin_level=$null; floating_pl=$null; magics=@() }
+    continue
+  }
+  $acctRow = $srows | Where-Object { $_.row_type -eq 'ACCOUNT' } | Select-Object -First 1
+  if ($null -eq $acctRow) {
+    $floating += [ordered]@{ account=$a; state='BLIND'; age_hours=$ageH; equity=$null; balance=$null; margin_level=$null; floating_pl=$null; magics=@() }
+    continue
+  }
+  $eq = [double]$acctRow.equity; $bal = [double]$acctRow.balance
+  # floating_pl derived from the ACCOUNT row's equity/balance (the row's own float_pl
+  # column is blank by design - that field only carries a value on MAGIC/SYMBOL rows).
+  $floatPl = [math]::Round($eq - $bal, 2)
+  $magicRows = @($srows | Where-Object { $_.row_type -eq 'MAGIC' })
+  $magics = @($magicRows | ForEach-Object {
+    [ordered]@{ magic=$_.magic; floating_pl=[double]$_.float_pl; open_lots=[double]$_.open_lots; pos_count=[int]$_.open_positions; oldest_age_h=[double]$_.oldest_open_hours }
+  })
+  $floating += [ordered]@{ account=$a; state='FRESH'; age_hours=$ageH; equity=$eq; balance=$bal; margin_level=[double]$acctRow.margin_level_pct; floating_pl=$floatPl; magics=$magics }
 }
 
 # --- summary (TODAY block) ---
@@ -214,12 +306,15 @@ $sum = [ordered]@{
   attestation_ok            = $attHashed.Count
   attestation_gaps          = $attGaps.Count
   unknown_magics            = $unknown.Count
+  unknown_magics_active     = @($unknown | Where-Object { $_.age_class -eq 'ACTIVE' }).Count
+  unknown_magics_historical = @($unknown | Where-Object { $_.age_class -eq 'HISTORICAL' }).Count
+  accounts_floating_blind   = @($floating | Where-Object { $_.state -ne 'FRESH' }).Count
 }
 
 $snapshot = [ordered]@{
   meta = [ordered]@{
     schema  = 'ControlRoomSnapshot'
-    version = 2
+    version = 3   # v3 (CR-003b/002c/002d): +governance_scope on health, +floating_risk, +unknown age_class. Additive - v2 readers still work.
     generated_at = $now.ToString('s')
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
@@ -240,6 +335,7 @@ $snapshot = [ordered]@{
   judge_cohorts   = $cohorts
   attestation     = $attest
   unknown_magics  = $unknown
+  floating_risk   = $floating
   summary         = $sum
 }
 
@@ -255,5 +351,6 @@ foreach($cRoll in $cohorts){
   Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
 }
 Write-Host ("ATTEST   {0} fully hashed (high-confidence) | {1} gaps (NO_BUNDLE/PARTIAL/FILE_MISSING/low-conf)" -f $sum.attestation_ok, $sum.attestation_gaps)
-Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv" -f $sum.unknown_magics)
+Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv ({1} active, {2} historical)" -f $sum.unknown_magics, $sum.unknown_magics_active, $sum.unknown_magics_historical)
+Write-Host ("FLOATING {0}/{1} account(s) blind (no/stale AccountSnapshotExporter data)" -f $sum.accounts_floating_blind, $sum.accounts_total)
 Write-Host ("OUTPUT   {0}" -f $OutFile)

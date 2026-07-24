@@ -55,6 +55,40 @@ Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.
 # dashboard so it reads the freshest data. Read-only projection (never writes owners); a
 # failure here is fail-visible like any step but never blocks dashboard/gist above.
 Step 'snapshot'  { powershell -NoProfile -File D:\EA_LAB\scripts\control_room_snapshot.ps1 *>> $log }
+# CR-003a: coverage check - the chain can run clean (every Step above exit 0) while a
+# LAB_MANAGED account's sensor is dead (STALE/NO_SENSOR), which is the actual failure mode
+# that bit us with 463666728/69424711. This is an ADDITIONAL layer on top of the existing
+# stale-data guard below (lines ~76-82), not a replacement - that guard checks the newest
+# file across ALL accounts; this one checks PER-ACCOUNT freshness scoped to governance_scope.
+# USER_OBSERVED / ARCHIVED / UNREGISTERED accounts are logged but never turn the chain red -
+# only LAB_MANAGED accounts (the ones this lab owns and must keep sensors on) do.
+$coverageMsg = "coverage check skipped (no snapshot json)"
+$crJson = 'D:\EA_LAB\portfolio\control_room_snapshot.json'
+if (Test-Path $crJson) {
+    try {
+        $cr = Get-Content $crJson -Raw | ConvertFrom-Json
+        $labAccts = @($cr.system_health | Where-Object { $_.governance_scope -eq 'LAB_MANAGED' })
+        $labFresh = @($labAccts | Where-Object { $_.state -eq 'FRESH' })
+        $labMissing = @($labAccts | Where-Object { $_.state -ne 'FRESH' })
+        $coverageMsg = "$($labFresh.Count)/$($labAccts.Count) LAB_MANAGED fresh"
+        if ($labMissing.Count -gt 0) {
+            $coverageMsg += "; missing: $(($labMissing | ForEach-Object { $_.account }) -join ', ')"
+            foreach ($m in $labMissing) {
+                $script:failed += "sensor-$($m.account)"
+                "COVERAGE GAP: account $($m.account) (LAB_MANAGED) state=$($m.state)" | Add-Content $log
+            }
+        }
+        # non-LAB_MANAGED accounts never fail the chain - just logged for visibility
+        $otherAccts = @($cr.system_health | Where-Object { $_.governance_scope -ne 'LAB_MANAGED' -and $_.state -ne 'FRESH' })
+        foreach ($o in $otherAccts) {
+            "coverage note (not red): account $($o.account) scope=$($o.governance_scope) state=$($o.state)" | Add-Content $log
+        }
+    } catch {
+        $coverageMsg = "coverage check FAILED to parse snapshot json: $($_.Exception.Message)"
+        "$coverageMsg" | Add-Content $log
+    }
+}
+"COVERAGE: $coverageMsg" | Add-Content $log
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
 if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
@@ -66,13 +100,29 @@ if (Test-Path 'D:\Monitor\dashboard_gist_id.txt') {
 }
 # commit the snapshot (audit trail) - quiet if nothing changed
 Set-Location D:\EA_LAB
-git add portfolio/live_deals portfolio/LIVE_DASHBOARD.html portfolio/news_today.html portfolio/news_week.csv portfolio/mris/whisper_brief.html portfolio/mris/whisper_brief.md portfolio/mris/regime_state.json portfolio/mris/barometer_snapshot.csv portfolio/EA_LAB_mris_regime.csv portfolio/control_room_snapshot.json 2>> $log
+# CR-TOOL-01: the same pathspec is used for both `add` and `commit`. This is a shared
+# worktree (see memory shared-worktree-concurrent-writers) - a bare `git commit` with no
+# pathspec would sweep in whatever another concurrent session has staged in the meantime.
+# Scoping the commit to exactly what we just added removes that race.
+$monitorPaths = @(
+    'portfolio/live_deals',
+    'portfolio/LIVE_DASHBOARD.html',
+    'portfolio/news_today.html',
+    'portfolio/news_week.csv',
+    'portfolio/mris/whisper_brief.html',
+    'portfolio/mris/whisper_brief.md',
+    'portfolio/mris/regime_state.json',
+    'portfolio/mris/barometer_snapshot.csv',
+    'portfolio/EA_LAB_mris_regime.csv',
+    'portfolio/control_room_snapshot.json'
+)
+git add $monitorPaths 2>> $log
 $staged = git diff --cached --name-only
 if ($staged) {
-    git commit -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log
+    git commit $monitorPaths -m "[auto] daily monitor snapshot $(Get-Date -Format 'yyyy-MM-dd')" *>> $log
 }
 # ORDER-128 health check: stale exporter data means the chain "ran" but the eyes are
-# still blind — surface it as loudly as a step failure instead of a quiet green.
+# still blind - surface it as loudly as a step failure instead of a quiet green.
 $newest = Get-ChildItem 'D:\EA_LAB\portfolio\live_deals' -File -ErrorAction SilentlyContinue |
           Sort-Object LastWriteTime -Descending | Select-Object -First 1
 $dataAgeH = if ($newest) { ((Get-Date) - $newest.LastWriteTime).TotalHours } else { [double]::MaxValue }
@@ -81,7 +131,9 @@ if ($dataAgeH -gt 26) {
     "ALERT: newest live_deals snapshot is $([math]::Round($dataAgeH,1))h old (>26h)" | Add-Content $log
 }
 if ($failed.Count -gt 0) {
-    $msg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm') monitoring chain UNHEALTHY: $($failed -join ', ') (newest data $([math]::Round($dataAgeH,1))h old)"
+    # distinguish "the chain ran (steps exited 0)" from "sensor coverage is healthy" - a
+    # clean step run with a dead LAB_MANAGED sensor is still an UNHEALTHY chain (CR-003a).
+    $msg = "$(Get-Date -Format 'yyyy-MM-dd HH:mm') monitoring chain UNHEALTHY: $($failed -join ', ') (newest data $([math]::Round($dataAgeH,1))h old; $coverageMsg)"
     Set-Content $alertFile $msg -Encoding utf8
     "done WITH FAILURES: $($failed -join ', ')" | Add-Content $log
     exit 1
