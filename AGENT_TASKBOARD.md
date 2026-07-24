@@ -32,6 +32,18 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 
+## ORDER-200 — [macro/tooling] MRIS crisis-model extension (bond/credit/oil/equity axes) — `REVIEWED(Claude/Fable 2026-07-24): Phase-A DONE + Phase-B concept-check 4/4 PASS — ADVISORY-ONLY, live`
+**source:** user 2026-07-24 ชอบเว็บ `bond-crisis-dashboard-v2.vercel.app` อยากให้ absorb ไอเดียเข้า stack เอง (กันเว็บหาย) + ใช้ shape strategy (ลด lot/หยุดเทรดตอนข่าวใหญ่). full spec = `_triage/ORDER200_MRIS_MACRO_EXTENSION_SPEC.md`.
+**ทำแล้ว (Phase A, additive ทั้งหมด — ไม่แตะ path RI จริง):**
+- `scripts/mris/mris_macro_feeder.ps1` (Sonnet) → `barometer_snapshot_macro.csv`: 6 แกนใหม่ US2Y/WTI/SP500/MOVE (Yahoo IWR) + HY_OAS/YCURVE (FRED via **curl.exe** — IWR timeout จาก TLS proxy). 6/6 OK.
+- `scripts/mris/mris_crisis_models.ps1` + `crisis_models.json` (Opus-seat, risk logic ไม่ delegate) → `crisis_models_state.json`: 3 โมเดล YIELD_SHOCK/CREDIT_STRESS/INFLATION_OIL คะแนน 0-100 = weighted linear-ramp ของ component ที่อธิบายได้ทุกตัว. **advisory-only ไม่แตะ regime_state.json/MacroGate.**
+- brief + `mris_run.ps1` wiring (Sonnet): chain = webfeed→macrofeed→classify→crisismodels→exposure→brief, 6 steps clean; core regime ยัง NEUTRAL ไม่เปลี่ยน (พิสูจน์ non-invasive).
+**Phase-B concept-check** (`mris_crisis_backtest.ps1`, 4 windows): **4/4 PASS** — CREDIT_STRESS ติด covid_2020, INFLATION_OIL ติด 2022, YIELD_SHOCK ติด yield-spike 2023, ทุกโมเดลสงบใน calm_2019.
+**bars (pre-registered):** each model peak ≥60 ใน matching episode = fire · calm window ทุกโมเดล <60. → met 4/4.
+**flat-lot probe:** N-A (ไม่ใช่ EA — เป็น macro sensor layer).
+**KNOWN LIMIT:** FRED HY history cap ~3yr keyless (2023+) → covid-2020 credit ติดผ่าน MOVE+VIX (HY component drop+renorm = graceful degrade) ไม่ใช่ HY ลึกจริง. live ใช้ HY จริงได้ (ครอบคลุมปัจจุบัน).
+**ห้าม:** fold คะแนน crisis เข้า RI/MacroGate real-money ก่อน (1) FRED API key ดึง HY ลึก validate หรือ forward-accumulate (2) Codex blind audit (risk-path §5.1) (3) user ratify — = order อนาคตแยก. ตอนนี้ advisory display เท่านั้น.
+
 ## ORDER-187 — [core/money] fail-closed first-lot sizing + Wave5 naked-order guard (Codex review 2026-07-24, ข้อ 1 ของ 8) — `DONE(Claude/Fable 2026-07-24) — รอ Codex blind-audit`
 **source:** user ส่ง review ของ Codex เรื่อง EA Template หลังเพิ่ม `FirstLotMode=43` (balance-scaled). Claude รีวิวซ้ำโดย trace โค้ดจริงทุก claim — **ยืนยันถูกทุกข้อหลัก** + เจอเพิ่ม 1 ข้อที่ Codex ไม่ได้จับ (ข้อ (d) ล่าง).
 **สิ่งที่แก้ (4 จุด):**
@@ -67,7 +79,54 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 **⚠️ ยังเหลือ (ไม่ได้ทำใน order นี้):** ~174 แถวเดิมยังอ้าง line number จาก commit ที่ pin ไว้ตอน ORDER-164 ซึ่ง**เคลื่อนไปแล้วราว 16 บรรทัด** — ไม่ใช่ข้อมูลผิด แต่เป็นหนี้ที่ต้องล้างรอบเดียวทั้งไฟล์ (ดู ORDER-191)
 **ห้าม:** regenerate registry ทั้งไฟล์ใหม่ (จะทิ้งงาน trace มือของ ORDER-164 ทิ้งหมด).
 
-## ORDER-190 — [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) — `OPEN`
+## ORDER-198 — [ops] 18-EA judge-projected-shortfall triage: silent-skip check + judge-date policy — `REVIEWED(Claude 2026-07-24): NO BUG FOUND — the "18 shortfall" number is largely a formula artifact, not 18 EAs actually failing`
+
+**source:** user 2026-07-24 (Control Room follow-up) — ตัดสินไปแล้วว่า "ขยาย judge date + เช็ค silent-skip ก่อน" ก่อนเชื่อเลข 18
+
+**เช็ค silent-skip (6 magic ที่มี detail: 991001/991004/991002 @159503454, 990202/990203/990205 @415573666):**
+- ทุกตัวมี local sensor terminal (`D:\Monitor\MT5 - <acct>`) แต่นั่นรัน `DealsExporter` เท่านั้น ไม่ใช่ terminal ที่รัน EA จริง (EA รันบน VPS 66.212.22.7) — **ไม่มี access ไปดู Experts-log ของ VPS จากเครื่องนี้** ต้องพึ่ง deal-history CSV ที่ sync ผ่าน `Common\Files` แทน
+- อ่านโค้ด `(BRK)_SqueezeBreakout_rev01.mq5` (991004, 0 trades ใน 15 วัน) ตรง — มี guard 2 ชั้นที่เป็นสาเหตุคลาสสิกของ "0 trades เงียบ": (1) `_07_AllowLive` dry-run gate (2) min-lot silent-rejection guard (คอมเมนต์อ้างถึงบั๊กเดิมของ `PostNewsReversion rev01`) — **เช็คแล้วทั้งคู่ไม่ใช่สาเหตุ**: `.set` ที่ deploy จริงตั้ง `_07_AllowLive=true` ชัดเจน และ lot 0.01 เทรดได้จริงที่อื่น (991001/991002 มีไม้จริงที่ผ่าน lot check)
+- **991001/991002 ก็ตรวจแล้วเหมือนกัน** — deployed `.set` ทั้งคู่ตั้ง `AllowLive=true` และมีไม้จริงเทรดสำเร็จอยู่ในเดือนนี้ (ไม่ใช่ dry-run ค้าง)
+- **สรุป: ไม่พบบั๊ก silent-skip ในทั้ง 6 ตัว**
+
+**พบแทน — ปัญหาที่แท้จริงอยู่ที่สูตร ไม่ใช่ตัว EA:** `scripts/control_room_snapshot.ps1` มี 2 ตัวชี้วัดคนละความหมายที่ถูกปนกันตอนอ่านผลรอบก่อน —
+- `needed_trades_per_week` (เลข "needs 2.6/wk" ที่ทำให้ตกใจ) = แค่ (30-เทรดที่มี)×7/วันที่เหลือถึง judge — **generic, ไม่สนใจว่า EA ตัวนี้ backtest แล้วเทรดถี่แค่ไหน**
+- `rate_flag` (ON_RATE/UNDER_RATE) = เทียบ obs กับ `expected_trades_per_week` ที่มาจาก backtest ของ EA ตัวเอง (`expectations.csv`) — **นี่คือตัวเปรียบเทียบที่ถูกต้อง**
+- ตรวจ rate_flag จริงของ 6 ตัว: **991001=ON_RATE (0.5 vs คาด 0.2/wk, ดีกว่าคาด) · 990203=ON_RATE (0.4 vs 0.8) · 990205=ON_RATE (0.4 vs 0.3) · 991004/991002/990202=UNDER_RATE แต่ n=0-1 ไม้ในเวลาแค่ 15-18 วัน (Poisson P(เห็น 0)=22-53% ล้วนๆ ที่ rate คาด) = สัญญาณอ่อนเกินจะสรุป ไม่ใช่ "เงียบผิดปกติ"**
+- **แปลว่า EA อย่างน้อย 3/6 ไม่ได้ shortfall จริง — เทรดตามที่ backtest บอกไว้เป๊ะ แค่โดน bar generic "30 ไม้ตายตัว" ตัดสินผิด**
+
+**data gap ที่แก้ไปด้วย:** `expectations.csv` มี `trades_per_month_expected=UNKNOWN` สำหรับ grid leg 3 ตัว (990202/203/205) ทั้งที่ backtest report ที่อ้างในแถวเดียวกันมีเลขอยู่แล้ว (138t/128t/45t บน MAIN 36 เดือน) — **backfill เป็น 3.83/3.56/1.25 ต่อเดือน (คำนวณจากรายงานที่ cited ในแถวเดียวกันเอง ไม่ใช่เดา — ไม่ชน กฎ ORDER-164)** แล้ว re-run snapshot ยืนยัน rate_flag คำนวณได้จริงแล้ว (ไม่ใช่ NA อีกต่อไป)
+
+**ยังไม่ได้ตัดสินใจ (ต้องการ user เพราะเป็น policy เปลี่ยน judge bar ไม่ใช่แค่ mechanical):** ถ้าจะ "ขยาย judge date" ให้ถึง n≥30 จริง บาง EA ใช้เวลาไม่สมเหตุสมผล — 991001 ที่ 0.2/wk ต้องรอ ~150 สัปดาห์ (~2.9 ปี), 991004 ที่ 0.3/wk ต้องรอ ~100 สัปดาห์ (~23 เดือน) ถึงจะได้ 30 ไม้ ⇒ **เลื่อนวันเฉยๆ ไม่ช่วย** ต้องเลือกแบบ RSI-MR precedent (ยอมรับ n บางกว่า 30 ถ้า plateau/backtest แข็งพอ) แทน สำหรับตัวที่ pace ปกติกว่า (991002 ~1.1/wk, 990202/203 ~0.8-0.9/wk) เลื่อนจริงถึง n=30 ใช้เวลา ~6-8 เดือน (~2027-01 ถึง 2027-03) ยังพอทำได้
+**recommend:** ใช้ `rate_flag=ON_RATE` เป็นเกณฑ์แทน "n≥30" สำหรับ EA ที่ backtest มีเรทต่ำอยู่แล้ว (991001/990203/990205) — judge ได้ที่วันเดิมด้วย PF อ่านทิศทาง ไม่ต้องรอ n=30 · ที่เหลือ (991002/990202/991004) รอ observe ต่ออีก ~2 สัปดาห์ให้ผ่าน 30 วัน (noise floor ปัจจุบันสูงเกิน n=0-1) ก่อนตัดสินว่า UNDER_RATE จริงหรือ noise
+
+**ทำได้:** Claude (diagnostic + data backfill) — decision ว่าจะเปลี่ยน judge bar policy ไหม = user
+
+**✅ POLICY DECIDED (user 2026-07-24):** ใช้ `rate_flag=ON_RATE` แทน `n≥30` เป็นเกณฑ์ judge สำหรับ EA ที่ backtest บอกไว้แล้วว่า pace ช้าโดยธรรมชาติ — 991001/990203/990205 judge ได้ที่วัน judge เดิม (2026-10-09) ด้วย PF ทิศทาง ไม่ต้องรอ n=30. ที่เหลือ (991004/991002/990202) ยัง UNDER_RATE บน n=0-1 ที่ noise สูง — รอ observe ต่อจนผ่าน 30 วัน active (~กลาง ส.ค. 2026) ก่อนประเมินซ้ำว่า UNDER_RATE จริงหรือ noise. **บันทึกเป็น precedent ต่อจาก RSI-MR** สำหรับ low-frequency-by-design EA ทุกตัวในอนาคต ไม่ใช่ special-case เฉพาะ 3 ตัวนี้.
+
+## ORDER-199 — [lever] ORDER-137 continuation: StoMultiTap last-optimize ADX-gate (the ONE untouched lever) — `REVIEWED(Claude 2026-07-24): REJECTED — ADX-gate makes BOTH windows worse, ladder now fully exhausted`
+
+**source:** handoff `_triage/HANDOFF_ORDER137_STOMULTITAP.md` fork (a) — user 2026-07-24 เคาะ "ลอง ADX-gate ก่อน" ก่อนตัดสิน demo-isolate/shelve. ORDER-137 เดิมถูกย้ายเข้า `ARCHIVE_TASKBOARD_2026-07A.md` แล้ว (REVIEWED เดิม) — ใบนี้คือ continuation ใหม่ ไม่แก้ archive
+
+**bars (pre-registered, ตรงกับที่ handoff เขียนไว้):** pass = ADX-gate ทำให้ BWD≥1.0 ขณะ MAIN ยัง≥1.2 → re-graduate เป็น CANDIDATE · dead/กลาง = ไม่ผ่านทั้งคู่ หรือผ่านแค่ข้างเดียว → ปิด fork นี้ กลับไปเลือก demo-isolate/shelve **flat-lot probe:** N-A (naked single-position, ไม่มี escalation)
+
+**เดินจริง 4 backtest (Model 2, XAUUSD M15, leverage 1:100 asserted ผ่าน `mt5_run.ps1`, .set ครบทุก input กัน input-cache bug):**
+| config | window | PF | trades |
+|---|---|---|---|
+| base (ADX off) — reverify | MAIN 2023-2025 | 1.50 | 64 |
+| base (ADX off) — reverify | BWD 2020-2022 | 0.57 | 80 |
+| **ADX-gate ON** | MAIN 2023-2025 | **1.14** | **16** |
+| **ADX-gate ON** | BWD 2020-2022 | **0.36** | **20** |
+
+reverify ของ base ตรงกับตัวเลขเดิมในรายงาน 2026-07-19 แทบเป๊ะ (1.50 vs 1.51, 0.57 vs 0.58 — ต่างแค่ rounding) ยืนยันว่าไม่ใช่ผลจาก leverage-format bug (ORDER-165) เพราะ EA นี้ flat-lot 0.01 ไม่พึ่ง margin/balance เลย
+
+**ผล: ADX-gate ทำร้ายทั้งสองข้าง ไม่ใช่ช่วยข้างเดียว** — MAIN ร่วง 1.50→1.14 (หลุด bar ≥1.2) **และ** BWD ร่วงต่อ 0.57→0.36 (แย่ลง ไม่ใช่ดีขึ้นตามที่หวัง) พร้อมจำนวนไม้หายไป 75% ทั้งคู่ (64→16, 80→20) — ตัวกรอง ADX ตัดไม้ที่เป็น "ตัวชนะ" ออกไปมากกว่าตัวที่เป็น "ตัวแพ้" สุทธิ ไม่ใช่แค่กรอง regime เทรนด์แรงออกเฉยๆ ตามสมมติฐาน
+
+**สรุป: ไม่ผ่าน bar ทั้งสองเงื่อนไข — REJECTED, ไม่ re-graduate เป็น CANDIDATE.** Ladder ที่ handoff ระบุไว้ว่า "FULL: StoK · MinTaps · ZoneTol · SwingStrength · MTF · ADX" ครบทุกช่องแล้วตอนนี้จริงๆ (ADX คือช่องสุดท้ายที่เหลือ) — **ไม่มี lever ให้ optimize ต่ออีกแล้ว** ตาม doctrine "last-optimize before verdict" (memory `feedback-last-optimize-before-verdict`) ปิดหนี้ข้อนี้ได้เต็มที่
+
+**หมายเหตุ verdict:** MAIN ceiling (1.50 บน base) ไม่เคยตกต่ำกว่า 1.0 เลยสักรอบ — เข้าเกณฑ์ VERDICT GATE "BWD-fail = ไม่ auto-kill" (bar table) ไม่ใช่ "DEAD-OPTIMIZED" (ต้องตกทั้งคู่ window) → **ยังคง PARKED-VERIFY(user) เหมือนเดิม แค่ปิด fork (a)-ADX ไปแล้ว** เหลือ 2 ทางจาก handoff เดิม: **demo-isolate zt40 (991075) เพื่อเก็บ forward data จริง** (MAIN edge 1.50 ยังยืนอยู่ + ไม่ซ้ำ cohort corr −0.10 ที่พิสูจน์แล้ว) **หรือ shelve ถาวร**. เลือกไม่ได้เอง — attach เข้า demo account เป็น action ที่ต้อง user ทำเอง (เหมือน ORDER-190)
+
+**ทำได้:** Claude (backtest + verdict) — attach demo / shelve = user เคาะ
 **source:** Codex ข้อ 2. **ยืนยันว่าเป็นเรื่องจริง แต่ขอแยกความเสี่ยงออกเป็น 2 ชั้น ไม่รวมเป็นก้อนเดียวแบบที่ review เสนอ:**
 - ชั้น safety (= "บอกผู้ใช้ว่าไม่มีผล") → **ทำไปแล้วใน ORDER-187**: `MM_ConfigValid` พิมพ์ `[INIT] WARN` เมื่อตั้ง FirstLotMode≠41 บน build 16
 - ชั้น lever (= "ทำให้มันมีผลจริง") → **order นี้** เพราะไปแตะ lot law ของ EA ที่มี baseline pin อยู่ (Boss_16 cage 8/8) = ต้องเดิน funnel ปกติ ห้ามแอบรวมใน patch safety
@@ -82,6 +141,11 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 - **⚠️ ยกเลิก bar เดิม "scaled ต้องผ่าน MAIN≥1.2 + BWD≥1.0 และไม่แย่กว่า flat":** bar นั้น**วัดผิดเรื่อง** — A/B ระหว่าง flat กับ balance-scaled บน backtest ที่เริ่มด้วยเงินต้นก้อนเดียว ส่วนใหญ่วัด **compounding** ไม่ใช่ edge ซึ่งชนกฎของ repo เองที่ว่า "optimize ด้วย mode 41 เพราะ compounding บิดผล PF" ถ้า scaled ชนะก็แปลว่ามันทบต้น ไม่ได้แปลว่ากลไกดีกว่า
 - **bar ใหม่ที่ถูกเรื่อง:** คุณค่าของ mode นี้ไม่ใช่ PF สูงขึ้น แต่คือ (1) risk เท่ากันข้ามขนาดบัญชี (deposit invariance) (2) หด lot เองตอน DD ลึกจนไม่ไปชน hard-kill — ข้อ (2) วัดได้แล้วบน chassis mode 43 (ORDER-188: fixed ตายที่ 115/164 ไม้ eqDD 25.09% · scaled จบครบ 164 ที่ 22.66%) → **ถ้าจะรับ lever นี้ ให้ตัดสินจากสองข้อนี้ ไม่ใช่จาก PF**
 - **ยังไม่ได้ทำ:** ตัดสินใจว่าจะเปิดใช้ mode 1 กับ Boss_16 ตัวจริงไหม = **user เคาะ** (โค้ดพร้อม default ปิด ปลอดภัยอยู่แล้ว)
+
+**✅ POLICY DECIDED (user 2026-07-24): "เปิดบน demo ก่อน ไม่แตะ live"** — ตรวจก่อนลงมือแล้วพบว่า **`Boss_16_KangarooGrid` ยังไม่เคยถูก deploy ที่ไหนเลย** (ไม่มีแถวใน `DEPLOYMENTS.csv` ทั้ง live/demo — มีแค่ backtest/regression artifact) ดังนั้น "เปิดบน demo" ไม่ใช่การ flip flag บน instance ที่รันอยู่ แต่คือเตรียม .set ให้พร้อม attach:
+- re-run `mm_lotmode_test.ps1` ยืนยันซ้ำ (2026-07-24) — K0/K1 cases ยัง **CLEAN ทั้งหมด** (deposit-invariance + unit-independence PASS)
+- สร้าง `ea_template/sets/Boss16_Kangaroo_XAU_21_30_scaled_demo.set` = base คือ `Boss16_Kangaroo_XAU_21_30.set` (candidate RSI 21/30 ที่ล็อกไว้จาก ORDER-077) + `_16_BaseLotMode=1` + **`_43_LotPerAnchor=0.01`/`_43_BalanceAnchor=10000`** (เลือกเอง ไม่ใช่ compiled default 0.01/1000 — เพราะ default จะทำให้ lot กระโดด 10x ที่ deposit $10k ซึ่งเป็น deposit เดียวกับที่ validate flat baseline ไว้; anchor ที่เลือกทำให้ lot เริ่มต้น **เท่ากับ flat เป๊ะที่ $10k** แล้วค่อยขยับตามยอดบัญชีจริงจากจุดนั้น) magic แยกต่างหาก `990018` กันชนกับ research .ini เดิม (990017 มีอยู่แล้วใน `BOSS16_KANG_XAU_H1_SELL.ini`)
+- **PENDING_ATTACH:** ต้องให้ user เปิด MT5 demo เอง ลาก `Boss_16_KangarooGrid.ex5` ลงชาร์ต XAUUSD H1 โหลด .set นี้ (ไม่มีเครื่องมือระยะไกลให้ agent ทำแทนได้) — พอ attach แล้วให้บันทึกแถวใหม่ใน `DEPLOYMENTS.csv` + re-pin .set นี้เป็น baseline ในคอมมิตเดียวกัน (ตาม convention เดิม)
 
 ## ORDER-194c — [core/safety] แก้อีก 4 ข้อจาก Codex review รอบสอง (ตรวจ "ของที่เพิ่งซ่อม") — `DONE(Claude/Fable 2026-07-24)`
 **source:** user ถามว่า "ต้องให้ codex รีวิวไหม" → ตอบว่าใช่ แต่**แคบ** คือให้ตรวจเฉพาะ 4 จุดที่เพิ่งซ่อม ไม่ใช่ audit ใหม่ทั้งชุด **เหตุผล: fix ของ SEV-1 เป็น risk logic ที่ไม่มี cage** — `tpl_regression.ps1` จำลอง "GlobalVariableSet ล้มเหลว" ไม่ได้ ดังนั้น "cage CLEAN" ไม่ได้พิสูจน์อะไรเกี่ยวกับมันเลย ตรงกับ trigger ใน CLAUDE.md ที่ว่า risk logic ไม่มีกรง = ต้องขอความเห็นที่สอง
@@ -122,13 +186,16 @@ raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XA
 - **3 ไฟล์ (BOSS14 US30/XAG/XAU)** กวาด `_2_BasketTP_ATRmult` ที่ classification=OVERRIDE (ตัวเองก็ถูก `_2_BasketTP_BalPct` ทับได้อีก) = กวาดตัวกลางของโซ่ override
 **ข้อควรรู้:** `_9_MaxLevels` สำหรับ grid EA เป็น dual-use จริง (เป็นทั้ง strategy dimension และ safety cap) — guard เลือกฝั่ง conservative ตาม doctrine. ถ้าจะกวาดมันต้องเป็นการ "หา depth ที่ worst-case ยังรับได้" ภายใต้ cage ไม่ใช่ "หา depth ที่ PF สูงสุด" → verdict ของ guard ป้องกันอย่างหลังถูกแล้ว. **ไม่มี deploy .set ตัวไหนตั้งอยู่บน flagged param** (ไฟล์ที่โดนคือ research sweep ล้วน ไม่ใช่ locked deploy set) → guard = เครื่องมือ forward-looking กัน sweep ครั้งหน้า ไม่ใช่ปัญหาที่ deploy อยู่แล้ว
 
+**✅ WIRED INTO PIPELINE (Claude 2026-07-24, user "บังคับแบบ warn + override ได้"):** `scripts/mt5_optimize.ps1` เรียก `optimize_guard.ps1 -IniPath $ini` เอง ทันทีหลังเขียน `.ini` (ก่อน `Start-Process` เปิด MT5 — เซฟ wall-clock จริง ไม่ต้องรอ tester จบแล้วค่อยรู้ว่ากวาดขยะ). **default = block**: REFUSE เจอ 1 ตัว → พิมพ์เหตุผล + `exit 3` ไม่เปิด MT5 เลย. **override:** เพิ่ม switch `-SkipOptimizeGuard` → รันซ้ำแบบ `-WarnOnly` (ยังพิมพ์ REFUSE lines เต็ม ไม่เงียบ) แล้วปล่อยผ่าน. ทดสอบ end-to-end จริงด้วย `.ini` ที่รู้ผลอยู่แล้ว (`O133_E4_LIN_BWD.ini`, กวาด `_9_MaxLevels`): ไม่ผ่าน guard → exit 1 confirm บล็อกจริง · `-WarnOnly` → exit 0 confirm override ทำงานจริง. ไม่ได้รัน MT5 จริงเต็ม pipeline (ไม่จำเป็น เพราะจุดที่แก้คือ pre-`Start-Process` ล้วนๆ, syntax validated ผ่าน PowerShell AST parser).
+
 ## ORDER-196 — [infra] ประกาศเลิกใช้ chassis V1 (`EA_LabTemplate.mq5` + `ea_template/modules/`) — `DONE(Sonnet + Claude verify 2026-07-24)`
 **ทำแล้ว:** banner DEPRECATED (comment-only, Claude ตรวจ diff = **+24/-0 และ +26/-0 ไม่มีบรรทัดที่ไม่ใช่คอมเมนต์เลย**) ที่หัว `EA_LabTemplate.mq5` + `modules/MoneyManagement.mqh` + คู่มือ §3.1 + `DESIGN_V2.md` 3 จุด · ระบุ 2 defect จริง (silent fallback + normalizer ปัด lot ต่ำกว่า min ขึ้น) · **ไม่ลบไฟล์ ไม่แตะ deploy.ps1 ไม่แก้ logic** · agent จับเพิ่ม: min-lot round-up จริงอยู่ที่ `modules/Execution.mqh::Exec_NormalizeLot` ไม่ใช่ RiskControl (แก้ banner ให้ชี้ถูก function แล้ว)
 **source:** Codex audit ชี้ว่า V1 ยังมี silent lot-mode fallback เดิม **และ normalizer ของมันปัด lot ที่ต่ำกว่าขั้นต่ำ *ขึ้น* เป็น min lot** (V2 คืน 0 แล้วข้ามไม้) — คำถามคือจะไปเสริมความแข็งแรงหรือเลิกใช้
 **ตรวจแล้ว = ตายจริง ไม่ต้องเสริม:** 0 แถวใน deployment inventory · 0 รายงาน backtest · 0 ไฟล์ `.set` อ้างถึง · `ea_template/modules/` ไม่ถูกแตะตั้งแต่ **2026-06-18** · Boss V2 ไม่มี dependency (Codex ยืนยัน 0 จุด) ⇒ **การไปแก้ money code ที่ตายแล้วคือรับความเสี่ยงฟรีๆ**
 **สั่งทำแค่:** ใส่ banner DEPRECATED ที่หัวไฟล์ทั้งสอง + คู่มือ · **ห้ามลบไฟล์ · ห้ามแก้ `deploy.ps1` · ห้ามแตะ logic** (comment-only) — เก็บของไว้ในประวัติ แค่ปิดทางไม่ให้ใครหยิบไปใช้
 
-## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `CLAIMED(Sonnet 2026-07-24)` + เพิ่มงาน: เติม `classification_note` ให้ 9 แถวฝั่งที่แพ้ใน registry ด้วย
+## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `DONE(Sonnet 2026-07-24, header sync 2026-07-24 Claude — commit 83ecce78 landed this ก่อนหน้าแล้ว, header เดิมลืมอัปเดต)` + เพิ่มงาน: เติม `classification_note` ให้ 9 แถวฝั่งที่แพ้ใน registry ด้วย
+**verify (2026-07-24, hygiene pass):** grep `ea_template/core/LabCore.mqh` เจอ `[CFG]` ครบทั้ง 4 pair ที่ spec ระบุ (`RC_MaxLevelsOverride`, `_2_SuppressLegTP`, `_33_SL_MaxATRmult`, `_17_UseStructLevels` ทับทั้ง `SLMode`+`ExitMode` — comment บรรทัด 195 เขียนไว้ตรงๆ ว่า "ORDER-195") — โค้ดจริงลงครบ header เก่าแค่ไม่ได้ sync
 <sub>⚠️ การจัดคิว 2026-07-24: ปล่อย Sonnet 2 ตัวคู่ขนาน โดย **195 เป็นเจ้าของ MT5 แต่ผู้เดียว** ส่วน 192(b)+196 ถูกสั่งห้ามแตะ MT5/`_mt5_auto/` เด็ดขาด — สอง agent รัน tester พร้อมกันจะได้ report ปนกัน (บทเรียน ORDER-128 เรื่อง 0-trade artifact จาก session คู่ขนาน)</sub>
 **source:** ORDER-191(c) นับได้ว่า registry มี **override pair 11 คู่ และ 9 คู่ (82%) เป็น SILENT** — คือแถวของ input ที่*แพ้*ไม่มีหมายเหตุบอกเลยว่ามันถูกทับได้ คนอ่านจะรู้ก็ต่อเมื่อบังเอิญไปอ่านแถวของตัวที่*ชนะ*
 **ช่องว่างที่เหลือ:** บล็อก `[CFG]` (ORDER-192) ครอบไปแล้ว **4 คู่** (BasketTP 3 ชั้น · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`) **ยังไม่ครอบอีก 4-5 คู่:**
@@ -152,19 +219,19 @@ raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XA
 **หลักฐาน:** compile 0 error/0 warning ทั้ง 9 wrapper · **`tpl_regression.ps1` CLEAN 8/8**
 **ค้าง (Codex ชี้ ผมไม่ทำในรอบนี้):** `EA_LabTemplate.mq5` chassis เก่า (include `modules/*` ไม่ใช่ `core/*`) ยังมี silent fallback เดิม **และ normalizer ของมันยัง floor lot ที่ต่ำกว่าขั้นต่ำ *ขึ้น* ไปเป็น min lot** (ต่างจาก core ที่คืน 0) — ถ้ายังนับว่า V1 ใช้งานอยู่ ต้องมี order แยก
 
-## ORDER-191 — [docs/tooling] parameter linkage matrix + ล้างหนี้ line-number ของ registry — `OPEN → (a) DONE 2026-07-24 (Sonnet lane + Claude verify), เหลือ (b) linkage matrix + (c) inactive audit`
+## ORDER-191 — [docs/tooling] parameter linkage matrix + ล้างหนี้ line-number ของ registry — `DONE 2026-07-24 (a: Sonnet lane + Claude verify · b/c: commit de14b3f3 "ORDER-191(b)(c): generated parameter linkage doc + inactive/override audit" — header sync 2026-07-24 Claude, ล่าช้ากว่า commit จริง)`
 **source:** Codex ข้อ "PARAM-LINK-005/UX-006". **ตัดสโคปลงจากที่ review เสนอ** เพราะ compile-time hiding ต่อ Boss ที่เสนอไว้ **มีอยู่แล้ว** — `Inputs.mqh` ห่อ input ของทุก entry ด้วย `#ifdef LAB_ENTRY_NN` อยู่แล้ว, wrapper ที่ build จริงจึงเห็นแค่ chassis ร่วม + entry ตัวเอง ไม่ต้องสร้างระบบใหม่.
 **spec (mechanical, ตรวจด้วยสคริปต์ได้):** (a) refresh line number ทั้ง ~174 แถวของ `docs/PARAM_REGISTRY.csv` ให้ตรง working tree รอบเดียว + เขียนสคริปต์ `scripts/param_registry_check.ps1` ที่ diff ชื่อ input ระหว่าง `Inputs.mqh` กับ registry แล้ว exit 1 ถ้าไม่ตรง (กันไม่ให้หนี้ก้อนนี้เกิดซ้ำ) (b) จากคอลัมน์ `coupled_parameters` ที่มีอยู่แล้ว generate ตาราง linkage ต่อหมวด → `docs/PARAM_LINKAGE.md` (c) audit หา input ที่ `classification=INACTIVE` หรือคู่ที่ override กันเงียบๆ → list ไว้ให้ Claude ตัดสิน
 **ห้าม:** เขียนคอลัมน์ `default_profile`/`optimize_stage`/`safe_range` ที่เป็น UNKNOWN โดยเดาเอง (กฎเหล็กของ ORDER-164) · regenerate registry ทั้งไฟล์
 **ทำได้:** Sonnet/qwen ทั้งใบ (mechanical + มี cage ตรวจ)
 
-## ORDER-192 — [tooling] OnInit effective-config summary + optimizer active-parameter guard — `OPEN`
+## ORDER-192 — [tooling] OnInit effective-config summary + optimizer active-parameter guard — `DONE 2026-07-24 (a: `[CFG] sizing` block landed + follow-up fix commit a97d7f7e "effective-config summary was lying about entry 16" · b: see ORDER-192(b) below, DONE — header sync 2026-07-24 Claude)`
 **source:** Codex ข้อ "CONFIG-007 + OPT-GUARD-008". **จัดไว้ท้ายคิวโดยตั้งใจ** — มูลค่าต่อ pipeline ต่ำกว่า 187-189 มาก และ MT5 ซ่อน parameter แบบ dynamic ไม่ได้อยู่ดี
 **spec:** (a) ต่อจาก `[INIT] Boss_%s | exit=... firstLot=...` ที่มีอยู่ ให้พิมพ์บล็อกสรุป **effective config** = โหมดที่ใช้จริง + first lot ที่คำนวณได้จริง ณ ตอน attach + ค่าที่ถูก override ทิ้ง (เช่น `_2_BasketTP_Money` ตอนที่ `_2_BasketTP_BalPct>0`) + คำเตือนเมื่อ `_4_DdAdaptiveOn` เปิดพร้อม LotProg/Recovery (b) guard ฝั่ง optimizer: สคริปต์อ่าน `.ini` ของ optimize pass แล้วปฏิเสธ parameter ที่ inactive/ถูก override/เป็น safety (`RC_*`, KillDD, DepositLoad) — **ใช้ `PARAM_REGISTRY.csv` เป็นแหล่งความจริง** (จึงต้องรอ ORDER-191 (a) ก่อน)
 **ห้าม:** ทำ (b) ก่อน registry ผ่าน check script (จะ guard จากข้อมูลเก่า) · เพิ่ม input ใหม่เพื่อเปิด/ปิด summary (log อย่างเดียวพอ)
 **ทำได้:** (a) Claude/Sonnet · (b) Sonnet/Codex
 
-## ORDER-194 — [core/safety] hard-kill ยิงซ้ำทุก tick หลัง halt แล้ว (ไม่มี `g_rc_halted` guard ใน `RiskControl_CheckDD`) — `OPEN` ⚠️ รอ user เคาะ (แตะ risk logic)
+## ORDER-194 — [core/safety] hard-kill ยิงซ้ำทุก tick หลัง halt แล้ว (ไม่มี `g_rc_halted` guard ใน `RiskControl_CheckDD`) — `DONE(Claude/Fable 2026-07-24, user "แก้ตามงานที่นายเปิดไว้เลย" — header sync 2026-07-24 Claude)`
 **source:** เจอโดยบังเอิญตอนไล่ตอบคำถาม user เรื่อง KillDD 25% (2026-07-24) — grep หา `HARD KILL` ใน tester log แล้วเจอตัวเลขที่เป็นไปไม่ได้
 **หลักฐานดิบ (log จริง ไม่ใช่การอนุมาน):**
 ```
@@ -182,7 +249,7 @@ raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XA
 **bars:** N-A. **flat-lot probe:** N-A.
 **ห้าม:** ตีความ CLEAN 8/8 ว่า "ไม่มีอะไรเสียหาย" — ผลจริงอยู่ที่ live (disk I/O) และที่ log ขนาด GB ซึ่งทำให้ ORDER-193 ทำงานไม่ไหวถ้าไม่แก้ก่อน
 
-## ORDER-193 — [tooling/integrity] ตรวจจับ backtest ที่ถูก hard-kill ตัดกลางคัน (truncated-run detector) — `OPEN` ⚠️ ผลกระทบต่อความน่าเชื่อถือของ funnel
+## ORDER-193 — [tooling/integrity] ตรวจจับ backtest ที่ถูก hard-kill ตัดกลางคัน (truncated-run detector) — `DONE 2026-07-24 (a/b/c: `scripts/check_truncated_run.ps1` wired into `mt5_run.ps1` — ทุก run เขียน `<name>.truncation_check.json` อัตโนมัติ (verified in source, line ~156) · d: retro-scan ORDER-193(d)/(e) below, DONE — header sync 2026-07-24 Claude)`
 **source:** user 2026-07-24 ถามว่า "KillDD 25% เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอาก็ได้". ไล่โค้ดแล้วเจอว่าคำถามนี้ชี้ไปที่ปัญหาที่ **ใหญ่กว่าตัวเลข 25** และไม่มีใครเห็นมาก่อน:
 **ข้อเท็จจริงที่ตรวจแล้ว:** `RiskControl_CheckDD()` **ไม่ถูก tester-gate** (มีแค่ `RiskControl_PersistRefresh` ที่ gate ไว้ที่ `RiskControl.mqh:287`) → **hard-kill ยิงใน backtest ด้วย** และเมื่อยิงแล้วจะ `close all + halt ตลอดที่เหลือของ run` (`g_rc_kill_pending` → `RiskControl_IsHalted` early-return ใน OnTick)
 **ผลที่ตามมา:** backtest ใดก็ตามที่ DD แตะ `RC_KillDDPct()` จะรายงาน PF/n จาก **sample ที่ถูกตัดกลางคัน โดยไม่มีอะไรในรายงานบอกว่าถูกตัด** — วัดได้จริงวันนี้ (ORDER-188 เคส A): ตาย DD 25.09% ที่ไม้ 115 จาก 164 = **30% ของหน้าต่างหายไปเงียบๆ** และ PF ที่ได้ (0.71) คือ PF ของ 70% แรกเท่านั้น. **ร้ายกว่านั้น: จุดตัดขึ้นกับ "เงินฝากที่ตั้งใน tester" ซึ่งเป็น setting ไม่ใช่คุณสมบัติของกลยุทธ์** → EA เดียวกัน พารามิเตอร์เดียวกัน คนละเงินต้น = คนละ verdict. นี่คือรูรั่วของ comparability ทั้ง funnel ไม่ใช่แค่ของ EA ตัวใดตัวหนึ่ง.

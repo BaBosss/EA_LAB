@@ -41,5 +41,12 @@
     "no_exposure": "ยังไม่มี exposure map (รัน mris_exposure.ps1 ก่อน)",
     "h_action": "สิ่งที่ควรทำวันนี้",
     "disclaimer": "ระบบเสนอ 'เฝ้าระวัง/ทบทวน' ไม่ใช่คำแนะนำการลงทุน และไม่ auto-trade — คนตัดสินใจคือคุณ. tripwire ทุกเส้นคุณเป็นคนเคาะเอง."
+  },
+  "crisis": {
+    "h_crisis": "โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)",
+    "label_th": { "active": "ทำงาน", "forming": "กำลังก่อตัว", "dormant": "สงบ", "unknown": "ไม่มีข้อมูล" },
+    "label_emoji": { "active": "🔴", "forming": "🟠", "dormant": "🟢", "unknown": "⚪" },
+    "driver_prefix": "ตัวขับหลัก",
+    "note": "คะแนน 0-100 จาก barometer ที่อธิบายได้ - เป็นชั้นเฝ้าระวัง ไม่ auto-trade และยังไม่ผ่าน backtest (ORDER-200)"
   }
 }

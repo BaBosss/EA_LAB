@@ -1,0 +1,44 @@
+{
+  "_doc": "MRIS crisis-model config (ORDER-200). ADVISORY-ONLY layer inspired by bond-crisis-dashboard-v2. Each model is a 0-100 composite of explainable components; every component is a clamped LINEAR RAMP between a 'calm' anchor (score 0) and a 'stress' anchor (score 100). Direction is inferred from the anchors (stress>calm = rising is bad; stress<calm = falling is bad). These scores DO NOT feed the validated RI/state that MacroGate reads on real accounts (doctrine: advisory shadow until backtested + user-ratified). Zero LLM tokens. All anchors are plain tunable numbers.",
+  "version": "1.0",
+  "_locked": "Anchors seeded by Opus-seat 2026-07-24 from historical episode reasoning (see _rationale). NOT yet backtest-validated - these produce a DISPLAY score only until ORDER-200 Phase-B proves them on 2020/2022/2024.",
+  "labels": {
+    "_doc": "score bands -> label (matches the vercel site vocabulary).",
+    "active_min": 60,
+    "forming_min": 40
+  },
+  "models": [
+    {
+      "name": "YIELD_SHOCK",
+      "title_th": "Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง)",
+      "_rationale": "US10Y rising hard while equities break down and bond vol (MOVE) is elevated = a duration/rate shock. Matches the site's #1 model on 2026-07-24.",
+      "components": [
+        { "key": "rate_level",       "input": "US10Y.spot",       "calm": 3.5,  "stress": 5.0,  "weight": 0.20, "unit": "%",   "desc": "US 10Y yield level" },
+        { "key": "rate_momentum",    "input": "US10Y.bps5d",      "calm": 0.0,  "stress": 25.0, "weight": 0.35, "unit": "bps", "desc": "US 10Y 5d change (bps)" },
+        { "key": "equity_breakdown", "input": "SP500.chg5d_pct",  "calm": 1.0,  "stress": -4.0, "weight": 0.25, "unit": "%",   "desc": "S&P500 5d momentum (falling = shock)" },
+        { "key": "bond_vol",         "input": "MOVE.spot",        "calm": 70.0, "stress": 140.0,"weight": 0.20, "unit": "idx", "desc": "MOVE bond-volatility index" }
+      ]
+    },
+    {
+      "name": "CREDIT_STRESS",
+      "title_th": "ความเครียดสินเชื่อ (สเปรด HY กว้าง)",
+      "_rationale": "High-yield credit spread high AND widening, confirmed by rising bond vol and equity fear = credit/bank-run stress. This is the core bond-crisis axis the site leads with; our old 8-barometer set had NO credit axis at all (the 2026-07-24 divergence vs the site).",
+      "components": [
+        { "key": "hy_level",       "input": "HY_OAS.spot",      "calm": 3.0,  "stress": 6.0,  "weight": 0.35, "unit": "%",   "desc": "HY option-adjusted spread level" },
+        { "key": "hy_widening",    "input": "HY_OAS.chg5d_pct", "calm": 0.0,  "stress": 15.0, "weight": 0.30, "unit": "%",   "desc": "HY spread 5d widening (%)" },
+        { "key": "bond_vol",       "input": "MOVE.spot",        "calm": 70.0, "stress": 140.0,"weight": 0.15, "unit": "idx", "desc": "MOVE bond-volatility index" },
+        { "key": "equity_confirm", "input": "VIX.spot",         "calm": 15.0, "stress": 35.0, "weight": 0.20, "unit": "idx", "desc": "VIX fear confirmation" }
+      ]
+    },
+    {
+      "name": "INFLATION_OIL",
+      "title_th": "เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น)",
+      "_rationale": "Oil surging above trend with upward momentum, confirmed by rising yields = inflation-driven regime. Matches the site's inflation-oil model. WTI vs its own SMA200 avoids a hardcoded price level.",
+      "components": [
+        { "key": "oil_vs_trend",  "input": "WTI.pct_vs_sma200", "calm": 0.0, "stress": 25.0, "weight": 0.40, "unit": "%",   "desc": "WTI % above its SMA200" },
+        { "key": "oil_momentum",  "input": "WTI.chg5d_pct",     "calm": 0.0, "stress": 10.0, "weight": 0.35, "unit": "%",   "desc": "WTI 5d momentum (%)" },
+        { "key": "rate_confirm",  "input": "US10Y.bps5d",       "calm": 0.0, "stress": 20.0, "weight": 0.25, "unit": "bps", "desc": "US 10Y 5d rise confirming inflation" }
+      ]
+    }
+  ]
+}
