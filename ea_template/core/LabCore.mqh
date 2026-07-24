@@ -128,6 +128,14 @@ void Lab_LogEffectiveConfig()
 #endif
    PrintFormat("[CFG] caps: RC_MaxLot %.2f | ProtectLevel %d (killDD %.0f%% / depositLoad %.0f%% / recSteps %d) | maxLevels %d",
                RC_MaxLot, ProtectLevel, RC_KillDDPct(), RC_MaxDepositLoadPct(), RC_MaxRecSteps(), RiskControl_MaxLevels());
+   // ORDER-195: RC_MaxLevelsOverride (>0) replaces only the step-count component
+   // ProtectLevel would otherwise supply via RC_MaxRecSteps() (RiskControl.mqh
+   // RiskControl_MaxLevels) -- it does NOT touch KillDD or DepositLoad, which stay
+   // ProtectLevel's exactly as printed on the line above. Say precisely which one
+   // component moved so a reader does not assume the whole preset was replaced.
+   if(RC_MaxLevelsOverride > 0)
+      PrintFormat("[CFG] depth cap: RC_MaxLevelsOverride %d replaces the step-count component of ProtectLevel %d -- IGNORING ProtectLevel's recSteps %d (killDD %.0f%% and depositLoad %.0f%% still come from ProtectLevel, untouched)",
+                  RC_MaxLevelsOverride, ProtectLevel, RC_MaxRecSteps(), RC_KillDDPct(), RC_MaxDepositLoadPct());
 
    // --- inputs that are silently superseded by a twin. Name the loser explicitly:
    // "ignored" in a log line is what stops someone tuning a dead number for an hour.
@@ -165,6 +173,43 @@ void Lab_LogEffectiveConfig()
       else
          PrintFormat("[CFG] recovery 82 DD reference: _8_DDRefMoney %.2f", _8_DDRefMoney);
    }
+
+   // ORDER-195: _2_SuppressLegTP blanks every leg's broker TP to 0.0 (ExitManager.mqh
+   // Exit_InitialTP, checked before anything else in that function). Only worth a WARN
+   // when ExitMode would otherwise have put a real per-leg TP in force (21 FIXED_TP /
+   // 22 ATR_TP) -- with TRAIL/RUN_TREND there is no per-leg TP to blank in the first
+   // place, so nothing is actually overridden and the line would be noise.
+   if(_2_SuppressLegTP && (ExitMode == EXIT_FIXED_TP || ExitMode == EXIT_ATR_TP))
+      PrintFormat("[CFG] per-leg TP: _2_SuppressLegTP=true forces every leg's broker TP to 0.0 -- IGNORING ExitMode %d's per-leg TP (basket-level exits such as _2_BasketTP_* still apply)", ExitMode);
+
+   // ORDER-195: _33_SL_MaxATRmult (>0) supersedes _33_SL_MaxPips as the ATR-SL distance
+   // cap (ExitManager.mqh Exit_CapATRDist checks MaxATRmult first, unconditionally, and
+   // only falls through to MaxPips when it is <=0). Both caps are reachable only from
+   // the SL_ATR branch of SLMode, so gate the note on that -- on any other SLMode
+   // neither cap is ever consulted and printing this would be a lie about what's live.
+   if(SLMode == SL_ATR && _33_SL_MaxATRmult > 0.0)
+      PrintFormat("[CFG] ATR-SL cap: _33_SL_MaxATRmult %.2f (portable, x current Risk-ATR) -- IGNORING _33_SL_MaxPips %.1f (legacy fixed-pip ceiling)",
+                  _33_SL_MaxATRmult, _33_SL_MaxPips);
+
+#ifdef LAB_ENTRY_17
+   // ORDER-195: _17_UseStructLevels supersedes BOTH SLMode and ExitMode's per-order
+   // SL/TP output (ExitManager.mqh Exit_InitialSL / Exit_InitialTP). SL: unconditional
+   // whenever a valid structural level is published for the order. TP: only when
+   // _2_SuppressLegTP has not already blanked it (checked first in Exit_InitialTP) AND
+   // ExitMode is not TRAIL/RUN_TREND -- those two modes own the exit themselves, and
+   // Exit_InitialTP explicitly skips the structural TP for them (the wave-1 TP anchor
+   // is published only as a reference zone in that case, never a broker TP).
+   if(_17_UseStructLevels)
+   {
+      PrintFormat("[CFG] entry-17 structural SL ON: every order's SL comes from the wave-1/wave-3 structural level, not the SLMode switch -- IGNORING SLMode %d", SLMode);
+      if(_2_SuppressLegTP)
+         Print("[CFG] entry-17 structural TP: moot -- _2_SuppressLegTP=true already blanked every leg's TP to 0.0 above the structural-TP check");
+      else if(ExitMode == EXIT_TRAIL || ExitMode == EXIT_RUN_TREND)
+         PrintFormat("[CFG] entry-17 structural TP: not applied -- ExitMode %d owns the exit (TRAIL/RUN_TREND); the wave-1 TP anchor is published as a reference zone only, no broker TP is set from it", ExitMode);
+      else
+         PrintFormat("[CFG] entry-17 structural TP ON: every order's TP comes from the wave-1/wave-3 structural level, not the ExitMode switch -- IGNORING ExitMode %d", ExitMode);
+   }
+#endif
 
    // --- the compounding stack. Three independent multipliers can stack on one order,
    // and the registry/guide both flag this as the most dangerous combination in the

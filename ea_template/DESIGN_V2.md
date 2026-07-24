@@ -1,12 +1,23 @@
 # EA_LabTemplate V2 — Design Blueprint
 > เขียน 2026-06-18 · สถานะ: DESIGN (ยังไม่ลงมือ) · คุยแผนก่อน build
 
+> **⚠️ UPDATE (post-hoc, this doc's V1 status is now stale): V1 (`EA_LabTemplate.mq5` +
+> `modules/`) is now DEPRECATED, not merely "kept archived" as §"ผลที่ตามมาจากการเคาะ" below
+> still says.** Finding: 0 rows in the deployments inventory, 0 backtest reports, 0 `.set`
+> files reference it, `modules/` unmodified since 2026-06-18 (this doc's own write date).
+> V1 still carries the silent lot-mode fallback (`MM_FirstLot`) and the round-up-to-minlot
+> normalizer (`Exec_NormalizeLot`) that V2 fixed (MM-SAFETY-001, 2026-07-24). Do not build new
+> work on V1; do not deploy it. See `docs/EA_CORE_AND_TEMPLATE_GUIDE.md` §3.1 for the current
+> V1 vs V2 statement. This is a documentation-only correction — nothing below was re-derived
+> or changed beyond this note and the two below it.
+
 V2 = รื้อ usability ของ chassis เดิม 3 เรื่องหลัก:
 1. **เลขกำกับทุก dropdown** (enum value = โค้ด) → ไล่ optimize/report ง่าย
 2. **1 EA = 1 entry** (compile-time variant) + entry เป็นชื่อ EA
 3. **แยก StackMode** ออกจาก OnTick (เลิกบังคับ grid กับทุก entry)
 
 โครงเดิม (V1) อยู่ที่ `EA_LabTemplate.mq5` + `modules/` — V2 ไม่ทับ ของเดิม build ได้ตลอด
+(**V1 ตอนนี้ DEPRECATED แล้ว — ดู banner ด้านบน**)
 
 ---
 
@@ -241,6 +252,7 @@ assert ใน OnInit ก่อน merge — "one mode, one exit owner" (MERGE-02
 7. อัปเดต .set ชุดใหม่ (ชื่อ key เปลี่ยน)
 
 ของเดิม V1 คงไว้จน V2 ผ่าน smoke แล้วค่อย deprecate
+(**V2 ผ่านสถานะนั้นแล้ว — V1 DEPRECATED จริงแล้ว ณ วันที่มี banner นี้, ดูหมายเหตุต้นไฟล์**)
 
 ---
 
@@ -407,10 +419,10 @@ set อ้างอิง: `sets\Boss14_GridLog_AUDJPY_20x.set`.
 - [x] **ชื่อ EA:** `Boss_11_GridTrend` / `Boss_12_Breakout` / `Boss_13_MeanRev` (prefix Boss_ + เลขหมวด + ชื่อสั้น)
 - [x] **Deploy:** ทับโฟลเดอร์ `EALabTpl` เดิม → expert name = `EALabTpl\Boss_11_GridTrend` ฯลฯ
 - [x] **MR (13) default stack:** `92` DCA (ถัวสวน bounce)
-- [x] **V1:** เก็บถาวร (`EA_LabTemplate.mq5` + `modules/` คงไว้คู่ `core/`)
+- [x] **V1:** เก็บถาวร (`EA_LabTemplate.mq5` + `modules/` คงไว้คู่ `core/`) — **DEPRECATED แล้ว, ดูหมายเหตุต้นไฟล์**
 
 ### ผลที่ตามมาจากการเคาะ
 - ชื่อ build ใน wrapper: `#property description "Boss V2 — 11 Grid Trend MA"` ฯลฯ
 - deploy.ps1 robocopy 3 .ex5 เข้า `…\MQL5\Experts\EALabTpl\` (ทับเฉพาะ Boss_* ไม่แตะ EA_LabTemplate.ex5 เดิม)
 - Stack default: 11→91, 12→90, 13→**92** (ตั้งใน Inputs.mqh ผ่าน #if LAB_ENTRY)
-- V1 ไม่ deprecate — `core/` เป็นชุดใหม่แยก ไม่ทับ `modules/` เดิม
+- V1 ไม่ deprecate ตอนนั้น — `core/` เป็นชุดใหม่แยก ไม่ทับ `modules/` เดิม (**ตอนนี้ deprecate แล้ว, ดูหมายเหตุต้นไฟล์**)

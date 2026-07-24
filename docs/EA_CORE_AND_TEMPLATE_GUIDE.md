@@ -128,10 +128,22 @@ report validate อยู่ `D:\EA_LAB\_mt5_auto\reports\ST03B_TG_*.htm`
 
 ### 3.1 โครงสร้าง + V1 vs V2
 
+> **⚠️ DEPRECATED (V1): `EA_LabTemplate.mq5` + `modules\` ห้ามใช้กับงานใหม่ใดๆ ทั้งสิ้น.**
+> Boss V2 (`core\` + `Boss_11..18_*.mq5`) แทนที่แล้วสมบูรณ์ และไม่มี dependency ใดๆ กลับไปที่
+> `EA_LabTemplate.mq5`/`modules\` — สองต้นไม้เดินคู่กันแบบไม่ทับกัน ไม่ใช่ layer ต่อกัน. V1 ตาย
+> จริง (finding, ไม่ใช่ opinion): **0 แถวใน deployments inventory · 0 backtest report ·
+> 0 ไฟล์ .set อ้างอิงถึง · `modules\` ไม่ถูกแก้ตั้งแต่ 2026-06-18.** V1 ยังมี defect ที่ V2 แก้แล้ว
+> 2 จุด: (1) **silent lot-mode fallback** — `MM_FirstLot()` (`modules/MoneyManagement.mqh`)
+> ตกกลับไปที่ `InpFixedLot` แบบเงียบเมื่อ RISK mode คำนวณระยะ SL ไม่ได้ (V2 = MM-SAFETY-001
+> ปี 2026-07-24 แก้แล้ว: attach fail / skip order แทนที่จะยืมค่าโหมดอื่น) (2) **lot normalizer
+> ปัดค่าต่ำกว่า broker minimum ขึ้นไปแทนที่จะ skip** — `Exec_NormalizeLot()` (`modules/
+> Execution.mqh`) ปัดขึ้น min lot เสมอ, V2 คืน 0 แล้ว skip order แทน. บันทึกไว้เป็น comment
+> banner ในทั้งสองไฟล์แล้ว — ห้ามลบไฟล์ ห้ามแก้ logic ไฟล์เหล่านี้ (deprecated ≠ delete).
+
 ```
 ea_template\
-├── EA_LabTemplate.mq5      ← V1 เดิม (entry เลือกจาก dropdown) — legacy, เก็บอ้างอิง
-├── modules\                ← module ของ V1 (ซ้ำกับ core\ โดยตั้งใจ — คนละ generation)
+├── EA_LabTemplate.mq5      ← ⚠️ DEPRECATED (V1 เดิม, entry เลือกจาก dropdown) — ห้ามใช้งานใหม่
+├── modules\                ← ⚠️ DEPRECATED (module ของ V1 — ซ้ำกับ core\ โดยตั้งใจ, คนละ generation)
 ├── Boss_11_GridTrend.mq5   ← V2: 1 EA = 1 entry (compile-time #define LAB_ENTRY 11)
 ├── Boss_12_Breakout.mq5    ←     (LAB_ENTRY 12 = Donchian breakout)
 ├── Boss_13_MeanRev.mq5     ←     (LAB_ENTRY 13 = BB/RSI mean reversion)
@@ -147,7 +159,7 @@ ea_template\
 ```
 
 > **หมายเหตุ duplication:** `modules\` (V1) กับ `core\` (V2) มีไฟล์ชื่อซ้ำกันโดยตั้งใจ —
-> V1 ยังใช้ได้ผ่าน `EA_LabTemplate.mq5` แต่ **งานใหม่ทั้งหมดใช้ V2 (Boss_*.mq5 + core\)**
+> V1 **DEPRECATED แล้ว** (ดู banner ด้านบน) — **งานใหม่ทั้งหมดใช้ V2 (Boss_*.mq5 + core\) เท่านั้น**
 
 ### 3.2 chassis ให้อะไร (ทุก entry ได้ฟรี)
 
