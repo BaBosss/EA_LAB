@@ -70,8 +70,23 @@ void Lab_LogEffectiveConfig()
    // Print the inputs that decide it instead, and resolve a real lot only for the
    // modes that can be resolved from account state alone.
 #ifdef LAB_ENTRY_16
-   PrintFormat("[CFG] sizing: Kangaroo owns lots - every order = _16_BaseLot %.4f (FirstLotMode=%d IGNORED)",
-               _16_BaseLot, FirstLotMode);
+   // ORDER-190 follow-up: this branch used to print _16_BaseLot unconditionally, which
+   // became a LIE the moment _16_BaseLotMode=1 existed - the log claimed a flat 0.01 while
+   // the EA actually traded a balance-scaled 0.20. A summary whose whole job is "say what
+   // really wins" must never be the thing that misreports the newest dial.
+   if(_16_BaseLotMode == 1)
+   {
+      double bal16 = AccountInfoDouble(ACCOUNT_BALANCE);
+      PrintFormat("[CFG] sizing: Kangaroo owns lots - BALANCE-SCALED base %.4f lot per %.2f balance; at the current balance %.2f that is %.4f lot (_16_BaseLot %.4f IGNORED, FirstLotMode=%d IGNORED)",
+                  _43_LotPerAnchor, _43_BalanceAnchor, bal16,
+                  (_43_BalanceAnchor > 0.0 ? _43_LotPerAnchor * (bal16 / _43_BalanceAnchor) : 0.0),
+                  _16_BaseLot, FirstLotMode);
+   }
+   else
+      PrintFormat("[CFG] sizing: Kangaroo owns lots - flat base, every order = _16_BaseLot %.4f (FirstLotMode=%d IGNORED)",
+                  _16_BaseLot, FirstLotMode);
+   if(_16_LadderMult > 1.0)
+      PrintFormat("[CFG] entry-16 ladder ON: order 5+ = max open lot x %.2f, per-order ceiling %.2f", _16_LadderMult, _16_MaxLotPerOrder);
 #else
    if(FirstLotMode == FIRSTLOT_FIXED)
       PrintFormat("[CFG] sizing: 41 FIXED -> first lot %.4f", _41_FixedLot);
