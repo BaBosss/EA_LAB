@@ -187,7 +187,27 @@ raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XA
 **bars:** N-A (tooling). **flat-lot probe:** N-A.
 **ทำได้:** Sonnet/qwen (mechanical, ตรวจผลได้ด้วย log จริง) — logic ตัดสินว่า verdict ไหนต้องรื้อ = Claude/user เท่านั้น
 
-## ORDER-197 — [lever] ORDER-098 continuation: PROG_FIBONACCI vs PROG_LOG_POWER lot lever on Boss_14 XAU leg (990207) — `OPEN` (user 2026-07-24: "098 ต่อเลย")
+## ORDER-197 — [lever] ORDER-098 continuation: PROG_FIBONACCI vs PROG_LOG_POWER lot lever on Boss_14 XAU leg (990207) — `REVIEWED(Claude 2026-07-24): NOT ADOPTED — fails the pre-registered bar (loses on MAIN), PROG_LOG_POWER stays live default`
+
+**RESULT (Sonnet-agent ran 4 backtests, Claude verified against the pre-registered bar):**
+| Config | Window | PF | Trades | eqDD max | Net Profit |
+|---|---|---|---|---|---|
+| Baseline (LotProg=55) | MAIN 2023-2025 | 1.91 | 533 | 4.06% | $1,762.90 |
+| Baseline (LotProg=55) | BWD 2020-2022 | 1.19 | 167 | 4.44% | $168.67 |
+| Fib (LotProg=56) | MAIN 2023-2025 | **1.83** | 535 | **5.27%** | $1,758.69 |
+| Fib (LotProg=56) | BWD 2020-2022 | **1.23** | 167 | 4.42% | $207.53 |
+
+Fib **loses on MAIN** (1.91→1.83, −0.08 PF, eqDD +30% relative — a real increase, not noise) despite winning
+on BWD (1.19→1.23, +0.04 PF, though that window's last ~80% of days traded zero for both configs — quiet tail
+confirmed via `check_truncated_run.ps1`, not a hard-kill truncation, but thin/low-power evidence either way).
+Per the pre-registered bar ("loses on either window → PROG_LOG_POWER stays live default"), this is a clean
+NOT-ADOPTED. Live `.set` (`Boss14_GridLog_XAU_DEMO.set`, magic 990207) confirmed untouched. No truncation, no
+leverage mismatch on any of the 4 runs (verified). Full finding + reports → `EDGE_CATALOG.md` §LEVER
+PROG_FIBONACCI entry (2026-07-24) · raw reports `_mt5_auto/reports/ORDER197_{BASELINE,FIB}_{MAIN,BWD}.htm`.
+**Closes the ORDER-098 campaign's "recommended move #2" (B1/B3 retrofit)** for this leg/chassis pairing —
+DynClose-on-Kangaroo (deferred above, exit-owner conflict) remains the one open thread from the shortlist if
+anyone wants to pick it up later; not pursued in this pass.
+
 **source:** `_triage/fxdreema_youtube/BUILDON_SHORTLIST.md` recommended-move #2 (retrofit B1/B3 MM-parts onto a validated chassis) + ORDER-098-C's own note that the two parts it built (`PROG_FIBONACCI` lot-cap, `Exit_DynCloseTargetMoney`) were "off-by-default, regression-clean, integrate-into-chassis = future order, not backtested yet."
 **why this target, not the shortlist's literal suggestion:** shortlist said "Fib→MatchaGrid / DynClose→Kangaroo+JUMSTOCH" — checked both before writing this spec:
 - `ea_projects/Matchagrid/` = **locked/vendor EA, reports only, no source** — cannot retrofit a module into closed-source. Ruled out.

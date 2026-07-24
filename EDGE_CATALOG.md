@@ -365,3 +365,20 @@ Sweep prior-day H/L + $25 grid ≥0.3ATR แล้วปิดกลับ + RSI
 ## NULL: LondonORB symbol expansion (ORDER-140, 2026-07-20)
 ORB plateau XAU M15 (1.17/1.07) ขยาย: GBP MAIN 0.79 ตาย · EUR ตายทั้งคู่ · USDJPY M15 1.14/1.10 + XAU M30
 1.13/1.08 @n~700 = **edge จริงแต่บางใต้ bar ทุกบ้าน** — ORB-with-ATR-band เป็น broad thin edge ไม่ใช่ deploy edge.
+
+## LEVER: PROG_FIBONACCI lot-cap vs PROG_LOG_POWER on Boss_14 GridLog XAU (ORDER-197, 2026-07-24) ⬛ NOT ADOPTED
+
+fxDreema-corpus MM-part (`PROG_FIBONACCI`, corpus EX191, built off-by-default in ORDER-098-C) tested as a
+drop-in swap for the live XAU leg's (990207) existing `PROG_LOG_POWER` progression — isolate ONE variable
+(`LotProg` 55→56 + `_56_FibMaxStep=5`), everything else byte-identical. **Result: mixed, and the pre-registered
+bar (must beat-or-tie on BOTH windows) fails.** MAIN 2023-2025: 1.91→1.83 (worse, −0.08 PF) with eqDD
+4.06%→5.27% (~+30% relative, real not noise). BWD 2020-2022: 1.19→1.23 (better, +0.04 PF), but that window's
+last 80% of days traded zero for both configs (quiet tail, not a hard-kill truncation — verified via
+`check_truncated_run.ps1`), so the BWD comparison itself is thin/low-power even though it's apples-to-apples.
+**Reading:** PROG_LOG_POWER's smoother, more continuous curve fits this basket's actual DD dynamics on the
+window that matters most (MAIN, the pinned re-opt window) better than Fibonacci's step-function jumps —
+losing on the harder/larger/more-recent window rules it out per doctrine even though it won the smaller one.
+Boss_14 XAU leg's live `.set` (`Boss14_GridLog_XAU_DEMO.set`) untouched, still `LotProg=55`. Raw reports:
+`_mt5_auto/reports/ORDER197_{BASELINE,FIB}_{MAIN,BWD}.htm`. **Do not re-test this exact swap on Boss_14 XAU
+again without new evidence** — `_56_FibMaxStep` sweep or a different chassis/leg would be new evidence,
+re-running the same two configs would not.
