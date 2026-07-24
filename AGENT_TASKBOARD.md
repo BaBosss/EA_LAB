@@ -83,6 +83,18 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 - **bar ใหม่ที่ถูกเรื่อง:** คุณค่าของ mode นี้ไม่ใช่ PF สูงขึ้น แต่คือ (1) risk เท่ากันข้ามขนาดบัญชี (deposit invariance) (2) หด lot เองตอน DD ลึกจนไม่ไปชน hard-kill — ข้อ (2) วัดได้แล้วบน chassis mode 43 (ORDER-188: fixed ตายที่ 115/164 ไม้ eqDD 25.09% · scaled จบครบ 164 ที่ 22.66%) → **ถ้าจะรับ lever นี้ ให้ตัดสินจากสองข้อนี้ ไม่ใช่จาก PF**
 - **ยังไม่ได้ทำ:** ตัดสินใจว่าจะเปิดใช้ mode 1 กับ Boss_16 ตัวจริงไหม = **user เคาะ** (โค้ดพร้อม default ปิด ปลอดภัยอยู่แล้ว)
 
+## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `OPEN` (งานเล็ก ~15 นาที + 1 cage)
+**source:** ORDER-191(c) นับได้ว่า registry มี **override pair 11 คู่ และ 9 คู่ (82%) เป็น SILENT** — คือแถวของ input ที่*แพ้*ไม่มีหมายเหตุบอกเลยว่ามันถูกทับได้ คนอ่านจะรู้ก็ต่อเมื่อบังเอิญไปอ่านแถวของตัวที่*ชนะ*
+**ช่องว่างที่เหลือ:** บล็อก `[CFG]` (ORDER-192) ครอบไปแล้ว **4 คู่** (BasketTP 3 ชั้น · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`) **ยังไม่ครอบอีก 4-5 คู่:**
+- `_17_UseStructLevels` ทับ `SLMode` **และ** `ExitMode` (build 17)
+- `_2_SuppressLegTP` ทับ per-leg TP ที่ `ExitMode` 21/22 จะตั้ง
+- `_33_SL_MaxATRmult` ทับ `_33_SL_MaxPips`
+- `RC_MaxLevelsOverride` ทับส่วน steps ของ `ProtectLevel`
+**⚠️ ที่น่าสนใจสุดจาก 191(c):** `ExitMode` เป็น dial ที่ถูก tune บ่อยที่สุดตัวหนึ่ง แต่**โดนทับเงียบ 2 ทาง** และแถวของมันเองมี `classification_note` ว่างเปล่า
+**spec:** เพิ่มบรรทัด `[CFG]` ต่อ pair ที่เหลือ (log-only เท่านั้น ห้ามแตะ logic) · เติม `classification_note` ให้แถวฝั่งที่แพ้ใน registry เพื่อให้คนอ่าน registry ตรงๆ ก็เห็น (แก้เฉพาะคอลัมน์ note ห้ามแตะคอลัมน์อื่น แล้วรัน `param_registry_check.ps1`)
+**ห้าม:** เปลี่ยน precedence จริงในโค้ด (นี่คืองาน "ทำให้มองเห็น" ไม่ใช่ "เปลี่ยนพฤติกรรม") · ข้าม cage เพราะคิดว่าเป็นแค่ log
+**ทำได้:** Sonnet ทั้งใบ (mechanical, มี cage + check script คุม)
+
 ## ORDER-194b — [core/safety] แก้ 4 ข้อจาก Codex blind-audit ของ ORDER-187/194 — `DONE(Claude/Fable 2026-07-24)`
 **source:** Codex CLI (0.144.2, เรียกตรงผ่าน `codex exec --sandbox read-only`) audit งาน commit `f5c093f` + RiskControl diff. **หมายเหตุ tooling: subagent `codex:codex-rescue` รายงานผิดว่า "Codex CLI ไม่ได้ติดตั้ง" ทั้งที่ติดตั้งอยู่จริง — เรียกตรงผ่าน PowerShell ได้ปกติ ใช้ทางนี้แทนไปก่อน**
 **ผล audit: not clean — 2 high + 1 medium + 1 low. ตรวจแล้วรับทั้ง 4 ข้อ แก้ครบ:**
