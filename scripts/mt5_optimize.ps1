@@ -27,7 +27,7 @@ param(
   [Parameter(Mandatory)][string]$SetFile,       # base .set WITH optimize ranges (||...||Y)
   [int]$Model = 1,                              # 1 = 1-min OHLC (fast) for optimization
   [int]$Optimization = 2,                       # 2 = fast genetic, 1 = slow complete
-  [int]$Criterion = 0,                          # 0 = max balance
+  [int]$Criterion = 7,                          # 7 = Complex Criterion (policy 2026-07-25; 0=balance max drives the genetic population into spikes) - engine-edge-class EAs pass -Criterion 1 (PF max)
   [int]$Deposit = 10000,
   [int]$Leverage = 100,                         # tester account leverage (1:N)
   [Parameter(Mandatory)][string]$ReportName,
@@ -72,7 +72,9 @@ $lines = @(
   "[Tester]", "Expert=$Expert", "Symbol=$Symbol", "Period=$Period", "Model=$Model",
   "Optimization=$Optimization", "OptimizationCriterion=$Criterion",
   "FromDate=$FromDate", "ToDate=$ToDate", "ForwardMode=0",
-  "Deposit=$Deposit", "Currency=USD", "Leverage=$Leverage", "ExecutionMode=0", "Visual=0",
+  "Deposit=$Deposit", "Currency=USD", "Leverage=1:$Leverage", "ExecutionMode=0", "Visual=0",
+  # Leverage MUST be written as 1:N - a bare "Leverage=100" is silently ignored and the
+  # tester falls back to the server default (observed: OPT_MDX_GBP ran at 1:2000).
   "Report=$ReportName", "ReplaceReport=1", "ShutdownTerminal=1", "[TesterInputs]"
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"

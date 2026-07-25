@@ -30,10 +30,17 @@ intermediate parsing internally; return only the final structured result.
   (the old `ruin<5%` here was looser than the project bar)
 
 ## Procedure (coarse → fine → validate)
-1. **Coarse optimize**: wide param ranges, large step. Run `select_robust_pass`.
-   Read the `center_params` — the plateau-centre region.
+1. **Coarse optimize**: wide param ranges, large step. **Mode by combo count**
+   (genetic policy 2026-07-25, canonical text = skill `backtest-optimize-rigor` Step 2):
+   ≤~1,000 combos → complete (`-Optimization 1`); more → MT5 genetic (`-Optimization 2`).
+   Leave `-Criterion` at its default (7 = Complex); engine-edge-class EAs (caller will say
+   so) use `-Criterion 1`. Before reading results, drop passes under the trade floor
+   (H4/D1 ≥60 · H1/M30 ≥100 · ≤M15 ≥250 per 36-mo MAIN). Run `select_robust_pass`.
+   Read the `center_params` — the plateau-centre region. Never hand-pick single
+   point-tests to select params.
 2. **Fine optimize**: narrow each range to ±2 steps around `center_params`, small
-   step. Re-select. Take the new `center_params` as the locked params.
+   step, **always complete mode** (`-Optimization 1`, ≤~1,000 combos). Re-select.
+   Take the new `center_params` as the locked params.
 3. Write the locked `.set` (all params explicit, `N` flag). Note Magic number.
 4. **MAIN test** 2023.01.01–2025.12.31 → parse PF/DD/RF/trades, score.
 5. **BWD test** 2020.01.01–2022.12.31 → parse + score. This is the stress test.
@@ -53,7 +60,10 @@ ladder plus a last-optimize round. State what the numbers did; stop there.
 ## CRITICAL
 - Always kill a stuck terminal64 before the next launch; never run two at once.
 - If optimize XML never appears, the expert name is wrong — stop, report it.
-- Judge optimize by ELAPSED TIME (cap ~1hr), not param-space size.
+- Long optimizes are fine (est. >~2h → report and let the caller schedule overnight);
+  NEVER shorten the MAIN window to save wall-clock — short window = one regime = overfit.
+- If the locked centre fails BWD: ONE logged re-pick from the same MAIN plateau, then stop
+  and report — never iterate picks against BWD.
 - Tight trailing stop (<20pip)? Re-test IS with Model=4 (real ticks) — OHLC lies.
 
 ## Output (return EXACTLY this block)

@@ -50,7 +50,11 @@ FOUR CHECKS (verdict is REFUSE if ANY of these fire for a parameter)
   An identifier this script cannot resolve against PARAM_REGISTRY.csv at all
   (unknown name, or an ambiguous multi-build identifier with no build context)
   is refused fail-closed - "sweep it anyway" is not the safe default for an
-  unrecognized dial.
+  unrecognized dial. EXCEPTION (user 2026-07-25): when the Expert is not a Boss
+  build AND zero checked names resolve against the registry (an EA the registry
+  has simply never catalogued), UNKNOWN downgrades to warn-only - refusing
+  whole unregistered EAs only trains operators to -SkipOptimizeGuard everything.
+  The safety-name check (RC_*/ProtectLevel/_9_MaxLevels) refuses regardless.
 
 USAGE
   # audit the whole 184-row registry for how many dimensions are never-optimizable
@@ -264,7 +268,8 @@ function Test-OptimizeParameter {
         [hashtable]$IniValues,
         [object[]]$RegistryRows,
         [object[]]$OverridePairs,
-        [object[]]$InertTable
+        [object[]]$InertTable,
+        [bool]$UnknownIsWarn = $false
     )
 
     $facts = New-Object System.Collections.Generic.List[object]   # {Refuse=bool; Text=string}
@@ -289,7 +294,15 @@ function Test-OptimizeParameter {
             $facts.Add([pscustomobject]@{ Refuse = $true; Text = "UNRESOLVED: $($candidates.Count) registry rows share identifier '$baseName' across builds and no -Build/-IniPath Expert= resolved which applies (fail-closed)" })
         }
     } else {
-        $facts.Add([pscustomobject]@{ Refuse = $true; Text = "UNKNOWN: no row in docs/PARAM_REGISTRY.csv matches identifier '$baseName' (fail-closed - cannot verify ACTIVE classification)" })
+        if ($UnknownIsWarn) {
+            # Non-Boss EA whose inputs the registry has never catalogued: refusing here
+            # only trains operators to pass -SkipOptimizeGuard on every run, which also
+            # silences the checks that DO have evidence behind them. Safety-name check
+            # (RC_*/ProtectLevel/_9_MaxLevels) above still refuses unconditionally.
+            $facts.Add([pscustomobject]@{ Refuse = $false; Text = "UNKNOWN (warn-only): '$baseName' not in docs/PARAM_REGISTRY.csv and Expert is not a registry-covered Boss build - cannot verify ACTIVE/override/inert status" })
+        } else {
+            $facts.Add([pscustomobject]@{ Refuse = $true; Text = "UNKNOWN: no row in docs/PARAM_REGISTRY.csv matches identifier '$baseName' (fail-closed - cannot verify ACTIVE classification)" })
+        }
     }
 
     if ($row) {
@@ -423,9 +436,24 @@ if ($checkList.Count -eq 0) {
     exit 0
 }
 
+# Unknown-EA downgrade: if no Boss build resolved AND not a single checked name exists
+# in the registry, this is an EA the registry has never catalogued (e.g. a standalone
+# non-Boss expert) - report UNKNOWN as warn-only instead of REFUSE. A Boss build (or a
+# partial match, which suggests a typo among known names) keeps the fail-closed default.
+$resolvableCount = 0
+foreach ($name in $checkList) {
+    $bn = (Split-NameTag $name).BaseName
+    if (@($registryRows | Where-Object { $_.BaseName -eq $bn }).Count -gt 0) { $resolvableCount++ }
+}
+$unknownIsWarn = (-not $build) -and ($resolvableCount -eq 0)
+if ($unknownIsWarn) {
+    Write-Host "NOTE: no Boss build and 0/$($checkList.Count) parameters known to the registry - unregistered EA, UNKNOWN downgraded to warn-only (safety-name check still enforced)." -ForegroundColor Yellow
+    Write-Host ""
+}
+
 $results = New-Object System.Collections.Generic.List[object]
 foreach ($name in $checkList) {
-    $r = Test-OptimizeParameter -Name $name -Build $build -IniValues $iniValues -RegistryRows $registryRows -OverridePairs $overridePairs -InertTable $inertTable
+    $r = Test-OptimizeParameter -Name $name -Build $build -IniValues $iniValues -RegistryRows $registryRows -OverridePairs $overridePairs -InertTable $inertTable -UnknownIsWarn $unknownIsWarn
     $results.Add($r)
 }
 
