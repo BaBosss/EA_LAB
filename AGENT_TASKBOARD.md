@@ -132,6 +132,11 @@ engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวน�
 **bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
 **flat-lot probe:** N-A(single-order — MacdDiv ไม่มี escalation)
 **เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น** (5c ไม่มี tick cache — ห้าม Model 4 เด็ดขาด)
+**📖 วิธีอ่านผล (ใช้กับทุก order ที่รัน tester — ห้าม Get-Content ไฟล์ .htm มาแกะเอง มันคือ HTML หลายหมื่น token):**
+```
+powershell -Command ". D:\EA_LAB\scripts\use_python.ps1; python D:\EA_LAB\scripts\parse_mt5_report.py 'D:\EA_LAB\_mt5_auto\reports\<RPT>.htm'"
+```
+เอาเฉพาะบรรทัด `profit_factor` · `total_trades` · `net_profit` · `balance_drawdown_maximal_pct` (ต้องใช้ **path เต็ม** ทั้ง 2 ตัว ไม่งั้นได้ `NO_REPORT`)
 
 **STEP 1** — รัน MAIN ทีละคำสั่ง (3 ตัว, symbol เปลี่ยนอย่างเดียว):
 ```
@@ -175,6 +180,7 @@ quality 100% · leverage assert 1:100 ผ่าน · traded through to end of w
 **bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
 **flat-lot probe:** N-A(single-order)
 **เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น**
+**📖 วิธีอ่านผล:** เหมือน ORDER-205 — ใช้ `scripts\parse_mt5_report.py` ด้วย path เต็ม **ห้าม Get-Content ไฟล์ .htm มาแกะเอง**
 
 **STEP 1** — รัน MAIN 3 ตัว:
 ```
@@ -207,6 +213,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "PivotBreakout_XAU" -Symb
 **bars:** pass = PF ≥ **1.2** · dead = PF < **1.0** · กลาง(WATCH) = **1.0–1.2** (ใช้กับทุก cell ในตาราง)
 **flat-lot probe:** N-A(ทุก EA ในตารางเป็น single-order)
 **เลน:** `D:\Meta 5c` · **Model 1 เท่านั้น** · หน้าต่าง MAIN `2023.01.01 → 2025.12.31` เสมอ
+**📖 วิธีอ่านผล:** เหมือน ORDER-205 — ใช้ `scripts\parse_mt5_report.py` ด้วย path เต็ม **ห้าม Get-Content ไฟล์ .htm มาแกะเอง**
 
 **วิธีทำ:** หยิบ cell **บนสุดที่ยังไม่มีผล** → รัน 1 คำสั่ง → append ผลดิบใต้ตาราง → เติม PF ในช่อง → cell ถัดไป
 **template คำสั่ง** (แทน `<EXPERT> <SYM> <TF> <SET> <RPT>` จากแถวที่หยิบ):
