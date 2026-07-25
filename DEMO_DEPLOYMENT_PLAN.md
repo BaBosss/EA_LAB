@@ -24,6 +24,41 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 | **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
 | **146237** Exness demo (user) | DEMO MT5 | user's own pool ~10 EA — magic ยังไม่ enumerate (บัญชีนี้เคยโผล่ใน live_deals) | 🆕 registered 2026-07-18 (user ยืนยัน: demo Exness, ขอให้เฝ้า) → enumerate magics จาก live_deals รอบ `/ea-monitor` ถัดไป |
 
+### ⏳ JUDGE DATE EXTENDED (user decision 2026-07-25: "เลื่อนวัน")
+
+เดิม EA ชุดนี้ถูกตั้ง judge ที่ +3 เดือน แต่ **ไม่มีทางเก็บครบ 30 ไม้ทัน** — บาร์ promote คือ
+PF ≥ 1.40 ที่ **≥ 30 trades** ตัดสินตอนไม้ยังไม่ถึงคือตัดสินบน noise.
+
+**ฐานที่ใช้คำนวณ:** อัตราไม้ที่**คาดจาก backtest** (`expectations.csv` → `trades_per_month_expected`)
+ไม่ใช่อัตราที่สังเกตได้ตอนนี้ — ตอนคำนวณ EA พวกนี้เพิ่ง active 7-19 วัน ซึ่งสั้นเกินกว่าจะ forecast
+(ORDER-198 เคยสรุปแล้วว่าเลข "18 ตัวขาด" ส่วนใหญ่เป็น artifact ของสูตร ไม่ใช่ EA พัง).
+สูตร: `judge = start_date + (30 ÷ อัตราคาดต่อสัปดาห์) × 7 วัน`
+
+| magic | EA | คาด/สัปดาห์ | judge เดิม | **judge ใหม่** |
+|---|---|---|---|---|
+| 999094 | MacdDiv_Naked XAUUSDm | 1.8 | 2026-10-16 | **2026-11-10** |
+| 991002 | (BRK)_TrendlineBreakout XAUUSD | 1.1 | 2026-10-09 | **2027-01-16** |
+| 990066 · 990067 | IchiADX USDJPYm (basket) | 1.1 | 2026-10-16 | **2027-01-23** |
+| 990068 · 990069 | IchiADX XAUUSDm (basket) | 1.0 | 2026-10-16 | **2027-02-11** |
+| 990202 | Boss_14_GridLog AUDNZDm | 0.9 | 2026-10-09 | **2027-02-24** |
+| 991070 | EmaStoRev EURUSDm | 0.9 | 2026-10-16 | **2027-03-06** |
+| 990203 | Boss_14_GridLog size-light EURJPYm | 0.8 | 2026-10-09 | **2027-03-25** |
+
+**🔴 4 ตัวที่เลื่อนไม่ช่วย — ต้องตัดสินคนละแบบ (ยังไม่แก้ รอ user):**
+ที่อัตราไม้ของมัน กว่าจะครบ 30 ไม้ต้องรอถึงปี 2028-2029 การเลื่อนวันจึงไม่ใช่คำตอบ —
+บาร์ 30 ไม้ต่างหากที่ผิดกับ EA ที่เทรดปีละไม่กี่ครั้ง:
+
+| magic | EA | คาด/สัปดาห์ | ต้องรอถึง |
+|---|---|---|---|
+| 991001 | EA_BREAKOUT_XAU XAUUSD (**เงินจริง**) | 0.2 | 2029-05 |
+| 991004 | (BRK)_SqueezeBreakout XAUUSD | 0.3 | 2028-06 |
+| 990205 | Boss_14_GridLog size-light thin CADJPYm | 0.3 | 2028-06 |
+| 990303 | Boss_17_Wave5 USDJPYm | 0.3 | 2028-06 |
+
+ทางเลือกสำหรับ 4 ตัวนี้ = (ก) ลดบาร์จำนวนไม้เฉพาะกลุ่ม thin แล้วชดเชยด้วยหลักฐาน backtest
+both-window + ขนาด lot เล็กถาวร · (ข) ตัดสินเป็น "ยังไม่พอตัดสิน" ไปเรื่อยๆ แล้วปล่อยรัน
+· (ค) ถอดออกเพราะไม่คุ้มช่องพอร์ต. **ยังไม่เลือกให้ — เป็นการตัดสินเรื่องบาร์ ไม่ใช่เรื่องวันที่.**
+
 **🟢 APPROVED (user 2026-07-16B "เอาเข้าทั้งหมด") — bundle พร้อม, user จะ attach ตอนว่าง (ยังไม่อยู่ใน DEPLOYMENTS.csv จนกว่า attach จริง):**
 | EA | Symbol/TF | Magic | Bundle | หลักฐาน |
 |---|---|---|---|---|
