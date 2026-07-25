@@ -219,6 +219,30 @@ already throttling; without it a window reads 0% for the wrong reason):
 `mris_fold_costcheck.ps1` now prints headroom per window and **excludes saturated windows from
 the cost verdict** instead of averaging them in (covid_2020 headroom 1.5%, calm_2019 2%).
 
+### Re-measured 2026-07-25 on a CLEAN core baseline (after the ORDER-203 pin fix landed, `265de0e3`)
+The AUDJPY-pin defect that inflated every pre-2026 core reading is fixed, so these are the first
+cost numbers whose *baseline* is trustworthy. Verified first that the fix is sound:
+- **live state unchanged** — NEUTRAL RI 0.308 before and after (the fix was made while AUDJPY sat
+  above the pin, so it altered no live behaviour, exactly as predicted).
+- **core parity holds** — live classifier vs the backtest port both give NEUTRAL / 0.308 for
+  2026-07-24 (both files were edited by the fix, so this had to be re-established).
+- **ORDER-073's concept check SURVIVES, now for valid reasons** — covid_crash_2020 flags 55/65 days
+  (STRESS 47 + RISK_OFF 8); carry_unwind_2024 flags 26 days starting **2024-07-17**, i.e. it warns
+  *before* the early-August blow-up rather than after. The MacroGate justification stands on real
+  evidence now instead of on the pin artifact.
+
+| window | headroom | newly throttled |
+|---|---|---|
+| calm_2017 | **100%** | 0/67 (0%) |
+| precovid_2019q4 | 69.4% | 0/62 (0%) |
+| calm_2021h1 | 96.6% | 8/59 (13.6%) |
+| inflation_2022 | 55.7% | 27/106 (25.5%) |
+| yield_spike_2023 | 100% | 19/63 (30.2%) |
+| covid_2020 | 14.9% | 0/67 — still below the 20% headroom bar, still cannot price the fold |
+
+The cost/benefit profile is **unchanged** across the pin fix, which is itself reassuring: the
+fold's value never depended on the defect.
+
 ### Scrutinize pass 2026-07-25 — 6 defects found and fixed (all verified by re-run)
 1. **[major] the phone-push path had no evidence gate.** The fold refused to throttle below
    `coverage >= 0.5`, but `mris_alert.ps1` compared `label` alone — so a partial feed outage
