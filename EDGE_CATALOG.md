@@ -403,3 +403,41 @@ Raw: `_mt5_auto/reports/O136_W2RETEST_*`. ⚠️ paid-for tooling gotcha from th
 memory/pagefile commit ceiling (RAM ~4GB free of 32, pagefile+TEMP on the tight C: drive) while both disks had
 ample free space; do not chase it as a literal disk problem. Model-4 pre-generates the whole window's tick
 array upfront, so a big window can hit the commit ceiling and abort ~10s in with zero trades.
+
+## LEVER: MACD-vs-signal-line cross as a timing confirm on a divergence entry (MacdDiv, ORDER-217, 2026-07-25) 🟨 BUILT — REGIME-CONDITIONAL, NOT DEPLOYED
+
+**Where it came from.** ORDER-216 found `_02_MacdSignal` was fed to `iMACD()` but buffer 1 (the
+signal line) was never read anywhere in `(EXP)_MacdDiv_Naked` — the entry was pure divergence with
+no timing confirmation at all. Rather than delete the dead input, wire the mechanism it implies.
+
+**The lever.** `_08_UseMacdCross` (default false) + `_08_CrossWithinBars`: take the divergence
+entry only if MACD has crossed its own signal line in the same direction within the last N closed
+bars. Additive, default-OFF, proven byte-identical when off (MAIN 1.82 / 280 / 1506.02 before and
+after, same binary path). N=1 is the best setting; longer windows monotonically decay
+(MAIN PF 2.98 → 2.83 → 2.73 → 2.48 at N = 1, 2, 3, 5).
+
+**What it does — the honest version.** It removes roughly **88% of trades** and lifts MAIN PF at
+every SwingRadius. At the deployed `_01_SwingRadius=3` it takes MAIN 1.82 → 2.98 (280 → 34
+trades) but takes **BWD 0.98 → 0.81**. At SR2 and SR4 it clears both windows (2.52/1.42 and
+2.30/1.13) — which the ungated EA cannot do at any SwingRadius.
+
+**Why it is not deployed.** Three reasons, and the third is the one that matters:
+
+1. **n collapses to 16–34 trades per window over three years.** PF 1.42 on 16 trades is not a
+   measurement. Any filter that keeps 12% of trades will raise PF on the survivors; that is
+   arithmetic before it is edge.
+2. **The knife-edge did not flatten — it inverted.** Gate OFF, MAIN peaks at SR3 and BWD at SR4.
+   Gate ON, MAIN still peaks at SR3 but BWD now peaks at SR2. Still regime-split, just differently.
+3. **In the stress regime the filter selects WORSE trades.** If the 88% it discards were dropped
+   at random, PF would hold near baseline. On MAIN it rises (selection value); on BWD at the same
+   setting it falls, 0.98 → 0.81. So the filter's ability to pick is itself regime-dependent —
+   the same disease as the host it was meant to cure.
+
+**Reusable claim (narrow, on purpose):** an independent timing confirm CAN lift a divergence
+entry's in-sample PF hard, and can move a both-window failure into a both-window pass at some
+parameter settings. It does **not** buy regime-robustness, and the trade-count cost is severe
+enough that thin-sample EAs cannot afford it. Try it where the host already has trades to spare
+and a *symmetric* weakness — not where the host is already regime-split.
+
+Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[08]` block) · sets
+`_mt5_auto/ab_sets/order217/` · reports `_mt5_auto/reports/O217_*`.

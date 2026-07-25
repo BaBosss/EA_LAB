@@ -291,7 +291,48 @@ prose 2 ครั้งและทั้งสองฝ่ายเลี่ย
 ต้องถูกทบทวนก่อน Boss_16 ขึ้น demo** · กลาง = จริงแต่ margin บาง ⇒ บันทึกใน README bundle
 **ห้าม:** ตีความ 6-ไม้ PASS เดิมว่าใช้ได้ · แก้ default ของ `_16_BaseLotMode`
 
-## ORDER-217 — [lever/build-on] MacdDiv: เส้น MACD signal ที่ EA ไม่เคยอ่าน = lever ที่ยังไม่เคยลอง — `OPEN`
+## ORDER-217 — [lever/build-on] MacdDiv: เส้น MACD signal ที่ EA ไม่เคยอ่าน = lever ที่ยังไม่เคยลอง — `REVIEWED(Claude/Opus 2026-07-25): 🟨 กลาง ตามบาร์ที่ล็อกไว้ → เก็บเป็น lever ใน EDGE_CATALOG ไม่ deploy · code เก็บไว้ (default OFF พิสูจน์ inert แล้ว)`
+**build สะอาด:** +23 บรรทัด additive ล้วน · `_08_UseMacdCross=false` default · อ่าน buffer 1 ที่ EA ไม่เคยแตะ ·
+**พิสูจน์ inert แบบที่ควรทำ**: รัน config ที่ deploy อยู่บนไบนารีก่อน/หลัง ได้ **1.82 / 280 ไม้ / 1506.02 เท่ากันทุกหลัก** ·
+mql-code-reviewer PASS · compile 0/0 · ผมอ่าน diff เองแล้ว gate อยู่หลัง `if(_08_UseMacdCross)` จริง
+**N=1 ดีสุด** และยาวขึ้นแย่ลงเป็นเส้นตรง (MAIN PF 2.98 → 2.83 → 2.73 → 2.48 ที่ N=1/2/3/5)
+
+| `_01_SwingRadius` | gate | MAIN PF / ไม้ | BWD PF / ไม้ |
+|---|---|---|---|
+| 2 | OFF | 0.96 / 304 | 0.87 / 296 |
+| 2 | **ON** | **2.52 / 23** | **1.42 / 16** |
+| 3 (deploy) | OFF | 1.82 / 280 | 0.98 / 243 |
+| 3 (deploy) | **ON** | **2.98 / 34** | **0.81 / 21** |
+| 4 | OFF | 1.04 / 274 | 1.44 / 206 |
+| 4 | **ON** | **2.30 / 34** | **1.13 / 33** |
+
+**สิ่งที่มันทำได้จริง:** SR2 และ SR4 ที่เปิด gate **ผ่านทั้งสองหน้าต่าง** ซึ่งเป็นสิ่งที่ ORDER-216 สรุปว่า EA ตัวนี้
+**ทำไม่ได้เลยไม่ว่าตั้ง SwingRadius เท่าไร** ⇒ lever นี้ "ทำงาน" ในความหมายที่วัดได้
+**ทำไมยังไม่ deploy — 3 เหตุผล และข้อ 3 คือข้อที่สำคัญ:**
+1. **ไม้เหลือ 16–34 ตัวต่อหน้าต่างใน 3 ปี** — PF 1.42 บน 16 ไม้ไม่ใช่การวัด. filter ที่เก็บไม้ไว้ 12% ย่อมดัน PF
+   ของผู้รอดชีวิตขึ้น นั่นคือเลขคณิตก่อนจะเป็น edge (บทเรียนเดียวกับ ORDER-210/216 เรื่อง sample poverty)
+2. **knife-edge ไม่ได้แบนลง มัน "กลับด้าน"** — gate OFF: MAIN สูงสุดที่ SR3, BWD สูงสุดที่ SR4 · gate ON: MAIN ยัง
+   SR3 แต่ **BWD ย้ายไปสูงสุดที่ SR2** ⇒ ยัง regime-split อยู่ แค่คนละแบบ
+3. 🎯 **ในตลาดเครียด filter เลือกไม้ "แย่ลง"** — ถ้า 88% ที่มันตัดทิ้งถูกตัดแบบสุ่ม PF ควรอยู่ใกล้เดิม. **บน MAIN
+   มันขึ้น (มีคุณค่าในการคัด) แต่บน BWD ที่ค่าเดียวกันมันลง 0.98 → 0.81** ⇒ **ความสามารถในการคัดของมันเอง
+   ขึ้นกับ regime** = โรคเดียวกับ host ที่มันถูกสร้างมารักษา
+**⇒ ตรงช่อง "กลาง" ที่ pre-register ไว้เป๊ะ** ("ยก BWD ได้แต่ยังพลิกที่ SwingRadius ⇒ เก็บเป็น lever ไม่ deploy")
+**ไม่ลบ `_02_MacdSignal`** — ตอนนี้มันมีความหมายแล้ว (คุมคาบของเส้น signal ที่ `[08]` อ่าน) ⇒ หนี้ dead-input ปิดโดยการ**ใช้มัน** ไม่ใช่ลบ
+**🔴 ของแถมที่ agent เจอ = stale binary ตัวที่ 3 ของวันนี้:** `MQL5\Experts\MacdDiv_Naked.mq5/.ex5` ใน roaming เป็นสำเนา
+**2026-07-14 ซึ่งเก่ากว่า RSI gate ของ ORDER-117 ด้วยซ้ำ** — agent อัปเดตให้ตรง HEAD แล้ว backup ตัวเก่าไว้ที่
+`_backup_before_o217\`. รวมวันนี้เจอ stale artifact **3 จุด** (Boss_16 ex5 · MacdDiv roaming pair · และ input-cache เดิม)
+→ **ORDER-221**
+
+## ORDER-221 — [ops/integrity] กวาด compiled artifact ที่เก่าค้างทุกจุด — `OPEN`
+**source:** ORDER-213 + ORDER-217 เจอคนละใบในวันเดียว. เครื่องนี้มี `.ex5` อยู่ **≥4 ที่**: `ea_template/` ·
+`ea_projects/` · `D:\Meta 5b\MQL5\Experts\` · roaming `9CA16B...\MQL5\Experts\` — **ไม่มีอะไรบังคับให้ตรงกัน**
+และ **`.ex5` ถูก gitignore ⇒ repo มองไม่เห็นปัญหานี้เลยโดยโครงสร้าง**
+**task:** สคริปต์ `scripts/check_stale_binaries.ps1` — ต่อ EA แต่ละตัว: หา `.ex5` ทุกสำเนา → เทียบ mtime กับ (ก) `.mq5`
+ของตัวเอง (ข) **ทุก `.mqh` ที่มัน include** → รายงานสำเนาที่เก่ากว่า + hash ที่ไม่ตรงกันระหว่างสำเนา
+**acceptance:** รันแล้วต้องจับ 2 เคสที่รู้แล้วได้ (Boss_16 ex5 ใน `ea_template` เก่ากว่า core 7 ไฟล์ · MacdDiv roaming
+pair ที่เพิ่งซ่อม ถ้าเอา backup กลับมาทดสอบ) · ต่อเข้า `detector_digest` ของ ORDER-219 · เรียกก่อนสร้าง deploy bundle ทุกครั้ง
+**ห้าม:** ลบสำเนาไหนอัตโนมัติ (รายงานอย่างเดียว — สำเนาใน tester dir อาจมี session อื่นใช้อยู่) · แก้ `.gitignore` ให้ commit `.ex5`
+(ไบนารีไม่ควรอยู่ใน git — ทางแก้คือ **hash ใน README** ตาม precedent ORDER-213)
 **source:** ORDER-216 — `_02_MacdSignal` ป้อนเข้า `iMACD()` แต่ `MacdAt()` อ่านแค่ buffer 0 ⇒ buffer 1 (เส้น signal)
 **ไม่เคยถูกใช้เลย**. ปฏิกิริยาแรกคือ "ลบ input ทิ้ง" — **ผมว่านั่นคือการทิ้งของ**: MACD-vs-signal crossing เป็นกลไก
 ยืนยันจังหวะที่ใช้กันจริงและ EA ตัวนี้ยังไม่เคยมี. ตอนนี้ entry = divergence ล้วน ไม่มีตัวยืนยัน timing
