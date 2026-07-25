@@ -11,9 +11,12 @@
 # that calls this script never breaks just because Telegram isn't set up yet.
 [CmdletBinding()]
 param(
-  [Parameter(Mandatory=$true)][string]$Message,
+  [Parameter(Mandatory=$true, ParameterSetName='Send')][string]$Message,
   [string]$Config = "D:\EA_LAB\scripts\config.yaml",
-  [switch]$WhatIf
+  [Parameter(ParameterSetName='Send')][switch]$WhatIf,
+  # setup helper: list chat ids that have messaged the bot, so the token never has to be
+  # pasted into a browser URL (getUpdates needs it in the path, and that lands in history).
+  [Parameter(Mandatory=$true, ParameterSetName='Discover')][switch]$ShowChatIds
 )
 $ErrorActionPreference = "Stop"
 
@@ -68,6 +71,37 @@ if ($cfg.ContainsKey('telegram_bot_token')) { $token = "$($cfg['telegram_bot_tok
 
 if ([string]::IsNullOrWhiteSpace($token) -or $token -eq $placeholderToken) {
   Write-Host "[notify] telegram not configured - skipping (set telegram_bot_token in scripts\config.yaml)"
+  exit 0
+}
+
+# ---- setup helper: discover chat ids (never prints the token) ----
+if ($ShowChatIds) {
+  $url = "https://api.telegram.org/bot$token/getUpdates"
+  try {
+    $r = Invoke-RestMethod -Method Get -Uri $url -ErrorAction Stop
+  } catch {
+    $safe = "$($_.Exception.Message)"
+    if (-not [string]::IsNullOrEmpty($token)) { $safe = $safe.Replace($token, "***REDACTED***") }
+    Write-Host "[notify] getUpdates failed ($safe)"
+    Write-Host "[notify] a 404/401 here usually means the token in config.yaml is wrong or truncated."
+    $url = $null
+    exit 1
+  }
+  $url = $null
+  if (-not $r.ok) { Write-Host "[notify] telegram api did not report ok"; exit 1 }
+  $found = @{}
+  foreach ($u in $r.result) {
+    foreach ($m in @($u.message, $u.edited_message, $u.channel_post)) {
+      if ($null -ne $m -and $null -ne $m.chat) { $found["$($m.chat.id)"] = "$($m.chat.type)/$($m.chat.first_name)$($m.chat.title)" }
+    }
+  }
+  if ($found.Count -eq 0) {
+    Write-Host "[notify] no chats found. Open Telegram, send your bot any message (e.g. 'hi'), then re-run this."
+    Write-Host "[notify] NOTE: getUpdates only returns RECENT updates - if you messaged it long ago, send another message."
+    exit 0
+  }
+  Write-Host "[notify] chat id(s) that have messaged this bot - put the right one in telegram_allowed_user_ids:"
+  foreach ($k in $found.Keys) { Write-Host ("   {0}   ({1})" -f $k, $found[$k]) }
   exit 0
 }
 
