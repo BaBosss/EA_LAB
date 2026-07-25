@@ -41,6 +41,7 @@
 4. output ตารางเดียว: `ini | Expert | Symbol | fine-stage-found (Y/N) | fan-found (Y/N) | verdict-citing-it (verbatim + file:line) | flag` — `flag = DEBT` เมื่อมี verdict อ้าง genetic run ที่ fine-stage-found = N
 **acceptance:** ครบ 66 แถว · ทุกแถว DEBT มี citation `file:line` · ไม่แก้ข้อความ verdict ใด ๆ (รายงานเท่านั้น — lead ตัดสินว่าอะไรต้อง re-verify)
 **calibration (ตรวจมือแล้ว = ไม่ใช่หนี้):** `OPT_MDX_GBP_coarse/_fine/_fine2` = funnel coarse→fine ถูกต้อง
+**5. เพิ่มคอลัมน์ `inert-dim-suspect`** — assert run `ASSERT204_MDX_GBP_H4` (2026-07-25) พบ `_01_LookbackBars` **ไม่มีผลเลย** บน MacdDiv GBPUSD H4: Result/PF/Trades เท่ากันเป๊ะทุกค่า (80/100/120 → 33.77/1.2298/235t) มีแต่ `_01_SwingRadius` ที่ขยับผล → genetic ชุด MDX เดิมกวาดมิตินี้ฟรี. ต่อไฟล์: ถ้า XML มีมิติที่ค่าต่างกันแล้ว **ทุก metric เท่ากันหมด** → flag `INERT:<dimname>` (นี่คือ plateau ปลอมแบบที่ `optimize_guard` จับไม่ได้เพราะ EA ไม่อยู่ใน registry)
 **ห้าม:** รัน backtest/optimize ใหม่ · แก้ scorecard/verdict · แตะไฟล์นอกรายงานตัวเอง · commit ต้อง path-limited เฉพาะไฟล์รายงาน (เครื่องนี้หลาย session แชร์ working tree)
 
 ## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `REVIEWED(Claude/Fable 2026-07-25): CONFIRMED — backtest-validity bug, live วันนี้ไม่กระทบ, รอ user เคาะวิธีแก้`
