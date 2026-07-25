@@ -10,6 +10,17 @@ Usage (CLI):
 Reference: D:\\EA_LAB\\_archive_docs\\RECOVERED_PLATFORM_DESIGN_20260614.md  section 3 (archived/superseded
 spec - this script still implements the old BacktestScore v1 formula; not re-verified against the
 current VERDICT GATE / backtest-optimize-rigor LADDER as part of ORDER-152(c)).
+
+!! SCREENING ONLY - THE "verdict" FIELD IS NOT A VERDICT (checked 2026-07-25) !!
+The PASS / WATCH / REJECT strings this module emits are BacktestScore v1 vocabulary, which
+CLAUDE.md's VERDICT GATE explicitly RETIRED. They are a cheap triage label on ONE report and
+must never be copied into a scorecard, a taskboard row, or any user-facing conclusion.
+Two ways they actively contradict the gate:
+  * this module says REJECT at PF < 1.05 on a single cell. The gate forbids any DEAD verdict
+    before the full ladder (>=3 levers x >=2 TF on the right home) plus a last-optimize round.
+  * the gate's canonical words are DEAD-STRUCTURAL / DEAD-OPTIMIZED / PARKED-VERIFY(user) /
+    BUILD-ON / CANDIDATE / DEMO / LIVE. "PASS" and "REJECT" are not among them.
+Read this output as "worth a closer look" vs "not this cell, this time" - nothing more.
 """
 import json
 import sys
@@ -159,7 +170,8 @@ def main():
           f"trades={out['metrics']['trades']} net={out['metrics']['net']}")
     print("components: " + ", ".join(f"{k}={v}" for k, v in c.items()))
     print(f"BacktestScore = {out['BacktestScore']}/100  -> Tier {out['band']}")
-    print(f"VERDICT = {out['verdict']}")
+    print(f"SCREEN LABEL = {out['verdict']}  "
+          "(BacktestScore v1 triage, NOT a VERDICT GATE verdict - never copy into a scorecard)")
     for w in out["warnings"]:
         print(f"  ! {w}")
 

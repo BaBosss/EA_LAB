@@ -167,7 +167,7 @@ reverify ของ base ตรงกับตัวเลขเดิมใน�
 **ที่ Codex ยืนยันว่าถูกแล้ว:** guard Wave5 (ไล่ทุก path ที่เปิดไม้ได้แล้ว ไม่มี path ที่สาม) · lever `_16_BaseLotMode` (flat/scaled เข้า pipeline เดียวกัน, fail-closed 0.0 ปลอดภัยกับ caller เดียวที่มี)
 **หลักฐาน:** compile 0 error ทั้ง 9 · **`tpl_regression.ps1` CLEAN 8/8**
 
-## ORDER-193(d) — retro-scan: verdict เก่าใบไหนตั้งอยู่บน backtest ที่ถูกตัดกลางคัน — `DONE(Claude/Fable 2026-07-24) — พบของจริง ต้องให้ user/Claude ตัดสินต่อ`
+## ORDER-193(d) — retro-scan: verdict เก่าใบไหนตั้งอยู่บน backtest ที่ถูกตัดกลางคัน — `REVIEWED(Claude 2026-07-24) — retro-scan ปิด, 0 verdict กระทบ`
 **วิธี:** `scripts/truncation_retro_scan.ps1` (เขียนใหม่แบบ in-process — เวอร์ชันแรกที่วน `check_truncated_run.ps1` ต่อไฟล์ใช้เวลาเป็นชั่วโมง) + ทำให้ detector อ่าน window จากตัวรายงานเองได้ (`Period: H1 (from - to)`) จึงไม่ต้องมีบัญชีคุมว่ารันไหนใช้ window ไหน
 **ผลบน 4,233 รายงาน:** OK 3,748 · QUIET_TAIL 344 · **SUSPECT 141**
 **⚠️ ตีความก่อนใช้ (สำคัญ):** ใน 141 ใบนั้น **76 ใบ eqDD ≥45% (สูงสุด 131%) = บัญชีระเบิด/margin stop-out ไม่ใช่ cage เราตัด** — ส่วนใหญ่เป็น EA จาก corpus ภายนอก (MS5_*/BWD_*/O076_*) ที่ไม่มี RiskControl ของเราอยู่ด้วยซ้ำ. **เหลือ 65 ใบที่เข้าข่าย chassis hard-kill จริง** และในนั้นมี **cluster ที่ eqDD = 25.0-26.7% เป๊ะ = KillDD ของ ProtectLevel NORMAL**
@@ -934,7 +934,7 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
 
 ---
 
-## ORDER-072 — build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2 — `CLAIMED(Claude-agent, 2026-07-10)` (role: agent build ภายใต้ spec ที่ Claude เคาะ)
+## ORDER-072 — build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2 — `DONE(Claude-agent 2026-07-10) — รอ Claude lead ตัดสินทิศทางต่อ (entry sweep / both-instance portfolio)` (role: agent build ภายใต้ spec ที่ Claude เคาะ)
 
 **Spec decisions (Claude lead เคาะ 2026-07-10 — ปิดประเด็นเปิดทั้ง 5 ของ KANGAROO_LOGIC_NOTES §4):**
 1. **Lot law: FLAT default** (ทุกไม้ = base_lot) — flat-lot probe พิสูจน์แล้วว่าดีกว่ามี ladder
@@ -1342,7 +1342,7 @@ mechanism ที่เคยพิมพ์เงิน → จด IDEA_CATALOG 
 
 ---
 
-## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `🔼 PRIORITIZED (user reaffirm 2026-07-16: "EA ตายเพราะ spread ตั้ง pending + ขยาย TP") — vehicle แรกของ pending-limit rescue · role: Claude/Sonnet build → run`
+## ORDER-091C-D1d — JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) — `REVIEWED(Claude 2026-07-16) — residual queue: TP-widen A/B + หา reversion base ที่ near-breakeven เป็น demonstrator`
 **ที่มา:** user + ORDER-080 · mean-reversion เข้าหา LWMA → วาง **buy-limit ใต้ราคา / sell-limit เหนือ** ที่ระดับ
 grid แทน market → fill maker ไม่จ่าย spread (grid 5-7k ไม้ = ประหยัด spread เยอะ อาจดัน PF ขึ้นชัด). **ทำไมเลือก
 ตัวนี้เป็น vehicle แรก:** reversion (limit-compatible เป๊ะ) + grid เทรดเยอะ (spread saving ทวีคูณ) + source แก้ได้.
