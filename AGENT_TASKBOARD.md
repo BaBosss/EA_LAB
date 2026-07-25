@@ -102,7 +102,68 @@ engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวน�
 **bars:** N-A (งานเอกสาร ไม่ใช่ทดสอบ) · **flat-lot probe:** N-A
 **ห้าม:** เปลี่ยนพารามิเตอร์ใน .set (edge สะอาด ไม่ต้อง re-opt) · attach แทน user
 
-## ORDER-204 — [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid + fan รองรับ — `CLAIMED(Sonnet agent, 2026-07-25)`
+## ORDER-214 — [🔴 เงินจริง · integrity] Gold Reaper 4.3: lab เขียน CORE ให้ EA เงินจริงโดยที่ plateau-check เป็น null result — `OPEN`
+**source:** ORDER-204 DEBT row `QWEN_GR_opt.ini`. เรื่องนี้ **repo รู้ตัวเองอยู่แล้ว** และเขียนไว้ที่
+`EA_SCORECARD_AND_REGISTRY.md:165-168` ว่า sweep 5 pass ของ qwen (2026-06-29) ได้ผล **bit-identical ทั้ง 5**
+= null result ไม่ใช่ plateau-check จริง (สาเหตุ = `Leverage=` no-op + input-cache ตาม `mt5-tester-cache-nondeterminism`)
+— **แต่แถว scorecard:160 ยังเขียน `CORE ⚠️ ruin 1.9%` อยู่เหมือนเดิม**. EA นี้เดินอยู่บนบัญชี **REAL_CENT 159475669 8 leg**
+(magic 8001..8015). โน้ต `user mix - lab does not certify` แปลว่าแล็บไม่ได้เลือกมันขึ้นบัญชี — **แต่แล็บเขียนคำว่า CORE
+เอง ก็ต้องรับผิดชอบคำนั้นเอง**.
+**spec (ตัดสินใจง่าย ๆ ก่อนเผา run):** ขั้นแรก **ไม่ต้องรัน** — เปิด `QWEN_GR_opt.xml` ยืนยันว่า 5 pass identical จริงไหม
+ถ้าจริง ⇒ **แก้แถว scorecard ทันที** จาก `CORE` เป็นสถานะที่ตรงความจริง (`user-mix, lab-uncertified, no valid
+plateau evidence`) พร้อมเหตุผล 1 บรรทัด. **ค่อยตัดสินทีหลัง**ว่าคุ้มไหมที่จะรัน funnel เต็มให้ EA ที่ผู้ใช้เลือกเอง
+(grid ที่มี 8 magic = คิว Model-4 ยาว).
+**bars:** N-A รอบแรก (งานแก้ข้อความให้ตรงหลักฐาน) · ถ้าตัดสินใจรัน funnel ค่อย pre-register บาร์ในใบลูก
+**flat-lot probe:** pending — GR เป็น multi-leg grid ⇒ ถ้าจะรัน funnel ต้องทำ flat-lot probe ก่อนตัดสิน STRUCTURAL
+**ห้าม:** แตะค่าบนบัญชีจริง · ลบแถว scorecard ทิ้ง (แก้ + เขียนเหตุ ไม่ใช่ลบ)
+
+## ORDER-215 — [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage — `OPEN`
+**source:** ORDER-204 DEBT row `OPT_MG_CHF_lowDD.ini` (`Optimization=2`, `Criterion=0`, window `2023.01.01–2026.06.01`
+= **กิน holdout ด้วย**, ไม่มี fine-stage ไม่มี fan). citation = `EA_SCORECARD_AND_REGISTRY.md:156` "MG_v1 MatchaGrid
+CHFJPY M15 2.08 CORE — grid but bounded+SL; passed deep-val". agent ตั้งข้อสังเกตถูกว่าแถวนี้อยู่ในตารางที่ขึ้นหัวว่า
+`⛔ HISTORICAL, SUPERSEDED 2026-07-09` — **แต่ EA ตัวนี้ ACTIVE อยู่บน REAL_CENT 159475669 (magic 20240001) จริง**
+(`DEPLOYMENTS.csv:12`) ⇒ ตารางถูก mark historical ไม่ได้แปลว่าเงินหยุดเดิน.
+**spec:** เหมือน ORDER-214 — ยืนยันว่ามีหลักฐาน fine-stage/fan ที่ไหนอีกไหมนอก `ini/` ก่อน; ไม่มี ⇒ แก้ข้อความให้ตรง
+(CORE ที่ยืนบน genetic pass เดียว + window ที่กิน holdout = ไม่ใช่ CORE) แล้วค่อยตัดสินว่าจะรัน funnel ไหม
+**bars:** N-A รอบแรก · **flat-lot probe:** pending (grid) · **ห้าม:** แตะค่าบนบัญชีจริง
+
+## ORDER-216 — [demo · funnel] MacdDiv XAU H4 (999094): เติม fine-grid + fan ที่ genetic pick ไม่เคยมี — `OPEN`
+**source:** ORDER-204 DEBT row `O098B_OPT_XAUUSD_H4.ini` — verdict "🥇 XAU H4 ผ่านครบทุกด่าน funnel" (`AGENT_TASKBOARD:1849`,
+`EDGE_CATALOG:214-220`) ยืนบน genetic pass ที่**ไม่มี complete-mode fine grid ตามหลัง**. ข้อดี: window ของมัน
+`2023.01.01–2026.01.01` = **สะอาด** (ไม่กิน holdout) และมี M4 confirm + MC + corr แล้ว → หนี้ที่เหลือคือ
+**"จุดที่เลือกเป็น plateau จริงหรือ spike"** ข้อเดียว.
+**spec:** complete-mode fine grid รอบ config ที่ deploy (`_mt5_auto/ab_sets/order098b/MacdDiv_Naked_XAUUSD_H4_optPF.set`)
+≤1,000 combo + sensitivity fan ±20% ทุกแกน รวมแกนที่ freeze ไว้ · MAIN 2023.01.01–2025.12.31 + BWD 2020–2022 ·
+Model 1 พอสำหรับ grid รอบนี้ (M4 ทำไปแล้ว) · assert `Leverage=1:100`
+**bars:** pass = ≥70% ของ neighbor ถือ PF ไว้ได้ ⇒ plateau จริง ปิดหนี้ คง demo · dead = neighbor พลิกขาดทุน ⇒ spike
+⇒ ถอดออกจาก demo cohort · กลาง = plateau เบี้ยว (center ไม่ใช่จุดกลาง) ⇒ คง demo แต่ล็อกไม่ให้ size-up
+**flat-lot probe:** N-A (single-order entry) · **ห้าม:** ใช้ 2026H1 · re-tune config ที่ attach อยู่ (ใบนี้วัด ไม่ใช่จูน)
+
+## ORDER-204 — [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid + fan รองรับ — `REVIEWED(Claude/Opus 2026-07-25)`
+**ผล:** 66/66 ครบ · **fine-stage มีแค่ 10/66 · fan มีแค่ 5/66** · มี verdict อ้างถึง 16 ใบ ซึ่ง **13 ใบเป็น DEBT**
+(กระจายใน 6 ย่อหน้า verdict). calibration `OPT_MDX_GBP_coarse/_fine/_fine2` ออกมา Y ตามที่ควร (method ผ่าน) และ agent
+แก้บั๊กตัวเองระหว่างทาง 2 จุด (คำว่า `grid` ไป match ชื่อ `BaronGrid`, case-sensitivity พลาด `OPT_BRKXAG_FINE.ini`).
+รายงานเต็ม = `_triage/ORDER204_GENETIC_RETRO_AUDIT.md`.
+**คำตัดสิน — ทิศทางของ error เป็นตัวคัด (หลักเดียวกับ ORDER-202): genetic ที่ไม่มี fine-stage มีแต่ทำให้ผล "ดูดีเกินจริง"**
+ดังนั้น DEBT row ที่ verdict เป็น **DEAD/PARK/ปิด cell ไม่ต้องทำอะไรเลย** — ถ้ามันตกทั้งที่เข็มทิศเข้าข้าง ก็ยิ่งตกจริง.
+ตัดออกด้วยเหตุผลนี้ **8 ใบ**: BREAKOUT_opt1 EURUSD/GBPJPY (DEAD) · O098B EURUSD H1+H4 กับ XAU H1 (ปิด cell/PARK) ·
+O107 AUDNZD/EURGBP/XAU (ขาที่ล่ม).
+**เหลือของจริง 5 ใบ ที่มีทุนวางอยู่บนมัน → แตกเป็นใบใหม่:**
+- BRK_XAU v2/v3 (เงินจริง) → **ORDER-210 กำลังรันอยู่แล้ว** ไม่ต้องเปิดใหม่
+- `OPT_NuiIndy.ini` (เงินจริง) → **ORDER-212 เปิดอยู่แล้ว** — audit ยืนยันโดยอิสระว่าหลักฐานหาย ไม่ใช่แค่ผมหาไม่เจอ
+- Gold Reaper 4.3 (เงินจริง 8 leg) → **ORDER-214** ใหม่
+- MatchaGrid CHFJPY (เงินจริง) → **ORDER-215** ใหม่
+- MacdDiv XAU H4 999094 (demo) → **ORDER-216** ใหม่
+**ที่ audit ตั้ง DEBT แต่ผมตัดสินว่าไม่ต้องรันใหม่ — EmaStoRev/SMCxSTO EURUSD H1 (991070, demo attach):** fine grid
+ไม่มีจริงตามที่ agent ว่า **แต่มี sensitivity fan ครบ และเป็น Model-4 26 run** (ORDER-LANEC-FAN) ซึ่งไป**เจอ**ความเปราะ
+ที่แกน SL แล้วด้วย (SlAtrMult −20% พลิกทั้งสองหน้าต่าง → ล็อก SL≥3.0 ไว้แล้ว). fan คือสิ่งที่ fine-grid มีไว้เพื่อจะได้
+— ได้มาแล้วด้วยวิธีที่แพงกว่า. **บันทึกเป็นหนี้ที่รับรู้แล้ว ไม่ใช่หนี้ที่ต้องจ่าย.**
+**อีก 2 ใบที่ agent เองก็ไม่ฟันธง และผมเห็นด้วยว่ายังไม่ต้องทำ:** `OPT_MACD_GBPUSD.ini` (citation อ่อน + อยู่ในลิสต์
+DO-NOT-RE-EXAMINE = ตายแล้ว) · ส่วน `OPT_MG_CHF_lowDD.ini` ผม**ไม่**ปล่อยตามที่ agent เสนอ เพราะเช็คแล้วว่ายัง ACTIVE
+บนเงินจริง → ยกเป็น ORDER-215.
+**หนี้เชิงระบบที่ตัวเลขนี้บอก (สำคัญกว่ารายชื่อ EA):** fine-stage 10/66 = **นโยบาย genetic ที่เพิ่งเคาะเมื่อวาน
+ไม่ได้แค่ห้ามของใหม่ มันเปิดเผยว่า 85% ของ genetic run ที่ผ่านมาไม่เคยเดินจนจบขั้น** — ถ้ามีใบไหนต่อจากนี้จะอ้าง
+genetic result ให้ถือว่า **ยังไม่จบ ladder** จนกว่าจะเห็น fine + fan ในไฟล์ ไม่ใช่ในคำบรรยาย
 **lane:** qwen/ZCode (mechanical grep+map ล้วน ไม่มี judgment) · **source:** genetic policy ratified 2026-07-25 (`b9ba8c84`, canonical = skill `backtest-optimize-rigor` Step 2). ก่อนนั้น `.ini` 66 ไฟล์รัน `Optimization=2` ด้วย `OptimizationCriterion=0` (balance max = เข็มทิศชี้ spike) + `Leverage=N` ที่เป็น no-op เงียบ (รันจริงที่ server default 1:2000). **คำถามเดียวที่ต้องตอบ: มี verdict ไหนที่ตัดสินจากผล genetic โดยไม่มี fine-grid + sensitivity-fan ตามหลัง**
 **task (mechanical, numeric acceptance):**
 1. list `.ini` ทั้ง 66 ไฟล์ใน `_mt5_auto/ini/` ที่มี `Optimization=2` + report name ของแต่ละไฟล์
