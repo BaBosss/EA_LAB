@@ -92,13 +92,48 @@ Columns: `symbol,spot,sma200,atr20,chg5d_pct,data_status,asof,source_note`
 our layer calls INFLATION_OIL #1 (WTI +9.5%/5d, +20% vs SMA200) with every component shown.
 Ours is auditable; the site's is not. This is exactly why we backtest before trusting a score.
 
-## KNOWN LIMITATION (do not paper over)
-- **Deep HY history unavailable keyless.** FRED `fredgraph.csv` caps at ~3yr (2023-07+) even
-  with `cosd` — a proxy/CDN cap on this box. So the covid_2020 CREDIT_STRESS backtest fired via
-  its MOVE+VIX components (HY component dropped, weights renormalised = graceful degradation),
-  NOT via deep HY data. LIVE credit reads use real HY (2023+, covers now). Folding CREDIT_STRESS
-  into the real-money RI would need either a free FRED API key for deep HY validation OR forward
-  accumulation — a FUTURE user-ratified order, gated on a Codex blind audit (risk-path, §5.1).
+## KNOWN LIMITATION — ✅ SOLVED 2026-07-25 (Phase C), kept for the record
+- ~~**Deep HY history unavailable keyless.** FRED `fredgraph.csv` caps at ~3yr (2023-07+) even
+  with `cosd`. So the covid_2020 CREDIT_STRESS backtest fired via its MOVE+VIX components, NOT
+  via deep credit data.~~ **Solved without an API key** by adding a *derived* credit axis:
+  **CREDITPX = HYG/IEF price ratio** (junk-bond ETF vs Treasury ETF = credit risk appetite),
+  both legs carrying 10yr of Yahoo history. FRED HY_OAS stays as a live-precision component;
+  CREDITPX supplies the deep history. See Phase C below.
+
+---
+## PHASE C (2026-07-25) — deep credit axis + push notify + alert-fatigue fix
+
+**C1. CREDITPX credit axis (Opus-seat).** `mris_macro_feeder.ps1` gained a `ratio` feed kind
+(`Compute-RowRatio` + `Get-CloseMap`, aligning two independently-holidayed series before
+dividing). Snapshot is now 7/7 OK.
+**Anchors are MEASURED, not guessed** — probe over 2016-2026 (worst pct_vs_sma200 / worst 5d):
+| episode | vs SMA200 | 5d | reads as |
+|---|---|---|---|
+| covid_2020 | **-26.2%** | **-14.2%** | full credit crisis |
+| svb_2023mar | -2.8% | **-5.7%** | bank shock caught by the 5d leg only |
+| inflation_2022 | -5.5% | -3.8% | moderate (a rates event) |
+| yield_spike_2023 | +2.4% | -1.2% | correctly NOT a credit event |
+→ stress anchors -15% (trend) / -8% (5d); CREDIT_STRESS reweighted to 6 components.
+
+**C2. Backtest now checks SPECIFICITY, not just sensitivity — 7/7 PASS.** The deep axis paid
+for itself immediately: CREDIT_STRESS previously fired **67/125 days in inflation_2022** (a
+rates event) because MOVE/VIX dominated its weights = false positive. It is now **0/125**, while
+covid_2020 still peaks 100. A gate that cries wolf in the wrong regime is worse than no gate,
+so "[spec] model must stay quiet in a non-matching episode" is now a permanent pre-registered bar.
+SVB Mar-2023 peaks 52 = "forming" — defensible for a contained, backstopped bank scare.
+
+**C3. Push notify (Sonnet).** `mris_notify.ps1` → Telegram Bot API, reads token from the
+gitignored `scripts\config.yaml`, **HIGH alerts only** (INFO/COOL stay file-only), graceful
+no-op when unconfigured, token scrubbed from all output/exceptions, wrapped so a notifier
+failure can never break the alert chain. `-NoPush` suppresses. **User must supply their own bot
+token** — Claude cannot create accounts.
+
+**C4. Alert-fatigue defect found & fixed (Opus-seat).** The mandated real chain run exposed it:
+classifier flag text embeds live prices (`LOADED_FUSE: USDJPY 163.85 at extreme`), so a
+163.77→163.79 tick made the SAME standing condition look like a new flag and fired a spurious
+HIGH push. Flags are now compared by **key** (`TYPE:SUBJECT`, digits stripped) with a
+back-compat path for older baselines. Verified: price tick inside a standing flag = silent;
+a genuinely new flag type = still alerts.
 - US2Y (Yahoo `2YY=F`) history only 2021+, and neither US2Y nor YCURVE is used by the 3 current
   model formulas (they are fetched for brief display + future models).
 

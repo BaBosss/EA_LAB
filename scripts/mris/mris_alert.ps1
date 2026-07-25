@@ -12,7 +12,8 @@ param(
   [string]$RegimeJson = "D:\EA_LAB\portfolio\mris\regime_state.json",
   [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
   [string]$LastState  = "D:\EA_LAB\portfolio\mris\last_alert_state.json",
-  [string]$AlertsMd   = "D:\EA_LAB\portfolio\mris\ALERTS.md"
+  [string]$AlertsMd   = "D:\EA_LAB\portfolio\mris\ALERTS.md",
+  [switch]$NoPush
 )
 $ErrorActionPreference = "Stop"
 
@@ -32,11 +33,27 @@ if ($crisis -and $crisis.models) {
 $curFlags = @()
 if ($reg.flags) { $curFlags = @($reg.flags | ForEach-Object { "$_" }) }
 
+# A flag's IDENTITY is its type + subject, NOT its full text. The classifier bakes live
+# numbers into flag text ("LOADED_FUSE: USDJPY 163.85 at extreme - ..."), so comparing raw
+# strings marks the SAME standing condition as "new" on every tiny price tick - 163.77 ->
+# 163.79 fired a spurious HIGH push on 2026-07-25. Alert fatigue defeats the whole point of
+# a delta-alert, so key on "TYPE:SUBJECT" (first token after the colon) and drop the digits.
+function Get-FlagKey([string]$f) {
+  $type = ($f -split ':', 2)[0].Trim()
+  $rest = if ($f -match ':') { ($f -split ':', 2)[1] } else { "" }
+  $subject = (($rest.Trim() -split '\s+') | Select-Object -First 1)
+  $subject = ($subject -replace '[0-9].*$', '')   # strip a numeric tail e.g. "163.85"
+  if ([string]::IsNullOrWhiteSpace($subject)) { return $type }
+  return "$type`:$subject"
+}
+$curFlagKeys = @($curFlags | ForEach-Object { Get-FlagKey $_ })
+
 $cur = [ordered]@{
-  state  = "$($reg.state)"
-  ri     = $reg.risk_index
-  models = $curModels
-  flags  = $curFlags
+  state     = "$($reg.state)"
+  ri        = $reg.risk_index
+  models    = $curModels
+  flags     = $curFlags
+  flag_keys = $curFlagKeys
 }
 
 # ---- load previous ----
@@ -67,10 +84,16 @@ if ($null -eq $prev) {
       $alerts += "COOL|CRISIS $name cooling $prevLbl -> $curLbl (score $([string]$curModels[$name].score)/100)"
     }
   }
-  # (3) new core flags
-  $prevFlags = @(); if ($prev.flags) { $prevFlags = @($prev.flags | ForEach-Object { "$_" }) }
-  foreach ($f in $curFlags) {
-    if ($prevFlags -notcontains $f) { $alerts += "HIGH|FLAG new: $f" }
+  # (3) new core flags - compared by KEY so a re-worded/re-priced standing flag is not "new".
+  # Baselines written before flag_keys existed fall back to deriving keys from their raw text.
+  $prevKeys = @()
+  if ($prev.PSObject.Properties.Name -contains 'flag_keys' -and $prev.flag_keys) {
+    $prevKeys = @($prev.flag_keys | ForEach-Object { "$_" })
+  } elseif ($prev.flags) {
+    $prevKeys = @($prev.flags | ForEach-Object { Get-FlagKey "$_" })
+  }
+  for ($i = 0; $i -lt $curFlags.Count; $i++) {
+    if ($prevKeys -notcontains $curFlagKeys[$i]) { $alerts += "HIGH|FLAG new: $($curFlags[$i])" }
   }
 }
 
@@ -97,6 +120,29 @@ if ($alerts.Count -gt 0) {
   foreach ($a in $alerts) { $p = $a -split '\|',2; Write-Host ("   [{0}] {1}" -f $p[0], $p[1]) }
 } else {
   if ($null -ne $prev) { Write-Host "[alert] no change (state=$($cur.state)) - silent" }
+}
+
+# ---- push HIGH-severity alerts to Telegram (phone) - INFO/COOL stay file-only ----
+# This is the whole point: the phone only buzzes for HIGH transitions, everything
+# else is available in ALERTS.md on demand. A notifier failure must never break
+# the alert chain, so this is wrapped end-to-end in try/catch.
+try {
+  $highAlerts = @($alerts | Where-Object { ($_ -split '\|', 2)[0] -eq "HIGH" })
+  if ($highAlerts.Count -gt 0 -and !$NoPush) {
+    $notifyScript = Join-Path $PSScriptRoot "mris_notify.ps1"
+    if (Test-Path $notifyScript) {
+      $lines = @("MRIS ALERT $stamp")
+      foreach ($a in $highAlerts) { $lines += ($a -split '\|', 2)[1] }
+      $pushMessage = [string]::Join("`n", $lines)
+      & $notifyScript -Message $pushMessage
+    } else {
+      Write-Host "[alert] mris_notify.ps1 not found - skipping push"
+    }
+  } elseif ($highAlerts.Count -gt 0 -and $NoPush) {
+    Write-Host "[alert] $($highAlerts.Count) HIGH alert(s) - push suppressed (-NoPush)"
+  }
+} catch {
+  Write-Host "[alert] notify push failed (non-fatal): $($_.Exception.Message)"
 }
 
 # ---- persist current as the new baseline ----

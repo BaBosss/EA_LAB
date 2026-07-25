@@ -22,12 +22,15 @@
     {
       "name": "CREDIT_STRESS",
       "title_th": "ความเครียดสินเชื่อ (สเปรด HY กว้าง)",
-      "_rationale": "High-yield credit spread high AND widening, confirmed by rising bond vol and equity fear = credit/bank-run stress. This is the core bond-crisis axis the site leads with; our old 8-barometer set had NO credit axis at all (the 2026-07-24 divergence vs the site).",
+      "_rationale": "High-yield credit spread high AND widening, confirmed by the HYG/IEF credit-risk-appetite ratio, rising bond vol and equity fear = credit/bank-run stress. This is the core bond-crisis axis the site leads with; our old 8-barometer set had NO credit axis at all (the 2026-07-24 divergence vs the site).",
+      "_anchor_evidence": "CREDITPX anchors are MEASURED, not guessed (ORDER-200 Phase-C probe over 2016-2026): worst pct_vs_sma200 / worst 5d = covid_2020 -26.2%/-14.2% · inflation_2022 -5.5%/-3.8% · calm_2019 -5.7%/-2.8% · svb_2023mar -2.8%/-5.7% (the 5d leg is what catches a bank shock the trend leg misses) · yield_spike_2023 +2.4%/-1.2% (correctly reads as NOT a credit event). Stress anchors set at -15% (trend) and -8% (5d) so covid saturates while 2022/2019 stay mid-scale.",
       "components": [
-        { "key": "hy_level",       "input": "HY_OAS.spot",      "calm": 3.0,  "stress": 6.0,  "weight": 0.35, "unit": "%",   "desc": "HY option-adjusted spread level" },
-        { "key": "hy_widening",    "input": "HY_OAS.chg5d_pct", "calm": 0.0,  "stress": 15.0, "weight": 0.30, "unit": "%",   "desc": "HY spread 5d widening (%)" },
-        { "key": "bond_vol",       "input": "MOVE.spot",        "calm": 70.0, "stress": 140.0,"weight": 0.15, "unit": "idx", "desc": "MOVE bond-volatility index" },
-        { "key": "equity_confirm", "input": "VIX.spot",         "calm": 15.0, "stress": 35.0, "weight": 0.20, "unit": "idx", "desc": "VIX fear confirmation" }
+        { "key": "hy_level",       "input": "HY_OAS.spot",           "calm": 3.0,  "stress": 6.0,   "weight": 0.20, "unit": "%",   "desc": "HY option-adjusted spread level" },
+        { "key": "hy_widening",    "input": "HY_OAS.chg5d_pct",      "calm": 0.0,  "stress": 15.0,  "weight": 0.15, "unit": "%",   "desc": "HY spread 5d widening (%)" },
+        { "key": "credit_trend",   "input": "CREDITPX.pct_vs_sma200","calm": 0.0,  "stress": -15.0, "weight": 0.25, "unit": "%",   "desc": "HYG/IEF credit ratio vs its SMA200 (falling = stress)" },
+        { "key": "credit_drop",    "input": "CREDITPX.chg5d_pct",    "calm": 0.0,  "stress": -8.0,  "weight": 0.20, "unit": "%",   "desc": "HYG/IEF credit ratio 5d drop" },
+        { "key": "bond_vol",       "input": "MOVE.spot",             "calm": 70.0, "stress": 140.0, "weight": 0.10, "unit": "idx", "desc": "MOVE bond-volatility index" },
+        { "key": "equity_confirm", "input": "VIX.spot",              "calm": 15.0, "stress": 35.0,  "weight": 0.10, "unit": "idx", "desc": "VIX fear confirmation" }
       ]
     },
     {

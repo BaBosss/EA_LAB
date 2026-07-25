@@ -29,7 +29,12 @@ $FEEDS = @(
   @{ Symbol="SP500";  Kind="yahoo"; Ticker="^GSPC";            Note="Yahoo ^GSPC (S&P 500 index)" },
   @{ Symbol="MOVE";   Kind="yahoo"; Ticker="^MOVE";            Note="Yahoo ^MOVE (ICE BofA MOVE bond-vol index)" },
   @{ Symbol="HY_OAS"; Kind="fred";  Ticker="BAMLH0A0HYM2";     Note="FRED BAMLH0A0HYM2 (ICE BofA US High Yield OAS, %)" },
-  @{ Symbol="YCURVE"; Kind="fred";  Ticker="T10Y2Y";           Note="FRED T10Y2Y (10Y-2Y UST spread, %)" }
+  @{ Symbol="YCURVE"; Kind="fred";  Ticker="T10Y2Y";           Note="FRED T10Y2Y (10Y-2Y UST spread, %)" },
+  # CREDITPX = HYG/IEF price ratio (junk-bond ETF vs Treasury ETF) = credit risk appetite.
+  # Ratio FALLING = credit stress. Exists because FRED's keyless HY OAS history caps at
+  # ~3yr on this box, which made deep credit backtests impossible; both ETF legs carry 10yr
+  # of Yahoo history, so this axis CAN be validated on covid-2020 (ORDER-200 Phase-C).
+  @{ Symbol="CREDITPX"; Kind="ratio"; Ticker="HYG_IEF"; Num="HYG"; Den="IEF"; Note="Yahoo HYG/IEF price ratio (credit risk appetite; falling = credit stress)" }
 )
 
 if (!(Test-Path $CacheDir)) { New-Item -ItemType Directory -Force -Path $CacheDir | Out-Null }
@@ -163,6 +168,63 @@ function Compute-RowFred {
   }
 }
 
+function Get-CloseMap {
+  # Yahoo chart JSON -> hashtable of date(UTC, no time) -> close. Used by the ratio feed,
+  # which must align two independently-holidayed series before dividing them.
+  param([string]$RawJson)
+  $j = $RawJson | ConvertFrom-Json
+  $res = $j.chart.result[0]
+  if ($null -eq $res) { throw "no chart result" }
+  $q = $res.indicators.quote[0]
+  $map = @{}
+  for ($i = 0; $i -lt $res.timestamp.Count; $i++) {
+    $c = $q.close[$i]
+    if ($null -ne $c) { $map[[DateTimeOffset]::FromUnixTimeSeconds([long]$res.timestamp[$i]).UtcDateTime.Date] = [double]$c }
+  }
+  return $map
+}
+
+function Compute-RowRatio {
+  # Derived single-value series: Num/Den aligned on common dates. Same output schema as the
+  # other Compute-Row* functions. atr20 uses the mean absolute day-over-day change (there is
+  # no meaningful high/low for a derived ratio), matching Compute-RowFred's proxy.
+  param([string]$Symbol, [string]$Note, [string]$RawNum, [string]$RawDen, [bool]$FromCache)
+  $mapN = Get-CloseMap -RawJson $RawNum
+  $mapD = Get-CloseMap -RawJson $RawDen
+  $dates = @($mapN.Keys | Where-Object { $mapD.ContainsKey($_) } | Sort-Object)
+  $Values = @()
+  foreach ($d in $dates) { if ($mapD[$d] -ne 0) { $Values += ($mapN[$d] / $mapD[$d]) } }
+  $n = $Values.Count
+  if ($n -lt 6) { throw "too few aligned bars ($n)" }
+
+  $spot = [math]::Round($Values[$n - 1], 6)
+  $lookback = [math]::Min(200, $n)
+  $smaSlice = $Values[($n - $lookback)..($n - 1)]
+  $sma200 = [math]::Round((($smaSlice | Measure-Object -Average).Average), 6)
+  $smaNote = if ($lookback -lt 200) { " (sma over $lookback bars)" } else { "" }
+
+  $atrN = [math]::Min(20, $n - 1)
+  $trs = @()
+  for ($i = $n - $atrN; $i -lt $n; $i++) { $trs += [math]::Abs($Values[$i] - $Values[$i - 1]) }
+  $atr20 = [math]::Round((($trs | Measure-Object -Average).Average), 6)
+
+  $v5 = $Values[$n - 6]
+  $chg5d = if ($v5 -ne 0) { [math]::Round((($Values[$n - 1] / $v5) - 1.0) * 100.0, 3) } else { 0 }
+
+  $status = if ($FromCache) { "STALE" } else { "OK" }
+  $stamp  = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+  return [pscustomobject]@{
+    symbol      = $Symbol
+    spot        = $spot
+    sma200      = $sma200
+    atr20       = $atr20
+    chg5d_pct   = $chg5d
+    data_status = $status
+    asof        = $stamp
+    source_note = "$Note$smaNote"
+  }
+}
+
 # ---- fetch + compute each macro feed ----
 # Order: try fresh fetch -> validate via Compute-Row* -> only THEN write cache. If the
 # fetch leg fails OR its payload is invalid, fall back to a fresh (<CacheMaxHours) cache.
@@ -170,9 +232,13 @@ function Compute-RowFred {
 $newRows = @{}
 $okCount = 0; $staleCount = 0; $failCount = 0
 foreach ($f in $FEEDS) {
-  $isFred = ($f.Kind -eq "fred")
+  $isFred  = ($f.Kind -eq "fred")
+  $isRatio = ($f.Kind -eq "ratio")
   $cacheExt = if ($isFred) { ".csv" } else { ".json" }
   $cache = Get-CachePath -Ticker $f.Ticker -Ext $cacheExt
+  # a ratio feed caches each leg under its OWN ticker so the legs stay reusable/inspectable
+  $cacheNum = if ($isRatio) { Get-CachePath -Ticker $f.Num -Ext ".json" } else { $null }
+  $cacheDen = if ($isRatio) { Get-CachePath -Ticker $f.Den -Ext ".json" } else { $null }
   $row = $null; $why = ""
 
   # 1. fresh fetch
@@ -180,23 +246,39 @@ foreach ($f in $FEEDS) {
     if ($isFred) {
       $raw = Fetch-Fred -SeriesId $f.Ticker
       $row = Compute-RowFred -Symbol $f.Symbol -Note $f.Note -RawCsv $raw -FromCache $false
+      [System.IO.File]::WriteAllText($cache, $raw, (New-Object System.Text.UTF8Encoding($false)))  # validated-good only
+    } elseif ($isRatio) {
+      $rawN = Fetch-Yahoo -Ticker $f.Num
+      $rawD = Fetch-Yahoo -Ticker $f.Den
+      $row = Compute-RowRatio -Symbol $f.Symbol -Note $f.Note -RawNum $rawN -RawDen $rawD -FromCache $false
+      [System.IO.File]::WriteAllText($cacheNum, $rawN, (New-Object System.Text.UTF8Encoding($false)))
+      [System.IO.File]::WriteAllText($cacheDen, $rawD, (New-Object System.Text.UTF8Encoding($false)))
     } else {
       $raw = Fetch-Yahoo -Ticker $f.Ticker
       $row = Compute-RowYahoo -Symbol $f.Symbol -Note $f.Note -RawJson $raw -FromCache $false
+      [System.IO.File]::WriteAllText($cache, $raw, (New-Object System.Text.UTF8Encoding($false)))
     }
-    [System.IO.File]::WriteAllText($cache, $raw, (New-Object System.Text.UTF8Encoding($false)))  # validated-good only
   } catch {
     $why = "$($_.Exception.Message)"; $row = $null
   }
 
-  # 2. fall back to a fresh cache (covers both fetch failure and invalid live payload)
-  if ($null -eq $row -and (Test-Path $cache) -and (((Get-Date) - (Get-Item $cache).LastWriteTime).TotalHours -lt $CacheMaxHours)) {
+  # 2. fall back to a fresh cache (covers both fetch failure and invalid live payload).
+  # A ratio needs BOTH legs cached and fresh, else it stays unavailable.
+  $cacheUsable = if ($isRatio) {
+    (Test-Path $cacheNum) -and (Test-Path $cacheDen) -and
+    (((Get-Date) - (Get-Item $cacheNum).LastWriteTime).TotalHours -lt $CacheMaxHours) -and
+    (((Get-Date) - (Get-Item $cacheDen).LastWriteTime).TotalHours -lt $CacheMaxHours)
+  } else {
+    (Test-Path $cache) -and (((Get-Date) - (Get-Item $cache).LastWriteTime).TotalHours -lt $CacheMaxHours)
+  }
+  if ($null -eq $row -and $cacheUsable) {
     try {
-      $cacheRaw = [System.IO.File]::ReadAllText($cache)
       if ($isFred) {
-        $row = Compute-RowFred -Symbol $f.Symbol -Note $f.Note -RawCsv $cacheRaw -FromCache $true
+        $row = Compute-RowFred -Symbol $f.Symbol -Note $f.Note -RawCsv ([System.IO.File]::ReadAllText($cache)) -FromCache $true
+      } elseif ($isRatio) {
+        $row = Compute-RowRatio -Symbol $f.Symbol -Note $f.Note -RawNum ([System.IO.File]::ReadAllText($cacheNum)) -RawDen ([System.IO.File]::ReadAllText($cacheDen)) -FromCache $true
       } else {
-        $row = Compute-RowYahoo -Symbol $f.Symbol -Note $f.Note -RawJson $cacheRaw -FromCache $true
+        $row = Compute-RowYahoo -Symbol $f.Symbol -Note $f.Note -RawJson ([System.IO.File]::ReadAllText($cache)) -FromCache $true
       }
       Write-Host "  $($f.Symbol) fetch failed ($why) - using cache"
     } catch { $why = "$why; cache: $($_.Exception.Message)"; $row = $null }

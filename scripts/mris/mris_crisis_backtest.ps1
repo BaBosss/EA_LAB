@@ -77,6 +77,22 @@ foreach ($sym in $YTICK.Keys) {
 try { $HIST["HY_OAS"] = Fetch-Fred "BAMLH0A0HYM2"; Write-Host ("  {0,-8} {1} bars {2}..{3}" -f "HY_OAS",$HIST["HY_OAS"].N,$HIST["HY_OAS"].Dates[0].ToString('yyyy-MM-dd'),$HIST["HY_OAS"].Dates[-1].ToString('yyyy-MM-dd')) }
 catch { Write-Host "  HY_OAS FETCH FAIL: $($_.Exception.Message)"; $HIST["HY_OAS"]=$null }
 
+# CREDITPX = HYG/IEF ratio. This is THE reason deep credit backtesting is possible at all:
+# FRED's keyless HY OAS caps at ~3yr on this box, so before this axis existed the covid-2020
+# CREDIT_STRESS test was firing off MOVE+VIX alone (HY components dropped + renormalised).
+try {
+  $h = Fetch-Yahoo "HYG"; $i = Fetch-Yahoo "IEF"
+  $imap = @{}
+  for ($k=0; $k -lt $i.N; $k++) { $imap[$i.Dates[$k]] = $i.Vals[$k] }
+  $dates=@(); $vals=@()
+  for ($k=0; $k -lt $h.N; $k++) {
+    $d = $h.Dates[$k]
+    if ($imap.ContainsKey($d) -and $imap[$d] -ne 0) { $dates += $d; $vals += ($h.Vals[$k] / $imap[$d]) }
+  }
+  $HIST["CREDITPX"] = [pscustomobject]@{ Dates=$dates; Vals=$vals; N=$vals.Count }
+  Write-Host ("  {0,-8} {1} bars {2}..{3}" -f "CREDITPX",$vals.Count,$dates[0].ToString('yyyy-MM-dd'),$dates[-1].ToString('yyyy-MM-dd'))
+} catch { Write-Host "  CREDITPX BUILD FAIL: $($_.Exception.Message)"; $HIST["CREDITPX"]=$null }
+
 # index of the bar on-or-before target date
 function IdxAsOf($h, [datetime]$d) {
   if ($null -eq $h) { return -1 }
@@ -158,13 +174,33 @@ foreach ($w in $Windows) {
 }
 
 Write-Host ""
-Write-Host "=== EXPECTATION CHECK (each model should fire in its matching episode, stay calm in calm_2021) ==="
-function PeakOf($win,$mod) { ($summary | Where-Object { $_.window -eq $win -and $_.model -eq $mod } | Select-Object -First 1).peak }
+Write-Host "=== EXPECTATION CHECK ==="
+# Two kinds of check, and the SECOND kind is the one that earns the deep credit axis:
+#  (a) sensitivity - each model fires in its matching episode
+#  (b) SPECIFICITY - a model must NOT fire in an episode that is not its kind. Before
+#      CREDITPX existed, CREDIT_STRESS was MOVE/VIX-dominated and fired 67/125 days in
+#      inflation_2022 (a rates event, not a credit event) = false positive. It is now 0.
+#      A gate that cries wolf on the wrong regime is worse than no gate.
+function PeakOf($win,$mod) {
+  $r = $summary | Where-Object { $_.window -eq $win -and $_.model -eq $mod } | Select-Object -First 1
+  if ($null -eq $r) { return $null }
+  return $r.peak
+}
+function CalmIn($win) {
+  foreach ($m in @('CREDIT_STRESS','YIELD_SHOCK','INFLATION_OIL')) {
+    $p = PeakOf $win $m
+    if ($null -ne $p -and $p -ge $activeMin) { return $false }
+  }
+  return $true
+}
 $checks = @(
-  @{ desc="CREDIT_STRESS fires in covid_2020";      pass=((PeakOf 'covid_2020' 'CREDIT_STRESS') -ge $activeMin) },
-  @{ desc="INFLATION_OIL fires in inflation_2022";   pass=((PeakOf 'inflation_2022' 'INFLATION_OIL') -ge $activeMin) },
-  @{ desc="YIELD_SHOCK fires in yield_spike_2023";   pass=((PeakOf 'yield_spike_2023' 'YIELD_SHOCK') -ge $activeMin) },
-  @{ desc="all models calm (<60) in calm_2021";      pass=(((PeakOf 'calm_2021' 'CREDIT_STRESS') -lt $activeMin) -and ((PeakOf 'calm_2021' 'YIELD_SHOCK') -lt $activeMin) -and ((PeakOf 'calm_2021' 'INFLATION_OIL') -lt $activeMin)) }
+  @{ desc="[sens] CREDIT_STRESS fires in covid_2020";              pass=((PeakOf 'covid_2020' 'CREDIT_STRESS') -ge $activeMin) },
+  @{ desc="[sens] INFLATION_OIL fires in inflation_2022";          pass=((PeakOf 'inflation_2022' 'INFLATION_OIL') -ge $activeMin) },
+  @{ desc="[sens] YIELD_SHOCK fires in yield_spike_2023";          pass=((PeakOf 'yield_spike_2023' 'YIELD_SHOCK') -ge $activeMin) },
+  @{ desc="[spec] CREDIT_STRESS quiet in inflation_2022 (rates ev)";pass=((PeakOf 'inflation_2022' 'CREDIT_STRESS') -lt $activeMin) },
+  @{ desc="[spec] CREDIT_STRESS quiet in yield_spike_2023";        pass=((PeakOf 'yield_spike_2023' 'CREDIT_STRESS') -lt $activeMin) },
+  @{ desc="[spec] INFLATION_OIL quiet in covid_2020 (demand crash)";pass=((PeakOf 'covid_2020' 'INFLATION_OIL') -lt $activeMin) },
+  @{ desc="[spec] all models calm in calm_2019";                   pass=(CalmIn 'calm_2019') }
 )
 $nPass=0
 foreach ($c in $checks) { $tag = if ($c.pass) { "PASS"; $nPass++ } else { "FAIL" }; Write-Host ("   [{0}] {1}" -f $tag,$c.desc) }

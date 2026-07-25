@@ -42,7 +42,12 @@
 **delta-alert** (`mris_alert.ps1`, step 7 ของ chain): เงียบเมื่อไม่เปลี่ยน, เตือนเฉพาะ transition จริง (state เปลี่ยน / crisis model ข้ามขึ้น band / flag ใหม่) → append `portfolio/mris/ALERTS.md`. ตอบโจทย์ "ตั้งแล้วลืม" (user ดูนานๆที). tested seed/silent/fire 3 path.
 **bars (pre-registered):** each model peak ≥60 ใน matching episode = fire · calm window ทุกโมเดล <60. → met 4/4.
 **flat-lot probe:** N-A (ไม่ใช่ EA — เป็น macro sensor layer).
-**KNOWN LIMIT:** FRED HY history cap ~3yr keyless (2023+) → covid-2020 credit ติดผ่าน MOVE+VIX (HY component drop+renorm = graceful degrade) ไม่ใช่ HY ลึกจริง. live ใช้ HY จริงได้ (ครอบคลุมปัจจุบัน).
+**~~KNOWN LIMIT~~ ✅ แก้แล้ว 2026-07-25 (Phase C):** เดิม FRED HY cap ~3yr → covid-2020 ติดผ่าน MOVE+VIX ไม่ใช่ credit จริง. **แก้โดยไม่ต้องใช้ API key** = เพิ่มแกน **CREDITPX (HYG/IEF ratio)** ที่มี history 10 ปีบน Yahoo.
+**Phase C (2026-07-25):**
+- **C1 CREDITPX** (seat): feeder รองรับ feed แบบ `ratio` (align 2 series ก่อนหาร) → snapshot 7/7 OK. **anchor วัดจากข้อมูลจริง** ไม่ใช่เดา: covid −26.2%/−14.2% · SVB −2.8%/**−5.7%** (5d leg จับ bank shock ที่ trend leg มองไม่เห็น) · 2022 −5.5%/−3.8% · yield-spike 2023 +2.4% (อ่านถูกว่าไม่ใช่เรื่อง credit) → stress anchor −15%/−8%.
+- **C2 backtest 7/7** (เพิ่มเกณฑ์ **specificity** ถาวร): แกนใหม่คุ้มทันที — CREDIT_STRESS เดิม**ติดผิด 67/125 วันใน inflation_2022** (rates event, MOVE ครองน้ำหนัก = false positive) ตอนนี้ **0/125** ขณะ covid ยัง peak 100. gate ที่ร้องหมาป่าผิด regime แย่กว่าไม่มี gate.
+- **C3 push notify** (Sonnet): `mris_notify.ps1` → Telegram, **HIGH เท่านั้น**, token จาก `config.yaml` (gitignored) + scrub ออกจาก output/exception ทุกทาง, unconfigured = no-op, notifier ล้มไม่ทำ chain พัง, `-NoPush` ปิดได้. **user ต้องใส่ bot token เอง** (Claude สมัครบัญชีแทนไม่ได้).
+- **C4 alert-fatigue bug** (seat เจอจากรันจริง): flag text ฝังราคาไว้ → tick 163.77→163.79 = "flag ใหม่" ยิง HIGH ทุกวัน. แก้เป็นเทียบด้วย **key (`TYPE:SUBJECT` ตัดตัวเลข)** + back-compat baseline เก่า. verify: tick ในธงเดิม=เงียบ · ธงชนิดใหม่=ยังเตือน.
 **ห้าม:** fold คะแนน crisis เข้า RI/MacroGate real-money ก่อน (1) FRED API key ดึง HY ลึก validate หรือ forward-accumulate (2) Codex blind audit (risk-path §5.1) (3) user ratify — = order อนาคตแยก. ตอนนี้ advisory display เท่านั้น.
 
 ## ORDER-187 — [core/money] fail-closed first-lot sizing + Wave5 naked-order guard (Codex review 2026-07-24, ข้อ 1 ของ 8) — `DONE(Claude/Fable 2026-07-24) — รอ Codex blind-audit`
