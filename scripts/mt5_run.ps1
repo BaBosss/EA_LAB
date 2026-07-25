@@ -8,8 +8,13 @@ terminal DATA folder) into _mt5_auto/reports, returns its path.
 SAFETY: aborts if the MT5 GUI is already running. Close MT5 first, or -Force.
 
 Example:
-  & .\mt5_run.ps1 -Expert "MatchaGrid" -Symbol CHFJPY -FromDate 2023.06.01 `
-                  -ToDate 2026.06.01 -SetFile "...\AUDCAD_robust_v1.set" -ReportName MG_CHFJPY_IS
+  & .\mt5_run.ps1 -Expert "MatchaGrid" -Symbol CHFJPY -FromDate 2023.01.01 `
+                  -ToDate 2025.12.31 -SetFile "...\AUDCAD_robust_v1.set" -ReportName MG_CHFJPY_MAIN
+
+  The example window IS the MAIN window (2023.01.01-2025.12.31) on purpose. It used to end in
+  June 2026, which is six months inside the 2026H1 holdout - and examples get copied.
+  Spending the holdout is a deliberate, once-only act; if a run is meant to do it, put
+  HOLDOUT-OK on that line so the check_state holdout guard lets it through.
 #>
 param(
   [Parameter(Mandatory)][string]$Expert,

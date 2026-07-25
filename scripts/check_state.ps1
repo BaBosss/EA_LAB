@@ -95,6 +95,44 @@ foreach($f in @($DEMO,$BL,$SC)){
   Check (Has $f 'canonical entry =') "$n has owner banner" "$n missing 'canonical entry =' banner"
 }
 
+# 9. HOLDOUT GUARD (2026-07-25). A test window that ends after MAIN spends the holdout,
+#    and a holdout is spent the FIRST time it is touched. On 2026-07-25 both EA subagent
+#    definitions were found running every screen and every optimize with -ToDate 2026.06.01,
+#    i.e. six months inside the 2026H1 holdout, for an unknown length of time. Nothing failed
+#    loudly; it was found by hand. This check is the loud failure.
+#
+#    SCOPE IS DELIBERATELY NARROW: only files that DEFINE how future runs happen. Historical
+#    one-shot runners (gsmc_validate.ps1, order104*.ps1, qwen_batch_runner.ps1 ...) keep their
+#    old windows on purpose - rewriting them would misrepresent what past runs actually did.
+#
+#    RE-PIN WHEN MAIN MOVES: MAIN is re-pinned every ~6 months (CLAUDE.md VERDICT GATE). When
+#    it does, update $mainEnd here in the same commit, and declare the new holdout first.
+#    ESCAPE HATCH: put HOLDOUT-OK on the line when a run is meant to spend the holdout.
+$mainEnd  = '2025.12.31'
+$scopeDef = @()
+$scopeDef += (Get-ChildItem (Join-Path $Root '.claude\agents') -Filter *.md -File -ErrorAction SilentlyContinue)
+foreach($n in @('mt5_run.ps1','mt5_optimize.ps1')){
+  $p = Join-Path $Root "scripts\$n"
+  if(Test-Path $p){ $scopeDef += (Get-Item $p) }
+}
+$leaks = @()
+foreach($f in $scopeDef){
+  $i = 0
+  foreach($line in (Get-Content $f.FullName -Encoding UTF8 -ErrorAction SilentlyContinue)){
+    $i++
+    if($line -match 'HOLDOUT-OK'){ continue }
+    # only an actual ToDate ASSIGNMENT counts -- prose that merely mentions a date must not trip
+    foreach($m in [regex]::Matches($line,'(?i)-?ToDate[=\s:]+["'']?(\d{4}\.\d{2}\.\d{2})')){
+      $d = $m.Groups[1].Value
+      if($d -gt $mainEnd){
+        $leaks += ("{0}:{1} ToDate={2}" -f $f.Name,$i,$d)
+      }
+    }
+  }
+}
+Check ($leaks.Count -eq 0) ("holdout guard: no reusable definition selects past $mainEnd") `
+  ("HOLDOUT LEAK - these select/screen on data past MAIN ($mainEnd), which spends the holdout: " + ($leaks -join '; ') + " -- fix the window, or add HOLDOUT-OK on the line if spending it is intended")
+
 if($script:warn -eq 0){ Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green }
 else { Write-Host ("=== {0} WARNING(s) - fix the drift above ===" -f $script:warn) -ForegroundColor Yellow }
 if($Strict -and $script:warn -gt 0){ exit 1 }

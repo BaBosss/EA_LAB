@@ -12,7 +12,11 @@ but should be confirmed on first real run (MT5 must be CLOSED).
 
 Example:
   & .\mt5_optimize.ps1 -Expert "Boss - 2 Adaptive Smart Grid" -Symbol EURCAD `
-        -SetFile "...\EURCAD.set" -FromDate 2023.06.01 -ToDate 2026.06.01 -ReportName OPT_EURCAD
+        -SetFile "...\EURCAD.set" -FromDate 2023.01.01 -ToDate 2025.12.31 -ReportName OPT_EURCAD
+
+  The example window IS MAIN (2023.01.01-2025.12.31). Optimizing past it selects parameters on
+  the 2026H1 holdout, which spends it - the exact leak found on 2026-07-25. Enforced by the
+  holdout guard in check_state.ps1; HOLDOUT-OK on a line opts out when that is intended.
 #>
 param(
   [Parameter(Mandatory)][string]$Expert,
