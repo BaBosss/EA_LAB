@@ -186,23 +186,38 @@ function PeakOf($win,$mod) {
   if ($null -eq $r) { return $null }
   return $r.peak
 }
+# A check whose window was not run must report SKIP - never PASS. Absence of evidence is not
+# evidence of a quiet gate: running a subset of windows used to print "[spec] ... PASS" purely
+# because the data was missing, which would let a partial run masquerade as a validated gate.
+function Fires($win,$mod)  { $p = PeakOf $win $mod; if ($null -eq $p) { return $null }; return ($p -ge $activeMin) }
+function Quiet($win,$mod)  { $p = PeakOf $win $mod; if ($null -eq $p) { return $null }; return ($p -lt $activeMin) }
 function CalmIn($win) {
+  $seen = $false
   foreach ($m in @('CREDIT_STRESS','YIELD_SHOCK','INFLATION_OIL')) {
     $p = PeakOf $win $m
-    if ($null -ne $p -and $p -ge $activeMin) { return $false }
+    if ($null -eq $p) { continue }
+    $seen = $true
+    if ($p -ge $activeMin) { return $false }
   }
+  if (-not $seen) { return $null }
   return $true
 }
 $checks = @(
-  @{ desc="[sens] CREDIT_STRESS fires in covid_2020";              pass=((PeakOf 'covid_2020' 'CREDIT_STRESS') -ge $activeMin) },
-  @{ desc="[sens] INFLATION_OIL fires in inflation_2022";          pass=((PeakOf 'inflation_2022' 'INFLATION_OIL') -ge $activeMin) },
-  @{ desc="[sens] YIELD_SHOCK fires in yield_spike_2023";          pass=((PeakOf 'yield_spike_2023' 'YIELD_SHOCK') -ge $activeMin) },
-  @{ desc="[spec] CREDIT_STRESS quiet in inflation_2022 (rates ev)";pass=((PeakOf 'inflation_2022' 'CREDIT_STRESS') -lt $activeMin) },
-  @{ desc="[spec] CREDIT_STRESS quiet in yield_spike_2023";        pass=((PeakOf 'yield_spike_2023' 'CREDIT_STRESS') -lt $activeMin) },
-  @{ desc="[spec] INFLATION_OIL quiet in covid_2020 (demand crash)";pass=((PeakOf 'covid_2020' 'INFLATION_OIL') -lt $activeMin) },
+  @{ desc="[sens] CREDIT_STRESS fires in covid_2020";              pass=(Fires 'covid_2020' 'CREDIT_STRESS') },
+  @{ desc="[sens] INFLATION_OIL fires in inflation_2022";          pass=(Fires 'inflation_2022' 'INFLATION_OIL') },
+  @{ desc="[sens] YIELD_SHOCK fires in yield_spike_2023";          pass=(Fires 'yield_spike_2023' 'YIELD_SHOCK') },
+  @{ desc="[spec] CREDIT_STRESS quiet in inflation_2022 (rates ev)";pass=(Quiet 'inflation_2022' 'CREDIT_STRESS') },
+  @{ desc="[spec] CREDIT_STRESS quiet in yield_spike_2023";        pass=(Quiet 'yield_spike_2023' 'CREDIT_STRESS') },
+  @{ desc="[spec] INFLATION_OIL quiet in covid_2020 (demand crash)";pass=(Quiet 'covid_2020' 'INFLATION_OIL') },
   @{ desc="[spec] all models calm in calm_2019";                   pass=(CalmIn 'calm_2019') }
 )
-$nPass=0
-foreach ($c in $checks) { $tag = if ($c.pass) { "PASS"; $nPass++ } else { "FAIL" }; Write-Host ("   [{0}] {1}" -f $tag,$c.desc) }
+$nPass=0; $nFail=0; $nSkip=0
+foreach ($c in $checks) {
+  if ($null -eq $c.pass)      { $tag="SKIP"; $nSkip++ }
+  elseif ($c.pass)            { $tag="PASS"; $nPass++ }
+  else                        { $tag="FAIL"; $nFail++ }
+  Write-Host ("   [{0}] {1}" -f $tag,$c.desc)
+}
 Write-Host ""
-Write-Host ("CONCEPT CHECK: $nPass/$($checks.Count) expectations met")
+Write-Host ("CONCEPT CHECK: $nPass passed, $nFail failed, $nSkip skipped (of $($checks.Count))")
+if ($nSkip -gt 0) { Write-Host "   NOTE: skipped checks had no window data - this run does NOT validate the gate." }

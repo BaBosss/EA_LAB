@@ -137,6 +137,19 @@ a genuinely new flag type = still alerts.
 - US2Y (Yahoo `2YY=F`) history only 2021+, and neither US2Y nor YCURVE is used by the 3 current
   model formulas (they are fetched for brief display + future models).
 
+**C5. Live-vs-backtest PARITY verified (the load-bearing check).** `mris_crisis_backtest.ps1`
+reimplements the scorer independently of `mris_crisis_models.ps1`; if they diverged, the 7/7
+would validate something other than what runs live. Replayed the backtest over 2026-07-18..25
+and compared its last row to the live `crisis_models_state.json` from the same date:
+**YIELD_SHOCK 45.1 / CREDIT_STRESS 5.0 / INFLATION_OIL 83.5 — identical to the decimal in both.**
+The two implementations agree.
+
+**C6. Check-harness flaw found & fixed during C5.** Running a SUBSET of windows printed
+`[spec] ... PASS` for windows that were never run — absence of data was being counted as a
+quiet gate, so a partial run could masquerade as a validated one. Checks now return
+PASS/FAIL/**SKIP**, and any skip prints "this run does NOT validate the gate". Full run still
+7 passed / 0 failed / 0 skipped.
+
 ## PHASE D — PROPOSED fold into the real-money path (NOT built; needs user ratify)
 
 The user's original ask was "reduce lot on big macro events / pause trading". MacroGate already
