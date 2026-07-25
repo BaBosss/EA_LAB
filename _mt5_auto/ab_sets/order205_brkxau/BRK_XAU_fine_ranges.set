@@ -1,0 +1,18 @@
+; ORDER-205 fine optimize ranges — narrowed +/-2 coarse-steps around the coarse genetic
+; plateau centre (Bars=30, Sl=1.0, Tp=4, Ema=150; 10 surviving neighbours, PF=2.03 44t).
+; Sl sits at the coarse floor (1.0) so its fine range extends below it (0.5) to check for
+; a boundary effect. Complete mode: 5 x 7 x 5 x 5 = 875 combos.
+_00_OptimizeMode=false||false||0||true||N
+_01_BreakoutBars=30||20||5||40||Y
+_02_SlAtrMult=1.0||0.5||0.25||2.0||Y
+_02_TpAtrMult=4.0||2.0||1.0||6.0||Y
+_03_AtrPeriod=14||14||1||14||N
+_03_AtrMaPeriod=20||20||1||20||N
+_03_AtrExpandRatio=1.0||1.0||0.1||1.0||N
+_04_UseDailyEma=true||false||0||true||N
+_04_EmaPeriod=150||50||50||250||Y
+_05_BuyOnly=true||false||0||true||N
+_05_LotSize=0.01||0.01||0.01||0.01||N
+_06_Magic=991001||991001||1||991001||N
+_06_Deviation=20||20||1||20||N
+_06_AllowLive=false||false||0||true||N

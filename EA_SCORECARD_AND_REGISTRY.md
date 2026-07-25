@@ -158,7 +158,7 @@ distance-scaling insight) — note it, but the EA itself is out.
 | ST_EA03 MACD | GBPUSD H1 | 2.47 | — | ★★★ | **CORE** | count+tiered-TP scalp |
 | ST_EA03 MACD | USDCAD H1 | 2.62 | — | ★★★ | **CORE** | |
 | Gold Reaper 4.3 | XAUUSD H1 | 2.07 | — | ★★★ | **CORE** ⚠️ | ruin 1.9% — watch. **Live set unchanged 2026-07-02** — see plateau-check note below (optimize attempt was a null result, not a real check) |
-| EA_BREAKOUT_XAU | XAUUSD H1 | 1.77 (M4) | 0.65 | ★★★ | **CANDIDATE** | BUY-only regime risk; thin OOS 33t |
+| EA_BREAKOUT_XAU | XAUUSD H1 | **1.98 MAIN / 1.66 BWD (M4, clean)** | 0.65 | ★★★ | **CANDIDATE** | ⚠️ เลขเดิม `1.77 (M4)` มาจากหน้าต่างที่กิน 2026H1 — แทนที่ด้วยเลขสะอาด ORDER-202/210 (v2 = Bars40). v3 (Bars55) ชนะเฉพาะหน้าต่างที่ไหม้, BWD 1.01 → **ห้ามใช้**. re-optimize สะอาดหา config ที่ชนะ v2 ทั้งสองหน้าต่างไม่เจอ (ORDER-210). BUY-only regime risk; thin 30-50t/3yr = ข้อจำกัดถาวร; 2026H1 spent → forward = holdout |
 | LondonConsoBreakout | GBPUSD H1 | 2.08 | 0.10 | ★★★ | **CANDIDATE** | 3/3 OOS; GBP concentration |
 | LondonConsoBreakout | EURUSD H1 | 1.25 | 0.13 | ★★★ | **DROP (was #8)** | Q2 rescue sweep (48 combo×3 win) DONE — NO combo passes all 3 at PF≥1.2; best min-PF 0.92, both OOS <1.0. No durable edge → remove from portfolio |
 
