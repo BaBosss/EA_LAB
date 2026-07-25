@@ -243,6 +243,45 @@ cost numbers whose *baseline* is trustworthy. Verified first that the fix is sou
 The cost/benefit profile is **unchanged** across the pin fix, which is itself reassuring: the
 fold's value never depended on the defect.
 
+### 2026-07-25 — two follow-ups the scrutinize pass raised, both settled by measurement
+
+**(A) Swept the configs for more absolute-price constants (the ORDER-203 defect class). One more
+found; recommendation is to LEAVE IT, with reasons.**
+`USDJPY.extreme_weak_level = 158` is the same species: only **121/2603 days (4.6%)** of the 10y
+history sit above it, first crossed **2024-04-28**, so every pre-2024 replay takes the `else`
+branch — signal 0 instead of +0.5 and `LOADED_FUSE` never fires. It is much milder than the pin
+(it under-reports a *risk-on* nudge worth +0.077 RI, rather than over-reporting risk-off) but it
+does mean historical replays are blind to crowded-carry episodes.
+**Why not "fix" it to a relative rule:** measured the obvious alternative (% above SMA200) and it
+does NOT solve the live symptom — at +3% it fires 30.8% of days with a **190-day** longest streak.
+A crowded carry trade genuinely IS a multi-month *state*, not an event, so no threshold shape makes
+that flag blink. The live symptom (a permanently-lit flag re-alerting daily as its embedded price
+changed) was already the right fix: key-based dedup in `mris_alert.ps1`. Recorded, not changed.
+**Verified VALID (do not touch):** `VIX 15/20/30` (range 9.5–53.5), `MOVE 70/140` (range 36.6–182.6;
+1200 days at the calm end, 63 at the stress end), `US10Y 3.5/5.0` (0.54–4.88), `HY_OAS 3.0/6.0`.
+Those series are bounded and mean-reverting, so a level test crosses freely — the defect class only
+bites on **non-stationary prices** (FX pairs), which is the rule to remember.
+
+**(B) Tested the scrutinize pass's own architectural suggestion — "merge the crisis gauges into the
+core barometer set and delete the fold" — and the measurement REFUTES it. Keep both layers.**
+Probe: reconstruct core RI from the repo's own `-Detailed` signal dump (so the probe cannot drift
+from the real classifier), then add CREDITPX (w=2) and MOVE (w=1) as barometers 9–10 and re-derive
+the state.
+| window | core 8 | core 10 (with credit + bond-vol) | days improved |
+|---|---|---|---|
+| **yield_spike_2023** (the window that motivated this whole order) | NEUTRAL 75, RISK_OFF 1 | NEUTRAL 76, RISK_OFF 0 | **0 — it got WORSE** |
+| inflation_2022 | NEUTRAL 80, RISK_OFF 51 | NEUTRAL 70, RISK_OFF 61 | 12 |
+| covid_2020 | NEUTRAL 10, RISK_OFF 61, STRESS 4 | NEUTRAL 10, RISK_OFF 54, STRESS 11 | 0 (deepens only) |
+| calm_2017 | NEUTRAL 61, RISK_ON 25 | NEUTRAL 68, RISK_ON 18 | 0 (mildly less risk-on) |
+
+**Why it fails, and this is the real justification for the two-layer design:** in Aug–Nov 2023 the
+credit ratio was *rising* (it was a rates event, not a credit event) and MOVE sat below its stress
+band, so the two new gauges contributed POSITIVE signal that **diluted** the risk-off read. A flat
+weighted mean lets a healthy gauge cancel a warning. The crisis models detect a **conjunction**
+("yields high AND rising AND equities breaking AND bond vol up") which a weighted average
+structurally cannot express. So the separate layer is justified on *structure*, not merely on the
+original blast-radius argument — and the fold remains the right coupling mechanism.
+
 ### Scrutinize pass 2026-07-25 — 6 defects found and fixed (all verified by re-run)
 1. **[major] the phone-push path had no evidence gate.** The fold refused to throttle below
    `coverage >= 0.5`, but `mris_alert.ps1` compared `label` alone — so a partial feed outage
