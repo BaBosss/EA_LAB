@@ -178,13 +178,17 @@ foreach ($w in $Windows) {
   if ($Detailed) {
     # mean signal per barometer = which gauge is systematically pushing the Risk Index around
     Write-Host "   mean signal per barometer over this window (negative = pushing RISK_OFF):"
+    # total weight read from config, not hardcoded: the whole point of this table is to expose a
+    # barometer whose weighted pull dominates, so it must stay correct if weights are retuned.
+    $wTotal = ($cfg.barometers | Measure-Object -Property weight -Sum).Sum
     foreach ($sym in $SIGCOLS) {
       $vals = @($rows | ForEach-Object { $_."sig_$sym" } | Where-Object { $null -ne $_ })
       if ($vals.Count -eq 0) { continue }
       $w = ($cfg.barometers | Where-Object { $_.symbol -eq $sym } | Select-Object -First 1).weight
       $mean = ($vals | Measure-Object -Average).Average
       $pctNeg = 100.0 * (@($vals | Where-Object { $_ -lt 0 }).Count) / $vals.Count
-      Write-Host ("      {0,-13} w={1}  mean={2,6:N2}  weighted={3,6:N3}  days-negative={4,5:N1}%" -f $sym,$w,$mean,($mean*$w/13.0),$pctNeg)
+      $weighted = if ($wTotal -gt 0) { $mean * $w / $wTotal } else { 0 }
+      Write-Host ("      {0,-13} w={1}  mean={2,6:N2}  weighted={3,6:N3}  days-negative={4,5:N1}%" -f $sym,$w,$mean,$weighted,$pctNeg)
     }
   }
   $dist = $rows | Group-Object state | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }

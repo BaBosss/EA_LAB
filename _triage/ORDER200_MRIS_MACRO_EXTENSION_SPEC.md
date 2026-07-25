@@ -201,13 +201,52 @@ lot-reduce/block that the core layer alone would not have:**
 | calm_2017 (VIX ~10) | 67 | **0 (0%)** | does not cry wolf in a calm tape |
 | precovid_2019q4 | 62 | **0 (0%)** | same |
 | calm_2021h1 | 59 | 8 (13.6%) | oil-reopening surge — arguably a true early signal, not noise |
-| covid_2020 | 67 | **0 (0%)** | core already STRESS 50/67 — fold adds nothing **and loses nothing** (empirically confirms the "never manufacture STRESS" cap costs us zero) |
+| covid_2020 | 67 | **0 (0%)** | ⚠️ **headroom only 1.5%** — core was already throttling 50/67 days, so this window cannot price the fold. The earlier claim that it "empirically confirms the STRESS cap costs zero" was OVERSTATED: it is consistent with that, not proof of it, and the core's 2020 risk-off count is itself inflated by the ORDER-203 AUDJPY-pin defect. |
 | inflation_2022 | 106 | 27 (25.5%) | core said NEUTRAL 62 days; 2022 was genuinely hostile to risk |
 | yield_spike_2023 | 63 | 19 (30.2%) | core said NEUTRAL all 63 days — this is exactly the gap the user spotted vs the vercel site |
 
 **Honest reading:** the fold is ~free in calm tape and redundant in a full crisis (the core
 8-barometer layer already fires). Its entire value lands in the **mid-regime** stress the core
 misses — which is precisely the divergence that started this order.
+
+**Cost, re-measured 2026-07-25 on windows with real HEADROOM** (headroom = days the core was NOT
+already throttling; without it a window reads 0% for the wrong reason):
+| calm window | headroom | newly throttled |
+|---|---|---|
+| calm_2017 | 97% | **0/67 (0%)** |
+| precovid_2019q4 | 40.3% | **0/62 (0%)** |
+| calm_2021h1 | 96.6% | 8/59 (13.6%) — oil reopening, arguably a true early signal |
+`mris_fold_costcheck.ps1` now prints headroom per window and **excludes saturated windows from
+the cost verdict** instead of averaging them in (covid_2020 headroom 1.5%, calm_2019 2%).
+
+### Scrutinize pass 2026-07-25 — 6 defects found and fixed (all verified by re-run)
+1. **[major] the phone-push path had no evidence gate.** The fold refused to throttle below
+   `coverage >= 0.5`, but `mris_alert.ps1` compared `label` alone — so a partial feed outage
+   could push a HIGH "CRISIS active" built from a fraction of the components. Degraded models
+   (`status != OK`) are now carried as `unknown`, which the rank map scores -1 so it can never
+   register as an upward crossing. Verified: degraded→silent, same jump with good data→still alerts.
+2. **[major] the fold ignored the age of the crisis scores.** The exported CSV is rewritten
+   daily, so MacroGate's own file-age guard always sees a fresh file and cannot tell that the
+   scores inside are days old (the crisis stage is non-fatal in `mris_run.ps1`). Added a
+   `generated_utc` gate (`fold_policy.max_age_hours`, default 30) mirroring `EffStatus`.
+   Verified: 216h-old state → fold skipped, fresh → folds.
+3. **[minor] the cost estimator encoded its own copy of the policy.** Ladder + `min_coverage`
+   now live in `crisis_models.json` `fold_policy`, read by BOTH the exporter and the estimator;
+   the crisis backtest emits per-model `*_cov` columns so the estimator can apply the same
+   evidence gate. Cost numbers unchanged (verified), but they can no longer silently drift.
+4. **[minor] Infinity could fabricate a max-severity score.** `bps5d` divides by
+   `1 + chg5d/100`, so a -100% print yields ±Infinity; for a component whose stress anchor sits
+   BELOW its calm anchor the ramp clamped that to a full 100. `Ramp` now rejects NaN/Infinity as
+   no-data. Verified against ±Inf and NaN.
+5. **[nit] the fold appended to `flags` after the comma/quote sanitisation** the original author
+   put there, and used culture-sensitive `[string]$score`. Now sanitised identically and
+   formatted with InvariantCulture. (The MQL reader `MG_SplitCsv` is quote-aware, so this was
+   latent, not live.)
+6. **[nit] `-Detailed` hardcoded the total barometer weight (13).** Now summed from config.
+
+Re-verified after all six: C5 parity still identical (43.4 / 4.1 / 76.1 both sides), backtest
+still 7 passed / 0 failed / 0 skipped, fold-OFF export still deterministic and free of any
+`CRISIS_FOLD` text, full 7-step chain clean and silent, all scripts pure ASCII.
 
 **⚠️ Finding about the CORE layer (not the new one):** the first cost run used `calm_2019` as the
 control and reported 0% — but only because the **core** layer already sat at RISK_OFF on **48/51

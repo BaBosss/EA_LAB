@@ -7,6 +7,13 @@
     "active_min": 60,
     "forming_min": 40
   },
+  "fold_policy": {
+    "_doc": "ORDER-200 Phase D. SINGLE SOURCE OF TRUTH for the crisis fold - read by BOTH mris_export_regime.ps1 (which actually writes the state MacroGate reads) and mris_fold_costcheck.ps1 (which estimates its cost). Keeping the ladder here instead of duplicated in two scripts is deliberate: a cost estimate that silently describes a different policy than the one that runs is worse than no estimate.",
+    "min_coverage": 0.5,
+    "max_age_hours": 30,
+    "_ladder_doc": "One notch, downward only. RISK_OFF/STRESS deliberately absent = the fold can never manufacture STRESS; that stays owned by the validated 8-barometer layer.",
+    "ladder": { "RISK_ON": "NEUTRAL", "NEUTRAL": "RISK_OFF" }
+  },
   "models": [
     {
       "name": "YIELD_SHOCK",

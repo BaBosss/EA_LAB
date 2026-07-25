@@ -134,12 +134,18 @@ function Ramp($v,$calm,$stress) {
 function ScoreModelsAt([datetime]$d) {
   $res = @{}
   foreach ($m in $cfg.models) {
-    $wA=0.0; $wS=0.0
+    $wA=0.0; $wS=0.0; $wT=0.0
     foreach ($c in $m.components) {
+      $wT += [double]$c.weight
       $sc = Ramp (ResolveAt $c.input $d) $c.calm $c.stress
       if ($null -ne $sc) { $wA += [double]$c.weight; $wS += $sc*[double]$c.weight }
     }
-    $res[$m.name] = if ($wA -gt 0) { [math]::Round($wS/$wA,1) } else { $null }
+    # coverage emitted too: the fold refuses to act below fold_policy.min_coverage, so the cost
+    # estimator must be able to apply the same test or it reports a policy nobody runs.
+    $res[$m.name] = [pscustomobject]@{
+      score    = if ($wA -gt 0) { [math]::Round($wS/$wA,1) } else { $null }
+      coverage = if ($wT -gt 0) { [math]::Round($wA/$wT,2) } else { 0 }
+    }
   }
   return $res
 }
@@ -155,7 +161,12 @@ foreach ($w in $Windows) {
     $d = $cal.Dates[$i]
     if ($d -lt $start -or $d -gt $end) { continue }
     $s = ScoreModelsAt $d
-    $rows += [pscustomobject]@{ date=$d.ToString('yyyy-MM-dd'); YIELD_SHOCK=$s["YIELD_SHOCK"]; CREDIT_STRESS=$s["CREDIT_STRESS"]; INFLATION_OIL=$s["INFLATION_OIL"] }
+    $rows += [pscustomobject]@{
+      date=$d.ToString('yyyy-MM-dd')
+      YIELD_SHOCK=$s["YIELD_SHOCK"].score;   YIELD_SHOCK_cov=$s["YIELD_SHOCK"].coverage
+      CREDIT_STRESS=$s["CREDIT_STRESS"].score; CREDIT_STRESS_cov=$s["CREDIT_STRESS"].coverage
+      INFLATION_OIL=$s["INFLATION_OIL"].score; INFLATION_OIL_cov=$s["INFLATION_OIL"].coverage
+    }
   }
   $out = Join-Path $OutDir "crisis_$label.csv"
   $rows | Export-Csv $out -NoTypeInformation -Encoding UTF8

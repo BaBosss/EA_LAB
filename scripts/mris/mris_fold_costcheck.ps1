@@ -35,9 +35,15 @@ if (-not $SkipReplays) {
   & "$root\mris_crisis_backtest.ps1" -Windows $Windows -OutDir $OutDir | Out-Null
 }
 
-# same ladder as the exporter - keep these two in sync by hand, they are deliberately small
-$ladder = @{ 'RISK_ON' = 'NEUTRAL'; 'NEUTRAL' = 'RISK_OFF' }
+# ladder + min_coverage come from crisis_models.json fold_policy - the SAME object
+# mris_export_regime.ps1 reads, so this estimate cannot describe a policy nobody runs.
+$fp = $cfg.fold_policy
+$ladder = @{}
+if ($fp -and $fp.ladder) { foreach ($p in $fp.ladder.PSObject.Properties) { $ladder[$p.Name] = "$($p.Value)" } }
+else { $ladder = @{ 'RISK_ON' = 'NEUTRAL'; 'NEUTRAL' = 'RISK_OFF' } }
+$minCov = if ($fp -and $null -ne $fp.min_coverage) { [double]$fp.min_coverage } else { 0.5 }
 $throttleStates = @('RISK_OFF','STRESS')   # states where MacroGate reduces lot / blocks new
+Write-Host ("fold policy: ladder=" + (($ladder.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key)->$($_.Value)" }) -join ' ') + "  min_coverage=$minCov  active_min=$activeMin")
 
 $grand = @()
 foreach ($w in $Windows) {
@@ -57,7 +63,7 @@ foreach ($w in $Windows) {
     $core[$d] = "$($r.state)"
   }
 
-  $n=0; $folded=0; $newlyThrottled=0
+  $n=0; $folded=0; $newlyThrottled=0; $headroom=0
   $beforeDist=@{}; $afterDist=@{}
   foreach ($c in (Import-Csv $criCsv)) {
     $d = "$($c.date)"
@@ -67,12 +73,18 @@ foreach ($w in $Windows) {
     $anyActive = $false
     foreach ($mn in @('YIELD_SHOCK','CREDIT_STRESS','INFLATION_OIL')) {
       $v = $c.$mn
-      if ($null -ne $v -and "$v".Trim() -ne "" -and [double]$v -ge $activeMin) { $anyActive = $true }
+      if ($null -eq $v -or "$v".Trim() -eq "") { continue }
+      # same evidence gate the exporter applies. Older CSVs have no *_cov column; treat a
+      # missing coverage as 1 so this stays backward compatible rather than silently zeroing.
+      $cvRaw = $c."${mn}_cov"
+      $cv = if ($null -ne $cvRaw -and "$cvRaw".Trim() -ne "") { [double]$cvRaw } else { 1.0 }
+      if ([double]$v -ge $activeMin -and $cv -ge $minCov) { $anyActive = $true }
     }
     $after = $before
     if ($anyActive -and $ladder.ContainsKey($before)) { $after = $ladder[$before] }
     if ($after -ne $before) { $folded++ }
     if (($throttleStates -notcontains $before) -and ($throttleStates -contains $after)) { $newlyThrottled++ }
+    if ($throttleStates -notcontains $before) { $headroom++ }
     if (!$beforeDist.ContainsKey($before)) { $beforeDist[$before]=0 }; $beforeDist[$before]++
     if (!$afterDist.ContainsKey($after))   { $afterDist[$after]=0 };   $afterDist[$after]++
   }
@@ -85,14 +97,30 @@ foreach ($w in $Windows) {
   Write-Host ("   core  : " + (($beforeDist.GetEnumerator() | Sort-Object Name | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '  '))
   Write-Host ("   folded: " + (($afterDist.GetEnumerator()  | Sort-Object Name | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join '  '))
   Write-Host ("   days changed by fold: {0}/{1} ({2}%)   NEWLY throttled (lot-reduce/block engaged): {3} ({4}%)" -f $folded,$n,$pctFold,$newlyThrottled,$pctThr)
-  $grand += [pscustomobject]@{ window=$label; days=$n; folded=$folded; pct_folded=$pctFold; newly_throttled=$newlyThrottled; pct_throttled=$pctThr }
+  # HEADROOM = days the core layer was NOT already throttling. If that is tiny, the fold had
+  # nowhere to act and a 0% cost reading means "saturated control", not "free". ORDER-203 found
+  # exactly this: calm_2019 read 0% only because the core sat in RISK_OFF 48/51 days (an
+  # artifact of the AUDJPY user_pin). Surfacing headroom stops that misreading recurring.
+  $pctHead = [math]::Round(100.0*$headroom/$n,1)
+  if ($pctHead -lt 20) { Write-Host ("   !! LOW HEADROOM: core was already throttling on {0}/{1} days - this window CANNOT measure fold cost" -f ($n-$headroom),$n) }
+  $grand += [pscustomobject]@{ window=$label; days=$n; folded=$folded; pct_folded=$pctFold; newly_throttled=$newlyThrottled; pct_throttled=$pctThr; headroom_pct=$pctHead }
 }
 
 Write-Host ""
 Write-Host "=== COST SUMMARY (what flipping -EnableCrisisFold would have done) ==="
 $grand | Format-Table -AutoSize
-$calm = $grand | Where-Object { $_.window -like 'calm*' }
-if ($calm) {
-  Write-Host ("READ THIS FIRST: in the CALM control window the fold would have throttled {0}/{1} days ({2}%)." -f $calm[0].newly_throttled,$calm[0].days,$calm[0].pct_throttled)
-  Write-Host "That number is the pure cost - throttling in a calm tape buys nothing. Judge the switch on it."
+# Only a calm window WITH headroom can price the fold. A saturated one reads 0% for the wrong
+# reason, so it is reported as unusable rather than quietly averaged in with the good ones.
+$calmAll = @($grand | Where-Object { $_.window -like 'calm*' -or $_.window -like 'precovid*' })
+$calmUsable = @($calmAll | Where-Object { $_.headroom_pct -ge 20 })
+$calmDead   = @($calmAll | Where-Object { $_.headroom_pct -lt 20 })
+if ($calmUsable.Count -gt 0) {
+  Write-Host "READ THIS FIRST - pure cost, measured only on calm windows the core left room in:"
+  foreach ($c in $calmUsable) { Write-Host ("   {0,-16} {1}/{2} days throttled ({3}%)  [headroom {4}%]" -f $c.window,$c.newly_throttled,$c.days,$c.pct_throttled,$c.headroom_pct) }
+  Write-Host "Throttling in a calm tape buys nothing - judge the switch on these numbers."
+} else {
+  Write-Host "READ THIS FIRST: no USABLE calm control window in this run - cost is unmeasured. Add one with headroom."
+}
+if ($calmDead.Count -gt 0) {
+  Write-Host ("EXCLUDED as saturated (core already throttling, cannot price the fold): " + (($calmDead | ForEach-Object { "$($_.window) headroom=$($_.headroom_pct)%" }) -join ', '))
 }

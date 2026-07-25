@@ -28,7 +28,16 @@ $rank = @{ "dormant"=0; "forming"=1; "active"=2; "unknown"=-1 }
 # ---- build the current compact state ----
 $curModels = @{}
 if ($crisis -and $crisis.models) {
-  foreach ($m in $crisis.models) { $curModels[$m.name] = @{ label = "$($m.label)"; score = $m.score } }
+  foreach ($m in $crisis.models) {
+    # EVIDENCE GATE: mris_crisis_models.ps1 still emits label='active' when only a fraction of
+    # a model's components had data (it flags that via status/coverage). The fold path already
+    # refuses to throttle lots on such a score - the phone must not buzz on it either, or a
+    # partial feed outage reads as a macro crisis. Degraded models are carried as 'unknown',
+    # which the rank map scores -1 so it never counts as an upward crossing.
+    $lbl = "$($m.label)"
+    if ("$($m.status)" -ne 'OK') { $lbl = 'unknown' }
+    $curModels[$m.name] = @{ label = $lbl; score = $m.score }
+  }
 }
 $curFlags = @()
 if ($reg.flags) { $curFlags = @($reg.flags | ForEach-Object { "$_" }) }

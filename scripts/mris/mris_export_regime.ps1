@@ -25,7 +25,10 @@ param(
   [int]   $KeepRows  = 400,
   # DEFAULT OFF. When on, a crisis model at 'active' downgrades the exported state ONE notch.
   [switch]$EnableCrisisFold,
-  [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json"
+  [string]$CrisisJson = "D:\EA_LAB\portfolio\mris\crisis_models_state.json",
+  # fold policy (ladder / min_coverage / max_age_hours) lives in the crisis config so the
+  # cost estimator reads the SAME numbers this exporter acts on
+  [string]$FoldPolicyJson = "D:\EA_LAB\scripts\mris\crisis_models.json"
 )
 $ErrorActionPreference = 'Stop'
 $ci = [System.Globalization.CultureInfo]::InvariantCulture
@@ -77,27 +80,57 @@ if ($EnableCrisisFold) {
   } else {
     try {
       $cm = Get-Content -Raw -LiteralPath $CrisisJson -Encoding UTF8 | ConvertFrom-Json
+      # policy (ladder / min_coverage / max_age_hours) is read from crisis_models.json so the
+      # cost estimator cannot drift from what actually runs. Defaults keep old files working.
+      $fp = $null
+      try { $fp = (Get-Content -Raw -LiteralPath $FoldPolicyJson -Encoding UTF8 | ConvertFrom-Json).fold_policy } catch { $fp = $null }
+      $minCov  = if ($fp -and $null -ne $fp.min_coverage)   { [double]$fp.min_coverage }   else { 0.5 }
+      $maxAge  = if ($fp -and $null -ne $fp.max_age_hours)  { [double]$fp.max_age_hours }  else { 30 }
+      $ladder = @{}
+      if ($fp -and $fp.ladder) { foreach ($p in $fp.ladder.PSObject.Properties) { $ladder[$p.Name] = "$($p.Value)" } }
+      else { $ladder = @{ 'RISK_ON' = 'NEUTRAL'; 'NEUTRAL' = 'RISK_OFF' } }
+
+      # FRESHNESS GATE: the CSV is rewritten daily, so MacroGate's own file-age check always
+      # sees a fresh file - it cannot detect that the crisis SCORES inside are days old (the
+      # crisis stage is non-fatal in mris_run.ps1, so a broken feed leaves the old json in
+      # place). Age-gate here, mirroring mris_classify.ps1's EffStatus discipline.
+      $ageOk = $true; $ageTxt = "unknown"
+      if ($cm.generated_utc) {
+        $gd = [datetime]::MinValue
+        if ([datetime]::TryParse("$($cm.generated_utc)", $ci, [System.Globalization.DateTimeStyles]::AdjustToUniversal -bor [System.Globalization.DateTimeStyles]::AssumeUniversal, [ref]$gd)) {
+          $ageH = ((Get-Date).ToUniversalTime() - $gd).TotalHours
+          $ageTxt = ("{0:N1}h" -f $ageH)
+          if ($ageH -gt $maxAge) { $ageOk = $false }
+        } else { $ageOk = $false; $ageTxt = "unparseable" }
+      } else { $ageOk = $false; $ageTxt = "absent" }
+
       $activeModels = @()
-      foreach ($m in $cm.models) {
-        # require a real score AND enough evidence behind it - a score computed from a
-        # fraction of its components must not throttle live lots
-        if ($null -ne $m.score -and "$($m.label)" -eq 'active' -and [double]$m.coverage -ge 0.5) {
-          $activeModels += "$($m.name)=$([string]$m.score)"
+      if (-not $ageOk) {
+        Write-Host "[export-regime] crisis fold SKIPPED - crisis state age $ageTxt exceeds ${maxAge}h (fail-safe: core state kept)"
+      } else {
+        foreach ($m in $cm.models) {
+          # require a real score AND enough evidence behind it - a score computed from a
+          # fraction of its components must not throttle live lots
+          if ($null -ne $m.score -and "$($m.label)" -eq 'active' -and [double]$m.coverage -ge $minCov) {
+            $activeModels += ("{0}={1}" -f $m.name, ([double]$m.score).ToString('0.#', $ci))
+          }
         }
       }
       if ($activeModels.Count -gt 0) {
-        $ladder = @{ 'RISK_ON' = 'NEUTRAL'; 'NEUTRAL' = 'RISK_OFF' }   # RISK_OFF/STRESS: no change
         if ($ladder.ContainsKey($state)) {
           $before = $state
           $state = $ladder[$state]
-          $note = "CRISIS_FOLD: $before -> $state (" + ($activeModels -join '; ') + ")"
+          # sanitize exactly like the core flags above (commas -> ';', quotes stripped). The
+          # MQL reader IS quote-aware, but the original author stripped commas deliberately and
+          # appending after that step would have quietly bypassed the guard.
+          $note = ("CRISIS_FOLD: $before -> $state (" + ($activeModels -join '; ') + ")") -replace '"','' -replace ',',';'
           $flags = if ($flags) { "$flags | $note" } else { $note }
           Write-Host "[export-regime] crisis fold applied: $note"
         } else {
           Write-Host "[export-regime] crisis fold: state already $state - no downgrade available (fold never manufactures STRESS)"
         }
-      } else {
-        Write-Host "[export-regime] crisis fold ON, no model active at coverage>=0.5 - core state kept"
+      } elseif ($ageOk) {
+        Write-Host "[export-regime] crisis fold ON, no model active at coverage>=$minCov - core state kept"
       }
     } catch {
       Write-Host "[export-regime] crisis fold read failed - exporting core state unchanged (fail-safe): $($_.Exception.Message)"

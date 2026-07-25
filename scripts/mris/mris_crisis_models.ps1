@@ -84,6 +84,13 @@ function Resolve-Input([string]$key) {
 # clamped linear ramp: calm->0, stress->100 (works both directions via sign of stress-calm)
 function Ramp($v, $calm, $stress) {
   if ($null -eq $v) { return $null }
+  # Reject non-finite inputs. bps5d back-computes a previous value via 1/(1+chg/100), which
+  # yields +-Infinity if a series ever prints a -100% 5d change. Infinity is NOT harmless here:
+  # for a component whose stress anchor is BELOW its calm anchor the ramp would clamp to a full
+  # 100 = a fabricated max-severity crisis reading out of garbage data. Treat as no-data.
+  $d = 0.0
+  if (-not [double]::TryParse("$v", [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$d)) { return $null }
+  if ([double]::IsNaN($d) -or [double]::IsInfinity($d)) { return $null }
   if ($stress -eq $calm) { return 0.0 }
   $t = ($v - $calm) / ($stress - $calm)
   if ($t -lt 0) { $t = 0 }
