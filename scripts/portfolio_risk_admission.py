@@ -165,7 +165,57 @@ def _basket_key(basket_id):
     return f"basket::{basket_id}"
 
 
-def collapse_basket_risk_units(dd95_by_magic, basket_of):
+# --------------------------------------------------------------------------- #
+# 2026-07-25: single-leg-basket correlation resolution -- OFF BY DEFAULT, PENDING AUDIT
+#
+# THE OBSERVATION. A basket leg is keyed 'basket::<id>' so a basket-level DD95 is not
+# counted once per leg. But get_corr() is keyed by MAGIC, so a 'basket::' key can never
+# match a measured correlation and always falls back to the conservative 1.0. When a
+# basket has only ONE leg with a known DD95, that rename buys no dedup at all and costs
+# every correlation the leg has. On account 463666728 the two biggest units (the IchiADX
+# baskets, 22.19% and 10.77%, each with exactly one known leg) were therefore treated as
+# fully additive with all 12 other EAs: reported 73.04% where the same formula over the
+# same already-measured correlations gives 38.35%.
+#
+# WHY IT IS STILL OFF. Over-statement is the safe direction, and the 1.0 default is a
+# DELIBERATE, cage-protected choice (cage 19), not an oversight. Resolving it swaps a
+# basket-level DD95 against a single LEG's correlation series -- defensible, but a
+# judgment call on money-adjacent logic with no independent review available today
+# (Codex quota exhausted). Same discipline ORDER-200 Phase D used: build it, default it
+# off, change no live number until it is audited and the user ratifies.
+#
+# TO REVIEW: run with --resolve-single-leg-baskets and compare. Flipping the default is
+# a decision, not a cleanup.
+# --------------------------------------------------------------------------- #
+RESOLVE_SINGLE_LEG_BASKETS = False
+
+
+def basket_unit_keys(dd95_by_magic, basket_of, resolve_single_leg=None):
+    """{basket_id: the risk-unit key that basket collapses to}, for the given set of
+    known-DD95 magics. THE single source of truth for that mapping -- the account
+    summary and the admission path must agree on a candidate's unit identity
+    (ORDER-170 round-4 SEV-1), so neither may re-derive this rule by hand.
+
+    >= 2 known legs -> 'basket::<id>' (a real collapse).
+     1 known leg    -> 'basket::<id>' as well by DEFAULT (conservative: its
+                       correlations stay unresolved at 1.0). Only when
+                       RESOLVE_SINGLE_LEG_BASKETS is on does it key by that leg's own
+                       magic so its measured correlations resolve -- see the block
+                       comment above; that switch is unaudited and off in normal runs.
+    """
+    resolve = RESOLVE_SINGLE_LEG_BASKETS if resolve_single_leg is None else resolve_single_leg
+    legs = {}
+    for magic in dd95_by_magic:
+        basket = basket_of.get(magic)
+        if basket:
+            legs.setdefault(basket, []).append(magic)
+    return {
+        b: (ms[0] if (resolve and len(ms) == 1) else _basket_key(b))
+        for b, ms in legs.items()
+    }
+
+
+def collapse_basket_risk_units(dd95_by_magic, basket_of, unit_keys=None):
     """Collapse magics that share a basket_id into ONE risk unit so a basket-level
     DD95 is counted once, not once per leg (ORDER-170 SEV-1 #1).
 
@@ -180,8 +230,32 @@ def collapse_basket_risk_units(dd95_by_magic, basket_of):
     """
     units = {}
     dropped = []
+
+    # 2026-07-25 fix: a basket contributes a `basket::` key ONLY when it actually has
+    # >= 2 legs to collapse here. With a single known-DD95 leg there is nothing to
+    # dedup, and renaming that leg to `basket::<id>` silently destroyed every
+    # correlation measured for it -- get_corr() is keyed by MAGIC, so a basket:: key
+    # can never resolve and falls back to the conservative 1.0 against the whole
+    # portfolio. Observed on account 463666728: the two largest DD95 units (the
+    # IchiADX baskets, 22.19% and 10.77%, each with exactly ONE known leg) were being
+    # treated as fully additive with all 12 other EAs, reporting 73.04% where the same
+    # formula over the same measured correlations gives 38.35%. Over-statement is the
+    # safe direction, but a number nobody can act on is its own failure.
+    # Multi-leg baskets are UNCHANGED (still collapsed, still conservative): picking a
+    # representative leg's correlation series for a real 2-leg basket is a judgment
+    # call, not a bug fix, and is queued for the Codex risk-path audit.
+    # `unit_keys` MUST be supplied whenever this is called on a SUBSET of an account's
+    # magics (e.g. ACTIVE-only vs all rows). Deriving the rule per-subset makes a
+    # basket's identity depend on which slice you happen to be looking at -- an
+    # ACTIVE-only slice can see 1 leg (key = magic) while the all-rows slice sees 2
+    # (key = 'basket::<id>'), and the two paths then disagree about the same basket.
+    # Cage 12 caught exactly that. One canonical inventory decides, everyone follows.
+    basket_keys = basket_unit_keys(dd95_by_magic, basket_of) if unit_keys is None else unit_keys
+
     for magic, val in dd95_by_magic.items():
         basket = basket_of.get(magic)
+        if basket and basket_keys.get(basket) != _basket_key(basket):
+            basket = None   # single known leg -> keep the magic key so corr resolves
         # ORDER-170 round-3 SEV-1 #2: basket ids and standalone magics must NOT share
         # one raw-string namespace -- a basket_id equal to an unrelated magic would
         # silently merge two independent risk units (an undercount, the dangerous
@@ -1052,7 +1126,13 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # collapsed risk units as the account summary, or the two paths disagree on
         # the same input (summary said 20%, admission sized against 30%). Collapse
         # basket legs BEFORE handing the existing portfolio to admit_candidate().
-        active_units, _active_folded = collapse_basket_risk_units(active_known, basket_of or {})
+        # The canonical inventory for THIS account is all its known-DD95 rows (ACTIVE
+        # and PENDING). Every collapse below is a slice of it and must be keyed by the
+        # same rule -- see basket_unit_keys / cage 12.
+        all_known = {r["magic"]: dd95_map[r["magic"]] for r in rows if r["magic"] in dd95_map}
+        all_unit_keys = basket_unit_keys(all_known, basket_of or {})
+        active_units, _active_folded = collapse_basket_risk_units(
+            active_known, basket_of or {}, unit_keys=all_unit_keys)
         # ORDER-170 round-5 (audit F1): decisions for MULTIPLE pending candidates must
         # COMPOSE, not each pretend it is the only attach. Previously two ADMIT_FULL
         # decisions could sit side by side whose combined risk breaches the budget.
@@ -1066,8 +1146,8 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
         # candidate must be sized at its basket's conservative canonical value (the
         # max across conflicting siblings -- same rule the summary uses), never at
         # whichever sibling row happens to come first in inventory order.
-        all_known = {r["magic"]: dd95_map[r["magic"]] for r in rows if r["magic"] in dd95_map}
-        units_all, _ = collapse_basket_risk_units(all_known, basket_of or {})
+        units_all, _ = collapse_basket_risk_units(
+            all_known, basket_of or {}, unit_keys=all_unit_keys)
         # ORDER-170 round-7 (audit F1): the EXISTING portfolio must also carry each
         # basket at its canonical all-row value. An ACTIVE basket leg at 10 whose
         # PENDING sibling declares the basket-level DD95 as 30 is a 30% risk unit
@@ -1083,8 +1163,8 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
                 continue
             b = (basket_of or {}).get(r["magic"])
             if b:
-                k = _basket_key(b)
-                if k in units_all and k not in existing_units:
+                k = all_unit_keys.get(b)
+                if k is not None and k in units_all and k not in existing_units:
                     existing_units[k] = units_all[k]
 
         def _with_provenance(entry):
@@ -1109,7 +1189,7 @@ def build_report(deployments, dd95_map, corr_matrix, basket_of=None,
             # measured raw-magic correlation the summary (conservatively) does not,
             # and the two paths can disagree -- round 3 showed ADMIT_FULL next to an
             # OVER-BUDGET summary in the same report.
-            cand_key = _basket_key(cand_basket) if cand_basket else m
+            cand_key = all_unit_keys.get(cand_basket, m) if cand_basket else m
             if cand_key in existing_units:
                 admission_demo.append(_with_provenance({
                     "account": acct, "magic": m, "ea_name": cand["ea_name"],
@@ -2226,6 +2306,66 @@ def _cage_30_malformed_report_rows_poison():
         assert _parse_money_cell("-12.5") == -12.5
 
 
+def _cage_31_single_leg_basket_switch():
+    """2026-07-25. The single-leg-basket resolution must be OFF by default (the live
+    number may not move just because a switch was added), and when explicitly ON it
+    must change ONLY the single-leg case -- never a real multi-leg collapse."""
+    assert RESOLVE_SINGLE_LEG_BASKETS is False, (
+        "the unaudited single-leg-basket resolution must default to OFF -- if this "
+        "fires, someone flipped a money-path default without the audit"
+    )
+    basket_of = {"SOLO_LEG": "B_ONE", "L1": "B_TWO", "L2": "B_TWO"}
+    dd95 = {"SOLO_LEG": 10.0, "L1": 5.0, "L2": 5.0, "PLAIN": 7.0}
+
+    off = basket_unit_keys(dd95, basket_of, resolve_single_leg=False)
+    assert off["B_ONE"] == _basket_key("B_ONE"), f"default must stay conservative: {off!r}"
+    on = basket_unit_keys(dd95, basket_of, resolve_single_leg=True)
+    assert on["B_ONE"] == "SOLO_LEG", f"resolution did not key by the lone leg: {on!r}"
+    assert off["B_TWO"] == on["B_TWO"] == _basket_key("B_TWO"), (
+        f"a genuine 2-leg basket must collapse identically either way: {off!r} vs {on!r}"
+    )
+
+    # and the switch must actually recover the correlation, not merely rename the key
+    corr = {frozenset(("SOLO_LEG", "PLAIN")): 0.0}
+    solo = {"SOLO_LEG": 10.0, "PLAIN": 7.0}
+    u_off, _ = collapse_basket_risk_units(
+        solo, basket_of, unit_keys=basket_unit_keys(solo, basket_of, resolve_single_leg=False))
+    u_on, _ = collapse_basket_risk_units(
+        solo, basket_of, unit_keys=basket_unit_keys(solo, basket_of, resolve_single_leg=True))
+    dd_off = portfolio_dd_est(u_off, corr)
+    dd_on = portfolio_dd_est(u_on, corr)
+    assert abs(dd_off - 17.0) < 1e-9, f"OFF must stay fully additive (corr 1.0): {dd_off!r}"
+    assert abs(dd_on - math.sqrt(10.0 ** 2 + 7.0 ** 2)) < 1e-9, (
+        f"ON must use the measured corr=0.0: {dd_on!r}"
+    )
+    assert dd_on < dd_off, "resolution should lower the estimate here, never raise it"
+
+
+def _cage_32_unit_key_rule_is_inventory_wide():
+    """2026-07-25. A basket's risk-unit identity must be decided ONCE per account
+    inventory, never re-derived per slice. Re-deriving it let the ACTIVE-only slice see
+    1 leg (key = magic) while the all-rows slice saw 2 (key = 'basket::'), so the
+    existing-portfolio lookup raised KeyError on its own key."""
+    all_known = {"L1": 10.0, "L3": 10.0}      # both legs of BX: one ACTIVE, one PENDING
+    active_known = {"L1": 10.0}                # the ACTIVE-only slice sees a single leg
+    basket_of = {"L1": "BX", "L3": "BX"}
+    for resolve in (False, True):
+        keys = basket_unit_keys(all_known, basket_of, resolve_single_leg=resolve)
+        units_all, _ = collapse_basket_risk_units(all_known, basket_of, unit_keys=keys)
+        units_active, _ = collapse_basket_risk_units(active_known, basket_of, unit_keys=keys)
+        assert set(units_active) <= set(units_all), (
+            f"ACTIVE slice invented a unit key the inventory does not have "
+            f"(resolve={resolve}): {units_active!r} vs {units_all!r}"
+        )
+    report = build_report(
+        [_mk_row("111", "L1", "ACTIVE"), _mk_row("111", "L3", "PENDING_ATTACH")],
+        all_known, {}, basket_of=basket_of,
+    )
+    assert report["admission_demo"][0]["status"] == "CANNOT_RUN", (
+        "sibling-of-active-basket candidate must still escalate"
+    )
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -2257,6 +2397,8 @@ CAGE_TESTS = [
     ("28_backtest_corr_provenance", _cage_28_backtest_corr_provenance),
     ("29_backtest_map_fail_soft_hardening", _cage_29_backtest_map_fail_soft_hardening),
     ("30_malformed_report_rows_poison", _cage_30_malformed_report_rows_poison),
+    ("31_single_leg_basket_switch_is_off_by_default", _cage_31_single_leg_basket_switch),
+    ("32_unit_key_rule_is_inventory_wide", _cage_32_unit_key_rule_is_inventory_wide),
 ]
 
 
@@ -2350,7 +2492,17 @@ def main(argv=None):
     ap.add_argument("--backtest-map", default=str(BACKTEST_CORR_MAP))
     ap.add_argument("--out-md", default=str(OUT_MD))
     ap.add_argument("--out-json", default=str(OUT_JSON))
+    ap.add_argument(
+        "--resolve-single-leg-baskets", action="store_true",
+        help="EXPERIMENTAL, UNAUDITED (2026-07-25). Key a basket that has exactly ONE "
+             "known-DD95 leg by that leg's magic, so its already-measured correlations "
+             "resolve instead of falling back to the conservative 1.0. Changes reported "
+             "risk numbers -- use to review the difference, not to publish. Default off "
+             "until the Codex risk-path audit and user ratification.")
     args = ap.parse_args(argv)
+
+    global RESOLVE_SINGLE_LEG_BASKETS
+    RESOLVE_SINGLE_LEG_BASKETS = args.resolve_single_leg_baskets
 
     if args.selftest:
         ok = run_selftest()
