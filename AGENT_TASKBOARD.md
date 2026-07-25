@@ -136,6 +136,16 @@ reverify ของ base ตรงกับตัวเลขเดิมใน�
 
 **ทำได้:** Claude (backtest + verdict) — attach demo / shelve = user เคาะ
 
+## ORDER-202 — [audit] retro-scan: which verdicts were selected on the burned 2026H1 holdout — `REVIEWED(Claude 2026-07-25) — 2 damaged, 2 survive, 1 real-money decision open for user`
+**source:** found while fixing `.claude/agents/ea-screener.md` / `ea-validator.md`, which had been running every screen and optimize with a window ending 2026.06.01 — six months inside the 2026H1 holdout — for an unknown length of time (commit `c612dbe0`). Fixing the definitions stops future leaks; this order asks what was already selected that way.
+**method:** parsed all 6,467 `.ini` under `_mt5_auto`. Threshold set at `ToDate > 2026.01.01`, NOT `> 2025.12.31`: a run ending exactly `2026.01.01` yields zero 2026 deals (verified against real deal dates), so those 450 passes are clean. **87 optimize passes selected on a window overlapping 2026H1.**
+**result — deployed:** `Boss_14` 8 legs CLEAN at the parameter level (values came from a separate `_IS.ini` pass ending 2025.06.30; ORDER-166 was revalidation not re-selection) — but the promotion gate touched 2026H1 for 7 of 8, so the cohort's holdout is spent · **`EA_BREAKOUT_XAU` 991001 (REAL MONEY) directly contaminated**, re-run on clean windows: **v2** BWD 1.66 / MAIN 1.98 · **v3** BWD **1.01** / MAIN 1.86 — v3 wins ONLY on the burned window = selected into the leak. **v2 is what clean evidence supports.**
+**result — not deployed:** only 2 of 25 could have been flattered · **`Boss_16_Kangaroo` survives** (clean MAIN 1.46/205t, BWD 1.30/278t) but its PENDING_ATTACH judge bar was written from inflated numbers → **use PF 1.46 not 1.57, and ~68 trades/yr not ~90** · **`NRBreakout` revival hook was the contamination** (clean MAIN 0.93 and 0.82, both losses) → annotated, do not re-open on the 1.31 figure.
+**verdict doc:** `_triage/ORDER202_HOLDOUT_CONTAMINATION_RETROSCAN.md` (report files keep the `O201_*` prefix — renamed the order after the runs, artifacts left alone on purpose).
+**prevention:** `check_state.ps1` check #9 — a reusable definition assigning `ToDate` past MAIN now blocks the commit under `-Strict`. Verified it catches the exact historical string; `HOLDOUT-OK` opts out.
+**OPEN (user):** confirm whether v2 or v3 is live for 991001 on both real accounts (`_01_BreakoutBars` 40 = v2 / 55 = v3) — if v3, switching is the evidence-backed move but it is a real-money change · declare 2026H1 spent for `EA_BREAKOUT_XAU` and the `Boss_14` cohort, the way Boss_16 was.
+**ห้าม:** ปลุก NRBreakout ด้วยเลข ceiling 1.31 · ตัดสิน Boss_16 demo ด้วยบาร์ 1.57/90-trades เดิม · rewrite ini/report เก่าให้ "สะอาด" (เท่ากับบิดเบือนว่า run ในอดีตทำอะไร)
+
 ## ORDER-201 — [lever] HANDOFF_ST03_OPTIMIZE continuation: standalone spacing lever (`InpNearbyPip`) — `REVIEWED(Claude 2026-07-25): BWD-fail on all 3 variants — spacing does NOT rescue, PARKED-VERIFY(user) stays, lever #1/3 of the handoff closed`
 
 **source:** `_triage/HANDOFF_ST03_OPTIMIZE_2026-07-19.md` lever #1 ("Spacing UNSWEPT... this is the cleanest open lever") — user 2026-07-24 เคาะ "ให้ผมเดิน optimize แทน" (แทนที่จะรอ user ทำเอง)

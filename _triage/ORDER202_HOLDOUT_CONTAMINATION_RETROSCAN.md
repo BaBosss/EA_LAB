@@ -1,4 +1,9 @@
-# ORDER-201 — retro-scan: which verdicts rest on a burned holdout?
+# ORDER-202 — retro-scan: which verdicts rest on a burned holdout?
+
+> **Renumbered 2026-07-25.** This was written as ORDER-201, but a parallel session had already
+> registered ORDER-201 on the taskboard for the ST03 spacing lever. The report files on disk keep
+> their `O201_*` prefix on purpose — renaming artifacts after the fact would break the pointers in
+> this document and in the reports themselves. Prefix = when it ran, not which order owns it.
 
 **Opened** 2026-07-25, after finding that `.claude/agents/ea-screener.md` and `ea-validator.md`
 had run every screen and every optimize with `-ToDate 2026.06.01` — six months INSIDE the
