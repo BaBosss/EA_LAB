@@ -101,7 +101,7 @@ function Classify([hashtable]$snap) {
         $fastMult=if ($b.fast_drop_atr_mult){$b.fast_drop_atr_mult}else{$null}; $fastDrop=$false
         if ($fastMult -and $null -ne $atr20 -and $null -ne $chg5d) { $dp=-($fastMult*$atr20/$spot*100.0); if ($chg5d -le $dp){$fastDrop=$true} }
         elseif ($b.move_5d_pct -and $null -ne $chg5d) { if ($chg5d -le -[double]$b.move_5d_pct){$fastDrop=$true} }
-        if ($null -ne $pin -and $spot -lt $pin -and $belowTrend) { $signal=-2 }
+        if ($belowTrend -and $fastDrop) { $signal=-2 }   # ORDER-203: was pin-based, see mris_classify.ps1
         elseif ($fastDrop) { $signal=-1.5 }
         elseif ($belowTrend) { $signal=-1 }
         elseif ($null -ne $chg5d -and $chg5d -ge 0) { $signal=1 }
