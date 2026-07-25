@@ -173,7 +173,35 @@ engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวน�
 ⇒ ยกเป็นใบ re-measure (ORDER-214+) เพราะเป็นเงินจริง · **flat-lot probe:** N-A (วัด guardrail ไม่ใช่ entry)
 **ห้าม:** แก้ค่า CutLoss บนบัญชีจริง · รัน backtest ในใบนี้ (ใบนี้ = สำรวจหลักฐานอย่างเดียว)
 
-## ORDER-213 — [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด — `OPEN`
+## ORDER-213 — [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด — `DONE(Claude/Opus 2026-07-25) — bundle พร้อม attach ที่ `_vps_deploy/BOSS16_KANGAROO_XAU/``
+**ตั้งใจมาแก้ตัวเลข 2 ตัว แต่เจอของที่อันตรายกว่าระหว่างทาง:**
+### 🔴 `.ex5` ใน `ea_template/` เก่าค้าง และถ้า attach ไปจะ "ทำงานคนละอย่างกับที่คิด"
+`ea_template/Boss_16_KangarooGrid.ex5` = **2026-07-23, 128,744 bytes** · ไฟล์ chassis ที่มันคอมไพล์ทับ **7 ไฟล์ถูกแก้
+2026-07-24** (`MoneyManagement` · `RiskControl` · `Inputs` · `LabCore` · `ExitManager` · `Recovery` · `entries/Kangaroo`)
+= วันที่ ORDER-187/190/194 ลง. build ปัจจุบัน = **134,550 bytes** (โตขึ้น 5,806)
+**`_16_BaseLotMode` ถูกเพิ่มโดย ORDER-190 วันที่ 07-24 — คือหลังจากไบนารีตัวเก่าถูกคอมไพล์** ⇒ ไบนารีตัวนั้น**ไม่มี
+input นี้อยู่เลย**. MT5 **เมิน input ที่ไม่รู้จักแบบเงียบ ๆ** (memory `mt5-tester-cache-nondeterminism`) ⇒ ถ้า user
+ลากตัวเก่าลงชาร์ตแล้วโหลด `..._scaled_demo.set` **EA จะรัน flat mode ทั้งที่คนใช้เชื่อว่ารัน balance-scaled**
+และยังขาด safety fix ของ ORDER-187/194 ด้วย. **นี่คือ PENDING_ATTACH ที่ถ้า attach ไปเมื่อวาน จะได้ผลลัพธ์ที่
+ตีความผิดทั้ง demo โดยไม่มีอะไรเตือน**
+bundle ใหม่ใช้ build ปัจจุบัน · ตรวจแล้วว่า tester ทั้ง 2 instance (`D:\Meta 5b` + roaming `9CA16B`) **hash ตรงกันเป๊ะ**
+· `.ex5` ถูก gitignore ⇒ **บันทึก SHA256 ไว้ใน README แทน** `B5001606FC…27CFC` + คำสั่งให้ user verify ก่อน attach
+### ตัวเลขที่ตั้งใจมาแก้ (ORDER-202 Part 2)
+- **PF คาดหวัง 1.46 ไม่ใช่ 1.57** · **~68 เทรด/ปี (5.7/เดือน) ไม่ใช่ ~81–90** — ORDER-078 รันถึง `2026.07.01` ทั้ง funnel
+  และมีแถว year-split เขียนว่า `2026H1 … PF 1.75 / 85t` ตรง ๆ
+- **🎯 ผลที่ตามมาซึ่งไม่มีใครสังเกต: อัตราเทรดที่ถูกต้อง ทำให้ "วันตัดสิน" ต้องเลื่อน** — 30 เทรดที่ 5.7/เดือน = **~5.3 เดือน**
+  ⇒ judge_date ต้องเป็น **attach + 5.5 เดือน ไม่ใช่ +3** มิฉะนั้น**ต่อให้ทำผลงานดีแค่ไหนก็ผ่านบาร์ 30 เทรดไม่ได้**
+  (อัตราเดิมที่เฟ้อจะบอกว่า ~3.9 เดือน) — **นี่คือตัวอย่างว่าการปนเปื้อนเดินทางไปถึง "ตาราง" ไม่ใช่แค่ "พาดหัว"**
+### ที่เขียนไว้ใน README ด้วยเพราะจะลืมกัน
+- ต้องเริ่มที่ balance **$10,000** เท่านั้น ไม่งั้น scaled กับ flat เทียบกันไม่ได้ตั้งแต่ไม้แรก (anchor = 10000)
+- **ความขัดแย้งที่ยังไม่ได้แก้ (จงใจ ไม่เดา):** `EA_MASTER_INDEX` เขียน home = `XAUUSD D1 (D1g)` แต่ `.set` และ funnel
+  ORDER-077/078 ที่ให้เลข 1.46/1.30 คือ **H1**. D1 คือ ORDER-091C-D1g ซึ่งปิดไปแล้วว่าไม่มี edge = **คนละหลักฐาน**
+  → README สั่งให้หยุดถามถ้าตั้งใจจะ attach D1
+- eqDD BWD = 9.70% ขณะที่ kill rule default = 12% ⇒ headroom บาง **ตั้งใจ** — ถ้าทริปเร็ว ให้เช็คก่อนว่า balance-scaling
+  โตขึ้นหรือเปล่า ก่อนจะสรุปว่า edge พัง
+- เป็น **grid** ⇒ ถ้าแพ้ ให้บันทึกว่าแพ้เพราะ entry ผิด หรือเพราะ grid แบกขาที่สวนอยู่ — คนละความล้มเหลว และมีแค่แบบแรก
+  ที่ฆ่า concept
+**ยังเป็นของ user:** ลาก attach เอง (agent ทำแทนไม่ได้) แล้วเติมแถว `DEPLOYMENTS.csv` + `expectations.csv` ในเซสชันเดียวกัน
 **source:** ORDER-202 Part 2 — Boss_16 **edge จริง** (clean MAIN PF 1.46/205t, BWD 1.30/278t = ผ่านทั้งสองบาร์สบาย)
 แต่ criteria ที่ pre-register ไว้คำนวณจาก funnel ORDER-078 ที่รัน `2023.01.01 → 2026.07.01` ทุกขั้น. ถ้า attach ตอนนี้
 **demo จะถูกตัดสินด้วยบาร์ที่ leak เป็นคนเขียน**. **spec:** แก้ 2 เลขในทุกที่ที่มันปรากฏ (bundle README + `expectations.csv`
