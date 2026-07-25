@@ -133,7 +133,21 @@ engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวน�
 **bars:** N-A (งานเอกสาร ไม่ใช่ทดสอบ) · **flat-lot probe:** N-A
 **ห้าม:** เปลี่ยนพารามิเตอร์ใน .set (edge สะอาด ไม่ต้อง re-opt) · attach แทน user
 
-## ORDER-214 — [🔴 เงินจริง · integrity] Gold Reaper 4.3: lab เขียน CORE ให้ EA เงินจริงโดยที่ plateau-check เป็น null result — `OPEN`
+## ORDER-214 — [🔴 เงินจริง · integrity] Gold Reaper 4.3: lab เขียน CORE ให้ EA เงินจริงโดยที่ plateau-check เป็น null result — `REVIEWED(Claude/Opus 2026-07-25): แก้ข้อความแล้ว · funnel = ไม่คุ้มรัน อธิบายเหตุผลไว้`
+**ยืนยันเองแล้ว ไม่ได้เชื่อ agent:** เปิด `_mt5_auto/optimizations/QWEN_GR_opt.xml` นับค่าซ้ำ — **ทุก metric ปรากฏ 5 ครั้งเท่ากันหมด**
+(Profit 267741.38 ×5 · PF 2.349244 ×5 · Trades 2548 ×5 · DD 13.8505 ×5) = pass ทั้ง 5 เหมือนกันทุกหลัก **null result ยืนยัน**
+**เจอเพิ่มที่ audit ไม่ได้พูด และมันเปลี่ยนคำแนะนำ:** ปัญหาไม่ใช่แค่ "ไม่มี fine-stage" — **ต่อให้รัน fine-stage ก็จะได้ null
+เหมือนเดิม** เพราะ `Risk=1234` = internal-lot mode ของ EA (ปิด source, 9 sub-strategy) ⇒ `StartLots` ที่ optimizer กวาด
+**ไม่ผูกกับอะไรเลย**. นี่คือ "inert dimension" แบบเดียวกับที่เจอใน MacdDiv `_01_LookbackBars` — **optimize แกนที่ไม่มีผล
+= ได้ plateau ปลอมที่แบนสนิท**. ⇒ **ไม่สั่งรัน funnel** จนกว่าจะรู้ว่าแกนไหน bind จริง ซึ่งกับ EA ปิด source แปลว่าต้อง
+probe ทีละ input — ราคาแพงเกินสำหรับ EA ที่**แล็บไม่ได้เลือกขึ้นบัญชีตั้งแต่แรก**
+**ที่ทำจริงรอบนี้:** แถว scorecard เดิมเขียน `CORE ★★★` **ขัดกับ banner ของหัวข้อตัวเองที่เขียนไว้ตั้งแต่ 2026-07-09
+ว่า "Gold Reaper = แล็บ REJECT"** — ความขัดแย้งนี้อยู่ห่างกัน 8 บรรทัด ในเอกสารฉบับเดียวกัน. แก้แถวเป็น `REJECT — user-mix,
+lab ไม่รับรอง ★☆☆` + เขียนหลักฐาน null-result ลงในแถว + เพิ่มแถวใน `EA_MASTER_INDEX` (เดิม**ไม่มี**เลย)
+**บทเรียนที่ควรถือต่อ:** banner ที่ทับตารางไม่พอ — **ถ้าแถวยังอ่านว่า CORE คนก็อ่านว่า CORE**. ครั้งหน้าที่ supersede
+ตาราง ต้องแก้ที่แถว ไม่ใช่แปะ banner ทับ
+
+<details><summary>สเปกเดิมของใบนี้</summary>
 **source:** ORDER-204 DEBT row `QWEN_GR_opt.ini`. เรื่องนี้ **repo รู้ตัวเองอยู่แล้ว** และเขียนไว้ที่
 `EA_SCORECARD_AND_REGISTRY.md:165-168` ว่า sweep 5 pass ของ qwen (2026-06-29) ได้ผล **bit-identical ทั้ง 5**
 = null result ไม่ใช่ plateau-check จริง (สาเหตุ = `Leverage=` no-op + input-cache ตาม `mt5-tester-cache-nondeterminism`)
@@ -147,8 +161,26 @@ plateau evidence`) พร้อมเหตุผล 1 บรรทัด. **ค
 **bars:** N-A รอบแรก (งานแก้ข้อความให้ตรงหลักฐาน) · ถ้าตัดสินใจรัน funnel ค่อย pre-register บาร์ในใบลูก
 **flat-lot probe:** pending — GR เป็น multi-leg grid ⇒ ถ้าจะรัน funnel ต้องทำ flat-lot probe ก่อนตัดสิน STRUCTURAL
 **ห้าม:** แตะค่าบนบัญชีจริง · ลบแถว scorecard ทิ้ง (แก้ + เขียนเหตุ ไม่ใช่ลบ)
+</details>
 
-## ORDER-215 — [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage — `OPEN`
+## ORDER-215 — [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage — `PART 1 DONE(Claude/Opus 2026-07-25): downgrade CORE → PARKED-VERIFY(user) · PART 2 (re-measure) OPEN`
+**ตรวจ ini จริงทั้งชุดแล้ว — ภาพจริงดีกว่าที่ audit เสนอ และแย่กว่าที่ scorecard เขียน:**
+- `OPT_MG_CHF_lowDD.ini` (ตัวเลือกพารามิเตอร์) = `Optimization=2` genetic · `Criterion=0` · **`2023.01.01–2026.06.01`
+  = กิน holdout 5 เดือน** · ไม่มี fine-grid ไม่มี fan → **ขาที่ใช้เลือก = สกปรกเต็ม ๆ**
+- `MG_CHFJPY_IS.ini` = single test (`Optimization=0`) บน window เดียวกันที่สกปรก
+- **`MG_CHFJPY_OOS.ini` = single test `2020.01.01–2023.01.01`** ← **สะอาด และเป็น OOS จริง** (คือ BWD ของเราพอดี)
+**⇒ นี่คือเหตุผลที่ผมไม่ตีตก:** ตัวเลข **2.08 ที่ scorecard อ้าง มาจากขา OOS ที่สะอาด** — selection สกปรก แต่ confirmation
+สะอาด. โครงสร้างแบบนี้ "อ่อน" ไม่ใช่ "เท็จ". แต่ **CORE ยืนบนขาเดียวไม่ได้** โดยเฉพาะเมื่อ EA เป็น **grid** ที่
+doctrine บังคับ Model-4 ก่อน verdict และยังไม่เคยมี flat-lot probe เลย ⇒ downgrade เป็น **PARKED-VERIFY(user)**
+**PART 2 ที่ยังค้าง (สเปกพร้อมรัน):** clean-MAIN `2023.01.01–2025.12.31` re-measure + fan ±20% ทุกแกน + **flat-lot probe**
+(grid ⇒ ต้องรู้ว่า edge อยู่ที่สัญญาณหรือที่ escalation) + **Model-4** ทั้งสองหน้าต่าง. ⚠️ M15 × 3 ปี × grid = คิว M4 หนัก
+และเครื่องชน memory ceiling อยู่ (ดู ORDER-210) → **แตก sub-window ตั้งแต่แรก อย่าเพิ่งยิงรวดเดียว**
+**bars:** pass = clean MAIN ≥1.2 **และ** BWD ≥1.0 บน M4 + fan ≥70% ถือ ⇒ คืนสถานะได้ · dead = clean MAIN <1.0
+⇒ แจ้ง user ว่าแล็บไม่หนุนแล้ว (ถอดหรือไม่ = สิทธิ์ user, เป็น EA ที่เขาเลือกเอง) · กลาง ⇒ คง PARKED-VERIFY
+**flat-lot probe:** pending (บังคับ — grid/escalation)
+**ห้าม:** แตะค่าบนบัญชีจริง · ใช้ Model-2 เป็นหลักฐานกับ grid (doctrine 2026-07-17: grid บน M2 = ไม่ใช่หลักฐานเลย)
+
+<details><summary>สเปกเดิมของใบนี้</summary>
 **source:** ORDER-204 DEBT row `OPT_MG_CHF_lowDD.ini` (`Optimization=2`, `Criterion=0`, window `2023.01.01–2026.06.01`
 = **กิน holdout ด้วย**, ไม่มี fine-stage ไม่มี fan). citation = `EA_SCORECARD_AND_REGISTRY.md:156` "MG_v1 MatchaGrid
 CHFJPY M15 2.08 CORE — grid but bounded+SL; passed deep-val". agent ตั้งข้อสังเกตถูกว่าแถวนี้อยู่ในตารางที่ขึ้นหัวว่า
@@ -157,6 +189,7 @@ CHFJPY M15 2.08 CORE — grid but bounded+SL; passed deep-val". agent ตั้�
 **spec:** เหมือน ORDER-214 — ยืนยันว่ามีหลักฐาน fine-stage/fan ที่ไหนอีกไหมนอก `ini/` ก่อน; ไม่มี ⇒ แก้ข้อความให้ตรง
 (CORE ที่ยืนบน genetic pass เดียว + window ที่กิน holdout = ไม่ใช่ CORE) แล้วค่อยตัดสินว่าจะรัน funnel ไหม
 **bars:** N-A รอบแรก · **flat-lot probe:** pending (grid) · **ห้าม:** แตะค่าบนบัญชีจริง
+</details>
 
 ## ORDER-216 — [demo · funnel] MacdDiv XAU H4 (999094): เติม fine-grid + fan ที่ genetic pick ไม่เคยมี — `OPEN`
 **source:** ORDER-204 DEBT row `O098B_OPT_XAUUSD_H4.ini` — verdict "🥇 XAU H4 ผ่านครบทุกด่าน funnel" (`AGENT_TASKBOARD:1849`,
