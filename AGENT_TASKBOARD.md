@@ -100,7 +100,37 @@ source แล้ว 14 ตัว · sweep Bars/Sl/Tp/Ema = 1,680 combo) · **coa
 แตะ `.set` ที่ live อยู่ · ตัดสิน verdict เอง (agent ส่ง evidence, Opus-seat ตัดสิน)
 </details>
 
-## ORDER-211 — [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง — `CLAIMED(Sonnet agent, 2026-07-25) — ขนาดความเสียหายวัดได้แล้ว รอผล A/B`
+## ORDER-211 — [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง — `REVIEWED(Claude/Opus 2026-07-25): 🔴 ถอดสถานะ "VALIDATED deploy-candidate" → ADVISORY-ONLY`
+**gate ทำงานจริงในรอบทดสอบ พิสูจน์แล้วไม่ใช่เดา:** tester log มี `[MACROGATE] regime loaded: 262 row(s), 0 skipped` ครบ 4 ครั้ง
+(ทุก run ที่เปิด gate) · block event 25,105 ครั้ง · **ฝั่ง OFF ไม่เคยเปิดไฟล์ regime เลย** ⇒ ไม่ใช่กรณี "gate หลับเงียบแล้ว
+ON=OFF" ที่ผมสั่งให้ดักไว้. leverage `1:100` MATCH ทั้ง 8 run
+
+| | recorded (classifier พัง) | **วัดใหม่ (classifier แก้แล้ว)** |
+|---|---|---|
+| AUDJPY event · net | +5.36 | **−30.24** |
+| USDJPY event · net | +37.02 | **−18.40** |
+| AUDJPY full-2024 · net | +0.40 (เสมอ) | **−15.39** |
+| USDJPY full-2024 · net | +61.16 (ขาดทุน→เสมอตัว) | **−20.75** |
+| **PF ทั้ง 4 ช่อง** | ขึ้นหรือเสมอ | **ลงทั้ง 4 ช่อง** (−0.20 / −0.24 / −0.05 / −0.07) |
+| USDJPY full-2024 · eqDD | −55.7% | **−7.1%** |
+
+**ตัดสินตามบาร์ที่ล็อกไว้ก่อนเห็นผล — เข้าเงื่อนไข dead ข้อแรกตรง ๆ: "PF แย่ลง ⇒ ถอด gate กลับเป็น advisory-only".**
+ไม่มีช่องไหนที่ PF ไม่แย่ลง. คำอ้างหลักของเอกสารเดิม (*"P&L เสมอถึงดีขึ้นมาก ขณะที่ DD ลดครึ่ง"*) **ไม่เหลือแล้ว** —
+ที่เหลือคือต้นทุนปกติของ filter ทุกตัว: เทรดน้อยลง DD ต่ำลง กำไรแย่ลง
+**คำถาม "จับจังหวะ หรือแค่เทรดน้อยลง" ที่ผมเขียนดักไว้ — ตอบได้แล้ว และคำตอบแยกตาม symbol:**
+- **AUDJPY = จับจังหวะจริง** — บล็อกไม้ 19–32% แต่ eqDD ลง 44–53% (ลดมากกว่าสัดส่วนที่บล็อก)
+- **USDJPY = แค่เทรดน้อยลง (แย่กว่านั้นด้วยซ้ำ)** — บล็อก 16–35% แต่ eqDD ลงแค่ 7–21% (ลดน้อยกว่าสัดส่วนที่บล็อก)
+**และนี่คือประเด็นที่แทงใจที่สุด: leg ที่ attach อยู่จริง (990120) คือ USDJPY** — ช่องที่ gate ช่วยน้อยที่สุดและกิน PF
+**สิ่งที่ยัง valid:** กลไกยังถูกต้อง (mechanism validation + Codex hardening 7 ข้อ ไม่กระทบ — นั่นวัด "ทำงานตามสั่งไหม"
+ไม่ใช่ "คุ้มไหม") · fail-safe ยังดี · no-op บน manage-only grid ยังจริง
+**agent รายงานตรงเรื่องที่ควรชม:** เลข OFF ขยับเล็กน้อยจากที่บันทึกไว้ (23.38 vs 24.62 ฯลฯ) — เขาชี้เองว่าเป็น tick drift
+ปกติตั้งแต่ 07-18 ไม่ใช่ผลของการแก้ classifier (ฝั่ง OFF ไม่อ่านไฟล์ regime เลย) **ถูกต้อง** และการที่มันขยับสมมาตรทุกช่อง
+ยืนยันข้อนี้ · restore `Common\Files` byte-identical แล้ว
+**ค้างที่ user (ไม่ใช่เรื่องด่วน — เป็น demo ไม่ใช่เงินจริง):** จะคง 990120 ไว้บน demo ต่อไหม. **ข้อเสนอของผม: คงไว้**
+แต่เปลี่ยนสถานะเป็น "กำลังทดลอง advisory" ไม่ใช่ "candidate ที่ผ่านการตรวจแล้ว" — และถ้าจะทดลอง gate ต่อจริง
+**ควรย้ายไปทดสอบบน AUDJPY ไม่ใช่ USDJPY** เพราะหลักฐานชี้ว่า timing value อยู่ที่นั่น
+**ห้ามต่อจากนี้:** อ้าง "eqDD −54..−56%" ที่ไหนอีก (เอกสารต้นทางติด banner แล้ว) · ตัดสิน gate จาก host ที่ขาดทุนอยู่แล้ว
+โดยไม่บอก — ทั้งรอบเก่าและรอบนี้ Boss_12 ขาดทุนทั้ง ON/OFF ⇒ **หลักฐานชุดนี้อ่อนในตัวมันเองทั้งสองรอบ** รอบเก่าแค่บังเอิญอ่อนไปทางที่ดูดี
 **🔑 เลขที่ตัดสินว่าใบนี้ต้องเดินต่อ (รันเองแล้ว, `portfolio/mris/backtest/order211_macrogate/regime_y2024.csv`):**
 ปี 2024 ทั้งปี — classifier ที่พังให้ **82 วัน risk-off** (ตัวเลขที่เขียนไว้ในใบ verdict เดิมเอง) · **classifier ที่แก้แล้วให้ 47 วัน**
 ⇒ **gate เดิมปิดประตูถี่กว่าที่ควรราว 75%**. และรูปร่างก็เปลี่ยน ไม่ใช่แค่จำนวน: หลังแก้ **วัน risk-off แรกของปี 2024
@@ -418,7 +448,12 @@ calm-2021 87/261 (33%) → 57/261 (22%) · **concept check ORDER-073 P3 ยั�
 **เครื่องมือที่เพิ่ม:** `mris_backtest_timeline.ps1 -Detailed` = ดัมพ์ signal ราย barometer + ตาราง attribution (คืนค่าจาก `Classify` เดิม ไม่ก๊อป logic ซ้ำ). **bug ที่ผมทำเองแล้วแก้:** พิมพ์ตารางก่อนหัวข้อ ทำให้อ่านสลับปี — รอบแรกผมสรุปผิดเพราะอันนี้ จับได้ตอนเลขขัดกันเอง (mean signal บอก RI≈−0.07 แต่ state บอก RISK_OFF 84%) แล้วไล่ดู CSV ดิบ.
 **ห้าม:** แก้ `barometers.json` โดยไม่ประกาศ + ไม่ re-run concept check ของ ORDER-073 ใหม่ · ถือว่า backtest core เก่าใช้ได้ต่อ.
 
-## ORDER-200 — [macro/tooling] MRIS crisis-model extension (bond/credit/oil/equity axes) — `REVIEWED(Claude/Fable 2026-07-24): Phase-A DONE + Phase-B concept-check 4/4 PASS — ADVISORY-ONLY, live`
+## ORDER-200 — [macro/tooling] MRIS crisis-model extension (bond/credit/oil/equity axes) — `REVIEWED(Claude/Fable 2026-07-25): Phase A-D ครบ · backtest 7/7 · alert เข้ามือถือ live · fold สร้างแล้วแต่สวิตช์ปิด รอ Codex audit`
+**📄 handoff เต็ม = `_triage/HANDOFF_2026-07-25C_MRIS_MACRO_LAYER.md` · spec/หลักฐาน = `_triage/ORDER200_MRIS_MACRO_EXTENSION_SPEC.md`**
+**สรุปปิด (2026-07-25):** chain 7 ขั้น live (`daily_monitor` เรียกอยู่แล้ว) · backtest **7/7** ทั้ง sensitivity+specificity · **push เข้ามือถือ user ใช้งานจริงแล้ว** (HIGH เท่านั้น, ทดสอบส่งผ่าน, ตลาดปกติเงียบ) · **fold ปิดสวิตช์** (`-EnableCrisisFold`, CSV hash ตรงเป๊ะตอนปิด) · scrutinize pass เจอ+แก้ **6 บั๊ก (2 major: กรง coverage หลุดที่ทาง push · fold ไม่เช็คอายุคะแนน)** · **2 ข้อตรวจแล้วตั้งใจไม่แก้** (USDJPY 158 = สายพันธุ์เดียวกับ pin แต่ทางเลือก relative วัดแล้วไม่ช่วย · **"ยุบ 2 ชั้นเป็นชั้นเดียว" ทดลองแล้วแย่ลง อย่าทำ** — yield_spike_2023 RISK_OFF 1→0 เพราะค่าเฉลี่ยถ่วงน้ำหนักตรวจเงื่อนไขร่วมไม่ได้).
+**🔴 ห้าม:** flip `-EnableCrisisFold` ขึ้นบัญชีจริงก่อน Codex audit ผ่าน (§5.1) — ส่งไม่สำเร็จ 2 ครั้ง (background ดึงผลไม่ได้ + quota=0%) **ครั้งหน้ารัน synchronous** · ยุบ crisis models เข้า core RI (มีหลักฐานว่าแย่ลง) · แตะ VIX/MOVE/US10Y/HY_OAS threshold (ตรวจแล้ว valid).
+
+## ORDER-200 (ประวัติ Phase A/B) — `REVIEWED(Claude/Fable 2026-07-24): Phase-A DONE + Phase-B concept-check 4/4 PASS — ADVISORY-ONLY, live`
 **source:** user 2026-07-24 ชอบเว็บ `bond-crisis-dashboard-v2.vercel.app` อยากให้ absorb ไอเดียเข้า stack เอง (กันเว็บหาย) + ใช้ shape strategy (ลด lot/หยุดเทรดตอนข่าวใหญ่). full spec = `_triage/ORDER200_MRIS_MACRO_EXTENSION_SPEC.md`.
 **ทำแล้ว (Phase A, additive ทั้งหมด — ไม่แตะ path RI จริง):**
 - `scripts/mris/mris_macro_feeder.ps1` (Sonnet) → `barometer_snapshot_macro.csv`: 6 แกนใหม่ US2Y/WTI/SP500/MOVE (Yahoo IWR) + HY_OAS/YCURVE (FRED via **curl.exe** — IWR timeout จาก TLS proxy). 6/6 OK.
