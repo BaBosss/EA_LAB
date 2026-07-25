@@ -47,6 +47,6 @@
     "label_th": { "active": "ทำงาน", "forming": "กำลังก่อตัว", "dormant": "สงบ", "unknown": "ไม่มีข้อมูล" },
     "label_emoji": { "active": "🔴", "forming": "🟠", "dormant": "🟢", "unknown": "⚪" },
     "driver_prefix": "ตัวขับหลัก",
-    "note": "คะแนน 0-100 จาก barometer ที่อธิบายได้ - เป็นชั้นเฝ้าระวัง ไม่ auto-trade และยังไม่ผ่าน backtest (ORDER-200)"
+    "note": "คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)"
   }
 }
