@@ -137,6 +137,8 @@ Claude เขียน order ลง AGENT_TASKBOARD (มี: งาน · คำ
   ทุกข้อ (เช่น "Y ต่อเมื่อ: มี entry indicator จริง AND ไม่ใช่ grid/martingale เป็นแกน AND มี SL")
   — ห้ามเขียนเกณฑ์แบบให้ agent ใช้วิจารณญาณ ("น่าสนใจ", "มี edge") เพราะจะได้ผลหลวมเสมอ
 - ไม่มี order OPEN เหลือ + Claude ไม่อยู่ → **หยุด อย่าคิดงานใหม่เอง** (บันทึกข้อเสนอเป็น comment ใน taskboard ได้)
+  — ข้อยกเว้นเดียว: หยิบ cell ถัดไปจาก **`ORDER-GEN-STANDING`** ได้ เพราะ matrix นั้น Claude เขียนไว้ล่วงหน้าแล้ว
+  (worker ไม่ได้คิดงานเอง) · matrix หมด = `BLOCKED(matrix หมด)` แล้วหยุดจริง → `docs/QUOTA_FALLBACK_PLAYBOOK.md` §3
 
 ## 5. เมื่อไหร่ใช้ตัวไหน (มุมมอง user) — ปรับใหม่ post-Fable 2026-07-04
 
@@ -199,6 +201,24 @@ oc-btest ไว้เฉพาะตอน ZCode ไม่ว่าง + ให�
 - **oc-btest** (batch) = model ถูกสุด + งานส่วนใหญ่โยนไป ZCode/qwen แทน
 - **ห้ามรัน Codex Desktop/CLI + OpenClaw งานหนักพร้อมกัน** (แชร์ ChatGPT OAuth ก้อนเดียว = หมดเร็วเป็น 2 เท่า)
 - ลำดับความคุ้ม batch: **qwen → ZCode(GLM) → oc-btest(ถูกสุด) → [ห้าม] Codex/oc-dev บน batch**
+
+### 5.2 เลน oc-qwen + โหมด quota-fallback (user directive 2026-07-25) — ฉบับเต็ม: `docs/QUOTA_FALLBACK_PLAYBOOK.md`
+
+**ปัญหาที่แก้:** เตรียม order ไว้ N ใบ แล้วรันหมด = เครื่องว่างที่ N. ทางแก้ = order ต้องเป็น **ต้นไม้ทางแยก**
+ไม่ใช่รายการงาน + มี **generator order** ท้ายคิวถาวร + มีช่องให้ user เคาะทางแยกจากมือถือ.
+
+- **oc-qwen = agent OpenClaw ตัวใหม่ที่รันบน qwen API key (คนละ quota กับ ChatGPT OAuth)** → overhead ของ
+  OpenClaw layer (oc-mgr/Telegram/heartbeat) ไม่แตะ ChatGPT quota อีกต่อไป ⇒ ข้อสรุปเดิมใน §5.1
+  ("OpenClaw ไม่คุ้มเพราะ overhead กิน quota ก้อนเดียวกัน") **ใช้กับ oc-dev/oc-btest เหมือนเดิม แต่ไม่ใช้กับ oc-qwen**
+  ⇒ **oc-qwen = default ของงาน batch ตอน seat ไม่อยู่ · สั่งผ่าน Telegram ได้ ไม่ต้องแตะ powershell/cmd**
+- **order ที่จ่ายให้ lane นี้ต้องเป็น CONDITIONAL ORDER** (มี `TREE:` ครบทุก branch, ปลายทุกกิ่งเป็น
+  STEP ถัดไป / STOP / BLOCKED) — order ที่ไม่มี TREE = worker ห้ามรับ. template = header `AGENT_TASKBOARD.md`
+- **เส้นแดง (ต่อให้ user สั่งผ่าน Telegram ก็ห้าม):** ❌ เขียน verdict ทุกรูปแบบ ❌ แตะ EA_SCORECARD /
+  EA_MASTER_INDEX / EDGE_CATALOG / PROJECT_STATE / VISION / CLAUDE.md / AGENTS.md / B1_DATASET.csv
+  ❌ แตะ `.mq5` หรือ `ea_template\core\` ❌ แตะ `_vps_deploy` หรือ .set ของ EA ที่ demo อยู่
+  ❌ ตีความผลนอก branch — เขียนได้ไฟล์เดียว = แถว order ที่ตัว claim · commit tag `[oc-qwen]`
+- **ชั่วโมงสุดท้ายของ Claude ก่อนโควตาหมด ต้องจบด้วย:** (1) ตัดสิน DONE ค้างครบ (2) conditional order ใหม่ ≥2 ใบ
+  (3) เติม matrix `ORDER-GEN-STANDING` ให้เหลือ ≥10 cell — **ไม่ใช่** ไปนั่งรัน backtest เอง
 
 ## 6. รอบบำรุงรักษาระบบ (adopt จาก `docs/PORTABLE_AI_OS.md` 2026-07-06 — Claude เป็นคนทำ)
 

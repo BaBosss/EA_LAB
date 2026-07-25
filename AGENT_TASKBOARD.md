@@ -11,9 +11,53 @@
 > - `bars:` pass = X · dead = Y · กลาง(WATCH/build-on) = Z   ← เลขตัดสินที่ล็อกก่อนเห็นผล
 > - `flat-lot probe:` done / N-A(single-order) / pending   ← ถ้ามี escalation ต้อง done ก่อนตัดสิน STRUCTURAL
 >
+> 🌳 **CONDITIONAL-ORDER TEMPLATE (บังคับสำหรับทุก order ที่จ่ายให้ lane ตอน Claude ไม่อยู่ — oc-qwen/qwen/ZCode ·
+> user directive 2026-07-25 · ฉบับเต็ม + เหตุผล → `docs/QUOTA_FALLBACK_PLAYBOOK.md`):** order ที่ไม่มีบล็อก
+> `TREE:` = **worker ห้ามรับ** (มันจะจบที่ STEP 1 แล้วเครื่องว่าง ซึ่งคือปัญหาที่ template นี้แก้)
+> ```
+> ## ORDER-xxx — <ชื่อ> — `OPEN` · ทำได้: <agents> · 👉 แนะ: <default>
+> **bars:** pass = X · dead = Y · กลาง = Z          **flat-lot probe:** done / N-A / pending
+> **STEP 1:** <คำสั่งรันที่ copy ไปวางได้ตรงๆ — EA/symbol/TF/window/path ครบ>
+> **TREE:** PF ≥ pass → STEP 2A <สเปกครบ> · pass > PF ≥ กลาง → STEP 2B <สเปกครบ> ·
+>           PF < dead → STOP lane นี้ + ไป order ถัดไป (ห้ามสรุปว่า "ตาย" — verdict = Claude) ·
+>           ไม่เข้า branch ไหน / รันพลาด 2 ครั้ง → `BLOCKED(<คำถาม + ตัวเลือก A/B>)` แล้วแจ้ง user
+> **ห้าม:** verdict · แตะ scorecard/MASTER_INDEX/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET ·
+>          แตะ .mq5 หรือ ea_template\core\ · แตะ _vps_deploy/.set ของ EA ที่ demo อยู่ · Model-2 ·
+>          ตีความผลนอก branch · เปลี่ยนค่าที่ STEP ไม่ได้ระบุ
+> ```
+> ทุก branch ต้องรันได้ทันทีโดยไม่ต้องคิด ("SL {2.5,3.0,3.5} step 0.5" = ใช่ · "ลองปรับดู" = ไม่ใช่) ·
+> ปลายทุกกิ่งต้องเป็น **STEP ถัดไป / STOP / BLOCKED** เท่านั้น ห้ามมีปลายเปิด · ลึก 2-3 ชั้นกำลังดี
+>
 > 🏁 **track merge EA_CORE → Boss V2: ปิดแล้ว (เปิด+จบ 2026-07-06)** — อะไหล่เข้าแม่พิมพ์ครบ
 > (pyramid 93 · acct-DD gate · Persist · tests\) + EA_Project = read-only archive · บันทึกเต็ม →
 > `AGENT_TASKBOARD_MERGE.md` (เหลือ MERGE-07 Entry_ST03 = HOLD ถึง judge — เงื่อนไขอยู่ในบอร์ดนั้น)
+
+---
+
+## ORDER-GEN-STANDING — generator: กันคิวว่างตอน Claude ไม่อยู่ — `OPEN ถาวร (ไม่มีวัน DONE)` · ทำได้: oc-qwen · qwen · ZCode · 👉 แนะ: **oc-qwen**
+
+> ⚠️ **หยิบ order นี้ได้ต่อเมื่อไม่มี order OPEN อื่นที่ทำได้เหลือแล้วเท่านั้น** — มันคือพื้นรองคิว ไม่ใช่งานหลัก ·
+> เหตุผล + วงจรเต็ม → `docs/QUOTA_FALLBACK_PLAYBOOK.md` §3 · matrix ข้างล่าง **Claude เป็นคนเติมเท่านั้น**
+> (worker เติม cell เอง = ผิดกฎ `AGENTS.md` §4 "อย่าคิดงานใหม่เอง")
+
+**วิธีทำ (worker):** หยิบ cell บนสุดที่ช่อง `ผล` ยังว่าง → รันด้วย RUN TEMPLATE ข้างล่าง → append ผลดิบทั้งก้อน
+ใต้ order นี้ → เติมช่อง `ผล` (PF/trades/DD + วันที่ + ใครรัน) → commit `[oc-qwen]` → cell ถัดไป
+
+**bars (ใช้ทุก cell):** pass ≥ **1.2** · กลาง(WATCH) **1.0–1.2** · dead < **1.0** — **เป็นแค่ป้ายจัดกอง ไม่ใช่ verdict**
+**flat-lot probe:** ต่อ cell — N-A ถ้า EA เป็น single-order · ถ้ามี escalation ต้องรัน flat-lot reference ควบทุก cell
+
+**RUN TEMPLATE:** `<Claude เติม: คำสั่งรัน 1 บรรทัดที่ copy ไปวางได้ + path report + วิธี parse>`
+
+| # | EA | symbol | TF | window | lever/หมายเหตุ | ผล |
+|---|---|---|---|---|---|---|
+| — | _(ว่าง — Claude ต้องเติม ≥10 cell ก่อนหมดโควตาทุกรอบ)_ | | | | | |
+
+**ผลของ order นี้ = screening ดิบเท่านั้น** — ห้ามใช้เป็นหลักฐาน promote/kill อะไรทั้งสิ้นจนกว่า Claude review
+(ยังไม่ผ่าน ladder · ไม่ใช่ plateau · n อาจไม่พอ)
+
+**ห้าม:** เขียน verdict · เติม/แก้ cell ในตาราง · เปลี่ยนค่าที่ไม่ได้ระบุใน RUN TEMPLATE · แตะไฟล์อื่นนอกจาก
+แถวนี้ใน taskboard · รายงาน Model-2 · เอา cell ที่ dead ไป optimize ต่อเอง (นั่นคืองาน Claude)
+**matrix หมด:** mark `BLOCKED(matrix หมด — รอ Claude เติม)` + แจ้ง user ทาง Telegram แล้ว **หยุดจริง**
 
 ---
 
