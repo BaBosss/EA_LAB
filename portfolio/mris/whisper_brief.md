@@ -2,22 +2,22 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-24 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.6) | Risk Index: 0.231
+**2026-07-25 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.308
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
-- WARN: LOADED_FUSE: USDJPY 163.85 at extreme - crowded short, snap-back risk high
+- WARN: LOADED_FUSE: USDJPY 163.79 at extreme - crowded short, snap-back risk high
 
 ## barometer readout
 | instrument | signal | อ่านว่า |
 |---|---|---|
-| AUDJPY | 1 | above SMA200, 5d 0.525% -> risk-on intact |
-| USDJPY | 0.5 | extreme weak (163.851 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | 0 | VIX 18.7 mid-range -> neutral |
+| AUDJPY | 1 | above SMA200, 5d 0.849% -> risk-on intact |
+| USDJPY | 0.5 | extreme weak (163.791 >= 158) -> risk-on now BUT crowded/loaded |
+| VIX | 0 | VIX 18.58 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
-| XAUUSD | -1 | gold +1.561% WITH VIX +11.775% (>= 10%) -> risk-off confirmation |
+| XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |
-| US10Y_JP10Y | 0 | carry spread ~flat (13.4bps/5d) -> neutral |
-| COPPER | 1 | above SMA200, 5d 0.365% -> risk-on intact |
+| US10Y_JP10Y | 0 | carry spread ~flat (13.8bps/5d) -> neutral |
+| COPPER | 1 | above SMA200, 5d 1.921% -> risk-on intact |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม
@@ -49,6 +49,15 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 
 ## สิ่งที่ควรทำวันนี้
 ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)
+
+## โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)
+| model | score | label | ตัวขับหลัก |
+|---|---|---|---|
+| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 83.5/100 | 🔴 ทำงาน | WTI 5d momentum (%) = 9.674% |
+| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 45.1/100 | 🟠 กำลังก่อตัว | US 10Y 5d change (bps) = 13.8bps |
+| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 5.0/100 | 🟢 สงบ | HY spread 5d widening (%) = 2.214% |
+
+_คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)_
 
 ---
 _ระบบเสนอ 'เฝ้าระวัง/ทบทวน' ไม่ใช่คำแนะนำการลงทุน และไม่ auto-trade — คนตัดสินใจคือคุณ. tripwire ทุกเส้นคุณเป็นคนเคาะเอง._
