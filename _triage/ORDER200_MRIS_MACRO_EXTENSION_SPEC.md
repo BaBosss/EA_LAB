@@ -137,6 +137,35 @@ a genuinely new flag type = still alerts.
 - US2Y (Yahoo `2YY=F`) history only 2021+, and neither US2Y nor YCURVE is used by the 3 current
   model formulas (they are fetched for brief display + future models).
 
+## PHASE D — PROPOSED fold into the real-money path (NOT built; needs user ratify)
+
+The user's original ask was "reduce lot on big macro events / pause trading". MacroGate already
+has the machinery (`MacroGate_Core.mqh`: reads a state string from the exported CSV, sets a
+per-magic lot-multiplier GlobalVariable, can block new orders). So the only missing piece is a
+**policy** mapping crisis scores → state. Proposed design, deliberately the most conservative
+shape available:
+
+**Iron rule: the crisis layer may only ever REDUCE risk, never increase it — one notch, never up.**
+It can downgrade the exported state (RISK_ON→NEUTRAL→RISK_OFF) but can NEVER upgrade one. A false
+positive then costs some missed profit; it can never cause overexposure. Given Phase-C specificity
+(0/125 false-fire days in the tested non-credit episodes) that trade is acceptable.
+
+| condition | proposed effect on the EXPORTED state | rationale |
+|---|---|---|
+| any crisis model `active` (≥60) | downgrade one notch (max once) | a confirmed macro shock |
+| CREDIT_STRESS `active` | downgrade one notch **and** flag carry legs | credit is the fastest-contagion axis |
+| models only `forming` (40-60) | **no change** — brief/alert only | avoid throttling on noise |
+| all `dormant` | no change | 8-barometer RI stands alone |
+
+Not proposed: letting a crisis score raise the state, block-new on `forming`, or any auto-close
+(user doctrine: reduce lot, never cut).
+
+**Gate before this is built:** (1) Codex blind audit of the Phase-A/C code — LAUNCHED 2026-07-25;
+(2) user ratifies the policy table above; (3) implement behind a **default-OFF** switch so the
+exported CSV is byte-identical until explicitly enabled; (4) re-run the backtest replay with the
+fold ON to see how many days it would have throttled in each episode (the real cost estimate)
+BEFORE the switch is flipped on any live account.
+
 ## NOT DONE (future, gated)
 - Codex blind audit — NOT required now (layer is advisory, does not touch exported RI).
   REQUIRED before any fold into the MacroGate real-money path.
