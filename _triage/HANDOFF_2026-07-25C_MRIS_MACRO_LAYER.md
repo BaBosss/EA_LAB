@@ -1,6 +1,10 @@
 # HANDOFF 2026-07-25C — MRIS macro layer: crisis models, alert lane, fold (switch OFF)
 
-> Session owner: Fable-seat. Commits `6e806b85` → `a721efd1` (13 ก้อน).
+> Session owner: Fable-seat. **13 commits ที่ขึ้นต้น `[claude]`** ระหว่าง `6e806b85` → `a721efd1`
+> (ช่วงนั้นมี 33 commit รวมของ session อื่นที่แทรก — หาด้วย `git log --grep='\[claude\]' 6e806b85^..`).
+> ⚠️ **commit ปิดงาน (PROJECT_STATE + taskboard + handoff นี้) ไม่ได้อยู่ในช่วงนั้น** — มันถูก index race
+> กวาดเข้า commit ของ session คู่ขนาน **`0c967e9a`** (ตรวจแล้วเนื้อหาลงครบทั้ง 3 ไฟล์, attribution ปนกัน
+> เท่านั้น). แถว B1 ของ ORDER-200/203 ตามมาทีหลังอีกก้อน.
 > Order rows: **ORDER-200** (macro extension, REVIEWED) · **ORDER-203** (core pin defect — fix ลงโดย
 > session คู่ขนาน `265de0e3`, ผม verify แล้ว).
 > ⚠️ session คู่ขนาน active วันเดียวกัน (genetic policy `b9ba8c84`, ORDER-202 holdout leak,

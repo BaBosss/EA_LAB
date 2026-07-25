@@ -11,6 +11,23 @@
 > - `bars:` pass = X · dead = Y · กลาง(WATCH/build-on) = Z   ← เลขตัดสินที่ล็อกก่อนเห็นผล
 > - `flat-lot probe:` done / N-A(single-order) / pending   ← ถ้ามี escalation ต้อง done ก่อนตัดสิน STRUCTURAL
 >
+> 🌳 **CONDITIONAL-ORDER TEMPLATE (บังคับสำหรับทุก order ที่จ่ายให้ lane ตอน Claude ไม่อยู่ — oc-qwen/qwen/ZCode ·
+> user directive 2026-07-25 · ฉบับเต็ม + เหตุผล → `docs/QUOTA_FALLBACK_PLAYBOOK.md`):** order ที่ไม่มีบล็อก
+> `TREE:` = **worker ห้ามรับ** (มันจะจบที่ STEP 1 แล้วเครื่องว่าง ซึ่งคือปัญหาที่ template นี้แก้)
+> ```
+> ## ORDER-xxx — <ชื่อ> — `OPEN` · ทำได้: <agents> · 👉 แนะ: <default>
+> **bars:** pass = X · dead = Y · กลาง = Z          **flat-lot probe:** done / N-A / pending
+> **STEP 1:** <คำสั่งรันที่ copy ไปวางได้ตรงๆ — EA/symbol/TF/window/path ครบ>
+> **TREE:** PF ≥ pass → STEP 2A <สเปกครบ> · pass > PF ≥ กลาง → STEP 2B <สเปกครบ> ·
+>           PF < dead → STOP lane นี้ + ไป order ถัดไป (ห้ามสรุปว่า "ตาย" — verdict = Claude) ·
+>           ไม่เข้า branch ไหน / รันพลาด 2 ครั้ง → `BLOCKED(<คำถาม + ตัวเลือก A/B>)` แล้วแจ้ง user
+> **ห้าม:** verdict · แตะ scorecard/MASTER_INDEX/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET ·
+>          แตะ .mq5 หรือ ea_template\core\ · แตะ _vps_deploy/.set ของ EA ที่ demo อยู่ · Model-2 ·
+>          ตีความผลนอก branch · เปลี่ยนค่าที่ STEP ไม่ได้ระบุ
+> ```
+> ทุก branch ต้องรันได้ทันทีโดยไม่ต้องคิด ("SL {2.5,3.0,3.5} step 0.5" = ใช่ · "ลองปรับดู" = ไม่ใช่) ·
+> ปลายทุกกิ่งต้องเป็น **STEP ถัดไป / STOP / BLOCKED** เท่านั้น ห้ามมีปลายเปิด · ลึก 2-3 ชั้นกำลังดี
+>
 > 🏁 **track merge EA_CORE → Boss V2: ปิดแล้ว (เปิด+จบ 2026-07-06)** — อะไหล่เข้าแม่พิมพ์ครบ
 > (pyramid 93 · acct-DD gate · Persist · tests\) + EA_Project = read-only archive · บันทึกเต็ม →
 > `AGENT_TASKBOARD_MERGE.md` (เหลือ MERGE-07 Entry_ST03 = HOLD ถึง judge — เงื่อนไขอยู่ในบอร์ดนั้น)
@@ -496,7 +513,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "<EXPERT>" -Symbol <SYM> 
   - รันล้ม 2 ครั้งติดบน cell เดียว → เขียน `FAIL` ในช่อง PF → cell ถัดไป (ไม่ต้อง BLOCKED — ใบนี้ห้ามหยุดเพราะ cell เดียว)
   - **ตารางเต็มหมดทุกช่อง** → `BLOCKED(matrix หมด — รอ lead เติม cell ใหม่)` + แจ้ง user ทาง Telegram แล้วหยุด
 
-**ห้าม:** เขียน verdict หรือคำว่า pass/dead/ตาย · เรียง cell ใหม่ · เพิ่ม cell เอง · ตีความ PF · ทุกข้อห้ามของ ORDER-205
+**ห้าม:** เขียน verdict หรือคำว่า pass/dead/ตาย · เรียง cell ใหม่ · เพิ่ม cell เอง (ผิดกฎ `AGENTS.md` §4 "อย่าคิดงานใหม่เอง" — matrix มี Claude เป็นเจ้าของ) · ตีความ PF · **เอา cell ที่ได้ PF ต่ำไป optimize ต่อเอง** (นั่นคืองาน lead) · ทุกข้อห้ามของ ORDER-205
 
 ---
 
