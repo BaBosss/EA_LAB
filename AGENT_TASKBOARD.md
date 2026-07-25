@@ -135,6 +135,39 @@ reverify ของ base ตรงกับตัวเลขเดิมใน�
 **หมายเหตุ verdict:** MAIN ceiling (1.50 บน base) ไม่เคยตกต่ำกว่า 1.0 เลยสักรอบ — เข้าเกณฑ์ VERDICT GATE "BWD-fail = ไม่ auto-kill" (bar table) ไม่ใช่ "DEAD-OPTIMIZED" (ต้องตกทั้งคู่ window) → **ยังคง PARKED-VERIFY(user) เหมือนเดิม แค่ปิด fork (a)-ADX ไปแล้ว** เหลือ 2 ทางจาก handoff เดิม: **demo-isolate zt40 (991075) เพื่อเก็บ forward data จริง** (MAIN edge 1.50 ยังยืนอยู่ + ไม่ซ้ำ cohort corr −0.10 ที่พิสูจน์แล้ว) **หรือ shelve ถาวร**. เลือกไม่ได้เอง — attach เข้า demo account เป็น action ที่ต้อง user ทำเอง (เหมือน ORDER-190)
 
 **ทำได้:** Claude (backtest + verdict) — attach demo / shelve = user เคาะ
+
+## ORDER-201 — [lever] HANDOFF_ST03_OPTIMIZE continuation: standalone spacing lever (`InpNearbyPip`) — `REVIEWED(Claude 2026-07-25): BWD-fail on all 3 variants — spacing does NOT rescue, PARKED-VERIFY(user) stays, lever #1/3 of the handoff closed`
+
+**source:** `_triage/HANDOFF_ST03_OPTIMIZE_2026-07-19.md` lever #1 ("Spacing UNSWEPT... this is the cleanest open lever") — user 2026-07-24 เคาะ "ให้ผมเดิน optimize แทน" (แทนที่จะรอ user ทำเอง)
+
+**scope gotcha ที่เจอก่อนเริ่ม:** worktree เดิมที่เก็บ tuned artifacts (`great-mendeleev-a35c44`, 30+ sets) **ถูกลบไปแล้ว** — เหลือแค่ `ST03_optimized_v2.set`/`v1.set` ใน main repo. และมี `_mt5_auto/ab_sets/st03_spacing_probe/` (SP_fixed/atr10/atr20) เตรียมไว้จาก 2026-07-20 แต่**เป็นคนละ EA** — .set นั้นใช้ param name แบบ chassis (`_15_MacdFast`/`StackMode`/`_9_MaxLevels`, Expert=`Boss_15_ST03`) ไม่ใช่ standalone (`InpMacdFast`/`InpNearbyPip`, Expert=`EA_RUNNER_ST03`) ที่ handoff นี้พูดถึงจริง — รันไปแล้วด้วย (ผลอยู่ `ST03SP_*_MAIN.htm`: 0.90/1.03/0.94) แต่นั่นคือ chassis-generic-MM ที่ ORDER-135 ตัดสินตายไปแล้ว ไม่ใช่คำตอบที่ handoff ต้องการ — **ต้องรันใหม่บน `EA_RUNNER_ST03.ex5` ตัวจริง**
+
+**standalone spacing axis ที่มีจริง:** ไม่มี input แบบ fixed/ATR/progressive toggle ในไบนารีที่คอมไพล์ไว้ (ไม่มี source .mq5 เหลือให้ตรวจ มีแค่ .ex5) — spacing ที่ sweep ได้จริงคือค่า `InpNearbyPip` (fixed pips ระหว่าง leg) ตรงๆ → sweep 30/50(locked)/80 รอบ locked winner
+
+**bars (ตาม repo standard, ครั้งแรกที่ v2 โดนวัดกับ window นี้จริง — .set เดิมมีแค่ IS/OOS/CRISIS ปี 2024/2022 สั้นๆ ไม่ใช่ MAIN/BWD เต็ม):** pass = MAIN≥1.2 AND BWD≥1.0 · dead/กลาง = อย่างใดอย่างหนึ่งไม่ผ่าน **flat-lot probe:** N-A (LotSizerMode=0 flat throughout)
+
+**ผลจริง (Model 1 ตามที่ handoff สั่ง — "3 Model-1 runs would close it", GBPUSD H1, leverage 1:100 asserted ทุก run, .set ครบทุก input กัน input-cache bug):**
+| InpNearbyPip | MAIN 2023-2025 PF | MAIN n | BWD 2020-2022 PF | BWD n |
+|---|---|---|---|---|
+| 30 (tighter) | 1.20 | 1788 | 0.77 | 1753 |
+| **50 (locked v2, baseline)** | **1.33** | 1766 | **0.75** | 1702 |
+| 80 (wider) | 1.21 | 1680 | 0.82 | 1661 |
+
+**สรุป: ไม่มี variant ไหนผ่านทั้งคู่ window** — BWD ค้างอยู่แถบ 0.75-0.82 ไม่ขยับพอจะข้าม 1.0 ไม่ว่าจะบีบหรือขยาย spacing (spread แค่ 0.07 ข้าม 3 ค่า = lever นี้แทบไม่มีผลต่อ BWD เลย) MAIN ก็ไม่ได้ดีขึ้นจากการขยับ (50 ยังชนะทั้งคู่ variant) → **locked config (near=50) ยังเป็นตัวที่ดีที่สุดในสามตัว ไม่มีเหตุผลเปลี่ยน**
+
+**ปิด lever #1/3 ของ handoff.** เหลือ lever #2 (per-symbol TP × exit-mode) และ #3 (LOT_Repeat depth × vol-gate interaction) ที่ยังไม่แตะ (ไม่ได้ทำรอบนี้ — แต่ละ MAIN+BWD pair ใช้เวลา ~30-90 นาที/รัน Model-1 บน GBPUSD H1 3ปี ต่อ session นี้ที่ยาวมากแล้ว ตัดจบที่ lever ที่ชัดเจนสุดก่อน)
+
+**หมายเหตุ verdict:** MAIN ไม่เคยตกต่ำกว่า 1.2 (1.20-1.33 ทั้ง 3 variant) — เข้าเกณฑ์ "BWD-fail = ไม่ auto-kill" ไม่ใช่ DEAD-OPTIMIZED (ต้องตกทั้งคู่) → **ยังคง PARKED-VERIFY(user) เหมือนเดิม** ไม่ได้ re-graduate เป็น CANDIDATE (ต้องผ่านทั้งคู่ window) และไม่ตาย (MAIN ยืนได้เสมอ)
+
+**gotcha ระหว่างรัน (สำหรับ session ถัดไป):** GBPUSD H1 Model 4 (real-tick) รายงาน **"0 ticks, 0 bars generated"** ทั้งที่ Model 2/1 รันได้ปกติ (tick history ไม่ครบสำหรับคู่นี้ในช่วงนี้บน terminal นี้ — สลับไป Model 1 ตามที่ handoff สั่งไว้แต่แรกก็แก้ปัญหาได้พอดี) · เจอ 0-trade transient artifact 1 ครั้ง (retry เปล่าๆ ก็หาย, "leverage 1:0 not recorded" = สัญญาณว่า terminal เพิ่งเปิดแล้ว launch ไม่ทันสมบูรณ์ ไม่ใช่ผลจริงของ EA) · BWD window ใช้เวลานานกว่า MAIN มาก (EA เทรดถี่ ~1700+ ไม้ต่อ window, OCO logic แพง) ต้องขยาย `-TimeoutSec` เป็น 3600 ไม่ใช่ default 1800
+
+**ทำได้:** Claude (backtest + verdict) — ต่อ lever #2/#3 = order แยก เมื่อ user พร้อมให้ priority
+
+<!-- taskboard-repair 2026-07-25 (Claude): the "## ORDER-190" header line below was found MISSING during a
+     concurrent-session edit collision (shared worktree, see memory shared-worktree-concurrent-writers) --
+     its body survived, orphaned under ORDER-199 above. Restoring the header with its actual final status. -->
+
+## ORDER-190 — [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) — `DONE(Claude/Fable 2026-07-24) — PENDING_ATTACH(user), demo-scaled .set built, see POLICY DECIDED note below`
 **source:** Codex ข้อ 2. **ยืนยันว่าเป็นเรื่องจริง แต่ขอแยกความเสี่ยงออกเป็น 2 ชั้น ไม่รวมเป็นก้อนเดียวแบบที่ review เสนอ:**
 - ชั้น safety (= "บอกผู้ใช้ว่าไม่มีผล") → **ทำไปแล้วใน ORDER-187**: `MM_ConfigValid` พิมพ์ `[INIT] WARN` เมื่อตั้ง FirstLotMode≠41 บน build 16
 - ชั้น lever (= "ทำให้มันมีผลจริง") → **order นี้** เพราะไปแตะ lot law ของ EA ที่มี baseline pin อยู่ (Boss_16 cage 8/8) = ต้องเดิน funnel ปกติ ห้ามแอบรวมใน patch safety

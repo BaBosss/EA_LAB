@@ -31,7 +31,8 @@ param(
   [string]$DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355",
   [int]$TimeoutSec = 7200,
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
-  [switch]$Force
+  [switch]$Force,
+  [switch]$SkipOptimizeGuard   # override: proceed even if optimize_guard.ps1 refuses a swept dimension
 )
 $ErrorActionPreference = "Stop"
 # guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
@@ -72,6 +73,30 @@ $lines = @(
 ) + $inputs
 $ini = "$auto\ini\$ReportName.ini"
 [IO.File]::WriteAllLines($ini, $lines)
+
+# ORDER-198 follow-up (user 2026-07-24: "บังคับแบบ warn + override ได้"): pre-flight every
+# optimize pass through optimize_guard.ps1 (ORDER-192b) BEFORE burning tester wall-clock on
+# a sweep that provably can't do anything (dead/overridden/inactive dimension) or that
+# optimizes away a safety cap (RC_*/ProtectLevel/_9_MaxLevels). Default = blocks on REFUSE;
+# -SkipOptimizeGuard proceeds anyway (still prints the REFUSE lines via -WarnOnly, never silent).
+$guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
+if (Test-Path $guardScript) {
+  if ($SkipOptimizeGuard) {
+    Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
+    & $guardScript -IniPath $ini -WarnOnly | Write-Output
+  }
+  else {
+    & $guardScript -IniPath $ini | Write-Output
+    if ($LASTEXITCODE -ne 0) {
+      Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
+      Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
+      exit 3
+    }
+  }
+}
+else {
+  Write-Output "optimize_guard: scripts\optimize_guard.ps1 not found, skipping pre-flight check"
+}
 
 Write-Output "OPTIMIZE: $Expert | $Symbol $Period | $FromDate..$ToDate | mode=$Optimization"
 $mtArgs = @("/config:`"$ini`""); if ($Portable) { $mtArgs += "/portable" }
