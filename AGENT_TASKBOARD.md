@@ -32,6 +32,17 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 
+## ORDER-204 — [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid + fan รองรับ — `OPEN`
+**lane:** qwen/ZCode (mechanical grep+map ล้วน ไม่มี judgment) · **source:** genetic policy ratified 2026-07-25 (`b9ba8c84`, canonical = skill `backtest-optimize-rigor` Step 2). ก่อนนั้น `.ini` 66 ไฟล์รัน `Optimization=2` ด้วย `OptimizationCriterion=0` (balance max = เข็มทิศชี้ spike) + `Leverage=N` ที่เป็น no-op เงียบ (รันจริงที่ server default 1:2000). **คำถามเดียวที่ต้องตอบ: มี verdict ไหนที่ตัดสินจากผล genetic โดยไม่มี fine-grid + sensitivity-fan ตามหลัง**
+**task (mechanical, numeric acceptance):**
+1. list `.ini` ทั้ง 66 ไฟล์ใน `_mt5_auto/ini/` ที่มี `Optimization=2` + report name ของแต่ละไฟล์
+2. ต่อไฟล์ เช็คว่ามีหลักฐาน stage ถัดไปไหม: `.ini` fine/complete หรือ labeled grid sweep ที่ครอบ Expert+Symbol เดียวกันภายใน 14 วันหลังจากนั้น **และ** sensitivity-fan run
+3. grep `EA_SCORECARD_AND_REGISTRY.md`, `PROJECT_STATE.md`, `docs/memory_control/B1_DATASET.csv` หา verdict ที่อ้าง report name / Expert+Symbol นั้น
+4. output ตารางเดียว: `ini | Expert | Symbol | fine-stage-found (Y/N) | fan-found (Y/N) | verdict-citing-it (verbatim + file:line) | flag` — `flag = DEBT` เมื่อมี verdict อ้าง genetic run ที่ fine-stage-found = N
+**acceptance:** ครบ 66 แถว · ทุกแถว DEBT มี citation `file:line` · ไม่แก้ข้อความ verdict ใด ๆ (รายงานเท่านั้น — lead ตัดสินว่าอะไรต้อง re-verify)
+**calibration (ตรวจมือแล้ว = ไม่ใช่หนี้):** `OPT_MDX_GBP_coarse/_fine/_fine2` = funnel coarse→fine ถูกต้อง
+**ห้าม:** รัน backtest/optimize ใหม่ · แก้ scorecard/verdict · แตะไฟล์นอกรายงานตัวเอง · commit ต้อง path-limited เฉพาะไฟล์รายงาน (เครื่องนี้หลาย session แชร์ working tree)
+
 ## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `REVIEWED(Claude/Fable 2026-07-25): CONFIRMED — backtest-validity bug, live วันนี้ไม่กระทบ, รอ user เคาะวิธีแก้`
 **source:** ORDER-200 Phase D cost-estimate เจอของแปลก — core ขึ้น RISK_OFF 48/51 วันในกลางปี 2019 (control window ที่ควรสงบ) → user สั่งสอบ ("ทำข้อ 1").
 **สมมติฐานแรกของผมผิด:** ไม่ใช่ "จูน threshold ไวเกิน" แต่เป็น **config anachronism**.
