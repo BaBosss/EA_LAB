@@ -173,11 +173,48 @@ positive then costs some missed profit; it can never cause overexposure. Given P
 Not proposed: letting a crisis score raise the state, block-new on `forming`, or any auto-close
 (user doctrine: reduce lot, never cut).
 
-**Gate before this is built:** (1) Codex blind audit of the Phase-A/C code — LAUNCHED 2026-07-25;
-(2) user ratifies the policy table above; (3) implement behind a **default-OFF** switch so the
-exported CSV is byte-identical until explicitly enabled; (4) re-run the backtest replay with the
-fold ON to see how many days it would have throttled in each episode (the real cost estimate)
-BEFORE the switch is flipped on any live account.
+**Gate before this is built:** (1) Codex blind audit of the Phase-A/C code — first attempt was
+dispatched to a background Codex job whose result proved **unretrievable** from the main seat
+(registry lives in the forwarder's process; `status`→"No jobs recorded yet", `result <id>`→"No job
+found"). The highest-value item was therefore verified in-seat instead (C5 parity). A synchronous
+Codex audit is still owed before any live flip. (2) user ratifies the policy table — **RATIFIED
+2026-07-25**; (3) implement behind a **default-OFF** switch; (4) produce the real cost estimate
+BEFORE any live flip.
+
+---
+### PHASE D BUILT 2026-07-25 (switch DEFAULT OFF — nothing live has changed)
+
+`mris_export_regime.ps1` gained `-EnableCrisisFold` (off by default) + `mris_fold_costcheck.ps1`.
+Fold rules as ratified, plus two guards added during implementation:
+- **coverage ≥ 0.5 required** — a score computed from a fraction of its components must never
+  throttle live lots.
+- **fail-safe** — missing/unparseable `crisis_models_state.json` exports the core state unchanged.
+- **Proof the switch is inert when off:** exported CSV hash byte-identical before/after
+  (`2A7D4424…5E38`). With it on: `NEUTRAL -> RISK_OFF (INFLATION_OIL=83.5)` and the reason is
+  written into the CSV's flags column for audit.
+
+**COST ESTIMATE (`mris_fold_costcheck.ps1`) — "newly throttled" = days the fold engaged
+lot-reduce/block that the core layer alone would not have:**
+
+| window | days | newly throttled | read |
+|---|---|---|---|
+| calm_2017 (VIX ~10) | 67 | **0 (0%)** | does not cry wolf in a calm tape |
+| precovid_2019q4 | 62 | **0 (0%)** | same |
+| calm_2021h1 | 59 | 8 (13.6%) | oil-reopening surge — arguably a true early signal, not noise |
+| covid_2020 | 67 | **0 (0%)** | core already STRESS 50/67 — fold adds nothing **and loses nothing** (empirically confirms the "never manufacture STRESS" cap costs us zero) |
+| inflation_2022 | 106 | 27 (25.5%) | core said NEUTRAL 62 days; 2022 was genuinely hostile to risk |
+| yield_spike_2023 | 63 | 19 (30.2%) | core said NEUTRAL all 63 days — this is exactly the gap the user spotted vs the vercel site |
+
+**Honest reading:** the fold is ~free in calm tape and redundant in a full crisis (the core
+8-barometer layer already fires). Its entire value lands in the **mid-regime** stress the core
+misses — which is precisely the divergence that started this order.
+
+**⚠️ Finding about the CORE layer (not the new one):** the first cost run used `calm_2019` as the
+control and reported 0% — but only because the **core** layer already sat at RISK_OFF on **48/51
+days** of mid-2019, so the fold had nowhere to downgrade. A saturated control reads as "free" for
+the wrong reason. Re-run with 2017/2019Q4/2021H1 controls. Separately, core printing RISK_OFF ~94%
+of mid-2019 deserves its own look — that is the 8-barometer layer being trigger-happy, and it is
+NOT in this order's scope.
 
 ## NOT DONE (future, gated)
 - Codex blind audit — NOT required now (layer is advisory, does not touch exported RI).
