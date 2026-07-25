@@ -156,6 +156,18 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "MacdDiv_Naked" -Symbol G
 
 **ห้าม:** เขียน verdict · แตะ scorecard/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET · รายงานเลข Model 2 · รัน Model 4 · แตะ `_vps_deploy` · ตีความผลนอก branch · เปลี่ยนค่า input ที่ไม่ได้ระบุใน STEP · **แตะหน้าต่าง 2026 ทุกกรณี** (holdout ไหม้แล้ว)
 
+### ผลดิบ ORDER-205
+**lane-proof run (Opus-seat 2026-07-25 17:56)** — รันเองเพื่อพิสูจน์ว่าเลน 5c ใช้งานได้ก่อนส่งต่อ worker
+(ก่อนหน้านี้ 5c ไม่มี `MacdDiv_Naked.ex5` / `PivotBreakout_XAU.ex5` เลย — copy จาก lane1 `Experts\c091c\` เข้า `D:\Meta 5c\MQL5\Experts\` แล้ว)
+
+| symbol | TF | window | PF | trades | net | eqDD | report |
+|---|---|---|---|---|---|---|---|
+| GBPJPY | H4 | MAIN 2023.01-2025.12 | **0.83** | 254 | -121.68 | 1.74% | `MDX_GBPJPY_H4_MAIN.htm` |
+
+quality 100% · leverage assert 1:100 ผ่าน · traded through to end of window (idle tail 0 วัน)
+→ **TREE: MAIN < 1.0 → STOP symbol นี้** (ไม่ใช่ verdict — แค่ต่ำกว่าบาร์ที่ล็อกไว้ · lead ตัดสินทีหลัง)
+→ **เหลือให้ worker: USDJPY + EURJPY**
+
 ---
 
 ## ORDER-206 — [expand] PivotBreakout H4: 3 symbol ใหม่ (conditional) — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
