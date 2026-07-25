@@ -32,6 +32,22 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 
+## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `REVIEWED(Claude/Fable 2026-07-25): CONFIRMED — backtest-validity bug, live วันนี้ไม่กระทบ, รอ user เคาะวิธีแก้`
+**source:** ORDER-200 Phase D cost-estimate เจอของแปลก — core ขึ้น RISK_OFF 48/51 วันในกลางปี 2019 (control window ที่ควรสงบ) → user สั่งสอบ ("ทำข้อ 1").
+**สมมติฐานแรกของผมผิด:** ไม่ใช่ "จูน threshold ไวเกิน" แต่เป็น **config anachronism**.
+**หลักฐาน (วัดจริง ไม่ใช่เดา):**
+- `barometers.json` → `AUDJPY.user_pin = 110` เป็น **ราคาสัมบูรณ์ของปี 2026**. เช็ค history จริง: AUDJPY อยู่**ใต้ 110 มาตลอด 10 ปี** (2017-06=88 · 2019-06=**74.6** · 2022-06=93 · 2024-06=99.9 · 2025-12=104.7) เพิ่งข้ามขึ้นปี 2026 (ล่าสุด 114).
+- ผลคือเงื่อนไข `spot < pin` **เป็นจริงเสมอ**ในทุก backtest → branch `-2 "carry-unwind confirmed"` ทำงานแทน `-1 "below SMA200"` ทุกครั้งที่ AUDJPY อยู่ใต้ SMA200. AUDJPY weight=3 → **−2×3/13 = −0.46 เกินเส้น RISK_OFF (−0.25) ด้วยตัวมันเองตัวเดียว**.
+- attribution ปี 2019 (`-Detailed` ใหม่): **AUDJPY mean=−1.83 · weighted=−0.422 · ติดลบ 94.3% ของวัน** ขณะที่ **VIX = +0.47 (ตลาดสงบ)** — เกจวัดความกลัวบอกสงบ แต่ระบบบอก RISK_OFF 88% ของปี.
+- ปิด pin แล้ววัดซ้ำ (config สำเนา): **2019 risk-off 229/261 (88%) → 124/261 (48%)** · **2021 87/261 (33%) → 57/261 (22%)**.
+**ผลกระทบ (แยกให้ชัด):**
+- 🟢 **live วันนี้ไม่กระทบ** — AUDJPY 114 > pin 110 → branch นี้ไม่ทำงาน, signal จริงวันนี้ = +1 ตรงกับ `regime_state.json`. **ไม่ใช่เหตุฉุกเฉิน**.
+- 🔴 **backtest ทุกใบของ core layer ก่อนปี 2026 ใช้อ้างอิงไม่ได้** — รวมถึง concept-check เดิมของ ORDER-073 P3 ที่ใช้อ้างว่า "MRIS จับ covid/carry-unwind ได้" (AUDJPY กรีดร้อง −2 ตลอดช่วงนั้นอยู่แล้ว = ผ่านด้วยเหตุผลผิด).
+- 🟠 **cost estimate ของ ORDER-200 Phase D**: baseline "core" ของ window ก่อนปี 2026 ปนเปื้อน → นี่คือ**ต้นตอ**ของ artifact `calm_2019 = 0%` ที่บันทึกไว้แล้ว. เลข **crisis-model 7/7 ไม่กระทบ** (ไม่ได้ใช้ core classifier เลย — ใช้ US10Y/VIX/MOVE/WTI/SP500/HY/CREDITPX ของตัวเอง).
+**ทางแก้ที่เสนอ (ยังไม่ทำ — เป็น validated risk logic ต้องให้ user เคาะ):** เอกสาร `scripts/mris/README.md` เขียนเองว่า *"No hardcoded price levels in rules"* และ pin มีไว้ให้ **flag เตือนใกล้เส้น** ไม่ใช่เปลี่ยนน้ำหนักสัญญาณ → แก้ให้ pin คุมเฉพาะ `TRIPWIRE_NEAR` แล้วให้ signal ใช้ SMA200 ล้วน (หรือ `user_pin=null` ซึ่ง config รองรับอยู่แล้ว). **จังหวะนี้ปลอดภัยที่สุดที่จะแก้** เพราะ AUDJPY อยู่เหนือ pin → แก้แล้ว state วันนี้ไม่เปลี่ยน.
+**เครื่องมือที่เพิ่ม:** `mris_backtest_timeline.ps1 -Detailed` = ดัมพ์ signal ราย barometer + ตาราง attribution (คืนค่าจาก `Classify` เดิม ไม่ก๊อป logic ซ้ำ). **bug ที่ผมทำเองแล้วแก้:** พิมพ์ตารางก่อนหัวข้อ ทำให้อ่านสลับปี — รอบแรกผมสรุปผิดเพราะอันนี้ จับได้ตอนเลขขัดกันเอง (mean signal บอก RI≈−0.07 แต่ state บอก RISK_OFF 84%) แล้วไล่ดู CSV ดิบ.
+**ห้าม:** แก้ `barometers.json` โดยไม่ประกาศ + ไม่ re-run concept check ของ ORDER-073 ใหม่ · ถือว่า backtest core เก่าใช้ได้ต่อ.
+
 ## ORDER-200 — [macro/tooling] MRIS crisis-model extension (bond/credit/oil/equity axes) — `REVIEWED(Claude/Fable 2026-07-24): Phase-A DONE + Phase-B concept-check 4/4 PASS — ADVISORY-ONLY, live`
 **source:** user 2026-07-24 ชอบเว็บ `bond-crisis-dashboard-v2.vercel.app` อยากให้ absorb ไอเดียเข้า stack เอง (กันเว็บหาย) + ใช้ shape strategy (ลด lot/หยุดเทรดตอนข่าวใหญ่). full spec = `_triage/ORDER200_MRIS_MACRO_EXTENSION_SPEC.md`.
 **ทำแล้ว (Phase A, additive ทั้งหมด — ไม่แตะ path RI จริง):**

@@ -12,8 +12,12 @@ param(
   [string]$Config  = "D:\EA_LAB\scripts\mris\barometers.json",
   [string]$OutDir  = "D:\EA_LAB\portfolio\mris\backtest",
   # windows to replay (label -> start,end). Defaults = the two mandated A/B windows.
-  [string[]]$Windows = @("carry_unwind_2024:2024-06-01:2024-09-20", "covid_crash_2020:2020-02-01:2020-04-30")
+  [string[]]$Windows = @("carry_unwind_2024:2024-06-01:2024-09-20", "covid_crash_2020:2020-02-01:2020-04-30"),
+  # -Detailed also emits per-barometer signal columns + a mean-signal attribution table, so a
+  # state can be traced to the gauge that caused it (ORDER-203 core-sensitivity investigation).
+  [switch]$Detailed
 )
+$SIGCOLS = @('AUDJPY','USDJPY','VIX','DXY','XAUUSD','BTCUSD','US10Y_JP10Y','COPPER')
 $ErrorActionPreference = "Stop"
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 if (!(Test-Path $OutDir)) { New-Item -ItemType Directory -Force -Path $OutDir | Out-Null }
@@ -139,7 +143,10 @@ function Classify([hashtable]$snap) {
   if (($null -ne $vixSpot -and $vixSpot -ge $t.vix_stress_override) -or $ri -lt $t.stress_below){$state="STRESS"}
   elseif ($ri -ge $t.risk_on_min){$state="RISK_ON"} elseif ($ri -ge $t.neutral_min){$state="NEUTRAL"} else {$state="RISK_OFF"}
   $allFlags=@(); foreach($a in $active){$allFlags+=$a.flags}
-  return [pscustomobject]@{ state=$state; ri=[math]::Round($ri,3); flags=($allFlags -join ',') }
+  # per-barometer signals returned too, so -Detailed can attribute a state to its drivers
+  # without a second (divergence-prone) copy of this logic living somewhere else.
+  $sig=@{}; foreach($a in $active){ $sig[$a.symbol]=$a.signal }
+  return [pscustomobject]@{ state=$state; ri=[math]::Round($ri,3); flags=($allFlags -join ','); sig=$sig }
 }
 
 # ---- replay each window over AUDJPY's trading calendar ----
@@ -154,14 +161,34 @@ foreach ($w in $Windows) {
     $snap=@{}
     foreach ($sym in $TICKERS.Keys) { $r=AsOfRow $sym $d; if ($r){$snap[$sym]=$r} }
     $c=Classify $snap
-    if ($c){ $rows += [pscustomobject]@{ date=$d.ToString('yyyy.MM.dd'); state=$c.state; ri=$c.ri; flags=$c.flags } }
+    if ($c){
+      $row = [pscustomobject]@{ date=$d.ToString('yyyy.MM.dd'); state=$c.state; ri=$c.ri; flags=$c.flags }
+      if ($Detailed) { foreach ($sym in $SIGCOLS) { Add-Member -InputObject $row -NotePropertyName "sig_$sym" -NotePropertyValue $(if ($c.sig.ContainsKey($sym)) { $c.sig[$sym] } else { $null }) } }
+      $rows += $row
+    }
   }
   $out=Join-Path $OutDir "regime_$label.csv"
-  $rows | Select-Object @{n='datetime';e={ $_.date + ' 00:00' }}, state, ri, flags | Export-Csv $out -NoTypeInformation -Encoding UTF8
-  $dist = $rows | Group-Object state | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
-  $stress = $rows | Where-Object { $_.state -eq 'STRESS' -or $_.state -eq 'RISK_OFF' } | Sort-Object date
+  $cols = @(@{n='datetime';e={ $_.date + ' 00:00' }}, 'state', 'ri', 'flags')
+  if ($Detailed) { $cols += ($SIGCOLS | ForEach-Object { "sig_$_" }) }
+  $rows | Select-Object $cols | Export-Csv $out -NoTypeInformation -Encoding UTF8
+  # header FIRST so the attribution table below is unambiguously attributable to THIS window
+  # (printing it before the header made a reader assign each table to the wrong year).
   Write-Host ""
   Write-Host "=== $label ($($parts[1])..$($parts[2])) : $($rows.Count) days -> $out ==="
+  if ($Detailed) {
+    # mean signal per barometer = which gauge is systematically pushing the Risk Index around
+    Write-Host "   mean signal per barometer over this window (negative = pushing RISK_OFF):"
+    foreach ($sym in $SIGCOLS) {
+      $vals = @($rows | ForEach-Object { $_."sig_$sym" } | Where-Object { $null -ne $_ })
+      if ($vals.Count -eq 0) { continue }
+      $w = ($cfg.barometers | Where-Object { $_.symbol -eq $sym } | Select-Object -First 1).weight
+      $mean = ($vals | Measure-Object -Average).Average
+      $pctNeg = 100.0 * (@($vals | Where-Object { $_ -lt 0 }).Count) / $vals.Count
+      Write-Host ("      {0,-13} w={1}  mean={2,6:N2}  weighted={3,6:N3}  days-negative={4,5:N1}%" -f $sym,$w,$mean,($mean*$w/13.0),$pctNeg)
+    }
+  }
+  $dist = $rows | Group-Object state | Sort-Object Count -Descending | ForEach-Object { "$($_.Name)=$($_.Count)" }
+  $stress = $rows | Where-Object { $_.state -eq 'STRESS' -or $_.state -eq 'RISK_OFF' } | Sort-Object date
   Write-Host ("   state dist: " + ($dist -join '  '))
   if ($stress) {
     Write-Host ("   RISK_OFF/STRESS days: " + $stress.Count + " (first " + $stress[0].date + " .. last " + $stress[-1].date + ")")
