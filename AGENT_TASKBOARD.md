@@ -32,7 +32,74 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 
-## ORDER-204 — [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid + fan รองรับ — `OPEN`
+> 🔁 **RE-OPTIMIZE WAVE 205..208 (เขียน 2026-07-25, Opus-seat — user สั่ง "วางแผน optimize ใหม่")**
+> **หลักการเลือกว่าตัวไหนต้อง re-opt:** ไม่ใช่ "รันใหม่ให้หมด" แต่รันเฉพาะตัวที่ **หลักฐานที่ใช้เลือกพารามิเตอร์เสียจริง**.
+> ตรวจแล้วมี 3 แหล่งที่ทำให้หลักฐานเสีย และแต่ละแหล่งกินตัวไหนบ้าง:
+> - **(A) holdout leak** (ORDER-202): 87 optimize pass เลือกบนหน้าต่างที่กิน 2026H1 — แต่ deployed จริงโดน
+>   **ตัวเดียว = `EA_BREAKOUT_XAU` 991001 (เงินจริง)** → **ORDER-205**. Boss_14 cohort ค่าพารามิเตอร์สะอาด
+>   (มาจาก `_IS.ini` 2023.01–2025.06) เสียแค่ "ใบตัดสินว่าจะ ship" → ประกาศ 2026H1 ไหม้ พอ ไม่ต้อง re-opt.
+>   Boss_16 สะอาด แต่ **บาร์ที่จะใช้ตัดสิน demo เขียนมาจากเลขที่เฟ้อ** → **ORDER-208** (แก้เลข ไม่ใช่ re-opt).
+>   NRBreakout/ST03/ZSCORE/LNBREAK = verdict เป็น "ตก" อยู่แล้ว — contamination มีแต่ทำให้ดูดีขึ้น ไม่ต้องทำใหม่.
+> - **(B) MRIS core classifier พัง** (ORDER-203, แก้แล้ว `265de0e3`): ทุกอย่างที่**กินสัญญาณ regime ย้อนหลัง**
+>   ต้องวัดใหม่ — ตัวที่โดนจริงคือ **MacroGate 990120** ที่ attach อยู่ → **ORDER-206**.
+> - **(C) genetic ที่ไม่มี fine-grid** (ORDER-204 กำลังรัน): ยังไม่รู้ว่ากินใครบ้าง — **ORDER-204 คือใบสำรวจ**,
+>   ผลออกมาแล้วค่อยแตกใบ re-opt ต่อ (จะเป็น 209+). ห้ามเดารายชื่อล่วงหน้า.
+> **ที่ไม่อยู่ในเวฟนี้และเหตุผล:** EA ที่ verdict = DEAD/ตก (contamination ทำให้ดูดีขึ้นเท่านั้น) · EA ที่ยังไม่ deploy
+> และไม่มีใครอ้างเลขมันอยู่ (ไม่มีใครเสียหายถ้าเลขผิด — รอ ORDER-204 คัดมาก่อน) · Boss_14 cohort (ค่าสะอาด).
+
+## ORDER-205 — [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด — `CLAIMED(ea-validator, 2026-07-25)`
+**source:** ORDER-202 — funnel เดิมของ EA ตัวนี้ **ไม่มี ini สักใบที่จบก่อน 2026** (เช็คครบ 16 ใบ): genetic ทั้ง v2/v3
+และ IS-confirm ทุกใบรัน `2023.01.01 → 2026.06.01` = เลือกพารามิเตอร์บนหน้าต่างที่กิน holdout 6 เดือน.
+**เจอเพิ่มระหว่างเตรียมใบนี้ (ยังไม่เคยบันทึกที่ไหน):** `BRK_XAU_v2_OPT.ini`/`v3_OPT.ini` ใส่ range ด้วยชื่อ input
+**เก่า** (`InpBreakoutBars`…) แต่ `.ex5` ถูก rename เป็น `_NN_` ตั้งแต่ 2026-06-22 — ตาม gotcha input-cache ของ MT5
+(`mt5-tester-cache-nondeterminism`) input ที่ไม่อยู่ใน .set จะตกไปใช้ค่าจาก cache ของ terminal เงียบ ๆ →
+**เป็นไปได้ว่า range ของ v3 ไม่เคยถูกใช้จริง** ("plateau center Bars=55" อาจไม่ใช่ plateau ของอะไรเลย). ใบนี้แก้ทั้งสองเรื่องพร้อมกัน.
+**spec:** XAUUSD H1 · ranges `_mt5_auto/ab_sets/order205_brkxau/BRK_XAU_reopt_ranges.set` (ชื่อ input verify กับ
+source แล้ว 14 ตัว · sweep Bars/Sl/Tp/Ema = 1,680 combo) · **coarse = genetic Criterion 7 → fine = complete
+รอบผู้ชนะ** ตาม policy 2026-07-25 · MAIN `2023.01.01–2025.12.31` · BWD `2020.01.01–2022.12.31` ·
+**assert `Leverage=1:100`** (เลข `100` เปล่า = no-op) · plateau-center ต้องผ่าน **Model-4 ทั้งสองหน้าต่าง** (incumbent
+วัดด้วย M4 → ต้องเทียบชนิดเดียวกัน) · MC ปิดท้าย.
+**bars:** pass = ชนะ v2 **ทั้งสองหน้าต่าง** (M4 MAIN >1.98 **และ** BWD >1.66) + อยู่บน plateau ไม่ใช่ spike ⇒ เสนอสลับ config
+· dead = ไม่มี cell ไหนผ่าน MAIN 1.2 ⇒ กลับไปสอบสวน EA ไม่ใช่แค่พารามิเตอร์ · **กลาง = ชนะหน้าต่างเดียว หรือ plateau ไม่ชัด
+⇒ คง v2 ไว้ตามเดิม** (default คือ "ไม่ขยับเงินจริง" — challenger ต้องพิสูจน์ตัวเอง ไม่ใช่ incumbent)
+**flat-lot probe:** N-A (fixed lot 0.01, single order, ไม่มี escalation)
+**ห้าม:** รันหน้าต่างที่จบหลัง 2025.12.31 (**2026H1 ไหม้ไปแล้วสำหรับ EA ตัวนี้ — forward record จากวัน attach = holdout จริงตัวใหม่**) ·
+แตะ `.set` ที่ live อยู่ · ตัดสิน verdict เอง (agent ส่ง evidence, Opus-seat ตัดสิน)
+
+## ORDER-206 — [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง — `OPEN`
+**source:** ORDER-203 — `mris_export_regime.ps1` อ่าน `regime_state.json` จาก core classifier โดยตรง แปลว่า
+**สัญญาณ regime ย้อนหลังทุกเส้นที่ MacroGate เคยใช้ตอน validate มาจาก logic ที่ผิด** (AUDJPY ใต้ pin 110 ตลอด
+ทศวรรษก่อน 2026 → −2 แทน −1 → weight 3 ดัน RI ข้ามเส้น RISK_OFF ตัวเดียว). วัดจริงหลังแก้: calm-2019
+**88% → 47%** risk-off, calm-2021 33% → 22%. หน้าต่างที่ ORDER-073 P3 ใช้ validate = **2024 ซึ่งอยู่ในช่วงที่บั๊กทำงาน**
+(AUDJPY ~99–109 = ใต้ pin ทั้งปี) → **ตัวเลข "eqDD −54..−56%" วัดใต้ gate ที่ปิดถี่เกินจริง**.
+**spec:** rebuild regime timeline ย้อนหลังด้วย classifier ที่แก้แล้ว (`mris_backtest_timeline.ps1`, ผลปี 2019/2021/2020/2024
+รอบล่าสุดอยู่ที่ `portfolio/mris/backtest/order203_postfix/`) → export เป็น regime CSV รูปแบบเดียวกับที่ EA อ่าน →
+รัน A/B **gate-on vs gate-off** บน carry leg 990120 (USDJPY) หน้าต่าง MAIN + BWD → เทียบกับตัวเลขเดิม.
+**bars:** pass = gate ยังลด eqDD ได้ ≥20% โดย PF ไม่ตก ⇒ คง attach · dead = gate ทำให้ PF แย่ลงหรือ eqDD ไม่ต่างจริง
+⇒ ถอด gate (advisory-only เหมือนเดิม) · กลาง = ช่วยแต่น้อยกว่าที่เคยอ้าง ⇒ คง attach **แต่แก้ตัวเลขในเอกสารให้ตรง**
+**flat-lot probe:** N-A · **ห้าม:** ใช้ตัวเลข −54..−56% เดิมอ้างต่อโดยไม่ระบุว่ามาจาก classifier ที่พัง · แตะ EA ที่ attach อยู่บน VPS
+
+## ORDER-207 — [🔴 เงินจริง · integrity] `NuiIndy` guardrail `CutLoss=30` — หาหน้าต่างที่มันถูกวัดมา — `OPEN`
+**lane:** qwen/Sonnet (grep ล้วน ถ้าเจอไฟล์ที่ระบุหน้าต่างได้) → ถ้าไม่เจอ ยกกลับให้ Opus-seat ตัดสินว่าต้องรันใหม่ไหม
+**source:** ORDER-202 หมายเหตุท้ายรายงาน — คำแนะนำ `CutLoss=30` (ORDER-095 verdict 2026-07-17) อ้างว่า
+"both-window profitable" แต่ **ไม่มี date string ให้ grep** และ NuiIndy เป็น **EA เงินจริง** ที่ทั้ง edge อยู่ที่ escalation
+engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวนี้คือสิ่งเดียวที่กั้น ruin.
+**spec:** ไล่หา report/ini/verdict ที่ให้เลข CutLoss=30 → ระบุหน้าต่างจริง → ถ้าหน้าต่างจบหลัง 2025.12.31 หรือหาไม่เจอเลย
+ให้บอกตรง ๆ ว่า "หาไม่เจอ" **ห้ามเดา**. **bars:** เจอหน้าต่างสะอาด ⇒ ปิดใบ · เจอว่าหน้าต่างกิน 2026H1 หรือหาไม่เจอ
+⇒ ยกเป็นใบ re-measure (ORDER-209+) เพราะเป็นเงินจริง · **flat-lot probe:** N-A (วัด guardrail ไม่ใช่ entry)
+**ห้าม:** แก้ค่า CutLoss บนบัญชีจริง · รัน backtest ในใบนี้ (ใบนี้ = สำรวจหลักฐานอย่างเดียว)
+
+## ORDER-208 — [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด — `OPEN`
+**source:** ORDER-202 Part 2 — Boss_16 **edge จริง** (clean MAIN PF 1.46/205t, BWD 1.30/278t = ผ่านทั้งสองบาร์สบาย)
+แต่ criteria ที่ pre-register ไว้คำนวณจาก funnel ORDER-078 ที่รัน `2023.01.01 → 2026.07.01` ทุกขั้น. ถ้า attach ตอนนี้
+**demo จะถูกตัดสินด้วยบาร์ที่ leak เป็นคนเขียน**. **spec:** แก้ 2 เลขในทุกที่ที่มันปรากฏ (bundle README + `expectations.csv`
++ DEPLOYMENTS notes + DEMO_DEPLOYMENT_PLAN): **PF คาดหวัง 1.46 ไม่ใช่ 1.57** · **~68 เทรด/ปี ไม่ใช่ ~81–90/ปี**
+(ตัวหลังไปตั้ง judge_date ด้วย → ตรวจว่า judge_date ยังสมเหตุผลที่อัตราใหม่). ระบุในหมายเหตุว่า 2026H1 ถูก funnel กินไปแล้ว
+→ **demo-forward = holdout จริง** (precedent Boss_16 ที่ CLAUDE.md อ้างอยู่แล้ว).
+**bars:** N-A (งานเอกสาร ไม่ใช่ทดสอบ) · **flat-lot probe:** N-A
+**ห้าม:** เปลี่ยนพารามิเตอร์ใน .set (edge สะอาด ไม่ต้อง re-opt) · attach แทน user
+
+## ORDER-204 — [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid + fan รองรับ — `CLAIMED(Sonnet agent, 2026-07-25)`
 **lane:** qwen/ZCode (mechanical grep+map ล้วน ไม่มี judgment) · **source:** genetic policy ratified 2026-07-25 (`b9ba8c84`, canonical = skill `backtest-optimize-rigor` Step 2). ก่อนนั้น `.ini` 66 ไฟล์รัน `Optimization=2` ด้วย `OptimizationCriterion=0` (balance max = เข็มทิศชี้ spike) + `Leverage=N` ที่เป็น no-op เงียบ (รันจริงที่ server default 1:2000). **คำถามเดียวที่ต้องตอบ: มี verdict ไหนที่ตัดสินจากผล genetic โดยไม่มี fine-grid + sensitivity-fan ตามหลัง**
 **task (mechanical, numeric acceptance):**
 1. list `.ini` ทั้ง 66 ไฟล์ใน `_mt5_auto/ini/` ที่มี `Optimization=2` + report name ของแต่ละไฟล์
@@ -43,8 +110,132 @@
 **calibration (ตรวจมือแล้ว = ไม่ใช่หนี้):** `OPT_MDX_GBP_coarse/_fine/_fine2` = funnel coarse→fine ถูกต้อง
 **5. เพิ่มคอลัมน์ `inert-dim-suspect`** — assert run `ASSERT204_MDX_GBP_H4` (2026-07-25) พบ `_01_LookbackBars` **ไม่มีผลเลย** บน MacdDiv GBPUSD H4: Result/PF/Trades เท่ากันเป๊ะทุกค่า (80/100/120 → 33.77/1.2298/235t) มีแต่ `_01_SwingRadius` ที่ขยับผล → genetic ชุด MDX เดิมกวาดมิตินี้ฟรี. ต่อไฟล์: ถ้า XML มีมิติที่ค่าต่างกันแล้ว **ทุก metric เท่ากันหมด** → flag `INERT:<dimname>` (นี่คือ plateau ปลอมแบบที่ `optimize_guard` จับไม่ได้เพราะ EA ไม่อยู่ใน registry)
 **ห้าม:** รัน backtest/optimize ใหม่ · แก้ scorecard/verdict · แตะไฟล์นอกรายงานตัวเอง · commit ต้อง path-limited เฉพาะไฟล์รายงาน (เครื่องนี้หลาย session แชร์ working tree)
+**bars:** N-A (order รายงาน ไม่ใช่ order ตัดสิน EA — acceptance = ความครบของตาราง ไม่ใช่ PF)
+**flat-lot probe:** N-A (ไม่มีการรัน)
+**TREE (เพิ่ม 2026-07-25 เพื่อให้ lane worker รับได้ — เดินเองได้ไม่ต้องถาม):**
+  - **STEP 1:** `Get-ChildItem D:\EA_LAB\_mt5_auto\ini\*.ini | Select-String "Optimization=2" -List` → นับไฟล์
+    - ถ้าได้ **66 ไฟล์** → STEP 2
+    - ถ้าได้ **60-72 ไฟล์** → เดินต่อ STEP 2 ได้เลย แต่เขียนเลขจริงที่นับได้กำกับหัวตาราง (จำนวนอาจขยับตาม run ใหม่)
+    - ถ้าได้ **<60 หรือ >72** → `BLOCKED(นับได้ N ไฟล์ ไม่ใช่ ~66 — A: เดินต่อด้วย N ที่นับได้ / B: รอ lead ยืนยันขอบเขต)`
+  - **STEP 2:** ต่อไฟล์ ทำข้อ 2-5 ในสเปกด้านบน → เติมตาราง 1 แถว/ไฟล์ (คอลัมน์ตามข้อ 4 + `inert-dim-suspect`)
+  - **STEP 3:** เขียนตารางลง `_triage/ORDER204_GENETIC_RETRO_AUDIT.md` → commit path-limited ไฟล์นั้น + แถวนี้ → **STOP ไปใบถัดไป**
+    (ห้ามสรุปว่า verdict ไหน "ผิด" — แค่ตั้ง flag `DEBT` แล้วให้ lead ตัดสิน)
+  - รัน grep พลาด 2 ครั้งติด → `BLOCKED(<คำถาม A/B>)`
 
-## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `REVIEWED(Claude/Fable 2026-07-25): CONFIRMED — backtest-validity bug, live วันนี้ไม่กระทบ, รอ user เคาะวิธีแก้`
+---
+
+## ORDER-205 — [expand] MacdDiv_Naked H4: 3 symbol ใหม่ (conditional, เดินต้นไม้เองได้) — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+**ที่มา:** ORDER-098-B ปิดด้วย MacdDiv XAU H4 = DEMO-ELIGIBLE (MAIN plateau 1.91 · BWD 1.04 · M4 ยืนยันไม่ใช่ fill artifact) · EURUSD H4 holdout fail แล้วปิด cell ไป · **doctrine BUILD-ON: PF>1 = ของต่อยอด → ยังไม่เคยลอง JPY-cross เลย** ซึ่งเป็นบ้านของ momentum/divergence
+**bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
+**flat-lot probe:** N-A(single-order — MacdDiv ไม่มี escalation)
+**เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น** (5c ไม่มี tick cache — ห้าม Model 4 เด็ดขาด)
+
+**STEP 1** — รัน MAIN ทีละคำสั่ง (3 ตัว, symbol เปลี่ยนอย่างเดียว):
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "MacdDiv_Naked" -Symbol GBPJPY -Period H4 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "D:\EA_LAB\_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set" -ReportName MDX_GBPJPY_H4_MAIN -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+ทำซ้ำโดยเปลี่ยน `-Symbol` และ `-ReportName` เป็น: **USDJPY** (`MDX_USDJPY_H4_MAIN`) · **EURJPY** (`MDX_EURJPY_H4_MAIN`)
+
+**TREE (ต่อ symbol แยกกัน — symbol หนึ่งตายไม่ลาก symbol อื่นตาย):**
+  - **MAIN PF ≥ 1.2** → **STEP 2A:** รัน BWD symbol เดียวกัน `-FromDate 2020.01.01 -ToDate 2022.12.31` `-ReportName MDX_<SYM>_H4_BWD`
+    - BWD ≥ 1.0 → **STEP 3A** (ด้านล่าง)
+    - BWD < 1.0 → append ผลดิบ + เขียนว่า `BWD-fail` → **STOP symbol นี้** (ห้ามสรุปว่าตาย — lead ตัดสินเอง)
+  - **MAIN 1.0–1.2** → **STEP 2B:** รัน BWD เหมือน 2A แล้ว append ผล + ทำเครื่องหมาย `WATCH` → **STOP symbol นี้**
+  - **MAIN < 1.0** → append ผลดิบ → **STOP symbol นี้** ไปตัวถัดไป (ห้ามสรุปว่า "ตาย")
+  - **trades < 20 ใน MAIN** (ไม่ว่า PF เท่าไหร่) → `BLOCKED(n บาง <20 ใน <SYM> — A: ข้ามไป symbol ถัดไป / B: ลอง H1 บน symbol เดิม)`
+  - รันล้ม 2 ครั้งติดบน symbol เดียว → `BLOCKED(<SYM> รันไม่ผ่าน: <error บรรทัดสุดท้าย> — A: ข้าม / B: รอ lead)`
+
+**STEP 3A (ชั้นที่ 3 — sensitivity fan, ทำเฉพาะ symbol ที่ผ่านทั้ง MAIN≥1.2 และ BWD≥1.0):**
+คัดลอก .set เดิมเป็น 4 ไฟล์ใน `D:\EA_LAB\_mt5_auto\ab_sets\order205\` แล้วแก้ทีละค่า — เปลี่ยน **ค่าเดียวต่อไฟล์**:
+`_01_SwingRadius` = {2, 3, 4, 5} (ค่าอื่นคงเดิมทั้งหมด) → รัน MAIN ทั้ง 4 ไฟล์ `-ReportName MDX_<SYM>_H4_SW<n>`
+→ append ตาราง 4 แถว (SwingRadius · PF · trades · DD · net) → **STOP ไปใบถัดไป**
+(เหตุผลที่เลือกมิตินี้: ORDER-204 assert พบ `_01_LookbackBars` **inert** บน MacdDiv — กวาดไปก็ไม่ขยับ ส่วน `_01_SwingRadius` ขยับผลจริง)
+
+**ห้าม:** เขียน verdict · แตะ scorecard/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET · รายงานเลข Model 2 · รัน Model 4 · แตะ `_vps_deploy` · ตีความผลนอก branch · เปลี่ยนค่า input ที่ไม่ได้ระบุใน STEP · **แตะหน้าต่าง 2026 ทุกกรณี** (holdout ไหม้แล้ว)
+
+---
+
+## ORDER-206 — [expand] PivotBreakout H4: 3 symbol ใหม่ (conditional) — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+**ที่มา:** Wave-1 ปิดด้วย PivotBreakout_XAU (992017) = **VALIDATED CANDIDATE ตัวแข็งสุดของรอบ** (M4 MAIN 1.16 / BWD 1.22 / HOLD 1.33 · MC ruin 0%) — daily-pivot breakout เป็นกลไกที่ portable ข้าม symbol ได้ตามทฤษฎี แต่ยังไม่เคยทดสอบนอก XAU เลย
+**bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
+**flat-lot probe:** N-A(single-order)
+**เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น**
+
+**STEP 1** — รัน MAIN 3 ตัว:
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "PivotBreakout_XAU" -Symbol XAGUSD -Period H4 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "D:\EA_LAB\_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set" -ReportName PVT_XAGUSD_H4_MAIN -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+ทำซ้ำเปลี่ยน `-Symbol`/`-ReportName`: **US30** (`PVT_US30_H4_MAIN`) · **GBPJPY** (`PVT_GBPJPY_H4_MAIN`)
+
+**TREE (ต่อ symbol แยกกัน):**
+  - **MAIN PF ≥ 1.2** → **STEP 2A:** BWD `-FromDate 2020.01.01 -ToDate 2022.12.31` `-ReportName PVT_<SYM>_H4_BWD`
+    - BWD ≥ 1.0 → **STEP 3A**
+    - BWD < 1.0 → append + `BWD-fail` → **STOP symbol นี้**
+  - **MAIN 1.0–1.2** → **STEP 2B:** รัน BWD เหมือนกัน + mark `WATCH` → **STOP symbol นี้**
+  - **MAIN < 1.0** → append → **STOP symbol นี้**
+  - **symbol ไม่มีใน terminal / no history** → append บรรทัด `NO-DATA:<SYM>` → ข้ามไปตัวถัดไป (ไม่ต้อง BLOCKED)
+  - **trades < 20 ใน MAIN** → `BLOCKED(n บาง <20 ใน <SYM> — A: ข้าม / B: ลอง D1)`
+  - รันล้ม 2 ครั้งติด → `BLOCKED(<SYM>: <error> — A: ข้าม / B: รอ lead)`
+
+**STEP 3A (ชั้นที่ 3 — SL sensitivity fan, เฉพาะ symbol ที่ผ่านทั้งสองหน้าต่าง):**
+คัดลอก `PivotBreakout_XAU_deploy.set` เป็น 3 ไฟล์ใน `D:\EA_LAB\_mt5_auto\ab_sets\order206\` แก้ **ค่าเดียวต่อไฟล์**:
+`_02_SlAtrMult` = {**1.5**, **2.0**, **2.5**} (input อื่นคงเดิมทุกตัว — ตรวจแล้ว .set นี้มี 15 input, ไม่มี buffer/offset, lever จริงคือ SL/RR)
+→ รัน MAIN ทั้ง 3 `-ReportName PVT_<SYM>_H4_SL<ค่า>` → append ตาราง 4 คอลัมน์ (SlAtrMult · PF · trades · DD) → **STOP ไปใบถัดไป**
+
+**ห้าม:** (เหมือน ORDER-205 ทุกข้อ)
+
+---
+
+## ORDER-GEN-STANDING — matrix screening (standing order, ไม่มีวัน DONE) — `OPEN-STANDING` · ทำได้: oc-qwen · ZCode
+> ⚠️ **หยิบใบนี้ได้เฉพาะเมื่อไม่มี order OPEN ใบอื่นเหลือแล้วเท่านั้น** — ใบนี้คือกันเครื่องว่าง ไม่ใช่คิวหลัก
+> ผลจากใบนี้ = **screening ดิบ** ห้ามใช้เป็นหลักฐาน promote อะไรทั้งสิ้นจนกว่า lead review
+**bars:** pass = PF ≥ **1.2** · dead = PF < **1.0** · กลาง(WATCH) = **1.0–1.2** (ใช้กับทุก cell ในตาราง)
+**flat-lot probe:** N-A(ทุก EA ในตารางเป็น single-order)
+**เลน:** `D:\Meta 5c` · **Model 1 เท่านั้น** · หน้าต่าง MAIN `2023.01.01 → 2025.12.31` เสมอ
+
+**วิธีทำ:** หยิบ cell **บนสุดที่ยังไม่มีผล** → รัน 1 คำสั่ง → append ผลดิบใต้ตาราง → เติม PF ในช่อง → cell ถัดไป
+**template คำสั่ง** (แทน `<EXPERT> <SYM> <TF> <SET> <RPT>` จากแถวที่หยิบ):
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "<EXPERT>" -Symbol <SYM> -Period <TF> -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "<SET>" -ReportName <RPT> -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+
+| # | EXPERT | SYM | TF | SET | RPT | PF |
+|---|---|---|---|---|---|---|
+| 1 | MacdDiv_Naked | AUDJPY | H4 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_AUDJPY_H4 | |
+| 2 | MacdDiv_Naked | XAUUSD | D1 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_XAU_D1 | |
+| 3 | MacdDiv_Naked | GBPJPY | D1 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_GBPJPY_D1 | |
+| 4 | PivotBreakout_XAU | XAUUSD | D1 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_XAU_D1 | |
+| 5 | PivotBreakout_XAU | USDJPY | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_USDJPY_H4 | |
+| 6 | PivotBreakout_XAU | EURUSD | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_EURUSD_H4 | |
+| 7 | MacdDiv_Naked | USDCAD | H4 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_USDCAD_H4 | |
+| 8 | MacdDiv_Naked | AUDUSD | H4 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_AUDUSD_H4 | |
+| 9 | PivotBreakout_XAU | XAGUSD | D1 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_XAG_D1 | |
+| 10 | PivotBreakout_XAU | GBPUSD | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_GBPUSD_H4 | |
+| 11 | MacdDiv_Naked | NZDUSD | H4 | `_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` | GEN_MDX_NZDUSD_H4 | |
+| 12 | PivotBreakout_XAU | AUDUSD | H4 | `_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set` | GEN_PVT_AUDUSD_H4 | |
+
+**TREE (ทุก cell ใช้เหมือนกัน):**
+  - ได้ผล (PF เท่าไหร่ก็ตาม) → เติมช่อง PF + append ผลดิบ + commit → **cell ถัดไป**
+  - `NO-DATA` / symbol ไม่มีใน terminal → เขียน `NO-DATA` ในช่อง PF → cell ถัดไป
+  - รันล้ม 2 ครั้งติดบน cell เดียว → เขียน `FAIL` ในช่อง PF → cell ถัดไป (ไม่ต้อง BLOCKED — ใบนี้ห้ามหยุดเพราะ cell เดียว)
+  - **ตารางเต็มหมดทุกช่อง** → `BLOCKED(matrix หมด — รอ lead เติม cell ใหม่)` + แจ้ง user ทาง Telegram แล้วหยุด
+
+**ห้าม:** เขียน verdict หรือคำว่า pass/dead/ตาย · เรียง cell ใหม่ · เพิ่ม cell เอง · ตีความ PF · ทุกข้อห้ามของ ORDER-205
+
+---
+
+## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `FIXED + REVIEWED(Claude/Opus 2026-07-25, user เคาะ "ทำเลย" → commit 265de0e3)`
+**✅ วิธีแก้ที่ลงจริง:** pin กลับไปเป็น **advisory อย่างเดียว** (คุมแค่ flag `TRIPWIRE_NEAR`) · ระดับ **−2 "carry-unwind
+confirmed" นิยามใหม่เป็นเงื่อนไข relative สองข้อพร้อมกัน = ใต้ SMA200 **และ** fast drop เกินแถบ ATR** (แทนที่จะทิ้ง −2
+ไปเฉย ๆ ซึ่งจะทำให้ risk_on barometer แรงสุดได้แค่ −1.5 = เสียความหมายของสเกล). แก้ทั้ง `mris_classify.ps1` และ
+port ใน `mris_backtest_timeline.ps1` ให้ตรงกัน + เขียนเหตุผลลง README/`barometers.json` กันคนแก้กลับ.
+**วัดซ้ำหลังแก้** (`portfolio/mris/backtest/order203_postfix/`): calm-2019 **229/261 (88%) → 124/261 (47%)** ·
+calm-2021 87/261 (33%) → 57/261 (22%) · **concept check ORDER-073 P3 ยังผ่าน**: covid-2020 ยัง 55/65 วัน risk-off
+(47 วันเป็น STRESS) · carry-unwind-2024 ยังติด และ STRESS ตกวันที่ 2024-08-05 ตรงวันจริง.
+**live ไม่ขยับ** — รัน `mris_run.ps1` ซ้ำหลังแก้ได้ NEUTRAL RI=0.308 เท่าเดิมเป๊ะ (AUDJPY 114 > pin → branch ที่พังหลับอยู่แล้ว).
+**หนี้ที่เหลือ 2 ก้อน:** (1) **ORDER-206** — MacroGate 990120 validate มาบน classifier ที่พัง ต้องวัดใหม่
+(2) calm-2019 ยัง 47% risk-off ซึ่งสูงอยู่สำหรับหน้าต่างควบคุม — เป็นประเด็น **specificity** ของ threshold
+(ดู memory `gate-specificity-not-just-sensitivity`) ไม่ใช่บั๊กใบนี้ · ยังไม่ยกเป็น order จนกว่าจะมีใครใช้ core layer ตัดสินอะไรจริง
 **source:** ORDER-200 Phase D cost-estimate เจอของแปลก — core ขึ้น RISK_OFF 48/51 วันในกลางปี 2019 (control window ที่ควรสงบ) → user สั่งสอบ ("ทำข้อ 1").
 **สมมติฐานแรกของผมผิด:** ไม่ใช่ "จูน threshold ไวเกิน" แต่เป็น **config anachronism**.
 **หลักฐาน (วัดจริง ไม่ใช่เดา):**

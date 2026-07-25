@@ -1,0 +1,22 @@
+; ORDER-205 — EA_BREAKOUT_XAU clean re-optimize ranges (XAUUSD H1)
+; Param names verified against ea_projects/EA_BREAKOUT_XAU/EA_BREAKOUT_XAU.mq5 (14 inputs, _NN_ scheme).
+; The 2026-06 funnel's ini files used the PRE-RENAME Inp* names, which no longer exist on this
+; .ex5 — unlisted inputs fall back to the per-terminal cache, so those ranges may never have
+; applied. That is a second reason this re-optimize exists.
+; Frozen on purpose: BuyOnly (incumbent v2 is long-only), ATR block, lot/magic/deviation.
+; Swept: BreakoutBars, SlAtrMult, TpAtrMult, EmaPeriod = 8 x 6 x 7 x 5 = 1680 combos
+;   -> over the 1,000 ceiling, so coarse runs GENETIC (Criterion 7), fine runs COMPLETE.
+_00_OptimizeMode=false||false||0||true||N
+_01_BreakoutBars=40||25||5||60||Y
+_02_SlAtrMult=1.5||1.0||0.5||3.5||Y
+_02_TpAtrMult=5.0||3.0||1.0||9.0||Y
+_03_AtrPeriod=14||14||1||14||N
+_03_AtrMaPeriod=20||20||1||20||N
+_03_AtrExpandRatio=1.0||1.0||0.1||1.0||N
+_04_UseDailyEma=true||false||0||true||N
+_04_EmaPeriod=200||50||50||250||Y
+_05_BuyOnly=true||false||0||true||N
+_05_LotSize=0.01||0.01||0.01||0.01||N
+_06_Magic=991001||991001||1||991001||N
+_06_Deviation=20||20||1||20||N
+_06_AllowLive=false||false||0||true||N
