@@ -228,6 +228,69 @@ bundle ใหม่ใช้ build ปัจจุบัน · ตรวจแ�
 **bars:** N-A (งานเอกสาร ไม่ใช่ทดสอบ) · **flat-lot probe:** N-A
 **ห้าม:** เปลี่ยนพารามิเตอร์ใน .set (edge สะอาด ไม่ต้อง re-opt) · attach แทน user
 
+## ORDER-218 — [ops/integrity] error sweep: เครื่องเตือนไว้แล้ว แต่ไม่มีใครอ่าน — `DONE + REVIEWED(Claude/Opus 2026-07-25)` · รายงานเต็ม `_triage/ORDER218_ERROR_SWEEP_2026-07-25.md`
+**ที่มา:** user สั่งกลางคัน — *"ตั้งแต่รีวิว optimize แล้วก็แก้ไฟล์ ทำให้เกิด error เยอะ เอา error มารีวิวแล้วขยายผลดีกว่า"*
+**คำตอบบรรทัดเดียว: repo มี detector ที่เขียนผลลง disk อัตโนมัติ แล้ว "ไม่เคยมีใครอ่าน" เลยสักครั้ง**
+### 🔴 1. truncation detector ชี้ cage ของ Boss_16 มาตั้งแต่ 24 ก.ค. — และผมเพิ่งเอา cage นั้นไปเขียน bundle เมื่อเช้านี้
+sidecar 140 ใบ · **`truncated: true` 4 ใบ · ทั้ง 4 คือ `mm_lotmode_test` = cage ที่รับรอง `_16_BaseLotMode`**
+
+| run | last deal | idle tail | entry deals | eqDD |
+|---|---|---|---|---|
+| `MMLOT_K1_scaled_1x` (dep 10,000) | 2024.05.23 20:56:40 | 38.1d (20.9%) | 59 | 25.09% |
+| `MMLOT_K1_scaled_2x` (dep 20,000) | 2024.05.23 20:56:40 | 38.1d (20.9%) | 59 | 25.03% |
+| `MMLOT_A_fixed_baseline` | 2024.05.09 | 52.3d (28.7%) | 115 | 25.09% |
+| `MMLOT_E_unit_indep` | 2024.01.08 | **174.4d (95.8%)** | **6** | 25.01% |
+
+ทุกใบตายที่ eqDD ≈25% = **โดน hard-kill ตัดกลางคัน ไม่ใช่หมดสัญญาณ**
+**คำตัดสิน — invariance ยังยืน และเหตุผลสำคัญกว่าผลลัพธ์:** อันตรายที่ detector ตัวนี้ถูกสร้างมาจับ (เขียนไว้ใน docstring เอง)
+คือ *"ตัดที่ deposit หนึ่ง แต่ครบที่อีก deposit หนึ่ง ⇒ 2 run ที่ดูเทียบกันได้ จริง ๆ เทียบไม่ได้"* — แต่ **1x กับ 2x
+ตายที่ timestamp เดียวกัน ด้วยจำนวนไม้เท่ากันเป๊ะ (59)** = ตายเหมือนกัน ซึ่ง**ตัวมันเองคือหลักฐานของ invariance**. กับดักไม่สปริง
+**ที่อ่อนกว่าคำว่า "CLEAN" จริง:** ไม่มีอะไรถูกตรวจเลยหลัง DD 25% (วัดแค่ ~5 จาก 6 เดือน) · และ `MMLOT_E_unit_indep`
+ผ่าน unit-independence ด้วย **6 ไม้ใน 8 วัน** = ไม่ใช่การทดสอบ **→ บันทึกว่ายังไม่พิสูจน์**
+**ทำแล้ว:** เขียน caveat ลง `README_ATTACH.md` ของ bundle **ให้ถึงมือคนก่อน attach ไม่ใช่หลัง**
+### 🟡 2. 6 run ที่ยืนยัน leverage ไม่ได้ — และ 1 ใน 6 ถูกอ้างใน verdict ที่เขียนวันนี้
+498 sidecar · MATCH 490 · MISMATCH 1 = `EXP_LEV_H_FORCEDMISMATCH` (probe ที่ตั้งใจให้ fail = **ข่าวดี detector ทำงาน**)
+· **`NOT_RECORDED` 6 ใบ** (รายงานไม่มีบรรทัด leverage ⇒ *ตรวจไม่ได้* ไม่ใช่ *ผิด*): `CSC_sb2_ex300_BWD` ·
+`O171_SS4_sa0.8_tp2.5` · **`O200_ST03_near30_MAIN`** · `SS1L_base_off_MAIN` · `SS1L_lot02_ctrl_BWD` · `SS1TF_ema100_mo0p8_MAIN`
+ตัวที่ 3 มาจากงาน ST03 ที่ session คู่ขนาน review **วันนี้** (ORDER-201) — **แต่ verdict นั้นเป็นผลลบ (BWD-fail ทุก variant)
+และ leverage ที่ไม่แน่นอนมีแต่ทำให้ดูดีขึ้น ⇒ ข้อสรุปไม่สั่นคลอน** บันทึกไว้ให้ชัดดีกว่าปล่อยเป็นปมค้าง
+### 🟠 3-4. detector ทิ้งเหตุผลของตัวเอง + guard ที่สอนให้คนเลี่ยงมัน
+sidecar เก็บ `"detail": ""` ทุกใบ ทั้งที่รันสคริปต์ซ้ำมันพิมพ์คำวินิจฉัยเต็ม ⇒ **ธงที่ไม่มีเหตุผล = ธงที่คนเรียนรู้ที่จะเมิน**
+(ซึ่งเกิดขึ้นจริงมาแล้ว 1 วัน) · `check_state.ps1` §7 จับวลีไทย "ไฟล์-เดียว" แบบ substring — **วันนี้ยิงโดนงานเขียนธรรมดา 2 ครั้ง**
+(ประโยคผมเอง + ของ session คู่ขนาน) และ **ทั้งสองฝ่ายแก้ด้วยการเปลี่ยนคำ ไม่ใช่แก้ guard** ⇒ guard ที่ถูกเดินอ้อมด้วยการ
+แก้สำนวน = กำลังฝึกคนเขียน ไม่ได้ปกป้องกติกา
+### 🟢 5. ของที่ผมแก้วันนี้ ไม่มีอะไรพัง (ตรวจตรง ๆ เพราะ user ถามมา)
+สคริปต์ MRIS ทั้ง 3 ไฟล์ parse ผ่าน · `barometers.json` เป็น JSON ถูกต้อง · `check_state` CLEAN · รัน MRIS ซ้ำได้
+NEUTRAL RI=0.308 เท่าเดิม · agent ORDER-211 restore `Common\Files` byte-identical
+**red text ที่เห็นในจอ = pre-commit guard ทำงานถูกต้อง 3 ครั้ง** (scorecard กับ index ต้องขยับพร้อมกัน) **+ ผมพิมพ์
+PowerShell ผิด 1 ครั้งซึ่ง fail ดัง ๆ แล้วรันใหม่** — **ไม่มีความเสียหายเงียบ**
+### 📌 3% coverage = ไม่ใช่ข้อบกพร่อง (บันทึกกันคนมาตกใจทีหลัง)
+report 4,930 ใบ · truncation sidecar 140 · leverage sidecar 498 — เพราะ detector เพิ่งต่อเข้าไปหลัง corpus โต
+retro-scan 4,930 ใบไม่คุ้ม; ที่สำคัญคือใบที่ **verdict อ้างถึง** ซึ่ง ORDER-202/204 กวาดอยู่แล้ว **→ ไม่ตั้ง order**
+### **บทสรุปที่แท้จริงของใบนี้**
+ทุกข้อยกเว้นข้อ 5 มีรูปร่างเดียวกัน: **ระบบตรวจเจอ เขียนลงไฟล์ แล้วไม่มีใครเปิดอ่าน** — truncation detector จับจุดอ่อน
+ของ cage Boss_16 ได้**ก่อนหน้าที่ผมจะสร้าง bundle 1 วันเต็ม** ข้อมูลนั่งอยู่บน disk ตลอดเวลาที่ผมประกอบ bundle
+**สร้าง detector ถูก · อ่านมันคือส่วนที่หายไป** → ORDER-219
+
+## ORDER-219 — [ops/tooling] ทำให้ detector ที่มีอยู่แล้ว "ถูกอ่าน" — `OPEN`
+**lane:** Sonnet/qwen (mechanical) · **source:** ORDER-218 ข้อ 3-4
+**task:** (1) `check_truncated_run.ps1` เขียน `detail` ลง sidecar จริง (ตอนนี้ว่างเปล่าทุกใบ ทั้งที่สคริปต์พิมพ์คำวินิจฉัยเต็มออก stdout)
+(2) เพิ่ม `scripts/detector_digest.ps1` — สแกน `_mt5_auto/reports/*.{truncation,leverage}_check.json` แล้วสรุปเฉพาะใบที่
+`truncated=true` หรือ status ≠ MATCH พร้อม `report_name` + เหตุผล **ต่อเข้า daily monitor chain** ให้มันโผล่เองโดยไม่ต้องมีใครนึกจะเปิด
+(3) `check_state.ps1` §7 เปลี่ยนจาก substring เป็นการจับ **รูปแบบของการอ้างสิทธิ์** (heading / บรรทัดตัวหนา) — วันนี้ยิงโดน
+prose 2 ครั้งและทั้งสองฝ่ายเลี่ยงด้วยการเปลี่ยนคำ ซึ่งแปลว่ากติกาจริงไม่ได้ถูกปกป้อง
+**acceptance:** ยิง digest แล้วต้องเห็น MMLOT 4 ใบ + NOT_RECORDED 6 ใบ พร้อมเหตุผลครบ · แก้ §7 แล้ว `check_state` ยังต้อง
+จับเคสจริงได้ (เขียนไฟล์ทดสอบที่ประกาศตัวเป็น entry point → ต้อง WARN) และไม่จับ prose ที่มีวลีนั้นเฉย ๆ
+**ห้าม:** ลบ §7 ทิ้ง (กติกา single-entry ยังจำเป็น แค่จับผิดวิธี) · แตะ report เก่า · retro-scan 4,930 ใบ (ดู ORDER-218 ข้อ 3%)
+
+## ORDER-220 — [test] `MMLOT_E_unit_indep` ผ่านด้วย 6 ไม้ — รันใหม่ให้มันเป็นการทดสอบจริง — `OPEN`
+**source:** ORDER-218 ข้อ 1. เคส unit-independence ตายที่ 8 วัน/6 ไม้/eqDD 25% ⇒ "PASS" ที่ไม่ได้แปลว่าอะไร
+**task:** รันซ้ำที่ deposit/sizing ที่**ไม่ทริป kill 25%** (ลด lot หรือเพิ่ม deposit — PF ไม่ขึ้นกับ scale) ให้ได้ตัวอย่าง
+ที่มีความหมาย แล้วเทียบ invariance ใหม่ · ตรวจ sidecar truncation ต้องได้ `false` ทั้งคู่ก่อนสรุป
+**bars:** pass = unit-independence ยังจริงเมื่อมีไม้พอ ⇒ ปิดหนี้ · dead = ไม่จริงเมื่อไม่โดน kill ⇒ **`_16_BaseLotMode`
+ต้องถูกทบทวนก่อน Boss_16 ขึ้น demo** · กลาง = จริงแต่ margin บาง ⇒ บันทึกใน README bundle
+**ห้าม:** ตีความ 6-ไม้ PASS เดิมว่าใช้ได้ · แก้ default ของ `_16_BaseLotMode`
+
 ## ORDER-217 — [lever/build-on] MacdDiv: เส้น MACD signal ที่ EA ไม่เคยอ่าน = lever ที่ยังไม่เคยลอง — `OPEN`
 **source:** ORDER-216 — `_02_MacdSignal` ป้อนเข้า `iMACD()` แต่ `MacdAt()` อ่านแค่ buffer 0 ⇒ buffer 1 (เส้น signal)
 **ไม่เคยถูกใช้เลย**. ปฏิกิริยาแรกคือ "ลบ input ทิ้ง" — **ผมว่านั่นคือการทิ้งของ**: MACD-vs-signal crossing เป็นกลไก

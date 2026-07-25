@@ -55,6 +55,34 @@ plus the first-tick log as the baseline, and add the `expectations.csv` row.
 
 ---
 
+## ⚠️ What the lot-mode cage actually proved (added 2026-07-25 by the ORDER-218 error sweep)
+
+ORDER-190 certified `_16_BaseLotMode` with `mm_lotmode_test.ps1` and recorded "K0/K1 cases CLEAN".
+The truncation detector's own sidecar files — written automatically since 2026-07-24 and never
+read by anyone until now — say **all four** of the relevant runs stopped early at the 25% DD kill:
+
+| run | last deal | idle tail | entry deals | eqDD |
+|---|---|---|---|---|
+| `MMLOT_K1_scaled_1x` (deposit 10,000) | 2024.05.23 20:56:40 | 38.1 d (20.9%) | 59 | 25.09% |
+| `MMLOT_K1_scaled_2x` (deposit 20,000) | 2024.05.23 20:56:40 | 38.1 d (20.9%) | 59 | 25.03% |
+| `MMLOT_A_fixed_baseline` | 2024.05.09 16:10:40 | 52.3 d (28.7%) | 115 | 25.09% |
+| `MMLOT_E_unit_indep` | 2024.01.08 14:51:40 | **174.4 d (95.8%)** | **6** | 25.01% |
+
+**The deposit-invariance claim survives, and here is why:** the hazard that detector exists to
+catch is "truncated at one deposit, complete at another, so two runs that look comparable are
+not". The 1x and 2x runs stop at the **same timestamp with the same 59 deals** — they die
+identically, which is itself invariance. That specific trap did not spring.
+
+**What is weaker than "CLEAN" sounds:** every case was measured only up to the DD kill, over
+roughly five of six months, so nothing was verified about behaviour past that point. And
+`MMLOT_E_unit_indep` — the unit-independence case — passed on **6 trades over 8 days**. Treat
+that one as unproven rather than proven.
+
+**None of this blocks the attach.** The mode is opt-in, it is deposit-invariant where it was
+tested, and at a $10,000 start it trades the identical first lot as flat. But if the demo trips
+its 12% kill early, check the lot progression before concluding the *edge* failed — the cage
+never watched this mode past a drawdown of that size.
+
 ## Pre-registered expectations — CORRECTED, do not use the older figures
 
 ORDER-078's funnel ran `2023.01.01 → 2026.07.01`, six months **inside** the 2026H1 holdout, and
