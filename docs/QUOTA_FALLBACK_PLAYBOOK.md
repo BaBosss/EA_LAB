@@ -116,6 +116,26 @@ ORDER-xxx STEP 1 done · PF 1.31 / trades 84 / DD 6.2%
 
 ⚠️ อย่าสร้าง verdict จากผล generator เพียวๆ — มันคือ screening ไม่ได้ผ่าน ladder
 
+## 5.5 CONTEXT BUDGET — qwen มี ~200k ต้องวางแผน (user Q 2026-07-25)
+
+**หลัก: state ของงานอยู่ใน git ไม่ใช่ใน context.** ถ้าออกแบบถูก session ตายกลางทาง = งานไม่หาย
+เปิดใหม่แล้วเดินต่อจาก taskboard ได้เลย. ⇒ กฎ 5 ข้อ (บังคับใน system prompt §6):
+
+1. **1 order = 1 session** — จบ order แล้วปิด session เปิดใหม่สำหรับใบถัดไป **ห้ามสะสมหลาย order ใน context เดียว**
+2. **ห้ามอ่าน `AGENT_TASKBOARD.md` ทั้งไฟล์** (~1,900 บรรทัดและโตขึ้นเรื่อยๆ = กิน context ครึ่งนึงตั้งแต่ยังไม่เริ่มงาน)
+   → อ่านเฉพาะ **header บรรทัด 1-40** (กติกา+template) **+ block ของ order ตัวเองเท่านั้น**
+   (`Grep "^## ORDER-xxx" -A 60` หรือ `Read offset/limit`) — block อื่นไม่เกี่ยว ห้ามโหลด
+3. **ห้ามโหลด report ดิบทั้งไฟล์เข้า context** (html/xml ของ MT5 = หลายหมื่น token/ไฟล์)
+   → parse ด้วย script/grep เอาเฉพาะบรรทัดตัวเลข (PF · trades · DD · net) แล้วค่อยอ่านผลที่ parse แล้ว
+4. **append ผลลง taskboard + commit ทันทีที่จบแต่ละ STEP** — ห้ามเก็บผลไว้ใน context แล้วค่อยเขียนตอนจบ
+   (ทำแบบหลัง = context เต็มตอนไหน ผลหายตอนนั้น)
+5. **ห้าม compact แล้วทำต่อ** — compact ทำให้ลืมรายละเอียด branch ที่กำลังเดิน = ความเสี่ยงเดินผิดกิ่ง
+   → context ใกล้เต็ม (~70%) ให้ **commit ผลที่มี → เขียนบรรทัด "ทำถึง STEP ไหน" ใต้ order → จบ session**
+   session ใหม่อ่านบรรทัดนั้นแล้วเดินต่อได้ทันที
+
+**สัดส่วนที่ควรเป็นในทางปฏิบัติ:** กติกา+order (~10-15k) · ผล parse แล้ว (~5k) · ที่เหลือ = ทำงาน
+ถ้า session ไหนใช้เกิน ~50% ตั้งแต่ยังไม่รัน STEP 1 = อ่านเกินความจำเป็น ให้ทบทวนข้อ 2/3
+
 ## 6. ภาคผนวก — prompt ติดตั้ง oc-qwen (ส่งให้ Codex / oc-dev ทำครั้งเดียว)
 
 > งานนี้เป็นงาน config ฝั่งเครื่อง ไม่ใช่งาน repo — ส่ง prompt นี้ให้ Codex/oc-dev แล้วให้รายงานผลกลับ
@@ -148,7 +168,12 @@ ORDER-xxx STEP 1 done · PF 1.31 / trades 84 / DD 6.2%
     VISION / CLAUDE.md / AGENTS.md / B1_DATASET.csv · ห้ามแตะ .mq5 หรือ ea_template\\core\\ ·
     ห้ามแตะ _vps_deploy หรือ .set ของ EA ที่ demo อยู่
     ผลไม่เข้า branch ไหน หรือรันพลาด 2 ครั้ง = mark BLOCKED(คำถาม) แล้วส่งคำถามกลับ Telegram
-    commit ด้วย tag [oc-qwen] เสมอ · append ผลดิบทั้งก้อน ห้ามสรุปทิ้งตัวเลข"
+    commit ด้วย tag [oc-qwen] เสมอ · append ผลดิบทั้งก้อน ห้ามสรุปทิ้งตัวเลข
+    CONTEXT (200k — ห้ามละเมิด): 1 order = 1 session ห้ามสะสม ·
+    ห้ามอ่าน AGENT_TASKBOARD.md ทั้งไฟล์ อ่านแค่บรรทัด 1-40 + block ของ order ตัวเอง ·
+    ห้ามโหลด report ดิบทั้งไฟล์ ให้ parse เอาเฉพาะบรรทัด PF/trades/DD/net ·
+    commit ทุกครั้งที่จบ STEP ห้ามเก็บผลไว้ใน context ·
+    context ถึง ~70% = commit + เขียนว่าทำถึง STEP ไหน + จบ session (ห้าม compact แล้วทำต่อ)"
 5. ทดสอบ end-to-end: สั่งจาก Telegram ให้ oc-qwen อ่าน taskboard แล้วรายงานว่ามี order OPEN กี่ใบ
    (งาน read-only ล้วน) — ต้องได้คำตอบกลับทาง Telegram จริง
 
