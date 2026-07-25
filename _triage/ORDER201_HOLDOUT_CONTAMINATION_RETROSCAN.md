@@ -97,3 +97,90 @@ per the user's 2026-07-25 stance on optimizer method (coarse genetic first, then
 never default to point-tests), the ranges are worth agreeing before burning the runs.
 
 Reports: `_mt5_auto/reports/O201_BRK_{v2,v3}_{BWD,MAINCLEAN,HOLDOUTONLY}_M4.htm`
+
+---
+
+# Part 2 — the NOT-deployed EAs (2026-07-25, same day)
+
+Swept every written standing for the 25 contaminated non-deployed experts across
+`EA_SCORECARD_AND_REGISTRY.md`, `EA_MASTER_INDEX.csv`, `EDGE_CATALOG.md`,
+`AGENT_TASKBOARD.md`, `ARCHIVE_TASKBOARD_2026-07A.md`, `PROJECT_STATE.md`, `_triage/*VERDICT*`.
+
+The sort that matters is **direction of error**: contamination inflates. So a FAILING verdict on
+a contaminated window is, if anything, more solidly failing — nothing to redo. Only *passing*
+or *promising* standings can have been created by the leak. Two were.
+
+## Re-tested (both on clean MAIN 2023.01–2025.12 + BWD 2020–2022, Model 1, leverage asserted)
+
+### Boss_16_KangarooGrid — **survives, but its judge bar was written from inflated numbers**
+
+This one was urgent because it is **`PENDING_ATTACH(user)` right now** (ORDER-190): a
+demo-scaled `.set` is built and waiting to go on a chart, and the pre-registered judge criteria
+that will decide its fate were calibrated off the ORDER-078 funnel — every step of which ran
+`2023.01.01 → 2026.07.01`, with a year-split row literally labelled `2026H1 … PF 1.75 / 85t`.
+
+| window | PF | trades | eqDD |
+|---|---|---|---|
+| MAIN 2023–2025 (clean) | **1.46** | 205 | 7.39% |
+| BWD 2020–2022 | **1.30** | 278 | 9.70% |
+| *(archived contaminated headline)* | *1.57* | *285* | — |
+
+**The edge is real** — clean MAIN 1.46 clears the 1.2 hard bar and BWD 1.30 clears the 1.0 soft
+bar comfortably, which is more than most of this repo's candidates manage. Attaching it is still
+the right call.
+
+**But two pre-registered numbers must be corrected before attach, or the demo judge will be
+graded against a bar the leak wrote:**
+- expected PF **1.46, not 1.57**
+- expected trade rate **≈68/year** (205 over 3 years), not the ~81–90/yr implied by 285 trades
+  across the longer contaminated span. This one also feeds judge-readiness forecasting, which is
+  exactly what set the judge dates.
+
+The existing "demo-forward is the real holdout" designation (the Boss_16 precedent named in
+CLAUDE.md) stays correct and is now better founded: 2026H1 was consumed by the funnel, so the
+demo period genuinely is the first independent evidence.
+
+### Boss_NRBreakout_rev01 — **the revival hook was the contamination**
+
+Standing was `PARKED-final`, but with a hook that invited revival: *"ceiling ~1.31, OOS 1.37/20t
+— revisit if bench dries"*. Both figures are contaminated — the plateau optimize ended
+`2026.07.01`, and the "OOS" window `2025.07.01–2026.07.01` sits **inside** 2026H1 rather than
+merely being selected with it.
+
+| config | MAIN 2023–2025 clean | BWD 2020–2022 |
+|---|---|---|
+| `NRBreakout_OPT1_p10_ISpick.set` | **PF 0.93** / 80t / net −22.34 | 0.96 / 99t / −12.06 |
+| `NRBreakout_opt1.set` | **PF 0.82** / 192t / net −197.77 | 1.02 / 192t / +16.54 |
+
+**Every clean MAIN number is a loss.** The park was accidentally right, for the wrong reason —
+it was parked on slot priority against Boss_14, when the honest reading is that the ceiling that
+made it look worth reviving does not exist on data it did not see. Registry + master index
+annotated so nobody re-opens this on the 1.31 figure.
+
+Caveat kept deliberately: only the two `.set` files that exist in the repo were re-run. If the
+1.31 pick was a third parameter set that was never saved, it survives only inside the optimize
+XML — it is not recoverable from a `.set`, and would have to be re-derived by a clean optimize.
+
+## Failing verdicts on contaminated evidence — noted, no rework
+`Boss_15_ST03` chassis-cell (DEAD-OPTIMIZED; 0/6 and 0/9 cells, best MAIN 1.15 < 1.2) ·
+`EA_ZSCORE` (killed at Stage 2 by a **clean** BWD run, PF 0.77 — the contaminated number was the
+one that didn't matter) · `EA_LNBREAK` (0/81, best 1.048) · `ZeusInspired` non-XAU legs (all
+terminal numbers already under gate) · `Degold_hunter` (killed on structural/artifact grounds,
+nothing to do with windows). Contamination can only have flattered these.
+
+**Standalone ST03 is clean** — today's separate spacing-lever work re-measured it on the
+standard MAIN/BWD windows, so its live `PARKED-VERIFY(user)` standing does not rest on leaked
+data.
+
+## No written standing at all
+Boss_11_GridTrend · Boss_12_Breakout · Boss_13_MeanRev (regression-cage entries only) ·
+EA_LabTemplate (infra deprecation note only) · LondonBO · BaronGrid · MooDeng · Quantum ·
+EAAmongUs · Boss/PIVOT-NZDUSD · EX197-GBPJPY. Nothing to correct.
+
+## Left unchecked, flagged
+`NuiIndy` live guardrail recommendation (`CutLoss=30`, ORDER-095 verdict 2026-07-17) cites
+"both-window profitable" without a greppable date string. It is a LIVE EA, so worth confirming
+its window at some point — it was outside this pass's deployed-EA scope split.
+
+Reports: `_mt5_auto/reports/O201_B16_flat_{MAINCLEAN,BWD}_M1.htm`,
+`O201_NRB{,base}_{MAINCLEAN,BWD}_M1.htm`
