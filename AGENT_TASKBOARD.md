@@ -32,22 +32,25 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 
-> 🔁 **RE-OPTIMIZE WAVE 205..208 (เขียน 2026-07-25, Opus-seat — user สั่ง "วางแผน optimize ใหม่")**
+> 🔁 **RE-OPTIMIZE WAVE 210..213 (เขียน 2026-07-25, Opus-seat — user สั่ง "วางแผน optimize ใหม่")**
+> <sub>⚠️ renumbered 205..208 → 210..213 ทันทีหลังเขียน: session คู่ขนานลง 205/206 (MacdDiv/PivotBreakout expand)
+> ไว้ก่อนแล้ว — collision เดิมซ้ำรอย ORDER-201/202 เมื่อวาน. ไฟล์ ranges ยังชื่อ `order205_brkxau/` ตามเดิม
+> (prefix = ตอนที่สร้าง ไม่ใช่เจ้าของใบ — เปลี่ยนแล้ว pointer ใน brief ที่ agent ถืออยู่จะพัง). **เลข 209 เว้นว่างไว้.**</sub>
 > **หลักการเลือกว่าตัวไหนต้อง re-opt:** ไม่ใช่ "รันใหม่ให้หมด" แต่รันเฉพาะตัวที่ **หลักฐานที่ใช้เลือกพารามิเตอร์เสียจริง**.
 > ตรวจแล้วมี 3 แหล่งที่ทำให้หลักฐานเสีย และแต่ละแหล่งกินตัวไหนบ้าง:
 > - **(A) holdout leak** (ORDER-202): 87 optimize pass เลือกบนหน้าต่างที่กิน 2026H1 — แต่ deployed จริงโดน
->   **ตัวเดียว = `EA_BREAKOUT_XAU` 991001 (เงินจริง)** → **ORDER-205**. Boss_14 cohort ค่าพารามิเตอร์สะอาด
+>   **ตัวเดียว = `EA_BREAKOUT_XAU` 991001 (เงินจริง)** → **ORDER-210**. Boss_14 cohort ค่าพารามิเตอร์สะอาด
 >   (มาจาก `_IS.ini` 2023.01–2025.06) เสียแค่ "ใบตัดสินว่าจะ ship" → ประกาศ 2026H1 ไหม้ พอ ไม่ต้อง re-opt.
->   Boss_16 สะอาด แต่ **บาร์ที่จะใช้ตัดสิน demo เขียนมาจากเลขที่เฟ้อ** → **ORDER-208** (แก้เลข ไม่ใช่ re-opt).
+>   Boss_16 สะอาด แต่ **บาร์ที่จะใช้ตัดสิน demo เขียนมาจากเลขที่เฟ้อ** → **ORDER-213** (แก้เลข ไม่ใช่ re-opt).
 >   NRBreakout/ST03/ZSCORE/LNBREAK = verdict เป็น "ตก" อยู่แล้ว — contamination มีแต่ทำให้ดูดีขึ้น ไม่ต้องทำใหม่.
 > - **(B) MRIS core classifier พัง** (ORDER-203, แก้แล้ว `265de0e3`): ทุกอย่างที่**กินสัญญาณ regime ย้อนหลัง**
->   ต้องวัดใหม่ — ตัวที่โดนจริงคือ **MacroGate 990120** ที่ attach อยู่ → **ORDER-206**.
+>   ต้องวัดใหม่ — ตัวที่โดนจริงคือ **MacroGate 990120** ที่ attach อยู่ → **ORDER-211**.
 > - **(C) genetic ที่ไม่มี fine-grid** (ORDER-204 กำลังรัน): ยังไม่รู้ว่ากินใครบ้าง — **ORDER-204 คือใบสำรวจ**,
 >   ผลออกมาแล้วค่อยแตกใบ re-opt ต่อ (จะเป็น 209+). ห้ามเดารายชื่อล่วงหน้า.
 > **ที่ไม่อยู่ในเวฟนี้และเหตุผล:** EA ที่ verdict = DEAD/ตก (contamination ทำให้ดูดีขึ้นเท่านั้น) · EA ที่ยังไม่ deploy
 > และไม่มีใครอ้างเลขมันอยู่ (ไม่มีใครเสียหายถ้าเลขผิด — รอ ORDER-204 คัดมาก่อน) · Boss_14 cohort (ค่าสะอาด).
 
-## ORDER-205 — [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด — `CLAIMED(ea-validator, 2026-07-25)`
+## ORDER-210 — [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด — `CLAIMED(ea-validator, 2026-07-25)`
 **source:** ORDER-202 — funnel เดิมของ EA ตัวนี้ **ไม่มี ini สักใบที่จบก่อน 2026** (เช็คครบ 16 ใบ): genetic ทั้ง v2/v3
 และ IS-confirm ทุกใบรัน `2023.01.01 → 2026.06.01` = เลือกพารามิเตอร์บนหน้าต่างที่กิน holdout 6 เดือน.
 **เจอเพิ่มระหว่างเตรียมใบนี้ (ยังไม่เคยบันทึกที่ไหน):** `BRK_XAU_v2_OPT.ini`/`v3_OPT.ini` ใส่ range ด้วยชื่อ input
@@ -66,7 +69,7 @@ source แล้ว 14 ตัว · sweep Bars/Sl/Tp/Ema = 1,680 combo) · **coa
 **ห้าม:** รันหน้าต่างที่จบหลัง 2025.12.31 (**2026H1 ไหม้ไปแล้วสำหรับ EA ตัวนี้ — forward record จากวัน attach = holdout จริงตัวใหม่**) ·
 แตะ `.set` ที่ live อยู่ · ตัดสิน verdict เอง (agent ส่ง evidence, Opus-seat ตัดสิน)
 
-## ORDER-206 — [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง — `OPEN`
+## ORDER-211 — [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง — `OPEN`
 **source:** ORDER-203 — `mris_export_regime.ps1` อ่าน `regime_state.json` จาก core classifier โดยตรง แปลว่า
 **สัญญาณ regime ย้อนหลังทุกเส้นที่ MacroGate เคยใช้ตอน validate มาจาก logic ที่ผิด** (AUDJPY ใต้ pin 110 ตลอด
 ทศวรรษก่อน 2026 → −2 แทน −1 → weight 3 ดัน RI ข้ามเส้น RISK_OFF ตัวเดียว). วัดจริงหลังแก้: calm-2019
@@ -79,17 +82,17 @@ source แล้ว 14 ตัว · sweep Bars/Sl/Tp/Ema = 1,680 combo) · **coa
 ⇒ ถอด gate (advisory-only เหมือนเดิม) · กลาง = ช่วยแต่น้อยกว่าที่เคยอ้าง ⇒ คง attach **แต่แก้ตัวเลขในเอกสารให้ตรง**
 **flat-lot probe:** N-A · **ห้าม:** ใช้ตัวเลข −54..−56% เดิมอ้างต่อโดยไม่ระบุว่ามาจาก classifier ที่พัง · แตะ EA ที่ attach อยู่บน VPS
 
-## ORDER-207 — [🔴 เงินจริง · integrity] `NuiIndy` guardrail `CutLoss=30` — หาหน้าต่างที่มันถูกวัดมา — `OPEN`
+## ORDER-212 — [🔴 เงินจริง · integrity] `NuiIndy` guardrail `CutLoss=30` — หาหน้าต่างที่มันถูกวัดมา — `OPEN`
 **lane:** qwen/Sonnet (grep ล้วน ถ้าเจอไฟล์ที่ระบุหน้าต่างได้) → ถ้าไม่เจอ ยกกลับให้ Opus-seat ตัดสินว่าต้องรันใหม่ไหม
 **source:** ORDER-202 หมายเหตุท้ายรายงาน — คำแนะนำ `CutLoss=30` (ORDER-095 verdict 2026-07-17) อ้างว่า
 "both-window profitable" แต่ **ไม่มี date string ให้ grep** และ NuiIndy เป็น **EA เงินจริง** ที่ทั้ง edge อยู่ที่ escalation
 engine (ดู memory `nuiindy-edge-is-escalation`) — guardrail ตัวนี้คือสิ่งเดียวที่กั้น ruin.
 **spec:** ไล่หา report/ini/verdict ที่ให้เลข CutLoss=30 → ระบุหน้าต่างจริง → ถ้าหน้าต่างจบหลัง 2025.12.31 หรือหาไม่เจอเลย
 ให้บอกตรง ๆ ว่า "หาไม่เจอ" **ห้ามเดา**. **bars:** เจอหน้าต่างสะอาด ⇒ ปิดใบ · เจอว่าหน้าต่างกิน 2026H1 หรือหาไม่เจอ
-⇒ ยกเป็นใบ re-measure (ORDER-209+) เพราะเป็นเงินจริง · **flat-lot probe:** N-A (วัด guardrail ไม่ใช่ entry)
+⇒ ยกเป็นใบ re-measure (ORDER-214+) เพราะเป็นเงินจริง · **flat-lot probe:** N-A (วัด guardrail ไม่ใช่ entry)
 **ห้าม:** แก้ค่า CutLoss บนบัญชีจริง · รัน backtest ในใบนี้ (ใบนี้ = สำรวจหลักฐานอย่างเดียว)
 
-## ORDER-208 — [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด — `OPEN`
+## ORDER-213 — [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด — `OPEN`
 **source:** ORDER-202 Part 2 — Boss_16 **edge จริง** (clean MAIN PF 1.46/205t, BWD 1.30/278t = ผ่านทั้งสองบาร์สบาย)
 แต่ criteria ที่ pre-register ไว้คำนวณจาก funnel ORDER-078 ที่รัน `2023.01.01 → 2026.07.01` ทุกขั้น. ถ้า attach ตอนนี้
 **demo จะถูกตัดสินด้วยบาร์ที่ leak เป็นคนเขียน**. **spec:** แก้ 2 เลขในทุกที่ที่มันปรากฏ (bundle README + `expectations.csv`
