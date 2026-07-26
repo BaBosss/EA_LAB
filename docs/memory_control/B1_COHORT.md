@@ -13,9 +13,26 @@ Per §20.2 step 6, B1 = the 20 orders **after MVP-3 AND MVP-1-lite pass acceptan
 | MVP-3 (active/archive + generated view) — Contracts C0+C1+C1-ENFORCE | 2026-07-14 (ORDER-103 ACCEPT) | `c0f7b0d` |
 | MVP-1-lite (experiment events + evidence manifest) — Contract D | 2026-07-17 (ORDER-105 ACCEPT) | `0e13699e` |
 
-**B1 window opens at commit `0e13699e` (2026-07-17). Cohort = the next 20 eligible terminal orders
-whose close (final DONE/REVIEWED/CLOSED mark) lands strictly AFTER `0e13699e`.** Orders closed earlier
-on 2026-07-17 (e.g. the ORDER-098-x wave closed before Contract D acceptance) are NOT in B1.
+**B1 window opens at commit `0e13699e` (2026-07-17).** Orders closed earlier on 2026-07-17 (e.g. the
+ORDER-098-x wave closed before Contract D acceptance) are NOT in B1.
+
+> ### ⚠️ AMENDED 2026-07-26 (user ratified): B1 is a RUNNING LOG, not a 20-order cohort
+>
+> This section used to read *"Cohort = the next **20** eligible terminal orders"*. By 2026-07-26 the
+> dataset held **61 distinct order ids** — so the practice had been a continuous log for weeks while the
+> doc still described a fixed window. The user's call: **the practice is right, the doc was wrong.**
+> Keep appending for every eligible terminal close, with no upper bound.
+>
+> **What did NOT change, and matters more than the count:** the metrics in §3 are *live observations*
+> (`onboarding_time`, `context_incident`, `lead_attention_hours`). §3 already says: record live, and if
+> genuinely not observed write `NOT_RECORDED` — **never reconstruct**. That rule is what makes the
+> dataset worth having.
+>
+> Concretely, on 2026-07-26 a session wrote review verdicts for ~30 orders that other sessions had
+> closed days earlier. Those orders got **no B1 rows**, deliberately: nobody could observe their
+> onboarding time or context incidents after the fact, and 30 rows of invented zeros would have
+> destroyed the very signal B1 exists to measure. **A row is owed by the session that did the work and
+> watched it happen — not by whoever happens to type the closing verb.**
 
 ## 2. Eligibility rule — identical to B0 (`B0_REPORT.md` §3)
 
