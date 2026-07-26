@@ -1,0 +1,32 @@
+﻿; STF_BTC_H4_pyr1_fan.set — SENSITIVITY FAN รอบ config ที่ยืนยันแล้ว (PYR1: Atr14/Mult2.5/Don20/MaxAdds1/AddAtAtr1.0)
+; 2026-07-26 · ถามคำถามเดียว: เพื่อนบ้านของ config นี้ยังกำไรไหม หรือมันเป็นยอดแหลม
+; combos = AtrPeriod(3: 12/14/16) x Mult(3: 2.0/2.5/3.0) x DonBars(3: 15/20/25) x AddAtAtr(3: 0.5/1.0/1.5) = 81
+; MaxAdds ล็อก 1 (แกน leverage — ไม่เอามาปนใน fan ของ signal robustness)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=14||12||2||16||Y
+_01_Mult=2.5||2.0||0.5||3.0||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=true||true||0||true||N
+_01_DonBars=20||15||5||25||Y
+_02_ExitMode=0||0||0||0||N
+_02_TpAtrMult=4.0||4.0||0||4.0||N
+_02_SlAtrMult=1.0||1.0||0||1.0||N
+_03_UseEma=true||true||0||true||N
+_03_EmaPeriod=250||250||0||250||N
+_03_UseER=false||false||0||false||N
+_03_ErPeriod=8||8||0||8||N
+_03_ErMin=0.30||0.30||0||0.30||N
+_07_UsePyramid=true||true||0||true||N
+_07_MaxAdds=1||1||0||1||N
+_07_AddAtAtr=1.0||0.5||0.5||1.5||Y
+_07_AddLotFactor=1.0||1.0||0||1.0||N
+_07_BasketMaxLossPct=8.0||8.0||0||8.0||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

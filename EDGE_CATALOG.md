@@ -609,3 +609,42 @@ per-symbol downloaded tick history, and crypto is where it bites.
 the numbers. This caught a real error mid-session: the first "BWD 1.35 → 3.51" claim compared a
 main-terminal baseline against a 5b Donchian run. Re-running the baseline on 5b (1.348) happened to
 preserve the conclusion — that was luck, not method.
+
+### PYR1 cage completion (2026-07-26) — all four items cleared, holdout untouched
+
+**Monte Carlo** (2,000 shuffles + bootstrap, deposit 10,000, 0.01 lot/leg): MAIN ruin **0%**, PF-5th
+**1.114**, PF-median 2.358, DD-95th 2.24% · BWD ruin **0%**, PF-5th **2.209**, PF-median 4.087. Both
+bars (ruin ≤2%, PF-5th ≥1.0) pass. Read MAIN's 1.114 honestly: at the 5th percentile of resampling the
+edge nearly disappears — the expected consequence of ~34 signals, and the reason sizing stays small.
+
+**Worst case at the real sizing** (0.01/leg, ≤2 legs = 0.02 BTC): worst single leg **−$69.50 = 0.70%**
+of a 10k account (25H1) · worst realised equity DD **−$247.05 = 2.47%** (21H1) · cage ceiling
+(`_07_BasketMaxLossPct=8`) = −$800 · doctrine bar 15%. Five-fold margin between realised worst and the
+cage. **The one path that can still breach it is a weekend/overnight BTC gap through both legs' trail
+stops at once, which the tester does not simulate** — that is a stated residual, not a closed risk.
+
+**Sensitivity fan** (81 neighbours: AtrPeriod × Mult × DonBars × AddAtAtr, both windows, MaxAdds locked
+because depth is the leverage axis, not a robustness axis): **69/81 = 85.2% clear both windows** ·
+**BWD PF minimum across all 81 cells = 1.71** (nothing below 1.0 anywhere) · MAIN PF min 0.63 / median
+1.69 / max 4.01, the 12 failures all sit at DonBars=25 or Mult=3.0 · the confirmed centre reproduces to
+the digit (2.400 / 4.363) · chosen `DonBars=20` and `AddAtAtr=1.0` are per-axis interior optima on both
+windows. Caveat carried forward, same as ORDER-210: when 85% of the space passes, the bar is not
+discriminating — this proves "not a spike", it does not prove "big edge".
+
+**`select_robust_pass.py` mis-reported this fan** as `survivors=0 (0.0%) plateau=NONE` while the raw
+rows were profitable almost everywhere (PF 1.59–2.79 at 68–81 legs). Its survivor filter cannot be
+trusted on multi-leg/pyramid result sets — read the raw XML rows for any basket EA.
+
+**Correlation vs the deployed cohort** (monthly P&L, MAIN window): BRK_XAU 991001 (real money)
+**+0.167** (16 mo) · MacdDiv XAU H4 +0.134 (22 mo) · O108_S H1 +0.176 (16 mo) — all far inside the
+≤0.40 additive band. Against its own sibling (SuperTrend ER-gated on XAU) **+0.444**, which is exactly
+what a shared signal engine should look like: usable together, but not both at full size.
+
+**Config choice was decided by a pre-registered tie-break, and it cost us the prettier number.** The fan
+suggested `Mult=2.0`; M4 on both windows gave MAIN **3.542** / +901.96 (vs 2.379 / +700.28) but BWD
+**3.307** (vs **4.044**). Rule set before the run — *win on the window we did not tune* — so `Mult=2.5`
+stays. MAIN alone would have picked the other one.
+
+**Funnel position:** MAIN 2.379 · BWD 4.044 · MC pass · M4 throughout · fan 85% · corr additive.
+The only remaining gate is the **2026H1 holdout, which is still clean for this EA** (no STF run has ever
+crossed 2025.12.31). One shot, and it must be spent with no further tuning afterwards.
