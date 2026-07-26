@@ -645,6 +645,120 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "<EXPERT>" -Symbol <SYM> 
 
 **ห้าม:** เขียน verdict หรือคำว่า pass/dead/ตาย · เรียง cell ใหม่ · เพิ่ม cell เอง (ผิดกฎ `AGENTS.md` §4 "อย่าคิดงานใหม่เอง" — matrix มี Claude เป็นเจ้าของ) · ตีความ PF · **เอา cell ที่ได้ PF ต่ำไป optimize ต่อเอง** (นั่นคืองาน lead) · ทุกข้อห้ามของ ORDER-205
 
+
+### MATRIX ชุดที่ 1 (Claude เติม 2026-07-25) — Boss_14 GridLog symbol-screen ต่อจาก ORDER-095
+
+**ที่มา:** ORDER-095 §"ขยายได้" + line "ORDER-095 ทำแค่ 1/6 EA". Boss_14 = ตัวเดียวในคลังที่**พิสูจน์แล้วว่า
+เดินทางข้ามคู่เงินได้จริง** (DEMO 6 symbol: AUDNZD/USDJPY/EURJPY/AUDCAD/CADJPY/EURUSD + live GBPJPY)
+→ คุ้มที่สุดที่จะกวาดคู่ที่ยังไม่เคยแตะ. ⚠️ **ไม่ใส่ EA_SUPERTREND ทั้งที่ ORDER-095 list ว่า "ขยายได้"** —
+scorecard L190 ระบุ "SuperTrend DEAD ใน signal hunt = คู่เงินอื่น; XAU H4 ตัวนี้รอด" = ขยายคู่เงินตายไปแล้ว
+(ORDER-095 list ตรงนั้น stale — Claude แก้ตอน review รอบหน้า)
+
+**สิ่งที่ cell นี้ตอบ = step 1 ของ ORDER-095 methodology เท่านั้น** ("flat-lot smoke บน symbol candidate →
+เอาที่ entry PF>1") — **ไม่ใช่** IS/OOS, ไม่ใช่ corr, ไม่ใช่ deploy. สองอันหลัง = งาน Claude หลัง review
+
+**RUN TEMPLATE** (แทน `{SYM}` ด้วย symbol ในแถว · รันทีละแถว · **สองรอบต่อแถว: A แล้ว B**):
+```powershell
+# A = flat-lot probe (StackMode=90 single) — ตัวชี้ว่า ENTRY มี edge ไหม (บรรทัดที่ใช้ตัดสินจริง)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
+  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
+  -ReportName GEN_{SYM}_H1_MAIN_flat
+#    ↑ แก้ในไฟล์ .set สำเนา: StackMode=90 (เดิม 92) — อย่าแก้ไฟล์ต้นฉบับ ให้ copy เป็น *_flat.set ก่อน
+# B = grid ปกติ (StackMode=92, .set เดิมไม่แก้) — ตัวชี้ว่าทั้งระบบทำเงินไหม
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
+  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
+  -ReportName GEN_{SYM}_H1_MAIN_grid
+```
+- **ต้องปิด MT5 GUI ก่อนรัน** ไม่งั้น script abort เอง (`docs/MT5_AUTOMATION.md`)
+- **parse เอาแค่ 4 ตัวเลข** จาก report: `Profit factor` · `Total trades` · `Balance DD relative %` · `Total net profit`
+  — **ห้ามโหลด html ทั้งไฟล์เข้า context** (§5.5 ข้อ 3)
+- ⚠️ base .set = AUDNZD DEMO เพราะ step เป็น **ATR-adaptive** (`_9_StepUseATR=true`) จึงพกข้ามคู่ได้ —
+  **นี่คือ assumption ของ Claude ไม่ใช่ config ที่ tune มาเพื่อคู่นั้น** → ผลที่ได้ = screening หยาบตามนิยาม
+- **{SYM} ไม่มี history** (คู่ exotic บาง broker ไม่มี) → เขียนช่องผล = `NO-DATA` แล้วไปแถวถัดไป **ไม่ใช่ BLOCKED**
+
+| # | EA | symbol | TF | window | lever/หมายเหตุ | ผล |
+|---|---|---|---|---|---|---|
+| 1 | Boss_14_GridLog | NZDJPY | H1 | MAIN 2023.07–2026.07 | A flat(90) + B grid(92) | |
+| 2 | Boss_14_GridLog | CADCHF | H1 | MAIN | A + B | |
+| 3 | Boss_14_GridLog | GBPCAD | H1 | MAIN | A + B | |
+| 4 | Boss_14_GridLog | EURAUD | H1 | MAIN | A + B | |
+| 5 | Boss_14_GridLog | AUDCHF | H1 | MAIN | A + B (ORDER-095 เคย BLOCKED-ON-DATA เพราะ **BWD** — MAIN น่าจะมี) | |
+| 6 | Boss_14_GridLog | NZDCAD | H1 | MAIN | A + B (เหตุผลเดียวกับ #5) | |
+| 7 | Boss_14_GridLog | CHFJPY | H1 | MAIN | A + B | |
+| 8 | Boss_14_GridLog | GBPCHF | H1 | MAIN | A + B (เหตุผลเดียวกับ #5) | |
+| 9 | Boss_14_GridLog | EURNZD | H1 | MAIN | A + B | |
+| 10 | Boss_14_GridLog | AUDUSD | H1 | MAIN | A + B | |
+| 11 | Boss_14_GridLog | USDCAD | H1 | MAIN | A + B | |
+| 12 | Boss_14_GridLog | GBPNZD | H1 | MAIN | A + B | |
+
+**อ่านผลยังไง (worker แค่ติดป้าย ไม่ตัดสิน):** `A ≥ 1.2` = entry มี edge ที่คู่นี้ → น่าสนใจ · `A < 1.0 แต่ B > 1`
+= **grid ปั้นให้ ไม่ใช่ edge** ติดป้าย `ESCALATION-ONLY` (VERDICT GATE ข้อ 1 — แต่ **ห้าม**เขียนว่า DEAD เอง) ·
+ทั้งคู่ < 1.0 = ติดป้าย `no-pulse` · **ทุกป้าย = ป้ายจัดกอง Claude ตัดสินจริงตอน review**
+
+### MATRIX ชุดที่ 2 (Claude เติม 2026-07-25) — **GENETIC optimize**: SuperTrendFlip × NON-FX
+
+**ที่มา (user hypothesis 2026-07-25):** *"SuperTrend เหมาะกับสินค้าที่ไม่ใช่ค่าเงิน — BTC, oil, หุ้น, index"* ·
+ตรงกับหลักฐานที่มี: scorecard L190 = SuperTrend ตายที่คู่เงิน **แต่รอดที่ XAUUSD H4** (PF 1.92/33t · OOS 5.09) =
+สินค้าที่ trend ยาว+vol สูงคือบ้านของมัน. ⇒ กวาด non-FX ให้ครบ **ด้วย genetic ไม่ใช่ทีละพารามิเตอร์**
+
+**ต่างจากชุดที่ 1 ยังไง:** ชุด 1 = smoke ค่าเดียว (ถูก/เร็ว/ตอบแค่ "มีชีพจรไหม") · ชุด 2 = **optimize จริง**
+1 cell = genetic 155,520 combo แล้วเอา plateau ไป confirm Model-4 (แพงกว่ามาก ใช้เมื่อเชื่อว่ามี edge ให้หา)
+
+**search space (baked ใน .set แล้ว):** `ea_projects\(TRD)_SuperTrendFlip\set_files\STF_gen_nonfx.set`
+= AtrPeriod(10) × Mult(8) × ExitMode(3) × TpAtrMult(9) × SlAtrMult(6) × UseEma(2) × EmaPeriod(6)
+**Stage B** (หลังได้ plateau เท่านั้น): เปิด `_01_UseDonchian`/`_01_DonBars` เป็น `Y` แล้ว optimize รอบสอง
+บนช่วงแคบรอบ center — **ห้ามเปิดพร้อมกันตั้งแต่รอบแรก** (search space ระเบิด + plateau อ่านไม่ออก)
+
+**RUN TEMPLATE (3 ขั้นต่อ cell — ขั้น 3 คือขั้นที่ให้ตัวเลขจริง):**
+```powershell
+# 1) GENETIC optimize บน MAIN (Model 1 = เร็ว, ใช้หา candidate เท่านั้น ไม่ใช่หลักฐาน)
+powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" `
+  -Symbol {SYM} -Period {TF} -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 1 -Optimization 2 `
+  -SetFile "D:\EA_LAB\ea_projects\(TRD)_SuperTrendFlip\set_files\STF_gen_nonfx.set" `
+  -ReportName GEN2_{SYM}_{TF}_MAIN
+# 2) เลือก robust pass (ห้ามเลือก peak เอง — script เลือก plateau ให้)
+python D:\EA_LAB\scripts\select_robust_pass.py D:\EA_LAB\_mt5_auto\optimizations\GEN2_{SYM}_{TF}_MAIN.xml
+python D:\EA_LAB\scripts\set_from_robust.py   # -> .set ของ pass ที่เลือก
+# 3) CONFIRM ด้วย Model-4 ทั้งสอง window (นี่คือตัวเลขที่กรอกลงตาราง)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" -Symbol {SYM} `
+  -Period {TF} -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 -SetFile <set จากขั้น 2> `
+  -ReportName GEN2_{SYM}_{TF}_MAIN_M4
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" -Symbol {SYM} `
+  -Period {TF} -FromDate 2020.01.01 -ToDate 2022.12.31 -Model 4 -SetFile <set จากขั้น 2> `
+  -ReportName GEN2_{SYM}_{TF}_BWD_M4
+```
+**⚠️ ข้อควรระวัง 4 ข้อ (ละเมิด = ผลใช้ไม่ได้):**
+1. **ผลขั้น 1 (Model-1) ห้ามกรอกลงตารางและห้ามรายงานเป็นผล** — เป็นแค่ตัวหา candidate · ตัวเลขจริง = ขั้น 3
+   (Model-2 ban ขยายผลมาถึง Model-1 optimize: optimizer เร็วไว้หา ไม่ใช่ไว้ตัดสิน)
+2. **`scripts\qwen_batch_runner.ps1` มี auto-fallback ไป Model 2 เมื่อ Model 4 ล้ม** (บรรทัด ~60, ติดป้าย
+   `M2fallback` ใน log) — **ถ้าเห็นป้ายนี้ = ผลนั้นใช้ไม่ได้ ให้ mark `M2-INVALID` แล้วรันใหม่** ห้ามกรอกลงตาราง
+3. **BTCUSD/ETHUSD: backtest คิด swap = 0 แต่ของจริงติดลบหนัก** (RCA 2026-07: BTC long −14.67%/ปี ·
+   ETH −9.86%/ปี) → cell crypto ที่ผ่าน ให้เขียนหมายเหตุ `swap-unadjusted` ต่อท้ายผลเสมอ
+4. optimize 1 cell กินเวลาเป็นชั่วโมง — **1 cell = 1 session** (§5.5) · ปิด MT5 GUI ก่อนรัน
+
+| # | EA | symbol | TF | window | lever/หมายเหตุ | ผล (M4 MAIN / M4 BWD) |
+|---|---|---|---|---|---|---|
+| 13 | STF | BTCUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 14 | STF | BTCUSD | H1 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 15 | STF | XAUUSD | H4 | MAIN+BWD | **control cell** — ต้องได้ ~PF 1.9 ถ้าต่ำกว่ามาก = pipeline ผิด ไม่ใช่ตลาด | |
+| 16 | STF | WTI | H4 | MAIN+BWD | genetic Stage A | |
+| 17 | STF | US30 | H4 | MAIN+BWD | genetic Stage A | |
+| 18 | STF | XAGUSD | H4 | MAIN+BWD | genetic Stage A | |
+| 19 | STF | ETHUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 20 | STF | BRENT | H4 | MAIN+BWD | genetic Stage A | |
+| 21 | STF | NAS100 | H4 | MAIN+BWD | genetic Stage A (ORDER-116 เคยเจอ no-data — ถ้าไม่มี = `NO-DATA`) | |
+| 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A | |
+| 23 | STF | XAUUSD | H1 | MAIN+BWD | บ้านเดิมคนละ TF | |
+| 24 | STF | US30 | H1 | MAIN+BWD | genetic Stage A | |
+
+**cell #15 = control ทำก่อนเป็นอันดับแรก** — ถ้า control ออกมาต่ำผิดปกติ แปลว่า pipeline/data มีปัญหา
+ไม่ใช่ตลาด → หยุดทั้ง matrix แล้ว `BLOCKED(control cell ไม่ผ่าน)` แจ้ง user ทันที (อย่ารันต่อให้เปลือง)
+
+**อ่านผลยังไง (worker ติดป้ายเท่านั้น):** `M4 MAIN ≥1.2 AND BWD ≥1.0` = `both-window-pulse` ·
+`MAIN ≥1.2 แต่ BWD <1.0` = `main-only` · `MAIN <1.0` = `no-pulse` — **ห้ามเขียน DEAD/CANDIDATE เอง**
+
 ---
 
 ## ORDER-203 — [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026 เพี้ยน** — `FIXED + REVIEWED(Claude/Opus 2026-07-25, user เคาะ "ทำเลย" → commit 265de0e3)`
