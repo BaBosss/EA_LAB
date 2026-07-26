@@ -31,7 +31,7 @@ orders legitimately re-scale as balance evolves, which is the whole point of mod
 USAGE
   powershell -File scripts\mm_lotmode_test.ps1
   powershell -File scripts\mm_lotmode_test.ps1 -KeepSets     # leave generated .set files for inspection
-Requires: MT5 GUI closed (mt5_run.ps1 guard). 8 sequential tester runs, Model 1.
+Requires: MT5 GUI closed (mt5_run.ps1 guard). 12 sequential tester runs, Model 1.
 #>
 [CmdletBinding()]
 param(
@@ -95,7 +95,17 @@ $cases = @(
   @{ id='B_ratio_1x';       dep=10000; expect=0.10; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
   @{ id='C_ratio_0p5x';     dep=5000;  expect=0.05; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
   @{ id='D_ratio_2x';       dep=20000; expect=0.20; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
+  # ORDER-220. E is the same ratio as D expressed 10x SMALLER, and it always dies early: 0.20
+  # lot on a $2,000 deposit is ten times the risk of 0.20 lot on $20,000, so the DD hard-kill
+  # fires and the run ends after 6 trades in 8 days. The first-lot assertion still holds (the
+  # first deal happens before any kill can), but a case that only ever produces 6 trades is
+  # not much of a test, and on 2026-07-24 it was recorded as a plain PASS with nothing saying
+  # how thin it was. E2 is the same ratio expressed 10x LARGER, where the kill cannot reach:
+  # that gives the invariant at least one full-window leg. Keep BOTH - the pair is also the
+  # honest statement of the limit, which is that a fixed ratio is not equally survivable at
+  # every absolute size, only equally SIZED.
   @{ id='E_unit_indep';     dep=2000;  expect=0.20; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='1000.0';  RC_MaxLot='5.0' } },
+  @{ id='E2_unit_indep_hi'; dep=200000; expect=0.20; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='100000.0'; RC_MaxLot='5.0' } },
   @{ id='F_maxlot_clamp';   dep=20000; expect=0.15; over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='0.15' } },
   @{ id='G_bad_anchor';     dep=10000; expect=0.0;  over=@{ FirstLotMode='43'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='0.0';     RC_MaxLot='5.0' } },
   @{ id='H_mode42_no_sl';   dep=10000; expect=0.0;  over=@{ FirstLotMode='42'; _42_RiskPct='1.0'; SLMode='30';                       RC_MaxLot='5.0' } },
@@ -107,7 +117,14 @@ $cases = @(
   @{ id='K1_scaled_1x';     dep=10000; expect=0.10; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
      over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
   @{ id='K1_scaled_2x';     dep=20000; expect=0.20; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
-     over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } }
+     over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='10000.0'; RC_MaxLot='5.0' } },
+  # ORDER-220: K1_scaled_1x and _2x BOTH hit the 25% kill (eqDD 25.09 / 25.03), so the entry-16
+  # scaler's evidence was two truncated runs compared against each other. They agree, but they
+  # agree about a shortened window. This leg is the same 2x ratio at 10x the absolute size,
+  # where the kill cannot reach - it is what gives _16_BaseLotMode a clean sample before
+  # Boss_16 goes on a demo chart.
+  @{ id='K1_scaled_hi';     dep=200000; expect=0.20; ea='EALabTpl\Boss_16_KangarooGrid'; base='ea_template\sets\regression\Boss_16_KangarooGrid_regression_full.set';
+     over=@{ _16_BaseLotMode='1'; _43_LotPerAnchor='0.10'; _43_BalanceAnchor='100000.0'; RC_MaxLot='5.0' } }
 )
 
 $rows = @(); $fail = 0
@@ -182,9 +199,39 @@ if ($a -and $b) { Write-Host ">> [INFO] fixed-lot A=$($a.trades) trades vs balan
 # cross-case invariant: D and E are the same RATIO expressed in 10x different units.
 $dd = $rows | Where-Object case -eq 'D_ratio_2x'
 $ee = $rows | Where-Object case -eq 'E_unit_indep'
-if ($dd -and $ee) {
-  if ($dd.got -eq $ee.got) { Write-Host ">> [PASS] invariant: unit independence - D and E both sized $($dd.got)" -ForegroundColor Green }
-  else { Write-Host ">> [FAIL] invariant: D=$($dd.got) vs E=$($ee.got) - mode 43 is NOT unit-independent" -ForegroundColor Red; $fail++ }
+$e2 = $rows | Where-Object case -eq 'E2_unit_indep_hi'
+if ($dd -and $ee -and $e2) {
+  if (($dd.got -eq $ee.got) -and ($dd.got -eq $e2.got)) {
+    Write-Host ">> [PASS] invariant: unit independence across 100x of absolute size - D(x1) E(x0.1) E2(x10) all sized $($dd.got)" -ForegroundColor Green
+  } else {
+    Write-Host ">> [FAIL] invariant: D=$($dd.got) E=$($ee.got) E2=$($e2.got) - mode 43 is NOT unit-independent" -ForegroundColor Red; $fail++
+  }
+  # ORDER-220: an invariant proven only on runs the cage cut short is an invariant proven on a
+  # different experiment than the one written down. At least one leg has to be a full window.
+  $e2Side = Join-Path $root "_mt5_auto\reports\MMLOT_E2_unit_indep_hi.truncation_check.json"
+  if (Test-Path $e2Side) {
+    $e2j = Get-Content $e2Side -Raw | ConvertFrom-Json
+    if ($e2j.truncated) {
+      Write-Host ">> [FAIL] E2 was itself truncated - no full-window leg survives, so the invariant has no clean sample. Raise its deposit or lower the lot and re-run." -ForegroundColor Red; $fail++
+    } else {
+      Write-Host ">> [PASS] E2 ran the full window ($($e2.trades) trades) - the invariant has a clean leg" -ForegroundColor Green
+    }
+  } else {
+    Write-Host ">> [WARN] no truncation sidecar for E2 - cannot confirm it ran the full window" -ForegroundColor Yellow
+  }
+}
+# Entry 16 has its own lot law, so it needs its own clean leg (ORDER-220).
+$k1a = $rows | Where-Object case -eq 'K1_scaled_2x'
+$k1h = $rows | Where-Object case -eq 'K1_scaled_hi'
+if ($k1a -and $k1h) {
+  if ($k1a.got -eq $k1h.got) { Write-Host ">> [PASS] invariant: entry-16 scaler is size-independent - K1_2x and K1_hi both sized $($k1h.got) across 10x of absolute size" -ForegroundColor Green }
+  else { Write-Host ">> [FAIL] invariant: K1_2x=$($k1a.got) vs K1_hi=$($k1h.got) - _16_BaseLotMode is NOT size-independent" -ForegroundColor Red; $fail++ }
+  $khSide = Join-Path $root "_mt5_auto\reports\MMLOT_K1_scaled_hi.truncation_check.json"
+  if (Test-Path $khSide) {
+    $khj = Get-Content $khSide -Raw | ConvertFrom-Json
+    if ($khj.truncated) { Write-Host ">> [FAIL] K1_hi was truncated too - entry 16 still has no full-window leg" -ForegroundColor Red; $fail++ }
+    else { Write-Host ">> [PASS] K1_hi ran the full window ($($k1h.trades) trades) - entry 16 has a clean leg" -ForegroundColor Green }
+  }
 }
 
 Write-Host ""
