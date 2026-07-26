@@ -27,12 +27,14 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
-| `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00 | (ไม่ได้จอง — ย้อนหลัง) | `AGENT_TASKBOARD.md` (แถว ORDER-GEN-STANDING) · `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` · `_mt5_auto/**` | ไม่ทราบ | `ACTIVE` |
+| `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00 | **240-249** | `AGENT_TASKBOARD.md` (แถว ORDER-GEN-STANDING) · `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` · `_mt5_auto/**` | ไม่ทราบ | `ACTIVE` |
 | `S-2026-07-26-TRIAGE` | 2026-07-26 13:00 | **230-239** | `docs/SESSION_LEDGER.md` · `scripts/check_order_collision.ps1` · `scripts/make_taskboard_digest.ps1` · `TASKBOARD_DIGEST.md` · `_triage/_archive/**` · (ตอนจบ) `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` | ไม่ใช้ | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.
-เลข order block เว้นไว้เพราะมันใช้ ORDER-GEN-STANDING ซึ่งเป็น standing order ไม่กินเลขใหม่.</sub>
+มันทำงานบน ORDER-GEN-STANDING ซึ่งเป็น standing order ไม่กินเลขใหม่ **แต่จอง 240-249 ให้ล่วงหน้า** เพราะ
+`check_order_collision.ps1` RULE 2 บล็อกเลขที่อยู่นอกบล็อกของทุกเลนที่ ACTIVE — ถ้าไม่จองให้ เลนนั้นจะโดนบล็อก
+กลางคันทั้งที่ไม่ได้ทำอะไรผิด. การจองล่วงหน้า = **ผ่อนให้เท่านั้น ไม่ปิดกั้นอะไรเพิ่ม** จึงปลอดภัยที่จะเดาแทน.</sub>
 
 ## ประวัติเลนที่ปิดแล้ว
 
@@ -44,4 +46,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **240-249**
+- บล็อกถัดไปที่จองได้ = **250-259**

@@ -36,6 +36,21 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+# Order-number collision guard (2026-07-26). Fast no-op unless AGENT_TASKBOARD.md is
+# staged. BLOCKS a duplicate order id (within the active board, or active-vs-archive)
+# and a new order number outside the committing lane's reserved block in
+# docs/SESSION_LEDGER.md; WARNS when a staged path belongs to another ACTIVE lane.
+# Three renumber-after-the-fact collisions in one month (fd5264f8, 30598b55, and the
+# still-unfixed ORDER-098-C double-use) is what a memory-only rule buys you.
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_order_collision.ps1
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] order-number collision check failed (above)."
+  echo "[pre-commit] If you need a number outside your block, claim one in docs/SESSION_LEDGER.md first."
+  exit $rc
+fi
+
 event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
 if [ -n "$event_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1
