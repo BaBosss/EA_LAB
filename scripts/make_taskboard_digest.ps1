@@ -35,10 +35,27 @@
 [CmdletBinding()]
 param(
     [switch]$Check,
-    [string]$Root = (Split-Path -Parent $PSScriptRoot)
+    [string]$Root = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+# Resolve the repo root defensively. $PSScriptRoot comes back EMPTY when the script is
+# invoked as `powershell.exe -File <relative\path.ps1>` from a non-PowerShell shell,
+# which is exactly how the pre-commit chain and the bash tool call it -- and evaluating
+# `Split-Path -Parent $PSScriptRoot` in the param default then threw before the body ran.
+# Suppressed stdout hid that: the script "ran", wrote nothing, and left a stale digest
+# behind that looked freshly generated.
+if (-not $Root) {
+    $scriptDir = $PSScriptRoot
+    if (-not $scriptDir -and $MyInvocation.MyCommand.Path) {
+        $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+    }
+    if (-not $scriptDir) {
+        throw 'cannot resolve script directory; pass -Root explicitly'
+    }
+    $Root = Split-Path -Parent $scriptDir
+}
 
 $ACTIVE_REL  = 'AGENT_TASKBOARD.md'
 $ARCHIVE_REL = 'ARCHIVE_TASKBOARD_2026-07A.md'
@@ -207,6 +224,14 @@ if ($Check) {
     # compare on canonical LF so a CRLF checkout does not read as drift
     $normDisk = $onDisk   -replace "`r`n", "`n"
     $normNew  = $digest   -replace "`r`n", "`n"
+    # Set-Content -Encoding UTF8 writes a BOM under PS 5.1 and Get-Content -Raw hands
+    # it back as the first character, while the freshly built string has none. Without
+    # this strip, -Check reported STALE on a byte-identical file -- i.e. always. A
+    # staleness gate that never goes green is worse than no gate: it trains people to
+    # ignore it.
+    $bom = [char]0xFEFF
+    $normDisk = $normDisk.TrimStart($bom)
+    $normNew  = $normNew.TrimStart($bom)
     if ($normDisk -eq $normNew) {
         Write-Host "[digest] OK -- $OUT_REL matches both taskboards" -ForegroundColor Green
         exit 0
