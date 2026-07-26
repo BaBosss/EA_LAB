@@ -656,3 +656,39 @@ stays. MAIN alone would have picked the other one.
 **Funnel position:** MAIN 2.379 · BWD 4.044 · MC pass · M4 throughout · fan 85% · corr additive.
 The only remaining gate is the **2026H1 holdout, which is still clean for this EA** (no STF run has ever
 crossed 2025.12.31). One shot, and it must be spent with no further tuning afterwards.
+
+### Holdout spent + swap measured (2026-07-26, closing the PYR1 file)
+
+**The swap question was lore; now it is a measurement, and it splits the lab in two.** A probe EA that
+holds one long for 30 days and reports the tester's own numbers:
+
+| symbol | swap mode | spec | tester behaviour |
+|---|---|---|---|
+| BTCUSD | `INTEREST_CURRENT` | long −14.67 %/yr · short −0.49 %/yr | **charges NOTHING** — 30-day hold returned +8.99, exactly the price-only P&L, where the spec implies −12.84 |
+| XAUUSD | `POINTS` | long −100.66 pts · short +23.82 | **charges correctly** — measured −29.25 against −29.19 expected |
+
+So the repo's `-14.67%/yr (backtest คิด 0)` note was right about crypto and, more importantly, **every
+XAU backtest in the lab already carries its financing cost.** The −14.67 figure is not an external
+estimate — it is literally `SYMBOL_SWAP_LONG` on this broker's BTCUSD.
+
+**Swap charged post-hoc from real per-leg holding time** (conservative: worse of entry/exit price, and
+weekend triple-charge ignored, which if anything understates it). Mean holding turned out to be **4.59
+days**, not the long stretches the ExitMode=0 design made me expect:
+
+| window | swap bill | PF before → after | net before → after |
+|---|---|---|---|
+| MAIN | −$51.79 (7.4% of net) | 2.379 → **2.257** | +700.28 → **+648.49** |
+| BWD | −$16.12 (2.1%) | 4.044 → **3.949** | +773.55 → **+757.43** |
+| MC MAIN | — | PF-5th 1.114 → **1.052** · ruin **0%** | — |
+
+BWD's bill is a third of MAIN's for the same holding time because BTC traded at a fraction of the price
+in 2020-2022 — the cost scales with notional, so this drag grows as BTC does.
+
+**Then the 2026H1 holdout was spent, once, with no tuning afterwards:**
+**PF 4.32 (swap-adjusted 4.274) · 9 legs · +250.52 · eqDD 2.52% · 29.4M ticks · traded through to
+2026.06.30**, ending on a profitable short basket (BTC 62k → 58.6k), so the edge is not long-only.
+Bar was PF ≥1.2 — cleared wide. **But n=9 over six months (the expected rate for ~11 signals/yr) can
+only say "does not contradict the candidate"; it cannot size the edge.**
+
+**Verdict: VALIDATED CANDIDATE.** 2026H1 is now spent for this EA — the forward record from the day of
+any demo attach becomes the next holdout (Boss_16 precedent). Demo-attach decision is the user's.
