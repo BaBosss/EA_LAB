@@ -35,7 +35,8 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
-| `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) · `AGENT_TASKBOARD.md` (แถว ORDER-280) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
+| `S-2026-07-27-GREENYELLOW` | 2026-07-27 06:35 | **320-329** | `scripts/**` + `scripts/_test/**` (270 · 238 · 252) · `AGENT_TASKBOARD.md` (แถว ORDER-205 · 206 · 231 · 236 · 238 · 250 · 251 · 252 · 270 เท่านั้น) · `EA_SCORECARD_AND_REGISTRY.md`/`EA_MASTER_INDEX.csv` (แถว TsMom 992001 · SS1 LondonORB 992003 · MacdDiv · PivotBreakout) · `docs/memory_control/B1_DATASET.csv` · `_mt5_auto/**` (รันเทส 205/206/231/236) | `D:\Meta 5b` (portable) — **รับช่วงจาก REV04 ที่ปิดแล้ว** | `ACTIVE` |
+| `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) · `AGENT_TASKBOARD.md` (แถว ORDER-280) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `CLOSED` (2026-07-27 06:35 — **ปิดโดย session ถัดไปตามคำสั่ง user**; commit สุดท้ายของเลน = `862513fe` 07-26 19:40 ⇒ เงียบ ~11 ชม. · ORDER-280 ยัง `CLAIMED` ค้างที่ STEP 0 ไม่มีตัวเลขใดๆ — ใครมารับต่อต้องเริ่มที่ STEP 0 parity ใหม่) |
 | `S-2026-07-26-CUTLOSS` (เขียนย้อนหลัง — เปิดก่อน ledger นี้จะถูกใช้จริงในวันนี้ ไม่ใช่การละเมิด) | 2026-07-26 ~18:00–20:30 | ไม่จองเลข (แก้ order เดิม ORDER-215/219/220/221/222 ไม่เปิดใหม่) | `AGENT_TASKBOARD.md` (แถว ORDER-215/219/220/221/222 เท่านั้น) · `EA_SCORECARD_AND_REGISTRY.md`/`EA_MASTER_INDEX.csv` (แถว NuiIndy/MatchaGrid) · `_mt5_auto/ab_sets/order215/**`, `order222/**` · `scripts/order21{5,2}*_cutloss_probe.ps1`, `check_stale_binaries.ps1`, `detector_digest.ps1` | **`D:\Meta 5b` (portable) ช่วงสั้นๆ 20:10-20:30** — ชนกับเลนที่ REV04 ประกาศไว้; `mt5_run.ps1`'s process-guard กันไม่ให้รันซ้อนกันจริง (คนละ launch คนละเวลา) แต่ไม่ได้เช็ค ledger ก่อนใช้ — แจ้งไว้ให้ REV04 เห็นว่าเลนถูกยืมใช้ช่วงสั้นๆ | `CLOSED` (2026-07-26 20:35) |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
@@ -55,6 +56,6 @@
 
 ## เลขที่ใช้ไปแล้ว (อัปเดตเมื่อจองบล็อกใหม่)
 
-- สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
+- สูงสุดที่ใช้จริง ณ 2026-07-27 = **280**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **320-329** (290-299 · 310-319 เว้นกันชน · 280-289 = REV04 · 300-309 = CAGE)
+- บล็อกถัดไปที่จองได้ = **340-349** (290-299 · 310-319 · 330-339 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW)
