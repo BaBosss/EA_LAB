@@ -661,13 +661,13 @@ scorecard L190 ระบุ "SuperTrend DEAD ใน signal hunt = คู่เ�
 ```powershell
 # A = flat-lot probe (StackMode=90 single) — ตัวชี้ว่า ENTRY มี edge ไหม (บรรทัดที่ใช้ตัดสินจริง)
 powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
-  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -Period H1 -FromDate 2023.01.01 -ToDate 2025.12.31 -Model 4 `
   -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
   -ReportName GEN_{SYM}_H1_MAIN_flat
 #    ↑ แก้ในไฟล์ .set สำเนา: StackMode=90 (เดิม 92) — อย่าแก้ไฟล์ต้นฉบับ ให้ copy เป็น *_flat.set ก่อน
 # B = grid ปกติ (StackMode=92, .set เดิมไม่แก้) — ตัวชี้ว่าทั้งระบบทำเงินไหม
 powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
-  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -Period H1 -FromDate 2023.01.01 -ToDate 2025.12.31 -Model 4 `
   -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
   -ReportName GEN_{SYM}_H1_MAIN_grid
 ```
@@ -680,7 +680,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog
 
 | # | EA | symbol | TF | window | lever/หมายเหตุ | ผล |
 |---|---|---|---|---|---|---|
-| 1 | Boss_14_GridLog | NZDJPY | H1 | MAIN 2023.07–2026.07 | A flat(90) + B grid(92) | |
+| 1 | Boss_14_GridLog | NZDJPY | H1 | MAIN 2023.01–2025.12 | A flat(90) + B grid(92) | |
 | 2 | Boss_14_GridLog | CADCHF | H1 | MAIN | A + B | |
 | 3 | Boss_14_GridLog | GBPCAD | H1 | MAIN | A + B | |
 | 4 | Boss_14_GridLog | EURAUD | H1 | MAIN | A + B | |
@@ -715,7 +715,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog
 ```powershell
 # 1) GENETIC optimize บน MAIN (Model 1 = เร็ว, ใช้หา candidate เท่านั้น ไม่ใช่หลักฐาน)
 powershell -File D:\EA_LAB\scripts\mt5_optimize.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" `
-  -Symbol {SYM} -Period {TF} -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 1 -Optimization 2 `
+  -Symbol {SYM} -Period {TF} -FromDate 2023.01.01 -ToDate 2025.12.31 -Model 1 -Optimization 2 `
   -SetFile "D:\EA_LAB\ea_projects\(TRD)_SuperTrendFlip\set_files\STF_gen_nonfx.set" `
   -ReportName GEN2_{SYM}_{TF}_MAIN
 # 2) เลือก robust pass (ห้ามเลือก peak เอง — script เลือก plateau ให้)
@@ -723,13 +723,18 @@ python D:\EA_LAB\scripts\select_robust_pass.py D:\EA_LAB\_mt5_auto\optimizations
 python D:\EA_LAB\scripts\set_from_robust.py   # -> .set ของ pass ที่เลือก
 # 3) CONFIRM ด้วย Model-4 ทั้งสอง window (นี่คือตัวเลขที่กรอกลงตาราง)
 powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" -Symbol {SYM} `
-  -Period {TF} -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 -SetFile <set จากขั้น 2> `
+  -Period {TF} -FromDate 2023.01.01 -ToDate 2025.12.31 -Model 4 -SetFile <set จากขั้น 2> `
   -ReportName GEN2_{SYM}_{TF}_MAIN_M4
 powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev01" -Symbol {SYM} `
   -Period {TF} -FromDate 2020.01.01 -ToDate 2022.12.31 -Model 4 -SetFile <set จากขั้น 2> `
   -ReportName GEN2_{SYM}_{TF}_BWD_M4
 ```
-**⚠️ ข้อควรระวัง 4 ข้อ (ละเมิด = ผลใช้ไม่ได้):**
+**🔧 แก้ 2026-07-26 (Opus-seat ตอน merge PR #5):** template เดิมเขียน `-FromDate 2023.07.01 -ToDate 2026.07.01`
+ทั้งชุด 1 และชุด 2 = **กิน holdout 2026H1** ขัดกฎเหล็ก `MAIN ∩ HOLDOUT = ∅` (CLAUDE.md) และขัดหัวใบนี้เองที่เขียนว่า
+"MAIN `2023.01.01 → 2025.12.31` เสมอ" — แก้เป็น **MAIN `2023.01.01–2025.12.31`** ทุกบรรทัดแล้ว (holdout guard ใน
+`check_state.ps1` จะ refuse ถ้าใครแก้กลับ). **BWD `2020.01.01–2022.12.31` ไม่เปลี่ยน.**
+
+**⚠️ ข้อควรระวัง 6 ข้อ (ละเมิด = ผลใช้ไม่ได้):**
 1. **ผลขั้น 1 (Model-1) ห้ามกรอกลงตารางและห้ามรายงานเป็นผล** — เป็นแค่ตัวหา candidate · ตัวเลขจริง = ขั้น 3
    (Model-2 ban ขยายผลมาถึง Model-1 optimize: optimizer เร็วไว้หา ไม่ใช่ไว้ตัดสิน)
 2. **`scripts\qwen_batch_runner.ps1` มี auto-fallback ไป Model 2 เมื่อ Model 4 ล้ม** (บรรทัด ~60, ติดป้าย
@@ -737,6 +742,14 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 3. **BTCUSD/ETHUSD: backtest คิด swap = 0 แต่ของจริงติดลบหนัก** (RCA 2026-07: BTC long −14.67%/ปี ·
    ETH −9.86%/ปี) → cell crypto ที่ผ่าน ให้เขียนหมายเหตุ `swap-unadjusted` ต่อท้ายผลเสมอ
 4. optimize 1 cell กินเวลาเป็นชั่วโมง — **1 cell = 1 session** (§5.5) · ปิด MT5 GUI ก่อนรัน
+5. **genetic เดี่ยวไม่พอตาม policy ที่เคาะแล้ว** (2026-07-25 `b9ba8c84`, canonical = skill `backtest-optimize-rigor`
+   Step 2): space >1,000 combo ⇒ **coarse genetic `-Criterion 7` → fine complete ≤1,000 combo รอบผู้ชนะ →
+   plateau-center**. ขั้น 2 ของ template (`select_robust_pass.py` บน XML ของ genetic) = ตัวเลือก center **ของ coarse
+   เท่านั้น** ห้ามข้าม fine grid ไป Model-4 ตรง ๆ · และ**ต้อง probe แกนตายก่อนทำ fine grid** (memory
+   `inert-axis-fake-plateau`: neighbour ที่ให้ผลเท่ากันเป๊ะ = แกนไม่มีผล ไม่ใช่ plateau)
+6. **`python` ไม่อยู่ใน PATH ของเครื่องนี้** — ก่อนเรียก `.py` ต้อง `. D:\EA_LAB\scripts\use_python.ps1` ก่อน
+   (portable python) · run แรกของทุก cell ต้อง **assert `Leverage=1:100`** ใน ini ที่สร้าง (`100` เปล่า = no-op,
+   memory `mt5-tester-cache-nondeterminism`)
 
 | # | EA | symbol | TF | window | lever/หมายเหตุ | ผล (M4 MAIN / M4 BWD) |
 |---|---|---|---|---|---|---|
