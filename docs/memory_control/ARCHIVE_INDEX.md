@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `5c5269ad4ed4163dafd57078c8c52671cee44547`
+> NOT repo HEAD; stable across any commit that does not touch that file): `0c61b0c3204201754febff8578485a162f112c3f`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `2f1f43ef1757ec2c2968a997caeef7ba37c4842fe13eb1efa0f1a0e5aa608bc4`
+> EOL/whitespace drift the per-block hashes below cannot see): `882e481a5afe77c2d9ebff20701f3fddf54c705f2a93c824706a58daeafb28a0`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -200,3 +200,25 @@
 | 103\|ORDER\|current-archive#184 | 103 | ORDER | 184 | 88557c1a48a9c194299aea9941d1b5d5ebe69666085643c57eea62b4c2b45f1b |
 | 105\|ORDER\|current-archive#185 | 105 | ORDER | 185 | d2b9f7f4b5f3175587d97c33c9fefef6b5d753568297ec9c780dd92543b41425 |
 | 115\|ORDER\|current-archive#186 | 115 | ORDER | 186 | 2a012d1da9a5b8a1643716efa728dff951a9d8928a42d6216ab573c86fe2aabe |
+| 210\|ORDER\|current-archive#187 | 210 | ORDER | 187 | 4be9ab15fc7e99738db8d64f61e256ae352d9d08d4ce460021ffc489754d3508 |
+| 211\|ORDER\|current-archive#188 | 211 | ORDER | 188 | 2c580d996bbb4d901c2cb86026e1025f99c5166e0cc3598ccf5f48d37e07e6b1 |
+| 212\|ORDER\|current-archive#189 | 212 | ORDER | 189 | 17174a5ee513f6ee2b077283dfadd23ac680f9d1f224cf8594ba1831492fb604 |
+| 222\|ORDER\|current-archive#190 | 222 | ORDER | 190 | 9c8b652ff8e0193e99c21ed3aa24941dc7eca085a9d4d4c290fdc9801ba460a8 |
+| 218\|ORDER\|current-archive#191 | 218 | ORDER | 191 | 7929ad7d799fb31a120b08e38299f47f05d1f6d5b7ce963a75633be157c5b42d |
+| 219\|ORDER\|current-archive#192 | 219 | ORDER | 192 | b952933eb7b5c0d0c0ba87f4a9bd181608430b13acbba45cb11d5eff21489d60 |
+| 220\|ORDER\|current-archive#193 | 220 | ORDER | 193 | 79ace942aa230147324e3846c7dc474f435e6381f3a179db46f501bc8286124c |
+| 217\|ORDER\|current-archive#194 | 217 | ORDER | 194 | 2da9ce5a03b108f4606ee60e54a20291ccf392788715d50c62fb9a004a450858 |
+| 221\|ORDER\|current-archive#195 | 221 | ORDER | 195 | 9cb7d25aa99e94e3f884386e5db8524ba2f1376ec4cb48d374a75a4123d6b162 |
+| 214\|ORDER\|current-archive#196 | 214 | ORDER | 196 | 61ea66d048c3bc689e8cf1aab2abc346e740a186a3ac1f732c651b9f40a1b584 |
+| 216\|ORDER\|current-archive#197 | 216 | ORDER | 197 | db1635bca19ba92a0c40a7a22b9d745241e4b4af6db7d6666776c518ab12e0b6 |
+| 204\|ORDER\|current-archive#198 | 204 | ORDER | 198 | 0d6a9b2fec100452892a68eb9a34106c4d0cd3b66ffcf5c567d11121dc91fdcc |
+| 203\|ORDER\|current-archive#199 | 203 | ORDER | 199 | d440ad43f0ebdb96bbb71169542ce69bc2a4de5dd551ddfbf2d6bcc6101a6ec8 |
+| 200\|ORDER\|current-archive#200 | 200 | ORDER | 200 | fbe3f4092510a83968d2a4b207cf7328b919634c68e54c73a113493a3e2ed000 |
+| 200\|ORDER\|current-archive#201 | 200 | ORDER | 201 | 13e4b985ef51188ac144fd65a6c676303edb5145e1d47e1c477c7f8914ea97fb |
+| 198\|ORDER\|current-archive#202 | 198 | ORDER | 202 | b3c3773d7c8b7f230d5df920dba5cff77aca9d76c6aa0c5f47fc8ce00c4bba7b |
+| 199\|ORDER\|current-archive#203 | 199 | ORDER | 203 | d54241c7f2421707bf69eeb7d4a946fe67fac9f9ba8f64c7f6e4dc03bf35309a |
+| 201\|ORDER\|current-archive#204 | 201 | ORDER | 204 | abef58a7e39cd51131f15aeda1fa0d956e6af0e8edfe21855f02a7d3052b76fc |
+| 197\|ORDER\|current-archive#205 | 197 | ORDER | 205 | 2ac2a8342b9e247d3b0ebbc7fbd7042f8952148e3cc8d6400ee60ec5562330f1 |
+| NA\|ORDER\|current-archive#206 |  | ORDER | 206 | 0b198c2b599fee71b5123cfe488bb5e59dc92c0394c4506329e072c024e22869 |
+| NA\|ORDER\|current-archive#207 |  | ORDER | 207 | 45d9881f690b0f58f4e41d00712843d61aa8f2c69e55e0cc14224badaca51f58 |
+| 136\|ORDER\|current-archive#208 | 136 | ORDER | 208 | bdf3d6c6ef9b0d24c54fce831bdcc8574d58eb0be7d134c5146c486e167e463f |
