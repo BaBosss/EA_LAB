@@ -755,7 +755,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 |---|---|---|---|---|---|---|
 | 13 | STF | BTCUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
 | 14 | STF | BTCUSD | H1 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
-| 15 | STF | XAUUSD | H4 | MAIN+BWD | **control cell** — ต้องได้ ~PF 1.9 ถ้าต่ำกว่ามาก = pipeline ผิด ไม่ใช่ตลาด | |
+| 15 | STF | XAUUSD | H4 | MAIN+BWD | **control cell** — ต้องได้ ~PF 1.9 ถ้าต่ำกว่ามาก = pipeline ผิด ไม่ใช่ตลาด | **1.51 / 1.03** · `both-window-pulse` (BWD ปริ่ม) · **control = pipeline ปกติ** (ดูบล็อกผลดิบ) |
 | 16 | STF | WTI | H4 | MAIN+BWD | genetic Stage A | |
 | 17 | STF | US30 | H4 | MAIN+BWD | genetic Stage A | |
 | 18 | STF | XAGUSD | H4 | MAIN+BWD | genetic Stage A | |
@@ -771,6 +771,38 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 
 **อ่านผลยังไง (worker ติดป้ายเท่านั้น):** `M4 MAIN ≥1.2 AND BWD ≥1.0` = `both-window-pulse` ·
 `MAIN ≥1.2 แต่ BWD <1.0` = `main-only` · `MAIN <1.0` = `no-pulse` — **ห้ามเขียน DEAD/CANDIDATE เอง**
+
+#### ผลดิบ cell #15 (control) — 2026-07-26, Opus-seat รันเอง
+
+**Model-4 ทั้งสองหน้าต่าง · leverage verified `1:100` ทั้ง 2 run · traded through to end of window (idle tail 0 วัน):**
+
+| | PF | trades | net | eqDD% |
+|---|---|---|---|---|
+| **MAIN 2023.01–2025.12** | **1.51** | 211 | +1,372.94 | 2.96 |
+| **BWD 2020.01–2022.12** | **1.03** | 206 | **+58.91** | 4.60 |
+
+ป้าย = `both-window-pulse` **แต่ BWD ปริ่มเส้นแบบต้องบอกตรง ๆ**: net +58.91 ต่อ 3 ปี = เสมอตัว ไม่ใช่กำไร
+(PF 1.03 ผ่านบาร์ 1.0 ทางเทคนิค แต่เป็นชนิดเดียวกับที่ BRK_XAU v3 โดนจับได้ — ดู `brk-xau-991001-v3-selected-into-leak`)
+
+**คำตอบของ control cell = pipeline ปกติ ไม่ต้องหยุด matrix.** ตัวเลข pre-register ไว้ว่า "~PF 1.9" แต่ **1.9 นั้นเป็นของ
+`EA_SUPERTREND` (scorecard L190) ไม่ใช่ `(TRD)_SuperTrendFlip_rev01` ที่ cell นี้รัน — คนละ EA** จึงเทียบกันตรง ๆ ไม่ได้.
+เกณฑ์ที่ใช้ตัดสินแทน = ลายนิ้วมือของ pipeline พัง (0 เทรด · PF ~0.0x · bars degenerate · leverage no-op · idle tail):
+**ไม่เจอข้อใดเลย** — 211/206 เทรด, ปิดถึงท้ายหน้าต่าง, leverage verified, fine grid survivors 77% ⇒ ผ่าน
+
+**ladder ที่เดินจริง (ตาม policy `b9ba8c84` ไม่ใช่ template เดิม):** coarse genetic Criterion 7 → 784 pass →
+fine **complete** 75 combo (`STF_XAU_H4_fine_noema.set`) + 225 combo (`_fine_ema.set`) → plateau-centre →
+M4 ทั้งสองหน้าต่าง · .set ที่ล็อก = `_mt5_auto/ab_sets/genstanding_stf/STF_XAU_H4_locked.set` (`AllowLive=false`)
+- **plateau ของ coarse เชื่อไม่ได้ตามที่รายงานมา** — ที่ centre ของ coarse (`ExitMode=1` · `UseEma=false`) มี **2 ใน 6
+  แกนที่ไม่มีผลจริง**: `_02_SlAtrMult` ใช้เฉพาะ `ExitMode==2` (mq5 L193/200) · `_03_EmaPeriod` ใช้เฉพาะ
+  `UseEma==true` (L115/171) ⇒ "neighbours=9" นับ neighbour ปลอม (memory `inert-axis-fake-plateau`).
+  fine grid จึง **ล็อกแกนตาย + แยกกริดตาม UseEma** — plateau ที่ได้จึงเป็นของจริง: survivors **58/75 = 77%**, neighbours 22
+- **EMA filter ไม่ซื้ออะไรที่นี่**: กริด EMA ให้ PF เท่ากัน (1.518 vs 1.525) แต่ n ครึ่งเดียว (112 vs 211) → เลือก NOEMA
+- **ไม่ใช้ profit-max** (กริด EMA มี PF 2.29/81t = spike, script ติดป้าย overfit-prone เอง)
+
+**⚠️ หนี้ที่ทิ้งไว้ให้ cell ที่เหลือของชุดนี้ (ไม่ใช่แค่ cell นี้):** `STF_gen_nonfx.set` sweep `_02_TpAtrMult`/`_02_SlAtrMult`
+พร้อม `_02_ExitMode` ทั้ง 3 ค่า และ sweep `_03_EmaPeriod` พร้อม `_03_UseEma` — **ทุก cell จะเจอแกนตายชุดเดียวกัน**
+(ExitMode=0 ทำให้ Tp+Sl ตาย · UseEma=false ทำให้ EmaPeriod ตาย) ⇒ coarse ใช้หา candidate ได้ตามเดิม
+แต่ **ห้ามอ่าน plateau จาก coarse ตรง ๆ** ต้องแยกกริด fine ตาม ExitMode/UseEma เหมือน cell นี้ทุกครั้ง
 
 ---
 
