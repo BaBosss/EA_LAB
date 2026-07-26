@@ -310,6 +310,16 @@ recon เจอ 3 อย่างที่ทำให้ "re-measure PF ก่�
 **flat-lot probe:** pending (บังคับ — grid/escalation)
 **ห้าม:** แตะค่าบนบัญชีจริง · ใช้ Model-2 เป็นหลักฐานกับ grid (doctrine 2026-07-17: grid บน M2 = ไม่ใช่หลักฐานเลย)
 
+**🔴 UPDATE 2026-07-26 (Claude/Sonnet) — เจอ 2 อย่างก่อนจะรัน probe: `_triage/ORDER215_MATCHAGRID_CUTLOSS_FINDING.md`**
+1. **2 ใน 5 report ที่เคยอ้าง เป็น degenerate-tick artifact** — `QWEN_MG_IS`/`QWEN_MG_OOS` มี tick/bar = 3.9
+   เทียบ report สุขภาพดี 2 ใบที่ 58-59 (M15 2 ปีควรมี ~50,000 bars แต่ `QWEN_MG_IS` มีแค่ 12,073) = คลาสเดียวกับ
+   `mt5-no-disk-space-is-memory-ceiling` ⇒ **ทิ้งทั้ง PF 0.17 และ PF 2.15 ทั้งคู่** (ไม่ใช่เลือกทิ้งใบที่ไม่ถูกใจ)
+2. **บนข้อมูลสะอาดที่เหลือ (3.4 ปี, input set เดียวกันทั้งหมดรวม magic 20240001 ที่เป็นเงินจริง) — ไม่เจอการปิดยกตะกร้า
+   แบบเปอร์เซ็นต์แม้ครั้งเดียว** (เจอแค่ churn ปกติ 3 ครั้ง −4 ถึง −16 net บน 23-31 ไม้ + forced end-of-test)
+⇒ **`InpCutLossMode=0` = ปิดสวิตช์ หรือ = โหมดที่ข้อมูลนี้ไม่เคยดันถึงเกณฑ์ — ยังแยกไม่ออก** ต้องใช้เทคนิคเดียวกับ
+ORDER-222 (ดันความเสี่ยงจนลึกแล้วดูว่ามีการตัดไหม) ซึ่ง**ยังไม่ได้รัน** — เป็น next step ที่ชัดเจน ไม่ใช่ verdict
+**ยังไม่ถึง DEAD-STRUCTURAL** จนกว่า probe จะกลับมาเป็นลบ (ไม่มีการตัดแม้ถูกดันเกินเกณฑ์)
+
 <details><summary>สเปกเดิมของใบนี้</summary>
 **source:** ORDER-204 DEBT row `OPT_MG_CHF_lowDD.ini` (`Optimization=2`, `Criterion=0`, window `2023.01.01–2026.06.01`
 = **กิน holdout ด้วย**, ไม่มี fine-stage ไม่มี fan). citation = `EA_SCORECARD_AND_REGISTRY.md:156` "MG_v1 MatchaGrid

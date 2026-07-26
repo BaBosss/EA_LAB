@@ -57,6 +57,14 @@ the uncapped-ruin bin rests entirely on `InpCutLossMode=0`, an input found only 
 report headers, **whose meaning is documented nowhere in this repo**. Every archived run also sits at
 `Model=1`; there has never been a Model-4 run of this EA, and doctrine treats a grid measured below
 Model-4 as not evidence at all. So the safety claim is a hypothesis wearing a verdict's clothes.
+**Follow-up same day:** re-read the 5 cited reports directly. 2 of 5 (`QWEN_MG_IS`/`QWEN_MG_OOS`) are
+degenerate-tick artefacts (3.9 ticks/bar vs 59 on the trustworthy pair — same failure class as
+`mt5-no-disk-space-is-memory-ceiling`) and their PF numbers (0.17 and 2.15) are both discarded. On the
+**3.4 years of trustworthy data that remain**, grouping every simultaneous-close cluster found **zero
+events resembling a percentage-of-balance cut** — only ordinary grid churn and one forced end-of-test
+close. Whether `InpCutLossMode=0` means "disabled" or "a mode whose trigger this data never reached" is
+**not yet distinguished** — that needs the same deliberately-raise-the-risk probe ORDER-222 used on
+NuiIndy, not run yet. Full writeup: `_triage/ORDER215_MATCHAGRID_CUTLOSS_FINDING.md`.
 **Failure mode:** a sustained CHFJPY trend that blows past the grid bounds (SL caps it, *if* the SL
 is what we think it is — see above).
 **Idea seeds:** "bounded + SL" is the safe way to run a range harvester — the template for taming
