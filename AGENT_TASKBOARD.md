@@ -579,7 +579,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 | 16 | STF | WTI | H4 | MAIN+BWD | genetic Stage A | **no-pulse** · coarse survivors **0/778** plateau=NONE — ไม่คุ้ม M4 |
 | 17 | STF | US30 | H4 | MAIN+BWD | genetic Stage A | **1.55 / 1.01** · `both-window-pulse` แต่ BWD net +2.91 = เสมอตัว · plateau แข็ง (22%) |
 | 18 | STF | XAGUSD | H4 | MAIN+BWD | genetic Stage A | coarse 0.6% survivors · plateau=WEAK neighbours 0 → ยังไม่ยืนยัน M4 |
-| 19 | STF | ETHUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 19 | STF | ETHUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.310 / 1.099** (หัก swap) แต่ **MC PF-5th 0.857/0.657 ตก** → `BUILD-ON` · overlay ฆ่า MAIN (1.010) · portable stack ของ BTC ตก BWD 0.858 |
 | 20 | STF | BRENT | H4 | MAIN+BWD | genetic Stage A | |
 | 21 | STF | NAS100 | H4 | MAIN+BWD | genetic Stage A (ORDER-116 เคยเจอ no-data — ถ้าไม่มี = `NO-DATA`) | |
 | 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A | |
@@ -758,6 +758,21 @@ XAU ตรงกันเป๊ะทั้งสองเลน) ⇒ **ทุ�
 - **🎯 ตำแหน่งใน funnel:** ผ่าน optimize→CANDIDATE bars, M4, MC, fan, corr ครบ · **holdout 2026H1 ยังสะอาด**
   (ไม่มี run ของ STF ไหนข้าม 2025.12.31 เลย) = ยิงได้ครั้งเดียว **และต้องไม่จูนอะไรอีกหลังยิง** → รอ user เคาะ
 
+**5. cell #19 ETHUSD H4 — ปิดเป็น `BUILD-ON` 2026-07-26 (ladder ครบ):**
+
+| ทดสอบ | MAIN | BWD | อ่านว่า |
+|---|---|---|---|
+| **portable**: stack ที่ชนะบน BTC ยกมาทั้งชุด | 1.293 / 64 legs | **0.858 / −41.34** | ⬛ **กลไกไม่เดินทาง** |
+| ETH center ของตัวเอง (หัก swap −21.40/−14.96) | **1.310** / 163t | **1.099** / 139t | ผ่านบาร์หัวตาราง |
+| ↳ **MC ของ center นั้น** | **PF-5th 0.857** | **PF-5th 0.657** | ❌ **ตกกรง** (บาร์ ≥1.0) · ruin 0% ทั้งคู่ |
+| center + overlay (Don20+pyramid) = last-optimize | **1.010** / 48 legs / net **+2.22** | 1.272 / 47 | ❌ overlay ฆ่า MAIN |
+
+- **ladder ครบ:** coarse genetic 831 pass (survivors 99 = 11.9%) → fine complete 2 กริด (NOEMA 1/12 neighbours 0 · **EMA 14/36 = 38.9% neighbours 9**) → M4 สองหน้าต่าง → portable test → overlay last-optimize → MC
+  ⇒ **verdict `BUILD-ON`** (มี PF>1 ทั้งสองหน้าต่างจริง จึงไม่ใช่ DEAD) · **ตัวขวางชื่อชัด = MC PF-5th <1.0** ไม่ใช่ PF หัวตาราง
+- **corr ETH vs BTC-PYR1 = +0.123** (และ vs BRK_XAU −0.089) — ถ้ามันผ่านกรงจะเป็น leg ที่กระจายความเสี่ยงได้ดีมาก แต่ **ห้ามรับ leg ที่ทนการสุ่มใหม่ไม่ได้เพราะ corr สวย**
+- **🔴 gotcha ที่เกือบทำให้อ่านผิดทั้ง cell: `ETHUSD min_lot = 0.1` ไม่ใช่ 0.01** — `.set` ที่ใช้ 0.01 ทำให้ guard ในตัว EA ปฏิเสธทุกออเดอร์ → รายงาน 0 ไม้ ซึ่งหน้าตาเหมือน "ETH ไม่มีสัญญาณ" เป๊ะ. run แรกของผมโดนเต็ม ๆ (probe 30 วันได้ net=0.0) จับได้เพราะ probe swap เผยเลข min_lot มาก่อน ⇒ **ทุก symbol ใหม่ต้อง probe สเปกก่อนเชื่อผลใดๆ** · ต้องแก้ทั้ง .set ที่ล็อกและ .set ของ optimize (ไม่งั้น sweep 155k combo = 0 ไม้ทั้งชุด)
+- **ETH swap = `INTEREST_CURRENT` long −9.86%/ปี short −3.95% → tester ไม่คิดเช่นเดียวกับ BTC** (โหมดเดียวกัน)
+- **🎯 pattern ข้าม 3 cell crypto:** BTC H4 = cell **เดียว**ที่สัญญาณดิบเดินได้เองโดยไม่ต้องมี EMA filter (NOEMA ดีกว่า) และเป็น cell เดียวที่ BWD แข็งจริง — BTC H1 และ ETH H4 **ต้องมี** EMA filter (ปิดแล้ว neighbours 0 ทั้งคู่) ⇒ **BTC H4 เป็นเคสพิเศษ ไม่ใช่หัวขบวนของกอง crypto** ⇒ แผน "ผูก 20 symbol" ต้องอ่านใหม่ว่าเป็น **20 funnel แยกกัน** ไม่ใช่การผูกเพิ่ม (2 symbol วันนี้ = ครึ่งวัน, ผ่าน 1)
 **ยังไม่ทำ:** ER+Donchian ซ้อนกัน (n จะเหลือ ~20 = วัดไม่ได้ตามกฎ) ·
 cell #19-#24 (ETH/BRENT/NAS100/DE40/XAU H1/US30 H1) · pyramid บน XAU (host BWD 1.03 ปริ่ม = กฎห้ามแปะ)
 

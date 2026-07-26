@@ -1,0 +1,31 @@
+﻿; STF_ETH_H4_own.set — plateau-centre ของ ETH เอง (ยังไม่ใส่ overlay ใดๆ) — ORDER-GEN-STANDING cell #19
+; 2026-07-26 · EMA grid 36 pass survivors 14 (38.9%) neighbours 9 · M1 MAIN PF 1.362/163t
+; กริดปิด EMA = 1/12 survivors neighbours 0 -> ETH ต้องมี trend filter เหมือน BTC H1 ไม่เหมือน BTC H4
+; LotSize=0.10 (ETH min_lot) · swap ต้องหัก post-hoc -9.86%/ปี · AllowLive=false
+_00_OptimizeMode=false
+_01_AtrPeriod=8
+_01_Mult=2.0
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=20
+_02_ExitMode=0
+_02_TpAtrMult=3.0
+_02_SlAtrMult=2.0
+_03_UseEma=true
+_03_EmaPeriod=100
+_03_UseER=false
+_03_ErPeriod=8
+_03_ErMin=0.30
+_07_UsePyramid=false
+_07_MaxAdds=1
+_07_AddAtAtr=1.0
+_07_AddLotFactor=1.0
+_07_BasketMaxLossPct=8.0
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.10
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

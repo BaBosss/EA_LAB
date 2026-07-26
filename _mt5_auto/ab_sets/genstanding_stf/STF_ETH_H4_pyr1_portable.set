@@ -1,0 +1,33 @@
+﻿; STF_ETH_H4_pyr1_portable.set — PORTABILITY TEST: stack ที่ชนะบน BTC H4 ยกมาทั้งชุด ไม่จูนอะไรเลย
+; 2026-07-26 · ต่างจาก BTC เพียงข้อเดียว = LotSize 0.01 -> 0.10 เพราะ ETHUSD min_lot = 0.1
+;   (วัดด้วย SymbolSwapProbe: min_lot=0.1000 · ถ้าใช้ 0.01 guard ในตัว EA จะปฏิเสธทุกออเดอร์
+;    -> ได้ 0 ไม้ ซึ่งอ่านผิดเป็น "ไม่มี edge" ได้ง่ายมาก)
+; ETH swap = INTEREST_CURRENT long -9.86%/ปี short -3.95% -> tester ไม่คิด ต้องหัก post-hoc
+; ถ้าผ่านทั้งสองหน้าต่างแบบไม่จูน = กลไกเดินทางได้จริง (หนักแน่นกว่าการจูนใหม่ให้ผ่าน)
+_00_OptimizeMode=false
+_01_AtrPeriod=14
+_01_Mult=2.5
+_01_Lookback=400
+_01_UseDonchian=true
+_01_DonBars=20
+_02_ExitMode=0
+_02_TpAtrMult=4.0
+_02_SlAtrMult=1.0
+_03_UseEma=true
+_03_EmaPeriod=250
+_03_UseER=false
+_03_ErPeriod=8
+_03_ErMin=0.30
+_07_UsePyramid=true
+_07_MaxAdds=1
+_07_AddAtAtr=1.0
+_07_AddLotFactor=1.0
+_07_BasketMaxLossPct=8.0
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.10
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

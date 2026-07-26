@@ -1,0 +1,22 @@
+﻿; STF_gen_eth.set — coarse genetic space สำหรับ ETHUSD (สำเนาของ STF_gen_nonfx.set)
+; 2026-07-26 · ต่างข้อเดียว: _04_LotSize 0.01 -> 0.10 เพราะ ETHUSD min_lot = 0.1
+;   ถ้าไม่แก้ guard ใน EA จะปฏิเสธทุกออเดอร์ -> sweep ทั้งชุดได้ 0 ไม้ = ขยะที่หน้าตาเหมือน "ไม่มี edge"
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=10||6||2||24||Y
+_01_Mult=3.0||1.5||0.5||5.0||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=0||0||1||2||Y
+_02_TpAtrMult=6.0||2.0||1.0||10.0||Y
+_02_SlAtrMult=1.0||0.5||0.5||3.0||Y
+_03_UseEma=true||false||1||true||Y
+_03_EmaPeriod=200||50||50||300||Y
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.10||0.10||0||0.10||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

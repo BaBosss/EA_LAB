@@ -692,3 +692,44 @@ only say "does not contradict the candidate"; it cannot size the edge.**
 
 **Verdict: VALIDATED CANDIDATE.** 2026H1 is now spent for this EA — the forward record from the day of
 any demo attach becomes the next holdout (Boss_16 precedent). Demo-attach decision is the user's.
+
+## CELL: SuperTrendFlip on ETHUSD H4 (cell #19, 2026-07-26) 🟨 BUILD-ON — the mechanism does not travel from BTC, and MC is what stops it
+
+The obvious next step after BTC H4 cleared every gate was a second crypto leg. ETH was chosen because
+this catalog already records a validated crypto pyramid lane (BTC SuperTrend + ETH Donchian pyramid).
+It does not survive its own funnel, and *how* it fails is the useful part.
+
+| test | MAIN | BWD | verdict |
+|---|---|---|---|
+| **Portability**: the exact BTC-winning stack, nothing retuned | 1.293 / 64 legs | **0.858 / −41.34** | ⬛ mechanism does **not** travel |
+| ETH's own plateau centre (swap-adjusted −21.40 / −14.96) | **1.310** / 163t | **1.099** / 139t | clears the headline bars |
+| ↳ Monte Carlo on that centre | **PF-5th 0.857** | **PF-5th 0.657** | ❌ **fails** (bar ≥1.0); ruin 0% both |
+| ↳ last-optimize: + Donchian(20) + pyramid | **1.010** / 48 legs / net **+2.22** | 1.272 / 47 | ❌ the overlay kills MAIN |
+
+Ladder completed: coarse genetic 831 passes (99 survivors = 11.9%) → fine complete, split by UseEma
+(NOEMA 1/12 with neighbours 0 · **EMA 14/36 = 38.9%, neighbours 9**) → M4 both windows → portability
+test → overlay last-optimize → MC. **BUILD-ON, not DEAD** — PF>1 on both windows is real — but the
+blocker has a name: **the per-trade edge is too thin relative to its variance**, so resampling puts the
+5th percentile below break-even. PF at the top of the table cannot see that; MC can.
+
+**Correlation vs BTC PYR1 = +0.123** (and −0.089 vs the live BRK_XAU leg). If ETH had cleared MC it
+would have been an unusually good diversifier. It did not, and a leg that cannot survive resampling is
+not admitted because its correlation is attractive.
+
+**The finding that outranks the cell verdict.** Across the three crypto cells measured, **BTC H4 is the
+only one whose raw signal walks unaided**: it prefers `UseEma=false`, while BTC H1 and ETH H4 both
+collapse to *neighbours = 0* with the EMA filter off. BTC H4 is also the only cell with a genuinely
+strong BWD. Those two facts are almost certainly the same fact. **So BTC H4 is a special case, not the
+head of a crypto family** — which reprices any "attach 20 symbols" plan as *20 separate funnels*
+(coarse → fine → M4 ×2 → swap → MC → corr), not as extra attachments. Two symbols consumed half a day
+here and produced one pass.
+
+**⚠️ Symbol-spec gotcha that nearly inverted the whole cell: `ETHUSD min_lot = 0.1`, not 0.01.** A .set
+carrying `LotSize=0.01` makes the EA's own below-minimum guard refuse every order, producing a 0-trade
+report that reads exactly like "this symbol has no signal". The first run hit this (the 30-day probe
+returned net=0.0) and it was caught only because the swap probe had already printed `min_lot`. **Probe
+a new symbol's spec before believing any result on it**, and fix the lot in the *optimize* .set too — a
+155k-combo genetic sweep with a sub-minimum lot is 155k empty passes wearing the costume of a result.
+
+ETH swap is the same mode as BTC (`INTEREST_CURRENT`, long −9.86 %/yr, short −3.95 %) and is likewise
+**not charged by the tester** — see the swap-mode table above.
