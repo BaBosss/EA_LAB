@@ -298,7 +298,31 @@ retro-scan 4,930 ใบไม่คุ้ม; ที่สำคัญคือ�
 ของ cage Boss_16 ได้**ก่อนหน้าที่ผมจะสร้าง bundle 1 วันเต็ม** ข้อมูลนั่งอยู่บน disk ตลอดเวลาที่ผมประกอบ bundle
 **สร้าง detector ถูก · อ่านมันคือส่วนที่หายไป** → ORDER-219
 
-## ORDER-219 — [ops/tooling] ทำให้ detector ที่มีอยู่แล้ว "ถูกอ่าน" — `OPEN`
+## ORDER-219 — [ops/tooling] ทำให้ detector ที่มีอยู่แล้ว "ถูกอ่าน" — `DONE + REVIEWED(Claude/Opus 2026-07-26)`
+
+**(1) `detail` ว่างเปล่า — สาเหตุจริงไม่ใช่ "สคริปต์ไม่ได้เขียน" แต่เป็นบั๊ก stream:** `check_truncated_run.ps1`
+พิมพ์คำวินิจฉัยทั้งหมดด้วย `Write-Host` ซึ่งใน PS 5.0+ ลง **information stream (6)** ไม่ใช่ success stream —
+`mt5_run.ps1` จับด้วย `2>&1` อย่างเดียวจึงได้สตริงว่าง **ทั้ง 182 ใบ**. ช่องมีอยู่ ตัวเขียนมีอยู่ เหตุผลถูกทิ้ง
+ตอนเขียนพอดี. แก้ที่ `mt5_run.ps1:161` → `2>&1 6>&1` (พิสูจน์แล้ว: จับข้อความเต็มได้จริงบน `MMLOT_E_unit_indep`)
+**(2) `scripts/detector_digest.ps1` ใหม่** — อ่าน `*.truncation_check.json` + `*.leverage_check.json` +
+`stale_binaries_check.json` (ORDER-221) รายงานเฉพาะใบที่มีปัญหา พร้อม **mtime ของ sidecar** (คำถามของ ORDER-218
+คือ "ถูก flag เมื่อไหร่" — ใบ Boss_16 อายุ 1 วันแล้วยังมองไม่เห็น). ใบเก่าที่ `detail` ว่าง **กู้เหตุผลคืนจาก .htm
+ที่ยังอยู่** (detector deterministic) แทนที่จะพิมพ์ว่า "ไม่มีเหตุผล" — flag ที่ไม่มีเหตุผลคือ flag ที่ถูกข้าม
+`-Repair` เขียนกลับลง sidecar เดิม · `-SinceDays` · `-HighOnly` · `-Quiet`
+**(3) severity — จุดที่ผมไม่ได้ทำตามสเปกตรงตัว และเหตุผล:** ถ้าต่อ digest เข้า daily chain แบบ "มีอะไรก็แดง"
+มันจะแดงทุกเช้าจาก NOT_RECORDED 6 ใบเก่า แล้วก็จะถูกปิดหูภายในสัปดาห์เดียว = **ความล้มเหลวเดิมในชุดใหม่**.
+จึงแบ่ง HIGH (truncated · leverage MISMATCH · binary stale/hash · **status ที่ digest ไม่รู้จัก**) vs advisory
+(NOT_RECORDED / NO_LEVERAGE_LINE) — log เต็มทุกวัน แต่ **เฉพาะ HIGH ที่อายุ ≤2 วันเท่านั้นที่ทำ chain แดง**
+**(4) `check_state.ps1` §7 rewrite:** เดิมจับ *วลี* ทั้งไฟล์ ⇒ ยิงโดน prose ไทย 3 ครั้งเมื่อ 07-25 (ครั้งหนึ่งโดน
+รายงานที่กำลังอธิบายบั๊กนี้เอง) และ **ทั้งสองฝ่ายเลี่ยงด้วยการเปลี่ยนคำ** ⇒ วันนั้นกติกาไม่เคยถูกบังคับจริง
+ตอนนี้จับ **รูปแบบของการอ้างสิทธิ์**: needle ต้องอยู่ใน heading / bold run / blockquote banner · บรรทัดที่เอ่ยถึง
+`PROJECT_STATE` = กำลัง *ยกให้* ไม่ใช่แย่ง (คือ banner ที่ทุก secondary owner doc มี) · escape hatch = `ENTRY-CLAIM-OK`
+**acceptance ผ่านครบ (รันจริง ไม่ใช่อ้าง):** digest → TRUNCATED 4 ใบ (MMLOT) พร้อมเหตุผลเต็มที่กู้คืนมา +
+NOT_RECORDED 6 ใบ + เจอของแถม **MISMATCH 1 ใบ** (`EXP_LEV_H_FORCEDMISMATCH` ขอ 1:750 ได้ 1:100) ·
+§7 บน root สังเคราะห์: จับ rival 3 แบบครบ (heading/bold/banner) และ **ไม่จับ** prose ไทย + owner banner ·
+`check_state` บน repo จริง = CLEAN 14/14
+**ผลข้างเคียงที่ตั้งใจ:** chain จะแดงจนกว่า **ORDER-220** จะปิด — MMLOT 4 ใบคือหนี้ก้อนนั้นพอดี ไม่ใช่ noise
+<details><summary>สเปกเดิม</summary>
 **lane:** Sonnet/qwen (mechanical) · **source:** ORDER-218 ข้อ 3-4
 **task:** (1) `check_truncated_run.ps1` เขียน `detail` ลง sidecar จริง (ตอนนี้ว่างเปล่าทุกใบ ทั้งที่สคริปต์พิมพ์คำวินิจฉัยเต็มออก stdout)
 (2) เพิ่ม `scripts/detector_digest.ps1` — สแกน `_mt5_auto/reports/*.{truncation,leverage}_check.json` แล้วสรุปเฉพาะใบที่
@@ -308,6 +332,7 @@ prose 2 ครั้งและทั้งสองฝ่ายเลี่ย
 **acceptance:** ยิง digest แล้วต้องเห็น MMLOT 4 ใบ + NOT_RECORDED 6 ใบ พร้อมเหตุผลครบ · แก้ §7 แล้ว `check_state` ยังต้อง
 จับเคสจริงได้ (เขียนไฟล์ทดสอบที่ประกาศตัวเป็น entry point → ต้อง WARN) และไม่จับ prose ที่มีวลีนั้นเฉย ๆ
 **ห้าม:** ลบ §7 ทิ้ง (กติกา single-entry ยังจำเป็น แค่จับผิดวิธี) · แตะ report เก่า · retro-scan 4,930 ใบ (ดู ORDER-218 ข้อ 3%)
+</details>
 
 ## ORDER-220 — [test] `MMLOT_E_unit_indep` ผ่านด้วย 6 ไม้ — รันใหม่ให้มันเป็นการทดสอบจริง — `OPEN`
 **source:** ORDER-218 ข้อ 1. เคส unit-independence ตายที่ 8 วัน/6 ไม้/eqDD 25% ⇒ "PASS" ที่ไม่ได้แปลว่าอะไร

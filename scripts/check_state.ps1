@@ -84,10 +84,41 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
 }
 
 # 7. no competing single-entry claim (English OR Thai) outside PROJECT_STATE
+#
+#    ORDER-219 REWRITE. The rule being protected is "exactly one doc claims to be the entry
+#    point". The old implementation tested for the PHRASE anywhere in the file, which is a
+#    different rule: on 2026-07-25 it fired three times on ordinary Thai prose, including on
+#    the report that was describing this very bug, and BOTH sessions cleared it by rewording
+#    the sentence. That means the rule was never actually enforced that day - it was routed
+#    around - and a guard that people learn to reword past protects nothing.
+#
+#    So match the SHAPE OF A CLAIM, not the vocabulary:
+#      - the needle has to sit in a structural assertion: a heading, a bold run, or a
+#        blockquote banner. Those are how a doc declares its own standing. A sentence in
+#        the middle of a paragraph is discussing the idea, not claiming the title.
+#      - a line that names PROJECT_STATE is DEFERRING to it ("canonical entry = PROJECT_STATE"),
+#        which is the correct banner every secondary owner doc carries - never a rival claim.
+#      - `ENTRY-CLAIM-OK` on the line is the deliberate escape hatch, same convention as the
+#        holdout guard below, so the answer to a false positive is a marker in the file rather
+#        than silently editing the prose until the check shuts up.
 $thaiOnly = -join (0x0E44,0x0E1F,0x0E25,0x0E4C,0x0E40,0x0E14,0x0E35,0x0E22,0x0E27 | ForEach-Object {[char]$_})
-$rivals = Get-ChildItem $Root -Filter *.md | Where-Object { $_.Name -ne 'PROJECT_STATE.md' -and $_.Name -notmatch 'RESUME|RUN_REGISTRY' } |
-  Where-Object { $c = (Get-Content $_.FullName -Raw -Encoding UTF8 -ErrorAction SilentlyContinue); ($c -match 'single source of truth') -or ($c -match [regex]::Escape($thaiOnly)) }
-Check ($rivals.Count -eq 0) "no competing single-entry claim (EN/TH)" ("competing entry claim in: " + (($rivals | ForEach-Object Name) -join ', '))
+$claimNeedle = '(single source of truth|canonical entry|' + [regex]::Escape($thaiOnly) + ')'
+$rivals = @()
+foreach($f in @(Get-ChildItem $Root -Filter *.md -File | Where-Object { $_.Name -ne 'PROJECT_STATE.md' -and $_.Name -notmatch 'RESUME|RUN_REGISTRY' })){
+  $n = 0
+  foreach($line in (Get-Content $f.FullName -Encoding UTF8 -ErrorAction SilentlyContinue)){
+    $n++
+    if($line -match 'ENTRY-CLAIM-OK'){ continue }
+    if($line -notmatch "(?i)$claimNeedle"){ continue }
+    if($line -match 'PROJECT_STATE'){ continue }          # deferring to the owner, not claiming
+    $isHeading   = $line -match '^\s{0,3}#{1,6}\s'
+    $isBold      = $line -match "(?i)\*\*[^*]*$claimNeedle"
+    $isBanner    = $line -match '^\s{0,3}>'
+    if($isHeading -or $isBold -or $isBanner){ $rivals += ("{0}:{1}" -f $f.Name,$n) }
+  }
+}
+Check ($rivals.Count -eq 0) "no competing single-entry claim (EN/TH, structural claims only)" `
+  ("competing entry claim at: " + ($rivals -join ', ') + " -- either point the line at PROJECT_STATE.md or mark it ENTRY-CLAIM-OK if it is deliberate")
 
 # 8. owner banner present on the secondary owners
 foreach($f in @($DEMO,$BL,$SC)){

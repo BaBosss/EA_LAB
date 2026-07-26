@@ -55,6 +55,20 @@ Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.
 # dashboard so it reads the freshest data. Read-only projection (never writes owners); a
 # failure here is fail-visible like any step but never blocks dashboard/gist above.
 Step 'snapshot'  { powershell -NoProfile -File D:\EA_LAB\scripts\control_room_snapshot.ps1 *>> $log }
+# ORDER-219: surface what the run-time detectors already wrote. This is deliberately NOT a
+# Step - the digest exits 2 whenever anything is flagged, and a report that turns the chain
+# red every single morning is a report that gets muted inside a week. So:
+#   - the FULL digest goes to the log every day (so the history is there to look back at)
+#   - only flags NEWER THAN 2 DAYS mark the chain unhealthy
+# That split is the actual ORDER-218 finding: the Boss_16 truncation flag was ONE DAY old and
+# still invisible, while 180-odd historical sidecars were never the problem.
+"--- detector digest ---" | Add-Content $log
+powershell -NoProfile -File D:\EA_LAB\scripts\detector_digest.ps1 *>> $log
+powershell -NoProfile -File D:\EA_LAB\scripts\detector_digest.ps1 -SinceDays 2 -Quiet *>> $log
+if ($LASTEXITCODE -eq 2) {
+    $failed += 'detector-flags'
+    "ALERT: a detector flagged something in the last 2 days - see the digest above before trusting any recent run or building a bundle" | Add-Content $log
+}
 # CR-003a: coverage check - the chain can run clean (every Step above exit 0) while a
 # LAB_MANAGED account's sensor is dead (STALE/NO_SENSOR), which is the actual failure mode
 # that bit us with 463666728/69424711. This is an ADDITIONAL layer on top of the existing

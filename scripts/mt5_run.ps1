@@ -156,9 +156,14 @@ if (Test-Path $srcHtm) {
   # Warning only: never changes this script's exit code (callers depend on 0/1/3). Sidecar
   # written for the same reason the leverage one is - tpl_regression.ps1 and friends do not
   # read exit codes, so a print alone would vanish.
+  # ORDER-219: the 6>&1 is load-bearing. check_truncated_run.ps1 prints its whole diagnosis
+  # with Write-Host, which in PS 5.0+ goes to the INFORMATION stream (6), not the success
+  # stream - so `2>&1 | Out-String` captured nothing and every one of the 182 sidecars
+  # written before 2026-07-26 has detail:"". The sidecar existed, the field existed, and the
+  # reason the run was flagged was thrown away at the moment of writing.
   $truncOut = ""; $truncCode = 0
   try {
-    $truncOut  = & (Join-Path $PSScriptRoot 'check_truncated_run.ps1') -Report $destHtm -FromDate $FromDate -ToDate $ToDate 2>&1 | Out-String
+    $truncOut  = & (Join-Path $PSScriptRoot 'check_truncated_run.ps1') -Report $destHtm -FromDate $FromDate -ToDate $ToDate 2>&1 6>&1 | Out-String
     $truncCode = $LASTEXITCODE
   } catch { $truncOut = "truncation check failed: $_"; $truncCode = -1 }
   [PSCustomObject]@{ report_name=$ReportName; truncated=($truncCode -eq 2); detail=$truncOut.Trim() } |
