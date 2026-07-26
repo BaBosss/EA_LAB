@@ -36,6 +36,7 @@
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
 | `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) · `AGENT_TASKBOARD.md` (แถว ORDER-280) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
+| `S-2026-07-26-CUTLOSS` (เขียนย้อนหลัง — เปิดก่อน ledger นี้จะถูกใช้จริงในวันนี้ ไม่ใช่การละเมิด) | 2026-07-26 ~18:00–20:30 | ไม่จองเลข (แก้ order เดิม ORDER-215/219/220/221/222 ไม่เปิดใหม่) | `AGENT_TASKBOARD.md` (แถว ORDER-215/219/220/221/222 เท่านั้น) · `EA_SCORECARD_AND_REGISTRY.md`/`EA_MASTER_INDEX.csv` (แถว NuiIndy/MatchaGrid) · `_mt5_auto/ab_sets/order215/**`, `order222/**` · `scripts/order21{5,2}*_cutloss_probe.ps1`, `check_stale_binaries.ps1`, `detector_digest.ps1` | **`D:\Meta 5b` (portable) ช่วงสั้นๆ 20:10-20:30** — ชนกับเลนที่ REV04 ประกาศไว้; `mt5_run.ps1`'s process-guard กันไม่ให้รันซ้อนกันจริง (คนละ launch คนละเวลา) แต่ไม่ได้เช็ค ledger ก่อนใช้ — แจ้งไว้ให้ REV04 เห็นว่าเลนถูกยืมใช้ช่วงสั้นๆ | `CLOSED` (2026-07-26 20:35) |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.
