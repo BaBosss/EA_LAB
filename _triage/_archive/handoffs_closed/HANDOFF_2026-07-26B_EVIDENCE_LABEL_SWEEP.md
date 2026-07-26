@@ -94,8 +94,8 @@ DD **25%** (guard สูงกว่าจุดที่มนุษย์ท�
 | banner กลุ่ม 1 ที่เหลือ 6 กล่อง (+ ICHIADX ไม่มีแถวทะเบียน) | BACKLOG-D18 |
 | NuiIndy — base control run ที่ขาด | BACKLOG-D19 |
 | `live_deals` ไม่บันทึก guard ที่ทำงาน | BACKLOG-D20 |
-| MacroGate leg 990120 — เก็บ/ย้าย/ถอด + `.set` ที่ยังขาด | ORDER-211 |
-| ร่างกฎ guard-evidence เข้า VERDICT GATE | BACKLOG-D19 |
+| MacroGate leg 990120 — เก็บ/ย้าย/ถอด + `.set` ที่ยังขาด | DONE (user ratified 2026-07-26, `608f9d5` — ORDER-211 REVIEWED อยู่แล้วใน archive) |
+| ร่างกฎ guard-evidence เข้า VERDICT GATE | DONE (user ratified 2026-07-26, `608f9d5` — เข้า `CLAUDE.md` แล้ว) |
 
 ## รอ user
 1. ~~`_04_UseAdxGate` ของ 991002~~ → **ปิดแล้ว 2026-07-26: live เป็น `rev01` ซึ่งไม่มี ADX gate เลย**
