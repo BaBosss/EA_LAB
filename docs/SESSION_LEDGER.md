@@ -27,6 +27,7 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
+| `S-2026-07-26-CAGE` | 2026-07-26 20:50 | **300-309** | `scripts/_test/**` · `docs/memory_control/B1_COHORT.md` · `docs/memory_control/B1_DATASET.csv` (append 260/261) · `AGENT_TASKBOARD.md` (แถว ORDER-270 เท่านั้น) | ไม่ใช้ | `ACTIVE` |
 | `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) · `AGENT_TASKBOARD.md` (แถว ORDER-280) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
@@ -47,4 +48,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **300-309** (290-299 เว้นกันชน · 280-289 จองแล้วโดย `S-2026-07-26-REV04`)
+- บล็อกถัดไปที่จองได้ = **320-329** (290-299 · 310-319 เว้นกันชน · 280-289 = REV04 · 300-309 = CAGE)
