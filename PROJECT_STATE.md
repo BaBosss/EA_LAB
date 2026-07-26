@@ -1,5 +1,26 @@
 # PROJECT_STATE — EA_LAB single living state (👉 AI START HERE)
 
+> 🆕 **2026-07-26 (Opus-seat) — CR-002 ปิดฝั่งแล็บ + กวาด "คำสั่ง deploy ที่ค้าง" ที่ sweep เมื่อวานยังไม่ได้แตะ.**
+> commits `0e37c0a` (CR-002/991001) · `85b55fd` (bundle sweep + NuiIndy). **ไม่แตะบัญชีใดทั้งสิ้น ไม่ใช้ holdout ไม่รัน optimize.**
+> - **991001 เงินจริง = v2** (ATTESTATION low→medium): source defaults Bars40/Tp5.0/Ema200 **ไม่เคยถูกแก้เลย** ตั้งแต่วันสร้างไฟล์
+>   (`git log -L` = commit เดียวต่อบรรทัด) ⇒ .ex5 build ไหนก็ได้ v2 · งาน reload v3 ยังเป็น checkbox ที่ไม่เคยติ๊ก · บัญชีพี่น้อง
+>   159475669 อ่านจากจอจริงได้ v2. **เหลือช่องเดียว:** `_06_AllowLive` default=false แต่ EA เทรด ⇒ มีการแก้ input ด้วยมือ ⇒
+>   **ต้องให้ user เปิดหน้า Inputs ของ 159503454 อ่าน 3 ค่า** (งานมือข้อ 1)
+> - **บทเรียนของวัน = sweep เมื่อวานแก้ "ป้ายในทะเบียน" แต่ไม่ได้แก้ "README ข้างกล่อง .ex5" ซึ่งคือสิ่งที่คนอ่านจริงตอน attach.**
+>   เจอ 4 กล่องที่ยังโฆษณาหลักฐานที่ถูกเพิกถอน: v3.set (+คำสั่ง reload ค้างอีก 2 ที่ใน MASTER_BACKLOG/DEMO plan) ·
+>   MACROGATE_DEMOLEG (ยังนำด้วย "eqDD −54..−56%" ที่ ORDER-211 สั่งห้ามอ้าง) · MACDDIV_XAU ("full funnel cleared" = plateau ปลอม) ·
+>   BOSS14_GBPJPY (ไม่มีหมายเหตุว่า 2026H1 ถูกใช้ไปแล้ว). ติด banner ครบ. BOSS16 ตรวจแล้วถูกต้องอยู่แล้ว
+> - **990120 — ผมไม่เห็นด้วยกับ "ย้ายไป AUDJPY":** host ขาดทุนทั้ง gate ON และ OFF ทั้งสองคู่ ⇒ เปลี่ยน symbol ก็ยังแยก
+>   "จับจังหวะถูก" จาก "แค่เทรดน้อยลง" ไม่ได้ **ข้อเสนอ: คงไว้เป็น plumbing sensor เฉยๆ ไม่ย้ายไม่ถอด** แล้วไปตัดสิน gate
+>   บน host ที่กำไรเป็นบวกเมื่อมี (รอ user เคาะ)
+> - **ปิดรายการ "left unchecked" ของ ORDER-202 = NuiIndy (เงินจริง):** window สะอาด (ทุก ini `Optimization=0`, guardrail อยู่บน
+>   2022+2024) **แต่เจอปัญหาคนละเรื่อง** — `CutLoss=30` **inert ในปี 2024** (เลขเท่า base ทุกหลัก, DD ไม่เคยแตะ 30%) และ **ปี 2022
+>   ไม่มี base control** ⇒ **ไม่มีหน้าต่างไหนเลยที่ cut30 ถูกวัดเทียบ control แล้วพิสูจน์ว่าช่วย** (ที่มีคือ "ไม่ทำร้าย").
+>   ฝั่งลบแน่น: `MAX_Order=12` พังจริง (2022 PF 0.42/−2,915 vs 1.19/+1,080) = ยืนยัน doctrine "guard ต้องเป็น DD-kill ไม่ใช่ cap"
+>   รายละเอียด = Part 3 ใน `_triage/ORDER202_HOLDOUT_CONTAMINATION_RETROSCAN.md`
+> - **replay v2-vs-v3 ปิดแบบ INCONCLUSIVE + ห้ามรันซ้ำ** — วิธีผิดเชิงโครงสร้าง: high 55 บาร์ ≥ high 40 บาร์เสมอ ⇒ ไม้ v3 เป็น
+>   **subset ของ v2** การเห็นไม้เกิดขึ้นจึงไม่แยกอะไร (+ เครื่องนี้ไม่มี tick Exness XAUUSDc) เหตุผลล็อกไว้ใน `_triage/ORDER_BRKXAU_LIVE_REPLAY.md`
+
 > 🆕 **2026-07-25 evidence-integrity sweep (Opus-seat, session คู่ขนานกับ MRIS block ด้านล่าง) —
 > อ่าน `_triage/HANDOFF_2026-07-25C_EVIDENCE_INTEGRITY_SWEEP.md` ก่อนเริ่มงานต่อ.**
 > ปิด ORDER-203/204/210/211/212/213/214/215(part1)/216/217/218 · เปิด 219..222 ·
