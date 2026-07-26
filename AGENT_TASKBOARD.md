@@ -49,6 +49,12 @@
 > **ที่ยังอยู่บอร์ดนี้** = order ที่ยัง OPEN/CLAIMED/WAITING-USER/CAMPAIGN + ใบที่สถานะเป็น `DONE`/`CLOSED` เปล่าซึ่งยัง
 > ย้ายไม่ได้ (validator ต้องการ `## REVIEW ORDER-x` คู่กัน ไม่งั้นจุด `terminal-no-linked-review`) — ต้องทำ C1-CLOSURE ก่อน.
 > 📦 **ย้ายเข้าคลังรอบ 2026-07-26 (Opus-seat):** 22 order สถานะ `REVIEWED*` ยกทั้งดุ้น (verbatim) ไปต่อท้ายไฟล์คลังเดิม — **ที่ย้าย:** 210 · 211 · 212 · 222 · 218 · 219 · 220 · 217 · 221 · 214 · 216 · 204 · 203 · 200 (x2) · 198 · 199 · 201 · 197 · LANEA-AB · LANEC-FAN · 136 · **ที่ไม่ย้าย:** 193(d) + 095/#4 (เลข order ซ้ำกับใบที่ยังค้างบอร์ดนี้ → ย้ายแล้วจะจุด `cross-active-and-archive`)
+>
+> 📦 **ย้ายเข้าคลังรอบ 2 · 2026-07-26 (ORDER-260 + ORDER-261):** อีก **51 ใบ**. ปลดล็อกได้เพราะ **ORDER-260** แก้บั๊ก
+> `Get-StatusClass` ที่ตี `REVIEWED` เป็น NonTerminal เมื่อ verdict มีคำว่า "holdout"/"open" (17 ใบติดกับนี้) และ
+> **ORDER-261** เขียน review ให้ 28 ใบที่ตรวจหลักฐานครบแล้ว (`_triage/EVIDENCE_SWEEP_TERMINAL_BLOCKS_2026-07-26.md`)
+> พร้อมแก้ข้อความ 9 ใบที่ข้ออ้างเก่าถูกหลักฐานใหม่หักล้าง (073 · 143 · 188 · 193 · 187 · 072 · 036 · 112E · 189).
+> **ที่ยังไม่ย้าย:** `095/#4` (แม่ CAMPAIGN ยัง OPEN — ย้ายแล้วจะจุด `cross-active-and-archive` · ต้องรอ campaign ปิด)
 
 > 🔁 **RE-OPTIMIZE WAVE 210..213 (เขียน 2026-07-25, Opus-seat — user สั่ง "วางแผน optimize ใหม่")**
 > <sub>⚠️ renumbered 205..208 → 210..213 ทันทีหลังเขียน: session คู่ขนานลง 205/206 (MacdDiv/PivotBreakout expand)
@@ -783,51 +789,6 @@ cell #19-#24 (ETH/BRENT/NAS100/DE40/XAU H1/US30 H1) · pyramid บน XAU (host 
 
 ---
 
-## ORDER-187 — [core/money] fail-closed first-lot sizing + Wave5 naked-order guard (Codex review 2026-07-24, ข้อ 1 ของ 8) — `DONE(Claude/Fable 2026-07-24) — รอ Codex blind-audit`
-**source:** user ส่ง review ของ Codex เรื่อง EA Template หลังเพิ่ม `FirstLotMode=43` (balance-scaled). Claude รีวิวซ้ำโดย trace โค้ดจริงทุก claim — **ยืนยันถูกทุกข้อหลัก** + เจอเพิ่ม 1 ข้อที่ Codex ไม่ได้จับ (ข้อ (d) ล่าง).
-**สิ่งที่แก้ (4 จุด):**
-- (a) `MoneyManagement.mqh` — เลิก silent fallback. เพิ่ม `MM_ConfigValid()` เรียกจาก `OnInit` → config ที่ใช้โหมดไม่ได้ = **INIT_FAILED** (mode 42 คู่ `SLMode=30/32` ที่ไม่มีระยะ SL · mode 43 ที่ `_43_BalanceAnchor≤0` หรือ `_43_LotPerAnchor≤0` · mode 41 ที่ `_41_FixedLot≤0`). runtime ที่อ่านข้อมูลไม่ได้ → `MM_FirstLot` คืน **0.0 = ข้ามไม้นั้น** + log throttle 60s **ไม่ถอยไป `_41_FixedLot` อีกแล้ว**
-- (b) `MoneyManagement.mqh` — `MM_NextLot(firstLot≤0)` คืน 0 ทันที. **กับดักจริง: `PROG_PLUS` เป็นสมการบวก** (`0 + _53_PlusLot×lv`) → sizing ที่ *ล้มเหลว* จะเสก lot ขึ้นมาจากศูนย์ที่ level ≥1 ถ้าไม่ดัก (branch อื่นเป็นการคูณ จึงได้ 0 อยู่แล้ว)
-- (c) `ExitManager.mqh` + `LabCore.mqh`/`Recovery.mqh` — `Exit_StructSLMissing()` แยกความหมายของ `Exit_InitialSL()==0` ออกเป็น 2 กรณี: "config ไม่ต้องการ SL ต่อไม้" (SL_NONE/SL_MONEY = ถูกต้อง) vs "**structural SL ที่สัญญาไว้ re-validate ไม่ผ่าน**" (Wave5) — ของเดิมมองเป็นกรณีเดียวกัน จึงเปิดไม้ **naked** พอดีในกรณีที่ guard G4 ตั้งใจกันไว้ (ราคาขยับระหว่าง signal → fill). non-17 build compile เป็นค่าคงที่ false = ไม่กระทบ
-- (d) **⭐ เจอเพิ่มเอง (Codex ไม่ได้จับ):** `LabCore.mqh` OnInit — ORDER-082 guard G4 เขียนไว้ว่า "structural mode ห้ามใช้กับ stacking, naked probe เท่านั้น" แต่**เป็นแค่คอมเมนต์ ไม่มีอะไรบังคับ**. `.set` ที่ตั้ง `StackMode=91/92/93` บน Boss_17 จะเอา structural SL ที่คำนวณเพื่อ**ไม้เดียวที่ราคาเดียว** ไปแปะ grid adds/pending ladder ทั้งกอง (path 93 ไม่ re-check เลยด้วย) → ตอนนี้ **INIT_FAILED**
-**หลักฐาน (ไม่ใช่คำอ้าง):** `deploy.ps1 -Compile` = **0 errors/0 warnings ทั้ง 9 wrapper** · `scripts\tpl_regression.ps1` = **REGRESSION CLEAN 8/8 ไม่ต้อง re-pin baseline เลย** (Boss_17 ตัวเลขเท่าเดิมเป๊ะ net=-86.89 pf=0.45 n=26 → fail-closed ไม่ได้ตัด trade ไหนทิ้งบน window นี้) · ทั้ง repo **ไม่มี .set สักไฟล์ใน 1,331 ไฟล์ที่ใช้ mode 42/43** → INIT_FAILED ใหม่ไม่มีทางทำของเดิมพัง (ตรวจแล้วก่อนแก้)
-**ทำไมไม่ใช่เรื่องด่วนไฟไหม้ (แย้งโทนของ review เดิม):** mode 43 default OFF + ไม่มี .set ไหนใช้ · Wave5 = naked probe ตัวเดียว ยังไม่ขึ้นเงินจริง → นี่คือ **pre-deployment hardening ที่ pace ได้** ทำให้เสร็จก่อนมีใครเปิด mode 43 จริงก็พอ.
-**ห้าม:** ถือว่าปิดจบก่อน Codex blind-audit ผ่าน (core/money code = doctrine `AGENTS.md` §5.1) · ยัด Boss_16 balance-scaling เข้ามาใน patch นี้ (= ORDER-190 คนละชั้นความเสี่ยง).
-
-## ORDER-188 — [test] positive-path cage ของ lot mode 42/43 (`scripts\mm_lotmode_test.ps1`) — `DONE(Claude/Fable 2026-07-24)`
-**source:** Codex ข้อ 4 — "ยังไม่มี positive-path test". จริง และเป็นช่องว่างเชิงโครงสร้าง: **`tpl_regression.ps1` พิสูจน์สิ่งตรงข้าม** คือ "ของใหม่ที่ปิดอยู่ไม่ทำให้เลขเก่าเปลี่ยน" — มันจับ feature ที่พังตอน**เปิด**ไม่ได้เลย เพราะไม่มีอะไรใน cage เปิดอะไรสักอย่าง. mode 43 ship มา 2026-07-23 พร้อมช่องนี้พอดี.
-**ผลรัน 8 เคส (Boss_12, XAUUSD H1 2024.01-07, Model 1) — ผ่านหมด:**
-| เคส | ตั้งใจทดสอบ | คาด | ได้ |
-|---|---|---|---|
-| A fixed baseline | control | 0.10 | 0.10 ✅ |
-| B ratio 1× | 43 = 41 ที่ ratio 1.0 | 0.10 | 0.10 ✅ |
-| C ratio 0.5× | dep 5000/anchor 10000 | 0.05 | 0.05 ✅ |
-| D ratio 2× | dep 20000/anchor 10000 | 0.20 | 0.20 ✅ |
-| E unit-independence | **ratio 2.0 ในหน่วยต่างกัน 10 เท่า** (anchor 1000/dep 2000) | 0.20 | 0.20 ✅ |
-| F RC_MaxLot clamp | cage ต้องชนะ sizing | 0.15 | 0.15 ✅ |
-| G anchor=0 | ต้อง**ไม่**แอบเทรด fixed lot | 0 ไม้ | 0 ไม้ ✅ |
-| H mode 42 + SLMode=30 | เหมือนกัน | 0 ไม้ | 0 ไม้ ✅ |
-G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อนแก้ ทั้งสองเคสเทรดฉลุยที่ `_41_FixedLot` โดยรายงานดูปกติทุกบรรทัด**.
-**invariant ที่ตั้งเพิ่ม:** *deposit invariance* — mode 43 ทำให้ lot แปรผันตาม balance ⇒ เส้นทาง equity เชิง % เท่ากันทุกเงินต้น ⇒ **B/C/D ต้องได้จำนวนไม้เท่ากัน (164/164/164 ✅ บนช่วงเงินต้นต่างกัน 4 เท่า)**.
-**⚠️ finding ที่ได้แถมมา (สำคัญกว่าตัว test):** A (fixed 0.10) ได้ **115 ไม้ eqDD 25.09%** แต่ B (mode 43 เริ่มที่ 0.10 เท่ากัน) ได้ **164 ไม้ eqDD 22.66%** — A ชน `KillDD 25%` ของ ProtectLevel NORMAL **พอดีเป๊ะ** แล้วโดน cage hard-kill กลางทาง ส่วน B หด lot ตาม balance ที่ลดลงจึงไม่เคยแตะเส้นตาย. **นี่คือคุณสมบัติที่ mode 43 มีให้จริง วัดได้เป็นตัวเลข** ไม่ใช่ทฤษฎี — และเป็นเหตุผลว่าทำไม A≠B ถึง**ไม่ใช่**บั๊ก (รอบแรกผมเขียน invariant ผิดว่าต้องเท่ากัน มันเลย FAIL แล้วผมไปไล่หาสาเหตุจนเจออันนี้).
-**ห้าม:** เอา A/B ไปเทียบกันตรงๆ แล้วสรุปว่า sizing ทำ entry เพี้ยน · ใช้ cage นี้แทน `tpl_regression.ps1` (คนละหน้าที่ ต้องรันทั้งคู่).
-
-## ORDER-189 — [docs] PARAM_REGISTRY 183/183 + คู่มือ lot mode §3.6 — `DONE(Claude/Fable 2026-07-24)`
-**source:** Codex ข้อ 5 — registry ขาด 6 ตัว. ตรวจแล้วเลขตรง: `Inputs.mqh` มี **183 input จริง** (208 บรรทัดที่ขึ้นต้น `input` ลบ 25 `input group`), registry มี 177 แถว → ขาด **6 ตัวพอดี** = `_43_LotPerAnchor` · `_43_BalanceAnchor` · `_2_BasketTP_BalPct` · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct` (ORDER-164 จงใจไม่ใส่เพราะตอนนั้น ORDER-161 ยังไม่ commit — มี note บอกไว้ในหัวไฟล์เอง)
-**ทำแล้ว:** เพิ่ม 6 แถวครบ (ต่อท้ายไฟล์ ไม่ใช่เรียงตามหมวด) แต่ละแถว trace precedence จากโค้ดจริง (`_2_BasketTP_BalPct` > `_2_BasketTP_ATRmult` > `_2_BasketTP_Money` ที่ `ExitManager.mqh:506` ฯลฯ) · **แก้ 3 แถวเดิมที่กลายเป็นข้อมูลผิดหลัง ORDER-187** (`FirstLotMode`/`_41_FixedLot`/`_42_RiskPct` — ทั้งสามเขียนว่า "silently falls back to `_41_FixedLot`" ซึ่งวันนี้ไม่จริงแล้ว) · ลบ note "moving target" ที่หัวไฟล์ + ใส่คำสั่ง verify ไว้แทน · เพิ่ม **§3.6 ใน `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`** = ตารางเลือกโหมด 41/42/43 + **Account Profile USD vs CENT** (anchor ผูกกับบัญชี ไม่ใช่กลยุทธ์ — cent ที่ฝาก $1,000 อ่านได้ `100000` ใส่ anchor ผิด = lot ใหญ่ 100 เท่าแล้วไปตายที่ `RC_MaxLot`) + **linkage diagram สาย lot ทั้งเส้น** (balance → mode → DdAdaptive → RC_MaxLot → LotProg → Recovery → cage → normalize) + หมายเหตุ Boss_16 ไม่ฟัง 4x เลย
-**⚠️ ยังเหลือ (ไม่ได้ทำใน order นี้):** ~174 แถวเดิมยังอ้าง line number จาก commit ที่ pin ไว้ตอน ORDER-164 ซึ่ง**เคลื่อนไปแล้วราว 16 บรรทัด** — ไม่ใช่ข้อมูลผิด แต่เป็นหนี้ที่ต้องล้างรอบเดียวทั้งไฟล์ (ดู ORDER-191)
-**ห้าม:** regenerate registry ทั้งไฟล์ใหม่ (จะทิ้งงาน trace มือของ ORDER-164 ทิ้งหมด).
-
-## ORDER-202 — [audit] retro-scan: which verdicts were selected on the burned 2026H1 holdout — `REVIEWED(Claude 2026-07-25) — 2 damaged, 2 survive, 1 real-money decision open for user`
-**source:** found while fixing `.claude/agents/ea-screener.md` / `ea-validator.md`, which had been running every screen and optimize with a window ending 2026.06.01 — six months inside the 2026H1 holdout — for an unknown length of time (commit `c612dbe0`). Fixing the definitions stops future leaks; this order asks what was already selected that way.
-**method:** parsed all 6,467 `.ini` under `_mt5_auto`. Threshold set at `ToDate > 2026.01.01`, NOT `> 2025.12.31`: a run ending exactly `2026.01.01` yields zero 2026 deals (verified against real deal dates), so those 450 passes are clean. **87 optimize passes selected on a window overlapping 2026H1.**
-**result — deployed:** `Boss_14` 8 legs CLEAN at the parameter level (values came from a separate `_IS.ini` pass ending 2025.06.30; ORDER-166 was revalidation not re-selection) — but the promotion gate touched 2026H1 for 7 of 8, so the cohort's holdout is spent · **`EA_BREAKOUT_XAU` 991001 (REAL MONEY) directly contaminated**, re-run on clean windows: **v2** BWD 1.66 / MAIN 1.98 · **v3** BWD **1.01** / MAIN 1.86 — v3 wins ONLY on the burned window = selected into the leak. **v2 is what clean evidence supports.**
-**result — not deployed:** only 2 of 25 could have been flattered · **`Boss_16_Kangaroo` survives** (clean MAIN 1.46/205t, BWD 1.30/278t) but its PENDING_ATTACH judge bar was written from inflated numbers → **use PF 1.46 not 1.57, and ~68 trades/yr not ~90** · **`NRBreakout` revival hook was the contamination** (clean MAIN 0.93 and 0.82, both losses) → annotated, do not re-open on the 1.31 figure.
-**verdict doc:** `_triage/ORDER202_HOLDOUT_CONTAMINATION_RETROSCAN.md` (report files keep the `O201_*` prefix — renamed the order after the runs, artifacts left alone on purpose).
-**prevention:** `check_state.ps1` check #9 — a reusable definition assigning `ToDate` past MAIN now blocks the commit under `-Strict`. Verified it catches the exact historical string; `HOLDOUT-OK` opts out.
-**OPEN (user):** confirm whether v2 or v3 is live for 991001 on both real accounts (`_01_BreakoutBars` 40 = v2 / 55 = v3) — if v3, switching is the evidence-backed move but it is a real-money change · declare 2026H1 spent for `EA_BREAKOUT_XAU` and the `Boss_14` cohort, the way Boss_16 was.
-**ห้าม:** ปลุก NRBreakout ด้วยเลข ceiling 1.31 · ตัดสิน Boss_16 demo ด้วยบาร์ 1.57/90-trades เดิม · rewrite ini/report เก่าให้ "สะอาด" (เท่ากับบิดเบือนว่า run ในอดีตทำอะไร)
-
 ## ORDER-190 — [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) — `DONE(Claude/Fable 2026-07-24) — PENDING_ATTACH(user), demo-scaled .set built, see POLICY DECIDED note below`
 **source:** Codex ข้อ 2. **ยืนยันว่าเป็นเรื่องจริง แต่ขอแยกความเสี่ยงออกเป็น 2 ชั้น ไม่รวมเป็นก้อนเดียวแบบที่ review เสนอ:**
 - ชั้น safety (= "บอกผู้ใช้ว่าไม่มีผล") → **ทำไปแล้วใน ORDER-187**: `MM_ConfigValid` พิมพ์ `[INIT] WARN` เมื่อตั้ง FirstLotMode≠41 บน build 16
@@ -848,235 +809,6 @@ G/H คือ regression ของ ORDER-187 โดยตรง — **ก่อ�
 - re-run `mm_lotmode_test.ps1` ยืนยันซ้ำ (2026-07-24) — K0/K1 cases ยัง **CLEAN ทั้งหมด** (deposit-invariance + unit-independence PASS)
 - สร้าง `ea_template/sets/Boss16_Kangaroo_XAU_21_30_scaled_demo.set` = base คือ `Boss16_Kangaroo_XAU_21_30.set` (candidate RSI 21/30 ที่ล็อกไว้จาก ORDER-077) + `_16_BaseLotMode=1` + **`_43_LotPerAnchor=0.01`/`_43_BalanceAnchor=10000`** (เลือกเอง ไม่ใช่ compiled default 0.01/1000 — เพราะ default จะทำให้ lot กระโดด 10x ที่ deposit $10k ซึ่งเป็น deposit เดียวกับที่ validate flat baseline ไว้; anchor ที่เลือกทำให้ lot เริ่มต้น **เท่ากับ flat เป๊ะที่ $10k** แล้วค่อยขยับตามยอดบัญชีจริงจากจุดนั้น) magic แยกต่างหาก `990018` กันชนกับ research .ini เดิม (990017 มีอยู่แล้วใน `BOSS16_KANG_XAU_H1_SELL.ini`)
 - **PENDING_ATTACH:** ต้องให้ user เปิด MT5 demo เอง ลาก `Boss_16_KangarooGrid.ex5` ลงชาร์ต XAUUSD H1 โหลด .set นี้ (ไม่มีเครื่องมือระยะไกลให้ agent ทำแทนได้) — พอ attach แล้วให้บันทึกแถวใหม่ใน `DEPLOYMENTS.csv` + re-pin .set นี้เป็น baseline ในคอมมิตเดียวกัน (ตาม convention เดิม)
-
-## ORDER-194c — [core/safety] แก้อีก 4 ข้อจาก Codex review รอบสอง (ตรวจ "ของที่เพิ่งซ่อม") — `DONE(Claude/Fable 2026-07-24)`
-**source:** user ถามว่า "ต้องให้ codex รีวิวไหม" → ตอบว่าใช่ แต่**แคบ** คือให้ตรวจเฉพาะ 4 จุดที่เพิ่งซ่อม ไม่ใช่ audit ใหม่ทั้งชุด **เหตุผล: fix ของ SEV-1 เป็น risk logic ที่ไม่มี cage** — `tpl_regression.ps1` จำลอง "GlobalVariableSet ล้มเหลว" ไม่ได้ ดังนั้น "cage CLEAN" ไม่ได้พิสูจน์อะไรเกี่ยวกับมันเลย ตรงกับ trigger ใน CLAUDE.md ที่ว่า risk logic ไม่มีกรง = ต้องขอความเห็นที่สอง
-**ผลรอบสอง: ซ่อมถูก 2 · ซ่อมไม่ครบ 2 · สร้างบั๊กใหม่ 1** (คุ้มมากที่ตรวจซ้ำ)
-1. **ซ่อมไม่ครบ — persist retry ไม่มีวันได้รัน:** ผมเขียน retry เป็น `else if` ต่อจาก sweep → ถ้ามีไม้โผล่บน magic เดิมเรื่อยๆ (โบรกปฏิเสธวน / pending fill race / instance อื่น) sweep จะชนะทุก tick แล้ว **retry ไม่เคยทำงาน** ซึ่งคือสถานการณ์ยืดเยื้อที่ crash มีโอกาสสูงสุดพอดี → เปลี่ยนเป็น `if` แยก ทำงานได้ทั้งคู่ใน tick เดียว
-2. **ซ่อมไม่ครบ — flag ไม่ถูก reset:** `RiskControl_InitEx` ไม่ล้าง `g_rc_persist_dirty` (global อยู่ข้าม OnInit cycle ตอนเปลี่ยน symbol/TF) → เพิ่ม reset
-3. **ซ่อมไม่ครบ — daily refresh เขียนพลาดยังเงียบ:** `PersistRefresh` คือ keep-alive กัน TTL 4 สัปดาห์ของ MT5 เสียมันไปแย่พอกับเสีย write แรก → set dirty เมื่อพลาด
-4. **🔴 บั๊กใหม่ที่ผมสร้างเอง:** การเช็คพารามิเตอร์ราย SLMode (ที่เพิ่งเพิ่มตาม 194b ข้อ 3) **ยิงแม้ตอนที่ Wave5 struct SL เป็นแหล่งระยะจริง** — `Exit_SLDistancePoints` คืนระยะ structural **ก่อน**ถึง switch ของ SLMode ด้วยซ้ำ ⇒ `_17_UseStructLevels=true + SLMode=31 + _31_SL_Pip=0` เป็น config ที่ใช้ได้จริงแต่โดน INIT_FAILED = false alarm → ข้ามการเช็คเมื่อ struct เป็นแหล่ง
-5. **ซ่อมไม่ครบ — throttle:** ของที่ผมทำคือ "log เมื่อเหตุผล*เปลี่ยน*" ซึ่งไม่ใช่ per-reason จริง — เหตุผลสลับ A-B-A-B จะต่างจากตัวก่อนหน้าทุกครั้ง = log ทุกครั้ง หน้าต่าง 60 วิไม่ทำงานเลย → ใช้ timestamp แยกต่อ reason (array)
-6. **`[CFG]` ยังเข้าใจผิดได้:** พิมพ์ lot ดิบก่อน clamp (raw 2.00 ขณะ `_16_MaxLotPerOrder=0.50` + `RC_MaxLot=0.10` ตัดเหลือ 0.10) และเรียก `0.00` ว่า "per-order ceiling" ทั้งที่ Kangaroo ถือว่า ≤0 = ปิด → พิมพ์ค่าหลัง clamp + บอกว่าตัวไหนตัด + แสดง `OFF (<=0)`
-**ที่ Codex ยืนยันว่าถูกแล้ว:** guard Wave5 (ไล่ทุก path ที่เปิดไม้ได้แล้ว ไม่มี path ที่สาม) · lever `_16_BaseLotMode` (flat/scaled เข้า pipeline เดียวกัน, fail-closed 0.0 ปลอดภัยกับ caller เดียวที่มี)
-**หลักฐาน:** compile 0 error ทั้ง 9 · **`tpl_regression.ps1` CLEAN 8/8**
-
-## ORDER-193(d) — retro-scan: verdict เก่าใบไหนตั้งอยู่บน backtest ที่ถูกตัดกลางคัน — `REVIEWED(Claude 2026-07-24) — retro-scan ปิด, 0 verdict กระทบ`
-**วิธี:** `scripts/truncation_retro_scan.ps1` (เขียนใหม่แบบ in-process — เวอร์ชันแรกที่วน `check_truncated_run.ps1` ต่อไฟล์ใช้เวลาเป็นชั่วโมง) + ทำให้ detector อ่าน window จากตัวรายงานเองได้ (`Period: H1 (from - to)`) จึงไม่ต้องมีบัญชีคุมว่ารันไหนใช้ window ไหน
-**ผลบน 4,233 รายงาน:** OK 3,748 · QUIET_TAIL 344 · **SUSPECT 141**
-**⚠️ ตีความก่อนใช้ (สำคัญ):** ใน 141 ใบนั้น **76 ใบ eqDD ≥45% (สูงสุด 131%) = บัญชีระเบิด/margin stop-out ไม่ใช่ cage เราตัด** — ส่วนใหญ่เป็น EA จาก corpus ภายนอก (MS5_*/BWD_*/O076_*) ที่ไม่มี RiskControl ของเราอยู่ด้วยซ้ำ. **เหลือ 65 ใบที่เข้าข่าย chassis hard-kill จริง** และในนั้นมี **cluster ที่ eqDD = 25.0-26.7% เป๊ะ = KillDD ของ ProtectLevel NORMAL**
-**ใบที่ควรดูก่อน (chassis + ถูกตัดลึก):** `BOSS14_SWEEP_*` (EURCHF gap 84% · EURCAD 78% · USDJPY 72% · EURJPY 48% · GBPAUD 35%) · `BOSS16_KANG_XAU_H1_SELL` (gap 66%) · `O095A_FULL_GBPJPY_M15` (52%) · `ZIGL_SELL1_FWD` (43%) · `TPLREG_B18_*`/`ORDER125_B18_rerun`/`O132_B18_recheck` (eqDD 25.00% เป๊ะ, gap 33% — ชุด probe ที่ใช้สืบ "engine drift" ORDER-162/165 ก็ถูกตัดเอง)
-**ทิศทางของความเสียหาย (อย่าตื่นเกินจริง):** run ที่โดน kill คือ run ที่**กำลังเจ๊งหนัก** PF ที่รายงานจึงเป็น PF ของช่วงก่อนตาย = **ต่ำกว่าความจริงไม่ใช่สูงกว่า** ⇒ ความเสี่ยงไม่ใช่ "เราเชียร์ตัวแย่" แต่เป็น **"การเทียบใน sweep พัง"** — cell A ถูกตัดที่ 40% ของ window ส่วน cell B รันจบ เอา PF สองตัวมาเทียบกันแล้วเลือกผู้ชนะ = เลือกจากคนละการทดลอง
-**✅ ปิดแล้ว (2026-07-24, user สั่ง "ทำเลย") — ผลสรุป: ไม่มี verdict ไหนต้องรื้อ**
-กรวยการกรอง: **4,233 รายงาน → SUSPECT 141 → อยู่ในพิสัย chassis-kill 65 → ถูกอ้างในเอกสาร verdict จริง 7 → นั่งที่เพดาน kill พอดี 3 → ตรวจแล้วกระทบ verdict 0 ใบ**
-⚠️ **กับดักที่เกือบพลาดเอง:** ค้นรอบแรกได้ "10 ใบถูกอ้าง" แต่ **5 ใบในนั้นคือ entry ORDER-193(d) ที่ผมเพิ่งเขียนเองชั่วโมงก่อน** (self-reference) — ต้องค้นบนเอกสารเวอร์ชัน `f5c093f~1` (ก่อน session นี้แตะ) ถึงได้เลขจริง 7 ใบ. **ใครทำ retro-scan แบบนี้อีกต้อง exclude งานเขียนของตัวเองเสมอ**
-**ผลราย 3 ใบ:**
-| run | recorded | ตรวจแล้วพบว่า |
-|---|---|---|
-| `BOSS14_XAU_OOS_M1` | PF **1.15** n=196 eqDD 27.02% | **rerun เต็ม window** (set เดิมเป๊ะ + `-Deposit 100000` = DD% ต่ำลง 10 เท่า cage ไม่มีทางแตะ; set นี้ sizing ไม่พึ่ง balance เลย — 41 fixed, DdAdaptive off, ไม่มี BalPct — เพิ่มเงินฝากจึงไม่เปลี่ยนการตัดสินใจเทรดสักไม้) → **PF 1.13 n=269** ⇒ **verdict OOS เดิมยืน** (เห็นไม้เพิ่ม 73 ไม้ที่ run เดิมไม่เคยเห็น แต่แทบเสมอตัว). **แถม: มันไม่ได้ถูก cage ฆ่าด้วยซ้ำ** — ไม้สุดท้าย = `2026.01.30` เท่ากันเป๊ะทั้งสอง run ⇒ EA หยุดส่งสัญญาณเองจริงๆ ส่วนไม้ที่เพิ่มมาเกิดจาก deposit-load cap คลายตัว ไม่ใช่ kill |
-| `O132_B18_recheck` | PF 0.35 **n=6020** | **ขยะที่รู้อยู่แล้ว** — repo บันทึกเองว่า `Boss_18 "n=6020 exact" ที่เคยเฝ้าเป็น invariant = churn config จาก cache, ค่าจริง default = n=298 PF 1.21` (ORDER-165 re-pin) ⇒ ถูก supersede ไปแล้ว ไม่ต้องทำอะไร |
-| `BOSS16_KANG_XAU_H1_SELL` | PF 0.46 | ถูกอ้างเป็น**คู่รายงานยืนยันกลไก** (BUY/SELL) ไม่ใช่ verdict ที่ตั้งบน PF · และ run ที่โดนตัดตอนกำลังขาดทุนจะรายงาน PF **ดีกว่า**ความจริง ⇒ ข้อสรุป "ไม่เอา" ยิ่งมั่นคง |
-**🔍 บทเรียนเรื่องเครื่องมือเอง (สำคัญกว่าผลลัพธ์):** เคสเดียวที่ทดสอบจนจบได้ **detector เตือนผิด** — `eqDD ≥ เพดาน` เป็นเงื่อนไข *จำเป็น* แต่ *ไม่พอ* (รายงานวัด eqDD ทั้ง run ส่วน EA วัดจาก peak ของตัวเองที่ reset ตอน OnInit — คนละเลข). ⇒ **อย่าเชื่อธง SUSPECT ตรงๆ** วิธียืนยันที่ถูกคือ rerun ด้วยเงินฝากมากขึ้นแล้วดูว่าไม้สุดท้ายขยับไหม (ถูกและชี้ขาด) หรือดู `[RISK] HARD KILL` ใน tester log
-raw = `_triage/TRUNCATION_RETRO_SCAN.csv` · report เทียบ = `BOSS14_XAU_OOS_M1_FULLWINDOW`
-**ห้าม:** สรุปจากคอลัมน์ verdict ตรงๆ โดยไม่แยก eqDD ≥45% ออกก่อน (จะได้ตัวเลข 141 ที่เว่อร์เกินจริงเท่าตัว)
-
-## ORDER-192(b) — [tooling] optimizer active-parameter guard (`scripts/optimize_guard.ps1`) — `DONE(Sonnet + Claude verify 2026-07-24)`
-**ทำแล้ว:** สคริปต์อ่าน `.ini` ของ optimize pass (หรือ `-ParamNames`) แล้วปฏิเสธ dimension ที่กวาดไม่มีความหมาย — ใช้ `PARAM_REGISTRY.csv` + `PARAM_LINKAGE.md` (override pairs) + `PARAM_INACTIVE_AUDIT.md` (build-inert) เป็นแหล่งความจริง fail-closed 4 กรณี: classification≠ACTIVE · inert บน build นั้น · ถูก override โดย sibling ที่ตั้งค่าไว้ใน .ini เดียวกัน · safety (`RC_*`/`ProtectLevel`/`_9_MaxLevels` หรือ context=safety). **19/184 แถว never-optimizable**
-**Claude verify เอง (ไม่เชื่อรายงาน agent):** refuse `RC_MaxLot` (2 เหตุผลอิสระ: name rule + context=safety) + `TrendFilter` บน build 16 (อ้าง audit table ว่า inert 5/8 builds) · .ini งานจริง 2 ไฟล์ (Boss_16 3-dim, Boss_12 3-dim) ผ่านหมดไม่มี false positive · **agent เจอบั๊กตัวเองระหว่างเทสแล้วแก้:** `($x|Where).Count` unwrap เป็น object เดี่ยวเมื่อ match 1 ตัว → `$null -gt 0` = false เงียบ → wrap `@()`. งานตัดสินว่าจะบังคับ guard นี้ใน pipeline optimize จริงไหม = แยก order (ตอนนี้เป็นเครื่องมือ opt-in)
-**🔬 ยิงกับคลัง .ini จริงทั้งหมด (2026-07-24, user "ทดลองดู"):** กรอง 6,433 ไฟล์ → **67 ไฟล์เป็น optimize pass จริงบน Boss build** → guard ให้ **ALLOW 48 · REFUSE 19** ทั้ง 19 ถูกต้องไม่ใช่ false positive:
-- **16 ไฟล์ (แคมเปญ O133 ST03/escalation)** กวาด `_9_MaxLevels=2..8` = **กวาดเพดานความลึกของ grid เพื่อไล่ PF** ซึ่งชนกฎ ENGINE-EDGE ของ repo เองพอดี (depth cap = ตัวกำหนด worst-case ต้อง *cage* ไม่ใช่ optimize) — guard จับ doctrine violation จริง ไม่ใช่แค่ dead dimension
-- **3 ไฟล์ (BOSS14 US30/XAG/XAU)** กวาด `_2_BasketTP_ATRmult` ที่ classification=OVERRIDE (ตัวเองก็ถูก `_2_BasketTP_BalPct` ทับได้อีก) = กวาดตัวกลางของโซ่ override
-**ข้อควรรู้:** `_9_MaxLevels` สำหรับ grid EA เป็น dual-use จริง (เป็นทั้ง strategy dimension และ safety cap) — guard เลือกฝั่ง conservative ตาม doctrine. ถ้าจะกวาดมันต้องเป็นการ "หา depth ที่ worst-case ยังรับได้" ภายใต้ cage ไม่ใช่ "หา depth ที่ PF สูงสุด" → verdict ของ guard ป้องกันอย่างหลังถูกแล้ว. **ไม่มี deploy .set ตัวไหนตั้งอยู่บน flagged param** (ไฟล์ที่โดนคือ research sweep ล้วน ไม่ใช่ locked deploy set) → guard = เครื่องมือ forward-looking กัน sweep ครั้งหน้า ไม่ใช่ปัญหาที่ deploy อยู่แล้ว
-
-**✅ WIRED INTO PIPELINE (Claude 2026-07-24, user "บังคับแบบ warn + override ได้"):** `scripts/mt5_optimize.ps1` เรียก `optimize_guard.ps1 -IniPath $ini` เอง ทันทีหลังเขียน `.ini` (ก่อน `Start-Process` เปิด MT5 — เซฟ wall-clock จริง ไม่ต้องรอ tester จบแล้วค่อยรู้ว่ากวาดขยะ). **default = block**: REFUSE เจอ 1 ตัว → พิมพ์เหตุผล + `exit 3` ไม่เปิด MT5 เลย. **override:** เพิ่ม switch `-SkipOptimizeGuard` → รันซ้ำแบบ `-WarnOnly` (ยังพิมพ์ REFUSE lines เต็ม ไม่เงียบ) แล้วปล่อยผ่าน. ทดสอบ end-to-end จริงด้วย `.ini` ที่รู้ผลอยู่แล้ว (`O133_E4_LIN_BWD.ini`, กวาด `_9_MaxLevels`): ไม่ผ่าน guard → exit 1 confirm บล็อกจริง · `-WarnOnly` → exit 0 confirm override ทำงานจริง. ไม่ได้รัน MT5 จริงเต็ม pipeline (ไม่จำเป็น เพราะจุดที่แก้คือ pre-`Start-Process` ล้วนๆ, syntax validated ผ่าน PowerShell AST parser).
-
-## ORDER-196 — [infra] ประกาศเลิกใช้ chassis V1 (`EA_LabTemplate.mq5` + `ea_template/modules/`) — `DONE(Sonnet + Claude verify 2026-07-24)`
-**ทำแล้ว:** banner DEPRECATED (comment-only, Claude ตรวจ diff = **+24/-0 และ +26/-0 ไม่มีบรรทัดที่ไม่ใช่คอมเมนต์เลย**) ที่หัว `EA_LabTemplate.mq5` + `modules/MoneyManagement.mqh` + คู่มือ §3.1 + `DESIGN_V2.md` 3 จุด · ระบุ 2 defect จริง (silent fallback + normalizer ปัด lot ต่ำกว่า min ขึ้น) · **ไม่ลบไฟล์ ไม่แตะ deploy.ps1 ไม่แก้ logic** · agent จับเพิ่ม: min-lot round-up จริงอยู่ที่ `modules/Execution.mqh::Exec_NormalizeLot` ไม่ใช่ RiskControl (แก้ banner ให้ชี้ถูก function แล้ว)
-**source:** Codex audit ชี้ว่า V1 ยังมี silent lot-mode fallback เดิม **และ normalizer ของมันปัด lot ที่ต่ำกว่าขั้นต่ำ *ขึ้น* เป็น min lot** (V2 คืน 0 แล้วข้ามไม้) — คำถามคือจะไปเสริมความแข็งแรงหรือเลิกใช้
-**ตรวจแล้ว = ตายจริง ไม่ต้องเสริม:** 0 แถวใน deployment inventory · 0 รายงาน backtest · 0 ไฟล์ `.set` อ้างถึง · `ea_template/modules/` ไม่ถูกแตะตั้งแต่ **2026-06-18** · Boss V2 ไม่มี dependency (Codex ยืนยัน 0 จุด) ⇒ **การไปแก้ money code ที่ตายแล้วคือรับความเสี่ยงฟรีๆ**
-**สั่งทำแค่:** ใส่ banner DEPRECATED ที่หัวไฟล์ทั้งสอง + คู่มือ · **ห้ามลบไฟล์ · ห้ามแก้ `deploy.ps1` · ห้ามแตะ logic** (comment-only) — เก็บของไว้ในประวัติ แค่ปิดทางไม่ให้ใครหยิบไปใช้
-
-## ORDER-195 — [tooling] ขยาย `[CFG]` ให้ครอบ override pair ที่เหลือ (ปิดช่องที่ ORDER-191(c) วัดออกมาได้) — `DONE(Sonnet 2026-07-24, header sync 2026-07-24 Claude — commit 83ecce78 landed this ก่อนหน้าแล้ว, header เดิมลืมอัปเดต)` + เพิ่มงาน: เติม `classification_note` ให้ 9 แถวฝั่งที่แพ้ใน registry ด้วย
-**verify (2026-07-24, hygiene pass):** grep `ea_template/core/LabCore.mqh` เจอ `[CFG]` ครบทั้ง 4 pair ที่ spec ระบุ (`RC_MaxLevelsOverride`, `_2_SuppressLegTP`, `_33_SL_MaxATRmult`, `_17_UseStructLevels` ทับทั้ง `SLMode`+`ExitMode` — comment บรรทัด 195 เขียนไว้ตรงๆ ว่า "ORDER-195") — โค้ดจริงลงครบ header เก่าแค่ไม่ได้ sync
-<sub>⚠️ การจัดคิว 2026-07-24: ปล่อย Sonnet 2 ตัวคู่ขนาน โดย **195 เป็นเจ้าของ MT5 แต่ผู้เดียว** ส่วน 192(b)+196 ถูกสั่งห้ามแตะ MT5/`_mt5_auto/` เด็ดขาด — สอง agent รัน tester พร้อมกันจะได้ report ปนกัน (บทเรียน ORDER-128 เรื่อง 0-trade artifact จาก session คู่ขนาน)</sub>
-**source:** ORDER-191(c) นับได้ว่า registry มี **override pair 11 คู่ และ 9 คู่ (82%) เป็น SILENT** — คือแถวของ input ที่*แพ้*ไม่มีหมายเหตุบอกเลยว่ามันถูกทับได้ คนอ่านจะรู้ก็ต่อเมื่อบังเอิญไปอ่านแถวของตัวที่*ชนะ*
-**ช่องว่างที่เหลือ:** บล็อก `[CFG]` (ORDER-192) ครอบไปแล้ว **4 คู่** (BasketTP 3 ชั้น · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`) **ยังไม่ครอบอีก 4-5 คู่:**
-- `_17_UseStructLevels` ทับ `SLMode` **และ** `ExitMode` (build 17)
-- `_2_SuppressLegTP` ทับ per-leg TP ที่ `ExitMode` 21/22 จะตั้ง
-- `_33_SL_MaxATRmult` ทับ `_33_SL_MaxPips`
-- `RC_MaxLevelsOverride` ทับส่วน steps ของ `ProtectLevel`
-**⚠️ ที่น่าสนใจสุดจาก 191(c):** `ExitMode` เป็น dial ที่ถูก tune บ่อยที่สุดตัวหนึ่ง แต่**โดนทับเงียบ 2 ทาง** และแถวของมันเองมี `classification_note` ว่างเปล่า
-**spec:** เพิ่มบรรทัด `[CFG]` ต่อ pair ที่เหลือ (log-only เท่านั้น ห้ามแตะ logic) · เติม `classification_note` ให้แถวฝั่งที่แพ้ใน registry เพื่อให้คนอ่าน registry ตรงๆ ก็เห็น (แก้เฉพาะคอลัมน์ note ห้ามแตะคอลัมน์อื่น แล้วรัน `param_registry_check.ps1`)
-**ห้าม:** เปลี่ยน precedence จริงในโค้ด (นี่คืองาน "ทำให้มองเห็น" ไม่ใช่ "เปลี่ยนพฤติกรรม") · ข้าม cage เพราะคิดว่าเป็นแค่ log
-**ทำได้:** Sonnet ทั้งใบ (mechanical, มี cage + check script คุม)
-
-## ORDER-194b — [core/safety] แก้ 4 ข้อจาก Codex blind-audit ของ ORDER-187/194 — `DONE(Claude/Fable 2026-07-24)`
-**source:** Codex CLI (0.144.2, เรียกตรงผ่าน `codex exec --sandbox read-only`) audit งาน commit `f5c093f` + RiskControl diff. **หมายเหตุ tooling: subagent `codex:codex-rescue` รายงานผิดว่า "Codex CLI ไม่ได้ติดตั้ง" ทั้งที่ติดตั้งอยู่จริง — เรียกตรงผ่าน PowerShell ได้ปกติ ใช้ทางนี้แทนไปก่อน**
-**ผล audit: not clean — 2 high + 1 medium + 1 low. ตรวจแล้วรับทั้ง 4 ข้อ แก้ครบ:**
-1. **SEV-1 (ผมทำพังเอง จาก ORDER-194):** `KillReconcile` ตั้ง `g_rc_halted=true` **ก่อน** ยืนยันว่า persist สำเร็จ — เขียนพลาดแค่ log error แล้วไปต่อ. **ของเดิม bug re-fire ทำหน้าที่ retry ให้โดยบังเอิญ พอผมปิด re-fire ก็ปิด retry ไปด้วย** → GV write พลาดชั่วคราว + terminal crash ก่อน daily refresh = restart กลับมา **RUNNING ทั้งที่ถูก kill ไปแล้ว** (คือ resurrection แบบเดียวกับที่ ORDER-132/138 สร้างมากัน). **แก้:** flag `g_rc_persist_dirty` + retry เฉพาะ persist (2 write + flush) บน halted path ไม่ต้องรัน close-all ซ้ำ
-2. **High:** guard Wave5 ที่ผมเพิ่ม ปิดแค่ `StackMode` — แต่ `Recovery_OnTick` ทำงานทุก StackMode ยกเว้น 93 → `struct=true + StackMode=90 + RecoveryMode=81` **ผ่าน init แล้วเปิดไม้เพิ่มบน structural SL ของไม้อื่น** ซึ่งคือสิ่งเดียวกับที่ guard ตั้งใจกัน. **แก้:** ปิด `RecoveryMode != 80` และ `HedgeMode != 0` ด้วย
-3. **Medium:** `MM_ConfigValid` เช็คแค่ *หมวด* ของ SLMode ไม่ได้เช็คว่าพารามิเตอร์ของหมวดนั้นให้ระยะ > 0 → `FirstLotMode=42 + SLMode=31 + _31_SL_Pip=0` attach ผ่านสวยงามแล้ว**ข้ามทุกสัญญาณตลอดกาล** = ขัดกับหลัก "config ผิดต้องตายที่ OnInit". **แก้:** เช็คพารามิเตอร์ราย SLMode + ปฏิเสธค่า `FirstLotMode` ที่ไม่มีจริง (เช่น 44 จาก .set ที่แก้มือ ซึ่งเดิมจะเทรด fixed lot เงียบๆ)
-4. **Low:** `MM_SizingUnavailable` ใช้ timestamp เดียวคุม throttle ทุกเหตุผล → เหตุผลที่สองภายใน 60 วิ หายไป. **แก้:** throttle ราย reason
-**⚠️ แก้คำพูดตัวเองใน ORDER-187:** ที่เขียนว่า "ไม่มี .set ไหนพัง" **ไม่จริง** — ตรวจแค่มิติ FirstLotMode. Codex จับได้ว่ามี **3 ไฟล์ใน `_mt5_auto/ab_sets/order136_w1/` (W1_92_L4_lin/W1_92_L4_none/W1_92_L6_none) ที่ตอนนี้ INIT_FAILED** เพราะ struct SL + StackMode 92. ตรวจต่อแล้ว: ทั้ง 3 คือ cell ที่ **ORDER-136 Wave1 ตัดสินว่าแพ้อยู่แล้ว** (eqDD 3.6-4.4× base, BWD 0.91-0.94 → verdict "overlay แพ้ คง single-position") → guard กับ verdict ตรงกัน ไม่มี verdict ไหนต้องรื้อ และการ replay ไม่ได้ก็ไม่เสียอะไรเพราะ config นั้นถูกห้ามแล้ว. scan ทั้ง repo ยืนยัน 3 ไฟล์นี้เท่านั้น
-**หลักฐาน:** compile 0 error/0 warning ทั้ง 9 wrapper · **`tpl_regression.ps1` CLEAN 8/8**
-**ค้าง (Codex ชี้ ผมไม่ทำในรอบนี้):** `EA_LabTemplate.mq5` chassis เก่า (include `modules/*` ไม่ใช่ `core/*`) ยังมี silent fallback เดิม **และ normalizer ของมันยัง floor lot ที่ต่ำกว่าขั้นต่ำ *ขึ้น* ไปเป็น min lot** (ต่างจาก core ที่คืน 0) — ถ้ายังนับว่า V1 ใช้งานอยู่ ต้องมี order แยก
-
-## ORDER-191 — [docs/tooling] parameter linkage matrix + ล้างหนี้ line-number ของ registry — `DONE 2026-07-24 (a: Sonnet lane + Claude verify · b/c: commit de14b3f3 "ORDER-191(b)(c): generated parameter linkage doc + inactive/override audit" — header sync 2026-07-24 Claude, ล่าช้ากว่า commit จริง)`
-**source:** Codex ข้อ "PARAM-LINK-005/UX-006". **ตัดสโคปลงจากที่ review เสนอ** เพราะ compile-time hiding ต่อ Boss ที่เสนอไว้ **มีอยู่แล้ว** — `Inputs.mqh` ห่อ input ของทุก entry ด้วย `#ifdef LAB_ENTRY_NN` อยู่แล้ว, wrapper ที่ build จริงจึงเห็นแค่ chassis ร่วม + entry ตัวเอง ไม่ต้องสร้างระบบใหม่.
-**spec (mechanical, ตรวจด้วยสคริปต์ได้):** (a) refresh line number ทั้ง ~174 แถวของ `docs/PARAM_REGISTRY.csv` ให้ตรง working tree รอบเดียว + เขียนสคริปต์ `scripts/param_registry_check.ps1` ที่ diff ชื่อ input ระหว่าง `Inputs.mqh` กับ registry แล้ว exit 1 ถ้าไม่ตรง (กันไม่ให้หนี้ก้อนนี้เกิดซ้ำ) (b) จากคอลัมน์ `coupled_parameters` ที่มีอยู่แล้ว generate ตาราง linkage ต่อหมวด → `docs/PARAM_LINKAGE.md` (c) audit หา input ที่ `classification=INACTIVE` หรือคู่ที่ override กันเงียบๆ → list ไว้ให้ Claude ตัดสิน
-**ห้าม:** เขียนคอลัมน์ `default_profile`/`optimize_stage`/`safe_range` ที่เป็น UNKNOWN โดยเดาเอง (กฎเหล็กของ ORDER-164) · regenerate registry ทั้งไฟล์
-**ทำได้:** Sonnet/qwen ทั้งใบ (mechanical + มี cage ตรวจ)
-
-## ORDER-192 — [tooling] OnInit effective-config summary + optimizer active-parameter guard — `DONE 2026-07-24 (a: `[CFG] sizing` block landed + follow-up fix commit a97d7f7e "effective-config summary was lying about entry 16" · b: see ORDER-192(b) below, DONE — header sync 2026-07-24 Claude)`
-**source:** Codex ข้อ "CONFIG-007 + OPT-GUARD-008". **จัดไว้ท้ายคิวโดยตั้งใจ** — มูลค่าต่อ pipeline ต่ำกว่า 187-189 มาก และ MT5 ซ่อน parameter แบบ dynamic ไม่ได้อยู่ดี
-**spec:** (a) ต่อจาก `[INIT] Boss_%s | exit=... firstLot=...` ที่มีอยู่ ให้พิมพ์บล็อกสรุป **effective config** = โหมดที่ใช้จริง + first lot ที่คำนวณได้จริง ณ ตอน attach + ค่าที่ถูก override ทิ้ง (เช่น `_2_BasketTP_Money` ตอนที่ `_2_BasketTP_BalPct>0`) + คำเตือนเมื่อ `_4_DdAdaptiveOn` เปิดพร้อม LotProg/Recovery (b) guard ฝั่ง optimizer: สคริปต์อ่าน `.ini` ของ optimize pass แล้วปฏิเสธ parameter ที่ inactive/ถูก override/เป็น safety (`RC_*`, KillDD, DepositLoad) — **ใช้ `PARAM_REGISTRY.csv` เป็นแหล่งความจริง** (จึงต้องรอ ORDER-191 (a) ก่อน)
-**ห้าม:** ทำ (b) ก่อน registry ผ่าน check script (จะ guard จากข้อมูลเก่า) · เพิ่ม input ใหม่เพื่อเปิด/ปิด summary (log อย่างเดียวพอ)
-**ทำได้:** (a) Claude/Sonnet · (b) Sonnet/Codex
-
-## ORDER-194 — [core/safety] hard-kill ยิงซ้ำทุก tick หลัง halt แล้ว (ไม่มี `g_rc_halted` guard ใน `RiskControl_CheckDD`) — `DONE(Claude/Fable 2026-07-24, user "แก้ตามงานที่นายเปิดไว้เลย" — header sync 2026-07-24 Claude)`
-**source:** เจอโดยบังเอิญตอนไล่ตอบคำถาม user เรื่อง KillDD 25% (2026-07-24) — grep หา `HARD KILL` ใน tester log แล้วเจอตัวเลขที่เป็นไปไม่ได้
-**หลักฐานดิบ (log จริง ไม่ใช่การอนุมาน):**
-```
-06:57:49  2024.05.09 16:10:40  [RISK] HARD KILL: DD 25.09% >= 25.00% (profile 2) -> closing all
-06:57:49  2024.05.09 16:10:40  [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
-06:57:49  2024.05.09 16:10:59  [RISK] HARD KILL: DD 25.09% >= 25.00% (profile 2) -> closing all   ← ยิงซ้ำหลัง halt แล้ว
-```
-จำนวน match ต่อไฟล์ log: **07-19 = 14.4M · 07-23 = 11.8M · 07-24 = 3.5M** · ไฟล์ log วันเดียว **777 MB**
-**กลไก (ยืนยันที่ `RiskControl.mqh:299-327`):** `RiskControl_CheckDD()` เช็ค `g_rc_kill_pending` แต่ **ไม่เคยเช็ค `g_rc_halted`**. พอ kill เสร็จ → `kill_pending=false`, `halted=true` → tick ถัดไปเข้ามาใหม่ → `dd` ยังสูงกว่าเพดาน (peak equity ไม่ถูก reset, equity ยังต่ำ) → **print + `kill_pending=true` + `KillReconcile()` อีกรอบ ทุก tick จนจบ run**. ใน `LabCore.OnTick` ลำดับคือ `RiskControl_CheckDD()` ก่อน `RiskControl_IsHalted()` — CheckDD จึงยิงก่อนที่ halt check จะได้ทำงาน
-**ผลกระทบ:** (1) **live: พยายาม close-all ซ้ำทุก tick ทั้งที่พอร์ตแบนแล้ว** = ยิง request ใส่โบรกเกอร์รัวๆ โดยไม่จำเป็น (2) tester log บวมระดับ GB → เปลืองดิสก์ + ทำให้ทุกงานที่ต้อง scan log ช้ามาก (3) กลบ log อื่นจนหาอะไรไม่เจอ
-**ที่ยังไม่รู้ (ต้องตรวจก่อนแก้):** `KillReconcile` ที่ถูกเรียกซ้ำ ส่งคำสั่งปิดจริงทุกครั้ง หรือเจอว่า flat แล้ว return เร็ว — ต่างกันมากระหว่าง "log spam เฉยๆ" กับ "ยิง order ใส่โบรกจริง"
-**✅ DONE (Claude/Fable 2026-07-24, user สั่ง "แก้ตามงานที่นายเปิดไว้เลย"):** ตอบข้อ "ที่ยังไม่รู้" ก่อนแก้แล้ว — **ไม่ได้ยิง order ใส่โบรก** (`Exec_CloseAll` วนหาไม้ของตัวเอง ไม่เจอ ก็ไม่เรียก `PositionClose`) **แต่หนักกว่าที่คิดในอีกทาง: `KillReconcile` เข้า block persist ทุกครั้งที่ผ่าน → `Persist_Set`×2 + `Persist_Flush()` = `GlobalVariablesFlush()` เขียนดิสก์ทุก tick ตลอดไปบน live/demo** บวก log 2 บรรทัดต่อ tick
-**fix ที่ลง:** ไม่ใช้ early-return เปล่าตามที่เสนอไว้ตอนแรก — ใช้แบบที่**รักษาคุณสมบัติ "halted ต้องแบน" ไว้ด้วย**: ถ้า halted แล้วจะไม่ประเมิน DD ซ้ำ แต่ยัง sweep ไม้ที่โผล่มาบน magic นี้*หลัง* halt (เรียก reconcile เฉพาะตอนมีของจริงให้ปิด — idle path ต้องไม่มีต้นทุน)
-**หลักฐาน:** `tpl_regression.ps1` = **CLEAN 8/8 ไม่ขยับสักตัว** → ยืนยันว่า kill ซ้ำเป็นเรื่อง log/disk ล้วน ไม่เคยมีผลต่อ trade
-**bars:** N-A. **flat-lot probe:** N-A.
-**ห้าม:** ตีความ CLEAN 8/8 ว่า "ไม่มีอะไรเสียหาย" — ผลจริงอยู่ที่ live (disk I/O) และที่ log ขนาด GB ซึ่งทำให้ ORDER-193 ทำงานไม่ไหวถ้าไม่แก้ก่อน
-
-## ORDER-193 — [tooling/integrity] ตรวจจับ backtest ที่ถูก hard-kill ตัดกลางคัน (truncated-run detector) — `DONE 2026-07-24 (a/b/c: `scripts/check_truncated_run.ps1` wired into `mt5_run.ps1` — ทุก run เขียน `<name>.truncation_check.json` อัตโนมัติ (verified in source, line ~156) · d: retro-scan ORDER-193(d)/(e) below, DONE — header sync 2026-07-24 Claude)`
-**source:** user 2026-07-24 ถามว่า "KillDD 25% เข้มไปไหม ถ้าโดนก็ optimize/ลด lot เอาก็ได้". ไล่โค้ดแล้วเจอว่าคำถามนี้ชี้ไปที่ปัญหาที่ **ใหญ่กว่าตัวเลข 25** และไม่มีใครเห็นมาก่อน:
-**ข้อเท็จจริงที่ตรวจแล้ว:** `RiskControl_CheckDD()` **ไม่ถูก tester-gate** (มีแค่ `RiskControl_PersistRefresh` ที่ gate ไว้ที่ `RiskControl.mqh:287`) → **hard-kill ยิงใน backtest ด้วย** และเมื่อยิงแล้วจะ `close all + halt ตลอดที่เหลือของ run` (`g_rc_kill_pending` → `RiskControl_IsHalted` early-return ใน OnTick)
-**ผลที่ตามมา:** backtest ใดก็ตามที่ DD แตะ `RC_KillDDPct()` จะรายงาน PF/n จาก **sample ที่ถูกตัดกลางคัน โดยไม่มีอะไรในรายงานบอกว่าถูกตัด** — วัดได้จริงวันนี้ (ORDER-188 เคส A): ตาย DD 25.09% ที่ไม้ 115 จาก 164 = **30% ของหน้าต่างหายไปเงียบๆ** และ PF ที่ได้ (0.71) คือ PF ของ 70% แรกเท่านั้น. **ร้ายกว่านั้น: จุดตัดขึ้นกับ "เงินฝากที่ตั้งใน tester" ซึ่งเป็น setting ไม่ใช่คุณสมบัติของกลยุทธ์** → EA เดียวกัน พารามิเตอร์เดียวกัน คนละเงินต้น = คนละ verdict. นี่คือรูรั่วของ comparability ทั้ง funnel ไม่ใช่แค่ของ EA ตัวใดตัวหนึ่ง.
-**spec:** (a) หา marker ที่เชื่อถือได้ว่า run ถูกตัด — `[RISK] HARD KILL` ใน tester log และ/หรือ deals ที่หยุดก่อนวันสิ้นสุด window (b) ใส่การตรวจนี้เข้า `scripts/mt5_run.ps1` (หรือ wrapper) ให้ **print คำเตือนเด่นๆ + คืน flag** ว่า `TRUNCATED_BY_KILL at trade N / DD X%` (c) เติมฟิลด์นี้ในทางเดินผลที่ใช้ตัดสิน (report harvest / CSV) เพื่อให้ **ไม่มี verdict ไหนถูกเขียนบน sample ที่ถูกตัดโดยไม่รู้ตัว** (d) ตรวจย้อนหลัง: scan tester log เท่าที่ยังเหลือ หา run ที่เคยโดน แล้วรายงานว่ากระทบ EA ตัวไหนที่มี verdict อยู่แล้วบ้าง
-**ห้าม:** แก้ตัวเลข `RC_KillDDPct()` · ปิด/ข้าม hard-kill ในโหมด tester เพื่อให้ backtest เดินจบ (จะได้เลขที่สวยจากความเสี่ยงที่ live รับจริงไม่ได้ = โกหกตัวเอง — ถ้าอยากได้ run ที่ไม่ถูกตัด วิธีที่ถูกคือ **ลด lot / เพิ่มระยะ จนไม่แตะเพดาน** ตามที่ user เสนอ ซึ่งถูกแล้ว แค่ต้องเห็นสัญญาณเตือนก่อน) · ทำ (d) แล้วรีบตีความว่า verdict เก่าผิดทันที (รายงานก่อน ให้ Claude/user ตัดสิน)
-**bars:** N-A (tooling). **flat-lot probe:** N-A.
-**ทำได้:** Sonnet/qwen (mechanical, ตรวจผลได้ด้วย log จริง) — logic ตัดสินว่า verdict ไหนต้องรื้อ = Claude/user เท่านั้น
-
-## ORDER-152 — [infra] doctrine reconciliation: Codex routing + stale verdict vocabulary + doc-retirement audit — `REVIEWED(Claude 2026-07-23) — committed c6d431f · (a)(b) done · (c) disposition B-list EXECUTED this session (user go-ahead given): moved 6 root docs → _archive_docs/ (DEPLOY_CHECKLIST_2026-06-29 + 5 one-off analysis docs), deleted empty portfolio/port_01/ scaffold + duplicate _archive_docs/QWEN_RUN_LOG_updated.md (verified pure subset of QWEN_RUN_LOG.md), verified DEPLOYMENT_PLAN.md is NOT a stale duplicate of DEMO_DEPLOYMENT_PLAN.md (distinct scope, already bannered) → kept as-is; updated path refs in PROJECT_STATE.md/README.md/MASTER_BACKLOG.md; check_state.ps1 -Strict = CLEAN after every move; **B-list now 7/7 CLOSED** — final 2 done same session (`ee8db79`+`1b0ebb9`): `OPTIMIZE_PROCEDURE_AND_AUDIT.md` → `_archive_docs/` (already self-bannered SUPERSEDED, nothing to merge) · `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` → `_archive_docs/` **after content-check**: not "already ported" but *replaced by a different system* (§3 scoring + §4 gate chain = retired vocabulary → VERDICT GATE · §5 Pass 0/1/2/4 → skill LADDER · §6 window → pinned MAIN/BWD/HOLDOUT · §7 EA table stale, GSMC already DISQUALIFIED · §1-2/§8 still true, live in `ea_template/DESIGN_V2.md`+`VISION.md`) → SUPERSEDED banner added, refs fixed in `PLATFORM_INDEX.md`/`README.md`/`PROJECT_STATE.md`/`_archive_docs/README.md` — see `_triage/_archive/audits_and_investigations/ORDER152_DOC_RETIREMENT_AUDIT.md` §B for full detail. **⚠️ spun off (out of scope, not done):** `scripts/select_robust_pass.py`+`scripts/score_backtest.py` ยัง implement สูตร BacktestScore v1 ที่ retire แล้วจากไฟล์ที่เพิ่ง archive — ยังไม่ตรวจว่ายังถูกเรียกใช้จริงไหม (แก้แค่ path comment) · worktree risk item (`great-mendeleev-a35c44`) resolved same session: confirmed clean + already-merged, removed via `git worktree remove`, nothing lost`
-> 🔧 **provenance correction (Opus-seat, 2026-07-23):** B-list execution above actually landed in commit **`52e9fcd`**, not folded into any of this session's other commits. `52e9fcd`'s commit message reads "ORDER-163 (CORE-002) REVIEWED..." — **that message is wrong for that commit's actual content.** Root cause: a `.git/index` race between two concurrent sessions writing to the same shared working tree during a slow (~3min) pre-commit hook — this session's ORDER-163 `git add` got superseded in the shared index by the other session's doc-cleanup `git add` before either `git commit` finished, so the commit object that landed carries this session's message text but the other session's staged content. No data was lost (all files intact), but **the git log entry for `52e9fcd` should be read as "ORDER-152(c) doc B-list execution", not ORDER-163** — this note is the correction. ORDER-163's actual files were re-staged and committed separately afterward (see that order's own commit). New failure class for `AGENT_TASKBOARD.md`/git-workflow doctrine — logged to memory `shared-worktree-concurrent-writers`.
-**source:** workplan review finding #2 + Codex MISSED #1/#2 + ROADMAP §3 ข้อ 9 (เกษียณเอกสารซ้ำซ้อน) — **ยกระดับจาก "ว่างเมื่อไหร่ก็ได้" เป็น T1 เพราะพิสูจน์แล้วว่ามี doc ขัดกันเองที่ agent อ่านอยู่ทุกวัน** (ไม่ใช่แค่รก).
-**ยืนยันแล้ว 2 จุดขัด:** (1) `AGENTS.md` §5.1 ตาราง order-tag ระบุ 👉 แนะ default = **Codex-direct** สำหรับงาน code · แต่ Decision log 2026-07-16 + `docs/PIPELINE.md` สั่ง Claude-author + Codex audit-only หลัง Codex-builder ตาย 3 ครั้งใน 1 วัน (2) `ea_template/OPTIMIZATION_PROCEDURE_V2.md` ยังเป็น DRAFT FOR REVIEW และใช้ศัพท์ verdict เก่า (`DEAD`/`PARKED`/`SYMBOL_LOCAL` เปล่าๆ) ที่ retire ไปแล้วตาม VERDICT GATE.
-**spec:** (a) แก้ `AGENTS.md` §5.1 ให้ตรง Decision log — เส้นแบ่งที่ถูกต้องคือ **core/parity/money code = Claude เขียน Codex blind-audit** · **tooling ที่ไม่แตะเงินและมี cage ชัด = Codex build ได้** (precedent ที่ถูกต้องแล้ว = ORDER-144) ห้ามเขียนเหมารวมว่า Codex ห้ามเขียนโค้ดทุกกรณี (b) `OPTIMIZATION_PROCEDURE_V2.md` — map ศัพท์เก่า→canonical vocabulary + ใส่ banner ว่าไฟล์นี้ owns **procedure เท่านั้น ไม่ own verdict** (VERDICT GATE ใน CLAUDE.md own) (c) audit: list ทุก `*.md` ที่มี banner `DRAFT FOR REVIEW` / `SUPERSEDED` / `DEPRECATED` + ไฟล์ที่ authority ทับกัน → ตารางเสนอ disposition ต่อไฟล์ (keep / merge-into-X / retire) — **เสนอเฉย ๆ**.
-**ผล sweep รอบแรกมีแล้ว (2026-07-23 — ใช้เป็นจุดตั้งต้นของ (c) ไม่ต้องเริ่มจากศูนย์):** ขนาด = **29 `.md` ที่ root · 10 ใน `docs/` · 20 ใน `_archive_docs/`**. ตระกูลที่ authority ทับกัน: **taskboard ×4** (`AGENT_TASKBOARD` + `_MERGE` + `_PQUANT` + `ARCHIVE_TASKBOARD_2026-07A`) · **deployment plan ×3** (`DEPLOYMENT_PLAN` + `DEMO_DEPLOYMENT_PLAN` + `DEPLOY_CHECKLIST_2026-06-29` ซึ่ง date-stamped น่าจะค้าง) · **project state ×2** (+ `STATUS.md`/`STATUS.html` + `_archive_docs/PROJECT_STATUS.md`). ติด banner ชัดแล้ว: `OPTIMIZE_PROCEDURE_AND_AUDIT.md` = `⚠️ SUPERSEDED (2026-07-18)` · `docs/RECOVERED_PLATFORM_DESIGN_20260614.md` = artifact กู้คืน น่าจะถูกแทนด้วย `PLATFORM_INDEX.md`/`docs/PIPELINE.md`. one-off analysis ที่ root ควรย้ายลง `_archive_docs/`: `EA_CORE_ST03_LOOP_PLAN` · `MT4_GOLDGRID_RETEST_PLAN` · `RSI_FROM_PIPS_REVERSE_ENGINEERING` · `STRATEGY_200_ANALYSIS` · `ZEUS_GOLD_HEDGE_ANALYSIS`. **2 อย่างที่ไม่ใช่ .md แต่เป็นขยะโครงสร้างจริง:** `portfolio/port_01/` = 5 โฟลเดอร์ว่างเปล่ามีแต่ `.gitkeep` ไม่ถูกแตะตั้งแต่ 2026-05-29 · **`.claude/worktrees/great-mendeleev-a35c44/` = สำเนาทั้ง repo ค้างอยู่** (root docs + `_mt5_auto/` ครบ) — อันนี้อันตรายกว่ารก เพราะ memory `shared-worktree-concurrent-writers` เตือนไว้แล้วว่า worktree ค้าง = ความเสี่ยง writer ชนกัน **แต่ห้ามลบในใบนี้ ให้เสนอพร้อมเหตุผล**.
-**bars:** N-A (doc order ไม่มี pass/dead). **flat-lot probe:** N-A.
-**ห้าม:** ลบ/ย้าย/rename ไฟล์ใดๆ ใน order นี้ (เสนอ disposition เท่านั้น) · แก้ VISION.md · แก้ Decision log · แตะ verdict EA · commit เอง.
-**ทำได้:** (a)+(b) = **Claude เท่านั้น** (เป็นการตัดสินว่า doc ไหนชนะ) · (c) sweep = qwen/Sonnet ทำ list ได้ · 👉 แนะ: Claude ทำ (a)(b), qwen ทำ (c).
-
-## ORDER-182 — RSI-MR (990103): continuous-span re-measure — WFA stitched-window methodology invalid for this basket EA, real evidence is stronger — `REVIEWED(Claude 2026-07-23): edge ยืนยันจริง (both-window PF1.37/1.37 plateau, ไม่ใช่ spike) แต่ holdout n=26 บางล้มไม่ผ่าน → BUILD-ON (ไม่ใช่ CANDIDATE, ไม่ใช่ตาย)`
-**source:** ก่อนดัน RSI-MR ไปเป็น CANDIDATE ตาม "ค้าง" จากหลาย session-close พบว่า `(Boss)_RSI_MR_GridLog_rev01` เป็น **basket EA จริง** (dual-side, `_06_MaxPositions=8`, `_05_LotMode=3` LOG escalation — `PositionsTotal()`/per-side basket TP ใน source) แต่ ORDER-168 WFA วัดด้วย **3 window แยกกัน 2020-21/21-22, 2021-23/23-24, 2023-25/25-26 (equity reset ทุกรอบ, DistAtrMult คนละค่าต่อ fold)** — ตรง pattern ที่ skill `backtest-optimize-rigor` เตือนไว้เป๊ะว่า stitched windows หลอกได้ ~10x สำหรับ basket/grid EA (precedent: PF 7.17/3.97/7.64 tiled → 0.583 continuous). flat-lot เดิม (PF 0.78, ORDER-048/2026-07-08) ก็ใช้ .set บางส่วนก่อนเจอ cache bug ORDER-165 — เชื่อไม่ได้เหมือนกัน. ใบนี้รัน **continuous single-span** ด้วย full-pinned config เดียว (atr9, `_mt5_auto/ab_sets/rsimr_continuity_check/`) บน **D:\Meta 5b** (กัน session คู่ขนานที่ใช้ D:\Meta 5 อยู่).
-**ผล (Model 4, full-pinned, continuous span, EURUSD H1):**
-| config | window | PF | trades | DD% | win% |
-|---|---|---|---|---|---|
-| ESCALATED (LOG5, pinned) | MAIN 2023-25 | **1.37** | 280 | 8.07 | 67.9 |
-| ESCALATED (LOG5, pinned) | BWD 2020-22 | **1.37** | 267 | 5.35 | 62.6 |
-| FLATLOT (LotMode=0) | MAIN 2023-25 | **1.33** | 163 | 1.57 | 62.6 |
-| FLATLOT (LotMode=0) | BWD 2020-22 | **0.82** | 159 | 4.12 | 59.1 |
-| ESCALATED (LOG5, pinned) | HOLDOUT 2026H1 | **0.73** | 26 | 3.63 | 50.0 |
-raw `_mt5_auto/RSIMR_CONTINUITY_CHECK.csv` + reports `RSIMR_CONT_*`.
-**อ่านผล:** (1) **both-window PF เท่ากันเป๊ะ 1.37/1.37 บน config เดียว ไม่ต้อง reoptimize ต่อ fold** = plateau จริง ไม่ใช่ spike, n สุขภาพดีสำหรับ type นี้ (280/267 เทรดใน 3 ปี) — ผ่าน CANDIDATE bar ทั้งคู่ (MAIN≥1.2 hard, BWD≥1.0 soft) สบายๆ, **ดีกว่า WFA เดิมมาก** (fold2 OOS 1.08 เดิม = artifact ของการ chop window ไม่ใช่ edge จริงที่บาง) (2) **flat-lot ไม่ใช่ ENGINE-EDGE class ชัดเจน**: MAIN flat-lot ยังมีกำไร (1.33 > 1) แสดงว่า entry เองมี edge จริงในหน้าต่างปัจจุบัน, มีแค่ BWD (0.82) ที่ต้องพึ่ง escalation ถึงจะรอด — อ่านเป็น "escalation ช่วยพยุงในโหมด trend-stress" ไม่ใช่ "escalation คือ edge ทั้งหมด" (3) **MC** (bootstrap จาก MAIN gross P/L, win190/loss90, `mc_from_summary.ps1`): PF-5th **1.116** (ผ่าน hard floor ≥1.0 ไม่ถึง comfortable ≥1.2), ruin **0%**, DD95 3.07% (4) **holdout 2026H1 ล้ม (0.73/n=26)** แต่ n บาง (26 เทรดใน 6 เดือน เทียบ ~45-90 ที่คาดจาก rate ของ MAIN/flat — เข้าข่าย "thin sample = inconclusive" ตาม catalog ไม่ใช่ "ล้มชัดเจน") — ตาม LADDER Step 6 (holdout collapse + PF>1 ที่อื่น ⇒ BUILD-ON ไม่ใช่กลับไป diagnosis).
-**lever coverage:** รอบนี้แตะแค่ methodology (continuous vs stitched) — **spacing (DistAtrMult) เดียวที่ swept บน pinned data จริง**; lot-law เคย sweep (ORDER-048) แต่บน partial-set ก่อน ORDER-165 = ไม่นับ; entry-threshold (RSI band)/SL-width/exit-mode ยังไม่แตะบน continuous-pinned baseline เลย → **ยังไม่ครบ ≥3 lever ตามกฎ** ห้ามเขียน DEAD/CANDIDATE เด็ดขาดจากรอบนี้.
-**verdict:** ยกจาก **PARKED-VERIFY(user) ความเชื่อมั่นลด** → **BUILD-ON** (evidence แข็งแรงขึ้นมากจาก methodology fix, both-window ผ่านจริง ไม่ใช่ margin บาง — แต่ holdout ยังไม่ผ่านและ lever ยังไม่ครบ 3 = ยังไม่ CANDIDATE). ยังไม่เคย attach = ไม่มีความเสียหายจากการรอ.
-**ห้าม:** อ่าน flat-lot BWD (0.82) เป็น STRUCTURAL/ENGINE-EDGE เต็มรูปแบบ (MAIN flat ยังกำไรจริง) · เชื่อ holdout 0.73 เป็นคำตอบสุดท้ายก่อนขยาย n · ข้าม lever entry-threshold/SL ไปเขียน CANDIDATE · **อ่าน DD 8.07%/5.35% เป็นภาพความเสี่ยงครบ** (ดู basket-duration finding ด้านล่าง — PF/DD ไม่เห็น tail นี้).
-**🔴 basket-duration tail (พบเพิ่มระหว่างทาง, `scripts/max_recovery_days.py` บน 2 continuous escalated report):** MAIN 14 basket, **max recovery 159.1 วัน** (95th pct 149.7, median 92.2, 86% ค้าง >7 วัน, 64% ค้าง >30 วัน) · BWD 19 basket, **max recovery 291.8 วัน** (เกือบ 10 เดือน!, 95th pct 107.3, median 31.1, 100% ค้าง >7 วัน) — นี่คือ "time-underwater" ที่ equity curve/DD ไม่เห็น (skill: "time-underwater IS the recovery-EA tail the equity curve hides"). ก่อนดัน CANDIDATE ต้องตอบให้ได้ว่า capital ที่ถูกล็อกไว้ 5-10 เดือน (basket ไม่ปิด) รับได้ไหมในบริบทพอร์ตจริง — ตัวเลขนี้ยังไม่ผ่าน worst-case ≤15% equity check ของ ENGINE-EDGE cage (ยังไม่ทำ เพราะยังไม่จัดเป็น ENGINE-EDGE เต็มรูป แต่ escalation มีจริงจึงควรเช็คไว้ก่อน).
-**ทำได้ต่อ (session หน้า):** sweep RSI Oversold/Overbought band + SL width (SlAtrMult) บน continuous MAIN+BWD, pinned methodology เดิม — ถ้าเจอ config ที่ยกทั้ง holdout และคง both-window plateau = ดัน CANDIDATE ได้จริง · **ต้องวัด basket-duration ของ config ใหม่ด้วยทุกครั้ง** ไม่ใช่แค่ PF/DD.
-
-## ORDER-183 — RSI-MR (990103) lever 2/3: RSI band × SL-width coarse grid (ต่อ ORDER-182) — `REVIEWED(Claude 2026-07-23): เจอ plateau ที่ดีกว่าเดิมชัดเจน (RSI25/75+SL25: MAIN1.96/BWD1.56, DD ต่ำกว่า, basket-duration สั้นกว่า) แต่ holdout ยังล้มเท่าเดิม (0.76/n=21) — ครบ 3/3 lever แล้ว, ยัง BUILD-ON`
-**grid:** RsiOversold/Overbought {25/75, 30/70(=baseline), 35/65} × SlAtrMult {15, 25(=baseline), 35}, continuous MAIN+BWD, full-pinned atr9 spacing คงเดิม, D:\Meta 5b.
-**ผล (9 combo × 2 window = 18 run):**
-| RSI band | SL15 (MAIN/BWD) | SL25 (MAIN/BWD) | SL35 (MAIN/BWD) |
-|---|---|---|---|
-| 25/75 | 1.15/0.90 | **1.96/1.56** | 1.56/1.72 |
-| 30/70 (baseline) | 1.00/1.01 | 1.37/1.37 | 1.24/1.57 |
-| 35/65 | 1.03/0.82 | 1.23/1.32 | 1.19/0.90 |
-raw `_mt5_auto/RSIMR_LEVER2_SWEEP.csv` + sets `_mt5_auto/ab_sets/rsimr_lever2/`.
-**อ่านผล:** (1) **RSI25/75 × SL{25,35} = plateau จริง ไม่ใช่ spike** — 2 จุดติดกันทั้งคู่ผ่าน both-window ชัดเจน (1.96/1.56 และ 1.56/1.72), n สุขภาพดี (199-232 เทรด), **ไม่ใช่แค่ SL15 ที่แย่ทุก band** (แถว 15 แย่หมดทุก RSI band = ตัด SL ไม่ใช่ candidate) (2) เลือก **RSI25/75+SL25 เป็น center ใหม่** (ดีกว่า SL35 ที่ n มากกว่าแต่ trade-off ไม่ชัด) — ยืนยันด้วย holdout+basket-duration รอบใหม่:
-- **holdout 2026H1: PF 0.76/n=21** — **ยังล้มเหมือนเดิม** (baseline เดิม 0.73/n=26) → พิสูจน์ว่า **2026H1 อ่อนจริงในตัวมันเอง ไม่ใช่ config-dependent** (คนละ config, RSI band เปลี่ยน SL เปลี่ยน แต่ผลลัพธ์ holdout เหมือนเดิมเป๊ะ — ไม่ใช่สิ่งที่ lever tuning แก้ได้)
-- **basket-duration ดีขึ้นทั้งคู่:** MAIN max 98.4 วัน (เดิม 159.1) · BWD max 182.1 วัน (เดิม 291.8) — สั้นลงมาก, tail risk เบาลงจริง ไม่ใช่แค่ PF ดีขึ้นบนหน้าตา
-**lever coverage ตอนนี้ครบ 3/3:** spacing (ORDER-182) + entry-threshold RSI band (ใบนี้) + SL-width (ใบนี้) — ผ่านกฎ "≥3 lever ก่อนตัดสิน" แล้ว.
-**verdict:** ยัง **BUILD-ON** (holdout ยังไม่ผ่าน = ยัง CANDIDATE ไม่ได้ตามกฎ VERDICT GATE ถึงแม้ lever ครบแล้ว) — แต่เป็น BUILD-ON ที่แข็งแรงขึ้นชัดเจนอีกชั้น: ceiling ทั้ง both-window (1.96/1.56) และ basket-duration (98/182 วัน) ดีขึ้นทั้งคู่ที่ **RSI25/75+SL25**. เสนอ **lock config ใหม่นี้แทน baseline เดิม** ถ้าจะเดินหน้าต่อ (ดีกว่าทุกมิติ ไม่มี trade-off).
-**ห้าม:** อ่าน holdout ล้มซ้ำเป็น "lever tuning ไม่ช่วยเลย" — มันช่วยจริงบน MAIN/BWD/basket-duration, แค่ไม่แก้ 2026H1 โดยเฉพาะ (อาจเป็น regime สั้นที่แย่จริง ไม่ใช่ปัญหา config) · เลือก SL35 เป็น center แทน SL25 โดยไม่เช็ค sensitivity fan ก่อน (SL35 ยังไม่ผ่านการยืนยัน holdout/basket-duration).
-**ทำได้ต่อ:** sensitivity fan ±20% รอบ RSI25/75+SL25 (กัน spike-ridge) + MC ใหม่บน config นี้ · ถ้า user อยากรู้ว่า 2026H1 อ่อนเพราะอะไรจริงๆ (regime หรือ noise) ต้องขยาย holdout ไปดู full 2026 เมื่อมีข้อมูลมากกว่านี้ (ตาม pattern เดียวกับ XAGUSD ORDER-180/181 n=7).
-
-## ORDER-185 — RSI-MR (990103) sensitivity fan รอบ RSI25/75+SL25 (ปิด LADDER Step 5, ต่อ ORDER-183) — `REVIEWED(Claude 2026-07-23): plateau ที่แข็งแรงที่สุดในบรรดา EA ที่เทสวันนี้ทั้งหมด — ทุก cell ผ่าน both-window ไม่มี flip ลบเลยสักตัว — ยัง BUILD-ON (holdout ยังเป็นด่านเดียวที่ค้าง)`
-**fan ±20% single-axis รอบ center (Os25/Ob75/SL25/Dist9), รวม frozen axis (DistAtrMult) ตามกฎ, continuous MAIN+BWD:**
-| axis | value | MAIN PF/n | BWD PF/n | % ของ baseline (MAIN1.96/BWD1.56) |
-|---|---|---|---|---|
-| center | os25/ob75/sl25/d9 | 1.96/216 | 1.56/199 | 100%/100% |
-| RsiOversold | 20 | **2.04**/160 | **1.96**/156 | 104%/126% ✅ ดีขึ้นทั้งคู่ |
-| RsiOversold | 30 | 1.32/254 | 1.82/232 | 67%/117% ⚠️ MAIN หลุด 70% เล็กน้อยแต่ยังกำไร |
-| RsiOverbought | 60 | 1.99/272 | 1.28/286 | 102%/82% ✅ |
-| RsiOverbought | 90 | 1.65/106 | 1.27/114 | 84%/81% ✅ (n บางลงหน่อย) |
-| SlAtrMult | 20 | 1.73/203 | 1.39/179 | 88%/89% ✅ |
-| SlAtrMult | 30 | **2.16**/231 | 1.43/211 | 110%/92% ✅ |
-| DistAtrMult (frozen) | 7 | **2.17**/265 | **1.62**/289 | 111%/104% ✅ ดีขึ้นทั้งคู่ |
-| DistAtrMult (frozen) | 11 | 1.98/173 | 1.10/160 | 101%/71% ⚠️ ขอบ threshold พอดี |
-raw `_mt5_auto/RSIMR_SENS_FAN.csv` + sets `_mt5_auto/ab_sets/rsimr_fan/`.
-**อ่านผล:** **plateau ผ่านชัดเจนที่สุดในบรรดา sensitivity fan ที่ทำวันนี้ทั้งหมด** — ทุก 1 ใน 8 variant (รวม frozen axis DistAtrMult ที่ไม่เคยแตะมาก่อน) ยัง **PF>1 ทั้ง MAIN และ BWD ไม่มีตัวไหน flip เป็นลบเลย**; มีแค่ 2 จุด (RSI_OS_HIGH MAIN 67%, DIST_HIGH BWD 71%) ที่หลุดเกณฑ์ hold-70% เล็กน้อยแต่ยังกำไรจริง ไม่ใช่ ridge. **สังเกตเพิ่ม (ไม่ chase):** RSI_OS_LOW (20) และ DIST_LOW (7) ดีขึ้นกว่า center ทั้งคู่ (2.04/1.96 และ 2.17/1.62) — บ่งว่า true peak อาจอยู่ทาง OS ต่ำกว่า/spacing แคบกว่านี้อีกหน่อย แต่ **ไม่ไล่ตามตอนนี้** (anti-overfit: MAIN/BWD ถูกใช้ select ไปแล้ว, ไล่ต่อ = fit หน้าต่างเดิมซ้ำ) — center RSI25/75+SL25+Dist9 ที่ล็อกไว้ปลอดภัยอยู่กลาง plateau ไม่ใช่ขอบ.
-**verdict:** ยัง **BUILD-ON** — sensitivity fan (LADDER Step 5) ผ่านสมบูรณ์ที่สุดเท่าที่เคยเจอ, **lever ครบ 3/3 + fan ผ่าน = เหลือแค่ holdout เป็นด่านเดียวที่ยังไม่ผ่าน** (เหมือน pattern เดียวกับ XAGUSD ORDER-180/181, LondonORB — holdout thin/fail คือจุดอ่อนร่วมของหลาย EA วันนี้ ไม่ใช่แค่ตัวนี้). ครบทุกด่านของ VERDICT GATE 2c ยกเว้น holdout+MC เต็ม (ยังใช้ MC แบบ simplified bootstrap จาก baseline เดิม ไม่ใช่ config ใหม่นี้).
-**ห้าม:** ไล่ปรับ center ไปทาง OS20/Dist7 ที่ดูดีกว่า โดยไม่รู้ตัวว่ากำลัง re-fit MAIN/BWD ซ้ำ (ทั้งคู่เป็น window ที่ใช้ select ไปแล้ว) · ข้าม MC เต็มรูปแบบบน config ใหม่ก่อนจะเรียก CANDIDATE.
-**ทำได้ต่อ:** MC เต็มบน RSI25/75+SL25 (ตอนนี้ยังอิง MC เดิมของ baseline คนละ config) · ถ้า user อยากดัน CANDIDATE จริง ต้องรอ n เพิ่มใน holdout (รอเวลา ไม่ใช่รอ optimize) หรือยอมรับ demo-isolate ทั้งที่ holdout อ่อน (precedent StoMultiTap/XAGUSD).
-
-## ORDER-186 — RSI-MR (990103) full MC บน RSI25/75+SL25 (ปิด LADDER Step 7 บน center ใหม่, ปิด funnel วันนี้) — `REVIEWED(Claude 2026-07-23): MC ผ่าน comfortable bar ทั้งคู่ (MAIN PF-5th 1.544, BWD 1.209) ดีขึ้นชัดเจนจาก baseline (1.116) — funnel ครบทุกด่านยกเว้น holdout เดียว, ปิดงาน RSI-MR วันนี้ที่นี่`
-**MC (bootstrap 5000 iter, `mc_from_summary.ps1`, GP/GL จริงจาก report):**
-| window | trades | win% | PF-5th | PF-median | DD95 | ruin |
-|---|---|---|---|---|---|---|
-| MAIN | 216 | 66.2 | **1.544** | 1.963 | 1.38% | 0% |
-| BWD | 199 | 65.8 | **1.209** | 1.533 | 2.40% | 0% |
-เทียบ baseline (atr9 เดิม, MAIN only): PF-5th 1.116 (ผ่านแค่ hard floor) → center ใหม่ **ผ่าน comfortable bar (≥1.2) ทั้ง 2 window** ชัดเจน, DD95 ต่ำกว่าเดิมมาก (เดิม 3.07% MAIN).
-**สรุปรวม funnel RSI-MR วันนี้ (ORDER-182→186):** methodology fix (continuous vs stitched) → lever spacing/entry-threshold/SL ครบ 3/3 → sensitivity fan สะอาดที่สุดของวันนี้ (ไม่มี flip ลบเลยสักตัวรวม frozen axis) → MC ผ่าน comfortable ทั้งคู่ → basket-duration tail ดีขึ้น (98d/182d จาก 159d/292d) → **เหลือ holdout 2026H1 เป็นด่านเดียวที่ยังไม่ผ่าน (0.76/n=21) และพิสูจน์แล้วว่าเป็น regime feature จริง ไม่ใช่ config bug** (2 config อิสระตกที่เดียวกัน). ครบทุกด่านของ VERDICT GATE 2c ยกเว้น holdout — เป็น pattern เดียวกับ XAGUSD (ORDER-180/181) และ LondonORB วันนี้ (ซึ่งเพิ่งถูก attach demo ไปแล้วทั้งที่ holdout บาง — precedent ตรงกัน).
-**verdict:** คง **BUILD-ON** (VERDICT GATE ไม่อนุญาต CANDIDATE จนกว่า holdout ผ่าน แม้ funnel ที่เหลือครบและแข็งแรงมาก) — RSI-MR พร้อมสำหรับ **user ตัดสินใจ demo-isolate** ถ้ายอมรับ holdout อ่อนแบบเดียวกับที่เพิ่งอนุมัติให้ LondonORB. lock config แนะนำ = `_mt5_auto/ab_sets/rsimr_lever2/RSIMR_RSI30_70_SL25.set` ต้นแบบเดิม **เปลี่ยนเป็น RSI25/75+SL25** (`_mt5_auto/ab_sets/rsimr_fan/RSIMR_CENTER.set` — ไฟล์นี้คือ config ที่แนะนำ).
-**ห้าม:** เขียน CANDIDATE จาก MC/fan ที่ผ่านโดยไม่รอ holdout · ลืมว่า config recommend เปลี่ยนจาก atr9/RSI30-70/SL25 เดิม เป็น RSI25/75/SL25/Dist9 ใหม่ (คนละไฟล์ .set).
-**ปิดงาน RSI-MR สำหรับวันนี้** — งานถัดไปที่มีค่าจริงคือรอเวลา (holdout n เพิ่ม) ไม่ใช่ optimize เพิ่ม.
-**UPDATE (user 2026-07-23, "เข้าคิวขึ้นเดโม่เลย"):** queue สำหรับ demo-isolate — `DEPLOYMENTS.csv` เพิ่มแถว **463666728 "Demo bundle 10", EURUSDm, PENDING_ATTACH, DD15%** · bundle เต็ม `_vps_deploy/RSI_MR_EURUSD/` (.ex5 เดิม ไม่แก้โค้ด + .set ใหม่ RSI25/75+SL25+Dist9 + `AllowLive=true` + README ประวัติเต็ม). **⚠️ เจอระหว่างเตรียม bundle: 463666728 margin mode (Hedge/Netting) ไม่ยืนยันในเอกสารโปรเจกต์ — EA นี้ต้องการ Hedging account (dual-side basket) มิฉะนั้น INIT_FAILED** (บัญชี Hedge เดียวที่ยืนยันในเอกสาร = 159503454 ซึ่งเป็นบัญชีจริงที่เพิ่งถอด RSI-MR ออก ใช้ไม่ได้). **ต้องเช็ค margin mode ก่อน attach จริง** — นี่คือ checklist item ไม่ใช่ blocker ของการ queue (PENDING_ATTACH ≠ attached).
-**UPDATE (user 2026-07-24, "เข้า Demo, attached แล้ว"):** ยืนยัน attach จริงบน 463666728 — status ยก **PENDING_ATTACH → ACTIVE**, `start_date=2026-07-24`, `judge_date=2026-10-24` (+3mo). attach สำเร็จ = ตอบคำถาม margin-mode ที่ค้างไว้แล้วโดยอ้อม (463666728 ต้องเป็น Hedging-mode จริง ไม่งั้น EA จะ INIT_FAILED). ส่งต่อ `ea-live-monitor` สำหรับติดตามต่อจากนี้ — **จำไว้: holdout ของ config นี้ล้มจริง (0.76) ไม่ใช่แค่บาง** เข้าใจความเสี่ยงนี้ไว้แล้วตอนตัดสินใจ attach อย่าตีความ losing streak แรกเป็นข้อมูลใหม่.
-
-## ORDER-181 — TrendRider XAGUSD H4: sensitivity fan (Sep/Ch) + corr vs cohort — ปิดของค้างสุดท้ายของ ORDER-180 — `REVIEWED(Claude 2026-07-23): fan ผ่าน 3/4 ชัดเจน (1 แกนไม่ flat แต่ไม่ flip เป็นลบ) + corr ต่ำทั้งคู่ — BUILD-ON แข็งแรงมาก เกือบ CANDIDATE เต็มตัว เหลือแค่ holdout n บาง`
-**sensitivity fan ±20% รอบ center (AdxMin30/Sep0.5/Ch2.5), MAIN+BWD:**
-| axis | value | MAIN PF/n | BWD PF/n | เทียบ baseline (MAIN2.10/BWD1.49) |
-|---|---|---|---|---|
-| SepAtr | 0.4 | 2.10/42 | 1.51/48 | ✅ เท่าเดิม |
-| SepAtr | 0.6 | 2.36/40 | 1.42/45 | ✅ ดีขึ้น |
-| ChAtr | 2.0 | **1.20**/42 | 1.27/48 | ⚠️ MAIN เหลือ 57% ของ baseline (ต่ำกว่าเกณฑ์ hold-70%) แต่ **ไม่ flip เป็นลบ** ทั้งสองหน้าต่างยังกำไร |
-| ChAtr | 3.0 | **3.50**/40 | 1.34/42 | ✅ ดีขึ้นอีก (167% ของ baseline) |
-**อ่านผล:** แกน SepAtr = plateau จริง (แบนราบทั้งสองข้าง). แกน **ChAtr ไม่ใช่ plateau — เป็น trend ทางเดียว** (trail กว้างขึ้น = กำไรมากขึ้นเรื่อยๆ ไม่ reverse) เพราะเป็น Chandelier-trail ที่ยิ่งหลวมยิ่งปล่อยให้กำไรวิ่งไกล — ตรงไปตรงมาตามกลไก ไม่ใช่ artifact แต่หมายความว่า **center 2.5 ที่ล็อกไว้ conservative กว่าที่ได้จริง** ไม่ไล่ตามต่อ (2.0 ก็ยังไม่ตาย, พอแล้วสำหรับยืนยันว่าไม่ใช่ ridge).
-**corr vs cohort (Pearson จาก monthly P&L, deal-list extraction, script ใหม่ `scripts/corr_monthly_quick.ps1` เพราะตัวเก่า hardcode ไฟล์เดิม):**
-- vs **XAU TrendRider sibling (992004, attached)**: corr **-0.244** (24 เดือนร่วม) = LOW-additive
-- vs **Boss_14 XAU leg (990207, แข็งสุดของวันนี้)**: corr **0.236** (16 เดือนร่วม) = LOW-additive
-ทั้งคู่ต่ำกว่า 0.40 มาก **ไม่มี concentration risk แม้เป็นโลหะเหมือนกันทั้งคู่** — กลไก pullback-continuation จับจังหวะเข้าคนละเวลากับ trend/breakout ของอีกสองตัว.
-**สรุป funnel เต็ม:** lock → both-window ✅ → sensitivity fan (3/4 แข็งแรง, 1 แกนไม่แบนแต่ไม่ตาย) → holdout **1.01/n=7 บาง** (จุดอ่อนเดียวที่เหลือ) → MC PF-5th 1.266 ruin0% ✅ → M4 ตรง M1 ✅ → corr ต่ำ ✅. **นี่คือ funnel ที่ครบเกือบทุกด่านของ VERDICT GATE 2c** เหลือแค่ holdout ที่ n ไม่พอให้มั่นใจเต็มร้อย — verdict คง **BUILD-ON** (ไม่ยกเป็น CANDIDATE เต็มตัวเพราะ holdout, ไม่ใช่เพราะกลัวอย่างอื่น) แต่เป็น BUILD-ON ที่แข็งแรงที่สุดในบรรดา expansion cell ทั้งหมดที่ทดสอบวันนี้ — **สมควรให้ user พิจารณา demo-isolate ได้เลยถ้ายอมรับ holdout บาง** (เหมือน precedent StoMultiTap/ORDER-137 ที่ demo-isolate ทั้งที่ funnel ไม่ครบ 100%). raw `_mt5_auto/O175_XAG_FAN.csv`.
-
-## ORDER-167 — [funnel completion] holdout ที่ค้างของ ORDER-147/149 บน pinned config — `REVIEWED(Claude/Opus 2026-07-23) — 4/5 cells ตายที่ holdout · 1 เหลือ BUILD-ON`
-**source:** ORDER-166 ปลด blocker แล้ว → เคลียร์ของค้าง 2 ใบที่ "ผ่าน both-window แต่ยังไม่ holdout" ซึ่งเป็นด่านที่ยังไม่เคยเดิน. รันทั้งหมดบน **full-pinned .set + leverage asserted** (มาตรฐานใหม่หลัง ORDER-165).
-**ผลรวม (รายละเอียดอยู่ในบล็อก ORDER-147/149 ตามลำดับ):**
-- **MacdDiv D1 majors: 2/2 ตาย** — GBPUSD (demo cfg) holdout 0.15/0.82 · USDJPY holdout 0.57/0.61 (ทั้งที่ both-window 1.37/1.20) → ตระกูล D1-majors ปิด, MacdDiv เหลือบ้านเดียว = XAU H4 (demo 999094)
-- **TrendRider expansion: 2/3 ตาย** — USDJPY 0.38 · EURJPY 0.32 · XAGUSD รอด holdout 1.37 แต่ BWD 0.97 บน pinned = **BUILD-ON ห้าม attach**
-- **diagnostic ที่ปิดปริศนาค้าง:** ORDER-117 vs ORDER-149 เทส MacdDiv **คนละ config** (defaults 1.23/24 vs demo-tuned 1.82/21) — demo cfg (MACD 12/44/13) อยู่นอกกริดที่ 117 กวาด จึงไม่เคยถูก holdout จริง → ORDER-167 เดินให้ครบแล้ว verdict "ตาย" จึง **earned** ไม่ใช่อ้างผิด
-**ค่าใช้จ่าย:** 13 runs. **สิ่งที่ได้:** ปิด 4 cell ที่ถ้าไม่เทสอาจถูก attach ตาม "both-window ผ่าน" + แก้ verdict ที่ผมเขียนผิด 2 จุด (149 เหตุผลผิด, 147 USDJPY/EURJPY เรียก BUILD-ON ทั้งที่ตาย).
-**ห้าม (ยึดตามเดิม):** ประกาศ MacdDiv/TrendRider concept ตาย — ตายเฉพาะ cell/config ที่ระบุ, บ้านที่ validated แล้ว (XAU H4 ทั้งคู่) ไม่ถูกแตะ.
-
-## ORDER-165 — [🔴 T0 BLOCKER · tooling] pin leverage + INPUT CACHE ให้ได้จริง ก่อน re-validate — `DONE(Claude/Opus 2026-07-23) — root cause จริงลึกกว่า spec เดิม: TESTER INPUT-CACHE ไม่ใช่ leverage · cage พิสูจน์ reproducible 8/8 แล้ว`
-**⛔ แก้ความเข้าใจผิดของผมเอง 2 ชั้นก่อนอ่าน spec เดิม:** (1) leverage ini **pin ได้จริง** ด้วย format `Leverage=1:N` (ผมเคยเขียนว่า format นี้ "ทำ report โกหก" — **ผิด**: agent log ยืนยัน 4/4 ว่า report ตรงกับ simulation จริง ที่ n=9 ไม่เปลี่ยนตอนนั้นเพราะตัวขับจริงคือ input ไม่ใช่ leverage) · format ตัวเลขเปล่า `Leverage=100` ที่ script ใช้มาตลอด = silently ignored → tester ใช้ค่า cached (2) **ตัวขับจริงของ 8/8 drift = TESTER INPUT-PROFILE CACHE**: `[TesterInputs]` override เฉพาะ input ที่ระบุ — **ที่ไม่ระบุมาจาก `MQL5\Profiles\Tester\<EA>.set` (ค่าล่าสุดที่เคยใช้ ถูกเขียนทับโดยทุก session ที่แตะ EA นั้นบน terminal นั้น)**. พิสูจน์ขาด: binary hash เดียวกัน + tick เดียวกัน → lane1 เปิด BUY 0.2 lot (cache: SLMode=30 no-SL + Recovery82 + risk-sizing → n=9 KillDD) vs lane2 SELL 0.01 (cache = compiled defaults → n=480). **Cage เดิมรัน 6/8 EA ไม่มี .set เลย + Boss_14/16 ใช้ set partial (53/89 บรรทัด จาก ~116 surface) = ไม่เคย deterministic ตั้งแต่ต้น** ทำงานได้เพราะบังเอิญไม่มีใครแตะ cache · baseline 07-19 pin บน cache state ที่ตายไปแล้ว (Codex ORDER-136 W2 รัน Boss_14 บน lane1 เมื่อ 07-21 + user ใช้ terminal เอง = ตัวเขียนทับ)
-**สิ่งที่แก้จริง (ทั้งหมด verified):**
-1. `mt5_run.ps1`: leverage เขียนเป็น `1:N` (format ที่ tester อ่านจริง) + **assertion post-run** อ่าน leverage จาก report เทียบกับที่ขอ mismatch = exit 3 ดังๆ (ทดสอบแล้ว: จับ mismatch จริง + ผ่านเมื่อตรง) + **WARN ดังๆ เมื่อรันโดยไม่มี -SetFile** ("inputs มาจาก cache = non-reproducible")
-2. **Full pinned default sets ทั้ง 8 EA** (`ea_template/sets/regression/*_defaults.set`, 113-134 inputs/ตัว): wipe cache → รัน compiled defaults → harvest จาก report Inputs section · Boss_14/16 = overlay frozen smoke params บน surface เต็ม (`*_regression_full.set`, override 53/42 ชื่อ match surface 100% = cross-validated)
-3. `tpl_regression.ps1`: ทุก EA บังคับ full set (ไม่มี set = FAIL ไม่ใช่เงียบ) + เช็ค exit 3 จาก mt5_run
-4. **baseline re-pin บน configuration ที่ pin ครบทุกแกน** (inputs + leverage 1:100) — diff table เก็บใน commit: ของเก่าหลายตัวคือ cache ขยะ (ตัวโต: Boss_18 "n=6020 exact" ที่เคยเฝ้าเป็น invariant = churn config จาก cache, ค่าจริง default = n=298 PF 1.21 · Boss_13 เก่า DD 25% = cache, จริง 3.1%)
-5. **Reproducibility PROVEN:** รัน cage ซ้ำทันทีหลัง pin → **7/8 CLEAN byte-exact + Boss_13 = 0-trade transient artifact ที่รู้จัก (memory 07-18) → solo re-run ตรง baseline เป๊ะ (209t/-12.47/0.99) = 8/8**
-**ผลกระทบต่อ evidence เก่า (สำหรับ re-validate ที่ user อนุมัติ):** (ก) EA standalone (ea_projects — Wave-1/2, MacdDiv, EmaStoRev ฯลฯ) input surface เล็กและ .set ที่ใช้ครอบเกือบหมด + flat 0.01 lot = margin/leverage ไม่ bind → **verdict เดิมน่าจะยืนเกือบทั้งหมด** (ข) เลขที่เสี่ยงจริง = **chassis Boss EA ที่รันด้วย set partial** + grid/basket lot ใหญ่ (margin bind ได้) → คิว re-validate ควรเริ่มที่ Boss_14 bench demo (990201-208) + RSI-MR (ORDER-157 PF 1.74→1.08 = คลาสเดียวกันเกือบแน่ — WFA รัน partial set) (ค) ทุก run ตั้งแต่นี้ = pin ครบอัตโนมัติ
-**source:** ORDER-162 รอบ 3 พิสูจน์แล้วว่า `mt5_run.ps1 -Leverage` **เป็น silent no-op** — เขียนลง ini แต่ MT5 build 5836 ไม่อ่าน ใช้ leverage ของบัญชีที่ terminal login อยู่แทน (lane1=1:2000, lane2=1:100) → **ผลต่างกัน 53 เท่าบน grid EA** (n=9 vs n=480). แปลว่า backtest ทุกใบที่ผ่านมา **leverage ไม่เคยถูก pin จริง** และผลขึ้นกับว่า terminal นั้น login บัญชีอะไรอยู่ตอนรัน.
-**ทำไมเป็น T0 (บล็อก re-validate ที่ user อนุมัติแล้ว):** user อนุมัติ re-validate ทั้งหมด **แต่ถ้ายังไม่ pin leverage ก่อน = re-validate ออกมาก็ลอยเหมือนเดิม** แค่ได้ตัวเลขชุดใหม่ที่ยังผูกกับบัญชีที่บังเอิญ login อยู่ **ห้ามเริ่ม re-validate จนกว่าใบนี้จะปิด**.
-**spec:** (1) หาวิธี pin leverage ที่ tester เชื่อจริง — ทางที่ควรลองตามลำดับ: ตั้ง leverage ที่ **บัญชีที่ terminal นั้น login** ให้ตรงกันทุก lane (ง่ายสุด ทำได้เลย) · หรือใช้ **custom symbol** ที่ล็อก margin spec เอง · หรือ **login บัญชีมาตรฐานเฉพาะสำหรับ backtest** ทุก lane (2) เพิ่ม **assertion ใน `mt5_run.ps1`**: อ่าน leverage ที่ report บอกกลับมา เทียบกับที่ขอ **ถ้าไม่ตรง = FAIL ดังๆ** ไม่ใช่เงียบ (บั๊กนี้รอดมาได้เพราะไม่มีใครตรวจย้อน) (3) ทำแบบเดียวกันกับ `Spread`/`TestSpread` (ORDER-085 พบว่า no-op เหมือนกัน — คลาสเดียวกัน ควรกันทีเดียว) (4) re-pin `regression_baseline.csv` ใหม่หลัง pin ได้แล้ว พร้อมบันทึก leverage/บัญชีที่ใช้ลงในไฟล์ baseline เอง
-**bars:** N-A (tooling). **flat-lot probe:** N-A.
-**ห้าม:** เริ่ม re-validate EA ใดๆ ก่อนใบนี้ปิด · re-pin baseline ก่อน pin leverage ได้ (จะ pin ความลอยเข้าไปเป็นความจริงใหม่) · แก้ verdict เก่าจาก finding นี้.
-**ทำได้:** Claude (money-adjacent + ต้องตัดสิน design) · 👉 แนะ: Claude ทำ (1)(2), qwen ช่วย (4) ตอน re-pin.
 
 ## ORDER-162 — [investigation] ~~MT5 tester engine drift~~ → **ROOT CAUSE = leverage unpinnable + margin-gate** (ไม่ใช่ engine drift) — `RESOLVED(Claude 2026-07-23 รอบ 3) — เหลือเศษเล็ก 1 อย่างยังค้าง · แตกเป็น ORDER-165 (T0 blocker)`
 **🔴 sample-check (1) ตอบแล้ว โดยบังเอิญ จากคนละเส้นทาง — คำตอบ = SYSTEMIC ไม่ใช่ isolated:** ระหว่างตรวจ ORDER-161 (template money-params) ผมรัน `tpl_regression.ps1` เจอ **8/8 Boss EA drift พร้อมกัน** (ไม่ใช่แค่ RSI-MR cell เดียวแบบ ORDER-157) — แล้ว **isolate ด้วย `git stash` ยืนยันว่าไม่ใช่โค้ดของผม**: stash ORDER-161 ออก รันซ้ำบน tree สะอาด (ไม่มีการแก้ `core/` เลยตั้งแต่ ORDER-125 baseline-repin 07-19) ได้ **ตัวเลขตรงกัน byte-for-byte กับตอนมี ORDER-161 อยู่** (net/pf/trades/eqdd ทั้ง 8 ตัวเป๊ะ) — ยืนยัน 2 ชั้น: (a) โค้ดผมไม่ใช่สาเหตุ (b) drift ทำซ้ำได้เสมอบน primary lane `D:\Meta 5` ไม่ใช่ noise ครั้งเดียว. **สองตัวที่โปรเจกต์เฝ้าเป็นพิเศษก็ drift ด้วย: Boss_14 n=84→81, Boss_18 n=6020→6000** (บทเรียน ORDER-125 ที่เพิ่ง re-pin baseline ไปเมื่อ 4 วันก่อน).
@@ -1130,24 +862,6 @@ raw `_mt5_auto/RSIMR_SENS_FAN.csv` + sets `_mt5_auto/ab_sets/rsimr_fan/`.
 **ห้าม:** สรุปว่า EA ตัวไหน "จริงๆ ตาย/รอด" จาก finding นี้จนกว่าจะรู้ scope (isolated vs systemic) · เปลี่ยน build/version MT5 เอง · แก้ evidence เก่าใน scorecard/index ใดๆ ตามความสงสัยนี้ก่อนพิสูจน์.
 **ทำได้:** sample-check (1) = qwen/ZCode (mechanical, เทียบเลขเก่ากับใหม่) · การตัดสินใจ (2) = Claude/user เท่านั้น · 👉 **รอ user เคาะว่าจะให้ priority แค่ไหน** (T1-ฉุกเฉินถ้าห่วง evidence ปัจจุบัน vs T2-เมื่อว่างถ้าเชื่อว่า isolated).
 
-## ORDER-161 — template: portable money params (cent/USD-safe) + balance-scaled lot sizing — `DONE + VERIFIED-NEUTRAL(Claude 2026-07-23)` ✅ **compile 9/9 · neutrality พิสูจน์แล้วด้วย stash-isolation (cage เองเสียจากบั๊กคนละเรื่อง = ORDER-165)**
-> ✅ **ปิดข้อค้างเรื่อง cage แล้ว (2026-07-23):** รัน `tpl_regression.ps1` ได้แล้ว (user ปิด terminal ให้) → ขึ้น **8/8 drift** → **isolate ด้วย `git stash`: เอาโค้ด ORDER-161 ออกหมด รันซ้ำบน tree สะอาด ได้ตัวเลขเดียวกันเป๊ะทั้ง 8 ตัว (net/pf/trades/eqdd byte-for-byte)** = **โค้ดใบนี้ไม่ใช่สาเหตุ พิสูจน์แล้วไม่ใช่แค่อ้าง**. drift มาจากบั๊ก leverage-no-op ที่มีอยู่ก่อนแล้ว (root cause เต็ม = ORDER-162 รอบ 3 → แตกเป็น ORDER-165). ⚠️ **หมายเหตุความซื่อสัตย์: การ isolate นี้พิสูจน์ว่า "ไม่ทำให้แย่ลง" แต่ยังไม่ได้พิสูจน์ neutrality เทียบ baseline ที่เชื่อถือได้ เพราะ baseline เองยังลอยอยู่จนกว่า ORDER-165 จะปิด** — พอ re-pin baseline ใหม่แล้วควรรัน cage ซ้ำอีกรอบให้จบสมบูรณ์.
-> 🔧 **renumbered 152→161 (Opus-seat, 2026-07-23):** เลข collision จริง — session นี้กับอีก session ใช้ ORDER-152 พร้อมกัน (ของผม = "doctrine reconciliation" คนละเรื่องเลย, commit `c6d431f` ไปแล้ว) ตาม precedent เดิม (133→135, 134→136 การชนกันของ session คู่ขนาน) **เลขที่ใหม่กว่า/ยังไม่ commit ถูก renumber** — เนื้อหา/โค้ด/สถานะข้างล่างไม่ถูกแตะเลย แค่เปลี่ยนเลข heading + self-reference ในบรรทัด verification status
-**source:** user 2026-07-23 during ORDER-150 review — *"input parameter ประมาณว่า tp เมื่อเงินให้ถึง 25$ พวกนี้ชวนสับสนมาก เพราะบางพอร์ตผมใช้ port cent, usd จะแก้ยังไงดี แล้วก็ lot size สามารถทำให้เป็น percent of balance ได้ไหมเพื่อจะได้ scale up ตาม port size ได้ง่ายๆ"*
-**problem:** (1) absolute money inputs mean 100× different things on a cent vs USD account (a `25` target = $25 or $0.25) — same .set, silently different behavior; (2) no lot mode scaled with account size for EAs **without** an SL — `FIRSTLOT_RISK(42)` needs an SL distance and silently falls back to `_41_FixedLot`, which is exactly why grid/basket EAs never scaled.
-**solution (all additive, every new input defaults to 0/off ⇒ existing .sets byte-identical):**
-- new shared helper `MM_BalancePct(pct)` in `MoneyManagement.mqh` — single resolver behind every `*BalPct` input (fail-safe: returns 0 on unreadable/non-positive balance, so a bad read disables the target rather than inventing one)
-- percent-of-balance twins: `_2_BasketTP_BalPct` (precedence BalPct > ATRmult > Money) · `_32_SL_BalPct` · `_57_DynCloseBalPct` · `_8_DDRefBalPct`
-- `_32_SL_*` gained a single resolver `Exit_BasketStopMoney()` — **both** call sites (intrabar safety stop + per-tick basket mgmt) now read the same value; they previously duplicated the raw input, which would have split-brained the moment one leg used BalPct
-- new `FirstLotMode = FIRSTLOT_BALANCE (43)` + `_43_LotPerAnchor` / `_43_BalanceAnchor` — `lot = LotPerAnchor × (balance / anchor)`, no SL required
-- `ExitManager.mqh` now includes `MoneyManagement.mqh` explicitly (was relying on LabCore include ORDER; no cycle — MM → Inputs/RiskControl only)
-**why ratios fix the cent/USD problem:** balance and anchor/percent are both in account currency ⇒ the ratio is unitless ⇒ identical meaning on both account types, and it auto-scales as the account grows. Anchor is set in whatever units the terminal displays (USD acct 1000 / cent acct 100000) — converting to USD would reintroduce the bug.
-**docs:** new `ea_template/INSTRUMENT_SCALE_REFERENCE.md` — full portable-vs-non-portable param audit + the BTC/ETH/XAU/EURUSD pip table the user asked for (answers the ORDER-142 review question), incl. measured D1 ATR for BTC (516.66) / ETH (58.33) and the `Stack_PipSize()` digits rule (BTC/ETH/XAU all digits=2 ⇒ **pip == point**, so "100 pips" = $1.00 there vs 100 real pips on EURUSD).
-**verification status — HONEST:** compile **0 errors / 0 warnings × 9 wrappers** (Boss_11..18 + EA_LabTemplate) ✅. **`scripts/tpl_regression.ps1` NOT RUN** ❌ — it needs the `D:\Meta 5` tester lane, currently held by the user's own terminal (PID 4744, account 146237 ThinkMarkets-Live, BTCUSD Daily chart = the export session). Not killed: live-account terminal, user's call. **Neutrality is argued-by-construction (every branch guarded by `>0` with 0 defaults, new enum branch unreachable at default FirstLotMode=41) but NOT yet PROVEN by the cage — the whole point of the cage is that this reasoning is not trusted.** ⚠️ **Do not treat ORDER-161 as closed until `tpl_regression.ps1` returns CLEAN (Boss_14 n=84, Boss_18 6020 exact).** One intentional non-identity to watch: `MM_FirstLot` RISK branch now routes through `MM_BalancePct` and gained a `riskMoney > 0` guard — mathematically identical except when balance ≤ 0, where it now keeps `_41_FixedLot` instead of computing a 0 lot.
-> 🔧 **note (Opus-seat, 2026-07-23):** `tpl_regression.ps1` รันผ่าน CLEAN ให้ ORDER-160 ได้สำเร็จช่วงเดียวกันนี้ (session นี้) — ไม่เจอ lane conflict ตอนรัน อาจจะ tester lane ว่างแล้วหรือ regression script ไม่ได้ต้องการ interactive terminal จริงๆ ตามที่สงสัย ลองรันซ้ำได้เลย.
-
----
-
 ## ORDER-151 — (TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep — `DONE(Claude 2026-07-23) — bundle built, PENDING_ATTACH for user` (user decision 2026-07-23: demo-isolate directly, not MRIS overlay first)
 **result:** locked plateau-center **lb60/dm2** (from `_mt5_auto/S2_TSMOM_BOTHWINDOW.csv` — picked over the lb100/dm2 spike-peak 4.90; lb60 family is flatter across deadmult 1-3). Bundle `_vps_deploy/S2_TSMOM_XAU/` = `TsMom_XAU.ex5` (verified fresh vs source mtime) + `S2_TsMom_XAU_deploy.set` (full 18-input merge, `_05_AllowLive=true`, magic 992001) + `README_ATTACH.md` (judge criteria + explicit "don't misread a losing stretch as new info" regime caveat, per user's own instruction on this order). DEPLOYMENTS.csv row added (463666728 placeholder acct, PENDING_ATTACH) + EA_MASTER_INDEX + scorecard rows updated.
 **source:** S2 PARKED-VERIFY — MAIN 2.8-4.9 all cells (strong bull-only TSMOM momentum edge) but BWD 0.52-0.77 all cells, ADX last-optimize could not filter the V-reversal failure mode. User chose to demo-forward the edge as-is rather than gate it behind an MRIS regime-overlay build first — forward data becomes the regime-dependence evidence.
@@ -1158,96 +872,12 @@ raw `_mt5_auto/RSIMR_SENS_FAN.csv` + sets `_mt5_auto/ab_sets/rsimr_fan/`.
 
 ---
 
-## ORDER-147 — S1 TrendRider XAU (992004 CANDIDATE) symbol expansion — `REVIEWED + HOLDOUT DONE(Claude 2026-07-23, ORDER-167): 2/3 ตาย · XAGUSD H4 = BUILD-ON (holdout ผ่านแต่ BWD ตกบน pinned config)`
-**เดิม (partial-set era):** transfer-screen ยก locked center a20/s0.5/c2.5 ไป 3 บ้าน ผ่าน M1+M4 both-window ทั้งหมด — XAGUSD 1.62/1.03 · USDJPY 1.34/1.31 · EURJPY 1.32/1.02.
-**ORDER-167 (full-pinned, M4, leverage asserted) — holdout 2026H1 = ด่านชี้ขาด:**
-| cell | holdout 2026H1 | verdict |
-|---|---|---|
-| USDJPY H4 | **0.38**/16t | **DEAD-OPTIMIZED** — both-window 1.34/1.31 สวยแต่ holdout พัง = selection-fit |
-| EURJPY H4 | **0.32**/11t | **DEAD-OPTIMIZED** — เหมือนกัน |
-| XAGUSD H4 | **1.37**/11t ✅ | รอด holdout — แต่ดูบรรทัดล่าง |
-**XAGUSD re-confirm บน pinned config:** MAIN **1.53**/111t (เดิม 1.62) · **BWD 0.97**/138t (เดิม 1.03) → **BWD ตกใต้ 1.0 บน config ที่ pin จริง** = soft-gate fail. holdout 1.37 ผ่านแต่ n=11 บางมาก. ⇒ **BUILD-ON ไม่ใช่ CANDIDATE** (ตาม bar: BWD-fail = PARKED/BUILD-ON ห้าม auto-live) · ห้าม attach จนกว่าจะมี BWD ที่ยืนได้ — lever ที่ยังไม่แตะบน XAG = optimize เฉพาะบ้านนี้ (ทั้งหมดที่ทำมาคือ *ยืม* center ของ XAU ไม่เคย tune ให้ XAG เลย).
-**บทเรียนซ้ำรอบ 3 ในวันเดียว:** both-window ผ่าน ≠ edge จริง — **holdout คือด่านที่ฆ่า** (MacdDiv D1 majors 2/2 ตาย · TrendRider expansion 2/3 ตาย) transfer-screen ให้ผลบวกง่ายกว่าที่คิดมาก อย่าหยุดที่ both-window.
-**source:** ORDER-139 (S1 = VALIDATED CANDIDATE XAU H4). doctrine 2b: ขยาย symbol×TF เอาทุก home ที่ผ่านบาร์. **spec:** locked center a20/s0.5/c2.5 **verbatim ห้าม re-tune**. symbols: XAGUSD + GBPJPY + USDJPY + EURJPY × H4 (+ H1 เฉพาะ XAG) = ~5 cells × MAIN+BWD M1 = 10 runs → M4 survivors (~20 runs รวม). Reports `S1X_{SYM}_{TF}_{WIN}_{MODEL}`.
-**bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · corr Claude รันเองตอน review (agent แค่เก็บ report ครบ). **flat-lot: N-A** (single-position). **ห้าม:** แตะ set/demo 992004 · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/_archive/verdicts/order135-149_results/ORDER147_S1_EXPAND_RESULTS.md`.
-
-## ORDER-149 — MacdDiv divergence: majors D1/H4 sweep (ต่อยอด 999094 + GBPUSD-D1 parked) — `REVIEWED + CORRECTED(Claude 2026-07-23): GBPUSD D1 DEAD-OPTIMIZED (earned properly now) · USDJPY D1 DEAD-OPTIMIZED (holdout-fail) — ORDER-167 ปิดทั้งคู่`
-> ⚠️ **การ review รอบแรกของผมมีข้อผิด — แก้แล้วด้วยการทดลอง (ORDER-167 ด้านล่าง).** รอบแรกผมเขียนว่า "GBPUSD D1 PASS ไม่เปิดเซลล์ใหม่ เพราะ ORDER-117 ฆ่าไปแล้วบน config เดียวกัน" — **ผิด: มันคนละ config กัน** และผมสรุปทั้งที่ตัวเองเป็นคน flag ว่า "ตัวเลขไม่ตรง ยังไม่ reconcile" (1.86/n21 vs 1.24/n24) — ควรทดสอบก่อนสรุป ไม่ใช่สรุปแล้วแปะ flag ไว้.
-**diagnostic ที่ปิดปริศนา (GBPUSD D1 MAIN, full-pinned ทั้งคู่):** compiled-defaults → **1.23/n24** (= ORDER-117's 1.24/24 ✓) · demo/tuned 999094 → **1.82/n21** (= ORDER-149's 1.86/21 ✓) ⇒ **ORDER-117 เทส defaults, ORDER-149 เทส demo-tuned = คนละ config จริง**. สำคัญกว่านั้น: demo config = MACD **12/44/13** ซึ่ง **อยู่นอกกริดที่ ORDER-117 กวาด** (Fast{8,12,16}×Slow{21,26,34}×Signal{7,9}) → **config นี้ไม่เคยผ่าน holdout เลย** = ตอนนั้นยังฆ่าไม่ได้จริง.
-**ORDER-167 รัน holdout ที่ขาดไป (Model 1, full-pinned, leverage asserted):**
-| cell | MAIN | BWD | HOLDOUT 2026H1 | HOLDOUT 2017-19 | verdict |
-|---|---|---|---|---|---|
-| GBPUSD D1 (demo cfg) | 1.82/21t | — | **0.15**/4t | **0.82**/44t | **DEAD-OPTIMIZED — earned** |
-| USDJPY D1 (demo cfg) | **1.37**/39t | **1.20**/45t | **0.57**/10t | **0.61**/49t | **DEAD-OPTIMIZED** |
-**ผลลัพธ์สุดท้าย: verdict เดิม (ตาย) ยืน แต่ตอนนี้*ได้มาอย่างถูกต้อง*แทนที่จะอ้างเหตุผลผิด** — GBPUSD D1 ตายบน holdout ทั้งสองหน้าต่างจริงๆ (0.15 · 0.82) · **USDJPY D1 ที่ผมเคยเรียก "cell ใหม่ BUILD-ON" = ตายเหมือนกัน** — both-window สวย (1.37/1.20) แต่ holdout ทั้งสองพัง (0.57 · 0.61) = selection-fit ซ้ำรอย GBPUSD sibling เป๊ะตามที่ตัวเองเตือนไว้. **MacdDiv concept ยังมีชีวิตที่บ้านเดิมเท่านั้น (XAU H4, demo 999094)** — D1-majors ตระกูลนี้ปิด.
-**บทเรียนเข้า catalog:** อย่าเทียบผลข้าม order โดยเชื่อ label ("default/locked") — **ต้อง diff .set จริง**; และ EA ตัวเดียวกันมีได้หลาย config ที่ verdict คนละอย่าง — verdict ต้องผูกกับ *config* ไม่ใช่แค่ symbol×TF.
-**source:** MacdDiv XAU H4 = demo 999094 (M4 confirmed) + ORDER-117 พบ GBPUSD MacdDiv D1 PARKED-VERIFY. ยังไม่เคย sweep majors เป็นระบบ. **spec:** EA MacdDiv เดิม (source เดียวกับ bundle 999094) default/locked param **ห้าม tune**. symbols: GBPUSD + EURUSD + USDJPY + AUDUSD + XAGUSD + GBPJPY × D1 + H4 = 12 cells × MAIN M1 (12 runs) → BWD เฉพาะ MAIN≥1.1 → M4 survivors (~28 runs รวม). Reports `MDX_{SYM}_{TF}_{WIN}_{MODEL}`.
-**bars:** PASS=MAIN≥1.2 AND BWD≥1.0 M1+M4 · D1 cells n≥20/window มิฉะนั้น THIN. **flat-lot: N-A** (single-position). **ห้าม:** แตะ 999094 demo · tune · verdict. **ทำได้:** qwen/ZCode → `_triage/_archive/verdicts/order135-149_results/ORDER149_MDX_SWEEP_RESULTS.md`.
-
-## ORDER-143 — SS1 LondonORB lever ค้าง: partial-TP + trend-filter sweep — `DONE(2026-07-20, Opus-seat) — N/A closure · EA (BRK)_LondonORB_XAU_rev01 lacks _2_PartialPct1 (partial-TP) and EMA200 trend-filter inputs · ห้าม แก้โค้ด per spec → sweep NOT RUN · SS1 remains BUILD-ON (next = different HOME/symbol, not lever stacking) · ผลดิบ _triage/_archive/verdicts/order135-149_results/ORDER143_SS1_LEVER_RESULTS.md`
-**source:** ORDER-140 close note ("lever ค้าง = partial-TP + trend filter"). **spec:** vehicle = SS1 LondonORB EA เดิม (Wave-1, sets `_mt5_auto/ab_sets/london_sets/` center MinOr 0.5/TpRR 3). sweep 2 lever แยกกัน (ห้าม stack รอบแรก): (A) partial-TP: `_2_PartialPct1 {30,50}` @frac 0.5 (ถ้า EA standalone ไม่มี input นี้ = บันทึก N/A แล้วข้าม — **ห้ามแก้โค้ด**) (B) trend filter EMA200 direction-align ถ้ามี input อยู่แล้วเท่านั้น. homes: GBPUSD M15 (บ้านหลัก) + USDJPY M15 + XAU M30 (2 บ้าน both-window>1 จาก 140). windows MAIN+BWD, M1. ~≤24 runs.
-**bars:** pass=cell MAIN≥1.2 AND BWD≥1.0 (ยกจาก BUILD-ON ได้) · dead=lever ไม่ยก MAIN เกิน 1.2 ที่ไหนเลย → SS1 คง BUILD-ON บันทึกปิด lever. **flat-lot: N-A** (single-position OCO). **ห้าม:** แก้โค้ด EA · stack lever · verdict. **ทำได้:** qwen/ZCode → ผลดิบ `_triage/_archive/verdicts/order135-149_results/ORDER143_SS1_LEVER_RESULTS.md`.
-
-## ORDER-144 — [codex] pre-commit staged-bytes validation (roadmap finding #12, ops-debt) — `DONE(Codex, 2026-07-20)` (Codex builder OK — tooling ไม่ใช่ money code, cage ชัด)
-**source:** `_triage/_archive/frameworks_superseded/CODEX_ROADMAP_2026-07-19.md` finding #12 (Open): pre-commit ตรวจ working tree ไม่ใช่ staged bytes; `check_precommit_staged.ps1` คุ้มแค่ 5 artifact. **spec:** ขยาย staged-bytes validation ให้ครอบ `portfolio/DEPLOYMENTS.csv` (parse+dup-magic บน staged blob) + `EA_SCORECARD_AND_REGISTRY.md`/`EA_MASTER_INDEX` same-commit rule + `docs/memory_control/B1_DATASET.csv` append-only + `ea_template/regression_baseline.csv` (แก้ได้เฉพาะ commit ที่มีคำว่า re-pin). ใช้ `git show :<path>` อ่าน staged content. **acceptance:** (1) synthetic test ต่อ rule: stage ไฟล์พัง → commit ถูก block พร้อม message ชี้ rule (2) commit ปกติผ่าน (3) ห้ามแตะ 4 script ต้องห้าม (`control_room_snapshot/daily_monitor/live_dashboard/monitor_rotation`) (4) `check_state.ps1` เดิมยังรันเหมือนเดิม (additive เท่านั้น) (5) เอกสาร rule ท้าย script. **ห้าม:** เปลี่ยน hook เดิมเป็น blocking กับ path ที่ไม่ใช่ 4 กลุ่มข้างบน · แตะ .githooks ที่ session อื่นกำลังใช้โดยไม่ backward-compat. **ทำได้:** Codex (`/codex:rescue`) — commit path-limited `[codex]` prefix.
-**result:** `scripts/check_precommit_staged.ps1` now validates staged blobs for deployment CSV parse+duplicate account|magic, scorecard/index same-commit pairing, B1 append-only prefix, and regression-baseline `re-pin` commit-message gate. Ordinary commit path remains no-op/pass. Parser check + `check_precommit_staged.ps1` + `check_state.ps1 -Strict` all PASS. No forbidden scripts or `.githooks/pre-commit` changed.
-
-## ORDER-145 — [codex] blind audit: (EXP)_AdaptGridMC_rev01 (money-adjacent: hard-kill −20% persisted GV) — `DONE(Codex, 2026-07-20)` (Codex audit lane — จุดแข็งที่พิสูจน์แล้ว)
-**source:** ORDER-141 build DONE ยังไม่มี independent review; EA มี kill-switch persisted GV + lot cap = money-adjacent. **spec (neutral QA — ห้ามบอกผล 141):** อ่าน `(EXP)_AdaptGridMC_rev01.mq5` + `_mt5_auto/adaptgrid_mc_zone.py` ตรวจ: (1) hard-kill −20% equity: fire ทุก path? persisted GV รอด restart/recompile? fail-closed เมื่อ GV หาย? (2) MaxLevels/MaxTotalLot cap บังคับก่อน order ทุกใบ? (3) zone P10/P90 อ่านผิด/ว่าง = EA ทำอะไร (ต้อง refuse ไม่ใช่เทรดต่อ)? (4) digit/lot normalize + bar-open gate + tester-gate ตาม mql-review checklist (5) zone script: block bootstrap ถูกต้องตามนิยาม? seed/replicability? **output:** findings SEV-1/2/MINOR + file:line → `_triage/_archive/codex_reviews/CODEX_ORDER145_AGMC_AUDIT.md`. **ห้าม:** แก้โค้ด (audit-only) · รัน backtest (นั่นคือ 142). **ทำได้:** Codex.
-**result:** audit report `_triage/_archive/codex_reviews/CODEX_ORDER145_AGMC_AUDIT.md` written. Findings: SEV-1 hard-kill only evaluated at bar-open; SEV-2 unchecked persisted GV writes; SEV-2 non-finite zone CSV values accepted; MINOR generated-N off-by-one vs EA; MINOR no 1000-bar self-guard. Caps, invalid-zone refusal, lot normalization, tester gate, and seeded block bootstrap checked as passing. No source edits/backtest/verdict.
-
-## ORDER-139 — Wave-2 XAU optimize ladders: S1 TrendRider H4 + SS4 SweepReversal M15 — `DONE + REVIEWED(Claude 2026-07-20): S1 = VALIDATED CANDIDATE → DEMO-ready 992004 (plateau 6-cell a20×s{.3,.5}×c{2..3}; center a20/s0.5/c2.5 MAIN 1.63/BWD 1.03/holdout 2026H1 1.33 (burned)/M4 1.61-1.01 retained/MC ruin 0 DD95 4.15/corr ≤0.32; BWD borderline → demo isolate) · SS4 = PARKED-VERIFY(user) (MAIN pulse 1.31–1.85, BWD <1 ทุก healthy-n cell; RSI last-opt pass เดียว = n=27 spike). bundle _vps_deploy/W2_S1_TRENDRIDER_XAU + DEPLOYMENTS row PENDING_ATTACH`
-**why:** Wave-2 smoke (2026-07-19): S1 MAIN 1.77/72t, SS4 1.31/146t — both PROCEED. Stage A (this session)
-pinned homes: S1 = H4 (H1 MAIN 1.02/BWD 0.76) · SS4 = M15 (M30 worse both windows). Naked BWD: S1 0.84, SS4 0.88.
-**bars (pre-registered ก่อนรัน Stage B):** optimize pass = MAIN ≥1.2 AND BWD ≥1.0 (soft) on a PLATEAU (center
-not peak, neighbors pass) · holdout 2026H1 ≥1.2 = deploy-track / 1.0–1.2 = BUILD-ON / <1.0 = selection-fit ·
-M4 both-window PF ≥1.0 retained, no model-switch cliff · dead = ceiling <1.0 both-window after ladder ≥3 lever
-× 2 TF + last-optimize.
-**flat-lot probe:** N/A (both single-position flat 0.01, real SL — no escalation).
-**method:** Stage B both-window grids (S1: AdxMin×SepAtr×ChAtr 27 cells · SS4: AdxMax×SweepAtr×TpAtr 18 cells)
-→ S1 funnel (holdout+M4 on locked plateau center) · SS4 last-optimize RSI band ก่อน verdict. CSVs
-`_mt5_auto/W2_*.csv`, sets `_mt5_auto/ab_sets/w2_s1|w2_ss4`.
-
 ## ORDER-141 — (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) — `DONE(build-only 2026-07-20) — backtest ยังไม่เริ่ม (ตามคิว user: spec→code→compile+tests พอ)`
 Spec: standalone (EXP)_ L3 flat-lot BUY ladder ระหว่าง P10/P90 จาก offline `_mt5_auto/adaptgrid_mc_zone.py`
 (10k paths × 60d, 24-day block bootstrap, 1000 D1 bars) · spacing 0.3×ATR(D1,30) หรือ geometric · band cap +
 MaxLevels ≤40 + MaxTotalLot + hard kill −20% equity persisted GV · magic 992007. mql-review PASS (C3 benign note) ·
 compile 0/0 · zone script self-tested (synthetic 1100-bar, 2k paths → sane P10/P90/N). **ก่อน backtest ต้อง:**
 export D1 CSV จริง (BTCUSD/ETHUSD) → gen zone → BWD 2020-22 = HARD gate + flat-lot per spec + swap-drag บันทึกใน verdict.
-
-## ORDER-LANEC-REBUILD — SMC×STO rebuild for an SL plateau (parallel to live demo 991070) — `DONE + REVIEWED(Claude 2026-07-18): NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+holdout, magic 991071). Center MAIN 1.38/BWD 1.02 but holdout 1.09<1.2 (soft ~0.94-1.18 across whole plateau = 2026H1 regime weak, not config) + SL still not clean plateau (fragility moved to SL+20%=4.2 BWD 0.94) + rebuild BWD 1.02 < demo BWD 1.19. No decisive improvement → keep 991070 as-is, 991071 not deployed. SMCxSTO EURUSD-H1 = genuinely marginal reversion edge; further build-on = different HOME (TF/symbol) not more EURUSD-H1 SL tuning. verdict=_triage/_archive/verdicts/ORDER_LANEC_REBUILD_VERDICT.md` (role: Claude judge · M4 driver)
-**why:** ORDER-LANEC-FAN found the demo config (SL=3.0) edge-positive both-window but **SL-fragile** — SL−20%
-(2.4×ATR) flips 0.94/0.99 both-window (center = cliff, not plateau). User (2026-07-18): keep 991070 on demo AS-IS,
-rebuild in parallel, swap only if the rebuild tests+builds better. verdict src = `_triage/_archive/verdicts/ORDER_LANEC_SMCSTO_FAN_VERDICT.md`.
-**pre-registered bars:** pass = a config whose **SL axis is a PLATEAU** (SL and SL±20% ALL ≥1.0 both-window) AND
-MAIN≥1.2/BWD≥1.0 AND holdout(2026H1)≥1.2 → new demo row (new magic **991071**, run alongside 991070). middle =
-edge but SL still marginal → BUILD-ON note. dead = no SL-plateau exists on EURUSD H1 → keep 991070 only, close.
-**flat-lot probe:** N/A (EmaStoRev single-position, flat 0.01 — no escalation).
-**method (⚠️ anti-overfit — do NOT re-center on the 07-18 fan, that data is now "seen"):** proper coarse→fine
-SL×TP grid on MAIN only (SL {2.0,2.5,3.0,3.5,4.0} × TP {0.8,1.0,1.2,1.5}), pick the **plateau center** (not the
-peak) where neighbors incl. SL±1 step all profitable → both-window → fresh sensitivity fan → holdout 2026H1 (never
-used to select) → Model-4. Keep other axes at the ORDER-107 center (StoK13/OS30/AdxMax30/EMA50). EA=`(EXP)_EmaStoRev`,
-Expert `EmaStoRev`, EURUSD H1. **verdict = Claude** (VERDICT GATE + Row-X). **ห้าม:** report Model-2; re-center on
-seen fan; swap 991070 before the rebuild clears the pre-registered bars. role: agent runs coarse/fine M4 serial · Claude judges.
-
-## ORDER-118 — ST03 real-money CutLoss guardrail — `CLOSED-OBSOLETE (Claude 2026-07-18): user ถอดตระกูล ST03 ออกจากบัญชีจริง 159475669 ทั้ง 3 ตัว (9398/939721/990010 — DEPLOYMENTS.csv = REMOVED, ยืนยัน RDP) → ไม่มี tail เปิดบนเงินจริงแล้ว กรง CutLoss หมดเหตุ. ถ้าอนาคตเอาตระกูลนี้กลับขึ้นเงินจริง ต้องเปิด order นี้ใหม่ก่อนเสมอ (spec เดิมด้านล่างใช้ได้เลย)`
-**why (owner decision 2026-07-18, Fable grill session):** user เคาะเก็บตระกูล ST03 บนบัญชีจริง 159475669
-ต่อ (override คำแนะนำถอด 2026-07-10) **โดยมีเงื่อนไขต้องใส่กรง CutLoss ก่อน** — pattern เดียวกับ NuiIndy
-`CutLoss=30` (tail-insurance ฟรี, DD มีเพดาน). ST03 = uncapped recovery (ที่มาไม้ 33.73 lots) → เปลี่ยน
-uncapped→capped โดยไม่ใส่ SL รายไม้ (SL รายไม้ฆ่า edge — ทดสอบแล้ว 2026-06-26).
-**spec:**
-1. **X-ray inputs ก่อน:** ST_EA03 (source/`.set` ของ config live 9397 GBPUSD H1 + 9398 USDCAD H1) มี input
-   ตระกูล CutLoss/MaxDD/equity-stop ไหม — อ่านจาก .set + source + Journal (locked-ea-analyzer วิธีเดิม)
-2. **มี input →** grid CutLoss% {10,15,20,25,30,40} รัน **continuous span 2020.01–2026.06** (basket EA =
-   ห้าม stitched windows) Model 1 → confirm ค่าเลือกด้วย Model 4 (serial เลน 1) · ทั้ง GBPUSD+USDCAD
-3. **ไม่มี input →** arithmetic จาก equity curve ของ ST03LAB continuous runs ที่มีอยู่ (`_mt5_auto\reports\
-   ST03LAB_*`): simulate close-all-at-X%-แล้วไปต่อ สำหรับ X เดิม → เลือกค่า + แนะกลไก (guardian watchdog
-   เล็กที่ force-close ตาม magic ที่ DD threshold — spec build แยกเป็น order ใหม่ ห้ามลงมือในใบนี้)
-**acceptance (pre-registered):** ค่าที่เลือก = ค่า**เล็กสุด**ที่ (a) หน้าต่าง benign 2025-26 trigger ≤1 ครั้ง
-และ cost ≤20% ของ net (b) ตัด worst eqDD ของหน้าต่าง hostile 2023-24 ลง ≥50% · deliverable = ตาราง
-X% × {net, worstEqDD, #triggers} ต่อ symbol + **ค่าแนะนำ 1 ค่า** ส่ง user ใส่เอง (บัญชีจริง = มือ user เท่านั้น)
-**ห้าม:** แตะ EA/บัญชี live เอง · report Model-2 · ตีความผลเป็น verdict (Claude เท่านั้น)
-**ทำได้:** Claude · qwen (arithmetic route) · ZCode (backtest route) · 👉 แนะ: **Claude x-ray ก่อน → route ตามข้อ 2/3**
 
 ## ORDER-119 — CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) — `REVIEWED(Opus 2026-07-19): DEAD-OPTIMIZED (flat-lot MACD-reversion entry, ranger homes) — campaign ปิด, lever A/B ไม่เดิน`
 **verdict (lever C = last-optimize บน right home, ครบ):** sweep `_15_Macd{Fast,Slow,Signal}`×`_15_CountBars` 18 combo × 6 cell (GBPUSD/EURUSD/EURGBP × H1/H4) × 2 window = 216 runs (agent, main tester serial, n≥200/combo, Opus verify: parse PF column จริง + spot XML). **pre-registered GATE = ไม่ผ่าน: 0 cell flat-lot PF≥1.0 both-window.** best-home EURUSD H4 MAIN 1.15 (16/34/3) แต่ BWD max 0.98 ที่ combo เดียวกัน → window-crossing pair fail ทุกตัว (MAIN>1 → BWD<1 สลับกันเสมอ). **ตัดสิน DEAD-OPTIMIZED เพราะ:** (1) right home ยืนยัน (ranger ×3) (2) last-optimize lever ที่สำคัญสุด (entry-signal params, StoK-lesson) ครบ — ceiling < 1.0 both-window (3) **lever A (capped basket) ห้ามเดิน = flat-lot no-edge + escalation = martingale-คือ-edge-เอง (DEAD-STRUCTURAL trap)** · lever B (regime gate) ไม่สร้าง edge บน underlying no-edge แค่ลด trade. **ST03 MACD-reversion = no robust both-window edge naked บน ranger.** evidence `_triage/_archive/verdicts/order104-126/ORDER119_LEVERC_RESULTS.md` + XML `_mt5_auto/optimizations/O119C_*.xml`. **⏭ decision ระยะยาว (ถอด ST03 ถาวร / แทน Boss_16 slot) = owner-override territory → user เคาะ** (ผม judge campaign evidence, fate ของ owner-override EA = user). role: agent sweep · Opus verify+judge.
@@ -1275,55 +905,7 @@ Claude + user) · single-window ranking
 **ทำได้:** Claude sets+judge · qwen/ea-screener batch M1 · M4 serial เลน 1 · 👉 แนะ: **Claude ออก .set →
 qwen รัน C → Claude อ่าน surface → A/B เฉพาะเมื่อผ่าน GATE**
 
-## ORDER-120 — implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table — `DONE(Opus 2026-07-18): CLAUDE.md gate = decision tree (STRUCTURAL→PARAMETRIC→DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE) + bar table 7 แถว (MAIN≥1.2 hard / BWD≥1.0 soft-gate→PARKED-VERIFY / holdout≥1.2 / MC ruin≤2% PF-5th≥1.0 / demo→live PF≥1.40@30) + Row-X write-checklist 5 บรรทัด + window names MAIN/BWD/HOLDOUT rolling-36 + paid-for history เป็น footnote. vocab 7 ตัวครบ. section อื่นไม่แตะ.`
-**source:** `_triage/_archive/frameworks_superseded/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` Part 4(b) (user approve ครบใน grill 2026-07-18 —
-decision log แถว 2026-07-18). **spec:** แทน prose gate ด้วย (1) decision tree STRUCTURAL→PARAMETRIC→
-DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE (2) bar table 7 แถวตาม framework (MAIN≥1.2·BWD≥1.0
-soft-gate ตามที่ user เคาะ Q3 — BWD-fail → PARKED-VERIFY(user) เคาะ demo-isolate ได้แต่ปิดทางเงินจริงอัตโนมัติ)
-(3) Row-X write-checklist 5 บรรทัด (scorecard·index·EDGE_CATALOG·B1·user-brief) (4) ตั้งชื่อ window
-MAIN/BWD/HOLDOUT ตาม rolling-36 ใหม่. **acceptance:** vocab 7 ตัวครบ · บรรทัด "paid for" history เดิมคงอยู่เป็น
-footnote (ห้ามลบบทเรียน) · ไม่มี section อื่นใน CLAUDE.md ถูกแตะ · เลขบาร์ตรง framework ทุกตัว.
-**ห้าม:** เปลี่ยนเลขบาร์เองโดยไม่มี decision ใหม่. **ทำได้:** Claude เท่านั้น (แก้กฎ) · 👉 แนะ: **Opus-seat**
-
-## ORDER-121 — implement framework Part 3: rewrite skill backtest-optimize-rigor เป็น ladder 0-9 — `DONE(Opus 2026-07-18): skill = THE OPTIMIZE LADDER Step 0-9 (windows pin MAIN rolling-36/BWD 2020-22/HOLDOUT 2026H1 · Model-4-mandatory table ย้ายเข้า · MC bars ruin≤2%/resize 2-10%/PF-5th≥1.0 ย้ายเข้า). ลบ "Model 2 throughout optimize" (Codex BLOCKER) → Model-2 = preflight+kill-only, coarse=Model 1+. grep "Model 2" เหลือเฉพาะ preflight/kill/artifact-detect. OPTIMIZE_PROCEDURE_AND_AUDIT.md ติด superseded banner. NEXT STAGE → VERDICT GATE.`
-**source:** framework Part 3(b). **spec:** (1) แทน Phase D-F ด้วย ladder Step 0-9 (2) **ลบบรรทัด "Model 2
-throughout optimize for bar-open EAs" (drift ที่ Codex จับเป็น BLOCKER)** → Model-2 = zero-trade preflight +
-kill-only, coarse sweep = Model 1+ (3) pin windows: MAIN = rolling 36 เดือนที่ไม่กิน holdout (convention
-2023.01–2025.12) · BWD 2020.01–2022.12 · HOLDOUT 2026H1/unseen-symbol (4) ย้ายตาราง Model-4-mandatory เข้า
-(grid/DCA/basket · pending-ladder · TP<20pip · largest-loss cliff) (5) ย้ายเลข MC จาก robustness-validator เข้า
-(ruin ≤2% green · 2-10% resize-first · PF-5th ≥1.0) (6) `OPTIMIZE_PROCEDURE_AND_AUDIT.md` ติด superseded
-banner ชี้ skill. **acceptance:** grep "Model 2" ใน skill เหลือเฉพาะบริบท preflight/kill · ladder ครบ 10 ขั้น ·
-เลขตรง framework. **ทำได้:** Claude · 👉 แนะ: **Opus-seat** (แก้กฎ optimize = law)
-
-## ORDER-122 — implement framework Part 2+5: สร้าง docs/PIPELINE.md + sync FINAL RULE 9 skills + AGENTS §1.5 — `DONE(Opus+Sonnet 2026-07-18): docs/PIPELINE.md สร้างแล้ว (flow owner + routing table 10 boundary + skill roster). FINAL RULE sync 9 skills: strategy-and-risk (ลบ standalone-faster block→chassis-first) · mql-code-generator (→mql-code-reviewer ก่อน compile) · signal-scanner · backtest-optimize-rigor (→VERDICT GATE) · mql-code-reviewer (mandatory cage) · robustness-validator + backtest-report-analyzer (DEMOTED banner, vocab retired) · portfolio-selector (corr ladder ≤0.40/0.40-0.60/>0.60 reduce-not-cut/same-EA<0.8) · live-deployment-controller (=GATE) · vps-deploy-ops (=SHIP, requires gate output). AGENTS §1.5 sync Fable→4 reserved cases. check_state CLEAN. Opus นำ+verify · Sonnet แก้ 8 skills+AGENTS ตาม list.`
-**source:** framework Part 2(b) kill-list + Part 5(b) routing table. **spec:** (1) สร้าง `docs/PIPELINE.md` =
-owner ของ flow เดียว + ตาราง 10 boundary (artifact·gate·who·written-where) ยกจาก framework ตรงๆ + banner
-"canonical entry = PROJECT_STATE · ไฟล์นี้ owns: stage routing เท่านั้น" (2) แก้ FINAL RULE/handoff ใน 9 skills:
-strategy-and-risk (ลบ standalone-faster-path block) · mql-code-generator (→ mql-code-reviewer ก่อน compile,
-ลบ "standalone preferred") · signal-scanner · backtest-optimize-rigor · mql-code-reviewer ·
-robustness-validator + backtest-report-analyzer (ติด banner "calculator ไม่ใช่ pipeline gate — vocab เดิม retired") ·
-portfolio-selector (**แก้ corr: pair>0.7-block → ladder ≤0.40/0.40-0.60 reduce-lot/>0.60 reduce-not-cut ตามกฎ
-user**) · live-deployment-controller (= gate ก่อน vps-deploy-ops) · vps-deploy-ops (ต้องรับ output จาก gate)
-(3) AGENTS.md §1.5 sync สถานะ Fable → จอง 4 กรณี one-shot ตาม CLAUDE.md 2026-07-11 + fallback Opus+Codex.
-**acceptance:** ทุก skill ชี้ next-stage ตรง PIPELINE.md · ไม่มี "PASS/CONDITIONAL/ROBUST" เป็นด่านเหลือใน
-FINAL RULE ไหน · check_state ผ่าน. **ทำได้:** Claude (Sonnet ช่วย mechanical edits ได้) · 👉 แนะ: **Opus นำ + Sonnet แก้ตาม list**
-
-## ORDER-123 — order template: เพิ่ม field บังคับ 2 ช่อง (pre-registered bars · flat-lot probe) — `DONE(Opus 2026-07-18): เพิ่ม ORDER TEMPLATE block ใน header taskboard (ใต้กติกาสถานะ) — order ทดสอบทุกใบตั้งแต่ 124+ ต้องมี bars: (pass/dead/กลาง) + flat-lot probe: done/N-A/pending.`
-**source:** framework Part 5(b) enforcement #1. **spec:** เพิ่ม template block ใน header taskboard นี้ (ใต้กติกา
-สถานะ): order ทดสอบทุกใบต้องมีบรรทัด `bars:` (pass=X/dead=Y/กลาง=Z) และ `flat-lot: done/N-A/pending`.
-**acceptance:** header มี template + ORDER ใหม่ตั้งแต่ 124 ขึ้นไปใช้ครบ. **ทำได้:** Claude · 👉 แนะ: ทำพ่วงกับ 120-122
-
-## ORDER-128 — 🔴 P0: monitoring chain repair (task refused + false-green gist) — `CLOSED (Opus 2026-07-20): gh re-auth สำเร็จ (BaBosss keyring, scope gist/repo) + gist 287cce51 update จริง 2026-07-19 20:31 = E2E ผ่านแล้ว` — a/b/c ครบ + manual run เก็บ snapshot 18 ก.ค. สำเร็จ (auto-commit e321eee, ทุก step ผ่านยกเว้น gist) · **root cause dashboard มือถือเน่า = gh token account BaBosss หมดอายุ (401 มานาน แต่ script เดิมพิมพ์ "updated" ปลอม) → user ต้องรัน `gh auth login -h github.com` เอง แล้ว chain รอบ 07:30 พรุ่งนี้จะพิสูจน์ E2E** · fail-path test ผ่าน (bogus gist id → exit 1 จริง)
-**source:** Codex system review `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_SYSTEM_REVIEW_2026-07-18.md` + contract review เดียวกัน — verified โดย Opus: `EA_LAB_DailyMonitor` LastResult `0x800710E0` วันนี้ 07:47 (LogonType=Interactive → ถูก refuse) · snapshot ค้าง 17 ก.ค. · `publish_dashboard_gist.ps1` ไม่เช็ค `$LASTEXITCODE` ของ `gh gist edit` → "updated" ปลอมได้เมื่อ 401. **why P0:** เงินจริง + 38 ACTIVE deployments แต่ตาเฝ้าบอด และระบบรายงานเขียวปลอม.
-**spec:** (a) task config: `StartWhenAvailable=true` + ยกเลิก battery block + เพิ่ม logon trigger (delay) — คง Interactive logon เพราะ `monitor_rotation.ps1` เปิด MT5 GUI terminals (S4U = session 0 เสี่ยง exporter ไม่ทำงาน); (b) `publish_dashboard_gist.ps1` เช็ค `$LASTEXITCODE` ทุก native call, fail → exit 1 ให้ `Step()` แม่เห็น; (c) `daily_monitor.ps1` freshness guard (last success <20h → skip เงียบ กัน logon trigger รันซ้ำ) + health alert (snapshot age >26h → `portfolio/MONITOR_ALERT.txt` + log ALERT + exit non-zero, healthy → ลบ alert file). **acceptance:** manual run จบ exit 0 + dashboard/gist update วันนี้ · task query แสดง trigger ใหม่ · จำลอง gh fail → script exit 1 จริง. **bars:** N-A (infra). **flat-lot probe:** N-A. **ห้าม:** แตะ collector/rotation logic · เปลี่ยน gist id/URL. **ทำได้:** Opus ทำเอง (มี state-change บนเครื่อง user).
-
 ## ORDER-095 / #4 — Boss_14 GridLog EUR-cross symbol-expand — `CLOSED + REVIEWED(Claude 2026-07-17): EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่ kill (Boss_14 live @GBPJPY leg-8). ยืนยัน grid=symbol-specific. GBPCHF/NZDCAD/AUDNZD/AUDCHF = BLOCKED-ON-DATA (ไม่มี history 2020-22 → user โหลดก่อนถึงเทสได้; user เคาะ stop-at-2). verdict = _triage/_archive/verdicts/order076-098/ORDER095_EURCROSS_EXPAND_VERDICT.md` (role: agent ea-validator ×2 · verdict = Claude)
-
-## ORDER-098-C — FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold swept 30/70 (~0 trades) /40/60 (thin spike XAU MAIN 1.23 BWD 0.63) /50/50 (well-powered 350-370t both-win, PF 0.76-0.94 ไม่เคย >1.0). FVG-fill ไม่มี edge naked หรือ RSI-gated. Gold SMC = FVG-retest อยู่แล้ว → FVG-as-primary ปิด, fxDreema FVG lineage exhausted. verdict = _triage/_archive/verdicts/order076-098/ORDER098C_FVG_RSIGATE_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
-
-## ORDER-098-D — Currency-strength meter EA (fxDreema CCI-Strength lineage, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): 🟡 PARAMETRIC-marginal → BUILD-ON candidate. naked CurrStrength_Naked (7-pair USD-basket momentum→chart-cross stronger-leg entry, ATR SL). multi-symbol tester ยืนยัน works (215t). funnel: threshold×3 · exit-RR×3 · TF×2 · 3 crosses. EURJPY H4 default = MAIN 1.01/BWD 1.01 (177/119t, win 42%) = cell เดียว both-window>1 sample พอ แต่ razor-thin + neighbors sub-1 = ไม่ใช่ plateau, ไม่ deploy. TP-widen thesis disproven (แคบดีกว่า). meter validated functional → build-on = ORDER-098-E. verdict = _triage/_archive/verdicts/order076-098/ORDER098D_CURRSTRENGTH_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
-
-## ORDER-098-F — Pairs-spread stat-arb (Jobot arbitrage idea + SL cage, #098 corpus) — `DONE + REVIEWED(Claude 2026-07-17): 🟢 PARAMETRIC CANDIDATE (session's strongest). PairSpread_StatArb — 2-leg hedged, spread=log(A)-log(B) z-score fade, exit revert/z-stop cage (course NO_SL → SL cage rebuilt, blowup fixed: largest loss ~2% gross). mql-review PASS compile 0/0. funnel EntryZ×4·ExitZ×2·TF×2·2pairs. **H4 z2.5 EURUSD/GBPUSD = MAIN 1.07(130t)/BWD 1.04(110t) win 49-51% eqDD 4/13% = only both-window>1 cell**, lift จาก TF (H1→H4 ตัด cost drag) ไม่ใช่ Z. NEW diversifier class (pairs mean-rev, orthogonal). แต่ thin + selected-on-both → NOT deploy จนกว่า plateau+holdout+MC. verdict = _triage/_archive/verdicts/order076-098/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md` (role: Claude build → agent batch · verdict = Claude)
 
 ## ORDER-098-K — stat-arb maker(pending-limit) build-on — `DONE/REVIEWED (Claude 2026-07-17) → NO LIFT, market baseline stays`
 Built `PairSpread_StatArb_Maker.mq5` (magic 990985, limit entry + naked-leg guard). Funnel: maker 1.12/1.14/1.23 ≈ market 1.14/1.15/1.23 → cost-drag hypothesis REJECTED, edge thinness is signal-inherent. Keep deployed market ExitZ0.3. verdict `_triage/_archive/verdicts/order076-098/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md` §098-K.
@@ -1331,19 +913,6 @@ Built `PairSpread_StatArb_Maker.mq5` (magic 990985, limit entry + naked-leg guar
 ## 🗂️ ARCHIVED ORDERS — index ย้ายไป generated file (ORDER-102 Contract C1, 2026-07-13)
 
 > orders ปิดแล้ว = `ARCHIVE_TASKBOARD_2026-07A.md` (verbatim) · **index = generated/read-only** `docs/memory_control/ARCHIVE_INDEX.md` (§20.7 — ห้าม hand-edit ในบอร์ดนี้) · integrity guard: `powershell -File scripts/check_taskboard_archive.ps1 -Strict` (raw/reviewed/unresolved · archive append-only + active conservation)
-## ORDER-036 — MT4 mass-smoke (1,318 ex4) — `CLOSED (2026-07-07 — sweep จบ · 1,318 → 2 survivors → demo คู่ = ORDER-045)` · **ทำได้: Codex · oc-dev**
-
-**👉 spec + สถานะ + วิธีสั่งทั้งหมด = `ORDER-036_MT4_MASS_SMOKE.md`** (แยกไฟล์เพราะ 27 batches ×50 —
-กัน taskboard บวม). batch assignment deterministic = `_triage/mass_smoke_mt4_batches.csv` (คอลัมน์ batch 01-27).
-user สั่งเป็นก้อน เช่น "ทำ 036 batch 04-08" · batch จบ+review แล้ว archive ไป `_archive/ORDER-036_ARCHIVE.md` ·
-order แม่แถวนี้**คงอยู่จนครบ 27 batch** (กันหลุดจาก board) — Claude สรุป verdict รวมที่นี่ตอนจบ
-
-**ผล (สรุปปิด 2026-07-07, header sync 2026-07-16):** 1,318 ex4 → 2 survivors ผ่านครบถึง Model-0 bwd+fwd
-(**UnNomGuaiV1.132 + RSI from pips_EA**) → เข้าคู่ demo = ORDER-045 · รายละเอียดต่อ batch = `ORDER-036_MT4_MASS_SMOKE.md`
-+ `_archive/ORDER-036_ARCHIVE.md`
-
----
-
 ## ORDER-045 — MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) — `WAITING-USER (attach) → แล้วค่อยเป็น monitoring loop` · **เจ้าของ: user (attach) + Claude (judge)** _(ออก 2026-07-07 หลัง user อนุมัติ)_
 
 **สถานะ:** ORDER-036 ปิดสมบูรณ์ (1,318 → 2 survivor: **UnNomGuaiV1.132 + RSI from pips_EA** ผ่านครบถึง
@@ -1392,36 +961,6 @@ bundle = `_demo_deploy\README_DEPLOY.md` (2 บัญชี MT4+MT5 · WILL-IT-T
 **ห้าม:** แก้ config ที่ validate แล้ว · เชื่อ hunt ว่า EV สูง (พิสูจน์แล้วว่าตัน)
 
 **ผล:** bundle deploy-ready (8 EA, safety-checked). รอ user attach.
-
----
-
-## ORDER-106 — rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool — `GBPJPY DONE + REVIEWED(Claude 2026-07-16): ✅ RESCUE สำเร็จ ไม่ตาย — H4 @ dist2.0 plateau both-window + Model-4 CONFIRM (MAIN 1.56/BWD 1.11 ดีขึ้น/HOLDOUT 1.50, grid ไม่ collapse บน real ticks) · high-PF cells = spike ทิ้ง · thin (n~50, DD~9%) · PARAMETRIC candidate = leg ที่ 8 ของ Boss_14 demo cohort (H4, magic ใหม่) · **d1.5 finer Model-4 = REJECT (2026-07-16): MAIN 1.92 แต่ BWD 0.92 fill-optimism → leg-8 config = d2.0/s4.0** · **✅ ปิด leg-8 (2026-07-16): corr ทุกคู่ <0.8 (max CADJPY 0.791) + year-split Model-4 all-years-positive (2021-2026 PF 1.28-2.36, ไม่มีปีเจ๊ง — สะอาดกว่า Zeus) → DEMO LEG-8 พร้อม `_vps_deploy/BOSS14_GBPJPY/` magic 990208 (EA=Boss_14_GridLog ตัวเดียวกับ cohort, แค่ attach chart GBPJPY H4 เพิ่ม) · caveat: thin 9-28t/ปี + 2020 no-data + CADJPY 0.791 (JPY-cross คู่กัน flag user) → รอ user attach** · verdict = _triage/_archive/verdicts/order104-126/ORDER106_GBPJPY_RESCUE_VERDICT.md · NZDUSD/USDCAD/AUDNZD = ใบถัดไป` (role: agent funnel-batch · verdict = Claude)
-
-**ที่มา:** ORDER-084 judge กอง ข อันดับ 1 — GBPJPY/NZDUSD/USDCAD/AUDNZD เคยเห็นแค่ defaults (0.68-1.13,
-GBPJPY OOS 1.12 เฉียดบาร์) บน chassis Boss_14 ที่ validated แล้ว = under-swept ชัดตามกฎ rescue-ladder.
-
-**คำสั่ง (เริ่ม GBPJPY ตัวเดียวก่อนตาม pacing):** funnel มาตรฐาน Boss_14 family — coarse sweep ≥3 lever
-(spacing/DistAtrMult × SL-mult × lot-law ตาม strategy) × {H1, H4} × both-window (MAIN 2023-26 + BWD 2020-22)
-Model 1 → รายงาน surface ดิบ (ทุก pass ไม่ใช่ top) → lead ตัดสิน plateau → ถ้าผ่านค่อย NZDUSD/USDCAD/AUDNZD
-ใบถัดไป. ใช้ launcher/set ของ family เดิม (`_mt5_auto/ab_sets/` มี precedent ORDER-069 216-pass).
-**Acceptance:** CSV ทุก pass: PF/Net/Trades/DD ต่อ window · **ห้าม:** verdict · เลือก "ตัวดีสุด" เอง ·
-รันเกิน 1 symbol ในรอบเดียว · แตะ config demo cohort เดิม
-
----
-
-## ORDER-107 — SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) — `CORRECTED + REVIEWED(Claude 2026-07-16): 🟩 BUILD-ON candidate ไม่ตาย (user จับถูก — default-smoke ผมรีบตัดสินผิด gate) · optimize จริง 180 passes/symbol: XAU (trender=บ้านผิด) regime-fit ล่ม BWD · EURUSD (ranger=บ้านถูก) 2/3 top pass ยืน both-window (1.30/1.13 · 1.22/1.02) · **CONFIRMED (2026-07-16): EURUSD H1 = demo candidate จริง** — ADX filter (user idea) ยก 1.30/1.13→1.50/1.24 · plateau 6/7 neighbor · **Model-4 MAIN 1.39/BWD 1.19/HOLDOUT 1.14 ครบ** · EURUSD-only (ไม่ travel AUDNZD/EURGBP/XAU) · bundle `_vps_deploy/SMCSTO_EURUSD` magic 991070 → รอ user attach (corr=informational) · verdict = _triage/_archive/verdicts/order104-126/ORDER107_SMCxSTO_STAGE0_VERDICT.md · **บทเรียน: default-smoke เกือบทิ้ง candidate จริง — user push optimize+filter ถูก** (memory feedback-optimize-before-killing-reversion)` (role: Claude build → agent optimize · verdict = Claude)
-
-**ที่มา:** user แชร์ระบบ class SMC×STO (triage เต็ม = `_triage/_archive/one_off_analyses/SMCxSTO_SIGNAL_TRIAGE.md`, EDGE_CATALOG PARKED-CONCEPT).
-class = momentum-gated reversion · cheap-death: strip SMC/OB (แพง) เทส skeleton ก่อน.
-
-**Stage 0 (คำสั่ง):** build standalone probe `(EXP)_EmaStoRev` — higher-TF EMA100 gate (buy-only ถ้า close>EMA100 บน
-resample/HTF handle · sell-only ถ้าต่ำกว่า) + Stochastic(5,3,3) cross ออกจาก OS(20)/OB(80) = entry, 1 flat-lot 0.01,
-SL 1.5-2.0×ATR, exit = STO-reverse ที่ opposite extreme + BE-move ที่ STO50. **ไม่มี OB zone, ไม่มี grid** (Stage 1
-ค่อยเพิ่มถ้ามีชีพจร). bar-open gate + tester-gate + digit-aware pip ผ่าน mql-code-reviewer ก่อน compile.
-smoke Model 1, 2023-2026: EURUSD + GBPUSD + XAUUSD × {M15, H1} = 6 cell.
-**Acceptance:** ตาราง 6 แถว PF/Trades/DD/Win + report path · **บาร์:** cell ใดก็ได้ PF≥1.1 naked = ไป Stage 1 (เพิ่ม OB
-gate) · ทุก cell PF<1.0 = DEAD concept (OB ไม่ช่วย — zone แค่ locate reversion เดิม) บันทึก signal-landscape ปิด.
-**ห้าม:** ใส่ OB/grid ก่อน skeleton ผ่าน · M1 ใน Stage 0 (spread noise — เก็บไว้ถ้าไป production) · verdict (lead).
 
 ---
 
@@ -1485,123 +1024,6 @@ lower bound (grid ขาขาด cluster → real adverse อาจแย่ก
 
 ---
 
-## ORDER-064 — ขุดไอเดียจาก Open WebUI export 93MB (คุยกับ OpenAI ของบริษัท) — `CLOSED (Stage 3 verdict Claude 2026-07-09 — ลูกที่ spawn: ORDER-065 SuperTrendFlip = RESERVE · ORDER-066 VWAP WaveS1 = NO EDGE, ทั้งคู่ปิดแล้วใน archive)`
-
-- **Stage 1 ✅:** `scripts\chatgpt_export_inventory.py` (รองรับทั้ง OpenAI export และ Open WebUI format) →
-  45 บทสนทนา, จัดอันดับตาม MQL-keyword density → `_triage\chatgpt_inventory.csv` + top-12 แตกเป็น .txt ใน
-  `_triage\chatgpt_convs\` (⚠️ ข้อมูลบริษัท — .txt/.csv **ไม่เข้า git**, เก็บ local เท่านั้น)
-- **Stage 2 (กำลังรัน):** 4 Sonnet agents skim 12 ไฟล์ → catalog กลไก/โค้ด/ความใหม่เทียบ cohort
-- **Stage 3 (Claude):** judge catalog → เลือก build candidates (เกณฑ์: กลไกใหม่จริง + กติกาชัด — VWAP-based
-  น่าสนใจสุดเพราะ cohort ยังไม่มี) · ที่เหลืออีก 33 บทสนทนา = อ่านเฉพาะถ้า top-12 ให้ของดี
-
-**VERDICT Stage 3 (Claude, 2026-07-09 — catalog ครบ 12/12):**
-- **ขยะ/ซ้ำของที่เรามี-REJECT แล้ว (7 ไฟล์):** 024 scaffold framework · 015 recovery-hedge spec (ตระกูล REJECT
-  81/82) · 041 AW-Recover clone (**ไม่มี SL ต่อไม้ทั้ง 5 เวอร์ชัน**) · 030 prompt-eng session · 036 triage PDF
-  ซ้ำ STRATEGY_200_ANALYSIS · 022+009 = 11-EA ตาม**โหราศาสตร์** (โค้ดครบแต่ allocation ไม่ใช่ market logic)
-- **ของจริงที่สกัดได้ — จัดอันดับ build EV:**
-  1. 🥇 **SuperTrend/HalfTrend/Chandelier "ATR-band flip"** — โผล่อิสระ **5 แหล่ง** (025 HalfTrend MTF ·
-     043 Smart Trail · 009 P10 · 022 P10 · STRATEGY_200 #68 top-pick) · กลไก: trailing extreme ∓ ATR×mult
-     พลิกทิศ = trend-follow ที่ exit ด้วยเส้นวิ่งตาม ไม่ใช่ fixed TP · บ้านที่ควรเทส: XAU H1 (edge class
-     momentum ที่พิสูจน์แล้ว) · build ถูกสุด (indicator เดียว + โครง L1 มีแล้ว) → **ORDER-065**
-  2. 🥈 **VWAP Wave (010 — สเปคเต็ม 4 setup)** — VWAP+SD band แยก Balance/Discovery + Initial Balance ·
-     กลไกใหม่แท้ต่อ cohort (ไม่มีตัวไหนใช้ fair-value anchor) · ต้องกลั่นเหลือ setup เดียวก่อน (S1 continuation
-     หรือ S4 VWAP-bounce) — ห้าม build ตามสเปค 30 ไฟล์ (บวม+ML+Wyckoff = overfit trap) → **ORDER-066**
-  3. 🥉 **Z-score pairs stat-arb EURUSD/USDCHF** (009 P5 + 022 P5 สองแหล่ง) — market-neutral = return stream
-     คนละจักรวาลกับ cohort ทั้งกอง · ติดเรื่อง infra (multi-symbol tester + ไม่มี price SL ในดีไซน์เดิม = ต้อง
-     ใส่ hard SL เอง) → วิจัยความเป็นไปได้ก่อน build → backlog
-  4. **Graft ideas ใส่ของที่มีอยู่ (ถูกมาก):** ATR>1.2×ATR_MA เป็น squeeze-proxy ราคาถูก (032) · vote N-of-M
-     gate (043/032) · asymmetric-lot MTF confluence (025 — เห็นต่างเข้าครึ่งไซส์) · time-stop 48 แท่ง (032)
-  5. **Anti-pattern เก็บเข้าคลัง:** virtual SL (043) · recovery-multiplier ซ้อน martingale (043) · equity-based
-     kill แทน price SL (041) · "AI/Neural" = ป้ายการตลาดของ EA ขายตลาด 90% (035 audit ชี้ Quantum Emperor
-     เจ้าของเติมเงินเข้า signal ปิด DD!)
-- Boring-Pips-style cross-pair reversion (035) + session-gate (022 P11) = MED เก็บ backlog ไม่เร่ง
-
----
-
-## ORDER-072 — build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2 — `DONE(Claude-agent 2026-07-10) — รอ Claude lead ตัดสินทิศทางต่อ (entry sweep / both-instance portfolio)` (role: agent build ภายใต้ spec ที่ Claude เคาะ)
-
-**Spec decisions (Claude lead เคาะ 2026-07-10 — ปิดประเด็นเปิดทั้ง 5 ของ KANGAROO_LOGIC_NOTES §4):**
-1. **Lot law: FLAT default** (ทุกไม้ = base_lot) — flat-lot probe พิสูจน์แล้วว่าดีกว่ามี ladder
-   (H1 5.71 vs 4.86) · ×1.5 capped ladder ใส่เป็น input `LadderMult` default 1.0 (=ปิด) ไว้ A/B
-2. **Bidirectional = 2 instance ผ่าน Direction input** (ตาม pattern Boss_14) — ไม่ทำ dual-engine
-   ในตัวเดียว, magic แยกฝั่ง · ไม่ทำ multi-magic stream ของ original (artifact ไม่ใช่ feature)
-3. **Entry v0 = RSI fade** (RSI(14) H1: BUY เมื่อ <th_low, SELL เมื่อ >th_high, default 30/70) —
-   ใกล้เคียง counter-trend ของ original ที่สุดในคลังเรา (RSI-MR = survivor mechanism ที่ validate แล้ว)
-4. **เก็บ 3 กลไก exit ตาม original แต่คิดเงินจริง:** TP เดี่ยว (ATR-mult) · basket close แบบ net-$ ·
-   **overlap pair-close** (คู่ใหม่สุด+เก่าสุด ปิดเมื่อรวม ≥ $X, default 5, sweepable) — โมดูลใหม่
-5. **ladder_flatten (controlled-loss release):** มีเป็น input default OFF — A/B แยกใน funnel
-6. Spacing ATR (0.8/1.4 mult + floor 150p) · SL ต่อไม้ ATR-mult (ceiling $90-equiv) · HARD cap
-   10 ไม้/ฝั่ง (ของจริง ไม่ใช่โฆษณาแบบ original) · emergency DD 70%
-
-**คำสั่ง:** สร้าง `ea_template\Boss_16_KangarooGrid.mq5` + โมดูลใหม่ที่จำเป็นใน `core\` (additive,
-default-off สำหรับ EA เดิม) ตาม pattern Boss_14_GridLog · compile 0/0 · **`tpl_regression.ps1` ต้อง CLEAN**
-(กติกาแก้ core) · smoke XAUUSD H1 2023-2026 Model 1 บน lane "D:\Meta 5b" (กันชนกับ ORDER-071) ·
-เทียบตาราง: Boss_16 flat vs original flat (PF 5.71/DD 11.5% = เป้าไล่)
-**Acceptance:** compile 0/0 · regression CLEAN · ตาราง smoke เทียบ original + set ไฟล์ · commit `[tag] ORDER-072 done`
-**ห้าม:** deploy/verdict · แก้ Boss_14/15 behavior · martingale default-on · แตะ .set live
-
-### ORDER-072 result — `DONE(Claude-agent, 2026-07-10)` — build ครบ + gates ผ่านทั้ง 3 + smoke raw numbers (NO verdict)
-
-**Build file list:**
-- NEW `ea_template\Boss_16_KangarooGrid.mq5` (wrapper: `LAB_ENTRY_16` + tag)
-- NEW `ea_template\core\Kangaroo.mqh` — basket engine ของ entry 16 ทั้งก้อน: adverse-only ATR grid
-  (0.8/1.4 mult + floor 150p digit-aware) · FLAT lot (LadderMult>1.0 = capped ladder, first-4 = BaseLot,
-  cap/order 1.0) · HARD cap 10 ไม้/ฝั่ง (refuse จริง) · per-order broker SL (18×ATR, ceiling 9000p) ·
-  exit 4 กลไก **คิดเงินจริงทั้งหมด**: (1) single TP 0.35×ATR (managed close) (2) basket net-$ ≥ 16×(lots/0.01)
-  (3) overlap pair-close newest+oldest ≥ $5 เมื่อ ≥4 ไม้ (4) ladder_flatten default OFF (≥6 ไม้, net ≥ -$400) ·
-  emergency DD close-all 70% · **one exit owner:** LabCore short-circuit เข้า `Kangaroo_OnTick()` — ExitManager/
-  Stack/Recovery/Hedge ไม่รันเลยสำหรับ build นี้; ไม่มี broker TP ต่อไม้ (precedent mode 93); cage ยังเป็นใหญ่
-  (RiskControl hard-kill/deposit-load/RC_MaxLot รันก่อน/คุมทับ)
-- NEW `ea_template\core\entries\Entry_KangarooRSI.mqh` — entry v0: RSI(14) fade บน chart TF, closed-bar read,
-  `_16_Direction` 1=BUY(<RsiLow 30)/2=SELL(>RsiHigh 70) ตาม pattern Boss_14, เข้าที่ bar open
-- EDIT (additive, `#ifdef LAB_ENTRY_16` ทั้งหมด — compile out จาก Boss_11..15): `core\Inputs.mqh` (กลุ่ม `_16_*`
-  + StackMode/fallback guard) · `core\Indicators.mqh` (handle `g_hRSI16`) · `core\LabCore.mqh`
-  (include + init + OnTick short-circuit) · `core\Execution.mqh` (`Exec_CloseTicket()` — build อื่นไม่เรียก)
-- EDIT `ea_template\deploy.ps1` (+Boss_16 target) · `scripts\mt5_run.ps1` (+`-Leverage` param, default 100 = พฤติกรรมเดิม)
-- NEW `ea_template\sets\Boss16_Kangaroo_XAU_smoke.set` (defaults ทั้งชุด เขียน explicit)
-
-**Gate evidence:**
-1. compile: `Boss_16_KangarooGrid.mq5 → Result: 0 errors, 0 warnings` (และทั้ง 7 targets 0/0)
-2. `tpl_regression.ps1` = **CLEAN 4/4** — หมายเหตุ: เจอ DRIFT 4/4 ก่อน แต่ control run บน clean HEAD (stash)
-   reproduce เลขเพี้ยน **bit-identical** (trades เท่าเดิมเป๊ะ 168/164/107/56, profit ±1-4%) = data-side
-   XAU history refresh ตาม incident เดิม commit 6a21f040 → re-baseline บน verified clean HEAD แล้วรันกับ
-   module = CLEAN (ทำตาม procedure ที่บันทึกไว้เป๊ะ) · `tests\run_tests.ps1` = **ALL TESTS PASS 3/3**
-   (AcctGate/Persist/StackStep)
-3. smoke lane "D:\Meta 5b" (portable): XAUUSD H1 2023.01.01–2026.07.01 Model 1 (history quality 98%),
-   deposit 10000, leverage 1:2000, defaults flat-lot
-
-**Smoke table (raw — ห้าม verdict ที่นี่):**
-| Run | PF | Net $ | maxDD% (eq) | Trades | Win% |
-|---|---|---|---|---|---|
-| Boss_16 BUY (defaults) | 1.49 | +2,242.42 | 10.85% | 588 | 76.4% |
-| Boss_16 SELL (_16_Direction=2) | 0.46 | −2,261.00 | 25.12% ← cage HARD KILL @25% วันสุดท้าย 2026.06.30 | 293 | 54.3% |
-| Original Gold_Kangaroo FLAT (MT4 H1, สองฝั่งในตัวเดียว) | 5.71 | +15,216.87 | 11.53% | 6,166 | 86.4% |
-
-Reports: `_mt5_auto\reports\BOSS16_KANG_XAU_H1_BUY.htm` / `BOSS16_KANG_XAU_H1_SELL.htm` · mechanics ยืนยันใน
-journal lane2: overlap pair-close ยิงจริง 168 ครั้ง (SELL run), grid adds เดินตาม spacing, cage kill ทำงาน
-
-**Deviations from spec (พร้อมเหตุผล):**
-1. smoke = 2 runs (BUY+SELL อย่างละ 1 ครั้ง ไม่มี tuning) — EA เป็น fixed-direction ต่อ instance ตาม spec
-   decision 2 แต่แถวเทียบ original เป็นสองฝั่ง → รันฝั่งละครั้งเพื่อให้ตารางเทียบได้
-2. single TP = managed close ไม่ใช่ broker TP — กติกา one-exit-owner (ไม้ห้ามมี broker TP, precedent 93);
-   fill = tick แรกที่เลย level ซึ่งเทียบเท่า overshoot behavior ที่เห็นใน original
-3. grid-add reference = ราคา extreme ของฝั่ง (ต่ำสุด BUY / สูงสุด SELL) ไม่ใช่ไม้ล่าสุดตามเวลา — กัน
-   oscillation refill หลัง overlap pair-close ตัดไม้ newest ออก; ตรง observation ว่า original เติมไม้ที่
-   new low เท่านั้นช่วง crash 2024-11-06
-4. emergency 70% อยู่ในโค้ดตาม spec แต่ cage KillDD (ProtectLevel 2 = 25%) ยิงก่อนเสมอที่ default —
-   70% = backstop สำหรับ config ที่คลาย cage (SELL run คือหลักฐาน cage ทำงานจริงและ halt)
-5. `mt5_run.ps1` เพิ่ม `-Leverage` (additive, default 100 ไม่เปลี่ยนพฤติกรรมเดิม) เพราะ order สั่ง 1:2000
-   แต่ script hardcode 100
-6. `regression_baseline.csv` ถูก re-capture บน clean HEAD (ดู gate 2) — ไม่ใช่การกลบ drift ของ module;
-   พิสูจน์ด้วย control run ก่อนแล้ว
-
-**ข้อสังเกต (ข้อมูล ไม่ใช่ verdict):** trades 588+293 vs original 6,166 — entry v0 RSI fade คัดเข้มกว่า entry
-เข้ารหัสของ original มาก (ตัว original ยิงหลาย magic stream แทบตลอดเวลา) · ฝั่ง SELL แพ้บน XAU 2023-26
-ซึ่งเป็นเทรนด์ขึ้นยักษ์ · การอ่านผล/ทางไปต่อ (entry sweep? both-instance portfolio?) = งาน Claude lead
-
-
----
-
 ## ORDER-073 — News-aware risk system (user directive 2026-07-10) — Phase 1 `DONE(Claude)` · Phase 2 `ATTACHED 2026-07-24 (user) on all 3 real accounts (141049900 MT4 / 159503454 MT5 / 159475669 MT5) — filename-mismatch finding below FIXED(user, 2026-07-24)` · Phase 2.5 MRIS `DONE(Claude 2026-07-18)` · Phase 3 MacroGate `DONE — ⚠️ ถอนสถานะแล้ว: ADVISORY-ONLY (ORDER-211, 2026-07-25) · เดิมเขียนว่า "VALIDATED deploy-candidate (Claude 2026-07-18)" → ATTACHED 2026-07-18 (demo carry-leg 990120, manual-weekly mode)`
 
 **✅ 2026-07-24 finding RESOLVED(user) — NewsGuard "file missing/stale" root cause was a FILENAME mismatch:** `Common\Files` on the VPS had the file as `news_week.csv` but every NewsGuard instance's `NewsFile` input expects `EA_LAB_news_week.csv` (copy step ran but was never renamed). **User fixed the rename on the VPS 2026-07-24** — not independently re-verified by Claude via a fresh alert/log snapshot, logged here on user attestation. If the "missing/stale" alert reappears on 159503454/159475669/141049900, re-open this finding first before assuming a new cause. Still unresolved/deprioritized separately: MT4 `ServerToBkkOffsetHours` timezone input (should be 7, not default 4) on 141049900 — user call, low-priority (MT4 footprint being reduced anyway).
@@ -1658,51 +1080,6 @@ daily 07:30 chain แล้ว · **ข้อจำกัดที่ต้อ�
   (คาดผลตาม Regime.mqh เดิม: ช่วย grid จริง · redundant กับ breakout — ถ้า A/B ไม่ต่าง = ไม่ใส่)
 - blocked-on: user เปิด session MRIS (`_triage/MACRO_REGIME_SYSTEM_PROMPT.md` #073-reimagined) เคาะ
   tripwire/threshold ก่อน แล้ว Claude ค่อยยกเป็น order เต็ม (spec + acceptance + ห้าม)
-
-## ORDER-076 — smoke-screen หัวกะทิ 41 ตัวจาก X-ray — `CLOSED (Claude 2026-07-14 — 16 mq5 ใหม่จริง: 11 REJECT/PARK + 1 build-on-needs-data ((ICE) CCI = PARKED, basket 9-major ไม่รอด) · verdict = _triage/_archive/verdicts/order076-098/ORDER076_MQ5_SMOKE_VERDICT.md)` (role: agent/qwen lane)
-
-**คำสั่ง:** (1) cross-ref 41 ตัว (CSV filter has_sl=yes & lot_escalation=no) กับ EA_SCORECARD +
-ผล ORDER-036 (MT4 1,318 sweep) — ตัวที่เคย screen แล้วห้ามรันซ้ำ ใช้ผลเดิม (2) ตัวใหม่จริง:
-smoke ตาม filter chain มาตรฐาน (name-DQ → smoke PF>1 → BWD-OOS 2020-22 → spread-stress)
-platform ตามไฟล์ · **compiled .ex4/.ex5 เท่านั้นถ้ามี — .mq4/.mq5 คอมไพล์ก่อน** (3) ตาราง verdict-ดิบ
-ต่อ EA ต่อด่าน **Acceptance:** ตารางครบ 41 แถว (screened-before / smoked / DQ) + top-5 ตาม
-BWD-OOS PF · commit `[tag] ORDER-076 done` **ห้าม:** verdict PASS/REJECT (Claude ตัดสิน) ·
-แตะไฟล์ต้นฉบับ · แตะ 297 ตัว SL-unknown (รอ verification pass แยก ถ้าคุ้ม)
-
-
----
-
-## ORDER-079 — Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) — `DONE(Claude-inline, 2026-07-10 — catalog = _triage/FXDREEMA_IDEA_CATALOG.md)`
-
-**ทำไม (user directive):** คลัง 1,050 EA = สื่อการเรียน ไม่ใช่สินค้า — ห้ามตัดสินด้วยเกณฑ์ risk structure
-(43% no-SL คือ scaffold ของแบบฝึก ไม่ใช่ความผิด) · เป้า = **สกัดไอเดีย/แนวคิด** ที่ user เรียนมา
-ให้เห็นเป็นแคตตาล็อกต่อยอดได้ · user ยืนยันในคลังมี Elliott Wave (รวมแบบเฉพาะ wave 5) + SMC —
-ห้ามปัดตก แนวพวกนี้แล็บมี precedent ด้วย (Gold SMC = OOS_VALIDATED ใน EA_Project)
-
-**คำสั่ง:** สร้าง concept-mining pass ต่อยอด xray (แหล่งข้อมูลต่อไฟล์: ชื่อไฟล์/โฟลเดอร์ · **fxDreema
-block labels** (คนเขียนเอง สื่อความหมายตรง) · indicator signature · comment strings) →
-จัด taxonomy แนวคิด เช่น: Elliott/wave-count · SMC/order-block/liquidity/BOS · session-time ·
-breakout (แบบไหน) · reversion (RSI/CCI/Stoch/BB) · trend-follow (MA/ST/SAR) · currency-strength
-meter · correlation/pair · news · scalping · grid/basket variants · dashboard/tool (ไม่ใช่ EA) ·
-money-management exercises → output `_triage\FXDREEMA_IDEA_CATALOG.md`:
-ต่อ concept: จำนวนไฟล์ · ตัวแทน 2-3 ไฟล์ (ตัวที่ block labels สื่อสุด) · mechanism sketch จาก labels ·
-**cross-ref สถานะแล็บ**: เคยทดสอบ/ตาย/validated/ยังไม่เคยแตะ (เทียบ EDGE_CATALOG.md + memory
-signal-landscape ผ่านไฟล์ repo) + CSV คอลัมน์ concept เพิ่มใน FXDREEMA_XRAY.csv
-**เจาะพิเศษ:** ไฟล์ Elliott/wave ทั้งหมด (grep wave/elliot/impulse/zigzag ใน name+labels) และ
-SMC (order block/liquidity/FVG/BOS/CHOCH/SMC) — ลิสต์แยกครบทุกไฟล์ พร้อมสรุป logic จาก labels ต่อไฟล์
-**Acceptance:** catalog ครบ + ลิสต์ Elliott/SMC เต็ม + นับ concept ใหม่ที่แล็บไม่เคยทดสอบ ·
-commit `[tag] ORDER-079 done` · **ห้าม:** ตัดสินดี/ไม่ดี ต่อ concept (Claude+user คุยกัน) · risk flags
-ห้ามโผล่ใน catalog (คนละเอกสารกับ XRAY)
-
-**สถานะ:** CLAIMED -> DONE(Claude-inline, 2026-07-10) — agent ตายที่ session limit, Claude เขียน/รันสคริปต์เองต่อ (fxdreema_concepts.py + boilerplate fix รอบสอง: doji-string เคย inflate candle_pattern 224->16) · ผลเต็ม = _triage\FXDREEMA_IDEA_CATALOG.md + concept column ใน XRAY.csv + _concept_summary.json
-
-
----
-
-## ORDER-080 — วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB) — `CLOSED (Claude 2026-07-17): ตอบผ่าน ORDER-108 + 091C-D1d ไม่ต้อง build Boss_16 ซ้ำ`
-**VERDICT (`_triage/_archive/verdicts/order076-098/ORDER080_LIMIT_ENTRY_VERDICT.md`):** pending-limit ≠ free win — (a) adverse-selection ในเทรนด์ (พลาด runner: ORDER-108 pending-only 1.76<market 2.07),
-(b) ~26-28% ไม้ไม่ fill (lwma). **split (market+pending) = robust** (1.93/1.97 ทั้ง 2 regime) แต่ **config-conditional** (ช่วย reversion/balanced, ทำร้าย trend-chaser — ห้าม retrofit live trend EA).
-กติกา: offer entry-mode เป็น input, default = validated mode, เปิด pending/split เฉพาะ reversion/balanced. lever อยู่ EDGE_CATALOG แล้ว.
 
 ## ORDER-080-orig (spec เดิม — superseded)
 
@@ -1762,125 +1139,6 @@ commit `[tag] ORDER-080 done` · **ห้าม:** เปลี่ยน lever �
     holdout XAU H4 MAIN 1.74/BWD 1.01 · corr gate vs 4 gold cohort max|corr|=0.415 << 0.8 · bundle staged
     `_vps_deploy/WAVE5_XAU|XAG` · ⚠️ template ไม่มี tester-gate — attach แล้วเทรดทันที · เหลือ: user attach บน VPS
     (commits `0b4acdbc`+`86151de9`, spec-of-record = `docs/superpowers/plans/2026-07-12-entry-wave5.md`)
-
-## ORDER-084 — Retro-audit: ไล่ verdict DEAD/REJECT/PARKED ทั้งหมดกับกฎใหม่ (user: "ตายเปล่าเยอะ") — `CLOSED (extract DONE agent 2026-07-10 · judge DONE Claude 2026-07-16: กอง ก ~95 ฆ่าถูกกติกา · กอง ข rescue queue 5 ตัวเรียง EV · กอง ค PARKED-VERIFY(user) 2 รายการ — rescue ยกเป็น order ใหม่ทีละใบตาม pacing)`
-
-**ทำไม:** กฎ rescue-ladder (optimize ≥3 รอบ lever ต่างชุด × ≥2 TF ก่อนตาย) + PARKED-VERIFY(user) +
-EA-SCORE เพิ่งเกิดวันนี้ — verdict เก่าจำนวนมากตัดสินก่อนกฎนี้ · user เชื่อ (ประสบการณ์ตรง: หลายตัวที่ live
-อยู่รอดเพราะมือ user เคยเทส) ว่ามีของดีตายเปล่าค้างอยู่
-
-**ขั้น 1 — extract (mechanical, agent):** กวาดทุก verdict จาก EA_SCORECARD_AND_REGISTRY.md +
-MASTER_BACKLOG.md + memory signal-landscape (อ่านผ่านไฟล์ repo ที่อ้างถึง) + AGENT_TASKBOARD
-(ORDER ที่ REVIEWED) → ตาราง CSV ต่อ EA/concept: ชื่อ · verdict · วันที่ · **lever ที่ sweep จริง
-(นับจากหลักฐาน ไม่ใช่คำอ้าง)** · จำนวน TF ที่ทดสอบ · จำนวน symbol · best PF ที่เคยเห็น · class
-(STRUCTURAL/PARAMETRIC/artifact) · หลักฐานชี้ไปไหน
-**ขั้น 2 — judge (Claude):** แยก 3 กอง — (ก) STRUCTURAL/artifact ยืนยัน = ตายจริง ไม่แตะ
-(ข) **under-swept ตามกฎใหม่** (sweep <3 รอบ หรือ 1 TF) = คิว rescue เรียงตาม EV: best-PF ใกล้เกณฑ์ +
-mechanism เข้ากับ symbol ที่รู้จัก (reversion→ranger · breakout/trend→XAU/GBP) (ค) idea ดีแต่เครื่องมือ
-ยุคนั้นไม่ถึง = **PARKED-VERIFY(user)** สรุป 3 บรรทัด/ตัวส่ง user
-**ขั้น 3 — แผน rescue:** เลือก top 5-10 จากกอง (ข) → order sweep ตามสูตร rescue-ladder
-(lever ชุดตามประเภทใน backtest-optimize-rigor) — **ห้ามรันใน order นี้** แค่วางแผน+ประมาณชั่วโมงเครื่อง
-**Acceptance ขั้น 1:** `_triage\_archive\audits_and_investigations\RETRO_AUDIT_VERDICTS.csv` ครบทุก verdict ที่หาเจอ + สรุปนับต่อกอง ·
-commit `[tag] ORDER-084 extract done` · **ห้าม:** ตัดสิน/จัดกองเอง (แค่ extract หลักฐาน) · ห้ามรัน backtest
-
-### ORDER-084 extract SUMMARY (Claude-agent, 2026-07-10 — raw counts, no judging)
-1. **Total verdict rows: 154** ใน `_triage\_archive\audits_and_investigations\RETRO_AUDIT_VERDICTS.csv` (per-EA/cell/concept; aggregate-pool rows ครอบ ~2,700 EAs ที่ตายเป็นกอง: ORDER-036 1,318 ex4 · ORDER-035 203 ex5 · 63-EA screen · idea_bank 251)
-2. Counts by verdict: **REJECT 52 · DEAD 33 · CANDIDATE 13 · CORE/ROBUST/DEMO 12 · NO-EDGE/closed 11 · PARKED 11 · DQ/DISQUALIFIED 10 · CONDITIONAL 3 · WATCH 3 · LEAD 2 · DROP 2 · other 2**
-3. **TFs_tested == 1: 141/154 (92%)** — เกือบทั้ง lab ตัดสินจาก TF เดียว (H1 ล้วนเป็นส่วนใหญ่); มีแค่ 13 ราย ที่เห็น ≥2 TF (RSI from pips 4 TF · Boss_16 2 TF · WaveS1 2 TF · NR7/PrevDay/EMATREND/Kangaroo/NuiIndy/ST03/HalfTrend ฯลฯ)
-4. **Evidence = default-only/smoke-only (เข้ม): 29 rows · รวมชั้นเดียว (BWD-only/lot-check-only/hard-gate): 44 rows** — กองนี้คือผู้สมัคร rescue-ladder โดยนิยาม (ไม่เคยเห็น lever sweep แม้แต่รอบเดียว)
-5. Top-10 best_PF_seen ในกอง DEAD/PARKED/REJECT/DQ (118 rows): CITY-GOLD 259.99 (artifact) · gold-grid concept 85.14 (M2 artifact) · Degold 13.12 (M1-vs-M4 artifact) · Scalper_S3 10.71 (fixed-spread artifact) · GBPJPY1H90PCWR 8.15 (PARKED-no-data, absurd-flag) · Golden Elephant 7.77 (TP-lever artifact) · Gold Stuff V7 5.09 · Dark Mimas 5.0 (regime) · **EA_SUPERTREND XAU H4 4.49 OOS (ตัวจริง — parked เพราะ corr 0.946 กับ KER)** · COT-filter 3.96 (year-split kill)
-6. หมายเหตุ: top-PF ส่วนใหญ่ = artifact ที่พิสูจน์แล้ว; PF สูงสุดที่*ไม่ใช่* artifact ในกองตาย = SuperTrend 4.49 · IR Whale 3.94(suspect) · EURUSD Forex Robot 3.89 (BWD 0.39) · FZ2 3.05 (flat-lot 0.36) · 143 E4.7.4 3.0 (BWD 0.85) · AsReMix 2.99 (PARKED regime)
-7. รูปแบบที่เห็นซ้ำใน extraction (ข้อมูล ไม่ใช่คำตัดสิน): กอง mass-smoke ตายด้วย 1 symbol-pair × 1 TF × default; กอง concept 200-list ตายด้วย default smoke 1-2 cell แล้วปิด "concept DEAD ถาวร"; กองที่ sweep จริง ≥3 lever มีน้อย (~25 rows: Boss_14 family · ST03 · SessionBreakout 1200-pass · FlagPennant · WaveS1 · SuperTrendFlip · Degold · ZIGL-EURUSD 216-pass ฯลฯ)
-8. Sources ที่กวาดครบ: EA_SCORECARD_AND_REGISTRY.md · MASTER_BACKLOG.md · AGENT_TASKBOARD.md (ORDER-001→083) · ORDER-036_MT4_MASS_SMOKE.md · memory signal-landscape.md · STRATEGY_200_ANALYSIS.md · PROJECT_STATE.md §07-08 (อ้างถึงจาก taskboard)
-9. STRATEGY_200_ANALYSIS.md = **prior scores ไม่ใช่ verdict** (คะแนน /10 ก่อนเทส) — ไม่ได้สร้าง row ต่อ prompt; ตัวที่ถูกเทสจริง (#9/20/30/62/66/68/70/83/94/100/105/127/135) มี row จากผลเทสใน backlog/signal-landscape แล้ว
-10. AGENT_TASKBOARD_MERGE.md = engineering port track ล้วน (MERGE-01..08) ไม่มี EA verdict — ไม่มี row
-11. ORDER-064 (ChatGPT export mining) เป็น idea-triage ไม่ใช่ backtest verdict — ไม่ได้สร้าง row (จดไว้กันสับสน)
-12. Orders 048-054 ไม่มี header ใน taskboard (เลขข้าม 047→055) — verdict ของ funnel 07-08 (SqueezeBRK ROBUST · Trendline #8 EXPERIMENTAL · ConfluenceMartATR/London/plain-squeeze ตก) สกัดจาก PROJECT_STATE §SESSION 2026-07-08 + การอ้างอิงใน ORDER-059/065/067 แทน
-13. Verdict ที่มี supersede-chain ถูกยุบเหลือ row เดียว (verdict ล่าสุด + ประวัติใน evidence): ST03 family (CORE→STRUCTURAL 07-10) · 2020v2 (REJECT→revive→REJECT) · Happy thaipop (PARKED→REJECT ×16.3) · Automated Forex Grail (AUTO-REJECT→revive→REJECT-spread) · LNBREAK/NRBreakout (DEAD→re-exam ORDER-008B)
-14. คอลัมน์ class_claimed = คำอ้างของ verdict เดิมเท่านั้น (STRUCTURAL/PARAMETRIC/artifact/unknown) — ยังไม่มีการจัดกอง rescue/dead/verify ตามข้อห้าม
-15. ขั้น judge (กอง ก/ข/ค + แผน rescue top 5-10) = รอ Claude lead อ่าน CSV
-
-### ORDER-084 ขั้น 2 JUDGE (Claude lead, 2026-07-16) — จัดกอง 107 rows กลุ่มตาย + แผน rescue
-
-**กอง ก — ตายจริง ไม่แตะ (~95 rows):** ทุกตัวที่มี kill-chain ครบอย่างน้อย 1 ด่าน structural/artifact จริง:
-BWD wipeout (Dark Mimas 0.45 · EURUSD Robot 0.39 · SEMIS 0.05-0.65 · GapinFX 2022 0.02) · spread-stress
-(Grail · Yetti family · Expert · 2020v2) · lot-check (Z61 ×44-80 · AF-Global →94 lots · Dark Venus ×2+ ·
-Happy thaipop) · Model-ladder artifact (Elephant 85→1.41 · Scalper_S3 · Degold M1-fantasy · Zeus Gold Hedge
-M1-false-pass) · exhaustive sweep ถึง ceiling (MACD-cross 1.16 · SessionBreakout 1,200-pass 1.20 ·
-RSI_Swing_BB 27-combo · LNBREAK 0/81 · Boss_14 EURCHF 0/54 + US30 + BREAKOUT EU/GBPJPY 0/180-175 ·
-LondonConso rescue-sweep 48-combo แล้วยังตก) · no-source/cracked (CITY-GOLD · North East Way · KRAPOOK).
-**การ audit ยืนยัน: กองนี้ฆ่าตามกติกา ไม่ใช่ตายเปล่า.**
-
-**กอง ข — UNDER-SWEPT ตามกฎใหม่ (ตายจาก default-only/1-TF, ยังไม่เคยเห็น lever sweep) → คิว rescue เรียง EV:**
-1. **Boss_14_GridLog second-symbol pool (GBPJPY/NZDUSD/USDCAD/AUDNZD)** — defaults เท่านั้น (0.68-1.13,
-   GBPJPY OOS 1.12 เฉียดบาร์) · chassis validated แล้ว = EV สูงสุด · rescue = funnel มาตรฐาน ≥3 lever × H1+H4
-   (~2-3 ชม.เครื่อง/symbol, ใช้ launcher เดิมของ family ได้เลย)
-2. **EA_XAU_NY (#83 NY-session breakout)** — default smoke เดียว PF 1.12/350t · mechanism = breakout@XAU
-   (edge class ที่พิสูจน์แล้ว) · sweep session-window × buffer × SL × {M30,H1,H4} (~2 ชม.)
-3. **EA_ZSCORE (#100)** — default เดียว PF 1.15/0.95 H4 · reversion signal แต่เทสบน XAU (บ้าน momentum) —
-   ผิดบ้านตาม portfolio-edge thesis · rescue = ย้ายไป ranger pairs (AUDNZD/EURCHF/EURGBP) × H1/H4 ×
-   threshold sweep (~2 ชม.)
-4. **EA_ICHIMOKU (#66)** — claimed STRUCTURAL "cloud lags" แต่หลักฐาน = default 1 cell = overclaim ชัด ·
-   sweep Kumo period × TF บน XAU/JPY (~1.5 ชม.)
-5. **EA_KELTNER (#62)** — default เดียว PF 1.04 · momentum-class ถูกบ้านแล้ว แต่ PF ไกลบาร์ · ท้ายคิว (~1.5 ชม.)
-6. **EA_PREVDAY / EA_NR7** — เคย iterate 2-3 รอบแล้ว (เกือบครบ gate) · ต่อคิวเฉพาะถ้า 1-5 ให้ผลดี
-**หมายเหตุ regime-parked (Zeus AUDJPY/AUDUSD · Boss_14 NZDUSD-SELL · AsReMix):** full-funnel แล้ว ไม่ใช่
-under-swept — ทางฟื้นเดียว = lever `_50_ Regime.mqh` ใน funnel ใหม่ (ORDER-057 adoption path) ไม่ใช่ re-sweep เปล่า
-
-**กอง ค — PARKED-VERIFY(user):** (1) **Phoenix_EA_v5_6_03 + GBPJPY1H90PCWR** (PF 8.15 absurd-flag) —
-BWD ว่างเพราะ MT4 history ขาด · ปลดล็อกทันทีที่ user โหลด history (memory `mt4-history-gap-jumstoch` มีคิว
-priority อยู่แล้ว: NZDUSD-H4/AUDJPY-H1/GBPJPY/EURGBP) (2) **VisualMartiEA** — unverifiable ×2 (ladder ×5
-น่าจะ structural แต่ยังไม่มีหลักฐาน) — แจ้ง user ตามกติกา ห้ามปล่อยตายเงียบ
-
-**ขั้น 3 (แผน — ห้ามรันใน order นี้):** rescue 1-2 ตัว/รอบตาม pacing เริ่มจาก Boss_14 GBPJPY → XAU_NY →
-ZSCORE · รวม ~9-11 ชม.เครื่องสำหรับ top-5 · ยกเป็น order ใหม่ทีละใบตอนถึงคิว (อย่า burst)
-
-**🔧 แก้คำตัดสินกอง ก (user จับ 2026-07-16 — pending-limit lever):** spread-death subset (Yetti3 · Grail ·
-Expert · 2020v2 · Scalper_S3 ฯลฯ) ผมเคยจัด "ฆ่าถูกกติกา" — **แต่ฆ่าใต้ market entry เท่านั้น.** ตัวที่
-**(1) entry = reversion/mean-revert** (limit fill บน pullback ได้) **+ (2) มี source แก้ได้** → pending buy/sell
-limit = lever ที่ยังไม่เทส → **ย้ายจาก "ตายจริง" ไป rescue-verify** (compiled vendor แก้ entry ไม่ได้ = ตันตามเดิม ·
-breakout = pending-limit ผิดทาง มันต้อง chase). vehicle = ORDER-091C-D1d/080 ด้านล่าง (JUMSTOCH เหมาะสุด).
-
-**ผลรอบ rescue 2026-07-16:** #1 GBPJPY = ✅ revive (Model-4 confirm, verdict `_triage/ORDER106_*`) ·
-#2 XAU_NY = 🟡 regime-dependent long-gold (edge จริง in-regime แต่ไม่ both-window; 3 lever swept รวม direction;
-build-on = จับคู่ ORDER-057 regime-gate; verdict `_triage/_archive/verdicts/order076-098/ORDER084_XAUNY_RESCUE_VERDICT.md`) · **#3 ZSCORE = ❌ REJECT (2026-07-16):
-ย้ายไป ranger (AUDNZD/EURGBP/EURCHF) × threshold{2.0,2.5,3.0} × {H1,H4} × both-window = 36 runs ไม่มี both-window survivor
-(≥1.1). ดีสุด EURGBP H4 t3.0 1.04/1.12 แต่ thin 36-42t + spike (t2.0/2.5 ตก) = high-threshold thin-artifact. reversion
-ไม่มี edge แม้บนบ้านถูก → valid kill (optimize-on-right-home-fail) ตอกย้ำ momentum>reversion prior · CSV `_mt5_auto/ZSCORE_RESCUE_RANGER.csv`** ·
-next: ICHIMOKU → KELTNER (⚠️ agent delegation ต้องใส่ "foreground synchronous ห้าม background-wait" เสมอ — ZSCORE agent ตกหลุมนี้)
-
-**ผลรอบ rescue #4 ICHIMOKU (#66) = ORDER-112 (2026-07-16B):** เปิดพบว่า rescue ทำไปครึ่งทางแล้ว (probe 2026-07-11
-sweep ADX+exit+symbol) → USDJPY = cell เดียวที่รอด (smoke 1.25 / IS 1.13 / OOS 2.66-31t · GBPJPY/AUDJPY/GBPUSD/EURUSD ตาย).
-**แต่ probe นั้นบน Model-2 + recent-only(2023-25) + Kumo-period ไม่เคยแตะ = 3 ช่องโหว่ตรง VERDICT GATE.** ORDER-112 =
-เติม lever แกน: Ichimoku/Kumo periods {fast6/17/34 · def9/26/52 · med12/34/68 · slow20/60/120} × {H1,H4} × both-window
-Model-4 (16 runs) · isolate: hold ExitMode2/AdxMin20/Sl2.0 · runner `_mt5_auto/run_ichi_kumo_bothwin.ps1` · CSV
-`_mt5_auto/ICHI_KUMO_BOTHWIN.csv`. **VERDICT = 🟡 REVIVED (คว่ำ "DEAD") → PARKED-BUILD-ON:** 6/8 cell both-window บวก >1.1 (plateau);
-med-H4(12/34/68)=1.48/1.39 + slow-H1(20/60/120)=1.31/1.22 ผ่าน ≥1.2 both. **แต่ year-split = ทั้งคู่ 2 ปีขาดทุน** (agg โดนปีเทรนด์กลบ)
-→ ไม่ผ่าน all-years-positive = ยังไม่ demo. **DEAD 2026-06-27 = ผิด** (under-swept: เทสผิด symbol XAU + ไม่แตะ period lever).
-Build-on lead: 2 config ขาดทุนคนละปี → diversified basket (5/6 ปีบวกเมื่อรวม, **full-period PF 1.448** ยืนยัน). verdict = `_triage/_archive/verdicts/order104-126/ORDER112_ICHIMOKU_RESCUE_VERDICT.md` · CSV year-split `_mt5_auto/ICHI_YEARSPLIT.csv`.
-
-**ผลรอบ rescue #5 KELTNER (#62) = ORDER-113 (2026-07-16B) = ❌ REJECT-CONFIRMED:** sweep channel-def (EMAPeriod/KeltMult)
-× TF × both-window Model-4 บน USDJPY (16 runs, `_mt5_auto/KELT_CH_BOTHWIN.csv`). **H4 = window-inversion** (BWD 1.22-1.48 แต่
-MAIN 2023-26 พังหมด 0.71-0.76 DD15%) · **H1 = churn** (1.0-1.14 ไม่แตะ 1.2, 450-530t spread-fragile) · ไม่มี cell both-window ≥1.2.
-original DEAD ถูก—ครั้งนี้ swept จริง = valid kill. Build-on ปิด (breakout→regime-gate redundant). verdict = `_triage/_archive/verdicts/order104-126/ORDER113_KELTNER_RESCUE_VERDICT.md`.
-**บทเรียน:** rescue-ladder ให้ผลต่างกัน — ICHIMOKU revived · KELTNER dead ภายใต้ treatment เดียวกัน = กระบวนการทำงาน (ไม่ rubber-stamp).
-
-**ORDER-112B ICHIMOKU basket build-on = DONE → DEMO-ELIGIBLE bundle #9:** merged-equity (2 config continuous Model-4, merge deal list ตามเวลา
-— deploy = 2 instance ไม่ต้อง build wrapper): **PF 1.339 · 357t · true max-DD 6.09% · MC PF_5th 1.036 · DD_95th 10.77% · ruin 0%.**
-edge บวกจริง+MC-survive แต่ thin (PF_5th 1.036) = demo small-lot ไม่ใช่ live leg แข็ง. **Bundle `_vps_deploy/ICHIADX_USDJPY_BASKET/`** (H4 med 990066 + H1 slow 990067)
-พร้อม attach (user 2026-07-16B APPROVED "เอาเข้าทั้งหมด" → roster ใน DEMO_DEPLOYMENT_PLAN, register ตอน attach จริง). script `_mt5_auto/ichi_basket_merge_mc.ps1`.
-
-**🥇 ORDER-112C/D ICHIMOKU multi-home = XAU ฟื้นด้วย period lever (2026-07-16B):** เอา config USDJPY-winner ไป 6 trenders × both-window Model-4
-(`_mt5_auto/ICHI_MULTIHOME.csv`). GBPJPY/EURJPY/AUDJPY/GBPUSD ตาย/single-window · CADJPY 1.16/1.15 near-miss · **XAUUSD = medH4 3.94/1.25 + slowH1
-1.66/1.39 ผ่าน both-window ≥1.2** → คว่ำ "XAU ceiling 1.13" (default-period only). year-split (`ICHI_XAU_YEARSPLIT.csv`): medH4 6/6 ปี ≥0.99 (thin 8-20t/yr) ·
-slowH1 5/6 ปีบวก (32-41t/yr). แข็งกว่า USDJPY basket แต่ **gate ชี้ขาด = corr vs XAU legs เดิม** (XAU แน่นมาก).
-
-## ORDER-112E — corr check: Ichimoku-XAU additive หรือ redundant? — `DONE(Claude 2026-07-16B) = 🎯 ADDITIVE (reduced-lot)`
-**ผล:** full-window XAU Model-4 → monthly Pearson (`_mt5_auto/ichi_xau_corr.ps1`): Ichimoku-XAU slowH1 PF 1.57/236t/Sharpe 3.0 ·
-**vs BRK 0.263 · Kaufman 0.574 · SuperTrend 0.646** = additive (max 0.646, ต่ำกว่า SuperTrend-0.724-block). **VERDICT: candidate จริง.
-Bundle #11 `_vps_deploy/ICHIADX_XAU/` (H1 slow magic 990068)** — เพิ่มใน roster แล้ว. medH4 = optional 2nd leg (990069 reserved).
-⚠️ **corr = live-decision gate เท่านั้น ไม่ใช่ demo gate** (user 2026-07-16B): demo เอาขึ้นเทส normal lot คอนเฟิร์มว่าเวิร์ค; corr sizing/cut ตอนเงินจริง. เก็บเลข corr ไว้ตอน promote live.
-รายละเอียด original order ด้านล่าง (เก็บไว้ provenance):
 
 ## ~~ORDER-112E — corr check~~ (spec เดิม, ปิดแล้ว)
 **ทำไม:** XAU Ichimoku (slowH1 20/60/120, both-window 1.66/1.39, 5/6 yr+) = edge จริง แต่ XAU portfolio แน่น (BRK/Kaufman/SuperTrend/Wave5/MacdDiv);
@@ -2049,7 +1307,7 @@ symbol อื่นที่ผ่านเกณฑ์ (corr < 0.8 ระหว
 entry PF>1 (2) full-config IS/OOS บนตัวที่ผ่าน (3) corr equity-curve vs leg เดิม → เก็บ corr<0.8, คู่ >0.8 บอก user
 (4) เพิ่มเข้า demo config. **pace 1 EA/batch** · Boss_14 = ตัวแรก (D1c-สไตล์)
 
-## ORDER-097 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline `DONE(Claude, 2026-07-11)` · funnel `CLOSED (Claude 2026-07-14 — STRUCTURAL DEAD: sweep spacing×SL ไม่ช่วย + flat-lot isolate S1-S6 ไม่มีระบบไหนมี edge เดี่ยว (ดีสุด 0.80/0.76) · ปัญหาอยู่ที่ entry ทั้ง 6 ไม่ใช่ chassis · verdict = _triage/_archive/verdicts/order076-098/ORDER097_HEX_FUNNEL_VERDICT.md)` _(renumbered 096→097: ชนกับ CAMPAIGN ORDER-096 WOBR)_
+## ORDER-097 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline `DONE(Claude, 2026-07-11)` · funnel `CLOSED (Claude 2026-07-14 — STRUCTURAL DEAD: sweep spacing×SL ไม่ช่วย + flat-lot isolate S1-S6 ไม่มีระบบไหนมี edge เดี่ยว (ดีสุด 0.80/0.76) · ปัญหาอยู่ที่ entry ทั้ง 6 ไม่ใช่ chassis · verdict = _triage/_archive/verdicts/order076-098/ORDER097_HEX_FUNNEL_VERDICT.md) + REVIEWED(Claude/Opus 2026-07-26)` _(renumbered 096→097: ชนกับ CAMPAIGN ORDER-096 WOBR)_
 
 **ที่มา:** user ส่งสเปค HexaGrid เต็ม (6 ระบบอิสระ magic-scoped แชร์ grid engine ×1.33 cap 10 + SL จริงทุกไม้,
 regime EMA224-slope+ADX, 7 ชั้นจัดการ+global cap) แล้วสั่ง "เขียน EA ตัวนี้ + รอรันเลย" (optimize เองไม่ได้ — คอมเต็ม).
@@ -2163,101 +1421,6 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **ห้าม:** grid ก่อน flat-lot ผ่าน · verdict · reject ก่อนครบ gate.
 
 ---
-
-## ORDER-098-C — reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) — `DONE(Claude 2026-07-17C, commit bd709fca)` (role: Claude, built via sonnet-agent + lead-verified)
-
-**RESULT:** 2 parts extracted OFF-by-default into Boss V2 core — `PROG_FIBONACCI` (56, MoneyManagement.mqh, lot*fib(lv) cap _56_FibMaxStep=5→13x) + `Exit_DynCloseTargetMoney()` (ExitManager.mqh, base+(openCount/C)*base, gated _57_DynCloseOn=false). Compile 7/7 EA 0 err. **Off-by-default lead-VERIFIED:** tpl_regression trade counts byte-identical to baseline all 6 EA (gated code changes 0 default behavior); 6 net/pf micro-drifts <2% = pre-existing stale baseline (Jul11) vs refreshed ticks NOT edits → **baseline refresh = separate lead maintenance (flagged, not done mid dual-session).** Integrate-into-chassis = future order (not backtested yet, per scope). Retrofit: Fib→MatchaGrid bounded / DynClose→Kangaroo DD-release + JUMSTOCH.
-
-**ทำไม:** 2 ชิ้นนี้ = "cap + linear/log" ที่ user สั่ง มีคนทำไว้แล้วในคลัง — เอาไปแปะ chassis ที่ผ่าน flat-lot (098-A/B)
-หรือ retrofit บน MatchaGrid/Kangaroo/JUMSTOCH ได้เลย (pure risk-mechanics ไม่ยุ่ง entry-edge).
-
-**สเปคที่จะสกัดเป็น module:**
-- **dynamic close_money** (EX183/EX078): `close_target = base + (open_order_count / C) * base` — เป้าโตตามจำนวนไม้
-- **Fibonacci-bounded lot** (EX191): sequence `0.01,0.02,0.03,0.05,0.08,0.13` cap ที่ step 13× (แทน martingale ×2) +
-  reset เมื่อ flat · EX211 variant มี SL30/TP50 อยู่แล้ว = bounded+capped ต้นแบบ
-
-**คำสั่ง:** เขียนเป็น include module (`ea_template/core/` ตาม pattern เดิม) + run `tpl_regression.ps1` cage หลังแก้ core.
-**Acceptance:** module compile ผ่าน + regression cage เขียว + unit note ว่าใส่กับ chassis ไหนได้. **ยังไม่ต้อง backtest** (งาน integrate อยู่ order ถัดไปหลัง 098-A/B รู้ผล).
-**ห้าม:** แก้ core โดยไม่รัน `tpl_regression.ps1` · integrate เข้า chassis จริงก่อน entry-edge ยืนยัน (จะปนตัวแปร).
-
----
-
-## ORDER-102 — Contract C1: migration window — resolve exceptions + replace manual index + freeze archive (WRITE-PATH) — `CLOSED (2026-07-14 — ENFORCEMENT-REWORK ปิดโดย ORDER-103 C1-ENFORCE = ACCEPT · Contract C1 complete ทั้ง data + enforcement)` (SYSTEM ORDER 4 of ≤4 memory-control build)
-
-> **Design source:** `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` **§20.8 Contract C @ `4eb839d`** (migration half) + ORDER-101 "→ C1" spec + §20.7
-> **ทำได้:** Opus (exception judgment + migration window + canonical workflow = own) · Codex/subagent (guard-hook code) · **👉 แนะ:** Opus เขียน+ตัดสิน → subagent build lock-hook → **Opus execute migration เอง (1 atomic commit)** → **blind Codex review ก่อน accept**
-> ⚠️ **นี่คือ order เดียวที่แก้ architectural write path จริง (taskboard/archive)** — ต้อง maintenance window ไม่มี writer อื่น (user ยืนยัน session อื่นปิด) · gate = C0 validator `-Strict` ต้อง exit 0 หลัง migration
-> **Prereq:** C0 (ORDER-101) REVIEWED ✓ — validator `check_taskboard_archive.ps1` + manifest/index/exceptions พร้อมใช้เป็น gate
-
-**REALITY:** manual split ทำแล้ว (archive 131 blocks) → C1 **ไม่ bulk-move**. **REVISED r1 หลัง Codex C1 design review (2026-07-13):** เปลี่ยน "dispose exceptions" → **"canonical review linkage"** (§20.7: reviewed history/decision อยู่ owner เดิม ไม่ใช่ manifest column/allowlist ใหม่); ใช้ verdict เดิมที่มีอยู่; archived blocks **immutable — append-only**; แยก hook-install (C1a) จาก migration (C1b); pin staged-snapshot protocol.
-
-**Phase 0 — validator upgrade (prereq, read-only, commit ของตัวเอง):** อัปเกรด `check_taskboard_archive.ps1` review-linkage เป็น **block-id/text level** (ที่ C0 เลื่อนไว้) → รู้จัก `REVIEW ORDER-x` block จริง. **หลัง upgrade: 071 exception ต้องหาย** เพราะมี `REVIEW ORDER-071 — REVIEWED — เคส entry ST03 ปิดถาวร` อยู่แล้ว (`ARCHIVE_TASKBOARD_2026-07A.md` L2657, preregistered-gate fail) — **C0 เดิม false-positive จาก canonical-id limit**. validator ต้องรายงานแยก `raw_detected / canonically_reviewed / unresolved`.
-
-**Phase 1 — Opus canonical review (append-only, ไม่แก้ archived bytes):** สำหรับ exception ที่ **ไม่มี** linked review จริง → Opus เขียน **canonical consolidated review block** (append เข้า archive/taskboard ตาม owner) ระบุต่อรายการ: `kind · block_id · block_sha256 · disposition · evidence/review-ref`. validator **derive closure จาก canonical review block เท่านั้น** (key = exact exception identity `kind+block_id+sha256` ไม่ใช่ canonical-id — กัน 091C-D1c ที่มี 2 kind ปิดพลาด). **ห้าม manifest column/allowlist เป็น authority.** 
-- benign **แต่ต้อง review จริง ไม่ใช่ "disposed":** 086/093/096C (DONE-mechanical) · 003/009 (SKIPPED) · 065/066/067 (BUILT+verdict-inline) — Opus เขียน closure จริงต่อรายการ · **091C-D1c ต้อง review ผล D1c โดยตรง** (ห้ามถือว่า D1f ปิดย้อนหลังอัตโนมัติ)
-- benign list จริง = **9 canonical IDs** (003,009,065,066,067,086,093,091C-D1c,096C) ไม่ใช่ 10
-
-**Phase 1b — จัดการ block ที่หลง active (append-only, verbatim):**
-- **ORDER-071 rev02:** มี verdict แล้ว (REVIEW ORDER-071) → **ห้ามตัดสินซ้ำ ห้ามแก้ bytes** · validator (Phase 0) รับรู้ linked review = ปิด pending-stage exception
-- **ORDER-071 rev01 (`OPEN` active L362):** superseded โดย rev02 → **ย้ายเข้า archive verbatim + append closure block** ("SUPERSEDED by rev02; final review = REVIEW ORDER-071") — **ห้ามลบทิ้งเฉย ๆ**
-- **091C-D1c PROCESSING (active L665):** annotation stale → ย้าย/ปิด verbatim + closure (D1c reviewed) — ไม่ทิ้งเงียบ
-
-**Phase 2 = C1a (hook) → C1b (migration) — 2 commit แยก:**
-- **C1a (commit แยก):** ติดตั้ง+test hardened lock hook · **machine-checkable contract:** marker `.git/ea_lab_c1_lock.json` (ไม่ tracked, atomic create) มี expected-preimage blobs + exact candidate blobs + staged-path allowlist · hook อ่าน candidate จาก **git index (`git show :path`) ไม่ใช่ working tree** · staged-vs-expected exact (partial/extra staged path = fail) · **fail-CLOSED ถ้าไม่มี PowerShell** (ปิด fail-open เดิม `.githooks/pre-commit` L5) · crash-recovery ระบุ · test ใน **temp repo/index ไม่ใช่ shared worktree** · hook message **ห้ามแนะ `--no-verify`** (bypass เทคนิคปิดไม่ได้ อาศัยกฎ AGENTS)
-- **C1b (1 atomic commit):** แทน manual index (L15) ด้วย **short pointer** (archive file + generated `ARCHIVE_INDEX.md` + validator command) · apply Phase-1/1b closures · regenerate manifest/index/exceptions · **archive preamble L4 stale banner** (บอกว่า index อยู่ taskboard) → append superseding notice **ไม่แก้ existing archived H2 blocks**
-
-**Acceptance (machine-checkable):**
-- [ ] Phase 0 validator upgrade: 071 exception หาย (linked review รับรู้) · validator รายงาน `raw_detected/canonically_reviewed/unresolved`
-- [ ] **C0 `-Strict` exit 0 หลัง migration ก็ต่อเมื่อ:** integrity=0 · unresolved policy=0 · **ทุก closed exception มี canonical review ตรง exact block_id+sha256** · ไม่มี wildcard/canonical-id-only approval · ไม่มี stale/missing approval-ref
-- [ ] manual index (L15) → pointer · agents ยังหา OPEN/CLAIMED order ได้ (test) · check_state.ps1 ยัง CLEAN
-- [ ] archived H2 blocks **byte-unchanged** (append-only; รวม rev02) · rev01+091C-D1c ย้าย verbatim+closure · archive `-Audit` clean
-- [ ] **C1b = 1 atomic commit** · staged set == expected allowlist exact · หลัง commit `HEAD:<path>`==candidate blobs · git diff --cached เท่านั้น (ไม่ whole-worktree)
-- [ ] **negative tests:** disposition kind เดียวห้าม suppress อีก kind ของ id เดียว · stale disposition-hash หลัง block เปลี่ยน→exit 2 · unknown/dup disposition→exit 2 · missing review-ref→Strict 1/integrity 2 · non-terminal archive ไม่มี linked terminal review→Strict fail · hook: commit แตะ taskboard ระหว่าง lock (ไม่ใช่ migration)→blocked · staged≠working-tree→hook fail · no-PS→fail-closed
-- [ ] `[tag] ORDER-102 done` + ผลดิบ
-
-**ห้าม:** แก้ bytes ของ archived block เดิม (append-only) · ตัดสิน 071 ซ้ำ (verdict มีแล้ว) · manifest column/allowlist เป็น decision authority · ลบ block ที่หลง active ทิ้ง (ย้าย verbatim+closure) · whole-worktree restore/checkout · แตะ unrelated dirty files · implement Contract D
-
-**Rollback (staged-blob protocol):** capture target preimage hashes ก่อนเริ่ม · C1b = explicit `git add -- <allowlist>` เท่านั้น · rollback = **revert/inverse ของ C1b ใต้ lock** + recheck target files ไม่มี later writes (มี = หยุด ไม่ restore ทับ) · **maintenance lock คงจน blind review ผ่าน หรือ rollback เสร็จ** · git commit atomic ต่อ repo state ไม่ใช่ทั้ง working tree.
-
-### Codex C1 design review (2026-07-13) = needs-CHANGES → order REVISED r1 (Opus verify ยืนยันทุกข้อ)
-- 🔴 **disposition = second authority (§20.7):** manifest column/allowlist กลายเป็น owner ใหม่ของ "reviewed" → **FIX:** canonical review block append-only, validator derive จาก review เท่านั้น, key = exact `kind+block_id+sha256` (ไม่ใช่ canonical-id — 091C-D1c มี 2 kind)
-- 🔴 **ORDER-071 มี verdict อยู่แล้ว:** `REVIEW ORDER-071 REVIEWED ปิดถาวร` @ archive L2657 (Opus verify: มีจริง) — **C0 false-positive จาก canonical-id linking limit** · **FIX:** ห้ามตัดสินซ้ำ, upgrade validator รับรู้ linked review (Phase 0), rev01 OPEN ย้าย verbatim+closure ไม่ลบ
-- 🔴 **lock ขัด acceptance:** "hook ใน commit ก่อน" vs "1 atomic commit รวม hook" ทำพร้อมกันไม่ได้ → **FIX:** แยก C1a (hook) / C1b (migration atomic) · lock marker ใต้ `.git/`, git-index-based, staged-vs-expected exact, fail-closed
-- 🟡 atomicity: `git diff --cached` + staged-blob verify (ไม่ whole-worktree restore) · archive preamble L4 stale banner (append notice ไม่แก้ archived) · Strict-gate ต้อง unresolved=0 + review ตรง exact hash + report raw/reviewed/unresolved · negative tests เพิ่ม
-
-**Status:** ORDER-102 = REVISED r1 (Codex needs-CHANGES ปิดครบ) · **pending Codex re-review** ก่อน execute · **execution ยังต้องรอ window เงียบจริง** (git log ยังเห็น session อื่น commit — ORDER-045/082/083C).
-
-### C1 EXECUTION เริ่ม 2026-07-13 (user: window นิ่งแล้ว, run to completion) — Phase 0 DONE + เจอ design gate
-- **Phase 0 DONE (validator review-linkage upgrade):** `check_taskboard_archive.ps1` รู้จัก `## REVIEW ORDER-x` (Source A) + `## C1-CLOSURE` block (Source B, key exact kind+block_id+sha256) · report **raw=12 / reviewed=2 / unresolved=10** · **-Strict=1** · negTests **20/20** · **071 false-positive ปิดแล้ว** (2 exception ผ่าน REVIEW ORDER-071 ที่มีอยู่) · read-only held. = ตัวปรับปรุง validator ที่มีค่าเดี่ยว ๆ (commit แล้ว).
-- 🛑 **DESIGN GATE เจอตอน execute (surface ต่อ user):** C0 validator = **frozen-snapshot verifier** — append/แก้ archive ใด ๆ → `archive-not-append-only` **integrity exit 2** (พิสูจน์: append dummy block → audit exit 2) · ลบ manual-index block ออกจาก active (block นั้นอยู่ใน split-set 4aebbc37) → ตก (1b) drift ด้วย. **C1 โดยนิยาม mutate active+archive → incompatible กับ validator ปัจจุบัน.** → C1 execute ไม่ได้จนกว่า validator จะ evolve จาก "frozen snapshot" เป็น **"living append-only log (immutable split-prefix + tracked C1 appends)"** ก่อน. นี่คือ refinement ที่แผน+Codex C1 review ยังไม่ครอบ — **ผมหยุด surface แทนฝืน migrate พัง.**
-
-**Next (รอ user เคาะทิศ):** (ก) evolve validator → living-log model (Phase 0.5, bounded) → แล้ว execute migration (index-pointer + move rev01/annotation append-only + C1-CLOSURE 9 rows → -Strict 0) → Codex review · หรือ (ข) checkpoint ที่นี่.
-
-### C1b MIGRATION EXECUTED (Opus, 2026-07-13) — user: run to completion, window นิ่ง
-Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migration (Opus, deterministic script, preimage-captured):
-- **manual index block (active) → short pointer** ไป generated `ARCHIVE_INDEX.md` (§20.7 · index generated/read-only แล้ว)
-- **ORDER-071 rev01 (OPEN, superseded) → archive verbatim** (append-only) · closed via Source A (REVIEW ORDER-071 = ST03 ปิดถาวร)
-- **ORDER-091C-D1c PROCESSING** = stale scratch annotation (D1c DONE+archived) → **removed from active** (transient, ไม่ใช่ history)
-- **`## C1-CLOSURE` block (archive)** = Opus canonical closure 9 terminal-no-linked-review (003/009/065/066/067/086/093/091C-D1c/096C) key exact kind+block_id+sha256
-- **Opus lead call:** defer C1a enforced-lock hook (window เงียบ + hook ผิด=self-DoS เสี่ยงกว่า) — migration ทำใน manual staged-blob discipline + validator gate แทน
-
-**Opus-verified (รันเอง):** **C0 `-Strict` EXIT 0** · raw=11/reviewed=11/**unresolved=0** · **append-only clean** (0 mutated, 2 appends) · **0 active-order-lost** · integrity=0 · manifest/index/exceptions zero-diff · **check_state.ps1 CLEAN** · OPEN/CLAIMED orders ยังหาเจอ (15/4) · diff เฉพาะ 5 ไฟล์ (taskboard+archive+3 artifacts) ไม่แตะ unrelated · **106 bug caught by gate:** append lone-`\n` mutated 096C block (fixed) + statusless annotation ใน archive = status-unparseable (fixed = remove not archive) — validator gate จับทั้งคู่ก่อน commit.
-
-**Status:** C1b DONE + Opus self-review ACCEPT · pending final blind Codex review.
-
-### Codex final review of executed C1 (2026-07-13) = REWORK (data ACCEPT · enforcement REWORK)
-**PASS (Codex verified อิสระ):** -Strict exit 0 · raw11/rev11/unresolved0 · integrity0 · active-order-lost0 · **history conservation: old archive prefix byte-identical, appended 5717 bytes = rev01+C1-CLOSURE เท่านั้น · rev01 verbatim (SHA เท่ากันเป๊ะ 6c8241d8) · 091C-D1c DONE order ยังอยู่ (L4523)** · index pointer ถูก, 15 OPEN/3 CLAIMED หาเจอ · 9 closures dispositions มีเหตุผล + exact-hash keyed (แก้ 003 → unresolved=1 พิสูจน์) · 071 ปิดผ่าน review เดิม ไม่ re-decide · commit scope สะอาด. **→ migration DATA รับได้.**
-**REWORK (write-path enforcement — hole จริง):**
-- 🔴 **P0 append-tamper:** `Invoke-ArchiveAppendOnlyCheck` เทียบกับ split baseline `4aebbc37` เท่านั้น → block ที่ append **หลัง** split (รวม C1-CLOSURE เอง + rev01) **แก้ได้แล้ว regenerate manifest → Strict กลับ 0** (Codex พิสูจน์ forge closure evidence + mutate rev01 ผ่านทั้งคู่). immutability คุมแค่ 131 split blocks ไม่คุม appends. **FIX:** append-CHAIN integrity — ทุก archive-changing commit ต้องพิสูจน์ staged archive = raw-byte prefix-extension ของ blob จาก parent commit · audit เดิน chain จาก anchor ผ่านทุก commit ที่แตะ archive · negTests (mutate closure/rev01 append → exit 2) · manifest regen ห้าม bless mutation
-- 🔴 **P0 no enforced hook:** pre-commit ยังเรียกแค่ check_state + fail-OPEN ไม่มี PS → write path = manual discipline. **FIX:** fail-closed staged-snapshot hook (= C1a ที่ defer)
-- 🟡 **P1 Source A กว้าง:** ปิดทุก exception ของ canonical-id เดียวผ่าน `REVIEW ORDER-<id>` ใด ๆ → อนาคต phase-review หรือ forged review ปิดข้าม. **FIX:** bind exact block-id/hash
-- 🟡 **P1 atomicity:** 2-commit (0ced194 pin ผิด → 9e0bd8a ซ่อม). Codex ยืนยัน **hash-object / `git rev-parse :path`** = fix ถูก (single atomic). *(HEAD ปัจจุบันถูกแล้ว ไม่ rollback/rewrite)*
-
-**⚖️ Lead note:** migration DATA correct + safe (git history = tamper-evidence จริง; validator append-check = defense-in-depth ที่ยังไม่ครบ). Enforcement REWORK = workstream ต่อ (append-chain + fail-closed hook + Source-A binding + hash-object) — เป็น C1a ที่ defer + P0 ใหม่ที่ Codex เพิ่งเจอ.
-
-**Routing:** Opus resolve exceptions + execute migration + 1 atomic commit · subagent/Codex build lock-hook + disposition mechanism · **blind Codex review รอบผลจริง ก่อน accept** · Opus แก้ `AGENTS.md` ใน review commit ถ้า archive-immutability protocol ต้องการ (เช่น "archived block immutable; REVIEWED ใหม่เข้า archive ผ่าน validator -Strict"). C1 = commit แยก.
-
-**→ หลัง C1 accept = order ที่ 4 → MANDATORY REVIEW GATE** (§20.2 #5): หยุด ทบทวน ACCEPT/REWORK/ROLLBACK ต่อ component (A/B/C0/C1) ก่อนเริ่ม Contract D (MVP-1-lite events).
 
 ## ✅ MANDATORY REVIEW GATE — order ที่ 4 ครบ + C1-ENFORCE ปิด (gate ปลดล็อก 2026-07-14, §20.2 #5)
 ทบทวนต่อ component (ผ่าน Codex blind review รวม ~15 รอบตลอด build — จับ defect จริงทุกใบที่ Opus self-verify พลาด):

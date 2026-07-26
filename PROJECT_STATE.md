@@ -111,6 +111,16 @@ banner: `> ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ ow
 
 ## 2. สถานะตอนนี้ (one-liner ต่อชั้น)
 
+> 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign จบรอบ · handoff เต็ม = [`_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
+> **ได้ candidate 1 ตัว:** BTCUSD H4 `(TRD)_SuperTrendFlip_rev03` (Donchian20 + pyramid MaxAdds=1) — M4 หัก swap แล้ว
+> MAIN **2.257**/50 · BWD **3.949**/66 · **HOLDOUT 2026H1 = 4.274**/9 (ไหม้แล้ว) · MC ruin 0% PF-5th 1.052 ·
+> fan 69/81 · corr +0.167 vs เงินจริง ⇒ **VALIDATED CANDIDATE รอ user เคาะ demo attach**
+> **2 lever ใหม่ (additive, default-off, regression ผ่าน):** Kaufman ER gate (`rev02`, ได้ผลบน XAU H4) · capped pyramid (`rev03`, ได้ผลบน BTC H4)
+> **ข้อสรุประดับกลยุทธ์:** SuperTrend flip = edge ของระบอบ 2023-2025 (ทุก cell เสมอตัวบน BWD **ยกเว้น BTC H4**) ·
+> **BTC H4 เป็นเคสพิเศษ ไม่ใช่หัวขบวนกอง crypto** (ETH ตกที่ MC, portable stack ไม่เดินทาง) ⇒ แผน "ผูก 20 symbol" = **20 funnel แยกกัน**
+> **🔴 3 gotcha ที่กระทบงานอื่น:** (1) tester คิด swap โหมด POINTS แต่**ไม่คิด**โหมด INTEREST_CURRENT ⇒ **backtest XAU หัก financing แล้ว · crypto ยังไม่หัก**
+> (2) BTCUSD tick data ต่างกันข้าม MT5 install ⇒ A/B crypto ต้องเลนเดียวกัน (3) `select_robust_pass.py` รายงาน fan ของ EA แบบ basket ผิด — อ่าน XML ดิบ
+
 - **EA_LAB 90%** — pipeline ครบ (intake→smoke→IS/OOS→MC→corr→deploy). housekeeping ปิดครบทุกข้อ 2026-07-02:
   ~~fix path OneDrive→D:~~ ✅ + ~~รวม template ซ้ำ~~ ✅ + ~~ลบ ea_projects/Gold~~ ✅. เหลือ 10% =
   งานที่ผูกกับเวลาจริง (operate จนถึง judge, ขยายจาก 1→หลายพอร์ต) ไม่ใช่งานสร้างเพิ่ม.
