@@ -191,6 +191,16 @@ $script:NonTerminalPatternsOrdered = @(
     'OPEN'
 )
 
+# ORDER-260: the same vocabulary anchored to the start of a backtick status span, used
+# when a header HAS backticks (the normal case). Precomputed once rather than rebuilt on
+# every Get-StatusClass call -- .NET's Regex cache is 15 entries by default and this file
+# already exceeds that, so per-call string construction risked recompiling on every block.
+# See Get-StatusClass for why anchoring is the correct rule and why the no-backtick
+# fallback deliberately stays unanchored.
+$script:NonTerminalPatternsAnchored = @(
+    $script:NonTerminalPatternsOrdered | ForEach-Object { '^[^A-Za-z]*' + $_ + '\b' }
+)
+
 # Pending/partial-stage markers (ORDER-101 fix 4). A block whose backtick status verb
 # is terminal (e.g. `STAGE2-DONE(...)`) can still carry a pending-stage marker OUTSIDE
 # the backtick span (e.g. ORDER-071: "`STAGE2-DONE(...)` -- Stage 3 = รอ main session
@@ -786,11 +796,17 @@ function Get-StatusClass {
     # The no-backtick fallback stays UNANCHORED on purpose: there the search space is
     # the entire header, where the verb never sits at position 0 (the header starts
     # "ORDER-091C-D1e -- ..."), so anchoring would silently stop classifying it.
+    # Anchored variants are precomputed ONCE at script scope
+    # ($script:NonTerminalPatternsAnchored), not rebuilt per call. .NET's Regex cache
+    # holds only 15 patterns by default; this file already uses more than that, so
+    # constructing 6 fresh pattern strings on every Get-StatusClass call risked
+    # thrashing the cache into recompiling regexes for every block.
     $anchorNonTerminal = ($backtickMatches.Count -gt 0)
+    if ($anchorNonTerminal) { $ntPatterns = $script:NonTerminalPatternsAnchored }
+    else                    { $ntPatterns = $script:NonTerminalPatternsOrdered }
     foreach ($s in $searchSpaces) {
-        foreach ($pat in $script:NonTerminalPatternsOrdered) {
-            if ($anchorNonTerminal) { $effectivePat = '^[^A-Za-z]*' + $pat + '\b' } else { $effectivePat = $pat }
-            if ($s -match $effectivePat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0].Trim() } }
+        foreach ($pat in $ntPatterns) {
+            if ($s -match $pat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0].Trim() } }
         }
     }
     foreach ($s in $searchSpaces) {

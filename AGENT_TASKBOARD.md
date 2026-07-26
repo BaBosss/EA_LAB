@@ -138,9 +138,33 @@ chain ของ repo จริงทุกครั้ง — ต้นทุน
 **ทำไมยังเป็นปัญหาแม้ไม่ใช่การค้าง:** ผลลัพธ์ทางปฏิบัติเหมือนกัน — กรงที่ใช้เวลา 30-45 นาทีคือกรงที่
 ไม่มีใครรัน และ**ไม่มีใครรู้ว่ามันเคยผ่านครั้งสุดท้ายเมื่อไร** ระบบ tamper-integrity ของ ORDER-102/103
 จึงยืนอยู่บนกรงที่ de-facto ไม่ทำงาน
-**STEP 1:** วัดให้จบว่า suite ใช้เวลาเท่าไรจริง (ปล่อยรันให้จบ 1 รอบ จับเวลา) — ห้ามสรุปจาก CPU ของ process แม่
-**STEP 2:** หา hotspot — เสนอ: cache git first-parent chain ต่อ 1 รอบ suite แทนที่จะเดินใหม่ทุก invocation ·
-          หรือให้ child ใช้ `-RepoRoot` ที่เป็น fixture repo เล็กแทน repo จริง ถ้า test ไม่ได้ต้องการประวัติจริง
+**✅ STEP 1-2 ปิดแล้ว 2026-07-26 — root cause เจอแล้ว (วัดครบ):**
+| วัดอะไร | ผล |
+|---|---|
+| `-Audit` บน repo จริง 1 ครั้ง | **254 / 278 วินาที** (วัด 2 รอบ) |
+| child ของ suite 1 ครั้ง (fixture **364 ไบต์**) | **~60 วินาที** ⇒ ไม่ใช่ขนาดไฟล์ เป็น **fixed cost** |
+| `git rev-list --first-parent` ทั้งสาย | **42 ms** ⇒ **ไม่ใช่ต้นเหตุ** (สมมติฐานแรกของผมผิด) |
+| regex cache thrash (สมมติฐานที่ 2) | precompute แล้ว **254→278 วินาที = ไม่ต่าง** ⇒ **ไม่ใช่ต้นเหตุ** และเคลียร์ว่า ORDER-260 ไม่ได้ทำให้ช้า |
+| **สาย checkpoint→HEAD** | **502 commit** |
+| **ในนั้นที่แตะ archive จริง** | **5 commit** |
+
+**🎯 ต้นเหตุ:** `Invoke-ArchiveChainIntegrityCheck` วน `for ($i=1; $i -lt $chain.Count; $i++)` ทุก commit ในสาย
+และ**ต่อ 1 commit ยิง git subprocess 3 ครั้ง** (`Get-GitBlobBytes` prev · `Get-GitBlobBytes` cur ·
+`Get-GitCommitParents`) พร้อมอ่าน blob archive เต็มไฟล์ 2 รอบ
+⇒ **502 × 3 ≈ 1,506 git spawn ต่อการเรียก 1 ครั้ง** ซึ่ง **~1,491 ครั้งเป็นงานเปล่า** (archive ไม่เปลี่ยน)
+× ~40ms/spawn บน Windows = **~60 วินาที** ตรงกับ fixed cost ที่วัดได้เป๊ะ
+**และมันโตขึ้น 3 spawn ต่อทุก commit ใหม่** ⇒ อธิบายได้ว่าทำไม 8-9 นาที (memory เก่า) กลายเป็น 30-45 นาที
+
+**STEP 3 — ทางแก้ที่ถูก + ⚠️ กับดักที่ห้ามพลาด:**
+- แก้ที่ถูกที่สุด: จำกัดการวนเฉพาะ commit ที่แตะ path archive (`git rev-list --first-parent <ckpt>..HEAD -- <archive>`)
+  เพราะ commit ที่ไม่อยู่ใน path-filter **พิสูจน์ได้ว่า blob ไม่เปลี่ยน** → semantically ถูก ไม่ใช่การมองข้าม
+- ของแถมฟรี: `$prevBytes` ของรอบถัดไป = `$curBytes` ของรอบนี้ → cache ไว้ ลดการอ่าน blob ครึ่งหนึ่ง
+- batch parent lookup: `git rev-list --parents <ckpt>..HEAD` ครั้งเดียว แทนยิงต่อ commit
+- 🔴 **กับดัก:** `--first-parent` + path-filter **อาจซ่อน merge ที่เปลี่ยน archive ผ่าน parent ที่สอง** ซึ่งคือ
+  **BLOCKER 6 "checkpoint laundering ผ่าน merge"** ที่ ORDER-103 REWORK3 เสียเวลาปิดไปแล้ว
+  ⇒ ต้องเก็บการตรวจ merge-parent ไว้ครบ ห้ามให้ optimization เปิดรูเดิมกลับมา
+**ห้าม:** แก้ walk นี้โดยไม่มีกรงเร็วที่ครอบ merge-laundering ก่อน (วงจรอุบาทว์: จะแก้ validator ให้ปลอดภัยต้องมี suite ·
+         suite ช้าเพราะบั๊กนี้ · ทางออก = เขียน targeted test ของ chain-walk ก่อน แล้วค่อยแก้)
 **STEP 3:** ถ้าลดไม่ได้จริง → แยกเป็น 2 ชั้น: smoke เร็ว (<1 นาที) ที่รันได้ทุก commit + full suite ที่รันตามรอบ
           โดย**บันทึกวันที่รันครั้งสุดท้าย**ไว้ในไฟล์ ไม่ใช่ปล่อยให้ไม่มีใครรู้
 <sub>กรงแคบที่ใช้ได้จริงมีตัวอย่างแล้ว: `scripts/_test/run_statusclass_tests.ps1` (19 เคสจาก corpus จริง · เสร็จในไม่กี่วินาที ·
@@ -313,7 +337,7 @@ bundle ใหม่ใช้ build ปัจจุบัน · ตรวจแ�
 **bars:** N-A (งานเอกสาร ไม่ใช่ทดสอบ) · **flat-lot probe:** N-A
 **ห้าม:** เปลี่ยนพารามิเตอร์ใน .set (edge สะอาด ไม่ต้อง re-opt) · attach แทน user
 
-## ORDER-215 — [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage — `PART 1 DONE(Claude/Opus 2026-07-25): downgrade CORE → PARKED-VERIFY(user) · PART 2 (re-measure) OPEN`
+## ORDER-215 — [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage — `PART 1 DONE(Claude/Opus 2026-07-25) · PART 2 CUTLOSS-QUESTION DONE(Claude/Sonnet 2026-07-26): "bounded+SL" ถอนแล้ว — safety switch ไม่ตอบสนอง · re-measure funnel ยัง OPEN`
 **ตรวจ ini จริงทั้งชุดแล้ว — ภาพจริงดีกว่าที่ audit เสนอ และแย่กว่าที่ scorecard เขียน:**
 - `OPT_MG_CHF_lowDD.ini` (ตัวเลือกพารามิเตอร์) = `Optimization=2` genetic · `Criterion=0` · **`2023.01.01–2026.06.01`
   = กิน holdout 5 เดือน** · ไม่มี fine-grid ไม่มี fan → **ขาที่ใช้เลือก = สกปรกเต็ม ๆ**
