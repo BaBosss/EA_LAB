@@ -766,9 +766,31 @@ function Get-StatusClass {
         $searchSpaces.Add($Header)
     }
 
+    # ORDER-260 fix. The non-terminal vocabulary is matched ANCHORED to the start of a
+    # backtick status span, not as a bare substring anywhere inside it.
+    #
+    # Unanchored and case-insensitive, 'HOLD' matched inside "holdout" and 'OPEN' inside
+    # "open question". So a status of
+    #     `REVIEWED(Claude/Opus 2026-07-23) -- 4/5 cells died at holdout`
+    # classified NonTerminal, label "hold". Measured 2026-07-26: of ~45 headers whose
+    # status verb genuinely is REVIEWED, only 22 were Terminal; 17 were lost to this
+    # exactly. Those orders were unarchivable for describing their own results, and
+    # because StatusClass feeds the whole exception scan, the validator's picture of the
+    # board was wrong in the same direction.
+    #
+    # Anchoring is the correct rule, not a patch: by the board's own convention the
+    # status verb is the FIRST token of the backtick span. Leading non-letters are
+    # skipped so an emoji-prefixed status still matches. \b at the end keeps
+    # OPEN-STANDING and WAITING-USER matching while rejecting "holdout".
+    #
+    # The no-backtick fallback stays UNANCHORED on purpose: there the search space is
+    # the entire header, where the verb never sits at position 0 (the header starts
+    # "ORDER-091C-D1e -- ..."), so anchoring would silently stop classifying it.
+    $anchorNonTerminal = ($backtickMatches.Count -gt 0)
     foreach ($s in $searchSpaces) {
         foreach ($pat in $script:NonTerminalPatternsOrdered) {
-            if ($s -match $pat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0] } }
+            if ($anchorNonTerminal) { $effectivePat = '^[^A-Za-z]*' + $pat + '\b' } else { $effectivePat = $pat }
+            if ($s -match $effectivePat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0].Trim() } }
         }
     }
     foreach ($s in $searchSpaces) {

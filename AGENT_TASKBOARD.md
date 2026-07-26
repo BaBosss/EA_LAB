@@ -76,7 +76,24 @@
 > (ไม่เปิดเป็น order เพราะยังไม่มีเงื่อนไขปลุก — เปิดไว้เฉยๆ = บอร์ดบวมโดยไม่มีใครทำ)
 > วงจรชีวิตเต็ม + เหตุผล → `docs/WORK_LIFECYCLE.md` · เลนที่เปิดอยู่ → `docs/SESSION_LEDGER.md`
 
-## ORDER-260 — [🔴 tooling/integrity] validator ตี order ที่ REVIEWED แล้วเป็น NonTerminal เพราะคำว่า "holdout" — `OPEN` · ทำได้: Sonnet · Claude · 👉 แนะ: Claude (แตะฐานของ exception scan)
+## ORDER-270 — [🔴 tooling/integrity] กรงของ validator ไม่ทำงาน — negative suite ทั้ง 2 ชุดค้าง — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** N-A · **flat-lot probe:** N-A
+**วัดได้ 2026-07-26:** `scripts/_test/run_order101_negative_tests.ps1` และ `run_order103_negative_tests.ps1`
+**ค้างทั้งคู่ ไม่ใช่แค่ช้า** — 101: ไม่มี output เลย · CPU < 1 วินาที หลังผ่านไป **25+ นาที** · ไม่มี child process ·
+ไม่มี git process · ไม่มี `index.lock` · ไม่มี `Read-Host` ในสคริปต์ · 103: timeout ที่ 90 วินาที
+**พบ 2 instance ค้างพร้อมกัน** (ตัวหนึ่งอายุ 93 นาที) ⇒ อาการนี้เกิดซ้ำได้ ไม่ใช่ครั้งเดียว
+**ทำไมเรื่องใหญ่:** ทั้ง 2 ชุดคือกรงเดียวที่คุม `check_taskboard_archive.ps1` — สคริปต์ที่ ORDER-102/103 ลงทุนสร้าง
+tamper-integrity ให้ทั้งระบบ ⇒ **ตอนนี้ระบบนั้นไม่มีกรง** และไม่มีใครรู้ เพราะมันไม่ fail มันแค่ไม่จบ
+<sub>memory `C1_ENFORCE_HANDOFF` เขียนไว้ว่า "suite ช้า ~8-9 นาที อย่าตัดสินว่าค้างเร็วเกินไป" — คำแนะนำนั้นเลยกลายเป็น
+เกราะให้อาการค้างจริงซ่อนตัว. **และ task-notification ของ shell ที่ค้างรายงานว่า "completed exit code 0"** = false-green
+อีกใบ (คลาสเดียวกับ `writehost-stream6-swallows-detail`)</sub>
+**STEP 1:** หาสาเหตุที่ค้าง — เริ่มจากรันทีละ negative case (สคริปต์แบ่งเป็นเคสได้) หา case แรกที่ไม่คืนค่า
+**STEP 2:** ถ้าซ่อมไม่คุ้ม → **แทนที่ด้วยกรงที่รันได้จริง** แบบ `scripts/_test/run_statusclass_tests.ps1`
+(แคบ · เร็ว · เคสมาจาก corpus จริง · พิสูจน์แล้วว่า fail ได้เมื่อ revert ของที่มันคุม)
+**ห้าม:** ปล่อยให้ 2 ชุดนี้อยู่ในสถานะ "มีอยู่แต่ไม่เคยรัน" ต่อ — นั่นแย่กว่าไม่มีเลย เพราะมันดูเหมือนมีกรง ·
+รัน suite พวกนี้แบบ background แล้วรอ notification (จะได้ false-green)
+
+## ORDER-260 — [🔴 tooling/integrity] validator ตี order ที่ REVIEWED แล้วเป็น NonTerminal เพราะคำว่า "holdout" — `DONE(Claude/Opus 2026-07-26) — แก้แล้ว + มีกรงใหม่ที่พิสูจน์แล้วว่า fail ได้ · รอ review pass ก่อนย้าย`
 **bars:** N-A · **flat-lot probe:** N-A
 **บั๊ก:** `Get-StatusClass` ใน `scripts/check_taskboard_archive.ps1` เช็ค **NonTerminal ก่อน Terminal** และ pattern เป็น
 **bare substring, case-insensitive** (`$script:NonTerminalPatternsOrdered` = WAITING-USER · WAITING · CLAIMED · IN-PROGRESS · HOLD · OPEN)
