@@ -66,6 +66,65 @@ MacdDiv XAU H4 (999094) · Boss_16 Kangaroo XAU H1 · SMCxSTO EURUSD H1
 
 ---
 
+## 3.5 ส่วนขยายตาม user 2026-07-26 — symbol×TF · bias · news/macro
+
+### (ก) "ดีเฉพาะบาง symbol บาง TF" — ถูก และต้องบังคับให้เป็นระเบียบ ไม่ใช่ปล่อยให้เลือกทีหลัง
+
+z-score เป็นตัวเลขที่ไม่มีหน่วย ก็จริง แต่ *พฤติกรรมหลังแตะ 2SD* ต่างกันตาม instrument ชัดเจน:
+XAU/GBPJPY แตะแล้วมักไปต่อ (vol-cluster แรง) · EURGBP/AUDNZD แตะแล้วมักหด. นี่คือเหตุผลที่ต้อง
+**pre-register matrix ก่อนรัน** และห้ามเลือก cell หลังเห็นตัวเลข (บทเรียน Boss_16: select หลังเห็นข้อมูล = holdout ไหม้)
+
+| อาร์ม | symbol | TF | เหตุผล |
+|---|---|---|---|
+| **JOIN** (default) | XAUUSD · GBPUSD · GBPJPY · USDJPY | H1, H4 | trender/vol-cluster — 8 cell |
+| **FADE** (gated) | EURUSD · EURGBP · AUDNZD | H1, H4 | ranger — 6 cell **แต่เปิดได้ต่อเมื่อต่างจริงจาก ZSCORE** (rejection confirm หรือ z_source anchored) |
+| **HOLDOUT (ห้ามแตะ)** | XAGUSD ทุก TF · หน้าต่าง 2026H1 | — | สำรองไว้ยืนยันตอนท้าย ใช้ตอนไหน = ไหม้ตอนนั้น |
+
+**วินัยเรื่องจำนวนการทดสอบ (สำคัญกว่าที่คนส่วนใหญ่คิด):** 8-14 cell × 4 ค่า ZMin = ~50 การทดสอบ
+→ โดยบังเอิญล้วนๆ จะมี 1-3 cell ที่ PF > 1.2. ดังนั้น **cell เดี่ยวที่สวยไม่นับเป็นหลักฐาน** — ต้องผ่าน
+(1) plateau ของ cell ข้างเคียง (symbol พี่น้อง / TF ติดกัน ต้องไปทางเดียวกัน) + (2) both-window (MAIN + BWD)
+ตาม bar table เดิม. cell สวยเดี่ยวโดดๆ = จดว่า WATCH ไม่ใช่ candidate.
+
+### (ข) Bias filter สำหรับ buy/sell — 4 ชั้น เรียงจากถูกไปแพง (ใช้ของที่มีอยู่แล้วก่อน)
+
+| # | lever | มีอยู่แล้วไหม | ใช้ยังไงกับ SIGMA_ZONE |
+|---|---|---|---|
+| **B1** | `TradeDir` = LONG_ONLY / SHORT_ONLY | ✅ มีในแม่พิมพ์ | รันเป็น 2 instance แยก magic (แบบ `_18_Direction`) — ได้ทั้งการวัด asymmetry ฟรี และได้ตัวเลือก deploy ฝั่งเดียว (precedent: Boss_16 BUY-only · KAUFMAN buyonly) |
+| **B2** | **HTF direction gate** (`_19_BiasTF` + `_19_BiasMode`) | ⚠️ ต้องเขียน แต่มี precedent ตรง | **นี่คือชั้นที่คาดว่าให้ผลมากสุด.** ORDER-071 salvage: H4-MACD-direction gate ลด DD 21% → 5.5% บน entry อื่น = อะไหล่ที่พิสูจน์แล้ว. modes: `0` off · `1` HTF MA slope · `2` HTF MACD sign · `3` ADX/DI จาก `Regime.mqh` (`_50_`) |
+| **B3** | **z ไม่สมมาตร** (`_19_ZMinBuy` / `_19_ZMinSell`) | ต้องเขียน (ถูก — แค่แยกตัวแปร) | ตลาดไม่สมมาตร: XAU/หุ้น σ พุ่งฝั่งลง · JPY-carry ฝั่งขาย. บังคับ ZMin เท่ากันสองฝั่ง = ยัดสมมติฐานผิดเข้าไปตั้งแต่ต้น |
+| **B4** | session window | ✅ มี pattern จาก entry 12 (`HourFrom/To`) | ผูกกับ z_source=2 (anchored ที่เปิดเซสชัน) อยู่แล้ว — ใช้เป็น lever เดียวกัน ไม่ต้องเพิ่มของใหม่ |
+
+**กฎการใช้ bias ที่ไม่เหมือนกันสองอาร์ม (นี่คือ design decision จริง ไม่ใช่ toggle เฉยๆ):**
+- **JOIN ต้องการ bias "เห็นด้วย"** — ทะลุ 2SD ขึ้น + HTF ขึ้น = สัญญาณ; ทะลุขึ้นแต่ HTF ลง = ปล่อยผ่าน
+- **FADE ต้องการ bias "เป็นกลาง"** — ห้ามสวนตอนเทรนด์ HTF แรง (ADX สูง / slope ชัน). นี่คือคำตอบตรงๆ ของคำถาม
+  ที่บทความไม่ตอบ ("เมื่อไหร่สวน เมื่อไหร่ตาม") และเป็นสมมติฐานที่ MODE 3 AUTO จะทดสอบ
+
+**ลำดับการวัด (ห้ามสลับ):** naked ก่อน → ใส่ bias ทีละชั้น B1 → B2 → B3 → ดูว่าชั้นไหนยก PF ขณะไม้ลด.
+ใส่พร้อมกันทีเดียว = ไม่รู้ว่าตัวไหนทำงาน (บทเรียนซ้ำๆ ของ repo นี้)
+
+### (ค) News / macro — **ใช้ของเดิม ห้ามสร้างใหม่** และแยกวัดเสมอ
+
+| ชั้น | ของที่มีอยู่ | backtest ได้ไหม | ที่ทางใน SIGMA_ZONE |
+|---|---|---|---|
+| **MacroGate** (ORDER-073 Phase-3, VALIDATED) | `core/MacroGate_Core.mqh` + regime CSV + GV bridge (block-new + lot-mult) | ✅ ได้ (อ่าน CSV ในเทสเตอร์) — A/B บน Boss_12 ปี 2024 = **eqDD −54..−56%** | overlay หลัง naked ผ่านแล้ว. โปรไฟล์ที่เหมาะกับ SIGMA_ZONE: **JOIN อาจไม่อยากถูกบล็อกตอน STRESS** (vol expansion คือสิ่งที่มันกิน) — ดังนั้น A/B `mg_triggerRiskOff` และ lot-mult แทน block-new เต็ม |
+| **NewsGuard** (event blackout ±N นาที) | MT5 พร้อม attach · MT4 port ทำแล้ว | ❌ **ไม่ได้** — ในเทสเตอร์ไม่มี feed | **ห้ามนับเป็น edge เด็ดขาด.** เป็น overlay ตอน demo/live เท่านั้น และต้องจดในแถว DEPLOYMENTS ว่าเปิดอยู่ ไม่งั้นเทียบเลข demo กับ backtest ไม่ตรงแล้วงงเอง |
+
+**doctrine ที่ต้องเขียนไว้ตรงนี้:** ถ้า EA "ดีเฉพาะตอนเปิด MacroGate" แปลว่า **gate คือ edge ไม่ใช่ EA** →
+ทางที่ถูกคือเอา gate ไปทดสอบกับ EA ตัวอื่นในพอร์ต ไม่ใช่ประกาศว่า SIGMA_ZONE ผ่าน.
+(ตรรกะเดียวกับ flat-lot probe ที่จับ martingale-เป็น-edge ได้)
+
+### (ง) ลำดับงานที่แก้ใหม่
+
+```
+PHASE-A   1SD-gate เป็น filter บน 3 champion            <- ยังเป็นอันแรกเสมอ (ถูกสุด/ตอบบทความ)
+PHASE-B0  naked JOIN บน 8 cell (4 symbol x 2 TF)        <- pre-registered matrix ห้ามเพิ่ม cell ทีหลัง
+PHASE-B1  bias ทีละชั้น B1 -> B2 -> B3 บน cell ที่รอด B0
+PHASE-B2  MacroGate overlay A/B (block vs lot-mult vs off)
+PHASE-C   funnel เดิม: plateau -> both-window -> fan -> Model-4 -> MC -> corr -> demo (+NewsGuard ตอน attach)
+```
+
+---
+
 ## 4. คำแนะนำเดียว
 
 **ทำ PHASE-A ก่อน — อย่าเพิ่ง build EA.** บทความมีของจริงอยู่ชิ้นเดียวคือ "ห้ามเทรดในโซน noise" และของชิ้นนั้น

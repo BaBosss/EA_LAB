@@ -84,16 +84,54 @@ risk:
   max_drawdown_target_percent: 12.0
   daily_loss_limit_pct: 5.0
 
+# --- user extension 2026-07-26: symbol/TF specificity · bias · news-macro -------
+symbol_tf_matrix:          # PRE-REGISTERED ห้ามเพิ่ม/สลับ cell หลังเห็นตัวเลข
+  JOIN:  { symbols: [XAUUSD, GBPUSD, GBPJPY, USDJPY], tf: [H1, H4] }   # 8 cell
+  FADE:  { symbols: [EURUSD, EURGBP, AUDNZD],         tf: [H1, H4] }   # 6 cell (gated: ต้องต่างจาก ZSCORE)
+  HOLDOUT_UNTOUCHED: { symbols: [XAGUSD], window: "2026H1" }           # ใช้เมื่อไหร่ = ไหม้เมื่อนั้น
+  multiple_comparison_rule: >
+    ~50 การทดสอบ -> คาดว่ามี 1-3 cell PF>1.2 โดยบังเอิญ. cell เดี่ยวที่สวย = WATCH ไม่ใช่ candidate.
+    ต้องมี plateau ของ cell ข้างเคียง (symbol พี่น้อง / TF ติดกัน ไปทางเดียวกัน) + both-window.
+
+bias_filter:               # วัดทีละชั้น ห้ามใส่พร้อมกัน
+  B1_TradeDir:  { exists: true,  input: "TradeDir (LONG_ONLY/SHORT_ONLY)", how: "2 instance แยก magic แบบ _18_Direction" }
+  B2_HTF_gate:  { exists: false, inputs: [_19_BiasTF, _19_BiasMode],
+                  modes: { 0: off, 1: "HTF MA slope", 2: "HTF MACD sign", 3: "ADX/DI จาก Regime.mqh _50_" },
+                  precedent: "ORDER-071 H4-MACD-direction gate ลด DD 21%->5.5% (อะไหล่ที่พิสูจน์แล้ว)" }
+  B3_asym_z:    { exists: false, inputs: [_19_ZMinBuy, _19_ZMinSell],
+                  why: "ตลาดไม่สมมาตร (XAU sigma พุ่งฝั่งลง / JPY carry) — บังคับเท่ากัน = ยัดสมมติฐานผิด" }
+  B4_session:   { exists: true,  pattern: "entry 12 HourFrom/To", note: "ผูกกับ z_source=2 (anchored เปิดเซสชัน)" }
+  asymmetric_rule: >
+    JOIN ต้องการ bias 'เห็นด้วย' (ทะลุขึ้น + HTF ขึ้น) · FADE ต้องการ bias 'เป็นกลาง'
+    (ห้ามสวนตอน HTF เทรนด์แรง). = คำตอบของคำถามที่บทความไม่ตอบ และเป็นสมมติฐานที่ MODE 3 AUTO ทดสอบ.
+
+news_macro_overlay:        # ใช้ของเดิม ห้ามสร้างใหม่ · วัดแยกหลัง naked ผ่านแล้วเสมอ
+  MacroGate:
+    module: "core/MacroGate_Core.mqh (ORDER-073 Phase-3 VALIDATED)"
+    backtestable: true       # อ่าน regime CSV ในเทสเตอร์ได้ · A/B Boss_12 ปี 2024 = eqDD -54..-56%
+    ab_axis: ["off", "lot-mult only", "block-new", "mg_triggerRiskOff on/off"]
+    note: "JOIN กิน vol-expansion — การบล็อกตอน STRESS อาจตัดไม้ที่ดีที่สุดทิ้ง ต้อง A/B ไม่ใช่เปิดตามความเชื่อ"
+  NewsGuard:
+    backtestable: false      # เทสเตอร์ไม่มี feed
+    rule: "ห้ามนับเป็น edge · overlay ตอน demo/live เท่านั้น · ต้องจดในแถว DEPLOYMENTS ว่าเปิดอยู่"
+  doctrine: >
+    ถ้า EA ดีเฉพาะตอนเปิด MacroGate => gate คือ edge ไม่ใช่ EA -> เอา gate ไปเทสกับ EA ตัวอื่นในพอร์ต
+    ห้ามประกาศว่า SIGMA_ZONE ผ่าน. (ตรรกะเดียวกับ flat-lot probe ที่จับ martingale-เป็น-edge)
+# -------------------------------------------------------------------------------
+
 optimizable_inputs:
   - _19_ZMin        # {1.5, 2.0, 2.5, 3.0}   <- no-trade band
   - _19_Period      # {20, 50, 100}          <- หน้าต่างของ MA/StdDev
   - _19_ExpRatio    # {1.0, 1.2, 1.5}        <- ตัวแยก expanding/contracting
   - _19_ZSource     # {1,2,3}                <- lever ที่ทำให้ต่างจาก ZSCORE จริง
+  - _19_BiasMode    # {0,1,2,3}              <- B2 (วัดหลัง naked)
+  - _19_ZMinBuy / _19_ZMinSell   # B3 asymmetry (วัดหลัง B2)
   - TF              # {H1, H4}
 non_optimizable:
   - "trigger_rule (CLOSE-CONFIRMED เสมอ)"
   - "SL ต้องมีเสมอ"
   - "max_positions_per_side = 1 ในรอบ validate แรก"
+  - "symbol_tf_matrix (pre-registered — ห้ามเพิ่ม cell หลังเห็นตัวเลข)"
 
 rejection_conditions:      # เขียนล่วงหน้า ก่อนเห็นตัวเลข (pre-registered)
   - "PHASE-A: 1SD-gate ทำให้ PF ของ EA ที่ validate แล้ว *ลดลง* ทั้ง 3 ตัว -> ข้ออ้างหลักของบทความ
@@ -112,9 +150,17 @@ validation_plan:
     - "A/B ZMin {0(off), 1.0, 1.5, 2.0} บน 3 EA ที่ผ่าน funnel แล้ว:
        MacdDiv XAU H4 (999094) · Boss_16 Kangaroo XAU H1 · SMCxSTO EURUSD H1"
     - "อ่านผลที่ 'PF ที่รักษาไว้ได้ต่อจำนวนไม้ที่ตัดทิ้ง' — filter ที่ดีต้องยก PF ขึ้นขณะไม้ลด"
-  phase_B_build_if_earned:
-    - "1. smoke JOIN บน XAU H1/H4 + GBPUSD (บ้าน trender) Model 1, naked"
-    - "2. ladder >=3 lever x 2 TF (ZMin · Period · ExpRatio) MAIN + BWD"
-    - "3. plateau-center .set -> both-window -> sensitivity fan"
-    - "4. Model-4 บังคับ (entry ที่ขอบแบนด์ = fill-sensitive)"
-    - "5. MC (ruin <=2%) -> corr vs cohort -> demo"
+  phase_B0_naked_matrix:
+    - "smoke JOIN naked บน 8 cell ตาม symbol_tf_matrix (Model 1) — ไม่มี bias ไม่มี overlay"
+    - "ladder >=3 lever x 2 TF (ZMin · Period · ExpRatio) MAIN + BWD บน cell ที่ผ่านบาร์"
+  phase_B1_bias:
+    - "ใส่ทีละชั้น B1 -> B2 -> B3 บน cell ที่รอด B0 · อ่านผลที่ 'PF ขึ้นขณะไม้ลง'"
+    - "ห้ามใส่พร้อมกัน (ไม่งั้นไม่รู้ว่าชั้นไหนทำงาน)"
+  phase_B2_overlay:
+    - "MacroGate A/B: off | lot-mult | block-new | triggerRiskOff on-off"
+    - "ถ้าผ่านเฉพาะตอน gate เปิด -> gate คือ edge -> ย้ายไปเทส gate กับ EA อื่น ไม่ใช่ผ่าน"
+  phase_C_funnel:
+    - "plateau-center .set -> both-window -> sensitivity fan"
+    - "Model-4 บังคับ (entry ที่ขอบแบนด์ = fill-sensitive)"
+    - "MC (ruin <=2%) -> corr vs cohort -> demo (NewsGuard attach ตรงนี้ + จดใน DEPLOYMENTS)"
+    - "HOLDOUT (XAGUSD / 2026H1) แตะได้ครั้งเดียวตอนท้ายเท่านั้น"
