@@ -43,11 +43,22 @@ losers). **So you cannot size this up safely.**
 **Idea seeds:** more profit comes from DIVERSIFICATION not leverage — run the engine small on other
 liquid rangers (EURUSD/EURGBP) per-symbol tuned, and combine uncorrelated legs in a portfolio.
 
-### MG_v1 MatchaGrid — CHFJPY M15 (CORE) 🟨
-**Mechanism (hypothesis):** bounded grid with hard SL on a range-bound cross.
+### MG_v1 MatchaGrid — CHFJPY M15 (PARKED-VERIFY(user) since 2026-07-25) 🟥
+> ⚠️ **This entry said `CORE` until 2026-07-26 — it was stale by a day against the scorecard and
+> EA_MASTER_INDEX, which both moved to `PARKED-VERIFY(user)` in ORDER-215 part 1.** Corrected here
+> rather than banner-patched, per the ORDER-214 lesson: if the row still reads CORE, people read CORE.
+**Mechanism (hypothesis — and note how much of it is still hypothesis):** bounded grid with hard SL
+on a range-bound cross.
 **Why edge:** CHFJPY oscillates in a range; the grid harvests the back-and-forth, the **bounded
 steps + SL cap the breakout tail** (this is why it passed deep-val where naked grids DQ).
-**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds (SL caps it, not ruin).
+**🔴 The load-bearing part of that claim is unverified (ORDER-215 recon, 2026-07-26):** MatchaGrid is
+**closed source** — `.ex5` only, no `.mq5` anywhere. The "bounded + SL" property that keeps it out of
+the uncapped-ruin bin rests entirely on `InpCutLossMode=0`, an input found only by reading rendered
+report headers, **whose meaning is documented nowhere in this repo**. Every archived run also sits at
+`Model=1`; there has never been a Model-4 run of this EA, and doctrine treats a grid measured below
+Model-4 as not evidence at all. So the safety claim is a hypothesis wearing a verdict's clothes.
+**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds (SL caps it, *if* the SL
+is what we think it is — see above).
 **Idea seeds:** "bounded + SL" is the safe way to run a range harvester — the template for taming
 any grid/martingale that screened well but DQ'd on uncapped tail.
 
@@ -441,3 +452,81 @@ and a *symmetric* weakness — not where the host is already regime-split.
 
 Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[08]` block) · sets
 `_mt5_auto/ab_sets/order217/` · reports `_mt5_auto/reports/O217_*`.
+
+## LEVER: Kaufman ER regime gate ported onto SuperTrendFlip (rev02, 2026-07-26) 🟩 CONFIRMED both-window (XAU H4)
+
+**Where it came from.** Cells #13/#14/#15 of ORDER-GEN-STANDING all showed the same failure shape —
+the SuperTrend flip fires in chop (BTC H1 has *no* plateau without a trend filter; XAU BWD is
+break-even). This catalog already recorded the fix for this exact family: `EA_KAUFMAN_ER` (ER>0.30
+gate + SuperTrend signal) scored PF 2.34/50t on XAUUSD H4 where naked `EA_SUPERTREND` scored
+1.92/33t at corr 0.946 — same edge, ER version dormant in ranging periods. So: port the gate as a
+lever instead of keeping two EAs.
+
+**The lever.** `_03_UseER` (default false) + `_03_ErPeriod` + `_03_ErMin` in
+`(TRD)_SuperTrendFlip_rev02`. ER = |close[1]−close[1+N]| / Σ|close[i]−close[i+1]| over closed bars,
+in [0..1]: 1 = straight move, ~0 = chop. Blocks **entry only**; open-position management untouched.
+Unmeasurable ER (data hole / zero path length) = gate closed, never "pass". `OnInit` refuses
+`ErMin>=1.0` or `ErPeriod<2` loudly — a gate that can never open would otherwise emit 0-trade
+passes that read as "no signal" instead of "impossible setting".
+
+**Regression cage passed byte-exact:** rev02 with the gate off = rev01 on XAUUSD H4 MAIN M4
+(PF 1.51 / 211t / +1372.94 / eqDD 2.96 / bars 4637), confirmed across two different terminal lanes.
+
+**Result — Model-4, XAUUSD H4, ErPeriod=8 / ErMin=0.20:**
+
+| window | baseline (rev01) | ER 8/0.20 |
+|---|---|---|
+| MAIN 2023.01–2025.12 | 1.51 / 211t / +1372.94 / DD 2.96% | **1.62 / 156t / +1142.32 / DD 2.11%** |
+| BWD 2020.01–2022.12 | 1.03 / 206t / +58.91 / DD 4.60% | **1.09 / 163t / +134.18 / DD 4.50%** |
+
+PF up on both windows, MAIN drawdown down a third, BWD net 2.3×. Per-trade edge: MAIN 6.51 → 7.32,
+BWD 0.29 → 0.82. **Cost: 26% of trades and 17% of MAIN absolute net.** The gate buys quality, not
+more money — on a fixed lot it is a *risk-adjusted* win, and its value is realized only if the freed
+capacity is spent elsewhere (or the lot is raised, which is a separate decision with its own gate).
+
+**The finding that matters more than the numbers — how the sweep tried to fool us.** Over 20 combos
+(ErPeriod 8/12/16/20 × ErMin 0.20–0.40) the pattern is monotone and it is a trap:
+- **Long ER window (12–20) fits MAIN and kills BWD.** Best MAIN of the whole sweep is
+  ErPeriod=12/ErMin=0.20 at **PF 2.405 / 105t / +1488.66** — better MAIN than baseline on half the
+  trades. Its **BWD is 0.838, net −165.61**. Selecting on MAIN alone adopts a losing config.
+- **Short ER window (8) improves both windows modestly.** That is the only both-window family.
+- Every row showing PF 2.5–3.8 has **n = 6–30 trades**. Arithmetic, not edge.
+
+**Rule this earns:** a chop filter must be judged on the window it was *not* tuned on, and its
+window-length parameter is the axis that decides whether it is a filter or a curve-fit. Pre-register
+"must improve both windows" *before* reading the sweep — the same trap caught the Donchian lever on
+XAU the same afternoon (below).
+
+Source: `ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev02.mq5` (`[03b]` block) ·
+sets `_mt5_auto/ab_sets/genstanding_stf/STF_XAU_H4_er*.set` · reports `ER8_XAU_H4_*_M4`,
+optimizations `ER_XAU_H4_{MAIN,BWD}.xml`.
+
+## LEVER: Donchian-break confluence on a SuperTrend flip (2026-07-26) 🟨 SYMBOL-SPECIFIC — adopt on BTC H4, reject on XAU H4
+
+**The lever** (already coded in rev01, never tested until now): `_01_UseDonchian` + `_01_DonBars` —
+the flip only counts as an entry if the signal bar also breaks the prior N-bar Donchian range.
+
+**It splits by symbol, in opposite directions, on the same afternoon and the same EA:**
+
+| | MAIN | BWD | read |
+|---|---|---|---|
+| XAUUSD H4 baseline | 1.51 / 211t | 1.03 / 206t | — |
+| XAUUSD H4 + Don(20) | **2.37 / 30t** (M1) | **0.48 / −230.53** (M1) | ⬛ **reject** — every DonBars value 20/40/60/80/100 is net-negative on BWD (PF 0.31–0.67) |
+| BTCUSD H4 baseline | 1.591 / 100t | 1.35 / 91t | — |
+| BTCUSD H4 + Don(20) | 1.510 / 34t | **3.510 / 40t / +451.74** | 🟩 **adopt (build-on)** — BWD PF 2.6×, net 2×, on 44% of the trades |
+
+BTC per-trade net over both windows: **4.1 → 9.1**. DonBars 40–100 keep only 6–10 trades per window
+on both symbols — discard the whole tail, it is noise wearing a PF of 5–8.
+
+**Why the split is believable rather than luck.** Requiring a range break demands *expansion*
+confirming the flip. Crypto's trends start with expansion, so the filter keeps the real ones; gold's
+H4 flips more often begin inside the prior range and expand later, so the same filter cuts the
+entries that would have worked and keeps the late ones — which is exactly what a BWD collapse from
+1.03 to 0.48 looks like.
+
+**Caveat carried with the BTC number:** n = 34/40 · MAIN's two 2025 half-years are **0.24 and 0.36**
+(the aggregate 1.51 hides a hostile recent regime) · `swap-unadjusted` (BTC long −14.67%/yr real vs
+0 in the tester, and ExitMode=0 holds for long stretches). BUILD-ON, not deploy-ready.
+
+Source: sets `_mt5_auto/ab_sets/genstanding_stf/STF_{XAU,BTC}_H4_don*.set` · reports
+`DON20_BTC_H4_*` · optimizations `DON_{XAU,BTC}_H4_{MAIN,BWD}.xml`.

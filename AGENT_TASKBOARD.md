@@ -485,7 +485,17 @@ plateau evidence`) พร้อมเหตุผล 1 บรรทัด. **ค
 **⇒ นี่คือเหตุผลที่ผมไม่ตีตก:** ตัวเลข **2.08 ที่ scorecard อ้าง มาจากขา OOS ที่สะอาด** — selection สกปรก แต่ confirmation
 สะอาด. โครงสร้างแบบนี้ "อ่อน" ไม่ใช่ "เท็จ". แต่ **CORE ยืนบนขาเดียวไม่ได้** โดยเฉพาะเมื่อ EA เป็น **grid** ที่
 doctrine บังคับ Model-4 ก่อน verdict และยังไม่เคยมี flat-lot probe เลย ⇒ downgrade เป็น **PARKED-VERIFY(user)**
-**PART 2 ที่ยังค้าง (สเปกพร้อมรัน):** clean-MAIN `2023.01.01–2025.12.31` re-measure + fan ±20% ทุกแกน + **flat-lot probe**
+**🔴 PART 2 — สั่งลำดับใหม่ 2026-07-26 (Claude/Opus) หลัง recon: `_triage/ORDER215_MATCHAGRID_RECON.md`**
+recon เจอ 3 อย่างที่ทำให้ "re-measure PF ก่อน" เป็นลำดับที่ผิด:
+1. **MatchaGrid ปิดซอร์สจริง** — มีแต่ `.ex5` ใน `D:\Meta 5b` + roaming ไม่มี `.mq5` ที่ไหนเลย
+2. **ไม่เคยมี Model-4 run สักครั้ง** — ini ทั้ง 14 ใบเป็น `Model=1` ⇒ ตาม doctrine 2026-07-17 grid ที่วัดต่ำกว่า M4
+   **ไม่ใช่หลักฐานเลย** ⇒ แปลว่าตัวเลขทุกตัวที่เคยเขียนถึง EA นี้ รวม 2.08 ที่ใช้ปกป้องมัน อยู่ใต้มาตรฐานหลักฐานของเราเอง
+3. **คำว่า "bounded grid + hard SL" — คือสิ่งเดียวที่กันมันจาก uncapped-ruin — แขวนอยู่บน `InpCutLossMode=0`**
+   ซึ่งเป็น input ที่เจอได้จากการอ่าน header ของ report เท่านั้น และ **ไม่มีเอกสารที่ไหนในรีโปบอกว่าโหมด 0 แปลว่าอะไร**
+⇒ **คำถามที่ต้องตอบก่อนคือ "มันตัดจริงไหม" ไม่ใช่ "PF เท่าไหร่"** — เป็นคำถามเดียวกับ ORDER-222 เป๊ะ และตอบได้ถูกกว่ามาก:
+ดันความเสี่ยงจนขาดทุนลึก แล้วดูว่ามีการปิดยกตะกร้าเกิดขึ้นไหม (probe แบบ `scripts/order222_cutloss_probe.ps1`).
+**ถ้าไม่มีการตัด = DEAD-STRUCTURAL บนเงินจริง ต้องแจ้ง user ทันที ไม่ต้องรอ funnel** · ถ้ามีการตัด ค่อยจ่ายคิว M4 ที่แพงข้างล่าง
+**สเปก funnel เดิม (ยังใช้ได้ แต่เป็นขั้นที่ 2):** clean-MAIN `2023.01.01–2025.12.31` re-measure + fan ±20% ทุกแกน + **flat-lot probe**
 (grid ⇒ ต้องรู้ว่า edge อยู่ที่สัญญาณหรือที่ escalation) + **Model-4** ทั้งสองหน้าต่าง. ⚠️ M15 × 3 ปี × grid = คิว M4 หนัก
 และเครื่องชน memory ceiling อยู่ (ดู ORDER-210) → **แตก sub-window ตั้งแต่แรก อย่าเพิ่งยิงรวดเดียว**
 **bars:** pass = clean MAIN ≥1.2 **และ** BWD ≥1.0 บน M4 + fan ≥70% ถือ ⇒ คืนสถานะได้ · dead = clean MAIN <1.0
@@ -927,6 +937,31 @@ terminal คืน `"no disk space in ticks generating function"` (journal ข�
 **pattern ที่เริ่มเห็น (ยังไม่ใช่ข้อสรุป — n=3 cell):** H4 > H1 ทั้งสองสินค้า · สมมติฐาน user ว่า non-FX เหมาะกับ
 SuperTrend **มีน้ำหนักขึ้นจริงที่ฝั่ง BWD** (BTC H4 = 1.35 ดีกว่า XAU 1.03) แต่ **ไม่มี cell ไหนที่ plateau แข็ง
 พร้อม BWD แข็งในตัวเดียวกัน** — ต้องรอ cell โลหะ/ดัชนี/น้ำมัน (#16-#18, #20-#24) ก่อนจะสรุปอะไรได้
+
+#### 🔧 LEVER A/B 2026-07-26 (user สั่ง "ทำทั้งคู่") — Donchian + Kaufman ER บน SuperTrendFlip
+
+**ทำไมหยุดกวาด cell แล้วมาแก้ entry ก่อน:** cell #13/#14/#15 ให้อาการเดียวกันหมด = **flip ยิงตอน chop**
+(BTC H1 ไม่มี plateau เลยถ้าไม่มี trend filter · XAU BWD เสมอตัว) ⇒ เพิ่มสินค้าใหม่ = คูณจุดอ่อนเดิม
+รายละเอียดกลไก + ตัวเลขเต็ม 2 lever = **`EDGE_CATALOG.md`** (2 entry ใหม่ท้ายไฟล์)
+
+**1. Donchian confluence** (`_01_UseDonchian` — coded ใน rev01 มาแต่ต้น ยังไม่เคยเทส) → **แยกตามสินค้า:**
+- ⬛ **XAU H4 = ทิ้ง** — MAIN 1.51→**2.37** สวยขึ้นชัด แต่ BWD 1.03→**0.48 ติดลบทุกค่า DonBars** = selection-fit
+- 🟩 **BTC H4 = adopt (build-on)** — M4 ยืนยัน: BWD **1.35→3.510** (+451.74) MAIN 1.591→1.510 · กำไรต่อไม้ 4.1→**9.1**
+  · `.set` = `STF_BTC_H4_don20.set` · caveat: n=34/40 · MAIN สองครึ่งปีของ 2025 = 0.24/0.36 · `swap-unadjusted`
+
+**2. Kaufman ER regime gate** = **`(TRD)_SuperTrendFlip_rev02.mq5` ใหม่** (`[03b]` block, default-off,
+compile 0/0, ผ่าน `mql-code-reviewer`) — rev01 **ไม่แตะเลย** เพื่อให้หลักฐาน 3 cell ที่เพิ่งได้ยังใช้ได้
+- **regression cage ผ่านเป๊ะ:** rev02 ปิด gate = rev01 ทุกหลัก (1.51/211t/+1372.94/DD 2.96/bars 4637) รันคนละเลนด้วย
+- 🟩 **ผ่านทั้งสองหน้าต่างบน XAU H4** (ErPeriod=8/ErMin=0.20, M4): MAIN 1.51→**1.62** (DD 2.96→**2.11**) ·
+  BWD 1.03→**1.09** (net 58.91→**134.18**) · ต้นทุน = ไม้หาย 26% และ net MAIN ลง 17% ⇒ **ซื้อคุณภาพ ไม่ใช่ซื้อกำไร**
+- **⚠️ กับดักที่เกือบโดน:** config ที่ชนะ MAIN แรงสุด (ErPeriod=12/ErMin=0.20) ให้ MAIN **2.405/105t/+1488**
+  แต่ BWD **0.838 ติดลบ −165** — pattern ทั้งตาราง: **ER window ยาว = ฟิต MAIN ฆ่า BWD · window สั้น = ดีขึ้นพอประมาณทั้งคู่**
+  · ทุกแถวที่ PF 2.5-3.8 มี n = 6-30 ไม้ = arithmetic ไม่ใช่ edge
+- **กฎที่ได้:** chop filter ต้องตัดสินบนหน้าต่างที่ไม่ได้จูน และ **pre-register "ต้องดีขึ้นทั้งสองหน้าต่าง" ก่อนเปิดดูผล**
+  (บ่ายเดียวกันกับดักนี้จับ Donchian-on-XAU ไปแล้วหนึ่งดอก)
+
+**ยังไม่ทำ (คิวถัดไป):** ER gate บน BTC H4/H1 · ER+Donchian ซ้อนกันบน BTC (ระวัง n) · pyramid บน BTC H4
+(host เดียวที่ BWD >1.0 สบาย ๆ ตาม `escalation-overlay-needs-strong-bwd-host`) · แล้วค่อยกลับไปกวาด cell #16-#24
 
 **⚠️ หนี้ที่ทิ้งไว้ให้ cell ที่เหลือของชุดนี้ (ไม่ใช่แค่ cell นี้):** `STF_gen_nonfx.set` sweep `_02_TpAtrMult`/`_02_SlAtrMult`
 พร้อม `_02_ExitMode` ทั้ง 3 ค่า และ sweep `_03_EmaPeriod` พร้อม `_03_UseEma` — **ทุก cell จะเจอแกนตายชุดเดียวกัน**

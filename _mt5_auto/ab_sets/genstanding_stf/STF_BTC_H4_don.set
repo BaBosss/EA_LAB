@@ -1,0 +1,24 @@
+; STF_BTC_H4_don.set — A/B lever: Donchian confluence (Stage B) บน plateau-centre ของ cell #13
+; 2026-07-26 · baseline = STF_BTC_H4_locked.set (M4 MAIN 1.591/100t ซอย · BWD 1.35/91t)
+; เปลี่ยนอย่างเดียวจาก baseline = UseDonchian=true + sweep DonBars · swap-unadjusted
+; combos = DonBars(5) -> Optimization=1 (complete)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=14||14||0||14||N
+_01_Mult=2.5||2.5||0||2.5||N
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=true||true||0||true||N
+_01_DonBars=60||20||20||100||Y
+_02_ExitMode=0||0||0||0||N
+_02_TpAtrMult=4.0||4.0||0||4.0||N
+_02_SlAtrMult=1.0||1.0||0||1.0||N
+_03_UseEma=true||true||0||true||N
+_03_EmaPeriod=250||250||0||250||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

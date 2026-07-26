@@ -1,0 +1,28 @@
+; STF_XAU_H4_rev02_off.set — REGRESSION CAGE ของ rev02: ปิด ER gate แล้วต้องได้ผลเท่า rev01 เป๊ะ
+; 2026-07-26 · ค่าอื่นทั้งหมด = STF_XAU_H4_locked.set (rev01 M4 MAIN PF 1.51 / 211t / +1372.94)
+; ⚠️ ต้องระบุ input ครบทุกตัวรวม _03_UseER — input ที่ไม่อยู่ใน .set จะถูกดึงจาก per-terminal cache
+;    เงียบ ๆ ไม่ใช่ค่า default ในซอร์ส (memory mt5-tester-cache-nondeterminism)
+; ถ้าเลขไม่ตรง rev01 = rev02 เปลี่ยนพฤติกรรมโดยไม่ได้ตั้งใจ -> หยุด อย่าเชื่อผล ER A/B
+
+_00_OptimizeMode=false
+_01_AtrPeriod=18
+_01_Mult=2.0
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=1
+_02_TpAtrMult=5.0
+_02_SlAtrMult=1.0
+_03_UseEma=false
+_03_EmaPeriod=150
+_03_UseER=false
+_03_ErPeriod=10
+_03_ErMin=0.30
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false
