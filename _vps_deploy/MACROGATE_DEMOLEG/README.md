@@ -18,6 +18,14 @@
 > you cannot separate "gated the right moments" from "simply traded less" — the symbol is not the
 > binding constraint, the host is. Judge the gate on a host with positive expectancy, or not at all.
 >
+> **⚠️ ATTESTATION GAP STILL OPEN (2026-07-26).** A `.set` was saved on the VPS and dropped into
+> this folder, but it turned out to be the **MacroGate watchdog's** inputs
+> (`InpRegimeFile / InpMagicsCsv=990120 / InpLotMult=0.5 / InpStaleMaxHours=200`), not this leg's.
+> It was moved to `_vps_deploy/MACROGATE/MacroGate_watchdog_asdeployed_2026-07-26.set`, where it
+> is genuinely useful — it locks the watchdog config, which was also undocumented.
+> **This bundle still has no `.set`.** To close it, Save from the `Boss_12_Breakout - USDJPYm,H1`
+> chart specifically (the leg being gated), not from the `(Boss)_MacroGate` chart (the gate).
+>
 > **What this leg is still good for, and the only reason to keep it:** we have never seen the
 > GlobalVariable bridge fire on a live terminal during a real risk-off (only in the tester —
 > `regime loaded: 262 row(s)`, 25,105 block events). Keep it attached as a **plumbing sensor**.
