@@ -46,11 +46,56 @@
 **bars (ใช้ทุก cell):** pass ≥ **1.2** · กลาง(WATCH) **1.0–1.2** · dead < **1.0** — **เป็นแค่ป้ายจัดกอง ไม่ใช่ verdict**
 **flat-lot probe:** ต่อ cell — N-A ถ้า EA เป็น single-order · ถ้ามี escalation ต้องรัน flat-lot reference ควบทุก cell
 
-**RUN TEMPLATE:** `<Claude เติม: คำสั่งรัน 1 บรรทัดที่ copy ไปวางได้ + path report + วิธี parse>`
+### MATRIX ชุดที่ 1 (Claude เติม 2026-07-25) — Boss_14 GridLog symbol-screen ต่อจาก ORDER-095
+
+**ที่มา:** ORDER-095 §"ขยายได้" + line "ORDER-095 ทำแค่ 1/6 EA". Boss_14 = ตัวเดียวในคลังที่**พิสูจน์แล้วว่า
+เดินทางข้ามคู่เงินได้จริง** (DEMO 6 symbol: AUDNZD/USDJPY/EURJPY/AUDCAD/CADJPY/EURUSD + live GBPJPY)
+→ คุ้มที่สุดที่จะกวาดคู่ที่ยังไม่เคยแตะ. ⚠️ **ไม่ใส่ EA_SUPERTREND ทั้งที่ ORDER-095 list ว่า "ขยายได้"** —
+scorecard L190 ระบุ "SuperTrend DEAD ใน signal hunt = คู่เงินอื่น; XAU H4 ตัวนี้รอด" = ขยายคู่เงินตายไปแล้ว
+(ORDER-095 list ตรงนั้น stale — Claude แก้ตอน review รอบหน้า)
+
+**สิ่งที่ cell นี้ตอบ = step 1 ของ ORDER-095 methodology เท่านั้น** ("flat-lot smoke บน symbol candidate →
+เอาที่ entry PF>1") — **ไม่ใช่** IS/OOS, ไม่ใช่ corr, ไม่ใช่ deploy. สองอันหลัง = งาน Claude หลัง review
+
+**RUN TEMPLATE** (แทน `{SYM}` ด้วย symbol ในแถว · รันทีละแถว · **สองรอบต่อแถว: A แล้ว B**):
+```powershell
+# A = flat-lot probe (StackMode=90 single) — ตัวชี้ว่า ENTRY มี edge ไหม (บรรทัดที่ใช้ตัดสินจริง)
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
+  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
+  -ReportName GEN_{SYM}_H1_MAIN_flat
+#    ↑ แก้ในไฟล์ .set สำเนา: StackMode=90 (เดิม 92) — อย่าแก้ไฟล์ต้นฉบับ ให้ copy เป็น *_flat.set ก่อน
+# B = grid ปกติ (StackMode=92, .set เดิมไม่แก้) — ตัวชี้ว่าทั้งระบบทำเงินไหม
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "EALabTpl\Boss_14_GridLog" -Symbol {SYM} `
+  -Period H1 -FromDate 2023.07.01 -ToDate 2026.07.01 -Model 4 `
+  -SetFile D:\EA_LAB\ea_template\sets\Boss14_GridLog_AUDNZD_DEMO.set `
+  -ReportName GEN_{SYM}_H1_MAIN_grid
+```
+- **ต้องปิด MT5 GUI ก่อนรัน** ไม่งั้น script abort เอง (`docs/MT5_AUTOMATION.md`)
+- **parse เอาแค่ 4 ตัวเลข** จาก report: `Profit factor` · `Total trades` · `Balance DD relative %` · `Total net profit`
+  — **ห้ามโหลด html ทั้งไฟล์เข้า context** (§5.5 ข้อ 3)
+- ⚠️ base .set = AUDNZD DEMO เพราะ step เป็น **ATR-adaptive** (`_9_StepUseATR=true`) จึงพกข้ามคู่ได้ —
+  **นี่คือ assumption ของ Claude ไม่ใช่ config ที่ tune มาเพื่อคู่นั้น** → ผลที่ได้ = screening หยาบตามนิยาม
+- **{SYM} ไม่มี history** (คู่ exotic บาง broker ไม่มี) → เขียนช่องผล = `NO-DATA` แล้วไปแถวถัดไป **ไม่ใช่ BLOCKED**
 
 | # | EA | symbol | TF | window | lever/หมายเหตุ | ผล |
 |---|---|---|---|---|---|---|
-| — | _(ว่าง — Claude ต้องเติม ≥10 cell ก่อนหมดโควตาทุกรอบ)_ | | | | | |
+| 1 | Boss_14_GridLog | NZDJPY | H1 | MAIN 2023.07–2026.07 | A flat(90) + B grid(92) | |
+| 2 | Boss_14_GridLog | CADCHF | H1 | MAIN | A + B | |
+| 3 | Boss_14_GridLog | GBPCAD | H1 | MAIN | A + B | |
+| 4 | Boss_14_GridLog | EURAUD | H1 | MAIN | A + B | |
+| 5 | Boss_14_GridLog | AUDCHF | H1 | MAIN | A + B (ORDER-095 เคย BLOCKED-ON-DATA เพราะ **BWD** — MAIN น่าจะมี) | |
+| 6 | Boss_14_GridLog | NZDCAD | H1 | MAIN | A + B (เหตุผลเดียวกับ #5) | |
+| 7 | Boss_14_GridLog | CHFJPY | H1 | MAIN | A + B | |
+| 8 | Boss_14_GridLog | GBPCHF | H1 | MAIN | A + B (เหตุผลเดียวกับ #5) | |
+| 9 | Boss_14_GridLog | EURNZD | H1 | MAIN | A + B | |
+| 10 | Boss_14_GridLog | AUDUSD | H1 | MAIN | A + B | |
+| 11 | Boss_14_GridLog | USDCAD | H1 | MAIN | A + B | |
+| 12 | Boss_14_GridLog | GBPNZD | H1 | MAIN | A + B | |
+
+**อ่านผลยังไง (worker แค่ติดป้าย ไม่ตัดสิน):** `A ≥ 1.2` = entry มี edge ที่คู่นี้ → น่าสนใจ · `A < 1.0 แต่ B > 1`
+= **grid ปั้นให้ ไม่ใช่ edge** ติดป้าย `ESCALATION-ONLY` (VERDICT GATE ข้อ 1 — แต่ **ห้าม**เขียนว่า DEAD เอง) ·
+ทั้งคู่ < 1.0 = ติดป้าย `no-pulse` · **ทุกป้าย = ป้ายจัดกอง Claude ตัดสินจริงตอน review**
 
 **ผลของ order นี้ = screening ดิบเท่านั้น** — ห้ามใช้เป็นหลักฐาน promote/kill อะไรทั้งสิ้นจนกว่า Claude review
 (ยังไม่ผ่าน ladder · ไม่ใช่ plateau · n อาจไม่พอ)
