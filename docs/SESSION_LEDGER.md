@@ -28,6 +28,7 @@
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
 | `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00 | **240-249** | `AGENT_TASKBOARD.md` (แถว ORDER-GEN-STANDING) · `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` · `_mt5_auto/**` | ไม่ทราบ | `ACTIVE` |
+| `S-2026-07-26-TRIAGE-B` | 2026-07-26 18:45 | **270-279** (สำรอง — งานนี้ปิดใบเก่า ไม่เปิดเลขใหม่) | `scripts/check_taskboard_archive.ps1` · `AGENT_TASKBOARD.md` · `ARCHIVE_TASKBOARD_2026-07A.md` · `docs/memory_control/ARCHIVE_*` · `TASKBOARD_DIGEST.md` | ไม่ใช้ | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.
@@ -45,4 +46,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **270-279** (253-259 เว้นกันชน)
+- บล็อกถัดไปที่จองได้ = **280-289** (253-259 เว้นกันชน)
