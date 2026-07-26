@@ -374,7 +374,34 @@ mql-code-reviewer PASS · compile 0/0 · ผมอ่าน diff เองแล
 `_backup_before_o217\`. รวมวันนี้เจอ stale artifact **3 จุด** (Boss_16 ex5 · MacdDiv roaming pair · และ input-cache เดิม)
 → **ORDER-221**
 
-## ORDER-221 — [ops/integrity] กวาด compiled artifact ที่เก่าค้างทุกจุด — `OPEN`
+## ORDER-221 — [ops/integrity] กวาด compiled artifact ที่เก่าค้างทุกจุด — `DONE + REVIEWED(Claude/Opus 2026-07-26)` · `scripts/check_stale_binaries.ps1`
+
+**เจอของที่เปลี่ยนวิธีอ่านหลักฐานทั้งหมด — วัดเองแล้ว ไม่ใช่เดา: MQL5 compile ไม่ deterministic.**
+compile `ea_template\tests\AcctGate_Test.mq5` 5 ครั้งจากซอร์สที่ไม่แตะเลย ได้ **hash ต่างกันทั้ง 5 และ
+ขนาดไฟล์ต่างกันทั้ง 5** (60870 / 60076 / 60802 / 60258 / 60950 ไบต์). ⇒ **hash ที่ต่างกันระหว่างสำเนา
+ไม่ใช่หลักฐานว่าโค้ดต่างกัน** มันคือผลปกติของการ compile สองครั้ง. สเปกใบนี้สั่งให้รายงาน hash mismatch
+เป็นความผิด — ถ้าทำตามตรง ๆ จะได้ **111 finding ปลอมทุกวัน** = detector ตัวใหม่ที่ถูกปิดหูภายในสัปดาห์เดียว
+ซึ่งคือความล้มเหลวที่ ORDER-218 เพิ่งบันทึกไว้เอง ⇒ downgrade เป็น `HASH_DIFFERS` **advisory ไม่ทำให้ fail**
+**สิ่งที่ hash ยังทำได้ และ ORDER-213 ยังถูกต้อง:** เทียบ "ไฟล์ที่กำลังจะลากขึ้นชาร์ต" กับ "ไฟล์ที่เทสไป"
+= เทียบไฟล์เดียวกันข้ามการ copy ไม่ใช่ build กับ build ⇒ precedent hash-ใน-README รอด ไม่ต้องแก้
+**scope = ทั้งหมดของงานนี้:** รอบแรก agent ชี้ roaming เป็น `Terminal\*` ได้ 1,313 ไฟล์ / 530 finding
+(709 ไม่มีซอร์สในรีโป = EA ที่ซื้อ/โหลดมา · 502 hash ต่าง = terminal ตายแล้ว 26 ตัว) — **530 finding ไม่ใช่
+detector มันคือกำแพง**. default ตอนนี้ = 4 ที่ที่ binary ถูก attach/test ได้จริง (pin terminal `9CA16B`
+ตัวเป็น ๆ) · `-AllTerminals` / `-IncludeForeign` ไว้ audit
+**ผลจริงหลัง scope:** 209 record → **STALE 28** (อ่านไหว) · HASH_DIFFERS 111 advisory · foreign 747 นับแต่ไม่ list
+**เคสที่รู้แล้วจับได้เป๊ะ:** `ea_template\Boss_16_KangarooGrid.ex5` (2026-07-23 08:10) เก่ากว่า core **7 ไฟล์**
+พอดีตามบันทึก และ **ระบุชื่อไฟล์ที่ใหม่กว่าทุกไฟล์** — บรรทัด "stale" เปล่า ๆ คือสิ่งที่ถูกข้ามไปเมื่อ 07-25
+**triage ที่ต้องอ่านคู่เสมอ (เขียนไว้ใน header สคริปต์แล้ว):** STALE จะ "สำคัญ" หรือ "สวยงามเฉย ๆ" ขึ้นกับว่า
+ผู้ใช้ binary นั้น recompile ก่อนไหม — `tpl_regression.ps1` เรียก `deploy.ps1 -Compile` (ลบ .ex5 เก่าแล้ว build ใหม่ทุกครั้ง)
+⇒ test binary ใน `EALabTpl\tests` ที่ขึ้น STALE = cosmetic · ที่อันตรายจริงคือตัวที่ **attach ขึ้นชาร์ต / รันตรงจาก
+Experts folder โดยไม่ build** = เคส Boss_16 · และ `mtime` เองก็อ่อน (git checkout เขียนทับ mtime ได้) — ก่อนตีว่าเป็น
+incident ต้องดูก่อนว่าไฟล์ที่ "ใหม่กว่า" ใหม่เพราะ **ถูกแก้** ไม่ใช่เพราะ checkout ไปแตะ (spot-check แล้ว: core 7 ไฟล์
+= ORDER-187/194 แก้จริง 07-24 ไม่ใช่ artifact)
+**bug 2 ตัวที่ agent เจอ+แก้ระหว่างพิสูจน์:** `Split-Path -LiteralPath -Parent` = AmbiguousParameterSet บน PS 5.1
+เครื่องนี้ (ใช้ `[IO.Path]::GetDirectoryName` แทน) · worktree ค้างที่ `.claude\worktrees\` ทำให้ทุกไฟล์ดู STALE
+(checkout stamp เวลาใหม่ทั้งชุด) → exclude แล้ว
+**ต่อเข้า `detector_digest` แล้ว** (HASH_DIFFERS/NO_SOURCE = advisory · STALE = HIGH)
+<details><summary>สเปกเดิม</summary>
 **source:** ORDER-213 + ORDER-217 เจอคนละใบในวันเดียว. เครื่องนี้มี `.ex5` อยู่ **≥4 ที่**: `ea_template/` ·
 `ea_projects/` · `D:\Meta 5b\MQL5\Experts\` · roaming `9CA16B...\MQL5\Experts\` — **ไม่มีอะไรบังคับให้ตรงกัน**
 และ **`.ex5` ถูก gitignore ⇒ repo มองไม่เห็นปัญหานี้เลยโดยโครงสร้าง**
@@ -384,6 +411,7 @@ mql-code-reviewer PASS · compile 0/0 · ผมอ่าน diff เองแล
 pair ที่เพิ่งซ่อม ถ้าเอา backup กลับมาทดสอบ) · ต่อเข้า `detector_digest` ของ ORDER-219 · เรียกก่อนสร้าง deploy bundle ทุกครั้ง
 **ห้าม:** ลบสำเนาไหนอัตโนมัติ (รายงานอย่างเดียว — สำเนาใน tester dir อาจมี session อื่นใช้อยู่) · แก้ `.gitignore` ให้ commit `.ex5`
 (ไบนารีไม่ควรอยู่ใน git — ทางแก้คือ **hash ใน README** ตาม precedent ORDER-213)
+</details>
 **source:** ORDER-216 — `_02_MacdSignal` ป้อนเข้า `iMACD()` แต่ `MacdAt()` อ่านแค่ buffer 0 ⇒ buffer 1 (เส้น signal)
 **ไม่เคยถูกใช้เลย**. ปฏิกิริยาแรกคือ "ลบ input ทิ้ง" — **ผมว่านั่นคือการทิ้งของ**: MACD-vs-signal crossing เป็นกลไก
 ยืนยันจังหวะที่ใช้กันจริงและ EA ตัวนี้ยังไม่เคยมี. ตอนนี้ entry = divergence ล้วน ไม่มีตัวยืนยัน timing
@@ -779,7 +807,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 | # | EA | symbol | TF | window | lever/หมายเหตุ | ผล (M4 MAIN / M4 BWD) |
 |---|---|---|---|---|---|---|
 | 13 | STF | BTCUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.59 (ซอย 6 ช่วง) / 1.35** · `both-window-pulse` · `swap-unadjusted` · plateau=WEAK/spike |
-| 14 | STF | BTCUSD | H1 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 14 | STF | BTCUSD | H1 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.229 / 1.039** (ซอยทั้งคู่) · `both-window-pulse` แต่เฉียดทั้งสองฝั่ง · `swap-unadjusted` |
 | 15 | STF | XAUUSD | H4 | MAIN+BWD | **control cell** — ต้องได้ ~PF 1.9 ถ้าต่ำกว่ามาก = pipeline ผิด ไม่ใช่ตลาด | **1.51 / 1.03** · `both-window-pulse` (BWD ปริ่ม) · **control = pipeline ปกติ** (ดูบล็อกผลดิบ) |
 | 16 | STF | WTI | H4 | MAIN+BWD | genetic Stage A | |
 | 17 | STF | US30 | H4 | MAIN+BWD | genetic Stage A | |
@@ -848,6 +876,38 @@ terminal คืน `"no disk space in ticks generating function"` (journal ข�
   ⇒ ผ่านบาร์ทั้งสองหน้าต่างจริง แต่ยังไม่มีหลักฐานว่ามี plateau ให้ยืน
 - **swap ยังไม่หัก:** BTC long จริง −14.67%/ปี ขณะ backtest คิด 0 · ExitMode=0 = ถือยาว (trail เส้น ST ไม่มี TP)
   ⇒ ต้นทุนจริงกินกำไร +564 นี้เป็นสัดส่วนที่ยังไม่ประเมิน **ห้ามเทียบ PF ตัวนี้กับ EA ที่ไม่ใช่ crypto ตรง ๆ**
+
+#### ผลดิบ cell #14 BTCUSD H1 — 2026-07-26, Opus-seat รันเอง
+
+**ซอย 6 ช่วงครึ่งปีทั้งสองหน้าต่าง** (H1 ชน memory ceiling ทั้ง MAIN และ BWD — BWD ล้มด้วย `no disk space` ตอน 10:15:53
+ได้ `bars=0` = artifact ทิ้งแล้วรันใหม่แบบซอย) · .set = `STF_BTC_H1_locked.set`
+
+| | PF | trades | net | worst-chunk eqDD% |
+|---|---|---|---|---|
+| **MAIN 2023.01–2025.12** | **1.229** | 320 | +478.76 | 2.04 |
+| **BWD 2020.01–2022.12** | **1.039** | 301 | **+59.90** | 2.57 |
+
+ป้าย `both-window-pulse` **แต่เฉียดทั้งสองฝั่ง** · `swap-unadjusted`
+- chunk MAIN: 0.59 · 0.89 · 1.40 · 1.56 · 1.49 · 0.99 — **3 ใน 6 ครึ่งปี ≤0.99** กำไรทั้งก้อนมาจาก 2024.01–2025.06
+- chunk BWD: 0.95 · 2.08 · 0.93 · 0.95 · 1.12 · 1.20 — **4 ใน 6 ครึ่งปี ≤1.12**, net +59.90/3 ปี = เสมอตัว
+- ⇒ อ่านว่า **regime-dependent ผ่านบาร์แบบเฉียด** ไม่ใช่ของทน · cross-check chunk อีกครั้ง: M1 เต็มหน้าต่าง
+  1.234/319t vs chunked M4 1.229/320t (ต่างกัน 1 ไม้)
+- **🎯 lever ที่เจอ (มีค่ากว่าตัวเลข PF): H1 ต้องมี EMA trend filter ถึงจะมีย่านเหลือ** — กริดที่ปิด EMA
+  survivors **1/108 · neighbours 0** (ไม่ใช่ plateau ตามนิยาม) · กริดที่เปิด EMA `plateau=GOOD` neighbours 46
+  **ตรงข้ามกับ H4 ที่ EMA ไม่ช่วย** (cell #13 และ #15 เลือก NOEMA ทั้งคู่) ⇒ TF ต่ำ = noise สูง = ต้องมีตัวคัดเทรนด์
+- ธง "centre ติดขอบ range" ของ coarse (AtrPeriod=6 = ขอบล่าง) **เคลียร์แล้ว**: fine grid ขยายลงถึง 4 แล้วยังเลือก 6
+
+#### 📊 เทียบ 3 cell ที่ปิดแล้ว (M4 MAIN / M4 BWD)
+
+| cell | | MAIN | BWD | plateau | อ่านว่า |
+|---|---|---|---|---|---|
+| #15 | XAUUSD H4 | 1.51 | 1.03 | survivors **77%** neighbours 22 | ย่านแข็งสุด แต่ BWD เสมอตัว |
+| #13 | BTCUSD H4 | 1.59 | **1.35** | WEAK · centre=peak | BWD ดีสุด แต่ยังไม่มีย่าน |
+| #14 | BTCUSD H1 | 1.229 | 1.039 | GOOD (ต้องมี EMA) | เฉียดทั้งสองฝั่ง regime-dependent |
+
+**pattern ที่เริ่มเห็น (ยังไม่ใช่ข้อสรุป — n=3 cell):** H4 > H1 ทั้งสองสินค้า · สมมติฐาน user ว่า non-FX เหมาะกับ
+SuperTrend **มีน้ำหนักขึ้นจริงที่ฝั่ง BWD** (BTC H4 = 1.35 ดีกว่า XAU 1.03) แต่ **ไม่มี cell ไหนที่ plateau แข็ง
+พร้อม BWD แข็งในตัวเดียวกัน** — ต้องรอ cell โลหะ/ดัชนี/น้ำมัน (#16-#18, #20-#24) ก่อนจะสรุปอะไรได้
 
 **⚠️ หนี้ที่ทิ้งไว้ให้ cell ที่เหลือของชุดนี้ (ไม่ใช่แค่ cell นี้):** `STF_gen_nonfx.set` sweep `_02_TpAtrMult`/`_02_SlAtrMult`
 พร้อม `_02_ExitMode` ทั้ง 3 ค่า และ sweep `_03_EmaPeriod` พร้อม `_03_UseEma` — **ทุก cell จะเจอแกนตายชุดเดียวกัน**

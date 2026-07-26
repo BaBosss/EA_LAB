@@ -141,7 +141,10 @@ if (Test-Path -LiteralPath $staleFile) {
       foreach ($e in @($j)) {
         if ($e.status -and $e.status -ne 'OK') {
           $d = if ([string]::IsNullOrWhiteSpace($e.detail)) { "status $($e.status), no detail recorded" } else { $e.detail }
-          $bsev = if ($e.status -eq 'NO_SOURCE') { 'LOW' } else { 'HIGH' }
+          # HASH_DIFFERS is advisory by measurement, not by taste: the MQL5 compiler produced
+          # 5 different hashes from 5 compiles of identical source (ORDER-221, 2026-07-26), so
+          # copies disagreeing on hash is the normal case, not a finding.
+          $bsev = if ($e.status -eq 'NO_SOURCE' -or $e.status -eq 'HASH_DIFFERS') { 'LOW' } else { 'HIGH' }
           Add-Finding "BINARY-$($e.status)" $e.name $d $sf.LastWriteTime $bsev
         }
       }
