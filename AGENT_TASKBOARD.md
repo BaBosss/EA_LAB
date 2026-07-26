@@ -371,8 +371,30 @@ recon เจอ 3 อย่างที่ทำให้ "re-measure PF ก่�
 2. **บนข้อมูลสะอาดที่เหลือ (3.4 ปี, input set เดียวกันทั้งหมดรวม magic 20240001 ที่เป็นเงินจริง) — ไม่เจอการปิดยกตะกร้า
    แบบเปอร์เซ็นต์แม้ครั้งเดียว** (เจอแค่ churn ปกติ 3 ครั้ง −4 ถึง −16 net บน 23-31 ไม้ + forced end-of-test)
 ⇒ **`InpCutLossMode=0` = ปิดสวิตช์ หรือ = โหมดที่ข้อมูลนี้ไม่เคยดันถึงเกณฑ์ — ยังแยกไม่ออก** ต้องใช้เทคนิคเดียวกับ
-ORDER-222 (ดันความเสี่ยงจนลึกแล้วดูว่ามีการตัดไหม) ซึ่ง**ยังไม่ได้รัน** — เป็น next step ที่ชัดเจน ไม่ใช่ verdict
-**ยังไม่ถึง DEAD-STRUCTURAL** จนกว่า probe จะกลับมาเป็นลบ (ไม่มีการตัดแม้ถูกดันเกินเกณฑ์)
+ORDER-222 (ดันความเสี่ยงจนลึกแล้วดูว่ามีการตัดไหม)
+
+**🔴 RESOLVED 2026-07-26 (Claude/Sonnet) — ดันแล้ว: `_triage/ORDER215_MATCHAGRID_CUTLOSS_VERDICT.md`**
+สร้าง `scripts/order215_matchagrid_cutloss_probe.ps1` (สคริปต์เดียวกับ ORDER-222 แต่ปรับ lever ให้ตรงกับกลไก
+MatchaGrid — pin ครบ 15 input เพราะ**ไม่มี ini ไหนของ EA นี้เคย pin ตระกูล `InpCutLoss*` มาก่อนเลย** ค่าที่ recon
+เจอมาจาก terminal cache ล้วนๆ):
+- **Stage 0 (control):** primary terminal ไม่ว่าง (อีก session ใช้อยู่ ไม่แตะ) → ย้ายไป `Meta 5b` แทน — เจอปัญหาแยกต่างหาก:
+  ผลไม่ตรงกับ archive (PF 1.77 vs 2.08, tick ต่างกัน 14 เท่า) เพราะ **tick-history ของ `Meta 5b` เพี้ยนจาก terminal
+  หลัก** (ตาม memory `mt5-parallel-instance` — คนละเรื่องกับ CutLoss แต่ต้อง flag แยกไว้ก่อนเชื่อ cross-instance run ใดๆ)
+- **Stage 1 (ดันความเสี่ยง):** ลด `InpGridPoints` 350→200 บน window สะอาดเดิม → **66 ไม้พร้อมกัน, eqDD 63.94%**
+  (2.5 เท่าของเพดานที่เคยเห็นในข้อมูลสงบ) — เจอ cluster ติดลบ 4 ก้อนตอนแรก แต่**เช็ค balance ก่อน-หลังแล้วพบว่าเป็น
+  churn ปกติทั้งหมด** (−0.63%, −0.27%, −0.19%, −0.19% ของ balance ก่อนหน้า — ไม่ใช่การตัด) แก้ script ให้เช็ค
+  %-of-balance แทนการนับ cluster เฉยๆ (บทเรียนเดียวกับที่ทำให้ ORDER-222 แม่นยำ)
+- **Stage 2 (isolate):** ที่ความเสี่ยงเดียวกัน (DD 63.94%) เทียบ threshold จริง (`Percent=10/Fixed=50`) กับ threshold
+  ที่ตึงสุดโต่ง (`Percent=1/Fixed=1`) — **ผลลัพธ์เหมือนกันทุกทศนิยม** (2,961 ไม้, net, DD, cluster ทั้ง 4 ก้อนที่
+  timestamp เดียวกันเป๊ะ) ⇒ **`InpCutLossMode=0` ไม่ตอบสนอง threshold เลย** — นี่คือหลักฐานที่หนักแน่นที่สุดเท่าที่ทำได้
+  โดยไม่มีซอร์ส ว่าโหมดนี้ **ปิดสวิตช์จริง ไม่ใช่แค่ยังไม่เคยติด**
+**⇒ "bounded grid + hard SL" — เหตุผลเดียวที่กัน MatchaGrid จากถัง uncapped-ruin — ถอนแล้ว** สิ่งที่จำกัดจริงคือ
+lot ladder **linear** (`InpStepAddLot` บวกคงที่ ไม่ใช่ทวีคูณ) ซึ่งปลอดภัยกว่า geometric martingale ตาม precedent
+`rsi-from-pips-mechanism` **แต่ไม่ใช่ stop** ⇒ **ยังไม่ถึง DEAD-STRUCTURAL อัตโนมัติ** (gate เดิมเขียนไว้เฉพาะ
+geometric ladder) — ไฟล์เป็น "ถอนคำอ้างเรื่อง safety + สิทธิ์ตัดสินใจเป็นของ user" แบบเดียวกับ NuiIndy (ORDER-222)
+**ที่ sizing จริง (GridPoints=350) ยังไม่เคยเห็น DD ขนาดนี้ใน 3.4 ปี ⇒ ไม่มีอะไรต้องเปลี่ยนบนบัญชีจริงวันนี้**
+**เปิดไว้ ไม่บล็อก:** `InpCutLossMode` ค่าอื่นทำอะไร (ต้องมี source หรือ sweep ค่า) · reconcile tick history
+ของ `Meta 5b` vs primary · funnel re-measure เดิม (clean-MAIN + fan + flat-lot + M4) ยังค้างอยู่
 
 <details><summary>สเปกเดิมของใบนี้</summary>
 **source:** ORDER-204 DEBT row `OPT_MG_CHF_lowDD.ini` (`Optimization=2`, `Criterion=0`, window `2023.01.01–2026.06.01`

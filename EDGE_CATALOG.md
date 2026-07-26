@@ -47,10 +47,13 @@ liquid rangers (EURUSD/EURGBP) per-symbol tuned, and combine uncorrelated legs i
 > ⚠️ **This entry said `CORE` until 2026-07-26 — it was stale by a day against the scorecard and
 > EA_MASTER_INDEX, which both moved to `PARKED-VERIFY(user)` in ORDER-215 part 1.** Corrected here
 > rather than banner-patched, per the ORDER-214 lesson: if the row still reads CORE, people read CORE.
-**Mechanism (hypothesis — and note how much of it is still hypothesis):** bounded grid with hard SL
-on a range-bound cross.
-**Why edge:** CHFJPY oscillates in a range; the grid harvests the back-and-forth, the **bounded
-steps + SL cap the breakout tail** (this is why it passed deep-val where naked grids DQ).
+**Mechanism:** ~~bounded grid with hard SL~~ **grid with a linear-add lot ladder and NO confirmed
+stop-loss** on a range-bound cross (see 2026-07-26 finding below — the "hard SL" half of this claim is
+withdrawn, not just unverified).
+**Why edge:** CHFJPY oscillates in a range; the grid harvests the back-and-forth. ~~the **bounded
+steps + SL cap the breakout tail**~~ **the SL half of this sentence is false for the deployed config —
+see below.** (this is why it passed deep-val where naked grids DQ, but deep-val never tested the
+switch either).
 **🔴 The load-bearing part of that claim is unverified (ORDER-215 recon, 2026-07-26):** MatchaGrid is
 **closed source** — `.ex5` only, no `.mq5` anywhere. The "bounded + SL" property that keeps it out of
 the uncapped-ruin bin rests entirely on `InpCutLossMode=0`, an input found only by reading rendered
@@ -64,9 +67,22 @@ degenerate-tick artefacts (3.9 ticks/bar vs 59 on the trustworthy pair — same 
 events resembling a percentage-of-balance cut** — only ordinary grid churn and one forced end-of-test
 close. Whether `InpCutLossMode=0` means "disabled" or "a mode whose trigger this data never reached" is
 **not yet distinguished** — that needs the same deliberately-raise-the-risk probe ORDER-222 used on
-NuiIndy, not run yet. Full writeup: `_triage/ORDER215_MATCHAGRID_CUTLOSS_FINDING.md`.
-**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds (SL caps it, *if* the SL
-is what we think it is — see above).
+NuiIndy. Interim writeup: `_triage/ORDER215_MATCHAGRID_CUTLOSS_FINDING.md`.
+**🔴 RESOLVED 2026-07-26 (same day, probe run):** deliberately tightened `InpGridPoints` 350→200 on the
+same clean window — 66 simultaneous open positions, equity DD **63.94%** (2.5x the calm-data ceiling).
+**No cut-candidate cluster appeared anywhere** (largest was −0.63% of balance, ordinary churn). Then
+held that stress fixed and changed **only** the thresholds, live (`Percent=10/Fixed=50`) vs absurdly
+tight (`Percent=1/Fixed=1`): **the two runs are identical down to the decimal** — same 2,961 trades,
+same net, same DD, same four clusters at the same timestamps. Changing the trigger by 50x changed
+nothing. **`InpCutLossMode=0` does not respond to its own threshold inputs at all** — this is the
+disabled reading, not "untriggered." "Bounded grid + hard SL" is **withdrawn** as a property of the
+config that runs on real money (magic 20240001). What actually limits exposure is the **linear**
+`InpStepAddLot` ladder (arithmetic, not geometric — materially safer than a martingale per
+`rsi-from-pips-mechanism`, but not a stop). Live sizing has never produced anything like this DD in
+3.4 years of calm history — no forced live change, owner's call, same as NuiIndy (ORDER-222). Full
+verdict: `_triage/ORDER215_MATCHAGRID_CUTLOSS_VERDICT.md`.
+**Failure mode:** a sustained CHFJPY trend that blows past the grid bounds — ~~SL caps it~~ **nothing
+confirmed caps it except the slow linear lot-add and eventual profit-target exits.**
 **Idea seeds:** "bounded + SL" is the safe way to run a range harvester — the template for taming
 any grid/martingale that screened well but DQ'd on uncapped tail.
 
