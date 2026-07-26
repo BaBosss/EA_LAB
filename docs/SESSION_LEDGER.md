@@ -30,6 +30,7 @@
 | `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00 | **240-249** | `AGENT_TASKBOARD.md` (แถว ORDER-GEN-STANDING) · `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` · `_mt5_auto/**` | ไม่ทราบ | `ACTIVE` |
 | `S-2026-07-26-TRIAGE` | 2026-07-26 13:00 | **230-239** | `docs/SESSION_LEDGER.md` · `scripts/check_order_collision.ps1` · `scripts/make_taskboard_digest.ps1` · `TASKBOARD_DIGEST.md` · `_triage/_archive/**` · (ตอนจบ) `AGENT_TASKBOARD.md` + `ARCHIVE_TASKBOARD_2026-07A.md` | ไม่ใช้ | `ACTIVE` |
 | `S-2026-07-26-TRIAGE` (บล็อก 2) | 2026-07-26 15:40 | **250-252** | (เหมือนแถวบน) | ไม่ใช้ | `ACTIVE` |
+| `S-2026-07-26-TRIAGE` (บล็อก 3) | 2026-07-26 17:10 | **260-269** | (เหมือนแถวบน) | ไม่ใช้ | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.
@@ -47,4 +48,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **260-269** (253-259 เว้นกันชน)
+- บล็อกถัดไปที่จองได้ = **270-279** (253-259 เว้นกันชน)
