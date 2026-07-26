@@ -1,6 +1,10 @@
 # ข้อเสนอแก้ VERDICT GATE — "guard ที่ไม่เคยติด = ยังไม่ได้ทดสอบ"
 
-> **สถานะ: ร่าง รอ user เคาะ.** ผมไม่แก้ `CLAUDE.md` เอง — bar table กับ gate tree เป็นของ user
+> # ✅ RATIFIED โดย user 2026-07-26 — เข้า `CLAUDE.md` แล้ว (bar table 1 แถว + Row-X checklist 1 บรรทัด)
+> ไฟล์นี้เก็บไว้เป็น **เหตุผลเบื้องหลังกฎ** เท่านั้น — ตัวกฎที่บังคับใช้อยู่ที่ `CLAUDE.md` VERDICT GATE
+> งานที่ตามมาจากการเคาะ = **BACKLOG-D19** (รัน base control ที่ขาดของ NuiIndy)
+>
+> <sub>สถานะเดิม: ร่าง รอ user เคาะ.</sub> ผมไม่แก้ `CLAUDE.md` เอง — bar table กับ gate tree เป็นของ user
 > (ทุกกฎในนั้นจ่ายด้วยความผิดพลาดจริงมาแล้ว) เสนอมาเป็นข้อความพร้อมวางเท่านั้น
 > เขียน 2026-07-26 (Opus-seat) หลังเจอเคส NuiIndy · ที่มาเต็ม = Part 3 ของ
 > `_triage/ORDER202_HOLDOUT_CONTAMINATION_RETROSCAN.md`

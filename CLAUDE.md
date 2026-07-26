@@ -68,6 +68,7 @@ EVIDENCE IN
 | Model-4 (เมื่อถึงคิว) | both-window PF ≥ **1.0** retained AND largest-loss ไม่ระเบิด (ไม่มี model-switch cliff) |
 | demo → LIVE | ≥ **3 เดือน** · judge PF ≥ **1.40** ที่ ≥ **30 trades** · ไม่มี pre-registered kill trip |
 | demo kill (default, override ต่อ-EA ตอน attach ได้) | eqDD > **12%** · 3-mo PF < **0.8** ที่ ≥ **15 trades** |
+| **guard/filter/kill-switch (เมื่อจะนับเป็นหลักฐาน)** | ต้องมี **base control run** ในหน้าต่างที่ guard *ควร* ติด **และ** รายงาน **จำนวนครั้งที่มันติดจริง** · ติด 0 ครั้ง = **`UNTESTED` ห้ามเขียนว่าผ่าน** · เลขเท่ากับ base ทุกหลัก = หลักฐานว่า **inert** ไม่ใช่หลักฐานว่า **ปลอดภัย** |
 
 **Canonical verdict vocabulary (retire ทุกคำอื่น):**
 `DEAD-STRUCTURAL · DEAD-OPTIMIZED · PARKED-VERIFY(user) · BUILD-ON · CANDIDATE · DEMO · LIVE`
@@ -79,6 +80,7 @@ EVIDENCE IN
 - [ ] **EDGE_CATALOG** — dead pile หรือ reusable-lever/mechanism entry
 - [ ] **B1_DATASET.csv** row ใน REVIEWED commit เดียวกัน (นิยาม = B1_COHORT.md)
 - [ ] **user brief** ถ้า PARKED-VERIFY (3 บรรทัด: อะไร/gate ไหนฆ่า/ทำไมน่าสนใจ)
+- [ ] ถ้า verdict อ้างประโยชน์ของ **guard/filter** ใดๆ — ระบุ **จำนวนครั้งที่ guard ติด** + path ของ **base control run**
 
 <sub>**paid-for history (บทเรียนจริง — ห้ามลบ):** 2026-07-08 ตัด "dead" ผิด 2 ครั้ง/session เพราะ optimize ไม่ครบ (→ tree ข้อ 2) · 2026-07-10 ST03 "no-edge" วัดใต้ scalp-exit เดียว (→ exit-mode เป็น lever) · 2026-07-16 SMC×STO ตายจาก default-smoke แล้ว optimize+ADX กลายเป็น EURUSD candidate จริง (→ ข้อ 2a: default-smoke ปิดได้แค่ cell; StoK 5→17 พลิกผล = optimize entry-signal เป็น lever แรก) · 2026-07-17 Model-2 ปั้น fake grid plateau AUDNZD PF 3-4→M4 0.61 (→ grid = Model-2 ไม่ใช่หลักฐาน) · 2026-07-18 last-optimize-before-verdict + BWD soft-gate (user rule). ที่มาเต็ม = memory `feedback-last-optimize-before-verdict` · `feedback-buildon-pf-gt-1` · `feedback-optimize-before-killing-reversion`.</sub>
 
