@@ -70,8 +70,21 @@ any grid/martingale that screened well but DQ'd on uncapped tail.
 single-order PF **0.90**, flat-lot grid PF **0.72**, only escalated PF **2.20**. Entry has no standalone
 directional edge. As-shipped `MAX_Order=99999`/`CutLoss=100` = uncapped-ruin.
 **Do NOT mold-expand** (ORDER-095 rejected — no entry edge to replicate; expanding a no-edge geometric
-martingale multiplies correlated tail-risk). **LIVE guardrail (magic 1524):** `CutLoss_Percent=30` = free
-tail-insurance (both-window profitable 1.19/2.20, DD bounded ~15%). Verdict: `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md`.
+martingale multiplies correlated tail-risk).
+**🔴 LIVE guardrail (magic 1524) — "free tail-insurance / DD bounded ~15%" WITHDRAWN 2026-07-26 (ORDER-222).**
+The switch was tested at a drawdown that actually reaches it, and it cuts **30% of the balance it has at
+that moment**, then re-arms against the reduced balance. Measured ladder over one year at 4× live sizing:
+`10,521 → 7,363 → 5,214 → 4,025 → 3,125 → 2,735 → 2,145 → 1,599 → 1,326` (8 cuts, each −30.0..−30.6%,
+first one proven to the decimal at −30.02% on 2022.01.27). **A percentage cut against a shrinking balance
+is a ratchet, not a floor** — the same year ended **+51% with the cut off and −86% with it on**, and
+equity DD reached **87%** while a "30" threshold was active. The old "DD bounded ~15%" was an artefact of
+the switch **never engaging** at live sizing, not evidence of a bound.
+**Reusable lesson (the transferable part):** a %-of-current-equity kill cannot bound an account — only an
+**absolute equity floor that fires once and stays off** can. Cost is non-linear and inverted: nearly free
+where DD grazes the line (×2: −12% of profit, DD unchanged), catastrophic where it fires repeatedly. A
+guardrail is cheapest exactly where it is useless. Do NOT remove the mechanism (nothing at all is worse on
+an uncapped martingale) — replace the *shape*. Verdict: `_triage/ORDER222_NUIINDY_CUTLOSS_VERDICT.md`
+(+ ORDER-095: `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md`).
 
 ### Gold Reaper 4.3 — XAUUSD H1 (CORE ⚠️ ruin 1.9%) 🟨
 **Why edge:** gold = trender → momentum/continuation edge. Watch flag = thin ruin margin.
@@ -530,3 +543,69 @@ entries that would have worked and keeps the late ones — which is exactly what
 
 Source: sets `_mt5_auto/ab_sets/genstanding_stf/STF_{XAU,BTC}_H4_don*.set` · reports
 `DON20_BTC_H4_*` · optimizations `DON_{XAU,BTC}_H4_{MAIN,BWD}.xml`.
+
+## LEVER: capped pyramid into winners on a Donchian-gated SuperTrend (rev03, BTCUSD H4, 2026-07-26) 🟩 BUILD-ON — best both-window result of the campaign, with a hostile-recent-regime caveat
+
+**The lever.** `(TRD)_SuperTrendFlip_rev03` `[07]` block, default-off. Adds a leg only while the basket
+is **in profit** and only after price advances `_07_AddAtAtr`×ATR beyond the **last fill** (not the
+first — one large candle cannot collapse the spacing and stack several legs at once). Every leg
+trails the same SuperTrend line; a flip or a floating-loss breach closes the **whole** basket.
+Not martingale — adds require profit, never a loss.
+
+**Bounded by construction, not by hope:** legs ≤ 1+`_07_MaxAdds` (init-refused above 10) · lot per leg
+flat or **decreasing** (`_07_AddLotFactor>1` refused at init) · basket floating loss ≥
+`_07_BasketMaxLossPct` of balance → flat · `_07_BasketMaxLossPct` must be ≤ `_05_EmergencyDdPct` ·
+leg count derived from live positions every bar (state-free: a restart mid-basket cannot desync it) ·
+pyramid + `ExitMode=2` refused at init (mode 2 never trails, so adds would be unmanaged).
+
+**Regression cage: rev01 = rev02 = rev03-with-pyramid-off, identical to the cent** on the same lane
+and window (PF 0.96 / 13t / net −1.83 / gross 49.71/−51.54 / 14,498,245 ticks).
+
+**Result — Model-4, BTCUSD H4, all three variants on the SAME terminal lane** (see the gotcha below
+for why that sentence is load-bearing), MAIN chunked into 6 half-years:
+
+| variant | MAIN | BWD |
+|---|---|---|
+| baseline (plateau centre) | 1.644 / 100 legs / +607.59 / DD 1.83% | 1.348 / 91 / +219.78 / DD 2.31% |
+| + Donchian(20) gate | 1.510 / 34 / +218.74 / DD 2.16% | 3.510 / 40 / +451.74 / DD 1.55% |
+| **+ Donchian(20) + pyramid MaxAdds=1 / AddAtAtr=1.0** | **2.379 / 50 / +700.28 / DD 2.16%** | **4.044 / 66 / +773.55 / DD 2.43%** |
+
+Beats the baseline on **both** windows and beats the Donchian-only host on both, at essentially
+unchanged drawdown. M1 predicted 2.400 / 4.363 and M4 delivered 2.379 / 4.044 — close enough that
+the M1 surface can be trusted for *this* config family (contrast with the ER gate, where M1 was
+optimistic on crypto BWD: 1.443 → 1.295).
+
+**Config choice was pre-registered, and deliberately not the best number.** The 12-combo surface is
+monotone — more adds → more profit → more DD (MaxAdds=3 reaches MAIN PF 3.103 / +1363 at DD 5.15%).
+A monotone surface in the depth axis is the signature of **measuring leverage, not edge**, so the
+confirmed config is the *least*-leveraged point that clears both windows.
+
+**What must be said next to those numbers:**
+1. **Legs are not independent samples.** ~34 MAIN and ~40 BWD *signals* produce 50 and 66 *legs*.
+   Never quote n=50 as a sample size; the statistical width is still ~34.
+2. **The recent regime is hostile and pyramiding does not fix it — it amplifies whatever the regime
+   gives.** Per-half-year MAIN: 2.56 / 4.55 / 2.95 / 11.75 / **0.40 / 0.44** — both halves of 2025
+   lose, exactly as the ungated baseline did (0.24 / 0.36). The aggregate is carried by a few large
+   winners (an 11.75 on six legs; BWD has an 11.34 and a 7.18).
+3. **`swap-unadjusted`, and the gap is now WORSE than for a single-leg EA.** BTC long costs ~−14.67%/yr
+   in reality and 0 in the tester; holding two legs doubles that bill while `ExitMode=0` holds for
+   long stretches. This is the largest unmodelled cost in the table above.
+4. **Cage items still owed before this can be called a candidate:** Monte-Carlo (ruin ≤2%, PF-5th
+   ≥1.0) at the real sizing, a written worst-case-single-loss figure, sensitivity fan, and
+   correlation against the live cohort.
+
+Source: `ea_projects/(TRD)_SuperTrendFlip/(TRD)_SuperTrendFlip_rev03.mq5` (`[07]`) · sets
+`_mt5_auto/ab_sets/genstanding_stf/STF_BTC_H4_{pyr,pyr1,don20,rev03_off}.set` · reports
+`{BASE5B,DON5B,PYR1}_BTC_H4_*` · optimizations `PYR_BTC_H4_{MAIN,BWD}.xml`.
+
+## GOTCHA: BTCUSD tick history differs between MT5 installs — crypto A/B across lanes is invalid (2026-07-26)
+
+Same EA, same .set, same window, same broker login, **different terminal install** → same 13 entries
+but different exits: `D:\Meta 5` gave PF 0.92 / net −4.26, `D:\Meta 5b` gave PF 0.96 / net −1.83.
+XAUUSD matched to the cent across the same two lanes, so this is not a general lane problem — it is
+per-symbol downloaded tick history, and crypto is where it bites.
+
+**Rule:** every variant in a crypto A/B must run on ONE lane, and the lane belongs in the note beside
+the numbers. This caught a real error mid-session: the first "BWD 1.35 → 3.51" claim compared a
+main-terminal baseline against a 5b Donchian run. Re-running the baseline on 5b (1.348) happened to
+preserve the conclusion — that was luck, not method.

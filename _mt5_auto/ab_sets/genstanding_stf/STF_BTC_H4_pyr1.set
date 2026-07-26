@@ -1,0 +1,31 @@
+﻿; STF_BTC_H4_pyr1.set — pyramid config ที่เลือกยืนยัน M4: MaxAdds=1 AddAtAtr=1.0 บน host Donchian-20
+; เลือกจุด leverage น้อยสุดที่ผ่านทั้งสองหน้าต่าง (ไม่ใช่จุดกำไรสูงสุด) เพราะพื้นผิว monotone
+; = adds มาก -> กำไรมาก -> DD มาก = วัด leverage ไม่ใช่วัด edge
+; M1: MAIN 2.400/50legs/+706 · BWD 4.363/66legs/+845 · eqDD 2.84/2.66%
+_00_OptimizeMode=false
+_01_AtrPeriod=14
+_01_Mult=2.5
+_01_Lookback=400
+_01_UseDonchian=true
+_01_DonBars=20
+_02_ExitMode=0
+_02_TpAtrMult=4.0
+_02_SlAtrMult=1.0
+_03_UseEma=true
+_03_EmaPeriod=250
+_03_UseER=false
+_03_ErPeriod=8
+_03_ErMin=0.30
+_07_UsePyramid=true
+_07_MaxAdds=1
+_07_AddAtAtr=1.0
+_07_AddLotFactor=1.0
+_07_BasketMaxLossPct=8.0
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false
