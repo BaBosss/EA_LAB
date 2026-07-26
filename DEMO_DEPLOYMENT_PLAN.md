@@ -99,7 +99,7 @@ both-window + ขนาด lot เล็กถาวร · (ข) ตัดสิ
 | 3 | ST_EA03 MACD | GBPUSD | H1 | `MACD_GBPUSD_locked.set` | 2.47 | 🟢 LIVE | Lots_divided แก้ → 100,000 (0.1 lot/leg) ✅ |
 | 4 | ST_EA03 MACD | USDCAD | H1 | `MACD_USDCAD_locked.set` | 2.62 | 🟢 LIVE | เหมือน EA 3 ✅ |
 | 5 | Gold Reaper 4.3 | XAUUSD | H1 | `GoldReaper_cent_v1.set` | 2.07 | 🟢 LIVE | StartLots=0.01 ✅ |
-| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v3.set` | 2.94-4.87 | 🟡 RELOAD | **v3 upgrade** Bars=55, TP×8, EMA150. Reload EA in MT5 GUI (F7→load v3.set→OK). IS PF=2.10/Sharpe=3.47, Neighbors=12. |
+| 6 | EA_BREAKOUT_XAU | XAUUSD | H1 | `_vps_deploy\BRK_XAU_live_v2.set` | 1.98 MAIN / 1.66 BWD | 🟢 LIVE — ห้าม reload | ⛔ **v3 RELOAD ยกเลิกถาวร 2026-07-26**: v3 จูนบนหน้าต่างที่กิน holdout 2026H1, แพ้ v2 ทั้ง BWD (1.01 vs 1.66) และ MAIN (1.86 vs 1.98) — ชนะเฉพาะช่องที่ไหม้. เลข 2.94-4.87 เดิม = contaminated, ห้ามอ้าง. คง Bars40/Tp5.0/Ema200 |
 | 7 | LondonConsoBreakout | GBPUSD | H1 | `_vps_deploy\CB_GBP\CB_GBP_H1_live_v1.set` | 2.08 | 🟢 LIVE | 0.01 lot ✅ |
 | 8 | LondonConsoBreakout | EURUSD | H1 | `_vps_deploy\CB_EUR\CB_EUR_H1_live_v1.set` | 1.25 | ❌ DROP (2026-06-25) | Q2 rescue sweep พบ no durable edge (OOS ทั้งคู่ <1.0) → ถอดออกจาก demo. Portfolio จริง = 7 ตัว |
 | 9 | EA_RUNNER_ST03 (LR2 replica) | GBPUSD | H1 | `_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set` | 3.93 | 🟡 DEPLOY MON 2026-06-29 (DEMO) | bundle staged + verified 2026-06-26. magic 990010, AllowLiveOrders=true. corr −0.24 vs live ST_EA03 = LOW. |
@@ -299,7 +299,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 |---|---|
 | 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
 | 2026-06-22 | ST_EA03 lot fix — Lots_divided แก้ → 100,000 ✅ |
-| 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) |
+| 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) — ⛔ **เพิกถอน 2026-07-26 ไม่เคยทำและห้ามทำ** (v3 = selection-into-the-leak, ORDER-201/210) |
 | 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
 | หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 

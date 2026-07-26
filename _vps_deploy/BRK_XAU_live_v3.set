@@ -1,3 +1,15 @@
+; ⛔ DO NOT DEPLOY — SUPERSEDED BY v2 (ORDER-201/210, 2026-07-25). Kept for audit trail only.
+;    v3 was selected on 2023.01.01–2026.06.01, which swallowed the declared 2026H1 holdout.
+;    Re-run on three separated windows (Model-4, real ticks) — v3 beats v2 ONLY on the burned
+;    window and loses on BOTH clean ones:
+;        window            v2            v3
+;        BWD  2020–22      1.66 / 33t    1.01 / 26t   (net +1.66 = breakeven through stress)
+;        MAIN 2023–25      1.98 / 46t    1.86 / 40t
+;        2026H1 (burned)   3.62 /  7t    5.32 /  5t   <- the only cell v3 wins
+;    Textbook selection-into-the-leak. ORDER-210 then ran a clean-window re-optimize and could
+;    not find any config beating v2 on BWD either. LIVE CONFIG = BRK_XAU_live_v2.set.
+;    The numbers below were measured on the contaminated window — do not cite them.
+;
 ; EA_BREAKOUT_XAU — LIVE params XAUUSD H1 — v3 (Bars=55 plateau center)
 ; _NN_ param names — use ONLY with the recompiled .ex5 (post-2026-06-22 rename).
 ; IS 2023-2026 (H1, Model=2): PF=2.10, DD=3.19%, Trades=195, Sharpe=3.47 | Neighbors=12

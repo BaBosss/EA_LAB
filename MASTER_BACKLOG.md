@@ -48,7 +48,10 @@
 > Model4: IS PF 2.85-3.19 / OOS 2.94-4.87) = param improvement ไม่ใช่ TF/instrument ใหม่.
 
 ### 🔴 ติดเวลา / ทำก่อน
-- [ ] **EA #6 reload Bars55** — MT5 GUI → XAUUSD H1 chart → EA_BREAKOUT_XAU → F7 → load `_vps_deploy\BRK_XAU_live_v3.set` → OK (แค่ 2 นาที)
+- [x] ~~**EA #6 reload Bars55**~~ — ⛔ **ยกเลิกถาวร 2026-07-26 (ห้ามทำ).** v3 (Bars55) ถูกจูนบนหน้าต่างที่กิน
+      holdout 2026H1 เข้าไป → วัดใหม่บน 3 หน้าต่างแยก v3 **แพ้ v2 ทั้ง BWD (1.01 vs 1.66) และ MAIN (1.86 vs 1.98)**
+      ชนะเฉพาะช่องที่ไหม้ = selection-into-the-leak. ORDER-210 ค้นใหม่บนหน้าต่างสะอาดก็หา config ที่ชนะ v2 บน BWD
+      ไม่เจอ. **คงเงินจริงไว้ที่ v2 (Bars40/Tp5.0/Ema200) ไม่ต้องแตะชาร์ต** — ดู header ใน `BRK_XAU_live_v3.set`
 - [ ] **ST03 replica deploy → จันทร์ 2026-06-29** (DEMO, magic 990010). bundle staged แล้ว `_vps_deploy/ST03_GBPUSD/`. ดู `DEMO_DEPLOYMENT_PLAN.md`.
       Steps: DEMO MT5 → New GBPUSD H1 chart → attach EA_RUNNER_ST03 → load `ST03_GBPUSD_live_v1.set` → verify magic=990010 + AllowLiveOrders=true
 - [ ] **EA #10 deploy (BRKXAU Bars8)** — DEMO MT5 → New XAUUSD H1 chart → attach EA_BREAKOUT_XAU → load `_vps_deploy\BRK_XAU_Bars8\BRKXAUH4_Bars8_demo_v1.set` → verify magic=991002
@@ -62,7 +65,8 @@
 - **Phase 1 — re-tune / param-improve EA ที่ proven (ROI สูงสุด):**
   - [x] **XAU breakout BreakoutBars=55 = ดีสุด** (ไม่ใช่ "H4" — EA เป็น H1-signal ตายตัว). IS PF 2.85-3.19 /
         OOS 2.94-4.87. Bars8 ผ่าน MC (PF-5th 1.73). corr Bars8 vs deployed Bars55 = 0.21 LOW = additive variant.
-        → ✅ **v3.set done 2026-06-28** (`_vps_deploy/BRK_XAU_live_v3.set`, Bars=55, TP×8, EMA150) — ต้อง reload EA #6 ใน MT5 GUI (F7 → load v3.set → OK)
+        → ⛔ **ผลนี้ถูกเพิกถอน 2026-07-25/26**: IS/OOS ข้างบนวัดบนหน้าต่างที่กิน holdout 2026H1 → v3 แพ้ v2 บน
+        หน้าต่างสะอาดทั้งสอง (ORDER-201/210). `BRK_XAU_live_v3.set` = DO-NOT-DEPLOY, เงินจริงคง v2 (Bars40)
   - [x] **XAGUSD buy-only REJECT 2026-06-28**: smoke 1.45 ✅ / IS 1.47 ✅ / OOS 0.78 ❌ structural — Silver 2020-23 hostile (COVID crash, Reddit squeeze, bear). XAU≠XAGUSD buy-only. Do NOT revisit.
   - GBPUSD breakout (EA_BREAKOUT_XAU H1-signal) = ❌ DEAD (Bars8-20, Model4 PF 0.66-0.85). N-bar breakout = XAU-specific
   - EA_LNBREAK (London breakout) = ❌ DEAD 2026-06-28 — smoke PF 1.07-1.09 ทุก symbol ไม่ผ่าน gate
