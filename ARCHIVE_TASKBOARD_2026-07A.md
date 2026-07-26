@@ -7898,3 +7898,58 @@ Phase 0 + 0.5 (validator: review-linkage + living-log) commit แล้ว. Migr
 
 **→ หลัง C1 accept = order ที่ 4 → MANDATORY REVIEW GATE** (§20.2 #5): หยุด ทบทวน ACCEPT/REWORK/ROLLBACK ต่อ component (A/B/C0/C1) ก่อนเริ่ม Contract D (MVP-1-lite events).
 
+## ORDER-260 — [🔴 tooling/integrity] validator ตี order ที่ REVIEWED แล้วเป็น NonTerminal เพราะคำว่า "holdout" — `REVIEWED(Claude/Opus 2026-07-26): แก้แล้ว — anchor NonTerminal pattern ที่ต้นช่วง backtick · วัดผลจริง Terminal 47→69, Terminal+REVIEWED 7→24 (+17 ตรงตามที่วินิจฉัย), Unparseable คงที่ 4 · archive ไม่ขยับ (11 exception เดิม ปิดครบ, unresolved 0) · กรงใหม่ scripts/_test/run_statusclass_tests.ps1 19 เคสจาก corpus จริง พิสูจน์แล้วว่า fail ได้เมื่อ revert (3 เคสแดงเป๊ะ) · หนี้ที่เปิดต่อ = ORDER-270 (negative suite 2 ชุดค้าง)`
+**bars:** N-A · **flat-lot probe:** N-A
+**บั๊ก:** `Get-StatusClass` ใน `scripts/check_taskboard_archive.ps1` เช็ค **NonTerminal ก่อน Terminal** และ pattern เป็น
+**bare substring, case-insensitive** (`$script:NonTerminalPatternsOrdered` = WAITING-USER · WAITING · CLAIMED · IN-PROGRESS · HOLD · OPEN)
+```
+'holdout' -match 'HOLD'      → True
+'open question' -match 'OPEN' → True
+```
+⇒ status ที่เป็น `REVIEWED(...)` จริง แต่มีคำว่า **holdout / open** ในช่วง backtick เดียวกัน **ถูกตีเป็น NonTerminal**
+ตัวอย่าง: `ORDER-167 — ... — \`REVIEWED(Claude/Opus 2026-07-23) — 4/5 cells ตายที่ holdout\`` → Label = `hold`
+**ขนาดที่วัดได้ 2026-07-26:** จาก ~45 header ที่เป็น REVIEWED → validator มองว่า Terminal แค่ **22** ·
+**17 ใบตกเพราะ substring นี้ล้วน ๆ** (อีก 5 ใบมี pending marker จริง = ถูกต้อง) ⇒ order ที่ปิดเรียบร้อยถูกกักบนบอร์ด
+**เพราะมันบรรยายผลของตัวเองด้วยคำว่า holdout**
+**ทำไมใหญ่กว่าเรื่องย้ายไฟล์:** `StatusClass` เป็นฐานของ exception scan ทั้งชุด ⇒ **ภาพบอร์ดที่ validator เห็นก็ผิดตาม**
+**STEP 1:** ผูก pattern กับขอบเขตคำ/ต้นสตริง (เช่น `^\s*OPEN\b`) แทน bare substring — status verb อยู่**ต้น**ช่วง backtick
+เสมอตาม convention ไม่ใช่กลางประโยค
+**STEP 2:** รัน `-Audit` + `-Strict` ก่อน/หลัง ยืนยัน unresolved ไม่เพิ่ม แล้วค่อยย้าย 17 ใบที่ปลดล็อก
+**ห้าม:** แก้ตรรกะนี้พร้อมกับการย้ายบอร์ดในคอมมิตเดียว (แยกให้เห็นว่าอะไรทำให้อะไรเปลี่ยน) ·
+ใช้ `-Generate` ก่อน commit (ใช้ `scripts/regen_archive_artifacts_staged.ps1` แทน)
+<sub>คลาสเดียวกับ `check_state.ps1` §7 ที่จับ `"ในไฟล์เดียวกัน"` เป็น competing entry claim เพราะ substring `"ไฟล์เดียว"` —
+เจอ 3 ครั้งใน session เดียว (ครั้งที่ 3 = ตัวกรอง `_archive` ของผมเองไปแมตช์ `check_taskboard_archive.ps1`)</sub>
+
+## ORDER-261 — [bookkeeping] ปิดกอง B: 28 ใบรอ REVIEW + 9 ใบต้องแก้ข้อความก่อนย้าย — `REVIEWED(Claude/Opus 2026-07-26): ปิดครบ — เขียน review ให้ 28 ใบที่หลักฐาน resolve ได้ + แก้ข้อความ 9 ใบที่ถูกหลักฐานใหม่หักล้าง (073 · 143 · 188 · 193 · 187 · 072 · 036 · 112E · 189) → ย้ายเข้าคลังรวม 51 ใบ บอร์ด 96→45 · ที่กันไว้ = 095/#4 (แม่ CAMPAIGN ยัง OPEN) · ผลตรวจหลักฐานเต็ม = _triage/EVIDENCE_SWEEP_TERMINAL_BLOCKS_2026-07-26.md`
+**bars:** N-A · **flat-lot probe:** N-A
+**ที่มา:** บอร์ดมี order ที่สถานะ `DONE(...)`/`CLOSED(...)` เปล่า ย้ายเข้าคลังไม่ได้ (validator จุด `terminal-no-linked-review`)
+**หลักฐานตรวจครบทุกใบแล้ว** → `_triage/EVIDENCE_SWEEP_TERMINAL_BLOCKS_2026-07-26.md` (resolve path จริง · commit hash จริง)
+**สรุปผลตรวจ:** CONFIRMED 27 · UNVERIFIABLE-ไม่มีพิษ 1 · PARTIAL 3 · **CONTRADICTED 3**
+**งานที่เหลือ:**
+1. เขียน `REVIEWED` (หรือ `## REVIEW ORDER-x`) ให้ 28 ใบที่หลักฐานผ่าน → ย้ายเข้าคลัง
+2. แก้ข้อความก่อนย้าย 9 ใบ (ตารางในไฟล์หลักฐาน) — **073 ทำแล้ว** (`e2098c9e`) เหลือ 143 · 188 · 193 · 187 · 072 · 036 · 112E · 189
+3. ใบที่เร่งสุด = **143** — ปิดไปว่า "sweep รันไม่ได้" แต่ `a88db4c6` กลับด้านแล้วดัน SS1 ขึ้น demo (→ ORDER-250)
+**ห้าม:** ประทับตรา REVIEWED โดยไม่อ่านหลักฐาน (ทั้งกองนี้มีอยู่เพราะกฎว่า *ผลดิบของ agent ห้ามกลายเป็นข้อสรุปเองเพราะเวลาผ่านไป*) ·
+ย้ายใบที่ยัง CONTRADICTED/PARTIAL ก่อนแก้ข้อความ
+
+## ORDER-237 — [integrity] "GBPJPY leg-8" = 3 magic 2 spacing คนละตัวกัน — `REVIEWED(Claude 2026-07-26)` · ทำได้: user (อ่าน VPS) + Claude (เก็บกวาด .set) · 👉 แนะ: user
+
+**✅ ปิดแล้ว — user เปิด Inputs สดบน VPS 2026-07-26 (บัญชี 415573666, chart GBPJPYm H4):**
+`_14_DistAtrMult=2.0` · `_9_StepATRmult=3.0` · `LotProg=55` (LogPower) · `_9_MaxLevels=6` · magic `990208`
+⇒ **ตรงกับ bundle `_vps_deploy/BOSS14_GBPJPY/Boss14_GridLog_GBPJPY_H4_demo_leg8.set` ทุกค่า** และตรงกับ
+config ที่ ORDER-166 revalidate ไว้. **ของจริงมีตัวเดียว ไม่ใช่สาม** — ใน Navigator มี Boss_14 บน GBPJPY
+แค่ chart เดียว.
+- **990101** = Zeus GridLog บน XAU บัญชีเงินจริง — คนละ EA คนละคู่เงิน ที่ไปโผล่ใน `ea_template/sets/Boss14_GridLog_GBPJPY_ISpick.set` คือ magic ที่ค้างมาในไฟล์ ไม่ใช่ deployment
+- **990218** = มีแต่ในไฟล์ `_mt5_auto/ab_sets/order136_w2_b14/*.set` ที่ Codex ใช้ backtest — **ไม่เคยถูก attach ที่ไหนเลย**
+- **`d2.0/s4.0`** ที่ ORDER-106 เขียนไว้ตอนปิด **ผิดครึ่งหนึ่ง**: dist 2.0 ถูก แต่ step ที่ ship จริงคือ **3.0** ไม่ใช่ 4.0. ตัวเลข `s4.0` ไม่เคยอยู่ในไฟล์ไหนเลย — เป็นเลขที่หลุดมาจากการเขียนสรุป ไม่ใช่จากไฟล์
+**ยังไม่ลบไฟล์ `.set` ผี** — ปล่อยไว้พร้อม header เตือน ดีกว่าลบ เพราะมันคือ provenance ของ verdict ที่ถูกถอน (`d375099e`) ถ้าลบทิ้งจะอ่านไม่ออกว่าทำไมเคยถอน
+**บทเรียน:** ความสับสนทั้งชุดนี้เกิดจาก **สรุปเป็นข้อความแล้วอ้างต่อ ๆ กัน โดยไม่มีใครเปิดไฟล์**. ครั้งหน้าที่จะอ้าง "config ที่ live คือ X" ให้ grep ไฟล์ที่ ship จริงมาแปะ ([[feedback-verify-set-matches-live-before-verdict]] มีอยู่แล้ว — ใบนี้คือราคาที่จ่ายเพราะไม่ได้ใช้มัน)
+
+<sub>เนื้อใบเดิม:</sub>
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** 990101 / 990208 / 990218 + `_14_DistAtrMult` 2.0 vs 3.0 ลอยอยู่โดยถูกเรียกว่า "config GBPJPY leg-8" เหมือนกันหมด
+`DEPLOYMENTS.csv` บอก live = 990208 · ORDER-166 revalidate ที่ dist=2.0
+**ความเสียหายที่เกิดไปแล้ว:** ความสับสนชุดนี้ทำให้ต้องถอน verdict 1 ใบ (`d375099e`) — Wave 2 "แพ้ BWD 0.92" มาจากรันผิด config
+**ทำไมมันหลุด:** ORDER-136 เขียนไว้ในเนื้อว่า "side-finding, unresolved, not chased further" แล้วใบนั้นก็ปิดไป
+**ห้าม:** ลบ .set ก่อน user ยืนยันว่าตัวไหนอยู่บน VPS จริง
+

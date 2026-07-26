@@ -99,40 +99,6 @@ tamper-integrity ให้ทั้งระบบ ⇒ **ตอนนี้ร�
 **ห้าม:** ปล่อยให้ 2 ชุดนี้อยู่ในสถานะ "มีอยู่แต่ไม่เคยรัน" ต่อ — นั่นแย่กว่าไม่มีเลย เพราะมันดูเหมือนมีกรง ·
 รัน suite พวกนี้แบบ background แล้วรอ notification (จะได้ false-green)
 
-## ORDER-260 — [🔴 tooling/integrity] validator ตี order ที่ REVIEWED แล้วเป็น NonTerminal เพราะคำว่า "holdout" — `DONE(Claude/Opus 2026-07-26) — แก้แล้ว + มีกรงใหม่ที่พิสูจน์แล้วว่า fail ได้ · รอ review pass ก่อนย้าย`
-**bars:** N-A · **flat-lot probe:** N-A
-**บั๊ก:** `Get-StatusClass` ใน `scripts/check_taskboard_archive.ps1` เช็ค **NonTerminal ก่อน Terminal** และ pattern เป็น
-**bare substring, case-insensitive** (`$script:NonTerminalPatternsOrdered` = WAITING-USER · WAITING · CLAIMED · IN-PROGRESS · HOLD · OPEN)
-```
-'holdout' -match 'HOLD'      → True
-'open question' -match 'OPEN' → True
-```
-⇒ status ที่เป็น `REVIEWED(...)` จริง แต่มีคำว่า **holdout / open** ในช่วง backtick เดียวกัน **ถูกตีเป็น NonTerminal**
-ตัวอย่าง: `ORDER-167 — ... — \`REVIEWED(Claude/Opus 2026-07-23) — 4/5 cells ตายที่ holdout\`` → Label = `hold`
-**ขนาดที่วัดได้ 2026-07-26:** จาก ~45 header ที่เป็น REVIEWED → validator มองว่า Terminal แค่ **22** ·
-**17 ใบตกเพราะ substring นี้ล้วน ๆ** (อีก 5 ใบมี pending marker จริง = ถูกต้อง) ⇒ order ที่ปิดเรียบร้อยถูกกักบนบอร์ด
-**เพราะมันบรรยายผลของตัวเองด้วยคำว่า holdout**
-**ทำไมใหญ่กว่าเรื่องย้ายไฟล์:** `StatusClass` เป็นฐานของ exception scan ทั้งชุด ⇒ **ภาพบอร์ดที่ validator เห็นก็ผิดตาม**
-**STEP 1:** ผูก pattern กับขอบเขตคำ/ต้นสตริง (เช่น `^\s*OPEN\b`) แทน bare substring — status verb อยู่**ต้น**ช่วง backtick
-เสมอตาม convention ไม่ใช่กลางประโยค
-**STEP 2:** รัน `-Audit` + `-Strict` ก่อน/หลัง ยืนยัน unresolved ไม่เพิ่ม แล้วค่อยย้าย 17 ใบที่ปลดล็อก
-**ห้าม:** แก้ตรรกะนี้พร้อมกับการย้ายบอร์ดในคอมมิตเดียว (แยกให้เห็นว่าอะไรทำให้อะไรเปลี่ยน) ·
-ใช้ `-Generate` ก่อน commit (ใช้ `scripts/regen_archive_artifacts_staged.ps1` แทน)
-<sub>คลาสเดียวกับ `check_state.ps1` §7 ที่จับ `"ในไฟล์เดียวกัน"` เป็น competing entry claim เพราะ substring `"ไฟล์เดียว"` —
-เจอ 3 ครั้งใน session เดียว (ครั้งที่ 3 = ตัวกรอง `_archive` ของผมเองไปแมตช์ `check_taskboard_archive.ps1`)</sub>
-
-## ORDER-261 — [bookkeeping] ปิดกอง B: 28 ใบรอ REVIEW + 9 ใบต้องแก้ข้อความก่อนย้าย — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
-**bars:** N-A · **flat-lot probe:** N-A
-**ที่มา:** บอร์ดมี order ที่สถานะ `DONE(...)`/`CLOSED(...)` เปล่า ย้ายเข้าคลังไม่ได้ (validator จุด `terminal-no-linked-review`)
-**หลักฐานตรวจครบทุกใบแล้ว** → `_triage/EVIDENCE_SWEEP_TERMINAL_BLOCKS_2026-07-26.md` (resolve path จริง · commit hash จริง)
-**สรุปผลตรวจ:** CONFIRMED 27 · UNVERIFIABLE-ไม่มีพิษ 1 · PARTIAL 3 · **CONTRADICTED 3**
-**งานที่เหลือ:**
-1. เขียน `REVIEWED` (หรือ `## REVIEW ORDER-x`) ให้ 28 ใบที่หลักฐานผ่าน → ย้ายเข้าคลัง
-2. แก้ข้อความก่อนย้าย 9 ใบ (ตารางในไฟล์หลักฐาน) — **073 ทำแล้ว** (`e2098c9e`) เหลือ 143 · 188 · 193 · 187 · 072 · 036 · 112E · 189
-3. ใบที่เร่งสุด = **143** — ปิดไปว่า "sweep รันไม่ได้" แต่ `a88db4c6` กลับด้านแล้วดัน SS1 ขึ้น demo (→ ORDER-250)
-**ห้าม:** ประทับตรา REVIEWED โดยไม่อ่านหลักฐาน (ทั้งกองนี้มีอยู่เพราะกฎว่า *ผลดิบของ agent ห้ามกลายเป็นข้อสรุปเองเพราะเวลาผ่านไป*) ·
-ย้ายใบที่ยัง CONTRADICTED/PARTIAL ก่อนแก้ข้อความ
-
 ## ORDER-230 — [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD — `OPEN` · ทำได้: user (อ่าน terminal) + Claude (แก้แถว) · 👉 แนะ: user
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 **ปัญหา:** `portfolio/ACCOUNTS.csv` แถว 463666728 เขียน `USD` + `base_equity=100000` แต่ user อธิบายบัญชีนี้เป็น **cent**
@@ -205,14 +171,6 @@ Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **�
 **ทำไมน่าทำ:** นี่คือรายการที่ **หลักฐานพร้อมที่สุด** ในกอง untracked ทั้ง 27 — ของสร้างเสร็จ cage ผ่าน .set มีแล้ว เหลือแค่เล็งให้ถูกตัว
 **STEP 1:** เลือก host ที่ BWD >1.0 สบายๆ (ตาม memory `escalation-overlay-needs-strong-bwd-host`) — เสนอ Boss_14 GBPJPY leg-8 หรือ RSI-MR 990103
 **ห้าม:** ใช้ host ที่ BWD ปริ่ม 1.0 (Wave1 พิสูจน์แล้วว่าแพ้) · Model-2
-
-## ORDER-237 — [integrity] "GBPJPY leg-8" = 3 magic 2 spacing คนละตัวกัน — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เก็บกวาด .set) · 👉 แนะ: user
-**bars:** N-A · **flat-lot probe:** N-A
-**ปัญหา:** 990101 / 990208 / 990218 + `_14_DistAtrMult` 2.0 vs 3.0 ลอยอยู่โดยถูกเรียกว่า "config GBPJPY leg-8" เหมือนกันหมด
-`DEPLOYMENTS.csv` บอก live = 990208 · ORDER-166 revalidate ที่ dist=2.0
-**ความเสียหายที่เกิดไปแล้ว:** ความสับสนชุดนี้ทำให้ต้องถอน verdict 1 ใบ (`d375099e`) — Wave 2 "แพ้ BWD 0.92" มาจากรันผิด config
-**ทำไมมันหลุด:** ORDER-136 เขียนไว้ในเนื้อว่า "side-finding, unresolved, not chased further" แล้วใบนั้นก็ปิดไป
-**ห้าม:** ลบ .set ก่อน user ยืนยันว่าตัวไหนอยู่บน VPS จริง
 
 ## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `OPEN` · ทำได้: Sonnet · Claude · 👉 แนะ: Sonnet
 **bars:** N-A · **flat-lot probe:** N-A
