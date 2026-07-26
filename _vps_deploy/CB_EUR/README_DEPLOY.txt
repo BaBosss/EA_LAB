@@ -1,6 +1,11 @@
 VPS DEPLOY — (Boss)_LondonConsoBreakout_rev01 on EURUSD H1  (2026-06-22)
 =========================================================================
-STATUS: ⚠️ CONDITIONAL — deploy with close monitoring (see risk note)
+STATUS: ⛔ DROPPED 2026-06-25 — DO NOT DEPLOY (banner added 2026-07-26)
+        Registry: "DROP — no durable edge (OOS both <1.0) → remove from portfolio"; the Q2
+        rescue sweep found nothing worth keeping. Every number in this README reproduces
+        exactly and the selection is genuinely clean — the defect is only that the verdict
+        moved and this file did not. Superseded status line was:
+        "⚠️ CONDITIONAL — deploy with close monitoring". CB_GBP is the leg that survived.
 
 Files to ship to the VPS:
   (Boss)_LondonConsoBreakout_rev01.ex5   → VPS MQL5\Experts\  (same binary as CB_GBP)

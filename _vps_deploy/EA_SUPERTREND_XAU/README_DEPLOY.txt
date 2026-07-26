@@ -2,6 +2,18 @@
 EA_SUPERTREND — XAUUSD H4 — DEMO (validated; live-tracking leg)
 ========================================================================
 Status:   DEMO — user-approved 2026-07-11, PENDING_ATTACH on demo acct 415573666.
+
+!!! CONTAMINATED SELECTION + A MISSING FAILURE (added 2026-07-26) !!!
+          Audit AUDIT_BUNDLE_EVIDENCE_G1.md sec.2.
+          (1) The 18-cell grid that picked ATR10 / mult3.0 / SL2.0 scored EVERY cell on
+              2023.01.01 -> 2026.07.01 -- six months inside the declared 2026H1 holdout.
+              The .ini say Optimization=0 only because a shell loop drove the grid; a ranked
+              grid is selection regardless of that flag.
+          (2) More serious: the one clean out-of-sample window that exists for this exact
+              config -- BWD 2020-2022 -- returns PF 0.88, net -91.49. That result is absent
+              from a README headed "validated". A losing out-of-sample run is not a detail
+              to omit; it is the result that decides.
+          => not a validated leg. Do not attach on these numbers.
           Purpose = EA-SCORE criterion #7 (live tracking >=2 months) for a fully
           validated XAU edge. Runs at 0.01 lot.
 EA:       EA_SUPERTREND.ex5   (bundled here)  MD5 b0885f878e0229e8cd15f9755c041f2d
