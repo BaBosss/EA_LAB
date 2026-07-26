@@ -27,7 +27,7 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
-| `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
+| `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) · `AGENT_TASKBOARD.md` (แถว ORDER-280) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.

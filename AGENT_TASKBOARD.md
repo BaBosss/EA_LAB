@@ -82,6 +82,33 @@
 > (ไม่เปิดเป็น order เพราะยังไม่มีเงื่อนไขปลุก — เปิดไว้เฉยๆ = บอร์ดบวมโดยไม่มีใครทำ)
 > วงจรชีวิตเต็ม + เหตุผล → `docs/WORK_LIFECYCLE.md` · เลนที่เปิดอยู่ → `docs/SESSION_LEDGER.md`
 
+## ORDER-280 — [lever] rev04 re-entry บน BTC H4 — สวีป 3 anchor — `CLAIMED(Claude, 2026-07-26 20:30)` · ทำได้: Claude · 👉 แนะ: Claude
+**bars (pre-register 2026-07-26 20:55 — เขียนก่อนรันครั้งแรก ห้ามแก้หลังเห็นผล):**
+pass = **ดีขึ้นทั้ง MAIN และ BWD เทียบ baseline pyr1 (2.257 / 3.949) AND MC PF-5th ไม่ต่ำกว่า 1.052** ·
+dead = แย่ลงหน้าต่างใดหน้าต่างหนึ่ง · กลาง = ดีขึ้นหน้าต่างเดียว **หรือ** PF ดีขึ้นแต่ PF-5th ลด ⇒ ไม่รับ lever
+<sub>เงื่อนไข MC อยู่ในบาร์เพราะ ETH สอนมาแล้ว: PF หัวตาราง 1.310/1.099 ผ่านสวย แต่ PF-5th 0.857/0.657
+= ขาดทุนเมื่อสุ่มลำดับไม้ใหม่. PF อย่างเดียวมองความบางไม่เห็น</sub>
+**flat-lot probe:** N-A (lever นี้ไม่ escalate lot — ทุกไม้ flat `_04_LotSize`; ตัว escalate คือ `[07]` ซึ่ง probe ไปแล้วรอบ campaign)
+**EA:** `(TRD)_SuperTrendFlip_rev04` (compile 0/0 · `ebece9d0`) · **เลน:** `D:\Meta 5b` portable **เท่านั้น**
+(gotcha: BTC tick data ต่างกันข้าม install — เทียบข้ามเลน = ตัวเลขปลอม)
+**STEP 0 (กรง — ห้ามข้าม):** parity. รัน `rev04` ด้วย `STF_BTC_H4_rev04_off.set` (ReMode=0) เทียบ `rev03` ด้วย
+`STF_BTC_H4_pyr1.set` · MAIN 2023.01.01-2025.12.31 · Model 1 · **เทียบรายไม้ (จำนวน/เวลาเปิด-ปิด/ราคา) ไม่ใช่ PF**
+— PF ตรงกันโดยบังเอิญได้ · assert หน้า Inputs ว่า `_08_ReMode=0` จริง (cache กินค่าที่ไม่ได้ระบุ)
+**TREE:** ไม่ตรงรายไม้ → `BLOCKED` ทันที หยุดทุกอย่าง (แปลว่า refactor `SuperTrend()` ทำพฤติกรรมเปลี่ยน) ·
+ตรง → STEP 1
+**STEP 1:** สวีป 3 โหมดแยกกัน บน host pyr1 เดิม (Donchian-20 + pyramid MaxAdds=1) — `_08_MaxReEntries=1` ตรึงทุกโหมด:
+· mode 1: `_08_PbAtrMult` {0.5, 1.0, 1.5, 2.0}
+· mode 2: `_08_StoLevel` {20, 25, 30} × `_08_StoK` {9, 14}
+· mode 3: `_08_SrBars` {10, 20, 40} × `_08_SrAtrMult` {0.3, 0.5, 1.0}
+**STEP 2 (บังคับ ก่อนสรุปว่าโหมดไหนชนะ):** **control run `_01_UseDonchian=false`** ของโหมดที่ดีที่สุด.
+เหตุผล: re-entry ข้าม Donchian โดยตั้งใจ ⇒ ตอน `UseDonchian=true` ทางเข้า re-entry มีตัวกรอง**น้อยกว่า**
+ทางเข้า flip ⇒ สวีปทำกำไรได้จากการหลบตัวกรอง ไม่ใช่จากกลไก pullback. ถ้า control บอกว่ากำไรมาจากการหลบ
+⇒ lever ตก ไม่ว่าเลขหน้าตาดีแค่ไหน
+**STEP 3:** ตัวชนะ → Model-4 both-window (ซอยครึ่งปี — 3 ปีชน memory ceiling) → หัก swap ด้วย
+`scripts/swap_adjust_crypto.py --rate-long 14.67 --rate-short 0.49` → `monte_carlo.py` → เทียบบาร์
+**ห้าม:** แตะ 2026H1 (ไหม้ไปแล้วสำหรับ EA ตัวนี้) · เทียบเลขข้ามเลน MT5 · ใช้ผล Model-1 เป็นหลักฐานตัดสิน ·
+รับ lever โดยไม่มี control run STEP 2 · แก้บาร์ด้านบนหลังเห็นผล
+
 ## ORDER-270 — [🔴 tooling/integrity] กรงของ validator ไม่ทำงาน — negative suite ทั้ง 2 ชุดค้าง — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A · **flat-lot probe:** N-A
 **วัดได้ 2026-07-26:** `scripts/_test/run_order101_negative_tests.ps1` และ `run_order103_negative_tests.ps1`
