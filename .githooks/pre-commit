@@ -51,6 +51,21 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+# Handoff routing contract (2026-07-26). Fast no-op unless an added/modified handoff
+# under _triage/ is staged (archived ones are exempt). BLOCKS a handoff with no
+# <!-- HANDOFF-ROUTING --> table, or one whose ORDER-/BACKLOG- destinations do not
+# resolve against the real boards. A sweep found 27 forward-looking items that had
+# been written into handoffs and never reached AGENT_TASKBOARD.md at all.
+"$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_handoff_contract.ps1
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] handoff routing contract failed (above)."
+  echo "[pre-commit] Every forward-looking item needs a home: an ORDER on the board, a MASTER_BACKLOG row, or DONE."
+  echo "[pre-commit] Format: docs/WORK_LIFECYCLE.md section 2."
+  exit $rc
+fi
+
 event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
 if [ -n "$event_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1
