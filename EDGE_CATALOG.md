@@ -255,7 +255,7 @@ holdout ที่ไม่เคยใช้ select (gate #6) ว่าจับ
 spread เพิ่มบน ~90% ของไม้ retest = edge ที่ tester ประเมินต่ำ. **ใช้ได้กับ breakout EA ที่มี edge เท่านั้น**
 (ห้ามแปะ EA ที่ปัญหาคือ regime เช่น XAU_NY). **config-conditional:** ช่วยเฉพาะเมื่อขา retest มี edge ในหน้าต่างที่ market
 อ่อน — Bars40/TP5 ช่วย (regime-robust) แต่ **live Bars55/TP8 ไม่ช่วย** (retest อ่อน BWD, TP กว้างต้องการ move ใหญ่)
-→ **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/ORDER108_SPLIT_RETEST_VERDICT.md`.
+→ **ห้าม retrofit ตัว live**, ใช้กับ build ใหม่ที่ config สมดุล. verdict = `_triage/_archive/verdicts/order104-126/ORDER108_SPLIT_RETEST_VERDICT.md`.
 
 ## SMC × STO multi-TF reversion (user idea, 2026-07-16) 🟩 BUILD-ON candidate (optimized, ranger-home)
 
@@ -265,7 +265,7 @@ pass ยืน both-window** (1.30/1.13 · 1.22/1.02). survivor = **StoK17** (�
 = edge **เฉพาะ EURUSD H1** (ไม่ travel: AUDNZD/EURGBP/XAU ล่ม BWD). **ADX filter (user idea) ยกดีขึ้น:** best =
 StoK13/OS30/AdxMax30/EMA50/SL3/TP1 = **MAIN 1.50 / BWD 1.24, 130 ไม้** (จาก no-filter 1.30/1.13). filter ต่อยอด
 edge ที่มี ไม่สร้าง edge (AUDNZD กู้ไม่ได้). = **EURUSD-specific candidate** (plateau+Model-4 ก่อน demo). verdict =
-`_triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
+`_triage/_archive/verdicts/order104-126/ORDER107_SMCxSTO_STAGE0_VERDICT.md`.
 **บทเรียนถาวร: default-smoke ≠ concept-kill — optimize + right-home + filter ก่อนตีตาย reversion (user push ถูก 2 เรื่อง).**
 
 ## LEVER: HP-denoise (Hodrick-Prescott causal) @ λ1600 on trend-cross (ORDER-104C, 2026-07-16) 🟩 REUSABLE
@@ -280,7 +280,7 @@ present-but-untested in ORDER-079 corpus) and the exit is fully mechanical (test
 **Cheap 2-stage smoke plan (build when a lane frees):** Stage 0 = strip the SMC/OB (expensive) → naked
 EMA100-gated STO-cross reversion probe on M15 (skip M1 for triage), EURUSD/GBPUSD/XAU, Model 1 — if core PF<1
 everywhere, OB won't save it → DEAD. Stage 1 (only if pulse) = add M5 OB-zone gate (ring-buffer state like
-ORDER-098-A) → should raise win%. Full plan + hard-parts = `_triage/SMCxSTO_SIGNAL_TRIAGE.md`.
+ORDER-098-A) → should raise win%. Full plan + hard-parts = `_triage/_archive/one_off_analyses/SMCxSTO_SIGNAL_TRIAGE.md`.
 **Verdict: worth a cheap Stage-0 smoke (~1-2h), NOT a build campaign on hope.** Sibling of the MACD-gate S/D
 concept above (both = untested reversion-at-zone).
 
@@ -291,12 +291,12 @@ EA testbed = `(TRD)_Probe_MAHP_TanhVol_rev01` (`_02_UseHPFilter`/`_02_HP_Lambda`
 บน XAU H4:** fast16/slow32/λ1600 = MAIN 1.59 / BWD 1.33 · เพื่อนบ้าน MA 4 ทิศผ่าน · SL {1.5,2.0,3.0} ผ่านทั้งหมด ·
 λ1600 = center (λ800 MAIN พัง, λ3200 เสื่อม). **HP ช่วยเฉพาะ XAU ไม่ช่วย EUR** (Stage A/B). chassis 2-MA เปล่า
 ไม่ใช่ keeper — คุณค่า = lever ไปแปะ production trend chassis (BREAKOUT/SuperTrend) เป็น axis ใหม่ใน funnel.
-verdict = `_triage/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำให้ valid = HP one-sided causal (reviewer ยืนยันไม่มี look-ahead).
+verdict = `_triage/_archive/verdicts/order104-126/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำให้ valid = HP one-sided causal (reviewer ยืนยันไม่มี look-ahead).
 
 ## LEVER: vertical-barrier time exit `_2_MaxHoldBars` (ORDER-125, 2026-07-19) 🟨 BUILT — DEAD-ON-GRID, untested elsewhere
 
 - **What:** basket-level force-close after N chart-TF bars from basket inception (QuantCorner Triple Barrier time leg). In chassis, default 0=off byte-identical, Codex-hardened (inception latch กัน clock-reset เมื่อ leg ปิดเอง · iBarShift −1 guard · Boss_16 no-op warn · partial-milestone leak fix).
-- **A/B host Boss_14 GBPJPY H4 (locked leg8 set): DEAD ทุกค่าที่ M4** — MH130 ตาย M1 (BWD 0.73; MAIN lift 2.16 = regime-fit ห้ามไล่) · MH390 ผ่าน M1 แต่ **M4 พลิก** (BWD 1.11→0.85, net +210→−368). verdict `_triage/ORDER125_VERTBARRIER_VERDICT.md`.
+- **A/B host Boss_14 GBPJPY H4 (locked leg8 set): DEAD ทุกค่าที่ M4** — MH130 ตาย M1 (BWD 0.73; MAIN lift 2.16 = regime-fit ห้ามไล่) · MH390 ผ่าน M1 แต่ **M4 พลิก** (BWD 1.11→0.85, net +210→−368). verdict `_triage/_archive/verdicts/order104-126/ORDER125_VERTBARRIER_VERDICT.md`.
 - **Mechanism lesson (จ่ายแล้ว):** (1) **recovery tail ของ grid คือเครื่องยนต์** — basket 203 วันใน BWD สุดท้าย recover; time-cut = realize tail loss = ตัด edge ตัวเอง. ห้าม enable lever นี้บน grid/DCA family. (2) **M1→M4 flip บน exit lever** — M1 มองไม่เห็น path ใต้น้ำ; exit/time lever บน grid = M4-deciding เสมอ (ยืนยันซ้ำ precedent ORDER-126 SL-fan).
 - **Open home (ยังไม่ทดสอบ):** single-position trend-following (SuperTrend/TrendRider) ที่ time-stop เป็น convention — ถ้าจะใช้ ต้อง A/B บน host นั้นก่อน.
 
@@ -305,7 +305,7 @@ verdict = `_triage/ORDER104C_HP_PLATEAU_VERDICT.md` · gate ที่ทำใ�
 EX009 geometry (3-bar gap retrace + engulfing confirm) **ไม่มี edge ที่ exit geometry ใดๆ**: 22 runs,
 RR sweep TP{15→60}@SL20, both regimes — PF peak 0.98 แล้วหักลง (cost-dilution ไม่ใช่ edge), ไม่เคย >1
 ใน 26 cells. **ปิดเฉพาะ naked-entry** — FVG-as-confluence-filter ให้ entry อื่นยังไม่เคยเทส (เปิดอยู่).
-verdict = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
+verdict = `_triage/_archive/verdicts/order076-098/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
 
 ## LEVER: add-gating a grid (gate the ADDS, not just the seed) — from AdaptiveGrid_Oil (2026-07-17) 🟩 REUSABLE
 
@@ -362,7 +362,7 @@ and both lose** → the seed is directionless; the brief-vs-source direction dis
 edge lives in the standalone's combined 4-basket (Trend+Counter) + BEP-shift + trailing engine, NOT the seed
 signal** — stripping the seed onto a generic DCA chassis removes the edge source. Matches the standing lesson:
 MM/exit layers multiply an existing edge, they don't manufacture one. Standalone `(EXP)_JUMSTOCH_MT5` untouched.
-Boss_18 code kept + caged (documented dead-seed, not deploy). verdict = `_triage/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
+Boss_18 code kept + caged (documented dead-seed, not deploy). verdict = `_triage/_archive/verdicts/ORDER_LANEA_JUMSTOCH_VERDICT.md`.
 
 ## LEVER: basket-close beats per-leg-TP on flat-lot DCA (JumStoch exit sweep, 2026-07-18) 🟩 REUSABLE
 

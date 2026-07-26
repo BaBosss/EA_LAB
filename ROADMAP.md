@@ -41,7 +41,7 @@
 - **สัดส่วนงาน (ยาแก้ตัน "ใส่ไอเดีย EA ไม่จบ"):** 50% operate/observe · 25% evidence/promotion integrity ·
   15% portfolio construction · 10% EA idea ใหม่ (เลน intake = งาน agent — ดูกติกากวาด v2 ใน §2.5) ·
   **denominator = lead-attention hours (rolling 4 สัปดาห์) — compute/agent runtime ไม่นับในสัดส่วนนี้**
-- ที่มา: `_triage/CODEX_5YR_OS_VISION_2026-07-19.md` + `_triage/CODEX_CONTROLROOM_DESIGN_2026-07-19.md`
+- ที่มา: `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_5YR_OS_VISION_2026-07-19.md` + `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_CONTROLROOM_DESIGN_2026-07-19.md`
   (Opus สังเคราะห์ — ส่วนที่เพิ่มจาก Codex: ท่อ 2/3 ฝั่งรายได้ ซึ่งแผน Codex จบแค่ OS บนทุน cent)
 
 ---
@@ -96,7 +96,7 @@
 
 ### Phase 4.5 — CONTROL ROOM (เลนขนาน · CR-001+ เริ่มได้ก่อน judge — เป็นงาน ops/evidence ตรงกับ FIX-THEN-SCALE)
 
-> design เต็ม = `_triage/CODEX_CONTROLROOM_DESIGN_2026-07-19.md` (Codex เขียน · Opus adopt · user approve
+> design เต็ม = `_triage/_archive/codex_reviews/system_and_roadmap/CODEX_CONTROLROOM_DESIGN_2026-07-19.md` (Codex เขียน · Opus adopt · user approve
 > 2026-07-19) · หลักการ: **EA = เซนเซอร์/ผู้ปฏิบัติ · Control Room = ความจริงกลาง (`ControlRoomSnapshot`
 > ก้อนเดียว) · AI = ที่ปรึกษา · user = ผู้อนุมัติเงิน** · อำนาจ AI ไต่ทีละขั้น L0 observe → L1 recommend →
 > L2 safe-ops → L3 pre-approved risk-reduction · **L4 (money decision) = human approval เสมอ แม้ปีที่ 5**

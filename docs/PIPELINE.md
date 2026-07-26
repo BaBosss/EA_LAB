@@ -5,7 +5,7 @@
 > owns the *routing between them*. (1-fact-1-owner anti-drift: this fact previously had no owner, so it forked
 > into two contradictory pipelines across the skill docs — that fork is now closed.)
 >
-> Established 2026-07-18 from `_triage/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` Part 2+5 (user-approved).
+> Established 2026-07-18 from `_triage/_archive/frameworks_superseded/FABLE_RESETTLE_FRAMEWORK_2026-07-18.md` Part 2+5 (user-approved).
 > Verdict tree + bar numbers = `CLAUDE.md` VERDICT GATE. Optimize method = skill `backtest-optimize-rigor`.
 
 ## The flow (this is what actually runs — docs match practice, not vice versa)

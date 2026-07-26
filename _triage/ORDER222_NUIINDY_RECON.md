@@ -152,7 +152,7 @@ re-read here), `NUI_EURUSD_H1_flat_2425.htm` (PF 0.72), `NUI_EURUSD_H1_single_23
 ### `_triage/*.md` verdict docs mentioning NuiIndy
 - `D:\EA_LAB\_triage\ORDER095_NUIINDY_EXPAND_VERDICT.md` — the primary verdict: EXPANSION REJECTED
   (structural martingale, no entry edge), + the CutLoss=30 LIVE guardrail recommendation.
-- `D:\EA_LAB\_triage\ORDER212_NUIINDY_GUARDRAIL_PROVENANCE.md` — provenance audit of the 1.19/2.20
+- `D:\EA_LAB\_triage\_archive\audits_and_investigations\ORDER212_NUIINDY_GUARDRAIL_PROVENANCE.md` — provenance audit of the 1.19/2.20
   numbers (CLEAN, but notes the DD-kill was never empirically triggered in either tested window).
 - Downstream citations of the same two numbers (no new evidence): `EA_SCORECARD_AND_REGISTRY.md:157`
   and `EDGE_CATALOG.md:54-63`.

@@ -42,7 +42,7 @@ cd D:\EA_LAB ; powershell -ExecutionPolicy Bypass -File scripts\order104_smokeA.
 **endpoint instability** — ถ้า HP แย่ลง เช็คว่าเป็น endpoint noise ไม่ใช่ denoise ล้มเหลว.
 
 ## ✅ STAGE A+B DONE (2026-07-13) — verdict + build-on ที่ผ่าน
-ผลเต็ม = `_triage/ORDER104_EXPERIMENT_SUMMARY.md`. สรุป:
+ผลเต็ม = `_triage/_archive/verdicts/order104-126/ORDER104_EXPERIMENT_SUMMARY.md`. สรุป:
 - **HP@λ1600 บน XAU ผ่าน both-regime** (XAU H4 1.35/1.68) = **candidate build-on** (Stage A ที่ตี HP ตกเป็น λ14400 artifact)
 - IBS naked ตก (park, ต้อง filter) · tanh inert (calib bug R/κ horizon)
 - **NEXT BUILD (priority):** build-on XAU-H4-HP-λ1600 → sweep MA-period/SL รอบ plateau + Model-4 confirm + holdout/MC

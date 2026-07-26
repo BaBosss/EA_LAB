@@ -53,7 +53,8 @@ WHAT IT DOES
      file:line -> include path -> reason list, then exits 1.
      Exits 0 with a clean summary when there are none.
   6. Writes the full dependency graph (every scanned file -> its full include
-     list, each with resolution + status) to _triage\ORDER163_DEPENDENCY_GRAPH.md.
+     list, each with resolution + status) to
+     _triage\_archive\audits_and_investigations\ORDER163_DEPENDENCY_GRAPH.md.
 
 This script is DETECTION ONLY. It never edits, moves, or deletes anything under
 ea_template\, EA_CORE, or D:\EA_Project. If it finds a violation, fix it in a
@@ -83,7 +84,7 @@ if ([string]::IsNullOrEmpty($scriptDir)) {
   }
 }
 if ([string]::IsNullOrEmpty($TemplateRoot)) { $TemplateRoot = Join-Path $scriptDir '..\ea_template' }
-if ([string]::IsNullOrEmpty($GraphReport))  { $GraphReport  = Join-Path $scriptDir '..\_triage\ORDER163_DEPENDENCY_GRAPH.md' }
+if ([string]::IsNullOrEmpty($GraphReport))  { $GraphReport  = Join-Path $scriptDir '..\_triage\_archive\audits_and_investigations\ORDER163_DEPENDENCY_GRAPH.md' }
 
 if (-not (Test-Path -LiteralPath $TemplateRoot)) {
   Write-Host "FATAL: TemplateRoot not found: $TemplateRoot" -ForegroundColor Red

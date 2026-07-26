@@ -67,4 +67,4 @@ KILL-SWITCH + NEXT
 - Equity DD alert 15%, KILL 20% (internal KillDD fires at 25%). Judge +3 months from attach.
 - Attach Boss_14_GridLog on GBPJPY H4, load this .set, confirm DryRun=false + magic 990208 +
   first basket arms. Tell Claude attach date -> register 990208 in DEPLOYMENTS.csv + judge date.
-- Verdict: _triage/ORDER106_GBPJPY_RESCUE_VERDICT.md
+- Verdict: _triage/_archive/verdicts/order104-126/ORDER106_GBPJPY_RESCUE_VERDICT.md

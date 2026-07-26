@@ -71,4 +71,4 @@ NEXT STEP (user)
 corr vs cohort = informational (demo experiment; closest relatives = JPY-cross grids). Attach the
 EA on AUDJPY H1, load ZeusAUDJPY_regime_demo_v1.set, confirm AllowLive=true + magic 990110 +
 _50_RegimeMode=1 + first basket arms. Tell Claude the attach date -> register in DEPLOYMENTS.csv
-(portfolio/) + set judge +3 months. Verdict doc: _triage/ORDER109_ZEUS_REGIME_VERDICT.md
+(portfolio/) + set judge +3 months. Verdict doc: _triage/_archive/verdicts/order104-126/ORDER109_ZEUS_REGIME_VERDICT.md

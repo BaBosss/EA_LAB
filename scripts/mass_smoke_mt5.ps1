@@ -1,5 +1,5 @@
 param(
-  [string]$WorklistCsv = "D:\EA_LAB\_triage\mass_smoke_worklist.csv",
+  [string]$WorklistCsv = "D:\EA_LAB\_triage\_archive\campaigns_closed\mass_smoke_worklist.csv",
   [string]$RootDir = "D:\Forex\10_EA_PROJECTS\2. wait for test",
   [string]$OutCsv = "D:\EA_LAB\_mt5_auto\mass_smoke_mt5.csv",
   [string]$SmokeDir = "D:\Meta 5b\MQL5\Experts\_smoke",

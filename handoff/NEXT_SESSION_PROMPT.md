@@ -17,7 +17,7 @@ divergence-reversion = DEAD) [[feedback-buildon-pf-gt-1]] [[feedback-pacing-batc
 ## สถานะเข้า session (session ก่อน = ORDER-098 corpus ปิดครบ)
 - **ORDER-098 signal-hunt CLOSED** — stat-arb G/H validated+optimized (ExitZ0.3, both-window 1.14/1.15,
   holdout 1.23) → demo staged; concepts I/J/M DEAD; K maker + L OB-gate no-lift. **finding: cheap signal-hunt หมดแล้ว.**
-- verdict = `_triage/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md` · handoff = `handoff/HANDOFF_2026-07-17C.md`
+- verdict = `_triage/_archive/verdicts/order076-098/ORDER098F_PAIRSPREAD_STATARB_VERDICT.md` · handoff = `handoff/HANDOFF_2026-07-17C.md`
 
 ## งาน session นี้ (เรียง EV):
 

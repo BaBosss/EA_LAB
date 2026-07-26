@@ -277,14 +277,14 @@ grid class per CLAUDE.md verdict gate).
   OPEN and specced, not run — M15 over three years on a grid is a heavy M4 queue and the box is
   already hitting the memory ceiling" — i.e. this recon's section 6 split is exactly the debt that
   row flags as unpaid.
-- **`_triage/ORDER204_GENETIC_RETRO_AUDIT.md:118-121`** —
+- **`_triage/_archive/audits_and_investigations/ORDER204_GENETIC_RETRO_AUDIT.md:118-121`** —
   > "`OPT_MG_CHF_lowDD.ini` — its only citation lives in a scorecard table explicitly marked
   > `⛔ HISTORICAL, SUPERSEDED 2026-07-09`. Whether the MatchaGrid CORE verdict is still the
   > operative one for MG_v1 was not re-derived here (out of scope — this audit does not judge
   > verdicts, only traces citations)."
   (This is the audit that fed into ORDER-215; ORDER-215 itself is the "re-derive it" step it declined
   to do.)
-- **`_triage/ORDER204_GENETIC_RETRO_AUDIT.md:52`** (ORDER-214, Gold Reaper, a sibling row) documents
+- **`_triage/_archive/audits_and_investigations/ORDER204_GENETIC_RETRO_AUDIT.md:52`** (ORDER-214, Gold Reaper, a sibling row) documents
   the **inert-axis hazard** for closed-source EAs whose sizing input is overridden internally — worth
   keeping in mind for MatchaGrid's flat-lot probe: confirm `InpStepAddLot=0` actually produces flat
   lot sizing in the Journal/trade log rather than assuming the input binds.

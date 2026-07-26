@@ -32,7 +32,7 @@ Commits this session: `d0560cc f26d0c01 0d12fbdb 51ca7dd8 b553648b 55ee7344 d3f5
 ## ADDENDUM 2026-07-19 (ต่อ session เดิม, "ทำต่อให้จบ")
 - **ORDER-126 = DONE (NO LIFT, keep 991070).** round-number SL-avoidance ไม่แก้ fragility — fragility = M4
   fill-sensitivity ไม่ใช่ stop-hunt (M1 บัง: 1.05/1.03 plateau vs M4 0.94/0.99 cliff, reproduce Lane C). lever
-  `_09_RoundAvoid` เก็บใน EmaStoRev (default OFF, reusable). verdict `_triage/ORDER126_SMCSTO_ROUNDAVOID_VERDICT.md`.
+  `_09_RoundAvoid` เก็บใน EmaStoRev (default OFF, reusable). verdict `_triage/_archive/verdicts/order104-126/ORDER126_SMCSTO_ROUNDAVOID_VERDICT.md`.
 - **ORDER-119 = DONE by parallel session** (flat-lot MACD = 0/6 both-window = DEAD-STRUCTURAL, escalation คือ edge).
 - **ORDER-124 + 125 = UNBLOCKED แล้ว** (parallel session ORDER-129 re-pin baseline 2026-07-18) — **แต่ทั้งคู่แตะ
   core/ ที่ parallel session กำลังทำอยู่ (129/130/131/133) → collision risk, ควร coordinate ก่อนลงมือ ไม่ solo.**

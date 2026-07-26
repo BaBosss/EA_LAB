@@ -738,7 +738,7 @@
                                          "kill_rule":  "DD 15%",
                                          "judge_date":  "2027-03-06",
                                          "start_date":  "2026-07-16",
-                                         "notes":  "SMCSTO EURUSD ADX-filter WEAK candidate; fan 2026-07-18 center 1.39/1.19 both-window but SL-FRAGILE (SL-20%=2.4xATR flips 0.94/0.99 both-window) =\u003e LOCK SL\u003e=3.0 never tighten; verdict _triage/ORDER_LANEC_SMCSTO_FAN_VERDICT.md"
+                                         "notes":  "SMCSTO EURUSD ADX-filter WEAK candidate; fan 2026-07-18 center 1.39/1.19 both-window but SL-FRAGILE (SL-20%=2.4xATR flips 0.94/0.99 both-window) =\u003e LOCK SL\u003e=3.0 never tighten; verdict _triage/_archive/verdicts/ORDER_LANEC_SMCSTO_FAN_VERDICT.md"
                                      },
                                      {
                                          "account":  "463666728",

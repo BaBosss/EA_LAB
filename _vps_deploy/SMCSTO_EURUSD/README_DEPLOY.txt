@@ -39,5 +39,5 @@ corr vs cohort = informational (user: it's a demo experiment). Attach EmaStoRev 
 SMCSTO_EURUSD_H1_demo_v1.set, confirm AllowLive=true + magic 991070 + first trade fires. Tell Claude
 the attach date -> register in DEPLOYMENTS.csv + judge +3 months.
 Provenance: this candidate was nearly killed on a default-param smoke; the user's push (optimize STO
-K5->13, add ADX filter) revived it. Full arc: _triage/ORDER107_SMCxSTO_STAGE0_VERDICT.md
+K5->13, add ADX filter) revived it. Full arc: _triage/_archive/verdicts/order104-126/ORDER107_SMCxSTO_STAGE0_VERDICT.md
 ========================================================================

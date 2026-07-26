@@ -29,7 +29,7 @@
 > ที่อธิบาย config ที่ ship จริง มาจาก run **Model-1** (audit `AUDIT_BUNDLE_EVIDENCE_G2.md` §4)
 
 Trend-rider + pyramid + snowball บน crypto CFD (MT5). 2 leg อิสระ corr 0.03 = additive เต็ม.
-สเปค + หลักฐานเต็ม: `_triage/ORDER125_CRYPTO_TRENDRIDER_SPEC.md`
+สเปค + หลักฐานเต็ม: `_triage/_archive/verdicts/order104-126/ORDER125_CRYPTO_TRENDRIDER_SPEC.md`
 
 ## ⚠️ ก่อน attach — เงื่อนไขบัญชี
 - **symbol ต้องมี BTCUSD + ETHUSD** ใน Market Watch (ThinkMarkets มี · Exness demo 146237 มี) — เช็ค suffix (บาง broker เป็น BTCUSDm)

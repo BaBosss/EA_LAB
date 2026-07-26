@@ -191,21 +191,21 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - [x] **EA_PREVDAY (#9/#30 Prev-Day H/L breakout) = DEAD 2026-06-27 → RE-CONFIRMED (ORDER-114, 2026-07-16B)**
       XAU H1 PF=1.19/T=877. Rescue-close: buffer{0.1,0.3,0.5}×{H1,H4}×both-window Model-4 (12 runs) — ไม่มี config
       แตะ 1.2 both-window (ดีสุด b0.1-H4 1.07/1.06 = marginal churn, DD 22-72%). buffer lever swept = valid kill.
-      Do not re-test Prev-Day H/L on any FX or XAU. verdict `_triage/ORDER114_PREVDAY_NR7_CLOSE_VERDICT.md`.
+      Do not re-test Prev-Day H/L on any FX or XAU. verdict `_triage/_archive/verdicts/order104-126/ORDER114_PREVDAY_NR7_CLOSE_VERDICT.md`.
 
 - [x] **EA_KELTNER (#62 Keltner Channel breakout) = DEAD 2026-06-27 → REJECT-CONFIRMED (ORDER-113, 2026-07-16B)**
       Rescue swept channel-def lever (EMAPeriod/KeltMult) × TF × both-window Model-4 บน USDJPY (16 runs) → ยืนยันตาย:
       **H4 = window-inversion** (BWD 1.22-1.48 แต่ MAIN 2023-26 พังหมด 0.71-0.76, DD 15%) = deploy ไม่ได้ ·
       **H1 = churn** (both-window 1.0-1.14 ไม่แตะ 1.2, 450-530t = spread-fragile). ไม่มี cell both-window ≥1.2.
       Build-on ปิด (breakout → regime-gate redundant · pending-limit ผิดทาง). original DEAD ถูก, ครั้งนี้ swept จริง.
-      verdict = `_triage/ORDER113_KELTNER_RESCUE_VERDICT.md`. (contrast: ICHIMOKU revived under same treatment → กระบวนการทำงาน ไม่ใช่ rubber-stamp)
+      verdict = `_triage/_archive/verdicts/order104-126/ORDER113_KELTNER_RESCUE_VERDICT.md`. (contrast: ICHIMOKU revived under same treatment → กระบวนการทำงาน ไม่ใช่ rubber-stamp)
 
 - [~] **EA_ICHIMOKU (#66 Kumo TK-cross + ADX) = ~~DEAD 2026-06-27~~ → REVIVED-PARKED (ORDER-112, 2026-07-16B)**
       ⚠️ "DEAD" ผิด — under-swept: เทสผิด symbol (XAU capped) + default periods เท่านั้น + ไม่เคยแตะ Kumo-period lever.
       **USDJPY (momentum→JPY-trender = บ้านถูก) + period sweep = both-window Model-4 บวก + plateau กว้าง (6/8 cell >1.1):**
       med-H4(12/34/68) 1.48/1.39 · slow-H1(20/60/120) 1.31/1.22 (ผ่าน ≥1.2 both). แต่ year-split = ทั้งคู่ 2 ปีขาดทุน
       (agg โดนปีเทรนด์กลบ) → ไม่ผ่าน all-years-positive = **PARKED-BUILD-ON ไม่ demo.** build-on lead: med-H4+slow-H1 ขาดทุนคนละปี
-      → diversified basket (5/6 ปีบวก). verdict = `_triage/ORDER112_ICHIMOKU_RESCUE_VERDICT.md`.
+      → diversified basket (5/6 ปีบวก). verdict = `_triage/_archive/verdicts/order104-126/ORDER112_ICHIMOKU_RESCUE_VERDICT.md`.
       (เดิม: XAU H4 1.13/DD9.96 default — ceiling XAU breakout ~1.13-1.19 ยังจริงสำหรับ XAU; แต่ concept ไม่ตาย มันแค่คนละบ้าน.)
 
 - [x] **concept A: EA_NR7 (#105 NR7 volatility breakout) = FULLY DEAD 2026-06-28**
@@ -291,7 +291,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 
 ---
 
-## §CODEX-AUDIT missing controls (P1/P2) — ตบเข้าจาก `_triage\CODEX_AUDIT_FULL_2026-07-10.md` Layer E (REVIEW = taskboard §REVIEW CODEX-AUDIT 2026-07-11 · P0 ทั้ง 5 ข้อเป็น ORDER-092/093/083C แล้ว ไม่อยู่ในนี้)
+## §CODEX-AUDIT missing controls (P1/P2) — ตบเข้าจาก `_triage\_archive\codex_reviews\system_and_roadmap\CODEX_AUDIT_FULL_2026-07-10.md` Layer E (REVIEW = taskboard §REVIEW CODEX-AUDIT 2026-07-11 · P0 ทั้ง 5 ข้อเป็น ORDER-092/093/083C แล้ว ไม่อยู่ในนี้)
 
 ### P1 — ต้องมีก่อน promotion รอบถัดไป / ระหว่าง operate
 - [ ] **Live-vs-backtest drift monitor ต่อเนื่อง:** trade-rate interval, win/PF uncertainty, spread/slippage จริง, holding time, layer depth, MAE/MFE — ไม่ใช่รอ judge date อย่างเดียว (ต่อยอด ORDER-092 หลัง snapshot data ไหลแล้ว)
@@ -303,7 +303,7 @@ gold-grid concept confirmed dead. เต็ม → `MT4_GOLDGRID_RETEST_PLAN.md`
 - [x] **Gist privacy:** ✅ redact เลขบัญชีใน published copy (2026-07-19) — `publish_dashboard_gist.ps1` mask ทุกบัญชีเป็น `...<last4>` บน `$tmp` ก่อน upload (local dashboard ยังเต็ม) · verified: 0 leftover, magic/dollar ไม่โดน clip, 21 masked tokens · ⏸ ยังเหลือ option "ย้ายช่องทาง private จริง" ถ้าต้องการมากกว่า mask
 - [ ] **Judge date ต่อ cohort:** generate จาก DEPLOYMENTS.csv (ORDER-093) — ห้ามนาฬิกาเดียวทั้งระบบ (ชุด 07-09 judge = 2026-10-09, ชุดเก่า = ตามวัน attach จริง)
 - [ ] **C5 hygiene:** ใส่ SUPERSEDED marker บน Model-2 conclusion เก่าในไฟล์นี้ (ห้ามลบ — mark ว่าใช้ตัดสินไม่ได้แล้ว)
-- [x] **ST03 spacing probe:** ✅ ปิดแกน 2026-07-20 — 3 รัน M1 GBPUSD H1 (cell near-miss 12/26/9 cnt3, DCA L4, trail 23): FIXED 300pts PF 0.90 (986t) · ATR×1.0 PF 1.03 (2213t) · ATR×2.0 PF 0.94 (1254t) — เพดาน 1.03 = breakeven noise, **spacing ไม่ rescue, verdict ไม่เปลี่ยน**. หมายเหตุวิธี: chassis ไม่มี progressive-per-level step input → แกนปิดเป็น fixed/ATR1.0/ATR2.0 (standalone ST03 มี spacing กลไกต่างออกไป = ยังเป็น user lane ตาม `_triage/HANDOFF_ST03_OPTIMIZE_2026-07-19.md`). reports `ST03SP_*` · sets `_mt5_auto/ab_sets/st03_spacing_probe/`
+- [x] **ST03 spacing probe:** ✅ ปิดแกน 2026-07-20 — 3 รัน M1 GBPUSD H1 (cell near-miss 12/26/9 cnt3, DCA L4, trail 23): FIXED 300pts PF 0.90 (986t) · ATR×1.0 PF 1.03 (2213t) · ATR×2.0 PF 0.94 (1254t) — เพดาน 1.03 = breakeven noise, **spacing ไม่ rescue, verdict ไม่เปลี่ยน**. หมายเหตุวิธี: chassis ไม่มี progressive-per-level step input → แกนปิดเป็น fixed/ATR1.0/ATR2.0 (standalone ST03 มี spacing กลไกต่างออกไป = ยังเป็น user lane ตาม `_triage/_archive/handoffs_closed/HANDOFF_ST03_OPTIMIZE_2026-07-19.md`). reports `ST03SP_*` · sets `_mt5_auto/ab_sets/st03_spacing_probe/`
 
 ### P2 — resilience/governance (ทำเมื่อ P0+P1 จบ)
 - [ ] Attach/config/build attestation อัตโนมัติจากทุก terminal (รวม magic collision + hedging/netting mode)
@@ -366,10 +366,10 @@ utf-8 ปกติ · UTF-16 มี BOM (BOT MOGUL html) · **UTF-16 ไม่�
 | # | งาน | ปลุกเมื่อ | หลักฐานที่มีแล้ว |
 |---|---|---|---|
 | D1 | Boss_16 ก่อนสลับ binary ต้องเช็ค F3 หา GV `k16_pair_a/b` (มี = pair liquidation ค้าง ต้องเคลียร์ก่อน) | **มีคนจะ attach/สลับ binary Boss_16** — เร็วๆ นี้จริง (ORDER-213 bundle รออยู่) | ORDER-138 pair-persist · `_vps_deploy/BOSS16_KANGAROO_XAU/` |
-| D2 | X1 milestone persist ข้าม restart · S1/S2 ladder restart-cancel reconcile · S3 margin re-budget ต่อเนื่อง | **EA ที่ใช้ StackMode=93 หรือ partial-close ขึ้น live จริง** | `_triage/CODEX_ORDER132_AUDIT.md` (defer pack ของ ORDER-132b) |
+| D2 | X1 milestone persist ข้าม restart · S1/S2 ladder restart-cancel reconcile · S3 margin re-budget ต่อเนื่อง | **EA ที่ใช้ StackMode=93 หรือ partial-close ขึ้น live จริง** | `_triage/_archive/codex_reviews/order129_132_138/CODEX_ORDER132_AUDIT.md` (defer pack ของ ORDER-132b) |
 | D3 | ขุด QuantCorner FB ย้อนหลัง | **user ส่ง permalink มา** (feed อ่านอัตโนมัติไม่ได้ — scrollHeight ค้างที่ 2406 เห็นแค่โพสต์ปักหมุด) | memory `quantcorner-findyour8-idea-catalog` |
 | D4 | แกะ PDF ทฤษฎี 11 ใบที่เหลือ (Vanguard / Risk-Parity / Mudley) | **คิว build ว่าง** หรือ **จะเคลียร์ `findyour8_pdfs/`** (โฟลเดอร์ gitignore — เคลียร์แล้วของหาย) | `_triage/FINDYOUR8_STRATEGY_PDF_CATALOG.md` · EDGE_CATALOG IDEA SEEDS #9 |
-| D5 | Wave-3 XAU 3 ดีไซน์ที่ไม่เคยสร้าง: S6/SS5 squeeze-micro · SS3 VWAP reversion · S3 Asian fade | **เปิดรอบออกแบบ XAU ใหม่** | `_triage/XAU_STRATEGY_WAVE12_2026-07-19.md` บรรทัด 34 (ช่องว่างในโรสเตอร์) — ⚠️ VwapSnapback_EUR / AsianDriftCarry_XAU ที่มีอยู่ **คนละเซลล์** ไม่ใช่ตัวนี้ |
+| D5 | Wave-3 XAU 3 ดีไซน์ที่ไม่เคยสร้าง: S6/SS5 squeeze-micro · SS3 VWAP reversion · S3 Asian fade | **เปิดรอบออกแบบ XAU ใหม่** | `_triage/_archive/frameworks_superseded/XAU_STRATEGY_WAVE12_2026-07-19.md` บรรทัด 34 (ช่องว่างในโรสเตอร์) — ⚠️ VwapSnapback_EUR / AsianDriftCarry_XAU ที่มีอยู่ **คนละเซลล์** ไม่ใช่ตัวนี้ |
 | D6 | สมมติฐาน: ความกว้าง SL เทียบ noise floor เป็นตัวทำนายว่ารอด M1→M4 ไหม | **ทำได้เลยเมื่อว่าง** — falsify ถูกจาก corpus ที่มีอยู่ ไม่ต้องรันใหม่ | PivotBreakout + SS1 (SL กว้างตาม ATR = รอด) vs MomentumBurst (SL 40pt = พังบน real tick) |
 | D7 | ยัด `Exit_DynCloseTargetMoney()` เข้า Kangaroo | **หลัง review เจ้าของ exit ก่อน** (Kangaroo มี `Kangaroo_NextLot()` + exit path ของตัวเอง — ชนแน่ถ้าไม่ดูก่อน) | ORDER-098-C build ไว้แล้ว (`bd709fca`) · ORDER-197 body |
 | D8 | พอร์ตเกินงบ 25% — จะ resize / ถอด / ยอมรับ | **ORDER-233 audit ผ่าน** (ตัวเลขจะขยับจาก 73% เป็น 38% ถ้า flag เปิด — ตัดสินก่อน audit = ตัดสินบนเลขที่ยังไม่รู้ว่าใช้ได้ไหม) | `scripts/portfolio_risk_admission.py` · `6f49e0b7` |

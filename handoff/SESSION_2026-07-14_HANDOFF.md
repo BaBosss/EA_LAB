@@ -31,7 +31,7 @@ HEAD ขยับผ่าน `c0f7b0db`→`eb06ac64`→`35a6b84c` ระหว�
 16 mq5 ใหม่จริง (mq4 53 ตัว = ORDER-036 ครอบแล้ว): 4 name-DQ + 12 smoked → **11 REJECT/PARK, 1 build-on-needs-data**
 ((ICE) CCI Currencies Strength — both-window PF>1 แต่ n=10 บางไป). ลอง basket ขยาย 9 majors แล้ว **ไม่รอด**
 (7-13 trades/sym, identical-row artifact = EA ไม่อ่าน chart symbol อิสระ) → **ยืน PARKED ไม่ไล่ต่อ**.
-Verdict = `_triage/ORDER076_MQ5_SMOKE_VERDICT.md`.
+Verdict = `_triage/_archive/verdicts/order076-098/ORDER076_MQ5_SMOKE_VERDICT.md`.
 
 ## Thread D — ORDER-095 CAMPAIGN: EA_BREAKOUT_XAU expand — ✅ ปิด, bundle staged
 Flat-lot both-window H4 บน 5 candidate (XAG/GBP/EUR/JPY/US30): **2 ผ่าน** — USDJPY (PF 1.28/1.25, 75-102t)
@@ -44,7 +44,7 @@ Verdict = `_triage/ORDER095_BREAKOUT_XAU_EXPAND_VERDICT.md`.
 sweep spacing×SL (3 combo) ไม่ช่วย (PF ยัง<1 ทุก cell) → flat-lot combined-6-system probe (PF 0.67 MAIN/
 0.15 BWD = STRUCTURAL-death criterion ตาม CLAUDE.md) → **isolate ทีละ 6 ระบบ (S1-S6) ไม่มีตัวไหนมี edge เดี่ยว**
 (ดีสุด S2 = 0.80/0.76 ยังแพ้). **Verdict: park ทั้ง concept, chassis/risk-mgmt ไม่มีปัญหา ปัญหาอยู่ที่ entry
-signal ทั้ง 6 ตัว.** Verdict = `_triage/ORDER097_HEX_FUNNEL_VERDICT.md`.
+signal ทั้ง 6 ตัว.** Verdict = `_triage/_archive/verdicts/order076-098/ORDER097_HEX_FUNNEL_VERDICT.md`.
 
 ## Thread F — ORDER-098-A FVGFill_Naked (build ใหม่) — 🟡 PARAMETRIC, ยังไม่ปิด
 Build `ea_projects/(EXP)_FVGFill_Naked/FVGFill_Naked.mq5` ใหม่ทั้งตัว (EX009/EX196 FVG-fill algo).
@@ -54,7 +54,7 @@ Build `ea_projects/(EXP)_FVGFill_Naked/FVGFill_Naked.mq5` ใหม่ทั้�
 - **ผล rev02 (1 window เท่านั้น, Model 1 2023-2026):** PF<1 ทั้ง 4 cell (0.74-0.97) แต่ win% ใกล้ breakeven
   มาก (49.8-56.7% vs breakeven จริง 57.1% ที่ RR SL20/TP15) — **EURUSD H1 เกือบเสมอทุนพอดี (PF 0.97)**
 - **Verdict: PARAMETRIC ไม่ใช่ STRUCTURAL** — ยังไม่มี BWD window, ยังไม่ sweep RR/TP → **ห้ามตัดตายตอนนี้**
-- Verdict เต็ม = `_triage/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
+- Verdict เต็ม = `_triage/_archive/verdicts/order076-098/ORDER098A_FVGFILL_SMOKE_VERDICT.md`
 
 **👉 งานถัดของ thread นี้ (ถ้าไล่ต่อ):** (1) BWD window 2020-22 บน 4 cell เดิม (2) sweep RR — ลอง TP กว้างขึ้น
 (win% ใกล้ breakeven มาก แค่ปรับ exit อาจดันข้าม 1.0 ได้ — นี่คือเคส "ปรับ exit ไม่ใช่ redesign entry" ต่างจาก
