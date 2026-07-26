@@ -94,3 +94,8 @@ ARCHIVE/
 _triage/findyour8_pdfs/
 
 STATUS.md
+
+# Codex/agent raw run transcripts parked in the triage archive (~16MB, untracked by
+# intent — the PROMPT/RESULT pairs beside them are the readable record). Ignored so a
+# stray `git add -A` cannot commit them into history permanently.
+_triage/_archive/**/*.log
