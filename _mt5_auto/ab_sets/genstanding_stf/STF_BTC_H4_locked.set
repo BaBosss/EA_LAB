@@ -1,0 +1,27 @@
+; STF_BTC_H4_locked.set — centre ที่เลือกจาก fine grid EMA (ORDER-GEN-STANDING cell #13)
+; 2026-07-26 · EMA grid: 60 pass · survivors 18/60 (30%) · plateau=WEAK · neighbours 9
+;   M1 MAIN PF 1.682 / 100t / eqDD 2.37%
+; ⚠️ centre == robust == profit-max = จุดเดียวกัน -> เป็นยอด ไม่ใช่ใจกลางย่าน (สัญญาณ spike)
+; NOEMA grid แย่กว่าและบางกว่า (plateau=THIN, neighbours 1, PF 1.36) -> ไม่ใช้
+; ⚠️ crypto: backtest คิด swap=0 แต่ BTC long จริง -14.67%/ปี -> ผลทุกบรรทัด = `swap-unadjusted`
+; AllowLive=false
+
+_00_OptimizeMode=false
+_01_AtrPeriod=14
+_01_Mult=2.5
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=0
+_02_TpAtrMult=4.0
+_02_SlAtrMult=1.0
+_03_UseEma=true
+_03_EmaPeriod=250
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false

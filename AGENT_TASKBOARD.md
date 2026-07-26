@@ -753,7 +753,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 
 | # | EA | symbol | TF | window | lever/หมายเหตุ | ผล (M4 MAIN / M4 BWD) |
 |---|---|---|---|---|---|---|
-| 13 | STF | BTCUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
+| 13 | STF | BTCUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.59 (ซอย 6 ช่วง) / 1.35** · `both-window-pulse` · `swap-unadjusted` · plateau=WEAK/spike |
 | 14 | STF | BTCUSD | H1 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | |
 | 15 | STF | XAUUSD | H4 | MAIN+BWD | **control cell** — ต้องได้ ~PF 1.9 ถ้าต่ำกว่ามาก = pipeline ผิด ไม่ใช่ตลาด | **1.51 / 1.03** · `both-window-pulse` (BWD ปริ่ม) · **control = pipeline ปกติ** (ดูบล็อกผลดิบ) |
 | 16 | STF | WTI | H4 | MAIN+BWD | genetic Stage A | |
@@ -798,6 +798,31 @@ M4 ทั้งสองหน้าต่าง · .set ที่ล็อก =
   fine grid จึง **ล็อกแกนตาย + แยกกริดตาม UseEma** — plateau ที่ได้จึงเป็นของจริง: survivors **58/75 = 77%**, neighbours 22
 - **EMA filter ไม่ซื้ออะไรที่นี่**: กริด EMA ให้ PF เท่ากัน (1.518 vs 1.525) แต่ n ครึ่งเดียว (112 vs 211) → เลือก NOEMA
 - **ไม่ใช้ profit-max** (กริด EMA มี PF 2.29/81t = spike, script ติดป้าย overfit-prone เอง)
+
+#### ผลดิบ cell #13 BTCUSD H4 — 2026-07-26, Opus-seat รันเอง
+
+| | PF | trades | net | eqDD% | หมายเหตุ |
+|---|---|---|---|---|---|
+| **MAIN 2023.01–2025.12** | **1.591** | 100 | +564.14 | 1.84 (ช่วงแย่สุด) | **ซอย 6 ช่วงครึ่งปีแล้ว aggregate** |
+| **BWD 2020.01–2022.12** | **1.35** | 91 | +220.89 | 2.34 | รันต่อเนื่อง 111M ticks |
+
+ป้าย = `both-window-pulse` · `swap-unadjusted` · **แต่ plateau อ่อน (ดูด้านล่าง)**
+.set = `_mt5_auto/ab_sets/genstanding_stf/STF_BTC_H4_locked.set` · chunk รายช่วง: 0.92 / 1.47 / 1.86 / 2.20 / 1.16 / 1.66
+
+**🔴 gotcha ที่ต้องรู้ก่อนรัน cell crypto ที่เหลือ (#14 #19): MAIN 3 ปีเต็มของ BTC รัน Model-4 ไม่ผ่าน**
+terminal คืน `"no disk space in ticks generating function"` (journal ของ terminal ไม่ใช่ tester log) = **memory ceiling
+ไม่ใช่ข้อมูลขาดและไม่ใช่ดิสก์เต็ม** (memory `mt5-no-disk-space-is-memory-ceiling`) — probe หน้าต่างสั้นยืนยัน tick มีครบ
+(2023 ต้นปี 4.51M ticks · 2024 ต้นปี 4.58M ticks) · BTC tick หนักกว่า XAU มาก (BWD 3 ปี = 111M ticks / 2,341 MB)
+⇒ **crypto ต้องซอยหน้าต่างเสมอ** · report ที่ล้มจะออกมาเป็น `PF 0.0 / 0 trades / bars=0` = **artifact ห้ามกรอกลงตาราง**
+- **caveat ที่ต้องติดไปกับเลข MAIN:** ซอย 6 ช่วง ⇒ ทุกรอยต่อมีไม้ถูก "end of test" ปิด ⇒ เทียบกับ BWD ที่รันต่อเนื่อง
+  **ไม่ใช่การเทียบชนิดเดียวกันเป๊ะ** (ทิศทาง error ไม่รู้ — precedent เดียวกับ ORDER-210 challenger)
+- **cross-check ที่ทำให้เชื่อได้ว่า chunk ไม่เพี้ยน:** M1 เต็มหน้าต่างให้ PF 1.682/100t · chunked M4 ให้ 1.591/100t
+  = **จำนวนไม้เท่ากันเป๊ะ** และ PF ใกล้กัน
+- **plateau ของ BTC อ่อนกว่า XAU ชัดเจน:** coarse survivors **3.5%** (XAU 21.8%) · fine NOEMA `plateau=THIN`
+  neighbours 1 · fine EMA `plateau=WEAK` neighbours 9 และ **centre = robust = profit-max จุดเดียวกัน = ยอด ไม่ใช่ใจกลางย่าน**
+  ⇒ ผ่านบาร์ทั้งสองหน้าต่างจริง แต่ยังไม่มีหลักฐานว่ามี plateau ให้ยืน
+- **swap ยังไม่หัก:** BTC long จริง −14.67%/ปี ขณะ backtest คิด 0 · ExitMode=0 = ถือยาว (trail เส้น ST ไม่มี TP)
+  ⇒ ต้นทุนจริงกินกำไร +564 นี้เป็นสัดส่วนที่ยังไม่ประเมิน **ห้ามเทียบ PF ตัวนี้กับ EA ที่ไม่ใช่ crypto ตรง ๆ**
 
 **⚠️ หนี้ที่ทิ้งไว้ให้ cell ที่เหลือของชุดนี้ (ไม่ใช่แค่ cell นี้):** `STF_gen_nonfx.set` sweep `_02_TpAtrMult`/`_02_SlAtrMult`
 พร้อม `_02_ExitMode` ทั้ง 3 ค่า และ sweep `_03_EmaPeriod` พร้อม `_03_UseEma` — **ทุก cell จะเจอแกนตายชุดเดียวกัน**
