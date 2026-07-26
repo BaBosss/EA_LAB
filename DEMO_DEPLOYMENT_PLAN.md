@@ -16,13 +16,23 @@ Monitor: exporter 1 chart/บัญชี → dashboard ผ่านเครื
 
 | บัญชี | ประเภท | รันอะไร (magic) | สถานะแล็บ |
 |---|---|---|---|
-| **159503454** Blazing Arrow | REAL cent MT5 | **กองหลัก validated 5 ตัว:** Zeus(990101) · BRK-XAU(991001) · Squeeze(991004) · Trendline(991002 exp) · RSI-MR(990103→**REMOVED 2026-07-18**) | ✅ monitor เข้ม |
-| **159475669** Boss-Trend Swing | REAL cent MT5 | user mix: NuiIndy(1524) · CB_GBP(990005) + **ST03 family 9398/939721/990010 = REMOVED 2026-07-18** (uncapped-ruin/no-edge; rescue ต่อใน backtest = ORDER-119) + unenumerated | ⚠️ user mix — แล็บไม่รับรอง |
+| **159503454** Blazing Arrow | REAL cent MT5 | **กองหลัก validated 5 ตัว:** Zeus(990101) · BRK-XAU(991001) · Squeeze(991004) · Trendline(991002 exp) · RSI-MR(990103→**REMOVED 2026-07-18**) | ✅ monitor เข้ม · **991001 อ่าน Inputs สด 2026-07-26 ยืนยัน v2 (Bars40/Sl1.5/Tp5.0/Ema200/AllowLive=true) = ตรงตามที่ต้องคง ไม่ต้องแตะ** |
+| **159475669** Boss-Trend Swing | REAL cent MT5 | user mix: NuiIndy(1524) · CB_GBP(990005) + **ST03 family 9398/939721/990010 = REMOVED 2026-07-18** (uncapped-ruin/no-edge; rescue ต่อใน backtest = ORDER-119) + unenumerated · **BRK-XAU ×2 อ่านสด 2026-07-26: 991001 = v2 Bars40 (ACTIVE) · 991002 = Bars8 ซึ่ง bundle ระบุ DEMO แต่ไปอยู่บนเงินจริง + ถูกเลือกบนหน้าต่างที่กิน holdout 2026H1 (โรคเดียวกับ Bars55/v3) → user ถอดออก 2026-07-26** | ⚠️ user mix — แล็บไม่รับรอง |
 | **141049900** Celestial Woodfire | REAL cent MT4 | user exp: Zeus Gold Hedge(7777, no-SL) · Gold_Kangaroo L1-4(1112-1115) | ⚠️ user exp · kill floating DD 40% |
 | **415573666** Demo Mt5-2 (Exness Trial14) | DEMO MT5 | **Boss_14_GridLog ×7** (990201-207) **+ Zeus AUDJPY(990110) + GBPJPY leg8(990208) + TrendRider_XAU/W2 S1(992004)** · AccountSnapshotExporter | ✅ Boss V2 bench + 2 grid legs (attached 2026-07-16, judge 2026-10-16) · TrendRider_XAU attached 2026-07-23, judge 2026-10-23 (ORDER-139; attached here per user override, not the originally-planned 463666728 bundle account) |
 | **463666728** Demo bundle 10 (Exness Trial17) | DEMO MT5 | **11 single-position (attached 2026-07-16, judge 2026-10-16):** Wave5 XAU/XAG(990301-2) · BRK USDJPY/US30(991003/5) · MacdDiv(999094) · SMCSTO/EmaStoRev(991070) · IchiADX USDJPY×2(990066-7) · IchiADX XAU×2(990068-9) · SuperTrend(990020) · **➕ RSI-MR(990103) EURUSDm attached 2026-07-24, judge 2026-10-24** (demo-isolate re-attach after real-account removal 2026-07-18 for DD25% kill; re-validated ORDER-182→186, both-window strong but holdout 2026H1 fails outright — accepted as BUILD-ON exception per user) | 🆕 ⚠️ **ยังไม่มี exporter** → ดู §monitoring |
 | **69424711** Demo EA3 | DEMO MT4 | UnNomGuai(1/2) · RSI-orig(5888) · swb(990) · ClevrFX(unverified) | monitor deferred (Trial8 login) |
 | **146237** Exness demo (user) | DEMO MT5 | user's own pool ~10 EA — magic ยังไม่ enumerate (บัญชีนี้เคยโผล่ใน live_deals) | 🆕 registered 2026-07-18 (user ยืนยัน: demo Exness, ขอให้เฝ้า) → enumerate magics จาก live_deals รอบ `/ea-monitor` ถัดไป |
+
+### 🔴 CRYPTO LEGS — นาฬิกาตัดสินรีเซ็ตเป็น **2027-01-26** (2026-07-26)
+
+ขา crypto ทั้งคู่บน **415573666** — BTC `EA_SUPERTREND`(990025) และ ETH `EA_DONCHIAN`(990030) — attach
+ไปเมื่อ 2026-07-23 แต่ `.set` ที่แถมมาตั้ง **`_06_AllowLive=false`** ทั้งสองไฟล์ ⇒ EA รันแต่ไม่ยิงไม้เลย
+3 วัน (ศูนย์ดีล). user เปิดแท็บ Inputs อ่านเจอเองแล้วแก้เป็น `true` ทั้งคู่ **2026-07-26**.
+
+- **start_date + judge_date re-base ไปที่ 2026-07-26 → judge 2027-01-26** (+3 เดือนของจริง; ช่วง 07-23→07-26 ไม่นับเป็นหลักฐาน)
+- บทเรียนกลับเข้า bundle: `README_ATTACH.md` ต้องมีบรรทัด "verify `_06_AllowLive=true` หลัง load .set"
+  เป็น step บังคับ ไม่ใช่หมายเหตุ — แท็บ Common ติ๊ก Allow live trading แล้วยัง**ไม่พอ** เพราะ EA กั้นสองชั้น
 
 ### ⏳ JUDGE DATE EXTENDED (user decision 2026-07-25: "เลื่อนวัน")
 
