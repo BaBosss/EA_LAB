@@ -234,3 +234,54 @@ base `CutLoss=100` on 2022, same symbol/TF, compared against the existing `cut30
 
 Reports: `_mt5_auto/reports/NUI_EURUSD_{cut30only,cap12cut30}_{2022,2425}.htm`,
 `NUI_EURUSD_H1_base_2425.htm` · inis of the same names under `_mt5_auto/ini/`.
+
+---
+
+# Part 4 — 🔴 this scan has a blind spot, and it is load-bearing (Claude/Opus 2026-07-26)
+
+**The method of Part 1 cannot see hand-rolled grid selection, and that is how three deployed legs
+got through it.**
+
+Part 1 parsed 6,467 `.ini` for `FromDate/ToDate/Optimization` and treated a pass as *selection*
+when `Optimization` was non-zero. That flag only records whether the **MT5 tester's own optimiser**
+drove the run. It says nothing about whether parameters were chosen.
+
+The Wave5 family selects parameters with a **PowerShell loop**: `run_wave5_uj_opt.ps1` writes one
+`.ini` per cell, every cell runs `Optimization=0`, the results land in a CSV, and the winning row is
+read off the CSV by hand. Substantively that is an optimize pass — a grid was scored and ranked and
+a winner picked. Formally every file says `Optimization=0`, so Part 1 classified all of it as
+harmless evaluation.
+
+**Consequence, measured (audit `_triage/AUDIT_BUNDLE_EVIDENCE_G2.md`):**
+
+| leg | magic | what was ranked | window every cell was scored on |
+|---|---|---|---|
+| WAVE5_USDJPY | 990303 | 9 MAIN cells (`W5OPT_f*_m*`) | `2023.01.01 → 2026.07.01` |
+| WAVE5_XAU | 990301 | 12 MAIN cells (`EXT_XAU_F*_M*`) | `2023.01.01 → 2026.07.01` |
+| WAVE5_XAG | 990302 | 6 MAIN cells (`XAGMG_*`) | `2023.01.01 → 2026.07.01` |
+
+All three are ACTIVE on demo 463666728 with judge 2026-10-16. There is **no** `.ini` anywhere in
+this EA's funnel with a MAIN upper bound at or before `2025.12.31` (all 41 Wave5 `.ini` checked), so
+the deployed configs' MAIN numbers have never been measured on data they did not see.
+
+**The corrected criterion — use this, not the flag:**
+
+> A run is **selection** if its result was *compared against another run's result to choose a
+> configuration*, regardless of what `Optimization=` says. A grid driven by a shell loop, a manual
+> A/B, or a spreadsheet ranking are all selection. `Optimization != 0` is a sufficient condition,
+> never a necessary one.
+
+**What this invalidates and what it does not.** Part 1's clearances that rest on *positively
+tracing* the deployed parameters to a clean pass still stand — Boss_14 is the good case: every leg
+traces to `BOSS14_OPT_<SYM>_IS.ini` at `2023.01.01 → 2025.06.30`. The clearances phrased as "all
+their optimize passes end at 2026.01.01" — **`EmaStoRev` (991070), `MacdDiv_Naked` (999094),
+`EA_DONCHIAN` (990030)** — used the flag as the filter and therefore inherit the blind spot. They
+are **not** re-opened here, but they are **not cleared either**: each needs one re-check asking
+whether a multi-cell CSV ever ranked its config on a holdout-inclusive window. Queue, do not assume.
+
+**Why this is the more valuable finding.** The three Wave5 legs are demo, judge is three months out,
+and nothing is on real money — the direct damage is small. The damage that matters is that a
+scan everyone has since been citing as "we checked the whole repo" checked one syntactic marker and
+not the thing it stood for. Same shape as the two other findings this month: a guard that never
+fires, and a plateau counted on a dead axis — **a formal marker standing in for the substance it was
+supposed to indicate.**

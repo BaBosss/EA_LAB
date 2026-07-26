@@ -2,6 +2,17 @@
 ORDER-095 CAMPAIGN — EA_BREAKOUT_XAU expansion — DEMO DEPLOY — US30 H4
 ========================================================================
 Status:   DEMO-ELIGIBLE, WATCH sizing (lead-engineer PASS to demo, 2026-07-14). NOT live-certified.
+
+!!! HEADLINE NUMBER SUPERSEDED -- added 2026-07-26 (audit AUDIT_BUNDLE_EVIDENCE_G2.md) !!!
+          "MAIN(2023-26) PF 1.46" was measured on O095_BRK_US30_H4_MAIN.ini, which runs
+          2023.01.01 -> 2026.07.01 and therefore includes six months of the 2026H1 holdout.
+          A clean-window re-run already exists in this repo (O159_991005): PF 1.21 / 32 trades.
+          Roughly 58% of this leg's MAIN net came from the six burned months.
+          No parameter was tuned here (the .set is 53 bytes: BuyOnly, AllowLive, Magic; the rest
+          are compiled defaults), so nothing was selected into the leak -- the defect is that the
+          number used to justify the attach is inflated, not that the config was fitted.
+          Read this leg as PF ~1.21 on a 32-trade sample, against the README's own THIN-SAMPLE
+          caveat. Demo only (463666728, magic 991005).
 EA:       EA_BREAKOUT_XAU.ex5  (same binary as the live XAU leg magic 991001 — breakout40 /
           ATR1.5-5 SLTP / daily-EMA200 filter / buy-only / fixed lot 0.01)
 Source:   D:\EA_LAB\ea_projects\EA_BREAKOUT_XAU\EA_BREAKOUT_XAU.mq5

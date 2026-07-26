@@ -2,6 +2,32 @@
 ORDER-082 Wave5 (LAB_ENTRY_17) — DEMO DEPLOY BUNDLE — XAUUSD H1
 ========================================================================
 Status:   DEMO-ELIGIBLE (lead-engineer PASS to demo, 2026-07-14). NOT live-certified.
+
+!!! CONTAMINATED SELECTION -- added 2026-07-26 (audit AUDIT_BUNDLE_EVIDENCE_G2.md) !!!
+          The deployed cell (fib23.6 / mult0.618) was picked as the best of a 12-cell grid
+          (EXT_XAU_F*_M*_MAIN.ini) in which EVERY cell was scored on 2023.01.01 -> 2026.07.01.
+          Six months of the declared 2026H1 holdout sat inside the ranking window. The .ini all
+          say Optimization=0 only because the grid was driven by a PowerShell loop instead of
+          the tester's optimiser -- a ranked grid is selection regardless of that flag.
+          No .ini in this EA's funnel has a MAIN upper bound at or before 2025.12.31, so the
+          deployed config's MAIN number has never been measured on data it did not see.
+          => "MAIN(2023-26) PF 1.11" below is NOT a clean-window number. Do not cite it as one.
+
+          Two further corrections found in the same audit:
+          - The most recent run of THIS EXACT set (ORDER166_990301_W5XAU) gives MAIN 1.08 /
+            BWD 1.06, not 1.11 / 1.11. Same trade counts (271 / 217), so it is a tick-database
+            difference on the same trades -- but the README advertises the higher, older pair.
+          - ORDER166_990301_W5XAU_MAIN.ini does NOT write _17_UseStructLevels, which this
+            bundle's .set sets true. Per the known tester-cache defect, an input absent from the
+            .ini is taken from the per-terminal cache. That re-validation may not have run the
+            deployed configuration at all. UNCERTAIN -- settle it with a FULL pinned .set.
+          - The MC (ruin 0.00%) and corr (0.415) figures below could not be located in any
+            stored artifact. Unconfirmed, not disproven.
+
+          NOT a reason to detach: this is demo (463666728, judge 2026-10-16), the BWD side is
+          clean (2020.01.01 -> 2022.12.31), and no real money is exposed. It IS a reason not to
+          promote and not to quote the MAIN figure. The one run that would settle it:
+          fib23.6/mult0.618 on 2023.01.01 -> 2025.12.31, Model 4, full pinned .set.
 EA:       Boss_17_Wave5.ex5  (Boss V2 template, Entry_17 = Elliott wave-4 retrace, both directions)
 Source:   D:\EA_LAB\ea_template\Boss_17_Wave5.mq5  (+ core/entries/{Entry_Wave5,Wave5Swings}.mqh)
 Build:    ex5 from commit bfa048f ; verdict/gates commit 0b4acdbc
