@@ -53,7 +53,7 @@
 ## 3. 🔴 gotcha ที่จะกัด session ถัดไปถ้าไม่รู้
 
 1. **BTCUSD tick data ต่างกันระหว่าง MT5 install** — EA/set/window/บัญชีเดียวกัน: `Meta 5` = PF 0.92/−4.26 · `Meta 5b` = 0.96/−1.83 (13 ไม้เท่ากัน) ขณะ **XAU ตรงกันเป๊ะ** ⇒ **A/B ของ crypto ต้องรันเลนเดียวกัน + เขียนกำกับว่าเลนไหน** (memory `btc-tick-data-differs-per-mt5-install`)
-2. **swap: tester คิดโหมด POINTS แต่ไม่คิดโหมด INTEREST_CURRENT** — วัดด้วย probe: XAUUSD (POINTS) ถูกคิดจริง −29.25 ⇒ **backtest XAU ทั้งคลังหัก financing แล้ว** · BTCUSD/ETHUSD (INTEREST) **ไม่ถูกคิดเลย** ⇒ crypto ต้องหัก post-hoc = `notional × rate/100/360 × วันถือ` · probe อยู่ที่ `ea_projects/(TST)_SymbolSwapProbe/` (2 ตัว: อ่านสเปก + วัดว่าคิดจริงไหม) · สคริปต์หัก = scratchpad `swap_adjust.py`/`swap_apply.py` (⚠️ ยังไม่ย้ายเข้า repo — ถ้าจะใช้ซ้ำควรย้ายเข้า `scripts/`)
+2. **swap: tester คิดโหมด POINTS แต่ไม่คิดโหมด INTEREST_CURRENT** — วัดด้วย probe: XAUUSD (POINTS) ถูกคิดจริง −29.25 ⇒ **backtest XAU ทั้งคลังหัก financing แล้ว** · BTCUSD/ETHUSD (INTEREST) **ไม่ถูกคิดเลย** ⇒ crypto ต้องหัก post-hoc = `notional × rate/100/360 × วันถือ` · probe อยู่ที่ `ea_projects/(TST)_SymbolSwapProbe/` (2 ตัว: อ่านสเปก + วัดว่าคิดจริงไหม) · สคริปต์หัก = **`scripts/swap_adjust_crypto.py`** (ย้ายเข้า repo แล้ว + verify ว่าให้เลขเดิมเป๊ะ · วิธีใช้ใน `docs/MT5_AUTOMATION.md`)
 3. **`ETHUSD min_lot = 0.1` ไม่ใช่ 0.01** — `.set` ที่ใช้ 0.01 ทำให้ guard ใน EA ปฏิเสธทุกออเดอร์ → **รายงาน 0 ไม้ที่หน้าตาเหมือน "ไม่มีสัญญาณ"** ⇒ probe สเปก symbol ใหม่ก่อนเชื่อผลใดๆ และแก้ lot ใน `.set` ของ optimize ด้วย
 4. **`select_robust_pass.py` รายงาน fan ของ EA แบบ basket/pyramid ผิด** — บอก `survivors=0 plateau=NONE` ขณะแถวดิบกำไรเกือบทั้งกระดาน (PF 1.59-2.79 ที่ 68-81 ไม้) ⇒ **อ่าน XML ดิบเสมอสำหรับ EA หลายไม้**
 5. **crypto Model-4 หน้าต่าง 3 ปีชน memory ceiling** — terminal คืน `"no disk space in ticks generating function"` (อยู่ใน journal ของ terminal ไม่ใช่ tester log) แล้วออกรายงาน `bars=0 / PF 0.0` = **artifact ห้ามกรอกลงตาราง** ⇒ ซอยเป็นครึ่งปี 6 ช่วง (cross-check: M1 เต็มหน้าต่างให้จำนวนไม้เท่ากันเป๊ะ)
@@ -65,7 +65,7 @@
 
 1. **user เคาะ: attach demo ของ BTC H4 PYR1 หรือรอ regime 2025 พลิก** — ถ้า attach ต้อง pre-register เกณฑ์ judge ลง `DEPLOYMENTS.csv` (default PF ≥1.40 ที่ ≥30 ไม้ ซึ่งด้วยอัตรา ~11 สัญญาณ/ปีจะใช้เวลา ~1 ปีกว่าจะครบ — ต้องยอมรับล่วงหน้า)
 2. **pullback / S-R / STO re-entry บน BTC H4** (= `rev04` lever, default-off + regression cage) — user เสนอเอง, ผมเห็นด้วยว่าเป็นทางที่คุ้มกว่าขยาย symbol เพราะเพิ่มไม้ใน**เทรนด์ที่รู้แล้วว่ามี edge** · **บาร์ที่ต้องใช้: ดีขึ้นทั้งสองหน้าต่าง AND MC PF-5th ไม่ลดลง** (เพิ่มเงื่อนไข MC เพราะ ETH สอนว่า PF หัวตารางมองความบางไม่เห็น)
-3. ย้าย `swap_adjust.py`/`swap_apply.py` เข้า `scripts/` + เขียนลง `docs/MT5_AUTOMATION.md` (ตอนนี้อยู่ scratchpad เท่านั้น = จะหายเมื่อ session ตาย)
+3. ~~ย้าย swap script เข้า `scripts/`~~ ✅ ทำแล้ว = `scripts/swap_adjust_crypto.py` + `docs/MT5_AUTOMATION.md`
 4. cell ที่เหลือของ matrix ชุด 2 (#20 BRENT · #21 NAS100 · #22 DE40 · #23 XAU H1 · #24 US30 H1) — **คาดว่าจะออกแบบ US30** (MAIN ผ่าน BWD เสมอตัว) ทำเมื่อว่างจริง ไม่ใช่คิวหลัก
 5. เพดาน 5 symbol + equity kill ระดับพอร์ต = เลเยอร์แยก **ไม่ยัดเข้า EA** และ **ไม่มี "ออกพร้อมกัน"** (การปิดพร้อมกันทำลายการกระจายความเสี่ยงที่หลาย symbol ให้มา — รอยเท้าเดียวกับ ORDER-222)
 
