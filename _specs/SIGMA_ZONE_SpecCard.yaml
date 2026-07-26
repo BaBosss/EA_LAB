@@ -1,0 +1,120 @@
+spec_card_version: "3.0"
+chain_id: "EA_SIGMA_ZONE_20260726_01"
+# STATUS 2026-07-26: DESIGN ONLY — ยังไม่ generate code, ยังไม่มีตัวเลขใดๆ.
+#   ที่มา = บทความ "I don't trade 1SD" (user ส่งเข้ามา 2026-07-26).
+#   brief เต็ม + การหักล้างข้ออ้างในบทความ + แผน 2 เฟส -> _specs/SIGMA_ZONE_DESIGN_BRIEF.md
+#
+# ⚠️ PRIOR EVIDENCE ที่ผูกกับ spec นี้โดยตรง (ห้ามข้าม):
+#   EA_ZSCORE (#100) rescue 2026-07-16 = ❌ REJECT — ranger (AUDNZD/EURGBP/EURCHF)
+#   x threshold {2.0,2.5,3.0} x {H1,H4} x both-window = 36 runs, ไม่มี both-window
+#   survivor. ดีสุด EURGBP H4 t3.0 = 1.04/1.12 แต่ thin 36-42 trades + spike.
+#   => "ยิงสวนที่ 2SD ด้วย threshold เปล่าๆ" = cell ที่ตายไปแล้วบนบ้านที่ถูก
+#      (AGENT_TASKBOARD §rescue #3). spec นี้จึง **ห้าม** rerun อาร์มนั้นแบบเดิม.
+#      ส่วนที่ยังไม่เคยเทสจริง = (a) 1SD-gate เป็น filter หักลบบน EA ที่ผ่าน funnel แล้ว
+#      (b) อาร์ม JOIN (vol-expansion breakout ที่ขอบ) (c) SD anchored รายวัน/เซสชัน
+#      (คนละสิ่งกับ rolling BB z) (d) ตัวแยกแยะ FADE vs JOIN (sigma expanding/contracting).
+
+identity:
+  ea_name: "SIGMA_ZONE"          # Boss_19 ถ้าขึ้นแม่พิมพ์ (entry id 19, ต่อจาก 18 JumStoch)
+  vehicle: "ea_template (Boss V2) — entry module ใหม่ core/entries/Entry_SigmaZone.mqh"
+  symbol: "XAUUSD"               # PHASE-B default home = trender (อาร์ม JOIN). FADE home = EURUSD/EURGBP/AUDNZD
+  timeframe: "H1"                # primary; H4 = second TF บังคับตาม ladder (>=2 TF)
+
+thesis:
+  claim_from_article: >
+    ในโซน |z| < 1SD ราคาคือ noise/fair-value ที่ตลาด price-in ไปแล้ว -> ไม่มี edge, โดน SL สะบัด.
+    edge อยู่ที่หาง 2-3SD ซึ่งเกิด imbalance/panic -> เล่นได้ทั้ง reversion และ breakout.
+  what_survives_scrutiny: >
+    ข้อที่ทดสอบได้และยังไม่เคยเทสในโปรเจกต์ = "ห้ามเปิดไม้ใหม่ตอน |z| < zMin" ซึ่งเป็น
+    FILTER (การหักลบ) ไม่ใช่ entry. มันวัดได้ถูกๆ บน EA ที่มี edge อยู่แล้ว.
+  what_does_not: >
+    (1) 68.2% มาจาก normal distribution — FX/XAU returns fat-tail + vol-cluster,
+        การแตะ 2SD เกิดบ่อยกว่าที่บทความบอกมาก (ไม่ใช่ panic ที่หายาก)
+    (2) บทความแนะนำทั้ง reversion และ trend-following ที่จุดเดียวกัน = สองระบบที่ขัดกัน
+        ไม่ใช่ edge เดียว -> คำถามวิจัยจริงคือ "อะไรเป็นตัวแยก" ไม่ใช่ "เทรดที่ 2SD"
+    (3) reversion ที่ 2SD แบบ threshold เปล่า = ตายไปแล้ว (EA_ZSCORE ด้านบน)
+
+strategy:
+  trade_style: "SWING"
+  entry:
+    indicator: "z = (Close - MA(n)) / StdDev(n)  ·  ATR expansion ratio  ·  (opt) anchored session SD"
+    z_source:                    # lever ที่ต่างจาก ZSCORE จริงๆ อยู่ที่ตัวนี้
+      1: "ROLLING_BB   — z จาก MA(n)/StdDev(n) บน TF ปัจจุบัน (ถูกสุด, = ที่ ZSCORE เคยเทส)"
+      2: "ANCHORED_DAY — sigma_day * sqrt(elapsed_fraction) anchored ที่ราคาเปิดวัน/เปิดเซสชัน
+                          (ใกล้กรอบ 'expected move' ของสถาบันที่บทความอ้างที่สุด — ยังไม่เคยเทส)"
+      3: "RETURN_Z     — z ของ return ไม่ใช่ของราคา (วัด shock ไม่ใช่ location)"
+    condition: >
+      กฎร่วมทุกโหมด (นี่คือหัวใจของบทความ): NO-TRADE BAND — ถ้า |z(bar 1)| < _19_ZMin
+      ห้ามเปิดไม้ใหม่ทุกกรณี (ไม้ที่เปิดแล้วบริหารตามปกติ).
+
+      MODE 2 = JOIN (default ของ PHASE-B, อาร์มที่ยังไม่เคยถูกฆ่า):
+        BUY  เมื่อ z[1] >= +ZMin  AND  sigma กำลังขยาย (ATR(0) >= _19_ExpRatio * ATR_MA(_19_ExpMA))
+             AND แท่งปิดนอกแบนด์ (ปิดยืนได้ ไม่ใช่แค่แตะ)
+        SELL = กระจกเงา
+        ตรรกะ: volatility expansion = ตลาดกำลังเลือกทาง ไม่ใช่ mean-revert — ตรงกับ prior
+        ของโปรเจกต์ (momentum > reversion)
+
+      MODE 1 = FADE (wired แต่ default OFF — เปิดได้เฉพาะรูปแบบที่ต่างจาก ZSCORE จริง):
+        SELL เมื่อ z[1] >= +ZMin AND sigma ไม่ขยาย (ATR(0) < ExpRatio*ATR_MA)
+             AND มี rejection: แท่งปิดกลับเข้าในแบนด์ (close[1] ข้ามกลับ) — ไม่ใช่ยิงตอนแตะ
+        เงื่อนไขบังคับก่อนอนุญาตให้เทสอาร์มนี้: ต้องใช้ z_source=2 หรือ 3 หรือมี rejection
+        confirm — ห้าม rerun (ROLLING_BB + threshold เปล่า) ซึ่ง = cell ที่ตายแล้ว
+
+      MODE 3 = AUTO (สมมติฐานหลักของงานวิจัยนี้): ใช้ตัวแยก sigma-expanding เลือก JOIN
+        มิฉะนั้น FADE. เทสได้ก็ต่อเมื่อ MODE 1 และ 2 ถูกวัดเดี่ยวๆ มาก่อน (one lever at a time)
+    trigger_rule: "CLOSE-CONFIRMED เท่านั้น — ห้าม trigger-touch (กัน fill-artifact; doctrine 2026-07-17)"
+    max_positions_per_side: 1     # single-shot; ไม่มี grid/ladder ในเวอร์ชันแรก
+  take_profit:
+    JOIN: "trail ATR (ExitMode เดิมของแม่พิมพ์) — ให้หางวิ่ง ไม่ fix TP สั้น (กัน tight-TP fiction)"
+    FADE: "TP = เส้น mean (z=0) หรือ z=+/-1 (แล้วแต่ _19_FadeTP) — reward ถูกจำกัดโดยนิยาม"
+  stop_loss:
+    mode: "STRUCTURE (บังคับมี SL จริงเสมอ)"
+    JOIN: "SL = ขอบ 1SD ฝั่งตรงข้าม (ราคากลับเข้าในแบนด์ = thesis ตาย)"
+    FADE: "SL = z ที่ _19_SLz (default 3.5) — เลย 3SD = ไม่ใช่ noise แล้ว"
+
+recovery:
+  grid: false
+  martingale: false
+  hedging: false
+  note: "ห้ามใส่ recovery ใดๆ ในเวอร์ชันแรก — ต้องพิสูจน์ว่า 'สัญญาณ' มี edge ไม่ใช่การถัวเฉลี่ย"
+
+risk:
+  risk_level: "L1"               # single-shot + SL จริง + ไม่มี recovery
+  risk_per_trade_pct: 1.0
+  max_drawdown_target_percent: 12.0
+  daily_loss_limit_pct: 5.0
+
+optimizable_inputs:
+  - _19_ZMin        # {1.5, 2.0, 2.5, 3.0}   <- no-trade band
+  - _19_Period      # {20, 50, 100}          <- หน้าต่างของ MA/StdDev
+  - _19_ExpRatio    # {1.0, 1.2, 1.5}        <- ตัวแยก expanding/contracting
+  - _19_ZSource     # {1,2,3}                <- lever ที่ทำให้ต่างจาก ZSCORE จริง
+  - TF              # {H1, H4}
+non_optimizable:
+  - "trigger_rule (CLOSE-CONFIRMED เสมอ)"
+  - "SL ต้องมีเสมอ"
+  - "max_positions_per_side = 1 ในรอบ validate แรก"
+
+rejection_conditions:      # เขียนล่วงหน้า ก่อนเห็นตัวเลข (pre-registered)
+  - "PHASE-A: 1SD-gate ทำให้ PF ของ EA ที่ validate แล้ว *ลดลง* ทั้ง 3 ตัว -> ข้ออ้างหลักของบทความ
+     ถูกหักล้างบน portfolio นี้ -> ไม่ต้อง build PHASE-B (ประหยัดทั้งก้อน)"
+  - "PHASE-B smoke: ไม่มี cell ไหน naked PF >= 1.2 (WATCH 1.0-1.2) -> ไม่เดิน ladder ต่อ"
+  - "optimize: MAIN < 1.2 บนบ้านที่ถูก หลังเดิน ladder >=3 lever x >=2 TF + last-optimize
+     -> DEAD-OPTIMIZED ระดับ cell"
+  - "ผลดีมาจาก threshold สูง + trade บาง (<50 ไม้/หน้าต่าง) และหายเมื่อลด threshold
+     = thin-artifact (บทเรียนตรงจาก ZSCORE EURGBP H4 t3.0) -> ไม่นับเป็น edge"
+  - "Model-4 พลิกเครื่องหมาย (entry อยู่ที่ขอบแบนด์ = fill-sensitive โดยธรรมชาติ) -> DEAD-STRUCTURAL"
+
+validation_plan:
+  phase_A_lever_first:     # ถูกที่สุด ทำก่อนเสมอ — ไม่ต้องเขียน EA ใหม่
+    - "เพิ่ม TFILTER_SIGMA (73) = block entry เมื่อ |z| < ZMin ในแม่พิมพ์ (filter ล้วน, additive, default OFF)"
+    - "รัน tpl_regression.ps1 พิสูจน์ว่า default OFF = ตัวเลขเดิมเป๊ะ (cage)"
+    - "A/B ZMin {0(off), 1.0, 1.5, 2.0} บน 3 EA ที่ผ่าน funnel แล้ว:
+       MacdDiv XAU H4 (999094) · Boss_16 Kangaroo XAU H1 · SMCxSTO EURUSD H1"
+    - "อ่านผลที่ 'PF ที่รักษาไว้ได้ต่อจำนวนไม้ที่ตัดทิ้ง' — filter ที่ดีต้องยก PF ขึ้นขณะไม้ลด"
+  phase_B_build_if_earned:
+    - "1. smoke JOIN บน XAU H1/H4 + GBPUSD (บ้าน trender) Model 1, naked"
+    - "2. ladder >=3 lever x 2 TF (ZMin · Period · ExpRatio) MAIN + BWD"
+    - "3. plateau-center .set -> both-window -> sensitivity fan"
+    - "4. Model-4 บังคับ (entry ที่ขอบแบนด์ = fill-sensitive)"
+    - "5. MC (ruin <=2%) -> corr vs cohort -> demo"
