@@ -1,9 +1,32 @@
-# MACROGATE demo carry-leg — Boss_12_Breakout (validation vehicle)
+# MACROGATE demo carry-leg — Boss_12_Breakout (plumbing sensor)
 
-**Purpose:** give MacroGate a real chassis breakout leg to gate on DEMO, so you can watch the
-gate actually fire during the next risk-off before committing anything on live money. This is
-the exact EA that was A/B-validated (eqDD −54..−56% on USDJPY/AUDJPY full-year 2024). It is a
-demo plumbing-validation, **not** a new live-edge bet — deploy small, demo only.
+> ## ⚠️ EVIDENCE WITHDRAWN 2026-07-25 (ORDER-211) — read before citing anything here
+> The **"eqDD −54..−56%"** figure this README used to lead with is **dead and must not be quoted
+> anywhere again.** It was measured through the broken MRIS classifier, which flagged 82 risk-off
+> days in 2024 where the corrected one flags 47 — the old gate closed the door ~75% too often, so
+> the benefit was overstated. Re-measured on the corrected timeline: **PF drops in all four cells**
+> and USDJPY full-2024 eqDD falls from −55.7% to **−7.1%**.
+>
+> MacroGate's standing is now **ADVISORY-ONLY**, not a validated deploy-candidate.
+>
+> **This leg is on the wrong symbol to answer anything.** The timing value that survived is on
+> **AUDJPY** (blocks 19–32% of trades, cuts eqDD 44–53% = more than its share), not USDJPY
+> (blocks 16–35%, cuts eqDD only 7–21% = less than its share). The attached leg is USDJPY.
+>
+> **Do not "fix" that by moving it to AUDJPY** (Claude/Opus 2026-07-26): the host itself loses
+> money with the gate both ON and OFF, on both symbols (2024 net −8.82 / −58.36). On a losing host
+> you cannot separate "gated the right moments" from "simply traded less" — the symbol is not the
+> binding constraint, the host is. Judge the gate on a host with positive expectancy, or not at all.
+>
+> **What this leg is still good for, and the only reason to keep it:** we have never seen the
+> GlobalVariable bridge fire on a live terminal during a real risk-off (only in the tester —
+> `regime loaded: 262 row(s)`, 25,105 block events). Keep it attached as a **plumbing sensor**.
+> It is **not** gathering edge evidence. Cost to keep = one demo chart.
+
+**Purpose (as originally written — the validation framing below is superseded by the banner):**
+give MacroGate a real chassis breakout leg to gate on DEMO, so you can watch the gate actually
+fire during the next risk-off before committing anything on live money. It is a demo
+plumbing-validation, **not** a new live-edge bet — deploy small, demo only.
 
 ## Files
 - `Boss_12_Breakout.ex5` — recompiled 2026-07-18, 0/0, against the current core (GV bridge

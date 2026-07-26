@@ -189,3 +189,48 @@ its window at some point — it was outside this pass's deployed-EA scope split.
 
 Reports: `_mt5_auto/reports/O201_B16_flat_{MAINCLEAN,BWD}_M1.htm`,
 `O201_NRB{,base}_{MAINCLEAN,BWD}_M1.htm`
+
+---
+
+# Part 3 — closing the "left unchecked" NuiIndy item (Claude/Opus 2026-07-26)
+
+**The window question is answered, and it is CLEAN.** Every `NuiIndy` ini under `_mt5_auto/ini`
+carries `Optimization=0` — there is no optimize pass anywhere in this EA's record, so no
+parameter was ever *selected* on any window and the contamination class cannot apply to it. The
+guardrail runs specifically sit on **2022** (`FromDate=2022.01.01 ToDate=2023.01.01`) and **2024**
+(`2024.01.01 → 2025.01.01`), both entirely outside 2026H1. The ORDER-095 phrase "both-window
+profitable" is literally true: PF 1.19 (2022) and PF 2.20 (2024). **Retro-scan item closed, no leak.**
+
+**But confirming the window surfaced a separate problem with the same evidence, so it is recorded
+here rather than left implicit.**
+
+| window | base `CutLoss=100` | `cut30only` | `cap12+cut30` |
+|---|---|---|---|
+| **2022** | **NO CONTROL RUN EXISTS** | PF **1.19** · 933t · net +1 080.62 | PF **0.42** · 520t · net **−2 915.09** |
+| **2024** | PF 2.20 · 836t · net +2 689.34 | PF **2.20** · 836t · net **+2 689.34** | PF 1.27 · 493t · net +364.56 |
+
+1. **`CutLoss=30` was INERT in 2024.** The cut30 run is identical to the base run to the cent —
+   same PF, same net, same trade count. Verified this is a real comparison and not a mislabelled
+   duplicate: the two `.ini` differ exactly where they should (`CutLoss_Percent=100.0` vs `=30`,
+   `MAX_Order=99999.0` in both, same symbol/TF/window). Drawdown simply never reached 30% that
+   year, so the guardrail never fired. **The 2024 run is not evidence about the guardrail.**
+2. **2022 — the one window where a DD-kill could matter — has no base control.** There is no
+   `NUI_EURUSD_H1_base_2022`; the report set is only the four listed above.
+3. **Therefore: there is not a single window where `CutLoss=30` was measured against a control and
+   shown to help.** What the evidence supports is "it does not hurt" (2024) plus a profitable live
+   account. That is weaker than "validated guardrail" and the recommendation should be read that way.
+   This is the same shape as the ORDER-216 fake-plateau finding: a parameter that cannot move the
+   result produces reassuring-looking agreement.
+4. **What IS strongly evidenced is the negative, and it confirms standing doctrine with numbers.**
+   The `MAX_Order=12` cap is destructive on both windows — 2022 PF 0.42 / net −2 915 against
+   cut30-only's 1.19 / +1 080, and 2024 PF 1.27 against 2.20. This is the greppable backing for the
+   existing rule that NuiIndy's guardrail must be a **DD-kill, not an order-count cap** (the cap
+   amputates the escalation engine that is the actual edge).
+
+**Deliberately NOT done:** nothing was changed on the live EA, and no run was launched. NuiIndy is
+a user-lane deployment (magic 1524, account 159475669) — this is an evidence-quality note, not a
+verdict. **If anyone wants the guardrail actually validated**, the missing run is one control:
+base `CutLoss=100` on 2022, same symbol/TF, compared against the existing `cut30only_2022`.
+
+Reports: `_mt5_auto/reports/NUI_EURUSD_{cut30only,cap12cut30}_{2022,2425}.htm`,
+`NUI_EURUSD_H1_base_2425.htm` · inis of the same names under `_mt5_auto/ini/`.

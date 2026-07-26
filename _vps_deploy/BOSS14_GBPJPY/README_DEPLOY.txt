@@ -3,6 +3,21 @@ ORDER-106 Boss_14 GridLog — GBPJPY H4 — DEMO LEG #8 (cohort 990201-207 -> +9
 ========================================================================
 Status:   DEMO-ELIGIBLE additive leg (lead 2026-07-16). Same EA as the live 7-leg
           Boss_14 cohort, new symbol+magic. Rescue of a previously default-only-parked cell.
+
+!!! HOLDOUT NOTE — added 2026-07-26 after the ORDER-202 contamination retro-scan !!!
+          The PARAMETER VALUES of this cohort are CLEAN: every deployed leg traces to
+          BOSS14_OPT_<SYM>_IS.ini at 2023.01.01 -> 2025.06.30 (the contaminated round-1
+          BOSS14_OPT_<SYM>_1.ini sweeps were superseded and are not the source).
+          BUT the promotion gate -- the "fresh-start OOS" 2025.07.01 -> 2026.07.01 plus the
+          FULL/M4CONFIRM windows -- reached into 2026H1 for 7 of the 8 legs. So the values are
+          clean while the SHIP/NO-SHIP DECISION consumed the holdout.
+          => 2026H1 is SPENT for this cohort. Do NOT cite any 2026H1 result as independent
+             confirmation of these legs. Genuine forward evidence starts at demo attach
+             (same disposition as the Boss_16 precedent: demo-forward-as-holdout).
+          No re-optimize is needed -- this is a policy/labelling correction, not a defect.
+          See _triage/ORDER202_HOLDOUT_CONTAMINATION_RETROSCAN.md.
+          Separately (ORDER-136 Wave 2): keep LotProg=55 on this leg -- escalation beat flat
+          on BWD real-tick Model-4 (PF 1.32 vs 1.07, lower eqDD). Do not revert to flat.
 EA:       Boss_14_GridLog.ex5  (the SHARED cohort EA — already attached for 990201-207;
           just add one more chart on GBPJPY H4 with this .set + magic 990208)
 Source:   D:\EA_LAB\ea_template\Boss_14_GridLog.mq5 (LabCore chassis)
