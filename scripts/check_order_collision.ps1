@@ -472,14 +472,37 @@ if ($ledgerUsable) {
     }
 
     # --- RULE 3 (WARN only, never touches the exit code) ---
+    # Aggregated by (session, owned-pattern) on purpose. Emitting one line per staged
+    # file produced ~70 warnings on a single archive-migration commit, most of them
+    # about the committing lane's OWN declared paths. That volume is self-defeating:
+    # a reader who scrolls past 70 warnings once will scroll past the 71st that
+    # actually mattered. One line per claim, with a count and one example, keeps the
+    # signal at a size somebody will read.
+    $ruleThreeHits = New-Object System.Collections.Specialized.OrderedDictionary
     foreach ($sp in $stagedPaths) {
         foreach ($lane in $activeLanes) {
+            $matchedPattern = $null
             foreach ($owned in $lane.OwnsPaths) {
-                if (Test-PathOwned -StagedPath $sp -OwnedPattern $owned) {
-                    Write-Host ('{0} WARN: staged path {1} is declared by ACTIVE session {2} (owns {3}) -- coordinate before writing' -f $Tag, $sp, $lane.SessionId, $owned)
-                    break
-                }
+                if (Test-PathOwned -StagedPath $sp -OwnedPattern $owned) { $matchedPattern = $owned; break }
             }
+            if ($matchedPattern) {
+                $key = '{0}|{1}' -f $lane.SessionId, $matchedPattern
+                if (-not $ruleThreeHits.Contains($key)) {
+                    $ruleThreeHits[$key] = [pscustomobject]@{
+                        SessionId = $lane.SessionId; Pattern = $matchedPattern
+                        Count = 0; Example = $sp
+                    }
+                }
+                $ruleThreeHits[$key].Count++
+            }
+        }
+    }
+    foreach ($key in $ruleThreeHits.Keys) {
+        $h = $ruleThreeHits[$key]
+        if ($h.Count -eq 1) {
+            Write-Host ('{0} WARN: staged path {1} is declared by ACTIVE session {2} (owns {3}) -- coordinate before writing' -f $Tag, $h.Example, $h.SessionId, $h.Pattern)
+        } else {
+            Write-Host ('{0} WARN: {1} staged path(s) match "{2}" declared by ACTIVE session {3} (e.g. {4}) -- coordinate before writing' -f $Tag, $h.Count, $h.Pattern, $h.SessionId, $h.Example)
         }
     }
 }
