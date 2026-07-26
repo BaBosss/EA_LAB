@@ -25,10 +25,22 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$RepoRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepoRoot = ''
 )
 
 $ErrorActionPreference = 'Stop'
+
+# $PSScriptRoot is EMPTY under `powershell.exe -File <relative-path>` from a non-PowerShell
+# shell, and evaluating Split-Path on it in the param default throws before the body runs.
+# Same defect I shipped in make_taskboard_digest.ps1 and fixed there without sweeping for
+# other copies -- so it bit again here, on the very script whose job is to keep the archive
+# artifacts honest.
+if (-not $RepoRoot) {
+    $here = $PSScriptRoot
+    if (-not $here -and $MyInvocation.MyCommand.Path) { $here = Split-Path -Parent $MyInvocation.MyCommand.Path }
+    if (-not $here) { throw 'cannot resolve script directory; pass -RepoRoot explicitly' }
+    $RepoRoot = Split-Path -Parent $here
+}
 
 # 6>$null matches how check_precommit_staged.ps1 dot-sources this; the validator's
 # main body is guarded by `if ($MyInvocation.InvocationName -ne '.')` so this only
