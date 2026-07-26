@@ -32,6 +32,17 @@ Single-order profile: 95.2% win-rate, largest win $27 vs largest loss −$288 = 
 (many tiny TP=10pip wins, rare large adverse ride). Classic "martingale wearing a signal costume"
 (matches lab's FZ2 precedent: PF 3.05→0.36 on zeroed multiplier = REJECT).
 
+> 🔴 **SUPERSEDED IN PART, 2026-07-26 (ORDER-222) — read this before believing anything below about
+> `CutLoss_Percent=30`.** This document's central guardrail claim ("free tail-insurance", "bounds
+> worst-case DD", "DD bounded ~15%", "converts uncapped-ruin to bounded capped-martingale") was reasoned
+> from two runs in which **the switch never fired** (peak DD 15.4% / 16.6% against a 30% threshold). Tested
+> at a drawdown that reaches it, it cuts **30% of the balance it has at that moment** and re-arms against
+> the reduced balance — a ratchet, not a floor. Measured: 8 cuts in one year at 4× sizing,
+> `10,521 → 7,363 → … → 1,326`, equity DD **87%** *with* the "30" threshold active, and the same year
+> ending **+51% cut-off vs −86% cut-on**. The words "bounds worst-case DD" below are **withdrawn**.
+> What survives: the mechanism should NOT be removed (nothing at all is worse), and the MAX_Order finding
+> is untouched. Full evidence: `_triage/ORDER222_NUIINDY_CUTLOSS_VERDICT.md`.
+
 ## Verdict-gate #5 (martingale recheck) — as-shipped fails, but DD-kill rescues the LIVE risk
 As shipped (CutLoss=100): SL **none** · capped steps **no** (99999) · entry edge **no** (0.72/0.90) ·
 uncapped geometric **yes** → **uncapped-ruin as-shipped.** BUT a basket DD-kill converts it (see guardrail
@@ -41,6 +52,10 @@ death of the LIVE instance; it's a regime-dependent capped-martingale once a rea
 ## Guardrail sweep (user asked to make the LIVE EA safe — 2026-07-17)
 Key mechanism finding: **MAX_Order cap kills the profit engine** (deep-tier Multiple3^count recovery),
 while a **basket DD-kill (CutLoss) is free tail-insurance** — it never fires inside the normal DD envelope.
+<sub>⚠️ ORDER-222 (2026-07-26): the clause after the dash is the *only* part that was measured. "It never
+fires inside the normal DD envelope" is true and is precisely why "free tail-insurance" does not follow —
+a switch that never engages is free because it is doing nothing, and when it does engage repeatedly it is
+destructive. See the banner at the top.</sub>
 Also: NuiIndy is **trend-aligned** (pullback-continuation: sells rallies in a downtrend), so 2022's EUR fall
 was NOT a martingale nightmare — it traded *with* the trend. Real risk = sharp whipsaw reversal, not a
 sustained trend.
@@ -66,9 +81,13 @@ empirically triggered here — it is a strict improvement (free in tested regime
 2. **EDGE_CATALOG correction:** NuiIndy entry is NOT a "filtered reversion edge" (prior hypothesis) —
    edge = escalation. Non-transferable. Reclassify.
 3. **⚠️ LIVE-money guardrail (user chose "add guardrail" 2026-07-17) → DONE:** recommend
-   `CutLoss_Percent=30` (keep MAX_Order uncapped) = free tail-insurance, both-window profitable, DD
+   `CutLoss_Percent=30` (keep MAX_Order uncapped) = ~~free tail-insurance, both-window profitable, DD
    bounded ~15%. Converts the as-shipped uncapped-ruin exposure to a bounded capped-martingale at zero
-   profit cost in tested regimes. Set: `NUI_cut30only.set`. User applies on the live terminal (magic 1524).
+   profit cost in tested regimes.~~ Set: `NUI_cut30only.set`. User applies on the live terminal (magic 1524).
+   **🔴 STRUCK 2026-07-26 (ORDER-222): the struck text was never measured — it describes a switch that had
+   not fired in either cited run. It does NOT convert uncapped-ruin to a bounded martingale; a
+   %-of-current-balance cut cannot bound an account. Keep the setting, drop the claim, and treat the
+   question of what would actually bound this account as OPEN and the owner's call.**
 4. **Optional rescue (low priority, NOT this lane):** the RSI-dip-in-ADX-trend *idea* could be rebuilt
    as an original EA with a real SL + capped grid + entry-param sweep (RSI_Period/ADX_Value) — but
    single-order 0.90 says the raw entry is weak; treat as a cold lead, not a queued build.
