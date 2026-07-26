@@ -27,7 +27,7 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
-| `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00 | **240-249** | `AGENT_TASKBOARD.md` (แถว ORDER-GEN-STANDING) · `EA_SCORECARD_AND_REGISTRY.md` · `EA_MASTER_INDEX.csv` · `_triage/ORDER095_NUIINDY_EXPAND_VERDICT.md` · `_mt5_auto/**` | ไม่ทราบ | `ACTIVE` |
+| `S-2026-07-26-REV04` | 2026-07-26 20:30 | **280-289** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `_mt5_auto/**` (รันเทส) | `D:\Meta 5b` (portable — BTC ต้องเลนเดียวกับ campaign เดิม) | `ACTIVE` |
 
 <sub>แถว `S-2026-07-26-GENSTANDING` เขียนย้อนหลังโดย session TRIAGE จากหลักฐาน git (commit `6df2d6b5`, `47319bef`,
 `09a6fb7b`, `ca922653` + ไฟล์ที่ค้างใน working tree) — session นั้นเปิดก่อนที่ ledger นี้จะมีอยู่ ไม่ใช่การละเมิดกติกา.
@@ -39,6 +39,7 @@
 
 | session id | ช่วง | order block | สรุป 1 บรรทัด |
 |---|---|---|---|
+| `S-2026-07-26-GENSTANDING` | 2026-07-26 ~10:00–20:00 | 240-249 (ไม่ได้ใช้ — standing order) | ORDER-GEN-STANDING ชุด 2: matrix 19 cell → **VALIDATED CANDIDATE ตัวเดียว = BTCUSD H4 `rev03` pyramid** (MAIN 2.257 · BWD 3.949 · holdout 4.274 · MC ruin 0%) · lever ใหม่ 2 ตัวเข้า rev02/rev03 (ER gate · capped pyramid) · วัด swap ได้ว่า tester คิด POINTS แต่ไม่คิด INTEREST ⇒ `scripts/swap_adjust_crypto.py` · handoff = `_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md` |
 | `S-2026-07-26-TRIAGE-B` | 2026-07-26 18:45–20:15 | 270-279 (ไม่ได้ใช้ — ปิดใบเก่า) | **ORDER-260** แก้บั๊ก `Get-StatusClass` (substring `HOLD`/`OPEN`) → ปลด 17 ใบ + กรงใหม่ `run_statusclass_tests.ps1` (พิสูจน์แล้วว่า fail ได้) · **ORDER-261** เขียน review 28 ใบ + แก้ข้อความ 9 ใบ → ย้ายเข้าคลัง 51+3 ใบ **บอร์ด 96→42** · เปิด **ORDER-270** (negative suite 2 ชุดค้าง = validator ไม่มีกรง) · ⚠️ **B1_DATASET.csv rows ยังค้าง** (ไฟล์อยู่ในมือ session คู่ขนาน) |
 | `S-2026-07-26-TRIAGE` | 2026-07-26 13:00–18:30 | 230-239 · 250-252 · 260-269 (ใช้จริง 230-239, 250-252, 260-261) | วางวงจรชีวิตงาน (`docs/WORK_LIFECYCLE.md`) + เกราะกัน session ชน 3 ชั้น · บอร์ด 102→95 order (ย้ายเข้าคลัง 22) · `_triage/` 198→51 ไฟล์ (ย้าย 153 + rewrite citation 138 จุด) · เปิด order ใหม่ 15 ใบจาก 27 รายการที่ handoff ทิ้งไว้ · handoff = `_triage/HANDOFF_2026-07-26_WORK_LIFECYCLE_AND_TRIAGE_SWEEP.md` |
 
@@ -46,4 +47,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-26 = **222**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **280-289** (253-259 เว้นกันชน)
+- บล็อกถัดไปที่จองได้ = **300-309** (290-299 เว้นกันชน · 280-289 จองแล้วโดย `S-2026-07-26-REV04`)
