@@ -1,18 +1,23 @@
 //+------------------------------------------------------------------+
-//| OrdersExporterMT4.mq4 - read-only nightly history snapshot        |
-//| MT4 twin of DealsExporter.mq5 (ORDER-060). Attach to ONE chart on |
-//| the monitored MT4 account. Writes the closed-order history as CSV |
-//| to the COMMON Files folder:                                       |
-//|   <Common>\Files\EA_LAB_mt4_orders_<login>.csv                    |
-//| No trade functions anywhere in this file - it cannot touch the    |
-//| account. Full-snapshot overwrite each export = idempotent.        |
-//| Exports once on attach, then daily at InpExportHour.              |
+//| OrdersExporterMT4.mq4 - read-only monitor sensor (ORDER-060+CR-P0)|
+//| MT4 twin of DealsExporter.mq5. Attach to ONE chart on the         |
+//| monitored MT4 account. Writes BOTH monitor feeds from one EA:     |
+//|   1. closed-order history -> <Common>\Files\EA_LAB_mt4_orders_<login>.csv |
+//|      (once on attach, boot re-exports, then daily at InpExportHour)       |
+//|   2. floating-risk snapshot -> <Common>\Files\EA_LAB_snapshot_<login>.csv |
+//|      (every timer tick + on attach; equity/margin/per-magic baskets)      |
+//| Merge (CR-P0, 2026-07-26): floating snapshot = the tested                 |
+//| AccountSnapshot_CoreMT4.mqh, so the operator attaches ONE EA not two.     |
+//| The standalone AccountSnapshotExporter.mq4 is now redundant for monitor   |
+//| terminals (kept for reference/fallback).                                  |
+//| No trade functions anywhere in this file OR its include.                  |
 //| ⚠ GOTCHA: MT4 only exposes what the Account History tab shows -   |
 //|   right-click the History tab -> "All History" once, or rows will |
 //|   silently be missing. Journal prints the row count so you can    |
 //|   sanity-check against the tab.                                   |
 //+------------------------------------------------------------------+
 #property strict
+#include "..\AccountSnapshot\AccountSnapshot_CoreMT4.mqh"   // floating snapshot (Snapshot_Run/Snap_FileName)
 
 input int      InpExportHour  = 23;              // server hour to export daily
 input datetime InpHistoryFrom = D'2026.01.01';   // export orders closed after this
@@ -67,7 +72,8 @@ int g_boot_ticks = 0;   // rotation-mode support: re-export shortly after login 
 int OnInit()
 {
    EventSetTimer(120);   // 2-min ticks: first two re-export (fresh-login history sync), then daily check
-   Exporter_Run();       // snapshot immediately on attach (proof it works)
+   Exporter_Run();       // deals snapshot immediately on attach (proof it works)
+   Snapshot_Run();       // floating snapshot too (has its own login=0 guard inside)
    g_last_export_day = 0;
    g_boot_ticks = 0;
    return(INIT_SUCCEEDED);
@@ -77,6 +83,7 @@ void OnDeinit(const int reason) { EventKillTimer(); }
 
 void OnTimer()
 {
+   Snapshot_Run();       // floating snapshot on EVERY tick (read-only) so open-position risk stays fresh
    if(g_boot_ticks < 2)  // rotation mode: terminal may live only minutes after a fresh login
    {
       g_boot_ticks++;

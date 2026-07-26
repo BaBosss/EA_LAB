@@ -1,14 +1,20 @@
 //+------------------------------------------------------------------+
-//| DealsExporter.mq5 - read-only nightly deals snapshot (ORDER-039) |
+//| DealsExporter.mq5 - read-only monitor sensor (ORDER-039 + CR-P0)  |
 //| Attach to ONE chart on the monitored account (demo/live). Writes  |
-//| the full deal history as CSV to the COMMON Files folder so a      |
-//| collector script outside the terminal sandbox can pick it up:     |
-//|   <Common>\Files\EA_LAB_deals_<login>.csv                         |
-//| No trade functions anywhere in this file - it cannot touch the    |
-//| account. Full-snapshot overwrite each export = idempotent.        |
-//| Exports once on attach, then daily at InpExportHour.              |
+//| BOTH monitor feeds so a single attached EA covers the account:    |
+//|   1. closed deal history  -> <Common>\Files\EA_LAB_deals_<login>.csv     |
+//|      (once on attach, boot re-exports, then daily at InpExportHour)      |
+//|   2. floating-risk snapshot -> <Common>\Files\EA_LAB_snapshot_<login>.csv|
+//|      (every timer tick + on attach; equity/margin/per-magic baskets)     |
+//| Merge (CR-P0, 2026-07-26): the floating snapshot logic is the exact      |
+//| tested AccountSnapshot_Core.mqh - so the operator only ever attaches     |
+//| ONE EA (this one) instead of two. The standalone AccountSnapshotExporter |
+//| is now redundant for monitor terminals (kept for reference/fallback).    |
+//| No trade functions anywhere in this file OR its include - it cannot      |
+//| touch the account. Full-snapshot overwrite each export = idempotent.     |
 //+------------------------------------------------------------------+
 #property strict
+#include "..\AccountSnapshot\AccountSnapshot_Core.mqh"   // floating snapshot (Snap_Export/Snap_FileName)
 
 input int    InpExportHour = 23;               // server hour to export daily
 input datetime InpHistoryFrom = D'2026.01.01'; // export deals from this date
@@ -65,7 +71,10 @@ int g_boot_ticks = 0;   // rotation-mode support: re-export shortly after login 
 int OnInit()
 {
    EventSetTimer(120);   // 2-min ticks: first two re-export (fresh-login history sync), then daily check
-   Exporter_Run();       // snapshot immediately on attach (proof it works)
+   Exporter_Run();       // deals snapshot immediately on attach (proof it works)
+   // floating snapshot immediately on attach too, but only once authorized (login=0 => a
+   // garbage _0 file the collector would skip anyway; mirrors AccountSnapshotExporter's guard)
+   if(AccountInfoInteger(ACCOUNT_LOGIN) != 0) Snap_Export(Snap_FileName());
    g_last_export_day = 0;
    g_boot_ticks = 0;
    return INIT_SUCCEEDED;
@@ -75,6 +84,9 @@ void OnDeinit(const int reason) { EventKillTimer(); }
 
 void OnTimer()
 {
+   // floating snapshot on EVERY tick (read-only, cheap) so open-position risk stays fresh
+   // at the 120s cadence regardless of the deals boot/daily state machine below.
+   if(AccountInfoInteger(ACCOUNT_LOGIN) != 0) Snap_Export(Snap_FileName());
    if(g_boot_ticks < 2)  // rotation mode: terminal may live only minutes after a fresh login —
    {                     // history often finishes syncing AFTER OnInit, so export again at +2/+4 min
       g_boot_ticks++;

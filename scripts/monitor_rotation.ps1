@@ -3,6 +3,10 @@
 # no passwords in any file). This script launches ALL of them concurrently in /portable mode
 # with a startup-ini that auto-attaches the exporter to a fresh chart, waits ~5.5 min
 # (exporter fires at 0s/+2m/+4m), then kills only D:\Monitor processes.
+# CR-P0 (2026-07-26): DealsExporter/OrdersExporterMT4 now ALSO emit the floating-risk
+# snapshot (EA_LAB_snapshot_<login>.csv) in the same EA - so attaching this one expert
+# covers both the closed-deal history AND open-position risk. No second EA needed; the
+# standalone AccountSnapshotExporter is redundant on monitor terminals.
 # PREREQ per folder: Exness-branded terminal + logged in once by the user.
 # MT4 note: a ThinkMarkets-copied build cannot reach Exness servers until the matching
 # Exness .srv files are placed in <folder>\config\ (copy from the VPS terminal) or the
