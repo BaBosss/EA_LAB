@@ -67,6 +67,149 @@
 > **ที่ไม่อยู่ในเวฟนี้และเหตุผล:** EA ที่ verdict = DEAD/ตก (contamination ทำให้ดูดีขึ้นเท่านั้น) · EA ที่ยังไม่ deploy
 > และไม่มีใครอ้างเลขมันอยู่ (ไม่มีใครเสียหายถ้าเลขผิด — รอ ORDER-204 คัดมาก่อน) · Boss_14 cohort (ค่าสะอาด).
 
+> 🧹 **TRANCHE 230-239 + 250-252 (เขียน 2026-07-26, Opus-seat · session `S-2026-07-26-TRIAGE`)** — **ไม่ใช่งานใหม่**
+> ทุกใบในชุดนี้คืองานที่**มีอยู่แล้วแต่ไม่เคยมีที่อยู่บนบอร์ด**. ที่มา = กวาด `_triage/HANDOFF_*` 17 ใบ (100 รายการ)
+> แล้วเจอ **27 รายการที่ไม่เคยเข้า `AGENT_TASKBOARD.md` เลย** + evidence sweep บน 36 order ที่ terminal-แต่ยังไม่ review
+> เจอเพิ่มอีก 3. **6 ใบแรก (230-235) = แตะเงินจริงหรือบัญชีจริง** · 236-239 = หลักฐานพร้อมแต่ไม่เร่ง ·
+> 250-252 = หนี้ระบบที่ evidence sweep จับได้ · **ที่เหลือ 16 รายการ → `MASTER_BACKLOG.md` §9 พร้อมช่อง "ปลุกเมื่อ"**
+> (ไม่เปิดเป็น order เพราะยังไม่มีเงื่อนไขปลุก — เปิดไว้เฉยๆ = บอร์ดบวมโดยไม่มีใครทำ)
+> วงจรชีวิตเต็ม + เหตุผล → `docs/WORK_LIFECYCLE.md` · เลนที่เปิดอยู่ → `docs/SESSION_LEDGER.md`
+
+## ORDER-230 — [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD — `OPEN` · ทำได้: user (อ่าน terminal) + Claude (แก้แถว) · 👉 แนะ: user
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+**ปัญหา:** `portfolio/ACCOUNTS.csv` แถว 463666728 เขียน `USD` + `base_equity=100000` แต่ user อธิบายบัญชีนี้เป็น **cent**
+คำเตือนถูกเขียนฝังอยู่ในช่อง note ของแถวนั้นเองตั้งแต่ 2026-07-25 ("confirm USC vs USD before any figure that converts
+to money rather than %") แล้ว **ไม่มีใครเป็นเจ้าของ** — handoff ทิ้งไว้ ไม่เคยมีใบสั่งงาน
+**ทำไมเร่ง:** บัญชีนี้ถือ EA คิวตัดสิน ต.ค. ~13 ตัว · ทุกเลข DD/risk ที่แปลงเป็นเงิน (ไม่ใช่ %) ตั้งอยู่บนช่องนี้ ·
+`base_equity` เพิ่งขยับ 10000→100000 เมื่อ 07-25 ซึ่งทำให้ DD-as-% ตกลง ~10 เท่า = งบ 25% เลิก binding ที่บัญชีนี้พอดี
+**STEP 1:** user เปิด terminal 463666728 อ่าน currency จริง (USD/USC) + balance จริง
+**STEP 2:** Claude แก้ `portfolio/ACCOUNTS.csv` แล้วรัน `python scripts/portfolio_risk_admission.py` ใหม่ทั้งบัญชี
+**ห้าม:** เดาค่าเอง · แก้ช่อง currency โดยไม่มี user ยืนยัน (แถวนี้ถูกเว้นไว้โดยตั้งใจมาแล้วครั้งหนึ่ง)
+
+## ORDER-231 — [demo · funnel gap] 992001 TsMom_XAU: ACTIVE อยู่แต่ไม่เคยมี Monte Carlo — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+**bars:** MC ruin ≤ 2% (resize-first ถึง 10%) · PF-5th ≥ 1.0 · **flat-lot probe:** N-A (single-order trend EA)
+**ปัญหา:** `portfolio/expectations.csv` แถว 992001 = `pf=UNKNOWN`, `dd95=UNKNOWN`, `RANGE_NOT_SEPARABLE`
+EA นี้ **ACTIVE จริงบน 415573666 judge 2026-10-23** แต่ไม่เคยรัน MC / holdout / sensitivity fan
+(attach แบบ demo-isolate ตาม user directive ไม่ใช่ funnel ที่เดินครบ) ⇒ portfolio risk ของบัญชีนั้น **ตัดตัวนี้ทิ้งทั้งตัว**
+**STEP 1:** รัน MC บน .set ที่ล็อกไว้ `_vps_deploy/S2_TSMOM_XAU/` (lb60/deadmult2) หน้าต่าง MAIN 2023.01-2025.12
+**TREE:** ruin ≤2% AND PF-5th ≥1.0 → STEP 2A เติม dd95 ลง `expectations.csv` แล้วรัน risk admission ใหม่ ·
+          ruin 2-10% → STEP 2B คำนวณ lot ที่ทำให้ ruin ≤2% แล้ว**เสนอ** resize (ห้ามแก้ live เอง) ·
+          ruin >10% → STOP + `BLOCKED(992001 ruin เกินเพดานแม้ resize — ถอด หรือคงจนถึง judge?)`
+**ห้าม:** verdict · แตะ .set ที่ demo อยู่ · **เดา dd95** (ค่า UNKNOWN ตอนนี้ถูกต้องแล้ว ห้ามเติมเลขที่ไม่มี run รองรับ)
+
+## ORDER-232 — [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด — `OPEN` · ทำได้: user ตัดสิน + Claude เสนอ · 👉 แนะ: user
+**bars:** N-A (decision) · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-211 ถอดสถานะ VALIDATED → ADVISORY-ONLY แล้ว แต่ **990120 ยัง ACTIVE บน USDJPYm judge 2026-10-16**
+และมี **คำแนะนำที่ขัดกันเอง 2 ฉบับ** ค้างอยู่:
+- handoff 2026-07-25C → "ย้ายไป AUDJPY" (ที่ DD-timing จริง)
+- bundle sweep 2026-07-26 (`85b55fd9`) → **หักล้างข้อบน**: host ขาดทุนทั้งเปิดและปิด gate ทั้งสอง symbol ⇒ ไม่มี symbol ไหน
+  แยก "gate จับจังหวะถูก" ออกจาก "เทรดน้อยลง" ได้ → เก็บเป็น sensor เฉยๆ
+**คำแนะนำของผม = ฉบับหลัง** (คงเป็น plumbing sensor · ห้ามนับเป็น edge · ห้าม size ตาม PF)
+**STEP 1:** user เคาะ 1 ใน 3 — (a) คงเป็น sensor advisory (b) ย้าย AUDJPY (c) ถอด
+**ห้าม:** ตัดสินแทน user · อ้างคำแนะนำฉบับแรกโดยไม่บอกว่ามันถูกหักล้างแล้ว
+
+## ORDER-233 — [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% — `OPEN` · ทำได้: Codex (audit) → user (ratify) · 👉 แนะ: Codex
+**bars:** N-A (audit) · **flat-lot probe:** N-A
+**ปัญหา:** fix สร้างเสร็จแล้ว **DEFAULT OFF** · เปิดแล้วบัญชี 463666728 ขยับ **73.04% → 38.36%** เทียบงบ 25%
+คำถามจริงไม่ใช่ code diff แต่คือ **เอา DD95 ระดับ basket ไปจับคู่กับ correlation series ของ leg เดียว ชอบธรรมไหม**
+**ทำไมมันหลุด:** จอดอยู่ใน `_triage/CODEX_REVIEW_QUEUE_2026-07-25.md` ซึ่ง**ไม่ใช่บอร์ด** — อีก 2 รายการในคิวนั้น
+บังเอิญมี order รองรับ (187, 200) ใบนี้ไม่มี ⇒ คนที่อ่าน `AGENT_TASKBOARD.md` อย่างเดียวมองไม่เห็นเลย
+**STEP 1:** Codex blind audit คำถามข้างบน (**ห้ามให้ดูคำตอบ Opus ก่อน** — กัน anchoring)
+**STEP 2:** user ratify ก่อนเปลี่ยน default · gate เดียวกับ ORDER-200 Phase D
+**ห้าม:** เปลี่ยน default เอง · อ้างเลข 38.36% เป็นเลขจริงก่อน audit ผ่าน
+
+## ORDER-234 — [🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ — `OPEN` · ทำได้: user (เดิน checklist) + Claude (verify journal) · 👉 แนะ: user
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-132 + ORDER-138 ปิดแล้วทั้งคู่ — แต่ปิดที่ **code** ส่วน **ฝั่ง user ยังไม่เคยเดิน** และไม่มีแถวไหนเป็นเจ้าของ
+โผล่ใน handoff 07-19 · 07-20 · 07-24D เหมือนเดิมทุกครั้ง = สัญญาณคลาสสิกว่ามันกำลังจะหายไปเงียบๆ
+**checklist:** `ea_template/PERSIST_MIGRATION_ORDER132.md` — F3 snapshot GV → demo attach → เช็ค journal หา
+`[PERSIST] migrated` → restart 1 ครั้งยืนยัน state → **แล้วค่อย** ปล่อย Boss_14 GBPJPY ขึ้นเงินจริง
+**ข้อที่ ORDER-138 เพิ่ม:** บัญชีที่มี legacy state ต้องตั้ง `RC_AdoptLegacyHalt=true` **แค่ attach เดียว** แล้วกลับเป็น false
+(ไม่งั้น OnInit fail by design)
+**ห้าม:** ขึ้นเงินจริงก่อนเดิน checklist ครบ · ปล่อย `RC_AdoptLegacyHalt=true` ค้างไว้
+
+## ORDER-235 — [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ — `OPEN` · ทำได้: user (ratify) + Claude (เขียนลง gate) · 👉 แนะ: user
+**bars:** N-A (ใบนี้แก้บาร์เอง) · **flat-lot probe:** N-A
+**ปัญหา:** 991001 / 991004 / 990205 / 990303 ต้องรอถึง **2028-2029** กว่าจะครบ 30 ไม้ปิด
+อีก 9 แถวถูกเลื่อน judge date ไปแล้ว แต่ 4 ตัวนี้จงใจไม่เลื่อน เพราะที่พังคือ **บาร์** ไม่ใช่ **วันที่** · 3 ทางเลือกเขียนไว้แล้วใน
+`DEMO_DEPLOYMENT_PLAN.md`
+**ทำไมต้องเป็น order:** มันแก้ตัวเลขใน VERDICT GATE ⇒ ต้อง ratify ชัดแบบ precedent `rate_flag=ON_RATE` ของ ORDER-198
+**ห้าม drift เงียบ**
+**ห้าม:** เปลี่ยนบาร์เองโดยไม่มี user เคาะ · ปล่อย 4 ตัวนี้ค้างไร้เกณฑ์ตัดสินต่อไป
+
+## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN` · ทำได้: Claude (ออกแบบ) + oc-qwen (รัน) · 👉 แนะ: Claude ออกแบบก่อน
+**bars:** pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
+**ของที่มีอยู่แล้ว:** `_9_RegimeGateAdds` + `CONF_PA_ENGULF` — build เสร็จ (`1aeafc06`, `f65bf2ce`) · cage ผ่าน · byte-identical เมื่อปิด ·
+Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **มี `ea_template/sets/B14_AB_on.set` รออยู่แล้ว**
+**ปัญหา:** ที่เดียวที่เคย matrix มันคือ ORDER-LANEA-AB บน Boss_18 JumStoch ซึ่ง **หยุดที่ base gate**
+(`DEAD-OPTIMIZED port-level`, base 0.58-0.71) ⇒ **เซลล์ lever ไม่เคยรันเลย** และ Boss_18 ก็ไม่ใช่ CORE ที่ validated ด้วยซ้ำ
+หลังจากนั้นไม่มีใบไหนเล็ง lever คู่นี้ไปที่ CORE จริงอีก
+**ทำไมน่าทำ:** นี่คือรายการที่ **หลักฐานพร้อมที่สุด** ในกอง untracked ทั้ง 27 — ของสร้างเสร็จ cage ผ่าน .set มีแล้ว เหลือแค่เล็งให้ถูกตัว
+**STEP 1:** เลือก host ที่ BWD >1.0 สบายๆ (ตาม memory `escalation-overlay-needs-strong-bwd-host`) — เสนอ Boss_14 GBPJPY leg-8 หรือ RSI-MR 990103
+**ห้าม:** ใช้ host ที่ BWD ปริ่ม 1.0 (Wave1 พิสูจน์แล้วว่าแพ้) · Model-2
+
+## ORDER-237 — [integrity] "GBPJPY leg-8" = 3 magic 2 spacing คนละตัวกัน — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เก็บกวาด .set) · 👉 แนะ: user
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** 990101 / 990208 / 990218 + `_14_DistAtrMult` 2.0 vs 3.0 ลอยอยู่โดยถูกเรียกว่า "config GBPJPY leg-8" เหมือนกันหมด
+`DEPLOYMENTS.csv` บอก live = 990208 · ORDER-166 revalidate ที่ dist=2.0
+**ความเสียหายที่เกิดไปแล้ว:** ความสับสนชุดนี้ทำให้ต้องถอน verdict 1 ใบ (`d375099e`) — Wave 2 "แพ้ BWD 0.92" มาจากรันผิด config
+**ทำไมมันหลุด:** ORDER-136 เขียนไว้ในเนื้อว่า "side-finding, unresolved, not chased further" แล้วใบนั้นก็ปิดไป
+**ห้าม:** ลบ .set ก่อน user ยืนยันว่าตัวไหนอยู่บน VPS จริง
+
+## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `OPEN` · ทำได้: Sonnet · Claude · 👉 แนะ: Sonnet
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** `gsmc_validate.ps1` · `order104*.ps1` · `qwen_batch_runner.ps1` · `mt5_batch_shortlist.ps1` · `optimize_loop.ps1`
+ยังถือวันจบที่กิน holdout 2026H1 · `check_state.ps1` §9 จงใจ scope แคบ (เฉพาะ reusable definition:
+`.claude/agents/*.md`, `mt5_run.ps1`, `mt5_optimize.ps1`) ⇒ 5 ตัวนี้อยู่นอกกรง
+**ตัวที่น่ากลัวสุด = `qwen_batch_runner.ps1`** เพราะเป็น batch driver ที่ agent lane หยิบไปใช้ได้จริง
+**STEP 1:** (a) ใส่แบนเนอร์ `HOLDOUT-BURNED` หัวไฟล์ทั้ง 5 · หรือ (b) ขยาย guard ให้เตือนตอนถูก invoke
+👉 แนะ (b) สำหรับ `qwen_batch_runner.ps1` + (a) สำหรับอีก 4 ตัวที่เป็น order-specific ของเก่า
+**ห้าม:** แก้หน้าต่างในสคริปต์เก่าให้ "ถูก" เฉยๆ — มันคือประวัติของ run ที่เกิดไปแล้ว แก้แล้วหลักฐานเพี้ยน
+
+## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
+**ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
+และ **DD% มองไม่เห็นมัน** · 990103 ACTIVE judge **2026-10-24** ซึ่ง **สั้นกว่าหางที่วัดได้**
+**ช่องว่าง:** `portfolio/expectations.csv` ไม่มีช่องอายุ basket · handoff บอกจะส่งให้ `ea-live-monitor` แต่ไม่เคยตั้งค่าอะไรจริง
+**STEP 1:** เพิ่ม field "อายุ basket ที่เปิดค้างนานสุด" เข้า monitoring chain + ตั้งเกณฑ์เตือนราว 100 วัน
+**ห้าม:** ตัดสิน 990103 จากหางนี้ — มันคือสิ่งที่ยังไม่เคยวัดบน live ไปวัดก่อน
+
+## ORDER-250 — [🔴 demo · order-of-record หาย] SS1 LondonORB 992003: ผ่าน funnel ขึ้น demo โดยไม่มีใบสั่งงานรองรับ — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** corr vs cohort < 0.8 (pairwise) · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-143 ปิดไปเมื่อ 2026-07-20 ว่า "EA ไม่มี input `_2_PartialPct1`/EMA200 ⇒ **sweep ไม่ได้รัน** · next = หา HOME ใหม่
+ไม่ใช่ stack lever". **แล้ววันที่ 07-23 commit `a88db4c6` เพิ่ม input พวกนั้นเข้าไปจริง รัน funnel และดัน SS1 เป็น
+VALIDATED CANDIDATE → attach demo magic 992003** (M4 1.16/1.06, holdout 1.21@n=86, MC ruin 0.00%)
+**สิ่งที่หายไป:** ไม่มี order block ไหนบันทึกการพลิกนี้เลย — หลักฐานเดียวคือ subject ของ commit กับช่อง `notes` ใน `DEPLOYMENTS.csv`
+⇒ **EA ตัวหนึ่งเดิน funnel จนถึง demo โดยไม่มีใบสั่งงานเป็นหลักฐาน**
+**จุดอ่อนที่ตัวมันเองประกาศไว้ และยังไม่ถูกปิด:** real-tick MAIN 1.16 **ต่ำกว่าบาร์ 1.2** · ต้องใช้ `MinOr=0.5` เป๊ะ (0.8 → 1.09) ·
+cohort holdout โดน TrendRider กินไปบางส่วน · **corr vs cohort ยังไม่เคยวัด** (ค้างมาตั้งแต่ ORDER-174)
+**STEP 1:** เขียน order block ย้อนหลังให้ครบ (อะไรเปลี่ยน · หลักฐานอะไรรองรับ · ใครตัดสิน)
+**STEP 2:** ปิดช่อง corr vs cohort **ก่อน judge 2026-10-23**
+**ห้าม:** ปล่อยให้ถึงวัน judge โดย corr ยังว่าง · เขียน ORDER-143 ทับจนอ่านไม่ออกว่าเคยสรุปตรงข้าม (เก็บรอยไว้)
+
+## ORDER-251 — [🔴 integrity · หนี้ระบบ] คลัง skill ที่เป็นเจ้าของบาร์ตัดสินทุกใบ อยู่นอก repo และไม่มี version control — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-121 + ORDER-122 ทั้งสองใบคือการเขียน `backtest-optimize-rigor`, DEMOTED banner, corr ladder,
+`FINAL RULE` ข้าม 9-11 skill ใหม่ทั้งหมด — **ของทั้งหมดนั้นอยู่ที่ `C:\Users\patip\.claude\skills\` ไม่ได้อยู่ใน `D:\EA_LAB`**
+⇒ ไม่อยู่ใน git · ไม่มีประวัติ · `check_state.ps1` มองไม่เห็น · **ใครแก้เมื่อไรก็ได้โดยไม่มีอะไรจับ**
+**ทำไมมันย้อนแย้ง:** ORDER-102/103 ลงทุนสร้าง append-chain tamper integrity ให้ taskboard ทั้งระบบ
+แต่ **เอกสารที่เป็นเจ้าของบาร์ตัดสินทุกตัว** กลับเปิดโล่ง — verify วันนี้ได้ แต่พิสูจน์ไม่ได้ว่าไม่ drift ตั้งแต่ 07-18
+**STEP 1:** เลือกทาง — (a) mirror เข้า repo + เช็ค hash ใน `check_state.ps1` (b) symlink/submodule (c) snapshot+diff รายสัปดาห์
+👉 แนะ (a) เพราะถูกที่สุดและเข้ากับกรงที่มีอยู่แล้ว
+**ห้าม:** ย้าย skill ออกจากที่เดิมจน Claude Code หาไม่เจอ (mirror = สำเนา ไม่ใช่การย้าย)
+
+## ORDER-252 — [tooling] staleness linter: บล็อกที่ปิดแล้วยังพูดสิ่งที่ถูกหักล้างไปแล้ว — `OPEN` · ทำได้: Sonnet · Claude · 👉 แนะ: Sonnet
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-073 · ORDER-143 · ORDER-188 = **บั๊กเดียวกัน 3 ครั้ง** ไม่ใช่ 3 เรื่อง — หลักฐานปลายน้ำขยับ แต่บล็อก order
+ที่ปิดไปแล้วไม่ขยับตาม. และทุกครั้ง **คำแก้ถูกเขียนไว้จริง** แค่ไปอยู่ที่อื่น (banner บนไฟล์ verdict · ช่อง notes ใน
+`DEPLOYMENTS.csv` · เนื้อของ order ใบใหม่กว่า)
+`check_taskboard_archive.ps1` ตรวจ **การเชื่อม review** ได้ แต่ไม่มีอะไรตรวจว่า **ข้ออ้างในบล็อกที่ปิดแล้วยังตรงกับ repo ไหม**
+**STEP 1:** เขียน linter — ทุกบล็อกที่ terminal: resolve path ที่มันอ้าง · resolve commit hash ที่มันอ้าง ·
+แล้ว **flag บล็อกที่ artifact ของมันตอนนี้ติด banner `SUPERSEDED`/`WITHDRAWN`/`DEPRECATED`/"ถอน"**
+ตัวนี้จะจับ 073 กับ 143 ได้อัตโนมัติ
+**หมายเหตุ:** thesis เดียวกับ ORDER-219 ("ทำให้ detector ที่มีอยู่แล้วถูกอ่าน") แค่เอามาใช้กับบอร์ดแทน log
+**ห้าม:** ทำเป็น hard block ตั้งแต่แรก (จะ false-fire เยอะ) — เริ่มที่ warn + รายงาน
+
 ## ORDER-210 — [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด — `REVIEWED(Claude/Opus 2026-07-25): 🟡 กลาง ตามบาร์ที่ล็อกไว้ล่วงหน้า → คง v2 บนเงินจริง ไม่สลับ`
 **ผลเทียบตรง ๆ (Model-4 ทั้งคู่, leverage `1:100` MATCH 10/10 run, MAIN M4 = 99,161,342 ticks "100% real ticks"):**
 

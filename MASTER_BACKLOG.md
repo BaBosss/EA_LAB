@@ -352,3 +352,37 @@ utf-8 ปกติ · UTF-16 มี BOM (BOT MOGUL html) · **UTF-16 ไม่�
 + double-encoded mojibake reverse. **TODO adoption (qwen/agent ตอน lane ว่าง):** retrofit `fxdreema_xray.py`,
 `order091a_intake.py`, `botmogul_parse.py` ให้ import ตัวนี้แทน read_text() เดิม → ปิด bug class ถาวร
 (ตอนนี้แต่ละ script มี BOM-sniff ของตัวเอง กระจาย — รวมเป็นตัวเดียว)
+
+---
+
+## 9. DORMANT BACKLOG — งานที่มีเงื่อนไขปลุก (เก็บกู้จาก handoff 2026-07-26)
+
+> **ที่มา:** 2026-07-26 กวาด `_triage/HANDOFF_*` 17 ใบ เจอ **27 รายการที่ไม่เคยเข้า `AGENT_TASKBOARD.md` เลย**
+> 6 ใบเร่ง → ORDER-230..235 · 4 ใบพร้อมทำ → ORDER-236..239 · **ที่เหลือ 16 ใบอยู่ตารางนี้**
+>
+> ตารางนี้ไม่ใช่ที่ทิ้งขยะ — มันคือ **order ที่ยังไม่เกิดเพราะเงื่อนไขยังไม่มา**. ทุกแถวต้องมี `ปลุกเมื่อ` ที่เช็คได้จริง
+> ถ้าเขียน `ปลุกเมื่อ` ไม่ได้ = มันไม่ใช่งาน dormant มันคืองานที่ตัดสินใจไม่ทิ้งไม่ได้ → ต้องเปิด order หรือปิดทิ้งไปเลย
+
+| # | งาน | ปลุกเมื่อ | หลักฐานที่มีแล้ว |
+|---|---|---|---|
+| D1 | Boss_16 ก่อนสลับ binary ต้องเช็ค F3 หา GV `k16_pair_a/b` (มี = pair liquidation ค้าง ต้องเคลียร์ก่อน) | **มีคนจะ attach/สลับ binary Boss_16** — เร็วๆ นี้จริง (ORDER-213 bundle รออยู่) | ORDER-138 pair-persist · `_vps_deploy/BOSS16_KANGAROO_XAU/` |
+| D2 | X1 milestone persist ข้าม restart · S1/S2 ladder restart-cancel reconcile · S3 margin re-budget ต่อเนื่อง | **EA ที่ใช้ StackMode=93 หรือ partial-close ขึ้น live จริง** | `_triage/CODEX_ORDER132_AUDIT.md` (defer pack ของ ORDER-132b) |
+| D3 | ขุด QuantCorner FB ย้อนหลัง | **user ส่ง permalink มา** (feed อ่านอัตโนมัติไม่ได้ — scrollHeight ค้างที่ 2406 เห็นแค่โพสต์ปักหมุด) | memory `quantcorner-findyour8-idea-catalog` |
+| D4 | แกะ PDF ทฤษฎี 11 ใบที่เหลือ (Vanguard / Risk-Parity / Mudley) | **คิว build ว่าง** หรือ **จะเคลียร์ `findyour8_pdfs/`** (โฟลเดอร์ gitignore — เคลียร์แล้วของหาย) | `_triage/FINDYOUR8_STRATEGY_PDF_CATALOG.md` · EDGE_CATALOG IDEA SEEDS #9 |
+| D5 | Wave-3 XAU 3 ดีไซน์ที่ไม่เคยสร้าง: S6/SS5 squeeze-micro · SS3 VWAP reversion · S3 Asian fade | **เปิดรอบออกแบบ XAU ใหม่** | `_triage/XAU_STRATEGY_WAVE12_2026-07-19.md` บรรทัด 34 (ช่องว่างในโรสเตอร์) — ⚠️ VwapSnapback_EUR / AsianDriftCarry_XAU ที่มีอยู่ **คนละเซลล์** ไม่ใช่ตัวนี้ |
+| D6 | สมมติฐาน: ความกว้าง SL เทียบ noise floor เป็นตัวทำนายว่ารอด M1→M4 ไหม | **ทำได้เลยเมื่อว่าง** — falsify ถูกจาก corpus ที่มีอยู่ ไม่ต้องรันใหม่ | PivotBreakout + SS1 (SL กว้างตาม ATR = รอด) vs MomentumBurst (SL 40pt = พังบน real tick) |
+| D7 | ยัด `Exit_DynCloseTargetMoney()` เข้า Kangaroo | **หลัง review เจ้าของ exit ก่อน** (Kangaroo มี `Kangaroo_NextLot()` + exit path ของตัวเอง — ชนแน่ถ้าไม่ดูก่อน) | ORDER-098-C build ไว้แล้ว (`bd709fca`) · ORDER-197 body |
+| D8 | พอร์ตเกินงบ 25% — จะ resize / ถอด / ยอมรับ | **ORDER-233 audit ผ่าน** (ตัวเลขจะขยับจาก 73% เป็น 38% ถ้า flag เปิด — ตัดสินก่อน audit = ตัดสินบนเลขที่ยังไม่รู้ว่าใช้ได้ไหม) | `scripts/portfolio_risk_admission.py` · `6f49e0b7` |
+| D9 | ยืนยัน MT5 local agent = 18 ตัว (Core 02/03 ปิด) | **ทำได้เลย 30 วินาที** หรือ Claude ใส่ assert ใน `mt5_optimize.ps1` | genetic policy `b9ba8c84` |
+| D10 | เช็คว่า bundle ที่ staged อยู่ ถูกลากขึ้นชาร์ตจริงกี่ตัว | **CR-P0 sensor กลับมา** (2 บัญชีตอนนี้ไม่มี sensor จะเช็คด้วยซ้ำ) | `portfolio/DEPLOYMENTS.csv` · 24 bundle ใน `_vps_deploy/` · sweep `85b55fd9` ตอบคนละคำถาม (evidence ไม่ใช่ attachment) |
+| D11 | re-pin `$mainEnd` ในกรง holdout ตอน MAIN เลื่อน | **MAIN เลื่อน (ราว 6 เดือน = ~2027-01)** — ต้อง**ประกาศ holdout ใหม่ก่อน** แล้วค่อยขยับ | `scripts/check_state.ps1` §9 · กฎเหล็ก MAIN ∩ HOLDOUT = ∅ |
+| D12 | MRIS core ยังไวเกิน — 2019 อ่านได้ 48% risk-off (จาก 88%) หลังแก้ pin | **ก่อนตัดสิน crisis-fold (ORDER-200 Phase D)** เพราะ fold กิน classifier ตัวเดียวกัน | ORDER-203 verify (`1cc84314`) · memory `absolute-price-constant-poisons-backtests` |
+| D13 | ST03 lever 2: TP ต่อ symbol × exit-mode | **user เปิดเลน optimize มือ** — ⚠️ worktree `great-mendeleev-a35c44` **หายแล้ว** เหลือแค่ `ST03_optimized_v2.set`/`v1.set` และ **ไม่มี .mq5 ของ `EA_RUNNER_ST03` มีแต่ .ex5** · ห้ามใช้ `st03_spacing_probe/` (นั่นยิงใส่ `Boss_15_ST03` คนละตัว) | ORDER-201 (ปิด lever 1 = spacing, ไม่ช่วย) |
+| D14 | ST03 lever 3: ความลึก LOT_Repeat × vol-gate | เหมือน D13 · ถ้าตัวชนะพึ่ง escalation ⇒ เข้ากรง ENGINE-EDGE 5 ข้อ | `ST03_volgate_v1.set` · `ST03_lr2_v1.set` |
+| D15 | PA_LotMult ตาม tier ของ Bulkowski (Step 3 ของสแตก PA/MM) | **หลังพิสูจน์ว่า PA ยก expectancy ได้จริงก่อน** — ตอนนี้ยังไม่มีหลักฐานนั้น | `ea_projects/(TRD)_PA_Probe/FINDINGS.md` = PA ช่วยตอน "เติมไม้" ไม่ใช่ตอน entry |
+| D16 | SMC / S-R เป็นชั้น confluence (ห้ามใช้เปล่า) | เหมือน D15 | naked FVG ตายแล้ว (098-A) · SMC×STO ได้แค่ candidate (LANEC-FAN, SL เปราะ) |
+
+<sub>**ของแถมที่เจอตอนกวาด (ไม่ใช่ backlog แต่คือความจริงที่บันทึกผิด):** SS2 NyIgnition optimize **รันไปแล้วจริง**
+(`a88db4c6`, 2026-07-23 — `_mt5_auto/SS2_NYIG_BOTHWINDOW.csv` 6 เซลล์ ดีสุด 1.05/1.16 `candidate=no` ทุกเซลล์)
+แต่ `EA_SCORECARD_AND_REGISTRY.md:252` + `EA_MASTER_INDEX.csv:142` ยังเขียน "ยังไม่ optimize — คิว Wave-3" อยู่ —
+งานเกิดแล้วแต่ verdict ไม่เคยถูกเขียนลง. ต้องแก้ 2 แถวนี้ (session คู่ขนานถือไฟล์อยู่ 2026-07-26 → ทำตอน lane ว่าง)</sub>
