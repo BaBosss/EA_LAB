@@ -34,7 +34,16 @@
 ```
 ขั้น single-test เป็นต้นไป **อัตโนมัติครบแล้ว**
 
-## ข้อจำกัด — headless OPTIMIZATION (v2, ยังไม่ทำ)
+## ✅ UPDATE 2026-07-25 — headless OPTIMIZATION ทำได้แล้ว (หัวข้อ "v2 ยังไม่ทำ" ข้างล่าง = ล้าสมัย)
+
+`scripts/mt5_optimize.ps1` รัน genetic headless แล้ว export XML ได้จริง → `scripts/parse_opt_xml.ps1` →
+`scripts/select_robust_pass.py` → `scripts/set_from_robust.py` → `mt5_run.ps1` Model-4 confirm.
+optimize range เก็บใน .set เป็น `value||start||step||stop||Y`. ตัวอย่างใช้งานจริง = `ORDER-GEN-STANDING`
+MATRIX ชุดที่ 2 ใน `AGENT_TASKBOARD.md`.
+**⚠️ ผล optimize รันบน Model 1 (เร็ว) = ใช้หา candidate เท่านั้น ห้ามใช้เป็นหลักฐาน** — ตัวเลขที่ใช้ตัดสิน
+ต้องมาจาก Model-4 single-test ของ pass ที่เลือกแล้วเสมอ
+
+## ~~ข้อจำกัด — headless OPTIMIZATION (v2, ยังไม่ทำ)~~ (superseded 2026-07-25 — ดูข้างบน)
 - MT5 **รัน** optimization headless ได้ (`Optimization=2` ใน ini) แต่ผลออกมาเป็น **.opt cache (binary)** ไม่ใช่ XML
 - MT5 ไม่มีคำสั่ง export opt → XML แบบ headless สะอาดๆ (ปกติต้อง export มือใน GUI)
 - ทางออก v2: เขียน `OnTester()` hook ใน EA ให้เขียนผลทุก pass ลงไฟล์ หรือ parser อ่าน .opt — เป็นงานเพิ่ม

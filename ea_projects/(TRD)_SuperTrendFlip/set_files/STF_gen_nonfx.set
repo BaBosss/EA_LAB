@@ -1,0 +1,31 @@
+; STF_gen_nonfx.set — GENETIC search space for SuperTrendFlip on NON-FX (crypto/metal/index/oil)
+; created 2026-07-25 (ORDER-GEN-STANDING matrix ชุดที่ 2) — user hypothesis: SuperTrend เหมาะกับสินค้า
+; ที่ trend ยาวและ vol สูง (BTC/oil/index) มากกว่าคู่เงิน · FX pairs = ตายไปแล้วใน signal hunt (scorecard L190)
+;
+; ใช้กับ scripts\mt5_optimize.ps1 -Optimization 2 (fast genetic) -Model 1
+; search space = 10 x 8 x 3 x 9 x 6 x 2 x 6 = 155,520 combos -> genetic เท่านั้น (complete = ไม่ไหว)
+; format: name=value||start||step||stop||Y|N   (Y = optimize ตัวนี้, N = ล็อกค่าไว้)
+;
+; STAGE A = ตัวนี้ (core signal + exit + trend filter)
+; STAGE B (หลังได้ plateau) = เปิด _01_UseDonchian/_01_DonBars เป็น Y แล้ว optimize รอบสอง
+;                            บนช่วงแคบรอบ plateau center — อย่าเปิดพร้อมกันตั้งแต่รอบแรก
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=10||6||2||24||Y
+_01_Mult=3.0||1.5||0.5||5.0||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=0||0||1||2||Y
+_02_TpAtrMult=6.0||2.0||1.0||10.0||Y
+_02_SlAtrMult=1.0||0.5||0.5||3.0||Y
+_03_UseEma=true||false||1||true||Y
+_03_EmaPeriod=200||50||50||300||Y
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N
