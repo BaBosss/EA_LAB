@@ -107,18 +107,19 @@ string BG_State(const bool halted, const int positionsLeft)
 string BG_StatusLine(const datetime stamp, const long magic, const int positions,
                      const double floatingPL, const double limitAbs,
                      const bool halted, const bool dryRun,
-                     const long checks, const long fires, const long reentries)
+                     const long checks, const long fires,
+                     const long wouldFire, const long reentries)
 {
-   return StringFormat("%s,%I64d,%d,%.2f,%.2f,%.1f,%s,%s,%I64d,%I64d,%I64d",
+   return StringFormat("%s,%I64d,%d,%.2f,%.2f,%.1f,%s,%s,%I64d,%I64d,%I64d,%I64d",
                        TimeToString(stamp, TIME_DATE|TIME_SECONDS),
                        magic, positions, floatingPL, limitAbs,
                        BG_UsagePct(floatingPL, limitAbs),
                        BG_State(halted, positions),
                        (dryRun ? "DRYRUN" : "LIVE"),
-                       checks, fires, reentries);
+                       checks, fires, wouldFire, reentries);
 }
 
 string BG_StatusHeader()
 {
-   return "stamp,magic,positions,floating_pl,limit_abs,usage_pct,state,mode,checks,fires,reentries";
+   return "stamp,magic,positions,floating_pl,limit_abs,usage_pct,state,mode,checks,fires,would_fire,reentries";
 }

@@ -64,9 +64,9 @@ int OnInit()
 
    //--- status line must carry the firing count; a guard that cannot
    //--- report its own firings cannot be held to the doctrine bar
-   string line = BG_StatusLine(D'2026.07.26 10:00:00', 1524, 3, -75.0, 150.0, false, true, 100, 0, 0);
-   Check(StringFind(line, ",1524,3,-75.00,150.00,50.0,ARMED,DRYRUN,100,0,0") >= 0,
-         "status: line carries magic, state, mode and counters");
+   string line = BG_StatusLine(D'2026.07.26 10:00:00', 1524, 3, -75.0, 150.0, false, true, 100, 0, 7, 0);
+   Check(StringFind(line, ",1524,3,-75.00,150.00,50.0,ARMED,DRYRUN,100,0,7,0") >= 0,
+         "status: dry-run breaches land in would_fire and leave fires at zero");
 
    //--- the state word must distinguish "contained" from "we tried and failed".
    //--- Reporting HALTED while positions are still open is the failure that

@@ -11,6 +11,26 @@
 //| on any chart/timeframe - it is timer-driven, so the chart symbol |
 //| and whether that symbol ticks are both irrelevant.               |
 //|                                                                  |
+//| 🔴 THIS IS A SENSOR, NOT A BOUND. Do not describe it as one.     |
+//| (Owner decision 2026-07-27, after the Codex audit.)              |
+//|                                                                  |
+//| It sums only positions OPEN AT THIS INSTANT. A loss realized     |
+//| between two polls -- by a broker stop-out, or by the guarded EA  |
+//| closing its own legs -- disappears from the comparison, and the  |
+//| next poll reports ARMED after the episode has already blown      |
+//| through the configured percentage several times over. Worse,     |
+//| Exness stop-out is magic-blind: a 1524 blow-up that reaches it   |
+//| liquidates the other magics anyway, the exact outcome per-magic  |
+//| scope was chosen to prevent. The broker acts first and nothing   |
+//| here can outrun it.                                              |
+//|                                                                  |
+//| The REAL bound is structural and lives outside this file: give   |
+//| magic 1524 its own cent account funded with what the owner will  |
+//| accept losing outright. That is the plan of record. This EA is   |
+//| the interim early-warning sensor, and its value is the usage     |
+//| percentage in the status file, not the cut. Full finding list:   |
+//| AUDIT_2026-07-27_CODEX.md                                        |
+//|                                                                  |
 //| WHY THIS EXISTS: NuiIndy's edge is escalation, not signal - it   |
 //| earns by surviving adverse excursions, so its own CutLoss_Percent|
 //| has never fired and cannot be relied on to bound the account.    |
@@ -33,7 +53,17 @@
 #include <Trade\Trade.mqh>
 #include "BasketGuard_Core.mqh"
 
-input long   InpMagic          = 1524;    // the ONE magic this guard may touch (0 = refuse to start)
+//--- Pinned at COMPILE TIME, deliberately not inputs.
+//--- A .set file or a saved chart profile can supply any input value, and an
+//--- old one supplying InpMagic=8001 would point this EA at GoldReaper and it
+//--- would faithfully liquidate it. Inputs cannot be trusted to name the
+//--- target when the whole purpose is "touch this one thing and nothing else".
+//--- Retargeting therefore requires editing and recompiling, which is a
+//--- deliberate act that leaves a diff. (Codex audit 2026-07-27, P0-2.)
+#define BG_PINNED_MAGIC     1524
+#define BG_PINNED_ACCOUNT   159475669
+
+input long   InpMagic          = 1524;    // must equal the compile-time pin, or the EA refuses to start
 input double InpMaxLossPct     = 15.0;    // cut when this magic's floating loss reaches this % of the baseline
 input bool   InpUseFixedBase   = false;   // false = live balance (self-scaling) / true = InpFixedBaseline
 input double InpFixedBaseline  = 0.0;     // account-currency baseline when InpUseFixedBase=true
@@ -47,7 +77,13 @@ input string InpStatusFile     = "EA_LAB_basketguard.csv";  // Common\Files, for
 CTrade   g_trade;
 bool     g_halted        = false;
 long     g_checks        = 0;
+//--- fires counts REAL close attempts only. would_fire counts dry-run
+//--- breaches. Keeping them apart is the whole point: this lab's bar reads a
+//--- guard with fires=0 as UNTESTED, so a counter that ticks up during a dry
+//--- run would manufacture evidence that the kill path had been exercised
+//--- when nothing was ever sent to the broker. (Codex audit 2026-07-27, P1-6.)
 long     g_fires         = 0;
+long     g_wouldFire     = 0;
 long     g_reentries     = 0;   // times the guarded EA opened again AFTER the halt
 datetime g_lastHeartbeat = 0;
 datetime g_lastAlert     = 0;
@@ -99,8 +135,17 @@ void BG_AlertThrottled(const string msg)
 
 //+------------------------------------------------------------------+
 //| Walk every open position, count and sum ONLY the watched magic.  |
-//| Profit + swap + commission, because the number we compare against|
-//| the limit must be what actually lands in the balance if we close.|
+//|                                                                  |
+//| Profit + swap, NOT commission. Closing fees are not visible on an |
+//| open position, so this number reads slightly BETTER than what     |
+//| would actually land in the balance -- the bias is toward cutting  |
+//| LATE, never early. On this Exness Standard Cent account trading   |
+//| commission is zero, so today the gap is only slippage.            |
+//|                                                                  |
+//| It also sees only what is OPEN RIGHT NOW. Anything the guarded EA |
+//| or a broker stop-out already realized is invisible here, which is |
+//| the structural limit of this whole design -- see                  |
+//| AUDIT_2026-07-27_CODEX.md, finding P0-1.                          |
 //+------------------------------------------------------------------+
 double BG_BasketFloating(int &positions, double &lots)
 {
@@ -116,7 +161,7 @@ double BG_BasketFloating(int &positions, double &lots)
       positions++;
       lots  += PositionGetDouble(POSITION_VOLUME);
       total += PositionGetDouble(POSITION_PROFIT)
-             + PositionGetDouble(POSITION_SWAP);
+             + PositionGetDouble(POSITION_SWAP);   // NOT commission - see AUDIT_2026-07-27_CODEX.md
    }
    return total;
 }
@@ -166,17 +211,35 @@ void BG_WriteStatus(const int positionsNow, const double floatingPL, const doubl
    if(FileSize(h) == 0) FileWrite(h, BG_StatusHeader());
    FileSeek(h, 0, SEEK_END);
    FileWrite(h, BG_StatusLine(TimeCurrent(), InpMagic, positionsNow, floatingPL, limitAbs,
-                              g_halted, InpDryRun, g_checks, g_fires, g_reentries));
+                              g_halted, InpDryRun, g_checks, g_fires, g_wouldFire, g_reentries));
    FileClose(h);
 }
 
 //+------------------------------------------------------------------+
 int OnInit()
 {
-   if(InpMagic <= 0)
+   //--- Pin checks first. Everything below is only meaningful once we know
+   //--- this instance is pointed at the thing it was built for.
+   if(InpMagic != BG_PINNED_MAGIC)
    {
-      Print("BasketGuard: InpMagic must be the magic you intend to guard. ",
-            "Refusing to start on 0, which would match nothing and give false comfort.");
+      PrintFormat("BasketGuard: InpMagic=%I64d but this build is pinned to %d. "
+                  "Refusing to start - a stale .set must never be able to aim this EA at another magic.",
+                  InpMagic, BG_PINNED_MAGIC);
+      return INIT_PARAMETERS_INCORRECT;
+   }
+   long login = AccountInfoInteger(ACCOUNT_LOGIN);
+   if(login != BG_PINNED_ACCOUNT)
+   {
+      PrintFormat("BasketGuard: account %I64d is not the pinned account %d. Refusing to start - "
+                  "magic %d on a different account is a different EA's positions.",
+                  login, BG_PINNED_ACCOUNT, BG_PINNED_MAGIC);
+      return INIT_PARAMETERS_INCORRECT;
+   }
+   if(AccountInfoInteger(ACCOUNT_MARGIN_MODE) != ACCOUNT_MARGIN_MODE_RETAIL_HEDGING)
+   {
+      Print("BasketGuard: this account is not HEDGING. Refusing to start - under netting a single "
+            "position can carry deals from several magics, so closing by ticket would take out "
+            "magics this EA must never touch.");
       return INIT_PARAMETERS_INCORRECT;
    }
    if(BG_LossLimitAbs(1000.0, InpMaxLossPct) <= 0.0)
@@ -198,7 +261,16 @@ int OnInit()
    g_trade.SetAsyncMode(false);
    g_trade.SetExpertMagicNumber(0);          // this EA opens nothing; it never stamps a magic
 
-   EventSetTimer(InpTimerSeconds < 1 ? 1 : InpTimerSeconds);
+   //--- OnTimer is the ONLY thing that ever runs. If registration fails and we
+   //--- ignore it, this EA sits on the chart doing literally nothing while its
+   //--- startup line says "armed" -- an inert guard that reads as a live one.
+   if(!EventSetTimer(InpTimerSeconds < 1 ? 1 : InpTimerSeconds))
+   {
+      PrintFormat("BasketGuard: EventSetTimer failed (err=%d). Refusing to start - "
+                  "OnTimer is the only trigger, so a failed timer means a guard that watches nothing.",
+                  GetLastError());
+      return INIT_FAILED;
+   }
 
    PrintFormat("BasketGuard armed: magic=%I64d limit=%.1f%% of %s mode=%s state=%s",
                InpMagic, InpMaxLossPct,
@@ -213,8 +285,8 @@ int OnInit()
 void OnDeinit(const int reason)
 {
    EventKillTimer();
-   PrintFormat("BasketGuard stopped (reason=%d). checks=%I64d fires=%I64d state=%s",
-               reason, g_checks, g_fires, (g_halted ? "HALTED" : "ARMED"));
+   PrintFormat("BasketGuard stopped (reason=%d). checks=%I64d fires=%I64d would_fire=%I64d reentries=%I64d state=%s",
+               reason, g_checks, g_fires, g_wouldFire, g_reentries, (g_halted ? "HALTED" : "ARMED"));
 }
 
 //+------------------------------------------------------------------+
@@ -236,15 +308,16 @@ void OnTimer()
 
    if(action == BG_ACTION_CUT)
    {
-      g_fires++;
       string head = StringFormat("magic %I64d floating %.2f reached %.1f%% limit (%.2f of %.2f baseline), %d positions %.2f lots",
                                  InpMagic, floating, InpMaxLossPct, limitAbs, baseline, positions, lots);
       if(InpDryRun)
       {
+         g_wouldFire++;
          BG_AlertThrottled("DRY RUN would CUT: " + head + " - nothing closed");
       }
       else
       {
+         g_fires++;
          BG_AlertThrottled("CUT: " + head);
          int left = BG_CloseBasket();
          g_halted = true;          // halt regardless: a failed cut is not a reason to re-arm
@@ -295,8 +368,8 @@ void OnTimer()
    {
       g_lastHeartbeat = TimeCurrent();
       BG_WriteStatus(positions, floating, limitAbs);
-      PrintFormat("BasketGuard heartbeat: magic=%I64d pos=%d lots=%.2f floating=%.2f limit=%.2f usage=%.1f%% checks=%I64d fires=%I64d",
+      PrintFormat("BasketGuard heartbeat: magic=%I64d pos=%d lots=%.2f floating=%.2f limit=%.2f usage=%.1f%% checks=%I64d fires=%I64d would_fire=%I64d",
                   InpMagic, positions, lots, floating, limitAbs,
-                  BG_UsagePct(floating, limitAbs), g_checks, g_fires);
+                  BG_UsagePct(floating, limitAbs), g_checks, g_fires, g_wouldFire);
    }
 }
