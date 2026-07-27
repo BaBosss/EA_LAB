@@ -324,6 +324,24 @@ int OnInit()
       PrintFormat("[INIT] FATAL: Boss_17 structural SL is naked-probe only - HedgeMode must be 0, got %d", HedgeMode);
       return INIT_FAILED;
    }
+   // ORDER-432 finding 3 (Codex blind audit 2026-07-27). Every guard above is gated on
+   // _17_UseStructLevels, which is a plain user-switchable input (Inputs.mqh:292). Turn
+   // it off and the three checks above stop applying AND the structural SL disappears:
+   // Exit_InitialSL falls through to the SLMode switch, SL_NONE returns 0.0,
+   // Exit_StructSLMissing returns false on the same flag, and Lab_OpenOrder sends
+   // sl=0 -- a naked position, with no after-the-fact detector anywhere in the chassis
+   // (POSITION_SL is read in exactly two places repo-wide, both trailing paths).
+   //
+   // Wave5 is a structural design: its whole thesis is a stop at the wave-1
+   // invalidation level. Running it with no per-order stop at all is not a
+   // configuration of that strategy, it is a different and unbounded one. Refuse the
+   // attach rather than trade it. SLMode 31/33/34/35/36 all remain legal with the flag
+   // off -- this only closes "no stop at all".
+   if(!_17_UseStructLevels && (SLMode == SL_NONE || SLMode == SL_MONEY))
+   {
+      PrintFormat("[INIT] FATAL: Boss_17 with _17_UseStructLevels=false needs a per-order SL, but SLMode=%d yields none (30 NONE / 32 MONEY) - that combination opens naked positions (ORDER-432 finding 3). Use SLMode 31/33/34/35/36, or leave _17_UseStructLevels=true.", SLMode);
+      return INIT_FAILED;
+   }
 #endif
 #ifdef LAB_ENTRY_18
    Entry_JumStoch_Init();

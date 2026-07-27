@@ -133,7 +133,20 @@ EntrySignal Entry_Evaluate()
 
    MqlTick t;
    if(!SymbolInfoTick(_Symbol, t)) { g_w5_n_no_tick++; return Entry_MakeNone("wave5: no tick"); }
-   double px = (dir == 1 ? t.bid : t.ask);
+   // ORDER-432 finding 1 (Codex blind audit 2026-07-27, traced and confirmed by the
+   // user). This used to be `(dir == 1 ? t.bid : t.ask)` -- the WRONG side. The order
+   // actually fills at ask for a long and bid for a short (LabCore.mqh Lab_OpenOrder),
+   // so the recorded reference was one spread closer to the SL than the real entry.
+   // Mode-42 risk sizing divides by |entry_ref - sl| (ExitManager Exit_SLDistancePoints),
+   // so a distance short by one spread makes the lot LARGER than the requested risk:
+   // long, bid 2000.00 / ask 2000.20 / SL 1990.00 sizes off 10.00 while the true risk
+   // is 10.20. The TP anchor below has the same problem in the other direction -- a
+   // "100% expansion from entry" measured from bid is short of a full expansion.
+   //
+   // Both uses want the price the position is actually opened at, so both now take it.
+   // This CHANGES BEHAVIOUR by one spread and the regression baseline moves with it;
+   // that is correct here, because the old baseline is a record of the defect.
+   double px = (dir == 1 ? t.ask : t.bid);
    double closePx = iClose(_Symbol, _Period, 1);
 
    bool inZone;

@@ -1,0 +1,52 @@
+#!/bin/sh
+# EA_LAB commit-msg guard.
+#
+# WHY THIS FILE EXISTS (2026-07-27, found while trying to land ORDER-432)
+#   ORDER-144 added a rule to scripts/check_precommit_staged.ps1: changing
+#   ea_template/regression_baseline.csv requires the word "re-pin" in the commit
+#   message. The intent is right -- moving a regression baseline is exactly the kind
+#   of thing that should need an explicit declaration, because the baseline is the
+#   only record of what the chassis used to do.
+#
+#   But it was implemented in the PRE-COMMIT hook, reading .git/COMMIT_EDITMSG. Under
+#   `git commit -m`, git writes COMMIT_EDITMSG only on SUCCESS, after pre-commit has
+#   already run -- so at pre-commit time that file still holds the PREVIOUS commit's
+#   message. The rule was therefore gating on the wrong input entirely: it could only
+#   pass by accident, when the last successful commit happened to contain "re-pin".
+#
+#   Demonstrated twice on 2026-07-27 with messages that plainly contained the word and
+#   were still blocked. Of the eight commits that have ever touched the baseline, only
+#   one postdates the guard -- so this had almost no chance to be noticed in normal use.
+#
+#   commit-msg is the correct hook: git passes it the path to the actual message as $1.
+#
+# Fail-CLOSED on a missing message file: a rule that cannot read its input must block,
+# not wave the commit through. That is the whole lesson above.
+
+msgfile="$1"
+if [ -z "$msgfile" ] || [ ! -f "$msgfile" ]; then
+  echo "[commit-msg] FAIL-CLOSED: no commit message file passed (\$1='$msgfile') -- cannot validate, blocking"
+  exit 1
+fi
+
+baseline='ea_template/regression_baseline.csv'
+
+# Only act when the baseline is actually staged AND its staged bytes differ from HEAD.
+# A commit that merely touches other files, or re-stages identical bytes, is a no-op here.
+if git diff --cached --name-only -- "$baseline" | grep -q .; then
+  if ! git diff --cached --quiet -- "$baseline"; then
+    if ! grep -qi 're-pin' "$msgfile"; then
+      echo ""
+      echo "[commit-msg] BLOCK: $baseline changed, but the commit message does not contain 're-pin'."
+      echo "[commit-msg] The baseline is the only record of what the chassis used to do. Moving it needs"
+      echo "[commit-msg] an explicit declaration in the message, stating WHICH EAs moved and WHY the old"
+      echo "[commit-msg] numbers were wrong -- not just the token."
+      echo "[commit-msg] (ORDER-144 rule; relocated from pre-commit 2026-07-27, where it was reading the"
+      echo "[commit-msg]  PREVIOUS commit's message and could never see this one.)"
+      echo ""
+      exit 1
+    fi
+  fi
+fi
+
+exit 0

@@ -162,13 +162,23 @@ if ($order144Staged.Count -gt 0) {
         if ($b1Error) { $order144Failures.Add($b1Error) }
     }
 
+    # 2026-07-27: the regression-baseline "re-pin" rule MOVED to .githooks/commit-msg.
+    #
+    # It used to live here and read .git\COMMIT_EDITMSG. Under `git commit -m` that file
+    # is written only on SUCCESS, after pre-commit has already run -- so at this point it
+    # still holds the PREVIOUS commit's message. The rule was gating on the wrong input
+    # and could only pass by accident, when the last successful commit happened to
+    # contain the word. Demonstrated twice while landing ORDER-432 with messages that
+    # plainly contained "re-pin" and were blocked anyway. Of the eight commits that have
+    # ever changed the baseline, only one postdates the guard, so it had almost no chance
+    # to be noticed.
+    #
+    # commit-msg is the correct hook: git passes it the real message file as $1. The rule
+    # is NOT weakened -- it is enforced somewhere it can actually read its input. Left as
+    # a note rather than deleted, so the next reader finds out where it went instead of
+    # concluding the rule was dropped.
     if ($stagedByPath.ContainsKey($RegressionBaselinePath)) {
-        $baselineHead = Get-HeadBytesOrNull $RegressionBaselinePath
-        $baselineStaged = Get-StagedBytesOrNull $RegressionBaselinePath
-        $commitMessage = if (Test-Path (Join-Path $RepoRoot '.git\COMMIT_EDITMSG')) { Get-Content (Join-Path $RepoRoot '.git\COMMIT_EDITMSG') -Raw -ErrorAction SilentlyContinue } else { '' }
-        if (-not (Compare-BytesExact $baselineHead $baselineStaged) -and $commitMessage -notmatch '(?i)re-pin') {
-            $order144Failures.Add('ea_template/regression_baseline.csv changed, but the commit message does not contain re-pin')
-        }
+        Write-Host '[precommit-staged] NOTE: regression-baseline re-pin rule is enforced by .githooks/commit-msg (it needs the message this commit is about, which pre-commit cannot see)'
     }
 
     if ($order144Failures.Count -gt 0) {

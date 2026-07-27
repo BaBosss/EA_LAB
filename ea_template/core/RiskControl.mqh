@@ -217,11 +217,26 @@ bool RiskControl_Init() { return RiskControl_InitEx(RC_AdoptLegacyHalt); }
 
 bool RiskControl_IsHalted() { return g_rc_halted; }
 
+// ORDER-432 finding 4 (Codex blind audit 2026-07-27; scope corrected in the 2026-07-27
+// verification pass -- of the two things that audit filed together, only THIS half is a
+// real fail-open. The DD-adaptive multiplier's 1.0 fallback returns the CONFIGURED lot
+// and, with the shipped tier multipliers of 1.2/1.5, can only ever be smaller than what
+// the feature would have produced; it cannot oversize, so it is not fixed here.)
+//
+// This returned 0.0 when the balance could not be read, and 0.0 means "no margin in
+// use" to the only caller that matters -- so a cap whose entire job is to block when
+// margin usage is high PERMITTED THE ORDER precisely when it could not measure. That is
+// the inverse of every other cap in this file.
+//
+// -1.0 = "unmeasurable", distinct from a real 0.0 (a genuinely flat account). Callers
+// must treat it as a refusal.
+#define RC_DEPOSIT_LOAD_UNKNOWN (-1.0)
+
 double RiskControl_DepositLoadPct()
 {
    double bal = AccountInfoDouble(ACCOUNT_BALANCE);
    double mar = AccountInfoDouble(ACCOUNT_MARGIN);
-   if(bal <= 0.0) return 0.0;
+   if(bal <= 0.0) return RC_DEPOSIT_LOAD_UNKNOWN;
    return 100.0 * mar / bal;
 }
 
@@ -383,10 +398,30 @@ bool RiskControl_AllowNewOrder()
 {
    if(g_rc_halted) return false;
    double maxLoad = RC_MaxDepositLoadPct();
-   if(maxLoad > 0.0 && RiskControl_DepositLoadPct() >= maxLoad)
+   if(maxLoad > 0.0)
    {
-      g_rc_cap_blocks++;
-      return false;
+      double load = RiskControl_DepositLoadPct();
+      // ORDER-432 finding 4: an unreadable balance now REFUSES instead of reading as
+      // zero load. A cap that cannot measure must not permit -- that is the whole
+      // difference between a cap and a decoration. Throttled log so a persistent
+      // terminal fault is visible rather than silently costing every entry.
+      if(load == RC_DEPOSIT_LOAD_UNKNOWN)
+      {
+         g_rc_cap_blocks++;
+         static datetime rc_load_log = 0;
+         datetime now_load = TimeCurrent();
+         if(now_load - rc_load_log >= 60)
+         {
+            rc_load_log = now_load;
+            Print("[RISK] deposit-load cap is ON but account balance is unreadable - new order BLOCKED (cannot verify the cap; ORDER-432 finding 4)");
+         }
+         return false;
+      }
+      if(load >= maxLoad)
+      {
+         g_rc_cap_blocks++;
+         return false;
+      }
    }
    return true;
 }

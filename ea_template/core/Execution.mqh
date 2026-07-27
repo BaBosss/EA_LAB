@@ -32,7 +32,31 @@ double Exec_NormalizeLot(double lot)
    double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double maxv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-   if(step <= 0.0) step = 0.01;
+   // ORDER-432 finding 5 (Codex blind audit 2026-07-27). This used to invent 0.01 when
+   // the property read failed. That is a guess about the broker's contract and it is
+   // wrong in both directions: with a real step of 0.001 an intended 0.015 floors to
+   // 0.01 and the broker ACCEPTS it, so the position is 33% small and nothing says so;
+   // with a real step of 0.1 the same guess leaves 0.15 unrounded and the broker
+   // REJECTS it. One fallback, two silent failures.
+   //
+   // Return 0.0 -- the same "caller skips this order" contract this function already
+   // uses for a lot below the broker minimum, and the same rule MM_FirstLot follows:
+   // a runtime data failure costs a missed trade, never a differently-sized one.
+   //
+   // NOTE the sibling Exec_NormalizeCloseLot is deliberately NOT changed the same way;
+   // see the comment there. Codex cited only this site, and applying one rule to both
+   // would have been wrong.
+   if(step <= 0.0)
+   {
+      static datetime step_log = 0;
+      datetime now_step = TimeCurrent();
+      if(now_step - step_log >= 60)
+      {
+         step_log = now_step;
+         Print("[EXEC] SYMBOL_VOLUME_STEP unreadable - OPEN skipped rather than sized against a guessed step (ORDER-432 finding 5)");
+      }
+      return 0.0;
+   }
    if(RC_MaxLot > 0.0 && lot > RC_MaxLot) lot = RC_MaxLot;   // final hard ceiling
    if(lot > maxv) lot = maxv;
    lot = MathFloor(lot / step + 0.0000001) * step;
@@ -385,8 +409,28 @@ double Exec_NormalizeCloseLot(double lot)
    double minv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MIN);
    double maxv = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_MAX);
    double step = SymbolInfoDouble(_Symbol, SYMBOL_VOLUME_STEP);
-   if(step <= 0.0) step = 0.01;
    if(lot > maxv) lot = maxv;
+   // ORDER-432 finding 5, the OTHER half -- and the direction is deliberately opposite
+   // to Exec_NormalizeLot above. This normalizes a partial CLOSE. Returning 0.0 here
+   // would mean "do not close", so applying the open path's fail-closed rule would make
+   // an unreadable broker property REFUSE TO REDUCE RISK -- the worst possible reading
+   // of "fail safe". Codex cited only the open site; one rule for both would have been
+   // wrong.
+   //
+   // So: never invent a step, but never refuse to close either. Skip the flooring and
+   // send the requested volume, letting the broker validate it. The close is attempted,
+   // and it is not silently shrunk against a guess.
+   if(step <= 0.0)
+   {
+      static datetime cstep_log = 0;
+      datetime now_cstep = TimeCurrent();
+      if(now_cstep - cstep_log >= 60)
+      {
+         cstep_log = now_cstep;
+         Print("[EXEC] SYMBOL_VOLUME_STEP unreadable on a CLOSE - sending the requested volume unrounded (refusing to close would be worse than an unrounded close)");
+      }
+      return (lot < minv ? 0.0 : lot);
+   }
    lot = MathFloor(lot / step + 0.0000001) * step;
    int stepDigits = 0;
    double s = step;
