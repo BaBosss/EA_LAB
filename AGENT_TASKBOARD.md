@@ -1713,7 +1713,7 @@ Take only `profit_factor` · `total_trades` · `net_profit` · `balance_drawdown
 
 ### 🔴 STEP 0 — pre-flight. This is the cheap part that is easy to skip and expensive to have skipped.
 
-**(a) Pin the levers explicitly in every set you run.** `_9_RegimeGateAdds` is **absent from every Boss_14 `.set` on disk — including `B14_AB_off.set`, the file ORDER-236 used as its control** (verified 2026-07-27 by grep, not by assumption). MT5 fills an input a `.set` does not list from the **per-terminal cache**, not from the source default (memory `mt5-tester-cache-nondeterminism`). For each host, copy the source set to `_mt5_auto/ab_sets/order430/<SYM>_CTRL.set` and make sure these four lines are present with exactly these values:
+**(a) Pin the levers explicitly in every set you run.** `_9_RegimeGateAdds` is **absent from every Boss_14 `.set` on disk — including `B14_AB_off.set`, the file ORDER-236 used as its control** (verified 2026-07-27 by grep, not by assumption). MT5 fills an input a `.set` does not list from the **per-terminal cache**, not from the source default (memory `mt5-tester-cache-nondeterminism`). Copy `ea_template/sets/B14_AB_off.set` **once** to `_mt5_auto/ab_sets/order430/CTRL.set` and make sure these four lines are present with exactly these values (one file, used by all seven runs):
 ```
 _9_RegimeGateAdds=false
 _50_RegimeMode=0
@@ -1728,20 +1728,25 @@ _9_PA_MinBodyRatio=1.0
 
 Command template — change **only** `-Symbol`, `-Period`, `-SetFile`, `-ReportName`:
 ```
-powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "Boss_14_GridLog" -Symbol USDJPY -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -SetFile "D:\EA_LAB\_mt5_auto\ab_sets\order430\USDJPY_CTRL.set" -ReportName O430_USDJPY_H1_BWD -Model 4 -Terminal "D:\Meta 5b\terminal64.exe" -DataDir "D:\Meta 5b" -Portable
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "Boss_14_GridLog" -Symbol USDJPY -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -SetFile "D:\EA_LAB\_mt5_auto\ab_sets\order430\CTRL.set" -ReportName O430_USDJPY_H1_BWD -Model 4 -Terminal "D:\Meta 5b\terminal64.exe" -DataDir "D:\Meta 5b" -Portable
 ```
 
-| # | symbol | TF | source set to copy into `order430/` | report name |
-|---|---|---|---|---|
-| 1 | USDJPY | H1 | `ea_template/sets/Boss14_GridLog_USDJPY_DEMO.set` | `O430_USDJPY_H1_BWD` |
-| 2 | EURJPY | H1 | `ea_template/sets/Boss14_GridLog_EURJPY_DEMO.set` | `O430_EURJPY_H1_BWD` |
-| 3 | AUDCAD | H1 | `ea_template/sets/Boss14_GridLog_AUDCAD_DEMO.set` | `O430_AUDCAD_H1_BWD` |
-| 4 | CADJPY | H1 | `ea_template/sets/Boss14_GridLog_CADJPY_DEMO.set` | `O430_CADJPY_H1_BWD` |
-| 5 | EURUSD | H1 | `ea_template/sets/Boss14_GridLog_EURUSD_DEMO.set` | `O430_EURUSD_H1_BWD` |
-| 6 | XAUUSD | H1 | `ea_template/sets/Boss14_GridLog_XAU_DEMO.set` | `O430_XAUUSD_H1_BWD` |
-| 7 | GBPJPY | **H4** | `_vps_deploy/BOSS14_GBPJPY/Boss14_GridLog_GBPJPY_H4_demo_leg8.set` (**copy it out — never edit under `_vps_deploy/`**) | `O430_GBPJPY_H4_BWD` |
+**🔴 One set for all seven runs: `_mt5_auto/ab_sets/order430/CTRL.set`, copied from `ea_template/sets/B14_AB_off.set`.**
+Only `-Symbol` and `-ReportName` change between runs. Everything else — including `-Period H1` — is identical.
 
-<sub>**Why H1 is pinned for rows 1-6:** the per-leg deployed timeframe is not recorded anywhere in the repo (`DEPLOYMENTS.csv` carries symbol and magic, not TF), and a host search only means anything if every host is measured under the same conditions as the CTRL that set the gate — which was AUDNZD **H1**. Row 7 is H4 because the only set that exists for GBPJPY is an H4 leg. **AUDNZD is deliberately absent: it has already been measured at 0.84.**</sub>
+| # | symbol | TF | set | report name |
+|---|---|---|---|---|
+| 1 | USDJPY | H1 | `order430/CTRL.set` | `O430_USDJPY_H1_BWD` |
+| 2 | EURJPY | H1 | `order430/CTRL.set` | `O430_EURJPY_H1_BWD` |
+| 3 | AUDCAD | H1 | `order430/CTRL.set` | `O430_AUDCAD_H1_BWD` |
+| 4 | CADJPY | H1 | `order430/CTRL.set` | `O430_CADJPY_H1_BWD` |
+| 5 | EURUSD | H1 | `order430/CTRL.set` | `O430_EURUSD_H1_BWD` |
+| 6 | XAUUSD | H1 | `order430/CTRL.set` | `O430_XAUUSD_H1_BWD` |
+| 7 | GBPJPY | H1 | `order430/CTRL.set` | `O430_GBPJPY_H1_BWD` |
+
+<sub>🔧 **Revised 2026-07-27 17:55 after `/scrutinize` — the first version of this table was wrong and the reason is worth keeping.** It listed a different `Boss14_GridLog_<SYM>_DEMO.set` per row, which **changes two variables at once (symbol *and* config)** and quietly creates work it never mentioned: all three ORDER-236 A/B sets (`B14_AB_on` · `B14_PAon` · `AB_both`) carry the header `; Boss14_GridLog_AUDNZD_ISpick.set`, i.e. they are all derived from `B14_AB_off`. A host qualified on a DEMO set would have needed those three rebuilt from *that* set — and the failure mode if nobody noticed is that the AUDNZD-lineage A/B sets get run against a USDJPY host and produce a delta that means nothing while looking clean. Using `B14_AB_off` itself removes the whole problem: **the qualified host drops straight into ORDER-236 STEP 2 with zero set rebuilding.** Verified before rewriting: a `.set` in this repo pins **no symbol and no timeframe** — both come from the CLI — so one file across seven symbols is legitimate, and `B14_AB_off` vs `Boss14_GridLog_AUDNZD_DEMO` differ on disk by only `_4_DdAdaptiveOn` (true/false) and `_0_Magic`, not by lot size.</sub>
+
+<sub>**Why H1 everywhere:** the per-leg deployed timeframe is recorded nowhere in the repo (`DEPLOYMENTS.csv` carries symbol and magic, not TF), and a host search only means anything if every host is measured under the same conditions as the CTRL that set the gate — AUDNZD **H1** on this exact file. GBPJPY is H1 here too, not H4 as first written; comparability across the table beats matching one leg's deploy timeframe, and nothing in the set is H4-specific. **AUDNZD is deliberately absent: this same file already measured 0.84 there** — with the rewrite that statement is now exactly true rather than approximately true, since the earlier version compared against a different set.</sub>
 
 **TREE — evaluate each host independently; one host failing does not stop the order:**
 - **BWD PF ≥ 1.20 AND trades ≥ 30** → mark `QUALIFIED`, run **STEP 2** for this host, then continue to the next host
@@ -1760,7 +1765,8 @@ Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-Rep
 
 **Prohibitions:** write a verdict, or the words pass/dead/died · **turn either lever on** (that is ORDER-236 STEP 2, not this order) · report Model 1 or Model 2 numbers as evidence · use `D:\Meta 5c` · compare against a number from another install or another lane (ORDER-371) · **touch the 2026 window in any way** (holdout) · modify anything under `_vps_deploy/` — copy out, never edit in place · re-use ORDER-236's AUDNZD numbers as one of these rows (different set, different pinning) · add hosts, change symbols, or reorder the list · touch scorecard / `EA_MASTER_INDEX.csv` / `EDGE_CATALOG.md` / `PROJECT_STATE.md` / `VISION.md` / `B1_DATASET.csv` · touch any `.mq5` or `ea_template/core/`
 
-**What the lead does with the result:** take the highest-BWD qualified host, re-point ORDER-236 STEP 2 at it, and re-register the delta bar in that lane. If nothing qualifies, ORDER-236 closes as *"the lever has no host"* → **PARKED, not dead** — and Boss_16 Kangaroo / Boss_11 GridTrend become the next search tranche (they need sets built first, which is why they are not in this order).
+**What the lead does with the result:** take the highest-BWD qualified host and re-point ORDER-236 STEP 2 at it by changing **`-Symbol` only** — the existing `B14_AB_on` / `B14_PAon` / `AB_both` sets are the same lineage as the CTRL used here and need no rebuilding, which is the whole reason this order runs one file instead of seven. Re-register the delta bar in that lane before running.
+<sub>⚠️ While checking this, one claim on ORDER-236's own row did not survive: it warns that `B14_AB_off.set` is the parity set at lot 0.10 and "**not** `Boss14_GridLog_AUDNZD_DEMO.set` (0.25x, 990202)". On disk both files carry `_41_FixedLot=0.10`; they differ only at `_4_DdAdaptiveOn` and `_0_Magic`. Either the 0.25x sizing exists only on the VPS, or that caveat overstates the gap. **Not corrected here — that row belongs to another lane's history.** Anyone leaning on it should check the deployed set first.</sub> If nothing qualifies, ORDER-236 closes as *"the lever has no host"* → **PARKED, not dead** — and Boss_16 Kangaroo / Boss_11 GridTrend become the next search tranche (they need sets built first, which is why they are not in this order).
 
 ---
 
@@ -1798,7 +1804,7 @@ Repeat with `RSIGATE.set` → `O431_USDJPY_H4_MAIN_RSIGATE`, and `MACDCROSS.set`
 ### STEP 3 — `_01_SwingRadius` fan on MAIN, always run (4 runs)
 Take whichever configuration scored highest on MAIN in STEP 1 (BASE counts). Copy it four times into `_mt5_auto/ab_sets/order431/` and set `_01_SwingRadius` = **{2, 3, 4, 5}** — one value per file, everything else untouched. Run all four on MAIN, `-ReportName O431_USDJPY_H4_SW<n>`.
 Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
-<sub>SwingRadius=2 is the current value, so it is both an arm and the anchor — a fan that does not contain its own centre cannot tell a plateau from a cliff, which is what ORDER-340 had to be re-run to discover.</sub>
+<sub>🔧 **Corrected 2026-07-27 17:55 after `/scrutinize`.** This line first read *"SwingRadius=2 is the current value"* — **wrong**. `2` is the source default in `MacdDiv_Naked.mq5:12`; the `.set` this order tells you to copy pins **`_01_SwingRadius=3`** (`_vps_deploy/MACDDIV_XAU/MacdDiv_XAU_H4_demo_v1.set:3`). The fan is unchanged and still valid — {2,3,4,5} brackets the real centre with one step below and two above — but the reason written under it named the wrong number. **The lesson is the one this same session wrote into ORDER-430 STEP 0 and then broke here: read the artifact the order actually uses, not the source default.** A fan that misses its own centre cannot tell a plateau from a cliff, which is what ORDER-340 had to be re-run to discover.</sub>
 
 ### STEP 4 — BWD on the fan winner, only if its MAIN PF ≥ 1.2 and it is not THIN
 `-FromDate 2020.01.01 -ToDate 2022.12.31`, `-ReportName O431_USDJPY_H4_BWD_SW<n>`. Append and stop.
