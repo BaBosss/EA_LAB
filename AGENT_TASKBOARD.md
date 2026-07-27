@@ -481,6 +481,47 @@ sweep จะรันไม่ได้ตั้งแต่แรก. นี่
 — ถ้า input ไม่โผล่ = ไบนารีเก่า และ MT5 จะเงียบๆ ดึงค่าจาก per-terminal cache ทำให้ A/B สองฝั่งเป็น run เดียวกัน
 รายงานออกมาเป็น null ที่ดูสะอาด (memory `mt5-tester-cache-nondeterminism` + `attach-verify-gate-and-binary`)
 
+### ผล STEP 2 (worker/Sonnet 2026-07-27) — **หยุดที่ประตู หลังรัน 2 จาก 8**
+
+**STEP 0 pre-flight ผ่าน ✅** — ไบนารีที่ refresh แล้วมี input ครบจริง ยืนยันจากหน้า Inputs ของรายงาน:
+`_9_RegimeGateAdds` · `StackConfirm` · `_50_RegimeMode` · `_50_AllowTrendUp/Down/Range` · `_9_PA_MinBodyRatio`
+⇒ กับดัก input-cache ปิดแล้ว (ถ้าไม่ refresh เมื่อ 08:55 ตรงนี้คือจุดที่ A/B จะกลายเป็น run เดียวกันเงียบๆ)
+
+**STEP 1 ผ่าน ✅** — `_mt5_auto/ab_sets/b14_lever/AB_both.set` สร้างแล้ว ยืนยันด้วย `Compare-Object` เทียบครบ 3 ฉบับ
+(vs off = ต่างเฉพาะ StackConfirm + 6 บรรทัดที่เพิ่ม · vs on = ต่างเฉพาะ StackConfirm + PA_MinBodyRatio · vs PAon = ต่างเฉพาะบล็อก regime)
+
+**CTRL — Model 4 real ticks 100% · AUDNZD H1 · lane `D:\Meta 5b` · leverage 1:100**
+
+| cell | MAIN PF | trades | DD% | BWD PF | trades | DD% |
+|---|---|---|---|---|---|---|
+| **CTRL** (`B14_AB_off.set`) | **1.09** | 138 | 4.89% | **0.84** | 184 | 8.55% |
+| A / B / AB | **ไม่ได้รัน — ประตูปิด** | | | | | |
+
+BWD net −510.30 (gross +2649.81 / −3160.11) = **ขาดทุนจริงในหน้าต่าง stress**
+
+## 🔴 STEP 2 = `BLOCKED(host ไม่ผ่านประตู BWD)` — และประตูนี้ทำงานถูกต้อง
+บาร์ที่ผม pre-register ไว้เขียนว่า "control BWD ไม่เกิน 1.0 แบบสบาย ⇒ หยุด ไม่ต้องรันต่อ" · CTRL BWD = **0.84**
+⇒ worker หยุดหลัง run ที่ 2 **ประหยัด Model-4 ไป 6 run** และไม่ผลิตตัวเลข lever ที่ตีความไม่ได้ออกมา
+
+**🔴 ผมเลือก host ผิดเป็นครั้งที่สองในใบเดียวกัน — คนละสาเหตุ แต่รากเดียวกัน**
+· ครั้งแรก (RSI-MR): เลือกเพราะ **BWD 1.56 สวยที่สุด** โดยไม่เปิด `.mq5` ⇒ EA ไม่มี input เลย
+· ครั้งที่สอง (Boss_14 AUDNZD): เลือกเพราะ **prose ในสกอร์การ์ดบอกว่า AUDNZD คือ leg ที่แข็งสุดของตระกูลมาตลอด**
+  โดยไม่เคยวัด BWD **ของ config ที่ A/B ใช้จริง** ⇒ พอวัด ได้ 0.84
+**รากเดียวกัน = เลือก host จากชื่อเสียง/ข้อความ ไม่ใช่จากการวัดตัว artifact ที่จะใช้จริง**
+สิ่งที่กันไว้ได้ครั้งนี้คือ **ประตูที่ pre-register ก่อนเห็นตัวเลข** ไม่ใช่การที่ผมเลือกเก่งขึ้น
+
+**⚠️ ข้อควรระวังในการอ่านเลข 1.09/0.84 นี้ — อย่าเอาไปหักล้าง demo cohort:**
+`B14_AB_off.set` = **ORDER-006 ISpick parity set** (magic 990101 · `_41_FixedLot=0.10`)
+**ไม่ใช่** `Boss14_GridLog_AUDNZD_DEMO.set` (0.25x) ที่ deploy จริงบน 990202
+⇒ เลขชุดนี้บอกว่า **config ฐานของ A/B ตัวนี้** ไม่ผ่านประตู · **ไม่ได้**บอกว่า demo leg 990202 แย่
+ใครจะอ้างต่อ ต้องรันของ config ที่ตัวเองพูดถึง
+
+**next ที่ถูก (ยังไม่ได้ทำ) — host search แยกเป็นใบใหม่:** รัน **CTRL อย่างเดียว 2 run/host (Model 4)** ไล่หา host ในตระกูล
+`ea_template/Boss_11..18` ที่ **BWD > 1.0 แบบสบายจริง** แล้วค่อยเอา lever เข้าไป · เรียงจากถูกไปแพง:
+Boss_14 legs อื่นที่มี DEMO set อยู่แล้ว (USDJPY/EURJPY/AUDCAD/CADJPY/EURUSD/XAU/GBPJPY) → Boss_16 Kangaroo → Boss_11 GridTrend
+**ถ้าไล่ครบแล้วไม่มี host ไหนผ่านประตู** ⇒ นั่นคือคำตอบของใบนี้: lever คู่นี้ยัง**ไม่มีบ้านให้ทดสอบ** ไม่ใช่ lever ไม่ดี — park ไว้ อย่าฝืนใส่ host ปริ่ม
+**ห้าม:** รัน A/B บน host ที่ BWD < 1.0 เพื่อ "ดูเฉยๆ" — Wave1 พิสูจน์แล้วว่า overlay บน host อ่อนให้ผลที่ตีความไม่ได้
+
 ## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `DONE(Claude/Opus 2026-07-27, `805a443a`) — ของจริง 16 ไฟล์ไม่ใช่ 5 · แบนเนอร์ 12 · guard §9 ขยาย 3 · qwen_batch_runner ปฏิเสธการรัน + REVIEWED(Claude/Opus 2026-07-27)`
 **ผล:** ใบสั่งนับไว้ 5 — grep เจอ **16**: 8 ตัวรันหน้าต่างนั้นจริง · 2 ตัวสอนมันผ่าน usage example · **3 ตัวเป็น reusable definition**
 · 🔴 ตัวที่แรงที่สุดไม่ได้อยู่ในรายชื่อเดิม: **`run_backtest.ps1` มี `-ToDate = "2026.05.29"` เป็นค่า default** ⇒ เรียกเปล่าๆ ก็กิน holdout 5 เดือนเงียบๆ
