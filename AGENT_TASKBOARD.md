@@ -110,6 +110,25 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 ตารางถูกตัดด้วย prose + มี ACTIVE → **BLOCK exit 1** · ทุกเลน CLOSED จริง → NOTE exit 0 (ไม่มี false positive)
 **ห้าม:** แก้ด้วยการย้ายคอมเมนต์อย่างเดียวแล้วถือว่าจบ (อาการหาย เหตุยังอยู่ คนถัดไปโดนซ้ำ)
 
+## ORDER-421 — [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+**bars:** N-A (สืบสวน) · **flat-lot probe:** N-A
+**ที่มา:** ORDER-420 ไล่วัดเวลาทุกกรงเพื่อจัด tier แล้วเจอว่า **`run_order105_negative_tests.ps1` exit 1**
+· **วัดก่อนแตะ hook** (521 วินาที · แล้วรันซ้ำยืนยัน) ⇒ **ไม่ใช่ผลจากงานของ ORDER-420**
+**เคสที่แดง 2 เคส (ชื่อตรงตัว):** `real-hook-first-event-from-committed-zero-byte-manifest-passes` ·
+`real-hook-first-event-from-committed-zero-byte-month-passes` — ทั้งคู่เป็นเคสตระกูล **`real-hook`** คือเคสที่
+**เรียก pre-commit hook จริง**ใน temp repo ⇒ มันคุมพฤติกรรมของ Contract D (ORDER-105) ตอนเจอ manifest/month
+ขนาด 0 ไบต์ที่ commit ไปแล้ว
+**ทำไมต้องมีใบ:** `check_experiment_events.ps1` **อยู่ใน pre-commit จริง** (บล็อก commit ได้) ⇒ กรงของมันแดง
+= เราไม่รู้ว่ามันยังทำงานถูกไหม · และ**ไม่มีที่ไหนในเรโปบันทึกว่ามันแดง** — ไม่มีใน backlog ไม่มีใน handoff
+ไม่มีใน PROJECT_STATE ⇒ มันแดงมานานเท่าไรก็ไม่มีใครรู้ **นี่คือเหตุผลที่ ORDER-420 มีอยู่ในรูปธรรม**
+**STEP 1:** หาว่าแดงตั้งแต่ commit ไหน (`git log` ของ `check_experiment_events.ps1` + สคริปต์เทส แล้ว bisect
+ด้วยมือ — 521 วินาที/รอบ ⇒ ใช้ `-DevFast` ถ้ามันลดเวลาได้จริง **แต่ต้องยืนยันก่อนว่า `-DevFast` ยังรัน 2 เคสนี้อยู่**
+ไม่งั้นจะ "เขียวเพราะไม่ได้รัน")
+**STEP 2:** ตัดสินว่าเป็น **บั๊กของ guard** (ต้องแก้ guard) หรือ **บั๊กของเทส** (ต้องแก้เทส) — **ห้ามเดา
+ห้ามแก้เทสให้เขียวเพื่อให้มันเขียว**
+**ห้าม:** ปิดเคสด้วยการลบ/skip เคสที่แดง · ประกาศว่า "น่าจะเป็นของเดิม ไม่เป็นไร" โดยไม่หาว่าเดิมตั้งแต่เมื่อไร ·
+เอา 105 เข้า fast tier ของ hook (521 วินาที = hook ที่คนจะ `--no-verify` ทิ้ง)
+
 ## ORDER-410 — [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เทียบ) · 👉 แนะ: user
 **bars:** N-A (งานวัด) · **flat-lot probe:** N-A
 **ที่มา:** ORDER-370 เปิดตา `_vps_deploy` แล้วเจอ **13 ใน 23 bundle เก่ากว่า source ที่ถูกแก้จริง** (ไม่ใช่ checkout artifact

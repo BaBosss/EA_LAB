@@ -8582,3 +8582,53 @@ source" ยังไม่เท่ากับ "ชาร์ตรันขอ�
 global mutation + branch ที่ไม่มีกรงมาด้วย · ถ้าเขียน fallback ขึ้นมาแล้วมันง่ายกว่า/ปลอดภัยกว่าทางหลัก
 **ให้ถามว่าทำไมมันไม่เป็นทางหลักตั้งแต่แรก**
 
+## ORDER-420 — [🔴 tooling/integrity] guard ทุกตัวถูกบังคับทุก commit แต่ **กรงของ guard ไม่เคยถูกรันเลย** — `DONE(Claude/Opus 2026-07-27) + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** N-A (infra + วัดเวลา) · **flat-lot probe:** N-A
+**ที่มา:** ข้อสังเกตเชิงโครงสร้างจาก `/scrutinize` รอบสอง — `.githooks/pre-commit` บังคับ `check_state` ·
+`check_precommit_staged` · `check_order_collision` · `check_handoff_contract` · `check_experiment_events`
+ทุก commit **แต่เทสของ guard เหล่านั้นไม่ถูกรันโดยอะไรเลย** — ทุกชุดใน `scripts/_test/` เป็น manual ล้วน
+⇒ **นี่คือ ORDER-270 ("กรงที่ไม่เคยรัน = ไม่ได้ป้องกันอะไร") แต่ใช้กับทั้งโฟลเดอร์ ไม่ใช่สคริปต์เดียว**
+**หลักฐานว่ามันไม่ใช่เรื่องทฤษฎี:** 8 วันที่ผ่านมามีบั๊กทรงเดียวกัน **4 ตัว** — guard ยังทำงานแต่**เงียบลง**
+(`260` substring · `341` label ranking · `390` nested backtick · `370` `(\).Count` เป็น `\`
+เมื่อมีผลลัพธ์ชิ้นเดียว) · **ทั้ง 4 ตัวถูกเจอโดยคนที่บังเอิญไปดู ไม่ใช่โดยกรง**
+
+**วัดก่อนออกแบบ (เลขคือสิ่งที่ตัดสิน tier ไม่ใช่ความรู้สึก):**
+
+| suite | เวลา | tier |
+|---|---|---|
+| `run_statusclass_tests` | **0.5s** | FAST |
+| `run_order_collision_tests` | **0.9s** | FAST |
+| `run_handoff_contract_tests` | **0.9s** | FAST |
+| `run_blobmap_encoding_tests` | **1.3s** | FAST |
+| `run_chainwalk_tests` | **74.4s** | ช้าเกิน — นอก hook |
+| `run_order101_negative_tests` | ~120s | ช้าเกิน — นอก hook |
+| `run_order103_negative_tests` | ~760s | ช้าเกิน — นอก hook |
+| `run_order105_negative_tests` | **520.8s** | ช้าเกิน — **และแดงอยู่** → ORDER-421 |
+
+**สิ่งที่ทำ:** `scripts/_test/run_fast_cages.ps1` (รัน 4 ชุดเร็ว = **3.8 วินาที**) + เสียบเข้า `.githooks/pre-commit`
+แบบ **มีเงื่อนไข**: ทำงานเฉพาะเมื่อ staged path แตะ `scripts/check_*.ps1` หรือ `scripts/_test/*`
+(= ตอนที่คนกำลังแก้ guard หรือกรง ซึ่งเป็นวิธีเดียวที่จะทำมันพัง) · commit อื่นทั้งหมด = **no-op ทันที**
+ตาม idiom เดิมของบล็อก `experiment_events`
+
+**เหตุผลที่ตั้ง budget เวลาไว้ในสคริปต์ (ไม่ใช่การประนีประนอม):** hook ที่กิน 10 นาที **จะโดน `--no-verify`**
+แล้วมันจะไม่ป้องกันอะไรเลยทั้งที่ดูเหมือนป้องกันทุกอย่าง — **แย่กว่า hook ซื่อๆ 4 วินาที + รายการที่บอกตรงๆ ว่า
+ไม่ได้ครอบอะไร** · สคริปต์เตือนเสียงดังถ้าเวลารวมเกิน budget แทนที่จะปล่อยให้บวมเงียบๆ
+
+**พิสูจน์ว่ามันล้มได้จริง (ไม่ใช่แค่รันแล้วเขียว):**
+| ทดลอง | ผล |
+|---|---|
+| ปกติ | 4 ชุดเขียว **3.8s** · runner exit 0 |
+| ทำ guard พัง (ถอด absorber ของ 412) | `run_blobmap` FAIL · **runner exit 1** ✅ |
+| ลบชื่อ suite ให้ชี้ไฟล์ที่ไม่มีอยู่ | `MISSING` + **runner exit 1** ✅ (ไม่ใช่ skip เงียบ) |
+| filter ของ hook | stage ไฟล์กรง → match · commit ปกติ → ว่าง = no-op |
+**end-to-end:** commit ของใบนี้เองมี `scripts/_test/**` staged ⇒ **hook รัน fast tier จริงตอน commit นี้**
+
+**สิ่งที่ใบนี้ *ไม่* ครอบ (เขียนไว้กันคนอ่านเกิน):** กรงช้า 4 ชุดยังต้องรันมือ · เขียวจาก fast tier แปลว่า
+"4 ชุดเร็วผ่าน" **เท่านั้น** · และ `run_order105` **แดงอยู่ตอนนี้** — แยกเป็น **ORDER-421** เพราะการหาสาเหตุ
+ไม่ควรถูกยัดท้ายใบ infra
+
+<sub>⚠️ **บทเรียนระหว่างทาง (ผมเกือบทำงานตัวเองหาย):** ใช้ `git stash --staged` เพื่อทดสอบ filter ของ hook
+มันดึงทั้งไฟล์ใหม่และการแก้ hook ออกจาก working tree ทันที · กู้คืนด้วย `git stash pop` ได้ครบ **แต่บน
+working tree ที่แชร์กันหลายเลน `git stash` อันตรายพอๆ กับ `git add -A`** — มันแตะของทุกคนไม่ใช่แค่ของเรา
+**ห้ามใช้ `git stash` ในเรโปนี้** ทดสอบ filter ด้วยการอ่าน `git diff --cached --name-only -- <pathspec>` เฉยๆ ก็พอ</sub>
+

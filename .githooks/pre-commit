@@ -77,6 +77,33 @@ if [ -n "$event_staged" ]; then
   fi
 fi
 
+# ORDER-420 (2026-07-27). The guards above run on every commit. Until now the TESTS for those
+# guards ran on nothing -- every suite in scripts/_test/ was manual-only, which is the ORDER-270
+# finding ("a cage that never runs protects nothing") applied to a whole directory. Four defects
+# in eight days had the same shape: a guard kept running and quietly stopped reporting
+# (ORDER-260 substring, ORDER-341 label ranking, ORDER-390 nested backticks, ORDER-370 a
+# pipeline .Count that is null for exactly one result). All four were found by a human looking.
+#
+# Scoped to when a guard or a cage is actually being edited, because that is how you break one.
+# Fast no-op on every other commit -- same idiom as the experiment-events block above.
+#
+# The FAST tier only: 3.8s measured for 4 suites. The slow suites (chainwalk 74s, order101 ~120s,
+# order103 ~760s, order105 521s) stay out on purpose. A hook that costs ten minutes gets
+# --no-verify'd, and a bypassed hook protects nothing while looking like it protects everything.
+# scripts/_test/run_fast_cages.ps1 names what it does not cover.
+cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*')
+if [ -n "$cage_staged" ]; then
+  "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
+  rc=$?
+  if [ "$rc" -ne 0 ]; then
+    echo ""
+    echo "[pre-commit] a guard's own test suite failed (above) -- ORDER-420."
+    echo "[pre-commit] You are editing scripts/check_*.ps1 or scripts/_test/*, and its cage went red."
+    echo "[pre-commit] Slow suites are NOT covered here: run_chainwalk_tests (74s), run_order101/103/105."
+    exit $rc
+  fi
+fi
+
 # WARN-ONLY (2026-07-16): remind on kill-verdict-without-optimize-evidence. Never blocks (script
 # always exits 0); we deliberately do NOT check its rc. Anti-recurrence for default-smoke concept-kills.
 "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_verdict_kill.ps1
