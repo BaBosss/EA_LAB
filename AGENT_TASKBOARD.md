@@ -110,24 +110,20 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 ตารางถูกตัดด้วย prose + มี ACTIVE → **BLOCK exit 1** · ทุกเลน CLOSED จริง → NOTE exit 0 (ไม่มี false positive)
 **ห้าม:** แก้ด้วยการย้ายคอมเมนต์อย่างเดียวแล้วถือว่าจบ (อาการหาย เหตุยังอยู่ คนถัดไปโดนซ้ำ)
 
-## ORDER-370 — [🔴 ops/integrity] `check_stale_binaries` ไม่ส่องที่ที่ binary ถูก **ส่งขึ้นชาร์ตจริง** — `OPEN` · ทำได้: Sonnet · Claude · 👉 แนะ: Sonnet
-**ที่มา — เจอตอนตรวจงานตัวเอง 2026-07-27:** ผมเขียน ORDER-221 โดยเลือก 4 root = `ea_template/` · `ea_projects/` ·
-`D:\Meta 5b\MQL5\Experts\` · roaming Experts. **ทั้ง 4 คือที่ที่ binary ถูก *build* และ *test* — ไม่ใช่ที่ที่มัน
-*ถูกส่งไป attach***. ที่นั้นคือ **`_vps_deploy/**`** และมันมี **0 record ในสคริปต์** (ยืนยันแล้ว: กรอง
-`stale_binaries_check.json` ด้วย `*_vps_deploy*` ได้ 0 แถว)
-**ทำไมเป็นช่องโหว่ที่แพงที่สุดในสามช่อง:** `ea_template` ที่ stale = คนรันเทสได้เลขผิด · **`_vps_deploy` ที่ stale
-= EA ตัวผิดเดินเงินจริง/demo อยู่บนชาร์ต** และ `.ex5` ถูก gitignore ⇒ ไม่มีใครเห็น. **ORDER-213 เคยเจอเคสนี้ด้วยมือ**
-(สำเนา `ea_template` ของ Boss_16 ไม่มี `_16_BaseLotMode` เลย) แล้วตอบด้วย "hash ใน README" — ซึ่งกันได้แค่ bundle
-ที่มีคนจำได้ว่าต้องเช็ค ไม่ใช่ทั้งกอง
-**ตรวจแล้วรอบนี้ (ไม่ใช่การเดา):** bundle ที่ attach ไปเมื่อวาน `_vps_deploy/BOSS16_KANGAROO_XAU/Boss_16_KangarooGrid.ex5`
-= `2026-07-24 20:13:33` · source ใหม่สุดใน `ea_template` = `2026-07-24 10:39:46` ⇒ **binary ใหม่กว่า source = ไม่ stale
-ของจริงปลอดภัย** ✅ **แต่สคริปต์บอกเรื่องนี้ไม่ได้เลย เพราะมันไม่ได้มอง** — เรารู้เพราะผมเช็คมือ
-**task:** เพิ่ม `_vps_deploy` (recursive) เข้า `$Roots` default ของ `scripts/check_stale_binaries.ps1`
-**acceptance:** รันแล้วต้องมี record ของทุก `.ex5` ใต้ `_vps_deploy/**` · bundle Boss_16 ต้องออกมาเป็น **OK ไม่ใช่ STALE**
-(ถ้าออก STALE = logic เพี้ยน เพราะเช็คมือแล้วว่าใหม่กว่า) · ต้องยังไม่พังกรณี bundle ที่ไม่มี `.mq5` คู่ (→ `NO_SOURCE`)
-**ห้าม:** ลบ/rebuild binary ใน `_vps_deploy` อัตโนมัติ (บางตัว attach อยู่จริง — รายงานเท่านั้น) ·
-เขียนทับ logic ของ **ORDER-341** (`bb4e1858` — แก้ ranking ของ `$status` ที่ผมทำพลาด: STALE ต้องชนะ HASH_DIFFERS
-ไม่ใช่แข่งกันแบบ first-wins) — ใบนี้ต้อง **ต่อจาก** เวอร์ชันที่แก้แล้ว ไม่ใช่เวอร์ชันที่ผมเขียนไว้เดิม
+## ORDER-410 — [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เทียบ) · 👉 แนะ: user
+**bars:** N-A (งานวัด) · **flat-lot probe:** N-A
+**ที่มา:** ORDER-370 เปิดตา `_vps_deploy` แล้วเจอ **13 ใน 23 bundle เก่ากว่า source ที่ถูกแก้จริง** (ไม่ใช่ checkout artifact
+— ตรวจ `git log` แล้ว). แต่ `_vps_deploy` คือ**จุดพักก่อนอัป** ไม่ใช่ชาร์ต ⇒ **ข้อมูลที่ขาดหายคือฝั่ง VPS**
+**คำถามเดียวที่ใบนี้ตอบ:** `.ex5` ที่อยู่บน VPS ตอนนี้ = build ไหน (mtime + sha256) และตรงกับ bundle ใน `_vps_deploy` ไหม
+**ทำไมไม่ใช่แค่ "rebuild ให้หมด":** ของบางตัว attach อยู่จริงบนบัญชีเงินจริง — **การ rebuild แล้วอัปทับ = เปลี่ยน EA
+ใต้ตำแหน่งที่เปิดค้างอยู่** ซึ่งแพงกว่าปัญหาเดิม. ต้องรู้ก่อนว่าอะไรรันอยู่ แล้วค่อยตัดสินทีละตัว
+**STEP 1 (user):** บน VPS รัน `Get-FileHash` + mtime ของทุก `.ex5` ใต้ `MQL5\Experts\` ของทั้ง 4 terminal → ส่งกลับเป็น CSV
+**STEP 2 (Claude):** join กับ `_mt5_auto/reports/stale_binaries_check.json` → แยก 3 กอง — (a) VPS ตรงกับ bundle ที่ stale
+(= ชาร์ตรัน build เก่าจริง ต้องตัดสินว่าส่วนต่างของ source กระทบพฤติกรรมไหม) (b) VPS ใหม่กว่า bundle (= bundle ในเรโป
+ตกรุ่นเฉยๆ ไม่กระทบชาร์ต) (c) หา binary บน VPS ไม่เจอ
+**STEP 3:** เฉพาะกอง (a) เท่านั้นที่ไต่ต่อ — ไล่ diff source ระหว่างวัน build กับ HEAD ว่าแตะ logic ที่ EA นั้นใช้จริงไหม
+**ห้าม:** rebuild/อัปทับอะไรบน VPS ก่อนจบ STEP 3 · เดาว่าชาร์ตรัน build ไหนจากวันที่ commit · ประกาศเป็นเหตุการณ์
+ก่อนมีเลขจากฝั่ง VPS (ORDER-222/230 เคยจ่ายค่าบทเรียนนี้มาแล้ว: `NOT FOUND` ≠ ใบอนุญาตให้สมมติว่าใหญ่)
 
 ## ORDER-371 — [ops/integrity] tick history ของ `Meta 5b` เพี้ยนจาก terminal หลัก — `OPEN` · ทำได้: user (โหลด history) + Claude (verify) · 👉 แนะ: user
 **ที่มา:** ORDER-215 stage 0 (2026-07-26) — terminal หลักไม่ว่าง (เลนอื่นใช้) จึงย้ายไป `Meta 5b` แล้ว

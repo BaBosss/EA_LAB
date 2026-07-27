@@ -8453,3 +8453,85 @@ deposit 10000, leverage 1:100, XAUUSD H1. report เขียนลง `D:\Meta 
 
 ---
 
+## ORDER-370 — [🔴 ops/integrity] `check_stale_binaries` ไม่ส่องที่ที่ binary ถูก **ส่งขึ้นชาร์ตจริง** — `DONE(Claude/Opus 2026-07-27) + REVIEWED(Claude/Opus 2026-07-27)` · ผลเต็มท้ายใบ
+**ที่มา — เจอตอนตรวจงานตัวเอง 2026-07-27:** ผมเขียน ORDER-221 โดยเลือก 4 root = `ea_template/` · `ea_projects/` ·
+`D:\Meta 5b\MQL5\Experts\` · roaming Experts. **ทั้ง 4 คือที่ที่ binary ถูก *build* และ *test* — ไม่ใช่ที่ที่มัน
+*ถูกส่งไป attach***. ที่นั้นคือ **`_vps_deploy/**`** และมันมี **0 record ในสคริปต์** (ยืนยันแล้ว: กรอง
+`stale_binaries_check.json` ด้วย `*_vps_deploy*` ได้ 0 แถว)
+**ทำไมเป็นช่องโหว่ที่แพงที่สุดในสามช่อง:** `ea_template` ที่ stale = คนรันเทสได้เลขผิด · **`_vps_deploy` ที่ stale
+= EA ตัวผิดเดินเงินจริง/demo อยู่บนชาร์ต** และ `.ex5` ถูก gitignore ⇒ ไม่มีใครเห็น. **ORDER-213 เคยเจอเคสนี้ด้วยมือ**
+(สำเนา `ea_template` ของ Boss_16 ไม่มี `_16_BaseLotMode` เลย) แล้วตอบด้วย "hash ใน README" — ซึ่งกันได้แค่ bundle
+ที่มีคนจำได้ว่าต้องเช็ค ไม่ใช่ทั้งกอง
+**ตรวจแล้วรอบนี้ (ไม่ใช่การเดา):** bundle ที่ attach ไปเมื่อวาน `_vps_deploy/BOSS16_KANGAROO_XAU/Boss_16_KangarooGrid.ex5`
+= `2026-07-24 20:13:33` · source ใหม่สุดใน `ea_template` = `2026-07-24 10:39:46` ⇒ **binary ใหม่กว่า source = ไม่ stale
+ของจริงปลอดภัย** ✅ **แต่สคริปต์บอกเรื่องนี้ไม่ได้เลย เพราะมันไม่ได้มอง** — เรารู้เพราะผมเช็คมือ
+**task:** เพิ่ม `_vps_deploy` (recursive) เข้า `$Roots` default ของ `scripts/check_stale_binaries.ps1`
+**acceptance:** รันแล้วต้องมี record ของทุก `.ex5` ใต้ `_vps_deploy/**` · bundle Boss_16 ต้องออกมาเป็น **OK ไม่ใช่ STALE**
+(ถ้าออก STALE = logic เพี้ยน เพราะเช็คมือแล้วว่าใหม่กว่า) · ต้องยังไม่พังกรณี bundle ที่ไม่มี `.mq5` คู่ (→ `NO_SOURCE`)
+**ห้าม:** ลบ/rebuild binary ใน `_vps_deploy` อัตโนมัติ (บางตัว attach อยู่จริง — รายงานเท่านั้น) ·
+เขียนทับ logic ของ **ORDER-341** (`bb4e1858` — แก้ ranking ของ `$status` ที่ผมทำพลาด: STALE ต้องชนะ HASH_DIFFERS
+ไม่ใช่แข่งกันแบบ first-wins) — ใบนี้ต้อง **ต่อจาก** เวอร์ชันที่แก้แล้ว ไม่ใช่เวอร์ชันที่ผมเขียนไว้เดิม
+
+### ✅ RESULT + REVIEW (Claude/Opus 2026-07-27) — `1e17ca44`
+
+**กรงมาก่อนแก้** (`scripts/_test/run_stale_binaries_tests.ps1`, 14 เคส) — **พิสูจน์แล้วว่า fail ได้**: รันก่อนแก้ = **แดง 3**
+(default root ไม่มี `_vps_deploy` · exit code · จำนวนแถว) → หลังแก้ **14/14 เขียว**. เคส scope อ่าน default `$Roots`
+ด้วย **AST ไม่ใช่ grep** — คำว่า `_vps_deploy` ที่โผล่ในคอมเมนต์จึงทำให้เทสเขียวไม่ได้
+
+**acceptance ครบทั้ง 3 ข้อ:**
+1. **มี record ของ `_vps_deploy` แล้ว** — 0 → **23 แถว** (จาก 30 `.ex5`; อีก 7 = `NO_SOURCE` ถูกนับแต่ไม่ list ตาม
+   default เดิม ซึ่งถูกต้อง — ไม่มี `.mq5` ในเรโป จึงพูดเรื่อง staleness ไม่ได้). รวมทั้งสคริปต์ 242 แถว · รัน 130 วินาที
+2. **Boss_16 bundle = ไม่ STALE** ✅ ตรงกับที่ใบสั่งเช็คมือไว้ — **แต่ label จริงคือ `HASH_DIFFERS` ไม่ใช่ `OK`**
+   เป๊ะๆ (มีสำเนา `Boss_16_KangarooGrid.ex5` ที่อื่นแฮชต่าง = ผลปกติของคอมไพเลอร์ที่ไม่ byte-reproducible,
+   advisory ล้วน). แกน staleness = ผ่านตามที่ตั้งบาร์ไว้ · **เขียนไว้ตรงนี้เพราะบาร์เขียนว่า "ต้องเป็น OK" — ไม่ตีความว่าผ่านเงียบๆ**
+3. **bundle ที่ไม่มี `.mq5` คู่ → `NO_SOURCE` ไม่พัง** ✅ (ทั้งบน fixture และบนต้นไม้จริง)
+
+**🔴 บั๊กตัวที่สองที่กรงจับได้ (ไม่ได้อยู่ในใบสั่ง แต่อยู่ในสคริปต์เดียวกัน):**
+`$badCount = ($results | Where-Object {...}).Count` คืน **`$null` ไม่ใช่ `1`** เมื่อมีผลลัพธ์ **ชิ้นเดียว** (วัดบน
+PS 5.1.26100) ⇒ `$null -gt 0` = False ⇒ **รันที่เจอ STALE พอดี 1 ตัว จะ exit 0 แล้วพิมพ์ `[OK] every .ex5 matches its
+source`**. สองตัวขึ้นไปรายงานถูก — ต้นไม้จริงบังเอิญมี 8 ตัว บั๊กเลยรอด. เคสที่เงียบคือ **เคสวันที่แก้ทุกอย่างอื่นหมดแล้ว
+เหลือตัวเดียว** แก้ด้วย `@()`. **คลาสเดียวกับ ORDER-341 · ORDER-260 · ORDER-390 เป๊ะ: detector ยังทำงาน แต่เงียบลง**
+<sub>เทสของผมเองก็โดนกับดักตระกูลเดียวกันชั้นถัดไป — `@(... | ConvertFrom-Json)` นับได้ 1 เพราะ PS 5.1 ส่ง JSON array
+ลง pipeline เป็น**ก้อนเดียว** ทั้งที่ per-row assertion ผ่านหมด (ยิ่งหลอก). บันทึกไว้ในไฟล์เทส</sub>
+
+**สิ่งที่ตาที่เพิ่งเปิดมองเห็นทันที — 13 ใน 23 bundle เป็น `STALE`** และ**ไม่ใช่ artifact ของ git checkout**
+(ตรวจ `git log` ของ source แล้ว: `ea_template/core/LabCore.mqh` แก้จริง 2026-07-24 `83ecce78` = ORDER-192/195/196
+optimizer guard + `[CFG]` · `EA_BREAKOUT_XAU.mq5` แก้จริง 07-23 `84bfe452` = ปิด silent-order-rejection ·
+`MacdDiv_Naked.mq5` แก้จริง 07-25 `b45320a1`): `Boss_12_Breakout` ×2 · `Boss_14_GridLog` · `Boss_17_Wave5` ×3 ·
+`MacdDiv_Naked` · `PairSpread_StatArb` · `EA_BREAKOUT_XAU` ×4 · `EA_SUPERTREND`
+**ยังไม่ประกาศว่าเป็นเหตุการณ์** — `_vps_deploy` = จุดพักก่อน**อัป**ขึ้น VPS ไม่ใช่ตัวที่อยู่บนชาร์ต ⇒ "bundle เก่ากว่า
+source" ยังไม่เท่ากับ "ชาร์ตรันของผิด" · ที่วัดจากเครื่องนี้ไม่ได้คือ **binary บน VPS ตรงกับ bundle ไหน** →
+ยกเป็น **ORDER-410** (ตามกฎ `pin-the-magnitude-before-calling-it-urgent` — ห้ามขยายความก่อนวัด)
+
+**review:** ผ่าน. งานตรงบาร์ทุกข้อ · `ห้าม` ทั้งสองข้อเคารพครบ (ไม่ลบ/rebuild อะไรใน `_vps_deploy` — รายงานล้วน ·
+ต่อยอดบนเวอร์ชันหลัง ORDER-341 `bb4e1858` การจัดอันดับ STALE > HASH_DIFFERS ไม่ถูกแตะ)
+
+## ORDER-411 — [🔴 tooling/integrity] BOM บน stdin ทำให้กรง archive โทษ history แทนที่จะโทษ encoding — `DONE(Claude/Opus 2026-07-27) + REVIEWED(Claude/Opus 2026-07-27)` · fix `0891a202`
+**bars:** N-A (bugfix + กรง) · **flat-lot probe:** N-A
+**ที่มา:** เกิดสดตอนจะปิด ORDER-370 — `check_precommit_staged` บล็อกด้วยข้อความ
+`archive path 'ARCHIVE_TASKBOARD_2026-07A.md' not readable at 0ced1948 (renamed/deleted mid-chain?)`
+ขณะที่ `git ls-tree 0ced1948 -- ARCHIVE_TASKBOARD_2026-07A.md` แสดงไฟล์อยู่ตรงนั้นชัดๆ **commit นั้นไม่ผิดอะไรเลย**
+**ต้นเหตุ:** ORDER-270 เปลี่ยนมาใช้ `git cat-file --batch-check` ป้อน ref ทาง stdin ครั้งเดียว · บน .NET Framework
+`Process.StandardInput` = `StreamWriter` ที่สร้างจาก `[Console]::InputEncoding` และตั้ง `AutoFlush=true`
+ซึ่ง**ปล่อย preamble ของ encoding ทันทีตอนสร้าง** ⇒ console ที่เป็น UTF-8 ยิง `EF BB BF` นำหน้า ⇒ git อ่านคำขอแรกเป็น
+`<BOM><sha>:<path>` → resolve ไม่ได้ → ตอบ `missing` ⇒ commit แรกของสายถูกตีเป็น "ไฟล์หาย"
+**สามอย่างที่ทำให้อ่านยากผิดปกติ (วัดทั้งหมด ไม่ได้เดา):**
+1. **positional ไม่ใช่เจาะจง commit** — มีแค่คำขอ**แรก**ที่ติด BOM ⇒ สลับลำดับ ref ความผิดย้ายไป commit อื่นที่บริสุทธิ์เท่ากัน
+2. **ขึ้นกับ session** — console ที่ยังเป็น OEM codepage ไม่มี preamble ⇒ **โค้ดชุดเดียวกันผ่านให้เลนที่ปิด ORDER-390
+   เมื่อเช้า แล้วบล็อกเลนผมอีกชั่วโมงถัดมาบน commit เดียวกัน** (อาการ "ของเขารันได้นี่")
+3. **fix แรกของผมผิด** — เขียนลง `.StandardInput.BaseStream` ด้วย writer ที่ไม่มี BOM **ไม่ช่วยเลย** เพราะแค่
+   *อ่าน* property `.StandardInput` ก็สร้าง AutoFlush writer แล้ว BOM อยู่ในไปป์ก่อนไบต์แรกของเรา ·
+   จับได้ด้วยการ **dump ไบต์ที่ลูกได้รับจริง** (`239 187 191 65 65 ...`) · และมันคือ `InputEncoding`
+   **ไม่ใช่ `OutputEncoding`** — pin Output ไม่เปลี่ยนอะไร byte dump เท่าเดิมเป๊ะ
+**ทางแก้:** pin `[Console]::InputEncoding` เป็น UTF-8 แบบไม่มี BOM คร่อม `Process.Start` + จังหวะแตะ `StandardInput`
+· setter ตัวนี้ **throw ได้** เมื่อไม่มี console input (ซึ่งคือสิ่งที่ git hook อาจส่งมาให้) ⇒ fallback = ยิงบรรทัดสังเวย
+บรรทัดแรกให้ BOM ไปเกาะ แล้วทิ้ง reply นั้น**ก่อน**ด่านนับ reply ⇒ ไม่มีทางส่งคำขอที่เสียแล้วภาวนา
+**กรงมาก่อนแก้ + พิสูจน์ว่า fail ได้ตรงบรรทัด fix:** `scripts/_test/run_blobmap_encoding_tests.ps1`
+= **7/7 เมื่อมี pin · 5/7 เมื่อถอด pin บรรทัดเดียว** (ไฟล์ถูก restore กลับ byte-identical แล้ว) ·
+เทส pin `InputEncoding` ให้เป็นศัตรู **ไม่ใช่ `OutputEncoding`** เพราะถ้า pin ผิดตัว เทสจะเขียวบนเครื่องที่ console
+เป็น OEM codepage ทั้งที่บั๊กอยู่ครบ (กฎ memory `discriminating-test-must-be-able-to-discriminate`) ·
+มีเคสยืนยันว่า path ที่หายจริงยังคง map เป็น `\` ⇒ **fix ไม่ได้เปลี่ยน fail-closed เป็น fail-open**
+**ไม่ถอยหลัง:** `run_chainwalk_tests` **11/11** (laundering ทั้ง 2 ทรงยังถูกปฏิเสธ · 83 วินาที) · `run_statusclass_tests` **23/23**
+**บทเรียนที่ต้องจำ:** ⚠️ **ข้อความ error ที่ชี้ไปที่ commit เก่า ไม่ได้แปลว่า history พัง** — ถ้ากลไกมี "คำขอแรก" ที่พิเศษกว่าคำขออื่น
+ให้สงสัย**ตำแหน่ง**ก่อน**เนื้อหา** · และ **fail-closed ที่ให้เหตุผลผิด แพงกว่าที่คิด**: มันส่งคนไปตามล่าปัญหาที่ไม่มีอยู่จริง
+

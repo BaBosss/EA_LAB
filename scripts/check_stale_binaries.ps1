@@ -61,9 +61,20 @@ param(
   #   9CA16B... is the data folder for the non-portable D:\Meta 5 install (memory:
   #   mt5-tester-experts-roaming). The other 26 terminal folders are dead installs.
   # Widen deliberately with -Roots or -AllTerminals when you are auditing rather than deploying.
+  #
+  # ORDER-370 (2026-07-27): the four roots above are every place a binary is BUILT or TESTED.
+  # None of them is the place a binary is SHIPPED TO A CHART. That is _vps_deploy\**, and it
+  # had 0 records here - filtering stale_binaries_check.json for *_vps_deploy* returned nothing.
+  # That was the most expensive of the gaps, not the cheapest: a stale ea_template copy gives
+  # somebody wrong test numbers, a stale _vps_deploy bundle puts the WRONG EA on a live or demo
+  # chart, and .ex5 is gitignored so nothing else on this machine would ever surface it.
+  # ORDER-213 caught exactly this case by hand once (the Boss_16 bundle was missing
+  # _16_BaseLotMode entirely) and answered it with "hash in the README", which only protects
+  # bundles somebody remembers to check.
   [string[]]$Roots = @(
     "D:\EA_LAB\ea_template",
     "D:\EA_LAB\ea_projects",
+    "D:\EA_LAB\_vps_deploy",
     "D:\Meta 5b\MQL5\Experts",
     "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\MQL5\Experts"
   ),
@@ -273,7 +284,11 @@ foreach ($g in $groups) {
   $copies = $g.Group
   Write-Host ("== {0} ({1} {2}) ==" -f $name, $copies.Count, $(if ($copies.Count -eq 1) { "copy" } else { "copies" }))
 
-  $distinctHashes = ($copies | Where-Object { $_.Hash } | Select-Object -ExpandProperty Hash -Unique)
+  # @() for the same reason as $badCount at the bottom of this file: a bare ($pipeline).Count
+  # is $null on exactly one result. Here the unwrapped form happened to give the right answer
+  # ($null -gt 1 is False, and one distinct hash is not a mismatch) - wrapped anyway so the
+  # file has one idiom rather than one idiom and one coincidence.
+  $distinctHashes = @($copies | Where-Object { $_.Hash } | Select-Object -ExpandProperty Hash -Unique)
   $hashMismatch = ($distinctHashes.Count -gt 1)
   # NOT $anyBad: a hash difference is advisory (non-reproducible compiler), never a failure.
 
@@ -415,8 +430,18 @@ if ($foreignCount -gt 0) {
   Write-Host ("({0} binary(ies) with no .mq5 in this repo were counted but not listed - they are not ours to judge. -IncludeForeign lists them.)" -f $foreignCount) -ForegroundColor DarkGray
 }
 
-$badCount  = ($results | Where-Object { $_.status -eq "STALE" }).Count
-$diffCount = ($results | Where-Object { $_.hash_differs }).Count
+# ORDER-370 (2026-07-27), found by scripts\_test\run_stale_binaries_tests.ps1: these two
+# counts were written as `($pipeline).Count` and that returns $null - not 1 - when EXACTLY ONE
+# object comes down the pipeline (measured on PS 5.1.26100: a lone [pscustomobject] has no
+# Count member for the parenthesised form to unify). `$null -gt 0` is False, so a run that
+# found precisely one STALE binary exited 0 AND printed "[OK] every .ex5 found matches its
+# source". Two or more stale binaries reported correctly, which is why this survived: the real
+# tree happened to have 8. The single-finding case - the one you get the day after you fix
+# everything else - was the silent one. Same failure shape as ORDER-341 (advisory label
+# swallowing STALE), ORDER-260 (substring match) and ORDER-390 (nested backticks): the
+# detector kept working and quietly stopped reporting.
+$badCount  = @($results | Where-Object { $_.status -eq "STALE" }).Count
+$diffCount = @($results | Where-Object { $_.hash_differs }).Count
 if ($diffCount -gt 0) {
   Write-Host ("[INFO] {0} copy(ies) differ by hash from a sibling - advisory only, the compiler is not byte-reproducible" -f $diffCount) -ForegroundColor DarkYellow
 }
