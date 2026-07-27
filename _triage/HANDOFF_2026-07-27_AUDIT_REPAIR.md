@@ -98,6 +98,38 @@ big-sweep attempt (2026-07-24) failed outright and had to be restored.
 
 ---
 
+## 6. Post-check, 22:45 (`S-2026-07-27-POSTCHECK`) — appended, not a new handoff
+
+A state check was run over everything the six evening lanes produced. **Their work stands** — the
+verification table, the four money-path fixes, the basket series, the `asof` fix, the `commit-msg` guard
+and ORDER-490 were all re-read and none of it needed correcting. Two loose ends were closed:
+
+**(a) The archive move of `HANDOFF_2026-07-27_QUEUE.md` was half-done.** The copy under
+`_triage/_archive/handoffs_closed/` was committed in `5afbb8e3`, but the deletion of the top-level file
+was left **staged and uncommitted in the shared index**. Checked before finishing it: the archived copy is
+tracked in HEAD and byte-identical to the original, so nothing was at risk. Committed in `71d0c81e`.
+<sub>Worth naming: a staged delete in an index every lane shares is exactly what ledger rule 3 is about. A
+path-limited commit will not pick it up, so it simply sits there — but it makes `git status` read dirty
+for every lane, and any lane reaching for a broad `add` carries it without meaning to. **An archive move
+is two operations and is only half-done until both land.**</sub>
+
+**(b) The ledger "numbers used" block was stale a third time — and this time it contradicted itself.**
+Bullet 1 read *max = 434* while bullet 3, two lines below it **in the same list**, read
+`490-499 ... used ORDER-490 ... next block 500-509`.
+
+That gives `BACKLOG-D29` a clean timeline: repaired 16:55 → stale by 17:40 → repaired 17:55 → stale again
+by 22:10, across six lanes. **Three of those lanes updated bullet 3 correctly and left bullet 1 alone**,
+which is the diagnosis rather than the symptom: bullet 3 is a *by-product* of reserving your own block, so
+it gets written; bullet 1 is the only line in the file that nobody has a reason to touch while doing the
+work, so it is the only one that rots. **Stop maintaining it — compute it from the rows or delete it.**
+Fixed to **490** in `77e9002a`.
+
+**Nothing else changed. No order was opened, none marked REVIEWED, so no `B1_DATASET.csv` row is owed for
+this lane either.** `ORDER-430` and `ORDER-431` (the batch work stocked at 17:00) are still `OPEN` and
+untouched — they need an MT5 lane and nobody has taken one.
+
+---
+
 ## ปลายทางของทุกรายการ
 
 <!-- HANDOFF-ROUTING -->
@@ -114,3 +146,6 @@ big-sweep attempt (2026-07-24) failed outright and had to be restored.
 | Fast-cage hook now watches `scripts/mris/*` | DONE |
 | Verification table for all 14 findings | DONE |
 | Derive the ledger "numbers used" block from the tables instead of hand-maintaining it | BACKLOG-D29 |
+| Host search that unblocks the caged lever pair — stocked 17:00, still unrun, needs `D:\Meta 5b` | ORDER-430 |
+| MacdDiv_Naked USDJPY H4 optimize — stocked 17:00, still unrun, needs `D:\Meta 5c` | ORDER-431 |
+| Post-check: archive move finished, ledger summary corrected the third time | DONE |
