@@ -123,6 +123,24 @@ dead = แย่ลงหน้าต่างใดหน้าต่างห�
 **ห้าม:** แตะ 2026H1 (ไหม้ไปแล้วสำหรับ EA ตัวนี้) · เทียบเลขข้ามเลน MT5 · ใช้ผล Model-1 เป็นหลักฐานตัดสิน ·
 รับ lever โดยไม่มี control run STEP 2 · แก้บาร์ด้านบนหลังเห็นผล
 
+## ORDER-340 — [expand/decisive] PivotBreakout GBPJPY: SL fan ฝั่งต่ำกว่า base — plateau หรือหน้าผา — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+**ที่มา:** ORDER-206 (2026-07-27) พบ GBPJPY H4 **MAIN 1.37 / BWD 1.16** ผ่านทั้งสองหน้าต่าง = ผลที่แรงที่สุดของรอบนั้น
+แต่ fan ที่รัน `_02_SlAtrMult` {1.5, 2.0, 2.5} ได้ **1.37 → 1.01 → 0.90 ลงทางเดียว** และ **base 1.5 อยู่ที่ขอบล่างสุดของช่วง**
+⇒ **แยกไม่ออกว่า 1.5 คือยอด plateau หรือปลายหน้าผา** เพราะไม่มีใครวัดฝั่งต่ำกว่า 1.5 เลย
+(ข้อบกพร่องอยู่ที่การออกแบบ fan ของ ORDER-206 ไม่ใช่ที่ worker)
+**ทำไมใบนี้คุ้ม:** run เดียวตอบคำถามที่กั้น GBPJPY ไม่ให้ขยับต่อทั้งหมด · ถ้าเป็นหน้าผา = spike ห้ามเอาไปใช้ · ถ้าเป็น plateau = ของจริง
+**bars (pre-register 2026-07-27 08:10 ก่อนมีตัวเลข):**
+· **plateau** = มีอย่างน้อย 1 ค่าที่ต่ำกว่า 1.5 ให้ PF ≥ **1.2** (มีสันสองข้าง) ⇒ GBPJPY เดินต่อได้ → Model-4 + demo-forward-as-holdout
+· **หน้าผา** = ทุกค่าที่ต่ำกว่า 1.5 ให้ PF < 1.2 และ 1.5 ยังสูงสุด ⇒ **1.37 = spike ห้ามอ้างเป็นหลักฐาน deploy** → กลับไป BUILD-ON แบบไม่มี lever นี้
+· ถ้าเจอค่าที่ **สูงกว่า** 1.37 ที่ SL แคบลง ⇒ ยังไม่เจอยอด ต้องขยายลงอีกชั้น (รายงาน ห้ามสรุปเอง)
+**เลน:** `D:\Meta 5c` · **Model 1** (ให้เทียบได้กับ 3 จุดเดิมของ ORDER-206 ที่เป็น Model 1 — fan นี้เป็นการวัด*สัมพัทธ์*ในเลนเดียวกัน)
+**STEP 1:** copy `_vps_deploy/PIVOTBREAKOUT_XAU/PivotBreakout_XAU_deploy.set` เป็น 3 ไฟล์ใน `_mt5_auto/ab_sets/order340/`
+แก้ **ค่าเดียวต่อไฟล์**: `_02_SlAtrMult` = {**0.75**, **1.0**, **1.25**} · input อื่นคงเดิมทุกตัว
+รัน MAIN 2023.01.01-2025.12.31 บน **GBPJPY H4** ทั้ง 3 ไฟล์ `-ReportName PVT_GBPJPY_H4_SL0p75 / SL1p0 / SL1p25`
+**STEP 2:** ค่าไหนก็ตามที่ MAIN ≥1.2 → รัน BWD 2020.01.01-2022.12.31 ของค่านั้นด้วย (`_BWD` ต่อท้าย)
+**append ตารางรวม 6 แถว** (0.75 / 1.0 / 1.25 / 1.5 / 2.0 / 2.5) คอลัมน์ SlAtrMult · PF · trades · DD · net
+**ห้าม:** เขียน verdict · แตะ 2026 · เปลี่ยน input อื่น · รายงาน Model 2 · เอาเลข fan เก่ามาปนโดยไม่ระบุว่าเป็น run คนละครั้ง
+
 ## ORDER-270 — [tooling/integrity] กรงของ validator ใช้งานไม่ได้จริง — negative suite ช้าจนไม่มีใครรัน — `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) — 254s → 7.6s · **ไม่ได้ใช้ path-filter** ที่ใบสั่งเสนอ (จะเปิดรู BLOCKER 6) · กรงเร็ว 11/11 · ชุด 103 เต็ม 41/41 + REVIEWED(Claude/Opus 2026-07-27)`
 ### ผล ORDER-270 STEP 3
 **ไม่ทำตามทางแก้ที่ใบสั่งเขียนไว้** — path-filter เปลี่ยน **"commit ไหนถูกเดินผ่าน"** และ BLOCKER 6 อยู่ในคอมมิตที่
@@ -295,34 +313,45 @@ Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **�
 **ห้าม:** ใช้ host ที่ BWD ปริ่ม 1.0 (Wave1 พิสูจน์แล้วว่าแพ้) · Model-2
 
 ### STEP 1 ปิดแล้ว — design (Claude/Opus 2026-07-27) · **ส่วนของ Claude จบ · ส่วนที่เหลือ = runner**
-**host ที่เลือก = `(Boss)_RSI_MR_GridLog_rev01` EURUSD H1 @ `_mt5_auto/ab_sets/rsimr_fan/RSIMR_CENTER.set`** (RSI25/75+SL25+Dist9)
-ไม่ใช่ Boss_14 GBPJPY leg-8 ตามที่ใบสั่งเดาไว้ · เหตุผล 3 ข้อ:
-1. **BWD 1.56 (MAIN 1.96)** = เกิน 1.0 แบบสบายจริง ไม่ใช่ปริ่ม — ตรงเงื่อนไข memory `escalation-overlay-needs-strong-bwd-host`
-2. **มันเป็น grid** — `_9_RegimeGateAdds` gate ที่ตัว **adds ของ grid** ⇒ host ที่ไม่ใช่ grid ไม่มีอะไรให้ gate เลย
-   (memory `regime-gate-grids-not-breakouts`) ⇒ **ตัด PivotBreakout ออกทั้งที่ BWD 1.22 สวย** เพราะผิดคลาส ไม่ใช่เพราะเลขไม่ดี
-3. plateau แข็งที่สุดเท่าที่วัดมา: sensitivity fan **8/8 variant ยัง PF>1 ทั้งสองหน้าต่าง** (ORDER-185) ⇒ ถ้า lever ขยับผล จะอ่านออกว่าเป็น lever ไม่ใช่ noise
 
-**🔴 2 อย่างที่ใบสั่งนี้เขียนไว้ผิด และต้องแก้ก่อนใครจะรัน:**
-1. **บาร์ปัจจุบัน (`pass = MAIN ≥1.2 AND BWD ≥1.0`) วัด host ไม่ได้วัด lever** — host ตัวนี้ผ่านบาร์นั้นอยู่แล้วตั้งแต่ยังไม่ใส่ lever
-   (1.96/1.56) ⇒ ต่อให้ lever ทำให้แย่ลง มันก็ยัง "ผ่าน" ⇒ **การทดสอบที่แยกไม่ออกว่าดีขึ้นหรือแย่ลง = ไม่ควรรัน**
-   (memory `discriminating-test-must-be-able-to-discriminate`)
-   **บาร์ใหม่ (pre-register ก่อนมีตัวเลขใดๆ 2026-07-27):** วัด **delta เทียบ control run ของ host เดียวกันที่ปิด lever ในเลนเดียวกัน**
-   · pass = **ดีขึ้นทั้ง MAIN และ BWD** AND MC PF-5th ไม่ลด · dead = แย่ลงหน้าต่างใดหน้าต่างหนึ่ง · กลาง = ดีขึ้นหน้าต่างเดียว ⇒ ไม่รับ lever
-   (รูปแบบเดียวกับที่ ORDER-280 ต้องแก้บาร์ตัวเองเพราะเลขสัมบูรณ์ผูกกับเลน)
-2. **`ea_template/sets/B14_AB_on.set` ครอบแค่ lever เดียว** — grep แล้วมี `_9_RegimeGateAdds=true` แต่ **ไม่มี `CONF_PA_ENGULF` เลย**
-   และมันเป็น set ของ chassis **Boss_14** ไม่ใช่ของ host ที่เลือก ⇒ ข้อความ "ของพร้อมแล้ว เหลือแค่เล็งให้ถูกตัว" **มองโลกในแง่ดีเกินจริง**
-   ต้องสร้าง 3 ไฟล์ใหม่จาก `RSIMR_CENTER.set` เอง เปลี่ยนค่าเดียวต่อไฟล์
+<sub>⚠️ **ฉบับแรกของ STEP 1 นี้ผิด และถูกเขียนทับแล้ว — เก็บบทเรียนไว้ ไม่เก็บข้อสรุป.** ผมเลือก host เป็น
+`(Boss)_RSI_MR_GridLog_rev01` เพราะ BWD 1.56 สวยที่สุด **แต่ไม่ได้เปิดไฟล์ .mq5 ดูก่อน** — มันเป็น standalone
+(`#include "STANDALONE_RISK_BUNDLE.mqh"`) ไม่ได้ใช้ chassis `ea_template/core/` ⇒ **มันไม่มี input ทั้งสองตัวอยู่เลย**
+sweep จะรันไม่ได้ตั้งแต่แรก. นี่คือ failure mode เดียวกับ ORDER-143 เป๊ะ (EA ไม่มี input ที่ใบสั่งสั่งให้กวาด) ซึ่งผมเพิ่ง
+เขียนถึงมันเองใน ORDER-250 ชั่วโมงก่อนหน้า. **บทเรียน: "BWD สวย" คัด host ไม่ได้จนกว่าจะ grep include ของ .mq5 ก่อน —
+ความเข้ากันได้ของ chassis มาก่อนตัวเลขเสมอ.** และผมยังเขียนผิดอีกข้อว่า "set ครอบแค่ lever เดียว" (ดู B ด้านล่าง)</sub>
 
-**STEP 2 (runner) — 4 cell บนเลนเดียวกันทั้งหมด · Model 1 · EURUSD H1 · MAIN 2023.01.01-2025.12.31 + BWD 2020.01.01-2022.12.31:**
-| cell | set | เปลี่ยนจาก CENTER |
+**host = `Boss_14_GridLog` @ AUDNZD H1** (chassis `ea_template/`, magic ในเซ็ต 990101) — **ใบสั่งเดาถูกตั้งแต่แรกว่าเป็นตระกูล Boss_14**
+1. **compat มาก่อน:** มีแค่ `ea_template/Boss_11..18` เท่านั้นที่ include `core/` ⇒ **มีแค่ตระกูลนี้ที่มี lever ทั้งสองจริง**
+   ⇒ ตัด RSI-MR และ PivotBreakout ออกด้วยเหตุผลเดียวกัน: **ผิด chassis / ผิดคลาส ไม่ใช่เลขไม่ดี**
+2. **เป็น grid** — `_9_RegimeGateAdds` gate ที่ **adds ของ grid** และ `StackConfirm` เป็น confirm ของ grid add
+   (memory `regime-gate-grids-not-breakouts`) ✓
+3. AUDNZD = leg ที่แข็งที่สุดของตระกูลนี้มาตลอด และ **เซ็ต A/B ที่เตรียมไว้ก็เป็น AUDNZD อยู่แล้ว**
+
+**✅ set ครบทั้ง 3 อยู่แล้ว ไม่ต้องสร้างใหม่** (ตรวจด้วย `diff` ทีละคู่ ไม่ได้เดาจากชื่อไฟล์):
+| cell | set | ต่างจาก control ตรงไหน (diff จริง) |
 |---|---|---|
-| **control** | `RSIMR_CENTER.set` (ตามเดิม) | — (บังคับ รันใหม่ในเลนเดียวกัน ห้ามอ้างเลขเก่า) |
-| A | `rsimr_lever/A_regimegate.set` | `_9_RegimeGateAdds=true` |
-| B | `rsimr_lever/B_paengulf.set` | `CONF_PA_ENGULF` เปิด |
-| AB | `rsimr_lever/AB_both.set` | เปิดทั้งคู่ |
-**ห้ามเพิ่ม:** อ้างเลข MAIN/BWD เก่าเป็น control (คนละ run คนละเลน) · stack 2 lever ก่อนรู้ผลเดี่ยว · ข้าม control
-**หมายเหตุที่ runner ต้องรู้:** holdout 2026H1 ของ host นี้ **ล้มไปแล้วจริง (0.76/n=21) และพิสูจน์แล้วว่าไม่ใช่ artifact ของ config**
-⇒ lever ที่ชนะจะ**ไม่**ปลดล็อก CANDIDATE ให้ · ประโยชน์ที่หวังได้จริงคือ "ทำให้ host ที่ยังไงก็ BUILD-ON ดีขึ้น" เท่านั้น — อย่าคาดหวังเกินนั้น
+| **control** | `ea_template/sets/B14_AB_off.set` | — (`StackConfirm=0` · ไม่มี `_9_RegimeGateAdds`) |
+| **A** regime gate | `ea_template/sets/B14_AB_on.set` | `+_9_RegimeGateAdds=true` `+_50_RegimeMode=1` `+_50_AllowTrendUp=true` `+_50_AllowRange=true` `+_50_AllowTrendDown=false` |
+| **B** PA engulf | `ea_template/sets/B14_PAon.set` | `StackConfirm=0→4` (= `CONF_PA_ENGULF`) `+_9_PA_MinBodyRatio=1.0` |
+| **AB** | สร้างใหม่ `_mt5_auto/ab_sets/b14_lever/AB_both.set` | off + ทั้งสองชุดข้างบน |
+
+**🔴 บาร์เดิมของใบนี้ถูกถอน — มันวัด host ไม่ได้วัด lever**
+`pass = MAIN ≥1.2 AND BWD ≥1.0` เป็นคุณสมบัติของ host ⇒ lever ทำให้แย่ลงก็ยัง "ผ่าน"
+(memory `discriminating-test-must-be-able-to-discriminate`)
+**บาร์ที่ใช้จริง — pre-register 2026-07-27 08:10 ก่อนมีตัวเลขใดๆ ห้ามแก้หลังเห็นผล:**
+วัด **delta เทียบ control run ที่รันใหม่ในเลนเดียวกัน** (ห้ามอ้างเลขเก่าจาก run อื่น/เลนอื่น)
+· **pass** = ดีขึ้น **ทั้ง MAIN และ BWD** · **dead** = แย่ลงหน้าต่างใดหน้าต่างหนึ่ง · **กลาง** = ดีขึ้นหน้าต่างเดียว ⇒ **ไม่รับ lever**
+(รูปแบบเดียวกับที่ ORDER-280 ต้องแก้บาร์ตัวเองเพราะเลขสัมบูรณ์ผูกกับเลน)
+
+**🔴 Model 4 บังคับ ห้าม Model 1/2 เป็นหลักฐาน** — precedent ตรงตัวและเป็น host เดียวกันเป๊ะ:
+2026-07-17 Model-2 ปั้น fake plateau บน **grid AUDNZD** PF 3-4 → Model-4 เหลือ **0.61** (CLAUDE.md paid-for history)
+⇒ ใบนี้เป็น grid + AUDNZD ครบทั้งสองเงื่อนไข
+
+**STEP 2 (runner) — 8 run:** 4 cell × {MAIN 2023.01.01-2025.12.31, BWD 2020.01.01-2022.12.31} · AUDNZD H1 · **Model 4** · เลนเดียวกันทั้ง 8
+**ห้าม:** อ้างเลขเก่าเป็น control · รายงาน Model 1/2 เป็นหลักฐาน · stack AB ก่อนรู้ผลเดี่ยว · แตะหน้าต่าง 2026
+**runner ต้องรู้:** ถ้า control BWD ออกมา **ไม่เกิน 1.0 แบบสบาย** ⇒ **หยุด รายงาน ไม่ต้องรันต่อ** — memory
+`escalation-overlay-needs-strong-bwd-host` บอกว่า overlay คุ้มเฉพาะบน host ที่ BWD แข็งจริง (นี่คือประตู ไม่ใช่ข้อสันนิษฐาน)
 
 ## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `DONE(Claude/Opus 2026-07-27, `805a443a`) — ของจริง 16 ไฟล์ไม่ใช่ 5 · แบนเนอร์ 12 · guard §9 ขยาย 3 · qwen_batch_runner ปฏิเสธการรัน + REVIEWED(Claude/Opus 2026-07-27)`
 **ผล:** ใบสั่งนับไว้ 5 — grep เจอ **16**: 8 ตัวรันหน้าต่างนั้นจริง · 2 ตัวสอนมันผ่าน usage example · **3 ตัวเป็น reusable definition**
