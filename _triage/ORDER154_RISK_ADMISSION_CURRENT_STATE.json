@@ -41,7 +41,7 @@
       "account_name": "Demo Mt5-2",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -15.1044,
+      "headroom_pct": -8.9081,
       "known_magics": [
         "990025",
         "990030",
@@ -62,7 +62,7 @@
       "n_total_magics": 14,
       "n_unknown_dd95": 0,
       "over_budget": true,
-      "portfolio_dd_est": 40.10436286177881,
+      "portfolio_dd_est": 33.90813895343298,
       "status_note": "computed from 14/14 magics (full coverage on this account)",
       "type": "DEMO",
       "type_conflict": false,
@@ -165,9 +165,9 @@
     "backtest_map_found": true,
     "backtest_map_path": "D:\\EA_LAB\\portfolio\\backtest_corr_reports.csv",
     "backtest_skipped": [],
-    "default_1_0_pairs": 1118,
-    "measured_pairs": 422,
-    "measured_pairs_backtest": 422,
+    "default_1_0_pairs": 1088,
+    "measured_pairs": 452,
+    "measured_pairs_backtest": 452,
     "measured_pairs_live": 0,
     "note": "every pair NOT listed above used the conservative default corr=1.0 (fully additive); live pairs outrank backtest pairs when both exist",
     "pairs": [
@@ -294,6 +294,11 @@
       {
         "corr": 0.2405,
         "pair": "990020~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7074,
+        "pair": "990020~992001",
         "source": "backtest"
       },
       {
@@ -437,6 +442,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1351,
+        "pair": "990025~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0411,
         "pair": "990025~992003",
         "source": "backtest"
@@ -572,6 +582,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.0294,
+        "pair": "990030~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1467,
         "pair": "990030~992003",
         "source": "backtest"
@@ -702,6 +717,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.3218,
+        "pair": "990066~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1499,
         "pair": "990066~992003",
         "source": "backtest"
@@ -827,6 +847,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.8267,
+        "pair": "990068~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4705,
         "pair": "990068~992003",
         "source": "backtest"
@@ -939,6 +964,11 @@
       {
         "corr": -0.1618,
         "pair": "990101~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2394,
+        "pair": "990101~992001",
         "source": "backtest"
       },
       {
@@ -1057,6 +1087,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.2713,
+        "pair": "990103~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1369,
         "pair": "990103~992003",
         "source": "backtest"
@@ -1162,6 +1197,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1918,
+        "pair": "990110~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.3168,
         "pair": "990110~992003",
         "source": "backtest"
@@ -1254,6 +1294,11 @@
       {
         "corr": 0.4828,
         "pair": "990120~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.8422,
+        "pair": "990120~992001",
         "source": "backtest"
       },
       {
@@ -1352,6 +1397,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.2514,
+        "pair": "990201~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1062,
         "pair": "990201~992003",
         "source": "backtest"
@@ -1439,6 +1489,11 @@
       {
         "corr": 0.5561,
         "pair": "990202~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0291,
+        "pair": "990202~992001",
         "source": "backtest"
       },
       {
@@ -1532,6 +1587,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1358,
+        "pair": "990203~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1254,
         "pair": "990203~992003",
         "source": "backtest"
@@ -1612,6 +1672,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.2123,
+        "pair": "990204~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1635,
         "pair": "990204~992003",
         "source": "backtest"
@@ -1687,6 +1752,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.07,
+        "pair": "990205~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0868,
         "pair": "990205~992003",
         "source": "backtest"
@@ -1734,6 +1804,11 @@
       {
         "corr": -0.4814,
         "pair": "990206~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.7757,
+        "pair": "990206~992001",
         "source": "backtest"
       },
       {
@@ -1807,6 +1882,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.7699,
+        "pair": "990207~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.5434,
         "pair": "990207~992003",
         "source": "backtest"
@@ -1872,6 +1952,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.2646,
+        "pair": "990208~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.4325,
         "pair": "990208~992003",
         "source": "backtest"
@@ -1932,6 +2017,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1286,
+        "pair": "990301~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.054,
         "pair": "990301~992003",
         "source": "backtest"
@@ -1987,6 +2077,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.6731,
+        "pair": "990302~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.3253,
         "pair": "990302~992003",
         "source": "backtest"
@@ -2037,6 +2132,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.2916,
+        "pair": "990303~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1907,
         "pair": "990303~992003",
         "source": "backtest"
@@ -2082,6 +2182,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.2419,
+        "pair": "990984~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1584,
         "pair": "990984~992003",
         "source": "backtest"
@@ -2122,6 +2227,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.7034,
+        "pair": "991002~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0146,
         "pair": "991002~992003",
         "source": "backtest"
@@ -2157,6 +2267,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.3068,
+        "pair": "991003~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1246,
         "pair": "991003~992003",
         "source": "backtest"
@@ -2187,6 +2302,11 @@
         "source": "backtest"
       },
       {
+        "corr": -0.5682,
+        "pair": "991004~992001",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1576,
         "pair": "991004~992003",
         "source": "backtest"
@@ -2212,6 +2332,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.2581,
+        "pair": "991005~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.0743,
         "pair": "991005~992003",
         "source": "backtest"
@@ -2232,6 +2357,11 @@
         "source": "backtest"
       },
       {
+        "corr": 0.2343,
+        "pair": "991070~992001",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1774,
         "pair": "991070~992003",
         "source": "backtest"
@@ -2249,6 +2379,26 @@
       {
         "corr": -0.1532,
         "pair": "991070~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5347,
+        "pair": "992001~992003",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7325,
+        "pair": "992001~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5022,
+        "pair": "992001~992017",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5184,
+        "pair": "992001~999094",
         "source": "backtest"
       },
       {
