@@ -53,6 +53,14 @@ function Get-LiveSkillFiles {
     $out = New-Object System.Collections.Generic.List[object]
     foreach ($f in [System.IO.Directory]::EnumerateFiles($rootFull, '*', [System.IO.SearchOption]::AllDirectories)) {
         $rel = $f.Substring($rootFull.Length + 1)
+        # Skip VCS/tooling internals. .agents\skills is itself a git repo, so
+        # following the symlinks drags its .git along -- and copying a .git into
+        # the mirror makes git store the whole tree as a GITLINK (mode 160000),
+        # i.e. a bare commit pointer with none of the content. The first version
+        # of this did exactly that and committed a mirror holding zero files
+        # while reporting success.
+        $segments = $rel -split '[\\/]'
+        if ($segments -contains '.git' -or $segments -contains 'node_modules' -or $segments -contains '__pycache__') { continue }
         $out.Add([pscustomobject]@{ Rel = $rel; Full = $f })
     }
     # Deterministic order, or the manifest churns for no reason.

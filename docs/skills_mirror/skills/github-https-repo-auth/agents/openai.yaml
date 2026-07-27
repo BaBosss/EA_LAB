@@ -1,0 +1,8 @@
+interface:
+  display_name: "GitHub HTTPS Repo Auth"
+  short_description: "Repo-scoped HTTPS auth for GitHub pushes"
+  default_prompt: "Use $github-https-repo-auth to diagnose and fix repo-scoped GitHub HTTPS push credentials."
+
+policy:
+  allow_implicit_invocation: true
+

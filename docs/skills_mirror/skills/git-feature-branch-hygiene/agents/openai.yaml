@@ -1,0 +1,8 @@
+interface:
+  display_name: "Git Feature Branch Hygiene"
+  short_description: "Keep unrelated git work on separate branches"
+  default_prompt: "Use $git-feature-branch-hygiene to decide whether new work belongs on the current branch or needs a separate branch."
+
+policy:
+  allow_implicit_invocation: true
+
