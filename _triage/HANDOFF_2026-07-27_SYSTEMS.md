@@ -67,6 +67,19 @@ detector `check_stale_binaries.ps1` มี 4 root ที่ล้วนเป็
 **ORDER-410** (STEP 1 = user อ่าน hash+mtime บน VPS ก่อน · ห้าม rebuild ก่อนจบ STEP 3
 เพราะบางตัว attach อยู่บนเงินจริง — **rebuild ทับ = เปลี่ยน EA ใต้ตำแหน่งที่เปิดค้าง** ซึ่งแพงกว่าปัญหาเดิม)
 
+## 4b. BACKLOG-D24 น่าจะเป็นบั๊กเดียวกับ ORDER-411 (อนุมาน ไม่ใช่พิสูจน์)
+
+D24 บันทึกว่า `run_order101` + `run_order103` **รันต่อกันใน process เดียวไม่ได้** — 103 พังหลายเคสด้วย
+`archive path 'ARCHIVE.md' not readable at <sha>` และตั้งสมมติฐานว่าเป็น temp fixture dir / leftover git state
+
+**วัดใหม่หลังแก้ ORDER-411** (รัน 101→103 ต่อกันใน process เดียว · 881 วินาที): **103 = ALL CASES PASSED ·
+`not readable` = 0 ครั้ง** · 101 เหลือ FAIL เดิมตัวเดียวที่ documented (`cross-HEAD-zero-diff`)
+
+**error string ที่ D24 จดไว้ = ของ ORDER-411 เป๊ะ** และกลไก "พังเฉพาะเมื่อรันต่อจาก 101" เข้ากับ
+**session-dependence** ของบั๊กนั้นพอดี (ถ้าชุด 101 ทิ้ง `[Console]::InputEncoding` ที่มี preamble ค้างไว้
+ชุด 103 จะรับเคราะห์) · **แต่ผมไม่ได้ reproduce อาการก่อนแก้** ⇒ **สาเหตุ = อนุมาน ไม่ใช่พิสูจน์
+· ไม่ปิด D24** แค่เขียนผลวัดใส่แถวไว้ให้คนถัดไปดู `InputEncoding` ก่อน fixture dir
+
 ## 5. ⚠️ เรื่องที่ต้องบอกเลนอื่น
 
 - **ผมลบ `.git/index.lock` ที่ค้าง** (10:50, 0 ไบต์, ไม่ขยับ 6 นาที, **ไม่มี `git.exe` รันอยู่เลย** และเปิดไฟล์แบบ
