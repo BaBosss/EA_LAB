@@ -148,6 +148,35 @@
 (ง) **สำรวจ `InpCutLossMode` ค่าอื่น** ก่อนตัดสิน (MatchaGrid เท่านั้น) → ถ้าเลือกข้อนี้ แตกเป็นใบลูกในบล็อก user
 **bars:** N-A (สิทธิ์ user) · **ห้าม:** ปิดใบนี้แทน user · ตีความ "ไม่มีอะไรเสียหายวันนี้" ว่า "ปลอดภัย"
 
+## ORDER-350 — [lever] rev05 SL buffer บน BTC H4 — คืน flip-exit ที่ไม่เคยได้ทำงาน — `CLAIMED(Claude, 2026-07-27 09:20)` · ทำได้: Claude · 👉 แนะ: Claude
+**ที่มา:** ORDER-280 STEP -1 วัดว่า flip-close ไม่เคยเกิดใน 6 ปี (116/116 ออกด้วย SL) เพราะ stop วางที่เส้นพอดี
+⇒ ทดสอบ "ถอย stop ออกจากเส้น N*ATR" ซึ่งถูกกว่าและตรงจุดกว่า re-entry lever (user เคาะ 2026-07-27)
+
+**✅ STEP 0 PARITY — ผ่านแล้ว 2026-07-27 09:15:** `rev05` (`SlBufferAtr=0` · `ReMode=0`) vs `rev03` ·
+BTCUSD H4 MAIN · Model 1 · เลน `D:\Meta 5` ⇒ **100 deal ตรงกันทุกตัว** (เวลา/ฝั่ง/ทิศ/vol/ราคา)
+พิสูจน์พร้อมกันว่า rev03 == rev04 off-path == rev05 off-path · รายงาน `PARITY_rev0{3,5}_BTC_H4_MAIN.htm`
+
+**📌 BASELINE ในเลนนี้ (ห้ามเทียบข้ามเลน — เลขของ Meta 5b ต่างกัน):**
+MAIN M1 · `rev03`/pyr1 = **PF 2.33 · net +675.42 · 50 ไม้ · eqDD 2.86% · largest loss −69.39**
+
+**bars (pre-register 2026-07-27 09:20 — เขียนก่อนรัน buffer ตัวแรก ห้ามแก้หลังเห็นผล):**
+- **pass** = PF ดีขึ้น **ทั้ง MAIN และ BWD** เทียบ baseline เลนเดียวกัน **AND** largest-loss ≤ **1.5%** ของทุน
+  (baseline 0.69%) **AND** MC ruin ≤ **2%** **AND** MC **DD-95th** ไม่แย่กว่า baseline เกิน **1.5 เท่า**
+- **dead** = PF แย่ลงทั้งสองหน้าต่าง · **กลาง** = ดีขึ้นหน้าต่างเดียว ⇒ ไม่รับ lever
+- 🔴 **ห้ามใช้ PF-5th เป็นบาร์** — `mt5_montecarlo.py` สุ่มด้วย `rng.shuffle` (permutation ไม่ใช่ with-replacement)
+  ⇒ multiset ของกำไร/ขาดทุนคงเดิม ⇒ gross_profit/gross_loss คงที่ ⇒ **PF เท่ากันทุก iteration ทางคณิตศาสตร์**
+  ⇒ บาร์ PF-5th ตกไม่ได้ อ่านได้เฉพาะคอลัมน์ DD + ruin (memory `pf5th-bar-cannot-fail-under-current-mc`)
+**flat-lot probe:** N-A (buffer ไม่แตะ lot)
+
+**STEP 1:** สวีป `_02_SlBufferAtr` {0.25, 0.5, 1.0} × {MAIN 2023.01.01-2025.12.31, BWD 2020.01.01-2022.12.31}
+· Model 1 · host = pyr1 เดิมทุกค่า · เลน `D:\Meta 5` เท่านั้น
+**STEP 2:** ตัวที่ผ่าน → Model-4 (ซอยครึ่งปี — 3 ปีชน memory ceiling) → หัก swap `swap_adjust_crypto.py
+--rate-long 14.67 --rate-short 0.49` → `monte_carlo.py` อ่านเฉพาะ DD+ruin
+**STEP 3:** เช็คว่ากลไกทำงานจริงไหม — **นับ exit reason ซ้ำ**: ถ้า buffer ได้ผลแต่ยังออกด้วย SL 100%
+แปลว่ากำไรไม่ได้มาจากกลไกที่อ้าง (คืน flip-exit) ⇒ ต้องอธิบายให้ได้ก่อนรับ
+**ห้าม:** แตะ 2026H1 · เทียบข้ามเลน MT5 · ใช้ Model-1 เป็นหลักฐานตัดสิน · ใช้ PF-5th เป็นบาร์ ·
+ตั้ง buffer > 3 ATR (init refuse อยู่แล้ว)
+
 ## ORDER-280 — [lever] rev04 re-entry บน BTC H4 — สวีป 3 anchor — `CLAIMED(Claude, 2026-07-26 20:30)` · ทำได้: Claude · 👉 แนะ: Claude
 **bars (pre-register 2026-07-26 20:55 — เขียนก่อนรันครั้งแรก ห้ามแก้หลังเห็นผล):**
 pass = **ดีขึ้นทั้ง MAIN และ BWD เทียบ baseline rev03/pyr1 ที่รันใหม่ใน "เลนเดียวกัน" AND MC PF-5th ไม่ลดลง** ·
