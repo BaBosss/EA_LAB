@@ -149,3 +149,73 @@ untouched — they need an MT5 lane and nobody has taken one.
 | Host search that unblocks the caged lever pair — stocked 17:00, still unrun, needs `D:\Meta 5b` | ORDER-430 |
 | MacdDiv_Naked USDJPY H4 optimize — stocked 17:00, still unrun, needs `D:\Meta 5c` | ORDER-431 |
 | Post-check: archive move finished, ledger summary corrected the third time | DONE |
+| USER: log in `/portable` on 463666728 + 69424711 → floating 6/6 | ORDER-400 |
+| USER: read currency + balance on 463666728 (USD vs USC) | ORDER-230 |
+| USER: hash + mtime every `.ex5` on the VPS terminals | ORDER-410 |
+| USER decision: MacroGate 990120 disposition | ORDER-232 |
+| USER decision: ratify the 30-trade bar for the 4 EAs that cannot meet it | ORDER-235 |
+| USER: walk the PERSIST_MIGRATION checklist — blocks Boss_14 GBPJPY going live | ORDER-234 |
+| USER: load `Meta 5b` tick history, or ratify never comparing across installs | ORDER-371 |
+| USER: pending attaches incl. the MT4 pair | ORDER-045 |
+| ORDER-233 said "ratify the flag ON by default" — dead advice, corrected, retirement owned by 433 | ORDER-433 |
+
+---
+
+## APPENDED 2026-07-27 (`S-2026-07-27-USERQUEUE`) — the user-action queue, checked against the board
+
+The user asked what work is theirs, with nothing that collides with another lane. Every lane was
+`CLOSED` when this was written, so nothing below is contended. Appended here rather than written as a
+tenth handoff, following the POSTCHECK precedent in the section above.
+
+**Checking before answering was the point — one item had gone stale and would have sent the user the
+wrong way.** See the ORDER-233 correction below.
+
+### Do these three first — about 20 minutes, all "go read a number", no decisions
+
+| # | order | what the user does | unlocks |
+|---|---|---|---|
+| 1 | **ORDER-400 (1)** | log in with `/portable` once on **463666728** (MT5) and **69424711** (MT4) | floating coverage 5/6 → **6/6** — every real-money account visible |
+| 2 | **ORDER-230** | open terminal **463666728**, read **currency (USD vs USC)** and real balance | every money-denominated risk/DD figure for the **~13 EAs judging in October** rests on this field; `ACCOUNTS.csv` says USD, the user says cent |
+| 3 | **ORDER-410** | on the VPS, hash + mtime every `.ex5` under the four terminals' `MQL5\Experts\`, send the CSV | answers whether any of the **13 staged bundles that are older than their edited sources** is what a live chart is actually running |
+
+None of the three requires a judgement call. The numbers come back, the lab does the rest.
+
+### Decisions only the user can make
+
+| order | question | recommendation |
+|---|---|---|
+| **ORDER-232** | MacroGate 990120 — keep / move to AUDJPY / remove | **keep as an advisory sensor.** Never count it as edge, never size on its PF. The "move to AUDJPY" advice was refuted by the 07-26 bundle sweep (`85b55fd9`): the host loses with the gate both open and closed on both symbols, so no symbol separates "the gate times it right" from "it trades less" |
+| **ORDER-235** | the 30-trade demo bar cannot be met by 991001 / 991004 / 990205 / 990303 until 2028-29 | needs an explicit ratification, not another date slip. Three options are already written in `DEMO_DEPLOYMENT_PLAN.md`; the lab writes whichever is chosen into the VERDICT GATE |
+
+### 🔄 ORDER-233 was stale — corrected in this lane, and the user should NOT be asked to ratify it
+
+The board told the user to **ratify turning `--resolve-single-leg-baskets` ON by default**. That
+instruction is dead, and following it would have promoted a proxy the evidence now says to retire:
+
+- Codex **rejected the question as framed** (`b83ef377`). The brief offered corr-1.0 versus a single-leg
+  proxy; both are wrong, because both leg reports were on disk the whole time, so the exact combined
+  series is computable and a proxy for it is a guess with no known error sign.
+- **ORDER-433 then built that series** (`40885e34`). Measured on 463666728: flag OFF **84.372%**,
+  proxy ON **57.047%**, true combined **56.641%** — the proxy sits 0.41 points conservative, the same
+  sign and order Codex measured independently at 0.61 on a smaller inventory.
+- The `73.04% → 38.36%` figures the order was built on, and the 7.38-point representative-choice spread,
+  are **superseded, not pending** — the inventory grew. Do not quote either as current.
+
+ORDER-433 already says it "closes the audit half of ORDER-233 and replaces it with a build", so the
+retirement has an owner. **No new ticket was opened** — a third owner for one flag is how the 73%/38%
+confusion happened in the first place. ORDER-233 stays OPEN only so the trail does not break mid-way;
+it closes when ORDER-433 lands.
+
+### Bigger, when there is a block of time
+
+- **ORDER-234** — walk the `PERSIST_MIGRATION` checklist (F3 snapshot GV → demo attach → confirm
+  `[PERSIST] migrated` in the journal → restart once). **This is what blocks Boss_14 GBPJPY going to
+  real money**, and it has drifted across three handoffs with no owner.
+- **ORDER-371** — load tick history for `Meta 5b`, or ratify the permanent rule that numbers from two
+  MT5 installs are never compared.
+- Pending attaches: TsMom 992001 · Boss_16 balance-scaled · Wave5 · the MT4 pair (ORDER-045).
+
+### Explicitly not the user's
+
+ORDER-421 · ORDER-430 · ORDER-431 · ORDER-433 · ORDER-434 · ORDER-490 · ORDER-372 · ORDER-340. The
+three Codex audits are collected and recorded (`b83ef377`); nothing there is waiting on the user either.
