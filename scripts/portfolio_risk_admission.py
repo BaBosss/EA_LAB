@@ -252,6 +252,27 @@ def collapse_basket_risk_units(dd95_by_magic, basket_of, unit_keys=None):
     # Cage 12 caught exactly that. One canonical inventory decides, everyone follows.
     basket_keys = basket_unit_keys(dd95_by_magic, basket_of) if unit_keys is None else unit_keys
 
+    # ORDER-433 (Codex blind audit 2026-07-27, second defect -- latent, no observed
+    # failure on any current caller). A SUPPLIED unit_keys map was trusted verbatim and
+    # never checked for coverage. Any basket it omits silently fails the identity test
+    # below, so both legs keep their own magic keys and the basket is counted TWICE:
+    # DD95={L1:10, L2:10} in basket BX with unit_keys={} reports 20.0% where the
+    # canonical keys report 10.0%. That is an UNDERCOUNT of diversification, i.e. an
+    # overstatement of risk -- the safe direction, which is exactly why it could sit
+    # here unnoticed. It is still a wrong number produced silently, and the next caller
+    # to build a partial map gets it with no warning at all.
+    if unit_keys is not None:
+        represented = {b for b in (basket_of.get(m) for m in dd95_by_magic) if b}
+        uncovered = sorted(represented - set(basket_keys))
+        if uncovered:
+            raise RiskAdmissionError(
+                "unit_keys does not cover every basket represented in dd95_by_magic: "
+                f"missing {', '.join(uncovered)}. Supply the map from "
+                "basket_unit_keys() over the SAME inventory slice, or pass None to "
+                "have it derived. A partial map silently double-counts the omitted "
+                "basket instead of collapsing it."
+            )
+
     for magic, val in dd95_by_magic.items():
         basket = basket_of.get(magic)
         if basket and basket_keys.get(basket) != _basket_key(basket):
@@ -573,8 +594,76 @@ def _pairs_from_monthly(monthly_by_magic, magics):
     return corr
 
 
+def _add_basket_series(monthly_by_key, basket_of):
+    """ORDER-433. Add a `basket::<id>` monthly series built by SUMMING every leg of
+    that basket, so a collapsed basket risk unit carries correlations of its own
+    instead of falling back to get_corr()'s conservative 1.0.
+
+    WHY THIS REPLACES THE PROXY
+    collapse_basket_risk_units keys a real multi-leg basket as `basket::<id>`, but the
+    correlation matrix was keyed by MAGIC only, so that key could never resolve. The
+    previously-proposed workaround was --resolve-single-leg-baskets: key the basket by
+    ONE representative leg and borrow that leg's correlations. Codex's blind audit
+    (2026-07-27, evidence in _triage/CODEX_AUDIT_RESULTS_2026-07-27.md sec 2) rejected
+    that framing outright -- both second-leg reports are already on disk, and the merge
+    scripts _mt5_auto/ichi_basket_merge_mc.ps1:18 and xau_basket_merge_mc.ps1:14 name
+    the exact pairs. When the true combined series is computable, a proxy for it is not
+    a conservative fallback, it is a guess whose error has no known sign.
+
+    ALL-OR-NOTHING ON PURPOSE
+    A basket whose legs are not ALL present is left out entirely, mirroring
+    load_backtest_monthly_by_magic's existing rule for a partial per-magic series.
+    A basket series summed from a SUBSET of its legs IS the single-leg proxy this
+    replaces, wearing a basket's name -- worse than the 1.0 default, because it would
+    look authoritative while being the same guess.
+
+    Returns (new_mapping, added_basket_ids, incomplete) -- `incomplete` carries the
+    reason per basket so the report can say what it could not measure rather than
+    quietly measuring less.
+    """
+    legs_by_basket = defaultdict(list)
+    for magic, basket in (basket_of or {}).items():
+        if basket:
+            legs_by_basket[basket].append(magic)
+
+    out = dict(monthly_by_key)
+    added = []
+    incomplete = []
+    for basket, legs in sorted(legs_by_basket.items()):
+        legs = sorted(set(legs))
+        if len(legs) < 2:
+            # one leg total is not a basket to combine: there is nothing to sum, and
+            # keying it as `basket::` would be the proxy again. Leave it to the 1.0
+            # default, which is what the pre-registered rule already says.
+            continue
+        have = [m for m in legs if m in monthly_by_key]
+        missing = [m for m in legs if m not in monthly_by_key]
+        if missing:
+            incomplete.append(
+                f"{basket}: no series for leg(s) {', '.join(missing)} -- basket left "
+                "UNMEASURED (a partial sum would be the single-leg proxy under another "
+                "name); its pairs fall back to the 1.0 default"
+            )
+            continue
+        summed = defaultdict(float)
+        for m in have:
+            for ym, v in monthly_by_key[m].items():
+                summed[ym] += v
+        # same poison rule as every other series in this file: a non-finite total is
+        # corrupt data, not a number.
+        if any(not math.isfinite(v) for v in summed.values()):
+            incomplete.append(
+                f"{basket}: aggregation overflow (non-finite monthly total) -- basket "
+                "left UNMEASURED, pairs fall back to the 1.0 default"
+            )
+            continue
+        out[_basket_key(basket)] = dict(summed)
+        added.append(basket)
+    return out, added, incomplete
+
+
 def compute_corr_with_backtest(magics, live_deals_dir=LIVE_DEALS_DIR,
-                               backtest_map_csv=BACKTEST_CORR_MAP):
+                               backtest_map_csv=BACKTEST_CORR_MAP, basket_of=None):
     """ORDER-174: correlation from BOTH sources with explicit per-pair provenance.
     LIVE wins over BACKTEST when both measured a pair (live is the higher-quality
     evidence); any pair neither could measure stays absent -> get_corr() applies the
@@ -586,9 +675,16 @@ def compute_corr_with_backtest(magics, live_deals_dir=LIVE_DEALS_DIR,
       quality  {frozenset(pair): "live" | "backtest"}  (absent pair = default 1.0)
       backtest_skipped  [str] -- mapped magics that could not be used, with reasons
     """
-    live_corr = compute_corr_matrix(magics, live_deals_dir)
+    live_corr = compute_corr_matrix(magics, live_deals_dir, basket_of=basket_of)
     bt_monthly, bt_skipped = load_backtest_monthly_by_magic(backtest_map_csv)
-    bt_corr = _pairs_from_monthly(bt_monthly, magics)
+    # ORDER-433: measure the basket units too, not only the magics. The keys the
+    # formula actually asks get_corr() about are the RISK-UNIT keys that
+    # collapse_basket_risk_units produces, and for a multi-leg basket that is
+    # `basket::<id>` -- a key the matrix never contained.
+    bt_monthly, _bt_baskets, bt_incomplete = _add_basket_series(bt_monthly, basket_of)
+    bt_skipped = list(bt_skipped) + bt_incomplete
+    bt_corr = _pairs_from_monthly(
+        bt_monthly, list(magics) + _basket_keys_present(bt_monthly))
     corr = {}
     quality = {}
     for pair, v in bt_corr.items():
@@ -636,34 +732,34 @@ def pearson(xs, ys):
     return r
 
 
-def compute_corr_matrix(magics, live_deals_dir=LIVE_DEALS_DIR):
+def _basket_keys_present(mapping):
+    """The `basket::` keys in a series mapping, sorted. One place so the prefix test
+    is not spelled out in three call sites (the drift _basket_key already guards)."""
+    pref = _basket_key("")
+    return sorted(k for k in mapping if isinstance(k, str) and k.startswith(pref))
+
+
+def compute_corr_matrix(magics, live_deals_dir=LIVE_DEALS_DIR, basket_of=None):
     """Best-effort monthly-return correlation for the given magics from live deal
     history actually on disk. A pair with fewer than MIN_SHARED_MONTHS overlapping
     months is simply left OUT of the returned dict -- get_corr() is what applies the
     1.0-default safety rule, this function only reports what it could measure."""
     monthly, corrupted = load_monthly_pnl_by_magic(live_deals_dir)
-    corr = {}
     # ORDER-170 SEV-1 #2: a magic with ANY corrupted P&L cell is excluded from
     # measurement entirely, so every pair involving it stays missing and get_corr()
     # applies the conservative 1.0 default instead of a correlation computed from
     # partly-fabricated data.
-    mags = [m for m in magics if m in monthly and m not in corrupted]
-    for i in range(len(mags)):
-        for j in range(i + 1, len(mags)):
-            a, b = mags[i], mags[j]
-            common = sorted(set(monthly[a]) & set(monthly[b]))
-            if len(common) < MIN_SHARED_MONTHS:
-                continue
-            xs = [monthly[a][m] for m in common]
-            ys = [monthly[b][m] for m in common]
-            c = pearson(xs, ys)
-            # ORDER-170 round-4 SEV-2: overflow inside pearson (finite inputs, huge
-            # magnitudes) can yield nan/inf -- a non-finite correlation must never
-            # enter the matrix; leaving the pair out applies the 1.0 default instead.
-            if c is None or not math.isfinite(c):
-                continue
-            corr[frozenset((a, b))] = c
-    return corr
+    usable = {m: v for m, v in monthly.items() if m not in corrupted}
+    # ORDER-433: basket units get a summed series here too, not only on the backtest
+    # side. A `basket::` key that resolves from one source and not the other would make
+    # the reported number depend on which evidence tier happened to be available.
+    # The all-or-nothing rule in _add_basket_series inherits the poison rule for free:
+    # a corrupted leg is simply absent from `usable`, so its basket stays unmeasured.
+    usable, _added, _incomplete = _add_basket_series(usable, basket_of)
+    # ORDER-170 round-4 SEV-2 (overflow -> nan/inf) and the MIN_SHARED_MONTHS rule both
+    # live in _pairs_from_monthly, which is the shared measurement rule for live and
+    # backtest alike -- this used to be a second hand-written copy of it.
+    return _pairs_from_monthly(usable, list(magics) + _basket_keys_present(usable))
 
 
 def get_corr(corr_matrix, i, j):
@@ -2366,6 +2462,91 @@ def _cage_32_unit_key_rule_is_inventory_wide():
     )
 
 
+def _cage_33_basket_series_is_summed_and_all_or_nothing():
+    """ORDER-433. A multi-leg basket must be correlated as the SUM of its legs, under
+    the same `basket::<id>` key the risk-unit collapse produces -- and must be left
+    UNMEASURED when any leg's series is missing.
+
+    Both halves matter. Without the first, the basket key never resolves and every
+    pair falls to the conservative 1.0 default (the situation --resolve-single-leg-
+    baskets was invented to work around). Without the second, a basket summed from a
+    subset of its legs IS that proxy again, but now wearing the basket's name, which
+    is worse: it looks like a measurement."""
+    basket_of = {"L1": "BX", "L2": "BX", "S1": None}
+    monthly = {
+        "L1": {"2024-01": 10.0, "2024-02": -5.0, "2024-03": 3.0, "2024-04": 1.0},
+        "L2": {"2024-01": 2.0, "2024-02": 4.0, "2024-03": -1.0, "2024-04": 6.0},
+        # S1 must VARY: a constant series has zero standard deviation, so pearson()
+        # correctly returns None and the pair is unmeasurable. First draft made it
+        # flat 1.0 and this cage failed for a reason that had nothing to do with
+        # baskets -- the code was right and the fixture was not.
+        "S1": {"2024-01": 1.0, "2024-02": 3.0, "2024-03": 2.0, "2024-04": 5.0},
+    }
+    out, added, incomplete = _add_basket_series(monthly, basket_of)
+    key = _basket_key("BX")
+    assert added == ["BX"] and not incomplete, f"basket not built: {added} / {incomplete}"
+    assert key in out, "combined series missing under the basket:: key"
+    # summed, month by month -- not one leg, not an average
+    assert out[key] == {"2024-01": 12.0, "2024-02": -1.0, "2024-03": 2.0, "2024-04": 7.0}, (
+        f"combined series is not the leg-wise SUM: {out[key]!r}"
+    )
+    # the legs themselves are untouched: they still exist for their own pairs
+    assert out["L1"] == monthly["L1"], "adding the basket series mutated a leg series"
+
+    # ...and the key actually reaches the matrix that get_corr() reads
+    pairs = _pairs_from_monthly(out, ["S1"] + _basket_keys_present(out))
+    assert any(key in p for p in pairs), "basket:: unit produced no measurable pair"
+
+    # all-or-nothing: drop one leg's series and the basket must vanish, NOT degrade
+    # into the single-leg proxy.
+    partial = {k: v for k, v in monthly.items() if k != "L2"}
+    out2, added2, incomplete2 = _add_basket_series(partial, basket_of)
+    assert added2 == [] and key not in out2, (
+        "a basket with a missing leg was still published -- that is the single-leg "
+        "proxy under another name"
+    )
+    assert incomplete2 and "L2" in incomplete2[0], (
+        f"the missing leg must be NAMED in the skip reason, got {incomplete2!r}"
+    )
+    # a one-leg-total 'basket' is not a basket to combine and must not be invented
+    out3, added3, _ = _add_basket_series({"Z1": {"2024-01": 1.0}}, {"Z1": "BZ"})
+    assert added3 == [] and _basket_key("BZ") not in out3, (
+        "a single-leg basket must stay on the 1.0 default, not become a combined series"
+    )
+
+
+def _cage_34_partial_unit_keys_is_refused_not_silently_wrong():
+    """ORDER-433 / Codex blind audit 2026-07-27, second defect. A SUPPLIED unit_keys
+    map that omits a represented basket used to be trusted verbatim: both legs kept
+    their magic keys and the basket was counted TWICE (20.0% where canonical keys give
+    10.0%). It over-states risk, which is the safe direction -- and is exactly why it
+    could sit here unnoticed. A wrong number produced silently is still wrong."""
+    basket_of = {"L1": "BX", "L2": "BX"}
+    dd95 = {"L1": 10.0, "L2": 10.0}
+
+    canonical, _ = collapse_basket_risk_units(dd95, basket_of)
+    assert canonical == {_basket_key("BX"): 10.0}, (
+        f"canonical collapse changed: {canonical!r}"
+    )
+
+    for bad in ({}, {"BOTHER": "basket::BOTHER"}):
+        try:
+            collapse_basket_risk_units(dd95, basket_of, unit_keys=bad)
+        except RiskAdmissionError as e:
+            assert "BX" in str(e), f"the uncovered basket must be named: {e}"
+        else:
+            raise AssertionError(
+                f"unit_keys={bad!r} omits basket BX and was accepted -- the double-count "
+                "is back"
+            )
+
+    # a COMPLETE supplied map must still work: this guard must not break the legitimate
+    # inventory-wide call that cage 32 exists to protect.
+    good = basket_unit_keys(dd95, basket_of)
+    units, _ = collapse_basket_risk_units(dd95, basket_of, unit_keys=good)
+    assert units == canonical, f"complete unit_keys map was rejected or changed: {units!r}"
+
+
 CAGE_TESTS = [
     ("1_golden_sample", _cage_1_golden_sample),
     ("2_bounds_assert", _cage_2_bounds_assert),
@@ -2399,6 +2580,8 @@ CAGE_TESTS = [
     ("30_malformed_report_rows_poison", _cage_30_malformed_report_rows_poison),
     ("31_single_leg_basket_switch_is_off_by_default", _cage_31_single_leg_basket_switch),
     ("32_unit_key_rule_is_inventory_wide", _cage_32_unit_key_rule_is_inventory_wide),
+    ("33_basket_series_summed_all_or_nothing", _cage_33_basket_series_is_summed_and_all_or_nothing),
+    ("34_partial_unit_keys_refused", _cage_34_partial_unit_keys_is_refused_not_silently_wrong),
 ]
 
 
@@ -2519,7 +2702,7 @@ def main(argv=None):
     dd95_map, basket_of = load_expectations_with_baskets(args.expectations)
     magics = sorted({r["magic"] for r in deployments})
     corr_matrix, corr_quality, bt_skipped = compute_corr_with_backtest(
-        magics, args.live_deals, args.backtest_map)
+        magics, args.live_deals, args.backtest_map, basket_of=basket_of)
 
     report = build_report(deployments, dd95_map, corr_matrix, basket_of=basket_of,
                           expectations_path=args.expectations,

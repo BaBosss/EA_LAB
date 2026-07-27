@@ -1861,7 +1861,20 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 
 **The work:** construct the summed two-leg monthly series keyed `basket::<id>` and correlate **that** against the portfolio, for both IchiADX baskets. Then re-run the admission on account 463666728 and expect ≈37.75%.
 
-**Also fix (latent, no observed failure yet):** `scripts/portfolio_risk_admission.py:253` never validates that `unit_keys` covers every represented basket. `DD95={L1:10,L2:10}` both in basket `BX` with `unit_keys={}` returns **20.0%** where canonical keys return **10.0%**. Current callers happen to pass complete maps — add the validation before one does not.
+**✅ BUILT 2026-07-27 20:30 (`S-2026-07-27-BASKETCORR`).** `_add_basket_series` sums every leg of a basket into one series under the `basket::<id>` key the risk-unit collapse already produces — applied to **both** the backtest and the live-deals sources, because a key that resolves from one tier and not the other would make the number depend on which evidence happened to exist. **All-or-nothing:** a basket missing any leg's series is left UNMEASURED and named in the skip list, since a partial sum *is* the single-leg proxy wearing the basket's name. The two second-leg rows (`990067`→`BASKET_slowH1_FULL.htm`, `990069`→`CORR_ICHI_XAU_medH4.htm`) were added to `backtest_corr_reports.csv`; both reports were already on disk. **`--resolve-single-leg-baskets` was not touched and stays OFF** — with the true series computable it is now dead weight, and retiring it is a separate call.
+> **Measured, account 463666728 (`tools\python312\python.exe`, the only interpreter on this box):**
+> | variant | portfolio DD95 |
+> |---|---|
+> | flag OFF (baseline before this work) | **84.372%** |
+> | single-leg proxy ON | **57.047%** |
+> | **combined two-leg series (this fix)** | **56.641%** |
+>
+> **The proxy sat 0.41 points conservative of the true value** — Codex measured 0.61 at `6f49e0b7` on a smaller inventory. **Same sign, same order, independently reproduced on today's data: the audit's central claim holds.** 67 measured pairs now involve a `basket::` unit, 0 baskets skipped; sanity check — leg `990066` correlates **+0.907** with its own basket, as a constituent should.
+> **§2-c is now closed the useful way.** Codex's absolute figures (73.0437/38.3556) are **not** reproducible today because the inventory grew (15 known DD95 magics now, vs whatever `6f49e0b7` had) — but they no longer matter: the true value is computed rather than estimated, so **the unverified 7.38-point representative-choice spread is moot, not pending.** It should be struck from anything that cites it, not carried forward as evidence.
+> **Cages 33 + 34 added (34/34 green, was 32/32 before and stayed green through the change).** Both **proven able to fail by mutation**, not just by passing: no-op the series builder → cage 33 fires (`basket not built`); strip the `unit_keys` validation → cage 34 fires (`the double-count is back`).
+> **⚠️ This changes a reported risk number for a real account (84.37 → 56.64).** It is a better measurement, not a loosened rule — but the portfolio still reads **over its 25% budget**, so nothing here licenses a size-up. That reading is the user's.
+
+**~~Also fix (latent, no observed failure yet)~~ ✅ FIXED 2026-07-27:** `scripts/portfolio_risk_admission.py:253` never validated that `unit_keys` covers every represented basket. `DD95={L1:10,L2:10}` both in basket `BX` with `unit_keys={}` returned **20.0%** where canonical keys return **10.0%**. Now raises `RiskAdmissionError` naming the uncovered basket. Note for the record: the silent failure **over**-stated risk, which is the safe direction — that is exactly why it survived, and is not a reason it was acceptable. Cage 34 pins it, including that a *complete* supplied map still works (cage 32's legitimate inventory-wide call must not break).
 
 **🔴 `--resolve-single-leg-baskets` stays OFF and does not become the default.** That rule was pre-registered and does not depend on the audit agreeing with it. Once the combined series exists the flag should be **retired**, not flipped — it is a proxy for something the repo can now compute exactly.
 
