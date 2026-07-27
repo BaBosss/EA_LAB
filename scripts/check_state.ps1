@@ -175,6 +175,20 @@ foreach($f in $scopeDef){
 Check ($leaks.Count -eq 0) ("holdout guard: no reusable definition selects past $mainEnd") `
   ("HOLDOUT LEAK - these select/screen on data past MAIN ($mainEnd), which spends the holdout: " + ($leaks -join '; ') + " -- fix the window, or add HOLDOUT-OK on the line if spending it is intended")
 
+# 10. SKILLS MIRROR (2026-07-27, ORDER-251). The skills library owns every decision
+#     bar in this project (THE LADDER, the DEMOTED banner, the corr ladder) and lives
+#     outside the repo, so until now nothing could tell whether a bar had drifted.
+#     docs/skills_mirror/ is a content mirror plus a sha256 manifest; this compares
+#     the live library against it. WARN, not block: the library legitimately changes,
+#     it just must not change UNOBSERVED.
+$mirrorScript = Join-Path $Root 'scripts\sync_skills_mirror.ps1'
+if(Test-Path $mirrorScript){
+  $mirrorOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $mirrorScript -Check -RepoRoot $Root 2>&1
+  $mirrorOk = ($LASTEXITCODE -eq 0)
+  Check $mirrorOk "skills mirror matches the live library" `
+    ("SKILLS DRIFT - the decision bars changed outside git: " + (($mirrorOut | Select-Object -Skip 1 | Select-Object -First 6) -join ' | ') + " -- if intended, run scripts\sync_skills_mirror.ps1 -Update and commit the mirror alongside the reason")
+}
+
 if($script:warn -eq 0){ Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green }
 else { Write-Host ("=== {0} WARNING(s) - fix the drift above ===" -f $script:warn) -ForegroundColor Yellow }
 if($Strict -and $script:warn -gt 0){ exit 1 }
