@@ -316,7 +316,20 @@ foreach ($g in $groups) {
     # file you are about to drag onto a chart is bit-identical to the one that was tested.
     # That is the ORDER-213 README precedent and it survives intact - it compares a file to
     # ITSELF across a copy, never one build to another build.
+    # ORDER-341 (2026-07-27): this used to be a first-wins race for a single $status
+    # slot, and HASH_DIFFERS was assigned BEFORE the staleness check below. Since MQL5
+    # compilation is not byte-reproducible, EVERY EA with more than one copy mismatches
+    # by hash -- so `if ($status -eq "OK") { $status = "STALE" }` could never fire for
+    # any multi-copy EA, and that is all of them. Measured on the real tree: 8 binaries
+    # were labelled STALE while 48 more were genuinely older than their source graph and
+    # wore the advisory HASH_DIFFERS label instead. The whole Boss_11..18 chassis family
+    # was masked, including the copy in the lane a live A/B was about to run on.
+    # The staleness text was still appended to $detail, so the information was present
+    # and nobody could see it -- the failing label is what makes a human look.
+    # Fixed by ranking: STALE outranks HASH_DIFFERS, which outranks OK.
+    $hashDiffersHere = $false
     if ($hashMismatch -and $c.Hash) {
+      $hashDiffersHere = $true
       if ($status -eq "OK") { $status = "HASH_DIFFERS" }
       $others = $copies | Where-Object { $_.Path -ne $c.Path }
       $otherDesc = ($others | ForEach-Object { "$($_.Path) [$($_.Hash)]" }) -join "; "
@@ -333,7 +346,10 @@ foreach ($g in $groups) {
       }
       $info = $src.Info
       if ($info.NewestMtime -gt $c.Mtime) {
-        if ($status -eq "OK") { $status = "STALE" }
+        # ORDER-341: STALE outranks HASH_DIFFERS unconditionally. Being older than your
+        # own source is a fact about the code; a hash difference is an artifact of a
+        # non-deterministic compiler. The blocking label must not lose to the advisory one.
+        if ($status -eq "OK" -or $status -eq "HASH_DIFFERS") { $status = "STALE" }
         $anyBad = $true
         # Name every source-side file newer than the binary - that is the whole point.
         $newerFiles = $info.Files | Where-Object {
@@ -377,6 +393,9 @@ foreach ($g in $groups) {
       mtime  = $c.Mtime.ToString("yyyy-MM-ddTHH:mm:ss")
       sha256 = $c.Hash
       status = $status
+      # ORDER-341: recorded separately now that STALE outranks HASH_DIFFERS in `status`,
+      # so the advisory signal is not lost on rows where the blocking one won.
+      hash_differs = $hashDiffersHere
       detail = $detail
     })
   }
@@ -397,7 +416,7 @@ if ($foreignCount -gt 0) {
 }
 
 $badCount  = ($results | Where-Object { $_.status -eq "STALE" }).Count
-$diffCount = ($results | Where-Object { $_.status -eq "HASH_DIFFERS" }).Count
+$diffCount = ($results | Where-Object { $_.hash_differs }).Count
 if ($diffCount -gt 0) {
   Write-Host ("[INFO] {0} copy(ies) differ by hash from a sibling - advisory only, the compiler is not byte-reproducible" -f $diffCount) -ForegroundColor DarkYellow
 }
