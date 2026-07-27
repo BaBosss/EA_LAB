@@ -85,6 +85,34 @@ user สั่ง `/scrutinize` หลังผมรายงานว่าเ
 > mutation เต็มๆ** เพราะจับ `$encBefore` ไว้ท้ายบล็อก ซึ่งการเรียกก่อนหน้า reset encoding ไปแล้ว ⇒ before=after=สะอาด
 > **บทเรียน: assertion เรื่อง side effect ต้องเป็นเจ้าของ state ที่มันวัด — ตั้งค่าศัตรูใหม่บรรทัดติดกันก่อนเรียก**
 
+## 3c. ORDER-420 — guard ถูกบังคับทุก commit แต่ **กรงของ guard ไม่เคยถูกรัน**
+
+`/scrutinize` รอบสองชี้ว่า `.githooks/pre-commit` บังคับ guard 5 ตัวทุก commit **แต่เทสของ guard เหล่านั้น
+ไม่ถูกรันโดยอะไรเลย** — ทุกชุดใน `scripts/_test/` เป็น manual ล้วน ⇒ **ORDER-270 เวอร์ชันทั้งโฟลเดอร์**
+
+**วัดก่อนออกแบบ:** เร็ว 4 ชุด (statusclass 0.5s · collision 0.9s · handoff 0.9s · blobmap 1.3s = **3.8s**) ·
+ช้า 4 ชุด (chainwalk 74s · 101 ~120s · 103 ~760s · **105 = 521s และแดง**)
+
+**ทำ:** `scripts/_test/run_fast_cages.ps1` + เสียบเข้า hook **แบบมีเงื่อนไข** — ทำงานเฉพาะเมื่อ staged path แตะ
+`scripts/check_*.ps1` หรือ `scripts/_test/*` (= ตอนคนกำลังแก้ guard/กรง ซึ่งเป็นวิธีเดียวที่ทำมันพัง) ·
+commit อื่น = **no-op ทันที**
+
+**เหตุผลที่ตั้ง time budget:** hook 10 นาที **จะโดน `--no-verify`** แล้วมันจะไม่ป้องกันอะไรเลยทั้งที่ดูเหมือนป้องกัน
+⇒ **แย่กว่า hook ซื่อๆ 4 วินาที + รายการที่บอกตรงๆ ว่าไม่ครอบอะไร**
+
+**พิสูจน์ว่าล้มได้ 3 ทาง + end-to-end จริง:** ทำ guard พัง → runner exit 1 · ชี้ suite ที่ไม่มีอยู่ → `MISSING` exit 1
+(ไม่ skip เงียบ) · pathspec match เฉพาะไฟล์กรง · **`b045e1a9` = commit ที่มีไฟล์กรง staged แล้วเห็น hook รันจริง
+4 ชุด 4.0 วินาที**
+
+**🔴 เจอของแถม → ORDER-421:** `run_order105_negative_tests` **exit 1** ที่เคส `real-hook-*-zero-byte-*` 2 เคส ·
+**วัดก่อนแตะ hook ⇒ เป็นของเดิม** · แต่ **ไม่มีที่ไหนในเรโปบันทึกว่ามันแดง** และ `check_experiment_events.ps1`
+**อยู่ใน pre-commit จริง** ⇒ กรงของ guard ที่บล็อก commit ได้ กำลังแดงอยู่โดยไม่มีใครรู้
+
+> ⚠️ **ห้ามใช้ `git stash` ในเรโปนี้** — ผมใช้ `git stash --staged` เพื่อทดสอบ pathspec แล้วมันดึงทั้งไฟล์ใหม่
+> และการแก้ hook ออกจาก working tree · กู้คืนครบด้วย `stash pop` **แต่บน working tree ที่แชร์กัน `git stash`
+> อันตรายพอๆ กับ `git add -A`** (แตะของทุกคน ไม่ใช่แค่ของเรา) · อยากทดสอบ pathspec ให้อ่าน
+> `git diff --cached --name-only -- <pathspec>` เฉยๆ พอ ไม่มีความเสี่ยง
+
 ## 4b. BACKLOG-D24 น่าจะเป็นบั๊กเดียวกับ ORDER-411 (อนุมาน ไม่ใช่พิสูจน์)
 
 D24 บันทึกว่า `run_order101` + `run_order103` **รันต่อกันใน process เดียวไม่ได้** — 103 พังหลายเคสด้วย
@@ -139,6 +167,9 @@ D24 บันทึกว่า `run_order101` + `run_order103` **รันต�
 | BOM บน stdin ทำให้ chain-walk โทษ commit ที่บริสุทธิ์ | DONE |
 | fix ของ 411 pin global + branch ที่ไม่มีกรง (เจอจาก `/scrutinize`) | DONE |
 | digest แสดง `DONE(attr) + REVIEWED(attr)` เป็น `DONE` ⇒ 341/370/411/412 ดูเหมือนยังไม่ review | BACKLOG-D27 |
+| กรงของ guard ไม่เคยถูกรันโดยอะไรเลย (ทุกชุดใน `scripts/_test/` = manual) | DONE |
+| `run_order105_negative_tests` แดงอยู่ 2 เคส และไม่มีใครรู้ | ORDER-421 |
+| กรงช้า 4 ชุด (chainwalk · 101 · 103 · 105) ยังต้องรันมือ ไม่มีตัวปลุก | BACKLOG-D28 |
 | 13 bundle staged เก่ากว่า source — บน VPS รันตัวไหนจริง | ORDER-410 |
 | บัญชี 463666728 currency cent vs USD | ORDER-230 |
 | MacroGate 990120 disposition | ORDER-232 |
