@@ -54,8 +54,8 @@ $boards = @(
 # these words constantly; citing one is not evidence of staleness.
 $selfReferential = @(
     'AGENT_TASKBOARD.md','ARCHIVE_TASKBOARD_2026-07A.md','EA_SCORECARD_AND_REGISTRY.md',
-    'EA_MASTER_INDEX.csv','PROJECT_STATE.md','MASTER_BACKLOG.md','TASKBOARD_DIGEST.md',
-    'VISION.md','ROADMAP.md','CLAUDE.md','AGENTS.md'
+    'EA_MASTER_INDEX.csv','PROJECT_STATE.md','PROJECT_HISTORY.md','MASTER_BACKLOG.md',
+    'TASKBOARD_DIGEST.md','VISION.md','ROADMAP.md','CLAUDE.md','AGENTS.md'
 )
 
 # Thai tokens are built from code points on purpose: Windows PowerShell 5.1 reads

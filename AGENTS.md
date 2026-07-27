@@ -78,7 +78,7 @@ paths at once · ZCode = a separate GLM quota.
 
 | File                                                                                                             | Who may write                                                                                                 |
 | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `VISION.md` · `PROJECT_STATE.md` §3 Decision log · verdicts in `EA_SCORECARD_AND_REGISTRY.md` · `AGENTS.md` (this file) | **Claude / the user only**                                                                                  |
+| `VISION.md` · `PROJECT_STATE.md` §3 Decision log · `PROJECT_HISTORY.md` (holds the complete decision log) · verdicts in `EA_SCORECARD_AND_REGISTRY.md` · `AGENTS.md` (this file) | **Claude / the user only**                                                                                  |
 | `AGENT_TASKBOARD.md`                                                                                             | every agent — but only **its own order row** (claim/results/BLOCKED) · adding a new order = Claude/the user |
 | the rest of `PROJECT_STATE.md` (status one-liners, HANDOFF)                                                      | Claude primarily · other agents must not edit it; write results to the taskboard instead                    |
 | source code (`ea_template\`, `scripts\`, EA_Project)                                                             | Claude + Codex (per order) · ZCode must not                                                                 |
@@ -114,7 +114,7 @@ paths at once · ZCode = a separate GLM quota.
      maintain) · junk cache: `<lane>\Tester\` + `Tester\...\Agent-*\cache` can always be deleted (it
      regenerates — clearing 5b freed 80GB on 07-06) · **never delete `Bases\`** (that is real history)
 3. **Reported numbers = Model 1 or better** (Model 2 is only for filtering zero-trade cases) · every full-window run is split by year with `scripts\report_year_split.py`
-4. **Verdict rules (summarized from the decision log — read the full version in PROJECT_STATE §3):**
+4. **Verdict rules (summarized from the decision log — binding rules in PROJECT_STATE §3, full provenance in PROJECT_HISTORY §E):**
    never DEAD/REJECT before an optimize probe · a cap breach (DD/margin/ruin) = resize-first, never
    reject outright · optimizer numbers are always in-sample · backward-OOS is mandatory when IS/OOS sit
    in the same regime
@@ -269,7 +269,7 @@ a way for the user to pick a branch from their phone.
   every branch tip being the next STEP / STOP / BLOCKED) — an order with no TREE = the worker must not take it.
   Template = the `AGENT_TASKBOARD.md` header
 - **Red lines (forbidden even if the user commands it over Telegram):** ❌ writing a verdict of any kind
-  ❌ touching EA_SCORECARD / EA_MASTER_INDEX / EDGE_CATALOG / PROJECT_STATE / VISION / CLAUDE.md / AGENTS.md / B1_DATASET.csv
+  ❌ touching EA_SCORECARD / EA_MASTER_INDEX / EDGE_CATALOG / PROJECT_STATE / PROJECT_HISTORY / VISION / CLAUDE.md / AGENTS.md / B1_DATASET.csv
   ❌ touching `.mq5` or `ea_template\core\` ❌ touching `_vps_deploy` or the .set of an EA currently on demo
   ❌ interpreting results outside the branch — there is exactly one place it may write = the order row it claimed · commit tag `[oc-qwen]`
   <sub>(the phrase meaning "single-file" is deliberately avoided here: `check_state.ps1` §7 caught that phrase as a competing entry claim by substring — the intended meaning was "only one place it may write", not a claim to be the source of truth)</sub>
