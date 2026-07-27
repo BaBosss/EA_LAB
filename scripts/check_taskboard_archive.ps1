@@ -562,6 +562,95 @@ function Get-GitCommitParents {
     return @($parts[1..($parts.Count - 1)])
 }
 
+function Get-GitBlobOidMap {
+    <#
+        ORDER-270. Resolves <ref>:<path> to a blob OID for MANY refs in a single
+        `git cat-file --batch-check` process, instead of one `git show` per ref.
+
+        Why an OID map is enough: git blob OIDs are content addresses, so
+        oid(a) -eq oid(b) is byte-equality of the archive at those two commits.
+        That lets the walk prove "unchanged at this step" without reading the
+        blob at all, and fall back to real bytes only where it actually changed.
+        It changes nothing about WHICH commits are visited -- every commit in the
+        first-parent chain is still inspected, so the merge rule below is
+        untouched. That distinction is the whole point: path-filtering the
+        rev-list would have skipped commits, this does not.
+
+        Returns a hashtable ref -> OID string, or ref -> $null when the path does
+        not exist at that ref (caller decides how to fail).
+    #>
+    param([string]$RepoRoot, [string[]]$Refs, [string]$Path)
+
+    $map = @{}
+    if (-not $Refs -or $Refs.Count -eq 0) { return $map }
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = 'git'
+    $psi.Arguments = 'cat-file --batch-check'
+    $psi.WorkingDirectory = $RepoRoot
+    $psi.RedirectStandardInput = $true
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.UseShellExecute = $false
+    $psi.CreateNoWindow = $true
+    $proc = [System.Diagnostics.Process]::Start($psi)
+
+    # Start draining stdout BEFORE writing stdin: on a long chain the reply
+    # stream can exceed the pipe buffer, and a write-then-read order deadlocks.
+    $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+    $stderrTask = $proc.StandardError.ReadToEndAsync()
+
+    foreach ($ref in $Refs) {
+        $proc.StandardInput.WriteLine(('{0}:{1}' -f $ref, $Path))
+    }
+    $proc.StandardInput.Close()
+
+    $stdout = $stdoutTask.GetAwaiter().GetResult()
+    $stderrText = $stderrTask.GetAwaiter().GetResult()
+    $proc.WaitForExit()
+    if ($proc.ExitCode -ne 0) {
+        throw ('git cat-file --batch-check failed (exit {0}): {1}' -f $proc.ExitCode, $stderrText)
+    }
+
+    $lines = @($stdout -split "`r?`n" | Where-Object { $_ -ne '' })
+    if ($lines.Count -ne $Refs.Count) {
+        throw ('git cat-file --batch-check returned {0} rows for {1} inputs -- refusing to guess the alignment' -f $lines.Count, $Refs.Count)
+    }
+    for ($i = 0; $i -lt $Refs.Count; $i++) {
+        $parts = @($lines[$i] -split '\s+' | Where-Object { $_ })
+        # "<oid> blob <size>" on success; "<input> missing" (or "... ambiguous") otherwise.
+        if ($parts.Count -ge 3 -and $parts[1] -eq 'blob') {
+            $map[$Refs[$i]] = $parts[0]
+        } else {
+            $map[$Refs[$i]] = $null
+        }
+    }
+    return $map
+}
+
+function Get-GitFirstParentParentsMap {
+    <#
+        ORDER-270. One `git rev-list --first-parent --parents` process yields the
+        parent list of every commit on the walked chain, replacing one
+        `Get-GitCommitParents` spawn per commit. Merge detection and the
+        first-parent identity check are computed from this map and are therefore
+        unchanged in strength -- see run_chainwalk_tests.ps1, which fails closed
+        on both laundering shapes.
+    #>
+    param([string]$RepoRoot, [string]$FromSha, [string]$ToRef)
+
+    $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments ('rev-list --first-parent --parents "{0}..{1}"' -f $FromSha, $ToRef)
+    if ($r.ExitCode -ne 0) { throw "git rev-list --first-parent --parents $FromSha..$ToRef failed (exit $($r.ExitCode)): $($r.StdErr)" }
+
+    $map = @{}
+    foreach ($line in ($r.StdOut -split "`r?`n")) {
+        $parts = @($line.Trim() -split '\s+' | Where-Object { $_ })
+        if ($parts.Count -eq 0) { continue }
+        $map[$parts[0]] = if ($parts.Count -le 1) { @() } else { @($parts[1..($parts.Count - 1)]) }
+    }
+    return $map
+}
+
 function Invoke-ArchiveChainIntegrityCheck {
     <#
         ORDER-103 Fix 1. Walks the FIRST-PARENT commit chain from the TRUSTED
@@ -633,26 +722,75 @@ function Invoke-ArchiveChainIntegrityCheck {
 
     $steps = New-Object System.Collections.Generic.List[object]
 
+    # ORDER-270: two batched lookups replace ~3 git spawns per commit. The chain
+    # walked below is still the FULL first-parent chain -- nothing is filtered
+    # out -- so every rule keeps seeing every commit it used to see.
+    $oidMap = @{}
+    $parentsMap = @{}
+    try {
+        $commitRefs = @($chain | Where-Object { $_ -ne 'STAGED' })
+        $oidMap = Get-GitBlobOidMap -RepoRoot $RepoRoot -Refs $commitRefs -Path $ArchiveRelPath
+        $parentsMap = Get-GitFirstParentParentsMap -RepoRoot $RepoRoot -FromSha $CheckpointSha -ToRef $HeadRef
+    } catch {
+        return [pscustomobject]@{ IsClean = $false; Reason = "batched chain lookup failed: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+    }
+
+    # Cheap identity for a step's archive content. STAGED has no commit OID, so it
+    # always falls through to a real byte read.
+    function Get-StepOid {
+        param([string]$Sha)
+        if ($Sha -eq 'STAGED') { return $null }
+        if (-not $oidMap.ContainsKey($Sha)) { return $null }
+        return $oidMap[$Sha]
+    }
+
     for ($i = 1; $i -lt $chain.Count; $i++) {
         $prevSha = $chain[$i - 1]
         $curSha  = $chain[$i]
 
-        try {
-            $prevBytes = if ($prevSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $prevSha -Path $ArchiveRelPath }
-        } catch {
-            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        $prevOid = Get-StepOid -Sha $prevSha
+        $curOid  = Get-StepOid -Sha $curSha
+
+        # A missing blob is still fail-closed, exactly as before -- the difference
+        # is that we learn it from the batch-check instead of a failed `git show`.
+        if ($prevSha -ne 'STAGED' -and $null -eq $prevOid) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): path missing at this commit"; Steps = $steps.ToArray(); IsShallow = $isShallow }
         }
-        try {
-            $curBytes = if ($curSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $curSha -Path $ArchiveRelPath }
-        } catch {
-            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        if ($curSha -ne 'STAGED' -and $null -eq $curOid) {
+            return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): path missing at this commit"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+        }
+
+        # Byte-equality proven by content address: skip both blob reads. This is
+        # the ~99% case (502 commits on the chain, 5 of them touch the archive).
+        $unchangedByOid = ($null -ne $prevOid) -and ($null -ne $curOid) -and ($prevOid -eq $curOid)
+
+        $prevBytes = $null
+        $curBytes = $null
+        if (-not $unchangedByOid) {
+            try {
+                $prevBytes = if ($prevSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $prevSha -Path $ArchiveRelPath }
+            } catch {
+                return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $prevSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            }
+            try {
+                $curBytes = if ($curSha -eq 'STAGED') { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref '' -Path $ArchiveRelPath } else { Get-GitBlobBytes -RepoRoot $RepoRoot -Ref $curSha -Path $ArchiveRelPath }
+            } catch {
+                return [pscustomobject]@{ IsClean = $false; Reason = "archive path '$ArchiveRelPath' not readable at $curSha (renamed/deleted mid-chain?): $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            }
         }
 
         if ($curSha -ne 'STAGED') {
-            try {
-                $parents = @(Get-GitCommitParents -RepoRoot $RepoRoot -CommitSha $curSha)
-            } catch {
-                return [pscustomobject]@{ IsClean = $false; Reason = "merge-parent inspection failed at ${curSha}: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+            if ($parentsMap.ContainsKey($curSha)) {
+                $parents = @($parentsMap[$curSha])
+            } else {
+                # Not on the batched map (e.g. the synthetic STAGED neighbour, or a
+                # git version that formats the row unexpectedly): fall back to the
+                # original per-commit lookup rather than skipping the merge rule.
+                try {
+                    $parents = @(Get-GitCommitParents -RepoRoot $RepoRoot -CommitSha $curSha)
+                } catch {
+                    return [pscustomobject]@{ IsClean = $false; Reason = "merge-parent inspection failed at ${curSha}: $($_.Exception.Message)"; Steps = $steps.ToArray(); IsShallow = $isShallow }
+                }
             }
             if ($parents.Count -gt 1) {
                 if ($parents[0] -ne $prevSha) {
