@@ -5,13 +5,13 @@
       "account_name": "Demo bundle 10",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -47.9531,
+      "headroom_pct": -59.372,
       "known_magics": [
+        "990016",
         "990020",
-        "990025",
-        "990030",
         "990066",
         "990068",
+        "990103",
         "990120",
         "990301",
         "990302",
@@ -20,22 +20,20 @@
         "991003",
         "991005",
         "991070",
+        "992017",
         "999094"
       ],
-      "n_known_dd95": 14,
-      "n_total_magics": 19,
-      "n_unknown_dd95": 5,
+      "n_known_dd95": 15,
+      "n_total_magics": 17,
+      "n_unknown_dd95": 2,
       "over_budget": true,
-      "portfolio_dd_est": 72.95314076400015,
-      "status_note": "computed from 14/19 magics (5 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
+      "portfolio_dd_est": 84.37197698317611,
+      "status_note": "computed from 15/17 magics (2 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
       "type": "DEMO",
       "type_conflict": false,
       "unknown_magics": [
         "990067",
-        "990069",
-        "992001",
-        "992003",
-        "992017"
+        "990069"
       ]
     },
     {
@@ -43,8 +41,10 @@
       "account_name": "Demo Mt5-2",
       "budget_note": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",
       "budget_pct": 25.0,
-      "headroom_pct": -7.3466,
+      "headroom_pct": -15.1044,
       "known_magics": [
+        "990025",
+        "990030",
         "990110",
         "990201",
         "990202",
@@ -54,14 +54,16 @@
         "990206",
         "990207",
         "990208",
+        "992001",
+        "992003",
         "992004"
       ],
-      "n_known_dd95": 10,
-      "n_total_magics": 10,
+      "n_known_dd95": 14,
+      "n_total_magics": 14,
       "n_unknown_dd95": 0,
       "over_budget": true,
-      "portfolio_dd_est": 32.34659333679384,
-      "status_note": "computed from 10/10 magics (full coverage on this account)",
+      "portfolio_dd_est": 40.10436286177881,
+      "status_note": "computed from 14/14 magics (full coverage on this account)",
       "type": "DEMO",
       "type_conflict": false,
       "unknown_magics": []
@@ -92,17 +94,29 @@
       "account_name": "Boss - Trend Swing",
       "budget_note": "REAL_CENT: computed/reported only -- NO budget assigned, user decision needed",
       "budget_pct": null,
-      "known_magics": [],
-      "n_known_dd95": 0,
-      "n_total_magics": 2,
-      "n_unknown_dd95": 2,
-      "portfolio_dd_est": null,
-      "status_note": "cannot compute -- 0/2 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.",
+      "known_magics": [
+        "991001"
+      ],
+      "n_known_dd95": 1,
+      "n_total_magics": 13,
+      "n_unknown_dd95": 12,
+      "portfolio_dd_est": 1.88,
+      "status_note": "computed from 1/13 magics (12 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage",
       "type": "REAL_CENT",
       "type_conflict": false,
       "unknown_magics": [
         "1524",
-        "990005"
+        "20240001",
+        "8001",
+        "8002",
+        "8005",
+        "8008",
+        "8009",
+        "8012",
+        "8014",
+        "8015",
+        "990005",
+        "99000512"
       ]
     },
     {
@@ -146,56 +160,14 @@
       ]
     }
   ],
-  "admission_demo": [
-    {
-      "account": "463666728",
-      "budget_pct": 25.0,
-      "ea_name": "EA_SUPERTREND (crypto ST-BTC)",
-      "existing_portfolio_dd_est": 65.74372317378476,
-      "lot_factor": null,
-      "magic": "990025",
-      "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
-      "status": "DEFER_ESCALATE"
-    },
-    {
-      "account": "463666728",
-      "budget_pct": 25.0,
-      "ea_name": "EA_DONCHIAN (crypto DON-ETH pyr3)",
-      "existing_portfolio_dd_est": 65.74372317378476,
-      "lot_factor": null,
-      "magic": "990030",
-      "message": "existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)",
-      "status": "DEFER_ESCALATE"
-    },
-    {
-      "account": "463666728",
-      "ea_name": "TsMom_XAU (S2)",
-      "magic": "992001",
-      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
-      "status": "CANNOT_RUN"
-    },
-    {
-      "account": "463666728",
-      "ea_name": "LondonORB_XAU (SS1 +trend filter)",
-      "magic": "992003",
-      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
-      "status": "CANNOT_RUN"
-    },
-    {
-      "account": "463666728",
-      "ea_name": "PivotBreakout_XAU",
-      "magic": "992017",
-      "message": "candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything",
-      "status": "CANNOT_RUN"
-    }
-  ],
+  "admission_demo": [],
   "corr_coverage": {
     "backtest_map_found": true,
     "backtest_map_path": "D:\\EA_LAB\\portfolio\\backtest_corr_reports.csv",
     "backtest_skipped": [],
-    "default_1_0_pairs": 608,
-    "measured_pairs": 338,
-    "measured_pairs_backtest": 338,
+    "default_1_0_pairs": 1118,
+    "measured_pairs": 422,
+    "measured_pairs_backtest": 422,
     "measured_pairs_live": 0,
     "note": "every pair NOT listed above used the conservative default corr=1.0 (fully additive); live pairs outrank backtest pairs when both exist",
     "pairs": [
@@ -222,6 +194,11 @@
       {
         "corr": -0.0498,
         "pair": "990020~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2414,
+        "pair": "990020~990103",
         "source": "backtest"
       },
       {
@@ -320,8 +297,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.112,
+        "pair": "990020~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.754,
         "pair": "990020~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4452,
+        "pair": "990020~992017",
         "source": "backtest"
       },
       {
@@ -347,6 +334,11 @@
       {
         "corr": 0.0774,
         "pair": "990025~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1797,
+        "pair": "990025~990103",
         "source": "backtest"
       },
       {
@@ -445,8 +437,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.0411,
+        "pair": "990025~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1672,
         "pair": "990025~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0538,
+        "pair": "990025~992017",
         "source": "backtest"
       },
       {
@@ -467,6 +469,11 @@
       {
         "corr": 0.1691,
         "pair": "990030~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1226,
+        "pair": "990030~990103",
         "source": "backtest"
       },
       {
@@ -565,8 +572,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1467,
+        "pair": "990030~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1889,
         "pair": "990030~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4648,
+        "pair": "990030~992017",
         "source": "backtest"
       },
       {
@@ -582,6 +599,11 @@
       {
         "corr": 0.0521,
         "pair": "990066~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1796,
+        "pair": "990066~990103",
         "source": "backtest"
       },
       {
@@ -680,8 +702,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1499,
+        "pair": "990066~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4008,
         "pair": "990066~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.2128,
+        "pair": "990066~992017",
         "source": "backtest"
       },
       {
@@ -692,6 +724,11 @@
       {
         "corr": 0.1222,
         "pair": "990068~990101",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.01,
+        "pair": "990068~990103",
         "source": "backtest"
       },
       {
@@ -790,13 +827,28 @@
         "source": "backtest"
       },
       {
+        "corr": 0.4705,
+        "pair": "990068~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.3941,
         "pair": "990068~992004",
         "source": "backtest"
       },
       {
+        "corr": 0.4945,
+        "pair": "990068~992017",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4103,
         "pair": "990068~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2894,
+        "pair": "990101~990103",
         "source": "backtest"
       },
       {
@@ -890,13 +942,138 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1164,
+        "pair": "990101~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0053,
         "pair": "990101~992004",
         "source": "backtest"
       },
       {
+        "corr": 0.0925,
+        "pair": "990101~992017",
+        "source": "backtest"
+      },
+      {
         "corr": -0.1383,
         "pair": "990101~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1241,
+        "pair": "990103~990110",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3479,
+        "pair": "990103~990120",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3367,
+        "pair": "990103~990201",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0849,
+        "pair": "990103~990202",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4076,
+        "pair": "990103~990203",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1396,
+        "pair": "990103~990204",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.5472,
+        "pair": "990103~990205",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3792,
+        "pair": "990103~990206",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1506,
+        "pair": "990103~990207",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.014,
+        "pair": "990103~990208",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1697,
+        "pair": "990103~990301",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0496,
+        "pair": "990103~990302",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0295,
+        "pair": "990103~990303",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1929,
+        "pair": "990103~990984",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0965,
+        "pair": "990103~991002",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0777,
+        "pair": "990103~991003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.3525,
+        "pair": "990103~991004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0655,
+        "pair": "990103~991005",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1638,
+        "pair": "990103~991070",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1369,
+        "pair": "990103~992003",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1134,
+        "pair": "990103~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.072,
+        "pair": "990103~992017",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.1249,
+        "pair": "990103~999094",
         "source": "backtest"
       },
       {
@@ -985,8 +1162,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.3168,
+        "pair": "990110~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1613,
         "pair": "990110~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0967,
+        "pair": "990110~992017",
         "source": "backtest"
       },
       {
@@ -1070,8 +1257,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1764,
+        "pair": "990120~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0578,
         "pair": "990120~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.6376,
+        "pair": "990120~992017",
         "source": "backtest"
       },
       {
@@ -1155,8 +1352,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1062,
+        "pair": "990201~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.0465,
         "pair": "990201~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.0132,
+        "pair": "990201~992017",
         "source": "backtest"
       },
       {
@@ -1235,8 +1442,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.0695,
+        "pair": "990202~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.0265,
         "pair": "990202~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0167,
+        "pair": "990202~992017",
         "source": "backtest"
       },
       {
@@ -1315,8 +1532,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1254,
+        "pair": "990203~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.0044,
         "pair": "990203~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.0643,
+        "pair": "990203~992017",
         "source": "backtest"
       },
       {
@@ -1385,8 +1612,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1635,
+        "pair": "990204~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.3827,
         "pair": "990204~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.127,
+        "pair": "990204~992017",
         "source": "backtest"
       },
       {
@@ -1450,8 +1687,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.0868,
+        "pair": "990205~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1474,
         "pair": "990205~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1086,
+        "pair": "990205~992017",
         "source": "backtest"
       },
       {
@@ -1490,8 +1737,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.2424,
+        "pair": "990206~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.6413,
         "pair": "990206~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.6127,
+        "pair": "990206~992017",
         "source": "backtest"
       },
       {
@@ -1550,8 +1807,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.5434,
+        "pair": "990207~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.7171,
         "pair": "990207~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4436,
+        "pair": "990207~992017",
         "source": "backtest"
       },
       {
@@ -1605,8 +1872,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.4325,
+        "pair": "990208~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1876,
         "pair": "990208~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.2252,
+        "pair": "990208~992017",
         "source": "backtest"
       },
       {
@@ -1655,8 +1932,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.054,
+        "pair": "990301~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.2988,
         "pair": "990301~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.161,
+        "pair": "990301~992017",
         "source": "backtest"
       },
       {
@@ -1700,8 +1987,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.3253,
+        "pair": "990302~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.3759,
         "pair": "990302~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.4753,
+        "pair": "990302~992017",
         "source": "backtest"
       },
       {
@@ -1740,8 +2037,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1907,
+        "pair": "990303~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4567,
         "pair": "990303~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.031,
+        "pair": "990303~992017",
         "source": "backtest"
       },
       {
@@ -1775,8 +2082,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1584,
+        "pair": "990984~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.2502,
         "pair": "990984~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.058,
+        "pair": "990984~992017",
         "source": "backtest"
       },
       {
@@ -1805,8 +2122,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.0146,
+        "pair": "991002~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4288,
         "pair": "991002~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.7972,
+        "pair": "991002~992017",
         "source": "backtest"
       },
       {
@@ -1830,8 +2157,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1246,
+        "pair": "991003~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1732,
         "pair": "991003~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": -0.085,
+        "pair": "991003~992017",
         "source": "backtest"
       },
       {
@@ -1850,8 +2187,18 @@
         "source": "backtest"
       },
       {
+        "corr": 0.1576,
+        "pair": "991004~992003",
+        "source": "backtest"
+      },
+      {
         "corr": -0.3429,
         "pair": "991004~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1742,
+        "pair": "991004~992017",
         "source": "backtest"
       },
       {
@@ -1865,8 +2212,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.0743,
+        "pair": "991005~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.1533,
         "pair": "991005~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1098,
+        "pair": "991005~992017",
         "source": "backtest"
       },
       {
@@ -1875,8 +2232,18 @@
         "source": "backtest"
       },
       {
+        "corr": -0.1774,
+        "pair": "991070~992003",
+        "source": "backtest"
+      },
+      {
         "corr": 0.4446,
         "pair": "991070~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1232,
+        "pair": "991070~992017",
         "source": "backtest"
       },
       {
@@ -1885,19 +2252,44 @@
         "source": "backtest"
       },
       {
+        "corr": 0.0905,
+        "pair": "992003~992004",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.1677,
+        "pair": "992003~992017",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.3465,
+        "pair": "992003~999094",
+        "source": "backtest"
+      },
+      {
+        "corr": 0.342,
+        "pair": "992004~992017",
+        "source": "backtest"
+      },
+      {
         "corr": -0.0437,
         "pair": "992004~999094",
         "source": "backtest"
+      },
+      {
+        "corr": 0.1536,
+        "pair": "992017~999094",
+        "source": "backtest"
       }
     ],
-    "possible_pairs_active_or_pending": 946
+    "possible_pairs_active_or_pending": 1540
   },
   "coverage": {
     "expectations_csv_found": true,
     "expectations_path": "D:\\EA_LAB\\portfolio\\expectations.csv",
-    "known_dd95": 28,
-    "total_active_or_pending_magics": 44,
-    "unknown_dd95": 16
+    "known_dd95": 34,
+    "total_active_or_pending_magics": 57,
+    "unknown_dd95": 23
   },
   "demo_budget_pct": 25.0,
   "demo_budget_source": "fixed project number (docs/JUDGE_DAY_RUNBOOK.md \"Sizing\" step 3)",

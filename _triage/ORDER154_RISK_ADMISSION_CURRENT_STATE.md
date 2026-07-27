@@ -4,11 +4,11 @@
 
 **Formula:** `portfolio_DD_est = sqrt( sum_i sum_j corr_ij * DD95_i * DD95_j ), corr_ii = 1`
 
-## Data coverage: **28/44 magics have real DD95 data (64%)** -- 16 are UNKNOWN
+## Data coverage: **34/57 magics have real DD95 data (60%)** -- 23 are UNKNOWN
 
 Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3)). REAL_CENT accounts: computed/reported only, **no budget assigned -- user decision needed**.
 
-## Correlation coverage (ORDER-174): **338/946 pairs measured** (0 live, 338 backtest) -- **608 pairs on the conservative default 1.0**
+## Correlation coverage (ORDER-174): **422/1540 pairs measured** (0 live, 422 backtest) -- **1118 pairs on the conservative default 1.0**
 
 | pair | corr | source |
 |---|---|---|
@@ -17,6 +17,7 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990020~990066 | 0.0236 | **backtest** |
 | 990020~990068 | 0.6985 | **backtest** |
 | 990020~990101 | -0.0498 | **backtest** |
+| 990020~990103 | -0.2414 | **backtest** |
 | 990020~990110 | -0.1075 | **backtest** |
 | 990020~990120 | 0.1222 | **backtest** |
 | 990020~990201 | -0.045 | **backtest** |
@@ -36,12 +37,15 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990020~991004 | -0.4337 | **backtest** |
 | 990020~991005 | 0.0483 | **backtest** |
 | 990020~991070 | 0.2405 | **backtest** |
+| 990020~992003 | 0.112 | **backtest** |
 | 990020~992004 | 0.754 | **backtest** |
+| 990020~992017 | 0.4452 | **backtest** |
 | 990020~999094 | 0.2051 | **backtest** |
 | 990025~990030 | -0.0265 | **backtest** |
 | 990025~990066 | -0.258 | **backtest** |
 | 990025~990068 | 0.0482 | **backtest** |
 | 990025~990101 | 0.0774 | **backtest** |
+| 990025~990103 | -0.1797 | **backtest** |
 | 990025~990110 | -0.1065 | **backtest** |
 | 990025~990120 | 0.2112 | **backtest** |
 | 990025~990201 | -0.0732 | **backtest** |
@@ -61,11 +65,14 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990025~991004 | 0.4534 | **backtest** |
 | 990025~991005 | 0.3296 | **backtest** |
 | 990025~991070 | -0.0002 | **backtest** |
+| 990025~992003 | 0.0411 | **backtest** |
 | 990025~992004 | -0.1672 | **backtest** |
+| 990025~992017 | -0.0538 | **backtest** |
 | 990025~999094 | 0.1042 | **backtest** |
 | 990030~990066 | -0.0952 | **backtest** |
 | 990030~990068 | 0.1658 | **backtest** |
 | 990030~990101 | 0.1691 | **backtest** |
+| 990030~990103 | 0.1226 | **backtest** |
 | 990030~990110 | -0.5483 | **backtest** |
 | 990030~990120 | 0.082 | **backtest** |
 | 990030~990201 | 0.0036 | **backtest** |
@@ -85,10 +92,13 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990030~991004 | 0.2535 | **backtest** |
 | 990030~991005 | -0.1879 | **backtest** |
 | 990030~991070 | 0.0958 | **backtest** |
+| 990030~992003 | 0.1467 | **backtest** |
 | 990030~992004 | 0.1889 | **backtest** |
+| 990030~992017 | 0.4648 | **backtest** |
 | 990030~999094 | 0.0831 | **backtest** |
 | 990066~990068 | 0.004 | **backtest** |
 | 990066~990101 | 0.0521 | **backtest** |
+| 990066~990103 | -0.1796 | **backtest** |
 | 990066~990110 | 0.3796 | **backtest** |
 | 990066~990120 | 0.6189 | **backtest** |
 | 990066~990201 | 0.1844 | **backtest** |
@@ -108,9 +118,12 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990066~991004 | -0.0769 | **backtest** |
 | 990066~991005 | -0.0438 | **backtest** |
 | 990066~991070 | 0.315 | **backtest** |
+| 990066~992003 | -0.1499 | **backtest** |
 | 990066~992004 | 0.4008 | **backtest** |
+| 990066~992017 | -0.2128 | **backtest** |
 | 990066~999094 | -0.0531 | **backtest** |
 | 990068~990101 | 0.1222 | **backtest** |
+| 990068~990103 | 0.01 | **backtest** |
 | 990068~990110 | -0.0249 | **backtest** |
 | 990068~990120 | 0.3213 | **backtest** |
 | 990068~990201 | -0.2931 | **backtest** |
@@ -130,8 +143,11 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990068~991004 | 0.1998 | **backtest** |
 | 990068~991005 | 0.1668 | **backtest** |
 | 990068~991070 | 0.0208 | **backtest** |
+| 990068~992003 | 0.4705 | **backtest** |
 | 990068~992004 | 0.3941 | **backtest** |
+| 990068~992017 | 0.4945 | **backtest** |
 | 990068~999094 | 0.4103 | **backtest** |
+| 990101~990103 | 0.2894 | **backtest** |
 | 990101~990110 | -0.131 | **backtest** |
 | 990101~990120 | 0.587 | **backtest** |
 | 990101~990201 | 0.0358 | **backtest** |
@@ -150,8 +166,33 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990101~991004 | 0.5305 | **backtest** |
 | 990101~991005 | 0.1413 | **backtest** |
 | 990101~991070 | -0.1618 | **backtest** |
+| 990101~992003 | 0.1164 | **backtest** |
 | 990101~992004 | 0.0053 | **backtest** |
+| 990101~992017 | 0.0925 | **backtest** |
 | 990101~999094 | -0.1383 | **backtest** |
+| 990103~990110 | 0.1241 | **backtest** |
+| 990103~990120 | -0.3479 | **backtest** |
+| 990103~990201 | 0.3367 | **backtest** |
+| 990103~990202 | -0.0849 | **backtest** |
+| 990103~990203 | 0.4076 | **backtest** |
+| 990103~990204 | 0.1396 | **backtest** |
+| 990103~990205 | 0.5472 | **backtest** |
+| 990103~990206 | 0.3792 | **backtest** |
+| 990103~990207 | 0.1506 | **backtest** |
+| 990103~990208 | -0.014 | **backtest** |
+| 990103~990301 | -0.1697 | **backtest** |
+| 990103~990302 | 0.0496 | **backtest** |
+| 990103~990303 | 0.0295 | **backtest** |
+| 990103~990984 | -0.1929 | **backtest** |
+| 990103~991002 | -0.0965 | **backtest** |
+| 990103~991003 | -0.0777 | **backtest** |
+| 990103~991004 | -0.3525 | **backtest** |
+| 990103~991005 | -0.0655 | **backtest** |
+| 990103~991070 | -0.1638 | **backtest** |
+| 990103~992003 | 0.1369 | **backtest** |
+| 990103~992004 | -0.1134 | **backtest** |
+| 990103~992017 | -0.072 | **backtest** |
+| 990103~999094 | -0.1249 | **backtest** |
 | 990110~990120 | 0.3559 | **backtest** |
 | 990110~990201 | 0.2791 | **backtest** |
 | 990110~990202 | 0.4471 | **backtest** |
@@ -169,7 +210,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990110~991004 | 0.4821 | **backtest** |
 | 990110~991005 | 0.0394 | **backtest** |
 | 990110~991070 | 0.3021 | **backtest** |
+| 990110~992003 | -0.3168 | **backtest** |
 | 990110~992004 | 0.1613 | **backtest** |
+| 990110~992017 | -0.0967 | **backtest** |
 | 990110~999094 | -0.2527 | **backtest** |
 | 990120~990201 | -0.6019 | **backtest** |
 | 990120~990202 | 0.6971 | **backtest** |
@@ -186,7 +229,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990120~991003 | 0.1655 | **backtest** |
 | 990120~991005 | 0.3795 | **backtest** |
 | 990120~991070 | 0.4828 | **backtest** |
+| 990120~992003 | 0.1764 | **backtest** |
 | 990120~992004 | 0.0578 | **backtest** |
+| 990120~992017 | 0.6376 | **backtest** |
 | 990120~999094 | 0.54 | **backtest** |
 | 990201~990202 | -0.2035 | **backtest** |
 | 990201~990203 | 0.4395 | **backtest** |
@@ -203,7 +248,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990201~991004 | -0.1053 | **backtest** |
 | 990201~991005 | -0.4095 | **backtest** |
 | 990201~991070 | 0.1858 | **backtest** |
+| 990201~992003 | -0.1062 | **backtest** |
 | 990201~992004 | 0.0465 | **backtest** |
+| 990201~992017 | -0.0132 | **backtest** |
 | 990201~999094 | -0.1383 | **backtest** |
 | 990202~990203 | -0.1468 | **backtest** |
 | 990202~990204 | 0.5524 | **backtest** |
@@ -219,7 +266,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990202~991004 | 0.112 | **backtest** |
 | 990202~991005 | -0.0789 | **backtest** |
 | 990202~991070 | 0.5561 | **backtest** |
+| 990202~992003 | -0.0695 | **backtest** |
 | 990202~992004 | -0.0265 | **backtest** |
+| 990202~992017 | 0.0167 | **backtest** |
 | 990202~999094 | -0.2342 | **backtest** |
 | 990203~990204 | 0.2548 | **backtest** |
 | 990203~990205 | 0.5054 | **backtest** |
@@ -235,7 +284,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990203~991004 | 0.0189 | **backtest** |
 | 990203~991005 | -0.3541 | **backtest** |
 | 990203~991070 | -0.1414 | **backtest** |
+| 990203~992003 | 0.1254 | **backtest** |
 | 990203~992004 | -0.0044 | **backtest** |
+| 990203~992017 | 0.0643 | **backtest** |
 | 990203~999094 | 0.3255 | **backtest** |
 | 990204~990205 | 0.086 | **backtest** |
 | 990204~990207 | -0.2432 | **backtest** |
@@ -249,7 +300,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990204~991004 | 0.0891 | **backtest** |
 | 990204~991005 | 0.0417 | **backtest** |
 | 990204~991070 | 0.1883 | **backtest** |
+| 990204~992003 | 0.1635 | **backtest** |
 | 990204~992004 | -0.3827 | **backtest** |
+| 990204~992017 | -0.127 | **backtest** |
 | 990204~999094 | 0.2731 | **backtest** |
 | 990205~990207 | 0.4287 | **backtest** |
 | 990205~990208 | 0.1627 | **backtest** |
@@ -262,7 +315,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990205~991004 | 0.1851 | **backtest** |
 | 990205~991005 | -0.6143 | **backtest** |
 | 990205~991070 | -0.0193 | **backtest** |
+| 990205~992003 | 0.0868 | **backtest** |
 | 990205~992004 | 0.1474 | **backtest** |
+| 990205~992017 | 0.1086 | **backtest** |
 | 990205~999094 | -0.3986 | **backtest** |
 | 990206~990301 | 0.5447 | **backtest** |
 | 990206~990302 | 0.0522 | **backtest** |
@@ -270,7 +325,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990206~991003 | 0.6641 | **backtest** |
 | 990206~991005 | 0.0236 | **backtest** |
 | 990206~991070 | -0.4814 | **backtest** |
+| 990206~992003 | -0.2424 | **backtest** |
 | 990206~992004 | 0.6413 | **backtest** |
+| 990206~992017 | -0.6127 | **backtest** |
 | 990206~999094 | 0.2107 | **backtest** |
 | 990207~990208 | -0.3026 | **backtest** |
 | 990207~990301 | -0.0371 | **backtest** |
@@ -282,7 +339,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990207~991004 | -0.2802 | **backtest** |
 | 990207~991005 | 0.066 | **backtest** |
 | 990207~991070 | 0.2608 | **backtest** |
+| 990207~992003 | 0.5434 | **backtest** |
 | 990207~992004 | 0.7171 | **backtest** |
+| 990207~992017 | 0.4436 | **backtest** |
 | 990207~999094 | 0.2115 | **backtest** |
 | 990208~990301 | 0.015 | **backtest** |
 | 990208~990302 | 0.1821 | **backtest** |
@@ -293,7 +352,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990208~991004 | 0.0559 | **backtest** |
 | 990208~991005 | -0.1748 | **backtest** |
 | 990208~991070 | 0.2584 | **backtest** |
+| 990208~992003 | -0.4325 | **backtest** |
 | 990208~992004 | 0.1876 | **backtest** |
+| 990208~992017 | 0.2252 | **backtest** |
 | 990208~999094 | -0.0194 | **backtest** |
 | 990301~990302 | 0.3212 | **backtest** |
 | 990301~990303 | -0.1345 | **backtest** |
@@ -303,7 +364,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990301~991004 | -0.0447 | **backtest** |
 | 990301~991005 | -0.007 | **backtest** |
 | 990301~991070 | 0.0624 | **backtest** |
+| 990301~992003 | -0.054 | **backtest** |
 | 990301~992004 | -0.2988 | **backtest** |
+| 990301~992017 | 0.161 | **backtest** |
 | 990301~999094 | 0.2022 | **backtest** |
 | 990302~990303 | -0.0271 | **backtest** |
 | 990302~990984 | -0.1712 | **backtest** |
@@ -312,7 +375,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990302~991004 | 0.0168 | **backtest** |
 | 990302~991005 | -0.1893 | **backtest** |
 | 990302~991070 | 0.0598 | **backtest** |
+| 990302~992003 | 0.3253 | **backtest** |
 | 990302~992004 | 0.3759 | **backtest** |
+| 990302~992017 | 0.4753 | **backtest** |
 | 990302~999094 | 0.3152 | **backtest** |
 | 990303~990984 | -0.1621 | **backtest** |
 | 990303~991002 | 0.3652 | **backtest** |
@@ -320,36 +385,55 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990303~991004 | -0.486 | **backtest** |
 | 990303~991005 | -0.0828 | **backtest** |
 | 990303~991070 | 0.1293 | **backtest** |
+| 990303~992003 | 0.1907 | **backtest** |
 | 990303~992004 | 0.4567 | **backtest** |
+| 990303~992017 | 0.031 | **backtest** |
 | 990303~999094 | -0.4257 | **backtest** |
 | 990984~991002 | 0.1333 | **backtest** |
 | 990984~991003 | 0.1643 | **backtest** |
 | 990984~991004 | 0.3779 | **backtest** |
 | 990984~991005 | 0.1513 | **backtest** |
 | 990984~991070 | -0.23 | **backtest** |
+| 990984~992003 | -0.1584 | **backtest** |
 | 990984~992004 | -0.2502 | **backtest** |
+| 990984~992017 | 0.058 | **backtest** |
 | 990984~999094 | -0.0643 | **backtest** |
 | 991002~991003 | 0.1046 | **backtest** |
 | 991002~991004 | 0.3086 | **backtest** |
 | 991002~991005 | -0.4836 | **backtest** |
 | 991002~991070 | 0.1246 | **backtest** |
+| 991002~992003 | 0.0146 | **backtest** |
 | 991002~992004 | 0.4288 | **backtest** |
+| 991002~992017 | 0.7972 | **backtest** |
 | 991002~999094 | -0.0691 | **backtest** |
 | 991003~991004 | -0.1256 | **backtest** |
 | 991003~991005 | 0.0607 | **backtest** |
 | 991003~991070 | -0.1285 | **backtest** |
+| 991003~992003 | -0.1246 | **backtest** |
 | 991003~992004 | 0.1732 | **backtest** |
+| 991003~992017 | -0.085 | **backtest** |
 | 991003~999094 | -0.0232 | **backtest** |
 | 991004~991005 | -0.2354 | **backtest** |
 | 991004~991070 | -0.3237 | **backtest** |
+| 991004~992003 | 0.1576 | **backtest** |
 | 991004~992004 | -0.3429 | **backtest** |
+| 991004~992017 | 0.1742 | **backtest** |
 | 991004~999094 | 0.054 | **backtest** |
 | 991005~991070 | 0.1162 | **backtest** |
+| 991005~992003 | -0.0743 | **backtest** |
 | 991005~992004 | 0.1533 | **backtest** |
+| 991005~992017 | 0.1098 | **backtest** |
 | 991005~999094 | 0.2182 | **backtest** |
+| 991070~992003 | -0.1774 | **backtest** |
 | 991070~992004 | 0.4446 | **backtest** |
+| 991070~992017 | 0.1232 | **backtest** |
 | 991070~999094 | -0.1532 | **backtest** |
+| 992003~992004 | 0.0905 | **backtest** |
+| 992003~992017 | 0.1677 | **backtest** |
+| 992003~999094 | 0.3465 | **backtest** |
+| 992004~992017 | 0.342 | **backtest** |
 | 992004~999094 | -0.0437 | **backtest** |
+| 992017~999094 | 0.1536 | **backtest** |
 
 _Live and backtest correlations are different evidence quality -- live outranks backtest when both exist. Every pair not listed used corr=1.0 (fully additive, conservative)._
 
@@ -357,20 +441,20 @@ _Live and backtest correlations are different evidence quality -- live outranks 
 
 ## Account 463666728 -- Demo bundle 10 (DEMO)
 
-- magics (ACTIVE+PENDING_ATTACH): **19** | known DD95: **14** | UNKNOWN: **5**
-- UNKNOWN magics: 990067, 990069, 992001, 992003, 992017
+- magics (ACTIVE+PENDING_ATTACH): **17** | known DD95: **15** | UNKNOWN: **2**
+- UNKNOWN magics: 990067, 990069
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
-- **portfolio_DD_est = 72.95%**
-  - headroom vs budget: -47.95 pts (OVER BUDGET)
-- computed from 14/19 magics (5 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
+- **portfolio_DD_est = 84.37%**
+  - headroom vs budget: -59.37 pts (OVER BUDGET)
+- computed from 15/17 magics (2 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
 
 ## Account 415573666 -- Demo Mt5-2 (DEMO)
 
-- magics (ACTIVE+PENDING_ATTACH): **10** | known DD95: **10** | UNKNOWN: **0**
+- magics (ACTIVE+PENDING_ATTACH): **14** | known DD95: **14** | UNKNOWN: **0**
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
-- **portfolio_DD_est = 32.35%**
-  - headroom vs budget: -7.35 pts (OVER BUDGET)
-- computed from 10/10 magics (full coverage on this account)
+- **portfolio_DD_est = 40.10%**
+  - headroom vs budget: -15.10 pts (OVER BUDGET)
+- computed from 14/14 magics (full coverage on this account)
 
 ## Account 141049900 -- 01. Celestial Woodfire (REAL_CENT)
 
@@ -381,10 +465,11 @@ _Live and backtest correlations are different evidence quality -- live outranks 
 
 ## Account 159475669 -- Boss - Trend Swing (REAL_CENT)
 
-- magics (ACTIVE+PENDING_ATTACH): **2** | known DD95: **0** | UNKNOWN: **2**
-- UNKNOWN magics: 1524, 990005
+- magics (ACTIVE+PENDING_ATTACH): **13** | known DD95: **1** | UNKNOWN: **12**
+- UNKNOWN magics: 1524, 20240001, 8001, 8002, 8005, 8008, 8009, 8012, 8014, 8015, 990005, 99000512
 - budget: **not assigned** (REAL_CENT: computed/reported only -- NO budget assigned, user decision needed)
-- cannot compute -- 0/2 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.
+- **portfolio_DD_est = 1.88%**
+- computed from 1/13 magics (12 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
 
 ## Account 159503454 -- 08. Blazing Arrow (REAL_CENT)
 
@@ -399,18 +484,6 @@ _Live and backtest correlations are different evidence quality -- live outranks 
 - UNKNOWN magics: 1, 2, 5888, 990
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
 - cannot compute -- 0/4 magics on this account have known DD95 (all UNKNOWN). portfolio_dd_est is NOT a portfolio risk number here, it is absent.
-
----
-
-## Admission-function demo (PENDING_ATTACH candidates, illustrative only)
-
-This does not attach anything and does not touch DEPLOYMENTS.csv -- it shows what `admit_candidate()` currently says, for whoever reviews the actual attach. Decisions are SEQUENTIAL in inventory order: each one assumes every earlier granted candidate on the same account is attached at its granted lot -- they compose within the budget and are NOT independent alternatives.
-
-- **463666728 / magic 990025** (EA_SUPERTREND (crypto ST-BTC)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
-- **463666728 / magic 990030** (EA_DONCHIAN (crypto DON-ETH pyr3)): `DEFER_ESCALATE` -- existing portfolio already exceeds budget before adding this candidate -- not this EA's fault, escalate to user (pre-existing over-budget condition)
-- **463666728 / magic 992001** (TsMom_XAU (S2)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
-- **463666728 / magic 992003** (LondonORB_XAU (SS1 +trend filter)): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
-- **463666728 / magic 992017** (PivotBreakout_XAU): `CANNOT_RUN` -- candidate DD95 UNKNOWN (no expectations.csv row) -- admission function needs it before it can size anything
 
 ---
 
