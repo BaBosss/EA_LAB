@@ -10,6 +10,36 @@ No tester lane used by this session.
 
 ---
 
+## 0. DECIDED 2026-07-27 — and I had the priority wrong
+
+**The user answered both questions in §1, at the account level:** *NuiIndy — keep as is, no top-up.
+Account `159475669` as a whole — total loss accepted, knowingly, no action.* Asked in two layers,
+because 13 ACTIVE deployments share that margin pool, so a NuiIndy or MatchaGrid tail takes GoldReaper's
+8 legs down with it. **Do not reopen without new evidence.** → ORDER-373
+
+**And the correction that matters more than the decision:** I ranked this campaign top-priority because
+it said *real money*, **never because of the amount** — while the recon I commissioned said plainly
+`live balance = NOT FOUND`. Checked afterwards in two minutes: the account is `REAL_CENT`,
+`portfolio/monthly/*.csv` is not currency-normalised, so **NuiIndy's `+92.77` is ~$0.93/month**, and
+`ROADMAP.md` Phase 4 sets capital per portfolio at **10,000 cent ≈ $100**. The account the plan
+actually depends on — `159503454`, portfolio #1, feeder for the Jan-2027 prop gate — **has an explicit
+`kill_rule` on every one of its four EAs.** I spent two days' urgency on the uncertified ~$100 account.
+
+The findings stand; the claims were false and had to be withdrawn. The *ranking* was wrong.
+→ memory `pin-the-magnitude-before-calling-it-urgent`.
+
+**Corrected priority for whoever picks this up:** ORDER-370 first (it is the path by which a stale
+binary reaches portfolio #1), then ORDER-371. **ORDER-372 I withdraw myself** — the reusable lesson
+("a %-of-balance cut ratchets, it cannot floor an account") is carried by the balance ladder
+`10,521 → 1,326` alone and does not depend on the endpoint-contaminated net comparison at all, so
+extending the window buys precision on a verdict nobody will act on, at the cost of a contended tester
+lane. Send it to backlog, not the run queue.
+
+**Bookkeeping debt left open on purpose:** `kill_rule` is **empty on 12 rows** of that account
+(MatchaGrid · GoldReaper ×8 · LondonConso 99000512 · BRK_XAU 991001). Empty reads as *undecided*, not
+as *decided and accepted* — and an empty field is exactly what let "free tail-insurance" survive nine
+days. Fill it with something true (`USER-ACCEPTED total-loss 2026-07-27`) before closing ORDER-373.
+
 ## 1. The two things only the user can decide → **ORDER-373**
 
 Both live on **REAL_CENT 159475669**, both user-mix (`ATTESTATION_MAP` confidence `none`), and for
