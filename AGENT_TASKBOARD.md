@@ -1608,3 +1608,13 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
   **ทางแก้ที่ user เลือกไว้แล้วและจะทำเอง:** เปิด `D:\Monitor\MT5 - 463666728\terminal64.exe /portable`
   แล้ว login 463666728 (Exness-MT5Trial17) ติ๊ก save password **ครั้งเดียว** → ให้เหมือนอีก 5 ตัว
   (ไม่ต้องแก้โค้ด ไม่ต้องก๊อป credential). หลังทำแล้ว rotation รอบถัดไปควรได้ **6/6 floating FRESH**.
+- **(4) [ใหม่ 2026-07-27] `69424711` (MT4) เป็นโรคเดียวกัน — จะ STALE เย็นนี้ 19:40 ถ้าไม่แก้พร้อมกัน.**
+  รัน rotation เต็มรอบเพื่อ verify สคริปต์ แล้วเจอว่า EA โหลดปกติ (`Expert OrdersExporterMT4 ... loaded
+  successfully` 11:16:45) แต่ 3 วินาทีถัดมามันเขียน **`EA_LAB_mt4_orders_0.csv`** (11:16:48) = **login 0
+  ไม่ได้ authorize** → collector skip ถูกต้อง ("skipped (login=0, terminal not authorized)").
+  ไฟล์จริงของบัญชีนี้ค้างที่ **2026-07-26 17:40** ซึ่งคือ session ที่ user เปิดมือ — เหมือน 463666728 เป๊ะ
+  (login ไม่ติดในโฟลเดอร์ที่ rotation ใช้). floating ของมันยัง FRESH เพราะอายุ 17.8h ยังไม่ชนบาร์ 26h
+  แต่จะกลายเป็น **STALE เวลา 2026-07-27 19:40** ⇒ ถ้า user ไม่ login ตัวนี้ด้วยคืนนี้ พรุ่งนี้จะ **blind 2 บัญชี**
+  ไม่ใช่ 1. **ทำพร้อมกันตอนแก้ 463666728: เปิด `D:\Monitor\MT4 - 69424711\terminal.exe /portable` แล้ว
+  login 69424711 ติ๊ก save.** *(หมายเหตุ: handoff บันทึกว่า "user แก้ login 69424711 แล้ว 07-26" — แก้จริง
+  แต่แก้ในบริบทที่ rotation เอาไปใช้ต่อไม่ได้ จึงยังไม่ปิด.)*

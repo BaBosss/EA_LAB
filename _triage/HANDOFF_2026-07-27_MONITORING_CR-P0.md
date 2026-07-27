@@ -29,7 +29,11 @@
   were BLIND now emit floating. Current state: **6/6 health FRESH, 4/6 floating FRESH.**
 
 **CR-P0 user-manual (done by user):** 69424711 login (was never logged in) + 463666728 login
-(had dropped) both fixed 2026-07-26. Key lesson confirmed: a new demo account would NOT have fixed
+(had dropped) both fixed 2026-07-26. **⚠️ CORRECTION 2026-07-27 (ORDER-400): "fixed" ที่นี่หมายถึง
+บัญชีต่อ server ได้แล้วเท่านั้น — login ไม่ได้ถูกบันทึกในโฟลเดอร์/โหมดที่ `monitor_rotation.ps1` ใช้
+จึงยังไม่ทำงานอัตโนมัติ. ทั้งสองบัญชียัง login=0 ตอน rotation (463666728 = BLIND อยู่แล้ว ·
+69424711 เขียน `EA_LAB_mt4_orders_0.csv` และจะ STALE 07-27 19:40). ทั้งคู่ต้อง login ซ้ำแบบ
+`/portable` ครั้งเดียวจึงจะปิดจริง.** Key lesson confirmed: a new demo account would NOT have fixed
 69424711 — the problem was terminal↔server reach + investor password, not the account. Account kept,
 its 5 unique deployments preserved.
 
@@ -78,6 +82,7 @@ the daily rotation snapshot is once/day and near-useless for live position risk)
 | floating BLIND 463666728 — **สาเหตุที่เดาไว้ (symbol) ผิด**; จริง = ไม่มี saved login ในโฟลเดอร์ portable | ORDER-400 (OPEN, รอ user login `/portable` ครั้งเดียว) |
 | floating BLIND 415573666 — **สาเหตุที่เดาไว้ (EA ไม่ attach) ผิด**; จริง = update-day `/config` path ถูกตัดที่ช่องว่าง + rotation ปล่อย orphan | DONE (`c297295d`, verified 4/6→5/6) |
 | rate_flag Gold_Kangaroo L1-4 reconcile (expectation-basis) | DONE (`c297295d`, basket-vs-leg unit mismatch) |
+| **[ใหม่] 69424711 (MT4) login=0 ตอน rotation — โรคเดียวกับ 463666728, จะ STALE 2026-07-27 19:40** | ORDER-400 (OPEN, รอ user login `/portable` ครั้งเดียว) |
 | CR-P0 exporter merge (built · compiled · deployed · proven live 4/6) | DONE |
 | CR-P0 user logins 69424711 + 463666728 | DONE |
 | CR-TRACK Phase-1 (CR-003a/b · CR-002c/d · CR-TOOL-01 · CR-005-lite-b) | DONE |
