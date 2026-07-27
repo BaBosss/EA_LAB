@@ -1806,3 +1806,72 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 **Prohibitions:** write a verdict, or the words pass/dead/died · **run Model 4 on 5c** (no tick cache — the run is meaningless, not merely slow) · report Model 2 numbers · **touch the 2026 window in any way** (holdout burned) · sweep `_01_LookbackBars` (proven inert) · change any input the STEP does not name · modify anything under `_vps_deploy/` — copy out, never edit in place · quote ORDER-205's 1.08 as the control instead of re-running it · draw a conclusion about GBPJPY or EURJPY from this order · touch scorecard / `EA_MASTER_INDEX.csv` / `EDGE_CATALOG.md` / `PROJECT_STATE.md` / `VISION.md` / `B1_DATASET.csv` · touch any `.mq5`
 
 **What the lead does with the result:** if a configuration clears MAIN ≥ 1.2 with BWD ≥ 1.0 on a plateau rather than a spike, USDJPY H4 becomes a second validated home for the MacdDiv mechanism alongside XAU (999094, already DEMO-eligible) and enters the deploy funnel — with a correlation check against the XAU leg before anything is attached. If nothing clears, USDJPY stays `BUILD-ON`: the ceiling of this home will then have been measured once, which is more than is true today.
+
+---
+
+## ORDER-432 — [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in first-lot sizing and the Wave5 naked-order guard — `OPEN` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
+**bars:** N-A (defect repair on the money path, not an EA measurement) · **flat-lot probe:** N-A
+
+**Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §1 — full finding list with file:line. Codex task `task-ms327ah8-0mtnut`, blind (it never saw the Claude-side reasoning). ORDER-187 was `DONE(2026-07-24) — waiting on Codex blind-audit`; the audit is now in and **the order may not be called closed.**
+
+**Why Claude and not a worker:** every item below is money logic with no verification cage yet, which `CLAUDE.md` assigns to the seat itself. **Do not delegate this to qwen or Sonnet.**
+
+**The three High items, in the order they should be fixed** (fix, then build the cage that proves the fix — cage before close, per ORDER-341/370 precedent):
+1. **Wave5 sizes from the wrong side of the spread.** `g_wave5_entry_ref` stores bid for a long / ask for a short (`core/entries/Entry_Wave5.mqh:82,:114`) while the entry executes at ask for a long / bid for a short (`core/LabCore.mqh:381`). Mode 42 sizes off that reference (`core/ExitManager.mqh:94`, `core/MoneyManagement.mqh:215`) ⇒ **the position is larger than the requested risk**, by the spread plus any drift between signal and send. Worked example in the evidence file.
+2. **A failed ATR read becomes a legal zero buffer.** `CopyBuffer` failure returns `0.0` (`core/Indicators.mqh:101`) and Wave5 multiplies it unchecked (`Entry_Wave5.mqh:102`) ⇒ on the first tick after attach the SL buffer silently vanishes and `Wave5_SLValid` can still approve (`ExitManager.mqh:25`). **Opening on a value that failed to read is the exact thing "fail closed" was supposed to prevent.**
+3. **The naked-order guard is switchable off by a legal config.** With `_17_UseStructLevels=false` (`core/Inputs.mqh:292`) plus `SLMode=30`, `Lab_OpenOrder` sends `sl=0` (`LabCore.mqh:383`) and nothing detects it afterwards. **Give the honest version its due:** with the flag true the guard is genuinely *preventive*, checked twice before send, exposure window zero. The defect is the reachable off-path, not the design.
+
+**Then the three Medium items** (4: adaptive sizing and the deposit-load gate fail **open** on an unreadable balance · 5: a failed volume-step lookup invents `0.01` and can open a smaller size than intended · 6: the guard has no fired-counter, so "no signal", "rejected everything" and "never ran" are indistinguishable in a report).
+
+**🔴 Item 6 is the one that changes how everything else is judged.** Per the VERDICT GATE guard clause, a guard reported without a fire count is `UNTESTED` and must not be written up as passed. `scripts/mm_lotmode_test.ps1:142` currently accepts **any** zero-entry report as a fail-closed pass without proving which guard produced the zero — so the existing evidence cannot distinguish a working guard from an absent one. **Fix the counter first if you want the rest of the testing to mean anything.**
+
+**STEP 1:** reproduce each High item as a failing test **before** changing any code. **STEP 2:** fix. **STEP 3:** re-run `scripts/tpl_regression.ps1` (mandatory after any `ea_template/core/` edit) plus a Wave5 run under `FirstLotMode=42`, which has never been run — `TPLREG_Boss_17_Wave5.htm:63` shows the only existing report uses mode 41.
+
+**ห้าม / Prohibitions:** call ORDER-187 closed before every High item has a test that fails without the fix · delegate to qwen/Sonnet · edit `ea_template/core/` without running `tpl_regression.ps1` in the same session · touch a live account or any `_vps_deploy/` bundle · treat "zero trades in the report" as proof a guard fired · accept Codex's findings without reproducing them — **it audited the code, it did not run the EA**
+
+---
+
+## ORDER-433 — [portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg series instead — `OPEN` · runnable by: **Claude/Opus** (Codex may build once the design is ratified) · 👉 recommended: Claude
+**bars:** N-A (measurement-model correction) · **flat-lot probe:** N-A
+
+**Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §2. Codex task `task-ms3274w9-ojqwj2`, blind. **This closes the audit half of ORDER-233 and replaces it with a build.**
+
+**What the audit actually did — worth knowing before reading the conclusion:** the brief offered a binary (assume corr 1.0, or use a single-leg proxy) and Codex **rejected the framing**, because both second-leg reports already exist and the merge scripts name the exact pairs (`_mt5_auto/ichi_basket_merge_mc.ps1:18`, `_mt5_auto/xau_basket_merge_mc.ps1:14`). It then reconstructed the numbers read-only rather than arguing about them:
+
+| variant | account 463666728 |
+|---|---|
+| flag OFF | 73.0437% |
+| flag ON (current representative legs) | 38.3556% |
+| **true summed two-leg series** | **37.7484%** |
+| three other legitimate-looking representative choices | 33.58% · 40.96% · 35.56% |
+
+**The 38.36% is 0.61 points conservative of the true value by coincidence, not by construction** — representative choice alone moves the same basket DD95 across **7.38 points**. That is what disqualifies the proxy as a default, and it is a stronger reason than the unit-mismatch argument the brief was built on.
+
+**The work:** construct the summed two-leg monthly series keyed `basket::<id>` and correlate **that** against the portfolio, for both IchiADX baskets. Then re-run the admission on account 463666728 and expect ≈37.75%.
+
+**Also fix (latent, no observed failure yet):** `scripts/portfolio_risk_admission.py:253` never validates that `unit_keys` covers every represented basket. `DD95={L1:10,L2:10}` both in basket `BX` with `unit_keys={}` returns **20.0%** where canonical keys return **10.0%**. Current callers happen to pass complete maps — add the validation before one does not.
+
+**🔴 `--resolve-single-leg-baskets` stays OFF and does not become the default.** That rule was pre-registered and does not depend on the audit agreeing with it. Once the combined series exists the flag should be **retired**, not flipped — it is a proxy for something the repo can now compute exactly.
+
+**On the multi-leg case deliberately left unchanged:** the audit calls the split inconsistent as production policy — how many rows happen to carry a known DD95 is a storage property, and both cases are still multi-leg economic baskets. Under the combined-series fix the inconsistency disappears on its own.
+
+**ห้าม / Prohibitions:** flip the default on the strength of this audit · backfill 992001 TsMom DD95 (still deliberately UNKNOWN — no MC was ever run) · map 991001 backtest-corr while CR-002's config-lineage question is open (that would launder it into a correlation number) · report a portfolio number without saying which variant produced it
+
+---
+
+## ORDER-434 — [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D stays gated — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (data-provenance defect) · **flat-lot probe:** N-A
+
+**Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §3. Codex task `task-ms327laa-b45mly`, blind. Verdict: the Phase A/C evidence does not support Phase D even being considered.
+
+**🔴 Fix this one first — it is live right now, and it is a repeat.** `scripts/mris/mris_macro_feeder.ps1:122-166` discards the FRED observation date, takes the last value, and writes `asof = (Get-Date)` with `data_status = OK`; the scorer trusts that timestamp (`scripts/mris/mris_crisis_models.ps1:31-41,63`). Proof from live files: `portfolio/mris/barometer_snapshot_macro.csv:6` says HY_OAS is `OK, 2026-07-27 07:37` while the cache behind it ends **2026-07-23** (`portfolio/mris/webfeed_cache/BAMLH0A0HYM2.csv:796`). **A four-day-old credit reading is being presented as this morning's.** The repo already owns this lesson twice — `macrogate-validated-on-broken-input` and `absolute-price-constant-poisons-backtests` — and the rule from it is: **when the data layer is fixed, go back and re-examine every verdict that ate that data.**
+
+**The rest, in priority order:** point-in-time replay (`mris_crisis_backtest.ps1:51-68,96-113` downloads the *current* FRED history with no vintage, so later publications and revisions are credited to earlier dates — validation optimistic in the dangerous direction) · replay artifacts unbound to the audited code, and COVID CREDIT_STRESS running at coverage 0.65 throughout where a score of 66 is ≈42.9 if the missing 35% contributed zero (**active in replay, forming live**) · in-sample validation, stated in the config itself (`crisis_models.json:4,:26`) · the absolute US10Y `3.5→5.0` threshold (`:16`), under which an identical rate shock scores zero in a low-rate regime and a full 20 in a high-rate one.
+
+<sub>Checked explicitly and clean: **no raw-price pin of the `user_pin=110` kind survives** — WTI, SP500 and CREDITPX all use relative measures (`crisis_models.json:18,30-31,39-43`). That specific wound is closed; US10Y/MOVE/VIX/HY remain absolute but are at least regime-*parameters* rather than a single instrument's price.</sub>
+
+**Missing test:** the spec requires a **2024 carry-unwind** replay (`_triage/ORDER200_MRIS_MACRO_EXTENSION_SPEC.md:16-18,60-62`) and `portfolio/mris/backtest/crisis_carry_unwind_2024.csv` does not exist — **verified independently 2026-07-27 by listing the directory**; do not be fooled by `regime_carry_unwind_2024.csv`, which is the other family. And the sensitivity test only asks whether the peak reaches 60, never when — so a model that fires only after the damage still passes. In COVID it first activates March 6, having stayed under 60 through March 5.
+
+**🔴 ORDER-200 Phase D remains gated on this audit PLUS user ratification.** The audit says no, so the question does not reach the user yet. Nothing about this order authorises folding crisis scores into the real-money MacroGate path.
+
+**ห้าม / Prohibitions:** let any crisis score touch a money path before this order closes · treat a `data_status = OK` as evidence of freshness anywhere until the feeder is fixed · quote replay numbers from `portfolio/mris/backtest/*.csv` as validation while they remain untracked and unbound to a commit · rewrite history-bound one-shot scripts to hide what past runs actually did

@@ -121,8 +121,26 @@ independent.
 | 2 | `ORDER-187` fail-closed first-lot sizing + Wave5 naked-order guard — **money path, mandatory** | `task-ms327ah8-0mtnut` |
 | 3 | `ORDER-200` Phase A/C MRIS crisis models — gates Phase D | `task-ms327laa-b45mly` |
 
-**Collect with `/codex:status <task-id>`.** They were dispatched at ~17:05 and **no result had come back
-before this handoff was written — do not assume any of them passed.**
+**✅ UPDATE 17:40 — all three came back ~10 minutes after dispatch, and NONE passed.** The lane was
+reopened on user instruction to record them rather than leave a money-path finding sitting in a plugin
+cache. Full findings with file:line: **`_triage/CODEX_AUDIT_RESULTS_2026-07-27.md`**. Follow-up orders:
+
+| audit | verdict | now tracked as |
+|---|---|---|
+| 1 — single-leg-basket correlation | not legitimate as the canonical input; the framing was wrong, and the real fix is buildable today | `ORDER-433` |
+| 2 — first-lot sizing + Wave5 guard | **NOT closed** — 3 High, 3 Medium, all money path | `ORDER-432` |
+| 3 — MRIS crisis models | evidence does not support Phase D being considered; one live blocker | `ORDER-434` |
+
+Retrieve the full text any time with `/codex:result <task-id>`. Note these ran through the **Codex CLI
+companion in this repo, not Codex Desktop** — Desktop's task list will show nothing, which is expected,
+not a failure.
+
+<sub>Two things the audits did that are worth imitating in future briefs: audit 1 **rejected the question
+as framed** (the brief offered corr-1.0 versus single-leg proxy; the answer was that both are wrong when
+the real two-leg series is already on disk) and then produced its own numbers read-only instead of
+arguing. Audit 2 separated "the design is wrong" from "a legal config reaches a bad path", and credited
+the guard's protected path as genuinely preventive. Neither was reachable from a brief that told them
+what we already thought — the blind framing paid for itself.</sub>
 
 🔴 **Two rules that survive whatever Codex says:** the `--resolve-single-leg-baskets` default **must not
 be flipped on Codex's word alone** (user ratification required, same precedent as ORDER-200 Phase D), and
@@ -133,8 +151,11 @@ the conversation, not the change.
 
 ## 5. Next session should start here
 
-1. **Collect the three Codex tasks** in §4 before starting anything new. Judge them yourself — Codex
-   produces evidence, not verdicts.
+1. **`ORDER-432` before anything else — it is the money path.** The three High items are reproducible
+   from file:line; reproduce each as a failing test *before* touching code, and fix the fired-counter
+   (item 6) first, because until a guard can report that it fired, none of the other testing on it means
+   anything. **Do not delegate this to qwen or Sonnet** — money logic with no cage is seat work.
+   Then `ORDER-434` (its blocker is live right now), then `ORDER-433`.
 2. **Hand the user the §3 red table.** It is the highest-value thing in this document; ORDER-400 alone is
    about ten minutes of their time and un-blinds two accounts.
 3. **Route `ORDER-430` and `ORDER-431` to oc-qwen or ZCode.** Both are self-contained with pre-registered
@@ -149,9 +170,12 @@ the conversation, not the change.
 | Host search that unblocks the caged lever pair | ORDER-430 |
 | MacdDiv_Naked USDJPY H4 optimize | ORDER-431 |
 | Lever A/B, still blocked until 430 finds a host | ORDER-236 |
-| Codex audit 1 — single-leg-basket correlation resolution | ORDER-233 |
-| Codex audit 2 — fail-closed first-lot sizing (money path) | ORDER-187 |
-| Codex audit 3 — MRIS crisis models, gates Phase D | ORDER-200 |
+| Codex audit 1 — audit half done; replaced by a build | ORDER-233 |
+| Build the combined two-leg basket series; retire the proxy flag | ORDER-433 |
+| Codex audit 2 — came back NOT closed | ORDER-187 |
+| Repair the 3 High + 3 Medium money-path defects | ORDER-432 |
+| Codex audit 3 — Phase D not supported | ORDER-200 |
+| Fix the stale-relabelled-fresh feeder and the replay evidence | ORDER-434 |
 | User: `/portable` logins for the two blind accounts | ORDER-400 |
 | User: read VPS binary hash + mtime before any rebuild | ORDER-410 |
 | User: cent-vs-USD on account 463666728 | ORDER-230 |

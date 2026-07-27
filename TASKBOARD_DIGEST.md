@@ -9,7 +9,7 @@
 > **`อยู่ที่` = ACTIVE** → ยังอยู่บน `AGENT_TASKBOARD.md` (ยังไม่ปิด หรือปิดแล้วแต่ยังไม่ได้ย้าย)
 > **`อยู่ที่` = ARCHIVE** → เนื้อเต็มอยู่ใน `ARCHIVE_TASKBOARD_2026-07A.md`
 
-- order ทั้งหมด: **280** · ยังอยู่บนบอร์ด: **44** · เข้าคลังแล้ว: **236**
+- order ทั้งหมด: **283** · ยังอยู่บนบอร์ด: **47** · เข้าคลังแล้ว: **236**
 
 | order | ปิดเมื่อ | สถานะ | เรื่อง | ผลลัพธ์ | อยู่ที่ |
 |---|---|---|---|---|---|
@@ -289,6 +289,9 @@
 | ORDER-421 |  | OPEN | [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ |  | ACTIVE:113 |
 | ORDER-430 |  | OPEN | [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged lever… |  | ACTIVE:1695 |
 | ORDER-431 |  | OPEN | [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never… |  | ACTIVE:1767 |
+| ORDER-432 |  | OPEN | [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in fi… |  | ACTIVE:1812 |
+| ORDER-433 |  | OPEN | [portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg s… |  | ACTIVE:1834 |
+| ORDER-434 |  | OPEN | [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D… |  | ACTIVE:1862 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:635 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
