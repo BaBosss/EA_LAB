@@ -8,14 +8,16 @@
 
 Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3)). REAL_CENT accounts: computed/reported only, **no budget assigned -- user decision needed**.
 
-## Correlation coverage (ORDER-174): **452/1540 pairs measured** (0 live, 452 backtest) -- **1088 pairs on the conservative default 1.0**
+## Correlation coverage (ORDER-174): **515/1540 pairs measured** (0 live, 515 backtest) -- **1025 pairs on the conservative default 1.0**
 
 | pair | corr | source |
 |---|---|---|
 | 990020~990025 | -0.0731 | **backtest** |
 | 990020~990030 | 0.2431 | **backtest** |
 | 990020~990066 | 0.0236 | **backtest** |
+| 990020~990067 | -0.0994 | **backtest** |
 | 990020~990068 | 0.6985 | **backtest** |
+| 990020~990069 | 0.0949 | **backtest** |
 | 990020~990101 | -0.0498 | **backtest** |
 | 990020~990103 | -0.2414 | **backtest** |
 | 990020~990110 | -0.1075 | **backtest** |
@@ -44,7 +46,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990020~999094 | 0.2051 | **backtest** |
 | 990025~990030 | -0.0265 | **backtest** |
 | 990025~990066 | -0.258 | **backtest** |
+| 990025~990067 | -0.1163 | **backtest** |
 | 990025~990068 | 0.0482 | **backtest** |
+| 990025~990069 | 0.0597 | **backtest** |
 | 990025~990101 | 0.0774 | **backtest** |
 | 990025~990103 | -0.1797 | **backtest** |
 | 990025~990110 | -0.1065 | **backtest** |
@@ -72,7 +76,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990025~992017 | -0.0538 | **backtest** |
 | 990025~999094 | 0.1042 | **backtest** |
 | 990030~990066 | -0.0952 | **backtest** |
+| 990030~990067 | 0.1778 | **backtest** |
 | 990030~990068 | 0.1658 | **backtest** |
+| 990030~990069 | 0.3035 | **backtest** |
 | 990030~990101 | 0.1691 | **backtest** |
 | 990030~990103 | 0.1226 | **backtest** |
 | 990030~990110 | -0.5483 | **backtest** |
@@ -99,7 +105,9 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990030~992004 | 0.1889 | **backtest** |
 | 990030~992017 | 0.4648 | **backtest** |
 | 990030~999094 | 0.0831 | **backtest** |
+| 990066~990067 | 0.3812 | **backtest** |
 | 990066~990068 | 0.004 | **backtest** |
+| 990066~990069 | 0.026 | **backtest** |
 | 990066~990101 | 0.0521 | **backtest** |
 | 990066~990103 | -0.1796 | **backtest** |
 | 990066~990110 | 0.3796 | **backtest** |
@@ -126,6 +134,35 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990066~992004 | 0.4008 | **backtest** |
 | 990066~992017 | -0.2128 | **backtest** |
 | 990066~999094 | -0.0531 | **backtest** |
+| 990067~990068 | -0.0123 | **backtest** |
+| 990067~990069 | -0.1364 | **backtest** |
+| 990067~990101 | 0.2278 | **backtest** |
+| 990067~990103 | 0.215 | **backtest** |
+| 990067~990110 | -0.4449 | **backtest** |
+| 990067~990120 | -0.137 | **backtest** |
+| 990067~990201 | -0.3225 | **backtest** |
+| 990067~990202 | -0.442 | **backtest** |
+| 990067~990203 | 0.0611 | **backtest** |
+| 990067~990204 | -0.0372 | **backtest** |
+| 990067~990205 | -0.1657 | **backtest** |
+| 990067~990206 | 0.6241 | **backtest** |
+| 990067~990207 | 0.1408 | **backtest** |
+| 990067~990208 | -0.6307 | **backtest** |
+| 990067~990301 | -0.0164 | **backtest** |
+| 990067~990302 | -0.0677 | **backtest** |
+| 990067~990303 | 0.1226 | **backtest** |
+| 990067~990984 | 0.1457 | **backtest** |
+| 990067~991002 | -0.0247 | **backtest** |
+| 990067~991003 | 0.1649 | **backtest** |
+| 990067~991004 | -0.0694 | **backtest** |
+| 990067~991005 | -0.2501 | **backtest** |
+| 990067~991070 | -0.254 | **backtest** |
+| 990067~992001 | -0.177 | **backtest** |
+| 990067~992003 | 0.0585 | **backtest** |
+| 990067~992004 | 0.1381 | **backtest** |
+| 990067~992017 | -0.1982 | **backtest** |
+| 990067~999094 | 0.1311 | **backtest** |
+| 990068~990069 | -0.0294 | **backtest** |
 | 990068~990101 | 0.1222 | **backtest** |
 | 990068~990103 | 0.01 | **backtest** |
 | 990068~990110 | -0.0249 | **backtest** |
@@ -152,6 +189,32 @@ Budget rule: DEMO accounts = **25%** of equity (fixed project number (docs/JUDGE
 | 990068~992004 | 0.3941 | **backtest** |
 | 990068~992017 | 0.4945 | **backtest** |
 | 990068~999094 | 0.4103 | **backtest** |
+| 990069~990101 | 0.0305 | **backtest** |
+| 990069~990103 | -0.3055 | **backtest** |
+| 990069~990110 | -0.3375 | **backtest** |
+| 990069~990120 | 0.1424 | **backtest** |
+| 990069~990201 | -0.5168 | **backtest** |
+| 990069~990202 | 0.2427 | **backtest** |
+| 990069~990203 | -0.1949 | **backtest** |
+| 990069~990204 | -0.218 | **backtest** |
+| 990069~990205 | -0.4275 | **backtest** |
+| 990069~990206 | 0.5157 | **backtest** |
+| 990069~990207 | 0.2341 | **backtest** |
+| 990069~990208 | -0.0313 | **backtest** |
+| 990069~990301 | -0.0795 | **backtest** |
+| 990069~990302 | -0.0796 | **backtest** |
+| 990069~990303 | 0.0397 | **backtest** |
+| 990069~990984 | 0.0368 | **backtest** |
+| 990069~991002 | -0.228 | **backtest** |
+| 990069~991003 | -0.2676 | **backtest** |
+| 990069~991004 | 0.0244 | **backtest** |
+| 990069~991005 | -0.3069 | **backtest** |
+| 990069~991070 | 0.3097 | **backtest** |
+| 990069~992001 | 0.3377 | **backtest** |
+| 990069~992003 | -0.1009 | **backtest** |
+| 990069~992004 | 0.6641 | **backtest** |
+| 990069~992017 | 0.205 | **backtest** |
+| 990069~999094 | -0.0684 | **backtest** |
 | 990101~990103 | 0.2894 | **backtest** |
 | 990101~990110 | -0.131 | **backtest** |
 | 990101~990120 | 0.587 | **backtest** |
@@ -474,8 +537,8 @@ _Live and backtest correlations are different evidence quality -- live outranks 
 - magics (ACTIVE+PENDING_ATTACH): **17** | known DD95: **15** | UNKNOWN: **2**
 - UNKNOWN magics: 990067, 990069
 - budget: **25.0%** of equity (fixed project number (docs/JUDGE_DAY_RUNBOOK.md "Sizing" step 3))
-- **portfolio_DD_est = 84.37%**
-  - headroom vs budget: -59.37 pts (OVER BUDGET)
+- **portfolio_DD_est = 56.64%**
+  - headroom vs budget: -31.64 pts (OVER BUDGET)
 - computed from 15/17 magics (2 UNKNOWN excluded from the sum, not zeroed) -- treat as a PARTIAL number, not full coverage
 
 ## Account 415573666 -- Demo Mt5-2 (DEMO)

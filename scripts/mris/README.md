@@ -72,6 +72,22 @@ As of the 2026-07-17 hardening the web feeder owns **every** row:
   `sma200` can carry contract-roll steps. The classifier only uses gold/copper **`chg5d`**
   (single-contract window) for their signals, not their SMA200 — so this does not affect the
   regime read; treat their stored `sma200` as indicative only.
+- **`asof` = the time the OBSERVATION is for, not the time it was fetched** (ORDER-434,
+  2026-07-27). It used to be `(Get-Date)` in both feeders, which meant the age-gate below was
+  comparing the feeder's own clock against itself and could never fire however old the data
+  was — measured live: HY_OAS was stamped `OK, 2026-07-27 07:37` on a value whose FRED
+  observation date was `2026-07-23`. Daily series carry no intraday time, so they stamp
+  `00:00` of the observation day: that reads slightly *older* than the truth, which is the
+  safe direction for a freshness gate. `data_status` is unchanged and still means
+  fetched (`OK`) vs served-from-cache (`STALE`) — that is the question the fetch clock
+  answers. **Both `barometer_snapshot.csv` and `barometer_snapshot_macro.csv` now use this
+  meaning**; cage `scripts/_test/run_mris_asof_tests.ps1` runs the same battery against both
+  feeders so the two copies of `New-AsOfStamp` cannot drift apart in behaviour.
+  <br>⚠️ A consequence worth knowing before reading a snapshot: an `asof` several days back is
+  normal for a series that only prints on business days, and `^MOVE` has been observed
+  returning bars for days whose closes are all null — so "last bar in the payload" and "last
+  bar with a value" can be a week apart. The stamp follows the value, which is the bar `spot`
+  actually came from.
 - **Freshness / resilience:** every row carries an `asof` stamp. A fetch failure falls back
   to a fresh per-symbol JSON cache (`portfolio\mris\webfeed_cache\`, <20h); with neither fresh
   data nor cache the row is tagged `STALE`. The classifier **excludes** any non-OK row *and*

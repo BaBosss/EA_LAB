@@ -53,8 +53,9 @@ if (-not $RepoRoot) {
 }
 
 $feeder = Join-Path $RepoRoot 'scripts\mris\mris_macro_feeder.ps1'
+$webfeeder = Join-Path $RepoRoot 'scripts\mris\mris_web_feeder.ps1'
 $scorer = Join-Path $RepoRoot 'scripts\mris\mris_crisis_models.ps1'
-foreach ($p in @($feeder, $scorer)) { if (-not (Test-Path $p)) { throw "missing: $p" } }
+foreach ($p in @($feeder, $webfeeder, $scorer)) { if (-not (Test-Path $p)) { throw "missing: $p" } }
 
 # ---- lift the real functions out of the real files (no main loop, no network) ----
 # Returns the SOURCE TEXT of EVERY function in the file, and asserts the ones this cage
@@ -83,11 +84,26 @@ function Get-FunctionSource {
 
 $feederSrc = Get-FunctionSource -Path $feeder -Require @('Compute-RowFred', 'Compute-RowYahoo', 'Compute-RowRatio', 'Get-CloseMap')
 $scorerSrc = Get-FunctionSource -Path $scorer -Require @('EffStatus')
+# The VALIDATED-path feeder. It was missed on the first pass (found by /scrutinize
+# 2026-07-27): mris_macro_feeder.ps1 owns the ADVISORY macro snapshot, while this one
+# owns barometer_snapshot.csv -- the snapshot mris_classify.ps1 age-gates to produce the
+# Risk Index, and the one mris_crisis_models.ps1 reads US10Y and VIX from. Fixing only
+# the advisory feeder left 55% of YIELD_SHOCK's weight (rate_level 0.20 +
+# rate_momentum 0.35, both US10Y) on the fetch clock inside the model that was called
+# fixed. Its Compute-Row is renamed here so both can be exercised in one session.
+$webSrc = Get-FunctionSource -Path $webfeeder -Require @('Compute-Row')
 foreach ($t in $feederSrc.Values) { . ([ScriptBlock]::Create($t)) }
 foreach ($t in $scorerSrc.Values) { . ([ScriptBlock]::Create($t)) }
-$nFeeder = $feederSrc.Count
-$nScorer = $scorerSrc.Count
-Write-Host ("extracted {0} feeder function(s) + {1} scorer function(s) from source" -f $nFeeder, $nScorer)
+foreach ($k in $webSrc.Keys) {
+    $text = $webSrc[$k]
+    if ($k -eq 'Compute-Row') {
+        # rename ONLY the definition line so it cannot collide with the macro feeder's
+        # own helpers; the body is untouched, so this still tests the shipped text.
+        $text = [regex]::Replace($text, '^\s*function\s+Compute-Row\b', 'function Web-ComputeRow', 'Multiline')
+    }
+    . ([ScriptBlock]::Create($text))
+}
+Write-Host ("extracted {0} macro-feeder + {1} web-feeder + {2} scorer function(s) from source" -f $feederSrc.Count, $webSrc.Count, $scorerSrc.Count)
 
 $script:pass = 0
 $script:fail = 0
@@ -191,6 +207,28 @@ Assert-Equal 'Yahoo spot'      7   $yStale.spot
 Assert-Equal 'Yahoo sma200'    4   $yStale.sma200
 Assert-Equal 'Yahoo atr20'     2   $yStale.atr20
 Assert-Equal 'Yahoo chg5d_pct' 250 $yStale.chg5d_pct
+
+Write-Host ''
+Write-Host '=== mris_web_feeder.ps1 -- the VALIDATED snapshot, missed on the first pass ==='
+# This feeder owns barometer_snapshot.csv, which mris_classify.ps1 age-gates into the
+# Risk Index and which mris_crisis_models.ps1 reads US10Y + VIX from. It is the higher-
+# stakes of the two feeders, and it had the identical defect.
+$wStale = Web-ComputeRow -Symbol 'US10Y_TEST' -Note 'n' -RawJson (New-YahooJson -LastDate $STALE_DATE -Closes $SERIES) -FromCache $false
+Assert-Equal 'stale web feed: asof carries the last BAR date, not the fetch time' `
+    $STALE_DATE.ToString('yyyy-MM-dd') ("$($wStale.asof)".Split(' ')[0])
+$wFresh = Web-ComputeRow -Symbol 'US10Y_TEST' -Note 'n' -RawJson (New-YahooJson -LastDate $FRESH_DATE -Closes $SERIES) -FromCache $false
+Assert-Equal 'fresh web feed: today bar still reports today (specificity)' `
+    $FRESH_DATE.ToString('yyyy-MM-dd') ("$($wFresh.asof)".Split(' ')[0])
+Write-Host '   -- numeric regression on the validated path (same series, same maths) --'
+Assert-Equal 'web spot'      7   $wStale.spot
+Assert-Equal 'web sma200'    4   $wStale.sma200
+Assert-Equal 'web atr20'     2   $wStale.atr20
+Assert-Equal 'web chg5d_pct' 250 $wStale.chg5d_pct
+$MaxAgeHours = 48
+Assert-Equal 'the classifier gate can fire on the validated snapshot too' `
+    'STALE_AGED' (EffStatus $wStale)
+Assert-Equal 'and stays quiet when that snapshot is fresh (specificity)' `
+    'OK' (EffStatus $wFresh)
 
 Write-Host ''
 Write-Host '=== ratio feed (CREDITPX) ==='
