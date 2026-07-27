@@ -48,10 +48,17 @@ double BG_LossLimitAbs(const double baseline, const double pct)
 //| limit, i.e. floatingPL <= -limitAbs.                             |
 //|                                                                  |
 //| halted=true short-circuits to HOLD whenever positions exist,     |
-//| regardless of P/L. That is what stops a closed-source EA from    |
-//| re-entering after we cut it: we are not asking whether the new   |
-//| basket is losing yet, we are refusing to let it exist at all     |
-//| until a human clears the halt.                                   |
+//| regardless of P/L.                                               |
+//|                                                                  |
+//| HOLD IS CONTAINMENT, NOT PREVENTION. Nothing here can stop a     |
+//| closed-source EA from opening a position; the guard only notices |
+//| afterwards and closes it, up to InpTimerSeconds late. Against an |
+//| EA that re-enters immediately this becomes an open/close churn   |
+//| that pays the spread every cycle and never ends on its own. The  |
+//| reentries counter exists so that churn shows up in the status    |
+//| file instead of quietly draining the account. Only taking the EA |
+//| off its chart actually stops it, and that is a human step -- so  |
+//| the halt escalates loudly rather than pretending it is handled.  |
 //+------------------------------------------------------------------+
 BG_Action BG_Decide(const int positions, const double floatingPL,
                     const double limitAbs, const bool halted)
@@ -84,21 +91,34 @@ double BG_UsagePct(const double floatingPL, const double limitAbs)
 //| firings is UNTESTED, not proven safe, and a guard that cannot    |
 //| report its own firing count cannot be held to that bar at all.   |
 //+------------------------------------------------------------------+
+//| The state word is NOT derived from the halt flag alone. A cut that
+//| left positions behind -- AutoTrading off, trade context busy, market
+//| closed -- must never report HALTED, because a monitoring chain reading
+//| this file would take HALTED to mean the basket is gone. It is the
+//| difference between "contained" and "we tried and failed", and only one
+//| of those needs a human tonight.
+string BG_State(const bool halted, const int positionsLeft)
+{
+   if(halted && positionsLeft > 0) return "CUT_FAILED";
+   if(halted)                      return "HALTED";
+   return "ARMED";
+}
+
 string BG_StatusLine(const datetime stamp, const long magic, const int positions,
                      const double floatingPL, const double limitAbs,
                      const bool halted, const bool dryRun,
-                     const long checks, const long fires)
+                     const long checks, const long fires, const long reentries)
 {
-   return StringFormat("%s,%I64d,%d,%.2f,%.2f,%.1f,%s,%s,%I64d,%I64d",
+   return StringFormat("%s,%I64d,%d,%.2f,%.2f,%.1f,%s,%s,%I64d,%I64d,%I64d",
                        TimeToString(stamp, TIME_DATE|TIME_SECONDS),
                        magic, positions, floatingPL, limitAbs,
                        BG_UsagePct(floatingPL, limitAbs),
-                       (halted ? "HALTED" : "ARMED"),
+                       BG_State(halted, positions),
                        (dryRun ? "DRYRUN" : "LIVE"),
-                       checks, fires);
+                       checks, fires, reentries);
 }
 
 string BG_StatusHeader()
 {
-   return "stamp,magic,positions,floating_pl,limit_abs,usage_pct,state,mode,checks,fires";
+   return "stamp,magic,positions,floating_pl,limit_abs,usage_pct,state,mode,checks,fires,reentries";
 }

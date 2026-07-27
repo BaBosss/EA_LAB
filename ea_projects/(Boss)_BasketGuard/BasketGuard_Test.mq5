@@ -64,9 +64,17 @@ int OnInit()
 
    //--- status line must carry the firing count; a guard that cannot
    //--- report its own firings cannot be held to the doctrine bar
-   string line = BG_StatusLine(D'2026.07.26 10:00:00', 1524, 3, -75.0, 150.0, false, true, 100, 0);
-   Check(StringFind(line, ",1524,3,-75.00,150.00,50.0,ARMED,DRYRUN,100,0") >= 0,
+   string line = BG_StatusLine(D'2026.07.26 10:00:00', 1524, 3, -75.0, 150.0, false, true, 100, 0, 0);
+   Check(StringFind(line, ",1524,3,-75.00,150.00,50.0,ARMED,DRYRUN,100,0,0") >= 0,
          "status: line carries magic, state, mode and counters");
+
+   //--- the state word must distinguish "contained" from "we tried and failed".
+   //--- Reporting HALTED while positions are still open is the failure that
+   //--- would let a monitoring chain call an unprotected account safe.
+   Check(BG_State(false, 0) == "ARMED",      "state: not halted, flat = ARMED");
+   Check(BG_State(false, 4) == "ARMED",      "state: not halted, open = ARMED");
+   Check(BG_State(true,  0) == "HALTED",     "state: halted and flat = HALTED");
+   Check(BG_State(true,  1) == "CUT_FAILED", "state: halted but STILL OPEN is never HALTED");
 
    PrintFormat("BasketGuard_Test: %d passed, %d FAILED", g_pass, g_fail);
    if(g_fail > 0) Print("BasketGuard_Test: DO NOT ARM THE GUARD");

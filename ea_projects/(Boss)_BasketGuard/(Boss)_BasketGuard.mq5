@@ -48,6 +48,7 @@ CTrade   g_trade;
 bool     g_halted        = false;
 long     g_checks        = 0;
 long     g_fires         = 0;
+long     g_reentries     = 0;   // times the guarded EA opened again AFTER the halt
 datetime g_lastHeartbeat = 0;
 datetime g_lastAlert     = 0;
 string   g_haltGvName    = "";
@@ -155,14 +156,17 @@ int BG_CloseBasket()
 }
 
 //+------------------------------------------------------------------+
-void BG_WriteStatus(const int positions, const double floatingPL, const double limitAbs)
+//| positionsNow is what is open AT THE MOMENT OF WRITING, not what was
+//| open when the poll started. After a cut that matters: passing the
+//| pre-cut count would stamp CUT_FAILED on a cut that actually worked.
+void BG_WriteStatus(const int positionsNow, const double floatingPL, const double limitAbs)
 {
    int h = FileOpen(InpStatusFile, FILE_READ|FILE_WRITE|FILE_CSV|FILE_ANSI|FILE_COMMON, ',');
    if(h == INVALID_HANDLE) return;
    if(FileSize(h) == 0) FileWrite(h, BG_StatusHeader());
    FileSeek(h, 0, SEEK_END);
-   FileWrite(h, BG_StatusLine(TimeCurrent(), InpMagic, positions, floatingPL, limitAbs,
-                              g_halted, InpDryRun, g_checks, g_fires));
+   FileWrite(h, BG_StatusLine(TimeCurrent(), InpMagic, positionsNow, floatingPL, limitAbs,
+                              g_halted, InpDryRun, g_checks, g_fires, g_reentries));
    FileClose(h);
 }
 
@@ -243,14 +247,22 @@ void OnTimer()
       {
          BG_AlertThrottled("CUT: " + head);
          int left = BG_CloseBasket();
-         g_halted = true;
+         g_halted = true;          // halt regardless: a failed cut is not a reason to re-arm
          BG_PersistHalt();
          if(left > 0)
-            BG_AlertThrottled(StringFormat("%d position(s) of magic %I64d SURVIVED the cut - close them by hand NOW",
-                                           left, InpMagic));
+         {
+            // NOT throttled. This is the one message that means the guard
+            // tried and did not succeed -- AutoTrading off, market closed,
+            // trade context busy. Throttling it would hide the exact case
+            // where the account is unprotected and nobody knows.
+            Alert(StringFormat("BasketGuard CUT FAILED: %d position(s) of magic %I64d still open - close them by hand NOW",
+                               left, InpMagic));
+            PrintFormat("BasketGuard: CUT FAILED, %d position(s) of magic %I64d survived", left, InpMagic);
+         }
          else
             Print("BasketGuard: basket closed, halt persisted. Clear ", g_haltFile,
                   " and global variable ", g_haltGvName, " to re-arm.");
+         positions = left;         // report what is open NOW, not what was open before the cut
       }
       BG_WriteStatus(positions, floating, limitAbs);
       g_lastHeartbeat = TimeCurrent();
@@ -259,14 +271,20 @@ void OnTimer()
 
    if(action == BG_ACTION_HOLD)
    {
+      // The guarded EA opened again after we halted it. We can only close
+      // after the fact, so this repeats until a human removes that EA from
+      // its chart. Every cycle costs a spread; the counter is what makes
+      // that cost visible instead of letting it accumulate silently.
+      g_reentries++;
       if(InpDryRun)
-         BG_AlertThrottled(StringFormat("DRY RUN: halted, and %d position(s) of magic %I64d are open - would close them",
-                                        positions, InpMagic));
+         BG_AlertThrottled(StringFormat("DRY RUN: halted, and %d position(s) of magic %I64d are open - would close them (re-entry #%I64d)",
+                                        positions, InpMagic, g_reentries));
       else
       {
          int left = BG_CloseBasket();
-         BG_AlertThrottled(StringFormat("halted: magic %I64d re-entered and was closed again (%d left)",
-                                        InpMagic, left));
+         BG_AlertThrottled(StringFormat("halted: magic %I64d re-entered and was closed again (#%I64d, %d left). It will keep doing this until you remove that EA from its chart.",
+                                        InpMagic, g_reentries, left));
+         positions = left;
       }
       BG_WriteStatus(positions, floating, limitAbs);
       g_lastHeartbeat = TimeCurrent();
