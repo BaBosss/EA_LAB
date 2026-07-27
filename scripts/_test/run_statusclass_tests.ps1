@@ -106,6 +106,28 @@ Assert-Status 'bare DONE stays DONE (needs a linked review)' `
 Assert-Status 'CLOSED-OBSOLETE -> CLOSED, not archivable' `
     '## ORDER-118 — ST03 guardrail — `CLOSED-OBSOLETE (Claude 2026-07-18)`'                                 'Terminal' 'CLOSED*'
 
+# --- ORDER-390: a status span containing INLINE CODE. Markdown single-backticks do not
+#     nest, so `DONE(... `sha` ... + REVIEWED(...))` parses as several spans and the FIRST
+#     one carries only DONE. Measured 2026-07-27: 6 orders on the active board were marked
+#     REVIEWED in their header yet classified DONE for exactly this reason, so they sat on
+#     the board invisibly. Writing a commit sha or a script name inside a status is
+#     completely natural, so this recurs until the parser handles it. ---
+Assert-Status 'inline sha inside the status span, REVIEWED must still win (ORDER-270, real)' `
+    '## ORDER-270 — [tooling/integrity] กรง — `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) — 254s → 7.6s · กรงเร็ว 11/11 + REVIEWED(Claude/Opus 2026-07-27)`' `
+    'Terminal' 'REVIEWED*'
+
+Assert-Status 'inline script path inside the status span (ORDER-238, real)' `
+    '## ORDER-238 — [tooling] windows — `DONE(Claude/Opus 2026-07-27): banner ใส่แล้ว · `qwen_batch_runner.ps1` เข้า guard · `check_state.ps1` §9 ขยาย + REVIEWED(Claude/Opus 2026-07-27)`' `
+    'Terminal' 'REVIEWED*'
+
+Assert-Status 'inline code but NO reviewed verb -> still DONE, not archivable' `
+    '## ORDER-999 — probe — `DONE(Claude 2026-07-27): แก้ `foo.ps1` แล้ว`' `
+    'Terminal' 'DONE*'
+
+Assert-Status 'inline code in an OPEN status -> NonTerminal still wins' `
+    '## ORDER-999 — probe — `OPEN · ต้องแก้ `bar.ps1` ก่อน`' `
+    'NonTerminal' '*OPEN*'
+
 # --- the no-backtick fallback must stay UNANCHORED. The search space there is the whole
 #     header, where the verb is never at position 0. ---
 Assert-Status 'no backticks, DONE mid-header (ORDER-091C-D1e, real corpus case)' `

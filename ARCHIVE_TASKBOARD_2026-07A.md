@@ -7953,3 +7953,503 @@ config ที่ ORDER-166 revalidate ไว้. **ของจริงมี�
 **ทำไมมันหลุด:** ORDER-136 เขียนไว้ในเนื้อว่า "side-finding, unresolved, not chased further" แล้วใบนั้นก็ปิดไป
 **ห้าม:** ลบ .set ก่อน user ยืนยันว่าตัวไหนอยู่บน VPS จริง
 
+## ORDER-350 — [lever] rev05 SL buffer บน BTC H4 — คืน flip-exit ที่ไม่เคยได้ทำงาน — `REVIEWED(Claude, 2026-07-27 09:45)` · ทำได้: Claude · 👉 แนะ: Claude
+
+**🔚 ผล + verdict (2026-07-27 09:45) — `lever ไม่รับ` ตามบาร์ที่ล็อกไว้ก่อนรัน · EA เดิมไม่กระทบ**
+เลน `D:\Meta 5` · Model 1 · host = pyr1 เดิมทุก arm · baseline รันใหม่ในเลนเดียวกัน
+
+| `SlBufferAtr` | MAIN PF | BWD PF | exit ที่เป็น flip จริง (MAIN) | worst loss |
+|---|---|---|---|---|
+| **0 = baseline** | **2.33** | **4.29** | 0/50 | −69.39 |
+| 0.25 | 2.19 ▼ | 5.09 ▲ | 0/50 | −75.70 |
+| 0.5 | 2.15 ▼ | 4.33 ▲ | 5/50 | −60.78 |
+| 1.0 | 1.82 ▼ | 4.38 ▲ | **18/50** | −65.36 |
+
+**บาร์ = ต้องดีขึ้นทั้งสองหน้าต่าง · ไม่มี arm ไหนทำได้ (MAIN แย่ลง monotone ทุกค่า) ⇒ `กลาง` ⇒ ไม่รับ**
+หยุดที่ STEP 1 ไม่ใช้ Model-4/MC — บาร์ตกแล้วไม่ต้องจ่ายค่ารันต่อ
+<sub>ตรวจแล้วว่า exit ที่ไม่ใช่ SL คือ market close ที่เปิดแท่ง (comment ว่าง) = `CloseAllOwn("flip")` จริง
+ไม่ใช่ end-of-test ⇒ **กลไกทำงานตามออกแบบ แล้วผลแย่ลง** ซึ่งเป็นคนละเรื่องกับ "lever ไม่ทำงาน"</sub>
+
+**🎯 สิ่งที่ order นี้ซื้อมาได้ (มีค่ากว่าตัว lever):** edge ของ SuperTrendFlip **ไม่ได้มาจากกลไกที่มันโฆษณา**
+header เขียนว่า *"exit timing is the edge being tested"* ผ่าน trail ตามเส้น — แต่กลไกนั้นเป็น dead code
+มา 6 ปี (stop วางที่เส้นพอดี ⇒ stop ยิงก่อนเสมอ) พอบังคับให้มันทำงาน MAIN ตก 2.33→1.82
+กำไรจริงมาจากพฤติกรรมอุบัติเหตุ "ออกทันทีที่ไส้เทียนแตะเส้น" · ทิศบน BWD กลับด้าน = ความชอบเรื่อง
+**ความเร็วในการออกเป็นเรื่องของระบอบ** (2020-22 ทนไส้เทียนคุ้ม · 2023-25 ออกไวคุ้ม) เข้าทาง
+memory `supertrend-is-a-2023-2025-regime-edge` → เข้า `EDGE_CATALOG` dead pile แล้ว
+**ผลต่อ ORDER-280 (re-entry):** ไม่ตาย — กลับ**แข็งขึ้น** เพราะตอนนี้รู้แล้วว่า "ออกไว" คือของดีบน MAIN
+ดังนั้นข้อเสนอ "ออกไวแล้วค่อยกลับเข้า" ยังไม่ถูกหักล้าง (ต่างจาก "ออกช้าลง" ที่เพิ่งถูกหักล้างไปแล้ว)
+
+**ที่มา:** ORDER-280 STEP -1 วัดว่า flip-close ไม่เคยเกิดใน 6 ปี (116/116 ออกด้วย SL) เพราะ stop วางที่เส้นพอดี
+⇒ ทดสอบ "ถอย stop ออกจากเส้น N*ATR" ซึ่งถูกกว่าและตรงจุดกว่า re-entry lever (user เคาะ 2026-07-27)
+
+**✅ STEP 0 PARITY — ผ่านแล้ว 2026-07-27 09:15:** `rev05` (`SlBufferAtr=0` · `ReMode=0`) vs `rev03` ·
+BTCUSD H4 MAIN · Model 1 · เลน `D:\Meta 5` ⇒ **100 deal ตรงกันทุกตัว** (เวลา/ฝั่ง/ทิศ/vol/ราคา)
+พิสูจน์พร้อมกันว่า rev03 == rev04 off-path == rev05 off-path · รายงาน `PARITY_rev0{3,5}_BTC_H4_MAIN.htm`
+
+**📌 BASELINE ในเลนนี้ (ห้ามเทียบข้ามเลน — เลขของ Meta 5b ต่างกัน):**
+MAIN M1 · `rev03`/pyr1 = **PF 2.33 · net +675.42 · 50 ไม้ · eqDD 2.86% · largest loss −69.39**
+
+**bars (pre-register 2026-07-27 09:20 — เขียนก่อนรัน buffer ตัวแรก ห้ามแก้หลังเห็นผล):**
+- **pass** = PF ดีขึ้น **ทั้ง MAIN และ BWD** เทียบ baseline เลนเดียวกัน **AND** largest-loss ≤ **1.5%** ของทุน
+  (baseline 0.69%) **AND** MC ruin ≤ **2%** **AND** MC **DD-95th** ไม่แย่กว่า baseline เกิน **1.5 เท่า**
+- **dead** = PF แย่ลงทั้งสองหน้าต่าง · **กลาง** = ดีขึ้นหน้าต่างเดียว ⇒ ไม่รับ lever
+- 🔴 **ห้ามใช้ PF-5th เป็นบาร์** — `mt5_montecarlo.py` สุ่มด้วย `rng.shuffle` (permutation ไม่ใช่ with-replacement)
+  ⇒ multiset ของกำไร/ขาดทุนคงเดิม ⇒ gross_profit/gross_loss คงที่ ⇒ **PF เท่ากันทุก iteration ทางคณิตศาสตร์**
+  ⇒ บาร์ PF-5th ตกไม่ได้ อ่านได้เฉพาะคอลัมน์ DD + ruin (memory `pf5th-bar-cannot-fail-under-current-mc`)
+**flat-lot probe:** N-A (buffer ไม่แตะ lot)
+
+**STEP 1:** สวีป `_02_SlBufferAtr` {0.25, 0.5, 1.0} × {MAIN 2023.01.01-2025.12.31, BWD 2020.01.01-2022.12.31}
+· Model 1 · host = pyr1 เดิมทุกค่า · เลน `D:\Meta 5` เท่านั้น
+**STEP 2:** ตัวที่ผ่าน → Model-4 (ซอยครึ่งปี — 3 ปีชน memory ceiling) → หัก swap `swap_adjust_crypto.py
+--rate-long 14.67 --rate-short 0.49` → `monte_carlo.py` อ่านเฉพาะ DD+ruin
+**STEP 3:** เช็คว่ากลไกทำงานจริงไหม — **นับ exit reason ซ้ำ**: ถ้า buffer ได้ผลแต่ยังออกด้วย SL 100%
+แปลว่ากำไรไม่ได้มาจากกลไกที่อ้าง (คืน flip-exit) ⇒ ต้องอธิบายให้ได้ก่อนรับ
+**ห้าม:** แตะ 2026H1 · เทียบข้ามเลน MT5 · ใช้ Model-1 เป็นหลักฐานตัดสิน · ใช้ PF-5th เป็นบาร์ ·
+ตั้ง buffer > 3 ATR (init refuse อยู่แล้ว)
+
+## ORDER-341 — [tooling/integrity] stale-binary detector รายงาน 8 จาก 56 — ตัวที่มันซ่อนคือตัวที่กำลังจะถูกใช้เทส — `DONE(Claude/Opus 2026-07-27, `bb4e1858`) — แก้ ranking แล้ว 8→56 · refresh binary ของ ORDER-236 ทัน + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** N-A (tooling) · **flat-lot probe:** N-A
+**เจอได้ยังไง:** เช็คของหน้างานก่อนส่ง worker ไปรัน ORDER-236 — **ไม่ใช่ detector เป็นคนบอก**
+**บั๊ก:** `check_stale_binaries.ps1` ให้ `$status` ช่องเดียวแบบ first-wins และเช็ค `HASH_DIFFERS` **ก่อน** staleness
+ส่วน staleness เขียนว่า `if ($status -eq "OK") { $status = "STALE" }` · **แต่ MQL5 compile ไม่ byte-reproducible**
+(สคริปต์ตัวเดียวกันนี้วัดไว้เอง: 5 hash ต่างกันจาก source เดียวกัน) ⇒ **EA ที่มีมากกว่า 1 สำเนา = hash ต่างเสมอ**
+⇒ `STALE` **ไม่มีวันถูก assign** ให้ EA แบบนั้น ซึ่งคือแทบทุกตัว
+· ข้อความ staleness ยัง append เข้า `detail` อยู่ ⇒ **ข้อมูลอยู่ครบใน JSON มาตลอด แต่ไม่มีป้าย** — ป้ายที่ block คือสิ่งที่ทำให้คนมอง
+**วัดจริง:** labelled STALE **8** · stale จริงแต่ถูกกลบ **48** · หลังแก้ **56** · advisory คงที่ 132 (ไม่มีอะไรหาย)
+**48 ตัวที่ถูกกลบไม่ใช่ของกระจอก:** ตระกูล `Boss_11..18` **ทั้งตระกูล** (logic อยู่ใน `core/*.mqh` ⇒ stale ได้โดยไม่มีใครแตะ `.mq5`)
+· `MacdDiv_Naked` · `EA_BREAKOUT_XAU` · `SuperTrendFlip_rev01` · test binary ของ EALabTpl เกือบทั้งหมด
+**🔴 ของจริงที่เกือบเกิด:** `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` คอมไพล์ **2026-07-18** = ก่อน `Inputs.mqh` เปลี่ยน 6 วัน
+และไม่ครอบ lever ทั้งสองตัวที่ ORDER-236 จะ A/B · ถ้าเชื่อ detector แล้วปล่อย worker ไป → input อาจไม่มีในไบนารี
+→ MT5 ดึงค่าจาก per-terminal cache (memory `mt5-tester-cache-nondeterminism`) → **A/B สองฝั่งกลายเป็น run เดียวกัน
+รายงานออกมาเป็น null ที่ดูสะอาด** · refresh แล้วก่อนรันอะไร
+**แก้:** ranking ไม่ใช่เขียนใหม่ — `STALE` > `HASH_DIFFERS` > `OK` (เก่ากว่าซอร์สคือข้อเท็จจริงของโค้ด · hash ต่างคือ artifact ของ compiler)
++ เพิ่มฟิลด์ `hash_differs` แยก เพื่อไม่ให้สัญญาณ advisory หายไปจากแถวที่ป้าย block ชนะ
+**ยังค้าง (ครึ่งหลังของใบนี้):** เหลือ **55 binary ที่ stale จริงบนดิสก์** — **ไม่กวาดรวดเดียว** ต้องไล่ทีละตัวว่ามันถูกใช้ผลิตหลักฐานอะไรไปแล้วบ้าง
+โดยเฉพาะ `MacdDiv_Naked` ที่ ORDER-205 เพิ่งรันไปเมื่อเช้านี้ (สำเนา 5c สืบสายจาก `c091c\` ที่อยู่ในกอง masked)
+**ห้าม:** rebuild ทั้ง 55 ตัวรวดเดียวโดยไม่บันทึกว่าตัวไหนเคยผลิตหลักฐานอะไร — จะทำให้ตามรอยย้อนหลังไม่ได้
+
+## ORDER-390 — [tooling/integrity] inline code ใน status span ทำให้ order ที่ REVIEWED แล้วค้างบอร์ดเงียบๆ — `DONE + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** N-A · **flat-lot probe:** N-A
+**อาการ:** markdown backtick เดี่ยว **ซ้อนกันไม่ได้** ⇒ status ที่อ้าง commit sha หรือชื่อสคริปต์ เช่น
+`` `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) ... + REVIEWED(Claude/Opus 2026-07-27)` `` ถูก parse เป็น **หลายสแปน**
+และสแปนแรกมีแค่ `DONE` · `Get-StatusClass` วนเจอสแปนแรกแล้ว return ทันที ⇒ **ไม่เคยเห็น REVIEWED**
+**ขนาดที่วัดได้ 2026-07-27:** บอร์ดมี **6 ใบ** ที่หัวข้อเขียน REVIEWED ไว้แล้วแต่ถูกจัดเป็น `DONE`
+(`341` · `270` · `238` · `251` · `252` · `097` — backtick 4-6 ตัวทุกใบ) ⇒ **นั่งบนบอร์ดเหมือนงานที่ยังไม่เสร็จ**
+· รวมกับ 6 ใบที่ปลดได้อยู่แล้ว = archivable 6 → **12**
+**ทำไมจะเกิดซ้ำ:** เขียน `` `sha` `` / `` `script.ps1` `` ในสถานะเป็นเรื่องธรรมชาติ ไม่ใช่ความผิดของคนเขียน
+⇒ คลาสเดียวกับบั๊ก substring ของ **ORDER-260** เป๊ะ: **โมเดลของ parser ไม่ตรงกับวิธีที่คนเขียนหัวข้อจริง และมันเงียบ**
+**ทางแก้:** pre-pass สแกน**ทุกสแปน**หา verb ที่ self-attesting แล้วให้ชนะ execution verb —
+จำกัดแคบไว้: ต้องเป็นรูปแบบมี attribution (`REVIEWED(` หรือ `REVIEWED/`) **ไม่ใช่คำเปล่า** ⇒ ประโยคอย่าง
+"รอ REVIEWED" เลื่อนสถานะไม่ได้ · และรัน **หลัง** NonTerminal scan ⇒ order ที่ reopen เป็น OPEN/WAITING ยังชนะ
+**กรงมาก่อนแก้ (ตามบทเรียน ORDER-220/270):** เพิ่ม 4 เคสใน `scripts/_test/run_statusclass_tests.ps1`
+· **พิสูจน์ว่า fail ได้ก่อนแก้โค้ด** — 2 เคส inline-sha แดง (`actual label=DONE`) · 2 เคสกันพลาดเขียวอยู่แล้ว
+(inline code ที่ไม่มี REVIEWED → คง `DONE` · inline code ใน `OPEN` → คง NonTerminal)
+**ยืนยันหลังแก้:** statusclass **23/23** (จาก 21/23) · chainwalk **11/11** · ชุด 103 **41/0** ·
+ชุด 101 **25/1** (1 = `cross-HEAD-zero-diff` ที่ documented ว่า pre-existing) · `-Audit` บน repo จริง
+**ผลไม่เปลี่ยนสักหลัก** (unresolved 0 · integrity 0 · rebuild zero-diff ทั้งสาม · exit 0)
+**ห้าม:** ขยายเป็นการจับคำ `REVIEWED` เปล่าๆ (จะทำให้ prose เลื่อนสถานะ order ได้) ·
+         ย้าย order ที่ NonTerminal ชนะ (reopen แล้ว) เข้าคลัง
+
+## ORDER-270 — [tooling/integrity] กรงของ validator ใช้งานไม่ได้จริง — negative suite ช้าจนไม่มีใครรัน — `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) — 254s → 7.6s · **ไม่ได้ใช้ path-filter** ที่ใบสั่งเสนอ (จะเปิดรู BLOCKER 6) · กรงเร็ว 11/11 · ชุด 103 เต็ม 41/41 + REVIEWED(Claude/Opus 2026-07-27)`
+### ผล ORDER-270 STEP 3
+**ไม่ทำตามทางแก้ที่ใบสั่งเขียนไว้** — path-filter เปลี่ยน **"commit ไหนถูกเดินผ่าน"** และ BLOCKER 6 อยู่ในคอมมิตที่
+history simplification อาจตัดทิ้งพอดี · แทนที่ด้วยวิธีที่เดินครบทุก commit เหมือนเดิม แต่เลิกอ่าน byte ที่พิสูจน์ได้แล้วว่าไม่เปลี่ยน:
+- `git cat-file --batch-check` **ครั้งเดียว** map ทุก commit → blob OID ของ archive · **OID = content address ⇒ OID เท่ากันคือ byte เท่ากัน**
+  ตรงไหน OID ไม่ขยับ ข้ามการอ่าน blob ทั้งสองฝั่ง · ตรงไหนขยับ ตรวจ prefix/H2 แบบเดิมทุกประการ
+- `git rev-list --first-parent --parents` **ครั้งเดียว** แทน parent lookup ต่อ commit ⇒ กฎ merge แข็งเท่าเดิม
+- drain stdout ก่อนเขียน stdin ไม่งั้นสายยาวๆ deadlock ที่ pipe buffer เต็ม
+**กรงมาก่อนตามข้อห้ามของใบสั่งเอง:** `scripts/_test/run_chainwalk_tests.ps1` 11 เคส วินาทีไม่ใช่นาที ·
+**พิสูจน์ว่า fail ได้ก่อนแก้โค้ด**: perf case แดงที่ 18.39s บน budget 3s → หลังแก้ 0.35s ·
+คุม laundering **2 รูป**: merge ที่ resolve เป็นของที่ไม่ตรง parent ไหนเลย และ merge ที่เอา archive ของ parent ที่สองมาทั้งดุ้น (รูปหลังคือรูปที่ path-filter มีโอกาสกลืนที่สุด)
+**ซ่อมกรงเดิมด้วย:** ชุด 103 fail อยู่ 3 เคสด้วยเรื่องที่ไม่เกี่ยวกับสิ่งที่มันทดสอบ — hook เพิ่ม callee 2 ตัวเมื่อ 2026-07-26
+(`check_order_collision`, `check_handoff_contract`) แต่ fixture ยัง hardcode รายชื่อเก่า ⇒ ตายที่ "argument to -File does not exist"
+· ตอนนี้ fixture **อ่านรายชื่อจาก hook เอง** ⇒ guard ตัวถัดไปที่เพิ่มเข้ามาทำให้มันเน่าอีกไม่ได้
+**ยืนยัน:** chainwalk 11/11 · ชุด 103 **41/41** · `-Audit` บน repo จริงผลไม่เปลี่ยนสักหลัก (unresolved 0 · integrity 0 · exit 0) ที่ 7.6 วินาที
+**bars:** N-A · **flat-lot probe:** N-A
+**⚠️ แก้การวินิจฉัยเดิม (2026-07-26, ผมเขียนผิดเอง):** ใบนี้เคยเขียนว่า "ค้างทั้งคู่ ไม่ใช่แค่ช้า" โดยอ้าง
+"CPU < 1 วินาที หลัง 25+ นาที" — **นั่นคือ CPU ของ process แม่ ซึ่งมันแค่นั่งรอลูก** วัดใหม่ด้วยการ
+ไล่ดู child process จริง: **ลูกกิน CPU 42→66 วินาทีและเดินหน้าอยู่** (case แรก `clean` รัน `-Generate` จบ
+แล้วขึ้น `-Audit`) ⇒ **มันไม่ deadlock มันช้าจริง** · memory `C1_ENFORCE_HANDOFF` เขียนเตือนไว้ตรงตัวว่า
+"เช็ค CPU ของ child process ก่อน" และผมข้ามคำเตือนนั้นไปเช็คตัวแม่
+**ตัวเลขที่วัดได้จริง:** ~1 CPU-นาที ต่อการเรียก validator 1 ครั้ง · suite มี ~15 case × 2-3 mode
+⇒ ประมาณ **30-45 นาที** ต่อชุด (memory เก่าบอก 8-9 นาที ⇒ **ช้าลง ~4 เท่า**)
+**สาเหตุที่น่าสงสัยที่สุด:** ทุก child invocation ส่ง `-RepoRoot D:\EA_LAB` แล้ว validator เดิน git first-parent
+chain ของ repo จริงทุกครั้ง — ต้นทุนโตตามจำนวน commit และวันนี้ repo เพิ่มไปหลายสิบ commit
+(fixtures เล็ก ไม่ใช่ต้นเหตุ) · **ยังไม่ยืนยัน** ต้องวัดเทียบก่อน
+**ทำไมยังเป็นปัญหาแม้ไม่ใช่การค้าง:** ผลลัพธ์ทางปฏิบัติเหมือนกัน — กรงที่ใช้เวลา 30-45 นาทีคือกรงที่
+ไม่มีใครรัน และ**ไม่มีใครรู้ว่ามันเคยผ่านครั้งสุดท้ายเมื่อไร** ระบบ tamper-integrity ของ ORDER-102/103
+จึงยืนอยู่บนกรงที่ de-facto ไม่ทำงาน
+**✅ STEP 1-2 ปิดแล้ว 2026-07-26 — root cause เจอแล้ว (วัดครบ):**
+| วัดอะไร | ผล |
+|---|---|
+| `-Audit` บน repo จริง 1 ครั้ง | **254 / 278 วินาที** (วัด 2 รอบ) |
+| child ของ suite 1 ครั้ง (fixture **364 ไบต์**) | **~60 วินาที** ⇒ ไม่ใช่ขนาดไฟล์ เป็น **fixed cost** |
+| `git rev-list --first-parent` ทั้งสาย | **42 ms** ⇒ **ไม่ใช่ต้นเหตุ** (สมมติฐานแรกของผมผิด) |
+| regex cache thrash (สมมติฐานที่ 2) | precompute แล้ว **254→278 วินาที = ไม่ต่าง** ⇒ **ไม่ใช่ต้นเหตุ** และเคลียร์ว่า ORDER-260 ไม่ได้ทำให้ช้า |
+| **สาย checkpoint→HEAD** | **502 commit** |
+| **ในนั้นที่แตะ archive จริง** | **5 commit** |
+
+**🎯 ต้นเหตุ:** `Invoke-ArchiveChainIntegrityCheck` วน `for ($i=1; $i -lt $chain.Count; $i++)` ทุก commit ในสาย
+และ**ต่อ 1 commit ยิง git subprocess 3 ครั้ง** (`Get-GitBlobBytes` prev · `Get-GitBlobBytes` cur ·
+`Get-GitCommitParents`) พร้อมอ่าน blob archive เต็มไฟล์ 2 รอบ
+⇒ **502 × 3 ≈ 1,506 git spawn ต่อการเรียก 1 ครั้ง** ซึ่ง **~1,491 ครั้งเป็นงานเปล่า** (archive ไม่เปลี่ยน)
+× ~40ms/spawn บน Windows = **~60 วินาที** ตรงกับ fixed cost ที่วัดได้เป๊ะ
+**และมันโตขึ้น 3 spawn ต่อทุก commit ใหม่** ⇒ อธิบายได้ว่าทำไม 8-9 นาที (memory เก่า) กลายเป็น 30-45 นาที
+
+**STEP 3 — ทางแก้ที่ถูก + ⚠️ กับดักที่ห้ามพลาด:**
+- แก้ที่ถูกที่สุด: จำกัดการวนเฉพาะ commit ที่แตะ path archive (`git rev-list --first-parent <ckpt>..HEAD -- <archive>`)
+  เพราะ commit ที่ไม่อยู่ใน path-filter **พิสูจน์ได้ว่า blob ไม่เปลี่ยน** → semantically ถูก ไม่ใช่การมองข้าม
+- ของแถมฟรี: `$prevBytes` ของรอบถัดไป = `$curBytes` ของรอบนี้ → cache ไว้ ลดการอ่าน blob ครึ่งหนึ่ง
+- batch parent lookup: `git rev-list --parents <ckpt>..HEAD` ครั้งเดียว แทนยิงต่อ commit
+- 🔴 **กับดัก:** `--first-parent` + path-filter **อาจซ่อน merge ที่เปลี่ยน archive ผ่าน parent ที่สอง** ซึ่งคือ
+  **BLOCKER 6 "checkpoint laundering ผ่าน merge"** ที่ ORDER-103 REWORK3 เสียเวลาปิดไปแล้ว
+  ⇒ ต้องเก็บการตรวจ merge-parent ไว้ครบ ห้ามให้ optimization เปิดรูเดิมกลับมา
+**ห้าม:** แก้ walk นี้โดยไม่มีกรงเร็วที่ครอบ merge-laundering ก่อน (วงจรอุบาทว์: จะแก้ validator ให้ปลอดภัยต้องมี suite ·
+         suite ช้าเพราะบั๊กนี้ · ทางออก = เขียน targeted test ของ chain-walk ก่อน แล้วค่อยแก้)
+**STEP 3:** ถ้าลดไม่ได้จริง → แยกเป็น 2 ชั้น: smoke เร็ว (<1 นาที) ที่รันได้ทุก commit + full suite ที่รันตามรอบ
+          โดย**บันทึกวันที่รันครั้งสุดท้าย**ไว้ในไฟล์ ไม่ใช่ปล่อยให้ไม่มีใครรู้
+<sub>กรงแคบที่ใช้ได้จริงมีตัวอย่างแล้ว: `scripts/_test/run_statusclass_tests.ps1` (19 เคสจาก corpus จริง · เสร็จในไม่กี่วินาที ·
+พิสูจน์แล้วว่า fail ได้เมื่อ revert ของที่มันคุม) — ไม่ได้แทนของเดิม แต่แสดงว่ารูปแบบนี้เป็นไปได้</sub>
+**ห้าม:** สรุปว่า process ค้างจาก CPU ของตัวแม่ (บทเรียนของใบนี้เอง) · ปล่อยให้ suite อยู่ในสถานะ
+         "มีอยู่แต่ไม่มีใครรู้ว่ารันผ่านเมื่อไร" ต่อ
+
+## ORDER-231 — [demo · funnel gap] 992001 TsMom_XAU: ACTIVE อยู่แต่ไม่เคยมี Monte Carlo — `DONE(Claude/Opus 2026-07-27) — MC รันแล้ว ruin 0.00% · PF-5th 2.75 · dd95=3.39 เข้า expectations.csv (STEP 2A) · แต่ของจริงที่ได้คือ corr ไม่ใช่ MC (ดูผลด้านล่าง) + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** MC ruin ≤ 2% (resize-first ถึง 10%) · PF-5th ≥ 1.0 · **flat-lot probe:** N-A (single-order trend EA)
+**ปัญหา:** `portfolio/expectations.csv` แถว 992001 = `pf=UNKNOWN`, `dd95=UNKNOWN`, `RANGE_NOT_SEPARABLE`
+EA นี้ **ACTIVE จริงบน 415573666 judge 2026-10-23** แต่ไม่เคยรัน MC / holdout / sensitivity fan
+(attach แบบ demo-isolate ตาม user directive ไม่ใช่ funnel ที่เดินครบ) ⇒ portfolio risk ของบัญชีนั้น **ตัดตัวนี้ทิ้งทั้งตัว**
+**STEP 1:** รัน MC บน .set ที่ล็อกไว้ `_vps_deploy/S2_TSMOM_XAU/` (lb60/deadmult2) หน้าต่าง MAIN 2023.01-2025.12
+**TREE:** ruin ≤2% AND PF-5th ≥1.0 → STEP 2A เติม dd95 ลง `expectations.csv` แล้วรัน risk admission ใหม่ ·
+          ruin 2-10% → STEP 2B คำนวณ lot ที่ทำให้ ruin ≤2% แล้ว**เสนอ** resize (ห้ามแก้ live เอง) ·
+          ruin >10% → STOP + `BLOCKED(992001 ruin เกินเพดานแม้ resize — ถอด หรือคงจนถึง judge?)`
+**ห้าม:** verdict · แตะ .set ที่ demo อยู่ · **เดา dd95** (ค่า UNKNOWN ตอนนี้ถูกต้องแล้ว ห้ามเติมเลขที่ไม่มี run รองรับ)
+
+### ผล ORDER-231 (Claude/Opus 2026-07-27 · `7cd82d9a` + `2e18a7e3`)
+รัน MAIN ใหม่จาก **binary+set ที่ deploy จริง** (`_vps_deploy/S2_TSMOM_XAU/TsMom_XAU.ex5` + `S2_TsMom_XAU_deploy.set`,
+`_05_Magic=992001` ยืนยันใน .set) · XAUUSD D1 · 2023.01.01-2025.12.31 · lane `D:\Meta 5b` · Model 1 ·
+report `TSMOM_XAU_D1_MAIN_MC.htm` · leverage assert 1:100 ผ่าน · quality 98%
+
+| | PF | trades | net | eqDD |
+|---|---|---|---|---|
+| MAIN re-run | **2.75** | 26 | 1044.12 | 2.9% |
+
+**MC (5000 iter, order-resampling, deposit 10k):** maxDD 5th 1.35 / median 2.08 / **95th 3.39** / worst 4.96 ·
+**ruin 0.00%** · P(net<0) 0.0% ⇒ ผ่านบาร์ทั้งสอง → STEP 2A: `dd95_expected=3.39`, `dd95_basis=MC95`
+
+**🔴 3 ข้อที่สำคัญกว่าตัวเลข MC:**
+1. **PF-5th = PF จุด (2.75) เป๊ะ** เพราะ order-resampling รักษา multiset ของไม้ไว้ ⇒ net และ PF **invariant**
+   ⇒ บาร์ `PF-5th ≥ 1.0` **ตกไม่ได้เลยกับ MC ชนิดนี้ = ไม่ใช่หลักฐาน** มีแต่คอลัมน์ DD ที่มีข้อมูล
+   (เข้าเกณฑ์เดียวกับกฎ guard-evidence: เลขที่ขยับไม่ได้ ไม่ใช่หลักฐานว่าปลอดภัย)
+2. **n=26 ใน 36 เดือน** — dd95 จาก 26 ตัวอย่างคือการเดาที่กว้างมาก แค่มีทศนิยมติดมา
+3. **MAIN re-run ได้ PF 2.75 ไม่ใช่ 3.72 ที่ทะเบียนเขียน** — จำนวนไม้เท่ากันเป๊ะ (26) ⇒ สัญญาณเดียวกัน fill ต่างกัน
+   (คนละ lane/model กับตัวที่ผลิต 3.72) · **บันทึกไว้ ยังไม่ reconcile**
+
+**ของจริงที่ได้จากใบนี้ = correlation ไม่ใช่ MC:**
+992001 ไม่เคยอยู่ใน `portfolio/backtest_corr_reports.csv` ⇒ ทุกคู่ตกไปที่ default `corr=1.0` (fallback ที่ถูกต้อง แต่แพง)
+· เติม map แล้ววัดใหม่ → coverage 422→**452**/1540 คู่
+
+| บัญชี 415573666 | portfolio_DD_est | headroom vs 25% |
+|---|---|---|
+| ก่อน (13/14 magics, partial) | 33.19% | −8.19 |
+| เติม dd95 อย่างเดียว (14/14, corr=1.0 default) | 40.10% | −15.10 |
+| **เติม corr ด้วย (14/14, วัดจริง)** | **33.91%** | **−8.91** |
+
+⇒ **DD ของตัวมันเองมีราคา 0.72 จุด · การไม่เคยวัด corr มีราคา 6.19 จุด** (กระทบยอดด้วยมือ: 33.19² + 2·3.39·73.02 + 3.39² = 40.10² พอดี)
+· ยังเหลือ **1088 คู่ทั้งพอร์ตที่อยู่บน default 1.0** = ประเมินความเสี่ยงสูงเกินจริงอย่างเป็นระบบตรงที่ไม่มีข้อมูล
+· บัญชียัง **OVER budget** ทั้งสองทาง — ใบนี้ไม่ได้เสนอ resize แค่เอา distortion ออกจากเลขที่จะใช้ตัดสิน
+**ไม่ได้ทำ:** แตะ .set ที่ demo · เสนอ resize · เดา dd95
+
+## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `DONE(Claude/Opus 2026-07-27, `805a443a`) — ของจริง 16 ไฟล์ไม่ใช่ 5 · แบนเนอร์ 12 · guard §9 ขยาย 3 · qwen_batch_runner ปฏิเสธการรัน + REVIEWED(Claude/Opus 2026-07-27)`
+**ผล:** ใบสั่งนับไว้ 5 — grep เจอ **16**: 8 ตัวรันหน้าต่างนั้นจริง · 2 ตัวสอนมันผ่าน usage example · **3 ตัวเป็น reusable definition**
+· 🔴 ตัวที่แรงที่สุดไม่ได้อยู่ในรายชื่อเดิม: **`run_backtest.ps1` มี `-ToDate = "2026.05.29"` เป็นค่า default** ⇒ เรียกเปล่าๆ ก็กิน holdout 5 เดือนเงียบๆ
+· `mt4_run.ps1`/`mt4_optimize.ps1` = ฝาแฝด MT4 ของ 2 ไฟล์ที่อยู่ใน §9 อยู่แล้ว ไม่มีอะไรทำให้มันต่างกัน แค่ตกสำรวจ
+**ทำ:** (a) แบนเนอร์ `HOLDOUT-BURNED` 12 ไฟล์ (หน้าต่างเดิม**ไม่แก้** — มันคือประวัติของ run ที่เกิดไปแล้ว)
+· (b) `qwen_batch_runner.ps1` **ปฏิเสธการรัน exit 3** เว้นแต่ส่ง `-SpendHoldout2026H1` — **แรงกว่าที่ใบสั่งขอ (warn)** โดยตั้งใจ:
+มันคือ batch driver ที่ agent lane หยิบไปรันไม่มีคนดู และ lane ที่ไม่มีคนดู**ไม่อ่าน warning**
+· (c) `check_state.ps1` §9 ขยาย scope 3 ไฟล์ + แก้ default/example ที่มันจับได้
+**พิสูจน์ว่ากรง fail ได้:** ทุบ default ของ `run_backtest.ps1` เป็น 2026.03.01 → §9 แดงทันที แล้วคืนค่า → เขียว
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** `gsmc_validate.ps1` · `order104*.ps1` · `qwen_batch_runner.ps1` · `mt5_batch_shortlist.ps1` · `optimize_loop.ps1`
+ยังถือวันจบที่กิน holdout 2026H1 · `check_state.ps1` §9 จงใจ scope แคบ (เฉพาะ reusable definition:
+`.claude/agents/*.md`, `mt5_run.ps1`, `mt5_optimize.ps1`) ⇒ 5 ตัวนี้อยู่นอกกรง
+**ตัวที่น่ากลัวสุด = `qwen_batch_runner.ps1`** เพราะเป็น batch driver ที่ agent lane หยิบไปใช้ได้จริง
+**STEP 1:** (a) ใส่แบนเนอร์ `HOLDOUT-BURNED` หัวไฟล์ทั้ง 5 · หรือ (b) ขยาย guard ให้เตือนตอนถูก invoke
+👉 แนะ (b) สำหรับ `qwen_batch_runner.ps1` + (a) สำหรับอีก 4 ตัวที่เป็น order-specific ของเก่า
+**ห้าม:** แก้หน้าต่างในสคริปต์เก่าให้ "ถูก" เฉยๆ — มันคือประวัติของ run ที่เกิดไปแล้ว แก้แล้วหลักฐานเพี้ยน
+
+## ORDER-250 — [🔴 demo · order-of-record หาย] SS1 LondonORB 992003: ผ่าน funnel ขึ้น demo โดยไม่มีใบสั่งงานรองรับ — `DONE(Claude/Opus 2026-07-27) — STEP 1 ใบสั่งย้อนหลังเขียนแล้ว (ORDER-143 คงรอยความเห็นตรงข้ามไว้) · STEP 2 corr ปิดแล้ว วัดครบ 13/13 คู่ max |r| 0.543 < 0.8 ผ่านบาร์ · จุดอ่อน MAIN 1.16 < 1.2 ยังอยู่ = เรื่องของวัน judge + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** corr vs cohort < 0.8 (pairwise) · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-143 ปิดไปเมื่อ 2026-07-20 ว่า "EA ไม่มี input `_2_PartialPct1`/EMA200 ⇒ **sweep ไม่ได้รัน** · next = หา HOME ใหม่
+ไม่ใช่ stack lever". **แล้ววันที่ 07-23 commit `a88db4c6` เพิ่ม input พวกนั้นเข้าไปจริง รัน funnel และดัน SS1 เป็น
+VALIDATED CANDIDATE → attach demo magic 992003** (M4 1.16/1.06, holdout 1.21@n=86, MC ruin 0.00%)
+**สิ่งที่หายไป:** ไม่มี order block ไหนบันทึกการพลิกนี้เลย — หลักฐานเดียวคือ subject ของ commit กับช่อง `notes` ใน `DEPLOYMENTS.csv`
+⇒ **EA ตัวหนึ่งเดิน funnel จนถึง demo โดยไม่มีใบสั่งงานเป็นหลักฐาน**
+**จุดอ่อนที่ตัวมันเองประกาศไว้ และยังไม่ถูกปิด:** real-tick MAIN 1.16 **ต่ำกว่าบาร์ 1.2** · ต้องใช้ `MinOr=0.5` เป๊ะ (0.8 → 1.09) ·
+cohort holdout โดน TrendRider กินไปบางส่วน · **corr vs cohort ยังไม่เคยวัด** (ค้างมาตั้งแต่ ORDER-174)
+**STEP 1:** เขียน order block ย้อนหลังให้ครบ (อะไรเปลี่ยน · หลักฐานอะไรรองรับ · ใครตัดสิน)
+**STEP 2:** ปิดช่อง corr vs cohort **ก่อน judge 2026-10-23**
+**ห้าม:** ปล่อยให้ถึงวัน judge โดย corr ยังว่าง · เขียน ORDER-143 ทับจนอ่านไม่ออกว่าเคยสรุปตรงข้าม (เก็บรอยไว้)
+
+### ORDER-250 STEP 1 — ใบสั่งย้อนหลัง (order-of-record ที่หายไป) · Claude/Opus 2026-07-27
+**เขียนย้อนหลังโดยเจตนา ไม่ใช่การกลบ** — ORDER-143 คงข้อความเดิมไว้ครบพร้อมหมายเหตุกลับด้าน อ่านได้ว่าเคยสรุปตรงข้าม
+
+| | |
+|---|---|
+| **อะไรเปลี่ยน** | 2026-07-20 ORDER-143 ปิดว่า "EA ไม่มี input `_2_PartialPct1`/EMA200 ⇒ **sweep ไม่ได้รัน** · next = หา HOME ใหม่ ไม่ใช่ stack lever" · **2026-07-23 commit `a88db4c6` เพิ่ม input เข้า EA จริง** (`_07_UseTrendFilter` · `_07_TrendEmaPeriod=200` · `_07_PartialPct` · `_07_PartialAtR`) แล้วรัน funnel |
+| **หลักฐานที่รองรับการพลิก** | M4 MAIN 1.16 / BWD 1.06 · holdout 1.21 @ n=86 · MC ruin 0.00% ⇒ VALIDATED CANDIDATE → attach demo **magic 992003** (XAUUSD M15, judge 2026-10-23) |
+| **ใครตัดสิน** | Opus-seat 2026-07-23 · **แต่ไม่มี order block รองรับเลย** หลักฐานเดียวคือ subject ของ commit + ช่อง `notes` ใน `DEPLOYMENTS.csv` |
+| **ทำไมมันหลุด** | การพลิกเกิดใน session ที่ไม่ได้เปิดใบใหม่ และ ORDER-143 ปิดไปแล้ว ⇒ ไม่มีใบไหนเป็นเจ้าของ ⇒ EA เดิน funnel จนขึ้น demo โดยไม่มีใบสั่งงานเป็นหลักฐาน |
+| **ป้องกันซ้ำ** | `scripts/check_block_staleness.ps1` (ORDER-252, commit `6f2d9c47`) จับ pattern นี้อัตโนมัติแล้ว — บล็อกที่ปิดแล้วแต่ artifact ที่มันอ้างถูกถอน/หักล้าง |
+
+**จุดอ่อนที่ EA ประกาศเองและยังไม่ปิด (ยกมาไว้ให้เห็น ไม่ได้แก้):** real-tick MAIN **1.16 ต่ำกว่าบาร์ 1.2** ·
+ต้องใช้ `MinOr=0.5` เป๊ะ (0.8 → 1.09 = แกนเปราะ) · cohort holdout โดน TrendRider กินไปบางส่วน
+
+### ORDER-250 STEP 2 — corr vs cohort ✅ ปิดแล้ว (`2e18a7e3`)
+บาร์: pairwise corr < 0.8 · **วัดครบ 13/13 คู่ในบัญชี 415573666** (ไม่มีคู่ไหนตกไปที่ default 1.0)
+
+| vs | r | | vs | r |
+|---|---|---|---|---|
+| 990207 | **+0.543** (สูงสุด) | | 990203 | +0.125 |
+| 992001 | +0.535 | | 990201 | −0.106 |
+| 990208 | −0.432 | | 992004 | +0.090 |
+| 990110 | −0.317 | | 990205 | +0.087 |
+| 990206 | −0.242 | | 990202 | −0.070 |
+| 990204 | +0.164 | | 990025 | +0.041 |
+| 990030 | +0.147 | | | |
+
+⇒ **max |r| = 0.543 < 0.8 = ผ่านบาร์** · 9 ใน 13 คู่ ≤0.40 = additive จริง ไม่ใช่ตัวซ้ำ
+**ช่องที่ปิดได้ก่อน judge 2026-10-23 = ปิดแล้ว** เหลือจุดอ่อน MAIN 1.16 < 1.2 ซึ่งเป็นเรื่องของวัน judge ไม่ใช่ของใบนี้
+
+## ORDER-251 — [🔴 integrity · หนี้ระบบ] คลัง skill ที่เป็นเจ้าของบาร์ตัดสินทุกใบ อยู่นอก repo และไม่มี version control — `DONE(Claude/Opus 2026-07-27, `6aa19f62` แล้ว `e56c357f` แก้) — ทาง (a): mirror 33 ไฟล์เข้า docs/skills_mirror/ + MANIFEST.sha256 + check_state §10 · ⚠️ commit แรก mirror ไม่ติดจริง ดูบันทึกความพลาดด้านล่าง + REVIEWED(Claude/Opus 2026-07-27)`
+**ผล:** `scripts/sync_skills_mirror.ps1 -Update/-Check` · `docs/skills_mirror/` (mirror ไม่ใช่ move — ของเดิมอยู่ที่เดิม) ·
+`check_state.ps1` §10 เทียบคลังจริงกับ manifest ทุก commit · **WARN ไม่ block** โดยตั้งใจ: คลังนี้*ควร*เปลี่ยนได้ แค่ต้องไม่เปลี่ยนแบบไม่มีใครเห็น
+**เรื่องที่ต้องรู้:** 11 จาก 26 skill เป็น **symlink ไป `C:\Users\patip\.agents\skills`** = แชร์กับเครื่องมืออื่น แก้จากนอกโปรเจกต์นี้ได้ ·
+`Get-ChildItem -Recurse` **ไม่เดินตาม reparse point** ⇒ วิธีที่นึกออกก่อนจะ mirror ได้เปลือกเปล่าแล้วรายงานว่าสำเร็จ ต้องใช้ .NET `EnumerateFiles`
+**🔴 ความพลาดที่เก็บไว้เป็นบทเรียน (`6aa19f62` ผิด ไม่ amend ทิ้ง):** `.agents/skills` เป็น git repo ของตัวเอง ⇒ ตาม symlink ไปแล้วลาก `.git` มาด้วย
+⇒ git เก็บทั้งโฟลเดอร์เป็น **gitlink (mode 160000) = ตัวชี้ commit เปล่าๆ ไม่มีเนื้อ** · commit นั้นเขียนว่า "mirror 131 ไฟล์" ซึ่ง 98 ไฟล์คือไส้ `.git`
+และ **ไม่มีสักไฟล์อยู่ใน repo จริง** · ที่รอดสายตาเพราะ `-Check` เขียว, `check_state` เขียว, จำนวนไฟล์เพิ่ม — **ทุกสัญญาณที่ดูล้วนวัด "คลังจริง vs manifest"
+ไม่มีอันไหนวัดสิ่งที่ใบสั่งขอจริงๆ คือ "เนื้ออยู่ใน git ไหม"** · แก้แล้ว: ตัด `.git`/`node_modules`/`__pycache__` · ของจริง 33 ไฟล์ blob ครบ gitlink 0
+· ยืนยันด้วยการ diff path-by-path ไม่ใช่นับจำนวน (ที่ขาด 4 ไฟล์คือ `.pyc` ล้วน ตั้งใจตัด)
+**พิสูจน์ว่ากรง fail ได้:** ก๊อปคลังไป temp แก้ 1 ไฟล์ ลบ 1 ไฟล์ → `-Check` รายงาน "1 changed, 1 removed" exit 1 · **ไม่แตะคลังจริงในการทดสอบ**
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-121 + ORDER-122 ทั้งสองใบคือการเขียน `backtest-optimize-rigor`, DEMOTED banner, corr ladder,
+`FINAL RULE` ข้าม 9-11 skill ใหม่ทั้งหมด — **ของทั้งหมดนั้นอยู่ที่ `C:\Users\patip\.claude\skills\` ไม่ได้อยู่ใน `D:\EA_LAB`**
+⇒ ไม่อยู่ใน git · ไม่มีประวัติ · `check_state.ps1` มองไม่เห็น · **ใครแก้เมื่อไรก็ได้โดยไม่มีอะไรจับ**
+**ทำไมมันย้อนแย้ง:** ORDER-102/103 ลงทุนสร้าง append-chain tamper integrity ให้ taskboard ทั้งระบบ
+แต่ **เอกสารที่เป็นเจ้าของบาร์ตัดสินทุกตัว** กลับเปิดโล่ง — verify วันนี้ได้ แต่พิสูจน์ไม่ได้ว่าไม่ drift ตั้งแต่ 07-18
+**STEP 1:** เลือกทาง — (a) mirror เข้า repo + เช็ค hash ใน `check_state.ps1` (b) symlink/submodule (c) snapshot+diff รายสัปดาห์
+👉 แนะ (a) เพราะถูกที่สุดและเข้ากับกรงที่มีอยู่แล้ว
+**ห้าม:** ย้าย skill ออกจากที่เดิมจน Claude Code หาไม่เจอ (mirror = สำเนา ไม่ใช่การย้าย)
+
+## ORDER-252 — [tooling] staleness linter: บล็อกที่ปิดแล้วยังพูดสิ่งที่ถูกหักล้างไปแล้ว — `DONE(Claude/Opus 2026-07-27, `6f2d9c47`) — warn-only · จับ ORDER-073 ได้เอง · STALE 11 · dangling 4 · unresolved 96 + REVIEWED(Claude/Opus 2026-07-27)`
+**bars:** N-A · **flat-lot probe:** N-A
+**ปัญหา:** ORDER-073 · ORDER-143 · ORDER-188 = **บั๊กเดียวกัน 3 ครั้ง** ไม่ใช่ 3 เรื่อง — หลักฐานปลายน้ำขยับ แต่บล็อก order
+ที่ปิดไปแล้วไม่ขยับตาม. และทุกครั้ง **คำแก้ถูกเขียนไว้จริง** แค่ไปอยู่ที่อื่น (banner บนไฟล์ verdict · ช่อง notes ใน
+`DEPLOYMENTS.csv` · เนื้อของ order ใบใหม่กว่า)
+`check_taskboard_archive.ps1` ตรวจ **การเชื่อม review** ได้ แต่ไม่มีอะไรตรวจว่า **ข้ออ้างในบล็อกที่ปิดแล้วยังตรงกับ repo ไหม**
+**STEP 1:** เขียน linter — ทุกบล็อกที่ terminal: resolve path ที่มันอ้าง · resolve commit hash ที่มันอ้าง ·
+แล้ว **flag บล็อกที่ artifact ของมันตอนนี้ติด banner `SUPERSEDED`/`WITHDRAWN`/`DEPRECATED`/"ถอน"**
+ตัวนี้จะจับ 073 กับ 143 ได้อัตโนมัติ
+**หมายเหตุ:** thesis เดียวกับ ORDER-219 ("ทำให้ detector ที่มีอยู่แล้วถูกอ่าน") แค่เอามาใช้กับบอร์ดแทน log
+**ห้าม:** ทำเป็น hard block ตั้งแต่แรก (จะ false-fire เยอะ) — เริ่มที่ warn + รายงาน
+
+### ผล ORDER-252 (Claude/Opus 2026-07-27 · `6f2d9c47`)
+`scripts/check_block_staleness.ps1` — warn-only, exit 0 เสมอเว้นแต่ `-Strict` · ใช้ `Get-StatusClass` ตัวเดียวกับ validator
+(กันไม่ให้สองเครื่องมือเถียงกันว่า terminal แปลว่าอะไร) · **จับ ORDER-073 ได้เองโดยไม่ต้องบอก = acceptance test ผ่าน**
+สแกน 316 บล็อก (terminal 276) → **STALE 11 · DANGLING commit 4 · UNRESOLVED path 96**
+จูน 3 รอบกับ corpus จริง ทุกรอบ**ตัด noise ไม่ใช่เพิ่มความฉลาด**: 23→11 (banner ต้อง UPPERCASE + อยู่หัวไฟล์ + ไม่ใช่แถวตาราง —
+`RECONCILE_EXCEPTIONS.md` คือ*ตาราง*ของของที่ superseded ทุกแถวเลยยิงหมด) · 62→4 dangling (regex hex กินเลขบัญชี
+`463666728`/magic/วันที่ `20260709` — บังคับให้มีตัวอักษร a-f อย่างน้อยตัวเดียว) · 231→96 path (ชนิดไฟล์ที่อยู่นอก git
+เช่น .htm/.set บอกอะไรไม่ได้ + citation แบบ absolute โดนตัดตัวอักษรไดรฟ์ทิ้ง)
+**4 hash ที่ resolve ไม่ได้:** `6c8241d8`(×2 จาก ORDER-102/103) · `ded1996b`(103) · `287cce51`(128) — **รายงานไว้ ไม่ได้แก้** ต้องการการตัดสิน ไม่ใช่การกวาด
+
+## ORDER-205 — [expand] MacdDiv_Naked H4: 3 symbol ใหม่ (conditional, เดินต้นไม้เองได้) — `DONE(worker/Sonnet 2026-07-27) — 3/3 symbol รันครบ · GBPJPY 0.83 · USDJPY 1.08/1.09 · EURJPY 1.06/0.90 · ไม่มีตัวถึง 1.2 ⇒ ไม่มี STEP 3A + REVIEWED(Claude/Opus 2026-07-27) = BUILD-ON ทั้งใบ, USDJPY = next home ที่ควร optimize (ยังไม่เคย optimize สักตัว)`
+**ที่มา:** ORDER-098-B ปิดด้วย MacdDiv XAU H4 = DEMO-ELIGIBLE (MAIN plateau 1.91 · BWD 1.04 · M4 ยืนยันไม่ใช่ fill artifact) · EURUSD H4 holdout fail แล้วปิด cell ไป · **doctrine BUILD-ON: PF>1 = ของต่อยอด → ยังไม่เคยลอง JPY-cross เลย** ซึ่งเป็นบ้านของ momentum/divergence
+**bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
+**flat-lot probe:** N-A(single-order — MacdDiv ไม่มี escalation)
+**เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น** (5c ไม่มี tick cache — ห้าม Model 4 เด็ดขาด)
+**📖 วิธีอ่านผล (ใช้กับทุก order ที่รัน tester — ห้าม Get-Content ไฟล์ .htm มาแกะเอง มันคือ HTML หลายหมื่น token):**
+```
+powershell -Command ". D:\EA_LAB\scripts\use_python.ps1; python D:\EA_LAB\scripts\parse_mt5_report.py 'D:\EA_LAB\_mt5_auto\reports\<RPT>.htm'"
+```
+เอาเฉพาะบรรทัด `profit_factor` · `total_trades` · `net_profit` · `balance_drawdown_maximal_pct` (ต้องใช้ **path เต็ม** ทั้ง 2 ตัว ไม่งั้นได้ `NO_REPORT`)
+
+**STEP 1** — รัน MAIN ทีละคำสั่ง (3 ตัว, symbol เปลี่ยนอย่างเดียว):
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "MacdDiv_Naked" -Symbol GBPJPY -Period H4 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "D:\EA_LAB\_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set" -ReportName MDX_GBPJPY_H4_MAIN -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+ทำซ้ำโดยเปลี่ยน `-Symbol` และ `-ReportName` เป็น: **USDJPY** (`MDX_USDJPY_H4_MAIN`) · **EURJPY** (`MDX_EURJPY_H4_MAIN`)
+
+**TREE (ต่อ symbol แยกกัน — symbol หนึ่งตายไม่ลาก symbol อื่นตาย):**
+  - **MAIN PF ≥ 1.2** → **STEP 2A:** รัน BWD symbol เดียวกัน `-FromDate 2020.01.01 -ToDate 2022.12.31` `-ReportName MDX_<SYM>_H4_BWD`
+    - BWD ≥ 1.0 → **STEP 3A** (ด้านล่าง)
+    - BWD < 1.0 → append ผลดิบ + เขียนว่า `BWD-fail` → **STOP symbol นี้** (ห้ามสรุปว่าตาย — lead ตัดสินเอง)
+  - **MAIN 1.0–1.2** → **STEP 2B:** รัน BWD เหมือน 2A แล้ว append ผล + ทำเครื่องหมาย `WATCH` → **STOP symbol นี้**
+  - **MAIN < 1.0** → append ผลดิบ → **STOP symbol นี้** ไปตัวถัดไป (ห้ามสรุปว่า "ตาย")
+  - **trades < 20 ใน MAIN** (ไม่ว่า PF เท่าไหร่) → `BLOCKED(n บาง <20 ใน <SYM> — A: ข้ามไป symbol ถัดไป / B: ลอง H1 บน symbol เดิม)`
+  - รันล้ม 2 ครั้งติดบน symbol เดียว → `BLOCKED(<SYM> รันไม่ผ่าน: <error บรรทัดสุดท้าย> — A: ข้าม / B: รอ lead)`
+
+**STEP 3A (ชั้นที่ 3 — sensitivity fan, ทำเฉพาะ symbol ที่ผ่านทั้ง MAIN≥1.2 และ BWD≥1.0):**
+คัดลอก .set เดิมเป็น 4 ไฟล์ใน `D:\EA_LAB\_mt5_auto\ab_sets\order205\` แล้วแก้ทีละค่า — เปลี่ยน **ค่าเดียวต่อไฟล์**:
+`_01_SwingRadius` = {2, 3, 4, 5} (ค่าอื่นคงเดิมทั้งหมด) → รัน MAIN ทั้ง 4 ไฟล์ `-ReportName MDX_<SYM>_H4_SW<n>`
+→ append ตาราง 4 แถว (SwingRadius · PF · trades · DD · net) → **STOP ไปใบถัดไป**
+(เหตุผลที่เลือกมิตินี้: ORDER-204 assert พบ `_01_LookbackBars` **inert** บน MacdDiv — กวาดไปก็ไม่ขยับ ส่วน `_01_SwingRadius` ขยับผลจริง)
+
+**ห้าม:** เขียน verdict · แตะ scorecard/EDGE_CATALOG/PROJECT_STATE/VISION/B1_DATASET · รายงานเลข Model 2 · รัน Model 4 · แตะ `_vps_deploy` · ตีความผลนอก branch · เปลี่ยนค่า input ที่ไม่ได้ระบุใน STEP · **แตะหน้าต่าง 2026 ทุกกรณี** (holdout ไหม้แล้ว)
+
+### ผลดิบ ORDER-205
+**lane-proof run (Opus-seat 2026-07-25 17:56)** — รันเองเพื่อพิสูจน์ว่าเลน 5c ใช้งานได้ก่อนส่งต่อ worker
+(ก่อนหน้านี้ 5c ไม่มี `MacdDiv_Naked.ex5` / `PivotBreakout_XAU.ex5` เลย — copy จาก lane1 `Experts\c091c\` เข้า `D:\Meta 5c\MQL5\Experts\` แล้ว)
+
+| symbol | TF | window | PF | trades | net | eqDD | report |
+|---|---|---|---|---|---|---|---|
+| GBPJPY | H4 | MAIN 2023.01-2025.12 | **0.83** | 254 | -121.68 | 1.74% | `MDX_GBPJPY_H4_MAIN.htm` |
+
+quality 100% · leverage assert 1:100 ผ่าน · traded through to end of window (idle tail 0 วัน)
+→ **TREE: MAIN < 1.0 → STOP symbol นี้** (ไม่ใช่ verdict — แค่ต่ำกว่าบาร์ที่ล็อกไว้ · lead ตัดสินทีหลัง)
+→ **เหลือให้ worker: USDJPY + EURJPY**
+
+**worker run (Sonnet, 2026-07-27) — lane 5c · Model 1 · leverage assert 1:100 ทุก run · quality 99-100%**
+
+| symbol | window | PF | trades | net | eqDD | report |
+|---|---|---|---|---|---|---|
+| USDJPY | MAIN | **1.08** | 250 | 37.24 | 0.80% | `MDX_USDJPY_H4_MAIN.htm` |
+| USDJPY | BWD | **1.09** | 221 | 36.84 | 1.01% | `MDX_USDJPY_H4_BWD.htm` |
+| EURJPY | MAIN | **1.06** | 236 | 31.57 | 0.86% | `MDX_EURJPY_H4_MAIN.htm` |
+| EURJPY | BWD | **0.90** | 243 | −51.03 | 1.87% | `MDX_EURJPY_H4_BWD.htm` |
+
+TREE: ทั้งคู่ MAIN 1.0-1.2 → `WATCH` → รัน BWD ตาม STEP 2B → STOP · ไม่มี STEP 3A (ไม่มีตัวไหนถึง 1.2)
+
+**VERDICT ORDER-205 (Claude/Opus 2026-07-27) = `BUILD-ON` ทั้งใบ — ไม่มีตัวไหนตาย**
+- 🎯 **USDJPY = ตัวที่น่าสนใจที่สุดในใบนี้ และเกือบถูกอ่านผิด**: PF 1.08/1.09 ดูจืด แต่มัน **ยืนเหนือ 1.0 ทั้งสองระบอบ**
+  ด้วย n เยอะ (250/221) — เสถียรข้ามระบอบมีค่ามากกว่า spike สูงๆ หน้าต่างเดียว (บทเรียน SuperTrend regime-edge)
+- 🔴 **ข้อสำคัญ: ทั้งสาม symbol รันด้วย `.set` ที่ tune มาสำหรับ XAU โดยไม่เคย optimize เลยสักตัว**
+  ⇒ ตามกฎ "ห้าม DEAD ก่อน optimize" ตัวเลขชุดนี้ **ปิดอะไรไม่ได้เลย** แม้แต่ GBPJPY 0.83 · มันคือ smoke ของบ้านใหม่ ไม่ใช่เพดาน
+- next ที่ถูกต้อง = optimize `_01_SwingRadius` + entry-signal บน **USDJPY H4** (บ้านที่ผ่าน both-window แล้ว) ไม่ใช่ไล่ symbol เพิ่ม
+  · `_01_LookbackBars` = **inert** (ORDER-204 assert) อย่าเสียเวลากวาด
+
+---
+
+## ORDER-206 — [expand] PivotBreakout H4: 3 symbol ใหม่ (conditional) — `DONE(worker/Sonnet 2026-07-27) — 3/3 symbol + STEP 3A · 🎯 GBPJPY H4 MAIN 1.37 / BWD 1.16 ผ่านทั้งสองหน้าต่าง · XAGUSD 1.13 · US30 1.05 = WATCH + REVIEWED(Claude/Opus 2026-07-27) = BUILD-ON ไม่ใช่ CANDIDATE — SL fan เป็นหน้าผาไม่ใช่ plateau และ base อยู่ที่ขอบช่วงที่ทดสอบ`
+**ที่มา:** Wave-1 ปิดด้วย PivotBreakout_XAU (992017) = **VALIDATED CANDIDATE ตัวแข็งสุดของรอบ** (M4 MAIN 1.16 / BWD 1.22 / HOLD 1.33 · MC ruin 0%) — daily-pivot breakout เป็นกลไกที่ portable ข้าม symbol ได้ตามทฤษฎี แต่ยังไม่เคยทดสอบนอก XAU เลย
+**bars:** pass = MAIN PF ≥ **1.2** · dead = MAIN PF < **1.0** · กลาง(WATCH) = **1.0–1.2**
+**flat-lot probe:** N-A(single-order)
+**เลน:** `D:\Meta 5c` (lane 3) · **Model 1 เท่านั้น**
+**📖 วิธีอ่านผล:** เหมือน ORDER-205 — ใช้ `scripts\parse_mt5_report.py` ด้วย path เต็ม **ห้าม Get-Content ไฟล์ .htm มาแกะเอง**
+
+**STEP 1** — รัน MAIN 3 ตัว:
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "PivotBreakout_XAU" -Symbol XAGUSD -Period H4 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "D:\EA_LAB\_vps_deploy\PIVOTBREAKOUT_XAU\PivotBreakout_XAU_deploy.set" -ReportName PVT_XAGUSD_H4_MAIN -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+ทำซ้ำเปลี่ยน `-Symbol`/`-ReportName`: **US30** (`PVT_US30_H4_MAIN`) · **GBPJPY** (`PVT_GBPJPY_H4_MAIN`)
+
+**TREE (ต่อ symbol แยกกัน):**
+  - **MAIN PF ≥ 1.2** → **STEP 2A:** BWD `-FromDate 2020.01.01 -ToDate 2022.12.31` `-ReportName PVT_<SYM>_H4_BWD`
+    - BWD ≥ 1.0 → **STEP 3A**
+    - BWD < 1.0 → append + `BWD-fail` → **STOP symbol นี้**
+  - **MAIN 1.0–1.2** → **STEP 2B:** รัน BWD เหมือนกัน + mark `WATCH` → **STOP symbol นี้**
+  - **MAIN < 1.0** → append → **STOP symbol นี้**
+  - **symbol ไม่มีใน terminal / no history** → append บรรทัด `NO-DATA:<SYM>` → ข้ามไปตัวถัดไป (ไม่ต้อง BLOCKED)
+  - **trades < 20 ใน MAIN** → `BLOCKED(n บาง <20 ใน <SYM> — A: ข้าม / B: ลอง D1)`
+  - รันล้ม 2 ครั้งติด → `BLOCKED(<SYM>: <error> — A: ข้าม / B: รอ lead)`
+
+**STEP 3A (ชั้นที่ 3 — SL sensitivity fan, เฉพาะ symbol ที่ผ่านทั้งสองหน้าต่าง):**
+คัดลอก `PivotBreakout_XAU_deploy.set` เป็น 3 ไฟล์ใน `D:\EA_LAB\_mt5_auto\ab_sets\order206\` แก้ **ค่าเดียวต่อไฟล์**:
+`_02_SlAtrMult` = {**1.5**, **2.0**, **2.5**} (input อื่นคงเดิมทุกตัว — ตรวจแล้ว .set นี้มี 15 input, ไม่มี buffer/offset, lever จริงคือ SL/RR)
+→ รัน MAIN ทั้ง 3 `-ReportName PVT_<SYM>_H4_SL<ค่า>` → append ตาราง 4 คอลัมน์ (SlAtrMult · PF · trades · DD) → **STOP ไปใบถัดไป**
+
+**ห้าม:** (เหมือน ORDER-205 ทุกข้อ)
+
+### ผลดิบ ORDER-206 — worker run (Sonnet, 2026-07-27) · lane 5c · Model 1 · leverage 1:100 ทุก run
+
+| symbol | window | PF | trades | net | eqDD | report |
+|---|---|---|---|---|---|---|
+| XAGUSD | MAIN | 1.13 | 218 | 528.84 | 7.45% | `PVT_XAGUSD_H4_MAIN.htm` |
+| XAGUSD | BWD | 0.93 | 190 | −220.43 | 6.95% | `PVT_XAGUSD_H4_BWD.htm` |
+| US30 | MAIN | 1.05 | 244 | 23.13 | 0.63% | `PVT_US30_H4_MAIN.htm` |
+| US30 | BWD | 0.95 | 213 | −30.80 | 1.60% | `PVT_US30_H4_BWD.htm` |
+| **GBPJPY** | **MAIN** | **1.37** | 184 | 327.10 | 1.13% | `PVT_GBPJPY_H4_MAIN.htm` |
+| **GBPJPY** | **BWD** | **1.16** | 181 | 158.43 | 1.17% | `PVT_GBPJPY_H4_BWD.htm` |
+
+XAGUSD/US30 → `WATCH` → STOP · **GBPJPY ผ่านทั้ง MAIN ≥1.2 และ BWD ≥1.0 → STEP 3A**
+
+**STEP 3A — SlAtrMult fan, GBPJPY MAIN** (`_mt5_auto/ab_sets/order206/GBPJPY_SL{1.5,2.0,2.5}.set`)
+
+| SlAtrMult | PF | trades | net | eqDD |
+|---|---|---|---|---|
+| **1.5** (base) | **1.37** | 184 | 327.10 | 1.13% |
+| 2.0 | 1.01 | 113 | 5.27 | 1.88% |
+| 2.5 | 0.90 | 95 | −89.31 | 1.67% |
+
+**VERDICT ORDER-206 (Claude/Opus 2026-07-27) = `BUILD-ON` ยังไม่ใช่ CANDIDATE**
+🎯 GBPJPY H4 คือของที่ดีที่สุดที่ออกมาจากทั้งสองใบ — ผ่าน both-window ด้วย n ที่ใช้ได้ (184/181) และ eqDD ต่ำมาก
+🔴 **แต่ยกเป็น CANDIDATE ไม่ได้ เพราะบาร์เขียนว่า "plateau ไม่ใช่ spike" และ fan นี้ไม่ใช่ plateau — มันคือหน้าผา**
+1.37 → 1.01 → 0.90 ลงทางเดียวชัน และ **1.5 คือขอบล่างสุดของช่วงที่ทดสอบ** ⇒ เราไม่รู้ว่ามันเป็นยอด plateau หรือปลายหน้าผา
+เพราะ**ไม่มีใครวัดฝั่งต่ำกว่า 1.5 เลย** · trade count ร่วงจาก 184→95 ตาม SL ที่กว้างขึ้น ⇒ แกนนี้เปลี่ยน**จำนวนไม้** ไม่ใช่แค่คุณภาพไม้
+· ข้อบกพร่องนี้อยู่ที่**การออกแบบใบสั่ง** (ระบุ {1.5,2.0,2.5} โดยวาง base ไว้ที่ขอบ) ไม่ใช่ที่ worker — worker เดินตามที่เขียนเป๊ะ
+**next ที่บังคับก่อนคุยเรื่อง deploy:** (1) fan ลงล่าง `_02_SlAtrMult` {0.75, 1.0, 1.25} เพื่อดูว่า 1.5 อยู่ตรงไหนของสันจริง
+(2) ถ้ามี plateau จริง → Model-4 (breakout = fill-sensitive, lane 5c ทำไม่ได้ ต้องย้ายเลน) (3) holdout 2026H1 **ไหม้แล้ว**
+สำหรับตระกูลนี้ ⇒ ต้องประกาศ demo-forward-as-holdout ตาม precedent Boss_16
+**ห้าม:** เอา 1.37 ไปอ้างเป็นหลักฐาน deploy ก่อนรู้ว่ามันเป็น plateau หรือหน้าผา
+
+---
+
+## ORDER-097 — build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build `DONE(Claude, 2026-07-11)` · baseline `DONE(Claude, 2026-07-11)` · funnel `CLOSED (Claude 2026-07-14 — STRUCTURAL DEAD: sweep spacing×SL ไม่ช่วย + flat-lot isolate S1-S6 ไม่มีระบบไหนมี edge เดี่ยว (ดีสุด 0.80/0.76) · ปัญหาอยู่ที่ entry ทั้ง 6 ไม่ใช่ chassis · verdict = _triage/_archive/verdicts/order076-098/ORDER097_HEX_FUNNEL_VERDICT.md) + REVIEWED(Claude/Opus 2026-07-26)` _(renumbered 096→097: ชนกับ CAMPAIGN ORDER-096 WOBR)_
+
+**ที่มา:** user ส่งสเปค HexaGrid เต็ม (6 ระบบอิสระ magic-scoped แชร์ grid engine ×1.33 cap 10 + SL จริงทุกไม้,
+regime EMA224-slope+ADX, 7 ชั้นจัดการ+global cap) แล้วสั่ง "เขียน EA ตัวนี้ + รอรันเลย" (optimize เองไม่ได้ — คอมเต็ม).
+brainstorm → standalone-port (core เดิม single-magic global-state #include ตรงไม่ได้) → user เคาะ standalone.
+
+**สถานะ build (DONE):**
+- source: `ea_projects\(HEX)_HexaGrid\(HEX)_HexaGrid_rev01.mq5` · compiled: `(HEX)_HexaGrid_rev01.ex5`
+  (อยู่ในโปรเจกต์ + deploy แล้วที่ `D:\Meta 5\MQL5\Experts\HEX_HexaGrid_rev01.ex5`)
+- **compile 0 errors / 0 warnings** (MetaEditor64, X64 Regular)
+- ผ่าน mql-code-reviewer: ไม่มี BLOCKER · แก้ 2 HIGH (sys4 ADX-only ไม่โดน slope-gate · g_suppress_log optimize)
+- **RISK CLASS L4** (capped-martingale+grid, ไม่มี rescue-hedge) — user รับทราบ (เลือก global cap 18% เอง)
+- default = conservative UNOPTIMIZED (spacing ATR-adaptive multi-symbol, risk 2%/basket, mult 1.33, maxLevels 10)
+
+**⚠️ GOTCHA ก่อนรัน (บันทึกไว้กันเสียเวลา):**
+1. **ต้องบัญชี HEDGING เท่านั้น** — OnInit มี guard: ถ้า `ACCOUNT_MARGIN_MODE != RETAIL_HEDGING` = INIT_FAILED
+   (netting จะ merge 6 ตะกร้าทับกัน). **เช็ค log หา `[HEX][FATAL]` ก่อนสรุป 0 trades = code bug** — ต้องมั่นใจ
+   server ของ terminal ที่รัน tester เป็น hedging ก่อน
+2. `_06_AllowLive=false` default แต่ tester-gate เปิดอัตโนมัติ (รัน Strategy Tester ได้เลย)
+3. weekend-cut `_G_CutHourServer=12` เป็น proxy 19:30 ไทย — ปรับตาม GMT offset ของ feed ที่เทสถ้าจะเอาชั้นนี้
+
+**คำสั่ง (baseline ก้อนแรก — both-regime, coarse Model 1 ก่อน, 1 symbol × 2 window ตาม pacing):**
+```powershell
+# ยืนยัน hedging ก่อน แล้วรัน 2 window (trend BWD + recent). แทน window ทีละรอบ:
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'HEX_HexaGrid_rev01' -Symbol XAUUSD -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -Model 1 -Deposit 10000 -Leverage 100 -ReportName HEX_BASE_XAU_BWD -Portable -Terminal 'D:\Meta 5\terminal64.exe'
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert 'HEX_HexaGrid_rev01' -Symbol XAUUSD -Period H1 -FromDate 2023.01.01 -ToDate 2026.07.01 -Model 1 -Deposit 10000 -Leverage 100 -ReportName HEX_BASE_XAU_REC -Portable -Terminal 'D:\Meta 5\terminal64.exe'
+```
+**Acceptance (raw เท่านั้น — ห้าม verdict, lead ตัดสิน):** 2 report เข้า `_mt5_auto\reports\` · ต่อ window append:
+PF · net profit · trades · maxEqDD% · maxBalDD% · + **ยืนยันว่า OnInit ไม่ FATAL (มี trade เกิดจริง)** ·
+สังเกตว่าระบบไหน (magic 20260707-13) มี trade บ้างจาก comment/journal · commit `[tag] ORDER-097 baseline done`
+
+### ORDER-097 BASELINE RESULT (Claude, 2026-07-11) — raw + lead note (NOT a kill-verdict)
+Runner `scripts\mt5_run.ps1 -Portable` บน `D:\Meta 5` (account 146237 = **hedging ✅**, guard ผ่าน — EA รันจริง
+ไม่ FATAL). **Model 1 coarse** (control-points, optimistic สำหรับ grid), default compiled inputs (no .set),
+deposit 10000, leverage 1:100, XAUUSD H1. report เขียนลง `D:\Meta 5\HEX_BASE_XAU_{REC,BWD}.htm` (portable
+เขียน root — mt5_run แจ้ง "NO REPORT" เพราะหาผิดที่ แต่ไฟล์มีจริง + test "successfully finished").
+
+| window | PF | Net$ | Trades | Bal-DD | Eq-DD | Sharpe |
+|---|---:|---:|---:|---:|---:|---:|
+| recent 2023.01–2026.07 | 0.97 | -2,224 | 12,403 | 56.80% | 57.95% | -0.31 |
+| BWD trend 2020.01–2022.12 | 0.88 | -5,937 | 9,099 | 65.04% | 65.44% | -1.38 |
+
+**Lead note (ยังไม่ใช่ verdict — VERDICT GATE ยังไม่ครบ: sweep 0 lever, 1 symbol, 1 TF):**
+- **default config = NO EDGE ทั้งสอง regime** (PF 0.88–0.97 แม้ Model-1 optimistic → real-tick น่าจะแย่กว่า) → **ยังไม่ผ่านบาร์เข้ารอบ Model-4**
+- **DD 57–65% = ตรงกับ worst-case ~60% ที่ flag ตอน build เป๊ะ** · global cap 18% คุมได้แค่ floating ชั่วขณะ ไม่กัน cumulative bleed เมื่อ edge ติดลบ
+- **12k/9k trades = spacing แน่นเกิน / 6 ระบบยิงพร้อมกันถี่มาก** — สมมติฐานแรกที่ควร sweep: ขยาย `_G_SpacingATRmult`/`_G_SL_ATRmult` + ลดจำนวนระบบที่เปิดพร้อมกัน
+- **ไม่ตีตาย (PARAMETRIC):** unoptimized/1-symbol/coarse → tag **build-on / PARKED-VERIFY(user)** ไม่ใช่ DEAD · แต่ห่างบาร์พอควร ไม่ใช่เฉียด
+- **บล็อกจริง:** user optimize ไม่ได้ (คอมเต็ม) → funnel ที่เหลือรอพื้นที่ว่าง. ถ้าเปิดได้: sweep spacing×SL×system-count → both-regime → ถ้าโผล่ PF>1 ค่อย Model-4 real-tick → OOS → MC
+
+**ห้าม:**
+- **ห้ามตัดสิน edge จาก Model-1 pass** — grid fill-sensitive, Model-1 optimistic; ผ่าน M1 = แค่ "ผ่านเข้ารอบ Model-4"
+  ไม่ใช่ candidate (VERDICT GATE #6 + doctrine grid-EA ต้อง real-tick confirm)
+- ห้าม tune ก่อนเห็น baseline both-regime (VERDICT GATE #3)
+- ห้ามขยาย symbol×TF เต็มก่อน baseline โชว์ชีพจร (ถ้า XAU both-window PF>1 coarse → ค่อยเปิด funnel: Model-4 real-tick
+  → OOS split → MC ตาม robustness-validator · ถ้าติดลบทั้ง 2 window = กลับมาดู logic/default ก่อน ไม่ใช่ tune หนี)
+- ถ้า INIT FATAL (ไม่ใช่ hedging) = **หยุด แจ้ง user** ว่าต้องเทสบนบัญชี/เทอร์มินอล hedging ห้ามแก้ guard ออก
+
+---
+

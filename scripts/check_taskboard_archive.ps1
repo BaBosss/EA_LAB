@@ -947,6 +947,29 @@ function Get-StatusClass {
             if ($s -match $pat) { return [pscustomobject]@{ Class = 'NonTerminal'; Label = $Matches[0].Trim() } }
         }
     }
+    # ORDER-390 fix: a SELF-ATTESTING review verb anywhere in the status wins over an
+    # execution-only verb, regardless of which backtick span it landed in.
+    #
+    # Markdown single-backticks do not nest, so a status that quotes a commit sha or a
+    # script name --
+    #     `DONE(Claude/Opus 2026-07-27, `3a2cee7e`) ... + REVIEWED(Claude/Opus 2026-07-27)`
+    # -- parses as SEVERAL spans, and the first one carries only DONE. The per-span scan
+    # below returns on that first hit, so the REVIEWED never gets seen. Measured
+    # 2026-07-27: 6 orders on the active board were marked REVIEWED in their header yet
+    # classified DONE for exactly this reason, and therefore sat on the board looking like
+    # open work. Quoting a sha or a filename inside a status is completely natural, so this
+    # recurs until the parser accounts for it -- same shape as the ORDER-260 substring bug:
+    # the parser's model of a header not matching how headers are actually written.
+    #
+    # Deliberately narrow. It requires the ATTRIBUTED verb form (`REVIEWED(` or
+    # `REVIEWED/`), not the bare word, so prose like "รอ REVIEWED" cannot promote a block.
+    # It runs AFTER the non-terminal scan, so an OPEN/WAITING/CLAIMED status still wins --
+    # a reviewed-but-reopened order must not become archivable.
+    foreach ($s in $searchSpaces) {
+        if ($s -match 'REVIEWED\s*[(/]') {
+            return [pscustomobject]@{ Class = 'Terminal'; Label = 'REVIEWED' }
+        }
+    }
     foreach ($s in $searchSpaces) {
         foreach ($pat in $script:TerminalPatternsOrdered) {
             if ($s -match $pat) { return [pscustomobject]@{ Class = 'Terminal'; Label = $Matches[0] } }

@@ -5,9 +5,9 @@
 > `-Audit`/`-Strict` are read-only). Re-running the generator against the same
 > manifest reproduces this file byte-for-byte (no timestamps/run-ids embedded).
 > Archive content identity (git blob SHA of ARCHIVE_TASKBOARD_2026-07A.md content --
-> NOT repo HEAD; stable across any commit that does not touch that file): `d8974aec44dbd768aa1a4aba45816dec6252eba7`
+> NOT repo HEAD; stable across any commit that does not touch that file): `085f70f4abae8f5722def24d4049cc9eee8b6c83`
 > Archive whole-file RAW-BYTE SHA256 (as committed, CRLF-as-is -- detects file-level
-> EOL/whitespace drift the per-block hashes below cannot see): `b9bac8cc01d2da9d111e4f6b2b267d47659c57121caaf39ea3f5641ebd958eb6`
+> EOL/whitespace drift the per-block hashes below cannot see): `f96fb27a485c8f36f00c5219032f491b74a9919717ac56b3856fe37e2521fabc`
 > HASH NOTE: the per-block `sha256` column below is a CANONICAL-TEXT hash (CRLF/CR
 > normalized to LF before hashing), not a raw-byte hash -- a CRLF-only edit inside one
 > block will not change that block's sha256; rely on the whole-file raw-byte hash above.
@@ -276,3 +276,15 @@
 | 260\|ORDER\|current-archive#260 | 260 | ORDER | 260 | fc90b4f89fb95851c92a8904800f74fd0673baeda67e8bbd4307889533ca2c97 |
 | 261\|ORDER\|current-archive#261 | 261 | ORDER | 261 | 4d961ccb9df923bdadf07f5de1f8b654045199804d8e234136307ae300415b9e |
 | 237\|ORDER\|current-archive#262 | 237 | ORDER | 262 | b2e5f283b5165be22d34380b7ec8dff0efdd053d856de1bb2e7c959fa0814857 |
+| 350\|ORDER\|current-archive#263 | 350 | ORDER | 263 | 549c2e3d81f1688b226c0d4649266b79d47840ae62c89eb4d4354f9fdd46c0fc |
+| 341\|ORDER\|current-archive#264 | 341 | ORDER | 264 | e7ae780f1861209d3b4f830fd6ded3dfd35fb0b4dabacd9d0ff703f6f1d0082c |
+| 390\|ORDER\|current-archive#265 | 390 | ORDER | 265 | 08e1caf472a8c958646d7ba3e36c5150992b773844b76a6764c0ed2c0d21e38b |
+| 270\|ORDER\|current-archive#266 | 270 | ORDER | 266 | 06996bc5d653bf80ff49e3fa638b60ba9f8ba0181a0564d46e5cf7c272a41b68 |
+| 231\|ORDER\|current-archive#267 | 231 | ORDER | 267 | e3c09570de05e65552c096c578b7e20b30fa1db9939d42c8a515a0c309deaee9 |
+| 238\|ORDER\|current-archive#268 | 238 | ORDER | 268 | f3b3e5ae5cf65d939b9e8ef4b32d12327f9cf666030a64f50d176a2c7d10f6e8 |
+| 250\|ORDER\|current-archive#269 | 250 | ORDER | 269 | 73c01dc3d634425bbfc2f34841d50f84349339d4832b64ad2f9514bb04447f74 |
+| 251\|ORDER\|current-archive#270 | 251 | ORDER | 270 | 95baaa1864939280fb8b86f152e1df39a2c77808df6d38a94a981e148605105e |
+| 252\|ORDER\|current-archive#271 | 252 | ORDER | 271 | c7f4751f38d0d279a381ab0606165b2bb29a75e9fe431dccd6f76a0b5a563e51 |
+| 205\|ORDER\|current-archive#272 | 205 | ORDER | 272 | 8c396587ed58ef4db293d79f36d3f6b8d1ccc5ea97761cb2909518dbb95728b4 |
+| 206\|ORDER\|current-archive#273 | 206 | ORDER | 273 | 6ed5533aaeef8c7bb7e16d787ac38a1b2d5dc65236a497a6691e2a014ca25ee5 |
+| 097\|ORDER\|current-archive#274 | 097 | ORDER | 274 | 1522188f158f1e5022abfdc388356b18d67d8742f1d397faed08b5f119a3440a |
