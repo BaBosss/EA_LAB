@@ -1689,3 +1689,120 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
   ไม่ใช่ 1. **ทำพร้อมกันตอนแก้ 463666728: เปิด `D:\Monitor\MT4 - 69424711\terminal.exe /portable` แล้ว
   login 69424711 ติ๊ก save.** *(หมายเหตุ: handoff บันทึกว่า "user แก้ login 69424711 แล้ว 07-26" — แก้จริง
   แต่แก้ในบริบทที่ rotation เอาไปใช้ต่อไม่ได้ จึงยังไม่ปิด.)*
+
+---
+
+## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `OPEN` · runnable by: **oc-qwen / ZCode** · 👉 recommended: oc-qwen
+**bars:** qualified host = BWD PF ≥ **1.20** at ≥ **30 trades** · borderline = **1.00–1.19** (record, must not be selected) · fail = **< 1.00** · **flat-lot probe:** N-A (this order measures a host; it changes no money management)
+
+**Why this order exists:** ORDER-236 is `BLOCKED` at its own pre-registered gate. The lever pair `_9_RegimeGateAdds` + `CONF_PA_ENGULF` is built, caged, byte-identical when off, and its A/B sets are ready — but the host it was aimed at (Boss_14 GridLog @ AUDNZD H1, `B14_AB_off.set`) measured **MAIN 1.09 / BWD 0.84** under Model 4, and the gate says a host that cannot clear BWD 1.0 comfortably is not worth six more Model-4 runs. The lever has no home. This order goes and finds one — **or proves none exists, which is equally an answer** (memory `escalation-overlay-needs-strong-bwd-host`: an overlay only pays on a host whose BWD is genuinely strong).
+
+**Scope discipline: this order runs CONTROL runs only. It never turns a lever on.** Producing the table is the whole job.
+
+**Compatibility is already settled — do not re-derive it and do not widen the list.** Only `ea_template/Boss_11..18` include `core/`, so only that family has the two inputs at all (verified 2026-07-27: all 8 include it; no other EA does). ORDER-236 already burned one full cycle picking `(Boss)_RSI_MR_GridLog` because its BWD of 1.56 was the prettiest number on the board — it is standalone, it has neither input, and the sweep could never have run.
+
+**Lane:** `D:\Meta 5b` (portable) · **Model 4 real ticks, mandatory.** Model 1/2 are not evidence for this family — 2026-07-17, Model-2 manufactured a fake plateau on a grid on AUDNZD at PF 3-4 which Model-4 cut to **0.61**, and this order is grids on the same chassis. `D:\Meta 5c` has **no tick cache and cannot run Model 4** — do not substitute it. Every run in this order uses the one lane; cross-install comparison stays banned until ORDER-371 closes.
+
+**Why BWD runs before MAIN:** BWD is the gate. A MAIN run on a host that is about to fail BWD is a wasted Model-4 run. One BWD run per host; MAIN only for the hosts that pass.
+
+**📖 How to read a report — never `Get-Content` a `.htm`, it is tens of thousands of tokens:**
+```
+powershell -Command ". D:\EA_LAB\scripts\use_python.ps1; python D:\EA_LAB\scripts\parse_mt5_report.py 'D:\EA_LAB\_mt5_auto\reports\<RPT>.htm'"
+```
+Take only `profit_factor` · `total_trades` · `net_profit` · `balance_drawdown_maximal_pct`. Both paths must be absolute or you get `NO_REPORT`.
+
+### 🔴 STEP 0 — pre-flight. This is the cheap part that is easy to skip and expensive to have skipped.
+
+**(a) Pin the levers explicitly in every set you run.** `_9_RegimeGateAdds` is **absent from every Boss_14 `.set` on disk — including `B14_AB_off.set`, the file ORDER-236 used as its control** (verified 2026-07-27 by grep, not by assumption). MT5 fills an input a `.set` does not list from the **per-terminal cache**, not from the source default (memory `mt5-tester-cache-nondeterminism`). For each host, copy the source set to `_mt5_auto/ab_sets/order430/<SYM>_CTRL.set` and make sure these four lines are present with exactly these values:
+```
+_9_RegimeGateAdds=false
+_50_RegimeMode=0
+StackConfirm=0
+_9_PA_MinBodyRatio=1.0
+```
+<sub>Calibrated so nobody over-reads it: the source defaults are `_9_RegimeGateAdds=false` and `_50_RegimeMode=0`, and `core/Inputs.mqh:179` documents the regime lever as inert unless `_50_RegimeMode != 0`. So the cache would have to have held **both** at a non-default value for a control run to be silently contaminated. The residual risk is low — and it costs four lines per file to remove entirely. Pin it.</sub>
+
+**(b) Confirm on the Inputs page of the first report — values, not just names.** `D:\Meta 5b\MQL5\Experts\Boss_14_GridLog.ex5` was refreshed 2026-07-27 08:55, but confirm anyway: `_9_RegimeGateAdds` · `_50_RegimeMode` · `StackConfirm` must appear **with the values from (a)**. ORDER-236 checked that the names appeared and stopped there, which is exactly why (a) exists. Any mismatch means stop and report `BLOCKED`.
+
+### STEP 1 — one BWD run per host, in this order
+
+Command template — change **only** `-Symbol`, `-Period`, `-SetFile`, `-ReportName`:
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "Boss_14_GridLog" -Symbol USDJPY -Period H1 -FromDate 2020.01.01 -ToDate 2022.12.31 -SetFile "D:\EA_LAB\_mt5_auto\ab_sets\order430\USDJPY_CTRL.set" -ReportName O430_USDJPY_H1_BWD -Model 4 -Terminal "D:\Meta 5b\terminal64.exe" -DataDir "D:\Meta 5b" -Portable
+```
+
+| # | symbol | TF | source set to copy into `order430/` | report name |
+|---|---|---|---|---|
+| 1 | USDJPY | H1 | `ea_template/sets/Boss14_GridLog_USDJPY_DEMO.set` | `O430_USDJPY_H1_BWD` |
+| 2 | EURJPY | H1 | `ea_template/sets/Boss14_GridLog_EURJPY_DEMO.set` | `O430_EURJPY_H1_BWD` |
+| 3 | AUDCAD | H1 | `ea_template/sets/Boss14_GridLog_AUDCAD_DEMO.set` | `O430_AUDCAD_H1_BWD` |
+| 4 | CADJPY | H1 | `ea_template/sets/Boss14_GridLog_CADJPY_DEMO.set` | `O430_CADJPY_H1_BWD` |
+| 5 | EURUSD | H1 | `ea_template/sets/Boss14_GridLog_EURUSD_DEMO.set` | `O430_EURUSD_H1_BWD` |
+| 6 | XAUUSD | H1 | `ea_template/sets/Boss14_GridLog_XAU_DEMO.set` | `O430_XAUUSD_H1_BWD` |
+| 7 | GBPJPY | **H4** | `_vps_deploy/BOSS14_GBPJPY/Boss14_GridLog_GBPJPY_H4_demo_leg8.set` (**copy it out — never edit under `_vps_deploy/`**) | `O430_GBPJPY_H4_BWD` |
+
+<sub>**Why H1 is pinned for rows 1-6:** the per-leg deployed timeframe is not recorded anywhere in the repo (`DEPLOYMENTS.csv` carries symbol and magic, not TF), and a host search only means anything if every host is measured under the same conditions as the CTRL that set the gate — which was AUDNZD **H1**. Row 7 is H4 because the only set that exists for GBPJPY is an H4 leg. **AUDNZD is deliberately absent: it has already been measured at 0.84.**</sub>
+
+**TREE — evaluate each host independently; one host failing does not stop the order:**
+- **BWD PF ≥ 1.20 AND trades ≥ 30** → mark `QUALIFIED`, run **STEP 2** for this host, then continue to the next host
+- **BWD PF 1.00–1.19** → record as `BORDERLINE`, **do not** run STEP 2, continue to the next host
+- **BWD PF < 1.00** → record, continue to the next host
+- **trades < 30** (whatever the PF) → record with the flag `THIN(n=<x>)`, treat as not qualified, continue
+- **a host fails to run twice** → record `BLOCKED(<SYM> run failed: <last error line> — A: skip to next host / B: wait for lead)` and **continue to the next host** — do not stall the whole order on one symbol
+
+### STEP 2 — MAIN, only for hosts marked QUALIFIED
+Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-ReportName O430_<SYM>_<TF>_MAIN`.
+
+### Report format — append one table, nothing else
+| symbol | TF | BWD PF | BWD trades | BWD DD% | MAIN PF | MAIN trades | MAIN DD% | flag |
+
+**If zero hosts qualify, that is a real result, not a failed order** — it means the lever pair has no home yet. Record the table and stop. **The runner does not write that conclusion; the lead does.**
+
+**Prohibitions:** write a verdict, or the words pass/dead/died · **turn either lever on** (that is ORDER-236 STEP 2, not this order) · report Model 1 or Model 2 numbers as evidence · use `D:\Meta 5c` · compare against a number from another install or another lane (ORDER-371) · **touch the 2026 window in any way** (holdout) · modify anything under `_vps_deploy/` — copy out, never edit in place · re-use ORDER-236's AUDNZD numbers as one of these rows (different set, different pinning) · add hosts, change symbols, or reorder the list · touch scorecard / `EA_MASTER_INDEX.csv` / `EDGE_CATALOG.md` / `PROJECT_STATE.md` / `VISION.md` / `B1_DATASET.csv` · touch any `.mq5` or `ea_template/core/`
+
+**What the lead does with the result:** take the highest-BWD qualified host, re-point ORDER-236 STEP 2 at it, and re-register the delta bar in that lane. If nothing qualifies, ORDER-236 closes as *"the lever has no host"* → **PARKED, not dead** — and Boss_16 Kangaroo / Boss_11 GridTrend become the next search tranche (they need sets built first, which is why they are not in this order).
+
+---
+
+## ORDER-431 — [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never been optimized once — `OPEN` · runnable by: **oc-qwen / ZCode** · 👉 recommended: oc-qwen
+**bars:** pass = MAIN PF ≥ **1.2** AND BWD PF ≥ **1.0** · dead = MAIN PF < **1.0** · middle (WATCH/build-on) = MAIN **1.0–1.2** · **flat-lot probe:** N-A (single-order EA, no escalation)
+
+**Where this comes from:** ORDER-205 (REVIEWED, `BUILD-ON`) ran MacdDiv_Naked H4 across three JPY crosses using the **XAU-tuned** `.set` and never optimized a single axis. USDJPY came back **MAIN 1.08 / BWD 1.09** at n=250/221 — unremarkable numbers that are actually the most interesting result of that order, because **it stands above 1.0 in both regimes with a large n**. Stability across regimes is worth more than a tall spike in one window (memory `supertrend-is-a-2023-2025-regime-edge`). Under the "no DEAD before optimize" rule that number closes nothing — it is the smoke test of a new home, not its ceiling.
+
+**Lane:** `D:\Meta 5c` (lane 3) · **Model 1 only** — 5c has no tick cache, Model 4 is impossible there. Every run in this order stays in this lane, including the baseline.
+
+**🔴 The baseline is re-run, not quoted.** ORDER-205's 1.08 was produced in this same lane with this same set, but it is still not this order's control. Run it again as run #1 and measure every arm as a delta against **that** number. (ORDER-236 and ORDER-280 both had to withdraw their own bars for citing absolute numbers tied to another run.)
+
+**Which axes, and why these:**
+- `_07_UseRsiGate` and `_08_UseMacdCross` are **default-off entry-timing gates already built into the EA** and never once exercised. Doctrine says optimize the entry signal first — 2026-07-16, SMC×STO was dead on a default smoke until `StoK 5→17` turned it into a real EURUSD candidate.
+- `_01_SwingRadius` is the structural axis known to move this EA's result.
+- **`_01_LookbackBars` is INERT — proven by ORDER-204's assert. Do not sweep it.** (memory `inert-axis-fake-plateau`: an axis with no effect manufactures a fake plateau.)
+
+**📖 How to read a report:** identical to ORDER-430 — `scripts\parse_mt5_report.py`, absolute paths, never `Get-Content` the `.htm`.
+
+### STEP 1 — baseline + the two entry gates, on MAIN (3 runs)
+Copy `D:\EA_LAB\_vps_deploy\MACDDIV_XAU\MacdDiv_XAU_H4_demo_v1.set` into `_mt5_auto/ab_sets/order431/` three times as `BASE.set`, `RSIGATE.set`, `MACDCROSS.set`; in `RSIGATE.set` set `_07_UseRsiGate=true`, in `MACDCROSS.set` set `_08_UseMacdCross=true`. **Change one value per file, nothing else.**
+```
+powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "MacdDiv_Naked" -Symbol USDJPY -Period H4 -FromDate 2023.01.01 -ToDate 2025.12.31 -SetFile "D:\EA_LAB\_mt5_auto\ab_sets\order431\BASE.set" -ReportName O431_USDJPY_H4_MAIN_BASE -Model 1 -Terminal "D:\Meta 5c\terminal64.exe" -DataDir "D:\Meta 5c" -Portable
+```
+Repeat with `RSIGATE.set` → `O431_USDJPY_H4_MAIN_RSIGATE`, and `MACDCROSS.set` → `O431_USDJPY_H4_MAIN_MACDCROSS`.
+
+**🔴 Report the trade count on every row, always.** A gate that lifts PF by starving the sample is not an edge — memory `feedback-discretionary-showtrade-not-mechanical`. **If any arm drops below 60 trades on MAIN** (baseline is ~250), flag it `THIN(n=<x>)` and do not carry it forward, whatever its PF.
+
+**TREE (evaluate each arm against the re-run BASE):**
+- **arm MAIN PF ≥ 1.2 and not THIN** → **STEP 2**: run that arm on BWD (`-FromDate 2020.01.01 -ToDate 2022.12.31`, `-ReportName O431_USDJPY_H4_BWD_<ARM>`), append, then go to STEP 3
+- **arm MAIN PF above BASE but < 1.2, not THIN** → run BWD the same way, mark `WATCH`, then go to STEP 3
+- **arm MAIN PF ≤ BASE** → record, mark `no lift`, go to STEP 3
+- **a run fails twice** → `BLOCKED(<arm> run failed: <last error line> — A: skip this arm / B: wait for lead)` and continue with the remaining arms
+
+### STEP 3 — `_01_SwingRadius` fan on MAIN, always run (4 runs)
+Take whichever configuration scored highest on MAIN in STEP 1 (BASE counts). Copy it four times into `_mt5_auto/ab_sets/order431/` and set `_01_SwingRadius` = **{2, 3, 4, 5}** — one value per file, everything else untouched. Run all four on MAIN, `-ReportName O431_USDJPY_H4_SW<n>`.
+Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
+<sub>SwingRadius=2 is the current value, so it is both an arm and the anchor — a fan that does not contain its own centre cannot tell a plateau from a cliff, which is what ORDER-340 had to be re-run to discover.</sub>
+
+### STEP 4 — BWD on the fan winner, only if its MAIN PF ≥ 1.2 and it is not THIN
+`-FromDate 2020.01.01 -ToDate 2022.12.31`, `-ReportName O431_USDJPY_H4_BWD_SW<n>`. Append and stop.
+
+**Prohibitions:** write a verdict, or the words pass/dead/died · **run Model 4 on 5c** (no tick cache — the run is meaningless, not merely slow) · report Model 2 numbers · **touch the 2026 window in any way** (holdout burned) · sweep `_01_LookbackBars` (proven inert) · change any input the STEP does not name · modify anything under `_vps_deploy/` — copy out, never edit in place · quote ORDER-205's 1.08 as the control instead of re-running it · draw a conclusion about GBPJPY or EURJPY from this order · touch scorecard / `EA_MASTER_INDEX.csv` / `EDGE_CATALOG.md` / `PROJECT_STATE.md` / `VISION.md` / `B1_DATASET.csv` · touch any `.mq5`
+
+**What the lead does with the result:** if a configuration clears MAIN ≥ 1.2 with BWD ≥ 1.0 on a plateau rather than a spike, USDJPY H4 becomes a second validated home for the MacdDiv mechanism alongside XAU (999094, already DEMO-eligible) and enters the deploy funnel — with a correlation check against the XAU leg before anything is attached. If nothing clears, USDJPY stays `BUILD-ON`: the ceiling of this home will then have been measured once, which is more than is true today.
