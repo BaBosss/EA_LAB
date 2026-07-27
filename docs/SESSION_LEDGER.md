@@ -39,6 +39,7 @@
      แต่ `S-2026-07-27-SLBUFFER` (ACTIVE, 08:40) ประกาศแถวนั้นไว้ก่อนแล้ว ⇒ ถอนออกตามกฎข้อ 4
      (เห็นเลนอื่นประกาศไฟล์/แถวเดียวกัน = รอหรือคุย ไม่ใช่เขียนทับ) · สถานะ 280 ถูกบันทึกไว้ครบแล้ว
      ในแถวปิดของ REV04 อยู่แล้ว ไม่มีอะไรตกหล่น -->
+| `S-2026-07-27-QUEUE` | 2026-07-27 16:55 (user directive: stock the run queue + ship the Codex audits before the token window ends) | **430-439** (uses ORDER-430 · ORDER-431) | `AGENT_TASKBOARD.md` (rows **ORDER-430 · ORDER-431 only** — appended at the end, no existing row touched) · `_triage/HANDOFF_2026-07-27_QUEUE.md` (new file) · `MASTER_BACKLOG.md` (row **D29 only**) · `docs/SESSION_LEDGER.md` (own row + the "numbers used" summary block, which was stale — see below) | **no MT5 lane** (writes orders only, runs nothing) | `ACTIVE` |
 | `S-2026-07-27-SYSTEMS-B` | 2026-07-27 11:50 (เปิดใหม่หลัง `/scrutinize` งานของเลน SYSTEMS เอง — user สั่งแก้) | **410-419** (ต่อจากเลนเดิม · ใช้ ORDER-412 · **413 ยกเลิก ไม่ได้ใช้**) | `scripts/check_taskboard_archive.ps1` · `scripts/_test/run_blobmap_encoding_tests.ps1` · `ARCHIVE_TASKBOARD_2026-07A.md` (append บล็อก ORDER-412) · `MASTER_BACKLOG.md` (แถว **D27 เท่านั้น**) · **ไม่แตะ `AGENT_TASKBOARD.md` เลย** (SLBUFFER ถือ ORDER-280 ค้างอยู่) · `docs/memory_control/B1_DATASET.csv` · `_triage/HANDOFF_2026-07-27_SYSTEMS.md` · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 เลย** | `CLOSED` (2026-07-27 12:30 — ORDER-412 ปิด · finding ที่ 3 ของรีวิวลงเป็น `BACKLOG-D27` เพราะบอร์ดถูกเลนอื่นถืออยู่) |
 | `S-2026-07-27-CAGERUN` | 2026-07-27 13:20 | **420-429** (ใช้ ORDER-420) | `scripts/_test/**` · `.githooks/pre-commit` · `AGENT_TASKBOARD.md` (แถว **ORDER-421 เท่านั้น** — 420 เกิดแล้วปิดเลย เข้าคลังตรง) · `ARCHIVE_TASKBOARD_2026-07A.md` (append บล็อก ORDER-420) · `docs/memory_control/B1_DATASET.csv` · `docs/SESSION_LEDGER.md` (แถวตัวเอง) · `_triage/HANDOFF_2026-07-27_SYSTEMS.md` · `MASTER_BACKLOG.md` (แถว **D28 เท่านั้น**) | **ไม่ใช้เลน MT5 เลย** | `CLOSED` (2026-07-27 14:10 — **ORDER-420 ปิด** `ec2b913d`: วัดเวลาทุกกรงแล้วเสียบ **fast tier 3.8s** เข้า pre-commit แบบมีเงื่อนไข (เฉพาะตอนแก้ `scripts/check_*.ps1` / `scripts/_test/*`) · พิสูจน์ล้มได้ 3 ทาง + เห็น hook รันจริงใน `b045e1a9` · **เจอ `run_order105` แดงมาก่อนแล้วไม่มีใครรู้ → ORDER-421** · กรงช้า 4 ชุด → BACKLOG-D28 · ⚠️ **ห้ามใช้ `git stash` ในเรโปนี้** — เกือบทำงานตัวเองหาย) |
 | `S-2026-07-27-MONITORING` | 2026-07-27 (ต่อจาก CR-P0/Phase-1 monitoring track) | **400-409** (ใช้ ORDER-400) | `_triage/HANDOFF_2026-07-27_MONITORING_CR-P0.md` · `AGENT_TASKBOARD.md` (แถว **ORDER-400 เท่านั้น**) · `scripts/monitor_rotation.ps1` · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 backtest** (แตะแค่ `D:\Monitor` terminals ผ่าน rotation) | `CLOSED` (2026-07-27 11:35 — commit สุดท้าย `d65456a3`) · ORDER-400 ปิด 2/3 ข้อ (**415573666 floating FRESH · Kangaroo rate_flag**) + verify `monitor_rotation.ps1` เต็มรอบ · **ยังค้าง = งานมือ user คืนนี้: login `/portable` ครั้งเดียวให้ `463666728` (MT5) และ `69424711` (MT4)** ⇒ ทำแล้วจะได้ 6/6 floating |
@@ -70,6 +71,19 @@
 
 ## เลขที่ใช้ไปแล้ว (อัปเดตเมื่อจองบล็อกใหม่)
 
-- สูงสุดที่ใช้จริง ณ 2026-07-27 = **280**
-- ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **420-429** (410-419 = SYSTEMS (ปิดแล้ว — ใช้ 410 · 411) · 400-409 = MONITORING (ปิดแล้ว — ใช้ ORDER-400 ซึ่งยัง OPEN รองานมือ user) · 290-299 · 310-319 · 330-339 · 360-369 · 380-389 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY)
+> 🔴 **Corrected 2026-07-27 16:55 (`S-2026-07-27-QUEUE`) — this block had gone stale and was actively dangerous.**
+> It still read "highest actually used = **280**" and "next block available = **420-429**" while the rows above it
+> showed **412 · 420 · 421** already in use. A session that trusted these two lines — which is exactly what they
+> exist for — would have reserved a block that was already taken and collided on its first commit.
+> **Root cause: rule 2 says to update this block when a new block is reserved, but nothing enforces it** — the six
+> lanes opened after 280 (LEVERFAN · CUTLOSS-VERIFY · VERIFY270 · MONITORING · SYSTEMS/-B · CAGERUN) each edited
+> their own row and left the summary alone. The summary is a hand-maintained cache of the rows above it, so it
+> drifts silently and is only read at the exact moment it matters. Same failure class as the detectors that went
+> quiet (ORDER-260 · 341 · 390 · 411): the artifact kept being produced, it just stopped being true.
+> **Not fixed here: nothing yet derives these lines from the tables.** Filed as `BACKLOG-D29`.
+
+- Highest order number actually used as of 2026-07-27 = **421** (numbers in use above 280: 340 · 341 · 350 · 351 · 370-373 · 390 · 400 · 410 · 411 · 412 · 420 · 421)
+- Free but **must not be used** (kept as buffer / old scar tissue): 207 · 208 · 209 · 223-229
+- **Next block available to reserve = `440-449`** — 430-439 is held by `S-2026-07-27-QUEUE` (ACTIVE)
+- Blocks already spoken for: 280-289 = REV04 (closed, but ORDER-280 is still unfinished — never reuse the number) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY · 390-399 = VERIFY270 · 400-409 = MONITORING (ORDER-400 still OPEN, waiting on the user's manual login) · 410-419 = SYSTEMS / SYSTEMS-B · 420-429 = CAGERUN (ORDER-421 still OPEN) · 430-439 = QUEUE
+- Held as buffers: 290-299 · 310-319 · 330-339 · 360-369 · 380-389
