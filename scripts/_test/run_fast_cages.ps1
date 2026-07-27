@@ -26,6 +26,8 @@
       run_order101_negative_tests.ps1   ~120s   -> too slow for a hook
       run_order103_negative_tests.ps1   ~760s   -> too slow for a hook
       run_order105_negative_tests.ps1   520.8s  -> too slow for a hook, AND currently RED
+                                                   (ORDER-421: two real-hook zero-byte cases,
+                                                    pre-existing, cause not yet known)
 
     WHY A TIME BUDGET IS PART OF THE DESIGN, NOT A COMPROMISE
     A hook that costs 10 minutes gets bypassed with --no-verify, and then it protects
