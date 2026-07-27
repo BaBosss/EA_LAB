@@ -283,8 +283,8 @@ report `TSMOM_XAU_D1_MAIN_MC.htm` · leverage assert 1:100 ผ่าน · quali
 **ห้าม drift เงียบ**
 **ห้าม:** เปลี่ยนบาร์เองโดยไม่มี user เคาะ · ปล่อย 4 ตัวนี้ค้างไร้เกณฑ์ตัดสินต่อไป
 
-## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN` · ทำได้: Claude (ออกแบบ) + oc-qwen (รัน) · 👉 แนะ: Claude ออกแบบก่อน
-**bars:** pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
+## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
+**bars:** ~~pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง~~ **← ถอนแล้ว 2026-07-27: บาร์นี้วัด host ไม่ได้วัด lever (ดู STEP 1 ด้านล่าง) · บาร์ที่ใช้จริง = delta vs control ในเลนเดียวกัน** · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
 **ของที่มีอยู่แล้ว:** `_9_RegimeGateAdds` + `CONF_PA_ENGULF` — build เสร็จ (`1aeafc06`, `f65bf2ce`) · cage ผ่าน · byte-identical เมื่อปิด ·
 Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **มี `ea_template/sets/B14_AB_on.set` รออยู่แล้ว**
 **ปัญหา:** ที่เดียวที่เคย matrix มันคือ ORDER-LANEA-AB บน Boss_18 JumStoch ซึ่ง **หยุดที่ base gate**
@@ -293,6 +293,36 @@ Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **�
 **ทำไมน่าทำ:** นี่คือรายการที่ **หลักฐานพร้อมที่สุด** ในกอง untracked ทั้ง 27 — ของสร้างเสร็จ cage ผ่าน .set มีแล้ว เหลือแค่เล็งให้ถูกตัว
 **STEP 1:** เลือก host ที่ BWD >1.0 สบายๆ (ตาม memory `escalation-overlay-needs-strong-bwd-host`) — เสนอ Boss_14 GBPJPY leg-8 หรือ RSI-MR 990103
 **ห้าม:** ใช้ host ที่ BWD ปริ่ม 1.0 (Wave1 พิสูจน์แล้วว่าแพ้) · Model-2
+
+### STEP 1 ปิดแล้ว — design (Claude/Opus 2026-07-27) · **ส่วนของ Claude จบ · ส่วนที่เหลือ = runner**
+**host ที่เลือก = `(Boss)_RSI_MR_GridLog_rev01` EURUSD H1 @ `_mt5_auto/ab_sets/rsimr_fan/RSIMR_CENTER.set`** (RSI25/75+SL25+Dist9)
+ไม่ใช่ Boss_14 GBPJPY leg-8 ตามที่ใบสั่งเดาไว้ · เหตุผล 3 ข้อ:
+1. **BWD 1.56 (MAIN 1.96)** = เกิน 1.0 แบบสบายจริง ไม่ใช่ปริ่ม — ตรงเงื่อนไข memory `escalation-overlay-needs-strong-bwd-host`
+2. **มันเป็น grid** — `_9_RegimeGateAdds` gate ที่ตัว **adds ของ grid** ⇒ host ที่ไม่ใช่ grid ไม่มีอะไรให้ gate เลย
+   (memory `regime-gate-grids-not-breakouts`) ⇒ **ตัด PivotBreakout ออกทั้งที่ BWD 1.22 สวย** เพราะผิดคลาส ไม่ใช่เพราะเลขไม่ดี
+3. plateau แข็งที่สุดเท่าที่วัดมา: sensitivity fan **8/8 variant ยัง PF>1 ทั้งสองหน้าต่าง** (ORDER-185) ⇒ ถ้า lever ขยับผล จะอ่านออกว่าเป็น lever ไม่ใช่ noise
+
+**🔴 2 อย่างที่ใบสั่งนี้เขียนไว้ผิด และต้องแก้ก่อนใครจะรัน:**
+1. **บาร์ปัจจุบัน (`pass = MAIN ≥1.2 AND BWD ≥1.0`) วัด host ไม่ได้วัด lever** — host ตัวนี้ผ่านบาร์นั้นอยู่แล้วตั้งแต่ยังไม่ใส่ lever
+   (1.96/1.56) ⇒ ต่อให้ lever ทำให้แย่ลง มันก็ยัง "ผ่าน" ⇒ **การทดสอบที่แยกไม่ออกว่าดีขึ้นหรือแย่ลง = ไม่ควรรัน**
+   (memory `discriminating-test-must-be-able-to-discriminate`)
+   **บาร์ใหม่ (pre-register ก่อนมีตัวเลขใดๆ 2026-07-27):** วัด **delta เทียบ control run ของ host เดียวกันที่ปิด lever ในเลนเดียวกัน**
+   · pass = **ดีขึ้นทั้ง MAIN และ BWD** AND MC PF-5th ไม่ลด · dead = แย่ลงหน้าต่างใดหน้าต่างหนึ่ง · กลาง = ดีขึ้นหน้าต่างเดียว ⇒ ไม่รับ lever
+   (รูปแบบเดียวกับที่ ORDER-280 ต้องแก้บาร์ตัวเองเพราะเลขสัมบูรณ์ผูกกับเลน)
+2. **`ea_template/sets/B14_AB_on.set` ครอบแค่ lever เดียว** — grep แล้วมี `_9_RegimeGateAdds=true` แต่ **ไม่มี `CONF_PA_ENGULF` เลย**
+   และมันเป็น set ของ chassis **Boss_14** ไม่ใช่ของ host ที่เลือก ⇒ ข้อความ "ของพร้อมแล้ว เหลือแค่เล็งให้ถูกตัว" **มองโลกในแง่ดีเกินจริง**
+   ต้องสร้าง 3 ไฟล์ใหม่จาก `RSIMR_CENTER.set` เอง เปลี่ยนค่าเดียวต่อไฟล์
+
+**STEP 2 (runner) — 4 cell บนเลนเดียวกันทั้งหมด · Model 1 · EURUSD H1 · MAIN 2023.01.01-2025.12.31 + BWD 2020.01.01-2022.12.31:**
+| cell | set | เปลี่ยนจาก CENTER |
+|---|---|---|
+| **control** | `RSIMR_CENTER.set` (ตามเดิม) | — (บังคับ รันใหม่ในเลนเดียวกัน ห้ามอ้างเลขเก่า) |
+| A | `rsimr_lever/A_regimegate.set` | `_9_RegimeGateAdds=true` |
+| B | `rsimr_lever/B_paengulf.set` | `CONF_PA_ENGULF` เปิด |
+| AB | `rsimr_lever/AB_both.set` | เปิดทั้งคู่ |
+**ห้ามเพิ่ม:** อ้างเลข MAIN/BWD เก่าเป็น control (คนละ run คนละเลน) · stack 2 lever ก่อนรู้ผลเดี่ยว · ข้าม control
+**หมายเหตุที่ runner ต้องรู้:** holdout 2026H1 ของ host นี้ **ล้มไปแล้วจริง (0.76/n=21) และพิสูจน์แล้วว่าไม่ใช่ artifact ของ config**
+⇒ lever ที่ชนะจะ**ไม่**ปลดล็อก CANDIDATE ให้ · ประโยชน์ที่หวังได้จริงคือ "ทำให้ host ที่ยังไงก็ BUILD-ON ดีขึ้น" เท่านั้น — อย่าคาดหวังเกินนั้น
 
 ## ORDER-238 — [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น — `DONE(Claude/Opus 2026-07-27, `805a443a`) — ของจริง 16 ไฟล์ไม่ใช่ 5 · แบนเนอร์ 12 · guard §9 ขยาย 3 · qwen_batch_runner ปฏิเสธการรัน + REVIEWED(Claude/Opus 2026-07-27)`
 **ผล:** ใบสั่งนับไว้ 5 — grep เจอ **16**: 8 ตัวรันหน้าต่างนั้นจริง · 2 ตัวสอนมันผ่าน usage example · **3 ตัวเป็น reusable definition**

@@ -60,10 +60,10 @@
 | ORDER-042 | 2026-07-06 | REVIEWED | DealsExporter: nightly deals snapshot สำหรับ /ea-monitor |  | ARCHIVE:2125 |
 | ORDER-043 | 2026-07-09 | REVIEWED/CLOSED | US30 GridLog: IS-optimize probe (optional, EV ต่ำ) |  | ARCHIVE:2033 |
 | ORDER-044 | 2026-07-07 | REVIEWED | EURUSD Trading Forex Robot: full chain re-test | BWD 2020-22 PF 0.39 / -$5,840) | ARCHIVE:2054 |
-| ORDER-045 |  | WAITING-USER | MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) |  | ACTIVE:1127 |
+| ORDER-045 |  | WAITING-USER | MT4 demo experiment #2: UnNomGuai + RSI from pips (คู่, บัญชีใหม่) |  | ACTIVE:1157 |
 | ORDER-046 | 2026-07-07 | REVIEWED/CLOSED | Revival probes: กฎ "ห้าม DEAD ก่อนลอง optimize" กับ ORDER-036 dead pool |  | ARCHIVE:1998 |
 | ORDER-047 | 2026-07-07 | REVIEWED/CLOSED | RSI from pips_EA: symbol/TF breadth → BWD confirm → optimize (user สั่ง 2026-07-07: "ตัวน… |  | ARCHIVE:1960 |
-| ORDER-055 | 2026-07-09 |  | [NEXT SESSION START HERE] demo cohort 8 ตัว: attach + monitor | user attach exporter ×5 บน VPS + เลือกท่อ CSV (OneDrive บน VPS หรือ RDP-copy รายสัปดาห์) + จับตา Boss-TrendSw… | ACTIVE:1143 |
+| ORDER-055 | 2026-07-09 |  | [NEXT SESSION START HERE] demo cohort 8 ตัว: attach + monitor | user attach exporter ×5 บน VPS + เลือกท่อ CSV (OneDrive บน VPS หรือ RDP-copy รายสัปดาห์) + จับตา Boss-TrendSw… | ACTIVE:1173 |
 | ORDER-057 | 2026-07-09 | CLOSED | mold upgrade: `Regime.mqh` (market-state filter, additive) |  | ARCHIVE:5707 |
 | ORDER-058 | 2026-07-09 | REVIEWED | live-monitor dashboard: ตาราง per-EA แบบเข้าใจใน 5 วิ (ต่อยอด DealsExporter) | ระดับ 🟡 ต้องใช้เตือนที่ README ประกาศ (MT4 25%/MT5 15%) ไม่ใช่สูตร 80% ล้วน · verify: synthetic CSV ผ่าน (br… | ARCHIVE:2150 |
 | ORDER-059 | 2026-07-09 | REVIEWED/CLOSED | COT regime filter สำหรับ EA ทอง: exploratory ผ่าน → ต้อง validate เต็ม |  | ARCHIVE:2169 |
@@ -81,7 +81,7 @@
 | ORDER-071 | 2026-07-10 | STAGE2-DONE | rev02 — ST03 entry rescue แบบขั้นบันได (supersede rev01 ด้านบน — user เพิ่มแกน exit 2026-… |  | ARCHIVE:2576 |
 | ORDER-071 |  | OPEN | ST03 entry rescue: HTF trend-gate A/B บน flat-lot |  | ARCHIVE:5065 |
 | ORDER-072 | 2026-07-26 | DONE | build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2 | core\entries\Kangaroo.mqh (ไม่ใช่ core\) · ea_template\tests\run_tests.ps1 (ไม่ใช่ tests\) + REVIEWED(Claude/… | ARCHIVE:7558 |
-| ORDER-073 |  | DONE | News-aware risk system (user directive 2026-07-10) — Phase 1 |  | ACTIVE:1238 |
+| ORDER-073 |  | DONE | News-aware risk system (user directive 2026-07-10) — Phase 1 |  | ACTIVE:1268 |
 | ORDER-074 | 2026-07-10 | DONE | fxDreema X-ray: อ่าน EA คลังเรียนของ user แบบไม่เปลือง token |  | ARCHIVE:2675 |
 | ORDER-075 | 2026-07-10 | DONE | Boss_16 entry sweep v1 (BUY-first) |  | ARCHIVE:2716 |
 | ORDER-075/078 |  |  | NOTE เพิ่ม (user observation 2026-07-10 ค่ำ): Boss_16 entry v1 candidate = SPIKE-FADE |  | ARCHIVE:3036 |
@@ -90,10 +90,10 @@
 | ORDER-078 | 2026-07-11 | DONE | Boss_16 BUY 21/30: validation funnel เต็ม |  | ARCHIVE:2843 |
 | ORDER-079 | 2026-07-26 | DONE | Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10) |  | ARCHIVE:7655 |
 | ORDER-080 | 2026-07-26 | CLOSED | วัดมูลค่า "limit-entry แทน market" บน EA เรา (แรงบันดาลใจ: บอท maker-only ของโพสต์ FB) | ตอบผ่าน ORDER-108 + 091C-D1d ไม่ต้อง build Boss_16 ซ้ำ + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7682 |
-| ORDER-080-orig |  |  | (spec เดิม — superseded) |  | ACTIVE:1295 |
+| ORDER-080-orig |  |  | (spec เดิม — superseded) |  | ACTIVE:1325 |
 | ORDER-081 | 2026-07-11 | DONE | Crypto lane feasibility study (maker-fee scalper blueprint) |  | ARCHIVE:3006 |
-| ORDER-082 | 2026-07-14 | CLOSED | Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) |  | ACTIVE:1307 |
-| ORDER-082 |  |  | AMENDMENT (user ยืนยัน 2026-07-10 ค่ำ) |  | ACTIVE:1335 |
+| ORDER-082 | 2026-07-14 | CLOSED | Entry_Wave5: สัญญาณ Elliott ขา 5 ตาม rule ที่ user ถ่ายทอดเอง (2026-07-10) |  | ACTIVE:1337 |
+| ORDER-082 |  |  | AMENDMENT (user ยืนยัน 2026-07-10 ค่ำ) |  | ACTIVE:1365 |
 | ORDER-083 | 2026-07-10 | DONE | build "(Boss)_NewsGuard" watchdog EA (user เคาะ policy ครบ 2026-07-10) |  | ARCHIVE:3043 |
 | ORDER-083B | 2026-07-11 | DONE | port NewsGuard เป็น MQL4 (คุมกอง no-SL บน MT4 141049900) |  | ARCHIVE:3871 |
 | ORDER-083C | 2026-07-11 | DONE | P0-before-attach: NewsGuard hardening (MT5+MT4) + VPS transport |  | ARCHIVE:4120 |
@@ -105,29 +105,29 @@
 | ORDER-088 | 2026-07-10 | DONE | Oracle EA: ปิดเงื่อนไขค้าง "อ่าน trade list" |  | ARCHIVE:3271 |
 | ORDER-089 | 2026-07-10 | DONE | EA_ZSCORE × AUDCAD: rescue-ladder เต็มตามสูตร (ตัวแรกที่ใช้กฎใหม่ครบวงจร) |  | ARCHIVE:3324 |
 | ORDER-090 | 2026-07-10 | DONE-STOPPED-AT-STAGE-2 | ZSCORE AUDCAD H4: funnel เต็ม (ด่านสุดท้ายก่อน bench) |  | ARCHIVE:3450 |
-| ORDER-091 |  | OPEN | MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท — ลูก 091A-D จ่ายตาม pacing) |  | ACTIVE:1374 |
+| ORDER-091 |  | OPEN | MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท — ลูก 091A-D จ่ายตาม pacing) |  | ACTIVE:1404 |
 | ORDER-091B | 2026-07-11 | DONE-PHASE1 | BOT MOGUL report sweep (เฟส 1: parse+rank+shortlist) |  | ARCHIVE:3614 |
 | ORDER-091B | 2026-07-11 | DONE | เฟส 2 — BWD spot-kill 5 ตัว "least-bad" ของ BOT MOGUL |  | ARCHIVE:3708 |
 | ORDER-091C-D1 | 2026-07-11 | DONE | JUMSTOCH_FIXEDLOT full funnel |  | ARCHIVE:4360 |
 | ORDER-091C-D1b | 2026-07-11 | DONE | JUMSTOCH spread stress (gate ก่อน demo) |  | ARCHIVE:4476 |
 | ORDER-091C-D1c | 2026-07-11 | DONE | JUMSTOCH ขยาย symbol×TF เต็ม (user: "symbol มีอีกเป็น 10 ให้เทส ทุก TF") |  | ARCHIVE:4523 |
-| ORDER-091C-D1d | 2026-07-16 | REVIEWED | JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) | TP-widen A/B + หา reversion base ที่ near-breakeven เป็น demonstrator | ACTIVE:1399 |
+| ORDER-091C-D1d | 2026-07-16 | REVIEWED | JUMSTOCH pending-limit entry variant (= ORDER-080 vehicle, user idea) | TP-widen A/B + หา reversion base ที่ near-breakeven เป็น demonstrator | ACTIVE:1429 |
 | ORDER-091C-D1e |  |  | JUMSTOCH MT5 port + smoke — DONE(Claude-agent, 2026-07-11) |  | ARCHIVE:4649 |
 | ORDER-091C-D1f | 2026-07-11 | DONE | OOS validate JUMSTOCH MT5 ขาใหม่ (EURGBP/NZDUSD) |  | ARCHIVE:4934 |
-| ORDER-091C-D1g | 2026-07-17 | DONE + REVIEWED | JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 202… |  | ACTIVE:1466 |
+| ORDER-091C-D1g | 2026-07-17 | DONE + REVIEWED | JUMSTOCH pending-limit + TP-widen A/B บน confirmed-edge base (closes ORDER-080 + user 202… |  | ACTIVE:1496 |
 | ORDER-092 | 2026-07-11 | DONE | P0: Floating-risk telemetry (ตาบอด floating = รูใหญ่สุดของทั้งระบบ) |  | ARCHIVE:4017 |
 | ORDER-093 | 2026-07-11 | DONE | P0: Deployment truth เดียว + ซ่อม PROJECT_STATE encoding |  | ARCHIVE:4106 |
 | ORDER-094 | 2026-07-11 | DONE | P1: Cage hardening (ปิดทาง stale-pass ทั้ง 4 ตัว) |  | ARCHIVE:4165 |
-| ORDER-095 | 2026-07-17 | CLOSED + REVIEWED | / #4 — Boss_14 GridLog EUR-cross symbol-expand | EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่… | ACTIVE:1119 |
-| ORDER-095 | 2026-07-14 | OPEN | CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อ… | EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_dep… | ACTIVE:1501 |
+| ORDER-095 | 2026-07-17 | CLOSED + REVIEWED | / #4 — Boss_14 GridLog EUR-cross symbol-expand | EURCHF+EURGBP both-window Model-4 coarse = NO home (MAIN spikes only, BWD dead ทุก cell) → PARKED ทั้งคู่ ไม่… | ACTIVE:1149 |
+| ORDER-095 | 2026-07-14 | OPEN | CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อ… | EA_BREAKOUT_XAU → USDJPY (PF 1.28/1.25) + US30 (1.46/1.39 WATCH-thin) demo-eligible · bundles staged _vps_dep… | ACTIVE:1531 |
 | ORDER-095-A | 2026-07-11 | DONE | Boss_14_GridLog ขยาย symbol (ตัวแรก, demo flagship) |  | ARCHIVE:4733 |
 | ORDER-096A | 2026-07-11 | REVIEWED | Alligator+AO naked smoke (WOBR lead 2 ตัวสุดท้าย) |  | ARCHIVE:5000 |
 | ORDER-096B | 2026-07-11 | REVIEWED | ปิดเซลล์ USDJPY IchiADX (PARKED→verdict) |  | ARCHIVE:5028 |
 | ORDER-096C | 2026-07-11 | DONE | commit WOBR intake artifacts |  | ARCHIVE:5048 |
-| ORDER-097 | 2026-07-11 | DONE | build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build |  | ACTIVE:1521 |
-| ORDER-098 |  | OPEN | CAMPAIGN: fxDreema YouTube corpus build-on |  | ACTIVE:1580 |
-| ORDER-098-A | 2026-07-16 | CLOSED | FVG-fill entry (EX009 algo) flat-lot smoke | naked FVG-fill ไม่มี edge — 22 runs ครบ BWD both-regime (0.79-0.88) + RR sweep TP{15,20,25,30,40,60}: PF ไต่ถ… | ACTIVE:1600 |
-| ORDER-098-B | 2026-07-16 | CLOSED | MACD-divergence entry (EX154/EX010 algo) flat-lot smoke | 🥇 XAU H4 ผ่านครบทุกด่าน funnel — MAIN plateau 1.91 (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 1.30 · M… | ACTIVE:1620 |
+| ORDER-097 | 2026-07-11 | DONE | build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11) — build |  | ACTIVE:1551 |
+| ORDER-098 |  | OPEN | CAMPAIGN: fxDreema YouTube corpus build-on |  | ACTIVE:1610 |
+| ORDER-098-A | 2026-07-16 | CLOSED | FVG-fill entry (EX009 algo) flat-lot smoke | naked FVG-fill ไม่มี edge — 22 runs ครบ BWD both-regime (0.79-0.88) + RR sweep TP{15,20,25,30,40,60}: PF ไต่ถ… | ACTIVE:1630 |
+| ORDER-098-B | 2026-07-16 | CLOSED | MACD-divergence entry (EX154/EX010 algo) flat-lot smoke | 🥇 XAU H4 ผ่านครบทุกด่าน funnel — MAIN plateau 1.91 (9 neighbor ไม่มีตัวขาดทุน) · BWD 1.04 · HOLDOUT 1.30 · M… | ACTIVE:1650 |
 | ORDER-098-C | 2026-07-17 | DONE + REVIEWED | FVG-fill + RSI confluence gate (fxDreema course, #098 corpus) | REJECT. build FVGFill_RSIgate (naked 098-A chassis + RSI gate, mql-review PASS, compile 0/0). RSI threshold s… | ARCHIVE:7476 |
 | ORDER-098-C | 2026-07-26 | DONE | reusable MM-parts library (dynamic close_money + Fibonacci-capped lot) |  | ARCHIVE:7806 |
 | ORDER-098-D | 2026-07-17 | DONE + REVIEWED | Currency-strength meter EA (fxDreema CCI-Strength lineage, #098 corpus) | 🟡 PARAMETRIC-marginal → BUILD-ON candidate. naked CurrStrength_Naked (7-pair USD-basket momentum→chart-cross… | ARCHIVE:7478 |
@@ -135,7 +135,7 @@
 | ORDER-098-F | 2026-07-17 | DONE + REVIEWED | Pairs-spread stat-arb (Jobot arbitrage idea + SL cage, #098 corpus) | 🟢 PARAMETRIC CANDIDATE (session's strongest). PairSpread_StatArb — 2-leg hedged, spread=log(A)-log(B) z-scor… | ARCHIVE:7480 |
 | ORDER-098-G | 2026-07-17 | DONE/REVIEWED | Validate stat-arb candidate H4 z2.5 EURUSD/GBPUSD (#098 corpus) |  | ARCHIVE:5543 |
 | ORDER-098-J | 2026-07-17 | DONE/REVIEWED | Fibonacci-pullback concept (new build) |  | ARCHIVE:5548 |
-| ORDER-098-K | 2026-07-17 | DONE/REVIEWED | stat-arb maker(pending-limit) build-on |  | ACTIVE:1121 |
+| ORDER-098-K | 2026-07-17 | DONE/REVIEWED | stat-arb maker(pending-limit) build-on |  | ACTIVE:1151 |
 | ORDER-098-L | 2026-07-17 | DONE/REVIEWED | SMC×STO add OB-zone gate (Stage-1) |  | ARCHIVE:5551 |
 | ORDER-098-M | 2026-07-17 | DONE/REVIEWED | Harmonic geometry (AB=CD / Gartley) naked smoke |  | ARCHIVE:5556 |
 | ORDER-099 | 2026-07-12 | REVIEWED | Contract A: B0 historical baseline + fact→owner map |  | ARCHIVE:5779 |
@@ -147,16 +147,16 @@
 | ORDER-105 | 2026-07-17 | REVIEWED/ACCEPT | Contract D: MVP-1-lite Experiment Event Log (locked JSONL append utility + linked-event s… |  | ARCHIVE:6242 |
 | ORDER-106 | 2026-07-16 | GBPJPY DONE + REVIEWED | rescue #1 จากคิว ORDER-084: Boss_14_GridLog second-symbol pool | ✅ RESCUE สำเร็จ ไม่ตาย — H4 @ dist2.0 plateau both-window + Model-4 CONFIRM (MAIN 1.56/BWD 1.11 ดีขึ้น/HOLDOU… | ARCHIVE:7495 |
 | ORDER-107 | 2026-07-16 | CORRECTED + REVIEWED | SMC×STO signal Stage-0 cheap smoke (user idea 2026-07-16) | 🟩 BUILD-ON candidate ไม่ตาย (user จับถูก — default-smoke ผมรีบตัดสินผิด gate) · optimize จริง 180 passes/sym… | ARCHIVE:7509 |
-| ORDER-108 | 2026-07-16 | DONE + REVIEWED | break-and-retest split-entry (market + pending-limit) บน breakout winner (user idea 2026-… | 🟩 BUILD-ON SUCCESS — build (EXP)_BRK_SplitRetest + A/B Model-4 XAU H1 · retest fill-rate ~90% · adverse-sele… | ACTIVE:1178 |
+| ORDER-108 | 2026-07-16 | DONE + REVIEWED | break-and-retest split-entry (market + pending-limit) บน breakout winner (user idea 2026-… | 🟩 BUILD-ON SUCCESS — build (EXP)_BRK_SplitRetest + A/B Model-4 XAU H1 · retest fill-rate ~90% · adverse-sele… | ACTIVE:1208 |
 | ORDER-109 |  | MAGIC | regime-rescue #1: graft `_50_ Regime.mqh` เข้า Zeus chassis + sweep AUDJPY/AUDUSD both-wi… | 1.5=best MAIN 1.35/BWD 1.20 DD↓, 2023 ยัง -900 structural) · locked .set verified reproduces 1.35 · ⚠️README… | ARCHIVE:5645 |
 | ORDER-110 | 2026-07-16 | DONE + REVIEWED | regime-rescue #2: rebuild XAU_NY (NY-session breakout) บน LabCore chassis (มี `_50_` leve… | 🟡 regime gate ไม่กู้ XAU_NY — rebuild = pure config บน Boss_12_Breakout (Entry-12 Donchian + session filter… | ARCHIVE:5672 |
 | ORDER-111 | 2026-07-16 | DONE + REVIEWED | re-audit open-price-killed pile + source-catalog build-material (user เคาะ 2026-07-16) | Part A 6-marginal recheck = **ไม่มี wrongly-parked** (every-tick แย่ลงทั้ง 6, PF ตกทุกตัว, 2 ตัวโผล่ DD~99% ท… | ARCHIVE:5679 |
 | ORDER-112E | 2026-07-26 | DONE | corr check: Ichimoku-XAU additive หรือ redundant? | 990069 ไม่ใช่ "reserved" แล้ว — attach + ACTIVE บน 463666728 + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7799 |
 | ORDER-115 | 2026-07-17 | DONE + REVIEWED | B1 observation cohort START + event-log adoption guide (§20.2 step 6 @ `4eb839d`) |  | ARCHIVE:6282 |
-| ORDER-116 | 2026-07-18 | CORE DONE | CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2… |  | ACTIVE:1444 |
-| ORDER-117 | 2026-07-18 | CORE DONE | CAMPAIGN: รีด EA ที่ validated แล้ว — coverage (symbol×TF) + precision-filter (user 2026-… |  | ACTIVE:1423 |
+| ORDER-116 | 2026-07-18 | CORE DONE | CAMPAIGN: split-entry breakout — รีด lever (ORDER-108 validated) ให้ครบ portfolio (user 2… |  | ACTIVE:1474 |
+| ORDER-117 | 2026-07-18 | CORE DONE | CAMPAIGN: รีด EA ที่ validated แล้ว — coverage (symbol×TF) + precision-filter (user 2026-… |  | ACTIVE:1453 |
 | ORDER-118 | 2026-07-26 | CLOSED-OBSOLETE | ST03 real-money CutLoss guardrail | user ถอดตระกูล ST03 ออกจากบัญชีจริง 159475669 ทั้ง 3 ตัว (9398/939721/990010 — DEPLOYMENTS.csv = REMOVED, ยืน… | ARCHIVE:7415 |
-| ORDER-119 | 2026-07-19 | REVIEWED | CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) | DEAD-OPTIMIZED (flat-lot MACD-reversion entry, ranger homes) — campaign ปิด, lever A/B ไม่เดิน | ACTIVE:1093 |
+| ORDER-119 | 2026-07-19 | REVIEWED | CAMPAIGN: ST03 rescue รอบ owner-override — 3 lever ที่ยังไม่เคยแตะ (flat-lot bar ตัดสิน) | DEAD-OPTIMIZED (flat-lot MACD-reversion entry, ranger homes) — campaign ปิด, lever A/B ไม่เดิน | ACTIVE:1123 |
 | ORDER-120 | 2026-07-26 | DONE | implement framework Part 4: rewrite CLAUDE.md VERDICT GATE เป็น tree + bar table | CLAUDE.md gate = decision tree (STRUCTURAL→PARAMETRIC→DEAD-OPTIMIZED/BUILD-ON/PARKED-VERIFY/CANDIDATE) + bar… | ARCHIVE:7434 |
 | ORDER-121 | 2026-07-26 | DONE | implement framework Part 3: rewrite skill backtest-optimize-rigor เป็น ladder 0-9 | skill = THE OPTIMIZE LADDER Step 0-9 (windows pin MAIN rolling-36/BWD 2020-22/HOLDOUT 2026H1 · Model-4-mandat… | ARCHIVE:7444 |
 | ORDER-122 | 2026-07-26 | DONE | implement framework Part 2+5: สร้าง docs/PIPELINE.md + sync FINAL RULE 9 skills + AGENTS… | docs/PIPELINE.md สร้างแล้ว (flow owner + routing table 10 boundary + skill roster). FINAL RULE sync 9 skills:… | ARCHIVE:7454 |
@@ -176,7 +176,7 @@
 | ORDER-138 | 2026-07-19 | DONE + REVIEWED | template SEV-1 pack #2 (Codex roadmap 2026-07-19): persist/kill transactional hardening | #1-4 + 138b + 138c ครบ, Codex audit 2 รอบครบ loop → live-rollout blocker ปลด (ฝั่ง code); user ยังต้องเดิน PE… | ARCHIVE:5487 |
 | ORDER-139 | 2026-07-20 | DONE + REVIEWED | Wave-2 XAU optimize ladders: S1 TrendRider H4 + SS4 SweepReversal M15 | S1 = VALIDATED CANDIDATE → DEMO-ready 992004 (plateau 6-cell a20×s{.3,.5}×c{2..3}; center a20/s0.5/c2.5 MAIN… | ARCHIVE:7388 |
 | ORDER-140 | 2026-07-20 | DONE + REVIEWED | SS1 LondonORB BUILD-ON: symbol×TF expansion | ไม่มี home ใหม่ผ่าน bar — GBP 0.79 MAIN / EUR 0.88-0.89 ตาย · USDJPY M15 1.14/1.10 + XAU M30 1.13/1.08 @n~700… | ARCHIVE:5448 |
-| ORDER-141 | 2026-07-20 | DONE | (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) | spec→code→compile+tests พอ) | ACTIVE:1086 |
+| ORDER-141 | 2026-07-20 | DONE | (EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid) | spec→code→compile+tests พอ) | ACTIVE:1116 |
 | ORDER-142 | 2026-07-23 | REVIEWED | AdaptGridMC backtest campaign (ต่อจาก 141 build) | NOT a validated candidate — MAIN PF is a realized-path artifact, structural flaw found | ARCHIVE:5434 |
 | ORDER-143 | 2026-07-26 | DONE | SS1 LondonORB lever ค้าง: partial-TP + trend-filter sweep | input _07_UseTrendFilter/_07_TrendEmaPeriod=200 + _07_PartialPct/_07_PartialAtR ถูกเพิ่มเข้า EA จริง · sweep… | ARCHIVE:7376 |
 | ORDER-144 | 2026-07-26 | DONE | [codex] pre-commit staged-bytes validation (roadmap finding #12, ops-debt) |  | ARCHIVE:7380 |
@@ -186,7 +186,7 @@
 | ORDER-148 | 2026-07-23 | REVIEWED | Boss_17 Wave5 symbol expansion (JPY crosses) | DEAD-OPTIMIZED (new-home expansion) — 0/8 cells cleared MAIN≥1.1 gate on GBPJPY/EURJPY/AUDJPY/CHFJPY H1/H4 (E… | ARCHIVE:5430 |
 | ORDER-149 | 2026-07-23 | REVIEWED + CORRECTED | MacdDiv divergence: majors D1/H4 sweep (ต่อยอด 999094 + GBPUSD-D1 parked) | GBPUSD D1 DEAD-OPTIMIZED (earned properly now) · USDJPY D1 DEAD-OPTIMIZED (holdout-fail) — ORDER-167 ปิดทั้งค… | ARCHIVE:7363 |
 | ORDER-150 | 2026-07-23 | REVIEWED | (MR)_SweepReversal_XAU (SS4, 992006) new-home ladder: ranger symbols | PARKED-VERIFY(user) — EURUSD M15 = weak pulse (PF 1.08/40t), keep for build-on | ARCHIVE:5414 |
-| ORDER-151 | 2026-07-23 | DONE | (TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep |  | ACTIVE:1076 |
+| ORDER-151 | 2026-07-23 | DONE | (TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep |  | ACTIVE:1106 |
 | ORDER-152 | 2026-06-29 | REVIEWED | [infra] doctrine reconciliation: Codex routing + stale verdict vocabulary + doc-retiremen… | moved 6 root docs → _archive_docs/ (DEPLOY_CHECKLIST_2026-06-29 + 5 one-off analysis docs), deleted empty por… | ARCHIVE:7214 |
 | ORDER-153 | 2026-07-23 | REVIEWED | [infra] `portfolio/expectations.csv` + capture-at-attach rule (PQ-03 ครึ่ง data-capture,… |  | ARCHIVE:5124 |
 | ORDER-154 | 2026-07-23 | REVIEWED-WITH-DEFECTS | [infra · money-adjacent] Attach-time portfolio risk budget (admission control) |  | ARCHIVE:5139 |
@@ -197,7 +197,7 @@
 | ORDER-159 | 2026-07-23 | REVIEWED | [infra] DD95 backfill + แก้ basket/leg double-count (ปลดล็อก ORDER-154 ให้ใช้ตัดสินใจได้จ… |  | ARCHIVE:5182 |
 | ORDER-160 | 2026-07-23 | REVIEWED | [infra · core, comment-only] แก้ป้าย "(stub)" ผิดข้อเท็จจริงใน `Inputs.mqh` (RecoveryMode… |  | ARCHIVE:5404 |
 | ORDER-161 | 2026-07-26 | DONE + VERIFIED-NEUTRAL | template: portable money params (cent/USD-safe) + balance-scaled lot sizing |  | ARCHIVE:7332 |
-| ORDER-162 | 2026-07-23 | RESOLVED | [investigation] ~~MT5 tester engine drift~~ → **ROOT CAUSE = leverage unpinnable + margin… |  | ACTIVE:1024 |
+| ORDER-162 | 2026-07-23 | RESOLVED | [investigation] ~~MT5 tester engine drift~~ → **ROOT CAUSE = leverage unpinnable + margin… |  | ACTIVE:1054 |
 | ORDER-163 | 2026-07-23 | REVIEWED | [template hardening, CORE-002] Clean-room dependency audit: Boss V2 ไม่พึ่ง EA_CORE V1 | 0 forbidden dependency | ARCHIVE:5352 |
 | ORDER-164 | 2026-07-23 | REVIEWED | [template hardening, PARAM-001] Full parameter registry — trace ทุก input ใน `Inputs.mqh`… |  | ARCHIVE:5363 |
 | ORDER-165 | 2026-07-26 | DONE | [🔴 T0 BLOCKER · tooling] pin leverage + INPUT CACHE ให้ได้จริง ก่อน re-validate | TESTER INPUT-CACHE ไม่ใช่ leverage · cage พิสูจน์ reproducible 8/8 แล้ว + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7316 |
@@ -220,7 +220,7 @@
 | ORDER-187 | 2026-07-26 | DONE | [core/money] fail-closed first-lot sizing + Wave5 naked-order guard (Codex review 2026-07… | ไม่สะอาด — 2 high/1 med/1 low แล้ว 194c เจอ fix ไม่ครบอีก 2 + บั๊กใหม่ 1) · ⚠️ ประโยค ".set ไม่มีไฟล์พัง" ถูก… | ARCHIVE:7058 |
 | ORDER-188 | 2026-07-26 | DONE | [test] positive-path cage ของ lot mode 42/43 (`scripts\mm_lotmode_test.ps1`) | ✅ เดิมคือ run 6 ไม้ที่ DD-25% ฆ่าตั้งแต่วันที่ 8 · cage ตอนนี้ 13 เคส (E2_unit_indep_hi + K0/K1_scaled_*) + R… | ARCHIVE:7069 |
 | ORDER-189 | 2026-07-26 | DONE | [docs] PARAM_REGISTRY 183/183 + คู่มือ lot mode §3.6 | 183/183 → 184/184 (ตรวจแล้วสองฝั่งตรงกัน) + REVIEWED(Claude/Opus 2026-07-26) | ARCHIVE:7087 |
-| ORDER-190 | 2026-07-24 | DONE | [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) |  | ACTIVE:1003 |
+| ORDER-190 | 2026-07-24 | DONE | [lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in) |  | ACTIVE:1033 |
 | ORDER-191 | 2026-07-26 | DONE 2026-07-24 | [docs/tooling] parameter linkage matrix + ล้างหนี้ line-number ของ registry | Sonnet lane + Claude verify · b/c: commit de14b3f3 "ORDER-191(b)(c): generated parameter linkage doc + inacti… | ARCHIVE:7175 |
 | ORDER-192 | 2026-07-24 | REVIEWED | [tooling] OnInit effective-config summary + optimizer active-parameter guard | [CFG] sizing block landed + follow-up fix commit a97d7f7e "effective-config summary was lying about entry 16"… | ARCHIVE:7181 |
 | ORDER-192(b) | 2026-07-26 | DONE | [tooling] optimizer active-parameter guard (`scripts/optimize_guard.ps1`) |  | ARCHIVE:7134 |
@@ -240,14 +240,14 @@
 | ORDER-202 | 2026-07-25 | REVIEWED | [audit] retro-scan: which verdicts were selected on the burned 2026H1 holdout |  | ARCHIVE:7093 |
 | ORDER-203 | 2026-07-25 | FIXED + REVIEWED | [macro/bug] core MRIS classifier: `user_pin=110` ทำให้ **replay ย้อนหลังทุกใบก่อนปี 2026… |  | ARCHIVE:6810 |
 | ORDER-204 | 2026-07-25 | REVIEWED | [tooling/retro] genetic retro-audit: verdict ไหนตัดสินจาก genetic run ที่ไม่มี fine-grid… |  | ARCHIVE:6761 |
-| ORDER-205 | 2026-07-27 | DONE | [expand] MacdDiv_Naked H4: 3 symbol ใหม่ (conditional, เดินต้นไม้เองได้) |  | ACTIVE:517 |
-| ORDER-206 | 2026-07-27 | DONE | [expand] PivotBreakout H4: 3 symbol ใหม่ (conditional) |  | ACTIVE:584 |
+| ORDER-205 | 2026-07-27 | DONE | [expand] MacdDiv_Naked H4: 3 symbol ใหม่ (conditional, เดินต้นไม้เองได้) |  | ACTIVE:547 |
+| ORDER-206 | 2026-07-27 | DONE | [expand] PivotBreakout H4: 3 symbol ใหม่ (conditional) |  | ACTIVE:614 |
 | ORDER-210 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · funnel] `EA_BREAKOUT_XAU` 991001 re-optimize บนหน้าต่างสะอาด | 🟡 กลาง ตามบาร์ที่ล็อกไว้ล่วงหน้า → คง v2 บนเงินจริง ไม่สลับ | ARCHIVE:6297 |
 | ORDER-211 | 2026-07-25 | REVIEWED | [macro/re-validate] MacroGate 990120: หลักฐานเดิมสร้างจาก classifier ที่พัง | 🔴 ถอดสถานะ "VALIDATED deploy-candidate" → ADVISORY-ONLY | ARCHIVE:6347 |
 | ORDER-212 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · integrity] `NuiIndy` guardrail `CutLoss=30` — หาหน้าต่างที่มันถูกวัดมา | provenance = CLEAN · แต่หลักฐานพิสูจน์คนละเรื่องกับที่ถูกอ้าง | ARCHIVE:6410 |
-| ORDER-213 | 2026-07-25 | DONE | [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด |  | ACTIVE:409 |
+| ORDER-213 | 2026-07-25 | DONE | [bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด |  | ACTIVE:439 |
 | ORDER-214 | 2026-07-25 | REVIEWED | [🔴 เงินจริง · integrity] Gold Reaper 4.3: lab เขียน CORE ให้ EA เงินจริงโดยที่ plateau-c… | แก้ข้อความแล้ว · funnel = ไม่คุ้มรัน อธิบายเหตุผลไว้ | ARCHIVE:6684 |
-| ORDER-215 | 2026-07-26 | PART 1 DONE | [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-… | "bounded+SL" ถอนแล้ว — safety switch ไม่ตอบสนอง · re-measure funnel ยัง OPEN | ACTIVE:447 |
+| ORDER-215 | 2026-07-26 | PART 1 DONE | [🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-… | "bounded+SL" ถอนแล้ว — safety switch ไม่ตอบสนอง · re-measure funnel ยัง OPEN | ACTIVE:477 |
 | ORDER-216 | 2026-07-25 | REVIEWED | [demo · funnel] MacdDiv XAU H4 (999094): เติม fine-grid + fan ที่ genetic pick ไม่เคยมี | 🔴 plateau เดิม = ของปลอมที่สร้างจากแกนตาย · cell จริงคือ knife-edge → ถอดสถานะ "ผ่านครบทุกด่าน" → PARKED-VER… | ARCHIVE:6714 |
 | ORDER-217 | 2026-07-25 | REVIEWED | [lever/build-on] MacdDiv: เส้น MACD signal ที่ EA ไม่เคยอ่าน = lever ที่ยังไม่เคยลอง | 🟨 กลาง ตามบาร์ที่ล็อกไว้ → เก็บเป็น lever ใน EDGE_CATALOG ไม่ deploy · code เก็บไว้ (default OFF พิสูจน์ ine… | ARCHIVE:6599 |
 | ORDER-218 | 2026-07-25 | DONE + REVIEWED | [ops/integrity] error sweep: เครื่องเตือนไว้แล้ว แต่ไม่มีใครอ่าน |  | ARCHIVE:6492 |
@@ -261,18 +261,18 @@
 | ORDER-233 |  | OPEN | [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% |  | ACTIVE:257 |
 | ORDER-234 |  | OPEN | [🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ |  | ACTIVE:267 |
 | ORDER-235 |  | OPEN | [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ |  | ACTIVE:277 |
-| ORDER-236 |  | OPEN | [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ |  | ACTIVE:286 |
+| ORDER-236 | 2026-07-27 | OPEN | [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ | host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.… | ACTIVE:286 |
 | ORDER-237 | 2026-07-26 | REVIEWED | [integrity] "GBPJPY leg-8" = 3 magic 2 spacing คนละตัวกัน |  | ARCHIVE:7935 |
-| ORDER-238 | 2026-07-27 | DONE | [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น |  | ACTIVE:297 |
-| ORDER-239 |  | OPEN | [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge |  | ACTIVE:315 |
-| ORDER-250 | 2026-07-27 | DONE | [🔴 demo · order-of-record หาย] SS1 LondonORB 992003: ผ่าน funnel ขึ้น demo โดยไม่มีใบสั่… |  | ACTIVE:323 |
-| ORDER-251 | 2026-07-27 | DONE | [🔴 integrity · หนี้ระบบ] คลัง skill ที่เป็นเจ้าของบาร์ตัดสินทุกใบ อยู่นอก repo และไม่มี… |  | ACTIVE:366 |
-| ORDER-252 | 2026-07-27 | DONE | [tooling] staleness linter: บล็อกที่ปิดแล้วยังพูดสิ่งที่ถูกหักล้างไปแล้ว |  | ACTIVE:387 |
+| ORDER-238 | 2026-07-27 | DONE | [tooling/integrity] `2026.06.01` ค้างใน 5 สคริปต์ที่ guard มองไม่เห็น |  | ACTIVE:327 |
+| ORDER-239 |  | OPEN | [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge |  | ACTIVE:345 |
+| ORDER-250 | 2026-07-27 | DONE | [🔴 demo · order-of-record หาย] SS1 LondonORB 992003: ผ่าน funnel ขึ้น demo โดยไม่มีใบสั่… |  | ACTIVE:353 |
+| ORDER-251 | 2026-07-27 | DONE | [🔴 integrity · หนี้ระบบ] คลัง skill ที่เป็นเจ้าของบาร์ตัดสินทุกใบ อยู่นอก repo และไม่มี… |  | ACTIVE:396 |
+| ORDER-252 | 2026-07-27 | DONE | [tooling] staleness linter: บล็อกที่ปิดแล้วยังพูดสิ่งที่ถูกหักล้างไปแล้ว |  | ACTIVE:417 |
 | ORDER-260 | 2026-07-26 | REVIEWED | [🔴 tooling/integrity] validator ตี order ที่ REVIEWED แล้วเป็น NonTerminal เพราะคำว่า "h… | แก้แล้ว — anchor NonTerminal pattern ที่ต้นช่วง backtick · วัดผลจริง Terminal 47→69, Terminal+REVIEWED 7→24 (… | ARCHIVE:7901 |
 | ORDER-261 | 2026-07-26 | REVIEWED | [bookkeeping] ปิดกอง B: 28 ใบรอ REVIEW + 9 ใบต้องแก้ข้อความก่อนย้าย | ปิดครบ — เขียน review ให้ 28 ใบที่หลักฐาน resolve ได้ + แก้ข้อความ 9 ใบที่ถูกหลักฐานใหม่หักล้าง (073 · 143 ·… | ARCHIVE:7923 |
 | ORDER-270 | 2026-07-27 | DONE | [tooling/integrity] กรงของ validator ใช้งานไม่ได้จริง — negative suite ช้าจนไม่มีใครรัน |  | ACTIVE:126 |
 | ORDER-280 | 2026-07-26 | CLAIMED | [lever] rev04 re-entry บน BTC H4 — สวีป 3 anchor | 30) | ACTIVE:85 |
-| ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:648 |
+| ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:678 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
 | ORDER-LANEC-FAN | 2026-07-18 | DONE + REVIEWED | SMC×STO EURUSD H1 sensitivity fan + Model-4 | WEAK candidate — edge-positive but SL-fragile. 26 M4 runs. center 1.39/1.19 both-window; 5/6 axes robust (Ema… | ARCHIVE:7005 |
 | ORDER-LANEC-REBUILD | 2026-07-18 | DONE + REVIEWED | SMC×STO rebuild for an SL plateau (parallel to live demo 991070) | NO SWAP — keep demo 991070. 35 M4 runs (coarse SL×TP grid MAIN + plateau-center SL3.5/TP1.2 both-window+fan+h… | ARCHIVE:7400 |
