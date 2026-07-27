@@ -593,13 +593,63 @@ function Get-GitBlobOidMap {
     $psi.RedirectStandardError = $true
     $psi.UseShellExecute = $false
     $psi.CreateNoWindow = $true
-    $proc = [System.Diagnostics.Process]::Start($psi)
+
+    # ORDER-411 (2026-07-27). Process.StandardInput is a StreamWriter that .NET Framework
+    # builds from [Console]::InputEncoding with AutoFlush=true, and AutoFlush=true emits
+    # that encoding's PREAMBLE at construction. When the session's console input encoding
+    # is UTF-8 the preamble is EF BB BF, so git's FIRST request arrives as
+    # "<BOM><sha>:<path>", does not resolve, and comes back "missing". The chain walk then
+    # aborted with "archive path not readable at <sha> (renamed/deleted mid-chain?)" naming
+    # a commit where `git ls-tree` plainly shows the file - the error blamed history for an
+    # encoding bug, and cost most of an afternoon.
+    #
+    # Four things measured here rather than assumed, each of which sent me the wrong way once:
+    #   - POSITIONAL, not commit-specific: only the first request carries the BOM, so
+    #     reordering the refs moves the failure onto a different, equally innocent commit.
+    #   - SESSION-DEPENDENT: a console on the OEM codepage has no preamble, so identical code
+    #     passes for one lane and blocks another on the same commit ("it worked for them").
+    #   - Writing to $proc.StandardInput.BaseStream with a BOM-less writer does NOT help:
+    #     merely READING the .StandardInput property constructs the AutoFlush writer, so the
+    #     preamble is in the pipe before your first byte. Dumped the child's received bytes
+    #     to see this (239 187 191 65 65 ...).
+    #   - It is [Console]::InputEncoding, NOT OutputEncoding. Pinning OutputEncoding changes
+    #     nothing; the byte dump is identical with and without it.
+    # ProcessStartInfo.StandardInputEncoding would be the direct fix, but it is .NET Core only.
+    #
+    # The setter can throw when there is no attached console input (stdin redirected, which
+    # is exactly what a git hook may do), so a failure to pin is expected, not exceptional.
+    # In that case we do not silently ship a corrupt first request: we send a sacrificial
+    # first line for the preamble to land on and drop its reply, keeping the strict
+    # reply-count alignment below honest.
+    $bomAbsorber = $null
+    $savedInputEncoding = $null
+    try { $savedInputEncoding = [Console]::InputEncoding } catch { $savedInputEncoding = $null }
+    try {
+        [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
+    } catch {
+        $pre = @()
+        try { $pre = [Console]::InputEncoding.GetPreamble() } catch { $pre = @() }
+        if ($pre.Count -gt 0) { $bomAbsorber = 'ORDER411-preamble-absorber-not-a-real-ref' }
+    }
+    try {
+        $proc = [System.Diagnostics.Process]::Start($psi)
+        # Construct the writer while the encoding is still pinned.
+        $null = $proc.StandardInput
+    } finally {
+        if ($null -ne $savedInputEncoding) {
+            try { [Console]::InputEncoding = $savedInputEncoding } catch { }
+        }
+    }
 
     # Start draining stdout BEFORE writing stdin: on a long chain the reply
     # stream can exceed the pipe buffer, and a write-then-read order deadlocks.
     $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
     $stderrTask = $proc.StandardError.ReadToEndAsync()
 
+    # See the ORDER-411 note above Process.Start. Normally the writer was constructed under
+    # a BOM-less encoding and these lines reach git unprefixed; $bomAbsorber is only set on
+    # the fallback path where the encoding could not be pinned at all.
+    if ($bomAbsorber) { $proc.StandardInput.WriteLine($bomAbsorber) }
     foreach ($ref in $Refs) {
         $proc.StandardInput.WriteLine(('{0}:{1}' -f $ref, $Path))
     }
@@ -613,6 +663,9 @@ function Get-GitBlobOidMap {
     }
 
     $lines = @($stdout -split "`r?`n" | Where-Object { $_ -ne '' })
+    # Drop the sacrificial line's reply (ORDER-411 fallback path only) BEFORE the count
+    # check, so the alignment guard still means what it says.
+    if ($bomAbsorber -and $lines.Count -gt 0) { $lines = @($lines[1..($lines.Count - 1)]) }
     if ($lines.Count -ne $Refs.Count) {
         throw ('git cat-file --batch-check returned {0} rows for {1} inputs -- refusing to guess the alignment' -f $lines.Count, $Refs.Count)
     }
