@@ -114,10 +114,18 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 **bars:** N-A (สืบสวน) · **flat-lot probe:** N-A
 **ที่มา:** ORDER-420 ไล่วัดเวลาทุกกรงเพื่อจัด tier แล้วเจอว่า **`run_order105_negative_tests.ps1` exit 1**
 · **วัดก่อนแตะ hook** (521 วินาที · แล้วรันซ้ำยืนยัน) ⇒ **ไม่ใช่ผลจากงานของ ORDER-420**
-**เคสที่แดง 2 เคส (ชื่อตรงตัว):** `real-hook-first-event-from-committed-zero-byte-manifest-passes` ·
-`real-hook-first-event-from-committed-zero-byte-month-passes` — ทั้งคู่เป็นเคสตระกูล **`real-hook`** คือเคสที่
-**เรียก pre-commit hook จริง**ใน temp repo ⇒ มันคุมพฤติกรรมของ Contract D (ORDER-105) ตอนเจอ manifest/month
-ขนาด 0 ไบต์ที่ commit ไปแล้ว
+**เคสที่แดง = 3 ไม่ใช่ 2** (แก้ 2026-07-27 หลังรันเต็มจบ — ตอนแรกผมอ่านจากผลที่ยังรันไม่จบแล้วเขียนว่า 2
+**ซึ่งผิด**; 15 เคสทั้งหมด):
+1. `real-hook-first-event-from-committed-zero-byte-manifest-passes`
+2. `real-hook-first-event-from-committed-zero-byte-month-passes`
+3. **`suite-unhandled-exception`** ← detail **ว่างเปล่า**
+
+ข้อ 1-2 เป็นตระกูล **`real-hook`** (เรียก pre-commit hook จริงใน temp repo) และ**ทั้งคู่รายงาน
+`{"status":"appended"...}`** คือ event ถูก append สำเร็จ แต่เคสคาดหวังอย่างอื่น
+**🎯 สมมติฐานที่ต้องทดสอบก่อน:** ข้อ 3 อาจเป็น**ต้นเหตุ** และข้อ 1-2 เป็น**อาการ** (suite โยน exception
+แล้วเคสที่ค้างอยู่ถูกนับเป็น FAIL ตามไป) — **ห้ามเริ่มจากการไล่แก้ 2 เคสแรกก่อนพิสูจน์ว่ามันไม่ใช่ downstream**
+`suite-unhandled-exception` ที่ detail ว่าง = ตัว suite กลืน message ของ exception ทิ้ง ⇒ งานแรกคือ
+**ทำให้มันพ่น exception จริงออกมาก่อน** ไม่ใช่เดาว่าอะไรพัง
 **ทำไมต้องมีใบ:** `check_experiment_events.ps1` **อยู่ใน pre-commit จริง** (บล็อก commit ได้) ⇒ กรงของมันแดง
 = เราไม่รู้ว่ามันยังทำงานถูกไหม · และ**ไม่มีที่ไหนในเรโปบันทึกว่ามันแดง** — ไม่มีใน backlog ไม่มีใน handoff
 ไม่มีใน PROJECT_STATE ⇒ มันแดงมานานเท่าไรก็ไม่มีใครรู้ **นี่คือเหตุผลที่ ORDER-420 มีอยู่ในรูปธรรม**
