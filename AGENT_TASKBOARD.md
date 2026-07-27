@@ -1933,3 +1933,20 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 **🔴 ORDER-200 Phase D remains gated on this audit PLUS user ratification.** The audit says no, so the question does not reach the user yet. Nothing about this order authorises folding crisis scores into the real-money MacroGate path.
 
 **ห้าม / Prohibitions:** let any crisis score touch a money path before this order closes · treat a `data_status = OK` as evidence of freshness anywhere until the feeder is fixed · quote replay numbers from `portfolio/mris/backtest/*.csv` as validation while they remain untracked and unbound to a commit · rewrite history-bound one-shot scripts to hide what past runs actually did
+
+## ORDER-490 — [🔴 guard coverage] Wave5 guard G4 has never been observed firing — prove it can, or stop counting it as a control — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (guard-coverage work, not an EA measurement) · **flat-lot probe:** N-A
+
+**Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §1 finding 6 + the counters added in `c44ca743`/`671783b1`. Two full regression runs over the same window report `sl_invalid=0` across **2936 evaluated bars**:
+`evaluated=2936 signalled=26 unaccounted=0 | no_swings=0 bad_pattern=2568 no_tick=0 not_in_zone=203 struct_invalid=52 already_latched=87 NO_RISK_ATR=0 sl_invalid=0`
+
+**Why this is not a footnote.** Guard G4 — the broker stops-level check in `Wave5_SLValid` (`ea_template/core/ExitManager.mqh:25-47`) — is the control the **entire ORDER-082 structural design rests on**: it is what makes Wave5 "preventive, not detective", and it is the reason the naked-probe design was accepted in the first place. It has now been observed executing **zero times**. Per the VERDICT GATE guard clause that is `UNTESTED`, and the clause is explicit that *numbers identical to base in every digit is evidence a guard is inert, not evidence it is safe*. **Nobody has ever seen this guard reject anything.** That was invisible until 2026-07-27 because there was no counter; it is now measured, and the measurement is zero.
+
+**The work — a discriminating test, not a bigger sample:**
+1. Force the reject deliberately. `SYMBOL_TRADE_STOPS_LEVEL` is a broker property, so the lever is the **distance**, not the level: pick a symbol/TF where the wave-1 invalidation sits within the stops level, or drive `_17_SLbufferATR` to ~0 so `slPrice` lands within `minDist` of the tick. **Pre-register both directions** (`gate-specificity-not-just-sensitivity`): a config where it MUST fire, and one where it MUST stay silent.
+2. Confirm via the counter (`sl_invalid` > 0) **and** zero trades from that path — not from the report alone, which cannot tell the two apart.
+3. If it turns out G4 **cannot** fire on any reachable config, that is the real finding and it is bigger than this ticket: the naked-probe acceptance rested on a control that does not exist. Say so plainly rather than closing this quietly.
+
+**Also in scope (same class, cheap while here):** `NO_RISK_ATR=0` — the finding-2 guard added the same day is in the identical position. Its reachability is argued from `Indicators.mqh:104`, never demonstrated.
+
+**ห้าม / Prohibitions:** close this by running a longer window and reporting a bigger zero — a bigger sample of "never fired" is the same evidence · treat `sl_invalid=0` as proof the guard works · touch a live account or any `_vps_deploy/` bundle · edit `ea_template/core/` without `tpl_regression.ps1` in the same session · re-pin the baseline without the `re-pin` declaration (`.githooks/commit-msg` enforces it, and as of 2026-07-27 it actually can)
