@@ -1544,3 +1544,13 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **ห้าม:** ให้ expected-vs-actual เขียน verdict หรือเลื่อน judge bar · delegate (นี่ judgment work).
 
 **ที่ไม่เปิดเป็นงานในชุดนี้ (มี owner/trigger แล้ว):** attestation gap 40/56 = ORDER-184 lane คุมอยู่ · Boss V2 heartbeat = CR-003 เต็มรูป/หลัง judge (deployment ใหม่ก่อน ห้าม roll fleet) · fast risk monitor อ่าน Common\Files ตรง = CR-007 (ปี 2, dependency credential-alarm ยังไม่ปิด).
+
+## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN`
+**source:** CR-P0 exporter merge (`eda4733`, 2026-07-27) พิสูจน์แล้วว่า combined DealsExporter เขียน floating ได้จริง — หลัง rotation เช้า 07-27 = **6/6 health FRESH, 4/6 floating FRESH**. เหลือ 2 terminal ที่ยัง floating BLIND ด้วยเหตุ operational คนละแบบ (ไม่ใช่ merge พัง — อีก 4 ตัวพิสูจน์แล้ว).
+**งาน 3 ข้อ:**
+- (1) **463666728** — rotation โหลด EA แล้วตายด้วย `EURUSDm symbol synchronization timeout` (~5 นาที) ถูก remove ก่อนเขียน snapshot เสถียร (เกิดซ้ำตั้งแต่ 07-21). root cause = chart symbol `EURUSDm` ไม่ sync บน demo crypto/multi-asset ตัวนี้ (position จริงเป็น BTCJPYm/XAGUSDm/XAUUSDm). **แก้: เปลี่ยน symbol ของ 463666728 ใน `scripts\monitor_rotation.ps1` (บรรทัด ~23) จาก `EURUSDm` เป็นตัวที่มันมีชัวร์ — น่าจะ `XAUUSDm` หรือ `BTCUSDm` (verify Market Watch ก่อน).** snapshot EA อ่านข้อมูลระดับบัญชี chart symbol แค่ต้อง exist+sync พอ.
+- (2) **415573666** — เช้านี้ authorized+synced ปกติ (7 positions) แต่ไม่มี snapshot + ไม่มีบรรทัด "DealsExporter loaded" ใน log → สอบว่าทำไม EA ไม่ attach/run บน terminal ตัวเดียวนี้ (rotation entry vs profile).
+- (3) **rate_flag reconcile (low-pri):** Gold_Kangaroo L1-4 บน 141049900 flag UNDER_RATE (obs 2.6-6.9/wk vs expWk 34.3) — น่าจะ expectation-basis mismatch (backtest trade-count basis ≠ live MT4 closed-order counting) ไม่ใช่ EA เงียบจริง. reconcile `trades_per_month_expected` ของ 4 magic นั้นใน `expectations.csv` หรือยืนยันว่า under-trade จริง. advisory ไม่แตะ promotion bar.
+**acceptance:** (1) หลังแก้ symbol → rotation รอบถัดไป 463666728 floating = FRESH · (2) 415573666 floating = FRESH · (3) rate_flag ของ Kangaroo หายหรือมีคำอธิบาย basis ที่ถูกต้อง · เป้ารวม snapshot **6/6 floating FRESH**.
+**ห้าม:** เปลี่ยน symbol ของ terminal อื่นที่ทำงานดีอยู่แล้ว · แตะ deals export logic (byte-identical ต้องคงไว้).
+**ทำได้:** Claude/Sonnet lane (infra ล้วน, ไม่ใช่ money/verdict).
