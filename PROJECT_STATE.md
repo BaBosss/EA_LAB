@@ -241,6 +241,13 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
 
 > 🧠 **MEMORY-CONTROL OS BUILD (canonical 2026-07-12):** implementation source = `_triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md` §20 @ `4eb839d` (full SHA in §3 Decision log) · split orders as **serial — Contract A first** · **stop review after system order 4** · **MVP-2 still B1-gated**. Design not repeated here — owner = §20.
 
+**🆕 2026-07-27 evening (Opus-seat) — Codex blind-audit findings verified, then repaired · handoff = [`_triage/HANDOFF_2026-07-27_AUDIT_REPAIR.md`](_triage/HANDOFF_2026-07-27_AUDIT_REPAIR.md)**
+> **14 findings checked: 13 CONFIRMED · 1 scope-corrected · 0 REFUTED.** Codex read this code accurately; its line numbers ran 0-7 early *systematically per file* (an older revision, not a different file).
+> **Repaired:** MRIS `asof` now means *when the observation is for*, in **both** feeders (the validated one was missed on the first pass and caught by `/scrutinize`) · basket risk units correlate as the **summed two-leg series** instead of borrowing one leg's correlations (account 463666728: **84.372% → 56.641%**, still over its 25% budget) · Wave5 refuses an entry when Risk-ATR is unreadable, takes the **fill side** for its entry reference, and refuses the config that opened naked positions · the deposit-load cap now refuses when it cannot measure.
+> **🔴 Three guards were found to be reading the wrong input, all the same shape as the audit itself** — the artifact kept being produced, it just stopped being true: the MRIS freshness gate measured the *fetch* clock; the fast-cage hook did not watch the directory its new cage protects; the ORDER-144 baseline `re-pin` rule read `.git/COMMIT_EDITMSG` from **pre-commit**, where it holds the *previous* commit's message (moved to a new `.githooks/commit-msg`).
+> **🔴 The most important number is a zero.** Wave5 guard **G4 — the control the entire ORDER-082 naked-probe design was accepted on — has never been observed firing** (0 across 2936 bars, two runs). Invisible until counters existed; now measured → **ORDER-490**.
+> **Honest coverage:** only ORDER-432 finding 3's guard was *demonstrated* firing. Findings 2/4/5 are fail-closed branches on runtime data failures that cannot be forced in the tester ⇒ `UNTESTED` by the VERDICT GATE's own rule, and not written up as passed.
+
 **Open now (2026-07-27):**
 - **ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`, the only place a binary actually
   reaches a live chart (0 records) ⇒ this is the route by which a stale binary reaches **portfolio #1**,
