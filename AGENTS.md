@@ -123,8 +123,8 @@ paths at once · ZCode = a separate GLM quota.
 5. **Git:** commit often; the commit message starts with your own tag `[codex]` / `[zcode]` / `[oc-*]` · no push/force/rebase/amend ·
    no `--no-verify` (the pre-commit guard is everyone's bumper) · work on the current branch, do not create/switch branches yourself ·
    **a Claude commit ends with `Co-Authored-By:` matching the current seat model — both trailers are accepted**
-   (user ratified 2026-07-23): `Claude Opus 4.8 <noreply@anthropic.com>` or `Claude Fable 5
-   <noreply@anthropic.com>`, whichever seat is actually running (the Fable-seat is available again — the
+   (user ratified 2026-07-23, seat model updated 2026-07-27): `Claude Opus 5 <noreply@anthropic.com>`
+   or `Claude Fable 5 <noreply@anthropic.com>`, whichever seat is actually running (the Fable-seat is available again — the
    old 1-week trial condition is over; if Fable disappears again, continue on Opus) · there is no git
    config for this trailer, it is a message trailer typed by hand on every commit ·
    **the key condition of the Fable-seat: mechanical work must always be distributed to cheaper tiers

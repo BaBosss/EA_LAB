@@ -234,7 +234,7 @@
   Ichimoku/PrevDay/EMA-cross/SuperTrend/GR optimize/#20 Trend+Pyramid/MT4 goldgrid, all of them — see details
   at `MASTER_BACKLOG.md`) **but there is a genuinely new candidate from the 2026-07-03 work: `(Boss)_ZeusInspired_GridLog_rev01`
   on AUDUSD/AUDJPY (genuinely passed IS/OOS)** — see the next bullet + `ZEUS_GOLD_HEDGE_ANALYSIS.md` +
-  `EA_SCORECARD_AND_REGISTRY.md` Â§FRESH TEMPLATE EAs
+  `EA_SCORECARD_AND_REGISTRY.md` §FRESH TEMPLATE EAs
 - **🆕 (2026-07-03) Zeus Gold Hedge V1.2 analyzed + built on — quick summary:**
   analyzed the user's closed/locked EA (behavioral analysis only, no file touched) → found it to be grid+martingale+hedge
   with **no stop loss at all** → REJECT both XAU/EU (low score, not a hard gate — see the rubric fix below)
@@ -341,7 +341,7 @@ fail-closed · deployment truth = `portfolio\DEPLOYMENTS.csv` (checker validates
 - Correlation script: `D:\EA_LAB\_mt5_auto\zigl_correlation.py`
 - Monte Carlo script: `D:\EA_LAB\scripts\mt5_montecarlo.py`
 - full analysis + timeline: `ZEUS_GOLD_HEDGE_ANALYSIS.md` · registry: `EA_SCORECARD_AND_REGISTRY.md`
-  Â§FRESH TEMPLATE EAs
+  §FRESH TEMPLATE EAs
 
 **Gotcha you need to know before running further (hit these today, don't hit them again):**
 - `_04_TpUsd` is a fixed dollar amount, does not auto-scale with lot — expanding `_05_BaseLot` must expand `_04_TpUsd` +
