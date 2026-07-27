@@ -31,7 +31,9 @@ datetime g_wave5_latched_peak = 0;   // wave-3-peak datetime already signalled (
 int g_w5_n_eval        = 0;   // bars evaluated (the denominator for everything below)
 int g_w5_n_no_swings   = 0;
 int g_w5_n_bad_pattern = 0;
-int g_w5_n_not_in_zone = 0;
+int g_w5_n_no_tick     = 0;   // SymbolInfoTick failed (symbol not synced - a real path)
+int g_w5_n_not_in_zone = 0;   // retrace has not reached the fib zone YET (still valid)
+int g_w5_n_struct_inv  = 0;   // wave4 overlapped wave1 - structure BROKEN (a different thing)
 int g_w5_n_latched     = 0;
 int g_w5_n_no_atr      = 0;   // ORDER-432 finding 2: Risk-ATR unreadable -> entry refused
 int g_w5_n_sl_invalid  = 0;   // guard G4: structural SL failed the broker stops-level check
@@ -45,18 +47,35 @@ void Entry_Wave5_Init()
    g_wave5_tp_price      = 0.0;
    g_wave5_entry_ref     = 0.0;
    g_w5_n_eval = 0; g_w5_n_no_swings = 0; g_w5_n_bad_pattern = 0;
-   g_w5_n_not_in_zone = 0; g_w5_n_latched = 0; g_w5_n_no_atr = 0;
+   g_w5_n_no_tick = 0; g_w5_n_not_in_zone = 0; g_w5_n_struct_inv = 0;
+   g_w5_n_latched = 0; g_w5_n_no_atr = 0;
    g_w5_n_sl_invalid = 0; g_w5_n_signalled = 0;
 }
 
 // Printed once at OnDeinit. A guard that fired ZERO times is reported as zero on
 // purpose: per the VERDICT GATE that reads as UNTESTED, and it must not be written up
 // as "passed" just because the run was clean.
+//
+// `unaccounted` is the load-bearing field. The first version of these counters missed
+// the no-tick return entirely, and the way that was caught was luck: the arithmetic
+// happened to close in that run (2568+255+87+26 = 2936) only because the path never
+// fired, and that closing sum was then presented as EVIDENCE the counters were wired
+// correctly. An invariant used as evidence has to be enforced, not observed -- so the
+// sum is now computed here. Any future return path added without a counter makes
+// `unaccounted` non-zero and says so in the log, instead of quietly weakening every
+// number on the line.
 void Entry_Wave5_LogCounters()
 {
-   PrintFormat("[17][counters] evaluated=%d signalled=%d | rejected: no_swings=%d bad_pattern=%d not_in_zone=%d already_latched=%d NO_RISK_ATR=%d sl_invalid=%d",
-               g_w5_n_eval, g_w5_n_signalled, g_w5_n_no_swings, g_w5_n_bad_pattern,
-               g_w5_n_not_in_zone, g_w5_n_latched, g_w5_n_no_atr, g_w5_n_sl_invalid);
+   int counted = g_w5_n_no_swings + g_w5_n_bad_pattern + g_w5_n_no_tick +
+                 g_w5_n_not_in_zone + g_w5_n_struct_inv + g_w5_n_latched +
+                 g_w5_n_no_atr + g_w5_n_sl_invalid + g_w5_n_signalled;
+   int unaccounted = g_w5_n_eval - counted;
+   PrintFormat("[17][counters] evaluated=%d signalled=%d unaccounted=%d | rejected: no_swings=%d bad_pattern=%d no_tick=%d not_in_zone=%d struct_invalid=%d already_latched=%d NO_RISK_ATR=%d sl_invalid=%d",
+               g_w5_n_eval, g_w5_n_signalled, unaccounted, g_w5_n_no_swings, g_w5_n_bad_pattern,
+               g_w5_n_no_tick, g_w5_n_not_in_zone, g_w5_n_struct_inv, g_w5_n_latched,
+               g_w5_n_no_atr, g_w5_n_sl_invalid);
+   if(unaccounted != 0)
+      PrintFormat("[17][counters] WARN unaccounted=%d - a return path in Entry_Evaluate has no counter; every rejection number above is understated", unaccounted);
 }
 
 EntrySignal Entry_Evaluate()
@@ -113,7 +132,7 @@ EntrySignal Entry_Evaluate()
    double invalidationLevel = w1_end.price; // wave-1 top (long) / wave-1 bottom (short)
 
    MqlTick t;
-   if(!SymbolInfoTick(_Symbol, t)) return Entry_MakeNone("wave5: no tick");
+   if(!SymbolInfoTick(_Symbol, t)) { g_w5_n_no_tick++; return Entry_MakeNone("wave5: no tick"); }
    double px = (dir == 1 ? t.bid : t.ask);
    double closePx = iClose(_Symbol, _Period, 1);
 
@@ -127,9 +146,14 @@ EntrySignal Entry_Evaluate()
    {
       // beyond invalidation (structure broke) or not retraced enough yet:
       // never chase with a resting limit - no pending bookkeeping in this seam.
+      // counted separately on purpose: "overlapped wave1" means the STRUCTURE broke and
+      // this setup is dead, while "not yet in the zone" means it is still perfectly
+      // valid and merely early. Lumping them under one `not_in_zone` label (as the
+      // first version did) makes the counter misreport what it counts, which is a
+      // smaller version of the problem these counters exist to solve.
+      if(dir == 1 && closePx <= invalidationLevel) { g_w5_n_struct_inv++; return Entry_MakeNone("wave5: wave4 overlapped wave1 top - invalid"); }
+      if(dir == 2 && closePx >= invalidationLevel) { g_w5_n_struct_inv++; return Entry_MakeNone("wave5: wave4 overlapped wave1 bottom - invalid"); }
       g_w5_n_not_in_zone++;
-      if(dir == 1 && closePx <= invalidationLevel) return Entry_MakeNone("wave5: wave4 overlapped wave1 top - invalid");
-      if(dir == 2 && closePx >= invalidationLevel) return Entry_MakeNone("wave5: wave4 overlapped wave1 bottom - invalid");
       return Entry_MakeNone("wave5: wave4 not yet in entry zone");
    }
 
