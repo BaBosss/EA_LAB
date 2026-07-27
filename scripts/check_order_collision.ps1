@@ -194,6 +194,15 @@ function Get-LedgerLanes {
        Throws when the ledger has no recognisable lane table at all -> caller exits 2. #>
     param([AllowEmptyString()][string]$Text)
 
+    # Strip HTML comments BEFORE splitting into lines. The row loop below stops at the first
+    # non-blank line that is not a table row, so a <!-- ... --> note placed between the separator
+    # and the first lane row silently truncated the table to ZERO lanes -- and a zero-lane parse
+    # is reported as a NOTE, not a failure, so every reserved-block and owned-path rule was
+    # skipped without anyone being told. Happened for real on 2026-07-27 (a VERIFY270 explanatory
+    # note landed directly under the header). Explanatory prose inside the table is a reasonable
+    # thing for a human to write; a guard that quietly switches itself off because of it is not.
+    $Text = [regex]::Replace($Text, '(?s)<!--.*?-->', '')
+
     $lines = @($Text -split "`r?`n")
     $sawAnyTableLine = $false
     $headerIdx = -1
@@ -438,6 +447,14 @@ if (-not $ledgerPresent) {
     }
     $activeLanes = @($lanes | Where-Object { $_.Status -eq 'ACTIVE' })
     if ($activeLanes.Count -eq 0) {
+        # "0 lanes parsed" and "every lane is closed" look identical in the output but mean
+        # opposite things: the first is the guard failing to read its own input, the second is
+        # the guard correctly having nothing to enforce. Separate them loudly -- a parser that
+        # reads nothing while the file plainly says ACTIVE is a broken guard, not a quiet day.
+        if ($lanes.Count -eq 0 -and $ledgerText -match 'ACTIVE') {
+            Write-Host ('{0} BLOCK: parsed 0 lane rows from {1} but the file contains "ACTIVE" -- the lane table is unreadable, so reserved-block and owned-path rules would be silently skipped. Fix the table (stray prose/HTML between the header separator and the first row truncates it).' -f $Tag, $LedgerPath)
+            exit 1
+        }
         Write-Host ('{0} NOTE: no ACTIVE lane in {1} ({2} row(s) parsed) -- reserved-block and owned-path rules skipped' -f $Tag, $LedgerPath, $lanes.Count)
     } else {
         $ledgerUsable = $true
