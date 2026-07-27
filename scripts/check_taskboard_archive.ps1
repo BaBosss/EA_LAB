@@ -669,8 +669,12 @@ function Get-GitBlobOidMap {
     # Do NOT write this as $lines[1..($lines.Count-1)]: PowerShell's `1..0` is a DESCENDING
     # range (1,0), so on a single-line reply that expression returns the absorber row it was
     # supposed to remove. Measured. Select-Object -Skip handles 0 and 1 rows correctly.
+    # .Contains, NOT -like: the token contains '?', which -like treats as a single-character
+    # WILDCARD, so "*...absorber?not-a-real-ref*" would also match ...absorberXnot-a-real-ref.
+    # Harmless for the token we send, but it makes a fail-closed guard quietly fuzzy, and it
+    # would break outright if anyone put a '*' in the token. .Contains is ordinal.
     $absorberReply = if ($lines.Count -gt 0) { $lines[0] } else { '' }
-    if ($absorberReply -notlike "*$BOM_ABSORBER*") {
+    if (-not $absorberReply.Contains($BOM_ABSORBER)) {
         throw ("stdin preamble absorber did not come back as the first reply (got '{0}') -- refusing to guess the alignment" -f $absorberReply)
     }
     $lines = @($lines | Select-Object -Skip 1)
