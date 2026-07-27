@@ -50,14 +50,14 @@
 <body>
 <header>
   <h1>🏭 EA_LAB — Dashboard</h1>
-  <div class="sub">generated 2026-07-17 17:02 · branch master · commit 8624153a · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
+  <div class="sub">generated 2026-07-27 14:19 · branch master · commit 5af1f827 · <b>ห้ามแก้ไฟล์นี้มือ</b> (regenerate ทุก commit)</div>
 </header>
 <div class="wrap">
 
   <div class="stats">
-    <div class="stat"><div class="n" style="color:var(--amber)">67</div><div class="l">วันถึง Judge (2026-09-22)</div></div>
+    <div class="stat"><div class="n" style="color:var(--amber)">57</div><div class="l">วันถึง Judge (2026-09-22)</div></div>
     <div class="stat"><div class="n" style="color:var(--red)">0</div><div class="l">งานรอมือคุณ</div></div>
-    <div class="stat"><div class="n" style="color:var(--blue)">9</div><div class="l">order เปิดค้าง</div></div>
+    <div class="stat"><div class="n" style="color:var(--blue)">24</div><div class="l">order เปิดค้าง</div></div>
     <div class="stat"><div class="n" style="color:var(--green)">9 + 0</div><div class="l">EA live + demo</div></div>
   </div>
 
@@ -92,7 +92,7 @@
     <div class="scroll"><table>
       <tr><th>#</th><th>EA</th><th>Symbol/TF</th><th>Magic</th><th>OOS PF</th><th>สถานะ</th></tr>
       <tr><td>1</td><td>Matchagrid MG_v1</td><td>CHFJPY M15</td><td class='mono'>(GUI default)</td><td>2.08</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
-<tr><td>2</td><td>NuiIndy RSI+ADX</td><td>EURUSD H1</td><td class='mono'>1524</td><td>2.00</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
+<tr><td>2</td><td>NuiIndy RSI+ADX</td><td>EURUSD H1</td><td class='mono'>1524</td><td>2.00</td><td><span class='tag t-live'>🟢 LIVE ⚠️ edge=geometric martingale (2026-07-18) — guardrail rec CutLoss=30 (NUI_cut30only.set); _triage/ORDER095_NUIINDY_EXPAND_VERDICT.md</span></td></tr>
 <tr><td>3</td><td>ST_EA03 MACD</td><td>GBPUSD H1</td><td class='mono'>9397</td><td>2.47</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
 <tr><td>4</td><td>ST_EA03 MACD</td><td>USDCAD H1</td><td class='mono'>9398</td><td>2.62</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
 <tr><td>5</td><td>Gold Reaper 4.3</td><td>XAUUSD H1</td><td class='mono'>(default/GUI)</td><td>2.07</td><td><span class='tag t-live'>🟢 LIVE</span></td></tr>
@@ -104,25 +104,40 @@
   </div>
 
   <div class="card">
-    <h2>📋 คิวงานเปิด (9)</h2>
+    <h2>📋 คิวงานเปิด (24)</h2>
     <div class="scroll"><table>
       <tr><th>Order</th><th>สถานะ</th><th>เรื่อง</th></tr>
-      <tr><td class='mono'>ORDER-072</td><td><span class='tag t-claim'>CLAIMED</span></td><td>build "(Boss)_Kangaroo" = Boss_16 บนแม่พิมพ์ V2</td></tr>
+      <tr><td class='mono'>ORDER-410</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source</td></tr>
+<tr><td class='mono'>ORDER-371</td><td><span class='tag t-open'>OPEN</span></td><td>[ops/integrity] tick history ของ Meta 5b เพี้ยนจาก terminal หลัก</td></tr>
+<tr><td class='mono'>ORDER-372</td><td><span class='tag t-open'>OPEN</span></td><td>[test] NuiIndy CutLoss 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก ตลาด ปิด ไม่ใช่ปฏิทิน</td></tr>
+<tr><td class='mono'>ORDER-340</td><td><span class='tag t-open'>OPEN</span></td><td>[expand/decisive] PivotBreakout GBPJPY: SL fan ฝั่งต่ำกว่า base</td></tr>
+<tr><td class='mono'>ORDER-230</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD</td></tr>
+<tr><td class='mono'>ORDER-232</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด</td></tr>
+<tr><td class='mono'>ORDER-233</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · audit] --resolve-single-leg-baskets: flag ที่พลิกงบพอร์ต 73% → 38%</td></tr>
+<tr><td class='mono'>ORDER-234</td><td><span class='tag t-open'>OPEN</span></td><td>[🔴 เงินจริง · migration] PERSIST_MIGRATION checklist: ลอยข้าม handoff 3 ใบโดยไม่มีเจ้าของ</td></tr>
+<tr><td class='mono'>ORDER-235</td><td><span class='tag t-open'>OPEN</span></td><td>[policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้</td></tr>
+<tr><td class='mono'>ORDER-236</td><td><span class='tag t-open'>OPEN</span></td><td>[lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์</td></tr>
+<tr><td class='mono'>ORDER-239</td><td><span class='tag t-open'>OPEN</span></td><td>[monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge</td></tr>
+<tr><td class='mono'>ORDER-213</td><td><span class='tag t-done'>DONE</span></td><td>[bookkeeping · ก่อน attach] Boss_16/Kangaroo: แก้บาร์ตัดสิน demo ให้เป็นเลขสะอาด</td></tr>
+<tr><td class='mono'>ORDER-215</td><td><span class='tag t-done'>DONE</span></td><td>[🔴 เงินจริง · integrity] MatchaGrid CHFJPY: verdict CORE อ้าง genetic run ที่ไม่มี fine-stage</td></tr>
+<tr><td class='mono'>ORDER-GEN-STANDING</td><td><span class='tag t-open'>OPEN</span></td><td>matrix screening (standing order, ไม่มีวัน DONE)</td></tr>
+<tr><td class='mono'>ORDER-190</td><td><span class='tag t-done'>DONE</span></td><td>[lever/funnel] MM-OWNER-002: Boss_16/Kangaroo ให้ scale ตาม balance ได้ (opt-in)</td></tr>
+<tr><td class='mono'>ORDER-151</td><td><span class='tag t-done'>DONE</span></td><td>(TRND)_TsMom_XAU (S2, 992001) demo-isolate bundle prep</td></tr>
+<tr><td class='mono'>ORDER-141</td><td><span class='tag t-done'>DONE</span></td><td>(EXP)_AdaptGridMC_rev01 build (FINDYOUR8 #1 MC block-bootstrap zone grid)</td></tr>
 <tr><td class='mono'>ORDER-073</td><td><span class='tag t-done'>DONE</span></td><td>News-aware risk system (user directive 2026-07-10)</td></tr>
-<tr><td class='mono'>ORDER-079</td><td><span class='tag t-done'>DONE</span></td><td>Idea mining คลังคอร์ส: concept catalog (reframe จาก user 2026-07-10)</td></tr>
-<tr><td class='mono'>ORDER-112E</td><td><span class='tag t-done'>DONE</span></td><td>corr check: Ichimoku-XAU additive หรือ redundant?</td></tr>
 <tr><td class='mono'>ORDER-091</td><td><span class='tag t-open'>OPEN</span></td><td>MASTER PLAN: intake คลัง Forex 9 โฟลเดอร์ของ user (แผนแม่บท</td></tr>
+<tr><td class='mono'>ORDER-117</td><td><span class='tag t-done'>DONE</span></td><td>CAMPAIGN: รีด EA ที่ validated แล้ว</td></tr>
+<tr><td class='mono'>ORDER-116</td><td><span class='tag t-done'>DONE</span></td><td>CAMPAIGN: split-entry breakout</td></tr>
 <tr><td class='mono'>ORDER-095</td><td><span class='tag t-done'>DONE</span></td><td>CAMPAIGN: ขยาย symbol ให้ EA ที่ deploy อยู่แล้ว (user 2026-07-11: "ขยายผลไปตัวที่ demo อยู่ ได้อีกเ...</td></tr>
-<tr><td class='mono'>ORDER-097</td><td><span class='tag t-done'>DONE</span></td><td>build "(HEX)_HexaGrid" (user สั่งเขียนจากสเปคเอง 2026-07-11)</td></tr>
 <tr><td class='mono'>ORDER-098</td><td><span class='tag t-open'>OPEN</span></td><td>CAMPAIGN: fxDreema YouTube corpus build-on</td></tr>
-<tr><td class='mono'>ORDER-098-C</td><td><span class='tag t-open'>OPEN</span></td><td>reusable MM-parts library (dynamic close_money + Fibonacci-capped lot)</td></tr>
+<tr><td class='mono'>ORDER-400</td><td><span class='tag t-open'>OPEN</span></td><td>[infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666)</td></tr>
     </table></div>
-    <div class="note">ปิดไปแล้วทั้งหมด 41 order — ประวัติเต็มอยู่ใน AGENT_TASKBOARD*.md</div>
+    <div class="note">ปิดไปแล้วทั้งหมด 20 order — ประวัติเต็มอยู่ใน AGENT_TASKBOARD*.md</div>
   </div>
 
   <div class="card">
     <h2>🕐 Commits ล่าสุด</h2>
-    <div class="mono">8624153a [claude] PROJECT_STATE decision log: ORDER-105 Contract D = ACCEPT closed (8 blind review rounds)<br>d8686dcc [claude] ORDER-105 mark REVIEWED/ACCEPT on taskboard (Contract D closed, 8 blind review rounds)<br>0e13699e [claude] ORDER-105 Contract D COMPLETE: locked JSONL event log + schemas + evidence manifest + staged checker (8 blind review rounds)<br>1b05d5a8 [claude] ORDER-098-L/M: OB-gate no robust lift (keep Stage-0) + harmonic DEAD (freq-starved)<br>27c4a76a [claude] ORDER-073 #3: embed MRIS whisper into LIVE_DASHBOARD + daily chain<br>9b0ba9ea [claude] taskboard: 098-K maker DONE (no lift) + stock 098-L (SMC OB-gate) / 098-M (harmonic) execute-ready<br>ccd84f6a [claude] ORDER-098-K: stat-arb maker(pending-limit) entry = NO LIFT, market baseline stays<br>0392cf52 [claude] ORDER-073 #2: lock MRIS tripwires as user-sanctioned defaults + in-file tuning guide</div>
+    <div class="mono">5af1f827 Translate PROJECT_STATE.md to English and split out PROJECT_HISTORY.md<br>89a83853 Translate AGENTS.md to English-only; no semantic changes<br>18569eda Translate CLAUDE.md to English-only; no semantic changes<br>a3da96bf Second scrutinize pass: harden the absorber guard, and regenerate the digest I left stale<br>bed55e7c Handoff: record the co-edit happening in the other direction, measured today<br>621fc3fd SESSION_LEDGER: close the SLBUFFER lane<br>44ec6e10 ORDER-412: the ORDER-411 fix worked, and was still the wrong shape<br>99a73910 ORDER-280 REVIEWED: two of three anchors were never tested, and the reason generalises</div>
   </div>
 
   <footer>
