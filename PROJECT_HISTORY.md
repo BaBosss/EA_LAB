@@ -254,7 +254,7 @@
   PF1.96→M1 real 1.06) — recorded in both `EA_SCORECARD_AND_REGISTRY.md` and the `backtest-optimize-rigor` skill
 - **🆕 (2026-07-03) new skill `locked-ea-analyzer`** — captures the whole closed/locked-EA analysis methodology for reuse
   (string-entropy check, pulling params from .set/.ini/Journal, infer behavior, web search, screen, optimize,
-  validate) invoked with "analyze this EA in detail"
+  validate) invoked with "analyze this EA in detail" / "วิเคราะห์ EA ตัวนี้อย่างละเอียด" (both are literal trigger strings in the skill description — kept verbatim)
 
 ---
 
