@@ -370,6 +370,14 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+#ifdef LAB_ENTRY_17
+   // ORDER-432 finding 6: print the Wave5 guard fire counts. Without this a report of
+   // zero trades cannot distinguish "no eligible signal" from "a guard rejected
+   // everything" from "the guard never ran" -- and the VERDICT GATE requires a fired
+   // count before any guard may be written up as passed. Diagnostic only; nothing
+   // branches on it, and no other build compiles this line.
+   Entry_Wave5_LogCounters();
+#endif
    if(_MG_SelfGate) MG_Deinit();   // clear any MACROGATE_* GVs we set
    Regime_Deinit();
    Indi_Deinit();
