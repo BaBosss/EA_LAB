@@ -75,9 +75,9 @@ the daily rotation snapshot is once/day and near-useless for live position risk)
 
 | รายการ | ปลายทาง |
 |---|---|
-| floating BLIND 463666728 (EURUSDm sync-timeout → เปลี่ยน symbol) | ORDER-400 |
-| floating BLIND 415573666 (EA ไม่ produce snapshot เช้านี้) | ORDER-400 |
-| rate_flag Gold_Kangaroo L1-4 reconcile (expectation-basis) | ORDER-400 |
+| floating BLIND 463666728 — **สาเหตุที่เดาไว้ (symbol) ผิด**; จริง = ไม่มี saved login ในโฟลเดอร์ portable | ORDER-400 (OPEN, รอ user login `/portable` ครั้งเดียว) |
+| floating BLIND 415573666 — **สาเหตุที่เดาไว้ (EA ไม่ attach) ผิด**; จริง = update-day `/config` path ถูกตัดที่ช่องว่าง + rotation ปล่อย orphan | DONE (`c297295d`, verified 4/6→5/6) |
+| rate_flag Gold_Kangaroo L1-4 reconcile (expectation-basis) | DONE (`c297295d`, basket-vs-leg unit mismatch) |
 | CR-P0 exporter merge (built · compiled · deployed · proven live 4/6) | DONE |
 | CR-P0 user logins 69424711 + 463666728 | DONE |
 | CR-TRACK Phase-1 (CR-003a/b · CR-002c/d · CR-TOOL-01 · CR-005-lite-b) | DONE |

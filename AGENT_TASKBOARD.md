@@ -1566,7 +1566,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 **ที่ไม่เปิดเป็นงานในชุดนี้ (มี owner/trigger แล้ว):** attestation gap 40/56 = ORDER-184 lane คุมอยู่ · Boss V2 heartbeat = CR-003 เต็มรูป/หลัง judge (deployment ใหม่ก่อน ห้าม roll fleet) · fast risk monitor อ่าน Common\Files ตรง = CR-007 (ปี 2, dependency credential-alarm ยังไม่ปิด).
 
-## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN`
+## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN — (2) + (3) ปิดแล้ว (Claude 2026-07-27, commit c297295d) · เหลือ (1) 463666728 รอ user`
 **source:** CR-P0 exporter merge (`eda4733`, 2026-07-27) พิสูจน์แล้วว่า combined DealsExporter เขียน floating ได้จริง — หลัง rotation เช้า 07-27 = **6/6 health FRESH, 4/6 floating FRESH**. เหลือ 2 terminal ที่ยัง floating BLIND ด้วยเหตุ operational คนละแบบ (ไม่ใช่ merge พัง — อีก 4 ตัวพิสูจน์แล้ว).
 **งาน 3 ข้อ:**
 - (1) **463666728** — rotation โหลด EA แล้วตายด้วย `EURUSDm symbol synchronization timeout` (~5 นาที) ถูก remove ก่อนเขียน snapshot เสถียร (เกิดซ้ำตั้งแต่ 07-21). root cause = chart symbol `EURUSDm` ไม่ sync บน demo crypto/multi-asset ตัวนี้ (position จริงเป็น BTCJPYm/XAGUSDm/XAUUSDm). **แก้: เปลี่ยน symbol ของ 463666728 ใน `scripts\monitor_rotation.ps1` (บรรทัด ~23) จาก `EURUSDm` เป็นตัวที่มันมีชัวร์ — น่าจะ `XAUUSDm` หรือ `BTCUSDm` (verify Market Watch ก่อน).** snapshot EA อ่านข้อมูลระดับบัญชี chart symbol แค่ต้อง exist+sync พอ.
@@ -1575,3 +1575,36 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 **acceptance:** (1) หลังแก้ symbol → rotation รอบถัดไป 463666728 floating = FRESH · (2) 415573666 floating = FRESH · (3) rate_flag ของ Kangaroo หายหรือมีคำอธิบาย basis ที่ถูกต้อง · เป้ารวม snapshot **6/6 floating FRESH**.
 **ห้าม:** เปลี่ยน symbol ของ terminal อื่นที่ทำงานดีอยู่แล้ว · แตะ deals export logic (byte-identical ต้องคงไว้).
 **ทำได้:** Claude/Sonnet lane (infra ล้วน, ไม่ใช่ money/verdict).
+
+**ผลรัน (Claude 2026-07-27, commit `c297295d`) — root cause ทั้งสองข้อ "ไม่ตรง" กับที่ order เดาไว้:**
+- **(2) 415573666 = ปิดแล้ว ✅ verified end-to-end.** ไม่ใช่ EA ไม่ attach. วันนั้นเป็น**วันที่ terminal auto-update**:
+  MT5 relaunch ตัวเองแล้ว re-emit command line ของตัวเองโดย**ไม่ re-quote `/config`** → path
+  `D:\Monitor\MT5 - 415573666\monitor_startup.ini` ถูกตัดที่ช่องว่างแรกเหลือ `D:\Monitor\MT5` (ซึ่งเป็นโฟลเดอร์จริง
+  MT5 เลยรายงาน "successfully initialized" แล้ว**ไม่ attach expert เลย**). แก้ = ย้าย .ini ไป path ไม่มีช่องว่าง
+  (`D:\Monitor\startup_ini\`). **เจอบั๊กที่ 2 พ่วง:** rotation kill ตาม pid ที่ launch แต่ update relaunch เป็น
+  **pid ใหม่** → ตัวแทนหลุดค้าง (เจอ orphan pid 20716 รันมา 3 ชม. 20 นาที) และ**instance ที่ค้างอยู่ทำให้การ
+  launch โฟลเดอร์เดิมครั้งต่อไป exit 0 ทันที** → บัญชีจะ blind ตลอดไปจนกว่าจะ reboot. แก้ = kill ตาม
+  **executable path** (scope แค่ `D:\Monitor\` ไม่แตะ terminal เทรดของ user) + sweep ก่อน launch.
+  **หลักฐาน:** relaunch → `expert DealsExporter loaded successfully` → `EA_LAB_snapshot_415573666.csv` เกิดจริง →
+  collect → snapshot `FRESH` equity 59975.18 floating +434.63. **floating 4/6 → 5/6.**
+- **(3) rate_flag Kangaroo = ปิดแล้ว ✅ เป็น unit mismatch จริง ไม่ใช่ EA เงียบ.** `trades_per_month_expected=148.60`
+  ถูกแปะบน**ทุก** leg (1112-1115) แต่ 148.60 คือยอด**ตะกร้า 4 stream** (6242t / 42 เดือน) → เอา expectation
+  ระดับตะกร้าไปเทียบ closes ของ leg เดียว = พอง 4 เท่า. ความจริงระดับตะกร้า: 168 closes / 62 วัน = **19.0/wk
+  vs 34.3/wk = 55%** อยู่**เหนือ**เส้น 50% gone-quiet ⇒ ไม่เงียบ. ตั้งเป็น `UNKNOWN` ไม่ใช่ 148.60/4 เพราะ
+  leg จริงเป็น 63/37/42/26 (ไม่ใช่ 4 ส่วนเท่ากัน) การหาร 4 = ตัวเลขที่แต่งขึ้น. diff snapshot ยืนยันว่าขยับเฉพาะ
+  4 แถวนั้น + `judge_under_rate` 12→8 ไม่มีอย่างอื่นขยับ. `trades_per_month_expected` ไม่มีเครื่องมืออื่นอ่าน
+  นอกจาก `control_room_snapshot.ps1` ⇒ `portfolio_risk_admission.py` ไม่กระทบ (มันอ่านแค่ magic/basket_id/dd95).
+- **(1) 463666728 = ยังเปิดอยู่ · รอ user (user 2026-07-27: "เดี๋ยวผมทำ ยังไม่สะดวก").**
+  **สาเหตุที่ order เขียนไว้ (symbol `EURUSDm` ไม่ sync) ผิด — เปลี่ยน symbol แก้ไม่ได้.** log ของ rotation
+  **ไม่มีบรรทัด `Network '463666728': authorized` เลยสักวัน** ⇒ terminal ไม่ได้ login ตั้งแต่แรก symbol จึง sync
+  ไม่ได้ และ `symbol synchronization timeout` คือ**อาการ ไม่ใช่สาเหตุ**. หลักฐาน:
+  `D:\Monitor\MT5 - 463666728\Config\common.ini` **ไม่มี `Login=`/`Server=`** และ**ไม่มี `accounts.dat`**
+  ขณะที่ MT5 อีก 3 ตัวมีครบ. ที่ login จริงอยู่คือ roaming data folder
+  `%APPDATA%\MetaQuotes\Terminal\F1BB12D1E9E64E4F929A4A1F158F10AC` (`Login=463666728`,
+  `Server=Exness-MT5Trial17`, มี `accounts.dat`) เพราะตอน user เปิดมือ 07-26 เปิดแบบ**ไม่มี `/portable`**
+  → credential ไปตกคนละ data folder กับที่ rotation ใช้. **นี่ยังอธิบายด้วยว่าทำไมรอบ 07-26 ได้ deals แต่ไม่ได้
+  snapshot:** `DealsExporter.ex5` ในโฟลเดอร์ roaming เป็นตัวเก่า 9 ก.ค. (11,600 B, deals อย่างเดียว) ไม่ใช่ตัว
+  merged (20,352 B).
+  **ทางแก้ที่ user เลือกไว้แล้วและจะทำเอง:** เปิด `D:\Monitor\MT5 - 463666728\terminal64.exe /portable`
+  แล้ว login 463666728 (Exness-MT5Trial17) ติ๊ก save password **ครั้งเดียว** → ให้เหมือนอีก 5 ตัว
+  (ไม่ต้องแก้โค้ด ไม่ต้องก๊อป credential). หลังทำแล้ว rotation รอบถัดไปควรได้ **6/6 floating FRESH**.
