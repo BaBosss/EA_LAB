@@ -11,7 +11,11 @@ param(
     [string]$SetFilePath = "",
     [string]$ExpertName = "",
     [string]$FromDate = "2025.01.01",
-    [string]$ToDate = "2026.05.29",
+    # ORDER-238: was 2026.05.29, i.e. five months inside the 2026H1 holdout. As a
+    # DEFAULT it spent the holdout for anyone who invoked this without dates, and
+    # nothing said so. Pinned to the MAIN end instead; check_state.ps1 section 9
+    # now covers this file and will fail loudly if it drifts past MAIN again.
+    [string]$ToDate = "2025.12.31",
     [double]$Deposit = 10000,
     [switch]$DebugVisible,
     [switch]$Portable,

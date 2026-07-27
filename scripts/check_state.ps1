@@ -139,10 +139,21 @@ foreach($f in @($DEMO,$BL,$SC)){
 #    RE-PIN WHEN MAIN MOVES: MAIN is re-pinned every ~6 months (CLAUDE.md VERDICT GATE). When
 #    it does, update $mainEnd here in the same commit, and declare the new holdout first.
 #    ESCAPE HATCH: put HOLDOUT-OK on the line when a run is meant to spend the holdout.
+#
+#    SCOPE WIDENED 2026-07-27 (ORDER-238). The original scope listed only the MT5
+#    pair. Three more files define how future runs happen and were outside it:
+#      run_backtest.ps1  - shipped a holdout-crossing DEFAULT -ToDate, so invoking
+#                          it with no dates spent the holdout silently. Worst of
+#                          the set, and the least visible.
+#      mt4_run.ps1 / mt4_optimize.ps1 - the MT4 twins of the two files already in
+#                          scope. Nothing made them different; they were just
+#                          missed.
+#    Historical one-shot runners stay OUT of scope by the rule above, but they now
+#    carry a HOLDOUT-BURNED banner instead of being silently trusted.
 $mainEnd  = '2025.12.31'
 $scopeDef = @()
 $scopeDef += (Get-ChildItem (Join-Path $Root '.claude\agents') -Filter *.md -File -ErrorAction SilentlyContinue)
-foreach($n in @('mt5_run.ps1','mt5_optimize.ps1')){
+foreach($n in @('mt5_run.ps1','mt5_optimize.ps1','mt4_run.ps1','mt4_optimize.ps1','run_backtest.ps1')){
   $p = Join-Path $Root "scripts\$n"
   if(Test-Path $p){ $scopeDef += (Get-Item $p) }
 }

@@ -1,6 +1,44 @@
+# =============================== HOLDOUT-BURNED ===============================
+# ORDER-238 (2026-07-27). One or more test windows in this file end after
+# 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
+# AS-IS: they record what past runs actually did, and rewriting them would
+# misrepresent that history.
+#
+# Therefore: do NOT re-run this script to produce selection evidence, and do NOT
+# copy its window into new work. A holdout is spent the first time it is touched.
+# The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
+# ==============================================================================
 # QWEN_BATCH_RUNNER.ps1 — runs TASK 1-4 from QWEN_RUN_PLAN.md
 # Log: D:\EA_LAB\QWEN_RUN_LOG.md
 # Rules: log ERR + skip, no git, no judgment, report names start with QWEN_
+
+param(
+    # ORDER-238. Nothing else in this file changed: the windows below still end at
+    # 2026.06.01 because that is what the original runs did. What changed is that
+    # you can no longer touch the holdout by accident just by invoking the driver.
+    [switch]$SpendHoldout2026H1
+)
+
+# ORDER-238 invoke-time guard. This file is the dangerous one of the burned set:
+# it is a BATCH DRIVER, so an agent lane can pick it up and run the whole plan
+# without a human reading the banner above. A printed warning would not have
+# stopped that -- an automated lane does not read warnings. So the default path
+# refuses and explains, and spending the holdout requires saying so out loud.
+if (-not $SpendHoldout2026H1) {
+    Write-Host ''
+    Write-Host '  REFUSED: qwen_batch_runner.ps1 runs windows that end 2026.06.01.' -ForegroundColor Red
+    Write-Host '  That is inside the 2026H1 holdout, and a holdout is spent the first' -ForegroundColor Red
+    Write-Host '  time it is touched. These windows are kept as a record of past runs.' -ForegroundColor Red
+    Write-Host ''
+    Write-Host '  If you want fresh evidence, do NOT use this driver -- write the run' -ForegroundColor Yellow
+    Write-Host '  against the current MAIN window (see the VERDICT GATE in CLAUDE.md).' -ForegroundColor Yellow
+    Write-Host '  If you genuinely intend to spend the holdout, re-invoke with:' -ForegroundColor Yellow
+    Write-Host '      -SpendHoldout2026H1' -ForegroundColor Yellow
+    Write-Host '  and say so in the order block, because it cannot be taken back.' -ForegroundColor Yellow
+    Write-Host ''
+    exit 3
+}
+Write-Host '[holdout] -SpendHoldout2026H1 given: proceeding INTO the 2026H1 holdout deliberately.' -ForegroundColor Magenta
 
 $LogFile = "D:\EA_LAB\QWEN_RUN_LOG.md"
 $ScriptDir = "D:\EA_LAB\scripts"

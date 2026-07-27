@@ -1,3 +1,13 @@
+# =============================== HOLDOUT-BURNED ===============================
+# ORDER-238 (2026-07-27). One or more test windows in this file end after
+# 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
+# AS-IS: they record what past runs actually did, and rewriting them would
+# misrepresent that history.
+#
+# Therefore: do NOT re-run this script to produce selection evidence, and do NOT
+# copy its window into new work. A holdout is spent the first time it is touched.
+# The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
+# ==============================================================================
 param(
   [string]$WorklistCsv = "D:\EA_LAB\_triage\_archive\campaigns_closed\mass_smoke_worklist.csv",
   [string]$RootDir = "D:\Forex\10_EA_PROJECTS\2. wait for test",

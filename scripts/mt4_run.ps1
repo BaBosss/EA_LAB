@@ -16,7 +16,9 @@ first, or pass -Force.
 
 Example:
   & .\mt4_run.ps1 -Expert "AI Gold Sniper EA" -Symbol XAUUSD `
-       -FromDate 2025.05.22 -ToDate 2026.05.22 -ReportName AIGOLD_XAU_1y
+       -FromDate 2025.01.01 -ToDate 2025.12.31 -ReportName AIGOLD_XAU_1y
+  (ORDER-238: the example used to end 2026.05.22, inside the 2026H1 holdout.
+   Examples get copied, so the example is now a window that is safe to copy.)
 #>
 param(
   [Parameter(Mandatory)][string]$Expert,
