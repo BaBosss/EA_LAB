@@ -67,6 +67,24 @@ detector `check_stale_binaries.ps1` มี 4 root ที่ล้วนเป็
 **ORDER-410** (STEP 1 = user อ่าน hash+mtime บน VPS ก่อน · ห้าม rebuild ก่อนจบ STEP 3
 เพราะบางตัว attach อยู่บนเงินจริง — **rebuild ทับ = เปลี่ยน EA ใต้ตำแหน่งที่เปิดค้าง** ซึ่งแพงกว่าปัญหาเดิม)
 
+## 3b. ORDER-412 — `/scrutinize` งานตัวเองแล้วพบว่า fix ของ 411 **ผิดทรง**
+
+user สั่ง `/scrutinize` หลังผมรายงานว่าเสร็จ. ของที่ commit ไป**ทำงานถูกจริง** (archive move ผ่าน end-to-end)
+**แต่ดีไซน์แย่กว่าที่ควร 3 ข้อ:** (1) pin `[Console]::InputEncoding` = `SetConsoleCP` = **mutation ทั้ง process**
+เพื่อแก้ปัญหาระดับไปป์เดียว (2) **รั่วจริง** — getter throw + setter สำเร็จ ⇒ `finally` ไม่ restore ⇒ codepage ค้าง
+(3) **branch absorber ไม่เคยถูกกรงแตะ** ⇒ โค้ดที่รันเฉพาะใน environment ที่ reproduce ไม่ได้ = โค้ดที่ไม่มีเทส
+
+**แก้ด้วยการลบ** — absorber เป็นทางเดียว ยิงเสมอ (วัดแล้วให้ผลถูกต้องเหมือนกันทั้งสอง encoding) ⇒ ไม่แตะ global ·
+ไม่มี branch ที่ไม่ถูกเทส · สั้นลง ~25 บรรทัด · เพิ่ม invariant ตรวจว่า reply แรกคือ absorber จริง
+
+**กรงพิสูจน์ว่า fail ได้ 3 ทาง:** สะอาด 9/9 · ใส่ mutation กลับ **8/9 แดง** · ลืม drop แถว → `throw 3 rows for 2 inputs`
+· ถอด absorber → `throw` + ref แรก `missing` (ยืนยันบั๊ก BOM ยังมีชีวิต) · **chainwalk 11/11 · statusclass 23/23 ·
+`-Audit` จริง exit 0 zero-diff**
+
+> 🔴 **ของแถมที่มีค่าสุด: เทสของผมเองไม่ discriminate ตอนแรก** — เคส "no global side effect" **ผ่านทั้งที่โค้ดมี
+> mutation เต็มๆ** เพราะจับ `$encBefore` ไว้ท้ายบล็อก ซึ่งการเรียกก่อนหน้า reset encoding ไปแล้ว ⇒ before=after=สะอาด
+> **บทเรียน: assertion เรื่อง side effect ต้องเป็นเจ้าของ state ที่มันวัด — ตั้งค่าศัตรูใหม่บรรทัดติดกันก่อนเรียก**
+
 ## 4b. BACKLOG-D24 น่าจะเป็นบั๊กเดียวกับ ORDER-411 (อนุมาน ไม่ใช่พิสูจน์)
 
 D24 บันทึกว่า `run_order101` + `run_order103` **รันต่อกันใน process เดียวไม่ได้** — 103 พังหลายเคสด้วย
@@ -85,6 +103,11 @@ D24 บันทึกว่า `run_order101` + `run_order103` **รันต�
 - **ผมลบ `.git/index.lock` ที่ค้าง** (10:50, 0 ไบต์, ไม่ขยับ 6 นาที, **ไม่มี `git.exe` รันอยู่เลย** และเปิดไฟล์แบบ
   exclusive ได้ = ไม่มี process ถือ) — มันบล็อกทุกเลน. ไม่มีเนื้องานอยู่ในนั้น (0 ไบต์) แต่**ผมไม่ใช่คนสร้าง** จึงแจ้งไว้:
   ถ้าเลนไหนโดน `git add` ล้มช่วง 10:50-10:57 ให้ stage ใหม่ ไม่มีอะไรหาย
+- **ORDER-413 ถูกยกเลิกกลางคัน → กลายเป็น `BACKLOG-D27` แทน** — ตอนจะเขียนใบนี้ลงบอร์ด เจอว่า **เลน SLBUFFER
+  กำลังแก้ `ORDER-280` ค้างอยู่ใน working tree** (timestamp `CLAIMED(Claude, 2026-07-27 12:20)`) ·
+  `git commit -- AGENT_TASKBOARD.md` จะ**ลากงานเขาไปด้วย** (path-limit กันข้ามไฟล์ ไม่กันข้ามบรรทัดในไฟล์เดียวกัน —
+  กฎข้อ 3 ของ ledger) ⇒ **ถอนบล็อกของตัวเองออกจาก working tree ด้วยมือ** (ห้าม `git checkout <file>` เด็ดขาด
+  มันจะล้างงานที่เขายังไม่ commit) แล้วลงเป็นแถว backlog พร้อมช่อง "ปลุกเมื่อ = บอร์ดว่าง" · **เลข 413 ยังไม่ถูกใช้**
 - **index ที่แชร์กันมีของเลน MONITORING staged อยู่** (`scripts/monitor_rotation.ps1`, `portfolio/expectations.csv`,
   `portfolio/control_room_snapshot.json`, `portfolio/live_deals/**`) ⇒ ผม commit แบบ **path-limited** เพื่อ
   **ไม่แตะ index ของเขา** · ตรวจแล้ว commit `960dd178` มีแค่ 8 ไฟล์ของผม และของเขายัง staged อยู่ครบ
@@ -109,6 +132,8 @@ D24 บันทึกว่า `run_order101` + `run_order103` **รันต�
 | `check_stale_binaries` ไม่ส่อง `_vps_deploy` | DONE |
 | `($pipeline).Count` = `$null` เมื่อมีผลลัพธ์ชิ้นเดียว ⇒ STALE 1 ตัวเงียบ | DONE |
 | BOM บน stdin ทำให้ chain-walk โทษ commit ที่บริสุทธิ์ | DONE |
+| fix ของ 411 pin global + branch ที่ไม่มีกรง (เจอจาก `/scrutinize`) | DONE |
+| digest แสดง `DONE(attr) + REVIEWED(attr)` เป็น `DONE` ⇒ 341/370/411/412 ดูเหมือนยังไม่ review | BACKLOG-D27 |
 | 13 bundle staged เก่ากว่า source — บน VPS รันตัวไหนจริง | ORDER-410 |
 | บัญชี 463666728 currency cent vs USD | ORDER-230 |
 | MacroGate 990120 disposition | ORDER-232 |

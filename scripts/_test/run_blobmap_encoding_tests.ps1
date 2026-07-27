@@ -109,6 +109,41 @@ try {
     $absent = Get-GitBlobOidMap -RepoRoot $RepoRoot -Refs @($head) -Path 'no/such/file/anywhere.md'
     Assert-True 'a genuinely missing path still maps to $null (still fails closed)' `
         ($null -eq $absent[$head]) ("got '{0}'" -f $absent[$head])
+
+    # ORDER-412 regression 1: NO GLOBAL SIDE EFFECT. The first fix mutated
+    # [Console]::InputEncoding process-wide (SetConsoleCP) to solve a problem local to one
+    # pipe, and leaked it whenever the getter threw but the setter succeeded.
+    #
+    # The hostile encoding is RE-ESTABLISHED on the line before the measured call, and that
+    # is not decoration. The first version of this case captured "before" once, near the end
+    # of the block - by which point the earlier calls above had already reset the encoding,
+    # so before and after were both clean and the case passed against code that mutated on
+    # every single call. Measured: it failed to fail. A side-effect assertion must own the
+    # state it measures, immediately.
+    [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($true)
+    $encBefore = [Console]::InputEncoding
+    $null = Get-GitBlobOidMap -RepoRoot $RepoRoot -Refs @($head) -Path $archiveRel
+    $encAfter = [Console]::InputEncoding
+    Assert-True 'call does not mutate [Console]::InputEncoding (no process-wide side effect)' `
+        (($encAfter.CodePage -eq $encBefore.CodePage) -and
+         ($encAfter.GetPreamble().Count -eq $encBefore.GetPreamble().Count)) `
+        ("before cp={0} preamble={1}; after cp={2} preamble={3}" -f `
+            $encBefore.CodePage, $encBefore.GetPreamble().Count, $encAfter.CodePage, $encAfter.GetPreamble().Count)
+
+    # ORDER-412 regression 2: SINGLE-REF batch returns the ref's OID, not the absorber's row.
+    #
+    # HONEST SCOPE, so nobody reads more into this than it carries: this does NOT cage the
+    # `1..0` descending-range bug that /scrutinize found in the old conditional-absorber
+    # code. With the absorber sent unconditionally the reply always has at least 2 lines
+    # (absorber + >=1 ref), so Count -eq 1 is unreachable and BOTH the old and new skip
+    # idioms give the same answer here - verified by reverting the idiom and watching this
+    # case stay green. Select-Object -Skip is kept because it is correct at 0 and 1 rows,
+    # i.e. defensive, not load-bearing. What this case does cage is the off-by-one:
+    # forget to drop the absorber row, or drop one too many, and it goes red.
+    $single = Get-GitBlobOidMap -RepoRoot $RepoRoot -Refs @($head) -Path $archiveRel
+    $expected = (& git -C $RepoRoot rev-parse ("{0}:{1}" -f $head, $archiveRel)).Trim()
+    Assert-True 'single-ref batch resolves to the ref OID (absorber row dropped exactly once)' `
+        ($single[$head] -eq $expected) ("got '{0}', git says '{1}'" -f $single[$head], $expected)
 }
 finally {
     [Console]::OutputEncoding = $savedOut

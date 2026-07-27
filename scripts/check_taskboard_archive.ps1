@@ -581,6 +581,11 @@ function Get-GitBlobOidMap {
     #>
     param([string]$RepoRoot, [string[]]$Refs, [string]$Path)
 
+    # ORDER-412. The sacrificial first stdin line (see the note at Process.Start below).
+    # Contains '?' deliberately: it is invalid in a git refname, so this can never collide
+    # with a real object in this or any repo, and git always answers it "missing".
+    $BOM_ABSORBER = 'ORDER412-bom-absorber?not-a-real-ref'
+
     $map = @{}
     if (-not $Refs -or $Refs.Count -eq 0) { return $map }
 
@@ -603,7 +608,7 @@ function Get-GitBlobOidMap {
     # a commit where `git ls-tree` plainly shows the file - the error blamed history for an
     # encoding bug, and cost most of an afternoon.
     #
-    # Four things measured here rather than assumed, each of which sent me the wrong way once:
+    # Four things measured rather than assumed, each of which sent me the wrong way once:
     #   - POSITIONAL, not commit-specific: only the first request carries the BOM, so
     #     reordering the refs moves the failure onto a different, equally innocent commit.
     #   - SESSION-DEPENDENT: a console on the OEM codepage has no preamble, so identical code
@@ -614,42 +619,34 @@ function Get-GitBlobOidMap {
     #     to see this (239 187 191 65 65 ...).
     #   - It is [Console]::InputEncoding, NOT OutputEncoding. Pinning OutputEncoding changes
     #     nothing; the byte dump is identical with and without it.
-    # ProcessStartInfo.StandardInputEncoding would be the direct fix, but it is .NET Core only.
     #
-    # The setter can throw when there is no attached console input (stdin redirected, which
-    # is exactly what a git hook may do), so a failure to pin is expected, not exceptional.
-    # In that case we do not silently ship a corrupt first request: we send a sacrificial
-    # first line for the preamble to land on and drop its reply, keeping the strict
-    # reply-count alignment below honest.
-    $bomAbsorber = $null
-    $savedInputEncoding = $null
-    try { $savedInputEncoding = [Console]::InputEncoding } catch { $savedInputEncoding = $null }
-    try {
-        [Console]::InputEncoding = New-Object System.Text.UTF8Encoding($false)
-    } catch {
-        $pre = @()
-        try { $pre = [Console]::InputEncoding.GetPreamble() } catch { $pre = @() }
-        if ($pre.Count -gt 0) { $bomAbsorber = 'ORDER411-preamble-absorber-not-a-real-ref' }
-    }
-    try {
-        $proc = [System.Diagnostics.Process]::Start($psi)
-        # Construct the writer while the encoding is still pinned.
-        $null = $proc.StandardInput
-    } finally {
-        if ($null -ne $savedInputEncoding) {
-            try { [Console]::InputEncoding = $savedInputEncoding } catch { }
-        }
-    }
+    # ORDER-412 (2026-07-27, from /scrutinize of ORDER-411). The first fix pinned
+    # [Console]::InputEncoding around Process.Start and kept this absorber only as a
+    # fallback. That was the wrong shape and is now deleted:
+    #   - [Console]::InputEncoding's setter calls SetConsoleCP, a PROCESS-WIDE console
+    #     mutation, to solve a problem local to one pipe.
+    #   - It leaked. If the GETTER threw (no attached console input) but the setter
+    #     succeeded, the saved value stayed $null and the restore was skipped by its own
+    #     guard - leaving the console codepage changed for the rest of the process.
+    #   - The fallback branch was therefore never exercised by the cage, so the code that
+    #     ran only in the environment I could not reproduce was the untested code. Same
+    #     anti-pattern as ORDER-270's cage that nobody could run.
+    # Measured: sending the absorber UNCONDITIONALLY returns identical, correct blob OIDs
+    # under both a preamble-bearing and a preamble-free console encoding. So there is one
+    # path, it touches no global state, and it is the path the cage tests.
+    $proc = [System.Diagnostics.Process]::Start($psi)
 
     # Start draining stdout BEFORE writing stdin: on a long chain the reply
     # stream can exceed the pipe buffer, and a write-then-read order deadlocks.
     $stdoutTask = $proc.StandardOutput.ReadToEndAsync()
     $stderrTask = $proc.StandardError.ReadToEndAsync()
 
-    # See the ORDER-411 note above Process.Start. Normally the writer was constructed under
-    # a BOM-less encoding and these lines reach git unprefixed; $bomAbsorber is only set on
-    # the fallback path where the encoding could not be pinned at all.
-    if ($bomAbsorber) { $proc.StandardInput.WriteLine($bomAbsorber) }
+    # ORDER-412: the sacrificial first line. Whatever preamble the StandardInput writer
+    # emits lands on THIS request, not on a real ref. git answers "<input> missing" for it
+    # and we drop that reply below. Unconditional on purpose - a conditional here would be
+    # a branch that only runs on machines where the bug reproduces, i.e. untestable where
+    # it matters.
+    $proc.StandardInput.WriteLine($BOM_ABSORBER)
     foreach ($ref in $Refs) {
         $proc.StandardInput.WriteLine(('{0}:{1}' -f $ref, $Path))
     }
@@ -663,9 +660,21 @@ function Get-GitBlobOidMap {
     }
 
     $lines = @($stdout -split "`r?`n" | Where-Object { $_ -ne '' })
-    # Drop the sacrificial line's reply (ORDER-411 fallback path only) BEFORE the count
-    # check, so the alignment guard still means what it says.
-    if ($bomAbsorber -and $lines.Count -gt 0) { $lines = @($lines[1..($lines.Count - 1)]) }
+
+    # ORDER-412: drop the absorber's reply BEFORE the alignment check, and VERIFY it was
+    # actually sacrificed. If the token ever resolved to a real object, silently shifting
+    # by one would misalign every ref by one position - the exact failure the count check
+    # below exists to prevent - so this fails closed instead.
+    #
+    # Do NOT write this as $lines[1..($lines.Count-1)]: PowerShell's `1..0` is a DESCENDING
+    # range (1,0), so on a single-line reply that expression returns the absorber row it was
+    # supposed to remove. Measured. Select-Object -Skip handles 0 and 1 rows correctly.
+    $absorberReply = if ($lines.Count -gt 0) { $lines[0] } else { '' }
+    if ($absorberReply -notlike "*$BOM_ABSORBER*") {
+        throw ("stdin preamble absorber did not come back as the first reply (got '{0}') -- refusing to guess the alignment" -f $absorberReply)
+    }
+    $lines = @($lines | Select-Object -Skip 1)
+
     if ($lines.Count -ne $Refs.Count) {
         throw ('git cat-file --batch-check returned {0} rows for {1} inputs -- refusing to guess the alignment' -f $lines.Count, $Refs.Count)
     }
