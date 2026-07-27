@@ -35,6 +35,7 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
+| `S-2026-07-27-VERIFY270` | 2026-07-27 ~08:00 | **390-399** | `AGENT_TASKBOARD.md` (แถว ORDER-270 + ORDER-280 เท่านั้น) · `ARCHIVE_TASKBOARD_2026-07A.md` · `docs/memory_control/ARCHIVE_*` · `TASKBOARD_DIGEST.md` · `MASTER_BACKLOG.md` (แถวใหม่ 1 แถว) | ไม่ใช้ | `ACTIVE` |
 | `S-2026-07-27-CUTLOSS-VERIFY` | 2026-07-27 09:05–09:25 | **370-379** (ใช้จริง 370-373) | `_triage/HANDOFF_2026-07-27_CUTLOSS_VERIFY.md` · `AGENT_TASKBOARD.md` (แถว ORDER-370..373 ใหม่ล้วน — diff = insert 193 บรรทัด ลบ 0) · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 เลย** | `CLOSED` (2026-07-27 09:25) |
 | `S-2026-07-27-SLBUFFER` | 2026-07-27 08:40 | **350-359** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `AGENT_TASKBOARD.md` (แถว **ORDER-280 · ORDER-350 เท่านั้น**) | **`D:\Meta 5`** (roaming/main — เลนเดียวที่ไม่มีใครจอง และมี tick BTC ครบ 2020+ · 5b/5c = LEVERFAN) | `ACTIVE` |
 | `S-2026-07-27-LEVERFAN` | 2026-07-27 08:05 | **340-349** | `AGENT_TASKBOARD.md` (แถว ORDER-236 · ORDER-340 · ORDER-341 เท่านั้น) · `scripts/check_stale_binaries.ps1` (ORDER-341) · `_mt5_auto/ab_sets/order340/**` · `_mt5_auto/ab_sets/b14_lever/**` · `_mt5_auto/**` (รันเทส) · `docs/memory_control/B1_DATASET.csv` | `D:\Meta 5c` (ORDER-340 fan) + `D:\Meta 5b` (ORDER-236 A/B) — คนละ install รันพร้อมกันได้ process-guard แยกตาม exe path | `CLOSED` (2026-07-27 09:40 — ORDER-340 ปิด · ORDER-341 ปิด · **ORDER-236 = BLOCKED ที่ประตู BWD ของตัวเอง** รอ host search เป็นใบใหม่) |
@@ -62,4 +63,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-27 = **280**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **390-399** (290-299 · 310-319 · 330-339 · 360-369 · 380-389 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY)
+- บล็อกถัดไปที่จองได้ = **400-409** (290-299 · 310-319 · 330-339 · 360-369 · 380-389 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY)
