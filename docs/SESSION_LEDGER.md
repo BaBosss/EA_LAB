@@ -39,6 +39,7 @@
      แต่ `S-2026-07-27-SLBUFFER` (ACTIVE, 08:40) ประกาศแถวนั้นไว้ก่อนแล้ว ⇒ ถอนออกตามกฎข้อ 4
      (เห็นเลนอื่นประกาศไฟล์/แถวเดียวกัน = รอหรือคุย ไม่ใช่เขียนทับ) · สถานะ 280 ถูกบันทึกไว้ครบแล้ว
      ในแถวปิดของ REV04 อยู่แล้ว ไม่มีอะไรตกหล่น -->
+| `S-2026-07-27-SYSTEMS` | 2026-07-27 (ต่อจาก handoff `_triage/HANDOFF_2026-07-26_WORK_LIFECYCLE_AND_TRIAGE_SWEEP.md` — user สั่งทำต่อ) | **410-419** | `scripts/check_stale_binaries.ps1` · `scripts/_test/**` (กรงของ 370) · `AGENT_TASKBOARD.md` (แถว **ORDER-370 เท่านั้น**) · `_triage/HANDOFF_2026-07-27_SYSTEMS.md` · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 เลย** | `ACTIVE` |
 | `S-2026-07-27-MONITORING` | 2026-07-27 (ต่อจาก CR-P0/Phase-1 monitoring track) | **400-409** (ใช้ ORDER-400) | `_triage/HANDOFF_2026-07-27_MONITORING_CR-P0.md` · `AGENT_TASKBOARD.md` (แถว **ORDER-400 เท่านั้น**) · `scripts/monitor_rotation.ps1` · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 backtest** (แตะแค่ `D:\Monitor` terminals ผ่าน rotation) | `ACTIVE` |
 | `S-2026-07-27-CUTLOSS-VERIFY` | 2026-07-27 09:05–09:25 **แล้วเปิดต่อ ~10:30-11:00** (user สั่งงานต่อหลังปิด — แก้แถวให้ตรงความจริงตามกฎข้อ 5 แทนที่จะเปิดแถวใหม่) | **370-379** (ใช้จริง 370-373) | `_triage/HANDOFF_2026-07-27_CUTLOSS_VERIFY.md` · `AGENT_TASKBOARD.md` (แถว ORDER-370..373 เท่านั้น) · `PROJECT_STATE.md` (บล็อก 🆕 ใหม่บนสุด — ไม่มีเลนไหนประกาศไฟล์นี้) · `docs/SESSION_LEDGER.md` (แถวตัวเอง) | **ไม่ใช้เลน MT5 เลย** | `CLOSED` (2026-07-27 11:00 — commit สุดท้าย `68c0c500` + PROJECT_STATE) |
 | `S-2026-07-27-SLBUFFER` | 2026-07-27 08:40 | **350-359** | `ea_projects/(TRD)_SuperTrendFlip/**` · `_mt5_auto/ab_sets/genstanding_stf/**` · `AGENT_TASKBOARD.md` (แถว **ORDER-280 · ORDER-350 เท่านั้น**) | **`D:\Meta 5`** (roaming/main — เลนเดียวที่ไม่มีใครจอง และมี tick BTC ครบ 2020+ · 5b/5c = LEVERFAN) | `ACTIVE` |
@@ -68,4 +69,4 @@
 
 - สูงสุดที่ใช้จริง ณ 2026-07-27 = **280**
 - ว่างและ**ห้ามใช้** (เว้นเป็นกันชน/รอยแผลเดิม): 207 · 208 · 209 · 223-229
-- บล็อกถัดไปที่จองได้ = **410-419** (400-409 = MONITORING (ACTIVE, ORDER-400) · 290-299 · 310-319 · 330-339 · 360-369 · 380-389 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY)
+- บล็อกถัดไปที่จองได้ = **420-429** (410-419 = SYSTEMS (ACTIVE) · 400-409 = MONITORING (ACTIVE, ORDER-400) · 290-299 · 310-319 · 330-339 · 360-369 · 380-389 เว้นกันชน · 280-289 = REV04 (ปิดแล้ว แต่ ORDER-280 ยังค้าง ห้ามใช้เลขซ้ำ) · 300-309 = CAGE · 320-329 = GREENYELLOW · 340-349 = LEVERFAN · 350-359 = SLBUFFER · 370-379 = CUTLOSS-VERIFY)
