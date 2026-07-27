@@ -98,6 +98,38 @@ function Ramp($v, $calm, $stress) {
   return [math]::Round($t * 100.0, 1)
 }
 
+# ORDER-434, age-gate follow-up (2026-07-27). MaxAgeHours is deliberately LEFT AT 120
+# after measuring the alternatives against real observed ages on this box:
+#
+#   last obs   age    72h     96h     120h    what it is
+#   07-24      93.3h  FIRES   quiet   quiet   Friday close read on a Monday = NORMAL
+#   07-23     117.3h  FIRES   FIRES   quiet   one business-day print missing (HY_OAS today)
+#   07-22     141.3h  FIRES   FIRES   FIRES   two missing
+#   07-17     261.3h  FIRES   FIRES   FIRES   ^MOVE -- feed genuinely broken
+#
+# 72h false-positives every Monday on a majority of rows; a gate that cries wolf weekly
+# is one people learn to ignore (the same reasoning run_fast_cages.ps1 uses about hooks
+# that get --no-verify'd). 96h is defensible but note what FIRING actually does here:
+# Resolve-Input returns $null, the component drops out, and the remaining weights
+# renormalise (see the $wSumAvail division below) -- so tightening the threshold during
+# a credit event would DELETE the credit axis and leave a confident-looking score built
+# on VIX and MOVE alone. That is the mechanism ORDER-434 finding 5 is about; a tighter
+# binary makes it MORE likely, not less.
+#
+# So the gap was never the number. It is that a 117h input and a 20h input are
+# indistinguishable to every consumer of this output. `age_h` below fixes that by ADDING
+# information rather than removing an input: the score still uses the datum, and the
+# reader can now see how old the datum driving it was.
+function Get-InputAgeHours([string]$key) {
+  $parts = $key -split '\.', 2
+  if ($parts.Count -ne 2) { return $null }
+  $row = $rows[$parts[0]]
+  if ($null -eq $row -or -not $row.asof) { return $null }
+  $dt = [datetime]::MinValue
+  if (-not [datetime]::TryParseExact("$($row.asof)", 'yyyy-MM-dd HH:mm', [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$dt)) { return $null }
+  return [math]::Round(((Get-Date) - $dt).TotalHours, 1)
+}
+
 $activeMin  = AsNum $cfg.labels.active_min
 $formingMin = AsNum $cfg.labels.forming_min
 function LabelFor($score) {
@@ -121,6 +153,11 @@ foreach ($m in $cfg.models) {
       value = if ($null -ne $val) { [math]::Round([double]$val, 3) } else { $null }
       score = $sc; weight = $w
       available = ($null -ne $sc)
+      # ORDER-434: how old the datum behind this component is, in hours. Null when the
+      # row is missing or its asof is unparseable. This is the number that used to be
+      # invisible -- every component looked equally fresh because `asof` was the fetch
+      # time, and even now that it is truthful, nothing downstream showed it.
+      age_h = Get-InputAgeHours $c.input
     }
     if ($null -ne $sc) { $wSumAvail += $w; $wScore += $sc * $w }
   }
