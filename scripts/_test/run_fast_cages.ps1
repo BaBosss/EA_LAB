@@ -22,6 +22,7 @@
       run_order_collision_tests.ps1      0.9s   -> FAST, runs here
       run_handoff_contract_tests.ps1     0.9s   -> FAST, runs here
       run_blobmap_encoding_tests.ps1     1.3s   -> FAST, runs here
+      run_mris_asof_tests.ps1            0.8s   -> FAST, runs here (added 2026-07-27, ORDER-434)
       run_chainwalk_tests.ps1           74.4s   -> too slow for a hook, run before release
       run_order101_negative_tests.ps1   ~120s   -> too slow for a hook
       run_order103_negative_tests.ps1   ~760s   -> too slow for a hook
@@ -74,7 +75,12 @@ $FAST_SUITES = @(
     'run_statusclass_tests.ps1',
     'run_order_collision_tests.ps1',
     'run_handoff_contract_tests.ps1',
-    'run_blobmap_encoding_tests.ps1'
+    'run_blobmap_encoding_tests.ps1',
+    # ORDER-434: guards the `asof` clock in scripts/mris/mris_macro_feeder.ps1. Note this
+    # suite protects a file OUTSIDE scripts/check_*.ps1 and scripts/_test/*, so the hook's
+    # trigger glob was widened to scripts/mris/* in the same commit -- otherwise the cage
+    # would only have run when something OTHER than the file it guards was edited.
+    'run_mris_asof_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path

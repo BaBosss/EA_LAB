@@ -64,6 +64,37 @@ function Fetch-Fred {
   return $rawText
 }
 
+# ORDER-434 finding 1 (Codex blind audit 2026-07-27, verified 2026-07-27).
+# `asof` used to be (Get-Date) in all three Compute-Row* functions -- the time the FETCH
+# happened. Every consumer reads it as "how old is this datum": EffStatus in
+# mris_crisis_models.ps1 age-gates exactly this field. So the gate was comparing the
+# feeder's clock against itself and could never fire, however old the data really was.
+# Measured live: barometer_snapshot_macro.csv said HY_OAS was "OK, 2026-07-27 07:37"
+# while the cache behind it ended 2026-07-23 -- the same value, 2.77, four days apart.
+#
+# `asof` now means THE TIME THE OBSERVATION IS FOR. Daily series carry no intraday
+# time, so they stamp 00:00 of the observation day: that reads slightly OLDER than the
+# truth, which is the safe direction for a freshness gate (it fires early, never late).
+# The fetch time is provenance, not freshness -- data_status already distinguishes a
+# live fetch from a cache fallback, which is the question the fetch clock could answer.
+#
+# NOT changed on purpose: data_status keeps its OK/STALE = fetched/from-cache meaning,
+# and no column was added. A new opt-in column would leave every existing reader on the
+# old wrong clock, which is how a fix becomes optional and then becomes forgotten.
+function New-AsOfStamp {
+  # $ObsDate = the observation the row's `spot` came from, or $null if the payload
+  # carried no usable date. The fallback is loud on purpose: a silent revert to fetch
+  # time would restore the original defect wearing the fix's clothes.
+  param($ObsDate)
+  if ($null -eq $ObsDate -or $ObsDate -eq [datetime]::MinValue) {
+    return [pscustomobject]@{
+      Stamp = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+      Note  = ' [WARN asof=fetch-time: payload carried no observation date]'
+    }
+  }
+  return [pscustomobject]@{ Stamp = ([datetime]$ObsDate).ToString('yyyy-MM-dd HH:mm'); Note = '' }
+}
+
 function Compute-RowYahoo {
   param([string]$Symbol, [string]$Note, [string]$RawJson, [bool]$FromCache)
   $j = $RawJson | ConvertFrom-Json
@@ -73,11 +104,22 @@ function Compute-RowYahoo {
   $closesRaw = $q.close
   $highsRaw  = $q.high
   $lowsRaw   = $q.low
-  # keep only bars where close/high/low are all present (holidays give nulls)
-  $Closes = @(); $Highs = @(); $Lows = @()
+  # keep only bars where close/high/low are all present (holidays give nulls).
+  # $Dates rides the SAME filter so index i always refers to one bar in all four arrays
+  # -- an off-by-one here would report a real date belonging to a different observation,
+  # which is worse than the bug being fixed because it would look right.
+  $ts = $res.timestamp
+  $Closes = @(); $Highs = @(); $Lows = @(); $Dates = @()
   for ($i = 0; $i -lt $closesRaw.Count; $i++) {
     $c = $closesRaw[$i]; $h = $highsRaw[$i]; $l = $lowsRaw[$i]
-    if ($null -ne $c -and $null -ne $h -and $null -ne $l) { $Closes += [double]$c; $Highs += [double]$h; $Lows += [double]$l }
+    if ($null -ne $c -and $null -ne $h -and $null -ne $l) {
+      $Closes += [double]$c; $Highs += [double]$h; $Lows += [double]$l
+      $d = [datetime]::MinValue
+      if ($null -ne $ts -and $i -lt $ts.Count -and $null -ne $ts[$i]) {
+        $d = [DateTimeOffset]::FromUnixTimeSeconds([long]$ts[$i]).UtcDateTime.Date
+      }
+      $Dates += $d
+    }
   }
   $n = $Closes.Count
   if ($n -lt 6) { throw "too few bars ($n)" }
@@ -106,7 +148,7 @@ function Compute-RowYahoo {
   $chg5d = if ($c5 -ne 0) { [math]::Round((($Closes[$n - 1] / $c5) - 1.0) * 100.0, 3) } else { 0 }
 
   $status = if ($FromCache) { "STALE" } else { "OK" }
-  $stamp  = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+  $a = New-AsOfStamp -ObsDate $Dates[$n - 1]
   return [pscustomobject]@{
     symbol      = $Symbol
     spot        = $spot
@@ -114,8 +156,8 @@ function Compute-RowYahoo {
     atr20       = $atr20
     chg5d_pct   = $chg5d
     data_status = $status
-    asof        = $stamp
-    source_note = "$Note$smaNote"
+    asof        = $a.Stamp
+    source_note = "$Note$smaNote$($a.Note)"
   }
 }
 
@@ -123,14 +165,22 @@ function Compute-RowFred {
   param([string]$Symbol, [string]$Note, [string]$RawCsv, [bool]$FromCache)
   $lines = $RawCsv -split "`r?`n" | Where-Object { $_.Trim().Length -gt 0 }
   if ($lines.Count -lt 2) { throw "no data rows" }
-  # header line is e.g. "observation_date,BAMLH0A0HYM2" or "DATE,BAMLH0A0HYM2" - skip it
+  # header line is e.g. "observation_date,BAMLH0A0HYM2" or "DATE,BAMLH0A0HYM2" - skip it.
+  # $Dates rides the same skips as $Values (FRED writes '.' for a missing observation),
+  # so index i is the same observation in both. An unparseable date does NOT drop the
+  # value -- it records MinValue instead, so the numbers stay exactly what they were and
+  # only the freshness claim degrades (and says it did, via New-AsOfStamp).
   $Values = @()
+  $Dates  = @()
   for ($i = 1; $i -lt $lines.Count; $i++) {
     $parts = $lines[$i] -split ','
     if ($parts.Count -lt 2) { continue }
     $v = $parts[1].Trim()
     if ($v -eq '.' -or [string]::IsNullOrWhiteSpace($v)) { continue }  # missing obs - skip
     $Values += [double]::Parse($v, [Globalization.CultureInfo]::InvariantCulture)
+    $d = [datetime]::MinValue
+    [void][datetime]::TryParse($parts[0].Trim(), [Globalization.CultureInfo]::InvariantCulture, [Globalization.DateTimeStyles]::None, [ref]$d)
+    $Dates += $d
   }
   $n = $Values.Count
   if ($n -lt 6) { throw "too few observations ($n)" }
@@ -155,7 +205,7 @@ function Compute-RowFred {
   $chg5d = if ($v5 -ne 0) { [math]::Round((($Values[$n - 1] / $v5) - 1.0) * 100.0, 3) } else { 0 }
 
   $status = if ($FromCache) { "STALE" } else { "OK" }
-  $stamp  = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+  $a = New-AsOfStamp -ObsDate $Dates[$n - 1]
   return [pscustomobject]@{
     symbol      = $Symbol
     spot        = $spot
@@ -163,8 +213,8 @@ function Compute-RowFred {
     atr20       = $atr20
     chg5d_pct   = $chg5d
     data_status = $status
-    asof        = $stamp
-    source_note = "$Note$smaNote"
+    asof        = $a.Stamp
+    source_note = "$Note$smaNote$($a.Note)"
   }
 }
 
@@ -192,8 +242,12 @@ function Compute-RowRatio {
   $mapN = Get-CloseMap -RawJson $RawNum
   $mapD = Get-CloseMap -RawJson $RawDen
   $dates = @($mapN.Keys | Where-Object { $mapD.ContainsKey($_) } | Sort-Object)
+  # $Aligned tracks the dates that actually produced a value: the zero-denominator skip
+  # below means $dates and $Values can differ in length, so $dates[-1] is NOT reliably
+  # the date of $Values[-1].
   $Values = @()
-  foreach ($d in $dates) { if ($mapD[$d] -ne 0) { $Values += ($mapN[$d] / $mapD[$d]) } }
+  $Aligned = @()
+  foreach ($d in $dates) { if ($mapD[$d] -ne 0) { $Values += ($mapN[$d] / $mapD[$d]); $Aligned += $d } }
   $n = $Values.Count
   if ($n -lt 6) { throw "too few aligned bars ($n)" }
 
@@ -212,7 +266,7 @@ function Compute-RowRatio {
   $chg5d = if ($v5 -ne 0) { [math]::Round((($Values[$n - 1] / $v5) - 1.0) * 100.0, 3) } else { 0 }
 
   $status = if ($FromCache) { "STALE" } else { "OK" }
-  $stamp  = (Get-Date).ToString('yyyy-MM-dd HH:mm')
+  $a = New-AsOfStamp -ObsDate $Aligned[$n - 1]
   return [pscustomobject]@{
     symbol      = $Symbol
     spot        = $spot
@@ -220,8 +274,8 @@ function Compute-RowRatio {
     atr20       = $atr20
     chg5d_pct   = $chg5d
     data_status = $status
-    asof        = $stamp
-    source_note = "$Note$smaNote"
+    asof        = $a.Stamp
+    source_note = "$Note$smaNote$($a.Note)"
   }
 }
 
