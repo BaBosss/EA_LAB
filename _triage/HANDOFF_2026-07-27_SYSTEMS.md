@@ -112,6 +112,11 @@ D24 บันทึกว่า `run_order101` + `run_order103` **รันต�
   `portfolio/control_room_snapshot.json`, `portfolio/live_deals/**`) ⇒ ผม commit แบบ **path-limited** เพื่อ
   **ไม่แตะ index ของเขา** · ตรวจแล้ว commit `960dd178` มีแค่ 8 ไฟล์ของผม และของเขายัง staged อยู่ครบ
   <sub>นี่คือกฎข้อ 4 ของ ledger ทำงานจริง: `git diff --cached` ก่อน commit เห็นของคนอื่นติดมา = หยุด ไม่ใช่ commit ทับ</sub>
+- 🔬 **แล้วมันก็เกิดกลับทิศให้ดูสดๆ ในวันเดียวกัน:** commit `99a73910` (เลน SLBUFFER, ORDER-280) **พาแถว B1 ของ
+  ORDER-412 ที่ผมยังไม่ commit ไปด้วย** เพราะเขา path-limit ที่ `docs/memory_control/B1_DATASET.csv` ซึ่ง commit
+  **เนื้อ working tree ทั้งไฟล์** · **ไม่มีอะไรหาย** (ตรวจแล้ว: แถว 370 · 411 · 412 อยู่ครบใน HEAD) **แต่ provenance เพี้ยน** —
+  แถวของผมไปอยู่ใต้ commit ของเขา · **ยืนยันคำเตือนในกฎข้อ 3 ของ ledger ด้วยตัวอย่างที่สอง และชี้ว่ามันเกิดสองทาง
+  ไม่ใช่แค่ทางเดียว** ⇒ ไฟล์ append-only ที่หลายเลนเขียน (`B1_DATASET.csv`) คือจุดที่เกิดบ่อยสุด
 
 ## 6. ของที่ยังไม่ได้ทำ (ตั้งใจ) — จาก handoff ใบก่อนที่ยังค้าง
 
