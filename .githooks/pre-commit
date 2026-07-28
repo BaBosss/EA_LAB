@@ -96,7 +96,15 @@ fi
 # without this the cage would have fired only when something OTHER than the file it
 # protects was edited. Same class as the finding it was written for: the artifact keeps
 # being produced, it just stops being connected to the thing it is about.
-cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*')
+# ORDER-500 (2026-07-28) added 'scripts/lib/*' for exactly the reason the ORDER-434
+# paragraph above describes, one day later. b1_guard.ps1 holds the rules that
+# check_precommit_staged.ps1 and .githooks/commit-msg both dot-source, and it matched
+# none of the three existing globs -- verified by pathspec before widening, not assumed.
+# Two consecutive additions have now needed this, which says the glob list is the wrong
+# shape: it enumerates directories that happen to hold guarded files, so every new
+# location is a silent miss until somebody notices. Recorded rather than fixed here --
+# changing the trigger to "any file a fast suite depends on" needs its own cage.
+cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*')
 if [ -n "$cage_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   rc=$?

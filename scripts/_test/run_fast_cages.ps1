@@ -80,7 +80,13 @@ $FAST_SUITES = @(
     # suite protects a file OUTSIDE scripts/check_*.ps1 and scripts/_test/*, so the hook's
     # trigger glob was widened to scripts/mris/* in the same commit -- otherwise the cage
     # would only have run when something OTHER than the file it guards was edited.
-    'run_mris_asof_tests.ps1'
+    'run_mris_asof_tests.ps1',
+    # ORDER-500: guards scripts/lib/b1_guard.ps1, which check_precommit_staged.ps1 and
+    # .githooks/commit-msg both dot-source. Runs in ~0.3s and touches no git state --
+    # it tests the rule functions directly rather than through a synthetic repo, which
+    # is the whole point: ORDER-421 found the synthetic-fixture cages drift away from
+    # the hooks they protect because nothing makes the fixture track the dependency list.
+    'run_b1_guard_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path
