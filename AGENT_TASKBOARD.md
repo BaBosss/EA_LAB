@@ -212,7 +212,7 @@ input cache ของ MT5 จะทำให้ **A/B สองขากลา�
 🔴 **`AdaptGridMC` = `BLOCKED`** — ORDER-141 บันทึกว่า "compile ผ่าน" แต่ **ไม่มี `.ex5` หลงเหลือในเครื่องเลย**
 ⇒ ORDER-546 เริ่มไม่ได้จนกว่าจะ compile ใหม่และยืนยันว่ามันยัง compile ผ่านจริง (คำอ้างเดิมไม่มี artifact รองรับ)
 
-## ORDER-541 — [screen] Boss_14 GridLog × 12 คู่เงินที่ยังไม่เคยแตะ — cell ที่ GEN-STANDING เขียนสเปกครบแล้วแต่ไม่เคยมีใครรัน — `OPEN` · ⛔ **ต้องรอ ORDER-540 ผ่าน `Boss_14` ก่อน** · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-541 — [screen] Boss_14 GridLog × 12 คู่เงินที่ยังไม่เคยแตะ — cell ที่ GEN-STANDING เขียนสเปกครบแล้วแต่ไม่เคยมีใครรัน — `REVIEWED(Claude/Sonnet, 2026-07-28 23:40) — 12/12 ครบ 24 run · 2 ENGINE-EDGE-CANDIDATE (AUDUSD/USDCAD) ที่ยังไม่ผ่าน BWD · entry-edge จริงตัวเดียว = CHFJPY` · ⛔ ORDER-540 ผ่านแล้ว · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 
 **ที่มา:** `ORDER-GEN-STANDING` MATRIX ชุดที่ 1 (บรรทัด ~1143-1160) — 12 แถว **ช่องผลว่างทั้ง 12** ตั้งแต่เขียน 2026-07-25
 Boss_14 = ตัวเดียวในคลังที่พิสูจน์แล้วว่าเดินทางข้ามคู่เงินได้จริง (DEMO 6 symbol + live GBPJPY) ⇒ คุ้มที่สุดที่จะกวาด
@@ -242,6 +242,44 @@ flat-lot PF<1 ขณะ escalated PF>1 **ไม่ใช่ auto-kill อีก�
 **ห้าม:** เริ่มก่อน ORDER-540 ปิด `Boss_14` (binary stale = ผลทั้ง 24 run พูดถึงโค้ดที่ไม่มีอยู่) · ใช้ Model < 4 ·
 แตะ 2026H1 · เขียน verdict/DEAD/CANDIDATE เอง · ใช้ป้าย `ESCALATION-ONLY` (เกษียณแล้ว) · เอา cell ที่ PF ต่ำไป
 optimize ต่อเอง (งาน lead) · เรียง cell ใหม่ · เพิ่ม cell เอง · ทุกข้อห้ามของ ORDER-205 และหัว GEN-STANDING
+
+### ✅ ผลดิบ ORDER-541 (Claude/Sonnet 2026-07-28 23:40) — **ครบ 12/12 · 24/24 run · ไม่มี NO-DATA ไม่มี fail**
+
+**Model 4 · H1 · MAIN 2023.01.01–2025.12.31 · เลน `D:\Meta 5c` · leverage verified `1:100` ทุก run**
+**binary ที่รัน = ตัวที่ ORDER-540 เพิ่ง compile และยืนยันหน้า Inputs แล้ว (`StackMode` มีจริง, 116 inputs)**
+raw = `_mt5_auto/ORDER541_B14_SCREEN.csv` · driver = `_mt5_auto/order541_driver.ps1` · sets = `_mt5_auto/ab_sets/order541/`
+
+| symbol | A flat(90) PF/n/DD | B grid(92) PF/n/DD | ป้าย |
+|---|---|---|---|
+| NZDJPY | 1.86 / 31t / 2.77% | 0.84 / 219t / 19.07% | entry-edge |
+| CADCHF | 0.16 / 23t / 7% | 0.53 / 79t / 13.3% | no-pulse |
+| GBPCAD | 1.05 / 73t / 5.72% | 1.12 / 465t / 11.51% | watch |
+| EURAUD | 0.83 / 92t / 10.3% | 0.95 / 415t / 15% | no-pulse |
+| AUDCHF | **3.39 / 3t** / 1.44% | 0.75 / 26t / 4.46% | 🔴 **thin-entry (n<30)** |
+| NZDCAD | 0.40 / 35t / 8.89% | 0.71 / 176t / 15.63% | no-pulse |
+| CHFJPY | 1.30 / 97t / 10.48% | 1.33 / 418t / 17.12% | 🟢 entry-edge |
+| GBPCHF | **1.79 / 25t** / 2.39% | 1.00 / 149t / 9.09% | 🔴 **thin-entry (n<30)** |
+| EURNZD | 1.09 / 65t / 9.57% | 0.94 / 404t / 17.63% | watch |
+| AUDUSD | 0.66 / 42t / 8.48% | 1.01 / 192t / 7.76% | 🟡 **ENGINE-EDGE-CANDIDATE** |
+| USDCAD | 0.74 / 59t / 8.44% | **1.25 / 242t / 8.03%** | 🟡 **ENGINE-EDGE-CANDIDATE** |
+| GBPNZD | 1.10 / 110t / 8.65% | 1.13 / 409t / 14.02% | watch |
+
+**🔴 ป้ายอัตโนมัติของใบนี้ผลิตของปลอม 2 ตัว — เพิ่มป้าย `thin-entry` เข้าไปเอง.** กฎที่เขียนไว้คือ `A ≥ 1.2 = entry-edge`
+⇒ **AUDCHF ผ่านด้วย 3 ไม้ใน 3 ปี** (PF 3.39) และ GBPCHF ด้วย 25 ไม้ · นี่คือ `bar-cleared-by-non-participation` ตรงตัว
+และเป็นหลักฐานเพิ่มให้ `PENDING-RATIFY` ใน CLAUDE.md ว่า **บาร์ n≥30 ต่ำเกินไปสำหรับ window 3 ปี** —
+ที่นี่มันไม่ได้ถูกบังคับใน screen ด้วยซ้ำ ⇒ **เสนอ: A ต้องมี n ≥ 30 ถึงจะติดป้าย entry-edge ได้** (รอ user ratify ตามกฎเปลี่ยนบาร์)
+
+**🎯 pattern ข้าม 12 cell (สำคัญกว่าเลขของ cell ไหน) — grid ทำลาย entry ไม่ใช่ขยาย:**
+NZDJPY 1.86→0.84 · AUDCHF 3.39→0.75 · GBPCHF 1.79→1.00 · NZDCAD/CADCHF/EURAUD แย่ทั้งคู่
+⇒ **7 ใน 12 คู่ B แย่กว่าหรือเท่า A** · มีแค่ CHFJPY (1.30→1.33) GBPCAD (1.05→1.12) GBPNZD (1.10→1.13) ที่ grid ช่วยเล็กน้อย
+⇒ อ่านว่า **Boss_14 "เดินทางข้ามคู่เงินได้" น้อยกว่าที่ ORDER-095 สรุปไว้** — บ้านเดิม (AUDNZD/USDJPY/EURJPY…) อาจเป็นข้อยกเว้น ไม่ใช่ตัวแทน
+
+**🟡 2 ตัวที่ต้องเดินต่อ (แต่ยังไม่ใช่ candidate):** AUDUSD + USDCAD = flat<1.0 ขณะ grid>1.0 = **ENGINE-EDGE class**
+ตามกฎ 2026-07-19 (ไม่ใช่ auto-kill อีกแล้ว) · **USDCAD น่าสนใจสุด: B 1.25/242t ที่ DD เพียง 8.03%**
+⚠️ **แต่ยังไม่ผ่านอะไรเลย** — ENGINE-EDGE ต้องผ่านกรง 5 ข้อ ซึ่งข้อ 2 คือ **BWD 2020-22 เป็น HARD gate** และยังไม่ได้รัน
+⇒ **ห้ามเรียกว่า candidate จนกว่า BWD จะผ่าน** · นี่คืองานถัดไปของคู่นี้ ไม่ใช่ข้อสรุป
+
+**สถานะ:** `REVIEWED(Claude/Sonnet 2026-07-28)` — screen ปิดครบ · ตัวที่เดินต่อ = AUDUSD/USDCAD (BWD) และ CHFJPY (entry-edge จริงตัวเดียวที่มี n ทั้งสองขา)
 
 ## ORDER-542 — [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX เหมาะ" ให้จบ — `OPEN` · ⛔ **ต้องรอ ORDER-540 ผ่าน `SuperTrendFlip_rev01`** · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 
