@@ -24,6 +24,7 @@ param(
   [string]$OutCsv = ""
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $auto = "D:\EA_LAB\_mt4_auto"
 $sweepDir = "$auto\sweeps"
 New-Item -ItemType Directory -Force $sweepDir | Out-Null
@@ -65,11 +66,16 @@ foreach ($c in $combos) {
 
   Get-Process terminal -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
   Start-Sleep -Milliseconds 1500
+  # ORDER-372: gate on the runner's exit code and the report's mtime - a cell whose run aborted
+  # would otherwise re-record the SAME cell's numbers from a previous sweep, which does not look
+  # wrong in the output, it looks reproducible.
+  $runStart = Get-Date
   & "D:\EA_LAB\scripts\mt4_run.ps1" -Expert $Expert -Symbol $Symbol -FromDate $FromDate -ToDate $ToDate -SetFile $setPath -Model $Model -ReportName $rn -TimeoutSec 150 | Out-Null
+  $runnerExit = $LASTEXITCODE
 
   $rep = "$auto\reports\$rn.htm"
   $vals = $fields | ForEach-Object { $c[$_] }
-  if (Test-Path $rep) {
+  if (Test-ReportIsFresh -Htm $rep -RunStart $runStart -RunnerExit $runnerExit -Label $rn) {
     $csvRow = & python "D:\EA_LAB\scripts\parse_mt4_report.py" $rep --csv 2>$null
     # parse_mt4_report --csv cols: expert,symbol,period,total_trades,profit_factor,net_profit,max_drawdown_pct,win_pct,quality,screen
     $p = $csvRow -split ","

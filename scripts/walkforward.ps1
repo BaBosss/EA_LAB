@@ -88,6 +88,7 @@ if ($Model -eq 2) {
 }
 
 # ---------- fold construction ----------
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 function Fmt([datetime]$d) { $d.ToString("yyyy.MM.dd") }
 
 $foldList = @()
@@ -204,9 +205,15 @@ function RunCombo {
   if ($Terminal) { $mt5Args["Terminal"] = $Terminal }
   if ($DataDir)  { $mt5Args["DataDir"]  = $DataDir }
   if ($Portable) { $mt5Args["Portable"] = $true }
+  # ORDER-372: report existence != this run produced it. mt5_run.ps1 clears a stale report only
+  # AFTER its abort checks, so without this gate an aborted fold silently reports the PREVIOUS
+  # fold's numbers under the same ReportName - and walk-forward folds are compared against each
+  # other, so a stale fold does not look wrong, it looks stable.
+  $runStart = Get-Date
   & "$root\scripts\mt5_run.ps1" @mt5Args | Out-Null
+  $runnerExit = $LASTEXITCODE
   $htm = "$root\_mt5_auto\reports\$ReportName.htm"
-  if (-not (Test-Path $htm)) {
+  if (-not (Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $ReportName)) {
     return [PSCustomObject]@{ pf = 0; dd = 0; trd = 0; report = $htm; set = $set; ok = $false }
   }
   $j = python "$root\scripts\parse_mt5_report.py" $htm

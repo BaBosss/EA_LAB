@@ -163,6 +163,73 @@ if ($offenders.Count -gt 0) {
 }
 Assert "no uncaptured runner call inside any function under scripts\" { $offenders.Count -eq 0 }
 
+Write-Host ""
+Write-Host "PART 4 - the freshness guard itself behaves" -ForegroundColor Cyan
+
+. (Join-Path (Split-Path -Parent $PSScriptRoot) 'lib\report_freshness.ps1')
+
+$fresh = Join-Path $mockDir "fresh.htm"
+$stale = Join-Path $mockDir "stale.htm"
+"x" | Set-Content $stale
+Start-Sleep -Milliseconds 1100          # ensure a measurable gap, not a same-tick tie
+$runStart = Get-Date
+Start-Sleep -Milliseconds 1100
+"x" | Set-Content $fresh
+
+Assert "fresh report + exit 0 = accepted"        { Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 0 -Quiet }
+Assert "STALE report + exit 0 = REFUSED"         { -not (Test-ReportIsFresh -Htm $stale -RunStart $runStart -RunnerExit 0 -Quiet) }
+Assert "fresh report but exit 2 (abort) = REFUSED" { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 2 -Quiet) }
+Assert "fresh report but exit 1 (no report) = REFUSED" { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 1 -Quiet) }
+Assert "exit 3 (leverage mismatch) still accepts - the report IS from this run" {
+  Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 3 -Quiet
+}
+Assert "missing file = REFUSED" { -not (Test-ReportIsFresh -Htm (Join-Path $mockDir 'nope.htm') -RunStart $runStart -RunnerExit 0 -Quiet) }
+Assert "library is inert toward its caller (sets no StrictMode / ErrorActionPreference)" {
+  # Check STATEMENTS, not raw text: the library's own header explains why it avoids these, so a
+  # raw-text grep matches its documentation and fails on a correct file. (This assertion did
+  # exactly that on first run - the test was wrong, not the library.)
+  # Order matters and got this wrong once: filtering ^\s*# lines FIRST deletes the block comment's
+  # own closing "#>" token, after which the <#...#> strip finds no terminator and removes nothing.
+  # Strip block comments first, then line comments.
+  $raw  = Get-Content (Join-Path (Split-Path -Parent $PSScriptRoot) 'lib\report_freshness.ps1') -Raw
+  $code = [regex]::Replace($raw, '(?s)<#.*?#>', '')
+  $code = (($code -split "`n") | Where-Object { $_ -notmatch '^\s*#' }) -join "`n"
+  ($code -notmatch 'Set-StrictMode') -and ($code -notmatch '\$ErrorActionPreference\s*=')
+}
+
+Write-Host ""
+Write-Host "PART 5 - every runner caller that parses a report gates it for freshness" -ForegroundColor Cyan
+
+# The bug PART 3 cannot see: a caller may discard the runner's output correctly (| Out-Null) and
+# still infer "the .htm exists, therefore this run made it". That inference is what let an aborted
+# run report a previous run's numbers. Any script that calls a runner AND then reads a report must
+# either use the shared guard or check $LASTEXITCODE itself.
+$ungated = New-Object System.Collections.Generic.List[string]
+foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File) {
+  # The runners themselves are not callers. Without this they self-match on the usage examples in
+  # their own header comments - which is how this check first reported mt4_run.ps1 and
+  # mt4_optimize.ps1 as offenders against their own report-move logic.
+  if ($runnerNames -contains $f.Name) { continue }
+
+  # Comment lines must not count as calls, for the same reason.
+  $codeLines = Get-Content $f.FullName | Where-Object { $_ -notmatch '^\s*#' }
+  $txt = ($codeLines -join "`n")
+  $txt = [regex]::Replace($txt, '(?s)<#.*?#>', '')
+
+  $callsRunner = $false
+  foreach ($rn in $runnerNames) { if ($txt -match ('&[^\r\n]*' + [regex]::Escape($rn))) { $callsRunner = $true } }
+  if (-not $callsRunner) { continue }
+  # does it then read a report?
+  if ($txt -notmatch '\.htm') { continue }
+  $gated = ($txt -match 'Test-ReportIsFresh') -or ($txt -match '\$LASTEXITCODE')
+  if (-not $gated) { $ungated.Add($f.Name) }
+}
+if ($ungated.Count -gt 0) {
+  Write-Host "  runner callers that read a report without gating it:" -ForegroundColor Red
+  $ungated | ForEach-Object { Write-Host "    $_" -ForegroundColor Red }
+}
+Assert "no runner caller reads a report without a freshness/exit-code gate" { $ungated.Count -eq 0 }
+
 Remove-Item $mockDir -Recurse -Force -ErrorAction SilentlyContinue
 
 Write-Host ""

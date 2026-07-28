@@ -72,12 +72,18 @@ function Run-MT5($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
 
     try {
         $out = & "$ScriptDir\mt5_run.ps1" @args 2>&1
+        $runnerExit = $LASTEXITCODE
         Write-Host $out
         $pf = if ($out -match "Profit Factor[:\s]+([\d.]+)") { $matches[1] } else { "?" }
         $net = if ($out -match "Net Profit[:\s]+([-\d.,]+)") { $matches[1] } else { "?" }
         $tr = if ($out -match "Trades[:\s]+(\d+)") { $matches[1] } else { "?" }
         $rpt = if ($out -match "(D:\\[^\s]+\.html)") { $matches[1] } else { "-" }
-        Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr" "OK"
+        # ORDER-372: status must reflect the runner's exit code - logging "OK" for an aborted run
+        # records a failure as a completed measurement carrying "?" metrics.
+        $status = if ($runnerExit -eq 0) { "OK" }
+                  elseif ($runnerExit -eq 3) { "LEVERAGE_MISMATCH" }
+                  else { "FAILED_EXIT$runnerExit" }
+        Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr" $status
     } catch {
         Write-Host "ERR: $_" -ForegroundColor Red
         Log-Result $taskNum $tag $symbol $window "-" "ERR: $_" "ERR"

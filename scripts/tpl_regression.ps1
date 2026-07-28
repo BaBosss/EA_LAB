@@ -32,6 +32,7 @@ $baseline = Join-Path $root "ea_template\regression_baseline.csv"
 # binary. Now every run first mirrors + compiles CURRENT source (deploy.ps1 deletes old
 # .ex5 before compiling and fails on any compile error), so the numbers always describe
 # the source tree being judged.
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 Write-Host ">> deploy + compile current source (deploy.ps1 -Compile)" -ForegroundColor Cyan
 & (Join-Path $root "ea_template\deploy.ps1") -Compile
 if ($LASTEXITCODE -ne 0) { Write-Host "[FAIL] deploy/compile failed - regression aborted (never test stale binaries)" -ForegroundColor Red; exit 1 }
@@ -79,11 +80,18 @@ foreach ($e in $experts) {
   # ORDER-165: full pinned set for every expert - never run the cage on cached inputs.
   $setFile = if ($setOverride.ContainsKey($e)) { $setOverride[$e] } else { Join-Path $defaultSetDir "${name}_defaults.set" }
   if (-not (Test-Path $setFile)) { Write-Host "[FAIL] $name - pinned set missing: $setFile (capture defaults per ORDER-165 before running the cage)" -ForegroundColor Red; exit 1 }
+  $runStart = Get-Date
   $res = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $e -Symbol $Symbol -Period $Period `
           -FromDate $FromDate -ToDate $ToDate -Model $Model -ReportName $rep -SetFile $setFile
-  if ($LASTEXITCODE -eq 3) { Write-Host "[FAIL] $name - LEVERAGE MISMATCH (see mt5_run output above) - cage numbers would not be comparable" -ForegroundColor Red; exit 1 }
+  $runnerExit = $LASTEXITCODE
+  if ($runnerExit -eq 3) { Write-Host "[FAIL] $name - LEVERAGE MISMATCH (see mt5_run output above) - cage numbers would not be comparable" -ForegroundColor Red; exit 1 }
   $htm = Join-Path $root "_mt5_auto\reports\$rep.htm"
-  if (-not (Test-Path $htm)) { Write-Host "[FAIL] $name - no report produced ($res)" -ForegroundColor Red; exit 1 }
+  # ORDER-372: this used to check only exit 3 and then Test-Path, so an ABORT (exit 2) with a
+  # leftover report would have compared the template against a PREVIOUS run's numbers - the exact
+  # failure mode this regression cage exists to catch, hidden inside the cage itself.
+  if (-not (Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $name)) {
+    Write-Host "[FAIL] $name - no fresh report produced ($res)" -ForegroundColor Red; exit 1
+  }
   $m = Parse-Report $htm
   $rows += [pscustomobject]@{ ea=$name; net=$m['net']; pf=$m['pf']; trades=$m['trades']; eqdd=$m['eqdd'] }
   Write-Host ("   net={0} pf={1} trades={2} eqdd={3}" -f $m['net'], $m['pf'], $m['trades'], $m['eqdd'])

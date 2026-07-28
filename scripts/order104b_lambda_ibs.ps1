@@ -17,6 +17,7 @@ Output -> _mt5_auto\reports\P104b_summary.csv
 PREREQ: MT5 GUI closed; both ex5 already in roaming MQL5\Experts.
 #>
 $ErrorActionPreference="Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $root="D:\EA_LAB"; $runner="$root\scripts\mt5_run.ps1"
 $setDir="$root\_mt5_auto\ab_sets\order104"; $repDir="$root\_mt5_auto\reports"
 New-Item -ItemType Directory -Force $setDir,$repDir | Out-Null
@@ -26,10 +27,14 @@ $windows=@(@{n="BWD";from="2020.01.01";to="2022.12.31"},@{n="REC";from="2023.01.
 $rows=@()
 
 function Run-Cell($expert,$combo,$set,$rep){
+  # ORDER-372: report existence != this run produced it - mt5_run.ps1 clears a stale report only
+  # AFTER its abort checks, so an aborted cell would otherwise record the PREVIOUS run's numbers.
+  $runStart = Get-Date
   & $runner -Expert $expert -Symbol $script:sym -Period $script:tf -FromDate $script:w.from -ToDate $script:w.to `
             -Model 2 -SetFile $set -ReportName $rep | Out-Null
+  $runnerExit = $LASTEXITCODE
   $htm="$repDir\$rep.htm"; $pf=""; $tr=""
-  if(Test-Path $htm){ $t=Get-Content $htm -Raw -Encoding UTF8
+  if(Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rep){ $t=Get-Content $htm -Raw -Encoding UTF8
     if($t -match 'Profit factor[^0-9\-]*([0-9]+\.[0-9]+)'){$pf=$matches[1]}
     if($t -match 'Total trades[^0-9\-]*([0-9]+)'){$tr=$matches[1]} }
   $script:rows += [PSCustomObject]@{combo=$combo;symbol=$script:sym;tf=$script:tf;window=$script:w.n;PF=$pf;trades=$tr;report=$rep}

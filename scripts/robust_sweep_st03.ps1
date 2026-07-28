@@ -10,6 +10,7 @@ param(
   [int]$Model = 4
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $DataDir = "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
 $Terminal = "D:\Meta 5\terminal64.exe"
 $auto = "D:\EA_LAB\_mt5_auto"
@@ -49,11 +50,15 @@ foreach($tp in $tp3s){ foreach($nr in $nears){
     # clean slate: kill any lingering terminal so mt5_run's GUI-guard passes (we use -Force anyway)
     Get-Process terminal64 -EA SilentlyContinue | Stop-Process -Force -EA SilentlyContinue; Wait-TerminalGone 20
     # delegate to mt5_run (proven: launches, waits for the report FILE, moves it to reports/).
+    # ORDER-372: report existence != this run produced it (mt5_run.ps1 clears a stale report only
+    # AFTER its abort checks). Gate on the exit code and on the file being newer than this run.
+    $runStart = Get-Date
     & "$PSScriptRoot\mt5_run.ps1" -Expert "EA_RUNNER_ST03" -Symbol GBPUSD -Period H1 -Model $Model `
         -FromDate $w.f -ToDate $w.t -SetFile $setPath -ReportName $rep -Force 2>&1 | Out-Null
+    $runnerExit = $LASTEXITCODE
     Start-Sleep 2
     $htm="$auto\reports\$rep.htm"; if(-not (Test-Path $htm)){ $htm="$DataDir\$rep.htm" }
-    if(Test-Path $htm){
+    if(Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rep){
       $r=Parse-Report $htm
       "$tp,$nr,$($w.l),$($r.PF),$($r.Net),$($r.Trades),$($r.DDpct),$($r.Win),$($r.Sharpe),OK" | Add-Content $OutCsv
       Write-Output "    -> PF=$($r.PF) t=$($r.Trades) DD%=$($r.DDpct)"

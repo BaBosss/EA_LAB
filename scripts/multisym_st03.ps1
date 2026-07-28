@@ -10,6 +10,7 @@ param(
   [int]$Model = 2,
   [string[]]$Symbols = @("USDCAD","EURUSD","AUDUSD","NZDUSD","GBPUSD")
 )
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $ErrorActionPreference="Stop"
 $DataDir="C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"
 $auto="D:\EA_LAB\_mt5_auto"
@@ -28,11 +29,17 @@ foreach($sym in $Symbols){ foreach($w in $wins){
   Write-Output "[$n/$total] $sym $($w.l)"
   Get-Process terminal64 -EA SilentlyContinue | Stop-Process -Force -EA SilentlyContinue
   $g=[Diagnostics.Stopwatch]::StartNew(); while((Get-Process terminal64 -EA SilentlyContinue) -and $g.Elapsed.TotalSeconds -lt 20){ Start-Sleep 2 }
+  # ORDER-372: capture the exit code and the run's start time - "the .htm exists" does not mean THIS
+  # run wrote it. mt5_run.ps1 clears a stale report only AFTER its abort checks, so an abort leaves
+  # the previous run's file in place; the DataDir fallback below reads exactly the file that clear
+  # is meant to remove, so it is gated too.
+  $runStart = Get-Date
   & "$PSScriptRoot\mt5_run.ps1" -Expert "EA_RUNNER_ST03" -Symbol $sym -Period H1 -Model $Model `
       -FromDate $w.f -ToDate $w.t -SetFile $Set -ReportName $rep -Force 2>&1 | Out-Null
+  $runnerExit = $LASTEXITCODE
   Start-Sleep 2
   $htm="$auto\reports\$rep.htm"; if(-not(Test-Path $htm)){ $htm="$DataDir\$rep.htm" }
-  if(Test-Path $htm){
+  if(Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rep){
     $r=Parse-Report $htm
     "$sym,$($w.l),$Model,$($r.PF),$($r.Net),$($r.Trades),$($r.DDpct),$($r.Win),$($r.Sharpe),OK" | Add-Content $OutCsv
     Write-Output "    -> PF=$($r.PF) t=$($r.Trades) DD%=$($r.DDpct)"

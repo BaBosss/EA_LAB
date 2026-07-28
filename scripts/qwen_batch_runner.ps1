@@ -77,6 +77,7 @@ function Run-MT5($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
     while ($retries -lt 2 -and -not $ok) {
         try {
             $out = & "$ScriptDir\mt5_run.ps1" @args 2>&1
+            $runnerExit = $LASTEXITCODE
             Write-Host $out
             # Parse PF/Net/Trades from output
             $pf = if ($out -match "Profit Factor[:\s]+([\d.]+)") { $matches[1] } else { "?" }
@@ -84,7 +85,15 @@ function Run-MT5($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
             $tr = if ($out -match "Trades[:\s]+(\d+)") { $matches[1] } else { "?" }
             # Find report path
             $rpt = if ($out -match "(D:\\[^\s]+\.html)") { $matches[1] } else { "-" }
-            Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr$fallbackNote" "OK"
+            # ORDER-372: this lane cannot read a STALE report (every value above is derived from
+            # THIS run's captured output, not from a filename), but it used to log status "OK"
+            # unconditionally - so an aborted run was recorded as a completed one carrying "?" for
+            # every metric. A row that says OK is the thing downstream readers trust, so the exit
+            # code decides the status.
+            $status = if ($runnerExit -eq 0) { "OK" }
+                      elseif ($runnerExit -eq 3) { "LEVERAGE_MISMATCH" }
+                      else { "FAILED_EXIT$runnerExit" }
+            Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr$fallbackNote" $status
             $ok = $true
         } catch {
             $retries++
