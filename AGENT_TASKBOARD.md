@@ -394,7 +394,7 @@ ORDER-433 เขียนไว้ตรงตัวว่า *"This closes the 
 **ห้าม drift เงียบ**
 **ห้าม:** เปลี่ยนบาร์เองโดยไม่มี user เคาะ · ปล่อย 4 ตัวนี้ค้างไร้เกณฑ์ตัดสินต่อไป
 
-## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
+## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `PARKED(Claude/Opus 2026-07-28) — ORDER-430 ไล่ครบ 7 host แล้วไม่มีบ้านที่ใช้ได้ ⇒ lever ไม่มีที่ทดสอบ ไม่ใช่ lever ไม่ดี · ปลุกเมื่อมี host ที่ BWD>1.2 พร้อม MAIN>1.0 บนไม้ที่พอตีความ` · เดิม: `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
 **bars:** ~~pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง~~ **← ถอนแล้ว 2026-07-27: บาร์นี้วัด host ไม่ได้วัด lever (ดู STEP 1 ด้านล่าง) · บาร์ที่ใช้จริง = delta vs control ในเลนเดียวกัน** · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
 **ของที่มีอยู่แล้ว:** `_9_RegimeGateAdds` + `CONF_PA_ENGULF` — build เสร็จ (`1aeafc06`, `f65bf2ce`) · cage ผ่าน · byte-identical เมื่อปิด ·
 Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **มี `ea_template/sets/B14_AB_on.set` รออยู่แล้ว**
@@ -493,6 +493,22 @@ BWD net −510.30 (gross +2649.81 / −3160.11) = **ขาดทุนจริ�
 Boss_14 legs อื่นที่มี DEMO set อยู่แล้ว (USDJPY/EURJPY/AUDCAD/CADJPY/EURUSD/XAU/GBPJPY) → Boss_16 Kangaroo → Boss_11 GridTrend
 **ถ้าไล่ครบแล้วไม่มี host ไหนผ่านประตู** ⇒ นั่นคือคำตอบของใบนี้: lever คู่นี้ยัง**ไม่มีบ้านให้ทดสอบ** ไม่ใช่ lever ไม่ดี — park ไว้ อย่าฝืนใส่ host ปริ่ม
 **ห้าม:** รัน A/B บน host ที่ BWD < 1.0 เพื่อ "ดูเฉยๆ" — Wave1 พิสูจน์แล้วว่า overlay บน host อ่อนให้ผลที่ตีความไม่ได้
+
+### 🅿️ PARKED 2026-07-28 — ORDER-430 ตอบใบนี้แล้ว และคำตอบคือ "ยังไม่มีบ้าน"
+
+ORDER-430 รัน CTRL อย่างเดียว 7 host (Model 4, เลน 5b, `CTRL.set` ไฟล์เดียว) ⇒ **มี 2 host ผ่านบาร์ที่เขียนไว้
+แต่ไม่มีตัวไหนใช้เป็น host ของ A/B ได้จริง** — AUDCAD 2.20/62 ไม้ และ XAU 2.29/52 ไม้ **ผ่าน BWD ด้วยการแทบไม่อยู่ในตลาด**
+(DD 1.7-1.9% ตลอด 3 ปี stress) แล้ว **MAIN ต่ำกว่า 1.0 ทั้งคู่** (0.93 / 0.95)
+⇒ วัด delta ของ lever บน host ที่ขาดทุนใน MAIN = แยกไม่ออกว่า lever ช่วยหรือแค่ขาดทุนน้อยลง · เหตุผลเต็ม = VERDICT ORDER-430
+
+**⇒ `PARKED` ไม่ใช่ `DEAD`** · lever `_9_RegimeGateAdds` + `CONF_PA_ENGULF` **build เสร็จ · cage ผ่าน · byte-identical เมื่อปิด · `.set` 3 ฉบับพร้อม**
+ทุกอย่างพร้อมหมด ขาดอย่างเดียวคือที่ทดสอบ ⇒ **ห้ามเขียนว่า lever นี้ถูกทดสอบแล้วไม่ผ่าน — มันยังไม่เคยถูกทดสอบเลยสักเซลล์**
+
+**เงื่อนไขปลุก (เขียนไว้ให้ชัด จะได้ไม่ต้องคิดใหม่):** เจอ host ที่ **BWD PF > 1.2 พร้อมกับ MAIN PF > 1.0** และ
+**จำนวนไม้ใน BWD มากพอจะตีความ** (บทเรียนจาก ORDER-430: `n ≥ 30` ต่ำเกินไปสำหรับหน้าต่าง 3 ปีของ grid — ตั้งใหม่ที่ระดับที่บอกได้ว่า EA อยู่ในตลาดจริง)
+**tranche ถัดไปที่ยังไม่ได้ไล่:** Boss_16 Kangaroo · Boss_11 GridTrend (ทั้งคู่ต้องสร้าง `.set` ก่อน ซึ่งเป็นเหตุผลที่ ORDER-430 ไม่รวมไว้)
+
+<sub>ราคาที่จ่ายไปกับใบนี้คุ้มที่จะจำ: เลือก host ผิด **3 ครั้ง** — RSI-MR (ไม่เปิด `.mq5` เลย EA ไม่มี input) · Boss_14 AUDNZD (เชื่อ prose ในสกอร์การ์ด) · และรอบนี้ **บาร์ที่ผมเขียนเองปล่อยผ่าน host ที่ไม่ได้เทรด** · รากเดียวกันทั้งสามครั้ง = **ตัดสิน host จากอย่างอื่นที่ไม่ใช่การวัด artifact ที่จะใช้จริง** · สิ่งที่กันไว้ได้ทุกครั้งคือประตูที่เขียนก่อนเห็นตัวเลข ไม่ใช่การเลือกเก่งขึ้น</sub>
 
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
