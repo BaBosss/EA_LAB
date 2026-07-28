@@ -3009,3 +3009,48 @@ reasoning says the date is not the thing to slide — the trade *count* was repl
 should read start + 12 months. Whoever takes this must also check `expectations.csv` and the dashboard
 for the same staleness. **`991001` is real money ⇒ do not change its row without the user.**
 Found by ORDER-511 while sequencing a re-pin; not fixed there because it spans three other accounts.
+
+### VPS LOG READ + RE-PIN LANDED 2026-07-28 — every open question from this order is now closed but one
+
+Logs supplied by the user (`Log.7z`, terminal `logs\` + Experts `Mql-Logs\`, 3744 lines, 07-26→07-28
+13:54 — i.e. **ending just before the re-pin**, which the GV timestamps at 14:00).
+
+**🟢 The re-pin was SAFE — the position was never Wave5's.** `EA_LAB_snapshot_463666728_20260728.csv`
+attributes both open positions by magic: USDJPYm 0.01 → **`990120`** (Boss_12_Breakout) and XAUUSDm
+0.01 → **`999094`** (MacdDiv_Naked). **Magic `990001` held nothing.** So Wave5 USDJPY was **flat** when
+the magic changed and **no position was orphaned** — the hazard this order was blocked on did not exist.
+
+**🟢 Nothing halted.** `[RISK]` appears **zero times** across all three days — no halt, no kill, and no
+legacy-consent FATAL. The "the demo record is not what it appears" worry is closed: they were running.
+
+**🟢 (ก) confirmed exactly.** `[INIT]` lines for Wave5 XAG/USDJPY/XAU and Boss_12 all stamp
+**17:02:51 on 2026-07-26** — the same 17:02 the four GVs carried. The last-access reading of MT5's GV
+`Time` column was right, and the frozen value needed no other explanation.
+
+**🟢 (ข) Kangaroo is attached and running.** `Boss_16_KangarooGrid (XAUUSDm,H1)` `[INIT]` at 17:29:45
+and 17:31:04 on 07-26. It had no GV simply because it had not written one. **Not missing.**
+
+**🔴 The deviation was SIX fields, not five — and the sixth was invisible to the check we ran.**
+The `[INIT]` line prints the mode selectors: Wave5 **XAU and XAG both log `exit=23`** (their `.set`
+value, loaded correctly) while Wave5 **USDJPY logged `exit=22`** — the compiled default. The bundle
+`.set` sets `ExitMode=23`. We had assumed `ExitMode=23` *was* the default and so never asked the user
+to read it; the log settles it empirically from the two charts that did load their `.set`. **The
+running config differed in entry, exit engine, trail start, trail step, stack depth and magic.**
+Lesson for the re-verify below: **diff every key in the `.set`, not the keys we believe differ.**
+
+**🟢 Judge clock re-based (option A) — and it cost nothing.** `990001` opened **zero trades** in the
+10 days, confirmed independently by the deals export and the snapshot. `DEPLOYMENTS.csv` 990303 now
+reads `start_date=2026-07-28`, `judge_date=2027-07-28` (+12mo, ORDER-235 thin bar);
+`DEMO_DEPLOYMENT_PLAN.md` carries the matching note.
+
+**🟠 Still open — one screenshot, and it is the whole point of this order.** The GV
+`Boss_990303_rc_peak_eq = 99948.29 @ 14:00` proves the **magic** took. The other **five** fields
+(`_9_MaxLevels=1` · `_23_TrailStart=2000` · `_23_TrailStep=800` · `_17_Wave3MinMult=1.618` ·
+`ExitMode=23`) are **unverified on the chart**. Marking this REVIEWED on the magic alone would repeat
+the exact failure the order documents — a bundle that is correct on disk while the chart is not it.
+**Order stays `OPEN` ⇒ no B1 row owed.**
+
+**🟠 Also unresolved:** `EA_BREAKOUT_XAU (XAUUSDm,H1)` on this account logs
+`AllowLive=YES Bars=40 SL×1.5 TP×5.0 EMA200=ON` — **`Bars40` is the description on the 991001 real-money
+row**, and the init line does not print its magic. Still no inventory row for it here. Needs its
+Inputs tab read (`_06_Magic`).

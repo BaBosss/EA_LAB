@@ -93,6 +93,15 @@ PF ≥ 1.40 ที่ **≥ 30 trades** ตัดสินตอนไม้ย�
 | 990205 | Boss_14_GridLog size-light thin CADJPYm | 0.3 | 2028-06 |
 | 990303 | Boss_17_Wave5 USDJPYm | 0.3 | 2028-06 |
 
+> 🔴 **990303 clock re-based 2026-07-28 → judge_date `2027-07-28` (ORDER-511 option A, user ratified).**
+> That chart had been running since 07-18 **without its `.set` ever being loaded** — unpinned on the
+> compiled default magic `990001`, with a looser entry and a much tighter trail than the config its
+> evidence came from. `start_date` moved to the re-pin date (2026-07-28) and `judge_date` is start
+> **+12 months** per the ORDER-235 thin-EA bar. **Nothing was discarded:** the leg opened **zero
+> trades** across those 10 days, confirmed by the deals export *and* the account snapshot.
+> ⚠️ **The other three thin EAs (`991001` real money · `991004` · `990205`) still carry the old +3mo
+> `judge_date` in `DEPLOYMENTS.csv` and have NOT been re-based → `ORDER-520`.**
+
 ทางเลือกที่เสนอไว้ = (ก) ลดบาร์จำนวนไม้เฉพาะกลุ่ม thin แล้วชดเชยด้วยหลักฐาน backtest
 both-window + ขนาด lot เล็กถาวร · (ข) ตัดสินเป็น "ยังไม่พอตัดสิน" ไปเรื่อยๆ แล้วปล่อยรัน
 · (ค) ถอดออกเพราะไม่คุ้มช่องพอร์ต
