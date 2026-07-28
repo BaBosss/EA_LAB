@@ -2,8 +2,8 @@
     "meta":  {
                  "schema":  "ControlRoomSnapshot",
                  "version":  3,
-                 "generated_at":  "2026-07-28T06:43:01",
-                 "git_head":  "de19de00",
+                 "generated_at":  "2026-07-28T07:37:32",
+                 "git_head":  "519989d8",
                  "stale_bar_hours":  30,
                  "decision_bar_trades":  30,
                  "sources":  [
@@ -11,19 +11,19 @@
                                      "path":  "portfolio\\DEPLOYMENTS.csv",
                                      "sha256":  "454c681665d5a3cac13b26297af831349600edc399ab14c05d80957281ad3a5b",
                                      "mtime":  "2026-07-26T17:55:05",
-                                     "age_hours":  36.8
+                                     "age_hours":  37.7
                                  },
                                  {
                                      "path":  "portfolio\\LIVE_DASHBOARD.html",
-                                     "sha256":  "546eb716871033d2581b38df316e597f18735fa5aa9a7c2b63cd59c4c19475ac",
-                                     "mtime":  "2026-07-28T06:43:00",
+                                     "sha256":  "d3e80456f402f48a7c83dce696b4a13243e06292a91890c83138afc73ed2c9a4",
+                                     "mtime":  "2026-07-28T07:37:32",
                                      "age_hours":  0
                                  },
                                  {
                                      "path":  "portfolio\\ATTESTATION_MAP.csv",
                                      "sha256":  "a5278ffa282c6c26d05868968c62110470a001ac8cba0cbf08a0a622f8b5f766",
                                      "mtime":  "2026-07-26T18:39:37",
-                                     "age_hours":  36.1
+                                     "age_hours":  37
                                  }
                              ],
                  "counting_method":  "MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic."
@@ -34,7 +34,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159503454_20260728.csv",
-                              "age_hours":  0,
+                              "age_hours":  0.1,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -42,7 +42,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_159475669_20260728.csv",
-                              "age_hours":  0,
+                              "age_hours":  0.1,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -50,7 +50,7 @@
                               "collector":  "MT4",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_mt4_orders_141049900_20260728.csv",
-                              "age_hours":  0,
+                              "age_hours":  0.1,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -58,7 +58,7 @@
                               "collector":  "MT5",
                               "state":  "FRESH",
                               "latest_file":  "EA_LAB_deals_415573666_20260728.csv",
-                              "age_hours":  0,
+                              "age_hours":  0.1,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -66,7 +66,7 @@
                               "collector":  "MT5",
                               "state":  "STALE",
                               "latest_file":  "EA_LAB_deals_463666728_20260727.csv",
-                              "age_hours":  36.9,
+                              "age_hours":  37.8,
                               "governance_scope":  "LAB_MANAGED"
                           },
                           {
@@ -74,7 +74,7 @@
                               "collector":  "MT4",
                               "state":  "STALE",
                               "latest_file":  "EA_LAB_mt4_orders_69424711_20260727.csv",
-                              "age_hours":  37,
+                              "age_hours":  38,
                               "governance_scope":  "LAB_MANAGED"
                           }
                       ],
@@ -3243,24 +3243,24 @@
                               "account":  "159503454",
                               "state":  "FRESH",
                               "age_hours":  0,
-                              "equity":  5792.93,
-                              "balance":  8399.34,
-                              "margin_level":  1812.5,
-                              "floating_pl":  -2606.41,
+                              "equity":  5598.29,
+                              "balance":  8083.14,
+                              "margin_level":  2074.5,
+                              "floating_pl":  -2484.85,
                               "magics":  [
                                              {
                                                  "magic":  "0",
-                                                 "floating_pl":  -2614.02,
-                                                 "open_lots":  1.73,
-                                                 "pos_count":  17,
-                                                 "oldest_age_h":  213
+                                                 "floating_pl":  -2492.14,
+                                                 "open_lots":  1.42,
+                                                 "pos_count":  14,
+                                                 "oldest_age_h":  213.9
                                              },
                                              {
                                                  "magic":  "990103",
-                                                 "floating_pl":  7.61,
+                                                 "floating_pl":  7.29,
                                                  "open_lots":  0.01,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  322.7
+                                                 "oldest_age_h":  323.6
                                              }
                                          ]
                           },
@@ -3268,31 +3268,31 @@
                               "account":  "159475669",
                               "state":  "FRESH",
                               "age_hours":  0,
-                              "equity":  10223.04,
+                              "equity":  10227.25,
                               "balance":  10274.72,
-                              "margin_level":  33595.3,
-                              "floating_pl":  -51.68,
+                              "margin_level":  33609.1,
+                              "floating_pl":  -47.47,
                               "magics":  [
                                              {
                                                  "magic":  "1524",
-                                                 "floating_pl":  -62.32,
+                                                 "floating_pl":  -58.69,
                                                  "open_lots":  0.11,
                                                  "pos_count":  10,
-                                                 "oldest_age_h":  279.4
+                                                 "oldest_age_h":  280.3
                                              },
                                              {
                                                  "magic":  "20240001",
-                                                 "floating_pl":  -0.29,
+                                                 "floating_pl":  -0.31,
                                                  "open_lots":  0.04,
                                                  "pos_count":  4,
-                                                 "oldest_age_h":  321.6
+                                                 "oldest_age_h":  322.5
                                              },
                                              {
                                                  "magic":  "9397",
-                                                 "floating_pl":  10.93,
+                                                 "floating_pl":  11.53,
                                                  "open_lots":  0.02,
                                                  "pos_count":  2,
-                                                 "oldest_age_h":  853.7
+                                                 "oldest_age_h":  854.6
                                              },
                                              {
                                                  "magic":  "8002",
@@ -3321,24 +3321,24 @@
                               "account":  "141049900",
                               "state":  "FRESH",
                               "age_hours":  0,
-                              "equity":  11751.39,
+                              "equity":  11754.55,
                               "balance":  11799.1,
-                              "margin_level":  65385.8,
-                              "floating_pl":  -47.71,
+                              "margin_level":  58765.6,
+                              "floating_pl":  -44.55,
                               "magics":  [
                                              {
                                                  "magic":  "1112",
-                                                 "floating_pl":  -6.69,
-                                                 "open_lots":  0.01,
-                                                 "pos_count":  1,
-                                                 "oldest_age_h":  3.3
+                                                 "floating_pl":  -11.65,
+                                                 "open_lots":  0.02,
+                                                 "pos_count":  2,
+                                                 "oldest_age_h":  4.2
                                              },
                                              {
                                                  "magic":  "7777",
-                                                 "floating_pl":  -41.02,
+                                                 "floating_pl":  -32.9,
                                                  "open_lots":  0.72,
                                                  "pos_count":  5,
-                                                 "oldest_age_h":  15.8
+                                                 "oldest_age_h":  16.7
                                              }
                                          ]
                           },
@@ -3346,59 +3346,59 @@
                               "account":  "415573666",
                               "state":  "FRESH",
                               "age_hours":  0,
-                              "equity":  59963.4,
+                              "equity":  59984.39,
                               "balance":  59522.99,
-                              "margin_level":  94564.6,
-                              "floating_pl":  440.41,
+                              "margin_level":  94597.7,
+                              "floating_pl":  461.4,
                               "magics":  [
                                              {
                                                  "magic":  "992001",
-                                                 "floating_pl":  10.72,
+                                                 "floating_pl":  19.27,
                                                  "open_lots":  0.01,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  10.7
+                                                 "oldest_age_h":  11.6
                                              },
                                              {
                                                  "magic":  "990201",
-                                                 "floating_pl":  24.85,
+                                                 "floating_pl":  26.32,
                                                  "open_lots":  0.1,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  111.9
+                                                 "oldest_age_h":  112.8
                                              },
                                              {
                                                  "magic":  "990110",
-                                                 "floating_pl":  88.62,
+                                                 "floating_pl":  94.64,
                                                  "open_lots":  0.26,
                                                  "pos_count":  2,
-                                                 "oldest_age_h":  177.6
+                                                 "oldest_age_h":  178.5
                                              },
                                              {
                                                  "magic":  "990204",
-                                                 "floating_pl":  92.68,
+                                                 "floating_pl":  93.15,
                                                  "open_lots":  0.13,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  194.6
+                                                 "oldest_age_h":  195.5
                                              },
                                              {
                                                  "magic":  "990203",
-                                                 "floating_pl":  90.74,
+                                                 "floating_pl":  95.68,
                                                  "open_lots":  0.1,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  359.8
+                                                 "oldest_age_h":  360.7
                                              },
                                              {
                                                  "magic":  "990206",
-                                                 "floating_pl":  44.1,
+                                                 "floating_pl":  42.5,
                                                  "open_lots":  0.05,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  428.7
+                                                 "oldest_age_h":  429.6
                                              },
                                              {
                                                  "magic":  "990205",
-                                                 "floating_pl":  88.7,
+                                                 "floating_pl":  89.84,
                                                  "open_lots":  0.07,
                                                  "pos_count":  1,
-                                                 "oldest_age_h":  526.2
+                                                 "oldest_age_h":  527.1
                                              }
                                          ]
                           },
@@ -3417,7 +3417,7 @@
                           {
                               "account":  "69424711",
                               "state":  "STALE",
-                              "age_hours":  37,
+                              "age_hours":  38,
                               "equity":  null,
                               "balance":  null,
                               "margin_level":  null,
