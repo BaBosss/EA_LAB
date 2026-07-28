@@ -1670,7 +1670,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `OPEN` · runnable by: **oc-qwen / ZCode** · 👉 recommended: oc-qwen
+## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `REVIEWED(Claude/Opus 2026-07-28) — 2 hosts cleared the written bar, NEITHER is usable; the bar was wrong for a grid. ORDER-236 answer = the lever pair has no home → PARKED` · run by: worker/Sonnet, lane 5b, Model 4 · verdict: Claude
 **bars:** qualified host = BWD PF ≥ **1.20** at ≥ **30 trades** · borderline = **1.00–1.19** (record, must not be selected) · fail = **< 1.00** · **flat-lot probe:** N-A (this order measures a host; it changes no money management)
 
 **Why this order exists:** ORDER-236 is `BLOCKED` at its own pre-registered gate. The lever pair `_9_RegimeGateAdds` + `CONF_PA_ENGULF` is built, caged, byte-identical when off, and its A/B sets are ready — but the host it was aimed at (Boss_14 GridLog @ AUDNZD H1, `B14_AB_off.set`) measured **MAIN 1.09 / BWD 0.84** under Model 4, and the gate says a host that cannot clear BWD 1.0 comfortably is not worth six more Model-4 runs. The lever has no home. This order goes and finds one — **or proves none exists, which is equally an answer** (memory `escalation-overlay-needs-strong-bwd-host`: an overlay only pays on a host whose BWD is genuinely strong).
@@ -1745,6 +1745,50 @@ Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-Rep
 
 **What the lead does with the result:** take the highest-BWD qualified host and re-point ORDER-236 STEP 2 at it by changing **`-Symbol` only** — the existing `B14_AB_on` / `B14_PAon` / `AB_both` sets are the same lineage as the CTRL used here and need no rebuilding, which is the whole reason this order runs one file instead of seven. Re-register the delta bar in that lane before running.
 <sub>⚠️ While checking this, one claim on ORDER-236's own row did not survive: it warns that `B14_AB_off.set` is the parity set at lot 0.10 and "**not** `Boss14_GridLog_AUDNZD_DEMO.set` (0.25x, 990202)". On disk both files carry `_41_FixedLot=0.10`; they differ only at `_4_DdAdaptiveOn` and `_0_Magic`. Either the 0.25x sizing exists only on the VPS, or that caveat overstates the gap. **Not corrected here — that row belongs to another lane's history.** Anyone leaning on it should check the deployed set first.</sub> If nothing qualifies, ORDER-236 closes as *"the lever has no host"* → **PARKED, not dead** — and Boss_16 Kangaroo / Boss_11 GridTrend become the next search tranche (they need sets built first, which is why they are not in this order).
+
+---
+
+### ผลดิบ ORDER-430 (worker/Sonnet 2026-07-28) · lane `D:\Meta 5b` · **Model 4 real ticks** · `CTRL.set` เดียวทั้ง 7 run · STEP 0(b) ยืนยันจากหน้า Inputs ของรายงานแล้ว
+
+| symbol | TF | BWD PF | BWD ไม้ | BWD DD% | MAIN PF | MAIN ไม้ | MAIN DD% | flag |
+|---|---|---|---|---|---|---|---|---|
+| USDJPY | H1 | 1.15 | 343 | 12.56% | — | — | — | BORDERLINE |
+| EURJPY | H1 | 1.08 | 473 | 11.96% | — | — | — | BORDERLINE |
+| **AUDCAD** | H1 | **2.20** | **62** | **1.70%** | **0.93** | 205 | 9.02% | QUALIFIED |
+| CADJPY | H1 | 1.12 | 363 | 15.58% | — | — | — | BORDERLINE |
+| EURUSD | H1 | 0.84 | 163 | 10.36% | — | — | — | fail |
+| **XAUUSD** | H1 | **2.29** | **52** | **1.86%** | **0.95** | 237 | 4.84% | QUALIFIED |
+| GBPJPY | H1 | *(0.15)* | *(40)* | *(24.89%)* | — | — | — | **TRUNCATED — ห้ามใช้ตัวเลข** |
+
+## VERDICT ORDER-430 (Claude/Opus 2026-07-28) — มี 2 host ผ่านบาร์ที่เขียนไว้ · **ไม่มีตัวไหนใช้ได้ และบาร์คือสิ่งที่ผิด**
+
+**กลไกอยู่ในความสัมพันธ์กลับทิศ ไม่ได้อยู่ที่ตัวเลขตัวใดตัวหนึ่ง:**
+2 host ที่ผ่าน BWD ทำได้ด้วย **52-62 ไม้ และ DD 1.7-1.9%** · 3 host ที่ไม่ผ่านมี **343-473 ไม้ และ DD 12-16%**
+⇒ **ตัวที่ "รอดระบอบ stress" คือตัวที่แทบไม่ได้อยู่ในตลาดเลย** — grid ที่เทรด 52 ไม้ตลอด 3 ปีของหน้าต่าง stress โดย DD ไม่ถึง 2% ไม่ได้กำลังพิสูจน์ว่าทนแรงกดดัน มันกำลังพิสูจน์ว่ามันไม่ได้อยู่ตรงนั้น
+**บาร์ `n ≥ 30` ที่ผม pre-register เอง ต่ำเกินไปมากสำหรับหน้าต่าง 3 ปีของ grid** · มันคัดออกได้แค่ "ไม่มีไม้เลย" ไม่ได้คัด "ไม้น้อยจนตีความหมายไม่ได้"
+
+**และทั้งสองตัวก็ MAIN < 1.0 (0.93 / 0.95)** ⇒ **วัด lift ของ overlay บน host ที่ขาดทุนในหน้าต่างที่จะวัดไม่ได้** — delta ที่ออกมาจะแยกไม่ออกว่า lever ช่วย หรือแค่ทำให้ขาดทุนน้อยลง
+
+**⇒ คำตอบของ ORDER-236: lever คู่นี้ยังไม่มีบ้าน ⇒ `PARKED` ไม่ใช่ dead** — เป็นผลลัพธ์ที่ใบสั่งประกาศไว้เองว่าชอบธรรม ("If zero hosts qualify, that is a real result") และตรงกับ memory `escalation-overlay-needs-strong-bwd-host`
+
+**อ่านรวมกับ ORDER-236: chassis นี้วัดมาแล้ว 3 leg บน config `B14_AB_off` — ไม่มี leg ไหนผ่านทั้งสองหน้าต่าง**
+AUDNZD 1.09/0.84 (ORDER-236) · AUDCAD 0.93/2.20 · XAU 0.95/2.29 · ที่เหลือ BWD 1.08-1.15 โดยไม่เคยวัด MAIN
+⚠️ **ข้อนี้ห้ามเอาไปหักล้าง demo cohort** — `B14_AB_off.set` = ORDER-006 ISpick parity set (magic 990101) **ไม่ใช่** `Boss14_GridLog_<SYM>_DEMO.set` ที่ deploy จริง · มันบอกว่า **config ฐานของ A/B** อ่อน ไม่ได้บอกว่า leg ที่ deploy อยู่แย่ (คำเตือนเดียวกับที่ ORDER-236 เขียนไว้)
+
+### 🔴 GBPJPY: run ขาดกลางคัน — กรงจับได้ แต่ **คำอธิบายสาเหตุที่ worker อ้าง ตรวจซ้ำไม่ได้**
+
+**ที่วัดได้จริง** (`O430_GBPJPY_H1_BWD.truncation_check.json`): `truncated=true` · deal สุดท้าย **2020.03.12** · idle tail **1023.7 วัน = 93.5% ของหน้าต่าง** · entry deals 30 · **eqDD 24.95%** ⇒ ตัวเลข PF 0.15 ครอบคลุมแค่ ม.ค.-มี.ค. 2020 **ห้ามเอาไปเทียบกับแถวอื่น**
+✅ **กรง `check_truncated_run.ps1` ทำงานถูกต้อง** — ขึ้น `[SUSPECT]` และห้ามใช้ตัวเลข ก่อนที่ใครจะเอาไปกรอกลงตาราง
+
+**🔴 แต่คำอธิบายว่า "risk cage hard kill ยิงที่ 2020.03.12 07:45:59" ตรวจซ้ำไม่ได้ — ผมไล่หาเองแล้ว:**
+· ไฟล์ที่ worker อ้าง (`Agent-127.0.0.1-3000/logs/20260728.log`) **ไม่มีคำว่า `HARD KILL` ไม่มีคำว่า `GBPJPY` และไม่มีบรรทัด `[RISK]` สักบรรทัด**
+· สแกน agent log ของวันนี้ทั้งหมด (มีอยู่ไฟล์เดียว) + journal ของ terminal ⇒ **0 ครั้งทั้งหมด**
+· สิ่งที่**สนับสนุน**คำอธิบายนี้: ข้อความมีอยู่จริงในซอร์ส `RiskControl.mqh:380` **รูปแบบตรงกับที่ worker ยกมาเป๊ะ รวมคำว่า profile** · `InpCloseAllWhenDDPct` default = **25** ชนกับ eqDD **24.95%** พอดี · และ ORDER-194 ทำให้ HALTED เป็น terminal ⇒ หยุดยาวแบบไม่กลับมาคืออาการของ halt เป๊ะ
+⇒ **กลไกน่าจะถูก แต่ห้ามบันทึกว่า "กรงถูกเห็นว่ายิงแล้ว"** — นี่คือกฎ guard-evidence ของเราเอง: คำอ้างว่า guard ยิง ต้องมี path ของหลักฐานที่เปิดดูซ้ำได้
+<sub>น่าเจ็บเป็นพิเศษเพราะทั้ง session นี้กำลังไล่เรื่อง "guard ที่ไม่เคยถูกเห็นว่ายิง" — ถ้าผมรับคำอ้างนี้มาเขียนต่อเฉยๆ ผมจะได้หลักฐานชิ้นเดียวที่ทั้งแล็บอยากได้มากที่สุด (กรง 25% ทำงานจริงบน tick จริงตอน COVID) เข้าคลังบนหลักฐานที่ตรวจไม่ได้ ซึ่งเป็น failure mode เดียวกับที่เรากำลังตรวจอยู่พอดี</sub>
+**งานที่เหลือของ GBPJPY (ถูกๆ คือ):** re-run แล้วส่ง `check_truncated_run.ps1 -TesterLog <path>` ตามที่สคริปต์บอกเอง — หนึ่ง run ก็จบ และจะได้หลักฐาน guard-fired ตัวจริงเป็นของแถม
+
+**ข้อสังเกตเรื่องกระบวนการ:** worker เดิน TREE ถูกทุกข้อ ไม่เคยเปิด lever สักครั้ง ไม่เขียน verdict ไม่แตะบอร์ด และรายงาน anomaly เองทั้งที่มันทำให้ตัวเองดูแย่ลง — **งานดีมาก** · จุดที่พลาดคือ **อ้าง log โดยที่ log นั้นตรวจซ้ำไม่ได้** ⇒ บทเรียนสำหรับใบสั่งครั้งหน้า: **สั่งให้ใช้เครื่องมือที่ผลิตไฟล์หลักฐาน (`-TesterLog`) อย่าสั่งให้ "ไปอ่าน log"**
 
 ---
 
