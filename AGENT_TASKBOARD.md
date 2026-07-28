@@ -1964,7 +1964,8 @@ entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"�
 
 **ห้าม / Prohibitions:** let any crisis score touch a money path before this order closes · treat a `data_status = OK` as evidence of freshness anywhere until the feeder is fixed · quote replay numbers from `portfolio/mris/backtest/*.csv` as validation while they remain untracked and unbound to a commit · rewrite history-bound one-shot scripts to hide what past runs actually did
 
-## ORDER-490 — [🔴 guard coverage] Wave5 guard G4 has never been observed firing — prove it can, or stop counting it as a control — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-490 — [🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → **G4 runs and accepts; its REJECTION arm is `UNTESTED`** — force it, and close the gap the audit found in the guard itself — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+<sub>🔧 **หัวใบแก้ 2026-07-28 หลัง Codex blind audit.** ของเดิมเขียนว่า guard "ไม่เคยถูกเห็นว่าทำงาน" ซึ่งพิสูจน์แล้วว่าไม่จริง — `signalled=26` แปลว่ามันทำงานและตอบผ่าน 26 ครั้ง เพราะ counter ตัวนั้นเพิ่มหลัง guard เท่านั้น · **ที่ยังไม่เคยถูกเห็นคือแขนปฏิเสธ** · รายละเอียด + ของแถมที่ใหญ่กว่าใบสั่ง อยู่ในบล็อก CODEX BLIND AUDIT ท้ายใบ</sub>
 **bars:** N-A (guard-coverage work, not an EA measurement) · **flat-lot probe:** N-A
 
 **Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §1 finding 6 + the counters added in `c44ca743`/`671783b1`. Two full regression runs over the same window report `sl_invalid=0` across **2936 evaluated bars**:
@@ -1980,6 +1981,43 @@ entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"�
 **Also in scope (same class, cheap while here):** `NO_RISK_ATR=0` — the finding-2 guard added the same day is in the identical position. Its reachability is argued from `Indicators.mqh:104`, never demonstrated.
 
 **ห้าม / Prohibitions:** close this by running a longer window and reporting a bigger zero — a bigger sample of "never fired" is the same evidence · treat `sl_invalid=0` as proof the guard works · touch a live account or any `_vps_deploy/` bundle · edit `ea_template/core/` without `tpl_regression.ps1` in the same session · re-pin the baseline without the `re-pin` declaration (`.githooks/commit-msg` enforces it, and as of 2026-07-27 it actually can)
+
+---
+
+### 🔎 CODEX BLIND AUDIT (dispatched 2026-07-28, `task-ms3wgign-8kc63b`, 6m46s) — และมันแก้ **หัวเรื่องของใบนี้เอง**
+
+<sub>ยิงแบบ blind ตาม doctrine (ไม่ให้เห็นคำตอบฝั่งเรา — เราเองก็ยังไม่มีคำตอบ) · **ผมไล่เช็คข้ออ้างที่ load-bearing ทุกข้อกับ source ด้วยตัวเองแล้ว ไม่ได้เชื่อตามรายงาน** (ผลตรวจอยู่ท้ายแต่ละข้อ)</sub>
+
+**🔴 1. ชื่อใบนี้ผิด และผิดในทางที่สำคัญ.** ใบนี้เขียนว่า G4 *"has never been observed firing / never been observed executing"* — **ปนกันสองเรื่อง**
+`g_w5_n_signalled++` อยู่ที่บรรทัด **218** ส่วน `if(!Wave5_SLValid(...))` อยู่ที่ **211** และแขนปฏิเสธ `return` ออกไปที่ **213**
+⇒ ไม้ที่ signalled ได้ **ต้องผ่าน G4 มาแล้วทุกไม้** ⇒ **`signalled=26` คือหลักฐานว่า G4 ทำงานแล้วอย่างน้อย 26 ครั้ง และตอบ true ทุกครั้ง**
+**สิ่งที่ยังไม่เคยถูกเห็นคือ *แขนปฏิเสธ* ไม่ใช่ตัว guard** ⇒ สถานะที่ถูกต้อง = **"G4 reachable + observed accepting · rejection arm = `UNTESTED`"**
+✅ **ตรวจเองแล้ว:** `Entry_Wave5.mqh:211/213/218` เรียงตามนี้จริง — ลำดับนี้คือทั้งหมดที่คำกล่าวนี้ยืนอยู่ และมันยืนได้
+<sub>เรื่องนี้สำคัญเพราะ **"guard ตายเป็น dead code" กับ "แขนปฏิเสธยังไม่ถูกทดสอบ" ต้องแก้คนละวิธี** — อันแรกต้องรื้อโค้ด อันหลังต้องออกแบบเทส · ใบนี้เขียนไว้แบบแรก ซึ่งจะพาคนถัดไปไปผิดทาง</sub>
+
+**2. แขนปฏิเสธ reachable จริง — ไม่มีเงื่อนไขก่อนหน้าที่การันตีระยะ.** zone test ที่บรรทัด 150/152 คุม `iClose(...,1)` เทียบกับ `w1_end` ขณะที่ G4 เทียบ `slPrice` กับ **bid/ask สดที่ `Wave5_SLValid()` ไปดึงเองข้างใน** ⇒ **คนละปริมาณกัน** · ส่วน ATR check ที่ 192-193 การันตีแค่ `riskAtr > 0` ไม่ได้เทียบ buffer กับ minimum ของโบรกเลย · และ **G4 ปฏิเสธแล้วยังไม่ latch** (latch อยู่ที่ 219) ⇒ candidate เดิมกลับมาชน G4 ได้อีก
+เงื่อนไขที่ทำให้ยิง (จาก `ExitManager.mqh:27-41`): long ⇒ `bid − I + A×R < S×P` · short ⇒ `I − ask + A×R < S×P` · และถ้า `S=0` **สาขาระยะถูกปิดทั้งดุ้น** เหลือแค่เช็คบวก/ฝั่ง
+
+**🔴 3. ของแถมที่ใหญ่กว่าใบสั่ง — G4 ไม่ใช่การพิสูจน์ความถูกต้องกับโบรกอย่างที่ชื่อมันบอก.**
+`Wave5_SLValid()` อ่านแค่ `SYMBOL_TRADE_STOPS_LEVEL` + point · **ไม่แตะ `SYMBOL_TRADE_TICK_SIZE` และไม่แตะ `SYMBOL_TRADE_FREEZE_LEVEL` เลย** · และมันตรวจ **ราคาที่ยังไม่ normalize** — `ExitManager.mqh:134` เรียก `Wave5_SLValid()` ก่อน แล้วค่อย `NormalizeDouble(..., _Digits)` บรรทัดถัดไป
+⇒ **ผ่าน G4 ไม่ได้แปลว่า SL ที่ส่งจริงถูกต้อง** ⇒ คำว่า *"preventive, not detective"* ที่ ORDER-082 พิงอยู่ **กว้างเกินกว่าที่โค้ดทำจริง**
+✅ **ตรวจเองแล้ว:** `SYMBOL_TRADE_TICK_SIZE` โผล่ที่ `ExitManager.mqh:513` เท่านั้น (คนละ path) · `FREEZE_LEVEL` ไม่มีในไฟล์เลย · ลำดับ validate-ก่อน-normalize ที่ 134-135 เป็นอย่างที่ว่าจริง
+
+**🔴 4. ข้อสันนิษฐานเดิมว่า "บังคับให้ยิงใน tester ไม่ได้" — ผิดสำหรับ G4.** `HANDOFF_2026-07-27_AUDIT_REPAIR.md` §3 จัด finding 2/4/5 เป็น *"cannot be forced in the tester"* และเหมารวม G4 ไปด้วย · แต่ **`SYMBOL_TRADE_STOPS_LEVEL` ตั้งได้ผ่าน custom symbol** (`CustomSymbolSetInteger`) ⇒ **G4 บังคับให้ยิงใน tester ได้**
+<sub>⚠️ Codex ระบุเองว่าข้อนี้เป็น **inference จากเอกสาร API ไม่ได้ลองรัน** — ยังไม่ใช่ของที่พิสูจน์แล้ว แต่ก็พอที่จะทำให้ "ทำไม่ได้" ตกไป</sub>
+
+**เทสที่ถูกที่สุดที่ตัดสินได้ (เข้ากับ memory `gate-specificity-not-just-sensitivity` พอดี — ต้อง pre-register ทั้งสองฝั่ง):**
+- **arm ที่ต้องยิง:** custom symbol ที่ copy tick ของ run 26-signal มา · ตั้ง `SYMBOL_TRADE_STOPS_LEVEL` ใหญ่ๆ · `_17_SLbufferATR=0` (SL ไปนั่งที่ `w1_end` พอดี) ⇒ pre-register ว่าต้องได้ **`sl_invalid > 0` · `signalled` ลดลงหรือเป็น 0 · `unaccounted=0`**
+- **arm ที่ต้องเงียบ (specificity):** tick ชุดเดียวกัน `STOPS_LEVEL=0` หรือเล็กมาก ⇒ pre-register **`sl_invalid=0` · `signalled>0`**
+- **discriminating จริง** เพราะโครงสร้างตลาดเหมือนกันทั้งสอง arm ต่างกันแค่ property เดียวที่ `ExitManager.mqh:31` อ่าน
+- **ระดับ unit (ทนกว่า):** แยก `Wave5_SLValidAt(dir, sl, bid, ask, point, stopsLevelPts)` เป็น pure function แล้ว assert 4 เคส — โดยเฉพาะ **ที่ระยะเท่ากับ minDist พอดีต้องได้ true** เพราะโค้ดปฏิเสธ `< minDist` ไม่ใช่ `<= minDist` · แต่ **unit test พิสูจน์แค่ predicate** ยังต้องมี integration ที่พิสูจน์ว่า `Entry_Evaluate()` เพิ่ม counter จริงและกลืนสัญญาณจริง
+
+**5. adversarial pass ของ Codex เอง (ต้องเก็บไว้):** ข้อโต้แย้งที่แรงที่สุดคือ buffer `0.5 × Risk-ATR` ตาม default (`Inputs.mqh:291` + regression set) **อาจมากกว่า stops-level ของโบรกเสมอในทางปฏิบัติ** ซึ่งอธิบายเลขศูนย์ทั้งหมดได้ · **แต่ไม่ได้ทำให้แขนปฏิเสธ unreachable** เพราะไม่มี invariant ใดในซอร์สที่ผูก ATR · ระยะจากราคาถึง `w1_end` · และ `S×P` เข้าด้วยกัน
+**สิ่งที่จะพิสูจน์ว่าบทวิเคราะห์นี้ผิด:** run ที่ log ออกมาว่า `D>0` และระยะจริง `< D` **แต่ `signalled` ยังเพิ่มและ `sl_invalid` ยังศูนย์**
+
+**🔧 แก้ให้แล้ว 1 จุดในใบนี้:** ใบเดิมเขียนว่า counter พิมพ์ที่ `OnDeinit` บรรทัด 73 — **บรรทัด 73 คือ `PrintFormat` ข้างใน `Entry_Wave5_LogCounters()`** ส่วน `OnDeinit` เรียกมันที่ `LabCore.mqh:397` ✅ ตรวจเองแล้ว
+
+**สถานะใบนี้: ยัง `OPEN`** — audit เปลี่ยนสิ่งที่ต้องทำ ไม่ได้ทำแทน · เหลือ: รัน 2 arm ข้างบน แล้วตัดสินว่า `NO_RISK_ATR=0` เป็นคลาสเดียวกันไหม · **และหนี้ใหม่ที่ใบนี้ยังไม่มีเจ้าของ = ข้อ 3 (tick-size / freeze-level / validate-ก่อน-normalize)** ซึ่งไม่ใช่เรื่อง coverage แล้ว แต่เป็นช่องว่างของตัว guard เอง
 
 ---
 
