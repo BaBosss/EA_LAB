@@ -42,7 +42,10 @@ function Assert([string]$what, [scriptblock]$cond) {
 # ---------------------------------------------------------------------------
 # A mock runner that behaves like mt5_run.ps1: chatty on stdout, meaningful exit code.
 # ---------------------------------------------------------------------------
-$mockDir = Join-Path $env:TEMP "ea_lab_runner_capture_test"
+# Per-process directory: two commits running their pre-commit hooks at the same time otherwise
+# share this path, and one suite's Remove-Item at the end can delete the other's fixtures between
+# creation and assertion - failing a commit that had nothing wrong with it.
+$mockDir = Join-Path $env:TEMP ("ea_lab_runner_capture_test_" + $PID)
 New-Item -ItemType Directory -Force $mockDir | Out-Null
 $mockRunner = Join-Path $mockDir "mock_runner.ps1"
 @'
@@ -135,7 +138,7 @@ $offenders   = New-Object System.Collections.Generic.List[string]
 # comments and could therefore leave a function early and stop looking. The AST knows exactly where
 # a FunctionDefinitionAst begins and ends, so the question "is this call inside a function" stops
 # being a guess.
-foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File) {
+foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File -Recurse | Where-Object { $_.FullName -notmatch [regex]::Escape($PSScriptRoot) }) {
   $parseErrors = $null
   $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$parseErrors)
   if ($null -eq $ast) { continue }
@@ -146,25 +149,58 @@ foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File) {
   foreach ($fn in $funcs) {
     $cmds = $fn.FindAll({ param($n) $n -is [System.Management.Automation.Language.CommandAst] }, $true)
     foreach ($cmd in $cmds) {
-      # Only actual invocations. `& (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert ...` contains a
-      # NESTED CommandAst for the Join-Path argument, whose own pipeline is neither assigned nor
-      # piped - so without this filter the inner argument gets reported while the outer call, which
-      # IS assigned, is correctly skipped. The call operator is what distinguishes an invocation
-      # from an expression that merely names the runner.
-      if ($cmd.InvocationOperator -eq [System.Management.Automation.Language.TokenKind]::Unknown) { continue }
-      $cmdText = $cmd.Extent.Text
+      # `& (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert ...` contains a NESTED CommandAst for the
+      # Join-Path argument, whose own pipeline is neither assigned nor piped - so it must not be
+      # mistaken for the invocation. CORRECTED after a blind audit: filtering on the call operator
+      # alone was wrong in the other direction, because a DIRECT invocation (`.\mt5_run.ps1 -x`)
+      # has InvocationOperator = Unknown and was therefore skipped entirely - a false negative in
+      # the exact check this file exists to provide. Decide on the COMMAND NAME instead: the runner
+      # must be what is being invoked, not merely a string appearing somewhere in the extent.
+      $nameEl = $cmd.CommandElements[0]
+      $invokedName = ''
+      if ($nameEl -is [System.Management.Automation.Language.StringConstantExpressionAst]) { $invokedName = $nameEl.Value }
+      elseif ($nameEl -is [System.Management.Automation.Language.ExpandableStringExpressionAst]) { $invokedName = $nameEl.Value }
+      elseif ($null -ne $nameEl) { $invokedName = $nameEl.Extent.Text }
+
       $callsRunner = $false
-      foreach ($rn in $runnerNames) { if ($cmdText -match [regex]::Escape($rn)) { $callsRunner = $true } }
+      foreach ($rn in $runnerNames) { if ($invokedName -match [regex]::Escape($rn)) { $callsRunner = $true } }
+      # `& $runner ...` where $runner holds the path: the name is a variable, so match on the
+      # variable's own name as a heuristic and report it rather than silently passing it.
+      if (-not $callsRunner -and $nameEl -is [System.Management.Automation.Language.VariableExpressionAst]) {
+        if ($nameEl.VariablePath.UserPath -match '(?i)runner|runscript') { $callsRunner = $true }
+      }
       if (-not $callsRunner) { continue }
+      $cmdText = $cmd.Extent.Text
 
       # Disposition is a property of the enclosing pipeline / statement, which the AST gives us
       # directly: assigned ($x = & ...), or piped somewhere (| Out-Null, | Where-Object, ...).
-      $pipeline = $cmd.Parent
+      # CORRECTED after a blind audit on two counts:
+      #  - `$x = (& .\mt5_run.ps1 ...)` is safely captured, but the assignment sits above a
+      #    ParenExpressionAst, so checking only the pipeline's IMMEDIATE parent reported it as an
+      #    offender. Walk up instead of peeking one level.
+      #  - `& .\mt5_run.ps1 | ForEach-Object { $_ }` still leaks the runner's output out of the
+      #    function, yet any multi-element pipeline was treated as handled. Only a terminating sink
+      #    actually discards it.
       $assigned = $false
       $piped    = $false
+      $pipeline = $cmd.Parent
       if ($pipeline -is [System.Management.Automation.Language.PipelineAst]) {
-        $piped = $pipeline.PipelineElements.Count -gt 1
-        if ($pipeline.Parent -is [System.Management.Automation.Language.AssignmentStatementAst]) { $assigned = $true }
+        if ($pipeline.PipelineElements.Count -gt 1) {
+          $last = $pipeline.PipelineElements[-1]
+          $lastName = ''
+          if ($last -is [System.Management.Automation.Language.CommandAst] -and $last.CommandElements.Count -gt 0) {
+            $lastName = $last.CommandElements[0].Extent.Text
+          }
+          # Out-Null / Out-File / Out-String consume the output; ForEach-Object and friends re-emit it.
+          $piped = $lastName -match '(?i)^Out-(Null|File|String|Printer)$'
+        }
+        $anc = $pipeline.Parent
+        while ($null -ne $anc) {
+          if ($anc -is [System.Management.Automation.Language.AssignmentStatementAst]) { $assigned = $true; break }
+          if ($anc -is [System.Management.Automation.Language.StatementBlockAst] -or
+              $anc -is [System.Management.Automation.Language.FunctionDefinitionAst]) { break }
+          $anc = $anc.Parent
+        }
       }
       if ($assigned -or $piped) { continue }
       $offenders.Add(("{0}:{1}  {2}" -f $f.Name, $cmd.Extent.StartLineNumber, ($cmdText -split "`n")[0].Trim()))
@@ -199,8 +235,37 @@ Assert "fresh report + exit 0 = accepted"        { Test-ReportIsFresh -Htm $fres
 Assert "STALE report + exit 0 = REFUSED"         { -not (Test-ReportIsFresh -Htm $stale -RunStart $runStart -RunnerExit 0 -Quiet) }
 Assert "fresh report but exit 2 (abort) = REFUSED" { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 2 -Quiet) }
 Assert "fresh report but exit 1 (no report) = REFUSED" { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 1 -Quiet) }
-Assert "exit 3 (leverage mismatch) still accepts - the report IS from this run" {
-  Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 3 -Quiet
+
+# Added after a blind audit. The guard was a BLACKLIST (rejects 1 and 2), so every code it did not
+# recognise was accepted - including a runner that never set one, which is exactly what
+# mt4_run.ps1 did. These pin the whitelist.
+Assert "unknown exit 4 = REFUSED (whitelist, not blacklist)"  { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 4 -Quiet) }
+Assert "unknown exit 99 = REFUSED"                            { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 99 -Quiet) }
+Assert "negative exit -1 = REFUSED"                           { -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit -1 -Quiet) }
+Assert "omitting -RunnerExit is an ERROR, not a silent pass (parameter is mandatory)" {
+  $threw = $false
+  try { Test-ReportIsFresh -Htm $fresh -RunStart $runStart -Quiet -ErrorAction Stop | Out-Null }
+  catch { $threw = $true }
+  $threw
+}
+
+# Exit 3 means the report is real but its numbers are not comparable. Accepting it silently is how
+# leverage-mismatched runs got written into sweep CSVs as ordinary results.
+Assert "exit 3 (leverage mismatch) is REFUSED by default" {
+  -not (Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 3 -Quiet)
+}
+Assert "exit 3 accepted ONLY with an explicit -AcceptLeverageMismatch opt-in" {
+  Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 3 -AcceptLeverageMismatch -Quiet
+}
+
+# The documented rule is "at or after the run's start". Without this, changing the production
+# comparison from -lt to -le would leave every other assertion green while rejecting a genuine
+# report whose timestamp lands exactly on $runStart.
+$equal = Join-Path $mockDir "equal.htm"
+"x" | Set-Content $equal
+(Get-Item $equal).LastWriteTime = $runStart
+Assert "report written EXACTLY at RunStart is accepted (boundary is 'at or after')" {
+  Test-ReportIsFresh -Htm $equal -RunStart $runStart -RunnerExit 0 -Quiet
 }
 Assert "missing file = REFUSED" { -not (Test-ReportIsFresh -Htm (Join-Path $mockDir 'nope.htm') -RunStart $runStart -RunnerExit 0 -Quiet) }
 Assert "library is inert toward its caller (sets no StrictMode / ErrorActionPreference)" {
@@ -224,24 +289,47 @@ Write-Host "PART 5 - every runner caller that parses a report gates it for fresh
 # run report a previous run's numbers. Any script that calls a runner AND then reads a report must
 # either use the shared guard or check $LASTEXITCODE itself.
 $ungated = New-Object System.Collections.Generic.List[string]
-foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File) {
+foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File -Recurse | Where-Object { $_.FullName -notmatch [regex]::Escape($PSScriptRoot) }) {
   # The runners themselves are not callers. Without this they self-match on the usage examples in
   # their own header comments - which is how this check first reported mt4_run.ps1 and
   # mt4_optimize.ps1 as offenders against their own report-move logic.
   if ($runnerNames -contains $f.Name) { continue }
 
   # Comment lines must not count as calls, for the same reason.
-  $codeLines = Get-Content $f.FullName | Where-Object { $_ -notmatch '^\s*#' }
-  $txt = ($codeLines -join "`n")
-  $txt = [regex]::Replace($txt, '(?s)<#.*?#>', '')
+  # CORRECTED after a blind audit: this had the SAME order-of-operations bug the inertness
+  # assertion above documents - stripping ^# lines first deletes the block comment's own "#>"
+  # terminator, after which <#...#> matches nothing and block-comment prose stays in the text.
+  # Diagnosing it once and then repeating it fifty lines away is exactly why it is written down.
+  $raw = Get-Content $f.FullName -Raw
+  $rawFile = $raw            # keep the commented original: the exemption marker lives in a comment
+  $txt = [regex]::Replace($raw, '(?s)<#.*?#>', '')
+  $txt = (($txt -split "`n") | Where-Object { $_ -notmatch '^\s*#' }) -join "`n"
 
+  # CORRECTED after a blind audit, on both halves of the test:
+  #
+  #  - DETECTION was "& and a literal runner filename on the SAME line", which missed the common
+  #    `$runner = "...\mt5_run.ps1"` ... `& $runner` shape entirely. ab_mode_test.ps1,
+  #    grid_sweep.ps1 and order104_smokeA.ps1 all invoke that way, read a report, and were
+  #    reported as clean. Now: naming a runner ANYWHERE in code counts as calling one.
+  #
+  #  - GATING accepted the mere presence of the token `$LASTEXITCODE`, which is not a control.
+  #    Deleting the Test-ReportIsFresh call while leaving `$runnerExit = $LASTEXITCODE` in place
+  #    made a file parse reports unconditionally and still pass. Now the shared guard must
+  #    actually be called; it is the only thing that both checks the code and the mtime.
   $callsRunner = $false
-  foreach ($rn in $runnerNames) { if ($txt -match ('&[^\r\n]*' + [regex]::Escape($rn))) { $callsRunner = $true } }
+  foreach ($rn in $runnerNames) { if ($txt -match [regex]::Escape($rn)) { $callsRunner = $true } }
   if (-not $callsRunner) { continue }
   # does it then read a report?
   if ($txt -notmatch '\.htm') { continue }
-  $gated = ($txt -match 'Test-ReportIsFresh') -or ($txt -match '\$LASTEXITCODE')
-  if (-not $gated) { $ungated.Add($f.Name) }
+  if ($txt -match 'Test-ReportIsFresh') { continue }
+
+  # A script may legitimately mention a report path without ever OPENING one - the qwen lanes
+  # scrape their metrics out of the runner's captured stdout and never touch the file. That is a
+  # real exemption, but it must be declared IN the file and carry a reason, so it stays greppable
+  # and arguable instead of becoming a silent hole in this check. Bare markers do not count.
+  $exempt = [regex]::Match($rawFile, '(?m)^\s*#\s*FRESHNESS-EXEMPT:\s*(\S.{9,})$')
+  if ($exempt.Success) { continue }
+  $ungated.Add($f.Name)
 }
 if ($ungated.Count -gt 0) {
   Write-Host "  runner callers that read a report without gating it:" -ForegroundColor Red
@@ -258,3 +346,4 @@ if ($script:fails -gt 0) {
 }
 Write-Host ("RESULT: all {0} assertions passed" -f $script:ran) -ForegroundColor Green
 exit 0
+

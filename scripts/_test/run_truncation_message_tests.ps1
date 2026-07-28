@@ -40,7 +40,9 @@ function Assert([string]$what, [scriptblock]$cond) {
   else     { Write-Host "  [FAIL] $what" -ForegroundColor Red; $script:fails++ }
 }
 
-$tmp = Join-Path $env:TEMP "ea_lab_trunc_msg_test"
+# Per-process: a shared fixed path lets two concurrent pre-commit hooks delete each other's
+# fixtures mid-run and fail a commit that was fine.
+$tmp = Join-Path $env:TEMP ("ea_lab_trunc_msg_test_" + $PID)
 New-Item -ItemType Directory -Force $tmp | Out-Null
 
 # Build a report MT5-shaped enough for the checker: a Period line it can read its own window from,
@@ -120,3 +122,4 @@ if ($script:fails -gt 0) {
 }
 Write-Host ("RESULT: all {0} assertions passed" -f $script:ran) -ForegroundColor Green
 exit 0
+

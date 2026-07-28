@@ -9,16 +9,16 @@
 # The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
 # ==============================================================================
 <#
-order104_smokeA.ps1 — ORDER-104 SSRN-151 W1 probe, Smoke Stage A launcher.
+order104_smokeA.ps1 ? ORDER-104 SSRN-151 W1 probe, Smoke Stage A launcher.
 
 Runs the 32-run A/B matrix for (TRD)_Probe_MAHP_TanhVol_rev01:
-  4 toggle-combos × {XAUUSD,EURUSD} × {H1,H4} × {BWD 2020-22, REC 2023-26}.
+  4 toggle-combos ? {XAUUSD,EURUSD} ? {H1,H4} ? {BWD 2020-22, REC 2023-26}.
 Writes one .set per combo, calls scripts\mt5_run.ps1 sequentially, then scrapes
 Profit Factor + Total Trades from each report into _mt5_auto\reports\P104_summary.csv.
 
 PREREQS (must be true or it aborts):
-  • MT5 GUI CLOSED (mt5_run guards; it will abort if terminal64.exe of this install is up).
-  • ex5 present at  D:\Meta 5\MQL5\Experts\(TRD)_Probe_MAHP_TanhVol_rev01.ex5  (already copied 2026-07-13).
+  ? MT5 GUI CLOSED (mt5_run guards; it will abort if terminal64.exe of this install is up).
+  ? ex5 present at  D:\Meta 5\MQL5\Experts\(TRD)_Probe_MAHP_TanhVol_rev01.ex5  (already copied 2026-07-13).
 
 USAGE (unattended, ~run for a while):
   cd D:\EA_LAB ; powershell -ExecutionPolicy Bypass -File scripts\order104_smokeA.ps1
@@ -28,6 +28,7 @@ Lambda fixed 14400 here; lambda sweep {1600,129600} = Stage A2 follow-up (edit $
 #>
 $ErrorActionPreference = "Stop"
 $root   = "D:\EA_LAB"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $runner = "$root\scripts\mt5_run.ps1"
 $setDir = "$root\_mt5_auto\ab_sets\order104"
 $repDir = "$root\_mt5_auto\reports"
@@ -72,13 +73,17 @@ foreach ($c in $combos) {
         $i++
         $rep = "P104_$($c.n)_${sym}_${tf}_$($w.n)"
         Write-Output "[$i/$total] $rep ..."
+        # ORDER-372: an aborted cell would otherwise re-scrape the previous run's report for this
+        # same cell name and record it as a fresh smoke result.
+        $runStart = Get-Date
         & $runner -Expert $expert -Symbol $sym -Period $tf `
                   -FromDate $w.from -ToDate $w.to -Model 2 `
                   -SetFile "$setDir\$($c.n).set" -ReportName $rep
+        $runnerExit = $LASTEXITCODE
         # best-effort scrape
         $htm = "$repDir\$rep.htm"
         $pf = ""; $tr = ""
-        if (Test-Path $htm) {
+        if (Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rep) {
           $txt = Get-Content $htm -Raw -Encoding UTF8
           if ($txt -match 'Profit factor[^0-9\-]*([0-9]+\.[0-9]+)') { $pf = $matches[1] }
           if ($txt -match 'Total trades[^0-9\-]*([0-9]+)')          { $tr = $matches[1] }

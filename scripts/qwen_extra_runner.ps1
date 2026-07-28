@@ -1,3 +1,4 @@
+# FRESHNESS-EXEMPT: this lane never OPENS a report file. Every metric and the report path itself are scraped from the runner s captured stdout, so a leftover report on disk cannot be read as this run s result. Run status is still decided by the runner exit code (see Run-MT5).
 # =============================== HOLDOUT-BURNED ===============================
 # ORDER-238 (2026-07-27). One or more test windows in this file end after
 # 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
@@ -8,7 +9,7 @@
 # copy its window into new work. A holdout is spent the first time it is touched.
 # The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
 # ==============================================================================
-# QWEN_EXTRA_RUNNER.ps1 — Optional extra runs (A+B+C)
+# QWEN_EXTRA_RUNNER.ps1 ? Optional extra runs (A+B+C)
 # A: MT4 Elephant/Mammoth optimize
 # B: MT4 Gold Grid on different symbols
 # C: MT5 Robustness (slippage tests)
@@ -40,12 +41,19 @@ function Run-MT4($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
 
     try {
         $out = & "$ScriptDir\mt4_run.ps1" @args 2>&1
+        $runnerExit = $LASTEXITCODE
         Write-Host $out
         $pf = if ($out -match "Profit Factor[:\s]+([\d.]+)") { $matches[1] } else { "?" }
         $net = if ($out -match "Net Profit[:\s]+([-\d.,]+)") { $matches[1] } else { "?" }
         $tr = if ($out -match "Trades[:\s]+(\d+)") { $matches[1] } else { "?" }
         $rpt = if ($out -match "(D:\\[^\s]+\.htm)") { $matches[1] } else { "-" }
-        Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr" "OK"
+        # ORDER-372: same as the MT5 twin above. This is only meaningful because mt4_run.ps1 gained
+        # explicit exit codes in the same change - before that it never set one on success at all,
+        # so reading $LASTEXITCODE here would have reported the PREVIOUS command's result.
+        $status = if ($runnerExit -eq 0) { "OK" }
+                  elseif ($runnerExit -eq 3) { "LEVERAGE_MISMATCH" }
+                  else { "FAILED_EXIT$runnerExit" }
+        Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr" $status
     } catch {
         Write-Host "ERR: $_" -ForegroundColor Red
         Log-Result $taskNum $tag $symbol $window "-" "ERR: $_" "ERR"
@@ -152,7 +160,7 @@ Run-MT4-Optimize "Mammoth" "XAUUSDMINI" "H1" "2023.01.01" "2026.06.01" $mammothS
 # -----------------------------------------------------------------------
 # B. MT4 GOLD GRID - Different Symbols
 # -----------------------------------------------------------------------
-Write-Host "`n### B. MT4 GOLD GRID — Different Symbols ###" -ForegroundColor Green
+Write-Host "`n### B. MT4 GOLD GRID ? Different Symbols ###" -ForegroundColor Green
 
 # B1: Elephant on XAUUSD (full-size)
 Run-MT4 "Elephant_full" "Elephant" "XAUUSD" "H1" "2023.01.01" "2026.06.01" "" 2 "EXTRA-B"
@@ -169,7 +177,7 @@ Run-MT4 "Mammoth_EUR" "Mammoth" "EURUSD" "H1" "2023.01.01" "2026.06.01" "" 2 "EX
 # -----------------------------------------------------------------------
 # C. MT5 ROBUSTNESS - Slippage Tests (MACDg + BRK55)
 # -----------------------------------------------------------------------
-Write-Host "`n### C. MT5 ROBUSTNESS — Slippage Tests ###" -ForegroundColor Green
+Write-Host "`n### C. MT5 ROBUSTNESS ? Slippage Tests ###" -ForegroundColor Green
 
 $macdgSet = "D:\EA_LAB\_mt5_auto\MACD_GBPUSD_locked.set"
 $brk55Set = "D:\EA_LAB\_vps_deploy\BRK_XAU_live_v3.set"

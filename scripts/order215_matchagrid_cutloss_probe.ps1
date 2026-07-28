@@ -79,6 +79,7 @@ param(
   [switch]$Portable
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $root    = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $expert  = "MatchaGrid"
 $outDir  = Join-Path $root "_mt5_auto\ab_sets\order215"
@@ -192,36 +193,18 @@ function Invoke-Probe([string]$name, [string]$setPath) {
       -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec @extra 2>&1
   $runnerExit = $LASTEXITCODE
   foreach ($line in @($runnerOut)) { Write-Host "   | $line" -ForegroundColor DarkGray }
-  $why = switch ($runnerExit) {
-    1 { "runner exit 1 = NO REPORT (check EA name / symbol history / login)" }
-    2 { "runner exit 2 = ABORT (MT5 instance for this install already running, or terminal not found)" }
-    3 { "runner exit 3 = LEVERAGE MISMATCH (report kept but numbers are not comparable)" }
-    default { $null }
-  }
-  # ORDER-372 second defect - see the long note in order222_cutloss_probe.ps1. An ABORTED run can
-  # report a PREVIOUS run's numbers as fresh, because mt5_run.ps1's ORDER-094 stale-report clear runs
-  # AFTER its `exit 2` abort checks. This exact script is what demonstrated it: run with a bogus
-  # -Terminal it aborted with exit 2 and then happily printed PF=1.77 from a leftover report. Gate on
-  # the exit code AND on the report being newer than this run's start.
-  if ($runnerExit -eq 1 -or $runnerExit -eq 2) {
-    Write-Host "   [FAIL] runner produced no report - $why" -ForegroundColor Red
-    Write-Host "          (any $name.htm on disk is from an EARLIER run and is deliberately ignored)" -ForegroundColor Red
-    return $null
-  }
+  # This script is what demonstrated the stale-report defect: run with a bogus -Terminal it aborted
+  # with exit 2 and then printed PF=1.77 from a leftover report. The gate was originally inlined
+  # here; it now calls the shared library so "fresh" has one definition across every caller.
   $htmPath = Join-Path $reports "$name.htm"
-  if (Test-Path $htmPath) {
-    $age = (Get-Item $htmPath).LastWriteTime
-    if ($age -lt $runStart) {
-      Write-Host ("   [FAIL] STALE REPORT: $name.htm was written {0}, before this run started {1} - refusing to report it as fresh." -f $age, $runStart) -ForegroundColor Red
-      return $null
-    }
+  if (-not (Test-ReportIsFresh -Htm $htmPath -RunStart $runStart -RunnerExit $runnerExit -Label $name)) {
+    return $null
   }
   $r = Read-Result $name
   if (-not $r) {
-    Write-Host "   [FAIL] no report produced$(if ($why) { " - $why" })" -ForegroundColor Red
+    Write-Host "   [FAIL] report passed the freshness gate but could not be parsed" -ForegroundColor Red
     return $null
   }
-  if ($why) { Write-Host "   [WARN] $why" -ForegroundColor Yellow }
   $levNote = if ($r.leverage -eq $Leverage) { "leverage OK" } else { "LEVERAGE 1:$($r.leverage) != requested 1:$Leverage" }
   Write-Host ("   PF=$($r.pf)  trades=$($r.trades)  net=$($r.net)  eqDD=$($r.eqdd_pct)%  bars=$($r.bars)  ticks=$($r.ticks)  $levNote  truncated=$($r.truncated)") `
     -ForegroundColor $(if ($r.leverage -eq $Leverage) { 'Green' } else { 'Red' })

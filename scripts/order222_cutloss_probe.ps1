@@ -61,6 +61,7 @@ param(
   [int]$TimeoutSec  = 3600
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $root    = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $expert  = "(NuiIndy) Dynamic RSI+ADX Style (4)"
 $baseSet = Join-Path $root "_mt5_auto\ab_sets\nuiindy_sets\NUI_cut30only.set"
@@ -130,44 +131,21 @@ function Invoke-Probe([string]$name, [string]$setPath) {
       -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec 2>&1
   $runnerExit = $LASTEXITCODE
   foreach ($line in @($runnerOut)) { Write-Host "   | $line" -ForegroundColor DarkGray }
-  # mt5_run.ps1's exit codes are load-bearing and were previously discarded: 0 ok, 1 no report,
-  # 2 abort (GUI/lane busy or terminal missing), 3 leverage mismatch. Naming the code turns a bare
-  # "no report produced" into a diagnosis.
-  $why = switch ($runnerExit) {
-    1 { "runner exit 1 = NO REPORT (check EA name / symbol history / login)" }
-    2 { "runner exit 2 = ABORT (MT5 instance for this install already running, or terminal not found)" }
-    3 { "runner exit 3 = LEVERAGE MISMATCH (report kept but numbers are not comparable)" }
-    default { $null }
-  }
-  # ORDER-372 second defect, found by end-to-end testing the fix above: an ABORTED run can report a
-  # PREVIOUS run's numbers as if they were fresh. mt5_run.ps1's ORDER-094 D3 clear exists precisely to
-  # stop "a stale report surviving a run that produced none" - but it runs AFTER the two `exit 2`
-  # abort checks, so the abort path is the one hole it does not cover. Observed live: pointing the
-  # runner at a non-existent terminal aborted with exit 2, and this probe then printed PF=1.77 off a
-  # leftover .htm. File existence is NOT evidence that THIS run produced it, so gate on two things:
-  #   (a) the exit code - 1 (no report) and 2 (abort) mean nothing was produced, whatever is on disk
-  #   (b) the report's mtime - it must be newer than the moment this run started
-  # Exit 3 is different: the report IS from this run, it just used the wrong leverage, so it stays a
-  # warning rather than a refusal.
-  if ($runnerExit -eq 1 -or $runnerExit -eq 2) {
-    Write-Host "   [FAIL] runner produced no report - $why" -ForegroundColor Red
-    Write-Host "          (any $name.htm on disk is from an EARLIER run and is deliberately ignored)" -ForegroundColor Red
-    return $null
-  }
+  # An ABORTED run can otherwise report a PREVIOUS run's numbers as fresh: mt5_run.ps1's ORDER-094
+  # clear runs AFTER its `exit 2` checks, so the abort path leaves the old report in place. Observed
+  # live - pointing the runner at a non-existent terminal aborted with exit 2 and this probe printed
+  # PF=1.77 off a leftover .htm. This was originally an inline copy of that gate; it now calls the
+  # shared one so there is a single definition of "fresh" (and so a blind audit's finding about the
+  # exit-code whitelist fixes every caller at once rather than the ones somebody remembered).
   $htmPath = Join-Path $reports "$name.htm"
-  if (Test-Path $htmPath) {
-    $age = (Get-Item $htmPath).LastWriteTime
-    if ($age -lt $runStart) {
-      Write-Host ("   [FAIL] STALE REPORT: $name.htm was written {0}, before this run started {1} - refusing to report it as fresh." -f $age, $runStart) -ForegroundColor Red
-      return $null
-    }
+  if (-not (Test-ReportIsFresh -Htm $htmPath -RunStart $runStart -RunnerExit $runnerExit -Label $name)) {
+    return $null
   }
   $r = Read-Result $name
   if (-not $r) {
-    Write-Host "   [FAIL] no report produced$(if ($why) { " - $why" })" -ForegroundColor Red
+    Write-Host "   [FAIL] report passed the freshness gate but could not be parsed" -ForegroundColor Red
     return $null
   }
-  if ($why) { Write-Host "   [WARN] $why" -ForegroundColor Yellow }
   # The leverage assertion is not decoration here: the archived evidence for this very setting
   # ran at 1:2000 while its ini asked for 1:100, and nobody noticed for nine days.
   $levNote = if ($r.leverage -eq $Leverage) { "leverage 1:$($r.leverage) OK" } else { "LEVERAGE 1:$($r.leverage) != requested 1:$Leverage" }

@@ -1,3 +1,4 @@
+# FRESHNESS-EXEMPT: this lane never OPENS a report file. Every metric and the report path itself are scraped from the runner s captured stdout, so a leftover report on disk cannot be read as this run s result. Run status is still decided by the runner exit code (see Run-MT5).
 # =============================== HOLDOUT-BURNED ===============================
 # ORDER-238 (2026-07-27). One or more test windows in this file end after
 # 2025.12.31 -- that is, inside the 2026H1 holdout. They are deliberately LEFT
@@ -8,7 +9,7 @@
 # copy its window into new work. A holdout is spent the first time it is touched.
 # The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
 # ==============================================================================
-# QWEN_BATCH_RUNNER.ps1 — runs TASK 1-4 from QWEN_RUN_PLAN.md
+# QWEN_BATCH_RUNNER.ps1 ? runs TASK 1-4 from QWEN_RUN_PLAN.md
 # Log: D:\EA_LAB\QWEN_RUN_LOG.md
 # Rules: log ERR + skip, no git, no judgment, report names start with QWEN_
 
@@ -94,7 +95,19 @@ function Run-MT5($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
                       elseif ($runnerExit -eq 3) { "LEVERAGE_MISMATCH" }
                       else { "FAILED_EXIT$runnerExit" }
             Log-Result $taskNum $tag $symbol $window $rpt "PF=$pf Net=$net Trades=$tr$fallbackNote" $status
-            $ok = $true
+            # ORDER-372 (corrected after a blind audit): $ok used to be set true unconditionally, so
+            # recording the failure in the log did nothing to stop the caller. Run-MT5's return value
+            # is what gates dependent work - if both ST03 runs aborted, $st03ok still became true and
+            # TASK 3 proceeded as though TASK 1 had produced evidence. A logged failure that still
+            # returns success is a status field, not a control.
+            $ok = ($runnerExit -eq 0 -or $runnerExit -eq 3)
+            # $retries is otherwise only incremented in the catch block, so a failure that does NOT
+            # throw - which is exactly what a non-zero exit code is - would leave both loop
+            # conditions unchanged and spin forever. Count it as the attempt it was.
+            if (-not $ok) {
+                $retries++
+                Write-Host "  runner exited $runnerExit (attempt $retries of 2)" -ForegroundColor Yellow
+            }
         } catch {
             $retries++
             Write-Host "ERR retry $retries : $_" -ForegroundColor Yellow
@@ -113,8 +126,8 @@ function Run-MT5($tag, $expert, $symbol, $period, $fromDate, $toDate, $setFile, 
     return $ok
 }
 
-# ── TASK 1: IS + OOS for all deployed EAs ──────────────────────────────────
-Write-Host "`n### TASK 1 — RE-CONFIRM OOS ###" -ForegroundColor Green
+# ?? TASK 1: IS + OOS for all deployed EAs ??????????????????????????????????
+Write-Host "`n### TASK 1 ? RE-CONFIRM OOS ###" -ForegroundColor Green
 
 $eas = @(
     @{tag="ST03rep"; expert="EA_RUNNER_ST03";                              sym="GBPUSD"; tf="H1";  set="D:\EA_LAB\_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set"},
@@ -135,8 +148,8 @@ foreach ($ea in $eas) {
     if ($ea.tag -eq "ST03rep" -and $r1 -and $r2) { $st03ok = $true }
 }
 
-# ── TASK 2: Gold Reaper optimize ───────────────────────────────────────────
-Write-Host "`n### TASK 2 — GR OPTIMIZE ###" -ForegroundColor Green
+# ?? TASK 2: Gold Reaper optimize ???????????????????????????????????????????
+Write-Host "`n### TASK 2 ? GR OPTIMIZE ###" -ForegroundColor Green
 try {
     Copy-Item "D:\EA_LAB\_mt5_auto\GoldReaper_cent_v1.set" "D:\EA_LAB\_mt5_auto\GR_opt.set" -Force
     $content = Get-Content "D:\EA_LAB\_mt5_auto\GR_opt.set"
@@ -162,9 +175,9 @@ try {
     Log-Result "TASK2" "GR_opt" "XAUUSD" "FULL" "-" "ERR: $_" "ERR"
 }
 
-# ── TASK 3: ST03 coarse grid ───────────────────────────────────────────────
+# ?? TASK 3: ST03 coarse grid ???????????????????????????????????????????????
 if ($st03ok) {
-    Write-Host "`n### TASK 3 — ST03 GRID ###" -ForegroundColor Green
+    Write-Host "`n### TASK 3 ? ST03 GRID ###" -ForegroundColor Green
     try {
         Copy-Item "D:\EA_LAB\_vps_deploy\ST03_GBPUSD\ST03_GBPUSD_live_v1.set" "D:\EA_LAB\_mt5_auto\ST03_grid.set" -Force
         $sc = Get-Content "D:\EA_LAB\_mt5_auto\ST03_grid.set"
@@ -198,8 +211,8 @@ if ($st03ok) {
     Log-Result "TASK3" "ST03GRID" "GBPUSD" "SKIP" "-" "skipped ST03rep TASK1 failed" "SKIP"
 }
 
-# ── TASK 4: MT4 gold-grid ──────────────────────────────────────────────────
-Write-Host "`n### TASK 4 — MT4 GOLD-GRID ###" -ForegroundColor Green
+# ?? TASK 4: MT4 gold-grid ??????????????????????????????????????????????????
+Write-Host "`n### TASK 4 ? MT4 GOLD-GRID ###" -ForegroundColor Green
 $ggPlan = "D:\EA_LAB\MT4_GOLDGRID_RETEST_PLAN.md"
 if (Test-Path $ggPlan) {
     $planContent = Get-Content $ggPlan -Raw
@@ -226,15 +239,15 @@ if (Test-Path $ggPlan) {
     Log-Result "TASK4" "GG" "XAUUSD" "FULL" "-" "MT4_GOLDGRID_RETEST_PLAN.md not found" "ERR"
 }
 
-# ── ROUND 2: Model 2 comparison ────────────────────────────────────────────
-Write-Host "`n### ROUND 2 — MODEL 2 COMPARISON ###" -ForegroundColor Green
+# ?? ROUND 2: Model 2 comparison ????????????????????????????????????????????
+Write-Host "`n### ROUND 2 ? MODEL 2 COMPARISON ###" -ForegroundColor Green
 foreach ($ea in $eas) {
     Run-MT5 "$($ea.tag)_M2" $ea.expert $ea.sym $ea.tf "2023.01.01" "2025.01.01" $ea.set 2 "TASK1R2"
     Run-MT5 "$($ea.tag)_M2" $ea.expert $ea.sym $ea.tf "2025.01.01" "2026.06.01" $ea.set 2 "TASK1R2"
 }
 
-# ── ROUND 3: OOS halves for PF>1.5 EAs ────────────────────────────────────
-Write-Host "`n### ROUND 3 — OOS HALVES ###" -ForegroundColor Green
+# ?? ROUND 3: OOS halves for PF>1.5 EAs ????????????????????????????????????
+Write-Host "`n### ROUND 3 ? OOS HALVES ###" -ForegroundColor Green
 $logContent = Get-Content $LogFile -Raw
 foreach ($ea in $eas) {
     # check if PF > 1.5 in log for this tag OOS

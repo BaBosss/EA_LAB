@@ -12,10 +12,10 @@
 #   Windows are supplied by the caller -- but the example is what people copy.
 # ==============================================================================
 <#
-grid_sweep.ps1 — sequential parameter-grid backtest sweep for ONE EA on ONE symbol.
+grid_sweep.ps1 ? sequential parameter-grid backtest sweep for ONE EA on ONE symbol.
 
 Expands a compact override spec into a cartesian grid, runs each combo as a single
-Model-4 backtest via mt5_run.ps1 (which is the ONLY MT5 instance — runs are serial),
+Model-4 backtest via mt5_run.ps1 (which is the ONLY MT5 instance ? runs are serial),
 parses the report, and appends one row per combo to an output CSV.
 
 DESIGN NOTES
@@ -25,10 +25,10 @@ DESIGN NOTES
     not abort each other. KEEP MODEL 4 SERIAL (every-tick = freeze risk on this box); only
     parallelize light Model-2 smokes.
   * Robust to a single bad combo: a backtest that yields no report is logged as a
-    FAIL row and the sweep continues (no hang — mt5_run.ps1 has its own timeout).
+    FAIL row and the sweep continues (no hang ? mt5_run.ps1 has its own timeout).
   * The EA must already be COMPILED into the terminal Experts folder. This script
     does NOT compile. (Lesson: editing the .mq5 + compiling to the source folder is
-    NOT enough — the .ex5 must live in <DataDir>\MQL5\Experts.)
+    NOT enough ? the .ex5 must live in <DataDir>\MQL5\Experts.)
 
 OVERRIDES SPEC (compact cartesian):
   "Key1=a,b,c;Key2=x,y"  ->  all combinations of Key1 in {a,b,c} X Key2 in {x,y}
@@ -60,6 +60,7 @@ param(
   [switch]$Portable
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $runner = "D:\EA_LAB\scripts\mt5_run.ps1"
 if (-not (Test-Path $BaseSet)) { Write-Output "ABORT: base set not found: $BaseSet"; exit 2 }
 if (-not (Test-Path $runner))  { Write-Output "ABORT: mt5_run.ps1 not found"; exit 2 }
@@ -139,9 +140,14 @@ for ($ci = 0; $ci -lt $combos.Count; $ci++) {
       Terminal = $Terminal; DataDir = $DataDir
     }
     if ($Portable) { $runnerArgs.Portable = $true }
+    # ORDER-372: gate on the runner's exit code and the report's mtime. This script is already
+    # marked HOLDOUT-BURNED and must not produce selection evidence, but a retired script that
+    # still runs can still mislead, so it gets the same guard as the live ones.
+    $runStart = Get-Date
     $out = & $runner @runnerArgs 2>&1 | Out-String
+    $runnerExit = $LASTEXITCODE
     $repPath = "D:\EA_LAB\_mt5_auto\reports\$rep.htm"
-    if (Test-Path $repPath) {
+    if (Test-ReportIsFresh -Htm $repPath -RunStart $runStart -RunnerExit $runnerExit -Label $rep) {
       $r = Parse-Report $repPath
       $row = [PSCustomObject]@{
         Combo=$ci; Params=$tagStr; Window=$w.Label; PF=$r.PF; Trades=$r.Trades

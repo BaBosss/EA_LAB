@@ -116,6 +116,14 @@ if ($found) {
       Move-Item -Destination "$auto\reports\" -Force
   }
   Write-Output "OK REPORT: $destHtm"
+  # ORDER-372: this script used to END here with no `exit`, so on success it never set an exit
+  # code at all - PowerShell leaves $LASTEXITCODE holding whatever the PREVIOUS command left. Any
+  # caller that read it after a successful run therefore read a stale value, which is worse than
+  # reading nothing: a sweep whose previous cell aborted with 2 would see 2 again on the next cell
+  # that genuinely succeeded, and reject a good report. run_batch.ps1 already compensates for this
+  # at its own layer (its "exit-unreliable basename" set names this script), but every other caller
+  # was on its own. Exit codes now match mt5_run.ps1's contract: 0 ok, 1 no report.
+  exit 0
 }
 else {
   # MT4 does NOT honor shutdown on a hung test (EA spamming iCustom "cannot open
@@ -127,4 +135,5 @@ else {
   } else {
     Write-Output "NO REPORT (exited=$($proc.HasExited)). Check EA name / symbol history / login."
   }
+  exit 1
 }

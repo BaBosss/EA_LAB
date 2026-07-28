@@ -24,6 +24,7 @@ $ErrorActionPreference = "Stop"
 
 . "D:\EA_LAB\scripts\use_python.ps1"
 
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $runScript = "D:\EA_LAB\scripts\mt5_run.ps1"
 $parseScript = "D:\EA_LAB\scripts\parse_mt5_report.py"
 $reportsDir = "D:\EA_LAB\_mt5_auto\reports"
@@ -99,6 +100,9 @@ function Invoke-TestRun {
     [string]$ReportName
   )
 
+  # ORDER-372: an aborted run leaves the previous smoke's report for this same ReportName in place,
+  # so Test-Path alone would hand a stale file back to the screener as this run's result.
+  $runStart = Get-Date
   & powershell -File $runScript `
     -Expert $Expert `
     -Symbol $Symbol `
@@ -111,9 +115,10 @@ function Invoke-TestRun {
     -DataDir $DataDir `
     -Portable `
     -TimeoutSec $TimeoutSec | Out-Host
+  $runnerExit = $LASTEXITCODE
 
   $reportPath = Join-Path $reportsDir "$ReportName.htm"
-  if (-not (Test-Path $reportPath)) { return $null }
+  if (-not (Test-ReportIsFresh -Htm $reportPath -RunStart $runStart -RunnerExit $runnerExit -Label $ReportName)) { return $null }
   return $reportPath
 }
 

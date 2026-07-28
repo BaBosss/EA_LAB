@@ -43,6 +43,7 @@ param(
   [switch]$KeepSets
 )
 $ErrorActionPreference = "Stop"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $root    = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $expert  = "EALabTpl\Boss_12_Breakout"   # StackMode=90 + LotProg=50 -> one order per signal, no progression
 $baseSet = Join-Path $root "ea_template\sets\regression\Boss_12_Breakout_defaults.set"
@@ -134,17 +135,23 @@ foreach ($c in $cases) {
   $set = New-VariantSet $c.id $c.over $caseBase
   $rep = "MMLOT_$($c.id)"
   Write-Host ">> $($c.id) (deposit $($c.dep), expect first lot $($c.expect))" -ForegroundColor Cyan
+  $runStart = Get-Date
   $null = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $caseEa -Symbol $Symbol -Period $Period `
             -FromDate $FromDate -ToDate $ToDate -Model $Model -Deposit $c.dep -ReportName $rep -SetFile $set
   $rc  = $LASTEXITCODE
   $htm = Join-Path $root "_mt5_auto\reports\$rep.htm"
+  # ORDER-372: this test reads "no report" as evidence that OnInit refused the attach, so a STALE
+  # report from a previous case is dangerous in the OPPOSITE direction to everywhere else - it would
+  # turn a correct refusal into "[FAIL] SILENT FALLBACK IS BACK". Resolve freshness once, and let
+  # both branches below ask about THIS run rather than about whatever is on disk.
+  $fresh = Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $rc -Label $rep -AcceptLeverageMismatch -Quiet
 
   if ($c.expect -eq 0.0) {
     # fail-closed case: the only acceptable outcomes are "no report" (init refused the run)
     # or "a report with zero entries". A report full of 0.01-lot trades = the silent
     # fallback is back, and that is the bug this whole task existed to kill.
-    if (-not (Test-Path $htm)) {
-      Write-Host "   [PASS] no report produced - attach refused (INIT_FAILED)" -ForegroundColor Green
+    if (-not $fresh) {
+      Write-Host "   [PASS] no report produced by THIS run - attach refused (INIT_FAILED)" -ForegroundColor Green
       $rows += [pscustomobject]@{ case=$c.id; expected='no trades'; got='no report'; verdict='PASS' }
       continue
     }
@@ -161,8 +168,8 @@ foreach ($c in $cases) {
   }
 
   if ($rc -eq 3) { Write-Host "   [FAIL] leverage mismatch" -ForegroundColor Red; $fail++; continue }
-  if (-not (Test-Path $htm)) {
-    Write-Host "   [FAIL] no report produced" -ForegroundColor Red
+  if (-not $fresh) {
+    Write-Host "   [FAIL] no report produced by this run" -ForegroundColor Red
     $rows += [pscustomobject]@{ case=$c.id; expected=$c.expect; got='no report'; verdict='FAIL' }; $fail++; continue
   }
   $d = Read-Deals $htm

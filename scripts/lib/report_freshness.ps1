@@ -54,17 +54,35 @@ function Test-ReportIsFresh {
   param(
     [Parameter(Mandatory)][string]$Htm,
     [Parameter(Mandatory)][datetime]$RunStart,
-    [int]$RunnerExit = 0,
+    [Parameter(Mandatory)][int]$RunnerExit,
     [string]$Label = '',
+    [switch]$AcceptLeverageMismatch,
     [switch]$Quiet
   )
   $tag = if ($Label) { $Label } else { Split-Path $Htm -Leaf }
   $why = Get-RunnerExitMeaning -RunnerExit $RunnerExit
 
-  if ($RunnerExit -eq 1 -or $RunnerExit -eq 2) {
+  # WHITELIST, not blacklist. CORRECTED 2026-07-28 after a blind audit: this originally rejected
+  # only exit 1 and 2, so an unrecognised code (4, 99, -1 - or a runner that never set one at all,
+  # which is what mt4_run.ps1 did until the same audit) was ACCEPTED. $RunnerExit also defaulted to
+  # 0, meaning a caller that simply forgot to pass it got a silent pass. Both are now impossible:
+  # the parameter is mandatory, and only codes that are known to mean "a report was written by THIS
+  # run" get through.
+  if ($RunnerExit -ne 0 -and $RunnerExit -ne 3) {
     if (-not $Quiet) {
       Write-Host "   [STALE-GUARD] $tag - $why" -ForegroundColor Red
       Write-Host "                 any report on disk is from an EARLIER run and is ignored." -ForegroundColor Red
+    }
+    return $false
+  }
+  # Exit 3 means the report IS from this run but ran at the wrong leverage, so its numbers are not
+  # comparable to anything. Previously this returned $true with only a warning, and five callers
+  # then wrote those numbers into sweep CSVs and verdict scoring as ordinary results - which
+  # contradicted this library's own text. It is now a REFUSAL unless the caller explicitly opts in.
+  if ($RunnerExit -eq 3 -and -not $AcceptLeverageMismatch) {
+    if (-not $Quiet) {
+      Write-Host "   [STALE-GUARD] $tag - $why" -ForegroundColor Red
+      Write-Host "                 pass -AcceptLeverageMismatch only if you intend to record a non-comparable number." -ForegroundColor Red
     }
     return $false
   }
@@ -80,7 +98,9 @@ function Test-ReportIsFresh {
     return $false
   }
   if ($RunnerExit -eq 3 -and -not $Quiet) {
-    Write-Host "   [WARN] $tag - $why" -ForegroundColor Yellow
+    # Only reachable via -AcceptLeverageMismatch; the caller asked for this number knowing it is
+    # not comparable, so say so every time it is handed over.
+    Write-Host "   [WARN] $tag - $why (accepted only because -AcceptLeverageMismatch was passed)" -ForegroundColor Yellow
   }
   return $true
 }

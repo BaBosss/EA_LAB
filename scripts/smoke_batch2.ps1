@@ -9,10 +9,11 @@
 # The current MAIN window is pinned in the VERDICT GATE section of CLAUDE.md.
 # ==============================================================================
 <#
-smoke_batch2.ps1 — Sequential smoke test of EAs in subfolders (MQL5 EA\, Quantum\)
+smoke_batch2.ps1 ? Sequential smoke test of EAs in subfolders (MQL5 EA\, Quantum\)
 Each test: 2023.01.01-2026.06.01, Model=1 (OHLC fast), default params.
 #>
 $ErrorActionPreference = "Continue"
+. (Join-Path $PSScriptRoot 'lib\report_freshness.ps1')
 $run  = "D:\EA_LAB\scripts\mt5_run.ps1"
 $score = "D:\EA_LAB\scripts\score_backtest.py"
 $parse = "C:\Users\patip\.claude\skills\backtest-report-analyzer\scripts\parse_mt5_report.py"
@@ -22,7 +23,7 @@ $from = "2023.01.01"; $to = "2026.06.01"
 
 # EA list: subfolder\name, Symbol, Period, code label
 $eas = @(
-  # PORT 1 and PORT 6 — correct names found in MQL5 EA\ subfolder
+  # PORT 1 and PORT 6 ? correct names found in MQL5 EA\ subfolder
   @{ E="MQL5 EA\rev_010_EA_CelestialWoodfire_141049900"; S="EURUSD"; P="H1"; C="B2_CW_rev010" },
   @{ E="MQL5 EA\rev_012_EA_GoldenEmber_117030969";       S="XAUUSD"; P="H1"; C="B2_GE_rev012" },
   @{ E="MQL5 EA\rev_001_EA_GoldenEmber_117030969_V2";    S="XAUUSD"; P="H1"; C="B2_GE_V2" },
@@ -78,16 +79,21 @@ foreach ($ea in $eas) {
   $htm   = "$rep\$rname.htm"
   Write-Output "[$i/$n] $($ea.E) | $($ea.S) $($ea.P) -> $rname"
 
+  # ORDER-372: a non-zero exit does NOT throw, so an aborted run would otherwise fall through to
+  # Test-Path and adopt a previous smoke's report for this same cell.
+  $runStart = Get-Date
+  $runnerExit = 0
   try {
     & $run -Expert $ea.E -Symbol $ea.S -Period $ea.P -Model 1 `
            -FromDate $from -ToDate $to -ReportName $rname -ErrorAction Stop
+    $runnerExit = $LASTEXITCODE
   } catch {
     Write-Output "  ERROR launch: $_"
     $results += [PSCustomObject]@{ Code=$ea.C; EA=$ea.E; Symbol=$ea.S; PF="ERR"; DD="ERR"; Trades="ERR"; Verdict="ERROR" }
     continue
   }
 
-  if (-not (Test-Path $htm)) {
+  if (-not (Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit $runnerExit -Label $rname)) {
     Write-Output "  NO REPORT (exited). Check EA name / symbol."
     $results += [PSCustomObject]@{ Code=$ea.C; EA=$ea.E; Symbol=$ea.S; PF="NOHTM"; DD="-"; Trades="-"; Verdict="NOHTM" }
     continue
