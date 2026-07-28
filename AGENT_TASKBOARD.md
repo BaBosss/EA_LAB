@@ -1980,3 +1980,32 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 **Also in scope (same class, cheap while here):** `NO_RISK_ATR=0` — the finding-2 guard added the same day is in the identical position. Its reachability is argued from `Indicators.mqh:104`, never demonstrated.
 
 **ห้าม / Prohibitions:** close this by running a longer window and reporting a bigger zero — a bigger sample of "never fired" is the same evidence · treat `sl_invalid=0` as proof the guard works · touch a live account or any `_vps_deploy/` bundle · edit `ea_template/core/` without `tpl_regression.ps1` in the same session · re-pin the baseline without the `re-pin` declaration (`.githooks/commit-msg` enforces it, and as of 2026-07-27 it actually can)
+
+---
+
+## ORDER-500 — [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that protects the file also forbids repairing it — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (data repair + guard design) · **flat-lot probe:** N-A
+
+**The defect, measured not inferred.** `docs/memory_control/B1_DATASET.csv` at HEAD `969f0fee` parses as **83 order rows, not 84**. `ORDER-280`'s row is glued onto the tail of `ORDER-412`'s quoted `notes` column with no line break between them, so a CSV reader sees **one row carrying 25 fields instead of 13** and `ORDER-280` is **absent from the dataset entirely**. Verified by parsing, not by reading:
+```
+order rows: 83 | has ORDER-280? False | rows with wrong field count: 1 (ORDER-412, fields=25)
+```
+Every character anybody wrote is still in the file, and it looks correct in an editor. It simply stopped being data.
+
+**Why it happened, and why this file specifically.** Two lanes appended to `B1_DATASET.csv` within minutes of each other on 2026-07-27. `HANDOFF_2026-07-27_SYSTEMS.md` §5 already describes this exact collision from the other side — commit `99a73910` (lane SLBUFFER, ORDER-280) swept another lane's uncommitted B1 row into its own commit, because a path-limited commit commits the whole working-tree file. **This malformed line is that incident's visible scar, not a new one.** The file is append-only and written by *every* lane that closes an order, which makes it simultaneously the highest-collision file in the repo and the one where damage is least visible. The file also has **mixed CRLF/LF endings** (22 CRLF / 67 LF) and **no trailing newline** at HEAD — the second of those is the mechanism that lets the next append glue itself on, and the first is why a missing break does not stand out in a diff.
+
+**🔴 The part that is not just a typo: there is no sanctioned way to fix it.** `scripts/check_precommit_staged.ps1` (ORDER-144 rule) enforces *"existing HEAD bytes must be an exact prefix"* on this path, with **no escape hatch of any kind**. The one-newline repair was written, verified to give **84 order rows · ORDER-280 present · 0 rows with a field count other than 13**, staged — and correctly **BLOCKED**:
+```
+[precommit-staged] BLOCK: ORDER-144 staged-bytes validation failed:
+  - B1_DATASET.csv may only append rows; existing HEAD bytes were modified
+```
+**The guard is right and was not bypassed.** The working tree was restored to HEAD byte-for-byte and nothing was committed. But note the shape: the sibling rule in the same block — `ea_template/regression_baseline.csv` — *does* have an audited escape hatch (`re-pin` declared in the commit message, enforced by `.githooks/commit-msg`). B1 has none, so the only routes available today are `--no-verify` or leaving the file broken. **A guard that refuses a legitimate case with no sanctioned path is how override habits get taught** (memory `feedback-audit-rule-rationale-not-compliance`).
+
+**Three options, and the choice is not the runner's:**
+- **A — append-only workaround.** Append a corrected `ORDER-280` row at the end. Fully compliant, needs no guard change. **Leaves `ORDER-412` malformed at 25 fields and duplicates ORDER-280's text inside it** — the dataset would then read correctly for ORDER-280 and incorrectly for ORDER-412. A half-fix that hides better than the current state, which is an argument against it.
+- **B — audited repair path.** Give B1 the same escape hatch `regression_baseline.csv` has: a declared keyword in the commit message, enforced by `.githooks/commit-msg`, so a repair is possible but never silent. **This edits a guard**, so it needs a cage written first and proven able to fail, and it widens what the Contract-D dataset permits — that is a doctrine change, not a chore.
+- **C — leave it, record it.** Accept 83 rows and a known-bad row, and note the discrepancy wherever B1 is consumed.
+
+**What must happen regardless of which is chosen:** a **malformed-row assertion** — field count and parseability — belongs in the same guard that already enforces append-only. Today the guard checks that bytes were only *added*; it does not check that what was added is a *row*. That is the whole gap: the file was protected against the wrong failure mode.
+
+**Prohibitions:** commit any change to `B1_DATASET.csv` with `--no-verify` · weaken or remove the ORDER-144 append-only rule (option B *adds* an audited path, it does not relax the default) · edit `scripts/check_precommit_staged.ps1` without a cage that is proven able to fail first (ORDER-270 / ORDER-420 doctrine) · "fix" the mixed line endings in a bulk rewrite — that rewrites every historical byte and is exactly what the guard exists to stop · treat option A as the fix and close this
