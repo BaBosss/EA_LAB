@@ -521,7 +521,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 มันจะเปลี่ยนก็ต่อเมื่อเราตั้งใจจะอนุญาตให้เทียบได้ *บางกรณี* ซึ่งคือทางที่ถูกปฏิเสธไป **การวัดที่ไม่มีทาง
 เปลี่ยนการตัดสินใจ = การวัดที่ไม่ควรรัน** (memory `discriminating-test-must-be-able-to-discriminate`)</sub>
 
-## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `CLAIMED(oc-qwen, 2026-07-28)` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `CLAIMED(Claude/Sonnet, 2026-07-28) — oc-qwen dispatch hit context-window limit twice, stopped, running directly instead` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 **ที่มา:** ORDER-222 เขียนข้อจำกัดนี้ไว้เองใน §3 ของ verdict — ขา `CutLoss=100` (ไม่ตัด) มี loss cluster **ก้อนเดียว
 และอยู่นาทีสุดท้ายของหน้าต่าง** (tester บังคับปิด −15,300 = −49.6% ก้อนเดียว) ⇒ ผล **+5,088 ของมันถูกตัดสินโดย
 ปฏิทิน ไม่ใช่ตลาด** ⇒ ใช้จัดอันดับ 30-vs-100 ระยะยาวไม่ได้ (ใช้พิสูจน์ว่า "สวิตช์ติด" ได้ ซึ่งจบไปแล้ว)
