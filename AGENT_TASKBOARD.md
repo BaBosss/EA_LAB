@@ -3054,3 +3054,26 @@ the exact failure the order documents — a bundle that is correct on disk while
 `AllowLive=YES Bars=40 SL×1.5 TP×5.0 EMA200=ON` — **`Bars40` is the description on the 991001 real-money
 row**, and the init line does not print its magic. Still no inventory row for it here. Needs its
 Inputs tab read (`_06_Magic`).
+
+## ORDER-521 — [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row, and its config matches a REAL-MONEY row — `OPEN` · runnable by: **Claude/Opus** (user reads Inputs) · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+Found by ORDER-511 in the VPS Experts log. On account **463666728** the chart
+`EA_BREAKOUT_XAU (XAUUSDm,H1)` initialises with
+`AllowLive=YES OptMode=off Bars=40 SL×1.5 TP×5.0 EMA200=ON`.
+
+**Why it matters:** `DEPLOYMENTS.csv` lists EA_BREAKOUT_XAU on this account only on **USDJPYm
+(991003)** and **US30m (991005)**. There is **no XAU row for this account**. And `Bars40` is the exact
+description carried by **`991001` on 159503454 — a REAL-MONEY row** ("validated set (Bars40 compiled
+defaults)"). The init line does **not** print the magic, so the magic is unknown.
+
+Two possibilities, and they need different fixes: an unregistered demo instance (add a row), or the
+same magic live on a demo **and** a real-money account (the `no duplicate account|magic` check is
+per-account and cannot see cross-account reuse — note row 22 of the CSV already flags a deliberate
+991001 reuse across 159503454/159475669, so this pattern has precedent and may be intentional).
+
+**STEP 1:** user opens the Inputs tab of that chart and reads **`_06_Magic`** · **STEP 2:** add the
+inventory row, or record the reuse explicitly the way row 22 does.
+
+**ห้าม:** เดาว่า magic คืออะไรจากคำอธิบาย `Bars40` ที่ตรงกัน — ตรงกันเพราะมันคือ compiled default
+ซึ่งหลาย instance ใช้ร่วมกันได้ · แก้แถวของ **159503454 (เงินจริง)** โดยไม่มี user เคาะ
