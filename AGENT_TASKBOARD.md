@@ -2025,7 +2025,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 **ที่ไม่เปิดเป็นงานในชุดนี้ (มี owner/trigger แล้ว):** attestation gap 40/56 = ORDER-184 lane คุมอยู่ · Boss V2 heartbeat = CR-003 เต็มรูป/หลัง judge (deployment ใหม่ก่อน ห้าม roll fleet) · fast risk monitor อ่าน Common\Files ตรง = CR-007 (ปี 2, dependency credential-alarm ยังไม่ปิด).
 
-## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN — (2) + (3) ปิดแล้ว (Claude 2026-07-27, c297295d) · (1) + (4) LOGIN DONE(user 2026-07-28) แต่ยังไม่ verified — เหลือ rotation 1 รอบ`
+## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `REVIEWED(Claude/Opus 2026-07-28 12:15) — ปิดครบทั้ง 4 ข้อ · วัดแล้ว FLOATING 0/6 blind · SYSTEM 6/6 fresh · เป้าหมายเดิม "6/6 floating FRESH" สำเร็จ`
 
 ### 🟡 2026-07-28 — login ทำแล้วทั้งคู่ · **แต่ยังปิดใบไม่ได้ และนี่คือความตั้งใจ**
 
@@ -2043,6 +2043,33 @@ MT4 Navigator ขึ้น `69424711: Demo EA3` ใต้ `Exness-Trial8` · MT5
 **เหลือขั้นเดียว:** rotation รอบถัดไป (หรือรันมือด้วย path เต็ม) แล้วอ่าน floating coverage ให้เห็น **5/6 → 6/6**
 **ห้ามปิดใบนี้จากการที่ login ติด** — ORDER-400 เองคือใบที่สอนว่า "EA โหลดสำเร็จ" กับ "snapshot เกิดจริง"
 เป็นคนละเรื่อง (ข้อ (2): terminal รายงาน *successfully initialized* ทั้งที่ไม่ attach expert เลยสักตัว)
+
+### ✅ ปิดจริง 2026-07-28 12:15 — วัดได้ตามเกณฑ์ที่ใบนี้เขียนไว้เอง
+
+user รัน `monitor_rotation.ps1` เต็มรอบ (11:18 → ~11:32, dwell 420s) · Journal ของ 463666728 ยืนยัน
+สิ่งที่**ไม่เคยมีมาก่อนสักวัน**: `'463666728': authorized on Exness-MT5Trial17` (11:28:44) ตามด้วย
+`expert DealsExporter (EURUSDm,H1) loaded successfully` (11:28:46) ⇒ การ login `/portable` ได้ผลจริง
+
+**ผลวัด (`control_room_snapshot.ps1`):**
+```
+SYSTEM   6/6 accounts fresh (0 stale/no-sensor, bar 30h)
+FLOATING 0/6 account(s) blind
+```
+snapshot ครบทั้ง 6 บัญชี รวม **463666728** (599 B) และ **69424711** (673 B) · และ
+`EA_LAB_mt4_orders_69424711.csv` = **7.9 KB ของจริง** ไม่ใช่ `EA_LAB_mt4_orders_0.csv` (106 B) แบบเดิม
+— collector ยัง `skipped (login=0)` ไฟล์ `_0` ตัวเก่าอย่างถูกต้อง
+
+<sub>🔧 **กับดักที่เกือบทำให้ผมรายงานว่า "ยังไม่สำเร็จ" ทั้งที่สำเร็จแล้ว:** ผมไปหาไฟล์ผลลัพธ์ใน
+`D:\Monitor\<acct>\MQL5\Files\` ซึ่ง**ว่างเปล่าทุกเครื่อง** แล้วเกือบสรุปว่า exporter ไม่ได้เขียนอะไร ·
+ความจริง exporter เขียนลง **common data folder** (`%APPDATA%\MetaQuotes\Terminal\Common\Files`) ที่ทุก
+terminal แชร์กัน — ซึ่งเป็นเหตุผลที่ collector ตัวเดียวกวาดได้ทุกบัญชีจากที่เดียว · และ
+**`monitor_rotation.ps1` ไม่ได้เก็บไฟล์เลย** มันแค่เปิด terminal รอ 7 นาทีแล้วปิด · การเก็บเป็นงานของ
+`scripts/collect_live_deals.ps1` ซึ่งเป็นคนละสคริปต์ **ต้องรันต่อท้ายเสมอ** ⇒ "รัน rotation แล้ว" ไม่ได้
+แปลว่า "ข้อมูลเข้า repo แล้ว" · ญาติของกับดักข้อ (2) ในใบนี้เอง: ขั้นตอนสำเร็จ แต่ผลลัพธ์ยังไม่ถึงปลายทาง</sub>
+
+<sub>ค้างไว้ให้ใบอื่น: `[SKIP] missing: D:\Monitor\MT5 - 146237\terminal64.exe` — เป็นแถวที่
+`monitor_rotation.ps1:34` เขียนกำกับตัวเองไว้แล้วว่า *"146237 = Exness user-pool demo, stale since 07-06"*
+⇒ SKIP คือพฤติกรรมที่ถูกต้อง ไม่ใช่ของเสีย แต่แถวที่ชี้ไป terminal ที่ไม่มีอยู่จริงควรถูกลบหรือมีเงื่อนไขปลุก</sub>
 **source:** CR-P0 exporter merge (`eda4733`, 2026-07-27) พิสูจน์แล้วว่า combined DealsExporter เขียน floating ได้จริง — หลัง rotation เช้า 07-27 = **6/6 health FRESH, 4/6 floating FRESH**. เหลือ 2 terminal ที่ยัง floating BLIND ด้วยเหตุ operational คนละแบบ (ไม่ใช่ merge พัง — อีก 4 ตัวพิสูจน์แล้ว).
 **งาน 3 ข้อ:**
 - (1) **463666728** — rotation โหลด EA แล้วตายด้วย `EURUSDm symbol synchronization timeout` (~5 นาที) ถูก remove ก่อนเขียน snapshot เสถียร (เกิดซ้ำตั้งแต่ 07-21). root cause = chart symbol `EURUSDm` ไม่ sync บน demo crypto/multi-asset ตัวนี้ (position จริงเป็น BTCJPYm/XAGUSDm/XAUUSDm). **แก้: เปลี่ยน symbol ของ 463666728 ใน `scripts\monitor_rotation.ps1` (บรรทัด ~23) จาก `EURUSDm` เป็นตัวที่มันมีชัวร์ — น่าจะ `XAUUSDm` หรือ `BTCUSDm` (verify Market Watch ก่อน).** snapshot EA อ่านข้อมูลระดับบัญชี chart symbol แค่ต้อง exist+sync พอ.
