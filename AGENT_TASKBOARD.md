@@ -2391,7 +2391,53 @@ entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"�
 
 ---
 
-## ORDER-500 — [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that protects the file also forbids repairing it — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-500 — [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that protects the file also forbids repairing it — `REVIEWED(Claude/Opus 2026-07-28) — user ratify option B · cage 23/23 (แดงก่อน 1 เคสจากบั๊กของ library เอง) · guard เข้าที่ f2248d17 + ec59e6c8 · ข้อมูลซ่อมแล้ว b97dca42 · ORDER-280 กลับมา 95 แถว 0 malformed` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+
+### ✅ ปิด 2026-07-28 — ทั้งสองครึ่ง (กฎ + ข้อมูล) และพิสูจน์ทั้งสองทิศ
+
+**สิ่งที่ user เคาะ = (B)** ให้ B1 มี escape hatch แบบเดียวกับ `regression_baseline.csv` · **default ไม่ขยับ** —
+การแก้ที่ไม่ประกาศยังถูกบล็อกเหมือนเดิมทุกประการ ใบนี้**เพิ่มทาง ไม่ได้ผ่อนกฎ**
+
+| ของที่ทำ | ที่อยู่ |
+|---|---|
+| กฎย้ายเข้า library ตัวเดียว (3 ผู้เรียก: pre-commit · commit-msg · cage) | `scripts/lib/b1_guard.ps1` |
+| **RULE 2 ใหม่ — `Test-B1RowShape`**: สิ่งที่ append ต้องเป็น *แถว* | บังคับที่ pre-commit (ไม่ต้องใช้ message) |
+| **RULE 1 append-only ย้ายไป commit-msg** พร้อมคำประกาศ `B1-REPAIR` | `.githooks/commit-msg` |
+| cage 23 เคส pre-register ทั้ง must-block และ must-stay-silent | `scripts/_test/run_b1_guard_tests.ps1` |
+| ลงทะเบียนใน fast tier + **ขยาย trigger glob ที่จะข้ามมัน** | `run_fast_cages.ps1` · `.githooks/pre-commit` |
+
+**ทำไมต้องเป็น library ไม่ใช่เขียนแทรกในที่เดิม:** ORDER-421 เพิ่งเจอว่ากรงของ ORDER-105 รันแค่ 14%
+ของตัวเองมา 2 วัน เพราะ fixture ก๊อป hook มาแต่ไม่ตาม dependency ของ hook ⇒ **library ตัดปัญหานี้ทิ้ง
+ตั้งแต่โครงสร้าง** ไม่ใช่เขียน comment เตือน
+
+**ทำไม append-only ต้องย้ายไป commit-msg:** มันต้องรู้ว่า commit **นี้** ประกาศ repair หรือไม่ และ pre-commit
+อ่าน message ของ commit ตัวเองไม่ได้ (บทเรียน ORDER-432) · ถ้าบล็อกที่ pre-commit → commit-msg ไม่มีวันได้รัน
+→ ประตูเปิดไม่ได้เลย · **ไม่ได้อ่อนลง**: สอง hook รันบน `git commit` ทั้งคู่ และถูกข้ามด้วย `--no-verify` ทั้งคู่
+
+**หลักฐานว่ากรงยิงได้จริง ไม่ใช่แค่เขียวเฉยๆ:**
+- cage **แดงตั้งแต่รันครั้งแรก** — จับบั๊กใน library ที่ผมเพิ่งเขียนเอง: field splitter คืน array 1 ตัว
+  PowerShell คลี่เป็น scalar แล้ว `.Count` โยนใต้ StrictMode (memory `powershell-pipeline-count-null-on-single-result`
+  **โผล่ในกรงที่เขียนมากันบั๊กเงียบ**) · แก้แล้วคอมเมนต์ไว้
+- cage อ่านไฟล์จริงแล้ว **reproduce ตัวเลขของใบนี้เองได้**: `record 83 (ORDER-412) has 25 fields, expected 13`
+- **ทิศ BLOCK พิสูจน์บน diff จริงตัวเดียวกัน**: commit repair ด้วย message ธรรมดา → `[commit-msg] BLOCK` exit 1 ·
+  และ message ที่มีคำว่า *"repair"* เป็นร้อยแก้ว **ก็ยังไม่ผ่าน** (specificity)
+- **ทิศ ALLOW**: diff เดียวกัน + `B1-REPAIR` → ผ่าน พร้อมบรรทัด audit ใน log
+
+**ครึ่งข้อมูล — ซ่อมแล้ว (`b97dca42`):** แทรก LF **1 ไบต์** หลัง quote ปิดของ ORDER-412 · 108,867 → 108,868 ·
+หลังซ่อม **95 แถว · ทุกแถวมี ORDER- id · 0 แถวที่ field count ≠ 13 · ORDER-280 กลับมา · ORDER-412 ยังครบ**
+ใช้ LF ตามเสียงข้างมากของไฟล์ และ **ไม่แตะ line ending ที่ปนกัน** เพราะการ normalize = เขียนทับทุกไบต์
+ในประวัติ ซึ่งคือสิ่งที่กฎ append-only มีไว้กัน
+
+<sub>🔴 **ผลข้างเคียงที่ต้องรู้ ถ้ากฎนี้ถูกใส่ก่อนซ่อม:** `Test-B1RowShape` บล็อก **ทุก commit ที่แตะ B1**
+ตราบใดที่แถวเสียยังอยู่ ⇒ กติกา Contract D ที่ว่า "ทุก REVIEWED ต้อง append แถว B1 ใน commit เดียวกัน"
+จะถูกล็อกทั้งเรโป · เจอตอนรันเทสจริง ไม่ใช่ตอนออกแบบ — **จึงต้องซ่อมข้อมูลในรอบเดียวกับที่ใส่กฎ** ·
+ถ้าใครเจออาการนี้อีกในอนาคต นั่นแปลว่ามีแถวเสียใหม่ ไม่ใช่กฎพัง</sub>
+
+<sub>**ไม่ได้แก้ บันทึกไว้:** มี order id ที่ปรากฏหลายแถว — `ORDER-174` ×2 · `ORDER-215` ×3 · `ORDER-340` ×2 ·
+`B1_COHORT.md` อธิบายไฟล์นี้ว่าเป็น running log ⇒ หลายแถวต่อ order **อาจตั้งใจ** · การตัดสินเรื่องนี้ไม่ใช่การซ่อม
+และไม่ควรอยู่ใน commit ที่อ้างว่าตัวเองเปลี่ยนไบต์เดียว · **`trigger glob` ของ fast-cage ก็ยังไม่ได้แก้ให้ถูกโครง** —
+ORDER-434 กับใบนี้ต้องขยาย glob ด้วยเหตุผลเดียวกันห่างกันวันเดียว ⇒ รายการ glob ผิดรูปแบบ (มันไล่ชื่อโฟลเดอร์
+ที่บังเอิญมีไฟล์ที่ถูกเฝ้า) แต่การเปลี่ยนเป็น "ไฟล์ใดก็ตามที่ fast suite พึ่งพา" ต้องมีกรงของตัวเองก่อน</sub>
 **bars:** N-A (data repair + guard design) · **flat-lot probe:** N-A
 
 **The defect, measured not inferred.** `docs/memory_control/B1_DATASET.csv` at HEAD `969f0fee` parses as **83 order rows, not 84**. `ORDER-280`'s row is glued onto the tail of `ORDER-412`'s quoted `notes` column with no line break between them, so a CSV reader sees **one row carrying 25 fields instead of 13** and `ORDER-280` is **absent from the dataset entirely**. Verified by parsing, not by reading:

@@ -22,7 +22,18 @@
 #   every character somebody wrote is still in the file, it just stopped being data.
 #   Test-B1RowShape closes that, and it applies to a repair commit too.
 
-Set-StrictMode -Version Latest
+# DELIBERATELY NO `Set-StrictMode` HERE.
+#
+# The first version of this file opened with `Set-StrictMode -Version Latest`. Because
+# the file is DOT-SOURCED, that ran in the CALLER's scope and changed the execution
+# semantics of the whole of check_precommit_staged.ps1, which had never run under strict
+# mode. The next commit was rejected by an unrelated part of that script:
+#   [precommit-staged] INTEGRITY: chain check threw: The property 'Length' cannot be
+#   found on this object.
+# Nothing about the chain logic had changed -- a library had reached out and altered the
+# rules its host runs under. A shared library must be inert to its caller beyond the
+# functions it defines; the cage sets its own strict mode instead, so these functions are
+# still exercised under the strictest interpretation without imposing it on anyone.
 
 # The declaration a commit message must contain to modify existing B1 bytes.
 # Deliberately verbose and un-guessable-by-accident: 're-pin' is one hyphenated word
