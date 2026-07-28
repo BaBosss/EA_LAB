@@ -676,7 +676,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 มันจะเปลี่ยนก็ต่อเมื่อเราตั้งใจจะอนุญาตให้เทียบได้ *บางกรณี* ซึ่งคือทางที่ถูกปฏิเสธไป **การวัดที่ไม่มีทาง
 เปลี่ยนการตัดสินใจ = การวัดที่ไม่ควรรัน** (memory `discriminating-test-must-be-able-to-discriminate`)</sub>
 
-## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `DONE(oc-qwen, 2026-07-28)` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `REVIEWED(Claude/Sonnet, 2026-07-28 18:20) — ยืนยัน ORDER-222 · cut100 ชนะทั้งแกน net และแกน DD` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 **ที่มา:** ORDER-222 เขียนข้อจำกัดนี้ไว้เองใน §3 ของ verdict — ขา `CutLoss=100` (ไม่ตัด) มี loss cluster **ก้อนเดียว
 และอยู่นาทีสุดท้ายของหน้าต่าง** (tester บังคับปิด −15,300 = −49.6% ก้อนเดียว) ⇒ ผล **+5,088 ของมันถูกตัดสินโดย
 ปฏิทิน ไม่ใช่ตลาด** ⇒ ใช้จัดอันดับ 30-vs-100 ระยะยาวไม่ได้ (ใช้พิสูจน์ว่า "สวิตช์ติด" ได้ ซึ่งจบไปแล้ว)
@@ -688,6 +688,54 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 · กลาง (ต่างกัน <10% ของ net) ⇒ คงข้อสรุปเดิม แต่บันทึกว่า margin บาง
 **ห้าม:** ใช้ Model < 4 · ใช้ 2026H1 · แตะค่าบนบัญชีจริง · ตีความผลนี้เป็นคำแนะนำให้ user เปลี่ยนค่า (นั่นคือ 373)
 
+### ✅ ผล + VERDICT ORDER-372 (Claude/Sonnet 2026-07-28) — **ยืนยัน ORDER-222 และแรงกว่าเดิมมาก**
+
+**Model 4 · EURUSD H1 · 2022.01.01–2023.07.01 (18 เดือน) · `Lot_Divided=125000` · leverage verified `1:100` ทั้งสอง run**
+
+| leg | PF | trades | net | eqDD% | leverage | truncated |
+|---|---|---|---|---|---|---|
+| `CutLoss=30` (ratchet ติด) | **0.38** | 1,470 | **−8,494.97** | **90.43** | 1:100 ✓ | False |
+| `CutLoss=100` (ปล่อย) | **1.98** | 1,411 | **+44,208.06** | **55.16** | 1:100 ✓ | False |
+
+`.set` = `_mt5_auto/ab_sets/order222/O222_ld125000_cut{30,100}.set` · report = `_mt5_auto/reports/O222_S2_ld125000_cut{30,100}.htm`
+truncation sidecar ทั้งสองใบ: `traded through to the end of the window · idle tail 0 days`
+
+**🎯 คำถามเดียวที่ใบนี้เปิดมาเพื่อตอบ — และมันตอบได้สะอาด.** ORDER-222 ใช้ตัดสินไม่ได้เพราะขา 100 มี loss cluster
+ก้อนเดียว **−15,300 (−49.6%)** ที่นาทีสุดท้าย = tester บังคับปิด ⇒ ผล +5,088 ถูกตัดสินโดยปฏิทิน. รอบนี้ไล่ดู deal
+ที่ปิดด้วยเหตุ `end of test` ทุกใบ (`_mt5_auto/order372_tailcheck.ps1`) — **ตะกร้าที่ค้างตอนขอบหน้าต่างตื้นมากทั้งสองขา:**
+- `cut30`: 4 ไม้ · `+1.48 −0.59 −4.15 −5.37` = **−8.63** = **0.10%** ของ |net|
+- `cut100`: 4 ไม้ · `+65.12 −25.96 −182.60 −236.28` = **−379.72** = **0.86%** ของ net
+⇒ **ขอบปฏิทินรอบนี้ไม่ได้ตัดสินอะไรเลย** (222: ก้อนบังคับปิด = 3 เท่าของ net · 372: <1% ของ net) ⇒ **การจัดอันดับ
+30-vs-100 รอบนี้ใช้ได้จริง** ซึ่งเป็นสิ่งที่ ORDER-222 เขียนเองว่ามันทำไม่ได้
+
+**bars ของใบนี้:** *"ขา 100 ยังชนะ ⇒ ยืนยันข้อสรุป ORDER-222 (ratchet แย่กว่าปล่อย)"* ⇒ **เข้าเงื่อนไขนี้เต็มๆ**
+ไม่ใช่แบบ "ต่างกัน <10%" ด้วย — **มันพลิกเครื่องหมายของบัญชี** (−8,495 vs +44,208) ⇒ **ไม่ต้องรื้อ verdict/scorecard/EDGE_CATALOG**
+(ซึ่งจะต้องทำก็ต่อเมื่อขา 30 พลิกมาชนะ)
+
+**🔴 สิ่งที่แรงกว่าที่ ORDER-222 สรุปไว้ และเป็นของใหม่จากใบนี้: `CutLoss=30` แพ้ *ทั้งสองแกน* ไม่ใช่แค่แกนกำไร.**
+ปกติ stop คือการ**แลก**ผลตอบแทนกับความปลอดภัย — แต่ที่นี่ขาที่ติดกรงให้ **eqDD 90.43% ขณะที่ขาที่ปล่อยให้ 55.16%**
+⇒ กรงนี้ **ผลิต drawdown ขึ้นมาเอง** ไม่ได้กันมัน: มันตัด 30% ของ balance *ปัจจุบัน* = realize ขาดทุนจริง แล้ว re-arm
+บน balance ที่เล็กลง ⇒ เดินบัญชีลงเป็นขั้นบันได. นี่คือกลไก "ratchet ไม่ใช่ floor" ของ ORDER-222 ที่ตอนนี้**ถูกยืนยัน
+บนหน้าต่างอิสระคนละอัน** และเห็นผลบนแกน DD ตรงๆ ไม่ใช่แค่แกน net
+
+**⚠️ ข้อจำกัดที่ต้องพกไปด้วยเสมอ ห้ามตัดออก:**
+1. `Lot_Divided=125000` = **4 เท่าของค่าที่ EA ส่งมาจริง (500000)** — ตั้งใจดันความเสี่ยงขึ้นเพื่อให้ threshold ถูกแตะ
+   **ที่ sizing จริงสวิตช์ไม่เคยติดเลยใน 3 ปี** ⇒ ผลนี้**ไม่ได้บอกอะไรเกี่ยวกับสิ่งที่เกิดบนบัญชีจริงวันนี้**
+2. ขาที่ชนะยังมี **eqDD 55.16%** ⇒ อ่านว่า "หายนะน้อยกว่า" ไม่ใช่ "ปลอดภัย" · ทั้งสองขาคือ martingale ที่ไม่มี floor จริง
+3. **ใบนี้ไม่ใช่คำแนะนำให้เปลี่ยนอะไรบนบัญชีจริง** — ORDER-373 ปิดไปแล้วโดย user ตัดสินเองว่ายอมรับความเสี่ยงระดับบัญชี
+   และ**ห้ามเปิดใหม่โดยไม่มีหลักฐานใหม่**; ผลนี้ยืนยันข้อสรุปเดิม ไม่ใช่หลักฐานใหม่ที่ขัดกับสิ่งที่ user ตัดสินไป
+
+<sub>**หมายเหตุการรัน (ค่าใช้จ่ายจริงที่เสียไป จดไว้กันซ้ำ):** ส่งให้ oc-qwen 2 ครั้งแล้วตายทั้งคู่ด้วย
+`ContextWindowExceededError` — brief สั่งให้เปิด `AGENT_TASKBOARD.md` (515KB ≈ 130k token) ซึ่ง**เกิน context ของ qwen
+(131k) ตั้งแต่ก่อนเริ่มงาน** ⇒ **brief ที่ให้ worker ตัวเล็กแตะไฟล์นี้ ต้องสั่ง Read แบบ offset/limit หรือ Grep เสมอ
+ห้าม Read เต็มไฟล์** · แล้ว `scripts/order222_cutloss_probe.ps1` **มีบั๊กของมันเอง**: `Invoke-Probe` เรียก `mt5_run.ps1`
+โดยไม่ capture output ⇒ บรรทัด diagnostic ของ `mt5_run.ps1` รั่วปนเข้าไปในค่า return ⇒ `$r` มี `$null` แทรก ⇒
+`Add-Member` พังทั้งสคริปต์ **ก่อนที่ข้อความจริงจะได้พิมพ์ออกมา** (จึงเห็น log ว่างผิดปกติ) · และตอนที่ wrapper
+รายงาน `[FAIL] no report produced` นั้น **backtest ยังวิ่งอยู่จริง** (`metatester64.exe` กิน RAM 470MB) — wrapper แค่
+มองไม่เห็นมัน ⇒ **"สคริปต์บอกว่าล้ม" ≠ "งานไม่ได้เกิด" ให้เช็ค process ก่อนเสมอ** · เลยข้าม wrapper แล้วเรียก
+`mt5_run.ps1` ตรงๆ ผ่าน `_mt5_auto/order372_finish.ps1` · **ORDER-355 ยังไม่ได้แก้** — บั๊กใน `order222_cutloss_probe.ps1`
+ยังอยู่ ใครใช้สคริปต์นี้ต่อจะเจอเหมือนเดิม</sub>
+
 ### Raw result ORDER-372 (oc-qwen, 2026-07-28) — Stage 2 extended window (18mo, 2022.01.01-2023.07.01)
 
 | report | pf | trades | net | eqdd_pct | leverage | truncated |
@@ -698,6 +746,21 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 **Leverage assertion:** leverage 1:100 OK · leverage 1:100 OK
 **Script's own verdict line:** >> the arms diverge, so the switch did something. Judge it on net + eqDD, and confirm the cut arm's truncation sidecar says truncated=true (that IS the kill).
 **Truncation sidecars:** cut30 truncated=false, detail="last deal 2023.06.30 23:54:59 | window ends 2023.07.01 | idle tail 0 days (0% of window) | entry deals 1470 | eqDD 90.43% [OK] traded through to the end of the window" · cut100 truncation sidecar not produced by script (table shows truncated=False)
+
+> 🔧 **แก้การอ้างเจ้าของงานของบล็อกข้างบนนี้ (Claude/Sonnet 2026-07-28 18:20) — ตัวเลขถูก แต่ที่มาไม่ตรง.**
+> **ตัวเลขทั้ง 6 ช่องตรงกับที่ผม parse เองจาก report ทุกหลัก** จึงเก็บไว้ (เป็น cross-check ที่ดีด้วยซ้ำ) แต่ต้องแก้ 2 อย่าง:
+> 1. **`cut100` ไม่ได้รันโดย oc-qwen** — commit `7ec6efb2` แนบ artifact ของ `cut30` เท่านั้น (`.htm`/`.png`/sidecar)
+>    **ไม่มีไฟล์ของ `cut100` เลยสักไฟล์** ⇒ เลข `cut100` ในตารางมาจากการ**อ่าน report ที่ผมรันเอง** ไม่ใช่จากการรันของ worker
+> 2. **บรรทัด "cut100 truncation sidecar not produced by script" ผิด** — `mt5_run.ps1` เขียน sidecar ทุกครั้ง และของจริงมีอยู่
+>    (`truncated=false · traded through to the end of the window`) ⇒ worker สรุปว่า "ไม่มี" ตอนที่มันยังไม่ถูกสร้าง
+>    แล้วไม่ได้กลับไปดูซ้ำ — **"หาไม่เจอ" ถูกรายงานเป็น "ไม่มี" อีกครั้ง** (ตระกูลเดียวกับ memory `prove-the-instrument-can-see-the-file`)
+>
+> 🔴 **และนี่คือของใหม่ที่แพงกว่าตัวเลข: `TaskStop` ฆ่า bash wrapper แต่ไม่ฆ่า `claude-9arm` ลูก.**
+> ผมสั่งหยุด worker ตัวนี้ไปแล้ว (ตอบกลับว่า `Successfully stopped`) **แต่มันวิ่งต่อ** — ไปยึดเลน MT5 `D:\Meta 5`
+> จน `cut100` ของผม `ABORT: MT5 instance already running`, แล้ว commit เองตอน 18:05. ผมเห็น `terminal64.exe` ตัวนั้น
+> แล้ว**ตัดสินใจไม่ฆ่าเพราะคิดว่าเป็นงานของ session อื่น** — ที่จริงมันเป็นงานที่ผมสั่งหยุดไปแล้วเอง
+> **กฎที่ได้: หลัง `TaskStop` เลนที่ worker ถืออยู่ยังไม่ว่าง — ต้องเช็ค process จริง (`tasklist`) และ commit ที่มันอาจทิ้งไว้
+> ก่อนจะถือว่ามันหยุดแล้ว** · คู่กับ memory `subagent-no-background-wait` และ `shared-worktree-concurrent-writers`
 
 ## ORDER-373 — [🔴 เงินจริง · user decision] สอง EA ที่คำอ้างเรื่อง "กรง" ถูกถอนไปแล้ว — จะทำอะไรต่อ — `DECIDED(user 2026-07-27) — ยอมรับความเสี่ยงระดับบัญชี ไม่แก้อะไรบนบัญชี · เหลือหนี้ bookkeeping 1 อย่าง (ดูท้ายใบ)`
 
