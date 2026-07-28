@@ -3640,7 +3640,7 @@ so **STEP 1 stands exactly as written** — one Inputs tab, one field, `_06_Magi
 
 ---
 
-## ORDER-530 — [🔴 ops/integrity] the "was the `.set` ever loaded" sweep across account 463666728 — `OPEN` · runnable by: **Claude/Opus** (user supplies one log export + 2 reads) · 👉 recommended: Claude
+## ORDER-530 — [🔴 ops/integrity] the "was the `.set` ever loaded" sweep across account 463666728 — `REVIEWED(Claude/Opus 2026-07-28)` — 3 faults found and fixed same-day (992017 wrong EA on the magic · 990067 missing / 990068 duplicated · 990016 removed); was `OPEN` · runnable by: **Claude/Opus** (user supplies one log export + 2 reads) · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 
 Opened by `S-2026-07-28-JUDGEINTEG` to own item 3 of
@@ -3970,3 +3970,51 @@ while the decision is pending.
 remove/re-magic the `EA_BREAKOUT_XAU` XAU H1 chart · re-pin `MagicNo` to `990067` on IchiADX `USDJPYm,H1`
 **while that leg is flat** · re-attach or retire `990016` · give `(Boss)_MacroGate` a row. Every one of
 them re-bases a judge clock, so none should be done piecemeal without saying which date moves.
+
+### 12. 🟢 ORDER-530 CLOSES — all five reads came back, three faults fixed by the user the same day (2026-07-28 16:37–16:40)
+
+| # | item | result |
+|---|---|---|
+| 1 | **`992017`** | ✅ **real `PivotBreakout_XAU` attached on XAUUSDm,H1.** Inputs match `PivotBreakout_XAU_deploy.set` on **15 of 15 keys** (`_00_OptimizeMode` false · `_01_AtrPeriod` 14 · `_02_SlAtrMult` 1.5 · `_02_TpRR` **3.0** · `_03_StartGmt` 0 · `_03_EndGmt` 24 · `_03_ServerGmtOffset` 3 · `_04_BuyOk`/`_04_SellOk` true · `_04_LotSize` 0.01 · `_05_DailyLossPct` 5.0 · `_05_EmergencyDdPct` 25.0 · `_06_Magic` 992017 · `_06_Deviation` 20 · `_06_AllowLive` true) ⇒ genuinely loaded, not hand-typed |
+| 2 | ORDER-521 chart | ✅ **gone — swapped in place.** Navigator went 19 → 20 charts while `Boss_16` was added, and `EA_BREAKOUT_XAU (XAUUSDm,H1)` is no longer listed ⇒ the offending chart became the PivotBreakout chart. **No duplicate `992017`** |
+| 3 | **IchiADX `990067`** | ✅ **re-pinned 990068 → 990067** by the user, who confirmed the cause was loading the wrong preset — the mechanism reconstructed in §11b, confirmed by the person who did it |
+| 4 | **`990016`** | ✅ **re-attached**, `Boss_16_KangarooGrid 2.00` XAUUSDm,H1, `_0_Magic` = **990016** (not `990001`, not the `_scaled_demo` `990018`) |
+| 5 | **`990026`** | ✅ `_06_Magic` 990026 · `_06_AllowLive` true |
+
+**Clocks re-based** (both demo, both losing nothing — each leg closed zero trades in the discarded span):
+`992017` start `2026-07-24 → 2026-07-28`, judge `2026-10-24 → 2026-12-17` (**not** +3mo: at 6.42
+trades/month a 3-month judge sees ~19 trades and cannot clear a 30-trade bar — the documented
+`DEMO_DEPLOYMENT_PLAN` formula `start + (30 / rate_per_week) × 7` gives 142 days; the same treatment
+seven other EAs already carry) · `990016` start `2026-07-26 → 2026-07-28`, judge `2027-01-11 →
+2027-01-13`, preserving that row's own pre-registered "attach + 5.5 months" rule rather than swapping
+methods mid-row. **Both are lab conventions on demo rows, not measurements — the user can override.**
+
+**🎁 Free ORDER-510 evidence, from `990016`'s Inputs:** it started with `RC_PersistHalt=true` **and**
+`RC_AdoptLegacyHalt=false`. Per `RiskControl.mqh:137-156` that combination fail-closes `OnInit` if any
+legacy magic-only `Boss_990016_*` key exists. It started ⇒ **no legacy key for that magic on 463666728**,
+consistent with the four `rc_peak_eq` deletions, and the first time the gate has been observed *not*
+firing on a clean account. It says nothing about the other four accounts — ORDER-510 stays `OPEN`.
+
+### 13. 🔴 §9 WAS WRONG — `(Boss)_MacroGate (EURUSDm,H1)` is not unregistered
+
+**User correction, and it is correct:** the MacroGate chart is the **watchdog for `990120`**, not a
+deployment of its own. `DEPLOYMENTS.csv` row 55 already documents it inside the `990120` row —
+*"MacroGate demo carry-leg ORDER-073 P3 (**watchdog InpMagicsCsv=990120** stale=200 manual-CSV-refresh
+weekly)"* — so the magic it gates is named, its config is recorded, and it places no orders (the deals
+export confirms: no deal under any magic but the registered ones).
+
+**Where I went wrong:** §9 asked "is there a `DEPLOYMENTS.csv` **row** for this chart" when the question
+that mattered was "is this chart **accounted for**". A non-trading utility attached to serve another
+row is documented *in that row*, which is the right place for it — the same is true of
+`AccountSnapshotExporter (GBPJPYm,H1)`, which §9 never flagged because it happens to look like
+infrastructure while `(Boss)_MacroGate` looks like an EA. **A row-shaped test applied to something that
+is not a deployment.** No fix owed; §9 is withdrawn.
+
+<sub>Its chart sits on `EURUSDm,H1` while the leg it gates trades `USDJPYm` — irrelevant for a utility
+that reads a CSV and writes GVs rather than trading its own symbol.</sub>
+
+### 14. Status
+
+**`REVIEWED`.** All five reads answered, three faults found and fixed by the user the same day, clocks
+re-based, one claim of my own withdrawn. `ORDER-510` remains `OPEN` on its own terms (legacy-GV sweep of
+the four other accounts, three of them `REAL_CENT`) — it is the only thing left from either handoff.
