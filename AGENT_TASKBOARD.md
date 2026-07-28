@@ -1,4 +1,4 @@
-# AGENT_TASKBOARD — คิวงานกลางของทุก agent
+﻿# AGENT_TASKBOARD — คิวงานกลางของทุก agent
 
 > ⚠️ canonical entry = PROJECT_STATE.md · ไฟล์นี้ owns: **คิวงาน + ผลดิบระหว่างรอ review เท่านั้น** ·
 > กติกาเต็ม → `AGENTS.md` (อ่านก่อน claim) · verdict สุดท้ายไม่อยู่ที่นี่ — อยู่ที่ EA_SCORECARD/PROJECT_STATE
@@ -93,7 +93,38 @@
 > (เจอตอน verify ว่า Boss_16 ที่ attach ไปแล้วเป็นของสดหรือไม่) · 371 = ผลข้างเคียงที่เจอตอนถูกบีบให้ย้ายเลน ·
 > 372 = ขาที่ ORDER-222 เขียนไว้เองว่ายังขาด · 373 = สองคำถามเงินจริงที่**เหลือให้ user เคาะเท่านั้น**
 
-## ORDER-354 — [🔴 tooling/integrity] แก้ ORDER-351 แล้วกรงยัง**ไม่กลับมา** — สถานะถูกอ่านจากทั้งเซลล์ — `REVIEWED(Claude, 2026-07-27 14:40)` · ทำได้: Claude · 👉 แนะ: Claude
+## ORDER-355 — [🔴 ops/data] `D:\Meta 5` รัน **Model 4 บน BTCUSD ไม่ได้เลย** — tick ถูกทิ้งทั้งหมด 0 บาร์ — `OPEN` · ทำได้: user (ลบ+โหลด history ใหม่) + Claude (verify) · 👉 แนะ: user
+**เจอจาก:** ORDER-353 ต้องผ่านด่าน Model 4 (ladder ลึก 7 ชั้น = ของที่ไวต่อ fill ที่สุดเท่าที่เคยทำ)
+รัน M4 บน MAIN แล้วได้ **0 ไม้ทั้งสอง config** (ทั้งตัวที่จะทดสอบและ baseline control)
+**หลักฐานจาก log ของรันตัวเอง** (`...9CA16B83\Tester\logs\20260728.log` 10:47:02 = ตรงกับ mtime ของรายงาน
+10:47:03 · `origin.txt` ยืนยันว่า `9CA16B83` = **`D:\Meta 5`**):
+```
+BTCUSD : 2024.07.05 23:59 - real ticks discarded for 1438 minutes out of 1440
+BTCUSD : 2024.07.05 23:59 - 214709 tick prices mismatch for 1438 minute bars
+BTCUSD,H4: 0 ticks, 0 bars generated
+```
+**อ่านว่า:** tick **มีอยู่** (`ticks synchronized 2020.01.02 → 2026.06.30`) แต่ **ราคาไม่ตรงกับแท่ง M1**
+⇒ tester ทิ้ง tick ทั้งหมดแล้วสร้างได้ 0 บาร์ · **ไม่ใช่ "ไม่มีข้อมูล" แต่เป็น "ข้อมูลสองชั้นขัดกันเอง"**
+**ต่างจาก ORDER-371 ที่ปิดไปแล้ว:** ใบนั้นสรุปว่า *`Meta 5b` เพี้ยนจาก terminal หลัก* ⇒ กฎห้ามเทียบข้าม install
+**แต่ใบนี้คือ terminal หลักเองใช้ M4 กับ BTCUSD ไม่ได้** ⇒ กฎ "ห้ามเทียบข้าม install" ไม่ช่วยอะไรเลย
+เพราะไม่มี install ไหนที่ใช้ได้ · memory `crypto lane` ที่จดว่า `D:\Meta 5` มี tick BTC ครบ 2020+
+**ถูกเฉพาะเรื่องช่วงเวลา ไม่ถูกเรื่องใช้งานได้**
+**ผลกระทบ:** BTC candidate ทุกตัวที่ต้องผ่าน M4 **ถูกบล็อกหมด** — รวม ORDER-353 ที่กำลังทำอยู่
+**ห้าม:** อ่าน "0 ไม้" ว่า M4 ทำให้กลยุทธ์ตาย (จะเป็นการฆ่า config ที่ยังไม่เคยถูกทดสอบ)
+· ห้ามข้ามด่าน M4 แล้วเดินต่อไป MC/holdout (จะเป็นการสร้างของบน fill ที่ยังไม่ยืนยัน)
+**acceptance:** ลบ history+ticks ของ BTCUSD แล้วโหลดใหม่ ⇒ รัน M4 ซ้ำได้ **ไม้ > 0** และ log ไม่มี
+`ticks discarded` เป็นก้อน ⇒ verify ด้วย baseline control ก่อน แล้วค่อยวัด config จริง
+
+## ORDER-353 — [campaign] optimize pyramid depth + ER regime gate บน BTC H4 — `BLOCKED(Claude, 2026-07-28 10:50) — ติดด่าน M4 ที่ ORDER-355` · ทำได้: Claude · 👉 แนะ: Claude
+**ที่มา:** user สั่ง — "ตรงนี้ทั้งหมดสามารถ optimize ได้ วางแผน optimize แล้ววางแผนทำเลย · DD ที่เพิ่มขึ้นผมรับได้
+· BWD ไม่ดีผมก็ว่าส่วนนึง strategy นี้จะเปิดตอน crypto กลับมาเป็น trend"
+**bars (pre-register ก่อนรัน):** MAIN ≥1.2 · BWD ≥1.0 · plateau ไม่ใช่ spike · **gate ต้องพิสูจน์ว่าติดจริง
+(นับไม้ที่ถูกตัด + base control) — ตัด 0 ไม้ = `UNTESTED` ห้ามเขียนว่าผ่าน** · DD **ไม่ใช้เป็นเกณฑ์ตัด** (user สั่ง)
+**ผลถึงตอนนี้ (Model 1 เท่านั้น — ยังไม่ผ่าน M4):** `AddAtAtr=1.0 · MaxAdds=7 · UseER=true · ErMin=0.25`
+⇒ MAIN PF 4.02 / net 2,106 (host เดิม 2.33 / 675) · BWD PF 2.17 / DD 4.40% (gate ปิด = 8.39%)
+**ยังไม่ปิด — ค้างที่ M4 (ORDER-355) · ยังไม่รัน MC · ยังไม่ยิง holdout 2026H1**
+
+## ORDER-354 — [🔴 tooling/integrity] แก้ ORDER-351 แล้วกรงยัง**ไม่กลับมา** — สถานะถูกอ่านจากทั้งเซลล์ — `REVIEWED(Claude, 2026-07-28 10:36)` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (tooling) · **ต่อจาก ORDER-351 — บั๊กคนละตัว ตระกูลเดียวกัน**
 **เจอได้ยังไง:** หลังแก้ ORDER-351 ผมเปิดเลนตัวเองกลับเป็น ACTIVE แล้ว hook ยังพิมพ์
 `no ACTIVE lane (19 row(s) parsed)` ⇒ **อ่านได้ 19 แถวแล้ว แต่ยังไม่เห็นเลนที่ ACTIVE อยู่**
@@ -111,7 +142,7 @@
 ครั้งแรกปิดทั้งตาราง ครั้งที่สองปิดทีละแถว · **เจอ parser ที่อ่านไฟล์ที่มนุษย์แก้มือ ให้ถามเสมอว่า
 "ถ้ามีคนเขียนคำอธิบายเพิ่ม มันจะพังเงียบไหม"** และให้ดึง token ที่ต้องการ อย่าเทียบทั้งช่อง
 
-## ORDER-352 — [lever] pyramid MM ลึกขึ้น (3 ATR × 5 ชั้น) บน BTC H4 — `REVIEWED(Claude, 2026-07-27 14:20)` · ทำได้: Claude · 👉 แนะ: Claude
+## ORDER-352 — [lever] pyramid MM ลึกขึ้น (3 ATR × 5 ชั้น) บน BTC H4 — `REVIEWED(Claude, 2026-07-28 10:31)` · ทำได้: Claude · 👉 แนะ: Claude
 **ที่มา:** user สั่งตรง — "แต่ละ mode ใส่ MM เพิ่มไม้แบบ linear lot ระยะ 3 ATR มากสุด 5 ครั้ง"
 **bars:** ต้องดีขึ้น **ทั้ง MAIN และ BWD** เทียบ baseline ในเลนเดียวกัน (มาตรฐาน lever ของแล็บ)
 **แปลงเป็นพารามิเตอร์:** `_07_AddAtAtr` 1.0→3.0 · `_07_MaxAdds` 1→5 (ทั้งคู่แก้ที่ `.set` ไม่ต้องคอมไพล์)
@@ -143,7 +174,7 @@
 <sub>⚠️ ข้อจำกัดที่ต้องพูดให้ครบ: baseline BWD 4.29 เองก็ไม่ใช่ out-of-sample แท้ ถ้า host `pyr1` เคยถูกเลือกบน MAIN
 มาก่อน — ข้อนี้มีอยู่ก่อน order นี้และ order นี้ไม่ได้ทำให้แย่ลง แต่ห้ามอ้าง 4.29 เป็นหลักฐาน out-of-sample</sub>
 
-## ORDER-351 — [🔴 tooling/integrity] คอมเมนต์ HTML ใน ledger ปิดกรงกันชนเลนทั้งระบบเงียบๆ — `REVIEWED(Claude, 2026-07-27 12:10)` · ทำได้: Claude · 👉 แนะ: Claude
+## ORDER-351 — [🔴 tooling/integrity] คอมเมนต์ HTML ใน ledger ปิดกรงกันชนเลนทั้งระบบเงียบๆ — `REVIEWED(Claude, 2026-07-27 10:32)` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (tooling) · **flat-lot probe:** N-A
 **อาการ:** `check_order_collision.ps1` พิมพ์ `NOTE: no ACTIVE lane ... (0 row(s) parsed) -- reserved-block
 and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACTIVE อยู่จริง** ⇒ กฎกันเลขซ้ำ/กันเขียนทับไฟล์ของ
@@ -160,7 +191,7 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 ตารางถูกตัดด้วย prose + มี ACTIVE → **BLOCK exit 1** · ทุกเลน CLOSED จริง → NOTE exit 0 (ไม่มี false positive)
 **ห้าม:** แก้ด้วยการย้ายคอมเมนต์อย่างเดียวแล้วถือว่าจบ (อาการหาย เหตุยังอยู่ คนถัดไปโดนซ้ำ)
 
-**➕ addendum (2026-07-27 14:20) — บั๊กนี้อธิบายเหตุการณ์ที่เลนอื่นบันทึกไว้ผิดสาเหตุ:**
+**➕ addendum (2026-07-28 10:31) — บั๊กนี้อธิบายเหตุการณ์ที่เลนอื่นบันทึกไว้ผิดสาเหตุ:**
 เลน `S-2026-07-28-QUEUERUN` บันทึกใน ledger ว่ากรงถูกปิดไป ~2 ชม. (09:20-10:35) และวินิจฉัยว่าเป็นเพราะ
 **เขา mark แถวตัวเองเป็น `CLOSED` ทั้งที่ยังทำงานต่อ** ⇒ สรุปยาว่า *"ถ้าจะทำงานต่อหลังเขียน handoff
 ต้องพลิกแถวกลับเป็น ACTIVE ก่อนแตะไฟล์"*
@@ -247,7 +278,33 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 
 <sub>บริบทที่ทำให้ใบนี้คุ้มเปิด: ORDER-420 เพิ่ง wire fast-cage 4 ชุดเข้า pre-commit โดยตั้งอยู่บนสมมติฐานว่า **exit code ของ runner แปลว่าอะไรบางอย่าง** · ชุด 105 ไม่ได้อยู่ใน fast tier (มันกิน 521 วินาที) แต่ถ้าวันหนึ่งมันถูกเสียบเข้า CI/hook โดยที่มันแดงเฉพาะตอนเครื่องยุ่ง มันจะแดงตอนที่คนกำลังรีบที่สุดพอดี</sub>
 
-## ORDER-410 — [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เทียบ) · 👉 แนะ: user
+## ORDER-410 — [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง — `STEP 1 DONE + REVIEWED(Claude/Opus 2026-07-28) — inventory 4,901 ไฟล์กลับมาแล้ว · VPS ตรงกับ bundle 19/20 · ของจริงที่เจอใหญ่กว่าที่ถาม → ORDER-510` · ทำได้: user (อ่าน VPS) + Claude (เทียบ) · 👉 แนะ: user
+
+### ✅ STEP 1 ปิด 2026-07-28 — user รัน inventory บน VPS, ผมเทียบ hash ต่อ hash
+
+**ดิบ:** `vps_ex5_inventory.csv` **4,901 แถว** (path · name · size · last-write · SHA256) จาก 11 terminal
+(MT5 5 ตัว · MT4 6 ตัว) · read-only ทั้งหมด **ไม่มีการ rebuild / copy / เขียนทับ `.ex5` ใดๆ บน VPS**
+
+**ผลหลัก — ตรงข้ามกับที่ใบนี้กลัวไว้: ไบนารีของแล็บ 20 ตัว ตรงกับ bundle ฝั่ง dev แบบ byte-for-byte 19 ตัว**
+
+`TrendRider_XAU` ที่ scan รอบแรกอ่านว่า *"ไม่มีบน VPS"* — **มีจริง อยู่ใต้ชื่อเดิม**
+`(TRND)_TrendRider_XAU_rev01.ex5` และ hash ตรงเป๊ะ (`60353BBE4627FE9E…`) · ตอน build bundle มีการ
+เปลี่ยนชื่อไฟล์ ⇒ **การจับคู่ด้วยชื่อไฟล์อย่างเดียวให้ false alarm — ต้องจับด้วย hash** · 992004 ปลอดภัย
+
+**ของเก่าจริงมี 2 จุด และไม่ใช่จุดที่ใบสั่งเล็งไว้:**
+1. `…\Terminal\F762D69E…\MQL5\Experts\`**`EALabTpl\`** — โฟลเดอร์ย่อยที่แช่ snapshot **2026-07-05** ไว้ 5 ไฟล์
+   (`Boss_11_GridTrend` 85,966 · `Boss_12_Breakout` 87,074 · `Boss_13_MeanRev` 87,476 ·
+   `Boss_14_GridLog` 85,064 · `EA_LabTemplate` 71,030) ขณะที่ตัวปัจจุบันวางอยู่ที่ Experts root ครบทุกตัว
+2. terminal `1A77C7F6…` — 7 ไฟล์ ลงวันที่ 07-08/07-11 ล้วน (Zeus rev01 = 50,178 B ขณะปัจจุบัน 56,206 B)
+   หน้าตาเหมือน install ที่เลิกใช้แล้ว
+
+**⚠️ สิ่งที่ inventory ตอบไม่ได้ และห้ามเดา:** ไฟล์อยู่บนดิสก์ ≠ ชาร์ตผูกกับไฟล์นั้น · จะรู้ว่าชาร์ตไหน
+ผูกกับสำเนาใด ต้องอ่านจาก Journal หรือหน้า Inputs ไม่ใช่จากรายชื่อไฟล์
+
+**🔴 ของที่ inventory เจอโดยไม่ได้ถาม → แตกเป็น `ORDER-510`:** ไบนารีตระกูล Boss ที่รันอยู่บน VPS
+(Boss_14 = 07-16 · Boss_17 = 07-17 · Boss_12 = 07-18) **เก่ากว่าวันที่ persist scoping ลงเรโป (07-19)
+ทุกตัว** ⇒ งาน hardening ของ ORDER-132/138 ยังไม่เคยขึ้นชาร์ตจริง · ยืนยันอิสระด้วย Global Variables
+ที่ user เปิดให้ดู (ดูใบ 510)
 **bars:** N-A (งานวัด) · **flat-lot probe:** N-A
 **ที่มา:** ORDER-370 เปิดตา `_vps_deploy` แล้วเจอ **13 ใน 23 bundle เก่ากว่า source ที่ถูกแก้จริง** (ไม่ใช่ checkout artifact
 — ตรวจ `git log` แล้ว). แต่ `_vps_deploy` คือ**จุดพักก่อนอัป** ไม่ใช่ชาร์ต ⇒ **ข้อมูลที่ขาดหายคือฝั่ง VPS**
@@ -262,7 +319,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 **ห้าม:** rebuild/อัปทับอะไรบน VPS ก่อนจบ STEP 3 · เดาว่าชาร์ตรัน build ไหนจากวันที่ commit · ประกาศเป็นเหตุการณ์
 ก่อนมีเลขจากฝั่ง VPS (ORDER-222/230 เคยจ่ายค่าบทเรียนนี้มาแล้ว: `NOT FOUND` ≠ ใบอนุญาตให้สมมติว่าใหญ่)
 
-## ORDER-371 — [ops/integrity] tick history ของ `Meta 5b` เพี้ยนจาก terminal หลัก — `OPEN` · ทำได้: user (โหลด history) + Claude (verify) · 👉 แนะ: user
+## ORDER-371 — [ops/integrity] tick history ของ `Meta 5b` เพี้ยนจาก terminal หลัก — `REVIEWED(Claude/Opus 2026-07-28) — user ratify: ห้ามเทียบข้าม install ถาวร (ไม่ sync) · เขียนลง AGENTS.md §3 เป็นกฎเหล็กแล้ว (aa2cb4f6)` · ทำได้: user (โหลด history) + Claude (verify) · 👉 แนะ: user
 **ที่มา:** ORDER-215 stage 0 (2026-07-26) — terminal หลักไม่ว่าง (เลนอื่นใช้) จึงย้ายไป `Meta 5b` แล้ว
 **reproduce รายงาน archive ไม่ได้**: MatchaGrid CHFJPY window เดียวกันเป๊ะ `2020.01.01–2023.01.01` ได้
 **PF 1.77 vs 2.08** · bars เท่ากัน 74,778 · แต่ **ticks = 61,093,205 vs 4,399,319 (ต่างกัน 14 เท่า)**
@@ -275,6 +332,22 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 (3) ถ้าเลือกทางหลัง → เขียนลง `AGENTS.md` §3 (lane params) ให้เป็นกฎ ไม่ใช่ความรู้ปากต่อปาก
 **bars:** N-A (งานวัด+ตัดสิน) · **ห้าม:** ลบ `Bases` ของ install ไหนโดยไม่ได้เช็คว่ามีเลนกำลังรันอยู่
 (ORDER-341/340/350 ใช้ทั้ง 3 install อยู่ตอนนี้)
+
+### ✅ RATIFIED (user 2026-07-28) = **ประกาศห้ามเทียบข้าม install ถาวร** (ไม่ sync `Bases`) · `aa2cb4f6`
+
+เขียนเป็นกฎเหล็กใน `AGENTS.md` §3 ข้อ 2 แล้ว — 3 ผลที่ผูกมัดทันที:
+1. A/B · fan · before/after ทุกชุด **ต้องรันจบในเลนเดียว** ตั้งแต่ต้นจนจบ
+2. **ทุกตัวเลขที่รายงานต้องระบุเลน** — ตัวเลขที่ไม่มีเลนกำกับ = ไม่ใช่หลักฐาน
+3. ผลที่ reproduce ข้าม install ไม่ได้ = **พฤติกรรมที่คาดไว้แล้ว ห้ามเขียนว่าเป็น nondeterminism**
+
+**เหตุผลที่ปฏิเสธการ sync:** copy `Bases` ใหม่แก้ได้วันเดียว แล้วมันแยกทางกันอีกตั้งแต่ tick ถัดไป ⇒
+ไม่ได้อะไรที่อยู่ทน · และปกติมี 2-3 เลนรันค้างอยู่เสมอ การไปยุ่ง `Bases` จึงเป็นทางที่**เสี่ยงกว่า**ด้วย ·
+กฎนี้ไม่มีต้นทุนและไม่มีวันเสื่อม
+
+<sub>**ข้อ (1) ของ task เดิม — ไล่วัดว่าเพี้ยนกี่ symbol — ตกไปพร้อมการเคาะนี้ โดยตั้งใจ.** ถ้ากฎคือ
+"ห้ามเทียบข้าม install ไม่ว่ากรณีใด" การรู้ว่าเพี้ยน 3 symbol หรือ 30 symbol ก็ไม่เปลี่ยนอะไรเลย —
+มันจะเปลี่ยนก็ต่อเมื่อเราตั้งใจจะอนุญาตให้เทียบได้ *บางกรณี* ซึ่งคือทางที่ถูกปฏิเสธไป **การวัดที่ไม่มีทาง
+เปลี่ยนการตัดสินใจ = การวัดที่ไม่ควรรัน** (memory `discriminating-test-must-be-able-to-discriminate`)</sub>
 
 ## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 **ที่มา:** ORDER-222 เขียนข้อจำกัดนี้ไว้เองใน §3 ของ verdict — ขา `CutLoss=100` (ไม่ตัด) มี loss cluster **ก้อนเดียว
@@ -330,9 +403,9 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 <sub>ทางเลือก (ก) คือสิ่งที่ user เลือก 2026-07-27 — ที่ระดับบัญชี ไม่ใช่ระดับ EA</sub>
 </details>
 
-## ORDER-280 — [lever] rev04 re-entry บน BTC H4 — สวีป 3 anchor — `REVIEWED(Claude, 2026-07-27 13:05)` · ทำได้: Claude · 👉 แนะ: Claude
+## ORDER-280 — [lever] rev04 re-entry บน BTC H4 — สวีป 3 anchor — `REVIEWED(Claude, 2026-07-27 12:29)` · ทำได้: Claude · 👉 แนะ: Claude
 
-**🔚 ผล + verdict (2026-07-27 13:05) — `lever ไม่รับ` · EA เดิมไม่กระทบ · 19 arm บน MAIN + last-optimize**
+**🔚 ผล + verdict (2026-07-27 12:29) — `lever ไม่รับ` · EA เดิมไม่กระทบ · 19 arm บน MAIN + last-optimize**
 เลน `D:\Meta 5` · Model 1 · host = pyr1 · `SlBufferAtr=0` · baseline ในเลนเดียวกัน = **PF 2.33 / 50 ไม้ / +675.42**
 
 | โหมด | arm ที่ดีที่สุด | ไม้ | PF | อ่านว่า |
@@ -423,7 +496,30 @@ tautology และ **ETH ต้องรื้อ** — **ผิด** บอร
 **ห้าม:** แตะ 2026H1 (ไหม้ไปแล้วสำหรับ EA ตัวนี้) · เทียบเลขข้ามเลน MT5 · ใช้ผล Model-1 เป็นหลักฐานตัดสิน ·
 รับ lever โดยไม่มี control run STEP 2 · แก้บาร์ด้านบนหลังเห็นผล
 
-## ORDER-230 — [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD — `OPEN` · ทำได้: user (อ่าน terminal) + Claude (แก้แถว) · 👉 แนะ: user
+## ORDER-230 — [🔴 เงินจริง · integrity] บัญชี 463666728: currency เป็น cent หรือ USD — `REVIEWED(Claude/Opus 2026-07-28) — คำถามนี้ถูกตอบไปแล้วตั้งแต่ 2026-07-26 ก่อนใบสั่งนี้จะถูกเขียนเสร็จ 4 ชั่วโมง · USD จริง ไม่ใช่ cent · ไม่มีอะไรต้องแก้` · ทำได้: user (อ่าน terminal) + Claude (แก้แถว) · 👉 แนะ: user
+
+### ✅ ปิด 2026-07-28 — และวิธีที่มันปิดสำคัญกว่าคำตอบ
+
+**คำตอบ: USD จริง** · `portfolio/ACCOUNTS.csv` แถว 463666728 เขียนไว้แล้วว่า
+*"RESOLVED 2026-07-26: user confirmed directly = DEMO, currency USD (not cent). The earlier 'cent'
+description was a misremember; USD stands, base_equity 100000 USD is a real dollar figure."*
+หลักฐาน = commit **`89ba5f89`** (2026-07-26 **17:17**) *"Registry: record what the live terminals actually
+show — three screenshots from the VPS settle three open questions"*
+
+**ใบสั่งนี้ถูกเขียนใน commit `74b47463` (2026-07-26 13:20)** — เก่ากว่าคำตอบ **4 ชั่วโมง** ⇒ มันไม่ใช่คำถาม
+ที่ยังไม่มีคำตอบ มันคือ**คำถามที่มีคำตอบแล้วแต่ใบไม่เคยถูกพลิก** และมันนั่งอยู่บนบอร์ดอีก 2 วัน
+
+**ยืนยันซ้ำอิสระ 2026-07-28:** user เปิด terminal 463666728 ให้ดู — `Balance: 99 907.33 USD ·
+Equity: 99 944.64 · Deposit 100 000.00` และ history มีแถว `D-trial-USD-6f81d92c04974d 90 000.00`
+(ฝากเข้า 2026-07-25) ⇒ ทั้ง currency และ `base_equity=100000` **ถูกต้องอยู่แล้วทั้งคู่** ไม่ต้องแก้
+`ACCOUNTS.csv` และไม่ต้องรัน `portfolio_risk_admission.py` ใหม่
+
+<sub>🔴 **นี่คือครั้งที่สองในสามวันที่ user เกือบถูกส่งไปทำงานที่ทำเสร็จแล้ว** — ครั้งแรกคือ ORDER-233
+(`S-2026-07-27-USERQUEUE` จับได้) ครั้งนี้คือใบนี้ ซึ่งถูกใส่ไว้ใน `_triage/USER_TASKS_2026-07-28.md`
+เป็นงานลำดับที่ 2 พร้อมเหตุผลว่า *"ทุกเลขความเสี่ยงของ ~13 EA ตั้งอยู่บนช่องนี้"*. **ทั้งสองครั้งเป็นคลาสเดียวกัน:
+คำตอบถูกบันทึกลงในไฟล์ที่ถูกต้อง (ACCOUNTS.csv / audit) แต่ไม่มีอะไรเดินย้อนกลับไปปิดแถวบนบอร์ด** ⇒
+**ก่อนจ่ายงานให้ user ต้อง grep หาคำตอบในไฟล์ปลายทางก่อนเสมอ ไม่ใช่เชื่อสถานะบนบอร์ด** —
+ญาติของ `BACKLOG-D29`: สถานะที่ไม่ใช่ by-product ของการทำงาน คือสถานะที่เน่า</sub>
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 **ปัญหา:** `portfolio/ACCOUNTS.csv` แถว 463666728 เขียน `USD` + `base_equity=100000` แต่ user อธิบายบัญชีนี้เป็น **cent**
 คำเตือนถูกเขียนฝังอยู่ในช่อง note ของแถวนั้นเองตั้งแต่ 2026-07-25 ("confirm USC vs USD before any figure that converts
@@ -444,6 +540,17 @@ to money rather than %") แล้ว **ไม่มีใครเป็นเ�
 **คำแนะนำของผม = ฉบับหลัง** (คงเป็น plumbing sensor · ห้ามนับเป็น edge · ห้าม size ตาม PF)
 **STEP 1:** user เคาะ 1 ใน 3 — (a) คงเป็น sensor advisory (b) ย้าย AUDJPY (c) ถอด
 **ห้าม:** ตัดสินแทน user · อ้างคำแนะนำฉบับแรกโดยไม่บอกว่ามันถูกหักล้างแล้ว
+
+### ✅ DECIDED (user 2026-07-28) = **(a) คงไว้เป็น sensor advisory**
+
+**สิ่งที่การเคาะนี้อนุญาต:** 990120 อยู่บน USDJPYm ต่อได้ · ท่อ regime CSV เดินต่อ · judge date 2026-10-16 คงเดิม
+**สิ่งที่มันห้ามถาวร:** ห้ามนับ MacroGate เป็น edge ในเอกสารใดๆ · ห้ามใช้ PF ของมันเป็นเหตุผลเพิ่มขนาด ·
+ห้ามอ้างว่ามันเป็น validated deploy-candidate (ORDER-211 ถอดสถานะนั้นไปแล้ว)
+
+**คำแนะนำฉบับ "ย้ายไป AUDJPY" ถือว่าตายแล้ว** — bundle sweep 2026-07-26 (`85b55fd9`) วัดแล้วว่า host
+ขาดทุนทั้งตอนเปิดและตอนปิด gate **ทั้งสอง symbol** ⇒ ไม่มี symbol ไหนแยก *"gate จับจังหวะถูก"* ออกจาก
+*"เทรดน้อยลงเลยขาดทุนน้อยลง"* ได้ · การย้ายบ้านจึงไม่ตอบคำถามที่ทำให้สถานะถูกถอนตั้งแต่แรก
+**ใครหยิบใบนี้ขึ้นมาอ่านทีหลังแล้วเจอ handoff 2026-07-25C ที่เขียนว่า "ย้าย AUDJPY" — นั่นคือฉบับที่ถูกหักล้าง**
 
 ## ORDER-233 — [🔴 เงินจริง · audit] `--resolve-single-leg-baskets`: flag ที่พลิกงบพอร์ต 73% → 38% — `OPEN` · ทำได้: Codex (audit) → user (ratify) · 👉 แนะ: Codex
 **bars:** N-A (audit) · **flat-lot probe:** N-A
@@ -495,7 +602,44 @@ ORDER-433 เขียนไว้ตรงตัวว่า *"This closes the 
 (ไม่งั้น OnInit fail by design)
 **ห้าม:** ขึ้นเงินจริงก่อนเดิน checklist ครบ · ปล่อย `RC_AdoptLegacyHalt=true` ค้างไว้
 
-## ORDER-235 — [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ — `OPEN` · ทำได้: user (ratify) + Claude (เขียนลง gate) · 👉 แนะ: user
+### 🔴 2026-07-28 — วัดของจริงแล้ว และผลกลับด้านจากที่ผมสรุปไว้ครั้งแรก
+
+user เปิด **Tools → Global Variables (F3)** บน terminal ของ VPS ให้ดู · **รอบแรกผมสรุปผิด**: ผมอ่านจอ
+ของ `159503454` ซึ่งว่างเปล่า แล้วเขียนว่า *"ไม่มีอะไรให้ migrate — checklist เป็น no-op"* · **บัญชีนั้น
+ตอบคำถามนี้ไม่ได้เลย** เพราะ EA ที่แขวนอยู่บนมัน (Zeus rev01 · Squeeze · Trendline · EA_BREAKOUT_XAU)
+ไม่มีตัวไหนใช้ระบบ persist — Zeus include `STANDALONE_RISK_BUNDLE.mqh` ไม่ใช่ `core/LabCore.mqh`
+⇒ **มันว่างเพราะมันไม่เคยเขียน ไม่ใช่เพราะมันสะอาด** (คลาสเดียวกับ memory `guard-disarmed-by-prose-reported-as-note`:
+"อ่าน input ไม่ออก" ต้องแยกจาก "ไม่มีอะไรต้องบังคับใช้")
+
+**พอเปิดสองบัญชีที่ *มี* EA ตระกูล Boss จริง ของโผล่ครบ:**
+
+| terminal | key | value | last write |
+|---|---|---|---|
+| 415573666 | `Boss_990208_rc_peak_eq` | 60027.15 | 2026.07.24 18:59 |
+| 463666728 | `Boss_990001_rc_peak_eq` | 10136.29 | 2026.07.26 17:02 |
+| 463666728 | `Boss_990120_rc_peak_eq` | 10136.29 | 2026.07.26 17:02 |
+| 463666728 | `Boss_990301_rc_peak_eq` | 10136.33 | 2026.07.26 17:02 |
+| 463666728 | `Boss_990302_rc_peak_eq` | 10136.33 | 2026.07.26 17:02 |
+
+`Boss_<magic>_<name>` = [`Persist_LegacyKey()`](ea_template/core/Persist.mqh:88) ⇒ **รูปแบบก่อน ORDER-132 เป๊ะ** ·
+รูปแบบ scoped `Boss2_<srvhash8>_<login>_<symbol>_<magic>_<name>` ([Persist.mqh:39](ea_template/core/Persist.mqh:39))
+**ไม่มีสักตัวเดียวบนทั้งสองบัญชี**
+
+**⇒ ใบนี้ไม่ใช่ no-op — มันคือกับดักที่รออยู่จริง.** [RiskControl.mqh:142](ea_template/core/RiskControl.mqh:142)
+`legacyPeak = RC_PersistHalt && Persist_HasLegacy("rc_peak_eq")` · default `RC_PersistHalt=true` +
+`RC_AdoptLegacyHalt=false` ⇒ เข้าเงื่อนไข ⇒ `return false` ⇒ **INIT_FAILED** · **วันที่ใครลากไบนารี
+ตัวปัจจุบันลงชาร์ตพวกนี้ EA 5 ตัวจะไม่ยอมสตาร์ท และหน้าตาของมันคือ "EA เงียบไปเฉยๆ"** ·
+`990208` = Boss_14 GBPJPY = ตัวที่ใบนี้กั้นไม่ให้ขึ้นเงินจริงพอดี
+
+**สถานะใหม่ของใบ:** ส่วนที่ user ต้องเดิน = **ยังไม่ถึงเวลา** · สิ่งที่ต้องมาก่อนคือเขียนขั้นตอน adopt-once
+ที่ปลอดภัยและทดสอบได้ แล้วเดินพร้อมกันทั้ง 5 magic — งานนั้นอยู่ที่ **`ORDER-510`** · ใบ 234 คงเปิดไว้
+เป็นเจ้าของ "การเดิน checklist" ซึ่งจะเริ่มได้หลัง 510 เขียนขั้นตอนเสร็จ
+
+<sub>**สิ่งที่ผมจะไม่สรุป:** peak บน 463666728 = 10,136 ขณะ equity จริง 99,944 (ฝากเข้า 90,000 เมื่อ 07-25
+แต่ค่าไม่เคยขยับ) ดูเหมือนผิด — **แต่วินิจฉัยจากซอร์สปัจจุบันไม่ได้ เพราะไบนารีที่รันอยู่ไม่ใช่ซอร์สนี้**
+ต้องอ่าน Journal ของ EA ตัวนั้น ไม่ใช่เดาจากโค้ดคนละเวอร์ชัน → ยกไปเป็นข้อ 3 ของ ORDER-510</sub>
+
+## ORDER-235 — [policy] บาร์ 30 ไม้ใช้กับ 4 EA นี้ไม่ได้ — ต้องเคาะ ไม่ใช่เลื่อนไปเรื่อยๆ — `REVIEWED(Claude/Opus 2026-07-28) — user ratify ทางเลือก (ก) · เขียนลง CLAUDE.md VERDICT GATE + DEMO_DEPLOYMENT_PLAN แล้ว (aa2cb4f6)` · ทำได้: user (ratify) + Claude (เขียนลง gate) · 👉 แนะ: user
 **bars:** N-A (ใบนี้แก้บาร์เอง) · **flat-lot probe:** N-A
 **ปัญหา:** 991001 / 991004 / 990205 / 990303 ต้องรอถึง **2028-2029** กว่าจะครบ 30 ไม้ปิด
 อีก 9 แถวถูกเลื่อน judge date ไปแล้ว แต่ 4 ตัวนี้จงใจไม่เลื่อน เพราะที่พังคือ **บาร์** ไม่ใช่ **วันที่** · 3 ทางเลือกเขียนไว้แล้วใน
@@ -503,6 +647,21 @@ ORDER-433 เขียนไว้ตรงตัวว่า *"This closes the 
 **ทำไมต้องเป็น order:** มันแก้ตัวเลขใน VERDICT GATE ⇒ ต้อง ratify ชัดแบบ precedent `rate_flag=ON_RATE` ของ ORDER-198
 **ห้าม drift เงียบ**
 **ห้าม:** เปลี่ยนบาร์เองโดยไม่มี user เคาะ · ปล่อย 4 ตัวนี้ค้างไร้เกณฑ์ตัดสินต่อไป
+
+### ✅ RATIFIED (user 2026-07-28) = **(ก) เปลี่ยนบาร์ของกลุ่ม thin** · เขียนลง gate แล้ว `aa2cb4f6`
+
+บาร์ใหม่ใช้กับ EA ที่**คาด < 0.5 ไม้ปิด/สัปดาห์** เท่านั้น และมัน **แทนที่** การนับ 30 ไม้ ไม่ใช่ยกเว้น:
+**≥ 12 เดือน live · net บวก · ไม่มี pre-registered kill ทริป · หลักฐาน backtest both-window ต้องชัดอยู่ก่อน attach**
+**ราคาที่จ่าย: lot เล็กถาวร ห้าม size-up ตาม PF** (ท่าเดียวกับ NuiIndy `engine-edge`)
+
+กระทบ 4 แถว: `991001` (**เงินจริง**) · `991004` · `990205` · `990303`
+
+**เหตุผลที่ปฏิเสธ (ข) และ (ค):** (ข) ปล่อยไป = 4 ตัวไม่มีเกณฑ์ตัดสินจนถึง 2028-2029 ซึ่งไม่ใช่บาร์
+แต่คือการไม่มีบาร์ — และหนึ่งในนั้นอยู่บนเงินจริง · (ค) ถอดออก = ทิ้งหลักฐาน both-window ที่ผ่านมาแล้ว
+ทั้งที่ปัญหาอยู่ที่เครื่องมือวัด ไม่ใช่ที่ตัว EA
+
+⚠️ **สิ่งที่บาร์นี้ไม่ได้ให้:** มันเปิดทางให้ **ตัดสิน** ได้ ไม่ได้เปิดทางให้ **เพิ่มขนาด** — เส้นห้าม size-up
+ผูกกับ `991001` แน่นที่สุดเพราะเป็นตัวเดียวในสี่ที่การเพิ่มขนาดแล้วผิดจะเจ็บด้วยเงินจริง
 
 ## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN — STEP 2 พร้อมรัน บน host = XAUUSD H1 (ORDER-430: BWD 2.29 = สูงสุด, qualified ตามบาร์ที่ pre-register)` · ทำได้: **oc-qwen/ZCode** · 👉 แนะ: oc-qwen · เดิม: `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
 **bars:** ~~pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง~~ **← ถอนแล้ว 2026-07-27: บาร์นี้วัด host ไม่ได้วัด lever (ดู STEP 1 ด้านล่าง) · บาร์ที่ใช้จริง = delta vs control ในเลนเดียวกัน** · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
@@ -1744,7 +1903,24 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 **ที่ไม่เปิดเป็นงานในชุดนี้ (มี owner/trigger แล้ว):** attestation gap 40/56 = ORDER-184 lane คุมอยู่ · Boss V2 heartbeat = CR-003 เต็มรูป/หลัง judge (deployment ใหม่ก่อน ห้าม roll fleet) · fast risk monitor อ่าน Common\Files ตรง = CR-007 (ปี 2, dependency credential-alarm ยังไม่ปิด).
 
-## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN — (2) + (3) ปิดแล้ว (Claude 2026-07-27, commit c297295d) · เหลือ (1) 463666728 รอ user`
+## ORDER-400 — [infra/monitor] ปิด floating coverage 2 terminal สุดท้าย (463666728 + 415573666) — `OPEN — (2) + (3) ปิดแล้ว (Claude 2026-07-27, c297295d) · (1) + (4) LOGIN DONE(user 2026-07-28) แต่ยังไม่ verified — เหลือ rotation 1 รอบ`
+
+### 🟡 2026-07-28 — login ทำแล้วทั้งคู่ · **แต่ยังปิดใบไม่ได้ และนี่คือความตั้งใจ**
+
+user login แบบ `/portable` ครบทั้ง **463666728** (MT5) และ **69424711** (MT4) แล้ว — เห็นจากภาพหน้าจอ:
+MT4 Navigator ขึ้น `69424711: Demo EA3` ใต้ `Exness-Trial8` · MT5 แสดง `Balance 99 907.33 USD` ปกติ
+<sub>เกร็ด: PowerShell รอบแรกล้มด้วย `The argument 'scripts\monitor_rotation.ps1' ... does not exist`
+เพราะ shell เปิดที่ `C:\WINDOWS\system32` ไม่ใช่ `D:\EA_LAB` — ไม่ใช่สคริปต์พัง แค่ต้องใช้ path เต็ม</sub>
+
+🔴 **แต่ acceptance criteria ของใบนี้เขียนไว้เองว่า "ยืนยันไม่ใช่ 'ฉันกดล็อกอินแล้ว'" และตอนนี้มันยังไม่ผ่าน:**
+ไฟล์ snapshot ล่าสุดใน `portfolio/live_deals/` ลงวันที่ **2026-07-28 07:36** และมีแค่ **4 บัญชี**
+(159503454 · 415573666 · 159475669 · 141049900) — ทั้ง 463666728 และ 69424711 **ยังไม่มีไฟล์ของวันนี้**
+ซึ่งถูกต้องตามเวลา เพราะ rotation รอบนั้นวิ่งก่อน user login · **ไม่มีไฟล์ใดใน `portfolio/` หรือ `logs/`
+ถูกเขียนหลัง 08:00 เลย** ⇒ ยังไม่มี rotation รอบไหนวิ่งหลัง login
+
+**เหลือขั้นเดียว:** rotation รอบถัดไป (หรือรันมือด้วย path เต็ม) แล้วอ่าน floating coverage ให้เห็น **5/6 → 6/6**
+**ห้ามปิดใบนี้จากการที่ login ติด** — ORDER-400 เองคือใบที่สอนว่า "EA โหลดสำเร็จ" กับ "snapshot เกิดจริง"
+เป็นคนละเรื่อง (ข้อ (2): terminal รายงาน *successfully initialized* ทั้งที่ไม่ attach expert เลยสักตัว)
 **source:** CR-P0 exporter merge (`eda4733`, 2026-07-27) พิสูจน์แล้วว่า combined DealsExporter เขียน floating ได้จริง — หลัง rotation เช้า 07-27 = **6/6 health FRESH, 4/6 floating FRESH**. เหลือ 2 terminal ที่ยัง floating BLIND ด้วยเหตุ operational คนละแบบ (ไม่ใช่ merge พัง — อีก 4 ตัวพิสูจน์แล้ว).
 **งาน 3 ข้อ:**
 - (1) **463666728** — rotation โหลด EA แล้วตายด้วย `EURUSDm symbol synchronization timeout` (~5 นาที) ถูก remove ก่อนเขียน snapshot เสถียร (เกิดซ้ำตั้งแต่ 07-21). root cause = chart symbol `EURUSDm` ไม่ sync บน demo crypto/multi-asset ตัวนี้ (position จริงเป็น BTCJPYm/XAGUSDm/XAUUSDm). **แก้: เปลี่ยน symbol ของ 463666728 ใน `scripts\monitor_rotation.ps1` (บรรทัด ~23) จาก `EURUSDm` เป็นตัวที่มันมีชัวร์ — น่าจะ `XAUUSDm` หรือ `BTCUSDm` (verify Market Watch ก่อน).** snapshot EA อ่านข้อมูลระดับบัญชี chart symbol แค่ต้อง exist+sync พอ.
@@ -2251,3 +2427,74 @@ Every character anybody wrote is still in the file, and it looks correct in an e
 **ความต่างที่สำคัญจากเคสแรก:** แถว ORDER-280 หายเพราะ **อุบัติเหตุ** (ขาดตัวขึ้นบรรทัด) ส่วนแถว ORDER-430 ผิดเพราะ **คนเขียนเข้าใจผิดตอนนั้น** ⇒ **อย่างหลังจะเกิดอีกแน่นอน ไม่ว่า tooling จะดีแค่ไหน** · ทางออกที่เป็นไปได้คือ **retraction record ที่ append ต่อท้ายได้** (เช่น คอลัมน์ `retracts` หรือแถวชนิด `CORRECTION`) — เข้ากันได้กับ append-only เต็มตัว และควรอยู่ในตัวเลือกของใบนี้
 
 **Prohibitions:** commit any change to `B1_DATASET.csv` with `--no-verify` · weaken or remove the ORDER-144 append-only rule (option B *adds* an audited path, it does not relax the default) · edit `scripts/check_precommit_staged.ps1` without a cage that is proven able to fail first (ORDER-270 / ORDER-420 doctrine) · "fix" the mixed line endings in a bulk rewrite — that rewrites every historical byte and is exactly what the guard exists to stop · treat option A as the fix and close this
+
+---
+
+## ORDER-510 — [🔴 money path · deploy trap] ฟลีตที่รันอยู่จริงเป็นไบนารีก่อน ORDER-132/138 ทั้งชุด — และการอัปเดตมันจะทำให้ EA 5 ตัวหยุดพร้อมกันแบบเงียบๆ — `OPEN` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
+**bars:** N-A (deploy procedure + ops) · **flat-lot probe:** N-A
+
+**หลักฐาน 2 ชั้นที่ชี้เรื่องเดียวกัน เก็บได้จากคนละทางในวันเดียวกัน (2026-07-28):**
+
+**ชั้นที่ 1 — ดิสก์ (จาก inventory ของ ORDER-410):** ไบนารีตระกูล Boss ที่วางอยู่บน VPS ลงวันที่
+`Boss_14_GridLog` **2026-07-16** · `Boss_17_Wave5` **2026-07-17** · `Boss_12_Breakout` **2026-07-18**
+ขณะที่ persist scoping (`Boss2_` key format) ลงเรโปวันที่ **2026-07-19** (`0dcf60e2`, ORDER-138)
+⇒ **ทั้งสามเก่ากว่าวันที่ฟีเจอร์เกิด** · `Boss_16_KangarooGrid` (07-24) เป็นตัวเดียวที่ใหม่กว่า
+
+**ชั้นที่ 2 — สถานะจริงใน terminal (F3 Global Variables, user เปิดให้ดู):** key ที่มีอยู่คือ
+`Boss_990208_rc_peak_eq` · `Boss_990001_…` · `Boss_990120_…` · `Boss_990301_…` · `Boss_990302_…`
+ซึ่งเป็น [`Persist_LegacyKey()`](ea_template/core/Persist.mqh:88) = **รูปแบบก่อน 132** และ
+**ไม่มี key รูปแบบ `Boss2_` เลยแม้แต่ตัวเดียว** ⇒ ไบนารีที่รันอยู่กำลังเขียน key แบบเก่าอยู่ทุกวัน
+
+⇒ **งาน persist/kill hardening ที่ ORDER-132 + 138 ปิดไปเมื่อ 07-19 ยังไม่เคยขึ้นชาร์ตจริงสักตัว**
+สิ่งที่ปิดคือ "โค้ดถูกต้องแล้ว" ไม่ใช่ "ของที่รันอยู่ถูกต้องแล้ว" — และไม่มีแถวไหนเคยเป็นเจ้าของช่องว่างนี้
+
+**🔴 กับดัก:** [RiskControl.mqh:142](ea_template/core/RiskControl.mqh:142) —
+`legacyPeak = RC_PersistHalt && Persist_HasLegacy("rc_peak_eq")` · ค่า default คือ `RC_PersistHalt=true`
+และ `RC_AdoptLegacyHalt=false` ⇒ `return false` ⇒ **`INIT_FAILED`** · **ลากไบนารีใหม่ลงชาร์ตพวกนี้เมื่อไร
+EA 5 ตัวจะปฏิเสธการสตาร์ททันที** โดยมีบรรทัด `[RISK] FATAL` ใน Journal เท่านั้นเป็นร่องรอย —
+บนหน้าจอมันคือ *"EA เงียบ"* ไม่ใช่ *"ระบบปฏิเสธตามที่ออกแบบ"* · **นี่คือพฤติกรรมที่ถูกต้องของ guard
+(มันกันการหยิบ state ของบัญชีอื่นมาใช้) ปัญหาคือไม่มีขั้นตอน deploy ที่รู้เรื่องนี้**
+
+**magic ที่โดน:** `990208` (**Boss_14 GBPJPY — ตัวที่รอขึ้นเงินจริง**) · `990120` · `990301` · `990302` · `990001`
+
+**STEP 1 — เขียนขั้นตอน adopt-once ที่ทดสอบได้ ก่อนแตะ VPS:** ลำดับ snapshot GV → attach ด้วย
+`RC_AdoptLegacyHalt=true` **หนึ่งครั้ง** → ยืนยัน `[PERSIST] migrated` + `Boss2_…` โผล่ → กลับเป็น `false`
+→ restart ยืนยัน state · ต้องพิสูจน์บน **demo terminal ที่สร้าง legacy key ขึ้นมาเองก่อน** ไม่ใช่ทดลองบน
+บัญชีจริง (ประตูนี้ยัง**ไม่เคยถูกเห็นยิงจริง** — `PersistMigrate_Test` มีอยู่แล้วสำหรับ tester แต่ tester
+sandbox GV ต่อ pass จึงไม่ใช่หลักฐานของพฤติกรรมบน terminal)
+**STEP 2:** เดินทั้ง 5 magic แล้วปิด ORDER-234
+**STEP 3:** ตอบคำถามค่าเพี้ยน — `Boss_990120/990001_rc_peak_eq = 10136.29` ขณะ equity จริง **99,944**
+(ฝากเข้า 90,000 เมื่อ 2026-07-25 แต่ค่าไม่ขยับ และ last-write คือ 07-26 17:02 = **หลัง**ฝาก)
+**ต้องอ่านจาก Journal ของ EA ตัวนั้น ห้ามวินิจฉัยจากซอร์สปัจจุบัน** เพราะไบนารีที่รันไม่ใช่ซอร์สนี้ ·
+ถ้าค่านั้นคือฐานที่ KillDD ใช้วัด DD จริง แปลว่าเส้น kill ของ 4 EA อยู่ผิดที่มา 3 วันแล้ว — **สมมติฐาน ไม่ใช่ข้อสรุป**
+
+**🔴 ห้ามระหว่างที่ใบนี้ยังเปิด:** copy / rebuild / เขียนทับ `Boss_*.ex5` บน VPS ไม่ว่ากรณีใด ·
+ตั้ง `RC_AdoptLegacyHalt=true` ค้างไว้ · ลบ `Boss_<magic>_*` GV ทิ้งเพื่อ "ให้มันผ่าน" (นั่นคือการทิ้ง
+สถานะ halt/kill ที่อาจยัง active อยู่) · สรุปว่า EA ตัวไหน "ทำงานถูกต้อง" จากการอ่านซอร์สปัจจุบัน
+
+---
+
+## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `OPEN` · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+**หลักฐาน:** F3 บน 463666728 (2026-07-28) แสดง `Boss_990001_rc_peak_eq = 10136.29` ·
+`990001` คือ**ค่า default ของ `_0_Magic` ในแม่พิมพ์** (เห็นใน `_triage/CODEX_ORDER129_AUDIT.md`:
+`input long _0_Magic = 990001;`) และ **ไม่มีอยู่ใน `portfolio/DEPLOYMENTS.csv` เลย**
+
+⇒ มี template EA อย่างน้อย 1 ตัวรันอยู่โดย `.set` ไม่ได้ pin magic — หรือถูก attach โดยไม่ได้โหลด `.set`
+
+**ทำไมไม่ใช่แค่เรื่อง bookkeeping:** `_0_Magic` คือสิ่งที่ `Exec_PosIsMine` / `Exec_OrdIsMine` ใช้แยกว่า
+ไม้ไหนเป็นของใคร ⇒ **ถ้ามี template EA สองตัวตกอยู่ที่ default พร้อมกัน ทั้งคู่จะมองไม้ของอีกฝ่าย
+เป็นของตัวเอง** — basket exit ของตัวหนึ่งจะปิดไม้ของอีกตัว และ kill/halt จะ reconcile ข้ามกัน
+Codex เคยเขียนสถานการณ์นี้ไว้ใน audit ORDER-129 แล้ว แต่ตอนนั้นเป็นสมมติฐาน **ตอนนี้มีของจริงบนชาร์ต**
+
+**STEP 1:** หาว่าตัวไหน — เปิดหน้า Inputs ของทุก chart บน 463666728 อ่าน `_0_Magic` (user ทำ หรือ
+อ่านจาก `.set` ที่ terminal โหลดอยู่) · **STEP 2:** เทียบกับ DEPLOYMENTS.csv ว่ามันควรเป็น magic อะไร ·
+**STEP 3:** ตรวจว่ามี template EA ตัวอื่นบนบัญชีเดียวกันที่ตกอยู่ที่ default ด้วยหรือไม่ (ถ้ามีแค่ตัวเดียว
+= bookkeeping · ถ้ามีสองตัวขึ้นไป = การแยกไม้พังอยู่ตอนนี้) · **STEP 4:** ถ้าเป็นแค่ตัวเดียว → เพิ่มแถว
+DEPLOYMENTS.csv หรือแก้ `.set` ให้ pin — **การแก้ magic ของ EA ที่มีไม้เปิดอยู่คือการทำให้มันลืมไม้เดิม
+ทั้งหมด ⇒ ต้องรอให้ flat ก่อน หรือ user เคาะ**
+
+**ห้าม:** เปลี่ยน `_0_Magic` ของ EA ที่ยังมี position เปิดโดยไม่มี user เคาะ · เดาว่าเป็น EA ตัวไหนจาก
+รายชื่อ chart โดยไม่เปิดหน้า Inputs ดูจริง (memory `stale-detector-masked-by-advisory-label`:
+ก่อน A/B ต้องเปิดหน้า Inputs ยืนยันว่า lever โผล่จริง — เหตุผลเดียวกัน)
