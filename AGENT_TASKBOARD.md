@@ -3722,3 +3722,82 @@ capture that reaches past 13:54.
 
 **Status: `OPEN`** — nothing here is marked `REVIEWED`, so **no `B1_DATASET.csv` row is owed** on this
 commit. §1 is closed by measurement and needs no reader; §2-4 wait on one log export and two reads.
+
+### 6. 🟢 MOST OF THIS ORDER IS NOW MEASURED — the VPS Experts log was already on disk (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+**The log export asked for in §4 did not need to be re-supplied.** The `Log.7z` the user handed the
+previous lane was still extracted in that session's scratchpad
+(`…\5fbb336e-…\scratchpad\o511log\Log\Mql-Logs\2026072{6,7,8}.log`, 3,747 lines, 07-26 → 07-28 13:54).
+Read it instead of asking again.
+
+<sub>🔬 **the instrument nearly lied, in the documented way.** First pass reported **0 hits in all three
+files**. The files are **UTF-16LE with BOM** (`FF FE`) and the encoding sniff tested `bytes[1] == 0`,
+which is true for UTF-16 *without* a BOM and false here (`bytes[1] = 0xFE`). Decoding as UTF-8 produced a
+confident empty answer. Re-run with a proper BOM check: 3,747 lines, 11 init lines.
+memory `prove-the-instrument-can-see-the-file` — and note the failure was in the *detector*, not the grep.</sub>
+
+**🟢 Settled from the log, no chart read needed:**
+
+| magic | log line (07-26 17:02:51 restart) | verdict |
+|---|---|---|
+| **991005** | `EA_BREAKOUT_XAU (US30m,H4)` → `init \| AllowLive=YES OptMode=off Bars=40 SL×1.5 TP×5.0 EMA200=ON` | ✅ **the brief's #1 question is answered: `AllowLive` is YES.** Its zero deals are **not** a live-gate problem |
+| **990103** | `(Boss)_RSI_MR_GridLog_rev01 (EURUSDm,H1)` → `init \| magic=990103 RSI(14) 25/75 EMAfilter=on AllowLive=YES` | ✅ **fully settled** — magic right, and `25/75` **is** §4's `_01_RsiOversold=25.0` tell (default 30) ⇒ `.set` loaded |
+| **990984** | `PairSpread_StatArb (EURUSDm,H4)` → `init \| EURUSDm/GBPUSDm Zwin=100 entry=2.5 exit=0.3 stop=3.5 magic=990984` | ✅ **fully settled** — `entry=2.5` **is** §4's `_01_EntryZ=2.5` tell (default 2.0) ⇒ `.set` loaded |
+| **990016** | `Boss_16_KangarooGrid (XAUUSDm,H1)` `[INIT]` ×2 (17:29:45, 17:31:04 = the binary swap) | attached and running; magic not printed ⇒ `_0_Magic` read still owed |
+| 991003 · ORDER-521 chart | both `EA_BREAKOUT_XAU` charts → `AllowLive=YES` | consistent with the deals; ORDER-521 still needs `_06_Magic` (**not in the format string**) |
+
+<sub>Correcting §4 of this order: it said PairSpread has no init log. It does, and it prints the `EntryZ`
+tell and the magic. The claim was made from a grep for `init.*Allow`, which that EA's line does not
+match — a search shaped by the answer expected rather than by what the EA prints.</sub>
+
+### 7. 🔴 `992017` PivotBreakout_XAU is very likely NOT ATTACHED — a third independent signal
+
+At **07-26 17:02:51** the terminal restarted and **eight** charts printed init lines. `PivotBreakout`
+printed nothing — not at the restart, not anywhere in 3,747 lines across three days.
+
+**This EA prints unconditionally on a live chart.** `(TRND)_PivotBreakout_XAU_rev01.mq5:82` —
+`if(!g_suppress_log) PrintFormat("PivotBreakout init magic=%d AllowLive=%s", …)` — and `:76` sets
+`g_suppress_log = _00_OptimizeMode || MQL_OPTIMIZATION`. `MQL_OPTIMIZATION` is false on a chart, and
+`_vps_deploy/PIVOTBREAKOUT_XAU/PivotBreakout_XAU_deploy.set` pins **`_00_OptimizeMode=false`**. The
+escape hatch is closed: if it were running, it would have printed.
+
+That is the **second and third independent signal** ORDER-235 requires before calling a zero-deal EA
+silent — (1) zero deals in 11 days, (2) never sighted in the Navigator list, (3) **no init line at a
+restart that caught every other chart**. `DEPLOYMENTS.csv` calls it `ACTIVE` since 2026-07-24.
+
+<sub>Same bundle also proves §3b: its `.set` carries `_06_AllowLive=true` and `_06_Magic=992017` against a
+compiled `false`, so §4's "zero differing inputs, no power" was simply wrong about this EA.</sub>
+
+**🚫 Still not proof, and the wording matters** — the log shows what was *printed*, not what was
+*attached*. It cannot be closed from here; the user has to look at the terminal. But this is no longer
+"absence in a truncated screenshot": it is absence from the terminal's own record at a moment when
+everything else announced itself.
+
+### 8. 🔬 CONTROL — why silence is uninformative for four other EAs
+
+The instrument was calibrated against EAs **known** to be attached, rather than assumed to be sensitive:
+**`990020` EA_SUPERTREND, `999094` MacdDiv_Naked and `991070` EmaStoRev all closed real deals in this
+window** — they are unquestionably attached and running — **and none of them appears anywhere in the
+log.** They print nothing at init. So for those, and for the four **IchiADX** charts (`990066-069`,
+whose source was not located in `ea_projects/`), **absence from this log is not evidence of anything.**
+
+⇒ the log is a **one-way instrument**: a line present is proof; a line missing is proof only for an EA
+whose init print has been verified in source. Applied that way here, and only that way.
+
+### 9. 🟠 New minor item: `(Boss)_MacroGate (EURUSDm,H1)` runs on this account with no inventory row
+
+17 log lines across the window. `DEPLOYMENTS.csv` has no MacroGate row for 463666728 — only
+`Boss_12_Breakout (MacroGate leg)` `990120` on `USDJPYm`, which is a different chart on a different
+symbol. This is the **watchdog** (bundle `_vps_deploy/MACROGATE/`), withdrawn to advisory-only by
+ORDER-211; it produced **no deals under any magic** in the export, so this is a bookkeeping gap, not a
+trading exposure. Give it a row or record deliberately that the watchdog is not inventoried.
+
+### 10. What is actually left — 5 reads, none of them urgent
+
+1. **`_06_Magic`** on `EA_BREAKOUT_XAU (XAUUSDm,H1)` — **ORDER-521**; no log prints it, so this one is
+   unavoidable and it is the only item with a real-money bookkeeping consequence.
+2. **`992017`** — confirm from the Navigator whether the chart exists at all (§7).
+3. **IchiADX ×4** (`990066-069`) — `TenkanPeriod`/`KijunPeriod` = **20 / 60**.
+4. **`990016`** — `_0_Magic` = **990016** (not `990001`, not the `_scaled_demo` preset's `990018`).
+5. **`990026`** STFlip — `_06_AllowLive`; attached 07-28, after this log ends at 13:54, so a newer
+   capture would settle it without opening the chart.
