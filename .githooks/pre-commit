@@ -104,7 +104,15 @@ fi
 # shape: it enumerates directories that happen to hold guarded files, so every new
 # location is a silent miss until somebody notices. Recorded rather than fixed here --
 # changing the trigger to "any file a fast suite depends on" needs its own cage.
-cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*')
+# ORDER-372: THIRD consecutive addition to need this, exactly as the note above predicted.
+# run_report_freshness_tests.ps1 guards scripts/lib/report_freshness.ps1 (covered by scripts/lib/*)
+# but its PART 5 sweep is over EVERY scripts/*.ps1 -- it exists to catch a caller reintroducing
+# "the .htm exists, so this run wrote it". Without scripts/*.ps1 on this list that sweep would only
+# run when something else happened to be staged, i.e. it would look enforced and not be. Widened
+# rather than enumerated again; the fast tier is 3.7s, which is inside the budget that makes a hook
+# survivable. The real fix named above -- deriving this list from what the suites depend on --
+# is still owed and still needs its own cage.
+cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1')
 if [ -n "$cage_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   rc=$?

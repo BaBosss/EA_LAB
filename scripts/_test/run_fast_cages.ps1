@@ -86,7 +86,15 @@ $FAST_SUITES = @(
     # it tests the rule functions directly rather than through a synthetic repo, which
     # is the whole point: ORDER-421 found the synthetic-fixture cages drift away from
     # the hooks they protect because nothing makes the fixture track the dependency list.
-    'run_b1_guard_tests.ps1'
+    'run_b1_guard_tests.ps1',
+    # ORDER-372: guards scripts/lib/report_freshness.ps1 AND sweeps every scripts/*.ps1 for two
+    # defect shapes that both produced wrong numbers silently -- a function returning a runner's
+    # console output as its result, and a caller inferring "the .htm exists, so this run wrote it".
+    # It lives here rather than in a directory of its own for the reason this file's header gives:
+    # the first version sat in scripts/tests/, which nothing ran, so it would have been enforced by
+    # a human remembering. Both of its guards are mutation-tested (plant an ungated caller -> PART 5
+    # fails naming the file; sabotage the mtime compare -> PART 4 fails).
+    'run_report_freshness_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path

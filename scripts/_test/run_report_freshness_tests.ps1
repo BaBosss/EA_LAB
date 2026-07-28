@@ -171,10 +171,14 @@ Write-Host "PART 4 - the freshness guard itself behaves" -ForegroundColor Cyan
 $fresh = Join-Path $mockDir "fresh.htm"
 $stale = Join-Path $mockDir "stale.htm"
 "x" | Set-Content $stale
-Start-Sleep -Milliseconds 1100          # ensure a measurable gap, not a same-tick tie
-$runStart = Get-Date
-Start-Sleep -Milliseconds 1100
 "x" | Set-Content $fresh
+# Stamp the timestamps explicitly rather than sleeping between writes. Sleeping cost 2.2s of the
+# 3.0s this suite took and made the assertions depend on wall-clock timing; setting mtime directly
+# is instant and states the intent - one file is an hour older than the run, the other a minute
+# newer - instead of hoping the clock cooperated.
+$runStart = Get-Date
+(Get-Item $stale).LastWriteTime = $runStart.AddHours(-1)
+(Get-Item $fresh).LastWriteTime = $runStart.AddMinutes(1)
 
 Assert "fresh report + exit 0 = accepted"        { Test-ReportIsFresh -Htm $fresh -RunStart $runStart -RunnerExit 0 -Quiet }
 Assert "STALE report + exit 0 = REFUSED"         { -not (Test-ReportIsFresh -Htm $stale -RunStart $runStart -RunnerExit 0 -Quiet) }
