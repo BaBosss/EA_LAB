@@ -96,6 +96,19 @@ explained: it trades as 990001) · `990984` (PairSpread_StatArb) · **`992017` (
 
 ## 4. The analysis the next session does NOT have to redo
 
+> 🔴 **SUPERSEDED IN PART by `ORDER-530` (`S-2026-07-28-JUDGEINTEG`, 2026-07-28). Use the board block, not
+> this table, and do not re-derive either.** The table below was used as instructed; three of its claims
+> did not survive being checked. **(1)** `990020` **is** in `DEPLOYMENTS.csv` (line 50, `EA_SUPERTREND`,
+> committed in `HEAD`) — finding 2b closes at *zero* unregistered magics, and `990020` is identified from
+> source (`ea_projects/CRYPTO_TRENDRIDER/EA_SUPERTREND.mq5:40`, comment `ST_ATR10x3` hard-coded at
+> `:218-219`). **(2)** The `ExitMode = 22` / `SLMode = 33` tells for `MACROGATE_DEMOLEG` and `BOSS16` are
+> **false positives** — `EXIT_ATR_TP` *is* `22` and `SL_ATR` *is* `33` (`Inputs.mqh:33-45,122-123`), so
+> those rows carry no information. **(3)** The 🔴 "no power" list below is **wrong**: every bundle on it
+> ships an `AllowLive=true` key while its EA compiles `AllowLive=false`, so each has a *decisive* tell —
+> including **`992017` PivotBreakout**. The generator never looked at `AllowLive`. Also: seven of the eight
+> trading legs are cleared **without any chart read**, because on a non-tester account a closed deal
+> proves `AllowLive=true`.
+
 For every deploy bundle: the inputs where the shipped `.set` differs from the EA's compiled defaults. **These are
 the only inputs whose value can tell you whether a `.set` was loaded.** Read any one of them off the Inputs tab.
 

@@ -2717,6 +2717,58 @@ sandbox GV ต่อ pass จึงไม่ใช่หลักฐานขอ
 ตั้ง `RC_AdoptLegacyHalt=true` ค้างไว้ · ลบ `Boss_<magic>_*` GV ทิ้งเพื่อ "ให้มันผ่าน" (นั่นคือการทิ้ง
 สถานะ halt/kill ที่อาจยัง active อยู่) · สรุปว่า EA ตัวไหน "ทำงานถูกต้อง" จากการอ่านซอร์สปัจจุบัน
 
+### SECOND BLOCKER — scoped (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+MAGIC511 found a **second** way the upgrade stops EAs, separate from the 5-magic item above, and left it
+un-scoped. Scoped here, from the source and the inventory — **no VPS access needed to define the check.**
+
+**The gate** (`ea_template/core/RiskControl.mqh:137-156`): `RiskControl_InitEx` returns **false** — i.e.
+`OnInit` fails and the chart never starts — when **any** legacy magic-only `Boss_<magic>_*` key exists and
+`RC_AdoptLegacyHalt=false`. Four independent triggers, not one:
+
+| trigger | condition | gated on |
+|---|---|---|
+| `legacyKill` | `rc_kill_pending > 0.5` | `RC_PersistHalt` (**default `true`**, `Inputs.mqh:484`) |
+| `legacyHalt` | `rc_halted > 0.5` | `RC_PersistHalt` |
+| **`legacyPeak`** | **`rc_peak_eq` merely EXISTS** (`Persist_HasLegacy`, no threshold) | `RC_PersistHalt` |
+| `legacyHwm` | `acct_hwm` exists | `RC_AcctDDLimitPct > 0` |
+
+**Why `legacyPeak` is the one that matters:** it fires on *existence*, not on a value. A chart that has
+simply been running normally under a pre-132 binary long enough to record a peak equity has the key — so
+this is not an exceptional state, it is close to the **default** state of the fleet. `RC_AdoptLegacyHalt`
+defaults `false` (`Inputs.mqh:497`), so the refusal is the default outcome. The failure signature is
+`[RISK] FATAL: legacy pre-132 state found (…)` and, from the outside, **"the EA went quiet"** — the same
+shape as ORDER-511's silent leg and the `AllowLive=false` trap.
+
+**Scope = every account carrying a Boss-template EA** (the `Boss_` GV prefix comes from the shared
+`Persist_*` layer, so any `ea_template/core` build writes these keys). From `DEPLOYMENTS.csv`, non-REMOVED:
+
+| account | type | template magics on it | legacy-GV status |
+|---|---|---|---|
+| **463666728** | DEMO | 990301 990302 999094 991070 990066-069 990303 990984 990120 990103 990016 990026 (14) | ✅ **cleared** — user deleted 4 stale `rc_peak_eq` on 07-28 |
+| **415573666** | DEMO | 990201-990208 · 990110 (9) | 🔴 **UNCHECKED** |
+| **141049900** | **REAL_CENT** | 1112 1113 1114 1115 | 🔴 **UNCHECKED** |
+| **159475669** | **REAL_CENT** | 990005 · 99000512 | 🔴 **UNCHECKED** |
+| **159503454** | **REAL_CENT** | 990101 | 🔴 **UNCHECKED** |
+| 69424711 | DEMO | none | n/a — no template EA, cannot hold these keys |
+
+⇒ **four accounts unchecked, and three of them are real money.** That is the inversion worth stating: the
+account already cleared is demo, and the entire remaining exposure sits on `REAL_CENT`, where a chart that
+silently refuses to start is most expensive.
+
+**The check itself is read-only and needs no binary change** — do it *before* any upgrade, per terminal:
+open **Tools → Global Variables (F3)**, list every name matching `Boss_<magic>_*` where the name carries
+**no account scoping** (post-132 keys are scoped; pre-132 are magic-only), and record the count per magic.
+An empty list for an account means the upgrade is safe *for that account*; it does **not** generalise.
+
+**🚫 Do not "fix" a hit by deleting the GV** — the standing prohibition above already covers this, and it
+applies with more force on the real-money accounts: `rc_kill_pending`/`rc_halted` may still be **active**,
+and deleting them discards a live kill state. The adopt-once sequence in STEP 1 is the route.
+<sub>Population size is **not** predictable from source: 463666728 had 14 template charts and only **4**
+legacy `rc_peak_eq` keys, so the key is written under narrower conditions than "chart ran". Must be
+measured per terminal, not inferred — and "the other accounts probably look like this one" is not a
+measurement.</sub>
+
 ---
 
 ## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `OPEN` · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
@@ -3031,6 +3083,45 @@ should read start + 12 months. Whoever takes this must also check `expectations.
 for the same staleness. **`991001` is real money ⇒ do not change its row without the user.**
 Found by ORDER-511 while sequencing a re-pin; not fixed there because it spans three other accounts.
 
+### PARTIAL FIX + a scope correction (`S-2026-07-28-JUDGEINTEG`, 2026-07-28) — 1 of 3 re-based, 2 need the user
+
+**🔴 `991004` is real money too. The framing "`991001` (real money) · `991004` · `990205`" reads as one
+real-money row and there are two.** `DEPLOYMENTS.csv` row 5 puts `991004` on account **159503454**, whose
+`type` is **`REAL_CENT`** — the *same account* as `991001` (row 4). So of the three rows still stale,
+**two are real money and only one is demo.** That is the whole difference between "mechanical cleanup"
+and "needs the user", and it was one column away from being missed.
+
+| account | type | EA | magic | start | judge on file | correct judge (start + 12mo) | action |
+|---|---|---|---|---|---|---|---|
+| 159503454 | **REAL_CENT** | EA_BREAKOUT_XAU | **991001** | 2026-07-09 | 2026-10-09 | **2027-07-09** | ⏳ **user** |
+| 159503454 | **REAL_CENT** | (BRK)_SqueezeBreakout | **991004** | 2026-07-09 | 2026-10-09 | **2027-07-09** | ⏳ **user** |
+| 415573666 | DEMO | Boss_14_GridLog size-light | 990205 | 2026-07-06 | 2026-10-09 | **2027-07-06** | ✅ **done** |
+| 463666728 | DEMO | Boss_17_Wave5 | 990303 | 2026-07-28 | — | 2027-07-28 | ✅ done (ORDER-511) |
+
+**✅ `990205` re-based** to `judge_date=2027-07-06` with the reasoning written into the row: expected
+**1.25 trades/month = 0.29/week**, under the ORDER-235 thin threshold of 0.5/week; the old bar (PF ≥ 1.40
+at ≥ 30 trades by 2026-10-09) is unreachable — 30 trades arrives **2028-06** — and has been replaced by
+≥ 12 months live + net positive + no kill tripped, paid for with permanently small lot and no size-up on
+PF. `kill_rule` (`closedDD 25%`) is untouched and applies throughout. `DEMO_DEPLOYMENT_PLAN.md` carries
+the matching date so `check_state.ps1`'s "all judge dates present in DEMO plan" invariant stays clean.
+
+**✅ the two side-checks this order asked for, both answered:**
+- **`expectations.csv` is NOT stale** — it has no `judge_date` column at all (`magic, ea_name, symbol,
+  account, basket_id, pf_expected, pf_basis, trades_per_month_expected, dd95_expected, dd95_basis,
+  source_evidence, recorded_date, notes`). It is the *input* to the thin classification, not a copy of
+  the verdict date, and its numbers are what proved the class: `991001` 1.08/mo · `991004` 1.25/mo ·
+  `990205` 1.25/mo · `990303` 1.17/mo — all under 0.5/week. Nothing to fix here.
+- **the dashboard is NOT stale either** — `scripts/control_room_snapshot.ps1` mentions `2026-10-09` in
+  **one place only, a comment describing the rollup** (`:14`, "per-judge-date rollup (2026-10-09 /
+  2026-10-16 cohorts)"). No hardcoded judge-date literal; the cohorts are generated from
+  `DEPLOYMENTS.csv`, which `check_state.ps1` independently enforces ("dashboard cohort map is generated
+  from DEPLOYMENTS.csv" · "no hardcoded cohort map literals"). Re-generating the snapshot will pick up
+  the new dates. <sub>The comment now names a cohort that will be one row lighter — cosmetic, not a
+  correctness issue, and deliberately not edited while the two real-money rows are still pending.</sub>
+
+**🟠 Remains OPEN for exactly two edits, both gated on the user** (`991001` · `991004`, both REAL_CENT
+159503454, both `2026-10-09 → 2027-07-09`). No other work is owed on this order.
+
 ### VPS LOG READ + RE-PIN LANDED 2026-07-28 — every open question from this order is now closed but one
 
 Logs supplied by the user (`Log.7z`, terminal `logs\` + Experts `Mql-Logs\`, 3744 lines, 07-26→07-28
@@ -3076,6 +3167,80 @@ the exact failure the order documents — a bundle that is correct on disk while
 row**, and the init line does not print its magic. Still no inventory row for it here. Needs its
 Inputs tab read (`_06_Magic`).
 
+### ORDER-511 RE-VERIFY — the read list is now EXHAUSTIVE, and one earlier claim is refuted (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+<sub>⚠️ **provenance note:** everything from `### VPS LOG READ + RE-PIN LANDED` down to here sits physically
+inside the `ORDER-520` block but is `ORDER-511` evidence. Left in place rather than moved — a 45-line
+cut/paste in a shared file is a worse risk than a pointer. Read it as ORDER-511.</sub>
+
+**🟢 The re-verify read list is provably COMPLETE this time — the "six not five" failure cannot repeat.**
+The lane before this one drew its list from the keys it *believed* differed. This one enumerated the
+whole file. `_vps_deploy/WAVE5_USDJPY/WAVE5_USDJPY_H1_demo_v1.set` is **168 bytes and contains exactly
+nine keys** — so "diff every key" is a finite, closed job, and here it is against
+`ea_template/core/Inputs.mqh` (`LAB_ENTRY_17`):
+
+| key in the `.set` | `.set` | compiled default | source | differs? |
+|---|---|---|---|---|
+| `ExitMode` | **23** (`EXIT_TRAIL`) | `EXIT_ATR_TP` = **22** | `Inputs.mqh:122` + enum `:33-36` | ✅ |
+| `_9_MaxLevels` | **1** | **5** | `Inputs.mqh:174` | ✅ |
+| `_23_TrailStart` | **2000** | **300** | `Inputs.mqh:348` | ✅ |
+| `_23_TrailStep` | **800** | **100** | `Inputs.mqh:349` | ✅ |
+| `_17_Wave3MinMult` | **1.618** | **0.618** | `Inputs.mqh:289` | ✅ |
+| `_0_Magic` | **990303** | **990001** | `Inputs.mqh:538` | ✅ (already proven by the GV) |
+| `_17_EntryFib` | 38.2 | 38.2 | `Inputs.mqh:290` | ✗ no information |
+| `_17_UseStructLevels` | true | true | `Inputs.mqh:292` | ✗ no information |
+| `_17_DivergTrail` | true | true | `Inputs.mqh:293` | ✗ no information |
+
+⇒ **six differing keys, and there is no seventh, because there is no tenth key.** The count MAGIC511
+arrived at was right; what was missing was the proof that the count was closed.
+
+<sub>🔬 **instrument check first, per memory `prove-the-instrument-can-see-the-file`.** The user's brief
+warned this `.set` is UTF-16LE. **It is not** — first four bytes are `69,120,105,116` = `Exit`, no BOM,
+168 bytes for 9 lines. Read as UTF-16 it yields **zero** parseable keys, which is how a wrong encoding
+assumption produces a confident empty answer. Other bundles in `_vps_deploy/` may well be UTF-16LE (that
+is what bit the first scan); this one is ASCII. Check per file, never per folder.</sub>
+
+<sub>🔬 **and the compiled defaults really are the running binary's defaults.** These are pre-132 binaries,
+so current-source defaults are an assumption, not a given (that is error #1 of the previous lane). It is
+testable here: the five values the user read off the chart on 07-28 13:29 — `990001 · 5 · 300 · 100 ·
+0.618` — equal the current-source defaults in every digit. A pre-132 binary with different defaults
+could not have produced that. Verified, not assumed.</sub>
+
+**🔴 REFUTED: "the leg opened zero trades, confirmed by the deals export."** It opened **one**. The block
+above and `DEPLOYMENTS.csv` both said zero, citing the deals export — and the deals export is the file
+that refutes it. `portfolio/live_deals/EA_LAB_deals_463666728_20260728.csv` carries two rows on magic
+`990001`: ticket `2048530663` **sell 0.01 USDJPYm @163.535, 2026.07.27 10:00**, comment `17_Wave5 L0`
+(`entry=0` = IN) → closed by ticket `2049131330` **@163.696, 12:16**, comment `[sl 163.69600]`,
+**profit −0.98** (`entry=1` = OUT). One round trip, stopped out.
+
+- **The option-A decision does not change** — one closed trade worth −0.98 on a ~100k demo, against a
+  12-month horizon, is immaterial. No re-litigation owed.
+- **The re-pin was still safe** — the leg was flat from 07-27 12:16, and the open `USDJPYm` position
+  (ticket `2292452147`) belongs to `990120`, exactly as the snapshot said.
+- **But two things do change.** "Zero" must not be re-quoted (corrected in `DEPLOYMENTS.csv` and
+  `DEMO_DEPLOYMENT_PLAN.md` in this commit), and the leg is now **confirmed to have been actively
+  trading on the un-validated config** — the looser `_17_Wave3MinMult=0.618` entry is not a
+  hypothetical any more. It fired, and it lost.
+- <sub>How it got past two independent checks: the account **snapshot** lists *open positions*, and the
+  leg was flat by then, so it agreed with "zero" for the wrong reason. Two sources agreeing is not two
+  measurements when one of them cannot see closed trades.</sub>
+
+**🟠 STILL THE ONLY THING BLOCKING `REVIEWED` — one Inputs tab, five fields.** The GV proves `_0_Magic`
+took. It does **not** prove the `.set` was *loaded*: hand-typing `990303` into one field produces the
+same GV, and leaves the other five at defaults. Read on `Boss_17_Wave5 (USDJPYm,H1)`, account
+463666728: `ExitMode` → **23 Trailing stop** · `_9_MaxLevels` → **1** · `_23_TrailStart` → **2000** ·
+`_23_TrailStep` → **800** · `_17_Wave3MinMult` → **1.618**. All five right ⇒ `REVIEWED` + B1 row. Any
+one wrong ⇒ the chart was hand-edited, not loaded, and the remaining fields must be set from the bundle.
+<sub>Free cross-check on `ExitMode` only: a **fresh** Experts capture prints it — `[INIT] Boss_%s | exit=%d …`
+(`LabCore.mqh:349`). The existing capture ends 13:54, before the 14:00 re-pin, so it cannot answer this.
+The other four inputs are not printed by any log line — the Inputs tab is unavoidable for them.</sub>
+
+**🟢 `_9_MaxLevels` 1→5 — the standing correction holds, and it is narrower than "dead axis".** Inert
+**for this config only**: `StackMode` is `STACK_SINGLE` (=90) and `RecoveryMode` is `REC_NONE`, both
+`LAB_ENTRY_17` compiled defaults (`Inputs.mqh:160`, `:127`), and `Stack.mqh:274` returns false before
+depth is consulted. It is **not** a dead input in general — it feeds `RiskControl_MaxLevels()`, which
+caps Recovery and clamps lot sizing. **Must not be written up as 5× exposure.**
+
 ## ORDER-521 — [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row, and its config matches a REAL-MONEY row — `OPEN` · runnable by: **Claude/Opus** (user reads Inputs) · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 
@@ -3098,3 +3263,188 @@ inventory row, or record the reuse explicitly the way row 22 does.
 
 **ห้าม:** เดาว่า magic คืออะไรจากคำอธิบาย `Bars40` ที่ตรงกัน — ตรงกันเพราะมันคือ compiled default
 ซึ่งหลาย instance ใช้ร่วมกันได้ · แก้แถวของ **159503454 (เงินจริง)** โดยไม่มี user เคาะ
+
+### the two cheaper instruments were tried first and BOTH come up empty (`S-2026-07-28-JUDGEINTEG`, 2026-07-28)
+
+Before asking the user for a read, the two sources already on disk were checked. Neither can answer this,
+so **STEP 1 stands exactly as written** — one Inputs tab, one field, `_06_Magic`.
+
+- **The deals export cannot discriminate.** `EA_LAB_deals_463666728_20260728.csv` over `07-16 → 07-27`
+  contains **no deal on magic `991001`** (magics present: `990001` `990020` `990120` `990301` `990302`
+  `991003` `991070` `999094` and `0`). That is consistent with *both* hypotheses at once: the chart is on
+  `991001` and simply has not traded (`991001`'s own expectation is **1.08 trades/month ⇒ 0.25/week**, so
+  11 days at that rate predicts zero — the ORDER-235 thin case, precisely the inference this lab forbids
+  reading as breakage), **or** it is on some other magic that also has not traded. No information.
+- **The Experts log cannot answer it either.** `EA_BREAKOUT_XAU` prints
+  `init | AllowLive=%s OptMode=%s Bars=%d SL×%.1f TP×%.1f EMA%d=%s` (`EA_BREAKOUT_XAU.mq5:210-211`) — the
+  format string **has no magic field**, which is exactly why the original finding says the magic is
+  unknown. Re-capturing the log will not change that; `_06_Magic` is set on the chart and only the Inputs
+  tab (or a deal, once one exists) exposes it.
+- 🟢 **What IS settled without a read: `AllowLive=YES` on this chart is measured, from its own init line.**
+  So whatever magic it carries, this instance **can** trade. An unregistered EA that is live-enabled on the
+  judge account is the reason this order is 🟠 and not a housekeeping note.
+- <sub>The risk if it *is* `991001`: nothing breaks in MT5 (magic scoping is per-account, and CSV row 22
+  already records a deliberate cross-account `991001` reuse), but a **fleet-wide rollup keyed on magic
+  alone** would blend demo deals from 463666728 into the real-money `991001` record on 159503454. That is a
+  bookkeeping hazard in the judge, not a trading hazard — which is why it needs a row, not a shutdown.</sub>
+
+---
+
+## ORDER-530 — [🔴 ops/integrity] the "was the `.set` ever loaded" sweep across account 463666728 — `OPEN` · runnable by: **Claude/Opus** (user supplies one log export + 2 reads) · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+Opened by `S-2026-07-28-JUDGEINTEG` to own item 3 of
+`_triage/HANDOFF_2026-07-28_JUDGE_ACCOUNT_INTEGRITY.md` — "ten `ACTIVE` magics produced zero deals in
+11 days" — plus the `990020` identification. The handoff's §4 tell-table was used as instructed and
+**not** recomputed. What follows is what changed when it was *checked* rather than re-derived.
+
+### 1. 🟢 CLOSED BY MEASUREMENT — `990020` is registered. There are ZERO unregistered magics on this account.
+
+The handoff's finding 2 ("**two** magics trade here with no `DEPLOYMENTS.csv` row — `990001` and
+`990020`") is **refuted for `990020`**:
+
+- `portfolio/DEPLOYMENTS.csv` line 50 — `463666728,Demo bundle 10,DEMO,MT5,VPS 66.212.22.7,`
+  **`EA_SUPERTREND,990020,XAUUSDm,ACTIVE,DD 8%,2026-10-16,2026-07-16`** — present in committed `HEAD`,
+  not something added by this lane.
+- It is also in **`portfolio/expectations.csv`** (row 40, PF 1.54 IS / DD95 3.26 MC95), in
+  **`portfolio/ATTESTATION_MAP.csv`** (row 37, confidence `high`, `463666728,990020` →
+  `_vps_deploy/EA_SUPERTREND_XAU`), in `portfolio/control_room_snapshot.json`, in `EDGE_CATALOG.md`
+  and in the `DEMO_DEPLOYMENT_PLAN.md` bundle-10 line. It was never missing from the inventory.
+
+**Identity, settled from source and needing no chart read:** the EA is **`EA_SUPERTREND`**,
+`ea_projects/CRYPTO_TRENDRIDER/EA_SUPERTREND.mq5` — `_06_Magic = 990020` at `:40`, and the order
+comment `"ST_ATR10x3"` is **hard-coded** into its two order calls at `:218-219`. The deals carry that
+exact comment on `XAUUSDm`. Magic, symbol, comment and bundle all agree on one row.
+
+**`990001` is not a second EA either** — it is the compiled default `_0_Magic` (`Inputs.mqh:538`) of the
+un-pinned `Boss_17_Wave5 USDJPYm,H1` chart, which is `ORDER-511`, now re-pinned to `990303`.
+⇒ **the "unregistered magics" finding closes at zero.** The two magics were one bookkeeping artifact and
+one row that was there all along.
+
+<sub>Worth naming the failure mode, because it is cheap to repeat: a magic that appears in a deals export
+but not in a *filtered view* of the inventory reads exactly like a magic with no row. The check that
+settles it is one `grep` of the committed CSV, and it costs less than the paragraph that speculates.</sub>
+
+### 2. 🟢 A discriminator that needs NO user read — and it clears 7 of the 8 trading legs
+
+**Every standalone EA in `ea_projects/` ships `AllowLive = false` compiled and gates order placement on
+it**, uniformly as `const bool allow = _0x_AllowLive || (bool)MQLInfoInteger(MQL_TESTER); if(!allow) return;`
+(verified across ~50 EAs; e.g. `EA_SUPERTREND.mq5:39,201` · `EA_BREAKOUT_XAU.mq5:92,288` ·
+`(EXP)_EmaStoRev.mq5:50,212` · `(EXP)_MacdDiv_Naked.mq5:22,123`). On a demo or live account
+`MQL_TESTER` is **false**, so:
+
+> **a closed deal is proof that this chart is not running compiled defaults.** No screenshot required.
+
+Two forms, and both are already in hand from `EA_LAB_deals_463666728_20260728.csv` (`07-16 → 07-27`):
+
+| magic | EA | proof it is NOT at compiled defaults | §4 tell |
+|---|---|---|---|
+| **990020** | EA_SUPERTREND XAUUSDm | traded ⇒ `_06_AllowLive=true` (default `false`) | **§4's only tell — PASSES by measurement** |
+| **991003** | EA_BREAKOUT_XAU USDJPYm | traded ⇒ `AllowLive=true`, **and** deal magic `991003` ≠ default `991001` | **both §4 tells PASS by measurement** |
+| **991070** | EmaStoRev EURUSDm | traded ⇒ `_06_AllowLive=true` | AllowLive settled; other fields unread |
+| **999094** | MacdDiv_Naked XAUUSDm | traded ⇒ `_06_AllowLive=true` | AllowLive settled; `_01_LookbackBars` unread |
+| **990301** | Boss_17_Wave5 XAUUSDm | deal magic ≠ template default `990001`; **and** its `[INIT]` logged `exit=23` = its `.set` value | **`.set` loaded — settled** |
+| **990302** | Boss_17_Wave5 XAGUSDm | same, both ways | **`.set` loaded — settled** |
+| **990120** | Boss_12_Breakout USDJPYm | deal magic ≠ `990001` | not-at-defaults settled |
+| 990001 | Boss_17_Wave5 USDJPYm | — this is the one that WAS at defaults | ORDER-511 |
+
+⇒ **the `_06_AllowLive` sweep the brief asked to start with is already 2/3 done.** `EA_BREAKOUT_XAU`
+(`991003`) and `EA_SUPERTREND` (`990020`) both **traded**, so both are live-enabled and their `.set`
+values took. Only **`991005` (US30m)** of that trio is still unknown.
+
+<sub>Scope limit, stated rather than glossed: a deal proves the chart is **not at compiled defaults**. It
+does not prove every field equals the bundle — a hand-toggled `AllowLive` looks the same. For the
+zero-deal charts below it proves nothing at all, which is the whole reason the read list is not empty.</sub>
+
+### 3. 🔴 TWO CORRECTIONS TO §4 — one removes power the table claimed, one restores power it denied
+
+**3a. `MACROGATE_DEMOLEG` and `BOSS16`'s `ExitMode`/`SLMode` tells are FALSE POSITIVES — the table is
+comparing an enum label to its own number.** §4 says read `ExitMode` = **22** and `SLMode` = **33**, and
+that reading `EXIT_ATR_TP` / `SL_ATR` means the `.set` was not loaded. But
+`Inputs.mqh:33-45` defines **`EXIT_ATR_TP = 22`** and **`SL_ATR = 33`**, and `Inputs.mqh:122-123` sets
+exactly those as the defaults — **unconditionally**, outside every `#ifdef LAB_ENTRY_*` block, so this is
+not per-build. `22` *is* `EXIT_ATR_TP`. The values are identical and the tell carries **zero information**.
+
+- `MACROGATE_DEMOLEG (990120)` — both its listed tells are void ⇒ **§4 has no power here**. Harmless in
+  the end: §2 settles it by magic anyway.
+- `BOSS16_KANGAROO_XAU (990016)` — the `ExitMode` half is void; **only `_0_Magic` retains power.**
+- <sub>Wave5's `ExitMode=23` is genuinely different (`23` = `EXIT_TRAIL` ≠ `22`), so ORDER-511's
+  six-field count is unaffected. The generator's bug is the label/number comparison, and it only bites
+  where a `.set` happens to spell out the default numerically — which is why it produced two hits and not
+  twenty.</sub>
+
+**3b. 🔴 The "NO POWER" list is WRONG — every bundle on it ships an `AllowLive=true` key, and every one of
+those EAs compiles `AllowLive=false`.** §4 declares the test powerless for `PIVOTBREAKOUT_XAU`,
+`S2_TSMOM_XAU`, `SMCSTO_EURUSD`, `SS1_LONDONORB_XAU`, `W2_S1_TRENDRIDER_XAU`, `ST03_GBPUSD`, `CB_EUR`,
+`CB_GBP` on the grounds that they show **zero** differing inputs. Reading every `.set` in `_vps_deploy/`
+with per-file encoding detection says otherwise:
+
+| bundle | `.set` carries | compiled default | source |
+|---|---|---|---|
+| **`PIVOTBREAKOUT_XAU`** | `_06_AllowLive=true` | **`false`** | `(TRND)_PivotBreakout_XAU_rev01.mq5:58` |
+| `S2_TSMOM_XAU` | `_05_AllowLive=true` | **`false`** | `(TRND)_TsMom_XAU_rev01.mq5:53` |
+| `SMCSTO_EURUSD` | `_06_AllowLive=true` | **`false`** | `(EXP)_EmaStoRev.mq5:50` |
+| `SS1_LONDONORB_XAU` | `_06_AllowLive=true` | **`false`** | `(BRK)_LondonORB_XAU_rev01.mq5:61` |
+| `W2_S1_TRENDRIDER_XAU` | `_06_AllowLive=true` | **`false`** | `(TRND)_TrendRider_XAU_rev01.mq5:60` |
+| `CB_EUR` · `CB_GBP` | `_06_AllowLive=true` | **`false`** | (their own READMEs already say to verify `AllowLive=YES` in the Experts tab) |
+| `ST03_GBPUSD` | `InpAllowLiveOrders=true` | to confirm | differently-named input — likely why the scan missed the family |
+
+⇒ §4's "no power" verdict was **an artifact of a comparison that never looked at `AllowLive`** — the very
+input the same table uses as the tell for three other bundles. §4 itself offered this as one of two
+explanations ("or the comparison failed to locate that EA's source"); that is the one that is true.
+
+**Why this matters more than the other correction:** the list's headline entry is **`992017`
+PivotBreakout_XAU — "the strongest candidate in the fleet"** — which produced **zero deals in 11 days**
+and was written off as unverifiable. It is not unverifiable. It has a **decisive** tell whose wrong value
+means *cannot place a single order*, and it is the same defect that silenced `990025` for three days
+(`_vps_deploy/CRYPTO_TRENDRIDER/ST_BTC_deploy.set` still ships `_06_AllowLive=false` — that file is the
+recorded cause, and this method finds it).
+
+<sub>🔬 encoding, per memory `prove-the-instrument-can-see-the-file`: checked **per file**, not per folder.
+36 of 38 bundle `.set` files are ASCII; exactly two are UTF-16LE-with-BOM
+(`MACROGATE/MacroGate_watchdog_asdeployed_2026-07-26.set` and
+`MACROGATE_DEMOLEG/Boss12_Breakout_USDJPY_H1_demoleg_asdeployed_2026-07-26.set`). Both mixed families
+exist in the same tree, which is exactly how a folder-wide encoding assumption produces a confident wrong
+answer in either direction.</sub>
+
+### 4. The residual read list — and the ONE export that answers most of it
+
+**🟢 Do this first: re-supply the Experts logs (`Mql-Logs\`, the same `Log.7z` shape as before).** Several
+of these EAs print magic *and* `AllowLive` at `OnInit`, so one log export replaces most of the chart-opening:
+
+| EA | init line | settles |
+|---|---|---|
+| `PivotBreakout_XAU` | `PivotBreakout init magic=%d AllowLive=%s` (`rev01:82`) | **`992017` completely — magic + AllowLive** |
+| `(Boss)_RSI_MR_GridLog` | `RSI_MR_GridLog init \| magic=%d RSI(%d) %.0f/%.0f EMAfilter=%s AllowLive=%s` (`rev01:464`) | **`990103` completely** — magic, the RSI 25/75 thresholds *and* AllowLive |
+| `(TRD)_SuperTrendFlip_rev05` | `STFlip init magic=%d AllowLive=%s` (`rev05:465`) | **`990026`** magic + AllowLive |
+| `EA_BREAKOUT_XAU` | `init \| AllowLive=%s OptMode=%s Bars=%d SL×%.1f TP×%.1f EMA%d=%s` (`:210`) | **`991005` AllowLive** + the ORDER-521 XAU chart's AllowLive (**no magic in the format string**) |
+| Boss template (`Boss_17`, `Boss_12`, `Boss_16`) | `[INIT] Boss_%s \| exit=%d sl=%d stack=%d …` (`LabCore.mqh:349`) | `ExitMode` for ORDER-511 — **but only in a capture taken AFTER the 14:00 re-pin**; the existing one ends 13:54 |
+
+The previous capture already spans a terminal restart (all `[INIT]` at **07-26 17:02**), so charts
+attached before then already have their lines in it. `990026` was attached **07-28**, so it needs a
+capture that reaches past 13:54.
+
+**Then the Inputs tab, for what no log prints — in priority order:**
+
+| # | chart (account 463666728) | read | expect | if it reads the other value |
+|---|---|---|---|---|
+| **1** | `Boss_17_Wave5 (USDJPYm,H1)` | `_9_MaxLevels` · `_23_TrailStart` · `_23_TrailStep` · `_17_Wave3MinMult` | **1 · 2000 · 800 · 1.618** | 5 · 300 · 100 · 0.618 ⇒ the re-pin was a hand edit, not a `.set` load → **ORDER-511 stays open** |
+| **2** | `EA_BREAKOUT_XAU (XAUUSDm,H1)` | `_06_Magic` | — | **ORDER-521**; if `991001`, it collides with a real-money row's magic across accounts |
+| 3 | `PairSpread_StatArb (EURUSDm)` `990984` | `_06_AllowLive` | **true** | `false` ⇒ cannot trade at all (no init log for this EA) |
+| 4 | `IchiADX (USDJPYm)` ×2 `990066` `990067` | `TenkanPeriod` · `KijunPeriod` | **20 · 60** | 9 · 26 ⇒ `.set` not loaded |
+| 5 | `IchiADX (XAUUSDm)` ×2 `990068` `990069` | `TenkanPeriod` · `KijunPeriod` | **20 · 60** | 9 · 26 |
+| 6 | `Boss_16_KangarooGrid (XAUUSDm,H1)` `990016` | `_0_Magic` | **990016** | `990001`, or **`990018`** = the `_scaled_demo` preset, which is in no inventory row |
+
+### 5. 🚫 Standing prohibitions on this order
+
+- **`deals = 0` is NOT evidence of breakage.** ORDER-235 (ratified 2026-07-28) accepts 0.2-0.3 closed
+  trades/week as normal, and 11 days at that rate predicts **zero**. Every row above needs a *second,
+  independent* signal — which is exactly what the tell is for. Writing up a zero-deal EA as silent
+  without one is the error this order exists to avoid.
+- **The bundles in §3b must not be reported as `verified` on the strength of this analysis.** What
+  changed is that a *usable tell now exists*; none of it has been read off a chart yet.
+- **`_9_MaxLevels` 1→5 is not 5× exposure** — see the ORDER-511 correction.
+- No chart edit, no `.set` load, no position closed, no `Boss_*.ex5` copied (ORDER-510 still `OPEN`).
+
+**Status: `OPEN`** — nothing here is marked `REVIEWED`, so **no `B1_DATASET.csv` row is owed** on this
+commit. §1 is closed by measurement and needs no reader; §2-4 wait on one log export and two reads.

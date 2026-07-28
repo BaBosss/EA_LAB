@@ -108,21 +108,34 @@ PF ≥ 1.40 ที่ **≥ 30 trades** ตัดสินตอนไม้ย�
 ที่อัตราไม้ของมัน กว่าจะครบ 30 ไม้ต้องรอถึงปี 2028-2029 การเลื่อนวันจึงไม่ใช่คำตอบ —
 บาร์ 30 ไม้ต่างหากที่ผิดกับ EA ที่เทรดปีละไม่กี่ครั้ง:
 
-| magic | EA | คาด/สัปดาห์ | ต้องรอถึง |
-|---|---|---|---|
-| 991001 | EA_BREAKOUT_XAU XAUUSD (**เงินจริง**) | 0.2 | 2029-05 |
-| 991004 | (BRK)_SqueezeBreakout XAUUSD | 0.3 | 2028-06 |
-| 990205 | Boss_14_GridLog size-light thin CADJPYm | 0.3 | 2028-06 |
-| 990303 | Boss_17_Wave5 USDJPYm | 0.3 | 2028-06 |
+| magic | EA | คาด/สัปดาห์ | ต้องรอถึง (บาร์ 30 ไม้เดิม) | **judge ใหม่ = start + 12 เดือน** |
+|---|---|---|---|---|
+| 991001 | EA_BREAKOUT_XAU XAUUSD (**เงินจริง** 159503454) | 0.2 | 2029-05 | ⏳ **ยังไม่แก้ — รอ user เคาะ** (ตอนนี้ยังเป็น 2026-10-09) |
+| 991004 | (BRK)_SqueezeBreakout XAUUSD (**เงินจริง** 159503454 REAL_CENT) | 0.3 | 2028-06 | ⏳ **ยังไม่แก้ — รอ user เคาะ** (ตอนนี้ยังเป็น 2026-10-09) |
+| 990205 | Boss_14_GridLog size-light thin CADJPYm (DEMO 415573666) | 0.3 | 2028-06 | ✅ **2027-07-06** (ORDER-520, แก้แล้ว 2026-07-28) |
+| 990303 | Boss_17_Wave5 USDJPYm (DEMO 463666728) | 0.3 | 2028-06 | ✅ **2027-07-28** (ORDER-511, แก้แล้ว 2026-07-28) |
+
+> 🔴 **ORDER-520 2026-07-28 — `991004` เป็นเงินจริงด้วย ไม่ใช่แค่ `991001`.** handoff ของเลน MAGIC511
+> เขียนกลุ่มนี้ว่า "`991001` (real money) · `991004` · `990205`" ซึ่งอ่านได้เหมือนว่ามีแถวเงินจริงใบเดียว
+> แต่ `991004` อยู่บนบัญชี **159503454 ซึ่ง `DEPLOYMENTS.csv` ระบุ type = `REAL_CENT`** — บัญชีเดียวกับ
+> `991001` เป๊ะ ⇒ **2 ใน 3 แถวที่เหลือเป็นเงินจริง** จึงแก้ให้ไม่ได้โดยไม่มี user เคาะ ที่แก้ไปคือ
+> `990205` (DEMO) เท่านั้น
 
 > 🔴 **990303 clock re-based 2026-07-28 → judge_date `2027-07-28` (ORDER-511 option A, user ratified).**
 > That chart had been running since 07-18 **without its `.set` ever being loaded** — unpinned on the
 > compiled default magic `990001`, with a looser entry and a much tighter trail than the config its
 > evidence came from. `start_date` moved to the re-pin date (2026-07-28) and `judge_date` is start
-> **+12 months** per the ORDER-235 thin-EA bar. **Nothing was discarded:** the leg opened **zero
-> trades** across those 10 days, confirmed by the deals export *and* the account snapshot.
-> ⚠️ **The other three thin EAs (`991001` real money · `991004` · `990205`) still carry the old +3mo
-> `judge_date` in `DEPLOYMENTS.csv` and have NOT been re-based → `ORDER-520`.**
+> **+12 months** per the ORDER-235 thin-EA bar.
+> 🔴 **CORRECTION (ORDER-530, 2026-07-28): "the leg opened zero trades, confirmed by the deals export"
+> was wrong, and the deals export is the file that refutes it.**
+> `portfolio/live_deals/EA_LAB_deals_463666728_20260728.csv` holds **two** deals on magic `990001`:
+> a sell 0.01 `USDJPYm` @163.535 on 2026.07.27 10:00 (`17_Wave5 L0`) closed on the stop @163.696 at
+> 12:16 for **−0.98**. So the re-base discarded **one closed trade worth −0.98**, not nothing. The
+> option-A decision is unchanged — one trade against a 12-month horizon is immaterial, and the leg was
+> flat from 07-27 12:16 so the re-pin was still safe — but **"zero" must not be re-quoted**, and the
+> leg is now confirmed to have been *actively trading* on the un-validated looser entry.
+> ⚠️ **`990205` re-based to `2027-07-06` (ORDER-520). `991001` and `991004` still carry the old +3mo
+> `judge_date` and are BOTH on REAL_CENT 159503454 → they need the user, see the table above.**
 
 ทางเลือกที่เสนอไว้ = (ก) ลดบาร์จำนวนไม้เฉพาะกลุ่ม thin แล้วชดเชยด้วยหลักฐาน backtest
 both-window + ขนาด lot เล็กถาวร · (ข) ตัดสินเป็น "ยังไม่พอตัดสิน" ไปเรื่อยๆ แล้วปล่อยรัน
