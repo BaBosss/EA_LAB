@@ -1748,7 +1748,7 @@ Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-Rep
 
 ---
 
-## ORDER-431 — [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never been optimized once — `OPEN` · runnable by: **oc-qwen / ZCode** · 👉 recommended: oc-qwen
+## ORDER-431 — [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never been optimized once — `REVIEWED(Claude/Opus 2026-07-28) — BUILD-ON, ceiling measured at MAIN 1.18 (SwingRadius=2); no BWD run earned` · run by: worker/Sonnet lane 5c · verdict: Claude
 **bars:** pass = MAIN PF ≥ **1.2** AND BWD PF ≥ **1.0** · dead = MAIN PF < **1.0** · middle (WATCH/build-on) = MAIN **1.0–1.2** · **flat-lot probe:** N-A (single-order EA, no escalation)
 
 **Where this comes from:** ORDER-205 (REVIEWED, `BUILD-ON`) ran MacdDiv_Naked H4 across three JPY crosses using the **XAU-tuned** `.set` and never optimized a single axis. USDJPY came back **MAIN 1.08 / BWD 1.09** at n=250/221 — unremarkable numbers that are actually the most interesting result of that order, because **it stands above 1.0 in both regimes with a large n**. Stability across regimes is worth more than a tall spike in one window (memory `supertrend-is-a-2023-2025-regime-edge`). Under the "no DEAD before optimize" rule that number closes nothing — it is the smoke test of a new home, not its ceiling.
@@ -1790,6 +1790,58 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 **Prohibitions:** write a verdict, or the words pass/dead/died · **run Model 4 on 5c** (no tick cache — the run is meaningless, not merely slow) · report Model 2 numbers · **touch the 2026 window in any way** (holdout burned) · sweep `_01_LookbackBars` (proven inert) · change any input the STEP does not name · modify anything under `_vps_deploy/` — copy out, never edit in place · quote ORDER-205's 1.08 as the control instead of re-running it · draw a conclusion about GBPJPY or EURJPY from this order · touch scorecard / `EA_MASTER_INDEX.csv` / `EDGE_CATALOG.md` / `PROJECT_STATE.md` / `VISION.md` / `B1_DATASET.csv` · touch any `.mq5`
 
 **What the lead does with the result:** if a configuration clears MAIN ≥ 1.2 with BWD ≥ 1.0 on a plateau rather than a spike, USDJPY H4 becomes a second validated home for the MacdDiv mechanism alongside XAU (999094, already DEMO-eligible) and enters the deploy funnel — with a correlation check against the XAU leg before anything is attached. If nothing clears, USDJPY stays `BUILD-ON`: the ceiling of this home will then have been measured once, which is more than is true today.
+
+---
+
+### ผลดิบ ORDER-431 (worker/Sonnet 2026-07-28) · lane `D:\Meta 5c` · Model 1 · leverage 1:100 · quality 100%/100% · 4656 bars / 4,411,907 ticks เท่ากันทุก run
+
+**STEP 0 pre-flight — เจอกับดัก 2 ตัวก่อนรัน (ข้อ 1-2) ทั้งคู่จะทำให้ผลอ่านไม่ได้ถ้าไม่แก้ · ข้อ 3-4 คือวิธียืนยันและความเสี่ยงที่ยังเหลือ:**
+1. 🔴 **ไบนารีในเลน 5c เก่ากว่า source 4 ชั่วโมง** (33,770 ไบต์ mtime 07-25 17:56 vs `.mq5` 21:57) ⇒ **ไม่มี `_08_UseMacdCross` อยู่ในไบนารีเลย** และ MT5 จะดึงค่า input ที่ไม่รู้จักจาก per-terminal cache ⇒ **แขน MACDCROSS จะได้ผลเท่ากับ BASE เป๊ะแล้วดูเหมือน null ที่สะอาด** · แก้โดย backup ตัวเก่าเป็น `.bak_20260728` แล้ว **copy** build ปัจจุบัน (36,680 ไบต์ 07-25 22:05) จาก roaming เข้ามา — **copy ไม่ compile**
+2. 🔴 **`.set` ต้นทางไม่มีบรรทัดของ gate ทั้งสองตัว** (13 บรรทัด ไม่มี `_07_UseRsiGate` ไม่มี `_08_UseMacdCross`) ⇒ **BASE ไม่ใช่ control** เพราะ gate ทั้งคู่มาจาก cache · แก้โดย pin ทั้งสองบรรทัดในทุกไฟล์ ยืนยันด้วย `Compare-Object` ว่าแต่ละคู่ต่างกันเฉพาะบรรทัดที่ตั้งใจ
+3. worker เปิดหน้า Inputs แบบ GUI ไม่ได้ จึงยืนยันจาก **tester journal** `D:\Meta 5c\Tester\logs\20260728.log` แทน ซึ่งลิสต์ input ที่ tester โหลดจริงตามชื่อ — **หลักฐานดีกว่าการดูหน้าจอด้วยซ้ำ เพราะเป็นไฟล์ที่อ้างอิงย้อนได้**
+4. ⚠️ **worker รายงานความเสี่ยงที่ยังเหลือเอง:** `_07_RsiPeriod` · `_07_RsiBuyMax` · `_07_RsiSellMin` · `_08_CrossWithinBars` **ไม่ได้ถูก pin ในใบสั่ง** — รอบนี้ได้ค่า default ของ source มาเพราะ cache ของเทอร์มินอลนี้สะอาด **ไม่ใช่เพราะถูกบังคับ** ⇒ ถ้าจะ re-run ต้อง pin ทั้งสี่ค่าก่อน
+
+| แขน | MAIN PF | ไม้ | short/long | net | DD% | flag |
+|---|---|---|---|---|---|---|
+| **BASE** (re-run control) | **1.08** | 250 | 171/79 | +37.24 | 0.80% | control |
+| RSIGATE (`_07_UseRsiGate=true`) | 0.92 | **250** | **184/66** | −29.96 | 0.71% | no lift |
+| MACDCROSS (`_08_UseMacdCross=true`) | 1.53 | **28** | 23/5 | +52.59 | 0.27% | **THIN(n=28)** — ไม่ถูกส่งต่อ |
+
+**fan `_01_SwingRadius` บน MAIN** (base = BASE ซึ่งเป็นแขนที่ PF สูงสุดที่ไม่ THIN):
+
+| SwingRadius | PF | ไม้ | net | DD% |
+|---|---|---|---|---|
+| **2** | **1.18** | 321 | +101.36 | 1.67% |
+| 3 (= BASE, `.set` byte-identical) | 1.08 | 250 | +37.24 | 0.80% |
+| 4 | 0.79 | 239 | −101.87 | 1.15% |
+| 5 | 1.04 | 194 | +16.27 | 0.69% |
+
+**ไม่มี BWD run สักครั้ง** — ไม่มีแขนหรือค่า fan ไหนผ่านประตู MAIN ≥1.2 แบบไม่ THIN ตาม TREE ที่ pre-register ไว้
+
+## VERDICT ORDER-431 (Claude/Opus 2026-07-28) — 🟨 **BUILD-ON ยืนตามเดิม · แต่ตอนนี้ "เพดานถูกวัดแล้ว" ซึ่งเมื่อวานยังไม่จริง**
+
+**ตรงบาร์ที่ pre-register:** pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = MAIN <1.0 · กลาง = 1.0–1.2
+⇒ ค่าที่ดีที่สุดคือ **SwingRadius=2 ที่ 1.18** ⇒ **ตกช่องกลาง = BUILD-ON** · **ไม่ dead** (1.18 > 1.0) และ **ไม่ pass**
+
+**🟢 สิ่งที่ใบนี้ยืนยันโดยไม่ได้ตั้งใจ และมีค่ากว่าเลข 1.18:** BASE ที่ re-run ได้ **1.08 ที่ 250 ไม้ ตรงกับ ORDER-205 ทุกหลัก** — ทั้งที่รันบน **ไบนารีคนละตัว** (ตัวใหม่มีบล็อก `[08]` เพิ่มเข้ามา) และ `.set` ที่ pin gate เพิ่ม 2 บรรทัด ⇒ **(ก)** คำอ้างของ ORDER-217 ว่าบล็อก `[08]` เป็น additive/inert เมื่อปิด **ถูกยืนยันซ้ำบน symbol ที่สอง** โดยไม่ได้ตั้งใจจะทดสอบมัน **(ข)** tester ในเลนเดียวกันให้ผลซ้ำได้เป๊ะ ⇒ **ปัญหาของ ORDER-371 เป็นเรื่องข้าม install จริงๆ ไม่ใช่ nondeterminism ทั่วไป** (คู่กับ gotcha "tester deterministic, compiler ไม่" ของเลน CUTLOSS)
+
+**🔴 RSI gate: มันไม่ได้ "กรอง" — มันไป "เลือกใหม่" และเลือกแย่กว่าเดิม.** นี่คือของที่ต้องดูให้ลึกกว่าตัวเลข PF:
+ไม้เท่ากันเป๊ะที่ **250 = 250** แต่ **องค์ประกอบเปลี่ยน 79 long → 66 long / 171 short → 184 short**
+และ **gross ทั้งสองขาหดลงพร้อมกันราว 30%** (+520.10/−482.86 → +327.83/−357.79)
+⇒ gate **ไม่ได้ลดการเข้าตลาด** มันเลื่อน/สลับไม้ที่เข้า และไม้ชุดใหม่แย่กว่าทั้งฝั่งกำไรและฝั่งขาดทุน · expected payoff 0.15 → **−0.12** · Sharpe 0.38 → **−0.73**
+**บทเรียนวิธีอ่าน: "จำนวนไม้เท่าเดิม" ไม่ใช่หลักฐานว่า filter ไม่ทำงาน** — ถ้าดูแค่คอลัมน์ไม้จะสรุปผิดว่า gate เฉื่อย ทั้งที่มันเปลี่ยนทิศทางของพอร์ตไปแล้ว 13 ไม้ **ต้องดู long/short split + gross สองขา ไม่ใช่ total อย่างเดียว**
+
+**🔴 MACD-cross gate: ทำซ้ำผลของ ORDER-217 บน symbol ที่สอง ตรงจุดที่ ORDER-217 บอกเองว่าน่าจะรอด.**
+entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"ลองกับ host ที่มีไม้เหลือเฟือ"* — USDJPY H4 ที่ **250 ไม้** คือ host แบบนั้นเป๊ะ **แล้วมันก็ยังเหลือ 28 ไม้ (11%)** ⇒ **ต้นทุนจำนวนไม้เป็นสมบัติของ gate ไม่ใช่ของ symbol** · PF 1.53 / payoff 1.88 / Sharpe 1.46 หน้าตาดีมาก **แต่ 28 ไม้ใน 3 ปี = อ่านไม่ได้** และ TREE ตัดทิ้งถูกแล้วโดยไม่ต้องเถียงกับ PF
+
+**🔴 SwingRadius = แกนที่ optimum ย้ายตาม symbol ทุกครั้งที่วัด.** XAU (ORDER-216): MAIN ชอบ 3 · BWD ชอบ 4 · USDJPY (ใบนี้): ชอบ **2** และ 3 มาที่สอง ส่วน **4 ขาดทุน (0.79)**
+⇒ ไม่มี optimum เชิงโครงสร้างของแกนนี้เลย มันคือ **symbol-fit ทุกที่ที่เคยวัด** · และ fan ของ USDJPY **ไม่ใช่ plateau** — 1.18 / 1.08 / 0.79 / 1.04 คือเส้นหยัก ไม่ใช่ที่ราบ
+
+**สิ่งที่ใบนี้ยัง *ไม่* ปิด — และห้ามเขียนว่าปิด:** cell USDJPY H4 **ยังไม่เข้าเงื่อนไข 2a** ของ VERDICT GATE (DEAD-OPTIMIZED ต้องการ ≥3 lever × ≥2 TF บนบ้านที่ถูก + last-optimize) · ใบนี้แตะ **2 lever (gate สองตัว) + 1 แกน (SwingRadius) บน TF เดียว** ⇒ **BUILD-ON แปลว่ายังไม่ตาย ไม่ได้แปลว่าดี**
+
+**ไม่ได้แตะ scorecard / `EA_MASTER_INDEX.csv` โดยตั้งใจ:** สถานะทะเบียนของ MacdDiv_Naked (XAU H4 999094 = `PARKED-VERIFY(user)`) **ไม่เปลี่ยนจากใบนี้** — ใบนี้วัดบ้านที่สอง ไม่ได้วัดบ้านที่ deploy อยู่ ⇒ ไม่มีบรรทัดไหนในสองไฟล์นั้นกลายเป็นเท็จ จึงไม่มีอะไรต้องแก้ (ถ้าแตะทั้งที่ไม่มีอะไรเปลี่ยน = สร้าง transaction ปลอมให้กฎ ORDER-144)
+
+**next ที่หลักฐานหนุน (ยังไม่เปิดใบ):** ถ้าจะเดินต่อกับบ้านนี้ ตัวที่ยังไม่เคยแตะคือ **`_03_BufferAtrMult` / `_03_AtrPeriod` / `_02_Macd*`** และ **TF ที่สอง** · แต่ถ้าจะให้เลือกอย่างเดียว: fan `_01_SwingRadius` **ลงต่ำกว่า 2** (ทิศเดียวกับที่ ORDER-340 เพิ่งสอนว่า base ที่ขอบช่วงแยก plateau กับหน้าผาไม่ออก) — 2 คือขอบล่างสุดของ fan นี้พอดี
 
 ---
 

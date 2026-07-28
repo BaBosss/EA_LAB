@@ -492,6 +492,77 @@ and a *symmetric* weakness — not where the host is already regime-split.
 Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[08]` block) · sets
 `_mt5_auto/ab_sets/order217/` · reports `_mt5_auto/reports/O217_*`.
 
+### REPLICATED on a second symbol (USDJPY H4, ORDER-431, 2026-07-28) — and it fails this entry's own advice
+
+The paragraph above closes with *"try it where the host already has trades to spare."* **USDJPY H4 is
+exactly that host — 250 trades over three years against XAU's 280 — and the gate still left 28 (11%).**
+
+| | trades | PF | expected payoff | Sharpe |
+|---|---|---|---|---|
+| BASE (`_08_UseMacdCross=false`) | 250 | 1.08 | 0.15 | 0.38 |
+| gate ON | **28** | 1.53 | 1.88 | 1.46 |
+
+So the trade-count cost is **a property of the gate, not of the host's sample size** — having trades to
+spare does not buy you a usable sample on the other side of it. The surviving 28 look excellent on every
+ratio, which is precisely the arithmetic this entry already warns about, and the pre-registered
+`THIN(n<60)` rule discarded the arm without anyone having to argue with a PF of 1.53.
+
+**Narrowing the reusable claim accordingly:** the advice "use it where the host has trades to spare"
+should be read as *necessary but nowhere near sufficient* — at ~11% retention you need a host with
+roughly **600+ trades per window** before the gated arm is even measurable. Nothing in this portfolio's
+divergence family is near that. Treat the lever as parked until such a host exists rather than as
+something waiting for the right symbol.
+
+<sub>Also confirmed here without setting out to: the `[08]` block is genuinely additive when off. The
+ORDER-431 BASE re-run used the **new** binary (with the block) and a `.set` pinning both gates false, and
+reproduced ORDER-205's USDJPY figure **1.08 at 250 trades to the digit**. ORDER-217 proved inertness on
+XAU by construction; this is an accidental second-symbol confirmation. Same run also shows the tester is
+exactly repeatable **within one lane**, which supports ORDER-371's problem being cross-install
+specifically rather than general nondeterminism.</sub>
+
+---
+
+## LEVER: RSI-extreme confirmation on a divergence entry (MacdDiv `_07_UseRsiGate`, ORDER-117 Track B / measured ORDER-431, 2026-07-28) 🟥 REJECTED on the one host where it has been measured properly
+
+**Why this entry exists at all.** The lever was built in ORDER-117 Track B and default-off, and then
+never characterised — it had no catalogue entry until now. ORDER-431 is the first run that pinned it
+explicitly and measured what it does.
+
+**The lever.** `_07_UseRsiGate` (default false) + `_07_RsiPeriod` / `_07_RsiBuyMax=45` /
+`_07_RsiSellMin=55`: take the divergence entry only if RSI(1) confirms the reversal direction
+(oversold for a long, overbought for a short).
+
+**What it actually does — and the number that makes it interesting is the one that did NOT move.**
+USDJPY H4, MAIN 2023-2025, Model 1, same lane:
+
+| | trades | long/short | gross profit | gross loss | PF | expected payoff | Sharpe |
+|---|---|---|---|---|---|---|---|
+| gate OFF | 250 | 79 / 171 | +520.10 | −482.86 | 1.08 | 0.15 | 0.38 |
+| gate ON | **250** | **66 / 184** | +327.83 | −357.79 | 0.92 | **−0.12** | **−0.73** |
+
+**The trade count is identical. Everything else moved.** Thirteen longs are gone and thirteen shorts have
+appeared, and *both* gross legs shrank by about 30%. So this filter does not reduce participation the way
+the MACD-cross gate does — **it re-selects it**, with a directional tilt away from the long side, and the
+replacement trades are worse on the winning leg and the losing leg at once. A profitable arm becomes a
+losing one with no change in how often it trades.
+
+**Reusable claim — this one is about how to read a filter, and it generalises past this EA:**
+**"trade count unchanged" is not evidence that a filter is inert.** A gate that rejects a signal on the
+bar it fires can still let the same setup in later, so the totals can land in the same place while the
+composition underneath has changed completely. Anyone reading only the trades column here would have
+recorded this gate as a no-op. **Check the long/short split and both gross legs before concluding a lever
+did nothing** — the inert-axis probe (memory `inert-axis-fake-plateau`) is about identical *results*, and
+identical *counts* are a much weaker signal that is easy to mistake for it.
+
+**Status:** not adopted. It has been measured on one symbol and one timeframe; that is enough to reject it
+there, not enough to call the mechanism dead everywhere. The residual caveat from ORDER-431 applies —
+`_07_RsiPeriod` / `RsiBuyMax` / `RsiSellMin` were **not pinned** in that order and came from source
+defaults on a clean cache, so a re-run must pin all three before its numbers can be compared to these.
+
+Source: `ea_projects/(EXP)_MacdDiv_Naked/MacdDiv_Naked.mq5` (`[07]` block, line 113) · sets
+`_mt5_auto/ab_sets/order431/` · reports `_mt5_auto/reports/O431_USDJPY_H4_MAIN_*` · raw
+`_mt5_auto/O431_RESULTS.md`.
+
 ## LEVER: Kaufman ER regime gate ported onto SuperTrendFlip (rev02, 2026-07-26) 🟩 CONFIRMED both-window (XAU H4)
 
 **Where it came from.** Cells #13/#14/#15 of ORDER-GEN-STANDING all showed the same failure shape —
