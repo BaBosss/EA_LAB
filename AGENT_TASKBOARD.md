@@ -2929,3 +2929,54 @@ holds. Re-pin stays blocked on **flat** + must land **before** the ORDER-510 ref
 
 **Order stays `OPEN` — awaiting (i) the judge-clock call (ii) the Experts log (iii) the re-pin.
 Not marked REVIEWED ⇒ no B1 row owed.**
+
+### USER DECISION 2026-07-28 — judge clock: **option A, restart at the re-pin**
+
+Applied **at the re-pin, not now** (the re-pin has not happened, so back-dating the row would make the
+inventory describe a state that does not exist). At re-pin: `start_date` = re-pin date, and
+`judge_date` = re-pin **+ 12 months** per the ORDER-235 thin-EA bar — **not** +3mo. The ~10 days of
+`990001` evidence is discarded as off-config (~0.4 trades against a 12-month horizon).
+
+### 🔴 FOUND WHILE PREPARING THE RE-PIN — this blocks ORDER-510 on FOUR legs, not one
+
+`RiskControl_InitEx` fail-closes when **any** legacy pre-132 key it would read exists without explicit
+consent: `legacyPeak = RC_PersistHalt && Persist_HasLegacy("rc_peak_eq")` →
+`if((...||legacyPeak||...) && !adoptLegacyHalt) return false` (`core/RiskControl.mqh:140-155`), and
+`RiskControl_Init()` failing returns `INIT_FAILED` (`core/LabCore.mqh:278-279`). Defaults confirmed:
+`RC_PersistHalt = true` (`Inputs.mqh:484`, and it reads `true` on the chart) ·
+`RC_AdoptLegacyHalt = false` (`:497`).
+
+F3 shows a legacy `Boss_<magic>_rc_peak_eq` for **990001 · 990120 · 990301 · 990302** ⇒ when ORDER-510
+refreshes these to the current build, **all four refuse `OnInit`** — and 990303 will join them after the
+re-pin. This is a **separate** refusal from the `_0_Magic==990001` guard already logged; fixing the magic
+does not clear it. The failure looks exactly like "the EA went quiet".
+
+**Cheapest clearance, and it is provably lossless:** delete the four `Boss_*_rc_peak_eq` GVs via F3 while
+the EAs are stopped. `RiskControl_Init` sets `g_rc_peak_equity = AccountInfoDouble(ACCOUNT_EQUITY)`
+(`:124`) and only raises it from persist via `if(p > peak)` (`:200`, `:209`) — the four stored values
+(~10,136) are **below** current equity (~99,951), so they contribute nothing and losing them changes no
+behaviour. Safe because F3 shows **only** `rc_peak_eq` keys: no `rc_halted`, `rc_kill_pending` or
+`acct_hwm`, i.e. **no active halt/kill state exists to destroy.** The documented alternative
+(`RC_AdoptLegacyHalt=true` for one attach, verify the migration journal, set back to false) also works
+but is four chart edits instead of four deletes.
+
+## ORDER-520 — [🟠 ops/integrity] the four `thin` EAs still carry +3mo judge dates that ORDER-235 replaced today — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (ops) · **flat-lot probe:** N-A
+
+ORDER-235 (ratified 2026-07-28) replaced the 30-trade count for EAs under 0.5 closed trades/week with
+**≥12 months live + net positive**, naming four: `991001` · `991004` · `990205` · `990303`. The rule
+landed in `CLAUDE.md` / `DEMO_DEPLOYMENT_PLAN.md` — **but no `DEPLOYMENTS.csv` row was re-based**, and
+the CSV is the inventory the judge is actually run from:
+
+| account | EA | magic | start | judge_date on file |
+|---|---|---|---|---|
+| 159503454 | EA_BREAKOUT_XAU | **991001 — REAL MONEY** | 2026-07-09 | 2026-10-09 |
+| 159503454 | (BRK)_SqueezeBreakout | 991004 | 2026-07-09 | 2026-10-09 |
+| 415573666 | Boss_14_GridLog size-light | 990205 | 2026-07-06 | 2026-10-09 |
+| 463666728 | Boss_17_Wave5 | 990303 | 2026-07-18 | 2026-10-16 |
+
+⇒ **three of the four come due in ~10 weeks against a bar that no longer exists.** ORDER-235's own
+reasoning says the date is not the thing to slide — the trade *count* was replaced — so these rows
+should read start + 12 months. Whoever takes this must also check `expectations.csv` and the dashboard
+for the same staleness. **`991001` is real money ⇒ do not change its row without the user.**
+Found by ORDER-511 while sequencing a re-pin; not fixed there because it spans three other accounts.
