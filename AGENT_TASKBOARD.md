@@ -3591,7 +3591,7 @@ The other four inputs are not printed by any log line — the Inputs tab is unav
 depth is consulted. It is **not** a dead input in general — it feeds `RiskControl_MaxLevels()`, which
 caps Recovery and clamps lot sizing. **Must not be written up as 5× exposure.**
 
-## ORDER-521 — [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row, and its config matches a REAL-MONEY row — `OPEN` · runnable by: **Claude/Opus** (user reads Inputs) · 👉 recommended: Claude
+## ORDER-521 — [🟠 ops/integrity] `EA_BREAKOUT_XAU (XAUUSDm,H1)` runs on 463666728 with no inventory row, and its config matches a REAL-MONEY row — `REVIEWED(Claude/Opus 2026-07-28)` — magic read = **992017**, not 991001: no real-money collision, but the wrong EA is wearing PivotBreakout's magic (escalated to ORDER-530 §11a) — was `OPEN` · runnable by: **Claude/Opus** (user reads Inputs) · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 
 Found by ORDER-511 in the VPS Experts log. On account **463666728** the chart
@@ -3878,3 +3878,95 @@ trading exposure. Give it a row or record deliberately that the watchdog is not 
 5. **`990026`** STFlip — `_06_AllowLive`; attached 07-28, after this log ends at 13:54, so a newer
    capture would settle it without opening the chart.
 
+
+### 11. 🔴🔴 THE READS CAME BACK — three rows on the judge account are not producing the evidence they claim (`S-2026-07-28-JUDGEINTEG`, 2026-07-28, user screenshots 16:22–16:25)
+
+**The Navigator tree was fully visible this time — 19 charts, untruncated** (the Indicators node sits below
+it in the screenshot, so nothing is cut off). That closes the caveat the previous lane had to leave open.
+Charts present: Wave5 ×3 (XAU/XAG/USDJPY H1) · EA_BREAKOUT_XAU ×3 (USDJPYm H4, US30m H4, **XAUUSDm H1**) ·
+MacdDiv XAU H4 · EmaStoRev EURUSD H1 · IchiADX ×4 · EA_SUPERTREND XAU H4 · AccountSnapshotExporter ·
+PairSpread EURUSD H4 · Boss_12_Breakout USDJPY H1 · **(Boss)_MacroGate EURUSD H1** · RSI_MR EURUSD H1 ·
+SuperTrendFlip BTC H4. **Absent: `PivotBreakout_XAU` and `Boss_16_KangarooGrid`.**
+
+#### 11a. 🔴 `992017` — the wrong EA is wearing the magic. ORDER-521 and the 992017 mystery are the same fault.
+
+`EA_BREAKOUT_XAU (XAUUSDm,H1)` Inputs read **`_06_Magic = 992017`** — *not* `991001`. So ORDER-521's
+real-money-collision hypothesis is **refuted** (the `Bars40` match was the compiled default, exactly as
+that order's own prohibition warned), and something worse is true instead.
+
+Every EA_BREAKOUT-specific input on that chart is at **its compiled default**: `_01_BreakoutBars` 40 ·
+`_02_SlAtrMult` 1.5 · `_02_TpAtrMult` 5.0 · `_03_AtrPeriod` 14 · `_03_AtrMaPeriod` 20 ·
+`_03_AtrExpandRatio` 1.0 · `_04_UseDailyEma` true · `_04_EmaPeriod` 200 · `_05_BuyOnly` true ·
+lot 0.01 (all match `EA_BREAKOUT_XAU.mq5:30-92`). The **only** overrides are `_06_Magic` and
+`_06_AllowLive`.
+
+That is the exact fingerprint of **loading `PIVOTBREAKOUT_XAU/PivotBreakout_XAU_deploy.set` onto an
+`EA_BREAKOUT_XAU` chart.** MT5 applies only inputs whose **names** match and silently drops the rest;
+across the two EAs the shared names are `_00_OptimizeMode` · `_02_SlAtrMult` · `_06_Magic` ·
+`_06_Deviation` · `_06_AllowLive`, and the only two where the `.set` disagrees with EA_BREAKOUT's
+defaults are **`_06_Magic` 991001→992017** and **`_06_AllowLive` false→true**. Both are exactly what the
+chart shows. **No error is raised anywhere in this sequence** — not by MT5, not by the EA, not by any
+guard we own.
+
+⇒ **since 2026-07-24 the `992017` row has been fed by a 40-bar breakout with a 5×ATR TP on XAU H1, not by
+the validated daily-pivot R1/S1 H4 TpRR-3.0 strategy.** The funnel evidence on that row (M4 MAIN 1.16 /
+BWD 1.22 / holdout 1.33 / MC ruin 0.00) describes a config that has never been on a chart on this account.
+The strongest candidate in the fleet has produced **no evidence at all**, and the four days everyone
+assumed it was accumulating were spent by a different EA.
+
+<sub>Both halves of §7's prediction land: it is not attached, and the log silence was real. What §7 did not
+anticipate is that the magic was *not idle* — it was occupied. "Zero deals under magic X" and "magic X is
+running the wrong strategy" look identical from the deals export.</sub>
+
+#### 11b. 🔴 `990067` does not exist on any chart, and `990068` is on two
+
+| chart | Tenkan/Kijun/Senkou | `MagicNo` | matching bundle | expected | |
+|---|---|---|---|---|---|
+| IchiADX `USDJPYm,H4` | 12 / 34 / 68 | **990066** | `IchiADX_USDJPY_H4_med_leg_A.set` | 990066 | ✅ |
+| IchiADX `USDJPYm,H1` | 20 / 60 / 120 | **990068** | `IchiADX_USDJPY_H1_slow_leg_B.set` | **990067** | 🔴 |
+| IchiADX `XAUUSDm,H4` | 12 / 34 / 68 | **990069** | `IchiADX_XAUUSD_H4_med.set` | 990069 | ✅ |
+| IchiADX `XAUUSDm,H1` | 20 / 60 / 120 | **990068** | `IchiADX_XAUUSD_H1_slow.set` | 990068 | ✅ |
+
+**Mechanism:** the two *slow* bundles are **identical in every key except `MagicNo`** — both
+`20/60/120`, `AdxPeriod=14`, `AdxMin=20.0`, `ExitMode=2`, `FixedLot=0.10`. Loading the **XAU** slow `.set`
+onto the **USDJPY H1** chart therefore changes nothing observable except the magic. That is what happened.
+
+- **Trade separation is intact.** `(EXP)_IchiADX_Naked_rev00.mq5:104-105` filters `POSITION_SYMBOL`
+  **and** `POSITION_MAGIC` together, so the two charts cannot manage each other's positions. Same
+  conclusion, same reason, as ORDER-511.
+- **The damage is bookkeeping, and it hits the October judge in three places:** `990067` can never close a
+  trade (which is the whole explanation of its zero-deal row) · the USDJPY basket `990066+990067` is being
+  judged with one leg missing · the XAU basket rollup on `990068` is inflated by a leg that is not XAU.
+- 🔴 **§4's tell was structurally incapable of catching this** — it reads `TenkanPeriod`/`KijunPeriod`,
+  which are the same `20/60` in both slow bundles. A discriminator that cannot discriminate the two things
+  actually at risk of being swapped (memory `discriminating-test-must-be-able-to-discriminate`).
+
+#### 11c. 🟠 `990016` Boss_16 Kangaroo — attached on 07-26, gone by 07-28
+
+`[INIT] Boss_16_KangarooGrid (XAUUSDm,H1)` twice on 2026-07-26 (17:29:45, 17:31:04 — the binary swap), and
+**no Boss_16 chart in the complete Navigator tree on 07-28 16:24.** Attached, then removed or closed, some
+time in between. This retires the ORDER-511 open question: the ORDER-129 default-magic guard was **not**
+the explanation — it started cleanly, twice.
+
+#### 11d. 🟢 Settled clean
+
+- **`990026`** SuperTrendFlip BTC H4 → `_06_Magic=990026` · `_06_AllowLive=true` ✅ (item 5 closed; the
+  `AllowLive=false` defect that silenced `990025` for three days did **not** repeat here)
+- **`(Boss)_MacroGate (EURUSDm,H1)`** confirmed present in the Navigator — still no inventory row (§9)
+
+#### 11e. Net effect on the October judge
+
+Of the ~13 EAs on this account, **three rows are not producing what they claim**: `992017` (wrong EA on
+the magic) · `990067` (no chart) · `990016` (removed) — plus `990068` contaminated by a second leg. None
+of it is real money and none of it is a trading risk; all of it is the *input* to a real-money promotion
+decision, which is what makes it worth the paragraphs.
+
+**`status` was deliberately left `ACTIVE` on all three rows.** Choosing between `ACTIVE` and `REMOVED`
+encodes a disposition — re-attach, re-magic, or drop — and that is the user's call, not a bookkeeping
+repair. The measured reality is written into each row's `notes` in full so no reader can mistake the state
+while the decision is pending.
+
+**Remaining user decisions (chart actions, none taken here):** attach the real `PivotBreakout_XAU` and
+remove/re-magic the `EA_BREAKOUT_XAU` XAU H1 chart · re-pin `MagicNo` to `990067` on IchiADX `USDJPYm,H1`
+**while that leg is flat** · re-attach or retire `990016` · give `(Boss)_MacroGate` a row. Every one of
+them re-bases a judge clock, so none should be done piecemeal without saying which date moves.
