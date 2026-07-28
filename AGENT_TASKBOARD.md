@@ -3846,3 +3846,4 @@ trading exposure. Give it a row or record deliberately that the watchdog is not 
 4. **`990016`** — `_0_Magic` = **990016** (not `990001`, not the `_scaled_demo` preset's `990018`).
 5. **`990026`** STFlip — `_06_AllowLive`; attached 07-28, after this log ends at 13:54, so a newer
    capture would settle it without opening the chart.
+
