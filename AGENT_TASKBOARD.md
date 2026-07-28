@@ -2873,3 +2873,59 @@ onward answers: whether the legs are halted · whether they restarted at 17:02 �
 ticket 2292452147** · whether Kangaroo and PivotBreakout initialised.
 
 **Order stays `OPEN` pending the re-pin ⇒ not marked REVIEWED ⇒ no B1 row owed.**
+
+### ESCALATION 2026-07-28 — the `.set` was never loaded at all. This is not bookkeeping.
+
+The user read **all 5 fields where the bundle `.set` differs from the compiled default**, on the live
+`Boss_17_Wave5` USDJPYm,H1 chart. **All 5 came back at the compiled default.** Verified against
+`core/Inputs.mqh`: `_9_MaxLevels` **5** (`:174`) · `_23_TrailStart` **300** (`:348`) · `_23_TrailStep`
+**100** (`:349`, label "23 trail distance") · `_17_Wave3MinMult` **0.618** (`:289`) · `_0_Magic`
+**990001** (`:538`).
+
+**1 · the bundle is correct; it was simply never applied.** `_vps_deploy/WAVE5_USDJPY/WAVE5_USDJPY_H1_demo_v1.set`
+has 9 keys and **line 9 is `_0_Magic=990303`** — right value, right file. The other 4 keys
+(`ExitMode=23`, `_17_UseStructLevels=true`, `_17_DivergTrail=true`, `_17_EntryFib=38.2`) match the
+compiled defaults, which is why exactly 5 fields differ and all 5 read as default. ⇒ **the EA was
+attached without ever loading its `.set`.** Same family as memory `attach-verify-gate-and-binary`:
+the bundle passes every check on disk while the thing on the chart is not it. The wrong magic was
+never the disease — it was the one symptom visible from outside.
+
+**2 · `_9_MaxLevels` — the user's conclusion is RIGHT (this is not 5x exposure) but the stated reason
+is incomplete, and the gap matters.** `_9_MaxLevels` is **not** used only as an `if(<=0)` guard: it
+also feeds `RiskControl_MaxLevels()` (`core/RiskControl.mqh:440-445`, `min(cageMax, stackMax)`), which
+caps **Recovery** adds (`core/Recovery.mqh:112`) and clamps the level in **lot sizing**
+(`core/MoneyManagement.mqh:245`). It is inert **for this configuration only**, on a conjunction of
+three facts: (a) Wave5's compiled `StackMode` is `STACK_SINGLE` (`Inputs.mqh:160` — "90 naked probe…
+no grid/recovery/martingale"), so `Stack_DecideAdd` returns at `Stack.mqh:274` before the cap is read
+(b) compiled `RecoveryMode = REC_NONE` (`Inputs.mqh:128`), so `Recovery.mqh:112` never runs (c) with a
+single order, `MM_NextLot` is only ever called at level 0, where the clamp cannot bite. **Change any
+one of those and 1-vs-5 becomes live** — with `RC_MaxLevelsOverride=0` and ProtectLevel `02 Normal`
+(Steps 3) on the chart, `RiskControl_MaxLevels()` would move from `min(3,1)=1` to `min(3,5)=**3**`.
+So the ceiling was never 5 either; the cage caps it at 3. **Record it as config-dependent inertness,
+not as a dead axis** (memory `inert-axis-fake-plateau` · `feedback-audit-rule-rationale-not-compliance`).
+
+**3 · what is actually running is a different strategy, on both sides of the trade.**
+Entry: `_17_Wave3MinMult` **1.618 → 0.618** — the validated config demands wave-3 run 1.618x the
+wave-1 break; the chart accepts 0.618, which `Inputs.mqh:289` itself calls the "permissive default".
+Exit: `_23_TrailStart` **2000 → 300** and `_23_TrailStep` **800 → 100** — trailing starts ~7x earlier
+and follows ~8x tighter. ⇒ **looser entry + shorter winners.** The `M4 1.56/1.92 all-years-positive`
+evidence in the inventory row describes a config that has never been on this chart.
+
+**4 · the judge clock has been running on it for 10 days — USER DECISION, not mine.**
+`start_date=2026-07-18`, `judge_date=2026-10-16`. Every closed trade since attach was produced by the
+unvalidated config and stamped `990001`. Two things sharpen the choice: this EA is **one of the four
+`thin` EAs named in the ORDER-235 rule ratified today** (`991001` · `991004` · `990205` · **`990303`**),
+so its real bar is **≥12 months live + net positive**, not the `+3mo` date in the CSV — which is
+itself now stale; and at 11-17 trades/yr, **10 days ≈ 0.4 trades**. <br>
+**Recommendation: restart the clock at the re-pin.** Against a 12-month horizon the discarded evidence
+is under half a trade, while keeping it mixes two strategies into one judge sample — the failure the
+thin-EA rule exists to avoid. **Options put to the user:** (A) restart `start_date` at re-pin, discard
+the 990001 stretch *(recommended)* (B) keep the clock and annotate *(cheap, but the sample is now two
+configs)* (C) keep the 990001 record separately as an accidental looser-entry variant and restart 990303.
+
+**5 · nothing on any chart was touched.** The open USDJPYm position (ticket 2292452147) still has no
+established owner, and loading the `.set` changes the magic, which makes the EA forget any position it
+holds. Re-pin stays blocked on **flat** + must land **before** the ORDER-510 refresh.
+
+**Order stays `OPEN` — awaiting (i) the judge-clock call (ii) the Experts log (iii) the re-pin.
+Not marked REVIEWED ⇒ no B1 row owed.**
