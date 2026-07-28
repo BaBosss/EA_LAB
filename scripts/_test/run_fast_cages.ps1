@@ -94,7 +94,12 @@ $FAST_SUITES = @(
     # the first version sat in scripts/tests/, which nothing ran, so it would have been enforced by
     # a human remembering. Both of its guards are mutation-tested (plant an ungated caller -> PART 5
     # fails naming the file; sabotage the mtime compare -> PART 4 fails).
-    'run_report_freshness_tests.ps1'
+    'run_report_freshness_tests.ps1',
+    # ORDER-372: guards the TEXT of scripts/check_truncated_run.ps1, because that text is copied
+    # verbatim into every <report>.truncation_check.json and read as the finding. Its final "[OK]
+    # traded through to the end of the window" used to be an unconditional else-branch, so a run
+    # with a measured 91% idle tail asserted the opposite of its own preceding line.
+    'run_truncation_message_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path

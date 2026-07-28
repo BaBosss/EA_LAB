@@ -136,5 +136,24 @@ if ($bigGap) {
     $gapDays, $eqddPct, $MIN_KILL_THRESHOLD_PCT) -ForegroundColor Yellow
   exit 0
 }
-Write-Host "[OK] traded through to the end of the window" -ForegroundColor Green
+# ORDER-372: this used to be an unconditional else-branch, so it asserted "traded through to the
+# end of the window" for ANY run that failed to clear $bigGap - including runs with a large
+# measured idle tail that only escaped the flag because of the absolute $GapDaysFloor. Observed:
+# a 7-day window whose last deal was on day 0.6 printed "idle tail 6.4 days (91.4% of window)"
+# and then "[OK] traded through to the end of the window" on the next line. Both came from this
+# script, one of them was false, and this text is what gets written into the truncation sidecar
+# that detector_digest.ps1 and every downstream reader treat as the verdict.
+# The threshold is deliberately NOT changed here - retuning a guard's sensitivity is its own
+# decision with its own evidence. What changes is that the message may no longer claim more than
+# was measured, and the blind spot is named out loud instead of being expressed as silence.
+$tailIsTrivial = ($gapDays -lt 1.0)
+if ($tailIsTrivial) {
+  Write-Host "[OK] traded through to the end of the window" -ForegroundColor Green
+  exit 0
+}
+$suppressedBy = if (($null -ne $gapPct) -and ($gapPct -ge $GapPctThreshold) -and ($gapDays -lt $GapDaysFloor)) {
+  " NOTE: the share of the window ({0}%) is above the {1}% flag threshold and was suppressed only by the {2}-day absolute floor - on a window this short that floor cannot be reached, so this check has no power here." -f $gapPct, $GapPctThreshold, $GapDaysFloor
+} else { "" }
+Write-Host ("[OK] reached the window end within tolerance - idle tail {0} days{1}, below the flag threshold ({2} days AND {3}% of window).{4}" -f `
+  $gapDays, $(if ($null -ne $gapPct) { " ($gapPct% of window)" } else { "" }), $GapDaysFloor, $GapPctThreshold, $suppressedBy) -ForegroundColor Green
 exit 0

@@ -130,30 +130,45 @@ $runnerNames = @('mt5_run.ps1', 'mt4_run.ps1', 'mt5_optimize.ps1', 'mt4_optimize
 $scriptDir   = Split-Path -Parent $PSScriptRoot
 $offenders   = New-Object System.Collections.Generic.List[string]
 
+# Uses PowerShell's own parser rather than counting braces. The first version of this check tracked
+# function boundaries by tallying { and } per line, which also counted braces inside strings and
+# comments and could therefore leave a function early and stop looking. The AST knows exactly where
+# a FunctionDefinitionAst begins and ends, so the question "is this call inside a function" stops
+# being a guess.
 foreach ($f in Get-ChildItem $scriptDir -Filter *.ps1 -File) {
-  $lines = Get-Content $f.FullName
-  $inFunc = $false; $depth = 0
-  for ($i = 0; $i -lt $lines.Count; $i++) {
-    $ln = $lines[$i]
-    if ($ln -match '^\s*function\s+') { $inFunc = $true; $depth = 0 }
-    if ($inFunc) {
-      $depth += ([regex]::Matches($ln, '\{')).Count
-      $depth -= ([regex]::Matches($ln, '\}')).Count
-      if ($depth -le 0 -and $i -gt 0 -and $ln -match '\}') { $inFunc = $false }
+  $parseErrors = $null
+  $ast = [System.Management.Automation.Language.Parser]::ParseFile($f.FullName, [ref]$null, [ref]$parseErrors)
+  if ($null -eq $ast) { continue }
+
+  $funcs = $ast.FindAll({ param($n) $n -is [System.Management.Automation.Language.FunctionDefinitionAst] }, $true)
+  if ($funcs.Count -eq 0) { continue }
+
+  foreach ($fn in $funcs) {
+    $cmds = $fn.FindAll({ param($n) $n -is [System.Management.Automation.Language.CommandAst] }, $true)
+    foreach ($cmd in $cmds) {
+      # Only actual invocations. `& (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert ...` contains a
+      # NESTED CommandAst for the Join-Path argument, whose own pipeline is neither assigned nor
+      # piped - so without this filter the inner argument gets reported while the outer call, which
+      # IS assigned, is correctly skipped. The call operator is what distinguishes an invocation
+      # from an expression that merely names the runner.
+      if ($cmd.InvocationOperator -eq [System.Management.Automation.Language.TokenKind]::Unknown) { continue }
+      $cmdText = $cmd.Extent.Text
+      $callsRunner = $false
+      foreach ($rn in $runnerNames) { if ($cmdText -match [regex]::Escape($rn)) { $callsRunner = $true } }
+      if (-not $callsRunner) { continue }
+
+      # Disposition is a property of the enclosing pipeline / statement, which the AST gives us
+      # directly: assigned ($x = & ...), or piped somewhere (| Out-Null, | Where-Object, ...).
+      $pipeline = $cmd.Parent
+      $assigned = $false
+      $piped    = $false
+      if ($pipeline -is [System.Management.Automation.Language.PipelineAst]) {
+        $piped = $pipeline.PipelineElements.Count -gt 1
+        if ($pipeline.Parent -is [System.Management.Automation.Language.AssignmentStatementAst]) { $assigned = $true }
+      }
+      if ($assigned -or $piped) { continue }
+      $offenders.Add(("{0}:{1}  {2}" -f $f.Name, $cmd.Extent.StartLineNumber, ($cmdText -split "`n")[0].Trim()))
     }
-    if (-not $inFunc) { continue }
-    $callsRunner = $false
-    foreach ($rn in $runnerNames) { if ($ln -match [regex]::Escape($rn)) { $callsRunner = $true } }
-    if (-not $callsRunner) { continue }
-    if ($ln -notmatch '&') { continue }              # a mention in a comment/string, not a call
-    if ($ln -match '^\s*#') { continue }             # comment line
-    # handled forms
-    if ($ln -match '\$\w+\s*=\s*&')      { continue }   # $out = & runner
-    if ($ln -match '\$null\s*=\s*&')     { continue }   # $null = & runner
-    # a call may continue across backticked lines; look ahead for the disposition
-    $window = ($lines[$i..([Math]::Min($i + 6, $lines.Count - 1))] -join ' ')
-    if ($window -match 'Out-Null|\|\s*Out-|\$\w+\s*=\s*&|\$null\s*=\s*&') { continue }
-    $offenders.Add(("{0}:{1}  {2}" -f $f.Name, ($i + 1), $ln.Trim()))
   }
 }
 
