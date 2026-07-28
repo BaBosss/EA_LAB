@@ -35,6 +35,7 @@
 
 | session id | เริ่ม | order block | owns paths | เลน MT5 | status |
 |---|---|---|---|---|---|
+| `S-2026-07-28-DECISIONS` | 2026-07-28 10:45 (user ratified the four pending decisions and said "ดำเนินการแก้ต่อเลย") | **510-519** (expects to open **ORDER-510** for the pre-132 live-binary gap and **ORDER-511** for the unpinned magic 990001) | `docs/SESSION_LEDGER.md` (own row + the "numbers used" summary) · `CLAUDE.md` (VERDICT GATE bar table — the thin-EA judge bar, ORDER-235) · `AGENTS.md` §3 (cross-install comparison ban, ORDER-371) · `DEMO_DEPLOYMENT_PLAN.md` (thin-EA bar) · `AGENT_TASKBOARD.md` (rows **ORDER-230 · 232 · 234 · 235 · 371 · 400 · 410** + the two new rows, written **once at the end** per rule 4) · `docs/memory_control/B1_DATASET.csv` (append only) | **no MT5 lane · no compile · nothing copied to the VPS** — every item here is policy text or a board row | `ACTIVE` |
 <!-- VERIFY270 แก้ owns paths 1 ครั้ง: ตอนแรกประกาศ ORDER-280 ไว้ด้วย เพื่อจะปล่อย CLAIMED ที่ค้าง
      แต่ `S-2026-07-27-SLBUFFER` (ACTIVE, 08:40) ประกาศแถวนั้นไว้ก่อนแล้ว ⇒ ถอนออกตามกฎข้อ 4
      (เห็นเลนอื่นประกาศไฟล์/แถวเดียวกัน = รอหรือคุย ไม่ใช่เขียนทับ) · สถานะ 280 ถูกบันทึกไว้ครบแล้ว
