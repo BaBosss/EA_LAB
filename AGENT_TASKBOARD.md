@@ -2759,3 +2759,58 @@ and a higher count means an EA nobody has on the books, which would be a larger 
 
 **Nothing marked REVIEWED ⇒ no B1 row owed** (B1 is a live observation, never reconstructed —
 Decision log 2026-07-26).
+
+### STEP 1-3 ANSWERED 2026-07-28 by the user's Inputs + F3 read — `STEP 1-3 DONE`, order stays `OPEN` for STEP 4
+
+**STEP 1 — it is `Boss_17_Wave5` on `USDJPYm,H1`.** Read directly off the Inputs tab:
+`_0_Magic = 990001`. This is the leg that `DEPLOYMENTS.csv` records as **`990303`**.
+
+**STEP 2 — the other three template legs are correctly pinned**, all confirmed by Inputs read:
+`Boss_17_Wave5` XAUUSDm,H1 = `990301` ✅ · `Boss_17_Wave5` XAGUSDm,H1 = `990302` ✅ ·
+`Boss_12_Breakout` USDJPYm,H1 = `990120` ✅.
+
+**STEP 3 — exactly ONE, not two. Trade separation is NOT broken.** F3 lists exactly four keys:
+`Boss_990001_rc_peak_eq` · `Boss_990120_rc_peak_eq` · `Boss_990301_rc_peak_eq` ·
+`Boss_990302_rc_peak_eq`. No `990303`, no `990016`. Ownership is **symbol AND magic**
+(`core/Execution.mqh:24-25`), and the only other EA sharing USDJPYm is `Boss_12_Breakout` on a
+**different** magic ⇒ no EA can claim another's positions today. **The October judge is not
+cross-contaminated.** What it does lose: this leg's P&L lands under `990001`, so `990303` will read
+as a zero-trade EA and `990001` has no inventory row to roll up into.
+
+**🔴 CORRECTION — inference F in the block above is REFUTED, and it was my reasoning, not a
+transcription slip.** I argued that because `rc_peak_eq = 10136.29` predates the 2026-07-25 equity
+raise, and because the peak is a monotonic HWM written on every tick, nothing could still be running
+on `990001`. An EA **is** running on it. Two things the F3 dialog showed that the argument had no way
+to see: the key's **timestamp is 2026-07-26 17:02**, i.e. *after* the raise, and **all four keys**
+— including `990120`/`990301`/`990302`, which are demonstrably live and trading — are equally stuck
+at ~10,136 while the account sits at ~99,951 equity. So the frozen value is not evidence about one
+leg; it is a property of **every** leg on this terminal. The inference read a real number correctly
+and drew a conclusion the number could not support, because I validated the HWM logic against the
+**current** source while these are **pre-132** binaries (ORDER-510) whose persist path I never read.
+I flagged that gap as limit (1) and then reasoned as though it were closed.
+
+**Open question, deliberately not answered here:** why *is* rc_peak_eq frozen at the 10k-era value on
+all four legs? On the current source a halted EA returns before the peak update
+(`core/RiskControl.mqh` halt branch, ahead of `:377`), which would fit — but these binaries are
+pre-132 and guessing at their internals is exactly the error corrected above. **Needs the Experts/
+Journal log, not more inference.** It matters: if these legs are halted, the demo record they are
+accumulating for the judge is not what it appears to be.
+
+**Also spotted, not yet explained:** the attached-EA list shows **`EA_BREAKOUT_XAU - XAUUSDm,H1`** on
+this account, but `DEPLOYMENTS.csv` has EA_BREAKOUT_XAU here only on **USDJPYm (991003)** and
+**US30m (991005)** — the XAU instances (`991001`/`991002`) belong to **159503454**. Either an
+unregistered instance or a mis-recorded row. The list was scrolled/truncated so the count is not
+final. **`Boss_16_KangarooGrid` (990016, XAUUSDm, recorded as attached 2026-07-26) was not visible in
+the list and has no GV** — unresolved.
+
+**STEP 4 blocked on a real hazard, not on bookkeeping:** there is an **open USDJPYm position**
+(ticket 2292452147, buy 0.01 @163.787) and both USDJPYm EAs could own it. Re-pinning `990001`→`990303`
+makes that EA **forget any position it owns** and also **splits the judge sample across two magics**.
+⚠️ **And it collides with ORDER-510:** the current build returns `INIT_FAILED` on `_0_Magic==990001`
+(`core/LabCore.mqh:235-239`), so **the moment the pre-132 fleet is upgraded, this chart stops starting**
+— the magic must be pinned *before* that deploy, not after. Recommended order of operations put to the
+user: record `990001` in the inventory now (zero risk, preserves the record), re-pin to `990303` only
+when the leg is flat, and sequence it ahead of the ORDER-510 binary refresh.
+
+**Nothing changed on any chart, no `.set` edited, no DEPLOYMENTS row written — STEP 4 is the user's
+call. Not marked REVIEWED ⇒ no B1 row owed.**
