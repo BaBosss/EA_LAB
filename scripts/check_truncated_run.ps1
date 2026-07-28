@@ -151,9 +151,16 @@ if ($tailIsTrivial) {
   Write-Host "[OK] traded through to the end of the window" -ForegroundColor Green
   exit 0
 }
-$suppressedBy = if (($null -ne $gapPct) -and ($gapPct -ge $GapPctThreshold) -and ($gapDays -lt $GapDaysFloor)) {
-  " NOTE: the share of the window ({0}%) is above the {1}% flag threshold and was suppressed only by the {2}-day absolute floor - on a window this short that floor cannot be reached, so this check has no power here." -f $gapPct, $GapPctThreshold, $GapDaysFloor
-} else { "" }
-Write-Host ("[OK] reached the window end within tolerance - idle tail {0} days{1}, below the flag threshold ({2} days AND {3}% of window).{4}" -f `
-  $gapDays, $(if ($null -ne $gapPct) { " ($gapPct% of window)" } else { "" }), $GapDaysFloor, $GapPctThreshold, $suppressedBy) -ForegroundColor Green
+# When the percentage IS over the threshold and only the absolute day floor held the flag back,
+# this check has no power on a window that short - and saying "[OK] reached the window end" there
+# would be asserting the very thing it could not test. CORRECTED after a blind audit, which was
+# right that the first repair still overclaimed: it swapped one unearned success sentence for a
+# softer unearned success sentence. Say UNDETERMINED and let the reader decide.
+if (($null -ne $gapPct) -and ($gapPct -ge $GapPctThreshold) -and ($gapDays -lt $GapDaysFloor)) {
+  Write-Host ("[UNDETERMINED] idle tail {0} days = {1}% of the window, which is over the {2}% flag threshold, but under the {3}-day absolute floor - on a window this short that floor can never be reached, so this check HAS NO POWER here and is not evidence either way." -f `
+    $gapDays, $gapPct, $GapPctThreshold, $GapDaysFloor) -ForegroundColor Yellow
+  exit 0
+}
+Write-Host ("[OK] reached the window end within tolerance - idle tail {0} days{1}, below the flag threshold ({2} days AND {3}% of window)." -f `
+  $gapDays, $(if ($null -ne $gapPct) { " ($gapPct% of window)" } else { "" }), $GapDaysFloor, $GapPctThreshold) -ForegroundColor Green
 exit 0

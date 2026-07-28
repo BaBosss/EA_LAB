@@ -88,14 +88,24 @@ Assert "full-window run exits 0" { $o1.code -eq 0 }
 $r2 = Join-Path $tmp "shortwin.htm"
 New-FakeReport -Path $r2 -From '2022.03.01' -To '2022.03.08' -LastDealTime '2022.03.01 13:22:00' -EqddPct 29.76
 $o2 = Run-Checker $r2
-Assert "short window with a 91% idle tail does NOT claim it traded through to the end" {
+# CORRECTED after a blind audit: banning only the exact old phrase let a NEW success sentence
+# ("[OK] reached the window end within tolerance") slip through and pass. Ban the CLAIM, not the
+# wording - no [OK] at all may appear on a result this check could not actually test.
+Assert "short window with a 91% idle tail emits no [OK] success claim of any wording" {
+  $o2.text -notmatch '\[OK\]'
+}
+Assert "...and does not claim it traded through to the end" {
   $o2.text -notmatch 'traded through to the end of the window'
 }
-Assert "...and states the measured idle tail instead" { $o2.text -match 'idle tail' }
-Assert "...and names the blind spot: the day floor made this check powerless here" {
-  ($o2.text -match 'no power here') -or ($o2.text -match 'suppressed only by')
+Assert "...and does not claim it reached the window end either" {
+  $o2.text -notmatch 'reached the window end'
 }
-Assert "...and still exits 0 (it is not a truncation claim, just an honest one)" { $o2.code -eq 0 }
+Assert "...and states the measured idle tail instead" { $o2.text -match 'idle tail' }
+Assert "...and says outright that the check has no power here" { $o2.text -match 'NO POWER|no power' }
+Assert "...and labels the result UNDETERMINED rather than passing or failing it" {
+  $o2.text -match 'UNDETERMINED'
+}
+Assert "...and still exits 0 (not a truncation claim - an absence of evidence)" { $o2.code -eq 0 }
 
 # 3. long window, big tail, drawdown far below any kill threshold -> quiet-tail INFO, exit 0
 $r3 = Join-Path $tmp "quiet.htm"
@@ -104,6 +114,11 @@ $o3 = Run-Checker $r3
 Assert "long quiet tail below kill territory is reported as a quiet tail, not a truncation" {
   $o3.text -match 'quiet tail'
 }
+# Presence of the expected phrase is not enough - a contradictory success/failure line could sit
+# beside it and every assertion would still pass.
+Assert "...and carries no contradictory TRUNCATED or SUSPECT line" {
+  ($o3.text -notmatch 'TRUNCATED') -and ($o3.text -notmatch 'SUSPECT')
+}
 Assert "quiet tail exits 0 (must not share an exit code with a truncation)" { $o3.code -eq 0 }
 
 # 4. long window, big tail, drawdown in kill territory -> SUSPECT, exit 2
@@ -111,6 +126,7 @@ $r4 = Join-Path $tmp "suspect.htm"
 New-FakeReport -Path $r4 -From '2023.01.01' -To '2023.12.31' -LastDealTime '2023.06.01 10:00:00' -EqddPct 26.0
 $o4 = Run-Checker $r4
 Assert "big tail + drawdown in kill territory is SUSPECT" { $o4.text -match 'SUSPECT' }
+Assert "...and carries no contradictory [OK] line beside it" { $o4.text -notmatch '\[OK\]' }
 Assert "SUSPECT exits 2" { $o4.code -eq 2 }
 
 Remove-Item $tmp -Recurse -Force -ErrorAction SilentlyContinue

@@ -75,7 +75,11 @@ foreach ($c in $combos) {
 
   $rep = "$auto\reports\$rn.htm"
   $vals = $fields | ForEach-Object { $c[$_] }
-  if (Test-ReportIsFresh -Htm $rep -RunStart $runStart -RunnerExit $runnerExit -Label $rn) {
+  # Resolve freshness ONCE and reuse it. The console line below used to ask Test-Path separately,
+  # so on an aborted cell with a leftover report it printed "-> ok" while this same block wrote
+  # NO_REPORT into the CSV - the operator and the saved result disagreeing about the same run.
+  $fresh = Test-ReportIsFresh -Htm $rep -RunStart $runStart -RunnerExit $runnerExit -Label $rn
+  if ($fresh) {
     $csvRow = & python "D:\EA_LAB\scripts\parse_mt4_report.py" $rep --csv 2>$null
     # parse_mt4_report --csv cols: expert,symbol,period,total_trades,profit_factor,net_profit,max_drawdown_pct,win_pct,quality,screen
     $p = $csvRow -split ","
@@ -84,6 +88,6 @@ foreach ($c in $combos) {
     $row = ($vals + @("NO_REPORT","","","","")) -join ","
   }
   $row | Out-File $OutCsv -Append -Encoding utf8
-  Write-Output "[$i/$($combos.Count)] $($fields | ForEach-Object {"$_=$($c[$_])"} ) -> $(if(Test-Path $rep){'ok'}else{'NO_REPORT'})"
+  Write-Output "[$i/$($combos.Count)] $($fields | ForEach-Object {"$_=$($c[$_])"} ) -> $(if($fresh){'ok'}else{'NO_REPORT'})"
 }
 Write-Output "DONE -> $OutCsv"
