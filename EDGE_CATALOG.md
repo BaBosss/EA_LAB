@@ -543,16 +543,32 @@ USDJPY H4, MAIN 2023-2025, Model 1, same lane:
 **The trade count is identical. Everything else moved.** Thirteen longs are gone and thirteen shorts have
 appeared, and *both* gross legs shrank by about 30%. So this filter does not reduce participation the way
 the MACD-cross gate does — **it re-selects it**, with a directional tilt away from the long side, and the
-replacement trades are worse on the winning leg and the losing leg at once. A profitable arm becomes a
-losing one with no change in how often it trades.
+replacements are worse **on net**. Stated precisely, because the first version of this line was wrong: gross
+profit fell 37% (520.10 → 327.83) while gross loss fell only 26% in magnitude (482.86 → 357.79). **Losses got
+smaller too** — the winning side just shrank faster than the losing side, which is enough to flip +37.24 into
+−29.96. A profitable arm becomes a losing one with no change in how often it trades.
 
-**Reusable claim — this one is about how to read a filter, and it generalises past this EA:**
-**"trade count unchanged" is not evidence that a filter is inert.** A gate that rejects a signal on the
-bar it fires can still let the same setup in later, so the totals can land in the same place while the
-composition underneath has changed completely. Anyone reading only the trades column here would have
-recorded this gate as a no-op. **Check the long/short split and both gross legs before concluding a lever
-did nothing** — the inert-axis probe (memory `inert-axis-fake-plateau`) is about identical *results*, and
-identical *counts* are a much weaker signal that is easy to mistake for it.
+**Reusable claim — corrected 2026-07-28 after `/scrutinize`, because the first version of this paragraph
+over-read its own headline number.** The claim is right; the reason first given for it was incomplete.
+
+**Why 250 = 250 is not the coincidence it looks like.** `MacdDiv_Naked.mq5:110` opens with
+`if(HasOpenPosition()) return;` — **the EA holds at most one position at a time.** So the entry rate is
+throttled by *occupancy*, not by how many signals survive the gate: while a trade is open, every signal is
+discarded regardless of any filter. A gate that **delays** entries rather than removing them therefore
+tends toward a similar three-year total **by construction**. The equal count is closer to expected than to
+surprising, and the first write-up of this entry led with it as though it were a fluke.
+
+**The claim that survives, and is stronger for the correction:**
+**On a single-position EA, trade count is a weak inertness signal by construction — it measures occupancy,
+not selection.** Here the count held at 250 while the long/short split moved 79/171 → 66/184 and both gross
+legs fell ~30%, turning +37.24 into −29.96. Anyone reading only the trades column would have filed this gate
+as a no-op. **Check the long/short split and both gross legs before concluding a lever did nothing.**
+
+Two neighbours worth keeping apart: the inert-axis probe (memory `inert-axis-fake-plateau`) is about
+identical *results*, which is a strong and easily-tested signal; identical *counts* are much weaker and, on
+a single-position EA, close to uninformative. **And this cuts the other way too** — it makes the MACD-cross
+arm's collapse to 28 trades *more* striking, not less, because that gate reduced participation hard enough
+to overcome the occupancy floor.
 
 **Status:** not adopted. It has been measured on one symbol and one timeframe; that is enough to reject it
 there, not enough to call the mechanism dead everywhere. The residual caveat from ORDER-431 applies —

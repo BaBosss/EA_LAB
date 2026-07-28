@@ -42,12 +42,23 @@ axis on one timeframe does not reach condition 2a.
 **The finding is the number that did not move.** The RSI gate returned **exactly 250 trades against baseline's
 250**, while the long/short split moved 79/171 → 66/184 and *both* gross legs shrank ~30%, turning +37.24 into
 −29.96. It does not reduce participation, it **re-selects** it, tilted off the long side, and the replacements
-are worse on the winning leg and the losing leg at once. Anyone reading the trades column alone would have
-filed this lever as a no-op.
+are worse **on net**. Precisely — the first version of this sentence was wrong: gross profit fell 37% while
+gross loss fell 26% in magnitude, so **losses got smaller too**; the winning side simply shrank faster.
+Anyone reading the trades column alone would have filed this lever as a no-op.
 
 > **Trade count unchanged is not evidence that a filter is inert. Check the direction split and both gross
 > legs.** Catalogued as its own EDGE_CATALOG entry — the lever was built in ORDER-117 and had never been
 > characterised until now.
+
+<sub>🔧 **Reason corrected after `/scrutinize` of this lane, 2026-07-28.** The conclusion holds; the reason
+first given for it did not, and this section over-sold `250 = 250` as a surprising coincidence.
+`MacdDiv_Naked.mq5:110` opens with `if(HasOpenPosition()) return;` — **the EA holds one position at a time**,
+so the entry rate is set by *occupancy*, not by how many signals clear the gate. A gate that **delays**
+entries rather than removing them therefore lands near the same three-year total **by construction**. The
+sharper and more general rule: **on a single-position EA, trade count is a weak inertness signal because it
+measures occupancy, not selection.** It also cuts the other way — the MACD-cross arm falling to 28 is *more*
+striking under this reading, not less, because it cut participation hard enough to break through the
+occupancy floor.</sub>
 
 The MACD-cross gate replicated ORDER-217's XAU result on a second symbol **at exactly the point that entry
 predicted it would survive** — a host with trades to spare. 250 → 28. So the participation cost belongs to the
@@ -59,7 +70,7 @@ digit** on a *different* binary, which independently re-proves the ORDER-217 `[0
 and shows the tester repeats exactly **within one lane** — supporting ORDER-371's problem being cross-install
 specifically rather than general nondeterminism.</sub>
 
-### ORDER-430 — host search · `REVIEWED` → **two hosts cleared the bar, neither is usable**
+### ORDER-430 — host search · `REVIEWED` → **two hosts cleared the bar** (verdict amended same day — see below)
 
 Seven Model-4 control runs on one pinned set. AUDCAD (BWD 2.20) and XAUUSD (BWD 2.29) were marked QUALIFIED
 exactly as written. They should not have been, and **the tell is a relationship, not any single number**:
@@ -69,45 +80,68 @@ exactly as written. They should not have been, and **the tell is a relationship,
 | trades | 62 · 52 | 343 · 473 · 363 |
 | BWD DD% | 1.70 · 1.86 | 12.56 · 11.96 · 15.58 |
 
-**The hosts that look like they survive the stress regime are the ones that were barely in the market during
-it.** A grid taking 52 trades across three stress years at under 2% drawdown is not demonstrating resilience,
-it is demonstrating absence. The `n >= 30` floor — which this lane pre-registered itself — screens out *having
-no trades*, not *having too few to interpret*. Both then came back **under 1.0 on MAIN** (0.93, 0.95), so an
-overlay delta measured on either could not be told apart from losing less.
+**The hosts that clear BWD are the ones that were barely in the market during it.** A grid taking 52 trades
+across three stress years at under 2% drawdown is thin evidence of resilience. The `n >= 30` floor — which this
+lane pre-registered itself — screens out *having no trades*, not *having too few to interpret*, and both hosts
+came back **under 1.0 on MAIN** (0.93, 0.95). **That is a real caveat on how to read the A/B delta. It is not a
+reason to void a pass the bar already granted** — see the correction below.
 
-⇒ **ORDER-236 = `PARKED`.** The caged lever pair is built, caged, byte-identical when off, with three A/B sets
-ready — the only missing piece is somewhere to measure it, and that is not the lever's fault. Wake condition is
-written into the row: BWD > 1.2 **and** MAIN > 1.0 **and** enough BWD trades to interpret. Next tranche is
-Boss_16 Kangaroo and Boss_11 GridTrend, which need sets built first.
+⇒ **This is where I got it wrong, and a blind Codex audit caught it the same day.** I concluded "no usable
+host" and parked ORDER-236. **That is moving the goalposts after seeing the numbers**: the pre-registered bar
+says `BWD >= 1.20 at >= 30 trades = QUALIFIED`, both hosts met it, and **the order I wrote myself says to take
+the highest-BWD qualified host into ORDER-236 by changing `-Symbol` only**. My reasoning was also loose —
+"losing less" is a measurable lever effect; what I actually meant is that it is not enough to *deploy*, which is
+a different statement from "cannot be measured".
+
+⇒ **Corrected: ORDER-236 is UN-PARKED and proceeds on XAUUSD H1** (BWD 2.29, the highest qualified). No set
+rebuilding — the A/B sets share the CTRL's lineage, which is why ORDER-430 ran one file across seven symbols.
+The sample-size concern survives as a **reading caveat written onto every delta** (host MAIN is 0.95, BWD n is
+52, so report trade counts and do not over-read small deltas), and the `n >= 30` floor is raised **for the next
+order**, not retroactively against a pass it already granted. AUDCAD H1 is available as a replication host.
 
 ⚠️ Read together with ORDER-236, the chassis now has three legs measured on the `B14_AB_off` parity config and
 none clears both windows. **That indicts the A/B base config, not the deployed demo legs**, which run different
 sets — the same caveat ORDER-236 already carried.
 
-### 🔴 GBPJPY — the claim that was not accepted
+### 🟢 GBPJPY — the claim I wrongly rejected, and the guard evidence it turned out to be
+
+**This section originally read "the claim that was not accepted". It was retracted the same day after a blind
+Codex audit, and the correction matters more than anything else on this page.**
 
 The run truncated at **2020-03-12** with a 93.5% idle tail and 24.95% equity drawdown. `check_truncated_run.ps1`
-flagged `[SUSPECT]` and refused the metrics — **the cage doing its job.**
+flagged `[SUSPECT]` and refused the metrics — the cage doing its job. The runner attributed the truncation to
+the risk cage firing and cited a log line with a timestamp. **I searched that log, found nothing, and recorded
+the citation as unverifiable.** That was wrong.
 
-The runner attributed it to the risk cage firing and quoted a specific log line with a timestamp. **That
-citation does not reproduce.** The named log holds no `HARD KILL`, no `GBPJPY`, and no `[RISK]` line at all,
-and neither does any other tester log or the terminal journal for that day.
+The file is **UTF-16LE** (BOM `ff fe`). Every search I ran was byte/UTF-8 oriented and **could not have matched
+anything in it**. Read with the right encoding it contains `HARD KILL` twice, `GBPJPY` 368 times, and `[RISK]`
+twice:
 
-The mechanism is well corroborated from the other side — the source message at `RiskControl.mqh:380` matches
-the quoted format exactly including the profile field, `InpCloseAllWhenDDPct` defaults to **25** against a
-measured **24.95**, and ORDER-194 made a halt terminal so a permanent stop is the expected shape. **Recorded as
-probable, explicitly not as observed.**
+```
+20394 | 2020.03.12 07:45:59   [RISK] HARD KILL: DD 25.01% >= 25.00% (profile 2) -> closing all
+20399 | 2020.03.12 07:45:59   [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
+```
 
-> A claim that a guard fired needs an evidence path someone can open. This session spent its day auditing other
-> people's guards on exactly that standard; banking the one piece of evidence the lab most wants — the 25% kill
-> working on real ticks during COVID — on a citation that does not open would have been the same failure
-> wearing a friendlier face.
+Path, timestamp and wording match the runner's citation exactly, and the master tester journal carries the same
+pair. **The runner was right; I was wrong, and I published that error to the board, a commit message, an
+append-only `B1_DATASET` row, this handoff, and the user twice.**
 
-**Cheap follow-up:** one re-run feeding `check_truncated_run.ps1 -TesterLog <path>` closes it *and* produces a
-genuine guard-fired artifact. **Process fix for the next order: instruct a runner to use the tool that emits an
-evidence file, not to go read a log.**
+**What this actually is:** the strongest piece of guard evidence this lab has — the 25% hard kill **observed
+firing on real ticks** during the COVID crash, closing flat, verifying flat with the broker, and persisting the
+halt. It is the exact counterpart to ORDER-490, where the reject arm has never been seen. ⚠️ **Do not inflate
+it**: this is one event, not a safety certificate. The VERDICT GATE still wants a base control and a fire count
+before a guard claim is written up as passed.
 
----
+> 🔴 **The lesson, and it is mine.** The signal was in front of me: searching for `GBPJPY` in the log of a
+> GBPJPY run returned **zero**, and I recorded that as corroborating my conclusion when it was proof my reading
+> tool was broken. Memory `guard-disarmed-by-prose-reported-as-note` states the rule plainly — **"cannot read
+> the input" must always be distinguished from "there is nothing there"** — and I had that memory. **New rule:
+> before rejecting a citation, prove the instrument can see the file at all by searching for a token that must
+> be present (a symbol, an EA name). If that also returns zero, the instrument is wrong, not the claim.**
+
+**What the order should say next time:** instruct the runner to use the tool that emits an evidence file
+(`check_truncated_run.ps1 -TesterLog <path>`) rather than to read a log — not because reading a log is
+unreliable, but because a script parses with the correct encoding while a later reviewer may not.
 
 ## 3. What the two Codex audits changed
 
@@ -155,7 +189,10 @@ generating ticks, **105/105 `ALL CASES PASSED` exit 0** on a confirmed-idle mach
 
 ## 4. Two new orders, both found by accident
 
-- **ORDER-500** — `B1_DATASET.csv` parses as **83 order rows, not 84**. ORDER-280's row is glued onto the tail
+- **ORDER-500** — `B1_DATASET.csv` parses as **83 order rows, not 84**. <sub>(Scope narrowed on review: the
+  *trailing-newline* half of this defect healed as a side effect of this lane's own B1 appends, which write a
+  leading newline when one is missing. What remains is the glued `ORDER-412` row, the absent repair path, and
+  the absent field-count assertion.)</sub> ORDER-280's row is glued onto the tail
   of ORDER-412's quoted `notes` with no line break, so a reader sees one row of 25 fields and ORDER-280 is
   absent. The one-newline repair was written and verified, and the ORDER-144 append-only guard **correctly
   blocked it**; it was not bypassed and the working tree was restored byte-for-byte. The exposed gap is that
@@ -191,9 +228,9 @@ generating ticks, **105/105 `ALL CASES PASSED` exit 0** on a confirmed-idle mach
 | MacdDiv USDJPY H4 optimized once; ceiling 1.18, BUILD-ON stands | ORDER-431 (REVIEWED) |
 | RSI gate re-selects rather than filters; trade count is not an inertness test | EDGE_CATALOG (new entry) |
 | MACD-cross participation cost is the gate's property, not the host's | EDGE_CATALOG (ORDER-217 entry, replication note) |
-| Host search: 2 cleared the bar, neither usable; the n>=30 floor was too low for a grid | ORDER-430 (REVIEWED) |
-| Caged lever pair has no home | ORDER-236 (PARKED, wake condition written) |
-| GBPJPY truncation cause: probable risk-cage kill, citation does not reproduce | ORDER-430 — one re-run with `-TesterLog` closes it |
+| Host search: 2 hosts qualified; verdict amended after audit — the n>=30 floor is raised for the NEXT order, not retroactively | ORDER-430 (REVIEWED, amended) |
+| Caged lever pair proceeds on XAUUSD H1, with sample-size caveats on every delta | ORDER-236 (UN-PARKED, STEP 2 ready) |
+| GBPJPY truncation = risk-cage hard kill, **verified in the log** (my rejection of the citation was wrong, retracted) | ORDER-430 (amended) — no re-run needed |
 | G4 runs and accepts; only its rejection arm is UNTESTED | ORDER-490 (header corrected, still OPEN) |
 | G4 ignores tick size + freeze level and validates before normalization | ORDER-490 — **new, no owner yet** |
 | ORDER-105 cage: fixture drift fixed, 105/105 green | ORDER-421 (REVIEWED) |

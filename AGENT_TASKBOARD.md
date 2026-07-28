@@ -439,7 +439,7 @@ ORDER-433 เขียนไว้ตรงตัวว่า *"This closes the 
 **ห้าม drift เงียบ**
 **ห้าม:** เปลี่ยนบาร์เองโดยไม่มี user เคาะ · ปล่อย 4 ตัวนี้ค้างไร้เกณฑ์ตัดสินต่อไป
 
-## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `PARKED(Claude/Opus 2026-07-28) — ORDER-430 ไล่ครบ 7 host แล้วไม่มีบ้านที่ใช้ได้ ⇒ lever ไม่มีที่ทดสอบ ไม่ใช่ lever ไม่ดี · ปลุกเมื่อมี host ที่ BWD>1.2 พร้อม MAIN>1.0 บนไม้ที่พอตีความ` · เดิม: `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
+## ORDER-236 — [lever/build-on] lever 2 ตัวที่ build เสร็จ + cage ผ่านแล้ว แต่เซลล์ไม่เคยรันสักเซลล์ — `OPEN — STEP 2 พร้อมรัน บน host = XAUUSD H1 (ORDER-430: BWD 2.29 = สูงสุด, qualified ตามบาร์ที่ pre-register)` · ทำได้: **oc-qwen/ZCode** · 👉 แนะ: oc-qwen · เดิม: `OPEN — STEP 1 (design, Claude) ปิดแล้ว 2026-07-27: host = RSI-MR GridLog EURUSD H1 @ RSIMR_CENTER.set · บาร์เดิมถูกถอนเพราะวัด host ไม่ได้วัด lever · B14_AB_on.set ครอบแค่ lever เดียวและผิด chassis · STEP 2 = 4 cell พร้อมรัน` · ทำได้: **oc-qwen/ZCode (รัน STEP 2)** · 👉 แนะ: oc-qwen
 **bars:** ~~pass = MAIN ≥1.2 AND BWD ≥1.0 · dead = ทั้งคู่ <1.0 · กลาง = ผ่านอย่างใดอย่างหนึ่ง~~ **← ถอนแล้ว 2026-07-27: บาร์นี้วัด host ไม่ได้วัด lever (ดู STEP 1 ด้านล่าง) · บาร์ที่ใช้จริง = delta vs control ในเลนเดียวกัน** · **flat-lot probe:** N-A (lever ไม่ใช่ MM escalation)
 **ของที่มีอยู่แล้ว:** `_9_RegimeGateAdds` + `CONF_PA_ENGULF` — build เสร็จ (`1aeafc06`, `f65bf2ce`) · cage ผ่าน · byte-identical เมื่อปิด ·
 Model-4 A/B บน AUDNZD ได้ **DD 12.3%→5.4%, net −286→+98** · **มี `ea_template/sets/B14_AB_on.set` รออยู่แล้ว**
@@ -539,21 +539,24 @@ Boss_14 legs อื่นที่มี DEMO set อยู่แล้ว (USDJ
 **ถ้าไล่ครบแล้วไม่มี host ไหนผ่านประตู** ⇒ นั่นคือคำตอบของใบนี้: lever คู่นี้ยัง**ไม่มีบ้านให้ทดสอบ** ไม่ใช่ lever ไม่ดี — park ไว้ อย่าฝืนใส่ host ปริ่ม
 **ห้าม:** รัน A/B บน host ที่ BWD < 1.0 เพื่อ "ดูเฉยๆ" — Wave1 พิสูจน์แล้วว่า overlay บน host อ่อนให้ผลที่ตีความไม่ได้
 
-### 🅿️ PARKED 2026-07-28 — ORDER-430 ตอบใบนี้แล้ว และคำตอบคือ "ยังไม่มีบ้าน"
+### ▶️ UN-PARKED 2026-07-28 — ORDER-430 ตอบใบนี้แล้ว และคำตอบคือ **XAUUSD**
 
-ORDER-430 รัน CTRL อย่างเดียว 7 host (Model 4, เลน 5b, `CTRL.set` ไฟล์เดียว) ⇒ **มี 2 host ผ่านบาร์ที่เขียนไว้
-แต่ไม่มีตัวไหนใช้เป็น host ของ A/B ได้จริง** — AUDCAD 2.20/62 ไม้ และ XAU 2.29/52 ไม้ **ผ่าน BWD ด้วยการแทบไม่อยู่ในตลาด**
-(DD 1.7-1.9% ตลอด 3 ปี stress) แล้ว **MAIN ต่ำกว่า 1.0 ทั้งคู่** (0.93 / 0.95)
-⇒ วัด delta ของ lever บน host ที่ขาดทุนใน MAIN = แยกไม่ออกว่า lever ช่วยหรือแค่ขาดทุนน้อยลง · เหตุผลเต็ม = VERDICT ORDER-430
+<sub>🔧 **บล็อกนี้เคยเขียนว่า `PARKED` เพราะ "ไม่มี host ใช้ได้" · ถอนแล้ววันเดียวกันหลัง Codex blind audit ชี้ว่านั่นคือการย้ายเสาประตูหลังเห็นเลข — และมันถูก.** ดู VERDICT ORDER-430 (แก้แล้ว) สำหรับเหตุผลเต็ม</sub>
 
-**⇒ `PARKED` ไม่ใช่ `DEAD`** · lever `_9_RegimeGateAdds` + `CONF_PA_ENGULF` **build เสร็จ · cage ผ่าน · byte-identical เมื่อปิด · `.set` 3 ฉบับพร้อม**
-ทุกอย่างพร้อมหมด ขาดอย่างเดียวคือที่ทดสอบ ⇒ **ห้ามเขียนว่า lever นี้ถูกทดสอบแล้วไม่ผ่าน — มันยังไม่เคยถูกทดสอบเลยสักเซลล์**
+**host = `Boss_14_GridLog` @ XAUUSD H1** · BWD PF **2.29** (52 ไม้, DD 1.86%) = qualified ตามบาร์ที่ pre-register (`BWD ≥1.20 ที่ ≥30 ไม้`) และเป็นตัวที่ BWD สูงสุด ⇒ ตรงกับที่ ORDER-430 สั่งไว้เองว่า *"take the highest-BWD qualified host and re-point ORDER-236 STEP 2 at it by changing `-Symbol` only"*
 
-**เงื่อนไขปลุก (เขียนไว้ให้ชัด จะได้ไม่ต้องคิดใหม่):** เจอ host ที่ **BWD PF > 1.2 พร้อมกับ MAIN PF > 1.0** และ
-**จำนวนไม้ใน BWD มากพอจะตีความ** (บทเรียนจาก ORDER-430: `n ≥ 30` ต่ำเกินไปสำหรับหน้าต่าง 3 ปีของ grid — ตั้งใหม่ที่ระดับที่บอกได้ว่า EA อยู่ในตลาดจริง)
-**tranche ถัดไปที่ยังไม่ได้ไล่:** Boss_16 Kangaroo · Boss_11 GridTrend (ทั้งคู่ต้องสร้าง `.set` ก่อน ซึ่งเป็นเหตุผลที่ ORDER-430 ไม่รวมไว้)
+**เปลี่ยนแค่ `-Symbol` เท่านั้น** — `B14_AB_on` / `B14_PAon` / `AB_both` เป็น lineage เดียวกับ `B14_AB_off` ที่ ORDER-430 ใช้เป็น CTRL จึง**ไม่ต้อง rebuild set ใดๆ** (นี่คือเหตุผลทั้งหมดที่ ORDER-430 รันไฟล์เดียว 7 symbol) <!-- ENTRY-CLAIM-OK: the needle is inside a sentence about ORDER-430 running one .set across seven symbols, not a claim about this document. Marked rather than reworded, per the guard comment in check_state.ps1. -->
 
-<sub>ราคาที่จ่ายไปกับใบนี้คุ้มที่จะจำ: เลือก host ผิด **3 ครั้ง** — RSI-MR (ไม่เปิด `.mq5` เลย EA ไม่มี input) · Boss_14 AUDNZD (เชื่อ prose ในสกอร์การ์ด) · และรอบนี้ **บาร์ที่ผมเขียนเองปล่อยผ่าน host ที่ไม่ได้เทรด** · รากเดียวกันทั้งสามครั้ง = **ตัดสิน host จากอย่างอื่นที่ไม่ใช่การวัด artifact ที่จะใช้จริง** · สิ่งที่กันไว้ได้ทุกครั้งคือประตูที่เขียนก่อนเห็นตัวเลข ไม่ใช่การเลือกเก่งขึ้น</sub>
+**🔴 caveat ที่ต้องเขียนกำกับ delta ทุกตัว — เป็นวิธีอ่าน ไม่ใช่เหตุไม่รัน:**
+1. **MAIN ของ host = 0.95 (<1.0)** ⇒ delta ที่ได้บอกว่า lever ทำอะไรกับ base ตัวนี้ **ไม่ได้บอกว่าผลรวมน่า deploy** · "ขาดทุนน้อยลง" เป็นผลที่วัดได้จริง แต่ไม่ใช่ใบเบิกทางไป demo
+2. **BWD มีแค่ 52 ไม้** ⇒ delta บนหน้าต่างนั้นมี noise สูง · ให้รายงานจำนวนไม้ทุกแถว และอย่าตีความ delta ที่เล็กกว่าความผันผวนของ sample ขนาดนี้
+3. ถ้าอยาก replicate: **AUDCAD H1** ก็ qualified (BWD 2.20, 62 ไม้) ใช้เป็น host ที่สองได้
+
+**บาร์ของ STEP 2 = delta vs CTRL ในเลนเดียวกัน** (ไม่ใช่บาร์ absolute — บาร์เดิมถูกถอนไปแล้วเพราะมันวัด host ไม่ได้วัด lever)
+
+**สิ่งที่ ORDER-430 สอนและมีผลกับใบสั่งถัดไป ไม่ใช่ใบนี้:** floor `n ≥ 30` ต่ำเกินไปสำหรับหน้าต่าง 3 ปีของ grid — ครั้งหน้าต้องตั้ง floor ที่สมเหตุกับความยาวหน้าต่าง **แต่จะไม่ถูกใช้ย้อนหลังกับผลที่ผ่านบาร์เดิมไปแล้ว**
+
+<sub>ราคาที่จ่ายไปกับใบนี้คุ้มที่จะจำ: เลือก host ผิด **3 ครั้ง** — RSI-MR (ไม่เปิด `.mq5` เลย EA ไม่มี input) · Boss_14 AUDNZD (เชื่อ prose ในสกอร์การ์ด) · แล้วรอบที่สาม **ผมไม่ได้เลือกผิด ผมปฏิเสธ host ที่ผ่านบาร์ของตัวเอง** ซึ่งเป็นความผิดคนละชนิดและอันตรายกว่า เพราะมันทำให้ pre-registration ไร้ความหมาย · สิ่งที่กันไว้ได้ทั้งสามครั้งคือกฎที่เขียนก่อนเห็นตัวเลข — ครั้งที่สามมันกันผมจากตัวเอง แต่ต้องรอ auditor คนนอกมาชี้</sub>
 
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
@@ -1731,7 +1734,7 @@ EURUSD H1/H4 · XAUUSD H1/H4 (4 cells).
 
 ---
 
-## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `REVIEWED(Claude/Opus 2026-07-28) — 2 hosts cleared the written bar, NEITHER is usable; the bar was wrong for a grid. ORDER-236 answer = the lever pair has no home → PARKED` · run by: worker/Sonnet, lane 5b, Model 4 · verdict: Claude
+## ORDER-430 — [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged levers finally have somewhere to be tested — `REVIEWED(Claude/Opus 2026-07-28, verdict AMENDED same day after a blind Codex audit) — 2 hosts cleared the pre-registered bar and the pre-registration is honoured: ORDER-236 proceeds on XAUUSD (BWD 2.29, highest). The sample-size concern is a READING caveat + a bar change for the NEXT order, not grounds to void a pass after seeing the numbers.` · run by: worker/Sonnet, lane 5b, Model 4 · verdict: Claude
 **bars:** qualified host = BWD PF ≥ **1.20** at ≥ **30 trades** · borderline = **1.00–1.19** (record, must not be selected) · fail = **< 1.00** · **flat-lot probe:** N-A (this order measures a host; it changes no money management)
 
 **Why this order exists:** ORDER-236 is `BLOCKED` at its own pre-registered gate. The lever pair `_9_RegimeGateAdds` + `CONF_PA_ENGULF` is built, caged, byte-identical when off, and its A/B sets are ready — but the host it was aimed at (Boss_14 GridLog @ AUDNZD H1, `B14_AB_off.set`) measured **MAIN 1.09 / BWD 0.84** under Model 4, and the gate says a host that cannot clear BWD 1.0 comfortably is not worth six more Model-4 runs. The lever has no home. This order goes and finds one — **or proves none exists, which is equally an answer** (memory `escalation-overlay-needs-strong-bwd-host`: an overlay only pays on a host whose BWD is genuinely strong).
@@ -1821,7 +1824,7 @@ Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-Rep
 | **XAUUSD** | H1 | **2.29** | **52** | **1.86%** | **0.95** | 237 | 4.84% | QUALIFIED |
 | GBPJPY | H1 | *(0.15)* | *(40)* | *(24.89%)* | — | — | — | **TRUNCATED — ห้ามใช้ตัวเลข** |
 
-## VERDICT ORDER-430 (Claude/Opus 2026-07-28) — มี 2 host ผ่านบาร์ที่เขียนไว้ · **ไม่มีตัวไหนใช้ได้ และบาร์คือสิ่งที่ผิด**
+## VERDICT ORDER-430 (Claude/Opus 2026-07-28 · **AMENDED วันเดียวกันหลัง Codex blind audit**) — 2 host ผ่านบาร์ · **เดินต่อตามที่ pre-register ไว้**
 
 **กลไกอยู่ในความสัมพันธ์กลับทิศ ไม่ได้อยู่ที่ตัวเลขตัวใดตัวหนึ่ง:**
 2 host ที่ผ่าน BWD ทำได้ด้วย **52-62 ไม้ และ DD 1.7-1.9%** · 3 host ที่ไม่ผ่านมี **343-473 ไม้ และ DD 12-16%**
@@ -1830,26 +1833,45 @@ Same command, changing only: `-FromDate 2023.01.01 -ToDate 2025.12.31` and `-Rep
 
 **และทั้งสองตัวก็ MAIN < 1.0 (0.93 / 0.95)** ⇒ **วัด lift ของ overlay บน host ที่ขาดทุนในหน้าต่างที่จะวัดไม่ได้** — delta ที่ออกมาจะแยกไม่ออกว่า lever ช่วย หรือแค่ทำให้ขาดทุนน้อยลง
 
-**⇒ คำตอบของ ORDER-236: lever คู่นี้ยังไม่มีบ้าน ⇒ `PARKED` ไม่ใช่ dead** — เป็นผลลัพธ์ที่ใบสั่งประกาศไว้เองว่าชอบธรรม ("If zero hosts qualify, that is a real result") และตรงกับ memory `escalation-overlay-needs-strong-bwd-host`
+**⇒ คำตอบของ ORDER-236 (แก้แล้ว 2026-07-28): เดินต่อบน XAUUSD (BWD 2.29 สูงสุด) ตามที่ใบสั่งนี้เขียนไว้เอง**
+
+<sub>🔧 **ฉบับแรกของข้อนี้สรุปว่า "ไม่มี host ไหนใช้ได้ ⇒ PARKED" และ Codex ชี้ว่านั่นคือการย้ายเสาประตูหลังเห็นเลข — และมันถูก.**
+บาร์ที่ pre-register เขียนชัดว่า `BWD PF ≥ 1.20 ที่ ≥ 30 ไม้ = QUALIFIED` และ**ใบสั่งที่ผมเขียนเองสั่งไว้ว่าให้เอา host ที่ BWD สูงสุดไปต่อ ORDER-236 โดยเปลี่ยนแค่ `-Symbol`** · ทั้งสองตัวผ่านจริง แล้วผมมาถอนย้อนหลัง
+และตรรกะที่ผมใช้ก็ไม่แน่น — **"ขาดทุนน้อยลงก็คือผลของ lever ที่วัดได้"** · สิ่งที่ผมหมายถึงจริงคือ "ไม่พอสำหรับ deploy" ซึ่งเป็นคนละเรื่องกับ "วัดไม่ได้"
+**ของที่ยังยืน: ข้อสังเกตเรื่อง sample size** — host ที่ผ่านทำได้ด้วย 52-62 ไม้ DD<2% ขณะที่ตัวที่ตกมี 343-473 ไม้ ⇒ **ต้องเขียนกำกับเวลาอ่าน delta ว่าฐานบางแค่ไหน และ MAIN ของทั้งสอง host ต่ำกว่า 1.0** — แต่เป็น **caveat ของการอ่านผล ไม่ใช่เหตุผลที่จะไม่รัน**
+**บาร์ใหม่มีผลกับใบสั่งถัดไป ไม่ย้อนหลัง:** floor ของจำนวนไม้ต้องสมเหตุกับความยาวหน้าต่างและชนิด EA (grid 3 ปี = หลักร้อย ไม่ใช่ 30)</sub>
+
+<sub>สิ่งที่ยังต้องพูดคู่กับตัวเลขเสมอ: chassis นี้วัดมาแล้ว 3 leg บน config `B14_AB_off` และ**ไม่มี leg ไหนผ่านทั้งสองหน้าต่าง** (AUDNZD 1.09/0.84 · AUDCAD 0.93/2.20 · XAU 0.95/2.29) ⇒ **host เหล่านี้ใช้ทดสอบ lever ได้ แต่ใช้เป็นฐาน deploy ไม่ได้** · และทั้งหมดนี้ห้ามเอาไปหักล้าง demo cohort — `B14_AB_off.set` = ORDER-006 ISpick parity set คนละตัวกับ `Boss14_GridLog_<SYM>_DEMO.set` ที่ deploy จริง</sub>
 
 **อ่านรวมกับ ORDER-236: chassis นี้วัดมาแล้ว 3 leg บน config `B14_AB_off` — ไม่มี leg ไหนผ่านทั้งสองหน้าต่าง**
 AUDNZD 1.09/0.84 (ORDER-236) · AUDCAD 0.93/2.20 · XAU 0.95/2.29 · ที่เหลือ BWD 1.08-1.15 โดยไม่เคยวัด MAIN
 ⚠️ **ข้อนี้ห้ามเอาไปหักล้าง demo cohort** — `B14_AB_off.set` = ORDER-006 ISpick parity set (magic 990101) **ไม่ใช่** `Boss14_GridLog_<SYM>_DEMO.set` ที่ deploy จริง · มันบอกว่า **config ฐานของ A/B** อ่อน ไม่ได้บอกว่า leg ที่ deploy อยู่แย่ (คำเตือนเดียวกับที่ ORDER-236 เขียนไว้)
 
-### 🔴 GBPJPY: run ขาดกลางคัน — กรงจับได้ แต่ **คำอธิบายสาเหตุที่ worker อ้าง ตรวจซ้ำไม่ได้**
+### 🟢 GBPJPY: run ขาดกลางคัน — **กรง 25% ยิงจริง และถูกยืนยันจาก log แล้ว** (หัวข้อนี้เคยเขียนกลับด้าน ดูบล็อก RETRACTED ด้านล่าง)
 
 **ที่วัดได้จริง** (`O430_GBPJPY_H1_BWD.truncation_check.json`): `truncated=true` · deal สุดท้าย **2020.03.12** · idle tail **1023.7 วัน = 93.5% ของหน้าต่าง** · entry deals 30 · **eqDD 24.95%** ⇒ ตัวเลข PF 0.15 ครอบคลุมแค่ ม.ค.-มี.ค. 2020 **ห้ามเอาไปเทียบกับแถวอื่น**
 ✅ **กรง `check_truncated_run.ps1` ทำงานถูกต้อง** — ขึ้น `[SUSPECT]` และห้ามใช้ตัวเลข ก่อนที่ใครจะเอาไปกรอกลงตาราง
 
-**🔴 แต่คำอธิบายว่า "risk cage hard kill ยิงที่ 2020.03.12 07:45:59" ตรวจซ้ำไม่ได้ — ผมไล่หาเองแล้ว:**
-· ไฟล์ที่ worker อ้าง (`Agent-127.0.0.1-3000/logs/20260728.log`) **ไม่มีคำว่า `HARD KILL` ไม่มีคำว่า `GBPJPY` และไม่มีบรรทัด `[RISK]` สักบรรทัด**
-· สแกน agent log ของวันนี้ทั้งหมด (มีอยู่ไฟล์เดียว) + journal ของ terminal ⇒ **0 ครั้งทั้งหมด**
-· สิ่งที่**สนับสนุน**คำอธิบายนี้: ข้อความมีอยู่จริงในซอร์ส `RiskControl.mqh:380` **รูปแบบตรงกับที่ worker ยกมาเป๊ะ รวมคำว่า profile** · `InpCloseAllWhenDDPct` default = **25** ชนกับ eqDD **24.95%** พอดี · และ ORDER-194 ทำให้ HALTED เป็น terminal ⇒ หยุดยาวแบบไม่กลับมาคืออาการของ halt เป๊ะ
-⇒ **กลไกน่าจะถูก แต่ห้ามบันทึกว่า "กรงถูกเห็นว่ายิงแล้ว"** — นี่คือกฎ guard-evidence ของเราเอง: คำอ้างว่า guard ยิง ต้องมี path ของหลักฐานที่เปิดดูซ้ำได้
-<sub>น่าเจ็บเป็นพิเศษเพราะทั้ง session นี้กำลังไล่เรื่อง "guard ที่ไม่เคยถูกเห็นว่ายิง" — ถ้าผมรับคำอ้างนี้มาเขียนต่อเฉยๆ ผมจะได้หลักฐานชิ้นเดียวที่ทั้งแล็บอยากได้มากที่สุด (กรง 25% ทำงานจริงบน tick จริงตอน COVID) เข้าคลังบนหลักฐานที่ตรวจไม่ได้ ซึ่งเป็น failure mode เดียวกับที่เรากำลังตรวจอยู่พอดี</sub>
-**งานที่เหลือของ GBPJPY (ถูกๆ คือ):** re-run แล้วส่ง `check_truncated_run.ps1 -TesterLog <path>` ตามที่สคริปต์บอกเอง — หนึ่ง run ก็จบ และจะได้หลักฐาน guard-fired ตัวจริงเป็นของแถม
+**🟢 RETRACTED + กลับด้าน 2026-07-28 (Codex blind audit จับได้) — คำอธิบายของ worker ถูกต้องทุกตัวอักษร · ผมผิดเอง**
 
-**ข้อสังเกตเรื่องกระบวนการ:** worker เดิน TREE ถูกทุกข้อ ไม่เคยเปิด lever สักครั้ง ไม่เขียน verdict ไม่แตะบอร์ด และรายงาน anomaly เองทั้งที่มันทำให้ตัวเองดูแย่ลง — **งานดีมาก** · จุดที่พลาดคือ **อ้าง log โดยที่ log นั้นตรวจซ้ำไม่ได้** ⇒ บทเรียนสำหรับใบสั่งครั้งหน้า: **สั่งให้ใช้เครื่องมือที่ผลิตไฟล์หลักฐาน (`-TesterLog`) อย่าสั่งให้ "ไปอ่าน log"**
+~~ผมเขียนไว้ว่า log ที่ worker อ้างไม่มีคำว่า `HARD KILL` / `GBPJPY` / `[RISK]` เลย จึงบันทึกว่า "น่าจะใช่ แต่ไม่ได้ถูกสังเกต"~~ — **ผิดทั้งย่อหน้า**
+
+ไฟล์เป็น **UTF-16LE** (BOM `ff fe`) · `grep` ที่ผมใช้อ่านเป็น byte/UTF-8 ⇒ **ไม่มีทางแมตช์อะไรได้เลยในไฟล์นั้น** · อ่านด้วย encoding ที่ถูกแล้วเจอ **HARD KILL 2 ครั้ง · GBPJPY 368 ครั้ง · `[RISK]` 2 ครั้ง**:
+
+```
+20394 | 2020.03.12 07:45:59   [RISK] HARD KILL: DD 25.01% >= 25.00% (profile 2) -> closing all
+20399 | 2020.03.12 07:45:59   [RISK] HARD KILL complete: broker flat verified -> halt (persisted)
+```
+`D:\Meta 5b\Tester\Agent-127.0.0.1-3000\logs\20260728.log` — **path · timestamp · ข้อความ ตรงตามที่ worker อ้างทุกตัวอักษร** · มีสำเนาใน master tester journal ด้วย (บรรทัด 20959 / 20964)
+
+⇒ **truncation ของ GBPJPY = risk-cage hard kill ที่ `observed` ไม่ใช่ `probable`** · ไม่ต้อง re-run เพื่อพิสูจน์สิ่งที่ log พิสูจน์ไปแล้ว
+
+**สิ่งที่ได้มาแทน และมันคือของที่แล็บตามหามาทั้ง session:** **guard ที่ถูกเห็นว่ายิงจริงบน tick จริง** — hard-kill 25% ทำงานตอน COVID ปิดยกตะกร้า **ยืนยันกับโบรกเองว่า flat** แล้ว persist halt · ตรงข้ามกับ ORDER-490 ที่แขนปฏิเสธยังไม่เคยถูกเห็น
+⚠️ **ห้ามขยายเกินนี้** — นี่คือ **หนึ่งเหตุการณ์** ไม่ใช่ใบรับรองว่าระบบ risk ปลอดภัย · ตาม VERDICT GATE การอ้างเรื่อง guard ยังต้องมี base control + จำนวนครั้งที่ยิง
+
+<sub>🔴 **บทเรียนที่แพงที่สุดของ session นี้ และเป็นของผมเอง:** สัญญาณอยู่ตรงหน้าแล้วผมอ่านกลับทาง — grep หา `GBPJPY` ใน log ของ run GBPJPY แล้วได้ **0** ผมบันทึกว่านั่นคือหลักฐานสนับสนุนข้อสรุป ทั้งที่มันคือหลักฐานว่า**เครื่องมืออ่านของผมพัง** · memory `guard-disarmed-by-prose-reported-as-note` เขียนกฎนี้ไว้ตรงๆ ว่า **"อ่าน input ไม่ออก" ต้องแยกจาก "ไม่มีอะไรอยู่"** — ผมละเมิดกฎที่ตัวเองบันทึก แล้วเอาไปกล่าวหาว่า worker อ้างลอย · **กฎใหม่: ก่อนจะปฏิเสธ citation ต้องพิสูจน์ก่อนว่าเครื่องมืออ่านไฟล์นั้นได้จริง — หา token ที่ต้องเจอแน่ๆ สักตัวก่อน (ชื่อ symbol/EA) ถ้ามันก็ไม่เจอ = เครื่องมือผิด ไม่ใช่หลักฐานผิด**</sub>
+
+**ข้อสังเกตเรื่องกระบวนการ — เขียนใหม่ 2026-07-28:** worker เดิน TREE ถูกทุกข้อ ไม่เคยเปิด lever สักครั้ง ไม่เขียน verdict ไม่แตะบอร์ด รายงาน anomaly เองทั้งที่ทำให้ตัวเองดูแย่ลง **และ citation ที่มันให้มาก็ถูกต้องทุกตัวอักษร** ⇒ งานของมันไม่มีที่ติเลยสักจุด · **คนที่พลาดคือผม** — ปฏิเสธ citation ที่ถูกต้องด้วยเครื่องมืออ่านที่พังเงียบ แล้วเขียนความผิดนั้นลงบอร์ด · commit message · แถว B1 · handoff และรายงานให้ user สองรอบ · **บทเรียนที่ควรเข้าใบสั่งครั้งหน้า: สั่งให้ runner ใช้เครื่องมือที่ผลิตไฟล์หลักฐาน (`check_truncated_run.ps1 -TesterLog <path>`) ไม่ใช่เพราะ 'ไปอ่าน log' เชื่อไม่ได้ — แต่เพราะ artifact ที่สคริปต์ผลิตจะถูก parse ด้วย encoding ที่ถูกเสมอ ส่วนคนที่มาตรวจทีหลังอาจใช้เครื่องมือที่ผิด**
 
 ---
 
@@ -1932,9 +1954,11 @@ Append a 4-row table (SwingRadius · PF · trades · net · DD%). **Then STOP.**
 
 **🔴 RSI gate: มันไม่ได้ "กรอง" — มันไป "เลือกใหม่" และเลือกแย่กว่าเดิม.** นี่คือของที่ต้องดูให้ลึกกว่าตัวเลข PF:
 ไม้เท่ากันเป๊ะที่ **250 = 250** แต่ **องค์ประกอบเปลี่ยน 79 long → 66 long / 171 short → 184 short**
-และ **gross ทั้งสองขาหดลงพร้อมกันราว 30%** (+520.10/−482.86 → +327.83/−357.79)
-⇒ gate **ไม่ได้ลดการเข้าตลาด** มันเลื่อน/สลับไม้ที่เข้า และไม้ชุดใหม่แย่กว่าทั้งฝั่งกำไรและฝั่งขาดทุน · expected payoff 0.15 → **−0.12** · Sharpe 0.38 → **−0.73**
+และ **gross ทั้งสองขาหดลง แต่หดไม่เท่ากัน** — gross profit 520.10 → 327.83 (**−37%**) ขณะที่ gross loss 482.86 → 357.79 (**ขนาดของการขาดทุน −26% = ขาดทุน *น้อยลง***) ⇒ **กำไรหดแรงกว่าขาดทุนหด net จึงพลิก** (+37.24 → −29.96)
+⇒ gate **ไม่ได้ลดการเข้าตลาด** มันเลื่อน/สลับไม้ที่เข้า และ**ไม้ชุดใหม่จับกำไรได้น้อยลงมากกว่าที่มันช่วยเลี่ยงขาดทุน** · expected payoff 0.15 → **−0.12** · Sharpe 0.38 → **−0.73**
 **บทเรียนวิธีอ่าน: "จำนวนไม้เท่าเดิม" ไม่ใช่หลักฐานว่า filter ไม่ทำงาน** — ถ้าดูแค่คอลัมน์ไม้จะสรุปผิดว่า gate เฉื่อย ทั้งที่มันเปลี่ยนทิศทางของพอร์ตไปแล้ว 13 ไม้ **ต้องดู long/short split + gross สองขา ไม่ใช่ total อย่างเดียว**
+
+<sub>🔧 **แก้เหตุผล 2026-07-28 หลัง `/scrutinize` — ข้อสรุปไม่เปลี่ยน แต่เหตุผลที่ผมให้ครั้งแรกไม่ครบ และผมยกเลข 250=250 เป็นพาดหัวเกินจริง.** `MacdDiv_Naked.mq5:110` ขึ้นต้นด้วย `if(HasOpenPosition()) return;` ⇒ **EA ถือได้ทีละไม้เดียว** ⇒ อัตราการเข้าถูกคุมด้วย **occupancy ไม่ใช่จำนวนสัญญาณ** — ระหว่างถือไม้อยู่ สัญญาณถูกทิ้งหมดอยู่แล้วไม่ว่ามี gate หรือไม่ ⇒ gate ที่ **เลื่อน** การเข้าแทนการ **ตัด** ย่อมได้ยอด 3 ปีใกล้เดิม **โดยโครงสร้าง** ไม่ใช่โดยบังเอิญ · **กฎที่ได้จึงคมกว่าเดิม: กับ EA ที่ถือไม้เดียว จำนวนไม้เป็นสัญญาณที่อ่อนโดยโครงสร้าง มันวัด occupancy ไม่ได้วัด selection** · และมันตีกลับด้วย — **ทำให้ MACDCROSS ที่ร่วงเหลือ 28 ไม้ *น่าสนใจขึ้น* ไม่ใช่ลดลง** เพราะมันลดการเข้าแรงพอจะทะลุเพดาน occupancy ลงไปได้ · ตัวเลขและข้อสรุปเรื่อง composition ทั้งหมดไม่กระทบ</sub> — ถ้าดูแค่คอลัมน์ไม้จะสรุปผิดว่า gate เฉื่อย ทั้งที่มันเปลี่ยนทิศทางของพอร์ตไปแล้ว 13 ไม้ **ต้องดู long/short split + gross สองขา ไม่ใช่ total อย่างเดียว**
 
 **🔴 MACD-cross gate: ทำซ้ำผลของ ORDER-217 บน symbol ที่สอง ตรงจุดที่ ORDER-217 บอกเองว่าน่าจะรอด.**
 entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"ลองกับ host ที่มีไม้เหลือเฟือ"* — USDJPY H4 ที่ **250 ไม้** คือ host แบบนั้นเป๊ะ **แล้วมันก็ยังเหลือ 28 ไม้ (11%)** ⇒ **ต้นทุนจำนวนไม้เป็นสมบัติของ gate ไม่ใช่ของ symbol** · PF 1.53 / payoff 1.88 / Sharpe 1.46 หน้าตาดีมาก **แต่ 28 ไม้ใน 3 ปี = อ่านไม่ได้** และ TREE ตัดทิ้งถูกแล้วโดยไม่ต้องเถียงกับ PF
@@ -2137,6 +2161,8 @@ Every character anybody wrote is still in the file, and it looks correct in an e
 
 **Why it happened, and why this file specifically.** Two lanes appended to `B1_DATASET.csv` within minutes of each other on 2026-07-27. `HANDOFF_2026-07-27_SYSTEMS.md` §5 already describes this exact collision from the other side — commit `99a73910` (lane SLBUFFER, ORDER-280) swept another lane's uncommitted B1 row into its own commit, because a path-limited commit commits the whole working-tree file. **This malformed line is that incident's visible scar, not a new one.** The file is append-only and written by *every* lane that closes an order, which makes it simultaneously the highest-collision file in the repo and the one where damage is least visible. The file also has **mixed CRLF/LF endings** (22 CRLF / 67 LF) and **no trailing newline** at HEAD — the second of those is the mechanism that lets the next append glue itself on, and the first is why a missing break does not stand out in a diff.
 
+<sub>🔧 **Scope correction 2026-07-28 (`/scrutinize` of this same lane).** The sentence above was true at `969f0fee`, which is the commit it cites, and is **no longer true of HEAD**: the three B1 appends this lane made afterwards (ORDER-340 · 430 · 431) each write a leading newline when one is missing, so the file now **ends with a newline** and reads 22 CRLF / 72 LF. **The trailing-newline half of this defect healed as a side effect of ordinary work** — anyone picking this order up would otherwise go hunting a missing newline that is not there. **Remaining scope is smaller than this row first read:** (1) the glued `ORDER-412` row, still 25 fields, still hiding `ORDER-280`; (2) no sanctioned repair path on an append-only file; (3) no assertion that an appended line is a well-formed *row*. Items 2 and 3 are the ones that matter — item 1 recurs the moment someone appends without the leading-newline guard, which is exactly what happened the first time.</sub>
+
 **🔴 The part that is not just a typo: there is no sanctioned way to fix it.** `scripts/check_precommit_staged.ps1` (ORDER-144 rule) enforces *"existing HEAD bytes must be an exact prefix"* on this path, with **no escape hatch of any kind**. The one-newline repair was written, verified to give **84 order rows · ORDER-280 present · 0 rows with a field count other than 13**, staged — and correctly **BLOCKED**:
 ```
 [precommit-staged] BLOCK: ORDER-144 staged-bytes validation failed:
@@ -2150,5 +2176,13 @@ Every character anybody wrote is still in the file, and it looks correct in an e
 - **C — leave it, record it.** Accept 83 rows and a known-bad row, and note the discrepancy wherever B1 is consumed.
 
 **What must happen regardless of which is chosen:** a **malformed-row assertion** — field count and parseability — belongs in the same guard that already enforces append-only. Today the guard checks that bytes were only *added*; it does not check that what was added is a *row*. That is the whole gap: the file was protected against the wrong failure mode.
+
+### 🔴 สองเดือนที่เกิดจริงภายในวันเดียว 2026-07-28 — คราวนี้ไม่ใช่แถวที่ "หาย" แต่เป็นแถวที่ "เท็จ"
+
+แถว **`ORDER-430`** ที่ append ลง `B1_DATASET.csv` วันนี้ ระบุว่า citation ของ hard-kill **"does not reproduce"** · ต่อมา Codex blind audit พิสูจน์ว่า **citation นั้นถูกต้องทุกตัวอักษร** (log เป็น UTF-16LE, เครื่องมืออ่านของผมผิด) ⇒ **แถวนั้นเป็นเท็จถาวร และกฎ append-only ห้ามแก้**
+
+บอร์ด/handoff/verdict ถูกถอนและเขียนทับได้ แต่ **dataset ที่ Contract D ใช้วัดผลคือสิ่งเดียวที่แก้ไม่ได้** ⇒ ใครก็ตามที่อ่าน B1 ตรงๆ จะเจอข้ออ้างที่ถูกเพิกถอนไปแล้วโดยไม่มีอะไรบอก
+
+**ความต่างที่สำคัญจากเคสแรก:** แถว ORDER-280 หายเพราะ **อุบัติเหตุ** (ขาดตัวขึ้นบรรทัด) ส่วนแถว ORDER-430 ผิดเพราะ **คนเขียนเข้าใจผิดตอนนั้น** ⇒ **อย่างหลังจะเกิดอีกแน่นอน ไม่ว่า tooling จะดีแค่ไหน** · ทางออกที่เป็นไปได้คือ **retraction record ที่ append ต่อท้ายได้** (เช่น คอลัมน์ `retracts` หรือแถวชนิด `CORRECTION`) — เข้ากันได้กับ append-only เต็มตัว และควรอยู่ในตัวเลือกของใบนี้
 
 **Prohibitions:** commit any change to `B1_DATASET.csv` with `--no-verify` · weaken or remove the ORDER-144 append-only rule (option B *adds* an audited path, it does not relax the default) · edit `scripts/check_precommit_staged.ps1` without a cage that is proven able to fail first (ORDER-270 / ORDER-420 doctrine) · "fix" the mixed line endings in a bulk rewrite — that rewrites every historical byte and is exactly what the guard exists to stop · treat option A as the fix and close this

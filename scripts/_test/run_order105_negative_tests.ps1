@@ -304,11 +304,33 @@ function Initialize-Seed {
     Write-Bytes (Join-Path $Seed 'docs\memory_control\experiment_events\evidence-manifest.jsonl') ([byte[]]@())
     # Every checker the real .githooks/pre-commit invokes needs a pass-stub here, or the
     # synthetic commit dies before it ever reaches check_experiment_events.ps1 and the
-    # failure is reported against whichever assertion happened to run next. That is how
-    # this suite went red: ad470945 (2026-07-26) added check_order_collision.ps1 to the
-    # hook unconditionally, and b5d71e47 later added check_handoff_contract.ps1. Neither
-    # commit touched this file, and nothing makes it track the hook's dependency list.
-    Write-Utf8 (Join-Path $Seed 'scripts\check_state.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_precommit_staged.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_order_collision.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_handoff_contract.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_verdict_kill.ps1') 'exit 0'
+    # failure gets reported against whichever assertion happened to run next.
+    #
+    # This list is DERIVED from the hook, not hand-maintained, and that is the whole point.
+    # The hand-maintained version is what broke: ad470945 (2026-07-26) added
+    # check_order_collision.ps1 to the hook and b5d71e47 later added
+    # check_handoff_contract.ps1, neither commit touched this file, and the suite died at
+    # case 15 of 105 for two days. A by-name defence already existed for exactly this
+    # failure (see the -cnotmatch on the two zero-byte cases) and it did not cover the new
+    # checker, because it named one script instead of describing the class. Deriving the
+    # list means the next checker added to the hook is stubbed the moment it is added.
+    # Match EVERY '-File scripts/....ps1' the hook runs, not just the check_* ones. The
+    # narrower check_* pattern left scripts/_test/run_fast_cages.ps1 unstubbed, and that
+    # was safe only by accident: this suite's synthetic commits stage event files, which
+    # do not match the hook's cage pathspec, so that block happens to no-op. Safe-by-
+    # condition is the same trap as safe-by-hand-maintained-list, one layer further in.
+    $hookText = Get-Content (Join-Path $SourceRoot '.githooks\pre-commit') -Raw -Encoding UTF8
+    $needed = @([regex]::Matches($hookText,'-File\s+(scripts/[A-Za-z0-9_/]+)\.ps1') |
+                ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique)
+    # check_experiment_events is the guard under test -- it is copied in for real above and
+    # must never be stubbed, or every case in this suite would pass against nothing.
+    $needed = @($needed | Where-Object { $_ -ne 'scripts/check_experiment_events' })
+    if($needed.Count -lt 2){ throw "seed: parsed only $($needed.Count) script(s) out of .githooks/pre-commit -- the hook format changed and this stub list is no longer derived from anything" }
+    foreach($rel in $needed){
+        $stub = Join-Path $Seed (($rel -replace '/','\') + '.ps1')
+        New-Item -ItemType Directory -Force (Split-Path -Parent $stub)|Out-Null
+        Write-Utf8 $stub "exit 0`n"
+    }
     Write-Utf8 (Join-Path $Seed 'AGENT_TASKBOARD.md') "ANCHOR_IDEA`nANCHOR_HYP`nANCHOR_RUN`nANCHOR_RESULT`nANCHOR_RECOVERY`n"
     Write-Utf8 (Join-Path $Seed 'ARCHIVE_TASKBOARD_2026-07A.md') "ANCHOR_REVIEW`n"
     Write-Utf8 (Join-Path $Seed 'EA_SCORECARD_AND_REGISTRY.md') "ANCHOR_SCORECARD`n"
@@ -334,10 +356,10 @@ try{
     # The shipped manifest is a committed zero-byte blob.  Prove the first
     # utility append survives the complete production hook from that state.
     $zeroManifest=New-ZeroManifestFixture 'zero_manifest_first_event';$zeroRequest=Write-Request -Root $zeroManifest -Request (New-IdeaRequest -Root $zeroManifest);$zeroAppend=Invoke-Utility -Root $zeroManifest -UtilityArgs @('-Command','Append','-EventJsonPath',$zeroRequest,'-TestUtcNow','2026-01-01T00:00:00.000Z');Invoke-TestGit -Root $zeroManifest -GitArgs @('add','docs/memory_control/experiment_events/events-2026-01.jsonl')|Out-Null;$zeroCommit=Invoke-TestGit -Root $zeroManifest -GitArgs @('commit','-m','first event from empty manifest') -AllowFailure
-    Add-Case 'real-hook-first-event-from-committed-zero-byte-manifest-passes' ($zeroAppend.ExitCode -ceq 0 -and $zeroCommit.ExitCode -ceq 0 -and $zeroCommit.Text -cmatch 'PASS' -and $zeroCommit.Text -cnotmatch 'cannot find the file.*check_verdict_kill') (($zeroAppend.Output,$zeroCommit.Text)-join "`n")
+    Add-Case 'real-hook-first-event-from-committed-zero-byte-manifest-passes' ($zeroAppend.ExitCode -ceq 0 -and $zeroCommit.ExitCode -ceq 0 -and $zeroCommit.Text -cmatch 'PASS' -and $zeroCommit.Text -cnotmatch 'cannot find the file') (($zeroAppend.Output,$zeroCommit.Text)-join "`n")
 
     $zeroMonth=New-ZeroManifestFixture 'zero_month_first_event';Invoke-TestGit -Root $zeroMonth -GitArgs @('config','core.hooksPath','.no-hooks')|Out-Null;Write-Bytes (Join-Path $zeroMonth 'docs\memory_control\experiment_events\events-2026-01.jsonl') ([byte[]]@());Invoke-TestGit -Root $zeroMonth -GitArgs @('add','docs/memory_control/experiment_events/events-2026-01.jsonl')|Out-Null;Invoke-TestGit -Root $zeroMonth -GitArgs @('commit','--quiet','-m','committed zero byte month')|Out-Null;Invoke-TestGit -Root $zeroMonth -GitArgs @('config','core.hooksPath','.githooks')|Out-Null;$zeroMonthRequest=Write-Request -Root $zeroMonth -Request (New-IdeaRequest -Root $zeroMonth);$zeroMonthAppend=Invoke-Utility -Root $zeroMonth -UtilityArgs @('-Command','Append','-EventJsonPath',$zeroMonthRequest,'-TestUtcNow','2026-01-01T00:00:00.000Z');Invoke-TestGit -Root $zeroMonth -GitArgs @('add','docs/memory_control/experiment_events/events-2026-01.jsonl')|Out-Null;$zeroMonthCommit=Invoke-TestGit -Root $zeroMonth -GitArgs @('commit','-m','first event from empty month') -AllowFailure
-    Add-Case 'real-hook-first-event-from-committed-zero-byte-month-passes' ($zeroMonthAppend.ExitCode -ceq 0 -and $zeroMonthCommit.ExitCode -ceq 0 -and $zeroMonthCommit.Text -cmatch 'PASS' -and $zeroMonthCommit.Text -cnotmatch 'cannot find the file.*check_verdict_kill') (($zeroMonthAppend.Output,$zeroMonthCommit.Text)-join "`n")
+    Add-Case 'real-hook-first-event-from-committed-zero-byte-month-passes' ($zeroMonthAppend.ExitCode -ceq 0 -and $zeroMonthCommit.ExitCode -ceq 0 -and $zeroMonthCommit.Text -cmatch 'PASS' -and $zeroMonthCommit.Text -cnotmatch 'cannot find the file') (($zeroMonthAppend.Output,$zeroMonthCommit.Text)-join "`n")
 
     # ------------------------------------------------------------------
     # Locking, concurrency, idempotency, and atomic installation
