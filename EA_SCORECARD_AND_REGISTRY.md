@@ -18,7 +18,8 @@ from the now-demoted robustness-validator + backtest-report-analyzer calculators
 
 | Legacy term | Canonical reading | Note |
 |---|---|---|
-| DISQUALIFIED (hard gate) / REJECT-structural | **DEAD-STRUCTURAL** | uncapped-ruin · cracked · expired · flat-lot PF<1 · fill-artifact |
+| DISQUALIFIED (hard gate) / REJECT-structural | **DEAD-STRUCTURAL** | uncapped-ruin · cracked · expired · fill-artifact · ⚠️ **NOT flat-lot PF<1 — see the row below** |
+| DISQUALIFIED *citing flat-lot PF<1 alone* | **re-open as ENGINE-EDGE**, not a kill | The 2026-07-19 carve-out (CLAUDE.md VERDICT GATE item 1, user-ratified) ended the flat-lot auto-kill: flat-lot PF<1 while escalated PF>1 now routes to the **5-condition cage** (computable worst case + hard depth cap · BWD 2020-22 as a **HARD** gate · Model-4 mandatory · MC ruin ≤2% · permanently small sizing, never sized up on PF). This map read `flat-lot PF<1 → DEAD-STRUCTURAL` for nine days after the rule changed, so **any kill dated on or before 2026-07-28 that rests on flat-lot alone is suspect and must be re-read through the cage before it is trusted.** |
 | DEAD / REJECT-after-optimize | **DEAD-OPTIMIZED** | earned terminal after full ladder + last-optimize on right home |
 | PASS / ROBUST (Mode A) | **CANDIDATE** (→ DEMO if deploy funnel cleared) | passed screening/robustness ≠ deployed |
 | CONDITIONAL / MARGINAL / Mode-B / CANDIDATE_WEAK | **BUILD-ON** or **PARKED-VERIFY(user)** | PF>1 under deploy bars → buildable, never a silent kill |
