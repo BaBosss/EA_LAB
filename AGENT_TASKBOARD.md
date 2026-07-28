@@ -99,6 +99,51 @@
 > เขียนสเปกไว้ครบแต่ไม่เคยมีใครรัน · 543 = fan ของ ORDER-431 ที่**เลือกค่าที่ขอบกริดพอดี** · 544 = กรง ENGINE-EDGE
 > ที่ NuiIndy ไม่เคยเดิน. **ลำดับบังคับ: 540 ต้องผ่านก่อน 541/542/543 จึงจะรันได้**
 
+## ORDER-545 — [🟠 tooling/integrity] pre-commit อ่าน working tree ไม่ใช่ staged snapshot ⇒ กรงถูกข้ามได้ด้วยการ stage บางส่วน — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+
+**ที่มา:** Codex blind audit (2026-07-28, `task-ms4nya1e-ras9db`) ของงานกรง ORDER-372 — ข้อเดียวที่**จงใจไม่แก้ในรอบนั้น**
+เพราะมันไม่ใช่บั๊กของกรงใหม่ แต่เป็น**คุณสมบัติเชิงระบบของ fast-cages ทั้งชุด**
+
+**สิ่งที่ Codex พิสูจน์:** `.githooks/pre-commit` เลือกว่าจะรัน `run_fast_cages.ps1` ไหมจาก **pathspec ของ staged files**
+(ถูกต้อง) แต่ suite ที่ถูกเรียกไป **อ่านไฟล์จาก working tree** (`Get-Content $f.FullName`) ⇒ เกิด 2 อาการตรงข้ามกัน:
+- **ปล่อยของเสียผ่าน:** stage เวอร์ชันที่มีบั๊ก + แก้ไว้ใน working tree (ยังไม่ stage) ⇒ trigger ยิง แต่ suite อ่านเวอร์ชันที่แก้แล้ว ⇒ **commit เนื้อหาที่พังเข้าไปได้**
+- **บล็อกของดี:** stage เวอร์ชันที่ถูก แต่ working tree มีเวอร์ชันพังค้างอยู่ ⇒ commit ที่ไม่มีอะไรผิดถูกปฏิเสธ
+
+**ขอบเขตจริง:** ไม่ใช่เฉพาะ 2 suite ใหม่ — `run_statusclass` · `run_blobmap_encoding` · `run_mris_asof` · `run_b1_guard`
+ก็อ่าน working tree เหมือนกัน (ข้อยกเว้น = `check_order_collision.ps1` ซึ่งอ่าน `git diff --cached` ถูกต้องอยู่แล้ว)
+⇒ **นี่คือหนี้เก่าที่มีมาก่อน ORDER-372 ไม่ใช่ของใหม่**
+
+**task:** เลือก 1 ใน 2 ทาง แล้วทำให้จบ พร้อมกรงพิสูจน์ทั้งสองทิศ
+- (ก) ให้ hook รัน suite บน **staged snapshot** (`git stash --keep-index` แล้วคืนค่า / หรือ `git worktree add` ชั่วคราวจาก index)
+  — ตรงประเด็นที่สุด แต่ `git stash` ในฮุคมีความเสี่ยงของมันเอง (ถ้าฮุคตายกลางทาง งานใน working tree หาย) ⇒ **ต้องมี trap คืนค่าเสมอ**
+- (ข) ให้ suite อ่านเนื้อหาจาก index โดยตรง (`git show :<path>`) แทน `Get-Content` — ปลอดภัยกว่ามาก ไม่แตะ working tree เลย
+  **👉 แนะ (ข)** เพราะไม่มีทางทำงาน user หาย และแก้ที่ตัว suite ซึ่งเป็นที่ที่ความผิดอยู่จริง
+
+**bars:** ต้องพิสูจน์ **ทั้งสองทิศ** ถึงจะปิดได้ — (1) stage ไฟล์ที่จงใจผิด + แก้ไว้ใน working tree ⇒ **commit ต้องถูกปฏิเสธ**
+(2) stage ไฟล์ที่ถูก + ปล่อยไฟล์พังไว้ใน working tree ⇒ **commit ต้องผ่าน** · ทั้งสองเคสต้องเป็น assert ในกรง ไม่ใช่ทดลองมือแล้วเล่าให้ฟัง
+
+**ห้าม:** ใช้ `git stash` โดยไม่มี trap คืนค่า · แก้เฉพาะ 2 suite ใหม่แล้วบอกว่าปิด (อีก 4 suite มีอาการเดียวกัน) ·
+ปิดใบนี้โดยอ้างว่า "ยังไม่เคยเกิดขึ้นจริง" — `partial staging` เป็นเรื่องปกติของการทำงานทุกวัน
+
+## ORDER-546 — [test] `(EXP)_AdaptGridMC_rev01`: EA ที่ build เสร็จตั้งแต่ 2026-07-20 แต่**ไม่เคยรัน backtest แม้แต่ครั้งเดียว** — `OPEN` · ทำได้: oc-qwen · ZCode · Claude/Sonnet · 👉 แนะ: oc-qwen
+
+**ที่มา:** ORDER-141 ปิดเป็น `DONE(build-only 2026-07-20) — backtest ยังไม่เริ่ม` ตามคิว user ตอนนั้น (spec→code→compile+tests พอ)
+⇒ ตอนนี้มี EA ที่ compile ผ่าน + ผ่าน `mql-code-reviewer` แล้ว **นอนอยู่เฉยๆ โดยไม่มีหลักฐานสักตัว** — ถูกที่สุดที่จะรู้ว่ามันตายหรือรอด
+
+**task (ตามลำดับ หยุดได้ทันทีที่ขั้นก่อนหน้าไม่ผ่าน):**
+- **STEP 0:** ผ่าน ORDER-540 ก่อน (เพิ่ม `(EXP)_AdaptGridMC_rev01` เข้าไปในตาราง 3 EA ของใบนั้น) — binary ต้องสด + lever ต้อง grep เจอ
+- **STEP 1:** export D1 CSV จริงของ BTCUSD + ETHUSD แล้วสร้าง zone ด้วยสคริปต์ python offline ตามที่ ORDER-141 เขียนไว้
+- **STEP 2:** **BWD 2020.01.01–2022.12.31 = HARD gate** (ORDER-141 กำหนดเอง) · Model 4 · **flat-lot ตาม spec** ·
+  ⚠️ **crypto ต้องซอยหน้าต่างเสมอ** (memory `mt5-no-disk-space-is-memory-ceiling` — 3 ปีเต็มของ BTC ชน RAM แล้วคืน `bars=0` ซึ่งเป็น artifact ห้ามกรอก)
+- **STEP 3 (เฉพาะเมื่อ BWD ≥1.0):** MAIN 2023.01.01–2025.12.31 Model 4 ซอยเหมือนกัน
+
+**bars:** BWD <1.0 ⇒ หยุด เขียน `no-pulse` (HARD gate ของใบนี้ ไม่ใช่ soft) · BWD ≥1.0 AND MAIN ≥1.2 ⇒ `both-window-pulse`
+**⚠️ ทุกแถวเขียน `trades` + `DD%` ข้าง PF** · **ทุก cell crypto เขียน `swap-unadjusted` ต่อท้ายเสมอ**
+(backtest คิด swap = 0 แต่ของจริง BTC long −14.67%/ปี · ETH −9.86%/ปี ⇒ กำไรที่เห็นยังไม่หักต้นทุนถือ)
+
+**ห้าม:** เริ่มก่อน ORDER-540 เคลียร์ EA ตัวนี้ · ใช้ Model < 4 · แตะ 2026H1 · รัน MAIN ก่อน BWD ผ่าน (ประหยัด และ
+BWD คือประตูของใบนี้) · เทียบ PF ของ crypto กับ EA ที่ไม่ใช่ crypto ตรงๆ · เขียน verdict เอง
+
 ## ORDER-540 — [🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน — ประตูบังคับก่อนใบ 541/542/543 — `OPEN` · ทำได้: Claude/Sonnet · oc-qwen · 👉 แนะ: Sonnet
 
 **ที่มา:** ORDER-341 พบว่า detector ปิดบัง **48 จาก 56** binary ที่ stale (เช็ค `HASH_DIFFERS` ก่อน `STALE` +
