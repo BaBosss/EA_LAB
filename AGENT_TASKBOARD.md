@@ -2571,3 +2571,69 @@ DEPLOYMENTS.csv หรือแก้ `.set` ให้ pin — **การแก
 **ห้าม:** เปลี่ยน `_0_Magic` ของ EA ที่ยังมี position เปิดโดยไม่มี user เคาะ · เดาว่าเป็น EA ตัวไหนจาก
 รายชื่อ chart โดยไม่เปิดหน้า Inputs ดูจริง (memory `stale-detector-masked-by-advisory-label`:
 ก่อน A/B ต้องเปิดหน้า Inputs ยืนยันว่า lever โผล่จริง — เหตุผลเดียวกัน)
+
+---
+
+### STEP 1-3 MEASURED 2026-07-28 (`S-2026-07-28-MAGIC511`) — `AWAITING-USER-INPUTS-READ`, order stays `OPEN`
+
+**Answer to STEP 3 up front (the question that decides whether attribution is broken):** no second
+template EA on the default could be demonstrated, and the evidence says the number **currently
+running** on `990001` is most likely **zero** — the GV looks like residue, not a live instance.
+⇒ **the October judge's per-magic P&L is most likely NOT compromised.** Not closed: two legs have no
+trade evidence and only the user's Inputs read can settle them. **Nothing was changed.**
+
+**A · the GV is in the pre-ORDER-132 key format.** `Boss_<magic>_<name>` is `Persist_LegacyKey`
+(`core/Persist.mqh:88`); the current build writes `Boss2_<srvhash>_<login>_<symbol>_<magic>_<name>`
+(`:39`). ⇒ written by a **pre-132 binary** — independent corroboration of **ORDER-510**.
+
+**B · the current build cannot produce this.** `core/LabCore.mqh:235-239` (the ORDER-129 guard)
+returns `INIT_FAILED` when `_0_Magic==990001` outside the tester. The fleet's pre-132 binaries have
+no such guard ⇒ a default-magic attach is possible there. This GV is evidence the guard was needed.
+
+**C · only 5 EAs on this account can land on `990001` at all.** `_0_Magic` exists only in the Boss V2
+template wrappers (`Boss_11..Boss_18`); every other EA on the account uses a different magic input
+name — `_06_Magic` · `_07_Magic` · `_05_Magic` · `MagicNo` · `InpMagic` · `InpMagicsCsv`. Verified by
+reading the inputs, **not** inferred from EA names. The five: Wave5 XAUUSDm `990301` · Wave5 XAGUSDm
+`990302` · Wave5 USDJPYm `990303` · Boss_12_Breakout USDJPYm `990120` · Boss_16 Kangaroo XAUUSDm `990016`.
+
+**D · every bundled `.set` in `_vps_deploy` pins its magic — 37/37, no exceptions.** So no shipped
+bundle explains `990001`; an unpinned instance would have to have been attached **without loading its
+`.set`**. <sub>🔴 This scan had to be run twice. The `.set` files are **UTF-16LE**, so the first
+byte-level grep reported `NO _0_Magic` for 31 of 37 files — **all false**, and it pointed at the wrong
+EA. Caught by hexdumping a file the grep called empty. memory `prove-the-instrument-can-see-the-file`.</sub>
+
+**E · magic `990001` has never traded here.** `portfolio/live_deals/EA_LAB_deals_463666728_20260727.csv`
+(29 rows): magics present = `990020 · 990120 · 990301 · 990302 · 991003 · 991070`, plus `magic 0` = the
+two deposits. **No `990001`.** And the three template legs that did trade each stamped their **own
+pinned magic** — direct proof those three are pinned, since a defaulted instance would have stamped 990001.
+
+**F · the value dates itself to before the equity raise.** Deposits: **10,000 on 2026-07-16 15:48**,
+**+90,000 on 2026-07-25 00:57**. `rc_peak_eq = 10136.29` can only have been written inside that window.
+`rc_peak_eq` is a monotonic high-water mark re-persisted whenever equity exceeds it
+(`core/RiskControl.mqh:246-249`) from `RiskControl_CheckDD()`, which runs **first on every tick, before
+the bar gate and before any trading logic** (`core/LabCore.mqh:442`; the Kangaroo path too,
+`core/entries/Kangaroo.mqh:579`) ⇒ **it updates even for an EA that never trades.** So if anything with
+magic `990001` were still ticking on this account, that GV would read **~100,0xx, not 10,136.29**.
+
+**Honest limits on F — it is a strong inference, not proof:** (1) it reads the **current** source while
+the binary that wrote the key is **pre-132**; that build's persist logic was not verified to be identical
+(2) it assumes `RC_PersistHalt=true` / `DryRun=false` on that instance (3) legacy keys are **magic-only
+with no account identity** — the exact bug ORDER-132 fixed — so the key could in principle have come from
+another account this terminal was once logged into. The 10k-era match with this account is suggestive,
+not exclusive.
+
+**Still unproven, and the only reason this is not closed:** the two template legs with **no trade
+evidence** — **`990303`** (Wave5 USDJPYm, attached 07-18; legitimately thin at 11-17 trades/yr, so its
+silence has a benign explanation) and **`990016`** (Boss_16 Kangaroo XAUUSDm, attached 07-26 — after the
+deals export **and** after the 10k window closed, so it **cannot** be the writer, but could still be
+unpinned today).
+
+**Handed to the user (cheapest-first), pending:** (1) F3 → read back every GV named `Boss_*`/`Boss2_*`
+**with its value** — each name embeds a magic, so the list enumerates every template EA that has actually
+ticked on that terminal; `990303` absent while `990001` present would be near-proof of which leg it is
+(2) open the Inputs tab of the 5 charts in **C** and read the magic line **verbatim, name and value**
+(3) report the **total count of charts with an EA attached** — the inventory expects 16 on this account,
+and a higher count means an EA nobody has on the books, which would be a larger finding than the magic.
+
+**Nothing marked REVIEWED ⇒ no B1 row owed** (B1 is a live observation, never reconstructed —
+Decision log 2026-07-26).
