@@ -289,11 +289,11 @@
 | ORDER-421 | 2026-07-28 | REVIEWED | [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ |  | ACTIVE:113 |
 | ORDER-430 | 2026-07-28 | REVIEWED | [host search] Find a Boss_11..18 host whose BWD actually survives, so the two caged lever… |  | ACTIVE:1734 |
 | ORDER-431 | 2026-07-28 | REVIEWED | [optimize] MacdDiv_Naked USDJPY H4: the one home that cleared both windows and has never… |  | ACTIVE:1856 |
-| ORDER-432 |  | OPEN | [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in fi… |  | ACTIVE:1953 |
-| ORDER-433 |  | OPEN | [portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg s… |  | ACTIVE:1998 |
-| ORDER-434 |  | OPEN | [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D… |  | ACTIVE:2042 |
-| ORDER-490 |  | OPEN | [🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → **G4 runs and acc… |  | ACTIVE:2072 |
-| ORDER-500 |  | OPEN | [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that… |  | ACTIVE:2129 |
+| ORDER-432 |  | OPEN | [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in fi… |  | ACTIVE:1955 |
+| ORDER-433 |  | OPEN | [portfolio risk] The single-leg-basket proxy is not the fix; build the combined two-leg s… |  | ACTIVE:2000 |
+| ORDER-434 |  | OPEN | [🔴 data integrity] MRIS crisis models: stale data is being relabelled fresh, and Phase D… |  | ACTIVE:2044 |
+| ORDER-490 |  | OPEN | [🔴 guard coverage] ~~Wave5 guard G4 has never been observed firing~~ → **G4 runs and acc… |  | ACTIVE:2074 |
+| ORDER-500 |  | OPEN | [🔴 data integrity] `B1_DATASET.csv` lost a row to a missing newline, and the guard that… |  | ACTIVE:2131 |
 | ORDER-501 |  | OPEN | [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ ev… |  | ACTIVE:166 |
 | ORDER-GEN-STANDING |  | OPEN-STANDING | matrix screening (standing order, ไม่มีวัน DONE) |  | ACTIVE:674 |
 | ORDER-LANEA-AB | 2026-07-18 | DONE + REVIEWED | JumStoch (Boss_18) direction×lever A/B, Model-4 both-window | DEAD-OPTIMIZED (port-level). base-gate 16 M4 runs 0.58–0.71 (no pulse) → last-optimize exit lever (base fixed… | ARCHIVE:6985 |
