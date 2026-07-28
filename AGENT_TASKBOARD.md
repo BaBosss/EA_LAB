@@ -2771,7 +2771,7 @@ measurement.</sub>
 
 ---
 
-## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `OPEN` · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
+## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `REVIEWED(Claude/Opus 2026-07-28)` — user อ่าน Inputs ครบ 4 ช่องที่เหลือ ตรงกับ `.set` ทั้งหมด ⇒ `.set` ถูกโหลดจริง ไม่ใช่พิมพ์มือ · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 
 **หลักฐาน:** F3 บน 463666728 (2026-07-28) แสดง `Boss_990001_rc_peak_eq = 10136.29` ·
@@ -3225,7 +3225,25 @@ that refutes it. `portfolio/live_deals/EA_LAB_deals_463666728_20260728.csv` carr
   leg was flat by then, so it agreed with "zero" for the wrong reason. Two sources agreeing is not two
   measurements when one of them cannot see closed trades.</sub>
 
-**🟠 STILL THE ONLY THING BLOCKING `REVIEWED` — one Inputs tab, five fields.** The GV proves `_0_Magic`
+### 🟢 CLOSED 2026-07-28 — the read came back clean, all four fields
+
+User opened the Inputs tab of `Boss_17_Wave5 (USDJPYm,H1)` on 463666728 and reported **all four remaining
+fields at their `.set` values** (`_9_MaxLevels=1` · `_23_TrailStart=2000` · `_23_TrailStep=800` ·
+`_17_Wave3MinMult=1.618`), verbatim: *"ถูกหมดอยู่แล้ว"*. With `_0_Magic=990303` already proven by
+`Boss_990303_rc_peak_eq` and the key list proven exhaustive (9 keys in the file, 6 differing), **every
+differing key is now accounted for** ⇒ the chart is running the bundle, the re-pin was a real `.set`
+load and not a hand edit of one field, and the alternative this order was held open for — five fields
+still sitting at compiled defaults behind a correct-looking magic — is **refuted**.
+
+⇒ **`REVIEWED`.** The judge clock stands as re-based: `start_date=2026-07-28`, `judge_date=2027-07-28`.
+From here the leg accumulates evidence on the config that actually passed the funnel.
+
+<sub>**Provenance, stated plainly:** this is a **user-reported read, not a screenshot** — unlike the
+07-28 13:29 reading that produced the original finding. It is the same instrument either way (only the
+terminal can show a chart input), and it is the user's own chart, so it is accepted. Recorded as
+reported rather than as attested so that anyone re-opening this knows which of the two it was.</sub>
+
+**~~🟠 STILL THE ONLY THING BLOCKING `REVIEWED`~~ — resolved above; kept for the record.** The GV proves `_0_Magic`
 took. It does **not** prove the `.set` was *loaded*: hand-typing `990303` into one field produces the
 same GV, and leaves the other five at defaults. Read on `Boss_17_Wave5 (USDJPYm,H1)`, account
 463666728: `ExitMode` → **23 Trailing stop** · `_9_MaxLevels` → **1** · `_23_TrailStart` → **2000** ·
