@@ -63,7 +63,9 @@ $cVals = $shared | ForEach-Object { $gsmc[$_] + $mg[$_] }
 $n     = $shared.Count
 $cMean = ($cVals | Measure-Object -Sum).Sum / $n
 $cStd  = [Math]::Sqrt((($cVals | ForEach-Object { ($_-$cMean)*($_-$cMean) }) | Measure-Object -Sum).Sum / ($n-1))
-$cPos  = ($cVals | Where-Object { $_ -gt 0 }).Count
+# @() is load-bearing: a bare ($pipeline).Count is $null - not 1 - when EXACTLY ONE element
+# matches, so a single positive month would report as no positive months. Same class as ORDER-341.
+$cPos  = @($cVals | Where-Object { $_ -gt 0 }).Count
 
 Write-Host ""
 Write-Host "=== COMBINED OOS PORTFOLIO ===" -ForegroundColor Yellow

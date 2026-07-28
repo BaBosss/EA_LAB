@@ -112,13 +112,62 @@ function Read-Result([string]$reportName) {
   }
 }
 
+# ORDER-372 (2026-07-28): this function used to call mt5_run.ps1 WITHOUT capturing its output.
+# In PowerShell a function returns everything its body writes to the success stream, not just what
+# `return` names - so mt5_run.ps1's own Write-Output diagnostics ("launch: ...", "NO REPORT ...",
+# "ABORT: ...") became part of Invoke-Probe's return value. The caller then held a string[] instead
+# of one object, `if ($r)` passed because a non-empty array is truthy, and `$r | Add-Member` threw
+# "Cannot bind argument to parameter 'InputObject' because it is null" on the $null that `return
+# $null` had appended. The crash therefore surfaced far from its cause AND swallowed the runner's
+# real message - which on the run that exposed this said `ABORT: MT5 instance already running`,
+# the one fact that would have explained everything immediately.
+# Fix: capture the runner's output, print it as text, and keep the object as the only stream output.
 function Invoke-Probe([string]$name, [string]$setPath) {
   Write-Host ">> $name" -ForegroundColor Cyan
-  & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $Symbol -Period $Period `
+  $runStart = Get-Date
+  $runnerOut = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $Symbol -Period $Period `
       -FromDate $FromDate -ToDate $ToDate -Model 4 -Deposit $Deposit -Leverage $Leverage `
-      -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec
+      -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec 2>&1
+  $runnerExit = $LASTEXITCODE
+  foreach ($line in @($runnerOut)) { Write-Host "   | $line" -ForegroundColor DarkGray }
+  # mt5_run.ps1's exit codes are load-bearing and were previously discarded: 0 ok, 1 no report,
+  # 2 abort (GUI/lane busy or terminal missing), 3 leverage mismatch. Naming the code turns a bare
+  # "no report produced" into a diagnosis.
+  $why = switch ($runnerExit) {
+    1 { "runner exit 1 = NO REPORT (check EA name / symbol history / login)" }
+    2 { "runner exit 2 = ABORT (MT5 instance for this install already running, or terminal not found)" }
+    3 { "runner exit 3 = LEVERAGE MISMATCH (report kept but numbers are not comparable)" }
+    default { $null }
+  }
+  # ORDER-372 second defect, found by end-to-end testing the fix above: an ABORTED run can report a
+  # PREVIOUS run's numbers as if they were fresh. mt5_run.ps1's ORDER-094 D3 clear exists precisely to
+  # stop "a stale report surviving a run that produced none" - but it runs AFTER the two `exit 2`
+  # abort checks, so the abort path is the one hole it does not cover. Observed live: pointing the
+  # runner at a non-existent terminal aborted with exit 2, and this probe then printed PF=1.77 off a
+  # leftover .htm. File existence is NOT evidence that THIS run produced it, so gate on two things:
+  #   (a) the exit code - 1 (no report) and 2 (abort) mean nothing was produced, whatever is on disk
+  #   (b) the report's mtime - it must be newer than the moment this run started
+  # Exit 3 is different: the report IS from this run, it just used the wrong leverage, so it stays a
+  # warning rather than a refusal.
+  if ($runnerExit -eq 1 -or $runnerExit -eq 2) {
+    Write-Host "   [FAIL] runner produced no report - $why" -ForegroundColor Red
+    Write-Host "          (any $name.htm on disk is from an EARLIER run and is deliberately ignored)" -ForegroundColor Red
+    return $null
+  }
+  $htmPath = Join-Path $reports "$name.htm"
+  if (Test-Path $htmPath) {
+    $age = (Get-Item $htmPath).LastWriteTime
+    if ($age -lt $runStart) {
+      Write-Host ("   [FAIL] STALE REPORT: $name.htm was written {0}, before this run started {1} - refusing to report it as fresh." -f $age, $runStart) -ForegroundColor Red
+      return $null
+    }
+  }
   $r = Read-Result $name
-  if (-not $r) { Write-Host "   [FAIL] no report produced" -ForegroundColor Red; return $null }
+  if (-not $r) {
+    Write-Host "   [FAIL] no report produced$(if ($why) { " - $why" })" -ForegroundColor Red
+    return $null
+  }
+  if ($why) { Write-Host "   [WARN] $why" -ForegroundColor Yellow }
   # The leverage assertion is not decoration here: the archived evidence for this very setting
   # ran at 1:2000 while its ini asked for 1:100, and nobody noticed for nine days.
   $levNote = if ($r.leverage -eq $Leverage) { "leverage 1:$($r.leverage) OK" } else { "LEVERAGE 1:$($r.leverage) != requested 1:$Leverage" }
@@ -156,8 +205,11 @@ elseif ($Stage -eq '2') {
     $r = Invoke-Probe ("O222_S2_ld{0}_cut{1}" -f $LotDivided, $cut) $s
     if ($r) { $r | Add-Member -NotePropertyName cutloss -NotePropertyValue $cut; $results += $r }
   }
-  $c30 = $results | Where-Object cutloss -eq 30
-  $c100 = $results | Where-Object cutloss -eq 100
+  # @() so a single match stays a collection: a bare ($pipeline) is the scalar itself and a bare
+  # ($pipeline).Count is $null - not 1 - when EXACTLY ONE item matches. Same class of silent pass
+  # that hid 48 stale binaries in ORDER-341.
+  $c30  = @($results | Where-Object { $_ -and $_.cutloss -eq 30 })  | Select-Object -First 1
+  $c100 = @($results | Where-Object { $_ -and $_.cutloss -eq 100 }) | Select-Object -First 1
   if ($c30 -and $c100) {
     Write-Host ""
     # Identical output on both arms is the one answer that means "still untested". Say it plainly
@@ -178,5 +230,16 @@ $results | Where-Object { $_ } | Format-Table report, pf, trades, net, eqdd_pct,
 # quietly replaces a different experiment's results is its own small version of this order's theme.
 $suffix = if ($Stage -eq '2') { "2_ld{0}" -f $LotDivided } else { $Stage }
 $csv = Join-Path $root ("_triage\ORDER222_probe_stage{0}.csv" -f $suffix)
-$results | Where-Object { $_ } | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8
-Write-Host "results -> $csv"
+# ORDER-372: `Where-Object { $_ }` drops $null but NOT strings, and under the output-leak bug above
+# $results was mostly leaked runner text. Export-Csv on a string exports its .Length - which is why
+# EVERY probe CSV in _triage predating this fix contains a "Length" column of byte counts instead of
+# PF/trades/net/eqDD. That is also why the bug lived so long: on a run that SUCCEEDED it corrupted
+# the CSV silently, and only crashed when a run failed and appended a $null for Add-Member to reject.
+# Keep only real result objects, and never let an empty set overwrite a previous experiment's file.
+$clean = @($results | Where-Object { $_ -and $_.PSObject.Properties.Name -contains 'report' })
+if ($clean.Count -eq 0) {
+  Write-Host "no usable results this run - leaving $csv untouched rather than blanking it" -ForegroundColor Yellow
+} else {
+  $clean | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8
+  Write-Host "results -> $csv"
+}

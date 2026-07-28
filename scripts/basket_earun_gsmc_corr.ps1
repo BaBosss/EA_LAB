@@ -109,7 +109,10 @@ foreach ($m in $allMonths) {
 $n    = $combinedPnl.Count
 $mean = ($combinedPnl | Measure-Object -Average).Average
 $std  = [Math]::Sqrt( ($combinedPnl | ForEach-Object { ($_ - $mean)*($_ - $mean) } | Measure-Object -Sum).Sum / [Math]::Max($n-1,1) )
-$wins = ($combinedPnl | Where-Object { $_ -gt 0 }).Count
+# @() is load-bearing: a bare ($pipeline).Count is $null - not 1 - when EXACTLY ONE element
+# matches. Without it a single winning month makes $wins null, and the $wr line below then divides
+# null by n and prints a 0% win rate - a plausible wrong number rather than an error. ORDER-341 class.
+$wins = @($combinedPnl | Where-Object { $_ -gt 0 }).Count
 $wr   = $wins / $n * 100
 $sharpe = if ($std -gt 0) { $mean / $std * [Math]::Sqrt(12) } else { 0.0 }
 $total = ($combinedPnl | Measure-Object -Sum).Sum

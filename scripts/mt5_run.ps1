@@ -82,6 +82,16 @@ $destHtm = "$auto\reports\$ReportName.htm"
 # that produces NO fresh report - otherwise every downstream reader (tpl_regression, run_tests,
 # any caller that just checks "does the .htm exist") sees old evidence and calls it a pass.
 # Clear both source-side (tester DataDir) and destination-side (_mt5_auto\reports) before launch.
+# ⚠️ ORDER-372 (2026-07-28) - THE HOLE THIS CLEAR DOES NOT COVER, READ BEFORE RELYING ON IT:
+# the two `exit 2` aborts above (GUI/lane busy at ~L72, terminal-not-found at ~L75) return BEFORE
+# this line runs, so on the abort path a previous run's report is left exactly where it was. That
+# is deliberate - an abort must not delete files belonging to whichever lane is currently running -
+# but it means "the .htm exists" is NOT evidence that THIS invocation produced it. Demonstrated
+# live: order215_matchagrid_cutloss_probe.ps1 pointed at a bogus -Terminal aborted with exit 2 and
+# then reported PF=1.77 off a leftover report as though it were a fresh measurement.
+# ⇒ CALLERS MUST CHECK THE EXIT CODE (0 ok / 1 no report / 2 abort / 3 leverage mismatch), and
+#   ideally also that the report's mtime is newer than the moment they started the run. Both probe
+#   scripts now do exactly that; copy that gate rather than inferring freshness from existence.
 Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 Get-ChildItem "$auto\reports" -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 

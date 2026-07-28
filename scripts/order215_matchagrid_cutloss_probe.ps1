@@ -179,11 +179,49 @@ function Invoke-Probe([string]$name, [string]$setPath) {
   if ($Terminal) { $extra.Terminal = $Terminal }
   if ($DataDir)  { $extra.DataDir  = $DataDir }
   if ($Portable) { $extra.Portable = $true }
-  & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $Symbol -Period $Period `
+  # ORDER-372 (2026-07-28): same defect as order222_cutloss_probe.ps1, fixed the same way and for
+  # the same reason. Calling the runner without capturing its output makes the runner's Write-Output
+  # diagnostics part of THIS function's return value, so the caller gets a string[] rather than one
+  # object; `if ($r)` then passes on a truthy array and the later `$r | Add-Member` (below) throws on
+  # the $null that `return $null` appended, far from the cause and with the runner's real message -
+  # e.g. "ABORT: MT5 instance already running" - discarded. ORDER-215's re-measure funnel is still
+  # open and runs through here, so this was live.
+  $runStart = Get-Date
+  $runnerOut = & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $expert -Symbol $Symbol -Period $Period `
       -FromDate $FromDate -ToDate $ToDate -Model 4 -Deposit $Deposit -Leverage $Leverage `
-      -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec @extra
+      -SetFile $setPath -ReportName $name -TimeoutSec $TimeoutSec @extra 2>&1
+  $runnerExit = $LASTEXITCODE
+  foreach ($line in @($runnerOut)) { Write-Host "   | $line" -ForegroundColor DarkGray }
+  $why = switch ($runnerExit) {
+    1 { "runner exit 1 = NO REPORT (check EA name / symbol history / login)" }
+    2 { "runner exit 2 = ABORT (MT5 instance for this install already running, or terminal not found)" }
+    3 { "runner exit 3 = LEVERAGE MISMATCH (report kept but numbers are not comparable)" }
+    default { $null }
+  }
+  # ORDER-372 second defect - see the long note in order222_cutloss_probe.ps1. An ABORTED run can
+  # report a PREVIOUS run's numbers as fresh, because mt5_run.ps1's ORDER-094 stale-report clear runs
+  # AFTER its `exit 2` abort checks. This exact script is what demonstrated it: run with a bogus
+  # -Terminal it aborted with exit 2 and then happily printed PF=1.77 from a leftover report. Gate on
+  # the exit code AND on the report being newer than this run's start.
+  if ($runnerExit -eq 1 -or $runnerExit -eq 2) {
+    Write-Host "   [FAIL] runner produced no report - $why" -ForegroundColor Red
+    Write-Host "          (any $name.htm on disk is from an EARLIER run and is deliberately ignored)" -ForegroundColor Red
+    return $null
+  }
+  $htmPath = Join-Path $reports "$name.htm"
+  if (Test-Path $htmPath) {
+    $age = (Get-Item $htmPath).LastWriteTime
+    if ($age -lt $runStart) {
+      Write-Host ("   [FAIL] STALE REPORT: $name.htm was written {0}, before this run started {1} - refusing to report it as fresh." -f $age, $runStart) -ForegroundColor Red
+      return $null
+    }
+  }
   $r = Read-Result $name
-  if (-not $r) { Write-Host "   [FAIL] no report produced" -ForegroundColor Red; return $null }
+  if (-not $r) {
+    Write-Host "   [FAIL] no report produced$(if ($why) { " - $why" })" -ForegroundColor Red
+    return $null
+  }
+  if ($why) { Write-Host "   [WARN] $why" -ForegroundColor Yellow }
   $levNote = if ($r.leverage -eq $Leverage) { "leverage OK" } else { "LEVERAGE 1:$($r.leverage) != requested 1:$Leverage" }
   Write-Host ("   PF=$($r.pf)  trades=$($r.trades)  net=$($r.net)  eqDD=$($r.eqdd_pct)%  bars=$($r.bars)  ticks=$($r.ticks)  $levNote  truncated=$($r.truncated)") `
     -ForegroundColor $(if ($r.leverage -eq $Leverage) { 'Green' } else { 'Red' })
@@ -258,5 +296,13 @@ elseif ($Stage -eq '2') {
 Write-Host ""
 $results | Where-Object { $_ } | Format-Table report, pf, trades, net, eqdd_pct, clusters, cut_candidates, worst_cluster_pct, truncated -AutoSize
 $csv = Join-Path $root ("_triage\ORDER215_probe_stage{0}.csv" -f $Stage)
-$results | Where-Object { $_ } | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8
-Write-Host "results -> $csv"
+# ORDER-372 - see the matching note in order222_cutloss_probe.ps1. Where-Object { $_ } drops $null
+# but not strings, and Export-Csv on a string writes its .Length, which is why every pre-fix probe
+# CSV in _triage has a "Length" column of byte counts where the metrics should be.
+$clean = @($results | Where-Object { $_ -and $_.PSObject.Properties.Name -contains 'report' })
+if ($clean.Count -eq 0) {
+  Write-Host "no usable results this run - leaving $csv untouched rather than blanking it" -ForegroundColor Yellow
+} else {
+  $clean | Export-Csv -Path $csv -NoTypeInformation -Encoding UTF8
+  Write-Host "results -> $csv"
+}
