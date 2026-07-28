@@ -2814,3 +2814,62 @@ when the leg is flat, and sequence it ahead of the ORDER-510 binary refresh.
 
 **Nothing changed on any chart, no `.set` edited, no DEPLOYMENTS row written — STEP 4 is the user's
 call. Not marked REVIEWED ⇒ no B1 row owed.**
+
+### (ก) the frozen `rc_peak_eq` — resolved from the pre-132 source, and it is BENIGN
+
+The binaries are pre-ORDER-132, so I stopped guessing at their internals and read them:
+`git show 0dcf60e2~1:ea_template/core/RiskControl.mqh` (0dcf60e2 = the commit that introduced
+`Persist_MigrateLegacy`). The pre-132 HWM logic is **identical in shape** to today's — init to current
+equity (`:101`), write only when `eq > peak` (`:148-151`).
+
+**What fits every observation:** MT5's Global-Variables `Time` column is the time of last **access**,
+not last write. `Persist_Get("rc_peak_eq", ...)` at init is a read, so **2026-07-26 17:02 = when these
+four EAs last restarted**, not when 10136.29 was written. The value is genuine 10k-era residue that has
+simply never been overwritten, because `eq > peak` has not been true since the restart (balance 99,907.33
+/ equity 99,951.18 — the account is slightly *below* its high-water mark, so the write at `:151` never
+fires). Checkable in the Experts log: expect init lines at 17:02 on 07-26.
+
+**Why it is not a risk, from the code rather than from reassurance:** on init the pre-132 path does
+`p = Persist_Get("rc_peak_eq", 0.0); if(p > g_rc_peak_equity) g_rc_peak_equity = p;` (`:128-129`) — it
+takes the **max**, so a stale-**low** persisted peak can never pull the live peak down. The in-memory peak
+is correct and `KillDD` measures from it normally. The dangerous direction is a stale-**high** foreign
+peak, which is what ORDER-138 fail-closes on; this is the harmless inverse. **No action needed.**
+
+**Not claimed:** that the legs are definitely not halted. The above explains the data without needing a
+halt, but only the Experts log can rule one out, and "the demo record is not what it appears" stays open
+until someone reads it.
+
+### (ข) chart list vs inventory — 1 unregistered, 2 unaccounted, list was truncated
+
+Reconciling the visible attached-EA list against the **17** `DEPLOYMENTS.csv` rows for this account:
+
+- **14 legs matched**, 2 expected non-trading utilities present (`AccountSnapshotExporter`,
+  `(Boss)_MacroGate` — the latter is the ORDER-073 watchdog, in `ATTESTATION_MAP.csv`).
+- 🔴 **`EA_BREAKOUT_XAU - XAUUSDm,H1` is on this account and in NO inventory row for it.** This account
+  has EA_BREAKOUT_XAU only on **USDJPYm (991003)** and **US30m (991005)**. The XAU magics **991001** and
+  **991002** are recorded against **159503454 (REAL MONEY, XAUUSD)** and 159475669 (XAUUSDc). If that
+  chart carries 991001/991002, the same magic is live on a demo **and** a real-money account — the
+  `no duplicate account|magic` check cannot see cross-account reuse. **Needs its Inputs read.**
+- **Not visible, expected further down the truncated list:** `PivotBreakout_XAU` (992017, XAUUSDm) and
+  `Boss_16_KangarooGrid` (**990016, XAUUSDm,H1** — the EA the user could not find; attached 2026-07-26
+  per its row). Neither has a GV, which is consistent with them simply not having written one yet, so
+  absence here is **not** evidence they are missing.
+
+### (ค) STEP 4 — the safe half done, the re-pin deliberately NOT done
+
+**Done:** the `990303` row's notes now carry the defect, the judge consequence, and the ordering
+constraint. **The `magic` field was deliberately left at `990303`** — 990303 is the correct end-state and
+the fix is to re-pin the chart; rewriting the magic would cascade through ~20 files that reference it
+(`ATTESTATION_MAP` · `expectations.csv` · `exposure_map.json` · `EA_MASTER_INDEX.csv` ·
+`LIVE_DASHBOARD.html` · `control_room_snapshot.json` …) and then have to be reverted after the re-pin.
+
+**Not done, and it is the user's call:** re-pinning `_0_Magic` on the VPS chart. There is an **open
+USDJPYm position** (ticket 2292452147) and **both** USDJPYm EAs are candidates to own it; re-pinning an
+EA that owns an open position makes it forget that position. The leg must be **flat** first — and the
+re-pin must land **before** the ORDER-510 binary refresh, or that chart will silently refuse to start.
+
+**One log read closes all three remaining unknowns at once** — the VPS Experts log from 2026-07-26
+onward answers: whether the legs are halted · whether they restarted at 17:02 · **which magic opened
+ticket 2292452147** · whether Kangaroo and PivotBreakout initialised.
+
+**Order stays `OPEN` pending the re-pin ⇒ not marked REVIEWED ⇒ no B1 row owed.**
