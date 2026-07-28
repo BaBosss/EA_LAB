@@ -113,6 +113,22 @@ paths at once · ZCode = a separate GLM quota.
      with every lane busy**, never speculatively (every lane = one more EA/history sync surface to
      maintain) · junk cache: `<lane>\Tester\` + `Tester\...\Agent-*\cache` can always be deleted (it
      regenerates — clearing 5b freed 80GB on 07-06) · **never delete `Bases\`** (that is real history)
+   - 🔴 **NEVER compare a number from one install against a number from another install** — *ratified by
+     the user 2026-07-28 (ORDER-371), binding, no case-by-case exceptions.* The three MT5 installs share
+     no tick history: `Bases\` on `5b` was copied from lane 1 at some point in the past and the two have
+     **diverged ever since**. Measured on MatchaGrid CHFJPY, identical EA/set/window `2020.01.01–2023.01.01`:
+     **PF 1.77 vs 2.08 · bars identical at 74,778 · ticks 4,399,319 vs 61,093,205 — a 14× difference.**
+     ORDER-280 hit the same thing on BTC and had to rewrite its bar as *relative within one lane*. So this
+     is a **property of the machine**, not a quirk of one symbol.
+     **What this means in practice:** (a) every A/B, fan, or before/after pair must run **end-to-end in one
+     lane** (b) **every reported number must name its lane**, and a number with no lane recorded is not
+     evidence (c) a result that cannot be reproduced on another install is **not** a contradiction — it is
+     the expected behaviour, and must not be written up as nondeterminism.
+     **Why sync was rejected:** re-copying `Bases\` fixes it for one day and the installs start diverging
+     again from the next tick, so it buys nothing durable — and three lanes are usually mid-run, which makes
+     touching `Bases\` the riskier of the two options. The ban costs nothing and never decays.
+     <sub>(TH verbatim: "ห้ามเทียบตัวเลขข้าม MT5 install ถาวร — ทุกผลต้องระบุเลน · A/B ต้องรันเลนเดียวกันตั้งแต่ต้นจนจบ")
+     · provenance: memory `btc-tick-data-differs-per-mt5-install`</sub>
 3. **Reported numbers = Model 1 or better** (Model 2 is only for filtering zero-trade cases) · every full-window run is split by year with `scripts\report_year_split.py`
 4. **Verdict rules (summarized from the decision log — binding rules in PROJECT_STATE §3, full provenance in PROJECT_HISTORY §E):**
    never DEAD/REJECT before an optimize probe · a cap breach (DD/margin/ruin) = resize-first, never
