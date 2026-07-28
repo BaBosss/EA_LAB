@@ -74,8 +74,17 @@ function Invoke-TestGit {
     # Bounded so a wedged git child (e.g. a hung hook) cannot stall the suite. Git
     # commit paths run the pre-commit hook (PowerShell checkers), so allow more time.
     $r=Invoke-BoundedProcess -FileName 'git' -AllArgs (@('-C',$Root)+$GitArgs) -TimeoutSeconds ([Math]::Max($ChildTimeoutSeconds,120))
-    $text=(($r.StdOut+"`n"+$r.StdErr) -join '').TrimEnd("`r","`n"," ")
-    if(-not $AllowFailure -and $r.ExitCode -ne 0){throw $text}
+    # Trim() both ends, not TrimEnd(): stdout is empty for a hook failure, so the
+    # leading newline survived and the reporter printed "[FAIL] <case> ::" with the
+    # real message on the next line. That read as an empty detail and cost a whole
+    # diagnosis cycle -- the message was never swallowed, only pushed off the line.
+    $text=(($r.StdOut+"`n"+$r.StdErr) -join '').Trim()
+    if(-not $AllowFailure -and $r.ExitCode -ne 0){
+        # A git child can also fail with nothing at all on either stream. Reporting
+        # an empty throw there is a counter that lies; name the command instead.
+        if(-not $text){$text="git child exited $($r.ExitCode) with no stdout/stderr (root='$Root'; args='$($GitArgs -join ' ')')"}
+        throw $text
+    }
     return [pscustomobject]@{ExitCode=$r.ExitCode;Text=$text}
 }
 
@@ -293,7 +302,13 @@ function Initialize-Seed {
     Copy-Item (Join-Path $SourceRoot '.gitattributes') (Join-Path $Seed '.gitattributes')
     Copy-Item (Join-Path $SourceRoot 'docs\memory_control\experiment_events\schema\*.json') (Join-Path $Seed 'docs\memory_control\experiment_events\schema\')
     Write-Bytes (Join-Path $Seed 'docs\memory_control\experiment_events\evidence-manifest.jsonl') ([byte[]]@())
-    Write-Utf8 (Join-Path $Seed 'scripts\check_state.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_precommit_staged.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_verdict_kill.ps1') 'exit 0'
+    # Every checker the real .githooks/pre-commit invokes needs a pass-stub here, or the
+    # synthetic commit dies before it ever reaches check_experiment_events.ps1 and the
+    # failure is reported against whichever assertion happened to run next. That is how
+    # this suite went red: ad470945 (2026-07-26) added check_order_collision.ps1 to the
+    # hook unconditionally, and b5d71e47 later added check_handoff_contract.ps1. Neither
+    # commit touched this file, and nothing makes it track the hook's dependency list.
+    Write-Utf8 (Join-Path $Seed 'scripts\check_state.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_precommit_staged.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_order_collision.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_handoff_contract.ps1') "exit 0`n";Write-Utf8 (Join-Path $Seed 'scripts\check_verdict_kill.ps1') 'exit 0'
     Write-Utf8 (Join-Path $Seed 'AGENT_TASKBOARD.md') "ANCHOR_IDEA`nANCHOR_HYP`nANCHOR_RUN`nANCHOR_RESULT`nANCHOR_RECOVERY`n"
     Write-Utf8 (Join-Path $Seed 'ARCHIVE_TASKBOARD_2026-07A.md') "ANCHOR_REVIEW`n"
     Write-Utf8 (Join-Path $Seed 'EA_SCORECARD_AND_REGISTRY.md') "ANCHOR_SCORECARD`n"

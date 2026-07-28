@@ -110,7 +110,7 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 ตารางถูกตัดด้วย prose + มี ACTIVE → **BLOCK exit 1** · ทุกเลน CLOSED จริง → NOTE exit 0 (ไม่มี false positive)
 **ห้าม:** แก้ด้วยการย้ายคอมเมนต์อย่างเดียวแล้วถือว่าจบ (อาการหาย เหตุยังอยู่ คนถัดไปโดนซ้ำ)
 
-## ORDER-421 — [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
+## ORDER-421 — [🔴 tooling/integrity] `run_order105_negative_tests` แดงอยู่ และไม่มีใครรู้ — `REVIEWED(Claude/Opus 2026-07-28) — fixture drift ล้วน guard จริงไม่พัง · แก้แล้ว 105/105 เขียว exit 0 · ของแถมที่ใหญ่กว่า = suite เคยตายที่เคส 15 จาก 105 ⇒ 84% ไม่เคยรัน · load-sensitivity แยกออกเป็น ORDER-501` · diagnosis: Codex (blind) · fix+verify: Claude
 **bars:** N-A (สืบสวน) · **flat-lot probe:** N-A
 **ที่มา:** ORDER-420 ไล่วัดเวลาทุกกรงเพื่อจัด tier แล้วเจอว่า **`run_order105_negative_tests.ps1` exit 1**
 · **วัดก่อนแตะ hook** (521 วินาที · แล้วรันซ้ำยืนยัน) ⇒ **ไม่ใช่ผลจากงานของ ORDER-420**
@@ -136,6 +136,51 @@ and owned-path rules skipped` **ขณะที่ ledger มี 3 เลน ACT
 ห้ามแก้เทสให้เขียวเพื่อให้มันเขียว**
 **ห้าม:** ปิดเคสด้วยการลบ/skip เคสที่แดง · ประกาศว่า "น่าจะเป็นของเดิม ไม่เป็นไร" โดยไม่หาว่าเดิมตั้งแต่เมื่อไร ·
 เอา 105 เข้า fast tier ของ hook (521 วินาที = hook ที่คนจะ `--no-verify` ทิ้ง)
+
+### ✅ ปิด 2026-07-28 — Codex วินิจฉัย · ผมแก้และรันยืนยัน
+
+**สาเหตุ = fixture drift ล้วน (คลาส b) · `check_experiment_events.ps1` ตัวจริงไม่ได้พัง**
+test repo สังเคราะห์ copy `.githooks/pre-commit` ตัวจริงมา แต่ seed ไม่ได้สร้าง stub ของ checker ที่ hook เรียก ⇒ commit สังเคราะห์**ตายก่อนจะไปถึง** `check_experiment_events.ps1` เลยด้วยซ้ำ
+- `check_order_collision.ps1` เข้า hook ที่ `ad470945` (**2026-07-26 13:06**) = **วันที่ suite เริ่มแดง**
+- `check_handoff_contract.ps1` เข้าทีหลังที่ `b5d71e47` ⇒ ต้อง stub ทั้งคู่
+- **ไม่มี commit ไหนในสองใบนั้นแตะไฟล์ suite เลย และไม่มีอะไรบังคับให้ fixture ตาม dependency ของ hook** ⇒ นี่คือรูปแบบ "เพิ่ม guard ตัวหนึ่ง แล้วกรงของ guard อีกตัวพังเงียบ"
+
+**`suite-unhandled-exception` ที่ detail ว่าง — ไม่เคยว่าง** · `$text = (StdOut + "`n" + StdErr).TrimEnd(...)` และ StdOut ว่างเมื่อ hook ล้ม ⇒ **ขึ้นบรรทัดนำหน้ารอด** reporter เลยพิมพ์ `[FAIL] <case> ::` แล้วข้อความจริงไปอยู่บรรทัดถัดไป · แก้เป็น `Trim()` + fallback ที่บอกคำสั่งและ exit code เมื่อ child ล้มโดยไม่มี output จริงๆ (**ตัวนับที่โกหกได้ แย่กว่าตัวนับที่เป็นศูนย์**)
+
+**🔴 ของแถมที่ใหญ่กว่าใบสั่ง — ใบนี้เขียนว่า "แดง 3 เคส" ซึ่งประเมินขนาดต่ำไปมาก**
+`suite-unhandled-exception` เป็นการ **throw** ⇒ suite **หยุดทั้งชุดที่เคสที่ 15** · พอ stub ครบ suite เดินจนจบ = **105 เคส**
+⇒ ของจริงไม่ใช่ "3 แดงจาก 15" แต่คือ **90 เคส (86%) ไม่เคยถูกรันเลยตั้งแต่ 2026-07-26** · กรงที่ป้องกัน guard ที่บล็อก commit ได้ เดินอยู่ 14% ของตัวเองมา 2 วันโดยไม่มีใครรู้
+
+**ผลหลังแก้ (วัด 2 รอบ ตั้งใจให้ต่างสภาพเครื่อง):**
+
+| รอบ | สภาพเครื่อง | ผล | exit |
+|---|---|---|---|
+| 1 | **MT5 3 ตัวรัน Model-4 อยู่** (ORDER-430) | 103/105 · แดง 2 เคส concurrency | 1 |
+| 2 | **เครื่องว่าง** (ยืนยัน `tasklist` = ไม่มี `terminal64.exe`) | **105/105 · `ALL CASES PASSED`** | **0** |
+
+⇒ **3 เคสเดิมเขียวถาวร** · 2 เคสที่แดงรอบแรก (`locking-barrier-held-lock-three-writers-observe-retry` · `concurrent-write-3x50-parseable-150-unique-events` ที่ **events=144 expected=150**) **เป็นเรื่อง load ไม่ใช่ของที่ผมทำพัง** — และทั้งคู่**ไม่เคยถูกแตะมาก่อน** เพราะ suite ตายก่อนถึง
+**แต่ "แดงเฉพาะตอนเครื่องยุ่ง" ยังไม่ได้แปลว่าไม่มีอะไร** → แยกเป็น **ORDER-501** ไม่กลบไว้ในใบนี้
+
+---
+
+## ORDER-501 — [🔴 tooling/integrity] กรง event-log แดง 2 เคสเฉพาะตอนเครื่องมี load — flaky test หรือ event หายจริงตอน contention — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (diagnosis) · **flat-lot probe:** N-A
+
+**ที่มา:** ORDER-421 รัน `run_order105_negative_tests.ps1` สองรอบในวันเดียวกันด้วยโค้ดชุดเดียวกันเป๊ะ — **เครื่องยุ่ง 103/105 · เครื่องว่าง 105/105** · เคสที่ต่างคือ concurrency 2 ตัว:
+- `concurrent-write-3x50-parseable-150-unique-events` → **`events=144 expected=150 childOk=False`** = **เขียนหาย 6 จาก 150**
+- `locking-barrier-held-lock-three-writers-observe-retry` → `positive_waits=143`
+
+**ทำไมต้องแยกใบ ไม่ใช่ปัดเป็น flaky:** สองคำอธิบายนี้ต่างกันคนละเรื่อง และ**เลือกไม่ได้จากการวัดครั้งเดียว**
+1. **เทส timing-sensitive** ⇒ กรงที่แดงสุ่ม = กรงที่สอนคนใส่ `--no-verify` (เหตุผลเดียวกับที่ ORDER-420 ตั้ง time budget ของ hook ไว้แต่แรก)
+2. **หรือ event log ทำของหายจริงตอนมี contention** ⇒ อันนี้ไม่ใช่เรื่องเทส แต่เป็น **data integrity ของ Contract D**
+
+**และข้อ 2 ไม่ใช่สถานการณ์สมมติในเรโปนี้** — สภาพปกติของเครื่องนี้คือ **MT5 batch รันอยู่ขณะที่เลนอื่น commit** (วันนี้เกิดพร้อมกัน 4 เลน) · ถ้า event เขียนหายจริงตอน contention มันจะหายในวันที่งานเยอะที่สุด และเงียบที่สุด — **รูปแบบเดียวกับ ORDER-500 เป๊ะ** (แถว B1 หายเพราะ 2 เลนเขียนไฟล์เดียวกันห่างกันไม่กี่นาที) <!-- ENTRY-CLAIM-OK: the needle here is inside a sentence about two lanes writing one CSV, not a claim that this file is the canonical entry. Marked rather than reworded, per the guard comment in check_state.ps1 and the ORDER-219 convention. -->
+
+**STEP 1 (discriminating):** รัน**เฉพาะ 2 เคสนี้** ซ้ำ N รอบใต้ load ที่ควบคุมได้ (เช่น busy-loop ที่รู้จำนวน core) แล้วดูว่า **6 ที่หายเป็นค่าคงที่ · แปรตามระดับ load · หรือเป็นศูนย์เมื่อไม่มี load** · ถ้าจำนวนที่หายแปรตาม load ⇒ เข้าข้อ 2 ต้องไล่ต่อที่ lock/retry ของ `experiment_event_log.ps1`
+**STEP 2:** ถ้าเป็นข้อ 1 → ทำให้เทส deterministic (รอจนครบแทนการรอตามเวลา) **ห้ามแก้ด้วยการเพิ่ม timeout เฉยๆ** — นั่นคือซ่อนอาการ
+**ห้าม:** ปิดหรือ skip 2 เคสนี้ · เพิ่ม timeout แล้วเรียกว่าแก้แล้ว · สรุปว่า "flaky" โดยไม่วัด · ปล่อยไว้โดยไม่บันทึกว่ากรงชุดนี้แดงได้ตอนเครื่องยุ่ง
+
+<sub>บริบทที่ทำให้ใบนี้คุ้มเปิด: ORDER-420 เพิ่ง wire fast-cage 4 ชุดเข้า pre-commit โดยตั้งอยู่บนสมมติฐานว่า **exit code ของ runner แปลว่าอะไรบางอย่าง** · ชุด 105 ไม่ได้อยู่ใน fast tier (มันกิน 521 วินาที) แต่ถ้าวันหนึ่งมันถูกเสียบเข้า CI/hook โดยที่มันแดงเฉพาะตอนเครื่องยุ่ง มันจะแดงตอนที่คนกำลังรีบที่สุดพอดี</sub>
 
 ## ORDER-410 — [🔴 ops/integrity] 13 bundle ที่ staged ไว้เก่ากว่า source — บน VPS รันตัวไหนอยู่จริง — `OPEN` · ทำได้: user (อ่าน VPS) + Claude (เทียบ) · 👉 แนะ: user
 **bars:** N-A (งานวัด) · **flat-lot probe:** N-A
