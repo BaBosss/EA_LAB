@@ -521,7 +521,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 มันจะเปลี่ยนก็ต่อเมื่อเราตั้งใจจะอนุญาตให้เทียบได้ *บางกรณี* ซึ่งคือทางที่ถูกปฏิเสธไป **การวัดที่ไม่มีทาง
 เปลี่ยนการตัดสินใจ = การวัดที่ไม่ควรรัน** (memory `discriminating-test-must-be-able-to-discriminate`)</sub>
 
-## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `OPEN` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `CLAIMED(oc-qwen, 2026-07-28)` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 **ที่มา:** ORDER-222 เขียนข้อจำกัดนี้ไว้เองใน §3 ของ verdict — ขา `CutLoss=100` (ไม่ตัด) มี loss cluster **ก้อนเดียว
 และอยู่นาทีสุดท้ายของหน้าต่าง** (tester บังคับปิด −15,300 = −49.6% ก้อนเดียว) ⇒ ผล **+5,088 ของมันถูกตัดสินโดย
 ปฏิทิน ไม่ใช่ตลาด** ⇒ ใช้จัดอันดับ 30-vs-100 ระยะยาวไม่ได้ (ใช้พิสูจน์ว่า "สวิตช์ติด" ได้ ซึ่งจบไปแล้ว)
@@ -3062,7 +3062,7 @@ behaviour. Safe because F3 shows **only** `rc_peak_eq` keys: no `rc_halted`, `rc
 (`RC_AdoptLegacyHalt=true` for one attach, verify the migration journal, set back to false) also works
 but is four chart edits instead of four deletes.
 
-## ORDER-520 — [🟠 ops/integrity] the four `thin` EAs still carry +3mo judge dates that ORDER-235 replaced today — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+## ORDER-520 — [🟠 ops/integrity] the four `thin` EAs still carry +3mo judge dates that ORDER-235 replaced today — `REVIEWED(Claude/Opus 2026-07-28)` — all 4 rows re-based; the 2 REAL_CENT rows on user approval · runnable by: **Claude/Opus** · 👉 recommended: Claude
 **bars:** N-A (ops) · **flat-lot probe:** N-A
 
 ORDER-235 (ratified 2026-07-28) replaced the 30-trade count for EAs under 0.5 closed trades/week with
@@ -3119,8 +3119,35 @@ the matching date so `check_state.ps1`'s "all judge dates present in DEMO plan" 
   the new dates. <sub>The comment now names a cohort that will be one row lighter — cosmetic, not a
   correctness issue, and deliberately not edited while the two real-money rows are still pending.</sub>
 
-**🟠 Remains OPEN for exactly two edits, both gated on the user** (`991001` · `991004`, both REAL_CENT
-159503454, both `2026-10-09 → 2027-07-09`). No other work is owed on this order.
+### 🟢 CLOSED 2026-07-28 — user approved the two REAL_CENT edits ("แก้เลย"), all four rows now match the bar
+
+The exact one-field diff was quoted to the user before applying, and applied unchanged:
+
+| row | account | type | magic | `judge_date` before → after | anything else changed? |
+|---|---|---|---|---|---|
+| 4 | 159503454 | **REAL_CENT** | **991001** | `2026-10-09` → **`2027-07-09`** | **no** |
+| 5 | 159503454 | **REAL_CENT** | **991004** | `2026-10-09` → **`2027-07-09`** | **no** |
+
+`kill_rule` (`closedDD 10%`) · `status` (`ACTIVE`) · `start_date` (`2026-07-09`) · `magic` · `symbol` are
+**untouched**, and **nothing on the VPS was modified** — no chart, no `.set`, no lot. The kill trigger keeps
+running unchanged for the whole extended window; what moved is the *decision* date and the criterion behind
+it, from an unreachable PF ≥ 1.40 at ≥ 30 trades (30 trades arrives **2029-05** for `991001` at 0.22
+trades/week, **2028-06** for `991004` at 0.29) to ORDER-235's ≥ 12 months live + net positive + no kill
+tripped, paid for with permanently small lot and no size-up on PF.
+
+Row 22 — `159475669` running the same magic `991001` as a deliberate cross-account reuse, `judge_date`
+empty, "user mix, lab does not certify" — was **not** touched. Its blank date is correct: the lab does not
+judge that deployment.
+
+⇒ all four thin rows now carry the right date (`991001` `991004` **2027-07-09** · `990205` **2027-07-06** ·
+`990303` **2027-07-28**), `expectations.csv` and the dashboard were checked and are not stale, and
+`check_state.ps1` confirms every date resolves in `DEMO_DEPLOYMENT_PLAN.md`. **`REVIEWED` · B1 row appended
+in the same commit.** No further work is owed.
+
+<sub>The one thing worth carrying forward: the finding that mattered here was not arithmetic, it was the
+`type` column. The handoff named this group "`991001` (real money) · `991004` · `990205`", which reads as
+one real-money row; two of the three are `REAL_CENT` on the same account. Had the list been trusted as
+written, a real-money row would have been edited unattended.</sub>
 
 ### VPS LOG READ + RE-PIN LANDED 2026-07-28 — every open question from this order is now closed but one
 
