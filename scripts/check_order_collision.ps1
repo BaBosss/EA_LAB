@@ -270,9 +270,18 @@ function Get-LedgerLanes {
             if ($p -and ($p -match '[/.*]')) { $owns.Add($p) }
         }
 
+        # Take the status VERB, not the whole cell. Every lane annotates its status with what
+        # it closed, which commit, what is still owed -- so comparing the whole cell against
+        # 'ACTIVE' silently misses every annotated row, and in practice that is nearly all of
+        # them. Same family as the HTML-comment truncation above (ORDER-351): human prose in a
+        # machine-read cell must not be able to switch the guard off. Anchored to the start so
+        # a note that merely MENTIONS another state ("CLOSED, reopened as ACTIVE") cannot flip it.
+        $statusRaw = (Get-CellPlain $cells[$colStatus]).ToUpperInvariant()
+        $statusVerb = if ($statusRaw -match '^(ACTIVE|CLOSED|ABANDONED|BLOCKED)\b') { $Matches[1] } else { $statusRaw }
+
         $lanes.Add([pscustomobject]@{
             SessionId = $sessionId
-            Status    = (Get-CellPlain $cells[$colStatus]).ToUpperInvariant()
+            Status    = $statusVerb
             Ranges    = $ranges.ToArray()
             OwnsPaths = $owns.ToArray()
         })
