@@ -676,7 +676,7 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 มันจะเปลี่ยนก็ต่อเมื่อเราตั้งใจจะอนุญาตให้เทียบได้ *บางกรณี* ซึ่งคือทางที่ถูกปฏิเสธไป **การวัดที่ไม่มีทาง
 เปลี่ยนการตัดสินใจ = การวัดที่ไม่ควรรัน** (memory `discriminating-test-must-be-able-to-discriminate`)</sub>
 
-## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `CLAIMED(Claude/Sonnet, 2026-07-28) — oc-qwen dispatch hit context-window limit twice, stopped, running directly instead` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-372 — [test] NuiIndy `CutLoss` 30-vs-100 ระยะยาว: ตะกร้าสุดท้ายต้องถูก **ตลาด** ปิด ไม่ใช่ปฏิทิน — `DONE(oc-qwen, 2026-07-28)` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 **ที่มา:** ORDER-222 เขียนข้อจำกัดนี้ไว้เองใน §3 ของ verdict — ขา `CutLoss=100` (ไม่ตัด) มี loss cluster **ก้อนเดียว
 และอยู่นาทีสุดท้ายของหน้าต่าง** (tester บังคับปิด −15,300 = −49.6% ก้อนเดียว) ⇒ ผล **+5,088 ของมันถูกตัดสินโดย
 ปฏิทิน ไม่ใช่ตลาด** ⇒ ใช้จัดอันดับ 30-vs-100 ระยะยาวไม่ได้ (ใช้พิสูจน์ว่า "สวิตช์ติด" ได้ ซึ่งจบไปแล้ว)
@@ -687,6 +687,17 @@ test repo สังเคราะห์ copy `.githooks/pre-commit` ตัว�
 เป็น artifact ของขอบหน้าต่างจริง ต้องกลับไปแก้ verdict + scorecard + EDGE_CATALOG ทั้งชุด** (นี่คือเหตุผลที่ต้องรัน)
 · กลาง (ต่างกัน <10% ของ net) ⇒ คงข้อสรุปเดิม แต่บันทึกว่า margin บาง
 **ห้าม:** ใช้ Model < 4 · ใช้ 2026H1 · แตะค่าบนบัญชีจริง · ตีความผลนี้เป็นคำแนะนำให้ user เปลี่ยนค่า (นั่นคือ 373)
+
+### Raw result ORDER-372 (oc-qwen, 2026-07-28) — Stage 2 extended window (18mo, 2022.01.01-2023.07.01)
+
+| report | pf | trades | net | eqdd_pct | leverage | truncated |
+|---|---|---|---|---|---|---|
+| O222_S2_ld125000_cut30 | 0.38 | 1470 | -8 494.97 | 90.43 | 100 | False |
+| O222_S2_ld125000_cut100 | 1.98 | 1411 | 44 208.06 | 55.16 | 100 | False |
+
+**Leverage assertion:** leverage 1:100 OK · leverage 1:100 OK
+**Script's own verdict line:** >> the arms diverge, so the switch did something. Judge it on net + eqDD, and confirm the cut arm's truncation sidecar says truncated=true (that IS the kill).
+**Truncation sidecars:** cut30 truncated=false, detail="last deal 2023.06.30 23:54:59 | window ends 2023.07.01 | idle tail 0 days (0% of window) | entry deals 1470 | eqDD 90.43% [OK] traded through to the end of the window" · cut100 truncation sidecar not produced by script (table shows truncated=False)
 
 ## ORDER-373 — [🔴 เงินจริง · user decision] สอง EA ที่คำอ้างเรื่อง "กรง" ถูกถอนไปแล้ว — จะทำอะไรต่อ — `DECIDED(user 2026-07-27) — ยอมรับความเสี่ยงระดับบัญชี ไม่แก้อะไรบนบัญชี · เหลือหนี้ bookkeeping 1 อย่าง (ดูท้ายใบ)`
 

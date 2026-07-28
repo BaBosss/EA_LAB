@@ -1,0 +1,7 @@
+﻿{
+    "report_name":  "O222_S2_ld125000_cut30",
+    "requested_leverage":  100,
+    "actual_leverage":  100,
+    "match":  true,
+    "status":  "MATCH"
+}
