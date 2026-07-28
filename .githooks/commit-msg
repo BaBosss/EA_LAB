@@ -49,4 +49,81 @@ if git diff --cached --name-only -- "$baseline" | grep -q .; then
   fi
 fi
 
+# ---------------------------------------------------------------------------
+# ORDER-500 (user ratified option B, 2026-07-28): B1_DATASET.csv append-only,
+# with an AUDITED repair path.
+#
+# WHY HERE AND NOT IN PRE-COMMIT
+#   The ORDER-144 rule made B1_DATASET.csv strictly append-only with no escape hatch of
+#   any kind. On 2026-07-28 that met a legitimate case it could not express: ORDER-280's
+#   row had been glued onto the tail of ORDER-412's quoted notes with no line break, so
+#   the file parsed as 83 rows instead of 84 and one row carried 25 fields. The one-byte
+#   repair was written, verified, staged -- and correctly BLOCKED. The guard was right
+#   and was not bypassed, but the only routes left were --no-verify or leaving the file
+#   broken, and a guard that refuses a legitimate case with no sanctioned path is how
+#   override habits get taught (memory `feedback-audit-rule-rationale-not-compliance`).
+#
+#   The sibling rule above already had this shape, so B1 now matches it: a repair is
+#   possible, but never silent. The default did not move -- an undeclared modification is
+#   still blocked, exactly as before.
+#
+#   Pre-commit cannot host this rule: it would have to block before commit-msg ever runs,
+#   so the escape hatch could never open. The row-shape assertion that ORDER-500 also
+#   added DOES live in pre-commit, because it needs no message.
+b1='docs/memory_control/B1_DATASET.csv'
+
+if git diff --cached --name-only -- "$b1" | grep -q .; then
+  if ! git diff --cached --quiet -- "$b1"; then
+    # Is HEAD an exact byte prefix of the staged blob? Anything else is a modification.
+    # Compared via git's own object store, never via the working tree.
+    head_blob=$(git rev-parse --verify --quiet "HEAD:$b1" 2>/dev/null || true)
+    if [ -n "$head_blob" ]; then
+      head_size=$(git cat-file -s "$head_blob")
+      staged_blob=$(git rev-parse --verify --quiet ":$b1" 2>/dev/null || true)
+      if [ -z "$staged_blob" ]; then
+        echo "[commit-msg] FAIL-CLOSED: $b1 is staged but its blob could not be read -- blocking"
+        exit 1
+      fi
+      staged_size=$(git cat-file -s "$staged_blob")
+
+      prefix_ok=1
+      if [ "$staged_size" -lt "$head_size" ]; then
+        prefix_ok=0
+      else
+        # Compare the first head_size bytes of both blobs. Written with temp files rather
+        # than process substitution: the shebang is /bin/sh and `<(...)` is a bashism that
+        # would silently fail here -- a guard that errors out is a guard that is off.
+        tmp_head=$(mktemp) || { echo "[commit-msg] FAIL-CLOSED: mktemp failed"; exit 1; }
+        tmp_pre=$(mktemp) || { rm -f "$tmp_head"; echo "[commit-msg] FAIL-CLOSED: mktemp failed"; exit 1; }
+        git cat-file blob "$head_blob" > "$tmp_head"
+        git cat-file blob "$staged_blob" | head -c "$head_size" > "$tmp_pre"
+        if ! cmp -s "$tmp_pre" "$tmp_head"; then
+          prefix_ok=0
+        fi
+        rm -f "$tmp_head" "$tmp_pre"
+      fi
+
+      if [ "$prefix_ok" -eq 0 ]; then
+        if ! grep -q 'B1-REPAIR' "$msgfile"; then
+          echo ""
+          echo "[commit-msg] BLOCK: $b1 modifies existing bytes (it is append-only by default)."
+          echo "[commit-msg]"
+          echo "[commit-msg] If this is an ordinary append, something rewrote earlier bytes by accident --"
+          echo "[commit-msg] check for a line-ending rewrite or an editor reformat before going further."
+          echo "[commit-msg]"
+          echo "[commit-msg] If this IS a deliberate repair, declare it: put B1-REPAIR in the commit message"
+          echo "[commit-msg] together with WHICH rows changed and WHY the existing bytes were wrong. The"
+          echo "[commit-msg] token alone is not the point -- the audit trail is."
+          echo "[commit-msg] (ORDER-500, user ratified 2026-07-28. The append-only default is unchanged;"
+          echo "[commit-msg]  this adds a declared path, it does not relax the rule.)"
+          echo ""
+          exit 1
+        fi
+        echo "[commit-msg] B1-REPAIR declared -- $b1 may modify existing bytes in this commit."
+        echo "[commit-msg] Row shape is still enforced by pre-commit; a declared repair is not exempt from it."
+      fi
+    fi
+  fi
+fi
+
 exit 0

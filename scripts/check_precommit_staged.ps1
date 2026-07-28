@@ -103,15 +103,20 @@ function Test-DeploymentInventoryBlob {
     finally { Remove-Item -LiteralPath $tmp -Force -ErrorAction SilentlyContinue }
 }
 
-function Test-B1AppendOnly {
-    param([byte[]]$HeadBytes, [byte[]]$StagedBytes)
-    if ($null -eq $HeadBytes) { return $null }
-    if ($StagedBytes.Length -lt $HeadBytes.Length) { return 'B1_DATASET.csv may only append rows; staged bytes are shorter than HEAD' }
-    for ($i = 0; $i -lt $HeadBytes.Length; $i++) {
-        if ($StagedBytes[$i] -ne $HeadBytes[$i]) { return 'B1_DATASET.csv may only append rows; existing HEAD bytes were modified' }
-    }
-    return $null
+# ORDER-500: the B1 rules moved to scripts/lib/b1_guard.ps1 so that this hook,
+# .githooks/commit-msg and scripts/_test/run_b1_guard_tests.ps1 all call ONE
+# implementation. ORDER-421 found the ORDER-105 cage had been running at 14% of itself
+# because its fixture copied the hook without tracking the hook's dependencies; a shared
+# library removes that failure mode instead of documenting it.
+$b1LibPath = Join-Path $PSScriptRoot 'lib\b1_guard.ps1'
+if (-not (Test-Path -LiteralPath $b1LibPath)) {
+    # Fail-CLOSED. A guard that cannot load its rules must block, not wave the commit
+    # through -- "could not read the input" is not the same as "nothing to enforce"
+    # (memory `guard-disarmed-by-prose-reported-as-note`).
+    Write-Host "[precommit-staged] FAIL-CLOSED: cannot find $b1LibPath -- B1 rules unavailable, blocking"
+    exit 1
 }
+. $b1LibPath
 
 function Get-StagedNameStatus {
     param([string]$RepoRoot)
@@ -158,8 +163,21 @@ if ($order144Staged.Count -gt 0) {
     }
 
     if ($stagedByPath.ContainsKey($B1DatasetPath)) {
-        $b1Error = Test-B1AppendOnly -HeadBytes (Get-HeadBytesOrNull $B1DatasetPath) -StagedBytes (Get-StagedBytesOrNull $B1DatasetPath)
-        if ($b1Error) { $order144Failures.Add($b1Error) }
+        # ORDER-500 RULE 2 (new, enforced HERE): what was appended must be a ROW.
+        # This needs no commit message, so it belongs at the earliest point that can see
+        # the bytes. It is the assertion whose absence let ORDER-280's row disappear
+        # while every character somebody typed was still present in the file.
+        $b1Shape = Test-B1RowShape -StagedBytes (Get-StagedBytesOrNull $B1DatasetPath)
+        if ($b1Shape) { $order144Failures.Add($b1Shape) }
+
+        # ORDER-500 RULE 1 (append-only) MOVED to .githooks/commit-msg -- same reason the
+        # regression-baseline re-pin rule moved there on 2026-07-27, and the note below
+        # explains it. The rule needs to know whether THIS commit declares an audited
+        # repair, and pre-commit structurally cannot read this commit's message. Blocking
+        # here would mean commit-msg never runs, so the escape hatch could never open.
+        # The rule is NOT weakened: both hooks run on `git commit` and both are skipped by
+        # --no-verify, so the enforcement point is equivalent.
+        Write-Host '[precommit-staged] NOTE: B1_DATASET.csv append-only rule is enforced by .githooks/commit-msg (ORDER-500 -- it must read this commit''s message to honour a declared repair)'
     }
 
     # 2026-07-27: the regression-baseline "re-pin" rule MOVED to .githooks/commit-msg.
