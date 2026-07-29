@@ -1,0 +1,7 @@
+{
+  "meta": { "schema": "ControlRoomSnapshot", "version": 2, "generated_at": "2026-07-30T06:00:00" },
+  "system_health": [
+    { "account": "100000001", "collector": "MT5", "state": "FRESH", "age_hours": 0.1, "governance_scope": "LAB_MANAGED" }
+  ],
+  "summary": { "unknown_magics_unclassified": 0 }
+}

@@ -60,7 +60,17 @@
     Pure ASCII on purpose: PowerShell 5.1 decodes a BOM-less .ps1 as ANSI.
 #>
 [CmdletBinding()]
-param([string]$RepoRoot = '')
+param(
+    [string]$RepoRoot = '',
+    # MUTATION-TEST LEVER. Points PART 2/3 at a different implementation of
+    # Get-MonitorCoverage. It exists so the claim "this cage discriminates" can be
+    # DEMONSTRATED rather than asserted: transcribe the pre-fix inline block from
+    # daily_monitor.ps1 into a file and run
+    #   run_monitor_integrity_tests.ps1 -CoverageLib <that file>
+    # -- the red cases must go red. A cage nobody has watched fail is UNTESTED.
+    # Defaults to the shipped library, which is what the pre-commit tier runs.
+    [string]$CoverageLib = ''
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -76,7 +86,7 @@ if (-not $RepoRoot) {
 
 $fixtures = Join-Path $RepoRoot 'scripts\_test\fixtures\monitor'
 $snapScript = Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1'
-$covLib = Join-Path $RepoRoot 'scripts\lib\monitor_coverage.ps1'
+if (-not $CoverageLib) { $CoverageLib = Join-Path $RepoRoot 'scripts\lib\monitor_coverage.ps1' }
 $dashScript = Join-Path $RepoRoot 'scripts\live_dashboard.ps1'
 
 $script:pass = 0
@@ -159,6 +169,130 @@ Assert-True 'summary carries unknown_magics_unclassified next to _active/_histor
     ($snapRaw -match 'unknown_magics_unclassified')
 Assert-True 'the console UNKNOWN line reports the unclassified count too' `
     ($snapRaw -match "UNKNOWN\s+\{0\}[^`n]*unclassified")
+
+# =====================================================================================
+# PART 2 (D1) -- a dead FLOATING sensor must be able to turn the chain red
+# PART 3 (D2) -- an unreadable / missing snapshot must be able to turn the chain red
+# =====================================================================================
+Write-Host ''
+Write-Host '=== PART 2/3 (D1/D2): coverage rules over control_room_snapshot.json ==='
+if (-not (Test-Path $CoverageLib)) { throw "missing coverage library: $CoverageLib" }
+. $CoverageLib
+if (-not (Get-Command Get-MonitorCoverage -ErrorAction SilentlyContinue)) {
+    throw "$CoverageLib did not define Get-MonitorCoverage"
+}
+Write-Host ("   library under test: {0}" -f $CoverageLib)
+
+$snapDir = Join-Path $fixtures 'snapshots'
+function Cover([string]$name) { Get-MonitorCoverage -SnapshotPath (Join-Path $snapDir $name) }
+# Convenience: the two things daily_monitor.ps1 actually consumes.
+function IsRed($r) { return ([int]$r.Failures.Count -gt 0) }
+function LogText($r) { return (($r.Log) -join "`n") }
+
+Write-Host '   -- GREEN: everything fresh (specificity: this must NOT be red) --'
+$g = Cover 'green.json'
+Assert-Equal 'green fixture produces no failure token' 0 $g.Failures.Count
+Assert-True  'green fixture summary reports both sensors' `
+    ($g.Summary -match 'deal-sensor fresh' -and $g.Summary -match 'float-sensor fresh')
+
+Write-Host '   -- WARN: a non-LAB_MANAGED account degraded on BOTH sensors --'
+$w = Cover 'warn_nonlab.json'
+Assert-Equal 'a USER_OBSERVED account never turns the chain red' 0 $w.Failures.Count
+Assert-True  'but its dead deal sensor is logged' ((LogText $w) -match '900000001.*USER_OBSERVED.*deal-sensor')
+Assert-True  'and its BLIND float sensor is logged too' ((LogText $w) -match '900000001.*USER_OBSERVED.*floating-risk sensor state=BLIND')
+
+Write-Host '   -- RED: LAB_MANAGED float sensor BLIND (the D1 defect, verbatim) --'
+$rb = Cover 'red_float_blind.json'
+Assert-True  'a BLIND float sensor on a LAB_MANAGED account IS red' (IsRed $rb)
+Assert-Equal 'exactly one failure token, naming the account' 'float-100000002' ($rb.Failures -join ',')
+Assert-True  'the log names the account and says BLIND' ((LogText $rb) -match 'COVERAGE GAP: account 100000002 \(LAB_MANAGED\) floating-risk sensor state=BLIND')
+Assert-True  'BLIND is explained as "no file at all", not as an age' ((LogText $rb) -match 'no AccountSnapshotExporter file')
+Assert-True  'the healthy sibling account is NOT in the failure list' (($rb.Failures -join ',') -notmatch '100000001')
+
+Write-Host '   -- RED: LAB_MANAGED float sensor STALE, kept distinct from BLIND --'
+$rs = Cover 'red_float_stale.json'
+Assert-True  'a STALE float sensor on a LAB_MANAGED account IS red' (IsRed $rs)
+Assert-Equal 'exactly one failure token, naming the account' 'float-100000002' ($rs.Failures -join ',')
+Assert-True  'the log says STALE, not BLIND' ((LogText $rs) -match 'floating-risk sensor state=STALE')
+Assert-True  'STALE carries the age, which is the thing that distinguishes it from BLIND' ((LogText $rs) -match 'age 73\.5h')
+Assert-True  'STALE is never described as BLIND' ((LogText $rs) -notmatch 'state=BLIND')
+
+Write-Host '   -- RED: account missing from the floating_risk array entirely --'
+$rm = Cover 'red_float_missing.json'
+Assert-True  'an account with no floating_risk entry IS red' (IsRed $rm)
+Assert-Equal 'the missing account is the one named' 'float-100000002' ($rm.Failures -join ',')
+Assert-True  'MISSING is its own word - not folded into BLIND' ((LogText $rm) -match 'floating-risk sensor state=MISSING')
+Assert-True  'a floating_risk row with no system_health row is reported, not dropped' ((LogText $rm) -match '900000009 is in floating_risk but has no system_health row')
+
+Write-Host '   -- RED: the pre-existing deal-sensor rule must keep working (regression) --'
+$rd = Cover 'red_deal_stale.json'
+Assert-True  'a STALE deal sensor on a LAB_MANAGED account is still red' (IsRed $rd)
+Assert-Equal 'and still uses the sensor- token the chain already logged' 'sensor-100000002' ($rd.Failures -join ',')
+
+Write-Host '   -- RED: no floating_risk section at all --'
+$nf = Cover 'no_floating_section.json'
+Assert-True  'a snapshot with no floating_risk section is red' (IsRed $nf)
+Assert-True  'and says once, up front, WHY every account below reads MISSING' ((LogText $nf) -match 'no floating_risk section')
+
+Write-Host '   -- RED (D2): the snapshot cannot be read --'
+$ur = Cover 'unreadable.json'
+Assert-True  'malformed json IS red' (IsRed $ur)
+Assert-Equal 'and says so with its own token' 'snapshot-unreadable' ($ur.Failures -join ',')
+Assert-True  'the summary says FAILED, never "skipped"' ($ur.Summary -match 'FAILED' -and $ur.Summary -notmatch 'skipped')
+
+# The chain does NOT run under $ErrorActionPreference = 'Stop' -- daily_monitor.ps1 sets
+# none, so it inherits 'Continue', while this suite sets 'Stop' at the top. A try/catch that
+# only catches under Stop would pass here and let a corrupt snapshot through in production.
+# Assert the branch under the preference the real caller actually uses.
+$savedEap = $ErrorActionPreference
+$ErrorActionPreference = 'Continue'
+$urC = Cover 'unreadable.json'
+$ErrorActionPreference = $savedEap
+Assert-Equal 'malformed json is still caught under $ErrorActionPreference = Continue (what daily_monitor runs under)' `
+    'snapshot-unreadable' ($urC.Failures -join ',')
+
+$ns = Cover 'not_a_snapshot.json'
+Assert-True  'valid json that is not a snapshot IS red' (IsRed $ns)
+Assert-Equal 'same token: we have no coverage data either way' 'snapshot-unreadable' ($ns.Failures -join ',')
+
+Write-Host '   -- RED (D2): the snapshot is absent --'
+$mi = Get-MonitorCoverage -SnapshotPath (Join-Path $snapDir 'this_file_does_not_exist.json')
+Assert-True  'a missing snapshot IS red on a chain whose job is coverage' (IsRed $mi)
+Assert-Equal 'with a token that distinguishes absent from corrupt' 'snapshot-missing' ($mi.Failures -join ',')
+Assert-True  'the summary no longer says "skipped"' ($mi.Summary -notmatch 'skipped')
+
+Write-Host '   -- NOT red: a negative floating P/L is not a failure --'
+# green.json account 100000002 sits at equity 10000 vs balance 10500 = -500 floating.
+# Deliberately unflagged: see the "WHAT IS DELIBERATELY NOT HERE" note in the library.
+# There is no per-account floating-loss threshold in any owner file to read, and a
+# guard that fires on an invented number is worse than no guard.
+Assert-Equal 'an account 500 down on open positions, sensor alive, is green' 0 $g.Failures.Count
+Assert-True  'and nothing in the log claims a P/L threshold was evaluated' ((LogText $g) -notmatch 'threshold')
+
+Write-Host '   -- NOT red, but surfaced: UNCLASSIFIED unknown magics (D5 counter) --'
+$uc = Cover 'unclassified.json'
+Assert-Equal 'unclassified magics do not turn the chain red' 0 $uc.Failures.Count
+Assert-True  'but the count reaches the daily log instead of only the json' ((LogText $uc) -match '2 unknown magic\(s\) UNCLASSIFIED')
+
+Write-Host ''
+Write-Host '=== PART 3b (D1/D2): daily_monitor.ps1 actually CONSUMES all of that ==='
+# The rules being right is worthless if the chain does not act on them. These assert the
+# wiring, which is the half that was broken: the old code computed $coverageMsg, logged
+# it, and dropped the verdict on the floor.
+$dm = Get-Content (Join-Path $RepoRoot 'scripts\daily_monitor.ps1') -Raw
+Assert-True 'daily_monitor dot-sources the coverage library rather than inlining the rules' `
+    ($dm -match 'monitor_coverage\.ps1')
+Assert-True 'daily_monitor appends the coverage failures into $failed (which drives exit 1)' `
+    ($dm -match '\$failed\s*\+=\s*\$cov(erage)?\.Failures')
+# Match the SHAPE of the defect, not its vocabulary. The first draft of this assertion
+# searched for the literal phrase "coverage check skipped" anywhere in the file -- and went
+# red on the COMMENT that explains the fix. That is the check_state.ps1 section-7 lesson
+# arriving one more time: an assertion over prose gets satisfied by rewording, so it tests
+# the writing rather than the code. Assert the assignment and the parse call instead.
+Assert-True 'daily_monitor no longer ASSIGNS a "skipped" coverage status' `
+    ($dm -notmatch '\$coverageMsg\s*=\s*"coverage check skipped')
+Assert-True 'daily_monitor no longer parses the snapshot inline (that is the library job now)' `
+    ($dm -notmatch 'ConvertFrom-Json')
 
 Write-Host ''
 if ($script:fail -gt 0) {

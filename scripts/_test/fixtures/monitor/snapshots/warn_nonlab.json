@@ -1,0 +1,14 @@
+{
+  "meta": { "schema": "ControlRoomSnapshot", "version": 4, "generated_at": "2026-07-30T06:00:00" },
+  "system_health": [
+    { "account": "100000001", "collector": "MT5", "state": "FRESH", "age_hours": 0.1, "governance_scope": "LAB_MANAGED" },
+    { "account": "100000002", "collector": "MT4", "state": "FRESH", "age_hours": 0.2, "governance_scope": "LAB_MANAGED" },
+    { "account": "900000001", "collector": "NONE", "state": "NO_SENSOR", "age_hours": null, "governance_scope": "USER_OBSERVED" }
+  ],
+  "floating_risk": [
+    { "account": "100000001", "state": "FRESH", "age_hours": 0.0, "equity": 10000.0, "balance": 10000.0, "floating_pl": 0.0, "magics": [] },
+    { "account": "100000002", "state": "FRESH", "age_hours": 0.0, "equity": 10000.0, "balance": 10000.0, "floating_pl": 0.0, "magics": [] },
+    { "account": "900000001", "state": "BLIND", "age_hours": null, "equity": null, "balance": null, "floating_pl": null, "magics": [] }
+  ],
+  "summary": { "unknown_magics_unclassified": 0 }
+}

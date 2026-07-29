@@ -67,38 +67,31 @@ if ($LASTEXITCODE -eq 2) {
     "ALERT: a detector flagged something in the last 2 days - see the digest above before trusting any recent run or building a bundle" | Add-Content $log
 }
 # CR-003a: coverage check - the chain can run clean (every Step above exit 0) while a
-# LAB_MANAGED account's sensor is dead (STALE/NO_SENSOR), which is the actual failure mode
-# that bit us with 463666728/69424711. This is an ADDITIONAL layer on top of the existing
-# stale-data guard below (lines ~76-82), not a replacement - that guard checks the newest
-# file across ALL accounts; this one checks PER-ACCOUNT freshness scoped to governance_scope.
-# USER_OBSERVED / ARCHIVED / UNREGISTERED accounts are logged but never turn the chain red -
-# only LAB_MANAGED accounts (the ones this lab owns and must keep sensors on) do.
-$coverageMsg = "coverage check skipped (no snapshot json)"
+# LAB_MANAGED account's sensor is dead, which is the actual failure mode that bit us with
+# 463666728/69424711. This is an ADDITIONAL layer on top of the stale-data guard below,
+# not a replacement - that guard checks the newest file across ALL accounts; this one
+# checks PER-ACCOUNT freshness scoped to governance_scope.
+#
+# 2026-07-30 (Stage 0B, D1+D2): the rules moved into scripts\lib\monitor_coverage.ps1 and
+# two of them were wrong for as long as they existed. Read that file's header for the full
+# account; the short version is:
+#   D1  this block read $cr.system_health ONLY. That section measures the CLOSED-DEAL
+#       exporter. The FLOATING-risk sensor is a different exporter reported in
+#       $cr.floating_risk, and nothing here ever looked at it -- so the only instrument
+#       that can see open baskets and margin could be dead for days while the chain went
+#       green on fresh closed-deal history.
+#   D2  the catch below built a message, logged it, and did NOT append to $failed, so a
+#       corrupt snapshot exited 0. A MISSING snapshot set "coverage check skipped" and
+#       moved on -- on a chain whose entire job is coverage.
+# It is a library rather than inline code because daily_monitor.ps1 cannot be run in a
+# test (step 0 rotates logins through five real terminals), which is exactly why these two
+# rules were never exercised. Cage: scripts\_test\run_monitor_integrity_tests.ps1.
+. D:\EA_LAB\scripts\lib\monitor_coverage.ps1
 $crJson = 'D:\EA_LAB\portfolio\control_room_snapshot.json'
-if (Test-Path $crJson) {
-    try {
-        $cr = Get-Content $crJson -Raw | ConvertFrom-Json
-        $labAccts = @($cr.system_health | Where-Object { $_.governance_scope -eq 'LAB_MANAGED' })
-        $labFresh = @($labAccts | Where-Object { $_.state -eq 'FRESH' })
-        $labMissing = @($labAccts | Where-Object { $_.state -ne 'FRESH' })
-        $coverageMsg = "$($labFresh.Count)/$($labAccts.Count) LAB_MANAGED fresh"
-        if ($labMissing.Count -gt 0) {
-            $coverageMsg += "; missing: $(($labMissing | ForEach-Object { $_.account }) -join ', ')"
-            foreach ($m in $labMissing) {
-                $script:failed += "sensor-$($m.account)"
-                "COVERAGE GAP: account $($m.account) (LAB_MANAGED) state=$($m.state)" | Add-Content $log
-            }
-        }
-        # non-LAB_MANAGED accounts never fail the chain - just logged for visibility
-        $otherAccts = @($cr.system_health | Where-Object { $_.governance_scope -ne 'LAB_MANAGED' -and $_.state -ne 'FRESH' })
-        foreach ($o in $otherAccts) {
-            "coverage note (not red): account $($o.account) scope=$($o.governance_scope) state=$($o.state)" | Add-Content $log
-        }
-    } catch {
-        $coverageMsg = "coverage check FAILED to parse snapshot json: $($_.Exception.Message)"
-        "$coverageMsg" | Add-Content $log
-    }
-}
+$cov = Get-MonitorCoverage -SnapshotPath $crJson
+foreach ($line in $cov.Log) { $line | Add-Content $log }
+$failed += $cov.Failures
+$coverageMsg = $cov.Summary
 "COVERAGE: $coverageMsg" | Add-Content $log
 # push to the secret gist for phone viewing - only after the user has run
 # publish_dashboard_gist.ps1 once themselves (that first run = publish consent + creates the id file)
