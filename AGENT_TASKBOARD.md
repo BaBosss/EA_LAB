@@ -1773,7 +1773,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 | 19 | STF | ETHUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.310 / 1.099** (หัก swap) แต่ **MC PF-5th 0.857/0.657 ตก** → `BUILD-ON` · overlay ฆ่า MAIN (1.010) · portable stack ของ BTC ตก BWD 0.858 |
 | 20 | STF | BRENT | H4 | MAIN+BWD | genetic Stage A | **1.24/126t/DD0.17% / 1.48/120t/DD0.21%** · `both-window-pulse` (MAIN barely clears bar) |
 | 21 | STF | NAS100 | H4 | MAIN+BWD | genetic Stage A (ORDER-116 เคยเจอ no-data — ถ้าไม่มี = `NO-DATA`) | data มีจริงในเลนนี้ (ต่าง ORDER-116) — **1.46/137t/DD0.28% / 1.17/146t/DD0.24%** · `both-window-pulse` · fine EMA grid = survivors 0/750 plateau=NONE (coarse ชอบ UseEma=true 95% แต่กลายเป็น spike ไม่ใช่ plateau) → เลือก NOEMA แทน (plateau=WEAK 10.7%) |
-| 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A | |
+| 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A · **symbol traded = `GER40`** (this broker's ticker for DE40/DAX40, confirmed same instrument — `DE40` itself throws `symbol DE40 not exist`) | **MAIN 1.43/119t/DD0.34% (99% real ticks) clears bar · BWD 0.97/106t/DD0.49% but `HISTORY-QUALITY-FAIL(2% real ticks vs MAIN's 99%)` — 2020-2022 GER40 tick history on this lane is ~98% synthetic, BWD number not trustworthy as evidence** · fine grid centre landed on its own edge once (Mult=1, lower bound of a 1.0-6.0 grid) → widened again to 0.25-1.25 → plateau jumped from 1.2%/WEAK to 30.4%/GOOD (memory `grid-answer-outside-the-grid` again) |
 | 23 | STF | XAUUSD | H1 | MAIN+BWD | บ้านเดิมคนละ TF | |
 | 24 | STF | US30 | H1 | MAIN+BWD | genetic Stage A | |
 

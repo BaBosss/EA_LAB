@@ -1,0 +1,30 @@
+; STF_DE40_H4_fine_noema.set -- FINE COMPLETE grid #1 (ORDER-542 cell #22, symbol=GER40 = this broker's DE40/DAX40 ticker)
+; coarse genetic GEN2_DE40_H4_MAIN.xml: passes=736 survivors=8 (1.1%) plateau=WEAK (thin coarse signal)
+;   filtered PF>=1.2 & trades>=30 (n=184): _02_ExitMode=2 dominant (129/184), _03_UseEma=false dominant (136/184)
+;   top passes: AtrPeriod=12 Mult=1.5 TpAtrMult=7 SlAtrMult=3.0 UseEma=false (PF 2.53/61t)
+; ⚠️ multiple axes cluster at the coarse range's edges (memory grid-answer-outside-the-grid):
+;   _01_Mult bimodal at BOTH edges (1.5: 56/184, 5.0: 40/184 of range 1.5-5.0) -> widened to 1.0-6.0
+;   _02_SlAtrMult clusters at upper edge (3.0: 64/184 of range 0.5-3.0) -> widened to 4.5
+;   _02_TpAtrMult skews toward upper edge (7-9: 108/184 of range 1-10) -> widened to 13
+; ⚠️ INERT-AXIS (memory inert-axis-fake-plateau): _03_EmaPeriod dead at UseEma=false, locked out (moved to _fine_ema.set)
+; combos = AtrPeriod(5) x Mult(6) x TpAtrMult(5) x SlAtrMult(6) = 900 -> Optimization=1 (complete)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=8||8||4||24||Y
+_01_Mult=1.0||1.0||1.0||6.0||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=2||2||0||2||N
+_02_TpAtrMult=5||5||2||13||Y
+_02_SlAtrMult=2.0||2.0||0.5||4.5||Y
+_03_UseEma=false||false||0||false||N
+_03_EmaPeriod=100||100||0||100||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

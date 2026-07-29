@@ -1,0 +1,30 @@
+; STF_DE40_H4_locked.set -- plateau-centre pick (ORDER-542 cell #22, symbol=GER40 = this broker's DE40/DAX40)
+; fine grid #1 (Mult 1.0-6.0) centred at Mult=1 = its own lower edge -> widened again per
+; memory grid-answer-outside-the-grid -> fine grid #2/#3 (Mult 0.25-1.25, narrowed AtrPeriod/Tp/Sl
+; around grid #1's centre) GEN2_DE40_H4_MAIN_fineNOEMA2.xml: passes=135 survivors=41 (30.4%) plateau=GOOD
+; (up from 1.2%/WEAK before widening -- the true answer really was outside the first grid)
+;   centre pick: AtrPeriod=20 Mult=0.75 ExitMode=2(locked) TpAtrMult=7 SlAtrMult=2.0 UseEma=false
+;   PF 1.451 / 119 trades / neighbours=28 (M1, not the number that goes in the table)
+; EMA locked out: fine EMA grid GEN2_DE40_H4_MAIN_fineEMA.xml survivors=0/900 plateau=NONE -- rejected
+; no axis on a grid-2/3 edge (AtrPeriod 20 of [16..24], Mult 0.75 of [0.25..1.25],
+;   TpAtrMult 7 of [2..9], SlAtrMult 2.0 of [0.5..2.5])
+
+_00_OptimizeMode=false
+_01_AtrPeriod=20
+_01_Mult=0.75
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=2
+_02_TpAtrMult=7
+_02_SlAtrMult=2.0
+_03_UseEma=false
+_03_EmaPeriod=200
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false
