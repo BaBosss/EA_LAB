@@ -23,6 +23,7 @@
       run_handoff_contract_tests.ps1     0.9s   -> FAST, runs here
       run_blobmap_encoding_tests.ps1     1.3s   -> FAST, runs here
       run_mris_asof_tests.ps1            0.8s   -> FAST, runs here (added 2026-07-27, ORDER-434)
+      run_monitor_integrity_tests.ps1    1.5s   -> FAST, runs here (added 2026-07-30, Stage 0B)
       run_chainwalk_tests.ps1           74.4s   -> too slow for a hook, run before release
       run_order101_negative_tests.ps1   ~120s   -> too slow for a hook
       run_order103_negative_tests.ps1   ~760s   -> too slow for a hook
@@ -109,7 +110,25 @@ $FAST_SUITES = @(
     # guard's own override check couple cases that must stay independent). That takes the
     # tier from ~5s to ~11s against a 15s budget: deliberate, and the next addition here
     # should re-measure rather than assume there is still room.
-    'run_optimize_guard_tests.ps1'
+    'run_optimize_guard_tests.ps1',
+    # 2026-07-30 (Stage 0B): guards the morning monitoring chain -- the coverage rules in
+    # scripts/lib/monitor_coverage.ps1 (which daily_monitor.ps1 dot-sources), the
+    # unknown-magic age classifier in control_room_snapshot.ps1, and base-equity /
+    # account-universe handling in live_dashboard.ps1. It belongs in a hook tier because
+    # every defect it covers was the shape this file's header lists: a detector that kept
+    # running and quietly stopped reporting.
+    #
+    # MEASURED 1.5s over three cold runs, which takes this tier from ~10.8s to ~12.4s
+    # against the 15s budget. That is a deliberate spend and it leaves roughly 2.5s.
+    # THE NEXT ADDITION HERE HAS TO DISPLACE SOMETHING, not assume there is room --
+    # run_optimize_guard_tests.ps1 alone is 5.8s and would not fit today.
+    #
+    # 1.5s of the cost is two child powershell processes: PART 4/5 runs the REAL
+    # live_dashboard.ps1 end to end against a fixture portfolio tree rather than
+    # re-deriving its arithmetic in the test. That is the expensive choice on purpose --
+    # a test that reimplements its subject agrees with itself no matter what the subject
+    # does, which is how run_fast_cages came to exist in the first place.
+    'run_monitor_integrity_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path
