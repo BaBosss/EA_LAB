@@ -1,0 +1,28 @@
+; STF_XAUUSD_H1_locked.set -- plateau-centre pick (ORDER-542 cell #23 XAUUSD H1)
+; fine EMA grid GEN2_XAUUSD_H1_MAIN_fineEMA.xml: passes=405 survivors=262 (64.7%) plateau=GOOD, 170 neighbours
+;   -- stronger than NOEMA (630 passes, 341 survivors 54.1%, 70 neighbours; centre PF 1.463/255t)
+;   centre pick: AtrPeriod=18 Mult=4.5 ExitMode=2(locked) TpAtrMult=7 SlAtrMult=1.0 UseEma=true EmaPeriod=100
+;   PF 1.522 / 199 trades / neighbours=170 (M1, not the number that goes in the table)
+; coarse Mult skewed to its upper edge (5.0: 93/320=29% of range 1.5-5.0) and SlAtrMult to its lower
+; edge (0.5: 83/320=26% of range 0.5-3.0) -> both widened for the fine grid; centre landed interior
+; on both widened grids (Mult 4.5 of [4.0,6.0], SlAtrMult 1.0 of [0.5,1.5]) -- no further widening needed
+
+_00_OptimizeMode=false
+_01_AtrPeriod=18
+_01_Mult=4.5
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=2
+_02_TpAtrMult=7
+_02_SlAtrMult=1.0
+_03_UseEma=true
+_03_EmaPeriod=100
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false
