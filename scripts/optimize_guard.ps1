@@ -34,7 +34,16 @@ SOURCE OF TRUTH (read, never re-derived here)
   _triage/PARAM_INACTIVE_AUDIT.md  - "## 2. ... inert / no-effect / dead-at-default" table
 
 FOUR CHECKS (verdict is REFUSE if ANY of these fire for a parameter)
-  1. classification (PARAM_REGISTRY.csv) is not exactly ACTIVE.
+  1. classification (PARAM_REGISTRY.csv) says the input is permanently dead:
+     INACTIVE / COMPATIBILITY, or any value this script does not recognise
+     (fail-closed). ACTIVE and OVERRIDE both pass this check - OVERRIDE means
+     "member of a precedence chain", NOT "inactive", and whether a chain member
+     is superseded in a particular run is decided by check 3 below from the
+     sibling values actually present. Reading OVERRIDE as dead is what refused
+     _2_BasketTP_ATRmult (Boss 14), _17_UseStructLevels (Boss 17) and
+     _33_SL_MaxATRmult - three working dials - and the only escape was
+     -SkipOptimizeGuard, which disables the checks that do have evidence.
+     Cage: scripts\_test\run_optimize_guard_tests.ps1
   2. the parameter is inert for the specific Boss build being optimized, per the
      curated build-dead-zone table in PARAM_INACTIVE_AUDIT.md section 2 (the
      .ini's Expert= line names the build; StackMode/StackConfirm/etc. also carry
@@ -259,6 +268,20 @@ function Test-Truthy {
 }
 
 # ---------------------------------------------------------------------------
+# Classification vocabulary (docs/PARAM_REGISTRY.csv column 11).
+#   LIVE = the input can still change behaviour somewhere. ACTIVE is
+#          unconditional; OVERRIDE means it sits in a precedence chain, so
+#          whether it does anything in a GIVEN run depends on the sibling
+#          values in that run - which is check 3's job, not this column's.
+#   DEAD = the input cannot change behaviour at all on the build it is tagged
+#          for. Those are refused outright.
+# Any value outside both lists is refused fail-closed (a new column value must
+# be classified deliberately, never inherited as "probably fine").
+# ---------------------------------------------------------------------------
+$script:LiveClassifications = @('ACTIVE', 'OVERRIDE')
+$script:DeadClassifications = @('INACTIVE', 'COMPATIBILITY')
+
+# ---------------------------------------------------------------------------
 # Per-parameter verdict
 # ---------------------------------------------------------------------------
 function Test-OptimizeParameter {
@@ -312,9 +335,27 @@ function Test-OptimizeParameter {
         }
 
         # ---- check 1: classification ----
-        if ($row.Classification -ne 'ACTIVE') {
-            $note = if ($row.ClassificationNote) { " - $($row.ClassificationNote)" } else { '' }
-            $facts.Add([pscustomobject]@{ Refuse = $true; Text = "classification='$($row.Classification)' (docs/PARAM_REGISTRY.csv, not ACTIVE)$note" })
+        # This check used to be `-ne 'ACTIVE'`, which read OVERRIDE as "dead".
+        # It does not mean that: OVERRIDE marks an input as a MEMBER OF A
+        # PRECEDENCE CHAIN, and the member that wins the chain is the one doing
+        # the work. Refusing it made three real, working dials un-sweepable
+        # (_2_BasketTP_ATRmult on Boss 14, _17_UseStructLevels on Boss 17,
+        # _33_SL_MaxATRmult) and the only way past the guard was
+        # -SkipOptimizeGuard, which also switches off the checks that DO have
+        # evidence behind them. Whether a chain member is actually dead in THIS
+        # run is decided by check 3 from the sibling values present, not by a
+        # static column - so classification now only answers "is this input
+        # permanently dead?", and precedence is left to check 3.
+        $cls = ("$($row.Classification)").Trim().ToUpperInvariant()
+        $note = if ($row.ClassificationNote) { " - $($row.ClassificationNote)" } else { '' }
+        if ($script:DeadClassifications -contains $cls) {
+            $facts.Add([pscustomobject]@{ Refuse = $true; Text = "classification='$($row.Classification)' (docs/PARAM_REGISTRY.csv - permanently dead, not a precedence loser)$note" })
+        } elseif ($script:LiveClassifications -notcontains $cls) {
+            # An unrecognized classification is not evidence of health. Fail closed
+            # rather than silently treating a new column value as sweepable.
+            $facts.Add([pscustomobject]@{ Refuse = $true; Text = "classification='$($row.Classification)' is not a value this guard knows (expected one of: $(($script:LiveClassifications + $script:DeadClassifications) -join ', ')) - fail-closed$note" })
+        } elseif ($cls -eq 'OVERRIDE') {
+            $facts.Add([pscustomobject]@{ Refuse = $false; Text = "classification='OVERRIDE' (member of a precedence chain, not inactive)$note - whether it is superseded in THIS run is decided below from the sibling values supplied" })
         }
 
         # ---- check 2: build inertness ----
@@ -379,16 +420,21 @@ if (-not $IniPath -and (-not $ParamNames -or $ParamNames.Count -eq 0)) {
     $neverOptimizable = New-Object System.Collections.Generic.List[object]
     foreach ($row in $registryRows) {
         $isSafety = (& $safetyNamePattern $row.BaseName) -or ($row.Context -match '(?i)safety')
-        $notActive = ($row.Classification -ne 'ACTIVE')
-        if ($isSafety -or $notActive) {
+        # Same correction as check 1: OVERRIDE rows are precedence-chain members,
+        # not never-optimizable rows. Counting them here made this tally overstate
+        # how much of the registry is off-limits.
+        $cls = ("$($row.Classification)").Trim().ToUpperInvariant()
+        $isDead = ($script:DeadClassifications -contains $cls) -or ($script:LiveClassifications -notcontains $cls)
+        if ($isSafety -or $isDead) {
             $reason = @()
-            if ($notActive) { $reason += "classification=$($row.Classification)" }
-            if ($isSafety)  { $reason += 'safety' }
+            if ($isDead)   { $reason += "classification=$($row.Classification)" }
+            if ($isSafety) { $reason += 'safety' }
             $neverOptimizable.Add([pscustomobject]@{ Name = $row.Name; Reason = ($reason -join '+') })
         }
     }
     $neverOptimizable | Sort-Object Reason, Name | Format-Table -AutoSize | Out-String | Write-Host
-    Write-Host "Never-optimizable (classification!=ACTIVE OR safety): $($neverOptimizable.Count) / $($registryRows.Count) rows"
+    Write-Host "Never-optimizable (dead classification OR safety): $($neverOptimizable.Count) / $($registryRows.Count) rows"
+    Write-Host "(OVERRIDE rows are NOT counted here - they are precedence-chain members whose deadness depends on the sibling values in a specific run; the per-run override check decides those)"
     Write-Host "(build-specific inertness from PARAM_INACTIVE_AUDIT.md section 2 is a further, per-build REFUSE layer - only meaningful once a Boss build/.ini is named; not counted in this build-agnostic registry-wide tally)"
     exit 0
 }
