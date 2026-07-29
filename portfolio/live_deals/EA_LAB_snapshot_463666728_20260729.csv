@@ -1,0 +1,10 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,463666728,2026.07.29 00:37:44,USD,99986.54,99976.00,21.42,99965.12,466790.6,PERCENT,0.0,,,,,,,
+MAGIC,463666728,2026.07.29 00:37:44,,,,,,,,,992017,XAUUSDm,11.99,0.01,1,7.6,0
+MAGIC,463666728,2026.07.29 00:37:44,,,,,,,,,990984,GBPUSDm;EURUSDm,-3.95,0.10,2,8.6,0
+MAGIC,463666728,2026.07.29 00:37:44,,,,,,,,,999094,XAUUSDm,2.43,0.01,1,12.6,0
+MAGIC,463666728,2026.07.29 00:37:44,,,,,,,,,990120,USDJPYm,0.07,0.01,1,29.6,0
+SYMBOL,463666728,2026.07.29 00:37:44,,,,,,,,,,XAUUSDm,14.42,0.02,2,,
+SYMBOL,463666728,2026.07.29 00:37:44,,,,,,,,,,GBPUSDm,-9.50,0.05,1,,
+SYMBOL,463666728,2026.07.29 00:37:44,,,,,,,,,,EURUSDm,5.55,0.05,1,,
+SYMBOL,463666728,2026.07.29 00:37:44,,,,,,,,,,USDJPYm,0.07,0.01,1,,

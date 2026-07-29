@@ -2,22 +2,22 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-28 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.231
+**2026-07-29 07:38 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: HIGH (0.75) | Risk Index: 0.269
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
-- WARN: LOADED_FUSE: USDJPY 163.77 at extreme - crowded short, snap-back risk high
+- WARN: LOADED_FUSE: USDJPY 163.79 at extreme - crowded short, snap-back risk high
 
 ## barometer readout
 | instrument | signal | อ่านว่า |
 |---|---|---|
-| AUDJPY | 1 | above SMA200, 5d 0.617% -> risk-on intact |
-| USDJPY | 0.5 | extreme weak (163.767 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | 0 | VIX 18.67 mid-range -> neutral |
+| AUDJPY | 1 | above SMA200, 5d 0.018% -> risk-on intact |
+| USDJPY | 0.5 | extreme weak (163.792 >= 158) -> risk-on now BUT crowded/loaded |
+| VIX | 0 | VIX 18.21 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
 | XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
-| BTCUSD | -2 | below SMA200 AND fast drop beyond ATR band -> carry-unwind confirmed |
-| US10Y_JP10Y | 0 | carry spread ~flat (4.3bps/5d) -> neutral |
-| COPPER | 1 | above SMA200, 5d 1.143% -> risk-on intact |
+| BTCUSD | -1 | below SMA200 -> risk-off lean |
+| US10Y_JP10Y | 0 | carry spread ~flat (-2.4bps/5d) -> neutral |
+| COPPER | 0.5 | above SMA200 but soft 5d -> mild risk-on |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม
@@ -47,6 +47,7 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 - EA_BREAKOUT_XAU [991005] US30m (DEMO) -> watch
 - EA_SUPERTREND (crypto ST-BTC) [990025] BTCUSDm (DEMO) -> watch
 - Boss_16_KangarooGrid [990016] XAUUSDm (DEMO) -> watch
+- (TRD)_SuperTrendFlip_rev05 (ORDER-353 deep-pyr+ER) [990026] BTCUSDm (DEMO) -> watch
 
 ## สิ่งที่ควรทำวันนี้
 ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)
@@ -54,9 +55,9 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 ## โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)
 | model | score | label | ตัวขับหลัก |
 |---|---|---|---|
-| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 30.3/100 | 🟢 สงบ | US 10Y yield level = 4.641% |
-| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 18.6/100 | 🟢 สงบ | WTI % above its SMA200 = 8.254% |
-| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 5.7/100 | 🟢 สงบ | HY spread 5d widening (%) = 2.198% |
+| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 26.8/100 | 🟢 สงบ | US 10Y yield level = 4.604% |
+| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 13.4/100 | 🟢 สงบ | WTI % above its SMA200 = 8.4% |
+| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 8.3/100 | 🟢 สงบ | HY spread 5d widening (%) = 4.461% |
 
 _คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)_
 
