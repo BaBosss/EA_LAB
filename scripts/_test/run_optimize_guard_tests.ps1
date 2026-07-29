@@ -97,8 +97,20 @@ $cases = @(
      expect='REFUSE'; why='not in PARAM_REGISTRY.csv - fail closed' }
 )
 
-function Get-VerdictFor {
-    param([string[]]$ParamArgs, [int]$Build, [string]$Param)
+# One guard process per case, deliberately. Batching cases into shared invocations
+# would cut ~3s off a 5.8s suite, but the guard's override check reads the OTHER
+# parameters present in the same run - RC_MaxLevelsOverride beats ProtectLevel, and
+# both are cases here - so batching would silently couple cases that are supposed to
+# be independent. That is the failure mode this cage was written to catch; paying 3
+# seconds to keep the cases isolated is the right side of that trade. Results are
+# memoised on (build + exact argument set) so a duplicated case costs nothing and
+# can never be served another run's output.
+$script:RunCache = @{}
+
+function Invoke-Guard {
+    param([string[]]$ParamArgs, [int]$Build)
+    $key = "$Build|" + (($ParamArgs | Sort-Object) -join ',')
+    if ($script:RunCache.ContainsKey($key)) { return $script:RunCache[$key] }
     # -WarnOnly so the process exit code never masks a per-parameter verdict:
     # this cage asserts the VERDICT LINE, and several cases deliberately expect
     # a REFUSE that would otherwise make the runner exit 1 and abort the loop.
@@ -111,6 +123,13 @@ function Get-VerdictFor {
     $cmd = "& '$guard' -ParamNames $joined -Build $Build -WarnOnly"
     $out = & powershell -NoProfile -Command $cmd 2>&1
     $text = ($out | Out-String)
+    $script:RunCache[$key] = $text
+    return $text
+}
+
+function Get-VerdictFor {
+    param([string[]]$ParamArgs, [int]$Build, [string]$Param)
+    $text = Invoke-Guard -ParamArgs $ParamArgs -Build $Build
     # the verdict line looks like: [ALLOW] _2_BasketTP_ATRmult  (from: -ParamNames)
     $line = @($text -split "`r?`n" | Where-Object { $_ -match ("^\[(ALLOW|REFUSE)\]\s+" + [regex]::Escape($Param) + "(\s|\[|$)") }) | Select-Object -First 1
     if (-not $line) { return [pscustomobject]@{ Verdict='(no verdict line)'; Text=$text } }

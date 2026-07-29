@@ -99,7 +99,17 @@ $FAST_SUITES = @(
     # verbatim into every <report>.truncation_check.json and read as the finding. Its final "[OK]
     # traded through to the end of the window" used to be an unconditional else-branch, so a run
     # with a measured 91% idle tail asserted the opposite of its own preceding line.
-    'run_truncation_message_tests.ps1'
+    'run_truncation_message_tests.ps1',
+    # 2026-07-30 (Stage 0A): guards scripts/optimize_guard.ps1, which had been refusing
+    # three working dials because it read classification=OVERRIDE as "inactive". The suite
+    # asserts BOTH directions of a precedence pair and the same dial ALLOW-on-11 /
+    # REFUSE-on-14, so a guard that simply refuses everything cannot pass it. Measured
+    # 5.8s cold - the most expensive suite in this tier by a wide margin, because each of
+    # its 14 cases spawns its own guard process on purpose (batching them would let the
+    # guard's own override check couple cases that must stay independent). That takes the
+    # tier from ~5s to ~11s against a 15s budget: deliberate, and the next addition here
+    # should re-measure rather than assume there is still room.
+    'run_optimize_guard_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path
