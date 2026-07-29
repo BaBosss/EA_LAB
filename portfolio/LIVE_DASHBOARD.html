@@ -85,8 +85,8 @@
 <body>
 <h1>EA_LAB Live Dashboard</h1>
 <div class="meta">
-  Generated: 2026-07-29 07:38:47 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260729.csv, EA_LAB_deals_159503454_20260729.csv, EA_LAB_deals_415573666_20260729.csv, EA_LAB_deals_463666728_20260729.csv, EA_LAB_mt4_orders_141049900_20260729.csv, EA_LAB_mt4_orders_69424711_20260729.csv</code> &middot;
-  Accounts: <code>MT5 146237 (2026-07-10) + MT5 159475669 (2026-07-29) + MT5 159503454 (2026-07-29) + MT5 415573666 (2026-07-29) + MT5 463666728 (2026-07-29) + MT4 141049900 (2026-07-29) + MT4 69424711 (2026-07-29)</code><br>
+  Generated: 2026-07-30 05:58:33 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260730.csv, EA_LAB_deals_159503454_20260730.csv, EA_LAB_deals_415573666_20260730.csv, EA_LAB_deals_463666728_20260730.csv, EA_LAB_mt4_orders_141049900_20260730.csv, EA_LAB_mt4_orders_69424711_20260730.csv</code> &middot;
+  Accounts: <code>MT5 146237 (2026-07-10) + MT5 159475669 (2026-07-30) + MT5 159503454 (2026-07-30) + MT5 415573666 (2026-07-30) + MT5 463666728 (2026-07-30) + MT4 141049900 (2026-07-30) + MT4 69424711 (2026-07-30)</code><br>
   Analysis windows (deals before these dates = earlier hand experiments, excluded):
   <code>141049900 from 2026-05-26 | 159475669 from 2026-05-26 | 159503454 from 2026-07-01 | 415573666 from 2026-07-06</code> &middot; excluded rows: 9287
 </div>
@@ -106,117 +106,114 @@
 </div>
 
 <div class="card"><div class="mris-brief" style="border-left:4px solid #d9a406;padding:8px 12px;margin:8px 0;font-family:sans-serif">
-  <div style="font-weight:700">MRIS 🟡 สมดุล/เฝ้าระวัง (NEUTRAL) <span style="font-weight:400;color:#666">- RI 0.269 - conf HIGH</span></div>
-  <div style="font-size:0.9em;color:#444">2026-07-29 07:38 - balanced - watch for tilt</div>
-  <ul style="margin:6px 0;padding-left:18px;font-size:0.9em"><li>WARN: LOADED_FUSE: USDJPY 163.79 at extreme - crowded short, snap-back risk high</li></ul>
+  <div style="font-weight:700">MRIS 🟡 สมดุล/เฝ้าระวัง (NEUTRAL) <span style="font-weight:400;color:#666">- RI 0.0 - conf MED</span></div>
+  <div style="font-size:0.9em;color:#444">2026-07-30 05:58 - balanced - watch for tilt</div>
+  <ul style="margin:6px 0;padding-left:18px;font-size:0.9em"><li>WARN: LOADED_FUSE: USDJPY 163.38 at extreme - crowded short, snap-back risk high</li></ul>
   <div style="font-size:0.85em;color:#555">ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)</div>
-  <div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><div style="font-weight:700;font-size:0.9em">โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)</div><ul style="margin:4px 0;padding-left:18px;font-size:0.85em"><li>Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) - 26.8/100 - 🟢 สงบ - ตัวขับหลัก: US 10Y yield level = 4.604%</li><li>เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) - 13.4/100 - 🟢 สงบ - ตัวขับหลัก: WTI % above its SMA200 = 8.4%</li><li>ความเครียดสินเชื่อ (สเปรด HY กว้าง) - 8.3/100 - 🟢 สงบ - ตัวขับหลัก: HY spread 5d widening (%) = 4.461%</li></ul><div style="font-size:0.75em;color:#777">คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)</div></div>
+  <div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><div style="font-weight:700;font-size:0.9em">โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)</div><ul style="margin:4px 0;padding-left:18px;font-size:0.85em"><li>Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) - 33.4/100 - 🟢 สงบ - ตัวขับหลัก: S&amp;P500 5d momentum (falling = shock) = -2.438%</li><li>เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) - 18.8/100 - 🟢 สงบ - ตัวขับหลัก: WTI % above its SMA200 = 11.749%</li><li>ความเครียดสินเชื่อ (สเปรด HY กว้าง) - 10.1/100 - 🟢 สงบ - ตัวขับหลัก: HY spread 5d widening (%) = 5.576%</li></ul><div style="font-size:0.75em;color:#777">คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)</div></div>
 </div></div>
 <div class="card" id="news-card">
-<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-07-29 07:38 &middot; source: ForexFactory feed</span><br>
+<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-07-30 05:58 &middot; source: ForexFactory feed</span><br>
 <table style="font-size:12px"><tr><th>Bangkok</th><th>CCY</th><th>Event</th><th>F&#39;cast</th><th>Prev</th></tr>
-<tr style="font-weight:600"><td>Wed 12:30</td><td>AUD</td><td style="text-align:left">Trimmed Mean CPI m/m</td><td>0.3%</td><td>0.4%</td></tr>
-<tr style="font-weight:600"><td>Wed 12:30</td><td>AUD</td><td style="text-align:left">CPI y/y</td><td>4.0%</td><td>4.0%</td></tr>
-<tr style="font-weight:600"><td>Wed 12:30</td><td>AUD</td><td style="text-align:left">CPI m/m</td><td>0.2%</td><td>-0.7%</td></tr>
-<tr><td>Thu 05:00</td><td>USD</td><td style="text-align:left">FOMC Statement</td><td></td><td></td></tr>
-<tr><td>Thu 05:00</td><td>USD</td><td style="text-align:left">Federal Funds Rate</td><td>3.75%</td><td>3.75%</td></tr>
-<tr><td>Thu 05:30</td><td>USD</td><td style="text-align:left">FOMC Press Conference</td><td></td><td></td></tr>
-<tr><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">MPC Official Bank Rate Votes</td><td>2-0-7</td><td>2-0-7</td></tr>
-<tr><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">Official Bank Rate</td><td>3.75%</td><td>3.75%</td></tr>
-<tr><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">BOE Monetary Policy Report</td><td></td><td></td></tr>
-<tr><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">Monetary Policy Summary</td><td></td><td></td></tr>
-<tr><td>Thu 22:30</td><td>GBP</td><td style="text-align:left">BOE Gov Bailey Speaks</td><td></td><td></td></tr>
-<tr><td>Thu 23:30</td><td>USD</td><td style="text-align:left">Core PCE Price Index m/m</td><td>0.2%</td><td>0.3%</td></tr>
-<tr><td>Thu 23:30</td><td>USD</td><td style="text-align:left">Advance GDP q/q</td><td>2.1%</td><td>2.0%</td></tr>
+<tr style="font-weight:600"><td>Thu 05:00</td><td>USD</td><td style="text-align:left">FOMC Statement</td><td></td><td></td></tr>
+<tr style="font-weight:600"><td>Thu 05:00</td><td>USD</td><td style="text-align:left">Federal Funds Rate</td><td>3.75%</td><td>3.75%</td></tr>
+<tr style="font-weight:600"><td>Thu 05:30</td><td>USD</td><td style="text-align:left">FOMC Press Conference</td><td></td><td></td></tr>
+<tr style="font-weight:600"><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">MPC Official Bank Rate Votes</td><td>2-0-7</td><td>2-0-7</td></tr>
+<tr style="font-weight:600"><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">Official Bank Rate</td><td>3.75%</td><td>3.75%</td></tr>
+<tr style="font-weight:600"><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">BOE Monetary Policy Report</td><td></td><td></td></tr>
+<tr style="font-weight:600"><td>Thu 22:00</td><td>GBP</td><td style="text-align:left">Monetary Policy Summary</td><td></td><td></td></tr>
+<tr style="font-weight:600"><td>Thu 22:30</td><td>GBP</td><td style="text-align:left">BOE Gov Bailey Speaks</td><td></td><td></td></tr>
+<tr style="font-weight:600"><td>Thu 23:30</td><td>USD</td><td style="text-align:left">Core PCE Price Index m/m</td><td>0.2%</td><td>0.3%</td></tr>
+<tr style="font-weight:600"><td>Thu 23:30</td><td>USD</td><td style="text-align:left">Advance GDP q/q</td><td>2.1%</td><td>2.0%</td></tr>
+<tr><td>Fri 13:30</td><td>JPY</td><td style="text-align:left">Monetary Policy Statement</td><td></td><td></td></tr>
+<tr><td>Fri 13:30</td><td>JPY</td><td style="text-align:left">BOJ Policy Rate</td><td><1.00%</td><td><1.00%</td></tr>
+<tr><td>Fri 13:31</td><td>JPY</td><td style="text-align:left">BOJ Outlook Report</td><td></td><td></td></tr>
+<tr><td>Fri 16:30</td><td>JPY</td><td style="text-align:left">BOJ Press Conference</td><td></td><td></td></tr>
+<tr><td>Fri 23:30</td><td>CAD</td><td style="text-align:left">GDP m/m</td><td>0.2%</td><td>0.5%</td></tr>
 </table>
 </div>
 
 <div class="card">
 <h2 style="font-size:16px;margin:0 0 8px 0;">&#9888;&#65039; FLOATING RISK &mdash; open baskets / margin (snapshot exporter, ORDER-092)</h2>
 <div class="card acct-card">
-<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) &middot; snapshot 2026.07.29 00:37:41</div>
-<div class="acct-head">equity <b>7,487.06</b> vs balance <b>7,702.06</b> USC &middot; floating <span class="neg">-215.00</span> &middot; margin level <span class="ml-green">18,146.0%</span> &middot; distance to stop-out: 18,146.0 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) &middot; snapshot 2026.07.29 22:57:30</div>
+<div class="acct-head">equity <b>7,653.41</b> vs balance <b>7,739.96</b> USC &middot; floating <span class="neg">-86.55</span> &middot; margin level <span class="ml-green">12,422.4%</span> &middot; distance to stop-out: 12,422.4 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">manual trades (magic 0)</td><td class="num-cell">0</td><td class="num-cell">XAGUSDc;XAUUSDc</td><td class="num-cell neg">-220.70</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">155.2</td><td class="num-cell">0</td><td class="label-cell">no declared criteria</td></tr>
-<tr><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990101</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 15% ref</td></tr>
-<tr><td class="name-cell">(Boss)_RSI_MR_GridLog [REMOVED]</td><td class="num-cell">990103</td><td class="num-cell">EURUSDc</td><td class="num-cell pos">5.70</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">347.6</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">manual trades (magic 0)</td><td class="num-cell">0</td><td class="num-cell">XAGUSDc;XAUUSDc</td><td class="num-cell neg">-105.00</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">177.5</td><td class="num-cell">0</td><td class="label-cell">no declared criteria</td></tr>
+<tr><td class="name-cell">(Boss)_RSI_MR_GridLog [REMOVED]</td><td class="num-cell">990103</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-2.55</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">370.0</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990101</td><td class="num-cell">XAUUSDc</td><td class="num-cell pos">20.80</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">2.2</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) &middot; snapshot 2026.07.29 00:37:44</div>
-<div class="acct-head">equity <b>10,169.13</b> vs balance <b>10,200.72</b> USC &middot; floating <span class="neg">-31.59</span> &middot; margin level <span class="ml-green">47,787.3%</span> &middot; distance to stop-out: 47,787.3 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) &middot; snapshot 2026.07.29 22:57:30</div>
+<div class="acct-head">equity <b>10,019.76</b> vs balance <b>10,043.78</b> USC &middot; floating <span class="neg">-24.02</span> &middot; margin level <span class="ml-green">52,846.8%</span> &middot; distance to stop-out: 52,846.8 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">NuiIndy Dynamic RSI+ADX</td><td class="num-cell">1524</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-42.47</td><td class="num-cell">0.17</td><td class="num-cell">15</td><td class="num-cell">304.4</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">MatchaGrid</td><td class="num-cell">20240001</td><td class="num-cell">CHFJPYc</td><td class="num-cell neg">-0.29</td><td class="num-cell">0.04</td><td class="num-cell">4</td><td class="num-cell">346.6</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">GoldReaper leg4</td><td class="num-cell">8008</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">GoldReaper leg6</td><td class="num-cell">8012</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">NuiIndy Dynamic RSI+ADX</td><td class="num-cell">1524</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-50.29</td><td class="num-cell">0.06</td><td class="num-cell">5</td><td class="num-cell">33.8</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">MatchaGrid</td><td class="num-cell">20240001</td><td class="num-cell">CHFJPYc</td><td class="num-cell neg">-0.54</td><td class="num-cell">0.04</td><td class="num-cell">4</td><td class="num-cell">368.9</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">GoldReaper leg2</td><td class="num-cell">8002</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">3</td><td class="label-cell">kill 25% ref</td></tr>
 <tr><td class="name-cell">GoldReaper leg1</td><td class="num-cell">8001</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref</td></tr>
 <tr><td class="name-cell">GoldReaper leg3</td><td class="num-cell">8005</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">GoldReaper leg7</td><td class="num-cell">8014</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">GoldReaper leg2</td><td class="num-cell">8002</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">3</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">GoldReaper leg5</td><td class="num-cell">8009</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">GoldReaper leg4</td><td class="num-cell">8008</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref</td></tr>
 <tr><td class="name-cell">GoldReaper leg8</td><td class="num-cell">8015</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref</td></tr>
-<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9397)</td><td class="num-cell">9397</td><td class="num-cell">GBPUSDc</td><td class="num-cell pos">11.17</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">878.6</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
+<tr><td class="name-cell">GoldReaper leg7</td><td class="num-cell">8014</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">GoldReaper leg5</td><td class="num-cell">8009</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref</td></tr>
+<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9397)</td><td class="num-cell">9397</td><td class="num-cell">GBPUSDc</td><td class="num-cell pos">26.81</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">901.0</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) &middot; snapshot 2026.07.29 00:37:34</div>
-<div class="acct-head">equity <b>11,776.06</b> vs balance <b>11,865.29</b> USC &middot; floating <span class="neg">-89.23</span> &middot; margin level <span class="ml-green">68,422.5%</span> &middot; distance to stop-out: 68,422.5 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) &middot; snapshot 2026.07.29 22:57:32</div>
+<div class="acct-head">equity <b>11,628.32</b> vs balance <b>12,097.15</b> USC &middot; floating <span class="neg">-468.83</span> &middot; margin level <span class="ml-green">9,080.6%</span> &middot; distance to stop-out: 9,080.6 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">Gold_Kangaroo L1</td><td class="num-cell">1112</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-101.99</td><td class="num-cell">0.04</td><td class="num-cell">4</td><td class="num-cell">28.2</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
-<tr><td class="name-cell">Zeus Gold Hedge V1.2_fix (kill: manual kill floating DD 40%)</td><td class="num-cell">7777</td><td class="num-cell">EURUSDc</td><td class="num-cell pos">12.76</td><td class="num-cell">0.28</td><td class="num-cell">3</td><td class="num-cell">10.7</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
+<tr><td class="name-cell">Zeus Gold Hedge V1.2_fix (kill: manual kill floating DD 40%)</td><td class="num-cell">7777</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-459.32</td><td class="num-cell">4.00</td><td class="num-cell">11</td><td class="num-cell">4.8</td><td class="num-cell">2</td><td class="label-cell">kill 35% ref</td></tr>
+<tr><td class="name-cell">Gold_Kangaroo L2</td><td class="num-cell">1113</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-9.51</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">0.2</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols &middot; snapshot 2026.07.29 00:37:44</div>
-<div class="acct-head">equity <b>59,971.61</b> vs balance <b>59,509.59</b> USD &middot; floating <span class="pos">462.02</span> &middot; margin level <span class="ml-green">94,577.5%</span> &middot; distance to stop-out: 94,577.5 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols &middot; snapshot 2026.07.29 22:57:30</div>
+<div class="acct-head">equity <b>59,677.05</b> vs balance <b>59,505.00</b> USD &middot; floating <span class="pos">172.05</span> &middot; margin level <span class="ml-green">115,787.8%</span> &middot; distance to stop-out: 115,787.8 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990201</td><td class="num-cell">USDJPYm</td><td class="num-cell pos">28.02</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">136.8</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">Boss_14_GridLog SELL</td><td class="num-cell">990206</td><td class="num-cell">EURUSDm</td><td class="num-cell pos">34.40</td><td class="num-cell">0.05</td><td class="num-cell">1</td><td class="num-cell">453.6</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">TsMom_XAU (S2)</td><td class="num-cell">992001</td><td class="num-cell">XAUUSDm</td><td class="num-cell pos">57.70</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">35.6</td><td class="num-cell">0</td><td class="label-cell">kill 12% ref</td></tr>
-<tr><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990204</td><td class="num-cell">AUDCADm</td><td class="num-cell pos">64.34</td><td class="num-cell">0.13</td><td class="num-cell">1</td><td class="num-cell">219.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990110</td><td class="num-cell">AUDJPYm</td><td class="num-cell pos">65.89</td><td class="num-cell">0.26</td><td class="num-cell">2</td><td class="num-cell">202.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">Boss_14_GridLog size-light thin</td><td class="num-cell">990205</td><td class="num-cell">CADJPYm</td><td class="num-cell pos">97.94</td><td class="num-cell">0.07</td><td class="num-cell">1</td><td class="num-cell">551.1</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
-<tr><td class="name-cell">Boss_14_GridLog size-light</td><td class="num-cell">990203</td><td class="num-cell">EURJPYm</td><td class="num-cell pos">113.73</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">384.7</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">TsMom_XAU (S2)</td><td class="num-cell">992001</td><td class="num-cell">XAUUSDm</td><td class="num-cell neg">-44.64</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">3.0</td><td class="num-cell">0</td><td class="label-cell">kill 12% ref</td></tr>
+<tr><td class="name-cell">Boss_14_GridLog SELL</td><td class="num-cell">990206</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-6.70</td><td class="num-cell">0.05</td><td class="num-cell">1</td><td class="num-cell">476.0</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990110</td><td class="num-cell">AUDJPYm</td><td class="num-cell neg">-5.91</td><td class="num-cell">0.14</td><td class="num-cell">1</td><td class="num-cell">217.0</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990204</td><td class="num-cell">AUDCADm</td><td class="num-cell pos">2.04</td><td class="num-cell">0.13</td><td class="num-cell">1</td><td class="num-cell">241.8</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990201</td><td class="num-cell">USDJPYm</td><td class="num-cell pos">3.12</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">159.2</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">Boss_14_GridLog size-light thin</td><td class="num-cell">990205</td><td class="num-cell">CADJPYm</td><td class="num-cell pos">107.14</td><td class="num-cell">0.07</td><td class="num-cell">1</td><td class="num-cell">573.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
+<tr><td class="name-cell">Boss_14_GridLog size-light</td><td class="num-cell">990203</td><td class="num-cell">EURJPYm</td><td class="num-cell pos">117.00</td><td class="num-cell">0.07</td><td class="num-cell">1</td><td class="num-cell">407.0</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) &middot; snapshot 2026.07.29 00:37:40</div>
-<div class="acct-head">equity <b>10,114.30</b> vs balance <b>10,161.81</b> USD &middot; floating <span class="neg">-47.51</span> &middot; margin level <span class="ml-green">67,939.3%</span> &middot; distance to stop-out: 67,939.3 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) &middot; snapshot 2026.07.29 22:57:32</div>
+<div class="acct-head">equity <b>10,103.38</b> vs balance <b>10,141.52</b> USD &middot; floating <span class="neg">-38.14</span> &middot; margin level <span class="ml-green">147,198.7%</span> &middot; distance to stop-out: 147,198.7 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">1</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-44.96</td><td class="num-cell">0.22</td><td class="num-cell">8</td><td class="num-cell">300.6</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
-<tr><td class="name-cell">swb grid 4.1.0.3_h</td><td class="num-cell">990</td><td class="num-cell">AUDCADm</td><td class="num-cell neg">-4.18</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">19.5</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
-<tr><td class="name-cell">RSI from pips_EA</td><td class="num-cell">5888</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-2.99</td><td class="num-cell">0.05</td><td class="num-cell">4</td><td class="num-cell">282.3</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
-<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9244)</td><td class="num-cell">9244</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-0.69</td><td class="num-cell">0.06</td><td class="num-cell">3</td><td class="num-cell">14.9</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
-<tr><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">2</td><td class="num-cell">EURUSDm</td><td class="num-cell pos">5.31</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">291.5</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
+<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9244)</td><td class="num-cell">9244</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-25.75</td><td class="num-cell">0.06</td><td class="num-cell">3</td><td class="num-cell">6.0</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
+<tr><td class="name-cell">RSI from pips_EA</td><td class="num-cell">5888</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-8.31</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">4.4</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
+<tr><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">2</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-4.08</td><td class="num-cell">0.04</td><td class="num-cell">2</td><td class="num-cell">4.0</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>463666728</b> &middot; account 463666728 &middot; snapshot 2026.07.29 00:37:44</div>
-<div class="acct-head">equity <b>99,986.54</b> vs balance <b>99,976.00</b> USD &middot; floating <span class="pos">10.54</span> &middot; margin level <span class="ml-green">466,790.6%</span> &middot; distance to stop-out: 466,790.6 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>463666728</b> &middot; account 463666728 &middot; snapshot 2026.07.29 22:57:32</div>
+<div class="acct-head">equity <b>99,843.37</b> vs balance <b>99,851.28</b> USD &middot; floating <span class="neg">-7.91</span> &middot; margin level <span class="ml-green">739,580.5%</span> &middot; distance to stop-out: 739,580.5 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">PairSpread_StatArb</td><td class="num-cell">990984</td><td class="num-cell">GBPUSDm;EURUSDm</td><td class="num-cell neg">-3.95</td><td class="num-cell">0.10</td><td class="num-cell">2</td><td class="num-cell">8.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
-<tr><td class="name-cell">Boss_12_Breakout (MacroGate leg)</td><td class="num-cell">990120</td><td class="num-cell">USDJPYm</td><td class="num-cell pos">0.07</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">29.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
-<tr><td class="name-cell">MacdDiv_Naked</td><td class="num-cell">999094</td><td class="num-cell">XAUUSDm</td><td class="num-cell pos">2.43</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">12.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
-<tr><td class="name-cell">PivotBreakout_XAU</td><td class="num-cell">992017</td><td class="num-cell">XAUUSDm</td><td class="num-cell pos">11.99</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">7.6</td><td class="num-cell">0</td><td class="label-cell">kill 12% ref</td></tr>
+<tr><td class="name-cell">PairSpread_StatArb</td><td class="num-cell">990984</td><td class="num-cell">GBPUSDm;EURUSDm</td><td class="num-cell neg">-5.95</td><td class="num-cell">0.10</td><td class="num-cell">2</td><td class="num-cell">31.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
+<tr><td class="name-cell">(Boss)_RSI_MR_GridLog</td><td class="num-cell">990103</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-1.96</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">4.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref</td></tr>
 </table>
 </div>
 <table>
 <tr><th>Aggregate (across all accounts with a FRESH snapshot)</th><th>Value</th></tr>
-<tr><td class="name-cell">Total XAU-symbol exposure (all accounts)</td><td class="num-cell">0.08 lots &middot; floating <span class="neg">-137.17</span></td></tr>
-<tr><td class="name-cell">Total floating P&amp;L (all accounts)</td><td class="num-cell"><span class="pos">89.23</span></td></tr>
+<tr><td class="name-cell">Total XAU-symbol exposure (all accounts)</td><td class="num-cell">0.04 lots &middot; floating <span class="neg">-77.15</span></td></tr>
+<tr><td class="name-cell">Total floating P&amp;L (all accounts)</td><td class="num-cell"><span class="neg">-453.40</span></td></tr>
 <tr><td class="name-cell">Coverage</td><td class="num-cell">fresh: 159503454, 159475669, 141049900, 415573666, 69424711, 463666728</td></tr>
 </table>
 </div>
 
 <div class="card acct-card">
-<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) &middot; window: from 2026-07-01 &middot; net <span class="neg">-5,114.94</span> USC &middot; 49 trades</div>
+<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) &middot; window: from 2026-07-01 &middot; net <span class="neg">-5,085.04</span> USC &middot; 54 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -224,12 +221,12 @@
 <td class="name-cell">(Boss)_ZeusInspired_GridLog</td>
 <td class="num-cell">990101</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">12</td>
-<td class="num-cell neg">-184.60</td>
-<td class="num-cell">0.38</td>
+<td class="num-cell">16</td>
+<td class="num-cell neg">-131.60</td>
+<td class="num-cell">0.57</td>
 <td class="num-cell">2.8%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 2.8% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -242,21 +239,21 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">8%</td>
-<td class="num-cell">11</td>
+<td class="num-cell">12</td>
 <td class="label-cell">DD 0.2% normal (kill 8%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0.3% normal (kill 10%)">&#128994;</td>
+<td class="status-cell" title="DD 0.5% normal (kill 10%)">&#128994;</td>
 <td class="name-cell">EA_BREAKOUT_XAU</td>
 <td class="num-cell">991001</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">1</td>
-<td class="num-cell neg">-25.70</td>
+<td class="num-cell">2</td>
+<td class="num-cell neg">-48.80</td>
 <td class="num-cell">0.00</td>
-<td class="num-cell">0.3%</td>
+<td class="num-cell">0.5%</td>
 <td class="num-cell">10%</td>
-<td class="num-cell">6</td>
-<td class="label-cell">DD 0.3% normal (kill 10%)</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0.5% normal (kill 10%)</td>
 </tr>
 <tr class="st-white">
 <td class="status-cell" title="no data yet">&#9898;</td>
@@ -294,13 +291,13 @@
 <td class="num-cell">0.11</td>
 <td class="num-cell">48.8%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) &middot; window: from 2026-05-26 &middot; net <span class="pos">10,172.72</span> USC &middot; 283 trades</div>
+<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) &middot; window: from 2026-05-26 &middot; net <span class="pos">10,014.78</span> USC &middot; 298 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -313,7 +310,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">36</td>
+<td class="num-cell">37</td>
 <td class="label-cell">DD 0% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -326,7 +323,7 @@
 <td class="num-cell">1.16</td>
 <td class="num-cell">0.8%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">29</td>
+<td class="num-cell">30</td>
 <td class="label-cell">DD 0.8% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -339,7 +336,7 @@
 <td class="num-cell">0.28</td>
 <td class="num-cell">3.1%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 3.1% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -352,7 +349,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">29</td>
+<td class="num-cell">30</td>
 <td class="label-cell">DD 0% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -365,21 +362,21 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">29</td>
+<td class="num-cell">30</td>
 <td class="label-cell">DD 0% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 3.5% normal (kill 25%)">&#128994;</td>
+<td class="status-cell" title="DD 4.4% normal (kill 25%)">&#128994;</td>
 <td class="name-cell">GoldReaper leg5</td>
 <td class="num-cell">8009</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">8</td>
-<td class="num-cell neg">-201.00</td>
-<td class="num-cell">0.43</td>
-<td class="num-cell">3.5%</td>
+<td class="num-cell">11</td>
+<td class="num-cell neg">-336.10</td>
+<td class="num-cell">0.31</td>
+<td class="num-cell">4.4%</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
-<td class="label-cell">DD 3.5% normal (kill 25%)</td>
+<td class="label-cell">DD 4.4% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 2.8% normal (kill 25%)">&#128994;</td>
@@ -391,21 +388,21 @@
 <td class="num-cell">0.45</td>
 <td class="num-cell">2.8%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 2.8% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0% normal (kill 25%)">&#128994;</td>
+<td class="status-cell" title="DD 0.3% normal (kill 25%)">&#128994;</td>
 <td class="name-cell">GoldReaper leg7</td>
 <td class="num-cell">8014</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">7</td>
-<td class="num-cell pos">101.40</td>
-<td class="num-cell">&#8734;</td>
-<td class="num-cell">0%</td>
+<td class="num-cell">8</td>
+<td class="num-cell pos">67.60</td>
+<td class="num-cell">3.00</td>
+<td class="num-cell">0.3%</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
-<td class="label-cell">DD 0% normal (kill 25%)</td>
+<td class="label-cell">DD 0.3% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 1.9% normal (kill 25%)">&#128994;</td>
@@ -417,7 +414,7 @@
 <td class="num-cell">0.95</td>
 <td class="num-cell">1.9%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 1.9% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -430,7 +427,7 @@
 <td class="num-cell">5.14</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">6</td>
+<td class="num-cell">7</td>
 <td class="label-cell">DD 0.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -438,12 +435,12 @@
 <td class="name-cell">NuiIndy Dynamic RSI+ADX</td>
 <td class="num-cell">1524</td>
 <td class="num-cell">EURUSDc</td>
-<td class="num-cell">93</td>
-<td class="num-cell pos">177.74</td>
-<td class="num-cell">7.44</td>
+<td class="num-cell">104</td>
+<td class="num-cell pos">188.70</td>
+<td class="num-cell">5.58</td>
 <td class="num-cell">0.1%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0.1% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -456,7 +453,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">19</td>
+<td class="num-cell">20</td>
 <td class="label-cell">DD 0% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -469,7 +466,7 @@
 <td class="num-cell">12.70</td>
 <td class="num-cell">2.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">14</td>
+<td class="num-cell">15</td>
 <td class="label-cell">DD 2.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -482,7 +479,7 @@
 <td class="num-cell">0.27</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">11</td>
+<td class="num-cell">12</td>
 <td class="label-cell">DD 0.3% normal (kill 25%)</td>
 </tr>
 <tr class="st-white">
@@ -547,13 +544,13 @@
 <td class="num-cell">7.30</td>
 <td class="num-cell">5.2%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) &middot; window: from 2026-05-26 &middot; net <span class="pos">1,951.85</span> USC &middot; 482 trades</div>
+<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) &middot; window: from 2026-05-26 &middot; net <span class="pos">2,179.71</span> USC &middot; 506 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -561,12 +558,12 @@
 <td class="name-cell">Gold_Kangaroo L1</td>
 <td class="num-cell">1112</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">67</td>
-<td class="num-cell pos">147.90</td>
-<td class="num-cell">1.34</td>
+<td class="num-cell">71</td>
+<td class="num-cell pos">259.06</td>
+<td class="num-cell">1.60</td>
 <td class="num-cell">1.8%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 1.8% normal (kill 35%)</td>
 </tr>
 <tr class="st-green">
@@ -574,9 +571,9 @@
 <td class="name-cell">Gold_Kangaroo L2</td>
 <td class="num-cell">1113</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">40</td>
-<td class="num-cell pos">243.94</td>
-<td class="num-cell">3.59</td>
+<td class="num-cell">42</td>
+<td class="num-cell pos">260.03</td>
+<td class="num-cell">3.76</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">35%</td>
 <td class="num-cell">0</td>
@@ -587,12 +584,12 @@
 <td class="name-cell">Gold_Kangaroo L3</td>
 <td class="num-cell">1114</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">45</td>
-<td class="num-cell pos">120.65</td>
-<td class="num-cell">1.51</td>
+<td class="num-cell">46</td>
+<td class="num-cell pos">128.21</td>
+<td class="num-cell">1.55</td>
 <td class="num-cell">1.3%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 1.3% normal (kill 35%)</td>
 </tr>
 <tr class="st-green">
@@ -600,9 +597,9 @@
 <td class="name-cell">Gold_Kangaroo L4</td>
 <td class="num-cell">1115</td>
 <td class="num-cell">XAUUSDc</td>
-<td class="num-cell">32</td>
-<td class="num-cell pos">158.93</td>
-<td class="num-cell">2.48</td>
+<td class="num-cell">35</td>
+<td class="num-cell pos">185.44</td>
+<td class="num-cell">2.71</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">35%</td>
 <td class="num-cell">0</td>
@@ -613,9 +610,9 @@
 <td class="name-cell">Zeus Gold Hedge V1.2_fix (kill: manual kill floating DD 40%)</td>
 <td class="num-cell">7777</td>
 <td class="num-cell">EURUSDc</td>
-<td class="num-cell">298</td>
-<td class="num-cell pos">1,280.43</td>
-<td class="num-cell">1.58</td>
+<td class="num-cell">312</td>
+<td class="num-cell pos">1,346.97</td>
+<td class="num-cell">1.59</td>
 <td class="num-cell">7.5%</td>
 <td class="num-cell">35%</td>
 <td class="num-cell">0</td>
@@ -624,21 +621,21 @@
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols &middot; window: from 2026-07-06 &middot; net <span class="neg">-1,443.46</span> USC &middot; 47 trades</div>
+<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols &middot; window: from 2026-07-06 &middot; net <span class="neg">-1,448.05</span> USC &middot; 52 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0% normal (kill 25%)">&#128994;</td>
+<td class="status-cell" title="DD 0.4% normal (kill 25%)">&#128994;</td>
 <td class="name-cell">(Boss)_ZeusInspired_GridLog</td>
 <td class="num-cell">990110</td>
 <td class="num-cell">AUDJPYm</td>
-<td class="num-cell">2</td>
-<td class="num-cell pos">31.83</td>
-<td class="num-cell">&#8734;</td>
-<td class="num-cell">0%</td>
+<td class="num-cell">3</td>
+<td class="num-cell neg">-5.36</td>
+<td class="num-cell">0.86</td>
+<td class="num-cell">0.4%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">6</td>
-<td class="label-cell">DD 0% normal (kill 25%)</td>
+<td class="num-cell">1</td>
+<td class="label-cell">DD 0.4% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 0.2% normal (kill 25%)">&#128994;</td>
@@ -650,7 +647,7 @@
 <td class="num-cell">8.22</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">7</td>
+<td class="num-cell">8</td>
 <td class="label-cell">DD 0.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -663,7 +660,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">21</td>
+<td class="num-cell">22</td>
 <td class="label-cell">DD 0.2% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -676,7 +673,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">1.9%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">9</td>
+<td class="num-cell">10</td>
 <td class="label-cell">DD 1.9% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -689,7 +686,7 @@
 <td class="num-cell">0.33</td>
 <td class="num-cell">13.9%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">6</td>
+<td class="num-cell">7</td>
 <td class="label-cell">DD 13.9% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -702,7 +699,7 @@
 <td class="num-cell">0.83</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">5</td>
+<td class="num-cell">6</td>
 <td class="label-cell">DD 0.3% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -710,12 +707,12 @@
 <td class="name-cell">Boss_14_GridLog size-light</td>
 <td class="num-cell">990203</td>
 <td class="num-cell">EURJPYm</td>
-<td class="num-cell">1</td>
-<td class="num-cell neg">-32.34</td>
-<td class="num-cell">0.00</td>
+<td class="num-cell">2</td>
+<td class="num-cell pos">10.68</td>
+<td class="num-cell">1.33</td>
 <td class="num-cell">0.3%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">16</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0.3% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
@@ -728,33 +725,33 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">14</td>
+<td class="num-cell">15</td>
 <td class="label-cell">DD 0% normal (kill 25%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0.4% normal (kill 12%)">&#128994;</td>
+<td class="status-cell" title="DD 0.5% normal (kill 12%)">&#128994;</td>
 <td class="name-cell">LondonORB_XAU (SS1 +trend filter)</td>
 <td class="num-cell">992003</td>
 <td class="num-cell">XAUUSDm</td>
-<td class="num-cell">3</td>
-<td class="num-cell neg">-38.91</td>
+<td class="num-cell">4</td>
+<td class="num-cell neg">-48.96</td>
 <td class="num-cell">0.00</td>
-<td class="num-cell">0.4%</td>
+<td class="num-cell">0.5%</td>
 <td class="num-cell">12%</td>
 <td class="num-cell">0</td>
-<td class="label-cell">DD 0.4% normal (kill 12%)</td>
+<td class="label-cell">DD 0.5% normal (kill 12%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 0.7% normal (kill 12%)">&#128994;</td>
 <td class="name-cell">TsMom_XAU (S2)</td>
 <td class="num-cell">992001</td>
 <td class="num-cell">XAUUSDm</td>
-<td class="num-cell">2</td>
-<td class="num-cell neg">-68.70</td>
-<td class="num-cell">0.00</td>
+<td class="num-cell">4</td>
+<td class="num-cell neg">-69.07</td>
+<td class="num-cell">0.38</td>
 <td class="num-cell">0.7%</td>
 <td class="num-cell">12%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0.7% normal (kill 12%)</td>
 </tr>
 <tr class="st-white">
@@ -825,7 +822,7 @@
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) &middot; window: all history &middot; net <span class="pos">161.81</span> USC &middot; 75 trades</div>
+<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) &middot; window: all history &middot; net <span class="pos">141.52</span> USC &middot; 96 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -833,51 +830,51 @@
 <td class="name-cell">RSI from pips_EA</td>
 <td class="num-cell">5888</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">12</td>
-<td class="num-cell pos">21.19</td>
-<td class="num-cell">&#8734;</td>
+<td class="num-cell">16</td>
+<td class="num-cell pos">30.39</td>
+<td class="num-cell">8.75</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">12</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0% normal (kill 35%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0.3% normal (kill 35%)">&#128994;</td>
+<td class="status-cell" title="DD 0.9% normal (kill 35%)">&#128994;</td>
 <td class="name-cell">swb grid 4.1.0.3_h</td>
 <td class="num-cell">990</td>
 <td class="num-cell">AUDCADm</td>
-<td class="num-cell">17</td>
-<td class="num-cell pos">66.77</td>
-<td class="num-cell">2.25</td>
-<td class="num-cell">0.3%</td>
+<td class="num-cell">21</td>
+<td class="num-cell pos">14.99</td>
+<td class="num-cell">1.10</td>
+<td class="num-cell">0.9%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
-<td class="label-cell">DD 0.3% normal (kill 35%)</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0.9% normal (kill 35%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 0.1% normal (kill 35%)">&#128994;</td>
+<td class="status-cell" title="DD 0.2% normal (kill 35%)">&#128994;</td>
 <td class="name-cell">UnNomGuaiV1.132</td>
 <td class="num-cell">1</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">11</td>
-<td class="num-cell pos">17.51</td>
-<td class="num-cell">2.72</td>
-<td class="num-cell">0.1%</td>
+<td class="num-cell">19</td>
+<td class="num-cell pos">29.72</td>
+<td class="num-cell">1.88</td>
+<td class="num-cell">0.2%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">12</td>
-<td class="label-cell">DD 0.1% normal (kill 35%)</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0.2% normal (kill 35%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 0.1% normal (kill 35%)">&#128994;</td>
 <td class="name-cell">UnNomGuaiV1.132</td>
 <td class="num-cell">2</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">9</td>
-<td class="num-cell pos">15.44</td>
-<td class="num-cell">2.43</td>
+<td class="num-cell">10</td>
+<td class="num-cell pos">18.43</td>
+<td class="num-cell">2.71</td>
 <td class="num-cell">0.1%</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">12</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0.1% normal (kill 35%)</td>
 </tr>
 <tr class="st-grey">
@@ -885,9 +882,9 @@
 <td class="name-cell">(unmapped magic 9244)</td>
 <td class="num-cell">9244</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">26</td>
-<td class="num-cell pos">40.90</td>
-<td class="num-cell">5.31</td>
+<td class="num-cell">30</td>
+<td class="num-cell pos">47.99</td>
+<td class="num-cell">5.30</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
 <td class="num-cell">0</td>
@@ -896,7 +893,7 @@
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>463666728</b> &middot; account 463666728 &middot; window: all history &middot; net <span class="neg">-24.00</span> USC &middot; 19 trades</div>
+<div class="acct-head"><b>463666728</b> &middot; account 463666728 &middot; window: all history &middot; net <span class="neg">-148.72</span> USC &middot; 28 trades</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -909,7 +906,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">18%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 0% normal (kill 18%)</td>
 </tr>
 <tr class="st-green">
@@ -917,12 +914,12 @@
 <td class="name-cell">Boss_12_Breakout (MacroGate leg)</td>
 <td class="num-cell">990120</td>
 <td class="num-cell">USDJPYm</td>
-<td class="num-cell">7</td>
-<td class="num-cell pos">4.91</td>
-<td class="num-cell">2.70</td>
+<td class="num-cell">11</td>
+<td class="num-cell pos">2.13</td>
+<td class="num-cell">1.28</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -939,17 +936,17 @@
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
-<td class="status-cell" title="DD 1.4% normal (kill 15%)">&#128994;</td>
+<td class="status-cell" title="DD 1.6% normal (kill 15%)">&#128994;</td>
 <td class="name-cell">Boss_17_Wave5</td>
 <td class="num-cell">990302</td>
 <td class="num-cell">XAGUSDm</td>
-<td class="num-cell">4</td>
-<td class="num-cell neg">-41.80</td>
-<td class="num-cell">0.69</td>
-<td class="num-cell">1.4%</td>
+<td class="num-cell">5</td>
+<td class="num-cell neg">-62.10</td>
+<td class="num-cell">0.60</td>
+<td class="num-cell">1.6%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">2</td>
-<td class="label-cell">DD 1.4% normal (kill 15%)</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 1.6% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 0% normal (kill 15%)">&#128994;</td>
@@ -961,7 +958,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">5</td>
+<td class="num-cell">6</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -974,7 +971,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.6%</td>
 <td class="num-cell">8%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD 0.6% normal (kill 8%)</td>
 </tr>
 <tr class="st-green">
@@ -982,32 +979,45 @@
 <td class="name-cell">EmaStoRev</td>
 <td class="num-cell">991070</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">1</td>
-<td class="num-cell neu">0.00</td>
-<td class="num-cell">N/A</td>
-<td class="num-cell">0%</td>
-<td class="num-cell">15%</td>
-<td class="num-cell">11</td>
-<td class="label-cell">DD 0% normal (kill 15%)</td>
-</tr>
-<tr class="st-green">
-<td class="status-cell" title="DD 0% normal (kill 15%)">&#128994;</td>
-<td class="name-cell">MacdDiv_Naked</td>
-<td class="num-cell">999094</td>
-<td class="num-cell">XAUUSDm</td>
-<td class="num-cell">1</td>
-<td class="num-cell pos">63.39</td>
+<td class="num-cell">2</td>
+<td class="num-cell pos">0.83</td>
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
 <td class="num-cell">0</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
+<tr class="st-green">
+<td class="status-cell" title="DD 0.5% normal (kill 15%)">&#128994;</td>
+<td class="name-cell">MacdDiv_Naked</td>
+<td class="num-cell">999094</td>
+<td class="num-cell">XAUUSDm</td>
+<td class="num-cell">2</td>
+<td class="num-cell pos">13.76</td>
+<td class="num-cell">1.28</td>
+<td class="num-cell">0.5%</td>
+<td class="num-cell">15%</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0.5% normal (kill 15%)</td>
+</tr>
+<tr class="st-green">
+<td class="status-cell" title="DD 0.5% normal (kill 12%)">&#128994;</td>
+<td class="name-cell">PivotBreakout_XAU</td>
+<td class="num-cell">992017</td>
+<td class="num-cell">XAUUSDm</td>
+<td class="num-cell">2</td>
+<td class="num-cell neg">-52.84</td>
+<td class="num-cell">0.00</td>
+<td class="num-cell">0.5%</td>
+<td class="num-cell">12%</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0.5% normal (kill 12%)</td>
+</tr>
 <tr class="st-white">
 <td class="status-cell" title="no data yet">&#9898;</td>
 <td class="name-cell">(Boss)_RSI_MR_GridLog</td>
 <td class="num-cell">990103</td>
-<td class="num-cell">EURUSD</td>
+<td class="num-cell">EURUSDm</td>
 <td class="num-cell">0</td>
 <td class="num-cell neu">0.00</td>
 <td class="num-cell">N/A</td>
@@ -1120,19 +1130,6 @@
 <td class="num-cell">-</td>
 <td class="label-cell">no data yet</td>
 </tr>
-<tr class="st-white">
-<td class="status-cell" title="no data yet">&#9898;</td>
-<td class="name-cell">PivotBreakout_XAU</td>
-<td class="num-cell">992017</td>
-<td class="num-cell">XAUUSDm</td>
-<td class="num-cell">0</td>
-<td class="num-cell neu">0.00</td>
-<td class="num-cell">N/A</td>
-<td class="num-cell">0%</td>
-<td class="num-cell">12%</td>
-<td class="num-cell">-</td>
-<td class="label-cell">no data yet</td>
-</tr>
 <tr class="st-grey">
 <td class="status-cell" title="unmapped magic - no declared criteria">&#10067;</td>
 <td class="name-cell">(unmapped magic 990001)</td>
@@ -1143,7 +1140,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
@@ -1151,8 +1148,8 @@
 
 
 <div class="footer">
-  Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): 119,400.03 &middot;
-  total deal rows: 1396 &middot; generated by scripts\live_dashboard.ps1 (ORDER-058)
+  Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): 119,359.25 &middot;
+  total deal rows: 1498 &middot; generated by scripts\live_dashboard.ps1 (ORDER-058)
 </div>
 </body>
 </html>
