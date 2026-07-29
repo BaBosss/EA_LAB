@@ -80,7 +80,7 @@ if ($LASTEXITCODE -eq 2) {
 #       $cr.floating_risk, and nothing here ever looked at it -- so the only instrument
 #       that can see open baskets and margin could be dead for days while the chain went
 #       green on fresh closed-deal history.
-#   D2  the catch below built a message, logged it, and did NOT append to $failed, so a
+#   D2  the catch this replaced built a message, logged it, and did NOT append to $failed, so a
 #       corrupt snapshot exited 0. A MISSING snapshot set "coverage check skipped" and
 #       moved on -- on a chain whose entire job is coverage.
 # It is a library rather than inline code because daily_monitor.ps1 cannot be run in a
