@@ -69,7 +69,11 @@ param(
     #   run_monitor_integrity_tests.ps1 -CoverageLib <that file>
     # -- the red cases must go red. A cage nobody has watched fail is UNTESTED.
     # Defaults to the shipped library, which is what the pre-commit tier runs.
-    [string]$CoverageLib = ''
+    [string]$CoverageLib = '',
+    # Same lever for PART 4/5. Copy scripts\live_dashboard.ps1, reintroduce the defect
+    # (e.g. make Get-AcctBase return a flat 10000, or make Get-AcctLabel never say
+    # UNREGISTERED), and point this at the copy: the D3/D4 assertions must go red.
+    [string]$DashScript = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -87,7 +91,8 @@ if (-not $RepoRoot) {
 $fixtures = Join-Path $RepoRoot 'scripts\_test\fixtures\monitor'
 $snapScript = Join-Path $RepoRoot 'scripts\control_room_snapshot.ps1'
 if (-not $CoverageLib) { $CoverageLib = Join-Path $RepoRoot 'scripts\lib\monitor_coverage.ps1' }
-$dashScript = Join-Path $RepoRoot 'scripts\live_dashboard.ps1'
+if (-not $DashScript) { $DashScript = Join-Path $RepoRoot 'scripts\live_dashboard.ps1' }
+$dashScript = $DashScript
 
 $script:pass = 0
 $script:fail = 0
@@ -293,6 +298,137 @@ Assert-True 'daily_monitor no longer ASSIGNS a "skipped" coverage status' `
     ($dm -notmatch '\$coverageMsg\s*=\s*"coverage check skipped')
 Assert-True 'daily_monitor no longer parses the snapshot inline (that is the library job now)' `
     ($dm -notmatch 'ConvertFrom-Json')
+
+# =====================================================================================
+# PART 4 (D3) -- base equity is per account, and UNKNOWN when it is not recorded
+# PART 5 (D4) -- the account universe comes from ACCOUNTS.csv, and a stranger is
+#                CLASSIFIED rather than hidden
+# =====================================================================================
+# This part runs the REAL live_dashboard.ps1 end to end and reads the HTML it writes.
+# That is deliberate: the alternative is to re-derive the DD arithmetic in the test, and a
+# test that reimplements its subject agrees with itself no matter what the subject does.
+Write-Host ''
+Write-Host '=== PART 4/5 (D3/D4): live_dashboard.ps1 over a fixture portfolio tree ==='
+if (-not (Test-Path $dashScript)) { throw "missing: $dashScript" }
+
+$work = Join-Path ([System.IO.Path]::GetTempPath()) ("monitor_cage_" + [guid]::NewGuid().ToString('N'))
+try {
+    Copy-Item (Join-Path $fixtures 'dash\portfolio') (Join-Path $work 'portfolio') -Recurse -Force
+    $wDeals = Join-Path $work 'portfolio\live_deals'
+    # The floating panel greys anything older than 26h and drops it from the aggregates.
+    # Fixture mtimes come from whenever git checked the files out, so stamp them now --
+    # otherwise this suite would pass or fail depending on how old the clone is.
+    Get-ChildItem (Join-Path $wDeals 'EA_LAB_snapshot_*.csv') | ForEach-Object { $_.LastWriteTime = (Get-Date) }
+    $outHtml = Join-Path $work 'DASH.html'
+
+    $dashOut = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $dashScript `
+        -LiveDealsDir $wDeals -OutFile $outHtml 2>&1
+    $dashExit = $LASTEXITCODE
+    Assert-Equal 'the dashboard runs clean over the fixture tree' 0 $dashExit
+    if ($dashExit -ne 0) { Write-Host ($dashOut | Out-String) }
+    $html = Get-Content $outHtml -Raw
+
+    # Pull the CLOSED-DEALS <tr> for a magic. Scoped by the status-cell, which only the
+    # closed-deals tables emit -- the first draft matched the first <tr> containing the
+    # magic and kept landing on the FLOATING panel row instead, so five assertions were
+    # reading the wrong table and reporting the code as broken when it was not. A test
+    # that looks at the wrong place fails in the same shape as a real defect.
+    function Row([string]$needle) {
+        foreach ($m in [regex]::Matches($html, '(?s)<tr[^>]*>.*?</tr>')) {
+            if ($m.Value -match 'status-cell' -and $m.Value -match [regex]::Escape($needle)) { return $m.Value }
+        }
+        return ''
+    }
+
+    Write-Host '   -- D3: SAME trades, DIFFERENT base equity -> different DD% --'
+    # All three fixture accounts trade the identical series (+1000, -2000, +500), so any
+    # difference between them can only come from the denominator.
+    #   base  10000 -> peak 11000, trough  9000 -> 2000/11000  = 18.2%
+    #   base 100000 -> peak 101000, trough 99000 -> 2000/101000 =  2.0%
+    # Asserting the two SPECIFIC numbers, not merely that they differ: an implementation
+    # that resolved per account but read the wrong row would still "vary".
+    $rowSmall = Row '900001'
+    $rowLarge = Row '900002'
+    $rowNone  = Row '900003'
+    Assert-True 'account with base_equity 10000 shows DD 18.2%' ($rowSmall -match '>18\.2%<')
+    Assert-True 'account with base_equity 100000 shows DD 2% on the identical trades' ($rowLarge -match '>2%<')
+    Assert-True 'the two are not the same number (the 10000-for-everyone defect)' `
+        (($rowSmall -match '>18\.2%<') -and ($rowLarge -notmatch '>18\.2%<'))
+
+    Write-Host '   -- D3: the two DD numbers drive DIFFERENT kill-switch verdicts --'
+    # kill 20%, warn 16% (0.8 x kill). 18.2 -> yellow, 2.0 -> green. The denominator is
+    # not cosmetic: it decides the flag colour on identical trading.
+    Assert-True 'small-base account is flagged yellow (18.2% >= warn 16%)' ($rowSmall -match 'st-yellow')
+    Assert-True 'large-base account is green on the same trades' ($rowLarge -match 'st-green')
+
+    Write-Host '   -- D3: a blank base_equity renders UNKNOWN and computes NOTHING --'
+    Assert-True 'no-base account shows UNKNOWN in its DD cell' ($rowNone -match '>UNKNOWN<')
+    Assert-True 'no-base account shows NO percentage at all in that cell' ($rowNone -notmatch '>\d+(\.\d+)?%<\/td>\s*<td class="num-cell">\d+%')
+    Assert-True 'no-base account is not silently painted green' ($rowNone -notmatch 'st-green')
+    Assert-True 'no-base account gets its own status class' ($rowNone -match 'st-nobase')
+    Assert-True 'and its label names the missing field and the account' `
+        ($rowNone -match 'NOT COMPUTABLE' -and $rowNone -match 'base_equity' -and $rowNone -match '100000003')
+    Assert-True 'the page never claims a 10000 default was applied' ($html -notmatch 'assumed 10,000')
+
+    Write-Host '   -- D3: the floating panel kill-DD EQUIVALENT is per account too --'
+    # Identical float_pl of -2500 on all three accounts, identical kill 20%.
+    #   base  10000 -> equivalent  2000 -> -2500 breaches   -> red
+    #   base 100000 -> equivalent 20000 -> -2500 does not   -> plain ref
+    #   base UNKNOWN                                        -> no equivalent computable
+    Assert-True 'small-base float basket breaches its kill-DD equivalent' `
+        ($html -match 'float loss &ge; kill-DD equivalent \(20% of 10,000\)')
+    Assert-True 'large-base float basket does NOT breach, on the identical -2500' `
+        ($html -notmatch 'float loss &ge; kill-DD equivalent \(20% of 100,000\)')
+    Assert-True 'large-base account shows the computed reference amount (20,000)' `
+        ($html -match 'kill 20% ref \(20,000\)')
+    Assert-True 'no-base account computes no currency equivalent at all' `
+        ($html -match 'UNKNOWN</b>: no base_equity for account 100000003')
+
+    Write-Host '   -- D3: the reader is told which denominator produced each column --'
+    Assert-True 'the legend lists base equity per account' `
+        ($html -match '100000001 = 10,000' -and $html -match '100000002 = 100,000' -and $html -match '100000003 = UNKNOWN')
+    Assert-True 'and states how many accounts are missing one' ($html -match '1 registered account\(s\) have no base_equity recorded')
+
+    Write-Host '   -- D4: an unregistered login is CLASSIFIED, not hidden --'
+    Assert-True 'the unregistered login still appears on the page' ($html -match '900000009')
+    Assert-True 'it is labelled UNREGISTERED / not a lab account' `
+        ($html -match 'UNREGISTERED &mdash; not a lab account')
+    Assert-True 'with the file it came from as provenance' `
+        ($html -match 'EA_LAB_deals_900000009_20260730\.csv')
+    Assert-True 'the account-universe panel exists' ($html -match 'ACCOUNT UNIVERSE')
+    Assert-True 'its section header also carries the UNREGISTERED marker' `
+        ($html -match 'UNREGISTERED / not a lab account - no row in ACCOUNTS\.csv')
+
+    Write-Host '   -- D4 specificity: registered accounts must NOT be called unregistered --'
+    # A "fix" that labelled everything UNREGISTERED would pass every assertion above.
+    foreach ($reg in @('100000001', '100000002', '100000003')) {
+        $seg = ''
+        foreach ($m in [regex]::Matches($html, '(?s)<div class="acct-head">.*?</div>')) {
+            if ($m.Value -match $reg) { $seg = $m.Value; break }
+        }
+        Assert-True "registered account $reg is not labelled UNREGISTERED" `
+            ($seg -ne '' -and $seg -notmatch 'UNREGISTERED')
+        Assert-True "registered account $reg carries its LAB_MANAGED scope" ($seg -match 'LAB_MANAGED')
+    }
+
+    Write-Host '   -- D4: a registered account with no collected data is surfaced too --'
+    # Rebuild with account 100000002 removed from live_deals: it must move from a data
+    # section to the "registered, no data" row rather than vanishing from the page.
+    Remove-Item (Join-Path $wDeals 'EA_LAB_deals_100000002_20260730.csv') -Force
+    Remove-Item (Join-Path $wDeals 'EA_LAB_snapshot_100000002_20260730.csv') -Force
+    $out2 = Join-Path $work 'DASH2.html'
+    & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $dashScript -LiveDealsDir $wDeals -OutFile $out2 | Out-Null
+    $html2 = Get-Content $out2 -Raw
+    Assert-True 'an account with a row in ACCOUNTS.csv but no data is named on the page' `
+        ($html2 -match 'REGISTERED \(LAB_MANAGED\) but NO collected data')
+    Assert-True 'and it is that specific account' `
+        ([regex]::Matches($html2, '(?s)<tr class="st-white"><td class="num-cell"><b>100000002</b>').Count -ge 1)
+    Assert-True 'it is NOT reported as unregistered (it is registered - the data is what is missing)' `
+        ($html2 -notmatch '(?s)<b>100000002</b></td><td class="label-cell">UNREGISTERED')
+}
+finally {
+    if (Test-Path $work) { Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue }
+}
 
 Write-Host ''
 if ($script:fail -gt 0) {

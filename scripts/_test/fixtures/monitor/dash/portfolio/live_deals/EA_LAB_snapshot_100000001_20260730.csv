@@ -1,0 +1,3 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,100000001,2026.07.30 05:00:00,USD,7500.00,10000.00,100.00,7500.00,9000.0,PERCENT,0.0,,,,,,,
+MAGIC,100000001,2026.07.30 05:00:00,,,,,,,,,900001,EURUSDm,-2500.00,0.10,1,4.0,0

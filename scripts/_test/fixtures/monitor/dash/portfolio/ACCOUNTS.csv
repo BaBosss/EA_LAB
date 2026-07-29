@@ -1,0 +1,4 @@
+account,account_name,platform,environment,governance_scope,expected_sensor,monitor_sla_minutes,base_equity,currency,start_date,alert_policy,notes
+100000001,FIXTURE small-base,MT5,DEMO,LAB_MANAGED,MT5_deals+AccountSnapshot,1800,10000,USD,2026-07-01,RED,fixture: base_equity RECORDED and small
+100000002,FIXTURE large-base,MT5,DEMO,LAB_MANAGED,MT5_deals+AccountSnapshot,1800,100000,USD,2026-07-01,RED,fixture: base_equity RECORDED and 10x the other one - same trades must yield 10x smaller DD%
+100000003,FIXTURE no-base,MT5,DEMO,LAB_MANAGED,MT5_deals+AccountSnapshot,1800,,USD,2026-07-01,RED,fixture: base_equity BLANK - every derived DD number must render UNKNOWN and none may be computed
