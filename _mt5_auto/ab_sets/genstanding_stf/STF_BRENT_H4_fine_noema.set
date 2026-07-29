@@ -1,0 +1,32 @@
+; STF_BRENT_H4_fine_noema.set -- FINE COMPLETE grid #1 (ORDER-542 cell #20 BRENT H4)
+; coarse genetic GEN2_BRENT_H4_MAIN.xml: passes=802 survivors=60 (7.5%) plateau=GOOD
+;   robust pick (highest PF, n>=100): AtrPeriod=24 Mult=3.0 ExitMode=2 TpAtrMult=2 SlAtrMult=3.0 UseEma=true EmaPeriod=50 (PF 1.786/102t)
+;   center pick (script default): AtrPeriod=16 Mult=3.5 ExitMode=1 TpAtrMult=2 SlAtrMult=2.5 UseEma=false EmaPeriod=100 (PF 1.338/117t)
+;   filtered PF>=1.2 & trades>=30 (n=106): ExitMode=2 dominant (92/106) at much higher PF than ExitMode=1 (14/106)
+;   -> fine grid centres on ExitMode=2 (the dominant, higher-PF regime), split by UseEma like cell #15/#13
+; ⚠️ INERT-AXIS (memory inert-axis-fake-plateau), locked here:
+;   _03_EmaPeriod uses only when UseEma==true (mq5 L115/171) -> dead at UseEma=false, moved to _fine_ema.set
+; ⚠️ widened past coarse edges per memory grid-answer-outside-the-grid: coarse AtrPeriod clustered at its
+;   upper bound (24/24, 39 of 106 survivors) and SlAtrMult clustered at its upper bound (3.0, 42/106)
+;   -> AtrPeriod widened to 32, SlAtrMult widened to 4.0
+; combos = AtrPeriod(7) x Mult(3) x TpAtrMult(3) x SlAtrMult(5) = 315 -> Optimization=1 (complete)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=8||8||4||32||Y
+_01_Mult=2.5||2.5||0.5||3.5||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=2||2||0||2||N
+_02_TpAtrMult=1||1||1||3||Y
+_02_SlAtrMult=2.0||2.0||0.5||4.0||Y
+_03_UseEma=false||false||0||false||N
+_03_EmaPeriod=100||100||0||100||N
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

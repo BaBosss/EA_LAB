@@ -1661,7 +1661,7 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 | 17 | STF | US30 | H4 | MAIN+BWD | genetic Stage A | **1.55 / 1.01** · `both-window-pulse` แต่ BWD net +2.91 = เสมอตัว · plateau แข็ง (22%) |
 | 18 | STF | XAGUSD | H4 | MAIN+BWD | genetic Stage A | coarse 0.6% survivors · plateau=WEAK neighbours 0 → ยังไม่ยืนยัน M4 |
 | 19 | STF | ETHUSD | H4 | MAIN+BWD | genetic Stage A · `swap-unadjusted` | **1.310 / 1.099** (หัก swap) แต่ **MC PF-5th 0.857/0.657 ตก** → `BUILD-ON` · overlay ฆ่า MAIN (1.010) · portable stack ของ BTC ตก BWD 0.858 |
-| 20 | STF | BRENT | H4 | MAIN+BWD | genetic Stage A | |
+| 20 | STF | BRENT | H4 | MAIN+BWD | genetic Stage A | **1.24/126t/DD0.17% / 1.48/120t/DD0.21%** · `both-window-pulse` (MAIN barely clears bar) |
 | 21 | STF | NAS100 | H4 | MAIN+BWD | genetic Stage A (ORDER-116 เคยเจอ no-data — ถ้าไม่มี = `NO-DATA`) | |
 | 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A | |
 | 23 | STF | XAUUSD | H1 | MAIN+BWD | บ้านเดิมคนละ TF | |
