@@ -154,6 +154,116 @@ session (out of scope — that belongs to whoever runs this order's actual sweep
 method, not a raw grep of the `.ex5`, per the sanity-token finding documented in the ORDER-540 block). Row stays
 `OPEN` — not marking DONE/REVIEWED, that's the lead's call.
 
+### 📊 ORDER-546 STEP 0-2 results (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 16:22-17:05) — BWD hard gate FAILS both symbols, STEP 3 not run
+
+**🔴 Instrument bug found and worked around (worth banking as a memory): lane `D:\Meta 5` is non-portable, and `mt5_run.ps1`'s
+`-Terminal`/`-DataDir` defaults assume the report/log files land under the install directory the way lane `5c` does. They
+do not, for this install.** `D:\Meta 5\terminal64.exe` is a non-portable launch — its real data folder (Experts,
+Bases/ticks, report output) lives at `C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355\`
+(itself junctioned onward to the physical D: drive per memory `mt5-no-disk-space-is-memory-ceiling`), NOT under
+`D:\Meta 5\` itself. Copying the fresh `.ex5` into `D:\Meta 5\MQL5\Experts\` (the naive path) put it somewhere the
+tester never looks — `Experts\(EXP)_AdaptGridMC_rev01.ex5 not found` on every attempt, and the terminal exits in ~1s
+without even writing a log for that data folder. Fix: copy the `.ex5` into the **real** Experts folder
+(`...\9CA16B.../MQL5\Experts\`, confirmed 310 files, shared with every non-portable install on this box), and pass
+`mt5_run.ps1 -DataDir` as that **same roaming folder**, not `D:\Meta 5`. With both corrected, `mt5_run.ps1` ran clean
+end-to-end (`OK REPORT ... leverage verified 1:100`) for the rest of this session. **Every ORDER-546 run below used
+`-Terminal "D:\Meta 5\terminal64.exe" -DataDir "C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\9CA16B8382AE4CF692710FB36B9DA355"`.**
+Anyone else pointing a script at lane `D:\Meta 5` non-portable needs the same fix — `deploy.ps1`/`mt5_run.ps1`'s
+hardcoded-path assumption (same family as memory `hardcoded-repo-path-defeats-worktree-cage`) does not know this lane
+is non-portable.
+
+**STEP 0 — lever-presence (the half left undone this morning): PASS, 15/15.** Short BTCUSD backtest
+(`_mt5_auto/reports/O546_AGMC_INPUTS.htm`, D1 2024.01-2024.01, Model 1, lane `D:\Meta 5`) — Inputs page lists all 15
+inputs from the compiled source exactly: `_00_OptimizeMode _01_ZoneLo _01_ZoneHi _01_SpacingAtrMult _01_GeoSpacing
+_01_MaxLevels _02_BaseLot _02_InvAtrLot _02_BaseAtr _05_KillDdPct _05_MaxTotalLot _05_ResetHalt _06_Magic
+_06_Deviation _06_AllowLive`, all at compiled defaults (`_06_Magic=992007`, `_06_AllowLive=false`, etc.) — the
+binary in this lane is the real one.
+
+**Tick-coverage check (the task's own required check before trusting any run):** BTCUSD ticks were already cached
+back to 2020.01 in this lane. **ETHUSD ticks initially looked capped at 2023.01** (`.tkc` files only from `202301`
+onward, checked directly in `Bases\ThinkMarkets-Live\ticks\ETHUSD\`) — looked like a real blocker. A probe run
+(ETHUSD 2020 Q1, Model 4) resolved it: the terminal is logged into the broker (`146237` on ThinkMarkets-Live) and
+**auto-downloaded the missing 2020-2022 ETHUSD ticks on demand** the moment a Model-4 test requested that range —
+post-probe the `ticks\ETHUSD\` folder had 80 `.tkc` files starting `202001`, matching BTCUSD. Report confirmed
+`History Quality: 98% real ticks` for that probe. **Conclusion: both symbols have genuine real-tick coverage back to
+2020.01 in this lane** — the apparent gap was an uncached-history artifact, not a lane limitation. (First probe's 0
+trades/0 PF is expected, not a data failure — the MC zone is priced at 2026 levels, nowhere near ETH's ~$130-280 in
+Q1 2020; see zone note below.)
+
+**STEP 1 — zone data (committed separately, commit `7a3ea27e`):** `_mt5_auto/adaptgrid_mc_zone.py`'s CSV parser only
+sniffs comma/semicolon delimiters; MT5's native D1 export (`_mt5_auto/BTCUSD_Daily_2020.01.10-2026.07.23.csv` /
+`ETHUSD_Daily_...`, 2262 rows each, already existing in the repo before this session) is tab-delimited with
+`<DATE>/<CLOSE>/...` bracketed headers — the script failed `no close column` until reformatted to plain comma CSV
+(`_mt5_auto/BTCUSD_D1_forzone.csv` / `ETHUSD_D1_forzone.csv`, values unchanged, same 2261 data rows). Zone script run
+with ORDER-141's literal default params (10k paths, 60d horizon, 24d block, last 1000 bars, seed 42) — **per
+ORDER-141's own "mechanical, agent must not interpret" instruction, the LATEST CSV (ending 2026.07.23) was used, not
+a pre-2023-only slice**, so both zones are anchored to **today's** price level:
+
+| Symbol | last_close | ZoneLo(P10) | ZoneHi(P90) | spacing | N levels | .set |
+|---|---|---|---|---|---|---|
+| BTCUSD | 66,037.88 | 57,479.27 | 79,693.81 | 568.82 | 39 | `_mt5_auto/ab_sets/adaptgridmc/O546_BTCUSD_flatlot.set` |
+| ETHUSD | 1,932.07 | 1,520.64 | 2,489.63 | 21.94 | 40 | `_mt5_auto/ab_sets/adaptgridmc/O546_ETHUSD_flatlot.set` |
+
+Full detail + the leakage caveat: `_mt5_auto/adaptgrid_zones.txt` (gitignored, not committed — regeneratable from the
+committed `.set` files + this note). Both `.set` files: flat-lot (`_02_BaseLot=0.01`, `_02_InvAtrLot=false`) per spec,
+`_05_ResetHalt=true` (so each fresh chunked tester run starts unhalted — a persisted `HALT`/`cycle` GV from one
+window must not leak into the next chunk), `_06_AllowLive=false`, all other inputs at compiled default.
+
+**STEP 2 — BWD 2020.01.01-2022.12.31, Model 4, flat-lot — HARD GATE, chunked into 6 half-year windows per symbol
+(memory `mt5-no-disk-space-is-memory-ceiling` — a full 3-year crypto Model-4 window risks a silent RAM-ceiling
+`bars=0`). All 12 chunks came back with valid non-zero bar counts (checked explicitly below) — no instrument
+failures to discard.**
+
+**BTCUSD** (`_mt5_auto/reports/O546_BTCUSD_BWD_2020H1.htm` ... `_2022H2.htm`):
+
+| Window | Bars | Hist.Quality | Trades | PF | Net Profit | Eq DD% (abs) |
+|---|---|---|---|---|---|---|
+| 2020H1 | 128 | 99% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+| 2020H2 | 130 | 100% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+| 2021H1 | 169 | 100% real ticks | 20 | 0.23 | -802.24 | 12.72% (1,298.82) |
+| 2021H2 | 182 | 100% real ticks | 30 | 0.34 | -638.05 | 9.91% (1,018.78) |
+| 2022H1 | 179 | 100% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+| 2022H2 | 181 | 100% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+
+Aggregate (sum GrossProfit/sum GrossLoss, not average-of-PF): GP=237.87+327.42=565.29, GL=1,040.11+965.47=2,005.58 →
+**aggregate PF = 0.28**. Total trades = **50** (all in the 2021 chunks, the only period BTC price came near the
+$57.5k-$79.7k zone — 2020 and 2022 H1/H2 show genuine zero participation, not a data gap: BTC traded well below the
+zone the whole time). Net = **-1,440.29**. Worst single-chunk Eq DD = **12.72%** (2021H1). `swap-unadjusted`.
+
+**ETHUSD** (`_mt5_auto/reports/O546_ETHUSD_BWD_2020H1.htm` ... `_2022H2.htm`):
+
+| Window | Bars | Hist.Quality | Trades | PF | Net Profit | Eq DD% (abs) |
+|---|---|---|---|---|---|---|
+| 2020H1 | 128 | 99% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+| 2020H2 | 130 | 100% real ticks | 0 | 0.00 | 0.00 | 0.00% (0.00) |
+| 2021H1 | 169 | 100% real ticks | 48 | 8.65 | +291.14 | 2.72% (274.27) |
+| 2021H2 | 182 | 100% real ticks | 17 | 0.00* | +120.24 | 2.03% (204.52) |
+| 2022H1 | 179 | 100% real ticks | 18 | 0.30 | -267.02 | 4.72% (477.83) |
+| 2022H2 | 181 | 100% real ticks | 24 | 0.34 | -200.25 | 3.65% (368.48) |
+
+*2021H2: MT5 prints `PF=0.00` when Gross Loss=0 (a report-formatting edge case, not a real zero) — all 17 trades
+that window were winners (GrossLoss=0.00), so this chunk's true PF is undefined/infinite; treated as GP=120.24 /
+GL=0 in the aggregate below, not excluded and not read as a real 0.
+
+Aggregate: GP=329.22+120.24+114.40+101.47=665.33, GL=38.08+0+381.42+301.72=721.22 → **aggregate PF = 0.92**. Total
+trades = **107**. Net = **-55.89**. Worst single-chunk Eq DD = **4.72%** (2022H1). `swap-unadjusted`.
+
+**Gate result: BOTH symbols fail BWD ≥ 1.0** (BTCUSD 0.28, ETHUSD 0.92 — closer to breakeven but still under the
+bar). Per this order's own rule this is a **HARD gate, not soft** → **STEP 3 (MAIN 2023-2025) was NOT run for either
+symbol.** Label: **`no-pulse`** (both symbols).
+
+**Reminder for the lead:** the zone driving both BWD legs is anchored to 2026 price levels (STEP 1 note above) — the
+50/107 trades that did happen are almost entirely from the one stretch (2021) where BTC/ETH prices happened to pass
+near that zone, not from a zone that was ever "in range" by design for this window. Whether a **window-appropriate**
+zone (rebuilt from data available as of each window's start, avoiding this level-mismatch) would behave differently
+is an open question this run does not answer — flagging it rather than deciding it, since STEP 1's method was
+dictated as mechanical/non-interpretable by ORDER-141's own spec.
+
+**Files produced this stretch:** `_mt5_auto/reports/O546_AGMC_INPUTS.htm(+png)`,
+`O546_ETHUSD_BWD_2020Q1_PROBE.htm`, `O546_{BTCUSD,ETHUSD}_BWD_202{0,1,2}H{1,2}.htm` (12 files + pngs),
+`O546_AGMC_TEST2.htm` (mt5_run.ps1 DataDir-fix verification run, disposable). No verdict written. `ORDER-546` stays
+`OPEN`.
+
 ## ORDER-540 — [🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน — ประตูบังคับก่อนใบ 541/542/543 — `OPEN` · ทำได้: Claude/Sonnet · oc-qwen · 👉 แนะ: Sonnet
 
 **ที่มา:** ORDER-341 พบว่า detector ปิดบัง **48 จาก 56** binary ที่ stale (เช็ค `HASH_DIFFERS` ก่อน `STALE` +
