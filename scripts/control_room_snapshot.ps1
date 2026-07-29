@@ -26,6 +26,8 @@
    unknown_magics    CR-002: closed-deal magics present in collector CSVs but absent from
                      DEPLOYMENTS.csv for that account (any status) - candidate ghosts or
                      un-enumerated user EAs. magic 0 (manual) excluded.
+                     age_class = ACTIVE (last close within 14d) / HISTORICAL (older) /
+                     UNCLASSIFIED (last_seen unparseable - see ClassifyUnknownAge).
    summary           TODAY-style one-screen counts (also printed to console)
 
  Judge-readiness counting method (documented so numbers are reproducible):
@@ -66,6 +68,27 @@ function TryParseTradeTime([string]$s){
   $dt = [datetime]::MinValue
   if ([datetime]::TryParse($norm, [ref]$dt)) { return $dt }
   return $null
+}
+function ClassifyUnknownAge([string]$lastSeen, [datetime]$asOf, [int]$activeDays = 14){
+  # Three-valued on purpose (2026-07-30, Stage 0B D5).
+  #
+  # This used to default to HISTORICAL and only promote to ACTIVE on a parseable recent
+  # date, so an UNPARSEABLE last_seen landed in the quiet bucket. The comment at the call
+  # site called that "the safer bucket (does not falsely raise an active unknown EA
+  # alarm)". It is not safer: it silently converts "I cannot read this timestamp" into
+  # "there is nothing here to look at", which is the difference between a finding and a
+  # blind spot. An unreadable input is its own answer and gets its own bucket.
+  #
+  #   ACTIVE        parseable AND last close within $activeDays -> still trading
+  #   HISTORICAL    parseable AND older than that               -> dormant / dead ghost
+  #   UNCLASSIFIED  not parseable                               -> we do not know
+  #
+  # Lifted out of the unknown-magic loop so scripts\_test\run_monitor_integrity_tests.ps1
+  # can drive it directly (this file cannot be dot-sourced -- loading it builds a snapshot).
+  $dt = TryParseTradeTime $lastSeen
+  if ($null -eq $dt) { return 'UNCLASSIFIED' }
+  if (($asOf - $dt).TotalDays -le $activeDays) { return 'ACTIVE' }
+  return 'HISTORICAL'
 }
 function LatestCollector([string]$acct){
   $mt5 = @(Get-ChildItem $DEALS -Filter ("EA_LAB_deals_" + $acct + "_*.csv") -ErrorAction SilentlyContinue | Sort-Object Name)
@@ -262,11 +285,9 @@ foreach($a in $accounts){
     if ($t.Count -eq 0) { continue }
     $times = @($t | ForEach-Object { $_.$timeCol } | Sort-Object)
     # CR-002d: ACTIVE = still trading recently (last close within 14d) vs HISTORICAL
-    # (dormant/dead ghost magic). Unparseable last_seen defaults to HISTORICAL - the
-    # safer bucket (does not falsely raise an "active unknown EA" alarm).
-    $lastSeenDt = TryParseTradeTime $times[-1]
-    $ageClass = 'HISTORICAL'
-    if ($null -ne $lastSeenDt -and ($now - $lastSeenDt).TotalDays -le 14) { $ageClass = 'ACTIVE' }
+    # (dormant/dead ghost magic) vs UNCLASSIFIED (last_seen could not be parsed - see
+    # ClassifyUnknownAge for why that is NOT folded into HISTORICAL).
+    $ageClass = ClassifyUnknownAge $times[-1] $now
     $unknown += [ordered]@{ account=$a; magic=$g.Name; closed_trades=$t.Count; first_seen=$times[0]; last_seen=$times[-1]; age_class=$ageClass; symbols=(@($g.Group | Select-Object -ExpandProperty symbol -Unique | Where-Object { $_ }) -join '+') }
   }
 }
@@ -340,6 +361,10 @@ $sum = [ordered]@{
   unknown_magics            = $unknown.Count
   unknown_magics_active     = @($unknown | Where-Object { $_.age_class -eq 'ACTIVE' }).Count
   unknown_magics_historical = @($unknown | Where-Object { $_.age_class -eq 'HISTORICAL' }).Count
+  # A non-zero value here means the collector wrote a last_seen this script cannot read.
+  # It is deliberately NOT added into either of the two counters above: folding it into
+  # historical is the exact defect this counter exists to make impossible to repeat.
+  unknown_magics_unclassified = @($unknown | Where-Object { $_.age_class -eq 'UNCLASSIFIED' }).Count
   accounts_floating_blind   = @($floating | Where-Object { $_.state -ne 'FRESH' }).Count
   judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
 }
@@ -347,7 +372,15 @@ $sum = [ordered]@{
 $snapshot = [ordered]@{
   meta = [ordered]@{
     schema  = 'ControlRoomSnapshot'
-    version = 3   # v3 (CR-003b/002c/002d/005-lite-b): +governance_scope, +floating_risk, +unknown age_class, +judge rate_flag/expected_*. Additive - v2 readers still work.
+    # v4 (Stage 0B D5, 2026-07-30): unknown_magics[].age_class gains a third value
+    # UNCLASSIFIED (last_seen unparseable), and summary gains unknown_magics_unclassified.
+    # ADDITIVE in the same sense the earlier bumps were - no field removed, no field
+    # renamed - but note the widened ENUM: a v3 reader that switches on age_class and
+    # assumes exactly {ACTIVE, HISTORICAL} will fall through on the new value. That is
+    # the intended failure direction: falling through is visible, and the alternative
+    # (keeping unreadable rows labelled HISTORICAL) is the defect being fixed.
+    # v3 (CR-003b/002c/002d/005-lite-b): +governance_scope, +floating_risk, +unknown age_class, +judge rate_flag/expected_*.
+    version = 4
     generated_at = $now.ToString('s')
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
@@ -385,6 +418,11 @@ foreach($cRoll in $cohorts){
   Write-Host ("COHORT   judge {0} ({1}d): {2} EAs | capable-now {3} | proj-capable {4} | proj-shortfall {5} | no-sensor {6}" -f $cRoll.judge_date, $cRoll.days_to_judge, $cRoll.deployments, $cRoll.decision_capable_now, $cRoll.projected_capable, $cRoll.projected_shortfall, $cRoll.no_sensor)
 }
 Write-Host ("ATTEST   {0} fully hashed (high-confidence) | {1} gaps (NO_BUNDLE/PARTIAL/FILE_MISSING/low-conf)" -f $sum.attestation_ok, $sum.attestation_gaps)
-Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv ({1} active, {2} historical)" -f $sum.unknown_magics, $sum.unknown_magics_active, $sum.unknown_magics_historical)
+Write-Host ("UNKNOWN  {0} collector magic(s) not in DEPLOYMENTS.csv ({1} active, {2} historical, {3} unclassified)" -f $sum.unknown_magics, $sum.unknown_magics_active, $sum.unknown_magics_historical, $sum.unknown_magics_unclassified)
+if ($sum.unknown_magics_unclassified -gt 0) {
+  # Printed on its own line, in red, because the whole point of the UNCLASSIFIED bucket is
+  # that it must not be absorbed into a count someone reads past.
+  Write-Host ("UNKNOWN  !! {0} magic(s) UNCLASSIFIED - last_seen could not be parsed, so age is UNKNOWN, not 'historical': {1}" -f $sum.unknown_magics_unclassified, ((@($unknown | Where-Object { $_.age_class -eq 'UNCLASSIFIED' } | ForEach-Object { "$($_.account)|$($_.magic) last_seen='$($_.last_seen)'" })) -join '; ')) -ForegroundColor Red
+}
 Write-Host ("FLOATING {0}/{1} account(s) blind (no/stale AccountSnapshotExporter data)" -f $sum.accounts_floating_blind, $sum.accounts_total)
 Write-Host ("OUTPUT   {0}" -f $OutFile)
