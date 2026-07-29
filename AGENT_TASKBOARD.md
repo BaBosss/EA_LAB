@@ -539,6 +539,32 @@ memory `grid-answer-outside-the-grid` เขียนไว้ตรงๆ ว�
 **ห้าม:** เริ่มก่อน ORDER-540 ปิด EA ตัวนี้ · แตะ 2026H1 · รัน BWD ก่อน MAIN ผ่าน 1.2 · เขียน verdict เอง ·
 สรุปว่า lever เฉื่อยจากจำนวนไม้อย่างเดียว · เปิดหลายแกนพร้อมกันใน STEP 2 (search space ระเบิด อ่าน plateau ไม่ออก)
 
+### ผลดิบ ORDER-543 (worker/Sonnet, lane `D:\Meta 5c`, `S-2026-07-29-NIGHTQUEUE` 2026-07-29) — STEP 1 + STEP 3 เท่านั้น (STEP 2 ข้าม, ดูเหตุผลด้านล่าง)
+
+**STEP 1 (3 runs, MAIN 2023.01.01–2025.12.31, Model 1, leverage 1:100, 100% real ticks ทั้ง 3 run):** `.set` = copy ของ `_mt5_auto/ab_sets/order431/SW2.set` (ต้นทางของ ORDER-431 fan) แก้เฉพาะ `_01_SwingRadius` — เก็บใน `_mt5_auto/ab_sets/order543/{SW0,SW1,SW2_BASELINE}.set`
+
+| SwingRadius | PF | trades | short/long | gross profit | gross loss | net | DD% |
+|---|---|---|---|---|---|---|---|
+| **2** (baseline, re-run not quoted) | 1.18 | 321 | 211/110 | 658.40 | −557.04 | +101.36 | 1.82% |
+| **1** | **1.27** | 363 | 194/169 | 898.56 | −709.93 | **+188.63** | 0.72% |
+| **0** (EA accepts it — `_01_SwingRadius=0` makes the swing-detection loop `for(k=1;k<=0;k++)` never execute, so `IsSwingLow`/`IsSwingHigh` fall through to unconditional `true`, i.e. every bar counts as a swing point) | 1.02 | 524 | 296/228 | 1100.85 | −1083.08 | +17.77 | 2.42% |
+
+🔴 **ANSWER TO THIS ORDER'S WHOLE QUESTION: yes, ORDER-431's ceiling was measured wrong.** `SwingRadius=2` was the *lower edge* of the {2,3,4,5} fan ORDER-431 ran, and the true peak sits one step further out at **`SwingRadius=1` (PF 1.27, +85 trades vs baseline, DD less than half of baseline's)** — exactly the failure mode memory `grid-answer-outside-the-grid` describes (ORDER-352 precedent). `SwingRadius=1` is also the first configuration on this EA/symbol/TF combination to clear the MAIN ≥1.2 bar at all.
+
+**STEP 2 skipped** — the order's own condition is "only if STEP 1 didn't already find a bar-clearing winner you need to carry to STEP 3"; STEP 1 found one (`SwingRadius=1`, PF 1.27 ≥ 1.2), so `_03_BufferAtrMult` was not fanned this round.
+
+**STEP 3 (BWD 2020.01.01–2022.12.31, Model 4, `SwingRadius=1` only — the STEP 1 winner):** lane `D:\Meta 5c`, leverage 1:100, **99% real ticks** (contrary to ORDER-431's note that "5c has no tick cache, Model 4 is impossible there" — that appears to be stale; every Model-4 run this session in lane 5c, across 6 different symbols, returned real-tick quality 99-100%, this one included)
+
+| SwingRadius | window | PF | trades | short/long | gross profit | gross loss | net | DD% |
+|---|---|---|---|---|---|---|---|---|
+| 1 | BWD 2020.01–2022.12 | **0.93** | 410 | 241/169 | 643.70 | −688.93 | **−45.23** | 2.35% |
+
+**STEP 3 bar (`both-window-pulse` = MAIN≥1.2 AND BWD≥1.0) NOT met** — MAIN clears (1.27) but BWD does not (0.93 < 1.0, net negative). The corrected ceiling still does not survive both windows.
+
+**Composition check (memory `filter-inertness-check-composition-not-count`) — not that it was needed to invalidate a "trade count unchanged" claim here, since trade counts moved a lot (321→363→524 on MAIN), but recorded per the order's own requirement:** SwingRadius=1 vs 2 shifts the long/short mix from 110/211 (34%/66%) to 169/194 (47%/53%) — loosening the swing filter by one step pulls in a much larger share of long entries, not just more trades of the existing mix.
+
+Files: `_mt5_auto/ab_sets/order543/{SW0,SW1,SW2_BASELINE}.set` · reports `_mt5_auto/reports/O543_USDJPY_H4_{MAIN_SW0,MAIN_SW1,MAIN_SW2,BWD_SW1}.htm` (gitignored, not committed)
+
 ## ORDER-544 — [classification · ไม่ใช่คำแนะนำเรื่องเงิน] NuiIndy: กรง ENGINE-EDGE 5 ข้อที่ไม่เคยเดิน — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 **ที่มา:** NuiIndy คือ**เคสต้นแบบของ ENGINE-EDGE class** ตามตัวเลขของมันเอง (`EDGE_CATALOG.md:94` — single-order
