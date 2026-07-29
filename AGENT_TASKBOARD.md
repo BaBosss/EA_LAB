@@ -144,6 +144,16 @@
 **ห้าม:** เริ่มก่อน ORDER-540 เคลียร์ EA ตัวนี้ · ใช้ Model < 4 · แตะ 2026H1 · รัน MAIN ก่อน BWD ผ่าน (ประหยัด และ
 BWD คือประตูของใบนี้) · เทียบ PF ของ crypto กับ EA ที่ไม่ใช่ crypto ตรงๆ · เขียน verdict เอง
 
+### 📌 STEP 0 prereq note (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 08:46)
+
+`(EXP)_AdaptGridMC_rev01` recompiled clean (0 errors, 0 warnings) — full evidence in the new sub-section under
+ORDER-540 below (search `ORDER-546 prereq cleared`). `.ex5` now exists at
+`ea_projects\(EXP)_AdaptGridMC\(EXP)_AdaptGridMC_rev01.ex5` and is copied into lane `D:\Meta 5c\MQL5\Experts\`.
+**STEP 0's "binary ต้องสด" half is now satisfied.** The "lever ต้อง grep เจอ" half was intentionally NOT done this
+session (out of scope — that belongs to whoever runs this order's actual sweep, and should use the Inputs-page
+method, not a raw grep of the `.ex5`, per the sanity-token finding documented in the ORDER-540 block). Row stays
+`OPEN` — not marking DONE/REVIEWED, that's the lead's call.
+
 ## ORDER-540 — [🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน — ประตูบังคับก่อนใบ 541/542/543 — `OPEN` · ทำได้: Claude/Sonnet · oc-qwen · 👉 แนะ: Sonnet
 
 **ที่มา:** ORDER-341 พบว่า detector ปิดบัง **48 จาก 56** binary ที่ stale (เช็ค `HASH_DIFFERS` ก่อน `STALE` +
@@ -211,6 +221,92 @@ input cache ของ MT5 จะทำให้ **A/B สองขากลา�
 🟡 `MacdDiv_Naked` สดอยู่แล้ว **แต่ยังไม่ได้ยืนยันหน้า Inputs** → ORDER-543 ต้องทำก่อนเริ่ม ·
 🔴 **`AdaptGridMC` = `BLOCKED`** — ORDER-141 บันทึกว่า "compile ผ่าน" แต่ **ไม่มี `.ex5` หลงเหลือในเครื่องเลย**
 ⇒ ORDER-546 เริ่มไม่ได้จนกว่าจะ compile ใหม่และยืนยันว่ามันยัง compile ผ่านจริง (คำอ้างเดิมไม่มี artifact รองรับ)
+
+### ✅ ORDER-540 gap closed (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 08:46) — SuperTrendFlip_rev01 + MacdDiv_Naked Inputs-page proof, lane `D:\Meta 5c`
+
+**Pre-check:** neither EA `#include`s anything under `ea_template\core\` — both source files only pull the standard
+`<Trade\Trade.mqh>`. Confirmed by grep. So the `core\*.mqh`-newer-than-`.ex5` rule that caught `Boss_14` does not
+apply to these two by construction — this is a fact about the include graph, not an assumption.
+
+**Staleness, re-measured this session (files could have moved since last night):**
+
+| EA | detector label (default roots, ea_projects copy) | mtime .mq5 | mtime .ex5 in lane 5c | core/ newer? | recompiled this session? | compile err/warn |
+|---|---|---|---|---|---|---|
+| `(TRD)_SuperTrendFlip_rev01` | HASH_DIFFERS (not STALE) | 2026-07-23 20:38:17 | 2026-07-28 22:51:34 | N/A (no core include) | No — already newer than source from last night's fix | N/A this session |
+| `MacdDiv_Naked` | HASH_DIFFERS (not STALE) | 2026-07-25 21:57:57 | 2026-07-28 07:10:02 | N/A (no core include) | No — already fresh | N/A this session |
+
+Both `.ex5` in lane 5c are newer than their `.mq5`. `check_stale_binaries.ps1` (full re-run, default roots — note lane
+5c is NOT one of its default roots, so this is a cross-check on the `ea_projects\` copy, not a lane-5c measurement)
+agrees: both come back `HASH_DIFFERS` (advisory, non-reproducible compiler per that script's own doctrine), neither
+`STALE`. No recompile was needed for either EA this session — no source file changed since last night's fix landed.
+
+**Inputs-page probe (method: short backtest + read the report's Inputs section — grepping the `.ex5` directly is
+proven not to work, see the sanity-token finding earlier in this block):**
+
+`O540_STF_INPUTS` — EURUSD H1, 2024.01.01–2024.01.08, Model 1, lane `D:\Meta 5c`, leverage verified 1:100.
+Full Inputs list captured (`_mt5_auto/reports/O540_STF_INPUTS.htm`). Required levers, found as substrings of the
+actual (group-prefixed) input names on the page:
+
+| required lever | found on page as |
+|---|---|
+| `_01_UseDonchian` | `_01_UseDonchian=false` (exact) |
+| `_01_DonBars` | `_01_DonBars=60` (exact) |
+| `AtrPeriod` | `_01_AtrPeriod=10` (substring match — page uses the `_01_` group prefix) |
+| `Mult` | `_01_Mult=3.0` (substring match) |
+| `ExitMode` | `_02_ExitMode=0` (substring match) |
+| `UseEma` | `_03_UseEma=true` (substring match) |
+| `EmaPeriod` | `_03_EmaPeriod=200` (substring match) |
+
+**7/7 found.** Note for whoever reads ORDER-542: the table above wrote 5 of these levers without their on-page
+group prefix (`_01_`/`_02_`/`_03_`) — the actual input names carry the prefix. Not a discrepancy in the binary,
+just a shorthand in how the table was written; use the prefixed names when building the `.set`.
+
+`O540_MACD_INPUTS` — EURUSD H1, 2024.01.01–2024.01.08, Model 1, lane `D:\Meta 5c`, leverage verified 1:100.
+Full Inputs list captured (`_mt5_auto/reports/O540_MACD_INPUTS.htm`).
+
+| required lever | found on page as |
+|---|---|
+| `_01_SwingRadius` | `_01_SwingRadius=3` (exact) |
+| `_03_BufferAtrMult` | `_03_BufferAtrMult=0.15` (exact) |
+| `_03_AtrPeriod` | `_03_AtrPeriod=18` (exact) |
+
+**3/3 found**, exact names, no prefix mismatch.
+
+**Bars from ORDER-540's own table:** (a) `.ex5` newer than `.mq5` and newer than every `core\` file — YES both
+(N/A core for both) · (b) compile 0/0 — YES (both compiled 0/0 last night per the block above, unchanged since)
+· (c) every named lever found — YES 7/7 and 3/3.
+
+**Gate verdict: 🟢 both EAs PASS.** `SuperTrendFlip_rev01` → **ORDER-542 may start.** `MacdDiv_Naked` →
+**ORDER-543 may start.** ORDER-540 is now fully closed for all 3 original EAs (Boss_14 passed last night,
+these two pass now). Not marking ORDER-540 REVIEWED/DONE myself — that judgment belongs to the human lead per
+this session's scope (mechanical prerequisite gate only).
+
+### ✅ ORDER-546 prereq cleared (Claude/Sonnet, session `S-2026-07-29-NIGHTQUEUE`, 2026-07-29 08:46) — `(EXP)_AdaptGridMC_rev01` compiled, artifact now exists
+
+Recompiled `D:\EA_LAB\ea_projects\(EXP)_AdaptGridMC\(EXP)_AdaptGridMC_rev01.mq5` directly via
+`metaeditor64.exe /compile:... /log:...` (same binary MetaEditor used by `ea_template\deploy.ps1`, invoked
+directly on this standalone source file — **not** through `deploy.ps1 -Compile` itself, because that script's
+`-Compile` mode only discovers and rebuilds `Boss_*.mq5` files under `ea_template\`; running it here would have
+recompiled the other ~55 stale binaries in that family, which ORDER-341/540 explicitly prohibit. This EA lives
+under `ea_projects\`, outside `ea_template\`, and is not on that script's target list at all — confirmed by
+reading `deploy.ps1` line 34).
+
+**Result: `Result: 0 errors, 0 warnings, 468 ms elapsed, cpu='X64 Regular'`.** `.ex5` produced at
+`ea_projects\(EXP)_AdaptGridMC\(EXP)_AdaptGridMC_rev01.ex5`, mtime 2026-07-29 08:45, newer than its `.mq5`
+(2026-07-20 06:38). This is a genuinely new artifact — cross-checked against the full `check_stale_binaries.ps1`
+scan: the only pre-existing `.ex5` files named close to this EA are two copies of a **differently-named** orphan
+binary `AdaptGridMC.ex5` (no `(EXP)_` prefix, no `_rev01` suffix, identical hash `1EB4CC34...` on both, dated
+2026-07-20/23) that has no matching `.mq5` anywhere in the repo — confirming last night's finding that no
+artifact under the *current* name existed before this compile.
+
+**Lane:** ORDER-546's own block does not specify a lane, so per this session's instructions I used
+`D:\Meta 5c` — the same lane the other two EAs in this tranche use. Copied
+`(EXP)_AdaptGridMC_rev01.ex5` into `D:\Meta 5c\MQL5\Experts\`.
+
+**Scope note — did NOT do:** the Inputs-page lever-presence probe (that is ORDER-546's own STEP 0, and ORDER-546's
+actual optimize sweep is explicitly out of scope for this session). The binary exists, compiles clean, and is not
+stale — that is the whole of what this session was asked to prove. Whoever picks up ORDER-546 still owes the
+lever-presence check as part of its own STEP 0 before running anything.
 
 ## ORDER-541 — [screen] Boss_14 GridLog × 12 คู่เงินที่ยังไม่เคยแตะ — cell ที่ GEN-STANDING เขียนสเปกครบแล้วแต่ไม่เคยมีใครรัน — `REVIEWED(Claude/Sonnet, 2026-07-28 23:40) — 12/12 ครบ 24 run · 2 ENGINE-EDGE-CANDIDATE (AUDUSD/USDCAD) ที่ยังไม่ผ่าน BWD · entry-edge จริงตัวเดียว = CHFJPY` · ⛔ ORDER-540 ผ่านแล้ว · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 
