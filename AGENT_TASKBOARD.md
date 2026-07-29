@@ -125,7 +125,7 @@
 **ห้าม:** ใช้ `git stash` โดยไม่มี trap คืนค่า · แก้เฉพาะ 2 suite ใหม่แล้วบอกว่าปิด (อีก 4 suite มีอาการเดียวกัน) ·
 ปิดใบนี้โดยอ้างว่า "ยังไม่เคยเกิดขึ้นจริง" — `partial staging` เป็นเรื่องปกติของการทำงานทุกวัน
 
-## ORDER-546 — [test] `(EXP)_AdaptGridMC_rev01`: EA ที่ build เสร็จตั้งแต่ 2026-07-20 แต่**ไม่เคยรัน backtest แม้แต่ครั้งเดียว** — `OPEN` · ทำได้: oc-qwen · ZCode · Claude/Sonnet · 👉 แนะ: oc-qwen
+## ORDER-546 — [test] `(EXP)_AdaptGridMC_rev01`: EA ที่ build เสร็จตั้งแต่ 2026-07-20 แต่**ไม่เคยรัน backtest แม้แต่ครั้งเดียว** — `REVIEWED(Claude/Opus 2026-07-30) — BWD hard gate ตกจริง แต่หลักฐานปนเปื้อน (zone anchor ผิดยุค) ⇒ INCONCLUSIVE ไม่ใช่ DEAD` · ทำได้: oc-qwen · ZCode · Claude/Sonnet · 👉 แนะ: oc-qwen
 
 **ที่มา:** ORDER-141 ปิดเป็น `DONE(build-only 2026-07-20) — backtest ยังไม่เริ่ม` ตามคิว user ตอนนั้น (spec→code→compile+tests พอ)
 ⇒ ตอนนี้มี EA ที่ compile ผ่าน + ผ่าน `mql-code-reviewer` แล้ว **นอนอยู่เฉยๆ โดยไม่มีหลักฐานสักตัว** — ถูกที่สุดที่จะรู้ว่ามันตายหรือรอด
@@ -261,8 +261,17 @@ dictated as mechanical/non-interpretable by ORDER-141's own spec.
 
 **Files produced this stretch:** `_mt5_auto/reports/O546_AGMC_INPUTS.htm(+png)`,
 `O546_ETHUSD_BWD_2020Q1_PROBE.htm`, `O546_{BTCUSD,ETHUSD}_BWD_202{0,1,2}H{1,2}.htm` (12 files + pngs),
-`O546_AGMC_TEST2.htm` (mt5_run.ps1 DataDir-fix verification run, disposable). No verdict written. `ORDER-546` stays
-`OPEN`.
+`O546_AGMC_TEST2.htm` (mt5_run.ps1 DataDir-fix verification run, disposable).
+
+### VERDICT ORDER-546 (Claude/Opus, 2026-07-30) — 🟨 `INCONCLUSIVE`, not `DEAD` — the BWD gate failed on a test that measures the wrong thing, not on the strategy
+
+**Read the STEP 1 note above again before trusting the STEP 2 numbers: the zone (`ZoneLo`/`ZoneHi`) that gates every trade this EA takes was built from the CSV ending 2026.07.23 — i.e. anchored to a 2026 price level ($57.5k-79.7k BTC, $1,520-2,490 ETH) — then tested against 2020-2022 price action, where BTC spent most of the window nowhere near that band (only 2021 came close).** That is why 4 of 12 BWD chunks show exactly 0 trades: not "the market didn't offer a signal," but "the price was never inside the box this run drew." This is a live instance of the same trap as memory `absolute-price-constant-poisons-backtests` and `grid-answer-outside-the-grid` — a parameter (the zone) fixed outside the window it's being tested on, rather than built from data available as of that window. The order's own STEP 1 spec mandated this ("mechanical, agent must not interpret" — use the latest CSV), so the worker did the task correctly; the task itself produces a contaminated BWD read.
+
+**Per VERDICT GATE §1/§2: this EA has never been optimized once (STEP 2 ran default params only), so `DEAD-OPTIMIZED` cannot apply regardless of the numbers (`no-DEAD-before-optimize`, and the gate explicitly requires ≥3 levers × ≥2 TF + a last-optimize pass before that verdict is available).** It is not `DEAD-STRUCTURAL` either — `_01_MaxLevels` (depth cap) + `_05_KillDdPct`/`_05_MaxTotalLot` (DD-kill) are both present in the compiled EA, so this is a capped grid, not uncapped-ruin martingale.
+
+**Verdict: `INCONCLUSIVE`, not a kill.** BTCUSD's −1,440 net on 50 real trades in 2021 is a genuine signal worth taking seriously (not zero-participation), but ETHUSD's near-breakeven −56 on 107 trades under the same contaminated setup means the picture is muddy, not clearly bad. Before this EA gets any real verdict, STEP 2 needs re-running with a **window-appropriate zone** (built from data available as of each BWD window's own start, not from 2026 prices) — that is a new, small task, not a re-litigation of this one. Filed for the lead/user to prioritize; not queued automatically given the zone-script rewrite it implies.
+
+**Row-checklist:** no scorecard/EDGE_CATALOG/B1_DATASET entry — nothing here is a terminal verdict yet.
 
 ## ORDER-540 — [🔴 gate/pre-flight] binary staleness ของ 3 EA ที่ tranche นี้จะรัน — ประตูบังคับก่อนใบ 541/542/543 — `OPEN` · ทำได้: Claude/Sonnet · oc-qwen · 👉 แนะ: Sonnet
 
@@ -487,7 +496,7 @@ NZDJPY 1.86→0.84 · AUDCHF 3.39→0.75 · GBPCHF 1.79→1.00 · NZDCAD/CADCHF/
 
 **สถานะ:** `REVIEWED(Claude/Sonnet 2026-07-28)` — screen ปิดครบ · ตัวที่เดินต่อ = AUDUSD/USDCAD (BWD) และ CHFJPY (entry-edge จริงตัวเดียวที่มี n ทั้งสองขา)
 
-## ORDER-542 — [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX เหมาะ" ให้จบ — `OPEN` · ⛔ **ต้องรอ ORDER-540 ผ่าน `SuperTrendFlip_rev01`** · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-542 — [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX เหมาะ" ให้จบ — `REVIEWED(Claude/Opus 2026-07-30) — 3 cell ใหม่เข้าเกณฑ์ CANDIDATE (BRENT·NAS100·US30) · DE40 BWD ข้อมูลเสียใช้ไม่ได้ · XAUUSD H1 BUILD-ON` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 
 **ที่มา:** `ORDER-GEN-STANDING` MATRIX ชุดที่ 2 — cell **#20 BRENT H4 · #21 NAS100 H4 · #22 DE40 H4 ·
 #23 XAUUSD H1 · #24 US30 H1** ยังว่าง (6/12 cell ที่ทำแล้วให้ pattern ชัดมาก: **ทุก cell ทำเงินบน MAIN
@@ -515,7 +524,7 @@ NZDJPY 1.86→0.84 · AUDCHF 3.39→0.75 · GBPCHF 1.79→1.00 · NZDCAD/CADCHF/
 เขียน DEAD/CANDIDATE เอง · แตะ 2026H1 (holdout ของ STF **ยังสะอาดอยู่** — cell #13-19 ไม่มี run ไหนข้าม 2025.12.31 เลย
 และ pyramid PYR1 กำลังรอยิง holdout นัดเดียว **ห้ามเผาโดยอุบัติเหตุจากใบนี้**) · เพิ่ม cell เอง
 
-## ORDER-543 — [lever] MacdDiv USDJPY H4: fan ที่ ORDER-431 เลือก **ค่าที่ขอบกริดพอดี** + 2 แกนที่ไม่เคยแตะ — `OPEN` · ⛔ **ต้องรอ ORDER-540 ผ่าน `MacdDiv_Naked`** · ทำได้: oc-qwen · ZCode · Claude/Sonnet · 👉 แนะ: oc-qwen
+## ORDER-543 — [lever] MacdDiv USDJPY H4: fan ที่ ORDER-431 เลือก **ค่าที่ขอบกริดพอดี** + 2 แกนที่ไม่เคยแตะ — `REVIEWED(Claude/Opus 2026-07-30) — 431's ceiling was wrong (SwingRadius=1 beats 2), corrected ceiling still BUILD-ON (BWD 0.93 fails)` · ⛔ **ต้องรอ ORDER-540 ผ่าน `MacdDiv_Naked`** · ทำได้: oc-qwen · ZCode · Claude/Sonnet · 👉 แนะ: oc-qwen
 
 **ที่มา:** ORDER-431 ปิดเป็น `BUILD-ON` ที่ MAIN **1.18** โดยเลือก `_01_SwingRadius=2` — **แต่ 2 คือขอบล่างของ fan ที่รัน**
 memory `grid-answer-outside-the-grid` เขียนไว้ตรงๆ ว่า **"เห็น monotone ถึงขอบ ⇒ ขยายกริดก่อนสรุป"** และเคยเสียท่ามาแล้ว
@@ -564,6 +573,16 @@ memory `grid-answer-outside-the-grid` เขียนไว้ตรงๆ ว�
 **Composition check (memory `filter-inertness-check-composition-not-count`) — not that it was needed to invalidate a "trade count unchanged" claim here, since trade counts moved a lot (321→363→524 on MAIN), but recorded per the order's own requirement:** SwingRadius=1 vs 2 shifts the long/short mix from 110/211 (34%/66%) to 169/194 (47%/53%) — loosening the swing filter by one step pulls in a much larger share of long entries, not just more trades of the existing mix.
 
 Files: `_mt5_auto/ab_sets/order543/{SW0,SW1,SW2_BASELINE}.set` · reports `_mt5_auto/reports/O543_USDJPY_H4_{MAIN_SW0,MAIN_SW1,MAIN_SW2,BWD_SW1}.htm` (gitignored, not committed)
+
+### VERDICT ORDER-543 (Claude/Opus, 2026-07-30) — 🟨 `BUILD-ON` stands, but the ceiling moved
+
+**ORDER-431's headline claim is confirmed wrong, exactly as this order suspected:** `SwingRadius=2` was the edge of a fan that never tested lower values, and the true (MAIN) peak sits at `SwingRadius=1` — PF 1.27 vs 1.18, +85 trades, DD less than half. This is now the **second** time this exact failure mode (`grid-answer-outside-the-grid`) has cost real analysis time on this repo (precedent: ORDER-352/BTC pyramid) — worth being more paranoid by default about any prior verdict whose winning value sits on a fan boundary, not just re-checking when a new order happens to be filed for it.
+
+**But the corrected ceiling still does not clear both windows: BWD 0.93 < 1.0 (net −45.23, 410 trades, real data).** Per VERDICT GATE, this stays `BUILD-ON` — not `DEAD-OPTIMIZED` (only 1 axis × 1 TF tested this round; the gate needs ≥3 levers × ≥2 TF + last-optimize before a kill verdict is even available), and not a new `CANDIDATE` either (BWD is the bar that's missing). STEP 2 (`_03_BufferAtrMult` fan) was correctly skipped per the order's own condition once STEP 1 found a MAIN-clearing winner to carry to BWD — that axis is still genuinely untouched and is the natural next lever if this EA/pair gets picked up again.
+
+**Composition note carried forward correctly:** the long/short mix shifted materially (34/66 → 47/53) between SwingRadius 2 and 1 — this isn't a case of "same trades, different PF," it's a real behavioral change in which signals fire, consistent with loosening a swing-detection filter by one bar.
+
+**Row-checklist:** no scorecard change (still `BUILD-ON`, same as ORDER-431 left it — only the specific parameter value on file should update: `_01_SwingRadius=1`, not `=2`, if anyone reuses this fan's center going forward). No EDGE_CATALOG/B1_DATASET entry (no terminal state reached).
 
 ## ORDER-544 — [classification · ไม่ใช่คำแนะนำเรื่องเงิน] NuiIndy: กรง ENGINE-EDGE 5 ข้อที่ไม่เคยเดิน — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
@@ -1825,6 +1844,18 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 - Cell #22's fine grid hit a grid edge (`_01_Mult=1` = its own lower bound) on the **first** widened attempt — had to widen a second time (down to 0.25) before the plateau firmed up from 1.2%/WEAK to 30.4%/GOOD. One widening pass is not always enough; check the new center against the new edges every time.
 - Cells #21 and #23 both show `select_robust_pass.py`'s fine-grid survivor count catching a fake plateau that the *coarse* stage's popularity vote would have missed (NAS100: coarse strongly favoured UseEma=true, fine proved it a spike) — the mandatory fine-grid step is not a formality.
 - `.set` files: `_mt5_auto/ab_sets/genstanding_stf/STF_{BRENT,NAS100,DE40,XAUUSD,US30}_{H4,H1}_{fine_noema,fine_ema,locked}.set` (+ `STF_DE40_H4_fine_noema2.set` for the second widening pass). Reports/optimizations under `_mt5_auto/reports/GEN2_*` and `_mt5_auto/optimizations/GEN2_*` (gitignored, not committed).
+
+### VERDICT ORDER-542 (Claude/Opus, 2026-07-30) — matrix cells #13-24 (12/12) now complete
+
+**Per cell, against the pre-registered bar table:**
+- **#20 BRENT H4, #21 NAS100 H4, #24 US30 H1 — clear the CANDIDATE bar** (MAIN ≥1.2 AND BWD ≥1.0, confirmed plateau not spike, real M4 tick data on both windows). This is a new result, not previously true of this matrix — **3 new demo-funnel candidates**, alongside the existing BTC H4 CANDIDATE. Before locking any of them: **sensitivity fan around the plateau-center** (not yet run) → **holdout 2026H1** → **MC** → **corr vs cohort** (esp. vs the BTC H4 leg and vs each other — BRENT/NAS100/US30 are all commodity/index exposure on the same signal, correlation risk is real) per the VERDICT GATE deploy funnel. None of these are locked or attached — this verdict only promotes them from raw evidence to CANDIDATE status.
+  - #21 NAS100's plateau is `WEAK` (10.7%, 10 neighbours) vs #20/#24's `GOOD` (27.9%/26.5%) — weakest of the three, prioritize its sensitivity fan first since it's most likely to not survive one.
+- **#22 DE40 (GER40) — cannot be classified `both-window-pulse` or `main-only`.** MAIN clears (1.43) on 99% real ticks, but the BWD run's own tick quality is 2% real (98% synthetic) — per this order's own instrument-trust rules, a number produced on synthetic-dominant ticks is not evidence either way. **Disposition: `BUILD-ON`** (MAIN proven, BWD unmeasured, not failed) — needs a tick-history reload for GER40 2020-2022 before BWD can be re-attempted. Not queued automatically.
+- **#23 XAUUSD H1 — `BUILD-ON`, not dead.** MAIN clears (1.51) but BWD fails hard (0.57, net −385) on good data — a real fail, but only one TF/one lever axis tested on this combination, and this EA's proven home for XAU is **H4** (cell #15, both windows already passed there). This reads as "H1 is the wrong timeframe for this signal on gold," not "gold is dead" — VERDICT GATE's "landing in the wrong home ≠ death" applies directly. No further action queued; H4 remains the validated XAU timeframe.
+
+**Net effect on the user's original question ("crypto เหมาะ ไม่ใช่ non-FX เหมาะ"):** with all 12 cells in, the picture is **not as clean a "crypto-only" story as memory `supertrend-is-a-2023-2025-regime-edge` stated after cell #19.** BRENT/NAS100/US30 all clear BWD ≥1.0 with real tick data, not just "breakeven" — BTC H4 is still the strongest single result, but it is no longer the *only* non-FX cell to clear the bar. This softens (does not reverse) the prior conclusion; recommend updating that memory once the 3 new candidates' sensitivity fans confirm they're not spikes. Filed here rather than auto-updating the memory, since a plateau that hasn't survived a sensitivity fan yet is not the same confidence level as one that has.
+
+**Row-checklist:** EDGE_CATALOG entry owed for the 3 new candidates once their sensitivity fan clears (not before — a plateau-center pick is not yet a validated lever). No B1_DATASET row yet (no CANDIDATE is locked/attached). No scorecard row yet (same reason).
 
 #### ผลดิบ cell #15 (control) — 2026-07-26, Opus-seat รันเอง
 
