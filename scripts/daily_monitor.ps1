@@ -37,15 +37,12 @@ Step 'news'      { powershell -NoProfile -File D:\EA_LAB\scripts\news_calendar.p
 # the dashboard so it embeds the fresh whisper_brief.html. Its own stages are non-fatal and
 # a mris failure never blocks the dashboard/gist (only a 'dashboard' failure skips the gist).
 Step 'mris'      { powershell -NoProfile -File D:\EA_LAB\scripts\mris\mris_run.ps1 *>> $log }
-# ORDER-083: publish the news CSV where the (Boss)_NewsGuard EA reads it (MT5 Common\Files)
-if (Test-Path 'D:\EA_LAB\portfolio\news_week.csv') {
-    try {
-        Copy-Item 'D:\EA_LAB\portfolio\news_week.csv' 'C:\Users\patip\AppData\Roaming\MetaQuotes\Terminal\Common\Files\EA_LAB_news_week.csv' -Force
-    } catch {
-        $failed += 'newsguard-csv'
-        "newsguard csv copy failed: $($_.Exception.Message)" | Add-Content $log
-    }
-}
+# ORDER-083: publish the news CSV where every (Boss)_NewsGuard instance reads it. 2026-07-28:
+# the old inline Copy-Item only reached the LOCAL Common\Files, so the VPS fleet ran on a
+# missing feed and sat INACTIVE for days. publish_news_to_vps.ps1 validates the CSV (age,
+# header, >=1 parseable event) and publishes atomically to BOTH the local Common\Files and the
+# OneDrive lab-to-vps staging folder the VPS pulls with rclone. Fail-visible like any Step.
+Step 'newsguard-csv' { powershell -NoProfile -File D:\EA_LAB\scripts\publish_news_to_vps.ps1 *>> $log }
 # ORDER-073 Phase-3: append today's MRIS macro state to the rolling regime CSV that the
 # (Boss)_MacroGate watchdog reads. Runs after 'mris' so regime_state.json is fresh. The
 # script mirrors the CSV to local Common\Files; the VPS copy is delivered by rclone (runbook).
