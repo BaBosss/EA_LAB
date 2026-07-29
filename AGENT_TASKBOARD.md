@@ -1775,13 +1775,30 @@ powershell -File D:\EA_LAB\scripts\mt5_run.ps1 -Expert "(TRD)_SuperTrendFlip_rev
 | 21 | STF | NAS100 | H4 | MAIN+BWD | genetic Stage A (ORDER-116 เคยเจอ no-data — ถ้าไม่มี = `NO-DATA`) | data มีจริงในเลนนี้ (ต่าง ORDER-116) — **1.46/137t/DD0.28% / 1.17/146t/DD0.24%** · `both-window-pulse` · fine EMA grid = survivors 0/750 plateau=NONE (coarse ชอบ UseEma=true 95% แต่กลายเป็น spike ไม่ใช่ plateau) → เลือก NOEMA แทน (plateau=WEAK 10.7%) |
 | 22 | STF | DE40 | H4 | MAIN+BWD | genetic Stage A · **symbol traded = `GER40`** (this broker's ticker for DE40/DAX40, confirmed same instrument — `DE40` itself throws `symbol DE40 not exist`) | **MAIN 1.43/119t/DD0.34% (99% real ticks) clears bar · BWD 0.97/106t/DD0.49% but `HISTORY-QUALITY-FAIL(2% real ticks vs MAIN's 99%)` — 2020-2022 GER40 tick history on this lane is ~98% synthetic, BWD number not trustworthy as evidence** · fine grid centre landed on its own edge once (Mult=1, lower bound of a 1.0-6.0 grid) → widened again to 0.25-1.25 → plateau jumped from 1.2%/WEAK to 30.4%/GOOD (memory `grid-answer-outside-the-grid` again) |
 | 23 | STF | XAUUSD | H1 | MAIN+BWD | บ้านเดิมคนละ TF | **1.51/199t/DD1.89% / 0.57/186t/DD4.57% (net −385.17)** · `main-only` — H1 ไม่รอด BWD ต่างจาก H4 control (cell #15) ที่ผ่านทั้งคู่ · plateau ทั้งสองฝั่งแข็งมาก (NOEMA 54.1%/70nb, EMA 64.7%/170nb) เลือก EMA (PF สูงกว่า + plateau ใหญ่กว่า) |
-| 24 | STF | US30 | H1 | MAIN+BWD | genetic Stage A | |
+| 24 | STF | US30 | H1 | MAIN+BWD | genetic Stage A | **1.35/195t/DD0.41% / 1.21/163t/DD0.50%** · `both-window-pulse` · NOEMA plateau (26.5% survivors, GOOD) beat EMA (15.7%, minor edge landing) |
 
 **cell #15 = control ทำก่อนเป็นอันดับแรก** — ถ้า control ออกมาต่ำผิดปกติ แปลว่า pipeline/data มีปัญหา
 ไม่ใช่ตลาด → หยุดทั้ง matrix แล้ว `BLOCKED(control cell ไม่ผ่าน)` แจ้ง user ทันที (อย่ารันต่อให้เปลือง)
 
 **อ่านผลยังไง (worker ติดป้ายเท่านั้น):** `M4 MAIN ≥1.2 AND BWD ≥1.0` = `both-window-pulse` ·
 `MAIN ≥1.2 แต่ BWD <1.0` = `main-only` · `MAIN <1.0` = `no-pulse` — **ห้ามเขียน DEAD/CANDIDATE เอง**
+
+#### ผลดิบ cell #20-24 (ORDER-542, worker/Sonnet lane 5c, `S-2026-07-29-NIGHTQUEUE` 2026-07-29) — ทุก cell เดิน coarse genetic (Criterion 7, Model 1) → fine complete grid แยกตาม UseEma (ล็อก `_02_SlAtrMult`/`_03_EmaPeriod` ตามที่แกนไหนตายจาก mq5 source) → M4 confirm ทั้งสองหน้าต่าง ตาม RUN TEMPLATE ของ matrix นี้ทุกขั้น
+
+| cell | symbol (TF) | plateau (fine) | MAIN M4 | BWD M4 | label |
+|---|---|---|---|---|---|
+| 20 | BRENT H4 | NOEMA 27.9%/34nb GOOD (beat EMA 6.7%/27nb) | PF 1.24 / 126t / DD 0.17% | PF 1.48 / 120t / DD 0.21% | `both-window-pulse` (MAIN barely clears) |
+| 21 | NAS100 H4 | NOEMA 10.7%/10nb WEAK (EMA survivors=0/750 plateau=NONE — coarse's 95%-dominant UseEma=true region was a spike) | PF 1.46 / 137t / DD 0.28% | PF 1.17 / 146t / DD 0.24% | `both-window-pulse` |
+| 22 | DE40 H4 (traded as `GER40`) | NOEMA, widened twice after landing on its own edge (1.2%/WEAK → 30.4%/GOOD, 28nb) | PF 1.43 / 119t / DD 0.34% (99% real ticks) | PF 0.97 / 106t / DD 0.49% — **`HISTORY-QUALITY-FAIL` (2% real ticks)** | MAIN alone clears 1.2; BWD not usable as evidence |
+| 23 | XAUUSD H1 | EMA 64.7%/170nb GOOD (beat NOEMA 54.1%/70nb) | PF 1.51 / 199t / DD 1.89% | PF 0.57 / 186t / DD 4.57% (net −385.17) | `main-only` |
+| 24 | US30 H1 | NOEMA 26.5%/37nb GOOD (beat EMA 15.7%/46nb, minor edge) | PF 1.35 / 195t / DD 0.41% | PF 1.21 / 163t / DD 0.50% | `both-window-pulse` |
+
+**gotchas worth carrying forward:**
+- `DE40` does not exist as a symbol name on this broker/lane — traded as `GER40` (same DAX/Germany-40 underlying, confirmed by probe before the coarse run; `DE40` throws `symbol DE40 not exist` in the tester journal). `NAS100` **does** exist in this lane, contrary to the old ORDER-116 note — worth re-checking other "NO-DATA" priors before assuming they still hold.
+- Cell #22 BWD is the first time this matrix hit a **tick-quality collapse rather than a hard failure**: the run completed and returned a PF (0.97) but on 2% real ticks vs MAIN's 99% — a silent-looking pass that is actually bad data, not a bad market. Flagged explicitly rather than folded into a clean label; the lead should decide whether to trust it, discard it, or ask for a history reload before judging cell #22's BWD.
+- Cell #22's fine grid hit a grid edge (`_01_Mult=1` = its own lower bound) on the **first** widened attempt — had to widen a second time (down to 0.25) before the plateau firmed up from 1.2%/WEAK to 30.4%/GOOD. One widening pass is not always enough; check the new center against the new edges every time.
+- Cells #21 and #23 both show `select_robust_pass.py`'s fine-grid survivor count catching a fake plateau that the *coarse* stage's popularity vote would have missed (NAS100: coarse strongly favoured UseEma=true, fine proved it a spike) — the mandatory fine-grid step is not a formality.
+- `.set` files: `_mt5_auto/ab_sets/genstanding_stf/STF_{BRENT,NAS100,DE40,XAUUSD,US30}_{H4,H1}_{fine_noema,fine_ema,locked}.set` (+ `STF_DE40_H4_fine_noema2.set` for the second widening pass). Reports/optimizations under `_mt5_auto/reports/GEN2_*` and `_mt5_auto/optimizations/GEN2_*` (gitignored, not committed).
 
 #### ผลดิบ cell #15 (control) — 2026-07-26, Opus-seat รันเอง
 

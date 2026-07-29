@@ -1,0 +1,23 @@
+; STF_US30_H1_fine_ema.set -- FINE COMPLETE grid #2 (ORDER-542 cell #24 US30 H1)
+; pairs with STF_US30_H1_fine_noema.set -- UseEma=true locked (coarse: 43/153 = 28% of ExitMode=2)
+; combos = AtrPeriod(5) x Mult(4) x TpAtrMult(3) x SlAtrMult(3) x EmaPeriod(3) = 540 -> Optimization=1 (complete)
+
+_00_OptimizeMode=true||false||0||true||N
+_01_AtrPeriod=4||4||6||28||Y
+_01_Mult=3.0||3.0||1.0||6.0||Y
+_01_Lookback=400||400||0||400||N
+_01_UseDonchian=false||false||0||false||N
+_01_DonBars=60||60||0||60||N
+_02_ExitMode=2||2||0||2||N
+_02_TpAtrMult=5||5||2||9||Y
+_02_SlAtrMult=1.0||1.0||1.0||3.0||Y
+_03_UseEma=true||true||0||true||N
+_03_EmaPeriod=50||50||100||250||Y
+_04_Buys=true||true||0||true||N
+_04_Sells=true||true||0||true||N
+_04_LotSize=0.01||0.01||0||0.01||N
+_05_DailyLossPct=5.0||5.0||0||5.0||N
+_05_EmergencyDdPct=25.0||25.0||0||25.0||N
+_06_Magic=991006||991006||0||991006||N
+_06_Deviation=20||20||0||20||N
+_06_AllowLive=false||false||0||false||N

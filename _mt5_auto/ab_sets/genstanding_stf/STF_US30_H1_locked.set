@@ -1,0 +1,28 @@
+; STF_US30_H1_locked.set -- plateau-centre pick (ORDER-542 cell #24 US30 H1)
+; fine NOEMA grid GEN2_US30_H1_MAIN_fineNOEMA.xml: passes=600 survivors=159 (26.5%) plateau=GOOD
+;   -- beats EMA (540 passes, 85 survivors, 15.7%, and EMA's centre landed on SlAtrMult=1.0, the
+;   lower edge of that grid's 1.0-3.0 range) -- NOEMA chosen, no edge, higher survivor fraction and PF
+;   centre pick: AtrPeriod=16 Mult=5.25 ExitMode=2(locked) TpAtrMult=9 SlAtrMult=2.5 UseEma=false
+;   PF 1.371 / 195 trades / neighbours=37 (M1, not the number that goes in the table)
+; coarse AtrPeriod was bimodal at both range edges (6 and 24) and Mult skewed to its upper edge (5.0)
+; -> both widened; fine centre landed interior on both (AtrPeriod 16 of [4,28], Mult 5.25 of [3.0,6.0])
+
+_00_OptimizeMode=false
+_01_AtrPeriod=16
+_01_Mult=5.25
+_01_Lookback=400
+_01_UseDonchian=false
+_01_DonBars=60
+_02_ExitMode=2
+_02_TpAtrMult=9
+_02_SlAtrMult=2.5
+_03_UseEma=false
+_03_EmaPeriod=200
+_04_Buys=true
+_04_Sells=true
+_04_LotSize=0.01
+_05_DailyLossPct=5.0
+_05_EmergencyDdPct=25.0
+_06_Magic=991006
+_06_Deviation=20
+_06_AllowLive=false
