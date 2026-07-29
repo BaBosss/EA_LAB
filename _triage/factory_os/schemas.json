@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ea-lab.local/factory_os/schemas.json",
+  "title": "EA LAB Factory OS - machine-readable entity schemas (DESIGN ONLY, not yet in force)",
+  "description": "Appendix to _triage/EA_LAB_FACTORY_OS_DESIGN.md. One file on purpose: the design brief forbids document sprawl. Nothing here is implemented; no validator consumes it yet. Every entity names its canonical owner file and its single writer. NONE of these entities may carry result or verdict prose - that rule comes from _triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md 20.7 and applies unchanged.",
+  "x-ea-lab-meta": {
+    "status": "DESIGN_ONLY",
+    "produced": "2026-07-30",
+    "produced_at_commit": "b430280b",
+    "session_lane": "S-2026-07-30-DESIGN1",
+    "blocking_gate": "Stage 2 blind Codex audit must be answered before any Order is written from this",
+    "forbidden_everywhere": [
+      "verdict text",
+      "result narrative",
+      "any field that duplicates a fact owned by PROJECT_STATE.md, EA_SCORECARD_AND_REGISTRY.md, AGENT_TASKBOARD.md, portfolio/DEPLOYMENTS.csv, portfolio/ACCOUNTS.csv or docs/PIPELINE.md"
+    ]
+  },
+
+  "$defs": {
+
+    "Hypothesis": {
+      "type": "object",
+      "x-owner-file": "factory/hypotheses.csv",
+      "x-writer": "claude|user",
+      "description": "A causal claim about why a configuration of a Boss family makes money. A numeric value, a symbol or a timeframe NEVER mints a new hypothesis (Grill decision 4/5).",
+      "required": ["hypothesis_id", "boss_family", "revision", "title", "causal_claim", "falsifier", "architecture_digest", "coupling_class", "status", "created_commit"],
+      "additionalProperties": false,
+      "properties": {
+        "hypothesis_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}$", "examples": ["B14-H01"] },
+        "boss_family": { "type": "integer", "minimum": 11, "maximum": 18 },
+        "revision": { "type": "integer", "minimum": 1, "description": "full revision id is <hypothesis_id>-r<revision>" },
+        "title": { "type": "string", "minLength": 3, "maxLength": 120 },
+        "causal_claim": { "type": "string", "minLength": 40, "description": "WHY this makes money. Required non-empty: a hypothesis with no claim cannot be falsified, and a claim you cannot falsify is a slogan." },
+        "falsifier": { "type": "string", "minLength": 20, "description": "The concrete observation that would kill this hypothesis. Pre-registered, before evidence." },
+        "architecture_digest": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). A change here is what MECHANICALLY forces a new revision - not someone's judgement about whether the claim really changed." },
+        "module_set": { "type": "array", "items": { "type": "string" }, "description": "capability tokens the wrapper enables, e.g. LAB_CAP_STACK" },
+        "coupling_class": { "enum": ["SCALE_INVARIANT", "COUPLED"], "description": "COUPLED = money/balance-% TP or grid/martingale: edge and sizing must be optimized jointly (decisions 46-48)" },
+        "safety_profile": { "type": "string", "description": "id into factory/instrument_profiles.yaml safety section" },
+        "experimental": { "type": "boolean", "default": true, "description": "EXPERIMENTAL cannot reach VPS/Demo/Live and cannot be promotion evidence (decision 33)" },
+        "engine_edge": { "type": "boolean", "default": false, "description": "flat-lot PF<1 while escalated PF>1. Requires ALL FIVE cage conditions in CLAUDE.md and permanently small sizing." },
+        "status": { "enum": ["DRAFT", "REGISTERED", "WRAPPER_GENERATED", "PARITY_PASSED", "EVIDENCE_IN_PROGRESS", "EVIDENCE_COMPLETE", "AWAITING_VERDICT", "CLOSED"], "description": "no verdict values here on purpose - the verdict lives in EA_SCORECARD_AND_REGISTRY.md" },
+        "created_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "superseded_by": { "type": ["string", "null"] }
+      }
+    },
+
+    "ParameterDefinitionExtension": {
+      "type": "object",
+      "x-owner-file": "docs/PARAM_REGISTRY.csv",
+      "x-writer": "claude",
+      "description": "ADDITIVE columns on the existing 184-row registry. The existing 12 columns keep their meaning so param_registry_check.ps1 keeps working across the change. Measured 2026-07-30: optimize_stage is UNKNOWN on 177/184 rows and safe_range on 181/184 - which is why the registry cannot yet generate an optimize plan.",
+      "required": ["role", "surface"],
+      "additionalProperties": false,
+      "properties": {
+        "role": { "enum": ["TUNABLE", "RUNTIME", "SIZING", "SAFETY", "LOCKED", "INACTIVE"], "description": "decision 28. SAFETY is declared sinput so the optimizer cannot reach it at all, rather than relying on a script to decline." },
+        "surface": { "enum": ["OPERATOR", "RESEARCH", "HIDDEN"], "description": "Thin Wrappers show Tunable+Runtime+Sizing+Safety only (decision 29). Operator target: <=40 per Boss." },
+        "display_label": { "type": "string", "description": "MQL5 input(name=...) - changes what the user sees WITHOUT renaming the identifier, so existing .set files keep working." },
+        "enum_name": { "type": ["string", "null"], "description": "replaces a numeric pseudo-enum. Confirmed offenders, all declared 'input int': _9_PendingMode, _14_Direction, _16_BaseLotMode, _18_DirMode, _50_RegimeMode." },
+        "unit_true": { "enum": ["POINTS", "PIPS", "PRICE", "ATR_MULT", "MONEY", "PERCENT", "BARS", "COUNT", "BOOL", "ENUM"], "description": "the unit the CODE uses, not the one the name claims. The chassis currently contains both conventions at once: Stack_PipSize() implements true pips (10x point on 3/5-digit symbols) while ExitManager multiplies _21_TP_Pip / _31_SL_Pip straight by _Point. Same word, two meanings, 10x apart." },
+        "optimize_stage": { "enum": ["ARCHITECTURE", "SIGNAL", "EXIT", "EXECUTION", "STRESS", "FREEZE", "UNKNOWN"] },
+        "safe_range_start": { "type": ["number", "null"] },
+        "safe_range_step": { "type": ["number", "null"] },
+        "safe_range_stop": { "type": ["number", "null"] },
+        "precedence_owner": { "type": ["string", "null"], "description": "the input that supersedes this one, from docs/PARAM_LINKAGE.md. classification=OVERRIDE means MEMBER OF A PRECEDENCE CHAIN, not inactive - reading it as inactive was the P0 repaired 2026-07-30." },
+        "supported_profiles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "TestUniverse": {
+      "type": "object",
+      "x-owner-file": "factory/universe.yaml",
+      "x-writer": "claude|user",
+      "required": ["universe_version", "kind", "symbols", "timeframes", "created_commit"],
+      "additionalProperties": false,
+      "properties": {
+        "universe_version": { "type": "string", "pattern": "^v[0-9]+$", "description": "versioned per decision 25; a Candidate records which version it was searched in" },
+        "kind": { "enum": ["CORE", "EXPANSION", "PILOT"], "description": "CORE is compulsory (decision 24)" },
+        "symbols": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/LogicalSymbol" } },
+        "timeframes": { "type": "array", "minItems": 1, "items": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] } },
+        "created_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+
+    "LogicalSymbol": {
+      "type": "object",
+      "description": "Logical symbol is separate from the broker string (decision 26). Real cases in this repo: DE40 is traded as GER40; USDJPYm / EURUSDm carry a broker suffix on two accounts.",
+      "required": ["logical", "asset_class", "broker_map"],
+      "additionalProperties": false,
+      "properties": {
+        "logical": { "type": "string", "examples": ["XAUUSD", "DE40", "BTCUSD"] },
+        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
+        "broker_map": {
+          "type": "object",
+          "description": "lane id -> broker symbol string. A lane with no mapping means the cell is NOT_APPLICABLE on that lane, with that as the written reason.",
+          "additionalProperties": { "type": "string" }
+        },
+        "swap_mode": { "enum": ["POINTS", "INTEREST_CURRENT", "UNKNOWN"], "description": "MEASURED, not assumed: the tester charges POINTS-mode swap (XAUUSD verified at -29.25) but does NOT charge INTEREST_CURRENT (BTCUSD, -14.67%/yr). Anything not POINTS must have financing deducted post-hoc from measured holding time or every number is optimistic." }
+      }
+    },
+
+    "InstrumentProfile": {
+      "type": "object",
+      "x-owner-file": "factory/instrument_profiles.yaml",
+      "x-writer": "claude",
+      "description": "Layered exactly as OPTIMIZATION_PROCEDURE_V2 section 4 specifies: AssetClass -> SymbolOverride -> Broker/LaneMapping (decision 27). A profile carries NO signal optimization - that separation is what makes reuse legitimate. Baseline values are screening priors, never verdicts.",
+      "required": ["profile_id", "asset_class", "layer"],
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": { "type": "string" },
+        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
+        "layer": { "enum": ["ASSET_CLASS", "SYMBOL_OVERRIDE", "BROKER_LANE"] },
+        "account_unit": { "enum": ["USD", "CENT"] },
+        "values": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "CoverageCell": {
+      "type": "object",
+      "x-owner-file": "factory/coverage.csv",
+      "x-writer": "automation for state; claude only for not_applicable_reason",
+      "description": "Every supported cell owes a real Baseline + small optimize probe (decision 13). A cell may never be labelled from a neighbouring cell's result.",
+      "required": ["cell_id", "hypothesis_revision", "logical_symbol", "tf", "universe_version", "state", "lane"],
+      "additionalProperties": false,
+      "properties": {
+        "cell_id": { "type": "string", "examples": ["B14-H01-r2/XAUUSD/H4"] },
+        "hypothesis_revision": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
+        "logical_symbol": { "type": "string" },
+        "tf": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] },
+        "universe_version": { "type": "string" },
+        "state": { "enum": ["UNTESTED", "BASELINE_RUN", "PROBE_RUN", "PULSE", "NO_PULSE", "RESCUE_IN_PROGRESS", "EVIDENCE_COMPLETE", "NOT_APPLICABLE"] },
+        "baseline_run_id": { "type": ["string", "null"] },
+        "probe_run_id": { "type": ["string", "null"] },
+        "best_pf_main": { "type": ["number", "null"] },
+        "trades_main": { "type": ["integer", "null"] },
+        "dd_main_pct": { "type": ["number", "null"] },
+        "best_pf_bwd": { "type": ["number", "null"] },
+        "trades_bwd": { "type": ["integer", "null"] },
+        "dd_bwd_pct": { "type": ["number", "null"] },
+        "trial_count": { "type": "integer", "minimum": 0 },
+        "boundary_hit": { "type": "boolean", "description": "true = best result sits on a grid edge; the cell may NOT be closed until the range is expanded (decision 19)" },
+        "lane": { "type": "string" },
+        "data_fingerprint": { "type": "string" },
+        "not_applicable_reason": { "type": ["string", "null"], "description": "REQUIRED when state=NOT_APPLICABLE, and only for technical impossibility (decision 14). Real precedent: EA_BREAKOUT_XAU hardcodes PERIOD_H1, so -Period changes nothing and H4/D1 are genuinely not applicable." },
+        "last_updated_commit": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "state": { "const": "NOT_APPLICABLE" } } },
+          "then": { "required": ["not_applicable_reason"] }
+        },
+        {
+          "if": { "required": ["best_pf_main"], "properties": { "best_pf_main": { "type": "number" } } },
+          "then": {
+            "required": ["trades_main", "dd_main_pct"],
+            "description": "A PF may never be recorded without its trade count and drawdown. Provenance: two hosts cleared the BWD gate on 52 and 62 trades at under 2% DD while every host that failed took 343-473 - they did not survive the regime, they were barely in the market during it."
+          }
+        }
+      ]
+    },
+
+    "JobManifest": {
+      "type": "object",
+      "x-owner-file": "factory/runs/<run_id>.json",
+      "x-writer": "automation (scheduler) only",
+      "description": "Realizes EA_LAB_EVOLUTION_PLAN_DRAFT 20.8 Contract B: a lane-aware, fail-visible resume manifest wrapped around the EXISTING runner. No global process kill, no -Force, no change to tester safety.",
+      "required": ["run_id", "attempt", "cell_id", "lane", "terminal_path", "data_dir", "symbol", "tf", "from_date", "to_date", "model", "state"],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "cell_id": { "type": "string" },
+        "lane": { "type": "string", "examples": ["MT5_LANE_1", "MT5_LANE_2", "MT5_LANE_3"] },
+        "terminal_path": { "type": "string" },
+        "data_dir": { "type": "string" },
+        "portable": { "type": "boolean" },
+        "symbol": { "type": "string", "description": "broker string, resolved from LogicalSymbol via the lane map" },
+        "tf": { "type": "string" },
+        "from_date": { "type": "string" },
+        "to_date": { "type": "string" },
+        "model": { "type": "integer", "enum": [1, 2, 4], "description": "Model 2 is a zero-trade filter only and may never be reported or ranked. Model 4 is exclusive machine-wide and is refused on lane 3, which has no tick cache." },
+        "leverage": { "type": "integer", "description": "written as 1:N in the ini and asserted post-run; an empty Leverage=N is a silent no-op" },
+        "set_hash": { "type": "string" },
+        "ini_hash": { "type": "string" },
+        "ex5_hash": { "type": "string" },
+        "effective_config_hash": { "type": "string", "description": "covers every exposed input PLUS every locked constant" },
+        "lease_id": { "type": "string" },
+        "state": { "enum": ["QUEUED", "LEASED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
+        "started_at": { "type": ["string", "null"] },
+        "finished_at": { "type": ["string", "null"] },
+        "exit_code": { "type": ["integer", "null"] },
+        "report_path": { "type": ["string", "null"] },
+        "report_fresh_proof": { "type": ["object", "null"], "description": "output of the existing scripts/lib/report_freshness.ps1 guard. COMPLETED is refused without it, because 'the .htm exists, so this run wrote it' has already produced wrong numbers in this repo." },
+        "data_fingerprint": { "type": "string", "description": "hash(lane, symbol, tf, window, model, bars, ticks, server, Bases state). Two runs are comparable ONLY if this and the lane both match - measured 14x tick-count difference between installs on an identical EA/set/window." },
+        "rerun_of": { "type": ["string", "null"], "description": "an identical config may be re-run ONLY after an execution or tester error (decision 18); otherwise the scheduler returns cached evidence" }
+      }
+    },
+
+    "EvidenceRef": {
+      "type": "object",
+      "x-owner-file": "factory/evidence/index.csv + the EXISTING experiment event log",
+      "x-writer": "automation via scripts/experiment_event_log.ps1",
+      "description": "No parallel evidence store is invented. Registration goes through the existing utility and inherits its known rough edges: .ex5 binaries are gitignored and need git add -f; the path pattern forbids parentheses and spaces, which the repo's (EXP)_Name convention violates; tick history has no committable artifact so 'data' uses a committed provenance descriptor instead.",
+      "required": ["evidence_id", "kind", "path", "commit_oid", "raw_sha256"],
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" },
+        "kind": { "enum": ["REPORT", "SET", "INI", "EX5", "SOURCE", "DATA_PROVENANCE", "CSV", "OTHER"] },
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9_./\\\\-]+$", "description": "no parentheses, no spaces - enforced by the event log's own pattern" },
+        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "full 40-hex; short form is rejected. Register each artifact ONCE - re-registering identical content after HEAD moved fails with 'different canonical locator'." },
+        "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+
+    "CandidateManifest": {
+      "type": "object",
+      "x-owner-file": "factory/candidates/<candidate_id>.json",
+      "x-writer": "claude, once, at verdict time",
+      "description": "IMMUTABLE by construction: candidate_id is the sha256 of this object in canonical field order, so 'someone edited a candidate' is not a policy that can be violated - it is a different id, and the deployment still points at the old one until a human moves it (decisions 38-41).",
+      "required": ["candidate_id", "hypothesis_revision", "logical_symbol", "tf", "parameters", "profiles", "evidence_ids", "ex5_sha256", "lane", "data_fingerprint", "trial_count", "universe_version"],
+      "additionalProperties": false,
+      "properties": {
+        "candidate_id": { "type": "string", "pattern": "^CAND-[0-9a-f]{12}$" },
+        "hypothesis_revision": { "type": "string" },
+        "logical_symbol": { "type": "string" },
+        "tf": { "type": "string" },
+        "parameters": { "type": "object", "description": "the FULL effective surface, never a partial set - a partial .set lets unlisted inputs be filled silently from the per-terminal tester cache, which is the documented root cause of the ORDER-165 8/8 false drift", "additionalProperties": { "type": ["number", "string", "boolean"] } },
+        "profiles": {
+          "type": "object",
+          "required": ["instrument", "exit", "sizing", "safety", "execution"],
+          "additionalProperties": false,
+          "properties": {
+            "instrument": { "type": "string" }, "exit": { "type": "string" },
+            "sizing": { "type": "string" }, "safety": { "type": "string" }, "execution": { "type": "string" }
+          }
+        },
+        "evidence_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" } },
+        "ex5_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "the binary that ACTUALLY produced the evidence. Note MQL5 compilation is not byte-reproducible, so a hash mismatch across rebuilds is not proof the source changed - staleness is judged by mtime." },
+        "lane": { "type": "string" },
+        "data_fingerprint": { "type": "string" },
+        "trial_count": { "type": "integer", "minimum": 0, "description": "total configurations ever scored on the path to selecting this candidate (decisions 44/45). What it OBLIGES is unresolved - see design section 11 item 1; it changes a bar, so only the user may set it." },
+        "universe_version": { "type": "string" },
+        "engine_edge": { "type": "boolean" },
+        "scorecard_ref": { "type": "string", "description": "pointer into EA_SCORECARD_AND_REGISTRY.md. The verdict TEXT lives there and is never copied here." }
+      }
+    },
+
+    "MagicAllocation": {
+      "type": "object",
+      "x-owner-file": "factory/magic_allocations.csv",
+      "x-writer": "automation allocates, claude approves",
+      "description": "Globally unique across EA LAB, allocated automatically (decision 56). check_state.ps1 already BLOCKS duplicate account|magic; this moves the same guarantee from detection-after-the-fact to prevention, and the existing check stays as the backstop.",
+      "required": ["magic", "allocated_to", "status", "allocated_at_commit"],
+      "additionalProperties": false,
+      "properties": {
+        "magic": { "type": "integer", "minimum": 1 },
+        "allocated_to": { "type": "string", "description": "candidate_id" },
+        "account": { "type": ["string", "null"] },
+        "status": { "enum": ["RESERVED", "ATTACHED", "RETIRED"], "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals" },
+        "allocated_at_commit": { "type": "string" }
+      }
+    },
+
+    "DeploymentAttestation": {
+      "type": "object",
+      "x-owner-file": "portfolio/ATTESTATION_MAP.csv (EXISTING) + portfolio/DEPLOYMENTS.csv (EXISTING)",
+      "x-writer": "claude",
+      "description": "Adds the candidate link to the existing inventory. It does NOT become a second deployment inventory: DEPLOYMENTS.csv stays the single write path and check_state.ps1 keeps validating both directions.",
+      "required": ["account", "magic", "candidate_id", "attest_state"],
+      "additionalProperties": false,
+      "properties": {
+        "account": { "type": "string" },
+        "magic": { "type": "integer" },
+        "candidate_id": { "type": "string" },
+        "attest_state": { "enum": ["HASHED", "PARTIAL", "FILE_MISSING", "UNVERIFIED"] },
+        "attest_confidence": { "enum": ["high", "medium", "low"] },
+        "core_revision_at_attach": { "type": "string", "description": "a later core change creates a NEW revision and must NOT auto-update this row (decision 39). This is the mechanisation of the live fleet still running pre-ORDER-132 binaries." }
+      }
+    },
+
+    "WorkReceipt": {
+      "type": "object",
+      "x-owner-file": "ops/receipts/ (append-only events -> single-writer projection)",
+      "x-writer": "any agent, for its own receipt only",
+      "description": "The durable commitment record from the Control Room handoff section 7. The taskboard stays authoritative for formal ORDER state; the Receipt is authoritative for the commitment/handoff record. A disagreement between them renders STATE_CONFLICT and stays visible until a source is corrected - the system never silently picks a winner.",
+      "required": ["receipt_id", "title", "source_agent", "requested_at", "owner", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "receipt_id": { "type": "string", "pattern": "^WRK-[0-9]{8}-[0-9]{3}$" },
+        "title": { "type": "string" },
+        "source_agent": { "enum": ["claude", "codex", "automation", "legacy"] },
+        "source_channel": { "type": "string" },
+        "requested_at": { "type": "string" },
+        "requester": { "type": "string" },
+        "related_order": { "type": ["string", "null"], "pattern": "^ORDER-[0-9]+$" },
+        "owner": { "type": "string" },
+        "status": { "enum": ["CAPTURED", "READY", "IN_PROGRESS", "WAITING", "BLOCKED", "HANDOFF", "DONE_PENDING_REVIEW", "AUDIT_REQUIRED", "AUDIT_IN_PROGRESS", "REWORK", "REVIEWED", "CANCELLED_BY_USER", "STATE_CONFLICT"], "description": "DONE is deliberately absent: DONE is not closed. There is also no AGING/NEGLECTED state, because a state meaning 'old work may be ignored' is how work gets ignored." },
+        "next_action": { "type": "string" },
+        "acceptance": { "type": "string" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "blocked_by": { "type": "array", "items": { "type": "string" } },
+        "review_required": { "type": "boolean" },
+        "rework_cycles": { "type": "integer", "minimum": 0, "description": ">=3 renders REWORK LOOP - review spec/approach, with the strongest suitable model and a summary of repeated defects" },
+        "waiting_for": { "type": ["string", "null"] },
+        "wake_condition": { "type": ["string", "null"] },
+        "handoff_summary": { "type": ["string", "null"] },
+        "cancelled_by_user_ref": { "type": ["string", "null"], "description": "ONLY the user may cancel. No other actor may write this field." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "status": { "const": "WAITING" } } },
+          "then": {
+            "anyOf": [{ "required": ["wake_condition"] }, { "required": ["waiting_for"] }],
+            "description": "a WAITING item with neither renders 'พักงานแบบไร้กำหนด — ต้องจัดการ'"
+          }
+        },
+        {
+          "if": { "properties": { "status": { "const": "CANCELLED_BY_USER" } } },
+          "then": { "required": ["cancelled_by_user_ref"] }
+        },
+        {
+          "if": { "properties": { "status": { "const": "HANDOFF" } } },
+          "then": {
+            "required": ["handoff_summary", "next_action", "evidence_refs", "review_required"],
+            "description": "missing any of these yields HANDOFF INCOMPLETE"
+          }
+        }
+      ]
+    },
+
+    "SystemFinding": {
+      "type": "object",
+      "x-owner-file": "ops/findings.csv",
+      "x-writer": "automation raises; claude resolves governance findings",
+      "required": ["finding_id", "detector", "first_seen", "last_seen", "state", "class"],
+      "additionalProperties": false,
+      "properties": {
+        "finding_id": { "type": "string", "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$" },
+        "detector": { "type": "string" },
+        "class": { "enum": ["RUNTIME", "GOVERNANCE", "DEPLOYMENT_DRIFT", "AUDIT"] },
+        "first_seen": { "type": "string" },
+        "last_seen": { "type": "string" },
+        "state": { "enum": ["OPEN", "HEALTHY_1_OF_2", "RESOLVED", "FLAPPING", "SUPPRESSED_MAINTENANCE"] },
+        "occurrences_24h": { "type": "integer", "description": ">=3 clear-and-return cycles collapse into ONE incident escalated to FLAPPING - root cause required" },
+        "evidence_refs": { "type": "array", "items": { "type": "string" } },
+        "owner": { "type": ["string", "null"] },
+        "resolution_rule": { "type": "string", "description": "RUNTIME auto-resolves only after TWO consecutive healthy checks. GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close - they require explicit review." }
+      }
+    },
+
+    "IdeaEntry": {
+      "type": "object",
+      "x-owner-file": "ops/ideas.csv",
+      "x-writer": "automation on intake",
+      "description": "External content is DATA, never instructions (AGENTS.md rule 9). An idea never auto-creates an Order; promotion is claude/user only. No aging pressure and no cap - unpromoted ideas are preserved indefinitely.",
+      "required": ["idea_id", "received_at", "source", "status"],
+      "additionalProperties": false,
+      "properties": {
+        "idea_id": { "type": "string", "pattern": "^IDEA-[0-9]{4}$" },
+        "received_at": { "type": "string" },
+        "source": { "enum": ["telegram", "claude", "codex", "legacy_openclaw"] },
+        "message_ref": { "type": "string" },
+        "normalized_url": { "type": ["string", "null"], "description": "exact-URL dedupe across every intake path; the same URL from three sources is ONE idea with three provenance records" },
+        "user_note": { "type": ["string", "null"] },
+        "fetched_title": { "type": ["string", "null"] },
+        "duplicate_of": { "type": ["string", "null"] },
+        "status": { "enum": ["NEW", "READ", "SHORTLIST", "REFERENCE", "DROP", "ORDER"] }
+      }
+    },
+
+    "SnapshotMeta": {
+      "type": "object",
+      "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, currently schema version 3)",
+      "x-writer": "the single snapshot builder",
+      "description": "The Factory domain arrives as ADDITIONAL TOP-LEVEL KEYS on this same document (v4, v5...), read by the same builder. Building a second projection would recreate exactly the drift the handoff forbids. No consumer - STATUS, dashboard, Telegram, digest - may compute its own totals.",
+      "required": ["schema", "version", "build_id", "generated_at", "sources", "reconciliation"],
+      "additionalProperties": true,
+      "properties": {
+        "schema": { "const": "ControlRoomSnapshot" },
+        "version": { "type": "integer", "minimum": 3 },
+        "build_id": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "git_head": { "type": "string" },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "mandatory", "read_ok", "age_hours"],
+            "properties": {
+              "name": { "type": "string" },
+              "mandatory": { "type": "boolean" },
+              "read_ok": { "type": "boolean", "description": "false must be distinguishable from 'read fine, nothing found' EVERYWHERE. Conflating them is the exact defect being repaired in daily_monitor.ps1." },
+              "age_hours": { "type": ["number", "null"] },
+              "fresh": { "type": "boolean" }
+            }
+          }
+        },
+        "reconciliation": {
+          "type": "object",
+          "required": ["discovered", "categorized", "duplicates", "conflicts", "unclassified", "all_clear"],
+          "properties": {
+            "discovered": { "type": "integer" },
+            "categorized": { "type": "integer" },
+            "duplicates": { "type": "integer" },
+            "conflicts": { "type": "integer" },
+            "unclassified": { "type": "integer" },
+            "all_clear": { "type": "boolean", "description": "true ONLY when every mandatory source read successfully AND met its freshness bar AND discovered==categorized AND conflicts==0 AND unclassified==0 AND no actionable/blocked/review/audit/decision item exists. Otherwise the page shows UNKNOWN - ตรวจไม่ครบ with sources N/M, uncategorized N, conflicts N. Silence is never rendered as healthy." }
+          }
+        }
+      }
+    }
+  }
+}
