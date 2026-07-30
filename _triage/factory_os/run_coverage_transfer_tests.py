@@ -195,6 +195,61 @@ def main():
          r'A2 the reading note')
 
     say()
+    say('=== CODEX AUDIT, Standards 3 -- a notice a human cannot SEE is not a notice ===')
+    say('  Wrapping the banner in an HTML comment made the rendered notice vanish while the')
+    say('  checker returned 0 problems. Same mechanism as memory')
+    say('  guard-disarmed-by-prose-reported-as-note. Reproduced by hand before it was fixed.')
+    hidden = backlog_post(section, records).split('\n')
+    _b = next(i for i, l in enumerate(hidden) if l == gen.TOP_BANNER)
+    hidden[_b] = '<!-- ' + gen.TOP_BANNER[2:] + ' -->'
+    case('the top notice hidden inside an HTML comment', '\n'.join(hidden), section, records, True,
+         r'A1 section 2 IS generated output but the notice is missing from the top banner')
+    # ...and the control that keeps the fix from over-reaching: a comment elsewhere in the header
+    # must not remove a notice that IS visible.
+    withc = backlog_post(section, records).split('\n')
+    withc.insert(_b, '<!-- an ordinary editorial comment -->')
+    case('CONTROL an unrelated HTML comment beside a visible notice',
+         '\n'.join(withc), section, records, False)
+
+    say()
+    say('=== CODEX AUDIT, P1 -- the store is a CLOSED shape, not a bag ===')
+    say('  All three of these passed before the fix: a wrong source_coordinates.file, a root')
+    say('  "outcome": "DEAD", and one declared_status swapped for another allowed value.')
+    post = backlog_post(section, records)
+
+    def wrong_coord(rs):
+        for r in rs:
+            for c in r.get('cells') or []:
+                if c.get('source_coordinates'):
+                    c['source_coordinates']['file'] = 'WRONG'
+                    return
+    case('a cell coordinate pointing at the wrong file', post, section,
+         mutate(records, wrong_coord), True, r"A2 row .*field 'source_coordinates' was altered")
+
+    case('a root field the old name-blacklist never anticipated', post, section,
+         mutate(records, lambda rs: rs[0].update({'outcome': 'DEAD'})), True,
+         r"A3 row .*undeclared field\(s\) \['outcome'\]")
+
+    def swap_status(rs):
+        for r in rs:
+            for c in r.get('cells') or []:
+                if c.get('declared_status') == 'REJECT':
+                    c['declared_status'] = 'DEAD'      # a DIFFERENT but ALLOWED vocabulary value
+                    return
+    case('one declared_status swapped for another allowed value', post, section,
+         mutate(records, swap_status), True, r"A2 row .*field 'declared_status' was altered")
+
+    case('an undeclared key inside source_coordinates', post, section,
+         mutate(records, lambda rs: rs[1]['cells'][1].setdefault('note', 'x')), True,
+         r'A3 row .* undeclared field')
+
+    say()
+    say('=== ORDER-610 A4 was deleted; its promised perturbation fixture lands on A1 ===')
+    case('a source column perturbed in the STORE, so section 2 no longer matches it', post, section,
+         mutate(records, lambda rs: rs[2]['source_columns'].__setitem__(1, 'PERTURBED')), True,
+         r'A1 the file SAYS')
+
+    say()
     say('=== A3 no verdict may live in a coverage store ===')
     case('a verdict field added to a row', post, section,
          mutate(records, lambda rs: rs[0].update({'verdict': 'CANDIDATE'})), True,
@@ -225,6 +280,48 @@ def main():
                         break
     case('a brand-new outcome word minted', post, section,
          mutate(records, new_word), True, r'A3 row .* not in the closed vocabulary')
+
+    say()
+    say('=== CODEX AUDIT, Standards 1 -- read_input, which had NO fixture at all ===')
+    say('  It falls back to the working tree for a path absent from the index, so a verdict could')
+    say('  rest on one input that is being committed and one that is not.')
+    real_git = chk._git
+
+    def fake_git(*args):
+        # `git show :<path>` succeeds only for the paths this scenario says are in the index
+        if args[:1] == ('show',) and args[1].startswith(':'):
+            path = args[1][1:]
+            if path in fake_git.indexed:
+                return 0, b'INDEXED BYTES\n', b''
+            return 1, b'', b'fatal: path does not exist in the index'
+        if args[:2] == ('ls-files', '--error-unmatch'):
+            return (0, b'', b'') if args[2] in fake_git.tracked else (1, b'', b'')
+        return real_git(*args)
+
+    for name, indexed, tracked, expect in (
+            ('both in the index -> one coherent snapshot', {chk.BACKLOG_PATH, chk.COVERAGE_PATH},
+             {chk.BACKLOG_PATH, chk.COVERAGE_PATH}, 'index/index'),
+            ('the store missing from the index -> mixed, must REFUSE', {chk.BACKLOG_PATH},
+             {chk.BACKLOG_PATH}, 'ToolFailure'),
+            ('the backlog missing from the index -> mixed, must REFUSE', {chk.COVERAGE_PATH},
+             {chk.COVERAGE_PATH}, 'ToolFailure')):
+        fake_git.indexed, fake_git.tracked = indexed, tracked
+        chk._git = fake_git
+        try:
+            b, bs = chk.read_input(chk.BACKLOG_PATH)
+            c, cs = chk.read_input(chk.COVERAGE_PATH)
+            got = '%s/%s' % (bs, cs)
+            if got != 'index/index':
+                # reproduce what check() does with a mixed pair
+                got = 'ToolFailure' if len({bs, cs}) > 1 else got
+        except chk.ToolFailure:
+            got = 'ToolFailure'
+        finally:
+            chk._git = real_git
+        ok = got == expect
+        if not ok:
+            FAILURES.append(name)
+        say('  %s %-58s expect=%-12s got=%s' % ('[OK ]' if ok else '[FAIL]', name, expect, got))
 
     say()
     say('=== TOOL FAILURE is not a rejection ===')

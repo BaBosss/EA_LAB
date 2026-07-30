@@ -196,9 +196,13 @@ Each of these is asserted somewhere in the tranche. None should be taken on trus
 
 - **Trust boundary:** `check_coverage_transfer.py` is the only place allowed to downgrade another
   checker's failure. Is that authority correctly bounded, and is it reachable from anywhere else?
-- **Recovery:** every commit here is revertible in isolation. Verify that reverting `a424e90b` alone
-  leaves a coherent repository, and that reverting `1a92ec42` alone leaves the gate red rather than
-  silently green.
+- **Recovery:** ~~every commit here is revertible in isolation.~~ 🔴 **CORRECTED 2026-07-31 after the
+  audit returned this as P5, and the correction is appended rather than rewritten so the document
+  Codex actually reviewed stays legible.** The claim was false: a read-only `git merge-tree`
+  simulation at `33292571` shows `a424e90b` conflicts with later modifications and delete/modify
+  paths, and `1a92ec42` conflicts in the taskboard. The true statement is *"revertible after
+  conflict resolution"*, and after resolution the second half of the original claim does hold —
+  removing `1a92ec42` leaves the gate red rather than silently green.
 - **Partial failure:** if `ajv` is absent, `run_schema_fixtures.py` must report ERROR rather than
   counting instances as rejected. Confirm by removing `ajv` from PATH.
 - **Secrets:** `factory/coverage.jsonl`, the three new `.py` files and `_triage/USER_TASKS_2026-07-31.md`

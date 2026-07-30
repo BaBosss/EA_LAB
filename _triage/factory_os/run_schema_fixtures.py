@@ -90,6 +90,22 @@ def ajv_errors(out):
         return None
 
 
+def spec_is_discriminating(spec):
+    """A `says` spec must actually assert something. Codex audit, Standards 4.
+
+    `_err_matches(err, {})` iterates zero conditions and returns True, so an empty spec matches the
+    FIRST error of ANY failing instance -- and `entity_coverage` only required the list to be
+    non-empty. `says=[{}]` therefore earned coverage with nothing asserted. That re-opened the
+    under-specified-`says` hole ORDER-611's own acceptance B2 was written to close, and which was
+    dropped when the isolation harness replaced the schemaPath scheme.
+
+    Discriminating = names WHERE (`instancePath`) or WHAT (`keyword`/a params key). A spec carrying
+    only `schemaPath_startswith` is provenance with no claim, which was B2's original complaint.
+    """
+    keys = set(spec)
+    return bool(keys - {'schemaPath_startswith'})
+
+
 def _err_matches(err, spec):
     params = err.get('params') or {}
     for k, v in spec.items():
@@ -814,9 +830,12 @@ def entity_coverage(entity_cases, results):
         if c['expect'] == VALID and state == VALID:
             passing.add(ent)
         elif c['expect'] == INVALID and state == INVALID:
-            if not c['says']:
-                problems.append('case %r is a negative with no `says`, so it proves only that '
-                                'SOMETHING was wrong with the instance' % c['name'])
+            useful = [s for s in c['says'] if spec_is_discriminating(s)]
+            if not useful:
+                problems.append('case %r is a negative whose `says` asserts nothing (%s), so it '
+                                'proves only that SOMETHING was wrong with the instance. An empty '
+                                'spec matches the first error of any failing instance.'
+                                % (c['name'], json.dumps(c['says'], sort_keys=True)))
                 continue
             failing.add(ent)
 
@@ -1012,6 +1031,23 @@ def main():
     # ...and the claim on the line above -- "the list is read from $defs, so a 28th entity would
     # redden this" -- is a claim, so it is checked rather than printed. Without this, a coverage
     # criterion that had silently stopped enumerating would report OK forever.
+    # Codex audit, Standards 4: `says=[{}]` used to earn coverage, because an empty spec matches
+    # every error and the criterion only checked the list was non-empty. Probed here permanently,
+    # against a real passing case, so the repair cannot quietly come undone.
+    _victim = next(c for c in ENTITY_CASES if c['expect'] == INVALID)
+    _saved = _victim['says']
+    try:
+        _victim['says'] = [{}]
+        _probe = entity_coverage(ENTITY_CASES, ebatch)
+    finally:
+        _victim['says'] = _saved
+    if any(_victim['name'] in p for p in _probe):
+        print("  [OK ] CONTROL a negative whose `says` is `{}` is refused as asserting nothing")
+    else:
+        print("  [BAD] CONTROL `says=[{}]` still earns coverage -- an empty spec matches every "
+              "error")
+        bad += 1
+
     _real = globals()['schema_entities']
     try:
         globals()['schema_entities'] = lambda: (sorted(list(entities) + ['A28thEntity']), schema_doc)

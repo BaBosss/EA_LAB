@@ -36,8 +36,10 @@ import hashlib
 import io
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -47,6 +49,13 @@ sys.path.insert(0, HERE)
 # Pinned by ORDER-610 A2; also the blob D1's CoverageCell row pins as its owner_ref.
 BASELINE_BLOB = 'ca909b693a4c747dc1347d48fa8b2507f6a4243f'
 BASELINE_COMMIT = 'a7960e08a03616984db2e7cccb19342f0ee30ad7'
+
+# The reconciliation is pinned by its OWN BLOB, not by BASELINE_COMMIT. MEASURED 2026-07-31 while
+# fixing Codex Standards 2: it did not EXIST at a7960e08 -- that commit predates the whole S2a work
+# -- so "both halves of the baseline from one commit" is not merely inconvenient here, it is
+# impossible. A blob id is immutable in exactly the way the fix needs, and this is the same bytes
+# attestation bundle aaa5998d binds, so changing the file invalidates the owner's approval as well.
+RECONCILIATION_BLOB = '1fff12ce1dc36964507dbb902ed69edebbcd8213'
 
 SECTION2_HEADING = '## 2. COVERAGE MATRIX'
 BACKLOG_PATH = 'MASTER_BACKLOG.md'
@@ -87,6 +96,25 @@ def baseline_text():
         raise SystemExit('gen_coverage: cannot read baseline blob %s: %s'
                          % (BASELINE_BLOB, err.decode('utf-8', 'replace')))
     return out.decode('utf-8').replace('\r\n', '\n')
+
+
+def baseline_reconciliation():
+    """The reconciliation AS IT WAS AT THE PINNED COMMIT, not as it is in the working tree.
+
+    Codex audit, Standards 2: build_records() joined the pinned backlog blob with a working-tree
+    read of the reconciliation, so the baseline it called immutable was mixed-vintage. An edit to
+    the reconciliation could move the yardstick the store is measured against -- which is the same
+    self-reference the pinned blob exists to prevent, arriving through the other input.
+
+    Both halves of the baseline are now immutable git objects. Note they are pinned DIFFERENTLY and
+    that is not sloppiness: the backlog by commit-resolved blob, the reconciliation by its own blob,
+    because it did not exist at BASELINE_COMMIT. See the constant.
+    """
+    rc, out, err = _git('cat-file', 'blob', RECONCILIATION_BLOB)
+    if rc != 0:
+        raise SystemExit('gen_coverage: cannot read the pinned reconciliation blob %s: %s'
+                         % (RECONCILIATION_BLOB[:12], err.decode('utf-8', 'replace')))
+    return json.loads(out.decode('utf-8-sig'))
 
 
 def section2_span(lines):
@@ -152,17 +180,25 @@ def build_records():
     # Independent cross-check: the existing, already-reviewed section-2 parser must agree about the
     # source rows and their LIVE cells. Two derivations agreeing is the reason these numbers are
     # trusted; disagreeing means one of them is wrong and that has to be found out first.
-    tmp = os.path.join(ROOT, '_triage', 'factory_os', '__baseline_probe.md')
-    io.open(tmp, 'w', encoding='utf-8', newline='\n').write(text)
+    #
+    # /scrutinize: this used to write `_triage/factory_os/__baseline_probe.md` -- a FIXED name
+    # INSIDE the repo, 17 times per suite run. A crash left it behind as untracked litter, and two
+    # lanes running at once would delete each other's copy mid-read. This repo has real history of
+    # exactly that (memory `shared-worktree-concurrent-writers`). It is a private temp dir now.
+    # parse_section2 takes a path and cannot be changed to take text: check_s2a_migration.py is
+    # inside attestation bundle aaa5998d, so editing it would void the owner's approval.
+    probedir = tempfile.mkdtemp(prefix='s2baseline_')
     try:
+        tmp = os.path.join(probedir, 'baseline.md')
+        io.open(tmp, 'w', encoding='utf-8', newline='\n').write(text)
         parsed = chk.parse_section2(tmp)
     finally:
-        os.remove(tmp)
+        shutil.rmtree(probedir, ignore_errors=True)
     if parsed is None or len(parsed) != len(rows):
         raise SystemExit('gen_coverage: parse_section2 sees %s rows, this generator sees %s'
                          % (None if parsed is None else len(parsed), len(rows)))
 
-    recon = json.load(io.open(os.path.join(ROOT, RECONCILIATION_PATH), encoding='utf-8'))
+    recon = baseline_reconciliation()
     by_row = {}
     for m in recon['mapping']:
         by_row.setdefault(m['source_row'], []).extend(m['cells'])
@@ -236,9 +272,14 @@ def load_store(path=None):
     return section, records
 
 
-def render(path=None):
-    """The section-2 block this store owns, as the exact list of lines to splice into the file."""
-    section, records = load_store(path)
+def render_from(section, records):
+    """The section-2 block this store owns, as the exact list of lines to splice into the file.
+
+    ONE implementation. /scrutinize found this algorithm written twice -- here and in
+    check_coverage_transfer.render_from -- differing only by namespace prefix, which is precisely
+    the duplication the A8 downgrade design argues against ("a rule written twice will disagree
+    with itself"). The checker now calls this.
+    """
     out = [section['heading'], '']
     out.extend(SECTION_BANNER)
     out.append('')
@@ -253,6 +294,11 @@ def render(path=None):
     out.append('---')
     out.append('')
     return out
+
+
+def render(path=None):
+    section, records = load_store(path)
+    return render_from(section, records)
 
 
 def apply_to_backlog(path=None):

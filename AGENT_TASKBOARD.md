@@ -103,7 +103,31 @@
 
 ---
 
-## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `OPEN` · ⛔ **blocks `ORDER-610` from closing** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `PARTIAL — 6 of 8 audit findings CLOSED; D1/D2/D3 held for the owner` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — **every Codex finding that does not touch the attestation bundle is fixed, each with a fixture that was RED first**
+>
+> | # | finding | fix | fixture |
+> |---|---|---|---|
+> | **S3** | 🔴 `normalize()` accepted the notice **inside an HTML comment** — rendered notice gone, checker 0 problems | `strip_invisible()` removes `<!-- … -->` across line boundaries **before** the notice is searched for. A check about what a **human sees** must run on what Markdown **renders**, not on source bytes | hidden-in-comment ⇒ RED · **+ CONTROL:** an unrelated comment beside a *visible* notice stays GREEN, so the fix does not over-reach |
+> | **P1** | store's structured facts unguarded: wrong `source_coordinates.file` · root `"outcome":"DEAD"` · `declared_status` swapped for another **allowed** value — all passed | A2 now compares the **whole cell dict** against the reviewed evidence, not `(cell, source_token)` · A3 became a **closed shape** (`RECORD_KEYS`/`CELL_KEYS`/`COORD_KEYS`) instead of a name **blacklist** — *"is this a field this store may have at all?"* rather than *"is this one of the bad names I thought of?"* | all 3 of Codex's probes ⇒ RED, + an undeclared key inside `source_coordinates` |
+> | **S1** | `read_input()` falls back to the working tree ⇒ could approve **bytes absent from the commit**. **Zero fixtures existed** | a mixed pair is a **TOOL FAILURE**, not a rejection — there is no reading of it that means anything | 3 cases via an injected `_git`: both-indexed GREEN · store missing ⇒ refuse · backlog missing ⇒ refuse |
+> | **S2** | A2's "immutable" baseline was **mixed-vintage** (pinned blob + working-tree reconciliation) | reconciliation pinned by its **own blob** `1fff12ce` | — |
+> | **S5** | `a4_deterministic()` **tautological** — same objects, same function, twice | **A4 DELETED.** See below | its promised perturbation fixture moved to **A1**, where it can fire |
+> | **P5** | *"every commit revertible in isolation"* was **false** | corrected in the brief by **appending**, so the document Codex reviewed stays legible | — |
+>
+> 🔎 **S2 could not be fixed the obvious way, and the reason is a fact worth keeping:** the plan was *"read both halves of the baseline from `BASELINE_COMMIT`"*. **Measured: the reconciliation did not exist at `a7960e08`** — that commit predates the entire S2a work — so one-commit sourcing is not inconvenient here, it is **impossible**. Pinned by blob instead, and the two halves are pinned *differently* on purpose, which the constant now says out loud.
+>
+> 🔎 **Why A4 was deleted rather than repaired.** Codex's fix was "call the generator instead of the checker's copy of the renderer". But `/scrutinize` had already found those two renderers were **the same algorithm written twice**, and the right fix for *that* was to delete the copy and delegate. With **one** implementation, *"the generator and the checker agree"* is true by construction and A4 has **no content left at all**. What it was reaching for is already A1's body comparison, which reads committed bytes from the index and has fixtures that redden. **Keeping a criterion that restates another one in a form that cannot fail is worse than not having it — it reads as coverage.**
+>
+> 🔧 **Also fixed here, from `/scrutinize` rather than from Codex:** `gen_coverage.py` wrote a **fixed-name temp file inside the repo** 17× per suite run (crash ⇒ untracked litter; two lanes ⇒ they delete each other's copy — memory `shared-worktree-concurrent-writers`) → private temp dir · and the duplicated renderer above.
+>
+> 🔧 **`says=[{}]` (Codex S4) closed in `run_schema_fixtures.py`:** `_err_matches(err, {})` iterates zero conditions and returns True, so an empty spec matched the first error of **any** failing instance while `entity_coverage` only checked the list was non-empty. `spec_is_discriminating()` now requires a `says` to name **where** or **what**; a spec carrying only `schemaPath_startswith` is provenance with no claim. **Permanent control:** a real passing case is temporarily given `says=[{}]` and must be refused.
+>
+> **Suite: 20 mutations · 3 controls · 36 assertions total** — counted from the run output this time, after Codex caught two hand-typed counts that were wrong (14≠18, 11≠12).
+>
+> ### 🔻 Still held for the owner — `D1` · `D2` · `D3`
+> Unchanged and deliberate: they edit `check_s2a_attestation.py`, which is **inside its own `bundle_sha256`**, so landing them **voids both attestation lines** and the S2a gate goes red until the owner re-records. `ORDER-610` stays `BLOCKED` until then. The A8 downgrade is therefore still present — **`D3` deletes it, and that deletion is the point of the remaining half.**
 
 > **Owner directive 2026-07-31:** *"Option B ให้ Claude เขียนเป็น Order แยกภายหลัง"* — written after the consolidated Codex audit was judged, as instructed.
 

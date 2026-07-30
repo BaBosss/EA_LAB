@@ -100,6 +100,26 @@ def read_input(relpath, worktree=False):
     return io.open(full, encoding='utf-8-sig').read().replace('\r\n', '\n'), 'worktree'
 
 
+HTML_COMMENT = re.compile(r'<!--.*?-->', re.S)
+
+
+def strip_invisible(text):
+    """Remove what Markdown does not render, before looking for a notice meant to be READ.
+
+    Codex audit, Standards 3, REPRODUCED here before accepting: wrapping the top banner in
+    `<!-- ... -->` made the rendered notice disappear while the checker returned 0 problems --
+    the owner's condition 1 defeated by the exact mechanism memory
+    `guard-disarmed-by-prose-reported-as-note` already records (an HTML comment under a table
+    header made a ledger guard parse 0 rows and report NOTE). A known scar, repeated in the file
+    written to stop a reader being told something untrue.
+
+    The rule this encodes: a check about what a HUMAN sees must be evaluated on what Markdown
+    RENDERS, not on the source bytes. Comments are removed across line boundaries, because that is
+    how a multi-line banner would be hidden.
+    """
+    return HTML_COMMENT.sub(' ', text)
+
+
 def normalize(s):
     return re.sub(r'\s+', ' ', s.replace('`', '').replace('*', '')).strip().lower()
 
@@ -127,25 +147,18 @@ def load_store_text(text):
 
 
 def render_from(section, records):
-    out = [section['heading'], '']
-    out.extend(gen.SECTION_BANNER)
-    out.append('')
-    out.append(gen.join_row(section['header_columns']))
-    out.append('|' + '---|' * len(section['header_columns']))
-    for r in records:
-        out.append(gen.join_row(r['source_columns']))
-    out.append('')
-    if section.get('note'):
-        out.append(section['note'])
-        out.append('')
-    out.append('---')
-    out.append('')
-    return out
+    """Delegates. /scrutinize found this algorithm written twice, differing only by namespace
+    prefix -- the same duplication the A8 downgrade design argues against. One implementation,
+    in the generator, so the checker cannot drift away from what `--apply` actually writes."""
+    return gen.render_from(section, records)
 
 
 # --------------------------------------------------------------------------- criteria
 
 def a1_banner_and_body(backlog_text, section, records, problems):
+    # The BODY comparison uses the raw text -- it must match the generator byte for byte, and a
+    # comment inserted into it is a difference the generator did not produce, so A5 catches it.
+    # The NOTICE search uses the rendered view: see strip_invisible.
     lines = backlog_text.split('\n')
     span = gen.section2_span(lines)
     if span is None:
@@ -157,8 +170,8 @@ def a1_banner_and_body(backlog_text, section, records, problems):
     body_is_generated = (body == want)
 
     header_region = lines[:next((i for i, l in enumerate(lines) if HEADING_RE.match(l)), len(lines))]
-    banner_ok = any(PHRASE in normalize(l) for l in header_region)
-    section_ok = any(PHRASE in normalize(l) for l in body)
+    banner_ok = PHRASE in normalize(strip_invisible('\n'.join(header_region)))
+    section_ok = PHRASE in normalize(strip_invisible('\n'.join(body)))
 
     # A1 first half, over the GENERATOR rather than over the file. The first fixture written for
     # this criterion proved the file-side version unreachable: the section-2 notice is emitted by
@@ -212,12 +225,25 @@ def a2_covers_the_hand_table(section, records, problems):
             if i >= len(got) or got[i] != col:
                 problems.append('A2 row %r column %s lost or altered. baseline=%r store=%r'
                                 % (ea, i, col, got[i] if i < len(got) else '<missing>'))
-        have = {(c.get('cell'), c.get('source_token')) for c in (r.get('cells') or [])}
+        # Codex audit P1: this compared only (cell, source_token), so every OTHER field of an
+        # imported cell was unguarded -- source_coordinates could name file "WRONG", and a
+        # declared_status could be swapped for a different allowed value, both silently. An
+        # imported cell is a TRANSCRIPTION of reviewed evidence; the whole record must match it,
+        # not the two fields that happen to be its identity.
+        have = {(c.get('cell'), c.get('source_token')): c for c in (r.get('cells') or [])}
         for c in b['cells']:
             key = (c.get('cell'), c.get('source_token'))
-            if key not in have:
+            got = have.get(key)
+            if got is None:
                 problems.append('A2 row %r lost cell %r (source_token=%r)'
                                 % (ea, c.get('cell'), c.get('source_token')))
+                continue
+            for k in sorted(set(c) | set(got)):
+                if c.get(k) != got.get(k):
+                    problems.append('A2 row %r cell %r field %r was altered in the move. '
+                                    'reviewed=%r store=%r -- an imported cell transcribes evidence '
+                                    'the owner approved; it is not a field this file may revise.'
+                                    % (ea, c.get('cell'), k, c.get(k), got.get(k)))
         b_live = set(b.get('live_cells') or [])
         r_live = set(r.get('live_cells') or [])
         for lc in b_live - r_live:
@@ -256,9 +282,43 @@ def _walk_keys(obj, path=''):
                 yield kk
 
 
-def a3_no_verdict(records, problems, allowed_status):
+# Codex audit P1: A3 was a BLACKLIST of key names, so a root field the list did not anticipate --
+# it used `"outcome": "DEAD"` -- carried a verdict straight through. A blacklist answers "is this
+# one of the bad names I thought of?"; the question that matters is "is this a field this store is
+# allowed to have at all?". These are closed sets. Adding a field is a reviewable edit here, which
+# is the point: the store's shape stops being whatever anyone last wrote into it.
+RECORD_KEYS = {'ea', 'imported_from', 'source_columns', 'live_cells', 'cells'}
+IMPORTED_FROM_KEYS = {'file', 'section', 'blob', 'commit', 'row_index'}
+CELL_KEYS = {'cell', 'column', 'status', 'declared_status', 'source_token', 'source_coordinates',
+             'why_unverified'}
+COORD_KEYS = {'column_index', 'file', 'section', 'source_row'}
+SECTION_KEYS = {'heading', 'header_columns', 'note'}
+
+
+def _closed(obj, allowed, where, problems):
+    if not isinstance(obj, dict):
+        problems.append('A3 %s is %s, expected an object' % (where, type(obj).__name__))
+        return
+    extra = sorted(set(obj) - allowed)
+    if extra:
+        problems.append('A3 %s carries undeclared field(s) %s. This store has a CLOSED shape -- a '
+                        'field nothing declared is a fact nothing validates, and the audit reached '
+                        'straight through the old name-blacklist with a root "outcome": "DEAD".'
+                        % (where, extra))
+
+
+def a3_closed_shape_and_no_verdict(section, records, problems, allowed_status):
+    _closed(section, SECTION_KEYS, '_section', problems)
     for r in records:
         ea = r.get('ea')
+        _closed(r, RECORD_KEYS, 'row %r' % ea, problems)
+        _closed(r.get('imported_from') or {}, IMPORTED_FROM_KEYS,
+                'row %r imported_from' % ea, problems)
+        for c in (r.get('cells') or []):
+            _closed(c, CELL_KEYS, 'row %r cell %r' % (ea, c.get('cell')), problems)
+            if 'source_coordinates' in c:
+                _closed(c['source_coordinates'], COORD_KEYS,
+                        'row %r cell %r source_coordinates' % (ea, c.get('cell')), problems)
         for key, where in _walk_keys(r):
             if str(key).strip().lower() in FORBIDDEN_KEYS:
                 problems.append('A3 row %r carries the field %r at %s. A coverage store records '
@@ -285,11 +345,21 @@ def a3_no_verdict(records, problems, allowed_status):
                                 % (ea, c.get('cell'), ds, ', '.join(sorted(allowed_status))))
 
 
-def a4_deterministic(section, records, problems):
-    once = render_from(section, records)
-    twice = render_from(section, records)
-    if once != twice:
-        problems.append('A4 rendering is not deterministic -- two renders of the same store differ')
+# A4 IS DELETED, and that is the fix rather than a gap.
+#
+# Codex audit, Standards 5, was right that it was tautological: it rendered the same in-memory
+# objects twice through the same function and asserted they were equal -- a pure function of
+# unchanged inputs, which cannot fail. The obvious repair was to make it call the GENERATOR instead
+# of the checker's copy of the renderer. But /scrutinize had already found that those two renderers
+# were the same algorithm written twice, and the right fix for THAT was to delete the copy and
+# delegate. With one implementation, "the generator and the checker agree" is true by construction
+# and A4 has no content left at all.
+#
+# What A4 was reaching for -- section 2 must BE what the generator produces from the store -- is
+# already A1's body comparison, which reads the committed bytes from the git index and has
+# fixtures that redden when the store is perturbed. Keeping a second criterion that restates it in
+# a form that cannot fail is worse than having one: it reads as coverage. ORDER-610's promised
+# perturbation fixture is now attached to A1, where it can actually fire.
 
 
 STALE_PIN_LINE = re.compile(
@@ -367,6 +437,21 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     else:
         info['coverage_source'] = 'injected'
 
+    # Codex audit, Standards 1: read_input falls back to the working tree for a path absent from
+    # the index, so a verdict could be reached on ONE input that is being committed and ANOTHER
+    # that is not. During the transfer that meant staging MASTER_BACKLOG.md while coverage.jsonl
+    # was still untracked would have approved bytes absent from the commit.
+    #
+    # There is no reading of a mixed pair that is safe to interpret, so this is a TOOL FAILURE, not
+    # a rejection: the checker cannot see one coherent state. (It was legitimate exactly once --
+    # the first generation, when the store did not exist yet -- and that moment is past.)
+    sources = {info['backlog_source'], info['coverage_source']}
+    if len(sources) > 1 and 'injected' not in sources:
+        raise ToolFailure(
+            'mixed-vintage read: %s came from the %s and %s from the %s. One of them is not what '
+            'a commit would contain, and no verdict over that pair means anything.'
+            % (BACKLOG_PATH, info['backlog_source'], COVERAGE_PATH, info['coverage_source']))
+
     try:
         recon = json.load(io.open(os.path.join(ROOT, RECON_PATH), encoding='utf-8'))
     except (IOError, ValueError) as exc:
@@ -379,8 +464,7 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     advisories = []
     info['body_is_generated'] = a1_banner_and_body(backlog_text, section, records, problems)
     info['baseline'] = a2_covers_the_hand_table(section, records, problems)
-    a3_no_verdict(records, problems, allowed_status)
-    a4_deterministic(section, records, problems)
+    a3_closed_shape_and_no_verdict(section, records, problems, allowed_status)
     if not skip_a8:
         # "transfer in place" is the A1+A2 verdict, not a separate belief: the exemption below is
         # only admissible when the change the stale pin reports is provably the approved one.
