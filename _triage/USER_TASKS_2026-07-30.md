@@ -61,6 +61,37 @@ worked for audit 6: all 8 findings reproduced before being fixed, and a self-rev
 
 ---
 
+## 1b. Send audit 8 — the narrow follow-up (do this INSTEAD of re-sending audit 7 if 7 is already done)
+
+Audit 7 came back **NOT DONE** and was right; its blocker and every finding are fixed (`caf9f18c`), and
+the remainder became `ORDER-602`, now built (`ea44077e`). **Brief 8 is much shorter and targets only what
+audit 7 could not have seen:** `_triage/factory_os/CODEX_AUDIT8_BRIEF.md`
+
+### Paste this into Codex
+
+```
+Read D:\EA_LAB\_triage\factory_os\CODEX_AUDIT8_BRIEF.md and follow it exactly.
+
+This is a code-quality review of data-validation scripts and the data files they validate,
+all inside this one repository. No security dimension, no external system, no third party.
+Where the brief asks for a constructed input, that is negative testing: does a conformance
+checker accept inputs that satisfy its letter while failing the specification's intent?
+
+Write your report to exactly one file: _triage/factory_os/CODEX_AUDIT8_2026-07-30.md.
+Everything else is read-only — stage nothing, commit nothing, and do not run `git add -A`
+or `git stash`; the working tree has unrelated modified files from other work.
+```
+
+**Why it is worth one more pass, in one line:** `s2a_signoff.jsonl` is a **brand-new trust boundary — a
+signature artifact — designed, built and self-reviewed by the same seat whose work it signs off.** Every
+round so far, the outside reviewer found a class my own review did not: audit 7 found a *composition* of
+six criteria that passed while all 29 single-field checks were green.
+
+**What it should NOT re-review:** the three stale `all_clear` design lines and the seven false
+`x-enforced-by` names — accepted from audit 7, routed to `ORDER-601` / `BACKLOG-D31`, mechanical.
+
+---
+
 ## 2. Sign or refuse the Coverage edge — `ORDER-600`
 
 **This is the decision the whole S2a slice exists to put in front of you, and it blocks slice S2.**
@@ -103,12 +134,30 @@ headline question is precisely whether the "nothing reads §2" claim holds.
 > mean changing **the evidence, the acceptance rule, and the generator in one commit** — and afterwards
 > nothing could tell "the owner approved" apart from "the author weakened the guard".
 >
-> **Codex's verdict: a sign-off deadlock, not a safeguard.** Accepted. The fix is to stop putting the
-> decision inside the proposal: an **append-only sign-off artifact** keyed by
-> `proposal_sha256 · current_owner · decision · signer · decided_at · reason`, which lets `APPROVED` be
-> recorded with **no checker edit at all** and gives C6 a real owner-level rule to enforce.
-> **Tracked as `ORDER-602`. Please do not hand-approve until it lands** — it is a small piece of work and
-> it removes the need to touch any guard to say yes.
+> **Codex's verdict: a sign-off deadlock, not a safeguard.** Accepted — and **`ORDER-602` has now landed
+> (`ea44077e`), so the deadlock is gone.**
+
+### ✅ How to record your decision now — one appended line, no guard touched
+
+```bash
+tools\python312\python.exe _triage\factory_os\check_s2a_signoff.py --template
+```
+
+That prints a ready-made line with the current `proposal_sha256` already filled in. Append it to
+`_triage/factory_os/s2a_signoff.jsonl`, edit `decision` / `decided_at` / `reason`, commit.
+
+**Nothing else changes** — not `check_s2a_migration.py`, not `gen_s2a_migration.py`, not
+`s2a_migration.jsonl`. C2 still refuses `APPROVED` inside D1, which is the guard that stops *Claude*
+self-approving, and it stays armed. Validate any time with:
+
+```bash
+tools\python312\python.exe _triage\factory_os\check_s2a_signoff.py
+```
+
+An empty or partial log is **not** an error — it means you have not decided yet, and it never reports
+`ORDER-600` complete. If a cited file has changed since the proposal was pinned, signing that owner is
+**blocked** until it is re-pinned, or until you add `"stale_pin_acknowledged": true` to record that you
+signed anyway.
 
 ---
 
