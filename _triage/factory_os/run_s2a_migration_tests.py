@@ -297,12 +297,31 @@ def advisory_part():
     rows, _ = load_real()
     bad = 0
 
-    quiet = chk.pin_vintage_notes(rows)
-    print('  [%s] CONTROL the real D1 is pinned current -> no notes'
-          % ('OK ' if not quiet else 'BAD'))
+    # CONTROL, built to be state-INDEPENDENT. The first version asserted "the real D1 produces no
+    # notes", which failed the moment a commit touched AGENT_TASKBOARD.md -- a file two rows pin and
+    # that changes on every order update. That is the SAME HEAD-tracking false alarm fixed in
+    # gen_s2a_migration.py, reintroduced one layer up in the test: a legitimate, expected repo state
+    # was being treated as a defect. A pinned owner going stale is exactly what the advisory exists
+    # to REPORT, so it must never be what the suite FAILS on.
+    # So the control is synthesised: a row pinned at the blob HEAD actually has right now must draw
+    # no note, whatever else is true of the repo.
+    probe_path = 'MASTER_BACKLOG.md'
+    live_blob = os.popen('git rev-parse HEAD:%s' % probe_path).read().strip()
+    current_row = [{'entity': 'SyntheticCurrentRow',
+                    'owner_ref': {'path': probe_path, 'commit_oid': 'HEAD',
+                                  'blob_oid': live_blob, 'raw_sha256': 'x' * 64}}]
+    quiet = chk.pin_vintage_notes(current_row)
+    print('  [%s] CONTROL a row pinned at HEAD\'s actual blob for %s -> no note'
+          % ('OK ' if not quiet else 'BAD', probe_path))
     if quiet:
         print('        -> unexpectedly said: %s' % quiet[:2])
         bad += 1
+    # ...and report, without judging, whatever the real file currently says. This is INFORMATION, not
+    # an assertion: a stale pin here is a legitimate state.
+    live_notes = chk.pin_vintage_notes(rows)
+    print('  [--- ] FYI the real D1 currently draws %d advisory note(s)%s'
+          % (len(live_notes), (': ' + '; '.join(n.split(' -- ')[0] for n in live_notes))
+             if live_notes else ''))
 
     # A stale-but-valid pin: point a row at an OLDER blob of the same file that still resolves.
     # Found the DETERMINISTIC way -- walk the file's own revisions and take the first blob that

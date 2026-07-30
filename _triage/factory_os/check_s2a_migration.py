@@ -356,6 +356,13 @@ def pin_vintage_notes(rows):
     the --check fix removed. But it must not be silent either, because the judgement columns cite
     specific line numbers (`scripts/check_state.ps1:124`), and a citation into a file that has since
     moved is how a reviewer is quietly misled. So: counted, named, and printed.
+
+    EXPECTED NOISE, so nobody reads it as a defect: `Hypothesis` and `WorkReceipt` both pin
+    `AGENT_TASKBOARD.md`, which changes on essentially every order update -- so those two notes
+    reappear as soon as anyone touches the board, and that is correct behaviour rather than drift.
+    Re-pin (a plain `gen_s2a_migration.py` run) if the proposal is about to be signed; otherwise
+    ignore them. Do NOT make this a failure to force the issue: the suite's own PART 4 control was
+    first written as "the real D1 draws no notes" and broke immediately for exactly this reason.
     """
     notes = []
     for r in rows:
