@@ -103,7 +103,26 @@
 
 ---
 
-## ORDER-602 — [factory/governance] S2a closure: separate the sign-off from the proposal, and replace the broad UNOWNED escape — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-602 — [factory/governance] S2a closure: separate the sign-off from the proposal, and replace the broad UNOWNED escape — `DONE` (A–E all built; owed an independent re-check) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ A–E BUILT (`ea44077e`) — **the owner can now approve without touching a single guard**
+>
+> | item | what landed |
+> |---|---|
+> | **A** sign-off deadlock | new append-only `_triage/factory_os/s2a_signoff.jsonl` + `check_s2a_signoff.py`, keyed by **sha256 of D1's bytes**. Owner appends **one line**; checker, generator and D1 all untouched, and **C2 keeps refusing `APPROVED` inside D1**. Run `check_s2a_signoff.py --template` for the exact line. |
+> | **B** `UNOWNED` split | 4 states with their own disposition rules — `NO_CURRENT_OWNER` · `NOT_YET_BUILT` · `DERIVED_NOT_PERSISTED` (must TRANSFER) · `TRANSIENT` (must KEEP + derived) |
+> | **C** 3 rationales | narrowed to what their evidence supports — each had reached for a real incident with **the wrong causal bridge** |
+> | **D** pin vintage | **blocks at sign-off**, advisory while drafting; override needs an explicit `stale_pin_acknowledged` on the record |
+> | **E** memoization | HEAD resolved **once to an OID**; run fingerprints its inputs and **aborts (exit 2) rather than reporting a verdict** if they moved |
+>
+> <sub>🔧 **E's first version was itself a false alarm** — it stat'ed `.git/index`, and git rewrites the index during an ordinary commit, so it would have aborted the **pre-commit tier** for a reason unrelated to the data. Caught by a transient exit 2. Now **content-based** (hashes `git ls-files -s`). That is the third time this session a fix produced a false alarm one layer up.</sub>
+>
+> <sub>🔎 **`/scrutinize` of my own A–E then found three more, probed not assumed.** **(1) The same defect class as the blocker I had just fixed:** C8's traceability applied only to non-LIVE cells, and the LIVE-subset check proves the *real* LIVE cells are **present**, never that everything **claiming** LIVE is real ⇒ a fabricated label wearing `status: LIVE` passed untraced. One path closed, its twin left open. **(2)** the sign-off stale-pin gate matched `owner in note` over note **prose**, so a note about `docs/MASTER_BACKLOG.md.bak` would have blocked signing `MASTER_BACKLOG.md` — **a substring standing in for an identity test, the exact weakness that produced audit 7**. Notes are structured now. **(3)** a decision for an `EMBEDDED:` pseudo-owner was accepted and would have counted as "signed" in the tally. All three have cases.</sub>
+>
+> **Cage:** 32 mutations + 5 loader + advisory/drift both directions + 9 sign-off cases, every part with a green control · gate is **7 steps** · **audit 7's original attack input is still refused**.
+>
+> 🔻 **Owed:** an independent re-check, same one-seat reason as ORDER-600/601. **This is the strongest candidate for the next blind audit** — A is a brand-new trust boundary (a signature artifact) written and self-reviewed by one seat.
+
 **bars:** N-A (governance/schema order) · **flat-lot probe:** N-A
 
 **Provenance:** opened 2026-07-30 from **blind audit 7** (`_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`) after its BLOCKER was fixed in `caf9f18c`. Number from lane `S-2026-07-30-S2AD1D2`, block 600-609. **`ORDER-600` cannot close until this does.**
