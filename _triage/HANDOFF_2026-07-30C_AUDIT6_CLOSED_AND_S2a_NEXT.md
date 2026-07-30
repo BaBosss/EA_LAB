@@ -77,7 +77,27 @@ day and declared the board, so the collision guard was warning about a lane that
 
 ## 4. `ORDER-600` — the next piece, and what makes it hard
 
-On the board, `OPEN`, **no work done**. Full spec in the board row and in
+> ⚠️ **UPDATE 2026-07-30 18:4x (`b56be960`) — this section is no longer "no work done".** Two things
+> happened, both before any data was written:
+> - **The acceptance was UNSATISFIABLE and is amended to rev 4.** Three clauses conflicted: every
+>   `current_owner` *and* `proposed_owner` had to exist at HEAD, the Coverage edge row (whose
+>   `proposed_owner` is `factory/coverage.jsonl`) was mandatory, and creating anything under `factory/`
+>   was prohibited. MEASURED: `factory/` does not exist and **11 of 27** entities have an absent
+>   `x-owner-file`; a further **12** are `EMBEDDED` and own no file at all. rev 4: `current_owner` must
+>   exist at HEAD, `proposed_owner` may be a declared `PLANNED_PATHS` future path,
+>   `EMBEDDED:<Parent>` is legal and exempt from pinning.
+> - **D3 (the checker) is built, BEFORE D1.** `_triage/factory_os/check_s2a_migration.py`, nine criteria,
+>   one function each. `--self-test` reconstructs audit 5's null migration and asserts each criterion
+>   fires by name — and it immediately caught a real bug in itself: the all-KEEP guard sat after the
+>   Coverage-edge early `return`, so on the null migration it never ran. It exits **2** (not 0) while D1
+>   is absent, and is deliberately **not** in the fast tier for that reason — wire it with D1, inside
+>   `run_contract_binding_tests.ps1`.
+>
+> **What remains is D1 and D2, and it is the judgement half:** for each of the 27 entities, where the
+> fact lives *today* (a real file at HEAD, or nowhere), and what concretely breaks if it moves or does
+> not. Start by running `--self-test` and then `check_s2a_migration.py` to see the exact shape D1 owes.
+
+On the board, `OPEN`, ~~no work done~~ **spec amended + checker built; D1/D2 outstanding**. Full spec in the board row and in
 `_triage/factory_os/ORDERS_S2a_S3a_DRAFT.md`. In one sentence: `MASTER_BACKLOG.md` §2 owns the coverage
 matrix today; the design proposes `factory/coverage.jsonl` become the machine source with §2 regenerated
 from it, and **this order does not perform that transfer** — it produces the proposal and the migration
