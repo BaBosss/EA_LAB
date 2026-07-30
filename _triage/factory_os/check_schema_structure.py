@@ -18,7 +18,7 @@ unevaluatedProperties inventory. It is kept as a lint, NOT as evidence that the 
 the schema agree. It is deliberately not wired into any hook -- a green run from this file
 means less than it appears to.
 """
-import json, re, sys
+import json, os, re, sys
 
 d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))
 fail = 0
@@ -193,6 +193,69 @@ banned = {
 stale = [(p, why) for p, why in banned.items() if p in both]
 chk(not stale, "no refuted claim survives in the design or CONTRACTS.md (found=%s)"
     % [p for p, _ in stale])
+
+print("\nENFORCEMENT STATUS (Codex audit 7 MAJOR 7: x-enforced-by was false governance state)")
+# The schema used to say every x-enforced-by name MUST exist as validator code. SEVEN of the ten
+# named had no implementation at all, so the field asserted enforcement that did not exist. Splitting
+# it into PLANNED/BUILT/WIRED only helps if the labels are CHECKED -- an unchecked label is the same
+# false claim with more syllables. So each one is verified against the repo here:
+#   PLANNED  the constraint is enforced by NOTHING today; must not name an existing enforcer
+#   BUILT    x-enforcer exists as a real tracked file, but nothing calls it in production
+#   WIRED    BUILT, and the enforcer is actually invoked by a hook or the pre-commit tier
+_STATUSES = ("PLANNED", "BUILT", "WIRED")
+def _invocation_text():
+    """Text where a name appearing means it is RUN -- not merely mentioned.
+
+    First version searched the tier files whole, and that was wrong in the way this whole slice keeps
+    being wrong: `snapshot_validator.py` is listed in run_fast_cages.ps1's $SUITE_GUARDS map as an
+    INPUT that triggers the tier, so a bogus WIRED claim pointing at it passed. Being named in a
+    dependency list is not being invoked. The $SUITE_GUARDS block is therefore cut out before
+    searching, leaving the parts that actually execute things.
+    """
+    text = ""
+    # .githooks/pre-commit is an invocation script end to end -- everything named there is run.
+    if os.path.exists(".githooks/pre-commit"):
+        text += open(".githooks/pre-commit", encoding="utf-8", errors="replace").read()
+    # For the tier files, take ONLY the arrays that are executed. Cutting the $SUITE_GUARDS map out
+    # and keeping the rest was tried first and still passed a bogus WIRED claim, because the same
+    # filename reappears further down in another declaration block. Whitelisting the executed arrays
+    # is decidable; blacklisting prose is not.
+    for path, marker in (("scripts/_test/run_fast_cages.ps1", "$FAST_SUITES"),
+                         ("scripts/_test/run_contract_binding_tests.ps1", "$scripts")):
+        if not os.path.exists(path):
+            continue
+        body = open(path, encoding="utf-8", errors="replace").read()
+        m = re.search(re.escape(marker) + r"\s*=\s*@\((.*?)\n\)", body, re.S)
+        if m:
+            text += m.group(1)
+    return text
+
+
+_wiring = _invocation_text()
+
+_counts = {s: 0 for s in _STATUSES}
+for _name, _body in sorted(d["$defs"].items()):
+    if not isinstance(_body, dict) or not _body.get("x-enforced-by"):
+        continue
+    _st = _body.get("x-enforcement-status")
+    _enf = _body.get("x-enforcer")
+    chk(_st in _STATUSES,
+        "%s declares x-enforcement-status=%r" % (_name, _st))
+    if _st not in _STATUSES:
+        continue
+    _counts[_st] += 1
+    if _st == "PLANNED":
+        chk(not _enf or not os.path.exists(_enf),
+            "%s is PLANNED and names no existing enforcer (a real one would understate it)" % _name)
+    else:
+        chk(bool(_enf) and os.path.exists(_enf),
+            "%s is %s and its x-enforcer %r exists" % (_name, _st, _enf))
+        if _st == "WIRED":
+            chk(bool(_enf) and os.path.basename(_enf) in _wiring,
+                "%s is WIRED and %s is actually invoked by a hook or the tier"
+                % (_name, os.path.basename(_enf or "")))
+print("  PLANNED=%d BUILT=%d WIRED=%d -- only WIRED means the constraint is enforced today"
+      % (_counts["PLANNED"], _counts["BUILT"], _counts["WIRED"]))
 
 print("\n=== %s ===" % ("STRUCTURE OK" if fail == 0 else "%d STRUCTURAL FAILURES" % fail))
 sys.exit(1 if fail else 0)

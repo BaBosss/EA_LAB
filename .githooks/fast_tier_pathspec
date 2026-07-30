@@ -10,6 +10,7 @@ _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/run_contract_binding_tests.py
+_triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_gate.py
 _triage/factory_os/run_s2a_migration_tests.py

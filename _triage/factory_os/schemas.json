@@ -3,7 +3,6 @@
   "$id": "https://ea-lab.local/factory_os/schemas.json",
   "title": "EA LAB Factory OS - entity schemas (DESIGN ONLY, rev 2 after the 2026-07-30 blind audit)",
   "description": "Appendix to _triage/EA_LAB_FACTORY_OS_DESIGN.md. REV 2 answers audit finding P0-1: rev 1 put every schema under $defs with no root type/properties/oneOf, so validating any instance against this FILE accepted almost anything and a slice could have reported 'schema-valid' while no contract ran at all. The root is now a discriminated union on `entity`, so validating against the file itself resolves to exactly one entity schema and unknown shapes are rejected. Every entity also sets unevaluatedProperties:false. Nothing here is implemented; no validator consumes it yet.",
-
   "x-ea-lab-meta": {
     "status": "DESIGN_ONLY",
     "revision": 2,
@@ -14,758 +13,2501 @@
     "validator_contract": [
       "A conforming validator MUST validate each instance against this root, which resolves via `entity` to exactly one $defs schema. Validating against $defs/<Entity> directly is also permitted; validating against the file with no entity discriminator is NOT a conformance claim.",
       "Every entity requires negative fixtures. A schema that has never rejected anything is untested - the same rule this repo applies to guards.",
-      "Constraints stated only in prose in rev 1 (transitions, immutability, permissions, ALL CLEAR) are NOT expressible in JSON Schema. They are marked x-enforced-by and MUST be enforced by the named validator code. A field carrying x-enforced-by is a reminder that the schema does NOT check it."
+      "Constraints stated only in prose in rev 1 (transitions, immutability, permissions, reconciliation) are NOT expressible in JSON Schema. They carry x-enforced-by, and a field carrying it is a reminder that the schema does NOT check it. CORRECTED 2026-07-31 (Codex audit 7 MAJOR 7): this used to say the named validator MUST exist, which made the field false governance state -- 7 of the 10 names had no implementation at all. x-enforcement-status now says which: PLANNED (named, not built - the constraint is enforced by NOTHING today), BUILT (x-enforcer exists and has negative fixtures, but nothing calls it in production), WIRED (BUILT and actually invoked by a hook or the pre-commit tier). Only WIRED means the constraint is enforced. check_schema_structure.py verifies each claim against the repo."
     ],
     "forbidden_everywhere": [
       "verdict text",
       "result narrative",
       "any MUTABLE copy of a fact owned elsewhere - store a pinned reference (path + commit_oid + blob_oid + raw_sha256) instead. Audit finding P0-2: rev 1 stored mutable copies of coverage state, work status, run occurrence and deployment identity, all of which already have owners."
     ],
-
     "contracts": {
       "_why": "BACKLOG-D31. Not every normative contract is a JSON entity. These are the ones that are not, held here so the design's tables can be GENERATED from them instead of retyped. Audit-3 finding #12 (the pilot parity list) is exactly this shape: it was bound to nothing machine-readable, so it drifted freely and no checker could see it.",
-
       "parameter_registry_columns": {
         "_why": "Audit-1 finding #10 REGRESSED because `role` was described as a column of the global registry while the schema put it per-hypothesis in ParameterBinding. Locked-ness is per hypothesis: the same input can be LOCKED in B14-H01 and TUNABLE in B14-H02, and marking it globally makes optimize_guard refuse it on every Boss. This table is the reason a `role` column reappearing here is now a schema change, not a prose edit.",
-        "columns": ["column", "meaning", "scope"],
+        "columns": [
+          "column",
+          "meaning",
+          "scope"
+        ],
         "rows": [
-          {"column": "owner", "meaning": "which module reads this input", "scope": "global"},
-          {"column": "unit_true", "meaning": "what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once", "scope": "global"},
-          {"column": "context", "meaning": "where in the strategy it applies", "scope": "global"},
-          {"column": "active_when", "meaning": "the condition under which this input has any effect at all", "scope": "global"},
-          {"column": "coupled_with", "meaning": "inputs that must move with it or the strategy changes rather than resizes", "scope": "global"},
-          {"column": "causal_question", "meaning": "the question a sweep of this input answers", "scope": "global"},
-          {"column": "classification", "meaning": "OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0)", "scope": "global"},
-          {"column": "display_label", "meaning": "the label the generated Inputs page shows", "scope": "global"},
-          {"column": "enum_name", "meaning": "the enum type when the input is an enum, so a diff table cannot compare a name against a number", "scope": "global"},
-          {"column": "precedence_owner", "meaning": "which sibling wins when an OVERRIDE chain has more than one member set", "scope": "global"},
-          {"column": "role", "meaning": "ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl", "scope": "NOT A COLUMN"}
+          {
+            "column": "owner",
+            "meaning": "which module reads this input",
+            "scope": "global"
+          },
+          {
+            "column": "unit_true",
+            "meaning": "what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once",
+            "scope": "global"
+          },
+          {
+            "column": "context",
+            "meaning": "where in the strategy it applies",
+            "scope": "global"
+          },
+          {
+            "column": "active_when",
+            "meaning": "the condition under which this input has any effect at all",
+            "scope": "global"
+          },
+          {
+            "column": "coupled_with",
+            "meaning": "inputs that must move with it or the strategy changes rather than resizes",
+            "scope": "global"
+          },
+          {
+            "column": "causal_question",
+            "meaning": "the question a sweep of this input answers",
+            "scope": "global"
+          },
+          {
+            "column": "classification",
+            "meaning": "OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0)",
+            "scope": "global"
+          },
+          {
+            "column": "display_label",
+            "meaning": "the label the generated Inputs page shows",
+            "scope": "global"
+          },
+          {
+            "column": "enum_name",
+            "meaning": "the enum type when the input is an enum, so a diff table cannot compare a name against a number",
+            "scope": "global"
+          },
+          {
+            "column": "precedence_owner",
+            "meaning": "which sibling wins when an OVERRIDE chain has more than one member set",
+            "scope": "global"
+          },
+          {
+            "column": "role",
+            "meaning": "ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl",
+            "scope": "NOT A COLUMN"
+          }
         ]
       },
-
       "parity_cases": {
         "_why": "Audit-3 finding #12: the design asserted the pilot uses five parity cases while the list itself had grown to seven. Generating the list from here means the count and the list cannot disagree.",
         "note": "Every case below is judged on ALL SEVEN points of section 5.5 - init result, [CFG] fingerprint, full order request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects, errors - never on the trade list alone. All must pass before any cell's evidence counts.",
-        "columns": ["case", "what it compares", "what it proves"],
+        "columns": [
+          "case",
+          "what it compares",
+          "what it proves"
+        ],
         "rows": [
-          {"case": "1", "what it compares": "wrapper vs parent, compiled defaults, XAUUSD H1", "what it proves": "baseline equivalence"},
-          {"case": "2", "what it compares": "wrapper vs parent, pilot .set, XAUUSD H4", "what it proves": "equivalence under the config the pilot actually runs"},
-          {"case": "2b", "what it compares": "a config that provably opens trades", "what it proves": "a run where both sides open nothing cannot be mistaken for agreement"},
-          {"case": "2c", "what it compares": "_42_RiskPct paired with an SLMode yielding no distance, which MM-SAFETY-001 fails at OnInit", "what it proves": "both sides refuse, for the same reason - parity can tell refused from silent"},
-          {"case": "3", "what it compares": "a locked parameter absent from the wrapper's Inputs page", "what it proves": "absent from the page AND its value provably applied"},
-          {"case": "4", "what it compares": "a locked value changed in the registry, regenerated", "what it proves": "behaviour changes, and parity vs the parent configured the same way still passes - lock is not ignore"},
-          {"case": "5", "what it compares": "delete the generated tree, regenerate from the registry", "what it proves": "byte-identical .mq5 - NOT .ex5, MQL5 compilation is not reproducible, staleness is judged by mtime"}
+          {
+            "case": "1",
+            "what it compares": "wrapper vs parent, compiled defaults, XAUUSD H1",
+            "what it proves": "baseline equivalence"
+          },
+          {
+            "case": "2",
+            "what it compares": "wrapper vs parent, pilot .set, XAUUSD H4",
+            "what it proves": "equivalence under the config the pilot actually runs"
+          },
+          {
+            "case": "2b",
+            "what it compares": "a config that provably opens trades",
+            "what it proves": "a run where both sides open nothing cannot be mistaken for agreement"
+          },
+          {
+            "case": "2c",
+            "what it compares": "_42_RiskPct paired with an SLMode yielding no distance, which MM-SAFETY-001 fails at OnInit",
+            "what it proves": "both sides refuse, for the same reason - parity can tell refused from silent"
+          },
+          {
+            "case": "3",
+            "what it compares": "a locked parameter absent from the wrapper's Inputs page",
+            "what it proves": "absent from the page AND its value provably applied"
+          },
+          {
+            "case": "4",
+            "what it compares": "a locked value changed in the registry, regenerated",
+            "what it proves": "behaviour changes, and parity vs the parent configured the same way still passes - lock is not ignore"
+          },
+          {
+            "case": "5",
+            "what it compares": "delete the generated tree, regenerate from the registry",
+            "what it proves": "byte-identical .mq5 - NOT .ex5, MQL5 compilation is not reproducible, staleness is judged by mtime"
+          }
         ]
       }
     }
   },
-
   "type": "object",
-  "required": ["entity"],
+  "required": [
+    "entity"
+  ],
   "properties": {
     "entity": {
       "type": "string",
       "description": "Discriminator. Every persisted instance carries it, including CSV-backed rows.",
       "enum": [
-        "OwnerRef", "Hypothesis", "ParameterBinding", "TestUniverse", "LogicalSymbol",
-        "InstrumentProfile", "CoverageCell", "RunTransition", "RunJournal",
-        "EvidenceRef", "CandidateManifest",
-        "MagicAllocation", "DeploymentAttestationEvent", "WorkReceipt", "SystemFinding",
-        "IdeaRef", "ControlRoomSnapshotV5", "SnapshotBuilderInput", "SafeProjection"
+        "OwnerRef",
+        "Hypothesis",
+        "ParameterBinding",
+        "TestUniverse",
+        "LogicalSymbol",
+        "InstrumentProfile",
+        "CoverageCell",
+        "RunTransition",
+        "RunJournal",
+        "EvidenceRef",
+        "CandidateManifest",
+        "MagicAllocation",
+        "DeploymentAttestationEvent",
+        "WorkReceipt",
+        "SystemFinding",
+        "IdeaRef",
+        "ControlRoomSnapshotV5",
+        "SnapshotBuilderInput",
+        "SafeProjection"
       ]
     }
   },
   "oneOf": [
-    { "properties": { "entity": { "const": "OwnerRef" } },                   "$ref": "#/$defs/OwnerRef" },
-    { "properties": { "entity": { "const": "Hypothesis" } },                 "$ref": "#/$defs/Hypothesis" },
-    { "properties": { "entity": { "const": "ParameterBinding" } },           "$ref": "#/$defs/ParameterBinding" },
-    { "properties": { "entity": { "const": "TestUniverse" } },               "$ref": "#/$defs/TestUniverse" },
-    { "properties": { "entity": { "const": "LogicalSymbol" } },              "$ref": "#/$defs/LogicalSymbol" },
-    { "properties": { "entity": { "const": "InstrumentProfile" } },          "$ref": "#/$defs/InstrumentProfile" },
-    { "properties": { "entity": { "const": "CoverageCell" } },               "$ref": "#/$defs/CoverageCell" },
-    { "properties": { "entity": { "const": "RunTransition" } },              "$ref": "#/$defs/RunTransition" },
-    { "properties": { "entity": { "const": "RunJournal" } },                 "$ref": "#/$defs/RunJournal" },
-    { "properties": { "entity": { "const": "EvidenceRef" } },                "$ref": "#/$defs/EvidenceRef" },
-    { "properties": { "entity": { "const": "CandidateManifest" } },          "$ref": "#/$defs/CandidateManifest" },
-    { "properties": { "entity": { "const": "MagicAllocation" } },            "$ref": "#/$defs/MagicAllocation" },
-    { "properties": { "entity": { "const": "DeploymentAttestationEvent" } }, "$ref": "#/$defs/DeploymentAttestationEvent" },
-    { "properties": { "entity": { "const": "WorkReceipt" } },                "$ref": "#/$defs/WorkReceipt" },
-    { "properties": { "entity": { "const": "SystemFinding" } },              "$ref": "#/$defs/SystemFinding" },
-    { "properties": { "entity": { "const": "IdeaRef" } },                    "$ref": "#/$defs/IdeaRef" },
-    { "properties": { "entity": { "const": "ControlRoomSnapshotV5" } },      "$ref": "#/$defs/ControlRoomSnapshotV5" },
-    { "properties": { "entity": { "const": "SnapshotBuilderInput" } },       "$ref": "#/$defs/SnapshotBuilderInput" },
-    { "properties": { "entity": { "const": "SafeProjection" } },             "$ref": "#/$defs/SafeProjection" }
+    {
+      "properties": {
+        "entity": {
+          "const": "OwnerRef"
+        }
+      },
+      "$ref": "#/$defs/OwnerRef"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "Hypothesis"
+        }
+      },
+      "$ref": "#/$defs/Hypothesis"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "ParameterBinding"
+        }
+      },
+      "$ref": "#/$defs/ParameterBinding"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "TestUniverse"
+        }
+      },
+      "$ref": "#/$defs/TestUniverse"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "LogicalSymbol"
+        }
+      },
+      "$ref": "#/$defs/LogicalSymbol"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "InstrumentProfile"
+        }
+      },
+      "$ref": "#/$defs/InstrumentProfile"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "CoverageCell"
+        }
+      },
+      "$ref": "#/$defs/CoverageCell"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "RunTransition"
+        }
+      },
+      "$ref": "#/$defs/RunTransition"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "RunJournal"
+        }
+      },
+      "$ref": "#/$defs/RunJournal"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "EvidenceRef"
+        }
+      },
+      "$ref": "#/$defs/EvidenceRef"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "CandidateManifest"
+        }
+      },
+      "$ref": "#/$defs/CandidateManifest"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "MagicAllocation"
+        }
+      },
+      "$ref": "#/$defs/MagicAllocation"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "DeploymentAttestationEvent"
+        }
+      },
+      "$ref": "#/$defs/DeploymentAttestationEvent"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "WorkReceipt"
+        }
+      },
+      "$ref": "#/$defs/WorkReceipt"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "SystemFinding"
+        }
+      },
+      "$ref": "#/$defs/SystemFinding"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "IdeaRef"
+        }
+      },
+      "$ref": "#/$defs/IdeaRef"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "ControlRoomSnapshotV5"
+        }
+      },
+      "$ref": "#/$defs/ControlRoomSnapshotV5"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "SnapshotBuilderInput"
+        }
+      },
+      "$ref": "#/$defs/SnapshotBuilderInput"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "SafeProjection"
+        }
+      },
+      "$ref": "#/$defs/SafeProjection"
+    }
   ],
-
   "$defs": {
-
     "OwnerRef": {
       "type": "object",
       "description": "The ONLY legal way for a Factory OS artifact to carry a fact owned elsewhere. Pins the owner at a commit so the reference cannot silently drift, exactly as the existing event log does. Rev 1's mutable copies are replaced by this everywhere.",
-      "required": ["entity", "owner_type", "path", "commit_oid", "blob_oid", "raw_sha256"],
+      "required": [
+        "entity",
+        "owner_type",
+        "path",
+        "commit_oid",
+        "blob_oid",
+        "raw_sha256"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "OwnerRef" },
-        "owner_type": { "enum": ["taskboard_order", "scorecard", "project_state", "deployments_csv", "accounts_csv", "attestation_map", "master_backlog", "param_registry", "param_linkage", "intake_queue", "event_log", "evidence_manifest", "session_ledger", "optimization_procedure"] },
-        "path": { "type": "string" },
-        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-        "blob_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-        "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "anchor": { "type": ["string", "null"], "description": "must occur EXACTLY once in the blob and contain no spaces - inherited constraint from the event log utility" }
+        "entity": {
+          "const": "OwnerRef"
+        },
+        "owner_type": {
+          "enum": [
+            "taskboard_order",
+            "scorecard",
+            "project_state",
+            "deployments_csv",
+            "accounts_csv",
+            "attestation_map",
+            "master_backlog",
+            "param_registry",
+            "param_linkage",
+            "intake_queue",
+            "event_log",
+            "evidence_manifest",
+            "session_ledger",
+            "optimization_procedure"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "commit_oid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "blob_oid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "raw_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "anchor": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "must occur EXACTLY once in the blob and contain no spaces - inherited constraint from the event log utility"
+        }
       }
     },
-
     "Hypothesis": {
       "type": "object",
       "x-owner-file": "factory/hypotheses.jsonl",
       "x-writer": "claude|user",
       "x-enforced-by": "hypothesis_validator: status transitions, and the refusal to register without a falsifier",
       "description": "GENUINELY NEW only in part. Audit P0-2: the causal claim, acceptance criteria and execution context of a hypothesis already live in taskboard pre-registration. This entity therefore stores the STRUCTURED, MACHINE-READ fields (identity, architecture digest, module set, coupling) and REFERENCES the taskboard for the prose. It must not restate acceptance criteria.",
-      "required": ["entity", "hypothesis_id", "boss_family", "revision", "architecture_digest", "module_set", "coupling_class", "experimental", "status", "preregistration_ref"],
+      "required": [
+        "entity",
+        "hypothesis_id",
+        "boss_family",
+        "revision",
+        "architecture_digest",
+        "module_set",
+        "coupling_class",
+        "experimental",
+        "status",
+        "preregistration_ref"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "Hypothesis" },
-        "hypothesis_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}$" },
-        "boss_family": { "type": "integer", "minimum": 11, "maximum": 18 },
-        "revision": { "type": "integer", "minimum": 1 },
-        "revision_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
-        "architecture_digest": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). Change here MECHANICALLY forces a new revision." },
-        "module_set": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ModuleUse" } },
-        "coupling_class": { "enum": ["SCALE_INVARIANT", "COUPLED"] },
-        "experimental": { "type": "boolean", "description": "REQUIRED, not defaulted. Audit P1: JSON Schema `default` does not populate a missing field, so a consumer would have read absent as false and let an experimental module reach a promotion path." },
-        "engine_edge": { "type": "boolean" },
-        "status": { "enum": ["DRAFT", "REGISTERED", "WRAPPER_GENERATED", "PARITY_PASSED", "EVIDENCE_IN_PROGRESS", "EVIDENCE_COMPLETE", "AWAITING_VERDICT", "CLOSED"] },
-        "preregistration_ref": { "$ref": "#/$defs/OwnerRef", "description": "the taskboard order that owns the causal claim, falsifier and pre-registered bars. This entity does NOT copy them." },
-        "superseded_by": { "type": ["string", "null"] }
-      }
+        "entity": {
+          "const": "Hypothesis"
+        },
+        "hypothesis_id": {
+          "type": "string",
+          "pattern": "^B(1[1-8])-H[0-9]{2}$"
+        },
+        "boss_family": {
+          "type": "integer",
+          "minimum": 11,
+          "maximum": 18
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "revision_id": {
+          "type": "string",
+          "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$"
+        },
+        "architecture_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{16}$",
+          "description": "hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). Change here MECHANICALLY forces a new revision."
+        },
+        "module_set": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ModuleUse"
+          }
+        },
+        "coupling_class": {
+          "enum": [
+            "SCALE_INVARIANT",
+            "COUPLED"
+          ]
+        },
+        "experimental": {
+          "type": "boolean",
+          "description": "REQUIRED, not defaulted. Audit P1: JSON Schema `default` does not populate a missing field, so a consumer would have read absent as false and let an experimental module reach a promotion path."
+        },
+        "engine_edge": {
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "DRAFT",
+            "REGISTERED",
+            "WRAPPER_GENERATED",
+            "PARITY_PASSED",
+            "EVIDENCE_IN_PROGRESS",
+            "EVIDENCE_COMPLETE",
+            "AWAITING_VERDICT",
+            "CLOSED"
+          ]
+        },
+        "preregistration_ref": {
+          "$ref": "#/$defs/OwnerRef",
+          "description": "the taskboard order that owns the causal claim, falsifier and pre-registered bars. This entity does NOT copy them."
+        },
+        "superseded_by": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-enforcement-status": "PLANNED"
     },
-
     "ModuleUse": {
       "type": "object",
       "description": "A capability token plus the stability of the module behind it. Audit P1: without per-module stability, an EXPERIMENTAL module's evidence could reach a Candidate.",
-      "required": ["token", "module_version", "stability"],
+      "required": [
+        "token",
+        "module_version",
+        "stability"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "token": { "type": "string", "pattern": "^LAB_CAP_[A-Z0-9_]+$" },
-        "module_version": { "type": "string" },
-        "stability": { "enum": ["EXPERIMENTAL", "CERTIFIABLE"] }
+        "token": {
+          "type": "string",
+          "pattern": "^LAB_CAP_[A-Z0-9_]+$"
+        },
+        "module_version": {
+          "type": "string"
+        },
+        "stability": {
+          "enum": [
+            "EXPERIMENTAL",
+            "CERTIFIABLE"
+          ]
+        }
       }
     },
-
     "ParameterBinding": {
       "type": "object",
       "x-owner-file": "factory/parameter_bindings.jsonl",
       "x-writer": "claude",
       "description": "NEW ENTITY answering the audit: rev 1 put role=LOCKED/TUNABLE on the GLOBAL parameter definition, but locked-ness is per hypothesis - the same input can be LOCKED in B14-H01 and TUNABLE in B14-H02. Marking it globally would make optimize_guard refuse it on every Boss. docs/PARAM_REGISTRY.csv keeps permanent semantics (owner/unit/context/active_when); this binds role and locked value per hypothesis revision. The wrapper generator and optimize_guard MUST read the same resolver.",
-      "required": ["entity", "hypothesis_revision", "parameter", "role", "surface", "definition_ref"],
+      "required": [
+        "entity",
+        "hypothesis_revision",
+        "parameter",
+        "role",
+        "surface",
+        "definition_ref"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "ParameterBinding" },
-        "hypothesis_revision": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
-        "parameter": { "type": "string" },
-        "role": { "enum": ["TUNABLE", "RUNTIME", "SIZING", "SAFETY", "LOCKED", "INACTIVE"] },
-        "surface": { "enum": ["OPERATOR", "RESEARCH", "HIDDEN"] },
-        "locked_value": { "description": "required when role=LOCKED; emitted as a const by the generator" },
-        "optimize_stage": { "enum": ["ARCHITECTURE", "SIGNAL", "EXIT", "EXECUTION", "STRESS", "FREEZE", "UNKNOWN"] },
-        "safe_range": {
-          "type": ["object", "null"],
-          "required": ["start", "step", "stop"],
-          "unevaluatedProperties": false,
-          "properties": { "start": { "type": "number" }, "step": { "type": "number" }, "stop": { "type": "number" } }
+        "entity": {
+          "const": "ParameterBinding"
         },
-        "definition_ref": { "$ref": "#/$defs/OwnerRef", "description": "pins the docs/PARAM_REGISTRY.csv row that owns this parameter's permanent semantics" }
+        "hypothesis_revision": {
+          "type": "string",
+          "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$"
+        },
+        "parameter": {
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "TUNABLE",
+            "RUNTIME",
+            "SIZING",
+            "SAFETY",
+            "LOCKED",
+            "INACTIVE"
+          ]
+        },
+        "surface": {
+          "enum": [
+            "OPERATOR",
+            "RESEARCH",
+            "HIDDEN"
+          ]
+        },
+        "locked_value": {
+          "description": "required when role=LOCKED; emitted as a const by the generator"
+        },
+        "optimize_stage": {
+          "enum": [
+            "ARCHITECTURE",
+            "SIGNAL",
+            "EXIT",
+            "EXECUTION",
+            "STRESS",
+            "FREEZE",
+            "UNKNOWN"
+          ]
+        },
+        "safe_range": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "start",
+            "step",
+            "stop"
+          ],
+          "unevaluatedProperties": false,
+          "properties": {
+            "start": {
+              "type": "number"
+            },
+            "step": {
+              "type": "number"
+            },
+            "stop": {
+              "type": "number"
+            }
+          }
+        },
+        "definition_ref": {
+          "$ref": "#/$defs/OwnerRef",
+          "description": "pins the docs/PARAM_REGISTRY.csv row that owns this parameter's permanent semantics"
+        }
       },
       "allOf": [
-        { "if": { "properties": { "role": { "const": "LOCKED" } }, "required": ["role"] },
-          "then": { "required": ["locked_value"] } }
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "LOCKED"
+              }
+            },
+            "required": [
+              "role"
+            ]
+          },
+          "then": {
+            "required": [
+              "locked_value"
+            ]
+          }
+        }
       ]
     },
-
     "TestUniverse": {
       "type": "object",
       "x-owner-file": "factory/universe.jsonl",
       "x-writer": "claude|user",
       "description": "One of the two facts the audit agreed is GENUINELY unowned: a versioned, mandatory symbol x TF set has no canonical artifact today.",
-      "required": ["entity", "universe_version", "kind", "symbols", "timeframes", "created_commit"],
+      "required": [
+        "entity",
+        "universe_version",
+        "kind",
+        "symbols",
+        "timeframes",
+        "created_commit"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "TestUniverse" },
-        "universe_version": { "type": "string", "pattern": "^v[0-9]+$" },
-        "kind": { "enum": ["CORE", "EXPANSION", "PILOT"] },
-        "symbols": { "type": "array", "minItems": 1, "items": { "type": "string" } },
-        "timeframes": { "type": "array", "minItems": 1, "items": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] } },
-        "created_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+        "entity": {
+          "const": "TestUniverse"
+        },
+        "universe_version": {
+          "type": "string",
+          "pattern": "^v[0-9]+$"
+        },
+        "kind": {
+          "enum": [
+            "CORE",
+            "EXPANSION",
+            "PILOT"
+          ]
+        },
+        "symbols": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "timeframes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "M5",
+              "M15",
+              "M30",
+              "H1",
+              "H4",
+              "D1"
+            ]
+          }
+        },
+        "created_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        }
       }
     },
-
     "LogicalSymbol": {
       "type": "object",
       "x-owner-file": "factory/universe.jsonl",
-      "required": ["entity", "logical", "asset_class", "broker_map"],
+      "required": [
+        "entity",
+        "logical",
+        "asset_class",
+        "broker_map"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "LogicalSymbol" },
-        "logical": { "type": "string" },
-        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
-        "broker_map": { "type": "object", "additionalProperties": { "type": "string" }, "description": "lane id -> broker symbol. Real cases: DE40 traded as GER40; USDJPYm/EURUSDm suffixed." },
-        "swap_mode": { "enum": ["POINTS", "INTEREST_CURRENT", "UNKNOWN"], "description": "MEASURED. The tester charges POINTS-mode swap (XAUUSD verified -29.25) but not INTEREST_CURRENT (BTCUSD -14.67%/yr), which must then be deducted post-hoc from measured holding time." }
+        "entity": {
+          "const": "LogicalSymbol"
+        },
+        "logical": {
+          "type": "string"
+        },
+        "asset_class": {
+          "enum": [
+            "FX_MAJOR",
+            "FX_JPY",
+            "GOLD",
+            "SILVER",
+            "CRYPTO",
+            "INDEX",
+            "ENERGY"
+          ]
+        },
+        "broker_map": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "lane id -> broker symbol. Real cases: DE40 traded as GER40; USDJPYm/EURUSDm suffixed."
+        },
+        "swap_mode": {
+          "enum": [
+            "POINTS",
+            "INTEREST_CURRENT",
+            "UNKNOWN"
+          ],
+          "description": "MEASURED. The tester charges POINTS-mode swap (XAUUSD verified -29.25) but not INTEREST_CURRENT (BTCUSD -14.67%/yr), which must then be deducted post-hoc from measured holding time."
+        }
       }
     },
-
     "InstrumentProfile": {
       "type": "object",
       "x-owner-file": "factory/instrument_profiles.jsonl",
       "description": "PARTLY owned already: baseline semantics and starting values live in ea_template/OPTIMIZATION_PROCEDURE_V2.md section 4. This entity owns only the broker/lane mapping layer and pins the rest by reference. Audit P1: a mutable profile string id let profile CONTENT change under a fixed id while a Candidate still looked valid - hence content_hash + version.",
-      "required": ["entity", "profile_id", "profile_version", "content_hash", "layer"],
+      "required": [
+        "entity",
+        "profile_id",
+        "profile_version",
+        "content_hash",
+        "layer"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "InstrumentProfile" },
-        "profile_id": { "type": "string" },
-        "profile_version": { "type": "integer", "minimum": 1 },
-        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "hash of the RESOLVED profile content. Candidates hash this, not the id." },
-        "layer": { "enum": ["ASSET_CLASS", "SYMBOL_OVERRIDE", "BROKER_LANE"] },
-        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
-        "account_unit": { "enum": ["USD", "CENT"] },
-        "values": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
-        "semantics_ref": { "$ref": "#/$defs/OwnerRef" }
+        "entity": {
+          "const": "InstrumentProfile"
+        },
+        "profile_id": {
+          "type": "string"
+        },
+        "profile_version": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "content_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "hash of the RESOLVED profile content. Candidates hash this, not the id."
+        },
+        "layer": {
+          "enum": [
+            "ASSET_CLASS",
+            "SYMBOL_OVERRIDE",
+            "BROKER_LANE"
+          ]
+        },
+        "asset_class": {
+          "enum": [
+            "FX_MAJOR",
+            "FX_JPY",
+            "GOLD",
+            "SILVER",
+            "CRYPTO",
+            "INDEX",
+            "ENERGY"
+          ]
+        },
+        "account_unit": {
+          "enum": [
+            "USD",
+            "CENT"
+          ]
+        },
+        "values": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          }
+        },
+        "semantics_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
       }
     },
-
     "MetricRef": {
       "type": "object",
       "description": "NEW. Audit P1: rev 1's CoverageCell held MAIN and BWD metrics beside ONE lane and ONE data_fingerprint - but the fingerprint includes the window, so MAIN and BWD can never share one. The pair could be filled from different lanes and rendered as if same-lane. Every metric now carries its own provenance.",
-      "required": ["window", "pf", "trades", "dd_pct", "run_id", "lane", "data_fingerprint", "model"],
+      "required": [
+        "window",
+        "pf",
+        "trades",
+        "dd_pct",
+        "run_id",
+        "lane",
+        "data_fingerprint",
+        "model"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "window": { "enum": ["MAIN", "BWD", "HOLDOUT", "OTHER"] },
-        "pf": { "type": "number" },
-        "trades": { "type": "integer", "minimum": 0 },
-        "dd_pct": { "type": "number" },
-        "run_id": { "type": "string" },
-        "lane": { "type": "string" },
-        "data_fingerprint": { "type": "string" },
-        "model": { "type": "integer", "enum": [1, 2, 4] }
+        "window": {
+          "enum": [
+            "MAIN",
+            "BWD",
+            "HOLDOUT",
+            "OTHER"
+          ]
+        },
+        "pf": {
+          "type": "number"
+        },
+        "trades": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dd_pct": {
+          "type": "number"
+        },
+        "run_id": {
+          "type": "string"
+        },
+        "lane": {
+          "type": "string"
+        },
+        "data_fingerprint": {
+          "type": "string"
+        },
+        "model": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            4
+          ]
+        }
       }
     },
-
     "CoverageCell": {
       "type": "object",
       "x-owner-file": "factory/coverage.jsonl",
       "x-writer": "automation for state; claude only for not_applicable_reason",
       "x-enforced-by": "coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited",
       "description": "Audit P0-2: MASTER_BACKLOG.md declares itself owner of the coverage matrix. This entity does NOT replace it - MASTER_BACKLOG section 2 becomes GENERATED from these rows, and the ownership move is recorded in the migration table. Metrics are MetricRefs, never bare numbers.",
-      "required": ["entity", "cell_id", "hypothesis_revision", "logical_symbol", "tf", "universe_version", "state", "metrics", "trial_count"],
+      "required": [
+        "entity",
+        "cell_id",
+        "hypothesis_revision",
+        "logical_symbol",
+        "tf",
+        "universe_version",
+        "state",
+        "metrics",
+        "trial_count"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "CoverageCell" },
-        "cell_id": { "type": "string" },
-        "hypothesis_revision": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
-        "logical_symbol": { "type": "string" },
-        "tf": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] },
-        "universe_version": { "type": "string" },
-        "state": { "enum": ["UNTESTED", "BASELINE_RUN", "PROBE_RUN", "PULSE", "NO_PULSE", "RESCUE_IN_PROGRESS", "EVIDENCE_COMPLETE", "NOT_APPLICABLE", "UNVERIFIED_IMPORT"] },
-        "metrics": { "type": "array", "items": { "$ref": "#/$defs/MetricRef" }, "description": "PF is unrepresentable without trades and dd_pct by construction: two BWD-clearing hosts had 52 and 62 trades at under 2% DD while every failing host had 343-473." },
-        "trial_count": { "type": "integer", "minimum": 0 },
-        "boundary_hit": { "type": "boolean", "description": "true = best result on a grid edge; the cell may NOT be closed until the range is expanded" },
-        "not_applicable_reason": { "type": ["string", "null"] },
-        "backlog_ref": { "$ref": "#/$defs/OwnerRef" }
+        "entity": {
+          "const": "CoverageCell"
+        },
+        "cell_id": {
+          "type": "string"
+        },
+        "hypothesis_revision": {
+          "type": "string",
+          "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$"
+        },
+        "logical_symbol": {
+          "type": "string"
+        },
+        "tf": {
+          "enum": [
+            "M5",
+            "M15",
+            "M30",
+            "H1",
+            "H4",
+            "D1"
+          ]
+        },
+        "universe_version": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "UNTESTED",
+            "BASELINE_RUN",
+            "PROBE_RUN",
+            "PULSE",
+            "NO_PULSE",
+            "RESCUE_IN_PROGRESS",
+            "EVIDENCE_COMPLETE",
+            "NOT_APPLICABLE",
+            "UNVERIFIED_IMPORT"
+          ]
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/MetricRef"
+          },
+          "description": "PF is unrepresentable without trades and dd_pct by construction: two BWD-clearing hosts had 52 and 62 trades at under 2% DD while every failing host had 343-473."
+        },
+        "trial_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "boundary_hit": {
+          "type": "boolean",
+          "description": "true = best result on a grid edge; the cell may NOT be closed until the range is expanded"
+        },
+        "not_applicable_reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "backlog_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
       },
       "allOf": [
-        { "if": { "properties": { "state": { "const": "NOT_APPLICABLE" } }, "required": ["state"] },
-          "then": { "required": ["not_applicable_reason"], "properties": { "not_applicable_reason": { "type": "string", "minLength": 10 } } } }
-      ]
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "NOT_APPLICABLE"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "required": [
+              "not_applicable_reason"
+            ],
+            "properties": {
+              "not_applicable_reason": {
+                "type": "string",
+                "minLength": 10
+              }
+            }
+          }
+        }
+      ],
+      "x-enforcement-status": "PLANNED"
     },
-
     "ExecutionKey": {
       "type": "object",
       "description": "NEW. Audit P1: rev 1's idempotency key did not require the hashes, leverage, deposit, currency or data fingerprint, so a 10,000/1:100 run and a 100,000/1:200 run were indistinguishable and the scheduler would have returned the wrong cached evidence. This is the COMPLETE simulator input identity. Every field is required.",
-      "required": ["expert", "symbol", "tf", "from_date", "to_date", "model", "deposit", "currency", "leverage", "set_hash", "ini_hash", "ex5_hash", "effective_config_hash", "data_fingerprint", "lane"],
+      "required": [
+        "expert",
+        "symbol",
+        "tf",
+        "from_date",
+        "to_date",
+        "model",
+        "deposit",
+        "currency",
+        "leverage",
+        "set_hash",
+        "ini_hash",
+        "ex5_hash",
+        "effective_config_hash",
+        "data_fingerprint",
+        "lane"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "expert": { "type": "string" },
-        "symbol": { "type": "string" },
-        "tf": { "type": "string" },
-        "from_date": { "type": "string" },
-        "to_date": { "type": "string" },
-        "model": { "type": "integer", "enum": [1, 2, 4] },
-        "deposit": { "type": "number" },
-        "currency": { "type": "string" },
-        "leverage": { "type": "integer", "description": "written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op" },
-        "set_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "ini_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "ex5_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "effective_config_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "data_fingerprint": { "type": "string" },
-        "lane": { "type": "string" }
+        "expert": {
+          "type": "string"
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "tf": {
+          "type": "string"
+        },
+        "from_date": {
+          "type": "string"
+        },
+        "to_date": {
+          "type": "string"
+        },
+        "model": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            4
+          ]
+        },
+        "deposit": {
+          "type": "number"
+        },
+        "currency": {
+          "type": "string"
+        },
+        "leverage": {
+          "type": "integer",
+          "description": "written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op"
+        },
+        "set_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "ini_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "ex5_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "effective_config_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "data_fingerprint": {
+          "type": "string"
+        },
+        "lane": {
+          "type": "string"
+        }
       }
     },
-
     "RunAttempt": {
       "type": "object",
       "description": "One append-only record. Audit P1: rev 1 had ONE attempt field and ONE state on the manifest while the design claimed every attempt was kept, and it was not crash-safe. Transitions are now appended, never overwritten.",
-      "required": ["attempt", "transition", "at"],
+      "required": [
+        "attempt",
+        "transition",
+        "at"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "attempt": { "type": "integer", "minimum": 1 },
-        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCH_INTENT", "PROCESS_OBSERVED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
-        "at": { "type": "string" },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transition": {
+          "enum": [
+            "QUEUED",
+            "LEASED",
+            "LAUNCH_INTENT",
+            "PROCESS_OBSERVED",
+            "RUNNING",
+            "COMPLETED",
+            "FAILED",
+            "ABANDONED",
+            "EVIDENCE_REGISTERED"
+          ]
+        },
+        "at": {
+          "type": "string"
+        },
         "lease": {
-          "type": ["object", "null"],
-          "required": ["lease_id", "owner", "expires_at"],
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "lease_id",
+            "owner",
+            "expires_at"
+          ],
           "unevaluatedProperties": false,
           "description": "SELF-REVIEW FIX: rev 3 required `pid` on the lease, but LEASED happens BEFORE any process exists - the lane is reserved first. A schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder. pid moves to process_observed and is not part of the lease.",
           "properties": {
-            "lease_id": { "type": "string" }, "owner": { "type": "string" },
-            "expires_at": { "type": "string", "description": "without an expiry a machine that died holding a lease keeps the lane forever" }
+            "lease_id": {
+              "type": "string"
+            },
+            "owner": {
+              "type": "string"
+            },
+            "expires_at": {
+              "type": "string",
+              "description": "without an expiry a machine that died holding a lease keeps the lane forever"
+            }
           }
         },
-        "launch_intent_at": { "type": ["string", "null"], "description": "written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again." },
+        "launch_intent_at": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again."
+        },
         "process_observed": {
-          "type": ["object", "null"],
-          "required": ["pid", "observed_at"],
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "pid",
+            "observed_at"
+          ],
           "unevaluatedProperties": false,
           "description": "SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable.",
-          "properties": { "pid": { "type": "integer" }, "observed_at": { "type": "string" }, "process_fingerprint": { "type": ["string", "null"] } }
+          "properties": {
+            "pid": {
+              "type": "integer"
+            },
+            "observed_at": {
+              "type": "string"
+            },
+            "process_fingerprint": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
         },
-        "exit_code": { "type": ["integer", "null"], "description": "persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it" },
-        "failure_class": { "enum": ["NONE", "TESTER_ERROR", "TERMINAL_ERROR", "TIMEOUT", "LEASE_LOST", "KILLED", "CONFIG_REJECTED"], "description": "the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR" },
-        "report_fresh_proof": { "type": ["object", "null"] },
-        "event_id": { "type": ["string", "null"], "description": "id returned by the existing event-log append, so a crash between append and EVIDENCE_REGISTERED does not duplicate the occurrence on retry" }
+        "exit_code": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it"
+        },
+        "failure_class": {
+          "enum": [
+            "NONE",
+            "TESTER_ERROR",
+            "TERMINAL_ERROR",
+            "TIMEOUT",
+            "LEASE_LOST",
+            "KILLED",
+            "CONFIG_REJECTED"
+          ],
+          "description": "the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR"
+        },
+        "report_fresh_proof": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "event_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "id returned by the existing event-log append, so a crash between append and EVIDENCE_REGISTERED does not duplicate the occurrence on retry"
+        }
       }
     },
-
     "RunTransition": {
       "type": "object",
       "x-owner-file": "factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only",
       "x-writer": "the scheduler only",
       "x-enforced-by": "scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator",
       "description": "SELF-REVIEW FIX (2026-07-30): rev 3 stored a `RunJournal` OBJECT containing an attempts ARRAY at a path described as one-transition-per-line append-only. Those cannot both be true - appending a transition to an in-object array means rewriting the whole object, which is not append-only, so the crash-safety claim was unsupported by its own storage contract. The PERSISTED entity is this: one transition, one line. `RunJournal` is now a derived read-model that is never written.",
-      "required": ["entity", "run_id", "cell_id", "attempt", "transition", "at"],
+      "required": [
+        "entity",
+        "run_id",
+        "cell_id",
+        "attempt",
+        "transition",
+        "at"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "RunTransition" },
-        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
-        "cell_id": { "type": "string" },
-        "execution_key": { "$ref": "#/$defs/ExecutionKey", "description": "written once, on the QUEUED line" },
-        "attempt": { "type": "integer", "minimum": 1 },
-        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCH_INTENT", "PROCESS_OBSERVED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
-        "at": { "type": "string" },
-        "record": { "$ref": "#/$defs/RunAttempt" },
-        "event_log_ref": { "$ref": "#/$defs/OwnerRef" }
-      }
+        "entity": {
+          "const": "RunTransition"
+        },
+        "run_id": {
+          "type": "string",
+          "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+        },
+        "cell_id": {
+          "type": "string"
+        },
+        "execution_key": {
+          "$ref": "#/$defs/ExecutionKey",
+          "description": "written once, on the QUEUED line"
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transition": {
+          "enum": [
+            "QUEUED",
+            "LEASED",
+            "LAUNCH_INTENT",
+            "PROCESS_OBSERVED",
+            "RUNNING",
+            "COMPLETED",
+            "FAILED",
+            "ABANDONED",
+            "EVIDENCE_REGISTERED"
+          ]
+        },
+        "at": {
+          "type": "string"
+        },
+        "record": {
+          "$ref": "#/$defs/RunAttempt"
+        },
+        "event_log_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
+      },
+      "x-enforcement-status": "PLANNED"
     },
-
     "RunJournal": {
       "type": "object",
       "x-derived": true,
       "x-owner-file": "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.",
       "description": "Read-model only. Realizes EVOLUTION_PLAN section 20.8 Contract B. Occurrence metadata and hashes only - the experiment event log remains the owner of the experiment timeline; this fold owns ONLY scheduler recovery state, which the audit agreed is a genuinely new fact.",
-      "required": ["entity", "run_id", "cell_id", "execution_key", "attempts"],
+      "required": [
+        "entity",
+        "run_id",
+        "cell_id",
+        "execution_key",
+        "attempts"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "RunJournal" },
-        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
-        "cell_id": { "type": "string" },
-        "execution_key": { "$ref": "#/$defs/ExecutionKey" },
-        "attempts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RunAttempt" } },
-        "event_log_ref": { "$ref": "#/$defs/OwnerRef" }
+        "entity": {
+          "const": "RunJournal"
+        },
+        "run_id": {
+          "type": "string",
+          "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$"
+        },
+        "cell_id": {
+          "type": "string"
+        },
+        "execution_key": {
+          "$ref": "#/$defs/ExecutionKey"
+        },
+        "attempts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/RunAttempt"
+          }
+        },
+        "event_log_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
       }
     },
-
     "EvidenceRef": {
       "type": "object",
       "x-owner-file": "docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)",
       "description": "Audit P0-2: rev 1 proposed factory/evidence/index.csv, duplicating an evidence manifest that already exists with its own schema (evidence-v1.schema.json). The Factory OS registers through the EXISTING utility and adds nothing. Known inherited constraints: .ex5 binaries are gitignored and need git add -f; the path pattern forbids parentheses and spaces; tick history uses a committed provenance descriptor.",
-      "required": ["entity", "evidence_id", "kind", "path", "commit_oid", "raw_sha256"],
+      "required": [
+        "entity",
+        "evidence_id",
+        "kind",
+        "path",
+        "commit_oid",
+        "raw_sha256"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "EvidenceRef" },
-        "evidence_id": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" },
-        "kind": { "enum": ["REPORT", "SET", "INI", "EX5", "SOURCE", "DATA_PROVENANCE", "CSV", "OTHER"] },
-        "path": { "type": "string", "pattern": "^[A-Za-z0-9_./\\\\-]+$" },
-        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-        "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+        "entity": {
+          "const": "EvidenceRef"
+        },
+        "evidence_id": {
+          "type": "string",
+          "pattern": "^evd_sha256_[0-9a-f]{64}$"
+        },
+        "kind": {
+          "enum": [
+            "REPORT",
+            "SET",
+            "INI",
+            "EX5",
+            "SOURCE",
+            "DATA_PROVENANCE",
+            "CSV",
+            "OTHER"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_./\\\\-]+$"
+        },
+        "commit_oid": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "raw_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
       }
     },
-
     "CandidatePayload": {
       "type": "object",
       "description": "THE HASHED OBJECT. Audit P1: rev 1 made candidate_id a required member of the object whose hash it was defined to be - id = hash(manifest containing id) has no normal construction, so a team would have hashed a different payload than the validator and quietly disabled the check. The id is now the hash of THIS object, which does not contain it. Also widened per the audit: module set with stability, resolved profile CONTENT hashes, generator/allowlist/source hashes, effective config, and evidence as a list with per-window provenance rather than one lane.",
-      "required": ["hypothesis_revision", "module_set", "logical_symbol", "tf", "parameters", "profiles", "evidence", "ex5_sha256", "source_sha256", "allowlist_sha256", "generator_version", "effective_config_hash", "universe_version", "trial_count", "experimental"],
+      "required": [
+        "hypothesis_revision",
+        "module_set",
+        "logical_symbol",
+        "tf",
+        "parameters",
+        "profiles",
+        "evidence",
+        "ex5_sha256",
+        "source_sha256",
+        "allowlist_sha256",
+        "generator_version",
+        "effective_config_hash",
+        "universe_version",
+        "trial_count",
+        "experimental"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "hypothesis_revision": { "type": "string" },
-        "module_set": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ModuleUse" } },
-        "experimental": { "type": "boolean", "description": "MUST be false for any candidate on a promotion path; the validator additionally resolves every evidence -> run -> module set and fails if any module is not CERTIFIABLE" },
-        "logical_symbol": { "type": "string" },
-        "tf": { "type": "string" },
-        "parameters": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] }, "description": "FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift." },
+        "hypothesis_revision": {
+          "type": "string"
+        },
+        "module_set": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/ModuleUse"
+          }
+        },
+        "experimental": {
+          "type": "boolean",
+          "description": "MUST be false for any candidate on a promotion path; the validator additionally resolves every evidence -> run -> module set and fails if any module is not CERTIFIABLE"
+        },
+        "logical_symbol": {
+          "type": "string"
+        },
+        "tf": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          },
+          "description": "FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift."
+        },
         "profiles": {
           "type": "object",
-          "required": ["instrument", "exit", "sizing", "safety", "execution"],
+          "required": [
+            "instrument",
+            "exit",
+            "sizing",
+            "safety",
+            "execution"
+          ],
           "unevaluatedProperties": false,
           "description": "content hashes, not mutable string ids - otherwise instrument_profiles could change under a fixed id and the candidate would still look valid",
           "properties": {
-            "instrument": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "exit": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "sizing": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "safety": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-            "execution": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            "instrument": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "exit": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "sizing": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "safety": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "execution": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
           }
         },
-        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/MetricRef" }, "description": "per window, each with its own run/lane/fingerprint - MAIN and BWD cannot share a fingerprint and must not be flattened to one" },
-        "ex5_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "source_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "allowlist_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "generator_version": { "type": "string" },
-        "effective_config_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
-        "universe_version": { "type": "string" },
-        "trial_count": { "type": "integer", "minimum": 0 }
+        "evidence": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/MetricRef"
+          },
+          "description": "per window, each with its own run/lane/fingerprint - MAIN and BWD cannot share a fingerprint and must not be flattened to one"
+        },
+        "ex5_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "allowlist_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "generator_version": {
+          "type": "string"
+        },
+        "effective_config_hash": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "universe_version": {
+          "type": "string"
+        },
+        "trial_count": {
+          "type": "integer",
+          "minimum": 0
+        }
       }
     },
-
     "CandidateManifest": {
       "type": "object",
       "x-owner-file": "factory/candidates/<candidate_id>.json",
       "x-writer": "claude, once, at verdict time",
       "x-enforced-by": "candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash.",
-      "required": ["entity", "candidate_id", "candidate_digest", "payload", "scorecard_ref"],
+      "required": [
+        "entity",
+        "candidate_id",
+        "candidate_digest",
+        "payload",
+        "scorecard_ref"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "CandidateManifest" },
-        "candidate_id": { "type": "string", "pattern": "^CAND-[0-9a-f]{12}$", "description": "DISPLAY id = first 12 hex of candidate_digest. Never the hash input." },
-        "candidate_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "full sha256 over the canonical serialization of `payload` - which does not contain it" },
-        "payload": { "$ref": "#/$defs/CandidatePayload" },
-        "scorecard_ref": { "$ref": "#/$defs/OwnerRef", "description": "the verdict TEXT lives in EA_SCORECARD_AND_REGISTRY.md and is never copied here" }
-      }
+        "entity": {
+          "const": "CandidateManifest"
+        },
+        "candidate_id": {
+          "type": "string",
+          "pattern": "^CAND-[0-9a-f]{12}$",
+          "description": "DISPLAY id = first 12 hex of candidate_digest. Never the hash input."
+        },
+        "candidate_digest": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "full sha256 over the canonical serialization of `payload` - which does not contain it"
+        },
+        "payload": {
+          "$ref": "#/$defs/CandidatePayload"
+        },
+        "scorecard_ref": {
+          "$ref": "#/$defs/OwnerRef",
+          "description": "the verdict TEXT lives in EA_SCORECARD_AND_REGISTRY.md and is never copied here"
+        }
+      },
+      "x-enforcement-status": "PLANNED"
     },
-
     "MagicAllocation": {
       "type": "object",
       "x-owner-file": "factory/magic_allocations.jsonl",
       "x-writer": "automation allocates; claude approves; user ratifies scope changes",
       "x-enforced-by": "allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account|magic backstop",
       "description": "USER DECISION 2026-07-30: uniqueness scope moves to GLOBAL, per Grill decision 56. This CONTRADICTS the account|magic invariant currently in PROJECT_STATE.md section 3, so that invariant must be amended by the user in the Decision log before this is built. The audit is correct that the current fleet violates global uniqueness: magics 990103, 991001 and 991002 each appear on two accounts, and 991001 is on real money. Those are recorded as legacy_exception and FROZEN until their judge date - the live fleet is never renumbered as a side effect of adopting this scope. Renumbering, if ever done, is a separate user-approved order.",
-      "required": ["entity", "magic", "scope", "status", "allocated_at_commit"],
+      "required": [
+        "entity",
+        "magic",
+        "scope",
+        "status",
+        "allocated_at_commit"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "MagicAllocation" },
-        "magic": { "type": "integer", "minimum": 1 },
-        "scope": { "enum": ["GLOBAL", "LEGACY_ACCOUNT_SCOPED"], "description": "GLOBAL for everything allocated from now on; LEGACY_ACCOUNT_SCOPED only for the pre-existing collisions" },
-        "legacy_exception": { "type": "boolean", "default": false },
-        "legacy_accounts": { "type": "array", "items": { "type": "string" }, "description": "populated only for legacy exceptions; frozen until judge" },
-        "allocated_to": { "type": ["string", "null"], "description": "candidate_id. Deployment status is NOT copied here - DEPLOYMENTS.csv owns it." },
-        "deployment_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef" },
-        "status": { "enum": ["RESERVED", "ASSIGNED", "RETIRED"], "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals" },
-        "allocated_at_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-        "imported_in_cutover": { "type": "boolean", "description": "RE-AUDIT P1: legacy exceptions are a CLOSED SET imported once, not an open category. Rev 2 let an unlimited number of new LEGACY_ACCOUNT_SCOPED rows be minted, which would have quietly reintroduced account-scoped magics forever. The allocator refuses a legacy row with imported_in_cutover=false after the cutover commit." }
+        "entity": {
+          "const": "MagicAllocation"
+        },
+        "magic": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "scope": {
+          "enum": [
+            "GLOBAL",
+            "LEGACY_ACCOUNT_SCOPED"
+          ],
+          "description": "GLOBAL for everything allocated from now on; LEGACY_ACCOUNT_SCOPED only for the pre-existing collisions"
+        },
+        "legacy_exception": {
+          "type": "boolean",
+          "default": false
+        },
+        "legacy_accounts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "populated only for legacy exceptions; frozen until judge"
+        },
+        "allocated_to": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "candidate_id. Deployment status is NOT copied here - DEPLOYMENTS.csv owns it."
+        },
+        "deployment_ref": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/$defs/OwnerRef"
+        },
+        "status": {
+          "enum": [
+            "RESERVED",
+            "ASSIGNED",
+            "RETIRED"
+          ],
+          "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals"
+        },
+        "allocated_at_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "imported_in_cutover": {
+          "type": "boolean",
+          "description": "RE-AUDIT P1: legacy exceptions are a CLOSED SET imported once, not an open category. Rev 2 let an unlimited number of new LEGACY_ACCOUNT_SCOPED rows be minted, which would have quietly reintroduced account-scoped magics forever. The allocator refuses a legacy row with imported_in_cutover=false after the cutover commit."
+        }
       },
       "allOf": [
-        { "if": { "properties": { "scope": { "const": "LEGACY_ACCOUNT_SCOPED" } }, "required": ["scope"] },
-          "then": {
-            "required": ["legacy_exception", "legacy_accounts", "imported_in_cutover"],
+        {
+          "if": {
             "properties": {
-              "legacy_exception": { "const": true },
-              "legacy_accounts": { "type": "array", "minItems": 2 }
+              "scope": {
+                "const": "LEGACY_ACCOUNT_SCOPED"
+              }
+            },
+            "required": [
+              "scope"
+            ]
+          },
+          "then": {
+            "required": [
+              "legacy_exception",
+              "legacy_accounts",
+              "imported_in_cutover"
+            ],
+            "properties": {
+              "legacy_exception": {
+                "const": true
+              },
+              "legacy_accounts": {
+                "type": "array",
+                "minItems": 2
+              }
             },
             "description": "scope and the exception flags must agree, and a legacy exception exists precisely because the magic is on more than one account"
           },
           "else": {
-            "properties": { "legacy_exception": { "const": false } }
-          } }
-      ]
+            "properties": {
+              "legacy_exception": {
+                "const": false
+              }
+            }
+          }
+        }
+      ],
+      "x-enforcement-status": "WIRED",
+      "x-enforcer": "scripts/check_state.ps1"
     },
-
     "DeploymentAttestationEvent": {
       "type": "object",
       "x-owner-file": "portfolio/ATTESTATION_MAP.csv (EXISTING) + append-only event log",
       "x-writer": "claude|user only",
       "x-enforced-by": "attestation_validator: no actor other than user/claude may append an event that changes candidate_id or status; automation may append OBSERVED events only",
       "description": "Audit P1: rev 1 had a mutable DeploymentAttestation whose candidate_id, state and core revision could be overwritten, so automation could have advanced a deployment to a new revision without the user ever moving the champion. Deployment STATE stays in DEPLOYMENTS.csv; this is an append-only attestation history.",
-      "required": ["entity", "event_id", "account", "magic", "event_type", "at", "actor", "deployment_ref"],
+      "required": [
+        "entity",
+        "event_id",
+        "account",
+        "magic",
+        "event_type",
+        "at",
+        "actor",
+        "deployment_ref"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "DeploymentAttestationEvent" },
-        "event_id": { "type": "string" },
-        "account": { "type": "string" },
-        "magic": { "type": "integer" },
-        "event_type": { "enum": ["OBSERVED", "CANDIDATE_ASSIGNED", "CANDIDATE_REASSIGNED", "ATTEST_STATE_CHANGED", "FROZEN", "RETIRED"] },
-        "at": { "type": "string" },
-        "actor": { "enum": ["user", "claude", "automation"] },
-        "authorization_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef", "description": "REQUIRED for any event that is not OBSERVED - the human decision that authorized it" },
-        "candidate_id": { "type": ["string", "null"] },
-        "attest_state": { "enum": ["HASHED", "PARTIAL", "FILE_MISSING", "UNVERIFIED", null] },
-        "core_revision": { "type": ["string", "null"] },
-        "deployment_ref": { "$ref": "#/$defs/OwnerRef" }
+        "entity": {
+          "const": "DeploymentAttestationEvent"
+        },
+        "event_id": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        },
+        "magic": {
+          "type": "integer"
+        },
+        "event_type": {
+          "enum": [
+            "OBSERVED",
+            "CANDIDATE_ASSIGNED",
+            "CANDIDATE_REASSIGNED",
+            "ATTEST_STATE_CHANGED",
+            "FROZEN",
+            "RETIRED"
+          ]
+        },
+        "at": {
+          "type": "string"
+        },
+        "actor": {
+          "enum": [
+            "user",
+            "claude",
+            "automation"
+          ]
+        },
+        "authorization_ref": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/$defs/OwnerRef",
+          "description": "REQUIRED for any event that is not OBSERVED - the human decision that authorized it"
+        },
+        "candidate_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attest_state": {
+          "enum": [
+            "HASHED",
+            "PARTIAL",
+            "FILE_MISSING",
+            "UNVERIFIED",
+            null
+          ]
+        },
+        "core_revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "deployment_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
       },
       "allOf": [
-        { "if": { "properties": { "event_type": { "not": { "const": "OBSERVED" } } }, "required": ["event_type"] },
-          "then": { "required": ["authorization_ref"], "properties": { "actor": { "enum": ["user", "claude"] } } } }
-      ]
+        {
+          "if": {
+            "properties": {
+              "event_type": {
+                "not": {
+                  "const": "OBSERVED"
+                }
+              }
+            },
+            "required": [
+              "event_type"
+            ]
+          },
+          "then": {
+            "required": [
+              "authorization_ref"
+            ],
+            "properties": {
+              "actor": {
+                "enum": [
+                  "user",
+                  "claude"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "x-enforcement-status": "PLANNED"
     },
-
     "WorkReceipt": {
       "type": "object",
       "x-owner-file": "ops/receipts/*.jsonl (append-only events -> single-writer projection)",
       "x-writer": "PENDING GOVERNANCE CHANGE - see description",
       "x-enforced-by": "receipt_validator: only the user may write CANCELLED_BY_USER",
       "description": "Audit P1 (governance): rev 1 declared the writer as 'any agent', but AGENTS.md section 2 permits an agent to write only its own taskboard order row plus new reports/CSV/sets per order. Opening a new writer surface REQUIRES the user to ratify an AGENTS.md permission-table change FIRST. Audit P0-2 also applies: for work that already has an ORDER, title/status/owner/acceptance are the taskboard's - this entity references them. A Receipt is genuinely new ONLY for a chat commitment that is not yet an Order.",
-      "required": ["entity", "receipt_id", "source_agent", "requested_at"],
+      "required": [
+        "entity",
+        "receipt_id",
+        "source_agent",
+        "requested_at"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "WorkReceipt" },
-        "receipt_id": { "type": "string", "pattern": "^WRK-[0-9]{8}-[0-9]{3}$" },
-        "title": { "type": "string" },
-        "source_agent": { "enum": ["claude", "codex", "automation", "legacy"] },
-        "requested_at": { "type": "string" },
-        "order_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef", "description": "when present, the taskboard owns status/acceptance/owner and this Receipt must NOT restate them" },
-        "owner": { "type": "string" },
-        "status": { "enum": ["CAPTURED", "READY", "IN_PROGRESS", "WAITING", "BLOCKED", "HANDOFF", "DONE_PENDING_REVIEW", "AUDIT_REQUIRED", "AUDIT_IN_PROGRESS", "REWORK", "REVIEWED", "CANCELLED_BY_USER", "STATE_CONFLICT"], "description": "DONE is deliberately absent - DONE is not closed. No AGING/NEGLECTED state exists either." },
-        "next_action": { "type": "string" },
-        "acceptance": { "type": ["string", "null"] },
-        "evidence_refs": { "type": "array", "items": { "type": "string" } },
-        "blocked_by": { "type": "array", "items": { "type": "string" } },
-        "review_required": { "type": "boolean" },
-        "rework_cycles": { "type": "integer", "minimum": 0 },
-        "waiting_for": { "type": ["string", "null"] },
-        "wake_condition": { "type": ["string", "null"] },
-        "handoff_summary": { "type": ["string", "null"] },
-        "cancelled_by_user_ref": { "type": ["string", "null"] }
+        "entity": {
+          "const": "WorkReceipt"
+        },
+        "receipt_id": {
+          "type": "string",
+          "pattern": "^WRK-[0-9]{8}-[0-9]{3}$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "source_agent": {
+          "enum": [
+            "claude",
+            "codex",
+            "automation",
+            "legacy"
+          ]
+        },
+        "requested_at": {
+          "type": "string"
+        },
+        "order_ref": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "$ref": "#/$defs/OwnerRef",
+          "description": "when present, the taskboard owns status/acceptance/owner and this Receipt must NOT restate them"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "CAPTURED",
+            "READY",
+            "IN_PROGRESS",
+            "WAITING",
+            "BLOCKED",
+            "HANDOFF",
+            "DONE_PENDING_REVIEW",
+            "AUDIT_REQUIRED",
+            "AUDIT_IN_PROGRESS",
+            "REWORK",
+            "REVIEWED",
+            "CANCELLED_BY_USER",
+            "STATE_CONFLICT"
+          ],
+          "description": "DONE is deliberately absent - DONE is not closed. No AGING/NEGLECTED state exists either."
+        },
+        "next_action": {
+          "type": "string"
+        },
+        "acceptance": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "blocked_by": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "review_required": {
+          "type": "boolean"
+        },
+        "rework_cycles": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "waiting_for": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "wake_condition": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "handoff_summary": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "cancelled_by_user_ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
       },
       "allOf": [
-        { "if": { "required": ["order_ref"] },
+        {
+          "if": {
+            "required": [
+              "order_ref"
+            ]
+          },
           "then": {
-            "not": { "anyOf": [ { "required": ["title"] }, { "required": ["owner"] }, { "required": ["status"] }, { "required": ["acceptance"] } ] },
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "title"
+                  ]
+                },
+                {
+                  "required": [
+                    "owner"
+                  ]
+                },
+                {
+                  "required": [
+                    "status"
+                  ]
+                },
+                {
+                  "required": [
+                    "acceptance"
+                  ]
+                }
+              ]
+            },
             "description": "RE-AUDIT P0: a Receipt that references an ORDER may NOT also carry title/owner/status/acceptance. Those are taskboard facts, and holding a second mutable copy is the ownership fork this design exists to prevent - Order REVIEWED while Receipt still IN_PROGRESS. Read them through order_ref."
           },
           "else": {
-            "required": ["title", "owner", "status"],
+            "required": [
+              "title",
+              "owner",
+              "status"
+            ],
             "description": "a Receipt with no Order is the only case where it owns these - a chat commitment not yet formalised"
-          } },
-        { "if": { "properties": { "status": { "const": "WAITING" } }, "required": ["status"] },
-          "then": { "required": ["waiting_for", "wake_condition"],
-                    "properties": { "waiting_for": { "type": "string" }, "wake_condition": { "type": "string" } },
-                    "description": "Audit P1: rev 1 used anyOf here, so one of the two sufficed - which produced exactly the indefinitely-parked item the design says it prevents. Both are now required." } },
-        { "if": { "properties": { "status": { "const": "CANCELLED_BY_USER" } }, "required": ["status"] },
-          "then": { "required": ["cancelled_by_user_ref"] } },
-        { "if": { "properties": { "status": { "const": "HANDOFF" } }, "required": ["status"] },
-          "then": { "required": ["handoff_summary", "next_action", "evidence_refs", "review_required"] } }
-      ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "WAITING"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "waiting_for",
+              "wake_condition"
+            ],
+            "properties": {
+              "waiting_for": {
+                "type": "string"
+              },
+              "wake_condition": {
+                "type": "string"
+              }
+            },
+            "description": "Audit P1: rev 1 used anyOf here, so one of the two sufficed - which produced exactly the indefinitely-parked item the design says it prevents. Both are now required."
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "CANCELLED_BY_USER"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "cancelled_by_user_ref"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "HANDOFF"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "required": [
+              "handoff_summary",
+              "next_action",
+              "evidence_refs",
+              "review_required"
+            ]
+          }
+        }
+      ],
+      "x-enforcement-status": "PLANNED"
     },
-
     "SystemFinding": {
       "type": "object",
       "x-owner-file": "ops/findings.jsonl",
       "x-enforced-by": "finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close",
       "description": "New ONLY for the stable lifecycle and identity. The detector state itself is owned by the snapshot; this references it.",
-      "required": ["entity", "finding_id", "public_id", "detector", "detector_ref", "class", "first_seen", "last_seen", "state", "severity", "material_revision"],
+      "required": [
+        "entity",
+        "finding_id",
+        "public_id",
+        "detector",
+        "detector_ref",
+        "class",
+        "first_seen",
+        "last_seen",
+        "state",
+        "severity",
+        "material_revision"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "SystemFinding" },
-        "finding_id": { "type": "string", "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$", "description": "INTERNAL ONLY. Its stable key may legitimately contain an account number, a magic, or a strategy name (e.g. FND-sensor-159503454), so it MUST NOT be serialized into any online or Telegram surface." },
-        "public_id": { "type": "string", "pattern": "^FP-[0-9a-f]{10}$", "description": "RE-AUDIT P1: opaque projection-safe identifier - the ONLY finding id a SafeProjection may carry. Rev 2 leaked the raw finding_id into the online projection while carefully masking account numbers two fields away." },
-        "detector_ref": { "$ref": "#/$defs/OwnerRef", "description": "RE-AUDIT P0: the snapshot owns detector state. Without a pinned reference this entity becomes a second, drifting copy - snapshot RESOLVED while the finding still reads OPEN." },
-        "detector": { "type": "string" },
-        "class": { "enum": ["RUNTIME", "GOVERNANCE", "DEPLOYMENT_DRIFT", "AUDIT"] },
-        "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"], "description": "part of the alert dedupe key - audit P1: dedupe on (id,state) alone would swallow a warning that escalated to real-money critical while the state stayed OPEN" },
-        "material_revision": { "type": "integer", "minimum": 0, "description": "REQUIRED. Bumped whenever the payload materially changes, and part of the dedupe key alongside severity - dedupe on (id,state) alone swallows a WARN that escalates to REAL_MONEY while the state stays OPEN" },
-        "first_seen": { "type": "string" },
-        "last_seen": { "type": "string" },
-        "state": { "enum": ["OPEN", "HEALTHY_1_OF_2", "RESOLVED", "FLAPPING", "SUPPRESSED_MAINTENANCE"] },
-        "occurrences_24h": { "type": "integer" },
-        "evidence_refs": { "type": "array", "items": { "type": "string" } },
-        "owner": { "type": ["string", "null"] }
-      }
+        "entity": {
+          "const": "SystemFinding"
+        },
+        "finding_id": {
+          "type": "string",
+          "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$",
+          "description": "INTERNAL ONLY. Its stable key may legitimately contain an account number, a magic, or a strategy name (e.g. FND-sensor-159503454), so it MUST NOT be serialized into any online or Telegram surface."
+        },
+        "public_id": {
+          "type": "string",
+          "pattern": "^FP-[0-9a-f]{10}$",
+          "description": "RE-AUDIT P1: opaque projection-safe identifier - the ONLY finding id a SafeProjection may carry. Rev 2 leaked the raw finding_id into the online projection while carefully masking account numbers two fields away."
+        },
+        "detector_ref": {
+          "$ref": "#/$defs/OwnerRef",
+          "description": "RE-AUDIT P0: the snapshot owns detector state. Without a pinned reference this entity becomes a second, drifting copy - snapshot RESOLVED while the finding still reads OPEN."
+        },
+        "detector": {
+          "type": "string"
+        },
+        "class": {
+          "enum": [
+            "RUNTIME",
+            "GOVERNANCE",
+            "DEPLOYMENT_DRIFT",
+            "AUDIT"
+          ]
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARN",
+            "CRITICAL",
+            "REAL_MONEY"
+          ],
+          "description": "part of the alert dedupe key - audit P1: dedupe on (id,state) alone would swallow a warning that escalated to real-money critical while the state stayed OPEN"
+        },
+        "material_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "REQUIRED. Bumped whenever the payload materially changes, and part of the dedupe key alongside severity - dedupe on (id,state) alone swallows a WARN that escalates to REAL_MONEY while the state stays OPEN"
+        },
+        "first_seen": {
+          "type": "string"
+        },
+        "last_seen": {
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "OPEN",
+            "HEALTHY_1_OF_2",
+            "RESOLVED",
+            "FLAPPING",
+            "SUPPRESSED_MAINTENANCE"
+          ]
+        },
+        "occurrences_24h": {
+          "type": "integer"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "x-enforcement-status": "PLANNED"
     },
-
     "IdeaRef": {
       "type": "object",
       "x-owner-file": "INTAKE_QUEUE.md (EXISTING - NOT replaced)",
       "description": "Audit P0-2: rev 1 proposed ops/ideas.csv, but INTAKE_QUEUE.md opens by declaring itself the single place for every new source and strategy drop. There is no second intake. What is genuinely missing is a STABLE ID and exact-URL dedupe, so those are added AS COLUMNS TO THE EXISTING OWNER and this entity is only the machine-readable projection of a row.",
-      "required": ["entity", "idea_id", "received_at", "source", "status", "intake_ref"],
+      "required": [
+        "entity",
+        "idea_id",
+        "received_at",
+        "source",
+        "status",
+        "intake_ref"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "IdeaRef" },
-        "idea_id": { "type": "string", "pattern": "^IDEA-[0-9]{4}$" },
-        "received_at": { "type": "string" },
-        "source": { "enum": ["telegram", "claude", "codex", "legacy_openclaw"] },
-        "normalized_url": { "type": ["string", "null"] },
-        "duplicate_of": { "type": ["string", "null"] },
-        "status": { "enum": ["NEW", "READ", "SHORTLIST", "REFERENCE", "DROP", "ORDER"] },
-        "intake_ref": { "$ref": "#/$defs/OwnerRef" }
+        "entity": {
+          "const": "IdeaRef"
+        },
+        "idea_id": {
+          "type": "string",
+          "pattern": "^IDEA-[0-9]{4}$"
+        },
+        "received_at": {
+          "type": "string"
+        },
+        "source": {
+          "enum": [
+            "telegram",
+            "claude",
+            "codex",
+            "legacy_openclaw"
+          ]
+        },
+        "normalized_url": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "duplicate_of": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "enum": [
+            "NEW",
+            "READ",
+            "SHORTLIST",
+            "REFERENCE",
+            "DROP",
+            "ORDER"
+          ]
+        },
+        "intake_ref": {
+          "$ref": "#/$defs/OwnerRef"
+        }
       }
     },
-
     "ControlRoomSnapshotV5": {
       "type": "object",
       "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
       "x-enforced-by": "snapshot_validator: reconciliation_clear is COMPUTED and MUST NOT be read from input",
       "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. ORDER-601 part 2: this root is now CLOSED. It was `additionalProperties: true` on the argument that the file versions additively, but the two facts do not imply each other - additive versioning means no field is REMOVED or RENAMED between versions, and it is satisfied by declaring each new domain here. An open root means a whole top-level domain can appear that no contract describes and no reader is required to handle, which is the same shape as the source array that silently dropped a missing file. The eleven keys below cover every top-level key the real v4 document has; closing the root therefore costs nothing today and forces the next domain to be declared. Adding a domain is a one-line edit HERE, which is the point: it becomes a reviewable act instead of a side effect.",
-      "required": ["entity", "meta", "verdict", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
+      "required": [
+        "entity",
+        "meta",
+        "verdict",
+        "system_health",
+        "floating_risk",
+        "deployments",
+        "unknown_magics",
+        "attestation",
+        "judge_readiness",
+        "judge_cohorts",
+        "summary"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "ControlRoomSnapshotV5" },
-        "meta": { "$ref": "#/$defs/SnapshotMeta" },
-        "verdict": { "$ref": "#/$defs/SnapshotVerdict" },
-        "system_health": { "type": "array", "items": { "type": "object" } },
-        "floating_risk": { "type": "array", "items": { "type": "object" } },
-        "deployments": { "type": "object" },
-        "unknown_magics": { "type": "array" },
-        "attestation": { "type": "array" },
-        "judge_readiness": { "type": "array" },
-        "judge_cohorts": { "type": "object" },
-        "summary": { "type": "object" }
-      }
+        "entity": {
+          "const": "ControlRoomSnapshotV5"
+        },
+        "meta": {
+          "$ref": "#/$defs/SnapshotMeta"
+        },
+        "verdict": {
+          "$ref": "#/$defs/SnapshotVerdict"
+        },
+        "system_health": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "floating_risk": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "deployments": {
+          "type": "object"
+        },
+        "unknown_magics": {
+          "type": "array"
+        },
+        "attestation": {
+          "type": "array"
+        },
+        "judge_readiness": {
+          "type": "array"
+        },
+        "judge_cohorts": {
+          "type": "object"
+        },
+        "summary": {
+          "type": "object"
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/snapshot_validator.py"
     },
-
     "ReconciliationEvidence": {
       "type": "object",
       "x-owner-file": "the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json",
       "x-enforced-by": "snapshot_validator: this object is the INPUT to the reconciliation_clear computation and never contains the answer",
       "description": "ORDER-601 / audit-5 Q2. `reconciliation_clear` used to live here, which made the contract unsatisfiable: it was REQUIRED in the persisted document and a writer-supplied value had to be REJECTED, and no validator inspecting one document can tell 'computed' from 'typed'. The evidence and the verdict are now different objects. Because this object is CLOSED and has no `reconciliation_clear` property, a builder that supplies one is refused by the schema itself - no special-case code, and the rejection names the property. Audit-5 also found every nested integer here lacked `minimum: 0`, so `actionable:-1, running:1` balanced every equation and validated; the bounds below close that.",
-      "required": ["discovered", "categorized", "categories", "duplicates", "conflicts", "unclassified", "coverage"],
+      "required": [
+        "discovered",
+        "categorized",
+        "categories",
+        "duplicates",
+        "conflicts",
+        "unclassified",
+        "coverage"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "discovered": { "type": "integer", "minimum": 0 },
-        "categorized": { "type": "integer", "minimum": 0 },
+        "discovered": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "categorized": {
+          "type": "integer",
+          "minimum": 0
+        },
         "categories": {
           "type": "object",
-          "required": ["actionable", "running", "waiting", "review_audit", "completed", "cancelled_by_user"],
+          "required": [
+            "actionable",
+            "running",
+            "waiting",
+            "review_audit",
+            "completed",
+            "cancelled_by_user"
+          ],
           "unevaluatedProperties": false,
           "description": "the equation's right-hand side must be ENCODED, not implied in prose",
           "properties": {
-            "actionable": { "type": "integer", "minimum": 0 }, "running": { "type": "integer", "minimum": 0 },
-            "waiting": { "type": "integer", "minimum": 0 }, "review_audit": { "type": "integer", "minimum": 0 },
-            "completed": { "type": "integer", "minimum": 0 }, "cancelled_by_user": { "type": "integer", "minimum": 0 }
+            "actionable": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "running": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "waiting": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "review_audit": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "completed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "cancelled_by_user": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
         "coverage": {
           "type": "object",
-          "required": ["cells_in_universe", "tested", "untested", "not_applicable"],
+          "required": [
+            "cells_in_universe",
+            "tested",
+            "untested",
+            "not_applicable"
+          ],
           "unevaluatedProperties": false,
           "properties": {
-            "cells_in_universe": { "type": "integer", "minimum": 0 }, "tested": { "type": "integer", "minimum": 0 },
-            "untested": { "type": "integer", "minimum": 0 }, "not_applicable": { "type": "integer", "minimum": 0 }
+            "cells_in_universe": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tested": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "untested": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "not_applicable": {
+              "type": "integer",
+              "minimum": 0
+            }
           }
         },
-        "duplicates": { "type": "integer", "minimum": 0 },
-        "conflicts": { "type": "integer", "minimum": 0 },
-        "unclassified": { "type": "integer", "minimum": 0 }
-      }
+        "duplicates": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conflicts": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unclassified": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/snapshot_validator.py"
     },
-
     "SnapshotVerdict": {
       "type": "object",
       "x-owner-file": "the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator",
       "x-enforced-by": "snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. Proves INTERNAL CONSISTENCY, not authenticity: read_ok/age_hours/path/sha256/mtime and the reconciliation counts are builder claims taken at face value (Codex audit 6 accepted a document whose sources all pointed at a nonexistent drive with mtime 2099). Deriving them from the real files and re-hashing on read is S4. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED",
       "description": "ORDER-601. JSON Schema can prove this boolean is well-typed; it cannot prove who wrote it. Audit-5's surviving attack was a hand-authored output with sources=[] and reconciliation_clear=true, which is structurally valid. The defence is not the schema, it is that every reader must obtain the document through the verifier that recomputes this from `meta.reconciliation` and the source list. `reasons` is a CLOSED enum so a false verdict cannot be explained in free text nobody parses.",
-      "required": ["reconciliation_clear", "reasons"],
+      "required": [
+        "reconciliation_clear",
+        "reasons"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "reconciliation_clear": { "type": "boolean", "description": "COMPUTED, never supplied. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. SCOPE - narrower than the old name promised: computed from meta.reconciliation and the source rows ONLY. It was called `all_clear` until Codex audit 6 built a document with a NO_SENSOR fleet sensor, a BLIND floating-risk sensor, missing kill/judge controls, an UNCLASSIFIED unknown magic and missing attestation, and it verified true - because none of those domains reach the computation. system_health, floating_risk, deployments.gaps, unknown_magics, attestation, judge_readiness and summary are carried through UNCHECKED. Do not render this as Control Room health." },
+        "reconciliation_clear": {
+          "type": "boolean",
+          "description": "COMPUTED, never supplied. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. SCOPE - narrower than the old name promised: computed from meta.reconciliation and the source rows ONLY. It was called `all_clear` until Codex audit 6 built a document with a NO_SENSOR fleet sensor, a BLIND floating-risk sensor, missing kill/judge controls, an UNCLASSIFIED unknown magic and missing attestation, and it verified true - because none of those domains reach the computation. system_health, floating_risk, deployments.gaps, unknown_magics, attestation, judge_readiness and summary are carried through UNCHECKED. Do not render this as Control Room health."
+        },
         "reasons": {
           "type": "array",
           "description": "empty if and only if reconciliation_clear is true - the two must not be able to disagree",
           "items": {
             "type": "object",
-            "required": ["code"],
+            "required": [
+              "code"
+            ],
             "unevaluatedProperties": false,
             "properties": {
               "code": {
-                "enum": ["MANDATORY_SOURCE_MISSING", "MANDATORY_SOURCE_UNREADABLE", "MANDATORY_SOURCE_STALE",
-                         "SOURCE_REGISTRY_MISMATCH", "DUPLICATE_SOURCE_NAME", "SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY",
-                         "DISCOVERED_CATEGORIZED_MISMATCH", "CATEGORY_SUM_MISMATCH", "COVERAGE_SUM_MISMATCH",
-                         "DUPLICATES_PRESENT", "CONFLICTS_PRESENT", "UNCLASSIFIED_PRESENT", "ACTIONABLE_PRESENT"],
+                "enum": [
+                  "MANDATORY_SOURCE_MISSING",
+                  "MANDATORY_SOURCE_UNREADABLE",
+                  "MANDATORY_SOURCE_STALE",
+                  "SOURCE_REGISTRY_MISMATCH",
+                  "DUPLICATE_SOURCE_NAME",
+                  "SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY",
+                  "DISCOVERED_CATEGORIZED_MISMATCH",
+                  "CATEGORY_SUM_MISMATCH",
+                  "COVERAGE_SUM_MISMATCH",
+                  "DUPLICATES_PRESENT",
+                  "CONFLICTS_PRESENT",
+                  "UNCLASSIFIED_PRESENT",
+                  "ACTIONABLE_PRESENT"
+                ],
                 "description": "MISSING and UNREADABLE are separate codes on purpose: 'cannot read it' and 'it is not there' have opposite fixes and this repo has collapsed them before"
               },
-              "detail": { "type": ["string", "null"], "description": "the source name, or the two numbers that failed to match - so a fixture can assert WHICH instance fired" }
+              "detail": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "the source name, or the two numbers that failed to match - so a fixture can assert WHICH instance fired"
+              }
             }
           }
         }
-      }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/snapshot_validator.py"
     },
-
     "SnapshotBuilderInput": {
       "type": "object",
       "x-owner-file": "NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.",
       "x-enforced-by": "snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path",
       "description": "ORDER-601 / audit-5 Q2: the builder side of the boundary. It carries the same facts as the persisted document but has NO `verdict` property and, because it is closed, cannot acquire one. That is what makes 'reconciliation_clear is computed, never supplied' checkable by the schema instead of by a code path somebody can special-case.",
-      "required": ["entity", "meta", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
+      "required": [
+        "entity",
+        "meta",
+        "system_health",
+        "floating_risk",
+        "deployments",
+        "unknown_magics",
+        "attestation",
+        "judge_readiness",
+        "judge_cohorts",
+        "summary"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "SnapshotBuilderInput" },
-        "meta": { "$ref": "#/$defs/SnapshotMeta" },
-        "system_health": { "type": "array", "items": { "type": "object" } },
-        "floating_risk": { "type": "array", "items": { "type": "object" } },
-        "deployments": { "type": "object" },
-        "unknown_magics": { "type": "array" },
-        "attestation": { "type": "array" },
-        "judge_readiness": { "type": "array" },
-        "judge_cohorts": { "type": "object" },
-        "summary": { "type": "object" }
-      }
+        "entity": {
+          "const": "SnapshotBuilderInput"
+        },
+        "meta": {
+          "$ref": "#/$defs/SnapshotMeta"
+        },
+        "system_health": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "floating_risk": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "deployments": {
+          "type": "object"
+        },
+        "unknown_magics": {
+          "type": "array"
+        },
+        "attestation": {
+          "type": "array"
+        },
+        "judge_readiness": {
+          "type": "array"
+        },
+        "judge_cohorts": {
+          "type": "object"
+        },
+        "summary": {
+          "type": "object"
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/snapshot_validator.py"
     },
-
     "SnapshotMeta": {
       "type": "object",
       "x-owner-file": "the `meta` property of portfolio/control_room_snapshot.json",
       "description": "The META SUB-OBJECT ONLY - not the whole file. Audit P1 (rev 1): reconciliation_clear was a writer-supplied boolean, `fresh` was not required, there was no mandatory-source registry and no category totals, so a snapshot with a missing mandatory source - or one that simply omitted the source from the array - could report reconciliation_clear:true and satisfy the equation with 0=0. Version note: HEAD is already v4; the Factory domain lands as v5.",
-      "required": ["schema", "version", "build_id", "generated_at", "mandatory_sources", "sources", "reconciliation"],
+      "required": [
+        "schema",
+        "version",
+        "build_id",
+        "generated_at",
+        "mandatory_sources",
+        "sources",
+        "reconciliation"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "schema": { "const": "ControlRoomSnapshot" },
-        "version": { "type": "integer", "minimum": 5, "description": "v5+ for anything carrying the Factory domain; v4 already exists at HEAD" },
-        "build_id": { "type": "string" },
-        "generated_at": { "type": "string" },
-        "git_head": { "type": "string" },
-        "mandatory_sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" }, "description": "the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected. `uniqueItems` because a registry naming the same source twice makes its own cardinality unreadable; a DUPLICATE name in the `sources` array below is not expressible in JSON Schema and is snapshot_validator's DUPLICATE_SOURCE_NAME predicate instead." },
+        "schema": {
+          "const": "ControlRoomSnapshot"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 5,
+          "description": "v5+ for anything carrying the Factory domain; v4 already exists at HEAD"
+        },
+        "build_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string"
+        },
+        "git_head": {
+          "type": "string"
+        },
+        "mandatory_sources": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          },
+          "description": "the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected. `uniqueItems` because a registry naming the same source twice makes its own cardinality unreadable; a DUPLICATE name in the `sources` array below is not expressible in JSON Schema and is snapshot_validator's DUPLICATE_SOURCE_NAME predicate instead."
+        },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "mandatory", "read_ok", "fresh", "age_hours"],
+            "required": [
+              "name",
+              "mandatory",
+              "read_ok",
+              "fresh",
+              "age_hours"
+            ],
             "unevaluatedProperties": false,
             "properties": {
-              "name": { "type": "string" },
-              "mandatory": { "type": "boolean" },
-              "read_ok": { "type": "boolean", "description": "false must stay distinguishable from 'read fine, found nothing' in EVERY consumer" },
-              "fresh": { "type": "boolean", "description": "DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an reconciliation_clear - there is a fixture for exactly that." },
-              "age_hours": { "type": ["number", "null"] },
-              "path": { "type": ["string", "null"], "description": "COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's." },
-              "sha256": { "type": ["string", "null"], "description": "COMPATIBILITY: as `path`." },
-              "mtime": { "type": ["string", "null"], "description": "COMPATIBILITY: as `path`." }
+              "name": {
+                "type": "string"
+              },
+              "mandatory": {
+                "type": "boolean"
+              },
+              "read_ok": {
+                "type": "boolean",
+                "description": "false must stay distinguishable from 'read fine, found nothing' in EVERY consumer"
+              },
+              "fresh": {
+                "type": "boolean",
+                "description": "DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an reconciliation_clear - there is a fixture for exactly that."
+              },
+              "age_hours": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "path": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's."
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "COMPATIBILITY: as `path`."
+              },
+              "mtime": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "COMPATIBILITY: as `path`."
+              }
             }
           }
         },
-        "stale_bar_hours": { "type": ["number", "null"], "description": "COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`." },
-        "decision_bar_trades": { "type": ["integer", "null"], "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it." },
-        "counting_method": { "type": ["string", "null"], "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it." },
-        "reconciliation": { "$ref": "#/$defs/ReconciliationEvidence" }
+        "stale_bar_hours": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`."
+        },
+        "decision_bar_trades": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it."
+        },
+        "counting_method": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it."
+        },
+        "reconciliation": {
+          "$ref": "#/$defs/ReconciliationEvidence"
+        }
       }
     },
-
     "SafeProjection": {
       "type": "object",
       "x-owner-file": "build/safe_projection.json (derived, never hand-written)",
       "x-enforced-by": "projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot",
       "description": "NEW, answering the audit: the design claimed the online projection was 'safe by construction' but no construction existed, while the real snapshot carries account IDs, balance, equity, floating P/L and exact open lots. This is an allowlist-only derived DTO. Anything not listed here cannot reach an online or Telegram surface.",
-      "required": ["entity", "build_id", "generated_at", "accounts", "findings"],
+      "required": [
+        "entity",
+        "build_id",
+        "generated_at",
+        "accounts",
+        "findings"
+      ],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "SafeProjection" },
-        "build_id": { "type": "string" },
-        "generated_at": { "type": "string" },
+        "entity": {
+          "const": "SafeProjection"
+        },
+        "build_id": {
+          "type": "string"
+        },
+        "generated_at": {
+          "type": "string"
+        },
         "accounts": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["account_masked", "sensor_state", "dd_pct_band"],
+            "required": [
+              "account_masked",
+              "sensor_state",
+              "dd_pct_band"
+            ],
             "unevaluatedProperties": false,
             "description": "no account number, no balance, no equity, no P/L amount, no lot size, no strategy identifier",
             "properties": {
-              "account_masked": { "type": "string", "pattern": "^\\*{3}[0-9]{3}$" },
-              "sensor_state": { "enum": ["FRESH", "STALE", "BLIND", "MISSING", "UNKNOWN"] },
-              "dd_pct_band": { "enum": ["OK", "WATCH", "BREACH", "UNKNOWN"], "description": "a BAND, not a number - a percentage plus a known base equity reconstructs the money amount" }
+              "account_masked": {
+                "type": "string",
+                "pattern": "^\\*{3}[0-9]{3}$"
+              },
+              "sensor_state": {
+                "enum": [
+                  "FRESH",
+                  "STALE",
+                  "BLIND",
+                  "MISSING",
+                  "UNKNOWN"
+                ]
+              },
+              "dd_pct_band": {
+                "enum": [
+                  "OK",
+                  "WATCH",
+                  "BREACH",
+                  "UNKNOWN"
+                ],
+                "description": "a BAND, not a number - a percentage plus a known base equity reconstructs the money amount"
+              }
             }
           }
         },
@@ -773,17 +2515,34 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["public_id", "severity", "state"],
+            "required": [
+              "public_id",
+              "severity",
+              "state"
+            ],
             "unevaluatedProperties": false,
             "description": "public_id ONLY. The internal finding_id may embed an account, a magic or a strategy name and must never reach this surface.",
             "properties": {
-              "public_id": { "type": "string", "pattern": "^FP-[0-9a-f]{10}$" },
-              "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"] },
-              "state": { "type": "string" }
+              "public_id": {
+                "type": "string",
+                "pattern": "^FP-[0-9a-f]{10}$"
+              },
+              "severity": {
+                "enum": [
+                  "INFO",
+                  "WARN",
+                  "CRITICAL",
+                  "REAL_MONEY"
+                ]
+              },
+              "state": {
+                "type": "string"
+              }
             }
           }
         }
-      }
+      },
+      "x-enforcement-status": "PLANNED"
     }
   }
 }

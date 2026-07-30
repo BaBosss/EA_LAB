@@ -130,7 +130,12 @@ $scripts = @(
     #    re-paying 25 times in a single run -- the ORDER-270 spawn pathology at small scale.
     #    The mutation half is the part that matters: the other four can all be green while the
     #    checker is incapable of failing against the file it just passed.
-    @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() },
+    # 6. ORDER-601 closure: proves the PLANNED/BUILT/WIRED labels are checked and the check can fail.
+    #    x-enforced-by asserted enforcement for 7 constraints nothing enforced; relabelling only
+    #    helps if the labels are verified, so this mutates the schema 5 ways and requires each to be
+    #    refused by name.
+    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() }
 )
 
 $failed = 0

@@ -950,7 +950,7 @@ Vertical, each independently verifiable, each with a cage that can fail. Depende
 |---|---|---|---|---|
 | S1 | Monitoring integrity foundation (**= Stage 0B, DONE 2026-07-30**) | fixture tests green/warn/red/stale/blind + accounts with different base equity; each guard **observed firing** | no new risk threshold; no dashboard-local constants | Claude writes · Codex audits |
 | S2 | **Ownership migration table + `OwnerRef` discipline** (new, from audit P0-2) | every Factory artifact holds owned facts only as pinned `OwnerRef`; owner-by-owner sign-off recorded; zero mutable copies | may not demote any owner without its owner's approval | **Claude writes** |
-| S3 | Schema validator + per-entity **negative** fixtures | every entity rejects at least one crafted bad instance; root discriminator rejects an unknown `entity`; `all_clear` **computed**, a supplied value rejected | no constraint left as prose that the validator does not enforce | Codex/Sonnet |
+| S3 | Schema validator + per-entity **negative** fixtures | every entity rejects at least one crafted bad instance; root discriminator rejects an unknown `entity`; **`reconciliation_clear`** **computed**, a supplied value rejected | every constraint this slice claims is enforced by a validator that exists — see `x-enforcement-status`, which is what makes that claim checkable rather than aspirational | Codex/Sonnet |
 | S4 | Snapshot **v5** + reconciliation + compatibility outputs made fail-closed | seeded N discovered ⇒ exactly N categorized or explicit `UNKNOWN`; missing/unreadable mandatory source ⇒ no `ALL CLEAR`; `make_status.ps1` and the digest read the validated snapshot and refuse to render on a failed build | not v4 (taken); no independently calculated totals anywhere | Codex/Sonnet |
 | S5 | Registries + **ParameterBinding** resolver (universe, profiles, hypotheses, coverage) | round-trip; `NOT_APPLICABLE` refused without a reason; `MASTER_BACKLOG` §2 generated and matching; generator and `optimize_guard` provably read **one** resolver | no verdict field in any of these files | Codex/Sonnet · Claude reviews |
 | S6 | Preset compiler + effective-config fingerprint | unknown key refused; partial set refused; generated `.set` full-surface and deterministic; `[CFG]` emits the fingerprint | must not read the terminal cache | Codex/Sonnet |
@@ -1112,7 +1112,7 @@ of them held. Nothing was accepted on the auditor's authority alone.
 |---|---|---|---|
 | 1 | **P0** appendix root validates almost anything | **FIXED** | schemas rev 2: discriminated union on `entity`, `unevaluatedProperties:false` throughout, structural checker committed |
 | 2 | **P0** "eleven unowned facts" false; forks §20.7 | **FIXED** | §1.3 rewritten — 2 genuinely unowned, 3 partly new, 6 references; `OwnerRef` is now the only way to carry a fact you do not own |
-| 3 | `ALL CLEAR` not enforceable by the schema | **FIXED** | `all_clear` computed and a supplied value rejected; mandatory-source registry separate from discovered; category + coverage totals encoded; `read_ok` **and** `fresh` both required |
+| 3 | `ALL CLEAR` not enforceable by the schema | **FIXED, NARROWLY** — the field is now **`reconciliation_clear`**, not a global all-clear | `reconciliation_clear` computed and a supplied value rejected; mandatory-source registry separate from discovered; category + coverage totals encoded; `read_ok` **and** `fresh` both required. ⚠️ It is **reconciliation only** — it deliberately excludes `system_health`, `floating_risk`, `deployments.gaps`, `unknown_magics`, `attestation` and `judge_readiness`, so a snapshot with a `NO_SENSOR` fleet sensor can be `reconciliation_clear: true` **correctly**. A *global* fleet verdict needs health contracts for those six and is **S4**, not this row. |
 | 4 | `make_status.ps1` still has an "unreadable = nothing found" path | **ACCEPTED, code owed** | S4 — compatibility outputs must read the validated snapshot and refuse to render on a failed build |
 | 5 | Candidate hash self-referential | **FIXED** | `CandidatePayload` (hashed, no id) + `CandidateManifest` (digest + payload); validator recomputes |
 | 6 | Candidate hash misses behaviour + evidence lineage | **FIXED** | payload gained module set with stability, profile **content** hashes, source/allowlist/generator hashes, effective config, per-window evidence |
@@ -1176,9 +1176,13 @@ now carry an opaque `public_id`, and it is the only id the projection may serial
 
 **Still owed after rev 3** — stated plainly rather than marked fixed:
 canonical JSON serialization for the candidate digest is undefined (two serializers ⇒ two digests) ·
-`all_clear`'s builder-input vs persisted-output boundary is not specified · the delivery ledger is
-designed but unbuilt · **no real JSON Schema validator has run** — `check_schema_structure.py` is a
-linter and says so, and this environment has no draft-2020-12 implementation available.
+~~`all_clear`'s builder-input vs persisted-output boundary is not specified~~ **CLOSED by ORDER-601:**
+the boundary is `SnapshotBuilderInput` → `snapshot_validator.verify_snapshot` → `ControlRoomSnapshotV5`,
+the field is **`reconciliation_clear`**, and it is **recomputed on read** so a persisted document whose
+answer contradicts its own evidence is refused · the delivery ledger is designed but unbuilt ·
+~~**no real JSON Schema validator has run**~~ **superseded:** `ajv-cli` is installed and
+`run_schema_fixtures.py` runs **35 draft-2020-12 cases**; `check_schema_structure.py` remains a linter
+for the two things ajv cannot see (discriminator consistency, the closed-object inventory).
 
 **§11 now holds nine open decisions, not six**, which the re-audit was right to flag as under-reported.
 
