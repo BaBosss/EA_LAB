@@ -103,6 +103,49 @@
 
 ---
 
+## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **What S3's acceptance actually says** (design §10): *"every entity rejects at least one crafted bad instance; root discriminator rejects an unknown `entity`; `reconciliation_clear` computed, a supplied value rejected"*. `ORDER-601` delivered the validator, the discriminator case and the computed-verdict cases. It did **not** deliver the first clause, and nothing measured how far short it fell.
+
+**MEASURED before writing this order** — `run_schema_fixtures.py` holds 35 cases against **27** `$defs` entities:
+
+| | count | entities |
+|---|---|---|
+| have ≥1 **negative** | 12 | CandidateManifest · ControlRoomSnapshotV5 · CoverageCell · DeploymentAttestationEvent · Hypothesis · MagicAllocation · RunTransition · SafeProjection · SnapshotBuilderInput · SystemFinding · WorkReceipt |
+| have **no negative at all** | **15** | CandidatePayload · EvidenceRef · ExecutionKey · IdeaRef · InstrumentProfile · LogicalSymbol · MetricRef · ModuleUse · **OwnerRef** · ParameterBinding · ReconciliationEvidence · RunAttempt · RunJournal · SnapshotMeta · SnapshotVerdict |
+| have ≥1 **positive** | **5** | Hypothesis · SafeProjection · SnapshotBuilderInput · ControlRoomSnapshotV5 · WorkReceipt |
+
+`OwnerRef` is the one to notice: it is the pin primitive **every** other entity references, and no instance of it was ever validated in either direction.
+
+### Deliverables
+
+| # | path | what it is |
+|---|---|---|
+| F1 | `_triage/factory_os/run_schema_fixtures.py` | a `covers=` attribution + the per-entity coverage criterion + the missing cases |
+| F2 | same file | `says` gains `schemaPath_startswith`, so attribution is **recomputed from ajv**, not declared |
+| F3 | `scripts/_test/run_contract_binding_tests.ps1` + `run_fast_cages.ps1` | wire the suite into the tier — `BACKLOG-D32` removed the reason it was excluded |
+
+### Acceptance
+
+- **B1 — coverage is DERIVED from the schema, never listed by hand.** The criterion enumerates `$defs` and requires each entity to hold ≥1 case that **validates** and ≥1 that **fails**. Adding a 28th entity to `schemas.json` must redden this suite in the same commit. Negative fixture: delete a case ⇒ RED naming the entity; add a fake 28th `$def` ⇒ RED naming it.
+- **B2 — attribution is proven by ajv, not claimed.** The root is a 19-branch `oneOf`, so **every** instance produces errors attributed to entities it has nothing to do with — a `covers:` label alone is worth nothing. Each negative must carry a `says` spec pairing `schemaPath_startswith: "#/$defs/<Entity>/"` with a **discriminating** component (`instancePath` or a `params` key). The criterion refuses a `says` that names the entity and nothing else. Negative fixture: a `says` carrying only `schemaPath_startswith` ⇒ RED as under-specified.
+- **B3 — the 8 embedded entities are exercised through their parents**, since they are not routable at the root. A case for an embedded entity declares `covers=` explicitly and B2's attribution check is what makes that declaration honest.
+- **B4 — every new negative must be one delta from a passing positive.** An instance that fails for three reasons proves nothing about the rule under test; the positive is what makes the negative interpretable.
+- **B5 — tool failure stays an ERROR.** `ajv` missing, unreadable schema, or no parsable error array must be a third state, never counted as a rejection. Already true; must remain true and is asserted.
+- **B6 — wired.** Declared in `$SUITE_GUARDS`, pathspec regenerated, `run_guard_trigger_tests.ps1` PARTS 1–5 green, and the tier cost is **stated as a number**.
+
+### ห้าม
+
+- ❌ **Do not weaken the schema to make a fixture pass.** If an instance that should validate does not, that is a finding about the schema and is reported, not smoothed over.
+- ❌ No hand-maintained list of entities anywhere — that is `BACKLOG-D29`'s failure mode inside a test file.
+- ❌ Do not touch the six files bound by attestation bundle `aaa5998d7128238a`. **`schemas.json` is not one of them**, but `check_s2a_migration.py` reads it — so a schema edit must be re-run against the S2a gate before commit.
+
+### Rollback
+
+One commit; `git revert`. The suite is additive — the 35 existing cases are untouched.
+
+---
+
 ## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **the transfer is done, in one commit, and the hand table's rows are byte-identical**
