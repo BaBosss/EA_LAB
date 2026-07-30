@@ -48,7 +48,11 @@
       * the next cage does NOT go in this all-suites tier -- measured headroom is zero;
       * quote a MEDIAN of at least three runs, never one run, when reporting the total;
       * the real fix is per-path suite selection using the $SUITE_GUARDS map below, so a schema
-        edit stops paying for 5.8s of optimize-guard cases. That is not built.
+        edit stops paying for 5.8s of optimize-guard cases. ✅ BUILT 2026-07-31 (BACKLOG-D32) --
+        see Select-Suites below. MEASURED: full tier 18.1s; a schema edit now 3.9s, an
+        optimize_guard.ps1 edit 7.3s, a D1 edit 3.9s. The 15.0s advisory line still applies to
+        the FULL tier, which is what a manual run and any caller that cannot determine the
+        staged set still pay -- selection reduces the common case, it does not raise the ceiling.
 
     WHAT THIS DOES NOT COVER -- read this before trusting a green run:
     the four slow suites above, and in particular run_order105_negative_tests.ps1, which

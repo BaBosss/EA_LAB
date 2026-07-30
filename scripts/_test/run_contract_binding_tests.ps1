@@ -84,7 +84,11 @@
     is ORDER-270's spawn pathology at small scale. A further 11x is available only by dropping the
     24-mutation half, which is the one half that proves the checker can still fail against the file
     it just passed. That is not a trade worth making.
-    THE REAL FIX REMAINS BACKLOG-D32, per-path suite selection from $SUITE_GUARDS: a commit touching
+    ✅ BACKLOG-D32 IS NOW BUILT (2026-07-31). This suite still costs 3.6s, but a commit only pays it
+    when it stages something this suite guards -- measured 3.9s total for a schema edit against
+    18.1s for the full tier. The paragraph below described the fix while it was still pending; it is
+    kept because the reasoning is why the feature exists.
+    THE REAL FIX WAS BACKLOG-D32, per-path suite selection from $SUITE_GUARDS: a commit touching
     only scripts/*.ps1 should not pay 2.9s of S2a, and a commit touching s2a_migration.jsonl should
     not pay 5.8s of optimize-guard. The declarations needed for that are now in place for S2a -- all
     eight of its paths are in the $SUITE_GUARDS map and selected by the generated pathspec, verified
