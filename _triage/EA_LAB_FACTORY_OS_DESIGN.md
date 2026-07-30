@@ -1086,7 +1086,7 @@ the builder side is closed and has no place to put an answer.*
 | `judge_cohorts` | `object` | **yes** |  |
 | `summary` | `object` | **yes** |  |
 
-**Unknown fields:** ⚠️ ACCEPTED — this object is open, so a typo becomes a silently-ignored field.
+**Unknown fields:** rejected (closed object).
 
 <!-- END GENERATED CONTRACT: ControlRoomSnapshotV5 -->
 
@@ -1102,13 +1102,16 @@ the builder side is closed and has no place to put an answer.*
 | `build_id` | `string` | **yes** |  |
 | `generated_at` | `string` | **yes** |  |
 | `git_head` | `string` | — |  |
-| `mandatory_sources` | array of `string` | **yes** | minItems `1` · the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected |
+| `mandatory_sources` | array of `string` | **yes** | minItems `1` · the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected. `uniqueItems` because a registry naming the same source twice makes its own cardinality unreadable; a DUPLICATE name in the `sources` array below is not expressible in JSON Schema and is snapshot_validator's DUPLICATE_SOURCE_NAME predicate instead. |
 | `sources` | array of object *(fields below)* | **yes** | items closed · items require `name`, `mandatory`, `read_ok`, `fresh`, `age_hours` |
 | `sources[].name` | `string` | **yes** |  |
 | `sources[].mandatory` | `boolean` | **yes** |  |
 | `sources[].read_ok` | `boolean` | **yes** | false must stay distinguishable from 'read fine, found nothing' in EVERY consumer |
-| `sources[].fresh` | `boolean` | **yes** |  |
+| `sources[].fresh` | `boolean` | **yes** | DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an all_clear - there is a fixture for exactly that. |
 | `sources[].age_hours` | `number` \| `null` | **yes** |  |
+| `sources[].path` | `string` \| `null` | — | COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's. |
+| `sources[].sha256` | `string` \| `null` | — | COMPATIBILITY: as `path`. |
+| `sources[].mtime` | `string` \| `null` | — | COMPATIBILITY: as `path`. |
 | `stale_bar_hours` | `number` \| `null` | — | COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`. |
 | `decision_bar_trades` | `integer` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |
 | `counting_method` | `string` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |

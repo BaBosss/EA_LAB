@@ -600,9 +600,9 @@
       "type": "object",
       "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
       "x-enforced-by": "snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input",
-      "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. The existing v3/v4 keys are carried through and additional keys are permitted, because the file's own convention is additive versioning.",
+      "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. ORDER-601 part 2: this root is now CLOSED. It was `additionalProperties: true` on the argument that the file versions additively, but the two facts do not imply each other - additive versioning means no field is REMOVED or RENAMED between versions, and it is satisfied by declaring each new domain here. An open root means a whole top-level domain can appear that no contract describes and no reader is required to handle, which is the same shape as the source array that silently dropped a missing file. The eleven keys below cover every top-level key the real v4 document has; closing the root therefore costs nothing today and forces the next domain to be declared. Adding a domain is a one-line edit HERE, which is the point: it becomes a reviewable act instead of a side effect.",
       "required": ["entity", "meta", "verdict", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
-      "additionalProperties": true,
+      "unevaluatedProperties": false,
       "properties": {
         "entity": { "const": "ControlRoomSnapshotV5" },
         "meta": { "$ref": "#/$defs/SnapshotMeta" },
@@ -718,7 +718,7 @@
         "build_id": { "type": "string" },
         "generated_at": { "type": "string" },
         "git_head": { "type": "string" },
-        "mandatory_sources": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected" },
+        "mandatory_sources": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string" }, "description": "the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected. `uniqueItems` because a registry naming the same source twice makes its own cardinality unreadable; a DUPLICATE name in the `sources` array below is not expressible in JSON Schema and is snapshot_validator's DUPLICATE_SOURCE_NAME predicate instead." },
         "sources": {
           "type": "array",
           "items": {
@@ -729,8 +729,11 @@
               "name": { "type": "string" },
               "mandatory": { "type": "boolean" },
               "read_ok": { "type": "boolean", "description": "false must stay distinguishable from 'read fine, found nothing' in EVERY consumer" },
-              "fresh": { "type": "boolean" },
-              "age_hours": { "type": ["number", "null"] }
+              "fresh": { "type": "boolean", "description": "DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an all_clear - there is a fixture for exactly that." },
+              "age_hours": { "type": ["number", "null"] },
+              "path": { "type": ["string", "null"], "description": "COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's." },
+              "sha256": { "type": ["string", "null"], "description": "COMPATIBILITY: as `path`." },
+              "mtime": { "type": ["string", "null"], "description": "COMPATIBILITY: as `path`." }
             }
           }
         },

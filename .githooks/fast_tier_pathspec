@@ -4,7 +4,9 @@
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/run_contract_binding_tests.py
+_triage/factory_os/run_snapshot_validator_tests.py
 _triage/factory_os/schemas.json
+_triage/factory_os/snapshot_validator.py
 _triage/PARAM_INACTIVE_AUDIT.md
 docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md

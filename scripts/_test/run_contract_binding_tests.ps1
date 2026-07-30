@@ -8,21 +8,41 @@
     have caught 0 of 7, and it printed STRUCTURE OK on a commit where the design described
     `attempts[]`, a lease with `pid`, and `launched_at` while the schema said the opposite.
 
-    Two things run here, and the second is the one that matters:
+    Three things run here, and the second and third are the ones that matter:
       1. gen_design_contracts.py --check   -- the design's generated tables still match the schema
       2. run_contract_binding_tests.py     -- the binding still CATCHES all seven regressions,
                                               re-applied as schema mutations, with three controls
                                               proving the harness is not simply always red
+      3. run_snapshot_validator_tests.py   -- ORDER-601 part 2. The schema can prove `all_clear`
+                                              is a well-typed boolean; it cannot prove who wrote
+                                              it. This asserts the verdict is the CORRECT verdict,
+                                              and mutation-tests its own predicates: each of the
+                                              13 is disabled in turn and only that predicate's
+                                              own fixtures may go red.
 
-    A cage that has never been shown to fail is untested by this repo's own rule, so (2) is
-    not optional decoration -- it is the only evidence (1) is worth running.
+    A cage that has never been shown to fail is untested by this repo's own rule, so (2) and the
+    mutation half of (3) are not optional decoration -- they are the only evidence (1) and the
+    rest of (3) are worth running.
 
-    Interpreter: tools\python312\python.exe, committed in-repo. Neither script needs ajv or
-    any network access; run_schema_fixtures.py is the one with the ajv dependency and it is
+    Interpreter: tools\python312\python.exe, committed in-repo. No script here needs ajv or any
+    network access; run_schema_fixtures.py is the one with the ajv dependency and it is
     deliberately NOT in this hook tier for that reason.
 
-    MEASURED 0.4s (both scripts plus process startup). The whole fast tier re-measured at
-    13.3s against its 15s budget with this suite in place.
+    WHY (3) LIVES HERE RATHER THAN IN A SUITE OF ITS OWN -- this is the budget decision the
+    ORDER-601 handoff demanded be made deliberately, with numbers rather than assumption.
+    MEASURED 2026-07-30 before touching anything: the fast tier was 14.7s against a 15.0s
+    budget, NOT the 14.0s carried in the handoff. So the headroom was 0.3s and a new
+    run_snapshot_validator_tests.ps1 would have breached the budget on its own -- roughly 0.3s
+    of a ~0.4s suite is PowerShell process startup, paid before a single assertion runs.
+    The three options were: displace run_optimize_guard_tests.ps1 (5.8s), raise the budget, or
+    fold these tests into an existing suite. Displacing a real 14-case guard to make room for
+    one python script is a bad trade at any budget, and raising the ceiling to fit an addition
+    that had a cheaper home would spend the one thing keeping this tier from being --no-verify'd.
+    Folding it in here costs ONE python interpreter start instead of a PowerShell process plus
+    an interpreter, and it is the honest home besides: this suite already guards the
+    design<->schema seam, and the validator is the third corner of it.
+
+    MEASURED 0.4s for the first two scripts. See the re-measured tier total in run_fast_cages.ps1.
 #>
 [CmdletBinding()]
 param([string]$RepoRoot)
@@ -47,7 +67,8 @@ if (-not (Test-Path -LiteralPath $python)) {
 
 $scripts = @(
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
-    @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
+    @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() }
 )
 
 $failed = 0
@@ -67,5 +88,6 @@ foreach ($s in $scripts) {
 }
 
 if ($failed -gt 0) { exit 1 }
-Write-Host '[contract-binding] design tables match the schema, and all 7 regressions are still caught'
+Write-Host ('[contract-binding] design tables match the schema, all 7 regressions are still ' +
+            'caught, and the snapshot verdict is recomputed rather than trusted')
 exit 0

@@ -22,7 +22,7 @@ REQUIRES  ajv-cli  (npm install -g ajv-cli)
 USAGE     python _triage/factory_os/run_schema_fixtures.py
 EXIT      0 = every case behaved as declared · 1 = at least one did not
 """
-import json, os, subprocess, sys, tempfile
+import json, os, re, subprocess, sys, tempfile
 
 SCHEMA = '_triage/factory_os/schemas.json'
 
@@ -36,8 +36,49 @@ HYP = {"entity": "Hypothesis", "hypothesis_id": "B14-H01", "boss_family": 14, "r
        "preregistration_ref": OWNER}
 
 
-def case(name, guards, expect, instance):
-    return {"name": name, "guards": guards, "expect": expect, "instance": instance}
+def case(name, guards, expect, instance, says=None):
+    """`says`: error specs that must each match at least one ajv error. See why_says below."""
+    return {"name": name, "guards": guards, "expect": expect, "instance": instance,
+            "says": says or []}
+
+
+# WHY `says` HAD TO EXIST (ORDER-601 part 2, measured 2026-07-30)
+#   The root of this schema is a oneOf over 19 entities, so ajv reports the first error from
+#   EVERY branch: validating a malformed ControlRoomSnapshotV5 yields 20 errors, and the first
+#   one is `#/$defs/OwnerRef/required missingProperty owner_type` -- an entity that has nothing
+#   to do with the instance. Any assertion on ajv's first line, or a grep over its whole
+#   output, can therefore be satisfied by a branch the fixture never intended to reach.
+#   `expect=fail` alone has the same weakness in a subtler form: it cannot distinguish "the
+#   rule I am testing rejected this" from "something else did".
+#
+#   So a `says` spec matches against the PARSED error array: keyword, instancePath, and any
+#   params key (missingProperty, unevaluatedProperty, ...). ORDER-601's acceptance asks for
+#   "the ajv error path/keyword naming that property", and this is what makes that checkable
+#   instead of asserted.
+def ajv_errors(out):
+    m = re.search(r'\[\{.*\}\]', out, re.S)
+    if not m:
+        return None
+    try:
+        return json.loads(m.group(0))
+    except ValueError:
+        return None
+
+
+def unmet_says(out, says):
+    errors = ajv_errors(out)
+    if errors is None:
+        return ['ajv printed no parsable error array, so no error could be asserted against']
+    unmet = []
+    for spec in says:
+        for err in errors:
+            params = err.get('params') or {}
+            if all((err.get(k) == v if k in ('keyword', 'instancePath')
+                    else params.get(k) == v) for k, v in spec.items()):
+                break
+        else:
+            unmet.append('no ajv error matched %s' % json.dumps(spec, sort_keys=True))
+    return unmet
 
 
 def without(d, *keys):
@@ -208,8 +249,11 @@ CASES += [
     case("builder-input-valid", "the positive the negatives below are one delta away from", "pass",
          BUILDER_OK),
     case("builder-input-carrying-all-clear",
-         "ORDER-601: a supplied verdict must be refused BY THE SCHEMA, not by code", "fail",
-         with_evidence(all_clear=True)),
+         "ORDER-601: a supplied verdict must be refused BY THE SCHEMA, not by code, and the "
+         "error must NAME the property", "fail",
+         with_evidence(all_clear=True),
+         says=[{"keyword": "unevaluatedProperties", "instancePath": "/meta/reconciliation",
+                "unevaluatedProperty": "all_clear"}]),
     case("builder-input-carrying-verdict-object",
          "ORDER-601: the builder root is closed, so it cannot acquire a verdict either", "fail",
          builder(verdict={"all_clear": True, "reasons": []})),
@@ -248,6 +292,66 @@ CASES += [
           "verdict": {"all_clear": True, "reasons": []},
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
           "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+]
+
+# ---------------------------------------------------------------------------------------
+# ORDER-601 part 2 -- the CLOSED root, and the v4 source-row metadata.
+#
+# The root was `additionalProperties: true` on the argument that the snapshot versions
+# additively. Those two facts do not imply each other: additive versioning means no field is
+# REMOVED or RENAMED, and declaring each new domain satisfies it. An open root let a whole
+# top-level domain appear that no contract described -- the same shape as the source array
+# that silently dropped a file which did not exist.
+#
+# Each of the three removals below is asserted INDEPENDENTLY and by error path, because
+# "expect=fail" on a 19-branch oneOf is satisfied by any of 20 errors (see why_says above).
+
+SNAP_OK = {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
+           "verdict": {"all_clear": True, "reasons": []},
+           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
+           "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}
+
+COMPAT_ROW = {"name": "live_deals", "mandatory": True, "read_ok": True, "fresh": True,
+              "age_hours": 1.0, "path": "portfolio\\DEPLOYMENTS.csv", "sha256": "a" * 64,
+              "mtime": "2026-07-28T23:44:11"}
+
+CASES += [
+    case("snapshot-output-undeclared-top-level-domain",
+         "ORDER-601: the root is CLOSED, so a domain no contract describes cannot be bolted "
+         "on. This case fails only because of the closing - it passed before it", "fail",
+         with_(SNAP_OK, brand_new_domain={"a": 1}),
+         says=[{"keyword": "unevaluatedProperties", "instancePath": "",
+                "unevaluatedProperty": "brand_new_domain"}]),
+    case("snapshot-output-missing-entity",
+         "ORDER-601: removing `entity` must fail AT THE ROOT - without the discriminator the "
+         "document cannot even be routed to a contract", "fail",
+         without(SNAP_OK, "entity"),
+         says=[{"keyword": "required", "instancePath": "", "missingProperty": "entity"}]),
+    case("snapshot-output-missing-system-health",
+         "ORDER-601: asserted independently of the other two removals", "fail",
+         without(SNAP_OK, "system_health"),
+         says=[{"keyword": "required", "instancePath": "", "missingProperty": "system_health"}]),
+    case("snapshot-output-missing-summary",
+         "ORDER-601: asserted independently of the other two removals", "fail",
+         without(SNAP_OK, "summary"),
+         says=[{"keyword": "required", "instancePath": "", "missingProperty": "summary"}]),
+    case("meta-registry-with-duplicate-entries",
+         "a registry naming the same source twice makes its own cardinality unreadable. This "
+         "half IS expressible in JSON Schema (uniqueItems); a duplicate in the `sources` "
+         "OBJECT array is not, and is snapshot_validator's DUPLICATE_SOURCE_NAME instead",
+         "fail", with_meta(mandatory_sources=["live_deals", "live_deals"]),
+         says=[{"keyword": "uniqueItems", "instancePath": "/meta/mandatory_sources"}]),
+    case("source-row-carrying-the-real-v4-metadata",
+         "ORDER-601: the real rows are {path, sha256, mtime, age_hours} (control_room_snapshot"
+         ".ps1 FileMeta). The closed row had nowhere to put them, so the boundary could not "
+         "preserve what it does not accept - this positive is what makes that testable",
+         "pass", with_meta(sources=[COMPAT_ROW])),
+    case("source-row-with-an-undeclared-field",
+         "the row stays CLOSED after widening it: adding three compatibility fields must not "
+         "turn it into a bag", "fail",
+         with_meta(sources=[with_(COMPAT_ROW, bogus=1)]),
+         says=[{"keyword": "unevaluatedProperties", "instancePath": "/meta/sources/0",
+                "unevaluatedProperty": "bogus"}]),
 ]
 
 
@@ -290,11 +394,23 @@ def main():
         # not read its input" and "the contract rejected this instance" are different facts
         # and must never share an outcome.
         good = got != ERROR and got == c['expect']
+        notes = []
+        if c['says']:
+            if c['expect'] != INVALID:
+                # A `says` spec on a case expected to PASS can never be met, and a check that
+                # cannot be met is worse than absent: it reads as coverage.
+                notes.append('a `says` spec is meaningless on an expect=pass case')
+            elif good:
+                notes = unmet_says(out, c['says'])
+        if notes:
+            good = False
         if not good:
             bad += 1
         print("  [%s] %-42s expect=%s got=%-5s (%s)"
               % ('OK ' if good else 'BAD', c['name'], c['expect'], got, c['guards']))
-        if not good and out:
+        for n in notes:
+            print("        -> %s" % n)
+        if not good and not notes and out:
             print("        %s" % out.splitlines()[0][:160])
 
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
@@ -306,11 +422,19 @@ def main():
               % out.splitlines()[0][:120])
         bad += 1
     print("  portfolio/control_room_snapshot.json -> %s" % ('PASSES' if got == VALID else 'FAILS'))
-    print("  This is EXPECTED to fail today and is not counted as a failure: the committed snapshot is")
-    print("  v3/v4 and carries no `entity`, while ControlRoomSnapshotV5 describes the v5 target. It is")
-    print("  printed because audit-3 found the schema does not carry meta fields the real file has")
-    print("  (stale_bar_hours, decision_bar_trades, counting_method) nor its real source-row shape.")
-    print("  Slice S4 is not done until this line reads PASSES.")
+    print("  This is EXPECTED to fail today and is not counted as a failure: ControlRoomSnapshotV5")
+    print("  describes the v5 TARGET and the committed file is a v3 artifact (meta.version == 3,")
+    print("  though control_room_snapshot.ps1 at HEAD writes 4 -- the file predates its own writer).")
+    print("  MEASURED gap, 2026-07-30, so this line stops being a vague 'needs migrating':")
+    print("    root missing  entity, verdict        <- the discriminator and the computed verdict")
+    print("    meta missing  build_id, mandatory_sources, reconciliation")
+    print("    row  missing  name, mandatory, read_ok, fresh   <- real rows are {path,sha256,mtime,age_hours}")
+    print("  The three meta compatibility fields audit-3 found dropped (stale_bar_hours,")
+    print("  decision_bar_trades, counting_method) are now carried, and ORDER-601 part 2 added")
+    print("  path/sha256/mtime to the source row, so the REAL row metadata is now expressible at")
+    print("  the boundary. What remains above is identity and evidence, which is S4's migration:")
+    print("  reconciling `path` with `name` needs a decision about which one is the identity, and")
+    print("  that decision belongs with the readers. Slice S4 is not done until this line PASSES.")
 
     print("\n=== %s ===" % ('ALL %d CASES BEHAVED AS DECLARED' % len(CASES) if bad == 0
                             else '%d CASE(S) DID NOT' % bad))

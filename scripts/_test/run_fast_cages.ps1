@@ -143,9 +143,20 @@ $FAST_SUITES = @(
     # findings as a schema mutation and asserts the binding goes red, which the previous
     # checker did for 0 of 7. Three controls prove it is not simply always red.
     #
-    # MEASURED 0.4s, and the whole tier re-measured at 13.3s against the 15s budget with it
-    # in place. That leaves ~1.7s. The warning two entries above still stands and is tighter:
-    # THE NEXT ADDITION HERE HAS TO DISPLACE SOMETHING.
+    # MEASURED 0.4s when added. The tier total recorded here at the time was 13.3s; it was
+    # RE-MEASURED at 14.7s on 2026-07-30 before ORDER-601 part 2 touched anything, so the
+    # earlier figure had drifted by 1.4s -- a per-suite time is stable, a TIER TOTAL is not,
+    # and the handoff that carried "14.0s" forward was quoting a number nobody had re-run.
+    # Re-measure before spending headroom; do not quote this comment as evidence.
+    #
+    # ORDER-601 part 2 (2026-07-30) added a THIRD python script to this wrapper --
+    # run_snapshot_validator_tests.py, the snapshot verdict's computation + mutation suite --
+    # instead of adding a 13th PowerShell suite, which at 0.3s of process startup alone would
+    # have breached the budget outright. MEASURED marginal cost: this suite 0.4s -> 0.4-0.5s,
+    # tier 14.5s and 13.9s over two consecutive runs. So the whole computation suite cost about
+    # 0.1s, because the expensive part of a suite here is the process, not the assertions.
+    # THAT is the displacement lesson, and it is cheaper than displacing anything:
+    # a python cage belongs in an existing python wrapper unless it needs its own lifecycle.
     'run_contract_binding_tests.ps1',
     # BACKLOG-D32 (2026-07-30): guards the trigger that decides whether this whole tier runs.
     # It is last on purpose -- if the declarations and the generated pathspec have drifted,
@@ -201,8 +212,15 @@ $SUITE_GUARDS = @{
                                           'scripts/control_room_snapshot.ps1',
                                           'scripts/monitor_rotation.ps1',
                                           'scripts/lib/monitor_coverage.ps1')
+    # ORDER-601 part 2 added the snapshot validator and its computation suite to this wrapper
+    # rather than to a suite of its own (the budget note in that file explains the trade), so
+    # both files are inputs to it. Declaring them is what puts them in the trigger pathspec --
+    # without these two lines the cage would run only when something ELSE it guards was staged,
+    # which is the exact five-times-in-four-days failure BACKLOG-D32 exists to end.
     'run_contract_binding_tests.ps1'  = @('_triage/factory_os/gen_design_contracts.py',
                                           '_triage/factory_os/run_contract_binding_tests.py',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          '_triage/factory_os/run_snapshot_validator_tests.py',
                                           '_triage/factory_os/schemas.json',
                                           '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
