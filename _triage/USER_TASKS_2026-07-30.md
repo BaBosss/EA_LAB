@@ -140,24 +140,39 @@ headline question is precisely whether the "nothing reads §2" claim holds.
 ### ✅ How to record your decision now — one appended line, no guard touched
 
 ```bash
-tools\python312\python.exe _triage\factory_os\check_s2a_signoff.py --template
+tools\python312\python.exe _triage\factory_os\check_s2a_attestation.py --template
 ```
 
-That prints a ready-made line with the current `proposal_sha256` already filled in. Append it to
-`_triage/factory_os/s2a_signoff.jsonl`, edit `decision` / `decided_at` / `reason`, commit.
+That prints a ready-made line with the current `bundle_sha256` already filled in. Append it to
+`_triage/factory_os/s2a_attestations.jsonl`, edit `decision` / `decided_at` / `reason`, commit.
 
 **Nothing else changes** — not `check_s2a_migration.py`, not `gen_s2a_migration.py`, not
 `s2a_migration.jsonl`. C2 still refuses `APPROVED` inside D1, which is the guard that stops *Claude*
 self-approving, and it stays armed. Validate any time with:
 
 ```bash
-tools\python312\python.exe _triage\factory_os\check_s2a_signoff.py
+tools\python312\python.exe _triage\factory_os\check_s2a_attestation.py
 ```
 
 An empty or partial log is **not** an error — it means you have not decided yet, and it never reports
-`ORDER-600` complete. If a cited file has changed since the proposal was pinned, signing that owner is
-**blocked** until it is re-pinned, or until you add `"stale_pin_acknowledged": true` to record that you
-signed anyway.
+`ORDER-600` complete.
+
+> ⚠️ **Read this once, then it never needs repeating.** This log is an **attestation, not a signature.**
+> It records that a decision was written down against specific bytes; it **cannot prove you were the one
+> who wrote it** — this repo commits under a single git identity, so nothing separates you from any other
+> writer. Codex audit 8 made that point and it is correct, so the artifact is named honestly rather than
+> dressed up. **What it does buy:** approving costs one line instead of editing the evidence, the
+> acceptance rule and the generator together — which was the state that made approval impossible.
+>
+> `bundle_sha256` covers **six files**: D1, D2, the coverage reconciliation, the generator and both
+> validators. So if the document you read, or the rules that decide what your decision *means*, change
+> after you record it, the record stops matching and must be re-made. It cannot be silently
+> reinterpreted under new rules.
+>
+> If a cited file changed since the proposal was pinned, recording for that owner is **blocked** until it
+> is re-pinned (`gen_s2a_migration.py`), or until you add `"stale_pin_acknowledged": true` **plus** a
+> `"stale_pin_acknowledgement"` object naming `{path, pinned_blob, current_blob}` — the checker
+> recomputes those values, so it is a record of what you accepted, not a checkbox.
 
 ---
 

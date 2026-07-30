@@ -103,7 +103,30 @@
 
 ---
 
-## ORDER-602 — [factory/governance] S2a closure: separate the sign-off from the proposal, and replace the broad UNOWNED escape — `DONE` (A–E all built; owed an independent re-check) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-602 — [factory/governance] S2a closure: separate the decision from the proposal, and replace the broad UNOWNED escape — `DONE` (**audit 8 answered; rescoped to an attestation**) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### 🔴 BLIND AUDIT 8 = NOT DONE on all of A–E → **answered by rescoping, not by building more** (`23cd1aff`)
+> Report: `_triage/factory_os/CODEX_AUDIT8_2026-07-30.md` · **every probed finding reproduced before it was accepted**
+>
+> **The decision the user made:** audit 8 §2 argued the smaller boundary is the right one, and it is right for a reason no amount of extra fields fixes — **nothing in this repo can distinguish an owner action from an author typing the owner's name.** MEASURED: the repo commits under **one git identity**, the same one Claude commits under, so authorship cannot separate them either. An `authorization_ref` would *record* a provenance claim, not *establish* one.
+>
+> ⇒ **the artifact is renamed to what it actually is — an ATTESTATION, not a signature** — and says so in its header, its output and its data file. A 23-owner sign-off subsystem was **not** built; it would have ended at the same limit.
+>
+> **What it still buys, which is why it exists:** the audit-7 deadlock is gone. Recording a decision costs **one appended line**, and C2 keeps refusing `APPROVED` inside D1. **`ORDER-600` blocks on ONE decision (the Coverage edge), not on all 23 owners** — the checker now says that instead of "0 of 23 decided".
+>
+> | audit-8 finding | fix, all verified against the audit's own reproduction |
+> |---|---|
+> | **MAJOR 6** fingerprint could never see HEAD move | it used the **memoized** `head_oid()` ⇒ compared start-HEAD with start-HEAD. Probe before: `head-A/head-A equal=True`, after: `head-A/head-B DIFFERENT=True`. Also now hashes the **working-tree** inputs (D1, reconciliation, `MASTER_BACKLOG.md`, schema) it actually judges |
+> | **MAJOR 5** string `"false"` granted the exemption | boolean identity + a **structured** acknowledgement `{path, pinned_blob, current_blob}` **recomputed** against D1 and HEAD |
+> | **BLOCKER 2** digest covered D1 only | now binds the whole reviewed bundle — **6 files**: D1 · D2 · reconciliation · generator · **both validators** |
+> | **BLOCKER 3** append-only was prose | **A7**: the version committed at HEAD must stay a byte **prefix** of the working copy |
+> | **MAJOR 4** (C8 half) | a traceable token + a meaningless label could coexist ⇒ the label must be **derivable** from its `source_token` |
+> | **MAJOR 7** my "correction" was itself false | I claimed the event log records only completed occurrences — **`RUN_STARTED` is defined, emitted and committed**. I replaced a wrong causal bridge with a **wrong fact** and called it a correction |
+> | **MODERATE 8** 2 anchors ≠ the state they authorize | what can be computed now **is** computed — no-current-owner must have no tracked owner file; derived/transient must agree with the schema's `x-derived`/`x-owner-file` |
+>
+> <sub>🔧 **A bootstrap deadlock of my own, caught immediately:** A7's first test read both sides from git, so the suite failed because the log was not yet committed — and the log could not be committed because the suite failed. **Third time this session a control depended on mutable repo state instead of the logic under test.** The committed/working bytes are injectable now, so the rule is exercised identically whatever HEAD holds.</sub>
+>
+> 🔻 **Owed:** an independent re-check. **What is left is genuinely small** — audit 8's remaining ask (`authorization_ref` resolving to a pre-existing owner action) is **deliberately not built**, because it cannot be satisfied in this repo; that limitation is now stated in the artifact rather than papered over.
 
 > ### ✅ A–E BUILT (`ea44077e`) — **the owner can now approve without touching a single guard**
 >
