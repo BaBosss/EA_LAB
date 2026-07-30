@@ -1,81 +1,159 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ea-lab.local/factory_os/schemas.json",
-  "title": "EA LAB Factory OS - machine-readable entity schemas (DESIGN ONLY, not yet in force)",
-  "description": "Appendix to _triage/EA_LAB_FACTORY_OS_DESIGN.md. One file on purpose: the design brief forbids document sprawl. Nothing here is implemented; no validator consumes it yet. Every entity names its canonical owner file and its single writer. NONE of these entities may carry result or verdict prose - that rule comes from _triage/EA_LAB_EVOLUTION_PLAN_DRAFT.md 20.7 and applies unchanged.",
+  "title": "EA LAB Factory OS - entity schemas (DESIGN ONLY, rev 2 after the 2026-07-30 blind audit)",
+  "description": "Appendix to _triage/EA_LAB_FACTORY_OS_DESIGN.md. REV 2 answers audit finding P0-1: rev 1 put every schema under $defs with no root type/properties/oneOf, so validating any instance against this FILE accepted almost anything and a slice could have reported 'schema-valid' while no contract ran at all. The root is now a discriminated union on `entity`, so validating against the file itself resolves to exactly one entity schema and unknown shapes are rejected. Every entity also sets unevaluatedProperties:false. Nothing here is implemented; no validator consumes it yet.",
+
   "x-ea-lab-meta": {
     "status": "DESIGN_ONLY",
+    "revision": 2,
     "produced": "2026-07-30",
-    "produced_at_commit": "b430280b",
-    "session_lane": "S-2026-07-30-DESIGN1",
-    "blocking_gate": "Stage 2 blind Codex audit must be answered before any Order is written from this",
+    "supersedes": "rev 1 (commit e7d66a27)",
+    "audit": "_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md",
+    "blocking_gate": "no taskboard Order may be written until the revised design passes re-review",
+    "validator_contract": [
+      "A conforming validator MUST validate each instance against this root, which resolves via `entity` to exactly one $defs schema. Validating against $defs/<Entity> directly is also permitted; validating against the file with no entity discriminator is NOT a conformance claim.",
+      "Every entity requires negative fixtures. A schema that has never rejected anything is untested - the same rule this repo applies to guards.",
+      "Constraints stated only in prose in rev 1 (transitions, immutability, permissions, ALL CLEAR) are NOT expressible in JSON Schema. They are marked x-enforced-by and MUST be enforced by the named validator code. A field carrying x-enforced-by is a reminder that the schema does NOT check it."
+    ],
     "forbidden_everywhere": [
       "verdict text",
       "result narrative",
-      "any field that duplicates a fact owned by PROJECT_STATE.md, EA_SCORECARD_AND_REGISTRY.md, AGENT_TASKBOARD.md, portfolio/DEPLOYMENTS.csv, portfolio/ACCOUNTS.csv or docs/PIPELINE.md"
+      "any MUTABLE copy of a fact owned elsewhere - store a pinned reference (path + commit_oid + blob_oid + raw_sha256) instead. Audit finding P0-2: rev 1 stored mutable copies of coverage state, work status, run occurrence and deployment identity, all of which already have owners."
     ]
   },
 
+  "type": "object",
+  "required": ["entity"],
+  "properties": {
+    "entity": {
+      "type": "string",
+      "description": "Discriminator. Every persisted instance carries it, including CSV-backed rows.",
+      "enum": [
+        "OwnerRef", "Hypothesis", "ParameterBinding", "TestUniverse", "LogicalSymbol",
+        "InstrumentProfile", "CoverageCell", "RunJournal",
+        "EvidenceRef", "CandidateManifest",
+        "MagicAllocation", "DeploymentAttestationEvent", "WorkReceipt", "SystemFinding",
+        "IdeaRef", "SnapshotMeta", "SafeProjection"
+      ]
+    }
+  },
+  "oneOf": [
+    { "properties": { "entity": { "const": "OwnerRef" } },                   "$ref": "#/$defs/OwnerRef" },
+    { "properties": { "entity": { "const": "Hypothesis" } },                 "$ref": "#/$defs/Hypothesis" },
+    { "properties": { "entity": { "const": "ParameterBinding" } },           "$ref": "#/$defs/ParameterBinding" },
+    { "properties": { "entity": { "const": "TestUniverse" } },               "$ref": "#/$defs/TestUniverse" },
+    { "properties": { "entity": { "const": "LogicalSymbol" } },              "$ref": "#/$defs/LogicalSymbol" },
+    { "properties": { "entity": { "const": "InstrumentProfile" } },          "$ref": "#/$defs/InstrumentProfile" },
+    { "properties": { "entity": { "const": "CoverageCell" } },               "$ref": "#/$defs/CoverageCell" },
+    { "properties": { "entity": { "const": "RunJournal" } },                 "$ref": "#/$defs/RunJournal" },
+    { "properties": { "entity": { "const": "EvidenceRef" } },                "$ref": "#/$defs/EvidenceRef" },
+    { "properties": { "entity": { "const": "CandidateManifest" } },          "$ref": "#/$defs/CandidateManifest" },
+    { "properties": { "entity": { "const": "MagicAllocation" } },            "$ref": "#/$defs/MagicAllocation" },
+    { "properties": { "entity": { "const": "DeploymentAttestationEvent" } }, "$ref": "#/$defs/DeploymentAttestationEvent" },
+    { "properties": { "entity": { "const": "WorkReceipt" } },                "$ref": "#/$defs/WorkReceipt" },
+    { "properties": { "entity": { "const": "SystemFinding" } },              "$ref": "#/$defs/SystemFinding" },
+    { "properties": { "entity": { "const": "IdeaRef" } },                    "$ref": "#/$defs/IdeaRef" },
+    { "properties": { "entity": { "const": "SnapshotMeta" } },               "$ref": "#/$defs/SnapshotMeta" },
+    { "properties": { "entity": { "const": "SafeProjection" } },             "$ref": "#/$defs/SafeProjection" }
+  ],
+
   "$defs": {
+
+    "OwnerRef": {
+      "type": "object",
+      "description": "The ONLY legal way for a Factory OS artifact to carry a fact owned elsewhere. Pins the owner at a commit so the reference cannot silently drift, exactly as the existing event log does. Rev 1's mutable copies are replaced by this everywhere.",
+      "required": ["entity", "owner_type", "path", "commit_oid", "blob_oid", "raw_sha256"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "OwnerRef" },
+        "owner_type": { "enum": ["taskboard_order", "scorecard", "project_state", "deployments_csv", "accounts_csv", "attestation_map", "master_backlog", "param_registry", "param_linkage", "intake_queue", "event_log", "evidence_manifest", "session_ledger", "optimization_procedure"] },
+        "path": { "type": "string" },
+        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "blob_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "anchor": { "type": ["string", "null"], "description": "must occur EXACTLY once in the blob and contain no spaces - inherited constraint from the event log utility" }
+      }
+    },
 
     "Hypothesis": {
       "type": "object",
-      "x-owner-file": "factory/hypotheses.csv",
+      "x-owner-file": "factory/hypotheses.jsonl",
       "x-writer": "claude|user",
-      "description": "A causal claim about why a configuration of a Boss family makes money. A numeric value, a symbol or a timeframe NEVER mints a new hypothesis (Grill decision 4/5).",
-      "required": ["hypothesis_id", "boss_family", "revision", "title", "causal_claim", "falsifier", "architecture_digest", "coupling_class", "status", "created_commit"],
-      "additionalProperties": false,
+      "x-enforced-by": "hypothesis_validator: status transitions, and the refusal to register without a falsifier",
+      "description": "GENUINELY NEW only in part. Audit P0-2: the causal claim, acceptance criteria and execution context of a hypothesis already live in taskboard pre-registration. This entity therefore stores the STRUCTURED, MACHINE-READ fields (identity, architecture digest, module set, coupling) and REFERENCES the taskboard for the prose. It must not restate acceptance criteria.",
+      "required": ["entity", "hypothesis_id", "boss_family", "revision", "architecture_digest", "module_set", "coupling_class", "experimental", "status", "preregistration_ref"],
+      "unevaluatedProperties": false,
       "properties": {
-        "hypothesis_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}$", "examples": ["B14-H01"] },
+        "entity": { "const": "Hypothesis" },
+        "hypothesis_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}$" },
         "boss_family": { "type": "integer", "minimum": 11, "maximum": 18 },
-        "revision": { "type": "integer", "minimum": 1, "description": "full revision id is <hypothesis_id>-r<revision>" },
-        "title": { "type": "string", "minLength": 3, "maxLength": 120 },
-        "causal_claim": { "type": "string", "minLength": 40, "description": "WHY this makes money. Required non-empty: a hypothesis with no claim cannot be falsified, and a claim you cannot falsify is a slogan." },
-        "falsifier": { "type": "string", "minLength": 20, "description": "The concrete observation that would kill this hypothesis. Pre-registered, before evidence." },
-        "architecture_digest": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). A change here is what MECHANICALLY forces a new revision - not someone's judgement about whether the claim really changed." },
-        "module_set": { "type": "array", "items": { "type": "string" }, "description": "capability tokens the wrapper enables, e.g. LAB_CAP_STACK" },
-        "coupling_class": { "enum": ["SCALE_INVARIANT", "COUPLED"], "description": "COUPLED = money/balance-% TP or grid/martingale: edge and sizing must be optimized jointly (decisions 46-48)" },
-        "safety_profile": { "type": "string", "description": "id into factory/instrument_profiles.yaml safety section" },
-        "experimental": { "type": "boolean", "default": true, "description": "EXPERIMENTAL cannot reach VPS/Demo/Live and cannot be promotion evidence (decision 33)" },
-        "engine_edge": { "type": "boolean", "default": false, "description": "flat-lot PF<1 while escalated PF>1. Requires ALL FIVE cage conditions in CLAUDE.md and permanently small sizing." },
-        "status": { "enum": ["DRAFT", "REGISTERED", "WRAPPER_GENERATED", "PARITY_PASSED", "EVIDENCE_IN_PROGRESS", "EVIDENCE_COMPLETE", "AWAITING_VERDICT", "CLOSED"], "description": "no verdict values here on purpose - the verdict lives in EA_SCORECARD_AND_REGISTRY.md" },
-        "created_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "revision": { "type": "integer", "minimum": 1 },
+        "revision_id": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
+        "architecture_digest": { "type": "string", "pattern": "^[0-9a-f]{16}$", "description": "hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). Change here MECHANICALLY forces a new revision." },
+        "module_set": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ModuleUse" } },
+        "coupling_class": { "enum": ["SCALE_INVARIANT", "COUPLED"] },
+        "experimental": { "type": "boolean", "description": "REQUIRED, not defaulted. Audit P1: JSON Schema `default` does not populate a missing field, so a consumer would have read absent as false and let an experimental module reach a promotion path." },
+        "engine_edge": { "type": "boolean" },
+        "status": { "enum": ["DRAFT", "REGISTERED", "WRAPPER_GENERATED", "PARITY_PASSED", "EVIDENCE_IN_PROGRESS", "EVIDENCE_COMPLETE", "AWAITING_VERDICT", "CLOSED"] },
+        "preregistration_ref": { "$ref": "#/$defs/OwnerRef", "description": "the taskboard order that owns the causal claim, falsifier and pre-registered bars. This entity does NOT copy them." },
         "superseded_by": { "type": ["string", "null"] }
       }
     },
 
-    "ParameterDefinitionExtension": {
+    "ModuleUse": {
       "type": "object",
-      "x-owner-file": "docs/PARAM_REGISTRY.csv",
-      "x-writer": "claude",
-      "description": "ADDITIVE columns on the existing 184-row registry. The existing 12 columns keep their meaning so param_registry_check.ps1 keeps working across the change. Measured 2026-07-30: optimize_stage is UNKNOWN on 177/184 rows and safe_range on 181/184 - which is why the registry cannot yet generate an optimize plan.",
-      "required": ["role", "surface"],
-      "additionalProperties": false,
+      "description": "A capability token plus the stability of the module behind it. Audit P1: without per-module stability, an EXPERIMENTAL module's evidence could reach a Candidate.",
+      "required": ["token", "module_version", "stability"],
+      "unevaluatedProperties": false,
       "properties": {
-        "role": { "enum": ["TUNABLE", "RUNTIME", "SIZING", "SAFETY", "LOCKED", "INACTIVE"], "description": "decision 28. SAFETY is declared sinput so the optimizer cannot reach it at all, rather than relying on a script to decline." },
-        "surface": { "enum": ["OPERATOR", "RESEARCH", "HIDDEN"], "description": "Thin Wrappers show Tunable+Runtime+Sizing+Safety only (decision 29). Operator target: <=40 per Boss." },
-        "display_label": { "type": "string", "description": "MQL5 input(name=...) - changes what the user sees WITHOUT renaming the identifier, so existing .set files keep working." },
-        "enum_name": { "type": ["string", "null"], "description": "replaces a numeric pseudo-enum. Confirmed offenders, all declared 'input int': _9_PendingMode, _14_Direction, _16_BaseLotMode, _18_DirMode, _50_RegimeMode." },
-        "unit_true": { "enum": ["POINTS", "PIPS", "PRICE", "ATR_MULT", "MONEY", "PERCENT", "BARS", "COUNT", "BOOL", "ENUM"], "description": "the unit the CODE uses, not the one the name claims. The chassis currently contains both conventions at once: Stack_PipSize() implements true pips (10x point on 3/5-digit symbols) while ExitManager multiplies _21_TP_Pip / _31_SL_Pip straight by _Point. Same word, two meanings, 10x apart." },
-        "optimize_stage": { "enum": ["ARCHITECTURE", "SIGNAL", "EXIT", "EXECUTION", "STRESS", "FREEZE", "UNKNOWN"] },
-        "safe_range_start": { "type": ["number", "null"] },
-        "safe_range_step": { "type": ["number", "null"] },
-        "safe_range_stop": { "type": ["number", "null"] },
-        "precedence_owner": { "type": ["string", "null"], "description": "the input that supersedes this one, from docs/PARAM_LINKAGE.md. classification=OVERRIDE means MEMBER OF A PRECEDENCE CHAIN, not inactive - reading it as inactive was the P0 repaired 2026-07-30." },
-        "supported_profiles": { "type": "array", "items": { "type": "string" } }
+        "token": { "type": "string", "pattern": "^LAB_CAP_[A-Z0-9_]+$" },
+        "module_version": { "type": "string" },
+        "stability": { "enum": ["EXPERIMENTAL", "CERTIFIABLE"] }
       }
+    },
+
+    "ParameterBinding": {
+      "type": "object",
+      "x-owner-file": "factory/parameter_bindings.jsonl",
+      "x-writer": "claude",
+      "description": "NEW ENTITY answering the audit: rev 1 put role=LOCKED/TUNABLE on the GLOBAL parameter definition, but locked-ness is per hypothesis - the same input can be LOCKED in B14-H01 and TUNABLE in B14-H02. Marking it globally would make optimize_guard refuse it on every Boss. docs/PARAM_REGISTRY.csv keeps permanent semantics (owner/unit/context/active_when); this binds role and locked value per hypothesis revision. The wrapper generator and optimize_guard MUST read the same resolver.",
+      "required": ["entity", "hypothesis_revision", "parameter", "role", "surface", "definition_ref"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "ParameterBinding" },
+        "hypothesis_revision": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
+        "parameter": { "type": "string" },
+        "role": { "enum": ["TUNABLE", "RUNTIME", "SIZING", "SAFETY", "LOCKED", "INACTIVE"] },
+        "surface": { "enum": ["OPERATOR", "RESEARCH", "HIDDEN"] },
+        "locked_value": { "description": "required when role=LOCKED; emitted as a const by the generator" },
+        "optimize_stage": { "enum": ["ARCHITECTURE", "SIGNAL", "EXIT", "EXECUTION", "STRESS", "FREEZE", "UNKNOWN"] },
+        "safe_range": {
+          "type": ["object", "null"],
+          "required": ["start", "step", "stop"],
+          "unevaluatedProperties": false,
+          "properties": { "start": { "type": "number" }, "step": { "type": "number" }, "stop": { "type": "number" } }
+        },
+        "definition_ref": { "$ref": "#/$defs/OwnerRef", "description": "pins the docs/PARAM_REGISTRY.csv row that owns this parameter's permanent semantics" }
+      },
+      "allOf": [
+        { "if": { "properties": { "role": { "const": "LOCKED" } }, "required": ["role"] },
+          "then": { "required": ["locked_value"] } }
+      ]
     },
 
     "TestUniverse": {
       "type": "object",
-      "x-owner-file": "factory/universe.yaml",
+      "x-owner-file": "factory/universe.jsonl",
       "x-writer": "claude|user",
-      "required": ["universe_version", "kind", "symbols", "timeframes", "created_commit"],
-      "additionalProperties": false,
+      "description": "One of the two facts the audit agreed is GENUINELY unowned: a versioned, mandatory symbol x TF set has no canonical artifact today.",
+      "required": ["entity", "universe_version", "kind", "symbols", "timeframes", "created_commit"],
+      "unevaluatedProperties": false,
       "properties": {
-        "universe_version": { "type": "string", "pattern": "^v[0-9]+$", "description": "versioned per decision 25; a Candidate records which version it was searched in" },
-        "kind": { "enum": ["CORE", "EXPANSION", "PILOT"], "description": "CORE is compulsory (decision 24)" },
-        "symbols": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/LogicalSymbol" } },
+        "entity": { "const": "TestUniverse" },
+        "universe_version": { "type": "string", "pattern": "^v[0-9]+$" },
+        "kind": { "enum": ["CORE", "EXPANSION", "PILOT"] },
+        "symbols": { "type": "array", "minItems": 1, "items": { "type": "string" } },
         "timeframes": { "type": "array", "minItems": 1, "items": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] } },
         "created_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
       }
@@ -83,132 +161,200 @@
 
     "LogicalSymbol": {
       "type": "object",
-      "description": "Logical symbol is separate from the broker string (decision 26). Real cases in this repo: DE40 is traded as GER40; USDJPYm / EURUSDm carry a broker suffix on two accounts.",
-      "required": ["logical", "asset_class", "broker_map"],
-      "additionalProperties": false,
+      "x-owner-file": "factory/universe.jsonl",
+      "required": ["entity", "logical", "asset_class", "broker_map"],
+      "unevaluatedProperties": false,
       "properties": {
-        "logical": { "type": "string", "examples": ["XAUUSD", "DE40", "BTCUSD"] },
+        "entity": { "const": "LogicalSymbol" },
+        "logical": { "type": "string" },
         "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
-        "broker_map": {
-          "type": "object",
-          "description": "lane id -> broker symbol string. A lane with no mapping means the cell is NOT_APPLICABLE on that lane, with that as the written reason.",
-          "additionalProperties": { "type": "string" }
-        },
-        "swap_mode": { "enum": ["POINTS", "INTEREST_CURRENT", "UNKNOWN"], "description": "MEASURED, not assumed: the tester charges POINTS-mode swap (XAUUSD verified at -29.25) but does NOT charge INTEREST_CURRENT (BTCUSD, -14.67%/yr). Anything not POINTS must have financing deducted post-hoc from measured holding time or every number is optimistic." }
+        "broker_map": { "type": "object", "additionalProperties": { "type": "string" }, "description": "lane id -> broker symbol. Real cases: DE40 traded as GER40; USDJPYm/EURUSDm suffixed." },
+        "swap_mode": { "enum": ["POINTS", "INTEREST_CURRENT", "UNKNOWN"], "description": "MEASURED. The tester charges POINTS-mode swap (XAUUSD verified -29.25) but not INTEREST_CURRENT (BTCUSD -14.67%/yr), which must then be deducted post-hoc from measured holding time." }
       }
     },
 
     "InstrumentProfile": {
       "type": "object",
-      "x-owner-file": "factory/instrument_profiles.yaml",
-      "x-writer": "claude",
-      "description": "Layered exactly as OPTIMIZATION_PROCEDURE_V2 section 4 specifies: AssetClass -> SymbolOverride -> Broker/LaneMapping (decision 27). A profile carries NO signal optimization - that separation is what makes reuse legitimate. Baseline values are screening priors, never verdicts.",
-      "required": ["profile_id", "asset_class", "layer"],
-      "additionalProperties": false,
+      "x-owner-file": "factory/instrument_profiles.jsonl",
+      "description": "PARTLY owned already: baseline semantics and starting values live in ea_template/OPTIMIZATION_PROCEDURE_V2.md section 4. This entity owns only the broker/lane mapping layer and pins the rest by reference. Audit P1: a mutable profile string id let profile CONTENT change under a fixed id while a Candidate still looked valid - hence content_hash + version.",
+      "required": ["entity", "profile_id", "profile_version", "content_hash", "layer"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "InstrumentProfile" },
         "profile_id": { "type": "string" },
-        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
+        "profile_version": { "type": "integer", "minimum": 1 },
+        "content_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "hash of the RESOLVED profile content. Candidates hash this, not the id." },
         "layer": { "enum": ["ASSET_CLASS", "SYMBOL_OVERRIDE", "BROKER_LANE"] },
+        "asset_class": { "enum": ["FX_MAJOR", "FX_JPY", "GOLD", "SILVER", "CRYPTO", "INDEX", "ENERGY"] },
         "account_unit": { "enum": ["USD", "CENT"] },
         "values": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] } },
-        "notes": { "type": "string" }
+        "semantics_ref": { "$ref": "#/$defs/OwnerRef" }
+      }
+    },
+
+    "MetricRef": {
+      "type": "object",
+      "description": "NEW. Audit P1: rev 1's CoverageCell held MAIN and BWD metrics beside ONE lane and ONE data_fingerprint - but the fingerprint includes the window, so MAIN and BWD can never share one. The pair could be filled from different lanes and rendered as if same-lane. Every metric now carries its own provenance.",
+      "required": ["window", "pf", "trades", "dd_pct", "run_id", "lane", "data_fingerprint", "model"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "window": { "enum": ["MAIN", "BWD", "HOLDOUT", "OTHER"] },
+        "pf": { "type": "number" },
+        "trades": { "type": "integer", "minimum": 0 },
+        "dd_pct": { "type": "number" },
+        "run_id": { "type": "string" },
+        "lane": { "type": "string" },
+        "data_fingerprint": { "type": "string" },
+        "model": { "type": "integer", "enum": [1, 2, 4] }
       }
     },
 
     "CoverageCell": {
       "type": "object",
-      "x-owner-file": "factory/coverage.csv",
+      "x-owner-file": "factory/coverage.jsonl",
       "x-writer": "automation for state; claude only for not_applicable_reason",
-      "description": "Every supported cell owes a real Baseline + small optimize probe (decision 13). A cell may never be labelled from a neighbouring cell's result.",
-      "required": ["cell_id", "hypothesis_revision", "logical_symbol", "tf", "universe_version", "state", "lane"],
-      "additionalProperties": false,
+      "x-enforced-by": "coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited",
+      "description": "Audit P0-2: MASTER_BACKLOG.md declares itself owner of the coverage matrix. This entity does NOT replace it - MASTER_BACKLOG section 2 becomes GENERATED from these rows, and the ownership move is recorded in the migration table. Metrics are MetricRefs, never bare numbers.",
+      "required": ["entity", "cell_id", "hypothesis_revision", "logical_symbol", "tf", "universe_version", "state", "metrics", "trial_count"],
+      "unevaluatedProperties": false,
       "properties": {
-        "cell_id": { "type": "string", "examples": ["B14-H01-r2/XAUUSD/H4"] },
+        "entity": { "const": "CoverageCell" },
+        "cell_id": { "type": "string" },
         "hypothesis_revision": { "type": "string", "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$" },
         "logical_symbol": { "type": "string" },
         "tf": { "enum": ["M5", "M15", "M30", "H1", "H4", "D1"] },
         "universe_version": { "type": "string" },
-        "state": { "enum": ["UNTESTED", "BASELINE_RUN", "PROBE_RUN", "PULSE", "NO_PULSE", "RESCUE_IN_PROGRESS", "EVIDENCE_COMPLETE", "NOT_APPLICABLE"] },
-        "baseline_run_id": { "type": ["string", "null"] },
-        "probe_run_id": { "type": ["string", "null"] },
-        "best_pf_main": { "type": ["number", "null"] },
-        "trades_main": { "type": ["integer", "null"] },
-        "dd_main_pct": { "type": ["number", "null"] },
-        "best_pf_bwd": { "type": ["number", "null"] },
-        "trades_bwd": { "type": ["integer", "null"] },
-        "dd_bwd_pct": { "type": ["number", "null"] },
+        "state": { "enum": ["UNTESTED", "BASELINE_RUN", "PROBE_RUN", "PULSE", "NO_PULSE", "RESCUE_IN_PROGRESS", "EVIDENCE_COMPLETE", "NOT_APPLICABLE", "UNVERIFIED_IMPORT"] },
+        "metrics": { "type": "array", "items": { "$ref": "#/$defs/MetricRef" }, "description": "PF is unrepresentable without trades and dd_pct by construction: two BWD-clearing hosts had 52 and 62 trades at under 2% DD while every failing host had 343-473." },
         "trial_count": { "type": "integer", "minimum": 0 },
-        "boundary_hit": { "type": "boolean", "description": "true = best result sits on a grid edge; the cell may NOT be closed until the range is expanded (decision 19)" },
-        "lane": { "type": "string" },
-        "data_fingerprint": { "type": "string" },
-        "not_applicable_reason": { "type": ["string", "null"], "description": "REQUIRED when state=NOT_APPLICABLE, and only for technical impossibility (decision 14). Real precedent: EA_BREAKOUT_XAU hardcodes PERIOD_H1, so -Period changes nothing and H4/D1 are genuinely not applicable." },
-        "last_updated_commit": { "type": "string" }
+        "boundary_hit": { "type": "boolean", "description": "true = best result on a grid edge; the cell may NOT be closed until the range is expanded" },
+        "not_applicable_reason": { "type": ["string", "null"] },
+        "backlog_ref": { "$ref": "#/$defs/OwnerRef" }
       },
       "allOf": [
-        {
-          "if": { "properties": { "state": { "const": "NOT_APPLICABLE" } } },
-          "then": { "required": ["not_applicable_reason"] }
-        },
-        {
-          "if": { "required": ["best_pf_main"], "properties": { "best_pf_main": { "type": "number" } } },
-          "then": {
-            "required": ["trades_main", "dd_main_pct"],
-            "description": "A PF may never be recorded without its trade count and drawdown. Provenance: two hosts cleared the BWD gate on 52 and 62 trades at under 2% DD while every host that failed took 343-473 - they did not survive the regime, they were barely in the market during it."
-          }
-        }
+        { "if": { "properties": { "state": { "const": "NOT_APPLICABLE" } }, "required": ["state"] },
+          "then": { "required": ["not_applicable_reason"], "properties": { "not_applicable_reason": { "type": "string", "minLength": 10 } } } }
       ]
     },
 
-    "JobManifest": {
+    "ExecutionKey": {
       "type": "object",
-      "x-owner-file": "factory/runs/<run_id>.json",
-      "x-writer": "automation (scheduler) only",
-      "description": "Realizes EA_LAB_EVOLUTION_PLAN_DRAFT 20.8 Contract B: a lane-aware, fail-visible resume manifest wrapped around the EXISTING runner. No global process kill, no -Force, no change to tester safety.",
-      "required": ["run_id", "attempt", "cell_id", "lane", "terminal_path", "data_dir", "symbol", "tf", "from_date", "to_date", "model", "state"],
-      "additionalProperties": false,
+      "description": "NEW. Audit P1: rev 1's idempotency key did not require the hashes, leverage, deposit, currency or data fingerprint, so a 10,000/1:100 run and a 100,000/1:200 run were indistinguishable and the scheduler would have returned the wrong cached evidence. This is the COMPLETE simulator input identity. Every field is required.",
+      "required": ["expert", "symbol", "tf", "from_date", "to_date", "model", "deposit", "currency", "leverage", "set_hash", "ini_hash", "ex5_hash", "effective_config_hash", "data_fingerprint", "lane"],
+      "unevaluatedProperties": false,
       "properties": {
-        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
-        "attempt": { "type": "integer", "minimum": 1 },
-        "cell_id": { "type": "string" },
-        "lane": { "type": "string", "examples": ["MT5_LANE_1", "MT5_LANE_2", "MT5_LANE_3"] },
-        "terminal_path": { "type": "string" },
-        "data_dir": { "type": "string" },
-        "portable": { "type": "boolean" },
-        "symbol": { "type": "string", "description": "broker string, resolved from LogicalSymbol via the lane map" },
+        "expert": { "type": "string" },
+        "symbol": { "type": "string" },
         "tf": { "type": "string" },
         "from_date": { "type": "string" },
         "to_date": { "type": "string" },
-        "model": { "type": "integer", "enum": [1, 2, 4], "description": "Model 2 is a zero-trade filter only and may never be reported or ranked. Model 4 is exclusive machine-wide and is refused on lane 3, which has no tick cache." },
-        "leverage": { "type": "integer", "description": "written as 1:N in the ini and asserted post-run; an empty Leverage=N is a silent no-op" },
-        "set_hash": { "type": "string" },
-        "ini_hash": { "type": "string" },
-        "ex5_hash": { "type": "string" },
-        "effective_config_hash": { "type": "string", "description": "covers every exposed input PLUS every locked constant" },
-        "lease_id": { "type": "string" },
-        "state": { "enum": ["QUEUED", "LEASED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
-        "started_at": { "type": ["string", "null"] },
-        "finished_at": { "type": ["string", "null"] },
-        "exit_code": { "type": ["integer", "null"] },
-        "report_path": { "type": ["string", "null"] },
-        "report_fresh_proof": { "type": ["object", "null"], "description": "output of the existing scripts/lib/report_freshness.ps1 guard. COMPLETED is refused without it, because 'the .htm exists, so this run wrote it' has already produced wrong numbers in this repo." },
-        "data_fingerprint": { "type": "string", "description": "hash(lane, symbol, tf, window, model, bars, ticks, server, Bases state). Two runs are comparable ONLY if this and the lane both match - measured 14x tick-count difference between installs on an identical EA/set/window." },
-        "rerun_of": { "type": ["string", "null"], "description": "an identical config may be re-run ONLY after an execution or tester error (decision 18); otherwise the scheduler returns cached evidence" }
+        "model": { "type": "integer", "enum": [1, 2, 4] },
+        "deposit": { "type": "number" },
+        "currency": { "type": "string" },
+        "leverage": { "type": "integer", "description": "written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op" },
+        "set_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "ini_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "ex5_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "effective_config_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "data_fingerprint": { "type": "string" },
+        "lane": { "type": "string" }
+      }
+    },
+
+    "RunAttempt": {
+      "type": "object",
+      "description": "One append-only record. Audit P1: rev 1 had ONE attempt field and ONE state on the manifest while the design claimed every attempt was kept, and it was not crash-safe. Transitions are now appended, never overwritten.",
+      "required": ["attempt", "transition", "at"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "attempt": { "type": "integer", "minimum": 1 },
+        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCHING", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
+        "at": { "type": "string" },
+        "lease": {
+          "type": ["object", "null"],
+          "required": ["lease_id", "owner", "pid", "expires_at"],
+          "unevaluatedProperties": false,
+          "description": "Audit P1: without owner/expiry/PID, a machine that died in LEASED held the lane forever.",
+          "properties": {
+            "lease_id": { "type": "string" }, "owner": { "type": "string" },
+            "pid": { "type": "integer" }, "expires_at": { "type": "string" }
+          }
+        },
+        "launched_at": { "type": ["string", "null"], "description": "persisted BEFORE the process is launched, so a crash between launch and RUNNING is detectable and the resume does not double-launch into a live MT5" },
+        "exit_code": { "type": ["integer", "null"], "description": "persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it" },
+        "failure_class": { "enum": ["NONE", "TESTER_ERROR", "TERMINAL_ERROR", "TIMEOUT", "LEASE_LOST", "KILLED", "CONFIG_REJECTED"], "description": "the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR" },
+        "report_fresh_proof": { "type": ["object", "null"] },
+        "event_id": { "type": ["string", "null"], "description": "id returned by the existing event-log append, so a crash between append and EVIDENCE_REGISTERED does not duplicate the occurrence on retry" }
+      }
+    },
+
+    "RunJournal": {
+      "type": "object",
+      "x-owner-file": "factory/runs/<run_id>.jsonl (append-only)",
+      "x-writer": "the scheduler only",
+      "x-enforced-by": "scheduler: reconcile process + report + event store BEFORE any retry",
+      "description": "Realizes EVOLUTION_PLAN section 20.8 Contract B. Occurrence metadata and hashes only - the experiment event log remains the owner of the experiment timeline; this journal owns ONLY scheduler recovery state, which the audit agreed is a genuinely new fact.",
+      "required": ["entity", "run_id", "cell_id", "execution_key", "attempts"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "RunJournal" },
+        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
+        "cell_id": { "type": "string" },
+        "execution_key": { "$ref": "#/$defs/ExecutionKey" },
+        "attempts": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/RunAttempt" } },
+        "event_log_ref": { "$ref": "#/$defs/OwnerRef" }
       }
     },
 
     "EvidenceRef": {
       "type": "object",
-      "x-owner-file": "factory/evidence/index.csv + the EXISTING experiment event log",
-      "x-writer": "automation via scripts/experiment_event_log.ps1",
-      "description": "No parallel evidence store is invented. Registration goes through the existing utility and inherits its known rough edges: .ex5 binaries are gitignored and need git add -f; the path pattern forbids parentheses and spaces, which the repo's (EXP)_Name convention violates; tick history has no committable artifact so 'data' uses a committed provenance descriptor instead.",
-      "required": ["evidence_id", "kind", "path", "commit_oid", "raw_sha256"],
-      "additionalProperties": false,
+      "x-owner-file": "docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)",
+      "description": "Audit P0-2: rev 1 proposed factory/evidence/index.csv, duplicating an evidence manifest that already exists with its own schema (evidence-v1.schema.json). The Factory OS registers through the EXISTING utility and adds nothing. Known inherited constraints: .ex5 binaries are gitignored and need git add -f; the path pattern forbids parentheses and spaces; tick history uses a committed provenance descriptor.",
+      "required": ["entity", "evidence_id", "kind", "path", "commit_oid", "raw_sha256"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "EvidenceRef" },
         "evidence_id": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" },
         "kind": { "enum": ["REPORT", "SET", "INI", "EX5", "SOURCE", "DATA_PROVENANCE", "CSV", "OTHER"] },
-        "path": { "type": "string", "pattern": "^[A-Za-z0-9_./\\\\-]+$", "description": "no parentheses, no spaces - enforced by the event log's own pattern" },
-        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$", "description": "full 40-hex; short form is rejected. Register each artifact ONCE - re-registering identical content after HEAD moved fails with 'different canonical locator'." },
+        "path": { "type": "string", "pattern": "^[A-Za-z0-9_./\\\\-]+$" },
+        "commit_oid": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
         "raw_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+
+    "CandidatePayload": {
+      "type": "object",
+      "description": "THE HASHED OBJECT. Audit P1: rev 1 made candidate_id a required member of the object whose hash it was defined to be - id = hash(manifest containing id) has no normal construction, so a team would have hashed a different payload than the validator and quietly disabled the check. The id is now the hash of THIS object, which does not contain it. Also widened per the audit: module set with stability, resolved profile CONTENT hashes, generator/allowlist/source hashes, effective config, and evidence as a list with per-window provenance rather than one lane.",
+      "required": ["hypothesis_revision", "module_set", "logical_symbol", "tf", "parameters", "profiles", "evidence", "ex5_sha256", "source_sha256", "allowlist_sha256", "generator_version", "effective_config_hash", "universe_version", "trial_count", "experimental"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "hypothesis_revision": { "type": "string" },
+        "module_set": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/ModuleUse" } },
+        "experimental": { "type": "boolean", "description": "MUST be false for any candidate on a promotion path; the validator additionally resolves every evidence -> run -> module set and fails if any module is not CERTIFIABLE" },
+        "logical_symbol": { "type": "string" },
+        "tf": { "type": "string" },
+        "parameters": { "type": "object", "additionalProperties": { "type": ["number", "string", "boolean"] }, "description": "FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift." },
+        "profiles": {
+          "type": "object",
+          "required": ["instrument", "exit", "sizing", "safety", "execution"],
+          "unevaluatedProperties": false,
+          "description": "content hashes, not mutable string ids - otherwise instrument_profiles could change under a fixed id and the candidate would still look valid",
+          "properties": {
+            "instrument": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "exit": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "sizing": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "safety": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "execution": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        },
+        "evidence": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/MetricRef" }, "description": "per window, each with its own run/lane/fingerprint - MAIN and BWD cannot share a fingerprint and must not be flattened to one" },
+        "ex5_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "source_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "allowlist_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "generator_version": { "type": "string" },
+        "effective_config_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "universe_version": { "type": "string" },
+        "trial_count": { "type": "integer", "minimum": 0 }
       }
     },
 
@@ -216,195 +362,250 @@
       "type": "object",
       "x-owner-file": "factory/candidates/<candidate_id>.json",
       "x-writer": "claude, once, at verdict time",
-      "description": "IMMUTABLE by construction: candidate_id is the sha256 of this object in canonical field order, so 'someone edited a candidate' is not a policy that can be violated - it is a different id, and the deployment still points at the old one until a human moves it (decisions 38-41).",
-      "required": ["candidate_id", "hypothesis_revision", "logical_symbol", "tf", "parameters", "profiles", "evidence_ids", "ex5_sha256", "lane", "data_fingerprint", "trial_count", "universe_version"],
-      "additionalProperties": false,
+      "x-enforced-by": "candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash.",
+      "required": ["entity", "candidate_id", "candidate_digest", "payload", "scorecard_ref"],
+      "unevaluatedProperties": false,
       "properties": {
-        "candidate_id": { "type": "string", "pattern": "^CAND-[0-9a-f]{12}$" },
-        "hypothesis_revision": { "type": "string" },
-        "logical_symbol": { "type": "string" },
-        "tf": { "type": "string" },
-        "parameters": { "type": "object", "description": "the FULL effective surface, never a partial set - a partial .set lets unlisted inputs be filled silently from the per-terminal tester cache, which is the documented root cause of the ORDER-165 8/8 false drift", "additionalProperties": { "type": ["number", "string", "boolean"] } },
-        "profiles": {
-          "type": "object",
-          "required": ["instrument", "exit", "sizing", "safety", "execution"],
-          "additionalProperties": false,
-          "properties": {
-            "instrument": { "type": "string" }, "exit": { "type": "string" },
-            "sizing": { "type": "string" }, "safety": { "type": "string" }, "execution": { "type": "string" }
-          }
-        },
-        "evidence_ids": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^evd_sha256_[0-9a-f]{64}$" } },
-        "ex5_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "the binary that ACTUALLY produced the evidence. Note MQL5 compilation is not byte-reproducible, so a hash mismatch across rebuilds is not proof the source changed - staleness is judged by mtime." },
-        "lane": { "type": "string" },
-        "data_fingerprint": { "type": "string" },
-        "trial_count": { "type": "integer", "minimum": 0, "description": "total configurations ever scored on the path to selecting this candidate (decisions 44/45). What it OBLIGES is unresolved - see design section 11 item 1; it changes a bar, so only the user may set it." },
-        "universe_version": { "type": "string" },
-        "engine_edge": { "type": "boolean" },
-        "scorecard_ref": { "type": "string", "description": "pointer into EA_SCORECARD_AND_REGISTRY.md. The verdict TEXT lives there and is never copied here." }
+        "entity": { "const": "CandidateManifest" },
+        "candidate_id": { "type": "string", "pattern": "^CAND-[0-9a-f]{12}$", "description": "DISPLAY id = first 12 hex of candidate_digest. Never the hash input." },
+        "candidate_digest": { "type": "string", "pattern": "^[0-9a-f]{64}$", "description": "full sha256 over the canonical serialization of `payload` - which does not contain it" },
+        "payload": { "$ref": "#/$defs/CandidatePayload" },
+        "scorecard_ref": { "$ref": "#/$defs/OwnerRef", "description": "the verdict TEXT lives in EA_SCORECARD_AND_REGISTRY.md and is never copied here" }
       }
     },
 
     "MagicAllocation": {
       "type": "object",
-      "x-owner-file": "factory/magic_allocations.csv",
-      "x-writer": "automation allocates, claude approves",
-      "description": "Globally unique across EA LAB, allocated automatically (decision 56). check_state.ps1 already BLOCKS duplicate account|magic; this moves the same guarantee from detection-after-the-fact to prevention, and the existing check stays as the backstop.",
-      "required": ["magic", "allocated_to", "status", "allocated_at_commit"],
-      "additionalProperties": false,
+      "x-owner-file": "factory/magic_allocations.jsonl",
+      "x-writer": "automation allocates; claude approves; user ratifies scope changes",
+      "x-enforced-by": "allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account|magic backstop",
+      "description": "USER DECISION 2026-07-30: uniqueness scope moves to GLOBAL, per Grill decision 56. This CONTRADICTS the account|magic invariant currently in PROJECT_STATE.md section 3, so that invariant must be amended by the user in the Decision log before this is built. The audit is correct that the current fleet violates global uniqueness: magics 990103, 991001 and 991002 each appear on two accounts, and 991001 is on real money. Those are recorded as legacy_exception and FROZEN until their judge date - the live fleet is never renumbered as a side effect of adopting this scope. Renumbering, if ever done, is a separate user-approved order.",
+      "required": ["entity", "magic", "scope", "status", "allocated_at_commit"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "MagicAllocation" },
         "magic": { "type": "integer", "minimum": 1 },
-        "allocated_to": { "type": "string", "description": "candidate_id" },
-        "account": { "type": ["string", "null"] },
-        "status": { "enum": ["RESERVED", "ATTACHED", "RETIRED"], "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals" },
-        "allocated_at_commit": { "type": "string" }
+        "scope": { "enum": ["GLOBAL", "LEGACY_ACCOUNT_SCOPED"], "description": "GLOBAL for everything allocated from now on; LEGACY_ACCOUNT_SCOPED only for the pre-existing collisions" },
+        "legacy_exception": { "type": "boolean", "default": false },
+        "legacy_accounts": { "type": "array", "items": { "type": "string" }, "description": "populated only for legacy exceptions; frozen until judge" },
+        "allocated_to": { "type": ["string", "null"], "description": "candidate_id. Deployment status is NOT copied here - DEPLOYMENTS.csv owns it." },
+        "deployment_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef" },
+        "status": { "enum": ["RESERVED", "ASSIGNED", "RETIRED"], "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals" },
+        "allocated_at_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
       }
     },
 
-    "DeploymentAttestation": {
+    "DeploymentAttestationEvent": {
       "type": "object",
-      "x-owner-file": "portfolio/ATTESTATION_MAP.csv (EXISTING) + portfolio/DEPLOYMENTS.csv (EXISTING)",
-      "x-writer": "claude",
-      "description": "Adds the candidate link to the existing inventory. It does NOT become a second deployment inventory: DEPLOYMENTS.csv stays the single write path and check_state.ps1 keeps validating both directions.",
-      "required": ["account", "magic", "candidate_id", "attest_state"],
-      "additionalProperties": false,
+      "x-owner-file": "portfolio/ATTESTATION_MAP.csv (EXISTING) + append-only event log",
+      "x-writer": "claude|user only",
+      "x-enforced-by": "attestation_validator: no actor other than user/claude may append an event that changes candidate_id or status; automation may append OBSERVED events only",
+      "description": "Audit P1: rev 1 had a mutable DeploymentAttestation whose candidate_id, state and core revision could be overwritten, so automation could have advanced a deployment to a new revision without the user ever moving the champion. Deployment STATE stays in DEPLOYMENTS.csv; this is an append-only attestation history.",
+      "required": ["entity", "event_id", "account", "magic", "event_type", "at", "actor", "deployment_ref"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "DeploymentAttestationEvent" },
+        "event_id": { "type": "string" },
         "account": { "type": "string" },
         "magic": { "type": "integer" },
-        "candidate_id": { "type": "string" },
-        "attest_state": { "enum": ["HASHED", "PARTIAL", "FILE_MISSING", "UNVERIFIED"] },
-        "attest_confidence": { "enum": ["high", "medium", "low"] },
-        "core_revision_at_attach": { "type": "string", "description": "a later core change creates a NEW revision and must NOT auto-update this row (decision 39). This is the mechanisation of the live fleet still running pre-ORDER-132 binaries." }
-      }
+        "event_type": { "enum": ["OBSERVED", "CANDIDATE_ASSIGNED", "CANDIDATE_REASSIGNED", "ATTEST_STATE_CHANGED", "FROZEN", "RETIRED"] },
+        "at": { "type": "string" },
+        "actor": { "enum": ["user", "claude", "automation"] },
+        "authorization_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef", "description": "REQUIRED for any event that is not OBSERVED - the human decision that authorized it" },
+        "candidate_id": { "type": ["string", "null"] },
+        "attest_state": { "enum": ["HASHED", "PARTIAL", "FILE_MISSING", "UNVERIFIED", null] },
+        "core_revision": { "type": ["string", "null"] },
+        "deployment_ref": { "$ref": "#/$defs/OwnerRef" }
+      },
+      "allOf": [
+        { "if": { "properties": { "event_type": { "not": { "const": "OBSERVED" } } }, "required": ["event_type"] },
+          "then": { "required": ["authorization_ref"], "properties": { "actor": { "enum": ["user", "claude"] } } } }
+      ]
     },
 
     "WorkReceipt": {
       "type": "object",
-      "x-owner-file": "ops/receipts/ (append-only events -> single-writer projection)",
-      "x-writer": "any agent, for its own receipt only",
-      "description": "The durable commitment record from the Control Room handoff section 7. The taskboard stays authoritative for formal ORDER state; the Receipt is authoritative for the commitment/handoff record. A disagreement between them renders STATE_CONFLICT and stays visible until a source is corrected - the system never silently picks a winner.",
-      "required": ["receipt_id", "title", "source_agent", "requested_at", "owner", "status"],
-      "additionalProperties": false,
+      "x-owner-file": "ops/receipts/*.jsonl (append-only events -> single-writer projection)",
+      "x-writer": "PENDING GOVERNANCE CHANGE - see description",
+      "x-enforced-by": "receipt_validator: only the user may write CANCELLED_BY_USER",
+      "description": "Audit P1 (governance): rev 1 declared the writer as 'any agent', but AGENTS.md section 2 permits an agent to write only its own taskboard order row plus new reports/CSV/sets per order. Opening a new writer surface REQUIRES the user to ratify an AGENTS.md permission-table change FIRST. Audit P0-2 also applies: for work that already has an ORDER, title/status/owner/acceptance are the taskboard's - this entity references them. A Receipt is genuinely new ONLY for a chat commitment that is not yet an Order.",
+      "required": ["entity", "receipt_id", "title", "source_agent", "requested_at", "owner", "status"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "WorkReceipt" },
         "receipt_id": { "type": "string", "pattern": "^WRK-[0-9]{8}-[0-9]{3}$" },
         "title": { "type": "string" },
         "source_agent": { "enum": ["claude", "codex", "automation", "legacy"] },
-        "source_channel": { "type": "string" },
         "requested_at": { "type": "string" },
-        "requester": { "type": "string" },
-        "related_order": { "type": ["string", "null"], "pattern": "^ORDER-[0-9]+$" },
+        "order_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef", "description": "when present, the taskboard owns status/acceptance/owner and this Receipt must NOT restate them" },
         "owner": { "type": "string" },
-        "status": { "enum": ["CAPTURED", "READY", "IN_PROGRESS", "WAITING", "BLOCKED", "HANDOFF", "DONE_PENDING_REVIEW", "AUDIT_REQUIRED", "AUDIT_IN_PROGRESS", "REWORK", "REVIEWED", "CANCELLED_BY_USER", "STATE_CONFLICT"], "description": "DONE is deliberately absent: DONE is not closed. There is also no AGING/NEGLECTED state, because a state meaning 'old work may be ignored' is how work gets ignored." },
+        "status": { "enum": ["CAPTURED", "READY", "IN_PROGRESS", "WAITING", "BLOCKED", "HANDOFF", "DONE_PENDING_REVIEW", "AUDIT_REQUIRED", "AUDIT_IN_PROGRESS", "REWORK", "REVIEWED", "CANCELLED_BY_USER", "STATE_CONFLICT"], "description": "DONE is deliberately absent - DONE is not closed. No AGING/NEGLECTED state exists either." },
         "next_action": { "type": "string" },
-        "acceptance": { "type": "string" },
+        "acceptance": { "type": ["string", "null"] },
         "evidence_refs": { "type": "array", "items": { "type": "string" } },
         "blocked_by": { "type": "array", "items": { "type": "string" } },
         "review_required": { "type": "boolean" },
-        "rework_cycles": { "type": "integer", "minimum": 0, "description": ">=3 renders REWORK LOOP - review spec/approach, with the strongest suitable model and a summary of repeated defects" },
+        "rework_cycles": { "type": "integer", "minimum": 0 },
         "waiting_for": { "type": ["string", "null"] },
         "wake_condition": { "type": ["string", "null"] },
         "handoff_summary": { "type": ["string", "null"] },
-        "cancelled_by_user_ref": { "type": ["string", "null"], "description": "ONLY the user may cancel. No other actor may write this field." }
+        "cancelled_by_user_ref": { "type": ["string", "null"] }
       },
       "allOf": [
-        {
-          "if": { "properties": { "status": { "const": "WAITING" } } },
-          "then": {
-            "anyOf": [{ "required": ["wake_condition"] }, { "required": ["waiting_for"] }],
-            "description": "a WAITING item with neither renders 'พักงานแบบไร้กำหนด — ต้องจัดการ'"
-          }
-        },
-        {
-          "if": { "properties": { "status": { "const": "CANCELLED_BY_USER" } } },
-          "then": { "required": ["cancelled_by_user_ref"] }
-        },
-        {
-          "if": { "properties": { "status": { "const": "HANDOFF" } } },
-          "then": {
-            "required": ["handoff_summary", "next_action", "evidence_refs", "review_required"],
-            "description": "missing any of these yields HANDOFF INCOMPLETE"
-          }
-        }
+        { "if": { "properties": { "status": { "const": "WAITING" } }, "required": ["status"] },
+          "then": { "required": ["waiting_for", "wake_condition"],
+                    "properties": { "waiting_for": { "type": "string" }, "wake_condition": { "type": "string" } },
+                    "description": "Audit P1: rev 1 used anyOf here, so one of the two sufficed - which produced exactly the indefinitely-parked item the design says it prevents. Both are now required." } },
+        { "if": { "properties": { "status": { "const": "CANCELLED_BY_USER" } }, "required": ["status"] },
+          "then": { "required": ["cancelled_by_user_ref"] } },
+        { "if": { "properties": { "status": { "const": "HANDOFF" } }, "required": ["status"] },
+          "then": { "required": ["handoff_summary", "next_action", "evidence_refs", "review_required"] } }
       ]
     },
 
     "SystemFinding": {
       "type": "object",
-      "x-owner-file": "ops/findings.csv",
-      "x-writer": "automation raises; claude resolves governance findings",
-      "required": ["finding_id", "detector", "first_seen", "last_seen", "state", "class"],
-      "additionalProperties": false,
+      "x-owner-file": "ops/findings.jsonl",
+      "x-enforced-by": "finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close",
+      "description": "New ONLY for the stable lifecycle and identity. The detector state itself is owned by the snapshot; this references it.",
+      "required": ["entity", "finding_id", "detector", "class", "first_seen", "last_seen", "state", "severity"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "SystemFinding" },
         "finding_id": { "type": "string", "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$" },
         "detector": { "type": "string" },
         "class": { "enum": ["RUNTIME", "GOVERNANCE", "DEPLOYMENT_DRIFT", "AUDIT"] },
+        "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"], "description": "part of the alert dedupe key - audit P1: dedupe on (id,state) alone would swallow a warning that escalated to real-money critical while the state stayed OPEN" },
+        "material_revision": { "type": "integer", "minimum": 0, "description": "bumped whenever the payload materially changes; also part of the dedupe key" },
         "first_seen": { "type": "string" },
         "last_seen": { "type": "string" },
         "state": { "enum": ["OPEN", "HEALTHY_1_OF_2", "RESOLVED", "FLAPPING", "SUPPRESSED_MAINTENANCE"] },
-        "occurrences_24h": { "type": "integer", "description": ">=3 clear-and-return cycles collapse into ONE incident escalated to FLAPPING - root cause required" },
+        "occurrences_24h": { "type": "integer" },
         "evidence_refs": { "type": "array", "items": { "type": "string" } },
-        "owner": { "type": ["string", "null"] },
-        "resolution_rule": { "type": "string", "description": "RUNTIME auto-resolves only after TWO consecutive healthy checks. GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close - they require explicit review." }
+        "owner": { "type": ["string", "null"] }
       }
     },
 
-    "IdeaEntry": {
+    "IdeaRef": {
       "type": "object",
-      "x-owner-file": "ops/ideas.csv",
-      "x-writer": "automation on intake",
-      "description": "External content is DATA, never instructions (AGENTS.md rule 9). An idea never auto-creates an Order; promotion is claude/user only. No aging pressure and no cap - unpromoted ideas are preserved indefinitely.",
-      "required": ["idea_id", "received_at", "source", "status"],
-      "additionalProperties": false,
+      "x-owner-file": "INTAKE_QUEUE.md (EXISTING - NOT replaced)",
+      "description": "Audit P0-2: rev 1 proposed ops/ideas.csv, but INTAKE_QUEUE.md opens by declaring itself the single place for every new source and strategy drop. There is no second intake. What is genuinely missing is a STABLE ID and exact-URL dedupe, so those are added AS COLUMNS TO THE EXISTING OWNER and this entity is only the machine-readable projection of a row.",
+      "required": ["entity", "idea_id", "received_at", "source", "status", "intake_ref"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "IdeaRef" },
         "idea_id": { "type": "string", "pattern": "^IDEA-[0-9]{4}$" },
         "received_at": { "type": "string" },
         "source": { "enum": ["telegram", "claude", "codex", "legacy_openclaw"] },
-        "message_ref": { "type": "string" },
-        "normalized_url": { "type": ["string", "null"], "description": "exact-URL dedupe across every intake path; the same URL from three sources is ONE idea with three provenance records" },
-        "user_note": { "type": ["string", "null"] },
-        "fetched_title": { "type": ["string", "null"] },
+        "normalized_url": { "type": ["string", "null"] },
         "duplicate_of": { "type": ["string", "null"] },
-        "status": { "enum": ["NEW", "READ", "SHORTLIST", "REFERENCE", "DROP", "ORDER"] }
+        "status": { "enum": ["NEW", "READ", "SHORTLIST", "REFERENCE", "DROP", "ORDER"] },
+        "intake_ref": { "$ref": "#/$defs/OwnerRef" }
       }
     },
 
     "SnapshotMeta": {
       "type": "object",
-      "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, currently schema version 3)",
-      "x-writer": "the single snapshot builder",
-      "description": "The Factory domain arrives as ADDITIONAL TOP-LEVEL KEYS on this same document (v4, v5...), read by the same builder. Building a second projection would recreate exactly the drift the handoff forbids. No consumer - STATUS, dashboard, Telegram, digest - may compute its own totals.",
-      "required": ["schema", "version", "build_id", "generated_at", "sources", "reconciliation"],
-      "additionalProperties": true,
+      "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
+      "x-enforced-by": "snapshot_validator: all_clear is COMPUTED here and MUST NOT be read from input",
+      "description": "Audit P1: rev 1 let all_clear be a writer-supplied boolean, did not require `fresh`, had no mandatory-source registry, and had no category totals - so a snapshot with a missing mandatory source, or one that simply omitted the source from the array, could report all_clear:true and satisfy the equation with 0=0. Version note: HEAD is ALREADY v4 (the Stage 0B lane bumped it); the Factory domain must therefore land as v5, not v4.",
+      "required": ["entity", "schema", "version", "build_id", "generated_at", "mandatory_sources", "sources", "reconciliation"],
+      "unevaluatedProperties": false,
       "properties": {
+        "entity": { "const": "SnapshotMeta" },
         "schema": { "const": "ControlRoomSnapshot" },
-        "version": { "type": "integer", "minimum": 3 },
+        "version": { "type": "integer", "minimum": 5, "description": "v5+ for anything carrying the Factory domain; v4 already exists at HEAD" },
         "build_id": { "type": "string" },
         "generated_at": { "type": "string" },
         "git_head": { "type": "string" },
+        "mandatory_sources": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected" },
         "sources": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["name", "mandatory", "read_ok", "age_hours"],
+            "required": ["name", "mandatory", "read_ok", "fresh", "age_hours"],
+            "unevaluatedProperties": false,
             "properties": {
               "name": { "type": "string" },
               "mandatory": { "type": "boolean" },
-              "read_ok": { "type": "boolean", "description": "false must be distinguishable from 'read fine, nothing found' EVERYWHERE. Conflating them is the exact defect being repaired in daily_monitor.ps1." },
-              "age_hours": { "type": ["number", "null"] },
-              "fresh": { "type": "boolean" }
+              "read_ok": { "type": "boolean", "description": "false must stay distinguishable from 'read fine, found nothing' in EVERY consumer" },
+              "fresh": { "type": "boolean" },
+              "age_hours": { "type": ["number", "null"] }
             }
           }
         },
         "reconciliation": {
           "type": "object",
-          "required": ["discovered", "categorized", "duplicates", "conflicts", "unclassified", "all_clear"],
+          "required": ["discovered", "categorized", "categories", "duplicates", "conflicts", "unclassified", "coverage", "all_clear"],
+          "unevaluatedProperties": false,
           "properties": {
-            "discovered": { "type": "integer" },
-            "categorized": { "type": "integer" },
+            "discovered": { "type": "integer", "minimum": 0 },
+            "categorized": { "type": "integer", "minimum": 0 },
+            "categories": {
+              "type": "object",
+              "required": ["actionable", "running", "waiting", "review_audit", "completed", "cancelled_by_user"],
+              "unevaluatedProperties": false,
+              "description": "the equation's right-hand side must be ENCODED, not implied in prose",
+              "properties": {
+                "actionable": { "type": "integer" }, "running": { "type": "integer" },
+                "waiting": { "type": "integer" }, "review_audit": { "type": "integer" },
+                "completed": { "type": "integer" }, "cancelled_by_user": { "type": "integer" }
+              }
+            },
+            "coverage": {
+              "type": "object",
+              "required": ["cells_in_universe", "tested", "untested", "not_applicable"],
+              "unevaluatedProperties": false,
+              "properties": {
+                "cells_in_universe": { "type": "integer" }, "tested": { "type": "integer" },
+                "untested": { "type": "integer" }, "not_applicable": { "type": "integer" }
+              }
+            },
             "duplicates": { "type": "integer" },
             "conflicts": { "type": "integer" },
             "unclassified": { "type": "integer" },
-            "all_clear": { "type": "boolean", "description": "true ONLY when every mandatory source read successfully AND met its freshness bar AND discovered==categorized AND conflicts==0 AND unclassified==0 AND no actionable/blocked/review/audit/decision item exists. Otherwise the page shows UNKNOWN - ตรวจไม่ครบ with sources N/M, uncategorized N, conflicts N. Silence is never rendered as healthy." }
+            "all_clear": { "type": "boolean", "description": "COMPUTED by the validator from every mandatory source being read_ok AND fresh, discovered==categorized, the category sum matching, the coverage sum matching, conflicts==0, unclassified==0, and no actionable item. A writer-supplied value MUST be rejected." }
+          }
+        }
+      }
+    },
+
+    "SafeProjection": {
+      "type": "object",
+      "x-owner-file": "build/safe_projection.json (derived, never hand-written)",
+      "x-enforced-by": "projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot",
+      "description": "NEW, answering the audit: the design claimed the online projection was 'safe by construction' but no construction existed, while the real snapshot carries account IDs, balance, equity, floating P/L and exact open lots. This is an allowlist-only derived DTO. Anything not listed here cannot reach an online or Telegram surface.",
+      "required": ["entity", "build_id", "generated_at", "accounts", "findings"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "SafeProjection" },
+        "build_id": { "type": "string" },
+        "generated_at": { "type": "string" },
+        "accounts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["account_masked", "sensor_state", "dd_pct_band"],
+            "unevaluatedProperties": false,
+            "description": "no account number, no balance, no equity, no P/L amount, no lot size, no strategy identifier",
+            "properties": {
+              "account_masked": { "type": "string", "pattern": "^\\*{3}[0-9]{3}$" },
+              "sensor_state": { "enum": ["FRESH", "STALE", "BLIND", "MISSING", "UNKNOWN"] },
+              "dd_pct_band": { "enum": ["OK", "WATCH", "BREACH", "UNKNOWN"], "description": "a BAND, not a number - a percentage plus a known base equity reconstructs the money amount" }
+            }
+          }
+        },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["finding_id", "severity", "state"],
+            "unevaluatedProperties": false,
+            "properties": {
+              "finding_id": { "type": "string" },
+              "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"] },
+              "state": { "type": "string" }
+            }
           }
         }
       }
