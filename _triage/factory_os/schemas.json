@@ -44,7 +44,8 @@
       },
 
       "parity_cases": {
-        "_why": "Audit-3 finding #12: the design asserted the pilot uses five parity cases while the list itself had grown to seven. Generating the list from here means the count and the list cannot disagree. Every case is judged on all seven points of section 5.5 - init result, [CFG] fingerprint, full order request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects, errors - never on the trade list alone.",
+        "_why": "Audit-3 finding #12: the design asserted the pilot uses five parity cases while the list itself had grown to seven. Generating the list from here means the count and the list cannot disagree.",
+        "note": "Every case below is judged on ALL SEVEN points of section 5.5 - init result, [CFG] fingerprint, full order request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects, errors - never on the trade list alone. All must pass before any cell's evidence counts.",
         "columns": ["case", "what it compares", "what it proves"],
         "rows": [
           {"case": "1", "what it compares": "wrapper vs parent, compiled defaults, XAUUSD H1", "what it proves": "baseline equivalence"},

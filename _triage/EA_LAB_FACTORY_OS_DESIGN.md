@@ -1392,6 +1392,8 @@ Universe: `XAUUSD · EURUSD · USDJPY · BTCUSD` × `H1 · H4` = 8 cells × 2 hy
 <!-- BEGIN GENERATED CONTRACT: META_parity_cases -->
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
+**Every case below is judged on ALL SEVEN points of section 5.5 - init result, [CFG] fingerprint, full order request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects, errors - never on the trade list alone. All must pass before any cell's evidence counts.**
+
 | case | what it compares | what it proves |
 |---|---|---|
 | 1 | wrapper vs parent, compiled defaults, XAUUSD H1 | baseline equivalence |

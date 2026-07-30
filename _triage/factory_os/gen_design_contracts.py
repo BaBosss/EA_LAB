@@ -265,6 +265,12 @@ def gen_meta(schema, key):
     if body is None:
         raise KeyError('x-ea-lab-meta.contracts.{0} is not in the schema'.format(key))
     lines = [WARNING, '']
+    # `note` is normative and IS rendered; `_why` is history and is not. The distinction is
+    # load-bearing: replacing section 8.4's prose with a generated table silently dropped
+    # "every case is judged on all seven points of 5.5" until this field existed to hold it.
+    if isinstance(body, dict) and body.get('note'):
+        lines.append('**{0}**'.format(' '.join(str(body['note']).split())))
+        lines.append('')
     if isinstance(body, dict) and 'columns' in body and 'rows' in body:
         cols = body['columns']
         lines.append('| ' + ' | '.join(cols) + ' |')
