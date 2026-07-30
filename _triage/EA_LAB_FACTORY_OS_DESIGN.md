@@ -370,6 +370,9 @@ Full field/type/validation definitions live in the single appendix `_triage/fact
 | `SystemFinding` | `ops/findings.jsonl` | — | finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close |
 | `IdeaRef` | `INTAKE_QUEUE.md (EXISTING - NOT replaced)` | — | — |
 | `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` | — | snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input |
+| `ReconciliationEvidence` | `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` | — | snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer |
+| `SnapshotVerdict` | `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` | — | snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match |
+| `SnapshotBuilderInput` | `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` | — | snapshot_validator: refuses to compute from an input that does not validate |
 | `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
 
@@ -994,6 +997,76 @@ no generated block anywhere in this document, so an entity cannot drift by simpl
 
 <!-- END GENERATED CONTRACT: IdeaRef -->
 
+*The builder/persisted boundary (ORDER-601): the evidence and the verdict are different objects, and
+the builder side is closed and has no place to put an answer.*
+
+<!-- BEGIN GENERATED CONTRACT: SnapshotBuilderInput -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`SnapshotBuilderInput`** · stored in `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` · enforced by *snapshot_validator: refuses to compute from an input that does not validate*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `SnapshotBuilderInput` | **yes** |  |
+| `meta` | [`SnapshotMeta`](#snapshotmeta) | **yes** |  |
+| `system_health` | array of `object` | **yes** |  |
+| `floating_risk` | array of `object` | **yes** |  |
+| `deployments` | `object` | **yes** |  |
+| `unknown_magics` | array of `any` | **yes** |  |
+| `attestation` | array of `any` | **yes** |  |
+| `judge_readiness` | array of `any` | **yes** |  |
+| `judge_cohorts` | `object` | **yes** |  |
+| `summary` | `object` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: SnapshotBuilderInput -->
+
+<!-- BEGIN GENERATED CONTRACT: ReconciliationEvidence -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ReconciliationEvidence`** · stored in `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` · enforced by *snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `discovered` | `integer` | **yes** | min `0` |
+| `categorized` | `integer` | **yes** | min `0` |
+| `categories` | object *(fields below)* | **yes** | closed · requires `actionable`, `running`, `waiting`, `review_audit`, `completed`, `cancelled_by_user` · the equation's right-hand side must be ENCODED, not implied in prose |
+| `categories.actionable` | `integer` | **yes** | min `0` |
+| `categories.running` | `integer` | **yes** | min `0` |
+| `categories.waiting` | `integer` | **yes** | min `0` |
+| `categories.review_audit` | `integer` | **yes** | min `0` |
+| `categories.completed` | `integer` | **yes** | min `0` |
+| `categories.cancelled_by_user` | `integer` | **yes** | min `0` |
+| `coverage` | object *(fields below)* | **yes** | closed · requires `cells_in_universe`, `tested`, `untested`, `not_applicable` |
+| `coverage.cells_in_universe` | `integer` | **yes** | min `0` |
+| `coverage.tested` | `integer` | **yes** | min `0` |
+| `coverage.untested` | `integer` | **yes** | min `0` |
+| `coverage.not_applicable` | `integer` | **yes** | min `0` |
+| `duplicates` | `integer` | **yes** | min `0` |
+| `conflicts` | `integer` | **yes** | min `0` |
+| `unclassified` | `integer` | **yes** | min `0` |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: ReconciliationEvidence -->
+
+<!-- BEGIN GENERATED CONTRACT: SnapshotVerdict -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`SnapshotVerdict`** · stored in `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` · enforced by *snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `all_clear` | `boolean` | **yes** | COMPUTED. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. |
+| `reasons` | array of object *(fields below)* | **yes** | items closed · items require `code` · empty if and only if all_clear is true - the two must not be able to disagree |
+| `reasons[].code` | `MANDATORY_SOURCE_MISSING` \| `MANDATORY_SOURCE_UNREADABLE` \| `MANDATORY_SOURCE_STALE` \| `SOURCE_REGISTRY_MISMATCH` \| `DUPLICATE_SOURCE_NAME` \| `SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY` \| `DISCOVERED_CATEGORIZED_MISMATCH` \| `CATEGORY_SUM_MISMATCH` \| `COVERAGE_SUM_MISMATCH` \| `DUPLICATES_PRESENT` \| `CONFLICTS_PRESENT` \| `UNCLASSIFIED_PRESENT` \| `ACTIONABLE_PRESENT` | **yes** | MISSING and UNREADABLE are separate codes on purpose: 'cannot read it' and 'it is not there' have opposite fixes and this repo has collapsed them before |
+| `reasons[].detail` | `string` \| `null` | — | the source name, or the two numbers that failed to match - so a fixture can assert WHICH instance fired |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: SnapshotVerdict -->
+
 <!-- BEGIN GENERATED CONTRACT: ControlRoomSnapshotV5 -->
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
@@ -1003,13 +1076,14 @@ no generated block anywhere in this document, so an entity cannot drift by simpl
 |---|---|---|---|
 | `entity` | const `ControlRoomSnapshotV5` | **yes** |  |
 | `meta` | [`SnapshotMeta`](#snapshotmeta) | **yes** |  |
+| `verdict` | [`SnapshotVerdict`](#snapshotverdict) | **yes** |  |
 | `system_health` | array of `object` | **yes** |  |
-| `floating_risk` | array of `object` | — |  |
-| `deployments` | `object` | — |  |
-| `unknown_magics` | array of `any` | — |  |
-| `attestation` | array of `any` | — |  |
-| `judge_readiness` | array of `any` | — |  |
-| `judge_cohorts` | `object` | — |  |
+| `floating_risk` | array of `object` | **yes** |  |
+| `deployments` | `object` | **yes** |  |
+| `unknown_magics` | array of `any` | **yes** |  |
+| `attestation` | array of `any` | **yes** |  |
+| `judge_readiness` | array of `any` | **yes** |  |
+| `judge_cohorts` | `object` | **yes** |  |
 | `summary` | `object` | **yes** |  |
 
 **Unknown fields:** ⚠️ ACCEPTED — this object is open, so a typo becomes a silently-ignored field.
@@ -1035,25 +1109,10 @@ no generated block anywhere in this document, so an entity cannot drift by simpl
 | `sources[].read_ok` | `boolean` | **yes** | false must stay distinguishable from 'read fine, found nothing' in EVERY consumer |
 | `sources[].fresh` | `boolean` | **yes** |  |
 | `sources[].age_hours` | `number` \| `null` | **yes** |  |
-| `reconciliation` | object *(fields below)* | **yes** | closed · requires `discovered`, `categorized`, `categories`, `duplicates`, `conflicts`, `unclassified`, `coverage`, `all_clear` |
-| `reconciliation.discovered` | `integer` | **yes** | min `0` |
-| `reconciliation.categorized` | `integer` | **yes** | min `0` |
-| `reconciliation.categories` | object *(fields below)* | **yes** | closed · requires `actionable`, `running`, `waiting`, `review_audit`, `completed`, `cancelled_by_user` · the equation's right-hand side must be ENCODED, not implied in prose |
-| `reconciliation.categories.actionable` | `integer` | **yes** |  |
-| `reconciliation.categories.running` | `integer` | **yes** |  |
-| `reconciliation.categories.waiting` | `integer` | **yes** |  |
-| `reconciliation.categories.review_audit` | `integer` | **yes** |  |
-| `reconciliation.categories.completed` | `integer` | **yes** |  |
-| `reconciliation.categories.cancelled_by_user` | `integer` | **yes** |  |
-| `reconciliation.coverage` | object *(fields below)* | **yes** | closed · requires `cells_in_universe`, `tested`, `untested`, `not_applicable` |
-| `reconciliation.coverage.cells_in_universe` | `integer` | **yes** |  |
-| `reconciliation.coverage.tested` | `integer` | **yes** |  |
-| `reconciliation.coverage.untested` | `integer` | **yes** |  |
-| `reconciliation.coverage.not_applicable` | `integer` | **yes** |  |
-| `reconciliation.duplicates` | `integer` | **yes** |  |
-| `reconciliation.conflicts` | `integer` | **yes** |  |
-| `reconciliation.unclassified` | `integer` | **yes** |  |
-| `reconciliation.all_clear` | `boolean` | **yes** | COMPUTED by the validator from every mandatory source being read_ok AND fresh, discovered==categorized, the category sum matching, the coverage sum matching, conflicts==0, unclassified==0, and no actionable item. A writer-supplied value MUST be rejected. |
+| `stale_bar_hours` | `number` \| `null` | — | COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`. |
+| `decision_bar_trades` | `integer` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |
+| `counting_method` | `string` \| `null` | — | COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it. |
+| `reconciliation` | [`ReconciliationEvidence`](#reconciliationevidence) | **yes** |  |
 
 **Unknown fields:** rejected (closed object).
 

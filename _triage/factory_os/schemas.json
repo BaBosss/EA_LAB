@@ -71,7 +71,7 @@
         "InstrumentProfile", "CoverageCell", "RunTransition", "RunJournal",
         "EvidenceRef", "CandidateManifest",
         "MagicAllocation", "DeploymentAttestationEvent", "WorkReceipt", "SystemFinding",
-        "IdeaRef", "ControlRoomSnapshotV5", "SafeProjection"
+        "IdeaRef", "ControlRoomSnapshotV5", "SnapshotBuilderInput", "SafeProjection"
       ]
     }
   },
@@ -93,6 +93,7 @@
     { "properties": { "entity": { "const": "SystemFinding" } },              "$ref": "#/$defs/SystemFinding" },
     { "properties": { "entity": { "const": "IdeaRef" } },                    "$ref": "#/$defs/IdeaRef" },
     { "properties": { "entity": { "const": "ControlRoomSnapshotV5" } },      "$ref": "#/$defs/ControlRoomSnapshotV5" },
+    { "properties": { "entity": { "const": "SnapshotBuilderInput" } },       "$ref": "#/$defs/SnapshotBuilderInput" },
     { "properties": { "entity": { "const": "SafeProjection" } },             "$ref": "#/$defs/SafeProjection" }
   ],
 
@@ -600,10 +601,99 @@
       "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
       "x-enforced-by": "snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input",
       "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. The existing v3/v4 keys are carried through and additional keys are permitted, because the file's own convention is additive versioning.",
-      "required": ["entity", "meta", "system_health", "summary"],
+      "required": ["entity", "meta", "verdict", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
       "additionalProperties": true,
       "properties": {
         "entity": { "const": "ControlRoomSnapshotV5" },
+        "meta": { "$ref": "#/$defs/SnapshotMeta" },
+        "verdict": { "$ref": "#/$defs/SnapshotVerdict" },
+        "system_health": { "type": "array", "items": { "type": "object" } },
+        "floating_risk": { "type": "array", "items": { "type": "object" } },
+        "deployments": { "type": "object" },
+        "unknown_magics": { "type": "array" },
+        "attestation": { "type": "array" },
+        "judge_readiness": { "type": "array" },
+        "judge_cohorts": { "type": "object" },
+        "summary": { "type": "object" }
+      }
+    },
+
+    "ReconciliationEvidence": {
+      "type": "object",
+      "x-owner-file": "the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json",
+      "x-enforced-by": "snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer",
+      "description": "ORDER-601 / audit-5 Q2. `all_clear` used to live here, which made the contract unsatisfiable: it was REQUIRED in the persisted document and a writer-supplied value had to be REJECTED, and no validator inspecting one document can tell 'computed' from 'typed'. The evidence and the verdict are now different objects. Because this object is CLOSED and has no `all_clear` property, a builder that supplies one is refused by the schema itself - no special-case code, and the rejection names the property. Audit-5 also found every nested integer here lacked `minimum: 0`, so `actionable:-1, running:1` balanced every equation and validated; the bounds below close that.",
+      "required": ["discovered", "categorized", "categories", "duplicates", "conflicts", "unclassified", "coverage"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "discovered": { "type": "integer", "minimum": 0 },
+        "categorized": { "type": "integer", "minimum": 0 },
+        "categories": {
+          "type": "object",
+          "required": ["actionable", "running", "waiting", "review_audit", "completed", "cancelled_by_user"],
+          "unevaluatedProperties": false,
+          "description": "the equation's right-hand side must be ENCODED, not implied in prose",
+          "properties": {
+            "actionable": { "type": "integer", "minimum": 0 }, "running": { "type": "integer", "minimum": 0 },
+            "waiting": { "type": "integer", "minimum": 0 }, "review_audit": { "type": "integer", "minimum": 0 },
+            "completed": { "type": "integer", "minimum": 0 }, "cancelled_by_user": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "required": ["cells_in_universe", "tested", "untested", "not_applicable"],
+          "unevaluatedProperties": false,
+          "properties": {
+            "cells_in_universe": { "type": "integer", "minimum": 0 }, "tested": { "type": "integer", "minimum": 0 },
+            "untested": { "type": "integer", "minimum": 0 }, "not_applicable": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "duplicates": { "type": "integer", "minimum": 0 },
+        "conflicts": { "type": "integer", "minimum": 0 },
+        "unclassified": { "type": "integer", "minimum": 0 }
+      }
+    },
+
+    "SnapshotVerdict": {
+      "type": "object",
+      "x-owner-file": "the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator",
+      "x-enforced-by": "snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match",
+      "description": "ORDER-601. JSON Schema can prove this boolean is well-typed; it cannot prove who wrote it. Audit-5's surviving attack was a hand-authored output with sources=[] and all_clear=true, which is structurally valid. The defence is not the schema, it is that every reader must obtain the document through the verifier that recomputes this from `meta.reconciliation` and the source list. `reasons` is a CLOSED enum so a false verdict cannot be explained in free text nobody parses.",
+      "required": ["all_clear", "reasons"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "all_clear": { "type": "boolean", "description": "COMPUTED. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0." },
+        "reasons": {
+          "type": "array",
+          "description": "empty if and only if all_clear is true - the two must not be able to disagree",
+          "items": {
+            "type": "object",
+            "required": ["code"],
+            "unevaluatedProperties": false,
+            "properties": {
+              "code": {
+                "enum": ["MANDATORY_SOURCE_MISSING", "MANDATORY_SOURCE_UNREADABLE", "MANDATORY_SOURCE_STALE",
+                         "SOURCE_REGISTRY_MISMATCH", "DUPLICATE_SOURCE_NAME", "SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY",
+                         "DISCOVERED_CATEGORIZED_MISMATCH", "CATEGORY_SUM_MISMATCH", "COVERAGE_SUM_MISMATCH",
+                         "DUPLICATES_PRESENT", "CONFLICTS_PRESENT", "UNCLASSIFIED_PRESENT", "ACTIONABLE_PRESENT"],
+                "description": "MISSING and UNREADABLE are separate codes on purpose: 'cannot read it' and 'it is not there' have opposite fixes and this repo has collapsed them before"
+              },
+              "detail": { "type": ["string", "null"], "description": "the source name, or the two numbers that failed to match - so a fixture can assert WHICH instance fired" }
+            }
+          }
+        }
+      }
+    },
+
+    "SnapshotBuilderInput": {
+      "type": "object",
+      "x-owner-file": "NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.",
+      "x-enforced-by": "snapshot_validator: refuses to compute from an input that does not validate",
+      "description": "ORDER-601 / audit-5 Q2: the builder side of the boundary. It carries the same facts as the persisted document but has NO `verdict` property and, because it is closed, cannot acquire one. That is what makes 'all_clear is computed, never supplied' checkable by the schema instead of by a code path somebody can special-case.",
+      "required": ["entity", "meta", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "SnapshotBuilderInput" },
         "meta": { "$ref": "#/$defs/SnapshotMeta" },
         "system_health": { "type": "array", "items": { "type": "object" } },
         "floating_risk": { "type": "array", "items": { "type": "object" } },
@@ -644,39 +734,10 @@
             }
           }
         },
-        "reconciliation": {
-          "type": "object",
-          "required": ["discovered", "categorized", "categories", "duplicates", "conflicts", "unclassified", "coverage", "all_clear"],
-          "unevaluatedProperties": false,
-          "properties": {
-            "discovered": { "type": "integer", "minimum": 0 },
-            "categorized": { "type": "integer", "minimum": 0 },
-            "categories": {
-              "type": "object",
-              "required": ["actionable", "running", "waiting", "review_audit", "completed", "cancelled_by_user"],
-              "unevaluatedProperties": false,
-              "description": "the equation's right-hand side must be ENCODED, not implied in prose",
-              "properties": {
-                "actionable": { "type": "integer" }, "running": { "type": "integer" },
-                "waiting": { "type": "integer" }, "review_audit": { "type": "integer" },
-                "completed": { "type": "integer" }, "cancelled_by_user": { "type": "integer" }
-              }
-            },
-            "coverage": {
-              "type": "object",
-              "required": ["cells_in_universe", "tested", "untested", "not_applicable"],
-              "unevaluatedProperties": false,
-              "properties": {
-                "cells_in_universe": { "type": "integer" }, "tested": { "type": "integer" },
-                "untested": { "type": "integer" }, "not_applicable": { "type": "integer" }
-              }
-            },
-            "duplicates": { "type": "integer" },
-            "conflicts": { "type": "integer" },
-            "unclassified": { "type": "integer" },
-            "all_clear": { "type": "boolean", "description": "COMPUTED by the validator from every mandatory source being read_ok AND fresh, discovered==categorized, the category sum matching, the coverage sum matching, conflicts==0, unclassified==0, and no actionable item. A writer-supplied value MUST be rejected." }
-          }
-        }
+        "stale_bar_hours": { "type": ["number", "null"], "description": "COMPATIBILITY: exists in the real v4 file (scripts/control_room_snapshot.ps1). The validator derives freshness from this, never from a hardcoded threshold and never from a caller-supplied `fresh`." },
+        "decision_bar_trades": { "type": ["integer", "null"], "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it." },
+        "counting_method": { "type": ["string", "null"], "description": "COMPATIBILITY: exists in the real v4 file. Audit 3 found the schema silently dropped it." },
+        "reconciliation": { "$ref": "#/$defs/ReconciliationEvidence" }
       }
     },
 

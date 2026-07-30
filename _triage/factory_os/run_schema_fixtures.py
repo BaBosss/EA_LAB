@@ -145,6 +145,111 @@ CASES = [
           "state": "NOT_APPLICABLE", "metrics": [], "trial_count": 0}),
 ]
 
+# ---------------------------------------------------------------------------------------
+# ORDER-601 -- the builder/persisted boundary.
+#
+# Every case below is a ONE-FIELD DELTA from BUILDER_OK. Audit 5's finding was that a
+# negative fixture which is also invalid for an unrelated reason gets credited to the rule
+# it names while never reaching it: ajv returns nonzero either way. So the positive is
+# defined once, and each negative is `dict(BUILDER_OK, **{one_thing})`.
+#
+# These cover only what JSON SCHEMA can decide. Whether `all_clear` is COMPUTED correctly is
+# not a schema property and is not tested here -- that is snapshot_validator's own suite, and
+# claiming otherwise would be the "x-enforced-by names a validator nobody wrote" defect.
+
+EVIDENCE_OK = {
+    "discovered": 3, "categorized": 3,
+    "categories": {"actionable": 0, "running": 1, "waiting": 1, "review_audit": 0,
+                   "completed": 1, "cancelled_by_user": 0},
+    "coverage": {"cells_in_universe": 4, "tested": 2, "untested": 2, "not_applicable": 0},
+    "duplicates": 0, "conflicts": 0, "unclassified": 0,
+}
+
+META_OK = {
+    "schema": "ControlRoomSnapshot", "version": 5, "build_id": "b1",
+    "generated_at": "2026-07-30T00:00:00Z",
+    "stale_bar_hours": 26, "decision_bar_trades": 30, "counting_method": "closed_deals",
+    "mandatory_sources": ["live_deals"],
+    "sources": [{"name": "live_deals", "mandatory": True, "read_ok": True,
+                 "fresh": True, "age_hours": 1.0}],
+    "reconciliation": EVIDENCE_OK,
+}
+
+BUILDER_OK = {
+    "entity": "SnapshotBuilderInput", "meta": META_OK,
+    "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
+    "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {},
+}
+
+
+def builder(**delta):
+    """BUILDER_OK with exactly one thing changed. The whole point of the minimal pair."""
+    out = json.loads(json.dumps(BUILDER_OK))
+    for k, v in delta.items():
+        out[k] = v
+    return out
+
+
+def with_meta(**delta):
+    m = json.loads(json.dumps(META_OK))
+    for k, v in delta.items():
+        m[k] = v
+    return builder(meta=m)
+
+
+def with_evidence(**delta):
+    e = json.loads(json.dumps(EVIDENCE_OK))
+    for k, v in delta.items():
+        e[k] = v
+    return with_meta(reconciliation=e)
+
+
+CASES += [
+    case("builder-input-valid", "the positive the negatives below are one delta away from", "pass",
+         BUILDER_OK),
+    case("builder-input-carrying-all-clear",
+         "ORDER-601: a supplied verdict must be refused BY THE SCHEMA, not by code", "fail",
+         with_evidence(all_clear=True)),
+    case("builder-input-carrying-verdict-object",
+         "ORDER-601: the builder root is closed, so it cannot acquire a verdict either", "fail",
+         builder(verdict={"all_clear": True, "reasons": []})),
+    case("builder-input-dropping-a-compat-domain",
+         "audit-5: a validator that emits only {entity,meta,system_health,summary} must not validate",
+         "fail",
+         {"entity": "SnapshotBuilderInput", "meta": META_OK, "system_health": [], "summary": {}}),
+    case("evidence-negative-category-count",
+         "audit-5: actionable=-1 running=1 balances every equation and used to validate", "fail",
+         with_evidence(categories={"actionable": -1, "running": 2, "waiting": 1,
+                                   "review_audit": 0, "completed": 1, "cancelled_by_user": 0})),
+    case("evidence-negative-coverage-count",
+         "audit-5: the same balanced-negative attack on the coverage totals", "fail",
+         with_evidence(coverage={"cells_in_universe": 4, "tested": -1, "untested": 5,
+                                 "not_applicable": 0})),
+    case("evidence-negative-conflicts",
+         "audit-5: conflicts/unclassified/duplicates carried no lower bound either", "fail",
+         with_evidence(conflicts=-1)),
+    case("meta-empty-mandatory-registry",
+         "an empty registry makes every missing source unexpected, which is how 0==0 passed", "fail",
+         with_meta(mandatory_sources=[])),
+    case("snapshot-output-without-verdict",
+         "ORDER-601: the persisted document must carry the computed verdict", "fail",
+         {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
+          "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
+          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+    case("snapshot-output-verdict-free-text-reason",
+         "a false verdict must be explained in a CLOSED code, not prose nobody parses", "fail",
+         {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
+          "verdict": {"all_clear": False, "reasons": [{"code": "something went wrong"}]},
+          "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
+          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+    case("snapshot-output-valid",
+         "the persisted positive - without it the negatives above could pass for any reason", "pass",
+         {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
+          "verdict": {"all_clear": True, "reasons": []},
+          "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
+          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+]
+
 
 VALID, INVALID, ERROR = 'pass', 'fail', 'ERROR'
 
