@@ -225,6 +225,16 @@ def output(name, guards, doc, must_say, depends_on=()):
     return F(name, 'output', guards, doc, None, None, None, must_say, set(depends_on))
 
 
+def output_refusal(name, guards, doc, must_say):
+    """A persisted document that is MALFORMED rather than merely disagreeing.
+
+    Separate from `output` because the two must not share an outcome: a VerdictMismatch says the
+    document's answer contradicts its evidence, while this says the document cannot be read as a
+    verdict at all. Accepting either where the other was expected would hide a real defect.
+    """
+    return F(name, 'output_refusal', guards, doc, None, None, None, must_say, set())
+
+
 FIXTURES = [
     # ---- the two independently built healthy positives ------------------------------
     positive('healthy-positive-1', 'ORDER-601: two independent positives; one only blocks a '
@@ -379,6 +389,20 @@ FIXTURES = [
             'the same attack one word over: `reasons` is validator-owned too, and the next place '
             'somebody puts the answer is the place nobody enumerated',
             at_ev(BASE, reasons=[]), 'reasons'),
+    # /scrutinize round 2, 2026-07-30: this fix had NO fixture. Codex audit 6 reproduced
+    # `duplicates: -1` computing clear, I fixed it, and verified the fix in a throwaway probe --
+    # in the same commit whose message says "a check that lives in shell history is not a check".
+    # Note it is a DIFFERENT code path from refuse-a-non-integer-count: that one is the isinstance
+    # branch, this one is the `v < 0` branch, and a `> 0` predicate passes a negative silently.
+    refusal('refuse-a-negative-count',
+            'Codex audit 6 MAJOR 3: the schema carries minimum:0 and the validator did not, so '
+            'with the gate skipped a negative count balanced every equation and computed clear',
+            at_ev(BASE, duplicates=-1), 'cannot be negative'),
+    refusal('refuse-a-negative-nested-category-count',
+            'the same hole one level down, where audit 5 originally found it',
+            at_ev(BASE, categories={'actionable': -1, 'running': 2, 'waiting': 1,
+                                    'review_audit': 0, 'completed': 1, 'cancelled_by_user': 0}),
+            'cannot be negative'),
     refusal('refuse-a-non-integer-count',
             'a string where a count belongs must not be compared as a number',
             at_ev(BASE, discovered='3'), 'must be an integer'),
@@ -414,6 +438,9 @@ _TRIPLED_REASON = SV.build_snapshot(drop_row(BASE, 'dashboard'), NC)
 # an HONEST verdict, then the one true reason repeated. Both the boolean and the reason SET
 # still agree with the evidence; only the multiset does not.
 _TRIPLED_REASON['verdict']['reasons'] = _TRIPLED_REASON['verdict']['reasons'] * 3
+
+_STRING_VERDICT = SV.build_snapshot(BASE, NC)
+_STRING_VERDICT['verdict']['reconciliation_clear'] = 'yes'
 
 _STALE_LYING_ROW = SV.build_snapshot(at_row(BASE, 'dashboard', age_hours=400.0), NC)
 # the verdict is CORRECT here; only the row's own derived field is falsified
@@ -452,6 +479,12 @@ FIXTURES += [
            # why this fixture still declares a dependency on it.
            must_say=['does not produce', '(x2)'],
            depends_on=[SV.MANDATORY_SOURCE_MISSING]),
+    output_refusal('persisted-verdict-is-a-string-not-a-boolean',
+           '/scrutinize round 2: audit 6 reproduced `all_clear: "yes"` verifying CLEAN because '
+           'both sides went through bool(), and every non-empty string is truthy. Fixed in the '
+           'same commit that shipped no fixture for it. Note bool("no") is also True, so the '
+           'coercion did not merely accept a typo -- it could invert the answer', _STRING_VERDICT,
+           must_say=['not a boolean', 'coerced']),
     output('persisted-row-lies-about-its-own-freshness',
            'the verdict here is CORRECT (false, STALE) while the row still asserts fresh=true '
            'for every consumer that reads the row instead of the verdict. Derived fields are '
@@ -491,6 +524,20 @@ def check(f):
                         f.must_say, exc)
                 return True, ''
             return False, 'produced a verdict for an input it cannot decide'
+
+        if f.kind == 'output_refusal':
+            try:
+                SV.verify_snapshot(f.instance, NC)
+            except SV.VerdictMismatch as exc:
+                return False, ('refused as a verdict MISMATCH, but this document is malformed '
+                               'rather than disagreeing -- the two must not share an outcome: %s'
+                               % exc)
+            except SV.SnapshotRefusal as exc:
+                missing = [s for s in f.must_say if s not in str(exc)]
+                if missing:
+                    return False, 'refused, but the message never names %s: %s' % (missing, exc)
+                return True, ''
+            return False, 'accepted a document whose verdict is not even the right type'
 
         if f.kind == 'output':
             try:
@@ -583,6 +630,40 @@ def check_no_test_only_identifiers():
         if before != after:
             problems.append('%s: the verdict changed when build_id/generated_at were '
                             'relabelled, so identity is reaching the logic' % f.name)
+    return problems
+
+
+def check_gate_rejects_arbitrary_callables():
+    """The gate must accept exactly two values. /scrutinize round 2: this had no test either.
+
+    Codex audit 6 showed `lambda instance, entity: instance` was an equally valid argument, which
+    made "skipping the gate is a visible, greppable act" false. It is checked here rather than as a
+    fixture because it raises TypeError -- a programming error, not a SnapshotRefusal about a
+    document -- and those two must not share an outcome.
+    """
+    problems = []
+    healthy = clone(BASE)
+    for label, gate in (('a no-op lambda', lambda instance, entity: instance),
+                        ('None', None),
+                        ('a truthy non-callable', 'ajv')):
+        for fname, fn, arg in (('build_snapshot', SV.build_snapshot, healthy),
+                               ('verify_snapshot', SV.verify_snapshot,
+                                SV.build_snapshot(healthy, NC))):
+            try:
+                fn(arg, gate)
+                problems.append('%s accepted %s as its schema gate' % (fname, label))
+            except TypeError:
+                pass
+            except SV.SnapshotRefusal as exc:
+                problems.append('%s reported %s as a document refusal rather than a TypeError, '
+                                'which blames the snapshot for a caller bug: %s'
+                                % (fname, label, str(exc)[:70]))
+    # ...and the control: both legal values must still work, or "rejects everything" would pass.
+    try:
+        out = SV.build_snapshot(healthy, NC)
+        SV.verify_snapshot(out, NC)
+    except Exception as exc:
+        problems.append('the sentinel path itself broke: %r' % (exc,))
     return problems
 
 
@@ -835,6 +916,8 @@ def main(argv):
                       ('no test-only identifier reaches the logic', check_no_test_only_identifiers),
                       ('every .py here compiles with no SyntaxWarning',
                        check_sources_parse_without_warnings),
+                      ('the schema gate accepts exactly two values',
+                       check_gate_rejects_arbitrary_callables),
                       ('v4 compatibility fields survive input -> output', check_compat_fields_survive),
                       ('build_snapshot output verifies as its own input', check_roundtrip)):
         problems = fn()

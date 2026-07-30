@@ -418,6 +418,23 @@ def check_validator_schema_gate():
     except SV.SnapshotRefusal:
         pass
 
+    # 5. The refusal must name a NESTED defect, not just a top-level one. /scrutinize round 2:
+    #    the schema root is a 19-branch oneOf, so validating against it made the refusal for
+    #    `duplicates: -1` read "required at '' -> owner_type; ... hypothesis_id" -- errors from
+    #    entities the instance was never meant to be. The heuristic filter could not fix that,
+    #    because a nested error lives under #/$defs/ReconciliationEvidence, not under the builder's
+    #    own $def. ajv_schema_validator now validates against the focused $def instead.
+    nested = with_evidence(duplicates=-1)
+    try:
+        SV.build_snapshot(nested, SV.ajv_schema_validator)
+        problems.append('the gate accepted a negative count that the schema forbids')
+    except SV.SnapshotRefusal as exc:
+        msg = str(exc)
+        if 'duplicates' not in msg:
+            problems.append('a NESTED violation was refused without naming the field: %s' % msg[:110])
+        if 'owner_type' in msg or 'hypothesis_id' in msg:
+            problems.append('the refusal quotes errors from unrelated oneOf branches: %s' % msg[:110])
+
     # 4. Tool failure must NOT read as rejection. Point the module at a schema that is not there
     #    and confirm the refusal says so rather than reporting the instance invalid -- the exact
     #    three-state discipline this file was rewritten for in 3812d72c.

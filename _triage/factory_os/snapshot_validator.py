@@ -599,13 +599,15 @@ def load_verified(path):
 # invoked by the fast tier -- see the module docstring on the budget.
 
 def _describe_ajv_errors(out, entity):
-    """Render ajv's errors, preferring the ones about THIS entity.
+    """Render ajv's errors as `keyword at 'instancePath' -> property`.
 
-    The schema root is a oneOf over every entity, so ajv reports the first error from every
-    branch: ~20 errors, of which the first is usually OwnerRef complaining about a property the
-    instance was never meant to have. Handing that to an operator points them at the wrong
-    contract, so errors whose schemaPath mentions the entity come first, and the branch noise is
-    only used when there is nothing better.
+    No filtering, deliberately. The first version tried to pick out the errors "about this entity"
+    by looking for the entity name in schemaPath, because validating against the 19-branch root
+    produced ~20 errors from unrelated branches. That heuristic could not work -- a NESTED failure
+    lives under #/$defs/ReconciliationEvidence, not under the builder's own $def, so the filter
+    dropped exactly the errors worth reading and fell back to the noise. _focused_schema() removes
+    the noise at the source instead, which leaves nothing here to be clever about: every error ajv
+    returns is now about the instance. Removing the heuristic is part of the fix, not a tidy-up.
     """
     match = re.search(r'\[\{.*\}\]', out, re.S)
     if not match:
@@ -614,15 +616,8 @@ def _describe_ajv_errors(out, entity):
         errors = json.loads(match.group(0))
     except ValueError:
         return out.splitlines()[0]
-    mine = [e for e in errors if entity in e.get('schemaPath', '')]
-    # A closed-object violation is reported at the offending instance path, not under the entity's
-    # own $def, so keep those too -- they are the ones that name a supplied property.
-    mine += [e for e in errors
-             if e.get('keyword') in ('unevaluatedProperties', 'additionalProperties')
-             and e not in mine]
-    chosen = mine or errors
     parts = []
-    for e in chosen[:4]:
+    for e in errors[:4]:
         params = e.get('params') or {}
         named = (params.get('missingProperty') or params.get('unevaluatedProperty')
                  or params.get('additionalProperty') or '')
@@ -631,15 +626,49 @@ def _describe_ajv_errors(out, entity):
     return '; '.join(parts)
 
 
+def _focused_schema(entity):
+    """The real schema with its 19-branch `oneOf` replaced by a `$ref` to ONE entity.
+
+    Codex audit 6 (MAJOR 3, sub-finding): validating against the root means ajv reports the first
+    error from every branch, so the refusal for `duplicates: -1` read
+    "required at '' -> owner_type; ... hypothesis_id; ... universe_version" and never named
+    `duplicates` or `minimum`. _describe_ajv_errors tried to filter that heuristically by looking
+    for the entity name in schemaPath, which cannot work for a NESTED failure: the error lives
+    under #/$defs/ReconciliationEvidence, not under #/$defs/SnapshotBuilderInput.
+
+    The fix is the one the audit recommended -- do not filter the noise, do not generate it. This
+    gate already knows which entity it expects (it asserts it below), so it validates against that
+    $def directly and every error is about the instance.
+
+    Discriminator coverage is NOT lost: the root `required: [entity]` and the `entity` enum are
+    kept, and the explicit equality check below is stricter than oneOf. run_schema_fixtures.py
+    still validates against the real root, which is where the discriminator belongs.
+    """
+    with io.open(SCHEMA_PATH, encoding='utf-8') as fh:
+        schema = json.load(fh)
+    schema.pop('oneOf', None)
+    schema.pop('$id', None)          # a derived schema must not claim the canonical id
+    schema['$ref'] = '#/$defs/%s' % entity
+    return schema
+
+
 def ajv_schema_validator(instance, entity):
     """callable(instance, entity) for build_snapshot/verify_snapshot. Raises on invalid."""
     if instance.get('entity') != entity:
         _refuse('expected entity=%r, got %r' % (entity, instance.get('entity')))
     fd, path = tempfile.mkstemp(suffix='.json')
+    sfd, spath = tempfile.mkstemp(suffix='.schema.json')
     try:
         with os.fdopen(fd, 'w', encoding='utf-8') as fh:
             json.dump(instance, fh)
-        p = subprocess.run(['ajv', 'validate', '-s', SCHEMA_PATH, '-d', path,
+        try:
+            with os.fdopen(sfd, 'w', encoding='utf-8') as fh:
+                json.dump(_focused_schema(entity), fh)
+        except (IOError, OSError, ValueError) as exc:
+            # Cannot read/derive the schema is a TOOL failure, never a verdict on the instance.
+            raise SnapshotRefusal('could not run: the schema could not be read or derived (%s)'
+                                  % exc)
+        p = subprocess.run(['ajv', 'validate', '-s', spath, '-d', path,
                             '--spec=draft2020', '--strict=false', '--errors=line'],
                            capture_output=True, text=True, shell=True)
         out = (p.stdout + p.stderr).strip()
@@ -656,7 +685,11 @@ def ajv_schema_validator(instance, entity):
         raise SnapshotRefusal('ajv could not run, so nothing was validated (exit %s): %s'
                               % (p.returncode, out.splitlines()[0] if out else '<no output>'))
     finally:
-        os.unlink(path)
+        for tmp in (path, spath):
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
 
 
 USAGE = 'usage: python _triage/factory_os/snapshot_validator.py verify <path-to-snapshot.json>'
