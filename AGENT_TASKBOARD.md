@@ -103,6 +103,54 @@
 
 ---
 
+## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Why this order exists and why it is narrow.** `ORDER-600` was a *proposal*; the owner approved **one** edge of it
+> (attestation line 2, bundle `aaa5998d7128238a`) and attached **two conditions**. Nothing has moved. This order is the
+> execution of that one edge and **nothing else** — the other 11 `TRANSFER` rows in D1 carry `signoff_state=PROPOSED`
+> with **no owner decision**, and `WorkReceipt` is `REFUSED` outright. Executing any of them here would be manufacturing
+> an approval, which is the exact defect blind audit 8 caught.
+
+**THE TWO OWNER CONDITIONS ARE THE ACCEPTANCE. They are transcribed verbatim from `s2a_attestations.jsonl` line 2 and may not be paraphrased, relaxed, or split across commits:**
+> 1. *"the owner banner and the section-2 header must say 'generated from factory/coverage.jsonl; edits here are overwritten' in the **SAME commit** as the first generation — nothing machine-reads section 2 today, so the only real risk is a human trusting the old banner and hand-editing generated output"*
+> 2. *"section 2 must **NOT** be switched to generated output until factory/coverage.jsonl covers **at least what the current hand table covers** — the present 7 rows are stale (last real update 2026-06-27 against a 64-row deployment inventory) but they are not nothing, and a thinner generated table would be a **regression**"*
+
+### Deliverables
+
+| # | path | what it is |
+|---|---|---|
+| E1 | `factory/coverage.jsonl` | the new canonical `CoverageCell` store — **new file, nothing else may be created under `factory/`** |
+| E2 | `_triage/factory_os/gen_coverage.py` | the generator: emits **both** `coverage.jsonl` **and** the §2 table body from it |
+| E3 | `_triage/factory_os/check_coverage_transfer.py` | the acceptance validator — the two conditions, mechanized |
+| E4 | `_triage/factory_os/run_coverage_transfer_tests.py` | the negative fixtures listed below |
+| E5 | `MASTER_BACKLOG.md` — **banner line + §2 header + §2 body only** | the transfer itself, one commit |
+
+### Acceptance — every line is machine-checked by E3, and every one has a negative fixture in E4
+
+- **A1 — condition 1, and BOTH directions of it.** E3 asserts the biconditional *"§2's body is generator output"* ⟺ *"the banner and the §2 header say `generated from factory/coverage.jsonl; edits here are overwritten`"*. <br>Negative fixtures, each of which must be observed RED **before** the fix exists: (a) generated body, unchanged banner ⇒ RED; (b) **banner changed, body still hand-written ⇒ RED** — pre-arming the banner one commit early would satisfy a naive "banner present" check while the file lies to every human who reads it, which is precisely the harm the owner named; (c) both changed but in **two different commits** ⇒ RED, checked against the **staged** tree, not the working tree.
+- **A2 — condition 2, measured against immutable bytes.** "Covers at least the hand table" is defined as the **pinned pre-transfer blob** `ca909b693a4c747dc1347d48fa8b2507f6a4243f` (`MASTER_BACKLOG.md` at `a7960e08`, the last hand-authored revision) parsed by the **existing** `check_s2a_migration.py:parse_section2`. E3 recomputes the baseline from that blob and requires `coverage.jsonl` to carry **≥ 7 source rows consumed · ≥ 8 LIVE cells · ≥ 40 cells total**, with **every** baseline cell present by its `source_token`. <br>🔴 **The baseline MUST be read from the pinned blob, never from the working-tree file.** After the transfer §2 *is* generator output, so comparing it to the generator is self-referential and passes unconditionally. This is the same defect class as the drift guard that regenerated against `HEAD` (memory `drift-guard-regenerating-against-head`). <br>Negative fixtures: drop one LIVE cell ⇒ RED naming it · drop one of the 32 `UNVERIFIED_IMPORT` cells ⇒ RED · drop a whole source row ⇒ RED · **rename a cell while keeping its `source_token` ⇒ RED** (audit 8 MAJOR 4's attack, re-run at the new boundary).
+- **A3 — no verdict field.** `coverage.jsonl` carries coverage facts only. A row containing `verdict`, `PF`, `pass`/`dead`, or any VERDICT-GATE vocabulary ⇒ RED. (Design §10 S5 prohibition.) Negative fixture required.
+- **A4 — round-trip determinism.** Regenerating §2's body from `coverage.jsonl` twice is byte-identical, and matches what is committed. Negative fixture: perturb one field ⇒ the regeneration differs and E3 reports STALE naming the line.
+- **A5 — the post-transfer hand-edit guard.** After the transfer, a hand edit to generated §2 ⇒ RED naming the divergent line. This is what makes the new banner true rather than decorative. Negative fixture required.
+- **A6 — `check_state.ps1` stays CLEAN.** `scripts/check_state.ps1:126` asserts `MASTER_BACKLOG.md` contains the literal `canonical entry =`. The new banner **must keep that string**. Run `check_state.ps1` and paste the result; a broken banner assertion is a failed acceptance, not a follow-up. <br><sub>`ENTRY-CLAIM-OK` — this line **quotes the needle** `check_state.ps1` searches for; it is not this board claiming to be the canonical entry. The guard fired on it correctly (its rule is "the needle inside a bold run"), and its own comment says the answer to a false positive is a marker, not editing prose until the check goes quiet. Observed: the commit was **blocked** by this guard before the marker was added.</sub>
+- **A7 — the tier stays honest.** E3 and E4 are declared in `$SUITE_GUARDS` and the pathspec is regenerated, so `run_guard_trigger_tests.ps1` PARTS 1–5 stay green. A new suite that nothing selects is a suite that never runs (`BACKLOG-D32`'s own defect).
+- **A8 — the owner's approval must still be valid at the end.** `check_s2a_attestation.py` must still exit 0 with the Coverage line matching bundle `aaa5998d7128238a`. It binds **six** files; **none of them may be edited by this order** (see prohibitions). If one must change, the approval is void and the owner must re-decide — this order does **not** get to decide that.
+
+### ห้าม (prohibitions — pre-registered, not discovered later)
+
+- ❌ **Do not execute any other D1 `TRANSFER` row.** The other 11 have no owner decision. `Hypothesis` · `CandidateManifest` · `MagicAllocation` · `TestUniverse` · `LogicalSymbol` · `SafeProjection` are `signoff_owner: user (Boss)` and **undecided**; `WorkReceipt` is `REFUSED`; `ParameterBinding` · `RunTransition` · `InstrumentProfile` · `SystemFinding` are lead-owned and belong to **S5/S9/S10**, not here.
+- ❌ **Do not edit any of the six files bound by bundle `aaa5998d7128238a`** — `s2a_migration.jsonl` · `s2a_coverage_reconciliation.json` · `S2A_OWNERSHIP_MIGRATION.md` · `gen_s2a_migration.py` · `check_s2a_migration.py` · `check_s2a_attestation.py`. Editing one silently reinterprets what the owner approved (audit 8 BLOCKER 2). E3 must **import** the parser it reuses, never fork it.
+- ❌ **Do not touch `MASTER_BACKLOG.md` outside the banner line, the §2 header and the §2 body.** §3 (the live backlog), §4, §5, §9 and every `BACKLOG-D*` row are out of scope.
+- ❌ Nothing else created under `factory/`. No `ops/`. No `build/`.
+- ❌ No `git add -A`; commit explicit owned paths only.
+- ❌ Do not mark this order `REVIEWED`. One seat writes it ⇒ `DONE — AWAITING CONSOLIDATED CODEX AUDIT`.
+
+### Rollback (one commit, stated before it is needed)
+
+The whole transfer is **one commit**. `git revert <sha>` restores §2 to blob `ca909b693a4c747dc1347d48fa8b2507f6a4243f` and removes `factory/coverage.jsonl`, which is a new file with no reader — measured 2026-07-30 and re-measured by this order before committing: the only parser of the `## 2. COVERAGE MATRIX` heading anywhere in the repo is `check_s2a_migration.py:parse_section2`, and `check_state.ps1` opens the file solely for its banner line. **If a second reader is found during implementation, stop and report it — that finding changes the owner's risk assessment and is the owner's to re-weigh.**
+
+---
+
 ## ORDER-602 — [factory/governance] S2a closure: separate the decision from the proposal, and replace the broad UNOWNED escape — `DONE` (**audit 8 answered; rescoped to an attestation**) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### 🔴 BLIND AUDIT 8 = NOT DONE on all of A–E → **answered by rescoping, not by building more** (`23cd1aff`)
