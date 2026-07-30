@@ -298,7 +298,20 @@ revert the commit" satisfies any mechanical form of it. Reviewer checklist, per 
 
 ---
 
-## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE(Claude/Opus 2026-07-30) — built, blind-audited, audit findings fixed; awaiting an independent re-check before REVIEWED` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+> ### ✅ 2026-07-31 (`54e82c81`) — **both of audit 7's closure conditions are now met**
+> Blind audit 7 said ORDER-601 could become `REVIEWED`-able after two things, and audit 8 deliberately did **not** re-review them. Both are done:
+>
+> **1. The three stale `all_clear` statements in the design.** Lines 953 / 1115 / 1179 still said S3 computes `all_clear`, listed global `ALL CLEAR` as **FIXED**, and called the builder/output boundary unspecified — while the implementation had been narrowed to **`reconciliation_clear`** and the boundary built. **Two incompatible contracts in one canonical file**, and a reader could take either. Line 1115 now states the exclusion outright: reconciliation **only**, deliberately not covering `system_health` · `floating_risk` · `deployments.gaps` · `unknown_magics` · `attestation` · `judge_readiness` ⇒ a `NO_SENSOR` snapshot can be `reconciliation_clear: true` **correctly**, and a *global* fleet verdict is **S4**. Line 1179's *"no real JSON Schema validator has run"* was stale too — `ajv-cli` is installed and `run_schema_fixtures.py` runs **35 draft-2020-12 cases**.
+>
+> **2. `x-enforced-by` split into `PLANNED | BUILT | WIRED`.** MEASURED, not assumed: of the ten names referenced, **seven have no implementation anywhere outside schema prose** — and the schema's own header *demanded every name MUST exist as validator code*, so the field asserted enforcement for constraints enforced by **nothing**. Now **PLANNED=8 · BUILT=4 · WIRED=1**, and **only `WIRED` means the constraint is enforced today**.
+>
+> **The labels are CHECKED, which is the only reason the split is worth anything** — an unchecked label is the same false claim with more syllables. `check_schema_structure.py` verifies each against the repo (PLANNED must not name an existing enforcer · BUILT must name one that exists · WIRED must additionally be **invoked**), and `run_enforcement_status_tests.py` mutates the schema **5 ways** requiring each to be refused by name, with the real schema as a green control on both sides.
+>
+> <sub>🔧 **The WIRED check earned that suite twice, both times the same defect class this slice keeps producing.** v1 searched the tier files whole ⇒ a bogus WIRED claim pointing at `snapshot_validator.py` **passed**, because that name sits in `$SUITE_GUARDS` as an **input that triggers** the tier, not as something the tier runs. v2 cut the map out and **still** passed — the same filename reappears in a later declaration block. Only whitelisting the arrays that are actually **executed** made it decidable. **Being named in a dependency list is not being invoked**, and blacklisting prose is not a way to find that out.</sub>
+>
+> 🔻 Still owed for `REVIEWED`: the independent re-check itself. The *conditions* are cleared; the *re-check* is not the same act.
+
+## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE(Claude/Opus 2026-07-30) — audit-7 closure conditions MET 2026-07-31 (54e82c81); awaiting an independent re-check before REVIEWED` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 **⚠️ READ THIS BEFORE TOUCHING THE SPEC BELOW — the work is already built.** The spec is kept verbatim as the record of what was asked. What exists:
 - **part 1** `c8d03d4b` — evidence/verdict entity split, so a supplied answer has nowhere to sit; ajv 17→28
