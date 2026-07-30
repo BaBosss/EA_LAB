@@ -4,7 +4,7 @@
 > session narrative, the accumulated changelog, and the full Decision log with provenance. This file
 > holds only: current status, active work, binding decisions, and the forward plan.
 
-> **last updated:** 2026-07-27 (Opus-seat) — sessions `CUTLOSS` / `CUTLOSS-VERIFY` closed; ORDER-370/371 open.
+> **last updated:** 2026-07-30 (Opus-seat) — Stage 0A + 0B repairs CLEAN; Factory OS design revised after a NO-GO blind audit; no Order written yet.
 > Full session-by-session history → `PROJECT_HISTORY.md`. · owner: patip
 
 ---
@@ -90,6 +90,15 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
 
 ## 2. Current status (one-liner per layer)
 
+> 🆕 **2026-07-30 (Opus-seat) — EA Template cage repaired, monitoring chain repaired, and a Factory OS design that failed its own audit · session `S-2026-07-30-TPLREPAIR` / `MONITOR0B` / `DESIGN1`**
+> **Stage 0A — EA Template confirmed defects: CLEAN.** `optimize_guard.ps1` was reading `classification=OVERRIDE` as "this input is dead". It means *member of a precedence chain*, so three working dials were refused (`_2_BasketTP_ATRmult` B14 · `_17_UseStructLevels` B17 · `_33_SL_MaxATRmult`) and the only way past was `-SkipOptimizeGuard`, which also disables the checks that do have evidence. Precedence is now decided per-run from sibling values; unknown classifications still fail closed. New cage `run_optimize_guard_tests.ps1` **proven red first (11/14) then green (14/14)**, wired into the pre-commit tier.
+> **The regression cage was compiling one MT5 install and measuring another** — an uncommitted edit had moved `mt5_run`/`mt5_optimize`'s default lane to `D:\Meta 5c` while `deploy.ps1` still targets lane 1, so it died at Boss_11 with "no fresh report" and nothing named the cause. Defaults reverted; `tpl_regression.ps1` now pins its lane explicitly and **asserts freshly-compiled binaries exist in the lane it is about to measure** (negative test fires: exit 1 before any tester run). Evidence, lane `D:\Meta 5`: compile **0 errors/0 warnings** (9 targets) · `param_registry_check` **CLEAN** · `tpl_regression` **CLEAN 8/8**.
+> **Stage 0B — monitoring integrity: 7 defects fixed.** A dead floating-risk sensor could not turn the chain red (only `system_health` was consulted); an unreadable/missing snapshot was logged but never failed; the dashboard applied **one base equity of 10,000 to all six accounts** (`463666728` was out by 10×); account `146237` was surfaced as if it were a lab account; an unparseable `last_seen` was filed as `HISTORICAL` — the quiet bucket. All fail-visible now, base equity is per-account with DD **suppressed not estimated** where `ACCOUNTS.csv` has no value (**5 of 6 accounts show UNKNOWN today — that is the honest state, and it is a prompt to fill the CSV in**). New suite **85/85**, in the fast tier. **Both guards mutation-tested by the lead, not taken on trust:** reverting the float rule ⇒ 7 red / 78 pass; reverting base equity ⇒ 11 red / 74 pass.
+> **Stage 1-3 — Factory OS + Control Center design → blind Codex audit → NO-GO → revised.** Design = [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) · audit = [`_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md`](_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md) (**22 findings: 2 P0 + 20 P1**), all 22 answered in design §14.
+> **🔴 The audit's best finding was a claim, not a bug:** the design said eleven facts had no owner, and that was the foundation everything else stood on. Most are owned — `MASTER_BACKLOG` §2 owns coverage, `INTAKE_QUEUE.md` owns strategy intake, `evidence-manifest.jsonl` already exists. **Two are genuinely unowned.** The schemas were storing *mutable copies* of owned facts, which is what the anti-drift rule exists to prevent.
+> **🔴 And it caught a counting bug I had written up as intellectual honesty:** I reported 209 inputs in `Inputs.mqh` (the real figure is **184**; 25 of those lines are `input group` headers), then reported a "~15 unexplained gap" between my static count and the real Inputs page and filed it as a discovery task. Removing the group headers reproduces the Inputs page exactly. There was never a gap.
+> **Still owed before any Order is written:** `make_status.ps1` still has an "unreadable = nothing found" path · alert delivery ledger · **user must amend §3's `account|magic` invariant** if the global-magic decision below is to be built · **user must amend `AGENTS.md` §2** before Work Receipts get a writer.
+>
 > 🆕 **2026-07-26 (Opus-seat) — SuperTrendFlip lever campaign round closed · full handoff = [`_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md`](_triage/HANDOFF_2026-07-26_SUPERTRENDFLIP_LEVER_CAMPAIGN.md)**
 > **Got 1 candidate:** BTCUSD H4 `(TRD)_SuperTrendFlip_rev03` (Donchian20 + pyramid MaxAdds=1) — M4 with swap already deducted
 > MAIN **2.257**/50 · BWD **3.949**/66 · **HOLDOUT 2026H1 = 4.274**/9 (already burned) · MC ruin 0% PF-5th 1.052 ·
@@ -168,6 +177,9 @@ Zeus build-on, the MERGE track) → **`PROJECT_HISTORY.md` §2 archive**.
 | 2026-07-26 | **B1's metric is a live observation — never reconstruct it.** Retroactively reviewed orders intentionally get no B1 row · `B1_COHORT.md` = a running log, not a 20-item cohort | reconstructed values would be fake, destroying the signal the dataset exists to measure (TH: "B1_COHORT.md = running log ไม่ใช่ cohort 20 ใบ (user เคาะ)") |
 | 2026-07-26 | **`TASKBOARD_DIGEST.md` = generated only, never hand-typed** (`-Check` catches staleness) | the board's 2 files (~1.4MB) had no human-readable index |
 | 2026-07-26 | **Do not fix the `check_taskboard_archive.ps1` chain-walk before a targeted test exists** | the fast fix (a path-filter) could reopen BLOCKER 6, "checkpoint laundering through merge" |
+| 2026-07-30 | **A guard that refuses valid work is not "extra safe" — it is the failure that gets guards switched off.** `optimize_guard` refused three working dials by reading `classification=OVERRIDE` as inactive, and the only route past it disabled the checks that had evidence. Any future guard must be able to state what it *allows*, and be tested in both directions | paid for in a P0: `_2_BasketTP_ATRmult` · `_17_UseStructLevels` · `_33_SL_MaxATRmult` were all un-sweepable |
+| 2026-07-30 | **A cage must prove it measured what it compiled.** `tpl_regression` inherited a lane default and spent an unknown period compiling lane 1 while running lane 5c. Cages pin their lane explicitly and assert the freshly-built binary is present in the lane being measured | the failure looked like "no fresh report" and named nothing |
+| 2026-07-30 | **user decision: magic uniqueness moves to GLOBAL scope** (Grill decision 56) — adopted for **new** allocations only. ⚠️ **This contradicts the `account|magic` invariant in §0.5, which is still true of the running system** (`990103` · `991001` · `991002` each sit on two accounts, `991001` on real money). The invariant is therefore **left as-is until the user amends it at implementation time**; the three collisions are `legacy_exception`, frozen to their judge dates, and **never renumbered as a side effect**. Renumbering a live magic is its own order | the concern was raised before the decision and the user confirmed; recording the decision without flipping a still-true invariant is what stops the doc lying about the system |
 
 
 > ⚠️ **HISTORICAL SNAPSHOT — superseded.** The table below is stale, dating from before 2026-07-18 (ST03 was already pulled from real money by then) — for the current reality, see the single file: `portfolio/DEPLOYMENTS.csv`
@@ -248,7 +260,14 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
 > **🔴 The most important number is a zero.** Wave5 guard **G4 — the control the entire ORDER-082 naked-probe design was accepted on — has never been observed firing** (0 across 2936 bars, two runs). Invisible until counters existed; now measured → **ORDER-490**.
 > **Honest coverage:** only ORDER-432 finding 3's guard was *demonstrated* firing. Findings 2/4/5 are fail-closed branches on runtime data failures that cannot be forced in the tester ⇒ `UNTESTED` by the VERDICT GATE's own rule, and not written up as passed.
 
-**Open now (2026-07-27):**
+**Open now — added 2026-07-30 (must clear before the Factory OS design can become Orders):**
+- **[user action] amend §3's `account|magic` invariant** if the global-magic decision is to be implemented (S10 is blocked on it).
+- **[user action] amend `AGENTS.md` §2** to authorize a Work Receipt writer, or S14 stays closed.
+- **[user action] define the "~10,000 combinations per round" budget executably** — zones, minimum total search, stop rule. The design refuses to invent the numbers; today an orchestrator could claim compliance either way.
+- **`make_status.ps1` still reads the taskboard directly under `SilentlyContinue`** — an unreadable taskboard renders an empty work queue rather than `UNKNOWN`. Design-fixed, code owed (slice S4).
+- **Re-review owed:** confirm the two P0s are genuinely closed rather than restated. The first audit's most valuable finding was a claim the design made about itself.
+
+**Open (2026-07-27):**
 - **ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`, the only place a binary actually
   reaches a live chart (0 records) ⇒ this is the route by which a stale binary reaches **portfolio #1**,
   which Phase 5 depends on. (Checked by hand: the attached Boss_16 bundle is genuinely not stale, but the
