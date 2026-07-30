@@ -112,7 +112,14 @@ fi
 # rather than enumerated again; the fast tier is 3.7s, which is inside the budget that makes a hook
 # survivable. The real fix named above -- deriving this list from what the suites depend on --
 # is still owed and still needs its own cage.
-cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1')
+# BACKLOG-D31 (2026-07-30): FOURTH addition, and this one was found by staging a design-only
+# edit and counting the hook's output lines -- zero. run_contract_binding_tests.ps1 guards
+# _triage/EA_LAB_FACTORY_OS_DESIGN.md and _triage/factory_os/schemas.json, neither of which
+# matched any glob here, so the cage fired only when a scripts/ file happened to be staged
+# alongside. It looked enforced for four commits and was not. The prediction in the ORDER-500
+# paragraph above has now come true three times in three days; deriving this list from the
+# suites' own declared dependencies is the fix, and it is now BACKLOG-D32, not a comment.
+cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1' '_triage/factory_os/*' '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
 if [ -n "$cage_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   rc=$?

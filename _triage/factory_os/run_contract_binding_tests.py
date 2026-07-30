@@ -143,7 +143,11 @@ def main():
     with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
         base = json.load(fh)
     with io.open(gen.DESIGN_PATH, encoding='utf-8', newline='') as fh:
-        design = fh.read()
+        # Normalised for the same reason the generator normalises: this repo's working tree is
+        # CRLF and the generator emits LF, so a file straight from `git checkout` would make
+        # the precondition below ABORT -- every case unrun, on a clean checkout, in a
+        # pre-commit hook. A cage that is red for everyone is a cage that gets removed.
+        design = fh.read().replace('\r\n', '\n')
 
     print('=== does the binding catch the seven regressions it was built for? ===')
     print('design: {0}'.format(gen.DESIGN_PATH))

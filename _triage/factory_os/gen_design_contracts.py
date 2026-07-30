@@ -50,6 +50,13 @@ BLOCK_RE = re.compile(
     r'<!-- END GENERATED CONTRACT: (?P=key) -->',
     re.DOTALL)
 
+MAX_NEST_DEPTH = 3
+
+
+class DepthExceeded(Exception):
+    pass
+
+
 WARNING = ('<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by '
            '`_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — '
            'edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>')
@@ -156,8 +163,15 @@ def walk_fields(defn, prefix='', depth=0):
     would create the second copy this whole tool exists to prevent.
     """
     rows = []
-    if depth > 3:
-        return rows
+    if depth > MAX_NEST_DEPTH:
+        # Loudly, not silently. A cap that returns an empty list is a contract that leaves
+        # the document with nothing disagreeing - the same shape as the nullable-object bug
+        # audit 4 found in this very function. Nothing in the schema is this deep today; if
+        # something becomes this deep, the generator must stop rather than quietly truncate.
+        raise DepthExceeded(
+            'nesting deeper than {0} at `{1}` — raise MAX_NEST_DEPTH deliberately after '
+            'checking the rendered table is still readable. Refusing to truncate silently.'
+            .format(MAX_NEST_DEPTH, prefix.rstrip('.')))
     required = set(defn.get('required') or [])
     for field, spec in (defn.get('properties') or {}).items():
         path = prefix + field
@@ -447,9 +461,23 @@ def main():
     with io.open(DESIGN_PATH, encoding='utf-8', newline='') as fh:
         original = fh.read()
 
+    # Line endings are NOT part of the contract. This repo's working tree is CRLF (core.autocrlf)
+    # while the blobs are LF, so a file straight from `git checkout` is CRLF and anything this
+    # script writes is LF. Comparing raw text made --check go red on a clean checkout with an
+    # EMPTY diff -- red for a reason the operator cannot see is how a cage gets bypassed, which
+    # is the entire premise of the fast-tier budget two directories away. Compare content;
+    # preserve whatever convention the file already uses when writing.
+    eol = '\r\n' if '\r\n' in original else '\n'
+
+    def norm(text):
+        return text.replace('\r\n', '\n')
+
     try:
-        new, keys = rewrite(original, schema)
+        new, keys = rewrite(norm(original), schema)
     except KeyError as exc:
+        print('[FAIL] {0}'.format(exc.args[0]))
+        return 1
+    except DepthExceeded as exc:
         print('[FAIL] {0}'.format(exc.args[0]))
         return 1
 
@@ -459,15 +487,21 @@ def main():
             print('[FAIL] {0}'.format(p))
         return 1
 
-    if new == original:
+    if new == norm(original):
         print('[OK] {0} blocks in {1} match {2}'.format(len(keys), DESIGN_PATH, SCHEMA_PATH))
         return 0
 
     if check:
         diff = list(difflib.unified_diff(
-            original.replace('\r\n', '\n').splitlines(),
-            new.replace('\r\n', '\n').splitlines(),
+            norm(original).splitlines(), new.splitlines(),
             'design (committed)', 'design (generated from schema)', lineterm='', n=1))
+        if not diff:
+            # Belt and braces: if the texts differ but the line-diff is empty, the difference
+            # is invisible (whitespace, encoding). Say so instead of printing nothing.
+            print('[FAIL] the file differs from the generated output in a way that produces no '
+                  'line diff — invisible whitespace or encoding, not a contract change. '
+                  'Regenerate; do not hunt for a semantic difference that is not there.')
+            return 1
         print('[FAIL] the design\'s generated contract tables no longer match the schema.')
         print('       This is BACKLOG-D31\'s whole purpose: the design and the schema stated')
         print('       different contracts seven times across three audits. Regenerate with:')
@@ -480,7 +514,7 @@ def main():
         return 1
 
     with io.open(DESIGN_PATH, 'w', encoding='utf-8', newline='') as fh:
-        fh.write(new)
+        fh.write(new.replace('\n', eol) if eol != '\n' else new)
     print('[WROTE] {0} — {1} generated blocks: {2}'.format(DESIGN_PATH, len(keys), ', '.join(keys)))
     return 0
 
