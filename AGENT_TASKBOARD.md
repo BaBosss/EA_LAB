@@ -103,7 +103,56 @@
 
 ---
 
-## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `DONE` (awaiting owner sign-off + an independent re-check) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-602 — [factory/governance] S2a closure: separate the sign-off from the proposal, and replace the broad UNOWNED escape — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+**bars:** N-A (governance/schema order) · **flat-lot probe:** N-A
+
+**Provenance:** opened 2026-07-30 from **blind audit 7** (`_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`) after its BLOCKER was fixed in `caf9f18c`. Number from lane `S-2026-07-30-S2AD1D2`, block 600-609. **`ORDER-600` cannot close until this does.**
+
+### A — the sign-off deadlock (audit MAJOR 2) 🔴 *blocks the user*
+`SIGNOFF_STATES` excludes `APPROVED` and C2 fails every `APPROVED` row, **and** `run_s2a_gate.py` step 1 requires D1 to byte-match its generator. So recording an approval today means editing **the evidence, the acceptance rule and the generator in one commit** — after which **nothing can distinguish "the owner approved" from "the proposal author weakened the guard"**. That is a deadlock, not a safeguard.
+**Build:** an append-only sign-off artifact keyed `proposal_sha256 · current_owner · decision(APPROVED|REFUSED) · signer · decided_at · reason · authorization_ref`. The checker verifies the digest, requires exactly one current decision per distinct owner, **permits `APPROVED` with no checker edit**, requires a reason for `REFUSED`, and requires pins current enough to sign.
+⚠️ **This is also where C6 gets a real rule** (audit MAJOR 3) — see the renamed criterion in `check_s2a_migration.py`.
+
+### B — `UNOWNED` conflates four different states (audit MAJOR 4)
+`TestUniverse` (genuinely missing owner) · `LogicalSymbol` (planned part of the universe contract) · `SafeProjection` (deliberately derived output) · `RunJournal` (derived, never persisted) are **not one kind of thing**, and collapsing them created the privileged escape the blocker walked through.
+**Build:** closed states `NO_CURRENT_OWNER` · `NOT_YET_BUILT` · `DERIVED_NOT_PERSISTED` · `TRANSIENT`, each with its own allowed disposition and pin rule. Reserve `UNOWNED` for a canonical fact whose missing owner **is** the migration subject.
+🚫 **Do not simply drop all four:** `TestUniverse` belongs in the proposal *precisely because* its owner is missing. `RunJournal` is the clear exclusion candidate; `SafeProjection` should be represented as derived/not-built.
+
+### C — three TRANSFER rationales that do not survive source inspection (audit MAJOR 5)
+The `LogicalSymbol` inversion is **already fixed** in `caf9f18c`. Three remain, all *"concrete prose with the wrong causal bridge"*:
+- **`TestUniverse`** cites `bar-cleared-by-non-participation`, which records hosts that **did** trade the cell but only 52/62 times in 3 years ⇒ that needs a **trades-per-window bar**, not a universe registry.
+- **`RunTransition`** cites `taskstop-does-not-kill-qwen-child`, which proves process-tree cancellation and lane-ownership defects ⇒ a recovery checkpoint does not stop or identify that orphan child.
+- **`Hypothesis`** cites `unmeasured-corr-costs-more-than-real-risk` (1088/1540 pairs on a default 1.0) ⇒ architecture digests do not produce the missing **return** correlations.
+**Acceptance:** each row either cites evidence that actually establishes the claimed failure, or states the weaker true claim. **Open every citation** — that is how all of these were found.
+
+### D — pin-vintage must block at the sign-off boundary (audit MODERATE 8)
+Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TASKBOARD.md` would otherwise redden constantly). It must become a **blocker at sign-off**: the sign-off command requires zero vintage notes, or records an explicit per-owner stale-pin acknowledgement.
+
+### E — memoization is unsound for symbolic `HEAD` and the live index (audit MODERATE 9)
+`commit_oid:path` and blob bytes are content-addressed and safe. **`HEAD:path` and `git ls-files` are not**, and this repo has concurrent writers. **Build:** resolve `HEAD` once to an OID and key every lookup by that OID; snapshot index/tree identity at start and **abort if it changes** mid-run.
+
+### Prohibited
+- ❌ Writing `signoff_state = APPROVED` on the owner's behalf — A exists so the owner never has to touch a guard to say yes.
+- ❌ Closing any item by weakening its check. Each fix ships with a mutation case that fails without it.
+- ❌ Reporting DONE while the audit-7 attack input passes.
+
+---
+
+## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `OPEN` (**blind audit 7 = NOT DONE**; blocker fixed, 4 closure conditions remain → `ORDER-602`) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### 🔴 BLIND AUDIT 7 (2026-07-30) — **NOT DONE, and it was right.** Report: `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`
+>
+> **The verdict I wrote (`DONE`) was wrong and is withdrawn.** Every finding was **reproduced locally before being accepted**, per the audit-6 pattern.
+>
+> **BLOCKER 1 — the checker accepted a useless D1. Reproduced unchanged, exit 0, all nine `[OK]`:** 26 of 27 entities declared `UNOWNED`, every row `REFUSED`, one nonsensical decoy transfer (`OwnerRef → factory/universe.jsonl`), and **32 coverage cells of the literal string `"junk"`**. <br>**The hole was my own guard's central claim.** rev 5 required `unowned_evidence` to be a tracked file that *mentions* the entity, and I called that *"recomputed, not trusted"* — but **`schemas.json` DEFINES all 27 entities**, so one citation satisfied it for the entire schema. **A substring cannot establish an ownership claim.** I recomputed the presence of a string and then trusted it to mean something. <br>⚠️ **29 local mutations green did not imply the acceptance held** — every one of them broke a single field; the attack coordinates C2·C3·C4·C7·C8·C9 at once. It is now a permanent mutation case.
+>
+> **Fixed in `caf9f18c`, each with a mutation case:** **C3** eligibility for `UNOWNED` is a **closed declaration** (4 entities, each with its claim sentence quoted verbatim from source; an entity may no longer nominate its own evidence) · **C7** the **Coverage row's own state** carries the decision, since the all-KEEP guard is proposal-wide and one decoy defeated it · **C8** cells must be **typed, unique and traceable** via a declared `source_token` re-found in §2 (tolerating two cell shapes *was* the hole — the LIVE check accepted both, so the weak shape was rejected nowhere) · **C6 renamed** to `CONSISTENT signer per owner (not 1 row)`.
+>
+> <sub>🔧 **Two data corrections, both found by the audit OPENING MY CITATIONS rather than reading my prose** — the failure mode D2 is most exposed to. (1) **`LogicalSymbol` cited a memory for the OPPOSITE of what it says**: `mt5-selfupdate-breaks-startup-ini-and-pid-kill` records that the `symbol synchronization timeout` was **not a symbol problem** (the terminal was never authorised — a login without `/portable` stores credentials elsewhere); my row called it *"a symbol-identity failure diagnosed as a network one"*, inverting its causality to support a symbol registry. Replaced with the real gap + the ORDER-371 cross-install ban as evidence. (2) Two cells labelled **`XAUUSD H4` / `GBPUSD H4` claimed "the source states no timeframe"** while the labels literally contain `H4`; the truth is the reverse — the source states **only** the timeframe and the **symbol** is inherited from the row's LIVE cell. This also caught a bug in my *first* C8 fix, which guessed the token from the label and accused both **correct** cells of being untraceable — a check that would have pushed someone to "fix" good data.</sub>
+>
+> <sub>📌 **C6 was a miss I had already half-seen.** During `/scrutinize` I noticed the generator assigns signers from a dict keyed by owner, so C6 *cannot fail* against any generated file — and I filed that as "not a defect" instead of asking whether the criterion matched its own name. It never implemented *"exactly one sign-off row per owner"*: the real D1 has **5 owners carrying >1 row** (`UNOWNED` carries 4) and C6 is green.</sub>
+>
+> **Remaining closure conditions → `ORDER-602`** (owner sign-off separated from D1/checker/generator · C6 as a real owner-level decision · owner-state taxonomy replacing the broad `UNOWNED` · the 3 other over-claiming TRANSFER rationales). **Do not hand-approve the Coverage edge until ORDER-602 lands** — see `_triage/USER_TASKS_2026-07-30.md` §2.
 
 > ### 🔻 STATUS 2026-07-30 (lane `S-2026-07-30-S2AD1D2`, commits `03e98667` + `34acbd54`) — **all four deliverables exist; all nine machine criteria hold**
 >
