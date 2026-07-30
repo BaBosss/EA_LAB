@@ -77,6 +77,11 @@ param(
     # BACKLOG-D32: paths staged for this commit. EMPTY MEANS RUN EVERYTHING -- see the safety
     # rules at Select-Suites. The caller (the hook) decides; this script never guesses.
     [string[]]$StagedPaths = @(),
+    # Preferred over -StagedPaths from a shell: one path per line, no quoting or array-binding
+    # ambiguity. `powershell -File` bound a comma-joined string as ONE literal for three paths
+    # while splitting it correctly for two, which is exactly the kind of thing not to depend on
+    # in the pre-commit trigger.
+    [string]$StagedPathsFile = '',
     # print the selection and exit, running nothing. For the cage.
     [switch]$ExportSelection
 )
@@ -330,7 +335,27 @@ function Select-Suites {
         }
         if ($hit) { $picked.Add($s) }
     }
+    # RULE 4, and the one that actually caught a live defect. The pathspec is GENERATED from these
+    # same guards, so a staged path that reached this script is guarded by at least one suite by
+    # construction. "Staged paths given, nothing selected" is therefore a CONTRADICTION -- it means
+    # the list arrived mangled, or the guards and the pathspec have drifted apart. Either way the
+    # honest response is to run everything, not nothing.
+    # This is not hypothetical: the first version of this feature passed the paths as one
+    # comma-joined string, PowerShell -File bound it as a single literal for three paths (though it
+    # split correctly for two), and the commit that introduced per-path selection ran ZERO suites
+    # while printing a confident selection message. It failed CLOSED while its own comment claimed
+    # it could only fail open.
+    if ($picked.Count -eq 0) {
+        Write-Host ('[fast-cages] {0} staged path(s) matched NO suite -- that cannot happen if the ' -f $Staged.Count) -ForegroundColor Yellow
+        Write-Host '             pathspec and $SUITE_GUARDS agree, so the list is suspect. Running everything.' -ForegroundColor Yellow
+        return $Suites
+    }
     return $picked.ToArray()
+}
+
+if ($StagedPathsFile -and (Test-Path -LiteralPath $StagedPathsFile)) {
+    $StagedPaths = @(Get-Content -LiteralPath $StagedPathsFile | ForEach-Object { $_.Trim() } |
+                     Where-Object { $_ })
 }
 
 if ($ExportSelection) {

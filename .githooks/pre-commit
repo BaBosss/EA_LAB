@@ -157,16 +157,22 @@ if [ -n "$cage_staged" ]; then
   # runs any suite whose guards are undeclared. So "FORCED", an empty list, or a list this hook
   # computed wrongly all run MORE than necessary, never less. run_guard_trigger_tests.ps1 PART 5
   # asserts that, plus that every suite is still reachable by its own declarations.
-  cage_list=""
+  # Paths go through a FILE, one per line -- not a comma-joined argument. `powershell -File` bound
+  # a comma string as one literal for three paths while splitting it correctly for two, and the
+  # commit that introduced this feature ran ZERO suites as a result. A temp file has no quoting,
+  # separator or array-binding ambiguity.
+  cage_file=""
   if [ "$cage_staged" != "FORCED" ]; then
-    cage_list=$(printf '%s' "$cage_staged" | tr '\n' ',' | sed 's/,$//')
+    cage_file=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/ea_cage_$$")
+    printf '%s\n' "$cage_staged" > "$cage_file"
   fi
-  if [ -n "$cage_list" ]; then
-    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -StagedPaths "$cage_list"
+  if [ -n "$cage_file" ] && [ -s "$cage_file" ]; then
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -StagedPathsFile "$(cygpath -w "$cage_file" 2>/dev/null || echo "$cage_file")"
   else
     "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   fi
   rc=$?
+  [ -n "$cage_file" ] && rm -f "$cage_file"
   if [ "$rc" -ne 0 ]; then
     echo ""
     echo "[pre-commit] a guard's own test suite failed (above) -- ORDER-420."

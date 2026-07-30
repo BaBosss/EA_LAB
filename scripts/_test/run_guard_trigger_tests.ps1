@@ -188,10 +188,29 @@ try {
     #    PART 1's braces, and is documented inline there rather than tested through a synthetic
     #    table this cage would then have to keep in sync.
 
-    # 4. an unrelated staged path must not select a suite that does not guard it.
-    $none = Selection @('no/such/path/at/all.txt')
-    if ($none.Count -lt $table.Suites.Count) { Good ('an unrelated staged path selects fewer suites ({0})' -f $none.Count) }
-    else { Bad 'an unrelated staged path still selected every suite -- the filter is inert' }
+    # 4. THE FILTER MUST NOT BE INERT: a path guarded by one suite must select a PROPER SUBSET.
+    #    Measured against a real declaration rather than a guess, so it cannot rot into a tautology.
+    $oneGuard = $table.Guards.'run_guard_trigger_tests.ps1'[0]
+    $subset = Selection @($oneGuard)
+    if ($subset.Count -gt 0 -and $subset.Count -lt $table.Suites.Count) {
+        Good ("a single guarded path selects a proper subset ({0} of {1}) -- the filter is not inert" -f $subset.Count, $table.Suites.Count)
+    } else {
+        Bad ("staging '{0}' selected {1} of {2} suites -- the filter is inert or empty" -f $oneGuard, $subset.Count, $table.Suites.Count)
+    }
+
+    # 5. FAIL-OPEN: staged paths that match NO suite must run EVERYTHING, not nothing.
+    #    The pathspec is generated from these same guards, so "staged but unmatched" is a
+    #    contradiction -- the list arrived mangled or the declarations drifted. This case is here
+    #    because the first version of the feature did the opposite: the very commit that
+    #    introduced per-path selection ran ZERO suites, while printing a confident selection
+    #    message, because `powershell -File` bound a comma-joined list of three paths as one
+    #    literal. It failed CLOSED while claiming it could only fail open.
+    $unmatched = @(Selection @('no/such/path/at/all.txt') | Where-Object { $_ -like '*.ps1' })
+    if ($unmatched.Count -eq $table.Suites.Count) {
+        Good ('staged paths matching nothing fall back to the WHOLE tier ({0}) -- fails open' -f $unmatched.Count)
+    } else {
+        Bad ("staged paths matching nothing selected {0} of {1} -- this MUST fail open" -f $unmatched.Count, $table.Suites.Count)
+    }
 
     if ($fail -eq $before) { Good 'per-path selection fails OPEN and every suite stays reachable' }
 
