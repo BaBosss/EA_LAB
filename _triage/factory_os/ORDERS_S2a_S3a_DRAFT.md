@@ -50,12 +50,32 @@ criterion with no line in this file is not acceptance; it is a wish.
 - [ ] The set of `entity` values equals **exactly** the set of rows in the generated `__STORAGE__` block —
       set equality, not count equality. Read it from `gen_design_contracts.py`; do not hardcode 24.
 - [ ] Zero rows with `signoff_state = APPROVED`.
-- [ ] Every `current_owner` and `proposed_owner` is drawn from a declared vocabulary of real paths, and
-      **every path exists in the repo at HEAD**. `schemas.json` is not a valid `current_owner` for a fact it
-      only describes.
+- [ ] ~~Every `current_owner` and `proposed_owner` is drawn from a declared vocabulary of real paths, and
+      **every path exists in the repo at HEAD**.~~ **AMENDED 2026-07-30 (rev 4) — as written this clause made
+      the order UNSATISFIABLE, and it is amended before any work rather than quietly reinterpreted while
+      building.** MEASURED: **11 of the 27 entities** have an `x-owner-file` that does not exist at HEAD
+      (`factory/` does not exist at all — `hypotheses.jsonl` · `parameter_bindings.jsonl` · `universe.jsonl`
+      ×2 · `instrument_profiles.jsonl` · `coverage.jsonl` · `runs/<run_id>.jsonl` ·
+      `candidates/<candidate_id>.json` · `magic_allocations.jsonl` · plus `ops/findings.jsonl` and
+      `build/safe_projection.json`), while the Coverage-edge criterion below **requires** a row whose
+      `proposed_owner` is `factory/coverage.jsonl` and the Prohibited list **forbids creating** it. Three
+      clauses that cannot all hold. The rule is now:
+      - **`current_owner` MUST exist at HEAD.** This is where the anti-gaming bite belongs: it is a claim
+        about today, and `schemas.json` is not a valid `current_owner` for a fact it only describes.
+      - **`proposed_owner` may be a path that does not exist yet**, but must appear in a `PLANNED_PATHS`
+        vocabulary declared in `check_s2a_migration.py`, so a typo is still caught while a future file stays
+        expressible. A proposal about future storage that may only name present storage is not a proposal.
+      - **`EMBEDDED:<ParentEntity>` is a legal owner value**, because **12 of the 27** entities are embedded
+        in a parent and own no file (`OwnerRef` · `ModuleUse` · `MetricRef` · `ExecutionKey` · `RunAttempt` ·
+        `RunJournal` · `CandidatePayload` · `WorkReceipt` and others). Such a row MUST carry
+        `disposition = KEEP` with its reason, and is exempt from `owner_ref` pinning — there is no blob to pin.
 - [ ] Every `owner_ref` is **recomputed, not merely shaped**: resolve `path` at `commit_oid`, compare
       `blob_oid` against `git rev-parse`, recompute `raw_sha256` from the blob bytes. **Zero unresolved,
-      zero mismatched.** A plausible-looking constant is the rev-1 failing case.
+      zero mismatched.** A plausible-looking constant is the rev-1 failing case. **rev 4 scope:** this
+      applies to every row that CLAIMS an `owner_ref`, and a row may only decline one when its
+      `current_owner` is `EMBEDDED:*` or names a fact that lives in no file today — in which case
+      `owner_ref` is `null` and `owner_ref_absent_reason` is required and non-empty. The recomputation is
+      the whole point of the criterion and is not weakened for any row that has a blob to pin.
 - [ ] `owner_ref` values are **distinct across rows** unless two rows genuinely pin the same blob, and any
       repeat carries `same_blob_reason`.
 - [ ] Exactly one sign-off row per **distinct `current_owner`**, each with a non-empty named `signoff_owner`.
