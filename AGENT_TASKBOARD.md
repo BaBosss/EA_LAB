@@ -496,7 +496,7 @@ NZDJPY 1.86→0.84 · AUDCHF 3.39→0.75 · GBPCHF 1.79→1.00 · NZDCAD/CADCHF/
 
 **สถานะ:** `REVIEWED(Claude/Sonnet 2026-07-28)` — screen ปิดครบ · ตัวที่เดินต่อ = AUDUSD/USDCAD (BWD) และ CHFJPY (entry-edge จริงตัวเดียวที่มี n ทั้งสองขา)
 
-## ORDER-542 — [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX เหมาะ" ให้จบ — `REVIEWED(Claude/Opus 2026-07-30) — 3 cell ใหม่เข้าเกณฑ์ CANDIDATE (BRENT·NAS100·US30) · DE40 BWD ข้อมูลเสียใช้ไม่ได้ · XAUUSD H1 BUILD-ON` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
+## ORDER-542 — [optimize] SuperTrendFlip × non-FX cell #20-24 — ปิดสมมติฐาน "crypto เหมาะ ไม่ใช่ non-FX เหมาะ" ให้จบ — `REVIEWED(Claude/Opus 2026-07-30) — 2026H1 holdout now spent on BRENT+US30 (see VERDICT below): BRENT fails holdout → BUILD-ON/parked · US30 clears thin margin → MC next · NAS100 still CANDIDATE-pending-fan · DE40 BWD ข้อมูลเสียใช้ไม่ได้ · XAUUSD H1 BUILD-ON` · ทำได้: oc-qwen · ZCode · 👉 แนะ: oc-qwen
 
 **ที่มา:** `ORDER-GEN-STANDING` MATRIX ชุดที่ 2 — cell **#20 BRENT H4 · #21 NAS100 H4 · #22 DE40 H4 ·
 #23 XAUUSD H1 · #24 US30 H1** ยังว่าง (6/12 cell ที่ทำแล้วให้ pattern ชัดมาก: **ทุก cell ทำเงินบน MAIN
@@ -2045,6 +2045,95 @@ cell #19-#24 (ETH/BRENT/NAS100/DE40/XAU H1/US30 H1) · pyramid บน XAU (host 
 พร้อม `_02_ExitMode` ทั้ง 3 ค่า และ sweep `_03_EmaPeriod` พร้อม `_03_UseEma` — **ทุก cell จะเจอแกนตายชุดเดียวกัน**
 (ExitMode=0 ทำให้ Tp+Sl ตาย · UseEma=false ทำให้ EmaPeriod ตาย) ⇒ coarse ใช้หา candidate ได้ตามเดิม
 แต่ **ห้ามอ่าน plateau จาก coarse ตรง ๆ** ต้องแยกกริด fine ตาม ExitMode/UseEma เหมือน cell นี้ทุกครั้ง
+
+---
+
+### 📐 Sensitivity fan — cell #20 BRENT H4 + cell #24 US30 H1 (session `S-2026-07-30-SENSFAN`, 2026-07-30) — supplementary evidence for the deploy funnel, no verdict written here
+
+**Scope note:** this is the sensitivity-fan step of the VERDICT GATE deploy funnel (item 2c) for the 2 `GOOD`-plateau CANDIDATEs the review above promoted. Not a re-optimize, not holdout (2026H1 untouched), not MC, not a verdict — checking whether the plateau-center survives a ±1-fine-grid-step perturbation on each active lever, per the ORDER-353 cliff precedent (memory `grid-answer-outside-the-grid` family). Lane `D:\Meta 5c` (confirmed free of any `terminal64.exe` before starting). Every run = Model 4, MAIN window 2023.01.01–2025.12.31 only (BWD not re-run, per this order's own "optional, not required" clause), leverage verified 1:100 by `mt5_run.ps1`'s own post-run assertion on every one of the 16 runs below. `.set` files = `_mt5_auto/ab_sets/order542_sensfan/*.set` (8 BRENT + 8 US30) · reports = `_mt5_auto/reports/O542_SENSFAN_*.htm`.
+
+**Levers perturbed (read from the locked `.set` + the EA source `(TRD)_SuperTrendFlip_rev01.mq5` L41-43, not guessed):** `_02_ExitMode=2` on both locked configs is the mode that uses **both** `_02_TpAtrMult` and `_02_SlAtrMult` (mq5 L193-201: mode 2 = fixed tight-SL/wide-TP, no line management) — so both exit params are live, not just SL as the order brief's generic hint suggested. `_01_UseDonchian=false` on both ⇒ `_01_DonBars` stays inert, correctly not fanned. Step sizes taken from the actual fine-grid `.ini` files (`GEN2_BRENT_H4_MAIN_fineNOEMA.ini` / `GEN2_US30_H1_MAIN_fineNOEMA.ini`), not guessed percentages: 4 levers × 2 directions = 8 runs per symbol.
+
+**BRENT H4 — center (locked) MAIN M4: PF 1.24 / 126t (from the ORDER-542 review above)**
+
+| lever perturbed | value | MAIN PF | trades | net | eqDD% | vs center |
+|---|---|---|---|---|---|---|
+| *(center, already run)* | AtrPeriod=20 Mult=3.0 Tp=2.0 Sl=2.5 | 1.24 | 126 | — | — | — |
+| `_01_AtrPeriod` | 16 (step −4) | 1.32 | 127 | +29.78 | 0.17 | +6.5% |
+| `_01_AtrPeriod` | 24 (step +4) | 1.35 | 129 | +32.09 | 0.15 | +8.9% |
+| `_01_Mult` | 2.5 (step −0.5) | 1.13 | 145 | +15.21 | 0.22 | −8.9% |
+| `_01_Mult` | 3.5 (step +0.5) | 1.46 | 108 | +33.01 | 0.11 | +17.7% |
+| `_02_TpAtrMult` | 1 (step −1) | 1.11 | 141 | +8.00 | 0.12 | −10.5% |
+| `_02_TpAtrMult` | 3 (step +1) | **0.95** | 98 | **−5.50** | 0.33 | **−23.4%, flips net-negative** |
+| `_02_SlAtrMult` | 2.0 (step −0.5) | 1.11 | 134 | +11.05 | 0.14 | −10.5% |
+| `_02_SlAtrMult` | 3.0 (step +0.5) | 1.34 | 112 | +29.19 | 0.18 | +8.1% |
+
+**BRENT read: found a real cliff, not just a soft edge — 1 of 8 perturbations flips profitable→unprofitable.** `AtrPeriod` and `SlAtrMult` neighbours both hold in a tight, plausible band either side (all within ~11% of center, all still comfortably PF>1) — those two axes look like a genuine plateau. `Mult` is asymmetric but directionally sane (higher Mult = wider stop = fewer/cleaner trades = higher PF, no cliff). `TpAtrMult` is the problem: stepping the center's TP from 2.0 → 3.0 ATR (one fine-grid step wider) drops PF from 1.24 to 0.95 and net from positive to **−5.50** — this is exactly the ORDER-353 cliff pattern (a neighbour 1 grid-step away collapsing the result), on the TP axis specifically, only in the "wider TP" direction (TP=1, the narrower-TP neighbour, still holds at PF 1.11). Also worth flagging for the lead even though it's outside this order's scope: `Mult=3.5` alone (PF 1.46, fewer trades, DD 0.11%) is notably *better* than the locked center on this one-axis probe — not something this order is authorized to chase (single-axis, not a re-optimize), just recording it.
+
+**US30 H1 — center (locked) MAIN M4: PF 1.35 / 195t (from the ORDER-542 review above)**
+
+| lever perturbed | value | MAIN PF | trades | net | eqDD% | vs center |
+|---|---|---|---|---|---|---|
+| *(center, already run)* | AtrPeriod=16 Mult=5.25 Tp=9 Sl=2.5 | 1.35 | 195 | — | — | — |
+| `_01_AtrPeriod` | 10 (step −6) | 1.30 | 191 | +104.03 | 0.49 | −3.7% |
+| `_01_AtrPeriod` | 22 (step +6) | 1.19 | 173 | +56.60 | 0.46 | −11.9% |
+| `_01_Mult` | 4.5 (step −0.75) | 1.22 | 220 | +73.77 | 0.47 | −9.6% |
+| `_01_Mult` | 6.0 (step +0.75, grid edge) | 1.32 | 189 | +93.79 | 0.42 | −2.2% |
+| `_02_TpAtrMult` | 7 (step −2) | 1.23 | 204 | +69.20 | 0.39 | −8.9% |
+| `_02_TpAtrMult` | 11 (step +2, grid edge) | 1.34 | 172 | +95.95 | 0.35 | −0.7% |
+| `_02_SlAtrMult` | 2.0 (step −0.5) | 1.19 | 211 | +52.69 | 0.42 | −11.9% |
+| `_02_SlAtrMult` | 3.0 (step +0.5) | 1.22 | 182 | +72.77 | 0.35 | −9.6% |
+
+**US30 read: no cliff on any of the 8 perturbations.** Every neighbour stays inside a 12% band of the center PF (worst case 1.19 vs center 1.35, both `AtrPeriod=22` and `SlAtrMult=2.0`), every one stays comfortably PF≥1.19 and net-positive, trade counts move sensibly with each lever direction (tighter stop → more trades, wider TP → fewer trades) instead of collapsing. This reads as a genuine plateau across all 4 tested levers, not a spike sitting at an isolated optimum. Note `Mult=6.0` and `TpAtrMult=11` are grid edges (per the fine-grid `.ini` ranges) — both perturbations still hold near-center PF, so this does not trigger the `grid-answer-outside-the-grid` concern (that memory is about *monotone* improvement running off the edge; here the edge-side neighbour is flat/slightly worse than center, not still climbing).
+
+**Per-symbol read for the lead's funnel decision (not a verdict — reporting evidence only, per this order's scope):**
+- **US30 H1 — safe to proceed to holdout.** 8/8 perturbations hold, no cliff, tight PF band, real plateau by the "no neighbour drops >1/3 or flips sign" test in the order brief.
+- **BRENT H4 — found a cliff, needs a second look.** 7/8 perturbations hold (including both directions on 2 of the 4 axes), but `_02_TpAtrMult` stepped from the locked 2.0 to 3.0 flips the result net-negative one fine-grid-step from the chosen center. This does not necessarily kill the candidate (`AtrPeriod`/`SlAtrMult` still look like a real plateau, and `Mult=3.5` even improves on the center) — but the TP axis specifically should not be treated as flat, and the lead should decide whether to re-center on a TP value with more margin before spending the holdout, per the same lesson ORDER-353 paid for.
+
+**Status (superseded by the continuation below — user reviewed this and ordered a fix + holdout in the same session):** ~~raw evidence only, appended under the already-`REVIEWED` ORDER-542 row per this session's brief. No CANDIDATE/DEMO verdict written here; no holdout run; no MC run; no scorecard/EDGE_CATALOG/B1_DATASET touched (out of this session's owned paths).~~
+
+#### Continuation (same session `S-2026-07-30-SENSFAN`, 2026-07-30) — user directive "แก้ก่อนแล้วยิงพร้อมกัน": fix BRENT's cliff, then fire the 2026H1 holdout for both together
+
+**Part 1 — BRENT H4 corrected centre.** The cliff (`_02_TpAtrMult` 2.0→3.0 crashing MAIN M4 PF 1.24→0.95, net flipping positive→negative) was diagnosed **without new runs first**, from the M1 fine-grid data already on disk (`_mt5_auto/optimizations/GEN2_BRENT_H4_MAIN_fineNOEMA.xml`, 315 passes):
+- The `_02_TpAtrMult` axis is a coarse 3-point grid `{1, 2, 3}` (step=1, per `GEN2_BRENT_H4_MAIN_fineNOEMA.ini`) — **no value exists between 1.0 and 2.0** to pick an interior point from. Checked the obvious fallback (TP=1.0, the narrower-TP neighbour) — it was already in this session's own M4 fan at PF 1.11/141t, which **fails the MAIN≥1.2 bar outright**, so it is not a safe replacement despite reading as "stable" in isolation.
+- Searched the full 315-row grid for a *different* nearby centre whose own TP-axis marginal doesn't cliff. Found several candidates with a flat/inverted TP2→TP3 drop, but the strongest ones (`Mult=3.5`, `AtrPeriod=8`) sit at a **grid edge** or in the extreme-corner spike zone this repo's own methodology already rejected in favour of the plateau pick (memory `grid-answer-outside-the-grid`, `inert-axis-fake-plateau`) — not trustworthy without widening the grid, which is out of this sub-step's scope.
+- **Picked instead: `_01_AtrPeriod` 20→16, everything else unchanged** (Mult=3.0, TpAtrMult=2.0, SlAtrMult=2.5) — fully interior on every axis (AtrPeriod 16 of [8..32]), and this exact point was already in the original fan (M4 MAIN PF **1.32**/127t, already better than the old centre's 1.24). Its **M1 TpAtrMult marginal is flat**: TP1=1.155, TP2=1.257, TP3=1.207 — a **4% drop** TP2→TP3, vs the old centre's **26% drop** collapsing further into net-negative.
+- **Verified directly, not just inferred:** ran the corrected centre through **M4 BWD 2020.01.01–2022.12.31** (new run) → **PF 1.58/118t/net +62.63/DD 0.19%** (was 1.48/120t at the old centre — also improved) — clears BWD≥1.0 with a wide margin. Then re-ran its **own 8-neighbour fan** (AtrPeriod/Mult/TpAtrMult/SlAtrMult × 2 directions, M4 MAIN only, excluding AtrPeriod+4 which is exactly the old locked centre and already known at PF 1.24/126t):
+
+| lever perturbed | value | MAIN PF | trades | net | DD% |
+|---|---|---|---|---|---|
+| *(corrected centre)* | AtrPeriod=16 Mult=3.0 Tp=2.0 Sl=2.5 | **1.32** | 127 | +29.78 | 0.17 |
+| `_01_AtrPeriod` | 12 | 1.44 | 126 | +36.71 | 0.16 |
+| `_01_AtrPeriod` | 20 *(= old locked centre)* | 1.24 | 126 | — | — |
+| `_01_Mult` | 2.5 | 1.09 | 150 | +11.22 | 0.19 |
+| `_01_Mult` | 3.5 | 1.50 | 110 | +35.58 | 0.16 |
+| `_02_TpAtrMult` | 1 | 1.14 | 143 | +10.23 | 0.16 |
+| `_02_TpAtrMult` | 3 *(the axis that broke the old centre)* | **1.24** | 103 | +23.74 | 0.24 |
+| `_02_SlAtrMult` | 2.0 | 1.06 | 141 | +6.21 | 0.19 |
+| `_02_SlAtrMult` | 3.0 | 1.34 | 120 | +30.98 | 0.18 |
+
+**Read: cliff is fixed.** All 8 neighbours stay net-positive (worst case PF 1.06, `SlAtrMult=2.0` — a soft dip, not a crash); the specific axis that broke the old centre (`TpAtrMult=3`) now reads **1.24**, exactly the level the *old* centre itself sat at — not a collapse. No perturbation flips sign or drops by anywhere near a third. **Updated the locked `.set`** at `_mt5_auto/ab_sets/genstanding_stf/STF_BRENT_H4_locked.set` — old centre commented out and kept for the record, new centre (`_01_AtrPeriod=16`) written live, full rationale in the file's own header comment.
+
+**Part 2 — 2026H1 holdout, both symbols, one pass.** Lane `D:\Meta 5c` confirmed free (`tasklist` clean) immediately before each run. Model 4, `2026.01.01–2026.06.30`, leverage verified 1:100 by the script. **This burns the STF holdout on both symbols — reported exactly as measured, no re-run, no tuning after seeing the numbers:**
+
+| symbol | PF | trades | net | DD% | bar-table label |
+|---|---|---|---|---|---|
+| **BRENT H4** (corrected centre) | **0.90** | 23 | −5.05 | 0.35% | **PF <1.0 ⇒ selection-fit, back to diagnosis** |
+| **US30 H1** (unchanged centre) | **1.21** | 35 | +16.30 | 0.47% | **PF ≥1.2 at an appropriate n ⇒ deploy track (MC next)** — n=35 clears the literal n≥30 floor but PF sits only 0.01 above the 1.2 bar; flagging the same `PENDING-RATIFY` participation-floor caveat CLAUDE.md already carries, not resolving it |
+
+No verdict written here per this order's scope — reporting the two numbers and their bar-table labels only, for the lead to judge alongside the correlation check already flagged in the ORDER-542 verdict (BRENT/NAS100/US30 all share commodity/index exposure on the same signal).
+
+**Reports:** `_mt5_auto/reports/O542_CC_BRENT_*.htm` (corrected-centre BWD + 7-neighbour fan) · `_mt5_auto/reports/O542_HOLDOUT_BRENT_2026H1.htm` · `_mt5_auto/reports/O542_HOLDOUT_US30_2026H1.htm`. Sets: `_mt5_auto/ab_sets/order542_sensfan/BRENT_H4_CORRECTED_CENTER.set` + `BRENT_H4_CC_*.set` (7 files) · locked `.set` updated in place (see Part 1).
+
+**Status:** BRENT centre corrected and M4-reverified both windows + own neighbourhood; **2026H1 holdout burned clean on both symbols this session — do not re-run either.** No CANDIDATE/DEMO/MC verdict written; scorecard/EDGE_CATALOG/B1_DATASET untouched (out of this session's owned paths) — that synthesis, plus the BRENT/US30/NAS100 correlation check, is the lead's next step.
+
+### VERDICT — BRENT H4 + US30 H1 post-holdout (Claude/Opus, 2026-07-30)
+
+**BRENT H4 — holdout fails (PF 0.90 < 1.0): `selection-fit, back to diagnosis` per the bar table. Deprioritized, not `DEAD`.** Only 1 lever (TpAtrMult→AtrPeriod re-center) was fanned on 1 TF — VERDICT GATE 2a needs ≥3 levers × ≥2 TF + a last-optimize before `DEAD-OPTIMIZED` is even available, so this stays formally `BUILD-ON`, same status as before this order. But **2026H1 is now spent for this EA×symbol×TF combination** — MAIN, BWD, and holdout have all been used, so any further work on BRENT H4 STF would need to declare demo-forward-as-holdout (the Boss_16 precedent CLAUDE.md already permits) rather than expecting another clean OOS check. Given the MAIN/BWD edge here was already the weakest of the three new cells (barely clearing 1.2 pre-fix, and the fix itself only pushed it to 1.32) and it's the one that then failed holdout, this is not a good use of further optimize effort right now relative to the other open work in this repo — parking it rather than actively re-optimizing, without declaring it dead.
+
+**US30 H1 — holdout clears (PF 1.21, n=35) but by the thinnest possible margin on both pre-registered floors at once (0.01 above the PF bar, 5 above the n floor).** Per the bar table this nominally proceeds to `MC next` — but a same-signal sibling (BRENT) just failed holdout on the same EA/mechanism, and a razor-thin double-margin pass is exactly the pattern that should be treated with extra skepticism rather than momentum. **Decision: send to MC as the funnel prescribes, but do NOT treat this as a confident pass** — if MC's ruin/PF-5th numbers are anything but comfortably clear of their bars, that should read as confirmation of the "thin pass" reading, not a surprise. Before any DEMO recommendation, still owed: MC (ruin ≤2%, PF-5th ≥1.0) → correlation check against the existing BTC H4 candidate and against NAS100 (same STF mechanism, correlated commodity/index exposure — flagged in the original ORDER-542 verdict and still unresolved). NAS100 itself was never sensitivity-fanned this round (only BRENT/US30 were, per the user's explicit choice) and remains at CANDIDATE-pending-fan, untouched.
+
+**Row-checklist:** still no scorecard/EDGE_CATALOG/B1_DATASET entry for either symbol — US30 hasn't reached a terminal state (MC + corr still owed), and BRENT's `BUILD-ON` status is unchanged from before this order, just with holdout now spent. Both facts recorded here so the next session doesn't have to re-derive them.
 
 ---
 
