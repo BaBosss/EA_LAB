@@ -99,6 +99,189 @@
 > เขียนสเปกไว้ครบแต่ไม่เคยมีใครรัน · 543 = fan ของ ORDER-431 ที่**เลือกค่าที่ขอบกริดพอดี** · 544 = กรง ENGINE-EDGE
 > ที่ NuiIndy ไม่เคยเดิน. **ลำดับบังคับ: 540 ต้องผ่านก่อน 541/542/543 จึงจะรันได้**
 
+> 🏭 **TRANCHE 600-601 (pasted 2026-07-30 17:40, lane `S-2026-07-30-BOARDPASTE`)** — the two Factory-OS orders that came out of `BACKLOG-D30`. They were drafted at 11:50 and could not be pasted for six hours because a concurrent lane held this file with uncommitted work under a user instruction to hold all commits; they lived in `_triage/factory_os/ORDERS_S2a_S3a_DRAFT.md` and were tracked by `BACKLOG-D30` in the meantime. **600 is untouched. 601 is already built and blind-audited — read its header before doing anything to it.** Both specs are deliberately un-gameable: Codex audit 5 constructed, for every rev-1 criterion, the cheapest output that met the letter and defeated the purpose, and every rev-2 amendment traces to one of those.
+
+---
+
+## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Provenance:** drafted `66346985`, amended to rev 2 against `_triage/factory_os/CODEX_AUDIT5_2026-07-30.md` (verdict GO WITH AMENDMENTS) in `2d166a34`. Held off the board 2026-07-30 11:50→17:40 because `S-2026-07-30-SENSFAN` owned this file (ledger rule 4). **Untouched — no work has been done on this order.** Number from lane `S-2026-07-30-BOARDPASTE`, reserved block 600-609.
+
+⚠️ **`bars:` / `flat-lot probe:` do not apply** — this is a governance/schema order, not a test or optimize order, so the ORDER-124+ template lines are deliberately absent rather than filled with N-A noise.
+
+
+### What this is
+`MASTER_BACKLOG.md` §2 owns the coverage matrix today and says so. The design proposes that
+`factory/coverage.jsonl` becomes the machine source and §2 is regenerated from it. **This order does not
+perform that transfer.** It produces the proposal and the migration table its owner signs — or refuses.
+
+### Deliverables
+
+**D1 — `factory_os/s2a_migration.jsonl`, machine-readable, one object per line.** Not a prose table: audit 5
+showed the rev-1 acceptance counted entity names and could not see whether any column held a real fact. Each
+line carries `entity · current_owner · proposed_owner · disposition · canonical_or_derived · owner_ref ·
+breaks_if_moved · breaks_if_not_moved · signoff_owner · signoff_state · reverse_steps · evidence_lost ·
+retention_window`.
+- `disposition` ∈ `TRANSFER · KEEP · RETIRE` — and `KEEP` requires a one-line reason. Setting every row to
+  `KEEP` is the null migration audit 5 built; it is now a visible choice with a name on it, not a default.
+- `signoff_state` ∈ `PROPOSED · REFUSED` only. `APPROVED` is not a value this order may write.
+
+**D2 — `_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md`**, generated from D1, plus the human-judgement prose
+that D1 cannot hold.
+
+**D3 — `_triage/factory_os/check_s2a_migration.py`**, the checker. Acceptance below is what it asserts. A
+criterion with no line in this file is not acceptance; it is a wish.
+
+### Acceptance — MACHINE (the checker must assert each; `exit 1` on any)
+- [ ] The set of `entity` values equals **exactly** the set of rows in the generated `__STORAGE__` block —
+      set equality, not count equality. Read it from `gen_design_contracts.py`; do not hardcode 24.
+- [ ] Zero rows with `signoff_state = APPROVED`.
+- [ ] Every `current_owner` and `proposed_owner` is drawn from a declared vocabulary of real paths, and
+      **every path exists in the repo at HEAD**. `schemas.json` is not a valid `current_owner` for a fact it
+      only describes.
+- [ ] Every `owner_ref` is **recomputed, not merely shaped**: resolve `path` at `commit_oid`, compare
+      `blob_oid` against `git rev-parse`, recompute `raw_sha256` from the blob bytes. **Zero unresolved,
+      zero mismatched.** A plausible-looking constant is the rev-1 failing case.
+- [ ] `owner_ref` values are **distinct across rows** unless two rows genuinely pin the same blob, and any
+      repeat carries `same_blob_reason`.
+- [ ] Exactly one sign-off row per **distinct `current_owner`**, each with a non-empty named `signoff_owner`.
+      No row may carry an empty signer.
+- [ ] The Coverage edge is present and explicit: a row whose `current_owner` is `MASTER_BACKLOG.md` (§2) and
+      whose `proposed_owner` is `factory/coverage.jsonl`, with `disposition` ∈ `TRANSFER · KEEP` and a named
+      `signoff_owner`. **Its absence fails the order** — rev 1 could omit the entire point.
+- [ ] **Coverage counting is reconciled, not asserted.** Report two separate numbers with a mapping between
+      them: `source_rows_consumed` (EA rows in §2) and `cells_emitted` (normalized symbol×TF cells). They are
+      **not equal and must not be equated** — measured 2026-07-30: §2 has **7 EA rows** but the LIVE column
+      alone holds **8 cells**, because `ST_EA03` carries GBPUSD H1 *and* USDCAD H1, and the rejected/attempted
+      column holds many more. Every source row consumed exactly once; every parsed symbol/TF/status token
+      emitted once or marked `UNVERIFIED_IMPORT` **with its source coordinates**.
+- [ ] Every row has non-empty `reverse_steps`, `evidence_lost`, `retention_window`.
+
+### Acceptance — HUMAN REVIEW (labelled as such; the checker cannot judge these)
+Rev 1 called the breakage analysis "numeric, checkable". It is not — 24 copies of "dashboard may break;
+revert the commit" satisfies any mechanical form of it. Reviewer checklist, per `TRANSFER` row:
+- [ ] `breaks_if_moved` names a **specific reader or writer** (file + what it reads), not a category.
+- [ ] `breaks_if_not_moved` states a concrete failure that is happening or will happen, with a date or trigger.
+- [ ] `reverse_steps` are executable steps, not "revert the commit".
+- [ ] `evidence_lost` names what cannot be reconstructed after `retention_window`.
+
+### Prohibited
+- ❌ Editing `MASTER_BACKLOG.md` §2 in any way — this order writes a proposal **about** it.
+- ❌ Creating `factory/coverage.jsonl` or anything under `factory/`.
+- ❌ Writing `signoff_state = APPROVED`. That is the owner's act, in their own commit.
+- ❌ Demoting any owner listed in design §1.1.
+- ❌ Reporting DONE while the Coverage edge row is absent or every `disposition` is `KEEP`.
+
+---
+
+---
+
+## ORDER-601 — [factory/tooling] S3a: pin the snapshot verdict validator, and write the fixtures it is owed — `DONE(Claude/Opus 2026-07-30) — built, blind-audited, audit findings fixed; awaiting an independent re-check before REVIEWED` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+**⚠️ READ THIS BEFORE TOUCHING THE SPEC BELOW — the work is already built.** The spec is kept verbatim as the record of what was asked. What exists:
+- **part 1** `c8d03d4b` — evidence/verdict entity split, so a supplied answer has nowhere to sit; ajv 17→28
+- **part 2** `4a4d6003` — `_triage/factory_os/snapshot_validator.py` (13 predicates, recompute-on-read), `run_snapshot_validator_tests.py`, `SNAPSHOT_VALIDATOR_MUTATION_TABLE.md`
+- **blind audit 6** `_triage/factory_os/CODEX_AUDIT6_2026-07-30.md` — verdict **NOT DONE**, 8 findings
+- **audit fixes** `161d2033` + `a7960e08` — all 8 reproduced here, then fixed
+
+**The audit's headline finding was the NAME, not the arithmetic:** a snapshot with a dead fleet sensor, a blind risk sensor, missing kill/judge controls and missing attestation verified `all_clear=true`, because the verdict is computed from `meta.reconciliation` and the source rows **only**. The field is now **`reconciliation_clear`** and the schema states what it excludes. Making it a genuinely global verdict needs health contracts for 7 domains that are `array of arbitrary object` today ⇒ **S4**.
+
+**Not fixed, named:** `verify_snapshot` proves **internal consistency, not authenticity** — `read_ok` / `age_hours` / `path` / `sha256` / `mtime` are builder claims taken at face value, so rows pointing at a nonexistent drive with `mtime 2099` are accepted. Deriving and re-hashing them, plus wiring readers through `load_verified()`, is **S4**.
+
+**Why this is `DONE` and not `REVIEWED`:** the work, the audit and the fixes are all from the same seat. Self-certifying after a blind audit said NOT DONE is exactly the anchoring the audit protocol exists to prevent. `REVIEWED` is owed a re-check by Codex or the user.
+
+⚠️ **`bars:` / `flat-lot probe:` do not apply** — tooling order, not a test/optimize order.
+
+**Blocks:** S3, and through it S4
+
+### The blocker this order removes
+`all_clear` is **required** in the persisted document *and* a writer-supplied value **must be rejected**.
+Both cannot be checked against one document: the builder has to write it, so no validator inspecting the
+persisted file alone can tell "computed" from "typed". That is the builder-input/persisted-output boundary.
+
+**Shape to build — audit 5's refinement of the two-entity split, adopted:**
+- `SnapshotBuilderInput` — closed; carries the snapshot facts and a closed `ReconciliationEvidence` that
+  **has no `all_clear`**, so a supplied value is refused by the schema with no special-case code.
+- `ControlRoomSnapshotV5` — the persisted document: the same preserved facts, plus validator-owned
+  `all_clear` and a **closed list of reason codes**.
+- **One output verification function** recomputes `all_clear` from the persisted evidence and rejects a
+  mismatched boolean. This is the part rev 1 was missing. JSON Schema can prove the boolean is well-typed;
+  it cannot prove authorship. Audit 5's surviving attack was a hand-authored output with `sources=[]` and
+  `all_clear=true` — structurally valid, and only recomputation catches it.
+- Readers accept a snapshot **only through that verifier** (wiring the readers is S4, not this order).
+
+### Fixture discipline — applies to every case below, no exceptions
+1. **One-field minimal pair.** Every negative is a known-valid positive with **exactly one** field changed.
+   Rev 1 allowed a negative that was also missing `entity`; ajv returns nonzero and the case is credited to
+   the rule it names while never reaching it.
+2. **Assert the reason.** Each negative asserts a stable reason code / error path — not merely "rejected".
+3. **Paired repair.** Repairing only that delta makes the instance valid again.
+4. **Tool failure is ERROR, never rejection.** Already implemented in `run_schema_fixtures.py` as of
+   `3812d72c` — `run()` returns `pass`/`fail`/`ERROR` and ERROR satisfies no expectation. Measured: with the
+   schema file absent, the old code reported **14 of 17 cases OK**. Reuse this; do not reintroduce a boolean.
+5. **Mutation table required.** Disable each predicate in turn; **only that predicate's named fixture may go
+   red.** A predicate whose removal turns nothing red is not tested. This artifact is a deliverable.
+6. **No test-only identifiers in validator logic.** `build_id == "fixture-healthy"` returning true is the
+   cheapest way to pass everything below.
+
+### Acceptance — every line is a fixture, both directions
+- [ ] Mandatory source **missing** ⇒ `all_clear=false`, reason `MANDATORY_SOURCE_MISSING:<name>`.
+- [ ] Mandatory source **unreadable** ⇒ `all_clear=false`, reason distinct from missing. Two closed states,
+      `MISSING` and `UNREADABLE`, asserted by exact path — not two free-text messages nobody checks.
+      ("cannot read" and "nothing to report" must never collapse: memory `prove-the-instrument-can-see-the-file`.)
+- [ ] Mandatory source **stale** ⇒ `all_clear=false`. `age_hours` must be varied **across the
+      `stale_bar_hours` boundary supplied in the input** — the validator must derive freshness, not accept a
+      caller-supplied `fresh=false`. No threshold may be hardcoded.
+- [ ] **`sources=[]` — two separate attacks, both required.**
+      (a) builder input with `sources=[]` and no `all_clear` ⇒ computed false with `MANDATORY_SOURCE_MISSING`;
+      (b) a complete **persisted** document with `sources=[]` and `all_clear=true` ⇒ **rejected by output
+      recomputation**, naming the mismatch. Rev 1 had only a form of (a), and audit 4 built an instance ajv
+      accepted.
+- [ ] Builder input carrying `all_clear` ⇒ rejected, with the ajv error path/keyword **naming that property**;
+      the same instance without it passes the input schema.
+- [ ] `discovered != categorized` ⇒ false. Category sum ≠ `categorized` ⇒ false. Coverage sum mismatch ⇒ false.
+- [ ] `conflicts > 0` ⇒ false. `unclassified > 0` ⇒ false.
+- [ ] **`categories.actionable > 0` ⇒ false.** Omitted from rev 1 although `schemas.json` states it.
+- [ ] **Nonnegative counts.** Measured 2026-07-30: `discovered` and `categorized` carry `minimum: 0`, but
+      every nested `categories.*` and `coverage.*` integer, and `duplicates`/`conflicts`/`unclassified`, carry
+      **none**. Audit 5's failing instance — `categories.actionable = -1`, `running = 1` — balances every
+      equation and validates. Add `minimum: 0` to all of them, with a fixture per group.
+- [ ] **Source identity.** Registry and source names unique; ~~exact membership both ways between
+      `mandatory_sources` and `sources`~~ **AMENDED 2026-07-30 (rev 3, after Codex audit 6 flagged the
+      deviation rather than letting it be called DONE): membership both ways for MANDATORY rows only** —
+      every registry name must have a row, and every row claiming `mandatory:true` must be in the
+      registry — because a genuinely optional source outside the registry is legitimate (the real v4
+      writer emits three sources and the registry need not name all of them). Exact set equality would
+      forbid that, and the implementation chose the weaker rule silently; this line now says which rule
+      is meant. Plus a fixture where a row's own `mandatory:false` contradicts the registry.
+      Prefer removing the redundant per-row flag over reconciling it — **deferred to S4**: the real v4
+      consumers read the flag, so until they migrate, a contradiction that cannot be reported is one
+      that ships.
+- [ ] **Two independently constructed healthy positives** ⇒ `all_clear=true` — different non-zero counts and
+      reordered sources. One positive only blocks a constant-false implementation.
+- [ ] **Whole-root, not a detached `meta`.** Note `reconciliation` currently lives under `SnapshotMeta`, and
+      `ControlRoomSnapshotV5` is declared `additionalProperties: true` — an arbitrary top-level shape
+      validates today. Close the root, then assert independently that removing `entity`, `system_health` and
+      `summary` each produces a root-path failure.
+- [ ] **Compatibility fields survive input → output.** `stale_bar_hours`, `decision_bar_trades`,
+      `counting_method` and the real source-row metadata exist in the live v4 file
+      (`scripts/control_room_snapshot.ps1:383-389`) and are absent from the closed `SnapshotMeta`. The
+      boundary must preserve them, with a fixture seeding them and asserting they are present in the output.
+- [ ] The real `portfolio/control_room_snapshot.json` is **not required to pass** — that is S4's criterion and
+      stays S4's. But its diagnostic line must distinguish expected schema incompatibility from a read/tool
+      error (implemented in `3812d72c`; keep it).
+
+### Prohibited
+- ❌ Writing `portfolio/control_room_snapshot.json` or changing the live snapshot's version.
+- ❌ Touching `make_status.ps1`, `live_dashboard.ps1`, `daily_monitor.ps1`, `control_room_snapshot.ps1` — S4.
+- ❌ Inventing a freshness threshold. `stale_bar_hours` exists in the real snapshot `meta`; read it.
+- ❌ Declaring any bullet satisfied by a fixture that has never been observed failing **for the reason it names**.
+- ❌ Reporting DONE without the mutation table from discipline rule 5.
+
+---
+
+---
+
 ## ORDER-545 — [🟠 tooling/integrity] pre-commit อ่าน working tree ไม่ใช่ staged snapshot ⇒ กรงถูกข้ามได้ด้วยการ stage บางส่วน — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
 
 **ที่มา:** Codex blind audit (2026-07-28, `task-ms4nya1e-ras9db`) ของงานกรง ORDER-372 — ข้อเดียวที่**จงใจไม่แก้ในรอบนั้น**
