@@ -47,8 +47,12 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_design_contracts as gen  # noqa: E402  -- C1 reads the entity set from the generator
 
-MIGRATION_PATH = 'factory_os/s2a_migration.jsonl'
-COVERAGE_PATH = 'factory_os/s2a_coverage_reconciliation.json'
+# rev 5: these were `factory_os/...`, which resolves to a REPO-ROOT directory that does not exist and
+# where no other artifact of this slice lives. Every sibling path here is root-relative WITH the
+# `_triage/` prefix, and D2 in the order carries that prefix -- the bare form was shorthand for a
+# location, and implementing it literally would have scattered the deliverable outside the slice.
+MIGRATION_PATH = '_triage/factory_os/s2a_migration.jsonl'
+COVERAGE_PATH = '_triage/factory_os/s2a_coverage_reconciliation.json'
 
 REQUIRED_FIELDS = ('entity', 'current_owner', 'proposed_owner', 'disposition',
                    'canonical_or_derived', 'owner_ref', 'breaks_if_moved', 'breaks_if_not_moved',
@@ -78,6 +82,13 @@ PLANNED_PATHS = (
 COVERAGE_CURRENT_OWNER = 'MASTER_BACKLOG.md'
 COVERAGE_PROPOSED_OWNER = 'factory/coverage.jsonl'
 
+# ORDER-600 rev 5: four of the 27 entities have NEITHER a file nor a parent entity -- design 1.3 #2 says
+# Test Universe is "genuinely unowned" in as many words. C3 as written left them three options, all
+# illegal: name a real file (a false claim about today), claim EMBEDDED (false, nothing references them),
+# or omit the row (C1 fails set equality). This sentinel is the fourth. It is deliberately NOT a free
+# pass: see c3_owner_vocabulary, which opens unowned_evidence rather than believing it.
+UNOWNED = 'UNOWNED'
+
 
 def fail(problems, msg):
     problems.append(msg)
@@ -88,11 +99,45 @@ def _git(*args):
     return p.returncode, p.stdout.strip(), p.stderr.strip()
 
 
+# Per-process memo for the two git reads C4 makes. This is CORRECT, not a shortcut: git objects are
+# content-addressed, so `commit:path` resolves to the same blob and a blob's bytes are immutable for
+# the life of a process. Measured need: run_s2a_migration_tests.py re-runs C4 for 24 mutations x ~14
+# pinned rows = ~670 git spawns, and took 29.8s -- twice the entire pre-commit tier's budget. This is
+# the ORDER-270 pathology at small scale (memory: a chain-walk spawning 3 git subprocesses per commit),
+# so it is fixed the same way: stop spawning for an answer already known.
+_REVPARSE_MEMO = {}
+_BLOB_MEMO = {}
+_PARENTS_MEMO = []
+
+
+def _rev_parse_cached(spec):
+    if spec not in _REVPARSE_MEMO:
+        _REVPARSE_MEMO[spec] = _git('rev-parse', spec)
+    return _REVPARSE_MEMO[spec]
+
+
+def _blob_sha256_cached(blob_oid):
+    if blob_oid not in _BLOB_MEMO:
+        p = subprocess.run(['git', 'cat-file', 'blob', blob_oid], capture_output=True)
+        _BLOB_MEMO[blob_oid] = (p.returncode,
+                                hashlib.sha256(p.stdout).hexdigest() if p.returncode == 0 else None)
+    return _BLOB_MEMO[blob_oid]
+
+
+_TRACKED_MEMO = []
+
+
 def tracked_paths():
-    rc, out, _ = _git('ls-files')
-    if rc != 0:
-        return None
-    return set(out.split('\n'))
+    # Memoized for the same reason as the blob reads, and it matters more: the mutation suite calls
+    # every criterion 25 times in one process, so an un-memoized `git ls-files` over this repo was
+    # being paid 25 times and was the single largest cost in the suite. The index cannot change
+    # underneath a single check run.
+    if not _TRACKED_MEMO:
+        rc, out, _ = _git('ls-files')
+        if rc != 0:
+            return None
+        _TRACKED_MEMO.append(set(out.split('\n')))
+    return _TRACKED_MEMO[0]
 
 
 def storage_entities():
@@ -105,6 +150,31 @@ def storage_entities():
     with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
         schema = json.load(fh)
     return set(k for k, v in schema['$defs'].items() if isinstance(v, dict))
+
+
+def ref_parents():
+    """Which entities actually $ref each entity -- the EMBEDDED claim, RECOMPUTED.
+
+    rev 5. `EMBEDDED:<Parent>` was previously believed on sight, so `EMBEDDED:Anything` would have passed
+    and taken the KEEP exemption with it. The schema already knows the answer; asking it costs one pass.
+    This is the same question that found every real defect in this slice: the row states a parent, and
+    the checker was trusting the half it could have computed.
+    """
+    import re as _re
+    if _PARENTS_MEMO:
+        return _PARENTS_MEMO[0]
+    with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
+        defs = json.load(fh)['$defs']
+    parents = {}
+    for owner, body in defs.items():
+        if not isinstance(body, dict):
+            continue
+        for m in _re.finditer(r'"#/\$defs/([A-Za-z0-9_]+)"', json.dumps(body)):
+            child = m.group(1)
+            if child != owner:
+                parents.setdefault(child, set()).add(owner)
+    _PARENTS_MEMO.append(parents)
+    return parents
 
 
 # ---------------------------------------------------------------------------- criteria
@@ -135,15 +205,65 @@ def c2_no_approved(rows, problems):
                  % (r.get('entity'), r.get('signoff_state'), list(SIGNOFF_STATES)))
 
 
+def _check_embedded_claim(e, value, rows_entities, parents, problems):
+    """rev 5: verify an `EMBEDDED:<Parent>` claim against the $ref graph instead of believing it."""
+    claim = value.split(':', 1)[1].strip()
+    if claim == '*':
+        listed = [p for p in (rows_entities.get(e) or []) if p]
+        if len(listed) < 2:
+            fail(problems, 'C3 %s uses EMBEDDED:* but embedded_in lists %d parent(s); the wildcard is '
+                           'for a primitive with MANY parents, so it needs at least 2 named and verified'
+                 % (e, len(listed)))
+            return
+        wrong = [p for p in listed if p not in parents.get(e, set())]
+        if wrong:
+            fail(problems, 'C3 %s claims embedded_in %s but the schema $ref graph says those do not '
+                           'reference it (real parents: %s)'
+                 % (e, wrong, sorted(parents.get(e, set())) or 'NONE'))
+        return
+    if claim not in parents.get(e, set()):
+        fail(problems, 'C3 %s claims EMBEDDED:%s, but the schema $ref graph says %s does not reference '
+                       'it (real parents: %s)'
+             % (e, claim, claim, sorted(parents.get(e, set())) or 'NONE'))
+
+
 def c3_owner_vocabulary(rows, problems, tracked):
+    parents = ref_parents()
+    embedded_in = {r.get('entity'): r.get('embedded_in') for r in rows}
     for r in rows:
         e = r.get('entity')
         cur = r.get('current_owner') or ''
         prop = r.get('proposed_owner') or ''
+        disp = r.get('disposition')
         if cur.startswith('EMBEDDED:'):
-            if r.get('disposition') != 'KEEP':
+            if disp != 'KEEP':
                 fail(problems, 'C3 %s is EMBEDDED but disposition=%r; an embedded fact owns no '
-                               'file to transfer' % (e, r.get('disposition')))
+                               'file to transfer' % (e, disp))
+            _check_embedded_claim(e, cur, embedded_in, parents, problems)
+        elif cur == UNOWNED:
+            # The sentinel must EARN its exemption. Three separate gates, because an unguarded
+            # `UNOWNED` would let all 27 rows out of C3 and reinstate the null migration by another
+            # name -- the row must point at a file, and that file must really discuss this entity.
+            ev = (r.get('unowned_evidence') or '').strip()
+            if not ev:
+                fail(problems, 'C3 %s is UNOWNED with no unowned_evidence; "nobody owns this" is a '
+                               'claim that needs a citation like any other' % e)
+            elif ev not in tracked:
+                fail(problems, 'C3 %s unowned_evidence=%r is not a tracked path at HEAD' % (e, ev))
+            else:
+                try:
+                    body = io.open(ev, encoding='utf-8', errors='replace').read()
+                except IOError as exc:
+                    fail(problems, 'C3 %s unowned_evidence %r could not be read: %s' % (e, ev, exc))
+                else:
+                    # RECOMPUTED, not trusted: the cited file must actually mention the entity.
+                    if e not in body:
+                        fail(problems, 'C3 %s cites %r as evidence that it is unowned, but that file '
+                                       'never mentions %s' % (e, ev, e))
+            if disp == 'KEEP' and r.get('canonical_or_derived') != 'derived':
+                fail(problems, 'C3 %s is UNOWNED + KEEP but canonical_or_derived=%r. A CANONICAL fact '
+                               'that nobody owns and nobody is proposed to own is drift, and must not '
+                               'be signable as "keep".' % (e, r.get('canonical_or_derived')))
         elif cur not in tracked:
             fail(problems, 'C3 %s current_owner=%r does not exist at HEAD. current_owner is a '
                            'claim about TODAY.' % (e, cur))
@@ -151,6 +271,12 @@ def c3_owner_vocabulary(rows, problems, tracked):
             fail(problems, 'C3 %s names schemas.json as current_owner; the schema DESCRIBES the '
                            'fact, it does not own it' % e)
         if prop.startswith('EMBEDDED:'):
+            _check_embedded_claim(e, prop, embedded_in, parents, problems)
+            continue
+        if prop == UNOWNED:
+            if disp != 'KEEP':
+                fail(problems, 'C3 %s proposes UNOWNED with disposition=%r; leaving a fact unowned is '
+                               'only expressible as KEEP' % (e, disp))
             continue
         if prop not in tracked and not any(prop.startswith(p) for p in PLANNED_PATHS):
             fail(problems, 'C3 %s proposed_owner=%r neither exists at HEAD nor appears in '
@@ -172,18 +298,17 @@ def c4_owner_ref_recomputed(rows, problems):
         if any(not ref.get(k) for k in ('path', 'commit_oid', 'blob_oid', 'raw_sha256')):
             continue
         spec = '%s:%s' % (ref['commit_oid'], ref['path'])
-        rc, blob_oid, err = _git('rev-parse', spec)
+        rc, blob_oid, err = _rev_parse_cached(spec)
         if rc != 0:
             fail(problems, 'C4 %s owner_ref does not resolve (%s): %s' % (e, spec, err[:70]))
             continue
         if blob_oid != ref['blob_oid']:
             fail(problems, 'C4 %s blob_oid MISMATCH for %s: stated %s, git says %s'
                  % (e, spec, ref['blob_oid'][:12], blob_oid[:12]))
-        p = subprocess.run(['git', 'cat-file', 'blob', blob_oid], capture_output=True)
-        if p.returncode != 0:
+        rc2, digest = _blob_sha256_cached(blob_oid)
+        if rc2 != 0:
             fail(problems, 'C4 %s blob %s cannot be read' % (e, blob_oid[:12]))
             continue
-        digest = hashlib.sha256(p.stdout).hexdigest()
         if digest != ref['raw_sha256']:
             fail(problems, 'C4 %s raw_sha256 MISMATCH for %s: stated %s, recomputed %s'
                  % (e, spec, ref['raw_sha256'][:12], digest[:12]))
@@ -500,7 +625,72 @@ def self_test():
         except OSError:
             pass
 
-    print('\n  %d criteria checked, %d did not behave as declared' % (len(expected) + 2, bad))
+    # ------------------------------------------------------------------ rev 5 rules
+    # The two forms added in rev 5 are exemptions from C3, and an exemption nobody tests is a hole.
+    # Each case below is the cheapest abuse of the new form, and must be refused BY NAME.
+    print('\n=== rev 5: do the two new owner forms refuse their own abuse? ===')
+    tracked_real = tracked or set()
+    real_evidence = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'   # really does mention TestUniverse
+
+    def c3_says(row, want, label):
+        global_bad = []
+        base = {'entity': 'TestUniverse', 'disposition': 'TRANSFER', 'proposed_owner': 'factory/universe.jsonl',
+                'canonical_or_derived': 'canonical'}
+        base.update(row)
+        c3_owner_vocabulary([base], global_bad, tracked_real)
+        joined = '\n'.join(global_bad)
+        ok = want in joined
+        print('  [%s] %s' % ('OK ' if ok else 'BAD', label))
+        if not ok:
+            print('        -> C3 said: %s' % (global_bad[:1] or ['NOTHING AT ALL']))
+        return 0 if ok else 1
+
+    rev5 = 0
+    rev5 += c3_says({'current_owner': UNOWNED},
+                    'needs a citation',
+                    'UNOWNED with no unowned_evidence refused')
+    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'no/such/file.md'},
+                    'not a tracked path',
+                    'UNOWNED citing an untracked path refused')
+    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'CLAUDE.md'},
+                    'never mentions',
+                    'UNOWNED citing a real file that does not mention the entity refused')
+    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': real_evidence,
+                     'disposition': 'KEEP', 'proposed_owner': UNOWNED,
+                     'canonical_or_derived': 'canonical'},
+                    'must not '
+                    'be signable',
+                    'UNOWNED + KEEP on a CANONICAL fact refused')
+    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': real_evidence,
+                     'proposed_owner': UNOWNED, 'disposition': 'TRANSFER'},
+                    'only expressible as KEEP',
+                    'proposed_owner=UNOWNED with TRANSFER refused')
+    rev5 += c3_says({'entity': 'MetricRef', 'current_owner': 'EMBEDDED:Hypothesis',
+                     'disposition': 'KEEP', 'proposed_owner': 'EMBEDDED:Hypothesis'},
+                    'does not reference',
+                    'EMBEDDED naming a parent the $ref graph denies refused')
+    rev5 += c3_says({'entity': 'OwnerRef', 'current_owner': 'EMBEDDED:*',
+                     'disposition': 'KEEP', 'proposed_owner': 'EMBEDDED:*',
+                     'embedded_in': ['CoverageCell']},
+                    'needs at least 2',
+                    'EMBEDDED:* with a single parent refused')
+    # ...and the control: the honest form must stay SILENT, or the guard is just noise.
+    control = []
+    c3_owner_vocabulary([{'entity': 'TestUniverse', 'current_owner': UNOWNED,
+                          'unowned_evidence': real_evidence, 'disposition': 'TRANSFER',
+                          'proposed_owner': 'factory/universe.jsonl',
+                          'canonical_or_derived': 'canonical'},
+                         {'entity': 'MetricRef', 'current_owner': 'EMBEDDED:CoverageCell',
+                          'disposition': 'KEEP', 'proposed_owner': 'EMBEDDED:CoverageCell',
+                          'canonical_or_derived': 'canonical'}], control, tracked_real)
+    print('  [%s] CONTROL a correct UNOWNED row and a correct EMBEDDED row stay silent'
+          % ('OK ' if not control else 'BAD'))
+    if control:
+        print('        -> C3 wrongly said: %s' % control[:2])
+        rev5 += 1
+    bad += rev5
+
+    print('\n  %d criteria checked, %d did not behave as declared' % (len(expected) + 2 + 8, bad))
     return 1 if bad else 0
 
 

@@ -31,7 +31,42 @@ perform that transfer.** It produces the proposal and the migration table its ow
 
 ### Deliverables
 
-**D1 — `factory_os/s2a_migration.jsonl`, machine-readable, one object per line.** Not a prose table: audit 5
+> ⚠️ **AMENDED 2026-07-30 (rev 5), again before any data was written.** Two clauses below were still
+> unsatisfiable or wrong, and both are the *same shape* as the rev-4 defect — a rule that cannot be obeyed
+> for a measured subset of the 27 entities:
+>
+> 1. **D1's path pointed outside the slice.** Written as `factory_os/s2a_migration.jsonl`, which
+>    `check_s2a_migration.py` implemented literally as a **repo-root** `factory_os/` — a directory that does
+>    not exist and where **no** other artifact of this slice lives. Every sibling path in this codebase is
+>    root-relative *with* the `_triage/` prefix (`_triage/factory_os/schemas.json` ·
+>    `_triage/factory_os/CONTRACTS.md`), and **D2 in this very list carries that prefix**. The bare form was
+>    shorthand, not a location. **rev 5: D1 is `_triage/factory_os/s2a_migration.jsonl`** and the
+>    reconciliation file is `_triage/factory_os/s2a_coverage_reconciliation.json`. The checker is corrected
+>    to match; nothing is created at the repo root.
+> 2. **`current_owner` had no legal value for a genuinely-unowned fact.** MEASURED against the schema's
+>    `$ref` graph rather than its prose: **9** entities are embedded in a parent (`CandidatePayload` ·
+>    `ExecutionKey` · `MetricRef` · `ModuleUse` · `OwnerRef` · `RunAttempt` · `ReconciliationEvidence` ·
+>    `SnapshotMeta` · `SnapshotVerdict`), **14** have a real artifact holding the fact today, and **4**
+>    (`TestUniverse` · `LogicalSymbol` · `SafeProjection` · `RunJournal`) have **neither a file nor a
+>    parent** — design §1.3 #2 states outright that Test Universe is *"genuinely unowned"*. For those four,
+>    C3 allowed only: name a real file (**a false claim about today**), claim `EMBEDDED:<Parent>` (**false —
+>    nothing references them**), or omit the row (**C1 fails on set equality**). Three impossible options is
+>    the rev-4 defect repeated.
+>    **rev 5: `UNOWNED` is a legal `current_owner`**, and — because an unconstrained sentinel would gut
+>    C3's entire bite — it is admitted only with a guard that is *recomputed, not trusted*:
+>    - `unowned_evidence` must name a **tracked path whose contents actually mention the entity**. The
+>      checker opens the file; a claim that the design says so is not enough.
+>    - `disposition = KEEP` on an `UNOWNED` row additionally requires `canonical_or_derived = derived`. A
+>      *canonical* fact that nobody owns and that nobody is proposed to own is drift, and must not be
+>      signable as "keep".
+>    - `proposed_owner = UNOWNED` is legal only on such a KEEP row (the fact is correctly never persisted).
+>    - `owner_ref` is `null` with `owner_ref_absent_reason`, exactly as for `EMBEDDED:*`.
+>    **Also tightened while here:** every `EMBEDDED:<Parent>` claim is now **verified against the `$ref`
+>    graph** — the parent must really reference the child. The prose count of "12 EMBEDDED" carried in the
+>    handoff was wrong (it listed `WorkReceipt`, which owns `ops/receipts/`); the graph says 9. A row may
+>    use `EMBEDDED:*` only with an `embedded_in` array of **≥2** parents, every one of them verified.
+
+**D1 — `_triage/factory_os/s2a_migration.jsonl`, machine-readable, one object per line.** Not a prose table: audit 5
 showed the rev-1 acceptance counted entity names and could not see whether any column held a real fact. Each
 line carries `entity · current_owner · proposed_owner · disposition · canonical_or_derived · owner_ref ·
 breaks_if_moved · breaks_if_not_moved · signoff_owner · signoff_state · reverse_steps · evidence_lost ·

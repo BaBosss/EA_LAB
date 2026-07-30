@@ -239,7 +239,24 @@ $SUITE_GUARDS = @{
                                           # CONTRACTS.md; the design is still an input because
                                           # --check refuses when it stops linking a contract.
                                           '_triage/factory_os/CONTRACTS.md',
-                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
+                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                                          # ORDER-600 (S2a). Declared here so that editing the
+                                          # migration table or its checker TRIGGERS the tier that
+                                          # guards them -- a cage whose own inputs are outside the
+                                          # pathspec is enforced only when something else happens
+                                          # to be staged, which is the D32 defect this map exists
+                                          # to close.
+                                          '_triage/factory_os/run_s2a_gate.py',
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/run_s2a_migration_tests.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
+                                          '_triage/factory_os/gen_s2a_migration_doc.py',
+                                          '_triage/factory_os/s2a_migration.jsonl',
+                                          '_triage/factory_os/s2a_coverage_reconciliation.json',
+                                          '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
+                                          # D1's coverage numbers are RECOMPUTED from section 2 of
+                                          # this file, so a change to it can falsify C8.
+                                          'MASTER_BACKLOG.md')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
                                           'scripts/_test/run_fast_cages.ps1')

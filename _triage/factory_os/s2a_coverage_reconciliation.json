@@ -1,0 +1,504 @@
+{
+  "cells_emitted": 40,
+  "live_cells_only": 8,
+  "mapping": [
+    {
+      "cells": [
+        {
+          "cell": "CHFJPY M15",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        }
+      ],
+      "source_row": "Matchagrid MG_v1"
+    },
+    {
+      "cells": [
+        {
+          "cell": "EURUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "GBPUSD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT_DD37",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "NuiIndy RSI+ADX"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "USDJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT_WIPEOUT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "NuiIndy RSI+ADX"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "AUDJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT_WIPEOUT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "NuiIndy RSI+ADX"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        }
+      ],
+      "source_row": "NuiIndy RSI+ADX"
+    },
+    {
+      "cells": [
+        {
+          "cell": "GBPUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "USDCAD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "EUR",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "USDJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "EURJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "XAU",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "EURGBP",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "AUD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "NZD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPCAD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "EURCAD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "CADJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPCHF",
+          "column": "symbol other-tried -> result",
+          "declared_status": "PASS_BUT_CORRELATED",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "ST_EA03 MACD"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        }
+      ],
+      "source_row": "ST_EA03 MACD"
+    },
+    {
+      "cells": [
+        {
+          "cell": "XAUUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        }
+      ],
+      "source_row": "Gold Reaper 4.3"
+    },
+    {
+      "cells": [
+        {
+          "cell": "XAUUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "US30",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "WTI",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "BRENT",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "XAGUSD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "USDJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "REJECT_AFTER_OPTIMIZE",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "XAUUSD H4",
+          "column": "symbol other-tried -> result",
+          "declared_status": "SMOKE_IN_PROGRESS",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_BREAKOUT_XAU"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        }
+      ],
+      "source_row": "EA_BREAKOUT_XAU"
+    },
+    {
+      "cells": [
+        {
+          "cell": "GBPUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "EURUSD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DROPPED",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPJPY",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPCAD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "EURGBP",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "USDCAD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "DEAD",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "GBPUSD H4",
+          "column": "symbol other-tried -> result",
+          "declared_status": "NOT_ATTEMPTED",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "LondonConsoBreakout"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        }
+      ],
+      "source_row": "LondonConsoBreakout"
+    },
+    {
+      "cells": [
+        {
+          "cell": "GBPUSD H1",
+          "column": "LIVE cell",
+          "status": "LIVE"
+        },
+        {
+          "cell": "USDCAD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "FAIL",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_RUNNER_ST03 (framework)"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "EUR",
+          "column": "symbol other-tried -> result",
+          "declared_status": "FAIL",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_RUNNER_ST03 (framework)"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "AUD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "FAIL",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_RUNNER_ST03 (framework)"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        },
+        {
+          "cell": "NZD",
+          "column": "symbol other-tried -> result",
+          "declared_status": "FAIL",
+          "source_coordinates": {
+            "column_index": 5,
+            "file": "MASTER_BACKLOG.md",
+            "section": "## 2. COVERAGE MATRIX",
+            "source_row": "EA_RUNNER_ST03 (framework)"
+          },
+          "status": "UNVERIFIED_IMPORT",
+          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+        }
+      ],
+      "source_row": "EA_RUNNER_ST03 (framework)"
+    }
+  ],
+  "note": "ORDER-600 C8. Two numbers with a mapping between them, NEVER equated. source_rows_consumed counts EA rows in MASTER_BACKLOG.md section 2; cells_emitted counts normalised cells across both the LIVE column and the other-tried column. They differ by construction: ST_EA03 alone carries two LIVE cells.",
+  "recomputed_from": {
+    "file": "MASTER_BACKLOG.md",
+    "parser": "_triage/factory_os/check_s2a_migration.py:parse_section2",
+    "section": "## 2. COVERAGE MATRIX"
+  },
+  "source_rows_consumed": 7
+}

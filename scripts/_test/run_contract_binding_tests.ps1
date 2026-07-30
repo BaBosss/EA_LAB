@@ -53,6 +53,26 @@
     design<->schema seam, and the validator is the third corner of it.
 
     MEASURED 0.4s for the first two scripts. See the re-measured tier total in run_fast_cages.ps1.
+
+    ⚠️ BUDGET: ORDER-600 (S2a) PUSHED THIS TIER FURTHER OVER AN ALREADY-BREACHED CEILING, and the
+    number is stated here rather than discovered by the next session.
+    MEASURED 2026-07-30, medians of 3 runs each (never one number -- the handoff that carried "14.0s"
+    forward was quoting a lucky single run):
+      this suite   0.6s -> 2.9s        (+2.3s: the five S2a checks, in ONE interpreter)
+      fast tier   15.4s -> 16.5s       (16.7 / 16.5 / 16.5) against a 15.0s ADVISORY budget
+    The tier was ALREADY over budget at 15.4s before this order touched it, so S2a is not the cause
+    of the breach -- but it is 1.5s of it now, and that must not be left implicit.
+    Everything cheaper was done first: five separate script entries measured 4.57s, one interpreter
+    3.45s, and 2.57s after memoizing `git ls-files` and the schema $ref graph inside
+    check_s2a_migration.py -- the mutation suite was re-paying both 25 times in a single run, which
+    is ORDER-270's spawn pathology at small scale. A further 11x is available only by dropping the
+    24-mutation half, which is the one half that proves the checker can still fail against the file
+    it just passed. That is not a trade worth making.
+    THE REAL FIX REMAINS BACKLOG-D32, per-path suite selection from $SUITE_GUARDS: a commit touching
+    only scripts/*.ps1 should not pay 2.9s of S2a, and a commit touching s2a_migration.jsonl should
+    not pay 5.8s of optimize-guard. The declarations needed for that are now in place for S2a -- all
+    eight of its paths are in the $SUITE_GUARDS map and selected by the generated pathspec, verified
+    by run_guard_trigger_tests.ps1.
 #>
 [CmdletBinding()]
 param([string]$RepoRoot)
@@ -89,7 +109,18 @@ $scripts = @(
     #    "all routed entities except ['ControlRoomSnapshotV5']" after that root was closed. A lint
     #    in no suite and no hook is a lint that can die without anyone learning it died, which is
     #    ORDER-270's finding applied to a file rather than to a runtime.
-    @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() }
+    @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
+    # 5. run_s2a_gate.py -- ORDER-600 (S2a), wired in the same commit that landed D1, which is what
+    #    check_s2a_migration.py's own header says to do: it exits 2 while D1 is absent, so wiring it
+    #    any earlier would have made this tier permanently red.
+    #    It is ONE entry running FIVE checks in ONE interpreter (D1-vs-generator drift, D2-vs-D1
+    #    drift, the nine machine criteria, the 18-assertion self-test, and 24 mutations of the real
+    #    D1). MEASURED: as five separate entries it cost 4.57s; in one process 3.45s; and 2.57s after
+    #    memoizing `git ls-files` and the schema $ref graph, which the mutation suite was otherwise
+    #    re-paying 25 times in a single run -- the ORDER-270 spawn pathology at small scale.
+    #    The mutation half is the part that matters: the other four can all be green while the
+    #    checker is incapable of failing against the file it just passed.
+    @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() }
 )
 
 $failed = 0
