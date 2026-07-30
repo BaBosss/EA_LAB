@@ -89,26 +89,36 @@ mechanical, and make every claim the system displays traceable to the one file t
 | `optimize_guard` classification semantics | repaired 2026-07-30 (`024127e3`): `OVERRIDE` no longer read as dead | the wrapper generator consumes the *repaired* semantics; see §5.4 |
 | `docs/PARAM_REGISTRY.csv` `OptimizeStage` / `SafeRange` | **verified 2026-07-30: 177/184 and 181/184 are `UNKNOWN`** | fill for the Operator surface only, per Boss, as a discovery task (§4.2) |
 
-### 1.3 Facts with **no owner today** — the eleven this design creates
+### 1.3 What is genuinely unowned — **corrected 2026-07-30 after the blind audit**
 
-Each gets exactly one owner, one writer, one ID format, and one validator. Nothing here duplicates §1.1.
+> 🔴 **Rev 1 of this section claimed eleven facts had no owner. That was the load-bearing claim of the
+> whole design, and it did not survive the audit.** Codex walked all eleven against the workspace and
+> found most of them already owned — and, worse, found that the rev-1 schemas stored **mutable copies**
+> of those facts, which is precisely what `PROJECT_STATE.md` §0.5 forbids ("links, never copies") and what
+> §20.7 restricts to occurrence metadata and references. The corrected table is below. The rule that
+> replaces the old one: **a Factory OS artifact may hold a fact it does not own only as an `OwnerRef`
+> pinned at commit + blob + sha256.**
 
-| # | New fact | Owner artifact | Writer | Why nothing owns it today |
-|---|---|---|---|---|
-| 1 | Hypothesis + its revisions | `factory/hypotheses.csv` | Claude/user | hypotheses live in order prose and die with the order |
-| 2 | Test Universe (versioned symbol×TF sets) | `factory/universe.yaml` | Claude/user | "Core Universe" exists only as a sentence |
-| 3 | Coverage cell state | `factory/coverage.csv` (generated + curated flags) | Automation writes state, Claude writes `NOT_APPLICABLE` | the coverage matrix is hand-typed and stale |
-| 4 | Instrument Profile (asset class → symbol override → broker/lane map) | `factory/instrument_profiles.yaml` | Claude | `OPTIMIZATION_PROCEDURE_V2` §4 specifies it; no file implements it |
-| 5 | Run / Attempt manifest | `factory/runs/<run_id>.json` | Automation | run state lives in ad-hoc `_mt5_auto` files; nothing survives a restart |
-| 6 | Evidence bundle index | `factory/evidence/index.csv` → content-addressed store | Automation | raw reports are `.gitignore`d and referenced by path, not identity |
-| 7 | Candidate manifest (immutable) | `factory/candidates/<candidate_id>.json` | Claude (on verdict) | "the locked .set" is a file path with a naming convention |
-| 8 | Magic allocation | `factory/magic_allocations.csv` | Automation, Claude approves | uniqueness is enforced *after the fact* by `check_state.ps1` |
-| 9 | Work Receipt | `ops/receipts/*.json` (append-only events → projection) | any agent | chat commitments vanish at handoff (handoff §7) |
-| 10 | System Finding | `ops/findings.csv` | Automation, Claude resolves governance ones | detector output is transient console text |
-| 11 | Idea Tank entry | `ops/ideas.csv` | Automation on intake | links are pasted into chat and lost |
+| # | Fact | Verdict after audit | Owner, and what the Factory OS may hold |
+|---|---|---|---|
+| 1 | Hypothesis + revisions | **partly owned** | causal claim, falsifier and acceptance already live in taskboard pre-registration. `factory/hypotheses.jsonl` holds only the machine-read fields (id, revision, architecture digest, module set, coupling) + `preregistration_ref`. It must not restate the claim. |
+| 2 | Test Universe | ✅ **genuinely unowned** | `factory/universe.jsonl`. No canonical artifact exists for a versioned mandatory symbol×TF set. |
+| 3 | Coverage cell state | **owned** — `MASTER_BACKLOG.md` §2 declares it | cells become the machine source and **`MASTER_BACKLOG` §2 is regenerated from them**; the ownership move is an explicit migration row, not a silent second copy. |
+| 4 | Instrument Profile | **partly owned** | baseline semantics + starting values are `OPTIMIZATION_PROCEDURE_V2` §4. New: only the broker/lane mapping layer, plus a `content_hash` so a Candidate pins profile *content*, not a mutable id. |
+| 5 | Run / Attempt | **split** | the experiment event log owns the occurrence timeline. **Only the scheduler recovery checkpoint is new** — that is what `factory/runs/` owns, and nothing else. |
+| 6 | Evidence index | **owned** — `docs/memory_control/experiment_events/evidence-manifest.jsonl` exists, with its own schema | no new index. Register through the existing utility. Only the *blob store location* is arguably new. |
+| 7 | Candidate | **partly new** | the immutable bundle identity is new; the locked `.set`, the scorecard standing, the evidence and the attestation all have owners and are referenced. |
+| 8 | Magic allocation | **owned** — assigned magics are in `DEPLOYMENTS.csv`, uniqueness is checked by `check_state.ps1`, session ranges by `SESSION_LEDGER.md` | the allocator becomes a **reservation log** that references Deployment. It must not copy deployment status. |
+| 9 | Work Receipt | **new only for chat commitments that are not yet Orders** | where an `ORDER-*` exists, the taskboard owns title/status/owner/acceptance and the Receipt references it. ⚠️ **opening this writer needs an `AGENTS.md` §2 permission change the user must ratify first** — see §11. |
+| 10 | System Finding | **new only for stable identity + lifecycle** | detector state is owned by the snapshot and is referenced. |
+| 11 | Idea Tank | **owned** — `INTAKE_QUEUE.md` opens by declaring itself the single place for every new source/strategy drop | **no `ops/ideas.csv`.** Add stable ID + exact-URL dedupe **as columns on the existing owner**; the Factory OS holds only a read projection. |
 
-**Naming rule:** every new artifact lives under `factory/` or `ops/` so that "is this a canonical owner or a
-projection?" is answerable from the path alone. Generated projections go to `build/` and are never edited.
+**Net: two facts are unambiguously unowned (Test Universe, scheduler recovery checkpoint), and three are
+partly new (candidate bundle identity, finding lifecycle, chat-commitment receipts).** The other six are
+extensions of, or references into, existing owners.
+
+**Naming rule:** artifacts under `factory/` or `ops/` are canonical only for the rows marked new above;
+everything else there is a projection. Generated projections go to `build/` and are never edited.
 
 ### 1.4 The reconciliation of the two designs (this is the decision the master file asks for)
 
@@ -382,7 +392,7 @@ Champion–Challenger case §3.7 introduces.
 ## 5. (E) Thin Wrapper architecture
 
 ### 5.1 The good news from current state
-`Boss_14_GridLog.mq5` is **13 lines**: two `#define`s and `#include "core/LabCore.mqh"`. The Boss family is
+`Boss_14_GridLog.mq5` is **12 lines**: two `#define`s and `#include "core/LabCore.mqh"`. The Boss family is
 already a thin-wrapper pattern; the generator does not have to invent it, only to extend it with a
 hypothesis token and a compile-time allowlist. This is the single largest reuse in this design.
 
@@ -409,12 +419,18 @@ hypothesis token and a compile-time allowlist. This is the single largest reuse 
   `#elif`** — `Inputs.mqh:11` says so and the file already nests eight `#ifndef LAB_ENTRY_nn` guards to
   emulate a default. The generator must therefore emit **token `#ifdef` only**. Any design that assumes
   expression conditionals is wrong on this platform.
-- Current state, measured: **209 `input`/`sinput` declarations, 25 `input group` sections, 28 preprocessor
-  guards.** A static walk of the guards gives **128–153 visible inputs per Boss** (16 is the worst at 153);
-  Codex's read of the actual MT5 Inputs page gave **113–135**. *The two methods disagree by ~15, and that
-  discrepancy is itself a discovery task* — a design promising "zero inert visible inputs" needs a
-  **measured** per-build surface, and today no two methods agree on what it is. Target after the change:
-  **Operator ≤ 40** per Boss.
+- Current state, **corrected 2026-07-30**: `Inputs.mqh` holds **184 real `input`/`sinput` declarations**
+  plus **25 `input group` section headers** (209 lines begin with `input`/`sinput`, and rev 1 of this
+  document reported that 209 as the parameter count — it was counting the section headings), behind
+  **26 preprocessor guards** (17 `#ifdef` + 9 `#ifndef`, not 28).
+  Visible inputs per Boss, excluding group headers:
+  **11→113 · 12→117 · 13→119 · 14→116 · 15→119 · 16→135 · 17→121 · 18→121.**
+  > 🔴 Rev 1 claimed a static walk gave 128–153 against 113–135 from the real Inputs page, called the ~15
+  > gap unexplained, and filed it as a discovery task. **There was never a gap.** The walk was counting
+  > the 25 group headers; removing them reproduces the Inputs-page range exactly, and Boss_14's 116 matches
+  > the figure already recorded in `_triage/HANDOFF_2026-07-28_BATCHQUEUE.md`. A counting bug was written
+  > up as a known unknown, which is worse than the bug.
+  Target after the change: **Operator ≤ 40** per Boss.
 
 ### 5.4 Locked/inactive declaration and the guard that must agree with it
 Three states must stay consistent or the optimizer will be told two different stories:
@@ -433,9 +449,30 @@ Three states must stay consistent or the optimizer will be told two different st
   guarantee than a script refusing, because it removes the dimension rather than declining to sweep it.
 
 ### 5.5 Parent–Variant parity contract (decision 35 — the load-bearing test)
-> A Thin Wrapper is valid **iff**, on one lane, one data fingerprint, one window and one model, the
-> wrapper and the **parent Boss configured with the wrapper's effective config** produce an **identical
-> trade list** — same count, same entry/exit times, same volumes, same prices.
+
+> 🔴 **Rev 1 defined parity as trade-list identity alone. The audit is right that this is insufficient**,
+> and its counter-example is the one that matters: a wrapper and its parent can both open **zero** trades
+> — identical empty trade lists, parity "passes" — while the wrapper actually failed `OnInit` because a
+> generated `const` was wrong, or wrote a different persistent risk key. The two builds would then behave
+> completely differently the moment they were deployed. An empty list is the easiest way to match.
+
+A Thin Wrapper is valid **iff**, on one lane, one data fingerprint, one window and one model, the wrapper
+and the **parent Boss configured with the wrapper's effective config** agree on **all seven** of:
+
+1. **init result** — both attach, or both refuse for the same reason (`OnInit` return + reason code);
+2. **`[CFG]` effective-config fingerprint** — identical `effective_config_hash`, including locked constants;
+3. **the full order-request/result trace** — every request, every retcode, including *rejected* attempts,
+   not merely the fills that survived;
+4. **trade list** — count, entry/exit times, volumes, prices;
+5. **pending orders and open positions at end of run**;
+6. **terminal-side effects** — GlobalVariables written, persistence keys, files touched;
+7. **errors and safety alerts raised**.
+
+And the case set must contain **both directions**:
+- a **must-trade case** — a config where the strategy provably opens trades, so an empty run cannot pass;
+- a **deliberate-refusal case** — a config that must fail the attach (e.g. `_42_RiskPct` mis-paired with an
+  `SLMode` that yields no distance, which `MM-SAFETY-001` fails at `OnInit`) — proving parity distinguishes
+  *refused* from *silent*.
 
 - Trade-list identity, not summary identity. PF/net/DD matching while trade lists differ is two different
   strategies that happen to agree on one window, and this repo has already been fooled by an aggregate
@@ -706,6 +743,20 @@ about a backup. Retention: candidate binary + `.set` + evidence kept permanently
 last-known-good. A failed build **retains last-known-good and labels it `STALE / BUILD FAILED`**. A
 partially generated "current" page is never published.
 
+> 🔴 **Corrected 2026-07-30 — several rollbacks above did not actually restore the prior state.**
+> - **M1** wrote state `UNVERIFIED_IMPORT`, which was not in the CoverageCell enum, so the very first
+>   import would have failed validation. Added to the enum in schemas rev 2.
+> - **M2's "delete receipts" is not a rollback once the system has been used.** After a week, receipts
+>   hold commitments that were never in any `HANDOFF_*.md`; deleting them destroys work rather than
+>   reverting a change. **Shadow import must stay separate from canonical state, with dual-read and
+>   reconciliation until an explicit cutover gate**, and rollback after cutover means a **reverse
+>   projection/export**, not a delete.
+> - **M4's "repoint to the old page" leaves the old page ignorant of the new owners** — it looks like a
+>   recovery while Factory state is simply invisible. Repointing is only valid while the old page's
+>   sources are still being maintained, which must be an explicit condition of the cutover gate.
+> - Neither event delivery nor the artifact store had any rollback at all. Both need one, and the
+>   artifact store's **restore must be drilled** — an untested backup is a story about a backup.
+
 ---
 
 ## 10. (J) Implementation slices
@@ -713,21 +764,30 @@ partially generated "current" page is never published.
 Vertical, each independently verifiable, each with a cage that can fail. Dependency order is top to bottom.
 **No taskboard Order may be written from this list until the blind audit is answered.**
 
+> 🔴 **Reordered 2026-07-30.** The audit found the rev-1 order unbuildable: S7 (wrapper generator) needed
+> the hypothesis registry that S8 created; S10 (preset compiler) came *after* a parity test that needs the
+> full effective config the compiler produces; S11 depended on Candidate semantics that were still broken;
+> and S2 proposed introducing "snapshot schema v4" when **HEAD is already v4**, so it would have collided.
+> New order: **schema/ownership → registries/bindings → preset resolver → wrapper/parity → scheduler →
+> Candidate/Deployment → pilot.**
+
 | # | Slice | Acceptance cage | Prohibitions | Owner (`AGENTS.md`) |
 |---|---|---|---|---|
-| S1 | Monitoring integrity foundation (**= Stage 0B**) | fixture tests green/warn/red/stale/blind + two accounts with different base equity; each guard **observed firing** | no new risk threshold; no dashboard-local constants | Claude writes · Codex audits |
-| S2 | Snapshot schema v4 + reconciliation validator + `ALL CLEAR` rule | seeded N discovered ⇒ exactly N categorized or explicit `UNKNOWN`; missing source ⇒ no `ALL CLEAR`; atomic build keeps last-known-good | no second projection; no independently calculated totals | Codex/Sonnet under order |
-| S3 | Work Receipts + legacy handoff import + untracked-work adapter | duplicate Order+Receipt+handoff+commit renders as **one** row with all provenance; similar titles do **not** auto-merge; `[auto]` commits excluded | may not write taskboard state; may not cancel anything | Codex/Sonnet |
-| S4 | Control Center shell + TODAY/WORK/LIVE/SYSTEM/IDEA in **shadow mode** | all 30 handoff acceptance scenarios; safe projection contains no accounts/tokens/lots/money amounts | no dispatch, no claim, no closure from the UI | Codex/Sonnet |
-| S5 | Direct Telegram Control Room + Morning Brief | alerts work with OpenClaw stopped; repeated unchanged checks send nothing; one recovery message; hibernate intake acknowledged after resume | no token in git/log/HTML/chat; OpenClaw not in the path | Codex/Sonnet |
-| S6 | Parameter registry extension + Operator/Research surface **for Boss_14 only** | `param_registry_check` CLEAN; zero `UNKNOWN` on Boss_14's Operator surface; old `.set` migrates or **fails loudly**, never silently ignored | no key renames; no strategy/default behaviour change | **Claude writes** · Codex blind-audits |
-| S7 | Thin Wrapper generator + parity harness | 5 parity cases (§8.4); wrapper contains zero logic; regenerate byte-identical `.mq5` | no wrapper edited by hand; no bulk generation beyond the pilot | **Claude writes** · Codex audits |
-| S8 | Hypothesis/Universe/Coverage/Profile registries + validators | round-trip; `NOT_APPLICABLE` refused without a reason; `MASTER_BACKLOG` §2 generated and matching | no verdict field anywhere in these files | Codex/Sonnet |
-| S9 | Recoverable scheduler (§20.8 Contract B) | kill mid-batch ⇒ resume with zero completed attempts re-run; lane-lock test; cross-lane comparison **refused** | no process kill, no `-Force`, no tester-safety change | **Claude writes** · Codex audits |
-| S10 | Preset compiler + effective-config fingerprint | unknown key refused; partial set refused; generated `.set` full-surface and deterministic | must not read the terminal cache | Codex/Sonnet |
-| S11 | Candidate/Bench/Deployment identity + magic allocator + attestation | candidate id changes iff manifest changes; duplicate magic impossible; `check_state.ps1` stays green | no auto-update of any deployment | **Claude writes** |
-| S12 | Boss_14 H01/H02 pilot matrix end-to-end | §8.6 checklist | automation stops at `EVIDENCE_COMPLETE` | mixed; batch to qwen/ZCode |
-| S13 | Expand Core Universe + other Boss families | pilot passed first | no bulk migration before that | mixed |
+| S1 | Monitoring integrity foundation (**= Stage 0B, DONE 2026-07-30**) | fixture tests green/warn/red/stale/blind + accounts with different base equity; each guard **observed firing** | no new risk threshold; no dashboard-local constants | Claude writes · Codex audits |
+| S2 | **Ownership migration table + `OwnerRef` discipline** (new, from audit P0-2) | every Factory artifact holds owned facts only as pinned `OwnerRef`; owner-by-owner sign-off recorded; zero mutable copies | may not demote any owner without its owner's approval | **Claude writes** |
+| S3 | Schema validator + per-entity **negative** fixtures | every entity rejects at least one crafted bad instance; root discriminator rejects an unknown `entity`; `all_clear` **computed**, a supplied value rejected | no constraint left as prose that the validator does not enforce | Codex/Sonnet |
+| S4 | Snapshot **v5** + reconciliation + compatibility outputs made fail-closed | seeded N discovered ⇒ exactly N categorized or explicit `UNKNOWN`; missing/unreadable mandatory source ⇒ no `ALL CLEAR`; `make_status.ps1` and the digest read the validated snapshot and refuse to render on a failed build | not v4 (taken); no independently calculated totals anywhere | Codex/Sonnet |
+| S5 | Registries + **ParameterBinding** resolver (universe, profiles, hypotheses, coverage) | round-trip; `NOT_APPLICABLE` refused without a reason; `MASTER_BACKLOG` §2 generated and matching; generator and `optimize_guard` provably read **one** resolver | no verdict field in any of these files | Codex/Sonnet · Claude reviews |
+| S6 | Preset compiler + effective-config fingerprint | unknown key refused; partial set refused; generated `.set` full-surface and deterministic; `[CFG]` emits the fingerprint | must not read the terminal cache | Codex/Sonnet |
+| S7 | Parameter registry extension + Operator/Research surface, **Boss_14 only** | `param_registry_check` CLEAN; zero `UNKNOWN` on Boss_14's Operator surface; old `.set` migrates or **fails loudly** | no key renames; no strategy/default behaviour change | **Claude writes** · Codex blind-audits |
+| S8 | Thin Wrapper generator + **7-point parity harness** (§5.5) | all parity cases incl. must-trade and deliberate-refusal; wrapper contains zero logic; regenerates byte-identical `.mq5` | no wrapper edited by hand; no generation beyond the pilot | **Claude writes** · Codex audits |
+| S9 | Recoverable scheduler (§20.8 Contract B) | kill at **every** state in §3.3 ⇒ resume re-runs zero completed attempts, double-launches nothing, duplicates no event; lane-lock test; cross-lane comparison **refused** | no process kill, no `-Force`, no tester-safety change | **Claude writes** · Codex audits |
+| S10 | Candidate identity + append-only Deployment attestation + magic reservation | candidate digest recomputed and compared on read; no non-`OBSERVED` attestation event without a human authorization ref; `check_state.ps1` stays green; legacy magic exceptions preserved | no auto-update of any deployment; no renumbering of a live magic | **Claude writes** |
+| S11 | Control Center shell + TODAY/WORK/LIVE/SYSTEM in **shadow mode** | all 30 handoff acceptance scenarios; **`SafeProjection` DTO**: forbidden-key recursive scan + synthetic secret/account fixtures | no dispatch, claim, or closure from the UI; Telegram must not be able to read the full snapshot | Codex/Sonnet |
+| S12 | Direct Telegram Control Room + Morning Brief | alerts work with OpenClaw stopped; dedupe key includes severity + material revision; per-channel delivery ledger; one recovery message; escalation is never swallowed | no token in git/log/HTML/chat; OpenClaw not in the path | Codex/Sonnet |
+| S13 | Boss_14 H01/H02 pilot matrix end-to-end | §8.6 checklist | automation stops at `EVIDENCE_COMPLETE` | mixed; batch to qwen/ZCode |
+| S14 | Work Receipts + legacy handoff import (**gated on an `AGENTS.md` §2 permission change**) | duplicate Order+Receipt+handoff+commit renders as **one** row with all provenance; similar titles do **not** auto-merge | ❌ must not start until the user ratifies the new writer surface | Codex/Sonnet |
+| S15 | Expand Core Universe + other Boss families | pilot passed first | no bulk migration before that | mixed |
 
 Batch execution goes to qwen/ZCode (decision 77). Core/money/EA code is written by the Claude seat and
 blind-audited by Codex (decisions 75, 76; `AGENTS.md` §5.2).
@@ -736,8 +796,16 @@ blind-audited by Codex (decisions 75, 76; `AGENTS.md` §5.2).
 
 ## 11. Genuinely unresolved decisions (the only ones)
 
-Everything else in this document follows from a locked decision or an existing rule. These six do not,
-and three of them are the user's alone because they change a bar or spend money.
+Everything else in this document follows from a locked decision or an existing rule. These do not, and
+several are the user's alone because they change a bar, change a governance rule, or spend wall-clock.
+
+> ✅ **DECIDED 2026-07-30 (user):** magic uniqueness moves to **global scope** (Grill decision 56). I
+> flagged the cost first — three magics (`990103`, `991001`, `991002`) are on two accounts each today and
+> `991001` is on real money — and the user confirmed. Consequences now written into the design: global
+> scope applies to **new** allocations; the three existing collisions are recorded as `legacy_exception`
+> and **frozen until their judge date**, never renumbered as a side effect; and **`PROJECT_STATE.md` §3's
+> `account|magic` invariant must be amended by the user before S10 is built**, because the design and the
+> invariant currently contradict each other. Renumbering a live magic, if ever wanted, is its own order.
 
 1. **Trial-count → required-confirmation ladder.** §6.7 records trial count but nothing consumes it.
    Proposal to react to: ≤50 trials ⇒ current bars · 51–500 ⇒ **plus** one independent confirmation
@@ -760,6 +828,22 @@ and three of them are the user's alone because they change a bar or spend money.
 6. **Core Universe v1 membership.** Which symbol×TF cells are *mandatory* (decision 24 says Core Universe
    is compulsory). Every added cell is Baseline + probe × every hypothesis, so this is a direct wall-clock
    cost the user should set, not the system.
+
+7. **The "~10,000 combinations per round" budget has no executable definition** *(raised by the audit;
+   rev 1 claimed this was reconciled and it was not)*. The ratified policy says fine complete grid ≤1,000
+   per zone; the locked requirement says ~10,000 per round. Rev 1 asserted the first governs the second.
+   The audit's counter-example stands: a genetic coarse pass plus **one** 125-combination fine grid
+   satisfies "≤1,000 per zone" and misses "~10,000 per round" — and an orchestrator could declare
+   compliance either way. What is missing is the number of zones, a minimum total search, and a stop rule.
+   **The owner of that requirement must define it; I will not pick the numbers.**
+8. **`AGENTS.md` §2 permission change for Work Receipt writers.** The design gives "any agent" a new
+   writable surface, but today an agent may write only its own taskboard order row plus new
+   reports/CSV/sets per order. Either the permission table is amended by the user first, or S14 does not
+   start. Implementation must never edit `AGENTS.md` to authorize itself.
+9. **CSV vs JSONL as the canonical storage for the new registries.** The audit is right that rev 1's
+   schemas used typed arrays and booleans while naming CSV owners, and CSV yields strings with no
+   round-trip rule for lists or nulls. Rev 2 moved these to `.jsonl`. If the user prefers CSV for
+   hand-editability, the encoding grammar and round-trip fixtures have to be specified instead.
 
 **Deliberately not reopened:** the 78 locked Grill decisions, the VERDICT GATE bars, the Model-2 ban, the
 3-year MAIN window, cap-breach-resize-first, correlation→reduce-lot, and the cross-install comparison ban.
@@ -822,8 +906,57 @@ self-assessment of this design (anti-anchoring, `AGENTS.md` §5). At minimum it 
     Inputs-page counts of visible inputs disagree by ~15; and §6.2's assertion that the ratified
     ≤1,000-per-complete-grid rule governs over the Grill's "~10,000 combinations per round".
 
-**Known weak points, stated in advance so the audit does not have to find them first:** §5.3's input
-counts come from two methods that disagree; §6.7's trial ladder has no numbers; §9's artifact store has no
-location decided; the Control Center's local-vs-published split (decision 10 says local web app, today's
-mechanism is a published gist) is designed only at the level of "safe projection vs full projection"; and
-this document has been read by exactly one model.
+**Known weak points, stated in advance so the audit does not have to find them first:** §6.7's trial
+ladder has no numbers; §9's artifact store has no location decided; the Control Center's local-vs-published
+split (decision 10 says local web app, today's mechanism is a published gist) is designed only at the level
+of "safe projection vs full projection".
+
+<sub>*Rev 1 also listed the §5.3 input-count discrepancy here. It was not a weak point, it was a counting
+bug — see §5.3. Listing a bug as a known unknown is how it survives an audit, and it nearly did.*</sub>
+
+---
+
+## 14. Audit response — every finding, and what changed
+
+The blind audit (`_triage/factory_os/CODEX_BLIND_AUDIT_2026-07-30.md`, verdict **NO-GO**) returned
+**22 findings: 2 P0 and 20 P1**, across the design, the appendix, and two existing scripts.
+*(I described it as "20" in conversation before counting the three in its own "other findings" section —
+the number is 22.)*
+
+Every factual correction it made about this document was re-measured here before being accepted, and all
+of them held. Nothing was accepted on the auditor's authority alone.
+
+| # | Finding | Status | Where it landed |
+|---|---|---|---|
+| 1 | **P0** appendix root validates almost anything | **FIXED** | schemas rev 2: discriminated union on `entity`, `unevaluatedProperties:false` throughout, structural checker committed |
+| 2 | **P0** "eleven unowned facts" false; forks §20.7 | **FIXED** | §1.3 rewritten — 2 genuinely unowned, 3 partly new, 6 references; `OwnerRef` is now the only way to carry a fact you do not own |
+| 3 | `ALL CLEAR` not enforceable by the schema | **FIXED** | `all_clear` computed and a supplied value rejected; mandatory-source registry separate from discovered; category + coverage totals encoded; `read_ok` **and** `fresh` both required |
+| 4 | `make_status.ps1` still has an "unreadable = nothing found" path | **ACCEPTED, code owed** | S4 — compatibility outputs must read the validated snapshot and refuse to render on a failed build |
+| 5 | Candidate hash self-referential | **FIXED** | `CandidatePayload` (hashed, no id) + `CandidateManifest` (digest + payload); validator recomputes |
+| 6 | Candidate hash misses behaviour + evidence lineage | **FIXED** | payload gained module set with stability, profile **content** hashes, source/allowlist/generator hashes, effective config, per-window evidence |
+| 7 | Run/Attempt not crash-safe | **FIXED** | append-only journal; lease owner/expiry/PID; `launched_at` before launch; exit code on receipt; `failure_class`; event id |
+| 8 | Idempotency key does not cover the real config | **FIXED** | `ExecutionKey` requires deposit, currency, leverage, all four hashes, fingerprint, lane |
+| 9 | EXPERIMENTAL evidence can reach a Candidate | **FIXED** | `experimental` required (not defaulted); `ModuleUse.stability`; validator resolves evidence→run→module set |
+| 10 | Parameter role at the wrong level | **FIXED** | new `ParameterBinding` per hypothesis revision; registry keeps permanent semantics; generator and guard share one resolver |
+| 11 | Lane provenance permits cross-install aggregation | **FIXED** | `MetricRef` — every metric carries its own run, lane, fingerprint, model; MAIN and BWD can no longer share one lane field |
+| 12 | Trade-list identity insufficient for parity | **FIXED** | §5.5 is now 7 points + must-trade and deliberate-refusal cases |
+| 13 | Deployment immutability only a promise | **FIXED** | append-only `DeploymentAttestationEvent`; any non-`OBSERVED` event requires a human authorization ref |
+| 14 | Magic allocator contradicts the ratified invariant | **USER DECIDED** | global scope adopted; legacy collisions frozen to judge; **`PROJECT_STATE` §3 amendment required before S10** |
+| 15 | "Safe projection by construction" has no construction | **FIXED** | `SafeProjection` allowlist DTO: masked account, DD **band** not number, no money/lots/logic; forbidden-key scan + secret fixtures in S11 |
+| 16 | Alert dedupe has no delivery state | **PARTIAL** | severity + `material_revision` in the dedupe key now; **per-channel delivery ledger and FLAPPING reminder policy owed in S12** |
+| 17 | Slice dependency order unusable; v4 collision | **FIXED** | §10 reordered to 15 slices; snapshot goes to **v5** |
+| 18 | Migration/rollback do not restore prior state | **FIXED** | §9 corrected: `UNVERIFIED_IMPORT` added to the enum, shadow kept separate from canonical, dual-read to a cutover gate, reverse projection instead of delete, drilled restore |
+| 19 | "~10,000 per round" not actually reconciled | **CONCEDED → §11.7** | rev 1 claimed a reconciliation it had not made; the requirement's owner must define zones, minimum total search and a stop rule |
+| 20 | JSON Schema types vs CSV storage | **FIXED** | registries moved to `.jsonl`; §11.9 if the user prefers CSV |
+| 21 | `WAITING` weaker in schema than in prose | **FIXED** | `anyOf` → both fields required |
+| 22 | New write authority without governance migration | **GATED** | §11.8; S14 must not start before the user amends `AGENTS.md` §2 |
+
+**Not adopted:** the audit's recommendation to cut scope to three axes and defer the rest. The user chose
+on 2026-07-30 to fix all findings and keep the full slice set. Its over-engineering list is preserved in
+the audit file and should be revisited if the pilot runs long.
+
+**Still owed before this design is safe to break into orders:** items 4 and 16 are design-complete but
+code-owed; item 14 needs the user's Decision-log amendment; item 19 needs a number this design refuses to
+invent; item 22 needs a governance change. **A re-review should confirm the P0s are genuinely closed
+rather than restated** — the first audit's most valuable finding was a claim this document made about
+itself, not a bug in a schema.
