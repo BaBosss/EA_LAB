@@ -27,14 +27,22 @@ chk(enum == br, "every enum value has exactly one branch (enum-only=%s branch-on
 chk(br <= defs, "every branch resolves to a $defs entity (missing=%s)" % sorted(br - defs))
 
 print("\nPER-ENTITY")
+# ControlRoomSnapshotV5 is the ONE deliberate exemption, and it is named here rather than
+# silently skipped. The real snapshot document versions additively - v3 gained fields, v4
+# gained more - so a closed root would reject the next legitimate addition. The guarantee is
+# preserved where it matters: its `meta` is a $ref to SnapshotMeta, which IS closed.
+OPEN_ROOT_BY_DESIGN = {'ControlRoomSnapshotV5'}
 no_unev, no_const = [], []
 for name in sorted(br):
     s = d['$defs'][name]
-    if s.get('unevaluatedProperties') is not False:
+    if s.get('unevaluatedProperties') is not False and name not in OPEN_ROOT_BY_DESIGN:
         no_unev.append(name)
     if s.get('properties', {}).get('entity', {}).get('const') != name:
         no_const.append(name)
-chk(not no_unev, "all %d routed entities set unevaluatedProperties:false (missing=%s)" % (len(br), no_unev))
+chk(not no_unev, "all routed entities except %s set unevaluatedProperties:false (missing=%s)"
+    % (sorted(OPEN_ROOT_BY_DESIGN), no_unev))
+chk(d['$defs']['SnapshotMeta'].get('unevaluatedProperties') is False,
+    "the exempted document's `meta` schema is itself closed, so the exemption does not leak")
 chk(not no_const, "all routed entities pin entity const to their own name (missing=%s)" % no_const)
 print("  helper $defs (referenced only from inside entities): %s" % sorted(defs - br))
 
@@ -45,8 +53,11 @@ chk('candidate_id' not in c.get('properties', {}),
 m = d['$defs']['CandidateManifest']['properties']
 chk('candidate_digest' in m and 'payload' in m,
     "CandidateManifest separates the digest from the hashed payload")
-w = d['$defs']['WorkReceipt']['allOf'][0]['then']
-chk(set(w.get('required', [])) == {'waiting_for', 'wake_condition'},
+# look the rule up rather than indexing allOf - inserting a new rule at position 0 silently
+# repointed this assertion at a different contract, which it did on the very next edit
+_wait = [a for a in d['$defs']['WorkReceipt']['allOf']
+         if a.get('if', {}).get('properties', {}).get('status', {}).get('const') == 'WAITING']
+chk(len(_wait) == 1 and set(_wait[0]['then'].get('required', [])) == {'waiting_for', 'wake_condition'},
     "WAITING requires BOTH fields (rev1 used anyOf, so one sufficed)")
 sm = d['$defs']['SnapshotMeta']['properties']
 chk(sm['version'].get('minimum') == 5, "snapshot version floor is v5 (v4 already exists at HEAD)")
@@ -55,6 +66,31 @@ srcreq = sm['sources']['items']['required']
 chk('fresh' in srcreq and 'read_ok' in srcreq, "every source must declare read_ok AND fresh")
 rec = sm['reconciliation']['required']
 chk('categories' in rec and 'coverage' in rec, "category and coverage totals are encoded, not implied in prose")
+
+print("\nRE-AUDIT FIXES")
+# the schema of the FILE must match the shape the file actually has
+snap = d['$defs']['ControlRoomSnapshotV5']
+chk(snap['properties']['meta'].get('$ref', '').endswith('SnapshotMeta'),
+    "the whole-document schema exists and uses SnapshotMeta for its `meta` property only")
+chk({'meta', 'system_health', 'summary'} <= set(snap['required']),
+    "the whole-document schema requires the keys the real snapshot actually has")
+wr = d['$defs']['WorkReceipt']
+chk(set(wr['required']) == {'entity', 'receipt_id', 'source_agent', 'requested_at'},
+    "WorkReceipt no longer unconditionally requires taskboard-owned fields")
+order_rule = [a for a in wr['allOf'] if a.get('if', {}).get('required') == ['order_ref']]
+chk(bool(order_rule) and 'not' in order_rule[0]['then'],
+    "a Receipt carrying order_ref is FORBIDDEN from duplicating title/owner/status/acceptance")
+sf = d['$defs']['SystemFinding']
+chk('detector_ref' in sf['required'], "SystemFinding pins the snapshot that owns the detector state")
+chk('material_revision' in sf['required'], "material_revision is required, so escalation cannot be deduped away")
+chk('public_id' in sf['required'], "SystemFinding carries an opaque public_id")
+proj = d['$defs']['SafeProjection']['properties']['findings']['items']
+chk('public_id' in proj['required'] and 'finding_id' not in proj.get('properties', {}),
+    "SafeProjection exposes only the opaque id - the raw finding_id can embed an account or magic")
+ma = d['$defs']['MagicAllocation']
+legacy = [a for a in ma['allOf'] if a.get('if', {}).get('properties', {}).get('scope', {}).get('const') == 'LEGACY_ACCOUNT_SCOPED']
+chk(bool(legacy) and 'legacy_accounts' in legacy[0]['then']['required'],
+    "a legacy magic exception must name its accounts and is a closed imported set")
 rj = d['$defs']['RunJournal']['properties']
 chk(rj['attempts']['type'] == 'array', "RunJournal keeps an ARRAY of attempts (rev1 had one mutable state)")
 ek = set(d['$defs']['ExecutionKey']['required'])

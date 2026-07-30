@@ -44,7 +44,8 @@ mechanical, and make every claim the system displays traceable to the one file t
 
 1. **It does not create a second source of truth for anything.** Not for orders, verdicts, deployments,
    parameters, or totals. Where a fact has an owner, the Control Center *projects* it. Where a fact has
-   no owner today (there are eleven — §1.3), this design names exactly one new owner and says who writes it.
+   no owner today — **two unambiguously, three partly (§1.3)** — this design names exactly one new owner
+   and says who writes it. A fact that already has an owner is carried only as a pinned `OwnerRef`.
 2. **It does not let automation reach a verdict.** Automation runs to `EVIDENCE_COMPLETE` and stops
    (Grill decision 20, `PROJECT_STATE` §3 2026-07-19). Mechanical gates and next-actions are computed;
    the verdict and the money decision stay with the user and the Claude seat.
@@ -171,17 +172,21 @@ Three consequences, stated so the audit can attack them:
 
 ### 1.5 Extension of `§20.7` (not a fork)
 
-| New artifact | Canonical owner + write path | Generated/reference rule |
+| New artifact | Canonical owner + write path | What it may hold, and what it must reference |
 |---|---|---|
-| Hypothesis registry | `factory/hypotheses.csv`, single writer = Claude/user | Control Center renders; wrapper generator reads; neither writes back |
-| Coverage cells | `factory/coverage.csv`, state written by the runner, `NOT_APPLICABLE` + reason written by Claude only | the heatmap and `MASTER_BACKLOG` §2 are generated from it |
-| Run/Attempt manifests | `factory/runs/`, written only by the scheduler, append-only per attempt | evidence references resolve into the existing event log |
-| Candidate manifests | `factory/candidates/`, written once at verdict, immutable thereafter | a change = a new candidate id, never an edit |
-| Work Receipts | `ops/receipts/`, append-only events, single-writer projection | handoff view is generated; taskboard stays authoritative for Order state |
-| Findings / Ideas | `ops/findings.csv`, `ops/ideas.csv` | dashboard and Telegram read the same IDs |
+| Hypothesis registry | `factory/hypotheses.jsonl`, single writer = Claude/user | machine-read fields only. **Causal claim, falsifier and acceptance stay in the taskboard pre-registration** and are reached via `preregistration_ref` |
+| Parameter bindings | `factory/parameter_bindings.jsonl`, writer = Claude | role/surface/locked value **per hypothesis revision**; permanent semantics stay in `docs/PARAM_REGISTRY.csv` via `definition_ref` |
+| Coverage cells | `factory/coverage.jsonl`, state by the runner, `NOT_APPLICABLE` + reason by Claude only | metrics are `MetricRef`s with their own lane/fingerprint. **`MASTER_BACKLOG` §2 is regenerated from these — an ownership transfer its owner signs off in S2, not an assertion made here** |
+| Run journal | `factory/runs/<run_id>.jsonl`, scheduler only, **one transition per line** | scheduler recovery state only. The experiment timeline stays in the event log |
+| Candidate manifests | `factory/candidates/`, written once at verdict, immutable | `candidate_digest` over the payload; verdict text stays in the scorecard via `scorecard_ref` |
+| Magic allocations | `factory/magic_allocations.jsonl` | reservation only. **Deployment status stays in `DEPLOYMENTS.csv`** via `deployment_ref` |
+| Work Receipts | `ops/receipts/*.jsonl` — ⚠️ **blocked on the `AGENTS.md` §2 writer change (§11.8)** | for work that already has an `ORDER-*`, title/status/owner/acceptance stay in the taskboard via `order_ref`; the Receipt holds only receipt-specific metadata |
+| Findings | `ops/findings.jsonl` | stable identity + lifecycle only; detector state stays in the snapshot via a pinned reference |
+| Ideas | **`INTAKE_QUEUE.md` (existing owner)** — gains stable-ID and URL-dedupe columns | `ops/` holds no idea file. `IdeaRef` is a read projection with `intake_ref` |
 
 The rules of §20.7 carry over unchanged: **occurrence metadata + hashes + owner references only; no
-result or verdict prose in any of them.**
+result or verdict prose in any of them.** Rev 1 broke this by storing mutable copies; the mechanism that
+enforces it now is `OwnerRef` — path + commit + blob + raw sha256 — as the *only* way to carry a foreign fact.
 
 ---
 
@@ -221,7 +226,7 @@ InstrumentProfile         →  AssetClass → SymbolOverride → Broker/LaneMapp
 | CoverageCell | `B14-H01-r2/XAUUSD/H4` | — |
 | TrialFamily | `TF-<cell>-<lever-set>` | a new lever family is searched on that cell |
 | Run | `RUN-<yyyymmdd>-<seq>`; Attempt `RUN-…#<k>` | — |
-| Candidate | `CAND-<sha256[:12]>` over the canonical manifest | any field changes ⇒ different id (immutability by construction) |
+| Candidate | `CAND-<first 12 hex of sha256(canonical payload)>` — **the payload, which does not contain the id**, never the whole manifest | any payload field changes ⇒ different id (immutability by construction) |
 | Deployment | existing `account|magic` key | — |
 | Receipt | `WRK-<yyyymmdd>-<nnn>` (handoff §7) | — |
 | Finding | `FND-<detector>-<stable-key>` | — |
@@ -324,27 +329,48 @@ CHAMPION (deployed) + CHALLENGER (new revision) → both evidenced on the same l
 Full field/type/validation definitions live in the single appendix `_triage/factory_os/schemas.json`
 (one file, `$defs` per entity — deliberately one file to avoid document sprawl). The design-level rules:
 
-### 4.1 Hypothesis registry (`factory/hypotheses.csv`)
-`hypothesis_id · boss_family · revision · title · causal_claim · falsifier · architecture_digest ·
-module_set · coupling_class · safety_profile · status · created_commit · superseded_by`
-- `causal_claim` and `falsifier` are **required non-empty**. A hypothesis you cannot falsify is a slogan.
-- `architecture_digest` = hash of (entry module, exit owner, stack owner, lot owner, recovery, hedge,
-  regime) — **this is what decides whether a change needs a new revision**, mechanically rather than by
-  someone's judgment about whether the claim "really" changed.
+**Storage format:** every new registry is **JSONL, one object per line**, each carrying its `entity`
+discriminator. Not CSV. CSV yields strings for everything and has no round-trip rule for lists or nulls,
+which is a defect the audit found in rev 1 where typed schemas named CSV owners. If hand-editability is
+preferred later, the CSV encoding grammar and round-trip fixtures must be specified first — §11.9.
 
-### 4.2 Parameter Registry extensions (`docs/PARAM_REGISTRY.csv` — extend, do not fork)
-Add: `role` ∈ {`TUNABLE`,`RUNTIME`,`SIZING`,`SAFETY`,`LOCKED`,`INACTIVE`} (decision 28) ·
-`surface` ∈ {`OPERATOR`,`RESEARCH`,`HIDDEN`} · `display_label` · `enum_name` ·
-`optimize_stage` · `safe_range_start/step/stop` · `precedence_owner` · `supported_profiles`.
-- **Verified today: `OptimizeStage` is `UNKNOWN` on 177/184 rows and `SafeRange` on 181/184.** The
-  registry can therefore answer "what does this parameter do" but **not** "which round should optimize it
-  and over what range" — so it cannot yet generate an optimize plan. Filling it is a **discovery task per
-  Boss, Operator surface first** (Codex's sequencing, adopted). The acceptance bar is "zero `UNKNOWN` on
-  the Operator surface of Boss 11–18", not "all 184 rows".
-- `role`/`surface` are what the wrapper generator reads. Existing columns keep their meaning, so
-  `param_registry_check.ps1` (CLEAN today: 170 identifiers / 184 rows) keeps working through the change.
+### 4.1 Hypothesis registry (`factory/hypotheses.jsonl`)
+`entity · hypothesis_id · boss_family · revision · revision_id · architecture_digest · module_set ·
+coupling_class · experimental · engine_edge · status · preregistration_ref · superseded_by`
+- **The causal claim, falsifier and acceptance criteria are NOT stored here.** They are owned by the
+  taskboard pre-registration and reached through `preregistration_ref` (an `OwnerRef` pinned at
+  commit + blob + sha256). Rev 1 copied them, which is what the anti-drift rule forbids. A hypothesis
+  still cannot be `REGISTERED` without a falsifier — that is checked *at the owner*, not by duplicating it.
+- `architecture_digest` = hash of (entry, exit owner, stack owner, lot owner, recovery, hedge, regime) —
+  this is what decides mechanically whether a change needs a new revision.
+- `module_set` is a list of `{token, module_version, stability}`. **`stability` is what stops
+  EXPERIMENTAL evidence reaching a promotion path**, so it is per module, not per hypothesis.
 
-### 4.3 Test Universe (`factory/universe.yaml`) and Instrument Profile
+### 4.2 Parameter semantics vs parameter binding — **two files, one resolver**
+Rev 1 put `role` on the global parameter definition. That is wrong: locked-ness is **per hypothesis** —
+the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and marking it globally would make
+`optimize_guard` refuse it on every Boss.
+
+| What | Where | Contents |
+|---|---|---|
+| **permanent semantics** | `docs/PARAM_REGISTRY.csv` (extend, do not fork) | owner · unit_true · context · active_when · coupled_with · causal_question · classification · `display_label` · `enum_name` · `precedence_owner` |
+| **per-hypothesis binding** | `factory/parameter_bindings.jsonl` | `hypothesis_revision` + `parameter` + `role` + `surface` + `locked_value` + `optimize_stage` + `safe_range` + `definition_ref` |
+
+- **The wrapper generator and `optimize_guard` must read one resolver.** If they read different tables
+  they will disagree the moment a binding changes, which is the class of defect the repaired guard came
+  from.
+- `unit_true` exists because the chassis currently holds **two meanings of "pip" at once**:
+  `Stack_PipSize()` implements true pips (10× point on 3/5-digit symbols) while `ExitManager` multiplies
+  `_21_TP_Pip`/`_31_SL_Pip` straight by `_Point`. The registry records what the **code** does, not what
+  the name claims.
+- **Measured: `OptimizeStage` is `UNKNOWN` on 177/184 rows and `SafeRange` on 181/184.** The registry can
+  say what a parameter does but **not** which round should optimize it or over what range, so it cannot
+  yet generate an optimize plan. Filling it is a discovery task **per Boss, Operator surface first**; the
+  acceptance bar is zero `UNKNOWN` on the Operator surface of Boss 11–18, not all 184 rows.
+- Existing columns keep their meaning so `param_registry_check.ps1` (CLEAN: 170 identifiers / 184 rows)
+  keeps working across the change.
+
+### 4.3 Test Universe (`factory/universe.jsonl`) and Instrument Profile
 - Universe is **versioned** (decision 25); a Candidate records which universe version it was searched in.
 - `LogicalSymbol` is separate from the broker string (decision 26). Real cases already in the repo:
   `DE40` traded as `GER40`; `USDJPYm`/`EURUSDm` suffixed symbols on two accounts.
@@ -352,35 +378,61 @@ Add: `role` ∈ {`TUNABLE`,`RUNTIME`,`SIZING`,`SAFETY`,`LOCKED`,`INACTIVE`} (dec
   **AssetClass → SymbolOverride → Broker/LaneMapping** (decision 27), classes
   `FX_MAJOR · FX_JPY · GOLD · SILVER · CRYPTO · INDEX · ENERGY`.
 - A profile carries **no signal optimization** — that separation is what makes profile reuse legitimate.
+- A profile is pinned by **`content_hash` + `profile_version`, never by its mutable string id**, so that
+  editing values under an unchanged id cannot leave a Candidate looking valid.
 
-### 4.4 Coverage cells (`factory/coverage.csv`)
-`cell_id · hypothesis_revision · logical_symbol · tf · universe_version · state · baseline_run_id ·
-probe_run_id · best_pf_main · best_pf_bwd · trades_main · trades_bwd · dd_main · trial_count ·
-lane · data_fingerprint · not_applicable_reason · last_updated_commit`
-- `trades_*` and `dd_*` sit **next to** every PF by construction, because of the finding recorded in
-  `CLAUDE.md` (memory `bar-cleared-by-non-participation`): the two hosts that cleared BWD did so on
-  52 and 62 trades at under 2% drawdown, while every host that failed took 343–473. A schema that lets
-  you print a PF without its participation is a schema that invites that mistake again.
+### 4.4 Coverage cells (`factory/coverage.jsonl`)
+`entity · cell_id · hypothesis_revision · logical_symbol · tf · universe_version · state · metrics[] ·
+trial_count · boundary_hit · not_applicable_reason · backlog_ref`
+- **There is no flat `lane` or `data_fingerprint` on the cell, and no bare `best_pf_main`/`best_pf_bwd`.**
+  Every measurement is a `MetricRef` carrying **its own** `window · pf · trades · dd_pct · run_id · lane ·
+  data_fingerprint · model`. Rev 1 put one lane beside MAIN and BWD together — impossible, since the
+  fingerprint includes the window, and it would have let a MAIN from lane 5c and a BWD from lane 1 render
+  as a same-lane pair.
+- A PF is **unrepresentable without its trade count and drawdown**, by construction: the two hosts that
+  cleared BWD did so on 52 and 62 trades at under 2% drawdown while every host that failed took 343–473
+  (memory `bar-cleared-by-non-participation`).
+- `MASTER_BACKLOG.md` §2 owns the coverage matrix today. These cells become the machine source and §2 is
+  **regenerated** from them — but that is an **ownership transfer that its owner must sign off in the S2
+  migration table**, not something this file may assert unilaterally.
 
-### 4.5 Job manifest, evidence manifest, candidate manifest
-- Job manifest: `run_id · attempt · cell_id · lane · terminal_path · data_dir · symbol · tf · from · to ·
-  model · set_hash · ini_hash · ex5_hash · leverage · lease_id · state · started_at · finished_at ·
-  exit_code · report_path · report_fresh_proof · data_fingerprint`.
+### 4.5 Run journal, evidence, candidate manifest
+- **Run journal** (`factory/runs/<run_id>.jsonl`, one transition per line, append-only): `run_id ·
+  cell_id · execution_key · attempts[]`. Each attempt records `transition · at · lease{lease_id, owner,
+  pid, expires_at} · launched_at · exit_code · failure_class · report_fresh_proof · event_id`.
+- **`ExecutionKey` is the complete simulator identity** and every field is required: `expert · symbol ·
+  tf · from_date · to_date · model · deposit · currency · leverage · set_hash · ini_hash · ex5_hash ·
+  effective_config_hash · data_fingerprint · lane`. Rev 1 omitted deposit, currency and leverage, so a
+  10,000/1:100 run and a 100,000/1:200 run had identical keys and the scheduler would have served the
+  wrong cached evidence.
+- `failure_class` ∈ `NONE · TESTER_ERROR · TERMINAL_ERROR · TIMEOUT · LEASE_LOST · KILLED ·
+  CONFIG_REJECTED`. **Only `TESTER_ERROR`/`TERMINAL_ERROR` permit re-running an identical key.**
 - **Evidence is registered through the existing event-log utility** (`RegisterEvidence`,
-  `evd_sha256_<raw sha256>`, committed Git artifacts only). No parallel evidence store is invented.
-  The known rough edges are inherited and must be designed around, not rediscovered: `.ex5` binaries are
-  gitignored and need `git add -f`; the evidence path pattern **forbids parentheses and spaces**, which
-  the repo's `(EXP)_Name` convention violates; tick history has no committable artifact so `data` uses a
-  committed **provenance descriptor** instead (`EVENT_LOG_ADOPTION.md` §6).
-- Candidate manifest is the canonical-order JSON whose sha256 **is** the candidate id.
+  `evd_sha256_<raw sha256>`, committed Git artifacts only) into the **existing**
+  `docs/memory_control/experiment_events/evidence-manifest.jsonl`. No parallel evidence store exists.
+  Inherited constraints: `.ex5` binaries are gitignored and need `git add -f`; the path pattern forbids
+  parentheses and spaces, which the repo's `(EXP)_Name` convention violates; tick history has no
+  committable artifact so `data` uses a committed **provenance descriptor** (`EVENT_LOG_ADOPTION.md` §6).
+- **Candidate identity:** `candidate_digest` = sha256 over the **canonical serialization of `payload`**,
+  and `candidate_id` = `CAND-<first 12 hex of the digest>`. The payload **does not contain the id** — rev 1
+  required the id inside the object whose hash it was defined to be, which has no normal construction and
+  would have led to the check being disabled. The validator recomputes the digest on every read.
+  *Canonical serialization (key order, number formatting, unicode) is still undefined and is owed —
+  two serializers that disagree produce two digests for one candidate.*
 
-### 4.6 Magic allocator (`factory/magic_allocations.csv`)
-`magic · allocated_to(candidate_id) · account · status · allocated_at · released_never`
-- Globally unique across EA LAB, allocated automatically (decision 56), **never reused** even after a
-  deployment ends — a reused magic silently re-attributes historical deals.
-- Reserved ranges per Boss family so a magic tells you its family on sight.
-- `check_state.ps1` already blocks duplicate `account|magic`; the allocator moves that from *detection
-  after the fact* to *prevention*, and the existing check stays as the backstop.
+### 4.6 Magic allocation (`factory/magic_allocations.jsonl`)
+`entity · magic · scope · legacy_exception · legacy_accounts[] · allocated_to · deployment_ref · status ·
+allocated_at_commit`
+- **Scope = GLOBAL for every new allocation** (user decision 2026-07-30, Grill decision 56). Never reused
+  once `RETIRED` — a reused magic silently re-attributes historical deals.
+- **Deployment status is not stored here.** `DEPLOYMENTS.csv` owns it; this row references it.
+- **Legacy exceptions are a closed set, not a category.** The three real collisions — `990103`, `991001`,
+  `991002`, each on two accounts, `991001` on real money — are imported once as
+  `LEGACY_ACCOUNT_SCOPED`, frozen to their judge dates, never renumbered as a side effect. **After the
+  import cutover, minting a new legacy exception is refused.**
+- ⚠️ `check_state.ps1` enforces `account|magic` today and that invariant is still true of the running
+  fleet. It stays the backstop, and **`PROJECT_STATE` §3's invariant must be amended by the user before
+  S10 is built** (§11).
 
 ### 4.7 Attribution key
 `Deployment ID + Account + Magic + Symbol + Candidate/Variant identity` (decision 57). The current key is
@@ -398,7 +450,7 @@ hypothesis token and a compile-time allowlist. This is the single largest reuse 
 
 ### 5.2 Generated artifact
 ```mql5
-//  GENERATED - do not edit. Source: factory/hypotheses.csv B14-H01-r2 @ <commit>
+//  GENERATED - do not edit. Source: factory/hypotheses.jsonl B14-H01-r2 @ <commit>
 #define LAB_ENTRY_14
 #define LAB_ENTRY_TAG "14_GridLog"
 #define LAB_HYP  "B14-H01-r2"
@@ -631,8 +683,17 @@ Direct Telegram Bot API, **OpenClaw out of the alert path** (hibernate/upgrade/g
 too uncertain to carry alerts). Two human-facing roles on **one** event system with severity routing:
 the existing Trade emergency bot (real-money/DD/critical only) and a new `EA LAB Control Room` bot
 (Morning Brief, decisions/blockers, monitor health, Idea intake).
-- Transition-based, deduplicated by stable finding id + state: one alert, then silence until state
-  changes, one recovery message.
+- Transition-based, deduplicated on **`finding_id` + `state` + `severity` + `material_revision`** — not on
+  id and state alone. Rev 1 deduped on the pair, which **swallows an escalation**: a finding that goes from
+  `WARN` to `REAL_MONEY` while its state stays `OPEN` would have been suppressed as a duplicate.
+- **Delivery is receipted per channel.** A delivery ledger records `(event, channel, receipt)`, so "was
+  this actually delivered" is answerable and a replay after an outage does not re-alert what already
+  landed. Without it, dedupe is a claim about sending, not about arriving.
+- `OPEN → HEALTHY_1_OF_2 → OPEN` must **not** emit a recovery message — an intermediate healthy check is
+  not a recovery, and treating it as one produces exactly the flapping spam the two-check rule exists to
+  stop. `FLAPPING` gets a **bounded reminder** rather than permanent silence, so a state that never
+  changes cannot go unreported forever.
+- One alert, then silence until the dedupe key changes; one recovery message when genuinely healthy.
 - Workstation offline (heartbeat > 45 min) renders neutral `WORKSTATION OFFLINE / UNKNOWN` with last-sync
   time. **Never guess** hibernate vs crash vs network. Never nag about a known offline state.
 - Telegram and Dashboard read **the same snapshot and the same event ids**, or they will drift.
@@ -687,8 +748,16 @@ Universe: `XAUUSD · EURUSD · USDJPY · BTCUSD` × `H1 · H4` = 8 cells × 2 hy
   windows (MAIN 2023.01–2025.12, BWD 2020–2022) and must not borrow the cage's.
 
 ### 8.4 Parity cases (all must pass before any cell's evidence counts)
-1. Wrapper vs parent, compiled defaults, XAUUSD H1 — identical trade list.
-2. Wrapper vs parent, pilot `.set`, XAUUSD H4 — identical trade list.
+**Every case below is judged on all seven points of §5.5** — init result, `[CFG]` fingerprint, full order
+request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects,
+errors — not on the trade list alone.
+1. Wrapper vs parent, compiled defaults, XAUUSD H1.
+2. Wrapper vs parent, pilot `.set`, XAUUSD H4.
+2b. **Must-trade case** — a config that provably opens trades, so a run where both sides open nothing
+   cannot be mistaken for agreement.
+2c. **Deliberate-refusal case** — `_42_RiskPct` paired with an `SLMode` that yields no distance, which
+   `MM-SAFETY-001` fails at `OnInit`. Both sides must refuse, for the same reason, proving parity can
+   tell *refused* from *silent*.
 3. Locked parameter provably absent from the wrapper's Inputs page **and** its value provably applied.
 4. A locked parameter's value changed in the registry ⇒ regenerate ⇒ behaviour changes ⇒ **parity vs the
    parent configured the same way still passes** (proves lock ≠ ignore).
@@ -702,9 +771,12 @@ adjacent architecture → symbol transfer → alternate profile/TF), ≥4 lever 
 last-optimize-before-verdict, then a human verdict. Boundary hits expand the grid instead of concluding.
 
 ### 8.6 Pilot acceptance checklist (the pass/fail for the whole Stage-4 pilot)
-- [ ] `factory/hypotheses.csv` holds B14-H01/H02 with causal claim **and** falsifier
+- [ ] `factory/hypotheses.jsonl` holds B14-H01/H02, each with a `preregistration_ref` resolving to a
+      taskboard order that carries the causal claim **and** the falsifier — the registry must not copy them
 - [ ] wrappers generate from the registry, contain zero logic, and regenerate byte-identically
-- [ ] all 5 parity cases pass on one lane, with the lane named in the output
+- [ ] **all parity cases in §8.4 pass on all seven points of §5.5**, on one lane, lane named in the output
+- [ ] the must-trade case actually traded, and the deliberate-refusal case actually refused on both sides
+      — a parity run where nothing traded and nothing refused is **not** a pass
 - [ ] Operator surface of the wrapper ≤ 40 inputs, **zero inert visible inputs**, zero numeric pseudo-enums
 - [ ] `optimize_guard` ALLOWs every intended sweep dimension and REFUSEs every safety/locked one — with
       the guard **observed refusing at least one real case** (a guard never seen firing is `UNTESTED`)
@@ -725,15 +797,23 @@ last-optimize-before-verdict, then a human verdict. Boundary hits expand the gri
 (decision 69) — 64 deployment rows, 5 judge-capable, real money on `991001`/`990208`. No migration
 touches a chart. **No bulk migration before the pilot passes** (decision 78).
 
-| Stage | Action | Rollback |
-|---|---|---|
-| M0 | Build `factory/` + `ops/` owners empty, with validators; change nothing else | delete the directories |
-| M1 | Import: coverage cells generated from taskboard/scorecard history **as `UNVERIFIED_IMPORT`**, never as evidence | drop the file |
-| M2 | Legacy handoff import → Work Receipts, exact-dedupe, provenance to every original file, originals untouched | delete receipts; `_triage/HANDOFF_*.md` still authoritative |
-| M3 | Control Room shadow mode: new snapshot built alongside the old, totals compared, **user-facing URL unchanged** | stop building it |
-| M4 | Switch the user-facing URL only after the totals agree and the acceptance scenarios pass | repoint to the old page |
-| M5 | Pilot only: Boss_14 wrappers generated; parent Boss untouched and still compiling | delete `build/`; parent unchanged |
-| M6 | Standalone EAs with proven edge ported one at a time as Boss hypotheses + parity (decision 70) | keep the standalone; it was never removed |
+Two rules govern the whole table, because rev 1's rollbacks did not actually restore anything:
+**(a) shadow state is never canonical state** — everything imported stays in a shadow namespace that is
+dual-read against its owner until an explicit **cutover gate**; **(b) after cutover, rollback is a reverse
+projection with a retention plan, never a delete.** A delete is only a valid rollback while nothing has
+been written that exists solely in the new system.
+
+| Stage | Action | Rollback | Cutover gate |
+|---|---|---|---|
+| M0 | Build `factory/` + `ops/` owners empty, with validators; change nothing else | delete the directories — valid, nothing is authoritative yet | — |
+| M1 | Import coverage cells from taskboard/scorecard history as **`UNVERIFIED_IMPORT`** (a real state in the enum), never as evidence | drop the file — valid, `MASTER_BACKLOG` §2 is still the owner | §2 owner signs off before cells become the source |
+| M2 | Legacy handoff import → shadow Receipts, exact-dedupe, provenance to every original, originals untouched | **before cutover:** drop. **After:** export every Receipt that has no `HANDOFF_*.md` ancestor, then drop — those are commitments that exist nowhere else, and deleting them destroys work rather than reverting a change | totals reconcile against the handoff files, and the `AGENTS.md` §2 writer change is ratified (§11.8) |
+| M3 | Control Room shadow: new snapshot built beside the old, totals compared, **user-facing URL unchanged** | stop building it — valid, nothing user-facing changed | totals agree for N consecutive builds |
+| M4 | Switch the user-facing URL | repoint to the old page **only while the old page's sources are still being maintained** — otherwise repointing hides the new state instead of restoring the old, and looks like recovery. Keeping the old generator alive is therefore a *condition of this gate*, not an afterthought | all 30 acceptance scenarios pass, incl. the `SafeProjection` leak fixtures |
+| M4b | **Event/notification delivery** goes live | replay from the delivery ledger; suppress re-delivery of events already receipted | one alert, one recovery, no duplicates, proven on fixtures |
+| M5 | Pilot only: Boss_14 wrappers generated; parent Boss untouched and still compiling | delete `build/`; parent unchanged | parity green on all seven points |
+| M6 | Standalone EAs with proven edge ported one at a time as Boss hypotheses + parity (decision 70) | keep the standalone; it was never removed | per-EA parity |
+| M7 | **Artifact store restore drill** — restore from backup into a scratch location and verify hashes | n/a (this *is* the rollback test) | drill passes before any candidate binary is retained only in the store |
 
 **Artifact store:** content-addressed, outside git for blobs, with the manifest and hashes **in** git
 (decision 66/67). Backup and restore must be **drilled**, not assumed — an untested backup is a story
@@ -743,19 +823,11 @@ about a backup. Retention: candidate binary + `.set` + evidence kept permanently
 last-known-good. A failed build **retains last-known-good and labels it `STALE / BUILD FAILED`**. A
 partially generated "current" page is never published.
 
-> 🔴 **Corrected 2026-07-30 — several rollbacks above did not actually restore the prior state.**
-> - **M1** wrote state `UNVERIFIED_IMPORT`, which was not in the CoverageCell enum, so the very first
->   import would have failed validation. Added to the enum in schemas rev 2.
-> - **M2's "delete receipts" is not a rollback once the system has been used.** After a week, receipts
->   hold commitments that were never in any `HANDOFF_*.md`; deleting them destroys work rather than
->   reverting a change. **Shadow import must stay separate from canonical state, with dual-read and
->   reconciliation until an explicit cutover gate**, and rollback after cutover means a **reverse
->   projection/export**, not a delete.
-> - **M4's "repoint to the old page" leaves the old page ignorant of the new owners** — it looks like a
->   recovery while Factory state is simply invisible. Repointing is only valid while the old page's
->   sources are still being maintained, which must be an explicit condition of the cutover gate.
-> - Neither event delivery nor the artifact store had any rollback at all. Both need one, and the
->   artifact store's **restore must be drilled** — an untested backup is a story about a backup.
+<sub>*(The rollback column above was rewritten on 2026-07-30. Rev 1 said "delete the directory", "delete the
+receipts" and "repoint the old page" for stages where none of those restore anything once the system has
+been used, and had no rollback at all for event delivery or the artifact store. The audit called the first
+attempt at fixing this `MOVED-evasive` — because I had left the wrong table standing and added a note
+underneath saying it was wrong. The table is the contract; the note was not.)*</sub>
 
 ---
 
@@ -852,20 +924,27 @@ several are the user's alone because they change a bar, change a governance rule
 
 ## 12. Summary answers the master file asks for
 
-**What is reused:** the entire Boss thin-wrapper pattern (a Boss `.mq5` is already 13 lines), the parameter
+**What is reused:** the entire Boss thin-wrapper pattern (a Boss `.mq5` is already 12 lines), the parameter
 registry and its `param_registry_check` cage, the linkage/override table, the build-inert audit, the
 repaired `optimize_guard`, `tpl_regression` with its now-explicit lane pin, `mt5_run`/`mt5_optimize`, the
 report-freshness guard, the experiment event log and its evidence registry, `control_room_snapshot.json`
 as the projection ancestor, `DEPLOYMENTS.csv`/`ACCOUNTS.csv`/`ATTESTATION_MAP.csv`, `check_state.ps1`,
 the fast-cage tier, the session ledger as a lane-lease source, and `PIPELINE.md` as stage routing.
 
-**What must be built:** the eleven unowned facts of §1.3, the wrapper generator and parity harness, the
-recoverable scheduler, the preset compiler, the effective-config fingerprint, the Control Center shell
-and its two domains, and the direct Telegram path.
+**What must be built:** the **two genuinely unowned facts** of §1.3 (versioned Test Universe, scheduler
+recovery checkpoint) plus the **three partly-new** ones (candidate bundle identity, finding lifecycle,
+chat-commitment receipts); the `OwnerRef` discipline and the ownership migration table; the wrapper
+generator and the seven-point parity harness; the recoverable scheduler; the preset compiler; the
+effective-config fingerprint; the Control Center shell and its two domains; the `SafeProjection` DTO; and
+the direct Telegram path with a per-channel delivery ledger. **The other six "new facts" of rev 1 turned
+out to have owners and are references, not builds.**
 
-**Source-of-truth map:** §1.1 (kept), §1.2 (retired/demoted), §1.3 (new), §1.5 (the §20.7 extension).
+**Source-of-truth map:** §1.1 (kept), §1.2 (retired/demoted), §1.3 (what is actually unowned), §1.5 (the
+§20.7 extension).
 
-**Unresolved implementation questions:** §11 — six, three of them user-only.
+**Unresolved implementation questions:** §11 — **nine**, four of them user-only (trial ladder,
+participation floor, ~10k round budget, `AGENTS.md` §2 permission), plus the magic-invariant amendment
+recorded as decided-but-blocking.
 
 **Pilot acceptance checklist:** §8.6.
 
@@ -954,6 +1033,51 @@ of them held. Nothing was accepted on the auditor's authority alone.
 **Not adopted:** the audit's recommendation to cut scope to three axes and defer the rest. The user chose
 on 2026-07-30 to fix all findings and keep the full slice set. Its over-engineering list is preserved in
 the audit file and should be revisited if the pilot runs long.
+
+---
+
+## 15. Second audit response (re-audit 2026-07-30, verdict NO-GO again)
+
+The re-audit graded all 22: **3 CLOSED · 6 MOVED-honest · 1 MOVED-evasive · 5 RESTATED · 7 REGRESSED.**
+Every one of its factual claims about this document was re-measured here before being accepted.
+
+**The seven REGRESSED findings shared one cause, and it was the method, not the content:
+I fixed the appendix and left this document stating the old contract, then added a note underneath
+saying the old contract was wrong.** So schema and design disagreed — which is the exact failure this
+design exists to prevent, reproduced inside the design itself. The note is not the contract; the table is.
+Rev 3 rewrites the contracts in place and deletes the notes:
+
+| What was regressed | Rev 3 |
+|---|---|
+| Candidate id defined two ways (§2 vs schema) | §2 now says the digest is over the **payload**, which does not contain the id |
+| Job manifest missing deposit/currency/effective-config | §4.5 replaced by the full `ExecutionKey` contract |
+| `role` still on the global registry in §4.2 | §4.2 rewritten as two files + one resolver |
+| CoverageCell still flat lane/fingerprint in §4.4 | §4.4 rewritten around `MetricRef` |
+| §8.6 pilot checklist still 5 trade-list cases | §8.4/§8.6 now judge all seven parity points, and require the must-trade and deliberate-refusal cases to have actually fired |
+| CSV/YAML in §1.5, §4, wrapper comment, checklist | JSONL everywhere; storage stated once at the head of §4 |
+| Rollback table still said delete/drop/repoint | §9's table itself rewritten, with cutover gates; the correction note is gone |
+
+**New P0 it found, and it is a good one.** `SnapshotMeta` was declared the schema of
+`control_room_snapshot.json` while describing a *flat* root — but the real document is
+`{meta:{…}, system_health:[…], …}` with nine top-level keys. A validator built to it would have passed
+a shape that never exists and reported the pipeline schema-clean **without ever validating the Control
+Room snapshot**. Fixed: `ControlRoomSnapshotV5` is the document; `SnapshotMeta` is its `meta` property.
+
+**Ownership P0 still open in rev 2, now closed in schema:** a `WorkReceipt` carrying `order_ref` may no
+longer also hold title/owner/status/acceptance; `SystemFinding` must pin the snapshot that owns detector
+state; legacy magic exceptions must name their accounts and are a closed imported set.
+
+**Privacy leak it caught two fields from where I had been careful:** `SafeProjection` masked account
+numbers and then emitted the raw `finding_id`, whose stable key can be `FND-sensor-159503454`. Findings
+now carry an opaque `public_id`, and it is the only id the projection may serialize.
+
+**Still owed after rev 3** — stated plainly rather than marked fixed:
+canonical JSON serialization for the candidate digest is undefined (two serializers ⇒ two digests) ·
+`all_clear`'s builder-input vs persisted-output boundary is not specified · the delivery ledger is
+designed but unbuilt · **no real JSON Schema validator has run** — `check_schema_structure.py` is a
+linter and says so, and this environment has no draft-2020-12 implementation available.
+
+**§11 now holds nine open decisions, not six**, which the re-audit was right to flag as under-reported.
 
 **Still owed before this design is safe to break into orders:** items 4 and 16 are design-complete but
 code-owed; item 14 needs the user's Decision-log amendment; item 19 needs a number this design refuses to

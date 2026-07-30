@@ -34,7 +34,7 @@
         "InstrumentProfile", "CoverageCell", "RunJournal",
         "EvidenceRef", "CandidateManifest",
         "MagicAllocation", "DeploymentAttestationEvent", "WorkReceipt", "SystemFinding",
-        "IdeaRef", "SnapshotMeta", "SafeProjection"
+        "IdeaRef", "ControlRoomSnapshotV5", "SafeProjection"
       ]
     }
   },
@@ -54,7 +54,7 @@
     { "properties": { "entity": { "const": "WorkReceipt" } },                "$ref": "#/$defs/WorkReceipt" },
     { "properties": { "entity": { "const": "SystemFinding" } },              "$ref": "#/$defs/SystemFinding" },
     { "properties": { "entity": { "const": "IdeaRef" } },                    "$ref": "#/$defs/IdeaRef" },
-    { "properties": { "entity": { "const": "SnapshotMeta" } },               "$ref": "#/$defs/SnapshotMeta" },
+    { "properties": { "entity": { "const": "ControlRoomSnapshotV5" } },      "$ref": "#/$defs/ControlRoomSnapshotV5" },
     { "properties": { "entity": { "const": "SafeProjection" } },             "$ref": "#/$defs/SafeProjection" }
   ],
 
@@ -391,8 +391,23 @@
         "allocated_to": { "type": ["string", "null"], "description": "candidate_id. Deployment status is NOT copied here - DEPLOYMENTS.csv owns it." },
         "deployment_ref": { "type": ["object", "null"], "$ref": "#/$defs/OwnerRef" },
         "status": { "enum": ["RESERVED", "ASSIGNED", "RETIRED"], "description": "RETIRED is never re-issued - a reused magic silently re-attributes historical deals" },
-        "allocated_at_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
-      }
+        "allocated_at_commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "imported_in_cutover": { "type": "boolean", "description": "RE-AUDIT P1: legacy exceptions are a CLOSED SET imported once, not an open category. Rev 2 let an unlimited number of new LEGACY_ACCOUNT_SCOPED rows be minted, which would have quietly reintroduced account-scoped magics forever. The allocator refuses a legacy row with imported_in_cutover=false after the cutover commit." }
+      },
+      "allOf": [
+        { "if": { "properties": { "scope": { "const": "LEGACY_ACCOUNT_SCOPED" } }, "required": ["scope"] },
+          "then": {
+            "required": ["legacy_exception", "legacy_accounts", "imported_in_cutover"],
+            "properties": {
+              "legacy_exception": { "const": true },
+              "legacy_accounts": { "type": "array", "minItems": 2 }
+            },
+            "description": "scope and the exception flags must agree, and a legacy exception exists precisely because the magic is on more than one account"
+          },
+          "else": {
+            "properties": { "legacy_exception": { "const": false } }
+          } }
+      ]
     },
 
     "DeploymentAttestationEvent": {
@@ -429,7 +444,7 @@
       "x-writer": "PENDING GOVERNANCE CHANGE - see description",
       "x-enforced-by": "receipt_validator: only the user may write CANCELLED_BY_USER",
       "description": "Audit P1 (governance): rev 1 declared the writer as 'any agent', but AGENTS.md section 2 permits an agent to write only its own taskboard order row plus new reports/CSV/sets per order. Opening a new writer surface REQUIRES the user to ratify an AGENTS.md permission-table change FIRST. Audit P0-2 also applies: for work that already has an ORDER, title/status/owner/acceptance are the taskboard's - this entity references them. A Receipt is genuinely new ONLY for a chat commitment that is not yet an Order.",
-      "required": ["entity", "receipt_id", "title", "source_agent", "requested_at", "owner", "status"],
+      "required": ["entity", "receipt_id", "source_agent", "requested_at"],
       "unevaluatedProperties": false,
       "properties": {
         "entity": { "const": "WorkReceipt" },
@@ -452,6 +467,15 @@
         "cancelled_by_user_ref": { "type": ["string", "null"] }
       },
       "allOf": [
+        { "if": { "required": ["order_ref"] },
+          "then": {
+            "not": { "anyOf": [ { "required": ["title"] }, { "required": ["owner"] }, { "required": ["status"] }, { "required": ["acceptance"] } ] },
+            "description": "RE-AUDIT P0: a Receipt that references an ORDER may NOT also carry title/owner/status/acceptance. Those are taskboard facts, and holding a second mutable copy is the ownership fork this design exists to prevent - Order REVIEWED while Receipt still IN_PROGRESS. Read them through order_ref."
+          },
+          "else": {
+            "required": ["title", "owner", "status"],
+            "description": "a Receipt with no Order is the only case where it owns these - a chat commitment not yet formalised"
+          } },
         { "if": { "properties": { "status": { "const": "WAITING" } }, "required": ["status"] },
           "then": { "required": ["waiting_for", "wake_condition"],
                     "properties": { "waiting_for": { "type": "string" }, "wake_condition": { "type": "string" } },
@@ -468,15 +492,17 @@
       "x-owner-file": "ops/findings.jsonl",
       "x-enforced-by": "finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close",
       "description": "New ONLY for the stable lifecycle and identity. The detector state itself is owned by the snapshot; this references it.",
-      "required": ["entity", "finding_id", "detector", "class", "first_seen", "last_seen", "state", "severity"],
+      "required": ["entity", "finding_id", "public_id", "detector", "detector_ref", "class", "first_seen", "last_seen", "state", "severity", "material_revision"],
       "unevaluatedProperties": false,
       "properties": {
         "entity": { "const": "SystemFinding" },
-        "finding_id": { "type": "string", "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$" },
+        "finding_id": { "type": "string", "pattern": "^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$", "description": "INTERNAL ONLY. Its stable key may legitimately contain an account number, a magic, or a strategy name (e.g. FND-sensor-159503454), so it MUST NOT be serialized into any online or Telegram surface." },
+        "public_id": { "type": "string", "pattern": "^FP-[0-9a-f]{10}$", "description": "RE-AUDIT P1: opaque projection-safe identifier - the ONLY finding id a SafeProjection may carry. Rev 2 leaked the raw finding_id into the online projection while carefully masking account numbers two fields away." },
+        "detector_ref": { "$ref": "#/$defs/OwnerRef", "description": "RE-AUDIT P0: the snapshot owns detector state. Without a pinned reference this entity becomes a second, drifting copy - snapshot RESOLVED while the finding still reads OPEN." },
         "detector": { "type": "string" },
         "class": { "enum": ["RUNTIME", "GOVERNANCE", "DEPLOYMENT_DRIFT", "AUDIT"] },
         "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"], "description": "part of the alert dedupe key - audit P1: dedupe on (id,state) alone would swallow a warning that escalated to real-money critical while the state stayed OPEN" },
-        "material_revision": { "type": "integer", "minimum": 0, "description": "bumped whenever the payload materially changes; also part of the dedupe key" },
+        "material_revision": { "type": "integer", "minimum": 0, "description": "REQUIRED. Bumped whenever the payload materially changes, and part of the dedupe key alongside severity - dedupe on (id,state) alone swallows a WARN that escalates to REAL_MONEY while the state stays OPEN" },
         "first_seen": { "type": "string" },
         "last_seen": { "type": "string" },
         "state": { "enum": ["OPEN", "HEALTHY_1_OF_2", "RESOLVED", "FLAPPING", "SUPPRESSED_MAINTENANCE"] },
@@ -504,15 +530,34 @@
       }
     },
 
-    "SnapshotMeta": {
+    "ControlRoomSnapshotV5": {
       "type": "object",
       "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
-      "x-enforced-by": "snapshot_validator: all_clear is COMPUTED here and MUST NOT be read from input",
-      "description": "Audit P1: rev 1 let all_clear be a writer-supplied boolean, did not require `fresh`, had no mandatory-source registry, and had no category totals - so a snapshot with a missing mandatory source, or one that simply omitted the source from the array, could report all_clear:true and satisfy the equation with 0=0. Version note: HEAD is ALREADY v4 (the Stage 0B lane bumped it); the Factory domain must therefore land as v5, not v4.",
-      "required": ["entity", "schema", "version", "build_id", "generated_at", "mandatory_sources", "sources", "reconciliation"],
+      "x-enforced-by": "snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input",
+      "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. The existing v3/v4 keys are carried through and additional keys are permitted, because the file's own convention is additive versioning.",
+      "required": ["entity", "meta", "system_health", "summary"],
+      "additionalProperties": true,
+      "properties": {
+        "entity": { "const": "ControlRoomSnapshotV5" },
+        "meta": { "$ref": "#/$defs/SnapshotMeta" },
+        "system_health": { "type": "array", "items": { "type": "object" } },
+        "floating_risk": { "type": "array", "items": { "type": "object" } },
+        "deployments": { "type": "object" },
+        "unknown_magics": { "type": "array" },
+        "attestation": { "type": "array" },
+        "judge_readiness": { "type": "array" },
+        "judge_cohorts": { "type": "object" },
+        "summary": { "type": "object" }
+      }
+    },
+
+    "SnapshotMeta": {
+      "type": "object",
+      "x-owner-file": "the `meta` property of portfolio/control_room_snapshot.json",
+      "description": "The META SUB-OBJECT ONLY - not the whole file. Audit P1 (rev 1): all_clear was a writer-supplied boolean, `fresh` was not required, there was no mandatory-source registry and no category totals, so a snapshot with a missing mandatory source - or one that simply omitted the source from the array - could report all_clear:true and satisfy the equation with 0=0. Version note: HEAD is already v4; the Factory domain lands as v5.",
+      "required": ["schema", "version", "build_id", "generated_at", "mandatory_sources", "sources", "reconciliation"],
       "unevaluatedProperties": false,
       "properties": {
-        "entity": { "const": "SnapshotMeta" },
         "schema": { "const": "ControlRoomSnapshot" },
         "version": { "type": "integer", "minimum": 5, "description": "v5+ for anything carrying the Factory domain; v4 already exists at HEAD" },
         "build_id": { "type": "string" },
@@ -599,10 +644,11 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["finding_id", "severity", "state"],
+            "required": ["public_id", "severity", "state"],
             "unevaluatedProperties": false,
+            "description": "public_id ONLY. The internal finding_id may embed an account, a magic or a strategy name and must never reach this surface.",
             "properties": {
-              "finding_id": { "type": "string" },
+              "public_id": { "type": "string", "pattern": "^FP-[0-9a-f]{10}$" },
               "severity": { "enum": ["INFO", "WARN", "CRITICAL", "REAL_MONEY"] },
               "state": { "type": "string" }
             }
