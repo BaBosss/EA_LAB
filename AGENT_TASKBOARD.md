@@ -103,6 +103,47 @@
 
 ---
 
+## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `OPEN` · ⛔ **blocks `ORDER-610` from closing** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Owner directive 2026-07-31:** *"Option B ให้ Claude เขียนเป็น Order แยกภายหลัง"* — written after the consolidated Codex audit was judged, as instructed.
+
+### The root defect (measured, not argued)
+
+An approval pins the bytes of the file it authorises changing. Executing it moves those bytes. The stale-pin rule then fires on the change it authorised — **and it fires on every historical row**, not just the current one, because `check_s2a_attestation.py::check()` runs A6 inside the loop and only records the winner at `:189`. The log is append-only, so the original row can never acquire an acknowledgement. **⇒ once a pin goes stale, that owner's records are permanently unrepairable.** This is general to every `TRANSFER` row in D1, not specific to Coverage.
+
+### The cost that makes this the owner's call, stated up front
+
+`check_s2a_attestation.py` is **inside its own `bundle_sha256`**. Fixing it changes the digest and **voids both existing attestation lines**, so the owner must re-record their decision against the new bundle. There is no version of this fix that is free. The owner has already stated the underlying decisions twice (approve the transfer · acknowledge the pin), so the re-record is a transcription of an existing decision against new bytes — but it is still their word to give.
+
+### Acceptance
+
+- **D1** A6 honours the log's own stated semantics: **the latest row per `current_owner` is the one judged**. Superseded rows are history, not live claims. Negative fixtures: a superseded row missing an acknowledgement must NOT block · the *current* row missing one must block · a superseded row that was `REFUSED` must still be visible in the printed history.
+- **D2** the record can express *"the pinned bytes changed **into** the state this record approved"* — an `expected_post_state` naming the blob the approved action is expected to produce, **recomputed** and compared. A record whose actual post-state differs from its declared one must be refused. This is what makes the acknowledgement a statement about a **specific** change rather than a blanket exemption.
+- **D3** the **A8 downgrade in `check_coverage_transfer.py` is DELETED**, not kept, once D1+D2 land. A downgrade that exists because a contract cannot express something must not outlive the contract fix. `run_s2a_gate.py`'s advisory branch goes with it, and `ORDER-610`'s A8 must then pass **as originally written** (`exit 0`), with no amendment.
+- **D4** the owner re-records once against the new bundle. **Do not write it for them.** Print the exact template and stop.
+
+### Codex audit findings folded in — each needs a fixture, none is a rewrite
+
+| # | finding | severity |
+|---|---|---|
+| S1 | `read_input()` falls back to the working tree for a path absent from the index ⇒ during the transfer, staging `MASTER_BACKLOG.md` while `coverage.jsonl` was untracked would have approved bytes **absent from the commit** | hard |
+| S2 | A2's "immutable" baseline is **mixed-vintage**: `build_records()` joins the pinned backlog blob with the **working-tree** reconciliation. The inertness probe substitutes a stand-in and never exercises this path | hard |
+| S3 | 🔴 **`normalize()` accepts the required notice inside an HTML comment** — Codex replaced the banner with `<!-- generated … -->`, the rendered notice vanished, and the checker returned **0 problems**. Condition 1 defeated by exactly the mechanism `guard-disarmed-by-prose-reported-as-note` already records. **A known scar, repeated.** | hard |
+| S4 | `_err_matches(err, {})` returns True for every error, and `entity_coverage()` only requires a non-empty list ⇒ **`says=[{}]` earns coverage**. This re-opens the under-specified-`says` hole ORDER-611's own B2 was written to close, and which was dropped when the isolation harness replaced it | hard |
+| S5 | `a4_deterministic()` renders the same in-memory objects twice through the same function — **tautological**. It never invokes the real generator and the perturbation fixture ORDER-610 A4 promised was never written | hard |
+| P2 | the store's structured facts are **not conformance-protected**: `source_coordinates={"file":"WRONG"}`, a root `"outcome":"DEAD"` field, and swapping one `declared_status` for another allowed value all pass. A2 compares only `(cell, source_token)`; A3 is a **blacklist** of key names and should be a closed schema | hard |
+| P3 | the attestation reads working-tree/HEAD while `--explain-attestation` verifies from the **index**, so an unstaged reversion of the transfer still receives the committed-index advisory. Moot once D3 deletes the downgrade | major |
+| P5 | *"every commit revertible in isolation"* in the audit brief is **false** — `git merge-tree` shows `a424e90b` and `1a92ec42` both conflict at `33292571`. Correct the claim rather than the history | minor |
+
+### ห้าม
+
+- ❌ Do not write the owner's re-record. Print the template, stop.
+- ❌ Do not weaken A6 into "acknowledgement optional". D1 narrows **which row** is judged; it must not narrow **what** is demanded of that row.
+- ❌ Do not keep the A8 downgrade "just in case" — D3 is the point of the order.
+- ❌ Do not mark `REVIEWED`.
+
+---
+
 ## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `OPEN` · ⛔ **next frontier; nothing before it is blocking** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Why this is written and not executed.** S4 is the first slice that **migrates a live artifact**: `portfolio/control_room_snapshot.json` is the monitoring sensor, and `make_status.ps1` runs after every commit and produces the HTML the owner reads. A partial migration here leaves two sources of truth for account state — the one thing the design and every audit have been most consistent about refusing. It was left fully specified rather than half-done. **Everything it depends on is green.**
@@ -221,7 +262,18 @@ One commit; `git revert`. The suite is additive — the 35 existing cases are un
 
 ---
 
-## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `BLOCKED(A8 fails as written; the attestation contract cannot express this — ORDER-613)` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### 🔴 2026-07-31 — **`DONE` WITHDRAWN. Codex audit P0 was right and I am not arguing it.**
+> Report: the consolidated audit of `d4e5716c..33292571` (Standards 5 · Spec 6).
+>
+> **A8 as I pre-registered it says `check_s2a_attestation.py` must still exit 0. It exits 1.** I then wrote a downgrade — inside this same order — that converts that failure into an advisory, and marked the order `DONE`. **That is amending my own acceptance to make my own work pass**, which is the defect this repo has the longest scar tissue about. The mechanism can stay so the tier does not go red and nobody reaches for `--no-verify`; **the `DONE` cannot.**
+>
+> **And Option A did not rescue it.** The owner chose Option A, it was recorded correctly (line 3, blobs recomputed from git), and the checker **still exits 1 — complaining about line 2**. Measured cause: the log's header says *"the latest line per `current_owner` wins"* but `check()` runs the stale-pin rule **inside the loop over every row** (`check_s2a_attestation.py:189` records the winner only after the checks). The original approval can never be given an acknowledgement because the log is **append-only**. ⇒ **once a pin goes stale, every historical record for that owner is unrepairable by appending.** Option B is not the thorough option, it is the only one. → **`ORDER-613`**
+>
+> <sub>🔧 **Codex also caught two false counts in my own write-up, both confirmed by re-measuring:** the suite has **14 mutations, not 18** (16 `case()` calls − 2 controls = 3 A1 + 1 A5 + 6 A2 + 4 A3), and the pre-ORDER-611 baseline had **11** entities with a negative, not 12 — my measurement counted `NotAThing`, which is not a `$defs` entity. A wrong number inside a claim about rigour is worse than no number.</sub>
+>
+> **What Codex confirmed and I am NOT withdrawing:** `MASTER_BACKLOG.md` is +4/−0 with all seven rows unchanged · store and reconciliation agree at 7 records / 40 cells / 8 LIVE · all six bundle-bound files unchanged · no live/VPS/EA-source path and no secret added · `check_state.ps1` CLEAN. **The transfer itself is sound. The governance record around it is not.**
 
 > ### ✅ 2026-07-31 — **the transfer is done, in one commit, and the hand table's rows are byte-identical**
 >
