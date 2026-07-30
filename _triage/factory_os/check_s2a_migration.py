@@ -179,7 +179,6 @@ def c4_owner_ref_recomputed(rows, problems):
         if blob_oid != ref['blob_oid']:
             fail(problems, 'C4 %s blob_oid MISMATCH for %s: stated %s, git says %s'
                  % (e, spec, ref['blob_oid'][:12], blob_oid[:12]))
-        rc, _, _ = _git('cat-file', '-e', blob_oid)
         p = subprocess.run(['git', 'cat-file', 'blob', blob_oid], capture_output=True)
         if p.returncode != 0:
             fail(problems, 'C4 %s blob %s cannot be read' % (e, blob_oid[:12]))
@@ -246,6 +245,49 @@ def c7_coverage_edge(rows, problems):
             fail(problems, 'C7 the Coverage edge row has no named signoff_owner')
 
 
+SECTION2_HEADING = '## 2. COVERAGE MATRIX'
+
+
+def parse_section2(path='MASTER_BACKLOG.md'):
+    """Recompute section 2's source rows and their LIVE cells FROM THE FILE.
+
+    /scrutinize round 3 found the asymmetry this closes: C4 recomputes every hash from git, while
+    C8 read `MASTER_BACKLOG.md` not at all -- it only checked that D1's numbers agreed with D1's own
+    mapping. That is exactly the defect Codex audit 6 found in verify_snapshot one directory over
+    (recompute the verdict, trust the evidence), sitting one criterion away from the code that gets
+    it right.
+
+    Cross-checked against the order's own measurement: ORDER-600 states section 2 has 7 EA rows and
+    8 LIVE cells because ST_EA03 carries GBPUSD H1 AND USDCAD H1. This parser independently returns
+    7 and 8. Two derivations agreeing is why the numbers below are trusted; if they had disagreed,
+    one of us would have been wrong and that would have needed finding out first.
+    """
+    lines = io.open(path, encoding='utf-8').read().replace('\r\n', '\n').split('\n')
+    try:
+        start = next(i for i, l in enumerate(lines) if l.startswith(SECTION2_HEADING))
+    except StopIteration:
+        return None
+    out = []
+    for line in lines[start + 1:]:
+        if line.startswith('## '):
+            break
+        if not line.startswith('|'):
+            if out:
+                break
+            continue
+        cells = [c.strip() for c in line.strip().strip('|').split('|')]
+        if not cells or cells[0].lower() == 'ea':
+            continue
+        if set(''.join(cells)) <= set('-: '):
+            continue
+        live_raw = cells[2] if len(cells) > 2 else ''
+        live_raw = live_raw.replace('**', '')
+        live_raw = __import__('re').sub(r'\(.*?\)', '', live_raw)
+        live = [c.strip() for c in live_raw.split('·') if c.strip()]
+        out.append({'source_row': cells[0], 'live_cells': live})
+    return out
+
+
 def c8_coverage_reconciled(problems):
     if not os.path.exists(COVERAGE_PATH):
         fail(problems, 'C8 %s is missing: the two coverage numbers must be REPORTED with a '
@@ -258,11 +300,42 @@ def c8_coverage_reconciled(problems):
             fail(problems, 'C8 %s has no %r' % (COVERAGE_PATH, k))
     if any(k not in cov for k in ('source_rows_consumed', 'cells_emitted', 'mapping')):
         return
-    if cov['source_rows_consumed'] == cov['cells_emitted']:
-        fail(problems, 'C8 source_rows_consumed == cells_emitted == %d. MEASURED 2026-07-30: '
-                       'section 2 has 7 EA rows while the LIVE column alone holds 8 cells, because '
-                       'ST_EA03 carries GBPUSD H1 AND USDCAD H1. Equal numbers mean the rows were '
-                       'counted, not normalised.' % cov['source_rows_consumed'])
+    # RECOMPUTED from section 2, not taken from D1. The previous version asserted only that the two
+    # numbers differ, which is a fragile proxy: it is a claim about today's section-2 content, so it
+    # would fail a correct file the day every EA has exactly one cell. Deriving the real numbers is
+    # both stronger and stable.
+    section2 = parse_section2()
+    if section2 is None:
+        fail(problems, 'C8 could not find %r in MASTER_BACKLOG.md, so nothing was recomputed. That '
+                       'is a tool failure, not a clean check.' % SECTION2_HEADING)
+        return
+    recomputed_rows = len(section2)
+    recomputed_live = sum(len(r['live_cells']) for r in section2)
+    if cov['source_rows_consumed'] != recomputed_rows:
+        fail(problems, 'C8 source_rows_consumed is %r but section 2 actually has %d EA rows -- '
+                       'every source row must be consumed exactly once'
+             % (cov['source_rows_consumed'], recomputed_rows))
+    # cells_emitted may legitimately EXCEED the LIVE count: the order notes the rejected/attempted
+    # column holds many more. It may never be LESS, because the LIVE cells are a subset.
+    if isinstance(cov['cells_emitted'], int) and cov['cells_emitted'] < recomputed_live:
+        fail(problems, 'C8 cells_emitted is %d but the LIVE column alone normalises to %d cells; '
+                       'LIVE cells are a subset of all cells, so this number cannot be smaller'
+             % (cov['cells_emitted'], recomputed_live))
+    # ...and the mapping must actually carry each row's LIVE cells, which is what makes copying one
+    # total into both fields impossible: ST_EA03 forces at least one row to hold two cells.
+    by_row = {}
+    for m in cov['mapping']:
+        by_row.setdefault((m.get('source_row') or '').strip(), []).extend(m.get('cells', []))
+    for r in section2:
+        got = by_row.get(r['source_row'].strip())
+        if got is None:
+            fail(problems, 'C8 the mapping has no entry for section-2 row %r' % r['source_row'])
+            continue
+        labels = {(c.get('cell') if isinstance(c, dict) else c) for c in got}
+        missing = [c for c in r['live_cells'] if c not in labels]
+        if missing:
+            fail(problems, 'C8 the mapping for %r omits its LIVE cell(s) %s'
+                 % (r['source_row'], missing))
     mapped = sum(len(m.get('cells', [])) for m in cov['mapping'])
     if mapped != cov['cells_emitted']:
         fail(problems, 'C8 the mapping accounts for %d cells but cells_emitted is %d'
@@ -273,8 +346,15 @@ def c8_coverage_reconciled(problems):
              % (len(cov['mapping']), cov['source_rows_consumed']))
     for m in cov['mapping']:
         for cell in m.get('cells', []):
+            # A cell may be a bare label OR an object carrying a status. Found by --self-test:
+            # this loop assumed dict and CRASHED on a string, while the LIVE-subset check above
+            # accepted both. A checker that raises AttributeError has not checked anything, and a
+            # traceback is not a verdict.
+            if not isinstance(cell, dict):
+                continue
             if cell.get('status') == 'UNVERIFIED_IMPORT' and not cell.get('source_coordinates'):
-                fail(problems, 'C8 an UNVERIFIED_IMPORT cell carries no source_coordinates')
+                fail(problems, 'C8 an UNVERIFIED_IMPORT cell carries no source_coordinates -- the '
+                               'order requires its source coordinates, not just the label')
 
 
 def c9_reversal_fields(rows, problems):
@@ -383,7 +463,44 @@ def self_test():
           'why counting names was never enough)' % ('OK ' if not c1_fired else 'BAD'))
     if c1_fired:
         bad += 1
-    print('\n  %d criteria checked, %d did not behave as declared' % (len(expected) + 1, bad))
+    # C8 needs its own case: the self-test above never reaches it, because it has no coverage file.
+    # The attack is the one the order names -- copy one total into both fields and map 1:1 -- which
+    # the old internally-consistent check would have accepted from a 7/7 claim.
+    global COVERAGE_PATH
+    section2 = parse_section2()
+    print('\n  recomputed from MASTER_BACKLOG section 2: %d source rows, %d LIVE cells'
+          % (len(section2), sum(len(r['live_cells']) for r in section2)))
+    saved_path = COVERAGE_PATH
+    import tempfile
+    fd, tmp = tempfile.mkstemp(suffix='.json')
+    try:
+        one_to_one = {
+            'source_rows_consumed': len(section2),
+            'cells_emitted': len(section2),                       # ...the copied number
+            'mapping': [{'source_row': r['source_row'],
+                         'cells': [r['live_cells'][0]] if r['live_cells'] else []}
+                        for r in section2],                       # ...forced 1:1
+        }
+        with os.fdopen(fd, 'w', encoding='utf-8') as fh:
+            json.dump(one_to_one, fh)
+        COVERAGE_PATH = tmp
+        c8 = []
+        c8_coverage_reconciled(c8)
+        joined = '\n'.join(c8)
+        hit = 'omits its LIVE cell' in joined or 'cannot be smaller' in joined
+        print('  [%s] C8 refuses a 1:1 mapping that drops ST_EA03\'s second LIVE cell'
+              % ('OK ' if hit else 'BAD'))
+        if not hit:
+            print('        -> C8 said: %s' % (c8[:1] or ['nothing']))
+            bad += 1
+    finally:
+        COVERAGE_PATH = saved_path
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+
+    print('\n  %d criteria checked, %d did not behave as declared' % (len(expected) + 2, bad))
     return 1 if bad else 0
 
 
