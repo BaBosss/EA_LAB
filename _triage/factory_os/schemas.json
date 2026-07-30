@@ -31,7 +31,7 @@
       "description": "Discriminator. Every persisted instance carries it, including CSV-backed rows.",
       "enum": [
         "OwnerRef", "Hypothesis", "ParameterBinding", "TestUniverse", "LogicalSymbol",
-        "InstrumentProfile", "CoverageCell", "RunJournal",
+        "InstrumentProfile", "CoverageCell", "RunTransition", "RunJournal",
         "EvidenceRef", "CandidateManifest",
         "MagicAllocation", "DeploymentAttestationEvent", "WorkReceipt", "SystemFinding",
         "IdeaRef", "ControlRoomSnapshotV5", "SafeProjection"
@@ -46,6 +46,7 @@
     { "properties": { "entity": { "const": "LogicalSymbol" } },              "$ref": "#/$defs/LogicalSymbol" },
     { "properties": { "entity": { "const": "InstrumentProfile" } },          "$ref": "#/$defs/InstrumentProfile" },
     { "properties": { "entity": { "const": "CoverageCell" } },               "$ref": "#/$defs/CoverageCell" },
+    { "properties": { "entity": { "const": "RunTransition" } },              "$ref": "#/$defs/RunTransition" },
     { "properties": { "entity": { "const": "RunJournal" } },                 "$ref": "#/$defs/RunJournal" },
     { "properties": { "entity": { "const": "EvidenceRef" } },                "$ref": "#/$defs/EvidenceRef" },
     { "properties": { "entity": { "const": "CandidateManifest" } },          "$ref": "#/$defs/CandidateManifest" },
@@ -268,19 +269,26 @@
       "unevaluatedProperties": false,
       "properties": {
         "attempt": { "type": "integer", "minimum": 1 },
-        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCHING", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
+        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCH_INTENT", "PROCESS_OBSERVED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
         "at": { "type": "string" },
         "lease": {
           "type": ["object", "null"],
-          "required": ["lease_id", "owner", "pid", "expires_at"],
+          "required": ["lease_id", "owner", "expires_at"],
           "unevaluatedProperties": false,
-          "description": "Audit P1: without owner/expiry/PID, a machine that died in LEASED held the lane forever.",
+          "description": "SELF-REVIEW FIX: rev 3 required `pid` on the lease, but LEASED happens BEFORE any process exists - the lane is reserved first. A schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder. pid moves to process_observed and is not part of the lease.",
           "properties": {
             "lease_id": { "type": "string" }, "owner": { "type": "string" },
-            "pid": { "type": "integer" }, "expires_at": { "type": "string" }
+            "expires_at": { "type": "string", "description": "without an expiry a machine that died holding a lease keeps the lane forever" }
           }
         },
-        "launched_at": { "type": ["string", "null"], "description": "persisted BEFORE the process is launched, so a crash between launch and RUNNING is detectable and the resume does not double-launch into a live MT5" },
+        "launch_intent_at": { "type": ["string", "null"], "description": "written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again." },
+        "process_observed": {
+          "type": ["object", "null"],
+          "required": ["pid", "observed_at"],
+          "unevaluatedProperties": false,
+          "description": "SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable.",
+          "properties": { "pid": { "type": "integer" }, "observed_at": { "type": "string" }, "process_fingerprint": { "type": ["string", "null"] } }
+        },
         "exit_code": { "type": ["integer", "null"], "description": "persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it" },
         "failure_class": { "enum": ["NONE", "TESTER_ERROR", "TERMINAL_ERROR", "TIMEOUT", "LEASE_LOST", "KILLED", "CONFIG_REJECTED"], "description": "the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR" },
         "report_fresh_proof": { "type": ["object", "null"] },
@@ -288,12 +296,32 @@
       }
     },
 
+    "RunTransition": {
+      "type": "object",
+      "x-owner-file": "factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only",
+      "x-writer": "the scheduler only",
+      "x-enforced-by": "scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator",
+      "description": "SELF-REVIEW FIX (2026-07-30): rev 3 stored a `RunJournal` OBJECT containing an attempts ARRAY at a path described as one-transition-per-line append-only. Those cannot both be true - appending a transition to an in-object array means rewriting the whole object, which is not append-only, so the crash-safety claim was unsupported by its own storage contract. The PERSISTED entity is this: one transition, one line. `RunJournal` is now a derived read-model that is never written.",
+      "required": ["entity", "run_id", "cell_id", "attempt", "transition", "at"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": { "const": "RunTransition" },
+        "run_id": { "type": "string", "pattern": "^RUN-[0-9]{8}-[0-9]{3,}$" },
+        "cell_id": { "type": "string" },
+        "execution_key": { "$ref": "#/$defs/ExecutionKey", "description": "written once, on the QUEUED line" },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "transition": { "enum": ["QUEUED", "LEASED", "LAUNCH_INTENT", "PROCESS_OBSERVED", "RUNNING", "COMPLETED", "FAILED", "ABANDONED", "EVIDENCE_REGISTERED"] },
+        "at": { "type": "string" },
+        "record": { "$ref": "#/$defs/RunAttempt" },
+        "event_log_ref": { "$ref": "#/$defs/OwnerRef" }
+      }
+    },
+
     "RunJournal": {
       "type": "object",
-      "x-owner-file": "factory/runs/<run_id>.jsonl (append-only)",
-      "x-writer": "the scheduler only",
-      "x-enforced-by": "scheduler: reconcile process + report + event store BEFORE any retry",
-      "description": "Realizes EVOLUTION_PLAN section 20.8 Contract B. Occurrence metadata and hashes only - the experiment event log remains the owner of the experiment timeline; this journal owns ONLY scheduler recovery state, which the audit agreed is a genuinely new fact.",
+      "x-derived": true,
+      "x-owner-file": "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.",
+      "description": "Read-model only. Realizes EVOLUTION_PLAN section 20.8 Contract B. Occurrence metadata and hashes only - the experiment event log remains the owner of the experiment timeline; this fold owns ONLY scheduler recovery state, which the audit agreed is a genuinely new fact.",
       "required": ["entity", "run_id", "cell_id", "execution_key", "attempts"],
       "unevaluatedProperties": false,
       "properties": {

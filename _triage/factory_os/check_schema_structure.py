@@ -1,4 +1,4 @@
-import json, sys
+import json, re, sys
 
 d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))
 fail = 0
@@ -99,6 +99,46 @@ chk({'deposit', 'leverage', 'currency', 'data_fingerprint', 'effective_config_ha
 dae = d['$defs']['DeploymentAttestationEvent']['allOf'][0]['then']
 chk('authorization_ref' in dae.get('required', []),
     "any non-OBSERVED attestation event requires a human authorization ref")
+
+print("\nSELF-REVIEW FIXES (2026-07-30 /scrutinize)")
+chk('RunTransition' in br, "the PERSISTED run entity is one-transition-per-line, not an object holding an array")
+chk(d['$defs']['RunJournal'].get('x-derived') is True,
+    "RunJournal is marked derived - a .jsonl path cannot hold an object you rewrite to append")
+lease = d['$defs']['RunAttempt']['properties']['lease']
+chk('pid' not in lease['required'],
+    "the lease does not demand a pid at LEASED, which happens before any process exists")
+chk('process_observed' in d['$defs']['RunAttempt']['properties'] and
+    'launch_intent_at' in d['$defs']['RunAttempt']['properties'],
+    "launch intent and process observation are separate records, so crash-before-spawn is decidable")
+
+# --- design <-> schema binding -------------------------------------------------
+# Every recurring defect in two audits plus this self-review had ONE shape: the schema
+# said one thing and the design document said another, because nothing checked the seam.
+# This is that check. It is cheap and it is the only thing here that would have caught
+# all three of today's blockers.
+print("\nDESIGN <-> SCHEMA BINDING (the seam every regression came through)")
+design = open('_triage/EA_LAB_FACTORY_OS_DESIGN.md', encoding='utf-8').read()
+
+owner_paths = []
+for name in sorted(d['$defs']):
+    of = d['$defs'][name].get('x-owner-file', '')
+    m = re.match(r'^([A-Za-z0-9_./<>-]+\.(?:jsonl|json|csv|md))', of)
+    if m and not d['$defs'][name].get('x-derived'):
+        owner_paths.append((name, m.group(1)))
+missing = [(n, p) for n, p in owner_paths if p not in design]
+chk(not missing,
+    "every non-derived entity's storage path also appears in the design (drifted=%s)"
+    % [f"{n}->{p}" for n, p in missing])
+
+banned = {
+    "the same snapshot and the same event ids":
+        "would put Telegram back on the full snapshot and reinstate the leak SafeProjection exists to stop",
+    "13 lines": "Boss_14_GridLog.mq5 is 12 lines",
+    "the eleven unowned facts": "refuted by the first audit - two are unowned, three partly new",
+    "§11 — six": "section 11 holds nine open decisions",
+}
+stale = [(p, why) for p, why in banned.items() if p in design]
+chk(not stale, "no refuted claim survives anywhere in the design (found=%s)" % [p for p, _ in stale])
 
 print("\n=== %s ===" % ("STRUCTURE OK" if fail == 0 else "%d STRUCTURAL FAILURES" % fail))
 sys.exit(1 if fail else 0)

@@ -178,7 +178,9 @@ Three consequences, stated so the audit can attack them:
 | Parameter bindings | `factory/parameter_bindings.jsonl`, writer = Claude | role/surface/locked value **per hypothesis revision**; permanent semantics stay in `docs/PARAM_REGISTRY.csv` via `definition_ref` |
 | Coverage cells | `factory/coverage.jsonl`, state by the runner, `NOT_APPLICABLE` + reason by Claude only | metrics are `MetricRef`s with their own lane/fingerprint. **`MASTER_BACKLOG` §2 is regenerated from these — an ownership transfer its owner signs off in S2, not an assertion made here** |
 | Run journal | `factory/runs/<run_id>.jsonl`, scheduler only, **one transition per line** | scheduler recovery state only. The experiment timeline stays in the event log |
-| Candidate manifests | `factory/candidates/`, written once at verdict, immutable | `candidate_digest` over the payload; verdict text stays in the scorecard via `scorecard_ref` |
+| Instrument profiles | `factory/instrument_profiles.jsonl`, writer = Claude | broker/lane mapping layer only; baseline semantics stay in `OPTIMIZATION_PROCEDURE_V2` §4 via `semantics_ref`; pinned by `content_hash`, never by id |
+| Candidate manifests | `factory/candidates/<candidate_id>.json`, written once at verdict, immutable | `candidate_digest` over the payload; verdict text stays in the scorecard via `scorecard_ref` |
+| Safe projection | `build/safe_projection.json` — **derived, never hand-written** | the only artifact Telegram and the online page may read |
 | Magic allocations | `factory/magic_allocations.jsonl` | reservation only. **Deployment status stays in `DEPLOYMENTS.csv`** via `deployment_ref` |
 | Work Receipts | `ops/receipts/*.jsonl` — ⚠️ **blocked on the `AGENTS.md` §2 writer change (§11.8)** | for work that already has an `ORDER-*`, title/status/owner/acceptance stay in the taskboard via `order_ref`; the Receipt holds only receipt-specific metadata |
 | Findings | `ops/findings.jsonl` | stable identity + lifecycle only; detector state stays in the snapshot via a pinned reference |
@@ -696,7 +698,11 @@ the existing Trade emergency bot (real-money/DD/critical only) and a new `EA LAB
 - One alert, then silence until the dedupe key changes; one recovery message when genuinely healthy.
 - Workstation offline (heartbeat > 45 min) renders neutral `WORKSTATION OFFLINE / UNKNOWN` with last-sync
   time. **Never guess** hibernate vs crash vs network. Never nag about a known offline state.
-- Telegram and Dashboard read **the same snapshot and the same event ids**, or they will drift.
+- Telegram and Dashboard are pinned to **the same `build_id` and the same event/finding ids**, or they
+  will drift — but they do **not** read the same document. The Dashboard's local view reads the full
+  snapshot; **Telegram and the online page read only the `SafeProjection`**, and the sender has no path
+  to the full snapshot at all. Rev 2 of this file said "the same snapshot", which would have reinstated
+  the leak §7.1 exists to prevent.
 - Tokens never enter git, logs, generated HTML, handoffs, or chat.
 
 ### 7.4 Context efficiency (how the AI reads this without eating its own context)
