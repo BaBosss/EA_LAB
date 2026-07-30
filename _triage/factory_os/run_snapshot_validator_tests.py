@@ -36,6 +36,7 @@ PROVING THE HARNESS CAN FAIL
 USAGE  python _triage/factory_os/run_snapshot_validator_tests.py [--write-table] [--prove-harness]
 EXIT   0 = every case and every mutation behaved as declared - 1 = at least one did not
 """
+import ast
 import collections
 import copy
 import io
@@ -154,7 +155,7 @@ def at_row(base, name, **kw):
     MEASURED, in this file, before it was measured anywhere else: the first version took
     `age=26.1` and dict-updated it straight onto the row, which ADDED a key called `age` and
     left `age_hours` untouched. Four negatives were therefore identical to the healthy
-    positive and computed all_clear=true, and the only reason it surfaced is that they
+    positive and computed reconciliation_clear=true, and the only reason it surfaced is that they
     asserted an exact reason set instead of "was rejected". A fixture builder that accepts a
     field the subject has never heard of manufactures probes that cannot fail, which is the
     one thing worse here than no probe at all.
@@ -192,7 +193,7 @@ def add_row(base, r):
 # Fixtures.
 #
 # kind:
-#   'verdict'  compute() over a builder input -> assert (all_clear, exact reason set)
+#   'verdict'  compute() over a builder input -> assert (reconciliation_clear, exact reason set)
 #   'refusal'  compute()/build_snapshot() must RAISE SnapshotRefusal, message asserted
 #   'output'   a hand-authored PERSISTED document -> verify_snapshot() must refuse
 #   'roundtrip' build_snapshot() then verify_snapshot() must both succeed
@@ -262,6 +263,21 @@ FIXTURES = [
             at_meta(BASE, sources=[]),
             [(SV.MANDATORY_SOURCE_MISSING, 'live_deals'),
              (SV.MANDATORY_SOURCE_MISSING, 'dashboard')],
+            repair=lambda d: at_meta(d, sources=[row('live_deals', age_hours=1.0),
+                                                 row('dashboard', age_hours=2.0)])),
+    # Codex audit 6 (MAJOR 4), reproduced: it replaced the membership predicate with a COUNT test
+    # (`len(rows) >= len(mandatory) -> []`) and the entire suite AND the whole mutation table stayed
+    # green, because every existing negative either drops a row or empties the array -- both of
+    # which change the count. This fixture holds the count constant and swaps the identity, so a
+    # count-based rewrite goes red. It is the one attack the mutation table structurally cannot see:
+    # deleting a wrong predicate still reddens exactly the fixtures it declared.
+    verdict('mandatory-source-swapped-for-an-optional-one-same-count',
+            'Codex audit 6 MAJOR 4: same number of rows, one mandatory identity replaced by an '
+            'unrelated optional name. A predicate that counts rows instead of checking membership '
+            'passes everything else in this file',
+            at_meta(BASE, sources=[row('live_deals', age_hours=1.0),
+                                   row('aux_notes', mandatory=False, age_hours=2.0)]),
+            [(SV.MANDATORY_SOURCE_MISSING, 'dashboard')],
             repair=lambda d: at_meta(d, sources=[row('live_deals', age_hours=1.0),
                                                  row('dashboard', age_hours=2.0)])),
     verdict('mandatory-source-unreadable',
@@ -343,13 +359,13 @@ FIXTURES = [
             at_row(BASE, 'dashboard', age_hours=None), 'age_hours'),
     refusal('refuse-empty-registry',
             'an empty registry makes every missing source unexpected, which is how 0 == 0 '
-            'produced an all_clear in the first place',
+            'produced an reconciliation_clear in the first place',
             at_meta(BASE, mandatory_sources=[]), 'mandatory_sources'),
     refusal('refuse-a-supplied-verdict',
             'the closed input schema refuses this too, but build_snapshot is reachable with '
             'NO_SCHEMA_CHECK, and a supplied verdict silently overwritten is '
             'indistinguishable from one that was honoured',
-            dict(clone(BASE), verdict={'all_clear': True, 'reasons': []}), 'verdict'),
+            dict(clone(BASE), verdict={'reconciliation_clear': True, 'reasons': []}), 'verdict'),
     # /scrutinize 2026-07-30. THE hole this review found: build_snapshot checked only for a
     # top-level `verdict`, so this instance was accepted and a verdict computed for it under
     # NO_SCHEMA_CHECK -- which is what every fixture in this file uses, so the fast tier was
@@ -358,7 +374,7 @@ FIXTURES = [
     refusal('refuse-all-clear-supplied-inside-the-evidence',
             'ORDER-601 part 1 made a supplied answer unrepresentable in the SCHEMA; this asserts '
             'the validator refuses it on its own, with the schema gate skipped',
-            at_ev(BASE, all_clear=True), 'all_clear'),
+            at_ev(BASE, reconciliation_clear=True), 'reconciliation_clear'),
     refusal('refuse-reasons-supplied-inside-the-evidence',
             'the same attack one word over: `reasons` is validator-owned too, and the next place '
             'somebody puts the answer is the place nobody enumerated',
@@ -392,7 +408,7 @@ def persisted(base=BASE, **edits):
 
 AUDIT5_ATTACK = SV.build_snapshot(BASE, NC)
 AUDIT5_ATTACK['meta']['sources'] = []
-AUDIT5_ATTACK['verdict'] = {'all_clear': True, 'reasons': []}
+AUDIT5_ATTACK['verdict'] = {'reconciliation_clear': True, 'reasons': []}
 
 _TRIPLED_REASON = SV.build_snapshot(drop_row(BASE, 'dashboard'), NC)
 # an HONEST verdict, then the one true reason repeated. Both the boolean and the reason SET
@@ -411,19 +427,19 @@ FIXTURES += [
            'persisted document, structurally valid against every schema here, whose verdict '
            'is simply typed. JSON Schema cannot prove authorship; only recomputation refuses '
            'this', AUDIT5_ATTACK,
-           must_say=['all_clear', 'MANDATORY_SOURCE_MISSING'],
+           must_say=['reconciliation_clear', 'MANDATORY_SOURCE_MISSING'],
            depends_on=[SV.MANDATORY_SOURCE_MISSING]),
     output('persisted-verdict-invents-a-reason',
            'the mismatch must name reasons the document does NOT produce, not merely count '
-           'them', persisted(verdict={'all_clear': False,
+           'them', persisted(verdict={'reconciliation_clear': False,
                                       'reasons': [{'code': SV.CONFLICTS_PRESENT,
                                                    'detail': 'conflicts=9'}]}),
            must_say=['does not produce', SV.CONFLICTS_PRESENT]),
     output('persisted-verdict-false-with-no-reasons',
-           'the schema says reasons is empty if and only if all_clear is true; this is the '
+           'the schema says reasons is empty if and only if reconciliation_clear is true; this is the '
            'half of that the schema cannot check',
-           persisted(verdict={'all_clear': False, 'reasons': []}),
-           must_say=['all_clear']),
+           persisted(verdict={'reconciliation_clear': False, 'reasons': []}),
+           must_say=['reconciliation_clear']),
     output('persisted-verdict-triples-one-true-reason',
            '/scrutinize 2026-07-30: the comparison was set-based, so a document listing the same '
            'reason three times verified CLEAN. The reason list is what a reader counts to say '
@@ -452,7 +468,7 @@ def check(f):
         if f.kind == 'verdict':
             clear, reasons = SV.compute(f.instance)
             if clear is not f.expect_clear:
-                return False, 'all_clear=%r, expected %r' % (clear, f.expect_clear)
+                return False, 'reconciliation_clear=%r, expected %r' % (clear, f.expect_clear)
             got = set(reasons)
             if got != f.expect_reasons:
                 return False, 'reasons %s, expected %s' % (
@@ -522,8 +538,32 @@ def check_no_test_only_identifiers():
     with io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                               'snapshot_validator.py'), encoding='utf-8') as fh:
         src = fh.read()
-    problems = ['snapshot_validator.py mentions the fixture identifier %r' % ident
-                for ident in FIXTURE_IDENTIFIERS if ident in src]
+
+    # Scan EXECUTABLE source, not the whole file. The first version searched raw text, so it
+    # flagged the word `attestation` the moment a docstring listed the top-level domains this
+    # verdict does NOT cover -- a false positive that penalises explaining the scope, which is
+    # the opposite of what should be encouraged. A docstring cannot special-case an input.
+    # String literals OTHER than docstrings are still scanned, because `build_id == "fixture-x"`
+    # is precisely a string literal, and that is the defect being hunted. `ast` drops comments
+    # for free.
+    tree = ast.parse(src)
+    docstrings = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            body = getattr(node, 'body', None)
+            if (body and isinstance(body[0], ast.Expr)
+                    and isinstance(body[0].value, ast.Constant)
+                    and isinstance(body[0].value.value, str)):
+                docstrings.add(id(body[0].value))
+    live_strings = [n.value for n in ast.walk(tree)
+                    if isinstance(n, ast.Constant) and isinstance(n.value, str)
+                    and id(n) not in docstrings]
+    live_names = [n.id for n in ast.walk(tree) if isinstance(n, ast.Name)]
+    live_names += [n.attr for n in ast.walk(tree) if isinstance(n, ast.Attribute)]
+    haystack = live_strings + live_names
+    problems = ['snapshot_validator.py uses the fixture identifier %r in executable code' % ident
+                for ident in FIXTURE_IDENTIFIERS
+                if any(ident in h for h in haystack)]
 
     # The static scan only catches the literals THIS suite happens to use. The behavioural
     # check is the one that generalises: relabel every identity field and the verdict must be
@@ -563,7 +603,7 @@ def check_compat_fields_survive():
                                 % (name, key, r_in[key], src_out.get(name, {}).get(key)))
     if out['entity'] != SV.OUTPUT_ENTITY:
         problems.append('the output entity is %r' % out['entity'])
-    if out['verdict']['all_clear'] is not True:
+    if out['verdict']['reconciliation_clear'] is not True:
         problems.append('the compat input should be healthy; got %r' % out['verdict'])
     # And the round trip: what build_snapshot writes must be what verify_snapshot accepts.
     # If these two ever disagree, every document this pipeline produces is unreadable by it.
@@ -578,7 +618,7 @@ def check_roundtrip():
     problems = []
     for name, base in (('healthy-positive-1', BASE), ('healthy-positive-2', BASE_2)):
         out = SV.build_snapshot(base, NC)
-        if out['verdict']['all_clear'] is not True or out['verdict']['reasons']:
+        if out['verdict']['reconciliation_clear'] is not True or out['verdict']['reasons']:
             problems.append('%s: expected a clear verdict, got %r' % (name, out['verdict']))
             continue
         try:
@@ -702,6 +742,44 @@ def prove_harness_can_fail():
               'clean: %s' % (len(other), other[0]))
         return 1
     print('  [OK ] and reported nothing else, so the real thirteen are all accounted for')
+
+    # Codex audit 6 (MAJOR 4): --prove-harness proved only the "predicate with no fixture"
+    # detector. The three mechanisms the mutation table cannot reach -- because they are not
+    # predicates -- were verified once, by hand, in a throwaway script. A check that lives in
+    # somebody's shell history is not a check. They are sabotaged here instead, and the assertion
+    # is that each reddens AT LEAST ONE fixture; the exact counts are printed rather than pinned,
+    # so adding a fixture does not turn this red for the wrong reason.
+    print('\n=== proving the three NON-predicate mechanisms are not inert ===')
+    saboteurs = [
+        ('assert_decidable -> no-op (an undecidable input answers anyway)',
+         'assert_decidable', lambda f: None),
+        ('derive_fresh -> always fresh (a guard that is present but inert)',
+         'derive_fresh', lambda f, row: True),
+        ('verify_snapshot -> trusts whatever it is handed (recompute-on-read removed)',
+         'verify_snapshot', lambda doc, sv: doc),
+    ]
+    failed = 0
+    for label, attr, replacement in saboteurs:
+        original = getattr(SV, attr)
+        setattr(SV, attr, replacement)
+        try:
+            red = sorted(f.name for f in FIXTURES if not check(f)[0])
+        finally:
+            setattr(SV, attr, original)
+        if not red:
+            print('  [BAD] %s -> NOTHING went red. That mechanism is untested.' % label)
+            failed += 1
+        else:
+            print('  [OK ] %s -> %d red (%s)' % (label, len(red), ', '.join(red[:3])
+                                                 + ('...' if len(red) > 3 else '')))
+    if failed:
+        return 1
+    baseline_red = sorted(f.name for f in FIXTURES if not check(f)[0])
+    if baseline_red:
+        print('  [BAD] after restoring, %d fixture(s) are still red: %s' % (len(baseline_red),
+                                                                           baseline_red))
+        return 1
+    print('  [OK ] all three restored cleanly, so the sabotage did not leak')
     return 0
 
 

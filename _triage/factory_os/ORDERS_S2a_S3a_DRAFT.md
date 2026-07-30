@@ -145,9 +145,17 @@ persisted file alone can tell "computed" from "typed". That is the builder-input
       every nested `categories.*` and `coverage.*` integer, and `duplicates`/`conflicts`/`unclassified`, carry
       **none**. Audit 5's failing instance — `categories.actionable = -1`, `running = 1` — balances every
       equation and validates. Add `minimum: 0` to all of them, with a fixture per group.
-- [ ] **Source identity.** Registry and source names unique; exact membership both ways between
-      `mandatory_sources` and `sources`; a fixture where a row's own `mandatory:false` contradicts the
-      registry. Prefer removing the redundant per-row flag over reconciling it.
+- [ ] **Source identity.** Registry and source names unique; ~~exact membership both ways between
+      `mandatory_sources` and `sources`~~ **AMENDED 2026-07-30 (rev 3, after Codex audit 6 flagged the
+      deviation rather than letting it be called DONE): membership both ways for MANDATORY rows only** —
+      every registry name must have a row, and every row claiming `mandatory:true` must be in the
+      registry — because a genuinely optional source outside the registry is legitimate (the real v4
+      writer emits three sources and the registry need not name all of them). Exact set equality would
+      forbid that, and the implementation chose the weaker rule silently; this line now says which rule
+      is meant. Plus a fixture where a row's own `mandatory:false` contradicts the registry.
+      Prefer removing the redundant per-row flag over reconciling it — **deferred to S4**: the real v4
+      consumers read the flag, so until they migrate, a contradiction that cannot be reported is one
+      that ships.
 - [ ] **Two independently constructed healthy positives** ⇒ `all_clear=true` — different non-zero counts and
       reordered sources. One positive only blocks a constant-false implementation.
 - [ ] **Whole-root, not a detached `meta`.** Note `reconciliation` currently lives under `SnapshotMeta`, and

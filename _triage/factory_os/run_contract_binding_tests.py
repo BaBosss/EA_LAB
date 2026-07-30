@@ -291,6 +291,17 @@ def main():
                         '[`{0}`](factory_os/CONTRACTS.md#owneref)'.format(a_key)), True),
         ('LINK a dangling reference to no contract',
          design + '\n[`NotAContract`](factory_os/CONTRACTS.md#notacontract)\n', True),
+        # Codex audit 6 (MAJOR 5), reproduced: all 30 links inside ONE html comment returned CLEAN
+        # with zero visible prose, because the check regex-scanned raw bytes. A link a reader cannot
+        # see satisfies a regex, not a reference.
+        ('LINK every link hidden in one html comment',
+         '<!--\n' + '\n'.join(m.group(0) for m in gen.LINK_RE.finditer(design)) + '\n-->\n', True),
+        ('LINK every link hidden in a fenced code block',
+         '```\n' + '\n'.join(m.group(0) for m in gen.LINK_RE.finditer(design)) + '\n```\n', True),
+        # ...and the control that keeps the two above honest: the SAME links, visible, must pass.
+        # Without it, a validate_links that rejected everything would look like a working fix.
+        ('LINK CONTROL the same links, visible',
+         '\n\n'.join(m.group(0) for m in gen.LINK_RE.finditer(design)), False),
     ]
     for label, text, expect_red in link_cases:
         problems = gen.validate_links(text, keys_now)

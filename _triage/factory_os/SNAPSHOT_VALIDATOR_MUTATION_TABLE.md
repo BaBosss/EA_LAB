@@ -16,7 +16,7 @@ or an output-side attack.
 
 | predicate disabled | fixtures that go red (measured) | count |
 |---|---|---|
-| `MANDATORY_SOURCE_MISSING` | `builder-sources-empty-attack-a` · `mandatory-source-missing` · `persisted-sources-empty-with-all-clear-true-attack-b` · `persisted-verdict-triples-one-true-reason` | 4 |
+| `MANDATORY_SOURCE_MISSING` | `builder-sources-empty-attack-a` · `mandatory-source-missing` · `mandatory-source-swapped-for-an-optional-one-same-count` · `persisted-sources-empty-with-all-clear-true-attack-b` · `persisted-verdict-triples-one-true-reason` | 5 |
 | `MANDATORY_SOURCE_UNREADABLE` | `mandatory-source-unreadable` | 1 |
 | `MANDATORY_SOURCE_STALE` | `stale-boundary-one-step-over` · `stale-while-the-caller-says-fresh` | 2 |
 | `SOURCE_REGISTRY_MISMATCH` | `source-claims-mandatory-outside-the-registry` | 1 |

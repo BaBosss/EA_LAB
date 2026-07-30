@@ -438,6 +438,21 @@ def rewrite(text, schema):
     return BLOCK_RE.sub(repl, text), keys
 
 
+HTML_COMMENT_RE = re.compile(r'<!--.*?-->', re.DOTALL)
+FENCE_RE = re.compile(r'^```.*?^```', re.DOTALL | re.MULTILINE)
+
+
+def visible_markdown(text):
+    """Drop HTML comments and fenced code blocks -- text a reader of the rendered page never sees.
+
+    Codex audit 6 (MAJOR 5, reproduced): validate_links regex-scanned the RAW bytes, so putting all
+    30 links inside one `<!-- ... -->` block returned CLEAN with zero visible prose. The check was
+    establishing "the design file contains a matching URL", not "the design references this
+    contract". A link a reader cannot see does not reference anything.
+    """
+    return FENCE_RE.sub('', HTML_COMMENT_RE.sub('', text))
+
+
 def validate_links(design, keys):
     """Return problems with how the DESIGN references the contracts file.
 
@@ -449,7 +464,17 @@ def validate_links(design, keys):
     """
     problems = []
     linked = {}
+    hidden_only = set()
+    visible = visible_markdown(design)
     for m in LINK_RE.finditer(design):
+        if m.group('key') not in [v.group('key') for v in LINK_RE.finditer(visible)]:
+            hidden_only.add(m.group('key'))
+    for key in sorted(hidden_only):
+        problems.append(
+            'the design links `{0}` only from inside an HTML comment or a fenced code block, '
+            'where no reader sees it. A hidden link satisfies a regex, not a reference.'
+            .format(key))
+    for m in LINK_RE.finditer(visible):
         key, anchor = m.group('key'), m.group('anchor')
         linked.setdefault(key, []).append(anchor)
         if anchor != anchor_of(key):

@@ -38,6 +38,18 @@
     refuses to grow: if a suite here ever exceeds $BudgetSeconds total, it says so loudly
     rather than silently becoming the thing people skip.
 
+    ⚠️ CORRECTION 2026-07-30 (Codex audit 6, MAJOR 7). "Refuses to grow" overstated it. Exceeding
+    the budget prints a yellow WARNING and the script still exits 0 -- it is an ADVISORY
+    threshold, not a budget, and three consecutive audit runs measured 15.2s / 14.7s / 14.8s, so
+    the tier is already over the line on some runs and nothing stopped it. It is deliberately
+    left advisory rather than made fatal: a single noisy run failing a commit is precisely how a
+    hook earns the --no-verify it is trying to avoid, and wall-clock on this machine varies by
+    ~0.5s run to run. What follows from that, and is NOT optional:
+      * the next cage does NOT go in this all-suites tier -- measured headroom is zero;
+      * quote a MEDIAN of at least three runs, never one run, when reporting the total;
+      * the real fix is per-path suite selection using the $SUITE_GUARDS map below, so a schema
+        edit stops paying for 5.8s of optimize-guard cases. That is not built.
+
     WHAT THIS DOES NOT COVER -- read this before trusting a green run:
     the four slow suites above, and in particular run_order105_negative_tests.ps1, which
     exits 1 today (ORDER-420 STEP 2 owns finding out why). Green here means "the suites in

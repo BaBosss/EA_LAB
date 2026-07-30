@@ -599,7 +599,7 @@
     "ControlRoomSnapshotV5": {
       "type": "object",
       "x-owner-file": "portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)",
-      "x-enforced-by": "snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input",
+      "x-enforced-by": "snapshot_validator: reconciliation_clear is COMPUTED and MUST NOT be read from input",
       "description": "RE-AUDIT P0 FIX: rev 2 declared `SnapshotMeta` to be the schema of control_room_snapshot.json, but it described a FLAT root {entity, schema, version, ...} while the real persisted document is {meta:{...}, system_health:[...], deployments, judge_readiness, judge_cohorts, attestation, unknown_magics, floating_risk, summary} - nine top-level keys. A validator built to that schema would have validated a shape that never exists and reported the pipeline schema-clean while never touching the actual snapshot. This entity is the WHOLE document; SnapshotMeta is now the schema of its `meta` property only. ORDER-601 part 2: this root is now CLOSED. It was `additionalProperties: true` on the argument that the file versions additively, but the two facts do not imply each other - additive versioning means no field is REMOVED or RENAMED between versions, and it is satisfied by declaring each new domain here. An open root means a whole top-level domain can appear that no contract describes and no reader is required to handle, which is the same shape as the source array that silently dropped a missing file. The eleven keys below cover every top-level key the real v4 document has; closing the root therefore costs nothing today and forces the next domain to be declared. Adding a domain is a one-line edit HERE, which is the point: it becomes a reviewable act instead of a side effect.",
       "required": ["entity", "meta", "verdict", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
       "unevaluatedProperties": false,
@@ -621,8 +621,8 @@
     "ReconciliationEvidence": {
       "type": "object",
       "x-owner-file": "the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json",
-      "x-enforced-by": "snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer",
-      "description": "ORDER-601 / audit-5 Q2. `all_clear` used to live here, which made the contract unsatisfiable: it was REQUIRED in the persisted document and a writer-supplied value had to be REJECTED, and no validator inspecting one document can tell 'computed' from 'typed'. The evidence and the verdict are now different objects. Because this object is CLOSED and has no `all_clear` property, a builder that supplies one is refused by the schema itself - no special-case code, and the rejection names the property. Audit-5 also found every nested integer here lacked `minimum: 0`, so `actionable:-1, running:1` balanced every equation and validated; the bounds below close that.",
+      "x-enforced-by": "snapshot_validator: this object is the INPUT to the reconciliation_clear computation and never contains the answer",
+      "description": "ORDER-601 / audit-5 Q2. `reconciliation_clear` used to live here, which made the contract unsatisfiable: it was REQUIRED in the persisted document and a writer-supplied value had to be REJECTED, and no validator inspecting one document can tell 'computed' from 'typed'. The evidence and the verdict are now different objects. Because this object is CLOSED and has no `reconciliation_clear` property, a builder that supplies one is refused by the schema itself - no special-case code, and the rejection names the property. Audit-5 also found every nested integer here lacked `minimum: 0`, so `actionable:-1, running:1` balanced every equation and validated; the bounds below close that.",
       "required": ["discovered", "categorized", "categories", "duplicates", "conflicts", "unclassified", "coverage"],
       "unevaluatedProperties": false,
       "properties": {
@@ -657,15 +657,15 @@
     "SnapshotVerdict": {
       "type": "object",
       "x-owner-file": "the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator",
-      "x-enforced-by": "snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match",
-      "description": "ORDER-601. JSON Schema can prove this boolean is well-typed; it cannot prove who wrote it. Audit-5's surviving attack was a hand-authored output with sources=[] and all_clear=true, which is structurally valid. The defence is not the schema, it is that every reader must obtain the document through the verifier that recomputes this from `meta.reconciliation` and the source list. `reasons` is a CLOSED enum so a false verdict cannot be explained in free text nobody parses.",
-      "required": ["all_clear", "reasons"],
+      "x-enforced-by": "snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED",
+      "description": "ORDER-601. JSON Schema can prove this boolean is well-typed; it cannot prove who wrote it. Audit-5's surviving attack was a hand-authored output with sources=[] and reconciliation_clear=true, which is structurally valid. The defence is not the schema, it is that every reader must obtain the document through the verifier that recomputes this from `meta.reconciliation` and the source list. `reasons` is a CLOSED enum so a false verdict cannot be explained in free text nobody parses.",
+      "required": ["reconciliation_clear", "reasons"],
       "unevaluatedProperties": false,
       "properties": {
-        "all_clear": { "type": "boolean", "description": "COMPUTED. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0." },
+        "reconciliation_clear": { "type": "boolean", "description": "COMPUTED, never supplied. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. SCOPE - narrower than the old name promised: computed from meta.reconciliation and the source rows ONLY. It was called `all_clear` until Codex audit 6 built a document with a NO_SENSOR fleet sensor, a BLIND floating-risk sensor, missing kill/judge controls, an UNCLASSIFIED unknown magic and missing attestation, and it verified true - because none of those domains reach the computation. system_health, floating_risk, deployments.gaps, unknown_magics, attestation, judge_readiness and summary are carried through UNCHECKED. Do not render this as Control Room health." },
         "reasons": {
           "type": "array",
-          "description": "empty if and only if all_clear is true - the two must not be able to disagree",
+          "description": "empty if and only if reconciliation_clear is true - the two must not be able to disagree",
           "items": {
             "type": "object",
             "required": ["code"],
@@ -688,8 +688,8 @@
     "SnapshotBuilderInput": {
       "type": "object",
       "x-owner-file": "NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.",
-      "x-enforced-by": "snapshot_validator: refuses to compute from an input that does not validate",
-      "description": "ORDER-601 / audit-5 Q2: the builder side of the boundary. It carries the same facts as the persisted document but has NO `verdict` property and, because it is closed, cannot acquire one. That is what makes 'all_clear is computed, never supplied' checkable by the schema instead of by a code path somebody can special-case.",
+      "x-enforced-by": "snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path",
+      "description": "ORDER-601 / audit-5 Q2: the builder side of the boundary. It carries the same facts as the persisted document but has NO `verdict` property and, because it is closed, cannot acquire one. That is what makes 'reconciliation_clear is computed, never supplied' checkable by the schema instead of by a code path somebody can special-case.",
       "required": ["entity", "meta", "system_health", "floating_risk", "deployments", "unknown_magics", "attestation", "judge_readiness", "judge_cohorts", "summary"],
       "unevaluatedProperties": false,
       "properties": {
@@ -709,7 +709,7 @@
     "SnapshotMeta": {
       "type": "object",
       "x-owner-file": "the `meta` property of portfolio/control_room_snapshot.json",
-      "description": "The META SUB-OBJECT ONLY - not the whole file. Audit P1 (rev 1): all_clear was a writer-supplied boolean, `fresh` was not required, there was no mandatory-source registry and no category totals, so a snapshot with a missing mandatory source - or one that simply omitted the source from the array - could report all_clear:true and satisfy the equation with 0=0. Version note: HEAD is already v4; the Factory domain lands as v5.",
+      "description": "The META SUB-OBJECT ONLY - not the whole file. Audit P1 (rev 1): reconciliation_clear was a writer-supplied boolean, `fresh` was not required, there was no mandatory-source registry and no category totals, so a snapshot with a missing mandatory source - or one that simply omitted the source from the array - could report reconciliation_clear:true and satisfy the equation with 0=0. Version note: HEAD is already v4; the Factory domain lands as v5.",
       "required": ["schema", "version", "build_id", "generated_at", "mandatory_sources", "sources", "reconciliation"],
       "unevaluatedProperties": false,
       "properties": {
@@ -729,7 +729,7 @@
               "name": { "type": "string" },
               "mandatory": { "type": "boolean" },
               "read_ok": { "type": "boolean", "description": "false must stay distinguishable from 'read fine, found nothing' in EVERY consumer" },
-              "fresh": { "type": "boolean", "description": "DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an all_clear - there is a fixture for exactly that." },
+              "fresh": { "type": "boolean", "description": "DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an reconciliation_clear - there is a fixture for exactly that." },
               "age_hours": { "type": ["number", "null"] },
               "path": { "type": ["string", "null"], "description": "COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's." },
               "sha256": { "type": ["string", "null"], "description": "COMPATIBILITY: as `path`." },

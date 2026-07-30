@@ -2,19 +2,19 @@
 snapshot_validator.py - ORDER-601 part 2. The builder-input/persisted-output boundary.
 
 WHY THIS EXISTS
-  `all_clear` is REQUIRED in the persisted control-room snapshot, and a writer-supplied
+  `reconciliation_clear` is REQUIRED in the persisted control-room snapshot, and a writer-supplied
   value MUST be rejected. Those two sentences cannot both be checked against one document:
   the builder has to write the field, so no validator inspecting the persisted file alone
   can tell "computed" from "typed". ORDER-601 part 1 split the entities so the SCHEMA can
   refuse a supplied answer at the input side (`ReconciliationEvidence` is closed and has no
-  `all_clear` property). This file is the other half:
+  `reconciliation_clear` property). This file is the other half:
 
     build_snapshot()   SnapshotBuilderInput -> ControlRoomSnapshotV5, computing the verdict.
     verify_snapshot()  recomputes the verdict from a PERSISTED document and refuses it if
                        the stored verdict disagrees.
 
   The second one is the load-bearing part. Audit 5's surviving attack was a hand-authored
-  output with `sources: []` and `all_clear: true` -- structurally valid against every schema
+  output with `sources: []` and `reconciliation_clear: true` -- structurally valid against every schema
   in this repo, because JSON Schema can prove a boolean is well-typed and cannot prove who
   wrote it. Recomputation at the trust boundary is the only defence, which is why readers
   must obtain the document through load_verified() and never through json.load().
@@ -37,11 +37,30 @@ RELATIONSHIP TO THE SCHEMA
   an unreachable contract; a predicate whose code the enum rejects makes the output invalid.
   run_snapshot_validator_tests.py asserts the two sets are equal, so they cannot drift.
 
-  Schema validation is NOT performed here by default and NOT by accident: ajv is a subprocess
-  per instance (~0.35s), and the fast pre-commit tier has ~1s of its 15s budget left. So the
-  gate is a REQUIRED, EXPLICIT argument -- pass a validator, or pass the named sentinel
-  NO_SCHEMA_CHECK. There is no default. Skipping the gate is therefore a visible, greppable
-  act rather than something a caller gets for free by not knowing about it.
+  Schema validation is NOT performed by default and NOT by accident: ajv is a subprocess per
+  instance, and the fast pre-commit tier has no budget for it. So the gate is a REQUIRED,
+  EXPLICIT argument on build_snapshot/verify_snapshot, and it accepts exactly two values --
+  `ajv_schema_validator` or the named sentinel `NO_SCHEMA_CHECK`. Anything else raises TypeError.
+  Codex audit 6 found the earlier version accepted ANY callable, which made "skipping is a
+  visible, greppable act" false: `lambda i, e: i` skipped it and greps for nothing.
+
+  `load_verified()` -- the PUBLIC reader boundary -- takes no such argument and always validates.
+  A boundary whose caller chooses whether to check is not a boundary.
+
+WHAT THIS VERDICT DOES *NOT* COVER -- read this before showing it to anyone
+  `reconciliation_clear` is computed from `meta.reconciliation` and the source rows, and from
+  NOTHING ELSE. It was called `all_clear` until Codex audit 6 built a document with a dead fleet
+  sensor (NO_SENSOR), a blind floating-risk sensor, missing kill/judge controls, an unclassified
+  unknown magic and missing attestation -- and it verified `true`, correctly, because none of
+  those domains reach compute(). The name was the defect, not the arithmetic.
+
+  So: `system_health`, `floating_risk`, `deployments.gaps`, `unknown_magics`, `attestation`,
+  `judge_readiness` and `summary` are carried through this boundary UNCHECKED. This verdict means
+  "the order/coverage reconciliation adds up and its mandatory sources were readable and fresh".
+  It does not mean the fleet is healthy, and it must never be rendered as a headline that implies
+  it. Making the verdict global is real work -- those domains are `array of arbitrary object`
+  today and need health contracts of their own first -- and it belongs with S4, where the readers
+  get wired.
 
 USAGE   python _triage/factory_os/snapshot_validator.py verify <path-to-snapshot.json>
 TESTS   python _triage/factory_os/run_snapshot_validator_tests.py
@@ -86,7 +105,7 @@ COVERAGE_PARTS = ('tested', 'untested', 'not_applicable')
 class SnapshotRefusal(Exception):
     """The validator will not produce a verdict for this input.
 
-    Deliberately NOT a verdict of `all_clear: false`. A false verdict is a statement about
+    Deliberately NOT a verdict of `reconciliation_clear: false`. A false verdict is a statement about
     the fleet; this is a statement about the input. Collapsing the two is how "the tool could
     not read its own input" gets reported as "nothing to report" -- the defect class that has
     cost this repo more than any other.
@@ -105,6 +124,23 @@ class _NoSchemaCheck(object):
 
 
 NO_SCHEMA_CHECK = _NoSchemaCheck()
+
+
+def _resolve_gate(schema_validator):
+    """Accept ONLY the canonical validator or the named sentinel. Nothing else.
+
+    Codex audit 6 (MAJOR 3): the claim that skipping the gate was a "visible, greppable act" was
+    false, because the parameter accepted any callable -- `lambda instance, entity: instance` was
+    an equally valid argument and greps for nothing. A required argument that accepts an arbitrary
+    no-op is ceremony, not a gate. Two values are legal now, one of which is named after what it
+    gives up.
+    """
+    if schema_validator is NO_SCHEMA_CHECK or schema_validator is ajv_schema_validator:
+        return schema_validator
+    raise TypeError(
+        'schema_validator must be snapshot_validator.ajv_schema_validator or the named sentinel '
+        'snapshot_validator.NO_SCHEMA_CHECK, not %r. An arbitrary callable here silently disables '
+        'the schema gate while looking like it supplies one.' % (schema_validator,))
 
 
 # ---------------------------------------------------------------------------------------
@@ -127,6 +163,17 @@ def _int(container, key, where):
     if isinstance(v, bool) or not isinstance(v, int):
         _refuse('%s.%s must be an integer, got %r -- refusing to compute an equation over a '
                 'value that is not a number' % (where, key, v))
+    # Codex audit 6 (MAJOR 3, reproduced): the schema carries `minimum: 0` on every one of these,
+    # but nothing here did -- so with the schema gate skipped, `duplicates: -1` computed
+    # reconciliation_clear=true, because DUPLICATES_PRESENT asks `n > 0` and -1 is not. The same
+    # held for conflicts and unclassified. That is audit 5's balanced-negative attack coming back
+    # through the door the schema was guarding, which is exactly what a skippable gate means.
+    # A count cannot be negative in any world this program models, so this is a refusal and not
+    # a reason code: it is not a fact about the fleet, it is a broken input.
+    if v < 0:
+        _refuse('%s.%s is %d. A count cannot be negative; this is a malformed input, not a '
+                'finding about the fleet, and a `> 0` test would silently pass it.'
+                % (where, key, v))
     return v
 
 
@@ -140,7 +187,7 @@ def facts_of(doc):
     reg = meta.get('mandatory_sources')
     if not isinstance(reg, list) or not reg:
         # An empty registry makes every missing source "unexpected", which is exactly how the
-        # original 0 == 0 all_clear passed. The schema also refuses this (minItems: 1); it is
+        # original 0 == 0 reconciliation_clear passed. The schema also refuses this (minItems: 1); it is
         # re-checked here because this function is reachable without ajv.
         _refuse('meta.mandatory_sources is absent or empty -- with no registry, a missing '
                 'source is indistinguishable from one that was never expected')
@@ -358,11 +405,11 @@ PREDICATES = collections.OrderedDict([
 
 
 def compute(doc):
-    """-> (all_clear, [(code, detail), ...]). Raises SnapshotRefusal if undecidable.
+    """-> (reconciliation_clear, [(code, detail), ...]). Raises SnapshotRefusal if undecidable.
 
-    all_clear is `not reasons` BY CONSTRUCTION rather than by a separate expression, so the
+    reconciliation_clear is `not reasons` BY CONSTRUCTION rather than by a separate expression, so the
     boolean and the reason list cannot be made to disagree -- the schema says "reasons is
-    empty if and only if all_clear is true" and this is where that becomes true.
+    empty if and only if reconciliation_clear is true" and this is where that becomes true.
     """
     f = facts_of(doc)
     assert_decidable(f)
@@ -378,14 +425,18 @@ def _as_reason_objects(reasons):
 
 # Keys that only the validator may write. Finding one in a BUILDER INPUT means somebody supplied
 # the answer, which is the whole thing ORDER-601 exists to make impossible.
-SUPPLIED_ANSWER_KEYS = ('verdict', 'all_clear', 'reasons')
+# `all_clear` is kept in this list even though nothing writes it any more. It was the name until
+# Codex audit 6, and a builder written against the old contract would supply it; silently ignoring
+# that is the exact failure this scan exists to prevent, and it would be invisible because the key
+# no longer appears anywhere else. A retired name stays forbidden.
+SUPPLIED_ANSWER_KEYS = ('verdict', 'reconciliation_clear', 'all_clear', 'reasons')
 
 
 def _refuse_supplied_answer(node, path='input'):
     """Recursive forbidden-key scan over a builder input.
 
     /scrutinize 2026-07-30 measured the hole this closes. build_snapshot checked only for a
-    top-level `verdict`, so an input whose `meta.reconciliation` carried `all_clear: true` was
+    top-level `verdict`, so an input whose `meta.reconciliation` carried `reconciliation_clear: true` was
     ACCEPTED under NO_SCHEMA_CHECK and a verdict computed for it -- the supplied answer silently
     ignored rather than refused. Part 1's guarantee ("a supplied answer has nowhere to sit") was
     therefore resting entirely on the closed schema, while the pre-commit computation suite runs
@@ -416,14 +467,14 @@ def build_snapshot(inp, schema_validator):
     raises on an invalid instance, or the sentinel NO_SCHEMA_CHECK. See the module docstring
     for why there is no default.
     """
-    if schema_validator is not NO_SCHEMA_CHECK:
+    if _resolve_gate(schema_validator) is not NO_SCHEMA_CHECK:
         schema_validator(inp, BUILDER_ENTITY)
     if not isinstance(inp, dict) or inp.get('entity') != BUILDER_ENTITY:
         _refuse('build_snapshot expects entity=%r, got %r' % (
             BUILDER_ENTITY, (inp or {}).get('entity') if isinstance(inp, dict) else inp))
     _refuse_supplied_answer(inp)
 
-    all_clear, reasons = compute(inp)
+    reconciliation_clear, reasons = compute(inp)
 
     # deepcopy carries every compatibility field through untouched -- meta.stale_bar_hours,
     # decision_bar_trades, counting_method, and the real v4 source-row metadata
@@ -435,7 +486,7 @@ def build_snapshot(inp, schema_validator):
         derived = derive_fresh(f, row)
         if derived is not None:
             row['fresh'] = derived
-    out['verdict'] = {'all_clear': all_clear, 'reasons': _as_reason_objects(reasons)}
+    out['verdict'] = {'reconciliation_clear': reconciliation_clear, 'reasons': _as_reason_objects(reasons)}
     return out
 
 
@@ -446,21 +497,28 @@ def verify_snapshot(doc, schema_validator):
     is well-formed -- the schema does that -- it asks whether the document's answer is the
     answer its own evidence produces.
     """
-    if schema_validator is not NO_SCHEMA_CHECK:
+    if _resolve_gate(schema_validator) is not NO_SCHEMA_CHECK:
         schema_validator(doc, OUTPUT_ENTITY)
     if not isinstance(doc, dict) or doc.get('entity') != OUTPUT_ENTITY:
         _refuse('verify_snapshot expects entity=%r, got %r' % (
             OUTPUT_ENTITY, (doc or {}).get('entity') if isinstance(doc, dict) else doc))
     stored = doc.get('verdict')
-    if not isinstance(stored, dict) or 'all_clear' not in stored or 'reasons' not in stored:
+    if not isinstance(stored, dict) or 'reconciliation_clear' not in stored or 'reasons' not in stored:
         _refuse('the persisted document carries no usable `verdict` to check')
 
-    all_clear, reasons = compute(doc)
+    reconciliation_clear, reasons = compute(doc)
     problems = []
 
-    if bool(stored['all_clear']) is not bool(all_clear):
-        problems.append('verdict.all_clear is %r but the evidence in this document computes '
-                        '%r' % (bool(stored['all_clear']), bool(all_clear)))
+    # Codex audit 6 (MAJOR 3, reproduced): this used to compare bool(stored) with bool(computed),
+    # so `reconciliation_clear: "yes"` verified clean -- every non-empty string is truthy. Coercion at a trust
+    # boundary reads the author's typo as the author's intent.
+    if not isinstance(stored['reconciliation_clear'], bool):
+        _refuse('verdict.reconciliation_clear is %r (%s), not a boolean. This is refused rather than coerced: '
+                'bool("no") is True, so coercion here would read any string as a clear verdict.'
+                % (stored['reconciliation_clear'], type(stored['reconciliation_clear']).__name__))
+    if stored['reconciliation_clear'] is not bool(reconciliation_clear):
+        problems.append('verdict.reconciliation_clear is %r but the evidence in this document computes '
+                        '%r' % (stored['reconciliation_clear'], bool(reconciliation_clear)))
 
     # Counter, not set. MEASURED 2026-07-30 (/scrutinize): with sets, a document that listed the
     # same reason three times verified clean, because set equality collapses the duplicates. The
@@ -493,7 +551,11 @@ def verify_snapshot(doc, schema_validator):
     f = facts_of(doc)
     for row in f.rows:
         derived = derive_fresh(f, row)
-        if derived is not None and bool(row.get('fresh')) is not bool(derived):
+        if derived is not None and not isinstance(row.get('fresh'), bool):
+            _refuse('meta.sources[%r].fresh is %r (%s), not a boolean -- refused rather than '
+                    'coerced, for the same reason as verdict.reconciliation_clear'
+                    % (row['name'], row.get('fresh'), type(row.get('fresh')).__name__))
+        if derived is not None and row.get('fresh') is not bool(derived):
             problems.append('meta.sources[%r].fresh is %r but age_hours=%r against '
                             'stale_bar_hours=%r derives %r'
                             % (row['name'], bool(row.get('fresh')), row.get('age_hours'),
@@ -506,11 +568,18 @@ def verify_snapshot(doc, schema_validator):
     return doc
 
 
-def load_verified(path, schema_validator):
-    """The only sanctioned way for a reader to obtain a snapshot. Wiring readers is S4."""
+def load_verified(path):
+    """The only sanctioned way for a reader to obtain a snapshot. Wiring readers is S4.
+
+    Takes NO validator parameter, per Codex audit 6: this is the PUBLIC trust boundary, and a
+    boundary that lets its caller choose whether to check is not a boundary. The skip stays
+    available on build_snapshot/verify_snapshot, which are the internal computation entry points
+    the fast suite drives; a reader gets the checked path or writes its own, and writing its own
+    is at least visible in a diff.
+    """
     with io.open(path, encoding='utf-8-sig') as fh:
         doc = json.load(fh)
-    return verify_snapshot(doc, schema_validator)
+    return verify_snapshot(doc, ajv_schema_validator)
 
 
 # ---------------------------------------------------------------------------------------
@@ -589,7 +658,7 @@ def main(argv):
         print(USAGE)
         return 2
     try:
-        load_verified(argv[2], ajv_schema_validator)
+        load_verified(argv[2])
     except SnapshotRefusal as exc:
         print('[REFUSED] %s' % exc)
         return 1

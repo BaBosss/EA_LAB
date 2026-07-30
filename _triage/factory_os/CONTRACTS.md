@@ -51,10 +51,10 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `WorkReceipt` | `ops/receipts/*.jsonl (append-only events -> single-writer projection)` | PENDING GOVERNANCE CHANGE - see description | receipt_validator: only the user may write CANCELLED_BY_USER |
 | `SystemFinding` | `ops/findings.jsonl` | — | finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close |
 | `IdeaRef` | `INTAKE_QUEUE.md (EXISTING - NOT replaced)` | — | — |
-| `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` | — | snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input |
-| `ReconciliationEvidence` | `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` | — | snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer |
-| `SnapshotVerdict` | `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` | — | snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match |
-| `SnapshotBuilderInput` | `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` | — | snapshot_validator: refuses to compute from an input that does not validate |
+| `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` | — | snapshot_validator: reconciliation_clear is COMPUTED and MUST NOT be read from input |
+| `ReconciliationEvidence` | `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` | — | snapshot_validator: this object is the INPUT to the reconciliation_clear computation and never contains the answer |
+| `SnapshotVerdict` | `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` | — | snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED |
+| `SnapshotBuilderInput` | `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` | — | snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path |
 | `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
 
@@ -614,7 +614,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`SnapshotBuilderInput`** · stored in `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` · enforced by *snapshot_validator: refuses to compute from an input that does not validate*
+**`SnapshotBuilderInput`** · stored in `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` · enforced by *snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -638,7 +638,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`ReconciliationEvidence`** · stored in `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` · enforced by *snapshot_validator: this object is the INPUT to the all_clear computation and never contains the answer*
+**`ReconciliationEvidence`** · stored in `the `meta.reconciliation` property of a SnapshotBuilderInput and of portfolio/control_room_snapshot.json` · enforced by *snapshot_validator: this object is the INPUT to the reconciliation_clear computation and never contains the answer*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -669,12 +669,12 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`SnapshotVerdict`** · stored in `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` · enforced by *snapshot_validator: recomputes all_clear from the persisted evidence on every READ and refuses a document whose verdict does not match*
+**`SnapshotVerdict`** · stored in `the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator` · enforced by *snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED*
 
 | field | type | required | rule |
 |---|---|---|---|
-| `all_clear` | `boolean` | **yes** | COMPUTED. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. |
-| `reasons` | array of object *(fields below)* | **yes** | items closed · items require `code` · empty if and only if all_clear is true - the two must not be able to disagree |
+| `reconciliation_clear` | `boolean` | **yes** | COMPUTED, never supplied. True only when every mandatory source is present, read_ok and fresh; discovered==categorized; the category sum matches; the coverage sum matches; duplicates==0; conflicts==0; unclassified==0; and categories.actionable==0. SCOPE - narrower than the old name promised: computed from meta.reconciliation and the source rows ONLY. It was called `all_clear` until Codex audit 6 built a document with a NO_SENSOR fleet sensor, a BLIND floating-risk sensor, missing kill/judge controls, an UNCLASSIFIED unknown magic and missing attestation, and it verified true - because none of those domains reach the computation. system_health, floating_risk, deployments.gaps, unknown_magics, attestation, judge_readiness and summary are carried through UNCHECKED. Do not render this as Control Room health. |
+| `reasons` | array of object *(fields below)* | **yes** | items closed · items require `code` · empty if and only if reconciliation_clear is true - the two must not be able to disagree |
 | `reasons[].code` | `MANDATORY_SOURCE_MISSING` \| `MANDATORY_SOURCE_UNREADABLE` \| `MANDATORY_SOURCE_STALE` \| `SOURCE_REGISTRY_MISMATCH` \| `DUPLICATE_SOURCE_NAME` \| `SOURCE_MANDATORY_FLAG_CONTRADICTS_REGISTRY` \| `DISCOVERED_CATEGORIZED_MISMATCH` \| `CATEGORY_SUM_MISMATCH` \| `COVERAGE_SUM_MISMATCH` \| `DUPLICATES_PRESENT` \| `CONFLICTS_PRESENT` \| `UNCLASSIFIED_PRESENT` \| `ACTIONABLE_PRESENT` | **yes** | MISSING and UNREADABLE are separate codes on purpose: 'cannot read it' and 'it is not there' have opposite fixes and this repo has collapsed them before |
 | `reasons[].detail` | `string` \| `null` | — | the source name, or the two numbers that failed to match - so a fixture can assert WHICH instance fired |
 
@@ -687,7 +687,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`ControlRoomSnapshotV5`** · stored in `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` · enforced by *snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input*
+**`ControlRoomSnapshotV5`** · stored in `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` · enforced by *snapshot_validator: reconciliation_clear is COMPUTED and MUST NOT be read from input*
 
 | field | type | required | rule |
 |---|---|---|---|
@@ -726,7 +726,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `sources[].name` | `string` | **yes** |  |
 | `sources[].mandatory` | `boolean` | **yes** |  |
 | `sources[].read_ok` | `boolean` | **yes** | false must stay distinguishable from 'read fine, found nothing' in EVERY consumer |
-| `sources[].fresh` | `boolean` | **yes** | DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an all_clear - there is a fixture for exactly that. |
+| `sources[].fresh` | `boolean` | **yes** | DERIVED, and the validator does not trust the supplied value: it recomputes fresh from `age_hours` against `stale_bar_hours` and overwrites this on the way out. Present because the real v4 consumers read it. A caller-supplied `fresh: true` on an over-the-bar row therefore does NOT buy an reconciliation_clear - there is a fixture for exactly that. |
 | `sources[].age_hours` | `number` \| `null` | **yes** |  |
 | `sources[].path` | `string` \| `null` | — | COMPATIBILITY: the real v4 source rows are {path, sha256, mtime, age_hours} (scripts/control_room_snapshot.ps1 FileMeta) and carry no `name` at all. These three were absent from this closed row, so a builder holding the real metadata could not even be expressed at the boundary, let alone preserve it. Reconciling `path` with `name` as the identity is S4's job; carrying it through is this order's. |
 | `sources[].sha256` | `string` \| `null` | — | COMPATIBILITY: as `path`. |

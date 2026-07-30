@@ -162,8 +162,16 @@ Three consequences, stated so the audit can attack them:
 - **Factory actions are never hidden inside Phase 1.** Phase 1 may read, normalize, dedupe, classify,
   render, notify. It may not claim, dispatch, approve, cancel, close, reprioritize, or start an agent
   (handoff §2, §20). A Factory *view* may ship in Phase 1; a Factory *action* may not.
-- **`ALL CLEAR` is one rule for both domains.** The handoff's reconciliation equation is promoted to a
-  global invariant and applied to Factory data too:
+- **The reconciliation equation is one rule for both domains — but it is NOT a global health verdict.**
+  ⚠️ **Corrected 2026-07-30 after Codex audit 6.** This bullet used to be titled "`ALL CLEAR` is one rule
+  for both domains", and the validator built to it named its output `all_clear`. Audit 6 then constructed a
+  snapshot with a **`NO_SENSOR` fleet sensor, a `BLIND` floating-risk sensor, missing kill/judge controls, an
+  `UNCLASSIFIED` unknown magic and missing attestation** — and it verified **true**, correctly, because the
+  equation below says nothing about any of those. The verdict is now called **`reconciliation_clear`** and
+  the schema states what it excludes. Making a genuinely global `ALL CLEAR` requires health contracts for
+  `system_health`, `floating_risk`, `deployments.gaps`, `unknown_magics`, `attestation` and
+  `judge_readiness` — all `array of arbitrary object` today — and that is **S4** work, not a rename.
+  The equation itself is unchanged and still applies to Factory data:
   `discovered = categorized` and `categorized = actionable + running + waiting + review/audit + completed + cancelled_by_user`.
   For coverage: `cells_in_universe = tested + untested + not_applicable(with reason)`. Fail either and the
   page shows `UNKNOWN — ตรวจไม่ครบ` with `sources N/M · uncategorized N · conflicts N`. **Never translate
@@ -504,8 +512,11 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 
 ### 4.7 Entities whose rationale lives in §7 (operations surface)
 These are contracts of the Control Center, not of the factory registries, and §7 explains *why* each one
-exists. Their **fields** are here for one reason: the generator refuses to run if any `$defs` entity has
-no generated block anywhere in this document, so an entity cannot drift by simply not being written down.
+exists. Their **fields live in [`factory_os/CONTRACTS.md`](factory_os/CONTRACTS.md)**, linked below — the
+generator refuses to run if any `$defs` entity has no generated block there, and `--check` additionally
+refuses if this document stops linking one, so an entity cannot drift by simply not being written down.
+<sub>(This paragraph said "their fields are here" and "no generated block anywhere in this document" until
+2026-07-30; both were left stale by the relocation and caught by Codex audit 6.)</sub>
 
 → **contract [`DeploymentAttestationEvent`](factory_os/CONTRACTS.md#deploymentattestationevent)** — fields, types, required-set and validation rules.
 

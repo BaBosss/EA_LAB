@@ -18,11 +18,25 @@ WHY THIS EXISTS
   do not call a finding fixed until a negative fixture for that specific defect fails
   before the fix and passes after.
 
+WHY THIS IS STILL NOT IN THE PRE-COMMIT TIER, and what changed 2026-07-30
+  It used to be excluded because it cost 11.5s -- one ajv process per case, 35 spawns. Codex audit 6
+  (MAJOR 7) pointed out what that meant: the 35 cases everyone quotes are enforced by nothing
+  automatic, so a schema edit can trigger the fast tier, run the computation suite with
+  NO_SCHEMA_CHECK, and never reach the authoritative closed-object and nonnegative checks.
+  Batching all cases into ONE ajv process took it to **1.8s, measured**.
+
+  It is STILL not wired, and the reason is now different and worth stating plainly: the fast tier
+  measures 14.1-15.2s against a 15.0s ADVISORY budget, so there is no room for 1.8s. The blocker
+  moved from "this suite is too slow" to "the tier runs all 12 suites whenever any guarded path is
+  staged". The fix is per-path suite selection driven by $SUITE_GUARDS in run_fast_cages.ps1 -- a
+  schema edit should not pay 5.8s of optimize-guard cases. Until that exists, this suite is
+  manual, and that sentence is the honest status rather than a cost excuse.
+
 REQUIRES  ajv-cli  (npm install -g ajv-cli)
 USAGE     python _triage/factory_os/run_schema_fixtures.py
 EXIT      0 = every case behaved as declared · 1 = at least one did not
 """
-import json, os, re, subprocess, sys, tempfile
+import io, json, os, re, shutil, subprocess, sys, tempfile
 
 SCHEMA = '_triage/factory_os/schemas.json'
 
@@ -194,7 +208,7 @@ CASES = [
 # it names while never reaching it: ajv returns nonzero either way. So the positive is
 # defined once, and each negative is `dict(BUILDER_OK, **{one_thing})`.
 #
-# These cover only what JSON SCHEMA can decide. Whether `all_clear` is COMPUTED correctly is
+# These cover only what JSON SCHEMA can decide. Whether `reconciliation_clear` is COMPUTED correctly is
 # not a schema property and is not tested here -- that is snapshot_validator's own suite, and
 # claiming otherwise would be the "x-enforced-by names a validator nobody wrote" defect.
 
@@ -251,12 +265,12 @@ CASES += [
     case("builder-input-carrying-all-clear",
          "ORDER-601: a supplied verdict must be refused BY THE SCHEMA, not by code, and the "
          "error must NAME the property", "fail",
-         with_evidence(all_clear=True),
+         with_evidence(reconciliation_clear=True),
          says=[{"keyword": "unevaluatedProperties", "instancePath": "/meta/reconciliation",
-                "unevaluatedProperty": "all_clear"}]),
+                "unevaluatedProperty": "reconciliation_clear"}]),
     case("builder-input-carrying-verdict-object",
          "ORDER-601: the builder root is closed, so it cannot acquire a verdict either", "fail",
-         builder(verdict={"all_clear": True, "reasons": []})),
+         builder(verdict={"reconciliation_clear": True, "reasons": []})),
     case("builder-input-dropping-a-compat-domain",
          "audit-5: a validator that emits only {entity,meta,system_health,summary} must not validate",
          "fail",
@@ -283,13 +297,13 @@ CASES += [
     case("snapshot-output-verdict-free-text-reason",
          "a false verdict must be explained in a CLOSED code, not prose nobody parses", "fail",
          {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
-          "verdict": {"all_clear": False, "reasons": [{"code": "something went wrong"}]},
+          "verdict": {"reconciliation_clear": False, "reasons": [{"code": "something went wrong"}]},
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
           "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
     case("snapshot-output-valid",
          "the persisted positive - without it the negatives above could pass for any reason", "pass",
          {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
-          "verdict": {"all_clear": True, "reasons": []},
+          "verdict": {"reconciliation_clear": True, "reasons": []},
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
           "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
 ]
@@ -307,7 +321,7 @@ CASES += [
 # "expect=fail" on a 19-branch oneOf is satisfied by any of 20 errors (see why_says above).
 
 SNAP_OK = {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
-           "verdict": {"all_clear": True, "reasons": []},
+           "verdict": {"reconciliation_clear": True, "reasons": []},
            "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
            "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}
 
@@ -383,15 +397,15 @@ def check_validator_schema_gate():
         problems.append('the gate REFUSED a builder input that ajv accepts: %s' % exc)
 
     # 2. An input ajv rejects must be refused BEFORE any verdict is computed. The instance below
-    #    carries `all_clear` in the evidence -- schema-invalid, and semantically healthy, so a
-    #    validator that skipped the gate would happily return all_clear=true for it.
-    supplied = with_evidence(all_clear=True)
+    #    carries `reconciliation_clear` in the evidence -- schema-invalid, and semantically healthy, so a
+    #    validator that skipped the gate would happily return reconciliation_clear=true for it.
+    supplied = with_evidence(reconciliation_clear=True)
     try:
         SV.build_snapshot(supplied, SV.ajv_schema_validator)
-        problems.append('the gate ACCEPTED an instance ajv rejects (evidence carrying all_clear) '
+        problems.append('the gate ACCEPTED an instance ajv rejects (evidence carrying reconciliation_clear) '
                         '- the schema gate is not wired into build_snapshot')
     except SV.SnapshotRefusal as exc:
-        if 'all_clear' not in str(exc):
+        if 'reconciliation_clear' not in str(exc):
             problems.append('refused, but the message never names the offending property: %s' % exc)
 
     # 3. The same instance with NO_SCHEMA_CHECK must reach the code path that refuses a supplied
@@ -399,7 +413,7 @@ def check_validator_schema_gate():
     #    gate is survivable. This is the honest scope of the sentinel.
     try:
         SV.build_snapshot(supplied, SV.NO_SCHEMA_CHECK)
-        problems.append('with NO_SCHEMA_CHECK, an evidence object carrying all_clear was accepted '
+        problems.append('with NO_SCHEMA_CHECK, an evidence object carrying reconciliation_clear was accepted '
                         'and a verdict computed for it')
     except SV.SnapshotRefusal:
         pass
@@ -420,6 +434,62 @@ def check_validator_schema_gate():
         SV.SCHEMA_PATH = saved
 
     return problems
+
+
+def run_batch(schema, cases):
+    """Validate every case in ONE ajv process. -> {name: (state, out)}
+
+    WHY (Codex audit 6, MAJOR 7): this suite measured 11.5s, essentially all of it ajv process
+    startup -- one spawn per case, 35 spawns. That cost is the only reason the suite is not in the
+    pre-commit tier, which means the 35 cases everyone quotes are enforced by nothing automatic: a
+    schema edit could trigger the fast tier, run the computation suite with NO_SCHEMA_CHECK, and
+    never touch the authoritative closed-object and nonnegative checks.
+
+    ajv's multi `-d` output is per file and attributable, MEASURED on this machine:
+      valid   -> stdout: "<path> valid"
+      invalid -> stderr: "<path> invalid" followed by the JSON error array on the next line
+    Attribution is by BASENAME because ajv echoes the path with a backslash before the filename
+    even when given forward slashes.
+
+    The three-state discipline is preserved and is arguably stronger here: a case for which ajv
+    printed NEITHER line is ERROR, explicitly. That is what makes "the tool did not read this"
+    impossible to confuse with "the contract rejected this".
+    """
+    tmpdir = tempfile.mkdtemp(prefix='ajvbatch_')
+    try:
+        names = {}
+        cmd = ['ajv', 'validate', '-s', schema, '--spec=draft2020', '--strict=false',
+               '--errors=line']
+        for i, c in enumerate(cases):
+            base = 'case_%03d.json' % i
+            p = os.path.join(tmpdir, base)
+            with io.open(p, 'w', encoding='utf-8') as fh:
+                fh.write(json.dumps(c['instance']))
+            names[base] = c['name']
+            cmd += ['-d', p]
+        proc = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+        combined = (proc.stdout or '') + '\n' + (proc.stderr or '')
+
+        results = {}
+        lines = combined.splitlines()
+        for idx, line in enumerate(lines):
+            stripped = line.strip()
+            for base, name in names.items():
+                if base not in stripped:
+                    continue
+                if stripped.endswith(' valid'):
+                    results[name] = (VALID, stripped)
+                elif stripped.endswith(' invalid'):
+                    detail = lines[idx + 1].strip() if idx + 1 < len(lines) else ''
+                    results[name] = (INVALID, stripped + '\n' + detail)
+                break
+        for base, name in names.items():
+            if name not in results:
+                results[name] = (ERROR, 'ajv printed no verdict line for this case (exit %s): %s'
+                                 % (proc.returncode, combined.strip().splitlines()[:1]))
+        return results
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
 
 
 def run(schema, instance):
@@ -452,8 +522,9 @@ def main():
     print("=== real JSON Schema validation (ajv, draft 2020-12) ===")
     print("schema: %s\n" % SCHEMA)
     bad = 0
+    batch = run_batch(SCHEMA, CASES)
     for c in CASES:
-        got, out = run(SCHEMA, c['instance'])
+        got, out = batch[c['name']]
         # An ERROR never satisfies an expectation, not even `expect=fail`. "The tool could
         # not read its input" and "the contract rejected this instance" are different facts
         # and must never share an outcome.

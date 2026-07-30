@@ -28,8 +28,15 @@
     rest of (3) are worth running.
 
     Interpreter: tools\python312\python.exe, committed in-repo. No script here needs ajv or any
-    network access; run_schema_fixtures.py is the one with the ajv dependency and it is
-    deliberately NOT in this hook tier for that reason.
+    network access.
+
+    run_schema_fixtures.py (35 ajv cases) is deliberately NOT here, and as of 2026-07-30 the reason
+    CHANGED: it was 11.5s (one ajv spawn per case) and is now 1.8s (batched into one). So it is no
+    longer excluded for cost -- it is excluded because this tier has no headroom at all, measuring
+    14.1-15.2s against a 15.0s advisory budget. Codex audit 6 named the consequence: the 35 cases
+    are enforced by nothing automatic, so a schema edit can trigger this tier, run the computation
+    suite with NO_SCHEMA_CHECK, and never reach the closed-object and nonnegative checks. The fix is
+    per-path suite selection from $SUITE_GUARDS, not squeezing 1.8s into a tier already over budget.
 
     WHY (3) LIVES HERE RATHER THAN IN A SUITE OF ITS OWN -- this is the budget decision the
     ORDER-601 handoff demanded be made deliberately, with numbers rather than assumption.
