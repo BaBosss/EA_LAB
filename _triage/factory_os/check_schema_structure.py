@@ -1,3 +1,23 @@
+"""
+SUPERSEDED AS THE DESIGN<->SCHEMA BINDING (2026-07-30, BACKLOG-D31). Read this before
+trusting a green run from it.
+
+This file was built to bind the design to the schema and was believed to be the cure.
+Audit 3 measured it against the 7 REGRESSED findings and it would have caught 0 of 7: it
+compares storage paths and greps a hardcoded list of banned sentences, while every one of
+those defects was semantic. It printed STRUCTURE OK on a commit where the design described
+`attempts[]`, a lease with `pid`, and `launched_at` and the schema said the opposite.
+
+The binding now lives in gen_design_contracts.py (the design's normative tables are
+GENERATED from schemas.json) and run_contract_binding_tests.py (all 7 regressions
+re-applied as mutations, all 7 caught, three controls green). Those two run in the
+pre-commit fast tier via scripts/_test/run_contract_binding_tests.ps1.
+
+What is still useful here: root/discriminator/branch shape checks and the
+unevaluatedProperties inventory. It is kept as a lint, NOT as evidence that the design and
+the schema agree. It is deliberately not wired into any hook -- a green run from this file
+means less than it appears to.
+"""
 import json, re, sys
 
 d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))

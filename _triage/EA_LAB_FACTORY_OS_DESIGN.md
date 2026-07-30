@@ -328,17 +328,120 @@ CHAMPION (deployed) + CHALLENGER (new revision) → both evidenced on the same l
 
 ## 4. (D) Machine-readable schemas
 
+> ⚙️ **How to read this section (BACKLOG-D31, 2026-07-30).** Every normative table below is
+> **generated from `_triage/factory_os/schemas.json`** by `_triage/factory_os/gen_design_contracts.py`.
+> Prose outside the generated blocks carries **rationale only** — why a field exists, what it cost to
+> learn — and has no authority over what the contract *is*. This is not a stylistic preference: across
+> three blind audits, **seven findings regressed through exactly one seam**, the design prose and the
+> schema each stating a contract by hand with nothing binding them. One of those regressions recurred
+> *inside the commit that installed the checker meant to prevent it*, and the checker printed
+> `STRUCTURE OK`. If you are about to hand-edit a table below, you are re-opening that seam: edit the
+> schema and run the generator.
+
 Full field/type/validation definitions live in the single appendix `_triage/factory_os/schemas.json`
 (one file, `$defs` per entity — deliberately one file to avoid document sprawl). The design-level rules:
+
+**Storage and ownership, every entity in one place:**
+
+<!-- BEGIN GENERATED CONTRACT: __STORAGE__ -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+| entity | canonical storage | writer | enforced by |
+|---|---|---|---|
+| `OwnerRef` | *embedded in its parent — no file* | — | — |
+| `Hypothesis` | `factory/hypotheses.jsonl` | claude|user | hypothesis_validator: status transitions, and the refusal to register without a falsifier |
+| `ModuleUse` | *embedded in its parent — no file* | — | — |
+| `ParameterBinding` | `factory/parameter_bindings.jsonl` | claude | — |
+| `TestUniverse` | `factory/universe.jsonl` | claude|user | — |
+| `LogicalSymbol` | `factory/universe.jsonl` | — | — |
+| `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | — |
+| `MetricRef` | *embedded in its parent — no file* | — | — |
+| `CoverageCell` | `factory/coverage.jsonl` | automation for state; claude only for not_applicable_reason | coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited |
+| `ExecutionKey` | *embedded in its parent — no file* | — | — |
+| `RunAttempt` | *embedded in its parent — no file* | — | — |
+| `RunTransition` | `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` | the scheduler only | scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator |
+| `RunJournal` | **derived, never written** — True | — | — |
+| `EvidenceRef` | `docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)` | — | — |
+| `CandidatePayload` | *embedded in its parent — no file* | — | — |
+| `CandidateManifest` | `factory/candidates/<candidate_id>.json` | claude, once, at verdict time | candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash. |
+| `MagicAllocation` | `factory/magic_allocations.jsonl` | automation allocates; claude approves; user ratifies scope changes | allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account\|magic backstop |
+| `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv (EXISTING) + append-only event log` | claude|user only | attestation_validator: no actor other than user/claude may append an event that changes candidate_id or status; automation may append OBSERVED events only |
+| `WorkReceipt` | `ops/receipts/*.jsonl (append-only events -> single-writer projection)` | PENDING GOVERNANCE CHANGE - see description | receipt_validator: only the user may write CANCELLED_BY_USER |
+| `SystemFinding` | `ops/findings.jsonl` | — | finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close |
+| `IdeaRef` | `INTAKE_QUEUE.md (EXISTING - NOT replaced)` | — | — |
+| `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` | — | snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input |
+| `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
+| `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
+
+<!-- END GENERATED CONTRACT: __STORAGE__ -->
 
 **Storage format:** every new registry is **JSONL, one object per line**, each carrying its `entity`
 discriminator. Not CSV. CSV yields strings for everything and has no round-trip rule for lists or nulls,
 which is a defect the audit found in rev 1 where typed schemas named CSV owners. If hand-editability is
 preferred later, the CSV encoding grammar and round-trip fixtures must be specified first — §11.9.
 
-### 4.1 Hypothesis registry (`factory/hypotheses.jsonl`)
-`entity · hypothesis_id · boss_family · revision · revision_id · architecture_digest · module_set ·
-coupling_class · experimental · engine_edge · status · preregistration_ref · superseded_by`
+### 4.1 Hypothesis registry
+
+<!-- BEGIN GENERATED CONTRACT: Hypothesis -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`Hypothesis`** · stored in `factory/hypotheses.jsonl` · written by *claude|user* · enforced by *hypothesis_validator: status transitions, and the refusal to register without a falsifier*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `Hypothesis` | **yes** |  |
+| `hypothesis_id` | `string` | **yes** | pattern `^B(1[1-8])-H[0-9]{2}$` |
+| `boss_family` | `integer` | **yes** | min `11` · max `18` |
+| `revision` | `integer` | **yes** | min `1` |
+| `revision_id` | `string` | — | pattern `^B(1[1-8])-H[0-9]{2}-r[0-9]+$` |
+| `architecture_digest` | `string` | **yes** | pattern `^[0-9a-f]{16}$` · hash of (entry, exit_owner, stack_owner, lot_owner, recovery, hedge, regime). Change here MECHANICALLY forces a new revision. |
+| `module_set` | array of [`ModuleUse`](#moduleuse) | **yes** | minItems `1` |
+| `coupling_class` | `SCALE_INVARIANT` \| `COUPLED` | **yes** |  |
+| `experimental` | `boolean` | **yes** | REQUIRED, not defaulted. Audit P1: JSON Schema `default` does not populate a missing field, so a consumer would have read absent as false and let an experimental module reach a promotion path. |
+| `engine_edge` | `boolean` | — |  |
+| `status` | `DRAFT` \| `REGISTERED` \| `WRAPPER_GENERATED` \| `PARITY_PASSED` \| `EVIDENCE_IN_PROGRESS` \| `EVIDENCE_COMPLETE` \| `AWAITING_VERDICT` \| `CLOSED` | **yes** |  |
+| `preregistration_ref` | [`OwnerRef`](#ownerref) | **yes** | the taskboard order that owns the causal claim, falsifier and pre-registered bars. This entity does NOT copy them. |
+| `superseded_by` | `string` \| `null` | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: Hypothesis -->
+
+<!-- BEGIN GENERATED CONTRACT: ModuleUse -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ModuleUse`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `token` | `string` | **yes** | pattern `^LAB_CAP_[A-Z0-9_]+$` |
+| `module_version` | `string` | **yes** |  |
+| `stability` | `EXPERIMENTAL` \| `CERTIFIABLE` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: ModuleUse -->
+
+<!-- BEGIN GENERATED CONTRACT: OwnerRef -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`OwnerRef`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `OwnerRef` | **yes** |  |
+| `owner_type` | `taskboard_order` \| `scorecard` \| `project_state` \| `deployments_csv` \| `accounts_csv` \| `attestation_map` \| `master_backlog` \| `param_registry` \| `param_linkage` \| `intake_queue` \| `event_log` \| `evidence_manifest` \| `session_ledger` \| `optimization_procedure` | **yes** |  |
+| `path` | `string` | **yes** |  |
+| `commit_oid` | `string` | **yes** | pattern `^[0-9a-f]{40}$` |
+| `blob_oid` | `string` | **yes** | pattern `^[0-9a-f]{40}$` |
+| `raw_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `anchor` | `string` \| `null` | — | must occur EXACTLY once in the blob and contain no spaces - inherited constraint from the event log utility |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: OwnerRef -->
+
+*Rationale:*
 - **The causal claim, falsifier and acceptance criteria are NOT stored here.** They are owned by the
   taskboard pre-registration and reached through `preregistration_ref` (an `OwnerRef` pinned at
   commit + blob + sha256). Rev 1 copied them, which is what the anti-drift rule forbids. A hypothesis
@@ -353,11 +456,54 @@ Rev 1 put `role` on the global parameter definition. That is wrong: locked-ness 
 the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and marking it globally would make
 `optimize_guard` refuse it on every Boss.
 
-| What | Where | Contents |
-|---|---|---|
-| **permanent semantics** | `docs/PARAM_REGISTRY.csv` (extend, do not fork) | owner · unit_true · context · active_when · coupled_with · causal_question · classification · `display_label` · `enum_name` · `precedence_owner` |
-| **per-hypothesis binding** | `factory/parameter_bindings.jsonl` | `hypothesis_revision` + `parameter` + `role` + `surface` + `locked_value` + `optimize_stage` + `safe_range` + `definition_ref` |
+**Permanent semantics — `docs/PARAM_REGISTRY.csv` (extend, do not fork):**
 
+<!-- BEGIN GENERATED CONTRACT: META_parameter_registry_columns -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+| column | meaning | scope |
+|---|---|---|
+| owner | which module reads this input | global |
+| unit_true | what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once | global |
+| context | where in the strategy it applies | global |
+| active_when | the condition under which this input has any effect at all | global |
+| coupled_with | inputs that must move with it or the strategy changes rather than resizes | global |
+| causal_question | the question a sweep of this input answers | global |
+| classification | OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0) | global |
+| display_label | the label the generated Inputs page shows | global |
+| enum_name | the enum type when the input is an enum, so a diff table cannot compare a name against a number | global |
+| precedence_owner | which sibling wins when an OVERRIDE chain has more than one member set | global |
+| role | ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl | NOT A COLUMN |
+
+<!-- END GENERATED CONTRACT: META_parameter_registry_columns -->
+
+**Per-hypothesis binding:**
+
+<!-- BEGIN GENERATED CONTRACT: ParameterBinding -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ParameterBinding`** · stored in `factory/parameter_bindings.jsonl` · written by *claude*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `ParameterBinding` | **yes** |  |
+| `hypothesis_revision` | `string` | **yes** | pattern `^B(1[1-8])-H[0-9]{2}-r[0-9]+$` |
+| `parameter` | `string` | **yes** |  |
+| `role` | `TUNABLE` \| `RUNTIME` \| `SIZING` \| `SAFETY` \| `LOCKED` \| `INACTIVE` | **yes** |  |
+| `surface` | `OPERATOR` \| `RESEARCH` \| `HIDDEN` | **yes** |  |
+| `locked_value` | `any` | — | required when role=LOCKED; emitted as a const by the generator |
+| `optimize_stage` | `ARCHITECTURE` \| `SIGNAL` \| `EXIT` \| `EXECUTION` \| `STRESS` \| `FREEZE` \| `UNKNOWN` | — |  |
+| `safe_range` | `object` \| `null` | — | closed |
+| `definition_ref` | [`OwnerRef`](#ownerref) | **yes** | pins the docs/PARAM_REGISTRY.csv row that owns this parameter's permanent semantics |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `role` = `LOCKED`** → requires `locked_value`
+
+<!-- END GENERATED CONTRACT: ParameterBinding -->
+
+*Rationale:*
 - **The wrapper generator and `optimize_guard` must read one resolver.** If they read different tables
   they will disagree the moment a binding changes, which is the class of defect the repaired guard came
   from.
@@ -372,7 +518,65 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 - Existing columns keep their meaning so `param_registry_check.ps1` (CLEAN: 170 identifiers / 184 rows)
   keeps working across the change.
 
-### 4.3 Test Universe (`factory/universe.jsonl`) and Instrument Profile
+### 4.3 Test Universe and Instrument Profile
+
+<!-- BEGIN GENERATED CONTRACT: TestUniverse -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`TestUniverse`** · stored in `factory/universe.jsonl` · written by *claude|user*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `TestUniverse` | **yes** |  |
+| `universe_version` | `string` | **yes** | pattern `^v[0-9]+$` |
+| `kind` | `CORE` \| `EXPANSION` \| `PILOT` | **yes** |  |
+| `symbols` | array of `string` | **yes** | minItems `1` |
+| `timeframes` | array of `M5` \| `M15` \| `M30` \| `H1` \| `H4` \| `D1` | **yes** | minItems `1` |
+| `created_commit` | `string` | **yes** | pattern `^[0-9a-f]{40}$` |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: TestUniverse -->
+
+<!-- BEGIN GENERATED CONTRACT: LogicalSymbol -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`LogicalSymbol`** · stored in `factory/universe.jsonl`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `LogicalSymbol` | **yes** |  |
+| `logical` | `string` | **yes** |  |
+| `asset_class` | `FX_MAJOR` \| `FX_JPY` \| `GOLD` \| `SILVER` \| `CRYPTO` \| `INDEX` \| `ENERGY` | **yes** |  |
+| `broker_map` | `object` | **yes** | lane id -> broker symbol. Real cases: DE40 traded as GER40; USDJPYm/EURUSDm suffixed. |
+| `swap_mode` | `POINTS` \| `INTEREST_CURRENT` \| `UNKNOWN` | — | MEASURED. The tester charges POINTS-mode swap (XAUUSD verified -29.25) but not INTEREST_CURRENT (BTCUSD -14.67%/yr), which must then be deducted post-hoc from measured holding time. |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: LogicalSymbol -->
+
+<!-- BEGIN GENERATED CONTRACT: InstrumentProfile -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`InstrumentProfile`** · stored in `factory/instrument_profiles.jsonl`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `InstrumentProfile` | **yes** |  |
+| `profile_id` | `string` | **yes** |  |
+| `profile_version` | `integer` | **yes** | min `1` |
+| `content_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` · hash of the RESOLVED profile content. Candidates hash this, not the id. |
+| `layer` | `ASSET_CLASS` \| `SYMBOL_OVERRIDE` \| `BROKER_LANE` | **yes** |  |
+| `asset_class` | `FX_MAJOR` \| `FX_JPY` \| `GOLD` \| `SILVER` \| `CRYPTO` \| `INDEX` \| `ENERGY` | — |  |
+| `account_unit` | `USD` \| `CENT` | — |  |
+| `values` | `object` | — |  |
+| `semantics_ref` | [`OwnerRef`](#ownerref) | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: InstrumentProfile -->
+
+*Rationale:*
 - Universe is **versioned** (decision 25); a Candidate records which universe version it was searched in.
 - `LogicalSymbol` is separate from the broker string (decision 26). Real cases already in the repo:
   `DE40` traded as `GER40`; `USDJPYm`/`EURUSDm` suffixed symbols on two accounts.
@@ -383,12 +587,59 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 - A profile is pinned by **`content_hash` + `profile_version`, never by its mutable string id**, so that
   editing values under an unchanged id cannot leave a Candidate looking valid.
 
-### 4.4 Coverage cells (`factory/coverage.jsonl`)
-`entity · cell_id · hypothesis_revision · logical_symbol · tf · universe_version · state · metrics[] ·
-trial_count · boundary_hit · not_applicable_reason · backlog_ref`
-- **There is no flat `lane` or `data_fingerprint` on the cell, and no bare `best_pf_main`/`best_pf_bwd`.**
-  Every measurement is a `MetricRef` carrying **its own** `window · pf · trades · dd_pct · run_id · lane ·
-  data_fingerprint · model`. Rev 1 put one lane beside MAIN and BWD together — impossible, since the
+### 4.4 Coverage cells
+
+<!-- BEGIN GENERATED CONTRACT: CoverageCell -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`CoverageCell`** · stored in `factory/coverage.jsonl` · written by *automation for state; claude only for not_applicable_reason* · enforced by *coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `CoverageCell` | **yes** |  |
+| `cell_id` | `string` | **yes** |  |
+| `hypothesis_revision` | `string` | **yes** | pattern `^B(1[1-8])-H[0-9]{2}-r[0-9]+$` |
+| `logical_symbol` | `string` | **yes** |  |
+| `tf` | `M5` \| `M15` \| `M30` \| `H1` \| `H4` \| `D1` | **yes** |  |
+| `universe_version` | `string` | **yes** |  |
+| `state` | `UNTESTED` \| `BASELINE_RUN` \| `PROBE_RUN` \| `PULSE` \| `NO_PULSE` \| `RESCUE_IN_PROGRESS` \| `EVIDENCE_COMPLETE` \| `NOT_APPLICABLE` \| `UNVERIFIED_IMPORT` | **yes** |  |
+| `metrics` | array of [`MetricRef`](#metricref) | **yes** | PF is unrepresentable without trades and dd_pct by construction: two BWD-clearing hosts had 52 and 62 trades at under 2% DD while every failing host had 343-473. |
+| `trial_count` | `integer` | **yes** | min `0` |
+| `boundary_hit` | `boolean` | — | true = best result on a grid edge; the cell may NOT be closed until the range is expanded |
+| `not_applicable_reason` | `string` \| `null` | — |  |
+| `backlog_ref` | [`OwnerRef`](#ownerref) | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `state` = `NOT_APPLICABLE`** → requires `not_applicable_reason` · `not_applicable_reason` → `string` (minLength `10`)
+
+<!-- END GENERATED CONTRACT: CoverageCell -->
+
+<!-- BEGIN GENERATED CONTRACT: MetricRef -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`MetricRef`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `window` | `MAIN` \| `BWD` \| `HOLDOUT` \| `OTHER` | **yes** |  |
+| `pf` | `number` | **yes** |  |
+| `trades` | `integer` | **yes** | min `0` |
+| `dd_pct` | `number` | **yes** |  |
+| `run_id` | `string` | **yes** |  |
+| `lane` | `string` | **yes** |  |
+| `data_fingerprint` | `string` | **yes** |  |
+| `model` | `1` \| `2` \| `4` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: MetricRef -->
+
+*Rationale:*
+- **There is no flat `lane` or `data_fingerprint` on the cell, and no bare `best_pf_main`/`best_pf_bwd`** —
+  read the two tables above, not this sentence. Every measurement is a `MetricRef` carrying **its own**
+  window, lane, fingerprint and model. Rev 1 put one lane beside MAIN and BWD together — impossible, since the
   fingerprint includes the window, and it would have let a MAIN from lane 5c and a BWD from lane 1 render
   as a same-lane pair.
 - A PF is **unrepresentable without its trade count and drawdown**, by construction: the two hosts that
@@ -399,41 +650,214 @@ trial_count · boundary_hit · not_applicable_reason · backlog_ref`
   migration table**, not something this file may assert unilaterally.
 
 ### 4.5 Run journal, evidence, candidate manifest
-- **Run journal** (`factory/runs/<run_id>.jsonl`) — the persisted entity is a **`RunTransition`, one per
-  line, append-only**: `run_id · cell_id · attempt · transition · at`, plus `execution_key` on the
-  `QUEUED` line and a per-state `record`. `RunJournal` is the **derived fold** of those lines and is never
-  written. Transitions: `QUEUED · LEASED · LAUNCH_INTENT · PROCESS_OBSERVED · RUNNING · COMPLETED ·
-  FAILED · ABANDONED · EVIDENCE_REGISTERED`. The lease carries `lease_id · owner · expires_at` and
-  **no `pid`** — `LEASED` reserves the lane before any process exists. The pid lives in
-  `process_observed{pid, observed_at, process_fingerprint}`, which is deliberately separate from
-  `launch_intent_at` so that "died before spawn" and "spawned then died" are different records.
-  <sub>*This paragraph is the one that proved the binding checker insufficient: after the checker was
+<!-- BEGIN GENERATED CONTRACT: RunTransition -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RunTransition`** · stored in `factory/runs/<run_id>.jsonl - ONE OF THESE PER LINE, append-only` · written by *the scheduler only* · enforced by *scheduler: reconcile process + report + event store BEFORE any retry; monotonic transition validator*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `RunTransition` | **yes** |  |
+| `run_id` | `string` | **yes** | pattern `^RUN-[0-9]{8}-[0-9]{3,}$` |
+| `cell_id` | `string` | **yes** |  |
+| `execution_key` | [`ExecutionKey`](#executionkey) | — | written once, on the QUEUED line |
+| `attempt` | `integer` | **yes** | min `1` |
+| `transition` | `QUEUED` \| `LEASED` \| `LAUNCH_INTENT` \| `PROCESS_OBSERVED` \| `RUNNING` \| `COMPLETED` \| `FAILED` \| `ABANDONED` \| `EVIDENCE_REGISTERED` | **yes** |  |
+| `at` | `string` | **yes** |  |
+| `record` | [`RunAttempt`](#runattempt) | — |  |
+| `event_log_ref` | [`OwnerRef`](#ownerref) | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RunTransition -->
+
+<!-- BEGIN GENERATED CONTRACT: RunAttempt -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RunAttempt`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `attempt` | `integer` | **yes** | min `1` |
+| `transition` | `QUEUED` \| `LEASED` \| `LAUNCH_INTENT` \| `PROCESS_OBSERVED` \| `RUNNING` \| `COMPLETED` \| `FAILED` \| `ABANDONED` \| `EVIDENCE_REGISTERED` | **yes** |  |
+| `at` | `string` | **yes** |  |
+| `lease` | `object` \| `null` | — | closed · SELF-REVIEW FIX: rev 3 required `pid` on the lease, but LEASED happens BEFORE any process exists - the lane is reserved first. A schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder. pid moves to process_observed and is not part of the lease. |
+| `launch_intent_at` | `string` \| `null` | — | written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again. |
+| `process_observed` | `object` \| `null` | — | closed · SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable. |
+| `exit_code` | `integer` \| `null` | — | persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it |
+| `failure_class` | `NONE` \| `TESTER_ERROR` \| `TERMINAL_ERROR` \| `TIMEOUT` \| `LEASE_LOST` \| `KILLED` \| `CONFIG_REJECTED` | — | the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR |
+| `report_fresh_proof` | `object` \| `null` | — |  |
+| `event_id` | `string` \| `null` | — | id returned by the existing event-log append, so a crash between append and EVIDENCE_REGISTERED does not duplicate the occurrence on retry |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RunAttempt -->
+
+<!-- BEGIN GENERATED CONTRACT: RunJournal -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`RunJournal`** · **DERIVED** — True · stored in `NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written.`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `RunJournal` | **yes** |  |
+| `run_id` | `string` | **yes** | pattern `^RUN-[0-9]{8}-[0-9]{3,}$` |
+| `cell_id` | `string` | **yes** |  |
+| `execution_key` | [`ExecutionKey`](#executionkey) | **yes** |  |
+| `attempts` | array of [`RunAttempt`](#runattempt) | **yes** | minItems `1` |
+| `event_log_ref` | [`OwnerRef`](#ownerref) | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: RunJournal -->
+
+<!-- BEGIN GENERATED CONTRACT: ExecutionKey -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ExecutionKey`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `expert` | `string` | **yes** |  |
+| `symbol` | `string` | **yes** |  |
+| `tf` | `string` | **yes** |  |
+| `from_date` | `string` | **yes** |  |
+| `to_date` | `string` | **yes** |  |
+| `model` | `1` \| `2` \| `4` | **yes** |  |
+| `deposit` | `number` | **yes** |  |
+| `currency` | `string` | **yes** |  |
+| `leverage` | `integer` | **yes** | written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op |
+| `set_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `ini_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `ex5_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `effective_config_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `data_fingerprint` | `string` | **yes** |  |
+| `lane` | `string` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: ExecutionKey -->
+
+<!-- BEGIN GENERATED CONTRACT: EvidenceRef -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`EvidenceRef`** · stored in `docs/memory_control/experiment_events/evidence-manifest.jsonl (EXISTING - NOT replaced)`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `EvidenceRef` | **yes** |  |
+| `evidence_id` | `string` | **yes** | pattern `^evd_sha256_[0-9a-f]{64}$` |
+| `kind` | `REPORT` \| `SET` \| `INI` \| `EX5` \| `SOURCE` \| `DATA_PROVENANCE` \| `CSV` \| `OTHER` | **yes** |  |
+| `path` | `string` | **yes** | pattern `^[A-Za-z0-9_./\\-]+$` |
+| `commit_oid` | `string` | **yes** | pattern `^[0-9a-f]{40}$` |
+| `raw_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: EvidenceRef -->
+
+<!-- BEGIN GENERATED CONTRACT: CandidatePayload -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`CandidatePayload`** · embedded — has no file of its own
+
+| field | type | required | rule |
+|---|---|---|---|
+| `hypothesis_revision` | `string` | **yes** |  |
+| `module_set` | array of [`ModuleUse`](#moduleuse) | **yes** | minItems `1` |
+| `experimental` | `boolean` | **yes** | MUST be false for any candidate on a promotion path; the validator additionally resolves every evidence -> run -> module set and fails if any module is not CERTIFIABLE |
+| `logical_symbol` | `string` | **yes** |  |
+| `tf` | `string` | **yes** |  |
+| `parameters` | `object` | **yes** | FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift. |
+| `profiles` | object *(fields below)* | **yes** | closed · content hashes, not mutable string ids - otherwise instrument_profiles could change under a fixed id and the candidate would still look valid |
+| `profiles.instrument` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `profiles.exit` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `profiles.sizing` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `profiles.safety` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `profiles.execution` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `evidence` | array of [`MetricRef`](#metricref) | **yes** | minItems `1` · per window, each with its own run/lane/fingerprint - MAIN and BWD cannot share a fingerprint and must not be flattened to one |
+| `ex5_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `source_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `allowlist_sha256` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `generator_version` | `string` | **yes** |  |
+| `effective_config_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
+| `universe_version` | `string` | **yes** |  |
+| `trial_count` | `integer` | **yes** | min `0` |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: CandidatePayload -->
+
+<!-- BEGIN GENERATED CONTRACT: CandidateManifest -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`CandidateManifest`** · stored in `factory/candidates/<candidate_id>.json` · written by *claude, once, at verdict time* · enforced by *candidate_validator: MUST recompute sha256 over the canonical serialization of `payload` and compare to candidate_digest. The schema checks the PATTERN only - it cannot verify a hash.*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `CandidateManifest` | **yes** |  |
+| `candidate_id` | `string` | **yes** | pattern `^CAND-[0-9a-f]{12}$` · DISPLAY id = first 12 hex of candidate_digest. Never the hash input. |
+| `candidate_digest` | `string` | **yes** | pattern `^[0-9a-f]{64}$` · full sha256 over the canonical serialization of `payload` - which does not contain it |
+| `payload` | [`CandidatePayload`](#candidatepayload) | **yes** |  |
+| `scorecard_ref` | [`OwnerRef`](#ownerref) | **yes** | the verdict TEXT lives in EA_SCORECARD_AND_REGISTRY.md and is never copied here |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: CandidateManifest -->
+
+*Rationale:*
+- **Why one transition per line.** `LEASED` reserves the lane *before any process exists*, so a lease
+  cannot carry a pid; "died before spawn" and "spawned then died" have to be two different records or the
+  scheduler cannot tell a crash from a slow start. The tables above say what the fields are.
+  <sub>*This is the paragraph that proved the first binding checker insufficient: after that checker was
   installed, this text still described `attempts[]`, a lease with `pid`, and `launched_at`, while the
-  schema said the opposite — and the checker reported STRUCTURE OK, because it compares storage paths
-  and banned phrases, not field semantics. Fixed here; the mechanism is still owed (§15).*</sub>
-- **`ExecutionKey` is the complete simulator identity** and every field is required: `expert · symbol ·
-  tf · from_date · to_date · model · deposit · currency · leverage · set_hash · ini_hash · ex5_hash ·
-  effective_config_hash · data_fingerprint · lane`. Rev 1 omitted deposit, currency and leverage, so a
-  10,000/1:100 run and a 100,000/1:200 run had identical keys and the scheduler would have served the
-  wrong cached evidence.
-- `failure_class` ∈ `NONE · TESTER_ERROR · TERMINAL_ERROR · TIMEOUT · LEASE_LOST · KILLED ·
-  CONFIG_REJECTED`. **Only `TESTER_ERROR`/`TERMINAL_ERROR` permit re-running an identical key.**
+  schema said the opposite — and the checker reported `STRUCTURE OK`, because it compared storage paths
+  and banned phrases, not field semantics. It is now generated, which is the only reason it cannot say
+  that again (BACKLOG-D31).*</sub>
+- **Why `ExecutionKey` is so wide.** Rev 1 omitted deposit, currency and leverage, so a 10,000/1:100 run
+  and a 100,000/1:200 run had identical keys and the scheduler would have served the wrong cached
+  evidence. Which fields are required is stated in the table, not here.
 - **Evidence is registered through the existing event-log utility** (`RegisterEvidence`,
   `evd_sha256_<raw sha256>`, committed Git artifacts only) into the **existing**
   `docs/memory_control/experiment_events/evidence-manifest.jsonl`. No parallel evidence store exists.
   Inherited constraints: `.ex5` binaries are gitignored and need `git add -f`; the path pattern forbids
   parentheses and spaces, which the repo's `(EXP)_Name` convention violates; tick history has no
   committable artifact so `data` uses a committed **provenance descriptor** (`EVENT_LOG_ADOPTION.md` §6).
-- **Candidate identity:** `candidate_digest` = sha256 over the **canonical serialization of `payload`**,
-  and `candidate_id` = `CAND-<first 12 hex of the digest>`. The payload **does not contain the id** — rev 1
+- **Candidate identity — one definition, and it is in the two tables above.** `candidate_digest` is a
+  sha256 over the canonical serialization of `payload`; the payload **does not contain the id** — rev 1
   required the id inside the object whose hash it was defined to be, which has no normal construction and
   would have led to the check being disabled. The validator recomputes the digest on every read.
   *Canonical serialization (key order, number formatting, unicode) is still undefined and is owed —
   two serializers that disagree produce two digests for one candidate.*
 
-### 4.6 Magic allocation (`factory/magic_allocations.jsonl`)
-`entity · magic · scope · legacy_exception · legacy_accounts[] · allocated_to · deployment_ref · status ·
-allocated_at_commit`
+### 4.6 Magic allocation
+
+<!-- BEGIN GENERATED CONTRACT: MagicAllocation -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`MagicAllocation`** · stored in `factory/magic_allocations.jsonl` · written by *automation allocates; claude approves; user ratifies scope changes* · enforced by *allocator: global uniqueness for NEW allocations; check_state.ps1 remains the account|magic backstop*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `MagicAllocation` | **yes** |  |
+| `magic` | `integer` | **yes** | min `1` |
+| `scope` | `GLOBAL` \| `LEGACY_ACCOUNT_SCOPED` | **yes** | GLOBAL for everything allocated from now on; LEGACY_ACCOUNT_SCOPED only for the pre-existing collisions |
+| `legacy_exception` | `boolean` | — |  |
+| `legacy_accounts` | array of `string` | — | populated only for legacy exceptions; frozen until judge |
+| `allocated_to` | `string` \| `null` | — | candidate_id. Deployment status is NOT copied here - DEPLOYMENTS.csv owns it. |
+| `deployment_ref` | [`OwnerRef`](#ownerref) | — |  |
+| `status` | `RESERVED` \| `ASSIGNED` \| `RETIRED` | **yes** | RETIRED is never re-issued - a reused magic silently re-attributes historical deals |
+| `allocated_at_commit` | `string` | **yes** | pattern `^[0-9a-f]{40}$` |
+| `imported_in_cutover` | `boolean` | — | RE-AUDIT P1: legacy exceptions are a CLOSED SET imported once, not an open category. Rev 2 let an unlimited number of new LEGACY_ACCOUNT_SCOPED rows be minted, which would have quietly reintroduced account-scoped magics forever. The allocator refuses a legacy row with imported_in_cutover=false after the cutover commit. |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `scope` = `LEGACY_ACCOUNT_SCOPED`** → requires `legacy_exception`, `legacy_accounts`, `imported_in_cutover` · `legacy_exception` → const `True` · `legacy_accounts` → array of `any` (minItems `2`)
+
+<!-- END GENERATED CONTRACT: MagicAllocation -->
+
+*Rationale:*
 - **Scope = GLOBAL for every new allocation** (user decision 2026-07-30, Grill decision 56). Never reused
   once `RETIRED` — a reused magic silently re-attributes historical deals.
 - **Deployment status is not stored here.** `DEPLOYMENTS.csv` owns it; this row references it.
@@ -445,7 +869,208 @@ allocated_at_commit`
   fleet. It stays the backstop, and **`PROJECT_STATE` §3's invariant must be amended by the user before
   S10 is built** (§11).
 
-### 4.7 Attribution key
+### 4.7 Entities whose rationale lives in §7 (operations surface)
+These are contracts of the Control Center, not of the factory registries, and §7 explains *why* each one
+exists. Their **fields** are here for one reason: the generator refuses to run if any `$defs` entity has
+no generated block anywhere in this document, so an entity cannot drift by simply not being written down.
+
+<!-- BEGIN GENERATED CONTRACT: DeploymentAttestationEvent -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`DeploymentAttestationEvent`** · stored in `portfolio/ATTESTATION_MAP.csv (EXISTING) + append-only event log` · written by *claude|user only* · enforced by *attestation_validator: no actor other than user/claude may append an event that changes candidate_id or status; automation may append OBSERVED events only*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `DeploymentAttestationEvent` | **yes** |  |
+| `event_id` | `string` | **yes** |  |
+| `account` | `string` | **yes** |  |
+| `magic` | `integer` | **yes** |  |
+| `event_type` | `OBSERVED` \| `CANDIDATE_ASSIGNED` \| `CANDIDATE_REASSIGNED` \| `ATTEST_STATE_CHANGED` \| `FROZEN` \| `RETIRED` | **yes** |  |
+| `at` | `string` | **yes** |  |
+| `actor` | `user` \| `claude` \| `automation` | **yes** |  |
+| `authorization_ref` | [`OwnerRef`](#ownerref) | — | REQUIRED for any event that is not OBSERVED - the human decision that authorized it |
+| `candidate_id` | `string` \| `null` | — |  |
+| `attest_state` | `HASHED` \| `PARTIAL` \| `FILE_MISSING` \| `UNVERIFIED` \| `None` | — |  |
+| `core_revision` | `string` \| `null` | — |  |
+| `deployment_ref` | [`OwnerRef`](#ownerref) | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `event_type` `any`** → requires `authorization_ref` · `actor` → `user` \| `claude`
+
+<!-- END GENERATED CONTRACT: DeploymentAttestationEvent -->
+
+<!-- BEGIN GENERATED CONTRACT: WorkReceipt -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`WorkReceipt`** · stored in `ops/receipts/*.jsonl (append-only events -> single-writer projection)` · written by *PENDING GOVERNANCE CHANGE - see description* · enforced by *receipt_validator: only the user may write CANCELLED_BY_USER*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `WorkReceipt` | **yes** |  |
+| `receipt_id` | `string` | **yes** | pattern `^WRK-[0-9]{8}-[0-9]{3}$` |
+| `title` | `string` | — |  |
+| `source_agent` | `claude` \| `codex` \| `automation` \| `legacy` | **yes** |  |
+| `requested_at` | `string` | **yes** |  |
+| `order_ref` | [`OwnerRef`](#ownerref) | — | when present, the taskboard owns status/acceptance/owner and this Receipt must NOT restate them |
+| `owner` | `string` | — |  |
+| `status` | `CAPTURED` \| `READY` \| `IN_PROGRESS` \| `WAITING` \| `BLOCKED` \| `HANDOFF` \| `DONE_PENDING_REVIEW` \| `AUDIT_REQUIRED` \| `AUDIT_IN_PROGRESS` \| `REWORK` \| `REVIEWED` \| `CANCELLED_BY_USER` \| `STATE_CONFLICT` | — | DONE is deliberately absent - DONE is not closed. No AGING/NEGLECTED state exists either. |
+| `next_action` | `string` | — |  |
+| `acceptance` | `string` \| `null` | — |  |
+| `evidence_refs` | array of `string` | — |  |
+| `blocked_by` | array of `string` | — |  |
+| `review_required` | `boolean` | — |  |
+| `rework_cycles` | `integer` | — | min `0` |
+| `waiting_for` | `string` \| `null` | — |  |
+| `wake_condition` | `string` \| `null` | — |  |
+| `handoff_summary` | `string` \| `null` | — |  |
+| `cancelled_by_user_ref` | `string` \| `null` | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `status` = `WAITING`** → requires `waiting_for`, `wake_condition` · `waiting_for` → `string` · `wake_condition` → `string`
+- **when `status` = `CANCELLED_BY_USER`** → requires `cancelled_by_user_ref`
+- **when `status` = `HANDOFF`** → requires `handoff_summary`, `next_action`, `evidence_refs`, `review_required`
+
+<!-- END GENERATED CONTRACT: WorkReceipt -->
+
+<!-- BEGIN GENERATED CONTRACT: SystemFinding -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`SystemFinding`** · stored in `ops/findings.jsonl` · enforced by *finding_validator: RUNTIME resolves only after two consecutive healthy checks; GOVERNANCE/AUDIT/DEPLOYMENT_DRIFT never auto-close*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `SystemFinding` | **yes** |  |
+| `finding_id` | `string` | **yes** | pattern `^FND-[A-Za-z0-9_]+-[A-Za-z0-9_.:-]+$` · INTERNAL ONLY. Its stable key may legitimately contain an account number, a magic, or a strategy name (e.g. FND-sensor-159503454), so it MUST NOT be serialized into any online or Telegram surface. |
+| `public_id` | `string` | **yes** | pattern `^FP-[0-9a-f]{10}$` · RE-AUDIT P1: opaque projection-safe identifier - the ONLY finding id a SafeProjection may carry. Rev 2 leaked the raw finding_id into the online projection while carefully masking account numbers two fields away. |
+| `detector_ref` | [`OwnerRef`](#ownerref) | **yes** | RE-AUDIT P0: the snapshot owns detector state. Without a pinned reference this entity becomes a second, drifting copy - snapshot RESOLVED while the finding still reads OPEN. |
+| `detector` | `string` | **yes** |  |
+| `class` | `RUNTIME` \| `GOVERNANCE` \| `DEPLOYMENT_DRIFT` \| `AUDIT` | **yes** |  |
+| `severity` | `INFO` \| `WARN` \| `CRITICAL` \| `REAL_MONEY` | **yes** | part of the alert dedupe key - audit P1: dedupe on (id,state) alone would swallow a warning that escalated to real-money critical while the state stayed OPEN |
+| `material_revision` | `integer` | **yes** | min `0` · REQUIRED. Bumped whenever the payload materially changes, and part of the dedupe key alongside severity - dedupe on (id,state) alone swallows a WARN that escalates to REAL_MONEY while the state stays OPEN |
+| `first_seen` | `string` | **yes** |  |
+| `last_seen` | `string` | **yes** |  |
+| `state` | `OPEN` \| `HEALTHY_1_OF_2` \| `RESOLVED` \| `FLAPPING` \| `SUPPRESSED_MAINTENANCE` | **yes** |  |
+| `occurrences_24h` | `integer` | — |  |
+| `evidence_refs` | array of `string` | — |  |
+| `owner` | `string` \| `null` | — |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: SystemFinding -->
+
+<!-- BEGIN GENERATED CONTRACT: IdeaRef -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`IdeaRef`** · stored in `INTAKE_QUEUE.md (EXISTING - NOT replaced)`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `IdeaRef` | **yes** |  |
+| `idea_id` | `string` | **yes** | pattern `^IDEA-[0-9]{4}$` |
+| `received_at` | `string` | **yes** |  |
+| `source` | `telegram` \| `claude` \| `codex` \| `legacy_openclaw` | **yes** |  |
+| `normalized_url` | `string` \| `null` | — |  |
+| `duplicate_of` | `string` \| `null` | — |  |
+| `status` | `NEW` \| `READ` \| `SHORTLIST` \| `REFERENCE` \| `DROP` \| `ORDER` | **yes** |  |
+| `intake_ref` | [`OwnerRef`](#ownerref) | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: IdeaRef -->
+
+<!-- BEGIN GENERATED CONTRACT: ControlRoomSnapshotV5 -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`ControlRoomSnapshotV5`** · stored in `portfolio/control_room_snapshot.json (EXISTING, v4 at HEAD)` · enforced by *snapshot_validator: all_clear is COMPUTED and MUST NOT be read from input*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `ControlRoomSnapshotV5` | **yes** |  |
+| `meta` | [`SnapshotMeta`](#snapshotmeta) | **yes** |  |
+| `system_health` | array of `object` | **yes** |  |
+| `floating_risk` | array of `object` | — |  |
+| `deployments` | `object` | — |  |
+| `unknown_magics` | array of `any` | — |  |
+| `attestation` | array of `any` | — |  |
+| `judge_readiness` | array of `any` | — |  |
+| `judge_cohorts` | `object` | — |  |
+| `summary` | `object` | **yes** |  |
+
+**Unknown fields:** ⚠️ ACCEPTED — this object is open, so a typo becomes a silently-ignored field.
+
+<!-- END GENERATED CONTRACT: ControlRoomSnapshotV5 -->
+
+<!-- BEGIN GENERATED CONTRACT: SnapshotMeta -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`SnapshotMeta`** · stored in `the `meta` property of portfolio/control_room_snapshot.json`
+
+| field | type | required | rule |
+|---|---|---|---|
+| `schema` | const `ControlRoomSnapshot` | **yes** |  |
+| `version` | `integer` | **yes** | min `5` · v5+ for anything carrying the Factory domain; v4 already exists at HEAD |
+| `build_id` | `string` | **yes** |  |
+| `generated_at` | `string` | **yes** |  |
+| `git_head` | `string` | — |  |
+| `mandatory_sources` | array of `string` | **yes** | minItems `1` · the REGISTRY of what must be present, kept separate from what was discovered - otherwise a missing source is indistinguishable from one that was never expected |
+| `sources` | array of object *(fields below)* | **yes** | items closed · items require `name`, `mandatory`, `read_ok`, `fresh`, `age_hours` |
+| `sources[].name` | `string` | **yes** |  |
+| `sources[].mandatory` | `boolean` | **yes** |  |
+| `sources[].read_ok` | `boolean` | **yes** | false must stay distinguishable from 'read fine, found nothing' in EVERY consumer |
+| `sources[].fresh` | `boolean` | **yes** |  |
+| `sources[].age_hours` | `number` \| `null` | **yes** |  |
+| `reconciliation` | object *(fields below)* | **yes** | closed |
+| `reconciliation.discovered` | `integer` | **yes** | min `0` |
+| `reconciliation.categorized` | `integer` | **yes** | min `0` |
+| `reconciliation.categories` | object *(fields below)* | **yes** | closed · the equation's right-hand side must be ENCODED, not implied in prose |
+| `reconciliation.categories.actionable` | `integer` | **yes** |  |
+| `reconciliation.categories.running` | `integer` | **yes** |  |
+| `reconciliation.categories.waiting` | `integer` | **yes** |  |
+| `reconciliation.categories.review_audit` | `integer` | **yes** |  |
+| `reconciliation.categories.completed` | `integer` | **yes** |  |
+| `reconciliation.categories.cancelled_by_user` | `integer` | **yes** |  |
+| `reconciliation.coverage` | object *(fields below)* | **yes** | closed |
+| `reconciliation.coverage.cells_in_universe` | `integer` | **yes** |  |
+| `reconciliation.coverage.tested` | `integer` | **yes** |  |
+| `reconciliation.coverage.untested` | `integer` | **yes** |  |
+| `reconciliation.coverage.not_applicable` | `integer` | **yes** |  |
+| `reconciliation.duplicates` | `integer` | **yes** |  |
+| `reconciliation.conflicts` | `integer` | **yes** |  |
+| `reconciliation.unclassified` | `integer` | **yes** |  |
+| `reconciliation.all_clear` | `boolean` | **yes** | COMPUTED by the validator from every mandatory source being read_ok AND fresh, discovered==categorized, the category sum matching, the coverage sum matching, conflicts==0, unclassified==0, and no actionable item. A writer-supplied value MUST be rejected. |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: SnapshotMeta -->
+
+<!-- BEGIN GENERATED CONTRACT: SafeProjection -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`SafeProjection`** · stored in `build/safe_projection.json (derived, never hand-written)` · enforced by *projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `SafeProjection` | **yes** |  |
+| `build_id` | `string` | **yes** |  |
+| `generated_at` | `string` | **yes** |  |
+| `accounts` | array of object *(fields below)* | **yes** | items closed · items require `account_masked`, `sensor_state`, `dd_pct_band` |
+| `accounts[].account_masked` | `string` | **yes** | pattern `^\*{3}[0-9]{3}$` |
+| `accounts[].sensor_state` | `FRESH` \| `STALE` \| `BLIND` \| `MISSING` \| `UNKNOWN` | **yes** |  |
+| `accounts[].dd_pct_band` | `OK` \| `WATCH` \| `BREACH` \| `UNKNOWN` | **yes** | a BAND, not a number - a percentage plus a known base equity reconstructs the money amount |
+| `findings` | array of object *(fields below)* | **yes** | items closed · items require `public_id`, `severity`, `state` |
+| `findings[].public_id` | `string` | **yes** | pattern `^FP-[0-9a-f]{10}$` |
+| `findings[].severity` | `INFO` \| `WARN` \| `CRITICAL` \| `REAL_MONEY` | **yes** |  |
+| `findings[].state` | `string` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: SafeProjection -->
+
+### 4.8 Attribution key
 `Deployment ID + Account + Magic + Symbol + Candidate/Variant identity` (decision 57). The current key is
 `(magic, symbol)`, which cannot distinguish two revisions of the same EA on one account — exactly the
 Champion–Challenger case §3.7 introduces.
@@ -763,22 +1388,27 @@ Universe: `XAUUSD · EURUSD · USDJPY · BTCUSD` × `H1 · H4` = 8 cells × 2 hy
   windows (MAIN 2023.01–2025.12, BWD 2020–2022) and must not borrow the cage's.
 
 ### 8.4 Parity cases (all must pass before any cell's evidence counts)
-**Every case below is judged on all seven points of §5.5** — init result, `[CFG]` fingerprint, full order
-request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects,
-errors — not on the trade list alone.
-1. Wrapper vs parent, compiled defaults, XAUUSD H1.
-2. Wrapper vs parent, pilot `.set`, XAUUSD H4.
-2b. **Must-trade case** — a config that provably opens trades, so a run where both sides open nothing
-   cannot be mistaken for agreement.
-2c. **Deliberate-refusal case** — `_42_RiskPct` paired with an `SLMode` that yields no distance, which
-   `MM-SAFETY-001` fails at `OnInit`. Both sides must refuse, for the same reason, proving parity can
-   tell *refused* from *silent*.
-3. Locked parameter provably absent from the wrapper's Inputs page **and** its value provably applied.
-4. A locked parameter's value changed in the registry ⇒ regenerate ⇒ behaviour changes ⇒ **parity vs the
-   parent configured the same way still passes** (proves lock ≠ ignore).
-5. Delete the whole generated tree, regenerate from the registry ⇒ byte-identical `.mq5`
-   (note: **`.ex5` will not be byte-identical** — MQL5 compilation is not reproducible, memory
-   `mql5-compile-not-byte-reproducible`; staleness is judged by mtime, never by hash).
+
+<!-- BEGIN GENERATED CONTRACT: META_parity_cases -->
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+| case | what it compares | what it proves |
+|---|---|---|
+| 1 | wrapper vs parent, compiled defaults, XAUUSD H1 | baseline equivalence |
+| 2 | wrapper vs parent, pilot .set, XAUUSD H4 | equivalence under the config the pilot actually runs |
+| 2b | a config that provably opens trades | a run where both sides open nothing cannot be mistaken for agreement |
+| 2c | _42_RiskPct paired with an SLMode yielding no distance, which MM-SAFETY-001 fails at OnInit | both sides refuse, for the same reason - parity can tell refused from silent |
+| 3 | a locked parameter absent from the wrapper's Inputs page | absent from the page AND its value provably applied |
+| 4 | a locked value changed in the registry, regenerated | behaviour changes, and parity vs the parent configured the same way still passes - lock is not ignore |
+| 5 | delete the generated tree, regenerate from the registry | byte-identical .mq5 - NOT .ex5, MQL5 compilation is not reproducible, staleness is judged by mtime |
+
+<!-- END GENERATED CONTRACT: META_parity_cases -->
+
+*Rationale:* the second audit found this list asserted as "five cases" while it had already grown to
+seven — a count and a list that disagreed, in one section, with nothing able to notice. It is generated
+now, so **the count is the list**. Case 5's `.ex5` caveat is not pedantry: MQL5 compilation is not
+byte-reproducible (memory `mql5-compile-not-byte-reproducible`), so a hash comparison there would fail
+forever and get switched off.
 
 ### 8.5 Failure and rescue branches
 `NO_PULSE` on a cell → rescue ladder R0–R4 (implementation/linkage audit → re-optimize related params →

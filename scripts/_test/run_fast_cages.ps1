@@ -128,7 +128,17 @@ $FAST_SUITES = @(
     # re-deriving its arithmetic in the test. That is the expensive choice on purpose --
     # a test that reimplements its subject agrees with itself no matter what the subject
     # does, which is how run_fast_cages came to exist in the first place.
-    'run_monitor_integrity_tests.ps1'
+    'run_monitor_integrity_tests.ps1',
+    # BACKLOG-D31 (2026-07-30): guards the design<->schema seam that produced every
+    # regression across three blind audits of the Factory OS design. The suite it wraps does
+    # not check that the design is well-formed -- it re-applies each of the 7 REGRESSED
+    # findings as a schema mutation and asserts the binding goes red, which the previous
+    # checker did for 0 of 7. Three controls prove it is not simply always red.
+    #
+    # MEASURED 0.4s, and the whole tier re-measured at 13.3s against the 15s budget with it
+    # in place. That leaves ~1.7s. The warning two entries above still stands and is tighter:
+    # THE NEXT ADDITION HERE HAS TO DISPLACE SOMETHING.
+    'run_contract_binding_tests.ps1'
 )
 
 $ps = (Get-Process -Id $PID).Path

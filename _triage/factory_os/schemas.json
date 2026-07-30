@@ -20,7 +20,43 @@
       "verdict text",
       "result narrative",
       "any MUTABLE copy of a fact owned elsewhere - store a pinned reference (path + commit_oid + blob_oid + raw_sha256) instead. Audit finding P0-2: rev 1 stored mutable copies of coverage state, work status, run occurrence and deployment identity, all of which already have owners."
-    ]
+    ],
+
+    "contracts": {
+      "_why": "BACKLOG-D31. Not every normative contract is a JSON entity. These are the ones that are not, held here so the design's tables can be GENERATED from them instead of retyped. Audit-3 finding #12 (the pilot parity list) is exactly this shape: it was bound to nothing machine-readable, so it drifted freely and no checker could see it.",
+
+      "parameter_registry_columns": {
+        "_why": "Audit-1 finding #10 REGRESSED because `role` was described as a column of the global registry while the schema put it per-hypothesis in ParameterBinding. Locked-ness is per hypothesis: the same input can be LOCKED in B14-H01 and TUNABLE in B14-H02, and marking it globally makes optimize_guard refuse it on every Boss. This table is the reason a `role` column reappearing here is now a schema change, not a prose edit.",
+        "columns": ["column", "meaning", "scope"],
+        "rows": [
+          {"column": "owner", "meaning": "which module reads this input", "scope": "global"},
+          {"column": "unit_true", "meaning": "what the CODE does with the number, not what the name claims - the chassis holds two meanings of 'pip' at once", "scope": "global"},
+          {"column": "context", "meaning": "where in the strategy it applies", "scope": "global"},
+          {"column": "active_when", "meaning": "the condition under which this input has any effect at all", "scope": "global"},
+          {"column": "coupled_with", "meaning": "inputs that must move with it or the strategy changes rather than resizes", "scope": "global"},
+          {"column": "causal_question", "meaning": "the question a sweep of this input answers", "scope": "global"},
+          {"column": "classification", "meaning": "OPERATOR / TUNING / OVERRIDE / DEAD - OVERRIDE means member of a precedence chain, NOT dead (Stage 0A P0)", "scope": "global"},
+          {"column": "display_label", "meaning": "the label the generated Inputs page shows", "scope": "global"},
+          {"column": "enum_name", "meaning": "the enum type when the input is an enum, so a diff table cannot compare a name against a number", "scope": "global"},
+          {"column": "precedence_owner", "meaning": "which sibling wins when an OVERRIDE chain has more than one member set", "scope": "global"},
+          {"column": "role", "meaning": "ABSENT FROM THIS TABLE ON PURPOSE - role/locked_value/safe_range/optimize_stage are per-hypothesis and live in factory/parameter_bindings.jsonl", "scope": "NOT A COLUMN"}
+        ]
+      },
+
+      "parity_cases": {
+        "_why": "Audit-3 finding #12: the design asserted the pilot uses five parity cases while the list itself had grown to seven. Generating the list from here means the count and the list cannot disagree. Every case is judged on all seven points of section 5.5 - init result, [CFG] fingerprint, full order request/result trace including rejections, trade list, end-state positions/pendings, terminal side effects, errors - never on the trade list alone.",
+        "columns": ["case", "what it compares", "what it proves"],
+        "rows": [
+          {"case": "1", "what it compares": "wrapper vs parent, compiled defaults, XAUUSD H1", "what it proves": "baseline equivalence"},
+          {"case": "2", "what it compares": "wrapper vs parent, pilot .set, XAUUSD H4", "what it proves": "equivalence under the config the pilot actually runs"},
+          {"case": "2b", "what it compares": "a config that provably opens trades", "what it proves": "a run where both sides open nothing cannot be mistaken for agreement"},
+          {"case": "2c", "what it compares": "_42_RiskPct paired with an SLMode yielding no distance, which MM-SAFETY-001 fails at OnInit", "what it proves": "both sides refuse, for the same reason - parity can tell refused from silent"},
+          {"case": "3", "what it compares": "a locked parameter absent from the wrapper's Inputs page", "what it proves": "absent from the page AND its value provably applied"},
+          {"case": "4", "what it compares": "a locked value changed in the registry, regenerated", "what it proves": "behaviour changes, and parity vs the parent configured the same way still passes - lock is not ignore"},
+          {"case": "5", "what it compares": "delete the generated tree, regenerate from the registry", "what it proves": "byte-identical .mq5 - NOT .ex5, MQL5 compilation is not reproducible, staleness is judged by mtime"}
+        ]
+      }
+    }
   },
 
   "type": "object",
