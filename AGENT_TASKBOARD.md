@@ -130,7 +130,19 @@
 >
 > ⚠️ **Tier cost, stated rather than buried: `run_contract_binding_tests.ps1` 3.9s → 5.6s, full tier 21.5s → 23.7s** against a 15.0s advisory budget that was **already breached before this order**. `BACKLOG-D32`'s per-path selection means an ordinary commit pays only the suites it triggers (this order's own commit selected 2 of 12). The full-tier number is what a manual run pays.
 >
-> 🔻 **Owed:** the independent re-check. `DONE`, never `REVIEWED` — one seat wrote the order, the code, the fixtures and this judgement.
+> ### 🔴 What executing this order DISCOVERED: **the approval mechanism is self-invalidating**
+>
+> **The transfer commit passed its own pre-commit gate and went red on the very next read.** At commit time `HEAD` still carried the pre-transfer blob, so the owner's pin was current; one second later `HEAD` carried the new blob and `check_s2a_attestation.py` reported the approval as resting on a **stale pin** — objecting to the change it authorized. **Third instance in this lineage of a guard that is green at its own introducing commit** (memory `drift-guard-regenerating-against-head`). Review did not catch it; re-running the gate afterwards did.
+>
+> **This is general, not a quirk of the Coverage row: every approved `TRANSFER` in D1 will do it.** Approving a move and then executing the move always moves the pinned bytes.
+>
+> **All three seat-side repairs are worse than asking**, and each was checked rather than assumed: writing `stale_pin_acknowledged` myself would **manufacture the owner's words** (audit 8 BLOCKER 1 exactly) · re-pinning D1 changes `bundle_sha256` and **voids the approval outright** · repairing `check_s2a_attestation.py` is impossible from inside — **it is a member of its own bundle**, so editing it voids every attestation it holds.
+>
+> ⇒ reported as an **ADVISORY**, printed loudly on every run, routed to `_triage/USER_TASKS_2026-07-31.md` §1 with two costed options. The gate's summary line was corrected in the same change: it said *"all 7 steps green"* while one step was an advisory, and **a summary that overstates by one step is how a reader learns to skim past the step that mattered**. It now reads `6 of 7 steps green, 1 ADVISORY`.
+>
+> **The downgrade is the most abusable thing added tonight, so it has the most fixtures.** It fires only when the attestation's **sole** complaint is that one pin on that one path **and** the transfer independently verifies — one implementation (`check_coverage_transfer.py --explain-attestation`), which `run_s2a_gate.py` **defers to rather than re-deriving**, because a downgrade rule written twice is a downgrade rule that will disagree with itself. Five negatives prove it refuses: transfer does not verify · stale pin **plus** a second problem · a different failure entirely · a stale pin on a **different** owner path · nothing to downgrade.
+>
+> 🔻 **Owed:** the independent re-check, and **the owner decision above**. `DONE`, never `REVIEWED` — one seat wrote the order, the code, the fixtures and this judgement.
 
 > **Why this order exists and why it is narrow.** `ORDER-600` was a *proposal*; the owner approved **one** edge of it
 > (attestation line 2, bundle `aaa5998d7128238a`) and attached **two conditions**. Nothing has moved. This order is the
