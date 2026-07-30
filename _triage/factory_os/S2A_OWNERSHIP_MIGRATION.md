@@ -72,13 +72,13 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `CoverageCell` | `MASTER_BACKLOG.md` | `factory/coverage.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `Hypothesis` | `AGENT_TASKBOARD.md` | `factory/hypotheses.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `InstrumentProfile` | `ea_template/OPTIMIZATION_PROCEDURE_V2.md` | `factory/instrument_profiles.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
-| `LogicalSymbol` | `UNOWNED` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
+| `LogicalSymbol` | `NOT_YET_BUILT` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `MagicAllocation` | `portfolio/DEPLOYMENTS.csv` | `factory/magic_allocations.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `ParameterBinding` | `docs/PARAM_REGISTRY.csv` | `factory/parameter_bindings.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
 | `RunTransition` | `scripts/experiment_event_log.ps1` | `factory/runs/` | **TRANSFER** | claude (lead engineer) | PROPOSED |
-| `SafeProjection` | `UNOWNED` | `build/safe_projection.json` | **TRANSFER** | user (Boss) | PROPOSED |
+| `SafeProjection` | `DERIVED_NOT_PERSISTED` | `build/safe_projection.json` | **TRANSFER** | user (Boss) | PROPOSED |
 | `SystemFinding` | `portfolio/control_room_snapshot.json` | `ops/findings.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
-| `TestUniverse` | `UNOWNED` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
+| `TestUniverse` | `NO_CURRENT_OWNER` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `WorkReceipt` | `AGENT_TASKBOARD.md` | `ops/receipts/` | **TRANSFER** | user (Boss) | **REFUSED** |
 | `CandidatePayload` | `EMBEDDED:CandidateManifest` | `EMBEDDED:CandidateManifest` | KEEP | claude (lead engineer) | PROPOSED |
 | `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json` | `portfolio/control_room_snapshot.json` | KEEP | claude (lead engineer) | PROPOSED |
@@ -91,7 +91,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `OwnerRef` | `EMBEDDED:*` | `EMBEDDED:*` | KEEP | claude (lead engineer) | PROPOSED |
 | `ReconciliationEvidence` | `EMBEDDED:SnapshotMeta` | `EMBEDDED:SnapshotMeta` | KEEP | claude (lead engineer) | PROPOSED |
 | `RunAttempt` | `EMBEDDED:RunTransition` | `EMBEDDED:RunTransition` | KEEP | claude (lead engineer) | PROPOSED |
-| `RunJournal` | `UNOWNED` | `UNOWNED` | KEEP | user (Boss) | PROPOSED |
+| `RunJournal` | `TRANSIENT` | `TRANSIENT` | KEEP | user (Boss) | PROPOSED |
 | `SnapshotBuilderInput` | `_triage/factory_os/snapshot_validator.py` | `_triage/factory_os/snapshot_validator.py` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
@@ -141,7 +141,7 @@ One block per row that proposes a move. These four fields are the reviewer check
 *canonical · signer: user (Boss) · state: PROPOSED*
 
 - **Breaks if moved — names a specific reader or writer:** Nothing reads pre-registration mechanically today, and the transfer is deliberately partial, so the risk is duplication rather than breakage. Design section 1.3 #1 rules that the causal claim, falsifier and acceptance STAY in the taskboard row and factory/hypotheses.jsonl holds only machine-read fields plus a preregistration_ref. The reader that would break if that rule is ignored is .githooks/pre-commit, which enforces taskboard structure on every commit: a second copy of the claim would drift from the row the hook validates, and the hook cannot see the copy.
-- **Breaks if NOT moved — a concrete failure, with a date or trigger:** No machine can currently answer "which hypotheses share an architecture digest or module set", because those fields exist only inside prose rows. TRIGGER: the next time a correlation question is asked across EAs - the concrete precedent is memory unmeasured-corr-costs-more-than-real-risk, where 1088 of 1540 pairs were still sitting on a default correlation of 1.0 because nothing held the machine-readable structure needed to compute them.
+- **Breaks if NOT moved — a concrete failure, with a date or trigger:** NARROWED after Codex audit 7. The previous version cited unmeasured-corr-costs-more-than-real-risk (1088 of 1540 pairs still on a default 1.0) as though machine-readable hypothesis structure would produce those numbers. It would not: those are RETURN correlations and they come from trade series, not from an architecture digest. The memory is real; the bridge to this entity was not. What this row can support: shared STRUCTURE is currently invisible to any tool. Whether two EAs use the same module set or the same architecture exists only as prose inside taskboard rows, so "these two are the same strategy wearing different parameters" cannot be asked mechanically - and that is the cheap screen that should run BEFORE the expensive return-correlation measurement, not a replacement for it. TRIGGER: the next cohort added to the portfolio without a structural dedupe.
 - **Reverse steps — executable, not "revert the commit":** 1) delete factory/hypotheses.jsonl. 2) drop the preregistration_ref column from any consumer written against it. 3) run .githooks/pre-commit against a taskboard edit to confirm the structure assertions still pass. No taskboard row is rewritten by this transfer, so there is nothing to restore there.
 - **Evidence lost — what cannot be reconstructed:** The revision chain: if a hypothesis is revised only in the jsonl and the file is deleted, which revision produced a given run can no longer be reconstructed - the taskboard row holds the claim but not the revision counter.
 - **Retention window:** git history, indefinite while the file is tracked. It must be tracked from its first commit for that to hold - an untracked jsonl has no retention at all.
@@ -156,7 +156,7 @@ One block per row that proposes a move. These four fields are the reviewer check
 - **Evidence lost — what cannot be reconstructed:** The content_hash pin. After a reverse, a Candidate references a profile by id again, so if the profile is edited there is no way to tell which content a past run used.
 - **Retention window:** git history, indefinite; profiles must be append-only rather than edited in place, or the content_hash pins something that no longer exists.
 
-### `LogicalSymbol` — `UNOWNED` → `factory/universe.jsonl`
+### `LogicalSymbol` — `NOT_YET_BUILT` → `factory/universe.jsonl`
 
 *canonical · signer: user (Boss) · state: PROPOSED*
 
@@ -191,12 +191,12 @@ One block per row that proposes a move. These four fields are the reviewer check
 *canonical · signer: claude (lead engineer) · state: PROPOSED*
 
 - **Breaks if moved — names a specific reader or writer:** Design section 1.3 #5 splits this deliberately: the experiment event log OWNS the occurrence timeline and factory/runs/ owns ONLY the scheduler recovery checkpoint. The readers that break if the timeline moves are scripts/check_experiment_events.ps1 and scripts/_test/run_order105_negative_tests.ps1, both of which read the event log and its evidence manifest. Note the current_owner here is the SCRIPT, not a data file: the transition shape lives in the writer today, and the monthly JSONL it appends to is the store - so "moving" it means giving the scheduler its own checkpoint file, not relocating history.
-- **Breaks if NOT moved — a concrete failure, with a date or trigger:** A killed run cannot be resumed, because no checkpoint is persisted. This has already cost real time: memory taskstop-does-not-kill-qwen-child records a worker that was "stopped" while its child kept holding the MT5 lane and committing, and the only way that was detected was by reading tasklist and git log afterwards. TRIGGER: the next interrupted overnight batch.
+- **Breaks if NOT moved — a concrete failure, with a date or trigger:** NARROWED after Codex audit 7. The previous version cited taskstop-does-not-kill-qwen-child as the cost, which does not follow: that memory records a process-tree cancellation defect (a "stopped" worker whose child kept holding the MT5 lane and committing), and a recovery checkpoint neither stops nor identifies an orphan child. Real incident, wrong causal bridge. The claim this row can actually support: a run interrupted between its start and its event-log entry leaves NO record that it was ever in flight, because scripts/experiment_event_log.ps1 records completed occurrences. So "is this run still going, or did it die?" is not answerable from the repo - which is exactly the question that had to be answered by reading tasklist and git log by hand in that incident. The checkpoint does not prevent the orphan; it makes the orphan VISIBLE. TRIGGER: the next interrupted overnight batch.
 - **Reverse steps — executable, not "revert the commit":** 1) delete factory/runs/. 2) remove the checkpoint write from the scheduler. 3) run scripts/check_experiment_events.ps1 to confirm the event log is unaffected - it must be, because this transfer never writes to it.
 - **Evidence lost — what cannot be reconstructed:** In-flight state for any run that was interrupted and not yet folded into the event log: the attempt counter and the last completed step. The event log records completed occurrences, so a half-finished run leaves no trace there.
 - **Retention window:** per-run, until the run completes and its occurrence is written to the event log; the checkpoint is safe to prune after that, and MUST be pruned or it becomes a second, stale copy of the timeline.
 
-### `SafeProjection` — `UNOWNED` → `build/safe_projection.json`
+### `SafeProjection` — `DERIVED_NOT_PERSISTED` → `build/safe_projection.json`
 
 *derived · signer: user (Boss) · state: PROPOSED*
 
@@ -216,12 +216,12 @@ One block per row that proposes a move. These four fields are the reviewer check
 - **Evidence lost — what cannot be reconstructed:** The acknowledgement and resolution history - who accepted a finding and when it was declared fixed. The snapshot holds only the current state, so after a reverse the question "was this ever acknowledged" becomes unanswerable.
 - **Retention window:** indefinite for resolved findings. A resolved finding that is deleted is indistinguishable from one that never fired, which would erase exactly the four-commit-blind-spot evidence the lifecycle exists to keep.
 
-### `TestUniverse` — `UNOWNED` → `factory/universe.jsonl`
+### `TestUniverse` — `NO_CURRENT_OWNER` → `factory/universe.jsonl`
 
 *canonical · signer: user (Boss) · state: PROPOSED*
 
 - **Breaks if moved — names a specific reader or writer:** Nothing breaks, because nothing reads it - there is no artifact to break. Design section 1.3 #2 is the audited verdict: "genuinely unowned. No canonical artifact exists for a versioned mandatory symbol x TF set." This row therefore CREATES a first owner rather than moving one, and the only risk is the mirror image of a transfer risk: the new file becomes a second de-facto coverage list competing with MASTER_BACKLOG.md section 2. The Coverage edge row above must land first or together, so that coverage cells and the universe they are drawn from have one source each.
-- **Breaks if NOT moved — a concrete failure, with a date or trigger:** "Mandatory symbol x TF" is not expressible, so a screen can silently skip a cell and nothing notices. This is measured, not theoretical: memory bar-cleared-by-non-participation found hosts that "passed" BWD on 52-62 trades over three years while failing hosts took 343-473, i.e. a bar cleared by absence from the market - and there is no universe definition against which "did this actually trade the mandatory set" could be checked. TRIGGER: the next both-window screen.
+- **Breaks if NOT moved — a concrete failure, with a date or trigger:** NARROWED after Codex audit 7, which found the previous version reaching for a failure this entity does not prevent. It cited bar-cleared-by-non-participation (hosts that "passed" BWD on 52-62 trades over three years) as if a universe registry would have caught it. It would not: those hosts DID trade the tested cell, just rarely, and the fix for that is a trades-per-window participation floor - a BAR, which CLAUDE.md says only the user may ratify. Wrong mechanism, right-sounding prose. The true gap is narrower and still real: there is no versioned statement of which symbol x TF cells are MANDATORY, so "this screen skipped a cell" is not a question any tool can ask. The measured instance is in this order's own data: MASTER_BACKLOG.md section 2 carries 7 EA rows and 8 LIVE cells against a 64-row deployment inventory, and no artifact says which cells SHOULD have been covered - so the gap between them cannot be computed, only eyeballed. TRIGGER: the next coverage question that asks what is missing rather than what was run.
 - **Reverse steps — executable, not "revert the commit":** 1) delete factory/universe.jsonl. 2) unregister any reader. Nothing is restored because nothing was moved - this row creates an owner where design section 1.3 says none exists, so the reverse is a plain deletion and cannot damage an existing owner.
 - **Evidence lost — what cannot be reconstructed:** The version history of the mandatory set: which symbol x TF cells were mandatory at the time a past screen ran. That is unreconstructable after deletion, because it exists nowhere else today - which is the same reason the fact is unowned.
 - **Retention window:** git history, indefinite, and the file must be versioned rather than edited in place - a mandatory set that is mutated silently is worse than none, because past verdicts would appear to have been judged against the current set.
@@ -255,7 +255,7 @@ One block per row that proposes a move. These four fields are the reviewer check
 | `OwnerRef` | `EMBEDDED:*` | the design's universal pinning primitive - 12 entities embed it, so naming a single parent would be false precision. It owns no file and cannot: it IS the pin (commit + blob + sha256) that lets an artifact hold a fact it does not own, per design section 1.3. |
 | `ReconciliationEvidence` | `EMBEDDED:SnapshotMeta` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `RunAttempt` | `EMBEDDED:RunTransition` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
-| `RunJournal` | `UNOWNED` | correctly owned by nobody, now and after: the schema declares it x-derived and "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written." Persisting a fold of an append-only log creates a second copy that can disagree with the log, so KEEP here means "never g… |
+| `RunJournal` | `TRANSIENT` | correctly owned by nobody, now and after: the schema declares it x-derived and "NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never written." Persisting a fold of an append-only log creates a second copy that can disagree with the log, so KEEP here means "never g… |
 | `SnapshotBuilderInput` | `_triage/factory_os/snapshot_validator.py` | transient by contract - the schema says "NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted." Its only home today is the module that defines and validates its shape, and that module is a real tracked file, so this row names a genuine current owner ra… |
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |

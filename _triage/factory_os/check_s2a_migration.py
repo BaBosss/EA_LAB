@@ -87,7 +87,11 @@ COVERAGE_PROPOSED_OWNER = 'factory/coverage.jsonl'
 # illegal: name a real file (a false claim about today), claim EMBEDDED (false, nothing references them),
 # or omit the row (C1 fails set equality). This sentinel is the fourth. It is deliberately NOT a free
 # pass: see c3_owner_vocabulary, which opens unowned_evidence rather than believing it.
-UNOWNED = 'UNOWNED'
+# ORDER-602 B RETIRED the single `UNOWNED` value in favour of the four states below. The name is kept
+# ONLY so that a stale row still carrying it fails loudly through the normal path-existence check
+# ("does not exist at HEAD") rather than crashing an importer. It is not a legal owner value and
+# nothing branches on it -- if you are reading this while adding a state, add it to OWNER_STATES.
+UNOWNED = 'UNOWNED'      # retired; see OWNER_STATES
 
 # Codex audit 7 BLOCKER 1. The rev-5 guard required `unowned_evidence` to be a tracked file that
 # MENTIONS the entity -- and `_triage/factory_os/schemas.json` DEFINES all 27 entities, so it mentions
@@ -106,13 +110,37 @@ UNOWNED = 'UNOWNED'
 # that is actually correct. Verifying the sentence that carries the claim is both stronger and honest:
 # if the design is reworded, this goes red and a human must re-establish the claim, which is exactly
 # what should happen to a citation whose source moved.
+# ORDER-602 B (audit 7 MAJOR 4): the four rows are NOT one kind of thing, and collapsing them into a
+# single `UNOWNED` is what made the escape broad enough for the blocker to walk through. Each state now
+# carries its OWN disposition rule, so "a governance gap", "not built yet" and "correctly not persisted"
+# can no longer borrow each other's exemption.
+#
+#   NO_CURRENT_OWNER      a canonical fact nobody owns; the missing owner IS the migration subject
+#                         -> must TRANSFER (it is here to get a first owner)
+#   NOT_YET_BUILT         a planned part of a contract that does not exist yet
+#                         -> must TRANSFER
+#   DERIVED_NOT_PERSISTED derived output that is written somewhere but owns no source of truth
+#                         -> must TRANSFER, and must be `derived`
+#   TRANSIENT             correctly never persisted, now or later -> must KEEP, and must be `derived`
+OWNER_STATES = ('NO_CURRENT_OWNER', 'NOT_YET_BUILT', 'DERIVED_NOT_PERSISTED', 'TRANSIENT')
+STATE_DISPOSITION = {
+    'NO_CURRENT_OWNER':      ('TRANSFER',),
+    'NOT_YET_BUILT':         ('TRANSFER',),
+    'DERIVED_NOT_PERSISTED': ('TRANSFER',),
+    'TRANSIENT':             ('KEEP',),
+}
+STATE_REQUIRES_DERIVED = ('DERIVED_NOT_PERSISTED', 'TRANSIENT')
+
+# entity -> (state, evidence path, the claim sentence quoted verbatim from that file)
 UNOWNABLE = {
-    'TestUniverse':   ('_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+    'TestUniverse':   ('NO_CURRENT_OWNER', '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                        'No canonical artifact exists for a versioned mandatory symbol'),
-    'LogicalSymbol':  ('_triage/EA_LAB_FACTORY_OS_DESIGN.md', 'broker symbol per lane'),
-    'SafeProjection': ('_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+    'LogicalSymbol':  ('NOT_YET_BUILT', '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                       'broker symbol per lane'),
+    'SafeProjection': ('DERIVED_NOT_PERSISTED', '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                        'Generated projections go to'),
-    'RunJournal':     ('_triage/factory_os/schemas.json', 'Never persisted, never written'),
+    'RunJournal':     ('TRANSIENT', '_triage/factory_os/schemas.json',
+                       'Never persisted, never written'),
 }
 
 
@@ -135,6 +163,43 @@ _REVPARSE_MEMO = {}
 _BLOB_MEMO = {}
 _PARENTS_MEMO = []
 _ENTITIES_MEMO = []
+_HEAD_MEMO = []
+_FINGERPRINT = []
+
+
+def head_oid():
+    """Resolve the symbolic HEAD ONCE, to an immutable OID.
+
+    Codex audit 7 MODERATE 9, accepted. `commit_oid:path` and blob bytes are content-addressed, so
+    caching them is sound. `HEAD:path` is NOT -- HEAD is a moving reference, and this repository has
+    concurrent writers (memory `shared-worktree-concurrent-writers`). A cached `HEAD:path` answer can
+    therefore describe a commit that is no longer HEAD by the time the result is printed. Resolving
+    once and keying every later lookup by that OID makes the whole run describe one commit.
+    """
+    if not _HEAD_MEMO:
+        rc, out, _ = _git('rev-parse', 'HEAD')
+        _HEAD_MEMO.append(out if rc == 0 else None)
+    return _HEAD_MEMO[0]
+
+
+def input_fingerprint():
+    """(HEAD oid, index size+mtime) -- the identity of what this run is judging.
+
+    `tracked_paths()` caches `git ls-files`, and the old comment claimed the index "cannot change
+    underneath a single check run". In a repo with concurrent writers that is an assumption, not a
+    fact. Rather than give up the cache (the mutation suite calls the criteria 25+ times), the run
+    records what it read at the start and REFUSES to report a verdict if it moved -- a stale answer is
+    turned into a tool failure instead of a quiet pass.
+    """
+    # CONTENT-based, not mtime-based, and that distinction is load-bearing. The first version stat'ed
+    # .git/index -- but git rewrites the index during an ordinary commit, and this check runs INSIDE
+    # the pre-commit tier, so a stat-based fingerprint would abort the tier for a reason that has
+    # nothing to do with the data. That is the same false-alarm class already fixed twice in this
+    # slice. Hashing `ls-files -s` (path + blob OID + stage) changes only when the staged CONTENT
+    # changes, which is the thing the caches actually depend on.
+    rc, out, _ = _git('ls-files', '-s')
+    stamp = hashlib.sha256(out.encode('utf-8', 'replace')).hexdigest() if rc == 0 else None
+    return (head_oid(), stamp)
 
 
 def _rev_parse_cached(spec):
@@ -280,17 +345,28 @@ def c3_owner_vocabulary(rows, problems, tracked):
                 fail(problems, 'C3 %s is EMBEDDED but disposition=%r; an embedded fact owns no '
                                'file to transfer' % (e, disp))
             _check_embedded_claim(e, cur, embedded_in, parents, problems)
-        elif cur == UNOWNED:
+        elif cur in OWNER_STATES:
             # Codex audit 7: the substring form of this guard was defeated by citing a file that
             # mentions every entity. Eligibility is now a CLOSED declaration, and the citation must
             # match the one declared for THAT entity -- an entity may not nominate its own evidence.
             if e not in UNOWNABLE:
-                fail(problems, 'C3 %s is UNOWNED but is not declared UNOWNABLE. Only %s may be, each '
-                               'with the design statement that establishes it; adding one is a '
+                fail(problems, 'C3 %s claims owner state %s but is not declared UNOWNABLE. Only %s '
+                               'may be, each with the statement that establishes it; adding one is a '
                                'reviewable edit to check_s2a_migration.py, not a field a row may '
-                               'assert about itself.' % (e, sorted(UNOWNABLE)))
+                               'assert about itself.' % (e, cur, sorted(UNOWNABLE)))
             else:
-                want_path, anchor = UNOWNABLE[e]
+                want_state, want_path, anchor = UNOWNABLE[e]
+                if cur != want_state:
+                    fail(problems, 'C3 %s declares owner state %s but its declared state is %s -- '
+                                   'the four states carry different disposition rules and are not '
+                                   'interchangeable' % (e, cur, want_state))
+                allowed = STATE_DISPOSITION.get(cur, ())
+                if disp not in allowed:
+                    fail(problems, 'C3 %s is %s with disposition=%r; that state allows only %s'
+                         % (e, cur, disp, list(allowed)))
+                if cur in STATE_REQUIRES_DERIVED and r.get('canonical_or_derived') != 'derived':
+                    fail(problems, 'C3 %s is %s but canonical_or_derived=%r -- that state exists for '
+                                   'derived facts' % (e, cur, r.get('canonical_or_derived')))
                 ev = (r.get('unowned_evidence') or '').strip()
                 if ev != want_path:
                     fail(problems, 'C3 %s cites unowned_evidence=%r but its declared evidence is %r'
@@ -309,10 +385,9 @@ def c3_owner_vocabulary(rows, problems, tracked):
                                            'longer in that file -- the citation has rotted and the '
                                            'exemption must be re-established by a human'
                                  % (e, ev, anchor))
-            if disp == 'KEEP' and r.get('canonical_or_derived') != 'derived':
-                fail(problems, 'C3 %s is UNOWNED + KEEP but canonical_or_derived=%r. A CANONICAL fact '
-                               'that nobody owns and nobody is proposed to own is drift, and must not '
-                               'be signable as "keep".' % (e, r.get('canonical_or_derived')))
+            # (the old blanket "UNOWNED + KEEP must be derived" rule is now carried per state by
+            #  STATE_DISPOSITION + STATE_REQUIRES_DERIVED above, which is strictly narrower: only
+            #  TRANSIENT may KEEP at all, and it must be derived.)
         elif cur not in tracked:
             fail(problems, 'C3 %s current_owner=%r does not exist at HEAD. current_owner is a '
                            'claim about TODAY.' % (e, cur))
@@ -322,9 +397,16 @@ def c3_owner_vocabulary(rows, problems, tracked):
         if prop.startswith('EMBEDDED:'):
             _check_embedded_claim(e, prop, embedded_in, parents, problems)
             continue
-        if prop == UNOWNED:
-            if disp != 'KEEP':
-                fail(problems, 'C3 %s proposes UNOWNED with disposition=%r; leaving a fact unowned is '
+        if prop in OWNER_STATES:
+            # Only TRANSIENT proposes staying unowned; the other three exist to GET an owner, so
+            # proposing the state as the destination would be proposing nothing.
+            if prop != 'TRANSIENT':
+                fail(problems, 'C3 %s proposes owner state %s as its DESTINATION. Only TRANSIENT may '
+                               'be proposed (it is correctly never persisted); %s exists to acquire '
+                               'an owner, so naming it as the destination proposes nothing.'
+                     % (e, prop, prop))
+            elif disp != 'KEEP':
+                fail(problems, 'C3 %s proposes TRANSIENT with disposition=%r; staying unpersisted is '
                                'only expressible as KEEP' % (e, disp))
             continue
         if prop not in tracked and not any(prop.startswith(p) for p in PLANNED_PATHS):
@@ -345,7 +427,7 @@ def c4_owner_ref_recomputed(rows, problems):
             # may only decline one when its current_owner is EMBEDDED:* or names a fact that lives in
             # no file today"); the code was looser than the rule it was enforcing. A reason string
             # explains an exemption, it does not GRANT one -- eligibility comes from current_owner.
-            if not (cur.startswith('EMBEDDED:') or cur == UNOWNED):
+            if not (cur.startswith('EMBEDDED:') or cur in OWNER_STATES):
                 fail(problems, 'C4 %s declines an owner_ref, but its current_owner is %r -- a real '
                                'file at HEAD has a blob to pin, and no reason string buys an '
                                'exemption from pinning it' % (e, cur))
@@ -404,19 +486,30 @@ def pin_vintage_notes(rows):
         ref = r.get('owner_ref')
         if not ref or not ref.get('path') or not ref.get('blob_oid'):
             continue
-        rc, now, _ = _rev_parse_cached('HEAD:%s' % ref['path'])
+        head = head_oid()
+        if not head:
+            continue
+        rc, now, _ = _rev_parse_cached('%s:%s' % (head, ref['path']))
+        # /scrutinize ORDER-602 H4: these were plain strings, and the sign-off gate decided whether a
+        # note applied to an owner by testing `owner in note`. A note about `docs/MASTER_BACKLOG.md.bak`
+        # would therefore have blocked signing `MASTER_BACKLOG.md` -- a substring test standing in for
+        # an identity test, which is the exact weakness that produced this order. They are structured
+        # now, and consumers match on `path`, not on prose.
         if rc != 0:
-            # Stronger than a vintage note and initially missed: `rc != 0` was skipped silently, so a
-            # DELETED owner was invisible -- C4 keeps passing because the old pin still resolves at
-            # the commit it names. An ownership proposal whose subject no longer exists is moot, and
-            # that is precisely the thing a signer must not have to notice for themselves.
-            notes.append('%s pins %s, which NO LONGER EXISTS at HEAD -- the row proposes something '
-                         'about a file that is gone, and C4 stays green because the pin still '
-                         'resolves at the commit it names' % (r.get('entity'), ref['path']))
+            # `rc != 0` was skipped silently at first, so a DELETED owner was invisible -- C4 keeps
+            # passing because the old pin still resolves at the commit it names. A proposal whose
+            # subject no longer exists is moot, and a signer must not have to notice that unaided.
+            notes.append({
+                'entity': r.get('entity'), 'path': ref['path'], 'kind': 'MISSING',
+                'text': '%s pins %s, which NO LONGER EXISTS at HEAD -- the row proposes something '
+                        'about a file that is gone, and C4 stays green because the pin still '
+                        'resolves at the commit it names' % (r.get('entity'), ref['path'])})
         elif now != ref['blob_oid']:
-            notes.append('%s pins %s at %s, but HEAD now has %s -- the proposal describes an older '
-                         'revision of its own owner' % (r.get('entity'), ref['path'],
-                                                        ref['blob_oid'][:12], now[:12]))
+            notes.append({
+                'entity': r.get('entity'), 'path': ref['path'], 'kind': 'STALE',
+                'text': '%s pins %s at %s, but HEAD now has %s -- the proposal describes an older '
+                        'revision of its own owner' % (r.get('entity'), ref['path'],
+                                                       ref['blob_oid'][:12], now[:12])})
     return notes
 
 
@@ -634,6 +727,15 @@ def c8_coverage_reconciled(problems):
                 fail(problems, 'C8 %r emits the cell %r twice -- every cell is emitted once'
                      % (row, label))
             seen_pairs.add((row, label))
+            # /scrutinize ORDER-602 H6: claiming LIVE used to SKIP traceability altogether, because
+            # the rule below only applied to non-LIVE cells -- so a fabricated label relabelled LIVE
+            # passed. The LIVE-subset check elsewhere proves the real LIVE cells are PRESENT; it never
+            # proved that everything CLAIMING LIVE is real. Same shape as the blocker this order
+            # exists to fix: one path was closed and its twin left open.
+            if status == 'LIVE' and label not in live_by_row.get(row, ()):
+                fail(problems, 'C8 %r claims %r is a LIVE cell, but section 2 lists %s as that row\'s '
+                               'LIVE cell(s). A cell cannot mark itself LIVE to skip traceability.'
+                     % (row, label, sorted(live_by_row.get(row, ())) or 'none'))
             if status == 'UNVERIFIED_IMPORT' and not cell.get('source_coordinates'):
                 fail(problems, 'C8 an UNVERIFIED_IMPORT cell carries no source_coordinates -- the '
                                'order requires its source coordinates, not just the label')
@@ -822,33 +924,39 @@ def self_test():
     # Codex audit 7 replaced the substring guard with a closed declaration, so these three now assert
     # three DIFFERENT rules. They used to differ only in which way the citation was bad, and after the
     # fix all three produced the same message -- three tests asserting one rule is one test.
-    rev5 += c3_says({'entity': 'CoverageCell', 'current_owner': UNOWNED,
+    rev5 += c3_says({'entity': 'CoverageCell', 'current_owner': 'NO_CURRENT_OWNER',
                      'unowned_evidence': '_triage/EA_LAB_FACTORY_OS_DESIGN.md'},
                     'not declared UNOWNABLE',
-                    'an entity not on the closed list may not claim UNOWNED')
-    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'CLAUDE.md'},
+                    'an entity not on the closed list may not claim an owner state')
+    rev5 += c3_says({'current_owner': 'NO_CURRENT_OWNER', 'unowned_evidence': 'CLAUDE.md'},
                     'declared evidence is',
                     'a declared entity citing evidence other than its own refused')
+    # ORDER-602 B: the four states are not interchangeable.
+    rev5 += c3_says({'current_owner': 'TRANSIENT', 'disposition': 'KEEP',
+                     'proposed_owner': 'TRANSIENT', 'canonical_or_derived': 'derived',
+                     'unowned_evidence': real_evidence},
+                    'its declared state is',
+                    'a row wearing another entity\'s owner state refused')
     # ...and the rot check: point the declaration at a tracked file that does NOT carry the claim.
     saved_decl = dict(UNOWNABLE)
     try:
-        UNOWNABLE['TestUniverse'] = ('CLAUDE.md', 'this exact sentence is not in CLAUDE.md')
-        rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'CLAUDE.md'},
+        UNOWNABLE['TestUniverse'] = ('NO_CURRENT_OWNER', 'CLAUDE.md',
+                                     'this exact sentence is not in CLAUDE.md')
+        rev5 += c3_says({'current_owner': 'NO_CURRENT_OWNER', 'unowned_evidence': 'CLAUDE.md'},
                         'has rotted',
                         'a citation whose claim is no longer in the cited file refused')
     finally:
         UNOWNABLE.clear()
         UNOWNABLE.update(saved_decl)
-    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': real_evidence,
-                     'disposition': 'KEEP', 'proposed_owner': UNOWNED,
+    rev5 += c3_says({'current_owner': 'NO_CURRENT_OWNER', 'unowned_evidence': real_evidence,
+                     'disposition': 'KEEP', 'proposed_owner': 'NO_CURRENT_OWNER',
                      'canonical_or_derived': 'canonical'},
-                    'must not '
-                    'be signable',
-                    'UNOWNED + KEEP on a CANONICAL fact refused')
-    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': real_evidence,
-                     'proposed_owner': UNOWNED, 'disposition': 'TRANSFER'},
-                    'only expressible as KEEP',
-                    'proposed_owner=UNOWNED with TRANSFER refused')
+                    'that state allows only',
+                    'NO_CURRENT_OWNER sitting at KEEP refused (it exists to acquire an owner)')
+    rev5 += c3_says({'current_owner': 'NO_CURRENT_OWNER', 'unowned_evidence': real_evidence,
+                     'proposed_owner': 'NO_CURRENT_OWNER', 'disposition': 'TRANSFER'},
+                    'proposes nothing',
+                    'an acquiring state named as its own DESTINATION refused')
     rev5 += c3_says({'entity': 'MetricRef', 'current_owner': 'EMBEDDED:Hypothesis',
                      'disposition': 'KEEP', 'proposed_owner': 'EMBEDDED:Hypothesis'},
                     'does not reference',
@@ -860,7 +968,7 @@ def self_test():
                     'EMBEDDED:* with a single parent refused')
     # ...and the control: the honest form must stay SILENT, or the guard is just noise.
     control = []
-    c3_owner_vocabulary([{'entity': 'TestUniverse', 'current_owner': UNOWNED,
+    c3_owner_vocabulary([{'entity': 'TestUniverse', 'current_owner': 'NO_CURRENT_OWNER',
                           'unowned_evidence': real_evidence, 'disposition': 'TRANSFER',
                           'proposed_owner': 'factory/universe.jsonl',
                           'canonical_or_derived': 'canonical'},
@@ -888,6 +996,8 @@ def main(argv):
     print('migration: %s' % MIGRATION_PATH)
     print('coverage : %s\n' % COVERAGE_PATH)
 
+    started_at = input_fingerprint()          # audit 7 MODERATE 9: pin what this run is judging
+    _FINGERPRINT[:] = [started_at]
     tracked = tracked_paths()
     if tracked is None:
         print('[ABORT] git ls-files failed, so no path claim could be checked. That is a tool')
@@ -922,7 +1032,15 @@ def main(argv):
     if notes:
         print('\n  %d ADVISORY note(s) -- not failures, but read them before signing:' % len(notes))
         for n in notes:
-            print('  ~> %s' % n)
+            print('  ~> %s' % n['text'])
+
+    # audit 7 MODERATE 9: the cached index/HEAD answers are only valid for the commit this run
+    # started on. If something committed or staged underneath us, no verdict here is trustworthy.
+    if input_fingerprint() != started_at:
+        print('\n[ABORT] HEAD or the git index changed while this check was running, so its cached')
+        print('        answers describe a state that no longer exists. That is a tool failure, not a')
+        print('        clean run -- exiting 2 rather than reporting a verdict. Re-run it.')
+        return 2
 
     if problems:
         print('')

@@ -156,6 +156,23 @@ def m_unowned_evidence_silent(rows, cov):
     find(rows, 'TestUniverse')['unowned_evidence'] = 'CLAUDE.md'
 
 
+def m_state_swapped(rows, cov):
+    """ORDER-602 B: the four owner states are not interchangeable.
+
+    Before the taxonomy, all four were `UNOWNED` and shared one disposition rule, which is what made
+    the escape wide enough for audit 7's attack. Swapping a row onto another state must now fail even
+    though both states are legal values.
+    """
+    find(rows, 'TestUniverse')['current_owner'] = 'TRANSIENT'
+
+
+def m_state_wrong_disposition(rows, cov):
+    """NO_CURRENT_OWNER exists to ACQUIRE an owner, so it may not sit at KEEP."""
+    r = find(rows, 'TestUniverse')
+    r['disposition'] = 'KEEP'
+    r['keep_reason'] = 'leave it'
+
+
 def m_undeclared_entity_claims_unowned(rows, cov):
     """Codex audit 7's primitive, isolated: an entity helps itself to the UNOWNED exemption.
 
@@ -163,7 +180,7 @@ def m_undeclared_entity_claims_unowned(rows, cov):
     UNOWNABLE list is now the only thing standing between one legitimate exemption and 27 of them.
     """
     r = find(rows, 'Hypothesis')
-    r['current_owner'] = chk.UNOWNED
+    r['current_owner'] = 'NO_CURRENT_OWNER'
     r['unowned_evidence'] = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'
     r['owner_ref'] = None
     r['owner_ref_absent_reason'] = 'none'
@@ -173,7 +190,7 @@ def m_unowned_keep_canonical(rows, cov):
     r = find(rows, 'TestUniverse')
     r['disposition'] = 'KEEP'
     r['keep_reason'] = 'x'
-    r['proposed_owner'] = chk.UNOWNED
+    r['proposed_owner'] = 'NO_CURRENT_OWNER'
 
 
 def m_decline_pin_with_a_reason(rows, cov):
@@ -208,8 +225,12 @@ def m_codex7_combined_attack(rows, cov):
     test as 'evidence' that each of them is unowned.
     """
     for r in rows:
-        r['current_owner'] = 'UNOWNED'
-        r['proposed_owner'] = 'UNOWNED'
+        # ORDER-602 B retired the single `UNOWNED` value, so the attack is re-aimed at the STRONGEST
+        # surviving state. Left on the retired literal it would still go red -- but for the trivial
+        # reason that the value no longer exists, which would quietly stop testing the escape it was
+        # written for. A regression test that passes for the wrong reason is worse than none.
+        r['current_owner'] = 'NO_CURRENT_OWNER'
+        r['proposed_owner'] = 'NO_CURRENT_OWNER'
         r['disposition'] = 'KEEP'
         r['canonical_or_derived'] = 'derived'
         r['owner_ref'] = None
@@ -259,6 +280,21 @@ def m_cov_drops_a_live_cell(rows, cov):
     cov['cells_emitted'] = sum(len(m['cells']) for m in cov['mapping'])
 
 
+def m_cov_fabricated_live_cell(rows, cov):
+    """/scrutinize ORDER-602 H6: claiming LIVE used to skip traceability entirely.
+
+    The token check only applied to non-LIVE cells, and the LIVE-subset check proves the REAL live
+    cells are present -- never that everything claiming LIVE is real. So a fabricated label wearing
+    `status: LIVE` passed. Same shape as audit 7's blocker: one path closed, its twin left open.
+    """
+    for m in cov['mapping']:
+        for c in m['cells']:
+            if isinstance(c, dict) and c.get('status') == 'UNVERIFIED_IMPORT':
+                c['status'] = 'LIVE'
+                c['cell'] = 'TOTALLY MADE UP'
+                return
+
+
 def m_cov_unverified_without_coords(rows, cov):
     for m in cov['mapping']:
         for c in m['cells']:
@@ -289,7 +325,9 @@ CASES = [
     ('C3  UNOWNED citing the wrong file',      m_unowned_evidence_silent,  'declared evidence is'),
     ('C3  an undeclared entity claims UNOWNED', m_undeclared_entity_claims_unowned,
                                                                            'not declared UNOWNABLE'),
-    ('C3  UNOWNED+KEEP on a canonical fact',   m_unowned_keep_canonical,   'must not be signable'),
+    ('602B a row swapped onto another state',  m_state_swapped,            'its declared state is'),
+    ('602B NO_CURRENT_OWNER sitting at KEEP',  m_state_wrong_disposition,  'that state allows only'),
+    ('C3  an acquiring state as its own dest',  m_unowned_keep_canonical,   'proposes nothing'),
     ('AUDIT7 the combined semantic attack',    m_codex7_combined_attack,   'not declared UNOWNABLE'),
     ('C4  a real owner declines its pin',      m_decline_pin_with_a_reason, 'no reason string buys'),
     ('C4  an exempt row states no reason',     m_exempt_row_without_a_reason, 'states no owner_ref_absent'),
@@ -297,6 +335,7 @@ CASES = [
     ('C8  source_rows_consumed inflated',      m_cov_wrong_rowcount,       'every source row must be'),
     ('C8  cells_emitted below the LIVE count', m_cov_cells_too_small,      'cannot be smaller'),
     ('C8  a LIVE cell dropped from mapping',   m_cov_drops_a_live_cell,    'omits its LIVE cell'),
+    ('C8  a fabricated cell relabelled LIVE',  m_cov_fabricated_live_cell, 'cannot mark itself LIVE'),
     ('C8  UNVERIFIED_IMPORT with no coords',   m_cov_unverified_without_coords, 'no source_coordinates'),
 ]
 
@@ -380,7 +419,7 @@ def advisory_part():
     # an assertion: a stale pin here is a legitimate state.
     live_notes = chk.pin_vintage_notes(rows)
     print('  [--- ] FYI the real D1 currently draws %d advisory note(s)%s'
-          % (len(live_notes), (': ' + '; '.join(n.split(' -- ')[0] for n in live_notes))
+          % (len(live_notes), (': ' + '; '.join(n['text'].split(' -- ')[0] for n in live_notes))
              if live_notes else ''))
 
     # A stale-but-valid pin: point a row at an OLDER blob of the same file that still resolves.
@@ -407,7 +446,7 @@ def advisory_part():
         victim['owner_ref']['commit_oid'] = older
         victim['owner_ref']['blob_oid'] = blob
         notes = chk.pin_vintage_notes(stale)
-        ok = any('older revision' in n for n in notes)
+        ok = any(n['kind'] == 'STALE' for n in notes)
         print('  [%s] %s pinned at an older revision of %s -> reported'
               % ('OK ' if ok else 'BAD', victim['entity'], victim['owner_ref']['path']))
         if not ok:
@@ -423,7 +462,7 @@ def advisory_part():
     gone = [json.loads(json.dumps(r)) for r in rows]
     find(gone, 'CoverageCell')['owner_ref']['path'] = 'deleted/owner.md'
     notes = chk.pin_vintage_notes(gone)
-    ok = any('NO LONGER EXISTS' in n for n in notes)
+    ok = any(n['kind'] == 'MISSING' for n in notes)
     print('  [%s] a pin whose path is gone at HEAD -> reported' % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> said: %s' % (notes[:1] or ['NOTHING AT ALL']))

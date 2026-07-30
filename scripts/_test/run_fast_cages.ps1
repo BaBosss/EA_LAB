@@ -254,6 +254,12 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/s2a_migration.jsonl',
                                           '_triage/factory_os/s2a_coverage_reconciliation.json',
                                           '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
+                                          # ORDER-602 A: the sign-off log and its checker. The log is
+                                          # the file the OWNER edits, so an edit to it must trigger
+                                          # the tier that validates it.
+                                          '_triage/factory_os/check_s2a_signoff.py',
+                                          '_triage/factory_os/run_s2a_signoff_tests.py',
+                                          '_triage/factory_os/s2a_signoff.jsonl',
                                           # D1's coverage numbers are RECOMPUTED from section 2 of
                                           # this file, so a change to it can falsify C8.
                                           'MASTER_BACKLOG.md')

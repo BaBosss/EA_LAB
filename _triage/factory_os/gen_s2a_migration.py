@@ -49,7 +49,11 @@ SIGNERS = {
     'AGENT_TASKBOARD.md': USER,
     'INTAKE_QUEUE.md': USER,
     'portfolio/DEPLOYMENTS.csv': USER,
-    chk.UNOWNED: USER,
+    # ORDER-602 B: one signer for the whole not-currently-owned group, whichever state each row is in.
+    'NO_CURRENT_OWNER': USER,
+    'NOT_YET_BUILT': USER,
+    'DERIVED_NOT_PERSISTED': USER,
+    'TRANSIENT': USER,
     'portfolio/control_room_snapshot.json': LEAD,
     'portfolio/ATTESTATION_MAP.csv': LEAD,
     'docs/memory_control/experiment_events/evidence-manifest.jsonl': LEAD,
@@ -63,8 +67,9 @@ KEEP_EMBEDDED = ('this fact is a sub-object of another entity and owns no file o
                  'is no storage to transfer; it moves if and only if its parent moves')
 NO_BLOB_EMBEDDED = ('embedded in a parent entity - there is no blob of its own to pin (ORDER-600 '
                     'rev 4 exemption)')
-NO_BLOB_UNOWNED = ('no artifact holds this fact at HEAD, so there is no blob to pin (ORDER-600 '
-                   'rev 5 UNOWNED form)')
+NO_BLOB_UNOWNED = ('no artifact holds this fact at HEAD, so there is no blob to pin (ORDER-602 B '
+                   'owner-state form: NO_CURRENT_OWNER / NOT_YET_BUILT / DERIVED_NOT_PERSISTED / '
+                   'TRANSIENT, each with its own disposition rule)')
 KEEP_REVERSE = ('nothing is moved by a KEEP, so there is no forward step to undo; reversing this '
                 'row means deleting the read-only projection that reads the owner and unregistering '
                 'its reader - the owner file itself is never written by this proposal')
@@ -168,12 +173,17 @@ ROWS = [
             'from the row the hook validates, and the hook cannot see the copy.'
         ),
         breaks_if_not_moved=(
-            'No machine can currently answer "which hypotheses share an architecture digest or module '
-            'set", because those fields exist only inside prose rows. TRIGGER: the next time a '
-            'correlation question is asked across EAs - the concrete precedent is memory '
-            'unmeasured-corr-costs-more-than-real-risk, where 1088 of 1540 pairs were still sitting '
-            'on a default correlation of 1.0 because nothing held the machine-readable structure '
-            'needed to compute them.'
+            'NARROWED after Codex audit 7. The previous version cited '
+            'unmeasured-corr-costs-more-than-real-risk (1088 of 1540 pairs still on a default 1.0) '
+            'as though machine-readable hypothesis structure would produce those numbers. It would '
+            'not: those are RETURN correlations and they come from trade series, not from an '
+            'architecture digest. The memory is real; the bridge to this entity was not. '
+            'What this row can support: shared STRUCTURE is currently invisible to any tool. Whether '
+            'two EAs use the same module set or the same architecture exists only as prose inside '
+            'taskboard rows, so "these two are the same strategy wearing different parameters" '
+            'cannot be asked mechanically - and that is the cheap screen that should run BEFORE the '
+            'expensive return-correlation measurement, not a replacement for it. TRIGGER: the next '
+            'cohort added to the portfolio without a structural dedupe.'
         ),
         reverse_steps=(
             '1) delete factory/hypotheses.jsonl. '
@@ -331,10 +341,17 @@ ROWS = [
             'relocating history.'
         ),
         breaks_if_not_moved=(
-            'A killed run cannot be resumed, because no checkpoint is persisted. This has already '
-            'cost real time: memory taskstop-does-not-kill-qwen-child records a worker that was '
-            '"stopped" while its child kept holding the MT5 lane and committing, and the only way '
-            'that was detected was by reading tasklist and git log afterwards. TRIGGER: the next '
+            'NARROWED after Codex audit 7. The previous version cited '
+            'taskstop-does-not-kill-qwen-child as the cost, which does not follow: that memory '
+            'records a process-tree cancellation defect (a "stopped" worker whose child kept holding '
+            'the MT5 lane and committing), and a recovery checkpoint neither stops nor identifies an '
+            'orphan child. Real incident, wrong causal bridge. '
+            'The claim this row can actually support: a run interrupted between its start and its '
+            'event-log entry leaves NO record that it was ever in flight, because '
+            'scripts/experiment_event_log.ps1 records completed occurrences. So "is this run still '
+            'going, or did it die?" is not answerable from the repo - which is exactly the question '
+            'that had to be answered by reading tasklist and git log by hand in that incident. The '
+            'checkpoint does not prevent the orphan; it makes the orphan VISIBLE. TRIGGER: the next '
             'interrupted overnight batch.'
         ),
         reverse_steps=(
@@ -492,7 +509,7 @@ ROWS = [
     # ---------------------------------------------------------------- UNOWNED (rev 5)
     dict(
         entity='TestUniverse',
-        owner=chk.UNOWNED,
+        owner='NO_CURRENT_OWNER',
         proposed='factory/universe.jsonl',
         disposition='TRANSFER',
         canonical_or_derived='canonical',
@@ -507,12 +524,19 @@ ROWS = [
             'cells and the universe they are drawn from have one source each.'
         ),
         breaks_if_not_moved=(
-            '"Mandatory symbol x TF" is not expressible, so a screen can silently skip a cell and '
-            'nothing notices. This is measured, not theoretical: memory '
-            'bar-cleared-by-non-participation found hosts that "passed" BWD on 52-62 trades over '
-            'three years while failing hosts took 343-473, i.e. a bar cleared by absence from the '
-            'market - and there is no universe definition against which "did this actually trade the '
-            'mandatory set" could be checked. TRIGGER: the next both-window screen.'
+            'NARROWED after Codex audit 7, which found the previous version reaching for a failure '
+            'this entity does not prevent. It cited bar-cleared-by-non-participation (hosts that '
+            '"passed" BWD on 52-62 trades over three years) as if a universe registry would have '
+            'caught it. It would not: those hosts DID trade the tested cell, just rarely, and the '
+            'fix for that is a trades-per-window participation floor - a BAR, which CLAUDE.md says '
+            'only the user may ratify. Wrong mechanism, right-sounding prose. '
+            'The true gap is narrower and still real: there is no versioned statement of which '
+            'symbol x TF cells are MANDATORY, so "this screen skipped a cell" is not a question any '
+            'tool can ask. The measured instance is in this order\'s own data: '
+            'MASTER_BACKLOG.md section 2 carries 7 EA rows and 8 LIVE cells against a 64-row '
+            'deployment inventory, and no artifact says which cells SHOULD have been covered - so '
+            'the gap between them cannot be computed, only eyeballed. TRIGGER: the next coverage '
+            'question that asks what is missing rather than what was run.'
         ),
         reverse_steps=(
             '1) delete factory/universe.jsonl. '
@@ -533,7 +557,7 @@ ROWS = [
     ),
     dict(
         entity='LogicalSymbol',
-        owner=chk.UNOWNED,
+        owner='NOT_YET_BUILT',
         proposed='factory/universe.jsonl',
         disposition='TRANSFER',
         canonical_or_derived='canonical',
@@ -581,7 +605,7 @@ ROWS = [
     ),
     dict(
         entity='SafeProjection',
-        owner=chk.UNOWNED,
+        owner='DERIVED_NOT_PERSISTED',
         proposed='build/safe_projection.json',
         disposition='TRANSFER',
         canonical_or_derived='derived',
@@ -620,8 +644,8 @@ ROWS = [
     ),
     dict(
         entity='RunJournal',
-        owner=chk.UNOWNED,
-        proposed=chk.UNOWNED,
+        owner='TRANSIENT',
+        proposed='TRANSIENT',
         disposition='KEEP',
         canonical_or_derived='derived',
         # Codex audit 7: the declared evidence for RunJournal is the SCHEMA, which states the claim
@@ -936,7 +960,7 @@ def build_rows(pins=None):
             'evidence_lost': spec['evidence_lost'],
             'retention_window': spec['retention_window'],
         }
-        if owner == chk.UNOWNED:
+        if owner in chk.OWNER_STATES:
             row['owner_ref'] = None
             row['owner_ref_absent_reason'] = NO_BLOB_UNOWNED
             row['unowned_evidence'] = spec['unowned_evidence']
