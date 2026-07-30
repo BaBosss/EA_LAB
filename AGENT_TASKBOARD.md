@@ -103,6 +103,49 @@
 
 ---
 
+## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `OPEN` · ⛔ **next frontier; nothing before it is blocking** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Why this is written and not executed.** S4 is the first slice that **migrates a live artifact**: `portfolio/control_room_snapshot.json` is the monitoring sensor, and `make_status.ps1` runs after every commit and produces the HTML the owner reads. A partial migration here leaves two sources of truth for account state — the one thing the design and every audit have been most consistent about refusing. It was left fully specified rather than half-done. **Everything it depends on is green.**
+
+**MEASURED 2026-07-31, so this order starts from facts rather than a survey:**
+
+| | measured |
+|---|---|
+| committed snapshot | `meta.version` = **3** — while `control_room_snapshot.ps1` at HEAD writes **4**. *The file predates its own writer.* |
+| `meta.sources` | 3 rows, shaped `{path, sha256, mtime, age_hours}` |
+| `ControlRoomSnapshotV5` wants | root `entity` + `verdict`; `meta.build_id` + `mandatory_sources` + `reconciliation`; rows carrying `name`, `mandatory`, `read_ok`, `fresh` |
+| fixture status | `run_schema_fixtures.py` prints this gap every run and says *"Slice S4 is not done until this line PASSES"* |
+
+### 🔑 The blocking design decision, MADE HERE (engineering, not owner-owned)
+
+The fixture output has been carrying *"reconciling `path` with `name` needs a decision about which one is the identity, and that decision belongs with the readers."* **Decision: they are two different things and the row carries BOTH.**
+- **`path` is the physical identity** — it is what gets hashed, what `mtime`/`age_hours` describe, and what a reader resolves. A row without it cannot be re-verified.
+- **`name` is the logical identity** — it is what `mandatory_sources` enumerates. A registry keyed on a path breaks the moment a file moves, and the reconciliation would then report a *missing mandatory source* for a rename.
+- ⇒ every source row is `{name, path, sha256, mtime, age_hours, mandatory, read_ok, fresh}`, `mandatory_sources` holds **names**, and the reconciliation joins on `name`. **No independently calculated totals** anywhere — the counts come from the join, not from a parallel tally.
+
+### Acceptance (from design §10 S4, each with a negative fixture)
+
+- **C1** the REAL snapshot validates against `ControlRoomSnapshotV5` — the fixture line above must flip to PASS, and that flip is the acceptance, not a claim about it.
+- **C2** seeded **N** discovered ⇒ exactly **N** categorized or an explicit `UNKNOWN`. Negative: seed N and drop one ⇒ RED.
+- **C3** a missing / unreadable / stale mandatory source ⇒ **cannot** render `ALL CLEAR`. Three separate negatives; the guard must be **observed firing** for each, and a run where it fires **0 times must be reported `UNTESTED`**, per the VERDICT GATE's guard rule.
+- **C4** **authenticity is derived, never claimed:** `read_ok` / `fresh` / `sha256` are recomputed from the file on disk, and a builder-supplied value is **refused**. Negative: a builder input asserting `read_ok: true` for a file that does not exist ⇒ RED. <br>*(This is the exact defect class of audit 6's `verify_snapshot` — recompute the verdict, trust the evidence.)*
+- **C5** **atomic** build→validate→replace. The canonical file is only replaced by a snapshot that has already validated; a failed build must leave the previous file **byte-unchanged**. Negative: force a validation failure mid-build ⇒ the old file is still there, bit for bit.
+- **C6** `make_status.ps1` and the digest reader consume **only** a validated snapshot and **refuse to render** on a failed build. Negative: point them at an invalid snapshot ⇒ they must fail loudly, not render a stale-but-pretty page. <br>🔴 **This is the one to be most careful with:** `make_status.ps1` runs after every commit. A reader that fails closed on a bad snapshot is correct; a reader that fails closed on a *missing* snapshot would block every commit in the repo. Decide which, pre-register it, and fixture both.
+- **C7** version is **5**, not 4 — 4 is taken by the current writer, so reusing it would make two incompatible shapes share a number.
+
+### ห้าม
+
+- ❌ No second source of account state. The v5 file **replaces** v3/v4; it does not sit beside it.
+- ❌ Do not change any risk threshold, bar, or dashboard constant while migrating the shape.
+- ❌ Do not touch `_vps_deploy/`, any live `.set`, or any account credential.
+- ❌ Do not mark `REVIEWED`.
+
+### Rollback
+
+`git revert` restores the previous writer **and** the previous snapshot in one commit. Before committing, confirm `make_status.ps1` renders and `check_state.ps1` is CLEAN — both consume this artifact.
+
+---
+
 ## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — **27/27 entities now reject a crafted bad instance, and 27/27 have a positive one delta away**
