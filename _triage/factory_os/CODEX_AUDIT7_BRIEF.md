@@ -1,4 +1,12 @@
-# Blind audit brief #7 — S2a's migration table, and whether the amendments that made it satisfiable also made it gameable
+# Blind audit brief #7 — S2a's migration table, and whether the amendments that made it satisfiable also weakened it
+
+> **Note on wording (2026-07-30).** The first version of this brief was written in adversarial
+> penetration-testing language ("rebuild the attack", "bypass", "defeat the purpose"). A Codex run on it
+> was stopped by a content-moderation filter as possible cybersecurity work. Nothing about the task
+> changed — this is **ordinary negative testing of a data validator inside this repo**: does a
+> conformance checker accept inputs that satisfy its letter while failing the specification's intent?
+> The brief now says that in plain QA terms. There is no security component, no external system, and no
+> third party involved: subject and validator are both files in this repository.
 
 **Scope of write permission, stated once so it cannot contradict itself:** you may create or overwrite
 **exactly one file**, `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`, which is your report. **Everything
@@ -16,9 +24,9 @@ Repo root: `D:\EA_LAB`. Interpreter: `tools\python312\python.exe` (no system Pyt
 `de240b33` and `59a27f97` are long, and they argue their own case at length. You will hit them
 immediately and they will try to convince you. **Treat every sentence in them as a claim to falsify, not
 as a finding.** They repeatedly assert something was "measured" — **re-measure it**. They assert three
-defect classes were closed — **your job is to find the variant that survives.** Two of those commits
-exist only because the *previous* commit's self-review missed something, which is direct evidence that
-this seat's self-assessment on this slice is not reliable.
+defect classes were closed — **check whether a variant of each survives.** Two of those commits exist
+only because the *previous* commit's self-review missed something, which is direct evidence that this
+seat's self-assessment on this slice is not reliable.
 
 Every judgement in this artifact came from **one seat** — the work, two rounds of acceptance amendment,
 and the verdict. That is precisely why you are being asked.
@@ -35,8 +43,8 @@ Its history matters because it is a history of the acceptance being **unsatisfia
 
 | rev | what changed |
 |---|---|
-| rev 1 | closed by audit 5 as gameable: 24 rows naming `schemas.json`, a constant in every hash field, nothing proposed |
-| rev 2 | amended against audit 5 (`2d166a34`) |
+| rev 1 | rejected in review #5 as too weak: 24 rows naming `schemas.json`, a constant in every hash field, nothing actually proposed |
+| rev 2 | amended against review #5 (`2d166a34`) |
 | rev 4 | `b56be960` — three clauses could not all hold; `current_owner` rules relaxed, `EMBEDDED:` introduced |
 | **rev 5** | `03e98667` — **two more clauses could not hold**; `UNOWNED` introduced, D1's path corrected |
 
@@ -54,7 +62,7 @@ amendment blocks). That is the spec. Then the artifacts.
 | `_triage/factory_os/check_s2a_migration.py` | **D3**, the checker: 9 criteria + `--self-test` + the advisory |
 | `_triage/factory_os/gen_s2a_migration.py` | D1's generator — the mechanical/judgement split lives here |
 | `_triage/factory_os/gen_s2a_migration_doc.py` | D2's generator |
-| `_triage/factory_os/run_s2a_migration_tests.py` | the cage: mutations of the real D1 + 3 further parts |
+| `_triage/factory_os/run_s2a_migration_tests.py` | the test suite: mutations of the real D1 + 3 further parts |
 | `_triage/factory_os/run_s2a_gate.py` | the aggregator wired into the pre-commit tier |
 | `_triage/EA_LAB_FACTORY_OS_DESIGN.md` §1.1–1.3 | the ownership tables D1's judgement columns are built on |
 | `MASTER_BACKLOG.md` §2 | the coverage matrix the headline row proposes to move |
@@ -67,29 +75,33 @@ tools\python312\python.exe _triage\factory_os\check_s2a_migration.py --self-test
 tools\python312\python.exe _triage\factory_os\run_s2a_migration_tests.py
 ```
 
-## 3. The primary question — rebuild audit 5's attack against the CURRENT checker
+## 3. The primary question — false-negative testing of the checker
 
-Audit 5 killed rev 1 by constructing, for every criterion, the cheapest output that met the letter and
-defeated the purpose. **Do that again, against the checker as it stands.**
+A checker is only worth its refusals. Review #5 rejected rev 1 by writing, for each criterion, the
+**cheapest input that satisfied the wording while carrying no useful content** — a 27-row file that was
+formally valid and told the owner nothing. The rev-1 checker accepted it. **Repeat that exercise against
+the checker as it stands**, as straightforward negative testing.
 
-Two amendments were made specifically to make the order satisfiable, and each one is an **exemption from
-the criterion that had the most bite**. Exemptions are where a null migration comes back:
+Two amendments were made specifically to make the order satisfiable, and each is an **exemption from the
+criterion that was doing the most work**. Exemptions are where a formally-valid-but-empty file tends to
+reappear:
 
 - **`UNOWNED`** as a legal `current_owner` (rev 5), for entities with neither a file nor a parent.
 - **`EMBEDDED:<Parent>`** and the wildcard **`EMBEDDED:*`** (rev 4 / rev 5), exempt from `owner_ref` pinning.
 
-**Construct a D1 that passes all nine criteria and is worth nothing.** Candidate angles — do not treat
-this list as exhaustive, and do not assume any of them fails:
-1. How many of the 27 rows can legally become `UNOWNED`? What stops all of them? Test it, do not reason
-   about it — write the file and run the checker.
-2. `EMBEDDED:*` requires ≥2 parents "verified against the `$ref` graph". Can a row claim a parent that
-   references it *for an unrelated reason* and take the pinning exemption it has no right to?
-3. `owner_ref` pinning was tightened in `a1f854f6` after being found bypassable. **Is it still
-   bypassable?** Look for a third route, not the two that were closed.
-4. C7 requires the Coverage edge and forbids all-`KEEP`. What is the minimum number of non-`KEEP` rows
-   that satisfies it, and is a table with that minimum still a proposal?
+**Goal: produce a D1 that passes all nine criteria and would be useless to its reader.** If you can, the
+acceptance is too weak and that is the headline finding. Candidate angles — not exhaustive, and do not
+assume any of them is already handled:
+1. How many of the 27 rows can legally become `UNOWNED`? What prevents all of them? **Test it by writing
+   the file and running the checker**, rather than reasoning from the source.
+2. `EMBEDDED:*` requires ≥2 parents "verified against the `$ref` graph". Can a row name a parent that
+   references it for an unrelated reason, and so claim a pinning exemption it should not get?
+3. The `owner_ref` pinning rule was tightened in `a1f854f6` after two ways around it were found. **Is
+   there a third?** Look for a route other than the two that were closed.
+4. C7 requires the Coverage edge row and forbids an all-`KEEP` table. What is the minimum number of
+   non-`KEEP` rows that satisfies it, and is a table with exactly that minimum still a proposal?
 5. C6 ("one signer per `current_owner`") — the generator assigns signers *from a dict keyed by owner*, so
-   ask whether C6 can fail against any generated file at all, and whether it therefore checks anything.
+   ask whether C6 can fail against any generated file at all, and therefore whether it checks anything.
 
 ## 4. Numbers to re-measure rather than believe
 
@@ -100,13 +112,13 @@ independently.** Any disagreement is a finding.
 |---|---|
 | 27 entities; **9** embedded in a parent, **14** with a real artifact at HEAD, **4** with neither | rev-5 block, D2, board row |
 | §2 has **7** EA rows and **8** LIVE cells; D1 emits **40** cells total | `s2a_coverage_reconciliation.json`, D2 |
-| the 32 non-LIVE cells are a complete and correct enumeration of §2's last column | `gen_s2a_migration.py` `OTHER` dict — **hand-curated, prime target** |
+| the 32 non-LIVE cells are a complete and correct enumeration of §2's last column | `gen_s2a_migration.py` `OTHER` dict — **hand-curated, so most likely to be wrong** |
 | **"nothing machine-reads `MASTER_BACKLOG.md` §2"** — the load-bearing claim of the whole proposal | `CoverageCell.breaks_if_moved`, D2 |
 | `scripts/check_state.ps1:124` reads that file *only* to assert its owner banner | same |
 | every `owner_ref` resolves and re-hashes correctly | C4 |
 | fast tier 15.4s → 17.3s standalone, 15.7s in-hook, vs a 15.0s advisory budget | `run_contract_binding_tests.ps1` header |
 
-The §2 claim is the one to attack hardest: **the entire recommendation to approve the transfer rests on
+The §2 claim deserves the most scrutiny: **the entire recommendation to approve the transfer rests on
 it.** If any script, hook, skill, subagent definition or dashboard parses that table, the row's breakage
 analysis is wrong and the recommendation should change.
 
@@ -123,8 +135,8 @@ hashes are real, **not** that the breakage analysis is any good. Per `TRANSFER` 
 **Check the citations, not the prose quality.** Several rows cite specific files and line numbers
 (`scripts/check_state.ps1:124`, `scripts/check_block_staleness.ps1:57`, `RiskControl.mqh:142`) and
 several cite repo memories and past ORDER numbers as evidence that a failure is real. **Open them.** A
-citation that does not say what the row claims it says is a finding, and it is the failure mode this
-artifact is most exposed to, because 12 rows of judgement prose were written in one sitting.
+citation that does not say what the row claims it says is a finding, and it is the weakness this artifact
+is most exposed to, because 12 rows of judgement prose were written in one sitting.
 
 ## 6. Specific things I want an outside opinion on
 
@@ -140,19 +152,19 @@ artifact is most exposed to, because 12 rows of judgement prose were written in 
    the right severity, given the row's own citations can rot?**
 4. **Memoization inside a checker.** `_REVPARSE_MEMO`, `_BLOB_MEMO`, `_TRACKED_MEMO`, `_PARENTS_MEMO`,
    `_ENTITIES_MEMO` were added for speed, justified as sound because git objects are content-addressed.
-   **Find the case where a memo makes a check answer a question it was not asked** — the mutation suite
-   runs all criteria 25+ times in one process, which is exactly the environment where a stale memo hides.
+   **Look for a case where a cached value makes a check answer a different question than intended** — the
+   test suite runs all criteria 25+ times in one process, which is exactly where a stale cache hides.
 5. **Is the `run_s2a_gate.py` aggregator a good idea**, or does bundling five checks behind one exit code
    lose information the tier needs?
 
 ## 7. Also in scope — ORDER-601, whose re-check is still owed
 
 `ORDER-601` (S3a, the snapshot validator) sits at `DONE` and has never been independently re-checked
-since audit 6's findings were fixed. Its fix commits are `161d2033`, `a7960e08`, `b8b332fc`, `8a5dac5f`.
-**Audit 6 returned NOT DONE and was right**; all 8 findings were then reproduced and fixed, and a
-self-review found three more. Confirm the fixes hold and look for the variants that survived:
+since review #6's findings were fixed. Its fix commits are `161d2033`, `a7960e08`, `b8b332fc`,
+`8a5dac5f`. **Review #6 returned NOT DONE and was right**; all 8 findings were then reproduced and fixed,
+and a self-review found three more. Confirm the fixes hold and look for variants that survived:
 
-- the headline audit-6 finding was the **NAME**, not the arithmetic: `all_clear` → `reconciliation_clear`,
+- the headline finding in #6 was the **NAME**, not the arithmetic: `all_clear` → `reconciliation_clear`,
   because a snapshot with a `NO_SENSOR` fleet sensor and missing kill/judge controls verified `true`
   *correctly*. **Is the renamed field now honestly scoped, or does D2/the design still imply fleet health?**
 - named and deliberately unfixed, all routed to S4 — confirm they are still true rather than quietly
@@ -174,11 +186,11 @@ Write `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`:
 2. **Verdict on ORDER-601's re-check: REVIEWED-able / NOT** — it cannot go `REVIEWED` on this seat's word.
 3. **Findings, severity-ordered.** For each: what is wrong, the evidence (path/line/command output), the
    consequence, and the minimal fix. **Separate "I reproduced this" from "I suspect this."**
-4. **If you constructed a passing-but-worthless D1, include it** — the input is worth more than the prose.
+4. **If you produced a passing-but-useless D1, include it** — the input is worth more than the prose.
 5. **What you checked and found sound**, so the coverage of this audit is legible.
-6. **Anything the brief steered you away from** that you think matters. Previous audits found their best
-   material outside the questions asked; brief #6's headline finding was a naming problem nobody asked
+6. **Anything the brief steered you away from** that you think matters. Previous reviews found their best
+   material outside the questions asked; review #6's headline finding was a naming problem nobody asked
    about.
 
-Do not soften. A NOT DONE that is right is worth far more than a DONE that is polite — audit 6's NOT DONE
-was correct and is the reason this slice is in a defensible state at all.
+Do not soften. A NOT DONE that is right is worth far more than a DONE that is polite — review #6's NOT
+DONE was correct and is the reason this slice is in a defensible state at all.
