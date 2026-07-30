@@ -546,12 +546,22 @@ ROWS = [
             'copied into .set generation, giving two answers for one symbol.'
         ),
         breaks_if_not_moved=(
-            'The broker-string aliasing is handled per script by convention, and the failure is on '
-            'record: memory mt5-selfupdate-breaks-startup-ini-and-pid-kill notes a login without '
-            '/portable landing credentials in a different data folder, surfacing as "symbol '
-            'synchronization timeout" - a symbol-identity failure diagnosed as a network one. '
-            'TRIGGER: any run on lane 2/3 (D:\\Meta 5b, D:\\Meta 5c) whose broker spells a symbol '
-            'differently from lane 1.'
+            'CORRECTED after Codex audit 7, which caught this row citing a memory for the OPPOSITE '
+            'of what it says. The removed claim was that '
+            'mt5-selfupdate-breaks-startup-ini-and-pid-kill records "a symbol-identity failure '
+            'diagnosed as a network one". That memory says the reverse in as many words: the '
+            '"symbol synchronization timeout" was NOT a symbol problem at all - the terminal was '
+            'simply never authorised, because a login made without /portable stores credentials in '
+            'a different data folder. Citing it here inverted its causality to make it support a '
+            'symbol registry. '
+            'The honest statement of the gap: the logical-to-broker symbol mapping exists only as '
+            'per-script convention, so nothing can mechanically check that two runs traded the same '
+            'instrument. The concrete cost on record is ORDER-371, which had to BAN cross-install '
+            'comparison outright after memory btc-tick-data-differs-per-mt5-install measured the '
+            'same EA, .set and window returning different PF on two MT5 installs. That ban is '
+            'enforced by discipline today; a versioned symbol identity is what would let a tool '
+            'enforce it. TRIGGER: the next A/B whose two legs land on different lanes '
+            '(D:\\Meta 5 / 5b / 5c).'
         ),
         reverse_steps=(
             '1) delete factory/universe.jsonl (shared with TestUniverse - if only this fact is being '
@@ -614,7 +624,9 @@ ROWS = [
         proposed=chk.UNOWNED,
         disposition='KEEP',
         canonical_or_derived='derived',
-        unowned_evidence=DESIGN,
+        # Codex audit 7: the declared evidence for RunJournal is the SCHEMA, which states the claim
+        # ("Never persisted, never written") outright. The design does not.
+        unowned_evidence='_triage/factory_os/schemas.json',
         keep_reason=(
             'correctly owned by nobody, now and after: the schema declares it x-derived and '
             '"NONE - derived by folding the RunTransition lines of one run_id. Never persisted, never '
@@ -952,28 +964,44 @@ DECLARED_LIVE = {
     'EA_RUNNER_ST03 (framework)': ['GBPUSD H1'],
 }
 
-# Every non-LIVE symbol token in section 2's last column, with the status the table gives it.
-# TF is almost never stated there, so these are UNVERIFIED_IMPORT and each carries its source
-# coordinates, as the order requires. `sym` is verbatim from the cell - 'EUR', 'AUD', 'NZD' are
-# recorded as written precisely because they are ambiguous and must not be silently expanded.
+# Every non-LIVE cell in section 2's last column: (label, declared status, SOURCE TOKEN).
+#
+# The third element is Codex audit 7's fix and it is the point of the whole structure: it is the exact
+# substring of section 2 the cell was derived from, and the checker requires it to appear verbatim in
+# that row's other-symbols column. Before this, C8 counted cells and believed them -- 32 copies of the
+# bare string "junk" passed.
+#
+# It also forced two cells to become honest. `XAUUSD H4` and `GBPUSD H4` were labelled UNVERIFIED_IMPORT
+# "because the source states no timeframe", which is the opposite of true: the source states ONLY the
+# timeframe ("H4 = smoke", "H4 yang mai long"), and it is the SYMBOL that is inherited from the row's
+# LIVE cell. Their source token is `H4`, and their reason now says so.
+#
+# Labels are verbatim from the table - 'EUR', 'AUD', 'NZD' stay as written precisely because they are
+# ambiguous and must not be silently expanded into currency pairs that were never tested.
 OTHER = {
     'Matchagrid MG_v1': [],
-    'NuiIndy RSI+ADX': [('GBPUSD', 'REJECT_DD37'), ('USDJPY', 'REJECT_WIPEOUT'),
-                        ('AUDJPY', 'REJECT_WIPEOUT')],
-    'ST_EA03 MACD': [('EUR', 'REJECT'), ('USDJPY', 'REJECT'), ('EURJPY', 'REJECT'),
-                     ('XAU', 'REJECT'), ('GBPJPY', 'REJECT'), ('EURGBP', 'REJECT'),
-                     ('AUD', 'REJECT'), ('NZD', 'REJECT'), ('GBPCAD', 'REJECT'),
-                     ('EURCAD', 'REJECT'), ('CADJPY', 'REJECT'),
-                     ('GBPCHF', 'PASS_BUT_CORRELATED')],
+    'NuiIndy RSI+ADX': [('GBPUSD', 'REJECT_DD37', 'GBPUSD'),
+                        ('USDJPY', 'REJECT_WIPEOUT', 'USDJPY'),
+                        ('AUDJPY', 'REJECT_WIPEOUT', 'AUDJPY')],
+    'ST_EA03 MACD': [('EUR', 'REJECT', 'EUR'), ('USDJPY', 'REJECT', 'USDJPY'),
+                     ('EURJPY', 'REJECT', 'EURJPY'), ('XAU', 'REJECT', 'XAU'),
+                     ('GBPJPY', 'REJECT', 'GBPJPY'), ('EURGBP', 'REJECT', 'EURGBP'),
+                     ('AUD', 'REJECT', 'AUD'), ('NZD', 'REJECT', 'NZD'),
+                     ('GBPCAD', 'REJECT', 'GBPCAD'), ('EURCAD', 'REJECT', 'EURCAD'),
+                     ('CADJPY', 'REJECT', 'CADJPY'),
+                     ('GBPCHF', 'PASS_BUT_CORRELATED', 'GBPCHF')],
     'Gold Reaper 4.3': [],
-    'EA_BREAKOUT_XAU': [('US30', 'DEAD'), ('WTI', 'DEAD'), ('BRENT', 'DEAD'), ('XAGUSD', 'DEAD'),
-                        ('GBPJPY', 'DEAD'), ('USDJPY', 'REJECT_AFTER_OPTIMIZE'),
-                        ('XAUUSD H4', 'SMOKE_IN_PROGRESS')],
-    'LondonConsoBreakout': [('EURUSD', 'DROPPED'), ('GBPJPY', 'DEAD'), ('GBPCAD', 'DEAD'),
-                            ('EURGBP', 'DEAD'), ('USDCAD', 'DEAD'),
-                            ('GBPUSD H4', 'NOT_ATTEMPTED')],
-    'EA_RUNNER_ST03 (framework)': [('USDCAD', 'FAIL'), ('EUR', 'FAIL'), ('AUD', 'FAIL'),
-                                   ('NZD', 'FAIL')],
+    'EA_BREAKOUT_XAU': [('US30', 'DEAD', 'US30'), ('WTI', 'DEAD', 'WTI'),
+                        ('BRENT', 'DEAD', 'BRENT'), ('XAGUSD', 'DEAD', 'XAGUSD'),
+                        ('GBPJPY', 'DEAD', 'GBPJPY'),
+                        ('USDJPY', 'REJECT_AFTER_OPTIMIZE', 'USDJPY'),
+                        ('XAUUSD H4', 'SMOKE_IN_PROGRESS', 'H4')],
+    'LondonConsoBreakout': [('EURUSD', 'DROPPED', 'EURUSD'), ('GBPJPY', 'DEAD', 'GBPJPY'),
+                            ('GBPCAD', 'DEAD', 'GBPCAD'), ('EURGBP', 'DEAD', 'EURGBP'),
+                            ('USDCAD', 'DEAD', 'USDCAD'),
+                            ('GBPUSD H4', 'NOT_ATTEMPTED', 'H4')],
+    'EA_RUNNER_ST03 (framework)': [('USDCAD', 'FAIL', 'USDCAD'), ('EUR', 'FAIL', 'EUR'),
+                                   ('AUD', 'FAIL', 'AUD'), ('NZD', 'FAIL', 'NZD')],
 }
 
 
@@ -996,7 +1024,8 @@ def build_coverage():
         row = r['source_row']
         cells = [{'cell': c, 'status': 'LIVE', 'column': 'LIVE cell'}
                  for c in DECLARED_LIVE[row]]
-        for sym, status in OTHER[row]:
+        for sym, status, token in OTHER[row]:
+            symbol_inherited = token != sym.split()[0]
             cells.append({
                 'cell': sym,
                 'status': 'UNVERIFIED_IMPORT',
@@ -1009,8 +1038,14 @@ def build_coverage():
                     'source_row': row,
                     'column_index': 5,
                 },
-                'why_unverified': ('the cell states a symbol and an outcome but no timeframe, so a '
-                                   'symbol x TF cell cannot be constructed from it without guessing'),
+                # verbatim substring of the source column; C8 re-finds it there
+                'source_token': token,
+                'why_unverified': (
+                    ('the source states only the timeframe %r; the SYMBOL is inherited from this '
+                     'row\'s LIVE cell rather than stated in the source, so the pairing is an '
+                     'inference' % token) if symbol_inherited else
+                    ('the cell states a symbol and an outcome but no timeframe, so a symbol x TF '
+                     'cell cannot be constructed from it without guessing')),
             })
         mapping.append({'source_row': row, 'cells': cells})
     return {

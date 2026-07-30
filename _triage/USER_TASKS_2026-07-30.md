@@ -96,13 +96,19 @@ headline question is precisely whether the "nothing reads §2" claim holds.
 - **refuse** → set `"REFUSED"` and add a `refused_reason`. A refusal with a stated reason closes the
   question; silence leaves it open and it comes back.
 
-> 🔴 **Known snag, and Claude flagged it for the audit rather than pre-solving it.** The checker
-> **refuses `APPROVED` outright** (criterion C2) — that guard exists to stop *Claude* writing it, so as
-> written you cannot record approval without relaxing C2 in the same commit. That relaxation is
-> deliberately **not** pre-built, so it cannot be used before you have decided. Audit question 6.1 asks
-> Codex whether this is a sound safeguard or a deadlock dressed up as one, and to propose the shape.
-> **Practical route today:** make the edit and, in the same commit, change `SIGNOFF_STATES` in
-> `_triage/factory_os/check_s2a_migration.py` to include `'APPROVED'`. Ask Claude to do it if you prefer.
+> 🔴 **DO NOT FOLLOW THE ROUTE THIS SECTION ORIGINALLY GAVE — it was wrong, and Codex audit 7 (MAJOR 2)
+> caught it.** The instruction was to edit D1 and relax `SIGNOFF_STATES` in the same commit. That is
+> **incomplete**: `run_s2a_gate.py` step 1 requires D1 to byte-match `gen_s2a_migration.py`, so you would
+> also have to edit the **generator** that emits `PROPOSED` and regenerate D1 *and* D2. Approving would
+> mean changing **the evidence, the acceptance rule, and the generator in one commit** — and afterwards
+> nothing could tell "the owner approved" apart from "the author weakened the guard".
+>
+> **Codex's verdict: a sign-off deadlock, not a safeguard.** Accepted. The fix is to stop putting the
+> decision inside the proposal: an **append-only sign-off artifact** keyed by
+> `proposal_sha256 · current_owner · decision · signer · decided_at · reason`, which lets `APPROVED` be
+> recorded with **no checker edit at all** and gives C6 a real owner-level rule to enforce.
+> **Tracked as `ORDER-602`. Please do not hand-approve until it lands** — it is a small piece of work and
+> it removes the need to touch any guard to say yes.
 
 ---
 

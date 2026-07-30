@@ -156,6 +156,19 @@ def m_unowned_evidence_silent(rows, cov):
     find(rows, 'TestUniverse')['unowned_evidence'] = 'CLAUDE.md'
 
 
+def m_undeclared_entity_claims_unowned(rows, cov):
+    """Codex audit 7's primitive, isolated: an entity helps itself to the UNOWNED exemption.
+
+    This is the single-field form of the combined attack. It matters on its own because the closed
+    UNOWNABLE list is now the only thing standing between one legitimate exemption and 27 of them.
+    """
+    r = find(rows, 'Hypothesis')
+    r['current_owner'] = chk.UNOWNED
+    r['unowned_evidence'] = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'
+    r['owner_ref'] = None
+    r['owner_ref_absent_reason'] = 'none'
+
+
 def m_unowned_keep_canonical(rows, cov):
     r = find(rows, 'TestUniverse')
     r['disposition'] = 'KEEP'
@@ -182,6 +195,50 @@ def m_refused_without_a_reason(rows, cov):
     r = find(rows, 'CoverageCell')
     r['signoff_state'] = 'REFUSED'
     r.pop('refused_reason', None)
+
+
+def m_codex7_combined_attack(rows, cov):
+    """Codex audit 7 BLOCKER 1, reproduced verbatim: the coordinated semantic bypass.
+
+    Every mutation above this one is LOCAL -- it breaks a single field and expects a single criterion to
+    fire. This one coordinates C2, C3, C4, C7, C8 and C9 at once, and the checker passed it with exit 0
+    and all nine [OK]. That is the finding: 27 local mutations green does not imply the acceptance holds,
+    and the 'UNOWNED is guarded' claim was true only in the weakest sense -- the guard opened a file.
+    `schemas.json` DEFINES all 27 entities, so it contains every entity name, so it satisfied a substring
+    test as 'evidence' that each of them is unowned.
+    """
+    for r in rows:
+        r['current_owner'] = 'UNOWNED'
+        r['proposed_owner'] = 'UNOWNED'
+        r['disposition'] = 'KEEP'
+        r['canonical_or_derived'] = 'derived'
+        r['owner_ref'] = None
+        r['owner_ref_absent_reason'] = 'none'
+        r['unowned_evidence'] = '_triage/factory_os/schemas.json'
+        r['keep_reason'] = 'leave everything where it is'
+        r['signoff_state'] = 'REFUSED'
+        r['refused_reason'] = 'no'
+        r['signoff_owner'] = 'nobody'
+        for k in ('breaks_if_moved', 'breaks_if_not_moved', 'reverse_steps', 'evidence_lost',
+                  'retention_window'):
+            r[k] = 'x'
+        r.pop('same_blob_reason', None)
+        r.pop('embedded_in', None)
+    real = {r['entity']: r for r in load_real()[0]}
+    cc = find(rows, 'CoverageCell')                       # keep the required edge...
+    cc['current_owner'] = 'MASTER_BACKLOG.md'
+    cc['proposed_owner'] = 'factory/coverage.jsonl'
+    cc['owner_ref'] = real['CoverageCell']['owner_ref']
+    cc.pop('unowned_evidence', None)
+    orf = find(rows, 'OwnerRef')                          # ...one decoy transfer defeats all-KEEP
+    orf['disposition'] = 'TRANSFER'
+    orf['proposed_owner'] = 'factory/universe.jsonl'
+    sec2 = chk.parse_section2()                           # ...and pad the mapping with junk
+    mapping = [{'source_row': r['source_row'], 'cells': list(r['live_cells'])} for r in sec2]
+    mapping[0]['cells'] += ['junk'] * 32
+    cov['mapping'] = mapping
+    cov['source_rows_consumed'] = len(mapping)
+    cov['cells_emitted'] = sum(len(m['cells']) for m in mapping)
 
 
 def m_cov_wrong_rowcount(rows, cov):
@@ -228,9 +285,12 @@ CASES = [
     ('C3  EMBEDDED names a false parent',      m_embedded_wrong_parent,    'does not reference'),
     ('C3  EMBEDDED:* down to one parent',      m_embedded_star_one_parent, 'at least 2'),
     ('C3  an EMBEDDED row set to TRANSFER',    m_embedded_transfers,       'owns no'),
-    ('C3  UNOWNED with its citation removed',  m_unowned_no_evidence,      'needs a citation'),
-    ('C3  UNOWNED citing a silent file',       m_unowned_evidence_silent,  'never mentions'),
+    ('C3  UNOWNED with its citation removed',  m_unowned_no_evidence,      'declared evidence is'),
+    ('C3  UNOWNED citing the wrong file',      m_unowned_evidence_silent,  'declared evidence is'),
+    ('C3  an undeclared entity claims UNOWNED', m_undeclared_entity_claims_unowned,
+                                                                           'not declared UNOWNABLE'),
     ('C3  UNOWNED+KEEP on a canonical fact',   m_unowned_keep_canonical,   'must not be signable'),
+    ('AUDIT7 the combined semantic attack',    m_codex7_combined_attack,   'not declared UNOWNABLE'),
     ('C4  a real owner declines its pin',      m_decline_pin_with_a_reason, 'no reason string buys'),
     ('C4  an exempt row states no reason',     m_exempt_row_without_a_reason, 'states no owner_ref_absent'),
     ('C2  REFUSED with no refused_reason',     m_refused_without_a_reason,  'does not close the question'),

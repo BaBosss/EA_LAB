@@ -89,6 +89,32 @@ COVERAGE_PROPOSED_OWNER = 'factory/coverage.jsonl'
 # pass: see c3_owner_vocabulary, which opens unowned_evidence rather than believing it.
 UNOWNED = 'UNOWNED'
 
+# Codex audit 7 BLOCKER 1. The rev-5 guard required `unowned_evidence` to be a tracked file that
+# MENTIONS the entity -- and `_triage/factory_os/schemas.json` DEFINES all 27 entities, so it mentions
+# every one of them. Declaring all 27 `UNOWNED` with schemas.json as evidence passed C3, which then
+# handed every row C4's null-pin exemption, and the whole file passed with exit 0.
+#
+# A substring cannot establish an ownership claim. What can is a CLOSED declaration: the entities
+# permitted to be UNOWNED are listed here, each with the design statement that establishes it, and
+# adding a line is a reviewable act -- the same shape as PLANNED_PATHS. An entity absent from this map
+# may not be UNOWNED at all, so the attack cannot scale past the four rows that are genuinely unowned.
+#
+# The second value is the CLAIM ITSELF, quoted verbatim from the cited file -- not the entity name and
+# not a keyword near it. Checking proximity to the entity name was tried first and was wrong for a
+# reason worth keeping: design 1.3 states the verdict against the human phrase "Test Universe", and
+# never against the schema identifier `TestUniverse`, so a name-proximity test failed on a citation
+# that is actually correct. Verifying the sentence that carries the claim is both stronger and honest:
+# if the design is reworded, this goes red and a human must re-establish the claim, which is exactly
+# what should happen to a citation whose source moved.
+UNOWNABLE = {
+    'TestUniverse':   ('_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                       'No canonical artifact exists for a versioned mandatory symbol'),
+    'LogicalSymbol':  ('_triage/EA_LAB_FACTORY_OS_DESIGN.md', 'broker symbol per lane'),
+    'SafeProjection': ('_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                       'Generated projections go to'),
+    'RunJournal':     ('_triage/factory_os/schemas.json', 'Never persisted, never written'),
+}
+
 
 def fail(problems, msg):
     problems.append(msg)
@@ -255,25 +281,34 @@ def c3_owner_vocabulary(rows, problems, tracked):
                                'file to transfer' % (e, disp))
             _check_embedded_claim(e, cur, embedded_in, parents, problems)
         elif cur == UNOWNED:
-            # The sentinel must EARN its exemption. Three separate gates, because an unguarded
-            # `UNOWNED` would let all 27 rows out of C3 and reinstate the null migration by another
-            # name -- the row must point at a file, and that file must really discuss this entity.
-            ev = (r.get('unowned_evidence') or '').strip()
-            if not ev:
-                fail(problems, 'C3 %s is UNOWNED with no unowned_evidence; "nobody owns this" is a '
-                               'claim that needs a citation like any other' % e)
-            elif ev not in tracked:
-                fail(problems, 'C3 %s unowned_evidence=%r is not a tracked path at HEAD' % (e, ev))
+            # Codex audit 7: the substring form of this guard was defeated by citing a file that
+            # mentions every entity. Eligibility is now a CLOSED declaration, and the citation must
+            # match the one declared for THAT entity -- an entity may not nominate its own evidence.
+            if e not in UNOWNABLE:
+                fail(problems, 'C3 %s is UNOWNED but is not declared UNOWNABLE. Only %s may be, each '
+                               'with the design statement that establishes it; adding one is a '
+                               'reviewable edit to check_s2a_migration.py, not a field a row may '
+                               'assert about itself.' % (e, sorted(UNOWNABLE)))
             else:
-                try:
-                    body = io.open(ev, encoding='utf-8', errors='replace').read()
-                except IOError as exc:
-                    fail(problems, 'C3 %s unowned_evidence %r could not be read: %s' % (e, ev, exc))
+                want_path, anchor = UNOWNABLE[e]
+                ev = (r.get('unowned_evidence') or '').strip()
+                if ev != want_path:
+                    fail(problems, 'C3 %s cites unowned_evidence=%r but its declared evidence is %r'
+                         % (e, ev, want_path))
+                elif ev not in tracked:
+                    fail(problems, 'C3 %s declared evidence %r is not tracked at HEAD' % (e, ev))
                 else:
-                    # RECOMPUTED, not trusted: the cited file must actually mention the entity.
-                    if e not in body:
-                        fail(problems, 'C3 %s cites %r as evidence that it is unowned, but that file '
-                                       'never mentions %s' % (e, ev, e))
+                    try:
+                        body = io.open(ev, encoding='utf-8', errors='replace').read()
+                    except IOError as exc:
+                        fail(problems, 'C3 %s evidence %r could not be read: %s' % (e, ev, exc))
+                    else:
+                        # RECOMPUTED: the claim sentence itself must still be in the cited file.
+                        if anchor not in body:
+                            fail(problems, 'C3 %s cites %r for being unowned, but the claim %r is no '
+                                           'longer in that file -- the citation has rotted and the '
+                                           'exemption must be re-established by a human'
+                                 % (e, ev, anchor))
             if disp == 'KEEP' and r.get('canonical_or_derived') != 'derived':
                 fail(problems, 'C3 %s is UNOWNED + KEEP but canonical_or_derived=%r. A CANONICAL fact '
                                'that nobody owns and nobody is proposed to own is drift, and must not '
@@ -399,6 +434,22 @@ def c5_refs_distinct(rows, problems):
 
 
 def c6_one_signoff_per_owner(rows, problems):
+    """CONSISTENT SIGNER per current_owner -- which is NOT the rule ORDER-600 states.
+
+    Codex audit 7 MAJOR 3, accepted. The order says "exactly one sign-off row per distinct
+    `current_owner`". This function has never checked that: it groups rows by owner and requires the
+    signer STRING to agree, and it skips `EMBEDDED:*` owners entirely. The real D1 has 5 owners
+    carrying more than one row (`UNOWNED` carries 4) and C6 reports green.
+
+    I noticed the weaker half of this myself during /scrutinize -- that the generator assigns signers
+    from a dict keyed by owner, so C6 cannot fail against any generated file -- and recorded it as
+    "not a defect" instead of asking whether the criterion matched its own name. That was the miss.
+
+    It is renamed rather than reimplemented because the honest fix is not a bigger loop: a migration
+    row and a sign-off decision are different records, and one row per owner cannot express both
+    (audit 7 MAJOR 2). Making decisions their own append-only artifact is ORDER-602; this stays a
+    consistency check until then, and now says so in its own name.
+    """
     by_owner = {}
     for r in rows:
         cur = r.get('current_owner') or ''
@@ -439,6 +490,18 @@ def c7_coverage_edge(rows, problems):
                  % r.get('disposition'))
         if not (r.get('signoff_owner') or '').strip():
             fail(problems, 'C7 the Coverage edge row has no named signoff_owner')
+        # Codex audit 7: the all-KEEP guard above is proposal-WIDE, so a single unrelated decoy
+        # transfer satisfied it while the Coverage row itself proposed nothing -- which is the one
+        # row this order exists to put in front of an owner. The decision must live on THAT row.
+        if r.get('disposition') == 'KEEP':
+            if r.get('signoff_state') != 'REFUSED':
+                fail(problems, 'C7 the Coverage edge row is KEEP with signoff_state=%r. Leaving the '
+                               'coverage matrix where it is IS a decision, so it must be recorded as '
+                               'REFUSED with a reason -- a KEEP that is merely PROPOSED proposes '
+                               'nothing, and this is the row the order exists for.'
+                     % r.get('signoff_state'))
+            elif not (r.get('refused_reason') or '').strip():
+                fail(problems, 'C7 the Coverage edge row refuses the transfer with no refused_reason')
 
 
 SECTION2_HEADING = '## 2. COVERAGE MATRIX'
@@ -480,7 +543,11 @@ def parse_section2(path='MASTER_BACKLOG.md'):
         live_raw = live_raw.replace('**', '')
         live_raw = __import__('re').sub(r'\(.*?\)', '', live_raw)
         live = [c.strip() for c in live_raw.split('·') if c.strip()]
-        out.append({'source_row': cells[0], 'live_cells': live})
+        # Codex audit 7: C8 accepted 32 bare "junk" strings as cells. The raw text of the
+        # other-symbols column is carried so every NON-LIVE cell can be checked back against the
+        # source it claims to come from, instead of being counted and believed.
+        out.append({'source_row': cells[0], 'live_cells': live,
+                    'other_raw': cells[5] if len(cells) > 5 else ''})
     return out
 
 
@@ -540,17 +607,52 @@ def c8_coverage_reconciled(problems):
         fail(problems, 'C8 the mapping covers %d source rows but source_rows_consumed is %d -- '
                        'every source row must be consumed exactly once'
              % (len(cov['mapping']), cov['source_rows_consumed']))
+    # Codex audit 7: every cell must be TYPED, UNIQUE, and traceable to section 2. Previously a cell
+    # could be a bare string, and 32 copies of "junk" were counted as coverage. Tolerating two shapes
+    # was the hole: the LIVE check accepted both, so the weaker shape was never rejected anywhere.
+    by_raw = {r['source_row'].strip(): r.get('other_raw', '') for r in section2}
+    live_by_row = {r['source_row'].strip(): set(r['live_cells']) for r in section2}
+    seen_pairs = set()
     for m in cov['mapping']:
+        row = (m.get('source_row') or '').strip()
         for cell in m.get('cells', []):
-            # A cell may be a bare label OR an object carrying a status. Found by --self-test:
-            # this loop assumed dict and CRASHED on a string, while the LIVE-subset check above
-            # accepted both. A checker that raises AttributeError has not checked anything, and a
-            # traceback is not a verdict.
             if not isinstance(cell, dict):
+                fail(problems, 'C8 %r carries the bare cell %r. A cell must be an object with a '
+                               'label and a status -- an untyped string cannot be checked against '
+                               'anything, which is how 32 copies of "junk" once counted as coverage.'
+                     % (row, cell))
                 continue
-            if cell.get('status') == 'UNVERIFIED_IMPORT' and not cell.get('source_coordinates'):
+            label = (cell.get('cell') or '').strip()
+            status = cell.get('status')
+            if not label:
+                fail(problems, 'C8 %r carries a cell with no label' % row)
+                continue
+            if status not in ('LIVE', 'UNVERIFIED_IMPORT'):
+                fail(problems, 'C8 %r cell %r has status=%r, not LIVE or UNVERIFIED_IMPORT'
+                     % (row, label, status))
+            if (row, label) in seen_pairs:
+                fail(problems, 'C8 %r emits the cell %r twice -- every cell is emitted once'
+                     % (row, label))
+            seen_pairs.add((row, label))
+            if status == 'UNVERIFIED_IMPORT' and not cell.get('source_coordinates'):
                 fail(problems, 'C8 an UNVERIFIED_IMPORT cell carries no source_coordinates -- the '
                                'order requires its source coordinates, not just the label')
+            # RECOMPUTED: a non-LIVE cell must declare the exact substring of section 2 it came from,
+            # and that substring must still be there. Guessing the token from the label was tried
+            # first and was wrong in a way worth keeping: two cells are labelled `XAUUSD H4` /
+            # `GBPUSD H4` while the source states only `H4` and the symbol is inherited from the
+            # row's LIVE cell -- so a label-derived guess accused two CORRECT cells of being
+            # untraceable, and would have pushed someone to "fix" the data to satisfy the checker.
+            if status != 'LIVE' and label not in live_by_row.get(row, ()):
+                token = (cell.get('source_token') or '').strip()
+                if not token:
+                    fail(problems, 'C8 %r cell %r is UNVERIFIED_IMPORT with no source_token -- it '
+                                   'must name the exact substring of section 2 it came from, or it '
+                                   'cannot be traced to anything' % (row, label))
+                elif token not in by_raw.get(row, ''):
+                    fail(problems, 'C8 %r claims the cell %r from source_token %r, but %r does not '
+                                   'appear in that row\'s other-symbols column in section 2'
+                         % (row, label, token, token))
 
 
 def c9_reversal_fields(rows, problems):
@@ -717,15 +819,26 @@ def self_test():
         return 0 if ok else 1
 
     rev5 = 0
-    rev5 += c3_says({'current_owner': UNOWNED},
-                    'needs a citation',
-                    'UNOWNED with no unowned_evidence refused')
-    rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'no/such/file.md'},
-                    'not a tracked path',
-                    'UNOWNED citing an untracked path refused')
+    # Codex audit 7 replaced the substring guard with a closed declaration, so these three now assert
+    # three DIFFERENT rules. They used to differ only in which way the citation was bad, and after the
+    # fix all three produced the same message -- three tests asserting one rule is one test.
+    rev5 += c3_says({'entity': 'CoverageCell', 'current_owner': UNOWNED,
+                     'unowned_evidence': '_triage/EA_LAB_FACTORY_OS_DESIGN.md'},
+                    'not declared UNOWNABLE',
+                    'an entity not on the closed list may not claim UNOWNED')
     rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'CLAUDE.md'},
-                    'never mentions',
-                    'UNOWNED citing a real file that does not mention the entity refused')
+                    'declared evidence is',
+                    'a declared entity citing evidence other than its own refused')
+    # ...and the rot check: point the declaration at a tracked file that does NOT carry the claim.
+    saved_decl = dict(UNOWNABLE)
+    try:
+        UNOWNABLE['TestUniverse'] = ('CLAUDE.md', 'this exact sentence is not in CLAUDE.md')
+        rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': 'CLAUDE.md'},
+                        'has rotted',
+                        'a citation whose claim is no longer in the cited file refused')
+    finally:
+        UNOWNABLE.clear()
+        UNOWNABLE.update(saved_decl)
     rev5 += c3_says({'current_owner': UNOWNED, 'unowned_evidence': real_evidence,
                      'disposition': 'KEEP', 'proposed_owner': UNOWNED,
                      'canonical_or_derived': 'canonical'},
@@ -795,7 +908,7 @@ def main(argv):
                      ('C3 owner vocabulary / existence', lambda: c3_owner_vocabulary(rows, problems, tracked)),
                      ('C4 owner_ref recomputed from git', lambda: c4_owner_ref_recomputed(rows, problems)),
                      ('C5 owner_refs distinct', lambda: c5_refs_distinct(rows, problems)),
-                     ('C6 one signer per current_owner', lambda: c6_one_signoff_per_owner(rows, problems)),
+                     ('C6 CONSISTENT signer per owner (not 1 row)', lambda: c6_one_signoff_per_owner(rows, problems)),
                      ('C7 Coverage edge present, not all-KEEP', lambda: c7_coverage_edge(rows, problems)),
                      ('C8 coverage counting reconciled', lambda: c8_coverage_reconciled(problems)),
                      ('C9 reversal fields non-empty', lambda: c9_reversal_fields(rows, problems))):

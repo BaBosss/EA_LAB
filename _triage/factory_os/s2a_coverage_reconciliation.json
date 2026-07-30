@@ -29,6 +29,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "NuiIndy RSI+ADX"
           },
+          "source_token": "GBPUSD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -42,6 +43,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "NuiIndy RSI+ADX"
           },
+          "source_token": "USDJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -55,6 +57,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "NuiIndy RSI+ADX"
           },
+          "source_token": "AUDJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         }
@@ -83,6 +86,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "EUR",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -96,6 +100,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "USDJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -109,6 +114,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "EURJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -122,6 +128,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "XAU",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -135,6 +142,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "GBPJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -148,6 +156,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "EURGBP",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -161,6 +170,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "AUD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -174,6 +184,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "NZD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -187,6 +198,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "GBPCAD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -200,6 +212,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "EURCAD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -213,6 +226,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "CADJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -226,6 +240,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "ST_EA03 MACD"
           },
+          "source_token": "GBPCHF",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         }
@@ -259,6 +274,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "US30",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -272,6 +288,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "WTI",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -285,6 +302,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "BRENT",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -298,6 +316,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "XAGUSD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -311,6 +330,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "GBPJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -324,6 +344,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "USDJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -337,8 +358,9 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_BREAKOUT_XAU"
           },
+          "source_token": "H4",
           "status": "UNVERIFIED_IMPORT",
-          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+          "why_unverified": "the source states only the timeframe 'H4'; the SYMBOL is inherited from this row's LIVE cell rather than stated in the source, so the pairing is an inference"
         }
       ],
       "source_row": "EA_BREAKOUT_XAU"
@@ -360,6 +382,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "EURUSD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -373,6 +396,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "GBPJPY",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -386,6 +410,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "GBPCAD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -399,6 +424,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "EURGBP",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -412,6 +438,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "USDCAD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -425,8 +452,9 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "LondonConsoBreakout"
           },
+          "source_token": "H4",
           "status": "UNVERIFIED_IMPORT",
-          "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
+          "why_unverified": "the source states only the timeframe 'H4'; the SYMBOL is inherited from this row's LIVE cell rather than stated in the source, so the pairing is an inference"
         }
       ],
       "source_row": "LondonConsoBreakout"
@@ -448,6 +476,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_RUNNER_ST03 (framework)"
           },
+          "source_token": "USDCAD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -461,6 +490,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_RUNNER_ST03 (framework)"
           },
+          "source_token": "EUR",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -474,6 +504,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_RUNNER_ST03 (framework)"
           },
+          "source_token": "AUD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         },
@@ -487,6 +518,7 @@
             "section": "## 2. COVERAGE MATRIX",
             "source_row": "EA_RUNNER_ST03 (framework)"
           },
+          "source_token": "NZD",
           "status": "UNVERIFIED_IMPORT",
           "why_unverified": "the cell states a symbol and an outcome but no timeframe, so a symbol x TF cell cannot be constructed from it without guessing"
         }
