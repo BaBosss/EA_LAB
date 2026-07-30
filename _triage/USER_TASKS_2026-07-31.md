@@ -32,6 +32,30 @@ is that one pin on that one path **and** the transfer independently verifies. Fi
 cover the ways it must refuse to fire (a second problem present · a different owner path · a
 different failure · a transfer that does not verify · nothing to downgrade).
 
+### 🔴 UPDATE 2026-07-31 04:30 — **you chose Option A, it is recorded, and it does NOT clear the red. I told you it would, and I had not tested it.**
+
+Your decision is on **line 3** of `s2a_attestations.jsonl`, correctly structured, with both blob
+values recomputed from git (`ca909b69…` → `02c1d0ed…`). That part worked.
+
+**What I got wrong:** I wrote below that Option A "costs one line and unblocks nothing else". I wrote
+that instruction **without running it**. Measured now: `check_s2a_attestation.py` still exits **1**,
+and it is complaining about **line 2**, not line 3.
+
+**The reason, and it is a real defect in the artifact:** the log's own header says *"The latest line
+per current_owner wins"*, but `check()` applies the stale-pin rule **inside the loop over every
+row** — there is no branch that skips a superseded record (`check_s2a_attestation.py:189` sets the
+winner only *after* the checks have already run). So the original approval on line 2, which has no
+acknowledgement and **can never be given one** because the log is append-only, stays permanently
+invalid.
+
+⇒ **Once a pin goes stale, every historical record for that owner is unrepairable by appending.**
+Option A is not a smaller version of Option B. It is not reachable at all under the current contract.
+That makes Option B not a nice-to-have but the only exit, and it is now `ORDER-613`.
+
+Nothing is lost: your decision is recorded and will be re-usable. What changes is that
+**`ORDER-610` is no longer `DONE`** — its written acceptance A8 required this checker to exit 0, and
+it does not, so the order is marked `BLOCKED` rather than continuing to claim it passed.
+
 ### What you can do — pick one
 
 **Option A — acknowledge the pin (smallest, keeps everything as it is).** Append one line to
