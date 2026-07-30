@@ -363,7 +363,15 @@ def pin_vintage_notes(rows):
         if not ref or not ref.get('path') or not ref.get('blob_oid'):
             continue
         rc, now, _ = _rev_parse_cached('HEAD:%s' % ref['path'])
-        if rc == 0 and now != ref['blob_oid']:
+        if rc != 0:
+            # Stronger than a vintage note and initially missed: `rc != 0` was skipped silently, so a
+            # DELETED owner was invisible -- C4 keeps passing because the old pin still resolves at
+            # the commit it names. An ownership proposal whose subject no longer exists is moot, and
+            # that is precisely the thing a signer must not have to notice for themselves.
+            notes.append('%s pins %s, which NO LONGER EXISTS at HEAD -- the row proposes something '
+                         'about a file that is gone, and C4 stays green because the pin still '
+                         'resolves at the commit it names' % (r.get('entity'), ref['path']))
+        elif now != ref['blob_oid']:
             notes.append('%s pins %s at %s, but HEAD now has %s -- the proposal describes an older '
                          'revision of its own owner' % (r.get('entity'), ref['path'],
                                                         ref['blob_oid'][:12], now[:12]))

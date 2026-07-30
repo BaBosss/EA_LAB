@@ -276,13 +276,82 @@ def main():
         print('\n=== %d MUTATION(S) NOT CAUGHT ===' % bad)
         return 1
 
+    bad += advisory_part()
     bad += structural_part()
     bad += drift_guard_part()
     if bad:
         return 1
-    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROL STAYED GREEN, LOADER AND DRIFT GUARD PROVEN ==='
-          % len(CASES))
+    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROLS GREEN; ADVISORY, LOADER AND DRIFT GUARD ALL '
+          'PROVEN BOTH WAYS ===' % len(CASES))
     return 0
+
+
+def advisory_part():
+    """PART 4: the pin-vintage advisory must speak up, and must stay quiet when there is no news.
+
+    It is an ADVISORY, so it cannot be covered by the mutation loop (which asserts failures). But an
+    advisory nobody tests is worse than a missing one: it reads as "checked and clean" on every run
+    while being incapable of saying anything.
+    """
+    print('\n=== PART 4: the pin-vintage advisory, both directions ===')
+    rows, _ = load_real()
+    bad = 0
+
+    quiet = chk.pin_vintage_notes(rows)
+    print('  [%s] CONTROL the real D1 is pinned current -> no notes'
+          % ('OK ' if not quiet else 'BAD'))
+    if quiet:
+        print('        -> unexpectedly said: %s' % quiet[:2])
+        bad += 1
+
+    # A stale-but-valid pin: point a row at an OLDER blob of the same file that still resolves.
+    # Found the DETERMINISTIC way -- walk the file's own revisions and take the first blob that
+    # differs from what is pinned now. The first version of this case guessed `HEAD~3` and SKIPPED,
+    # because MASTER_BACKLOG.md happened not to change in that range; a case that silently does not
+    # run is the thing this whole suite exists to prevent, so it is built not to depend on luck.
+    stale = [json.loads(json.dumps(r)) for r in rows]
+    older = blob = None
+    for row in stale:
+        ref = row.get('owner_ref')
+        if not ref:
+            continue
+        path = ref['path']
+        revs = os.popen('git rev-list -n 40 HEAD -- "%s"' % path).read().split()
+        for rev in revs:
+            cand = os.popen('git rev-parse %s:"%s" 2>NUL' % (rev, path)).read().strip()
+            if cand and len(cand) == 40 and cand != ref['blob_oid']:
+                older, blob, victim = rev, cand, row
+                break
+        if older:
+            break
+    if older:
+        victim['owner_ref']['commit_oid'] = older
+        victim['owner_ref']['blob_oid'] = blob
+        notes = chk.pin_vintage_notes(stale)
+        ok = any('older revision' in n for n in notes)
+        print('  [%s] %s pinned at an older revision of %s -> reported'
+              % ('OK ' if ok else 'BAD', victim['entity'], victim['owner_ref']['path']))
+        if not ok:
+            print('        -> said: %s' % (notes[:1] or ['NOTHING AT ALL']))
+            bad += 1
+    else:
+        # Never report a pass that was not earned.
+        print('  [BAD] could not construct a stale pin from any of the 14 pinned rows -- this case '
+              'did not run, which is not the same as passing')
+        bad += 1
+
+    # a pin at a path that does not exist at HEAD
+    gone = [json.loads(json.dumps(r)) for r in rows]
+    find(gone, 'CoverageCell')['owner_ref']['path'] = 'deleted/owner.md'
+    notes = chk.pin_vintage_notes(gone)
+    ok = any('NO LONGER EXISTS' in n for n in notes)
+    print('  [%s] a pin whose path is gone at HEAD -> reported' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> said: %s' % (notes[:1] or ['NOTHING AT ALL']))
+        bad += 1
+    if bad:
+        print('\n=== ADVISORY PART FAILED ===')
+    return bad
 
 
 def structural_part():
