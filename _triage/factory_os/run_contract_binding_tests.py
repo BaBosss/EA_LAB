@@ -105,6 +105,19 @@ def mut_lease_requirements_dropped(s):
     lease.pop('required')
 
 
+def mut_nesting_past_the_cap(s):
+    """audit-5 Q3(c) - nothing committed ever crossed MAX_NEST_DEPTH.
+
+    So a future edit could put the cap branch back to `return []` and all cases would stay
+    green while nested contracts silently vanished again -- the exact defect audit 4 found.
+    This case makes the cap's behaviour observable.
+    """
+    leaf = {'type': 'object', 'properties': {'leaf': {'type': 'string'}}}
+    for _ in range(gen.MAX_NEST_DEPTH + 1):
+        leaf = {'type': 'object', 'properties': {'child': leaf}}
+    s['$defs']['Hypothesis']['properties']['depth_probe'] = leaf
+
+
 def mut_noop(s):
     return
 
@@ -133,6 +146,7 @@ CASES = [
      'REFUSED', True),
     ('A4  nullable `lease` loses its required set', mut_lease_requirements_dropped,
      'lease_id', True),
+    ('A5  nesting past MAX_NEST_DEPTH', mut_nesting_past_the_cap, None, True),
     ('CONTROL no schema change at all', mut_noop, None, False),
     ('CONTROL rationale-only edit (def description)', mut_rationale_only, None, False),
 ]
@@ -175,7 +189,10 @@ def main():
         try:
             after, _ = gen.rewrite(design, mutated)
             err = None
-        except KeyError as exc:
+        except (KeyError, gen.DepthExceeded) as exc:
+            # DepthExceeded is caught beside KeyError (audit-5 Q3c): raising is the point, but
+            # an uncaught traceback is a crash, and "the harness crashed" must be reported as a
+            # named RED result rather than left to look like a broken test run.
             after, err = None, exc.args[0]
 
         if err is not None:
@@ -217,6 +234,25 @@ def main():
          design + '\n' + gen.BEGIN.format(key='OwnerRef') + '\n\n' + gen.END.format(key='OwnerRef') + '\n',
          True),
     ]
+    # Line endings. The generator and this harness both had to learn that CRLF is not a
+    # contract change -- --check went red on a clean checkout with an empty diff, and this
+    # harness ABORTED, so every case went unrun inside a pre-commit hook. Fixed in df4ccec6
+    # and, until now, protected by nothing but review (audit-5 Q3b).
+    # splitlines(keepends=True) rather than split('\n'): splitting on the separator and
+    # re-joining appends a newline the original never had, and a fixture that changes the
+    # content it claims to re-encode reports RED for its own defect. Which it did, once.
+    mixed = ''.join(
+        (line[:-1] + '\r\n' if (i % 2 and line.endswith('\n')) else line)
+        for i, line in enumerate(design.splitlines(keepends=True)))
+    for label, text in (('EOL  CRLF throughout', design.replace('\n', '\r\n')),
+                        ('EOL  alternating CRLF/LF', mixed)):
+        regenerated, _ = gen.rewrite(text.replace('\r\n', '\n'), base)
+        ok = regenerated == design
+        if not ok:
+            failures += 1
+        print('  [{0}] {1:<48} expect=GREEN got={2:<5}'.format(
+            'OK ' if ok else 'FAIL', label, 'GREEN' if ok else 'RED'))
+
     for label, text, expect_red in doc_cases:
         problems = coverage_problems(text)
         got_red = bool(problems)
@@ -233,7 +269,7 @@ def main():
         print('=== {0} CASE(S) DID NOT BEHAVE AS DECLARED ==='.format(failures))
         return 1
     print('=== ALL {0} CASES BEHAVED AS DECLARED - 7/7 regressions caught, controls stayed green ==='
-          .format(len(CASES) + len(doc_cases)))
+          .format(len(CASES) + len(doc_cases) + 2))
     return 0
 
 

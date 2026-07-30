@@ -97,7 +97,17 @@ fi
 # protects was edited. Same class as the finding it was written for: the artifact keeps
 # being produced, it just stops being connected to the thing it is about.
 # ORDER-500 (2026-07-28) added 'scripts/lib/*' for exactly the reason the ORDER-434
-# paragraph above describes, one day later. b1_guard.ps1 holds the rules that
+# AUDIT-5 (2026-07-30) measured the pathspec against every input the fast suites actually
+# read, and found four more misses BEYOND the _triage ones added the same day:
+#   .githooks/pre-commit itself   -- narrowing or deleting this very line triggers no cage
+#   docs/PARAM_REGISTRY.csv       -- read by optimize_guard.ps1, which run_optimize_guard_tests exercises
+#   docs/PARAM_LINKAGE.md         -- same; a malformed override pair changes guarded behaviour silently
+#   _triage/PARAM_INACTIVE_AUDIT.md -- same
+# tools/python312/python.exe is a fifth (the binding suite's interpreter) and is deliberately
+# NOT added: staging a binary interpreter is not a normal edit, and the suite already fails
+# closed when it is missing. Added the other four. This is the FIFTH widening, which is the
+# argument for BACKLOG-D32 and not a substitute for it.
+# ORDER-500 paragraph, for the record, describes exactly this: b1_guard.ps1 holds the rules that
 # check_precommit_staged.ps1 and .githooks/commit-msg both dot-source, and it matched
 # none of the three existing globs -- verified by pathspec before widening, not assumed.
 # Two consecutive additions have now needed this, which says the glob list is the wrong
@@ -119,7 +129,7 @@ fi
 # alongside. It looked enforced for four commits and was not. The prediction in the ORDER-500
 # paragraph above has now come true three times in three days; deriving this list from the
 # suites' own declared dependencies is the fix, and it is now BACKLOG-D32, not a comment.
-cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1' '_triage/factory_os/*' '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
+cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1' '_triage/factory_os/*' '_triage/EA_LAB_FACTORY_OS_DESIGN.md' '.githooks/*' 'docs/PARAM_REGISTRY.csv' 'docs/PARAM_LINKAGE.md' '_triage/PARAM_INACTIVE_AUDIT.md')
 if [ -n "$cage_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   rc=$?

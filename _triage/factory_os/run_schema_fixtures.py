@@ -146,6 +146,9 @@ CASES = [
 ]
 
 
+VALID, INVALID, ERROR = 'pass', 'fail', 'ERROR'
+
+
 def run(schema, instance):
     fd, path = tempfile.mkstemp(suffix='.json')
     try:
@@ -154,7 +157,20 @@ def run(schema, instance):
         p = subprocess.run(['ajv', 'validate', '-s', schema, '-d', path, '--spec=draft2020',
                             '--strict=false', '--errors=line'],
                            capture_output=True, text=True, shell=True)
-        return p.returncode == 0, (p.stdout + p.stderr).strip()
+        out = (p.stdout + p.stderr).strip()
+        # AUDIT-5: this used to `return p.returncode == 0`, so EVERY nonzero exit read as
+        # "the instance was rejected" -- including ajv missing, the schema being unreadable,
+        # or a $ref that does not resolve. Every negative case would then pass for a reason
+        # that has nothing to do with the rule it names, and the suite would print
+        # "ALL 17 CASES BEHAVED AS DECLARED" while validating nothing at all. That is this
+        # repo's most expensive defect class, in the file written to prevent it.
+        # Measured on this machine: exit 1 + " invalid" in the output = a real validation
+        # failure; exit 2 = tool/schema error.
+        if p.returncode == 0:
+            return VALID, out
+        if p.returncode == 1 and ' invalid' in out:
+            return INVALID, out
+        return ERROR, out
     finally:
         os.unlink(path)
 
@@ -164,19 +180,27 @@ def main():
     print("schema: %s\n" % SCHEMA)
     bad = 0
     for c in CASES:
-        ok, out = run(SCHEMA, c['instance'])
-        got = 'pass' if ok else 'fail'
-        good = got == c['expect']
+        got, out = run(SCHEMA, c['instance'])
+        # An ERROR never satisfies an expectation, not even `expect=fail`. "The tool could
+        # not read its input" and "the contract rejected this instance" are different facts
+        # and must never share an outcome.
+        good = got != ERROR and got == c['expect']
         if not good:
             bad += 1
-        print("  [%s] %-42s expect=%s got=%s   (%s)"
+        print("  [%s] %-42s expect=%s got=%-5s (%s)"
               % ('OK ' if good else 'BAD', c['name'], c['expect'], got, c['guards']))
         if not good and out:
             print("        %s" % out.splitlines()[0][:160])
 
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
-    ok, out = run(SCHEMA, json.load(open('portfolio/control_room_snapshot.json', encoding='utf-8')))
-    print("  portfolio/control_room_snapshot.json -> %s" % ('PASSES' if ok else 'FAILS'))
+    got, out = run(SCHEMA, json.load(open('portfolio/control_room_snapshot.json', encoding='utf-8')))
+    if got == ERROR:
+        # Distinguish "the schema says no" from "the tool fell over" here too -- otherwise the
+        # S4 acceptance line could read FAILS forever for a reason nobody is tracking.
+        print("  portfolio/control_room_snapshot.json -> TOOL ERROR, not a verdict: %s"
+              % out.splitlines()[0][:120])
+        bad += 1
+    print("  portfolio/control_room_snapshot.json -> %s" % ('PASSES' if got == VALID else 'FAILS'))
     print("  This is EXPECTED to fail today and is not counted as a failure: the committed snapshot is")
     print("  v3/v4 and carries no `entity`, while ControlRoomSnapshotV5 describes the v5 target. It is")
     print("  printed because audit-3 found the schema does not carry meta fields the real file has")
