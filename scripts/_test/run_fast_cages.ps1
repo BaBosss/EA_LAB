@@ -57,7 +57,11 @@
 [CmdletBinding()]
 param(
     [string]$RepoRoot = '',
-    [double]$BudgetSeconds = 15.0
+    [double]$BudgetSeconds = 15.0,
+    # BACKLOG-D32: print the suite/guards table as JSON and exit, running no suite. The
+    # pathspec generator and its cage both read the table through this switch so the
+    # dependency list exists in exactly one place.
+    [switch]$ExportGuards
 )
 
 $ErrorActionPreference = 'Stop'
@@ -142,8 +146,91 @@ $FAST_SUITES = @(
     # MEASURED 0.4s, and the whole tier re-measured at 13.3s against the 15s budget with it
     # in place. That leaves ~1.7s. The warning two entries above still stands and is tighter:
     # THE NEXT ADDITION HERE HAS TO DISPLACE SOMETHING.
-    'run_contract_binding_tests.ps1'
+    'run_contract_binding_tests.ps1',
+    # BACKLOG-D32 (2026-07-30): guards the trigger that decides whether this whole tier runs.
+    # It is last on purpose -- if the declarations and the generated pathspec have drifted,
+    # everything above it may have been enforced on a lie.
+    # MEASURED 1.4s (2.1s in its first form; collapsing ~25 git spawns into 3 bought 0.7s).
+    'run_guard_trigger_tests.ps1'
 )
+
+# ---------------------------------------------------------------------------------------
+# BACKLOG-D32 -- what each suite GUARDS, declared here rather than guessed by a path glob.
+#
+# WHY THIS EXISTS. The pre-commit hook decided whether to run this tier by matching staged
+# files against a hand-enumerated list of directories that HAPPENED to hold guarded files.
+# Five times in four days a new suite guarded something no glob matched, so the suite ran
+# only when an unrelated file was staged alongside -- it looked enforced and was not. The
+# ORDER-500 comment in .githooks/pre-commit predicted the recurrence in writing, twice.
+#
+# The trigger pathspec is now GENERATED from this table by scripts/gen_fast_tier_pathspec.ps1.
+# What that buys, precisely: you cannot add a suite without declaring its inputs, because
+# run_guard_trigger_tests.ps1 fails when the key sets of $FAST_SUITES and $SUITE_GUARDS
+# differ. What it does NOT buy on its own: a declaration that lists three of four inputs is
+# still wrong -- which is why that cage also sweeps each suite's sources for repo paths it
+# references but does not declare, and NotADependency below is the only way to be silent.
+#
+# Every suite implicitly guards itself, this file, and the hook; the generator adds those.
+$SUITE_GUARDS = @{
+    'run_statusclass_tests.ps1'       = @('scripts/check_taskboard_archive.ps1')
+    'run_order_collision_tests.ps1'   = @('scripts/check_order_collision.ps1', 'docs/SESSION_LEDGER.md')
+    'run_handoff_contract_tests.ps1'  = @('scripts/check_handoff_contract.ps1')
+    'run_blobmap_encoding_tests.ps1'  = @('scripts/check_taskboard_archive.ps1')
+    'run_mris_asof_tests.ps1'         = @('scripts/mris/mris_macro_feeder.ps1',
+                                          'scripts/mris/mris_crisis_models.ps1',
+                                          'scripts/mris/mris_web_feeder.ps1')
+    # B1_DATASET.csv was missing from this list until the PART 4 sweep in
+    # run_guard_trigger_tests.ps1 named it on its first run -- a declaration listing three of
+    # four inputs, which is precisely what the key-set check cannot see.
+    'run_b1_guard_tests.ps1'          = @('scripts/lib/b1_guard.ps1',
+                                          'scripts/check_precommit_staged.ps1',
+                                          '.githooks/commit-msg',
+                                          'docs/memory_control/B1_DATASET.csv')
+    # PART 5 sweeps EVERY scripts/*.ps1 for the "the .htm exists, so this run wrote it"
+    # shape, so the whole directory is genuinely its input, not just the library.
+    'run_report_freshness_tests.ps1'  = @('scripts/lib/report_freshness.ps1', 'scripts/*.ps1')
+    'run_truncation_message_tests.ps1' = @('scripts/check_truncated_run.ps1')
+    # The three docs are read by the real optimize_guard, which this suite executes. None of
+    # them matched any glob before 2026-07-30 (audit 5 measured it).
+    'run_optimize_guard_tests.ps1'    = @('scripts/optimize_guard.ps1',
+                                          'docs/PARAM_REGISTRY.csv',
+                                          'docs/PARAM_LINKAGE.md',
+                                          '_triage/PARAM_INACTIVE_AUDIT.md')
+    'run_monitor_integrity_tests.ps1' = @('scripts/daily_monitor.ps1',
+                                          'scripts/live_dashboard.ps1',
+                                          'scripts/control_room_snapshot.ps1',
+                                          'scripts/monitor_rotation.ps1',
+                                          'scripts/lib/monitor_coverage.ps1')
+    'run_contract_binding_tests.ps1'  = @('_triage/factory_os/gen_design_contracts.py',
+                                          '_triage/factory_os/run_contract_binding_tests.py',
+                                          '_triage/factory_os/schemas.json',
+                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
+    'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
+                                          '.githooks/fast_tier_pathspec',
+                                          'scripts/_test/run_fast_cages.ps1')
+}
+
+# Paths a suite references but which are NOT inputs to what it guards -- synthetic fixture
+# names, its own temp files. Listing one here is a deliberate, reviewable act; the sweep in
+# run_guard_trigger_tests.ps1 has no other way to be quiet.
+$NOT_A_DEPENDENCY = @(
+    'scripts/foo.ps1',                              # synthetic name in a collision fixture
+    'docs/UNOWNED.md',                              # ditto
+    'scripts/scripts/check_taskboard_archive.ps1',  # a doubled prefix inside a fixture string
+    'scripts/tests/test_runner_output_capture.ps1', # named in prose; the suite does not run it
+    'tools/python312/python.exe'                    # interpreter, not an edited input
+)
+
+if ($ExportGuards) {
+    # Machine-readable export so the generator and the cage read THIS table rather than
+    # re-typing it. Two copies of a dependency list is the defect one directory over.
+    [pscustomobject]@{
+        Suites         = $FAST_SUITES
+        Guards         = $SUITE_GUARDS
+        NotADependency = $NOT_A_DEPENDENCY
+    } | ConvertTo-Json -Depth 5
+    exit 0
+}
 
 $ps = (Get-Process -Id $PID).Path
 if (-not $ps) { $ps = 'powershell.exe' }

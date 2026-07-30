@@ -129,7 +129,26 @@ fi
 # alongside. It looked enforced for four commits and was not. The prediction in the ORDER-500
 # paragraph above has now come true three times in three days; deriving this list from the
 # suites' own declared dependencies is the fix, and it is now BACKLOG-D32, not a comment.
-cage_staged=$(git diff --cached --name-only -- 'scripts/check_*.ps1' 'scripts/_test/*' 'scripts/mris/*' 'scripts/lib/*' 'scripts/*.ps1' '_triage/factory_os/*' '_triage/EA_LAB_FACTORY_OS_DESIGN.md' '.githooks/*' 'docs/PARAM_REGISTRY.csv' 'docs/PARAM_LINKAGE.md' '_triage/PARAM_INACTIVE_AUDIT.md')
+# BACKLOG-D32 (2026-07-30): the hand-enumerated glob above is GONE. The pathspec is now
+# generated from what each suite declares it guards ($SUITE_GUARDS in run_fast_cages.ps1)
+# by scripts/gen_fast_tier_pathspec.ps1, and run_guard_trigger_tests.ps1 fails when a suite
+# has no declaration, when a declared path does not exist, or when this file is stale.
+# The five widenings this replaced are kept in the paragraphs above as the reason it exists.
+#
+# FAIL-CLOSED: if the generated file is missing or empty, RUN the tier. The failure mode
+# this whole line exists to prevent is a trigger that silently matches nothing, so an
+# unreadable trigger must mean "run everything", never "run nothing".
+spec_file=".githooks/fast_tier_pathspec"
+if [ -s "$spec_file" ]; then
+  cage_spec=()
+  while IFS= read -r line || [ -n "$line" ]; do
+    [ -n "$line" ] && cage_spec+=("$line")
+  done < "$spec_file"
+  cage_staged=$(git diff --cached --name-only -- "${cage_spec[@]}")
+else
+  echo "[pre-commit] $spec_file missing or empty -- running the fast tier unconditionally (fail-closed)."
+  cage_staged="FORCED"
+fi
 if [ -n "$cage_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
   rc=$?
