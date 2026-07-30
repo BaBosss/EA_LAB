@@ -2,14 +2,17 @@
 .githooks/commit-msg
 .githooks/fast_tier_pathspec
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
+_triage/factory_os/check_coverage_transfer.py
 _triage/factory_os/check_s2a_attestation.py
 _triage/factory_os/check_s2a_migration.py
 _triage/factory_os/check_schema_structure.py
 _triage/factory_os/CONTRACTS.md
+_triage/factory_os/gen_coverage.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/run_contract_binding_tests.py
+_triage/factory_os/run_coverage_transfer_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_gate.py
@@ -26,6 +29,7 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+factory/coverage.jsonl
 MASTER_BACKLOG.md
 scripts/*.ps1
 scripts/_test/*

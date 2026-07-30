@@ -103,7 +103,34 @@
 
 ---
 
-## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — **the transfer is done, in one commit, and the hand table's rows are byte-identical**
+>
+> **Condition 2 is satisfied in its strongest available form: byte equality.** The first generation reproduces all 7 hand rows exactly — the whole `MASTER_BACKLOG.md` diff is **+4 lines, 0 deletions**: one banner line and a three-line §2 notice. Nothing was rewritten, reformatted or dropped, and that is visible in the diff rather than asserted in prose. `source_columns` carries **all six columns verbatim**, including `Class` / `TF` / `Optimized?`, which the existing §2 parser drops — a store built only from the parser would have silently lost three columns and still counted 40 cells.
+>
+> **Condition 1 is a biconditional, and the `banner-without-body` half is the one that had to be invented.** A "banner present" check is satisfied by pre-arming the notice one commit early, at which point the file *tells* a reader it is generated while still being hand-written — the same harm the owner named, arriving by the other door. Both directions have fixtures.
+>
+> 🔎 **The fixtures caught a dead branch in my own checker before it was committed.** A1's first version required the notice in **both** the top banner and the §2 header when the body is generated. The §2 half is **unreachable**: the renderer emits that notice, so a generated body always contains it. A branch that cannot fire is the *shape* of protection, not protection. Replaced with a criterion that can fire — the **generator's own output** must contain the phrase — and the fixture now mutates `SECTION_BANNER` instead of the file. This is the fifth time in this tranche's lineage that writing the negative case is what exposed the check.
+>
+> 🔎 **Second self-inflicted defect, caught in the first `--apply` run:** writing back with `utf-8-sig` **added a BOM** to a file that had none, so the diff opened with a spurious change on line 1. A generator that quietly alters a byte outside the region it owns produces a diff nobody can read. Encoding is now detected from the raw bytes and preserved.
+>
+> **The inertness probe is the part worth auditing.** `run_coverage_transfer_tests.py` ends by running the **naive** A2 — the one that derives the baseline from the store it is judging — against a store with a LIVE cell deleted, and shows it returns **0 A2 problems**. The pinned-blob A2 catches the same deletion. That is what makes `ca909b69` load-bearing rather than decorative, and it is a permanent case, not a paragraph.
+>
+> | acceptance | evidence |
+> |---|---|
+> | A1 both directions | `run_coverage_transfer_tests.py` — 3 cases + 2 controls, all RED/GREEN as declared |
+> | A2 vs the pinned blob | 6 cases (LIVE cell · import cell · whole row · relabel-with-valid-token · emptied column · dropped note) + the inertness probe |
+> | A3 no verdict | 4 cases (verdict key · outcome word on a LIVE cell · provenance stripped · a new outcome word minted) |
+> | A4/A5 | determinism + the post-transfer hand-edit case |
+> | A6 `check_state.ps1` | **CLEAN**, exit 0 — the `canonical entry =` banner assertion still holds (`ENTRY-CLAIM-OK`: quoting the guard's needle, not claiming the title) |
+> | A7 tier | `run_guard_trigger_tests.ps1` PARTS 1–5 green; 4 new paths in the regenerated pathspec; **the cage failed first** (8 failures) because the new files were untracked — that is the cage working |
+> | A8 attestation | `check_s2a_attestation.py` exit 0, bundle `aaa5998d7128238a` unchanged — **none of the six bound files was touched** |
+> | tool failure ≠ rejection | 2 cases: invalid JSON and a missing `_section` both raise `ToolFailure` (exit 2), never a verdict |
+>
+> ⚠️ **Tier cost, stated rather than buried: `run_contract_binding_tests.ps1` 3.9s → 5.6s, full tier 21.5s → 23.7s** against a 15.0s advisory budget that was **already breached before this order**. `BACKLOG-D32`'s per-path selection means an ordinary commit pays only the suites it triggers (this order's own commit selected 2 of 12). The full-tier number is what a manual run pays.
+>
+> 🔻 **Owed:** the independent re-check. `DONE`, never `REVIEWED` — one seat wrote the order, the code, the fixtures and this judgement.
 
 > **Why this order exists and why it is narrow.** `ORDER-600` was a *proposal*; the owner approved **one** edge of it
 > (attestation line 2, bundle `aaa5998d7128238a`) and attached **two conditions**. Nothing has moved. This order is the

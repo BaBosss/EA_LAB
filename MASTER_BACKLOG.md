@@ -1,6 +1,7 @@
 # MASTER BACKLOG & COVERAGE
 
 > ⚠️ canonical entry = **`PROJECT_STATE.md`** · ไฟล์นี้ owns: **backlog · coverage matrix · hunt** เท่านั้น
+> 🤖 **§2 (COVERAGE MATRIX) is generated from `factory/coverage.jsonl`; edits here are overwritten.** Change the cell there and regenerate — `tools\python312\python.exe _triage\factory_os\gen_coverage.py --apply` (ORDER-610, owner-approved 2026-07-31).
 **สร้าง 2026-06-27.** จุดประสงค์: รวม "สิ่งที่ต้องทำ" ที่กระจายอยู่ 5 ไฟล์มาไว้ที่เดียว + ตอบว่า
 **EA ตัวไหนเทสกับ symbol/TF ไหนแล้ว, optimize รึยัง, ช่องว่างจริงอยู่ตรงไหน.**
 
@@ -25,6 +26,9 @@
 ---
 
 ## 2. COVERAGE MATRIX — EA × symbol × TF × optimize
+
+> 🤖 **GENERATED from `factory/coverage.jsonl`; edits here are overwritten.** This table was the canonical home of coverage facts until 2026-07-31; it is now a projection of the store.
+> The hand-authored original is blob `ca909b693a4c` (`a7960e08`) and the first generation reproduces its rows byte-for-byte — nothing was dropped in the move.
 
 | EA | Class | LIVE cell | TF เทส | Optimized? | symbol อื่นที่ลองแล้ว → ผล |
 |---|---|---|---|---|---|

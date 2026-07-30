@@ -278,8 +278,20 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/check_s2a_attestation.py',
                                           '_triage/factory_os/run_s2a_attestation_tests.py',
                                           '_triage/factory_os/s2a_attestations.jsonl',
+                                          # ORDER-610 (S2): the Coverage transfer. coverage.jsonl is
+                                          # now the CANONICAL owner of section 2, so an edit to it
+                                          # must trigger the suite that proves section 2 still
+                                          # matches it -- otherwise the store and its projection
+                                          # drift apart between commits and the new banner becomes
+                                          # a false statement.
+                                          '_triage/factory_os/gen_coverage.py',
+                                          '_triage/factory_os/check_coverage_transfer.py',
+                                          '_triage/factory_os/run_coverage_transfer_tests.py',
+                                          'factory/coverage.jsonl',
                                           # D1's coverage numbers are RECOMPUTED from section 2 of
-                                          # this file, so a change to it can falsify C8.
+                                          # this file, so a change to it can falsify C8. Since
+                                          # ORDER-610 it is ALSO the generated projection, so a
+                                          # hand edit to it must trigger the same tier.
                                           'MASTER_BACKLOG.md')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',

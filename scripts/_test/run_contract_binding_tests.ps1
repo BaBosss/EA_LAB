@@ -145,7 +145,18 @@ $scripts = @(
     #    x-enforced-by asserted enforcement for 7 constraints nothing enforced; relabelling only
     #    helps if the labels are verified, so this mutates the schema 5 ways and requires each to be
     #    refused by name.
-    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() },
+    # 7. ORDER-610 (S2). The Coverage transfer acceptance, in two entries because they answer two
+    #    different questions and one cannot substitute for the other:
+    #      run_coverage_transfer_tests.py  -- can the checker fail? 18 mutations, 2 controls, and
+    #                                         an inertness probe showing the self-referential
+    #                                         baseline accepts a deletion the pinned one catches.
+    #      check_coverage_transfer.py      -- does the REAL repository still satisfy both owner
+    #                                         conditions right now? The mutation suite injects its
+    #                                         inputs, so it would stay green if the real
+    #                                         MASTER_BACKLOG.md were hand-edited tomorrow.
+    @{ Path = '_triage\factory_os\run_coverage_transfer_tests.py'; Args = @() },
+    @{ Path = '_triage\factory_os\check_coverage_transfer.py'; Args = @() }
 )
 
 $failed = 0
