@@ -150,7 +150,22 @@ else
   cage_staged="FORCED"
 fi
 if [ -n "$cage_staged" ]; then
-  "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
+  # BACKLOG-D32: hand the tier the staged paths so it runs only the suites that guard them.
+  # MEASURED 2026-07-31: the whole tier is 18.1s against a 15.0s advisory budget; a schema edit
+  # now costs 3.9s and an optimize_guard.ps1 edit 7.3s.
+  # FAIL-OPEN BY CONSTRUCTION: run_fast_cages.ps1 runs EVERYTHING when -StagedPaths is empty, and
+  # runs any suite whose guards are undeclared. So "FORCED", an empty list, or a list this hook
+  # computed wrongly all run MORE than necessary, never less. run_guard_trigger_tests.ps1 PART 5
+  # asserts that, plus that every suite is still reachable by its own declarations.
+  cage_list=""
+  if [ "$cage_staged" != "FORCED" ]; then
+    cage_list=$(printf '%s' "$cage_staged" | tr '\n' ',' | sed 's/,$//')
+  fi
+  if [ -n "$cage_list" ]; then
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -StagedPaths "$cage_list"
+  else
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
+  fi
   rc=$?
   if [ "$rc" -ne 0 ]; then
     echo ""

@@ -73,7 +73,12 @@ param(
     # BACKLOG-D32: print the suite/guards table as JSON and exit, running no suite. The
     # pathspec generator and its cage both read the table through this switch so the
     # dependency list exists in exactly one place.
-    [switch]$ExportGuards
+    [switch]$ExportGuards,
+    # BACKLOG-D32: paths staged for this commit. EMPTY MEANS RUN EVERYTHING -- see the safety
+    # rules at Select-Suites. The caller (the hook) decides; this script never guesses.
+    [string[]]$StagedPaths = @(),
+    # print the selection and exit, running nothing. For the cage.
+    [switch]$ExportSelection
 )
 
 $ErrorActionPreference = 'Stop'
@@ -294,15 +299,66 @@ if ($ExportGuards) {
     exit 0
 }
 
+# ---------------------------------------------------------------------------------------
+# BACKLOG-D32 -- per-path suite selection.
+#
+# The tier is all-or-nothing today: any staged path matching the generated pathspec runs
+# every suite, so a schema edit pays 5.7s of optimize-guard cases and an optimize_guard.ps1
+# edit pays 3.6s of S2a. MEASURED 2026-07-31: 18.1s against a 15.0s advisory budget, which is
+# 3.1s over and more than any single addition accounts for.
+#
+# SAFETY RULES, because this is the pre-commit TRIGGER and getting it wrong means guards stop
+# running while everything still looks green -- the worst failure this repo has:
+#   1. FAIL-OPEN. A suite with no declared guards ALWAYS runs. Adding a suite and forgetting
+#      its $SUITE_GUARDS entry must cost time, never coverage.
+#   2. No -StagedPaths given -> run EVERYTHING. Manual runs and the -Audit path are unchanged.
+#   3. If the caller cannot determine staged paths, it must pass none, which means everything.
+# So every failure mode of this feature runs MORE than necessary, never less.
+function Select-Suites {
+    param([string[]]$Suites, [hashtable]$Guards, [string[]]$Staged)
+    if (-not $Staged -or $Staged.Count -eq 0) { return $Suites }
+    $picked = New-Object System.Collections.Generic.List[string]
+    foreach ($s in $Suites) {
+        $g = $Guards[$s]
+        if (-not $g -or $g.Count -eq 0) { $picked.Add($s); continue }   # rule 1: fail-open
+        $hit = $false
+        foreach ($pattern in $g) {
+            foreach ($p in $Staged) {
+                if ($p -eq $pattern -or $p -like $pattern -or $p -like "$pattern*") { $hit = $true; break }
+            }
+            if ($hit) { break }
+        }
+        if ($hit) { $picked.Add($s) }
+    }
+    return $picked.ToArray()
+}
+
+if ($ExportSelection) {
+    # Used by run_guard_trigger_tests.ps1 to assert the selection without running any suite.
+    (Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $StagedPaths) | ForEach-Object { $_ }
+    exit 0
+}
+
+$selected = Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $StagedPaths
+
 $ps = (Get-Process -Id $PID).Path
 if (-not $ps) { $ps = 'powershell.exe' }
+
+if ($StagedPaths -and $StagedPaths.Count -gt 0 -and $selected.Count -lt $FAST_SUITES.Count) {
+    Write-Host ('[fast-cages] per-path selection: {0} of {1} suite(s) guard something staged' -f `
+                $selected.Count, $FAST_SUITES.Count)
+    # Name what is being SKIPPED. A tier that quietly runs less is indistinguishable from a
+    # tier that is broken, and this repo has been burned by exactly that shape.
+    $skipped = $FAST_SUITES | Where-Object { $selected -notcontains $_ }
+    Write-Host ('[fast-cages] skipped (nothing they guard is staged): {0}' -f ($skipped -join ', '))
+}
 
 Write-Host '[fast-cages] running the cages that guard the guards'
 
 $results = New-Object System.Collections.Generic.List[object]
 $total = 0.0
 
-foreach ($suite in $FAST_SUITES) {
+foreach ($suite in $selected) {
     $path = Join-Path $testDir $suite
     if (-not (Test-Path -LiteralPath $path)) {
         # A missing suite is a failure, not a skip. Silently passing over a cage that was

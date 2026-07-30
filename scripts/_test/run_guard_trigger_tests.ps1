@@ -147,6 +147,54 @@ try {
     }
     if ($fail -eq $before) { Good 'no suite references a tracked path it has not accounted for' }
 
+    # -------------------------------------------------------------------------------------
+    Write-Host ''
+    Write-Host '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'
+    # This part exists because the repo's own memory says a path-filter must not land without a
+    # targeted test: filtering the pre-commit trigger wrong means guards stop running while
+    # everything still looks green. The selection is designed to fail OPEN, and these cases assert
+    # that it does -- every failure mode must run MORE suites than necessary, never fewer.
+    $before = $fail
+    $cages = Join-Path $PSScriptRoot 'run_fast_cages.ps1'
+
+    function Selection([string[]]$staged) {
+        if ($staged) { @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelection -StagedPaths $staged) }
+        else         { @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -ExportSelection) }
+    }
+
+    # 1. no staged paths -> EVERYTHING. Manual runs and any caller that cannot determine the
+    #    staged set must get the full tier.
+    $all = Selection $null
+    if ($all.Count -eq $table.Suites.Count) {
+        Good ("no staged paths selects the whole tier ({0} suites)" -f $all.Count)
+    } else {
+        Bad ("no staged paths selected {0} of {1} suites -- the empty case MUST run everything" -f $all.Count, $table.Suites.Count)
+    }
+
+    # 2. every suite must be REACHABLE by something it declares. A suite nothing can select is a
+    #    suite that silently never runs, which is worse than a slow tier.
+    $unreachable = @()
+    foreach ($s in $table.Suites) {
+        $g = $table.Guards.$s
+        if (-not $g -or $g.Count -eq 0) { continue }     # no guards = always runs, checked below
+        $sel = Selection @($g[0])
+        if ($sel -notcontains $s) { $unreachable += "$s (via $($g[0]))" }
+    }
+    if ($unreachable.Count -eq 0) { Good 'every guarded suite is selected by its own first declared path' }
+    else { Bad ("suite(s) unreachable by their own declarations: {0}" -f ($unreachable -join '; ')) }
+
+    # 3. PART 1 already fails any suite with no declared guards, so the "unguarded suite" case
+    #    cannot exist in the real table -- the fail-open branch in Select-Suites is belt to
+    #    PART 1's braces, and is documented inline there rather than tested through a synthetic
+    #    table this cage would then have to keep in sync.
+
+    # 4. an unrelated staged path must not select a suite that does not guard it.
+    $none = Selection @('no/such/path/at/all.txt')
+    if ($none.Count -lt $table.Suites.Count) { Good ('an unrelated staged path selects fewer suites ({0})' -f $none.Count) }
+    else { Bad 'an unrelated staged path still selected every suite -- the filter is inert' }
+
+    if ($fail -eq $before) { Good 'per-path selection fails OPEN and every suite stays reachable' }
+
     Write-Host ''
     if ($fail -gt 0) {
         Write-Host "[guard-trigger] $fail FAILURE(S)" -ForegroundColor Red
