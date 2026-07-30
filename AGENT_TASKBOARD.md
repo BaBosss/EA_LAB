@@ -180,7 +180,18 @@ Advisory is correct **while drafting** (a frequently-edited owner like `AGENT_TA
 
 ---
 
-## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `OPEN` (**blind audit 7 = NOT DONE**; blocker fixed, 4 closure conditions remain → `ORDER-602`) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `DONE` (**owner APPROVED the Coverage edge 2026-07-31**; awaiting an independent re-check before `REVIEWED`) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — **THE DECISION IS RECORDED. `APPROVED`, conditionally.**
+> `_triage/factory_os/s2a_attestations.jsonl` line 2 · bundle `aaa5998d7128238a` · verified by `check_s2a_attestation.py` (exit 0)
+>
+> **The owner approved `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, with two conditions that `S2` MUST honour:**
+> 1. the **owner banner and the §2 header must say *"generated … edits here are overwritten"* in the SAME commit as the first generation** — nothing machine-reads §2 today, so the only real risk is a human trusting the old banner and hand-editing generated output;
+> 2. **§2 must NOT be switched to generated output until `factory/coverage.jsonl` covers at least what the current hand table covers** — the present 7 rows are stale (last real update 2026-06-27 against a 64-row deployment inventory) but they are not nothing, and a thinner generated table would be a **regression**.
+>
+> **This unblocks `S2`, and nothing has moved yet** — ORDER-600 was always a proposal; the transfer itself is S2's work and is not written. **Do not create anything under `factory/` until S2 exists and both conditions above are in its acceptance.**
+>
+> <sub>📌 **How the record was made, stated plainly because the artifact itself refuses to overclaim:** the decision was the owner's, given in chat; the line was **transcribed by the Claude seat** and carries `recorded_by` saying so. This log records that a decision was written down against specific bytes — **it cannot prove who typed it**, because this repo commits under a single git identity. That limitation is the artifact's own header, not a caveat added here. `bundle_sha256` covers **six files** (D1 · D2 · reconciliation · generator · both validators), so if the reviewed document or the acceptance rules change, this record stops matching and must be re-made rather than being silently reinterpreted.</sub>
 
 > ### 🔴 BLIND AUDIT 7 (2026-07-30) — **NOT DONE, and it was right.** Report: `_triage/factory_os/CODEX_AUDIT7_2026-07-30.md`
 >
