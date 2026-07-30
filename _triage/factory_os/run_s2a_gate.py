@@ -30,11 +30,11 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import check_s2a_migration as chk          # noqa: E402
-import check_s2a_signoff as sign            # noqa: E402
+import check_s2a_attestation as sign            # noqa: E402
 import gen_s2a_migration as gen_d1          # noqa: E402
 import gen_s2a_migration_doc as gen_d2      # noqa: E402
 import run_s2a_migration_tests as muts      # noqa: E402
-import run_s2a_signoff_tests as sign_tests  # noqa: E402
+import run_s2a_attestation_tests as sign_tests  # noqa: E402
 
 STEPS = (
     ('D1 matches its generator', lambda: gen_d1.main(['--check'])),
@@ -43,8 +43,8 @@ STEPS = (
     ('the checker refuses the null migration', lambda: chk.self_test()),
     # ORDER-602 A: the sign-off log is a separate artifact so the owner never edits a guard to say
     # yes. An empty log is valid -- this step asserts the log is WELL-FORMED, never that it is signed.
-    ('the sign-off log is valid', lambda: sign.main([])),
-    ('approval works with no guard edit', lambda: sign_tests.main()),
+    ('the attestation log is valid', lambda: sign.main([])),
+    ('recording a decision needs no guard edit', lambda: sign_tests.main()),
     # count DERIVED, not typed: this label read "24 mutations" while the suite already held 27, one
     # commit after I complained about exactly that class of drift in D2's own prose.
     ('%d mutations of the real D1, + the loader and drift-guard parts' % len(muts.CASES),

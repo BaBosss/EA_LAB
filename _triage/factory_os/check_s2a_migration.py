@@ -194,12 +194,28 @@ def input_fingerprint():
     # CONTENT-based, not mtime-based, and that distinction is load-bearing. The first version stat'ed
     # .git/index -- but git rewrites the index during an ordinary commit, and this check runs INSIDE
     # the pre-commit tier, so a stat-based fingerprint would abort the tier for a reason that has
-    # nothing to do with the data. That is the same false-alarm class already fixed twice in this
-    # slice. Hashing `ls-files -s` (path + blob OID + stage) changes only when the staged CONTENT
-    # changes, which is the thing the caches actually depend on.
-    rc, out, _ = _git('ls-files', '-s')
-    stamp = hashlib.sha256(out.encode('utf-8', 'replace')).hexdigest() if rc == 0 else None
-    return (head_oid(), stamp)
+    # nothing to do with the data.
+    #
+    # audit 8 MAJOR 6, TWO defects, both mine:
+    #  (1) this used the MEMOIZED head_oid(), so the end-of-run comparison compared the starting HEAD
+    #      with the starting HEAD and could never observe HEAD moving. A guard written to detect
+    #      movement, built so that it cannot. `rev-parse HEAD` is read FRESH here -- the memo stays,
+    #      but only as the stable key for object lookups, which is what it is actually for.
+    #  (2) it covered HEAD and the index while the judged inputs -- D1, the reconciliation,
+    #      MASTER_BACKLOG.md and the schema -- are read from the WORKING TREE and could change
+    #      without moving either. They are hashed directly now.
+    rc, live_head, _ = _git('rev-parse', 'HEAD')
+    rc2, out, _ = _git('ls-files', '-s')
+    h = hashlib.sha256(out.encode('utf-8', 'replace')) if rc2 == 0 else None
+    for path in (MIGRATION_PATH, COVERAGE_PATH, 'MASTER_BACKLOG.md', gen.SCHEMA_PATH):
+        if h is None:
+            break
+        try:
+            with io.open(path, 'rb') as fh:
+                h.update(hashlib.sha256(fh.read().replace(b'\r\n', b'\n')).digest())
+        except IOError:
+            h.update(b'<absent>')
+    return ((live_head if rc == 0 else None), h.hexdigest() if h else None)
 
 
 def _rev_parse_cached(spec):
@@ -247,6 +263,40 @@ def storage_entities():
             schema = json.load(fh)
         _ENTITIES_MEMO.append(set(k for k, v in schema['$defs'].items() if isinstance(v, dict)))
     return set(_ENTITIES_MEMO[0])
+
+
+def _schema_defs():
+    with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
+        return json.load(fh)['$defs']
+
+
+def _schema_owner_file(entity):
+    """The bare path the schema names as this entity's owner, or None.
+
+    audit 8 MODERATE 8: used to recompute an owner-state claim instead of believing a substring. The
+    schema's `x-owner-file` carries prose around the path ("portfolio/ATTESTATION_MAP.csv (EXISTING)
+    + append-only event log"), so the first token is taken and the prose ignored.
+    """
+    v = _schema_defs().get(entity)
+    if not isinstance(v, dict):
+        return None
+    raw = v.get('x-owner-file')
+    if not raw or not isinstance(raw, str):
+        return None
+    first = raw.strip().split()[0]
+    return first if '/' in first or '.' in first else None
+
+
+def _schema_says_unpersisted(entity):
+    """Does the schema itself describe this entity as derived or never persisted?"""
+    v = _schema_defs().get(entity)
+    if not isinstance(v, dict):
+        return False
+    if v.get('x-derived') is True:
+        return True
+    raw = (v.get('x-owner-file') or '')
+    low = raw.lower()
+    return raw.strip().startswith('NONE') or 'never persisted' in low or 'derived' in low
 
 
 def ref_parents():
@@ -385,6 +435,22 @@ def c3_owner_vocabulary(rows, problems, tracked):
                                            'longer in that file -- the citation has rotted and the '
                                            'exemption must be re-established by a human'
                                  % (e, ev, anchor))
+                # audit 8 MODERATE 8: a citation is at best corroboration -- two of the four anchors
+                # ("broker symbol per lane", "Generated projections go to") describe SHAPE or
+                # LOCATION, not non-existence, so they could stay green while the state was false.
+                # The part that CAN be computed is now computed: an entity claiming to have no
+                # current owner must genuinely have no tracked owner file, and a derived/transient
+                # state must agree with the schema. What is left over is judgement, and is labelled
+                # as judgement rather than presented as proof.
+                declared_owner = _schema_owner_file(e)
+                if cur in ('NO_CURRENT_OWNER', 'NOT_YET_BUILT') and declared_owner in tracked:
+                    fail(problems, 'C3 %s claims %s, but the schema names %r as its owner file and '
+                                   'that file EXISTS at HEAD -- the state is refuted by the repo, '
+                                   'whatever the citation says' % (e, cur, declared_owner))
+                if cur in STATE_REQUIRES_DERIVED and not _schema_says_unpersisted(e):
+                    fail(problems, 'C3 %s claims %s, but the schema does not describe it as derived '
+                                   'or never-persisted -- recomputed from x-derived/x-owner-file, '
+                                   'not taken from the citation' % (e, cur))
             # (the old blanket "UNOWNED + KEEP must be derived" rule is now carried per state by
             #  STATE_DISPOSITION + STATE_REQUIRES_DERIVED above, which is strictly narrower: only
             #  TRANSIENT may KEEP at all, and it must be derived.)
@@ -755,6 +821,21 @@ def c8_coverage_reconciled(problems):
                     fail(problems, 'C8 %r claims the cell %r from source_token %r, but %r does not '
                                    'appear in that row\'s other-symbols column in section 2'
                          % (row, label, token, token))
+                else:
+                    # audit 8 MAJOR 4: a traceable token and a MEANINGLESS label could coexist --
+                    # the token was checked against the source, the label never was, so `cell` could
+                    # be any invented string while `source_token` stayed honest. The label must now
+                    # be DERIVABLE from the token: either it IS the token, or it is the token
+                    # qualified by this row's own LIVE symbol (the `XAUUSD H4` case, where the source
+                    # states only `H4` and the symbol is inherited).
+                    live_syms = {c.split()[0] for c in live_by_row.get(row, ()) if c.split()}
+                    allowed = {token} | {'%s %s' % (s, token) for s in live_syms}
+                    if label not in allowed:
+                        fail(problems, 'C8 %r cell %r is not derivable from its source_token %r. A '
+                                       'label must be the token itself, or the token qualified by '
+                                       'this row\'s LIVE symbol (%s) -- otherwise the token is '
+                                       'traceable while the label it labels is invented.'
+                             % (row, label, token, sorted(live_syms) or 'none'))
 
 
 def c9_reversal_fields(rows, problems):
