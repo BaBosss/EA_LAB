@@ -71,7 +71,18 @@ if (-not (Test-Path -LiteralPath $python)) {
 $scripts = @(
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
     @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
-    @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() },
+    # 4. check_schema_structure.py -- the SUPERSEDED lint, wired in by /scrutinize 2026-07-30.
+    #    It is not the binding (that is item 1) and its own header says so. It is kept for two
+    #    checks nothing else covers: discriminator consistency (add an entity, forget its oneOf
+    #    branch) and the closed-object inventory across all 27 entities.
+    #    WHY IT IS HERE NOW: it had been CRASHING since `c8d03d4b` -- part 1 made
+    #    meta.reconciliation a $ref and the script indexed ['required'] on it -- so its whole
+    #    design-binding section had not executed for four commits, and it still printed
+    #    "all routed entities except ['ControlRoomSnapshotV5']" after that root was closed. A lint
+    #    in no suite and no hook is a lint that can die without anyone learning it died, which is
+    #    ORDER-270's finding applied to a file rather than to a runtime.
+    @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() }
 )
 
 $failed = 0

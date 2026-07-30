@@ -358,6 +358,70 @@ CASES += [
 VALID, INVALID, ERROR = 'pass', 'fail', 'ERROR'
 
 
+def check_validator_schema_gate():
+    """snapshot_validator's ajv gate -- exercised HERE because this suite already has ajv.
+
+    /scrutinize 2026-07-30 found `ajv_schema_validator` had zero coverage: grep returned its own
+    definition and one call in __main__, nothing else. It is the function `x-enforced-by` points
+    at when it says "refuses to compute from an input that does not validate", so an untested
+    version of it is the same defect one level down -- x-enforced-by naming a validator nobody
+    TESTED rather than one nobody wrote. The computation suite cannot cover it: that suite is in
+    the pre-commit tier and must not spawn ajv.
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import snapshot_validator as SV
+
+    problems = []
+
+    # 1. A valid builder input passes the gate and produces a document.
+    try:
+        out = SV.build_snapshot(BUILDER_OK, SV.ajv_schema_validator)
+        if out.get('entity') != SV.OUTPUT_ENTITY:
+            problems.append('the gate passed a valid input but the output entity is %r'
+                            % out.get('entity'))
+    except SV.SnapshotRefusal as exc:
+        problems.append('the gate REFUSED a builder input that ajv accepts: %s' % exc)
+
+    # 2. An input ajv rejects must be refused BEFORE any verdict is computed. The instance below
+    #    carries `all_clear` in the evidence -- schema-invalid, and semantically healthy, so a
+    #    validator that skipped the gate would happily return all_clear=true for it.
+    supplied = with_evidence(all_clear=True)
+    try:
+        SV.build_snapshot(supplied, SV.ajv_schema_validator)
+        problems.append('the gate ACCEPTED an instance ajv rejects (evidence carrying all_clear) '
+                        '- the schema gate is not wired into build_snapshot')
+    except SV.SnapshotRefusal as exc:
+        if 'all_clear' not in str(exc):
+            problems.append('refused, but the message never names the offending property: %s' % exc)
+
+    # 3. The same instance with NO_SCHEMA_CHECK must reach the code path that refuses a supplied
+    #    verdict on its own -- otherwise item 2 proves only that ajv works, not that skipping the
+    #    gate is survivable. This is the honest scope of the sentinel.
+    try:
+        SV.build_snapshot(supplied, SV.NO_SCHEMA_CHECK)
+        problems.append('with NO_SCHEMA_CHECK, an evidence object carrying all_clear was accepted '
+                        'and a verdict computed for it')
+    except SV.SnapshotRefusal:
+        pass
+
+    # 4. Tool failure must NOT read as rejection. Point the module at a schema that is not there
+    #    and confirm the refusal says so rather than reporting the instance invalid -- the exact
+    #    three-state discipline this file was rewritten for in 3812d72c.
+    saved = SV.SCHEMA_PATH
+    SV.SCHEMA_PATH = '_triage/factory_os/does_not_exist.json'
+    try:
+        SV.build_snapshot(BUILDER_OK, SV.ajv_schema_validator)
+        problems.append('with the schema file absent the gate reported SUCCESS')
+    except SV.SnapshotRefusal as exc:
+        if 'could not run' not in str(exc):
+            problems.append('with the schema absent the gate said %r -- a tool failure reported '
+                            'as a verdict about the instance' % str(exc)[:80])
+    finally:
+        SV.SCHEMA_PATH = saved
+
+    return problems
+
+
 def run(schema, instance):
     fd, path = tempfile.mkstemp(suffix='.json')
     try:
@@ -412,6 +476,15 @@ def main():
             print("        -> %s" % n)
         if not good and not notes and out:
             print("        %s" % out.splitlines()[0][:160])
+
+    print("\n--- snapshot_validator's ajv gate (x-enforced-by's actual claim) ---")
+    gate = check_validator_schema_gate()
+    print("  [%s] a valid input passes, an ajv-rejected input is refused naming the property, "
+          "and a\n       missing schema is refused as TOOL FAILURE rather than as rejection"
+          % ('OK ' if not gate else 'BAD'))
+    for p in gate:
+        print("        -> %s" % p)
+    bad += len(gate)
 
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
     got, out = run(SCHEMA, json.load(open('portfolio/control_room_snapshot.json', encoding='utf-8')))

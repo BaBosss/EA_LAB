@@ -51,6 +51,7 @@ import copy
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -187,6 +188,16 @@ def assert_decidable(f):
     for row in f.rows:
         if row['name'] not in f.mandatory:
             continue
+        if 'read_ok' not in row:
+            # MEASURED 2026-07-30 (/scrutinize): an absent `read_ok` used to fall through the
+            # `not row.get('read_ok')` test below and be REPORTED as MANDATORY_SOURCE_UNREADABLE.
+            # That is this module's own rule 1 running backwards: "the field is not there" was
+            # being stated as "the file could not be read". Fail-closed is not enough when the
+            # two have different fixes. The schema requires the field; reaching here without it
+            # means no schema check ran, so the honest answer is that the input is undecidable.
+            _refuse('mandatory source %r has no `read_ok` field at all. That is not the same fact '
+                    'as read_ok=false: one means the collector did not report, the other means '
+                    'the file could not be read, and they have different fixes.' % row['name'])
         if not row.get('read_ok'):
             # Unreadable is already a reason; its age is meaningless and must not be
             # demanded. Refusing here would turn a REPORTABLE condition into a crash.
@@ -365,6 +376,39 @@ def _as_reason_objects(reasons):
     return [{'code': c, 'detail': d} for c, d in reasons]
 
 
+# Keys that only the validator may write. Finding one in a BUILDER INPUT means somebody supplied
+# the answer, which is the whole thing ORDER-601 exists to make impossible.
+SUPPLIED_ANSWER_KEYS = ('verdict', 'all_clear', 'reasons')
+
+
+def _refuse_supplied_answer(node, path='input'):
+    """Recursive forbidden-key scan over a builder input.
+
+    /scrutinize 2026-07-30 measured the hole this closes. build_snapshot checked only for a
+    top-level `verdict`, so an input whose `meta.reconciliation` carried `all_clear: true` was
+    ACCEPTED under NO_SCHEMA_CHECK and a verdict computed for it -- the supplied answer silently
+    ignored rather than refused. Part 1's guarantee ("a supplied answer has nowhere to sit") was
+    therefore resting entirely on the closed schema, while the pre-commit computation suite runs
+    every one of its fixtures with the schema gate skipped, so nothing in the fast tier was
+    enforcing it at all.
+
+    A recursive scan rather than two more `if` statements, for the reason SafeProjection's
+    forbidden-key scan is recursive: the next place somebody puts the answer is a place nobody
+    enumerated.
+    """
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key in SUPPLIED_ANSWER_KEYS:
+                _refuse('%s.%s is present in a builder input. `%s` is written only by this '
+                        'validator; a supplied answer is refused rather than overwritten, '
+                        'because overwritten and honoured look identical afterwards.'
+                        % (path, key, key))
+            _refuse_supplied_answer(value, '%s.%s' % (path, key))
+    elif isinstance(node, list):
+        for i, item in enumerate(node):
+            _refuse_supplied_answer(item, '%s[%d]' % (path, i))
+
+
 def build_snapshot(inp, schema_validator):
     """SnapshotBuilderInput -> ControlRoomSnapshotV5 with the verdict COMPUTED.
 
@@ -377,12 +421,7 @@ def build_snapshot(inp, schema_validator):
     if not isinstance(inp, dict) or inp.get('entity') != BUILDER_ENTITY:
         _refuse('build_snapshot expects entity=%r, got %r' % (
             BUILDER_ENTITY, (inp or {}).get('entity') if isinstance(inp, dict) else inp))
-    if 'verdict' in inp:
-        # The closed input schema already refuses this. Re-checked because build_snapshot is
-        # reachable with NO_SCHEMA_CHECK, and a supplied verdict silently overwritten is
-        # indistinguishable from one that was honoured.
-        _refuse('the builder input carries a `verdict`; the answer is computed here and a '
-                'supplied one is refused rather than overwritten')
+    _refuse_supplied_answer(inp)
 
     all_clear, reasons = compute(inp)
 
@@ -423,15 +462,24 @@ def verify_snapshot(doc, schema_validator):
         problems.append('verdict.all_clear is %r but the evidence in this document computes '
                         '%r' % (bool(stored['all_clear']), bool(all_clear)))
 
-    stored_pairs = set()
+    # Counter, not set. MEASURED 2026-07-30 (/scrutinize): with sets, a document that listed the
+    # same reason three times verified clean, because set equality collapses the duplicates. The
+    # reason list is what a reader COUNTS to say "3 sources are missing", so a document that
+    # triples one reason misstates its own evidence while agreeing with the boolean.
+    stored_pairs = collections.Counter()
     for r in (stored['reasons'] or []):
         if not isinstance(r, dict):
             _refuse('verdict.reasons contains a non-object entry: %r' % (r,))
-        stored_pairs.add((r.get('code'), r.get('detail')))
-    computed_pairs = set(reasons)
+        stored_pairs[(r.get('code'), r.get('detail'))] += 1
+    computed_pairs = collections.Counter(reasons)
     if stored_pairs != computed_pairs:
-        invented = sorted('%s:%s' % p for p in stored_pairs - computed_pairs)
-        omitted = sorted('%s:%s' % p for p in computed_pairs - stored_pairs)
+        def _render(counter):
+            out = []
+            for pair, n in sorted(counter.items()):
+                out.append('%s:%s' % pair + ('' if n == 1 else ' (x%d)' % n))
+            return out
+        invented = _render(stored_pairs - computed_pairs)
+        omitted = _render(computed_pairs - stored_pairs)
         if invented:
             problems.append('verdict.reasons states reasons this document does not produce: '
                             + ', '.join(invented))
@@ -469,6 +517,39 @@ def load_verified(path, schema_validator):
 # The optional ajv gate. Lives here so callers do not each grow their own copy, and is not
 # invoked by the fast tier -- see the module docstring on the budget.
 
+def _describe_ajv_errors(out, entity):
+    """Render ajv's errors, preferring the ones about THIS entity.
+
+    The schema root is a oneOf over every entity, so ajv reports the first error from every
+    branch: ~20 errors, of which the first is usually OwnerRef complaining about a property the
+    instance was never meant to have. Handing that to an operator points them at the wrong
+    contract, so errors whose schemaPath mentions the entity come first, and the branch noise is
+    only used when there is nothing better.
+    """
+    match = re.search(r'\[\{.*\}\]', out, re.S)
+    if not match:
+        return out.splitlines()[0] if out else '<no output>'
+    try:
+        errors = json.loads(match.group(0))
+    except ValueError:
+        return out.splitlines()[0]
+    mine = [e for e in errors if entity in e.get('schemaPath', '')]
+    # A closed-object violation is reported at the offending instance path, not under the entity's
+    # own $def, so keep those too -- they are the ones that name a supplied property.
+    mine += [e for e in errors
+             if e.get('keyword') in ('unevaluatedProperties', 'additionalProperties')
+             and e not in mine]
+    chosen = mine or errors
+    parts = []
+    for e in chosen[:4]:
+        params = e.get('params') or {}
+        named = (params.get('missingProperty') or params.get('unevaluatedProperty')
+                 or params.get('additionalProperty') or '')
+        parts.append('%s at %r%s' % (e.get('keyword'), e.get('instancePath', ''),
+                                     ' -> ' + named if named else ''))
+    return '; '.join(parts)
+
+
 def ajv_schema_validator(instance, entity):
     """callable(instance, entity) for build_snapshot/verify_snapshot. Raises on invalid."""
     if instance.get('entity') != entity:
@@ -487,16 +568,25 @@ def ajv_schema_validator(instance, entity):
         # rejection. Reporting "invalid" when ajv is simply absent is how a suite reports
         # 14 of 17 cases OK with the schema file deleted.
         if p.returncode == 1 and ' invalid' in out:
-            _refuse('%s failed schema validation: %s' % (entity, out.splitlines()[0]))
+            # /scrutinize 2026-07-30: this used to report out.splitlines()[0], which is ajv's
+            # "<tempfile> invalid" line and names nothing. The caller then had a refusal that did
+            # not say WHAT was wrong, about an instance in a temp file that is already deleted.
+            _refuse('%s failed schema validation: %s' % (entity, _describe_ajv_errors(out, entity)))
         raise SnapshotRefusal('ajv could not run, so nothing was validated (exit %s): %s'
                               % (p.returncode, out.splitlines()[0] if out else '<no output>'))
     finally:
         os.unlink(path)
 
 
+USAGE = 'usage: python _triage/factory_os/snapshot_validator.py verify <path-to-snapshot.json>'
+
+
 def main(argv):
     if len(argv) != 3 or argv[1] != 'verify':
-        print(__doc__.strip().splitlines()[-2])
+        # A literal, not __doc__.strip().splitlines()[-2]. That indexed a specific line of the
+        # docstring and would have printed an unrelated sentence the moment anyone added a line
+        # to it -- a usage message that silently stops being the usage.
+        print(USAGE)
         return 2
     try:
         load_verified(argv[2], ajv_schema_validator)

@@ -47,11 +47,17 @@ chk(enum == br, "every enum value has exactly one branch (enum-only=%s branch-on
 chk(br <= defs, "every branch resolves to a $defs entity (missing=%s)" % sorted(br - defs))
 
 print("\nPER-ENTITY")
-# ControlRoomSnapshotV5 is the ONE deliberate exemption, and it is named here rather than
-# silently skipped. The real snapshot document versions additively - v3 gained fields, v4
-# gained more - so a closed root would reject the next legitimate addition. The guarantee is
-# preserved where it matters: its `meta` is a $ref to SnapshotMeta, which IS closed.
-OPEN_ROOT_BY_DESIGN = {'ControlRoomSnapshotV5'}
+# Exemptions from the closed-object rule. ControlRoomSnapshotV5 used to be the one entry, on the
+# argument that the snapshot versions additively so a closed root would reject the next legitimate
+# addition. ORDER-601 part 2 rejected that argument -- additive means no field is REMOVED or
+# RENAMED, which declaring each new domain satisfies -- and closed the root. The set is now empty.
+#
+# /scrutinize 2026-07-30: an exemption left behind after the thing it exempted was fixed is worse
+# than no exemption, because it silently covers the REGRESSION. This script would have kept
+# printing "all routed entities except ['ControlRoomSnapshotV5'] set unevaluatedProperties:false"
+# -- a sentence asserting something false -- and if anyone re-opened that root, it would have
+# passed. So the list is now self-policing: an entry that is no longer needed is a FAILURE.
+OPEN_ROOT_BY_DESIGN = set()
 no_unev, no_const = [], []
 for name in sorted(br):
     s = d['$defs'][name]
@@ -59,8 +65,13 @@ for name in sorted(br):
         no_unev.append(name)
     if s.get('properties', {}).get('entity', {}).get('const') != name:
         no_const.append(name)
-chk(not no_unev, "all routed entities except %s set unevaluatedProperties:false (missing=%s)"
-    % (sorted(OPEN_ROOT_BY_DESIGN), no_unev))
+stale_exemptions = sorted(n for n in OPEN_ROOT_BY_DESIGN
+                          if d['$defs'].get(n, {}).get('unevaluatedProperties') is False)
+chk(not stale_exemptions,
+    "no exemption outlives what it exempted (stale=%s) -- an exemption for an entity that is "
+    "now closed would silently permit re-opening it" % stale_exemptions)
+chk(not no_unev, "all routed entities%s set unevaluatedProperties:false (missing=%s)"
+    % (' except %s' % sorted(OPEN_ROOT_BY_DESIGN) if OPEN_ROOT_BY_DESIGN else '', no_unev))
 chk(d['$defs']['SnapshotMeta'].get('unevaluatedProperties') is False,
     "the exempted document's `meta` schema is itself closed, so the exemption does not leak")
 chk(not no_const, "all routed entities pin entity const to their own name (missing=%s)" % no_const)
@@ -84,7 +95,23 @@ chk(sm['version'].get('minimum') == 5, "snapshot version floor is v5 (v4 already
 chk('mandatory_sources' in sm, "mandatory-source registry kept separate from discovered sources")
 srcreq = sm['sources']['items']['required']
 chk('fresh' in srcreq and 'read_ok' in srcreq, "every source must declare read_ok AND fresh")
-rec = sm['reconciliation']['required']
+def deref(node):
+    """Follow one hop of a local $ref.
+
+    /scrutinize 2026-07-30: ORDER-601 part 1 (`c8d03d4b`) split ReconciliationEvidence into its
+    own $def and made `meta.reconciliation` a `$ref`. This line indexed ['required'] on it and
+    raised KeyError, so THIS SCRIPT HAS CRASHED ON EVERY RUN SINCE -- which means the check below
+    and the entire DESIGN <-> SCHEMA BINDING section at the bottom have not executed since that
+    commit. Nothing noticed, because nothing runs this script: it is in no suite and no hook. It
+    is wired into the fast tier as of this fix, which is the only reason a crash here would ever
+    be seen again.
+    """
+    if isinstance(node, dict) and '$ref' in node:
+        return d['$defs'][node['$ref'].split('/')[-1]]
+    return node
+
+
+rec = deref(sm['reconciliation'])['required']
 chk('categories' in rec and 'coverage' in rec, "category and coverage totals are encoded, not implied in prose")
 
 print("\nRE-AUDIT FIXES")
@@ -138,6 +165,12 @@ chk('process_observed' in d['$defs']['RunAttempt']['properties'] and
 # all three of today's blockers.
 print("\nDESIGN <-> SCHEMA BINDING (the seam every regression came through)")
 design = open('_triage/EA_LAB_FACTORY_OS_DESIGN.md', encoding='utf-8').read()
+# The generated tables -- including the __STORAGE__ ownership table these checks read -- moved out
+# of the design into CONTRACTS.md (`87af43fd`). Both files together are the document, so the
+# storage-path and refuted-claim scans read the pair. Reading only the design would have made the
+# storage check vacuously fail and the banned-phrase scan blind to half the prose.
+contracts = open('_triage/factory_os/CONTRACTS.md', encoding='utf-8').read()
+both = design + '\n' + contracts
 
 owner_paths = []
 for name in sorted(d['$defs']):
@@ -145,10 +178,10 @@ for name in sorted(d['$defs']):
     m = re.match(r'^([A-Za-z0-9_./<>-]+\.(?:jsonl|json|csv|md))', of)
     if m and not d['$defs'][name].get('x-derived'):
         owner_paths.append((name, m.group(1)))
-missing = [(n, p) for n, p in owner_paths if p not in design]
+missing = [(n, p) for n, p in owner_paths if p not in both]
 chk(not missing,
-    "every non-derived entity's storage path also appears in the design (drifted=%s)"
-    % [f"{n}->{p}" for n, p in missing])
+    "every non-derived entity's storage path also appears in the design or CONTRACTS.md "
+    "(drifted=%s)" % [f"{n}->{p}" for n, p in missing])
 
 banned = {
     "the same snapshot and the same event ids":
@@ -157,8 +190,9 @@ banned = {
     "the eleven unowned facts": "refuted by the first audit - two are unowned, three partly new",
     "§11 — six": "section 11 holds nine open decisions",
 }
-stale = [(p, why) for p, why in banned.items() if p in design]
-chk(not stale, "no refuted claim survives anywhere in the design (found=%s)" % [p for p, _ in stale])
+stale = [(p, why) for p, why in banned.items() if p in both]
+chk(not stale, "no refuted claim survives in the design or CONTRACTS.md (found=%s)"
+    % [p for p, _ in stale])
 
 print("\n=== %s ===" % ("STRUCTURE OK" if fail == 0 else "%d STRUCTURAL FAILURES" % fail))
 sys.exit(1 if fail else 0)

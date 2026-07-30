@@ -221,6 +221,7 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_contract_binding_tests.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_validator_tests.py',
+                                          '_triage/factory_os/check_schema_structure.py',
                                           '_triage/factory_os/schemas.json',
                                           # The generated tables moved out of the design into
                                           # CONTRACTS.md; the design is still an input because

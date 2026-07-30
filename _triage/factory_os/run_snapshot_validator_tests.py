@@ -350,9 +350,32 @@ FIXTURES = [
             'NO_SCHEMA_CHECK, and a supplied verdict silently overwritten is '
             'indistinguishable from one that was honoured',
             dict(clone(BASE), verdict={'all_clear': True, 'reasons': []}), 'verdict'),
+    # /scrutinize 2026-07-30. THE hole this review found: build_snapshot checked only for a
+    # top-level `verdict`, so this instance was accepted and a verdict computed for it under
+    # NO_SCHEMA_CHECK -- which is what every fixture in this file uses, so the fast tier was
+    # enforcing part 1's central guarantee not at all. The closed schema does refuse it, but a
+    # guarantee that holds only when the optional gate is on is not the guarantee that was claimed.
+    refusal('refuse-all-clear-supplied-inside-the-evidence',
+            'ORDER-601 part 1 made a supplied answer unrepresentable in the SCHEMA; this asserts '
+            'the validator refuses it on its own, with the schema gate skipped',
+            at_ev(BASE, all_clear=True), 'all_clear'),
+    refusal('refuse-reasons-supplied-inside-the-evidence',
+            'the same attack one word over: `reasons` is validator-owned too, and the next place '
+            'somebody puts the answer is the place nobody enumerated',
+            at_ev(BASE, reasons=[]), 'reasons'),
     refusal('refuse-a-non-integer-count',
             'a string where a count belongs must not be compared as a number',
             at_ev(BASE, discovered='3'), 'must be an integer'),
+    # /scrutinize 2026-07-30. `at_row` cannot express this (it refuses unknown fields and this
+    # DELETES a known one), so the row is rebuilt without it -- still a one-field delta.
+    refusal('refuse-a-row-with-no-read_ok-field',
+            'an ABSENT read_ok used to be reported as MANDATORY_SOURCE_UNREADABLE, which states '
+            '"the file could not be read" about a collector that simply did not report. Rule 1 '
+            'of the validator, running backwards',
+            at_meta(BASE, sources=[row('live_deals', age_hours=1.0),
+                                   {'name': 'dashboard', 'mandatory': True, 'fresh': True,
+                                    'age_hours': 2.0}]),
+            'no `read_ok` field at all'),
 ]
 
 
@@ -371,7 +394,10 @@ AUDIT5_ATTACK = SV.build_snapshot(BASE, NC)
 AUDIT5_ATTACK['meta']['sources'] = []
 AUDIT5_ATTACK['verdict'] = {'all_clear': True, 'reasons': []}
 
-_HEALTHY_OUT = SV.build_snapshot(BASE, NC)
+_TRIPLED_REASON = SV.build_snapshot(drop_row(BASE, 'dashboard'), NC)
+# an HONEST verdict, then the one true reason repeated. Both the boolean and the reason SET
+# still agree with the evidence; only the multiset does not.
+_TRIPLED_REASON['verdict']['reasons'] = _TRIPLED_REASON['verdict']['reasons'] * 3
 
 _STALE_LYING_ROW = SV.build_snapshot(at_row(BASE, 'dashboard', age_hours=400.0), NC)
 # the verdict is CORRECT here; only the row's own derived field is falsified
@@ -398,6 +424,18 @@ FIXTURES += [
            'half of that the schema cannot check',
            persisted(verdict={'all_clear': False, 'reasons': []}),
            must_say=['all_clear']),
+    output('persisted-verdict-triples-one-true-reason',
+           '/scrutinize 2026-07-30: the comparison was set-based, so a document listing the same '
+           'reason three times verified CLEAN. The reason list is what a reader counts to say '
+           '"3 sources are missing", so tripling one misstates the evidence while agreeing with '
+           'the boolean', _TRIPLED_REASON,
+           # (x2), not (x3): three stored minus the one the evidence really produces. Asserting
+           # x3 failed, which is the assertion doing its job -- the number in the message is the
+           # SURPLUS, and a reader who saw x3 would think the document claimed three more than
+           # it does. With MANDATORY_SOURCE_MISSING disabled the surplus becomes x3, which is
+           # why this fixture still declares a dependency on it.
+           must_say=['does not produce', '(x2)'],
+           depends_on=[SV.MANDATORY_SOURCE_MISSING]),
     output('persisted-row-lies-about-its-own-freshness',
            'the verdict here is CORRECT (false, STALE) while the row still asserts fresh=true '
            'for every consumer that reads the row instead of the verdict. Derived fields are '
