@@ -815,15 +815,42 @@ def head_oid():
     return git_out('rev-parse', 'HEAD').decode().strip()
 
 
+# Memoized for the same content-addressed reason as in check_s2a_migration.py, and measured for the
+# same reason: run_s2a_migration_tests.py PART 2 calls build_rows() three times per run, each
+# resolving ~14 pins with 2 git spawns apiece. Un-memoized that took the suite from 2.9s to 5.1s and
+# the tier to 18.8s. A `commit:path` cannot change its answer inside one process.
+_REF_MEMO = {}
+
+
 def owner_ref_for(path, commit):
-    """RECOMPUTED, never typed: resolve the blob at HEAD and hash its actual bytes."""
-    blob = git_out('rev-parse', '%s:%s' % (commit, path)).decode().strip()
-    raw = git_out('cat-file', 'blob', blob)
-    return {'path': path, 'commit_oid': commit, 'blob_oid': blob,
-            'raw_sha256': hashlib.sha256(raw).hexdigest()}
+    """RECOMPUTED, never typed: resolve the blob at `commit` and hash its actual bytes."""
+    key = (commit, path)
+    if key not in _REF_MEMO:
+        blob = git_out('rev-parse', '%s:%s' % (commit, path)).decode().strip()
+        raw = git_out('cat-file', 'blob', blob)
+        _REF_MEMO[key] = {'path': path, 'commit_oid': commit, 'blob_oid': blob,
+                          'raw_sha256': hashlib.sha256(raw).hexdigest()}
+    return dict(_REF_MEMO[key])
 
 
-def build_rows():
+def build_rows(pins=None):
+    """pins: {entity: commit_oid} to honour instead of HEAD.
+
+    WHY THIS PARAMETER EXISTS -- a defect I shipped and caught one commit later.
+    `--check` originally regenerated against HEAD and compared. That made the drift guard go RED on
+    every commit AFTER the one that generated D1: HEAD had moved, so every recomputed `commit_oid`
+    differed and the guard reported STALE for a reason that is not drift. A pre-commit check that
+    fails for an unrelated reason is exactly how someone ends up reaching for --no-verify.
+
+    The confusion was between two different questions, and only the first belongs to this guard:
+      1. is D1's CONTENT still what the generator produces?   <- real drift, must be enforced
+      2. is D1's PIN at the current HEAD?                     <- must NOT be required. A pin is a
+         historical claim ("at commit X this owner was this blob"); pinning would be pointless if it
+         had to track HEAD. C4 already asks the right question of a pin -- does it still RESOLVE and
+         does the blob still hash to what is recorded -- and an old pin passes that correctly.
+    So --check honours the recorded pins and compares everything else; --repin is the deliberate act
+    of moving them forward.
+    """
     commit = head_oid()
     out = []
     for e, parent, cd in EMBEDDED:
@@ -899,7 +926,7 @@ def build_rows():
             row['owner_ref_absent_reason'] = NO_BLOB_UNOWNED
             row['unowned_evidence'] = spec['unowned_evidence']
         else:
-            row['owner_ref'] = owner_ref_for(owner, commit)
+            row['owner_ref'] = owner_ref_for(owner, (pins or {}).get(spec['entity']) or commit)
         for k in ('keep_reason', 'same_blob_reason', 'refused_reason'):
             if spec.get(k):
                 row[k] = spec[k]
@@ -1006,7 +1033,16 @@ def render(rows, cov):
 def main(argv):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
-    rows = build_rows()
+    pins = None
+    if '--check' in argv and '--repin' not in argv and os.path.exists(chk.MIGRATION_PATH):
+        pins = {}
+        for line in io.open(chk.MIGRATION_PATH, encoding='utf-8'):
+            if not line.strip():
+                continue
+            obj = json.loads(line)
+            if obj.get('owner_ref'):
+                pins[obj['entity']] = obj['owner_ref']['commit_oid']
+    rows = build_rows(pins)
     cov = build_coverage()
     jsonl, covtxt = render(rows, cov)
     if '--check' in argv:

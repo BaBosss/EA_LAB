@@ -251,8 +251,75 @@ def main():
     if bad:
         print('\n=== %d MUTATION(S) NOT CAUGHT ===' % bad)
         return 1
-    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROL STAYED GREEN ===' % len(CASES))
+
+    bad += drift_guard_part()
+    if bad:
+        return 1
+    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROL STAYED GREEN, DRIFT GUARD PROVEN BOTH WAYS ==='
+          % len(CASES))
     return 0
+
+
+def drift_guard_part():
+    """PART 2: the D1-vs-generator drift guard must be able to FAIL, and must not fail on an old pin.
+
+    This part exists because of a defect I shipped and caught one commit later. `--check` used to
+    regenerate against HEAD, so it reported STALE on every commit after the one that produced D1 --
+    HEAD had moved, so every `commit_oid` differed. The fix was to honour the recorded pins. But
+    loosening a guard is exactly how a guard becomes inert, so both directions are asserted here:
+
+      NEGATIVE  a real change to a judgement field must still be reported STALE
+      CONTROL   D1 pinned at an EARLIER commit than HEAD must stay OK -- which is the very case that
+                used to fail, and which is true right now, since D1 is pinned one commit back
+    """
+    import gen_s2a_migration as gen
+    print('\n=== PART 2: the drift guard, both directions ===')
+    bad = 0
+    head = os.popen('git rev-parse --short HEAD').read().strip()
+    pinned = set()
+    for line in io.open(chk.MIGRATION_PATH, encoding='utf-8'):
+        if line.strip():
+            o = json.loads(line)
+            if o.get('owner_ref'):
+                pinned.add(o['owner_ref']['commit_oid'][:8])
+
+    rc = gen.main(['--check'])
+    ok = rc == 0
+    print('  [%s] CONTROL D1 pinned at %s while HEAD is %s -> still OK (a pin is a historical '
+          'claim, not a HEAD tracker)' % ('OK ' if ok else 'BAD', ','.join(sorted(pinned)), head))
+    if not ok:
+        bad += 1
+
+    # NEGATIVE: alter a judgement field on disk and require STALE.
+    saved = chk.MIGRATION_PATH
+    original = io.open(saved, encoding='utf-8').read()
+    fd, tmp = tempfile.mkstemp(suffix='.jsonl')
+    try:
+        rows = [json.loads(l) for l in original.split('\n') if l.strip()]
+        find(rows, 'CoverageCell')['breaks_if_moved'] = 'dashboard may break'   # audit 5's phrasing
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            for r in rows:
+                fh.write(json.dumps(r, ensure_ascii=True, sort_keys=True) + '\n')
+        chk.MIGRATION_PATH = tmp
+        rc = gen.main(['--check'])
+        ok = rc != 0
+        print('  [%s] NEGATIVE a judgement field rewritten -> reported STALE'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+    finally:
+        chk.MIGRATION_PATH = saved
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    # the real file must be byte-identical to how this part found it
+    if io.open(saved, encoding='utf-8').read() != original:
+        print('  [BAD] this suite modified the real D1 -- it must only ever read it')
+        bad += 1
+    if bad:
+        print('\n=== DRIFT GUARD PART FAILED ===')
+    return bad
 
 
 if __name__ == '__main__':
