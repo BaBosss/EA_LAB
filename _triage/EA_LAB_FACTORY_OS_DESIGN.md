@@ -493,7 +493,10 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 | `surface` | `OPERATOR` \| `RESEARCH` \| `HIDDEN` | **yes** |  |
 | `locked_value` | `any` | — | required when role=LOCKED; emitted as a const by the generator |
 | `optimize_stage` | `ARCHITECTURE` \| `SIGNAL` \| `EXIT` \| `EXECUTION` \| `STRESS` \| `FREEZE` \| `UNKNOWN` | — |  |
-| `safe_range` | `object` \| `null` | — | closed |
+| `safe_range` | `object` \| `null` | — | closed · requires `start`, `step`, `stop` |
+| `safe_range.start` | `number` | **yes** |  |
+| `safe_range.step` | `number` | **yes** |  |
+| `safe_range.stop` | `number` | **yes** |  |
 | `definition_ref` | [`OwnerRef`](#ownerref) | **yes** | pins the docs/PARAM_REGISTRY.csv row that owns this parameter's permanent semantics |
 
 **Unknown fields:** rejected (closed object).
@@ -681,9 +684,15 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 | `attempt` | `integer` | **yes** | min `1` |
 | `transition` | `QUEUED` \| `LEASED` \| `LAUNCH_INTENT` \| `PROCESS_OBSERVED` \| `RUNNING` \| `COMPLETED` \| `FAILED` \| `ABANDONED` \| `EVIDENCE_REGISTERED` | **yes** |  |
 | `at` | `string` | **yes** |  |
-| `lease` | `object` \| `null` | — | closed · SELF-REVIEW FIX: rev 3 required `pid` on the lease, but LEASED happens BEFORE any process exists - the lane is reserved first. A schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder. pid moves to process_observed and is not part of the lease. |
+| `lease` | `object` \| `null` | — | closed · requires `lease_id`, `owner`, `expires_at` · SELF-REVIEW FIX: rev 3 required `pid` on the lease, but LEASED happens BEFORE any process exists - the lane is reserved first. A schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder. pid moves to process_observed and is not part of the lease. |
+| `lease.lease_id` | `string` | **yes** |  |
+| `lease.owner` | `string` | **yes** |  |
+| `lease.expires_at` | `string` | **yes** | without an expiry a machine that died holding a lease keeps the lane forever |
 | `launch_intent_at` | `string` \| `null` | — | written BEFORE spawn. Its presence with no process_observed means the crash happened around the spawn and the resume must RECONCILE (is an MT5 already running on this lane?) rather than launch again. |
-| `process_observed` | `object` \| `null` | — | closed · SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable. |
+| `process_observed` | `object` \| `null` | — | closed · requires `pid`, `observed_at` · SELF-REVIEW FIX: rev 3 had a single `launched_at` written before launch, which cannot distinguish crash-before-spawn from crash-after-spawn - the exact hole the field was added to close. Two records, so the pair is decidable. |
+| `process_observed.pid` | `integer` | **yes** |  |
+| `process_observed.observed_at` | `string` | **yes** |  |
+| `process_observed.process_fingerprint` | `string` \| `null` | — |  |
 | `exit_code` | `integer` \| `null` | — | persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it |
 | `failure_class` | `NONE` \| `TESTER_ERROR` \| `TERMINAL_ERROR` \| `TIMEOUT` \| `LEASE_LOST` \| `KILLED` \| `CONFIG_REJECTED` | — | the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR |
 | `report_fresh_proof` | `object` \| `null` | — |  |
@@ -769,7 +778,7 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 | `logical_symbol` | `string` | **yes** |  |
 | `tf` | `string` | **yes** |  |
 | `parameters` | `object` | **yes** | FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift. |
-| `profiles` | object *(fields below)* | **yes** | closed · content hashes, not mutable string ids - otherwise instrument_profiles could change under a fixed id and the candidate would still look valid |
+| `profiles` | object *(fields below)* | **yes** | closed · requires `instrument`, `exit`, `sizing`, `safety`, `execution` · content hashes, not mutable string ids - otherwise instrument_profiles could change under a fixed id and the candidate would still look valid |
 | `profiles.instrument` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `profiles.exit` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `profiles.sizing` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
@@ -853,7 +862,8 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
 **Unknown fields:** rejected (closed object).
 
 **Conditional requirements:**
-- **when `scope` = `LEGACY_ACCOUNT_SCOPED`** → requires `legacy_exception`, `legacy_accounts`, `imported_in_cutover` · `legacy_exception` → const `True` · `legacy_accounts` → array of `any` (minItems `2`)
+- **when `scope` = `LEGACY_ACCOUNT_SCOPED`** → requires `legacy_exception`, `legacy_accounts`, `imported_in_cutover` · `legacy_exception` → const `True` · `legacy_accounts` → array of `any` (minItems `2`) · scope and the exception flags must agree, and a legacy exception exists precisely because the magic is on more than one account
+- **otherwise (no `scope` = `LEGACY_ACCOUNT_SCOPED`)** → `legacy_exception` → const `False`
 
 <!-- END GENERATED CONTRACT: MagicAllocation -->
 
@@ -930,7 +940,9 @@ no generated block anywhere in this document, so an entity cannot drift by simpl
 **Unknown fields:** rejected (closed object).
 
 **Conditional requirements:**
-- **when `status` = `WAITING`** → requires `waiting_for`, `wake_condition` · `waiting_for` → `string` · `wake_condition` → `string`
+- **when `order_ref` present** → **REFUSED if it also carries** `title`, `owner`, `status`, `acceptance` · RE-AUDIT P0: a Receipt that references an ORDER may NOT also carry title/owner/status/acceptance. Those are taskboard facts, and holding a second mutable copy is the ownership fork this design exists to prevent - Order REVIEWED while Receipt still IN_PROGRESS. Read them through order_ref.
+- **otherwise (no `order_ref` present)** → requires `title`, `owner`, `status` · a Receipt with no Order is the only case where it owns these - a chat commitment not yet formalised
+- **when `status` = `WAITING`** → requires `waiting_for`, `wake_condition` · `waiting_for` → `string` · `wake_condition` → `string` · Audit P1: rev 1 used anyOf here, so one of the two sufficed - which produced exactly the indefinitely-parked item the design says it prevents. Both are now required.
 - **when `status` = `CANCELLED_BY_USER`** → requires `cancelled_by_user_ref`
 - **when `status` = `HANDOFF`** → requires `handoff_summary`, `next_action`, `evidence_refs`, `review_required`
 
@@ -1023,17 +1035,17 @@ no generated block anywhere in this document, so an entity cannot drift by simpl
 | `sources[].read_ok` | `boolean` | **yes** | false must stay distinguishable from 'read fine, found nothing' in EVERY consumer |
 | `sources[].fresh` | `boolean` | **yes** |  |
 | `sources[].age_hours` | `number` \| `null` | **yes** |  |
-| `reconciliation` | object *(fields below)* | **yes** | closed |
+| `reconciliation` | object *(fields below)* | **yes** | closed · requires `discovered`, `categorized`, `categories`, `duplicates`, `conflicts`, `unclassified`, `coverage`, `all_clear` |
 | `reconciliation.discovered` | `integer` | **yes** | min `0` |
 | `reconciliation.categorized` | `integer` | **yes** | min `0` |
-| `reconciliation.categories` | object *(fields below)* | **yes** | closed · the equation's right-hand side must be ENCODED, not implied in prose |
+| `reconciliation.categories` | object *(fields below)* | **yes** | closed · requires `actionable`, `running`, `waiting`, `review_audit`, `completed`, `cancelled_by_user` · the equation's right-hand side must be ENCODED, not implied in prose |
 | `reconciliation.categories.actionable` | `integer` | **yes** |  |
 | `reconciliation.categories.running` | `integer` | **yes** |  |
 | `reconciliation.categories.waiting` | `integer` | **yes** |  |
 | `reconciliation.categories.review_audit` | `integer` | **yes** |  |
 | `reconciliation.categories.completed` | `integer` | **yes** |  |
 | `reconciliation.categories.cancelled_by_user` | `integer` | **yes** |  |
-| `reconciliation.coverage` | object *(fields below)* | **yes** | closed |
+| `reconciliation.coverage` | object *(fields below)* | **yes** | closed · requires `cells_in_universe`, `tested`, `untested`, `not_applicable` |
 | `reconciliation.coverage.cells_in_universe` | `integer` | **yes** |  |
 | `reconciliation.coverage.tested` | `integer` | **yes** |  |
 | `reconciliation.coverage.untested` | `integer` | **yes** |  |

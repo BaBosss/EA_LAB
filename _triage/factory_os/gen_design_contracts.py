@@ -57,6 +57,33 @@ WARNING = ('<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by '
 
 # ---------------------------------------------------------------- type rendering
 
+def type_names(spec):
+    """The declared JSON types of a spec, as a set. `type` may be a string OR a list."""
+    t = spec.get('type') if isinstance(spec, dict) else None
+    if isinstance(t, list):
+        return set(t)
+    return {t} if t else set()
+
+
+def is_kind(spec, kind):
+    """True for `type: "object"` AND for `type: ["object", "null"]`.
+
+    AUDIT-4 P1: the first version tested `spec.get('type') == 'object'`, so every NULLABLE
+    nested object was skipped - and `lease`, `process_observed` and `safe_range` are all
+    `["object", "null"]`. Their nested required fields (`lease_id`/`owner`/`expires_at`,
+    `pid`/`observed_at`/`process_fingerprint`) silently vanished from the generated design
+    while the schema still carried them. That is the exact defect class this file exists to
+    remove, reintroduced by the file itself: a contract that left the document without any
+    check noticing, because absence is not disagreement.
+    """
+    return kind in type_names(spec)
+
+
+def nullable(spec):
+    return 'null' in type_names(spec)
+
+
+
 def render_type(spec):
     """One short, deterministic string describing what a field may hold.
 
@@ -74,15 +101,15 @@ def render_type(spec):
     t = spec.get('type')
     if isinstance(t, list):
         return ' \\| '.join('`{0}`'.format(x) for x in t)
-    if t == 'array':
+    if is_kind(spec, 'array'):
         items = spec.get('items', {})
         if isinstance(items, dict) and items.get('properties'):
-            return 'array of object *(fields below)*'
-        return 'array of {0}'.format(render_type(items))
-    if t == 'object':
+            return '{0}array of object *(fields below)*'.format('nullable ' if nullable(spec) else '')
+        return '{0}array of {1}'.format('nullable ' if nullable(spec) else '', render_type(items))
+    if is_kind(spec, 'object'):
         if spec.get('properties'):
-            return 'object *(fields below)*'
-        return '`object`'
+            return '{0}object *(fields below)*'.format('nullable ' if nullable(spec) else '')
+        return '`object`' if not nullable(spec) else '`object` \\| `null`'
     if t:
         return '`{0}`'.format(t)
     return '`any`'
@@ -101,8 +128,10 @@ def render_rule(spec):
             bits.append('{0} `{1}`'.format(label, spec[key]))
     if spec.get('additionalProperties') is False or spec.get('unevaluatedProperties') is False:
         bits.append('closed')
+    if is_kind(spec, 'object') and spec.get('required'):
+        bits.append('requires ' + ', '.join('`%s`' % r for r in spec['required']))
     items = spec.get('items')
-    if spec.get('type') == 'array' and isinstance(items, dict) and items.get('properties'):
+    if is_kind(spec, 'array') and isinstance(items, dict) and items.get('properties'):
         if items.get('unevaluatedProperties') is False or items.get('additionalProperties') is False:
             bits.append('items closed')
         else:
@@ -135,9 +164,9 @@ def walk_fields(defn, prefix='', depth=0):
         rows.append((path, spec, field in required))
         if not isinstance(spec, dict) or '$ref' in spec:
             continue
-        if spec.get('type') == 'object' and spec.get('properties'):
+        if is_kind(spec, 'object') and spec.get('properties'):
             rows.extend(walk_fields(spec, path + '.', depth + 1))
-        elif spec.get('type') == 'array':
+        elif is_kind(spec, 'array'):
             items = spec.get('items')
             if isinstance(items, dict) and items.get('properties') and '$ref' not in items:
                 rows.extend(walk_fields(items, path + '[].', depth + 1))
@@ -156,9 +185,11 @@ def render_conditionals(defn):
     """
     out = []
     for clause in defn.get('allOf', []) or []:
-        cond, then = clause.get('if'), clause.get('then')
-        if not (isinstance(cond, dict) and isinstance(then, dict)):
+        cond = clause.get('if')
+        if not isinstance(cond, dict):
+            out.append(unrendered(clause))
             continue
+
         when = []
         for field, sub in (cond.get('properties') or {}).items():
             if 'const' in sub:
@@ -167,18 +198,63 @@ def render_conditionals(defn):
                 when.append('`{0}` ∈ {1}'.format(field, ', '.join('`%s`' % v for v in sub['enum'])))
             else:
                 when.append('`{0}` {1}'.format(field, render_type(sub)))
-        req = then.get('required') or []
-        eff = []
-        if req:
-            eff.append('requires ' + ', '.join('`%s`' % r for r in req))
-        for field, sub in (then.get('properties') or {}).items():
-            rule = render_rule(sub)
-            eff.append('`{0}` → {1}{2}'.format(field, render_type(sub), ' (%s)' % rule if rule else ''))
-        if 'not' in then:
-            eff.append('is REFUSED')
-        if when and eff:
-            out.append('- **when {0}** → {1}'.format(' and '.join(when), ' · '.join(eff)))
+        # AUDIT-4 P1: an `if` carrying ONLY `required` used to produce an empty `when`, and
+        # an empty `when` was silently dropped. That is the shape of WorkReceipt's anti-copy
+        # rule - "a receipt that has an order_ref may not also carry title/owner/status" -
+        # so the single most load-bearing ownership constraint in that entity could be
+        # deleted from the schema without changing one character of the design.
+        bare = [r for r in (cond.get('required') or []) if r not in (cond.get('properties') or {})]
+        if bare:
+            when.append('{0} present'.format(', '.join('`%s`' % r for r in bare)))
+
+        rendered = []
+        for label, branch in (('then', clause.get('then')), ('else', clause.get('else'))):
+            if not isinstance(branch, dict):
+                continue
+            eff = []
+            if branch.get('required'):
+                eff.append('requires ' + ', '.join('`%s`' % r for r in branch['required']))
+            for field, sub in (branch.get('properties') or {}).items():
+                rule = render_rule(sub)
+                eff.append('`{0}` → {1}{2}'.format(field, render_type(sub), ' (%s)' % rule if rule else ''))
+            neg = branch.get('not')
+            if isinstance(neg, dict):
+                forbidden = list(neg.get('required') or [])
+                # `not: {anyOf: [{required:[a]}, {required:[b]}]}` is how "may carry none of
+                # these" is written in JSON Schema. Rendering it as a bare "REFUSED" would
+                # print a rule without naming the fields it protects, which is a table that
+                # looks complete and says nothing - the failure mode of the whole first pass.
+                for sub in (neg.get('anyOf') or []) + (neg.get('oneOf') or []):
+                    forbidden.extend(sub.get('required') or [])
+                forbidden.extend(sorted(neg.get('properties') or {}))
+                eff.append('**REFUSED if it also carries** ' + ', '.join('`%s`' % f for f in forbidden)
+                           if forbidden else '**REFUSED**')
+            if branch.get('description'):
+                eff.append(' '.join(str(branch['description']).split()))
+            if eff:
+                rendered.append((label, eff))
+
+        if when and rendered:
+            joined = ' and '.join(when)
+            for label, eff in rendered:
+                head = ('when {0}'.format(joined) if label == 'then'
+                        else 'otherwise (no {0})'.format(joined))
+                out.append('- **{0}** → {1}'.format(head, ' · '.join(eff)))
+        else:
+            # Never skip. A clause this renderer does not understand is dumped raw, so that
+            # editing it still moves the document. Silence is how the WorkReceipt rule hid.
+            out.append(unrendered(clause))
     return out
+
+
+def unrendered(clause):
+    """Visible fallback for a conditional shape this renderer does not model.
+
+    Deliberately ugly. An ugly line in the design is a bug report; a missing line is a
+    contract that quietly stopped existing.
+    """
+    return '- ⚠️ **conditional not modelled by the generator, shown raw so it cannot hide:** ' \
+           '`{0}`'.format(json.dumps(clause, sort_keys=True, ensure_ascii=False))
 
 
 # -------------------------------------------------------------- block generators
@@ -313,6 +389,54 @@ def rewrite(text, schema):
     return BLOCK_RE.sub(repl, text), keys
 
 
+def validate_coverage(text, schema, keys):
+    """Return a list of problems. Empty list = the design covers the schema.
+
+    A FUNCTION, not inline code in main(), because the negative-fixture harness has to be
+    able to call the real thing. AUDIT-4 P1 caught the previous control asserting
+    `'ExecutionKey' not in keys` after deleting the ExecutionKey block — which is true by
+    arithmetic and tests nothing. A control that cannot fail is worse than no control: it
+    reports coverage that was never checked.
+    """
+    problems = []
+
+    # Unmatched markers. The block regex only sees complete pairs, so a stray BEGIN or END
+    # used to be invisible to every check here - and everything between a stray BEGIN and
+    # the next real END is hand-written text sitting inside what reads as a generated block.
+    n_begin = text.count('<!-- BEGIN GENERATED CONTRACT:')
+    n_end = text.count('<!-- END GENERATED CONTRACT:')
+    if n_begin != len(keys) or n_end != len(keys):
+        problems.append(
+            'marker imbalance: {0} BEGIN and {1} END markers but only {2} complete pair(s). '
+            'An unpaired marker hides hand-written text inside what reads as generated output.'
+            .format(n_begin, n_end, len(keys)))
+
+    if not keys:
+        problems.append(
+            'the design contains no generated contract blocks at all — that is a design back '
+            'on hand-maintained contracts, which is the defect BACKLOG-D31 exists to remove.')
+
+    dupes = sorted({k for k in keys if keys.count(k) > 1})
+    if dupes:
+        problems.append('duplicated block(s): {0} — two blocks for one contract is the same '
+                        'two-copies defect this tool removes.'.format(', '.join(dupes)))
+
+    missing = [name for name in schema['$defs'] if name not in keys]
+    if missing:
+        problems.append(
+            '{0} entity/entities in schemas.json have no generated block in the design: {1}. '
+            'An entity the design never states cannot be caught contradicting the schema, '
+            'which is not the same as agreeing with it.'.format(len(missing), ', '.join(missing)))
+
+    meta = [k for k in ((schema.get('x-ea-lab-meta') or {}).get('contracts') or {})
+            if not k.startswith('_')]
+    missing_meta = [k for k in meta if 'META_' + k not in keys]
+    if missing_meta:
+        problems.append('non-entity contract(s) declared in x-ea-lab-meta.contracts with no '
+                        'block in the design: {0}'.format(', '.join(missing_meta)))
+    return problems
+
+
 def main():
     check = '--check' in sys.argv
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -329,37 +453,10 @@ def main():
         print('[FAIL] {0}'.format(exc.args[0]))
         return 1
 
-    if not keys:
-        print('[FAIL] {0} contains no generated contract blocks at all. The whole point of '
-              'BACKLOG-D31 is that the normative tables are generated; a design with zero '
-              'blocks is a design back on hand-maintained contracts.'.format(DESIGN_PATH))
-        return 1
-
-    dupes = sorted({k for k in keys if keys.count(k) > 1})
-    if dupes:
-        print('[FAIL] duplicated generated block(s): {0} — two blocks for one contract is '
-              'the same two-copies defect this tool exists to remove.'.format(', '.join(dupes)))
-        return 1
-
-    # Coverage. Without this, an entity drifts by simply not being written down: the design
-    # stays silent, the schema changes, and nothing disagrees because nothing was ever said.
-    # Silence is how six of the seven regressions survived a checker that only compared what
-    # WAS written.
-    missing = [name for name in schema['$defs'] if name not in keys]
-    if missing:
-        print('[FAIL] {0} entity/entities in schemas.json have no generated block in the design: {1}'
-              .format(len(missing), ', '.join(missing)))
-        print('       Add "<!-- BEGIN GENERATED CONTRACT: <Entity> -->" / "<!-- END ... -->" where the')
-        print('       design discusses it. An entity the design never states cannot be caught')
-        print('       contradicting the schema, which is not the same as agreeing with it.')
-        return 1
-
-    meta_contracts = [k for k in ((schema.get('x-ea-lab-meta') or {}).get('contracts') or {})
-                      if not k.startswith('_')]
-    missing_meta = [k for k in meta_contracts if 'META_' + k not in keys]
-    if missing_meta:
-        print('[FAIL] non-entity contract(s) declared in x-ea-lab-meta.contracts with no block '
-              'in the design: {0}'.format(', '.join(missing_meta)))
+    problems = validate_coverage(original, schema, keys)
+    if problems:
+        for p in problems:
+            print('[FAIL] {0}'.format(p))
         return 1
 
     if new == original:

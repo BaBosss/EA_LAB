@@ -40,8 +40,12 @@
 
     WHAT THIS DOES NOT COVER -- read this before trusting a green run:
     the four slow suites above, and in particular run_order105_negative_tests.ps1, which
-    exits 1 today (ORDER-420 STEP 2 owns finding out why). Green here means "the four fast
-    cages passed", nothing more.
+    exits 1 today (ORDER-420 STEP 2 owns finding out why). Green here means "the suites in
+    $FAST_SUITES passed", nothing more.
+    NOTE: this sentence used to say "the four fast cages" while eleven were running (found
+    by the audit-4 sweep, 2026-07-30). Do not restate the count here -- the list below IS
+    the count, and a hand-maintained number beside a list it does not derive from is the
+    exact drift BACKLOG-D29 tracks.
 
 .PARAMETER BudgetSeconds
     Total wall-clock the fast tier is allowed. Exceeding it is reported as a warning with

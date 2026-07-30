@@ -83,6 +83,28 @@ def mut_owner_becomes_csv(s):
     s['$defs']['Hypothesis']['x-owner-file'] = 'factory/hypotheses.csv'
 
 
+def mut_workreceipt_anticopy_removed(s):
+    """audit-4 Q2.3 - the ownership rule that used to be invisible to this harness.
+
+    `if` carried only `required`, so the renderer produced an empty `when` and dropped the
+    whole clause. Codex deleted this rule and the generated design did not move.
+    """
+    d = s['$defs']['WorkReceipt']
+    keep = [c for c in d['allOf']
+            if not (isinstance(c.get('if'), dict)
+                    and 'required' in c['if'] and 'properties' not in c['if']
+                    and isinstance(c.get('then'), dict) and 'not' in c['then'])]
+    assert len(keep) < len(d['allOf']), 'no bare-required/not clause found to remove'
+    d['allOf'] = keep
+
+
+def mut_lease_requirements_dropped(s):
+    """audit-4 Q3 - nullable nested objects were not walked, so these vanished silently."""
+    lease = s['$defs']['RunAttempt']['properties']['lease']
+    assert lease.get('required'), 'lease has no required list to drop'
+    lease.pop('required')
+
+
 def mut_noop(s):
     return
 
@@ -107,6 +129,10 @@ CASES = [
      'finding_id', True),
     ('#20 typed registry given a CSV owner', mut_owner_becomes_csv,
      'factory/hypotheses.csv', True),
+    ('A4  WorkReceipt anti-copy rule deleted', mut_workreceipt_anticopy_removed,
+     'REFUSED', True),
+    ('A4  nullable `lease` loses its required set', mut_lease_requirements_dropped,
+     'lease_id', True),
     ('CONTROL no schema change at all', mut_noop, None, False),
     ('CONTROL rationale-only edit (def description)', mut_rationale_only, None, False),
 ]
@@ -167,30 +193,43 @@ def main():
             'RED' if expect_red else 'GREEN', 'RED' if got_red else 'GREEN',
             '' if witness_ok else '(diff did not touch `%s`)' % witness))
 
-    # CONTROL 3 - silence. An entity the design never mentions cannot be caught
-    # contradicting the schema, and six of the seven regressions survived a checker
-    # that only examined what WAS written.
-    stripped = design.replace(
-        gen.BEGIN.format(key='ExecutionKey'), '<!-- deleted for the control case -->')
-    try:
-        gen.rewrite(stripped, base)
-        keys = [m.group('key') for m in gen.BLOCK_RE.finditer(stripped)]
-        caught = 'ExecutionKey' not in keys
-    except KeyError:
-        caught = True
-    print('  [{0}] {1:<48} expect=RED   got={2}'.format(
-        'OK ' if caught else 'FAIL',
-        'CONTROL block deleted from the design', 'RED' if caught else 'GREEN'))
-    print('         (the generator refuses on missing coverage; this asserts the deletion is visible)')
-    if not caught:
-        failures += 1
+    # Document-level cases. These call the REAL coverage validator, not a restatement of it.
+    # The previous version of the deleted-block case asserted `'ExecutionKey' not in keys`
+    # after deleting the ExecutionKey block, which is true by arithmetic and tested nothing
+    # (audit-4 P1). A control that cannot fail reports coverage that was never checked.
+    def coverage_problems(text):
+        keys = [m.group('key') for m in gen.BLOCK_RE.finditer(text)]
+        return gen.validate_coverage(text, base, keys)
+
+    doc_cases = [
+        ('CONTROL unmodified design', design, False),
+        ('DOC  a whole block deleted',
+         design.replace(gen.BEGIN.format(key='ExecutionKey'), '<!-- gone -->'), True),
+        ('DOC  a stray unpaired BEGIN marker',
+         design.replace('## 9. (I) Migration and rollback',
+                        gen.BEGIN.format(key='CoverageCell') + '\n\n## 9. (I) Migration and rollback'),
+         True),
+        ('DOC  the same block written twice',
+         design + '\n' + gen.BEGIN.format(key='OwnerRef') + '\n\n' + gen.END.format(key='OwnerRef') + '\n',
+         True),
+    ]
+    for label, text, expect_red in doc_cases:
+        problems = coverage_problems(text)
+        got_red = bool(problems)
+        ok = got_red == expect_red
+        if not ok:
+            failures += 1
+        print('  [{0}] {1:<48} expect={2:<5} got={3:<5} {4}'.format(
+            'OK ' if ok else 'FAIL', label,
+            'RED' if expect_red else 'GREEN', 'RED' if got_red else 'GREEN',
+            problems[0][:60] + '...' if problems else ''))
 
     print('')
     if failures:
         print('=== {0} CASE(S) DID NOT BEHAVE AS DECLARED ==='.format(failures))
         return 1
     print('=== ALL {0} CASES BEHAVED AS DECLARED - 7/7 regressions caught, controls stayed green ==='
-          .format(len(CASES) + 1))
+          .format(len(CASES) + len(doc_cases)))
     return 0
 
 
