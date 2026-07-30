@@ -156,25 +156,31 @@ def main():
     os.chdir(ROOT)
     with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
         base = json.load(fh)
-    with io.open(gen.DESIGN_PATH, encoding='utf-8', newline='') as fh:
+    # The generated blocks moved out of the design into CONTRACTS.md. The regressions this
+    # harness reproduces are schema->rendered-contract regressions, so it follows the blocks;
+    # the design is now read separately, and only to check it still links every contract.
+    with io.open(gen.CONTRACTS_PATH, encoding='utf-8', newline='') as fh:
         # Normalised for the same reason the generator normalises: this repo's working tree is
         # CRLF and the generator emits LF, so a file straight from `git checkout` would make
         # the precondition below ABORT -- every case unrun, on a clean checkout, in a
         # pre-commit hook. A cage that is red for everyone is a cage that gets removed.
+        contracts = fh.read().replace('\r\n', '\n')
+    with io.open(gen.DESIGN_PATH, encoding='utf-8', newline='') as fh:
         design = fh.read().replace('\r\n', '\n')
 
     print('=== does the binding catch the seven regressions it was built for? ===')
-    print('design: {0}'.format(gen.DESIGN_PATH))
-    print('schema: {0}\n'.format(gen.SCHEMA_PATH))
+    print('contracts: {0}'.format(gen.CONTRACTS_PATH))
+    print('design:    {0} (link check only)'.format(gen.DESIGN_PATH))
+    print('schema:    {0}\n'.format(gen.SCHEMA_PATH))
 
-    # Precondition. If the committed design is already stale the whole run is meaningless -
+    # Precondition. If the committed file is already stale the whole run is meaningless -
     # every case would show a diff and every case would "pass" for the wrong reason.
-    clean, _ = gen.rewrite(design, base)
-    if clean != design:
-        print('[ABORT] the committed design does not match the current schema. Regenerate first;')
+    clean, _ = gen.rewrite(contracts, base)
+    if clean != contracts:
+        print('[ABORT] committed CONTRACTS.md does not match the current schema. Regenerate first;')
         print('        until then this harness cannot tell a caught defect from a stale file.')
         return 1
-    print('  [OK ] precondition: committed design matches the unmutated schema\n')
+    print('  [OK ] precondition: committed CONTRACTS.md matches the unmutated schema\n')
 
     failures = 0
     for label, mutate, witness, expect_red in CASES:
@@ -187,7 +193,7 @@ def main():
             continue
 
         try:
-            after, _ = gen.rewrite(design, mutated)
+            after, _ = gen.rewrite(contracts, mutated)
             err = None
         except (KeyError, gen.DepthExceeded) as exc:
             # DepthExceeded is caught beside KeyError (audit-5 Q3c): raising is the point, but
@@ -199,12 +205,12 @@ def main():
             got_red = True
             witness_ok = True
         else:
-            got_red = after != design
+            got_red = after != contracts
             witness_ok = True
             if witness is not None:
                 # The diff must be about the defect, not about some unrelated churn.
-                witness_ok = (witness in after) != (witness in design) or \
-                             after.count(witness) != design.count(witness)
+                witness_ok = (witness in after) != (witness in contracts) or \
+                             after.count(witness) != contracts.count(witness)
 
         ok = (got_red == expect_red) and (witness_ok or not expect_red)
         if not ok:
@@ -222,16 +228,19 @@ def main():
         keys = [m.group('key') for m in gen.BLOCK_RE.finditer(text)]
         return gen.validate_coverage(text, base, keys)
 
+    STRAY_ANCHOR = '## Why this file exists, separately from the design'
+    assert STRAY_ANCHOR in contracts, 'the stray-marker fixture anchors on text that is gone'
     doc_cases = [
-        ('CONTROL unmodified design', design, False),
+        ('CONTROL unmodified contracts file', contracts, False),
         ('DOC  a whole block deleted',
-         design.replace(gen.BEGIN.format(key='ExecutionKey'), '<!-- gone -->'), True),
+         contracts.replace(gen.BEGIN.format(key='ExecutionKey'), '<!-- gone -->'), True),
         ('DOC  a stray unpaired BEGIN marker',
-         design.replace('## 9. (I) Migration and rollback',
-                        gen.BEGIN.format(key='CoverageCell') + '\n\n## 9. (I) Migration and rollback'),
+         contracts.replace(STRAY_ANCHOR,
+                           gen.BEGIN.format(key='CoverageCell') + '\n\n' + STRAY_ANCHOR),
          True),
         ('DOC  the same block written twice',
-         design + '\n' + gen.BEGIN.format(key='OwnerRef') + '\n\n' + gen.END.format(key='OwnerRef') + '\n',
+         contracts + '\n' + gen.BEGIN.format(key='OwnerRef') + '\n\n'
+         + gen.END.format(key='OwnerRef') + '\n',
          True),
     ]
     # Line endings. The generator and this harness both had to learn that CRLF is not a
@@ -243,11 +252,11 @@ def main():
     # content it claims to re-encode reports RED for its own defect. Which it did, once.
     mixed = ''.join(
         (line[:-1] + '\r\n' if (i % 2 and line.endswith('\n')) else line)
-        for i, line in enumerate(design.splitlines(keepends=True)))
-    for label, text in (('EOL  CRLF throughout', design.replace('\n', '\r\n')),
+        for i, line in enumerate(contracts.splitlines(keepends=True)))
+    for label, text in (('EOL  CRLF throughout', contracts.replace('\n', '\r\n')),
                         ('EOL  alternating CRLF/LF', mixed)):
         regenerated, _ = gen.rewrite(text.replace('\r\n', '\n'), base)
-        ok = regenerated == design
+        ok = regenerated == contracts
         if not ok:
             failures += 1
         print('  [{0}] {1:<48} expect=GREEN got={2:<5}'.format(
@@ -264,12 +273,42 @@ def main():
             'RED' if expect_red else 'GREEN', 'RED' if got_red else 'GREEN',
             problems[0][:60] + '...' if problems else ''))
 
+    # LINK cases. Moving the blocks out of the design cost one property that used to hold by
+    # construction: while the tables lived in the design, "the design states this contract" was
+    # not something anyone had to check. Now it is validate_links' job, and a new obligation
+    # nobody has watched fail is not an obligation. All four negatives below are one edit from
+    # the committed design.
+    keys_now = [m.group('key') for m in gen.BLOCK_RE.finditer(contracts)]
+    a_key = 'CoverageCell'
+    good_link = '[`{0}`](factory_os/CONTRACTS.md#{1})'.format(a_key, gen.anchor_of(a_key))
+    assert good_link in design, 'the link fixtures anchor on a link that is not in the design'
+    link_cases = [
+        ('LINK CONTROL unmodified design', design, False),
+        ('LINK a contract the design stops linking',
+         design.replace(good_link, '`{0}`'.format(a_key)), True),
+        ('LINK name and destination disagree',
+         design.replace(good_link,
+                        '[`{0}`](factory_os/CONTRACTS.md#owneref)'.format(a_key)), True),
+        ('LINK a dangling reference to no contract',
+         design + '\n[`NotAContract`](factory_os/CONTRACTS.md#notacontract)\n', True),
+    ]
+    for label, text, expect_red in link_cases:
+        problems = gen.validate_links(text, keys_now)
+        got_red = bool(problems)
+        ok = got_red == expect_red
+        if not ok:
+            failures += 1
+        print('  [{0}] {1:<48} expect={2:<5} got={3:<5} {4}'.format(
+            'OK ' if ok else 'FAIL', label,
+            'RED' if expect_red else 'GREEN', 'RED' if got_red else 'GREEN',
+            problems[0][:60] + '...' if problems else ''))
+
     print('')
     if failures:
         print('=== {0} CASE(S) DID NOT BEHAVE AS DECLARED ==='.format(failures))
         return 1
     print('=== ALL {0} CASES BEHAVED AS DECLARED - 7/7 regressions caught, controls stayed green ==='
-          .format(len(CASES) + len(doc_cases) + 2))
+          .format(len(CASES) + len(doc_cases) + len(link_cases) + 2))
     return 0
 
 

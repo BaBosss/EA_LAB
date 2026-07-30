@@ -9,7 +9,10 @@
     `attempts[]`, a lease with `pid`, and `launched_at` while the schema said the opposite.
 
     Three things run here, and the second and third are the ones that matter:
-      1. gen_design_contracts.py --check   -- the design's generated tables still match the schema
+      1. gen_design_contracts.py --check   -- _triage/factory_os/CONTRACTS.md still matches the
+                                              schema, AND the design still links every contract
+                                              in it (the tables moved out of the design; the
+                                              link check is what replaced "states it by being it")
       2. run_contract_binding_tests.py     -- the binding still CATCHES all seven regressions,
                                               re-applied as schema mutations, with three controls
                                               proving the harness is not simply always red

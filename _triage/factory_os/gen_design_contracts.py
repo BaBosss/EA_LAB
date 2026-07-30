@@ -1,6 +1,6 @@
 """
-gen_design_contracts.py - generate the design document's NORMATIVE contract tables
-from schemas.json, so the two cannot disagree.
+gen_design_contracts.py - generate the NORMATIVE contract tables from schemas.json into
+_triage/factory_os/CONTRACTS.md, so the design and the schema cannot disagree.
 
 WHY THIS EXISTS  (BACKLOG-D31)
   Every regression across three blind audits came through one seam: the normative
@@ -23,24 +23,46 @@ THE MANIFEST IS schemas.json ITSELF.
   the validator, this generator, and the design document.
 
 WHAT IS GENERATED
-  Blocks in the design delimited by
+  Blocks in CONTRACTS.md delimited by
       <!-- BEGIN GENERATED CONTRACT: <key> -->  ...  <!-- END GENERATED CONTRACT: <key> -->
   Keys:
       __STORAGE__      one row per entity: owner file, writer, canonical/derived, enforcement
+      META_<name>      a non-entity contract from x-ea-lab-meta.contracts
       <EntityName>     that entity's field table + conditional requirements
-  Prose OUTSIDE the blocks is rationale and may say anything. Prose INSIDE the blocks is
-  overwritten without mercy.
+  Each block opens with its own `### <key>` heading, which is what the design's links anchor to --
+  generated, so a heading cannot drift from the key naming it. Prose INSIDE a block is overwritten
+  without mercy.
+
+WHAT IS CHECKED IN THE DESIGN
+  Nothing is written there. It is read to confirm it still LINKS every contract, because moving the
+  tables out removed the one property that used to hold by construction: that the design states each
+  contract at all. An entity nobody references is an entity nobody reviews.
 
 USAGE
-  tools\\python312\\python.exe _triage/factory_os/gen_design_contracts.py           # rewrite in place
+  tools\\python312\\python.exe _triage/factory_os/gen_design_contracts.py           # rewrite CONTRACTS.md
   tools\\python312\\python.exe _triage/factory_os/gen_design_contracts.py --check   # exit 1 if stale
 EXIT
-  0 = design matches the schema  |  1 = drift (or a malformed/missing block)
+  0 = CONTRACTS.md matches the schema and the design links it all
+  1 = drift, a malformed/missing block, or a broken/missing design link
 """
 import json, re, sys, difflib, io, os
 
 SCHEMA_PATH = '_triage/factory_os/schemas.json'
 DESIGN_PATH = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'
+
+# The generated tables used to be injected into DESIGN_PATH. They now live in their own file and
+# the design links to them (BACKLOG-D31 follow-up, recommended independently by this seat and by
+# Codex audit 5 Q4). Two reasons, and the second is the one that matters:
+#   1. Injecting 30 blocks took the design from 829 to 1807 lines, while its own section 7.4 is
+#      about being readable without exhausting an agent's context.
+#   2. It put generated output inside a hand-written narrative, which is where both marker
+#      defects lived - a stray BEGIN hiding hand-written prose inside what reads as generated
+#      output, and a block written twice. CONTRACTS.md carries no narrative for a stray marker
+#      to capture, so the blast radius of that failure mode is now a generated file that
+#      --check rewrites wholesale.
+# DESIGN_PATH is still read, but READ-ONLY, and only to verify it links every contract. An
+# entity nobody references is an entity nobody reviews.
+CONTRACTS_PATH = '_triage/factory_os/CONTRACTS.md'
 
 BEGIN = '<!-- BEGIN GENERATED CONTRACT: {key} -->'
 END = '<!-- END GENERATED CONTRACT: {key} -->'
@@ -49,6 +71,17 @@ BLOCK_RE = re.compile(
     r'(?P<body>.*?)'
     r'<!-- END GENERATED CONTRACT: (?P=key) -->',
     re.DOTALL)
+
+# How the design references a contract. The KEY is carried in backticks and the ANCHOR in the
+# URL, and validate_coverage asserts the two agree -- a link whose visible name and destination
+# disagree is the same two-copies defect this tool exists to remove, one line long.
+LINK_RE = re.compile(
+    r'\[`(?P<key>[A-Za-z0-9_]+)`\]\(factory_os/CONTRACTS\.md#(?P<anchor>[A-Za-z0-9_-]+)\)')
+
+
+def anchor_of(key):
+    """The markdown anchor for the generated `### <key>` heading."""
+    return key.lower()
 
 MAX_NEST_DEPTH = 3
 
@@ -279,7 +312,9 @@ def gen_entity(name, defn):
     writer = defn.get('x-writer')
     enforced = defn.get('x-enforced-by')
 
-    lines = [WARNING, '']
+    # The heading is INSIDE the generated block on purpose: it is what the design's link anchors
+    # to, so a hand-written heading here could drift from the key the link names.
+    lines = ['### {0}'.format(name), '', WARNING, '']
     head = ['**`{0}`**'.format(name)]
     if derived:
         head.append('**DERIVED** — {0}'.format(' '.join(str(derived).split())))
@@ -320,7 +355,7 @@ def gen_entity(name, defn):
 
 def gen_storage(schema):
     defs = schema['$defs']
-    lines = [WARNING, '',
+    lines = ['### __STORAGE__', '', WARNING, '',
              '| entity | canonical storage | writer | enforced by |',
              '|---|---|---|---|']
     for name in defs:
@@ -354,7 +389,7 @@ def gen_meta(schema, key):
     body = contracts.get(key)
     if body is None:
         raise KeyError('x-ea-lab-meta.contracts.{0} is not in the schema'.format(key))
-    lines = [WARNING, '']
+    lines = ['### META_{0}'.format(key), '', WARNING, '']
     # `note` is normative and IS rendered; `_why` is history and is not. The distinction is
     # load-bearing: replacing section 8.4's prose with a generated table silently dropped
     # "every case is judged on all seven points of 5.5" until this field existed to hold it.
@@ -403,8 +438,42 @@ def rewrite(text, schema):
     return BLOCK_RE.sub(repl, text), keys
 
 
+def validate_links(design, keys):
+    """Return problems with how the DESIGN references the contracts file.
+
+    This replaces what the old in-document layout gave for free. When the blocks lived in the
+    design, "the design states this contract" was true by construction. Now that they live in
+    CONTRACTS.md, the design could quietly stop mentioning an entity and nothing would notice --
+    and an entity nobody references is an entity nobody reviews, which is the condition all seven
+    regressions were found in. So the link is the replacement obligation, and it is checked.
+    """
+    problems = []
+    linked = {}
+    for m in LINK_RE.finditer(design):
+        key, anchor = m.group('key'), m.group('anchor')
+        linked.setdefault(key, []).append(anchor)
+        if anchor != anchor_of(key):
+            problems.append(
+                'the design links `{0}` but points at #{1} (expected #{2}) — a link whose name '
+                'and destination disagree is the two-copies defect, one line long.'
+                .format(key, anchor, anchor_of(key)))
+
+    for key in keys:
+        if key not in linked:
+            problems.append(
+                'CONTRACTS.md defines `{0}` but the design never links it. An entity nobody '
+                'references is an entity nobody reviews; add a link at the point the design '
+                'discusses it.'.format(key))
+    for key in sorted(linked):
+        if key not in keys:
+            problems.append(
+                'the design links `{0}`, which CONTRACTS.md does not define — a dangling '
+                'contract reference reads as coverage.'.format(key))
+    return problems
+
+
 def validate_coverage(text, schema, keys):
-    """Return a list of problems. Empty list = the design covers the schema.
+    """Return a list of problems. Empty list = the contracts file covers the schema.
 
     A FUNCTION, not inline code in main(), because the negative-fixture harness has to be
     able to call the real thing. AUDIT-4 P1 caught the previous control asserting
@@ -427,7 +496,7 @@ def validate_coverage(text, schema, keys):
 
     if not keys:
         problems.append(
-            'the design contains no generated contract blocks at all — that is a design back '
+            'CONTRACTS.md contains no generated contract blocks at all — that is a design back '
             'on hand-maintained contracts, which is the defect BACKLOG-D31 exists to remove.')
 
     dupes = sorted({k for k in keys if keys.count(k) > 1})
@@ -438,8 +507,8 @@ def validate_coverage(text, schema, keys):
     missing = [name for name in schema['$defs'] if name not in keys]
     if missing:
         problems.append(
-            '{0} entity/entities in schemas.json have no generated block in the design: {1}. '
-            'An entity the design never states cannot be caught contradicting the schema, '
+            '{0} entity/entities in schemas.json have no generated block in CONTRACTS.md: {1}. '
+            'An entity the contracts file never states cannot be caught contradicting the schema, '
             'which is not the same as agreeing with it.'.format(len(missing), ', '.join(missing)))
 
     meta = [k for k in ((schema.get('x-ea-lab-meta') or {}).get('contracts') or {})
@@ -447,7 +516,7 @@ def validate_coverage(text, schema, keys):
     missing_meta = [k for k in meta if 'META_' + k not in keys]
     if missing_meta:
         problems.append('non-entity contract(s) declared in x-ea-lab-meta.contracts with no '
-                        'block in the design: {0}'.format(', '.join(missing_meta)))
+                        'block in CONTRACTS.md: {0}'.format(', '.join(missing_meta)))
     return problems
 
 
@@ -458,8 +527,12 @@ def main():
 
     with io.open(SCHEMA_PATH, encoding='utf-8') as fh:
         schema = json.load(fh)
-    with io.open(DESIGN_PATH, encoding='utf-8', newline='') as fh:
+    with io.open(CONTRACTS_PATH, encoding='utf-8', newline='') as fh:
         original = fh.read()
+    # READ-ONLY. The design is no longer written by this tool; it is read solely to confirm it
+    # still links every contract.
+    with io.open(DESIGN_PATH, encoding='utf-8', newline='') as fh:
+        design = fh.read().replace('\r\n', '\n')
 
     # Line endings are NOT part of the contract. This repo's working tree is CRLF (core.autocrlf)
     # while the blobs are LF, so a file straight from `git checkout` is CRLF and anything this
@@ -481,20 +554,22 @@ def main():
         print('[FAIL] {0}'.format(exc.args[0]))
         return 1
 
-    problems = validate_coverage(original, schema, keys)
+    problems = validate_coverage(original, schema, keys) + validate_links(design, keys)
     if problems:
         for p in problems:
             print('[FAIL] {0}'.format(p))
         return 1
 
     if new == norm(original):
-        print('[OK] {0} blocks in {1} match {2}'.format(len(keys), DESIGN_PATH, SCHEMA_PATH))
+        print('[OK] {0} blocks in {1} match {2}, and the design links all {0}'
+              .format(len(keys), CONTRACTS_PATH, SCHEMA_PATH))
         return 0
 
     if check:
         diff = list(difflib.unified_diff(
             norm(original).splitlines(), new.splitlines(),
-            'design (committed)', 'design (generated from schema)', lineterm='', n=1))
+            'CONTRACTS.md (committed)', 'CONTRACTS.md (generated from schema)',
+            lineterm='', n=1))
         if not diff:
             # Belt and braces: if the texts differ but the line-diff is empty, the difference
             # is invisible (whitespace, encoding). Say so instead of printing nothing.
@@ -502,7 +577,7 @@ def main():
                   'line diff — invisible whitespace or encoding, not a contract change. '
                   'Regenerate; do not hunt for a semantic difference that is not there.')
             return 1
-        print('[FAIL] the design\'s generated contract tables no longer match the schema.')
+        print('[FAIL] CONTRACTS.md no longer matches the schema.')
         print('       This is BACKLOG-D31\'s whole purpose: the design and the schema stated')
         print('       different contracts seven times across three audits. Regenerate with:')
         print('         tools\\python312\\python.exe {0}'.format(__file__.replace('\\', '/')))
@@ -513,9 +588,10 @@ def main():
             print('  ... {0} more diff lines'.format(len(diff) - 120))
         return 1
 
-    with io.open(DESIGN_PATH, 'w', encoding='utf-8', newline='') as fh:
+    with io.open(CONTRACTS_PATH, 'w', encoding='utf-8', newline='') as fh:
         fh.write(new.replace('\n', eol) if eol != '\n' else new)
-    print('[WROTE] {0} — {1} generated blocks: {2}'.format(DESIGN_PATH, len(keys), ', '.join(keys)))
+    print('[WROTE] {0} — {1} generated blocks: {2}'.format(CONTRACTS_PATH, len(keys),
+                                                           ', '.join(keys)))
     return 0
 
 

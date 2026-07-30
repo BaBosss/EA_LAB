@@ -2,6 +2,7 @@
 .githooks/commit-msg
 .githooks/fast_tier_pathspec
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
+_triage/factory_os/CONTRACTS.md
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/run_contract_binding_tests.py
 _triage/factory_os/run_snapshot_validator_tests.py

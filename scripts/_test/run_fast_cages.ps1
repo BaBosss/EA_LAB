@@ -222,6 +222,10 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_validator_tests.py',
                                           '_triage/factory_os/schemas.json',
+                                          # The generated tables moved out of the design into
+                                          # CONTRACTS.md; the design is still an input because
+                                          # --check refuses when it stops linking a contract.
+                                          '_triage/factory_os/CONTRACTS.md',
                                           '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
