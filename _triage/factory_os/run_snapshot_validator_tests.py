@@ -586,6 +586,38 @@ def check_no_test_only_identifiers():
     return problems
 
 
+def check_sources_parse_without_warnings():
+    """Every .py here must compile with no SyntaxWarning.
+
+    Found 2026-07-30 the accidental way: a docstring gained a Windows path, `\\d` is an invalid
+    escape sequence in a non-raw string, and python emitted a SyntaxWarning on stderr. Running the
+    scripts by hand stayed exit 0 -- warnings do not fail -- but the PowerShell wrapper redirects
+    stderr, so the pre-commit cage went red and the commit was refused. That is the right outcome
+    reached by the wrong mechanism: the tier's strictness there is a side effect of `2>&1`, not a
+    decision, and invalid escapes are scheduled to become hard SyntaxErrors in a future python.
+    Checked deliberately here so it does not depend on how the caller happens to capture output.
+    """
+    import warnings
+    problems = []
+    here = os.path.dirname(os.path.abspath(__file__))
+    for name in sorted(os.listdir(here)):
+        if not name.endswith('.py'):
+            continue
+        path = os.path.join(here, name)
+        with io.open(path, encoding='utf-8') as fh:
+            src = fh.read()
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter('always')
+            try:
+                ast.parse(src, filename=name)
+            except SyntaxError as exc:
+                problems.append('%s does not parse: %s' % (name, exc))
+                continue
+        for w in caught:
+            problems.append('%s: %s: %s' % (name, w.category.__name__, w.message))
+    return problems
+
+
 def check_compat_fields_survive():
     """ORDER-601 acceptance: the boundary must PRESERVE the real v4 fields, not drop them."""
     out = SV.build_snapshot(BASE_COMPAT, NC)
@@ -801,6 +833,8 @@ def main(argv):
     print('')
     for label, fn in (('reason codes match the closed schema enum', check_codes_match_the_schema),
                       ('no test-only identifier reaches the logic', check_no_test_only_identifiers),
+                      ('every .py here compiles with no SyntaxWarning',
+                       check_sources_parse_without_warnings),
                       ('v4 compatibility fields survive input -> output', check_compat_fields_survive),
                       ('build_snapshot output verifies as its own input', check_roundtrip)):
         problems = fn()

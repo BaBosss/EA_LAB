@@ -19,6 +19,18 @@ WHY THIS EXISTS
   wrote it. Recomputation at the trust boundary is the only defence, which is why readers
   must obtain the document through load_verified() and never through json.load().
 
+  WHAT verify_snapshot PROVES, EXACTLY: that the stored verdict is the verdict this document's
+  own evidence produces. It proves INTERNAL CONSISTENCY, not authenticity. Codex audit 6 made the
+  distinction concrete by pointing every source row at a nonexistent drive path with
+  `mtime: 2099-01-01`, `age_hours: 0`, `read_ok: true` -- accepted, because every fact being
+  recomputed was itself supplied by the document. `read_ok`, `age_hours`, `path`, `sha256`,
+  `mtime` and the reconciliation counts are all builder CLAIMS that this file takes at face value.
+  Closing that means deriving them from the real file at build time and re-hashing (or verifying a
+  content-addressed evidence manifest) at read time; that is S4 work, alongside wiring the readers.
+  Until it exists, do not describe a verified snapshot as "honest" or "trustworthy" -- it is
+  self-consistent, which is strictly weaker and is still worth having, because it closes the
+  typed-verdict attack it was written for.
+
 THREE RULES THIS FILE IS WRITTEN AGAINST, each one paid for elsewhere in this repo
   1. "cannot read it" must never collapse into "nothing to report". A source that cannot be
      read is MANDATORY_SOURCE_UNREADABLE, a source that is not there is

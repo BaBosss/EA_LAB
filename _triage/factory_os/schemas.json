@@ -657,7 +657,7 @@
     "SnapshotVerdict": {
       "type": "object",
       "x-owner-file": "the `verdict` property of portfolio/control_room_snapshot.json - written ONLY by snapshot_validator",
-      "x-enforced-by": "snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED",
+      "x-enforced-by": "snapshot_validator.verify_snapshot: recomputes reconciliation_clear from the persisted evidence and refuses a document whose stored verdict does not match. Proves INTERNAL CONSISTENCY, not authenticity: read_ok/age_hours/path/sha256/mtime and the reconciliation counts are builder claims taken at face value (Codex audit 6 accepted a document whose sources all pointed at a nonexistent drive with mtime 2099). Deriving them from the real files and re-hashing on read is S4. NOT on every READ - Codex audit 6 measured that no reader calls load_verified(); wiring readers is S4, so the honest status today is BUILT_NOT_WIRED",
       "description": "ORDER-601. JSON Schema can prove this boolean is well-typed; it cannot prove who wrote it. Audit-5's surviving attack was a hand-authored output with sources=[] and reconciliation_clear=true, which is structurally valid. The defence is not the schema, it is that every reader must obtain the document through the verifier that recomputes this from `meta.reconciliation` and the source list. `reasons` is a CLOSED enum so a false verdict cannot be explained in free text nobody parses.",
       "required": ["reconciliation_clear", "reasons"],
       "unevaluatedProperties": false,
