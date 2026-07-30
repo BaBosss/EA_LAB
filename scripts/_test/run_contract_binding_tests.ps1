@@ -58,8 +58,14 @@
     number is stated here rather than discovered by the next session.
     MEASURED 2026-07-30, medians of 3 runs each (never one number -- the handoff that carried "14.0s"
     forward was quoting a lucky single run):
-      this suite   0.6s -> 2.9s        (+2.3s: the five S2a checks, in ONE interpreter)
-      fast tier   15.4s -> 16.5s       (16.7 / 16.5 / 16.5) against a 15.0s ADVISORY budget
+      this suite   0.6s -> 2.8s        (+2.2s: the five S2a checks, in ONE interpreter)
+      fast tier   15.4s -> 16.5s       (16.5 / 16.5 / 16.5) against a 15.0s ADVISORY budget
+    ...but measured AGAIN from inside the real pre-commit hook, the same tier runs 15.1-15.2s with
+    this suite at 1.8s, because git's index and objects are already warm there. BOTH numbers are
+    real and they answer different questions: 16.5s is what a cold standalone run costs, 15.1s is
+    what a committer actually waits. Quote the in-situ figure when deciding whether the tier hurts,
+    and the standalone figure when deciding whether there is headroom to spend -- and re-measure
+    rather than citing either, which is the mistake that put "14.0s" in two handoffs.
     The tier was ALREADY over budget at 15.4s before this order touched it, so S2a is not the cause
     of the breach -- but it is 1.5s of it now, and that must not be left implicit.
     Everything cheaper was done first: five separate script entries measured 4.57s, one interpreter

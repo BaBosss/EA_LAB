@@ -103,9 +103,38 @@
 
 ---
 
-## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-600 — [factory/governance] S2a: Coverage ownership proposal + migration table — `DONE` (awaiting owner sign-off + an independent re-check) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
-**Provenance:** drafted `66346985`, amended to rev 2 against `_triage/factory_os/CODEX_AUDIT5_2026-07-30.md` (verdict GO WITH AMENDMENTS) in `2d166a34`. Held off the board 2026-07-30 11:50→17:40 because `S-2026-07-30-SENSFAN` owned this file (ledger rule 4). **Untouched — no work has been done on this order.** Number from lane `S-2026-07-30-BOARDPASTE`, reserved block 600-609.
+> ### 🔻 STATUS 2026-07-30 (lane `S-2026-07-30-S2AD1D2`, commits `03e98667` + `34acbd54`) — **all four deliverables exist; all nine machine criteria hold**
+>
+> **`DONE`, not `REVIEWED`,** for the same reason ORDER-601 is: the work, the amendments and the judgement all came from one seat. An independent re-check is owed before this can go `REVIEWED`, and a Codex audit of this order is queued for one pass at the end of the session (user directive).
+>
+> | deliverable | path | state |
+> |---|---|---|
+> | **D1** migration table | `_triage/factory_os/s2a_migration.jsonl` | **27 rows**, one per schema entity · 12 `TRANSFER` / 15 `KEEP` |
+> | **D2** the document its owner reads | `_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md` | generated from D1 (334 lines) |
+> | **D3** the checker | `_triage/factory_os/check_s2a_migration.py` | 9 criteria green · 18-assertion `--self-test` |
+> | + generator | `_triage/factory_os/gen_s2a_migration.py` | `owner_ref` **recomputed from git**, never typed |
+> | + mutation cage | `_triage/factory_os/run_s2a_migration_tests.py` | **24 mutations of the real D1**, each reddens by name, + drift guard proven both ways |
+> | + tier entry | `_triage/factory_os/run_s2a_gate.py` | all five checks in ONE interpreter, wired into `run_contract_binding_tests.ps1` |
+>
+> **👤 THE ONE THING THAT NEEDS THE USER:** the **Coverage edge** row — approve `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl` as `TRANSFER`, or refuse it. Everything else can wait; **S2 is blocked on this row alone.** Read §"The Coverage edge, in one read" in D2. `signoff_state` is the owner's act **in their own commit** — no row says `APPROVED`, and the checker refuses that value by design (so the criterion must be relaxed in the same commit that records a real approval; deliberately not pre-built).
+>
+> **Two measurements that decide that row:** (1) **nothing machine-reads §2** — the only parser of `## 2. COVERAGE MATRIX` in the whole repo is this order's own checker; `scripts/check_state.ps1:124` opens the file solely to assert its owner-banner line is present ⇒ **the transfer breaks no automated reader**, the risk is human, and the banner must say "generated" in the same commit. (2) **leaving it already costs**: design §1.2 measured §2 at **7 EA rows last really updated 2026-06-27** while `portfolio/DEPLOYMENTS.csv` carries **64** rows, never reconciled.
+>
+> **The acceptance needed amending TWICE MORE (rev 5), both before any data was written** — same shape as the rev-4 defect, a rule unobeyable for a measured subset: (a) D1's declared path resolved to a **repo-root `factory_os/`** that does not exist and where no sibling artifact lives (D2's own path in the same list carries the `_triage/` prefix) — corrected, **nothing created at the root**; (b) a **genuinely unowned** fact had no legal `current_owner` — measured from the schema `$ref` graph: **9 embedded · 14 with a real artifact · 4 with neither a file nor a parent**, and design §1.3 #2 calls Test Universe *"genuinely unowned"* outright, so the only options were a false claim, a false parent, or failing set equality. `UNOWNED` is now legal **and guarded**: `unowned_evidence` must name a tracked file and **the checker opens it and requires the entity to be mentioned there**; `UNOWNED`+`KEEP` requires `derived`, so a canonical fact cannot be signed as permanently unowned.
+>
+> **A number carried in the handoff was wrong and the graph caught it:** the handoff said **12** entities are EMBEDDED and listed `WorkReceipt`, which owns `ops/receipts/`. Every `EMBEDDED:<Parent>` claim is now **verified against the `$ref` graph** rather than believed. The graph says **9**.
+>
+> **1 row is `REFUSED` by me, not proposed:** `WorkReceipt` → `ops/receipts/` needs an **`AGENTS.md` §2 permission change the user must ratify first** (design §1.3 #9), so proposing it would mean proposing a writer the governance file forbids. A table where all twelve `TRANSFER`s are uniformly `PROPOSED` is indistinguishable from a table nobody thought about.
+>
+> <sub>🔧 **Three defects of my own, each found by measuring rather than reviewing.** (1) **A drift guard I shipped would have gone RED on every future commit**: `--check` regenerated against HEAD while D1 pins `commit_oid` at generation time, so the next commit reported `STALE` — it passed its own pre-commit run only because the commit object did not exist yet. Two questions had been conflated: *is the content still what the generator produces* (real drift, enforce) vs *is the pin at HEAD* (must not be required — a pin is a historical claim, and C4 already asks the right question of it). Fixed, and **because loosening a guard is how a guard becomes inert, both directions are now asserted** as PART 2 of the mutation suite. (2) **My own mutation expectation was wrong before the code was**: the unresolvable-blob case *was* caught, by the mismatch branch, so a lazier assertion would have hidden that the unresolvable branch was never exercised — split into two cases. (3) **The mutation suite took 29.8s**, double the entire pre-commit tier's budget, from re-paying `git ls-files` and a schema `$ref` parse **25 times in one run** — ORDER-270's spawn pathology at small scale. Memoized on content-addressed keys → **2.8s**.</sub>
+>
+> <sub>⚠️ **BUDGET, stated rather than left to be discovered:** the fast tier went **15.4s → 16.5s** standalone (medians of 3; **15.1–15.2s measured inside the real hook**, where git is warm) against a **15.0s advisory** budget. The tier was **already over** before this order, but S2a is 1.5s of it now. Everything cheaper was done first: 4.57s as five script entries → 3.45s in one interpreter → 2.8s memoized. The remaining 11× is only available by dropping the 24-mutation half, which is the one half proving the checker can still fail against the file it just passed — not a trade worth making. **Real fix stays `BACKLOG-D32`** (per-path suite selection), and **all eight S2a paths are now declared in `$SUITE_GUARDS` and selected by the regenerated pathspec** (verified by `run_guard_trigger_tests.ps1`) — a cage whose own inputs sit outside the trigger only runs when something else happens to be staged.</sub>
+>
+> <sub>📌 **Observation, not fixed here:** the schema's `x-owner-file` for `ControlRoomSnapshotV5` says *"(EXISTING, v4 at HEAD)"* but the file at HEAD carries `"version": 3`, and design §1.1 also says v3. Routed to **S4**, which owns the v4→v5 migration — this order writes a proposal about *ownership*, and a schema version is not an ownership fact.</sub>
+
+**Provenance:** drafted `66346985`, amended to rev 2 against `_triage/factory_os/CODEX_AUDIT5_2026-07-30.md` (verdict GO WITH AMENDMENTS) in `2d166a34`. Held off the board 2026-07-30 11:50→17:40 because `S-2026-07-30-SENSFAN` owned this file (ledger rule 4). ~~**Untouched — no work has been done on this order.**~~ **Superseded: rev 4 + D3 in `b56be960`, rev 5 + D1/D2 in `03e98667`, guard fix in `34acbd54`.** Number from lane `S-2026-07-30-BOARDPASTE`, reserved block 600-609.
 
 ⚠️ **`bars:` / `flat-lot probe:` do not apply** — this is a governance/schema order, not a test or optimize order, so the ORDER-124+ template lines are deliberately absent rather than filled with N-A noise.
 
