@@ -7,7 +7,7 @@
 
 ## 1. Where to start
 
-**Run these six first. If any is red, stop and read it — do not build on top of it.**
+**Run these seven first. If any is red, stop and read it — do not build on top of it.**
 
 ```
 tools\python312\python.exe _triage\factory_os\gen_design_contracts.py --check
@@ -16,12 +16,27 @@ tools\python312\python.exe _triage\factory_os\run_schema_fixtures.py
 tools\python312\python.exe _triage\factory_os\run_snapshot_validator_tests.py
 tools\python312\python.exe _triage\factory_os\run_snapshot_validator_tests.py --prove-harness
 tools\python312\python.exe _triage\factory_os\check_schema_structure.py
+tools\python312\python.exe _triage\factory_os\check_s2a_migration.py --self-test
 ```
 
 Expected: 30 blocks + all 30 design links · 25 binding cases (7/7 regressions) · 35 ajv cases · 35
-fixtures + 13 mutations · the harness self-proof · STRUCTURE OK.
+fixtures + 13 mutations · the harness self-proof · STRUCTURE OK · 10 S2a criteria self-tested.
 
-**The next task is `ORDER-600` (S2a), which is on the board and completely untouched.** Details in §4.
+⚠️ **`check_s2a_migration.py` with NO argument exits 2 on purpose** — D1 does not exist yet, and "no
+data" must not share an exit code with "data that passes". Only `--self-test` is expected green.
+
+**The next task is `ORDER-600` D1 + D2 — the judgement half.** The spec is amended and the checker is
+built; see §4. **Start by running `--self-test`, then the no-argument mode: between them they tell you
+the exact shape D1 owes and what will refuse it.**
+
+### The one question worth carrying into the next session
+
+Three separate times today the same defect shape appeared, twice in my own work and once found by
+Codex: **something recomputes one half of what it checks and trusts the other half.**
+`verify_snapshot` recomputed the verdict and trusted the evidence. `_int` type-checked counts inside a
+predicate and left the range unchecked. `check_s2a_migration.py` C4 re-hashed every blob from git while
+C8 never opened `MASTER_BACKLOG.md`. **When you add a check here, ask what it trusts** — that question
+found all three.
 
 ## 2. What was finished
 
@@ -93,9 +108,29 @@ day and declared the board, so the collision guard was warning about a lane that
 >   is absent, and is deliberately **not** in the fast tier for that reason — wire it with D1, inside
 >   `run_contract_binding_tests.ps1`.
 >
+> - **`8a5dac5f` — C8 now RECOMPUTES section 2** instead of trusting D1's numbers (7 rows, 8 LIVE
+>   cells, cross-checked against the order's own stated measurement). It also **dropped** a check I had
+>   written that "the two totals must differ" — that is a claim about today's data, not an invariant,
+>   and would fail a correct file the day every EA has one cell. The real invariants replaced it: row
+>   count must match the recompute, `cells_emitted` may exceed the LIVE count but never be smaller, and
+>   the mapping must carry each row's LIVE cells (which is what makes copying one total into both
+>   fields impossible — ST_EA03 forces a row to hold two). The C8 self-test crashed on its first run
+>   (a cell may be a bare string or an object; one loop assumed dict) before catching the attack.
+>
 > **What remains is D1 and D2, and it is the judgement half:** for each of the 27 entities, where the
 > fact lives *today* (a real file at HEAD, or nowhere), and what concretely breaks if it moves or does
 > not. Start by running `--self-test` and then `check_s2a_migration.py` to see the exact shape D1 owes.
+>
+> **Concrete inputs already measured, so D1 does not have to rediscover them:**
+> - **4** entities have an `x-owner-file` that exists at HEAD (`EvidenceRef`,
+>   `DeploymentAttestationEvent`, `IdeaRef`, `ControlRoomSnapshotV5`) — these are the rows that can
+>   carry a fully recomputed `owner_ref`.
+> - **11** point at paths that do not exist (`factory/**`, `ops/findings.jsonl`,
+>   `build/safe_projection.json`) — `proposed_owner` territory, already declared in `PLANNED_PATHS`.
+> - **12** are `EMBEDDED` in a parent and own no file — must be `KEEP` with a reason, exempt from
+>   pinning.
+> - Section 2 is a markdown table at `MASTER_BACKLOG.md` line ~29 with **7** EA rows; `parse_section2()`
+>   in the checker already extracts them and their LIVE cells, so reuse it rather than re-parsing.
 
 On the board, `OPEN`, ~~no work done~~ **spec amended + checker built; D1/D2 outstanding**. Full spec in the board row and in
 `_triage/factory_os/ORDERS_S2a_S3a_DRAFT.md`. In one sentence: `MASTER_BACKLOG.md` §2 owns the coverage
