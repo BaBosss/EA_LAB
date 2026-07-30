@@ -284,6 +284,10 @@ $SUITE_GUARDS = @{
                                           # matches it -- otherwise the store and its projection
                                           # drift apart between commits and the new banner becomes
                                           # a false statement.
+                                          # ORDER-611 (S3): the real ajv fixtures, wired now that
+                                          # per-path selection exists. schemas.json is already
+                                          # declared above; this is the suite that reads it.
+                                          '_triage/factory_os/run_schema_fixtures.py',
                                           '_triage/factory_os/gen_coverage.py',
                                           '_triage/factory_os/check_coverage_transfer.py',
                                           '_triage/factory_os/run_coverage_transfer_tests.py',

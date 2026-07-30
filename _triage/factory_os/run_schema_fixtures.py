@@ -18,19 +18,26 @@ WHY THIS EXISTS
   do not call a finding fixed until a negative fixture for that specific defect fails
   before the fix and passes after.
 
-WHY THIS IS STILL NOT IN THE PRE-COMMIT TIER, and what changed 2026-07-30
+HOW IT GOT INTO THE PRE-COMMIT TIER -- ORDER-611, 2026-07-31
   It used to be excluded because it cost 11.5s -- one ajv process per case, 35 spawns. Codex audit 6
-  (MAJOR 7) pointed out what that meant: the 35 cases everyone quotes are enforced by nothing
-  automatic, so a schema edit can trigger the fast tier, run the computation suite with
+  (MAJOR 7) pointed out what that meant: the 35 cases everyone quotes were enforced by nothing
+  automatic, so a schema edit could trigger the fast tier, run the computation suite with
   NO_SCHEMA_CHECK, and never reach the authoritative closed-object and nonnegative checks.
-  Batching all cases into ONE ajv process took it to **1.8s, measured**.
+  Batching all cases into ONE ajv process took it to 1.8s, measured.
 
-  It is STILL not wired, and the reason is now different and worth stating plainly: the fast tier
-  measures 14.1-15.2s against a 15.0s ADVISORY budget, so there is no room for 1.8s. The blocker
-  moved from "this suite is too slow" to "the tier runs all 12 suites whenever any guarded path is
-  staged". The fix is per-path suite selection driven by $SUITE_GUARDS in run_fast_cages.ps1 -- a
-  schema edit should not pay 5.8s of optimize-guard cases. Until that exists, this suite is
-  manual, and that sentence is the honest status rather than a cost excuse.
+  It then stayed unwired for a different reason, stated honestly at the time: the tier ran all 12
+  suites whenever ANY guarded path was staged, so 1.8s came out of a budget already at 15.2s.
+  `BACKLOG-D32` removed that reason -- per-path selection means a schema edit now pays only the
+  suites that guard schemas. So it is wired. MEASURED 2026-07-31 with ORDER-611's 54 extra cases:
+  2.2s standalone, three batched ajv processes (root cases, per-entity isolation, harness probes).
+
+ORDER-611: what "every entity" means here
+  S3's acceptance says every entity must reject at least one crafted bad instance. Measured before
+  the order was written: 15 of 27 entities had NO negative and only 5 had ANY positive -- including
+  `OwnerRef`, the pin primitive every other entity references. The per-entity half runs against an
+  ISOLATION HARNESS rather than the real root, because the real root is a 19-branch `oneOf` where
+  one malformed instance yields 20 errors from branches it has nothing to do with. See
+  build_isolation_schema for the measurement that killed the first, pattern-matching design.
 
 REQUIRES  ajv-cli  (npm install -g ajv-cli)
 USAGE     python _triage/factory_os/run_schema_fixtures.py
@@ -50,10 +57,14 @@ HYP = {"entity": "Hypothesis", "hypothesis_id": "B14-H01", "boss_family": 14, "r
        "preregistration_ref": OWNER}
 
 
-def case(name, guards, expect, instance, says=None):
-    """`says`: error specs that must each match at least one ajv error. See why_says below."""
+def case(name, guards, expect, instance, says=None, covers=None):
+    """`says`: error specs that must each match at least one ajv error. See why_says below.
+
+    `covers` is carried for symmetry with ENTITY_CASES; the per-entity criterion is measured on
+    those, against the isolation harness, not on this list.
+    """
     return {"name": name, "guards": guards, "expect": expect, "instance": instance,
-            "says": says or []}
+            "says": says or [], "covers": covers or (instance or {}).get("entity")}
 
 
 # WHY `says` HAD TO EXIST (ORDER-601 part 2, measured 2026-07-30)
@@ -79,18 +90,27 @@ def ajv_errors(out):
         return None
 
 
+def _err_matches(err, spec):
+    params = err.get('params') or {}
+    for k, v in spec.items():
+        if k == 'schemaPath_startswith':
+            if not str(err.get('schemaPath') or '').startswith(v):
+                return False
+        elif k in ('keyword', 'instancePath'):
+            if err.get(k) != v:
+                return False
+        elif params.get(k) != v:
+            return False
+    return True
+
+
 def unmet_says(out, says):
     errors = ajv_errors(out)
     if errors is None:
         return ['ajv printed no parsable error array, so no error could be asserted against']
     unmet = []
     for spec in says:
-        for err in errors:
-            params = err.get('params') or {}
-            if all((err.get(k) == v if k in ('keyword', 'instancePath')
-                    else params.get(k) == v) for k, v in spec.items()):
-                break
-        else:
+        if not any(_err_matches(err, spec) for err in errors):
             unmet.append('no ajv error matched %s' % json.dumps(spec, sort_keys=True))
     return unmet
 
@@ -368,6 +388,272 @@ CASES += [
                 "unevaluatedProperty": "bogus"}]),
 ]
 
+# =======================================================================================
+# ORDER-611 -- S3's first acceptance clause: EVERY entity rejects a crafted bad instance.
+#
+# MEASURED before writing any of this (2026-07-31): 35 cases against 27 `$defs` entities.
+# 15 entities had NO negative at all and only 5 had ANY positive. `OwnerRef` -- the pin
+# primitive every other entity references -- had never been validated in either direction.
+#
+# These cases run against the ISOLATION HARNESS (build_isolation_schema), not against the
+# real root. The real root is a `oneOf` over 19 branches, so one malformed instance yields
+# 20 errors and ajv's paths are relative to whichever branch produced them -- attribution by
+# pattern-match does not survive contact with that. Validating each instance against its own
+# `$def` makes attribution structural: only one contract is in play.
+#
+# Every case is a MINIMAL PAIR: a positive that validates, and a negative one delta away.
+# A negative with no positive proves nothing -- the instance may be failing for a reason
+# that has nothing to do with the rule under test.
+#
+# `instancePath` in a `says` is relative to the envelope, so it starts with `/instance`.
+# =======================================================================================
+
+ENTITY_CASES = []
+
+D40 = "d" * 40
+H64 = "e" * 64
+
+MODULE_OK = {"token": "LAB_CAP_STACK", "module_version": "1", "stability": "CERTIFIABLE"}
+METRIC_OK = {"window": "MAIN", "pf": 1.31, "trades": 84, "dd_pct": 7.4,
+             "run_id": "RUN-20260731-001", "lane": "MT5-A", "data_fingerprint": "df1", "model": 1}
+EXECKEY_OK = {"expert": "Boss_14", "symbol": "XAUUSD", "tf": "H1", "from_date": "2023.01.01",
+              "to_date": "2025.12.31", "model": 1, "deposit": 10000.0, "currency": "USD",
+              "leverage": 100, "set_hash": H64, "ini_hash": H64, "ex5_hash": H64,
+              "effective_config_hash": H64, "data_fingerprint": "df1", "lane": "MT5-A"}
+ATTEMPT_OK = {"attempt": 1, "transition": "QUEUED", "at": "2026-07-31T00:00:00Z"}
+
+
+def ecase(entity, name, guards, expect, instance, says=None):
+    ENTITY_CASES.append({
+        "name": "%s-%s" % (entity.lower(), name), "guards": guards, "expect": expect,
+        "covers": entity, "says": says or [],
+        "instance": {"case_entity": entity, "instance": instance},
+    })
+
+
+def epair(entity, positive, negative, guards, says, name='core'):
+    ecase(entity, name + '-valid',
+          'ORDER-611: the positive the negative below is one delta from', 'pass', positive)
+    ecase(entity, name + '-negative', guards, 'fail', negative,
+          says=[dict(s, instancePath='/instance' + s.get('instancePath', ''))
+                for s in says])
+
+
+PAYLOAD_OK = {"hypothesis_revision": "B14-H01-r1", "module_set": [MODULE_OK],
+              "logical_symbol": "XAUUSD", "tf": "H1", "parameters": {"GridStepATR": 1.5},
+              "profiles": {"instrument": H64, "exit": H64, "sizing": H64, "safety": H64,
+                           "execution": H64},
+              "evidence": [METRIC_OK], "ex5_sha256": H64, "source_sha256": H64,
+              "allowlist_sha256": H64, "generator_version": "1.0", "effective_config_hash": H64,
+              "universe_version": "v1", "trial_count": 12, "experimental": False}
+
+SAFEPROJ_OK = {"entity": "SafeProjection", "build_id": "b1",
+               "generated_at": "2026-07-31T00:00:00Z",
+               "accounts": [{"account_masked": "***454", "sensor_state": "FRESH",
+                             "dd_pct_band": "OK"}],
+               "findings": [{"public_id": "FP-0123456789", "severity": "WARN", "state": "OPEN"}]}
+
+epair('OwnerRef', OWNER, with_(OWNER, raw_sha256="NOT-A-SHA"),
+      'ORDER-611: OwnerRef is the pin primitive EVERY other entity references, and nothing had '
+      'ever validated one in either direction. A pin whose raw_sha256 is not a hash resolves to '
+      'nothing, so a C4-style recompute has no counterpart to compare against',
+      [{'keyword': 'pattern', 'instancePath': '/raw_sha256'}])
+
+epair('EvidenceRef',
+      {"entity": "EvidenceRef", "evidence_id": "evd_sha256_" + "f" * 64, "kind": "REPORT",
+       "path": "_mt5_auto/report.htm", "commit_oid": D40, "raw_sha256": H64},
+      {"entity": "EvidenceRef", "evidence_id": "evd_md5_" + "f" * 32, "kind": "REPORT",
+       "path": "_mt5_auto/report.htm", "commit_oid": D40, "raw_sha256": H64},
+      'ORDER-611: the evidence id encodes WHICH digest was taken; a non-sha256 id would let two '
+      'different artifacts share one identity',
+      [{'keyword': 'pattern', 'instancePath': '/evidence_id'}])
+
+epair('IdeaRef',
+      {"entity": "IdeaRef", "idea_id": "IDEA-0001", "received_at": "2026-07-31T00:00:00Z",
+       "source": "telegram", "status": "NEW", "intake_ref": OWNER},
+      {"entity": "IdeaRef", "idea_id": "IDEA-0001", "received_at": "2026-07-31T00:00:00Z",
+       "source": "smoke-signal", "status": "NEW", "intake_ref": OWNER},
+      'ORDER-611: an unknown intake source means an idea cannot be traced back to a channel '
+      'anybody controls',
+      [{'keyword': 'enum', 'instancePath': '/source'}])
+
+epair('InstrumentProfile',
+      {"entity": "InstrumentProfile", "profile_id": "GOLD_BASE", "profile_version": 1,
+       "content_hash": H64, "layer": "ASSET_CLASS", "asset_class": "GOLD", "values": {},
+       "semantics_ref": OWNER},
+      {"entity": "InstrumentProfile", "profile_id": "GOLD_BASE", "profile_version": 0,
+       "content_hash": H64, "layer": "ASSET_CLASS", "asset_class": "GOLD", "values": {},
+       "semantics_ref": OWNER},
+      'ORDER-611: version 0 is not a version. A profile editable without its version moving is a '
+      'profile whose content_hash means nothing to the candidate that pinned it',
+      [{'keyword': 'minimum', 'instancePath': '/profile_version'}])
+
+epair('LogicalSymbol',
+      {"entity": "LogicalSymbol", "logical": "XAUUSD", "asset_class": "GOLD",
+       "broker_map": {"MT5-A": "XAUUSD"}, "swap_mode": "POINTS"},
+      {"entity": "LogicalSymbol", "logical": "XAUUSD", "asset_class": "GOLD",
+       "broker_map": {"MT5-A": "XAUUSD"}, "swap_mode": "ROLLOVER"},
+      'ORDER-611: swap_mode was MEASURED, not assumed -- the tester charges POINTS swap and does '
+      'NOT charge INTEREST swap (memory tester-charges-points-swap-not-interest-swap), so an '
+      'invented third mode silently means "financing unknown"',
+      [{'keyword': 'enum', 'instancePath': '/swap_mode'}])
+
+epair('ParameterBinding',
+      {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
+       "parameter": "GridStepATR", "role": "TUNABLE", "surface": "RESEARCH",
+       "definition_ref": OWNER},
+      {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
+       "parameter": "GridStepATR", "role": "TUNABLE", "surface": "SEMI_HIDDEN",
+       "definition_ref": OWNER},
+      'ORDER-611: the surface decides who is shown a parameter. A fourth, undeclared surface is a '
+      'parameter with no answer to "should the operator see this?"',
+      [{'keyword': 'enum', 'instancePath': '/surface'}])
+
+epair('TestUniverse',
+      {"entity": "TestUniverse", "universe_version": "v1", "kind": "PILOT",
+       "symbols": ["XAUUSD"], "timeframes": ["H1"], "created_commit": D40},
+      {"entity": "TestUniverse", "universe_version": "v1", "kind": "PILOT",
+       "symbols": ["XAUUSD"], "timeframes": ["M1"], "created_commit": D40},
+      'ORDER-611: M1 is not in the closed timeframe list. A universe naming a timeframe nothing '
+      'else understands produces cells no runner can execute',
+      [{'keyword': 'enum', 'instancePath': '/timeframes/0'}])
+
+RUNJOURNAL_OK = {"entity": "RunJournal", "run_id": "RUN-20260731-001", "cell_id": "c1",
+                 "execution_key": EXECKEY_OK, "attempts": [ATTEMPT_OK], "event_log_ref": OWNER}
+epair('RunJournal', RUNJOURNAL_OK, with_(RUNJOURNAL_OK, run_id="RUN-2026-07-31-1"),
+      'ORDER-611: the run id is the execution identity; a free-form id cannot be matched back to '
+      'an event or a report',
+      [{'keyword': 'pattern', 'instancePath': '/run_id'}])
+
+CAND_OK = {"entity": "CandidateManifest", "candidate_id": "CAND-0123456789ab",
+           "candidate_digest": H64, "payload": PAYLOAD_OK, "scorecard_ref": OWNER}
+epair('CandidateManifest', CAND_OK, with_(CAND_OK, candidate_id="CAND-XYZ"),
+      'ORDER-611: the candidate id carries the digest prefix, so a malformed one breaks the '
+      'recompute-on-read check S10 is built around',
+      [{'keyword': 'pattern', 'instancePath': '/candidate_id'}])
+
+COVCELL_OK = {"entity": "CoverageCell", "cell_id": "c1", "hypothesis_revision": "B14-H01-r1",
+              "logical_symbol": "XAUUSD", "tf": "H1", "universe_version": "v1",
+              "state": "UNTESTED", "metrics": [METRIC_OK], "trial_count": 0, "backlog_ref": OWNER}
+epair('CoverageCell', COVCELL_OK, with_(COVCELL_OK, tf="M1"),
+      'ORDER-611: a cell naming a timeframe outside the closed list cannot be reconciled against '
+      'the universe it claims to cover',
+      [{'keyword': 'enum', 'instancePath': '/tf'}])
+
+epair('MagicAllocation',
+      {"entity": "MagicAllocation", "magic": 992017, "scope": "GLOBAL", "status": "RESERVED",
+       "allocated_at_commit": D40},
+      {"entity": "MagicAllocation", "magic": 0, "scope": "GLOBAL", "status": "RESERVED",
+       "allocated_at_commit": D40},
+      'ORDER-611: magic 0 is the MT5 "no magic" value, so allocating it would claim every '
+      'unowned order on the account',
+      [{'keyword': 'minimum', 'instancePath': '/magic'}])
+
+epair('RunTransition',
+      {"entity": "RunTransition", "run_id": "RUN-20260731-001", "cell_id": "c1", "attempt": 1,
+       "transition": "QUEUED", "at": "2026-07-31T00:00:00Z", "event_log_ref": OWNER},
+      {"entity": "RunTransition", "run_id": "RUN-20260731-001", "cell_id": "c1", "attempt": 0,
+       "transition": "QUEUED", "at": "2026-07-31T00:00:00Z", "event_log_ref": OWNER},
+      'ORDER-611: attempts are 1-based; attempt 0 makes "resume re-runs zero completed attempts" '
+      '(S9) unanswerable',
+      [{'keyword': 'minimum', 'instancePath': '/attempt'}])
+
+SYSFIND_OK = {"entity": "SystemFinding", "finding_id": "FND-stale_binary-Boss_14",
+              "public_id": "FP-0123456789", "detector": "check_stale_binaries",
+              "detector_ref": OWNER, "class": "RUNTIME", "first_seen": "2026-07-31T00:00:00Z",
+              "last_seen": "2026-07-31T00:00:00Z", "state": "OPEN", "severity": "WARN",
+              "material_revision": 0}
+epair('SystemFinding', SYSFIND_OK, with_(SYSFIND_OK, severity="NOISY"),
+      'ORDER-611: severity drives escalation and dedupe. An undeclared severity is a finding the '
+      'notifier cannot rank, which is how an escalation gets swallowed',
+      [{'keyword': 'enum', 'instancePath': '/severity'}])
+
+DEPEV_OK = {"entity": "DeploymentAttestationEvent", "event_id": "e1", "account": "159503454",
+            "magic": 991001, "event_type": "OBSERVED", "at": "2026-07-31T00:00:00Z",
+            "actor": "automation", "deployment_ref": OWNER}
+epair('DeploymentAttestationEvent', DEPEV_OK, with_(DEPEV_OK, actor="cron"),
+      'ORDER-611: the actor decides whether a human authorization is required. An actor outside '
+      'the closed list escapes that conditional entirely',
+      [{'keyword': 'enum', 'instancePath': '/actor'}])
+
+# ---- the eight entities that are not routable at the root -----------------------------
+# The isolation harness reaches them DIRECTLY, so they need no parent instance and no label to
+# be believed: the contract under evaluation is the one named.
+
+epair('ModuleUse', MODULE_OK, with_(MODULE_OK, token="STACK"),
+      'ORDER-611: the LAB_CAP_ prefix is what distinguishes a capability token from a free '
+      'string; without it the architecture digest hashes something nobody can resolve',
+      [{'keyword': 'pattern', 'instancePath': '/token'}])
+
+epair('MetricRef', METRIC_OK, with_(METRIC_OK, model=3),
+      'ORDER-611: model 3 does not exist in the tester. A metric that cannot name which fill '
+      'model produced it is a number with no provenance -- the Model-2 ban rests on this field',
+      [{'keyword': 'enum', 'instancePath': '/model'}])
+
+epair('CandidatePayload', PAYLOAD_OK, without(PAYLOAD_OK, "trial_count"),
+      'ORDER-611: trial_count is what makes discovery risk computable at all (design 6.7); a '
+      'payload without it silently reports "no trials"',
+      [{'keyword': 'required', 'instancePath': '', 'missingProperty': 'trial_count'}])
+
+epair('ExecutionKey', EXECKEY_OK, with_(EXECKEY_OK, model=3),
+      'ORDER-611: the execution key is the cache key for evidence reuse. A model outside {1,2,4} '
+      'means two different runs could share a key (audit-1 #8, the wrong cached evidence served)',
+      [{'keyword': 'enum', 'instancePath': '/model'}])
+
+epair('RunAttempt', ATTEMPT_OK, with_(ATTEMPT_OK, failure_class="WEIRD"),
+      'ORDER-611: the failure class decides whether a resume is safe. An undeclared class leaves '
+      'the recovery decision undefined, which is what S9 must not permit',
+      [{'keyword': 'enum', 'instancePath': '/failure_class'}])
+
+epair('SnapshotMeta', META_OK, without(META_OK, "build_id"),
+      'ORDER-611: without a build id two snapshots cannot be told apart, and "which build said '
+      'ALL CLEAR?" has no answer',
+      [{'keyword': 'required', 'instancePath': '', 'missingProperty': 'build_id'}])
+
+epair('SnapshotVerdict', {"reconciliation_clear": True, "reasons": []},
+      {"reconciliation_clear": "true", "reasons": []},
+      'ORDER-611: the verdict is a boolean the reader RECOMPUTES. The string "true" is truthy in '
+      'both PowerShell and JavaScript, so a string here reads as clear to every consumer that '
+      'does not type-check -- the same defect as stale_pin_acknowledged carrying "false" (audit 8)',
+      [{'keyword': 'type', 'instancePath': '/reconciliation_clear'}])
+
+epair('ReconciliationEvidence', EVIDENCE_OK, with_(EVIDENCE_OK, discovered=-1),
+      'ORDER-611: a negative discovered count balances every equation the reconciliation checks '
+      '(audit-5 found exactly this on three other counters)',
+      [{'keyword': 'minimum', 'instancePath': '/discovered'}])
+
+# ---- the five that already had a positive, given an attributed negative ---------------
+
+epair('SnapshotBuilderInput', BUILDER_OK, with_(BUILDER_OK, entity="SnapshotBuilderInputV2"),
+      'ORDER-611: the nine existing builder negatives had no positive one delta away inside the '
+      'isolation harness; this pair is that baseline',
+      [{'keyword': 'const', 'instancePath': '/entity'}])
+
+epair('Hypothesis', HYP, with_(HYP, coupling_class="SORT_OF_COUPLED"),
+      'ORDER-611: the coupling class decides whether a module change invalidates the '
+      'evidence of a hypothesis; an undeclared class means that question has no answer',
+      [{'keyword': 'enum', 'instancePath': '/coupling_class'}])
+
+epair('SafeProjection', SAFEPROJ_OK, with_(SAFEPROJ_OK, account="159503454"),
+      'ORDER-611: the projection is what Telegram is allowed to read. A raw account number as a '
+      'top-level field is the leak the closed DTO exists to prevent',
+      [{'keyword': 'unevaluatedProperties', 'instancePath': ''}])
+
+epair('ControlRoomSnapshotV5', SNAP_OK, with_(SNAP_OK, verdict={"reasons": []}),
+      'ORDER-611: a snapshot whose verdict carries no reconciliation_clear cannot answer the '
+      'only question it is read for',
+      [{'keyword': 'required', 'instancePath': '/verdict',
+        'missingProperty': 'reconciliation_clear'}])
+
+WORKRECEIPT_OK = {"entity": "WorkReceipt", "receipt_id": "WRK-20260731-001",
+                  "source_agent": "claude", "requested_at": "2026-07-31T00:00:00Z",
+                  "title": "a chat commitment", "owner": "claude", "status": "IN_PROGRESS"}
+epair('WorkReceipt', WORKRECEIPT_OK, with_(WORKRECEIPT_OK, source_agent="nobody"),
+      'ORDER-611: the source agent is the provenance of the receipt; an unknown agent makes the '
+      'duplicate detection S14 needs undecidable',
+      [{'keyword': 'enum', 'instancePath': '/source_agent'}])
+
+
 
 VALID, INVALID, ERROR = 'pass', 'fail', 'ERROR'
 
@@ -450,6 +736,98 @@ def check_validator_schema_gate():
     finally:
         SV.SCHEMA_PATH = saved
 
+    return problems
+
+
+def schema_entities():
+    schema = json.load(io.open(SCHEMA, encoding='utf-8'))
+    return sorted((schema.get('$defs') or {}).keys()), schema
+
+
+def build_isolation_schema(schema, path):
+    """A harness schema that validates ONE instance against ONE named `$def`, in isolation.
+
+    WHY THIS EXISTS, measured 2026-07-31.
+      The first attempt at ORDER-611 attributed each negative to its entity by matching ajv's
+      `schemaPath` against `#/$defs/<Entity>/`. That does not work, and the measurement is the
+      reason: the real schema's root is a `oneOf` over 19 branches, so ONE malformed instance
+      produces **20 errors**, and ajv reports the branch actually being evaluated with paths
+      RELATIVE to that branch -- `#/properties/tf/enum`, with no `$defs/CoverageCell` prefix --
+      while nested `$ref`s keep the absolute form. So the prefix that looked like provenance was
+      present for the wrong errors and absent for the right ones.
+
+      Validating against the entity's own `$def` removes the problem instead of working around it:
+      only one contract is in play, so every error IS that entity's, by construction rather than by
+      pattern-match. It also drops the noise from 20 errors to the one or two that are real, which
+      is what makes a `says` spec readable.
+
+      The envelope is `{case_entity, instance}` with one `if/then` per entity. An `if` that does not
+      match contributes no errors, so exactly one contract evaluates. `case_entity` is additionally
+      constrained to the closed entity list, because a typo that matched no branch would otherwise
+      make every instance valid -- a harness that passes everything is worse than no harness.
+    """
+    defs = schema['$defs']
+    ents = sorted(defs.keys())
+    harness = {
+        '$schema': schema.get('$schema', 'https://json-schema.org/draft/2020-12/schema'),
+        '$defs': defs,
+        'type': 'object',
+        'required': ['case_entity', 'instance'],
+        'properties': {'case_entity': {'enum': ents}},
+        'allOf': [{'if': {'properties': {'case_entity': {'const': e}},
+                          'required': ['case_entity']},
+                   'then': {'properties': {'instance': {'$ref': '#/$defs/%s' % e}}}}
+                  for e in ents],
+    }
+    io.open(path, 'w', encoding='utf-8').write(json.dumps(harness))
+    return path
+
+
+def entity_coverage(entity_cases, results):
+    """ORDER-611 B1/B2: every `$defs` entity must be exercised in BOTH directions.
+
+    The entity list is READ FROM THE SCHEMA. A hand-maintained list here would be `BACKLOG-D29`'s
+    failure mode relocated into a test file: right on the day it was written and quietly wrong
+    afterwards, and the only moment anybody reads it is the moment it matters. Adding a 28th `$def`
+    must redden this suite in the same commit that adds it.
+
+    Attribution is structural (see build_isolation_schema), so `covers` is not a claim that needs
+    checking -- it selects the contract. What still has to be checked is that a negative names a
+    SPECIFIC failure: `expect=fail` alone cannot distinguish "the rule I am testing rejected this"
+    from "I made the instance unparseable".
+    """
+    problems = []
+    try:
+        entities, _ = schema_entities()
+    except (IOError, ValueError) as exc:
+        return ['TOOL FAILURE: cannot read %s to derive the entity list: %s' % (SCHEMA, exc)]
+    if not entities:
+        return ['TOOL FAILURE: %s declares no $defs, so coverage cannot be derived' % SCHEMA]
+
+    passing, failing = set(), set()
+    for c in entity_cases:
+        ent = c['covers']
+        if ent not in entities:
+            problems.append('case %r covers %r, which is not a $defs entity' % (c['name'], ent))
+            continue
+        state = (results.get(c['name']) or (ERROR, ''))[0]
+        if c['expect'] == VALID and state == VALID:
+            passing.add(ent)
+        elif c['expect'] == INVALID and state == INVALID:
+            if not c['says']:
+                problems.append('case %r is a negative with no `says`, so it proves only that '
+                                'SOMETHING was wrong with the instance' % c['name'])
+                continue
+            failing.add(ent)
+
+    for ent in entities:
+        if ent not in passing:
+            problems.append('%s has NO case that validates. A negative with no positive cannot be '
+                            'interpreted: the instance may be failing for a reason unrelated to '
+                            'the rule under test.' % ent)
+        if ent not in failing:
+            problems.append('%s has NO negative case that names its failure. S3 is not done until '
+                            'every entity rejects at least one crafted bad instance.' % ent)
     return problems
 
 
@@ -565,6 +943,90 @@ def main():
         if not good and not notes and out:
             print("        %s" % out.splitlines()[0][:160])
 
+    print("\n--- ORDER-611: every $defs entity, against its own contract in isolation ---")
+    entities, schema_doc = schema_entities()
+    tmpdir = tempfile.mkdtemp(prefix='isoschema_')
+    try:
+        harness = build_isolation_schema(schema_doc, os.path.join(tmpdir, 'isolation.json'))
+        ebatch = run_batch(harness, ENTITY_CASES)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+    ebad = 0
+    for c in ENTITY_CASES:
+        got, out = ebatch[c['name']]
+        good = got != ERROR and got == c['expect']
+        notes = unmet_says(out, c['says']) if (good and c['says'] and c['expect'] == INVALID) else []
+        if notes:
+            good = False
+        if not good:
+            ebad += 1
+            print("  [BAD] %-46s expect=%s got=%-5s (%s)"
+                  % (c['name'], c['expect'], got, c['guards'][:90]))
+            for n in notes:
+                print("        -> %s" % n)
+            if not notes and out:
+                print("        %s" % out.splitlines()[-1][:200])
+    bad += ebad
+    print("  %d entity case(s), %d behaved as declared, %d did not"
+          % (len(ENTITY_CASES), len(ENTITY_CASES) - ebad, ebad))
+
+    # THE HARNESS MUST NOT BE ABLE TO PASS EVERYTHING. Its whole shape is `if case_entity == X
+    # then instance matches $defs/X`, and an `if` that does not match contributes no errors -- so
+    # a harness whose branches never fire would report every case valid, including all 27
+    # negatives. Two probes, run against the same generated schema the cases used:
+    #   1. an unroutable case_entity must be REJECTED by the closed enum, not silently ignored;
+    #   2. a well-formed instance of one entity, presented as ANOTHER, must be REJECTED -- that is
+    #      the proof the branches actually route rather than all matching.
+    tmpdir = tempfile.mkdtemp(prefix='isoprobe_')
+    try:
+        harness = build_isolation_schema(schema_doc, os.path.join(tmpdir, 'isolation.json'))
+        probes = [
+            {'name': 'harness-unknown-entity', 'expect': INVALID, 'says': [],
+             'instance': {'case_entity': 'NotAnEntity', 'instance': OWNER}},
+            {'name': 'harness-routes-to-the-named-contract', 'expect': INVALID, 'says': [],
+             'instance': {'case_entity': 'TestUniverse', 'instance': OWNER}},
+            {'name': 'harness-control-same-entity-validates', 'expect': VALID, 'says': [],
+             'instance': {'case_entity': 'OwnerRef', 'instance': OWNER}},
+        ]
+        pbatch = run_batch(harness, probes)
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+    for pr in probes:
+        got = pbatch[pr['name']][0]
+        ok = got != ERROR and got == pr['expect']
+        if not ok:
+            bad += 1
+        print("  [%s] %-46s expect=%s got=%s"
+              % ('OK ' if ok else 'BAD', pr['name'], pr['expect'], got))
+
+    cov = entity_coverage(ENTITY_CASES, ebatch)
+    if cov:
+        print("  [BAD] %d entity-coverage problem(s):" % len(cov))
+        for p in cov:
+            print("        -> %s" % p)
+        bad += len(cov)
+    else:
+        print("  [OK ] all %d $defs entities have a case that VALIDATES and a negative that names "
+              "its\n        own failure" % len(entities))
+
+    # ...and the claim on the line above -- "the list is read from $defs, so a 28th entity would
+    # redden this" -- is a claim, so it is checked rather than printed. Without this, a coverage
+    # criterion that had silently stopped enumerating would report OK forever.
+    _real = globals()['schema_entities']
+    try:
+        globals()['schema_entities'] = lambda: (sorted(list(entities) + ['A28thEntity']), schema_doc)
+        probe = entity_coverage(ENTITY_CASES, ebatch)
+    finally:
+        globals()['schema_entities'] = _real
+    named = [p for p in probe if 'A28thEntity' in p]
+    if len(named) == 2:      # one for the missing positive, one for the missing negative
+        print("  [OK ] CONTROL a 28th entity added to $defs is reported missing in BOTH "
+              "directions")
+    else:
+        print("  [BAD] CONTROL a 28th entity produced %d complaint(s), expected 2 -- the coverage "
+              "criterion is not enumerating what it claims to" % len(named))
+        bad += 1
+
     print("\n--- snapshot_validator's ajv gate (x-enforced-by's actual claim) ---")
     gate = check_validator_schema_gate()
     print("  [%s] a valid input passes, an ajv-rejected input is refused naming the property, "
@@ -597,8 +1059,12 @@ def main():
     print("  reconciling `path` with `name` needs a decision about which one is the identity, and")
     print("  that decision belongs with the readers. Slice S4 is not done until this line PASSES.")
 
-    print("\n=== %s ===" % ('ALL %d CASES BEHAVED AS DECLARED' % len(CASES) if bad == 0
-                            else '%d CASE(S) DID NOT' % bad))
+    # The count is DERIVED from both lists. It read "ALL %d CASES" % len(CASES) after ORDER-611
+    # added 54 more, which would have reported 35 while running 89 -- the same drift as the
+    # "24 mutations" label in run_s2a_gate.py that was already 27.
+    print("\n=== %s ===" % ('ALL %d CASES BEHAVED AS DECLARED (%d root + %d per-entity)'
+                            % (len(CASES) + len(ENTITY_CASES), len(CASES), len(ENTITY_CASES))
+                            if bad == 0 else '%d CASE(S) DID NOT' % bad))
     sys.exit(1 if bad else 0)
 
 

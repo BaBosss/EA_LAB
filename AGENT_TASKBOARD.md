@@ -103,7 +103,39 @@
 
 ---
 
-## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-611 — [factory/S3] Close S3: a negative fixture for **every** entity, proven by ajv's own attribution — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — **27/27 entities now reject a crafted bad instance, and 27/27 have a positive one delta away**
+>
+> **89 cases: 35 root + 54 per-entity**, plus 3 harness probes and a coverage control. Was 35 cases covering **12** entities for negatives and **5** for positives.
+>
+> ### 🔴 **B2's acceptance had to be REPLACED, and the measurement is why**
+>
+> The order pre-registered attribution via `schemaPath_startswith: "#/$defs/<Entity>/"`. **It does not work, measured:** the real root is a `oneOf` over 19 branches, so **one malformed instance produces 20 ajv errors**, and ajv reports the branch it is *currently evaluating* with paths **relative to that branch** — `#/properties/tf/enum`, with no `$defs/CoverageCell` prefix — while *nested* `$ref`s keep the absolute form. So the prefix that looked like provenance was **absent on exactly the errors it needed to match and present on the ones it needed to exclude**. 13 of the first 27 negatives failed their own `says`, which is how it was found.
+>
+> **Replaced with something that removes the problem instead of pattern-matching around it:** an **isolation harness** — a generated envelope `{case_entity, instance}` with one `if/then` per entity, so exactly one contract evaluates and **every error is that entity's by construction**. Noise drops from 20 errors to the one or two that are real. `covers` stops being a claim that needs auditing and becomes the thing that *selects the contract*.
+>
+> **The harness must not be able to pass everything, so 3 probes assert it cannot:** an unroutable `case_entity` is refused by the closed enum (a typo would otherwise match no branch and make every instance valid) · a well-formed `OwnerRef` presented as `TestUniverse` is **rejected**, which is the proof the branches route rather than all matching · the same instance under its own name validates.
+>
+> ### Two real findings about my own instances, neither smoothed over
+>
+> - `CandidatePayload.profiles` **requires all five content hashes** (`instrument`/`exit`/`sizing`/`safety`/`execution`) — the schema says why: *"content hashes, not mutable string ids, otherwise instrument_profiles could change under a fixed id and the candidate would still look valid"*. My first instance omitted them and I fixed the **instance**, not the schema.
+> - `SafeProjection` requires `accounts` and `findings`; the shape I invented had neither. Same resolution.
+>
+> ### Acceptance
+>
+> | | evidence |
+> |---|---|
+> | B1 coverage derived from `$defs` | 27/27 both directions · **CONTROL: a synthetic 28th entity is reported missing in BOTH directions**, so the criterion is enumerating rather than asserting |
+> | B2 attribution | replaced (above) — structural, not pattern-matched · 3 harness probes |
+> | B3 the 8 non-root-routable entities | reached **directly** by the harness; no parent instance and no label to be believed |
+> | B4 minimal pairs | every one of the 27 negatives is one delta from a positive that validates |
+> | B5 tool failure ≠ rejection | preserved: `ERROR` never satisfies an expectation, not even `expect=fail` |
+> | B6 wired | `run_contract_binding_tests.ps1` entry 8 + `$SUITE_GUARDS` + regenerated pathspec (54 entries) · guard-trigger PARTS 1–5 green |
+>
+> ⚠️ **Tier cost, stated: contract-binding 6.1s → 8.4s, full tier 22.8s → 24.9s** vs the 15.0s advisory. The suite was excluded for two reasons in sequence and both are now gone — it cost 11.5s (batching took it to 1.8s) and then the tier ran all 12 suites on any staged path (`BACKLOG-D32` fixed that). Its own header said *"STILL not wired"*; that paragraph was rewritten rather than left to rot.
+>
+> 🔻 **Owed:** the independent re-check. `DONE`, never `REVIEWED`.
 
 > **What S3's acceptance actually says** (design §10): *"every entity rejects at least one crafted bad instance; root discriminator rejects an unknown `entity`; `reconciliation_clear` computed, a supplied value rejected"*. `ORDER-601` delivered the validator, the discriminator case and the computed-verdict cases. It did **not** deliver the first clause, and nothing measured how far short it fell.
 

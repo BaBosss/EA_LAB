@@ -156,7 +156,15 @@ $scripts = @(
     #                                         inputs, so it would stay green if the real
     #                                         MASTER_BACKLOG.md were hand-edited tomorrow.
     @{ Path = '_triage\factory_os\run_coverage_transfer_tests.py'; Args = @() },
-    @{ Path = '_triage\factory_os\check_coverage_transfer.py'; Args = @() }
+    @{ Path = '_triage\factory_os\check_coverage_transfer.py'; Args = @() },
+    # 8. ORDER-611 (S3). The REAL JSON Schema validation, wired at last. It was excluded for two
+    #    reasons in sequence, both since removed: it cost 11.5s (fixed by batching, 1.8s), and then
+    #    the tier ran all 12 suites on any staged path (fixed by BACKLOG-D32's per-path selection).
+    #    A schema edit now pays this suite and not 5.8s of optimize-guard cases.
+    #    MEASURED 2026-07-31: 2.2s, 89 cases (35 root + 54 per-entity) + 3 harness probes.
+    #    REQUIRES ajv-cli on PATH. If ajv is missing the suite reports ERROR, not "rejected" --
+    #    that distinction is the whole reason its three-state discipline exists.
+    @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() }
 )
 
 $failed = 0

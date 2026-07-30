@@ -17,6 +17,7 @@ _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_gate.py
 _triage/factory_os/run_s2a_migration_tests.py
+_triage/factory_os/run_schema_fixtures.py
 _triage/factory_os/run_snapshot_validator_tests.py
 _triage/factory_os/s2a_attestations.jsonl
 _triage/factory_os/s2a_coverage_reconciliation.json
