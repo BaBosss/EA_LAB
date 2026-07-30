@@ -399,9 +399,18 @@ trial_count · boundary_hit · not_applicable_reason · backlog_ref`
   migration table**, not something this file may assert unilaterally.
 
 ### 4.5 Run journal, evidence, candidate manifest
-- **Run journal** (`factory/runs/<run_id>.jsonl`, one transition per line, append-only): `run_id ·
-  cell_id · execution_key · attempts[]`. Each attempt records `transition · at · lease{lease_id, owner,
-  pid, expires_at} · launched_at · exit_code · failure_class · report_fresh_proof · event_id`.
+- **Run journal** (`factory/runs/<run_id>.jsonl`) — the persisted entity is a **`RunTransition`, one per
+  line, append-only**: `run_id · cell_id · attempt · transition · at`, plus `execution_key` on the
+  `QUEUED` line and a per-state `record`. `RunJournal` is the **derived fold** of those lines and is never
+  written. Transitions: `QUEUED · LEASED · LAUNCH_INTENT · PROCESS_OBSERVED · RUNNING · COMPLETED ·
+  FAILED · ABANDONED · EVIDENCE_REGISTERED`. The lease carries `lease_id · owner · expires_at` and
+  **no `pid`** — `LEASED` reserves the lane before any process exists. The pid lives in
+  `process_observed{pid, observed_at, process_fingerprint}`, which is deliberately separate from
+  `launch_intent_at` so that "died before spawn" and "spawned then died" are different records.
+  <sub>*This paragraph is the one that proved the binding checker insufficient: after the checker was
+  installed, this text still described `attempts[]`, a lease with `pid`, and `launched_at`, while the
+  schema said the opposite — and the checker reported STRUCTURE OK, because it compares storage paths
+  and banned phrases, not field semantics. Fixed here; the mechanism is still owed (§15).*</sub>
 - **`ExecutionKey` is the complete simulator identity** and every field is required: `expert · symbol ·
   tf · from_date · to_date · model · deposit · currency · leverage · set_hash · ini_hash · ex5_hash ·
   effective_config_hash · data_fingerprint · lane`. Rev 1 omitted deposit, currency and leverage, so a
