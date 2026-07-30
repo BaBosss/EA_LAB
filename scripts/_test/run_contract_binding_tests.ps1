@@ -60,6 +60,12 @@
     forward was quoting a lucky single run):
       this suite   0.6s -> 3.6s        (+3.0s: the five S2a checks, in ONE interpreter)
       fast tier   15.4s -> 17.3s       (17.3 / 17.2 / 17.3) against a 15.0s ADVISORY budget
+    RE-MEASURED 2026-07-31 after ORDER-601's closure added run_enforcement_status_tests.py:
+      fast tier   17.3s -> 18.1s       (18.0 / 18.1 / 18.3) -- now 3.1s over the advisory line.
+    That suite is worth its ~0.8s (it is the only thing stopping PLANNED/BUILT/WIRED from becoming
+    the same unchecked label x-enforced-by already was), but the tier is now over by more than any
+    single addition, which is the definition of the drift BACKLOG-D32 exists to end. Nothing further
+    goes in this tier before per-path selection is built.
     (2.8s / 16.5s before /scrutinize; +0.8s bought coverage of five loader rules, two criterion
      bypasses and a pin-vintage advisory that were all enforced by nothing at all. Re-measured after
      each addition rather than carried forward -- an earlier line here said 2.9s and 16.5s and was
