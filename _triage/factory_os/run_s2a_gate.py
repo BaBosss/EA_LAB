@@ -39,7 +39,10 @@ STEPS = (
     ('D2 matches D1', lambda: gen_d2.main(['--check'])),
     ('the nine machine criteria', lambda: chk.main([])),
     ('the checker refuses the null migration', lambda: chk.self_test()),
-    ('24 mutations of the real D1 are caught', lambda: muts.main()),
+    # count DERIVED, not typed: this label read "24 mutations" while the suite already held 27, one
+    # commit after I complained about exactly that class of drift in D2's own prose.
+    ('%d mutations of the real D1, + the loader and drift-guard parts' % len(muts.CASES),
+     lambda: muts.main()),
 )
 
 

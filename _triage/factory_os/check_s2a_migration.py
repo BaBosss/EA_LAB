@@ -108,6 +108,7 @@ def _git(*args):
 _REVPARSE_MEMO = {}
 _BLOB_MEMO = {}
 _PARENTS_MEMO = []
+_ENTITIES_MEMO = []
 
 
 def _rev_parse_cached(spec):
@@ -147,9 +148,14 @@ def storage_entities():
     hardcode 24" -- and the number is 27 today, which is exactly why hardcoding it would have
     silently drifted.
     """
-    with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
-        schema = json.load(fh)
-    return set(k for k, v in schema['$defs'].items() if isinstance(v, dict))
+    # Memoized alongside the $ref graph and `git ls-files`. /scrutinize caught that this one was
+    # missed: it re-parses the whole schema on every C1 call, which the mutation suite makes 25 times
+    # in one process. Same cost class as the two that were fixed, so it should not have been left out.
+    if not _ENTITIES_MEMO:
+        with io.open(gen.SCHEMA_PATH, encoding='utf-8') as fh:
+            schema = json.load(fh)
+        _ENTITIES_MEMO.append(set(k for k, v in schema['$defs'].items() if isinstance(v, dict)))
+    return set(_ENTITIES_MEMO[0])
 
 
 def ref_parents():
@@ -203,6 +209,14 @@ def c2_no_approved(rows, problems):
         if r.get('signoff_state') not in SIGNOFF_STATES:
             fail(problems, 'C2 %s has signoff_state=%r, not one of %s'
                  % (r.get('entity'), r.get('signoff_state'), list(SIGNOFF_STATES)))
+        # /scrutinize 2026-07-30: REFUSED was accepted bare. D2 tells the owner that "a refusal with
+        # a stated reason closes the question; silence leaves it open and it comes back" -- so the
+        # document made a promise the checker did not keep. An unexplained REFUSED is also the
+        # cheapest way to make a row look considered without deciding anything.
+        if r.get('signoff_state') == 'REFUSED' and not (r.get('refused_reason') or '').strip():
+            fail(problems, 'C2 %s is REFUSED with no refused_reason -- a refusal without a stated '
+                           'reason does not close the question, it just hides it'
+                 % r.get('entity'))
 
 
 def _check_embedded_claim(e, value, rows_entities, parents, problems):
@@ -289,8 +303,21 @@ def c4_owner_ref_recomputed(rows, problems):
         e, ref = r.get('entity'), r.get('owner_ref')
         if ref is None:
             cur = r.get('current_owner') or ''
-            if not (cur.startswith('EMBEDDED:') or r.get('owner_ref_absent_reason')):
-                fail(problems, 'C4 %s declines an owner_ref without owner_ref_absent_reason' % e)
+            # /scrutinize 2026-07-30: this used to accept ANY row that supplied an
+            # owner_ref_absent_reason, which made the strongest criterion in the order -- the hash
+            # recomputation that killed audit 5's null migration -- bypassable in one line: set
+            # owner_ref to null, write any sentence, done. The rev-4 text never allowed that ("a row
+            # may only decline one when its current_owner is EMBEDDED:* or names a fact that lives in
+            # no file today"); the code was looser than the rule it was enforcing. A reason string
+            # explains an exemption, it does not GRANT one -- eligibility comes from current_owner.
+            if not (cur.startswith('EMBEDDED:') or cur == UNOWNED):
+                fail(problems, 'C4 %s declines an owner_ref, but its current_owner is %r -- a real '
+                               'file at HEAD has a blob to pin, and no reason string buys an '
+                               'exemption from pinning it' % (e, cur))
+                continue
+            if not (r.get('owner_ref_absent_reason') or '').strip():
+                fail(problems, 'C4 %s is exempt from pinning but states no owner_ref_absent_reason'
+                     % e)
             continue
         for k in ('path', 'commit_oid', 'blob_oid', 'raw_sha256'):
             if not ref.get(k):
@@ -312,6 +339,35 @@ def c4_owner_ref_recomputed(rows, problems):
         if digest != ref['raw_sha256']:
             fail(problems, 'C4 %s raw_sha256 MISMATCH for %s: stated %s, recomputed %s'
                  % (e, spec, ref['raw_sha256'][:12], digest[:12]))
+
+
+def pin_vintage_notes(rows):
+    """Which pinned owners have CHANGED since they were pinned. Advisory, and deliberately not a
+    failure.
+
+    /scrutinize 2026-07-30 found a mixed-vintage hole in this file: C4 validates each `owner_ref`
+    against the commit the row pins (correctly -- a pin is historical), while C8 recomputes the
+    coverage numbers from the WORKING TREE copy of MASTER_BACKLOG.md. So one artifact can describe two
+    different versions of the same file and every criterion stays green. Nothing was wrong with either
+    half; what was missing was anyone saying the halves had drifted apart.
+
+    This cannot be an error: a proposal written last week against last week's file is still a valid
+    proposal, and failing here would force a re-pin on every unrelated edit -- the exact false alarm
+    the --check fix removed. But it must not be silent either, because the judgement columns cite
+    specific line numbers (`scripts/check_state.ps1:124`), and a citation into a file that has since
+    moved is how a reviewer is quietly misled. So: counted, named, and printed.
+    """
+    notes = []
+    for r in rows:
+        ref = r.get('owner_ref')
+        if not ref or not ref.get('path') or not ref.get('blob_oid'):
+            continue
+        rc, now, _ = _rev_parse_cached('HEAD:%s' % ref['path'])
+        if rc == 0 and now != ref['blob_oid']:
+            notes.append('%s pins %s at %s, but HEAD now has %s -- the proposal describes an older '
+                         'revision of its own owner' % (r.get('entity'), ref['path'],
+                                                        ref['blob_oid'][:12], now[:12]))
+    return notes
 
 
 def c5_refs_distinct(rows, problems):
@@ -733,6 +789,12 @@ def main(argv):
         added = len(problems) - before
         print('  [%s] %-42s %s' % ('OK ' if added == 0 else 'BAD', name,
                                    '' if added == 0 else '%d problem(s)' % added))
+
+    notes = pin_vintage_notes(rows)
+    if notes:
+        print('\n  %d ADVISORY note(s) -- not failures, but read them before signing:' % len(notes))
+        for n in notes:
+            print('  ~> %s' % n)
 
     if problems:
         print('')

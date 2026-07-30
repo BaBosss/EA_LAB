@@ -58,8 +58,10 @@
     number is stated here rather than discovered by the next session.
     MEASURED 2026-07-30, medians of 3 runs each (never one number -- the handoff that carried "14.0s"
     forward was quoting a lucky single run):
-      this suite   0.6s -> 2.8s        (+2.2s: the five S2a checks, in ONE interpreter)
-      fast tier   15.4s -> 16.5s       (16.5 / 16.5 / 16.5) against a 15.0s ADVISORY budget
+      this suite   0.6s -> 3.3s        (+2.7s: the five S2a checks, in ONE interpreter)
+      fast tier   15.4s -> 17.0s       (17.0 / 17.0 / 17.4) against a 15.0s ADVISORY budget
+    (2.8s / 16.5s before /scrutinize added the loader and drift-guard parts; +0.5s bought coverage of
+     five loader rules and two criterion bypasses that were enforced by nothing.)
     ...but measured AGAIN from inside the real pre-commit hook, the same tier runs 15.1-15.2s with
     this suite at 1.8s, because git's index and objects are already warm there. BOTH numbers are
     real and they answer different questions: 16.5s is what a cold standalone run costs, 15.1s is

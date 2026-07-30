@@ -163,6 +163,27 @@ def m_unowned_keep_canonical(rows, cov):
     r['proposed_owner'] = chk.UNOWNED
 
 
+def m_decline_pin_with_a_reason(rows, cov):
+    # /scrutinize: the one-line bypass of the order's strongest criterion. A row whose current_owner
+    # is a real file at HEAD sets owner_ref to null and supplies any sentence. Before the fix this was
+    # SILENT, so audit 5's null migration could have passed C4 by declining every pin instead of
+    # faking every hash.
+    r = find(rows, 'CoverageCell')
+    r['owner_ref'] = None
+    r['owner_ref_absent_reason'] = 'I would rather not'
+
+
+def m_exempt_row_without_a_reason(rows, cov):
+    # the other side of the same rule: EMBEDDED/UNOWNED rows ARE exempt, but must still say why.
+    find(rows, 'TestUniverse').pop('owner_ref_absent_reason', None)
+
+
+def m_refused_without_a_reason(rows, cov):
+    r = find(rows, 'CoverageCell')
+    r['signoff_state'] = 'REFUSED'
+    r.pop('refused_reason', None)
+
+
 def m_cov_wrong_rowcount(rows, cov):
     cov['source_rows_consumed'] = 8
 
@@ -210,6 +231,9 @@ CASES = [
     ('C3  UNOWNED with its citation removed',  m_unowned_no_evidence,      'needs a citation'),
     ('C3  UNOWNED citing a silent file',       m_unowned_evidence_silent,  'never mentions'),
     ('C3  UNOWNED+KEEP on a canonical fact',   m_unowned_keep_canonical,   'must not be signable'),
+    ('C4  a real owner declines its pin',      m_decline_pin_with_a_reason, 'no reason string buys'),
+    ('C4  an exempt row states no reason',     m_exempt_row_without_a_reason, 'states no owner_ref_absent'),
+    ('C2  REFUSED with no refused_reason',     m_refused_without_a_reason,  'does not close the question'),
     ('C8  source_rows_consumed inflated',      m_cov_wrong_rowcount,       'every source row must be'),
     ('C8  cells_emitted below the LIVE count', m_cov_cells_too_small,      'cannot be smaller'),
     ('C8  a LIVE cell dropped from mapping',   m_cov_drops_a_live_cell,    'omits its LIVE cell'),
@@ -252,12 +276,97 @@ def main():
         print('\n=== %d MUTATION(S) NOT CAUGHT ===' % bad)
         return 1
 
+    bad += structural_part()
     bad += drift_guard_part()
     if bad:
         return 1
-    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROL STAYED GREEN, DRIFT GUARD PROVEN BOTH WAYS ==='
+    print('\n=== ALL %d MUTATIONS CAUGHT, CONTROL STAYED GREEN, LOADER AND DRIFT GUARD PROVEN ==='
           % len(CASES))
     return 0
+
+
+def structural_part():
+    """PART 3: the checks inside load_rows(), which PART 1 cannot reach.
+
+    /scrutinize 2026-07-30 found these were enforced in production and tested by nothing. PART 1
+    drives the nine criteria directly against in-memory rows, so it never executes the loader -- and
+    the loader is where required-field, disposition and KEEP-reason validation lives. That is the same
+    shape as this slice's two worst finds: check_schema_structure.py crashing for four commits while
+    in no suite, and three audit-6 fixes shipping with no fixture. A rule nothing exercises is a rule
+    that can rot silently.
+    """
+    print('\n=== PART 3: the loader\'s structural checks, which PART 1 never reaches ===')
+    original = io.open(chk.MIGRATION_PATH, encoding='utf-8').read()
+    rows = [json.loads(l) for l in original.split('\n') if l.strip()]
+
+    def write_and_load(mutate, raw=None):
+        saved = chk.MIGRATION_PATH
+        fd, tmp = tempfile.mkstemp(suffix='.jsonl')
+        try:
+            if raw is not None:
+                text = raw
+            else:
+                rs = [json.loads(json.dumps(r)) for r in rows]
+                mutate(rs)
+                text = ''.join(json.dumps(r, sort_keys=True) + '\n' for r in rs)
+            with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(text)
+            chk.MIGRATION_PATH = tmp
+            _, problems = chk.load_rows()
+            return '\n'.join(problems)
+        finally:
+            chk.MIGRATION_PATH = saved
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+
+    def drop_field(rs):
+        for r in rs:
+            if r['entity'] == 'CoverageCell':
+                del r['retention_window']
+
+    def bad_disposition(rs):
+        for r in rs:
+            if r['entity'] == 'CoverageCell':
+                r['disposition'] = 'MOVE'
+
+    def keep_no_reason(rs):
+        for r in rs:
+            if r['entity'] == 'IdeaRef':
+                r['disposition'] = 'KEEP'
+                r.pop('keep_reason', None)
+
+    cases = [
+        ('a required field deleted', drop_field, None, 'is missing field(s)'),
+        ('an invented disposition', bad_disposition, None, 'not one of'),
+        ('KEEP with its reason removed', keep_no_reason, None, 'no keep_reason'),
+        ('a line that is not valid JSON', None, '{"entity": broken\n', 'not valid JSON'),
+        ('an entirely empty file', None, '', 'is empty'),
+    ]
+    bad = 0
+    for label, mutate, raw, expect in cases:
+        blob = write_and_load(mutate, raw)
+        ok = expect in blob
+        print('  [%s] %-34s expect=RED got=%s' % ('OK ' if ok else 'BAD', label,
+                                                  'RED ' if blob else 'GREEN'))
+        if not ok:
+            bad += 1
+            print('        -> wanted %r; got: %s'
+                  % (expect, (blob.split('\n')[0] if blob else 'NOTHING AT ALL')))
+    # CONTROL: the real file must load with no structural complaint at all.
+    _, clean = chk.load_rows()
+    print('  [%s] CONTROL the real D1 loads with no structural problem'
+          % ('OK ' if not clean else 'BAD'))
+    if clean:
+        print('        -> %s' % clean[:2])
+        bad += 1
+    if io.open(chk.MIGRATION_PATH, encoding='utf-8').read() != original:
+        print('  [BAD] this part modified the real D1')
+        bad += 1
+    if bad:
+        print('\n=== STRUCTURAL PART FAILED ===')
+    return bad
 
 
 def drift_guard_part():

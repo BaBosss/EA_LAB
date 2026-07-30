@@ -848,8 +848,11 @@ def build_rows(pins=None):
          historical claim ("at commit X this owner was this blob"); pinning would be pointless if it
          had to track HEAD. C4 already asks the right question of a pin -- does it still RESOLVE and
          does the blob still hash to what is recorded -- and an old pin passes that correctly.
-    So --check honours the recorded pins and compares everything else; --repin is the deliberate act
-    of moving them forward.
+    So --check honours the recorded pins and compares everything else. Moving the pins forward needs
+    no flag: a plain (write-mode) run always re-pins at HEAD, which is the deliberate act.
+    (/scrutinize removed a `--repin` switch here that only suppressed pin-honouring INSIDE --check --
+    i.e. it re-created the very bug described above, and did nothing at all outside --check. A flag
+    whose documented purpose is already the default behaviour is surface that can only mislead.)
     """
     commit = head_oid()
     out = []
@@ -1034,7 +1037,7 @@ def main(argv):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     pins = None
-    if '--check' in argv and '--repin' not in argv and os.path.exists(chk.MIGRATION_PATH):
+    if '--check' in argv and os.path.exists(chk.MIGRATION_PATH):
         pins = {}
         for line in io.open(chk.MIGRATION_PATH, encoding='utf-8'):
             if not line.strip():
