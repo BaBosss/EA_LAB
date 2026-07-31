@@ -397,10 +397,23 @@ $SUITE_GUARDS = @{
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
     # something else happens to be staged, which is the D32 defect this map exists to end.
     # ORDER-630 (S5). The resolver, its guard, the store it reads and the consumer it wires.
+    # ORDER-674 owed half: this cage now drives FOUR of the six front guards, not one. The B/C/D
+    # cases attack check_order_collision (archive at the index), check_handoff_contract (the
+    # same-commit archive move) and check_precommit_staged (the duplicate account|magic rule that
+    # matched 0 of 64 rows). DECLARED because PART 4's undeclared-reference sweep demanded them
+    # on its first run after those cases landed -- which is the sweep doing exactly its job: the
+    # three guard commits before it did not stage the files that select run_guard_trigger_tests,
+    # so the omission survived three commits and was caught by the full tier, not by a reviewer.
     'run_front_guard_evidence_tests.ps1' = @('scripts/check_state.ps1',
+                                          'scripts/check_order_collision.ps1',
+                                          'scripts/check_handoff_contract.ps1',
+                                          'scripts/check_precommit_staged.ps1',
                                           'scripts/lib/evidence.ps1',
                                           '.githooks/pre-commit',
-                                          'portfolio/DEPLOYMENTS.csv')
+                                          'portfolio/DEPLOYMENTS.csv',
+                                          # the B and C cases stage into these two boards
+                                          'AGENT_TASKBOARD.md',
+                                          'ARCHIVE_TASKBOARD_2026-07A.md')
     'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',
                                           '_triage/factory_os/run_preset_tests.py',
                                           # the compiler reads the build's input

@@ -39,6 +39,8 @@ _triage/factory_os/schemas.json
 _triage/factory_os/snapshot_build.py
 _triage/factory_os/snapshot_validator.py
 _triage/PARAM_INACTIVE_AUDIT.md
+AGENT_TASKBOARD.md
+ARCHIVE_TASKBOARD_2026-07A.md
 docs/GUARD_SHAPES.md
 docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md

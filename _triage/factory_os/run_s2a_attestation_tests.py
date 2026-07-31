@@ -23,6 +23,7 @@ import tempfile
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_s2a_migration as chk      # noqa: E402
 import check_s2a_attestation as att    # noqa: E402
+import evidence                        # noqa: E402
 
 STALE_NOTE = {'entity': 'CoverageCell', 'path': 'MASTER_BACKLOG.md', 'kind': 'STALE',
               'text': 'stale'}
@@ -391,6 +392,80 @@ def main():
           'fallback' % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %s' % _probs)
+        bad += 1
+
+    # ---- ORDER-670 migration: a log ABSENT from the index is a deletion, not "nothing to judge"
+    # The pre-migration code read the WORKING TREE here, described as "reached ONLY for an
+    # untracked log (nothing staged to judge)". The description was true of the code path and
+    # false of the situation: control only reaches it when `committed` is non-empty, i.e. HEAD
+    # HAS the log and the index does not -- the commit is DELETING append-only history, and
+    # comparing HEAD to a working copy the commit is not keeping could pass.
+    # No patching: a path that exists nowhere drives the real branch.
+    p = []
+    att.check_append_only(p, 'no/such/attestation_log.jsonl',
+                          committed=b'{"decision": "REFUSED"}\n')
+    ok = any('not append-only' in x for x in p)
+    print('  [%s] a log present in HEAD but ABSENT from the index is refused (G5), not read off '
+          'disk as if nothing were staged' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % (p or 'NOTHING AT ALL'))
+        bad += 1
+
+    # ---- ORDER-670 migration: the DIGEST is a judged read ------------------------------------
+    # Before the migration `bundle_digest()` read the disk unconditionally, under the reasoning
+    # "the digest describes the bytes the signer is LOOKING AT". True of a manual run and FALSE
+    # of the gate: stage a change to a bundle file, restore the worktree copy, and the digest
+    # recomputes to the OLD value -- so the owner's record still validates and THE COMMIT LANDS
+    # A BUNDLE CHANGE NO ATTESTATION COVERS. A7's shape at the highest-ceremony target here.
+    #
+    # Driven through EvidenceSource's `_git` seam rather than by staging into a real index: the
+    # scenario is "index and worktree disagree", and a fake index expresses that without this
+    # suite ever writing to `.git` (which ORDER-670's T6 refuses, correctly).
+    _saved_src = att._SRC[0]
+    try:
+        _policy = '_triage/factory_os/S2A_ATTESTATION_POLICY.md'
+        _real = evidence.EvidenceSource('worktree', root=att._ROOT)
+
+        def _staged_git(*a):
+            # `git show :<path>` answers with TAMPERED bytes for one bundle member and with the
+            # real bytes for the rest, i.e. exactly a commit that stages a change to the bundle.
+            if a[:1] == ('show',) and a[1] == ':%s' % _policy:
+                return 0, b'TAMPERED BUNDLE MEMBER\n', b''
+            if a[:1] == ('show',) and a[1].startswith(':'):
+                return 0, _real.read_committed_bytes(a[1][1:]), b''
+            return 0, b'', b''
+
+        att._SRC[0] = evidence.EvidenceSource('index', root=att._ROOT, _git=_staged_git)
+        _tampered = att.bundle_digest()
+        att._SRC[0] = _real
+        _clean = att.bundle_digest()
+    finally:
+        att._SRC[0] = _saved_src
+    ok = _tampered != _clean
+    print('  [%s] ATTACK a bundle member staged behind a clean worktree changes the digest, so '
+          'F1 refuses the record instead of validating against bytes the commit does not have'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> both digests are %s; the digest is not reading the judged snapshot' % _clean)
+        bad += 1
+
+    # SPECIFICITY, and it is the one that keeps this migration free: with the index and the
+    # working tree in AGREEMENT -- which is the state of every bundle path in this repo -- the
+    # digest is UNCHANGED, so no existing attestation is voided and no owner signature is spent.
+    # Measured rather than promised: the pre-migration implementation and this one produce the
+    # same value on the real bundle, so the migration refuses zero recorded decisions.
+    _saved_src = att._SRC[0]
+    try:
+        att._SRC[0] = evidence.EvidenceSource('index', root=att._ROOT,
+                                              _git=lambda *a: (0, _real.read_committed_bytes(a[1][1:]), b'')
+                                              if a[:1] == ('show',) and a[1].startswith(':')
+                                              else (0, b'', b''))
+        ok = att.bundle_digest() == _clean
+    finally:
+        att._SRC[0] = _saved_src
+    print('  [%s] SPECIFICITY index and worktree agreeing give the SAME digest -- the migration '
+          'voids no recorded decision and costs no signature' % ('OK ' if ok else 'BAD'))
+    if not ok:
         bad += 1
 
     current, problems = run_with([good(decision='REFUSED', reason='not yet',

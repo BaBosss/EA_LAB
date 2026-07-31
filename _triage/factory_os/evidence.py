@@ -138,6 +138,44 @@ class EvidenceSource(object):
         with io.open(path, 'rb') as fh:  # snapshot: worktree -- manual-run mode, and it says so
             return _decode(fh.read(), errors)
 
+    def read_committed_bytes(self, rel):
+        """read_committed's twin, WITHOUT decoding or newline normalisation.
+
+        It exists because three checks in this repo are about BYTES, not text, and every one of
+        them hand-rolled its own `git show :path` because the reader offered no byte entry point:
+        an append-only PREFIX rule (`A7`/`G5`), a bundle sha256 DIGEST, and a blob-id comparison.
+        A missing primitive does not stop the read happening -- it decides where the read gets
+        reimplemented, and a second implementation is a second decider of which bytes count.
+
+        NO NORMALISATION HERE, deliberately, and it is the difference between this and its twin.
+        `read_committed` decodes utf-8-sig and folds CRLF, which is right for parsing and WRONG
+        for a digest: stripping a BOM or rewriting a line ending changes the fingerprint of the
+        bytes the caller believes it is fingerprinting. Callers that want folded newlines fold
+        them where the reader can see it happening.
+
+        Same no-fallback contract as read_committed, for the same reason paid for twice.
+        """
+        rel = rel.replace(os.sep, '/')
+        if self.mode == 'index':
+            rc, out, err = self._git('show', ':%s' % rel)
+            if rc == 0:
+                return out
+            rc2, _o, _e = self._git('ls-files', '--cached', '--error-unmatch', '--', rel)
+            if rc2 == 0:
+                raise ToolFailure('%s is in the index but not readable from it: %s'
+                                  % (rel, err.decode('utf-8', 'replace').strip()))
+            on_disk = os.path.isfile(os.path.join(self.root, rel.replace('/', os.sep)))
+            raise ToolFailure(
+                '%s is not in the index%s. In hook mode this reader judges what the commit '
+                'will contain; reading the disk instead would approve bytes the commit does '
+                'not have, so there is no fallback.'
+                % (rel, ' (it exists in the working tree)' if on_disk else ''))
+        path = os.path.join(self.root, rel.replace('/', os.sep))
+        if not os.path.isfile(path):
+            raise ToolFailure('%s does not exist in the working tree' % rel)
+        with io.open(path, 'rb') as fh:  # snapshot: worktree -- manual-run mode, and it says so
+            return fh.read()
+
     def exists_committed(self, rel):
         rel = rel.replace(os.sep, '/')
         if self.mode == 'index':

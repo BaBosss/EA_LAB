@@ -312,8 +312,6 @@ A_BINDING_PENDING = {
     # suspension stays until that is replaced -- which is a behaviour change (evidence.py refuses
     # rather than falling back to the worktree for an untracked path, the Spec4 lesson) and
     # therefore its own commit, not a rider on this one."
-    '_triage/factory_os/check_s2a_attestation.py':
-        'ORDER-670 migration owed: reads the attestation log and the bundle digest directly',
 }
 
 # ---------------------------------------------------------------------------------------------

@@ -41,6 +41,7 @@ if HERE not in sys.path:
 
 import check_s2a_attestation as att   # noqa: E402
 import check_s2a_migration as chk     # noqa: E402
+import evidence                      # noqa: E402
 
 POLICY_VERSION = 's2a-attestation/1'
 VECTORS_REL = '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl'
@@ -118,7 +119,8 @@ class World(object):
 
 def install_world(world):
     """Swap the checker's git touchpoints for the vector's world. Returns a restore callable."""
-    saved = (chk._git, chk.head_oid, chk._rev_parse_cached, att._D1_ROWS[:], att.subprocess)
+    saved = (chk._git, chk.head_oid, chk._rev_parse_cached, att._D1_ROWS[:], att.subprocess,
+             att._index_src)
 
     class _SubShim(object):
         run = staticmethod(world.subprocess_run)
@@ -127,11 +129,34 @@ def install_world(world):
     chk._rev_parse_cached = world.rev_parse_cached
     att._D1_ROWS[:] = world.d1_rows
     att.subprocess = _SubShim
+    # ORDER-670: A7's staged read MOVED UP A LAYER, from a raw `subprocess.run(['git','show',...])`
+    # to `evidence.EvidenceSource.read_committed_bytes`. THE MODEL MOVES WITH IT. Without this the
+    # world stops intercepting that route, real git answers for a synthetic path, and every G5
+    # vector reports G7 instead -- the right verdict for the wrong reason, six times, which is
+    # exactly the failure this corpus is built to make loud. Found by it, on the first run.
+    #
+    # The seam is EvidenceSource's own `_git` argument. `world.git` returns TEXT and this layer
+    # needs BYTES, so the adapter encodes -- and an unmodelled call still raises CorpusError
+    # through world.git, so a checker reaching git by a route no vector describes is still noticed
+    # rather than silently answered.
+    def _world_git_bytes(*args):
+        if args[:1] == ('show',):
+            r = world.subprocess_run(['git'] + list(args))
+            return r.returncode, r.stdout, r.stderr
+        # `ls-files --cached --error-unmatch` is the reader's tracked/untracked question, which
+        # the world already answers from `append_only.tracked`. Routed to world.git rather than
+        # re-modelled here: one vector fact, one place that decides it.
+        rc, out, err = world.git(*args)
+        return rc, (out or '').encode('utf-8'), (err or '').encode('utf-8')
+
+    att._index_src = lambda: evidence.EvidenceSource('index', root=att._ROOT,
+                                                     _git=_world_git_bytes)
 
     def restore():
         chk._git, chk.head_oid, chk._rev_parse_cached = saved[0], saved[1], saved[2]
         att._D1_ROWS[:] = saved[3]
         att.subprocess = saved[4]
+        att._index_src = saved[5]
     return restore
 
 

@@ -44,6 +44,37 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_s2a_migration as chk  # noqa: E402
+import evidence  # noqa: E402
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+_SRC = [None]
+
+
+def _src():
+    """The ONE mode-driven source for this process (design section 3).
+
+    MODE = `EA_LAB_EVIDENCE`, defaulting to **worktree** -- `EvidenceSource.for_run()`'s own
+    default, and the right one here, unlike check_coverage_transfer where an explicit --worktree
+    flag had already fixed the default at index. This checker is run by hand constantly
+    (`run_s2a_gate.py`, `--template`), and those runs are exactly the "signer looking at the
+    files" case: worktree bytes, with marker() saying so. Under the hook the tier exports
+    `index` and the same code judges the commit.
+    """
+    if _SRC[0] is None:
+        _SRC[0] = evidence.EvidenceSource.for_run(root=_ROOT)
+    return _SRC[0]
+
+
+def _index_src():
+    """PINNED to the index, in every mode, and used by exactly one rule.
+
+    `A7`/`G5` asks "is the committed log still a prefix of what is STAGED". That is a claim about
+    the COMMIT whether a human typed the command or a hook did, so making it follow the process
+    mode would hand manual runs back the defect Codex round 2 filed as a P0 -- A7 reading the
+    working tree, so staging a deletion and restoring the working copy reported 0 problems. The
+    mode is not a preference here; the rule names its snapshot itself.
+    """
+    return evidence.EvidenceSource('index', root=_ROOT)
 
 ATTESTATION_PATH = '_triage/factory_os/s2a_attestations.jsonl'
 DECISIONS = ('APPROVED', 'REFUSED')
@@ -76,15 +107,54 @@ BUNDLE = (
 
 _D1_ROWS = []          # set by main(); the D1 rows, for A6's recompute
 
+# KEYED ON THE SOURCE OBJECT, and that is the whole design of this cache rather than a detail.
+#
+# In index mode the digest costs six `git show` spawns, and the suites call it once per case --
+# measured at +14s on run_contract_binding_tests, which the tier budget refused (92.5s against
+# 90.0s). A cache is the right answer; a cache keyed on NOTHING would be the wrong one, and this
+# repo has the receipt: ORDER-670 migration 4/9 nearly shipped `_CLASSIFICATION_CACHE` keyed on
+# the root alone, so the first call would have decided for both vintages -- a guard caching the
+# value it watches (memory `drift-guard-regenerating-against-head`).
+#
+# Keying on the SOURCE means two sources that read different bytes get different answers, which
+# is exactly what the ATTACK case in run_s2a_attestation_tests requires: it builds a second
+# EvidenceSource over a tampered index and demands a DIFFERENT digest, while the SPECIFICITY case
+# demands the same digest when index and worktree agree. Those two cases fail if this cache ever
+# collapses them, so the cache cannot go wrong silently.
+#
+# The dict holds a reference to each source, which is also why `id()` is not used: an id can be
+# reused after garbage collection, and a cache that can answer for a dead object is a cache that
+# can answer for the wrong one.
+_DIGEST_CACHE = {}
+
 
 def bundle_digest():
+    """The fingerprint a record binds itself to, read through the process source.
+
+    ORDER-670 migration: this read the DISK unconditionally, under the reasoning "the digest
+    describes the bytes the signer is LOOKING AT". True of a manual run and false of the gate --
+    and the gap between them was an A7 at the highest-ceremony target in the repo: stage a change
+    to a bundle file, restore the worktree copy, and the digest recomputes to the OLD value, so
+    the owner's record still validates and THE COMMIT LANDS A BUNDLE CHANGE NO ATTESTATION COVERS.
+
+    The mode is what separates the two readings, which is what it is for. Manual runs
+    (`run_s2a_gate.py`, `--template`) stay worktree and still describe what a signer sees; under
+    the hook the same code fingerprints what the commit contains.
+
+    BYTES, through read_committed_bytes: a digest over decoded-and-renormalised text would
+    fingerprint something other than the file. The CRLF fold stays HERE, where it is visible and
+    where it has always been, so the digest value is unchanged for every existing record.
+    """
+    src = _src()
+    if src in _DIGEST_CACHE:
+        return _DIGEST_CACHE[src]
     h = hashlib.sha256()
     for path in BUNDLE:
         h.update(path.encode('utf-8'))
         h.update(b'\0')
-        with io.open(path, 'rb') as fh:  # snapshot: worktree -- the digest describes the bytes the signer is LOOKING AT; F1 is what compares a record against it
-            h.update(hashlib.sha256(fh.read().replace(b'\r\n', b'\n')).digest())
-    return h.hexdigest()
+        h.update(hashlib.sha256(src.read_committed_bytes(path).replace(b'\r\n', b'\n')).digest())
+    _DIGEST_CACHE[src] = h.hexdigest()
+    return _DIGEST_CACHE[src]
 
 
 BLOB_OID = re.compile(r'^[0-9a-f]{40}$')
@@ -103,9 +173,30 @@ def _is_blob_at_head(path):
 
 def load_records():
     rows, problems = [], []
-    if not os.path.exists(ATTESTATION_PATH):
-        return rows, problems
-    for n, line in enumerate(io.open(ATTESTATION_PATH, encoding='utf-8'), 1):  # snapshot: worktree -- the log being APPENDED to; G5 is what compares it to HEAD/index
+    if os.path.isabs(ATTESTATION_PATH):
+        # A FIXTURE'S OWN TEMP FILE (category C), and the split is by KIND of input rather than
+        # by mode -- the same rule run_guard_shape_lint._read states for absolute paths. Both
+        # suites that drive the REAL loader write their lines to a tempfile and point
+        # ATTESTATION_PATH at it, deliberately, so the loader is the loader instead of being
+        # reimplemented. Such a path is in no index, and read_committed would refuse it: correct
+        # behaviour, wrong question. Caught by the tier the first time this ran in index mode --
+        # every vector reported "no decision in force" because the fixture was invisible.
+        if not os.path.isfile(ATTESTATION_PATH):
+            return rows, problems
+        with io.open(ATTESTATION_PATH, encoding='utf-8') as fh:  # snapshot: not-a-judged-input -- fixture temp file
+            text = fh.read()
+    else:
+        # Existence is a judged fact too: "the log is gone" and "the log is gone FROM THE COMMIT"
+        # are different, and asking the disk while reading the commit is the mixed pair one line
+        # apart.
+        if not _src().exists_committed(ATTESTATION_PATH):
+            return rows, problems
+        # Through the process source: a decision APPENDED but not staged is not a decision this
+        # commit records, and treating it as in force would let the gate pass on an approval the
+        # commit does not contain. Manual runs still read the disk, which is where an owner has
+        # just written; G5 below is the rule that holds the two vintages together.
+        text = _src().read_committed(ATTESTATION_PATH)
+    for n, line in enumerate(text.split('\n'), 1):
         line = line.strip()
         if not line:
             continue
@@ -165,19 +256,35 @@ def check_append_only(problems, path=None, committed=None, working=None):
         # because a guard that does not name its snapshot cannot have its green interpreted.
         # BYTES, not text: A7 is a byte-prefix rule, so `chk._git` (which decodes) is the wrong
         # tool here and the first attempt crashed on `str.replace(b'\r\n', ...)`.
-        sp = subprocess.run(['git', 'show', ':%s' % path], capture_output=True)
-        if sp.returncode == 0:
-            working = sp.stdout
-        else:
+        #
+        # ORDER-670 migration: the hand-rolled `git show :path` is now
+        # `read_committed_bytes` on an INDEX-PINNED source -- see _index_src() for why this one
+        # rule does not follow the process mode. The untracked fallback is kept and is now
+        # explicit rather than a bare else: there is genuinely nothing staged to judge, and the
+        # reader refuses that case (correctly, for a category-A read) which is the wrong answer
+        # to THIS question.
+        try:
+            working = _index_src().read_committed_bytes(path)
+        except evidence.ToolFailure as exc:
             rc2, _, _ = chk._git('ls-files', '--error-unmatch', path)
             if rc2 == 0:
                 problems.append('G7 %s is tracked but could not be read from the index (%s). '
                                 'Append-only cannot be judged against bytes that are not the ones '
-                                'being committed.'
-                                % (path, sp.stderr.decode('utf-8', 'replace').strip()))
+                                'being committed.' % (path, exc))
                 return
-            with io.open(path, 'rb') as fh:  # snapshot: worktree -- reached ONLY for an untracked log (nothing staged to judge; G7 refuses the tracked-unreadable case above)
-                working = fh.read()
+            # NOT IN THE INDEX AT ALL -- and the old code read the WORKING TREE here, described as
+            # "reached ONLY for an untracked log (nothing staged to judge)". That description was
+            # true of the path and false of the situation. Control only reaches this line when
+            # `committed` is non-empty: a few lines up, a log with no HEAD blob RETURNS. So the
+            # state is "HEAD has the log, the index does not" -- the commit DELETES it. Falling
+            # back to the disk then compares HEAD against a working copy the commit is not
+            # keeping, and an append-only guard can pass while append-only history is removed.
+            #
+            # The staged content of an absent path is EMPTY, so saying so lets the existing
+            # prefix rule reach the right answer by itself: b'' cannot start with a non-empty
+            # committed prefix => G5, the criterion that already means exactly this. No new
+            # branch, no new criterion id, and no criterion invented without a fixture.
+            working = b''
     now = working.replace(b'\r\n', b'\n')
     if not now.startswith(committed):
         problems.append('G5 %s is not append-only: the version committed at HEAD is no longer a '
@@ -367,11 +474,14 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
 def main(argv):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
-    if not os.path.exists(chk.MIGRATION_PATH):
+    if not _src().exists_committed(chk.MIGRATION_PATH):
         print('[ABORT] %s does not exist; there is no proposal to attest to.' % chk.MIGRATION_PATH)
         return 2
     digest = bundle_digest()
-    d1 = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]  # snapshot: worktree
+    # D1, through the process source. It is the proposal the records attest TO, so it must be the
+    # same vintage as the digest that fingerprints it -- two moments in one verdict is A2, and
+    # here it would mean recomputing A6's owner set from a D1 the commit does not contain.
+    d1 = [json.loads(l) for l in _src().read_committed(chk.MIGRATION_PATH).split('\n') if l.strip()]
     _D1_ROWS[:] = d1
     d1_owners = sorted({r['current_owner'] for r in d1})
 
