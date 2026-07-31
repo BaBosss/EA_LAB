@@ -105,32 +105,113 @@ L1_FILES = (
 # (true, and useful).
 L1_NOT_PARSED = {
     'scripts/check_block_staleness.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_experiment_events.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_handoff_contract.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_order_collision.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_precommit_staged.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_stale_binaries.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_state.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_taskboard_archive.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_template_dependencies.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_truncated_run.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
     'scripts/check_verdict_kill.ps1':
-        'PowerShell -- L1 has no parser for it',
+        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
 }
 # MEASURED at declaration time: 11 PowerShell checkers, discovered by the glob rather than
 # remembered. If one is added or removed, L0 says so on the next run instead of this number
 # quietly becoming wrong.
 assert len(L1_NOT_PARSED) == 11
+
+# ---------------------------------------------------------------------------------------------
+# L3 -- THE POWERSHELL HALF, and it exists because the alternative was writing declarations
+# nothing reads.
+#
+# ORDER-674 measured the six guards `.githooks/pre-commit` runs BEFORE the fast tier: 7 disk reads,
+# 22 git reads, ZERO declarations. Its owed half is "annotate every read with `# snapshot:` checked
+# against what the code actually does". Adding 30 comments to files this lint declares UNPARSEABLE
+# would have produced exactly the artifact shape 3 is about -- a declaration no mechanism reads,
+# which rots on the first edit and is quoted as coverage forever after. The repo already owns the
+# evidence for that: `docs/SESSION_LEDGER.md`'s summary bullets have been hand-repaired NINE times
+# because nothing derives them (`BACKLOG-D29`).
+#
+# L3 DOES MORE THAN L1, DELIBERATELY. L1 asks "did you say which snapshot?" -- a wrong declaration
+# is still a lie a reviewer must catch by hand. In PowerShell the snapshot is decided by a TOKEN
+# that is right there on the line (`--cached`, `HEAD:`, `Get-Content`), so L3 DERIVES the snapshot
+# from the call and requires the declaration to MATCH it. A declaration that contradicts its own
+# call is refused. That is the difference between "somebody typed a word" and "the word is true".
+#
+# STATED LIMITS, because a lint that oversells itself is shape 3 wearing a badge:
+#   * It is REGEX over comment-stripped source, not a PowerShell AST. A read whose spec is built
+#     several lines away from the call is invisible to it -- the token table below is a closed,
+#     named list of the forms this repo's guards actually use, not a claim about the language.
+#   * It cannot see a read inside a dot-sourced library. `scripts/lib/evidence.ps1` is the READER
+#     (the PowerShell analogue of evidence.py) and is not a checker, so it is out of scope by the
+#     same rule that puts evidence.py in category READER.
+#   * A file with NO recognised read form passes trivially. That is why PS_PENDING releases a file
+#     only when a human has read it -- L3 proves the declarations present are true, never that the
+#     set of reads is complete.
+PS_SNAPSHOT_TOKENS = (
+    # (derived snapshot, label used in the message, regex)
+    # -- git, INDEX vintage: the bytes this commit will contain -------------------------------
+    ('index', 'diff --cached', re.compile(r'diff\s+--cached')),
+    ('index', 'ls-files --cached', re.compile(r'ls-files\s+--cached')),
+    # `git show ':{0}'` / `rev-parse ':path'` -- the index spec is a leading colon inside the
+    # quoted spec. Written as two forms because the guards build the spec both ways.
+    ('index', "an index spec (':...')", re.compile(r"""['"(]\s*:\s*[{'"a-zA-Z]""")),
+    # -- git, HEAD vintage: the baseline a commit is compared AGAINST ---------------------------
+    ('HEAD', "a HEAD spec ('HEAD:...')", re.compile(r"""HEAD\s*:""")),
+    ('HEAD', 'ls-tree ... HEAD', re.compile(r'ls-tree[^\n]*\bHEAD\b')),
+    # -- the disk. NOT a vintage a commit has; see PS_DISK_FORMS below -------------------------
+    ('worktree', 'Get-Content', re.compile(r'\bGet-Content\b')),
+    ('worktree', 'Import-Csv', re.compile(r'\bImport-Csv\b')),
+    ('worktree', '[IO.File]::ReadAll*', re.compile(r'\[(?:System\.)?IO\.File\]::ReadAll')),
+    ('worktree', 'Get-ChildItem', re.compile(r'\bGet-ChildItem\b')),
+    ('worktree', 'Test-Path', re.compile(r'\bTest-Path\b')),
+)
+# The subset of the above that physically reads the DISK. A disk call declaring `index` or `HEAD`
+# is refused outright: the declaration claims a vintage the call cannot produce, which is not a
+# style question. This is the PowerShell form of T7 -- the comment standing in for the call.
+PS_DISK_FORMS = ('Get-Content', 'Import-Csv', '[IO.File]::ReadAll*', 'Get-ChildItem', 'Test-Path')
+
+# Reads through the PowerShell READER (scripts/lib/evidence.ps1) need NO declaration, exactly as
+# `read_committed()` needs none in L1: the CALL chooses the bytes, and that is the whole point of
+# having a reader. A line carrying one of these is skipped before any token is considered.
+PS_READER_CALLS = re.compile(
+    r'\b(?:Read-Committed|Test-CommittedPath|Get-CommittedPaths|ReadJudged|Get-EvidenceMode'
+    r'|Get-EvidenceMarker|Invoke-EvidenceGitBytes)\b')
+
+# PowerShell checkers whose declarations have not been written yet. Same contract as
+# A_BINDING_PENDING: PRINTED on every run, counted from the map, and each guard's own commit
+# deletes its own line -- which is that commit's engagement half. If the line survives, the
+# annotation pass did nothing.
+PS_PENDING = {
+    'scripts/check_block_staleness.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
+    'scripts/check_experiment_events.ps1': 'ORDER-674 owed: 5 git reads, 0 declared',
+    'scripts/check_handoff_contract.ps1': 'ORDER-674 owed: 7 git reads, 0 declared',
+    'scripts/check_order_collision.ps1': 'ORDER-674 owed: 3 git reads, 0 declared',
+    'scripts/check_precommit_staged.ps1': 'ORDER-674 owed: 1 disk + 5 git reads, 0 declared',
+    'scripts/check_stale_binaries.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
+    'scripts/check_state.ps1': 'ORDER-674 migrated its reads but declared none of them',
+    'scripts/check_taskboard_archive.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
+    'scripts/check_template_dependencies.ps1':
+        'ORDER-674 owed: reads undeclared, not a front guard',
+    'scripts/check_truncated_run.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
+    'scripts/check_verdict_kill.ps1': 'ORDER-674 owed: 2 git reads, 0 declared',
+}
+# Every PowerShell checker starts suspended, so THIS commit changes no verdict anywhere. The
+# number is asserted against L1_NOT_PARSED rather than typed twice: a suspension list that can
+# drift from the file list it suspends is the hand-maintained cache L0 exists to refuse.
+assert set(PS_PENDING) == set(L1_NOT_PARSED)
 
 L1_DEFERRED = {
     '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2 '
@@ -448,6 +529,142 @@ def lint_l1(problems, files=None, categories=None):
                 'being committed.' % (rel, n, line.strip()[:90], '|'.join(SNAPSHOTS)))
 
 
+def ps_code_lines(src):
+    """PowerShell source -> [(lineno, code, comment)], with comments SEPARATED, not discarded.
+
+    Both halves are needed and for opposite reasons: the read forms must be looked for in CODE
+    only (every one of these guards documents `git show :<path>` in its own .DESCRIPTION help
+    block, and a lint that fired on its own documentation would refuse valid work -- the
+    optimize_guard failure the Decision log recorded on 2026-07-30), while the declaration lives
+    in the COMMENT. Stripping comments first would delete the answer; not stripping them would
+    manufacture the question.
+
+    Handles `<# ... #>` block comments and single-quoted/double-quoted strings, because `'#'
+    inside a string is not a comment start and this repo's regexes are full of them.
+    """
+    out = []
+    in_block = False
+    for n, line in enumerate(src.split('\n'), 1):
+        code, comment, i, quote = [], '', 0, None
+        while i < len(line):
+            ch = line[i]
+            if in_block:
+                if line.startswith('#>', i):
+                    in_block = False
+                    i += 2
+                    continue
+                i += 1
+                continue
+            if quote:
+                code.append(ch)
+                # '' and "" are the escaped-quote forms in PowerShell; skip the pair.
+                if ch == quote:
+                    if i + 1 < len(line) and line[i + 1] == quote:
+                        code.append(line[i + 1])
+                        i += 2
+                        continue
+                    quote = None
+                i += 1
+                continue
+            if ch in ('"', "'"):
+                quote = ch
+                code.append(ch)
+                i += 1
+                continue
+            if line.startswith('<#', i):
+                in_block = True
+                i += 2
+                continue
+            if ch == '#':
+                comment = line[i:]
+                break
+            code.append(ch)
+            i += 1
+        out.append((n, ''.join(code), comment))
+    return out
+
+
+def lint_l3(problems, files=None, pending=None, source=None):
+    """L3 -- PowerShell reads must declare their snapshot, AND the declaration must be true.
+
+    For each recognised read form the snapshot is DERIVED from the call. Three verdicts:
+      * no declaration            -> refused (L1's rule)
+      * declaration contradicts a DISK call (`index`/`HEAD` on Get-Content & friends)
+                                  -> refused; the comment is standing in for a call that cannot
+                                     produce those bytes. This is T7 in PowerShell.
+      * declaration contradicts a GIT call (`HEAD` written on `--cached`, or the reverse)
+                                  -> refused; the two disagree and only one of them runs.
+
+    `not-a-judged-input` is always accepted and is the deliberate escape hatch, same as L1: a
+    temp file, a scratch path, a tool invocation whose result is not evidence. It is a LOUD word,
+    which is the whole design -- the escape is visible instead of hiding inside the same
+    `worktree` that all 28 pre-ORDER-670 reads used.
+    """
+    pending = PS_PENDING if pending is None else pending
+    for rel in (files if files is not None else sorted(L1_NOT_PARSED)):
+        if rel in pending:
+            continue
+        try:
+            src = _read(rel) if source is None else source
+        except IOError as exc:
+            problems.append('L3 TOOL FAILURE: cannot read %s: %s' % (rel, exc))
+            continue
+        rows = ps_code_lines(src)
+        for idx, (n, code, comment) in enumerate(rows):
+            if not code.strip() or PS_READER_CALLS.search(code):
+                continue
+            hits = [(snap, label) for snap, label, rx in PS_SNAPSHOT_TOKENS if rx.search(code)]
+            if not hits:
+                continue
+            declared = DECLARATION.search(comment)
+            # ...or anywhere in the CONTIGUOUS comment block directly above it.
+            # L1 requires the declaration on the read's own line and that is right for Python,
+            # where a read is short. These guard lines run past 160 characters before a comment
+            # is added, and a rule that can only be satisfied by making them unreadable is a rule
+            # people route around. ATTACHMENT IS STILL STRICT: the walk stops at the first blank
+            # line or line of code, so a declaration binds to the ONE read directly beneath it
+            # and can never be a section heading silently covering a block of them.
+            j = idx - 1
+            while not declared and j >= 0:
+                _, prev_code, prev_comment = rows[j]
+                if prev_code.strip() or not prev_comment.strip():
+                    break
+                declared = DECLARATION.search(prev_comment)
+                j -= 1
+            if not declared:
+                problems.append(
+                    'L3 %s:%s reads %s without declaring which snapshot: %s\n'
+                    '     Add `# snapshot: <%s>` on this line. ORDER-674 measured 22 git reads '
+                    'across the six front guards with ZERO declarations -- five were already '
+                    'right and one judged the working tree over the live-money inventory, and '
+                    'nothing in the source could tell them apart.'
+                    % (rel, n, ' + '.join(sorted(set(l for _, l in hits))),
+                       code.strip()[:80], '|'.join(SNAPSHOTS)))
+                continue
+            said = declared.group(1)
+            if said == 'not-a-judged-input':
+                continue
+            disk = [l for s, l in hits if l in PS_DISK_FORMS]
+            if disk and said in ('index', 'HEAD'):
+                problems.append(
+                    'L3/T7 %s:%s declares `%s` on %s, which reads the DISK and cannot produce '
+                    'those bytes: %s\n'
+                    '     A declaration does not choose bytes. Read it through '
+                    '`Read-Committed` / `Get-CommittedPaths` in scripts/lib/evidence.ps1, which '
+                    'does -- or say `not-a-judged-input` if this is a temp file or a scratch '
+                    'path and make that claim visible.'
+                    % (rel, n, said, ' + '.join(sorted(set(disk))), code.strip()[:80]))
+                continue
+            git = sorted(set(s for s, l in hits if l not in PS_DISK_FORMS))
+            if git and said in ('index', 'HEAD') and said not in git:
+                problems.append(
+                    'L3 %s:%s declares `%s` but the call reads %s: %s\n'
+                    '     The declaration and the call disagree, and only one of them runs. '
+                    'Reading HEAD where the commit is judged is A7; reading the index where a '
+                    'BASELINE is wanted silently compares a thing to itself.'
+                    % (rel, n, said, ' or '.join(git), code.strip()[:80]))
+
+
 def lint_l2(problems, pairs=None):
     for checker, suites in (pairs if pairs is not None else L2_PAIRS).items():
         try:
@@ -525,6 +742,17 @@ def self_test(out=None):
         finally:
             A_BINDING_PENDING.pop(path, None)
 
+    def _l3(problems, body, suspended=False):
+        """One PowerShell source fragment through L3, with the suspension list switchable.
+
+        Source is passed IN rather than written to disk: L3's subject is text, and routing a
+        fixture through _read would only re-test the reader. Both suspension directions are
+        driven from one helper for the reason _t7_pending states -- a suspension nobody can
+        observe suppressing anything is indistinguishable from a rule nobody wrote.
+        """
+        rel = 'scripts/check_synthetic.ps1'
+        lint_l3(problems, [rel], {rel: 'test'} if suspended else {}, source=body + '\n')
+
     def _l0_cat(problems, category, pending=()):
         """The classification completeness rule, over a synthetic file/category pair."""
         rel = 'synthetic/checker.py'
@@ -590,6 +818,59 @@ def self_test(out=None):
         ('L0/T7 CONTROL a classified file is fine', lambda p: _l0_cat(p, 'A'), False),
         ('L0/T7 a suspension on a NON-checker exempts nothing and is refused',
          lambda p: _l0_cat(p, 'B', pending=('synthetic/checker.py',)), True),
+        # -- L3: the PowerShell half. Every case drives lint_l3 over source text directly ------
+        ('L3 an undeclared git read is refused',
+         lambda p: _l3(p, '$x = Git "diff --cached --name-only"'), True),
+        ('L3 CONTROL the same read declared `index` is allowed',
+         lambda p: _l3(p, '$x = Git "diff --cached --name-only"  # snapshot: index'), False),
+        ('L3 a declaration that CONTRADICTS its git call is refused',
+         lambda p: _l3(p, '$x = Git "diff --cached --name-only"  # snapshot: HEAD'), True),
+        ('L3 `index` declared on a HEAD spec is refused',
+         lambda p: _l3(p, "$t = Get-GitBlobText -Spec ('HEAD:{0}' -f $P)  # snapshot: index"),
+         True),
+        ('L3 CONTROL a HEAD spec declared `HEAD` is allowed',
+         lambda p: _l3(p, "$t = Get-GitBlobText -Spec ('HEAD:{0}' -f $P)  # snapshot: HEAD"),
+         False),
+        ('L3 CONTROL an index spec declared `index` is allowed',
+         lambda p: _l3(p, "$t = Get-GitBlobText -Spec (':{0}' -f $P)  # snapshot: index"), False),
+        ('L3/T7 `index` declared on a DISK call is refused',
+         lambda p: _l3(p, '$t = Get-Content $full  # snapshot: index'), True),
+        ('L3/T7 `HEAD` declared on Import-Csv is refused too',
+         lambda p: _l3(p, '$rows = Import-Csv -LiteralPath $p  # snapshot: HEAD'), True),
+        ('L3 CONTROL a disk call declared `worktree` is allowed, and now VISIBLE',
+         lambda p: _l3(p, '$t = Get-Content $full  # snapshot: worktree'), False),
+        ('L3 CONTROL `not-a-judged-input` is the escape hatch and always passes',
+         lambda p: _l3(p, '$t = Get-Content $tmp  # snapshot: not-a-judged-input'), False),
+        ('L3 CONTROL a read through the READER needs no declaration',
+         lambda p: _l3(p, '$t = Read-Committed -RelPath $INV -RepoRoot $Root'), False),
+        # The two that make L3 usable rather than merely strict. Every one of these guards
+        # DOCUMENTS its own git specs in a `<# .DESCRIPTION #>` help block; a lint that fired on
+        # a file's own documentation is the guard that refuses valid work (Decision log
+        # 2026-07-30), and it would have fired on all six on its first run.
+        ('L3 CONTROL a git spec inside a <# block comment #> is prose, not a read',
+         lambda p: _l3(p, '<#\n    reads `git show ":{0}"` from the index\n#>\n$a = 1'), False),
+        ('L3 CONTROL a git spec inside a # line comment is prose too',
+         lambda p: _l3(p, '# we could use diff --cached here one day\n$a = 1'), False),
+        ('L3 CONTROL a `#` inside a quoted string does not start a comment',
+         lambda p: _l3(p, "$x = Git ('show \"#{0}\"' -f $s)  # snapshot: not-a-judged-input"),
+         False),
+        ('L3 CONTROL a declaration on the comment line immediately above counts',
+         lambda p: _l3(p, '# snapshot: index -- the paths this commit carries\n'
+                          '$x = Git "diff --cached --name-only"'), False),
+        ('L3 CONTROL a declaration higher in the SAME comment block counts',
+         lambda p: _l3(p, '# snapshot: index -- what this commit carries\n'
+                          '# and the second line of the same block explains why\n'
+                          '$x = Git "diff --cached --name-only"'), False),
+        ('L3 a declaration separated by a BLANK line does not attach',
+         lambda p: _l3(p, '# snapshot: index\n\n$x = Git "diff --cached --name-only"'), True),
+        ('L3 a declaration two lines up does not attach either',
+         lambda p: _l3(p, '# snapshot: index\n$y = 1\n$x = Git "diff --cached"'), True),
+        ('L3 a CONTRADICTING declaration on the line above is still caught',
+         lambda p: _l3(p, '# snapshot: HEAD\n$x = Git "diff --cached --name-only"'), True),
+        ('L3 a suspended PowerShell checker is NOT flagged (suspension works)',
+         lambda p: _l3(p, '$x = Git "diff --cached"', suspended=True), False),
+        ('L3 the same file WITHOUT the suspension is flagged (it suppressed something real)',
+         lambda p: _l3(p, '$x = Git "diff --cached"', suspended=False), True),
     ]
     for label, fn, expect_red in cases:
         got = []
@@ -615,6 +896,7 @@ def main(argv):
     lint_l0(problems)
     lint_l1(problems)
     lint_l2(problems)
+    lint_l3(problems)
     tool = [p for p in problems if 'TOOL FAILURE' in p]
     out.write('=== ORDER-616 guard-shape lint ===\n')
     out.write('L1 snapshot declarations : %s file(s) checked, %s deferred (%s)\n'
@@ -622,6 +904,13 @@ def main(argv):
                  '; '.join('%s -- %s' % (os.path.basename(k), v)
                            for k, v in sorted(L1_DEFERRED.items()))))
     out.write('L2 criterion coverage    : %s checker/suite pair(s)\n' % len(L2_PAIRS))
+    # SAME CONTRACT AS THE T7 LINE BELOW, and for the same reason: a pending list nobody sees is
+    # an exemption nobody counts. Derived from the maps on every run, never typed.
+    _ps = sorted(L1_NOT_PARSED)
+    _psp = sorted(f for f in _ps if f in PS_PENDING)
+    out.write('L3 PowerShell snapshots  : %s of %s checker(s) declared; %s still suspended%s\n'
+              % (len(_ps) - len(_psp), len(_ps), len(_psp),
+                 (' -- ' + ', '.join(os.path.basename(f) for f in _psp)) if _psp else ''))
     # PRINT THE SUSPENSIONS ON EVERY RUN. A pending list nobody sees is an exemption nobody
     # counts, and this repo's own record is that such a list stops shrinking the moment it stops
     # being read. Counted from the maps, never typed.

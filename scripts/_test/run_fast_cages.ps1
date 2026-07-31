@@ -558,6 +558,14 @@ $SUITE_GUARDS = @{
                                           # ORDER-616: the shape lint reads the checkers
                                           # AND their suites, so both sides are inputs.
                                           '_triage/factory_os/run_guard_shape_lint.py',
+                                          # ORDER-674 owed half: L3 now READS the PowerShell
+                                          # checkers, so editing one changes what this suite
+                                          # proves. Declared as a glob because L0 discovers them
+                                          # by glob -- a hand-typed list of eleven filenames is
+                                          # the hand-maintained cache L0 exists to refuse, and
+                                          # the twelfth checker would be enforced only when
+                                          # something else happened to be staged (D32).
+                                          'scripts/check_*.ps1',
                                           'docs/GUARD_SHAPES.md',
                                           '_triage/factory_os/gen_coverage.py',
                                           '_triage/factory_os/check_coverage_transfer.py',

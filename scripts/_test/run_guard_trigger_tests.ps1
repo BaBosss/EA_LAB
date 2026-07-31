@@ -316,15 +316,40 @@ try {
     # refusals are driven here so they are OBSERVED RED, not merely written; a detector
     # nobody has seen fire is UNTESTED by the VERDICT GATE's own rule.
     $before = $fail
-    # A staged path selecting only three sub-second suites, so these nested tier runs are
-    # cheap; none of the three is a declared evidence suite, which is exactly what the
-    # override exists to simulate.
+    # A staged path selecting ONE sub-second suite, because this part runs the nested tier THREE
+    # times and pays for every selected suite three times over.
+    #
+    # 2026-07-31: it used to stage `scripts/check_taskboard_archive.ps1` under the comment "a
+    # staged path selecting only three sub-second suites". That was true when it was written and
+    # stopped being true the moment another suite declared `scripts/check_*.ps1` -- the fixture
+    # then pulled in an 18s suite and PART 6 went 7s -> 106s, breaching the per-path budget on
+    # the commit that made the declaration. Nothing was wrong with the declaration; the fixture's
+    # CHEAPNESS WAS AN UNDECLARED ASSUMPTION about somebody else's table.
+    # So: the pair moved to `docs/SESSION_LEDGER.md` + `run_order_collision_tests.ps1` (the same
+    # cheap pair PART 7 already uses), and the assumption is ASSERTED below instead of assumed.
     $cheapStaged = Join-Path ([System.IO.Path]::GetTempPath()) ("gt670_" + [guid]::NewGuid().ToString('N') + '.txt')
-    Set-Content -LiteralPath $cheapStaged -Encoding ASCII -Value 'scripts/check_taskboard_archive.ps1'
+    Set-Content -LiteralPath $cheapStaged -Encoding ASCII -Value 'docs/SESSION_LEDGER.md'
     try {
-        # T4 ATTACK: declare statusclass an evidence suite; it emits no marker => tier fails, naming it.
-        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_statusclass_tests.ps1') 2>&1)
-        if ($LASTEXITCODE -eq 1 -and (($o1 -join "`n") -match 'run_statusclass_tests\.ps1 emitted NO evidence-mode marker')) {
+        # THE COST ASSUMPTION, CHECKED. If a future declaration widens what this path selects,
+        # this says so in one line instead of being discovered as a budget breach three parts later.
+        $cheapSel = @(Selection @('docs/SESSION_LEDGER.md'))
+        if ($cheapSel.Count -le 2) {
+            Good ("PART 6's fixture path still selects {0} suite(s) -- the nested runs stay cheap" -f $cheapSel.Count)
+        } else {
+            # PARENTHESISED AS ONE STRING. `"a" + "b" -f $x` parses as `"a" + ("b" -f $x)`, so only
+            # the LAST fragment is formatted and every {0} above it prints literally. This exact
+            # message did that when it was first observed red -- it named neither the count nor the
+            # suites, which are the only two facts it exists to carry. Same trap the ORDER-674
+            # library hit; caught here only because the case was DRIVEN red instead of reasoned red.
+            Bad (("PART 6's fixture path now selects {0} suites ({1}) and this part runs the tier " +
+                  "THREE times. Pick a cheaper staged path, or accept the cost in the budget " +
+                  "deliberately -- do not leave it to be found as a breach.") -f $cheapSel.Count, ($cheapSel -join ', '))
+        }
+        # T4 ATTACK: declare the selected suite an evidence suite; it emits no marker => tier
+        # fails, naming it. The suite named here MUST be one the fixture path selects, or the
+        # attack would pass for the wrong reason (nothing in scope to be silent).
+        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_order_collision_tests.ps1') 2>&1)
+        if ($LASTEXITCODE -eq 1 -and (($o1 -join "`n") -match 'run_order_collision_tests\.ps1 emitted NO evidence-mode marker')) {
             Good 'T4 ATTACK a declared evidence suite emitting no marker fails the hook tier, by name'
         } else {
             Bad ("T4 ATTACK expected exit 1 naming the silent suite; got exit {0}" -f $LASTEXITCODE)

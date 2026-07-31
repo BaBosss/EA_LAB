@@ -55,6 +55,7 @@ portfolio/DEPLOYMENTS.csv
 scripts/*.ps1
 scripts/_test/*
 scripts/_test/run_fast_cages.ps1
+scripts/check_*.ps1
 scripts/check_handoff_contract.ps1
 scripts/check_order_collision.ps1
 scripts/check_precommit_staged.ps1
