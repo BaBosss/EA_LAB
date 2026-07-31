@@ -193,6 +193,20 @@ PS_DISK_FORMS = ('Get-Content', 'Import-Csv', '[IO.File]::ReadAll*', 'Get-ChildI
 # Reads through the PowerShell READER (scripts/lib/evidence.ps1) need NO declaration, exactly as
 # `read_committed()` needs none in L1: the CALL chooses the bytes, and that is the whole point of
 # having a reader. A line carrying one of these is skipped before any token is considered.
+# A DIAGNOSTIC IS NOT A READ. Every one of these guards quotes its own git command back in the
+# error it throws -- `throw ('git diff --cached --name-status failed (exit {0}): {1}' -f ...)` --
+# and six such lines across two files were flagged on L3's first real run. Annotating them would
+# have been pure noise-suppression: a `# snapshot:` comment on a message is a lie in the exact
+# form this lint exists to refuse, and a lint whose findings are mostly noise is the guard people
+# route around (Decision log 2026-07-30).
+#
+# The discriminator is measured, not guessed: on the two files that carry these, EVERY message
+# line has a diagnostic verb and NO assignment, and every real read either assigns or has no verb.
+# STATED LIMIT: a read nested inside a diagnostic (`Write-Host (Get-Content $p)`) is invisible to
+# this rule. None exists in these guards today; the only thing that finds one is a hand count of
+# the file's reads against L3's findings, which is how the array-argument hole was found.
+PS_DIAGNOSTIC = re.compile(r'\b(?:throw|Write-Host|Write-Output|Write-Error|Write-Warning)\b')
+
 PS_READER_CALLS = re.compile(
     r'\b(?:Read-Committed|Test-CommittedPath|Get-CommittedPaths|ReadJudged|Get-EvidenceMode'
     r'|Get-EvidenceMarker|Invoke-EvidenceGitBytes)\b')
@@ -622,6 +636,8 @@ def lint_l3(problems, files=None, pending=None, source=None):
         for idx, (n, code, comment) in enumerate(rows):
             if not code.strip() or PS_READER_CALLS.search(code):
                 continue
+            if PS_DIAGNOSTIC.search(code) and '=' not in code:
+                continue                      # the guard quoting its own command in a message
             hits = [(snap, label) for snap, label, rx in PS_SNAPSHOT_TOKENS if rx.search(code)]
             if not hits:
                 continue
@@ -863,6 +879,15 @@ def self_test(out=None):
         ('L3 CONTROL a `#` inside a quoted string does not start a comment',
          lambda p: _l3(p, "$x = Git ('show \"#{0}\"' -f $s)  # snapshot: not-a-judged-input"),
          False),
+        ('L3 CONTROL a guard quoting its own git command in a THROW is not a read',
+         lambda p: _l3(p, "if ($r.ExitCode -ne 0) { throw ('git diff --cached failed: {0}' -f $e) }"),
+         False),
+        ('L3 CONTROL the same shape in a Write-Host NOTE is not a read either',
+         lambda p: _l3(p, "Write-Host ('{0} NOTE: HEAD:{1} not readable' -f $Tag, $ArchivePath)"),
+         False),
+        ('L3 a real read that ALSO writes a message is still a read',
+         lambda p: _l3(p, "if ($null -eq $t) { $t = Get-GitBlobText -Spec ('HEAD:{0}' -f $P) }"),
+         True),
         ('L3 the ARRAY argument form is a read too, not invisible',
          lambda p: _l3(p, "$r = Invoke-GitText -Arguments @('diff','--cached','--name-status')"),
          True),
