@@ -204,6 +204,48 @@ try {
         ('| `S-GENSTANDING` | 2026-07-26 | (' + $THAI2 + ') | `_mt5_auto/**` | - | `ACTIVE` |')
     ))
 
+    # ---- ORDER-675: a range token must be a RANGE, not any two numbers with a dash ----
+    # Found by using this guard: a real lane row cited `ARCHIVE_TASKBOARD_2026-07A.md` in its
+    # order-block cell. The cell scan matched "2026-07", the low>high swap turned it into
+    # 7-2026, and that ONE range contains every order number this repo will ever issue -- so
+    # the reserved-block rule passed ORDER-999 while reporting PASS.
+    $ledgerActiveFilename = Write-Fixture 'ledger_active_filename.md' (New-Ledger @(
+        ('| `S-FNAME` | 2026-07-31 | **230-239** ' + $MID + ' parsed out of `ARCHIVE_TASKBOARD_2026-07A.md` before reserving | `_mt5_auto/**` | - | `ACTIVE` |')
+    ))
+
+    # Same defect through a plain date rather than a filename.
+    $ledgerActiveDate = Write-Fixture 'ledger_active_date.md' (New-Ledger @(
+        ('| `S-DATE` | 2026-07-31 | **230-239** ' + $MID + ' re-derived 2026-07-31 by parsing both boards | `_mt5_auto/**` | - | `ACTIVE` |')
+    ))
+
+    # A descending pair is not a range. Swapping it invents a declaration nobody wrote.
+    $ledgerActiveDescending = Write-Fixture 'ledger_active_desc.md' (New-Ledger @(
+        ('| `S-DESC` | 2026-07-31 | **239-230** | `_mt5_auto/**` | - | `ACTIVE` |')
+    ))
+
+    # ENGAGEMENT: two real blocks in one cell must BOTH still be enforced after the fix.
+    $ledgerActiveTwoBlocks = Write-Fixture 'ledger_active_two.md' (New-Ledger @(
+        ('| `S-TWO` | 2026-07-31 | **610-619** + **660-669** | `_mt5_auto/**` | - | `ACTIVE` |')
+    ))
+
+    $activeNew999 = Write-Fixture 'active_new_999.md' (@(
+        '# AGENT_TASKBOARD',
+        ('## ORDER-100 ' + $EM + ' pre-existing, far outside any block'),
+        ('## ORDER-999 ' + $EM + ' brand new, outside anything anyone reserved')
+    ) -join "`r`n")
+
+    $activeNew665 = Write-Fixture 'active_new_665.md' (@(
+        '# AGENT_TASKBOARD',
+        ('## ORDER-100 ' + $EM + ' pre-existing'),
+        ('## ORDER-665 ' + $EM + ' brand new, inside the SECOND declared block')
+    ) -join "`r`n")
+
+    $activeNew635 = Write-Fixture 'active_new_635.md' (@(
+        '# AGENT_TASKBOARD',
+        ('## ORDER-100 ' + $EM + ' pre-existing'),
+        ('## ORDER-635 ' + $EM + ' brand new, BETWEEN the two declared blocks')
+    ) -join "`r`n")
+
     $ledgerNoTable = Write-Fixture 'ledger_notable.md' (@(
         '# SESSION_LEDGER',
         '',
@@ -301,6 +343,56 @@ try {
         ArchiveContent      = ''
         LedgerContent       = $ledgerActiveNoBlock
     } -MustContain @('PASS', 'declares a parseable order block') -MustNotContain @('BLOCK')
+
+    # ---- ORDER-675 ----------------------------------------------------------------
+    # ATTACK. A filename in the block cell must not become a range. Before the fix the
+    # cell scan read "2026-07" out of ARCHIVE_TASKBOARD_2026-07A.md, swapped it to
+    # 7-2026, and that range contains every id -- so this case PASSED and said so.
+    Test-Case -Name 'RULE2/675 ATTACK filename 2026-07A in block cell must not become a range -> BLOCK' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeNewOutside
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveFilename
+    } -MustContain @('BLOCK', 'ORDER-245 is outside every ACTIVE reserved block (230-239)')
+
+    Test-Case -Name 'RULE2/675 ATTACK a date in the block cell must not become a range -> BLOCK (999)' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeNew999
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveDate
+    } -MustContain @('BLOCK', 'ORDER-999 is outside every ACTIVE reserved block (230-239)')
+
+    # ENGAGEMENT. The fix must not achieve its result by parsing nothing: the real block
+    # in the very same cell still has to be found and still has to permit its own ids.
+    Test-Case -Name 'RULE2/675 ENGAGEMENT the real block in that same cell still parses -> 231 passes' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeNewInside
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveFilename
+    } -MustContain @('PASS', 'enforcing reserved block(s): 230-239') -MustNotContain @('BLOCK')
+
+    Test-Case -Name 'RULE2/675 ENGAGEMENT two declared blocks are BOTH enforced -> 665 passes' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeNew665
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveTwoBlocks
+    } -MustContain @('PASS', 'enforcing reserved block(s): 610-619, 660-669') -MustNotContain @('BLOCK')
+
+    Test-Case -Name 'RULE2/675 SPECIFICITY the gap between two blocks is still outside -> 635 BLOCKs' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeNew635
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveTwoBlocks
+    } -MustContain @('BLOCK', 'ORDER-635 is outside every ACTIVE reserved block (610-619, 660-669)')
+
+    # A descending pair is not a range. Swapping it invents a declaration nobody wrote --
+    # and the swap is what made the filename defect fatal rather than merely wrong.
+    Test-Case -Name 'RULE2/675 descending pair is reported, not silently swapped' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeNewOutside
+        HeadActiveContent   = $headActive100
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActiveDescending
+    } -MustContain @('PASS', 'ignored malformed order-block token 239-230', 'declares a parseable order block') -MustNotContain @('BLOCK')
 
     Test-Case -Name 'RULE2 ledger absent entirely -> pass with NOTE' -ExpectCode 0 -Params @{
         StagedActiveContent = $activeNewOutside

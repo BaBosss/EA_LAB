@@ -105,6 +105,31 @@
 
 ---
 
+## ORDER-675 — [infra/guard] The collision guard read a FILENAME as a reserved block and permitted every order number in the repo — `DONE (Claude/Opus 2026-07-31) — 25/25, 5 cases observed red first` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Found by using it, not by auditing it.** This lane reserved `670-679`, and the hook still printed *"no ACTIVE lane … reserved-block and owned-path rules skipped"*. **Three separate defects, in sequence, each hiding the next:**
+
+| # | defect | how it presented |
+|---|---|---|
+| 1 | the row's `order block` cell quoted a shell command containing an escaped **pipe**; the parser splits on that character regardless of the markdown escape ⇒ the row parsed as **10 columns instead of 7** and its status landed on the wrong cell | a NOTE. `ORDER-670`–`674` were committed under the skip. |
+| 2 | the repaired row led its status cell with a 🔴 prose note, and the status verb is **anchored to the start** ⇒ still not `ACTIVE` | the same NOTE |
+| 3 | 🔴 **the real one:** the range scan was `(\d+)\s*-\s*(\d+)` over the **whole cell** with a **low>high swap**. The cell cited `ARCHIVE_TASKBOARD_2026-07A.md` ⇒ matched `2026-07` ⇒ swapped to **7–2026** ⇒ one range containing **every order number this repo will ever issue** | `PASS` on a probe of **ORDER-999** |
+
+### Fixed
+
+- a range token must be a **range**: boundaries reject a match glued to a word char, a dot or another dash, which excludes `2026-07A` and `2026-07-31`;
+- **no swap.** A descending pair is a token the parser cannot interpret, not a declaration written backwards — inverting it **invents a reservation nobody made**. Ignored and **named**, because *"I could not read it"* must never look like *"there was nothing there"*;
+- 🎯 **the guard now prints `enforcing reserved block(s): …` on every run**, per the Decision-log rule that a guard must be able to state what it **allows**. That line paid for itself on its first execution: it showed this lane declaring **six** ranges, because the cell's prose explaining *which blocks other lanes had taken* was being read as **this** lane reserving them. Prose in a machine-read cell became a declaration — the same class as defect 3, in the same cell, found only because the guard was made to speak.
+
+### Evidence
+
+`run_order_collision_tests.ps1` **25/25**, was 20/25: **2 attacks** (a filename ⇒ must BLOCK an out-of-block id · a date ⇒ must BLOCK `999`) · **2 engagement** (the real block in that same cell still parses; two declared blocks are **both** enforced) · **1 specificity** (the **gap** between two blocks is still outside). Verified against the real ledger both ways afterwards: `675` passes, `999` blocks.
+
+### ห้าม
+- ❌ Do not restore the swap. ❌ Do not put a bare `NNN-NNN` in a block cell that is not a reservation. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-670 — [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the INDEX — one answer, not thirty-one patches — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Design (binding): [`_triage/factory_os/TIER_SNAPSHOT_DESIGN.md`](_triage/factory_os/TIER_SNAPSHOT_DESIGN.md) rev 2 @ `84c939e`.** This order builds §3 and is accepted on §5 T1–T7. Do not re-derive the design here; do not amend it to make a fixture pass.

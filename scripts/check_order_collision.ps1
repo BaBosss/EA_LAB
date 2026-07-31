@@ -254,11 +254,25 @@ function Get-LedgerLanes {
         $blockRaw = ''
         if ($colBlock -ge 0 -and $cells.Count -gt $colBlock) { $blockRaw = $cells[$colBlock] }
 
+        # A RANGE TOKEN MUST BE A RANGE, not any two numbers that happen to have a dash
+        # between them (ORDER-675). The old scan was '(\d+)\s*-\s*(\d+)' over the whole cell
+        # with a low>high SWAP, and lane rows legitimately cite filenames and dates in this
+        # column. `ARCHIVE_TASKBOARD_2026-07A.md` yielded 2026-07, the swap turned it into
+        # 7-2026, and that ONE range contains every order number this repo will ever issue --
+        # so the reserved-block rule reported PASS on ORDER-999. Measured on the real ledger,
+        # by the lane that wrote the row.
+        #   * the boundaries reject a match glued to a word char, a dot or another dash, which
+        #     is what excludes 2026-07A (leading '_') and 2026-07-31 (trailing '-31');
+        #   * NO SWAP. A descending pair is not a declaration written backwards, it is a token
+        #     this parser cannot interpret -- inverting it INVENTS a reservation nobody made.
+        #     It is ignored and NAMED, because "I could not read it" must never look like
+        #     "there was nothing there" (memory: guard-disarmed-by-prose-reported-as-note).
         $ranges = New-Object System.Collections.Generic.List[object]
-        foreach ($m in [regex]::Matches($blockRaw, '(\d+)\s*-\s*(\d+)')) {
+        $malformed = New-Object System.Collections.Generic.List[string]
+        foreach ($m in [regex]::Matches($blockRaw, '(?<![-\w.])(\d+)\s*-\s*(\d+)(?![-\w.])')) {
             $lo = [int]$m.Groups[1].Value
             $hi = [int]$m.Groups[2].Value
-            if ($lo -gt $hi) { $t = $lo; $lo = $hi; $hi = $t }
+            if ($lo -gt $hi) { $malformed.Add($m.Value.Trim()); continue }
             $ranges.Add([pscustomobject]@{ Low = $lo; High = $hi })
         }
 
@@ -283,6 +297,7 @@ function Get-LedgerLanes {
             SessionId = $sessionId
             Status    = $statusVerb
             Ranges    = $ranges.ToArray()
+            Malformed = $malformed.ToArray()
             OwnsPaths = $owns.ToArray()
         })
     }
@@ -475,6 +490,13 @@ if ($ledgerUsable) {
     $ranges = New-Object System.Collections.Generic.List[object]
     foreach ($lane in $activeLanes) { foreach ($r in $lane.Ranges) { $ranges.Add($r) } }
 
+    # Name what could not be read, per ACTIVE lane. An unreadable token is not an absence.
+    foreach ($lane in $activeLanes) {
+        foreach ($bad in $lane.Malformed) {
+            Write-Host ('{0} NOTE: ignored malformed order-block token {1} in lane {2} (high < low; NOT swapped -- inverting it would invent a reservation)' -f $Tag, $bad, $lane.SessionId)
+        }
+    }
+
     if ($ranges.Count -eq 0) {
         Write-Host ('{0} NOTE: no ACTIVE lane in {1} declares a parseable order block -- reserved-block rule skipped' -f $Tag, $LedgerPath)
     } else {
@@ -482,6 +504,11 @@ if ($ledgerUsable) {
         foreach ($h in (Get-OrderHeaders -Text $headActive)) { $headIds[$h.Id] = $true }
 
         $rangeText = (($ranges | ForEach-Object { '{0}-{1}' -f $_.Low, $_.High }) -join ', ')
+        # STATE WHAT IS ALLOWED, on every run -- not only inside a refusal (Decision log
+        # 2026-07-30: "any future guard must be able to state what it ALLOWS"). One printed
+        # line would have exposed ORDER-675's swallowed range the first time it appeared,
+        # instead of it being found by probing the guard with an id nobody had reserved.
+        Write-Host ('{0} enforcing reserved block(s): {1}' -f $Tag, $rangeText)
         foreach ($id in (@($stagedHeaders | ForEach-Object { $_.Id }) | Select-Object -Unique)) {
             if ($headIds.ContainsKey($id)) { continue }          # not new in this commit
             if ($id -notmatch '^\d+$') {
