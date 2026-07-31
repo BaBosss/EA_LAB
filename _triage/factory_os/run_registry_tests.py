@@ -87,7 +87,11 @@ def _write_param_registry(root):
         for name, cls in SYNTHETIC_PARAMS:
             cells = [name] + [''] * 9 + [cls, '']
             fh.write(','.join('"%s"' % c for c in cells) + chr(10))
-    reg._CLASSIFICATION_CACHE.pop(root, None)
+    # ORDER-670 migration: the cache is keyed on (root, MODE), so popping `root` alone stopped
+    # clearing anything the moment the mode half was added. A fixture helper that silently
+    # stops resetting state is how a later case passes on an earlier case's answer.
+    for k in [k for k in reg._CLASSIFICATION_CACHE if k[0] == root]:
+        reg._CLASSIFICATION_CACHE.pop(k, None)
 
 
 def seed(root, **content):
@@ -784,6 +788,65 @@ def main():
                   data.decode('utf-8').replace('\r\n', '\n') == clean and st.st_size > 0)
         finally:
             shutil.rmtree(t1, ignore_errors=True)
+
+        # T1/RESOLVER -- the migration of registry.py's OWN read (ORDER-670, design section 6).
+        # Until this commit `resolve()` answered "may this run optimize this parameter" from
+        # docs/PARAM_REGISTRY.csv on the WORKING TREE, while the tier that consumes the answer
+        # runs as a pre-commit hook. A staged classification flip was therefore invisible to it.
+        t1r = seed(tempfile.mkdtemp(prefix='s5evd1r_'))
+        try:
+            _git(t1r, 'init', '-q')
+            _git(t1r, 'add', '-A')
+            csv_path = os.path.join(t1r, 'docs', 'PARAM_REGISTRY.csv')
+            clean_csv = io.open(csv_path, encoding='utf-8').read()
+            dead = clean_csv.replace('"SL_ATR","","","","","","","","","","ACTIVE",""',
+                                     '"SL_ATR","","","","","","","","","","INACTIVE",""')
+            check('T1/RESOLVER the fixture flip is a real edit (guards the case against a '
+                  'search string that matches nothing)', dead != clean_csv)
+            sr_i = evd.EvidenceSource('index', root=t1r)
+            sr_w = evd.EvidenceSource('worktree', root=t1r)
+
+            # THE ATTACK: stage "this dial is dead", restore the live worktree copy.
+            with io.open(csv_path, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(dead)
+            _git(t1r, 'add', 'docs/PARAM_REGISTRY.csv')
+            with io.open(csv_path, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(clean_csv)
+            _write_param_registry(t1r)          # restore + clear the cache for this root
+            with io.open(csv_path, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(clean_csv)
+            check('T1/RESOLVER ATTACK index mode reads the STAGED classification (INACTIVE) '
+                  'while the worktree says ACTIVE -- the resolver now judges the commit',
+                  reg.classification_of('SL_ATR', root=t1r, source=sr_i)[0] == 'INACTIVE',
+                  str(reg.classification_of('SL_ATR', root=t1r, source=sr_i)))
+            check('T1/RESOLVER ATTACK worktree mode still answers ACTIVE -- the pre-670 '
+                  'blindness, confined to manual runs that say so',
+                  reg.classification_of('SL_ATR', root=t1r, source=sr_w)[0] == 'ACTIVE')
+            # ... and the answer reaches the DECISION, not just the lookup
+            stores = reg.load_all(root=t1r, source=sr_i)
+            check('T1/RESOLVER ATTACK the staged classification reaches resolve(): a dead dial '
+                  'is not optimizable',
+                  not reg.resolve('B14-H01-r1', 'SL_ATR', root=t1r, stores=stores,
+                                  source=sr_i)['optimizable'])
+
+            # SPECIFICITY 1 -- the cache must not serve one vintage's answer to the other. Keyed
+            # on the root alone (as it was), the FIRST call above would have decided for both.
+            check('T1/RESOLVER SPECIFICITY the classification cache is keyed on (root, mode) -- '
+                  'index and worktree answers coexist rather than overwrite',
+                  reg.classification_of('SL_ATR', root=t1r, source=sr_i)[0] == 'INACTIVE'
+                  and reg.classification_of('SL_ATR', root=t1r, source=sr_w)[0] == 'ACTIVE')
+            # SPECIFICITY 2 -- with nothing staged-but-different, the migration changes NOTHING
+            _git(t1r, 'add', 'docs/PARAM_REGISTRY.csv')
+            _write_param_registry(t1r)
+            with io.open(csv_path, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(clean_csv)
+            check('T1/RESOLVER SPECIFICITY with nothing staged differently, index and worktree '
+                  'and the un-migrated no-source path all agree',
+                  (reg.classification_of('SL_ATR', root=t1r, source=sr_i)[0]
+                   == reg.classification_of('SL_ATR', root=t1r, source=sr_w)[0]
+                   == reg.classification_of('SL_ATR', root=t1r)[0] == 'ACTIVE'))
+        finally:
+            shutil.rmtree(t1r, ignore_errors=True)
 
         # T2 -- no silent fallback, all three refusal legs.
         t2 = seed(tempfile.mkdtemp(prefix='s5evd2_'))

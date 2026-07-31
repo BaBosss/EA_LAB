@@ -150,8 +150,20 @@ DEAD_CLASSIFICATIONS = ('INACTIVE', 'COMPATIBILITY')
 _CLASSIFICATION_CACHE = {}
 
 
-def _classifications(root=None):
+def _classifications(root=None, source=None):
     """-> {bare parameter name: classification} from docs/PARAM_REGISTRY.csv.
+
+    ORDER-670 migration (the resolver's OWN read). `resolve()` decides whether a parameter is
+    optimizable, and it decided that from the WORKING TREE while the tier that consumes it runs
+    as a pre-commit hook. `source` moves it: the index in hook mode, the disk otherwise. Handed
+    no source it still reads the disk, and that default is a scheduled removal (design section
+    6), not a preference -- the same wording `read_store` carries.
+
+    🔴 THE CACHE IS KEYED ON (root, MODE), and the mode half is not decoration. `_CLASSIFICATION_
+    CACHE` was keyed on the root alone; adding a source without touching it would let a worktree
+    answer be served to an index-mode caller from the first call onwards -- a guard caching the
+    value it is watching, which is the defect recorded in memory
+    `drift-guard-regenerating-against-head`. The two vintages must not share a slot.
 
     POSITIONAL, index 0 = name and index 10 = classification, which is what
     scripts/optimize_guard.ps1 reads ($m[10]) and what its own header calls "column 11". The file
@@ -165,39 +177,52 @@ def _classifications(root=None):
     SKIPPED AND COUNTED rather than guessed at.
     """
     base = REPO_ROOT if root is None else root
-    if base in _CLASSIFICATION_CACHE:
-        return _CLASSIFICATION_CACHE[base]
-    path = os.path.join(base, PARAM_REGISTRY_REL.replace('/', os.sep))
-    if not os.path.isfile(path):
-        _refuse('%s is not present, so a parameter PERMANENT-semantics lookup is impossible. '
-                'Refused rather than defaulted: "I cannot tell whether this input is dead" must '
-                'never be answered as "it is live".' % PARAM_REGISTRY_REL)
+    key = (base, source.mode if source is not None else 'worktree-direct')
+    if key in _CLASSIFICATION_CACHE:
+        return _CLASSIFICATION_CACHE[key]
+    if source is not None:
+        if not source.exists_committed(PARAM_REGISTRY_REL):
+            _refuse('%s is not present (%s mode), so a parameter PERMANENT-semantics lookup is '
+                    'impossible. Refused rather than defaulted: "I cannot tell whether this '
+                    'input is dead" must never be answered as "it is live".'
+                    % (PARAM_REGISTRY_REL, source.mode))
+        try:
+            text = source.read_committed(PARAM_REGISTRY_REL)
+        except Exception as exc:      # evidence.ToolFailure -- cannot read IS a refusal here
+            _refuse('%s: %s' % (PARAM_REGISTRY_REL, exc))
+    else:
+        path = os.path.join(base, PARAM_REGISTRY_REL.replace('/', os.sep))
+        if not os.path.isfile(path):
+            _refuse('%s is not present, so a parameter PERMANENT-semantics lookup is impossible. '
+                    'Refused rather than defaulted: "I cannot tell whether this input is dead" '
+                    'must never be answered as "it is live".' % PARAM_REGISTRY_REL)
+        with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
+            text = fh.read()
     out, skipped = {}, 0
-    with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
-        for line in fh:
-            if not line.startswith('"'):
-                continue
-            fields = re.findall(r'"([^"]*)"', line)
-            if len(fields) < 11:
-                skipped += 1
-                continue
-            name = fields[0].strip()
-            if not name:
-                skipped += 1
-                continue
-            # KEYED ON THE FULL NAME, TAG INCLUDED. The first version stripped the build tag
-            # and wrote out[bare], which is last-wins across rows that disagree -- and they DO:
-            # measured, StackMode[LAB_ENTRY_16] is INACTIVE while the other seven StackMode rows
-            # are ACTIVE. Collapsing eight answers into one and keeping whichever came last is the
-            # same "a store with two answers cannot be a resolver" defect this module refuses for
-            # duplicate bindings, committed by the resolver itself.
-            out[name] = fields[10].strip().upper()
+    for line in text.split('\n'):
+        if not line.startswith('"'):
+            continue
+        fields = re.findall(r'"([^"]*)"', line)
+        if len(fields) < 11:
+            skipped += 1
+            continue
+        name = fields[0].strip()
+        if not name:
+            skipped += 1
+            continue
+        # KEYED ON THE FULL NAME, TAG INCLUDED. The first version stripped the build tag
+        # and wrote out[bare], which is last-wins across rows that disagree -- and they DO:
+        # measured, StackMode[LAB_ENTRY_16] is INACTIVE while the other seven StackMode rows
+        # are ACTIVE. Collapsing eight answers into one and keeping whichever came last is the
+        # same "a store with two answers cannot be a resolver" defect this module refuses for
+        # duplicate bindings, committed by the resolver itself.
+        out[name] = fields[10].strip().upper()
     if not out:
         _refuse('%s parsed to ZERO classifications (%d row(s) skipped as unparseable). Refused: a '
                 'permanent-semantics table that reads as empty would make every parameter '
                 'UNKNOWN, and the first version of this parser did exactly that in silence.'
                 % (PARAM_REGISTRY_REL, skipped))
-    _CLASSIFICATION_CACHE[base] = out
+    _CLASSIFICATION_CACHE[key] = out
     return out
 
 
@@ -210,7 +235,7 @@ def _bare(parameter):
     return re.sub(r'\[[^\]]*\]$', '', str(parameter)).strip()
 
 
-def classification_of(parameter, root=None):
+def classification_of(parameter, root=None, source=None):
     """-> (classification, why) for one parameter name. `classification` is None when unresolvable.
 
     Three cases, and the third is the one that matters:
@@ -220,7 +245,7 @@ def classification_of(parameter, root=None):
         rows are seven ACTIVE and one INACTIVE, so a binding that does not say which build it
         means has no answer here, and must not be handed the majority one.
     """
-    table = _classifications(root)
+    table = _classifications(root, source=source)
     if parameter in table:
         return table[parameter], 'exact'
     bare = _bare(parameter)
@@ -372,7 +397,8 @@ def _overlay_index(root, overlay_root):
     return merged
 
 
-def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None):
+def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None,
+            source=None):
     """-> {parameter, hypothesis_revision, role, surface, optimizable, locked_value, safe_range,
            definition_ref, source}
 
@@ -468,7 +494,7 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     # ALLOWLIST on the classification, not a deny-list: a value in neither list is UNKNOWN, and
     # UNKNOWN is not optimizable. A classification this module has never seen must not inherit
     # permission from not being on a list of bad ones.
-    classification, why = classification_of(parameter, root)
+    classification, why = classification_of(parameter, root, source=source)
     if classification in LIVE_CLASSIFICATIONS:
         permanent_ok = True
     elif classification in DEAD_CLASSIFICATIONS:
@@ -486,7 +512,7 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
             'source': 'BOUND'}
 
 
-def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
+def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, source=None):
     """Every binding registered for one revision, keyed by parameter name."""
     # KEYED ON THE BARE NAME, with the bound (possibly tagged) string preserved inside each
     # record. F1's other half: resolve() now joins a bare request to a tagged binding, but this map
@@ -499,7 +525,8 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
     if overlay_root is not None:
         idx = _overlay_index(root, overlay_root)
         names = sorted(set(_bare(p) for (rev, p) in idx if rev == hypothesis_revision))
-        return dict((p, resolve(hypothesis_revision, p, root=root, overlay_root=overlay_root))
+        return dict((p, resolve(hypothesis_revision, p, root=root,
+                                overlay_root=overlay_root, source=source))
                     for p in names)
     if stores is None:
         stores = load_all(root=root)
@@ -511,7 +538,8 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
     # came from the caller's root -- two trees, one answer. Caught by the exhaustive-role fixture
     # going red the moment resolve() started consulting the classification table at all: before
     # that, root only selected the bindings, which resolve_all had already loaded.
-    return dict((p, resolve(hypothesis_revision, p, root=root, stores=stores)) for p in names)
+    return dict((p, resolve(hypothesis_revision, p, root=root, stores=stores, source=source))
+                for p in names)
 
 
 # ---------------------------------------------------------------------------------------------
