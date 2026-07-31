@@ -375,6 +375,22 @@ TASKBOARDS_NOT_READ = {
     'TASKBOARD_DIGEST.md': 'a GENERATED projection of the main board -- counting it would '
                            'double-count every order it summarises',
 }
+
+# THE LIMIT OF THAT COMPLETENESS CHECK, STATED IN THE GUARD RATHER THAN IMPLIED.
+# It globs ROOT-LEVEL files whose NAME contains TASKBOARD. Probed 2026-07-31 (round 3): a board
+# one directory down, or a root file called WORK_QUEUE.md, is invisible to it -- both confirmed.
+#
+# That scope is deliberate and the alternative was measured before choosing it: 46 tracked .md
+# files carry `## ORDER-` headers, and 36 of them are test fixtures under
+# scripts/_test/fixtures/order101/, the rest verdicts, handoffs and docs that quote an order.
+# Only 2 are boards. A repo-wide "every file with an order header must be declared" check would
+# therefore need a 44-entry exclusion list, and an exclusion list that long is a worse guard than
+# the hole it closes -- it is the shape-2 blacklist, at scale.
+#
+# So the claim this check makes is exactly: NO ROOT-LEVEL TASKBOARD-SHAPED FILE IS SILENTLY
+# OMITTED. It is not "no order can hide anywhere". A new board that follows the repo's own naming
+# convention is caught; one that does not is not, and that is written here so nobody reads the
+# green as the stronger sentence.
 TASKBOARD_GLOB = '*TASKBOARD*.md'
 
 # The coverage store's cell statuses, mapped onto the design's three coverage parts. A status this
