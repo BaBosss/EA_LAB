@@ -626,7 +626,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `unknown_magics` | array of `any` | **yes** |  |
 | `attestation` | array of `any` | **yes** |  |
 | `judge_readiness` | array of `any` | **yes** |  |
-| `judge_cohorts` | `object` | **yes** |  |
+| `judge_cohorts` | array of `object` | **yes** | MEASURED 2026-07-31 (ORDER-612 / S4): this was `type: object` and the real document has always carried an ARRAY of 17 per-judge-date cohort rollups (scripts/control_room_snapshot.ps1 `$cohorts`). The first build of a v5 document was refused by ajv naming `/judge_cohorts`, which is how it was found. It is the same defect class as rev 2's flat root: a contract that claims to describe a file and describes a shape the file never has. Nothing caught it earlier because no fixture ever validated the REAL document -- which is exactly what C1 of this order requires and why C1 is worded as a flip of that line rather than as a claim about it. |
 | `summary` | `object` | **yes** |  |
 
 **Unknown fields:** rejected (closed object).
@@ -700,7 +700,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `unknown_magics` | array of `any` | **yes** |  |
 | `attestation` | array of `any` | **yes** |  |
 | `judge_readiness` | array of `any` | **yes** |  |
-| `judge_cohorts` | `object` | **yes** |  |
+| `judge_cohorts` | array of `object` | **yes** | MEASURED 2026-07-31 (ORDER-612 / S4): this was `type: object` and the real document has always carried an ARRAY of 17 per-judge-date cohort rollups (scripts/control_room_snapshot.ps1 `$cohorts`). The first build of a v5 document was refused by ajv naming `/judge_cohorts`, which is how it was found. It is the same defect class as rev 2's flat root: a contract that claims to describe a file and describes a shape the file never has. Nothing caught it earlier because no fixture ever validated the REAL document -- which is exactly what C1 of this order requires and why C1 is worded as a flip of that line rather than as a claim about it. |
 | `summary` | `object` | **yes** |  |
 
 **Unknown fields:** rejected (closed object).

@@ -1,7 +1,21 @@
 {
-  "meta": { "schema": "ControlRoomSnapshot", "version": 2, "generated_at": "2026-07-30T06:00:00" },
+  "meta": {
+    "schema": "ControlRoomSnapshot",
+    "version": 2,
+    "generated_at": "2026-07-30T06:00:00"
+  },
   "system_health": [
-    { "account": "100000001", "collector": "MT5", "state": "FRESH", "age_hours": 0.1, "governance_scope": "LAB_MANAGED" }
+    {
+      "account": "100000001",
+      "collector": "MT5",
+      "state": "FRESH",
+      "age_hours": 0.1,
+      "governance_scope": "LAB_MANAGED"
+    }
   ],
-  "summary": { "unknown_magics_unclassified": 0 }
+  "summary": {
+    "unknown_magics_unclassified": 0
+  },
+  "floating_risk": [],
+  "_note": "ORDER-612 (S4): this used to OMIT floating_risk. ControlRoomSnapshotV5 REQUIRES the key, so an absent section can no longer be published at all -- the build refuses it naming the property. The reachable no-data case is an EMPTY array, which is what this fixture now carries. See run_monitor_integrity_tests.ps1 New-V5Fixture."
 }

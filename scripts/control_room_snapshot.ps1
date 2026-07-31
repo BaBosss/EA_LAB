@@ -52,11 +52,36 @@ $DASH  = Join-Path $Root 'portfolio\LIVE_DASHBOARD.html'
 $ACCTS = Join-Path $Root 'portfolio\ACCOUNTS.csv'
 if ($OutFile -eq "") { $OutFile = Join-Path $Root 'portfolio\control_room_snapshot.json' }
 $now = Get-Date
+# The repo's pinned interpreter (see .githooks/pre-commit). Named once so the two invocations
+# below cannot drift onto different pythons.
+$PY = Join-Path $Root 'tools\python312\python.exe'
+if (-not (Test-Path $PY)) { throw "control_room_snapshot: $PY is missing -- the snapshot cannot be validated, so it will not be written." }
 
-function FileMeta([string]$p){
-  if (-not (Test-Path $p)) { return $null }
-  $fi = Get-Item $p
-  return [ordered]@{ path = $p.Replace($Root + '\','' ); sha256 = (Get-FileHash $p -Algorithm SHA256).Hash.ToLower(); mtime = $fi.LastWriteTime.ToString('s'); age_hours = [math]::Round(($now - $fi.LastWriteTime).TotalHours,1) }
+function SourceRow([string]$name, [string]$p, [bool]$mandatory){
+  # ORDER-612 (S4). v5 source row. It carries BOTH identities and NO EVIDENCE.
+  #   path      PHYSICAL identity - what gets hashed and stat-ed, and what a later reader resolves
+  #   name      LOGICAL identity  - what meta.mandatory_sources enumerates and the reconciliation
+  #                                 joins on, so a file RENAME does not read as a missing source
+  #
+  # read_ok / sha256 / mtime / age_hours / fresh are emitted as $null ON PURPOSE. They are DERIVED
+  # from the file on disk by _triage\factory_os\snapshot_build.py, which REFUSES a builder claim
+  # that contradicts the disk. This script therefore cannot assert evidence about a file it did
+  # not read - which is precisely the document Codex audit 6 built and got accepted (every source
+  # row pointed at a nonexistent drive with read_ok:true).
+  #
+  # v4 returned $null for a missing file and the caller filtered it out, so a missing source
+  # VANISHED from the snapshot instead of being reported. The row is unconditional now: a file
+  # that is not there comes back read_ok=false and earns MANDATORY_SOURCE_MISSING.
+  return [ordered]@{
+    name       = $name
+    path       = $p.Replace($Root + '\','')
+    mandatory  = $mandatory
+    read_ok    = $null
+    sha256     = $null
+    mtime      = $null
+    age_hours  = $null
+    fresh      = $null
+  }
 }
 function TryParseTradeTime([string]$s){
   # CR-002d: trade-time strings from MT5/MT4 reports look like "2026.05.07 07:12:09"
@@ -369,7 +394,18 @@ $sum = [ordered]@{
   judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
 }
 
+# --- ORDER-612 (S4): the reconciliation evidence, from its ONE producer ---
+# snapshot_build.py reconcile is the only thing in this pipeline that counts orders or coverage
+# cells. Nothing here keeps a parallel tally to compare against it, which is what the order's
+# "no independently calculated totals anywhere" means in practice.
+$reconJson = & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') reconcile
+if ($LASTEXITCODE -ne 0 -or -not $reconJson) {
+  throw "control_room_snapshot: could not compute the reconciliation evidence (exit $LASTEXITCODE). Refusing to write a snapshot whose reconciliation is unknown -- 'I could not count' is not 'the counts are zero'."
+}
+$recon = ($reconJson -join '') | ConvertFrom-Json
+
 $snapshot = [ordered]@{
+  entity = 'SnapshotBuilderInput'
   meta = [ordered]@{
     schema  = 'ControlRoomSnapshot'
     # v4 (Stage 0B D5, 2026-07-30): unknown_magics[].age_class gains a third value
@@ -380,12 +416,28 @@ $snapshot = [ordered]@{
     # the intended failure direction: falling through is visible, and the alternative
     # (keeping unreadable rows labelled HISTORICAL) is the defect being fixed.
     # v3 (CR-003b/002c/002d/005-lite-b): +governance_scope, +floating_risk, +unknown age_class, +judge rate_flag/expected_*.
-    version = 4
+    # v5 (ORDER-612 / S4, 2026-07-31): this script no longer writes the snapshot. It writes a
+    # SnapshotBuilderInput, and _triage\factory_os\snapshot_build.py derives the source evidence
+    # from disk, computes the verdict, validates against ControlRoomSnapshotV5 and replaces the
+    # canonical file atomically. New in v5: root `entity` + `verdict`, meta.build_id +
+    # mandatory_sources + reconciliation, and source rows carrying name/mandatory/read_ok/fresh.
+    # v4 is NOT reused: v4 is a different, incompatible shape that shipped, and two shapes sharing
+    # a version number is how a reader picks the wrong parser.
+    version = 5
     generated_at = $now.ToString('s')
     git_head = (git -C $Root rev-parse --short HEAD 2>$null)
     stale_bar_hours = $staleBarHours
     decision_bar_trades = $decisionBar
-    sources = @((FileMeta $INV), (FileMeta $DASH), (FileMeta $ATT)) | Where-Object { $_ }
+    # The REGISTRY of what must be present, by LOGICAL name, kept separate from what was
+    # discovered. Without it a missing source is indistinguishable from one never expected --
+    # which is how the original reconciliation satisfied its equation with 0 == 0.
+    mandatory_sources = @('deployments_inventory','live_dashboard','attestation_map')
+    sources = @(
+      (SourceRow 'deployments_inventory' $INV  $true),
+      (SourceRow 'live_dashboard'        $DASH $true),
+      (SourceRow 'attestation_map'       $ATT  $true)
+    )
+    reconciliation = $recon
     counting_method = 'MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic.'
   }
   system_health   = $health
@@ -405,8 +457,23 @@ $snapshot = [ordered]@{
   summary         = $sum
 }
 
+# --- ORDER-612 (S4) build->validate->replace. This script never writes $OutFile itself. -------
+# The builder input goes to a sibling temp file; snapshot_build.py derives the evidence, computes
+# the verdict, validates against ControlRoomSnapshotV5, and only then os.replace()s the canonical
+# path. If ANY of that fails, $OutFile is left byte-for-byte unchanged and this script exits
+# non-zero. A half-migrated snapshot is the one outcome the order forbids outright.
+$builderTmp = Join-Path (Split-Path $OutFile -Parent) '.control_room_builder_input.json'
 $json = $snapshot | ConvertTo-Json -Depth 8
-[System.IO.File]::WriteAllText($OutFile, $json, (New-Object System.Text.UTF8Encoding($false)))
+[System.IO.File]::WriteAllText($builderTmp, $json, (New-Object System.Text.UTF8Encoding($false)))
+try {
+  & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') build $builderTmp $OutFile
+  $buildRc = $LASTEXITCODE
+} finally {
+  Remove-Item $builderTmp -ErrorAction SilentlyContinue
+}
+if ($buildRc -ne 0) {
+  throw "control_room_snapshot: snapshot_build.py refused this build (exit $buildRc). $OutFile was NOT replaced and still holds the previous validated snapshot."
+}
 
 Write-Host "=== CONTROL ROOM TODAY ($($now.ToString('yyyy-MM-dd HH:mm'))) ==="
 Write-Host ("SYSTEM   {0}/{1} accounts fresh ({2} stale/no-sensor, bar {3}h)" -f $sum.accounts_fresh, $sum.accounts_total, $sum.accounts_stale_or_no_sensor, $staleBarHours)

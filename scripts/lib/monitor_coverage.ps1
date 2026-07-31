@@ -71,23 +71,42 @@ function Get-MonitorCoverage {
     $failures = New-Object System.Collections.Generic.List[string]
     $log = New-Object System.Collections.Generic.List[string]
 
-    # ---- 1. can we read it at all? -------------------------------------------------
-    if (-not (Test-Path -LiteralPath $SnapshotPath)) {
-        $msg = "coverage check FAILED: no snapshot json at $SnapshotPath - the chain cannot tell whether any sensor is alive"
-        $failures.Add('snapshot-missing') | Out-Null
+    # ---- 1. can we read it, AND is it verified? -------------------------------------
+    # ORDER-612 (S4). This used to be Get-Content | ConvertFrom-Json, which answered "is this
+    # valid JSON" and nothing else. Codex audit 6 measured that no reader anywhere called
+    # load_verified(), so the entire build-side verdict machinery was guarding a door with no
+    # wall attached: a hand-authored snapshot with sources:[] and reconciliation_clear:true was
+    # structurally perfect JSON and this function would have read its sensor rows happily.
+    #
+    # PRE-REGISTERED for this reader, and deliberately stricter than make_status.ps1's:
+    #   REFUSED     -> failure token. The document is present and its own verdict is wrong.
+    #   UNAVAILABLE -> failure token. Missing snapshot, or the checker could not run.
+    # Both are red HERE because this chain's entire job is coverage and it is on nobody's commit
+    # path. make_status.ps1 makes the opposite call about its exit code, for the opposite reason,
+    # and both are written down in scripts\lib\snapshot_reader.ps1.
+    . D:\EA_LAB\scripts\lib\snapshot_reader.ps1
+    $verified = Get-VerifiedSnapshot -SnapshotPath $SnapshotPath
+    if ($verified.State -ne 'OK') {
+        # The token comes from Code, never from matching the Reason text. Four distinct facts,
+        # four tokens, because they have four different fixes:
+        #   snapshot-missing       nothing is there                -> run the builder
+        #   snapshot-unreadable    corrupt, or not a snapshot      -> the writer truncated it
+        #   snapshot-refused       it IS a snapshot and it lies    -> somebody typed a verdict
+        #   snapshot-unverifiable  the CHECKER could not run       -> fix this machine
+        # The first two names are the ones this cage already asserted and they keep their meaning.
+        # The last two are new states that did not exist before this reader was verified at all.
+        switch ($verified.Code) {
+            'MISSING'   { $token = 'snapshot-missing' }
+            'MALFORMED' { $token = 'snapshot-unreadable' }
+            'VERDICT'   { $token = 'snapshot-refused' }
+            default     { $token = 'snapshot-unverifiable' }
+        }
+        $msg = "coverage check FAILED [$token]: $($verified.Reason) - the chain cannot tell whether any sensor is alive, and NONE of this snapshot's numbers may be read"
+        $failures.Add($token) | Out-Null
         $log.Add($msg) | Out-Null
         return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
     }
-
-    $cr = $null
-    try {
-        $cr = Get-Content -LiteralPath $SnapshotPath -Raw | ConvertFrom-Json
-    } catch {
-        $msg = "coverage check FAILED to parse snapshot json: $($_.Exception.Message)"
-        $failures.Add('snapshot-unreadable') | Out-Null
-        $log.Add($msg) | Out-Null
-        return [pscustomobject]@{ Summary = $msg; Failures = $failures.ToArray(); Log = $log.ToArray() }
-    }
+    $cr = $verified.Document
     if ($null -eq $cr -or $null -eq $cr.system_health) {
         # Valid JSON that is not a snapshot (empty file, an array, a truncated write).
         # Same class as a parse error: we have no coverage data.

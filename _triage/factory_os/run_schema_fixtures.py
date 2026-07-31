@@ -295,7 +295,7 @@ META_OK = {
 BUILDER_OK = {
     "entity": "SnapshotBuilderInput", "meta": META_OK,
     "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
-    "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {},
+    "attestation": [], "judge_readiness": [], "judge_cohorts": [], "summary": {},
 }
 
 
@@ -355,19 +355,19 @@ CASES += [
          "ORDER-601: the persisted document must carry the computed verdict", "fail",
          {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
-          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+          "attestation": [], "judge_readiness": [], "judge_cohorts": [], "summary": {}}),
     case("snapshot-output-verdict-free-text-reason",
          "a false verdict must be explained in a CLOSED code, not prose nobody parses", "fail",
          {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
           "verdict": {"reconciliation_clear": False, "reasons": [{"code": "something went wrong"}]},
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
-          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+          "attestation": [], "judge_readiness": [], "judge_cohorts": [], "summary": {}}),
     case("snapshot-output-valid",
          "the persisted positive - without it the negatives above could pass for any reason", "pass",
          {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
           "verdict": {"reconciliation_clear": True, "reasons": []},
           "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
-          "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}),
+          "attestation": [], "judge_readiness": [], "judge_cohorts": [], "summary": {}}),
 ]
 
 # ---------------------------------------------------------------------------------------
@@ -385,7 +385,7 @@ CASES += [
 SNAP_OK = {"entity": "ControlRoomSnapshotV5", "meta": META_OK,
            "verdict": {"reconciliation_clear": True, "reasons": []},
            "system_health": [], "floating_risk": [], "deployments": {}, "unknown_magics": [],
-           "attestation": [], "judge_readiness": [], "judge_cohorts": {}, "summary": {}}
+           "attestation": [], "judge_readiness": [], "judge_cohorts": [], "summary": {}}
 
 COMPAT_ROW = {"name": "live_deals", "mandatory": True, "read_ok": True, "fresh": True,
               "age_hours": 1.0, "path": "portfolio\\DEPLOYMENTS.csv", "sha256": "a" * 64,
@@ -1108,27 +1108,56 @@ def main():
     bad += len(gate)
 
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
-    got, out = run(SCHEMA, json.load(open('portfolio/control_room_snapshot.json', encoding='utf-8')))
+    with open('portfolio/control_room_snapshot.json', encoding='utf-8-sig') as _fh:  # snapshot: worktree
+        _real = json.load(_fh)
+    got, out = run(SCHEMA, _real)
     if got == ERROR:
         # Distinguish "the schema says no" from "the tool fell over" here too -- otherwise the
         # S4 acceptance line could read FAILS forever for a reason nobody is tracking.
         print("  portfolio/control_room_snapshot.json -> TOOL ERROR, not a verdict: %s"
               % out.splitlines()[0][:120])
         bad += 1
-    print("  portfolio/control_room_snapshot.json -> %s" % ('PASSES' if got == VALID else 'FAILS'))
-    print("  This is EXPECTED to fail today and is not counted as a failure: ControlRoomSnapshotV5")
-    print("  describes the v5 TARGET and the committed file is a v3 artifact (meta.version == 3,")
-    print("  though control_room_snapshot.ps1 at HEAD writes 4 -- the file predates its own writer).")
-    print("  MEASURED gap, 2026-07-30, so this line stops being a vague 'needs migrating':")
-    print("    root missing  entity, verdict        <- the discriminator and the computed verdict")
-    print("    meta missing  build_id, mandatory_sources, reconciliation")
-    print("    row  missing  name, mandatory, read_ok, fresh   <- real rows are {path,sha256,mtime,age_hours}")
-    print("  The three meta compatibility fields audit-3 found dropped (stale_bar_hours,")
-    print("  decision_bar_trades, counting_method) are now carried, and ORDER-601 part 2 added")
-    print("  path/sha256/mtime to the source row, so the REAL row metadata is now expressible at")
-    print("  the boundary. What remains above is identity and evidence, which is S4's migration:")
-    print("  reconciling `path` with `name` needs a decision about which one is the identity, and")
-    print("  that decision belongs with the readers. Slice S4 is not done until this line PASSES.")
+    elif got != VALID:
+        # ORDER-612 (S4) CLOSED THIS. Until 2026-07-31 this line PRINTED its result and did not
+        # count it, because the real file was a v3 artifact and the schema described the v5 target.
+        # That made it a report, not a check -- and a report is exactly what nothing notices when
+        # it changes. It is an assertion now: the writer emits v5 through snapshot_build.py, so a
+        # real snapshot that stops validating is a REGRESSION, not a known gap.
+        print("  portfolio/control_room_snapshot.json -> FAILS")
+        print("  This is COUNTED AS A FAILURE (ORDER-612 / S4). The committed snapshot is written")
+        print("  by scripts/control_room_snapshot.ps1 -> _triage/factory_os/snapshot_build.py,")
+        print("  which validates against ControlRoomSnapshotV5 before it replaces the file. So a")
+        print("  FAILS here means one of: the writer regressed, the schema and the writer drifted")
+        print("  apart, or somebody hand-edited the canonical snapshot. ajv said:")
+        # NOT out.splitlines()[0]: that is ajv's "<tempfile> invalid" banner, naming a file that is
+        # already deleted and nothing else. Observed on this exact line while proving the assertion
+        # can go red.
+        #
+        # But the error ARRAY on the next line is no better here, and that was observed too: this
+        # validates against the REAL ROOT, whose `oneOf` has 19 branches, so ajv reports the first
+        # error of every branch and the output opened with `missingProperty: owner_type`. The cause
+        # was `meta.version: 4`. Filtering that noise by entity name is the heuristic
+        # snapshot_validator._describe_ajv_errors already documents as unworkable, so instead the
+        # same instance is asked a SECOND, focused question -- validate it against
+        # #/$defs/ControlRoomSnapshotV5 alone -- which is precise by construction. The root run
+        # keeps the discriminator; the focused run names the property.
+        import snapshot_validator as _sv
+        try:
+            _sv.ajv_schema_validator(_real, 'ControlRoomSnapshotV5')
+            print("    (the root `oneOf` rejected it but the focused entity accepted it -- that is")
+            print("     a DISCRIMINATOR failure: `entity` does not select this branch.)")
+        except _sv.SnapshotRefusal as _exc:
+            print("    %s" % str(_exc)[:400])
+        bad += 1
+    else:
+        print("  portfolio/control_room_snapshot.json -> PASSES")
+        print("  This is the ORDER-612 / S4 acceptance (C1), and it is ASSERTED, not reported:")
+        print("  the line above was a printed observation until 2026-07-31 and is now counted, so")
+        print("  the suite goes red if the real document stops matching the contract that claims")
+        print("  to describe it. The migration it was waiting on: root `entity` + `verdict`,")
+        print("  meta.build_id + mandatory_sources + reconciliation, and source rows carrying BOTH")
+        print("  identities -- `path` physical (hashed, stat-ed, re-derivable) and `name` logical")
+        print("  (what mandatory_sources enumerates and the reconciliation joins on).")
 
     # The count is DERIVED from both lists. It read "ALL %d CASES" % len(CASES) after ORDER-611
     # added 54 more, which would have reported 35 while running 89 -- the same drift as the

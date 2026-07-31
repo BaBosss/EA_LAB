@@ -128,6 +128,36 @@ class VerdictMismatch(SnapshotRefusal):
     """A persisted document's stored verdict disagrees with the recomputed one."""
 
 
+class MalformedDocument(SnapshotRefusal):
+    """The bytes are not a ControlRoomSnapshotV5 at all -- unparseable, or a different kind of thing.
+
+    MEASURED 2026-07-31 (ORDER-612 / S4): load_verified() called json.load() with no handler, so a
+    CORRUPT snapshot came out of the command line as an unhandled JSONDecodeError traceback and
+    Python's default exit 1 -- indistinguishable, to any caller, from "this document's verdict
+    disagrees with its evidence". The two have completely different fixes: one means the writer
+    truncated a file, the other means somebody typed an answer in.
+
+    Kept separate from ToolFailure because it IS a statement about the document, and separate from
+    a plain refusal because it says "we have no coverage data" rather than "we have data that does
+    not add up". Exit code 4.
+    """
+
+
+class ToolFailure(SnapshotRefusal):
+    """The checker could not run. NOT a statement about the document.
+
+    MEASURED 2026-07-31 (ORDER-612 / S4) while building the reader boundary on top of this file.
+    Every path in here raised plain SnapshotRefusal and main() returned 1 for all of them -- so
+    "ajv is not installed" and "this document's verdict is a lie" left the same exit code, and the
+    PowerShell reader about to consume it would have reported an uninstalled node as a refused
+    snapshot. That is this module's own rule 1 ("cannot read it" must never collapse into a finding)
+    holding for every caller EXCEPT its own command line.
+
+    A subclass rather than a new hierarchy so every existing `except SnapshotRefusal` keeps
+    working; the distinction is carried by the exit code (3, not 1) and by the printed prefix.
+    """
+
+
 class _NoSchemaCheck(object):
     """Named sentinel, so `build_snapshot(inp, NO_SCHEMA_CHECK)` reads as a decision."""
 
@@ -512,7 +542,10 @@ def verify_snapshot(doc, schema_validator):
     if _resolve_gate(schema_validator) is not NO_SCHEMA_CHECK:
         schema_validator(doc, OUTPUT_ENTITY)
     if not isinstance(doc, dict) or doc.get('entity') != OUTPUT_ENTITY:
-        _refuse('verify_snapshot expects entity=%r, got %r' % (
+        # MalformedDocument, not a plain refusal: valid JSON that is not one of these documents
+        # carries no coverage data at all, which is a different finding from a document whose
+        # numbers do not add up, and the two must reach a reader as different codes.
+        raise MalformedDocument('verify_snapshot expects entity=%r, got %r' % (
             OUTPUT_ENTITY, (doc or {}).get('entity') if isinstance(doc, dict) else doc))
     stored = doc.get('verdict')
     if not isinstance(stored, dict) or 'reconciliation_clear' not in stored or 'reasons' not in stored:
@@ -589,8 +622,15 @@ def load_verified(path):
     the fast suite drives; a reader gets the checked path or writes its own, and writing its own
     is at least visible in a diff.
     """
-    with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
-        doc = json.load(fh)
+    try:
+        with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
+            doc = json.load(fh)
+    except ValueError as exc:
+        raise MalformedDocument('%s is not parseable JSON, so there is no document to verify: %s'
+                                % (path, exc))
+    except (IOError, OSError) as exc:
+        # The file is there and could not be opened. That is the instrument, not the document.
+        raise ToolFailure('%s could not be opened: %s' % (path, exc))
     return verify_snapshot(doc, ajv_schema_validator)
 
 
@@ -654,8 +694,13 @@ def _focused_schema(entity):
 
 def ajv_schema_validator(instance, entity):
     """callable(instance, entity) for build_snapshot/verify_snapshot. Raises on invalid."""
-    if instance.get('entity') != entity:
-        _refuse('expected entity=%r, got %r' % (entity, instance.get('entity')))
+    if not isinstance(instance, dict) or instance.get('entity') != entity:
+        # MalformedDocument, for the reason given on that class: this gate runs BEFORE
+        # verify_snapshot's own entity check, so leaving it as a plain refusal here made that
+        # check unreachable and collapsed "not one of these documents" back into "refused".
+        raise MalformedDocument('expected entity=%r, got %r'
+                                % (entity, instance.get('entity')
+                                   if isinstance(instance, dict) else instance))
     fd, path = tempfile.mkstemp(suffix='.json')
     sfd, spath = tempfile.mkstemp(suffix='.schema.json')
     try:
@@ -666,8 +711,8 @@ def ajv_schema_validator(instance, entity):
                 json.dump(_focused_schema(entity), fh)
         except (IOError, OSError, ValueError) as exc:
             # Cannot read/derive the schema is a TOOL failure, never a verdict on the instance.
-            raise SnapshotRefusal('could not run: the schema could not be read or derived (%s)'
-                                  % exc)
+            raise ToolFailure('could not run: the schema could not be read or derived (%s)'
+                              % exc)
         p = subprocess.run(['ajv', 'validate', '-s', spath, '-d', path,
                             '--spec=draft2020', '--strict=false', '--errors=line'],
                            capture_output=True, text=True, shell=True)
@@ -682,8 +727,8 @@ def ajv_schema_validator(instance, entity):
             # "<tempfile> invalid" line and names nothing. The caller then had a refusal that did
             # not say WHAT was wrong, about an instance in a temp file that is already deleted.
             _refuse('%s failed schema validation: %s' % (entity, _describe_ajv_errors(out, entity)))
-        raise SnapshotRefusal('ajv could not run, so nothing was validated (exit %s): %s'
-                              % (p.returncode, out.splitlines()[0] if out else '<no output>'))
+        raise ToolFailure('ajv could not run, so nothing was validated (exit %s): %s'
+                          % (p.returncode, out.splitlines()[0] if out else '<no output>'))
     finally:
         for tmp in (path, spath):
             try:
@@ -704,6 +749,15 @@ def main(argv):
         return 2
     try:
         load_verified(argv[2])
+    except MalformedDocument as exc:
+        print('[MALFORMED] %s' % exc)
+        return 4
+    except ToolFailure as exc:
+        # Exit 3, and it must stay distinct from 1. A reader that cannot tell "the checker did not
+        # run" from "the document was refused" will report an uninstalled tool as a bad snapshot --
+        # or, worse, treat a real refusal as a tooling hiccup and render it anyway.
+        print('[TOOL-FAILURE] %s' % exc)
+        return 3
     except SnapshotRefusal as exc:
         print('[REFUSED] %s' % exc)
         return 1

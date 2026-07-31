@@ -184,6 +184,46 @@ $FAST_SUITES = @(
     # THAT is the displacement lesson, and it is cheaper than displacing anything:
     # a python cage belongs in an existing python wrapper unless it needs its own lifecycle.
     'run_contract_binding_tests.ps1',
+    # ORDER-612 (S4, 2026-07-31): the READER half of the snapshot boundary -- C3 (a missing /
+    # unreadable / stale mandatory source cannot render ALL CLEAR, each observed firing and the
+    # fire count printed) and C6 (make_status and the daily digest consume ONLY a validated
+    # snapshot). The python half of S4 went into run_contract_binding_tests.ps1's wrapper, per
+    # this file's own rule that a python cage belongs in an existing python wrapper.
+    #
+    # MEASURED 4.6s, and it is DECLARED rather than glossed: this file says the next addition has
+    # to displace something. Nothing is displaced, and the honest reason is that per-path selection
+    # landed in between -- this suite runs only when a snapshot path is staged.
+    #
+    # THE FULL-TIER NUMBER, RE-MEASURED RATHER THAN PROJECTED. The first draft of this comment
+    # said "roughly 22.7s", arrived at by adding 4.6s to the 18.1s recorded above. That was wrong,
+    # and it was wrong in the way this file already warns about two comments up ("a per-suite time
+    # is stable, a TIER TOTAL is not"). The actual full-tier run on 2026-07-31, all 13 suites,
+    # 0 failed:
+    #     37.7s  = optimize-guard 5.3 + monitor-integrity 8.9 + contract-binding 8.8
+    #              + snapshot-s4 4.6 + guard-trigger 5.3 + the seven small ones ~4.6
+    # Two of those grew in THIS order and neither is the new suite:
+    #   monitor-integrity  1.5s -> 8.9s  its 9 coverage fixtures are now BUILT through
+    #                                    snapshot_build.py instead of hand-authored, because a
+    #                                    hand-typed `verdict` is the attack the slice refuses.
+    #   contract-binding   ~4s  -> 8.8s  it gained run_snapshot_s4_tests.py (0.35s) and pays for
+    #                                    the schema growing.
+    # The cost is ajv process startup (~0.4s x 2 per built fixture), not assertions, and it cannot
+    # be bought back without skipping the schema gate -- which is the exact hole Codex audit 6
+    # closed. So: 37.7s against a 15.0s ADVISORY budget, up from 18.1s. It is recorded here as a
+    # number somebody must decide about, NOT quietly absorbed, and it is flagged in ORDER-612.
+    #
+    # WHAT A REAL COMMIT PAYS, also measured rather than reasoned about: staging
+    # snapshot_build.py + snapshot_reader.ps1 selects 4 suites and costs 23.7s. Per-path selection
+    # is doing its job (4 of 13), and the commits that pay are exactly the ones touching this
+    # boundary. Commits elsewhere are unaffected -- the run that landed this order's ledger row
+    # selected 1 suite and cost 0.6s.
+    #
+    # WHY IT IS NOT CHEAPER: 4 of its fixtures are BUILT through snapshot_build.py, each paying a
+    # python start plus two ajv subprocesses. Hand-authoring them instead would mean typing the
+    # `verdict` by hand -- which is the attack the whole slice exists to refuse, so the cost is
+    # the test being real. One ajv pass per build was already removed (build_file now proves the
+    # write round-tripped instead of re-deriving the same verdict), which bought 1.0s.
+    'run_snapshot_s4_tests.ps1',
     # BACKLOG-D32 (2026-07-30): guards the trigger that decides whether this whole tier runs.
     # It is last on purpose -- if the declarations and the generated pathspec have drifted,
     # everything above it may have been enforced on a lie.
@@ -237,7 +277,26 @@ $SUITE_GUARDS = @{
                                           'scripts/live_dashboard.ps1',
                                           'scripts/control_room_snapshot.ps1',
                                           'scripts/monitor_rotation.ps1',
-                                          'scripts/lib/monitor_coverage.ps1')
+                                          'scripts/lib/monitor_coverage.ps1',
+                                          # ORDER-612 (S4): monitor_coverage now obtains the
+                                          # snapshot through this library, so editing the reader
+                                          # changes what this cage tests.
+                                          'scripts/lib/snapshot_reader.ps1',
+                                          '_triage/factory_os/snapshot_build.py',
+                                          '_triage/factory_os/snapshot_validator.py')
+    # ORDER-612 (S4). Its fixtures are built by snapshot_build.py through the real schema, and the
+    # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
+    # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
+    # something else happens to be staged, which is the D32 defect this map exists to end.
+    'run_snapshot_s4_tests.ps1'       = @('_triage/factory_os/snapshot_build.py',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          '_triage/factory_os/run_snapshot_s4_tests.py',
+                                          '_triage/factory_os/schemas.json',
+                                          'scripts/lib/snapshot_reader.ps1',
+                                          'scripts/lib/monitor_coverage.ps1',
+                                          'scripts/make_status.ps1',
+                                          'scripts/control_room_snapshot.ps1',
+                                          'portfolio/control_room_snapshot.json')
     # ORDER-601 part 2 added the snapshot validator and its computation suite to this wrapper
     # rather than to a suite of its own (the budget note in that file explains the trade), so
     # both files are inputs to it. Declaring them is what puts them in the trigger pathspec --
@@ -247,6 +306,11 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_contract_binding_tests.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_validator_tests.py',
+                                          # ORDER-612 (S4): run_snapshot_s4_tests.py joins this
+                                          # wrapper (MEASURED 0.35s) instead of becoming a 13th
+                                          # PowerShell suite, per the trade recorded above.
+                                          '_triage/factory_os/snapshot_build.py',
+                                          '_triage/factory_os/run_snapshot_s4_tests.py',
                                           '_triage/factory_os/check_schema_structure.py',
                                           # ORDER-601 closure: proves the PLANNED/BUILT/WIRED
                                           # enforcement labels are verified against the repo rather
@@ -314,7 +378,15 @@ $NOT_A_DEPENDENCY = @(
     'docs/UNOWNED.md',                              # ditto
     'scripts/scripts/check_taskboard_archive.ps1',  # a doubled prefix inside a fixture string
     'scripts/tests/test_runner_output_capture.ps1', # named in prose; the suite does not run it
-    'tools/python312/python.exe'                    # interpreter, not an edited input
+    'tools/python312/python.exe',                   # interpreter, not an edited input
+    # ORDER-612 (S4): run_snapshot_s4_tests.ps1 names run_schema_fixtures.py in its header to say
+    # WHERE C1 is asserted (there, not here). It does not run it, and editing it cannot change
+    # what this suite proves. A cross-reference is not a dependency, and being forced to say so
+    # here is the sweep doing its job.
+    '_triage/factory_os/run_schema_fixtures.py',
+    # Same shape, other direction: run_contract_binding_tests.ps1 names the S4 PowerShell suite in
+    # a comment to say where C3/C6 are asserted. It is a sibling, not an input.
+    'scripts/_test/run_snapshot_s4_tests.ps1'
 )
 
 if ($ExportGuards) {

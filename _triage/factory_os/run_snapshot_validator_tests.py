@@ -88,7 +88,7 @@ BASE = {
         'reconciliation': EV_1,
     },
     'system_health': [], 'floating_risk': [], 'deployments': {}, 'unknown_magics': [],
-    'attestation': [], 'judge_readiness': [], 'judge_cohorts': {}, 'summary': {},
+    'attestation': [], 'judge_readiness': [], 'judge_cohorts': [], 'summary': {},
 }
 
 # POSITIVE 2, constructed independently rather than derived from POSITIVE 1: different
@@ -116,7 +116,7 @@ BASE_2 = {
         },
     },
     'system_health': [{'x': 1}], 'floating_risk': [], 'deployments': {'rows': []},
-    'unknown_magics': [], 'attestation': [], 'judge_readiness': [], 'judge_cohorts': {},
+    'unknown_magics': [], 'attestation': [], 'judge_readiness': [], 'judge_cohorts': [],
     'summary': {'orders': 7},
 }
 

@@ -119,6 +119,15 @@ $scripts = @(
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
     @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
     @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() },
+    # ORDER-612 (S4). The python half of the S4 acceptance -- C2 (N discovered => exactly N
+    # categorized or an explicit reason), C4 (evidence DERIVED from disk, a contradicting builder
+    # claim REFUSED), C5 (atomic build->validate->replace, previous file byte-unchanged on
+    # failure), C7 (version 5, and 4 refused by the schema). MEASURED 0.35s, which is why it is
+    # here rather than in a suite of its own: this wrapper's own note says the expensive part of a
+    # cage in this tier is the process, not the assertions. C1 stays in run_schema_fixtures.py
+    # (it IS that file's real-snapshot line, now asserted rather than printed); C3 and C6 are the
+    # PowerShell readers and live in scripts\_test\run_snapshot_s4_tests.ps1.
+    @{ Path = '_triage\factory_os\run_snapshot_s4_tests.py'; Args = @() },
     # 4. check_schema_structure.py -- the SUPERSEDED lint, wired in by /scrutinize 2026-07-30.
     #    It is not the binding (that is item 1) and its own header says so. It is kept for two
     #    checks nothing else covers: discriminator consistency (add an entity, forget its oneOf

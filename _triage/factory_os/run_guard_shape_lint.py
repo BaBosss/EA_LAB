@@ -67,6 +67,11 @@ L1_FILES = (
     '_triage/factory_os/check_schema_structure.py',
     '_triage/factory_os/snapshot_validator.py',
     '_triage/factory_os/gen_coverage.py',
+    # ORDER-612 (S4). Declared even though it does not match CHECKER_GLOB, so L0 would never have
+    # demanded it: it reads the real files on disk to DERIVE source evidence and reads both
+    # taskboards to reconcile, which makes every one of those reads a judged input. A module that
+    # is outside the glob is exactly the module a hand-maintained list forgets.
+    '_triage/factory_os/snapshot_build.py',
 )
 L1_DEFERRED = {
     '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2)',

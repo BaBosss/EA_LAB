@@ -189,7 +189,91 @@ if (-not (Get-Command Get-MonitorCoverage -ErrorAction SilentlyContinue)) {
 Write-Host ("   library under test: {0}" -f $CoverageLib)
 
 $snapDir = Join-Path $fixtures 'snapshots'
-function Cover([string]$name) { Get-MonitorCoverage -SnapshotPath (Join-Path $snapDir $name) }
+
+# ORDER-612 (S4). Get-MonitorCoverage now obtains the snapshot through snapshot_validator, so a
+# fixture must be a document that VERIFIES -- the whole point of the change is that an
+# unverified document reaches no reader. Two ways to get there, and only one of them is honest:
+#
+#   (a) hand-author v5 fixtures with a stored `verdict` typed in by hand. That is precisely the
+#       attack the verifier exists to refuse, and the fixtures would have to be re-typed by hand
+#       every time the verdict logic changes -- i.e. they would drift into agreeing with nothing.
+#   (b) BUILD each fixture through the real pipeline at test time.
+#
+# (b). The .json files under snapshots\ stay exactly what they were: readable FRAGMENTS carrying
+# the system_health / floating_risk / summary shapes under test. This function wraps a fragment in
+# the v5 scaffolding and runs snapshot_build.py over it, so the fixture's verdict is computed by
+# the same code the production writer uses. A fixture that stops building is a real failure.
+#
+# The source rows resolve against a TEMP ROOT created here, not against the repo: a source row
+# pointing at a repo file would derive `fresh` from that file's mtime, so the fixtures would go
+# red by the passage of time rather than by any change to the code -- the same defect as the
+# drift guard that regenerated against HEAD (memory: drift-guard-regenerating-against-head).
+$py = Join-Path $RepoRoot 'tools\python312\python.exe'
+$builder = Join-Path $RepoRoot '_triage\factory_os\snapshot_build.py'
+$fxRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("crfx_" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $fxRoot -Force | Out-Null
+Set-Content -Path (Join-Path $fxRoot 'srcA.txt') -Value 'fixture source A' -Encoding ASCII
+$fxBuilt = @{}
+
+function New-V5Fixture([string]$name) {
+    if ($fxBuilt.ContainsKey($name)) { return $fxBuilt[$name] }
+    $fragPath = Join-Path $snapDir $name
+    $frag = Get-Content -LiteralPath $fragPath -Raw | ConvertFrom-Json
+    $inp = [ordered]@{
+        entity = 'SnapshotBuilderInput'
+        meta = [ordered]@{
+            schema = 'ControlRoomSnapshot'
+            version = 5
+            generated_at = (Get-Date).ToString('s')
+            stale_bar_hours = 30
+            mandatory_sources = @('srcA')
+            sources = @([ordered]@{ name='srcA'; path='srcA.txt'; mandatory=$true
+                                    read_ok=$null; sha256=$null; mtime=$null; age_hours=$null; fresh=$null })
+            reconciliation = [ordered]@{
+                discovered = 0; categorized = 0
+                categories = [ordered]@{ actionable=0; running=0; waiting=0; review_audit=0; completed=0; cancelled_by_user=0 }
+                duplicates = 0; conflicts = 0; unclassified = 0
+                coverage = [ordered]@{ cells_in_universe=0; tested=0; untested=0; not_applicable=0 }
+            }
+        }
+        system_health   = @($(if ($null -ne $frag.system_health)   { $frag.system_health }   else { @() }))
+        floating_risk   = @($(if ($null -ne $frag.floating_risk)   { $frag.floating_risk }   else { @() }))
+        deployments     =   $(if ($null -ne $frag.deployments)     { $frag.deployments }     else { [ordered]@{} })
+        unknown_magics  = @($(if ($null -ne $frag.unknown_magics)  { $frag.unknown_magics }  else { @() }))
+        attestation     = @($(if ($null -ne $frag.attestation)     { $frag.attestation }     else { @() }))
+        judge_readiness = @($(if ($null -ne $frag.judge_readiness) { $frag.judge_readiness } else { @() }))
+        judge_cohorts   = @($(if ($null -ne $frag.judge_cohorts)   { $frag.judge_cohorts }   else { @() }))
+        summary         =   $(if ($null -ne $frag.summary)         { $frag.summary }         else { [ordered]@{} })
+    }
+    # MEASURED 2026-07-31 (ORDER-612 / S4): no_floating_section.json exists to test the branch
+    # that fires when a snapshot carries no floating-risk data. Under v4 that meant an ABSENT
+    # KEY, and this wrapper originally deleted the key to reproduce it. v5 refuses to build such
+    # a document at all -- `floating_risk` is REQUIRED by ControlRoomSnapshotV5, and the build
+    # failed naming it. That is the defence getting STRONGER, not the fixture getting weaker:
+    # the absent-key case is now impossible to publish, so the reader branch is exercised by the
+    # case that IS still reachable -- a writer that produced ZERO rows (an empty array), which
+    # means the same operational thing and is what the fragment now carries.
+    #
+    # The criterion is unchanged: "when there are no floating-risk rows, say once and up front
+    # why every account below reads MISSING." Only its input shape moved, because the contract
+    # closed the other shape.
+    $inPath  = Join-Path $fxRoot ("in_" + $name)
+    $outPath = Join-Path $fxRoot ("v5_" + $name)
+    [System.IO.File]::WriteAllText($inPath, ($inp | ConvertTo-Json -Depth 12), (New-Object System.Text.UTF8Encoding($false)))
+    $buildOut = & $py $builder build $inPath $outPath $fxRoot 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "fixture $name did not build: $($buildOut -join ' ')" }
+    $fxBuilt[$name] = $outPath
+    return $outPath
+}
+
+# RAW fixtures: the three cases that are ABOUT the reader's failure paths and must NOT be built
+# into valid documents, because then they would stop testing what they exist to test.
+$RAW_FIXTURES = @('unreadable.json', 'not_a_snapshot.json')
+
+function Cover([string]$name) {
+    if ($RAW_FIXTURES -contains $name) { return Get-MonitorCoverage -SnapshotPath (Join-Path $snapDir $name) }
+    return Get-MonitorCoverage -SnapshotPath (New-V5Fixture $name)
+}
 # Convenience: the two things daily_monitor.ps1 actually consumes.
 function IsRed($r) { return ([int]$r.Failures.Count -gt 0) }
 function LogText($r) { return (($r.Log) -join "`n") }
