@@ -460,6 +460,31 @@ def main():
                   '_stat_evidence (not merely matched in source text)',
                   raised and 'modified while it was being read' in msg,
                   msg if raised else json.dumps(ev))
+
+            # ITS PAIR, and the reason it exists: the first form of the observe() migration
+            # collapsed observe's TWO failure modes into one handler, so a file that merely
+            # could not be OPENED took the mid-read-mutation branch -- a hard build refusal,
+            # with a message naming the wrong cause, where this function had always returned
+            # read_ok=False for the registry join to report as MANDATORY_SOURCE_UNREADABLE.
+            # ToolFailure is not an OSError, so the outer `except (IOError, OSError)` silently
+            # stopped covering it. Without this case the regression is invisible: nothing else
+            # in the suite drives an unreadable-but-present source.
+            _real_open = evd.io.open
+
+            def _deny(path, *a, **k):
+                raise PermissionError(13, 'Permission denied', path)
+            evd.io.open = _deny
+            try:
+                ev2 = sb._stat_evidence(fp, datetime.datetime.now())
+                refused2 = False
+            except sv.SnapshotRefusal as exc:
+                refused2, ev2 = True, str(exc)
+            finally:
+                evd.io.open = _real_open
+            check('AUDIT S3 SPECIFICITY an UNREADABLE (not mutated) source is still read_ok=False, '
+                  'not a build refusal blaming a mid-read mutation',
+                  (not refused2) and ev2.get('read_ok') is False and ev2.get('sha256') is None,
+                  ev2 if refused2 else json.dumps(ev2))
         finally:
             shutil.rmtree(s3, ignore_errors=True)
         # S4: containment must be referential.

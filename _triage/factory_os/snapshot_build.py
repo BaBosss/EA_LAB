@@ -110,14 +110,26 @@ def _stat_evidence(abs_path, now):
         #
         # category B, DELIBERATELY, per evidence.py's own header: an index blob has no mtime that
         # means anything, and a build source may be written by MT5, not committed at all.
+        # TWO FAILURE MODES, TWO ANSWERS -- and collapsing them is a regression this repair
+        # shipped in its first form. `observe()` raises for BOTH "it moved under me" and "I could
+        # not open it", and ToolFailure is not an OSError, so the outer `except (IOError, OSError)`
+        # below stopped catching the second one: every permission error became a hard REFUSAL of
+        # the whole build, carrying a message that blamed a mid-read mutation. That broke this
+        # function's own contract ("Never raises for a bad path", four lines up) and erased the
+        # MISSING/UNREADABLE distinction its docstring exists to explain -- collateral outside the
+        # slice the repair was written staring at (GUARD_SHAPES shape 5).
         try:
             raw, st = evd.observe(abs_path)
-        except evd.ToolFailure as exc:
+        except evd.ObservationUnstable as exc:
             sv._refuse(
                 'the file at %r was modified while it was being read: mtime/size differ between '
                 'the two stats of the SAME open handle (%s). Refused -- the hash and the '
                 'timestamp would describe different moments, and a stale sensor labelled fresh is '
                 'the one error this pipeline exists to make impossible.' % (abs_path, exc))
+        except evd.ToolFailure:
+            # "there but unreadable" -- the same answer this function has always given, which the
+            # registry join turns into MANDATORY_SOURCE_UNREADABLE rather than a build refusal.
+            return {'read_ok': False, 'sha256': None, 'mtime': None, 'age_hours': None}
         digest = hashlib.sha256(raw).hexdigest()
         mtime = datetime.datetime.fromtimestamp(st.st_mtime)
         age = (now - mtime).total_seconds() / 3600.0

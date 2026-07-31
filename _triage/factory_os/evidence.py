@@ -57,6 +57,22 @@ class ToolFailure(Exception):
     """The reader could not answer. NOT a violation -- different exit code, different fix."""
 
 
+class ObservationUnstable(ToolFailure):
+    """`observe()` saw the file CHANGE between its two fstats. Distinct from "could not read it".
+
+    A subclass rather than a message string, because a caller has to tell them apart and message
+    matching is not a contract. `snapshot_build._stat_evidence` is the reason: "there but
+    unreadable" is a NAMED, recoverable outcome for it (`read_ok: False`, which the registry join
+    turns into MANDATORY_SOURCE_UNREADABLE), while "it moved under me" must refuse the whole build
+    because a hash and a timestamp from two different moments is the one error that pipeline
+    exists to make impossible.
+
+    Collapsing the two -- which is what a single ToolFailure did -- turned every permission error
+    into a REFUSAL that blamed a mid-read mutation: the right severity for one input, the wrong
+    diagnosis for the other, and a silent behaviour change for a case the repair never looked at.
+    """
+
+
 def _run_git(root, *args):
     # GIT_INDEX_FILE names an index of ONE repository -- the one whose hook set it. For THIS
     # repo it is exactly the thing to honour (a partial commit's hook publishes its temp index
@@ -259,8 +275,8 @@ def observe(path):
     except OSError as exc:
         raise ToolFailure('cannot observe %s: %s' % (path, exc))
     if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
-        raise ToolFailure('%s changed while being observed (mtime/size moved between the two '
-                          'fstats) -- bytes and timestamp cannot be pinned to one moment, so '
-                          'this observation is refused rather than published with a guess.'
-                          % path)
+        raise ObservationUnstable(
+            '%s changed while being observed (mtime/size moved between the two '
+            'fstats) -- bytes and timestamp cannot be pinned to one moment, so '
+            'this observation is refused rather than published with a guess.' % path)
     return data, after

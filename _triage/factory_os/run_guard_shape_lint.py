@@ -103,29 +103,36 @@ L1_FILES = (
 # whether it is checked or merely known. That distinction is the whole difference between "L1
 # covers every checker" (false) and "L1 covers every checker it can parse, and here is the rest"
 # (true, and useful).
+#
+# THESE REASONS SAY ONLY WHAT IS DURABLY TRUE, and that is a correction rather than a style note.
+# Each string briefly read "...(L3 covers it once PS_PENDING releases it)", and six of the eleven
+# were RELEASED within the same session -- so six reason strings described a state that had
+# already ended, in the lint whose entire L0 rule is that a hand-maintained list stops being true.
+# Whether L3 covers a file is DERIVED from PS_PENDING and printed on every run; it does not
+# belong here twice. (BACKLOG-D29, produced and caught inside one batch.)
 L1_NOT_PARSED = {
     'scripts/check_block_staleness.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_experiment_events.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_handoff_contract.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_order_collision.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_precommit_staged.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_stale_binaries.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_state.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_taskboard_archive.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_template_dependencies.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_truncated_run.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_verdict_kill.ps1':
-        'PowerShell -- L1 has no parser for it (L3 covers it once PS_PENDING releases it)',
+        'PowerShell -- L1 has no parser for it',
 }
 # MEASURED at declaration time: 11 PowerShell checkers, discovered by the glob rather than
 # remembered. If one is added or removed, L0 says so on the next run instead of this number
@@ -583,7 +590,18 @@ def ps_code_lines(src):
                 continue
             if quote:
                 code.append(ch)
-                # '' and "" are the escaped-quote forms in PowerShell; skip the pair.
+                # BACKTICK is PowerShell's escape, and only inside a DOUBLE-quoted string --
+                # `"a`"b"` is one string, not two. Without this the scanner closes the string at
+                # the escaped quote, reopens at the real one, and everything after it on the line
+                # is misfiled: a `#` comment would be read as string content, so a declaration
+                # would vanish and the read would be reported undeclared. No guard in this repo
+                # uses the form today (grep: 0 in all eleven), which is exactly why it is worth
+                # closing now -- a latent mis-parse in a lint is discovered as a false accusation.
+                if ch == '`' and quote == '"' and i + 1 < len(line):
+                    code.append(line[i + 1])
+                    i += 2
+                    continue
+                # '' and "" are the doubled-quote forms; skip the pair.
                 if ch == quote:
                     if i + 1 < len(line) and line[i + 1] == quote:
                         code.append(line[i + 1])
@@ -879,6 +897,10 @@ def self_test(out=None):
          lambda p: _l3(p, '<#\n    reads `git show ":{0}"` from the index\n#>\n$a = 1'), False),
         ('L3 CONTROL a git spec inside a # line comment is prose too',
          lambda p: _l3(p, '# we could use diff --cached here one day\n$a = 1'), False),
+        ('L3 a backtick-escaped quote does not end the string (the rest of the line stays code)',
+         lambda p: _l3(p, '$m = "she said `"hi`" to me"; $x = Git "diff --cached"'), True),
+        ('L3 CONTROL and the declaration after one is still FOUND, not swallowed',
+         lambda p: _l3(p, '$m = "a `" b"; $x = Git "diff --cached"  # snapshot: index'), False),
         ('L3 CONTROL a `#` inside a quoted string does not start a comment',
          lambda p: _l3(p, "$x = Git ('show \"#{0}\"' -f $s)  # snapshot: not-a-judged-input"),
          False),

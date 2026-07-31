@@ -135,9 +135,19 @@ try {
     # case that goes red for an unrelated rule proves nothing about the rule under test. Found
     # by running it: the first version flipped the account and check_state exited 1 while
     # check_precommit_staged exited 0, i.e. the case was measuring the DEMO-plan check.
+    # THE COLUMN INDEX IS DERIVED FROM THE HEADER, not assumed to be 6, and the field count is
+    # asserted against it. A naive split trusting position would silently edit the WRONG column
+    # the day a row gains a quoted comma or the schema gains a field -- and a specificity case
+    # that edits the wrong column still goes green, which makes it worse than absent.
+    $hdr = @($lines[0] -split ',') | ForEach-Object { $_.Trim([char]0xFEFF).Trim() }
+    $magicIdx = [array]::IndexOf($hdr, 'magic')
     $uf = @($dupRow -split ',')
-    if ($uf.Count -lt 7) { Bad 'D0 cannot build a unique row: inventory row 1 has fewer than 7 fields' }
-    $uf[6] = '9999999'
+    if ($magicIdx -lt 0 -or $uf.Count -ne $hdr.Count) {
+        Bad ("D0 cannot build a unique row: header has $($hdr.Count) column(s) with magic at " +
+             "index $magicIdx, but row 1 splits into $($uf.Count) field(s) -- the naive split no " +
+             'longer lines up with the schema, so this case would test the wrong column')
+    }
+    $uf[$magicIdx] = '9999999'
     $uniqRow = ($uf -join ',')
     [System.IO.File]::WriteAllText((Join-Path $RepoRoot ($INV -replace '/', '\')),
                                    ($raw.TrimEnd("`r", "`n") + "`n" + $uniqRow + "`n"))
@@ -270,12 +280,52 @@ function RunCollision {
     } finally { $ErrorActionPreference = $prevEAP }
 }
 
+# THE WORKING TREE IS NEVER TOUCHED BY THE B OR C CASES, and that is a deliberate difference
+# from case A above. A staged the attack by writing the real file and restoring it in `finally`,
+# which is correct for exceptions and useless against a hard kill -- the process dies between the
+# write and the restore and the file stays mutated. A is ORDER-674's and its subject is one CSV;
+# B and C would have tripled that exposure onto AGENT_TASKBOARD.md and the ARCHIVE, which are the
+# work queue EVERY lane writes to (docs/SESSION_LEDGER.md rule 4).
+#
+# So B and C stage through the OBJECT DATABASE instead: `hash-object -w` writes a blob, then
+# `update-index --cacheinfo` points the TEMP index at it. That is the same end state the attack
+# needs -- index and worktree disagreeing -- reached without a window in which the boards are
+# wrong on disk. There is no restore to get wrong because nothing was changed.
 $origActiveIdx  = GitText ('rev-parse ":{0}"' -f $ACTIVE)
 $origArchiveIdx = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
-$bakActive  = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.md')
-$bakArchive = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.md')
-Copy-Item -LiteralPath $ACTIVE -Destination $bakActive -Force
-Copy-Item -LiteralPath $ARCHIVE -Destination $bakArchive -Force
+$origActiveDisk  = GitText ('hash-object "{0}"' -f $ACTIVE)
+$origArchiveDisk = GitText ('hash-object "{0}"' -f $ARCHIVE)
+
+$script:pristineBlob = @{}   # rel -> the index bytes as they were BEFORE any staging here
+
+function StageBlobFrom([string]$RelPath, [string]$AppendText) {
+    <# Stage <RelPath>'s PRISTINE INDEX CONTENT plus $AppendText, without writing the worktree.
+       Returns nothing; throws if git refuses, so a silent no-op cannot masquerade as an attack
+       that failed to fire.
+
+       PRISTINE, not current: the archive is staged twice (B1 and C1) and reading ":path" the
+       second time would return the FIRST probe's bytes, so the two cases would compound instead
+       of each testing one appended header. Caching also stops re-reading ~1.8MB of board through
+       a git spawn on every call, which is where this helper's cost lives. #>
+    $tmpf = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674blob_" + [guid]::NewGuid().ToString('N') + '.md')
+    try {
+        if (-not $script:pristineBlob.ContainsKey($RelPath)) {
+            $cur = (Git ('show ":{0}"' -f $RelPath))
+            if ($cur.ExitCode -ne 0) { throw ("cannot read :{0} from the index" -f $RelPath) }
+            $script:pristineBlob[$RelPath] = $cur.Bytes
+        }
+        $bytes = $script:pristineBlob[$RelPath] + [System.Text.Encoding]::UTF8.GetBytes($AppendText)
+        [System.IO.File]::WriteAllBytes($tmpf, $bytes)
+        # --path so git applies the SAME clean filter this path would get on `git add`; without
+        # it the staged blob can differ from what a real commit of the same text would contain.
+        $h = GitText ('hash-object -w --path "{0}" -- "{1}"' -f $RelPath, $tmpf)
+        if (-not $h) { throw ("hash-object produced no oid for {0}" -f $RelPath) }
+        $u = Git ('update-index --add --cacheinfo 100644,{0},{1}' -f $h, $RelPath)
+        if ($u.ExitCode -ne 0) { throw ("update-index failed for {0}: {1}" -f $RelPath, $u.StdErr) }
+    } finally {
+        Remove-Item -LiteralPath $tmpf -Force -ErrorAction SilentlyContinue
+    }
+}
 
 $tmpIndex2 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.idx')
 Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex2 -Force
@@ -286,9 +336,7 @@ try {
     # B0 SPECIFICITY FIRST, so "the attack goes red" cannot be confused with "this guard always
     # goes red": stage the ACTIVE board alone, with the probe header, and no archive change.
     # One board, one id -- RULE 1 has nothing to find and the run must be green.
-    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ACTIVE), "`n$probeHdr`n")
-    [void](Git ('add -- "{0}"' -f $ACTIVE))
-    Copy-Item -LiteralPath $bakActive -Destination $ACTIVE -Force
+    StageBlobFrom $ACTIVE "`n$probeHdr`n"
     $b0 = RunCollision
     if ($b0.Code -eq 0) {
         Good 'B0 SPECIFICITY a new order on ONE board only is green -- the rule is not "always red"'
@@ -300,9 +348,7 @@ try {
     # B1 THE ATTACK. The SAME id now also enters the ARCHIVE in this commit. That is the
     # cross-board duplicate RULE 1 exists to refuse -- and it is created ENTIRELY by this
     # commit, so a HEAD read cannot see it. Pre-fix this printed PASS.
-    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ARCHIVE), "`n$probeHdr`n")
-    [void](Git ('add -- "{0}"' -f $ARCHIVE))
-    Copy-Item -LiteralPath $bakArchive -Destination $ARCHIVE -Force
+    StageBlobFrom $ARCHIVE "`n$probeHdr`n"
     $b1 = RunCollision
     if ($b1.Code -ne 0 -and $b1.Text -match ('ORDER-{0} exists in BOTH' -f $probeId)) {
         Good 'B1 ATTACK an id staged into BOTH boards by one commit is RED -- the archive is judged at the index'
@@ -311,23 +357,28 @@ try {
              'This is the pre-fix behaviour: the commit lands the cross-board duplicate green.')
     }
 } finally {
-    Copy-Item -LiteralPath $bakActive -Destination $ACTIVE -Force
-    Copy-Item -LiteralPath $bakArchive -Destination $ARCHIVE -Force
     if ($null -eq $prevIndexEnv2) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
     else { $env:GIT_INDEX_FILE = $prevIndexEnv2 }
-    Remove-Item -LiteralPath $bakActive, $bakArchive, $tmpIndex2 -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $tmpIndex2 -Force -ErrorAction SilentlyContinue
 }
 
 # ASSERTED, not assumed -- these two files are the work queue of every lane in the repo.
+# The DISK hashes are the load-bearing half now: with the attack staged through the object
+# database, "the worktree never moved" is the property that makes a hard kill harmless, and a
+# claim nothing checks is a claim that stops being true (this suite's own subject).
 $nowActiveIdx  = GitText ('rev-parse ":{0}"' -f $ACTIVE)
 $nowArchiveIdx = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$nowActiveDisk  = GitText ('hash-object "{0}"' -f $ACTIVE)
+$nowArchiveDisk = GitText ('hash-object "{0}"' -f $ARCHIVE)
 $nowIndexAfter2 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
 if ($nowActiveIdx -eq $origActiveIdx -and $nowArchiveIdx -eq $origArchiveIdx -and
+    $nowActiveDisk -eq $origActiveDisk -and $nowArchiveDisk -eq $origArchiveDisk -and
     $nowIndexAfter2 -eq $realIndexBefore2) {
-    Good 'B  both boards are byte-identical afterwards and .git/index was never written'
+    Good 'B  both boards are byte-identical on DISK and in the index, and .git/index was never written'
 } else {
-    Bad ('B  THE BOARDS WERE NOT RESTORED (or the real index was written): ' +
-         "active $nowActiveIdx (was $origActiveIdx), archive $nowArchiveIdx (was $origArchiveIdx)")
+    Bad ('B  THE BOARDS MOVED (or the real index was written): index active ' +
+         "$nowActiveIdx (was $origActiveIdx) archive $nowArchiveIdx (was $origArchiveIdx); " +
+         "disk active $nowActiveDisk (was $origActiveDisk) archive $nowArchiveDisk (was $origArchiveDisk)")
 }
 
 # ===========================================================================================
@@ -354,9 +405,8 @@ function RunHandoff {
     } finally { $ErrorActionPreference = $prevEAP }
 }
 
-$origArchiveIdx2 = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
-$bakArchive2 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674c_" + [guid]::NewGuid().ToString('N') + '.md')
-Copy-Item -LiteralPath $ARCHIVE -Destination $bakArchive2 -Force
+$origArchiveIdx2  = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$origArchiveDisk2 = GitText ('hash-object "{0}"' -f $ARCHIVE)
 $tmpIndex3 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674c_" + [guid]::NewGuid().ToString('N') + '.idx')
 Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex3 -Force
 $prevIndexEnv3 = $env:GIT_INDEX_FILE
@@ -389,10 +439,7 @@ try {
 
     # C1 THE ATTACK: the same commit now also puts `## ORDER-712` into the archive -- the
     # same-commit archive move WORK_LIFECYCLE mandates. It must resolve.
-    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ARCHIVE),
-                                    ("`n## ORDER-{0} -- L3 probe, never committed`n" -f $probeC))
-    [void](Git ('add -- "{0}"' -f $ARCHIVE))
-    Copy-Item -LiteralPath $bakArchive2 -Destination $ARCHIVE -Force
+    StageBlobFrom $ARCHIVE ("`n## ORDER-{0} -- L3 probe, never committed`n" -f $probeC)
     $c1 = RunHandoff
     if ($c1.Code -eq 0) {
         Good 'C1 ATTACK a handoff routing to an order archived BY THIS COMMIT resolves -- the archive is judged at the index'
@@ -401,19 +448,20 @@ try {
              'REFUSES the same-commit archive move WORK_LIFECYCLE requires (Decision log 2026-07-30).')
     }
 } finally {
-    Copy-Item -LiteralPath $bakArchive2 -Destination $ARCHIVE -Force
     Remove-Item -LiteralPath $probeAbs -Force -ErrorAction SilentlyContinue
     if ($null -eq $prevIndexEnv3) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
     else { $env:GIT_INDEX_FILE = $prevIndexEnv3 }
-    Remove-Item -LiteralPath $bakArchive2, $tmpIndex3 -Force -ErrorAction SilentlyContinue
+    Remove-Item -LiteralPath $tmpIndex3 -Force -ErrorAction SilentlyContinue
 }
-$nowArchiveIdx2 = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
-if ($nowArchiveIdx2 -eq $origArchiveIdx2 -and
+$nowArchiveIdx2  = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$nowArchiveDisk2 = GitText ('hash-object "{0}"' -f $ARCHIVE)
+if ($nowArchiveIdx2 -eq $origArchiveIdx2 -and $nowArchiveDisk2 -eq $origArchiveDisk2 -and
     (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc -eq $realIndexBefore3 -and
     -not (Test-Path -LiteralPath $probeAbs)) {
-    Good 'C  the archive is byte-identical, the probe handoff is gone, and .git/index was never written'
+    Good 'C  the archive is byte-identical on disk AND in the index, the probe handoff is gone, and .git/index was never written'
 } else {
-    Bad ('C  cleanup failed: archive ' + $nowArchiveIdx2 + " (was $origArchiveIdx2)" +
+    Bad ('C  cleanup failed: archive index ' + $nowArchiveIdx2 + " (was $origArchiveIdx2), disk " +
+         $nowArchiveDisk2 + " (was $origArchiveDisk2)" +
          $(if (Test-Path -LiteralPath $probeAbs) { " -- AND $probeRel is still on disk" } else { '' }))
 }
 
