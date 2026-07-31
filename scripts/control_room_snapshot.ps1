@@ -457,7 +457,10 @@ $snapshot = [ordered]@{
 # the verdict, validates against ControlRoomSnapshotV5, and only then os.replace()s the canonical
 # path. If ANY of that fails, $OutFile is left byte-for-byte unchanged and this script exits
 # non-zero. A half-migrated snapshot is the one outcome the order forbids outright.
-$builderTmp = Join-Path (Split-Path $OutFile -Parent) '.control_room_builder_input.json'
+# INVOCATION-UNIQUE. A blind audit ran two snapshot builds against the same -OutFile and
+# reproduced a JSON decode error, a missing file and a WriteAllText sharing violation, because both
+# used this one fixed name. The daily monitor chain and a manual run can overlap on this machine.
+$builderTmp = Join-Path (Split-Path $OutFile -Parent) (".control_room_builder_input.$PID." + [guid]::NewGuid().ToString('N').Substring(0,8) + '.json')
 $json = $snapshot | ConvertTo-Json -Depth 8
 [System.IO.File]::WriteAllText($builderTmp, $json, (New-Object System.Text.UTF8Encoding($false)))
 try {

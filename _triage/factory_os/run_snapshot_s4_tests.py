@@ -164,7 +164,7 @@ def main():
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', os.path.join('..', 'srcA.txt'))]),
                     root=root, schema_validator=gate, reconciler=NO_DERIVE),
-                'escapes the repository root')
+                'is outside the repository root')
 
         # SPECIFICITY, per memory `gate-specificity-not-just-sensitivity`: a deriver that refused
         # EVERY claim would pass all seven negatives above and be useless. A claim that MATCHES
@@ -319,6 +319,61 @@ def main():
                   'a lambda was accepted')
         except TypeError:
             check('C2c NEG an arbitrary callable is refused, like the schema gate', True)
+
+        print("\n--- BLIND AUDIT ROUND 4 ---")
+        import inspect as _i
+        rs = _i.getsource(sb._resolve)
+        se = _i.getsource(sb._stat_evidence)
+        bf = _i.getsource(sb.build_file)
+        # S1: precedence, not position. A title that MENTIONS a status must not beat the status.
+        check('AUDIT S1 a title mentioning DONE does not beat a status of OPEN '
+              '(probed: it did -- a title could hide actionable work)',
+              sb._order_rows('## ORDER-X -- title mentions `DONE` -- `OPEN`'
+                             + chr(10))[0][1] == 'OPEN')
+        check('AUDIT S1 and the round-3 case still holds -- inline code loses to the real status',
+              sb._order_rows('## ORDER-546 -- [EXP] `(EXP)_x` -- `REVIEWED(C)`'
+                             + chr(10))[0][1] == 'REVIEWED')
+        check('AUDIT S1 the two ranks are DERIVED from STATUS_CATEGORY, not a second vocabulary',
+              sb.NON_TERMINAL_VERBS | sb.TERMINAL_VERBS == set(sb.STATUS_CATEGORY))
+        # S2: temp names must be invocation-unique.
+        check('AUDIT S2 the output temp name carries pid + a random suffix '
+              '(probed: two concurrent builds collided -- JSONDecodeError, FileNotFoundError, '
+              'and a sharing violation)',
+              'os.getpid()' in bf and 'uuid.uuid4()' in bf)
+        # S3: an in-place rewrite during the read must be DETECTED.
+        check('AUDIT S3 the file is fstat-ed BEFORE and AFTER the read and a change is REFUSED '
+              '(probed: one handle stopped path replacement, not in-place mutation)',
+              'before = os.fstat' in se and 'after = os.fstat' in se
+              and 'st_mtime_ns' in se)
+        # S4: containment must be referential.
+        check('AUDIT S4 containment uses realpath, so a junction out of the tree is caught '
+              '(probed: a lexical prefix check accepted root/escape -> outside)',
+              'os.path.realpath' in rs and 'os.path.abspath' not in rs)
+        # S6: a logical name must be bound to a canonical physical path.
+        bad_bind = scaffold(root, [row('deployments_inventory', 'srcA.txt')])
+        refuses('AUDIT S6 a mandatory logical name pointed at the wrong file is REFUSED '
+                '(probed: deployments_inventory -> an unrelated fresh file gave '
+                'reconciliation_clear=true with no reasons)',
+                lambda: sb.build_document(bad_bind, root=root, schema_validator=gate,
+                                          reconciler=NO_DERIVE),
+                'the canonical path for that logical name')
+        check('AUDIT S6 SPECIFICITY an unlisted logical name is still unconstrained, so the '
+              'binding is a declaration and not a whitelist of every source',
+              'srcA' not in sb.MANDATORY_SOURCE_PATHS)
+        # S8: freshness must not be decided after lossy rounding.
+        prec = tempfile.mkdtemp(prefix='s4prec_')
+        try:
+            fp = os.path.join(prec, 'f.txt')
+            with io.open(fp, 'w') as fh:
+                fh.write('x')
+            n0 = datetime.datetime.now()
+            os.utime(fp, ((n0 - datetime.timedelta(hours=1.04)).timestamp(),) * 2)
+            age = sb._stat_evidence(fp, n0)['age_hours']
+            check('AUDIT S8 a real age of 1.04h survives storage and stays OVER a 1.0h bar '
+                  '(probed: it was stored as 1.0 and compared FRESH)',
+                  age > 1.0, 'stored %r' % age)
+        finally:
+            shutil.rmtree(prec, ignore_errors=True)
 
         print("\n--- BLIND AUDIT ROUND 3 ---")
         # P0: the hash and the mtime must describe the SAME open file.

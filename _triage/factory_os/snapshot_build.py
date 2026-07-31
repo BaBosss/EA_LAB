@@ -62,6 +62,7 @@ import json
 import os
 import re
 import sys
+import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
@@ -105,11 +106,27 @@ def _stat_evidence(abs_path, now):
         # os.fstat(fh.fileno()) reads the metadata OF THE OPEN FILE, so the bytes and the timestamp
         # describe the same inode at the same moment by construction. A replacement mid-read leaves
         # this handle on the old file entirely -- consistent, and stale in a way `sha256` reveals.
+        # TWO fstats, BEFORE and AFTER the read, and a refusal if they disagree. One handle
+        # protects against the PATH being replaced; it does NOT protect against the OPENED FILE
+        # being rewritten IN PLACE between fh.read() and os.fstat(), which a blind audit then
+        # demonstrated: sha256 of the old bytes carried the new mtime and age_hours=0.0. The
+        # single-handle repair closed half the window and the comment above claimed the whole of it.
+        #
+        # This cannot be prevented -- there is no atomic read-and-stat -- so it is DETECTED, and
+        # detection is enough: a source whose bytes and timestamp cannot be pinned to one moment is
+        # refused rather than published with a guess.
         with io.open(abs_path, 'rb') as fh:  # snapshot: worktree
+            before = os.fstat(fh.fileno())
             raw = fh.read()
-            st = os.fstat(fh.fileno())
+            after = os.fstat(fh.fileno())
+        if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
+            sv._refuse(
+                'the file at %r was modified while it was being read: mtime/size differ between '
+                'the two stats of the SAME open handle. Refused -- the hash and the timestamp '
+                'would describe different moments, and a stale sensor labelled fresh is the one '
+                'error this pipeline exists to make impossible.' % abs_path)
         digest = hashlib.sha256(raw).hexdigest()
-        mtime = datetime.datetime.fromtimestamp(st.st_mtime)
+        mtime = datetime.datetime.fromtimestamp(after.st_mtime)
         age = (now - mtime).total_seconds() / 3600.0
         return {'read_ok': True,
                 'sha256': digest,
@@ -118,7 +135,13 @@ def _stat_evidence(abs_path, now):
                 # produce a NEGATIVE age that compares fresh against every bar by accident. It is
                 # clamped to 0 and that is a deliberate, stated choice: "newer than now" is not a
                 # staleness finding.
-                'age_hours': round(max(age, 0.0), 1)}
+                # FOUR decimals, not one. A blind audit measured a real age of 1.04h being
+                # stored as 1.0 and then compared <= a 1.0h bar, so a source that was over the bar
+                # was published FRESH. The persisted number is what every later consumer -- and
+                # the verifier's own recomputation -- decides from, so it has to carry enough
+                # precision to survive the comparison. Renderers round for humans; the store does
+                # not round for the arithmetic.
+                'age_hours': round(max(age, 0.0), 4)}
     except (IOError, OSError):
         return {'read_ok': False, 'sha256': None, 'mtime': None, 'age_hours': None}
 
@@ -138,13 +161,39 @@ def _resolve(rel_path, root):
     if os.path.isabs(rel_path) or ':' in rel_path:
         sv._refuse('source path %r is absolute. Source paths are repo-relative so the evidence '
                    'can be re-derived from the same root by a different machine.' % rel_path)
-    abs_path = os.path.abspath(os.path.join(root, rel_path.replace('\\', os.sep)))
-    root_abs = os.path.abspath(root)
+    # REALPATH, not abspath. A blind audit created `root/escape` as a junction to an outside
+    # directory and resolved `escape/outside.txt` through it: the lexical check saw a path spelled
+    # under the root and accepted it, and _stat_evidence then reported read_ok=True for a file
+    # that is not in this tree at all. Containment expressed as a string prefix is containment of
+    # STRINGS. os.path.realpath resolves junctions, symlinks and `..` to the real target, so the
+    # question becomes WHERE THE BYTES ARE rather than how the path was written.
+    abs_path = os.path.realpath(os.path.join(root, rel_path.replace('\\', os.sep)))
+    root_abs = os.path.realpath(root)
     if os.path.normcase(abs_path) != os.path.normcase(root_abs) and \
             not os.path.normcase(abs_path).startswith(os.path.normcase(root_abs) + os.sep):
-        sv._refuse('source path %r escapes the repository root. Refused: a snapshot describes the '
-                   'state of THIS tree.' % rel_path)
+        sv._refuse('source path %r resolves to %r, which is outside the repository root %r. '
+                   'Refused: a snapshot describes the state of THIS tree, and a junction or a '
+                   'symlink pointing out of it is still pointing out of it.'
+                   % (rel_path, abs_path, root_abs))
     return abs_path
+
+
+# THE CANONICAL name -> path BINDING. A blind audit supplied name="deployments_inventory" with
+# path="unrelated.txt", pointed it at a fresh unrelated file, and got fresh=True /
+# reconciliation_clear=True with no reasons: the SAME builder supplied both the trusted logical
+# label and an arbitrary physical path, so nothing bound the two. The identity decision this order
+# made -- `name` logical, `path` physical -- is only worth anything if something other than the
+# builder decides which physical file a logical name means.
+#
+# These three are the paths scripts/control_room_snapshot.ps1 already hardcodes; making the binding
+# canonical and CHECKED closes the hole without inventing a policy. A name not listed here is
+# unconstrained and says so, so adding a fourth source is a deliberate edit HERE rather than a
+# silent widening.
+MANDATORY_SOURCE_PATHS = {
+    'deployments_inventory': 'portfolio/DEPLOYMENTS.csv',
+    'live_dashboard': 'portfolio/LIVE_DASHBOARD.html',
+    'attestation_map': 'portfolio/ATTESTATION_MAP.csv',
+}
 
 
 def derive_source_evidence(doc, root=None, now=None):
@@ -161,6 +210,18 @@ def derive_source_evidence(doc, root=None, now=None):
     for row in meta['sources']:
         if not isinstance(row, dict):
             sv._refuse('a meta.sources entry is %r, not an object' % (row,))
+        expected = MANDATORY_SOURCE_PATHS.get(row.get('name'))
+        if expected is not None:
+            declared = str(row.get('path') or '').replace('\\', '/')
+            if declared != expected:
+                sv._refuse(
+                    'meta.sources[%r].path is %r but the canonical path for that logical '
+                    'name is %r. Refused: `name` is the logical identity the registry and '
+                    'the reconciliation join on, and if the builder chooses which file it '
+                    'points at then the name carries no information at all -- a blind audit '
+                    'pointed deployments_inventory at an unrelated fresh file and got '
+                    'reconciliation_clear=true with no reasons.'
+                    % (row.get('name'), row.get('path'), expected))
         abs_path = _resolve(row.get('path'), root)
         truth = _stat_evidence(abs_path, now)
         for field in DERIVED_EVIDENCE_FIELDS:
@@ -376,6 +437,12 @@ STATUS_CATEGORY = {
 # it was fixed there (memory `validator-substring-misclassifies-reviewed`): the status verb is the
 # FIRST token of a backtick span, so the match is ANCHORED. Unanchored, `OPEN` matches inside
 # "open question" and `HOLD` inside "holdout", which cost that parser 17 orders.
+# The two ranks, DERIVED from STATUS_CATEGORY so they cannot drift from it. Non-terminal = the
+# buckets that mean work is still live; terminal = the buckets that mean it is not.
+NON_TERMINAL_BUCKETS = ('actionable', 'running', 'waiting')
+NON_TERMINAL_VERBS = frozenset(v for v, b in STATUS_CATEGORY.items() if b in NON_TERMINAL_BUCKETS)
+TERMINAL_VERBS = frozenset(v for v, b in STATUS_CATEGORY.items() if b not in NON_TERMINAL_BUCKETS)
+
 _ORDER_ID = re.compile(r'^## (ORDER-[0-9A-Za-z_-]+?)\s*(?:--|—|$)')
 _SPAN = re.compile(r'`([^`]+)`')
 _VERB = re.compile(r'^[^A-Za-z]*([A-Z][A-Z-]*)\b')
@@ -389,26 +456,31 @@ def _order_rows(text):
             continue
         m = _ORDER_ID.match(line)
         order_id = m.group(1) if m else line[3:].split()[0]
-        # THE STATUS IS THE FIRST SPAN WHOSE VERB IS A KNOWN STATUS, not the first uppercase span.
-        # BLIND AUDIT 2026-07-31, reproduced against the real boards: taking the first uppercase
-        # span read INLINE CODE IN THE TITLE as the status. `## ORDER-546 -- [EXP] `EXP` ... —
-        # `REVIEWED(...)`` classified as EXP. ELEVEN live rows were affected (546, 410, 373, 215,
-        # 117, 116, 003, 009 among them), every one of them inflating `unclassified` with a row
-        # that HAS a perfectly readable status.
+        # PRECEDENCE, not position. Round 3 changed this from "first uppercase span" to "first
+        # span whose verb is a KNOWN status", which fixed inline code in a title -- and round 4
+        # broke it with one line: `## ORDER-X -- title mentions `DONE` -- `OPEN`` resolved to DONE,
+        # so a TITLE could hide actionable work. A failed generalization: I replaced one
+        # position rule with another position rule.
         #
-        # The fallback keeps the old behaviour for a header whose spans contain no known verb, so a
-        # genuinely unreadable status still lands in `unclassified` rather than being dropped --
-        # which is the whole point of that bucket.
+        # The board already has a parser that got this right, and it got it right by RANKING
+        # rather than by ordering -- scripts/check_taskboard_archive.ps1's Get-StatusClass scans
+        # every span for NON-TERMINAL verbs first, then REVIEWED, then terminal ones. Same rule
+        # here, and the tie-break direction is the safe one: an order that is both "mentioned as
+        # DONE" and "marked OPEN" is counted as OPEN. Over-reporting actionable work is a
+        # nuisance; under-reporting it is how work disappears.
         verb = None
         fallback = None
-        for span in _SPAN.findall(line):
-            vm = _VERB.match(span.strip())
-            if not vm:
-                continue
-            if fallback is None:
-                fallback = vm.group(1)
-            if vm.group(1) in STATUS_CATEGORY:
-                verb = vm.group(1)
+        for rank in (NON_TERMINAL_VERBS, TERMINAL_VERBS):
+            for span in _SPAN.findall(line):
+                vm = _VERB.match(span.strip())
+                if not vm:
+                    continue
+                if fallback is None:
+                    fallback = vm.group(1)
+                if vm.group(1) in rank:
+                    verb = vm.group(1)
+                    break
+            if verb is not None:
                 break
         out.append((order_id, verb if verb is not None else fallback))
     return out
@@ -629,7 +701,13 @@ def build_file(input_path, out_path, root=None, now=None, schema_validator=None,
     out_dir = os.path.dirname(os.path.abspath(out_path)) or '.'
     if not os.path.isdir(out_dir):
         sv._refuse('output directory %r does not exist' % out_dir)
-    tmp = os.path.join(out_dir, '.%s.tmp' % os.path.basename(out_path))
+    # INVOCATION-UNIQUE. A blind audit ran two snapshot builds against the same out_path and
+    # reproduced JSONDecodeError, FileNotFoundError and a sharing violation: both processes used
+    # this one fixed name, so each read the other's half-written bytes and one os.replace()d a file
+    # the other had already moved. The daily monitor chain and a manual run CAN overlap on this
+    # machine -- `[auto] daily monitor snapshot` is a scheduled committer here.
+    tmp = os.path.join(out_dir, '.%s.%d.%s.tmp'
+                       % (os.path.basename(out_path), os.getpid(), uuid.uuid4().hex[:8]))
     text = json.dumps(doc, indent=2, ensure_ascii=False)
     with io.open(tmp, 'w', encoding='utf-8', newline='\n') as fh:
         fh.write(text)

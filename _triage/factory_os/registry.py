@@ -38,6 +38,7 @@ TESTS
 import io
 import json
 import os
+import re
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -130,6 +131,99 @@ SURFACES = ('OPERATOR', 'RESEARCH', 'HIDDEN')
 # optimizable" must be answered by naming them, so a role added to the enum later is refused until
 # somebody decides, rather than inheriting permission from not being on a deny list.
 OPTIMIZABLE_ROLES = ('TUNABLE',)
+
+# THE OTHER HALF OF THE COMBINATION, which this module CLAIMED to perform and did not.
+# A blind audit bound `StackMode[LAB_ENTRY_16]` as TUNABLE and got optimizable=True, while
+# docs/PARAM_REGISTRY.csv classifies that input INACTIVE. optimize_guard recovers the right answer
+# today because it applies the permanent-semantics half itself -- but the whole point of "ONE
+# resolver" is that the NEXT consumer does not have to, and the generator would have been handed
+# the wrong canonical answer. The docstring at the top of this file described a combination that
+# happened in two places, one of which was not this one.
+#
+# LIVE = the input can still change behaviour somewhere; DEAD = it cannot on the build it is tagged
+# for. Same vocabulary scripts/optimize_guard.ps1 uses, and it is an ALLOWLIST: a classification
+# value in neither list is refused rather than assumed harmless.
+PARAM_REGISTRY_REL = 'docs/PARAM_REGISTRY.csv'
+LIVE_CLASSIFICATIONS = ('ACTIVE', 'OVERRIDE')
+DEAD_CLASSIFICATIONS = ('INACTIVE', 'COMPATIBILITY')
+
+_CLASSIFICATION_CACHE = {}
+
+
+def _classifications(root=None):
+    """-> {bare parameter name: classification} from docs/PARAM_REGISTRY.csv.
+
+    POSITIONAL, index 0 = name and index 10 = classification, which is what
+    scripts/optimize_guard.ps1 reads ($m[10]) and what its own header calls "column 11". The file
+    has NO quoted header row -- it opens with `>` prose lines and then goes straight to data -- so
+    a header-driven parser finds nothing. The first version of this function was header-driven and
+    returned ZERO rows silently, which is the "readable but not understood, published as empty"
+    defect this pipeline refuses everywhere else. It is refused here too.
+
+    Deliberately not a general CSV parser: it relies on every field being double-quoted with no
+    embedded quotes, exactly as optimize_guard does, and a row that does not match that shape is
+    SKIPPED AND COUNTED rather than guessed at.
+    """
+    base = REPO_ROOT if root is None else root
+    if base in _CLASSIFICATION_CACHE:
+        return _CLASSIFICATION_CACHE[base]
+    path = os.path.join(base, PARAM_REGISTRY_REL.replace('/', os.sep))
+    if not os.path.isfile(path):
+        _refuse('%s is not present, so a parameter PERMANENT-semantics lookup is impossible. '
+                'Refused rather than defaulted: "I cannot tell whether this input is dead" must '
+                'never be answered as "it is live".' % PARAM_REGISTRY_REL)
+    out, skipped = {}, 0
+    with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
+        for line in fh:
+            if not line.startswith('"'):
+                continue
+            fields = re.findall(r'"([^"]*)"', line)
+            if len(fields) < 11:
+                skipped += 1
+                continue
+            name = fields[0].strip()
+            if not name:
+                skipped += 1
+                continue
+            # KEYED ON THE FULL NAME, TAG INCLUDED. The first version stripped the build tag
+            # and wrote out[bare], which is last-wins across rows that disagree -- and they DO:
+            # measured, StackMode[LAB_ENTRY_16] is INACTIVE while the other seven StackMode rows
+            # are ACTIVE. Collapsing eight answers into one and keeping whichever came last is the
+            # same "a store with two answers cannot be a resolver" defect this module refuses for
+            # duplicate bindings, committed by the resolver itself.
+            out[name] = fields[10].strip().upper()
+    if not out:
+        _refuse('%s parsed to ZERO classifications (%d row(s) skipped as unparseable). Refused: a '
+                'permanent-semantics table that reads as empty would make every parameter '
+                'UNKNOWN, and the first version of this parser did exactly that in silence.'
+                % (PARAM_REGISTRY_REL, skipped))
+    _CLASSIFICATION_CACHE[base] = out
+    return out
+
+
+def classification_of(parameter, root=None):
+    """-> (classification, why) for one parameter name. `classification` is None when unresolvable.
+
+    Three cases, and the third is the one that matters:
+      * an EXACT match (the binding names the tag, e.g. `StackMode[LAB_ENTRY_16]`) -> that row
+      * no tag, and every tagged row for that bare name AGREES -> the agreed value
+      * no tag, and the tagged rows DISAGREE -> None, AMBIGUOUS. Measured: the eight StackMode
+        rows are seven ACTIVE and one INACTIVE, so a binding that does not say which build it
+        means has no answer here, and must not be handed the majority one.
+    """
+    table = _classifications(root)
+    if parameter in table:
+        return table[parameter], 'exact'
+    bare = re.sub(r'\[[^\]]*\]$', '', str(parameter)).strip()
+    matches = dict((k, v) for k, v in table.items()
+                   if re.sub(r'\[[^\]]*\]$', '', k).strip() == bare)
+    if not matches:
+        return None, 'not in the registry'
+    values = set(matches.values())
+    if len(values) == 1:
+        return values.pop(), 'agreed across %d tagged row(s)' % len(matches)
+    return None, ('AMBIGUOUS: %d tagged rows disagree (%s) -- the binding must name the build tag'
+                  % (len(matches), ', '.join(sorted(values))))
 
 
 class RegistryRefusal(Exception):
@@ -263,7 +357,8 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
         rec = _binding_index(rows).get((hypothesis_revision, parameter))
     if rec is None:
         return {'parameter': parameter, 'hypothesis_revision': hypothesis_revision,
-                'role': None, 'surface': None, 'optimizable': None,
+                'role': None, 'surface': None, 'classification': None,
+                'classification_source': None, 'optimizable': None,
                 'locked_value': None, 'safe_range': None, 'definition_ref': None,
                 'source': 'UNBOUND'}
     role = rec.get('role')
@@ -285,9 +380,29 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
                 'one; this resolver is reached without ajv on the fast path, so it is refused here '
                 'too. A locked parameter with no value to lock to is not a lock.'
                 % (parameter, hypothesis_revision))
+    # THE COMBINATION. Until a blind audit checked it, `optimizable` was `role in
+    # OPTIMIZABLE_ROLES` and nothing else -- so binding `StackMode[LAB_ENTRY_16]` TUNABLE returned
+    # optimizable=True while docs/PARAM_REGISTRY.csv classifies that input INACTIVE. optimize_guard
+    # recovered the right answer by applying the permanent-semantics half ITSELF, which is exactly
+    # the thing "ONE resolver" exists to make unnecessary: the next consumer, the generator, would
+    # have been handed the wrong canonical answer. The docstring at the top of this file described
+    # a combination that was happening in two places, one of which was not this one.
+    #
+    # ALLOWLIST on the classification, not a deny-list: a value in neither list is UNKNOWN, and
+    # UNKNOWN is not optimizable. A classification this module has never seen must not inherit
+    # permission from not being on a list of bad ones.
+    classification, why = classification_of(parameter, root)
+    if classification in LIVE_CLASSIFICATIONS:
+        permanent_ok = True
+    elif classification in DEAD_CLASSIFICATIONS:
+        permanent_ok = False
+    else:
+        permanent_ok = False
     return {'parameter': parameter, 'hypothesis_revision': hypothesis_revision,
             'role': role, 'surface': surface,
-            'optimizable': role in OPTIMIZABLE_ROLES,
+            'classification': classification,
+            'classification_source': why,
+            'optimizable': (role in OPTIMIZABLE_ROLES) and permanent_ok,
             'locked_value': rec.get('locked_value'),
             'safe_range': rec.get('safe_range'),
             'definition_ref': rec.get('definition_ref'),
@@ -306,7 +421,12 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
     _meta, rows = stores['factory/parameter_bindings.jsonl']
     names = sorted(set(rec.get('parameter') for _n, rec in rows
                        if rec.get('hypothesis_revision') == hypothesis_revision))
-    return dict((p, resolve(hypothesis_revision, p, stores=stores)) for p in names)
+    # `root=root` is NOT optional and was missing. resolve_all delegated to resolve() without it,
+    # so the per-parameter answers were computed against the REPO's PARAM_REGISTRY while the rows
+    # came from the caller's root -- two trees, one answer. Caught by the exhaustive-role fixture
+    # going red the moment resolve() started consulting the classification table at all: before
+    # that, root only selected the bindings, which resolve_all had already loaded.
+    return dict((p, resolve(hypothesis_revision, p, root=root, stores=stores)) for p in names)
 
 
 # ---------------------------------------------------------------------------------------------

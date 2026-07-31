@@ -132,6 +132,28 @@ $safety = RunGuard @('-HypothesisRevision', $rev, '-BindingsRoot', $work)
 Ok 'C2 a SAFETY binding also REFUSES (optimizable is an allowlist, not a LOCKED blacklist)' `
     ($safety -match "\[REFUSE\] $param" -and $safety -match "role='SAFETY'")
 
+Write-Host '   -- E: the ajv live-row guard must be TRIGGERED by the store it governs --'
+# BLIND AUDIT round 4, the strongest finding of the batch: run_schema_fixtures.py validates every
+# LIVE registry row against its entity with ajv, and it runs inside run_contract_binding_tests.ps1
+# -- but staging factory/instrument_profiles.jsonl selected only THIS suite. The checker existed,
+# worked, and was not on the commit path of the file it governs. A guard the governed input does
+# not trigger runs when something ELSE is staged, which is BACKLOG-D32's defect one layer up.
+$selFile = Join-Path $work 'staged.txt'
+Set-Content -LiteralPath $selFile -Encoding ASCII -Value 'factory/instrument_profiles.jsonl'
+$sel = & powershell @('-NoProfile','-File',(Join-Path $RepoRoot ('scripts'+[char]92+'_test'+[char]92+'run_fast_cages.ps1')),
+                      '-StagedPathsFile',$selFile,'-ExportSelection') 2>&1
+Ok 'E staging a registry store selects the suite where ajv validates live rows' `
+    ((@($sel) -join ' ') -match 'run_contract_binding_tests\.ps1')
+Ok 'E and it still selects this suite too, so neither replaced the other' `
+    ((@($sel) -join ' ') -match 'run_registry_tests\.ps1')
+# SPECIFICITY: an unrelated staged path must NOT select them, or the assertion above proves
+# nothing about the mapping.
+Set-Content -LiteralPath $selFile -Encoding ASCII -Value 'docs/PARAM_LINKAGE.md'
+$sel2 = & powershell @('-NoProfile','-File',(Join-Path $RepoRoot ('scripts'+[char]92+'_test'+[char]92+'run_fast_cages.ps1')),
+                       '-StagedPathsFile',$selFile,'-ExportSelection') 2>&1
+Ok 'E SPECIFICITY an unrelated path does not select the registry suite' `
+    ((@($sel2) -join ' ') -notmatch 'run_registry_tests\.ps1')
+
 Write-Host '   -- D: FAIL CLOSED when a revision is named and the bindings cannot be read --'
 $threw = $false
 $msg = ''

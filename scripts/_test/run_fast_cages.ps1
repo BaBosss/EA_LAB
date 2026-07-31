@@ -368,6 +368,22 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/registry.py',
                                           '_triage/factory_os/check_registries.py',
                                           '_triage/factory_os/run_registry_tests.py',
+                                          # BLIND AUDIT round 4, and the strongest finding of the
+                                          # batch: run_schema_fixtures.py validates every LIVE
+                                          # registry row against its entity with ajv, and it runs
+                                          # inside THIS wrapper -- but staging
+                                          # factory/instrument_profiles.jsonl selected only
+                                          # run_registry_tests.ps1. The checker existed, worked,
+                                          # and was not on the commit path of the file it governs.
+                                          # A guard that the governed input does not trigger is a
+                                          # guard that runs when something ELSE is staged, which is
+                                          # the exact five-times-in-four-days failure BACKLOG-D32
+                                          # exists to end -- reappearing one layer up.
+                                          'factory/coverage.jsonl',
+                                          'factory/hypotheses.jsonl',
+                                          'factory/instrument_profiles.jsonl',
+                                          'factory/parameter_bindings.jsonl',
+                                          '_triage/factory_os/run_schema_fixtures.py',
                                           '_triage/factory_os/check_schema_structure.py',
                                           # ORDER-601 closure: proves the PLANNED/BUILT/WIRED
                                           # enforcement labels are verified against the repo rather
@@ -443,7 +459,12 @@ $NOT_A_DEPENDENCY = @(
     '_triage/factory_os/run_schema_fixtures.py',
     # Same shape, other direction: run_contract_binding_tests.ps1 names the S4 PowerShell suite in
     # a comment to say where C3/C6 are asserted. It is a sibling, not an input.
-    'scripts/_test/run_snapshot_s4_tests.ps1'
+    'scripts/_test/run_snapshot_s4_tests.ps1',
+    # ORDER-630 round 4: run_registry_tests.ps1 names docs/PARAM_LINKAGE.md as the UNRELATED path
+    # in its per-path-selection specificity case ("an unrelated path does not select this suite").
+    # It is the opposite of a dependency -- the case only means anything BECAUSE nothing here
+    # guards it. Declaring it as an input would make the assertion false.
+    'docs/PARAM_LINKAGE.md'
 )
 
 if ($ExportGuards) {

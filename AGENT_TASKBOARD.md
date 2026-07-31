@@ -105,7 +105,9 @@
 
 ## ORDER-630 — [factory/S5] Registries + the ONE ParameterBinding resolver — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
-**Built:** five stores (`factory/universe.jsonl` · `instrument_profiles.jsonl` · `hypotheses.jsonl` · `parameter_bindings.jsonl` · the existing `coverage.jsonl`, EXTENDED not re-opened), ONE resolver `_triage/factory_os/registry.py`, its guard `check_registries.py`, and the wiring that makes `scripts/optimize_guard.ps1` read that resolver.
+**Built: FOUR stores, not five.** `instrument_profiles.jsonl` · `hypotheses.jsonl` · `parameter_bindings.jsonl` · the existing `coverage.jsonl` (EXTENDED, not re-opened), plus ONE resolver `_triage/factory_os/registry.py`, its guard `check_registries.py`, and the wiring that makes `scripts/optimize_guard.ps1` read that resolver.
+
+> 🔴 **`factory/universe.jsonl` is OWNER-BLOCKED and does not exist.** This line said *"Built: five stores"* until a blind review read it against the filesystem. It was false, and the falseness pointed the wrong way — it claimed an acceptance that the owner has not been able to grant. **The five-store acceptance is NOT closed**; it closes when the owner resolves and re-attests D1. Reviewer's words, adopted: *"the honest statement is four stores built; universe store owner-blocked."*
 
 ### The five acceptance criteria, each with a negative observed red
 

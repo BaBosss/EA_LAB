@@ -52,9 +52,48 @@ def refuses(name, fn, must_contain):
     check(name, False, 'it was ACCEPTED')
 
 
+# A SYNTHETIC docs/PARAM_REGISTRY.csv, written into every fixture root. The resolver now combines
+# the per-hypothesis role with that file's PERMANENT classification (a blind audit found it did
+# not, and returned optimizable=True for an input the registry calls INACTIVE), so a fixture root
+# without one resolves every parameter to "not in the registry" -- which is correct behaviour and
+# useless for testing roles. Positional, index 0 = name and index 10 = classification, matching the
+# real file, which has no header row at all.
+SYNTHETIC_PARAMS = (
+    ('SL_ATR', 'ACTIVE'),
+    ('MaxOpen', 'ACTIVE'),
+    ('LotBase', 'ACTIVE'),
+    ('P', 'ACTIVE'),
+    ('Q', 'ACTIVE'),
+    ('X', 'ACTIVE'),
+    ('Y', 'ACTIVE'),
+    ('Z', 'ACTIVE'),
+    ('P0', 'ACTIVE'),
+    ('P1', 'ACTIVE'),
+    ('P2', 'ACTIVE'),
+    ('P3', 'ACTIVE'),
+    ('P4', 'ACTIVE'),
+    ('P5', 'ACTIVE'),
+    ('DeadParam', 'INACTIVE'),
+    ('SplitMode[BUILD_A]', 'ACTIVE'),
+    ('SplitMode[BUILD_B]', 'INACTIVE'),
+)
+
+
+def _write_param_registry(root):
+    os.makedirs(os.path.join(root, 'docs'), exist_ok=True)
+    with io.open(os.path.join(root, 'docs', 'PARAM_REGISTRY.csv'), 'w',
+                 encoding='utf-8', newline='\n') as fh:
+        fh.write('> synthetic fixture registry'+chr(10))
+        for name, cls in SYNTHETIC_PARAMS:
+            cells = [name] + [''] * 9 + [cls, '']
+            fh.write(','.join('"%s"' % c for c in cells) + chr(10))
+    reg._CLASSIFICATION_CACHE.pop(root, None)
+
+
 def seed(root, **content):
     """Write a full set of synthetic stores; `content[key] = [rows]` overrides one of them."""
     os.makedirs(os.path.join(root, 'factory'), exist_ok=True)
+    _write_param_registry(root)
     for rel in reg.STORES:
         rows = content.get(os.path.basename(rel).replace('.jsonl', ''), [])
         with io.open(os.path.join(root, rel.replace('/', os.sep)), 'w',
@@ -84,25 +123,25 @@ def main():
                                        binding(param='LotBase', role='LOCKED', surface='HIDDEN',
                                                locked_value=0.01)])
         st = reg.load_all(root=root)
-        t = reg.resolve('B14-H01-r1', 'SL_ATR', stores=st)
+        t = reg.resolve('B14-H01-r1', 'SL_ATR', root=root, stores=st)
         check('a TUNABLE binding resolves optimizable=True',
               t['optimizable'] is True and t['source'] == 'BOUND', json.dumps(t))
-        s = reg.resolve('B14-H01-r1', 'MaxOpen', stores=st)
+        s = reg.resolve('B14-H01-r1', 'MaxOpen', root=root, stores=st)
         check('a SAFETY binding resolves optimizable=False', s['optimizable'] is False)
-        lk = reg.resolve('B14-H01-r1', 'LotBase', stores=st)
+        lk = reg.resolve('B14-H01-r1', 'LotBase', root=root, stores=st)
         check('a LOCKED binding carries its locked_value through',
               lk['optimizable'] is False and lk['locked_value'] == 0.01)
         # THE ONE THAT MATTERS: an unbound parameter must not be granted permission by silence.
-        u = reg.resolve('B14-H01-r1', 'NeverBound', stores=st)
+        u = reg.resolve('B14-H01-r1', 'NeverBound', root=root, stores=st)
         check('an UNBOUND parameter resolves optimizable=None, never True',
               u['optimizable'] is None and u['role'] is None and u['source'] == 'UNBOUND',
               json.dumps(u))
         # The per-hypothesis point of the whole entity: same parameter, other revision.
-        o = reg.resolve('B14-H02-r1', 'SL_ATR', stores=st)
+        o = reg.resolve('B14-H02-r1', 'SL_ATR', root=root, stores=st)
         check('the SAME parameter is UNBOUND in a different revision (bindings are per-revision)',
               o['source'] == 'UNBOUND')
         check('resolve_all returns exactly the parameters bound in that revision',
-              sorted(reg.resolve_all('B14-H01-r1', stores=st)) == ['LotBase', 'MaxOpen', 'SL_ATR'])
+              sorted(reg.resolve_all('B14-H01-r1', root=root, stores=st)) == ['LotBase', 'MaxOpen', 'SL_ATR'])
 
         dup = seed(tempfile.mkdtemp(prefix='s5dup_'),
                    parameter_bindings=[binding(), binding(role='LOCKED', locked_value=1)])
@@ -420,6 +459,56 @@ def main():
                 chk.RESOLVER_CONSUMERS.update(saved_cons)
         finally:
             shutil.rmtree(fake, ignore_errors=True)
+
+        print("\n--- BLIND AUDIT ROUND 4 ---")
+        # S7: the resolver must combine BOTH layers. Its docstring said it did; it did not.
+        both = seed(tempfile.mkdtemp(prefix='s5comb_'),
+                    parameter_bindings=[binding(param='SplitMode[BUILD_B]'),
+                                        binding(param='SplitMode[BUILD_A]'),
+                                        binding(param='SplitMode'),
+                                        binding(param='DeadParam'),
+                                        binding(param='SL_ATR')])
+        try:
+            dead = reg.resolve('B14-H01-r1', 'DeadParam', root=both)
+            check('AUDIT S7 a TUNABLE binding on an INACTIVE parameter is NOT optimizable '
+                  '(probed: it returned True, ignoring PARAM_REGISTRY entirely)',
+                  dead['role'] == 'TUNABLE' and dead['classification'] == 'INACTIVE'
+                  and dead['optimizable'] is False, json.dumps(dead))
+            live = reg.resolve('B14-H01-r1', 'SL_ATR', root=both)
+            check('AUDIT S7 SPECIFICITY a TUNABLE binding on an ACTIVE parameter still IS',
+                  live['optimizable'] is True, json.dumps(live))
+            # The tag collision the audit's example actually rests on.
+            tagged_dead = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=both)
+            tagged_live = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_A]', root=both)
+            check('AUDIT S7 a build-TAGGED name resolves to ITS OWN row, both ways',
+                  tagged_dead['optimizable'] is False and tagged_live['optimizable'] is True,
+                  '%s / %s' % (tagged_dead['classification'], tagged_live['classification']))
+            bare = reg.resolve('B14-H01-r1', 'SplitMode', root=both)
+            check('AUDIT S7 an UNTAGGED name whose tagged rows DISAGREE is AMBIGUOUS, not the '
+                  'majority answer (probed: stripping the tag was last-wins across 8 real rows)',
+                  bare['classification'] is None and bare['optimizable'] is False
+                  and 'AMBIGUOUS' in (bare['classification_source'] or ''),
+                  json.dumps(bare))
+        finally:
+            shutil.rmtree(both, ignore_errors=True)
+        # An unparseable / absent registry must REFUSE, never resolve everything to UNKNOWN quietly.
+        noreg = tempfile.mkdtemp(prefix='s5noreg_')
+        try:
+            os.makedirs(os.path.join(noreg, 'factory'))
+            refuses('AUDIT S7 an ABSENT PARAM_REGISTRY is REFUSED, not defaulted to live',
+                    lambda: reg._classifications(noreg), 'Refused rather than defaulted')
+        finally:
+            shutil.rmtree(noreg, ignore_errors=True)
+        # resolve_all must carry the root through -- it did not, so answers came from two trees.
+        rt = seed(tempfile.mkdtemp(prefix='s5rt_'),
+                  parameter_bindings=[binding(param='DeadParam')])
+        try:
+            check('AUDIT S7 resolve_all carries `root` through to resolve (probed: it did not, so '
+                  'bindings came from one tree and classifications from another)',
+                  reg.resolve_all('B14-H01-r1', root=rt)['DeadParam']['classification']
+                  == 'INACTIVE')
+        finally:
+            shutil.rmtree(rt, ignore_errors=True)
 
         print("\n--- BLIND AUDIT ROUND 3 ---")
         # R3 must scan METADATA records too -- "a verdict key at any depth" said nothing about
