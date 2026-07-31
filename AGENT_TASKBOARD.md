@@ -101,6 +101,113 @@
 
 > 🏭 **TRANCHE 600-601 (pasted 2026-07-30 17:40, lane `S-2026-07-30-BOARDPASTE`)** — the two Factory-OS orders that came out of `BACKLOG-D30`. They were drafted at 11:50 and could not be pasted for six hours because a concurrent lane held this file with uncommitted work under a user instruction to hold all commits; they lived in `_triage/factory_os/ORDERS_S2a_S3a_DRAFT.md` and were tracked by `BACKLOG-D30` in the meantime. **600 is untouched. 601 is already built and blind-audited — read its header before doing anything to it.** Both specs are deliberately un-gameable: Codex audit 5 constructed, for every rev-1 criterion, the cheapest output that met the letter and defeated the purpose, and every rev-2 amendment traces to one of those.
 
+> 🧭 **TRANCHE 670-674 (written 2026-07-31, lane `S-2026-07-31-TIERSNAP`)** — three of these are the owner's decisions from 14:2x, recorded in `PROJECT_STATE.md` §3 **before** any code moved (`671` · `672` · `673`), and two come out of one measurement: **31 of 32 declared reads of judged evidence in the checker set read the WORKING TREE while the tier is a pre-commit hook** (`670` · `674`). Design = [`_triage/factory_os/TIER_SNAPSHOT_DESIGN.md`](_triage/factory_os/TIER_SNAPSHOT_DESIGN.md) **rev 2**, attacked by an independent review before a line was written: rev 1's central argument was wrong twice and its arrival check was a blacklist. **Do not implement from rev 1's shape — read §7 first, it is short and it is the reason the rest is trustworthy.**
+
+---
+
+## ORDER-670 — [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the INDEX — one answer, not thirty-one patches — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Design (binding): [`_triage/factory_os/TIER_SNAPSHOT_DESIGN.md`](_triage/factory_os/TIER_SNAPSHOT_DESIGN.md) rev 2 @ `84c939e`.** This order builds §3 and is accepted on §5 T1–T7. Do not re-derive the design here; do not amend it to make a fixture pass.
+
+### The measurement this order exists for
+
+```
+grep -ho "# snapshot: [a-z-]*" _triage/factory_os/*.py scripts/*.ps1 scripts/lib/*.ps1 | sort | uniq -c
+     31 # snapshot: worktree
+      1 # snapshot: not-a-judged-input
+```
+
+**Zero declare `index`.** The exploited form is already in this repo: `ORDER-615` S1 — A7 judged the working tree, so staging a deletion and restoring the working copy reported **0 problems** on an append-only guard. It was repaired in **one** checker; the same defect is structurally available in the other thirty.
+
+### The rule, which is the whole design in one line
+
+> **A BUILDER observes the world. A CHECKER judges the commit.**
+
+Builders (`snapshot_build`) read the **disk** — an index blob has no mtime and freshness computed against one is fiction. Checkers read the **index** in hook mode. The committed-vintage claim about a builder's output is made **by a checker** (`run_schema_fixtures` C1), never by the builder.
+
+### Scope — ONE checker, then one commit each
+
+`evidence.py` + the mode plumbing + T1–T7 proven against **`check_registries`** only (5 category-A reads, and it carries the T3 attack). The other eight migrate one commit each afterwards. **Thirty-one reads in one commit is a change nobody can review**, and reviewing badly is what produced this order.
+
+### The two things rev 1 did not have, both verified by hand before acceptance
+
+- **Enumeration is a judged read.** `read_committed` picks bytes for a known path; `glob` picks the **paths**, from disk. `git add rogue.py` carrying the role vocabulary + delete the worktree copy ⇒ `check_r4`'s second-copy sweep never sees what the commit contains. ⇒ `list_committed()` via `git ls-files --cached`. **This is T3 and it is the attack that matters most.**
+- **The arrival check must be an allowlist.** "Fail if any suite reports `worktree`" passes a suite that reports **nothing**, and fixtures legitimately print the word. ⇒ one structured marker per **selected** suite, required by name; missing/duplicate/wrong all fail. Hook-ness arrives as an **argument** at both `.githooks/pre-commit` call sites **including the fail-closed branch that today passes none**.
+
+### ห้าม
+
+- ❌ Do not give `read_committed` a worktree fallback. Tracked-but-unreadable and untracked-in-hook-mode are **`ToolFailure`**, and `worktree/worktree` is refused as well as mixed (Spec4's escape).
+- ❌ Do not let a library (`registry.py`) default its source — a default makes the resolver a second decider of which bytes count.
+- ❌ Do not write a criterion that equates an index-vintage hash with a disk-vintage one. Under `autocrlf` they can never agree (design §4.2).
+- ❌ Do not touch the six PowerShell front guards — that is `ORDER-674`. ❌ Do not mark `REVIEWED`.
+
+---
+
+## ORDER-671 — [factory/S5] An UNBOUND swept parameter under a declared revision becomes a REFUSAL — `OPEN` · ⛔ **owner-ratified 2026-07-31; the decision is made, this is the build** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Owner decision, recorded at `PROJECT_STATE.md` §3 (2026-07-31):** `-HypothesisRevision X` claims the run is evidence about `X`; a dimension `X` never described cannot be evidence about `X`. The current NOTE becomes a REFUSAL.
+
+**Why now and not later, stated because it is the whole cost argument:** `hypotheses.jsonl` is **empty**. The strict rule refuses **zero** existing runs today. Every later day turns this from a decision into a migration.
+
+### Acceptance
+
+- **U1** a swept parameter with no binding under a declared revision ⇒ `REFUSE`, naming the parameter and the revision. Negative observed red first.
+- **U2 — the specificity half, and it is not optional.** With **no** `-HypothesisRevision`, **not one line of output changes**. The first version of this repair fired on every legacy call site and was caught only because `run_registry_tests.ps1` already had this assertion (`GUARD_SHAPES.md` shape 5, "collateral outside the example's slice"). Both halves are asserted together so neither can be quoted without the other.
+- **U3** the refusal survives the `ORDER-672` tag change — a binding that resolves through `build_tag` is **bound**, and must not be reported UNBOUND. Order these two so this is provable rather than assumed.
+
+### ห้าม
+- ❌ Do not invent a "binding set is complete" field to justify it — the ratified ground is **attribution**, not completeness, and the two have different fixtures. ❌ No `REVIEWED`.
+
+---
+
+## ORDER-672 — [factory/S5] `build_tag` becomes its own `ParameterBinding` field — a name that encodes two facts may not be the join key — `OPEN` · ⛔ **owner-ratified 2026-07-31** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**The measured cost of the encoded form:** it produced **F1** (a tagged binding invisible to its only consumer — the two constraints were **jointly unsatisfiable**: bare ⇒ AMBIGUOUS, tagged ⇒ unseen, so a `LOCKED` binding silently degraded to an UNBOUND note) and **half of S7** (stripping the tag was last-wins across rows that *disagree* — `StackMode` is seven ACTIVE and one INACTIVE).
+
+`parameter` holds the bare name; `build_tag` holds the tag or `null`. **"These rows disagree, so the binding must name the tag" becomes representable in the DATA** instead of inferred by a parser at whichever call site remembers to run it.
+
+### Acceptance
+
+- **G1** `schemas.json` gains the field; a row carrying a tag **inside** `parameter` is **refused** by the schema, not silently accepted alongside the new field. Two encodings of one fact is the defect, not a migration path.
+- **G2** exactly **one** join site. A second place that parses `[...]` out of a name is a second resolver — `check_registries` R4's second-copy sweep must catch it.
+- **G3** the `AMBIGUOUS` behaviour is **preserved**, with its fixture: an untagged request whose tagged rows disagree stays not-optimizable. A refactor that quietly makes it optimizable is a silent permission grant.
+
+### ห้าม
+- ❌ `schemas.json` is **not** in the attestation bundle, but `check_s2a_migration.py` reads it ⇒ **re-run the S2a gate before commit**. ❌ No `REVIEWED`.
+
+---
+
+## ORDER-673 — [factory/tier] The fast-tier budget becomes a real number and is ENFORCED — `OPEN` · ⛔ **owner-ratified 2026-07-31** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Measured:** the full tier is **39.4s** (median of five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s** threshold that prints a warning and exits 0. Per-path selection keeps an ordinary commit at 11–29s. Codex audit 6 MAJOR-7 said it plainly: that is not a budget, it is an advisory.
+
+**Why an unenforced number is worse than no number:** the stated reason the budget exists is that a slow hook earns `--no-verify`. A threshold that has been breached repeatedly with nothing happening does not prevent that — and a check that cannot fail is **shape 3**, inside the tier built to catch shape 3.
+
+### Acceptance
+
+- **N1** the number comes from a **measurement command run in the same session** that writes it, not from this row. Two numbers are needed — full tier and per-path — because they are different claims.
+- **N2** over budget ⇒ the tier **fails**. Negative: inject a sleep ⇒ RED. Specificity: a normal run is green and prints the margin, so the next person can see the headroom **before** spending it.
+- **N3** the failure message names **which suite** spent the time. "The tier is slow" is not actionable; "this suite is 5.8s of it" is.
+- **N4** state the consequence that is being accepted: the next cage added has to **displace** something. That is the point.
+
+### ห้าม
+- ❌ Do not buy headroom by removing a suite from the tier without saying which and why in the same commit. ❌ No `REVIEWED`.
+
+---
+
+## ORDER-674 — [factory/tier] The six PowerShell guards that run BEFORE the tier were never measured — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+`.githooks/pre-commit` runs `check_state` · `check_precommit_staged` · `check_order_collision` · `check_handoff_contract` · `check_experiment_events` · `check_verdict_kill` **ahead of** the fast tier. They judge boards, the ledger and handoffs — committed evidence by any reading — and `ORDER-670`'s `evidence.py` gives them no entry point.
+
+🔴 **This order exists because of a defect in my own measurement.** The design's grep covered `scripts/*.ps1` and returned **zero declarations**, and rev 1 read that as *clean*. It means **UNMEASURED**. Two of the six are already partly right — `check_precommit_staged` reads the index per its own header, `check_order_collision` reads the ledger from `HEAD` — and **nobody wrote down which**, so there is no way to tell a deliberate choice from an accident.
+
+### Acceptance
+- **W1** each of the six declares, per read, which snapshot it judges — and the declaration is **checked against behaviour**, not accepted as prose. Where behaviour is wrong, it is fixed with T1's attack shape from `ORDER-670`.
+- **W2** the §1 grep in the design is corrected so it can never again be quoted as evidence these are clean.
+
+### ห้าม
+- ❌ Do not fold this into `ORDER-670`. Naming it separately is what stops it disappearing. ❌ No `REVIEWED`.
+
 ---
 
 ## ORDER-630 — [factory/S5] Registries + the ONE ParameterBinding resolver — `DONE — AUDITED x5 (Codex x4 + Fable), 29 findings all fixed; AWAITING OWNER on the universe store` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
