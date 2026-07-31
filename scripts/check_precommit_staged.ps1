@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     ORDER-103 Contract C1-ENFORCE Fix 2 -- fail-closed staged-snapshot pre-commit
     check. Called by .githooks/pre-commit; enforces ONLY when a PROTECTED-SET file
@@ -68,12 +68,17 @@ $RegressionBaselinePath = 'ea_template/regression_baseline.csv'
 
 function Get-StagedBytesOrNull {
     param([string]$RelPath)
+    # snapshot: index -- the CANDIDATE bytes, i.e. what the commit will contain.
     try { return (Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $RelPath).Bytes }
     catch { return $null }
 }
 
 function Get-HeadBytesOrNull {
     param([string]$RelPath)
+    # snapshot: HEAD -- the BASELINE half of the append-only rules, never a verdict on its own.
+    # The pair with the function above is deliberate: "is the candidate a prefix extension of
+    # what is already committed" needs both ends, and reading both from one vintage would make
+    # the rule hold vacuously (shape 3).
     try { return (Get-Snapshot -RepoRoot $RepoRoot -Mode Committed -RelPath $RelPath -CommitSha 'HEAD').Bytes }
     catch { return $null }
 }
@@ -90,13 +95,40 @@ function Test-DeploymentInventoryBlob {
     $tmp = Join-Path $env:TEMP ('order144_deploy_' + [guid]::NewGuid().ToString('N') + '.csv')
     try {
         [IO.File]::WriteAllBytes($tmp, $Bytes)
+        # snapshot: not-a-judged-input -- $tmp is a scratch file this function just wrote from
+        # the STAGED bytes its caller handed it. The vintage was chosen by Get-StagedBytesOrNull;
+        # Import-Csv needs a path, so the bytes are spilled to disk and read straight back. The
+        # disk is a transport here, not a source.
         $rows = @(Import-Csv -LiteralPath $tmp -Encoding UTF8)
         if ($rows.Count -eq 0) { return 'portfolio/DEPLOYMENTS.csv is empty or has no data rows' }
         $required = @('account','magic')
         $cols = @($rows[0].PSObject.Properties.Name)
         $missing = @($required | Where-Object { $cols -notcontains $_ })
         if ($missing.Count -gt 0) { return ('portfolio/DEPLOYMENTS.csv missing required column(s): ' + ($missing -join ', ')) }
-        $dups = @($rows | Where-Object { $_.magic -match '^d+$' } | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)
+        # ORDER-674 owed half, 2026-07-31: THIS FILTER WAS `'^d+$'` AND IT MATCHED NOTHING.
+        #
+        # A lost backslash. `^d+$` matches a string of literal letter `d`s, so no magic number
+        # ever passed it, `$dups` was always empty, and the duplicate `account|magic` rule ON THE
+        # LIVE-MONEY INVENTORY has been dead since the line was written (`baa1b6f5`, ORDER-144 --
+        # born broken, never once able to fire).
+        #
+        # MEASURED against the real portfolio/DEPLOYMENTS.csv before the fix:
+        #     rows                    64
+        #     match '^d+$'             0     <- the whole rule, every commit, since ORDER-144
+        #     match '^\d+$'           63
+        # The 64th row is account 69424711 (Demo EA3, MT4, UNVERIFIED) whose magic is still
+        # blank, which is what the filter is FOR: three blank magics must not be read as
+        # duplicates of each other. The corrected pattern keeps that exemption exactly.
+        #
+        # BLAST RADIUS, measured rather than hoped: 0 duplicates exist under the corrected
+        # filter today, so switching the rule on refuses ZERO existing work.
+        #
+        # This is the SECOND guard over this invariant. ORDER-674 fixed the first (check_state
+        # read the working tree); this one read the right bytes and then filtered them all away.
+        # Two independent guards on the single inventory for real money, neither of which could
+        # fire -- and the reason they failed differently is why fixing one did not reveal the
+        # other. Caged as D1 in scripts/_test/run_front_guard_evidence_tests.ps1.
+        $dups = @($rows | Where-Object { $_.magic -match '^\d+$' } | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)
         if ($dups.Count -gt 0) { return ('portfolio/DEPLOYMENTS.csv duplicate account|magic: ' + (($dups | ForEach-Object Name) -join ', ')) }
         return $null
     } catch { return ('portfolio/DEPLOYMENTS.csv parse failed: ' + $_.Exception.Message) }
@@ -109,6 +141,10 @@ function Test-DeploymentInventoryBlob {
 # because its fixture copied the hook without tracking the hook's dependencies; a shared
 # library removes that failure mode instead of documenting it.
 $b1LibPath = Join-Path $PSScriptRoot 'lib\b1_guard.ps1'
+# snapshot: not-a-judged-input -- this asks "can I load my own rules", not "what does the commit
+# contain". The library is code this process is about to dot-source, and code runs off the disk;
+# reading it from the index would answer a question nobody asked. The FAIL-CLOSED below is what
+# makes the answer safe, not the vintage.
 if (-not (Test-Path -LiteralPath $b1LibPath)) {
     # Fail-CLOSED. A guard that cannot load its rules must block, not wave the commit
     # through -- "could not read the input" is not the same as "nothing to enforce"
@@ -120,6 +156,8 @@ if (-not (Test-Path -LiteralPath $b1LibPath)) {
 
 function Get-StagedNameStatus {
     param([string]$RepoRoot)
+    # snapshot: index -- which protected paths this commit touches, and with what status. Every
+    # rule below keys off this map, so it is the read that decides what gets judged at all.
     $r = Invoke-GitRaw -RepoRoot $RepoRoot -Arguments 'diff --cached --name-status --no-renames'
     if ($r.ExitCode -ne 0) { throw "git diff --cached --name-status failed: $($r.StdErr)" }
     $rows = New-Object System.Collections.Generic.List[object]
@@ -246,8 +284,14 @@ if ($archiveChanged) {
 
 # --- read staged snapshots (INDEX, never working tree) ---
 try {
+    # snapshot: index -- the archive as this commit will contain it (the append-chain CANDIDATE).
     $stagedArchive = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ArchivePath
+    # snapshot: HEAD -- its BASELINE. The chain check is "staged extends HEAD extends checkpoint",
+    # so this end must be the committed one or the extension claim compares nothing.
     $headArchive   = Get-Snapshot -RepoRoot $RepoRoot -Mode Committed -RelPath $ArchivePath -CommitSha 'HEAD'
+    # snapshot: index -- and this one is load-bearing enough that the file's .DESCRIPTION already
+    # called it out: the exception scan judges the board as it will look AFTER this commit, never
+    # HEAD and never the working tree.
     $stagedActive  = Get-Snapshot -RepoRoot $RepoRoot -Mode Staged -RelPath $ActivePath
 } catch {
     Write-Host "[precommit-staged] INTEGRITY: failed to read staged/HEAD snapshot: $($_.Exception.Message)"
@@ -342,6 +386,11 @@ try {
 
     function Get-StagedBlobIdOrNull {
         param([string]$RelPath)
+        # snapshot: index -- the artifact blob id this commit will carry, compared against a
+        # fresh -Generate candidate hashed through the same clean filter. Comparing an
+        # index-vintage id to a disk-vintage one is what `core.autocrlf` makes impossible
+        # (TIER_SNAPSHOT_DESIGN 4.2), which is why the candidate side goes through
+        # `hash-object --path` rather than being read off disk and hashed raw.
         try { return Get-GitObjectId -RepoRoot $RepoRoot -Spec (':{0}' -f $RelPath) }
         catch { return $null }
     }

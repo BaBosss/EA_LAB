@@ -122,10 +122,42 @@ $prevIndexEnv = $env:GIT_INDEX_FILE
 $realIndexBefore = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
 $env:GIT_INDEX_FILE = $tmpIndex
 try {
-    # --- stage the attack: a duplicate account|magic, worktree left clean -------------------
     $raw = [System.IO.File]::ReadAllText((Join-Path $RepoRoot ($INV -replace '/', '\')))
     $lines = @($raw -split "`r?`n" | Where-Object { $_ })
     $dupRow = $lines[1]
+
+    # -- D0 SPECIFICITY, BEFORE the attack. Stage a row with a UNIQUE account|magic. Both guards
+    #    must be green. Without this, D1 going red would be satisfied just as well by a rule that
+    #    refuses any staged inventory at all -- and "the filter matches everything" is the same
+    #    class of defect as "the filter matches nothing", which is what D1 exists to close.
+    # Only the MAGIC changes. Changing the ACCOUNT instead makes check_state red for an entirely
+    # different reason -- an account absent from DEMO_DEPLOYMENT_PLAN.md -- and a specificity
+    # case that goes red for an unrelated rule proves nothing about the rule under test. Found
+    # by running it: the first version flipped the account and check_state exited 1 while
+    # check_precommit_staged exited 0, i.e. the case was measuring the DEMO-plan check.
+    $uf = @($dupRow -split ',')
+    if ($uf.Count -lt 7) { Bad 'D0 cannot build a unique row: inventory row 1 has fewer than 7 fields' }
+    $uf[6] = '9999999'
+    $uniqRow = ($uf -join ',')
+    [System.IO.File]::WriteAllText((Join-Path $RepoRoot ($INV -replace '/', '\')),
+                                   ($raw.TrimEnd("`r", "`n") + "`n" + $uniqRow + "`n"))
+    [void](Git ('add -- "{0}"' -f $INV))
+    Copy-Item -LiteralPath $backup -Destination $INV -Force
+    $d0state = RunGuard 'index'
+    $prevEAP0 = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $d0 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\check_precommit_staged.ps1') 2>&1)
+        $d0code = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $prevEAP0 }
+    if ($d0state.Code -eq 0 -and $d0code -eq 0) {
+        Good 'D0 SPECIFICITY a staged inventory row with a UNIQUE account|magic is green in BOTH guards'
+    } else {
+        Bad ("D0 SPECIFICITY a unique row was refused: check_state $($d0state.Code), " +
+             "check_precommit_staged $d0code -- the rule is over-matching, not enforcing")
+    }
+
+    # --- stage the attack: a duplicate account|magic, worktree left clean -------------------
     [System.IO.File]::WriteAllText((Join-Path $RepoRoot ($INV -replace '/', '\')),
                                    ($raw.TrimEnd("`r", "`n") + "`n" + $dupRow + "`n"))
     [void](Git ('add -- "{0}"' -f $INV))
@@ -150,6 +182,27 @@ try {
         Good 'A5 check_state states WHICH bytes it judged, so a reader need not trust a comment'
     } else {
         Bad 'A5 check_state emitted no index-mode marker -- the mode cannot be shown to have arrived'
+    }
+
+    # -- D: the SECOND guard over the same invariant, against the SAME staged state -----------
+    # check_precommit_staged has its own ORDER-144 duplicate-account|magic rule, and it read the
+    # right bytes and then filtered every one of them away: `$_.magic -match '^d+$'` is a lost
+    # backslash, matching literal `d` characters. 0 of 64 real rows passed it, so the rule has
+    # been dead since baa1b6f5. Two independent guards over the single inventory for real money,
+    # neither able to fire, FAILING FOR DIFFERENT REASONS -- which is why fixing check_state in
+    # ORDER-674 did not reveal this one.
+    $pcs = Join-Path $RepoRoot 'scripts\check_precommit_staged.ps1'
+    $prevEAP2 = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $d1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $pcs 2>&1)
+        $d1code = $LASTEXITCODE
+    } finally { $ErrorActionPreference = $prevEAP2 }
+    if ($d1code -ne 0 -and (($d1 -join "`n") -match 'duplicate account\|magic')) {
+        Good 'D1 ATTACK check_precommit_staged also refuses the staged duplicate -- its ORDER-144 rule can fire at last'
+    } else {
+        Bad ("D1 ATTACK expected exit!=0 naming the duplicate; got exit $d1code. That is the " +
+             "pre-fix behaviour: the filter '^d+' matched 0 of 64 rows, so the rule was inert.")
     }
 } finally {
     # The worktree copy is restored; the temp index is simply discarded, which is the point of

@@ -178,6 +178,13 @@ PS_SNAPSHOT_TOKENS = (
     # -- git, HEAD vintage: the baseline a commit is compared AGAINST ---------------------------
     ('HEAD', "a HEAD spec ('HEAD:...')", re.compile(r"""HEAD\s*:""")),
     ('HEAD', 'ls-tree ... HEAD', re.compile(r'ls-tree[^\n]*\bHEAD\b')),
+    # This repo's own reader convention, in `scripts/check_taskboard_archive.ps1`:
+    # `Get-Snapshot -Mode Staged` is the index, `-Mode Committed -CommitSha HEAD` is HEAD. The
+    # MODE ARGUMENT IS THE DECLARATION ALREADY -- which is the pattern L3 exists to reward -- so
+    # the value here is that L3 can now CHECK the comment against it rather than the read being
+    # invisible. Added when check_precommit_staged turned out to make five of its reads this way.
+    ('index', '-Mode Staged', re.compile(r'-Mode\s+Staged\b')),
+    ('HEAD', '-Mode Committed', re.compile(r'-Mode\s+Committed\b')),
     # -- the disk. NOT a vintage a commit has; see PS_DISK_FORMS below -------------------------
     ('worktree', 'Get-Content', re.compile(r'\bGet-Content\b')),
     ('worktree', 'Import-Csv', re.compile(r'\bImport-Csv\b')),
@@ -217,7 +224,6 @@ PS_READER_CALLS = re.compile(
 # annotation pass did nothing.
 PS_PENDING = {
     'scripts/check_block_staleness.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
-    'scripts/check_precommit_staged.ps1': 'ORDER-674 owed: 1 disk + 5 git reads, 0 declared',
     'scripts/check_stale_binaries.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_state.ps1': 'ORDER-674 migrated its reads but declared none of them',
     'scripts/check_taskboard_archive.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
@@ -876,6 +882,13 @@ def self_test(out=None):
          lambda p: _l3(p, '# we could use diff --cached here one day\n$a = 1'), False),
         ('L3 CONTROL a `#` inside a quoted string does not start a comment',
          lambda p: _l3(p, "$x = Git ('show \"#{0}\"' -f $s)  # snapshot: not-a-judged-input"),
+         False),
+        ('L3 the Get-Snapshot -Mode Staged form is a read',
+         lambda p: _l3(p, '$s = Get-Snapshot -RepoRoot $R -Mode Staged -RelPath $P'), True),
+        ('L3 `HEAD` declared on -Mode Staged is refused -- the mode says otherwise',
+         lambda p: _l3(p, '$s = Get-Snapshot -Mode Staged -RelPath $P  # snapshot: HEAD'), True),
+        ('L3 CONTROL -Mode Committed declared `HEAD` is allowed',
+         lambda p: _l3(p, '$s = Get-Snapshot -Mode Committed -CommitSha HEAD  # snapshot: HEAD'),
          False),
         ('L3 CONTROL a guard quoting its own git command in a THROW is not a read',
          lambda p: _l3(p, "if ($r.ExitCode -ne 0) { throw ('git diff --cached failed: {0}' -f $e) }"),
