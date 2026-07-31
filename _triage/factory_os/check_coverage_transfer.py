@@ -512,10 +512,35 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
                 'commit. Stage them, or pass --worktree to say deliberately that this run is a '
                 'preview and not a gate.' % (BACKLOG_PATH, COVERAGE_PATH))
 
+    # ORDER-670 migration 8/9, and this was a MIXED-VINTAGE VERDICT hiding behind "vocabulary
+    # only". `backlog_text` and `coverage_text` come from the INDEX; this came from the WORKING
+    # TREE, and A3's allowed-status set is derived from it -- so a status vocabulary edited in the
+    # worktree but not staged (or staged but not in the worktree) decided whether a COMMITTED row
+    # was acceptable. One verdict, two moments. That is A2's crime, in the file that refuses
+    # exactly that pairing eight lines above ("a verdict over bytes that are not staged says
+    # nothing about the commit").
+    #
+    # It reads through the SAME read_input as the other two now, so all three inputs to one
+    # verdict share one vintage by construction rather than by comment.
     try:
-        recon = json.load(io.open(os.path.join(ROOT, RECON_PATH), encoding='utf-8'))  # snapshot: worktree -- vocabulary only; A2 reads its own copy pinned by blob in gen_coverage
+        recon_text, info['recon_source'] = read_input(RECON_PATH, worktree)
+        recon = json.loads(recon_text)
+    except ToolFailure:
+        raise
     except (IOError, ValueError) as exc:
         raise ToolFailure('cannot read the reviewed reconciliation %s: %s' % (RECON_PATH, exc))
+    # Scoped to REAL reads. A fixture injects its coverage text ('injected'), which is a synthetic
+    # root -- category C -- and demanding it match a real read would make the check fire on the
+    # suite rather than on a commit. The pair that matters is index-vs-worktree.
+    _real = ('index', 'worktree')
+    if (info['recon_source'] in _real and info['coverage_source'] in _real
+            and info['recon_source'] != info['coverage_source']):
+        raise ToolFailure(
+            'the reconciliation was read from %r while the coverage store was read from %r. '
+            'A3 derives its allowed-status vocabulary from the first and judges rows from the '
+            'second, so a split vintage means the verdict is over two different moments -- the '
+            'mixed-source pair this checker already refuses one level up.'
+            % (info['recon_source'], info['coverage_source']))
     allowed_status = {c['declared_status'] for m in recon['mapping'] for c in m['cells']
                       if 'declared_status' in c}
 

@@ -333,7 +333,12 @@ try {
     Set-Content -LiteralPath $cheap7 -Encoding ASCII -Value 'docs/SESSION_LEDGER.md'
     try {
         # ATTACK: pad past the per-path budget => exit 1, and the message NAMES a suite (N3).
-        $b1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -DebugPadSeconds 40 2>&1)
+        # THE PAD AND THE BUDGET ARE BOTH PASSED, deliberately. The first version padded 40s
+        # against a hardcoded 30.0s production default; when that default was raised to 65.0 the
+        # attack stopped firing and this case went GREEN WHILE PROVING NOTHING -- a test whose
+        # ability to fail depended on a constant it did not control. Both sides are now the
+        # case's own, so it fires whatever the production numbers become.
+        $b1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -BudgetSeconds 2 -DebugPadSeconds 5 2>&1)
         $b1t = ($b1 -join "`n")
         if ($LASTEXITCODE -eq 1 -and $b1t -match 'OVER BUDGET' -and $b1t -match 'run_order_collision_tests\.ps1\s+\S+s\s+=') {
             Good 'N2/N3 ATTACK over budget FAILS the tier and names the suite with its share'
@@ -352,7 +357,7 @@ try {
         # SPECIFICITY 2: the two budgets are DIFFERENT numbers for different claims. A pad that
         # would bust the per-path budget must NOT bust the full-tier one -- one number would
         # either fail every full run or excuse every selected run.
-        $b3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -DebugPadSeconds 40 -BudgetSeconds 100 2>&1)
+        $b3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -BudgetSeconds 100 -DebugPadSeconds 5 2>&1)
         if ($LASTEXITCODE -eq 0) {
             Good 'N1 SPECIFICITY the per-path budget is a separate, separately-settable number'
         } else {
@@ -361,6 +366,13 @@ try {
     } finally {
         Remove-Item -LiteralPath $cheap7 -Force -ErrorAction SilentlyContinue
     }
+    # AND PIN THE PRODUCTION NUMBERS. Making the cases budget-independent (above) removed their
+    # dependence on the defaults -- which also means they can no longer notice a default being
+    # changed silently. Both properties are wanted, so the defaults are asserted separately, and
+    # the values here are the ones the commit that set them measured.
+    $cagesSrc = Get-Content -LiteralPath $cages -Raw
+    if ($cagesSrc -match '\$BudgetSeconds\s*=\s*65\.0') { Good 'N1 the per-path default is the measured 65.0s' } else { Bad 'N1 the per-path default is not 65.0 -- it was changed without this case being updated' }
+    if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*90\.0') { Good 'N1 the full-tier default is the measured 90.0s' } else { Bad 'N1 the full-tier default is not 90.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
 
     if ($fail -gt 0) {

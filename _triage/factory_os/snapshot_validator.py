@@ -89,6 +89,10 @@ import sys
 import tempfile
 
 SCHEMA_PATH = '_triage/factory_os/schemas.json'
+# ORDER-670 migration 7/9: the same path as a REPO-RELATIVE rel, for read_committed. Derived
+# from the one constant rather than typed twice -- two spellings of one path is the drift this
+# tree refuses everywhere else.
+SCHEMA_REL = SCHEMA_PATH
 
 BUILDER_ENTITY = 'SnapshotBuilderInput'
 OUTPUT_ENTITY = 'ControlRoomSnapshotV5'
@@ -693,7 +697,7 @@ def _describe_ajv_errors(out, entity):
     return '; '.join(parts)
 
 
-def _focused_schema(entity):
+def _focused_schema(entity, source=None):
     """The real schema with its 19-branch `oneOf` replaced by a `$ref` to ONE entity.
 
     Codex audit 6 (MAJOR 3, sub-finding): validating against the root means ajv reports the first
@@ -711,15 +715,27 @@ def _focused_schema(entity):
     kept, and the explicit equality check below is stricter than oneOf. run_schema_fixtures.py
     still validates against the real root, which is where the discriminator belongs.
     """
-    with io.open(SCHEMA_PATH, encoding='utf-8') as fh:  # snapshot: worktree
-        schema = json.load(fh)
+    # ORDER-670 migration 7/9. This module is a LIBRARY: it takes its source from the caller and
+    # never chooses (the registry.py precedent -- a library that defaults its source becomes a
+    # second decider of which bytes count). The SCHEMA is judged evidence: a staged schema change
+    # is what the commit will validate against, and validating against the worktree copy would
+    # approve a document against a contract the commit does not contain.
+    #
+    # Handed no source it still reads the disk, and that default is a SCHEDULED REMOVAL rather
+    # than a preference -- the same wording registry.read_store carries, and it ends when the
+    # remaining callers pass one.
+    if source is not None:
+        schema = json.loads(source.read_committed(SCHEMA_REL))
+    else:
+        with io.open(SCHEMA_PATH, encoding='utf-8') as fh:  # snapshot: worktree
+            schema = json.load(fh)
     schema.pop('oneOf', None)
     schema.pop('$id', None)          # a derived schema must not claim the canonical id
     schema['$ref'] = '#/$defs/%s' % entity
     return schema
 
 
-def ajv_schema_validator(instance, entity):
+def ajv_schema_validator(instance, entity, source=None):
     """callable(instance, entity) for build_snapshot/verify_snapshot. Raises on invalid."""
     if not isinstance(instance, dict) or instance.get('entity') != entity:
         # MalformedDocument, for the reason given on that class: this gate runs BEFORE
@@ -735,7 +751,7 @@ def ajv_schema_validator(instance, entity):
             json.dump(instance, fh)
         try:
             with os.fdopen(sfd, 'w', encoding='utf-8') as fh:
-                json.dump(_focused_schema(entity), fh)
+                json.dump(_focused_schema(entity, source=source), fh)
         except (IOError, OSError, ValueError) as exc:
             # Cannot read/derive the schema is a TOOL failure, never a verdict on the instance.
             raise ToolFailure('could not run: the schema could not be read or derived (%s)'

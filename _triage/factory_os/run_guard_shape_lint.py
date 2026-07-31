@@ -51,6 +51,9 @@ import os
 import re
 import sys
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import evidence                                                       # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 
@@ -177,8 +180,19 @@ CATEGORY = {
 # one commit each; each commit deletes its own line from here, and that deletion is the
 # engagement half of its shape-5 pair -- if the line stays, the migration did nothing.
 A_BINDING_PENDING = {
+    # ORDER-670 migration 8/9 improved this file but did NOT earn its release, and the honest
+    # move is to say which half landed. LANDED: the reconciliation read went through read_input
+    # with the other two inputs, closing a MIXED-VINTAGE verdict -- A3 derived its allowed-status
+    # vocabulary from the WORKTREE while judging rows read from the INDEX. NOT LANDED: read_input
+    # is still this file's OWN index/worktree reader, a second implementation of
+    # evidence.read_committed, and its worktree branch is the bare open() the lint names. The
+    # suspension stays until that is replaced -- which is a behaviour change (evidence.py refuses
+    # rather than falling back to the worktree for an untracked path, the Spec4 lesson) and
+    # therefore its own commit, not a rider on this one.
     '_triage/factory_os/check_coverage_transfer.py':
-        'ORDER-670 migration owed: read_input is index-first already, its ENUMERATIONS are not',
+        'ORDER-670 8/9 PARTIAL: the mixed-vintage reconciliation read is fixed; read_input is '
+        'still a second implementation of evidence.read_committed and replacing it changes the '
+        'untracked-path behaviour, so it is owed its own commit',
     '_triage/factory_os/check_s2a_attestation.py':
         'ORDER-670 migration owed: reads the attestation log and the bundle digest directly',
 }
@@ -202,10 +216,39 @@ L2_PAIRS = {
 CRITERION = re.compile(r"problems\.append\(\s*['\"]\s*([A-Z]\d+)\b")
 
 
+_SRC = [None]
+
+
+def _src():
+    """ORDER-670 migration 6/9. The lint of the guards was itself judging the WORKING TREE.
+
+    Its inputs are the committed checker sources -- judged evidence by any reading: L1 and L2
+    answer "does the code entering history declare its snapshot / name its criteria". Reading the
+    disk meant a staged checker with an undeclared read was invisible while a clean worktree copy
+    sat beside it, which is A7's shape in the file written to name A7's shape.
+
+    One source per process, as the design requires. A LIBRARY refuses to choose; this is a
+    program, so it chooses once, here, and nowhere else.
+    """
+    if _SRC[0] is None:
+        _SRC[0] = evidence.EvidenceSource.for_run(root=ROOT)
+    return _SRC[0]
+
+
 def _read(rel):
-    path = rel if os.path.isabs(rel) else os.path.join(ROOT, rel)
-    with io.open(path, encoding='utf-8') as fh:  # snapshot: not-a-judged-input
-        return fh.read()
+    # An ABSOLUTE path is a fixture's own temp tree (category C, the self-test writes them).
+    # It is not in this repo, is not in any index, and read_committed would refuse it -- which
+    # is correct behaviour and the wrong question. The split is by KIND of input, not by mode.
+    if os.path.isabs(rel):
+        with io.open(rel, encoding='utf-8') as fh:  # snapshot: not-a-judged-input -- temp fixture
+            return fh.read()
+    try:
+        return _src().read_committed(rel)
+    except evidence.ToolFailure as exc:
+        # "I cannot read it" is not "it is fine". Surfaced as an IOError so the existing
+        # TOOL FAILURE paths -> exit 2 keep working: a lint that cannot read its own inputs
+        # must not report a pass.
+        raise IOError(str(exc))
 
 
 def _open_calls(tree):
@@ -294,10 +337,13 @@ def lint_l0(problems, present=None):
     if present is not None:
         found = sorted(present)
     else:
+        # ENUMERATION IS A JUDGED READ (design 3.2). glob() picks PATHS from the disk, so a
+        # `git add rogue_check.py` with the worktree copy deleted leaves L0's completeness claim
+        # blind to a checker the commit contains -- the same channel T3 closed for check_r4.
         found = []
         for pat in CHECKER_GLOBS:
-            found += [p.replace(os.sep, '/') for p in _glob.glob(os.path.join(ROOT, pat))]
-        found = sorted(os.path.relpath(p, ROOT).replace(os.sep, '/') for p in found)
+            found += _src().list_committed(pat)
+        found = sorted(set(found))
     declared = set(L1_FILES) | set(L1_DEFERRED) | set(L1_NOT_PARSED)
     for rel in found:
         if rel not in declared:
