@@ -383,7 +383,13 @@ Each finding needs a fixture observed RED first. Three shape the rest:
 
 ---
 
-## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, after Codex refuted rev 1** — `DRAFTED (2026-07-31) — policy + 55 conformance vectors written and lead-verified; the RUNNER and the one landing signature remain` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, after Codex refuted rev 1** — `DONE (Claude/Opus 2026-07-31, `ddc8350c`) — LANDED as ONE bundle change with ONE owner re-record (line 7); S2a gate 7/7 · conformance 54/54 · mutate probes 26, 0 inert` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 evening — LANDED. From this commit on, a repair to `check_s2a_attestation.py` that keeps every canonical vector reproducing owes the owner NOTHING.
+>
+> **The bundle now binds meaning, never mechanism:** implementation OUT · generator OUT (D1 itself is bound) · **`check_s2a_migration.py` STAYS IN** (OPEN-2, the conservative way: its criteria are what D1's acceptance *means* and have no policy-and-vectors replacement yet) · IN: [`S2A_ATTESTATION_POLICY.md`](_triage/factory_os/S2A_ATTESTATION_POLICY.md) (`s2a-attestation/1`, 44 predicate-granularity criteria, §10.5 records every ratified call) + [`S2A_ATTESTATION_VECTORS.jsonl`](_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl) (55 hermetic) — renamed **before** the digest, which hashes paths. Digest history closes: `aaa5998d → 1bd4d268 → fa6bab35 → 6ec25ca5 → 7616f2de → df385139`, five signatures for repairs, **never again**.
+>
+> **Landed with it:** predicate ids emitted (`R*/F*/G*`) · A5 **deleted** (unreachable; its suite case had been passing on R4's message) · F4's dead guard deleted · runner + `--mutate` wired into the tier · the lint deferral **expired with its reason** — and L2 then caught my F9/F10 suite cases **lying about their criterion** (both passed on F11; unreachable from that suite by construction — relabelled honestly, vector-bound) · `main()`'s KeyError on the G3 placeholder, found live on the exact day a bundle change created the condition.
 
 > ### 📝 2026-07-31 — draft artifacts written by an opus subagent, verified by the lead before acceptance
 >
