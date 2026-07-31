@@ -41,6 +41,7 @@ import hashlib
 import io
 import json
 import os
+import re
 import subprocess
 import sys
 
@@ -76,6 +77,20 @@ def bundle_digest():
     return h.hexdigest()
 
 
+BLOB_OID = re.compile(r'^[0-9a-f]{40}$')
+
+
+def _is_blob_oid(value):
+    return bool(BLOB_OID.match(str(value or '')))
+
+
+def _is_blob_at_head(path):
+    """True only when HEAD:path is a FILE. A directory resolves to a tree id, which git happily
+    returns and which says nothing about content -- Codex round 2 used that to pass D2."""
+    rc, out, _ = chk._git('cat-file', '-t', '%s:%s' % (chk.head_oid(), path))
+    return rc == 0 and out.strip() in ('blob', b'blob')
+
+
 def load_records():
     rows, problems = [], []
     if not os.path.exists(ATTESTATION_PATH):
@@ -88,6 +103,13 @@ def load_records():
             obj = json.loads(line)
         except ValueError as exc:
             problems.append('%s:%d is not valid JSON: %s' % (ATTESTATION_PATH, n, exc))
+            continue
+        if not isinstance(obj, dict):
+            # Codex round 2, Spec 8: `obj['_line'] = n` on a string raised TypeError, so a
+            # malformed line ended the run in a traceback instead of the conformance exit 1 this
+            # file promises. "The tool broke" and "the file is wrong" must not share an outcome.
+            problems.append('A1 line %s is a %s, not an object -- every record must be a JSON '
+                            'object' % (n, type(obj).__name__))
             continue
         if '_comment' in obj and len(obj) == 1:
             continue
@@ -119,12 +141,34 @@ def check_append_only(problems, path=None, committed=None, working=None):
         committed = p.stdout
     committed = committed.replace(b'\r\n', b'\n')
     if working is None:
-        with io.open(path, 'rb') as fh:
-            working = fh.read()
+        # Codex round 2, Standards 1 (P0): this used to read the WORKING TREE. Stage a deletion of
+        # an earlier line, restore the working copy, and A7 reported 0 problems -- a commit could
+        # rewrite append-only history while the pre-commit gate stayed green. That is ORDER-545's
+        # defect sitting inside the guard built to prevent exactly this, which is the third time
+        # in this lineage a check has judged bytes that are not the ones being committed.
+        #
+        # The INDEX is what a commit contains. Fall back to the working tree only when the path is
+        # untracked -- there is nothing staged to judge then -- and say which was read either way,
+        # because a guard that does not name its snapshot cannot have its green interpreted.
+        # BYTES, not text: A7 is a byte-prefix rule, so `chk._git` (which decodes) is the wrong
+        # tool here and the first attempt crashed on `str.replace(b'\r\n', ...)`.
+        sp = subprocess.run(['git', 'show', ':%s' % path], capture_output=True)
+        if sp.returncode == 0:
+            working = sp.stdout
+        else:
+            rc2, _, _ = chk._git('ls-files', '--error-unmatch', path)
+            if rc2 == 0:
+                problems.append('A7 %s is tracked but could not be read from the index (%s). '
+                                'Append-only cannot be judged against bytes that are not the ones '
+                                'being committed.'
+                                % (path, sp.stderr.decode('utf-8', 'replace').strip()))
+                return
+            with io.open(path, 'rb') as fh:
+                working = fh.read()
     now = working.replace(b'\r\n', b'\n')
     if not now.startswith(committed):
         problems.append('A7 %s is not append-only: the version committed at HEAD is no longer a '
-                        'prefix of this file, so a previously recorded decision was edited or '
+                        'prefix of what is STAGED, so a previously recorded decision was edited or '
                         'removed rather than superseded by a new line.' % path)
 
 
@@ -206,15 +250,40 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             if not isinstance(eps, dict) or not eps.get('path') or not eps.get('blob'):
                 problems.append('A8 line %s has expected_post_state that is not an object naming '
                                 '{path, blob}' % n)
+            # Codex round 2, Standards 3 + Spec 3: this bound ANY path to ANY value. A record
+            # deciding for MASTER_BACKLOG.md could bind AGENT_TASKBOARD.md and pass; a
+            # {path: "NO_SUCH_PATH", blob: "MISSING"} pair passed; and a directory path resolved
+            # to its TREE oid and passed. So it never enforced "changed INTO the approved state" --
+            # it enforced "some path is at some value", which is not a claim about this decision.
+            elif eps['path'] != r['current_owner']:
+                problems.append(
+                    'A8 line %s decides for %r but its expected_post_state binds %r. A record may '
+                    'only make a claim about the state of the file it decides for -- binding '
+                    'anything else lets the approved target sit in a state nobody approved while '
+                    'this criterion stays green.' % (n, r['current_owner'], eps['path']))
+            elif str(eps['blob']).upper() == 'MISSING' or not _is_blob_oid(eps['blob']):
+                problems.append(
+                    'A8 line %s expects %s at %r, which is not a 40-hex blob id. "MISSING" and a '
+                    'tree id are both accepted by git and neither is a statement about the CONTENT '
+                    'this decision approved.' % (n, eps['path'], eps['blob']))
             else:
                 rc3, live3, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), eps['path']))
-                actual = live3 if rc3 == 0 else 'MISSING'
-                if actual != eps['blob']:
+                if rc3 != 0:
+                    problems.append(
+                        'A8 line %s expects %s at blob %s, but that path does not exist at HEAD. A '
+                        'record cannot approve the post-state of a file that is not there.'
+                        % (n, eps['path'], str(eps['blob'])[:12]))
+                elif not _is_blob_at_head(eps['path']):
+                    problems.append(
+                        'A8 line %s binds %s, which resolves to a TREE at HEAD, not a file. A '
+                        'directory has no content this decision could have approved.'
+                        % (n, eps['path']))
+                elif live3 != eps['blob']:
                     problems.append(
                         'A8 line %s expects %s to be at blob %s after the action it approves, but '
                         'HEAD has %s. The record describes a change that did not happen, or a '
                         'different one happened -- either way this is not the state that was '
-                        'approved.' % (n, eps['path'], str(eps['blob'])[:12], str(actual)[:12]))
+                        'approved.' % (n, eps['path'], str(eps['blob'])[:12], str(live3)[:12]))
 
         # ORDER-613 D1: the stale-pin rule now judges ONLY the CURRENT record per owner.
         # It used to run for every row, including superseded ones -- while this file's own header
@@ -253,6 +322,21 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                     problems.append('A6 line %s acknowledges current_blob %r but HEAD has %r'
                                     % (n, ack.get('current_blob'), want_current))
         current[r['current_owner']] = r
+
+    # Codex round 2, Spec 9: when the in-force row failed a check it `continue`d before reaching
+    # the line above, so `current` still reported the SUPERSEDED row as the decision in force. The
+    # printed diagnostic then pointed a reader at a record that is not the one being judged, which
+    # is worse than printing nothing -- it invites fixing the wrong line.
+    #
+    # `latest` already knows which row is in force. Anything else in `current` for that owner is a
+    # leftover, and the honest report is "the record in force did not verify", not an older one.
+    for owner, row in latest.items():
+        if current.get(owner) is not row:
+            current[owner] = {'_line': row.get('_line'), 'decision': 'UNVERIFIED',
+                              'current_owner': owner,
+                              '_note': 'the record in force (line %s) did not pass; the previous '
+                                       'record is NOT in force and is not reported as such'
+                                       % row.get('_line')}
     return current
 
 

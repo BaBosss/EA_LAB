@@ -103,12 +103,27 @@
 
 ---
 
-## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `OPEN` · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Round 2 is sharper than round 1.** Every command in the brief passed — S2a 7/7 · schema 89/89 · fast cages 12/12 · `check_state` CLEAN — **and every attack below still got through.** That is the whole thesis of the brief working against the person who wrote it.
 >
 > **Reproduced here before accepting** (probe output in the commit that opens this order): duplicate-cell bypass **0 problems** · a verdict word as `status` **0 problems** · `null` vs missing key **0 problems** · a non-object row **crashes with `TypeError`**. The others are confirmed by reading the code I wrote.
 
+> ### ✅ 2026-07-31 — **12 of 13 closed. Every fix had a fixture observed RED for the named reason first, and the probes found 2 more holes the audit had not.**
+> **Split by cost, deliberately:** batch A (`22ebb718`) = everything with no bundle impact · batch B = every `check_s2a_attestation.py` fix in ONE landing, **one owner signature instead of four**.
+>
+> 🔎 **The probe found what the audit did not, twice.** (1) `strip_invisible` — after fixing the 7 hiding techniques Codex named, probing all 7 showed **2 were STILL open**: `hidden` and `display:none` stripped only the *opening tag* and left the text inside it. (2) the D2 repair needed a `cat-file -t` check as well, because a **directory** resolves to a tree oid that git returns happily. **Fixing what an audit names is not the same as fixing what it found.**
+>
+> 🔧 **A4 is RESTORED, not re-deleted.** Deleting it was the amend-my-own-acceptance pattern again: ORDER-610 A4 required two byte-identical renders — a property of the **renderer**, not of who calls it — and A1 renders once, so a renderer returning the committed body first and something else second passed everything. The new version calls the real generator twice and requires agreement.
+>
+> 🔧 **A3 was not incomplete, it was false.** It checked key **names** and never **values**, so `"status": "DEAD-STRUCTURAL"` — a verdict, in the field that classifies the cell — passed in the store whose entire acceptance says no verdict lives here. **A closed shape is only half a closed contract.**
+>
+> 🔧 **Two P0s, one instinct:** comparing *the cells I can look up* instead of *the cells that are there*. A dict keyed by identity let a **duplicate** overwrite its twin so a corrupted duplicate inserted **first** was invisible; `.get()` made absent and present-null compare equal. Positional comparison + key-set comparison closes both.
+>
+> **Suites:** coverage 24 mutations / 3 controls / 35 assertions · attestation +9 cases (A7-staged · 4×D2 binding · non-object) · schema 89 cases + **5** `says` controls · contract-binding green.
+>
+> 🔻 **F3 is written, not built** — `ORDER-614` **rev 2** adopts Codex's design (policy + conformance vectors, implementation OUT of the bundle) after rev 1 was refuted by a one-line `if False`. Building it is its own order.
+>
 | # | finding | sev | verified |
 |---|---|---|---|
 | **S1** | **A7 reads the WORKING TREE, not the staged bytes** (`check_s2a_attestation.py:121`). Stage a deletion of line 2, restore the working copy, and append-only reports **0 problems** ⇒ history can be rewritten by a commit while the pre-commit gate stays green. **This is ORDER-545's defect inside the guard I built to prevent exactly this.** | **P0** | by inspection — I wrote `working = io.open(path,'rb')` |
@@ -143,43 +158,41 @@ Each finding needs a fixture observed RED first. Three shape the rest:
 
 ---
 
-## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — bind the CONTRACT, not the checker's bytes — `OPEN` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, after Codex refuted rev 1** — `OPEN` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
-> **Owner directive 2026-07-31, verbatim:** *"ยืนยัน ใช่ไม่อยากคอยยืนยันมันเสียเวลา แก้เลย"* — confirm, and **fix the repeated signing itself**.
+> **Owner directive 2026-07-31, verbatim:** *"ยืนยัน ใช่ไม่อยากคอยยืนยันมันเสียเวลา แก้เลย"*
 
-### The problem, measured this session rather than predicted
+### The problem, measured rather than predicted
 
-`check_s2a_attestation.py` is a member of **its own `bundle_sha256`**. So **every repair to it voids the record that authorised the previous repair.** Digest history in one session:
+`check_s2a_attestation.py` is a member of **its own `bundle_sha256`**, so **every repair to it voids the record that authorised the previous repair.** In two sessions:
 
-`aaa5998d` → `1bd4d268` → `fa6bab35` → `6ec25ca5` — **four signatures, three of them for bug fixes that changed no rule.**
+`aaa5998d` → `1bd4d268` → `fa6bab35` → `6ec25ca5` → `7616f2de` — **five signatures, four of them for repairs that changed no rule.**
 
-Two of those fixes were only found *because* the owner signed and the log stayed red. The mechanism is therefore actively hostile to being repaired, which is the opposite of what audit 8 BLOCKER 2 was protecting.
+### 🔴 rev 1's design is REFUTED. Recorded, not quietly replaced.
 
-### 🔴 The fix that must NOT be built
+rev 1 proposed binding a machine-readable **declaration of criteria** and proving completeness by requiring every `problems.append` site to carry a declared id. **Codex broke it in one line:** change a predicate to `if False`, keep the declaration and keep the append site. Behaviour changes materially; the digest does not; and the question *"did the semantics change?"* lands **back on the author** — which is precisely what the order forbade. A completeness check over *call sites* cannot see *reachability*.
 
-*"Claude decides which checker edits are substantive."* That is the abuse pattern this whole lineage exists to prevent, and it would hand the seat the power to reinterpret an owner decision by calling the change cosmetic. **Do not build it. Do not add an exemption list. Do not hash "the file except the comments".**
+### rev 2 — Codex's design, adopted because it is honest about what it cannot do
 
-### What to build instead — bind the DECLARATION, not the bytes
+1. **Move the checker implementation OUT of the bundle.** The bundle stops binding *how* the rule is executed.
+2. **Bind a versioned POLICY** — the criteria, their semantics, their scope (`record-intrinsic` vs `in-force`), stated declaratively.
+3. **Bind canonical CONFORMANCE VECTORS** — a frozen corpus of `(input, expected verdict, expected reason)` triples that any implementation claiming this policy version must reproduce exactly. A behavioural change that matters *shows up as a vector that no longer matches*, and `if False` fails immediately because the vectors that exercise A2 stop reproducing.
+4. **A signature is owed when the policy or the vectors change**, never when the implementation is repaired to satisfy them.
 
-The checker publishes a machine-readable **contract declaration**: one entry per criterion (`id`, one-line semantics, the field(s) it reads). `bundle_sha256` binds **that declaration**, not the file's bytes.
-
-- a repair that changes no criterion ⇒ declaration identical ⇒ **no new signature**
-- adding, removing, weakening or re-scoping a criterion ⇒ declaration changes ⇒ **signature required**, and the diff shown to the owner is the list of criteria, not a hash
-
-**What makes it non-gameable, and this is the load-bearing part:** a guard must prove the declaration is **complete** — every problem the code can emit must map to a declared criterion. Enforce it the way this repo already knows how: every `problems.append` must carry a declared id prefix, and a suite greps the source for `problems.append` sites and refuses any whose prefix is undeclared. Silently changing behaviour then requires keeping every declared criterion *and* emitting no new problem class — which is precisely the case where no re-signature is owed.
+**State the limit in the order and in the code, because it is the reason this design is acceptable:** full semantic equivalence between two implementations is **not achievable** without binding the implementation itself or possessing a complete executable spec. Vectors bound what is *tested*, not what is *possible*. That is a weaker guarantee than rev 1 pretended to give and a stronger one than rev 1 actually gave.
 
 ### Acceptance
 
-- **E1** declaration exists, is machine-readable, and `bundle_sha256` binds it instead of the checker's bytes. Negative: reword a comment ⇒ digest **unchanged**; narrow a criterion's scope ⇒ digest **changes**.
-- **E2** completeness guard: a `problems.append` whose id is not declared ⇒ **RED**, with a fixture that adds one.
-- **E3** the four historical digests stay resolvable — the log must remain readable, and lines 2–5 must not be invalidated *again* by this change. If they are, that is the same defect one layer up and E1 is wrong.
-- **E4** the D1 in-force rule and D2 `expected_post_state` survive unchanged; this order changes **what is bound**, never **what is demanded**.
+- **E1** the bundle binds policy + vectors; the implementation is outside it. Negative: reword a comment ⇒ digest **unchanged** · change a criterion's declared scope ⇒ digest **changes** · **`if False` on any predicate ⇒ at least one vector fails**, and that case is a permanent fixture.
+- **E2** every criterion has ≥1 vector that only it can satisfy — a vector no criterion uniquely explains is a vector that proves nothing.
+- **E3** the five historical digests stay resolvable and lines 2–6 are not invalidated *again* by this change. If they are, E1 is wrong in the same way rev 1 was.
+- **E4** D1 in-force scoping and D2 `expected_post_state` survive unchanged: this changes **what is bound**, never **what is demanded**.
 
 ### ห้าม
 
-- ❌ No exemption list, no "cosmetic change" judgement, no hashing a filtered view of the source.
-- ❌ Do not write the owner's landing signature. Print the template and stop.
-- ❌ Do not mark `REVIEWED`.
+- ❌ No exemption list, no "cosmetic change" judgement, no hashing a filtered view of the source. rev 1 died of exactly that.
+- ❌ Do not claim semantic equivalence. Say what the vectors cover and what they do not.
+- ❌ Do not write the owner's landing signature. Print the template and stop. ❌ No `REVIEWED`.
 
 ---
 

@@ -150,7 +150,22 @@ def main():
     print('  [%s] NEGATIVE an earlier record DELETED is refused' % ('OK ' if ok else 'BAD'))
     if not ok:
         bad += 1
-    # ...and the real file, whatever state it is in, must satisfy the rule as actually wired.
+    # Codex round 2, Standards 1 (P0): A7 read the WORKING TREE, so staging a deletion of an
+    # earlier line while restoring the working copy reported 0 problems -- a commit could rewrite
+    # append-only history with the gate green. The rule is byte-prefix-against-what-is-COMMITTED,
+    # so the fixture below is the one that distinguishes the two readings: `working` is injected
+    # with the bytes A7 should be judging (the staged ones), and the working tree is irrelevant.
+    staged_deletion = b'{"_comment": "header"}\n'          # line 2 removed from the STAGED copy
+    p = []
+    att.check_append_only(p, 'x.jsonl', committed=base, working=staged_deletion)
+    ok = any('not append-only' in x and 'STAGED' in x for x in p)
+    print('  [%s] NEGATIVE a deletion present only in the STAGED bytes is refused'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % p)
+        bad += 1
+    # ...and the real file, whatever state it is in, must satisfy the rule as actually wired --
+    # which now means read from the index, not from disk.
     p = []
     att.check_append_only(p)
     print('  [%s] the REAL log satisfies A7 as wired' % ('OK ' if not p else 'BAD'))
@@ -274,6 +289,49 @@ def main():
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %s' % problems)
+        bad += 1
+
+    # ---- Codex round 2: D2 bound ANY path to ANY value, so it never enforced "changed INTO the
+    #      approved state" -- it enforced "some path is at some value", which is not a claim about
+    #      this decision at all.
+    for label, eps, want_red in (
+            ('D2 CONTROL binding its OWN owner at the real blob',
+             {'path': 'MASTER_BACKLOG.md', 'blob': live}, False),
+            ('D2 binding an UNRELATED file is refused',
+             {'path': 'AGENT_TASKBOARD.md', 'blob': live}, True),
+            ('D2 binding a path that does not exist at HEAD is refused',
+             {'path': 'NO_SUCH_PATH', 'blob': 'MISSING'}, True),
+            ('D2 binding a DIRECTORY (a tree oid, not content) is refused',
+             {'path': 'portfolio', 'blob': 'a' * 40}, True)):
+        _, problems = run_with([good(expected_post_state=eps,
+                                     stale_pin_acknowledged=True,
+                                     stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+        got = 'A8' in problems
+        ok = (got == want_red)
+        print('  [%s] %s' % ('OK ' if ok else 'BAD', label))
+        if not ok:
+            print('        -> %s' % problems)
+            bad += 1
+
+    # ---- Codex round 2, Spec 8: a JSON line that is not an object crashed the loader ----------
+    import tempfile as _tf
+    _fd, _tmp = _tf.mkstemp(suffix='.jsonl')
+    os.close(_fd)
+    io.open(_tmp, 'w', encoding='utf-8', newline='\n').write('"string-row"\n')
+    _saved = att.ATTESTATION_PATH
+    try:
+        att.ATTESTATION_PATH = _tmp
+        _rows, _probs = att.load_records()
+        ok = any('not an object' in p for p in _probs)
+    except Exception as exc:                                   # noqa: BLE001 - that IS the finding
+        ok = False
+        _probs = ['CRASHED: %s' % type(exc).__name__]
+    finally:
+        att.ATTESTATION_PATH = _saved
+        os.unlink(_tmp)
+    print('  [%s] a non-object JSON line is REPORTED, not a traceback' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % _probs)
         bad += 1
 
     current, problems = run_with([good(decision='REFUSED', reason='not yet',
