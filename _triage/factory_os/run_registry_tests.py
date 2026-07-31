@@ -501,16 +501,35 @@ def main():
                   tagged['classification'] == 'ACTIVE', json.dumps(tagged))
         finally:
             shutil.rmtree(amb, ignore_errors=True)
-        # A tagged request that matches nothing must be UNBOUND, not silently served an
-        # untagged row -- F1's direction, reversed.
+        # WHAT `build_tag: null` MEANS, and this case was written backwards first. The version
+        # here a minute earlier asserted that a request naming a build must NOT match an untagged
+        # row, reasoning that "no binding for this build" and "a binding for all builds" are
+        # different facts. They are -- but null IS the second one (the schema says so), and
+        # refusing it made every existing untagged binding invisible the moment optimize_guard
+        # started passing --build-tag. Under ORDER-671 that turns every bound parameter into a
+        # REFUSAL. Caught by run_registry_tests.ps1 cases B/C/C2 going red, not by re-reading.
         onlybare = seed(tempfile.mkdtemp(prefix='s5ob_'),
                         parameter_bindings=[binding(param='SplitMode')])
         try:
-            check('G2 a request naming a build does NOT fall back to an all-builds binding',
+            check('G2 `build_tag: null` means EVERY build, so a request naming one still '
+                  'resolves to it',
                   reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
-                              root=onlybare)['source'] == 'UNBOUND')
+                              root=onlybare)['source'] == 'BOUND')
         finally:
             shutil.rmtree(onlybare, ignore_errors=True)
+        # ...and the fact that IS worth refusing to invent: bound for another build entirely.
+        otherbuild = seed(tempfile.mkdtemp(prefix='s5ub_'),
+                          parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B')])
+        try:
+            check('G2 SPECIFICITY a request for build A where only build B is bound is UNBOUND '
+                  '-- the tag is not decoration',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                              root=otherbuild)['source'] == 'UNBOUND')
+            check('G2 SPECIFICITY and the exact build still resolves',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B',
+                              root=otherbuild)['source'] == 'BOUND')
+        finally:
+            shutil.rmtree(otherbuild, ignore_errors=True)
 
         print("\n--- FABLE REVIEW (round 5) ---")
         # F1: the resolver keyed on the exact string while the consumer joined on the base name,

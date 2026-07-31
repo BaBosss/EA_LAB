@@ -540,6 +540,11 @@ if ($HypothesisRevision -ne '') {
     # could not. An overlay merges canonical-last, so it can ADD a refusal and can never remove
     # one -- the property is now structural instead of argued.
     if ($BindingsRoot -ne '') { $resolveArgs += "--overlay-root=$BindingsRoot" }
+    # ORDER-671 U3 / ORDER-672. The build being swept is passed to the resolver, so a binding that
+    # names its build is found. Without this, a revision that binds one parameter PER BUILD makes
+    # the resolver refuse the under-specified question -- and under 671 an unfound binding is now a
+    # REFUSAL, so the consumer failing to ask precisely would look exactly like a policy violation.
+    if ($build) { $resolveArgs += "--build-tag=$build" }
     $bindJson = & $py $resolveArgs 2>$bindErr
     $bindRc = $LASTEXITCODE
     $bindErrText = ''
@@ -585,13 +590,26 @@ foreach ($name in $checkList) {
         # B14-H01-r1 swept a parameter that revision never mentioned, and NOTHING anywhere said so.
         # The resolver kept its promise and the consumer broke it one line later.
         #
-        # It is a NOTE and not a REFUSE, deliberately. Whether a hypothesis's binding set must be
-        # COMPLETE -- so that an unbound parameter is an error rather than an omission -- is a
-        # policy nobody has decided: the Hypothesis entity has no "parameter surface is closed"
-        # field and the design row does not ask for one. Inventing that rule here would be
-        # inventing a bar. Making the silence VISIBLE requires no such decision, and it is the
-        # difference between "the layer had no opinion" and "nobody noticed the layer was empty".
-        $r.Facts.Add([pscustomobject]@{ Refuse = $false; Text = "ParameterBinding: UNBOUND in $HypothesisRevision - that revision registers no binding for this parameter, so the per-hypothesis layer has NO OPINION and the verdict above is the base guard's alone. This is stated rather than left silent; whether a revision's binding set must be complete is undecided (no `parameter surface is closed` field exists on Hypothesis)." }) | Out-Null
+        # ⚠️ ORDER-671, OWNER-RATIFIED 2026-07-31 (PROJECT_STATE.md section 3): THIS IS NOW A
+        # REFUSAL. The paragraph that used to sit here argued for a NOTE on COMPLETENESS grounds --
+        # "whether a revision's binding set must be complete is undecided" -- and the owner decided
+        # on different grounds entirely, which is why the argument did not survive its own logic:
+        #
+        #   `-HypothesisRevision X` is a CLAIM THAT THIS RUN IS EVIDENCE ABOUT X. A dimension X
+        #   never describes cannot be evidence about X. That is ATTRIBUTION, not completeness, and
+        #   it needs no ruling on whether a binding set must be closed.
+        #
+        # Taken at the cheapest moment it will ever be available: factory/hypotheses.jsonl is
+        # EMPTY, so the strict rule refuses ZERO existing runs today. Every later day turns a
+        # decision into a migration.
+        #
+        # SCOPE IS EXACT, and the `-ne ''` guard above is what makes it so: with no
+        # -HypothesisRevision declared, this branch does not run and not one line of output
+        # changes. That is U2, and it is asserted next to U1 in run_registry_tests.ps1 so neither
+        # can be quoted without the other -- the first version of this repair fired on every
+        # legacy call site and was caught only because that assertion already existed.
+        $r.Facts.Add([pscustomobject]@{ Refuse = $true; Text = "ParameterBinding: UNBOUND - '$name' is swept under $HypothesisRevision, but that revision registers no binding for it (build tag: $(if ($build) { $build } else { '(none)' })). REFUSED (ORDER-671, owner-ratified): declaring -HypothesisRevision claims this run is EVIDENCE ABOUT $HypothesisRevision, and a dimension that revision never describes cannot be evidence about it. Either register a ParameterBinding for '$name' in $HypothesisRevision, or drop -HypothesisRevision and run it as an undeclared sweep." }) | Out-Null
+        $r.Verdict = 'REFUSE'
     }
     $results.Add($r)
 }

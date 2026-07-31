@@ -91,13 +91,19 @@ $base = RunGuard @()
 Ok "PRE-CHECK: '$param' is ALLOW with no binding, so a binding is the only thing that can change it" `
     ($base -match "\[ALLOW\] $param")
 
-Write-Host '   -- A: the CONTROL. No revision => byte-identical verdicts --'
+Write-Host '   -- A: declaring a revision that binds NOTHING now REFUSES (ORDER-671) --'
 $withEmpty = RunGuard @('-HypothesisRevision', $rev, '-BindingsRoot', $work)
-$baseVerdicts   = (($base       -split "`n") | Where-Object { $_ -match '^\[(ALLOW|REFUSE)\]' }) -join "`n"
-$emptyVerdicts  = (($withEmpty  -split "`n") | Where-Object { $_ -match '^\[(ALLOW|REFUSE)\]' }) -join "`n"
-Ok 'A a revision with ZERO bindings changes not one verdict line' ($baseVerdicts -eq $emptyVerdicts)
+# SUPERSEDED BY OWNER DECISION, and rewritten rather than deleted. This case used to assert
+# 'a revision with ZERO bindings changes not one verdict line' -- true of the old behaviour and
+# FALSE of the ratified one, because declaring a revision is now a claim of attribution that an
+# empty binding set cannot support. Keeping it would have been a test asserting the rule the
+# owner replaced.
+Ok 'A a revision that binds NOTHING refuses every swept parameter, rather than passing silently' `
+    ($withEmpty -match "\[REFUSE\] $([regex]::Escape($param))")
 Ok 'A and it still SAYS it consulted the resolver, rather than being silently inert' `
     ($withEmpty -match 'BINDINGS: .* resolved 0 ParameterBinding row')
+Ok 'A SPECIFICITY the UNDECLARED run is untouched -- that is the whole scope of the change' `
+    ($base -match "\[ALLOW\] $([regex]::Escape($param))")
 
 Write-Host '   -- A2: an UNBOUND parameter under a DECLARED revision must not be SILENT --'
 # FOUND BY A BLIND AUDIT and reproduced before acceptance: case A above proves the verdict does not
@@ -107,15 +113,30 @@ Write-Host '   -- A2: an UNBOUND parameter under a DECLARED revision must not be
 # never described and NOTHING said so. Case A remains true and is now insufficient on its own; both
 # halves are asserted together so neither can be quoted without the other.
 Ok 'A2 an UNBOUND parameter under a declared revision is NAMED in the output' `
-    ($withEmpty -match 'UNBOUND in ' + [regex]::Escape($rev))
-Ok 'A2 and the note says the per-hypothesis layer has NO OPINION, not that it approved' `
-    ($withEmpty -match 'NO OPINION')
-Ok 'A2 and it stays a NOTE, not a REFUSE -- completeness of a binding set is undecided' `
-    ($withEmpty -match "\[ALLOW\] $([regex]::Escape($param))")
-# SPECIFICITY: with NO revision declared there is no per-hypothesis layer at all, so the note must
-# be absent. Without this, a version that printed the note unconditionally would pass A2.
-Ok 'A2 SPECIFICITY with no revision declared, no UNBOUND note is emitted at all' `
+    ($withEmpty -match 'UNBOUND')
+# ORDER-671 U1, OWNER-RATIFIED. This was a NOTE, argued on COMPLETENESS grounds. The owner decided
+# on ATTRIBUTION instead: `-HypothesisRevision X` claims the run is evidence about X, and a
+# dimension X never describes cannot be evidence about X -- which needs no ruling on whether a
+# binding set must be closed. The two assertions this replaces are kept in the commit message, not
+# deleted silently: 'NO OPINION' and '[ALLOW]' were both TRUE of the old behaviour and are both
+# FALSE of the ratified one, so leaving either would be a test asserting the superseded rule.
+Ok 'U1 an UNBOUND parameter under a declared revision is REFUSED, not noted' `
+    ($withEmpty -match "\[REFUSE\] $([regex]::Escape($param))")
+Ok 'U1 and the refusal names BOTH the parameter and the revision -- "something is unbound" is not actionable' `
+    (($withEmpty -match [regex]::Escape($param)) -and ($withEmpty -match [regex]::Escape($rev)))
+Ok 'U1 and it states the ATTRIBUTION ground, not a completeness rule nobody ratified' `
+    ($withEmpty -match 'EVIDENCE ABOUT')
+Ok 'U1 and it names the two ways out, so the refusal is a fork rather than a wall' `
+    (($withEmpty -match 'register a ParameterBinding') -and ($withEmpty -match 'drop -HypothesisRevision'))
+# U2, THE SPECIFICITY HALF, and it is not optional. With NO revision declared there is no
+# per-hypothesis layer at all, so nothing may change. The first version of THIS repair (the
+# earlier note) fired on every legacy call site and was caught only because this line already
+# existed -- GUARD_SHAPES shape 5, "collateral outside the example's slice". Asserted next to U1
+# so neither can be quoted without the other.
+Ok 'U2 SPECIFICITY with no revision declared, no UNBOUND line is emitted at all' `
     ($base -notmatch 'UNBOUND')
+Ok 'U2 SPECIFICITY and the undeclared run still ALLOWS -- the refusal did not leak past its scope' `
+    ($base -match "\[ALLOW\] $([regex]::Escape($param))")
 
 Write-Host '   -- B: a LOCKED binding turns ALLOW into REFUSE --'
 Seed 'LOCKED'

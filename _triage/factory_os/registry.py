@@ -477,10 +477,21 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
         if hit is not None:
             return hit
         if build_tag is not None:
-            # A tagged request that matched nothing is UNBOUND for that build. It must NOT fall
-            # back to an untagged row: "no binding for this build" and "a binding for all builds"
-            # are different facts, and silently promoting one to the other is the F1 direction
-            # again, reversed.
+            # `build_tag: null` MEANS "every build of this revision" -- the schema says so -- so a
+            # request naming a build matching it is not a fallback, it is the field's semantics.
+            #
+            # CAUGHT BY run_registry_tests.ps1 CASES B/C/C2 ON THE FIRST RUN. The version written
+            # one minute earlier returned None here, reasoning that "no binding for this build" and
+            # "a binding for all builds" are different facts. They are -- but null is the SECOND
+            # one, and refusing it made every existing untagged binding invisible the moment
+            # optimize_guard started naming its build. Combined with ORDER-671, that would have
+            # turned every bound parameter into a REFUSAL: the strictest possible wrong answer,
+            # from a repair to a strictness rule.
+            allbuilds = idx.get((hypothesis_revision, parameter, None))
+            if allbuilds is not None:
+                return allbuilds
+            # A request for build X where only build Y is bound genuinely IS unbound for X. THAT
+            # is the fact worth refusing to invent.
             return None
         near = [v for (rev, p, _t), v in idx.items()
                 if rev == hypothesis_revision and p == parameter]
@@ -565,7 +576,8 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
             'source': 'BOUND'}
 
 
-def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, source=None):
+def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, source=None,
+                build_tag=None):
     """Every binding registered for one revision, keyed by parameter name."""
     # KEYED ON THE BARE NAME, with the bound (possibly tagged) string preserved inside each
     # record. F1's other half: resolve() now joins a bare request to a tagged binding, but this map
@@ -579,7 +591,7 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, 
         idx = _overlay_index(root, overlay_root)
         names = sorted(set(p for (rev, p, _t) in idx if rev == hypothesis_revision))
         return dict((p, resolve(hypothesis_revision, p, root=root,
-                                overlay_root=overlay_root, source=source))
+                                overlay_root=overlay_root, source=source, build_tag=build_tag))
                     for p in names)
     if stores is None:
         stores = load_all(root=root)
@@ -591,7 +603,8 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, 
     # came from the caller's root -- two trees, one answer. Caught by the exhaustive-role fixture
     # going red the moment resolve() started consulting the classification table at all: before
     # that, root only selected the bindings, which resolve_all had already loaded.
-    return dict((p, resolve(hypothesis_revision, p, root=root, stores=stores, source=source))
+    return dict((p, resolve(hypothesis_revision, p, root=root, stores=stores, source=source,
+                            build_tag=build_tag))
                 for p in names)
 
 
@@ -670,6 +683,12 @@ def main(argv):
     # which build a whole synthetic repo), and it is NOT what optimize_guard passes.
     root = None
     overlay = None
+    # ORDER-671 U3 / ORDER-672: the CONSUMER knows which build it is sweeping, and now has a way
+    # to say so. Without it, a revision that binds one parameter per build makes resolve_all
+    # refuse (correctly -- the question is under-specified), and optimize_guard would report a
+    # bound parameter as UNBOUND, which under 671 is a REFUSAL. A refusal caused by the caller
+    # failing to ask a precise question is the worst kind of guard.
+    build_tag = None
     argv = [a for a in argv]
     keep = []
     for a in argv:
@@ -677,6 +696,8 @@ def main(argv):
             root = a.split('=', 1)[1]
         elif a.startswith('--overlay-root='):
             overlay = a.split('=', 1)[1]
+        elif a.startswith('--build-tag='):
+            build_tag = a.split('=', 1)[1] or None
         else:
             keep.append(a)
     argv = keep
@@ -693,9 +714,11 @@ def main(argv):
     if len(argv) in (3, 4) and argv[1] == 'resolve':
         try:
             if len(argv) == 4:
-                out = resolve(argv[2], argv[3], root=root, overlay_root=overlay)
+                out = resolve(argv[2], argv[3], root=root, overlay_root=overlay,
+                              build_tag=build_tag)
             else:
-                out = resolve_all(argv[2], root=root, overlay_root=overlay)
+                out = resolve_all(argv[2], root=root, overlay_root=overlay,
+                                  build_tag=build_tag)
         except RegistryRefusal as exc:
             print('[REFUSED] %s' % exc)
             return 1
