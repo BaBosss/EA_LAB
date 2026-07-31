@@ -383,7 +383,17 @@ Each finding needs a fixture observed RED first. Three shape the rest:
 
 ---
 
-## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, after Codex refuted rev 1** — `OPEN` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — **rev 2, after Codex refuted rev 1** — `DRAFTED (2026-07-31) — policy + 55 conformance vectors written and lead-verified; the RUNNER and the one landing signature remain` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### 📝 2026-07-31 — draft artifacts written by an opus subagent, verified by the lead before acceptance
+>
+> **Files (new, nothing existing edited — verified with `git status`, and the `schemas.json` ` M` beside them is a stat-cache artifact, `git diff --quiet` exits 0):** [`ORDER614_POLICY_DRAFT.md`](_triage/factory_os/ORDER614_POLICY_DRAFT.md) (policy `s2a-attestation/1`: 44 criteria at **predicate granularity** — `if False` on a sub-predicate is invisible at `A6` granularity, which is the whole E1 point — with scope vocabulary and the E1–E4 mapping) · [`ORDER614_VECTORS_DRAFT.jsonl`](_triage/factory_os/ORDER614_VECTORS_DRAFT.jsonl) (**55 hermetic vectors**: synthetic rows/blobs/bundles so the corpus can never re-create the signature loop by referencing real repo state; counts 18 green / 36 red / 1 abort **recomputed here**, ids unique).
+>
+> **The draft found three defects in the EXISTING checker, the biggest verified by the lead against the code:** 🔴 **A5/R8 is unreachable** — `reason` sits in `REQUIRED` (line 53), so a blank reason dies as R4-missing at line 193 and the REFUSED-without-reason branch at 241 can never fire; the suite case labelled "A5 REFUSED with no reason" asserts **R4's message**. Shape 3, in the criterion list since ORDER-602. · G3 (Spec 9's fix) covers only `continue`-ing criteria — a row failing F2–F11 still prints `APPROVED` (exit stays 1, so no green bypass, but the printed line names a record that did not verify) · a dead `if pinned and …` guard in F4.
+>
+> **Lead decisions on the draft's open questions (engineering-level, decided; the rest stay OPEN):** version string `s2a-attestation/1` adopted · id scheme `A*`→`R*/F*/G*/N*/B*/X*` adopted · **R8: keep `REQUIRED` exactly as it is and DELETE the unreachable branch** — making `reason` conditionally required would change *what is demanded*, which E4 forbids; deleting an unreachable branch changes nothing observable · dead F4 guard: delete when landing · **OPEN-2 (does `check_s2a_migration.py` also leave the bundle) is flagged as the one real design question** — the ratified principle says implementations leave, but dropping it without absorbing its criteria into the policy would bind D1's bytes while unbinding D1's meaning; to be decided when the runner is built, not by default.
+>
+> **🔻 Remaining (the actual build):** the conformance RUNNER + the permanent `if False` mutation harness (E1's acceptance fixture) · rename `DRAFT` → final **before** the digest is computed (it hashes paths) · land as **ONE** bundle change · print the owner's re-record template and stop. E3's honest form: landing voids line 6 — that is the one signature this order says it costs.
 
 > **Owner directive 2026-07-31, verbatim:** *"ยืนยัน ใช่ไม่อยากคอยยืนยันมันเสียเวลา แก้เลย"*
 
