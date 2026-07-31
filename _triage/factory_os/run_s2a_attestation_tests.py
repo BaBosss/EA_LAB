@@ -234,6 +234,19 @@ def main():
         print('        -> %s' % problems)
         bad += 1
 
+    # /scrutinize: `latest` was built from EVERY row, including ones that fail A1 -- so appending a
+    # single malformed line made THAT line "in force" and demoted the real decision to superseded,
+    # letting it skip A2 and A6 entirely. Probed: a row with a wrong bundle AND a stale pin was
+    # reported for neither. Both lists come from one eligibility predicate now.
+    _, problems = run_with([good(bundle_sha256='a' * 64, decided_at='2026-07-31T07:00'),
+                            good(signer='', decided_at='2026-07-31T07:10')], [STALE_NOTE])
+    ok = 'A2' in problems and 'A1' in problems
+    print('  [%s] D1 a MALFORMED trailing row cannot displace the decision in force'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
     # ---- ORDER-613 D2: a record may declare the state its approved action PRODUCES -------------
     _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': live},
                                  stale_pin_acknowledged=True,

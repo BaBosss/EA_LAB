@@ -130,15 +130,20 @@ def check_append_only(problems, path=None, committed=None, working=None):
 
 def check(rows, problems, digest, d1_owners, vintage_notes):
     stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
-    # ORDER-613 D1: resolve the winner per owner BEFORE judging, so the stale-pin rule can be
-    # applied to the record that is actually in force. Computed by last-wins over well-formed rows,
-    # which is the same rule the loop below records at the end -- stated once, here, so the two
-    # cannot disagree.
-    latest = {}
-    for r in rows:
-        if isinstance(r, dict) and str(r.get('current_owner') or '').strip():
-            latest[r['current_owner']] = r
-    current = {}
+    # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
+    # comment that asserted the opposite of the truth.
+    #
+    # The first version built `latest` from EVERY row, including rows that fail A1. So appending one
+    # deliberately malformed line -- `{"signer": ""}` was enough -- made that line "in force", which
+    # demoted the REAL current decision to "superseded" and let it skip A2 and A6 entirely. Probed:
+    # a row carrying a wrong bundle AND a stale pin was reported for neither. The log still went red
+    # on the A1 problem, so it was not a green bypass, but `current` and `latest` genuinely
+    # disagreed about which row was in force -- while the comment claimed "stated once, so the two
+    # cannot disagree". A comment that is false about the code beside it is worse than no comment.
+    #
+    # Both now come from ONE list, built by ONE predicate: a row is ELIGIBLE if it survives the
+    # intrinsic checks. A malformed trailing line can no longer displace the decision in force.
+    eligible = []
     for r in rows:
         n = r.get('_line')
         missing = [f for f in REQUIRED if not str(r.get(f) or '').strip()]
@@ -149,6 +154,24 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             problems.append('A1 line %s has decision=%r, not one of %s'
                             % (n, r['decision'], list(DECISIONS)))
             continue
+        if r['current_owner'] not in d1_owners:
+            problems.append('A4 line %s decides for %r, which is not a current_owner in D1'
+                            % (n, r['current_owner']))
+            continue
+        if r['current_owner'].startswith('EMBEDDED:'):
+            problems.append('A4 line %s decides for %r, but an EMBEDDED fact owns no file -- it '
+                            'follows its parent. Record the decision against the parent\'s owner.'
+                            % (n, r['current_owner']))
+            continue
+        eligible.append(r)
+
+    latest = {}
+    for r in eligible:
+        latest[r['current_owner']] = r
+
+    current = {}
+    for r in eligible:
+        n = r.get('_line')
         # ORDER-613 D1, EXTENDED after running it: A2 had the same defect A6 did, and narrowing
         # only A6 was not enough -- the log stayed red on lines 2 and 3, made under the previous
         # bundle, which append-only means can never be corrected.
@@ -168,15 +191,9 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                             'longer describes what is on disk. Re-make it against the current bytes.'
                             % (n, str(r['bundle_sha256'])[:12], digest[:12]))
             continue
-        if r['current_owner'] not in d1_owners:
-            problems.append('A4 line %s decides for %r, which is not a current_owner in D1'
-                            % (n, r['current_owner']))
-            continue
-        if r['current_owner'].startswith('EMBEDDED:'):
-            problems.append('A4 line %s decides for %r, but an EMBEDDED fact owns no file -- it '
-                            'follows its parent. Record the decision against the parent\'s owner.'
-                            % (n, r['current_owner']))
-            continue
+        # (A4 moved to pass 1: eligibility must be decided before `latest` is, or a row that fails
+        #  it could still displace the decision in force. Leaving a copy here would be dead code
+        #  that reads like a guard.)
         if r['decision'] == 'REFUSED' and not str(r.get('reason') or '').strip():
             problems.append('A5 line %s is REFUSED with no reason' % n)
         # ORDER-613 D2: a record may declare the state the approved action is expected to PRODUCE.

@@ -103,6 +103,46 @@
 
 ---
 
+## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — bind the CONTRACT, not the checker's bytes — `OPEN` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Owner directive 2026-07-31, verbatim:** *"ยืนยัน ใช่ไม่อยากคอยยืนยันมันเสียเวลา แก้เลย"* — confirm, and **fix the repeated signing itself**.
+
+### The problem, measured this session rather than predicted
+
+`check_s2a_attestation.py` is a member of **its own `bundle_sha256`**. So **every repair to it voids the record that authorised the previous repair.** Digest history in one session:
+
+`aaa5998d` → `1bd4d268` → `fa6bab35` → `6ec25ca5` — **four signatures, three of them for bug fixes that changed no rule.**
+
+Two of those fixes were only found *because* the owner signed and the log stayed red. The mechanism is therefore actively hostile to being repaired, which is the opposite of what audit 8 BLOCKER 2 was protecting.
+
+### 🔴 The fix that must NOT be built
+
+*"Claude decides which checker edits are substantive."* That is the abuse pattern this whole lineage exists to prevent, and it would hand the seat the power to reinterpret an owner decision by calling the change cosmetic. **Do not build it. Do not add an exemption list. Do not hash "the file except the comments".**
+
+### What to build instead — bind the DECLARATION, not the bytes
+
+The checker publishes a machine-readable **contract declaration**: one entry per criterion (`id`, one-line semantics, the field(s) it reads). `bundle_sha256` binds **that declaration**, not the file's bytes.
+
+- a repair that changes no criterion ⇒ declaration identical ⇒ **no new signature**
+- adding, removing, weakening or re-scoping a criterion ⇒ declaration changes ⇒ **signature required**, and the diff shown to the owner is the list of criteria, not a hash
+
+**What makes it non-gameable, and this is the load-bearing part:** a guard must prove the declaration is **complete** — every problem the code can emit must map to a declared criterion. Enforce it the way this repo already knows how: every `problems.append` must carry a declared id prefix, and a suite greps the source for `problems.append` sites and refuses any whose prefix is undeclared. Silently changing behaviour then requires keeping every declared criterion *and* emitting no new problem class — which is precisely the case where no re-signature is owed.
+
+### Acceptance
+
+- **E1** declaration exists, is machine-readable, and `bundle_sha256` binds it instead of the checker's bytes. Negative: reword a comment ⇒ digest **unchanged**; narrow a criterion's scope ⇒ digest **changes**.
+- **E2** completeness guard: a `problems.append` whose id is not declared ⇒ **RED**, with a fixture that adds one.
+- **E3** the four historical digests stay resolvable — the log must remain readable, and lines 2–5 must not be invalidated *again* by this change. If they are, that is the same defect one layer up and E1 is wrong.
+- **E4** the D1 in-force rule and D2 `expected_post_state` survive unchanged; this order changes **what is bound**, never **what is demanded**.
+
+### ห้าม
+
+- ❌ No exemption list, no "cosmetic change" judgement, no hashing a filtered view of the source.
+- ❌ Do not write the owner's landing signature. Print the template and stop.
+- ❌ Do not mark `REVIEWED`.
+
+---
+
 ## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 07:5x — **D1/D2/D3 LANDED. The root defect is fixed and the workaround is deleted.**
