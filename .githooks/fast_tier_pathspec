@@ -3,6 +3,7 @@
 .githooks/fast_tier_pathspec
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
 _triage/factory_os/check_coverage_transfer.py
+_triage/factory_os/check_registries.py
 _triage/factory_os/check_s2a_attestation.py
 _triage/factory_os/check_s2a_migration.py
 _triage/factory_os/check_schema_structure.py
@@ -11,10 +12,12 @@ _triage/factory_os/gen_coverage.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
+_triage/factory_os/registry.py
 _triage/factory_os/run_contract_binding_tests.py
 _triage/factory_os/run_coverage_transfer_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
+_triage/factory_os/run_registry_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_gate.py
 _triage/factory_os/run_s2a_migration_tests.py
@@ -35,6 +38,9 @@ docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
 factory/coverage.jsonl
+factory/hypotheses.jsonl
+factory/instrument_profiles.jsonl
+factory/parameter_bindings.jsonl
 MASTER_BACKLOG.md
 portfolio/control_room_snapshot.json
 scripts/*.ps1

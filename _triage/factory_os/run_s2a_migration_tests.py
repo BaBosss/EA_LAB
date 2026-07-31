@@ -115,7 +115,22 @@ def m_schema_as_owner(rows, cov):
 
 
 def m_owner_absent_at_head(rows, cov):
-    find(rows, 'Hypothesis')['current_owner'] = 'factory/hypotheses.jsonl'
+    # MEASURED 2026-07-31 (ORDER-630): this used to point at `factory/hypotheses.jsonl` on the
+    # premise that the file does not exist. S5 created it, and the mutation went GREEN -- it was
+    # asserting "C3 refuses an absent current_owner" using a path that had quietly become present.
+    # A mutation whose premise expires stops discriminating without stopping running, which is the
+    # same shape as a guard that keeps reporting after it stops being true.
+    #
+    # The path below is chosen to be UNCREATABLE rather than merely absent: it names a directory
+    # the migration table does not propose, so no later slice can make it exist as a side effect.
+    # C3's criterion is "a current_owner that does not exist is refused" -- which path exercises it
+    # was always incidental, and tying it to a file the design plans to CREATE was the mistake.
+    #
+    # This file is NOT inside the attestation bundle (check_s2a_attestation.BUNDLE names
+    # s2a_migration.jsonl, s2a_coverage_reconciliation.json, S2A_OWNERSHIP_MIGRATION.md,
+    # gen_s2a_migration.py, check_s2a_migration.py and check_s2a_attestation.py), so repairing it
+    # costs no signature. Checked before editing rather than assumed.
+    find(rows, 'Hypothesis')['current_owner'] = '_triage/factory_os/no_such_owner_file.jsonl'
 
 
 def m_undeclared_proposed(rows, cov):

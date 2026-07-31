@@ -103,6 +103,38 @@
 
 ---
 
+## ORDER-630 — [factory/S5] Registries + the ONE ParameterBinding resolver — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Built:** five stores (`factory/universe.jsonl` · `instrument_profiles.jsonl` · `hypotheses.jsonl` · `parameter_bindings.jsonl` · the existing `coverage.jsonl`, EXTENDED not re-opened), ONE resolver `_triage/factory_os/registry.py`, its guard `check_registries.py`, and the wiring that makes `scripts/optimize_guard.ps1` read that resolver.
+
+### The five acceptance criteria, each with a negative observed red
+
+| | criterion | negative |
+|---|---|---|
+| **R1** | round-trip deterministic | a line re-serialised with different key order is reported BY LINE NUMBER; `canonicalize` repairs it |
+| **R2** | `NOT_APPLICABLE` refused without a reason | no reason ⇒ RED · a 3-character reason ⇒ RED · a real reason ⇒ accepted |
+| **R3** | no verdict field | **both ends**: a `verdict` KEY at any depth ⇒ RED, and a NEUTRAL key carrying the VALUE `DEAD-STRUCTURAL` ⇒ RED. The second is audit finding A3 verbatim, which a name-only check passes. |
+| **R4** | generator and `optimize_guard` provably read ONE resolver | a declared consumer that never references it ⇒ RED · a second copy of the role vocabulary in code ⇒ RED · **in a comment ⇒ NOT red** |
+| **R5** | one entity per store | a `Hypothesis` row in the universe store ⇒ RED |
+
+### 🔴 Three stores carry NO rows, and that is a RECORDED BLOCK, not an omission
+
+- `universe.jsonl` — **Core Universe v1 membership is the owner's** (`_triage/USER_DECISIONS_PENDING.md` #1). Every cell is `Baseline + probe × every hypothesis`, paid in tester hours.
+- `hypotheses.jsonl` — registering one asserts a causal claim and pins the order that pre-registered it. No order exists in the `B11-B18` form.
+- `parameter_bindings.jsonl` — a binding names a `hypothesis_revision`, and there are none.
+
+The mechanism is exercised against **synthetic** registries. Populating these to make the stores look busy would be inventing owner-owned content, which the design forbids by name — and a fixture built out of invented content proves nothing about the real store anyway. **`check_registries.py` prints how many `NOT_APPLICABLE` cells it examined on each real run and prints `0` as "UNTESTED by this run"**, so empty is never read as passed.
+
+### What R4 does NOT prove, stated because it is the condition on the design being acceptable
+
+It cannot prove two programs compute the same thing — the same impossibility `ORDER-614` rev 2 had to state out loud. It proves (a) the role vocabulary and the `optimizable` derivation exist in **exactly one file** and (b) every declared consumer reaches it. **A consumer that calls the resolver and then ignores the answer is not caught by this** — which is why `run_registry_tests.ps1` exists separately and drives the real `optimize_guard`: a `LOCKED` binding turns `ALLOW` into `REFUSE`, a `TUNABLE` one does not, and a named revision whose bindings cannot be read **fails closed**.
+
+### ห้าม
+
+- ❌ No verdict field in any of these stores. ❌ Do not invent universe membership, a hypothesis, or a binding. ❌ Do not re-open the ORDER-610 coverage transfer. ❌ Do not mark `REVIEWED`.
+
+---
+
 ## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Owner directive 2026-07-31:** *"ทำ 616 ให้จบ จบไปเลยจริง"* — after the seat proposed it as the highest-value item in the set.
@@ -319,7 +351,7 @@ An approval pins the bytes of the file it authorises changing. Executing it move
 
 ---
 
-## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `OPEN` · ⛔ **next frontier; nothing before it is blocking** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (C1 flipped to PASS and is now ASSERTED; C6's asymmetry pre-registered and fixtured both ways; 3 self-scrutinize rounds) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Why this is written and not executed.** S4 is the first slice that **migrates a live artifact**: `portfolio/control_room_snapshot.json` is the monitoring sensor, and `make_status.ps1` runs after every commit and produces the HTML the owner reads. A partial migration here leaves two sources of truth for account state — the one thing the design and every audit have been most consistent about refusing. It was left fully specified rather than half-done. **Everything it depends on is green.**
 

@@ -1,0 +1,337 @@
+# -*- coding: utf-8 -*-
+"""check_registries.py -- ORDER-630 (slice S5). The guard over the Factory registries.
+
+THE DESIGN'S S5 ACCEPTANCE, ONE CRITERION EACH:
+  R1  round-trip deterministic -- every stored line equals its canonical re-serialisation.
+  R2  `NOT_APPLICABLE` is refused without a reason.
+  R3  NO VERDICT FIELD in any of these files.
+  R4  the generator and optimize_guard provably read ONE resolver.
+  R5  every row validates against the ONE entity its store is declared to hold.
+  R6  a store declared BLOCKED must actually be absent, and its blocker must still hold.
+
+WHAT EACH ONE ACTUALLY PROVES, because three of them are easy to oversell:
+
+  R3 is the one this repo has already been burned by. `check_s2a_migration`'s A3 checked key
+  NAMES and never VALUES, so `"status": "DEAD-STRUCTURAL"` carried a verdict into a store whose
+  entire acceptance forbids one (docs/GUARD_SHAPES.md, shape 2). So R3 checks BOTH ends: a closed
+  set of forbidden key names AND a closed set of forbidden VALUES, the latter being the canonical
+  verdict vocabulary out of CLAUDE.md. A field called `state` holding `DEAD-OPTIMIZED` is a
+  verdict, whatever it is named.
+
+  R4 cannot prove two programs compute the same thing -- that is the same impossibility ORDER-614
+  rev 2 had to state out loud, and pretending otherwise here would be the same defect. What it
+  proves is narrower and is stated in the failure text: (a) the role/surface vocabulary and the
+  optimizable derivation exist in exactly ONE file, and (b) every declared consumer reaches that
+  file. A consumer that calls the resolver and then ignores the answer is NOT caught by this, and
+  saying so is why the check is worth having.
+
+  R2 is scoped: it is the CoverageCell rule (a NOT_APPLICABLE cell must carry a reason of real
+  length). The schema says so too, in an `allOf`; this repeats it because the schema gate is an
+  ajv subprocess that the fast tier does not pay for, so on the fast path R2 is the only thing
+  enforcing it.
+
+USAGE  tools\\python312\\python.exe _triage/factory_os/check_registries.py
+EXIT   0 = every criterion holds - 1 = a violation - 2 = the checker could not read its inputs
+"""
+import io
+import json
+import os
+import re
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+if HERE not in sys.path:
+    sys.path.insert(0, HERE)
+
+import registry as reg  # noqa: E402
+
+ROOT = reg.REPO_ROOT
+
+# R3, half one: key NAMES that may never appear in a registry row, at any depth.
+FORBIDDEN_VERDICT_KEYS = ('verdict', 'reconciliation_clear', 'all_clear', 'pass', 'passed',
+                          'outcome', 'conclusion', 'judgement', 'judgment', 'ruling')
+
+# R3, half two: VALUES that are verdicts wherever they appear, under whatever key. This is the
+# canonical verdict vocabulary from CLAUDE.md's VERDICT GATE plus the retired terms it names, so a
+# store cannot smuggle one in under a neutral key like `state` or `label`.
+FORBIDDEN_VERDICT_VALUES = ('DEAD-STRUCTURAL', 'DEAD-OPTIMIZED', 'PARKED-VERIFY', 'BUILD-ON',
+                            'CANDIDATE', 'DEMO', 'LIVE', 'VALIDATED', 'ROBUST', 'MARGINAL',
+                            'CONDITIONAL')
+
+# Values that LOOK like verdicts but are a declared part of an entity's own closed vocabulary.
+# A closed declaration in code, not a substring exemption: each entry names the exact
+# (store, key, value) triple it excuses and why. `unowned_evidence` was defeated by an exemption
+# broad enough to cover everything (memory: citation-guard-satisfied-by-a-universal-file).
+VERDICT_VALUE_EXEMPTIONS = {
+    ('factory/coverage.jsonl', 'status', 'LIVE'):
+        'CoverageCell imported rows use `status: LIVE` to mean "this symbol x TF is traded '
+        'live", which is a FACT about deployment, not a verdict about an edge. Transcribed by '
+        "ORDER-610's transfer from MASTER_BACKLOG section 2 and pinned to its source blob.",
+}
+
+# R4: the ONE file allowed to define the role vocabulary or derive optimizability.
+RESOLVER = '_triage/factory_os/registry.py'
+# Consumers that MUST reach the resolver, and the token that proves each one does. Declared, so
+# that adding a consumer and forgetting to wire it is a violation rather than a silence.
+RESOLVER_CONSUMERS = {
+    'scripts/optimize_guard.ps1': 'factory_os/registry.py',
+}
+# Files exempt from the "no second copy of the vocabulary" sweep, each with a reason.
+RESOLVER_SWEEP_EXEMPT = {
+    RESOLVER: 'is the resolver',
+    '_triage/factory_os/schemas.json': 'declares the enum the resolver validates against; a '
+                                       'contract and its implementation are not two copies',
+    '_triage/factory_os/check_registries.py': 'this file, which must name what it forbids',
+    '_triage/factory_os/run_registry_tests.py': 'the suite, which must name what it asserts',
+    '_triage/factory_os/CONTRACTS.md': 'a GENERATED projection of schemas.json',
+    '_triage/factory_os/run_contract_binding_tests.py':
+        'MEASURED: it names the role enum as SCHEMA MUTATION material -- it deletes values from '
+        'ParameterBinding.role to prove the design<->schema binding goes red. It never decides '
+        'whether a parameter is optimizable, which is what a second resolver would do.',
+}
+# The tokens whose duplication would mean a second resolver. Two roles that only ever appear
+# together in a decision, not the whole enum.
+ROLE_PAIR = re.compile(r'TUNABLE')
+ROLE_PAIR2 = re.compile(r'LOCKED')
+
+# COMMENTS ARE NOT CODE, and this had to be learned here the same way run_guard_shape_lint learned
+# it: the first version of the sweep flagged scripts/optimize_guard.ps1 -- the DECLARED CONSUMER --
+# because the comment explaining WHY it consults the resolver says "LOCKED in B14-H01 and TUNABLE
+# in B14-H02". Exempting the consumer would have removed the sweep's most important target to
+# silence a false positive in prose. Stripping comments keeps the target and removes the noise.
+# It is a stripper and not a parser: a file that hides a second resolver inside a string literal
+# is still caught (run_contract_binding_tests.py is exactly that case, and is declared).
+_PS_BLOCK_COMMENT = re.compile(r'<#.*?#>', re.S)
+_PY_DOCSTRING = re.compile(r'(""".*?"""|' + "'''.*?'''" + r')', re.S)
+
+
+def strip_comments(src, rel):
+    if rel.endswith('.ps1'):
+        src = _PS_BLOCK_COMMENT.sub(' ', src)
+    else:
+        src = _PY_DOCSTRING.sub(' ', src)
+    return '\n'.join(l for l in src.splitlines() if not l.lstrip().startswith('#'))
+
+problems = []
+
+
+def _walk(node, path, fn, key=None):
+    """Visit every (nearest-enclosing-key, value, path) in a row, INCLUDING inside arrays.
+
+    FOUND BY ITS OWN FIXTURE, 2026-07-31: the first version called `fn` only for dict entries and
+    merely RECURSED through lists, so `{"tags": ["DEMO"]}` was invisible -- a verdict value one
+    bracket away from being caught. The list element inherits its parent key, which is what makes
+    the exemption lookup still work for an exempted (store, key, value) triple inside an array.
+    """
+    fn(key, node, path)
+    if isinstance(node, dict):
+        for k, v in node.items():
+            _walk(v, '%s.%s' % (path, k), fn, key=k)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _walk(v, '%s[%d]' % (path, i), fn, key=key)
+
+
+def check_r1(stores):
+    # `stores` rather than reg.STORES: a BLOCKED store that does not exist has no lines to check,
+    # and R6 is what proves it is genuinely absent rather than skipped. Iterating the declared set
+    # here would make R1 crash on the very condition R6 exists to report.
+    for rel in sorted(stores):
+        bad = reg.round_trip(rel)
+        if bad:
+            problems.append(
+                'R1 %s line(s) %s are not in canonical form, so a read-write cycle would change '
+                'bytes that no edit changed. Run `registry.py canonicalize`.'
+                % (rel, ', '.join(str(b) for b in bad)))
+
+
+def check_r2(stores):
+    if 'factory/coverage.jsonl' not in stores:
+        return 0
+    _meta, rows = stores['factory/coverage.jsonl']
+    fired = 0
+    for n, rec in rows:
+        for cell in (rec.get('cells') or []):
+            if not isinstance(cell, dict):
+                continue
+            if cell.get('status') != 'NOT_APPLICABLE' and cell.get('state') != 'NOT_APPLICABLE':
+                continue
+            fired += 1
+            why = cell.get('not_applicable_reason')
+            if not isinstance(why, str) or len(why.strip()) < 10:
+                problems.append(
+                    'R2 factory/coverage.jsonl line %d marks %r NOT_APPLICABLE with reason %r. A '
+                    'cell excluded from the universe without a reason is a cell nobody can '
+                    're-examine -- it is how a universe shrinks silently.'
+                    % (n, cell.get('cell'), why))
+    return fired
+
+
+def check_r3(stores):
+    for rel in sorted(stores):
+        _meta, rows = stores[rel]
+        for n, rec in rows:
+            def seen(k, v, path, rel=rel, n=n):
+                if k is not None and k.lower() in FORBIDDEN_VERDICT_KEYS:
+                    problems.append(
+                        'R3 %s line %d carries a verdict-shaped KEY at %s. These stores hold '
+                        'facts and references; a verdict belongs in the scorecard.'
+                        % (rel, n, path))
+                if isinstance(v, str) and v.strip().upper() in FORBIDDEN_VERDICT_VALUES:
+                    if (rel, k, v.strip().upper()) in VERDICT_VALUE_EXEMPTIONS:
+                        return
+                    problems.append(
+                        'R3 %s line %d carries the verdict VALUE %r at %s. Checking key names '
+                        'and not values is the exact defect audit finding A3 shipped: '
+                        '"status": "DEAD-STRUCTURAL" passed a name check and carried a verdict '
+                        'into a store whose acceptance forbids one.' % (rel, n, v, path))
+            _walk(rec, 'row', seen)
+
+
+def check_r4():
+    # (a) exactly one file derives optimizability.
+    for rel, why in sorted(RESOLVER_CONSUMERS.items()):
+        path = os.path.join(ROOT, rel.replace('/', os.sep))
+        if not os.path.isfile(path):
+            problems.append('R4 declared consumer %s does not exist' % rel)
+            continue
+        with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
+            src = fh.read()
+        if why not in src:
+            problems.append(
+                'R4 %s is declared a consumer of the ParameterBinding resolver but does not '
+                'reference %r, so it is deciding role/surface some other way -- or not at all. '
+                'Two answers to "may this run optimize this parameter" is the drift %s exists '
+                'to prevent.' % (rel, why, RESOLVER))
+    # (b) no second copy of the vocabulary.
+    import glob
+    hits = []
+    for pat in ('_triage/factory_os/*.py', 'scripts/*.ps1', 'scripts/lib/*.ps1'):
+        for path in glob.glob(os.path.join(ROOT, pat.replace('/', os.sep))):
+            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+            if rel in RESOLVER_SWEEP_EXEMPT:
+                continue
+            with io.open(path, encoding='utf-8', errors='replace') as fh:  # snapshot: worktree
+                src = strip_comments(fh.read(), rel)
+            if ROLE_PAIR.search(src) and ROLE_PAIR2.search(src):
+                hits.append(rel)
+    for rel in sorted(hits):
+        problems.append(
+            'R4 %s pairs the role tokens TUNABLE and LOCKED without being the resolver or a '
+            'declared exemption. Either route it through %s, or declare it in '
+            'RESOLVER_SWEEP_EXEMPT with a reason.' % (rel, RESOLVER))
+
+
+def check_r5(stores):
+    for rel, entity in sorted((k, v) for k, v in reg.STORES.items() if k in stores):
+        _meta, rows = stores[rel]
+        for n, rec in rows:
+            got = rec.get('entity')
+            if got is None:
+                # coverage.jsonl's ORDER-610 import rows predate the entity discriminator and are
+                # pinned to a source blob. They are NOT waved through: the exemption is this one
+                # store, named here, and it ends when S5's CoverageCell rows replace them.
+                if rel == 'factory/coverage.jsonl':
+                    continue
+                problems.append('R5 %s line %d has no `entity` discriminator, so nothing can '
+                                'route it to a contract' % (rel, n))
+                continue
+            if got != entity:
+                problems.append(
+                    'R5 %s line %d declares entity=%r but this store holds %r. A store whose rows '
+                    'can be any entity is a store nothing validates as a whole.'
+                    % (rel, n, got, entity))
+
+
+def check_r6():
+    """A blocked store may not quietly appear, and a block may not quietly expire.
+
+    Both halves, because a one-sided version is useless in a predictable way. If a blocked store
+    APPEARS, load_all skips it and nothing validates it -- so it must be refused. If the CONDITION
+    that blocks it stops holding, the block is an exclusion nobody re-examined, which is the same
+    defect snapshot_build's TASKBOARDS_NOT_READ check exists for.
+    """
+    d1 = os.path.join(ROOT, '_triage', 'factory_os', 's2a_migration.jsonl')
+    d1_states = set()
+    if os.path.isfile(d1):
+        with io.open(d1, encoding='utf-8') as fh:  # snapshot: worktree
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                except ValueError:
+                    continue
+                if isinstance(rec, dict) and rec.get('proposed_owner') or                         (isinstance(rec, dict) and rec.get('proposed')):
+                    d1_states.add((rec.get('entity_name') or rec.get('entity'),
+                                   rec.get('current_owner') or rec.get('owner')))
+    for rel, why in sorted(reg.STORES_BLOCKED.items()):
+        path = os.path.join(ROOT, rel.replace('/', os.sep))
+        if os.path.isfile(path):
+            problems.append(
+                'R6 %s is declared BLOCKED but EXISTS. load_all() skips a blocked store, so a '
+                'blocked store that is present is a store nothing validates. Either lift the '
+                'block in registry.STORES_BLOCKED with the reason it no longer applies, or '
+                'remove the file. Block reason on record: %s' % (rel, why))
+        # The blocker for the universe store is D1 still declaring those two states. If D1 no
+        # longer does, the block has expired and must be re-examined rather than inherited.
+        if rel == 'factory/universe.jsonl' and d1_states:
+            still = [st for ent, st in d1_states
+                     if ent in ('TestUniverse', 'LogicalSymbol')
+                     and st in ('NO_CURRENT_OWNER', 'NOT_YET_BUILT')]
+            if not still:
+                problems.append(
+                    'R6 %s is declared BLOCKED because D1 declares TestUniverse '
+                    'NO_CURRENT_OWNER / LogicalSymbol NOT_YET_BUILT, and D1 no longer declares '
+                    'either. The block has EXPIRED: re-examine it rather than inheriting it.'
+                    % rel)
+
+
+def main():
+    try:
+        stores = reg.load_all()
+    except reg.RegistryRefusal as exc:
+        # TOOL failure, exit 2. Not a violation: "I could not read the registries" and "the
+        # registries are wrong" have different fixes, and collapsing them is this repo's
+        # most-repeated defect.
+        print('[TOOL FAILURE] %s' % exc)
+        return 2
+
+    check_r1(stores)
+    na_fired = check_r2(stores)
+    check_r3(stores)
+    check_r4()
+    check_r5(stores)
+    check_r6()
+
+    total = sum(len(rows) for _m, rows in stores.values())
+    print('=== ORDER-630 registry check ===')
+    for rel in sorted(reg.STORES):
+        if rel not in stores:
+            # Printed on its own line, loudly, on EVERY run. A block that only exists in a
+            # constant is a block the next reader will not know about.
+            print('  %-40s BLOCKED, not created -- %s' % (rel, reg.STORES_BLOCKED.get(rel, '?')))
+            continue
+        meta, rows = stores[rel]
+        print('  %-40s %d row(s)' % (rel, len(rows)))
+    print('  %d row(s) across %d store(s)' % (total, len(reg.STORES)))
+    # THE GUARD RULE, applied to this guard. R2 can only be evidence if it fired; a run where it
+    # fired 0 times means UNTESTED here, and the run_registry_tests.py fixtures are where it is
+    # made to fire. Saying "0" out loud is the point -- CLAUDE.md's guard row exists because a
+    # guard that never fired has been written up as passed before.
+    print('  R2 NOT_APPLICABLE cells examined this run: %d%s'
+          % (na_fired, '  <- 0 means R2 is UNTESTED by this run, not that it passed'
+             if na_fired == 0 else ''))
+    if problems:
+        print('\n%d PROBLEM(S):' % len(problems))
+        for p in problems:
+            print('  - %s' % p)
+        return 1
+    print('\n=== R1 round-trip - R2 not-applicable reason - R3 no verdict (keys AND values) '
+          '- R4 one resolver - R5 one entity per store: all hold ===')
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())

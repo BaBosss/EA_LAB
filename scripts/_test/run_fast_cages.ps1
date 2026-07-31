@@ -234,6 +234,19 @@ $FAST_SUITES = @(
     # 4.6s, measured either side). It then grew back to ~5.8s when rounds 1 and 2 of the
     # self-review added two more built fixtures and a stub-root case.
     'run_snapshot_s4_tests.ps1',
+    # ORDER-630 (S5, 2026-07-31): the CONSUMER half of "the generator and optimize_guard provably
+    # read ONE resolver". The python half (the resolver's answers, and each of check_registries'
+    # five criteria going red) joined run_contract_binding_tests.ps1's wrapper; this proves
+    # optimize_guard READS that answer -- a LOCKED binding turns ALLOW into REFUSE, a TUNABLE one
+    # does not, and a named revision whose bindings cannot be read FAILS rather than resolving
+    # empty. Its load-bearing case is the CONTROL: with no -HypothesisRevision, not one verdict
+    # line changes.
+    # MEASURED 2.9s standalone. It spawns optimize_guard six times, each a fresh powershell
+    # loading the 193-row parameter registry; that is the expensive choice on purpose, because a
+    # test that reimplements its subject agrees with itself no matter what the subject does.
+    # (The first draft of this line said 8.6s, written before the suite was timed. It is here
+    # because guessing a number and labelling it MEASURED is shape 4 in one word.)
+    'run_registry_tests.ps1',
     # BACKLOG-D32 (2026-07-30): guards the trigger that decides whether this whole tier runs.
     # It is last on purpose -- if the declarations and the generated pathspec have drifted,
     # everything above it may have been enforced on a lie.
@@ -298,6 +311,28 @@ $SUITE_GUARDS = @{
     # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
     # something else happens to be staged, which is the D32 defect this map exists to end.
+    # ORDER-630 (S5). The resolver, its guard, the store it reads and the consumer it wires.
+    'run_registry_tests.ps1'          = @('_triage/factory_os/registry.py',
+                                          '_triage/factory_os/check_registries.py',
+                                          '_triage/factory_os/run_registry_tests.py',
+                                          'scripts/optimize_guard.ps1',
+                                          # This suite RUNS the real optimize_guard, so the three
+                                          # files optimize_guard treats as source of truth are its
+                                          # inputs too -- its PRE-CHECK asserts a specific
+                                          # parameter is ALLOW, which a registry edit can change.
+                                          # Declared rather than exempted: it genuinely is a
+                                          # dependency, and the sweep was right to ask.
+                                          'docs/PARAM_REGISTRY.csv',
+                                          # factory/universe.jsonl is DELIBERATELY absent from
+                                          # this list: it is BLOCKED and does not exist (see
+                                          # registry.STORES_BLOCKED). Declaring an untracked path
+                                          # here made the trigger cage red in both directions,
+                                          # which is correct -- a pathspec cannot select a file
+                                          # that is not in git. It is added when the block lifts.
+                                          'factory/instrument_profiles.jsonl',
+                                          'factory/hypotheses.jsonl',
+                                          'factory/parameter_bindings.jsonl',
+                                          'factory/coverage.jsonl')
     'run_snapshot_s4_tests.ps1'       = @('_triage/factory_os/snapshot_build.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_s4_tests.py',
@@ -321,6 +356,10 @@ $SUITE_GUARDS = @{
                                           # PowerShell suite, per the trade recorded above.
                                           '_triage/factory_os/snapshot_build.py',
                                           '_triage/factory_os/run_snapshot_s4_tests.py',
+                                          # ORDER-630 (S5): the python half, same trade.
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/check_registries.py',
+                                          '_triage/factory_os/run_registry_tests.py',
                                           '_triage/factory_os/check_schema_structure.py',
                                           # ORDER-601 closure: proves the PLANNED/BUILT/WIRED
                                           # enforcement labels are verified against the repo rather

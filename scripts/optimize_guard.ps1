@@ -89,7 +89,25 @@ param(
     [string]$IniPath,
     [string[]]$ParamNames,
     [Nullable[int]]$Build,
-    [switch]$WarnOnly
+    [switch]$WarnOnly,
+    # ORDER-630 (S5). When a run belongs to a registered hypothesis revision, the PER-HYPOTHESIS
+    # binding also decides whether a parameter may be optimized -- the same input can be LOCKED in
+    # B14-H01 and TUNABLE in B14-H02, which is the audit finding the ParameterBinding entity was
+    # created for. That answer is NOT computed here. It comes from _triage/factory_os/registry.py,
+    # which is the ONE resolver, because two consumers each combining permanent semantics
+    # (docs/PARAM_REGISTRY.csv) with a per-hypothesis role their own way is how the same parameter
+    # becomes tunable in one tool and locked in the other with nothing red anywhere.
+    #
+    # OMITTED = every existing call site. With no revision, not one line of this script's
+    # behaviour changes; there is a control fixture asserting exactly that, byte for byte.
+    [string]$HypothesisRevision = '',
+    # The tree the ParameterBinding store is read from. Defaults to this repo. It exists so a
+    # FIXTURE can drive this script against synthetic bindings without writing into the committed
+    # store, and it cannot buy permission: a binding only ever ADDS a refusal, an UNBOUND
+    # parameter leaves the existing verdict untouched, so pointing this at an empty tree gives
+    # exactly the behaviour you get with no -HypothesisRevision at all. There is no root that
+    # turns a REFUSE into an ALLOW. Same seam, same argument, as snapshot_build.py's <source-root>.
+    [string]$BindingsRoot = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -497,9 +515,51 @@ if ($unknownIsWarn) {
     Write-Host ""
 }
 
+# ORDER-630 (S5): the per-hypothesis layer, resolved ONCE, by the one resolver.
+# `$bindings` stays empty when no revision was given, so the loop below is a no-op and this
+# script behaves exactly as it did before -- asserted as a CONTROL in run_registry_tests.ps1.
+$bindings = @{}
+if ($HypothesisRevision -ne '') {
+    $py = Join-Path $repoRoot 'tools\python312\python.exe'
+    $resolver = Join-Path $repoRoot '_triage\factory_os\registry.py'
+    if (-not (Test-Path -LiteralPath $py) -or -not (Test-Path -LiteralPath $resolver)) {
+        # Fail CLOSED. A revision was named, so the caller believes bindings apply; not being able
+        # to read them is "I cannot tell", which must never be published as "nothing applies".
+        throw "optimize_guard: -HypothesisRevision was given but the resolver is not available ($resolver). Refusing to run: 'I could not read the bindings' is not 'there are no bindings'."
+    }
+    $bindErr = Join-Path ([System.IO.Path]::GetTempPath()) ("optguard_" + [guid]::NewGuid().ToString('N') + ".err")
+    $resolveArgs = @($resolver, 'resolve', $HypothesisRevision)
+    if ($BindingsRoot -ne '') { $resolveArgs += "--root=$BindingsRoot" }
+    $bindJson = & $py $resolveArgs 2>$bindErr
+    $bindRc = $LASTEXITCODE
+    $bindErrText = ''
+    if (Test-Path -LiteralPath $bindErr) {
+        $bindErrText = (Get-Content -LiteralPath $bindErr -Raw -ErrorAction SilentlyContinue)
+        Remove-Item -LiteralPath $bindErr -ErrorAction SilentlyContinue
+    }
+    if ($bindRc -ne 0) { throw "optimize_guard: the ParameterBinding resolver refused (exit $bindRc): $(($bindJson -join ' ')) $bindErrText" }
+    $parsed = ($bindJson -join '') | ConvertFrom-Json
+    foreach ($p in $parsed.PSObject.Properties) { $bindings[$p.Name] = $p.Value }
+    Write-Host ("BINDINGS: $HypothesisRevision resolved $($bindings.Count) ParameterBinding row(s) via _triage/factory_os/registry.py") -ForegroundColor Cyan
+    Write-Host ""
+}
+
 $results = New-Object System.Collections.Generic.List[object]
 foreach ($name in $checkList) {
     $r = Test-OptimizeParameter -Name $name -Build $build -IniValues $iniValues -RegistryRows $registryRows -OverridePairs $overridePairs -InertTable $inertTable -UnknownIsWarn $unknownIsWarn
+    $bn = (Split-NameTag $name).BaseName
+    if ($bindings.ContainsKey($bn)) {
+        $b = $bindings[$bn]
+        # `optimizable` is DERIVED by the resolver and read here as a value. This script does not
+        # know which roles are optimizable and must not learn -- that list is an allowlist in
+        # registry.py, so a role added to the enum later is refused until somebody decides.
+        if ($b.optimizable -ne $true) {
+            $r.Facts.Add([pscustomobject]@{ Refuse = $true; Text = "ParameterBinding: role='$($b.role)' in $HypothesisRevision is not optimizable (resolved by _triage/factory_os/registry.py, surface='$($b.surface)')" }) | Out-Null
+            $r.Verdict = 'REFUSE'
+        } else {
+            $r.Facts.Add([pscustomobject]@{ Refuse = $false; Text = "ParameterBinding: role='$($b.role)' in $HypothesisRevision is optimizable" }) | Out-Null
+        }
+    }
     $results.Add($r)
 }
 

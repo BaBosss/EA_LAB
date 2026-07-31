@@ -72,6 +72,11 @@ L1_FILES = (
     # taskboards to reconcile, which makes every one of those reads a judged input. A module that
     # is outside the glob is exactly the module a hand-maintained list forgets.
     '_triage/factory_os/snapshot_build.py',
+    # ORDER-630 (S5). L0 demanded these on their first run, which is the list-completeness lint
+    # doing exactly what it was built for -- the previous four additions to this file were all
+    # remembered by hand.
+    '_triage/factory_os/check_registries.py',
+    '_triage/factory_os/registry.py',
 )
 L1_DEFERRED = {
     '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2)',
@@ -88,6 +93,9 @@ L2_PAIRS = {
         ('_triage/factory_os/run_coverage_transfer_tests.py',),
     '_triage/factory_os/check_s2a_attestation.py':
         ('_triage/factory_os/run_s2a_attestation_tests.py',),
+    # ORDER-630 (S5): check_registries emits R1-R5, and run_registry_tests.py must name each.
+    '_triage/factory_os/check_registries.py':
+        ('_triage/factory_os/run_registry_tests.py',),
 }
 CRITERION = re.compile(r"problems\.append\(\s*['\"]\s*([A-E]\d+)\b")
 

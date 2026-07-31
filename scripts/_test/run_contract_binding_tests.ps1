@@ -128,6 +128,13 @@ $scripts = @(
     # (it IS that file's real-snapshot line, now asserted rather than printed); C3 and C6 are the
     # PowerShell readers and live in scripts\_test\run_snapshot_s4_tests.ps1.
     @{ Path = '_triage\factory_os\run_snapshot_s4_tests.py'; Args = @() },
+    # ORDER-630 (S5). The resolver's answers, and each of check_registries' five criteria observed
+    # going red for its own reason. MEASURED 0.2s. Same trade as the line above: a python cage
+    # belongs in an existing python wrapper unless it needs its own lifecycle.
+    @{ Path = '_triage\factory_os\run_registry_tests.py'; Args = @() },
+    # ...and the guard itself, run over the REAL stores. The suite above drives it against
+    # synthetic roots; this is the run that would notice a committed registry going wrong.
+    @{ Path = '_triage\factory_os\check_registries.py'; Args = @() },
     # 4. check_schema_structure.py -- the SUPERSEDED lint, wired in by /scrutinize 2026-07-30.
     #    It is not the binding (that is item 1) and its own header says so. It is kept for two
     #    checks nothing else covers: discriminator consistency (add an entity, forget its oneOf
