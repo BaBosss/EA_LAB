@@ -551,6 +551,23 @@ epair('ParameterBinding',
       'parameter with no answer to "should the operator see this?"',
       [{'keyword': 'enum', 'instancePath': '/surface'}])
 
+# ORDER-672 G1. The positive carries the tag in its OWN FIELD; the negative carries the SAME fact
+# encoded inside `parameter`, which is the shape that produced F1. Both rows describe the identical
+# binding -- the delta is purely the encoding, which is what makes this a test of G1 rather than of
+# anything else.
+epair('ParameterBinding',
+      {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
+       "parameter": "StackMode", "build_tag": "LAB_ENTRY_16",
+       "role": "TUNABLE", "surface": "RESEARCH", "definition_ref": OWNER},
+      {"entity": "ParameterBinding", "hypothesis_revision": "B14-H01-r1",
+       "parameter": "StackMode[LAB_ENTRY_16]",
+       "role": "TUNABLE", "surface": "RESEARCH", "definition_ref": OWNER},
+      'ORDER-672: a build tag INSIDE `parameter` is two facts in the join key. Accepting it '
+      'alongside the new field would leave two encodings of one fact live at once -- which is the '
+      'defect, not a migration path',
+      [{'keyword': 'not', 'instancePath': '/parameter'}],
+      name='buildtag')
+
 epair('TestUniverse',
       {"entity": "TestUniverse", "universe_version": "v1", "kind": "PILOT",
        "symbols": ["XAUUSD"], "timeframes": ["H1"], "created_commit": D40},

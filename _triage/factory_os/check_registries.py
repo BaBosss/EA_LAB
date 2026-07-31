@@ -124,10 +124,47 @@ RESOLVER_SWEEP_EXEMPT = {
         'ParameterBinding.role to prove the design<->schema binding goes red. It never decides '
         'whether a parameter is optimizable, which is what a second resolver would do.',
 }
+
+# ORDER-672 G2: files exempt from the TAG-PARSE sweep specifically. Separate from the vocabulary
+# exemptions above on purpose -- a file may legitimately do one and not the other, and one list
+# covering both would excuse more than it examined.
+TAG_SWEEP_EXEMPT = {
+    RESOLVER: 'owns the encoding in both directions (bare_registry_name / registry_name)',
+    '_triage/factory_os/check_registries.py': 'this file, which must name the shape it forbids',
+    '_triage/factory_os/run_registry_tests.py': 'the suite, which must name what it asserts',
+    'scripts/optimize_guard.ps1':
+        "MEASURED, not waved through: its Split-NameTag parses docs/PARAM_REGISTRY.csv NAMES -- "
+        "the CSV boundary, where the encoding genuinely exists because this repo does not own "
+        "that file's format. It is NOT parsing a ParameterBinding, which is what ORDER-672 "
+        "removed the need for. RESIDUAL RISK, stated because an exemption without one is a hole: "
+        "this is a SECOND implementation of the same decode, in a language that cannot call the "
+        "Python one, so the two could drift. What bounds the damage is that the DECISION "
+        "(optimizable) comes from the resolver -- R4(a) requires this file reference it -- and "
+        "Split-NameTag only reaches the CSV row. Closing it properly means a shared decoder, "
+        "which is a PowerShell/Python bridge and its own order.",
+}
 # The tokens whose duplication would mean a second resolver. Two roles that only ever appear
 # together in a decision, not the whole enum.
 ROLE_PAIR = re.compile(r'TUNABLE')
 ROLE_PAIR2 = re.compile(r'LOCKED')
+
+# ORDER-672 G2. A SECOND PARSER OF THE BUILD-TAG STRING IS A SECOND RESOLVER, and the role-pair
+# sweep above cannot see one -- a file can strip `[LAB_ENTRY_16]` off a name without ever writing
+# the word TUNABLE. This is not hypothetical: `preset.py` grew its own `re.sub(r'\[[^\]]*\]$', ...)`
+# and carried it for a day, in the same batch that split the field out precisely to stop that.
+#
+# The pattern matches the SHAPE of the surgery (a bracket-suffix strip or an equivalent split),
+# not a specific spelling, because the point is that only registry.py may know the encoding.
+#
+# TIGHTENED ON ITS FIRST RUN, and the loose version is worth recording. `\[[^\]]` followed by
+# anything then `$` also matches `^[ ]{0,3}\[[^\]]+\]:.*$` -- check_coverage_transfer's MARKDOWN
+# REFERENCE-DEFINITION regex, which has nothing to do with build tags. A guard that refuses valid
+# work is the failure the Decision log recorded on 2026-07-30, so the pattern names the exact
+# idiom (a bracket suffix stripped at END OF STRING) instead of anything bracket-shaped.
+TAG_PARSE = re.compile(r"""
+    \\ \[ \[ \^ \\ \] \] [*+] \\? \] \$     # re.sub(r'\[[^\]]*\]$', ...) -- the suffix strip
+  | Split-NameTag                           # the PowerShell helper that does the same job
+""", re.X)
 
 # THE SWEEP'S LIMITS, PROBED AND STATED HERE RATHER THAN IMPLIED. 2026-07-31, round 3:
 #   * `'TUN' + 'ABLE'` walks past it. Any regex sweep loses to string concatenation, and no
@@ -272,8 +309,9 @@ def check_r4(src=None):
                 'reference %r, so it is deciding role/surface some other way -- or not at all. '
                 'Two answers to "may this run optimize this parameter" is the drift %s exists '
                 'to prevent.' % (rel, why, RESOLVER))
-    # (b) no second copy of the vocabulary.
+    # (b) no second copy of the vocabulary.  (c) no second parser of the tag encoding.
     hits = []
+    tag_hits = []
     for pat in ('_triage/factory_os/*.py', 'scripts/*.ps1', 'scripts/lib/*.ps1'):
         for rel in src.list_committed(pat):
             if rel in RESOLVER_SWEEP_EXEMPT:
@@ -281,11 +319,21 @@ def check_r4(src=None):
             code = strip_comments(src.read_committed(rel, errors='replace'), rel)
             if ROLE_PAIR.search(code) and ROLE_PAIR2.search(code):
                 hits.append(rel)
+            # (c) ORDER-672 G2: nor a second parser of the build-tag encoding.
+            if rel not in TAG_SWEEP_EXEMPT and TAG_PARSE.search(code):
+                tag_hits.append(rel)
     for rel in sorted(hits):
         problems.append(
             'R4 %s pairs the role tokens TUNABLE and LOCKED without being the resolver or a '
             'declared exemption. Either route it through %s, or declare it in '
             'RESOLVER_SWEEP_EXEMPT with a reason.' % (rel, RESOLVER))
+    for rel in sorted(tag_hits):
+        problems.append(
+            'R4 %s parses the build-tag encoding out of a parameter name. Only %s may know that '
+            'encoding -- it owns both directions (bare_registry_name / registry_name), and a '
+            'second parser is a second answer to "which parameter does this mean". That is F1: a '
+            'tagged binding invisible to its only consumer. Call the resolver, or declare an '
+            'exemption with a reason.' % (rel, RESOLVER))
 
 
 def _required_fields(entity, src):

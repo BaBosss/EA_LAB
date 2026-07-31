@@ -517,7 +517,19 @@
           "pattern": "^B(1[1-8])-H[0-9]{2}-r[0-9]+$"
         },
         "parameter": {
-          "type": "string"
+          "type": "string",
+          "not": {
+            "pattern": "\\["
+          },
+          "description": "ORDER-672: the BARE parameter name. A build tag inside this string is REFUSED -- `StackMode[LAB_ENTRY_16]` encodes two facts in the join key, which produced F1 (a tagged binding invisible to its only consumer: bare => AMBIGUOUS, tagged => unseen, jointly unsatisfiable) and half of S7 (last-wins across rows that disagree). The tag lives in build_tag. Two encodings of one fact is the defect, not a migration path."
+        },
+        "build_tag": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^LAB_ENTRY_[0-9A-Za-z_]+$",
+          "description": "ORDER-672: which BUILD this binding is about, or null for \"every build of the revision\". A field, not a suffix -- so \"these rows disagree, therefore the binding must name the tag\" is representable IN THE DATA rather than inferred by whichever call site remembered to run a parser. A second parser of that string is a second resolver."
         },
         "role": {
           "enum": [

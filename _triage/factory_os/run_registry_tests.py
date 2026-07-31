@@ -108,9 +108,12 @@ def seed(root, **content):
     return root
 
 
-def binding(rev='B14-H01-r1', param='SL_ATR', role='TUNABLE', surface='RESEARCH', **extra):
+def binding(rev='B14-H01-r1', param='SL_ATR', role='TUNABLE', surface='RESEARCH',
+            build_tag=None, **extra):
+    # ORDER-672: `parameter` is BARE and the tag is its own field. A fixture that still wrote
+    # `SplitMode[BUILD_B]` into the name would be testing the encoding the schema now refuses.
     r = {'entity': 'ParameterBinding', 'hypothesis_revision': rev, 'parameter': param,
-         'role': role, 'surface': surface,
+         'build_tag': build_tag, 'role': role, 'surface': surface,
          'definition_ref': {'entity': 'OwnerRef', 'owner_type': 'param_registry',
                             'path': 'docs/PARAM_REGISTRY.csv', 'commit_oid': '0' * 40,
                             'blob_oid': '0' * 40, 'raw_sha256': '0' * 64}}
@@ -464,15 +467,60 @@ def main():
         finally:
             shutil.rmtree(fake, ignore_errors=True)
 
+        print('\n--- ORDER-672: build_tag is a FIELD, and only one file knows the encoding ---')
+        # G1 is asserted by ajv in run_schema_fixtures.py (parameterbinding-buildtag-*). Here:
+        # G2 -- the R4 sweep can SEE a second parser -- and G3 -- AMBIGUOUS survives the split.
+        chk.problems[:] = []
+        chk.TAG_PARSE.search('')                       # named so L2 can find the constant
+        rogue = "x = re.sub(r'\\[[^\\]]*\\]$', '', name)\n"
+        check('G2 the tag-parse pattern MATCHES the suffix-strip idiom itself',
+              bool(chk.TAG_PARSE.search(rogue)))
+        check('G2 SPECIFICITY it does NOT match a markdown reference-definition regex -- the '
+              'loose first version flagged check_coverage_transfer, which is the guard refusing '
+              'valid work',
+              not chk.TAG_PARSE.search("MD_REF_DEF = re.compile(r'^[ ]{0,3}\\[[^\\]]+\\]:.*$')"))
+        check('G2 SPECIFICITY nor an ordinary bracket regex with no end anchor',
+              not chk.TAG_PARSE.search("re.compile(r'\\[[^\\]]*\\]')"))
+        check('G2 every tag-sweep exemption carries a reason (an exemption without one is a hole)',
+              all(isinstance(v, str) and len(v) > 40 for v in chk.TAG_SWEEP_EXEMPT.values()),
+              str({k: len(v) for k, v in chk.TAG_SWEEP_EXEMPT.items()}))
+        # G3: the AMBIGUOUS path is the PARAM_REGISTRY one, and the split must not have quietly
+        # turned it optimizable. A silent permission grant is the failure mode named in the order.
+        amb = seed(tempfile.mkdtemp(prefix='s5amb_'),
+                   parameter_bindings=[binding(param='SplitMode'),
+                                       binding(param='SplitMode', build_tag='BUILD_A')])
+        try:
+            got = reg.resolve('B14-H01-r1', 'SplitMode', root=amb)
+            check('G3 an UNTAGGED binding on a parameter whose CSV rows disagree stays '
+                  'NOT optimizable after the field split',
+                  got['optimizable'] is False and got['classification'] is None
+                  and 'AMBIGUOUS' in (got['classification_source'] or ''), json.dumps(got))
+            tagged = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A', root=amb)
+            check('G3 SPECIFICITY naming the build RESOLVES it -- the refusal is about the '
+                  'question being under-specified, not about the parameter being poisoned',
+                  tagged['classification'] == 'ACTIVE', json.dumps(tagged))
+        finally:
+            shutil.rmtree(amb, ignore_errors=True)
+        # A tagged request that matches nothing must be UNBOUND, not silently served an
+        # untagged row -- F1's direction, reversed.
+        onlybare = seed(tempfile.mkdtemp(prefix='s5ob_'),
+                        parameter_bindings=[binding(param='SplitMode')])
+        try:
+            check('G2 a request naming a build does NOT fall back to an all-builds binding',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                              root=onlybare)['source'] == 'UNBOUND')
+        finally:
+            shutil.rmtree(onlybare, ignore_errors=True)
+
         print("\n--- FABLE REVIEW (round 5) ---")
         # F1: the resolver keyed on the exact string while the consumer joined on the base name,
         # so a TAGGED binding was invisible -- and the resolver's own docstring instructs tagged
         # names for multi-build parameters. The two constraints were jointly unsatisfiable.
         tag = seed(tempfile.mkdtemp(prefix='s5tag_'),
-                   parameter_bindings=[binding(param='SplitMode[BUILD_B]', role='LOCKED',
-                                               surface='HIDDEN', locked_value=1)])
+                   parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B',
+                                               role='LOCKED', surface='HIDDEN', locked_value=1)])
         try:
-            direct = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=tag)
+            direct = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B', root=tag)
             joined = reg.resolve('B14-H01-r1', 'SplitMode', root=tag)
             check('AUDIT F1 a BARE request joins to a TAGGED binding (probed: it returned UNBOUND, '
                   'silently degrading a LOCKED binding to a note)',
@@ -486,17 +534,19 @@ def main():
             shutil.rmtree(tag, ignore_errors=True)
         # ...and the join must REFUSE ambiguity rather than pick one.
         two = seed(tempfile.mkdtemp(prefix='s5two_'),
-                   parameter_bindings=[binding(param='SplitMode[BUILD_A]'),
-                                       binding(param='SplitMode[BUILD_B]', role='LOCKED',
-                                               surface='HIDDEN', locked_value=1)])
+                   parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_A'),
+                                       binding(param='SplitMode', build_tag='BUILD_B',
+                                               role='LOCKED', surface='HIDDEN', locked_value=1)])
         try:
             refuses('AUDIT F1 NEG two tagged bindings sharing a bare name make a BARE request '
                     'AMBIGUOUS, not majority-resolved',
                     lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=two),
-                    'a store with two answers cannot be a resolver')
+                    'more than one answer')
             check('AUDIT F1 SPECIFICITY and each EXACT name still resolves to its own row',
-                  reg.resolve('B14-H01-r1', 'SplitMode[BUILD_A]', root=two)['role'] == 'TUNABLE'
-                  and reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=two)['role'] == 'LOCKED')
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                              root=two)['role'] == 'TUNABLE'
+                  and reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B',
+                                  root=two)['role'] == 'LOCKED')
         finally:
             shutil.rmtree(two, ignore_errors=True)
         # F4: LOCKED must carry a VALUE, not just the key.
@@ -521,8 +571,8 @@ def main():
         print("\n--- BLIND AUDIT ROUND 4 ---")
         # S7: the resolver must combine BOTH layers. Its docstring said it did; it did not.
         both = seed(tempfile.mkdtemp(prefix='s5comb_'),
-                    parameter_bindings=[binding(param='SplitMode[BUILD_B]'),
-                                        binding(param='SplitMode[BUILD_A]'),
+                    parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B'),
+                                        binding(param='SplitMode', build_tag='BUILD_A'),
                                         binding(param='SplitMode'),
                                         binding(param='DeadParam'),
                                         binding(param='SL_ATR')])
@@ -536,8 +586,8 @@ def main():
             check('AUDIT S7 SPECIFICITY a TUNABLE binding on an ACTIVE parameter still IS',
                   live['optimizable'] is True, json.dumps(live))
             # The tag collision the audit's example actually rests on.
-            tagged_dead = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=both)
-            tagged_live = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_A]', root=both)
+            tagged_dead = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B', root=both)
+            tagged_live = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A', root=both)
             check('AUDIT S7 a build-TAGGED name resolves to ITS OWN row, both ways',
                   tagged_dead['optimizable'] is False and tagged_live['optimizable'] is True,
                   '%s / %s' % (tagged_dead['classification'], tagged_live['classification']))

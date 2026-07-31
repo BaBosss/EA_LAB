@@ -235,13 +235,37 @@ def _classifications(root=None, source=None):
     return out
 
 
-def _bare(parameter):
-    """Strip a trailing build tag: `StackMode[LAB_ENTRY_16]` -> `StackMode`. ONE definition.
+def bare_registry_name(parameter):
+    """Strip a trailing build tag from a docs/PARAM_REGISTRY.csv NAME. ONE definition.
 
-    Used by the binding join AND by classification_of. Two spellings of "the same parameter" is
-    exactly the drift that made a tagged binding invisible to its consumer.
+    ORDER-672 narrowed this deliberately. It used to serve the binding join as well; bindings now
+    carry `build_tag` as a field, so no parser recovers a tag from a binding's name and this
+    function's only remaining job is the CSV -- a file this repo does not own the format of, where
+    `StackMode[LAB_ENTRY_16]` genuinely is the name.
+
+    The narrowing IS the point of the order: the string surgery survives exactly where the data
+    really encodes two facts in one string, and is gone everywhere the schema could stop it. A
+    second implementation of it is a second resolver -- `preset.py` imports this one rather than
+    writing its own regex (it had one, for one day).
     """
     return re.sub(r'\[[^\]]*\]$', '', str(parameter)).strip()
+
+
+def registry_name(parameter, build_tag):
+    """The INVERSE, and the only place a build tag is ever written back into a name.
+
+    `docs/PARAM_REGISTRY.csv` keys its rows `StackMode[LAB_ENTRY_16]`. We do not own that file's
+    format, so somewhere the split representation has to be re-encoded to look one of its rows up.
+    That somewhere is HERE, once, next to the decoder -- an encode and a decode, both scoped to the
+    CSV boundary by name, so neither can be mistaken for a rule about a ParameterBinding.
+
+    ORDER-672's rule is that a NAME may not be the JOIN KEY. It is not that the CSV's format
+    changes; it cannot. What changed is that exactly two functions know about it.
+    """
+    bare = bare_registry_name(parameter)
+    if not build_tag:
+        return bare
+    return '%s[%s]' % (bare, build_tag)
 
 
 def classification_of(parameter, root=None, source=None):
@@ -257,9 +281,9 @@ def classification_of(parameter, root=None, source=None):
     table = _classifications(root, source=source)
     if parameter in table:
         return table[parameter], 'exact'
-    bare = _bare(parameter)
+    bare = bare_registry_name(parameter)
     matches = dict((k, v) for k, v in table.items()
-                   if _bare(k) == bare)
+                   if bare_registry_name(k) == bare)
     if not matches:
         return None, 'not in the registry'
     values = set(matches.values())
@@ -376,11 +400,14 @@ def _binding_index(rows):
     """
     out = {}
     for n, rec in rows:
-        key = (rec.get('hypothesis_revision'), rec.get('parameter'))
+        # ORDER-672: the key is the TRIPLE. `build_tag` is a field now, so "which build is this
+        # binding about" is data the index can carry, not a suffix a parser has to recover from
+        # the name. A row per build is legitimate; a row per build TWICE is not.
+        key = (rec.get('hypothesis_revision'), rec.get('parameter'), rec.get('build_tag'))
         if key in out:
-            _refuse('factory/parameter_bindings.jsonl line %d binds %r in %r a second time. '
-                    'Refused: a store with two answers cannot be a resolver.'
-                    % (n, key[1], key[0]))
+            _refuse('factory/parameter_bindings.jsonl line %d binds %r (build_tag %r) in %r a '
+                    'second time. Refused: a store with two answers cannot be a resolver.'
+                    % (n, key[1], key[2], key[0]))
         out[key] = rec
     return out
 
@@ -407,7 +434,7 @@ def _overlay_index(root, overlay_root):
 
 
 def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None,
-            source=None):
+            source=None, build_tag=None):
     """-> {parameter, hypothesis_revision, role, surface, optimizable, locked_value, safe_range,
            definition_ref, source}
 
@@ -432,28 +459,38 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     open question, not a rule this module gets to invent.
     """
     def _lookup(idx):
-        # EXACT first, then a TAG-AWARE join. F1, found by an independent review and reproduced:
-        # the resolver keyed bindings on the exact `parameter` string while optimize_guard joined
-        # on Split-NameTag's BASE name -- so a binding written as `StackMode[LAB_ENTRY_16]` was
-        # invisible to the only consumer, silently degrading a LOCKED binding to an UNBOUND note.
-        # The two constraints were JOINTLY UNSATISFIABLE for a multi-build parameter: bare -> this
-        # module calls the classification AMBIGUOUS; tagged -> the consumer never sees it.
+        # ORDER-672. THE JOIN NO LONGER PARSES ANYTHING.
         #
-        # The join lives HERE, not in the consumer, for the reason the whole module exists: a
-        # second implementation of "which binding does this parameter mean" is a second resolver.
-        # Ambiguity is refused rather than resolved by majority -- same rule as classification_of.
-        hit = idx.get((hypothesis_revision, parameter))
+        # F1, found by an independent review and reproduced: the resolver keyed bindings on the
+        # exact `parameter` string while optimize_guard joined on Split-NameTag's BASE name, so a
+        # binding written `StackMode[LAB_ENTRY_16]` was invisible to its only consumer -- a LOCKED
+        # binding silently degrading to an UNBOUND note. The two constraints were JOINTLY
+        # UNSATISFIABLE for a multi-build parameter: bare => AMBIGUOUS here, tagged => unseen there.
+        #
+        # That was unsatisfiable because one string carried two facts. It now carries one, and the
+        # second fact is `build_tag`. So: an exact (revision, parameter, build_tag) hit, else every
+        # row for that parameter regardless of tag -- and MORE THAN ONE IS STILL A REFUSAL, not a
+        # majority vote. A revision may legitimately bind StackMode once per build; a request that
+        # does not say WHICH build has no answer, and inventing one is how a LOCKED binding becomes
+        # an ALLOW. Same rule as classification_of's AMBIGUOUS, and G3 requires it survive intact.
+        hit = idx.get((hypothesis_revision, parameter, build_tag))
         if hit is not None:
             return hit
-        want = _bare(parameter)
-        near = [v for (rev, p), v in idx.items()
-                if rev == hypothesis_revision and _bare(p) == want]
+        if build_tag is not None:
+            # A tagged request that matched nothing is UNBOUND for that build. It must NOT fall
+            # back to an untagged row: "no binding for this build" and "a binding for all builds"
+            # are different facts, and silently promoting one to the other is the F1 direction
+            # again, reversed.
+            return None
+        near = [v for (rev, p, _t), v in idx.items()
+                if rev == hypothesis_revision and p == parameter]
         if len(near) > 1:
-            _refuse('%d bindings in %r match the parameter %r once build tags are ignored (%s). '
-                    'Refused: a store with two answers cannot be a resolver, and picking one by '
-                    'position is how a LOCKED binding becomes an ALLOW.'
+            _refuse('%d bindings in %r bind the parameter %r, differing only by build_tag (%s). '
+                    'Refused: the request did not say which build it means, so this store has '
+                    'more than one answer -- and picking one by position is how a LOCKED binding '
+                    'becomes an ALLOW. Pass build_tag.'
                     % (len(near), hypothesis_revision, parameter,
-                       ', '.join(sorted(str(v.get('parameter')) for v in near))))
+                       ', '.join(sorted(str(v.get('build_tag')) for v in near))))
         return near[0] if near else None
 
     if overlay_root is not None:
@@ -503,7 +540,14 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     # ALLOWLIST on the classification, not a deny-list: a value in neither list is UNKNOWN, and
     # UNKNOWN is not optimizable. A classification this module has never seen must not inherit
     # permission from not being on a list of bad ones.
-    classification, why = classification_of(parameter, root, source=source)
+    # ORDER-672: the CSV lookup uses the ENCODED name, rebuilt from the two fields. The tag comes
+    # from the REQUEST when it named one, otherwise from the ROW that answered -- a binding that
+    # says which build it is about has already told us which CSV row applies, and ignoring that
+    # would send a bare name into a table whose tagged rows disagree, turning a precise binding
+    # into AMBIGUOUS. That is F1's direction, one layer over.
+    effective_tag = build_tag if build_tag is not None else rec.get('build_tag')
+    classification, why = classification_of(registry_name(parameter, effective_tag), root,
+                                            source=source)
     if classification in LIVE_CLASSIFICATIONS:
         permanent_ok = True
     elif classification in DEAD_CLASSIFICATIONS:
@@ -533,14 +577,14 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, 
     # two bindings sharing a bare name, so this dict can never silently lose one.
     if overlay_root is not None:
         idx = _overlay_index(root, overlay_root)
-        names = sorted(set(_bare(p) for (rev, p) in idx if rev == hypothesis_revision))
+        names = sorted(set(p for (rev, p, _t) in idx if rev == hypothesis_revision))
         return dict((p, resolve(hypothesis_revision, p, root=root,
                                 overlay_root=overlay_root, source=source))
                     for p in names)
     if stores is None:
         stores = load_all(root=root)
     _meta, rows = stores['factory/parameter_bindings.jsonl']
-    names = sorted(set(_bare(rec.get('parameter')) for _n, rec in rows
+    names = sorted(set(rec.get('parameter') for _n, rec in rows
                        if rec.get('hypothesis_revision') == hypothesis_revision))
     # `root=root` is NOT optional and was missing. resolve_all delegated to resolve() without it,
     # so the per-parameter answers were computed against the REPO's PARAM_REGISTRY while the rows

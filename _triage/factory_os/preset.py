@@ -40,6 +40,7 @@ import hashlib
 import json
 import re
 
+import registry as _registry              # ORDER-672 G2: the ONE build-tag parser lives there
 from evidence import ToolFailure          # noqa: F401  (re-exported for callers)
 
 INPUTS_REL = 'ea_template/core/Inputs.mqh'
@@ -255,7 +256,10 @@ def parse_unit_classes(text):
         name = (row.get('name') or '').strip()
         if not name:
             continue
-        name = re.sub(r'\[[^\]]*\]$', '', name).strip()
+        # ORDER-672 G2: ONE definition of "strip the build tag off a registry name", and it is
+        # registry.bare_registry_name. This function had its own regex for one day, which is a
+        # second implementation of the join the whole S5 slice exists to have only once.
+        name = _registry.bare_registry_name(name)
         unit = (row.get('unit') or '').strip()
         if name in out and out[name] != unit:
             # /scrutinize: `out[name] = unit` was LAST-WINS ACROSS TAGGED ROWS THAT DISAGREE --
