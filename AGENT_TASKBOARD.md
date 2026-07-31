@@ -105,6 +105,52 @@
 
 ---
 
+## ORDER-700 — [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed from a terminal cache — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Slice `S6`** of [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) — mechanism §5.7, fingerprint §5.6, acceptance §10. §10's four clauses are *unknown key refused · partial set refused · generated `.set` full-surface and deterministic · `[CFG]` emits the fingerprint*, with one prohibition: *must not read the terminal cache*.
+
+### The measurement this order exists for
+
+```
+git ls-files '*.set'                          -> 2177 tracked
+  full-surface (>= 184 assignments)           ->    0
+  median keys per file 14  ·  max 134  ·  min 0
+grep -c '^input ' ea_template/core/Inputs.mqh ->  209
+  minus 25 `input group` headers              ->  184 real inputs
+```
+
+**Not one of 2,177 tracked `.set` files carries the build's full surface, and the median carries 14 of 184.** Every unlisted input is filled at run time from the per-terminal tester cache — the documented root cause of the ORDER-165 8/8 false drift, and the mechanism behind memory `mt5-tester-cache-nondeterminism`. That is what "REFUSE partial sets" is for, and the number is why it is worth building.
+
+It is also why **this order adds no repo-wide `.set` checker**. A rule "every committed `.set` is full-surface" would refuse 2,177 files on its first run — the `optimize_guard` failure the Decision log recorded on 2026-07-30: a guard that refuses valid work is the one that gets switched off. **The compiler refuses what IT emits; the existing corpus is not retro-judged.**
+
+### Scope, and the half that is deliberately NOT in it
+
+In: `_triage/factory_os/preset.py` (the compiler — a **LIBRARY**: it takes its `EvidenceSource` from the caller and never chooses bytes, the `registry.py` precedent) and `_triage/factory_os/run_preset_tests.py`.
+
+**`[CFG]` emitting the fingerprint is split out to `ORDER-701`, stated rather than quietly dropped.** MQL5 has no reflection, so an EA cannot hash "every input it exposes" without a generated enumeration, and any `ea_template/core/` change owes `tpl_regression` CLEAN on an explicitly pinned lane (Decision log 2026-07-06 + 2026-07-30). Both are real work with an MT5 lane cost and this lane reserved **no MT5 lane**. Until 701 lands, the manifest labels its own hash **`surface_only`** — an incomplete claim gets an honest name instead of a full one (memory `name-it-honestly-when-you-cannot-prove-it`).
+
+**No `check_preset.py` either.** There is nothing committed for it to judge — zero generated presets exist — and a checker whose input set is empty cannot fail, which is shape 3 inside the slice written to avoid shape 3. The criteria live in the compiler's refusals and the suite drives them directly. When S6 output is first committed, the checker is written *then*, against something.
+
+### Acceptance — every criterion carries its attack AND its specificity half (`GUARD_SHAPES.md` shape 5)
+
+| | criterion | the attack — must be observed RED first | the engagement / specificity assertion |
+|---|---|---|---|
+| **P1** | full surface | an overlay chain leaving one declared input unset ⇒ **REFUSE**, naming the key | grow the parsed surface by one input ⇒ the new key appears and every other key renders byte-identical. *A compiler emitting a hardcoded list also passes P1's attack.* |
+| **P2** | unknown key refused | an overlay key absent from the parsed surface ⇒ **REFUSE**, naming it | the refusal is an **allowlist over the parsed surface**, not a name blacklist: a key differing only by case or trailing space is still refused, and `input group` headers are **not** in the surface — they are exactly why 209 was once reported as the input count when 184 is the truth |
+| **P3** | determinism | two compiles of one request ⇒ byte-identical `.set` and identical hash; shuffling overlay insertion order changes nothing | mutate ONE value ⇒ bytes **and** hash differ. *A writer that ignores its inputs is also deterministic.* |
+| **P4** | the fingerprint is over the CONFIG, not the file | change one input's value ⇒ hash changes | change a non-config byte — a comment line, the generated-at stamp, the manifest's symbol/TF/window — ⇒ hash **unchanged**. Otherwise it is a file hash wearing a config hash's name, and *"the `.set` on the chart is the `.set` we validated"* stops being answerable (memory `attach-verify-gate-and-binary`). |
+| **P5** | must not read the terminal cache | with the process's file-open primitive patched to raise, a **full compile completes** — the compiler owns no path of its own | **the probe can fire:** a stub opening a tester-cache path under the same patch does raise. *An assertion that no read happened, which could not detect a read, is P5 failing rather than passing.* |
+| **P6** | refuse rather than invent | a request naming a symbol with no `InstrumentProfile` row ⇒ **REFUSE** naming the missing row (all three registries are **empty by design** today — `factory/*.jsonl` carry comment rows only) | a request that needs no profile still compiles. *The refusal must not degrade into "everything fails", which is P6 passing by being broken* — the shape-5 instance where fail-closed and broken point the same way. |
+| **P7** | precedence is declared, never accidental | two rows **inside one layer** giving different values for one key ⇒ **REFUSE**. Last-wins across rows that disagree is half of the S7 defect the owner ratified `build_tag` to fix (Decision log 2026-07-31) | across **different** layers the fixed rank applies silently, and the manifest records which layer won and which were overridden — a **total** order is what makes that silence legitimate |
+| **P8** | the account unit is carried, never converted | a money-denominated input whose value is declared in `cent`, compiled for a `usd` account ⇒ **REFUSE** | the same key declared `usd` compiles, and a non-money input with no unit compiles. An automatic ×100 is a money decision nobody authorised; the unit class is read from `docs/PARAM_REGISTRY.csv`'s `unit` column, and an `UNKNOWN` unit on a key an overlay sets is itself a refusal. |
+
+### ห้าม
+- ❌ Do not create `factory/universe.jsonl` — the owner has not re-attested D1. ❌ Do not commit a generated preset under `factory/`: a new store there is an ownership question (S2a), and fixtures use temp roots.
+- ❌ Do not give `preset.py` its own `EvidenceSource.for_run()` — a library that defaults its source becomes a second decider of which bytes count (`ORDER-670` design §3.3).
+- ❌ Do not auto-convert a money unit. ❌ Do not retro-judge the 2,177 existing `.set` files. ❌ Do not mark `REVIEWED`.
+
+---
+
 ## ORDER-675 — [infra/guard] The collision guard read a FILENAME as a reserved block and permitted every order number in the repo — `DONE (Claude/Opus 2026-07-31) — 25/25, 5 cases observed red first` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Found by using it, not by auditing it.** This lane reserved `670-679`, and the hook still printed *"no ACTIVE lane … reserved-block and owned-path rules skipped"*. **Three separate defects, in sequence, each hiding the next:**
