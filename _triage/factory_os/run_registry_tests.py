@@ -886,6 +886,13 @@ def main():
                   'decoy index (coverage removed) answers, not .git/index',
                   not evd.EvidenceSource('index', root=reg.REPO_ROOT)
                   .exists_committed('factory/coverage.jsonl'))
+            # Windows paths are case-insensitive: the real repo spelled in a different case
+            # is STILL the real repo, and must still honour the variable. Pre-normcase, this
+            # spelling was scrubbed -- silently judging .git/index instead of the hook's
+            # temp index for any caller that spelled the root differently.
+            check('T-GIF SPECIFICITY a case-variant spelling of the real root is not scrubbed',
+                  not evd.EvidenceSource('index', root=reg.REPO_ROOT.lower())
+                  .exists_committed('factory/coverage.jsonl'))
         finally:
             if saved_gif is None:
                 os.environ.pop('GIT_INDEX_FILE', None)

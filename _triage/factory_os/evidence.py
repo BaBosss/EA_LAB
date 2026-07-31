@@ -66,7 +66,11 @@ def _run_git(root, *args):
     # REAL COMMIT'S index, leaving a false index containing one fixture file. Had the suite
     # not happened to go red on the wreckage, the commit would have written that tree.
     env = None
-    if os.path.abspath(root) != REPO_ROOT and 'GIT_INDEX_FILE' in os.environ:
+    # normcase both sides: Windows paths are case-insensitive, and a caller spelling the real
+    # repo as d:/ea_lab must NOT be scrubbed -- that would silently judge .git/index instead
+    # of the hook-published temp index, breaking the specificity half of the containment.
+    if (os.path.normcase(os.path.abspath(root)) != os.path.normcase(REPO_ROOT)
+            and 'GIT_INDEX_FILE' in os.environ):
         env = {k: v for k, v in os.environ.items() if k != 'GIT_INDEX_FILE'}
     p = subprocess.run(['git', '-C', root] + list(args), capture_output=True, env=env)
     return p.returncode, p.stdout, p.stderr
