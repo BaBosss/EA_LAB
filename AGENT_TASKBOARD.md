@@ -103,7 +103,7 @@
 
 ---
 
-## ORDER-630 — [factory/S5] Registries + the ONE ParameterBinding resolver — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-630 — [factory/S5] Registries + the ONE ParameterBinding resolver — `DONE — AUDITED x5 (Codex x4 + Fable), 29 findings all fixed; AWAITING OWNER on the universe store` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Built: FOUR stores, not five.** `instrument_profiles.jsonl` · `hypotheses.jsonl` · `parameter_bindings.jsonl` · the existing `coverage.jsonl` (EXTENDED, not re-opened), plus ONE resolver `_triage/factory_os/registry.py`, its guard `check_registries.py`, and the wiring that makes `scripts/optimize_guard.ps1` read that resolver.
 
@@ -353,7 +353,7 @@ An approval pins the bytes of the file it authorises changing. Executing it move
 
 ---
 
-## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (C1 flipped to PASS and is now ASSERTED; C6's asymmetry pre-registered and fixtured both ways; 3 self-scrutinize rounds) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-612 — [factory/S4] Snapshot **v5** + fail-closed readers — `DONE — AUDITED x5 (Codex x4 + Fable), all findings fixed` (C1 flipped to PASS and is now ASSERTED; C6's asymmetry pre-registered and fixtured both ways; 3 self-scrutinize rounds) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Why this is written and not executed.** S4 is the first slice that **migrates a live artifact**: `portfolio/control_room_snapshot.json` is the monitoring sensor, and `make_status.ps1` runs after every commit and produces the HTML the owner reads. A partial migration here leaves two sources of truth for account state — the one thing the design and every audit have been most consistent about refusing. It was left fully specified rather than half-done. **Everything it depends on is green.**
 
