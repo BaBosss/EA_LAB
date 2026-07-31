@@ -105,23 +105,40 @@
 
 ---
 
-## ORDER-700 — [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed from a terminal cache — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-700 — [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed from a terminal cache — `DONE (Claude/Opus 2026-07-31) — 9 criteria × (attack + specificity) = 18 cases green, 9 mutation probes all DETECTED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — `preset.py` + `run_preset_tests.py` landed. Every criterion observed red for its own reason before being accepted.
+>
+> **`--mutate` rewrites ONE line of a TEMP COPY of `preset.py` per criterion and requires that criterion's case to go red.** 9/9 detected. The copy is deliberate: an interrupted suite that mutates a real repo file has already turned two unrelated gates red here once (`run_enforcement_status_tests`), and the handoff named it as a thing not to repeat.
+>
+> **The anchor check earned itself on the first run.** P1's mutation string matched **zero** places (wrong indentation) — a mutation that changes nothing would have printed a false green forever. `load_mutant` refuses any anchor that does not match exactly once.
+>
+> **P9 is the case that stops the other eight from being right for the wrong reason.** The fixture build has 7 inputs; the real one has 113–135 per build with `StackMode` declared eight times. Disabling the `#ifdef` evaluation leaves all eight fixture cases green and makes the real parse refuse `StackMode is declared twice` — so without P9 the compiler could have shipped unable to parse the only file it exists to read (`GUARD_SHAPES.md` shape 5, "the mechanism never engages and the acceptance test cannot tell").
+>
+> **Measured on the real source, not asserted:** all 8 build tags parse; **0 of 961** declared defaults across the eight builds fail to resolve through the enum table (which includes a closed table of MQL5 platform constants — `PERIOD_H4 = 16388`, not 4; guessing it is how a diff table lied in two directions, memory `proving-a-set-was-loaded-on-a-chart`).
+>
+> **🔻 OWED, stated rather than implied:** `ORDER-701` — the `[CFG]` half. Until it lands, `fingerprint_scope` is `surface_only` and the compiler's hash is a claim about the `.set`, **not** a check that the chart loaded it. Also not built: any caller. Nothing generates a preset into the repo yet, deliberately (a new store under `factory/` is an S2a ownership question).
 
 **Slice `S6`** of [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) — mechanism §5.7, fingerprint §5.6, acceptance §10. §10's four clauses are *unknown key refused · partial set refused · generated `.set` full-surface and deterministic · `[CFG]` emits the fingerprint*, with one prohibition: *must not read the terminal cache*.
 
 ### The measurement this order exists for
 
+🔴 **CORRECTED 2026-07-31 while building, and the correction is the more useful half.** The first version of this row said *"zero of 2,177 tracked `.set` files are full-surface, threshold ≥184 keys"*. **184 is not a surface.** It is the count of `input` declarations in the file, and `Inputs.mqh` declares `StackMode` and `StackConfirm` once per `#ifdef LAB_ENTRY_nn` — eight builds, sixteen declarations, two names. The distinct-name union is **170**, and **no build exposes more than 135**. A threshold no build could ever meet made "zero" arithmetically guaranteed, so the number carried no information. It is shape 4 — a count stated without reading its members — written the day after an audit corrected `209 → 184` on this same file, and it was caught only by making the parser answer the question for real.
+
 ```
-git ls-files '*.set'                          -> 2177 tracked
-  full-surface (>= 184 assignments)           ->    0
-  median keys per file 14  ·  max 134  ·  min 0
-grep -c '^input ' ea_template/core/Inputs.mqh ->  209
-  minus 25 `input group` headers              ->  184 real inputs
+per-build surface, parsed with #ifdef evaluated:
+  LAB_ENTRY_11 113 · _12 117 · _13 119 · _14 116 · _15 119 · _16 135 · _17 121 · _18 121
+  distinct names across all eight = 170   ·   raw `input` declarations = 184
+
+tracked .set                                                = 2177
+  addressing the Boss chassis (>=20% of some build surface)  =  228
+    FULL surface for some build                              =   20
+    PARTIAL                                                  =  208   median coverage 44.8%
 ```
 
-**Not one of 2,177 tracked `.set` files carries the build's full surface, and the median carries 14 of 184.** Every unlisted input is filled at run time from the per-terminal tester cache — the documented root cause of the ORDER-165 8/8 false drift, and the mechanism behind memory `mt5-tester-cache-nondeterminism`. That is what "REFUSE partial sets" is for, and the number is why it is worth building.
+**The median Boss preset leaves ~55% of its build's inputs unlisted** — and every unlisted input is filled at run time from the per-terminal tester cache, the documented root cause of the ORDER-165 8/8 false drift (memory `mt5-tester-cache-nondeterminism`). That is what "REFUSE partial sets" is for. The corrected number is *weaker* than the one it replaces (20 files do get this right) and *more* actionable: the failure is the 208, not the 2,177.
 
-It is also why **this order adds no repo-wide `.set` checker**. A rule "every committed `.set` is full-surface" would refuse 2,177 files on its first run — the `optimize_guard` failure the Decision log recorded on 2026-07-30: a guard that refuses valid work is the one that gets switched off. **The compiler refuses what IT emits; the existing corpus is not retro-judged.**
+It is also why **this order adds no repo-wide `.set` checker**. A rule "every committed `.set` is full-surface" would refuse 208 working presets on its first run — the `optimize_guard` failure the Decision log recorded on 2026-07-30: a guard that refuses valid work is the one that gets switched off. **The compiler refuses what IT emits; the existing corpus is not retro-judged.**
 
 ### Scope, and the half that is deliberately NOT in it
 
