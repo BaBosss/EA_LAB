@@ -327,7 +327,11 @@ $FAST_SUITES = @(
     # of magnitude. preset.py shipped with 9 criteria x (attack + specificity) + 9
     # mutation probes and NONE of it ran on any commit -- fully tested and completely
     # unguarded at once, which is the same hole evidence.py was in.
-    'run_preset_tests.ps1'
+    'run_preset_tests.ps1',
+    # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
+    # over the live-money inventory. It stages into the REAL index and restores, asserting
+    # the restore, so it is last in the list: nothing else should be mid-flight around it.
+    'run_front_guard_evidence_tests.ps1'
 )
 
 # ---------------------------------------------------------------------------------------
@@ -393,6 +397,10 @@ $SUITE_GUARDS = @{
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
     # something else happens to be staged, which is the D32 defect this map exists to end.
     # ORDER-630 (S5). The resolver, its guard, the store it reads and the consumer it wires.
+    'run_front_guard_evidence_tests.ps1' = @('scripts/check_state.ps1',
+                                          'scripts/lib/evidence.ps1',
+                                          '.githooks/pre-commit',
+                                          'portfolio/DEPLOYMENTS.csv')
     'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',
                                           '_triage/factory_os/run_preset_tests.py',
                                           # the compiler reads the build's input

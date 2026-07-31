@@ -377,7 +377,37 @@ Builders (`snapshot_build`) read the **disk** — an index blob has no mtime and
 
 ---
 
-## ORDER-674 — [factory/tier] The six PowerShell guards that run BEFORE the tier were never measured — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-674 — [factory/tier] The six PowerShell guards that run BEFORE the tier were never measured — `DONE (Claude/Opus 2026-07-31) — the answer was worse than the order guessed: check_state judged the WORKING TREE over the live-money inventory, proven by attack before the fix` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### 🔴 2026-07-31 — the measurement, and the one it found.
+>
+> | guard | disk reads | git reads | declared |
+> |---|---|---|---|
+> | **`check_state`** | **6** | **0** | 0 |
+> | `check_precommit_staged` | 1 | 5 | 0 |
+> | `check_order_collision` | 0 | 3 | 0 |
+> | `check_handoff_contract` | 0 | 7 | 0 |
+> | `check_experiment_events` | 0 | 5 | 0 |
+> | `check_verdict_kill` | 0 | 2 | 0 |
+>
+> The order guessed "two of the six are already partly right". **Five are.** The sixth is the one that matters: `check_state` read the working tree **exclusively**, and it is the guard `.githooks/pre-commit` runs **first**, enforcing the `account|magic` uniqueness invariant over `portfolio/DEPLOYMENTS.csv` — the single inventory for real money (`PROJECT_STATE.md` §0.5 rule 3).
+>
+> **ATTACK, run against the real index before a line was written:** append a duplicate `account|magic` row, **stage it**, restore the clean worktree copy ⇒
+> ```
+> [OK]   no duplicate account|magic in inventory
+> === CLEAN - no drift detected ===
+> ```
+> **The commit writes a corrupted live-money inventory with the gate green.** That is `A7` at the highest-value target in the repo, and it survived every audit so far because the design's grep over `scripts/*.ps1` returned zero *declarations* and was read as zero *problems*.
+>
+> **W1 built:** `scripts/lib/evidence.ps1` — the PowerShell half of `TIER_SNAPSHOT_DESIGN` §3. Same contract as `evidence.py`: no fallback (tracked-but-unreadable and untracked-in-hook-mode both throw), an invented mode is **refused not defaulted**, `Get-CommittedPaths` because enumeration is a judged read, and a `##EVIDENCE-MODE##` marker so a reader can see which bytes were judged. It carries **no `Set-StrictMode`** — it is dot-sourced, and dot-sourcing has no scope (memory `strictmode-in-dotsourced-library-leaks`). `check_state` migrated; `.githooks/pre-commit` exports the mode once for all six.
+>
+> **Caged, permanently:** `run_front_guard_evidence_tests.ps1`, 6 cases. A1 the attack ⇒ RED in index mode · A2 the same state green in worktree mode (manual-run semantics intact) · A3 a bogus mode refused · A4 **the hook actually sets it**, without which the whole migration is inert exactly where it matters · A5 the marker is emitted · and an assertion that the **live inventory came back byte-identical in both index and worktree** — a suite that could leave it mutated would be worse than the defect.
+>
+> **Three bugs the new code had, all caught by its own cage on first run:** `"a" + "b" -f $x` formats only the **last** fragment, so the refusal printed `evidence mode '{0}'` — a diagnostic that had lost the one fact it exists to carry · `& git` under `$ErrorActionPreference='Stop'` turns git's *warning* into a terminating error, which killed the suite **mid-restore** · and the same trap on the child guard, in the one case whose whole point is that the guard fails loudly.
+>
+> **W2 done:** `TIER_SNAPSHOT_DESIGN.md` §1 now carries the read table with the note that a declaration count answers *"did anyone say?"*, never *"which bytes?"* — so the grep cannot be quoted as clean again.
+>
+> **🔻 OWED:** the other five guards read git but **still declare nothing**, so a deliberate choice and an accident remain indistinguishable in five of six. They need `# snapshot:` declarations checked against behaviour, one commit each.
 
 `.githooks/pre-commit` runs `check_state` · `check_precommit_staged` · `check_order_collision` · `check_handoff_contract` · `check_experiment_events` · `check_verdict_kill` **ahead of** the fast tier. They judge boards, the ledger and handoffs — committed evidence by any reading — and `ORDER-670`'s `evidence.py` gives them no entry point.
 

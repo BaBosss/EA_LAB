@@ -20,6 +20,20 @@ if [ -z "$ps" ]; then
   exit 1
 fi
 
+# ORDER-674: THE FRONT GUARDS JUDGE THE COMMIT TOO, and until now they judged the working
+# tree. Proved before the fix: a duplicate account|magic STAGED into portfolio/DEPLOYMENTS.csv
+# with a clean worktree copy left check_state printing "[OK] no duplicate account|magic" and
+# "CLEAN" -- so the commit would write a corrupted LIVE-MONEY inventory with the gate green.
+#
+# Set ONCE, here, for every guard below AND for the tier (which re-sets the same value for its
+# own children). ORDER-670's design prefers an ARGUMENT over an env var because an argument
+# cannot fail to arrive -- that reasoning was about a hook -> tier -> suite -> python chain
+# four hops long. These guards are ONE hop from this line, and `Get-EvidenceMode` REFUSES any
+# value that is neither 'index' nor 'worktree', so a mangled variable fails loudly instead of
+# silently meaning worktree. Each migrated guard prints its ##EVIDENCE-MODE## marker so a
+# reader can see which bytes were judged rather than trusting this comment.
+export EA_LAB_EVIDENCE=index
+
 "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_state.ps1 -Strict
 rc=$?
 if [ "$rc" -ne 0 ]; then

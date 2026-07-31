@@ -45,6 +45,34 @@ Three qualifications, because this is a declaration count and not a behaviour co
   its own header; `check_order_collision` reads the ledger from `HEAD`. So the PowerShell side is
   **partly solved, unevenly, and undeclared**. Scope decision in §6.
 
+  ✅ **W2, MEASURED AND ANSWERED 2026-07-31 (`ORDER-674`) — and the answer was worse than the
+  paragraph above guessed.** Counting *reads* rather than *declarations*:
+
+  | guard | disk reads | git reads | declared |
+  |---|---|---|---|
+  | **`check_state`** | **6** | **0** | 0 |
+  | `check_precommit_staged` | 1 | 5 | 0 |
+  | `check_order_collision` | 0 | 3 | 0 |
+  | `check_handoff_contract` | 0 | 7 | 0 |
+  | `check_experiment_events` | 0 | 5 | 0 |
+  | `check_verdict_kill` | 0 | 2 | 0 |
+
+  Five read git already — the paragraph's "partly solved" was right about *five*. It was wrong
+  about the sixth, and the sixth is the one that matters: **`check_state` read the working tree
+  exclusively, and it is the guard the hook runs FIRST, enforcing the `account|magic` uniqueness
+  invariant over `portfolio/DEPLOYMENTS.csv` — the single inventory for real money.**
+
+  **Demonstrated before being fixed:** a duplicate `account|magic` **staged**, worktree copy
+  restored ⇒ `[OK] no duplicate account|magic in inventory` · `CLEAN`. The commit writes a
+  corrupted live inventory with the gate green. `A7`, at the highest-value target in the repo.
+  Fixed via `scripts/lib/evidence.ps1` (the PowerShell half of §3), caged by
+  `scripts/_test/run_front_guard_evidence_tests.ps1`, which drives that exact attack against the
+  real index and **asserts the inventory is restored byte-identical**.
+
+  ⚠️ **This grep must never again be quoted as evidence the PowerShell side is clean.** A
+  declaration count answers "did anyone say?", never "which bytes?" — and the table above is what
+  the second question looks like when it is actually asked.
+
 **The tier is a pre-commit hook. A commit contains the index.** So for every input that is evidence
 about what the commit will contain, the tier currently judges a document the commit will not contain.
 

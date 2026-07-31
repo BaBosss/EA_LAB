@@ -27,29 +27,56 @@ param(
   [switch]$Strict
 )
 
+# ORDER-674. THE READS BELOW ARE JUDGED EVIDENCE AND THIS GUARD READ THE WORKING TREE.
+# PROVED before the fix, not inferred: append a duplicate account|magic row to
+# portfolio\DEPLOYMENTS.csv, STAGE it, restore the clean worktree copy, run this script ->
+#     [OK]   no duplicate account|magic in inventory
+#     === CLEAN - no drift detected ===
+# The commit writes a corrupted LIVE-MONEY inventory with the gate green. A7 exactly, at the
+# highest-value target in the repo -- and this is the guard the pre-commit hook runs FIRST.
+. (Join-Path $PSScriptRoot 'lib\evidence.ps1')
+
 $script:warn = 0
+$script:toolFail = 0
+function ReadJudged($rel){
+  # One place maps "cannot read" to a COUNTER, never to a pass. A guard whose reader throws
+  # must not look identical to a guard whose subject is fine.
+  try { return (Read-Committed -RelPath $rel -RepoRoot $Root) }
+  catch { Write-Host ("[TOOL] cannot read {0}: {1}" -f $rel, $_.Exception.Message) -ForegroundColor Red
+          $script:toolFail++; return $null }
+}
 function Check($cond,$okMsg,$warnMsg){
   if($cond){ Write-Host "[OK]   $okMsg" -ForegroundColor Green }
   else     { Write-Host "[WARN] $warnMsg" -ForegroundColor Yellow; $script:warn++ }
 }
-function Has($file,$needle){ (Test-Path $file) -and ((Get-Content $file -Raw -Encoding UTF8 -ErrorAction SilentlyContinue) -match [regex]::Escape($needle)) }
+function Has($rel,$needle){
+  $t = ReadJudged $rel
+  return ($null -ne $t) -and ($t -match [regex]::Escape($needle))
+}
 
-$PS   = Join-Path $Root 'PROJECT_STATE.md'
-$DEMO = Join-Path $Root 'DEMO_DEPLOYMENT_PLAN.md'
-$BL   = Join-Path $Root 'MASTER_BACKLOG.md'
-$SC   = Join-Path $Root 'EA_SCORECARD_AND_REGISTRY.md'
-$INV  = Join-Path $Root 'portfolio\DEPLOYMENTS.csv'
-$DASH = Join-Path $Root 'scripts\live_dashboard.ps1'
+# REPO-RELATIVE now, because that is what a judged read is addressed by. The absolute paths
+# these used to be are only meaningful on a disk.
+$PS   = 'PROJECT_STATE.md'
+$DEMO = 'DEMO_DEPLOYMENT_PLAN.md'
+$BL   = 'MASTER_BACKLOG.md'
+$SC   = 'EA_SCORECARD_AND_REGISTRY.md'
+$INV  = 'portfolio/DEPLOYMENTS.csv'
+$DASH = 'scripts/live_dashboard.ps1'
 
 Write-Host "=== EA_LAB state consistency check (inventory-driven, ORDER-093) ===" -ForegroundColor Cyan
+Write-Host (Get-EvidenceMarker -Component 'check_state.ps1')
 
 # 1. canonical entry + inventory pointer
-Check (Test-Path $PS) "PROJECT_STATE.md exists (the entry point)" "PROJECT_STATE.md MISSING - canonical entry gone"
+Check (Test-CommittedPath -RelPath $PS -RepoRoot $Root) "PROJECT_STATE.md exists (the entry point)" "PROJECT_STATE.md MISSING - canonical entry gone"
 Check (Has $PS 'DEPLOYMENTS.csv') "PROJECT_STATE declares the DEPLOYMENTS.csv inventory pointer" "PROJECT_STATE does not reference portfolio\DEPLOYMENTS.csv (section 0.5 pointer missing)"
 
 # 2. inventory parses + shape
+# Import-Csv reads a PATH, so the inventory is read as TEXT through the judged reader and
+# parsed from that text. Same bytes, one vintage -- rather than a parser that reaches past the
+# reader to the disk, which is the exact shape being fixed.
 $rows = $null
-if (Test-Path $INV) { try { $rows = @(Import-Csv $INV -Encoding UTF8) } catch { $rows = $null } }
+$invText = if (Test-CommittedPath -RelPath $INV -RepoRoot $Root) { ReadJudged $INV } else { $null }
+if ($null -ne $invText) { try { $rows = @($invText | ConvertFrom-Csv) } catch { $rows = $null } }
 Check ($null -ne $rows -and $rows.Count -gt 0) "DEPLOYMENTS.csv parses ($(if($rows){$rows.Count}else{0}) rows)" "portfolio\DEPLOYMENTS.csv missing or unparseable"
 if ($null -ne $rows -and $rows.Count -gt 0) {
   $required = @('account','ea_name','magic','symbol','status','judge_date')
@@ -62,7 +89,8 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   Check ($dups.Count -eq 0) "no duplicate account|magic in inventory" ("duplicate account|magic: " + (($dups | ForEach-Object Name) -join ', '))
 
   # 3. accounts present in the deployment narrative doc
-  $demoRaw = if (Test-Path $DEMO) { Get-Content $DEMO -Raw -Encoding UTF8 } else { '' }
+  $demoRaw = if (Test-CommittedPath -RelPath $DEMO -RepoRoot $Root) { (ReadJudged $DEMO) } else { '' }
+  if ($null -eq $demoRaw) { $demoRaw = '' }
   $accts = @($rows | Select-Object -ExpandProperty account -Unique)
   $missA = @($accts | Where-Object { $demoRaw -notmatch [regex]::Escape($_) })
   Check ($missA.Count -eq 0) "all $($accts.Count) inventory accounts present in DEMO_DEPLOYMENT_PLAN" ("accounts missing from DEMO plan: " + ($missA -join ', '))
@@ -72,7 +100,8 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   # guaranteed by construction. What can still drift: (4) the generation link itself
   # (someone points the dashboard elsewhere), (5) someone re-introduces a hardcoded
   # "account|magic" literal table that would shadow the inventory.
-  $dashRaw = if (Test-Path $DASH) { Get-Content $DASH -Raw -Encoding UTF8 } else { '' }
+  $dashRaw = if (Test-CommittedPath -RelPath $DASH -RepoRoot $Root) { (ReadJudged $DASH) } else { '' }
+  if ($null -eq $dashRaw) { $dashRaw = '' }
   Check ($dashRaw -match 'DEPLOYMENTS\.csv') "dashboard cohort map is generated from DEPLOYMENTS.csv" "live_dashboard.ps1 no longer references DEPLOYMENTS.csv - cohort map generation link broken (audit A5)"
   $hardKeys = @([regex]::Matches($dashRaw,'"(\d+)\|(\d+)"\s*=') | ForEach-Object { "$($_.Groups[1].Value)|$($_.Groups[2].Value)" })
   Check ($hardKeys.Count -eq 0) "no hardcoded cohort map literals in dashboard (generation only)" ("hardcoded account|magic literals back in live_dashboard.ps1 (would shadow the inventory): " + ($hardKeys -join ', '))
