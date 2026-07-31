@@ -203,7 +203,6 @@ PS_READER_CALLS = re.compile(
 # annotation pass did nothing.
 PS_PENDING = {
     'scripts/check_block_staleness.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
-    'scripts/check_experiment_events.ps1': 'ORDER-674 owed: 5 git reads, 0 declared',
     'scripts/check_handoff_contract.ps1': 'ORDER-674 owed: 7 git reads, 0 declared',
     'scripts/check_order_collision.ps1': 'ORDER-674 owed: 3 git reads, 0 declared',
     'scripts/check_precommit_staged.ps1': 'ORDER-674 owed: 1 disk + 5 git reads, 0 declared',

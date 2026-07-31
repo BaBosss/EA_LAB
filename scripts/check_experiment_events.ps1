@@ -35,6 +35,9 @@ function Test-AllowedEventPath {
 
 function Get-NameStatusRows {
     param([string]$Root)
+    # snapshot: index -- what this commit stages. The trigger and the candidate bytes must come
+    # from one vintage, or the guard decides WHETHER to run from one moment and WHAT to judge
+    # from another (GUARD_SHAPES A2).
     $r=Invoke-GitText -Root $Root -Arguments @('diff','--cached','--name-status','--no-renames')
     $rows=New-Object System.Collections.Generic.List[object]
     foreach($line in ($r.Text -split "`n")){
@@ -48,12 +51,20 @@ function Get-NameStatusRows {
 
 function Get-IndexPathList {
     param([string]$Root)
+    # snapshot: index -- ENUMERATION IS A JUDGED READ. Get-ChildItem would pick the population
+    # from the disk, so a monthly file staged with its worktree copy deleted would be absent
+    # from the very list that decides "is any established month missing". This is already the
+    # right call; the declaration is what makes that deliberate rather than lucky.
     $r=Invoke-GitText -Root $Root -Arguments @('ls-files','--cached','--',$EventRoot)
     return @(($r.Text -split "`n")|Where-Object{$_}|ForEach-Object{$_ -replace '\\','/'})
 }
 
 function Get-HeadPathList {
     param([string]$Root)
+    # snapshot: HEAD -- deliberately, and this one is NOT the index. It is the BASELINE half of
+    # an append-only rule: "the candidate must extend what is already committed". Reading the
+    # index here would compare the staged bytes to themselves and the immutability rule would
+    # hold vacuously -- the shape 3 failure, arrived at by fixing the wrong read.
     $r=Invoke-GitText -Root $Root -Arguments @('ls-tree','-r','--name-only','HEAD','--',$EventRoot) -AllowFailure
     if($r.ExitCode -cne 0){return @()}
     return @(($r.Text -split "`n")|Where-Object{$_}|ForEach-Object{$_ -replace '\\','/'})
@@ -61,6 +72,8 @@ function Get-HeadPathList {
 
 function Get-IndexBytes {
     param([string]$Root,[string]$Path)
+    # snapshot: index -- the CANDIDATE. `cat-file blob` below takes the oid this line resolved,
+    # so the vintage is chosen here and nowhere else; that is why only this line declares.
     $oid=Invoke-GitText -Root $Root -Arguments @('rev-parse',(':{0}' -f $Path)) -AllowFailure
     if($oid.ExitCode -cne 0 -or -not $oid.Text){throw "index has no blob for '$Path'"}
     $bytes = Invoke-GitRawBytes -Root $Root -Arguments @('cat-file','blob',$oid.Text)
@@ -69,6 +82,11 @@ function Get-IndexBytes {
 
 function Get-HeadBytes {
     param([string]$Root,[string]$Path)
+    # snapshot: HEAD -- the BASELINE, the pair of the line above. Every use of it is a
+    # comparison ("is the candidate a raw-byte prefix extension of this", "is this established
+    # schema unchanged"), never a verdict on its own. The two vintages are DIFFERENT ON PURPOSE
+    # here, which is the one case where a mixed pair is correct and therefore the one case that
+    # most needs saying out loud.
     $oid=Invoke-GitText -Root $Root -Arguments @('rev-parse',('HEAD:{0}' -f $Path)) -AllowFailure
     if($oid.ExitCode -cne 0 -or -not $oid.Text){return $null}
     $bytes = Invoke-GitRawBytes -Root $Root -Arguments @('cat-file','blob',$oid.Text)
