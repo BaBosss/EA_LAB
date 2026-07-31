@@ -1,73 +1,62 @@
-# Next-session prompt — five undeclared front guards + migration 9/9
+# Next-session prompt — the ORDER-670/ORDER-674 batch is closed; what's left
 
 > ⚠️ canonical entry = **`PROJECT_STATE.md`** · this file owns: **the opening prompt for the
-> session that finishes the evidence migrations**. Written 2026-08-01 at the end of lane
-> `S-2026-07-31-FRONTGUARDS`. Paste the block below as the first message of the new session.
+> next session**. Written 2026-08-01, end of lane `S-2026-07-31-FRONTDECL`. The batch this file
+> used to open (migrations 1-9, the five front guards, T5) is DONE — read PROJECT_STATE.md §2 top
+> entry for what it found, not this file, which would only repeat it. Paste the block below as the
+> first message of the new session.
 
 ---
 
 ```
-Batch: ORDER-671/672/673/674/700/702 DONE · ORDER-670 migrations 8.5/9 · tier = 16 suites,
-budgets ENFORCED (65s per-path / 90s full) · HEAD = <run git log --oneline -1>
-check_state now judges the COMMIT (proven: a staged duplicate account|magic behind a clean
-worktree was CLEAN before, is RED now) and exits 2 when it cannot read its own inputs.
+Batch closed 2026-08-01: ORDER-670 (all 9 migrations, T7 = 5/5 bound, 0 suspended) ·
+ORDER-674 (all six front guards declare `# snapshot:`, checked by a new L3 lint) · T5 collapsed.
+HEAD = <run git log --oneline -1> · tier = 16 suites, 78.9s of 90.0s full-tier budget.
 
 Read in this order:
-  PROJECT_STATE.md  §2 top entry + §3 (three rules ratified 2026-07-31)
-  docs/GUARD_SHAPES.md  (five shapes; shape 5 = a repair graded by the finding it closes)
-  AGENT_TASKBOARD.md — ORDER-674 and ORDER-670 rows (grep '## ORDER-67')
-  scripts/lib/evidence.ps1  (the PowerShell reader — read its header, it carries the contract)
-  _triage/factory_os/evidence.py  (the python reader, same contract)
+  PROJECT_STATE.md  §2 top entry (what the batch found) + §3 (decision log, unchanged this batch)
+  docs/GUARD_SHAPES.md  (still the pre-flight for writing OR REPAIRING any guard)
+  AGENT_TASKBOARD.md — grep '## ORDER-670' and '## ORDER-674' for the full evidence
 
-Task, in priority order:
-  1. The five front guards that read git but DECLARE NOTHING: check_precommit_staged ·
-     check_order_collision · check_handoff_contract · check_experiment_events ·
-     check_verdict_kill. Per guard, one commit: annotate every read with `# snapshot:`
-     checked against what the code actually does (five of them already read index/HEAD —
-     the work is making deliberate-vs-accident distinguishable, not rewriting). Where a
-     read is WRONG (worktree where the commit is judged), fix it through
-     scripts/lib/evidence.ps1 with ORDER-674's attack shape: stage the corruption via a
-     TEMP INDEX (GIT_INDEX_FILE on a copy — never .git/index, T6 refuses that), restore,
-     assert byte-identical. run_front_guard_evidence_tests.ps1 is the template.
-  2. ORDER-670 migration 9/9: check_coverage_transfer.read_input → evidence.EvidenceSource.
-     It is a BEHAVIOUR change (evidence.py refuses untracked-in-hook-mode rather than
-     falling back — the Spec4 lesson), so it is its own commit with its own attack.
-     Clearing its line from A_BINDING_PENDING in run_guard_shape_lint.py is the
-     engagement half: the lint's T7 count must go "2 still suspended" → "1".
-  3. check_s2a_attestation migration — CAREFUL: it sits in the attestation bundle's blast
-     radius; run run_s2a_gate.py before AND after, and do not spend an owner signature.
-  4. T5's collapse-the-split red half (belongs to the snapshot_build migration; small).
+What's actually open (checked before writing this, not assumed):
+  1. ORDER-701 — [CFG] fingerprint emission. Parked until an MT5 lane is reserved: needs a
+     generated enumeration in ea_template/core/ + tpl_regression CLEAN on a pinned lane.
+     Nothing else in the S6/S5 tranche is open.
+  2. Five NON-front-guard PowerShell checkers still print in L3's suspension list every run
+     (`check_block_staleness · check_stale_binaries · check_taskboard_archive ·
+     check_template_dependencies · check_truncated_run`) — read the live line, don't trust this
+     one: `tools/python312/python.exe _triage/factory_os/run_guard_shape_lint.py` prints
+     "L3 PowerShell snapshots : N of 11 declared; K still suspended". These are NOT run by the
+     hook before the tier, so they were out of ORDER-674's scope — migrating them (if ever) is a
+     new order, not a continuation of this one.
+  3. The 4 items in _triage/USER_DECISIONS_PENDING.md (Core Universe v1 membership ·
+     AGENTS.md §2 writer surface · the account|magic §0.5-vs-global contradiction ·
+     the ~10,000-combination budget) — owed to the owner, untouched by this batch, still pending.
 
-Rules that must hold:
+Rules that still hold (unchanged from before, restated because they are still true):
   - Reserve a lane in docs/SESSION_LEDGER.md and COMMIT the reservation before anything.
-    Block 700-709 was reserved three times by closed lanes and ORDER-700/702 are spent
-    from it; parse `## ORDER-<n>` from all four board files yourself. Do not trust the
-    ledger's foot-of-file summary bullets (stale eight times).
-  - The lint's derived line is the truth about migration status — read
-    `T7 category-A binding: N of M bound; K suspended` from run_guard_shape_lint.py's
-    output, not from any board paragraph (a board paragraph was wrong within two commits).
-  - A guard's green means nothing until seen red for its own reason. Every fix commit
-    carries the attack AND the specificity/engagement half (GUARD_SHAPES shape 5).
-  - Budgets are enforced: 65s per-path / 90s full tier. Over budget = the commit is
-    REFUSED. If a new cage tips it, displace or make faster — raising the number needs
-    its own measured justification in the same commit.
-  - Never git add -A. Commit path-limited. ~267 dirty/untracked files must stay.
-  - Never use git stash to compare revisions (memory never-stash-to-compare-revisions):
-    `git show HEAD:path > scratchpad/` instead.
-  - `& git` under $ErrorActionPreference='Stop' turns git WARNINGS into terminating
-    errors (the CRLF warning fires on every add of DEPLOYMENTS.csv). Use
-    Invoke-EvidenceGitBytes from scripts/lib/evidence.ps1.
-  - `"a" + "b" -f $x` formats only the LAST fragment — parenthesise the whole string.
+    Parse `## ORDER-<n>` from all four board files yourself — do not trust the ledger's
+    foot-of-file summary bullets (stale for the ninth time as of this writing, BACKLOG-D29).
+  - Budgets are enforced: 65s per-path / 90s full tier. Over budget = the commit is REFUSED.
+    If a new cage tips it, displace or make faster — raising the number needs its own measured
+    justification in the same commit. (This batch hit the budget twice — a PowerShell
+    declaration widening what a fixture selects, and a per-call digest cost — and fixed the
+    cause both times rather than raising the number.)
+  - A repair is writing a guard: run docs/GUARD_SHAPES.md's pre-flight on it too (shape 5).
+    Every fix in this batch that touched a test file added BOTH the attack (red before the fix)
+    and the specificity/engagement half (green afterwards, and the suspension line moves).
+  - Never git add -A. Commit path-limited. Dirty/untracked files outside this batch's scope
+    must stay untouched.
+  - Never use git stash to compare revisions: `git show HEAD:path > scratchpad/` instead.
+  - `"a" + "b" -f $x` formats only the LAST fragment — parenthesise the whole string. (Recurred
+    THIS batch, in a test assertion written to prevent a cost regression — caught only because
+    the case was driven red rather than reasoned red.)
   - Codex quota is out. Fable = /fable-advisor only, never batch labour.
   - factory/universe.jsonl must not be created until the owner re-attests D1.
 
-Owed to the owner, do not decide these (unchanged, none block this work):
-  the 4 items in _triage/USER_DECISIONS_PENDING.md (Core Universe v1 membership ·
-  AGENTS.md §2 writer surface · the account|magic §0.5-vs-global contradiction ·
-  the ~10,000-combination budget).
-
-Parked until an MT5 lane is reserved: ORDER-701 ([CFG] fingerprint — needs a generated
-enumeration in ea_template/core/ + tpl_regression CLEAN on a pinned lane).
+Owed to the owner, do not decide these (unchanged, none block anything currently open):
+  the 3 items in _triage/USER_DECISIONS_PENDING.md listed above (item 4, the ~10,000-combination
+  budget, may already be folded into one of the other three — re-check the file, don't assume).
 ```
 
 ---
@@ -76,18 +65,24 @@ enumeration in ea_template/core/ + tpl_regression CLEAN on a pinned lane).
 
 | fact | evidence |
 |---|---|
-| `check_state` judged the worktree over the live-money inventory | staged duplicate `account|magic` ⇒ `CLEAN` pre-fix, RED post-fix (`cf6453ad`) |
-| the design's grep = zero *declarations*, not zero *problems* | `TIER_SNAPSHOT_DESIGN.md` §1 W2 table |
-| T6 refuses a suite that writes `.git/index` — correctly | the front-guard cage was refused by its own tier until it moved to a temp index |
-| a budget corrected by firing is working, not broken | 75→90 (growth itemised), 30→65 (multi-file selection), both in `7e88c028` |
-| a board paragraph about migration status rots in ~2 commits | "three migrations remain" named three that had landed; the lint's derived line replaced it |
+| a bare `open()` declaring a snapshot is not the same as reading the right one | `check_order_collision`/`check_handoff_contract` both read git already and both had a mixed-vintage defect anyway — declaring is necessary, not sufficient |
+| a single invariant can have two guards, dead for unrelated reasons | `check_state` (A7, working tree) and `check_precommit_staged` (`^d+$`, matches nothing) both guard `account\|magic` uniqueness; fixing one did not reveal the other |
+| "collapse the split" in a design doc can be stale the moment nobody builds the missing wiring | T5 said "collapse the split ⇒ the monitor suite goes RED"; `observe()` had no caller at all, so there was no split to collapse until the duplicate was found and routed through it |
+| a migration that changes *behaviour* (not just *location*) needs its own before/after, not a refactor's | ORDER-670 9/9 and the s2a attestation digest migration both required driving the pre-migration code on the same fixture to prove the change was real |
+| a lint built to check a class of defect should be built before the fixes it will check, not after | L3 landed as its own commit before any of the five guards were annotated |
 
-## The three failure shapes this batch actually produced (watch for them again)
+## The failure shapes this batch actually produced (watch for them again)
 
-1. **A counter nobody reads.** `$toolFail` existed, incremented, and reached no exit path —
-   found only by breaking a read and watching the run stay CLEAN.
-2. **A migration narrower than its own claim.** "check_state migrated" while two of its
-   sections still enumerated from disk. State the partial half or finish it.
-3. **A test that dies inside its own restore window.** `& git` + `$ErrorActionPreference
-   ='Stop'` + a warning git always emits = the suite killed between staging the attack and
-   restoring the inventory. Anything that mutates real state must prove its restore ran.
+1. **A fixture's cheapness is an undeclared assumption about someone else's table.** PART 6 of
+   `run_guard_trigger_tests.ps1` staged a "cheap" file for its nested tier runs; a later
+   declaration elsewhere made that file select an 18s suite, and PART 6 went 7s → 113s. The
+   fixture never claimed to be cheap in a checkable way — it just was, until it wasn't.
+2. **A caching layer keyed on the wrong thing recreates the bug it exists to prevent.** A digest
+   cache keyed on nothing (or on the wrong argument) is a guard caching the value it watches —
+   this repo already has the ORDER-670 4/9 instance of this and nearly repeated it in the s2a
+   digest cache; keying on the source *object* rather than a derived key kept the ATTACK and
+   SPECIFICITY cases discriminating.
+3. **A source-string match is not a behavioural test.** Both `_stat_evidence` audit cases (S3,
+   P0) had checked for `'os.fstat(fh.fileno())' in source` since they were written — never once
+   driving a real mid-read mutation. Neither was wrong, but neither had ever been *seen red for
+   its own reason* (GUARD_SHAPES: "have I seen this red, for this reason?"). Added this batch.
