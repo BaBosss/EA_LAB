@@ -225,7 +225,6 @@ PS_READER_CALLS = re.compile(
 PS_PENDING = {
     'scripts/check_block_staleness.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_stale_binaries.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
-    'scripts/check_state.ps1': 'ORDER-674 migrated its reads but declared none of them',
     'scripts/check_taskboard_archive.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_template_dependencies.ps1':
         'ORDER-674 owed: reads undeclared, not a front guard',

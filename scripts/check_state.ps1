@@ -39,6 +39,15 @@ param(
 $script:warn = 0
 $script:toolFail = 0
 function ReadJudged($rel){
+  # SNAPSHOT: chosen by the CALLER's mode, not by this function -- `Read-Committed` returns the
+  # index in hook mode and the disk otherwise, and that is the whole point of routing every read
+  # through one reader. This wrapper therefore carries no `# snapshot:` and neither does any of
+  # its ~8 call sites: a declaration on each would be a comment restating what the call already
+  # decides, which is precisely the substitution ORDER-670's T7 refuses. The same holds for
+  # Test-CommittedPath and Get-CommittedPaths below. The lint (L3) skips reader calls for this
+  # reason; the ONE read in this file that does not go through the reader is declared, and it is
+  # the only one that had a choice to make.
+  #
   # One place maps "cannot read" to a COUNTER, never to a pass. A guard whose reader throws
   # must not look identical to a guard whose subject is fine.
   try { return (Read-Committed -RelPath $rel -RepoRoot $Root) }
@@ -226,6 +235,12 @@ Check ($leaks.Count -eq 0) ("holdout guard: no reusable definition selects past 
 #     the live library against it. WARN, not block: the library legitimately changes,
 #     it just must not change UNOBSERVED.
 $mirrorScript = Join-Path $Root 'scripts\sync_skills_mirror.ps1'
+# snapshot: not-a-judged-input -- and this one is worth stating rather than assuming, because it
+# is the ONE check here whose subject is deliberately OUTSIDE git. The skills library lives on
+# this machine, not in the repo; the question is "does the live library still match the committed
+# mirror", so the disk is the subject, not a shortcut to it. Test-Path asks whether the comparison
+# tool exists before running it. WARN-only by design: the library legitimately changes, it just
+# must not change UNOBSERVED.
 if(Test-Path $mirrorScript){
   $mirrorOut = & powershell -NoProfile -ExecutionPolicy Bypass -File $mirrorScript -Check -RepoRoot $Root 2>&1
   $mirrorOk = ($LASTEXITCODE -eq 0)
