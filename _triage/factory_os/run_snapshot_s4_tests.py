@@ -320,6 +320,53 @@ def main():
         except TypeError:
             check('C2c NEG an arbitrary callable is refused, like the schema gate', True)
 
+        print("\n--- BLIND AUDIT ROUND 2 ---")
+        # P2-6: build_id called itself "a digest over WHAT WAS READ" and did not hash the
+        # reconciliation, so discovered=312 and discovered=0 produced the SAME id at the same head.
+        a = {'meta': {'git_head': 'abc', 'mandatory_sources': ['s'],
+                      'sources': [{'name': 's', 'path': 'p', 'sha256': 'd', 'read_ok': True}],
+                      'reconciliation': {'discovered': 312}}}
+        b = json.loads(json.dumps(a))
+        b['meta']['reconciliation'] = {'discovered': 0}
+        check('AUDIT P2-6 build_id CHANGES when the reconciliation changes (probed: it did not)',
+              sb.compute_build_id(a) != sb.compute_build_id(b),
+              '%s == %s' % (sb.compute_build_id(a), sb.compute_build_id(b)))
+        c = json.loads(json.dumps(a))
+        check('AUDIT P2-6 SPECIFICITY and it is STABLE for identical evidence, so it still tells '
+              '"rebuilt" from "changed"', sb.compute_build_id(a) == sb.compute_build_id(c))
+
+        # P1-8: a coverage store that parses but has the wrong SHAPE was reported as an empty
+        # universe -- "readable but not understood" published as "there is nothing there".
+        badcov = tempfile.mkdtemp(prefix='s4cov_')
+        try:
+            os.makedirs(os.path.join(badcov, 'factory'))
+            for rel in sb.TASKBOARDS:
+                with io.open(os.path.join(badcov, rel), 'w', encoding='utf-8') as fh:
+                    fh.write('## ORDER-001 -- x `OPEN`' + chr(10))
+            with io.open(os.path.join(badcov, 'factory', 'coverage.jsonl'), 'w',
+                         encoding='utf-8') as fh:
+                fh.write('{"_comment": "c"}' + chr(10) + '{"bogus": 1}' + chr(10))
+            refuses('AUDIT P1-8 a coverage row with no `cells` is REFUSED, not counted as zero',
+                    lambda: sb.reconcile(root=badcov), 'has no `cells` key')
+            # SPECIFICITY: a real metadata line is still fine, and a real cell still counts.
+            with io.open(os.path.join(badcov, 'factory', 'coverage.jsonl'), 'w',
+                         encoding='utf-8') as fh:
+                fh.write('{"_comment": "c"}' + chr(10)
+                         + '{"cells": [{"cell": "EURUSD H1", "status": "LIVE"}]}' + chr(10))
+            r = sb.reconcile(root=badcov)
+            check('AUDIT P1-8 SPECIFICITY metadata is still skipped and a real cell still counts',
+                  r['coverage']['cells_in_universe'] == 1 and r['coverage']['tested'] == 1,
+                  json.dumps(r['coverage']))
+        finally:
+            shutil.rmtree(badcov, ignore_errors=True)
+
+        # P2-10: the bucket named cancelled_by_user asserted an actor the board does not state.
+        rows = sb._order_rows('## ORDER-1 -- x `CANCELLED(agent qwen 2026-07-01)`' + chr(10))
+        check('AUDIT P2-10 a CANCELLED(agent ...) row does NOT land in cancelled_by_user',
+              sb.STATUS_CATEGORY.get(rows[0][1]) is None, str(rows))
+        check('AUDIT P2-10 and no verb at all maps into that bucket, so it cannot be filled by a '
+              'guess', 'cancelled_by_user' not in set(sb.STATUS_CATEGORY.values()))
+
         print('\n--- C5: atomic build -> validate -> replace ---')
         out = os.path.join(root, 'snap.json')
         sb.build_file(_write(root, 'good.json', scaffold(root, [row('srcA', 'srcA.txt')])),

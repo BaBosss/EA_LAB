@@ -3,8 +3,8 @@
   "meta": {
     "schema": "ControlRoomSnapshot",
     "version": 5,
-    "generated_at": "2026-07-31T10:16:55",
-    "git_head": "a3a89461",
+    "generated_at": "2026-07-31T12:01:49",
+    "git_head": "48c55aad",
     "stale_bar_hours": 30,
     "decision_bar_trades": 30,
     "mandatory_sources": [
@@ -20,7 +20,7 @@
         "read_ok": true,
         "sha256": "6bfb8fabc9d8877cb0ed20ab7b32be76a07e4acc1e574ca927e6fe6a6d35632b",
         "mtime": "2026-07-28T23:44:11",
-        "age_hours": 58.5,
+        "age_hours": 60.3,
         "fresh": false
       },
       {
@@ -30,7 +30,7 @@
         "read_ok": true,
         "sha256": "de5ac58b5d1e454dbfafae8dbee8bcfdd0c2e63d36eea4d9a75724299e47eede",
         "mtime": "2026-07-31T07:37:26",
-        "age_hours": 2.7,
+        "age_hours": 4.4,
         "fresh": true
       },
       {
@@ -40,19 +40,19 @@
         "read_ok": true,
         "sha256": "a5278ffa282c6c26d05868968c62110470a001ac8cba0cbf08a0a622f8b5f766",
         "mtime": "2026-07-26T18:39:37",
-        "age_hours": 111.6,
+        "age_hours": 113.4,
         "fresh": false
       }
     ],
     "counting_method": "MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic.",
     "reconciliation": {
-      "discovered": 312,
-      "categorized": 282,
+      "discovered": 313,
+      "categorized": 283,
       "categories": {
-        "actionable": 22,
+        "actionable": 21,
         "running": 0,
         "waiting": 1,
-        "review_audit": 111,
+        "review_audit": 113,
         "completed": 148,
         "cancelled_by_user": 0
       },
@@ -66,7 +66,7 @@
         "cells_in_universe": 40
       }
     },
-    "build_id": "40232f6c8526a3f4"
+    "build_id": "11f5bee2b083d3b3"
   },
   "system_health": [
     {
@@ -74,7 +74,7 @@
       "collector": "MT5",
       "state": "FRESH",
       "latest_file": "EA_LAB_deals_159503454_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     },
     {
@@ -82,7 +82,7 @@
       "collector": "MT5",
       "state": "FRESH",
       "latest_file": "EA_LAB_deals_159475669_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     },
     {
@@ -90,7 +90,7 @@
       "collector": "MT4",
       "state": "FRESH",
       "latest_file": "EA_LAB_mt4_orders_141049900_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     },
     {
@@ -98,7 +98,7 @@
       "collector": "MT5",
       "state": "FRESH",
       "latest_file": "EA_LAB_deals_415573666_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     },
     {
@@ -106,7 +106,7 @@
       "collector": "MT5",
       "state": "FRESH",
       "latest_file": "EA_LAB_deals_463666728_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     },
     {
@@ -114,7 +114,7 @@
       "collector": "MT4",
       "state": "FRESH",
       "latest_file": "EA_LAB_mt4_orders_69424711_20260731.csv",
-      "age_hours": 2.7,
+      "age_hours": 4.5,
       "governance_scope": "LAB_MANAGED"
     }
   ],
@@ -3315,7 +3315,7 @@
     {
       "account": "159503454",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 7666.21,
       "balance": 7761.56,
       "margin_level": 12400.9,
@@ -3347,7 +3347,7 @@
     {
       "account": "159475669",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 9977.27,
       "balance": 10087.47,
       "margin_level": 24598.8,
@@ -3435,7 +3435,7 @@
     {
       "account": "141049900",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 12432.21,
       "balance": 12407.77,
       "margin_level": 23671.7,
@@ -3460,7 +3460,7 @@
     {
       "account": "415573666",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 59436.88,
       "balance": 59344.27,
       "margin_level": 137968.6,
@@ -3506,7 +3506,7 @@
     {
       "account": "463666728",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 99822.4,
       "balance": 99856.35,
       "margin_level": 510339.5,
@@ -3552,7 +3552,7 @@
     {
       "account": "69424711",
       "state": "FRESH",
-      "age_hours": 2.7,
+      "age_hours": 4.4,
       "equity": 10030.71,
       "balance": 10151.77,
       "margin_level": 28456.8,
@@ -3633,7 +3633,7 @@
       },
       {
         "code": "DISCOVERED_CATEGORIZED_MISMATCH",
-        "detail": "discovered=312 categorized=282"
+        "detail": "discovered=313 categorized=283"
       },
       {
         "code": "DUPLICATES_PRESENT",
@@ -3645,7 +3645,7 @@
       },
       {
         "code": "ACTIONABLE_PRESENT",
-        "detail": "actionable=22"
+        "detail": "actionable=21"
       }
     ]
   }

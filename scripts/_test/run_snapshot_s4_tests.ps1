@@ -205,18 +205,42 @@ Assert-Equal 'C6 the reader gives the SAME answer for a tampered verdict under E
 # to lose that race on demand, so Get-FileHash is SHADOWED in this scope -- the library is
 # dot-sourced into it, so its call resolves to this function. That is a real exercise of the
 # comparison, not a simulation of its outcome: the branch is entered by the code under test.
-function Get-FileHash { param($LiteralPath, $Algorithm) return [pscustomobject]@{ Hash = ('f' * 64) } }
-$vRace = Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot
-Remove-Item function:Get-FileHash
+# HOW THIS CASE IS DRIVEN CHANGED, and the reason is the finding itself. It used to SHADOW
+# Get-FileHash to force a mismatch. A blind audit then found the reader still hashed the file with
+# Get-FileHash and re-opened it with Get-Content to parse -- two reads, so the digest described one
+# and the caller got the other. The repair reads the bytes ONCE and hashes that buffer, which
+# removed the cmdlet the fixture was leaning on: the fixture stopped discriminating in the same
+# commit that closed the hole, and said so by going red.
+#
+# It is driven through a STUB VALIDATOR now: one that answers OK and publishes a digest that does
+# not match the file. That exercises the comparison branch through the reader's real code path,
+# and -- unlike the shadow -- it does not depend on which cmdlet the implementation happens to use.
+$raceRoot = Join-Path $work 'raceroot'
+New-Item -ItemType Directory -Path (Join-Path $raceRoot ('_triage'+[char]92+'factory_os')) -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $raceRoot 'tools') -Force | Out-Null
+cmd /c mklink /J "$(Join-Path $raceRoot ('tools'+[char]92+'python312'))" "$(Join-Path $RepoRoot ('tools'+[char]92+'python312'))" | Out-Null
+Set-Content -LiteralPath (Join-Path $raceRoot ('_triage'+[char]92+'factory_os'+[char]92+'snapshot_validator.py')) -Encoding ASCII -Value @(
+    'import sys',
+    'print("[OK] %s: stored verdict matches" % sys.argv[2])',
+    'print("verified-sha256: " + "f"*64)',
+    'sys.exit(0)')
+$vRace = Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $raceRoot
 Assert-Equal 'C6 SHAPE-1 a read that does not match the verified bytes is UNAVAILABLE' 'UNAVAILABLE' $vRace.State
 Assert-Equal 'C6 SHAPE-1 and it is a TOOL problem, not a verdict about the document' 'TOOL' $vRace.Code
 Assert-True  'C6 SHAPE-1 and it names both digests so the reader can see WHICH read drifted' `
     ($vRace.Reason -match 'changed between being verified')
 Assert-True  'C6 SHAPE-1 and hands back no document' ($null -eq $vRace.Document)
-# CONTROL: with the real Get-FileHash restored, the same file is OK again -- so the branch above
-# was entered because of the mismatch, not because the fixture is broken.
-Assert-Equal 'C6 SHAPE-1 CONTROL the same snapshot verifies OK once the hash is real again' `
+# CONTROL: the SAME file through the REAL validator is OK -- so the branch above was entered
+# because the digests disagreed, not because the fixture or the file is broken.
+Assert-Equal 'C6 SHAPE-1 CONTROL the same snapshot verifies OK against the real validator' `
     'OK' (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot).State
+# ...and the digest the REAL validator publishes must actually match the file, or the comparison
+# above would be passing for the wrong reason.
+$realOut = & (Join-Path $RepoRoot ('tools'+[char]92+'python312'+[char]92+'python.exe')) `
+    (Join-Path $RepoRoot ('_triage'+[char]92+'factory_os'+[char]92+'snapshot_validator.py')) verify $clean
+$published = (@($realOut) | Where-Object { $_ -match '^verified-sha256:' }) -replace '^verified-sha256:\s*',''
+Assert-Equal 'C6 SHAPE-1 CONTROL the published digest equals the file on disk' `
+    ((Get-FileHash -LiteralPath $clean -Algorithm SHA256).Hash.ToLower()) ("$published".Trim())
 
 # Branch 2: the validator reports OK but publishes no verified-sha256 line -- an older or patched
 # validator. Reproduced with a STUB REPO ROOT: a directory holding a stub snapshot_validator.py

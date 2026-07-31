@@ -133,7 +133,25 @@ def read_store(rel, root=None):
                 _refuse('%s line %d is not parseable JSON: %s' % (rel, n, exc))
             if not isinstance(rec, dict):
                 _refuse('%s line %d is %s, not an object' % (rel, n, type(rec).__name__))
-            if any(k in rec for k in META_KEYS):
+            has_meta = any(k in rec for k in META_KEYS)
+            has_entity = 'entity' in rec
+            # BLIND AUDIT 2026-07-31, reproduced: this was `if any meta key -> metadata`, so ANY
+            # object carrying `_comment` disappeared from `rows`. Probed with a LOCKED
+            # ParameterBinding that also carried a forbidden `verdict`: meta=2 rows=0, the resolver
+            # answered UNBOUND, and R3 never saw the verdict. One extra key made a row invisible to
+            # every check at once.
+            #
+            # A row is metadata only if it carries a meta key AND NO `entity` discriminator.
+            # Carrying BOTH is refused rather than resolved either way: the two readings ("a
+            # commented row" / "a metadata line that mentions an entity") have opposite
+            # consequences, and picking one silently is how the hole existed.
+            if has_meta and has_entity:
+                _refuse('%s line %d carries both a metadata key (%s) and an `entity` '
+                        'discriminator. Refused: it is ambiguous whether this is a row or a note, '
+                        'and reading it as a note made a LOCKED binding and a forbidden verdict '
+                        'invisible to every check at once.'
+                        % (rel, n, ', '.join(k for k in META_KEYS if k in rec)))
+            if has_meta:
                 meta.append(rec)
                 continue
             rows.append((n, rec))
@@ -177,7 +195,28 @@ def _binding_index(rows):
     return out
 
 
-def resolve(hypothesis_revision, parameter, root=None, stores=None):
+def _overlay_index(root, overlay_root):
+    """Bindings from the canonical tree, with an overlay that may only ADD.
+
+    BLIND AUDIT 2026-07-31, and my claim was simply FALSE. `--root` REPLACED the store, so a root
+    holding a LOCKED binding gave REFUSE and an empty root gave ALLOW -- the seam bought permission,
+    which is exactly what its own comment said it could not do. Reproduced end to end through
+    optimize_guard.
+
+    An OVERLAY cannot: the canonical binding wins on every key it defines, and the overlay may only
+    supply keys the canonical store does not bind. So an overlay can add a refusal and can never
+    remove one, which is the property that was claimed and is now true rather than asserted.
+    """
+    canonical = _binding_index(load_all(root=root)['factory/parameter_bindings.jsonl'][1])
+    if overlay_root is None:
+        return canonical
+    extra = _binding_index(load_all(root=overlay_root)['factory/parameter_bindings.jsonl'][1])
+    merged = dict(extra)
+    merged.update(canonical)   # canonical last: it wins every key it defines
+    return merged
+
+
+def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root=None):
     """-> {parameter, hypothesis_revision, role, surface, optimizable, locked_value, safe_range,
            definition_ref, source}
 
@@ -201,10 +240,13 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None):
     required to be complete, which no entity declares and no design row asks for -- so it is an
     open question, not a rule this module gets to invent.
     """
-    if stores is None:
-        stores = load_all(root=root)
-    _meta, rows = stores['factory/parameter_bindings.jsonl']
-    rec = _binding_index(rows).get((hypothesis_revision, parameter))
+    if overlay_root is not None:
+        rec = _overlay_index(root, overlay_root).get((hypothesis_revision, parameter))
+    else:
+        if stores is None:
+            stores = load_all(root=root)
+        _meta, rows = stores['factory/parameter_bindings.jsonl']
+        rec = _binding_index(rows).get((hypothesis_revision, parameter))
     if rec is None:
         return {'parameter': parameter, 'hypothesis_revision': hypothesis_revision,
                 'role': None, 'surface': None, 'optimizable': None,
@@ -238,8 +280,13 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None):
             'source': 'BOUND'}
 
 
-def resolve_all(hypothesis_revision, root=None, stores=None):
+def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
     """Every binding registered for one revision, keyed by parameter name."""
+    if overlay_root is not None:
+        idx = _overlay_index(root, overlay_root)
+        names = sorted(set(p for (rev, p) in idx if rev == hypothesis_revision))
+        return dict((p, resolve(hypothesis_revision, p, root=root, overlay_root=overlay_root))
+                    for p in names)
     if stores is None:
         stores = load_all(root=root)
     _meta, rows = stores['factory/parameter_bindings.jsonl']
@@ -280,14 +327,24 @@ def round_trip(rel, root=None):
 
 
 def rewrite_canonical(rel, root=None):
-    """Rewrite a store in canonical form. The ONLY sanctioned writer of these files' formatting."""
+    """Rewrite a store in canonical form. The ONLY sanctioned writer of these files' formatting.
+
+    ATOMIC per file: the canonical text is built, written to a sibling temp file, then
+    os.replace()d. A blind audit measured the previous version leaving a PARTIAL MUTATION -- it
+    rewrote four stores and then raised on the fifth (the BLOCKED, absent universe store), so a
+    failed canonicalize left the tree half-rewritten with no signal about which half. Reproduced
+    live twice while fixing it, which is why this is written in the past tense rather than as a
+    hypothetical.
+    """
     root = REPO_ROOT if root is None else root
     path = os.path.join(root, rel.replace('/', os.sep))
     with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
         recs = [json.loads(l) for l in fh if l.strip()]
-    with io.open(path, 'w', encoding='utf-8', newline='\n') as fh:
-        for rec in recs:
-            fh.write(canonical_line(rec) + '\n')
+    text = ''.join(canonical_line(rec) + '\n' for rec in recs)
+    tmp = path + '.tmp'
+    with io.open(tmp, 'w', encoding='utf-8', newline='\n') as fh:
+        fh.write(text)
+    os.replace(tmp, path)
     return len(recs)
 
 
@@ -297,21 +354,32 @@ USAGE = ('usage: python _triage/factory_os/registry.py check\n'
 
 
 def main(argv):
-    # `--root=<path>` resolves against a different tree. It exists so a FIXTURE can drive a real
-    # consumer (scripts/optimize_guard.ps1) against synthetic bindings without writing into the
-    # committed store -- the same seam snapshot_build.py's <source-root> is, for the same reason.
+    # `--root=<path>` REPLACES the tree. `--overlay-root=<path>` ADDS to it, canonical winning
+    # every key it defines.
     #
-    # WHY IT CANNOT BUY PERMISSION, which is the question to ask of any override: a binding only
-    # ever ADDS a refusal. An UNBOUND parameter resolves optimizable=None and the consumer leaves
-    # its existing verdict alone, so pointing this at an empty tree yields exactly the behaviour
-    # you get with no --root at all. There is no root that turns a REFUSE into an ALLOW.
+    # ⚠️ THE ARGUMENT FOR --root WAS WRONG AND A BLIND AUDIT DISPROVED IT. It used to read "there
+    # is no root that turns a REFUSE into an ALLOW", on the grounds that a binding only ever adds a
+    # refusal. That is true of ADDING a binding and false of REPLACING the store: a canonical root
+    # holding a LOCKED binding gave REFUSE, and an empty --root gave ALLOW. The seam bought exactly
+    # the permission its own comment said it could not, reproduced end to end through
+    # optimize_guard.
+    #
+    # So the CONSUMER seam is now --overlay-root, which merges canonical-last and therefore cannot
+    # remove or relax a canonical binding by construction rather than by argument. --root survives
+    # for callers that legitimately mean a different tree entirely (this module's own fixtures,
+    # which build a whole synthetic repo), and it is NOT what optimize_guard passes.
     root = None
-    argv = list(argv)
-    for i, a in enumerate(argv):
+    overlay = None
+    argv = [a for a in argv]
+    keep = []
+    for a in argv:
         if a.startswith('--root='):
             root = a.split('=', 1)[1]
-            argv.pop(i)
-            break
+        elif a.startswith('--overlay-root='):
+            overlay = a.split('=', 1)[1]
+        else:
+            keep.append(a)
+    argv = keep
     if len(argv) >= 2 and argv[1] == 'check':
         try:
             stores = load_all(root=root)
@@ -325,17 +393,41 @@ def main(argv):
     if len(argv) in (3, 4) and argv[1] == 'resolve':
         try:
             if len(argv) == 4:
-                out = resolve(argv[2], argv[3], root=root)
+                out = resolve(argv[2], argv[3], root=root, overlay_root=overlay)
             else:
-                out = resolve_all(argv[2], root=root)
+                out = resolve_all(argv[2], root=root, overlay_root=overlay)
         except RegistryRefusal as exc:
             print('[REFUSED] %s' % exc)
             return 1
         sys.stdout.write(json.dumps(out, sort_keys=True))
         return 0
     if len(argv) == 2 and argv[1] == 'canonicalize':
+        # PLAN FIRST, THEN WRITE. The audit reproduced `CANONICALIZE_PARTIAL_MUTATION=True`: this
+        # loop rewrote four stores and then raised on the BLOCKED store that does not exist, and it
+        # ignored the `--root` it had just parsed. Both are fixed -- the target list is resolved and
+        # EVERY file is parsed before ANY file is written, so an unreadable store aborts the whole
+        # operation with nothing mutated.
+        base = REPO_ROOT if root is None else root
+        targets = []
         for rel in sorted(STORES):
-            print('%-40s %d row(s) rewritten canonically' % (rel, rewrite_canonical(rel)))
+            path = os.path.join(base, rel.replace('/', os.sep))
+            if not os.path.isfile(path):
+                if rel in STORES_BLOCKED:
+                    print('%-40s SKIPPED (declared BLOCKED and absent)' % rel)
+                    continue
+                print('[REFUSED] %s is not present -- nothing was rewritten' % rel)
+                return 1
+            targets.append(rel)
+        for rel in targets:
+            with io.open(  # snapshot: worktree
+                    os.path.join(base, rel.replace('/', os.sep)),
+                    encoding='utf-8') as fh:
+                for line in fh:
+                    if line.strip():
+                        json.loads(line)
+        for rel in targets:
+            print('%-40s %d row(s) rewritten canonically'
+                  % (rel, rewrite_canonical(rel, root=base)))
         return 0
     print(USAGE)
     return 2

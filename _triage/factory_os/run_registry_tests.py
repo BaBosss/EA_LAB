@@ -421,6 +421,122 @@ def main():
         finally:
             shutil.rmtree(fake, ignore_errors=True)
 
+        print("\n--- BLIND AUDIT ROUND 2: every finding, as a fixture ---")
+        # P2-9: canonicalize left a PARTIAL MUTATION -- it rewrote four stores then raised on the
+        # fifth, and ignored the --root it had parsed. Driven through the CLI, which is where the
+        # audit found it.
+        part = seed(tempfile.mkdtemp(prefix='s5can2_'))
+        try:
+            os.remove(os.path.join(part, 'factory', 'coverage.jsonl'))
+            before = dict((r, io.open(os.path.join(part, r.replace('/', os.sep)),
+                                      encoding='utf-8').read())
+                          for r in reg.STORES
+                          if os.path.isfile(os.path.join(part, r.replace('/', os.sep))))
+            py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+            pr = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'canonicalize',
+                                 '--root=' + part], capture_output=True, text=True)
+            check('AUDIT P2-9 canonicalize with an unreadable store exits non-zero',
+                  pr.returncode != 0, pr.stdout[-160:])
+            after = dict((r, io.open(os.path.join(part, r.replace('/', os.sep)),
+                                     encoding='utf-8').read())
+                         for r in before)
+            check('AUDIT P2-9 and NOTHING was mutated (probed: it rewrote 4 stores then raised)',
+                  before == after)
+        finally:
+            shutil.rmtree(part, ignore_errors=True)
+        # SPECIFICITY: a complete tree canonicalizes, honours --root, and leaves no temp file.
+        good = seed(tempfile.mkdtemp(prefix='s5can3_'))
+        try:
+            py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+            pr = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'canonicalize',
+                                 '--root=' + good], capture_output=True, text=True)
+            leftovers = [f for f in os.listdir(os.path.join(good, 'factory'))
+                         if f.endswith('.tmp')]
+            check('AUDIT P2-9 SPECIFICITY a complete tree canonicalizes under --root, exit 0, '
+                  'no temp file left', pr.returncode == 0 and not leftovers,
+                  '%s %s' % (pr.returncode, leftovers))
+        finally:
+            shutil.rmtree(good, ignore_errors=True)
+
+        # P1-4: a metadata key must not hide a row.
+        hid = seed(tempfile.mkdtemp(prefix='s5hid_'))
+        try:
+            with io.open(os.path.join(hid, 'factory', 'parameter_bindings.jsonl'),
+                         'a', encoding='utf-8', newline='\n') as fh:
+                fh.write(reg.canonical_line(
+                    {'_comment': 'looks like a note', 'entity': 'ParameterBinding',
+                     'hypothesis_revision': 'B14-H01-r1', 'parameter': 'X', 'role': 'LOCKED',
+                     'surface': 'HIDDEN', 'locked_value': 1, 'verdict': 'DEMO'}) + '\n')
+            refuses('AUDIT P1-4 a row carrying BOTH a metadata key and `entity` is REFUSED '
+                    '(probed: meta=2 rows=0, a LOCKED binding and a verdict both invisible)',
+                    lambda: reg.read_store('factory/parameter_bindings.jsonl', root=hid),
+                    'ambiguous whether this is a row or a note')
+        finally:
+            shutil.rmtree(hid, ignore_errors=True)
+        # SPECIFICITY: a genuine metadata line, with no `entity`, is still metadata.
+        okmeta = seed(tempfile.mkdtemp(prefix='s5meta_'))
+        try:
+            meta, rows = reg.read_store('factory/parameter_bindings.jsonl', root=okmeta)
+            check('AUDIT P1-4 SPECIFICITY a metadata line with no `entity` is still metadata',
+                  len(meta) == 1 and len(rows) == 0)
+        finally:
+            shutil.rmtree(okmeta, ignore_errors=True)
+
+        # P1-5: an overlay may ADD a refusal and may never REMOVE one.
+        can = seed(tempfile.mkdtemp(prefix='s5can_'),
+                   parameter_bindings=[binding(param='P', role='LOCKED', surface='HIDDEN',
+                                               locked_value=1)])
+        emptyo = seed(tempfile.mkdtemp(prefix='s5ov_'))
+        addo = seed(tempfile.mkdtemp(prefix='s5ov2_'),
+                    parameter_bindings=[binding(param='Q', role='SAFETY', surface='OPERATOR')])
+        try:
+            base = reg.resolve('B14-H01-r1', 'P', root=can)
+            check('AUDIT P1-5 CONTROL the canonical LOCKED binding refuses on its own',
+                  base['optimizable'] is False)
+            over = reg.resolve('B14-H01-r1', 'P', root=can, overlay_root=emptyo)
+            check('AUDIT P1-5 an EMPTY overlay cannot remove the canonical refusal '
+                  '(probed: --root replaced the store and turned this into ALLOW)',
+                  over['optimizable'] is False and over['role'] == 'LOCKED', json.dumps(over))
+            relax = seed(tempfile.mkdtemp(prefix='s5ov3_'),
+                         parameter_bindings=[binding(param='P', role='TUNABLE')])
+            try:
+                still = reg.resolve('B14-H01-r1', 'P', root=can, overlay_root=relax)
+                check('AUDIT P1-5 an overlay that RELAXES a canonical binding is ignored '
+                      '- canonical wins every key it defines',
+                      still['role'] == 'LOCKED' and still['optimizable'] is False,
+                      json.dumps(still))
+            finally:
+                shutil.rmtree(relax, ignore_errors=True)
+            added = reg.resolve('B14-H01-r1', 'Q', root=can, overlay_root=addo)
+            check('AUDIT P1-5 SPECIFICITY an overlay CAN still add a binding canonical lacks',
+                  added['role'] == 'SAFETY' and added['optimizable'] is False)
+        finally:
+            for d in (can, emptyo, addo):
+                shutil.rmtree(d, ignore_errors=True)
+
+        # P1-3: R5 must check required fields, not just the discriminator.
+        thin = seed(tempfile.mkdtemp(prefix='s5thin_'),
+                    instrument_profiles=[{'entity': 'InstrumentProfile'}])
+        try:
+            chk.problems[:] = []
+            chk.check_r5(reg.load_all(root=thin))
+            check('AUDIT P1-3 a row with the right entity and NO required fields is REFUSED '
+                  '(probed: R3 and R5 both reported [])',
+                  any('missing required field' in p for p in chk.problems), str(chk.problems))
+        finally:
+            shutil.rmtree(thin, ignore_errors=True)
+        full = seed(tempfile.mkdtemp(prefix='s5full_'),
+                    instrument_profiles=[{'entity': 'InstrumentProfile', 'profile_id': 'x',
+                                          'profile_version': 1, 'content_hash': 'h',
+                                          'layer': 'broker'}])
+        try:
+            chk.problems[:] = []
+            chk.check_r5(reg.load_all(root=full))
+            check('AUDIT P1-3 SPECIFICITY a row WITH its required fields is accepted',
+                  not chk.problems, str(chk.problems))
+        finally:
+            shutil.rmtree(full, ignore_errors=True)
+
         print('\n--- the CLI both consumers go through ---')
         py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
         p = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'resolve', 'B14-H01-r1'],

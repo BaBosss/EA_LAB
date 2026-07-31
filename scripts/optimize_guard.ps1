@@ -101,12 +101,17 @@ param(
     # OMITTED = every existing call site. With no revision, not one line of this script's
     # behaviour changes; there is a control fixture asserting exactly that, byte for byte.
     [string]$HypothesisRevision = '',
-    # The tree the ParameterBinding store is read from. Defaults to this repo. It exists so a
+    # An OVERLAY of extra ParameterBinding rows, on top of the canonical store. It exists so a
     # FIXTURE can drive this script against synthetic bindings without writing into the committed
-    # store, and it cannot buy permission: a binding only ever ADDS a refusal, an UNBOUND
-    # parameter leaves the existing verdict untouched, so pointing this at an empty tree gives
-    # exactly the behaviour you get with no -HypothesisRevision at all. There is no root that
-    # turns a REFUSE into an ALLOW. Same seam, same argument, as snapshot_build.py's <source-root>.
+    # store.
+    #
+    # ⚠️ THE ORIGINAL ARGUMENT FOR THIS PARAMETER WAS WRONG AND A BLIND AUDIT DISPROVED IT. It said
+    # "there is no root that turns a REFUSE into an ALLOW", reasoning that a binding only ever adds
+    # a refusal. True of ADDING one; false of REPLACING the store, which is what it did: a
+    # canonical LOCKED binding gave REFUSE and an empty -BindingsRoot gave ALLOW. Reproduced end to
+    # end. It passes --overlay-root now, and registry.py merges canonical-LAST, so the canonical
+    # store wins every key it defines and an overlay cannot remove or relax a binding. The property
+    # holds by construction rather than by this comment being persuasive.
     [string]$BindingsRoot = ''
 )
 
@@ -529,7 +534,12 @@ if ($HypothesisRevision -ne '') {
     }
     $bindErr = Join-Path ([System.IO.Path]::GetTempPath()) ("optguard_" + [guid]::NewGuid().ToString('N') + ".err")
     $resolveArgs = @($resolver, 'resolve', $HypothesisRevision)
-    if ($BindingsRoot -ne '') { $resolveArgs += "--root=$BindingsRoot" }
+    # --overlay-root, NOT --root. A blind audit disproved the claim this seam was built on:
+    # --root REPLACED the store, so a canonical LOCKED binding gave REFUSE and an empty
+    # -BindingsRoot gave ALLOW. The seam bought exactly the permission its own comment said it
+    # could not. An overlay merges canonical-last, so it can ADD a refusal and can never remove
+    # one -- the property is now structural instead of argued.
+    if ($BindingsRoot -ne '') { $resolveArgs += "--overlay-root=$BindingsRoot" }
     $bindJson = & $py $resolveArgs 2>$bindErr
     $bindRc = $LASTEXITCODE
     $bindErrText = ''

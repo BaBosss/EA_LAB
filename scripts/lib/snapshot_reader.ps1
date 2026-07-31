@@ -149,7 +149,27 @@ function Get-VerifiedSnapshot {
                 Reason = "the validator reported OK but published no verified-sha256 line, so this reader cannot prove it is reading the bytes that were verified"
             }
         }
-        $mine = (Get-FileHash -LiteralPath $SnapshotPath -Algorithm SHA256).Hash.ToLower()
+        # ONE READ. BLIND AUDIT 2026-07-31, reproduced: the first fix hashed the file with
+        # Get-FileHash and then opened it AGAIN with Get-Content to parse -- so it proved a digest
+        # about one read and handed back a different one. Swapping the file between the two
+        # commands produced State=OK carrying an edited verdict, while the validator run against
+        # that same file afterwards exited 1. The fix for the first two-read defect was itself a
+        # two-read defect.
+        #
+        # The bytes are read once into memory, hashed FROM THAT BUFFER, and parsed FROM THAT
+        # BUFFER. There is no second read to disagree with the first.
+        $bytes = $null
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes($SnapshotPath)
+        } catch {
+            return [pscustomobject]@{
+                State = 'UNAVAILABLE'; Code = 'TOOL'; Document = $null
+                Reason = "the validator accepted the snapshot but this reader could not read its bytes: $($_.Exception.Message)"
+            }
+        }
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try { $mine = ([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-','').ToLower() }
+        finally { $sha.Dispose() }
         if ($mine -ne $claimed) {
             return [pscustomobject]@{
                 State = 'UNAVAILABLE'; Code = 'TOOL'; Document = $null
@@ -157,7 +177,12 @@ function Get-VerifiedSnapshot {
             }
         }
         try {
-            $doc = Get-Content -LiteralPath $SnapshotPath -Raw | ConvertFrom-Json
+            # From the SAME buffer that was hashed above, never from a fresh read of the path.
+            # The UTF-8 BOM is stripped explicitly: ConvertFrom-Json chokes on it, and reaching
+            # for Get-Content to avoid that is what re-opened the file in the first place.
+            $text = [System.Text.Encoding]::UTF8.GetString($bytes)
+            if ($text.Length -gt 0 -and [int]$text[0] -eq 0xFEFF) { $text = $text.Substring(1) }
+            $doc = $text | ConvertFrom-Json
         } catch {
             # The validator read it and PowerShell could not. That is an instrument problem on
             # this side, not a verdict about the document, so it is UNAVAILABLE rather than

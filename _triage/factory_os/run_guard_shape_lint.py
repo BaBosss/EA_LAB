@@ -97,7 +97,12 @@ L2_PAIRS = {
     '_triage/factory_os/check_registries.py':
         ('_triage/factory_os/run_registry_tests.py',),
 }
-CRITERION = re.compile(r"problems\.append\(\s*['\"]\s*([A-E]\d+)\b")
+# `[A-Z]`, not `[A-E]`. BLIND AUDIT 2026-07-31, reproduced: the class was `[A-E]` because the
+# checkers that existed when L2 was written emitted A1-E9. ORDER-630's checker emits R1-R6, so the
+# regex found ZERO criteria in it, the L2 pair declared for it was INERT, and every R fixture could
+# have been deleted with this lint still green. A hand-narrowed character class is the same
+# hand-maintained cache of reality that L0 exists to prevent, one line further down.
+CRITERION = re.compile(r"problems\.append\(\s*['\"]\s*([A-Z]\d+)\b")
 
 
 def _read(rel):
@@ -237,6 +242,18 @@ def lint_l2(problems, pairs=None):
         except (IOError, SyntaxError) as exc:
             problems.append('L2 TOOL FAILURE: %s / %s: %s' % (checker, suites, exc))
             continue
+        # A DECLARED PAIR THAT FINDS NOTHING IS THE DECLARATION FAILING, NOT THE FILE PASSING.
+        # This is the check that would have caught the `[A-E]` regex on the day it was declared:
+        # check_registries.py emits R1-R6, the class did not include R, `emitted` was [], and the
+        # loop below iterated zero times and went green. Somebody declares an L2 pair because the
+        # checker HAS criteria; finding none means the parser and the file disagree, and silence is
+        # the one answer that cannot be right.
+        if not emitted:
+            problems.append(
+                'L2 %s is declared in L2_PAIRS but no criterion id was found in it, so this pair '
+                'enforces NOTHING and its suite could delete every fixture with this lint still '
+                'green. Either the checker emits ids in a shape CRITERION does not match, or the '
+                'pair should not be declared.' % os.path.basename(checker))
         blob = '\n'.join(named)
         for cid in emitted:
             if not re.search(r'\b%s\b' % cid, blob):

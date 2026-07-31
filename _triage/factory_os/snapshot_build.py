@@ -200,6 +200,14 @@ def compute_build_id(doc):
         h.update(('%s|%s|%s|%s' % (row.get('name'), row.get('path'),
                                    row.get('sha256'), row.get('read_ok'))).encode('utf-8'))
         h.update(b'\0')
+    # BLIND AUDIT 2026-07-31, reproduced: this function calls itself "a digest over WHAT WAS READ"
+    # and did not hash the reconciliation at all, so `discovered: 312` and `discovered: 0` produced
+    # the SAME build_id at the same git_head. A reader using build_id to tell "rebuilt" from
+    # "changed" would have been told nothing changed while the entire order/coverage picture had.
+    # The reconciliation IS read -- from two taskboards and the coverage store -- so it belongs in
+    # the digest by this function's own definition.
+    h.update(json.dumps(meta.get('reconciliation') or {}, sort_keys=True).encode('utf-8'))
+    h.update(b'\0')
     return h.hexdigest()[:16]
 
 
@@ -326,8 +334,21 @@ STATUS_CATEGORY = {
     'RESOLVED': 'review_audit',
     'REVIEWED': 'completed',
     'CLOSED': 'completed',
-    'CANCELLED': 'cancelled_by_user',
-    'WITHDRAWN': 'cancelled_by_user',
+    # `cancelled_by_user` IS DELIBERATELY UNREACHABLE FROM THIS TABLE, and that is the fix, not an
+    # omission. It used to map CANCELLED and WITHDRAWN. A blind audit pointed out what the comment
+    # above had claimed away: `## ORDER-1 -- x `CANCELLED(agent qwen)`` parses to the verb
+    # CANCELLED and landed in a bucket whose NAME asserts the user cancelled it. The board says an
+    # agent did. Reproduced.
+    #
+    # The six bucket names are the design's and I may not rename one. What I may do is decline to
+    # assert an actor the source does not state: a cancellation now falls to `unclassified`, which
+    # is COUNTED, NAMED and turns the verdict false with UNCLASSIFIED_PRESENT -- the same treatment
+    # every other verb this table cannot read gets. Measured before and after: the bucket held 0
+    # rows either way, so nothing about today's numbers changes; what changes is that it can no
+    # longer be filled by a guess.
+    #
+    # What is owed: either a bucket that names no actor, or an owner rule for reading one off the
+    # board. Both are decisions, and neither is this table's to make.
 }
 
 # Same convention as scripts/check_taskboard_archive.ps1 Get-StatusClass, and for the same reason
@@ -491,13 +512,33 @@ def reconcile(root=None):
     cells_in_universe = 0
     if os.path.isfile(cov_path):
         with io.open(cov_path, encoding='utf-8') as fh:  # snapshot: worktree
-            for line in fh:
+            for n, line in enumerate(fh, 1):
                 line = line.strip()
                 if not line:
                     continue
-                rec = json.loads(line)
+                try:
+                    rec = json.loads(line)
+                except ValueError as exc:
+                    sv._refuse('factory/coverage.jsonl line %d is not parseable JSON: %s'
+                               % (n, exc))
+                # BLIND AUDIT 2026-07-31, reproduced: a line that parsed as JSON but had the wrong
+                # SHAPE was skipped by `continue`, so a coverage store of `{"bogus": 1}` reconciled
+                # to cells_in_universe=0 with every part zero and NO REASON GIVEN. "I could read
+                # the file and did not understand it" was published as "the universe is empty" --
+                # the exact defect this pipeline refuses everywhere else, surviving in the one
+                # place it was written as a `continue`.
                 if not isinstance(rec, dict):
+                    sv._refuse('factory/coverage.jsonl line %d is %s, not an object. Refused: a '
+                               'coverage store this function cannot read is not a universe of zero '
+                               'cells.' % (n, type(rec).__name__))
+                if any(k in rec for k in ('_comment', '_section')):
                     continue
+                if 'cells' not in rec:
+                    sv._refuse(
+                        'factory/coverage.jsonl line %d has no `cells` key and is not a metadata '
+                        'line, so this function cannot tell how many coverage cells it describes. '
+                        'Refused rather than counted as zero: "readable but not understood" and '
+                        '"empty" have opposite fixes.' % n)
                 for cell in (rec.get('cells') or []):
                     cells_in_universe += 1
                     part = COVERAGE_PART.get(str(cell.get('status') or ''))
