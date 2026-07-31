@@ -130,7 +130,17 @@
 
 ---
 
-## ORDER-670 — [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the INDEX — one answer, not thirty-one patches — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-670 — [factory/tier] The whole checker set judges the WORKING TREE while the commit carries the INDEX — one answer, not thirty-one patches — `CORE DONE (Claude/Opus 2026-07-31, `5082bd4d` + `31c7beed`) — T1–T6 proven both ways · OWED: T7 (L1 binds calls, not comments) + the 8 remaining checker migrations, one commit each` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — evidence.py + first migration + tier plumbing LANDED. 96/0 python · guard-trigger PART 6 green · the landing commit itself ran under the new hook mode.
+>
+> **What is proven:** T1 staged corruption behind a clean worktree ⇒ RED in index mode, with the pre-670 blindness demonstrated live by the worktree mirror case · T2 all three no-fallback refusals · T3 a STAGED rogue vocabulary with no worktree copy ⇒ RED in the R4 sweep, an untracked scratch file neither flags nor fails · T4 marker allowlist: a silent evidence suite fails the hook tier **by name**, no-scope run green, the migrated suite emits exactly one marker carrying mode=index through its own process chain · T5 observe() returns disk bytes while the index disagrees · T6 a mid-tier index rewrite is refused, red path driven via a test-only seam.
+>
+> **🔴 THE INCIDENT, which outranks the feature:** the landing commit was nearly destroyed by its own fixtures. A partial commit publishes its temp index via `GIT_INDEX_FILE`; fixture repos ran `git -C <temp> add -A` INHERITING it; git resolved the variable against the fixture repo, saw all **5,135** real entries as deleted-from-worktree, and **removed them from the real commit's index** — the tier's diagnostic case went red on the wreckage and blocked three attempts, entirely by accident of coverage. Probed in a scratch repo first: a partial commit's false index does contain the full tree, so judging it is correct — the poison was strictly inheritance into OTHER repos' git. Fixed both layers (`evidence._run_git` scrubs the var for any non-EA_LAB root; the fixture `_git` scrubs always) + `T-GIF` replays the attack against a decoy index and asserts byte-unchanged, own-index-used, and — specificity — that for THIS repo the variable is still honoured. Memory: `git-index-file-poisons-fixture-repos`.
+>
+> **Also fixed in passing:** a stranded mutation from `run_enforcement_status_tests.py` (mutates the real `schemas.json` in place; an interrupted hook left `x-enforcer: does_not_exist.py` in the worktree, turning two unrelated gates red). Restored; the mutate-a-copy fix is flagged as its own task, not silently absorbed.
+>
+> **🔻 OWED, stated rather than implied:** **T7** — the lint still accepts a `# snapshot:` comment for category-A reads; binding it to the `read_committed` CALL is not built. **T5's collapse-the-split red half** belongs to the `snapshot_build` migration. **8 checkers** remain on the worktree default (`registry.py`'s own resolve path · `snapshot_build` · `check_schema_structure` · `gen_coverage` · `run_schema_fixtures` · `snapshot_validator` · `run_guard_shape_lint` · `check_coverage_transfer`'s enumerations), one commit each per design §6.
 
 **Design (binding): [`_triage/factory_os/TIER_SNAPSHOT_DESIGN.md`](_triage/factory_os/TIER_SNAPSHOT_DESIGN.md) rev 2 @ `84c939e`.** This order builds §3 and is accepted on §5 T1–T7. Do not re-derive the design here; do not amend it to make a fixture pass.
 

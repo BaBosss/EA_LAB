@@ -192,6 +192,17 @@ except by asking, and **it must not fire on them**, or it becomes the guard that
    between the hook and the commit.
 6. **Manual runs still judge the worktree**, by design ⇒ a green manual run is not evidence about a
    commit. The marker prints the mode so a reader can tell which claim they are holding.
+7. 🔴 **`GIT_INDEX_FILE` is poison to any git run against a DIFFERENT repository** — discovered
+   live while landing `ORDER-670` part 1, not predicted here. A partial commit publishes its temp
+   index through that variable; a test fixture running `git -C <temp> add -A` inherited it, git
+   resolved it against the *fixture* repo, saw all 5,135 real entries as deleted-from-worktree,
+   and **removed them from the real commit's index**. Three commit attempts were blocked only
+   because a diagnostic case happened to read the wreckage. Containment (both layers, with the
+   `T-GIF` attack/specificity pair): `evidence._run_git` scrubs the variable for any root that is
+   not this repo; fixture git helpers scrub it always. The rule generalises: **a hook-published
+   env var names state of ONE repository, and any subprocess aimed at another repository must be
+   stripped of it.** Suites that run git in fixture repos outside the tier (`run_order103/105`)
+   carry the same hazard if ever run under a hook.
 
 ## 5. Acceptance, with the shape-5 pair on every criterion
 
