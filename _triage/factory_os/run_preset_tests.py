@@ -243,6 +243,15 @@ def p3_attack(mod):
     r2 = mod.render_set(pre, ranges={'_9_Step': (100.0, 50.0, '4e2', True)})
     if r1 != r2:
         return 'two spellings of one optimize range produced different bytes'
+    # ... and a SYMBOLIC range bound resolves against the same enum table the values used
+    # (round 2: render_set was handed only the MQL builtins, so a file-declared enum symbol
+    # that compiled fine as a value refused as a bound)
+    try:
+        sym = mod.render_set(pre, ranges={'ExitMode': ('EXIT_FIXED_TP', 1, 'EXIT_ATR_TP', True)})
+    except mod.PresetRefusal as exc:
+        return 'a file-declared enum symbol was refused as a range bound: %s' % str(exc)[:100]
+    if 'ExitMode=21||21||1||22||Y' not in sym:
+        return 'the symbolic range did not render to its numeric codes'
     return None
 
 

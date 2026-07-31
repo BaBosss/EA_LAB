@@ -264,6 +264,11 @@ def parse_unit_classes(text):
             # whichever row came later silently decided P8 for both. Disagreement is recorded,
             # not resolved: the sentinel fails is_money_unit (so a bare number on such a key is
             # not silently fine) and compile_preset refuses it BY NAME whenever the key is set.
+            # STRICT on any string difference, not only on money-ness -- MEASURED before
+            # adopting (round 2): the real PARAM_REGISTRY.csv has ZERO bare names with more
+            # than one distinct unit string, so the strict rule refuses no existing row. Every
+            # later day makes loosening-vs-strict a migration; today it is free (the ORDER-671
+            # cost argument).
             out[name] = UNIT_CONFLICT
             continue
         if out.get(name) != UNIT_CONFLICT:
@@ -389,7 +394,7 @@ def _row_parts(row, layer_name):
 
 class Preset(object):
     def __init__(self, surface, values, provenance, fingerprint, fingerprint_scope,
-                 account_unit, locked_constants):
+                 account_unit, locked_constants, enums=None):
         self.surface = surface
         self.values = values                    # OrderedDict name -> rendered str
         self.provenance = provenance            # name -> {'layer':..., 'overridden':[...]}
@@ -397,6 +402,10 @@ class Preset(object):
         self.fingerprint_scope = fingerprint_scope
         self.account_unit = account_unit
         self.locked_constants = locked_constants
+        # The enum table the VALUES were resolved with, kept so render_set resolves range
+        # bounds against the same symbols (round 2: it was passing MQL_BUILTIN_ENUMS, so a
+        # symbolic bound like EXIT_ATR_TP -- resolvable at compile time -- refused at render).
+        self.enums = dict(enums) if enums else dict(MQL_BUILTIN_ENUMS)
 
 
 def compile_preset(surface, layers, account_unit, unit_classes=None, locked_constants=None,
@@ -517,7 +526,8 @@ def compile_preset(surface, layers, account_unit, unit_classes=None, locked_cons
     ordered = _ordered(surface, resolved)
     scope, constants = _constant_scope(locked_constants)
     digest = _fingerprint(surface.build_tag, ordered, constants, scope)
-    return Preset(surface, ordered, provenance, digest, scope, account_unit, constants)
+    return Preset(surface, ordered, provenance, digest, scope, account_unit, constants,
+                  enums=enums)
 
 
 def _ordered(surface, resolved):
@@ -613,9 +623,9 @@ def render_set(preset, ranges=None, header_note=None):
         decl = preset.surface.by_name[name]
         out.append('%s=%s||%s||%s||%s||%s'
                    % (name, value,
-                      render_value(decl, start, MQL_BUILTIN_ENUMS),
-                      render_value(decl, step, MQL_BUILTIN_ENUMS),
-                      render_value(decl, stop, MQL_BUILTIN_ENUMS),
+                      render_value(decl, start, preset.enums),
+                      render_value(decl, step, preset.enums),
+                      render_value(decl, stop, preset.enums),
                       'Y' if enabled else 'N'))
     return '\n'.join(out) + '\n'
 
