@@ -180,8 +180,10 @@ def main():
                 for c in r['cells']:
                     if c.get('cell') == 'GBPUSD':
                         c['cell'] = 'MEANINGLESS-CELL-1'
+    # The needle changed with the fix and that is an improvement, not a regression: positional
+    # comparison names the exact FIELD that was altered instead of reporting the cell as missing.
     case('a cell relabelled while its source_token stays valid', post, section,
-         mutate(records, relabel), True, r'A2 row .*lost cell')
+         mutate(records, relabel), True, r"A2 row .*field 'cell' was altered")
 
     def clip_column(rs):
         rs[4]['source_columns'][4] = ''
@@ -199,17 +201,80 @@ def main():
     say('  Wrapping the banner in an HTML comment made the rendered notice vanish while the')
     say('  checker returned 0 problems. Same mechanism as memory')
     say('  guard-disarmed-by-prose-reported-as-note. Reproduced by hand before it was fixed.')
-    hidden = backlog_post(section, records).split('\n')
-    _b = next(i for i, l in enumerate(hidden) if l == gen.TOP_BANNER)
-    hidden[_b] = '<!-- ' + gen.TOP_BANNER[2:] + ' -->'
-    case('the top notice hidden inside an HTML comment', '\n'.join(hidden), section, records, True,
-         r'A1 section 2 IS generated output but the notice is missing from the top banner')
+    # Round 2 named six more ways to keep the phrase in the source and off the page, and tested the
+    # Markdown reference definition itself. Two of the seven were STILL open after the first repair
+    # here -- `hidden` and `display:none` -- because the pattern stripped the opening tag and left
+    # the text inside it. All seven are cases now, so the next one found is added to a list rather
+    # than argued about.
+    _post = backlog_post(section, records).split('\n')
+    _b = next(i for i, l in enumerate(_post) if l == gen.TOP_BANNER)
+    for _label, _repl in (
+            ('an HTML comment',            '<!-- ' + gen.TOP_BANNER[2:] + ' -->'),
+            ('a Markdown reference def',   '[ref]: /x "%s"' % chk.PHRASE),
+            ('a <template> element',       '<template>%s</template>' % chk.PHRASE),
+            ('a hidden attribute',         '<div hidden>%s</div>' % chk.PHRASE),
+            ('an inline display:none',     '<div style="display:none">%s</div>' % chk.PHRASE),
+            ('image alt text',             '<img alt="%s">' % chk.PHRASE),
+            ('a title attribute',          '<div title="%s"></div>' % chk.PHRASE)):
+        _t = list(_post)
+        _t[_b] = _repl
+        case('the notice hidden in %s' % _label, '\n'.join(_t), section, records, True,
+             r'A1 section 2 IS generated output but the notice is missing from the top banner')
     # ...and the control that keeps the fix from over-reaching: a comment elsewhere in the header
     # must not remove a notice that IS visible.
     withc = backlog_post(section, records).split('\n')
     withc.insert(_b, '<!-- an ordinary editorial comment -->')
     case('CONTROL an unrelated HTML comment beside a visible notice',
          '\n'.join(withc), section, records, False)
+
+    say()
+    say('=== CODEX AUDIT ROUND 2 -- every one of these passed BEFORE the fix ===')
+    post = backlog_post(section, records)
+
+    # Standards 2 (P0): a duplicate placed BEFORE the real cell was invisible, because cells were
+    # collapsed into a dict keyed by identity and the LAST one won -- so the real cell satisfied
+    # A2 on the corrupted duplicate's behalf.
+    def dup_before(rs):
+        for r in rs:
+            if r['cells']:
+                bad = copy.deepcopy(r['cells'][0])
+                bad['source_coordinates'] = {'file': 'WRONG.md', 'column_index': 5,
+                                             'section': 'x', 'source_row': 'y'}
+                r['cells'].insert(0, bad)
+                return
+    case('a corrupted DUPLICATE inserted before the real cell', post, section,
+         mutate(records, dup_before), True, r'A2 row .*carries \d+ cell')
+
+    # Spec 1 (P0): A3 checked key NAMES, never VALUES -- so a verdict word rode in as `status`.
+    case('a VERDICT carried as a cell status', post, section,
+         mutate(records, lambda rs: rs[0]['cells'].append(
+             {'cell': 'EXTRA', 'status': 'DEAD-STRUCTURAL'})), True,
+         r'A3 row .*status=.DEAD-STRUCTURAL')
+
+    # Spec 6: `.get()` made an absent key and a present-null key compare equal.
+    case('a null value where the reviewed evidence has no key at all', post, section,
+         mutate(records, lambda rs: rs[0]['cells'][0].update({'why_unverified': None})), True,
+         r'A2 row .*field set differs')
+
+    # Spec 5: A4 was deleted; a nondeterministic renderer then passed everything. The fixture
+    # perturbs the RENDERER, which is the only thing that can make this fire.
+    _calls = {'n': 0}
+    _real_render = gen.render_from
+    try:
+        def flaky(sec, recs):
+            _calls['n'] += 1
+            out = _real_render(sec, recs)
+            return out if _calls['n'] % 2 else out + ['<extra line on every other call>']
+        gen.render_from = flaky
+        probs = run(post, section, records)
+        ok = any(re.search(r'A4 the generator is NOT deterministic', p) for p in probs)
+        say('  %s %-58s expect=RED got=%s'
+            % ('[OK ]' if ok else '[FAIL]', 'a renderer that returns something different each call',
+               'RED' if probs else 'GREEN'))
+        if not ok:
+            FAILURES.append('nondeterministic renderer')
+    finally:
+        gen.render_from = _real_render
 
     say()
     say('=== CODEX AUDIT, P1 -- the store is a CLOSED shape, not a bag ===')
@@ -304,7 +369,11 @@ def main():
             ('the store missing from the index -> mixed, must REFUSE', {chk.BACKLOG_PATH},
              {chk.BACKLOG_PATH}, 'ToolFailure'),
             ('the backlog missing from the index -> mixed, must REFUSE', {chk.COVERAGE_PATH},
-             {chk.COVERAGE_PATH}, 'ToolFailure')):
+             {chk.COVERAGE_PATH}, 'ToolFailure'),
+            # Codex round 2, Spec 4: refusing only the MIXED pair left BOTH-from-worktree
+            # accepted -- the original defect, doubled, not a weaker version of it.
+            ('NEITHER in the index -> worktree/worktree, must REFUSE', set(), set(),
+             'ToolFailure')):
         fake_git.indexed, fake_git.tracked = indexed, tracked
         chk._git = fake_git
         try:
@@ -312,8 +381,9 @@ def main():
             c, cs = chk.read_input(chk.COVERAGE_PATH)
             got = '%s/%s' % (bs, cs)
             if got != 'index/index':
-                # reproduce what check() does with a mixed pair
-                got = 'ToolFailure' if len({bs, cs}) > 1 else got
+                # reproduce what check() does: a MIXED pair, and now also a both-worktree pair,
+                # are tool failures -- neither says anything about what the commit contains.
+                got = 'ToolFailure'
         except chk.ToolFailure:
             got = 'ToolFailure'
         finally:

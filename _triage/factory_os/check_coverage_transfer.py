@@ -101,6 +101,22 @@ def read_input(relpath, worktree=False):
 
 
 HTML_COMMENT = re.compile(r'<!--.*?-->', re.S)
+# Markdown link/image REFERENCE DEFINITIONS render as nothing at all. Codex round 2 tested this and
+# the checker passed with 0 problems: `[x]: /url "generated from ...; edits here are overwritten"`
+# puts the phrase in the source and nothing on the page.
+MD_REF_DEF = re.compile(r'^[ ]{0,3}\[[^\]]+\]:.*$', re.M)
+# Elements whose CONTENT is never rendered.
+HIDDEN_ELEMENT = re.compile(r'<(template|script|style)\b.*?</\1>', re.S | re.I)
+# ...and elements hidden by attribute or inline style. The whole ELEMENT goes, not just its opening
+# tag: the first version here stripped only the tag and left the text inside it, so
+# `<div hidden>the phrase</div>` still read as visible. Caught by probing all seven techniques
+# rather than by assuming the pattern was right -- two of the seven were still open.
+HIDDEN_ATTR = re.compile(
+    r'<(\w+)[^>]*\b(?:hidden\b|style\s*=\s*["\'][^"\']*display\s*:\s*none)[^>]*>.*?</\1>',
+    re.S | re.I)
+# An HTML TAG is not rendered text. `<img alt="generated from ...">` and
+# `<div title="generated from ...">` both keep the phrase in source and off the page.
+HTML_TAG = re.compile(r'<[^>]+>')
 
 
 def strip_invisible(text):
@@ -116,8 +132,19 @@ def strip_invisible(text):
     The rule this encodes: a check about what a HUMAN sees must be evaluated on what Markdown
     RENDERS, not on the source bytes. Comments are removed across line boundaries, because that is
     how a multi-line banner would be hidden.
+
+    ROUND 2 showed one regex was not the rule, only the first instance of it. Codex tested a
+    Markdown REFERENCE DEFINITION -- `[x]: /url "the phrase"` -- and the checker passed with 0
+    problems, and named `<template>`, `hidden`, `display:none`, HTML attributes and image `alt`
+    as the same shape. So this is now a list, and the list is the honest statement of a limit:
+    **it removes the ways currently known to hide text, not every way that exists.** Markdown has
+    no canonical renderer here, so "what a human sees" is approximated, and the approximation is
+    stated rather than implied. A new hiding place is a finding against this function, and the
+    right response is to add it here -- not to argue the notice was technically present.
     """
-    return HTML_COMMENT.sub(' ', text)
+    for pattern in (HTML_COMMENT, HIDDEN_ELEMENT, MD_REF_DEF, HIDDEN_ATTR, HTML_TAG):
+        text = pattern.sub(' ', text)
+    return text
 
 
 def normalize(s):
@@ -225,25 +252,43 @@ def a2_covers_the_hand_table(section, records, problems):
             if i >= len(got) or got[i] != col:
                 problems.append('A2 row %r column %s lost or altered. baseline=%r store=%r'
                                 % (ea, i, col, got[i] if i < len(got) else '<missing>'))
-        # Codex audit P1: this compared only (cell, source_token), so every OTHER field of an
-        # imported cell was unguarded -- source_coordinates could name file "WRONG", and a
-        # declared_status could be swapped for a different allowed value, both silently. An
-        # imported cell is a TRANSCRIPTION of reviewed evidence; the whole record must match it,
-        # not the two fields that happen to be its identity.
-        have = {(c.get('cell'), c.get('source_token')): c for c in (r.get('cells') or [])}
-        for c in b['cells']:
-            key = (c.get('cell'), c.get('source_token'))
-            got = have.get(key)
-            if got is None:
+        # Codex audit round 1 P1: this compared only (cell, source_token), so every OTHER field of
+        # an imported cell was unguarded. Round 2 then defeated the repair itself, twice, and both
+        # defeats came from the same instinct -- comparing "the cells I can look up" instead of
+        # "the cells that are there":
+        #
+        #   * the fix collapsed cells into a dict keyed by identity, so a DUPLICATE overwrote its
+        #     twin and the LAST one won. Inserting a corrupted duplicate BEFORE the real cell was
+        #     therefore invisible: the real cell satisfied A2 on the duplicate's behalf.
+        #   * `.get()` made a key that is ABSENT and a key that is present-and-null compare equal,
+        #     so reviewed evidence could be altered and still called identical.
+        #
+        # Both are closed by comparing the cell list POSITIONALLY against the reviewed evidence and
+        # by comparing the key SETS before the values. An imported cell transcribes evidence the
+        # owner approved; there is no legitimate reason for its shape, order or count to differ.
+        got_cells = r.get('cells') or []
+        if len(got_cells) != len(b['cells']):
+            problems.append('A2 row %r carries %s cell(s) but the reviewed evidence has %s. An '
+                            'imported cell list is a transcription -- an extra cell (a duplicate '
+                            'is one) is a fact the owner never reviewed.'
+                            % (ea, len(got_cells), len(b['cells'])))
+        for i, c in enumerate(b['cells']):
+            if i >= len(got_cells):
                 problems.append('A2 row %r lost cell %r (source_token=%r)'
                                 % (ea, c.get('cell'), c.get('source_token')))
                 continue
-            for k in sorted(set(c) | set(got)):
-                if c.get(k) != got.get(k):
-                    problems.append('A2 row %r cell %r field %r was altered in the move. '
+            got = got_cells[i]
+            if set(c) != set(got):
+                problems.append('A2 row %r cell %s: field set differs from the reviewed evidence. '
+                                'reviewed-only=%s store-only=%s -- a key present with a null value '
+                                'is NOT the same as a key that is absent.'
+                                % (ea, i, sorted(set(c) - set(got)), sorted(set(got) - set(c))))
+            for k in sorted(set(c) & set(got)):
+                if c[k] != got[k]:
+                    problems.append('A2 row %r cell %s (%r) field %r was altered in the move. '
                                     'reviewed=%r store=%r -- an imported cell transcribes evidence '
                                     'the owner approved; it is not a field this file may revise.'
-                                    % (ea, c.get('cell'), k, c.get(k), got.get(k)))
+                                    % (ea, i, c.get('cell'), k, c[k], got[k]))
         b_live = set(b.get('live_cells') or [])
         r_live = set(r.get('live_cells') or [])
         for lc in b_live - r_live:
@@ -293,6 +338,10 @@ CELL_KEYS = {'cell', 'column', 'status', 'declared_status', 'source_token', 'sou
              'why_unverified'}
 COORD_KEYS = {'column_index', 'file', 'section', 'source_row'}
 SECTION_KEYS = {'heading', 'header_columns', 'note'}
+# The closed vocabulary for the field that CLASSIFIES a cell. Derived from the reviewed
+# reconciliation's own two states -- not invented here, and widening it means editing a file inside
+# the attested bundle, which is exactly what should need a fresh owner decision.
+CELL_STATUS = {'LIVE', 'UNVERIFIED_IMPORT'}
 
 
 def _closed(obj, allowed, where, problems):
@@ -316,6 +365,17 @@ def a3_closed_shape_and_no_verdict(section, records, problems, allowed_status):
                 'row %r imported_from' % ea, problems)
         for c in (r.get('cells') or []):
             _closed(c, CELL_KEYS, 'row %r cell %r' % (ea, c.get('cell')), problems)
+            # Codex audit round 2, Spec 1: A3 checked key NAMES and never VALUES, so a cell could
+            # carry `"status": "DEAD-STRUCTURAL"` and pass -- a VERDICT, in the field that decides
+            # what kind of cell this is, in the store whose whole acceptance says no verdict lives
+            # here. ORDER-610 A3 was simply false. A closed shape is only half of a closed
+            # contract: the fields that classify a record need closed vocabularies too.
+            st = c.get('status')
+            if st not in CELL_STATUS:
+                problems.append('A3 row %r cell %r has status=%r, which is not one of %s. This is '
+                                'the field that says what KIND of cell this is; leaving it open '
+                                'let a VERDICT be carried in a coverage store.'
+                                % (ea, c.get('cell'), st, sorted(CELL_STATUS)))
             if 'source_coordinates' in c:
                 _closed(c['source_coordinates'], COORD_KEYS,
                         'row %r cell %r source_coordinates' % (ea, c.get('cell')), problems)
@@ -345,7 +405,34 @@ def a3_closed_shape_and_no_verdict(section, records, problems, allowed_status):
                                 % (ea, c.get('cell'), ds, ', '.join(sorted(allowed_status))))
 
 
-# A4 IS DELETED, and that is the fix rather than a gap.
+def a4_renderer_is_deterministic(section, records, problems):
+    """A4, RESTORED. Codex audit round 2, Spec 5: deleting it was not free.
+
+    The argument for deleting it was that with one renderer, "the generator and the checker agree"
+    is true by construction. That argument is sound and it is also not what A4 said. ORDER-610's
+    A4 required TWO byte-identical renders -- a property of the renderer itself, not of who calls
+    it. A1 renders exactly once, so a renderer that returned the committed body first and something
+    else second would pass every check in this file.
+
+    That is a criterion I removed instead of satisfying, which is the same amend-my-own-acceptance
+    pattern the first audit caught. It is back, and it is now non-tautological for a reason the
+    previous version was not: it perturbs nothing and compares nothing to itself -- it calls the
+    REAL generator twice on the same inputs and requires the two calls to agree, which is exactly
+    the property "deterministic" names.
+    """
+    once = gen.render_from(section, records)
+    twice = gen.render_from(section, records)
+    if once != twice:
+        first = next((i for i, (a, b) in enumerate(zip(once, twice)) if a != b), None)
+        problems.append('A4 the generator is NOT deterministic: two renders of identical inputs '
+                        'differ%s. Section 2 would then depend on when it was generated, and A1 '
+                        'could pass or fail by luck.'
+                        % ((' first at line %s: %r vs %r' % (first, once[first], twice[first]))
+                           if first is not None else ' in length (%s vs %s)' % (len(once),
+                                                                               len(twice))))
+
+
+# The PREVIOUS A4 is deleted, and that part of the fix stands.
 #
 # Codex audit, Standards 5, was right that it was tautological: it rendered the same in-memory
 # objects twice through the same function and asserted they were equal -- a pure function of
@@ -408,11 +495,22 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     # a rejection: the checker cannot see one coherent state. (It was legitimate exactly once --
     # the first generation, when the store did not exist yet -- and that moment is past.)
     sources = {info['backlog_source'], info['coverage_source']}
-    if len(sources) > 1 and 'injected' not in sources:
-        raise ToolFailure(
-            'mixed-vintage read: %s came from the %s and %s from the %s. One of them is not what '
-            'a commit would contain, and no verdict over that pair means anything.'
-            % (BACKLOG_PATH, info['backlog_source'], COVERAGE_PATH, info['coverage_source']))
+    if 'injected' not in sources:
+        if len(sources) > 1:
+            raise ToolFailure(
+                'mixed-vintage read: %s came from the %s and %s from the %s. One of them is not '
+                'what a commit would contain, and no verdict over that pair means anything.'
+                % (BACKLOG_PATH, info['backlog_source'], COVERAGE_PATH, info['coverage_source']))
+        # Codex audit round 2, Spec 4: refusing only the MIXED pair left `worktree/worktree` --
+        # BOTH inputs absent from the index -- accepted. That is the original defect, not a
+        # weaker version of it: the checker approves bytes the commit does not contain, and it
+        # approves BOTH of them. The index is what a commit contains; anything else is a preview.
+        if sources == {'worktree'} and not worktree:
+            raise ToolFailure(
+                'neither %s nor %s could be read from the index, so both were read from the '
+                'working tree. A verdict over bytes that are not staged says nothing about the '
+                'commit. Stage them, or pass --worktree to say deliberately that this run is a '
+                'preview and not a gate.' % (BACKLOG_PATH, COVERAGE_PATH))
 
     try:
         recon = json.load(io.open(os.path.join(ROOT, RECON_PATH), encoding='utf-8'))
@@ -426,6 +524,7 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     info['body_is_generated'] = a1_banner_and_body(backlog_text, section, records, problems)
     info['baseline'] = a2_covers_the_hand_table(section, records, problems)
     a3_closed_shape_and_no_verdict(section, records, problems, allowed_status)
+    a4_renderer_is_deterministic(section, records, problems)
     if not skip_a8:
         a8_attestation_still_valid(problems)
     info['records'] = len(records)

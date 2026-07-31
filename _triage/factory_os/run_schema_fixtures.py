@@ -90,6 +90,14 @@ def ajv_errors(out):
         return None
 
 
+# The ajv `params` keys this matcher understands. Closed on purpose: an unknown key used to make
+# a spec look discriminating while matching nothing, and `params.get(unknown)` returns None, which
+# then compared equal to a `null` in the spec. Adding a key here is a reviewable act.
+KNOWN_PARAM_KEYS = ('missingProperty', 'unevaluatedProperty', 'additionalProperty', 'allowedValues',
+                    'allowedValue', 'pattern', 'limit', 'type', 'format', 'comparison',
+                    'deps', 'i', 'j', 'failingKeyword', 'propertyName')
+
+
 def spec_is_discriminating(spec):
     """A `says` spec must actually assert something. Codex audit, Standards 4.
 
@@ -101,9 +109,24 @@ def spec_is_discriminating(spec):
 
     Discriminating = names WHERE (`instancePath`) or WHAT (`keyword`/a params key). A spec carrying
     only `schemaPath_startswith` is provenance with no claim, which was B2's original complaint.
+
+    ROUND 2 defeated the first version of this: `says=[{"bogus": null}]` passed, because "has a key
+    other than schemaPath_startswith" was satisfied by a key nothing looks at, and `_err_matches`
+    then matched an unrelated error through `params.get('bogus') != None` -> `None != None` is
+    False. Two separate holes wearing one coat.
+
+    So the vocabulary is CLOSED at both ends now: the key must be one this matcher actually
+    evaluates, and `None` is not an assertable value -- `params.get()` returns it for every key that
+    is absent, so asserting it asserts nothing.
     """
-    keys = set(spec)
-    return bool(keys - {'schemaPath_startswith'})
+    for k, v in spec.items():
+        if k == 'schemaPath_startswith':
+            continue
+        if k in ('keyword', 'instancePath'):
+            return True
+        if k in KNOWN_PARAM_KEYS and v is not None:
+            return True
+    return False
 
 
 def _err_matches(err, spec):
@@ -115,6 +138,9 @@ def _err_matches(err, spec):
         elif k in ('keyword', 'instancePath'):
             if err.get(k) != v:
                 return False
+        elif k not in KNOWN_PARAM_KEYS:
+            # a key this matcher does not evaluate must never be treated as satisfied
+            return False
         elif params.get(k) != v:
             return False
     return True
@@ -1036,17 +1062,26 @@ def main():
     # against a real passing case, so the repair cannot quietly come undone.
     _victim = next(c for c in ENTITY_CASES if c['expect'] == INVALID)
     _saved = _victim['says']
-    try:
-        _victim['says'] = [{}]
-        _probe = entity_coverage(ENTITY_CASES, ebatch)
-    finally:
-        _victim['says'] = _saved
-    if any(_victim['name'] in p for p in _probe):
-        print("  [OK ] CONTROL a negative whose `says` is `{}` is refused as asserting nothing")
-    else:
-        print("  [BAD] CONTROL `says=[{}]` still earns coverage -- an empty spec matches every "
-              "error")
-        bad += 1
+    # Codex round 2, Standards 4: `[{}]` was closed, but `[{"bogus": null}]` walked straight
+    # through -- an unknown key made the spec look discriminating, and then matched an unrelated
+    # error because `params.get("bogus")` is None and the spec's value was None too. Both shapes
+    # are probed now, and so is a key whose value is null, which asserts nothing by construction.
+    for label, spec in (('`{}`', [{}]),
+                        ('an UNKNOWN key (`{"bogus": null}`)', [{'bogus': None}]),
+                        ('an unknown key with a value', [{'bogus': 'x'}]),
+                        ('a known key whose value is null', [{'missingProperty': None}]),
+                        ('only `schemaPath_startswith`',
+                         [{'schemaPath_startswith': '#/$defs/OwnerRef/'}])):
+        try:
+            _victim['says'] = spec
+            _probe = entity_coverage(ENTITY_CASES, ebatch)
+        finally:
+            _victim['says'] = _saved
+        if any(_victim['name'] in p for p in _probe):
+            print("  [OK ] CONTROL a negative whose `says` is %s asserts nothing -> refused" % label)
+        else:
+            print("  [BAD] CONTROL `says=%s` still earns coverage" % spec)
+            bad += 1
 
     _real = globals()['schema_entities']
     try:
