@@ -35,6 +35,52 @@ before accepting any negative claim this document makes.
 then, separately, `git log --format='%an|%s' 74973b71..HEAD` to see what landed after it and decide
 whether the findings still apply. Do not silently widen the range.
 
+## 1b. SECOND RANGE — the `ORDER-614` landing, added 2026-07-31 20:0x
+
+```
+74973b71..01adfc65      5 commits
+```
+
+Also pinned at both ends, also **checked, not assumed**: `git log --format='%an|%s'
+74973b71..01adfc65` returns 5 commits, all `patip`, none from the scheduled job.
+
+**Why a second range instead of moving the first one:** §1 says do not silently widen a range,
+and that rule applies to its author. Audit them as two ranges or as one union — but say which.
+
+**What landed in it, in one paragraph.** `ORDER-614` rev 2 shipped: the attestation checker's
+implementation **left its own `bundle_sha256`**, and what now holds it to its contract is a
+versioned policy (`s2a-attestation/1`, 44 criteria at **predicate** granularity) plus 55 hermetic
+conformance vectors, run by `run_s2a_conformance.py` with a permanent `--mutate` harness. The
+owner re-recorded once (line 7 of `s2a_attestations.jsonl`) and that is the last signature a
+*repair* will ever cost. `check_s2a_migration.py` **stayed in** the bundle deliberately.
+
+**Where to push, and these are the questions I would ask myself:**
+
+1. **Is the corpus actually hermetic?** Every vector is supposed to be synthetic — `head_blobs`
+   *is* git, D1 rows are invented, the digest is computed from invented bundle files. If any
+   vector can be made to pass or fail by moving real HEAD, the signature loop is re-created under
+   a new name and the order failed at its only goal.
+2. **Can conformance be green while behaviour changed?** The policy states the limit out loud
+   (vectors bound what is *tested*, not what is *possible*). The concrete question: **find a
+   change to `check_s2a_attestation.py` that alters a verdict on a real log and keeps 54/54
+   green.** If you find one, name whether it is inside or outside the policy's declared criteria —
+   the first is a corpus gap, the second is the stated limit doing its job.
+3. **The mutation harness.** It probes only vectors that currently conform, and returns 1 when it
+   probes zero. Its first version counted "red already" as "red because I neutralised it" — shape 3
+   inside the fixture built to prove criteria can fail. **Is the corrected version actually
+   discriminating, or did I trade one false-green for a narrower one?**
+4. **`check_s2a_migration.py` stayed in the bundle** (OPEN-2, resolved the conservative way) while
+   the policy absorbed its `pin_vintage_notes` semantics as `N1–N4`. **So one file's criteria are
+   bound by bytes and its notes are bound by policy — is that a coherent state, or a seam?**
+5. **A5 was deleted as unreachable** (`reason` sits in `REQUIRED`, so a blank reason fails R4
+   first, and the suite case named for A5 was passing on **R4's** message). Verify the unreachability
+   claim rather than the deletion — if there is any input where A5 could have fired, deleting it
+   removed a real check.
+6. **L2 caught two of my own test cases lying about their criterion** (labelled F9/F10, passing on
+   F11, because F7 pins `eps.path` to `current_owner` and R6 pins owners to real D1 files). They
+   are relabelled and the criteria are vector-bound instead. **Are there more labels asserting a
+   criterion their input cannot reach?** That is a cheap sweep with a high hit rate here.
+
 ## 2. What you are auditing, and what has already been audited to death
 
 | | slice | state |
@@ -160,7 +206,12 @@ Tier plumbing: `.githooks/pre-commit` passes `-Hook` at **both** call sites;
   and `evidence.py` gives them no entry point. Two of the six are already partly correct and
   **nobody wrote down which**. That is `ORDER-674`, open.
 
-## 6. ORDER-614 is DRAFTED, not built — audit the draft, do not audit it as shipped
+## 6. ORDER-614 — ⚠️ THIS SECTION IS SUPERSEDED BY §1b. It shipped.
+
+> Kept, not rewritten, because it is what the brief said before the landing and the reviewer
+> should be able to see that the document is not being quietly edited under them. **Read §1b for
+> the shipped state.** Everything below describes the draft as of 18:0x; the runner, the id
+> migration, the A5 deletion and the owner's re-record all landed afterwards in `ddc8350c`.
 
 [`ORDER614_POLICY_DRAFT.md`](ORDER614_POLICY_DRAFT.md) + [`ORDER614_VECTORS_DRAFT.jsonl`](ORDER614_VECTORS_DRAFT.jsonl):
 a versioned policy (44 criteria at **predicate** granularity) and **55 hermetic conformance
@@ -183,6 +234,9 @@ D1's *meaning* unbound.
 
 ```
 tools\python312\python.exe _triage\factory_os\run_registry_tests.py
+tools\python312\python.exe _triage\factory_os\run_s2a_conformance.py --mutate
+tools\python312\python.exe _triage\factory_os\run_s2a_gate.py
+tools\python312\python.exe _triage\factory_os\run_s2a_attestation_tests.py
 tools\python312\python.exe _triage\factory_os\run_schema_fixtures.py
 tools\python312\python.exe _triage\factory_os\check_registries.py
 tools\python312\python.exe _triage\factory_os\run_guard_shape_lint.py
