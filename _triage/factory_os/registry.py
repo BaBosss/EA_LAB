@@ -189,6 +189,17 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None):
     optimizable=None. A resolver that answered TUNABLE for a parameter nobody bound would be
     granting permission by silence, which is the same defect as reading an absent `experimental`
     field as false -- named in the Hypothesis schema for exactly that reason.
+
+    ⚠️ CORRECTED 2026-07-31 after a blind audit read this paragraph against the consumer and found
+    them disagreeing. The sentence above overclaimed. `optimizable=None` stops THIS FUNCTION from
+    granting permission by silence; it does not stop the SYSTEM. optimize_guard was dropping the
+    None on the floor, so a run declared to belong to a revision swept a parameter that revision
+    never described and nothing said so -- permission by silence, one call frame later. What None
+    means, exactly: THE PER-HYPOTHESIS LAYER HAS NO OPINION. It is now the consumer's obligation to
+    say so out loud, and scripts/optimize_guard.ps1 emits a note naming the parameter. Whether an
+    unbound parameter should instead be REFUSED depends on whether a revision's binding set is
+    required to be complete, which no entity declares and no design row asks for -- so it is an
+    open question, not a rule this module gets to invent.
     """
     if stores is None:
         stores = load_all(root=root)

@@ -559,6 +559,29 @@ foreach ($name in $checkList) {
         } else {
             $r.Facts.Add([pscustomobject]@{ Refuse = $false; Text = "ParameterBinding: role='$($b.role)' in $HypothesisRevision is optimizable" }) | Out-Null
         }
+    } elseif ($HypothesisRevision -ne '') {
+        # The `-ne ''` guard is NOT decoration. Without it this branch fired for EVERY parameter on
+        # EVERY existing call site, because `$bindings` is empty when no revision was declared --
+        # which would have broken the one promise this wiring made in writing: with no
+        # -HypothesisRevision, not one line of output changes. Caught by the SPECIFICITY assertion
+        # in run_registry_tests.ps1 ("with no revision declared, no UNBOUND note is emitted at
+        # all"), on the first run after the fix for the audit finding went in. The fix for a
+        # finding needed a fix.
+        #
+        # FOUND BY A BLIND AUDIT, 2026-07-31, and reproduced before being accepted. The resolver
+        # returns optimizable=$null / source=UNBOUND for a parameter no binding describes, and its
+        # own docstring says that exists so permission is never granted BY SILENCE. This branch did
+        # not exist: the $null was computed and then dropped, so a run declared to belong to
+        # B14-H01-r1 swept a parameter that revision never mentioned, and NOTHING anywhere said so.
+        # The resolver kept its promise and the consumer broke it one line later.
+        #
+        # It is a NOTE and not a REFUSE, deliberately. Whether a hypothesis's binding set must be
+        # COMPLETE -- so that an unbound parameter is an error rather than an omission -- is a
+        # policy nobody has decided: the Hypothesis entity has no "parameter surface is closed"
+        # field and the design row does not ask for one. Inventing that rule here would be
+        # inventing a bar. Making the silence VISIBLE requires no such decision, and it is the
+        # difference between "the layer had no opinion" and "nobody noticed the layer was empty".
+        $r.Facts.Add([pscustomobject]@{ Refuse = $false; Text = "ParameterBinding: UNBOUND in $HypothesisRevision - that revision registers no binding for this parameter, so the per-hypothesis layer has NO OPINION and the verdict above is the base guard's alone. This is stated rather than left silent; whether a revision's binding set must be complete is undecided (no `parameter surface is closed` field exists on Hypothesis)." }) | Out-Null
     }
     $results.Add($r)
 }

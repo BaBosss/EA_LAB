@@ -92,6 +92,24 @@ Ok 'A a revision with ZERO bindings changes not one verdict line' ($baseVerdicts
 Ok 'A and it still SAYS it consulted the resolver, rather than being silently inert' `
     ($withEmpty -match 'BINDINGS: .* resolved 0 ParameterBinding row')
 
+Write-Host '   -- A2: an UNBOUND parameter under a DECLARED revision must not be SILENT --'
+# FOUND BY A BLIND AUDIT and reproduced before acceptance: case A above proves the verdict does not
+# change, and that was read as the whole story. It is not. registry.py returns optimizable=$null /
+# source=UNBOUND precisely so permission is never granted BY SILENCE, and this consumer was
+# dropping that $null -- so a run declared to belong to a revision swept a parameter that revision
+# never described and NOTHING said so. Case A remains true and is now insufficient on its own; both
+# halves are asserted together so neither can be quoted without the other.
+Ok 'A2 an UNBOUND parameter under a declared revision is NAMED in the output' `
+    ($withEmpty -match 'UNBOUND in ' + [regex]::Escape($rev))
+Ok 'A2 and the note says the per-hypothesis layer has NO OPINION, not that it approved' `
+    ($withEmpty -match 'NO OPINION')
+Ok 'A2 and it stays a NOTE, not a REFUSE -- completeness of a binding set is undecided' `
+    ($withEmpty -match "\[ALLOW\] $([regex]::Escape($param))")
+# SPECIFICITY: with NO revision declared there is no per-hypothesis layer at all, so the note must
+# be absent. Without this, a version that printed the note unconditionally would pass A2.
+Ok 'A2 SPECIFICITY with no revision declared, no UNBOUND note is emitted at all' `
+    ($base -notmatch 'UNBOUND')
+
 Write-Host '   -- B: a LOCKED binding turns ALLOW into REFUSE --'
 Seed 'LOCKED'
 $locked = RunGuard @('-HypothesisRevision', $rev, '-BindingsRoot', $work)
