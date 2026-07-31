@@ -835,6 +835,15 @@ def main():
                   'index and worktree answers coexist rather than overwrite',
                   reg.classification_of('SL_ATR', root=t1r, source=sr_i)[0] == 'INACTIVE'
                   and reg.classification_of('SL_ATR', root=t1r, source=sr_w)[0] == 'ACTIVE')
+            # SPECIFICITY 1b (/scrutinize round 2) -- the cache key must follow the SOURCE's
+            # root, not the `root` argument. A caller passing (root=None, source=rooted-at-t1)
+            # would otherwise cache t1's table under REPO_ROOT's key, where the next
+            # repo-rooted call inherits a fixture's answers.
+            check('T1/RESOLVER SPECIFICITY a source-rooted lookup with root=None does not '
+                  'poison the real repo\'s cache slot',
+                  reg.classification_of('SL_ATR', source=sr_i)[0] == 'INACTIVE'
+                  and (reg.REPO_ROOT, 'index') not in reg._CLASSIFICATION_CACHE)
+
             # SPECIFICITY 2 -- with nothing staged-but-different, the migration changes NOTHING
             _git(t1r, 'add', 'docs/PARAM_REGISTRY.csv')
             _write_param_registry(t1r)

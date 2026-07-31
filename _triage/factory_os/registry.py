@@ -176,8 +176,17 @@ def _classifications(root=None, source=None):
     embedded quotes, exactly as optimize_guard does, and a row that does not match that shape is
     SKIPPED AND COUNTED rather than guessed at.
     """
-    base = REPO_ROOT if root is None else root
-    key = (base, source.mode if source is not None else 'worktree-direct')
+    # When a source is given, the bytes come from ITS root -- so the cache key must too.
+    # /scrutinize round 2: keying on the `root` argument while reading through `source` let a
+    # caller passing (root=None, source=rooted-at-t1) cache t1's table under REPO_ROOT's key,
+    # where the next repo-rooted caller would inherit it. Same family as the (root, mode) fix
+    # one commit earlier: two vintages -- or two repos -- must never share a slot.
+    if source is not None:
+        base = source.root
+        key = (base, source.mode)
+    else:
+        base = REPO_ROOT if root is None else root
+        key = (base, 'worktree-direct')
     if key in _CLASSIFICATION_CACHE:
         return _CLASSIFICATION_CACHE[key]
     if source is not None:

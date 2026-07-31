@@ -256,8 +256,24 @@ def parse_unit_classes(text):
         if not name:
             continue
         name = re.sub(r'\[[^\]]*\]$', '', name).strip()
-        out[name] = (row.get('unit') or '').strip()
+        unit = (row.get('unit') or '').strip()
+        if name in out and out[name] != unit:
+            # /scrutinize: `out[name] = unit` was LAST-WINS ACROSS TAGGED ROWS THAT DISAGREE --
+            # the exact S7 defect the owner ratified `build_tag` to fix, recreated in the file
+            # built the same day. If X[LAB_ENTRY_11] is money and X[LAB_ENTRY_12] is not,
+            # whichever row came later silently decided P8 for both. Disagreement is recorded,
+            # not resolved: the sentinel fails is_money_unit (so a bare number on such a key is
+            # not silently fine) and compile_preset refuses it BY NAME whenever the key is set.
+            out[name] = UNIT_CONFLICT
+            continue
+        if out.get(name) != UNIT_CONFLICT:
+            out[name] = unit
     return out
+
+
+# The sentinel parse_unit_classes stores when tagged registry rows disagree about a unit.
+# Not a valid unit string by construction (starts with '!'), and checked for by compile_preset.
+UNIT_CONFLICT = '!unit-rows-disagree'
 
 
 def is_money_unit(unit_text):
@@ -440,6 +456,13 @@ def compile_preset(surface, layers, account_unit, unit_classes=None, locked_cons
 
             # P8: the unit is carried, never converted.
             declared_unit_class = unit_classes.get(key)
+            if declared_unit_class == UNIT_CONFLICT:
+                raise PresetRefusal(
+                    'the parameter registry\'s tagged rows DISAGREE about %s\'s unit, so '
+                    'whether it is account money is unanswerable. Refused rather than letting '
+                    'whichever row was parsed last decide -- last-wins across rows that '
+                    'disagree is the defect the registry\'s own resolver refuses as AMBIGUOUS.'
+                    % key)
             money = is_money_unit(declared_unit_class)
             if money:
                 if unit is None:
@@ -584,8 +607,16 @@ def render_set(preset, ranges=None, header_note=None):
             out.append('%s=%s' % (name, value))
             continue
         start, step, stop, enabled = rng
+        # Range bounds go through the SAME canonicalisation as values (/scrutinize round 1:
+        # they were written raw, so (1, ...) and (1.0, ...) produced different bytes for one
+        # request -- a hole in exactly the determinism P3 asserts for the rest of the line).
+        decl = preset.surface.by_name[name]
         out.append('%s=%s||%s||%s||%s||%s'
-                   % (name, value, start, step, stop, 'Y' if enabled else 'N'))
+                   % (name, value,
+                      render_value(decl, start, MQL_BUILTIN_ENUMS),
+                      render_value(decl, step, MQL_BUILTIN_ENUMS),
+                      render_value(decl, stop, MQL_BUILTIN_ENUMS),
+                      'Y' if enabled else 'N'))
     return '\n'.join(out) + '\n'
 
 
@@ -649,6 +680,7 @@ def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL):
     answer -- what it must NOT do is invent a default profile so a compile can proceed.
     """
     rows = []
+    total_rows = 0
     for line in src.read_committed(rel).split('\n'):
         line = line.strip()
         if not line:
@@ -659,14 +691,20 @@ def load_instrument_profile(src, symbol, rel=INSTRUMENT_PROFILES_REL):
             raise PresetRefusal('%s has an unparseable row: %s' % (rel, exc))
         if '_comment' in obj and 'symbol' not in obj:
             continue
+        total_rows += 1
         if obj.get('symbol') == symbol:
             rows.append(obj)
     if not rows:
+        # The explanation is CONDITIONAL on the store actually being empty. An unconditional
+        # "empty by design" would become a false statement about the registry the moment its
+        # first row lands, for every symbol that is not that row (/scrutinize round 1).
+        empty_note = (' The registry holds no rows at all today, by design -- no run has '
+                      'measured a broker/lane mapping yet.' if not total_rows else
+                      ' The registry holds %d row(s) for other symbols.' % total_rows)
         raise PresetRefusal(
-            'no InstrumentProfile row for %r in %s. The registry is empty by design -- a '
-            'profile asserts which broker and lane a symbol trades on, and no run has measured '
-            'one. Compiling without it would put an invented broker mapping behind a '
-            'fingerprint.' % (symbol, rel))
+            'no InstrumentProfile row for %r in %s.%s A profile asserts which broker and lane '
+            'a symbol trades on; compiling without one would put an invented broker mapping '
+            'behind a fingerprint.' % (symbol, rel, empty_note))
     if len(rows) > 1:
         raise PresetRefusal(
             '%d InstrumentProfile rows for %r in %s. Two profiles for one symbol is the '

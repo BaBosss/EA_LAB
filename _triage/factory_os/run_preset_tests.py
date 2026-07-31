@@ -236,6 +236,13 @@ def p3_attack(mod):
              for f in (250, 250.0, '2.5e2')]
     if len(set(forms)) != 1:
         return 'three spellings of one number produced %d different files' % len(set(forms))
+    # ... including optimize-range bounds (/scrutinize: these were written raw, so (100, ...)
+    # and (100.0, ...) produced different bytes for one request)
+    pre = compile_ok(mod)
+    r1 = mod.render_set(pre, ranges={'_9_Step': (100, 50, 400, True)})
+    r2 = mod.render_set(pre, ranges={'_9_Step': (100.0, 50.0, '4e2', True)})
+    if r1 != r2:
+        return 'two spellings of one optimize range produced different bytes'
     return None
 
 
@@ -353,8 +360,20 @@ def p5_specificity(mod):
 
 def p6_attack(mod):
     """a symbol with no InstrumentProfile row => REFUSE naming it"""
-    return refuses(lambda: mod.load_instrument_profile(fake(), 'GBPJPY'),
-                   'GBPJPY', 'empty by design')
+    bad = refuses(lambda: mod.load_instrument_profile(fake(), 'GBPJPY'),
+                  'GBPJPY', 'no InstrumentProfile row')
+    if bad:
+        return bad
+    # the explanation must be conditional on the store's actual state: the fixture has one
+    # row (EURUSD), so the refusal may not claim the registry is empty
+    try:
+        mod.load_instrument_profile(fake(), 'GBPJPY')
+    except mod.PresetRefusal as exc:
+        if 'no rows at all' in str(exc):
+            return 'the refusal claims the registry is empty while it holds a row'
+        if '1 row(s) for other symbols' not in str(exc):
+            return 'the refusal does not state what the registry does hold: %s' % str(exc)[:120]
+    return None
 
 
 def p6_specificity(mod):
@@ -433,6 +452,29 @@ def p8_specificity(mod):
         layers=full_layers(mod, _4_TpUsd={'value': 50, 'unit': 'usd'})), 'UNKNOWN')
     if stray:
         return 'an unclassified key with a unit was not refused: %s' % stray
+    # tagged registry rows that DISAGREE about a unit are a refusal, not last-wins. This is the
+    # S7 defect (`build_tag` decision, PROJECT_STATE 2026-07-31) recreated in the unit lookup:
+    # with X[LAB_ENTRY_11]=money and X[LAB_ENTRY_12]=pips, whichever row parses last decided P8
+    # for both -- and in THIS ordering (money first) the pre-fix parser concluded "not money",
+    # accepting a bare number on a key one build calls account money.
+    conflicted = fake(**{P.PARAM_REGISTRY_REL: FIXTURE_REGISTRY.replace(
+        '"_4_TpUsd[LAB_ENTRY_11]","x","account money (USD)","exit"\n',
+        '"_4_TpUsd[LAB_ENTRY_11]","x","account money (USD)","exit"\n'
+        '"_4_TpUsd[LAB_ENTRY_12]","x","pips","exit"\n')})
+    clash = refuses(lambda: compile_ok(mod, src=conflicted,
+                                       layers=full_layers(mod, _4_TpUsd=50)),
+                    '_4_TpUsd', 'DISAGREE')
+    if clash:
+        return 'disagreeing tagged unit rows were resolved by last-wins: %s' % clash
+    # ... and rows that AGREE are not a conflict
+    agreeing = fake(**{P.PARAM_REGISTRY_REL: FIXTURE_REGISTRY.replace(
+        '"_4_TpUsd[LAB_ENTRY_11]","x","account money (USD)","exit"\n',
+        '"_4_TpUsd[LAB_ENTRY_11]","x","account money (USD)","exit"\n'
+        '"_4_TpUsd[LAB_ENTRY_12]","x","account money (USD)","exit"\n')})
+    if accepts(lambda: compile_ok(mod, src=agreeing,
+                                  layers=full_layers(mod,
+                                                     _4_TpUsd={'value': 50, 'unit': 'usd'}))):
+        return 'two tagged rows AGREEING on a unit were refused as a conflict'
     return None
 
 
