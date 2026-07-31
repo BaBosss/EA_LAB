@@ -288,6 +288,10 @@ $SUITE_GUARDS = @{
                                           # per-path selection exists. schemas.json is already
                                           # declared above; this is the suite that reads it.
                                           '_triage/factory_os/run_schema_fixtures.py',
+                                          # ORDER-616: the shape lint reads the checkers
+                                          # AND their suites, so both sides are inputs.
+                                          '_triage/factory_os/run_guard_shape_lint.py',
+                                          'docs/GUARD_SHAPES.md',
                                           '_triage/factory_os/gen_coverage.py',
                                           '_triage/factory_os/check_coverage_transfer.py',
                                           '_triage/factory_os/run_coverage_transfer_tests.py',

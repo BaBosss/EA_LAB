@@ -406,7 +406,40 @@ def main():
             say('  [OK ] %-58s ToolFailure: %s' % (name, str(exc)[:60]))
 
     say()
-    say('=== A8: the downgrade is GONE (ORDER-613 D3), so there is nothing left to fixture ===')
+    say('=== A8 -- which ORDER-616 L2 caught as having NO fixture at all ===')
+    say('  The six cases that used to live here tested the DOWNGRADE, and were deleted with it.')
+    say('  Nobody replaced them, and nothing noticed until a lint asked "is every criterion this')
+    say('  checker can emit named by its suite?". A8 is one subprocess exit check -- which is')
+    say('  exactly the kind of criterion that looks too small to test and then is not tested.')
+    _real_run = chk.subprocess.run
+
+    def _fake(cmd, *a, **kw):
+        if 'check_s2a_attestation.py' in ' '.join(str(c) for c in cmd):
+            class R(object):
+                returncode = 1
+                stdout = b'  -> A6 something is wrong with the attestation log\n'
+            return R()
+        return _real_run(cmd, *a, **kw)
+
+    for _label, _rc, _expect in (('the attestation checker exits non-zero', _fake, True),
+                                 ('CONTROL the attestation checker exits 0', None, False)):
+        try:
+            if _rc:
+                chk.subprocess.run = _rc
+            probs = []
+            chk.a8_attestation_still_valid(probs)
+        finally:
+            chk.subprocess.run = _real_run
+        got = any(p.startswith('A8') for p in probs)
+        ok = got == _expect
+        if not ok:
+            FAILURES.append(_label)
+        say('  %s %-58s expect=%s got=%s' % ('[OK ]' if ok else '[FAIL]', _label,
+                                             'RED' if _expect else 'GREEN',
+                                             'RED' if got else 'GREEN'))
+
+    say()
+    say('=== A8: the DOWNGRADE is gone (ORDER-613 D3); only the hard check remains ===')
     say('  Six cases used to live here proving the exemption refused to widen. They are deleted')
     say('  with the exemption itself: the contract can now express "the pinned bytes changed INTO')
     say('  the state this record approved", so nothing needs downgrading. A8 is a plain hard check')

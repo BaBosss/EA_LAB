@@ -103,6 +103,43 @@
 
 ---
 
+## ORDER-616 — [factory/discipline] The four defect SHAPES behind 24 audit findings — lint where mechanical, checklist where not — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Owner directive 2026-07-31:** *"ทำ 616 ให้จบ จบไปเลยจริง"* — after the seat proposed it as the highest-value item in the set.
+>
+> **The premise, measured:** two blind audits produced **24 findings across three slices**. Sorted by shape they are **four**, each repeated 4+ times, **by the same author, often inside the file written to prevent the previous instance**. Auditing harder does not fix that. Naming the shape does.
+
+| shape | instances | mechanical? |
+|---|---|---|
+| **1 — the check reads the wrong bytes** | `A7` judged the working tree · `read_input` accepted mixed, then worktree/worktree · `A2` joined a pinned blob to a working-tree file · the drift guard regenerated against HEAD | ✅ **L1** |
+| **2 — names not values · blacklist not allowlist** | `A3` checked key names, so a **verdict** rode in as `status` · `FORBIDDEN_KEYS` walked through by a field named `outcome` · `unowned_evidence` satisfied by any file that *mentions* the entity | ❌ judgement |
+| **3 — the check cannot fail** | `a4_deterministic` tautological · `A1`'s unreachable branch · `says=[{}]`, then `says=[{"bogus": null}]` · `C6` · **`A8` with no fixture at all** | ✅ **L2** |
+| **4 — a claim stated without measuring it** | "18 mutations" (14) · "12 entities" (11) · "No Live path touched" over a **range** containing an automated writer · "revertible in isolation" | ❌ judgement |
+
+### What was built
+
+- **`_triage/factory_os/run_guard_shape_lint.py`** — **L1** every read in a checker declares `# snapshot: index|HEAD|blob|worktree|not-a-judged-input` · **L2** every criterion a checker can emit is **named in a string literal of its suite** (parsed via `ast`, so a comment does not count).
+- **`docs/GUARD_SHAPES.md`** — shapes 2 and 4 as questions to answer before an Order closes, each with its real instances. **Pretending to lint judgement would itself be shape 3.**
+- Wired as **two** tier entries: `--self-test` and the real run. *"The lint passes"* and *"the lint can fail"* are different claims, and **a guard with no proof it can fire is the exact thing L2 exists to catch.**
+
+### What it caught on its first real run — which is the acceptance
+
+- **12 undeclared reads** across 4 checkers. All now declare. **Two got more than the bare declaration** because the answer was interesting: the reconciliation read is *vocabulary only* (A2's copy is pinned by blob elsewhere), and `gen_coverage`'s target read is *output, not judged evidence*.
+- **`A8` had no fixture at all** — its six cases were deleted along with the downgrade they tested and **nobody replaced them**. Nothing noticed until a lint asked the question. It now has a negative and a control.
+- `A7` was tested but **asserted on prose, not on its criterion id**. Now asserts by id, which is the more durable contract.
+
+### 🔎 The lint found three bugs in itself first, and that is the story worth keeping
+
+1. **It flagged every WRITE as a judged read** — `io.open(path, 'w')` is a generator producing output. **A lint that fires on writes trains people to ignore it**, which is how a guard goes quiet. Fixed by parsing modes via `ast` instead of grepping.
+2. **Its self-test crashed on the first run** — `os.path.relpath()` **raises across drives** on Windows (temp on `C:`, repo on `D:`). A self-test that cannot run is shape 3 in the tool built to catch shape 3.
+3. **Its self-test's output was invisible** — `print()` inside a function whose caller wrote through its own `TextIOWrapper` over the same stdout buffer. Two wrappers, one buffer, every line lost. It reported `SELFTEST=1` with **no visible reason**. And two L2 cases were **green for the wrong reason**: the fixtures used criterion id `Z9`, which is outside the `[A-E]` range the lint matches, so the checker emitted nothing to catch.
+
+<sub>⚠️ **Scope stated, not implied:** `check_s2a_migration.py` and `check_s2a_attestation.py` are **excluded from L1** because they sit inside the attestation bundle — adding a comment to either costs the owner a signature, and spending fewer is the point of `ORDER-614` rev 2. **The exclusion has an end date, and it is written in the lint.** Tier 27.8s vs a 15.0s advisory, already breached before this order.</sub>
+
+🔻 **Owed:** the independent re-check. `DONE`, never `REVIEWED`.
+
+---
+
 ## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (12 of 13 fixed; F3 = `ORDER-614` rev 2, written not built) · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Round 2 is sharper than round 1.** Every command in the brief passed — S2a 7/7 · schema 89/89 · fast cages 12/12 · `check_state` CLEAN — **and every attack below still got through.** That is the whole thesis of the brief working against the person who wrote it.

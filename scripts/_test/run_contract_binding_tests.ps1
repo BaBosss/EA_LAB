@@ -164,7 +164,13 @@ $scripts = @(
     #    MEASURED 2026-07-31: 2.2s, 89 cases (35 root + 54 per-entity) + 3 harness probes.
     #    REQUIRES ajv-cli on PATH. If ajv is missing the suite reports ERROR, not "rejected" --
     #    that distinction is the whole reason its three-state discipline exists.
-    @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
+    # 9. ORDER-616. The four defect SHAPES behind 24 audit findings, made mechanical where they
+    #    can be. TWO entries because "the lint passes" and "the lint can fail" are different
+    #    claims, and the second is the one this repo keeps needing: L1 and L2 are guards, and a
+    #    guard with no proof it can fire is shape 3 -- the very thing L2 exists to catch.
+    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @('--self-test') },
+    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @() }
 )
 
 $failed = 0

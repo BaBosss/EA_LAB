@@ -589,7 +589,7 @@ def load_verified(path):
     the fast suite drives; a reader gets the checked path or writes its own, and writing its own
     is at least visible in a diff.
     """
-    with io.open(path, encoding='utf-8-sig') as fh:
+    with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
         doc = json.load(fh)
     return verify_snapshot(doc, ajv_schema_validator)
 
@@ -644,7 +644,7 @@ def _focused_schema(entity):
     kept, and the explicit equality check below is stricter than oneOf. run_schema_fixtures.py
     still validates against the real root, which is where the discriminator belongs.
     """
-    with io.open(SCHEMA_PATH, encoding='utf-8') as fh:
+    with io.open(SCHEMA_PATH, encoding='utf-8') as fh:  # snapshot: worktree
         schema = json.load(fh)
     schema.pop('oneOf', None)
     schema.pop('$id', None)          # a derived schema must not claim the canonical id

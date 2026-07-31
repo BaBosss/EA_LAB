@@ -97,7 +97,7 @@ def read_input(relpath, worktree=False):
     full = os.path.join(ROOT, relpath)
     if not os.path.exists(full):
         raise ToolFailure('%s does not exist in %s' % (relpath, 'the working tree'))
-    return io.open(full, encoding='utf-8-sig').read().replace('\r\n', '\n'), 'worktree'
+    return io.open(full, encoding='utf-8-sig').read().replace('\r\n', '\n'), 'worktree'  # snapshot: worktree
 
 
 HTML_COMMENT = re.compile(r'<!--.*?-->', re.S)
@@ -513,7 +513,7 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
                 'preview and not a gate.' % (BACKLOG_PATH, COVERAGE_PATH))
 
     try:
-        recon = json.load(io.open(os.path.join(ROOT, RECON_PATH), encoding='utf-8'))
+        recon = json.load(io.open(os.path.join(ROOT, RECON_PATH), encoding='utf-8'))  # snapshot: worktree -- vocabulary only; A2 reads its own copy pinned by blob in gen_coverage
     except (IOError, ValueError) as exc:
         raise ToolFailure('cannot read the reviewed reconciliation %s: %s' % (RECON_PATH, exc))
     allowed_status = {c['declared_status'] for m in recon['mapping'] for c in m['cells']

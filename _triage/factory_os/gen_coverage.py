@@ -257,7 +257,7 @@ def load_store(path=None):
     path = path or os.path.join(ROOT, COVERAGE_PATH)
     section = None
     records = []
-    for n, line in enumerate(io.open(path, encoding='utf-8'), 1):
+    for n, line in enumerate(io.open(path, encoding='utf-8'), 1):  # snapshot: worktree
         if not line.strip():
             continue
         obj = json.loads(line)
@@ -304,7 +304,7 @@ def render(path=None):
 def apply_to_backlog(path=None):
     """Rewrite MASTER_BACKLOG.md: the top banner, and the whole section-2 block."""
     target = os.path.join(ROOT, BACKLOG_PATH)
-    blob = io.open(target, 'rb').read()
+    blob = io.open(target, 'rb').read()  # snapshot: worktree -- rewritten in place by --apply, so it is output, not judged evidence
     # Preserve the file's existing encoding exactly. Writing utf-8-sig unconditionally ADDED a BOM
     # to a file that had none -- caught in the first --apply run, before it was committed. A
     # generator that quietly changes a byte outside the region it owns is a generator whose diff
@@ -336,7 +336,7 @@ def apply_to_backlog(path=None):
 
 def sha256_file(path):
     h = hashlib.sha256()
-    h.update(io.open(path, 'rb').read())
+    h.update(io.open(path, 'rb').read())  # snapshot: worktree
     return h.hexdigest()
 
 

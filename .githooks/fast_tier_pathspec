@@ -14,6 +14,7 @@ _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/run_contract_binding_tests.py
 _triage/factory_os/run_coverage_transfer_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
+_triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_gate.py
 _triage/factory_os/run_s2a_migration_tests.py
@@ -26,6 +27,7 @@ _triage/factory_os/S2A_OWNERSHIP_MIGRATION.md
 _triage/factory_os/schemas.json
 _triage/factory_os/snapshot_validator.py
 _triage/PARAM_INACTIVE_AUDIT.md
+docs/GUARD_SHAPES.md
 docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv

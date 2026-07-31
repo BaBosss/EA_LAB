@@ -20,7 +20,7 @@ means less than it appears to.
 """
 import json, os, re, sys
 
-d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))
+d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))  # snapshot: worktree
 fail = 0
 
 def chk(ok, msg):
@@ -164,12 +164,12 @@ chk('process_observed' in d['$defs']['RunAttempt']['properties'] and
 # This is that check. It is cheap and it is the only thing here that would have caught
 # all three of today's blockers.
 print("\nDESIGN <-> SCHEMA BINDING (the seam every regression came through)")
-design = open('_triage/EA_LAB_FACTORY_OS_DESIGN.md', encoding='utf-8').read()
+design = open('_triage/EA_LAB_FACTORY_OS_DESIGN.md', encoding='utf-8').read()  # snapshot: worktree
 # The generated tables -- including the __STORAGE__ ownership table these checks read -- moved out
 # of the design into CONTRACTS.md (`87af43fd`). Both files together are the document, so the
 # storage-path and refuted-claim scans read the pair. Reading only the design would have made the
 # storage check vacuously fail and the banned-phrase scan blind to half the prose.
-contracts = open('_triage/factory_os/CONTRACTS.md', encoding='utf-8').read()
+contracts = open('_triage/factory_os/CONTRACTS.md', encoding='utf-8').read()  # snapshot: worktree
 both = design + '\n' + contracts
 
 owner_paths = []
@@ -215,7 +215,7 @@ def _invocation_text():
     text = ""
     # .githooks/pre-commit is an invocation script end to end -- everything named there is run.
     if os.path.exists(".githooks/pre-commit"):
-        text += open(".githooks/pre-commit", encoding="utf-8", errors="replace").read()
+        text += open(".githooks/pre-commit", encoding="utf-8", errors="replace").read()  # snapshot: worktree
     # For the tier files, take ONLY the arrays that are executed. Cutting the $SUITE_GUARDS map out
     # and keeping the rest was tried first and still passed a bogus WIRED claim, because the same
     # filename reappears further down in another declaration block. Whitelisting the executed arrays
@@ -224,7 +224,7 @@ def _invocation_text():
                          ("scripts/_test/run_contract_binding_tests.ps1", "$scripts")):
         if not os.path.exists(path):
             continue
-        body = open(path, encoding="utf-8", errors="replace").read()
+        body = open(path, encoding="utf-8", errors="replace").read()  # snapshot: worktree
         m = re.search(re.escape(marker) + r"\s*=\s*@\((.*?)\n\)", body, re.S)
         if m:
             text += m.group(1)
