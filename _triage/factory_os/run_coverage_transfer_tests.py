@@ -22,7 +22,9 @@ import io
 import json
 import os
 import re
+import shutil
 import sys
+import tempfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -348,9 +350,11 @@ def main():
 
     say()
     say('=== CODEX AUDIT, Standards 1 -- read_input, which had NO fixture at all ===')
-    say('  It falls back to the working tree for a path absent from the index, so a verdict could')
-    say('  rest on one input that is being committed and one that is not.')
-    real_git = chk._git
+    say('  It fell back to the working tree for a path absent from the index, so a verdict could')
+    say('  rest on one input that is being committed and one that is not. ORDER-670 migration 9/9')
+    say('  routed it through evidence.EvidenceSource, which HAS NO FALLBACK -- so these scenarios')
+    say('  now fail at the READ rather than being detected afterwards in check(). Same')
+    say('  expectations, different mechanism: that is what makes it a migration and not a rewrite.')
 
     def fake_git(*args):
         # `git show :<path>` succeeds only for the paths this scenario says are in the index
@@ -359,39 +363,83 @@ def main():
             if path in fake_git.indexed:
                 return 0, b'INDEXED BYTES\n', b''
             return 1, b'', b'fatal: path does not exist in the index'
-        if args[:2] == ('ls-files', '--error-unmatch'):
-            return (0, b'', b'') if args[2] in fake_git.tracked else (1, b'', b'')
-        return real_git(*args)
+        # evidence.read_committed asks `ls-files --cached --error-unmatch -- <path>`; the
+        # pre-migration reader asked `ls-files --error-unmatch <path>`. BOTH shapes are matched
+        # here on purpose, so this fixture keeps working against either implementation and the
+        # before/after comparison is over the CODE, not over a fixture that only fits one of them.
+        if args[:1] == ('ls-files',):
+            return (0, b'', b'') if args[-1] in fake_git.tracked else (1, b'', b'')
+        return 1, b'', b'unexpected git call in fixture: %s' % (' '.join(args)).encode()
 
-    for name, indexed, tracked, expect in (
-            ('both in the index -> one coherent snapshot', {chk.BACKLOG_PATH, chk.COVERAGE_PATH},
-             {chk.BACKLOG_PATH, chk.COVERAGE_PATH}, 'index/index'),
-            ('the store missing from the index -> mixed, must REFUSE', {chk.BACKLOG_PATH},
-             {chk.BACKLOG_PATH}, 'ToolFailure'),
-            ('the backlog missing from the index -> mixed, must REFUSE', {chk.COVERAGE_PATH},
-             {chk.COVERAGE_PATH}, 'ToolFailure'),
-            # Codex round 2, Spec 4: refusing only the MIXED pair left BOTH-from-worktree
-            # accepted -- the original defect, doubled, not a weaker version of it.
-            ('NEITHER in the index -> worktree/worktree, must REFUSE', set(), set(),
-             'ToolFailure')):
-        fake_git.indexed, fake_git.tracked = indexed, tracked
-        chk._git = fake_git
+    def with_source(mode, indexed, tracked, on_disk=()):
+        """Drive read_input against a SYNTHETIC index, by installing the process source.
+
+        The seam is evidence.EvidenceSource's `_git` argument, which exists for exactly this.
+        `chk._SRC` is set directly rather than through `_source()` because the whole point of
+        `_source()` is that it decides once -- a test that could re-decide it would not be
+        testing the shipped object.
+        """
+        fake_git.indexed, fake_git.tracked = set(indexed), set(tracked)
+        prev = chk._SRC[0]
+        chk._SRC[0] = chk.evidence.EvidenceSource(mode, root=str(tmp_root(on_disk)),
+                                                  _git=fake_git)
         try:
             b, bs = chk.read_input(chk.BACKLOG_PATH)
             c, cs = chk.read_input(chk.COVERAGE_PATH)
-            got = '%s/%s' % (bs, cs)
-            if got != 'index/index':
-                # reproduce what check() does: a MIXED pair, and now also a both-worktree pair,
-                # are tool failures -- neither says anything about what the commit contains.
-                got = 'ToolFailure'
+            return '%s/%s' % (bs, cs)
         except chk.ToolFailure:
-            got = 'ToolFailure'
+            return 'ToolFailure'
         finally:
-            chk._git = real_git
+            chk._SRC[0] = prev
+
+    _ROOTS = {}
+
+    def tmp_root(on_disk):
+        """A scratch root holding only the paths a scenario says exist on disk.
+
+        It matters for exactly one case: an UNTRACKED path that DOES exist in the working tree is
+        the one the old reader silently returned and the new one refuses. If the root were the
+        real repo, every path would exist and that distinction would be untestable.
+        """
+        key = tuple(sorted(on_disk))
+        if key not in _ROOTS:
+            d = tempfile.mkdtemp(prefix='covxfer_')
+            for rel in on_disk:
+                full = os.path.join(d, rel.replace('/', os.sep))
+                if not os.path.isdir(os.path.dirname(full)):
+                    os.makedirs(os.path.dirname(full))
+                with io.open(full, 'w', encoding='utf-8', newline='\n') as fh:
+                    fh.write('DISK BYTES\n')
+            _ROOTS[key] = d
+        return _ROOTS[key]
+
+    both = {chk.BACKLOG_PATH, chk.COVERAGE_PATH}
+    for name, mode, indexed, tracked, on_disk, expect in (
+            ('both in the index -> one coherent snapshot', 'index', both, both, (), 'index/index'),
+            ('the store missing from the index -> must REFUSE', 'index', {chk.BACKLOG_PATH},
+             {chk.BACKLOG_PATH}, (), 'ToolFailure'),
+            ('the backlog missing from the index -> must REFUSE', 'index', {chk.COVERAGE_PATH},
+             {chk.COVERAGE_PATH}, (), 'ToolFailure'),
+            # Codex round 2, Spec 4: refusing only the MIXED pair left BOTH-from-worktree
+            # accepted -- the original defect, doubled, not a weaker version of it.
+            ('NEITHER in the index -> must REFUSE', 'index', set(), set(), (), 'ToolFailure'),
+            # THE BEHAVIOUR CHANGE 9/9 IS ABOUT, and the only case whose expectation is new:
+            # untracked AND present on disk. The old reader returned those disk bytes labelled
+            # 'worktree'; check() then had to notice afterwards. There is nothing to notice now.
+            ('untracked but PRESENT ON DISK -> refused at the read, not detected after',
+             'index', set(), set(), both, 'ToolFailure'),
+            # ...and the same state under an explicit --worktree, which is the supported way to
+            # say "this run is a preview". It must still WORK, or the migration has quietly
+            # removed the escape hatch its own refusal message points people at.
+            ('the same state under --worktree is a legitimate preview',
+             'worktree', set(), set(), both, 'worktree/worktree')):
+        got = with_source(mode, indexed, tracked, on_disk)
         ok = got == expect
         if not ok:
             FAILURES.append(name)
         say('  %s %-58s expect=%-12s got=%s' % ('[OK ]' if ok else '[FAIL]', name, expect, got))
+    for _d in _ROOTS.values():
+        shutil.rmtree(_d, ignore_errors=True)
 
     say()
     say('=== TOOL FAILURE is not a rejection ===')

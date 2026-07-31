@@ -52,6 +52,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
+import evidence  # noqa: E402  (path is set above)
 import gen_coverage as gen  # noqa: E402  (path is set above)
 
 BACKLOG_PATH = gen.BACKLOG_PATH
@@ -69,13 +70,20 @@ FORBIDDEN_KEYS = (
 )
 
 
-class ToolFailure(Exception):
-    """Raised when the checker cannot READ what it is meant to judge.
-
-    Kept distinct from a rejection on purpose: "I could not see the file" and "the file is wrong"
-    are different facts, and collapsing them is how a guard reports CLEAN for a file it never
-    opened (memory `guard-disarmed-by-prose-reported-as-note`).
-    """
+# ORDER-670 migration 9/9. ToolFailure IS the reader's ToolFailure, not a look-alike.
+#
+# This is an alias rather than a second class, and the reason is a bug it prevents: every caller
+# and every fixture catches `chk.ToolFailure`, while the reader raises `evidence.ToolFailure`. Two
+# unrelated exception types would mean a read failure sails straight past main()'s handler and
+# out as a TRACEBACK -- exit 1 with a stack trace, which reads as a REJECTION of the file rather
+# than an admission that the file was never read. That is the exact conflation the docstring
+# below exists to prevent, reintroduced by the migration meant to honour it.
+#
+# Raised when the checker cannot READ what it is meant to judge. Kept distinct from a rejection
+# on purpose: "I could not see the file" and "the file is wrong" are different facts, and
+# collapsing them is how a guard reports CLEAN for a file it never opened (memory
+# `guard-disarmed-by-prose-reported-as-note`).
+ToolFailure = evidence.ToolFailure
 
 
 def _git(*args):
@@ -83,21 +91,42 @@ def _git(*args):
     return p.returncode, p.stdout, p.stderr
 
 
+_SRC = [None]
+
+
+def _source(worktree=False):
+    """The ONE EvidenceSource for this process (design section 3: a program chooses once).
+
+    MODE: `--worktree` wins; otherwise the tier's `EA_LAB_EVIDENCE`; otherwise **index**.
+
+    That last default is deliberately NOT `EvidenceSource.for_run()`, which falls back to
+    `worktree`. This checker has had an explicit `--worktree` flag since it was written, so its
+    unset default has always been the index, and adopting the library's default would have
+    silently flipped a gate to preview semantics -- a loosening disguised as a refactor. The
+    library's default is right for a caller with no flag; this caller has one.
+    """
+    if _SRC[0] is None:
+        mode = 'worktree' if worktree else os.environ.get(evidence.MODE_ENV, 'index')
+        _SRC[0] = evidence.EvidenceSource(mode, root=ROOT)
+    return _SRC[0]
+
+
 def read_input(relpath, worktree=False):
-    """(text, source) for one judged input. Index by default; working tree on request."""
-    if not worktree:
-        rc, out, err = _git('show', ':' + relpath)
-        if rc == 0:
-            return out.decode('utf-8-sig').replace('\r\n', '\n'), 'index'
-        # Not in the index: either untracked, or staged for deletion. Both are worth naming.
-        rc2, out2, _ = _git('ls-files', '--error-unmatch', relpath)
-        if rc2 == 0:
-            raise ToolFailure('%s is tracked but not readable from the index: %s'
-                              % (relpath, err.decode('utf-8', 'replace').strip()))
-    full = os.path.join(ROOT, relpath)
-    if not os.path.exists(full):
-        raise ToolFailure('%s does not exist in %s' % (relpath, 'the working tree'))
-    return io.open(full, encoding='utf-8-sig').read().replace('\r\n', '\n'), 'worktree'  # snapshot: worktree
+    """(text, source) for one judged input, through the shared reader.
+
+    ORDER-670 migration 9/9, and it is a BEHAVIOUR change, not a move. What this used to do:
+    try the index, and for a path absent from the index FALL BACK TO THE DISK, returning
+    ('worktree') as if that were an answer. `evidence.read_committed` has no fallback -- an
+    untracked path in index mode is a ToolFailure (ORDER-615 S1, then Spec4: paid for twice).
+
+    The old code compensated for its own fallback AFTERWARDS, in check(), by refusing a mixed
+    index/worktree pair and then -- one audit round later -- also refusing worktree/worktree.
+    Both of those are now impossible by construction rather than detected after the fact: one
+    source, one mode, chosen once. A second implementation of the reader is a second decider of
+    which bytes count, which is precisely what this migration removes.
+    """
+    src = _source(worktree)
+    return src.read_committed(relpath), src.mode
 
 
 HTML_COMMENT = re.compile(r'<!--.*?-->', re.S)
@@ -486,31 +515,25 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     else:
         info['coverage_source'] = 'injected'
 
-    # Codex audit, Standards 1: read_input falls back to the working tree for a path absent from
-    # the index, so a verdict could be reached on ONE input that is being committed and ANOTHER
-    # that is not. During the transfer that meant staging MASTER_BACKLOG.md while coverage.jsonl
-    # was still untracked would have approved bytes absent from the commit.
+    # ORDER-670 migration 9/9 DELETED TWO REFUSALS FROM HERE, and that deletion is the point of
+    # the migration rather than a casualty of it. They were:
     #
-    # There is no reading of a mixed pair that is safe to interpret, so this is a TOOL FAILURE, not
-    # a rejection: the checker cannot see one coherent state. (It was legitimate exactly once --
-    # the first generation, when the store did not exist yet -- and that moment is past.)
-    sources = {info['backlog_source'], info['coverage_source']}
-    if 'injected' not in sources:
-        if len(sources) > 1:
-            raise ToolFailure(
-                'mixed-vintage read: %s came from the %s and %s from the %s. One of them is not '
-                'what a commit would contain, and no verdict over that pair means anything.'
-                % (BACKLOG_PATH, info['backlog_source'], COVERAGE_PATH, info['coverage_source']))
-        # Codex audit round 2, Spec 4: refusing only the MIXED pair left `worktree/worktree` --
-        # BOTH inputs absent from the index -- accepted. That is the original defect, not a
-        # weaker version of it: the checker approves bytes the commit does not contain, and it
-        # approves BOTH of them. The index is what a commit contains; anything else is a preview.
-        if sources == {'worktree'} and not worktree:
-            raise ToolFailure(
-                'neither %s nor %s could be read from the index, so both were read from the '
-                'working tree. A verdict over bytes that are not staged says nothing about the '
-                'commit. Stage them, or pass --worktree to say deliberately that this run is a '
-                'preview and not a gate.' % (BACKLOG_PATH, COVERAGE_PATH))
+    #   * MIXED-VINTAGE (Codex Standards 1) -- one input from the index, one from the disk.
+    #   * WORKTREE/WORKTREE (Codex round 2, Spec 4) -- BOTH from the disk while not --worktree,
+    #     which is the original defect doubled, not a weaker version of it.
+    #
+    # Both existed to catch, after the fact, a state that `read_input`'s own per-call worktree
+    # fallback could produce. There is no fallback now and there is ONE source for the process,
+    # so neither state can be constructed: an untracked path in index mode raises before any
+    # verdict exists to be mixed. Keeping the checks would leave two branches that cannot fire --
+    # shape 3, in the file whose header is about not reading the wrong bytes -- and the honest
+    # move is to say the invariant became STRUCTURAL and show where it is enforced instead.
+    #
+    # WHAT IS NOT LOST: the diagnosis. `read_committed`'s refusal names the path, says whether it
+    # exists in the working tree, and says why there is no fallback. The suite still drives every
+    # one of these scenarios (Standards 1 block) and still expects a ToolFailure for each -- same
+    # expectations, different mechanism, which is why the fixtures could be kept rather than
+    # rewritten to match the new code.
 
     # ORDER-670 migration 8/9, and this was a MIXED-VINTAGE VERDICT hiding behind "vocabulary
     # only". `backlog_text` and `coverage_text` come from the INDEX; this came from the WORKING
@@ -529,18 +552,13 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
         raise
     except (IOError, ValueError) as exc:
         raise ToolFailure('cannot read the reviewed reconciliation %s: %s' % (RECON_PATH, exc))
-    # Scoped to REAL reads. A fixture injects its coverage text ('injected'), which is a synthetic
-    # root -- category C -- and demanding it match a real read would make the check fire on the
-    # suite rather than on a commit. The pair that matters is index-vs-worktree.
-    _real = ('index', 'worktree')
-    if (info['recon_source'] in _real and info['coverage_source'] in _real
-            and info['recon_source'] != info['coverage_source']):
-        raise ToolFailure(
-            'the reconciliation was read from %r while the coverage store was read from %r. '
-            'A3 derives its allowed-status vocabulary from the first and judges rows from the '
-            'second, so a split vintage means the verdict is over two different moments -- the '
-            'mixed-source pair this checker already refuses one level up.'
-            % (info['recon_source'], info['coverage_source']))
+    # The recon-vs-coverage split check that stood here is gone for the same reason as the two
+    # above: all three inputs now come from ONE EvidenceSource, so `recon_source` and
+    # `coverage_source` are literally the same attribute read twice. Comparing a value to itself
+    # is the purest form of shape 3 -- `a4_deterministic` rendered the same objects through the
+    # same function and asserted equality, and that is a named instance in GUARD_SHAPES. Migration
+    # 8/9 fixed the DEFECT (the reconciliation really was read from the worktree while the store
+    # came from the index); 9/9 removes the need for the detector by removing the way to get there.
     allowed_status = {c['declared_status'] for m in recon['mapping'] for c in m['cells']
                       if 'declared_status' in c}
 

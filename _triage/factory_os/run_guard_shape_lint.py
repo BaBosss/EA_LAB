@@ -297,19 +297,21 @@ CATEGORY = {
 # one commit each; each commit deletes its own line from here, and that deletion is the
 # engagement half of its shape-5 pair -- if the line stays, the migration did nothing.
 A_BINDING_PENDING = {
-    # ORDER-670 migration 8/9 improved this file but did NOT earn its release, and the honest
-    # move is to say which half landed. LANDED: the reconciliation read went through read_input
+    # check_coverage_transfer.py LEFT this list on 2026-07-31 (ORDER-670 migration 9/9, the last
+    # one). 8/9 had fixed its mixed-vintage verdict but left `read_input` as a second
+    # implementation of evidence.read_committed, with a worktree fallback; 9/9 replaced it with
+    # the shared reader, which has none. Deleting this line was that commit's engagement half.
+    #
+    # THE ORIGINAL 8/9 TEXT, kept because it is the clearest statement of why a partial migration
+    # must say which half landed rather than round itself up:
+    # "LANDED: the reconciliation read went through read_input
     # with the other two inputs, closing a MIXED-VINTAGE verdict -- A3 derived its allowed-status
     # vocabulary from the WORKTREE while judging rows read from the INDEX. NOT LANDED: read_input
     # is still this file's OWN index/worktree reader, a second implementation of
     # evidence.read_committed, and its worktree branch is the bare open() the lint names. The
     # suspension stays until that is replaced -- which is a behaviour change (evidence.py refuses
     # rather than falling back to the worktree for an untracked path, the Spec4 lesson) and
-    # therefore its own commit, not a rider on this one.
-    '_triage/factory_os/check_coverage_transfer.py':
-        'ORDER-670 8/9 PARTIAL: the mixed-vintage reconciliation read is fixed; read_input is '
-        'still a second implementation of evidence.read_committed and replacing it changes the '
-        'untracked-path behaviour, so it is owed its own commit',
+    # therefore its own commit, not a rider on this one."
     '_triage/factory_os/check_s2a_attestation.py':
         'ORDER-670 migration owed: reads the attestation log and the bundle digest directly',
 }
