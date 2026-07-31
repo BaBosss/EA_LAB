@@ -163,8 +163,15 @@ assert len(L1_NOT_PARSED) == 11
 PS_SNAPSHOT_TOKENS = (
     # (derived snapshot, label used in the message, regex)
     # -- git, INDEX vintage: the bytes this commit will contain -------------------------------
-    ('index', 'diff --cached', re.compile(r'diff\s+--cached')),
-    ('index', 'ls-files --cached', re.compile(r'ls-files\s+--cached')),
+    # THE SEPARATOR CLASS IS NOT COSMETIC. The first version required literal whitespace
+    # (`diff\s+--cached`) and was blind to the ARRAY form these guards actually use --
+    # `Invoke-GitText -Arguments @('diff','--cached','--name-status')`. Two of
+    # check_experiment_events' five reads were invisible to L3 on the commit that annotated
+    # them, so the lint would have certified the file with 40% of its reads unexamined. Found
+    # by counting L3's findings against a hand count of the file's reads, which is the only
+    # thing that catches a parser that is silent for the wrong reason.
+    ('index', 'diff --cached', re.compile(r'''diff['",\s]+--cached''')),
+    ('index', 'ls-files --cached', re.compile(r'''ls-files['",\s]+--cached''')),
     # `git show ':{0}'` / `rev-parse ':path'` -- the index spec is a leading colon inside the
     # quoted spec. Written as two forms because the guards build the spec both ways.
     ('index', "an index spec (':...')", re.compile(r"""['"(]\s*:\s*[{'"a-zA-Z]""")),
@@ -856,6 +863,15 @@ def self_test(out=None):
          lambda p: _l3(p, '# we could use diff --cached here one day\n$a = 1'), False),
         ('L3 CONTROL a `#` inside a quoted string does not start a comment',
          lambda p: _l3(p, "$x = Git ('show \"#{0}\"' -f $s)  # snapshot: not-a-judged-input"),
+         False),
+        ('L3 the ARRAY argument form is a read too, not invisible',
+         lambda p: _l3(p, "$r = Invoke-GitText -Arguments @('diff','--cached','--name-status')"),
+         True),
+        ('L3 the array form of ls-files --cached is seen as well',
+         lambda p: _l3(p, "$r = Invoke-GitText -Arguments @('ls-files','--cached','--',$Root)"),
+         True),
+        ('L3 CONTROL the array form declared `index` is allowed',
+         lambda p: _l3(p, "$r = Invoke-GitText -Arguments @('diff','--cached')  # snapshot: index"),
          False),
         ('L3 CONTROL a declaration on the comment line immediately above counts',
          lambda p: _l3(p, '# snapshot: index -- the paths this commit carries\n'
