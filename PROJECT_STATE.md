@@ -295,10 +295,12 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
 - **Re-review owed:** confirm the two P0s are genuinely closed rather than restated. The first audit's most valuable finding was a claim the design made about itself.
 
 **Open (2026-07-27):**
-- **ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`, the only place a binary actually
-  reaches a live chart (0 records) ⇒ this is the route by which a stale binary reaches **portfolio #1**,
-  which Phase 5 depends on. (Checked by hand: the attached Boss_16 bundle is genuinely not stale, but the
-  script cannot say so.)
+- ~~**ORDER-370** — `check_stale_binaries` does not scan `_vps_deploy/**`~~ ✅ **CLOSED 2026-07-27
+  (`DONE + REVIEWED`), archived.** This bullet stayed here for five days after the order closed and was
+  quoted back to the owner on 2026-08-01 as still-open work. **A bullet under a heading that says "Open"
+  is a claim, and this one had no owner checking it** — the boards are the state, this list is a cache of
+  them, and BACKLOG-D29 is the same defect one file over. Do not re-add an item here without also naming
+  what will remove it.
 - **ORDER-371** — tick history on `Meta 5b` differs from the primary terminal by **14×** (same window,
   PF 1.77 vs 2.08) ⇒ **numbers cannot be compared across installs anywhere in the lab.**
 - **Bookkeeping debt:** `kill_rule` in `DEPLOYMENTS.csv` is **empty on 12 rows** — that reads as "not yet
@@ -318,9 +320,15 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
    is false but the EA trades ⇒ an input was changed by hand).
 5. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT), slot in whenever a lane is free: gist redact →
    evidence lineage → drift monitor → backup drill.
-6. **098 — fxDreema YouTube corpus build-on (CAMPAIGN)** — orders stocked: **098-A** FVG-fill entry flat-lot
-   smoke · **098-B** MACD-divergence flat-lot smoke · **098-C** MM-parts library ("cap+linear/log" as the
-   user directed). **⏸ waiting for the user to decide the order** (TH verbatim: "cap+linear/log" ที่ user สั่ง · รอ user เคาะลำดับใน session เดียวที่นัดไว้ก่อนลงมือหนัก).
+6. 🔴 **098 — fxDreema corpus: THIS ITEM DESCRIBED THREE ORDERS THAT WERE ALL ALREADY CLOSED, and the
+   third one it describes does not exist.** Checked against the boards 2026-08-01:
+   **098-A** FVG-fill flat-lot smoke = `CLOSED — REJECT` (2026-07-16) · **098-B** MACD-divergence =
+   `CLOSED — DEMO-ELIGIBLE`, XAU H4 passed (2026-07-16) · **098-C** on the board is *"FVG-fill + RSI
+   confluence gate"* = `DONE + REVIEWED — REJECT` (2026-07-17). **The "MM-parts library (cap+linear/log)"
+   this bullet calls 098-C was never issued under any number.** It is a real user directive with no order,
+   which is exactly the class `docs/WORK_LIFECYCLE.md` exists to stop — so it is now the only live part of
+   this item: **write it an order first, then build.** The waiting-for-the-user line is retired; what the
+   user was waiting to sequence has been decided by two of the three being rejected.
 
 **Boss V2 chassis — remaining:** sweep the **mechanism×symbol** axis (grid/DCA/hedge/progression on pairs
 not yet tried) via `/signal-scan` · note: modes 82/83/HEDGE_LOCK have never passed any backtest — first time
