@@ -10,18 +10,25 @@
 
 ```
 Batch closed 2026-08-01: ORDER-670 (all 9 migrations, T7 = 5/5 bound, 0 suspended) ·
-ORDER-674 (all six front guards declare `# snapshot:`, checked by a new L3 lint) · T5 collapsed.
-HEAD = <run git log --oneline -1> · tier = 16 suites, 78.9s of 90.0s full-tier budget.
+ORDER-674 (all six front guards declare `# snapshot:`, checked by a new L3 lint) · T5 collapsed ·
+then /scrutinize x3, which found a BLOCKER in the batch's own repair (read the handoff for it).
+HEAD = <run git log --oneline -1> · tier = 16 suites, 81.3-81.8s of the 90.0s full-tier budget.
 
 Read in this order:
   PROJECT_STATE.md  §2 top entry (what the batch found) + §3 (decision log, unchanged this batch)
+  _triage/HANDOFF_2026-08-01_FRONTDECL.md  (the shift note — the six defects and the five
+      scrutinize findings, with how each was proven; the "live traps" section is the part that
+      saves the next session time)
   docs/GUARD_SHAPES.md  (still the pre-flight for writing OR REPAIRING any guard)
   AGENT_TASKBOARD.md — grep '## ORDER-670' and '## ORDER-674' for the full evidence
 
 What's actually open (checked before writing this, not assumed):
-  1. ORDER-701 — [CFG] fingerprint emission. Parked until an MT5 lane is reserved: needs a
+  1. ORDER-710 — [CFG] fingerprint emission. Parked until an MT5 lane is reserved: needs a
      generated enumeration in ea_template/core/ + tpl_regression CLEAN on a pinned lane.
-     Nothing else in the S6/S5 tranche is open.
+     OPENED 2026-08-01 under this number: it was called ORDER-701 in prose from 2026-07-31 (in
+     PROJECT_STATE, the ORDER-700 row and three ledger rows) but NO board header ever existed,
+     and check_handoff_contract refused this lane's handoff for routing to it. 701 was never
+     issued. Nothing else in the S6/S5 tranche is open.
   2. Five NON-front-guard PowerShell checkers still print in L3's suspension list every run
      (`check_block_staleness · check_stale_binaries · check_taskboard_archive ·
      check_template_dependencies · check_truncated_run`) — read the live line, don't trust this
@@ -37,6 +44,11 @@ Rules that still hold (unchanged from before, restated because they are still tr
   - Reserve a lane in docs/SESSION_LEDGER.md and COMMIT the reservation before anything.
     Parse `## ORDER-<n>` from all four board files yourself — do not trust the ledger's
     foot-of-file summary bullets (stale for the ninth time as of this writing, BACKLOG-D29).
+  - CLOSE THE LANE ROW IN YOUR LAST COMMIT, NOT BEFORE. check_order_collision RULE 2 reads the
+    ledger from HEAD and enforces reserved blocks only for ACTIVE rows; with none it prints
+    "NOTE: no ACTIVE lane ... reserved-block and owned-path rules skipped" and passes. The
+    2026-08-01 lane closed itself early and then opened ORDER-710 under a rule that never ran.
+    The number was legitimate, but the guard did not check it — do not quote such a PASS.
   - Budgets are enforced: 65s per-path / 90s full tier. Over budget = the commit is REFUSED.
     If a new cage tips it, displace or make faster — raising the number needs its own measured
     justification in the same commit. (This batch hit the budget twice — a PowerShell
@@ -51,6 +63,16 @@ Rules that still hold (unchanged from before, restated because they are still tr
   - `"a" + "b" -f $x` formats only the LAST fragment — parenthesise the whole string. (Recurred
     THIS batch, in a test assertion written to prevent a cost regression — caught only because
     the case was driven red rather than reasoned red.)
+  - A test that MUTATES repo state should stage through the object database
+    (`git hash-object -w --path` + `git update-index --cacheinfo` against a temp GIT_INDEX_FILE),
+    not by writing the working tree and restoring in `finally`. `finally` covers exceptions and
+    nothing else; the front-guard cage was rewritten this way after scrutinize round 2, because
+    the two taskboards are the work queue every lane writes to.
+  - Exception TYPE is a contract; a message string is not. `evidence.observe()` raises
+    `ObservationUnstable` for "it moved under me" and plain `ToolFailure` for "I could not read
+    it", and callers MUST distinguish them — collapsing the two turned every permission error
+    into a build refusal that blamed a mid-read mutation.
+  - Only ~8s of full-tier headroom remain (81.3-81.8s of 90.0s). Measure before adding a cage.
   - Codex quota is out. Fable = /fable-advisor only, never batch labour.
   - factory/universe.jsonl must not be created until the owner re-attests D1.
 
@@ -86,3 +108,14 @@ Owed to the owner, do not decide these (unchanged, none block anything currently
    P0) had checked for `'os.fstat(fh.fileno())' in source` since they were written — never once
    driving a real mid-read mutation. Neither was wrong, but neither had ever been *seen red for
    its own reason* (GUARD_SHAPES: "have I seen this red, for this reason?"). Added this batch.
+4. **A repair changes behaviour for inputs the counter-example never touched — and the shipped
+   commit said it did not.** Routing `_stat_evidence` through `observe()` was written staring at
+   the mid-read race; it silently turned every *unreadable* source into a build refusal, because
+   `ToolFailure` is not an `OSError` and the outer handler quietly stopped covering it. Caught
+   in scrutinize round 1 by asking "what does this do to inputs the example never touches" and
+   then *driving* that input rather than reasoning about it. **Restate the INVARIANT, not the
+   counter-example, and write the case for the region.**
+5. **An artifact rots inside the session that wrote it.** All eleven `L1_NOT_PARSED` reason
+   strings said "…once PS_PENDING releases it"; six were released hours later. Anything a run can
+   DERIVE must not also be typed — this is `BACKLOG-D29` reproduced by someone who had just read
+   the paragraph about `BACKLOG-D29`.

@@ -150,6 +150,43 @@ git ls-files -- $SPEC | grep -Fx <path>
 
 ---
 
+## ORDER-710 — [factory/S6] `[CFG]` emits the input-surface fingerprint, so the manifest's hash stops being `surface_only` — `OPEN` · ⛔ **needs an MT5 lane — do not start without reserving one** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **🔴 THIS ORDER EXISTS BECAUSE A GUARD REFUSED A HANDOFF THAT ROUTED TO A NUMBER NOBODY HAD OPENED.**
+> The `[CFG]` work was split out of `ORDER-700` on 2026-07-31 and called **`ORDER-701`** in prose —
+> in `PROJECT_STATE.md` §2, in the `ORDER-700` row's OWED line, and in three ledger rows. **No
+> `## ORDER-701` header was ever written on either board.** `check_handoff_contract` blocked this
+> lane's handoff for routing to it, which is precisely the failure that guard was built for
+> (Decision log 2026-07-26: 27 of 100 handoff items never reached the board). The number issued is
+> **710**, from this lane's own reserved block; `701` was never issued and is not a renumber.
+> Historical ledger rows keep the old name — they are a record of what was written at the time.
+
+**What is owed.** `ea_template/core/` must emit a fingerprint of the input surface the binary
+actually exposes, so `preset.py`'s manifest can state a hash of *what the chart loaded* rather
+than of *what the `.set` said*. Until it lands, `fingerprint_scope` stays **`surface_only`** — an
+incomplete claim carrying an honest name (memory `name-it-honestly-when-you-cannot-prove-it`).
+
+**Why it was split rather than done.** MQL5 has no reflection, so an EA cannot hash "every input
+it exposes" without a **generated enumeration**, and any `ea_template/core/` change owes
+`tpl_regression` CLEAN on an **explicitly pinned lane** (Decision log 2026-07-06 + 2026-07-30).
+Both are real work with an MT5 lane cost, and neither the S6PRESET lane nor
+`S-2026-07-31-FRONTDECL` reserved an MT5 lane.
+
+### Acceptance
+
+- **C1** the enumeration is GENERATED from `Inputs.mqh`, not hand-listed — a hand-maintained copy
+  of the input set is the cache `L0` exists to refuse, one layer down.
+- **C2** `tpl_regression` CLEAN on a lane pinned in the same commit, with the freshly-built binary
+  asserted present in the lane being measured (Decision log 2026-07-30).
+- **C3** `preset.py`'s manifest stops writing `surface_only` **only** when the fingerprint covers
+  the real surface; the label is derived from what was hashed, never set by hand.
+
+### ห้าม
+- ❌ Do not start without an MT5 lane reserved in `docs/SESSION_LEDGER.md`. ❌ Do not hand-write the
+  enumeration to avoid the generator. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-700 — [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed from a terminal cache — `DONE (Claude/Opus 2026-07-31) — 9 criteria × (attack + specificity) = 18 cases green, 9 mutation probes all DETECTED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — `preset.py` + `run_preset_tests.py` landed. Every criterion observed red for its own reason before being accepted.
@@ -162,7 +199,7 @@ git ls-files -- $SPEC | grep -Fx <path>
 >
 > **Measured on the real source, not asserted:** all 8 build tags parse; **0 of 961** declared defaults across the eight builds fail to resolve through the enum table (which includes a closed table of MQL5 platform constants — `PERIOD_H4 = 16388`, not 4; guessing it is how a diff table lied in two directions, memory `proving-a-set-was-loaded-on-a-chart`).
 >
-> **🔻 OWED, stated rather than implied:** `ORDER-701` — the `[CFG]` half. Until it lands, `fingerprint_scope` is `surface_only` and the compiler's hash is a claim about the `.set`, **not** a check that the chart loaded it. Also not built: any caller. Nothing generates a preset into the repo yet, deliberately (a new store under `factory/` is an S2a ownership question).
+> **🔻 OWED, stated rather than implied:** `ORDER-710` — the `[CFG]` half (called `ORDER-701` in prose until 2026-08-01, when a handoff routing to it was refused because no such header existed; 701 was never issued). Until it lands, `fingerprint_scope` is `surface_only` and the compiler's hash is a claim about the `.set`, **not** a check that the chart loaded it. Also not built: any caller. Nothing generates a preset into the repo yet, deliberately (a new store under `factory/` is an S2a ownership question).
 
 **Slice `S6`** of [`_triage/EA_LAB_FACTORY_OS_DESIGN.md`](_triage/EA_LAB_FACTORY_OS_DESIGN.md) — mechanism §5.7, fingerprint §5.6, acceptance §10. §10's four clauses are *unknown key refused · partial set refused · generated `.set` full-surface and deterministic · `[CFG]` emits the fingerprint*, with one prohibition: *must not read the terminal cache*.
 
@@ -244,8 +281,15 @@ In: `_triage/factory_os/preset.py` (the compiler — a **LIBRARY**: it takes its
 > **9/9 `check_coverage_transfer.read_input` → `evidence.EvidenceSource`.** The only migration that was a BEHAVIOUR change, not a move: the old reader fell back to the disk for an untracked path; the shared reader has none. Observed directly: the pre-migration reader driven against a synthetic root (both inputs untracked and present on disk) returned `worktree/worktree` with real bytes; the migrated one raises `ToolFailure`. Two refusals in `check()` — the mixed-vintage pair and the worktree/worktree pair — were DELETED because neither state can be constructed anymore (one source, no fallback); a recon-vs-coverage split check went the same way for comparing `src.mode` to itself. `ToolFailure` is now `evidence.ToolFailure` by alias, not a look-alike class — every caller catches the reader's exception type.
 > **`check_s2a_attestation` — the last T7 suspension, closed with no signature spent.** ORDER-614 rev 2 already took it out of its own bundle, so a repair no longer voids the record that authorised the previous one; all seven bundle-adjacent paths were measured clean (disk==index==HEAD) before anything was touched, and the bundle digest is byte-identical before/after (`df385139...`) on the real bundle. The finding: `bundle_digest()` read the disk unconditionally — stage a bundle-member change, restore the worktree copy, and the pre-migration digest recomputes to the OLD value, so an owner's record still validates against a bundle the commit is changing. New primitive `evidence.read_committed_bytes` (no decode, no CRLF fold — a digest needs the real bytes) closes three hand-rolled readers at once. A second real defect surfaced by T7's OWN refusal of the last bare `open()`: the untracked-log fallback was mislabelled "nothing staged to judge" when the actual reachable state is "HEAD has the log, the index does not" — i.e. the commit deletes append-only history; fixed by treating the absent path as empty bytes, which the existing G5 prefix rule already refuses correctly.
 > **T5 (design table) — closed, but not as the row prescribed.** `evidence.observe()` had **zero production callers**; `snapshot_build._stat_evidence` had reimplemented its one-handle/two-fstat mechanism verbatim under a different name, so there was a duplicate, not a split between two things. Collapsed by routing `_stat_evidence` through `observe()`. Its own suite had never driven the race behaviourally before — only matched source strings — so a real `os.fstat`-patched mid-read mutation case was added (`SnapshotRefusal`, "modified while it was being read"), which is the first time this repo has actually observed that refusal fire rather than trusted a comment about it.
-> **Guards that caught the work, and were right to:** the S2a conformance corpus failed 6 vectors after the digest migration (`git show` had moved up a layer and the vector world stopped intercepting it — the model was updated to match); the tier's own undeclared-reference sweep named new transitive imports of `evidence.py` three separate times across three commits and was satisfied each time; the enforced tier budget refused one commit at 92.5s/90.0s (a per-source digest cache fixed it — keyed on the source OBJECT, not on nothing, per the ORDER-670 4/9 lesson about caching the value a guard watches — down to 83.3s, no budget raised).
-> Full detail, per-commit: `git log --oneline 4ecc07bf..HEAD`.
+> **Guards that caught the work, and were right to:** the S2a conformance corpus failed 6 vectors after the digest migration (`git show` had moved up a layer and the vector world stopped intercepting it — the model was updated to match); the tier's own undeclared-reference sweep named new transitive imports of `evidence.py` three separate times across three commits and was satisfied each time; the enforced tier budget refused one commit at 92.5s/90.0s (a per-source digest cache fixed it — keyed on the source OBJECT, not on nothing, per the ORDER-670 4/9 lesson about caching the value a guard watches — no budget raised).
+>
+> ### 🔴 `/scrutinize` ×3 (2026-08-01) — one BLOCKER in this lane's own repair, plus two majors.
+> **BLOCKER, and it is shape 5 in its purest form.** `evidence.observe()` raises for TWO failures — "it moved under me" and "I could not open it" — and `ToolFailure` is not an `OSError`, so routing `_stat_evidence` through it silently removed the outer `except (IOError, OSError)`'s cover. An **unreadable** mandatory source went from `read_ok: False` → `MANDATORY_SOURCE_UNREADABLE` to **refusing the whole build**, carrying a message that blamed a mid-read mutation — breaking that function's own docstring, *"Never raises for a bad path"*. Reproduced by patching `evidence.io.open` to raise `PermissionError`. Fixed with `evidence.ObservationUnstable(ToolFailure)`: a subclass, not a message string, because a caller has to tell them apart and message matching is not a contract. Both directions cased — the specificity half is the case that would have caught it, and nothing else in the suite drove an unreadable-but-present source.
+> **MAJOR — the cage mutated the two shared boards in the WORKING TREE.** B/C appended to `AGENT_TASKBOARD.md` / the archive and restored in `finally`: correct for exceptions, useless against a hard kill, on the files every lane writes (ledger rule 4). Now staged through the **object database** (`hash-object -w --path` + `update-index --cacheinfo`) — same index-vs-worktree disagreement the attack needs, with no window and no restore to get wrong. Both attacks RE-PROVEN red under the new mechanism, because staging that quietly stages nothing would leave both cases green for the wrong reason; the disk hashes are asserted too.
+> **MAJOR — the lint's own reason strings rotted inside one session.** All eleven `L1_NOT_PARSED` entries read *"(L3 covers it once PS_PENDING releases it)"* and six were released the same day. Removed: the status is derived from `PS_PENDING` and printed every run, so it does not belong there twice. `BACKLOG-D29`, produced and caught within one batch.
+> **NITs:** L3 mis-parsed PowerShell's backtick escape (latent — 0 instances across all eleven guards, closed anyway because a latent mis-parse in a lint surfaces as a false accusation); the D0 fixture indexed the magic column by position rather than deriving it from the header.
+> After: lint self-test **57/57**, full tier **16/16 at 81.3s/81.8s** of 90.0s (two clean runs).
+> Full detail, per-commit: `git log --oneline 4ecc07bf..HEAD` · handoff = `_triage/HANDOFF_2026-08-01_FRONTDECL.md`.
 
 > ### ✅ 2026-07-31 — evidence.py + first migration + tier plumbing LANDED. 96/0 python · guard-trigger PART 6 green · the landing commit itself ran under the new hook mode.
 >
