@@ -84,7 +84,7 @@ finding what is not here.**
    `disposition: TRANSFER` row self-invalidates on execution). **Tell me if that was the wrong
    call.**
 
-9. **The fast tier is now 39.6s** (median of 3: 39.6 / 41.1 / 38.8) against a **15.0s advisory**
+9. **The fast tier is now 39.4s** (median of five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s advisory**
    budget, up from 18.1s. Most of the growth is ajv startup in the monitor fixtures, which are now
    BUILT through the real pipeline rather than hand-authored. Per-path selection keeps a real
    commit at 11–28s. Recorded in `run_fast_cages.ps1` as a number somebody must decide about.

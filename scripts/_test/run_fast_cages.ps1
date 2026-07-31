@@ -200,7 +200,15 @@ $FAST_SUITES = @(
     # and it was wrong in the way this file already warns about two comments up ("a per-suite time
     # is stable, a TIER TOTAL is not"). The actual full-tier run on 2026-07-31, all 13 suites,
     # 0 failed:
-    #     39.6s / 41.1s / 38.8s  -> MEDIAN 39.6s, three consecutive runs, all 13 suites, 0 failed
+    #     38.1 / 38.8 / 39.4 / 39.6 / 41.1  -> MEDIAN 39.4s, five clean full-tier runs, 0 failed
+    #     (An earlier draft of this line said "39.6s, three consecutive runs" quoting
+    #      39.6/41.1/38.8. The median was right; the sentence was not. Two of those came from a
+    #      BACKGROUND loop I read before its third run had finished writing, and the third came
+    #      from a separate foreground run -- so they were never three consecutive runs of
+    #      anything. The loop's own third value, 39.4s, and a fourth run at 38.1s, both landed
+    #      after I had already written the comment. All five are listed now. Reading a
+    #      background output file before the job ends and quoting it as the job's result is a
+    #      shape-4 defect with a new mechanism, and it is recorded here rather than tidied away.)
     #              = optimize-guard 5.3 + monitor-integrity 9.1 + contract-binding 9.1
     #              + snapshot-s4 5.3 + guard-trigger 5.4 + the seven small ones ~3.1
     #     (A single run said 37.7s earlier in the same session. This file's own rule two comments
