@@ -13,12 +13,21 @@ WHAT THIS ADDS THAT snapshot_validator.py DELIBERATELY DID NOT
   `_refuse_supplied_answer` is written on, applied one level down, to the evidence instead of the
   answer.
 
-  Note what is still NOT proven, because saying so is the condition on the design being acceptable:
-  authenticity is established for the SOURCE FILES only. The reconciliation counts
-  (`discovered`, `categorized`, `categories`, `coverage`) remain builder claims. Deriving those
-  means re-running the discovery, which is S5/S13 work; the honest status is that this module
-  authenticates the sensor rows and takes the arithmetic on trust, which is strictly more than
-  the previous "takes everything on trust".
+  The reconciliation counts are derived too, and that was NOT true in the first version of this
+  file -- it said so in this paragraph and treated it as an acceptable limit. Probing it on
+  2026-07-31 took one line: a builder input declaring `discovered: 0` and every other count 0 was
+  accepted and produced `reconciliation_clear: true`, while the real boards reconcile to
+  discovered=312 / unclassified=30 / duplicates=6. Half the verdict was derived and half was
+  typed, and the typed half is the half that says the work is finished. `reconcile()` below is
+  now the single producer, and `build_document` takes a REQUIRED `reconciler` argument with two
+  legal values, exactly like the schema gate.
+
+  What is STILL not proven, stated so it is a limit and not a surprise: `reconcile()` reads the
+  two taskboards and factory/coverage.jsonl from the WORKING TREE, so it describes the tree as it
+  is, not as a commit would contain it. And the six category buckets come from a closed
+  STATUS_CATEGORY allowlist -- a status verb it does not know becomes `unclassified`, which makes
+  the verdict false with a named reason rather than being guessed into a bucket. That is the
+  intended failure direction; it is not the same as understanding the board.
 
 THE IDENTITY DECISION (ORDER-612, engineering, recorded in the order)
   A source row carries BOTH:
@@ -46,6 +55,7 @@ TESTS
 import collections
 import copy
 import datetime
+import glob
 import hashlib
 import io
 import json
@@ -193,15 +203,74 @@ def compute_build_id(doc):
     return h.hexdigest()[:16]
 
 
-def build_document(builder_input, root=None, now=None, schema_validator=None):
+class _ClaimedReconciliation(object):
+    """Named sentinel, so declining to derive the counts reads as a decision and greps."""
+
+    def __repr__(self):
+        return 'RECONCILIATION_NOT_DERIVED'
+
+
+RECONCILIATION_NOT_DERIVED = _ClaimedReconciliation()
+
+_UNSET = object()
+
+
+def _resolve_reconciler(reconciler):
+    """Accept ONLY `reconcile` or the named sentinel. Same rule, same reason, as _resolve_gate.
+
+    FOUND BY PROBING THIS MODULE, 2026-07-31 (ORDER-612 round 1). C4 made the SOURCE ROWS
+    authentic -- read_ok/sha256/mtime/fresh derived from disk, a contradicting claim refused.
+    The reconciliation counts were left as builder claims, and the probe was one line: a builder
+    input declaring `discovered: 0, categorized: 0, ...everything 0` was accepted and produced
+    `reconciliation_clear: true`, while the real repo reconciles to discovered=312,
+    unclassified=30, duplicates=6. Half the verdict was derived and half was typed, and the
+    typed half is the half that says the work is done.
+
+    An OPTIONAL reconciler would reintroduce exactly what Codex audit 6 removed from the schema
+    gate ("a boundary whose caller chooses whether to check is not a boundary"), so this is a
+    required argument with two legal values, one of them named after what it gives up.
+    """
+    if reconciler is RECONCILIATION_NOT_DERIVED or reconciler is reconcile:
+        return reconciler
+    if reconciler is _UNSET:
+        raise TypeError(
+            'build_document/build_file require an explicit `reconciler`: snapshot_build.reconcile '
+            'to DERIVE the counts from the boards and refuse a contradicting claim, or the named '
+            'sentinel snapshot_build.RECONCILIATION_NOT_DERIVED to accept the builder\'s claim. '
+            'There is no default, because a default is how half a verdict went unauthenticated.')
+    raise TypeError(
+        'reconciler must be snapshot_build.reconcile or the named sentinel '
+        'snapshot_build.RECONCILIATION_NOT_DERIVED, not %r.' % (reconciler,))
+
+
+def _apply_reconciliation(inp, reconciler, root):
+    """Derive meta.reconciliation, refusing a claim the boards do not support."""
+    if _resolve_reconciler(reconciler) is RECONCILIATION_NOT_DERIVED:
+        return
+    truth = reconcile(root=root)
+    claimed = inp['meta'].get('reconciliation')
+    if claimed is not None and claimed != truth:
+        sv._refuse(
+            'meta.reconciliation does not match what the boards actually reconcile to. REFUSED, '
+            'not overwritten, for the same reason a contradicted source row is: overwritten and '
+            'honoured look identical afterwards.\n  claimed: %s\n  derived: %s'
+            % (json.dumps(claimed, sort_keys=True), json.dumps(truth, sort_keys=True)))
+    inp['meta']['reconciliation'] = truth
+
+
+def build_document(builder_input, root=None, now=None, schema_validator=None,
+                   reconciler=_UNSET):
     """SnapshotBuilderInput (dict) -> validated ControlRoomSnapshotV5 (dict). No file I/O.
 
     `schema_validator` defaults to the real ajv gate. It is an argument only so the fast fixture
     suite can drive the derivation and verdict logic without paying a node subprocess per case;
     _resolve_gate still refuses anything that is neither the canonical validator nor the named
     sentinel, so this cannot become a hole a caller widens with a lambda.
+
+    `reconciler` has NO default -- see _resolve_reconciler.
     """
     gate = sv.ajv_schema_validator if schema_validator is None else schema_validator
+    _resolve_reconciler(reconciler)
     inp = copy.deepcopy(builder_input)
     # Order matters and is load-bearing:
     #   1. refuse a supplied ANSWER   (verdict / reconciliation_clear / all_clear / reasons)
@@ -212,6 +281,11 @@ def build_document(builder_input, root=None, now=None, schema_validator=None):
     # the common case, and the schema requires `read_ok` to be a boolean. Validating first would
     # reject the honest builder for declining to claim what it has not measured.
     sv._refuse_supplied_answer(inp)
+    # Reconciliation BEFORE evidence: derive_source_evidence calls sv.facts_of, which requires
+    # meta.reconciliation to exist. An input that legitimately claims nothing (which is what the
+    # PowerShell writer now emits, so it CANNOT claim) would otherwise be refused for the absence
+    # the next line is about to fill.
+    _apply_reconciliation(inp, reconciler, root)
     derive_source_evidence(inp, root=root, now=now)
     inp['meta']['build_id'] = compute_build_id(inp)
     out = sv.build_snapshot(inp, gate)
@@ -285,6 +359,24 @@ def _order_rows(text):
 
 TASKBOARDS = ('AGENT_TASKBOARD.md', 'ARCHIVE_TASKBOARD_2026-07A.md')
 
+# The boards that are DELIBERATELY not counted, each with a reason. Probing round 2 of ORDER-612
+# found five taskboard-shaped files in the repo root and only two of them being read, so
+# `discovered` was a hand-maintained list of where work lives -- BACKLOG-D29's shape exactly, and
+# the same rule ("silence is not zero") that reconcile() already refuses a MISSING board for.
+#
+# MEASURED 2026-07-31: all three below carry ZERO `## ORDER-` headers today, so the count was not
+# wrong -- it was UNGUARDED. Both of the AGENT_TASKBOARD_* boards say in their own header that
+# claim/status rules are the same as the main board, so an order landing in one is a normal thing
+# to do, and nothing would have noticed.
+TASKBOARDS_NOT_READ = {
+    'AGENT_TASKBOARD_MERGE.md': 'a closed-track board; it must stay EMPTY of orders, and the '
+                                'completeness check below enforces that rather than assuming it',
+    'AGENT_TASKBOARD_PQUANT.md': 'a design board for a track that has not opened; same rule',
+    'TASKBOARD_DIGEST.md': 'a GENERATED projection of the main board -- counting it would '
+                           'double-count every order it summarises',
+}
+TASKBOARD_GLOB = '*TASKBOARD*.md'
+
 # The coverage store's cell statuses, mapped onto the design's three coverage parts. A status this
 # table cannot read is deliberately mapped to NOTHING, so the parts sum falls short of
 # cells_in_universe and COVERAGE_SUM_MISMATCH fires naming both numbers. Silence is not an option
@@ -308,6 +400,29 @@ COVERAGE_PART = {
 def reconcile(root=None):
     """-> a ReconciliationEvidence object. Every count comes from this one function."""
     root = REPO_ROOT if root is None else root
+
+    # COMPLETENESS, before counting anything. The two lists above are declarations; the
+    # FILESYSTEM decides whether they are complete -- the same shape as run_guard_shape_lint's L0,
+    # and for the same reason: a hand-maintained list of where to look is a list that stops being
+    # true. A board in neither list is refused outright; a board declared NOT_READ that has
+    # acquired orders is refused too, because "it is empty" was the entire basis for excluding it.
+    for path in sorted(glob.glob(os.path.join(root, TASKBOARD_GLOB))):
+        rel = os.path.basename(path)
+        if rel in TASKBOARDS:
+            continue
+        with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
+            n = len(_order_rows(fh.read()))
+        if rel not in TASKBOARDS_NOT_READ:
+            sv._refuse('%s looks like a taskboard and is in neither TASKBOARDS nor '
+                       'TASKBOARDS_NOT_READ (it carries %d order header(s)). Refusing: a count of '
+                       '"all discovered work" that quietly omits a board is worse than no count.'
+                       % (rel, n))
+        if n:
+            sv._refuse('%s is declared NOT READ on the grounds that it holds no orders (%r), and '
+                       'it now carries %d. Either count it or change the reason -- an exclusion '
+                       'whose premise has expired is an exclusion nobody re-examined.'
+                       % (rel, TASKBOARDS_NOT_READ[rel], n))
+
     per_board = []
     rows = []
     for rel in TASKBOARDS:
@@ -333,10 +448,18 @@ def reconcile(root=None):
     discovered = len(rows)
     categorized = sum(categories.values())
 
-    # duplicates = one board carrying the same order id twice. conflicts = the same order id on
-    # MORE THAN ONE board, i.e. simultaneously active and archived. Both are real, both are
-    # computed here, and neither is a constant -- a hardcoded `0` in a count the verdict reads is
-    # shape 3 (a criterion that cannot fire) sitting inside the evidence instead of the check.
+    # duplicates = one board carrying the same order id at the head of MORE THAN ONE BLOCK.
+    # conflicts = the same order id on more than one BOARD, i.e. simultaneously active and
+    # archived. Both are real, both are computed here, and neither is a constant -- a hardcoded
+    # `0` in a count the verdict reads is shape 3 (a criterion that cannot fire) sitting inside
+    # the evidence instead of the check.
+    #
+    # SAY WHAT `duplicates` MEANS, because the 6 it reports today are not 6 mis-issued numbers.
+    # Inspected 2026-07-31: `## ORDER-082 -- ...` and `## ORDER-082 -- AMENDMENT` are two blocks
+    # under one id, as are `## ORDER-095 / #4` and `## ORDER-095`. That is a real, reportable
+    # condition -- it is why an id can be simultaneously archivable and not -- but it is NOT the
+    # claim "two different orders were issued the same number". A counter whose name invites the
+    # stronger reading is the shape-2 defect, so the reading is pinned here.
     duplicates = 0
     for ids in per_board:
         counts = collections.Counter(ids)
@@ -384,7 +507,8 @@ def _sha256_file(path):
         return hashlib.sha256(fh.read()).hexdigest()
 
 
-def build_file(input_path, out_path, root=None, now=None, schema_validator=None):
+def build_file(input_path, out_path, root=None, now=None, schema_validator=None,
+               reconciler=_UNSET):
     """Read a builder input, build+validate, and atomically replace `out_path`.
 
     C5. Nothing touches `out_path` until a fully validated document exists in memory AND has been
@@ -393,7 +517,8 @@ def build_file(input_path, out_path, root=None, now=None, schema_validator=None)
     """
     with io.open(input_path, encoding='utf-8-sig') as fh:  # snapshot: worktree
         builder_input = json.load(fh)
-    doc = build_document(builder_input, root=root, now=now, schema_validator=schema_validator)
+    doc = build_document(builder_input, root=root, now=now, schema_validator=schema_validator,
+                         reconciler=reconciler)
 
     out_dir = os.path.dirname(os.path.abspath(out_path)) or '.'
     if not os.path.isdir(out_dir):
@@ -451,7 +576,11 @@ def main(argv):
         print(USAGE)
         return 2
     try:
-        doc = build_file(argv[2], argv[3], root=(argv[4] if len(argv) == 5 else None))
+        # The CLI is the PRODUCTION path, so it always derives. The sentinel exists for
+        # fixtures, which build against a temp root that has no boards.
+        doc = build_file(argv[2], argv[3], root=(argv[4] if len(argv) == 5 else None),
+                         reconciler=(reconcile if len(argv) == 4
+                                     else RECONCILIATION_NOT_DERIVED))
     except sv.ToolFailure as exc:
         print('[TOOL-FAILURE] %s' % exc)
         return 3

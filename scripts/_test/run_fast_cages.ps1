@@ -190,7 +190,8 @@ $FAST_SUITES = @(
     # snapshot). The python half of S4 went into run_contract_binding_tests.ps1's wrapper, per
     # this file's own rule that a python cage belongs in an existing python wrapper.
     #
-    # MEASURED 4.6s, and it is DECLARED rather than glossed: this file says the next addition has
+    # MEASURED 5.3-5.9s (5.9 / 5.7 / 5.8 standalone, 5.3 inside the tier), and it is DECLARED
+    # rather than glossed: this file says the next addition has
     # to displace something. Nothing is displaced, and the honest reason is that per-path selection
     # landed in between -- this suite runs only when a snapshot path is staged.
     #
@@ -199,12 +200,19 @@ $FAST_SUITES = @(
     # and it was wrong in the way this file already warns about two comments up ("a per-suite time
     # is stable, a TIER TOTAL is not"). The actual full-tier run on 2026-07-31, all 13 suites,
     # 0 failed:
-    #     37.7s  = optimize-guard 5.3 + monitor-integrity 8.9 + contract-binding 8.8
-    #              + snapshot-s4 4.6 + guard-trigger 5.3 + the seven small ones ~4.6
+    #     39.6s / 41.1s / 38.8s  -> MEDIAN 39.6s, three consecutive runs, all 13 suites, 0 failed
+    #              = optimize-guard 5.3 + monitor-integrity 9.1 + contract-binding 9.1
+    #              + snapshot-s4 5.3 + guard-trigger 5.4 + the seven small ones ~3.1
+    #     (A single run said 37.7s earlier in the same session. This file's own rule two comments
+    #      up is "quote a MEDIAN of at least three runs, never one run", and the first draft of
+    #      this note broke it. Three runs span 2.3s, which is why the rule exists.)
     # Two of those grew in THIS order and neither is the new suite:
-    #   monitor-integrity  1.5s -> 8.9s  its 9 coverage fixtures are now BUILT through
-    #                                    snapshot_build.py instead of hand-authored, because a
-    #                                    hand-typed `verdict` is the attack the slice refuses.
+    #   monitor-integrity  1.5s -> 8.9s  its 8 built coverage fixtures now go through
+    #                                    snapshot_build.py instead of being hand-authored, because
+    #                                    a hand-typed `verdict` is the attack the slice refuses.
+    #                                    (8 = 10 .json fixtures minus the 2 RAW ones that exist to
+    #                                    test the reader's failure paths. COUNTED, not recalled --
+    #                                    the first draft of this line said 9.)
     #   contract-binding   ~4s  -> 8.8s  it gained run_snapshot_s4_tests.py (0.35s) and pays for
     #                                    the schema growing.
     # The cost is ajv process startup (~0.4s x 2 per built fixture), not assertions, and it cannot
@@ -222,7 +230,9 @@ $FAST_SUITES = @(
     # python start plus two ajv subprocesses. Hand-authoring them instead would mean typing the
     # `verdict` by hand -- which is the attack the whole slice exists to refuse, so the cost is
     # the test being real. One ajv pass per build was already removed (build_file now proves the
-    # write round-tripped instead of re-deriving the same verdict), which bought 1.0s.
+    # write round-tripped instead of re-deriving the same verdict), which bought 1.0s (5.6s ->
+    # 4.6s, measured either side). It then grew back to ~5.8s when rounds 1 and 2 of the
+    # self-review added two more built fixtures and a stub-root case.
     'run_snapshot_s4_tests.ps1',
     # BACKLOG-D32 (2026-07-30): guards the trigger that decides whether this whole tier runs.
     # It is last on purpose -- if the declarations and the generated pathspec have drifted,

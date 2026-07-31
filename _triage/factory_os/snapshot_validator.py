@@ -79,6 +79,7 @@ TESTS   python _triage/factory_os/run_snapshot_validator_tests.py
 """
 import collections
 import copy
+import hashlib
 import io
 import json
 import os
@@ -622,16 +623,42 @@ def load_verified(path):
     the fast suite drives; a reader gets the checked path or writes its own, and writing its own
     is at least visible in a diff.
     """
+    return load_verified_with_digest(path)[0]
+
+
+def load_verified_with_digest(path):
+    """-> (verified document, sha256 of the exact bytes that were verified).
+
+    The digest exists because of a shape-1 finding against the PowerShell reader, 2026-07-31
+    (ORDER-612 round 1): Get-VerifiedSnapshot ran this verifier over a path and then read THE SAME
+    PATH AGAIN to parse it. Two reads, two moments, and the bytes it handed its caller were not
+    the bytes anything had checked. Publishing the digest of the verified bytes lets a caller
+    prove its own read is the same read -- 'do all inputs to one verdict come from the same
+    moment?' is the question GUARD_SHAPES asks about shape 1, and the honest answer was no.
+
+    ONE read here, on purpose: the bytes are hashed and parsed from the same buffer, so the
+    digest cannot describe a different revision of the file than the document does.
+    """
     try:
-        with io.open(path, encoding='utf-8-sig') as fh:  # snapshot: worktree
-            doc = json.load(fh)
-    except ValueError as exc:
-        raise MalformedDocument('%s is not parseable JSON, so there is no document to verify: %s'
-                                % (path, exc))
+        with io.open(path, 'rb') as fh:  # snapshot: worktree
+            raw = fh.read()
     except (IOError, OSError) as exc:
         # The file is there and could not be opened. That is the instrument, not the document.
-        raise ToolFailure('%s could not be opened: %s' % (path, exc))
-    return verify_snapshot(doc, ajv_schema_validator)
+        # RECORDED LIMIT (ORDER-612 round 2, probed): an ABSENT file lands here too, and comes
+        # out as ToolFailure/exit 3 -- 'the instrument' -- when 'there is no document' would be
+        # more accurate. It is left as is rather than growing a fifth exit code, because the
+        # PowerShell reader Test-Paths first and returns Code=MISSING before ever invoking this,
+        # so no reader takes this path for an absent file. Only a human at the command line sees
+        # it, and the message says which it was.
+        raise ToolFailure('%s could not be opened (it may not exist): %s' % (path, exc))
+    digest = hashlib.sha256(raw).hexdigest()
+    try:
+        text = raw.decode('utf-8-sig')
+        doc = json.loads(text)
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise MalformedDocument('%s is not parseable JSON, so there is no document to verify: %s'
+                                % (path, exc))
+    return verify_snapshot(doc, ajv_schema_validator), digest
 
 
 # ---------------------------------------------------------------------------------------
@@ -748,7 +775,7 @@ def main(argv):
         print(USAGE)
         return 2
     try:
-        load_verified(argv[2])
+        _doc, digest = load_verified_with_digest(argv[2])
     except MalformedDocument as exc:
         print('[MALFORMED] %s' % exc)
         return 4
@@ -761,8 +788,11 @@ def main(argv):
     except SnapshotRefusal as exc:
         print('[REFUSED] %s' % exc)
         return 1
+    # The digest is machine-readable on purpose: a caller that re-reads the file can prove it read
+    # the same bytes. The prefix is fixed so a caller matches on THAT, not on the prose.
     print('[OK] %s: stored verdict matches the verdict recomputed from its own evidence'
           % argv[2])
+    print('verified-sha256: %s' % digest)
     return 0
 
 

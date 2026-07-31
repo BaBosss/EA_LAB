@@ -394,16 +394,6 @@ $sum = [ordered]@{
   judge_under_rate          = @($jr | Where-Object { $_.rate_flag -eq 'UNDER_RATE' }).Count
 }
 
-# --- ORDER-612 (S4): the reconciliation evidence, from its ONE producer ---
-# snapshot_build.py reconcile is the only thing in this pipeline that counts orders or coverage
-# cells. Nothing here keeps a parallel tally to compare against it, which is what the order's
-# "no independently calculated totals anywhere" means in practice.
-$reconJson = & $PY (Join-Path $Root '_triage\factory_os\snapshot_build.py') reconcile
-if ($LASTEXITCODE -ne 0 -or -not $reconJson) {
-  throw "control_room_snapshot: could not compute the reconciliation evidence (exit $LASTEXITCODE). Refusing to write a snapshot whose reconciliation is unknown -- 'I could not count' is not 'the counts are zero'."
-}
-$recon = ($reconJson -join '') | ConvertFrom-Json
-
 $snapshot = [ordered]@{
   entity = 'SnapshotBuilderInput'
   meta = [ordered]@{
@@ -437,7 +427,12 @@ $snapshot = [ordered]@{
       (SourceRow 'live_dashboard'        $DASH $true),
       (SourceRow 'attestation_map'       $ATT  $true)
     )
-    reconciliation = $recon
+    # meta.reconciliation is DELIBERATELY ABSENT. snapshot_build.py derives it from the two
+    # taskboards and factory/coverage.jsonl and fills it in. This script does not compute it, does
+    # not carry it, and therefore CANNOT misstate it -- which is stronger than computing it here
+    # and having the builder check the answer. Found by probing the first version of this pipeline
+    # (ORDER-612 round 1): the source rows were authenticated and the counts were accepted on
+    # trust, so an all-zero claim produced reconciliation_clear=true.
     counting_method = 'MT5: latest cumulative deals csv, entry=1 rows per magic. MT4: latest orders csv, non-empty close_time per magic.'
   }
   system_health   = $health

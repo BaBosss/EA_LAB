@@ -133,6 +133,29 @@ function Get-VerifiedSnapshot {
     $text = ((@($out) -join ' ') + ' ' + $errText).Trim()
 
     if ($rc -eq 0) {
+        # SHAPE-1 FIX (ORDER-612 round 1, found by probing). This used to run the validator over
+        # $SnapshotPath and then read $SnapshotPath AGAIN to parse it -- two reads, two moments,
+        # and the bytes handed to the caller were not the bytes anything had checked. The
+        # validator now publishes the sha256 of the exact bytes it verified; this read is hashed
+        # and compared, so a file that changed in between is UNAVAILABLE ("the instrument lost
+        # its footing") rather than silently accepted.
+        $claimed = ''
+        foreach ($line in @($out)) {
+            if ("$line" -match '^verified-sha256:\s*([0-9a-f]{64})$') { $claimed = $Matches[1] }
+        }
+        if ($claimed -eq '') {
+            return [pscustomobject]@{
+                State = 'UNAVAILABLE'; Code = 'TOOL'; Document = $null
+                Reason = "the validator reported OK but published no verified-sha256 line, so this reader cannot prove it is reading the bytes that were verified"
+            }
+        }
+        $mine = (Get-FileHash -LiteralPath $SnapshotPath -Algorithm SHA256).Hash.ToLower()
+        if ($mine -ne $claimed) {
+            return [pscustomobject]@{
+                State = 'UNAVAILABLE'; Code = 'TOOL'; Document = $null
+                Reason = "the snapshot changed between being verified ($($claimed.Substring(0,12))) and being read ($($mine.Substring(0,12))) -- refusing to hand back bytes nothing checked"
+            }
+        }
         try {
             $doc = Get-Content -LiteralPath $SnapshotPath -Raw | ConvertFrom-Json
         } catch {

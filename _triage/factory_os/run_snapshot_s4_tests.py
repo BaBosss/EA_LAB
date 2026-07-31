@@ -27,6 +27,8 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import snapshot_build as sb            # noqa: E402
+
+NO_DERIVE = None  # bound in main() to sb.RECONCILIATION_NOT_DERIVED; see the C2c block
 import snapshot_validator as sv        # noqa: E402
 
 PASS = []
@@ -83,6 +85,8 @@ def row(name, path, mandatory=True, **claims):
 
 
 def main():
+    global NO_DERIVE
+    NO_DERIVE = sb.RECONCILIATION_NOT_DERIVED
     root = tempfile.mkdtemp(prefix='s4_')
     try:
         with io.open(os.path.join(root, 'srcA.txt'), 'w') as fh:
@@ -96,7 +100,7 @@ def main():
 
         print('\n--- C4: authenticity is DERIVED from the file on disk, never claimed ---')
         doc = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]), root=root,
-                                schema_validator=gate)
+                                schema_validator=gate, reconciler=NO_DERIVE)
         r0 = doc['meta']['sources'][0]
         check('a row with no claims gets read_ok/sha256/mtime derived from the real file',
               r0['read_ok'] is True and r0['sha256'] == real_sha and r0['mtime'] is not None,
@@ -108,17 +112,17 @@ def main():
         refuses('C4 NEG a builder claiming read_ok=true for a file that does not exist is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', 'nope.txt', read_ok=True)]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 "claims True but the file at 'nope.txt' is False")
         refuses('C4 NEG a builder claiming a sha256 the file does not have is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', 'srcA.txt', sha256='0' * 64)]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'sha256 claims')
         refuses('C4 NEG a builder claiming an mtime the file does not have is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', 'srcA.txt', mtime='2099-01-01T00:00:00')]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'mtime claims')
         # srcOld exists because the first version of this negative used `stale_bar=0` on a
         # just-created file -- and age 0.0 <= bar 0 is GENUINELY FRESH, so `fresh: true` was not a
@@ -136,11 +140,11 @@ def main():
         refuses('C4 NEG a builder claiming fresh=true on an over-the-bar row is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcOld', 'srcOld.txt', fresh=True)], stale_bar=30),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'fresh claims True')
         stale_doc = sb.build_document(
             scaffold(root, [row('srcOld', 'srcOld.txt')], stale_bar=30),
-            root=root, schema_validator=gate)
+            root=root, schema_validator=gate, reconciler=NO_DERIVE)
         check('C4 SPECIFICITY the same row with NO claim derives fresh=false and says STALE',
               stale_doc['meta']['sources'][0]['fresh'] is False
               and ('MANDATORY_SOURCE_STALE', 'srcOld')
@@ -149,17 +153,17 @@ def main():
         refuses('C4 NEG a source row with NO path is REFUSED, not skipped',
                 lambda: sb.build_document(
                     scaffold(root, [{'name': 'srcA', 'mandatory': True}]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'no usable `path`')
         refuses('C4 NEG an ABSOLUTE source path is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', os.path.join(root, 'srcA.txt'))]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'is absolute')
         refuses('C4 NEG a source path escaping the repo root is REFUSED',
                 lambda: sb.build_document(
                     scaffold(root, [row('srcA', os.path.join('..', 'srcA.txt'))]),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'escapes the repository root')
 
         # SPECIFICITY, per memory `gate-specificity-not-just-sensitivity`: a deriver that refused
@@ -167,7 +171,7 @@ def main():
         # the disk must be accepted.
         ok_doc = sb.build_document(
             scaffold(root, [row('srcA', 'srcA.txt', read_ok=True, sha256=real_sha)]),
-            root=root, schema_validator=gate)
+            root=root, schema_validator=gate, reconciler=NO_DERIVE)
         check('C4 SPECIFICITY a claim that AGREES with the disk is accepted, not refused',
               ok_doc['meta']['sources'][0]['sha256'] == real_sha)
 
@@ -191,7 +195,7 @@ def main():
                   'coverage': {'cells_in_universe': 4, 'tested': 1, 'untested': 2,
                                'not_applicable': 1}}
         d2 = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')], recon=seeded),
-                               root=root, schema_validator=gate)
+                               root=root, schema_validator=gate, reconciler=NO_DERIVE)
         check('C2 seeded 10 discovered / 10 categorized / sums matching => clear',
               d2['verdict']['reconciliation_clear'] is True,
               json.dumps(d2['verdict']))
@@ -200,7 +204,7 @@ def main():
         dropped['categorized'] = 9
         dropped['categories']['completed'] = 4
         d3 = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')], recon=dropped),
-                               root=root, schema_validator=gate)
+                               root=root, schema_validator=gate, reconciler=NO_DERIVE)
         codes = [(x['code'], x['detail']) for x in d3['verdict']['reasons']]
         check('C2 NEG drop one categorized => NOT clear, naming BOTH numbers',
               d3['verdict']['reconciliation_clear'] is False
@@ -212,7 +216,7 @@ def main():
         unclass['categories']['completed'] = 4
         unclass['unclassified'] = 1
         d4 = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')], recon=unclass),
-                               root=root, schema_validator=gate)
+                               root=root, schema_validator=gate, reconciler=NO_DERIVE)
         codes4 = [(x['code'], x['detail']) for x in d4['verdict']['reasons']]
         check('C2 the "or an explicit UNKNOWN" half: an unclassified item is NAMED, not absorbed',
               ('UNCLASSIFIED_PRESENT', 'unclassified=1') in codes4, json.dumps(codes4))
@@ -226,6 +230,46 @@ def main():
               '%d + %d != %d' % (rec['categorized'], rec['unclassified'], rec['discovered']))
         check('and the six category buckets sum to categorized',
               sum(rec['categories'].values()) == rec['categorized'])
+        # ROUND-2 FINDING, fixtured. reconcile() read 2 of the 5 taskboard-shaped files in the
+        # repo root; the other 3 were invisible to `discovered`. They carry ZERO order headers
+        # today (measured), so the count was not wrong -- it was UNGUARDED, and two of the three
+        # say in their own headers that claim/status rules match the main board, so an order
+        # landing in one is a normal thing to do. The list is a declaration now and the FILESYSTEM
+        # decides whether it is complete, which is run_guard_shape_lint's L0 pattern.
+        boards = tempfile.mkdtemp(prefix='s4boards_')
+        try:
+            for rel in sb.TASKBOARDS:
+                with io.open(os.path.join(boards, rel), 'w', encoding='utf-8') as fh:
+                    fh.write('## ORDER-001 -- x `OPEN`\n')
+            os.makedirs(os.path.join(boards, 'factory'))
+            with io.open(os.path.join(boards, 'factory', 'coverage.jsonl'), 'w') as fh:
+                fh.write('')
+            base = sb.reconcile(root=boards)
+            check('C2d CONTROL a root with only the declared boards reconciles',
+                  base['discovered'] == 2, json.dumps(base))
+            with io.open(os.path.join(boards, 'SIDE_TASKBOARD.md'), 'w', encoding='utf-8') as fh:
+                fh.write('## ORDER-999 -- work nobody counted `OPEN`\n')
+            refuses('C2d NEG an UNDECLARED taskboard carrying orders is REFUSED, not skipped',
+                    lambda: sb.reconcile(root=boards),
+                    'is in neither TASKBOARDS nor TASKBOARDS_NOT_READ')
+            os.remove(os.path.join(boards, 'SIDE_TASKBOARD.md'))
+            # ...and a board declared NOT READ *because it is empty* that has acquired orders.
+            declared = sorted(sb.TASKBOARDS_NOT_READ)[0]
+            with io.open(os.path.join(boards, declared), 'w', encoding='utf-8') as fh:
+                fh.write('## ORDER-998 -- work on an excluded board `OPEN`\n')
+            refuses('C2d NEG a NOT-READ board whose emptiness premise expired is REFUSED',
+                    lambda: sb.reconcile(root=boards),
+                    'is declared NOT READ on the grounds that it holds no orders')
+            # SPECIFICITY: the same board, EMPTY, must NOT be refused -- otherwise the exclusion
+            # list would be useless and the check would just be "any extra file is fatal".
+            with io.open(os.path.join(boards, declared), 'w', encoding='utf-8') as fh:
+                fh.write('# a declared, empty, excluded board\n')
+            again = sb.reconcile(root=boards)
+            check('C2d SPECIFICITY a declared NOT-READ board with no orders is fine',
+                  again['discovered'] == 2, json.dumps(again))
+        finally:
+            shutil.rmtree(boards, ignore_errors=True)
+
         empty = tempfile.mkdtemp(prefix='s4empty_')
         try:
             refuses('C2b NEG a MISSING taskboard is refused, never counted as zero orders',
@@ -234,16 +278,58 @@ def main():
         finally:
             shutil.rmtree(empty, ignore_errors=True)
 
+        print("\n--- C2c: the reconciliation counts are DERIVED, not claimed (round-1 finding) ---")
+        # FOUND BY PROBING, not by reading: before this, a builder input declaring `discovered: 0`
+        # and every other count 0 was ACCEPTED and produced reconciliation_clear=true, while the
+        # real boards reconcile to discovered=312 / unclassified=30 / duplicates=6. The source rows
+        # were authenticated and the arithmetic was not, and the arithmetic is the half that says
+        # the work is finished.
+        refuses('C2c NEG an all-zero reconciliation claim is REFUSED against the real boards',
+                lambda: sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]),
+                                          root=None, schema_validator=gate,
+                                          reconciler=sb.reconcile),
+                'does not match what the boards actually reconcile to')
+        # SPECIFICITY: a deriver that refused every claim would pass the negative and be useless.
+        truth = sb.reconcile()
+        agreeing = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')], recon=truth),
+                                     root=None, schema_validator=gate, reconciler=sb.reconcile)
+        check('C2c SPECIFICITY a claim that AGREES with the boards is accepted',
+              agreeing['meta']['reconciliation'] == truth)
+        # An input that CLAIMS NOTHING gets the derived counts filled in -- which is what the
+        # PowerShell writer now does, so it cannot claim at all.
+        no_claim = scaffold(root, [row('srcA', 'srcA.txt')])
+        del no_claim['meta']['reconciliation']
+        filled = sb.build_document(no_claim, root=None, schema_validator=gate,
+                                   reconciler=sb.reconcile)
+        check('C2c an input that claims NOTHING is filled from the boards',
+              filled['meta']['reconciliation'] == truth)
+        # The sentinel must be a DECISION, not a default -- the schema gate's own rule.
+        try:
+            sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]), root=root,
+                              schema_validator=gate)
+            check('C2c NEG omitting `reconciler` raises rather than defaulting', False,
+                  'it was accepted')
+        except TypeError as exc:
+            check('C2c NEG omitting `reconciler` raises rather than defaulting',
+                  'no default' in str(exc), str(exc)[:120])
+        try:
+            sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]), root=root,
+                              schema_validator=gate, reconciler=lambda **k: {})
+            check('C2c NEG an arbitrary callable is refused, like the schema gate', False,
+                  'a lambda was accepted')
+        except TypeError:
+            check('C2c NEG an arbitrary callable is refused, like the schema gate', True)
+
         print('\n--- C5: atomic build -> validate -> replace ---')
         out = os.path.join(root, 'snap.json')
         sb.build_file(_write(root, 'good.json', scaffold(root, [row('srcA', 'srcA.txt')])),
-                      out, root=root, schema_validator=gate)
+                      out, root=root, schema_validator=gate, reconciler=NO_DERIVE)
         before = io.open(out, 'rb').read()
         check('C5 a good build writes the canonical file', len(before) > 0)
 
         bad_in = _write(root, 'bad.json', scaffold(root, [row('srcA', 'gone.txt', read_ok=True)]))
         try:
-            sb.build_file(bad_in, out, root=root, schema_validator=gate)
+            sb.build_file(bad_in, out, root=root, schema_validator=gate, reconciler=NO_DERIVE)
             check('C5 NEG a failing build must raise', False, 'it returned normally')
         except sv.SnapshotRefusal:
             check('C5 NEG a failing build raises', True)
@@ -258,7 +344,7 @@ def main():
         refuses('a builder input carrying a nested `reconciliation_clear` is REFUSED',
                 lambda: sb.build_document(
                     _poison(scaffold(root, [row('srcA', 'srcA.txt')])),
-                    root=root, schema_validator=gate),
+                    root=root, schema_validator=gate, reconciler=NO_DERIVE),
                 'is present in a builder input')
 
         print('\n=== %d passed, %d failed ===' % (len(PASS), len(FAIL)))

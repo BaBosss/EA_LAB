@@ -197,6 +197,45 @@ $ErrorActionPreference = $savedEap
 Assert-Equal 'C6 the reader gives the SAME answer for corrupt bytes under EAP=Continue' $vC.Code $vC_cont.Code
 Assert-Equal 'C6 the reader gives the SAME answer for a tampered verdict under EAP=Continue' $vT.Code $vT_cont.Code
 
+# THE SHAPE-1 FIX'S OWN TWO BRANCHES. Both were added in round 1 of the self-scrutinize loop and
+# both are fixtured here, because a branch nobody can make fire is the A8 defect: a rule that
+# shipped with no fixture at all.
+#
+# Branch 1: the reader's own read does not match the bytes the validator verified. There is no way
+# to lose that race on demand, so Get-FileHash is SHADOWED in this scope -- the library is
+# dot-sourced into it, so its call resolves to this function. That is a real exercise of the
+# comparison, not a simulation of its outcome: the branch is entered by the code under test.
+function Get-FileHash { param($LiteralPath, $Algorithm) return [pscustomobject]@{ Hash = ('f' * 64) } }
+$vRace = Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot
+Remove-Item function:Get-FileHash
+Assert-Equal 'C6 SHAPE-1 a read that does not match the verified bytes is UNAVAILABLE' 'UNAVAILABLE' $vRace.State
+Assert-Equal 'C6 SHAPE-1 and it is a TOOL problem, not a verdict about the document' 'TOOL' $vRace.Code
+Assert-True  'C6 SHAPE-1 and it names both digests so the reader can see WHICH read drifted' `
+    ($vRace.Reason -match 'changed between being verified')
+Assert-True  'C6 SHAPE-1 and hands back no document' ($null -eq $vRace.Document)
+# CONTROL: with the real Get-FileHash restored, the same file is OK again -- so the branch above
+# was entered because of the mismatch, not because the fixture is broken.
+Assert-Equal 'C6 SHAPE-1 CONTROL the same snapshot verifies OK once the hash is real again' `
+    'OK' (Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $RepoRoot).State
+
+# Branch 2: the validator reports OK but publishes no verified-sha256 line -- an older or patched
+# validator. Reproduced with a STUB REPO ROOT: a directory holding a stub snapshot_validator.py
+# and a junction to the real interpreter, so the reader runs its real code path against a
+# validator that answers the old way.
+$stubRoot = Join-Path $work 'stubroot'
+New-Item -ItemType Directory -Path (Join-Path $stubRoot ('_triage'+[char]92+'factory_os')) -Force | Out-Null
+New-Item -ItemType Directory -Path (Join-Path $stubRoot 'tools') -Force | Out-Null
+cmd /c mklink /J "$(Join-Path $stubRoot ('tools'+[char]92+'python312'))" "$(Join-Path $RepoRoot ('tools'+[char]92+'python312'))" | Out-Null
+Set-Content -LiteralPath (Join-Path $stubRoot ('_triage'+[char]92+'factory_os'+[char]92+'snapshot_validator.py')) -Encoding ASCII -Value @(
+    'import sys',
+    'print("[OK] %s: stored verdict matches" % sys.argv[2])',
+    'sys.exit(0)')
+$vNoDigest = Get-VerifiedSnapshot -SnapshotPath $clean -RepoRoot $stubRoot
+Assert-Equal 'C6 SHAPE-1 a validator that publishes no digest is UNAVAILABLE, not OK' 'UNAVAILABLE' $vNoDigest.State
+Assert-True  'C6 SHAPE-1 and says it cannot prove it is reading the verified bytes' `
+    ($vNoDigest.Reason -match 'no verified-sha256')
+Assert-True  'C6 SHAPE-1 and hands back no document' ($null -eq $vNoDigest.Document)
+
 # --- C6 reader 2: the daily digest, which pre-registers the OPPOSITE exit behaviour ------
 $cov = Get-MonitorCoverage -SnapshotPath $clean
 Assert-Equal 'C6 digest: a verified snapshot produces no failure token' 0 $cov.Failures.Count
