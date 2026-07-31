@@ -1,0 +1,9 @@
+row_type,login,server_time,currency,equity,balance,margin,free_margin,margin_level_pct,stopout_mode,stopout_level,magic,symbols,float_pl,open_lots,open_positions,oldest_open_hours,pending_orders
+ACCOUNT,69424711,2026.07.31 00:36:16,USD,10030.71,10151.77,35.25,9995.46,28456.8,PERCENT,0.0,,,,,,,
+MAGIC,69424711,2026.07.31 00:36:16,,,,,,,,,2,EURUSDm,-30.81,0.13,5,15.6,0
+MAGIC,69424711,2026.07.31 00:36:16,,,,,,,,,9244,EURUSDm,-41.34,0.24,5,29.6,0
+MAGIC,69424711,2026.07.31 00:36:16,,,,,,,,,5888,EURUSDm,-21.81,0.07,5,30.0,0
+MAGIC,69424711,2026.07.31 00:36:16,,,,,,,,,1,EURUSDm,8.08,0.01,1,16.6,0
+MAGIC,69424711,2026.07.31 00:36:16,,,,,,,,,990,AUDCADm,-35.18,0.30,2,10.9,0
+SYMBOL,69424711,2026.07.31 00:36:16,,,,,,,,,,EURUSDm,-85.88,0.45,16,,
+SYMBOL,69424711,2026.07.31 00:36:16,,,,,,,,,,AUDCADm,-35.18,0.30,2,,

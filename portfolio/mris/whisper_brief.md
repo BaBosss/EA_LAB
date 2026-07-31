@@ -2,22 +2,22 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-07-30 05:58 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.6) | Risk Index: 0.0
+**2026-07-31 07:37 (Bangkok)** | สถานะ: 🟡 **สมดุล/เฝ้าระวัง (NEUTRAL)** | bias: balanced - watch for tilt | ความมั่นใจ: MED (0.5) | Risk Index: -0.192
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
-- WARN: LOADED_FUSE: USDJPY 163.38 at extreme - crowded short, snap-back risk high
+- WARN: TRIPWIRE_NEAR: AUDJPY 112.75 only 2.5% above pin 110
 
 ## barometer readout
 | instrument | signal | อ่านว่า |
 |---|---|---|
 | AUDJPY | 0.5 | above SMA200 but soft 5d -> mild risk-on |
-| USDJPY | 0.5 | extreme weak (163.381 >= 158) -> risk-on now BUT crowded/loaded |
-| VIX | -1 | VIX 20.66 >= 20 -> elevated fear |
+| USDJPY | -2 | sharp reversal down (5d -2.103%) -> JPY repatriation / carry unwind trigger |
+| VIX | 0 | VIX 17.09 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
 | XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
 | BTCUSD | -1 | below SMA200 -> risk-off lean |
-| US10Y_JP10Y | 0 | carry spread ~flat (-3.5bps/5d) -> neutral |
-| COPPER | 0.5 | above SMA200 but soft 5d -> mild risk-on |
+| US10Y_JP10Y | 0 | carry spread ~flat (-4bps/5d) -> neutral |
+| COPPER | 1 | above SMA200, 5d 3.212% -> risk-on intact |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 ยังไม่ใช่วิกฤต แต่บทเรียน ส.ค. 2024 บอกว่า 'ราคาวิ่งนำข่าว' — เส้นเตือนที่ขนานกันคือสัญญาณให้เตรียมร่ม
@@ -55,9 +55,9 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 ## โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)
 | model | score | label | ตัวขับหลัก |
 |---|---|---|---|
-| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 33.4/100 | 🟢 สงบ | S&P500 5d momentum (falling = shock) = -2.438% |
-| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 18.8/100 | 🟢 สงบ | WTI % above its SMA200 = 11.749% |
-| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 10.1/100 | 🟢 สงบ | HY spread 5d widening (%) = 5.576% |
+| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 20.5/100 | 🟢 สงบ | US 10Y yield level = 4.663% |
+| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 17.8/100 | 🟢 สงบ | WTI % above its SMA200 = 11.139% |
+| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 9.3/100 | 🟢 สงบ | HY spread 5d widening (%) = 7.09% |
 
 _คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)_
 
