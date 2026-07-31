@@ -105,6 +105,37 @@
 
 ---
 
+## ORDER-702 — [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it runs ZERO cages — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Found while measuring `ORDER-673`, and it outranks the number that measurement was for.**
+
+```
+SPEC=$(tr '\n' ' ' < .githooks/fast_tier_pathspec)
+git ls-files -- $SPEC | grep -Fx <path>
+  _triage/factory_os/registry.py    -> 1     (guarded)
+  _triage/factory_os/evidence.py    -> 0     (NOT guarded)
+  _triage/factory_os/preset.py      -> 0     (NOT guarded)
+  AGENT_TASKBOARD.md                -> 0     (NOT guarded)
+```
+
+`evidence.py` is the module `ORDER-670` was written to create, and **every migrated checker's correctness depends on it**. No suite declares it in `$SUITE_GUARDS`, so it is absent from the generated pathspec, so `.githooks/pre-commit`'s `cage_staged` is empty for a commit that touches only that file, so **the tier never runs at all** — not a suite, not the fail-open everything-run. Verified by command above, not inferred.
+
+**Why `run_guard_trigger_tests` PART 4 does not catch it.** The sweep is exactly one level too shallow: it scans each **`.ps1` wrapper's own source** for path-shaped strings (`(?:scripts|docs|_triage|...)[/\\]...\.(?:ps1|py|...)`). `run_registry_tests.ps1` runs `run_registry_tests.py`, whose dependency on the reader is `import evidence` — **a module name, not a path**. The sweep's own comment says it exists because "a declaration that lists three of four inputs is still wrong"; this is that case, arriving through a channel the regex cannot see.
+
+**Not a theoretical hole:** `evidence.py` was edited in this batch (`read_blob`, migration 5/9). The tier fired only because `run_registry_tests.py` happened to be staged in the same commit. Committed alone, it would have been unguarded.
+
+### Acceptance
+
+- **E1** a commit touching **only** `_triage/factory_os/evidence.py` selects at least one suite. Attack: compute the pathspec match before the fix ⇒ **0**, after ⇒ **≥1**.
+- **E2** the declaration is **derived, not hand-added.** Adding `evidence.py` to one suite's guards fixes today and leaves the next import invisible — resolve each Python suite's **transitive local imports** to repo paths and require them declared. Attack: a suite whose `.py` imports a tracked module it does not declare ⇒ PART 4 **RED**. Specificity: a stdlib/third-party import (`import io`, `import json`) is **not** flagged — the guard must not demand declarations for modules that are not repo files.
+- **E3** `AGENT_TASKBOARD.md` is decided **explicitly**, not by omission: either a suite guards it, or it is named in `$NOT_A_DEPENDENCY` with the reason. Today it is neither, which reads as "nobody thought about it".
+- **E4** state the cost: widening the pathspec makes more commits pay the tier. Report the new per-path figure for a board-only commit against the `ORDER-673` budget **in the same commit**.
+
+### ห้าม
+- ❌ Do not fix this by adding one line to `$SUITE_GUARDS` and calling it closed — that is E2's attack passing while the mechanism stays blind. ❌ Do not raise the `ORDER-673` budget to absorb the widening without saying so. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-700 — [factory/S6] The preset compiler: a full-surface `.set` that cannot be silently completed from a terminal cache — `DONE (Claude/Opus 2026-07-31) — 9 criteria × (attack + specificity) = 18 cases green, 9 mutation probes all DETECTED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — `preset.py` + `run_preset_tests.py` landed. Every criterion observed red for its own reason before being accepted.
@@ -296,9 +327,21 @@ Builders (`snapshot_build`) read the **disk** — an index blob has no mtime and
 
 ---
 
-## ORDER-673 — [factory/tier] The fast-tier budget becomes a real number and is ENFORCED — `OPEN` · ⛔ **owner-ratified 2026-07-31** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-673 — [factory/tier] The fast-tier budget becomes a real number and is ENFORCED — `DONE (Claude/Opus 2026-07-31) — enforced at 30.0s per-path / 75.0s full tier; PART 7 drives the refusal and both specificity halves` · ⛔ **owner-ratified 2026-07-31** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
-**Measured:** the full tier is **39.4s** (median of five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s** threshold that prints a warning and exits 0. Per-path selection keeps an ordinary commit at 11–29s. Codex audit 6 MAJOR-7 said it plainly: that is not a budget, it is an advisory.
+> ### ✅ 2026-07-31 — over budget now FAILS. And N1 proved itself on this very row.
+>
+> 🔴 **The row's own number was stale by 25 seconds.** It says 39.4s. Measured in the session that wrote the code — five clean runs, **65.8 / 64.8 / 64.7 / 64.7 / 64.7 ⇒ median 64.7s**. That is exactly the failure N1 exists to prevent: a number true when written, quoted forever after. Per-path, six realistic commit shapes: ledger **0.7s** · the tier itself **18.7s** · `factory_os` python **22.6s** · `schemas.json` **24.8s**.
+>
+> **Two budgets, because they are two claims:** `-BudgetSeconds 30.0` (a selected run) and `-FullTierBudgetSeconds 75.0` (nothing staged, or a path list that matched nothing and failed open). One number would either fail every full run or excuse every selected one. Over budget ⇒ **exit 1**, and the message names the **top three suites with their share of the run** (N3) — today `run_contract_binding_tests` 19.2s and `run_guard_trigger_tests` 17.4s are 57% of the full tier between them.
+>
+> **Observed both ways, driven from `run_guard_trigger_tests.ps1` PART 7:** ATTACK `-DebugPadSeconds 40` ⇒ exit 1 naming the suite · SPECIFICITY a normal run is green **and prints the headroom** so the next person sees it before spending it · SPECIFICITY the two budgets are separately settable (raising only the per-path one clears a padded per-path run). A suite failure is checked **before** the budget: both exit 1, but *"your commit is slow"* printed where *"your commit is broken"* belongs gets the wrong thing fixed.
+>
+> **N4, the accepted consequence, stated in the code and not only here:** ~5s of per-path headroom and ~10s of full-tier headroom remain. **The next cage added has to displace something.** That is the point — an unenforced budget has infinite headroom and therefore says nothing.
+>
+> **Found while measuring, not folded in:** `AGENT_TASKBOARD.md` and `evidence.py` are outside the tier's pathspec entirely ⇒ **`ORDER-702`**.
+
+**Measured (superseded — kept because the staleness is the finding):** the full tier was **39.4s** (median of five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s** threshold that printed a warning and exited 0. Per-path selection kept an ordinary commit at 11–29s. Codex audit 6 MAJOR-7 said it plainly: that is not a budget, it is an advisory.
 
 **Why an unenforced number is worse than no number:** the stated reason the budget exists is that a slow hook earns `--no-verify`. A threshold that has been breached repeatedly with nothing happening does not prevent that — and a check that cannot fail is **shape 3**, inside the tier built to catch shape 3.
 

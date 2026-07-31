@@ -73,7 +73,26 @@
 [CmdletBinding()]
 param(
     [string]$RepoRoot = '',
-    [double]$BudgetSeconds = 15.0,
+    # ORDER-673. TWO budgets, because they are two different claims, and both are ENFORCED --
+    # over budget FAILS the tier, it does not print a warning and exit 0.
+    #
+    # MEASURED 2026-07-31 by the lane that wrote these numbers, not quoted from an older row:
+    #   full tier, five clean runs   65.8 / 64.8 / 64.7 / 64.7 / 64.7  -> median 64.7s
+    #   per-path, realistic commits  ledger 0.7s - the tier itself 18.7s -
+    #                                factory_os python 22.6s - schemas.json 24.8s
+    # The ORDER-673 row said 39.4s. That was true when it was written and is now stale by 25s,
+    # which is the whole argument for N1: the number has to come from a command run in the
+    # session that writes it, or it is a claim about a machine nobody measured today.
+    #
+    # WHAT IS BEING ACCEPTED (N4), stated rather than left implicit: the next cage added to this
+    # tier has to DISPLACE something. There is ~5s of per-path headroom and ~10s of full-tier
+    # headroom, and after that a new suite is a trade, not an addition. That is the point of a
+    # budget -- an unenforced one has infinite headroom and therefore says nothing.
+    [double]$BudgetSeconds = 30.0,
+    [double]$FullTierBudgetSeconds = 75.0,
+    # N2's negative needs a way to be over budget without waiting for a suite to genuinely rot.
+    # Same shape as -DebugPretendIndexMoved below: a seam the cage drives, never the hook.
+    [double]$DebugPadSeconds = 0.0,
     # BACKLOG-D32: print the suite/guards table as JSON and exit, running no suite. The
     # pathspec generator and its cage both read the table through this switch so the
     # dependency list exists in exactly one place.
@@ -492,7 +511,13 @@ $NOT_A_DEPENDENCY = @(
     # ORDER-670: run_guard_trigger_tests.ps1 PART 6 stages this path IN A FIXTURE because it
     # selects three sub-second suites, making the nested hook-mode tier runs cheap. The suite
     # never reads or runs the file; it is a selection key, not an input.
-    'scripts/check_taskboard_archive.ps1'
+    'scripts/check_taskboard_archive.ps1',
+    # ORDER-673: same shape one part down. PART 7 stages this path so the nested budget runs
+    # select ONE 0.6s suite -- the cheapest way to exercise an over-budget refusal without
+    # waiting for a real 30s run. A selection key, not an input. (PART 4 refused the commit
+    # that added it until this line existed, which is the sweep working: the reference is
+    # real, and saying "not a dependency" out loud is the price of it being benign.)
+    'docs/SESSION_LEDGER.md'
 )
 
 if ($ExportGuards) {
@@ -695,10 +720,47 @@ foreach ($f in $failed) {
 Write-Host ''
 Write-Host ("[fast-cages] {0} suite(s), {1} failed, {2:N1}s total" -f $results.Count, $failed.Count, $total)
 
-if ($total -gt $BudgetSeconds) {
-    Write-Host ("[fast-cages] WARNING: {0:N1}s exceeds the {1:N1}s budget for a pre-commit tier. Move the slowest suite out, or raise the budget deliberately -- do not let this drift until someone reaches for --no-verify." -f $total, $BudgetSeconds) -ForegroundColor Yellow
-}
-
+# ---------------------------------------------------------------------------------------------
+# ORDER-673 -- the budget is ENFORCED. It was an advisory that printed yellow and exited 0, and
+# it had been breached on every commit for days with nothing happening. A check that cannot fail
+# is shape 3, and this one sat inside the tier built to catch shape 3.
+#
+# The applicable budget depends on WHICH RUN THIS IS: a full run (nothing staged, or a path list
+# that matched nothing and failed open) legitimately costs more than a selected run. Comparing
+# both against one number would either fail every full run or excuse every selected one.
+#
+# A SUITE FAILURE OUTRANKS THE BUDGET and is checked first: both exit 1, but "your commit is
+# slow" printed where "your commit is broken" belongs is a message that gets the wrong thing
+# fixed.
 if ($failed.Count -gt 0) { exit 1 }
 if ($evidenceProblems.Count -gt 0) { exit 1 }
+
+$total += $DebugPadSeconds
+$isFullRun = ($selected.Count -eq $FAST_SUITES.Count)
+$budget = if ($isFullRun) { $FullTierBudgetSeconds } else { $BudgetSeconds }
+$budgetLabel = if ($isFullRun) { 'full tier' } else { 'per-path' }
+
+if ($total -gt $budget) {
+    # N3: name WHICH SUITE spent the time. "The tier is slow" is not actionable; the top spender
+    # with its share is the sentence a reader can act on.
+    $top = @($results | Sort-Object -Property Seconds -Descending | Select-Object -First 3)
+    Write-Host ''
+    Write-Host ("[fast-cages] OVER BUDGET: {0:N1}s against the {1:N1}s {2} budget ({3:N1}s over)." -f `
+                $total, $budget, $budgetLabel, ($total - $budget)) -ForegroundColor Red
+    foreach ($t in $top) {
+        Write-Host ("               {0,-34} {1,5:N1}s  = {2,4:N0}% of the run" -f `
+                    $t.Suite, $t.Seconds, (100.0 * $t.Seconds / [Math]::Max($total, 0.001))) -ForegroundColor Red
+    }
+    Write-Host ("               A pre-commit tier that takes this long earns --no-verify, which is") -ForegroundColor Red
+    Write-Host ("               the failure this budget exists to prevent. Displace a suite, make the") -ForegroundColor Red
+    Write-Host ("               named one faster, or raise the number DELIBERATELY in the same commit") -ForegroundColor Red
+    Write-Host ("               that says why -- but do not leave it breached and green.") -ForegroundColor Red
+    exit 1
+}
+
+# Print the MARGIN on a green run, so the next person can see the headroom BEFORE spending it
+# (N2's specificity half). A budget you only hear about once you are over it is a budget that
+# gets discovered by a broken commit.
+Write-Host ("[fast-cages] budget: {0:N1}s of {1:N1}s {2} ({3:N1}s headroom)" -f `
+            $total, $budget, $budgetLabel, ($budget - $total))
 exit 0

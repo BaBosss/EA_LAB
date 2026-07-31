@@ -271,6 +271,46 @@ try {
     }
     if ($fail -eq $before) { Good 'evidence-mode plumbing holds in both directions' }
 
+    # -------------------------------------------------------------------------------------
+    Write-Host ''
+    Write-Host '[guard-trigger] PART 7 -- ORDER-673 the time budget is ENFORCED, not advisory'
+    # It printed yellow and exited 0 for days while breached. This drives the refusal so it is
+    # OBSERVED, and the control so the refusal is not simply "always fail".
+    $before = $fail
+    $cheap7 = Join-Path ([System.IO.Path]::GetTempPath()) ("gt673_" + [guid]::NewGuid().ToString('N') + '.txt')
+    Set-Content -LiteralPath $cheap7 -Encoding ASCII -Value 'docs/SESSION_LEDGER.md'
+    try {
+        # ATTACK: pad past the per-path budget => exit 1, and the message NAMES a suite (N3).
+        $b1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -DebugPadSeconds 40 2>&1)
+        $b1t = ($b1 -join "`n")
+        if ($LASTEXITCODE -eq 1 -and $b1t -match 'OVER BUDGET' -and $b1t -match 'run_order_collision_tests\.ps1\s+\S+s\s+=') {
+            Good 'N2/N3 ATTACK over budget FAILS the tier and names the suite with its share'
+        } else {
+            Bad ("N2/N3 ATTACK expected exit 1 with a named suite; got exit {0}" -f $LASTEXITCODE)
+        }
+        # SPECIFICITY 1: the same run unpadded is green AND prints the headroom, so the next
+        # person can see what is left BEFORE spending it. A budget first heard about when a
+        # commit breaks is a budget discovered by breaking a commit.
+        $b2 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 2>&1)
+        if ($LASTEXITCODE -eq 0 -and (($b2 -join "`n") -match 'budget: .*headroom')) {
+            Good 'N2 SPECIFICITY a normal run is green and states its remaining headroom'
+        } else {
+            Bad ("N2 SPECIFICITY expected exit 0 with a headroom line; got exit {0}" -f $LASTEXITCODE)
+        }
+        # SPECIFICITY 2: the two budgets are DIFFERENT numbers for different claims. A pad that
+        # would bust the per-path budget must NOT bust the full-tier one -- one number would
+        # either fail every full run or excuse every selected run.
+        $b3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -StagedPathsFile $cheap7 -DebugPadSeconds 40 -BudgetSeconds 100 2>&1)
+        if ($LASTEXITCODE -eq 0) {
+            Good 'N1 SPECIFICITY the per-path budget is a separate, separately-settable number'
+        } else {
+            Bad ("N1 SPECIFICITY raising only the per-path budget did not clear the run; exit {0}" -f $LASTEXITCODE)
+        }
+    } finally {
+        Remove-Item -LiteralPath $cheap7 -Force -ErrorAction SilentlyContinue
+    }
+    if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
+
     if ($fail -gt 0) {
         Write-Host "[guard-trigger] $fail FAILURE(S)" -ForegroundColor Red
         exit 1
