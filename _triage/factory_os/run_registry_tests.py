@@ -719,6 +719,203 @@ def main():
         finally:
             shutil.rmtree(full, ignore_errors=True)
 
+        print('\n--- ORDER-670: a checker judges the COMMIT (T1/T2/T3/T5) ---')
+        import evidence as evd
+
+        def _git(groot, *args):
+            # NEVER inherit GIT_INDEX_FILE into a fixture repo. Discovered live: under this
+            # repo's pre-commit hook that variable names the REAL commit's temp index; a
+            # fixture `add -A` resolved it against the fixture repo and DELETED all 5,135
+            # real entries from the commit being made. The fixture repos own their indexes.
+            env = {k: v for k, v in os.environ.items() if k != 'GIT_INDEX_FILE'}
+            return subprocess.run(['git', '-C', groot] + list(args),
+                                  capture_output=True, env=env)
+
+        # T1 -- the attack this whole order exists for, and its mirror. One temp repo,
+        # one corruption, judged from both snapshots.
+        t1 = seed(tempfile.mkdtemp(prefix='s5evd1_'))
+        try:
+            _git(t1, 'init', '-q')
+            _git(t1, 'add', '-A')
+            hyp = os.path.join(t1, 'factory', 'hypotheses.jsonl')
+            clean = io.open(hyp, encoding='utf-8').read()
+            corrupt = clean + '{"entity": "Hypothesis", "status": "DEAD-STRUCTURAL"}\n'
+            src_i = evd.EvidenceSource('index', root=t1)
+            src_w = evd.EvidenceSource('worktree', root=t1)
+
+            with io.open(hyp, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(corrupt)
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=t1, source=src_i))
+            check('T1 index mode judges the INDEX: a worktree-only corruption is invisible '
+                  '(it is not in the commit)', not any(p.startswith('R3') for p in chk.problems),
+                  str(chk.problems))
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=t1, source=src_w))
+            check('T1 worktree mode still sees the disk (manual-run semantics preserved)',
+                  any(p.startswith('R3') for p in chk.problems))
+
+            # THE ATTACK (ORDER-615 S1's shape): stage the corruption, restore the worktree.
+            _git(t1, 'add', 'factory/hypotheses.jsonl')
+            with io.open(hyp, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write(clean)
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=t1, source=src_i))
+            check('T1 ATTACK staged corruption behind a clean worktree copy is RED in index '
+                  'mode -- the bytes entering history are the ones judged',
+                  any(p.startswith('R3') for p in chk.problems))
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=t1, source=src_w))
+            check('T1 ATTACK and worktree mode is blind to it -- the exact pre-670 blindness, '
+                  'now confined to manual runs that say so in their marker',
+                  not any(p.startswith('R3') for p in chk.problems), str(chk.problems))
+
+            # T1 ENGAGEMENT: in worktree mode the new reader returns the same text the old
+            # io.open read did -- the migration must not change what a normal run judges.
+            old_way = io.open(hyp, encoding='utf-8').read().replace('\r\n', '\n')
+            check('T1 ENGAGEMENT worktree read_committed is byte-identical to the direct read',
+                  src_w.read_committed('factory/hypotheses.jsonl') == old_way)
+
+            # T5 -- category B untouched: observe() reads the DISK even where the index
+            # holds different bytes, and refuses nothing that is stable.
+            data, st = evd.observe(hyp)
+            check('T5 observe() returns the DISK bytes while the index disagrees '
+                  '(category B is the world, not the commit)',
+                  data.decode('utf-8').replace('\r\n', '\n') == clean and st.st_size > 0)
+        finally:
+            shutil.rmtree(t1, ignore_errors=True)
+
+        # T2 -- no silent fallback, all three refusal legs.
+        t2 = seed(tempfile.mkdtemp(prefix='s5evd2_'))
+        try:
+            _git(t2, 'init', '-q')
+            _git(t2, 'add', '-A')
+            _git(t2, 'rm', '--cached', '-q', 'factory/hypotheses.jsonl')
+            src_i2 = evd.EvidenceSource('index', root=t2)
+            refuses('T2 an untracked store in hook mode is REFUSED even though it exists on '
+                    'disk -- readable-from-worktree must buy nothing',
+                    lambda: reg.load_all(root=t2, source=src_i2), 'not present')
+            try:
+                evd.EvidenceSource('indx')
+                check('T2 a typo mode is refused, not defaulted', False)
+            except evd.ToolFailure as exc:
+                check('T2 a typo mode is refused, not defaulted', 'refused' in str(exc))
+            broken = evd.EvidenceSource(
+                'index', root=t2,
+                _git=lambda *a: (0, b'', b'') if a[0] == 'ls-files' else (128, b'', b'boom'))
+            try:
+                broken.read_committed('factory/coverage.jsonl')
+                check('T2 tracked-but-unreadable is a ToolFailure, never a worktree read', False)
+            except evd.ToolFailure as exc:
+                check('T2 tracked-but-unreadable is a ToolFailure, never a worktree read',
+                      'not readable' in str(exc))
+        finally:
+            shutil.rmtree(t2, ignore_errors=True)
+
+        # T3 -- ENUMERATION comes from the index: the staged rogue file whose worktree copy
+        # was deleted (design 3.2, the attack that matters most).
+        t3 = tempfile.mkdtemp(prefix='s5evd3_')
+        try:
+            fdir = os.path.join(t3, '_triage', 'factory_os')
+            os.makedirs(fdir)
+            rogue = os.path.join(fdir, 'rogue.py')
+            with io.open(rogue, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write("x = 'TUNABLE'\ny = 'LOCKED'\n")
+            _git(t3, 'init', '-q')
+            _git(t3, 'add', '-A')
+            os.remove(rogue)  # staged, absent from the disk -- glob can never see it
+            with io.open(os.path.join(fdir, 'scratch.py'), 'w',
+                         encoding='utf-8', newline='\n') as fh:
+                fh.write("a = 'TUNABLE'\nb = 'LOCKED'\n")  # on disk, NOT staged
+            saved_cons = dict(chk.RESOLVER_CONSUMERS)
+            try:
+                chk.RESOLVER_CONSUMERS.clear()
+                s3i = evd.EvidenceSource('index', root=t3)
+                s3w = evd.EvidenceSource('worktree', root=t3)
+                chk.problems[:] = []
+                chk.check_r4(s3i)
+                check('T3 ATTACK a STAGED rogue vocabulary with no worktree copy is RED in '
+                      'index mode -- the commit is what gets swept',
+                      any('rogue.py' in p for p in chk.problems), str(chk.problems))
+                check('T3 SPECIFICITY the untracked scratch file neither flags nor fails the '
+                      'run -- the commit never had it',
+                      not any('scratch.py' in p for p in chk.problems), str(chk.problems))
+                chk.problems[:] = []
+                chk.check_r4(s3w)
+                check('T3 worktree mode is the mirror: scratch seen, rogue invisible -- the '
+                      'blindness this order confines to manual runs',
+                      any('scratch.py' in p for p in chk.problems)
+                      and not any('rogue.py' in p for p in chk.problems), str(chk.problems))
+            finally:
+                chk.RESOLVER_CONSUMERS.clear()
+                chk.RESOLVER_CONSUMERS.update(saved_cons)
+        finally:
+            shutil.rmtree(t3, ignore_errors=True)
+
+        # T-GIF -- GIT_INDEX_FILE containment, both directions. THE INCIDENT: under a real
+        # pre-commit, fixture `git add -A` inherited the hook's GIT_INDEX_FILE, resolved it
+        # against the FIXTURE repo, and deleted all 5,135 real entries from the commit's
+        # temp index. These cases are the attack replayed and the honoured-side control.
+        tg = tempfile.mkdtemp(prefix='s5gif_')
+        decoy = os.path.join(tg, 'decoy_index')
+        saved_gif = os.environ.get('GIT_INDEX_FILE')
+        try:
+            subprocess.run(['git', '-C', reg.REPO_ROOT, 'read-tree', 'HEAD'],
+                           capture_output=True,
+                           env=dict(os.environ, GIT_INDEX_FILE=decoy))
+            subprocess.run(['git', '-C', reg.REPO_ROOT, 'update-index', '--force-remove',
+                            'factory/coverage.jsonl'], capture_output=True,
+                           env=dict(os.environ, GIT_INDEX_FILE=decoy))
+            with io.open(decoy, 'rb') as fh:
+                decoy_before = fh.read()
+            os.environ['GIT_INDEX_FILE'] = decoy
+            frepo = os.path.join(tg, 'fx')
+            os.makedirs(frepo)
+            with io.open(os.path.join(frepo, 'own.txt'), 'w', encoding='utf-8') as fh:
+                fh.write('x\n')
+            _git(frepo, 'init', '-q')
+            _git(frepo, 'add', '-A')  # THE ATTACK LINE: pre-fix, this rewrote the decoy
+            with io.open(decoy, 'rb') as fh:
+                decoy_after = fh.read()
+            check('T-GIF ATTACK fixture git ops under a hook-set GIT_INDEX_FILE leave the '
+                  'real index BYTE-UNCHANGED (pre-fix: add -A emptied it to one file)',
+                  decoy_before == decoy_after)
+            check('T-GIF and the fixture repo used its OWN index -- its staged file is there',
+                  evd.EvidenceSource('index', root=frepo).exists_committed('own.txt'))
+            check('T-GIF SPECIFICITY for THIS repo the variable is still honoured -- the '
+                  'decoy index (coverage removed) answers, not .git/index',
+                  not evd.EvidenceSource('index', root=reg.REPO_ROOT)
+                  .exists_committed('factory/coverage.jsonl'))
+        finally:
+            if saved_gif is None:
+                os.environ.pop('GIT_INDEX_FILE', None)
+            else:
+                os.environ['GIT_INDEX_FILE'] = saved_gif
+            shutil.rmtree(tg, ignore_errors=True)
+
+        # End to end through the real CLI, both modes pinned explicitly (the suite may itself
+        # be running under a hook-set EA_LAB_EVIDENCE; these cases must not inherit it blind).
+        py_exe = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
+        for mode in ('worktree', 'index'):
+            env = dict(os.environ)
+            env['EA_LAB_EVIDENCE'] = mode
+            p = subprocess.run([py_exe, os.path.join(HERE, 'check_registries.py')],
+                               capture_output=True, text=True, cwd=reg.REPO_ROOT, env=env)
+            ok = (p.returncode == 0
+                  and ('##EVIDENCE-MODE## check_registries.py %s' % mode) in p.stdout)
+            diag = p.stdout[-300:]
+            if not ok:
+                gi = os.environ.get('GIT_INDEX_FILE')
+                ls = subprocess.run(['git', '-C', reg.REPO_ROOT, 'ls-files', '--cached'],
+                                    capture_output=True, text=True)
+                names = ls.stdout.split()
+                diag += ' | DIAG GIT_INDEX_FILE=%r exists=%s size=%s ls_rc=%d n=%d head=%r err=%r' % (
+                    gi, os.path.isfile(gi) if gi else None,
+                    os.path.getsize(gi) if gi and os.path.isfile(gi) else None,
+                    ls.returncode, len(names), names[:8], ls.stderr[-120:])
+            check('CLI real repo, %s mode: exit 0 and the marker states the mode' % mode,
+                  ok, diag)
+
         print('\n--- the CLI both consumers go through ---')
         py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
         p = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'resolve', 'B14-H01-r1'],

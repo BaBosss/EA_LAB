@@ -243,13 +243,45 @@ def _refuse(msg):
     raise RegistryRefusal(msg)
 
 
-def read_store(rel, root=None):
+def read_store(rel, root=None, source=None):
     """-> (meta_lines, rows) for one store. Refuses rather than skipping anything it cannot read.
 
     A store that is ABSENT is refused, not treated as empty -- the rule this repo has paid for
     more than any other. `factory/coverage.jsonl` proves the distinction matters: "no coverage
     cells" and "no coverage store" have opposite fixes.
+
+    `source` (ORDER-670): an evidence.EvidenceSource choosing WHICH bytes are judged -- the
+    index in hook mode, the disk otherwise. When None, this reads the worktree directly: that
+    is the UN-MIGRATED default, kept because resolve()/optimize_guard run outside hooks where
+    worktree is the correct mode anyway. The design's end state is that a library handed no
+    source refuses; that lands when the remaining callers migrate (design section 6), and
+    this sentence is here so the default reads as a scheduled removal, not a choice.
     """
+    if source is not None:
+        if not source.exists_committed(rel):
+            _refuse('%s is not present (%s mode). An absent registry is not an empty registry: '
+                    'one means the store was never created, the other means nothing has been '
+                    'registered yet, and they have different fixes.' % (rel, source.mode))
+        try:
+            text = source.read_committed(rel)
+        except Exception as exc:  # evidence.ToolFailure -- "cannot read" is a refusal here too
+            _refuse('%s: %s' % (rel, exc))
+        meta, rows = [], []
+        for n, line in enumerate(text.split('\n'), 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError as exc:
+                _refuse('%s line %d is not parseable JSON: %s' % (rel, n, exc))
+            if not isinstance(rec, dict):
+                _refuse('%s line %d is %s, not an object' % (rel, n, type(rec).__name__))
+            if classify_record(rec, '%s line %d' % (rel, n)) == 'META':
+                meta.append(rec)
+                continue
+            rows.append((n, rec))
+        return meta, rows
     root = REPO_ROOT if root is None else root
     path = os.path.join(root, rel.replace('/', os.sep))
     if not os.path.isfile(path):
@@ -275,19 +307,26 @@ def read_store(rel, root=None):
     return meta, rows
 
 
-def load_all(root=None):
+def load_all(root=None, source=None):
     """-> {rel: (meta, rows)} for every UNBLOCKED store. One read each, so one moment for all.
 
     A BLOCKED store is skipped rather than refused -- but only while it is genuinely absent.
     `check_registries.R6` is what makes that safe: it refuses a blocked store that has APPEARED,
     so "skipped" can never quietly become "there but unchecked".
+
+    `source` chooses which bytes are judged (ORDER-670); the blocked-store absence probe uses
+    the SAME source, because "absent from the commit" and "absent from the disk" are different
+    facts and mixing them here would be one verdict over two vintages.
     """
     out = {}
     for rel in sorted(STORES):
-        if rel in STORES_BLOCKED and not os.path.isfile(
-                os.path.join(REPO_ROOT if root is None else root, rel.replace('/', os.sep))):
-            continue
-        out[rel] = read_store(rel, root=root)
+        if rel in STORES_BLOCKED:
+            absent = (not source.exists_committed(rel)) if source is not None else \
+                not os.path.isfile(
+                    os.path.join(REPO_ROOT if root is None else root, rel.replace('/', os.sep)))
+            if absent:
+                continue
+        out[rel] = read_store(rel, root=root, source=source)
     return out
 
 

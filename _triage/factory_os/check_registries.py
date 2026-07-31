@@ -54,8 +54,19 @@ if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
 import registry as reg  # noqa: E402
+import evidence as ev  # noqa: E402
 
 ROOT = reg.REPO_ROOT
+
+
+def _default_src():
+    """Manual-run semantics when a criterion is invoked directly (the test suite does this).
+
+    main() always passes the for_run() source explicitly; this default exists so that calling
+    a criterion by hand judges the worktree, which is what a hand run means. It is NOT a hook
+    fallback -- in hook mode the tier sets the env and for_run() returns index.
+    """
+    return ev.EvidenceSource('worktree', root=ROOT)
 
 # R3, half one: key NAMES that may never appear in a registry row, at any depth.
 FORBIDDEN_VERDICT_KEYS = ('verdict', 'reconciliation_clear', 'all_clear', 'pass', 'passed',
@@ -238,37 +249,37 @@ def check_r3(stores):
             _walk(rec, 'row', seen)
 
 
-def check_r4():
+def check_r4(src=None):
+    # ORDER-670: every read and EVERY ENUMERATION here judges the source's snapshot -- the
+    # index in hook mode. The old form globbed the DISK, so `git add rogue.py` + delete the
+    # worktree copy left the sweep blind to a second vocabulary the commit contained (A7's
+    # exact shape through the channel nothing had named; design 3.2).
+    src = src or _default_src()
     # (a) exactly one file derives optimizability.
     for rel, why in sorted(RESOLVER_CONSUMERS.items()):
-        path = os.path.join(ROOT, rel.replace('/', os.sep))
-        if not os.path.isfile(path):
-            problems.append('R4 declared consumer %s does not exist' % rel)
+        if not src.exists_committed(rel):
+            problems.append('R4 declared consumer %s does not exist (%s mode)' % (rel, src.mode))
             continue
-        with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
-            src = strip_comments(fh.read(), rel)
+        consumer_src = strip_comments(src.read_committed(rel), rel)
         # PROBED 2026-07-31 (round 2): this read the RAW source, so a consumer that merely MENTIONED
         # the resolver in a comment satisfied R4 while deciding role/surface some other way. That is
         # the same comments-are-not-code defect the sweep below had, in the half that is supposed to
         # be the strong one. MEASURED after the fix: optimize_guard still carries the token twice
         # with comments stripped, so the fix does not merely move the goalposts.
-        if why not in src:
+        if why not in consumer_src:
             problems.append(
                 'R4 %s is declared a consumer of the ParameterBinding resolver but does not '
                 'reference %r, so it is deciding role/surface some other way -- or not at all. '
                 'Two answers to "may this run optimize this parameter" is the drift %s exists '
                 'to prevent.' % (rel, why, RESOLVER))
     # (b) no second copy of the vocabulary.
-    import glob
     hits = []
     for pat in ('_triage/factory_os/*.py', 'scripts/*.ps1', 'scripts/lib/*.ps1'):
-        for path in glob.glob(os.path.join(ROOT, pat.replace('/', os.sep))):
-            rel = os.path.relpath(path, ROOT).replace(os.sep, '/')
+        for rel in src.list_committed(pat):
             if rel in RESOLVER_SWEEP_EXEMPT:
                 continue
-            with io.open(path, encoding='utf-8', errors='replace') as fh:  # snapshot: worktree
-                src = strip_comments(fh.read(), rel)
-            if ROLE_PAIR.search(src) and ROLE_PAIR2.search(src):
+            code = strip_comments(src.read_committed(rel, errors='replace'), rel)
+            if ROLE_PAIR.search(code) and ROLE_PAIR2.search(code):
                 hits.append(rel)
     for rel in sorted(hits):
         problems.append(
@@ -277,26 +288,28 @@ def check_r4():
             'RESOLVER_SWEEP_EXEMPT with a reason.' % (rel, RESOLVER))
 
 
-def _required_fields(entity):
+def _required_fields(entity, src):
     """The entity's `required` list, READ FROM THE SCHEMA rather than re-typed here.
 
     A second copy of a required-field list is the drift this whole module is written against, so
     the list is not written down -- it is looked up. If the schema cannot be read, that is a TOOL
-    failure and R5 says so instead of quietly checking nothing.
+    failure and R5 says so instead of quietly checking nothing. ORDER-670: the schema is judged
+    evidence -- the required-field floor must be the one the COMMIT declares, so it is read
+    through the source (the cache is keyed by mode; two sources in one process must not share
+    a schema).
     """
-    global _SCHEMA_DEFS
-    if _SCHEMA_DEFS is None:
-        with io.open(  # snapshot: worktree
-                os.path.join(ROOT, '_triage', 'factory_os', 'schemas.json'),
-                encoding='utf-8') as fh:  # snapshot: worktree
-            _SCHEMA_DEFS = json.load(fh).get('$defs') or {}
-    return list((_SCHEMA_DEFS.get(entity) or {}).get('required') or [])
+    key = (src.mode, src.root)
+    if key not in _SCHEMA_DEFS:
+        _SCHEMA_DEFS[key] = json.loads(
+            src.read_committed('_triage/factory_os/schemas.json')).get('$defs') or {}
+    return list((_SCHEMA_DEFS[key].get(entity) or {}).get('required') or [])
 
 
-_SCHEMA_DEFS = None
+_SCHEMA_DEFS = {}
 
 
-def check_r5(stores):
+def check_r5(stores, src=None):
+    src = src or _default_src()
     for rel, entity in sorted((k, v) for k, v in reg.STORES.items() if k in stores):
         _meta, rows = stores[rel]
         for n, rec in rows:
@@ -326,7 +339,7 @@ def check_r5(stores):
             # validator and it runs in run_schema_fixtures.py; this tier has no node budget. What
             # this adds is the REQUIRED-FIELD floor, read out of schemas.json so there is no second
             # copy of the list. A row that passes here can still be invalid in ways only ajv sees.
-            missing = [f for f in _required_fields(entity) if f not in rec]
+            missing = [f for f in _required_fields(entity, src) if f not in rec]
             if missing:
                 problems.append(
                     'R5 %s line %d declares entity=%r but is missing required field(s) %s. The '
@@ -336,29 +349,33 @@ def check_r5(stores):
                     % (rel, n, entity, ', '.join(missing)))
 
 
-def check_r6():
+def check_r6(src=None):
     """A blocked store may not quietly appear, and a block may not quietly expire.
 
     Both halves, because a one-sided version is useless in a predictable way. If a blocked store
     APPEARS, load_all skips it and nothing validates it -- so it must be refused. If the CONDITION
     that blocks it stops holding, the block is an exclusion nobody re-examined, which is the same
     defect snapshot_build's TASKBOARDS_NOT_READ check exists for.
+
+    ORDER-670: existence is judged through the source. "Absent from the COMMIT" is the fact this
+    criterion is about in hook mode -- staging a blocked store while deleting the worktree copy
+    must be refused, and an untracked scratch file must not be.
     """
-    d1 = os.path.join(ROOT, '_triage', 'factory_os', 's2a_migration.jsonl')
+    src = src or _default_src()
+    d1_rel = '_triage/factory_os/s2a_migration.jsonl'
     d1_states = set()
-    if os.path.isfile(d1):
-        with io.open(d1, encoding='utf-8') as fh:  # snapshot: worktree
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                try:
-                    rec = json.loads(line)
-                except ValueError:
-                    continue
-                if isinstance(rec, dict) and rec.get('proposed_owner') or                         (isinstance(rec, dict) and rec.get('proposed')):
-                    d1_states.add((rec.get('entity_name') or rec.get('entity'),
-                                   rec.get('current_owner') or rec.get('owner')))
+    if src.exists_committed(d1_rel):
+        for line in src.read_committed(d1_rel).split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            if isinstance(rec, dict) and rec.get('proposed_owner') or                     (isinstance(rec, dict) and rec.get('proposed')):
+                d1_states.add((rec.get('entity_name') or rec.get('entity'),
+                               rec.get('current_owner') or rec.get('owner')))
     # THE THIRD DIRECTION, and it was missing. PROBED 2026-07-31 (round 2): emptying
     # reg.STORES_BLOCKED entirely went silently GREEN -- a recorded owner-owned block could be
     # deleted with nothing noticing, which is worse than never having recorded it, because the
@@ -373,8 +390,7 @@ def check_r6():
                 'inside the owner attestation bundle, so the block must be recorded, not dropped.')
 
     for rel, why in sorted(reg.STORES_BLOCKED.items()):
-        path = os.path.join(ROOT, rel.replace('/', os.sep))
-        if os.path.isfile(path):
+        if src.exists_committed(rel):
             problems.append(
                 'R6 %s is declared BLOCKED but EXISTS. load_all() skips a blocked store, so a '
                 'blocked store that is present is a store nothing validates. Either lift the '
@@ -396,7 +412,15 @@ def check_r6():
 
 def main():
     try:
-        stores = reg.load_all()
+        src = ev.EvidenceSource.for_run()
+    except ev.ToolFailure as exc:
+        print('[TOOL FAILURE] %s' % exc)
+        return 2
+    # The one tier-verifiable line (ORDER-670): which bytes this run judged, stated by the
+    # code that chose them -- not by a wrapper that believes it knows.
+    print(src.marker('check_registries.py'))
+    try:
+        stores = reg.load_all(source=src)
     except reg.RegistryRefusal as exc:
         # TOOL failure, exit 2. Not a violation: "I could not read the registries" and "the
         # registries are wrong" have different fixes, and collapsing them is this repo's
@@ -407,9 +431,9 @@ def main():
     check_r1(stores)
     na_fired = check_r2(stores)
     check_r3(stores)
-    check_r4()
-    check_r5(stores)
-    check_r6()
+    check_r4(src)
+    check_r5(stores, src)
+    check_r6(src)
 
     total = sum(len(rows) for _m, rows in stores.values())
     print('=== ORDER-630 registry check ===')

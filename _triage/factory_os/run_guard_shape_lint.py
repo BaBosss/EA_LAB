@@ -77,6 +77,12 @@ L1_FILES = (
     # remembered by hand.
     '_triage/factory_os/check_registries.py',
     '_triage/factory_os/registry.py',
+    # ORDER-670. The evidence reader itself: its two direct disk reads are the worktree-mode
+    # entry point (which SAYS it is manual-run semantics) and observe() (category B by design).
+    # The index-mode path reads through `git show`, which is the lint's deliberate exclusion --
+    # that subprocess IS how the correct pattern reads the index and names its snapshot in the
+    # call itself.
+    '_triage/factory_os/evidence.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
