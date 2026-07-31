@@ -205,24 +205,33 @@ def check_r2(stores):
 
 def check_r3(stores):
     for rel in sorted(stores):
-        _meta, rows = stores[rel]
-        for n, rec in rows:
-            def seen(k, v, path, rel=rel, n=n):
+        meta, rows = stores[rel]
+        # METADATA IS SCANNED TOO. BLIND AUDIT 2026-07-31, reproduced: this iterated `rows` only,
+        # so `{"_comment": "note", "verdict": "DEAD-STRUCTURAL"}` produced ZERO problems -- against
+        # a criterion whose own text is "a verdict KEY at any depth". A note is still bytes in the
+        # store, a reader still reads them, and "it was in a comment" is not a defence. The line
+        # number is unavailable for meta records (read_store does not carry one), so they are
+        # reported by CONTENT, which is enough to find them in a file this size.
+        for n, rec in [(None, m) for m in meta] + list(rows):
+            where = ('line %d' % n) if n is not None else ('metadata record %s'
+                                                            % json.dumps(rec, sort_keys=True)[:70])
+
+            def seen(k, v, path, rel=rel, n=where):
                 if k is not None and k.strip().upper() in FORBIDDEN_VERDICT_VALUES:
                     problems.append(
-                        'R3 %s line %d uses the verdict word %r as a KEY at %s. Probed and found '
+                        'R3 %s %s uses the verdict word %r as a KEY at %s. Probed and found '
                         'walking past the value check, which only inspected values.'
                         % (rel, n, k, path))
                 if k is not None and k.lower() in FORBIDDEN_VERDICT_KEYS:
                     problems.append(
-                        'R3 %s line %d carries a verdict-shaped KEY at %s. These stores hold '
+                        'R3 %s %s carries a verdict-shaped KEY at %s. These stores hold '
                         'facts and references; a verdict belongs in the scorecard.'
                         % (rel, n, path))
                 if isinstance(v, str) and v.strip().upper() in FORBIDDEN_VERDICT_VALUES:
                     if (rel, k, v.strip().upper()) in VERDICT_VALUE_EXEMPTIONS:
                         return
                     problems.append(
-                        'R3 %s line %d carries the verdict VALUE %r at %s. Checking key names '
+                        'R3 %s %s carries the verdict VALUE %r at %s. Checking key names '
                         'and not values is the exact defect audit finding A3 shipped: '
                         '"status": "DEAD-STRUCTURAL" passed a name check and carried a verdict '
                         'into a store whose acceptance forbids one.' % (rel, n, v, path))

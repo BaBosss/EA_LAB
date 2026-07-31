@@ -421,6 +421,45 @@ def main():
         finally:
             shutil.rmtree(fake, ignore_errors=True)
 
+        print("\n--- BLIND AUDIT ROUND 3 ---")
+        # R3 must scan METADATA records too -- "a verdict key at any depth" said nothing about
+        # rows, and a note is still bytes in the store.
+        note = seed(tempfile.mkdtemp(prefix='s5note_'))
+        try:
+            with io.open(os.path.join(note, 'factory', 'hypotheses.jsonl'), 'w',
+                         encoding='utf-8', newline=chr(10)) as fh:
+                fh.write(reg.canonical_line(
+                    {'_comment': 'note', 'verdict': 'DEAD-STRUCTURAL'}) + chr(10))
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=note))
+            check('AUDIT R3 a verdict inside a METADATA record is REFUSED '
+                  '(probed: rows-only scan reported [])',
+                  any(p.startswith('R3') for p in chk.problems), str(chk.problems))
+        finally:
+            shutil.rmtree(note, ignore_errors=True)
+        clean = seed(tempfile.mkdtemp(prefix='s5cln_'))
+        try:
+            chk.problems[:] = []
+            chk.check_r3(reg.load_all(root=clean))
+            check('AUDIT R3 SPECIFICITY an ordinary metadata note is still accepted',
+                  not chk.problems, str(chk.problems))
+        finally:
+            shutil.rmtree(clean, ignore_errors=True)
+
+        # L0's completeness claim must cover the PowerShell checkers it never saw.
+        import run_guard_shape_lint as lint
+        check('AUDIT L0 discovery covers scripts/check_*.ps1, not only the python directory',
+              any('scripts/check_*.ps1' in g for g in lint.CHECKER_GLOBS), str(lint.CHECKER_GLOBS))
+        pr = []
+        lint.lint_l0(pr, present=['scripts/check_brand_new.ps1'])
+        check('AUDIT L0 an UNDECLARED PowerShell checker is REFUSED (probed: 11 existed, 0 seen)',
+              bool(pr), str(pr))
+        pr = []
+        lint.lint_l0(pr, present=['scripts/check_state.ps1'])
+        check('AUDIT L0 SPECIFICITY a DECLARED PowerShell checker is accepted', not pr, str(pr))
+        check('AUDIT L0 and every declared-unparseable entry carries a REASON, not just a name',
+              all(isinstance(v, str) and len(v) > 10 for v in lint.L1_NOT_PARSED.values()))
+
         print("\n--- BLIND AUDIT ROUND 2: every finding, as a fixture ---")
         # P2-9: canonicalize left a PARTIAL MUTATION -- it rewrote four stores then raised on the
         # fifth, and ignored the --root it had parsed. Driven through the CLI, which is where the

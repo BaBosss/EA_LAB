@@ -320,6 +320,75 @@ def main():
         except TypeError:
             check('C2c NEG an arbitrary callable is refused, like the schema gate', True)
 
+        print("\n--- BLIND AUDIT ROUND 3 ---")
+        # P0: the hash and the mtime must describe the SAME open file.
+        import inspect
+        src = inspect.getsource(sb._stat_evidence)
+        check('AUDIT P0 evidence comes from ONE open handle (os.fstat), not a second stat of the '
+              'path (probed: hash of OLD bytes carried the mtime of NEW)',
+              'os.fstat(fh.fileno())' in src and 'os.path.getmtime(abs_path)' not in src)
+        one = tempfile.mkdtemp(prefix='s4fs_')
+        try:
+            fp = os.path.join(one, 'f.txt')
+            with io.open(fp, 'w') as fh:
+                fh.write('CONTENT')
+            ev = sb._stat_evidence(fp, datetime.datetime.now())
+            check('AUDIT P0 SPECIFICITY and a normal file still derives a matching hash and mtime',
+                  ev['read_ok'] is True
+                  and ev['sha256'] == hashlib.sha256(b'CONTENT').hexdigest()
+                  and ev['mtime'] is not None, json.dumps(ev))
+        finally:
+            shutil.rmtree(one, ignore_errors=True)
+
+        # P1: a `_comment` on a REAL coverage row must not erase it. One rule, imported.
+        er = tempfile.mkdtemp(prefix='s4er_')
+        try:
+            os.makedirs(os.path.join(er, 'factory'))
+            for rel in sb.TASKBOARDS:
+                with io.open(os.path.join(er, rel), 'w', encoding='utf-8') as fh:
+                    fh.write('## ORDER-001 -- x `OPEN`' + chr(10))
+            cov = os.path.join(er, 'factory', 'coverage.jsonl')
+            with io.open(cov, 'w', encoding='utf-8') as fh:
+                fh.write('{"cells": [{"cell": "EURUSD H1", "status": "UNVERIFIED_IMPORT"}]}' + chr(10))
+            base = sb.reconcile(root=er)['coverage']
+            check('AUDIT P1 CONTROL a plain coverage row counts', base['cells_in_universe'] == 1,
+                  json.dumps(base))
+            with io.open(cov, 'w', encoding='utf-8') as fh:
+                fh.write('{"_comment": "x", "cells": [{"cell": "EURUSD H1", '
+                         '"status": "UNVERIFIED_IMPORT"}]}' + chr(10))
+            refuses('AUDIT P1 a `_comment` on a REAL coverage row is REFUSED as ambiguous, not '
+                    'silently erased (probed: 1 cell became a 0/0/0 universe)',
+                    lambda: sb.reconcile(root=er), 'ambiguous whether this is a row or a note')
+            check('AUDIT P1 and the rule has ONE home -- reconcile calls registry.classify_record',
+                  'reg.classify_record' in inspect.getsource(sb.reconcile))
+        finally:
+            shutil.rmtree(er, ignore_errors=True)
+
+        # P2: freshness drives the verdict, so it belongs in build_id.
+        f1 = {'meta': {'git_head': 'h', 'mandatory_sources': ['s'],
+                       'sources': [{'name': 's', 'path': 'p', 'sha256': 'd', 'read_ok': True,
+                                    'mtime': 't1', 'fresh': True}],
+                       'reconciliation': {'x': 1}}}
+        f2 = json.loads(json.dumps(f1))
+        f2['meta']['sources'][0].update({'fresh': False, 'mtime': 't2'})
+        check('AUDIT P2 build_id CHANGES between a fresh and a stale source (probed: same id '
+              'while one verdict was clear and the other MANDATORY_SOURCE_STALE)',
+              sb.compute_build_id(f1) != sb.compute_build_id(f2))
+        check('AUDIT P2 and age_hours is deliberately NOT hashed, so the id stays stable across '
+              'rebuilds of unchanged evidence',
+              'age_hours' not in inspect.getsource(sb.compute_build_id).split('h.update')[-1])
+
+        # P2: inline code in a title must not be read as the status.
+        parsed = sb._order_rows('## ORDER-546 -- [EXP] `(EXP)_x` foo -- `REVIEWED(Claude)`' + chr(10))
+        check('AUDIT P2 a title containing inline code resolves to the STATUS span, not the first '
+              'uppercase span (probed: 11 live rows classified from a non-status span)',
+              parsed[0][1] == 'REVIEWED', str(parsed))
+        parsed2 = sb._order_rows('## ORDER-999 -- x `BUILT+CLOSED(x)`' + chr(10))
+        check('AUDIT P2 SPECIFICITY a header with NO known status verb still falls back and lands '
+              'in unclassified, rather than being dropped',
+              parsed2[0][1] == 'BUILT' and sb.STATUS_CATEGORY.get(parsed2[0][1]) is None,
+              str(parsed2))
+
         print("\n--- BLIND AUDIT ROUND 2 ---")
         # P2-6: build_id called itself "a digest over WHAT WAS READ" and did not hash the
         # reconciliation, so discovered=312 and discovered=0 produced the SAME id at the same head.

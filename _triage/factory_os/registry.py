@@ -89,6 +89,38 @@ STORES_BLOCKED = {
 # real entity can never be mistaken for one: every entity's discriminator is `entity`.
 META_KEYS = ('_comment', '_section')
 
+# Keys that make a record STRUCTURED DATA rather than a note. `entity` is every registry row's
+# discriminator; `cells` is what ORDER-610's imported coverage rows carry instead, and they predate
+# the discriminator.
+STRUCTURAL_KEYS = ('entity', 'cells')
+
+
+def classify_record(rec, where=''):
+    """-> 'META' or 'ROW'. Refuses a record that is both. THE ONE metadata rule in this repo.
+
+    A blind audit called the duplication out by name: this rule existed in `read_store` AND again,
+    written differently, in snapshot_build.reconcile -- so the same defect had to be found twice.
+    It was: adding `_comment` to a real coverage row turned 1 untested cell into an empty 0/0/0
+    universe, three commits after the identical hole was closed here. Two copies of a rule is one
+    rule and one liability, and the second copy is always the one nobody fixes.
+
+    So there is one function, it lives here, and snapshot_build imports it. The rule:
+      META       a metadata key and no structural key -- a note
+      ROW        no metadata key -- data
+      REFUSED    both -- ambiguous, and reading it either way silently discards the other meaning
+    """
+    has_meta = any(k in rec for k in META_KEYS)
+    has_structure = any(k in rec for k in STRUCTURAL_KEYS)
+    if has_meta and has_structure:
+        _refuse('%s carries both a metadata key (%s) and structured data (%s). Refused: it is '
+                'ambiguous whether this is a row or a note, and reading it as a note is how a '
+                'LOCKED binding, a forbidden verdict and a real coverage cell each became '
+                'invisible to every check at once.'
+                % (where or 'a record',
+                   ', '.join(k for k in META_KEYS if k in rec),
+                   ', '.join(k for k in STRUCTURAL_KEYS if k in rec)))
+    return 'META' if has_meta else 'ROW'
+
 # The role vocabulary. It lives HERE and nowhere else -- C4 greps for a second copy, because two
 # copies of a vocabulary is the drift this module exists to prevent.
 ROLES = ('TUNABLE', 'RUNTIME', 'SIZING', 'SAFETY', 'LOCKED', 'INACTIVE')
@@ -133,25 +165,7 @@ def read_store(rel, root=None):
                 _refuse('%s line %d is not parseable JSON: %s' % (rel, n, exc))
             if not isinstance(rec, dict):
                 _refuse('%s line %d is %s, not an object' % (rel, n, type(rec).__name__))
-            has_meta = any(k in rec for k in META_KEYS)
-            has_entity = 'entity' in rec
-            # BLIND AUDIT 2026-07-31, reproduced: this was `if any meta key -> metadata`, so ANY
-            # object carrying `_comment` disappeared from `rows`. Probed with a LOCKED
-            # ParameterBinding that also carried a forbidden `verdict`: meta=2 rows=0, the resolver
-            # answered UNBOUND, and R3 never saw the verdict. One extra key made a row invisible to
-            # every check at once.
-            #
-            # A row is metadata only if it carries a meta key AND NO `entity` discriminator.
-            # Carrying BOTH is refused rather than resolved either way: the two readings ("a
-            # commented row" / "a metadata line that mentions an entity") have opposite
-            # consequences, and picking one silently is how the hole existed.
-            if has_meta and has_entity:
-                _refuse('%s line %d carries both a metadata key (%s) and an `entity` '
-                        'discriminator. Refused: it is ambiguous whether this is a row or a note, '
-                        'and reading it as a note made a LOCKED binding and a forbidden verdict '
-                        'invisible to every check at once.'
-                        % (rel, n, ', '.join(k for k in META_KEYS if k in rec)))
-            if has_meta:
+            if classify_record(rec, '%s line %d' % (rel, n)) == 'META':
                 meta.append(rec)
                 continue
             rows.append((n, rec))

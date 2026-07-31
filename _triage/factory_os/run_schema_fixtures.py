@@ -1107,6 +1107,46 @@ def main():
         print("        -> %s" % p)
     bad += len(gate)
 
+    # --- the LIVE registry rows, against their typed contracts ------------------------------
+    # BLIND AUDIT 2026-07-31: check_registries' R5 checks required-key PRESENCE only, so an
+    # InstrumentProfile with every required value set to `null` plus an unknown field passed R5
+    # while ajv rejected the same object. R5's own text says "required-field floor, not full
+    # validation" -- which is honest, and leaves the live rows bound to nothing typed.
+    #
+    # This is where that binding belongs: ajv already runs here, so the node budget is paid, and
+    # the fast tier stays as it is. R5 remains the fast-path floor; THIS is the contract.
+    print("\n--- the LIVE registry stores, each row against its own entity contract ---")
+    import registry as _reg
+    _live = 0
+    try:
+        _stores = _reg.load_all()
+    except _reg.RegistryRefusal as _exc:
+        print("  TOOL FAILURE: %s" % _exc)
+        bad += 1
+        _stores = {}
+    for _rel in sorted(_stores):
+        _entity = _reg.STORES[_rel]
+        _meta, _rows = _stores[_rel]
+        for _n, _rec in _rows:
+            # ORDER-610's imported coverage rows predate the `entity` discriminator and are pinned
+            # to a source blob; they are not CoverageCell objects yet and routing them to that
+            # contract would report a migration that has not happened as a defect. Named here
+            # rather than skipped silently, and it ends when S5's real CoverageCell rows land.
+            if _rec.get('entity') is None and _rel == 'factory/coverage.jsonl':
+                continue
+            _live += 1
+            _got, _out = run(SCHEMA, _rec)
+            if _got != VALID:
+                print("  [BAD] %s line %d does not validate as %s" % (_rel, _n, _entity))
+                print("        %s" % (_out.splitlines()[1][:220] if len(_out.splitlines()) > 1
+                                      else _out[:220]))
+                bad += 1
+    print("  %d live registry row(s) validated against their declared entity" % _live)
+    if _live == 0:
+        # The guard rule, applied here: a run that validated nothing proves nothing, and must say
+        # so rather than printing a clean line. Three of the five stores are empty by design.
+        print("  0 rows means this check is UNTESTED by this run, not that the stores are clean")
+
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
     with open('portfolio/control_room_snapshot.json', encoding='utf-8-sig') as _fh:  # snapshot: worktree
         _real = json.load(_fh)

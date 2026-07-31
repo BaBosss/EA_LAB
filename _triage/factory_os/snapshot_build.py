@@ -67,6 +67,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import registry as reg           # noqa: E402
 import snapshot_validator as sv  # noqa: E402
 
 REPO_ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -93,9 +94,22 @@ def _stat_evidence(abs_path, now):
     try:
         if not os.path.isfile(abs_path):
             return {'read_ok': False, 'sha256': None, 'mtime': None, 'age_hours': None}
+        # ONE OPEN HANDLE FOR BOTH FACTS. BLIND AUDIT 2026-07-31 (P0), reproduced: this hashed the
+        # bytes through one open(), closed it, and then called os.path.getmtime(PATH) -- a second
+        # trip to the filesystem. Replace the file between the two and the row carries the hash of
+        # the OLD bytes with the mtime of the NEW ones, so stale content is labelled fresh. That is
+        # the same "two moments in one verdict" shape as the reader's two reads, one layer down,
+        # and it is the more dangerous instance: the reader hands back a document, this one decides
+        # whether the fleet's sensors are fresh.
+        #
+        # os.fstat(fh.fileno()) reads the metadata OF THE OPEN FILE, so the bytes and the timestamp
+        # describe the same inode at the same moment by construction. A replacement mid-read leaves
+        # this handle on the old file entirely -- consistent, and stale in a way `sha256` reveals.
         with io.open(abs_path, 'rb') as fh:  # snapshot: worktree
-            digest = hashlib.sha256(fh.read()).hexdigest()
-        mtime = datetime.datetime.fromtimestamp(os.path.getmtime(abs_path))
+            raw = fh.read()
+            st = os.fstat(fh.fileno())
+        digest = hashlib.sha256(raw).hexdigest()
+        mtime = datetime.datetime.fromtimestamp(st.st_mtime)
         age = (now - mtime).total_seconds() / 3600.0
         return {'read_ok': True,
                 'sha256': digest,
@@ -197,8 +211,15 @@ def compute_build_id(doc):
         h.update(('m:' + str(name)).encode('utf-8'))
         h.update(b'\0')
     for row in sorted(meta.get('sources') or [], key=lambda r: str(r.get('name'))):
-        h.update(('%s|%s|%s|%s' % (row.get('name'), row.get('path'),
-                                   row.get('sha256'), row.get('read_ok'))).encode('utf-8'))
+        # `mtime` and `fresh` are in the digest and `age_hours` is NOT, deliberately. A blind
+        # audit found age 1h and age 31h producing the same id while one verdict was clear and the
+        # other MANDATORY_SOURCE_STALE -- freshness drives the verdict, so it is part of what was
+        # read. But `age_hours` changes on every single build by construction, so hashing it would
+        # make build_id differ on every rebuild and destroy the one question it answers ("rebuilt,
+        # or changed?"). `fresh` is the verdict-driving fact and it is stable while the file is.
+        h.update(('%s|%s|%s|%s|%s|%s' % (row.get('name'), row.get('path'), row.get('sha256'),
+                                         row.get('read_ok'), row.get('mtime'),
+                                         row.get('fresh'))).encode('utf-8'))
         h.update(b'\0')
     # BLIND AUDIT 2026-07-31, reproduced: this function calls itself "a digest over WHAT WAS READ"
     # and did not hash the reconciliation at all, so `discovered: 312` and `discovered: 0` produced
@@ -368,13 +389,28 @@ def _order_rows(text):
             continue
         m = _ORDER_ID.match(line)
         order_id = m.group(1) if m else line[3:].split()[0]
+        # THE STATUS IS THE FIRST SPAN WHOSE VERB IS A KNOWN STATUS, not the first uppercase span.
+        # BLIND AUDIT 2026-07-31, reproduced against the real boards: taking the first uppercase
+        # span read INLINE CODE IN THE TITLE as the status. `## ORDER-546 -- [EXP] `EXP` ... —
+        # `REVIEWED(...)`` classified as EXP. ELEVEN live rows were affected (546, 410, 373, 215,
+        # 117, 116, 003, 009 among them), every one of them inflating `unclassified` with a row
+        # that HAS a perfectly readable status.
+        #
+        # The fallback keeps the old behaviour for a header whose spans contain no known verb, so a
+        # genuinely unreadable status still lands in `unclassified` rather than being dropped --
+        # which is the whole point of that bucket.
         verb = None
+        fallback = None
         for span in _SPAN.findall(line):
             vm = _VERB.match(span.strip())
-            if vm:
+            if not vm:
+                continue
+            if fallback is None:
+                fallback = vm.group(1)
+            if vm.group(1) in STATUS_CATEGORY:
                 verb = vm.group(1)
                 break
-        out.append((order_id, verb))
+        out.append((order_id, verb if verb is not None else fallback))
     return out
 
 
@@ -531,7 +567,20 @@ def reconcile(root=None):
                     sv._refuse('factory/coverage.jsonl line %d is %s, not an object. Refused: a '
                                'coverage store this function cannot read is not a universe of zero '
                                'cells.' % (n, type(rec).__name__))
-                if any(k in rec for k in ('_comment', '_section')):
+                # THE ONE metadata rule, imported. This block used to carry its own copy --
+                # `if any meta key: continue` -- which meant a real coverage row with a `_comment`
+                # on it was ERASED: 1 untested cell became an empty 0/0/0 universe. The identical
+                # hole had been closed in registry.read_store three commits earlier, and the second
+                # copy is the one nobody fixed. There is no second copy now.
+                # The shared rule raises registry.RegistryRefusal; this module's contract is that
+                # it raises SnapshotRefusal. Translated at the boundary rather than leaked, so a
+                # caller still has ONE exception type to catch -- importing a rule must not import
+                # a second failure vocabulary along with it.
+                try:
+                    kind = reg.classify_record(rec, 'factory/coverage.jsonl line %d' % n)
+                except reg.RegistryRefusal as exc:
+                    sv._refuse(str(exc))
+                if kind == 'META':
                     continue
                 if 'cells' not in rec:
                     sv._refuse(

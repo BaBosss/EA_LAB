@@ -78,6 +78,41 @@ L1_FILES = (
     '_triage/factory_os/check_registries.py',
     '_triage/factory_os/registry.py',
 )
+# Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
+# language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
+# claim is true -- the list of what exists is derived from the filesystem, and each entry says
+# whether it is checked or merely known. That distinction is the whole difference between "L1
+# covers every checker" (false) and "L1 covers every checker it can parse, and here is the rest"
+# (true, and useful).
+L1_NOT_PARSED = {
+    'scripts/check_block_staleness.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_experiment_events.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_handoff_contract.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_order_collision.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_precommit_staged.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_stale_binaries.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_state.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_taskboard_archive.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_template_dependencies.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_truncated_run.ps1':
+        'PowerShell -- L1 has no parser for it',
+    'scripts/check_verdict_kill.ps1':
+        'PowerShell -- L1 has no parser for it',
+}
+# MEASURED at declaration time: 11 PowerShell checkers, discovered by the glob rather than
+# remembered. If one is added or removed, L0 says so on the next run instead of this number
+# quietly becoming wrong.
+assert len(L1_NOT_PARSED) == 11
+
 L1_DEFERRED = {
     '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2)',
     '_triage/factory_os/check_s2a_attestation.py': 'inside its own bundle (ORDER-614 rev 2)',
@@ -180,21 +215,35 @@ def string_literals(source, path):
 # was written and quietly stops being true -- and this repo already tracks that pattern as
 # BACKLOG-D29. So the lists are still declarations (which is correct: DEFERRED needs a reason a
 # glob cannot express), but the FILESYSTEM decides whether they are complete.
-CHECKER_GLOB = '_triage/factory_os/check_*.py'
+CHECKER_GLOBS = (
+    '_triage/factory_os/check_*.py',
+    # BLIND AUDIT 2026-07-31: L0's whole claim is "a hand-maintained list of what to check is a
+    # list that stops being true", and its OWN discovery glob was hand-narrowed to one directory
+    # and one language. ELEVEN scripts/check_*.ps1 existed -- check_state.ps1, check_taskboard_
+    # archive.ps1, check_order_collision.ps1 among them -- and L0 asserted completeness over a set
+    # that never contained any of them. The lint carried its own defect for the second time.
+    'scripts/check_*.ps1',
+)
+CHECKER_GLOB = CHECKER_GLOBS[0]   # kept: the self-test drives the python half by name
 
 
 def lint_l0(problems, present=None):
     import glob as _glob
-    found = sorted((present if present is not None else
-                    [p.replace(os.sep, '/') for p in _glob.glob(CHECKER_GLOB)]))
-    declared = set(L1_FILES) | set(L1_DEFERRED)
+    if present is not None:
+        found = sorted(present)
+    else:
+        found = []
+        for pat in CHECKER_GLOBS:
+            found += [p.replace(os.sep, '/') for p in _glob.glob(os.path.join(ROOT, pat))]
+        found = sorted(os.path.relpath(p, ROOT).replace(os.sep, '/') for p in found)
+    declared = set(L1_FILES) | set(L1_DEFERRED) | set(L1_NOT_PARSED)
     for rel in found:
         if rel not in declared:
             problems.append(
                 'L0 %s exists but is in neither L1_FILES nor L1_DEFERRED. A hand-maintained list '
                 'of what to check is a list that stops being true -- add it, or defer it WITH A '
                 'REASON.' % rel)
-        if rel in L1_FILES or rel in L1_DEFERRED:
+        if rel in L1_FILES:
             try:
                 emits = sorted(set(CRITERION.findall(_read(rel))))
             except IOError:
@@ -353,9 +402,19 @@ def main(argv):
                            for k, v in sorted(L1_DEFERRED.items()))))
     out.write('L2 criterion coverage    : %s checker/suite pair(s)\n' % len(L2_PAIRS))
     import glob as _g
-    out.write('L0 list completeness     : %s checker(s) on disk match %s; both lists are checked '
-              'against it\n'
-              % (len(_g.glob(CHECKER_GLOB)), CHECKER_GLOB))
+    # COUNT WHAT L0 ACTUALLY DISCOVERS, not what the first glob finds. This line said "5 checkers
+    # match _triage/factory_os/check_*.py" in the same commit that widened discovery to 16 across
+    # two globs -- a summary describing the old scope while the check used the new one, which is
+    # shape 4 inside the file that names shape 4.
+    _found = sorted(set(
+        os.path.relpath(_p, ROOT).replace(os.sep, '/')
+        for _pat in CHECKER_GLOBS for _p in _g.glob(os.path.join(ROOT, _pat))))
+    out.write('L0 list completeness     : %s checker(s) on disk across %s -- %s parsed by L1, '
+              '%s deferred, %s declared unparseable (PowerShell)\n'
+              % (len(_found), ' + '.join(CHECKER_GLOBS),
+                 len([f for f in _found if f in L1_FILES]),
+                 len([f for f in _found if f in L1_DEFERRED]),
+                 len([f for f in _found if f in L1_NOT_PARSED])))
     if tool:
         for p in tool:
             out.write('  %s\n' % p)
