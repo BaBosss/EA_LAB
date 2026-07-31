@@ -44,6 +44,7 @@ must keep the two apart (exit 2 vs exit 1 in every checker in this tree).
 import glob as _glob
 import io
 import os
+import re
 import subprocess
 
 MODE_ENV = 'EA_LAB_EVIDENCE'
@@ -143,6 +144,36 @@ class EvidenceSource(object):
             rc, _o, _e = self._git('ls-files', '--cached', '--error-unmatch', '--', rel)
             return rc == 0
         return os.path.isfile(os.path.join(self.root, rel.replace('/', os.sep)))
+
+    # -- category P ----------------------------------------------------------------------
+
+    def read_blob(self, sha, why):
+        """A PINNED object, by sha. Independent of mode, and that is the whole point.
+
+        Design section 2 named this entry point; ORDER-670 part 1 shipped without it, so `blob`
+        stayed a DECLARATION with no call form -- and T7 has to keep allowing `# snapshot: blob`
+        on a bare open() for exactly as long as that is true. This closes it.
+
+        `why` is required and unused by the mechanism: a pinned read is a claim that some
+        specific historical object is the right yardstick, and a sha with no stated reason is
+        the one form of provenance a reader cannot reconstruct. It is echoed in every failure.
+
+        NO FALLBACK, for the reason a pin exists: if the object is not in the store, the answer
+        is "I cannot read the yardstick", never "here is today's copy of that path". Substituting
+        a live file for a pinned blob is `A2`'s crime -- a pinned vintage joined to a live one
+        inside one verdict -- and it is the failure mode a pin is bought to prevent.
+        """
+        if not isinstance(sha, str) or not re.match(r'^[0-9a-f]{7,40}$', sha):
+            raise ToolFailure('read_blob(%r): not an object name. A pin is a sha, and a pin that '
+                              'is not one cannot be checked against anything.' % (sha,))
+        rc, out, err = self._git('cat-file', 'blob', sha)
+        if rc != 0:
+            raise ToolFailure(
+                'pinned blob %s is not readable from this object store (%s). It is pinned '
+                'because %s -- so there is no substitute: reading the current copy of that path '
+                'instead would join a live vintage to a pinned one inside one verdict.'
+                % (sha, err.decode('utf-8', 'replace').strip(), why))
+        return out
 
     def list_committed(self, pattern):
         """Enumerate committed paths matching a /-separated glob (no `**`; `*` stays inside

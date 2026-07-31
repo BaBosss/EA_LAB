@@ -848,6 +848,67 @@ def main():
         finally:
             shutil.rmtree(t1r, ignore_errors=True)
 
+        # T-P -- category P finally has a CALL (ORDER-670 migration 5/9). Design section 2 named
+        # `read_blob`; part 1 shipped without it, so `# snapshot: blob` was a declaration with no
+        # mechanism -- and T7 must keep allowing that word on a bare open() for exactly as long
+        # as that stays true.
+        tp = tempfile.mkdtemp(prefix='s5evdp_')
+        try:
+            _git(tp, 'init', '-q')
+            yard = os.path.join(tp, 'yardstick.txt')
+            with io.open(yard, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write('the pinned value\n')
+            _git(tp, 'add', '-A')
+            _git(tp, '-c', 'user.email=t@t', '-c', 'user.name=t', 'commit', '-qm', 'x')
+            sha = subprocess.run(['git', '-C', tp, 'rev-parse', 'HEAD:yardstick.txt'],
+                                 capture_output=True, text=True,
+                                 env={k: v for k, v in os.environ.items()
+                                      if k != 'GIT_INDEX_FILE'}).stdout.strip()
+            sp_i = evd.EvidenceSource('index', root=tp)
+            sp_w = evd.EvidenceSource('worktree', root=tp)
+
+            # THE ATTACK: move the path the pin came from. A pin that follows the path is not
+            # a pin -- it is A2's crime, a live vintage substituted for a pinned one.
+            with io.open(yard, 'w', encoding='utf-8', newline='\n') as fh:
+                fh.write('MOVED\n')
+            _git(tp, 'add', '-A')
+            check('T-P ATTACK read_blob returns the PINNED bytes after the path it came from '
+                  'was rewritten AND staged',
+                  sp_i.read_blob(sha, 'the yardstick') == b'the pinned value\n')
+            check('T-P SPECIFICITY the mode is irrelevant to a pin -- index and worktree '
+                  'sources return identical bytes for one sha',
+                  sp_i.read_blob(sha, 'x') == sp_w.read_blob(sha, 'x'))
+            # ToolFailure, NOT RegistryRefusal: "I cannot read the yardstick" and "I will not
+            # answer for this input" are different facts with different exit codes, and the
+            # generic `refuses` helper above would have silently accepted either.
+            def _tool_failure(label, fn, needle):
+                try:
+                    fn()
+                except evd.ToolFailure as exc:
+                    check(label, needle in str(exc), 'refused, but not for that: %s'
+                          % str(exc)[:140])
+                except Exception as exc:                       # noqa: BLE001
+                    check(label, False, 'raised %s, not ToolFailure' % type(exc).__name__)
+                else:
+                    check(label, False, 'it was ACCEPTED')
+
+            _tool_failure('T-P an unknown object is a ToolFailure, never a read of that path '
+                          'as it stands today',
+                          lambda: sp_i.read_blob('0' * 40, 'the yardstick'), 'no substitute')
+            _tool_failure('T-P a PATH passed where a sha belongs is refused, so callers cannot '
+                          'drift back into path reads',
+                          lambda: sp_i.read_blob('yardstick.txt', 'the yardstick'),
+                          'not an object name')
+            # ENGAGEMENT: the real generator's baseline is byte-identical through the new call.
+            import gen_coverage as gcv
+            old = _git(reg.REPO_ROOT, 'cat-file', 'blob', gcv.BASELINE_BLOB)
+            check('T-P ENGAGEMENT gen_coverage baseline through read_blob is byte-identical to '
+                  'the cat-file route it replaced (the migration changed no output)',
+                  old.returncode == 0
+                  and gcv.baseline_text() == old.stdout.decode('utf-8').replace('\r\n', '\n'))
+        finally:
+            shutil.rmtree(tp, ignore_errors=True)
+
         # T2 -- no silent fallback, all three refusal legs.
         t2 = seed(tempfile.mkdtemp(prefix='s5evd2_'))
         try:

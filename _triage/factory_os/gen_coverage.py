@@ -45,6 +45,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
+import evidence                                                              # noqa: E402
+
 # The pre-transfer blob of MASTER_BACKLOG.md: the last hand-authored revision of section 2.
 # Pinned by ORDER-610 A2; also the blob D1's CoverageCell row pins as its owner_ref.
 BASELINE_BLOB = 'ca909b693a4c747dc1347d48fa8b2507f6a4243f'
@@ -89,12 +91,27 @@ def _git(*args):
     return p.returncode, p.stdout, p.stderr
 
 
+def _pinned():
+    """The category-P reader (ORDER-670 migration 5/9).
+
+    A pinned blob is the ONE input whose bytes must not move with the mode, so the source's mode
+    is irrelevant here and `read_blob` ignores it by construction. What the migration buys: the
+    pin is a CALL a reviewer can grep for, its refusal is written once instead of once per call
+    site, and `# snapshot: blob` finally has a call form to point at -- until now it was a
+    declaration with no mechanism, which is the exact gap T7 exists to close one category over.
+    """
+    return evidence.EvidenceSource('worktree', root=ROOT)
+
+
 def baseline_text():
     """The pinned pre-transfer MASTER_BACKLOG.md, as text, straight from the object store."""
-    rc, out, err = _git('cat-file', 'blob', BASELINE_BLOB)
-    if rc != 0:
-        raise SystemExit('gen_coverage: cannot read baseline blob %s: %s'
-                         % (BASELINE_BLOB, err.decode('utf-8', 'replace')))
+    try:
+        out = _pinned().read_blob(
+            BASELINE_BLOB, 'it is the PRE-TRANSFER MASTER_BACKLOG.md -- the yardstick this store '
+                           'is measured against, so a live read of that path would be the store '
+                           'grading itself')
+    except evidence.ToolFailure as exc:
+        raise SystemExit('gen_coverage: %s' % exc)
     return out.decode('utf-8').replace('\r\n', '\n')
 
 
@@ -110,10 +127,13 @@ def baseline_reconciliation():
     that is not sloppiness: the backlog by commit-resolved blob, the reconciliation by its own blob,
     because it did not exist at BASELINE_COMMIT. See the constant.
     """
-    rc, out, err = _git('cat-file', 'blob', RECONCILIATION_BLOB)
-    if rc != 0:
-        raise SystemExit('gen_coverage: cannot read the pinned reconciliation blob %s: %s'
-                         % (RECONCILIATION_BLOB[:12], err.decode('utf-8', 'replace')))
+    try:
+        out = _pinned().read_blob(
+            RECONCILIATION_BLOB, 'it is the reconciliation AS AT THE PINNED COMMIT; a '
+                                 'working-tree read of it is the mixed-vintage baseline Codex '
+                                 'Standards 2 refuted')
+    except evidence.ToolFailure as exc:
+        raise SystemExit('gen_coverage: %s' % exc)
     return json.loads(out.decode('utf-8-sig'))
 
 
@@ -257,7 +277,10 @@ def load_store(path=None):
     path = path or os.path.join(ROOT, COVERAGE_PATH)
     section = None
     records = []
-    for n, line in enumerate(io.open(path, encoding='utf-8'), 1):  # snapshot: worktree
+    # This is the GENERATOR reading back the store IT wrote, in order to render it. The
+    # committed-vintage claim about factory/coverage.jsonl is made by check_coverage_transfer
+    # -- a CHECKER -- and never here (TIER_SNAPSHOT_DESIGN section 2).
+    for n, line in enumerate(io.open(path, encoding='utf-8'), 1):  # snapshot: not-a-judged-input
         if not line.strip():
             continue
         obj = json.loads(line)
@@ -336,7 +359,7 @@ def apply_to_backlog(path=None):
 
 def sha256_file(path):
     h = hashlib.sha256()
-    h.update(io.open(path, 'rb').read())  # snapshot: worktree
+    h.update(io.open(path, 'rb').read())  # snapshot: not-a-judged-input -- just-written output
     return h.hexdigest()
 
 
