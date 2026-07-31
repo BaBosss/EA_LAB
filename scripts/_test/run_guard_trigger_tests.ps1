@@ -147,6 +147,58 @@ try {
     }
     if ($fail -eq $before) { Good 'no suite references a tracked path it has not accounted for' }
 
+    # ORDER-702. THE SWEEP ABOVE IS EXACTLY ONE LEVEL TOO SHALLOW, and that is not a nit: it
+    # scans each .ps1 WRAPPER for path-shaped strings, but a wrapper's real dependency is what
+    # its .py RUNS -- and `import evidence` is a MODULE NAME, not a path. Measured before this
+    # was written: `git ls-files -- <pathspec>` matched registry.py (1) and evidence.py (0), so
+    # a commit touching ONLY evidence.py -- the module ORDER-670 exists to provide, which every
+    # migrated checker's correctness depends on -- ran ZERO cages. It was edited in this very
+    # batch and the tier fired only because another declared file happened to be staged too.
+    #
+    # DERIVED, NOT HAND-ADDED (E2). Adding evidence.py to one guard list fixes today and leaves
+    # the next import invisible, which is the hand-maintained cache of reality L0 exists to stop.
+    $before = $fail
+    $importRe = [regex]'(?m)^\s*(?:from\s+([A-Za-z_][A-Za-z0-9_]*)|import\s+([A-Za-z_][A-Za-z0-9_]*))'
+    foreach ($s in $suites) {
+        $pyFiles = @($declaredFor[$s] | Where-Object { $_ -like '*.py' })
+        $ownPy = '_triage/factory_os/' + ($s -replace '\.ps1$', '.py')
+        if ($tracked.ContainsKey($ownPy) -and $pyFiles -notcontains $ownPy) { $pyFiles += $ownPy }
+        # THE TRANSITIVE CLOSURE, walked here rather than one level per commit. Reporting only
+        # direct imports makes the sweep converge by repeated commits -- declare A, next run
+        # demands B, declare B, next run demands C -- and each of those intermediate runs is a
+        # RED tier for a reason that is not a defect. It also means the list is never provably
+        # complete at any single moment. Walking it makes one run answer the whole question.
+        $seen = @{}
+        $stack = New-Object System.Collections.Generic.Stack[string]
+        foreach ($p in $pyFiles) { $stack.Push($p); $seen[$p] = $true }
+        while ($stack.Count -gt 0) {
+            $py = $stack.Pop()
+            $full = Join-Path $RepoRoot ($py -replace '/', '\')
+            if (-not (Test-Path -LiteralPath $full)) { continue }
+            $pysrc = Get-Content -LiteralPath $full -Raw
+            foreach ($m in $importRe.Matches($pysrc)) {
+                $mod = if ($m.Groups[1].Success) { $m.Groups[1].Value } else { $m.Groups[2].Value }
+                $modRel = "_triage/factory_os/$mod.py"
+                # Only a REPO FILE can be an input. `import io`, `import json`, `import ajv` are
+                # not repo files and must never be demanded -- a guard that asks for a
+                # declaration of the standard library is a guard people switch off, and it is
+                # the specificity half of this check.
+                if (-not $tracked.ContainsKey($modRel)) { continue }
+                if ($seen.ContainsKey($modRel)) { continue }
+                $seen[$modRel] = $true
+                $stack.Push($modRel)
+                if ($notDep -contains $modRel) { continue }
+                if ($declaredFor[$s] -contains $modRel) { continue }
+                Bad ("$s reaches '$modRel' through the imports of $py, but declares neither. A " +
+                     "commit touching only that module would run no cage at all -- the " +
+                     "wrapper's path-string sweep cannot see an ``import``.")
+            }
+        }
+    }
+    if ($fail -eq $before) {
+        Good 'every tracked module a suite IMPORTS is declared -- the sweep follows the wrapper into its python'
+    }
+
     # -------------------------------------------------------------------------------------
     Write-Host ''
     Write-Host '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'

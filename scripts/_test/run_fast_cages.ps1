@@ -294,7 +294,12 @@ $FAST_SUITES = @(
     # It is last on purpose -- if the declarations and the generated pathspec have drifted,
     # everything above it may have been enforced on a lie.
     # MEASURED 1.4s (2.1s in its first form; collapsing ~25 git spawns into 3 bought 0.7s).
-    'run_guard_trigger_tests.ps1'
+    'run_guard_trigger_tests.ps1',
+    # ORDER-702, and added on a MEASUREMENT: 0.2s, the cheapest suite here by an order
+    # of magnitude. preset.py shipped with 9 criteria x (attack + specificity) + 9
+    # mutation probes and NONE of it ran on any commit -- fully tested and completely
+    # unguarded at once, which is the same hole evidence.py was in.
+    'run_preset_tests.ps1'
 )
 
 # ---------------------------------------------------------------------------------------
@@ -340,6 +345,11 @@ $SUITE_GUARDS = @{
                                           'docs/PARAM_LINKAGE.md',
                                           '_triage/PARAM_INACTIVE_AUDIT.md')
     'run_monitor_integrity_tests.ps1' = @('scripts/daily_monitor.ps1',
+                                          # ORDER-702: DERIVED by the import sweep in
+                                          # run_guard_trigger_tests PART 4b, not remembered.
+                                          # This suite's python imports it, so a commit
+                                          # touching only that module must still run a cage.
+                                          '_triage/factory_os/registry.py',
                                           'scripts/live_dashboard.ps1',
                                           'scripts/control_room_snapshot.ps1',
                                           'scripts/monitor_rotation.ps1',
@@ -355,7 +365,36 @@ $SUITE_GUARDS = @{
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
     # something else happens to be staged, which is the D32 defect this map exists to end.
     # ORDER-630 (S5). The resolver, its guard, the store it reads and the consumer it wires.
-    'run_registry_tests.ps1'          = @('_triage/factory_os/registry.py',
+    'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',
+                                          '_triage/factory_os/run_preset_tests.py',
+                                          # the compiler reads the build's input
+                                          # surface and the parameter registry, and
+                                          # P9 parses the REAL Inputs.mqh -- an edit
+                                          # to either changes what this cage proves.
+                                          'ea_template/core/Inputs.mqh',
+                                          'docs/PARAM_REGISTRY.csv',
+                                          'factory/instrument_profiles.jsonl',
+                                          # DEMANDED BY THE IMPORT SWEEP on this
+                                          # suite's FIRST run, which is the point:
+                                          # a brand-new suite cannot forget them.
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/registry.py')
+    'run_registry_tests.ps1'          = @(
+                                          # ORDER-702: DERIVED by the import sweep in
+                                          # run_guard_trigger_tests PART 4b, not remembered.
+                                          # This suite's python imports it, so a commit
+                                          # touching only that module must still run a cage.
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/run_guard_shape_lint.py',
+                                          '_triage/factory_os/gen_coverage.py',
+                                          # ...and the next level down: gen_coverage imports this.
+                                          # The sweep converges by construction -- every declared
+                                          # .py has ITS OWN imports checked, so the transitive
+                                          # closure is walked one commit at a time rather than
+                                          # assumed complete.
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          '_triage/factory_os/registry.py',
                                           '_triage/factory_os/check_registries.py',
                                           '_triage/factory_os/run_registry_tests.py',
                                           'scripts/optimize_guard.ps1',
@@ -376,7 +415,13 @@ $SUITE_GUARDS = @{
                                           'factory/hypotheses.jsonl',
                                           'factory/parameter_bindings.jsonl',
                                           'factory/coverage.jsonl')
-    'run_snapshot_s4_tests.ps1'       = @('_triage/factory_os/snapshot_build.py',
+    'run_snapshot_s4_tests.ps1'       = @(
+                                          # ORDER-702: DERIVED by the import sweep in
+                                          # run_guard_trigger_tests PART 4b, not remembered.
+                                          # This suite's python imports it, so a commit
+                                          # touching only that module must still run a cage.
+                                          '_triage/factory_os/registry.py',
+'_triage/factory_os/snapshot_build.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_s4_tests.py',
                                           '_triage/factory_os/schemas.json',
@@ -390,7 +435,13 @@ $SUITE_GUARDS = @{
     # both files are inputs to it. Declaring them is what puts them in the trigger pathspec --
     # without these two lines the cage would run only when something ELSE it guards was staged,
     # which is the exact five-times-in-four-days failure BACKLOG-D32 exists to end.
-    'run_contract_binding_tests.ps1'  = @('_triage/factory_os/gen_design_contracts.py',
+    'run_contract_binding_tests.ps1'  = @(
+                                          # ORDER-702: DERIVED by the import sweep in
+                                          # run_guard_trigger_tests PART 4b, not remembered.
+                                          # This suite's python imports it, so a commit
+                                          # touching only that module must still run a cage.
+                                          '_triage/factory_os/evidence.py',
+'_triage/factory_os/gen_design_contracts.py',
                                           '_triage/factory_os/run_contract_binding_tests.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_validator_tests.py',

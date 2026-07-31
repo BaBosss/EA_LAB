@@ -105,7 +105,21 @@
 
 ---
 
-## ORDER-702 — [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it runs ZERO cages — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-702 — [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it runs ZERO cages — `DONE (Claude/Opus 2026-07-31) — the sweep follows the wrapper into its python and walks the whole import closure; 12 real undeclared dependencies found on its first run` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-07-31 — E1–E4 closed, and the sweep found eleven more holes than the one it was written for.
+>
+> **E1.** `git ls-files -- <pathspec>` now matches `evidence.py` (**0 → 1**), and a commit touching only it selects `run_contract_binding_tests` + `run_registry_tests`.
+>
+> **E2 — derived, not hand-added, and that is what made it worth doing.** PART 4b resolves each suite's Python **import closure** to repo paths and requires every tracked module in it to be declared. On its first run it named **12** undeclared dependencies across 5 suites — `evidence.py` in four of them, plus `registry.py`, `gen_coverage.py`, `run_guard_shape_lint.py`, `check_s2a_migration.py`, `gen_design_contracts.py`. Only the first was known. **The sweep walks the CLOSURE, not one level:** the first version reported direct imports only, so declaring A made the next run demand B — converging by repeated red commits, each red for a reason that is not a defect, and never provably complete at any single moment. Specificity: `import io`, `import json` and every non-repo module are **not** demanded — a guard that asks you to declare the standard library is a guard people switch off.
+>
+> **The same hole, freshly dug, in this batch's own work.** `preset.py` shipped with 9 criteria × (attack + specificity) + 9 mutation probes and **none of it ran on any commit** — fully tested and completely unguarded at once, which is the state that is invisible while the first half is true. `scripts/_test/run_preset_tests.ps1` added, and the import sweep **demanded its transitive declarations on its very first run**, which is the mechanism doing exactly what E2 asked for.
+>
+> **E4 — the measured cost, against the `ORDER-673` budget enforced two commits earlier.** A commit touching only `evidence.py` now pays **23.4s of 30.0s** (6.6s headroom). Full tier **68.8s of 75.0s** (6.2s headroom) — the new suite costs **0.4s**, measured before it was added because a budget means a new cage displaces something. Headroom is now thin in both directions and the next addition is a trade.
+>
+> **E3 — `AGENT_TASKBOARD.md` decided rather than left to omission.** It stays outside the tier, and the reason is not "nobody thought about it": the guards that judge the board — `check_precommit_staged`, `check_order_collision`, `check_taskboard_archive` — are the **PowerShell front guards**, which run unconditionally on every commit *before* the tier and are not selected per path. The tier's suites test those guards against **synthetic fixtures**; none of them reads the real board, so declaring it would claim a dependency that does not exist. Whether the front guards are themselves adequately measured is **`ORDER-674`**, and this is a second reason that order matters.
+
+**Original finding, kept because the measurement is the argument:**
 
 **Found while measuring `ORDER-673`, and it outranks the number that measurement was for.**
 
