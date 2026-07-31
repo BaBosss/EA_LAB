@@ -1117,9 +1117,19 @@ def main():
     # the fast tier stays as it is. R5 remains the fast-path floor; THIS is the contract.
     print("\n--- the LIVE registry stores, each row against its own entity contract ---")
     import registry as _reg
+    import evidence as _ev
+    # ORDER-670: these two blocks judge REAL inputs (the live stores, the committed snapshot),
+    # so they read through the evidence source -- the index in hook mode. Everything above this
+    # line is synthetic fixtures (category C) and stays exactly as it is.
+    try:
+        _src = _ev.EvidenceSource.for_run()
+    except _ev.ToolFailure as _exc:
+        print("  TOOL FAILURE: %s" % _exc)
+        return 2
+    print("  " + _src.marker('run_schema_fixtures.py'))
     _live = 0
     try:
-        _stores = _reg.load_all()
+        _stores = _reg.load_all(source=_src)
     except _reg.RegistryRefusal as _exc:
         print("  TOOL FAILURE: %s" % _exc)
         bad += 1
@@ -1148,10 +1158,19 @@ def main():
         print("  0 rows means this check is UNTESTED by this run, not that the stores are clean")
 
     print("\n--- the real snapshot, validated against the schema that claims to describe it ---")
-    with open('portfolio/control_room_snapshot.json', encoding='utf-8-sig') as _fh:  # snapshot: worktree
-        _real = json.load(_fh)
-    got, out = run(SCHEMA, _real)
-    if got == ERROR:
+    # C1 is a claim about the artifact THIS COMMIT contains (design section 2: the
+    # commit-vintage claim about a builder's output is made by a checker, never the builder).
+    try:
+        _real = json.loads(_src.read_committed('portfolio/control_room_snapshot.json'))
+    except _ev.ToolFailure as _exc:
+        print("  portfolio/control_room_snapshot.json -> TOOL ERROR, not a verdict: %s"
+              % str(_exc)[:160])
+        bad += 1
+        _real = None
+    got, out = (ERROR, '') if _real is None else run(SCHEMA, _real)
+    if _real is None:
+        pass  # unreadable: already reported and counted at the read
+    elif got == ERROR:
         # Distinguish "the schema says no" from "the tool fell over" here too -- otherwise the
         # S4 acceptance line could read FAILS forever for a reason nobody is tracking.
         print("  portfolio/control_room_snapshot.json -> TOOL ERROR, not a verdict: %s"
