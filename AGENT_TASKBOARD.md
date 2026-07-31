@@ -136,6 +136,16 @@
 
 <sub>⚠️ **Scope stated, not implied:** `check_s2a_migration.py` and `check_s2a_attestation.py` are **excluded from L1** because they sit inside the attestation bundle — adding a comment to either costs the owner a signature, and spending fewer is the point of `ORDER-614` rev 2. **The exclusion has an end date, and it is written in the lint.** Tier 27.8s vs a 15.0s advisory, already breached before this order.</sub>
 
+### 🔎 `/scrutinize` of the lint itself — 3 findings, and the biggest one is the diagnosis of this whole order
+
+> **L0 (new): the lint carried the defect it was built to catch.** `L1_FILES` and `L2_PAIRS` were **hand-maintained lists**, and probing the filesystem showed **two checkers were in neither**. That is **shape 4** — a list that was right the day it was written — and this repo already tracks that pattern as `BACKLOG-D29`. The lists stay declarations (a *deferral* needs a reason a glob cannot express), but the **filesystem now decides whether they are complete**, and a checker that emits criterion ids with no declared suite is refused too. **Proven by dropping a new `check_*.py` on disk: RED. Removed: green.**
+>
+> **L2 was satisfied by a DOCSTRING.** `ast` drops comments, which is what the code claimed — but a docstring **is** a string literal, so `"""E9 is handled"""` earned coverage while asserting nothing. **Prose wearing the shape of a test, in the check written to catch exactly that.** Docstrings excluded; an id in an unused variable still passes and is now a **stated** limit rather than an implied absence.
+>
+> **L1 saw only a literal `open()`.** `Path(x).read_text()`, `os.popen` and `json.load` through a helper were all invisible — a bypass as cheap as importing `pathlib`. The mechanism list is closed and named now. `subprocess` running `git show` is **deliberately excluded**: that is how the *correct* pattern reads the index, and it names its snapshot in the call itself.
+>
+> <sub>**Confirmed as a stated limit, not a finding:** a *wrong* declaration still satisfies L1 — `# snapshot: index` on a plainly-worktree read is accepted. That is written in the file's own header (*"it stops a checker reading bytes WITHOUT SAYING WHICH"*), and verifying a declaration would require the lint to know what the code means. **12 self-test cases**, every one observed both ways.</sub>
+
 🔻 **Owed:** the independent re-check. `DONE`, never `REVIEWED`.
 
 ---

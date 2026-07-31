@@ -108,7 +108,12 @@ def _open_calls(tree):
         fn = node.func
         name = (fn.attr if isinstance(fn, ast.Attribute) else
                 fn.id if isinstance(fn, ast.Name) else None)
-        if name != 'open':
+        # /scrutinize: L1 saw ONLY a literal `open()`. `Path(x).read_text()`, `os.popen` and
+        # `json.load` through a helper were all invisible, which makes a bypass as easy as
+        # importing pathlib. The known-mechanism list is closed and named; `subprocess` running
+        # `git show` is DELIBERATELY not here -- that is how the correct pattern reads the index,
+        # and it names its snapshot in the call itself.
+        if name not in ('open', 'read_text', 'read_bytes', 'popen'):
             continue
         mode = ''
         if len(node.args) > 1 and isinstance(node.args[1], ast.Constant):
@@ -121,16 +126,65 @@ def _open_calls(tree):
 
 
 def string_literals(source, path):
-    """Every string literal in the file's AST.
+    """Every string literal in the file's AST, EXCEPT docstrings.
 
     Parsed, not grepped: a criterion id sitting in a COMMENT would satisfy a grep while asserting
     nothing, which is the same shape L2 exists to catch. `ast` drops comments by construction.
+
+    /scrutinize then showed that was not enough. A DOCSTRING is a string literal, so
+    `\"\"\"E9 is handled\"\"\"` satisfied L2 while asserting nothing -- prose wearing the shape of a
+    test, which is precisely what L2 is for. Docstrings are excluded now. An id in an unused
+    variable still passes, and that is left as a stated limit rather than chased: at some point
+    the only thing that proves a criterion is exercised is running it.
     """
+    tree = ast.parse(source, filename=path)
+    docstrings = set()
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            body = getattr(node, 'body', None)
+            if body and isinstance(body[0], ast.Expr) and \
+                    isinstance(body[0].value, ast.Constant) and \
+                    isinstance(body[0].value.value, str):
+                docstrings.add(id(body[0].value))
     out = []
-    for node in ast.walk(ast.parse(source, filename=path)):
-        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) \
+                and id(node) not in docstrings:
             out.append(node.value)
     return out
+
+
+# ---------------------------------------------------------------------------------------------
+# L0 -- the lists above must not be hand-maintained caches of the filesystem.
+#
+# /scrutinize found the lint carrying the defect it exists to catch: L1_FILES and L2_PAIRS are
+# hardcoded, and two checkers were in neither. That is shape 4 -- a list that was right the day it
+# was written and quietly stops being true -- and this repo already tracks that pattern as
+# BACKLOG-D29. So the lists are still declarations (which is correct: DEFERRED needs a reason a
+# glob cannot express), but the FILESYSTEM decides whether they are complete.
+CHECKER_GLOB = '_triage/factory_os/check_*.py'
+
+
+def lint_l0(problems, present=None):
+    import glob as _glob
+    found = sorted((present if present is not None else
+                    [p.replace(os.sep, '/') for p in _glob.glob(CHECKER_GLOB)]))
+    declared = set(L1_FILES) | set(L1_DEFERRED)
+    for rel in found:
+        if rel not in declared:
+            problems.append(
+                'L0 %s exists but is in neither L1_FILES nor L1_DEFERRED. A hand-maintained list '
+                'of what to check is a list that stops being true -- add it, or defer it WITH A '
+                'REASON.' % rel)
+        if rel in L1_FILES or rel in L1_DEFERRED:
+            try:
+                emits = sorted(set(CRITERION.findall(_read(rel))))
+            except IOError:
+                continue
+            if emits and rel not in L2_PAIRS:
+                problems.append(
+                    'L0 %s emits criterion id(s) %s but declares no suite in L2_PAIRS, so nothing '
+                    'checks that any of them is ever named by a test.' % (rel, emits))
 
 
 def lint_l1(problems, files=None):
@@ -224,6 +278,15 @@ def self_test(out=None):
         ('L2 CONTROL a named criterion passes',
          lambda p: lint_l2(p, {write('c2.py', "problems.append('E9 boom')\n"):
                                (write('s2.py', "case('E9 must fire')\n"),)}), False),
+        ('L2 a criterion named only in a DOCSTRING is refused',
+         lambda p: lint_l2(p, {write('c4.py', "problems.append('E9 boom')\n"):
+                               (write('s4.py', '"""E9 is handled"""\n'),)}), True),
+        ('L1 a pathlib read is not invisible',
+         lambda p: lint_l1(p, [write('pl.py', 'x = Path("a.md").read_text()\n')]), True),
+        ('L0 a checker in neither list is refused',
+         lambda p: lint_l0(p, ['_triage/factory_os/check_brand_new.py']), True),
+        ('L0 CONTROL a declared checker is fine',
+         lambda p: lint_l0(p, ['_triage/factory_os/check_coverage_transfer.py']), False),
         ('L2 a criterion named only in a COMMENT is refused',
          lambda p: lint_l2(p, {write('c3.py', "problems.append('E9 boom')\n"):
                                (write('s3.py', "# E9 is covered, honest\ncase('x')\n"),)}), True),
@@ -249,6 +312,7 @@ def main(argv):
         out.flush()
         return self_test(out)
     problems = []
+    lint_l0(problems)
     lint_l1(problems)
     lint_l2(problems)
     tool = [p for p in problems if 'TOOL FAILURE' in p]
@@ -258,6 +322,10 @@ def main(argv):
                  '; '.join('%s -- %s' % (os.path.basename(k), v)
                            for k, v in sorted(L1_DEFERRED.items()))))
     out.write('L2 criterion coverage    : %s checker/suite pair(s)\n' % len(L2_PAIRS))
+    import glob as _g
+    out.write('L0 list completeness     : %s checker(s) on disk match %s; both lists are checked '
+              'against it\n'
+              % (len(_g.glob(CHECKER_GLOB)), CHECKER_GLOB))
     if tool:
         for p in tool:
             out.write('  %s\n' % p)
