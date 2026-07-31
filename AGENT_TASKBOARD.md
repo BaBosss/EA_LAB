@@ -407,6 +407,12 @@ Builders (`snapshot_build`) read the **disk** — an index blob has no mtime and
 >
 > **W2 done:** `TIER_SNAPSHOT_DESIGN.md` §1 now carries the read table with the note that a declaration count answers *"did anyone say?"*, never *"which bytes?"* — so the grep cannot be quoted as clean again.
 >
+> ### 🔎 Post-close scrutinize ×3 (2026-08-01) — two findings in the migration itself, both proven both ways.
+>
+> **F1 (blocker):** `$toolFail` counted read failures and **nothing read it** — a `ReadJudged` throw printed `[TOOL]` in red and the run still ended `=== CLEAN ===` exit 0. "I could not read my inputs" was a PASS, in the guard this order migrated precisely so reads mean what they claim. Now: `toolFail > 0` ⇒ **exit 2 before any verdict line, in every mode** — a guard that cannot see cannot say CLEAN, strict or not. Proven: break the `Has` path ⇒ `TOOL FAILURE` + exit 2 without `-Strict`.
+>
+> **F2 (major):** the migration was **narrower than its own claim** — sections 7 (rival-entry-claim sweep) and 9 (holdout guard) still enumerated via `Get-ChildItem` and read via `Get-Content` from the **worktree**. Both now go through `Get-CommittedPaths`/`ReadJudged`. Proven both ways with a temp index: a rogue rival-claim `.md` **staged with no worktree copy** ⇒ post-fix names `RIVAL_PROBE.md:1` and exits 1; the pre-fix copy at HEAD mentions it **zero** times. The holdout guard had the same shape — a subagent definition with a holdout-crossing `-ToDate` staged behind a clean worktree would have sailed through the check that exists because exactly that once cost six months of holdout.
+>
 > **🔻 OWED:** the other five guards read git but **still declare nothing**, so a deliberate choice and an accident remain indistinguishable in five of six. They need `# snapshot:` declarations checked against behaviour, one commit each.
 
 `.githooks/pre-commit` runs `check_state` · `check_precommit_staged` · `check_order_collision` · `check_handoff_contract` · `check_experiment_events` · `check_verdict_kill` **ahead of** the fast tier. They judge boards, the ledger and handoffs — committed evidence by any reading — and `ORDER-670`'s `evidence.py` gives them no entry point.

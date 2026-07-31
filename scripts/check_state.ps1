@@ -133,9 +133,17 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
 $thaiOnly = -join (0x0E44,0x0E1F,0x0E25,0x0E4C,0x0E40,0x0E14,0x0E35,0x0E22,0x0E27 | ForEach-Object {[char]$_})
 $claimNeedle = '(single source of truth|canonical entry|' + [regex]::Escape($thaiOnly) + ')'
 $rivals = @()
-foreach($f in @(Get-ChildItem $Root -Filter *.md -File | Where-Object { $_.Name -ne 'PROJECT_STATE.md' -and $_.Name -notmatch 'RESUME|RUN_REGISTRY' })){
+# ORDER-674 round 1: ENUMERATE AND READ AS JUDGED EVIDENCE. Get-ChildItem picked the sweep's
+# population from the DISK, so a rival-claim doc staged with its worktree copy deleted was
+# invisible to the one check whose job is "exactly one doc claims the title" -- the same
+# enumeration hole T3 closed in the python tier. Get-CommittedPaths follows the mode; in
+# worktree mode both behave as before.
+foreach($fRel in @(Get-CommittedPaths -Pattern '*.md' -RepoRoot $Root | Where-Object { $_ -ne 'PROJECT_STATE.md' -and $_ -notmatch 'RESUME|RUN_REGISTRY' })){
+  $f = [pscustomobject]@{ Name = $fRel }
+  $fText = ReadJudged $fRel
+  if ($null -eq $fText) { continue }   # counted by $toolFail, which now fails the run
   $n = 0
-  foreach($line in (Get-Content $f.FullName -Encoding UTF8 -ErrorAction SilentlyContinue)){
+  foreach($line in ($fText -split "`n")){
     $n++
     if($line -match 'ENTRY-CLAIM-OK'){ continue }
     if($line -notmatch "(?i)$claimNeedle"){ continue }
@@ -181,15 +189,22 @@ foreach($f in @($DEMO,$BL,$SC)){
 #    carry a HOLDOUT-BURNED banner instead of being silently trusted.
 $mainEnd  = '2025.12.31'
 $scopeDef = @()
-$scopeDef += (Get-ChildItem (Join-Path $Root '.claude\agents') -Filter *.md -File -ErrorAction SilentlyContinue)
+# ORDER-674 round 1: same fix as section 7 -- the holdout guard's scope was enumerated from
+# the disk and read from the worktree. A subagent definition with a holdout-crossing -ToDate
+# STAGED behind a clean worktree copy sailed through the check that exists because exactly
+# such a definition once spent six months of holdout unnoticed.
+$scopeDef += @(Get-CommittedPaths -Pattern '.claude/agents/*.md' -RepoRoot $Root)
 foreach($n in @('mt5_run.ps1','mt5_optimize.ps1','mt4_run.ps1','mt4_optimize.ps1','run_backtest.ps1')){
-  $p = Join-Path $Root "scripts\$n"
-  if(Test-Path $p){ $scopeDef += (Get-Item $p) }
+  $rel = "scripts/$n"
+  if(Test-CommittedPath -RelPath $rel -RepoRoot $Root){ $scopeDef += $rel }
 }
 $leaks = @()
-foreach($f in $scopeDef){
+foreach($fRel in $scopeDef){
+  $f = [pscustomobject]@{ Name = (Split-Path $fRel -Leaf) }
+  $fText = ReadJudged $fRel
+  if ($null -eq $fText) { continue }   # counted by $toolFail, which now fails the run
   $i = 0
-  foreach($line in (Get-Content $f.FullName -Encoding UTF8 -ErrorAction SilentlyContinue)){
+  foreach($line in ($fText -split "`n")){
     $i++
     if($line -match 'HOLDOUT-OK'){ continue }
     # only an actual ToDate ASSIGNMENT counts -- prose that merely mentions a date must not trip
@@ -218,6 +233,15 @@ if(Test-Path $mirrorScript){
     ("SKILLS DRIFT - the decision bars changed outside git: " + (($mirrorOut | Select-Object -Skip 1 | Select-Object -First 6) -join ' | ') + " -- if intended, run scripts\sync_skills_mirror.ps1 -Update and commit the mirror alongside the reason")
 }
 
+# /scrutinize (ORDER-674 round 1): $toolFail EXISTED AND NOTHING READ IT. A ReadJudged throw
+# printed [TOOL] in red, returned $null -- and unless that null happened to trip a downstream
+# Check, the run ended "=== CLEAN ===" exit 0. "I could not read my inputs" was a PASS, in the
+# guard this whole order migrated precisely so that reads mean what they claim. Exit 2, before
+# any verdict line, in EVERY mode: a guard that cannot see cannot say CLEAN, strict or not.
+if($script:toolFail -gt 0){
+  Write-Host ("=== TOOL FAILURE - {0} input(s) could not be read; the verdicts above are over an incomplete evidence set ===" -f $script:toolFail) -ForegroundColor Red
+  exit 2
+}
 if($script:warn -eq 0){ Write-Host "=== CLEAN - no drift detected ===" -ForegroundColor Green }
 else { Write-Host ("=== {0} WARNING(s) - fix the drift above ===" -f $script:warn) -ForegroundColor Yellow }
 if($Strict -and $script:warn -gt 0){ exit 1 }
