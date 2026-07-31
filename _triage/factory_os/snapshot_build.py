@@ -68,6 +68,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import evidence as evd           # noqa: E402
 import registry as reg           # noqa: E402
 import snapshot_validator as sv  # noqa: E402
 
@@ -95,38 +96,30 @@ def _stat_evidence(abs_path, now):
     try:
         if not os.path.isfile(abs_path):
             return {'read_ok': False, 'sha256': None, 'mtime': None, 'age_hours': None}
-        # ONE OPEN HANDLE FOR BOTH FACTS. BLIND AUDIT 2026-07-31 (P0), reproduced: this hashed the
-        # bytes through one open(), closed it, and then called os.path.getmtime(PATH) -- a second
-        # trip to the filesystem. Replace the file between the two and the row carries the hash of
-        # the OLD bytes with the mtime of the NEW ones, so stale content is labelled fresh. That is
-        # the same "two moments in one verdict" shape as the reader's two reads, one layer down,
-        # and it is the more dangerous instance: the reader hands back a document, this one decides
-        # whether the fleet's sensors are fresh.
+        # ORDER-670, T5 (design section 5): THIS WAS A SECOND IMPLEMENTATION OF `evidence.observe`.
+        # One open handle, fstat before and after the read, refuse on disagreement -- the exact
+        # mechanism `observe()` exists to own, reproduced here under a different name because the
+        # reader had a category-B entry point and nothing pointed at it. Two implementations of one
+        # rule is the failure this whole repo keeps paying for; the design's own table names the
+        # test this collapse was supposed to make possible: "collapse the split (make observe read
+        # the index) => the monitor suite goes RED. A split nothing tests gets collapsed by the
+        # next editor." `observe()` was never actually wired to a real caller, so that red half
+        # could not fire as written -- it fires HERE instead, on the reimplementation, which is the
+        # more direct proof: this function's own fixtures (run_snapshot_s4_tests, the mid-read
+        # rewrite case) now exercise `observe()`'s refusal rather than a parallel copy of it.
         #
-        # os.fstat(fh.fileno()) reads the metadata OF THE OPEN FILE, so the bytes and the timestamp
-        # describe the same inode at the same moment by construction. A replacement mid-read leaves
-        # this handle on the old file entirely -- consistent, and stale in a way `sha256` reveals.
-        # TWO fstats, BEFORE and AFTER the read, and a refusal if they disagree. One handle
-        # protects against the PATH being replaced; it does NOT protect against the OPENED FILE
-        # being rewritten IN PLACE between fh.read() and os.fstat(), which a blind audit then
-        # demonstrated: sha256 of the old bytes carried the new mtime and age_hours=0.0. The
-        # single-handle repair closed half the window and the comment above claimed the whole of it.
-        #
-        # This cannot be prevented -- there is no atomic read-and-stat -- so it is DETECTED, and
-        # detection is enough: a source whose bytes and timestamp cannot be pinned to one moment is
-        # refused rather than published with a guess.
-        with io.open(abs_path, 'rb') as fh:  # snapshot: worktree
-            before = os.fstat(fh.fileno())
-            raw = fh.read()
-            after = os.fstat(fh.fileno())
-        if (before.st_mtime_ns, before.st_size) != (after.st_mtime_ns, after.st_size):
+        # category B, DELIBERATELY, per evidence.py's own header: an index blob has no mtime that
+        # means anything, and a build source may be written by MT5, not committed at all.
+        try:
+            raw, st = evd.observe(abs_path)
+        except evd.ToolFailure as exc:
             sv._refuse(
                 'the file at %r was modified while it was being read: mtime/size differ between '
-                'the two stats of the SAME open handle. Refused -- the hash and the timestamp '
-                'would describe different moments, and a stale sensor labelled fresh is the one '
-                'error this pipeline exists to make impossible.' % abs_path)
+                'the two stats of the SAME open handle (%s). Refused -- the hash and the '
+                'timestamp would describe different moments, and a stale sensor labelled fresh is '
+                'the one error this pipeline exists to make impossible.' % (abs_path, exc))
         digest = hashlib.sha256(raw).hexdigest()
-        mtime = datetime.datetime.fromtimestamp(after.st_mtime)
+        mtime = datetime.datetime.fromtimestamp(st.st_mtime)
         age = (now - mtime).total_seconds() / 3600.0
         return {'read_ok': True,
                 'sha256': digest,

@@ -26,6 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import evidence as evd                 # noqa: E402
 import snapshot_build as sb            # noqa: E402
 
 NO_DERIVE = None  # bound in main() to sb.RECONCILIATION_NOT_DERIVED; see the C2c block
@@ -407,10 +408,60 @@ def main():
               'and a sharing violation)',
               'os.getpid()' in bf and 'uuid.uuid4()' in bf)
         # S3: an in-place rewrite during the read must be DETECTED.
+        #
+        # ORDER-670, T5: `_stat_evidence` no longer stats the file itself -- it reads through
+        # `evidence.observe()`, which OWNS the one-handle/two-fstat mechanism this case names (T5
+        # collapsed a second implementation of the same rule rather than accepting one). So the
+        # source-string check moves to `observe`'s source, and gains a companion: `_stat_evidence`
+        # must actually CALL it rather than merely importing the module, or the collapse is a
+        # rename with the vulnerability still reachable underneath.
+        oe = _i.getsource(evd.observe)
         check('AUDIT S3 the file is fstat-ed BEFORE and AFTER the read and a change is REFUSED '
               '(probed: one handle stopped path replacement, not in-place mutation)',
-              'before = os.fstat' in se and 'after = os.fstat' in se
-              and 'st_mtime_ns' in se)
+              'before = os.fstat' in oe and 'after = os.fstat' in oe
+              and 'st_mtime_ns' in oe)
+        check('AUDIT S3/T5 `_stat_evidence` reaches that mechanism THROUGH observe(), rather than '
+              're-deriving it (probed: a second implementation is a second place to fix the bug)',
+              'evd.observe(' in se and 'os.fstat(fh.fileno())' not in se)
+
+        # BEHAVIOURAL, not just textual: drive the actual race rather than trust the source
+        # match. Neither this suite nor evidence.py's own had ever exercised observe()'s refusal
+        # against a real mid-read mutation before this migration -- GUARD_SHAPES shape 3 ("have I
+        # seen this red, for this reason?") applied to the fixture that is supposed to prove S3.
+        # `os.fstat` is patched to answer differently on its second call, which is the exact
+        # shape a file rewritten between `fh.read()` and the second fstat produces; it is scoped
+        # to snapshot_build's own os reference and restored in `finally` no matter what.
+        s3 = tempfile.mkdtemp(prefix='s4race_')
+        try:
+            fp = os.path.join(s3, 'f.txt')
+            with io.open(fp, 'wb') as fh:
+                fh.write(b'ORIGINAL')
+            _real_fstat = sb.os.fstat
+            _calls = [0]
+
+            def _flaky_fstat(fd):
+                _calls[0] += 1
+                st = _real_fstat(fd)
+                if _calls[0] == 2:
+                    st = os.stat_result((st.st_mode, st.st_ino, st.st_dev, st.st_nlink,
+                                         st.st_uid, st.st_gid, st.st_size + 1,
+                                         st.st_atime_ns // 10**9, st.st_mtime_ns // 10**9 + 1,
+                                         st.st_ctime_ns // 10**9))
+                return st
+            sb.os.fstat = _flaky_fstat
+            try:
+                ev = sb._stat_evidence(fp, datetime.datetime.now())
+                raised = False
+            except sv.SnapshotRefusal as exc:
+                raised, msg = True, str(exc)
+            finally:
+                sb.os.fstat = _real_fstat
+            check('AUDIT S3 BEHAVIOURAL a real mid-read fstat mismatch REFUSES through '
+                  '_stat_evidence (not merely matched in source text)',
+                  raised and 'modified while it was being read' in msg,
+                  msg if raised else json.dumps(ev))
+        finally:
+            shutil.rmtree(s3, ignore_errors=True)
         # S4: containment must be referential.
         check('AUDIT S4 containment uses realpath, so a junction out of the tree is caught '
               '(probed: a lexical prefix check accepted root/escape -> outside)',
@@ -443,11 +494,16 @@ def main():
 
         print("\n--- BLIND AUDIT ROUND 3 ---")
         # P0: the hash and the mtime must describe the SAME open file.
+        #
+        # ORDER-670, T5: same collapse as S3 above -- the one-handle guarantee is `observe()`'s to
+        # keep, and `_stat_evidence` is checked for calling it rather than re-deriving the fstat
+        # pair itself.
         import inspect
         src = inspect.getsource(sb._stat_evidence)
-        check('AUDIT P0 evidence comes from ONE open handle (os.fstat), not a second stat of the '
-              'path (probed: hash of OLD bytes carried the mtime of NEW)',
-              'os.fstat(fh.fileno())' in src and 'os.path.getmtime(abs_path)' not in src)
+        check('AUDIT P0 evidence comes from ONE open handle via evidence.observe(), not a second '
+              'stat of the path (probed: hash of OLD bytes carried the mtime of NEW)',
+              'evd.observe(' in src and 'os.path.getmtime(abs_path)' not in src
+              and 'os.fstat(fh.fileno())' not in src)
         one = tempfile.mkdtemp(prefix='s4fs_')
         try:
             fp = os.path.join(one, 'f.txt')

@@ -391,7 +391,11 @@ $SUITE_GUARDS = @{
                                           # changes what this cage tests.
                                           'scripts/lib/snapshot_reader.ps1',
                                           '_triage/factory_os/snapshot_build.py',
-                                          '_triage/factory_os/snapshot_validator.py')
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          # ORDER-670 T5 (2026-07-31): snapshot_build now calls
+                                          # evidence.observe() instead of reimplementing it, so
+                                          # this suite's python transitively imports the reader.
+                                          '_triage/factory_os/evidence.py')
     # ORDER-612 (S4). Its fixtures are built by snapshot_build.py through the real schema, and the
     # two readers it asserts on are make_status's renderer and the daily digest -- so all of those
     # are its inputs. A cage whose own inputs are outside the pathspec is enforced only when
@@ -473,6 +477,11 @@ $SUITE_GUARDS = @{
 '_triage/factory_os/snapshot_build.py',
                                           '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/run_snapshot_s4_tests.py',
+                                          # ORDER-670 T5 (2026-07-31): both snapshot_build and
+                                          # this suite's own test file now import evidence
+                                          # (snapshot_build calls observe(); the suite drives it
+                                          # directly for the S3 behavioural race case).
+                                          '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/schemas.json',
                                           'scripts/lib/snapshot_reader.ps1',
                                           'scripts/lib/monitor_coverage.ps1',
