@@ -186,6 +186,9 @@ function ConvertTo-StagedEntry {
 }
 
 function Get-StagedEntriesFromGit {
+    # snapshot: index -- which handoffs this commit adds or modifies. The status letter matters
+    # as much as the path (a rename/delete is how a handoff gets archived and must not trigger),
+    # and both come from this one read, so the trigger cannot disagree with itself.
     $r = Invoke-GitBytes -Arguments '-c core.quotePath=false diff --cached --name-status'
     if ($r.ExitCode -ne 0) { throw ('git diff --cached --name-status failed (exit {0}): {1}' -f $r.ExitCode, $r.StdErr) }
     $text = ConvertFrom-Utf8Bytes -Bytes $r.Bytes
@@ -374,6 +377,8 @@ foreach ($t in $targets) {
     if ($offline) {
         if ($handoffMap.ContainsKey($t.Path)) { $text = $handoffMap[$t.Path] }
     } else {
+        # snapshot: index -- the handoff as this commit will contain it. Reading the worktree
+        # here would judge a routing section the author has since edited and not staged.
         $text = Get-GitBlobText -Spec (':{0}' -f $t.Path)
     }
     if ($null -eq $text) {
@@ -420,15 +425,37 @@ if ($needOrder) {
         $activeIds = Get-OrderHeaderIds -Text $ActiveBoardContent
         $archiveIds = Get-OrderHeaderIds -Text $ArchiveBoardContent
     } else {
+        # snapshot: index -- the board as this commit will contain it. A handoff routing an item
+        # to an order the SAME commit opens must resolve, or the guard forbids the one shape
+        # WORK_LIFECYCLE actually asks for.
         $activeText = Get-GitBlobText -Spec (':{0}' -f $ActiveBoardPath)
+        # snapshot: HEAD -- reached only when the path has NO index entry at all (staged for
+        # deletion, or untracked). Not a vintage preference: it is "the board still exists in
+        # history, resolve against that rather than refuse", and it is stated so the fallback
+        # cannot be mistaken for the primary read.
         if ($null -eq $activeText) { $activeText = Get-GitBlobText -Spec ('HEAD:{0}' -f $ActiveBoardPath) }
-        $archiveText = Get-GitBlobText -Spec ('HEAD:{0}' -f $ArchiveBoardPath)
+        # ORDER-674 owed half, 2026-07-31: THIS READ WAS `HEAD:` AND IT REFUSED VALID WORK.
+        #
+        # Decision log 2026-07-26 (WORK_LIFECYCLE): "REVIEWED* = archive it immediately, SAME
+        # COMMIT -- no big sweep passes". So the normal, mandated shape is a commit that moves
+        # `## ORDER-X` out of the active board and into the archive. Under a HEAD read, a
+        # handoff in that same commit routing an item to ORDER-X resolved against NEITHER board:
+        # the staged active no longer has it and HEAD's archive does not have it yet. BLOCK --
+        # on the exact workflow this repo requires.
+        #
+        # That is the failure the Decision log names on 2026-07-30: "a guard that refuses valid
+        # work is not extra safe, it is the failure that gets guards switched off". Caged as C1.
+        #
+        # Reading the index is also STRICTER where it should be: an id deleted from the staged
+        # archive stops resolving, instead of resolving against a HEAD copy the commit removes.
+        # snapshot: index
+        $archiveText = Get-GitBlobText -Spec (':{0}' -f $ArchiveBoardPath)
         if ($null -eq $activeText -and $null -eq $archiveText) {
             Write-Host ('{0} TOOLING: neither {1} nor {2} is readable, but ORDER tokens need resolving -- refusing to guess' -f $Tag, $ActiveBoardPath, $ArchiveBoardPath)
             exit 2
         }
         if ($null -eq $activeText) { Write-Host ('{0} NOTE: {1} unreadable -- ORDER tokens resolved against the archive only' -f $Tag, $ActiveBoardPath) }
-        if ($null -eq $archiveText) { Write-Host ('{0} NOTE: HEAD:{1} unreadable -- ORDER tokens resolved against the active board only' -f $Tag, $ArchiveBoardPath) }
+        if ($null -eq $archiveText) { Write-Host ('{0} NOTE: :{1} unreadable from the index -- ORDER tokens resolved against the active board only' -f $Tag, $ArchiveBoardPath) }
         $activeIds = Get-OrderHeaderIds -Text $activeText
         $archiveIds = Get-OrderHeaderIds -Text $archiveText
     }
@@ -438,7 +465,10 @@ if ($needBacklog) {
     if ($offline) {
         $backlogIds = Get-BacklogRowIds -Text $BacklogContent
     } else {
+        # snapshot: index -- same reason as the active board: a BACKLOG row added by this commit
+        # must resolve for a handoff in the same commit.
         $backlogText = Get-GitBlobText -Spec (':{0}' -f $BacklogPath)
+        # snapshot: HEAD -- the no-index-entry fallback, the pair of the line above.
         if ($null -eq $backlogText) { $backlogText = Get-GitBlobText -Spec ('HEAD:{0}' -f $BacklogPath) }
         if ($null -eq $backlogText) {
             Write-Host ('{0} TOOLING: {1} is not readable, but BACKLOG tokens need resolving -- refusing to guess' -f $Tag, $BacklogPath)

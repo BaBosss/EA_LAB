@@ -277,6 +277,93 @@ if ($nowActiveIdx -eq $origActiveIdx -and $nowArchiveIdx -eq $origArchiveIdx -an
          "active $nowActiveIdx (was $origActiveIdx), archive $nowArchiveIdx (was $origArchiveIdx)")
 }
 
+# ===========================================================================================
+# C -- ORDER-674 owed half: check_handoff_contract resolved ORDER tokens against the ACTIVE
+#      board at the index and the ARCHIVE at HEAD. Same mixed pair as B, opposite symptom:
+#      here it REFUSED VALID WORK rather than missing an invalid commit.
+#
+# WORK_LIFECYCLE (Decision log 2026-07-26) requires "REVIEWED* = archive it immediately, SAME
+# COMMIT". So the mandated shape is a commit that moves `## ORDER-X` from the active board into
+# the archive. A handoff in that same commit routing an item to ORDER-X resolved against
+# NEITHER board -- gone from the staged active, not yet in HEAD's archive.
+# ===========================================================================================
+$handoff = Join-Path $RepoRoot 'scripts\check_handoff_contract.ps1'
+$probeC = '712'
+$probeRel = '_triage/HANDOFF_FG674_PROBE.md'
+$probeAbs = Join-Path $RepoRoot ($probeRel -replace '/', '\')
+
+function RunHandoff {
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $handoff 2>&1
+        return [pscustomobject]@{ Text = (@($out) -join "`n"); Code = $LASTEXITCODE }
+    } finally { $ErrorActionPreference = $prevEAP }
+}
+
+$origArchiveIdx2 = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$bakArchive2 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674c_" + [guid]::NewGuid().ToString('N') + '.md')
+Copy-Item -LiteralPath $ARCHIVE -Destination $bakArchive2 -Force
+$tmpIndex3 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674c_" + [guid]::NewGuid().ToString('N') + '.idx')
+Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex3 -Force
+$prevIndexEnv3 = $env:GIT_INDEX_FILE
+$realIndexBefore3 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$env:GIT_INDEX_FILE = $tmpIndex3
+try {
+    # The handoff routes ONE item, to an order that exists only in the STAGED archive.
+    $body = @(
+        '# HANDOFF probe -- ORDER-674 cage, never committed',
+        '',
+        '<!-- HANDOFF-ROUTING -->',
+        '',
+        '| item | destination |',
+        '|---|---|',
+        ("| the probe item | ORDER-{0} |" -f $probeC),
+        ''
+    ) -join "`n"
+    [System.IO.File]::WriteAllText($probeAbs, $body)
+    [void](Git ('add -- "{0}"' -f $probeRel))
+
+    # C0 SPECIFICITY, run FIRST: the same handoff routing to an id that exists NOWHERE must
+    # BLOCK, before and after the fix. Without this, "C1 is green" would be satisfied just as
+    # well by a guard that resolves everything -- which is what a too-permissive read produces.
+    $c0 = RunHandoff
+    if ($c0.Code -ne 0 -and $c0.Text -match ('ORDER-{0}' -f $probeC)) {
+        Good 'C0 SPECIFICITY a routing token that exists on NO board still BLOCKS -- the fix does not resolve everything'
+    } else {
+        Bad ("C0 SPECIFICITY expected exit!=0 for an unresolvable ORDER-$probeC; got $($c0.Code)")
+    }
+
+    # C1 THE ATTACK: the same commit now also puts `## ORDER-712` into the archive -- the
+    # same-commit archive move WORK_LIFECYCLE mandates. It must resolve.
+    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ARCHIVE),
+                                    ("`n## ORDER-{0} -- L3 probe, never committed`n" -f $probeC))
+    [void](Git ('add -- "{0}"' -f $ARCHIVE))
+    Copy-Item -LiteralPath $bakArchive2 -Destination $ARCHIVE -Force
+    $c1 = RunHandoff
+    if ($c1.Code -eq 0) {
+        Good 'C1 ATTACK a handoff routing to an order archived BY THIS COMMIT resolves -- the archive is judged at the index'
+    } else {
+        Bad ("C1 ATTACK expected exit 0; got $($c1.Code). This is the pre-fix behaviour: the guard " +
+             'REFUSES the same-commit archive move WORK_LIFECYCLE requires (Decision log 2026-07-30).')
+    }
+} finally {
+    Copy-Item -LiteralPath $bakArchive2 -Destination $ARCHIVE -Force
+    Remove-Item -LiteralPath $probeAbs -Force -ErrorAction SilentlyContinue
+    if ($null -eq $prevIndexEnv3) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
+    else { $env:GIT_INDEX_FILE = $prevIndexEnv3 }
+    Remove-Item -LiteralPath $bakArchive2, $tmpIndex3 -Force -ErrorAction SilentlyContinue
+}
+$nowArchiveIdx2 = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+if ($nowArchiveIdx2 -eq $origArchiveIdx2 -and
+    (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc -eq $realIndexBefore3 -and
+    -not (Test-Path -LiteralPath $probeAbs)) {
+    Good 'C  the archive is byte-identical, the probe handoff is gone, and .git/index was never written'
+} else {
+    Bad ('C  cleanup failed: archive ' + $nowArchiveIdx2 + " (was $origArchiveIdx2)" +
+         $(if (Test-Path -LiteralPath $probeAbs) { " -- AND $probeRel is still on disk" } else { '' }))
+}
+
 # --- A4: the hook actually sets it, or the whole migration is inert where it matters --------
 $hook = [System.IO.File]::ReadAllText((Join-Path $RepoRoot '.githooks\pre-commit'))
 if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
