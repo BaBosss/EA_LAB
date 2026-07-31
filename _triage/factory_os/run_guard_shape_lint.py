@@ -136,6 +136,54 @@ READ_CALL = re.compile(r'\b(?:io\.)?open\s*\(')
 DECLARATION = re.compile(r'#\s*snapshot:\s*(%s)\b' % '|'.join(SNAPSHOTS))
 
 # ---------------------------------------------------------------------------------------------
+# ORDER-670 T7 -- L1 stops accepting a COMMENT as the answer for a category-A read.
+#
+# L1's own header says it "does not stop a checker reading the wrong bytes; it stops a checker
+# reading bytes WITHOUT SAYING WHICH". That was honest and it was not enough: all 28 declared
+# reads of judged evidence said `worktree` inside a PRE-COMMIT tier, so every one of them was a
+# correct declaration of the wrong bytes. A declaration cannot choose bytes. A CALL can.
+#
+# So every file L1 parses is CLASSIFIED, and the classification decides whether a bare `open()`
+# is allowed to be a judged read at all:
+#
+#   A       CHECKER -- judges the commit. Its judged reads must go through
+#           EvidenceSource.read_committed / list_committed. A bare open() declaring
+#           worktree/index/HEAD is refused: that is the comment standing in for the call.
+#   B       BUILDER -- observes this machine now. The disk is CORRECT for it (an index blob has
+#           no meaningful mtime), so nothing here fires.
+#   P       PINNED -- reads a blob by sha. Neither of the above.
+#   LIB     LIBRARY -- takes its source from the caller and never chooses (registry.py's rule).
+#   READER  evidence.py itself: the one module that IMPLEMENTS a read, so its two direct opens
+#           are the mechanism, not a bypass of it.
+#
+# The vocabulary is CLOSED and L0 refuses an unclassified or invented value -- a default here
+# would be the lint deciding a file's category by omission, which is the shape it exists to stop.
+CATEGORIES = ('A', 'B', 'P', 'LIB', 'READER')
+CATEGORY = {
+    '_triage/factory_os/check_coverage_transfer.py': 'A',
+    '_triage/factory_os/check_schema_structure.py': 'A',
+    '_triage/factory_os/check_registries.py': 'A',
+    '_triage/factory_os/check_s2a_attestation.py': 'A',
+    '_triage/factory_os/snapshot_validator.py': 'LIB',
+    '_triage/factory_os/registry.py': 'LIB',
+    '_triage/factory_os/gen_coverage.py': 'P',
+    '_triage/factory_os/snapshot_build.py': 'B',
+    '_triage/factory_os/evidence.py': 'READER',
+}
+
+# Category-A files whose migration to read_committed/list_committed has not landed yet. The
+# binding rule is SUSPENDED for these and they are PRINTED on every run, so the exemption is a
+# countable list that shrinks rather than a silence. Design section 6 sequences the migrations
+# one commit each; each commit deletes its own line from here, and that deletion is the
+# engagement half of its shape-5 pair -- if the line stays, the migration did nothing.
+A_BINDING_PENDING = {
+    '_triage/factory_os/check_coverage_transfer.py':
+        'ORDER-670 migration owed: read_input is index-first already, its ENUMERATIONS are not',
+    '_triage/factory_os/check_s2a_attestation.py':
+        'ORDER-670 migration owed: reads the attestation log and the bundle digest directly',
+}
+
+# ---------------------------------------------------------------------------------------------
 # L2 -- every criterion a checker can emit must be NAMED by its suite.
 L2_PAIRS = {
     '_triage/factory_os/check_coverage_transfer.py':
@@ -266,9 +314,41 @@ def lint_l0(problems, present=None):
                 problems.append(
                     'L0 %s emits criterion id(s) %s but declares no suite in L2_PAIRS, so nothing '
                     'checks that any of them is ever named by a test.' % (rel, emits))
+    if present is None:
+        lint_categories(problems)
 
 
-def lint_l1(problems, files=None):
+def lint_categories(problems, files=None, categories=None, pending=None):
+    """ORDER-670 T7. The classification must cover EVERY file L1 parses, with nothing but the
+    closed vocabulary in it.
+
+    An unclassified file sits outside the category-A binding rule BY ACCIDENT -- which is how a
+    checker quietly rejoins the 28 reads that all declared `worktree` and all meant bytes the
+    commit did not contain. There is no default: a category arrived at by omission is not one.
+    """
+    files = L1_FILES if files is None else files
+    categories = CATEGORY if categories is None else categories
+    pending = A_BINDING_PENDING if pending is None else pending
+    for rel in files:
+        cat = categories.get(rel)
+        if cat is None:
+            problems.append(
+                'L0/T7 %s is parsed by L1 but has no entry in CATEGORY. Classify it A (checker) '
+                '/ B (builder) / P (pinned) / LIB (takes its source from the caller) / READER. '
+                'Without one it sits outside the category-A binding rule by accident.' % rel)
+        elif cat not in CATEGORIES:
+            problems.append('L0/T7 %s is classified %r, which is not one of %s'
+                            % (rel, cat, list(CATEGORIES)))
+    for rel in pending:
+        if categories.get(rel) != 'A':
+            problems.append(
+                'L0/T7 %s is listed as a pending category-A migration but is classified %r. A '
+                'suspension of a rule that does not apply to it exempts nothing while reading '
+                'as if it did.' % (rel, categories.get(rel)))
+
+
+def lint_l1(problems, files=None, categories=None):
+    categories = CATEGORY if categories is None else categories
     for rel in (files if files is not None else L1_FILES):
         try:
             src = _read(rel)
@@ -285,7 +365,25 @@ def lint_l1(problems, files=None):
             if any(ch in mode for ch in 'wax'):
                 continue                      # a write is output, not judged evidence
             line = lines[n - 1] if n - 1 < len(lines) else ''
-            if DECLARATION.search(line):
+            declared = DECLARATION.search(line)
+            if declared:
+                # T7: in a CHECKER, `worktree`/`index`/`HEAD` on a bare open() is the comment
+                # standing in for the call. `blob` (a pinned read) and `not-a-judged-input` (a
+                # fixture's own temp tree, a scratch file) stay declaration-only ON PURPOSE:
+                # this lint cannot tell a temp root from a repo root except by asking, and a
+                # lint that fired on them would refuse valid work -- the optimize_guard failure
+                # the Decision log recorded on 2026-07-30.
+                if (categories.get(rel) == 'A' and rel not in A_BINDING_PENDING
+                        and declared.group(1) in ('worktree', 'index', 'HEAD')):
+                    problems.append(
+                        'L1/T7 %s:%s is a CHECKER (category A) reading judged evidence through '
+                        'a bare open() declared `%s`: %s\n'
+                        '     A declaration does not choose bytes. Read it through '
+                        '`EvidenceSource.read_committed()` / `list_committed()`, which does. If '
+                        'this is NOT judged evidence -- a fixture temp root, a scratch file -- '
+                        'say `# snapshot: not-a-judged-input` and the claim becomes visible '
+                        'instead of hiding inside the same word all 28 pre-ORDER-670 reads used.'
+                        % (rel, n, declared.group(1), line.strip()[:90]))
                 continue
             problems.append(
                 'L1 %s:%s reads a file without declaring which snapshot: %s\n'
@@ -352,6 +450,31 @@ def self_test(out=None):
             fh.write(body)
         return full
 
+    def _t7(problems, name, body, category):
+        """One source line, in a file classified `category`. -> whatever L1 says about it."""
+        path = write(name, body + '\n')
+        lint_l1(problems, [path], {path: category})
+
+    def _t7_pending(problems, suspended):
+        """The SAME category-A file, with and without a pending-migration entry.
+
+        Both directions in one case on purpose: a suspension list that cannot be observed
+        suppressing anything is indistinguishable from a rule nobody wrote.
+        """
+        path = write('pend.py', 'x = io.open(f).read()  # snapshot: worktree\n')
+        if suspended:
+            A_BINDING_PENDING[path] = 'test'
+        try:
+            lint_l1(problems, [path], {path: 'A'})
+        finally:
+            A_BINDING_PENDING.pop(path, None)
+
+    def _l0_cat(problems, category, pending=()):
+        """The classification completeness rule, over a synthetic file/category pair."""
+        rel = 'synthetic/checker.py'
+        lint_categories(problems, [rel], {} if category is None else {rel: category},
+                        dict((p, 'test') for p in pending))
+
     cases = [
         ('L1 an undeclared read is refused',
          lambda p: lint_l1(p, [write('bad.py', 'x = io.open("a.md").read()\n')]), True),
@@ -383,6 +506,34 @@ def self_test(out=None):
         ('L2 a criterion named only in a COMMENT is refused',
          lambda p: lint_l2(p, {write('c3.py', "problems.append('E9 boom')\n"):
                                (write('s3.py', "# E9 is covered, honest\ncase('x')\n"),)}), True),
+        # -- ORDER-670 T7: the comment stops being an acceptable answer for a CHECKER ----------
+        ('T7 a category-A read declared `worktree` but not a CALL is refused',
+         lambda p: _t7(p, 'a.py', 'x = io.open("f.md").read()  # snapshot: worktree', 'A'), True),
+        ('T7 the same read declared `index` is refused too -- the mode is not the point',
+         lambda p: _t7(p, 'b.py', 'x = io.open("f.md").read()  # snapshot: index', 'A'), True),
+        ('T7 CONTROL a fixture temp root says so, and is allowed',
+         lambda p: _t7(p, 'c.py',
+                       'x = io.open(tmp).read()  # snapshot: not-a-judged-input', 'A'), False),
+        ('T7 CONTROL a pinned blob read is allowed',
+         lambda p: _t7(p, 'd.py', 'x = io.open(f).read()  # snapshot: blob', 'A'), False),
+        ('T7 CONTROL a BUILDER reading the disk is correct, not a violation',
+         lambda p: _t7(p, 'e.py', 'x = io.open(f).read()  # snapshot: worktree', 'B'), False),
+        ('T7 CONTROL the reader itself implements the read',
+         lambda p: _t7(p, 'g.py', 'x = io.open(f).read()  # snapshot: worktree', 'READER'),
+         False),
+        ('T7 CONTROL a category-A WRITE is still output',
+         lambda p: _t7(p, 'h.py', 'io.open(f, "w").write("x")  # snapshot: worktree', 'A'),
+         False),
+        ('T7 a pending category-A migration is NOT flagged (suspension works)',
+         lambda p: _t7_pending(p, suspended=True), False),
+        ('T7 the same file WITHOUT the suspension is flagged (it suppressed something real)',
+         lambda p: _t7_pending(p, suspended=False), True),
+        ('L0/T7 an L1 file with no category is refused', lambda p: _l0_cat(p, None), True),
+        ('L0/T7 an invented category value is refused',
+         lambda p: _l0_cat(p, 'PROBABLY_FINE'), True),
+        ('L0/T7 CONTROL a classified file is fine', lambda p: _l0_cat(p, 'A'), False),
+        ('L0/T7 a suspension on a NON-checker exempts nothing and is refused',
+         lambda p: _l0_cat(p, 'B', pending=('synthetic/checker.py',)), True),
     ]
     for label, fn, expect_red in cases:
         got = []
@@ -415,6 +566,15 @@ def main(argv):
                  '; '.join('%s -- %s' % (os.path.basename(k), v)
                            for k, v in sorted(L1_DEFERRED.items()))))
     out.write('L2 criterion coverage    : %s checker/suite pair(s)\n' % len(L2_PAIRS))
+    # PRINT THE SUSPENSIONS ON EVERY RUN. A pending list nobody sees is an exemption nobody
+    # counts, and this repo's own record is that such a list stops shrinking the moment it stops
+    # being read. Counted from the maps, never typed.
+    _a = sorted(f for f in L1_FILES if CATEGORY.get(f) == 'A')
+    _p = sorted(f for f in _a if f in A_BINDING_PENDING)
+    out.write('T7 category-A binding    : %s of %s checker(s) bound to read_committed; '
+              '%s still suspended%s\n'
+              % (len(_a) - len(_p), len(_a), len(_p),
+                 (' -- ' + ', '.join(os.path.basename(f) for f in _p)) if _p else ''))
     import glob as _g
     # COUNT WHAT L0 ACTUALLY DISCOVERS, not what the first glob finds. This line said "5 checkers
     # match _triage/factory_os/check_*.py" in the same commit that widened discovery to 16 across
