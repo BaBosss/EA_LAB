@@ -191,6 +191,92 @@ if ($bogus.Code -ne 0 -and $bogus.Text -match "is not 'index' or 'worktree'") {
     Bad "A3 a bogus mode did not refuse; got exit $($bogus.Code)"
 }
 
+# ===========================================================================================
+# B -- ORDER-674 owed half: check_order_collision judged the ARCHIVE at HEAD while judging the
+#      ACTIVE board at the index. RULE 1 asks "does an id appear in BOTH boards", and both
+#      boards means both boards in the RESULTING repository -- which is the index.
+#
+# Same attack shape as A, and the same reason for a TEMP index: staging into `.git/index` is
+# what ORDER-670's T6 refuses, correctly.
+# ===========================================================================================
+$ACTIVE  = 'AGENT_TASKBOARD.md'
+$ARCHIVE = 'ARCHIVE_TASKBOARD_2026-07A.md'
+$collide = Join-Path $RepoRoot 'scripts\check_order_collision.ps1'
+# 711 is inside THIS lane's reserved block (S-2026-07-31-FRONTDECL, 710-719) on purpose: RULE 2
+# must stay silent so the assertion can only be satisfied by RULE 1. A probe id that also
+# breached the reserved-block rule would go red for the wrong reason and prove nothing.
+$probeId = '711'
+$probeHdr = "## ORDER-$probeId -- L3 probe, never committed"
+
+function RunCollision {
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $collide 2>&1
+        return [pscustomobject]@{ Text = (@($out) -join "`n"); Code = $LASTEXITCODE }
+    } finally { $ErrorActionPreference = $prevEAP }
+}
+
+$origActiveIdx  = GitText ('rev-parse ":{0}"' -f $ACTIVE)
+$origArchiveIdx = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$bakActive  = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.md')
+$bakArchive = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.md')
+Copy-Item -LiteralPath $ACTIVE -Destination $bakActive -Force
+Copy-Item -LiteralPath $ARCHIVE -Destination $bakArchive -Force
+
+$tmpIndex2 = Join-Path ([System.IO.Path]::GetTempPath()) ("fg674b_" + [guid]::NewGuid().ToString('N') + '.idx')
+Copy-Item -LiteralPath (Join-Path $RepoRoot '.git\index') -Destination $tmpIndex2 -Force
+$prevIndexEnv2 = $env:GIT_INDEX_FILE
+$realIndexBefore2 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+$env:GIT_INDEX_FILE = $tmpIndex2
+try {
+    # B0 SPECIFICITY FIRST, so "the attack goes red" cannot be confused with "this guard always
+    # goes red": stage the ACTIVE board alone, with the probe header, and no archive change.
+    # One board, one id -- RULE 1 has nothing to find and the run must be green.
+    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ACTIVE), "`n$probeHdr`n")
+    [void](Git ('add -- "{0}"' -f $ACTIVE))
+    Copy-Item -LiteralPath $bakActive -Destination $ACTIVE -Force
+    $b0 = RunCollision
+    if ($b0.Code -eq 0) {
+        Good 'B0 SPECIFICITY a new order on ONE board only is green -- the rule is not "always red"'
+    } else {
+        Bad ("B0 SPECIFICITY expected exit 0 for a single-board order; got $($b0.Code). " +
+             ($b0.Text -split "`n" | Select-Object -Last 2) -join ' | ')
+    }
+
+    # B1 THE ATTACK. The SAME id now also enters the ARCHIVE in this commit. That is the
+    # cross-board duplicate RULE 1 exists to refuse -- and it is created ENTIRELY by this
+    # commit, so a HEAD read cannot see it. Pre-fix this printed PASS.
+    [System.IO.File]::AppendAllText((Join-Path $RepoRoot $ARCHIVE), "`n$probeHdr`n")
+    [void](Git ('add -- "{0}"' -f $ARCHIVE))
+    Copy-Item -LiteralPath $bakArchive -Destination $ARCHIVE -Force
+    $b1 = RunCollision
+    if ($b1.Code -ne 0 -and $b1.Text -match ('ORDER-{0} exists in BOTH' -f $probeId)) {
+        Good 'B1 ATTACK an id staged into BOTH boards by one commit is RED -- the archive is judged at the index'
+    } else {
+        Bad ("B1 ATTACK expected exit!=0 naming ORDER-$probeId in both boards; got exit $($b1.Code). " +
+             'This is the pre-fix behaviour: the commit lands the cross-board duplicate green.')
+    }
+} finally {
+    Copy-Item -LiteralPath $bakActive -Destination $ACTIVE -Force
+    Copy-Item -LiteralPath $bakArchive -Destination $ARCHIVE -Force
+    if ($null -eq $prevIndexEnv2) { Remove-Item Env:GIT_INDEX_FILE -ErrorAction SilentlyContinue }
+    else { $env:GIT_INDEX_FILE = $prevIndexEnv2 }
+    Remove-Item -LiteralPath $bakActive, $bakArchive, $tmpIndex2 -Force -ErrorAction SilentlyContinue
+}
+
+# ASSERTED, not assumed -- these two files are the work queue of every lane in the repo.
+$nowActiveIdx  = GitText ('rev-parse ":{0}"' -f $ACTIVE)
+$nowArchiveIdx = GitText ('rev-parse ":{0}"' -f $ARCHIVE)
+$nowIndexAfter2 = (Get-Item -LiteralPath (Join-Path $RepoRoot '.git\index')).LastWriteTimeUtc
+if ($nowActiveIdx -eq $origActiveIdx -and $nowArchiveIdx -eq $origArchiveIdx -and
+    $nowIndexAfter2 -eq $realIndexBefore2) {
+    Good 'B  both boards are byte-identical afterwards and .git/index was never written'
+} else {
+    Bad ('B  THE BOARDS WERE NOT RESTORED (or the real index was written): ' +
+         "active $nowActiveIdx (was $origActiveIdx), archive $nowArchiveIdx (was $origArchiveIdx)")
+}
+
 # --- A4: the hook actually sets it, or the whole migration is inert where it matters --------
 $hook = [System.IO.File]::ReadAllText((Join-Path $RepoRoot '.githooks\pre-commit'))
 if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {

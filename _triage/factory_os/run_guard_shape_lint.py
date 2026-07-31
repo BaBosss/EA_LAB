@@ -218,7 +218,6 @@ PS_READER_CALLS = re.compile(
 PS_PENDING = {
     'scripts/check_block_staleness.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_handoff_contract.ps1': 'ORDER-674 owed: 7 git reads, 0 declared',
-    'scripts/check_order_collision.ps1': 'ORDER-674 owed: 3 git reads, 0 declared',
     'scripts/check_precommit_staged.ps1': 'ORDER-674 owed: 1 disk + 5 git reads, 0 declared',
     'scripts/check_stale_binaries.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_state.ps1': 'ORDER-674 migrated its reads but declared none of them',

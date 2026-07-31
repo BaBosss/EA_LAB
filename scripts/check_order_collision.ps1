@@ -14,7 +14,10 @@
 
     RULE 1 -- duplicate order id (BLOCK)
         Every '## ORDER-<id>' header is parsed out of the STAGED AGENT_TASKBOARD.md
-        and out of the COMMITTED ARCHIVE_TASKBOARD_2026-07A.md. <id> is everything
+        and out of the STAGED ARCHIVE_TASKBOARD_2026-07A.md -- both at the INDEX,
+        because "appears in both boards" is a claim about the repository this commit
+        produces. The archive side read HEAD until 2026-07-31 (ORDER-674 owed half);
+        see the block comment at the archive read for what that missed. <id> is everything
         up to the first space or em-dash, trimmed and upper-cased. It is a block if
         the same id appears twice inside the staged active board, or appears in BOTH
         the staged active board and the archive. Archive-internal duplicates are NOT
@@ -123,6 +126,9 @@ function Get-GitBlobText {
 }
 
 function Get-StagedPathsFromGit {
+    # snapshot: index -- the paths this commit carries. This decides whether the guard runs at
+    # all, so it must be the same vintage as the content read below; a trigger from one moment
+    # and a verdict from another is A2.
     $r = Invoke-GitBytes -Arguments '-c core.quotePath=false diff --cached --name-only'
     if ($r.ExitCode -ne 0) { throw ('git diff --cached --name-only failed (exit {0}): {1}' -f $r.ExitCode, $r.StdErr) }
     $text = ConvertFrom-Utf8Bytes -Bytes $r.Bytes
@@ -356,6 +362,11 @@ $overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent',
 $offline = $false
 foreach ($n in $overrideNames) { if ($PSBoundParameters.ContainsKey($n)) { $offline = $true } }
 
+# ORDER-674 owed half: EVERY READ BELOW DECLARES ITS SNAPSHOT, and one of them was wrong.
+# The file's own .DESCRIPTION said "read from the git INDEX or from committed refs -- NEVER from
+# the working tree", which is true and was never the question. The question L3 asks is WHICH of
+# the two, per read, and answering it found the archive being judged at the wrong vintage. See
+# the fix at the `--- committed archive ---` block below.
 $stagedPaths = @()
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('StagedFileList')) {
@@ -385,6 +396,7 @@ $stagedActive = ''
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('StagedActiveContent')) { $stagedActive = $StagedActiveContent }
 } else {
+    # snapshot: index -- the board as this commit will contain it. RULE 1's subject.
     $stagedActive = Get-GitBlobText -Spec (':{0}' -f $ActivePath)
     if ($null -eq $stagedActive) {
         Write-Host ('{0} NOTE: {1} is staged but has no index blob (staged for deletion) -- nothing to check, pass' -f $Tag, $ActivePath)
@@ -392,14 +404,35 @@ if ($offline) {
     }
 }
 
-# --- committed archive ---
+# --- archive board, AS THIS COMMIT WILL CONTAIN IT ---
+#
+# ORDER-674 owed half, 2026-07-31: THIS READ WAS `HEAD:` AND THAT WAS WRONG.
+#
+# RULE 1 asks "does any order id appear in both boards". Both boards means both boards IN THE
+# RESULTING REPOSITORY, and the resulting repository is the index -- the active side was already
+# read from `:{0}` eight lines up. Reading the archive from HEAD made one verdict out of two
+# moments, which is A2's crime in the guard whose whole job is cross-board consistency.
+#
+# What it cost, both directions, and neither is theoretical:
+#   MISS  -- a commit that adds `## ORDER-X` to the active board AND to the archive creates the
+#            duplicate this rule exists to refuse, and HEAD cannot see either half of it. PASS.
+#            Proven by attack in scripts/_test/run_front_guard_evidence_tests.ps1 (case B1)
+#            before this line changed.
+#   FALSE BLOCK -- un-archiving (id removed from the staged archive, restored to the active
+#            board) is refused against a HEAD that still holds it, i.e. the guard blocks the
+#            commit that FIXES the state it is complaining about.
+#
+# `:{0}` is correct for an unmodified path too: its index entry is HEAD's blob, so the ordinary
+# commit reads exactly what it read before. This is a strictly-more-accurate read, not a
+# stricter one -- verified as such by the specificity half of the same case.
 $archiveText = ''
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('ArchiveContent')) { $archiveText = $ArchiveContent }
 } else {
-    $archiveText = Get-GitBlobText -Spec ('HEAD:{0}' -f $ArchivePath)
+    # snapshot: index
+    $archiveText = Get-GitBlobText -Spec (':{0}' -f $ArchivePath)
     if ($null -eq $archiveText) {
-        Write-Host ('{0} NOTE: HEAD:{1} not readable -- cross-board duplicate check skipped' -f $Tag, $ArchivePath)
+        Write-Host ('{0} NOTE: :{1} not readable from the index -- cross-board duplicate check skipped' -f $Tag, $ArchivePath)
         $archiveText = ''
     }
 }
@@ -409,6 +442,11 @@ $headActive = ''
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('HeadActiveContent')) { $headActive = $HeadActiveContent }
 } else {
+    # snapshot: HEAD -- and DELIBERATELY not the index, unlike the two reads above. This is the
+    # BASELINE that defines "what this commit ADDS": staged ids minus HEAD ids. Reading it from
+    # the index would subtract the staged board from itself, RULE 2 would see zero new orders,
+    # and the reserved-block rule could never fire again -- shape 3, produced by making the
+    # vintages agree when they are supposed to differ.
     $headActive = Get-GitBlobText -Spec ('HEAD:{0}' -f $ActivePath)
     if ($null -eq $headActive) { $headActive = '' }
 }
@@ -419,6 +457,12 @@ $ledgerText = ''
 if ($offline) {
     if ($PSBoundParameters.ContainsKey('LedgerContent')) { $ledgerPresent = $true; $ledgerText = $LedgerContent }
 } else {
+    # snapshot: HEAD -- deliberate, and it is a RATIFIED RULE rather than an implementation
+    # detail: Decision log 2026-07-26 says "the reservation must be committed before the number
+    # is used (the hook reads the ledger from HEAD, not the index)". Moving this to the index
+    # would let one commit reserve a block and spend it, which is the entire failure the lane
+    # ledger was created after (3 real collisions in a month). Do not "fix" it to match the
+    # reads above; it differs on purpose and the purpose is written down.
     $t = Get-GitBlobText -Spec ('HEAD:{0}' -f $LedgerPath)
     if ($null -ne $t) { $ledgerPresent = $true; $ledgerText = $t }
 }
