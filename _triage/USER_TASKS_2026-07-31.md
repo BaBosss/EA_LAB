@@ -1,10 +1,23 @@
-# User-side tasks — 2026-07-31 (overnight Factory OS tranche)
+﻿# User-side tasks — 2026-07-31 (overnight Factory OS tranche)
 
 Owner: **user**. Claude cannot do these from its seat. One section per task.
 
 ---
 
-## 1. The Coverage approval now pins bytes that executing it changed — 🔴 **the approval mechanism is self-invalidating, and only you can unblock it**
+## 1. ✅ **RESOLVED 2026-07-31 07:5x — nothing is owed here any more**
+
+You confirmed twice (Option A, then a re-confirm against the final bundle `fa6bab35` after your first
+confirmation exposed one more defect). `check_s2a_attestation.py` **exits 0**, the S2a gate is **7/7
+green with zero advisories**, and the downgrade that Codex objected to is **deleted** rather than kept.
+`ORDER-610` closed against the acceptance it pre-registered. Details in `ORDER-613`.
+
+**What was actually wrong, in one line:** an approval pinned the bytes of the file it authorised
+changing, and the rules that judged it were applied to **every historical record** rather than the one
+in force — so in an append-only log, one stale pin made that owner's history unrepairable forever.
+
+---
+
+## 1-HISTORY. The Coverage approval pinned bytes that executing it changed — 🔴 **the approval mechanism is self-invalidating, and only you can unblock it**
 
 **Status:** the transfer itself is **done and verified** (`ORDER-610`, commit in the range below).
 Nothing is broken and no cage is disarmed. What is owed is one line from you.

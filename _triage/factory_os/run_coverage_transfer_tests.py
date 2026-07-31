@@ -336,40 +336,13 @@ def main():
             say('  [OK ] %-58s ToolFailure: %s' % (name, str(exc)[:60]))
 
     say()
-    say('=== A8 the ONE downgrade in this file, and the three ways it must refuse to fire ===')
-    say('  Executing the approved transfer changes the blob the approval pins, so the attestation')
-    say('  checker reports a stale pin on the change it authorized. That is expected. Everything')
-    say('  else is not, and a downgrade that fires on a substring is how a cage goes quiet.')
-    REAL_PIN = ("  -> A6 line 2 attests for 'MASTER_BACKLOG.md' whose pin is STALE. Set "
-                '"stale_pin_acknowledged": true ...')
-    OTHER = "  -> A2 line 2 attests bundle deadbeef but the current bundle is aaa5998d"
+    say('=== A8: the downgrade is GONE (ORDER-613 D3), so there is nothing left to fixture ===')
+    say('  Six cases used to live here proving the exemption refused to widen. They are deleted')
+    say('  with the exemption itself: the contract can now express "the pinned bytes changed INTO')
+    say('  the state this record approved", so nothing needs downgrading. A8 is a plain hard check')
+    say('  again -- check_s2a_attestation.py must exit 0 -- which is what ORDER-610 pre-registered')
+    say('  before I amended it. Its negative fixture is the attestation suite, not this one.')
 
-    def a8_case(name, rc, text, in_place, expect_problem):
-        saved = chk.run_attestation
-        try:
-            chk.run_attestation = lambda: (rc, text)
-            problems, advisories = [], []
-            chk.a8_attestation_still_valid(problems, advisories, transfer_in_place=in_place)
-        finally:
-            chk.run_attestation = saved
-        got = bool(problems)
-        ok = (got == expect_problem)
-        say('  %s %-58s expect=%s got=%s' % ('[OK ]' if ok else '[FAIL]', name,
-                                             'HARD-FAIL' if expect_problem else 'advisory/clean',
-                                             'HARD-FAIL' if got else
-                                             ('advisory' if advisories else 'clean')))
-        if not ok:
-            FAILURES.append(name)
-
-    a8_case('the expected stale pin, transfer verified', 1, REAL_PIN, True, False)
-    a8_case('the expected stale pin, but the transfer does NOT verify', 1, REAL_PIN, False, True)
-    a8_case('the stale pin PLUS a second problem', 1, REAL_PIN + '\n' + OTHER, True, True)
-    a8_case('a different problem entirely (bundle digest moved)', 1, OTHER, True, True)
-    a8_case('a stale pin on a DIFFERENT owner path', 1,
-            "  -> A6 line 2 attests for 'AGENT_TASKBOARD.md' whose pin is STALE.", True, True)
-    a8_case('the attestation is clean', 0, '', True, False)
-
-    say()
     say('=== WHY THE PINNED BLOB IS LOAD-BEARING (the inertness probe) ===')
     say('  The naive A2 derives the baseline from the store it is judging. Below is that exact')
     say('  implementation, run against the store with a LIVE cell deleted.')

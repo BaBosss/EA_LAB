@@ -52,62 +52,28 @@ STEPS = (
 )
 
 
-ATTESTATION_STEP = 'the attestation log is valid'
-
-
-def attestation_exemption():
-    """ORDER-610: the ONE case where a red attestation step is expected rather than wrong.
-
-    The owner's approval pins MASTER_BACKLOG.md at the pre-transfer blob. Executing the transfer
-    they approved changes that blob, so A6 fires on the change it authorized -- and it cannot be
-    repaired here: check_s2a_attestation.py is inside its own bundle, so editing it voids every
-    attestation it holds, and writing the owner's acknowledgement would be manufacturing the
-    owner's words (blind audit 8 BLOCKER 1).
-
-    The judgement is NOT re-derived here. It is delegated to check_coverage_transfer.py
-    --explain-attestation, which exits 0 only when the attestation's sole complaint is that one
-    pin AND the transfer independently verifies. One implementation, one set of fixtures: a
-    downgrade rule written twice is a downgrade rule that will disagree with itself.
-    """
-    import subprocess
-    p = subprocess.run(
-        [sys.executable, os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                      'check_coverage_transfer.py'), '--explain-attestation'],
-        capture_output=True)
-    return p.returncode == 0, p.stdout.decode('utf-8', 'replace')
+# ORDER-613 D3: the attestation exemption that used to live here is DELETED. It existed because
+# the contract could not express "the pinned bytes changed INTO the state this record approved",
+# so an approved transfer permanently invalidated its own approval and this step could never be
+# green again. D1 and D2 fixed that in the contract; a workaround kept past the repair of its cause
+# stops being a workaround and becomes the rule. There is no downgrade path in this gate any more.
 
 
 def main():
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     failed = []
-    advisories = []
     for label, fn in STEPS:
         # each step chdir's to root itself; none of them is allowed to leave the cwd elsewhere
         rc = fn()
         os.chdir(root)
-        if rc != 0 and label == ATTESTATION_STEP:
-            exempt, detail = attestation_exemption()
-            os.chdir(root)
-            if exempt:
-                print('\n---- [ADVISORY] %s (exit %s) -- EXPECTED, owner decision owed\n%s'
-                      % (label, rc, detail))
-                advisories.append(label)
-                continue
         print('\n---- [%s] %s (exit %s)\n' % ('OK ' if rc == 0 else 'FAIL', label, rc))
         if rc != 0:
             failed.append(label)
-    if advisories:
-        print('=== %d ADVISORY step(s): %s -- see _triage/USER_TASKS_2026-07-31.md ==='
-              % (len(advisories), ' · '.join(advisories)))
     if failed:
         print('=== S2a GATE FAILED: %s ===' % ' · '.join(failed))
         return 1
-    # Do NOT say "all N green" when one of them was an advisory: a summary line that overstates by
-    # one step is how a reader learns to skim past the detail that mattered.
-    print('=== S2a GATE: %d of %d steps green%s ==='
-          % (len(STEPS) - len(advisories), len(STEPS),
-             ', %d ADVISORY (owner decision owed)' % len(advisories) if advisories else ''))
+    print('=== S2a GATE: all %d steps green ===' % len(STEPS))
     return 0
 
 

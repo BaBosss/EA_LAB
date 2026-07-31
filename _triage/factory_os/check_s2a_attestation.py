@@ -130,6 +130,14 @@ def check_append_only(problems, path=None, committed=None, working=None):
 
 def check(rows, problems, digest, d1_owners, vintage_notes):
     stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
+    # ORDER-613 D1: resolve the winner per owner BEFORE judging, so the stale-pin rule can be
+    # applied to the record that is actually in force. Computed by last-wins over well-formed rows,
+    # which is the same rule the loop below records at the end -- stated once, here, so the two
+    # cannot disagree.
+    latest = {}
+    for r in rows:
+        if isinstance(r, dict) and str(r.get('current_owner') or '').strip():
+            latest[r['current_owner']] = r
     current = {}
     for r in rows:
         n = r.get('_line')
@@ -141,7 +149,20 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             problems.append('A1 line %s has decision=%r, not one of %s'
                             % (n, r['decision'], list(DECISIONS)))
             continue
-        if r['bundle_sha256'] != digest:
+        # ORDER-613 D1, EXTENDED after running it: A2 had the same defect A6 did, and narrowing
+        # only A6 was not enough -- the log stayed red on lines 2 and 3, made under the previous
+        # bundle, which append-only means can never be corrected.
+        #
+        # THE RULE, stated once so the next check lands on the right side of it:
+        #   * a check about the RECORD ITSELF (A1 well-formedness, A4 attributability, A5 a reason)
+        #     applies to EVERY row -- those were true when written or the row should not exist;
+        #   * a check about the record's relationship to CURRENT EXTERNAL STATE (A2 the bundle,
+        #     A6 the pin, A8 the expected post-state) applies ONLY to the row in force.
+        # Superseded records are history. Demanding that history keep matching today's bytes is
+        # demanding that history be rewritten, and in an append-only file that is not merely wrong,
+        # it is impossible -- so the artifact could never survive its own evolution.
+        in_force = r is latest.get(r['current_owner'])
+        if in_force and r['bundle_sha256'] != digest:
             problems.append('A2 line %s attests bundle %s but the current bundle is %s -- D1, D2, '
                             'the reconciliation or a validator changed after this record, so it no '
                             'longer describes what is on disk. Re-make it against the current bytes.'
@@ -158,7 +179,35 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             continue
         if r['decision'] == 'REFUSED' and not str(r.get('reason') or '').strip():
             problems.append('A5 line %s is REFUSED with no reason' % n)
-        note = stale.get(r['current_owner'])
+        # ORDER-613 D2: a record may declare the state the approved action is expected to PRODUCE.
+        # Without it, an acknowledgement is a blanket exemption -- "these bytes moved, fine" -- and
+        # cannot distinguish the approved change from any other change that happens to arrive
+        # afterwards. With it, the record is a claim about a SPECIFIC post-state, and the claim is
+        # recomputed here rather than believed.
+        eps = r.get('expected_post_state') if in_force else None
+        if eps is not None:
+            if not isinstance(eps, dict) or not eps.get('path') or not eps.get('blob'):
+                problems.append('A8 line %s has expected_post_state that is not an object naming '
+                                '{path, blob}' % n)
+            else:
+                rc3, live3, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), eps['path']))
+                actual = live3 if rc3 == 0 else 'MISSING'
+                if actual != eps['blob']:
+                    problems.append(
+                        'A8 line %s expects %s to be at blob %s after the action it approves, but '
+                        'HEAD has %s. The record describes a change that did not happen, or a '
+                        'different one happened -- either way this is not the state that was '
+                        'approved.' % (n, eps['path'], str(eps['blob'])[:12], str(actual)[:12]))
+
+        # ORDER-613 D1: the stale-pin rule now judges ONLY the CURRENT record per owner.
+        # It used to run for every row, including superseded ones -- while this file's own header
+        # promises "the latest line per current_owner wins". Because the log is append-only, an
+        # earlier row could never acquire the acknowledgement it was being failed for, so a single
+        # stale pin made that owner's history permanently unrepairable and the artifact could not
+        # be returned to green by any legal action. Superseded rows stay in the file and stay
+        # printed; they are history, not live claims. What is DEMANDED of the current row is
+        # unchanged -- this narrows which row is judged, never what it must satisfy.
+        note = stale.get(r['current_owner']) if in_force else None
         if note:
             ack = r.get('stale_pin_acknowledgement')
             # audit 8 MAJOR 5: this was `not row.get('stale_pin_acknowledged')`, so the STRING

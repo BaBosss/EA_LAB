@@ -103,9 +103,20 @@
 
 ---
 
-## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `PARTIAL — 6 of 8 audit findings CLOSED; D1/D2/D3 held for the owner` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
-> ### ✅ 2026-07-31 — **every Codex finding that does not touch the attestation bundle is fixed, each with a fixture that was RED first**
+> ### ✅ 2026-07-31 07:5x — **D1/D2/D3 LANDED. The root defect is fixed and the workaround is deleted.**
+> **D1** the stale-pin rule judges the row **in force**, per the header's own promise · **D2** `expected_post_state` lets a record say *"the pinned bytes changed **into** the state this record approved"*, recomputed · **D3** the A8 downgrade and the gate's advisory branch are **deleted** — A8 is a plain hard check again.
+>
+> 🔴 **The owner's own confirmation exposed the next defect, and it was the same one:** appending their line left the log **still red**, because **A2 (bundle) had the identical whole-file scope A6 did**. Records made under a previous bundle blocked permanently, and append-only meant they could never be corrected ⇒ **the artifact could not survive its own evolution** — any edit to a bundled file reddened it forever. Narrowing only A6 was not enough, and only running it showed that.
+>
+> **The rule now stated once in the code, so the next check lands on the right side of it:** a criterion about the **record itself** (A1 well-formedness · A4 attributability · A5 a reason) applies to **every row** — those were true when written or the row should not exist. A criterion about the record's relationship to **current external state** (A2 bundle · A6 pin · D2 post-state) applies **only to the row in force**. Superseded records are history; demanding that history keep matching today's bytes is demanding it be rewritten, which in an append-only file is not merely wrong but impossible.
+>
+> **Fixtures:** superseded row without an ack does **not** block · superseded row on an **old bundle** does not block · the **current** row still must acknowledge (an old ack does **not** carry forward) · `expected_post_state` matching HEAD accepted · naming a state that never arrived **refused** · a bare string **refused**.
+>
+> <sub>🔧 A bug in my own new tests first: `run_with()` returns `problems` as a **string**, so `any(... for p in problems)` iterated **characters** and three new cases were green for nothing. Found by the cases failing for the wrong reason, fixed in the tests — not in the code they were meant to check.</sub>
+>
+> ### ✅ Earlier the same session — **every Codex finding that does not touch the attestation bundle is fixed, each with a fixture that was RED first**
 >
 > | # | finding | fix | fixture |
 > |---|---|---|---|
@@ -286,8 +297,11 @@ One commit; `git revert`. The suite is additive — the 35 existing cases are un
 
 ---
 
-## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `BLOCKED(A8 fails as written; the attestation contract cannot express this — ORDER-613)` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (**A8 now passes AS ORIGINALLY WRITTEN**) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
+> ### ✅ 2026-07-31 07:5x — **RE-CLOSED. `ORDER-613` D1/D2/D3 landed, and A8 passes `exit 0` with NO downgrade in the path.**
+> The owner re-recorded against bundle `fa6bab35`; `check_s2a_attestation.py` **exit 0** · S2a gate **all 7 steps green, zero advisories** · `check_coverage_transfer.py` **ACCEPTED with no owner decision owed**. The amendment Codex objected to is **deleted**, not tolerated — the order is closed against the acceptance it pre-registered, which is the only way it was ever allowed to close.
+>
 > ### 🔴 2026-07-31 — **`DONE` WITHDRAWN. Codex audit P0 was right and I am not arguing it.**
 > Report: the consolidated audit of `d4e5716c..33292571` (Standards 5 · Spec 6).
 >

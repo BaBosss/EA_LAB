@@ -362,65 +362,27 @@ def a3_closed_shape_and_no_verdict(section, records, problems, allowed_status):
 # perturbation fixture is now attached to A1, where it can actually fire.
 
 
-STALE_PIN_LINE = re.compile(
-    r"^\s*->\s*A6 line \d+ attests for 'MASTER_BACKLOG\.md' whose pin is STALE")
+def a8_attestation_still_valid(problems):
+    """ORDER-610 A8, restored to what it actually said: the transfer may not invalidate the
+    approval that authorized it, and `check_s2a_attestation.py` must exit 0.
 
+    ORDER-613 D3 DELETED the downgrade that used to live here. It existed because the attestation
+    contract could not express "the pinned bytes changed INTO the state this record approved", so
+    an approved transfer permanently invalidated its own approval. D1 and D2 fixed that in the
+    contract. A workaround kept past the repair of its cause stops being a workaround and becomes
+    the rule -- and Codex was right that this one converted a FAILED pre-registered acceptance into
+    a pass without the owner ever agreeing to the amendment.
 
-def run_attestation():
-    """(exit code, stdout) of the attestation checker. Separated so the fixtures can inject it."""
+    There is no exemption path here any more. If this reddens, something is wrong.
+    """
     p = subprocess.run([sys.executable, os.path.join(HERE, 'check_s2a_attestation.py')],
                        capture_output=True, cwd=ROOT)
-    return p.returncode, p.stdout.decode('utf-8', 'replace')
-
-
-def attestation_failure_is_the_expected_pin(text):
-    """True only when the attestation's SOLE complaint is the pin the transfer itself moved."""
-    reported = [l for l in text.split('\n') if l.strip().startswith('-> ')]
-    return len(reported) == 1 and bool(STALE_PIN_LINE.match(reported[0]))
-
-
-def a8_attestation_still_valid(problems, advisories, transfer_in_place):
-    """The transfer may not invalidate the approval that authorized it -- with ONE exception, and
-    the exception is arithmetic rather than judgement.
-
-    THE CIRCULARITY, stated plainly because it is the most abusable thing in this file.
-    The owner approved moving section 2 to a generated projection. Their approval pins
-    MASTER_BACKLOG.md at blob ca909b69. EXECUTING the approval necessarily changes that blob, so
-    A6 -- "a stale pin blocks the record" -- fires on the transfer it authorized. The two obvious
-    escapes are both worse: re-pinning D1 changes the bundle digest and voids the approval outright,
-    and writing the owner's `stale_pin_acknowledgement` myself is manufacturing the owner's words,
-    which is the exact defect blind audit 8 caught. check_s2a_attestation.py cannot be repaired
-    either -- it is inside its own bundle, so editing it voids every attestation it holds.
-
-    So this is reported as an OWNER DECISION OWED, not swallowed and not called a pass. The
-    downgrade is admissible only when ALL of these hold, and every one of them is recomputed:
-
-      * the attestation's ONLY problem is that one stale pin, on that one path;
-      * the transfer is actually, correctly in place (A1 and A2 both clean) -- so the divergence
-        the pin reports is the approved change and not something else wearing its clothes.
-
-    A second attestation problem, or a transfer that does not verify, is a hard failure. A guard
-    that downgrades on a substring and nothing else is how a cage goes quiet.
-    """
-    rc, text = run_attestation()
-    if rc == 0:
-        return
-    only_the_expected_pin = attestation_failure_is_the_expected_pin(text)
-    if only_the_expected_pin and transfer_in_place:
-        advisories.append(
-            'A8 the owner\'s approval pins MASTER_BACKLOG.md at blob %s, and executing the '
-            'transfer they approved changed that blob. This is the approved change, recomputed: '
-            'section 2 IS generator output and the store covers the pinned baseline in full. '
-            'It is NOT something this order may close. OWNER DECISION OWED -- append a line to '
-            '_triage/factory_os/s2a_attestations.jsonl with "stale_pin_acknowledged": true and a '
-            'stale_pin_acknowledgement naming {path, pinned_blob, current_blob}, or re-decide. '
-            'Until then check_s2a_attestation.py exits 1 by design.' % gen.BASELINE_BLOB[:12])
-        return
-    problems.append('A8 the attested bundle no longer verifies (check_s2a_attestation.py exit '
-                    '%s), and NOT only because of the expected stale pin. The approval that '
-                    'authorized this transfer binds six files; if one changed, the approval is '
-                    'void and the owner must decide again -- this order does not get to decide '
-                    'that.\n%s' % (rc, text[-800:]))
+    if p.returncode != 0:
+        problems.append('A8 the attested bundle no longer verifies (check_s2a_attestation.py exit '
+                        '%s). The approval that authorized this transfer binds six files; if one '
+                        'changed, the approval is void and the owner must decide again -- this '
+                        'order does not get to decide that.\n%s'
+                        % (p.returncode, p.stdout.decode('utf-8', 'replace')[-800:]))
 
 
 # --------------------------------------------------------------------------- driver
@@ -461,59 +423,18 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
 
     section, records = load_store_text(coverage_text)
     problems = []
-    advisories = []
     info['body_is_generated'] = a1_banner_and_body(backlog_text, section, records, problems)
     info['baseline'] = a2_covers_the_hand_table(section, records, problems)
     a3_closed_shape_and_no_verdict(section, records, problems, allowed_status)
     if not skip_a8:
-        # "transfer in place" is the A1+A2 verdict, not a separate belief: the exemption below is
-        # only admissible when the change the stale pin reports is provably the approved one.
-        a8_attestation_still_valid(problems, advisories,
-                                   transfer_in_place=(info['body_is_generated'] and not problems))
+        a8_attestation_still_valid(problems)
     info['records'] = len(records)
     info['cells'] = sum(len(r.get('cells') or []) for r in records)
-    info['advisories'] = advisories
     return problems, info
-
-
-def explain_attestation(out):
-    """`--explain-attestation`: exit 0 iff the attestation's failure is the EXPECTED one.
-
-    run_s2a_gate.py defers to this instead of re-deriving the reasoning, so the exemption exists in
-    exactly one place with exactly one set of fixtures. A downgrade rule implemented twice is a
-    downgrade rule that will disagree with itself.
-    """
-    rc, text = run_attestation()
-    if rc == 0:
-        out.write('[explain] the attestation log verifies; nothing to explain.\n')
-        return 1  # nothing was downgraded -- the caller must not treat this as an exemption
-    if not attestation_failure_is_the_expected_pin(text):
-        out.write('[explain] the attestation fails for something OTHER than the expected '
-                  'post-transfer pin. Not exempt.\n')
-        return 1
-    try:
-        problems, info = check(skip_a8=True)
-    except ToolFailure as exc:
-        out.write('[explain] cannot verify the transfer: %s\n' % exc)
-        return 2
-    if problems or not info['body_is_generated']:
-        out.write('[explain] the stale pin is the expected line, but the transfer does NOT verify '
-                  '(%s problem(s), section 2 generated=%s). Not exempt.\n'
-                  % (len(problems), info['body_is_generated']))
-        return 1
-    out.write('[explain] EXPECTED: the owner approved moving section 2, and executing that approval\n'
-              '          changed the blob their approval pins. Recomputed: section 2 IS generator\n'
-              '          output and the store covers the pinned baseline in full.\n'
-              '          OWNER DECISION OWED -- see _triage/USER_TASKS_2026-07-31.md.\n')
-    return 0
 
 
 def main(argv):
     out = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', newline='\n')
-    if '--explain-attestation' in argv:
-        rc = explain_attestation(out)
-        out.flush()
-        return rc
     worktree = '--worktree' in argv
     out.write('=== ORDER-610 E3: the S2 Coverage transfer acceptance ===\n')
     try:
@@ -530,8 +451,6 @@ def main(argv):
     out.write('store        : %s rows / %s cells\n' % (info['records'], info['cells']))
     out.write('section 2    : %s\n' % ('GENERATED output' if info['body_is_generated']
                                        else 'still hand-written'))
-    for a in info.get('advisories') or []:
-        out.write('\n[OWNER DECISION OWED] %s\n' % a)
     if problems:
         out.write('\n%s PROBLEM(S):\n' % len(problems))
         for p in problems:
@@ -540,9 +459,6 @@ def main(argv):
         out.flush()
         return 1
     out.write('\n=== ACCEPTED: both owner conditions hold, and nothing was lost in the move ===\n')
-    if info.get('advisories'):
-        out.write('    ...with %s owner decision(s) owed, printed above. Accepted is not closed.\n'
-                  % len(info['advisories']))
     out.flush()
     return 0
 

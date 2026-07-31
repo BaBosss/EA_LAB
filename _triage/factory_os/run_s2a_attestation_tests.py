@@ -189,6 +189,80 @@ def main():
     if not ok:
         print('        -> %s' % problems)
         bad += 1
+    # ---- ORDER-613 D1: the stale-pin rule judges the CURRENT record, not every historical one ----
+    # Why this exists: A6 used to run for every row, while this artifact's own header promises the
+    # latest line per owner wins. Because the log is append-only, an earlier row could never acquire
+    # the acknowledgement it was being failed for, so one stale pin made that owner's records
+    # permanently unrepairable -- the artifact could not be returned to green by ANY legal action.
+    ack_ok = {'path': 'MASTER_BACKLOG.md', 'pinned_blob': pinned, 'current_blob': live}
+    _, problems = run_with([good(decided_at='2026-07-30T10:00'),                     # no ack
+                            good(decided_at='2026-07-31T04:30',
+                                 stale_pin_acknowledged=True,
+                                 stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+    ok = not problems
+    print('  [%s] D1 a SUPERSEDED row with no acknowledgement does not block the current one'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
+    # ...and the narrowing must not become a loophole: what is demanded of the CURRENT row is
+    # unchanged. Same two rows, acknowledgement on the OLD one instead of the new one.
+    _, problems = run_with([good(decided_at='2026-07-30T10:00',
+                                 stale_pin_acknowledged=True,
+                                 stale_pin_acknowledgement=ack_ok),
+                            good(decided_at='2026-07-31T04:30')], [STALE_NOTE])
+    ok = 'A6' in problems   # run_with joins problems into one string
+    print('  [%s] D1 the CURRENT row still must acknowledge -- an old ack does not carry forward'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
+    # A2 had the SAME defect A6 did, and narrowing only A6 was not enough -- found by running it:
+    # lines made under a previous bundle kept the log red, and append-only means they can never be
+    # corrected. So the artifact could not survive its own evolution: any edit to a bundled file
+    # reddened it permanently. Superseded records are history.
+    _, problems = run_with([good(bundle_sha256='a' * 64, decided_at='2026-07-30T10:00'),
+                            good(decided_at='2026-07-31T07:55',
+                                 stale_pin_acknowledged=True,
+                                 stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+    ok = not problems
+    print('  [%s] D1 a SUPERSEDED row bound to an OLD bundle does not block the current one'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
+    # ---- ORDER-613 D2: a record may declare the state its approved action PRODUCES -------------
+    _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': live},
+                                 stale_pin_acknowledged=True,
+                                 stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+    ok = not problems
+    print('  [%s] D2 CONTROL an expected_post_state that matches HEAD is accepted'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
+    _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': 'f' * 40},
+                                 stale_pin_acknowledged=True,
+                                 stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+    ok = 'A8' in problems and 'did not happen' in problems
+    print('  [%s] D2 an expected_post_state naming a state that never arrived is REFUSED'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
+    _, problems = run_with([good(expected_post_state='MASTER_BACKLOG.md')], [STALE_NOTE])
+    ok = 'A8' in problems and 'not an object' in problems
+    print('  [%s] D2 an expected_post_state that is a bare string is REFUSED'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % problems)
+        bad += 1
+
     current, problems = run_with([good(decision='REFUSED', reason='not yet',
                                        decided_at='2026-07-30T10:00'),
                                   good(decided_at='2026-07-31T00:30')])
