@@ -1,4 +1,4 @@
-# Review brief — round 2: the response to your first audit
+﻿# Review brief — round 2: the response to your first audit
 
 Code-quality and data-conformance review of validation scripts and the data files they validate, all
 inside this repository. No external system, no third party, no security dimension. The recurring
@@ -148,6 +148,24 @@ ORDER-614 proposes binding a machine-readable **contract declaration** instead o
 ---
 
 ## 5. Confirm the negatives
+
+> 🔴 **CORRECTED 2026-07-31 after the round-2 audit returned this, appended rather than rewritten
+> so the document the auditor actually read stays legible.**
+>
+> **The scope line and one negative below were both wrong, and the reason is worth more than the
+> correction.** This brief said the new range was 12 commits and the session 19. It is **14 and 21**:
+> the brief's own commit lands inside the range it describes, and `f2cc7ca1` **`[auto] daily monitor
+> snapshot`** committed at 07:37 **while this session was running**.
+>
+> That automated commit touched `portfolio/LIVE_DASHBOARD.html`, `portfolio/control_room_snapshot.json`
+> and six `portfolio/live_deals/*.csv` files. So *"No Live path touched"* is **false for the range**,
+> though it remains true for every commit authored by this work. The honest form is:
+> **no live path was touched by the commits of this change; the range also contains a scheduled
+> monitor snapshot that this session neither made nor reviewed.**
+>
+> **The lesson is not the wording.** A negative asserted over a *commit range* is a claim about
+> everything that lands in it, including writers that are not you. This repository has a scheduled
+> job that commits to it, and nothing in the session ledger records that lane.
 
 - No `.set`, `.mq5`, `.mqh` or `.ex5` touched in the whole 19-commit range.
 - No Demo / Live / VPS / `_vps_deploy` path touched. No Telegram message. No token.

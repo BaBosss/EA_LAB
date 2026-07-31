@@ -103,6 +103,46 @@
 
 ---
 
+## ORDER-615 — [factory/governance] Codex round 2: 13 findings, 6 reproduced by hand before acceptance — `OPEN` · ⛔ **re-opens `ORDER-610` and `ORDER-613`; both were closed on evidence this refutes** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Round 2 is sharper than round 1.** Every command in the brief passed — S2a 7/7 · schema 89/89 · fast cages 12/12 · `check_state` CLEAN — **and every attack below still got through.** That is the whole thesis of the brief working against the person who wrote it.
+>
+> **Reproduced here before accepting** (probe output in the commit that opens this order): duplicate-cell bypass **0 problems** · a verdict word as `status` **0 problems** · `null` vs missing key **0 problems** · a non-object row **crashes with `TypeError`**. The others are confirmed by reading the code I wrote.
+
+| # | finding | sev | verified |
+|---|---|---|---|
+| **S1** | **A7 reads the WORKING TREE, not the staged bytes** (`check_s2a_attestation.py:121`). Stage a deletion of line 2, restore the working copy, and append-only reports **0 problems** ⇒ history can be rewritten by a commit while the pre-commit gate stays green. **This is ORDER-545's defect inside the guard I built to prevent exactly this.** | **P0** | by inspection — I wrote `working = io.open(path,'rb')` |
+| **S2** | **duplicate cell defeats full-dict equality** (`check_coverage_transfer.py:233`): `{(cell, token): c}` lets a later duplicate overwrite an earlier one, so a **bad duplicate placed first** is invisible while the real cell satisfies A2 | **P0** | ✅ reproduced, 0 problems |
+| **Spec1** | **a verdict still reaches the store** (`:322`): A3 checks key *names*, never *values* — `{"cell":"EXTRA","status":"DEAD-STRUCTURAL"}` passes. **Directly contradicts ORDER-610 A3**, the criterion I claimed was closed | **P0** | ✅ reproduced, 0 problems |
+| **Spec2** | 🔴 **`ORDER-614`'s design is gameable**: change A2's predicate to `if False`, keep the declaration and the `append` site ⇒ behaviour changes materially, digest does not. **The judgement about "did semantics change" lands back on the author** — the exact thing the order forbids. Codex's alternative is better and is adopted as the new D-line: **move the implementation OUT of the bundle and bind a versioned policy + canonical conformance vectors.** Full semantic equivalence is unachievable without binding the implementation or a complete executable spec, and saying so is more honest than pretending otherwise | **BLOCKER** | design-level |
+| **S3** | **D2 can bind an unrelated file** (`:204`): `expected_post_state.path` is never tied to `current_owner` or to the acknowledgement, so a record for `MASTER_BACKLOG.md` can bind `AGENT_TASKBOARD.md` and pass | **P1** | by inspection |
+| **Spec3** | D2 also accepts `{path:"NO_SUCH_PATH", blob:"MISSING"}` and a **directory path with a tree OID** ⇒ it does not enforce "changed into the approved state" at all | **MAJOR** | by inspection |
+| **Spec4** | **S1's fix only refuses MIXED sources** (`:410`): `worktree/worktree` — both paths absent from the index — passes, so the checker still approves bytes the commit does not contain | **MAJOR** | by inspection |
+| **Spec5** | **deleting A4 was not free**: A1 renders **once**, so a nondeterministic renderer passes. ORDER-610 A4 required two byte-identical renders and I removed the criterion instead of satisfying it — **the same "amend my own acceptance" pattern round 1 caught** | **MAJOR** | by inspection |
+| **S4** | **`says=[{"bogus": null}]` defeats `spec_is_discriminating`**: an unknown key with a `null` value passes the "names where or what" test and then matches an unrelated ajv error via `params.get(k) != v` → `None != None` is False | **P1** | by inspection |
+| **Spec6** | full-dict equality uses `.get()`, so **`null` and a missing key compare equal** — reviewed evidence can be altered and still called identical | **MODERATE** | ✅ reproduced |
+| **Spec7** | **B4 "minimal pair" is prose**: `entity_coverage` counts positives and negatives separately and never checks they differ by one delta | **MODERATE** | by inspection |
+| **Spec8** | a JSON line that is not an object (`"string-row"`) **crashes** `load_records` with `TypeError` instead of the promised conformance exit 1 | **MODERATE** | ✅ reproduced |
+| **Spec9** | when the in-force row fails A2, `current` still reports the **superseded** row as the current decision — a diagnostic that points a reader at the wrong record | **MODERATE** | by inspection |
+| **S5** | `strip_invisible` is insufficient: **Markdown reference definitions** (tested by Codex: 0 problems), `<template>`, `hidden`/`display:none`, HTML attributes and image `alt` all keep the phrase in source and out of the rendered page | **confirmed gap** | Codex tested |
+
+> ### 🔴 And the correction that matters most, because it is about my own honesty
+> The round-2 brief asserted *"No Live path touched"* over a **commit range**. **False.** `f2cc7ca1` **`[auto] daily monitor snapshot`** committed at **07:37 while this session was running** and touched `portfolio/LIVE_DASHBOARD.html`, `control_room_snapshot.json` and six `live_deals/*.csv`. True form: *no live path was touched **by the commits of this change***; the range also contains a scheduled snapshot this session neither made nor reviewed.
+> **The lesson is not the wording.** A negative asserted over a *range* is a claim about every writer that lands in it — and **this repo has a scheduled committer that no session ledger row records.** Scope counts were wrong for the same reason (14/21, not 12/19: the brief's own commit lands inside the range it describes).
+
+### Acceptance
+
+Each finding needs a fixture observed RED first. Three shape the rest:
+- **F1 (S1)** A7 must judge **staged** bytes. Negative: stage a deletion while the working copy is intact ⇒ RED.
+- **F2 (S2+Spec1+Spec6)** cells compare as an **ordered list against the reviewed evidence**, not a dict keyed by identity; `status` gets a **closed vocabulary**; `null` and absent are **distinguished**.
+- **F3 (Spec2)** rewrite `ORDER-614` to Codex's design before any of it is built.
+
+### ห้าม
+- ❌ Do not close `ORDER-610`/`ORDER-613` again until F1–F3 land — they were closed on evidence this refutes.
+- ❌ Do not weaken a criterion to make a fixture pass. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-614 — [factory/governance] Stop charging the owner a signature for every bug fix — bind the CONTRACT, not the checker's bytes — `OPEN` · ⛔ **the last signature it will ever cost is the one that lands it** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Owner directive 2026-07-31, verbatim:** *"ยืนยัน ใช่ไม่อยากคอยยืนยันมันเสียเวลา แก้เลย"* — confirm, and **fix the repeated signing itself**.
@@ -143,7 +183,7 @@ The checker publishes a machine-readable **contract declaration**: one entry per
 
 ---
 
-## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-613 — [factory/governance] Option B: make an approval survive the change it approves — and close the Codex audit findings — `RE-OPENED by Codex round 2 — A7/D2 defeated; see ORDER-615` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 07:5x — **D1/D2/D3 LANDED. The root defect is fixed and the workaround is deleted.**
 > **D1** the stale-pin rule judges the row **in force**, per the header's own promise · **D2** `expected_post_state` lets a record say *"the pinned bytes changed **into** the state this record approved"*, recomputed · **D3** the A8 downgrade and the gate's advisory branch are **deleted** — A8 is a plain hard check again.
@@ -337,7 +377,7 @@ One commit; `git revert`. The suite is additive — the 35 existing cases are un
 
 ---
 
-## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `DONE — AWAITING CONSOLIDATED CODEX AUDIT` (**A8 now passes AS ORIGINALLY WRITTEN**) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-610 — [factory/S2] Execute the Coverage transfer — `MASTER_BACKLOG.md` §2 → `factory/coverage.jsonl`, under the owner's two conditions — `RE-OPENED by Codex round 2 — A3 and A2 are refuted; see ORDER-615` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 07:5x — **RE-CLOSED. `ORDER-613` D1/D2/D3 landed, and A8 passes `exit 0` with NO downgrade in the path.**
 > The owner re-recorded against bundle `fa6bab35`; `check_s2a_attestation.py` **exit 0** · S2a gate **all 7 steps green, zero advisories** · `check_coverage_transfer.py` **ACCEPTED with no owner decision owed**. The amendment Codex objected to is **deleted**, not tolerated — the order is closed against the acceptance it pre-registered, which is the only way it was ever allowed to close.
