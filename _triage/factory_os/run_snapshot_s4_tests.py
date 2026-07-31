@@ -77,6 +77,17 @@ def scaffold(root, sources, recon=None, stale_bar=30):
     }
 
 
+def real_scaffold(root, sources, recon=None, stale_bar=30):
+    """A scaffold valid against the REAL repo root, whose canonical mandatory-source registry is
+    pinned (F2). Fixtures that pass root=None -- because they want reconcile() to read the real
+    boards -- must satisfy that registry, so the names go in here rather than being repeated at
+    every call site."""
+    inp = scaffold(root, sources, recon=recon, stale_bar=stale_bar)
+    inp['meta']['mandatory_sources'] = sorted(
+        set(inp['meta']['mandatory_sources']) | set(sb.MANDATORY_SOURCE_PATHS))
+    return inp
+
+
 def row(name, path, mandatory=True, **claims):
     r = {'name': name, 'path': path, 'mandatory': mandatory,
          'read_ok': None, 'sha256': None, 'mtime': None, 'age_hours': None, 'fresh': None}
@@ -285,19 +296,19 @@ def main():
         # were authenticated and the arithmetic was not, and the arithmetic is the half that says
         # the work is finished.
         refuses('C2c NEG an all-zero reconciliation claim is REFUSED against the real boards',
-                lambda: sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]),
+                lambda: sb.build_document(real_scaffold(root, [row('srcA', 'srcA.txt')]),
                                           root=None, schema_validator=gate,
                                           reconciler=sb.reconcile),
                 'does not match what the boards actually reconcile to')
         # SPECIFICITY: a deriver that refused every claim would pass the negative and be useless.
         truth = sb.reconcile()
-        agreeing = sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')], recon=truth),
+        agreeing = sb.build_document(real_scaffold(root, [row('srcA', 'srcA.txt')], recon=truth),
                                      root=None, schema_validator=gate, reconciler=sb.reconcile)
         check('C2c SPECIFICITY a claim that AGREES with the boards is accepted',
               agreeing['meta']['reconciliation'] == truth)
         # An input that CLAIMS NOTHING gets the derived counts filled in -- which is what the
         # PowerShell writer now does, so it cannot claim at all.
-        no_claim = scaffold(root, [row('srcA', 'srcA.txt')])
+        no_claim = real_scaffold(root, [row('srcA', 'srcA.txt')])
         del no_claim['meta']['reconciliation']
         filled = sb.build_document(no_claim, root=None, schema_validator=gate,
                                    reconciler=sb.reconcile)
@@ -319,6 +330,61 @@ def main():
                   'a lambda was accepted')
         except TypeError:
             check('C2c NEG an arbitrary callable is refused, like the schema gate', True)
+
+        print("\n--- FABLE REVIEW (round 5) ---")
+        # F2: S6 pinned name->path and left the builder choosing WHICH NAMES COUNT.
+        # Driven against the REAL repo root, because that is the only tree the canonical set
+        # describes -- and because scoping it there was the repair's own second defect.
+        shrunk = scaffold(root, [row('live_dashboard', 'portfolio/LIVE_DASHBOARD.html')])
+        shrunk['meta']['mandatory_sources'] = ['live_dashboard']
+        refuses('AUDIT F2 a builder input that omits a canonical mandatory source is REFUSED '
+                '(probed: shrinking the registry to one name BUILT CLEAN, deleting two of three '
+                'fleet sensors with no reason code)',
+                lambda: sb.build_document(shrunk, root=None, schema_validator=gate,
+                                          reconciler=NO_DERIVE),
+                'meta.mandatory_sources omits')
+        check('AUDIT F2 SPECIFICITY the constraint does NOT fire for a different root -- the '
+              'canonical names describe THIS repo, and the first version of this repair broke '
+              'every synthetic fixture in the suite',
+              sb.build_document(scaffold(root, [row('srcA', 'srcA.txt')]), root=root,
+                                schema_validator=gate, reconciler=NO_DERIVE)['entity']
+              == 'ControlRoomSnapshotV5')
+        full = scaffold(root, [row('live_dashboard', 'portfolio/LIVE_DASHBOARD.html')])
+        full['meta']['mandatory_sources'] = sorted(sb.MANDATORY_SOURCE_PATHS)
+        ok_doc = sb.build_document(full, root=None, schema_validator=gate, reconciler=NO_DERIVE)
+        check('AUDIT F2 SPECIFICITY a registry that CONTAINS them all still builds, and the '
+              'missing ones are reported as MISSING rather than vanishing',
+              sorted(set(x['detail'] for x in ok_doc['verdict']['reasons']
+                         if x['code'] == 'MANDATORY_SOURCE_MISSING'))
+              == sorted(set(sb.MANDATORY_SOURCE_PATHS) - {'live_dashboard'}),
+              json.dumps(ok_doc['verdict']['reasons']))
+
+        # F3: git_head was the last typed field, and it is hashed into build_id.
+        lie = scaffold(root, [row('live_dashboard', 'portfolio/LIVE_DASHBOARD.html')])
+        lie['meta']['mandatory_sources'] = sorted(sb.MANDATORY_SOURCE_PATHS)
+        lie['meta']['git_head'] = 'deadbeef'
+        refuses('AUDIT F3 a fabricated git_head is REFUSED (probed: accepted, persisted, and '
+                'hashed into build_id, so "rebuilt" and "changed" became indistinguishable)',
+                lambda: sb.build_document(lie, root=None, schema_validator=gate,
+                                          reconciler=NO_DERIVE),
+                'meta.git_head claims')
+        nogit = tempfile.mkdtemp(prefix='s4nogit_')
+        try:
+            claim = scaffold(nogit, [row('srcA', 'srcA.txt')])
+            claim['meta']['mandatory_sources'] = ['srcA']
+            claim['meta']['git_head'] = 'abc1234'
+            refuses('AUDIT F3 a git_head claim that CANNOT be checked is refused, not trusted',
+                    lambda: sb.build_document(claim, root=nogit, schema_validator=gate,
+                                              reconciler=NO_DERIVE),
+                    'cannot be checked')
+            silent = scaffold(nogit, [row('srcA', 'srcA.txt')])
+            silent['meta']['mandatory_sources'] = ['srcA']
+            built = sb.build_document(silent, root=nogit, schema_validator=gate,
+                                      reconciler=NO_DERIVE)
+            check('AUDIT F3 SPECIFICITY an input that CLAIMS no git_head is fine outside a repo',
+                  built['meta'].get('git_head') in (None, ''), repr(built['meta'].get('git_head')))
+        finally:
+            shutil.rmtree(nogit, ignore_errors=True)
 
         print("\n--- BLIND AUDIT ROUND 4 ---")
         import inspect as _i

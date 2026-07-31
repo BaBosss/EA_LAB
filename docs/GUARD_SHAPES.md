@@ -4,8 +4,10 @@
 > writing or closing a guard** · the mechanical half is `_triage/factory_os/run_guard_shape_lint.py`
 
 Two blind audits produced **24 findings across three slices**. They are not 24 different mistakes.
-Sorted by shape they are **four**, each repeated four or more times, by the same author, often
-inside the file written to prevent the previous instance.
+Sorted by shape they were **four**, each repeated four or more times, by the same author, often
+inside the file written to prevent the previous instance. A **fifth** was named on 2026-07-31 after
+two more audit rounds -- and its instances are not in the code under review, they are in the
+repairs. See shape 5.
 
 Read this before writing a guard, and again before closing the Order that contains it.
 
@@ -72,6 +74,43 @@ Read this before writing a guard, and again before closing the Order that contai
 
 ---
 
+## Shape 5 — the repair is graded by the finding it closes
+
+Named 2026-07-31 by an independent review, from three instances **in this repo's own repairs**
+rather than in the code being repaired. Shapes 1–4 describe how a CHECK reads its subject wrong.
+This one describes how a REPAIR gets accepted wrong.
+
+A repair ships because the counter-example that demanded it stops firing. But the repair was
+written *staring at* that counter-example, so it is the one test it can hardly fail — and a
+counter-example is a **point** while the invariant it violated is a **region**. Meanwhile the
+repair is NEW CODE: new reads, new branches, new parsers, entering production carrying the trust
+of the finding instead of evidence of its own.
+
+| instance | sub-form |
+|---|---|
+| the reader repair hashed the file, then RE-OPENED it to parse | **carries the class forward.** The counter-example pinned a timing; the invariant was "the bytes handed back are the bytes verified". A two-read fix for a two-read defect. |
+| the UNBOUND note fired on every legacy call site | **collateral outside the example's slice.** The counter-example exercised one input shape; the repair changed behaviour for all of them. Caught only because a specificity assertion already existed. |
+| a header-driven parser of a headerless CSV returned 0 rows | **the mechanism never engages, and the acceptance test cannot tell.** Zero rows ⇒ everything unknown ⇒ unknown is not optimizable ⇒ the attack goes green *because* the repair is broken. Fail-closed and broken point the same way. |
+| `MANDATORY_SOURCE_PATHS` pinned name→path and not the name SET | pinned the counter-example's AXIS, not the invariant. A builder could still delete two of three sensors and build `reconciliation_clear: true`. |
+| the LOCKED repair tested `'locked_value' not in rec` | its own refusal text is about the VALUE; `locked_value: null` walked through the check written to stop it. Shape 2, recreated inside the repair for shape 2. |
+
+**Why the checklist missed it:** the pre-flight triggers on *"writing or closing a guard"*. A repair
+does not feel like writing a guard — it feels like closing a finding — so repairs skipped the
+discipline the findings had just paid for.
+
+**Ask:** *is the acceptance test one the repair was written staring at? · restate the INVARIANT —
+does any assertion check the region, or only replay the point? · what does the repair do to inputs
+the counter-example never touches? · has the new mechanism been seen green FOR ITS OWN REASON — is
+there an assertion that fails if the new code is inert? · **a repair to a guard IS writing a guard:
+run this pre-flight on it.***
+
+**Mechanical half, if one is wanted:** a fix commit adds TWO assertions — one that fails on the
+pre-fix code for the defect's own reason (the attack), and one that fails if the repair's new
+mechanism is inert or its untouched surface moved (the engagement/specificity pair).
+`run_registry_tests.ps1`'s A + A2 pair is exactly this, written after the fact.
+
+---
+
 ## Before closing any Order that contains a guard
 
 - [ ] every read declares its snapshot (`run_guard_shape_lint.py` proves it)
@@ -81,5 +120,7 @@ Read this before writing a guard, and again before closing the Order that contai
 - [ ] every number in the write-up came from a command in the same session
 - [ ] every negative names its scope: *my commits*, not *the range*
 - [ ] the guard's own limits are stated **in the guard**, not implied
+- [ ] **if this is a REPAIR:** the new mechanism has an assertion that fails when it is inert, and
+      the untouched surface has one that fails when it moves (shape 5)
 
 <sub>**Why the checklist is here and not in a doc nobody opens:** `strip_invisible` was repaired against the seven hiding techniques an auditor named, and **two were still open** afterwards — found by probing all seven rather than trusting the repair. **Fixing what an audit names is not the same as fixing what it found.** The same applies to this list: it is the shapes seen so far, not the shapes that exist.</sub>

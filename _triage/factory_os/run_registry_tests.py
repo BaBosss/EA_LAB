@@ -460,6 +460,60 @@ def main():
         finally:
             shutil.rmtree(fake, ignore_errors=True)
 
+        print("\n--- FABLE REVIEW (round 5) ---")
+        # F1: the resolver keyed on the exact string while the consumer joined on the base name,
+        # so a TAGGED binding was invisible -- and the resolver's own docstring instructs tagged
+        # names for multi-build parameters. The two constraints were jointly unsatisfiable.
+        tag = seed(tempfile.mkdtemp(prefix='s5tag_'),
+                   parameter_bindings=[binding(param='SplitMode[BUILD_B]', role='LOCKED',
+                                               surface='HIDDEN', locked_value=1)])
+        try:
+            direct = reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=tag)
+            joined = reg.resolve('B14-H01-r1', 'SplitMode', root=tag)
+            check('AUDIT F1 a BARE request joins to a TAGGED binding (probed: it returned UNBOUND, '
+                  'silently degrading a LOCKED binding to a note)',
+                  joined['source'] == 'BOUND' and joined['role'] == 'LOCKED', json.dumps(joined))
+            check('AUDIT F1 and the exact request still works, so the join added a route rather '
+                  'than replacing one', direct['role'] == 'LOCKED')
+            check('AUDIT F1 resolve_all keys on the BARE name, which is what the consumer looks up',
+                  list(reg.resolve_all('B14-H01-r1', root=tag)) == ['SplitMode'],
+                  str(list(reg.resolve_all('B14-H01-r1', root=tag))))
+        finally:
+            shutil.rmtree(tag, ignore_errors=True)
+        # ...and the join must REFUSE ambiguity rather than pick one.
+        two = seed(tempfile.mkdtemp(prefix='s5two_'),
+                   parameter_bindings=[binding(param='SplitMode[BUILD_A]'),
+                                       binding(param='SplitMode[BUILD_B]', role='LOCKED',
+                                               surface='HIDDEN', locked_value=1)])
+        try:
+            refuses('AUDIT F1 NEG two tagged bindings sharing a bare name make a BARE request '
+                    'AMBIGUOUS, not majority-resolved',
+                    lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=two),
+                    'a store with two answers cannot be a resolver')
+            check('AUDIT F1 SPECIFICITY and each EXACT name still resolves to its own row',
+                  reg.resolve('B14-H01-r1', 'SplitMode[BUILD_A]', root=two)['role'] == 'TUNABLE'
+                  and reg.resolve('B14-H01-r1', 'SplitMode[BUILD_B]', root=two)['role'] == 'LOCKED')
+        finally:
+            shutil.rmtree(two, ignore_errors=True)
+        # F4: LOCKED must carry a VALUE, not just the key.
+        nul = seed(tempfile.mkdtemp(prefix='s5nul_'),
+                   parameter_bindings=[binding(param='Z', role='LOCKED', surface='HIDDEN',
+                                               locked_value=None)])
+        try:
+            refuses('AUDIT F4 role=LOCKED with locked_value=NULL is REFUSED (probed: the check '
+                    'tested presence while its own message is about the value)',
+                    lambda: reg.resolve('B14-H01-r1', 'Z', root=nul), 'is not a lock')
+        finally:
+            shutil.rmtree(nul, ignore_errors=True)
+        zero = seed(tempfile.mkdtemp(prefix='s5zero_'),
+                    parameter_bindings=[binding(param='Z', role='LOCKED', surface='HIDDEN',
+                                                locked_value=0)])
+        try:
+            check('AUDIT F4 SPECIFICITY locked_value=0 is still a real lock, not falsy-rejected',
+                  reg.resolve('B14-H01-r1', 'Z', root=zero)['locked_value'] == 0)
+        finally:
+            shutil.rmtree(zero, ignore_errors=True)
+
         print("\n--- BLIND AUDIT ROUND 4 ---")
         # S7: the resolver must combine BOTH layers. Its docstring said it did; it did not.
         both = seed(tempfile.mkdtemp(prefix='s5comb_'),

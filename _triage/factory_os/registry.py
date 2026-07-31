@@ -201,6 +201,15 @@ def _classifications(root=None):
     return out
 
 
+def _bare(parameter):
+    """Strip a trailing build tag: `StackMode[LAB_ENTRY_16]` -> `StackMode`. ONE definition.
+
+    Used by the binding join AND by classification_of. Two spellings of "the same parameter" is
+    exactly the drift that made a tagged binding invisible to its consumer.
+    """
+    return re.sub(r'\[[^\]]*\]$', '', str(parameter)).strip()
+
+
 def classification_of(parameter, root=None):
     """-> (classification, why) for one parameter name. `classification` is None when unresolvable.
 
@@ -214,9 +223,9 @@ def classification_of(parameter, root=None):
     table = _classifications(root)
     if parameter in table:
         return table[parameter], 'exact'
-    bare = re.sub(r'\[[^\]]*\]$', '', str(parameter)).strip()
+    bare = _bare(parameter)
     matches = dict((k, v) for k, v in table.items()
-                   if re.sub(r'\[[^\]]*\]$', '', k).strip() == bare)
+                   if _bare(k) == bare)
     if not matches:
         return None, 'not in the registry'
     values = set(matches.values())
@@ -348,13 +357,38 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     required to be complete, which no entity declares and no design row asks for -- so it is an
     open question, not a rule this module gets to invent.
     """
+    def _lookup(idx):
+        # EXACT first, then a TAG-AWARE join. F1, found by an independent review and reproduced:
+        # the resolver keyed bindings on the exact `parameter` string while optimize_guard joined
+        # on Split-NameTag's BASE name -- so a binding written as `StackMode[LAB_ENTRY_16]` was
+        # invisible to the only consumer, silently degrading a LOCKED binding to an UNBOUND note.
+        # The two constraints were JOINTLY UNSATISFIABLE for a multi-build parameter: bare -> this
+        # module calls the classification AMBIGUOUS; tagged -> the consumer never sees it.
+        #
+        # The join lives HERE, not in the consumer, for the reason the whole module exists: a
+        # second implementation of "which binding does this parameter mean" is a second resolver.
+        # Ambiguity is refused rather than resolved by majority -- same rule as classification_of.
+        hit = idx.get((hypothesis_revision, parameter))
+        if hit is not None:
+            return hit
+        want = _bare(parameter)
+        near = [v for (rev, p), v in idx.items()
+                if rev == hypothesis_revision and _bare(p) == want]
+        if len(near) > 1:
+            _refuse('%d bindings in %r match the parameter %r once build tags are ignored (%s). '
+                    'Refused: a store with two answers cannot be a resolver, and picking one by '
+                    'position is how a LOCKED binding becomes an ALLOW.'
+                    % (len(near), hypothesis_revision, parameter,
+                       ', '.join(sorted(str(v.get('parameter')) for v in near))))
+        return near[0] if near else None
+
     if overlay_root is not None:
-        rec = _overlay_index(root, overlay_root).get((hypothesis_revision, parameter))
+        rec = _lookup(_overlay_index(root, overlay_root))
     else:
         if stores is None:
             stores = load_all(root=root)
         _meta, rows = stores['factory/parameter_bindings.jsonl']
-        rec = _binding_index(rows).get((hypothesis_revision, parameter))
+        rec = _lookup(_binding_index(rows))
     if rec is None:
         return {'parameter': parameter, 'hypothesis_revision': hypothesis_revision,
                 'role': None, 'surface': None, 'classification': None,
@@ -375,8 +409,12 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     # fails safe on it (LOCKED is not optimizable either way), but the generator's whole job is to
     # emit that value as a const, and a const of null is a locked parameter locked to nothing.
     # Re-checked here rather than left to ajv, because the fast path never runs ajv.
-    if role == 'LOCKED' and 'locked_value' not in rec:
-        _refuse('binding for %r in %r is role=LOCKED with no `locked_value`. The schema requires '
+    # `is None`, not `not in`. F4: this tested PRESENCE while its own message is about the VALUE,
+    # so `locked_value: null` walked through the check written to stop exactly that -- shape 2
+    # recreated inside the repair that closed it. Harmless only until the generator exists, whose
+    # whole job is to emit this as a const: a const of null is what the message already predicts.
+    if role == 'LOCKED' and rec.get('locked_value') is None:
+        _refuse('binding for %r in %r is role=LOCKED with no usable `locked_value` (absent or null). The schema requires '
                 'one; this resolver is reached without ajv on the fast path, so it is refused here '
                 'too. A locked parameter with no value to lock to is not a lock.'
                 % (parameter, hypothesis_revision))
@@ -411,15 +449,23 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
 
 def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None):
     """Every binding registered for one revision, keyed by parameter name."""
+    # KEYED ON THE BARE NAME, with the bound (possibly tagged) string preserved inside each
+    # record. F1's other half: resolve() now joins a bare request to a tagged binding, but this map
+    # still handed the consumer the TAGGED key, and optimize_guard looks up Split-NameTag's base
+    # name -- so the tagged binding stayed invisible through the map even after the direct lookup
+    # was fixed. Fixing one of two join sites is fixing where the counter-example pointed.
+    #
+    # Keying by bare name is unambiguous BY CONSTRUCTION: resolve() refuses a revision that carries
+    # two bindings sharing a bare name, so this dict can never silently lose one.
     if overlay_root is not None:
         idx = _overlay_index(root, overlay_root)
-        names = sorted(set(p for (rev, p) in idx if rev == hypothesis_revision))
+        names = sorted(set(_bare(p) for (rev, p) in idx if rev == hypothesis_revision))
         return dict((p, resolve(hypothesis_revision, p, root=root, overlay_root=overlay_root))
                     for p in names)
     if stores is None:
         stores = load_all(root=root)
     _meta, rows = stores['factory/parameter_bindings.jsonl']
-    names = sorted(set(rec.get('parameter') for _n, rec in rows
+    names = sorted(set(_bare(rec.get('parameter')) for _n, rec in rows
                        if rec.get('hypothesis_revision') == hypothesis_revision))
     # `root=root` is NOT optional and was missing. resolve_all delegated to resolve() without it,
     # so the per-parameter answers were computed against the REPO's PARAM_REGISTRY while the rows

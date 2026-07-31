@@ -205,6 +205,32 @@ def derive_source_evidence(doc, root=None, now=None):
     root = REPO_ROOT if root is None else root
     now = datetime.datetime.now() if now is None else now
     meta = doc.get('meta')
+    # F2, found by an independent review and reproduced end to end: S6 stopped the builder choosing
+    # WHICH FILE a logical name means, and left it choosing WHICH NAMES COUNT. A builder input whose
+    # meta.mandatory_sources listed only `live_dashboard` BUILT CLEAN -- deployments_inventory and
+    # attestation_map simply vanished, no MANDATORY_SOURCE_MISSING, and the document then verified
+    # against its own evidence forever after. On a day the boards reconcile that is
+    # reconciliation_clear: true with two of three fleet sensors unconsulted.
+    #
+    # The S6 repair pinned the counter-example's axis (name -> path) instead of the invariant
+    # (the builder does not decide what must be present). Shape 5, in the fix for shape 5.
+    # SCOPED TO THE REAL TREE, and the scoping was itself a shape-5 lesson: the first version of
+    # this check applied to EVERY root and broke every synthetic fixture in the suite on its first
+    # run -- collateral far outside the counter-example's slice, caught only because those fixtures
+    # already existed. MANDATORY_SOURCE_PATHS names THIS repository's three sensors; a caller that
+    # passes a different root has declared a different tree, where those names mean nothing.
+    #
+    # It cannot buy permission: the production path (control_room_snapshot.ps1 -> the CLI with no
+    # root argument) always resolves to REPO_ROOT, so the real snapshot is always constrained.
+    if isinstance(meta, dict) and os.path.normcase(os.path.abspath(root)) ==             os.path.normcase(REPO_ROOT):
+        declared = set(meta.get('mandatory_sources') or [])
+        absent = sorted(set(MANDATORY_SOURCE_PATHS) - declared)
+        if absent:
+            sv._refuse(
+                'meta.mandatory_sources omits %s. The registry of what MUST be present is not '
+                'the builder to shrink: a name missing from it is not reported missing, it is not '
+                'reported at all, and the verdict is computed as though that sensor were never '
+                'expected.' % ', '.join(repr(a) for a in absent))
     if not isinstance(meta, dict) or not isinstance(meta.get('sources'), list):
         sv._refuse('meta.sources is absent or not an array -- there is no evidence to derive')
     for row in meta['sources']:
@@ -348,6 +374,42 @@ def _apply_reconciliation(inp, reconciler, root):
     inp['meta']['reconciliation'] = truth
 
 
+def _apply_git_head(inp, root):
+    """Derive meta.git_head from the tree, refusing a claim that disagrees or cannot be checked.
+
+    F3: `git_head` was the last typed field in a document whose every other fact graduated to
+    derived this slice -- and it is the one that makes `build_id` answer "rebuilt or changed".
+    A fabricated `git_head: "deadbeef"` was accepted, persisted, and hashed into the identity.
+
+    If the root is not a git worktree, the value cannot be checked, so a SUPPLIED one is refused
+    rather than trusted: "I cannot verify this" is not a licence to publish it. An input that
+    claims nothing is fine and simply carries no git_head.
+    """
+    import subprocess
+    base = REPO_ROOT if root is None else root
+    meta = inp.get('meta')
+    if not isinstance(meta, dict):
+        return
+    try:
+        p = subprocess.run(['git', '-C', base, 'rev-parse', '--short', 'HEAD'],
+                           capture_output=True, text=True)
+        derived = p.stdout.strip() if p.returncode == 0 else None
+    except (OSError, ValueError):
+        derived = None
+    claimed = meta.get('git_head')
+    if derived is None:
+        if claimed:
+            sv._refuse('meta.git_head claims %r but %r is not a git worktree this process can '
+                       'query, so the claim cannot be checked. Refused rather than trusted.'
+                       % (claimed, base))
+        return
+    if claimed and claimed != derived:
+        sv._refuse('meta.git_head claims %r but the tree at %r is at %r. Refused: git_head is '
+                   'hashed into build_id, so a typed value makes "rebuilt" and "changed" '
+                   'indistinguishable.' % (claimed, base, derived))
+    meta['git_head'] = derived
+
+
 def build_document(builder_input, root=None, now=None, schema_validator=None,
                    reconciler=_UNSET):
     """SnapshotBuilderInput (dict) -> validated ControlRoomSnapshotV5 (dict). No file I/O.
@@ -375,6 +437,7 @@ def build_document(builder_input, root=None, now=None, schema_validator=None,
     # meta.reconciliation to exist. An input that legitimately claims nothing (which is what the
     # PowerShell writer now emits, so it CANNOT claim) would otherwise be refused for the absence
     # the next line is about to fill.
+    _apply_git_head(inp, root)
     _apply_reconciliation(inp, reconciler, root)
     derive_source_evidence(inp, root=root, now=now)
     inp['meta']['build_id'] = compute_build_id(inp)
