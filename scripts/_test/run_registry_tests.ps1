@@ -34,6 +34,13 @@ if ($RepoRoot -eq '') { $RepoRoot = Split-Path -Parent (Split-Path -Parent (Spli
 
 $script:pass = 0
 $script:fail = 0
+
+# ORDER-670: the tier-verifiable evidence-mode marker. Emitted by running evidence.for_run()
+# in THIS suite's own process chain, so it proves the mode ARRIVED through hook -> tier ->
+# suite -> python -- not what this wrapper believes. If python or the module is broken the
+# marker is absent and the tier fails closed naming this suite.
+$pyExe = Join-Path $RepoRoot 'tools\python312\python.exe'
+& $pyExe -c "import sys, os; sys.path.insert(0, os.path.join(r'$RepoRoot', '_triage', 'factory_os')); import evidence; print(evidence.EvidenceSource.for_run().marker('run_registry_tests.ps1'))"
 function Ok([string]$n, $c) {
     if ($c) { $script:pass++; Write-Host "   [PASS] $n" }
     else { $script:fail++; Write-Host "   [FAIL] $n" }

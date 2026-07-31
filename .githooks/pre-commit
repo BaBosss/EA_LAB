@@ -166,10 +166,14 @@ if [ -n "$cage_staged" ]; then
     cage_file=$(mktemp 2>/dev/null || echo "${TMPDIR:-/tmp}/ea_cage_$$")
     printf '%s\n' "$cage_staged" > "$cage_file"
   fi
+  # ORDER-670: -Hook at BOTH call sites, including this fail-closed else-branch -- hook-ness
+  # is an ARGUMENT precisely because an argument cannot fail to arrive from a caller that is
+  # one file with two lines. Given -Hook the tier sets EA_LAB_EVIDENCE=index for its children
+  # and verifies per-suite markers that the mode actually arrived.
   if [ -n "$cage_file" ] && [ -s "$cage_file" ]; then
-    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -StagedPathsFile "$(cygpath -w "$cage_file" 2>/dev/null || echo "$cage_file")"
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook -StagedPathsFile "$(cygpath -w "$cage_file" 2>/dev/null || echo "$cage_file")"
   else
-    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1
+    "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook
   fi
   rc=$?
   [ -n "$cage_file" ] && rm -f "$cage_file"

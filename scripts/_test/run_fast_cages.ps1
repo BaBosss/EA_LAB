@@ -87,7 +87,23 @@ param(
     # in the pre-commit trigger.
     [string]$StagedPathsFile = '',
     # print the selection and exit, running nothing. For the cage.
-    [switch]$ExportSelection
+    [switch]$ExportSelection,
+    # ORDER-670: THIS RUN IS A PRE-COMMIT HOOK. An ARGUMENT, not an env var, and passed by
+    # .githooks/pre-commit at BOTH call sites including the fail-closed branch -- an argument
+    # cannot fail to arrive from a caller that is one file with two lines. Given -Hook, this
+    # tier is the ONE setter of EA_LAB_EVIDENCE=index for its children, and it verifies the
+    # mode ARRIVED via one structured marker per evidence suite (an ALLOWLIST: missing fails,
+    # wrong fails, duplicated fails; prose containing the word 'worktree' cannot forge one).
+    [switch]$Hook,
+    # test override for the marker allowlist (see $EVIDENCE_SUITES). $null = use the real
+    # list. A single element 'NONE' means "empty list" -- `powershell -File` cannot pass @()
+    # (it binds as a missing argument) and a bare '-' binds as a parameter name, so the
+    # empty case needs a spelled sentinel.
+    [string[]]$EvidenceSuitesOverride = $null,
+    # test-only: force the end-of-run index-movement stamp to mismatch, so the T6 refusal
+    # path can be OBSERVED RED (a detector nobody has seen fire is UNTESTED, per the
+    # VERDICT GATE's own guard rule).
+    [switch]$DebugPretendIndexMoved
 )
 
 $ErrorActionPreference = 'Stop'
@@ -464,7 +480,11 @@ $NOT_A_DEPENDENCY = @(
     # in its per-path-selection specificity case ("an unrelated path does not select this suite").
     # It is the opposite of a dependency -- the case only means anything BECAUSE nothing here
     # guards it. Declaring it as an input would make the assertion false.
-    'docs/PARAM_LINKAGE.md'
+    'docs/PARAM_LINKAGE.md',
+    # ORDER-670: run_guard_trigger_tests.ps1 PART 6 stages this path IN A FIXTURE because it
+    # selects three sub-second suites, making the nested hook-mode tier runs cheap. The suite
+    # never reads or runs the file; it is a selection key, not an input.
+    'scripts/check_taskboard_archive.ps1'
 )
 
 if ($ExportGuards) {
@@ -540,6 +560,33 @@ if ($ExportSelection) {
 
 $selected = Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $StagedPaths
 
+# ORDER-670: suites that have MIGRATED to the evidence reader. Each must emit exactly one
+# `##EVIDENCE-MODE## <suite-name> <mode> ...` line, produced by running evidence.for_run()
+# in the suite's own process chain -- so a marker proves ARRIVAL through hook -> tier ->
+# suite -> python, not what a wrapper believes. Grows one entry per migrated suite
+# (TIER_SNAPSHOT_DESIGN.md section 6); when all 14 are here, the list dissolves into
+# "every selected suite".
+$EVIDENCE_SUITES = @('run_registry_tests.ps1')
+if ($null -ne $EvidenceSuitesOverride) {
+    $EVIDENCE_SUITES = @($EvidenceSuitesOverride | Where-Object { $_ -and $_ -ne 'NONE' })
+}
+
+$hookStampHead = ''
+$hookStampIndexTime = $null
+$hookIndexPath = ''
+if ($Hook) {
+    $env:EA_LAB_EVIDENCE = 'index'
+    Write-Host '[fast-cages] hook mode: EA_LAB_EVIDENCE=index set for every child'
+    # T6: a concurrent writer (this repo has a scheduled committer) can move HEAD or the
+    # index mid-tier, leaving two suites judging two different commits. Detected, not
+    # prevented: stamp both now, compare at the end, refuse on movement.
+    $hookStampHead = (& git -C $RepoRoot rev-parse HEAD 2>$null)
+    $hookIndexPath = if ($env:GIT_INDEX_FILE) { $env:GIT_INDEX_FILE } else { Join-Path $RepoRoot '.git\index' }
+    if (Test-Path -LiteralPath $hookIndexPath) {
+        $hookStampIndexTime = (Get-Item -LiteralPath $hookIndexPath).LastWriteTimeUtc
+    }
+}
+
 $ps = (Get-Process -Id $PID).Path
 if (-not $ps) { $ps = 'powershell.exe' }
 
@@ -587,6 +634,46 @@ foreach ($suite in $selected) {
     }
 }
 
+$evidenceProblems = New-Object System.Collections.Generic.List[string]
+if ($Hook) {
+    # ORDER-670 T4: the marker ALLOWLIST. For each selected evidence suite: exactly one
+    # marker naming THAT suite, carrying mode 'index'. This replaced a blacklist ("fail if
+    # any suite reports worktree") that passed a suite reporting NOTHING -- and suite output
+    # legitimately quotes the word 'worktree' in fixture names, which a structured marker
+    # with the suite's own name cannot collide with.
+    foreach ($esuite in $EVIDENCE_SUITES) {
+        if ($selected -notcontains $esuite) { continue }
+        $r = $results | Where-Object { $_.Suite -eq $esuite } | Select-Object -First 1
+        if ($null -eq $r) { continue }
+        $markers = @(($r.Output -split "`r?`n") | Where-Object {
+            $_ -match ('^##EVIDENCE-MODE## ' + [regex]::Escape($esuite) + ' (\S+)') })
+        if ($markers.Count -eq 0) {
+            $evidenceProblems.Add(('{0} emitted NO evidence-mode marker -- the mode cannot be shown to have arrived, and silence must not pass' -f $esuite))
+        } elseif ($markers.Count -gt 1) {
+            $evidenceProblems.Add(('{0} emitted {1} evidence-mode markers -- exactly one is the contract' -f $esuite, $markers.Count))
+        } elseif ($markers[0] -notmatch ('^##EVIDENCE-MODE## ' + [regex]::Escape($esuite) + ' index\b')) {
+            $evidenceProblems.Add(('{0} reports the WRONG mode in hook mode: {1}' -f $esuite, $markers[0]))
+        }
+    }
+    # ORDER-670 T6: did the ground move under the run?
+    $headNow = (& git -C $RepoRoot rev-parse HEAD 2>$null)
+    if ($hookStampHead -and $headNow -ne $hookStampHead) {
+        $evidenceProblems.Add(('HEAD moved during the tier ({0} -> {1}) -- two suites may have judged two different commits; re-run' -f $hookStampHead, $headNow))
+    }
+    if ($null -ne $hookStampIndexTime -and (Test-Path -LiteralPath $hookIndexPath)) {
+        $indexTimeNow = (Get-Item -LiteralPath $hookIndexPath).LastWriteTimeUtc
+        if ($DebugPretendIndexMoved) { $indexTimeNow = $indexTimeNow.AddSeconds(1) }
+        if ($indexTimeNow -ne $hookStampIndexTime) {
+            $evidenceProblems.Add(('the index ({0}) was rewritten during the tier -- a verdict over a moving index means nothing; re-run' -f $hookIndexPath))
+        }
+    } elseif ($DebugPretendIndexMoved) {
+        $evidenceProblems.Add('the index was rewritten during the tier (debug-forced) -- re-run')
+    }
+    foreach ($p in $evidenceProblems) {
+        Write-Host ('[fast-cages] EVIDENCE FAIL: {0}' -f $p) -ForegroundColor Red
+    }
+}
+
 $failed = @($results | Where-Object { $_.Exit -ne 0 })
 
 # Print the full output of failures only. A hook that prints 60 lines of green on every
@@ -605,4 +692,5 @@ if ($total -gt $BudgetSeconds) {
 }
 
 if ($failed.Count -gt 0) { exit 1 }
+if ($evidenceProblems.Count -gt 0) { exit 1 }
 exit 0

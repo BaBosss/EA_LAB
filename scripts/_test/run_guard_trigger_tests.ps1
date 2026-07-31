@@ -215,6 +215,62 @@ try {
     if ($fail -eq $before) { Good 'per-path selection fails OPEN and every suite stays reachable' }
 
     Write-Host ''
+    # -------------------------------------------------------------------------------------
+    Write-Host ''
+    Write-Host '[guard-trigger] PART 6 -- ORDER-670 evidence-mode plumbing (T4 marker allowlist, T6 moved-index)'
+    # The tier in -Hook mode must (a) fail when a declared evidence suite emits no marker --
+    # the ALLOWLIST that replaced a "fail on the word worktree" blacklist, which passed a
+    # suite that reported nothing -- and (b) refuse when the index moved mid-run. Both
+    # refusals are driven here so they are OBSERVED RED, not merely written; a detector
+    # nobody has seen fire is UNTESTED by the VERDICT GATE's own rule.
+    $before = $fail
+    # A staged path selecting only three sub-second suites, so these nested tier runs are
+    # cheap; none of the three is a declared evidence suite, which is exactly what the
+    # override exists to simulate.
+    $cheapStaged = Join-Path ([System.IO.Path]::GetTempPath()) ("gt670_" + [guid]::NewGuid().ToString('N') + '.txt')
+    Set-Content -LiteralPath $cheapStaged -Encoding ASCII -Value 'scripts/check_taskboard_archive.ps1'
+    try {
+        # T4 ATTACK: declare statusclass an evidence suite; it emits no marker => tier fails, naming it.
+        $o1 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride @('run_statusclass_tests.ps1') 2>&1)
+        if ($LASTEXITCODE -eq 1 -and (($o1 -join "`n") -match 'run_statusclass_tests\.ps1 emitted NO evidence-mode marker')) {
+            Good 'T4 ATTACK a declared evidence suite emitting no marker fails the hook tier, by name'
+        } else {
+            Bad ("T4 ATTACK expected exit 1 naming the silent suite; got exit {0}" -f $LASTEXITCODE)
+        }
+        # T4 SPECIFICITY: with no evidence suite selected, the same run is green -- the
+        # verifier must not fire on suites that never migrated.
+        $o2 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' 2>&1)
+        if ($LASTEXITCODE -eq 0) {
+            Good 'T4 SPECIFICITY the same hook run with no evidence suite in scope is green'
+        } else {
+            Bad ("T4 SPECIFICITY expected exit 0; got {0}: {1}" -f $LASTEXITCODE, (($o2 | Select-Object -Last 3) -join ' | '))
+        }
+        # T6 ATTACK: force the end-stamp mismatch => the tier refuses and says the index moved.
+        $o3 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File $cages -Hook -StagedPathsFile $cheapStaged -EvidenceSuitesOverride 'NONE' -DebugPretendIndexMoved 2>&1)
+        if ($LASTEXITCODE -eq 1 -and (($o3 -join "`n") -match 'rewritten during the tier')) {
+            Good 'T6 ATTACK an index rewritten mid-tier is refused, loudly'
+        } else {
+            Bad ("T6 ATTACK expected exit 1 naming the moved index; got {0}" -f $LASTEXITCODE)
+        }
+        # T4 POSITIVE, direct: the one migrated suite emits exactly one marker carrying the
+        # env-selected mode through its own process chain (wrapper -> python -> evidence).
+        $env:EA_LAB_EVIDENCE = 'index'
+        try {
+            $o4 = @(& $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'run_registry_tests.ps1') 2>&1)
+        } finally {
+            Remove-Item Env:EA_LAB_EVIDENCE -ErrorAction SilentlyContinue
+        }
+        $m4 = @($o4 | Where-Object { "$_" -match '^##EVIDENCE-MODE## run_registry_tests\.ps1 index\b' })
+        if ($LASTEXITCODE -eq 0 -and $m4.Count -eq 1) {
+            Good 'T4 POSITIVE the migrated suite emits exactly one marker, carrying mode=index from the env'
+        } else {
+            Bad ("T4 POSITIVE expected exit 0 with one index marker; got exit {0}, {1} marker(s)" -f $LASTEXITCODE, $m4.Count)
+        }
+    } finally {
+        Remove-Item -LiteralPath $cheapStaged -Force -ErrorAction SilentlyContinue
+    }
+    if ($fail -eq $before) { Good 'evidence-mode plumbing holds in both directions' }
+
     if ($fail -gt 0) {
         Write-Host "[guard-trigger] $fail FAILURE(S)" -ForegroundColor Red
         exit 1
