@@ -431,6 +431,14 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/check_s2a_attestation.py',
                                           '_triage/factory_os/run_s2a_attestation_tests.py',
                                           '_triage/factory_os/s2a_attestations.jsonl',
+                                          # ORDER-614 rev 2: the bound policy, the frozen corpus,
+                                          # and the conformance runner that holds the (now
+                                          # bundle-free) implementation to them. Editing ANY of
+                                          # the three must trigger the tier -- an unwatched
+                                          # corpus is an unbound policy.
+                                          '_triage/factory_os/S2A_ATTESTATION_POLICY.md',
+                                          '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',
+                                          '_triage/factory_os/run_s2a_conformance.py',
                                           # ORDER-610 (S2): the Coverage transfer. coverage.jsonl is
                                           # now the CANONICAL owner of section 2, so an edit to it
                                           # must trigger the suite that proves section 2 still

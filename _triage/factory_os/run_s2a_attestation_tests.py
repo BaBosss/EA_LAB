@@ -88,32 +88,36 @@ def main():
 
     print('\n=== negatives: each must be refused BY NAME ===')
     cases = [
-        ('A1 a missing required field',           [good(signer='')], 'is missing'),
-        ('A1 an invented decision value',         [good(decision='MAYBE')], 'not one of'),
-        ('A2 a record bound to different bytes',  [good(bundle_sha256='a' * 64)],
+        ('R4 a missing required field',           [good(signer='')], 'is missing'),
+        ('R5 an invented decision value',         [good(decision='MAYBE')], 'not one of'),
+        ('F1 a record bound to different bytes',  [good(bundle_sha256='a' * 64)],
                                                   'the current bundle is'),
-        ('A4 a decision for an owner not in D1',  [good(current_owner='no/such/owner.md')],
+        ('R6 a decision for an owner not in D1',  [good(current_owner='no/such/owner.md')],
                                                   'not a current_owner'),
-        ('A4 a decision for an EMBEDDED owner',   [good(current_owner='EMBEDDED:RunTransition')],
+        ('R7 a decision for an EMBEDDED owner',   [good(current_owner='EMBEDDED:RunTransition')],
                                                   'follows its parent'),
-        ('A5 REFUSED with no reason',             [good(decision='REFUSED', reason='')], 'is missing'),
-        ('A6 a stale pin with no acknowledgement', [good()], 'pin is STALE'),
+        # A5 is DELETED (ORDER-614 OPEN-3, ratified): it was unreachable -- `reason` is in
+        # REQUIRED, so this very case was green on R4's message ('is missing'), never A5's.
+        # The input is kept because it is still a real negative; it now says what it tests.
+        ('R4 a blank reason dies as MISSING-REQUIRED (the criterion the old A5 case actually exercised)',
+                                                  [good(decision='REFUSED', reason='')], 'is missing'),
+        ('F2 a stale pin with no acknowledgement', [good()], 'pin is STALE'),
         # audit 8 MAJOR 5 -- the string "false" used to GRANT the exemption
-        ('A6 the STRING "false" as acknowledgement',
+        ('F2 the STRING "false" as acknowledgement',
          [good(stale_pin_acknowledged='false')], 'JSON boolean, not a string'),
-        ('A6 true but no structured acknowledgement',
+        ('F2 true but no structured acknowledgement',
          [good(stale_pin_acknowledged=True)], 'JSON boolean, not a string'),
-        ('A6 an acknowledgement naming the wrong path',
+        ('F3 an acknowledgement naming the wrong path',
          [good(stale_pin_acknowledged=True,
                stale_pin_acknowledgement={'path': 'other.md', 'pinned_blob': 'x',
                                           'current_blob': 'y'})], 'but the stale pin is on'),
-        ('A6 an acknowledgement with a wrong pinned blob',
+        ('F4 an acknowledgement with a wrong pinned blob',
          [good(stale_pin_acknowledged=True,
                stale_pin_acknowledgement={'path': 'MASTER_BACKLOG.md', 'pinned_blob': 'b' * 40,
                                           'current_blob': 'y'})], 'but D1 pins'),
     ]
     for label, lines, expect in cases:
-        vintage = [STALE_NOTE] if label.startswith('A6') else []
+        vintage = [STALE_NOTE] if label.startswith(('F2','F3','F4','F5')) else []
         _, problems = run_with(lines, vintage)
         ok = expect in problems
         print('  [%s] %-46s expect=RED got=%s' % ('OK ' if ok else 'BAD', label,
@@ -123,7 +127,7 @@ def main():
             print('        -> wanted %r; got: %s'
                   % (expect, (problems.split('\n')[0] if problems else 'NOTHING AT ALL')))
 
-    print('\n=== A7 append-only, enforced against HEAD rather than asserted in prose ===')
+    print('\n=== G5-G8 append-only, enforced against HEAD rather than asserted in prose ===')
     # audit 8 BLOCKER 3: deleting an earlier record used to stay green.
     # State-INDEPENDENT: the committed and working bytes are injected, so the rule is exercised
     # identically whether or not the real log happens to be in HEAD yet. Reading both from git
@@ -168,7 +172,7 @@ def main():
     # which now means read from the index, not from disk.
     p = []
     att.check_append_only(p)
-    print('  [%s] the REAL log satisfies A7 as wired' % ('OK ' if not p else 'BAD'))
+    print('  [%s] the REAL log satisfies append-only (G5) as wired' % ('OK ' if not p else 'BAD'))
     if p:
         print('        -> %s' % p)
         bad += 1
@@ -227,7 +231,7 @@ def main():
                                  stale_pin_acknowledged=True,
                                  stale_pin_acknowledgement=ack_ok),
                             good(decided_at='2026-07-31T04:30')], [STALE_NOTE])
-    ok = 'A6' in problems   # run_with joins problems into one string
+    ok = 'F2' in problems   # run_with joins problems into one string
     print('  [%s] D1 the CURRENT row still must acknowledge -- an old ack does not carry forward'
           % ('OK ' if ok else 'BAD'))
     if not ok:
@@ -255,7 +259,7 @@ def main():
     # reported for neither. Both lists come from one eligibility predicate now.
     _, problems = run_with([good(bundle_sha256='a' * 64, decided_at='2026-07-31T07:00'),
                             good(signer='', decided_at='2026-07-31T07:10')], [STALE_NOTE])
-    ok = 'A2' in problems and 'A1' in problems
+    ok = 'F1' in problems and 'R4' in problems
     print('  [%s] D1 a MALFORMED trailing row cannot displace the decision in force'
           % ('OK ' if ok else 'BAD'))
     if not ok:
@@ -276,7 +280,7 @@ def main():
     _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': 'f' * 40},
                                  stale_pin_acknowledged=True,
                                  stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
-    ok = 'A8' in problems and 'did not happen' in problems
+    ok = 'F11' in problems and 'did not happen' in problems
     print('  [%s] D2 an expected_post_state naming a state that never arrived is REFUSED'
           % ('OK ' if ok else 'BAD'))
     if not ok:
@@ -284,7 +288,7 @@ def main():
         bad += 1
 
     _, problems = run_with([good(expected_post_state='MASTER_BACKLOG.md')], [STALE_NOTE])
-    ok = 'A8' in problems and 'not an object' in problems
+    ok = 'F6' in problems and 'not an object' in problems
     print('  [%s] D2 an expected_post_state that is a bare string is REFUSED'
           % ('OK ' if ok else 'BAD'))
     if not ok:
@@ -294,20 +298,33 @@ def main():
     # ---- Codex round 2: D2 bound ANY path to ANY value, so it never enforced "changed INTO the
     #      approved state" -- it enforced "some path is at some value", which is not a claim about
     #      this decision at all.
-    for label, eps, want_red in (
+    # Each red case asserts its PRECISE criterion id -- 'some F fired' would let F7 pass on
+    # F9's behalf, which is the exact wrong-reason conformance the runner refuses.
+    for label, eps, want_id in (
             ('D2 CONTROL binding its OWN owner at the real blob',
-             {'path': 'MASTER_BACKLOG.md', 'blob': live}, False),
-            ('D2 binding an UNRELATED file is refused',
-             {'path': 'AGENT_TASKBOARD.md', 'blob': live}, True),
-            ('D2 binding a path that does not exist at HEAD is refused',
-             {'path': 'NO_SUCH_PATH', 'blob': 'MISSING'}, True),
-            ('D2 binding a DIRECTORY (a tree oid, not content) is refused',
-             {'path': 'portfolio', 'blob': 'a' * 40}, True)):
+             {'path': 'MASTER_BACKLOG.md', 'blob': live}, None),
+            ('F7 binding an UNRELATED file is refused',
+             {'path': 'AGENT_TASKBOARD.md', 'blob': live}, 'F7'),
+            ('F8 MISSING as a blob id is refused before HEAD is even consulted',
+             {'path': 'MASTER_BACKLOG.md', 'blob': 'MISSING'}, 'F8'),
+            # F9 (path absent at HEAD) and F10 (path is a tree) are UNREACHABLE from this
+            # suite: F7 pins eps.path to current_owner, and eligibility (R6) pins owners to
+            # real D1 paths that exist as files. They are bound HERMETICALLY by the
+            # conformance vectors V-F9-001 / V-F10-001 instead, where D1 and HEAD are both
+            # synthetic. This case exercises the branch BELOW them (F11) and says so --
+            # its first version was labelled F9/F10 and passed on F11, which is a label
+            # asserting a criterion the input can never reach.
+            ('F11 a wrong post-state blob on a real path (F9/F10 are vector-bound, unreachable here)',
+             {'path': 'MASTER_BACKLOG.md', 'blob': 'a' * 40}, 'F11')):
         _, problems = run_with([good(expected_post_state=eps,
                                      stale_pin_acknowledged=True,
                                      stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
-        got = 'A8' in problems
-        ok = (got == want_red)
+        if want_id is None:
+            ok = 'F' not in problems
+        elif '-or-' in want_id:
+            ok = any(w in problems for w in want_id.split('-or-'))
+        else:
+            ok = want_id in problems
         print('  [%s] %s' % ('OK ' if ok else 'BAD', label))
         if not ok:
             print('        -> %s' % problems)
@@ -329,7 +346,49 @@ def main():
     finally:
         att.ATTESTATION_PATH = _saved
         os.unlink(_tmp)
-    print('  [%s] a non-object JSON line is REPORTED, not a traceback' % ('OK ' if ok else 'BAD'))
+    print('  [%s] R2 a non-object JSON line is REPORTED, not a traceback' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % _probs)
+        bad += 1
+
+    # ---- R1: a line that is not JSON at all is reported by id and line, never raised ----------
+    _fd, _tmp = _tf.mkstemp(suffix='.jsonl')
+    os.close(_fd)
+    io.open(_tmp, 'w', encoding='utf-8', newline=chr(10)).write('{not json' + chr(10))
+    _saved = att.ATTESTATION_PATH
+    try:
+        att.ATTESTATION_PATH = _tmp
+        _rows, _probs = att.load_records()
+        ok = any(p.startswith('R1 line 1') for p in _probs)
+    finally:
+        att.ATTESTATION_PATH = _saved
+        os.unlink(_tmp)
+    print('  [%s] R1 an unparseable line is reported BY ID AND LINE (it was unprefixed until '
+          'ORDER-614, so the conformance runner could not match it)' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % _probs)
+        bad += 1
+
+    # ---- G7: tracked but unreadable from the index is a TOOL FAILURE, never a worktree read ---
+    # Driven through the same seams the conformance runner uses: git-show fails, ls-files says
+    # tracked, `committed` supplied so no real git is consulted for the HEAD side.
+    class _ShowFails(object):
+        @staticmethod
+        def run(cmd, **kw):
+            class R(object):
+                returncode, stdout, stderr = 128, b'', b'fatal: unreadable'
+            return R()
+    _saved_sub, _saved_git = att.subprocess, chk._git
+    try:
+        att.subprocess = _ShowFails
+        chk._git = lambda *a2_: (0, '', '') if a2_ and a2_[0] == 'ls-files' else _saved_git(*a2_)
+        _probs = []
+        att.check_append_only(_probs, path='whatever.jsonl', committed=b'L1' + chr(10).encode())
+        ok = any(p.startswith('G7') for p in _probs)
+    finally:
+        att.subprocess, chk._git = _saved_sub, _saved_git
+    print('  [%s] G7 tracked-but-unreadable is a TOOL FAILURE by id, not a silent worktree '
+          'fallback' % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %s' % _probs)
         bad += 1

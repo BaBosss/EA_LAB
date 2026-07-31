@@ -1,7 +1,7 @@
 # S2a ATTESTATION POLICY — DRAFT (ORDER-614 rev 2)
 
 > **Status: DRAFT. Nothing here is bound yet.** This file and
-> `ORDER614_VECTORS_DRAFT.jsonl` are the two artifacts ORDER-614 rev 2 asks for. They are written
+> `S2A_ATTESTATION_VECTORS.jsonl` are the two artifacts ORDER-614 rev 2 asks for. They are written
 > as new files so that landing them is one reviewable act; **no existing file was edited to produce
 > them**, and in particular `check_s2a_attestation.py`, `s2a_attestations.jsonl` and the current
 > `BUNDLE` are untouched. See §11 OPEN QUESTIONS for every judgement the lead must ratify before
@@ -11,7 +11,7 @@
 |---|---|
 | `policy_version` | **`s2a-attestation/1`** (proposed; see OPEN-1) |
 | supersedes | the prose criteria in the `check_s2a_attestation.py` module docstring (`A1`…`A8`) |
-| companion corpus | `ORDER614_VECTORS_DRAFT.jsonl` — **55 vectors**, 18 green / 36 red / 1 abort |
+| companion corpus | `S2A_ATTESTATION_VECTORS.jsonl` — **55 vectors**, 18 green / 36 red / 1 abort |
 | written against | `check_s2a_attestation.py` at HEAD `7616f2de` bundle, suite **35/35** green |
 
 ---
@@ -53,12 +53,13 @@ vector, because the vectors exercise the predicates rather than counting them.
 | `_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md` | D2 — what the owner actually reads |
 | `_triage/factory_os/S2A_ATTESTATION_POLICY.md` | **this file** — what the criteria MEAN |
 | `_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl` | the corpus — what the criteria DO |
+| `_triage/factory_os/check_s2a_migration.py` | **RATIFIED IN (§10.5 OPEN-2):** what D1’s own acceptance MEANS — it has no policy-and-vectors replacement yet, and dropping it would bind D1’s bytes while unbinding D1’s meaning |
 
 | out of the bundle | why |
 |---|---|
 | `check_s2a_attestation.py` | the implementation. This is the whole change. |
 | `gen_s2a_migration.py` | it produced D1, but **D1 itself is bound**, so the generator's bytes cannot change what the owner read without changing D1 too. |
-| `check_s2a_migration.py` | ⚠️ **OPEN-2.** It currently supplies `pin_vintage_notes()`, whose semantics this policy absorbs as **N1–N4** and whose behaviour the corpus now exercises. That is the argument for dropping it. The counter-argument is in §11. |
+
 
 ### 2.2 When a signature is owed
 
@@ -201,7 +202,7 @@ stated because it is not obvious from the names.
 
 ## 5. The conformance corpus — schema and runner contract
 
-One JSON object per line in `ORDER614_VECTORS_DRAFT.jsonl`. A line whose only key is `_comment` is
+One JSON object per line in `S2A_ATTESTATION_VECTORS.jsonl`. A line whose only key is `_comment` is
 not a vector (same rule as R3, deliberately).
 
 ```jsonc
@@ -407,6 +408,29 @@ recreates a defect shape is worse than no policy.
 
 ---
 
+## 10.5 RATIFICATION AT LANDING (2026-07-31) -- what was decided, by whom
+
+The owner delegated the landing decisions to the lead's recommendation ("ทำตามที่นายแนะนำได้เลย"),
+and these are the calls, so the signed document carries them rather than a chat transcript:
+
+- **OPEN-1** version = `s2a-attestation/1`, declared in this file's header and in the runner.
+- **OPEN-2** `check_s2a_migration.py` **STAYS IN the bundle** (the conservative reading, against
+  §2.1's first draft): this policy absorbed only its `pin_vintage_notes` semantics (N1-N4). Its
+  OWN criteria -- what D1's acceptance MEANS -- have no policy-and-vectors replacement, and
+  dropping it would bind D1's bytes while unbinding D1's meaning. It leaves when it gets the
+  same treatment. `gen_s2a_migration.py` leaves as proposed (its output is bound).
+- **OPEN-3** R8: `REQUIRED` stays exactly as it is; the unreachable branch is DELETED. Making
+  `reason` conditionally required would change what is demanded, which E4 forbids. R8 stays in
+  §4 as DISPUTED with its PROVISIONAL vector, so the criterion's history is not erased.
+- **OPEN-5** the dead `pinned and` guard in F4's branch is deleted.
+- **OPEN-7** the `R*/F*/G*/N*/B*/X*` scheme is adopted; the implementation now emits these ids.
+- **OPEN-8** the invalid-JSON message now carries the `R1` prefix and a `line N` token.
+- **OPEN-10** renamed to the final names BEFORE the digest was computed, as required.
+- **OPEN-4 / OPEN-6 status:** the runner and the permanent mutation harness ARE built
+  (`run_s2a_conformance.py`, outside the bundle); G3's partial coverage is frozen as-is by the
+  corpus and remains flagged, not silently fixed -- fixing it changes behaviour and therefore
+  owes its own vector-and-signature round.
+
 ## 11. OPEN QUESTIONS FOR THE LEAD
 
 Every judgement call made in these two files, and every place ground truth could not be determined
@@ -473,8 +497,8 @@ exits 0. I did not write a criterion or a vector for it: it produces no verdict.
 the template's **shape** pinned (so a field cannot silently vanish from what the owner is handed),
 that is a criterion and needs a vector.
 
-**OPEN-10 · file names at landing.** These drafts are `ORDER614_POLICY_DRAFT.md` /
-`ORDER614_VECTORS_DRAFT.jsonl` so they edit nothing. §2.1 assumes they land as
+**OPEN-10 · file names at landing.** These drafts are `S2A_ATTESTATION_POLICY.md` /
+`S2A_ATTESTATION_VECTORS.jsonl` so they edit nothing. §2.1 assumes they land as
 `S2A_ATTESTATION_POLICY.md` / `S2A_ATTESTATION_VECTORS.jsonl`. **The bundle binds paths as well as
 content** (§2.3 hashes the path), so the rename must happen *before* the digest the owner signs is
 computed, not after.

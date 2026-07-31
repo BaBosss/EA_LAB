@@ -157,6 +157,12 @@ $scripts = @(
     #    The mutation half is the part that matters: the other four can all be green while the
     #    checker is incapable of failing against the file it just passed.
     @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() },
+    # 5b. run_s2a_conformance.py -- ORDER-614 rev 2. The implementation left the attestation
+    # bundle; THIS is what holds it to the bound policy instead. --mutate is the permanent E1
+    # fixture: every conforming vector must go red when its own criterion is neutralised. A
+    # repair to check_s2a_attestation.py that keeps this green owes the owner NO signature,
+    # which is the entire point of the order.
+    @{ Path = '_triage\factory_os\run_s2a_conformance.py'; Args = @('--mutate') },
     # 6. ORDER-601 closure: proves the PLANNED/BUILT/WIRED labels are checked and the check can fail.
     #    x-enforced-by asserted enforcement for 7 constraints nothing enforced; relabelling only
     #    helps if the labels are verified, so this mutates the schema 5 ways and requires each to be

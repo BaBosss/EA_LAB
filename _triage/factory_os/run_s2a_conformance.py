@@ -43,7 +43,7 @@ import check_s2a_attestation as att   # noqa: E402
 import check_s2a_migration as chk     # noqa: E402
 
 POLICY_VERSION = 's2a-attestation/1'
-VECTORS_REL = '_triage/factory_os/ORDER614_VECTORS_DRAFT.jsonl'
+VECTORS_REL = '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl'
 REPO_ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 
 
@@ -66,6 +66,7 @@ class World(object):
         self.head_blobs = dict(ctx.get('head_blobs') or {})
         self.d1_rows = list(ctx.get('d1_rows') or [])
         self.d1_present = ctx.get('d1_present', True)
+        self.ao = ctx.get('append_only')  # corpus contract 6: modelled independently
 
     def rev_parse_cached(self, spec):
         # spec is '<head>:<path>'; the head half is synthetic and ignored on purpose.
@@ -83,23 +84,54 @@ class World(object):
             if not ent:
                 return 128, '', 'fatal: not a valid object name'
             return 0, ent.get('kind', 'blob'), ''
+        if args and args[0] == 'rev-parse' and self.ao:
+            # check_append_only asks whether the log is committed at HEAD (G6's silence).
+            if self.ao.get('committed') is not None:
+                return 0, 'a' * 40, ''
+            return 128, '', 'fatal: not in HEAD'
+        if args and args[0] == 'ls-files' and self.ao:
+            return (0, '', '') if self.ao.get('tracked') else (1, '', '')
         # Anything else a vector does not model is a runner failure, not a silent pass:
         # a checker reaching git through an unmodelled route must be noticed.
         raise CorpusError('vector world has no answer for git %s -- the corpus does not model '
                           'this call, so a verdict over it would be meaningless' % (args,))
 
+    def subprocess_run(self, cmd, **kw):
+        """check_append_only reaches git through RAW subprocess for BYTES (its own comment says
+        chk._git decodes and is the wrong tool there), so the world must answer at that layer
+        too -- an unmodelled route raising is what keeps a vector from quietly running real git.
+        """
+        class R(object):
+            def __init__(self, rc, out, err=b''):
+                self.returncode, self.stdout, self.stderr = rc, out, err
+        if not self.ao:
+            raise CorpusError('append-only subprocess reached with no append_only context')
+        if cmd[:2] == ['git', 'cat-file']:
+            c = self.ao.get('committed')
+            return R(0, (c or '').encode('utf-8')) if c is not None else R(128, b'', b'no blob')
+        if cmd[:2] == ['git', 'show']:
+            if self.ao.get('index_readable', True) and self.ao.get('staged') is not None:
+                return R(0, self.ao['staged'].encode('utf-8'))
+            return R(128, b'', b'fatal: index unreadable')
+        raise CorpusError('vector world has no answer for subprocess %s' % (cmd,))
+
 
 def install_world(world):
     """Swap the checker's git touchpoints for the vector's world. Returns a restore callable."""
-    saved = (chk._git, chk.head_oid, chk._rev_parse_cached, att._D1_ROWS[:])
+    saved = (chk._git, chk.head_oid, chk._rev_parse_cached, att._D1_ROWS[:], att.subprocess)
+
+    class _SubShim(object):
+        run = staticmethod(world.subprocess_run)
     chk._git = world.git
     chk.head_oid = lambda: 'f' * 40
     chk._rev_parse_cached = world.rev_parse_cached
     att._D1_ROWS[:] = world.d1_rows
+    att.subprocess = _SubShim
 
     def restore():
         chk._git, chk.head_oid, chk._rev_parse_cached = saved[0], saved[1], saved[2]
         att._D1_ROWS[:] = saved[3]
+        att.subprocess = saved[4]
     return restore
 
 
@@ -130,13 +162,18 @@ def digest_of(ctx):
     files = ctx.get('bundle_files')
     if files is None:
         raise CorpusError('a vector supplies neither current_bundle_sha256 nor bundle_files')
+    # Policy section 2.3, EXACTLY -- the first version of this function sorted by path and
+    # skipped the inner hash, i.e. it implemented a different algorithm than the one the
+    # policy declares and the B-vectors pin. DECLARED order is load-bearing (B2), the inner
+    # sha256 of CRLF-normalised content is load-bearing (B3), and a runner with its own
+    # private digest algorithm is a second implementation of a bound rule.
     import hashlib
     h = hashlib.sha256()
-    for f in sorted(files, key=lambda x: x['path']):
+    for f in files:
         h.update(f['path'].encode('utf-8'))
         h.update(b'\0')
-        h.update(f.get('content', '').encode('utf-8'))
-        h.update(b'\0')
+        content = f.get('content', '').replace('\r\n', '\n').encode('utf-8')
+        h.update(hashlib.sha256(content).digest())
     return h.hexdigest()
 
 
@@ -187,6 +224,29 @@ def run_vector(vec):
     restore = install_world(world)
     try:
         current = att.check(rows, problems, digest_of(ctx), d1_owners, vintage_notes)
+        if world.ao:
+            # corpus contract 6: append-only judged from its own synthetic context, through
+            # the checker's REAL function -- committed/working stay None so every branch
+            # (G5 prefix, G6 silence, G7 tool-failure, G8 CRLF) runs the code under test.
+            # The untracked-fallback branch reads the DISK by design, so the vector's
+            # `worktree` bytes are materialised as a real temp file -- the code path stays
+            # the real one and the file stays synthetic.
+            import tempfile
+            ao_path = world.ao.get('path')
+            tmp_ao = None
+            if world.ao.get('worktree') is not None and not world.ao.get('tracked'):
+                fd, tmp_ao = tempfile.mkstemp(prefix='s2aconf_ao_')
+                with os.fdopen(fd, 'w', encoding='utf-8', newline='') as fh:
+                    fh.write(world.ao['worktree'])
+                ao_path = tmp_ao
+            try:
+                att.check_append_only(problems, path=ao_path)
+            finally:
+                if tmp_ao:
+                    try:
+                        os.remove(tmp_ao)
+                    except OSError:
+                        pass
     finally:
         restore()
     ids = []

@@ -83,6 +83,10 @@ L1_FILES = (
     # that subprocess IS how the correct pattern reads the index and names its snapshot in the
     # call itself.
     '_triage/factory_os/evidence.py',
+    # ORDER-614 rev 2: out of its own bundle, so declaring a snapshot no longer costs the owner
+    # a signature -- which was the deferral's whole reason, and reasons that expire must take
+    # their exemptions with them.
+    '_triage/factory_os/check_s2a_attestation.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -120,8 +124,12 @@ L1_NOT_PARSED = {
 assert len(L1_NOT_PARSED) == 11
 
 L1_DEFERRED = {
-    '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2)',
-    '_triage/factory_os/check_s2a_attestation.py': 'inside its own bundle (ORDER-614 rev 2)',
+    '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2 '
+                                                 'RATIFIED it stays: its criteria have no '
+                                                 'policy-and-vectors replacement yet)',
+    # check_s2a_attestation.py LEFT this list when rev 2 landed -- the deferral's own text said
+    # it ends "when rev 2 moves implementations out of the bundle", and that happened. It is in
+    # L1_FILES now, with its reads declared.
 }
 SNAPSHOTS = ('index', 'HEAD', 'blob', 'worktree', 'not-a-judged-input')
 READ_CALL = re.compile(r'\b(?:io\.)?open\s*\(')

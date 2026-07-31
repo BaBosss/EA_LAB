@@ -20,19 +20,16 @@ WHAT IT STILL BUYS, WHICH IS THE REASON IT EXISTS
   the acceptance rule and the generator in one commit -- `check_s2a_migration.py` C2 keeps refusing
   `APPROVED` inside D1, and a decision is written here instead. Approving costs one appended line.
 
-WHAT IT ASSERTS
-  A1  every line is well-formed and carries the required fields
-  A2  `bundle_sha256` matches the CURRENT reviewed bundle -- D1, D2, the coverage reconciliation and
-      BOTH validators. Audit 8 BLOCKER 2: hashing D1 alone let the reviewed document or the
-      acceptance rules change while the record still read as current.
-  A3  exactly one CURRENT decision per distinct `current_owner` (append-only: last line wins)
-  A4  `current_owner` is a real owner in D1, and not an `EMBEDDED:` pseudo-owner
-  A5  `REFUSED` carries a non-empty reason
-  A6  a stale pin BLOCKS the record unless it carries a STRUCTURED acknowledgement naming the pinned
-      and current blob, recomputed here. Audit 8 MAJOR 5: generic truthiness meant the string
-      "false" granted the exemption.
-  A7  the log is APPEND-ONLY against HEAD -- the committed version must be a byte prefix of this one.
-      Audit 8 BLOCKER 3: "append-only" was prose, and deleting an earlier line stayed green.
+WHAT IT ASSERTS -- OWNED BY THE POLICY, NOT BY THIS DOCSTRING (ORDER-614 rev 2)
+  The criteria, their semantics, their scope (record-intrinsic vs in-force vs global) and their
+  evaluation order live in `S2A_ATTESTATION_POLICY.md`, version `s2a-attestation/1`, and the
+  frozen corpus `S2A_ATTESTATION_VECTORS.jsonl` is what they DO. This file is the current
+  IMPLEMENTATION of that policy; `run_s2a_conformance.py` is what holds it to the policy. A
+  prose copy of the criteria here would be a second copy that drifts -- the earlier version of
+  this header listed A1-A7 and had already drifted from the code beneath it (A5 was
+  unreachable, and the header did not know).
+  Criterion ids emitted: R1-R7 (record-intrinsic) - F1-F11 (in-force) - G5/G7 (append-only) -
+  see the policy for G0-G8, N1-N4, B1-B4, X1.
 
 USAGE  tools\\python312\\python.exe _triage/factory_os/check_s2a_attestation.py [--template]
 EXIT   0 = the log is valid (it may legitimately be empty) - 1 = a record is malformed or stale
@@ -55,13 +52,26 @@ REQUIRED = ('bundle_sha256', 'current_owner', 'decision', 'signer', 'decided_at'
 # audit 8 BLOCKER 2: the record binds the whole reviewed bundle, not just D1. If the document the
 # owner read, or the rules that decide what the decision MEANS, change afterwards, the record stops
 # matching and must be re-made.
+# ORDER-614 rev 2 (owner-ratified 2026-07-31): the bundle binds WHAT THE CRITERIA MEAN and
+# WHAT THEY DO -- never HOW they are executed. This file is therefore OUT of its own bundle:
+# repairing it no longer voids the record that authorised the previous repair, which had cost
+# five signatures in two sessions, four of them for repairs that changed no rule. What holds
+# the implementation to the policy is the conformance corpus, run by run_s2a_conformance.py.
+#
+#   * gen_s2a_migration.py is OUT: it produced D1, but D1 ITSELF is bound, so the generator's
+#     bytes cannot change what the owner read without changing D1 too.
+#   * check_s2a_migration.py STAYS IN, deliberately (OPEN-2 resolved the conservative way):
+#     this policy absorbed only its pin_vintage_notes semantics (N1-N4). Its OWN criteria --
+#     what D1's acceptance MEANS -- have no policy-and-vectors replacement yet, and dropping
+#     it would bind D1's bytes while unbinding D1's meaning. It leaves when it gets the same
+#     treatment, and not before.
 BUNDLE = (
     '_triage/factory_os/s2a_migration.jsonl',               # D1 - the data
     '_triage/factory_os/s2a_coverage_reconciliation.json',  # C8's evidence
     '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',        # D2 - what the owner actually reads
-    '_triage/factory_os/gen_s2a_migration.py',              # what produced D1
-    '_triage/factory_os/check_s2a_migration.py',            # what the acceptance MEANS
-    '_triage/factory_os/check_s2a_attestation.py',          # ...and what this record means
+    '_triage/factory_os/check_s2a_migration.py',            # what D1's acceptance MEANS
+    '_triage/factory_os/S2A_ATTESTATION_POLICY.md',         # what THESE criteria mean
+    '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',     # what these criteria DO
 )
 
 _D1_ROWS = []          # set by main(); the D1 rows, for A6's recompute
@@ -72,7 +82,7 @@ def bundle_digest():
     for path in BUNDLE:
         h.update(path.encode('utf-8'))
         h.update(b'\0')
-        with io.open(path, 'rb') as fh:
+        with io.open(path, 'rb') as fh:  # snapshot: worktree -- the digest describes the bytes the signer is LOOKING AT; F1 is what compares a record against it
             h.update(hashlib.sha256(fh.read().replace(b'\r\n', b'\n')).digest())
     return h.hexdigest()
 
@@ -87,7 +97,7 @@ def _is_blob_oid(value):
 def _is_blob_at_head(path):
     """True only when HEAD:path is a FILE. A directory resolves to a tree id, which git happily
     returns and which says nothing about content -- Codex round 2 used that to pass D2."""
-    rc, out, _ = chk._git('cat-file', '-t', '%s:%s' % (chk.head_oid(), path))
+    rc, out, _ = chk._git('cat-file', '-t', '%s:%s' % (chk.head_oid(), path))  # snapshot: HEAD
     return rc == 0 and out.strip() in ('blob', b'blob')
 
 
@@ -95,20 +105,23 @@ def load_records():
     rows, problems = [], []
     if not os.path.exists(ATTESTATION_PATH):
         return rows, problems
-    for n, line in enumerate(io.open(ATTESTATION_PATH, encoding='utf-8'), 1):
+    for n, line in enumerate(io.open(ATTESTATION_PATH, encoding='utf-8'), 1):  # snapshot: worktree -- the log being APPENDED to; G5 is what compares it to HEAD/index
         line = line.strip()
         if not line:
             continue
         try:
             obj = json.loads(line)
         except ValueError as exc:
-            problems.append('%s:%d is not valid JSON: %s' % (ATTESTATION_PATH, n, exc))
+            # R1 (was unprefixed -- OPEN-8: a message with no criterion id cannot be matched by
+            # the conformance runner, so the checker could stop naming this rule silently).
+            problems.append('R1 line %d of %s is not valid JSON: %s'
+                            % (n, ATTESTATION_PATH, exc))
             continue
         if not isinstance(obj, dict):
             # Codex round 2, Spec 8: `obj['_line'] = n` on a string raised TypeError, so a
             # malformed line ended the run in a traceback instead of the conformance exit 1 this
             # file promises. "The tool broke" and "the file is wrong" must not share an outcome.
-            problems.append('A1 line %s is a %s, not an object -- every record must be a JSON '
+            problems.append('R2 line %s is a %s, not an object -- every record must be a JSON '
                             'object' % (n, type(obj).__name__))
             continue
         if '_comment' in obj and len(obj) == 1:
@@ -158,16 +171,16 @@ def check_append_only(problems, path=None, committed=None, working=None):
         else:
             rc2, _, _ = chk._git('ls-files', '--error-unmatch', path)
             if rc2 == 0:
-                problems.append('A7 %s is tracked but could not be read from the index (%s). '
+                problems.append('G7 %s is tracked but could not be read from the index (%s). '
                                 'Append-only cannot be judged against bytes that are not the ones '
                                 'being committed.'
                                 % (path, sp.stderr.decode('utf-8', 'replace').strip()))
                 return
-            with io.open(path, 'rb') as fh:
+            with io.open(path, 'rb') as fh:  # snapshot: worktree -- reached ONLY for an untracked log (nothing staged to judge; G7 refuses the tracked-unreadable case above)
                 working = fh.read()
     now = working.replace(b'\r\n', b'\n')
     if not now.startswith(committed):
-        problems.append('A7 %s is not append-only: the version committed at HEAD is no longer a '
+        problems.append('G5 %s is not append-only: the version committed at HEAD is no longer a '
                         'prefix of what is STAGED, so a previously recorded decision was edited or '
                         'removed rather than superseded by a new line.' % path)
 
@@ -192,18 +205,19 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         n = r.get('_line')
         missing = [f for f in REQUIRED if not str(r.get(f) or '').strip()]
         if missing:
-            problems.append('A1 line %s is missing %s' % (n, missing))
+            problems.append('R4 line %s is missing %s' % (n, missing))
             continue
         if r['decision'] not in DECISIONS:
-            problems.append('A1 line %s has decision=%r, not one of %s'
+            problems.append('R5 line %s has decision=%r, not one of %s'
                             % (n, r['decision'], list(DECISIONS)))
             continue
         if r['current_owner'] not in d1_owners:
-            problems.append('A4 line %s decides for %r, which is not a current_owner in D1'
+            problems.append('R6 line %s decides for %r, which is not a current_owner in D1'
                             % (n, r['current_owner']))
             continue
         if r['current_owner'].startswith('EMBEDDED:'):
-            problems.append('A4 line %s decides for %r, but an EMBEDDED fact owns no file -- it '
+            # R7 is separate from R6 because EMBEDDED:* values DO appear in D1 and pass R6.
+            problems.append('R7 line %s decides for %r, but an EMBEDDED fact owns no file -- it '
                             'follows its parent. Record the decision against the parent\'s owner.'
                             % (n, r['current_owner']))
             continue
@@ -230,16 +244,22 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # it is impossible -- so the artifact could never survive its own evolution.
         in_force = r is latest.get(r['current_owner'])
         if in_force and r['bundle_sha256'] != digest:
-            problems.append('A2 line %s attests bundle %s but the current bundle is %s -- D1, D2, '
-                            'the reconciliation or a validator changed after this record, so it no '
-                            'longer describes what is on disk. Re-make it against the current bytes.'
+            problems.append('F1 line %s attests bundle %s but the current bundle is %s -- the '
+                            'bound policy, corpus, D1, D2 or the reconciliation changed after this '
+                            'record, so it no longer describes what is on disk. Re-make it against '
+                            'the current bytes.'
                             % (n, str(r['bundle_sha256'])[:12], digest[:12]))
             continue
-        # (A4 moved to pass 1: eligibility must be decided before `latest` is, or a row that fails
-        #  it could still displace the decision in force. Leaving a copy here would be dead code
-        #  that reads like a guard.)
-        if r['decision'] == 'REFUSED' and not str(r.get('reason') or '').strip():
-            problems.append('A5 line %s is REFUSED with no reason' % n)
+        # (R6/R7 live in pass 1: eligibility must be decided before `latest` is, or a row that
+        #  fails them could still displace the decision in force.)
+        #
+        # A5 ("REFUSED with no reason") is DELETED, not renamed -- OPEN-3, ratified. It was
+        # UNREACHABLE: `reason` is in REQUIRED, so a blank reason fails R4 first and this branch
+        # could never fire; the suite case named for it was asserting R4's message. Making
+        # `reason` conditionally required instead would change WHAT IS DEMANDED, which E4
+        # forbids. Deleting an unreachable branch changes nothing observable. R8 stays in the
+        # policy as DISPUTED with a PROVISIONAL vector, so the history of the criterion is not
+        # erased -- but the code stops carrying a guard that reads like coverage.
         # ORDER-613 D2: a record may declare the state the approved action is expected to PRODUCE.
         # Without it, an acknowledgement is a blanket exemption -- "these bytes moved, fine" -- and
         # cannot distinguish the approved change from any other change that happens to arrive
@@ -248,7 +268,7 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         eps = r.get('expected_post_state') if in_force else None
         if eps is not None:
             if not isinstance(eps, dict) or not eps.get('path') or not eps.get('blob'):
-                problems.append('A8 line %s has expected_post_state that is not an object naming '
+                problems.append('F6 line %s has expected_post_state that is not an object naming '
                                 '{path, blob}' % n)
             # Codex round 2, Standards 3 + Spec 3: this bound ANY path to ANY value. A record
             # deciding for MASTER_BACKLOG.md could bind AGENT_TASKBOARD.md and pass; a
@@ -257,30 +277,30 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             # it enforced "some path is at some value", which is not a claim about this decision.
             elif eps['path'] != r['current_owner']:
                 problems.append(
-                    'A8 line %s decides for %r but its expected_post_state binds %r. A record may '
+                    'F7 line %s decides for %r but its expected_post_state binds %r. A record may '
                     'only make a claim about the state of the file it decides for -- binding '
                     'anything else lets the approved target sit in a state nobody approved while '
                     'this criterion stays green.' % (n, r['current_owner'], eps['path']))
             elif str(eps['blob']).upper() == 'MISSING' or not _is_blob_oid(eps['blob']):
                 problems.append(
-                    'A8 line %s expects %s at %r, which is not a 40-hex blob id. "MISSING" and a '
+                    'F8 line %s expects %s at %r, which is not a 40-hex blob id. "MISSING" and a '
                     'tree id are both accepted by git and neither is a statement about the CONTENT '
                     'this decision approved.' % (n, eps['path'], eps['blob']))
             else:
                 rc3, live3, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), eps['path']))
                 if rc3 != 0:
                     problems.append(
-                        'A8 line %s expects %s at blob %s, but that path does not exist at HEAD. A '
+                        'F9 line %s expects %s at blob %s, but that path does not exist at HEAD. A '
                         'record cannot approve the post-state of a file that is not there.'
                         % (n, eps['path'], str(eps['blob'])[:12]))
                 elif not _is_blob_at_head(eps['path']):
                     problems.append(
-                        'A8 line %s binds %s, which resolves to a TREE at HEAD, not a file. A '
+                        'F10 line %s binds %s, which resolves to a TREE at HEAD, not a file. A '
                         'directory has no content this decision could have approved.'
                         % (n, eps['path']))
                 elif live3 != eps['blob']:
                     problems.append(
-                        'A8 line %s expects %s to be at blob %s after the action it approves, but '
+                        'F11 line %s expects %s to be at blob %s after the action it approves, but '
                         'HEAD has %s. The record describes a change that did not happen, or a '
                         'different one happened -- either way this is not the state that was '
                         'approved.' % (n, eps['path'], str(eps['blob'])[:12], str(live3)[:12]))
@@ -300,7 +320,7 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             # "false" -- which reads as a refusal to acknowledge -- granted the exemption. Boolean
             # identity now, plus a structured record whose contents are recomputed below.
             if r.get('stale_pin_acknowledged') is not True or not isinstance(ack, dict):
-                problems.append('A6 line %s attests for %r whose pin is STALE. Set '
+                problems.append('F2 line %s attests for %r whose pin is STALE. Set '
                                 '"stale_pin_acknowledged": true (JSON boolean, not a string) AND a '
                                 '"stale_pin_acknowledgement" object naming {path, pinned_blob, '
                                 'current_blob}, or re-pin with gen_s2a_migration.py.'
@@ -313,13 +333,17 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                                if row.get('owner_ref')
                                and row['owner_ref']['path'] == note['path']), None)
                 if ack.get('path') != note['path']:
-                    problems.append('A6 line %s acknowledges path %r but the stale pin is on %r'
+                    problems.append('F3 line %s acknowledges path %r but the stale pin is on %r'
                                     % (n, ack.get('path'), note['path']))
-                elif pinned and ack.get('pinned_blob') != pinned:
-                    problems.append('A6 line %s acknowledges pinned_blob %r but D1 pins %r'
+                # OPEN-5, ratified: the `pinned and` guard that used to sit on the next branch
+                # was DEAD -- under N1/N2 a note can only exist for a path D1 pins, so `pinned`
+                # was always truthy on every reachable input. A guard that cannot fire reads as
+                # tolerance for a case that cannot occur, which is worse than its absence.
+                elif ack.get('pinned_blob') != pinned:
+                    problems.append('F4 line %s acknowledges pinned_blob %r but D1 pins %r'
                                     % (n, ack.get('pinned_blob'), pinned))
                 elif ack.get('current_blob') != want_current:
-                    problems.append('A6 line %s acknowledges current_blob %r but HEAD has %r'
+                    problems.append('F5 line %s acknowledges current_blob %r but HEAD has %r'
                                     % (n, ack.get('current_blob'), want_current))
         current[r['current_owner']] = r
 
@@ -347,7 +371,7 @@ def main(argv):
         print('[ABORT] %s does not exist; there is no proposal to attest to.' % chk.MIGRATION_PATH)
         return 2
     digest = bundle_digest()
-    d1 = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]
+    d1 = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]  # snapshot: worktree
     _D1_ROWS[:] = d1
     d1_owners = sorted({r['current_owner'] for r in d1})
 
@@ -369,7 +393,8 @@ def main(argv):
     print('      It does NOT prove who made it -- this repo commits under one git identity, so')
     print('      nothing here separates the owner from any other writer. Do not cite it as a')
     print('      signature. (Codex audit 8.)')
-    print('bundle : %s (D1 + D2 + reconciliation + generator + both validators)' % digest[:16])
+    print('bundle : %s (D1 + D2 + reconciliation + migration checker + POLICY + VECTORS -- '
+          'the implementation is NOT a member, per ORDER-614 rev 2)' % digest[:16])
     print('log    : %s\n' % ATTESTATION_PATH)
 
     rows, problems = load_records()
@@ -379,9 +404,16 @@ def main(argv):
 
     # RESCOPED (audit 8 section 2): ORDER-600 blocks on ONE decision, not on all 23 owners.
     coverage = current.get('MASTER_BACKLOG.md')
+    # `.get`, because the in-force entry may be G3's UNVERIFIED placeholder, which carries no
+    # signer by design -- it reports that the record in force did not verify, and pretending it
+    # had a signer would put words in a row that failed. Found live: this line crashed with
+    # KeyError the first time an F1-failed row was in force, i.e. the exact situation a bundle
+    # change creates, on the day the bundle changed.
     print('  THE decision ORDER-600 blocks on:')
     print('    MASTER_BACKLOG.md (Coverage edge) -> %s'
-          % ('%s by %s (line %s)' % (coverage['decision'], coverage['signer'], coverage['_line'])
+          % ('%s by %s (line %s)%s' % (coverage['decision'], coverage.get('signer', '<n/a>'),
+                                       coverage['_line'],
+                                       ' -- ' + coverage['_note'] if coverage.get('_note') else '')
              if coverage else 'NOT YET RECORDED'))
     others = [o for o in d1_owners if o in current and o != 'MASTER_BACKLOG.md']
     print('  %d other owner(s) recorded, %d not yet -- none of them block ORDER-600'
