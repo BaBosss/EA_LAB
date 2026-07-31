@@ -17,10 +17,17 @@ grep -ho "# snapshot: [a-z-]*" _triage/factory_os/*.py scripts/*.ps1 scripts/lib
       1 # snapshot: not-a-judged-input
 ```
 
-Thirty-one declared reads of judged evidence across **nine** checkers, every one of them the working
-tree, and **not one** declared `index`. Per file: `snapshot_build` 7 · `check_registries` 5 ·
-`check_schema_structure` 5 · `registry` 5 · `gen_coverage` 3 · `check_coverage_transfer` 2 ·
-`snapshot_validator` 2 · `run_schema_fixtures` 1 · `run_guard_shape_lint` 1.
+Thirty-one matches — and the honest breakdown, checked against each line rather than quoted from the
+grep, is: **one is a fixture STRING** inside `run_guard_shape_lint.py`'s own self-test (not a read at
+all), and **two annotate themselves as not-judged-evidence** (`gen_coverage`'s target is *"output,
+not judged evidence"*; one `check_coverage_transfer` read is *"vocabulary only"*, its A2 copy being
+pinned by blob). That leaves **28 declared reads of judged evidence across eight checkers, every one
+of them the working tree, and not one declaring `index`** — which is the claim that matters, and it
+survives the correction. Per file: `snapshot_build` 7 · `check_registries` 5 ·
+`check_schema_structure` 5 · `registry` 5 · `gen_coverage` 2 · `snapshot_validator` 2 ·
+`check_coverage_transfer` 1 · `run_schema_fixtures` 1. <sub>rev 2 first quoted "31 reads of judged
+evidence" straight off the grep — a count stated without reading its own members, in the document's
+own shape-4 section. Caught by `/scrutinize`, not by either review.</sub>
 
 Three qualifications, because this is a declaration count and not a behaviour count:
 

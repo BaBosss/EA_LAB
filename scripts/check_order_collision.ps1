@@ -267,6 +267,11 @@ function Get-LedgerLanes {
         #     this parser cannot interpret -- inverting it INVENTS a reservation nobody made.
         #     It is ignored and NAMED, because "I could not read it" must never look like
         #     "there was nothing there" (memory: guard-disarmed-by-prose-reported-as-note).
+        #   * STATED LIMIT: a bare range immediately followed by '.' or '-' (e.g. a sentence
+        #     ending "670-679.") is silently NOT matched -- the cost of excluding filenames.
+        #     The failure lands on the LOUD path (zero ranges => a named NOTE + rule skipped,
+        #     or the other declared ranges still enforce), never on a wrong range. The
+        #     `enforcing reserved block(s):` line below is how a human notices the drop.
         $ranges = New-Object System.Collections.Generic.List[object]
         $malformed = New-Object System.Collections.Generic.List[string]
         foreach ($m in [regex]::Matches($blockRaw, '(?<![-\w.])(\d+)\s*-\s*(\d+)(?![-\w.])')) {

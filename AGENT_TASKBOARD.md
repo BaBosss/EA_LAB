@@ -142,7 +142,7 @@ grep -ho "# snapshot: [a-z-]*" _triage/factory_os/*.py scripts/*.ps1 scripts/lib
       1 # snapshot: not-a-judged-input
 ```
 
-**Zero declare `index`.** The exploited form is already in this repo: `ORDER-615` S1 — A7 judged the working tree, so staging a deletion and restoring the working copy reported **0 problems** on an append-only guard. It was repaired in **one** checker; the same defect is structurally available in the other thirty.
+**Zero declare `index`.** Of the 31 matches, one is a fixture string in the lint's self-test and two annotate themselves as not-judged-evidence ⇒ **28 real reads of judged evidence, all worktree** (design §1 carries the per-file breakdown and the correction note). The exploited form is already in this repo: `ORDER-615` S1 — A7 judged the working tree, so staging a deletion and restoring the working copy reported **0 problems** on an append-only guard. It was repaired in **one** checker; the same defect is structurally available in the rest.
 
 ### The rule, which is the whole design in one line
 
