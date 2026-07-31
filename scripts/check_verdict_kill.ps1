@@ -9,14 +9,31 @@
 # WARN-ONLY: this script ALWAYS exits 0. It never blocks a commit. Its only job is to print the
 # KILL-GATE questions when a commit appears to add a concept-kill verdict WITHOUT optimize evidence,
 # so the author consciously confirms (structural kill? optimized on the right home?).
+#
+# SNAPSHOT DECLARATIONS (ORDER-674's owed half, added 2026-07-31). ORDER-674 measured this guard at
+# 2 git reads and 0 declarations. Both reads were already correct; nobody had written that down, so
+# "deliberate" and "accidental" were indistinguishable -- which is the whole finding, not a
+# formality. Every read below carries `# snapshot:` checked against what the code actually does.
+#
+# WHAT THIS GUARD JUDGES, and it decides the snapshot: the lines THIS COMMIT ADDS. That is exactly
+# `git diff --cached` -- HEAD compared against the INDEX. The working tree is not a candidate here
+# and never was: a verdict typed but not staged is not being committed, and a verdict staged but
+# since edited on disk still lands in the commit.
+#
+# ITS STATED LIMIT, so the next reader does not over-read the green: this guard is WARN-ONLY and
+# always exits 0. Reading the right bytes makes its reminder fire on the right commits; it does not
+# make it enforce anything. Nothing here should ever be cited as "the kill gate is enforced".
 
 $ErrorActionPreference = 'SilentlyContinue'
 
 # verdict-bearing files worth scanning
+# snapshot: index -- `diff --cached` is HEAD vs the INDEX, i.e. the paths this commit carries.
 $targets = git diff --cached --name-only -- '_triage/*.md' 'EDGE_CATALOG.md' 'AGENT_TASKBOARD.md' 'EA_SCORECARD_AND_REGISTRY.md'
 if (-not $targets) { exit 0 }
 
 # only the ADDED lines in this commit
+# snapshot: index -- same vintage as the path list above, so both halves of one verdict come
+# from one moment (the pairing GUARD_SHAPES shape 1 records as `A2`'s crime when it does not).
 $added = git diff --cached --unified=0 -- $targets | Where-Object { $_ -match '^\+' -and $_ -notmatch '^\+\+\+' }
 if (-not $added) { exit 0 }
 

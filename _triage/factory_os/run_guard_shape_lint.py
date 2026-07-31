@@ -206,12 +206,15 @@ PS_PENDING = {
     'scripts/check_template_dependencies.ps1':
         'ORDER-674 owed: reads undeclared, not a front guard',
     'scripts/check_truncated_run.ps1': 'ORDER-674 owed: reads undeclared, not a front guard',
-    'scripts/check_verdict_kill.ps1': 'ORDER-674 owed: 2 git reads, 0 declared',
 }
-# Every PowerShell checker starts suspended, so THIS commit changes no verdict anywhere. The
-# number is asserted against L1_NOT_PARSED rather than typed twice: a suspension list that can
-# drift from the file list it suspends is the hand-maintained cache L0 exists to refuse.
-assert set(PS_PENDING) == set(L1_NOT_PARSED)
+# SUBSET, not equality. The list started equal to L1_NOT_PARSED -- every PowerShell checker
+# suspended, so the landing commit changed no verdict anywhere -- and it SHRINKS: releasing a file
+# is the whole point, and an equality assert would have made that impossible. What is still
+# refused is a suspension for a file nothing suspends: an exemption naming a file outside the set
+# exempts nothing while reading as if it did, which is the same defect L0/T7 refuses one rule up.
+assert set(PS_PENDING) <= set(L1_NOT_PARSED), (
+    'PS_PENDING suspends %s, which is not a PowerShell checker L3 covers'
+    % sorted(set(PS_PENDING) - set(L1_NOT_PARSED)))
 
 L1_DEFERRED = {
     '_triage/factory_os/check_s2a_migration.py': 'inside the attestation bundle (ORDER-614 rev 2 '
