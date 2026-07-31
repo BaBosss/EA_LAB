@@ -44,7 +44,16 @@ CASES = (
 
 
 def run_checker():
-    p = subprocess.run(['tools\\python312\\python.exe', CHECKER], capture_output=True, text=True)
+    # ORDER-670: mode pinned to WORKTREE explicitly. This suite writes mutations into the
+    # worktree copy of schemas.json and asserts the checker refuses them -- it is testing the
+    # checker's RULES against synthetic bytes (category C), not judging a commit. Under a
+    # pre-commit hook the inherited env says `index`, and an index-mode checker cannot see a
+    # worktree mutation: every case here would report GREEN-for-the-wrong-reason and the
+    # suite would call that BAD. The mode must therefore be deterministic, not inherited.
+    env = dict(os.environ)
+    env['EA_LAB_EVIDENCE'] = 'worktree'
+    p = subprocess.run(['tools\\python312\\python.exe', CHECKER], capture_output=True,
+                       text=True, env=env)
     return p.returncode, p.stdout
 
 

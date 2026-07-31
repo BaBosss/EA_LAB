@@ -15,12 +15,26 @@ pre-commit fast tier via scripts/_test/run_contract_binding_tests.ps1.
 
 What is still useful here: root/discriminator/branch shape checks and the
 unevaluatedProperties inventory. It is kept as a lint, NOT as evidence that the design and
-the schema agree. It is deliberately not wired into any hook -- a green run from this file
-means less than it appears to.
+the schema agree. (An earlier version of this header said it was "deliberately not wired
+into any hook" -- that stopped being true on 2026-07-30 when /scrutinize wired it into
+run_contract_binding_tests.ps1, and the sentence outlived the fact.)
+
+ORDER-670: every judged read goes through the evidence source -- the index in hook mode,
+the worktree on a manual run. Existence probes on enforcer paths go the same way: "the
+enforcer exists" is a claim about the commit when a commit is being judged.
 """
 import json, os, re, sys
 
-d = json.load(open('_triage/factory_os/schemas.json', encoding='utf-8'))  # snapshot: worktree
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import evidence as ev  # noqa: E402
+
+try:
+    src = ev.EvidenceSource.for_run()
+    print(src.marker('check_schema_structure.py'))
+    d = json.loads(src.read_committed('_triage/factory_os/schemas.json'))
+except ev.ToolFailure as exc:
+    print('[TOOL FAILURE] %s' % exc)
+    sys.exit(2)
 fail = 0
 
 def chk(ok, msg):
@@ -164,12 +178,12 @@ chk('process_observed' in d['$defs']['RunAttempt']['properties'] and
 # This is that check. It is cheap and it is the only thing here that would have caught
 # all three of today's blockers.
 print("\nDESIGN <-> SCHEMA BINDING (the seam every regression came through)")
-design = open('_triage/EA_LAB_FACTORY_OS_DESIGN.md', encoding='utf-8').read()  # snapshot: worktree
+design = src.read_committed('_triage/EA_LAB_FACTORY_OS_DESIGN.md')
 # The generated tables -- including the __STORAGE__ ownership table these checks read -- moved out
 # of the design into CONTRACTS.md (`87af43fd`). Both files together are the document, so the
 # storage-path and refuted-claim scans read the pair. Reading only the design would have made the
 # storage check vacuously fail and the banned-phrase scan blind to half the prose.
-contracts = open('_triage/factory_os/CONTRACTS.md', encoding='utf-8').read()  # snapshot: worktree
+contracts = src.read_committed('_triage/factory_os/CONTRACTS.md')
 both = design + '\n' + contracts
 
 owner_paths = []
@@ -214,17 +228,17 @@ def _invocation_text():
     """
     text = ""
     # .githooks/pre-commit is an invocation script end to end -- everything named there is run.
-    if os.path.exists(".githooks/pre-commit"):
-        text += open(".githooks/pre-commit", encoding="utf-8", errors="replace").read()  # snapshot: worktree
+    if src.exists_committed(".githooks/pre-commit"):
+        text += src.read_committed(".githooks/pre-commit", errors="replace")
     # For the tier files, take ONLY the arrays that are executed. Cutting the $SUITE_GUARDS map out
     # and keeping the rest was tried first and still passed a bogus WIRED claim, because the same
     # filename reappears further down in another declaration block. Whitelisting the executed arrays
     # is decidable; blacklisting prose is not.
     for path, marker in (("scripts/_test/run_fast_cages.ps1", "$FAST_SUITES"),
                          ("scripts/_test/run_contract_binding_tests.ps1", "$scripts")):
-        if not os.path.exists(path):
+        if not src.exists_committed(path):
             continue
-        body = open(path, encoding="utf-8", errors="replace").read()  # snapshot: worktree
+        body = src.read_committed(path, errors="replace")
         m = re.search(re.escape(marker) + r"\s*=\s*@\((.*?)\n\)", body, re.S)
         if m:
             text += m.group(1)
@@ -245,10 +259,10 @@ for _name, _body in sorted(d["$defs"].items()):
         continue
     _counts[_st] += 1
     if _st == "PLANNED":
-        chk(not _enf or not os.path.exists(_enf),
+        chk(not _enf or not src.exists_committed(_enf),
             "%s is PLANNED and names no existing enforcer (a real one would understate it)" % _name)
     else:
-        chk(bool(_enf) and os.path.exists(_enf),
+        chk(bool(_enf) and src.exists_committed(_enf),
             "%s is %s and its x-enforcer %r exists" % (_name, _st, _enf))
         if _st == "WIRED":
             chk(bool(_enf) and os.path.basename(_enf) in _wiring,
