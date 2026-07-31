@@ -51,6 +51,20 @@ ROOT = reg.REPO_ROOT
 FORBIDDEN_VERDICT_KEYS = ('verdict', 'reconciliation_clear', 'all_clear', 'pass', 'passed',
                           'outcome', 'conclusion', 'judgement', 'judgment', 'ruling')
 
+# R3 IS A BLACKLIST, AND SAYING SO IS PART OF IT. GUARD_SHAPES shape 2 asks: "is this a
+# blacklist? if so, what is the allowlist?" PROBED 2026-07-31, four things walk past the value
+# list and only one was closable:
+#   a verdict as a dict KEY (`{"DEMO": 1}`)     -> CLOSED below, keys are checked against both sets
+#   a NUMBER-coded verdict (`{"state": 1}`)     -> NOT closable by any value list
+#   a verdict split across two fields           -> NOT closable
+#   a verdict word nobody listed (`APPROVED`)   -> the definition of a blacklist's limit
+#
+# THE ALLOWLIST EXISTS AND IT IS NOT THIS CHECK. Every registry entity in schemas.json is
+# `unevaluatedProperties: false`, so a row cannot acquire an undeclared field AT ALL -- that is the
+# closed end, and R5 is what keeps each store bound to one such entity. R3 is the second line, for
+# a verdict smuggled into a field that IS declared. Read on its own it would oversell itself, which
+# is why the two halves are named together here.
+#
 # R3, half two: VALUES that are verdicts wherever they appear, under whatever key. This is the
 # canonical verdict vocabulary from CLAUDE.md's VERDICT GATE plus the retired terms it names, so a
 # store cannot smuggle one in under a neutral key like `state` or `label`.
@@ -93,6 +107,18 @@ RESOLVER_SWEEP_EXEMPT = {
 # together in a decision, not the whole enum.
 ROLE_PAIR = re.compile(r'TUNABLE')
 ROLE_PAIR2 = re.compile(r'LOCKED')
+
+# THE SWEEP'S LIMITS, PROBED AND STATED HERE RATHER THAN IMPLIED. 2026-07-31, round 3:
+#   * `'TUN' + 'ABLE'` walks past it. Any regex sweep loses to string concatenation, and no
+#     amount of pattern work closes that -- a parser would be needed, and a parser for four
+#     languages to catch a hypothetical is worse than an honest limit.
+#   * SCOPE is three globs: _triage/factory_os/*.py, scripts/*.ps1, scripts/lib/*.ps1.
+#     scripts/_test/*.ps1, *.psm1 and MQL sources are NOT swept. A second resolver written in
+#     ea_template/core/*.mqh would not be seen.
+# So R4(b)'s claim is exactly: NO FILE IN THOSE THREE GLOBS PAIRS THE ROLE TOKENS IN CODE WITHOUT
+# being the resolver or a declared exemption. It is not "no second resolver can exist". R4(a) --
+# every declared consumer reaches the resolver -- is the half that carries real weight, and it is
+# the half that reads stripped source so a comment cannot satisfy it.
 
 # COMMENTS ARE NOT CODE, and this had to be learned here the same way run_guard_shape_lint learned
 # it: the first version of the sweep flagged scripts/optimize_guard.ps1 -- the DECLARED CONSUMER --
@@ -172,6 +198,11 @@ def check_r3(stores):
         _meta, rows = stores[rel]
         for n, rec in rows:
             def seen(k, v, path, rel=rel, n=n):
+                if k is not None and k.strip().upper() in FORBIDDEN_VERDICT_VALUES:
+                    problems.append(
+                        'R3 %s line %d uses the verdict word %r as a KEY at %s. Probed and found '
+                        'walking past the value check, which only inspected values.'
+                        % (rel, n, k, path))
                 if k is not None and k.lower() in FORBIDDEN_VERDICT_KEYS:
                     problems.append(
                         'R3 %s line %d carries a verdict-shaped KEY at %s. These stores hold '
@@ -196,7 +227,12 @@ def check_r4():
             problems.append('R4 declared consumer %s does not exist' % rel)
             continue
         with io.open(path, encoding='utf-8') as fh:  # snapshot: worktree
-            src = fh.read()
+            src = strip_comments(fh.read(), rel)
+        # PROBED 2026-07-31 (round 2): this read the RAW source, so a consumer that merely MENTIONED
+        # the resolver in a comment satisfied R4 while deciding role/surface some other way. That is
+        # the same comments-are-not-code defect the sweep below had, in the half that is supposed to
+        # be the strong one. MEASURED after the fix: optimize_guard still carries the token twice
+        # with comments stripped, so the fix does not merely move the goalposts.
         if why not in src:
             problems.append(
                 'R4 %s is declared a consumer of the ParameterBinding resolver but does not '
@@ -266,6 +302,19 @@ def check_r6():
                 if isinstance(rec, dict) and rec.get('proposed_owner') or                         (isinstance(rec, dict) and rec.get('proposed')):
                     d1_states.add((rec.get('entity_name') or rec.get('entity'),
                                    rec.get('current_owner') or rec.get('owner')))
+    # THE THIRD DIRECTION, and it was missing. PROBED 2026-07-31 (round 2): emptying
+    # reg.STORES_BLOCKED entirely went silently GREEN -- a recorded owner-owned block could be
+    # deleted with nothing noticing, which is worse than never having recorded it, because the
+    # store would then be created and the S2a gate would go red with no explanation on file.
+    # A block is only a block if REMOVING it is also refused while its premise holds.
+    if ('TestUniverse', 'NO_CURRENT_OWNER') in d1_states or             ('LogicalSymbol', 'NOT_YET_BUILT') in d1_states:
+        if 'factory/universe.jsonl' not in reg.STORES_BLOCKED:
+            problems.append(
+                'R6 D1 still declares TestUniverse NO_CURRENT_OWNER / LogicalSymbol NOT_YET_BUILT '
+                'with factory/universe.jsonl as their proposed owner, but that store is NOT '
+                'declared in registry.STORES_BLOCKED. Creating it refutes both rows and D1 is '
+                'inside the owner attestation bundle, so the block must be recorded, not dropped.')
+
     for rel, why in sorted(reg.STORES_BLOCKED.items()):
         path = os.path.join(ROOT, rel.replace('/', os.sep))
         if os.path.isfile(path):

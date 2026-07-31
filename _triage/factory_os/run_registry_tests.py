@@ -214,6 +214,53 @@ def main():
             finally:
                 shutil.rmtree(exroot, ignore_errors=True)
 
+        # ROUND-1 FINDINGS, fixtured. Both were found by ATTACKING R3 and the resolver, not by
+        # re-reading them.
+        for label, row, expect in [
+                ('a verdict word used as a KEY (probed: walked past the value check)',
+                 {'entity': 'TestUniverse', 'DEMO': 1}, True),
+                ('a verdict value LOWERCASED',
+                 {'entity': 'TestUniverse', 'state': 'dead-structural'}, True),
+                ('a verdict value padded with whitespace',
+                 {'entity': 'TestUniverse', 'state': ' DEMO '}, True),
+                ('a verdict inside a NESTED array',
+                 {'entity': 'TestUniverse', 'a': [{'b': ['DEMO']}]}, True),
+                # THE STATED LIMIT, asserted so it is a documented gap and not a surprise. A value
+                # list cannot catch a verdict expressed as a number or in words nobody listed. The
+                # allowlist for that is the schema's closed object, not this check.
+                ('a verdict word NOT in the list -- the blacklist limit, asserted as a gap',
+                 {'entity': 'TestUniverse', 'state': 'APPROVED'}, False)]:
+            lroot = seed(tempfile.mkdtemp(prefix='s5lim_'), universe=[row])
+            try:
+                chk.problems[:] = []
+                chk.check_r3(reg.load_all(root=lroot))
+                got = any(p.startswith('R3') for p in chk.problems)
+                check('R3 %s -> %s' % (label, 'REFUSED' if expect else 'NOT caught (stated limit)'),
+                      got is expect, str(chk.problems))
+            finally:
+                shutil.rmtree(lroot, ignore_errors=True)
+
+        lk = seed(tempfile.mkdtemp(prefix='s5lock_'),
+                  parameter_bindings=[{'entity': 'ParameterBinding',
+                                       'hypothesis_revision': 'B14-H01-r1', 'parameter': 'Z',
+                                       'role': 'LOCKED', 'surface': 'HIDDEN'}])
+        try:
+            refuses('NEG role=LOCKED with NO locked_value is REFUSED (probed: it resolved to None)',
+                    lambda: reg.resolve('B14-H01-r1', 'Z', root=lk),
+                    'is not a lock')
+        finally:
+            shutil.rmtree(lk, ignore_errors=True)
+        lk2 = seed(tempfile.mkdtemp(prefix='s5lock2_'),
+                   parameter_bindings=[binding(param='Z', role='LOCKED', surface='HIDDEN',
+                                               locked_value=0)])
+        try:
+            # SPECIFICITY, and it has to be `0`: a check written as `if not locked_value` would
+            # refuse a legitimate lock-to-zero, which is a real value for a lot size or a flag.
+            check('SPECIFICITY role=LOCKED with locked_value=0 is ACCEPTED, not refused as falsy',
+                  reg.resolve('B14-H01-r1', 'Z', root=lk2)['locked_value'] == 0)
+        finally:
+            shutil.rmtree(lk2, ignore_errors=True)
+
         print('\n--- R4: one resolver, and the sweep can tell code from prose ---')
         chk.problems[:] = []
         chk.check_r4()
@@ -258,6 +305,28 @@ def main():
                   any('this store holds' in p for p in chk.problems), str(chk.problems))
         finally:
             shutil.rmtree(wrong, ignore_errors=True)
+
+        # ROUND-3: the allowlist is exhaustive over the WHOLE role enum, not just the two roles
+        # the other cases happen to use. This is what makes "a role added to the enum later is
+        # refused until somebody decides" a fact rather than an intention.
+        allroot = tempfile.mkdtemp(prefix='s5roles_')
+        try:
+            rows = []
+            for i, r in enumerate(reg.ROLES):
+                extra = {'locked_value': 1} if r == 'LOCKED' else {}
+                rows.append(binding(param='P%d' % i, role=r, surface='RESEARCH', **extra))
+            seed(allroot, parameter_bindings=rows)
+            res = reg.resolve_all('B14-H01-r1', root=allroot)
+            check('every one of the %d roles resolves, and exactly the ones in OPTIMIZABLE_ROLES '
+                  'are True' % len(reg.ROLES),
+                  all(res['P%d' % i]['optimizable'] is (r in reg.OPTIMIZABLE_ROLES)
+                      for i, r in enumerate(reg.ROLES)),
+                  json.dumps({k: v['optimizable'] for k, v in res.items()}))
+            check('and OPTIMIZABLE_ROLES is a strict subset, so the enum cannot grant itself '
+                  'permission by growing',
+                  set(reg.OPTIMIZABLE_ROLES) < set(reg.ROLES))
+        finally:
+            shutil.rmtree(allroot, ignore_errors=True)
 
         print("\n--- R6: a BLOCKED store must be absent, and its block must still hold ---")
         chk.problems[:] = []
@@ -304,6 +373,53 @@ def main():
         finally:
             chk.ROOT = saved_root
             shutil.rmtree(empty_d1, ignore_errors=True)
+
+        # ROUND-2 FINDINGS, fixtured.
+        saved_blocked = dict(reg.STORES_BLOCKED)
+        try:
+            reg.STORES_BLOCKED.clear()
+            chk.problems[:] = []
+            chk.check_r6()
+            check('R6 NEG DELETING the block while its premise holds is REFUSED '
+                  '(probed: it was silently green)',
+                  any('must be recorded, not dropped' in p for p in chk.problems),
+                  str(chk.problems))
+        finally:
+            reg.STORES_BLOCKED.clear()
+            reg.STORES_BLOCKED.update(saved_blocked)
+
+        # R4's consumer half must read CODE, not prose. Probed: it read the raw source, so a
+        # consumer that only MENTIONED the resolver in a comment satisfied it.
+        consumer = 'scripts/optimize_guard.ps1'
+        with io.open(os.path.join(reg.REPO_ROOT, consumer.replace('/', os.sep)),
+                     encoding='utf-8') as fh:
+            csrc = fh.read()
+        token = chk.RESOLVER_CONSUMERS[consumer]
+        check('R4 the declared consumer carries the resolver token in CODE, not only in a comment',
+              chk.strip_comments(csrc, consumer).count(token) >= 1,
+              'stripped occurrences=%d, raw=%d'
+              % (chk.strip_comments(csrc, consumer).count(token), csrc.count(token)))
+        # ...and the check itself must reject a consumer whose ONLY reference is a comment.
+        fake = tempfile.mkdtemp(prefix='s5cons_')
+        try:
+            os.makedirs(os.path.join(fake, 'scripts'))
+            with io.open(os.path.join(fake, 'scripts', 'fake.ps1'), 'w', encoding='utf-8') as fh:
+                fh.write('# we consult factory_os/registry.py, honest\n$x = 1\n')
+            saved_root, saved_cons = chk.ROOT, dict(chk.RESOLVER_CONSUMERS)
+            try:
+                chk.ROOT = fake
+                chk.RESOLVER_CONSUMERS.clear()
+                chk.RESOLVER_CONSUMERS['scripts/fake.ps1'] = 'factory_os/registry.py'
+                chk.problems[:] = []
+                chk.check_r4()
+                check('R4 NEG a consumer whose ONLY reference is a COMMENT is REFUSED',
+                      any('does not reference' in p for p in chk.problems), str(chk.problems))
+            finally:
+                chk.ROOT = saved_root
+                chk.RESOLVER_CONSUMERS.clear()
+                chk.RESOLVER_CONSUMERS.update(saved_cons)
+        finally:
+            shutil.rmtree(fake, ignore_errors=True)
 
         print('\n--- the CLI both consumers go through ---')
         py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')

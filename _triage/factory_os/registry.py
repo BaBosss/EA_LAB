@@ -207,6 +207,17 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None):
     if surface not in SURFACES:
         _refuse('binding for %r in %r carries surface %r, which is not in the closed vocabulary %s'
                 % (parameter, hypothesis_revision, surface, list(SURFACES)))
+    # FOUND BY PROBING, 2026-07-31 (ORDER-630 round 1): the schema requires `locked_value` when
+    # role is LOCKED (an `allOf`/`if`-`then`), and this resolver never consults the schema -- a
+    # LOCKED binding with no locked_value resolved happily and handed back None. optimize_guard
+    # fails safe on it (LOCKED is not optimizable either way), but the generator's whole job is to
+    # emit that value as a const, and a const of null is a locked parameter locked to nothing.
+    # Re-checked here rather than left to ajv, because the fast path never runs ajv.
+    if role == 'LOCKED' and 'locked_value' not in rec:
+        _refuse('binding for %r in %r is role=LOCKED with no `locked_value`. The schema requires '
+                'one; this resolver is reached without ajv on the fast path, so it is refused here '
+                'too. A locked parameter with no value to lock to is not a lock.'
+                % (parameter, hypothesis_revision))
     return {'parameter': parameter, 'hypothesis_revision': hypothesis_revision,
             'role': role, 'surface': surface,
             'optimizable': role in OPTIMIZABLE_ROLES,
