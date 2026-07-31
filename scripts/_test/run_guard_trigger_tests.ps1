@@ -199,6 +199,46 @@ try {
         Good 'every tracked module a suite IMPORTS is declared -- the sweep follows the wrapper into its python'
     }
 
+    # /scrutinize round 2: THE SWEEP ABOVE HAD NO NEGATIVE. It fired on 12 real undeclared
+    # dependencies once, which is genuine observed-red -- and then every one was declared, so from
+    # the next commit onward it matches nothing and prints green forever. A regex typo, a broken
+    # closure walk, or an accidentally-emptied $pyFiles would all be invisible. That is shape 3 in
+    # a check written the same hour, so it gets a fixture that does not depend on the repo being
+    # broken.
+    $before = $fail
+    $tmpPy = Join-Path ([System.IO.Path]::GetTempPath()) ("gt702_" + [guid]::NewGuid().ToString('N') + '.py')
+    try {
+        # ATTACK: a module that imports a TRACKED repo module, with nothing declared for it.
+        Set-Content -LiteralPath $tmpPy -Encoding ASCII -Value "import evidence`nimport registry`n"
+        $hits = @()
+        foreach ($m in $importRe.Matches((Get-Content -LiteralPath $tmpPy -Raw))) {
+            $mod = if ($m.Groups[1].Success) { $m.Groups[1].Value } else { $m.Groups[2].Value }
+            if ($tracked.ContainsKey("_triage/factory_os/$mod.py")) { $hits += $mod }
+        }
+        if ($hits.Count -eq 2) {
+            Good 'PART 4b NEG the import matcher finds tracked repo modules (evidence, registry)'
+        } else {
+            Bad ("PART 4b NEG expected 2 tracked imports, found $($hits.Count) -- the matcher is " +
+                 'no longer able to see an import, and the green above means nothing')
+        }
+        # SPECIFICITY: stdlib and third-party imports must NOT be demanded. A guard that asks you
+        # to declare `import json` is a guard people switch off, which is the 2026-07-30 lesson.
+        Set-Content -LiteralPath $tmpPy -Encoding ASCII -Value "import io`nimport json`nfrom collections import OrderedDict`n"
+        $stray = @()
+        foreach ($m in $importRe.Matches((Get-Content -LiteralPath $tmpPy -Raw))) {
+            $mod = if ($m.Groups[1].Success) { $m.Groups[1].Value } else { $m.Groups[2].Value }
+            if ($tracked.ContainsKey("_triage/factory_os/$mod.py")) { $stray += $mod }
+        }
+        if ($stray.Count -eq 0) {
+            Good 'PART 4b SPECIFICITY stdlib imports are not demanded as declarations'
+        } else {
+            Bad "PART 4b SPECIFICITY the sweep would demand declarations for: $($stray -join ', ')"
+        }
+    } finally {
+        Remove-Item -LiteralPath $tmpPy -Force -ErrorAction SilentlyContinue
+    }
+    if ($fail -eq $before) { Good 'the import sweep can still fire, and does not fire on the standard library' }
+
     # -------------------------------------------------------------------------------------
     Write-Host ''
     Write-Host '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'

@@ -90,6 +90,12 @@ L1_FILES = (
     # a signature -- which was the deferral's whole reason, and reasons that expire must take
     # their exemptions with them.
     '_triage/factory_os/check_s2a_attestation.py',
+    # /scrutinize round 1, ORDER-670 8/9: THIS FILE. It does not match CHECKER_GLOBS (`check_*.py`)
+    # and was in no list, so the lint of the guards was the one module the lint never looked at --
+    # exactly what the snapshot_build entry four lines up says outside-the-glob modules become.
+    # It matters more since migration 6/9 gave it real reads: it judges committed checker sources,
+    # which makes it a CHECKER by its own definition.
+    '_triage/factory_os/run_guard_shape_lint.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -172,6 +178,10 @@ CATEGORY = {
     '_triage/factory_os/gen_coverage.py': 'P',
     '_triage/factory_os/snapshot_build.py': 'B',
     '_triage/factory_os/evidence.py': 'READER',
+    # A: it judges the committed source of every other checker. Its one remaining
+    # bare open() is the fixture-temp-tree branch, declared `not-a-judged-input`,
+    # which T7 allows precisely because a synthetic root is not judged evidence.
+    '_triage/factory_os/run_guard_shape_lint.py': 'A',
 }
 
 # Category-A files whose migration to read_committed/list_committed has not landed yet. The
