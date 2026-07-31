@@ -11,11 +11,17 @@
 > expected to concern one. The words `signature` and `attestation` refer to the repository owner
 > countersigning a data-migration record in a text file.
 
-**Commit range: `48973138..50ef2f41`, six commits.** ⚠️ A range includes writers that are not me:
-`[auto] daily monitor snapshot` is a scheduled committer in this repo with no ledger row, and it
-landed mid-session during the previous batch. **CHECKED for this range, not assumed** —
-`git log --format='%an|%s' 48973138..HEAD` returns six commits, all mine, none from the scheduled
-job. Re-run it before accepting any negative claim I make.
+**Commit range: `48973138..d92549a4`, ELEVEN commits. Both ends are PINNED SHAs — do not
+substitute `HEAD`.** The previous version of this line wrote `48973138..HEAD` in the same sentence
+that told you to re-run it, and by the time you did, HEAD had moved and returned 9 where the text
+said 6. That was the document's defect, not a discrepancy in the repo. A range in a review brief is
+a claim about a fixed set of commits and must be written as one.
+
+⚠️ A range includes writers that are not me. `[auto] daily monitor snapshot` is a scheduled
+committer in this repo with no ledger row and it has landed mid-session before. **CHECKED for this
+exact range, not assumed** — `git log --format='%an|%s' 48973138..d92549a4` returns eleven commits,
+all `patip`, none from the scheduled job. Re-run that literal command before accepting any negative
+claim I make.
 
 ## What you are auditing
 
@@ -45,65 +51,91 @@ permanent semantics with a `ParameterBinding`'s per-hypothesis role.
 
 ---
 
-## THE GAPS I ALREADY KNOW ABOUT
+## THE GAPS I ALREADY KNOW ABOUT — 9, and only 3 are engineering work
 
-This section exists because it is what made your round 2 productive last time. Everything below is
-a real weakness I found and did not close, with the reason. **Re-deriving these is lower value than
-finding what is not here.**
+MEASURED just now, not recalled. Each line says who can close it, because "still open" and "still
+my job" are different facts and the list is useless if it conflates them.
 
-1. **`run_schema_fixtures.py` judges the WORKTREE snapshot while the fast tier is a pre-commit
-   hook.** A staged-but-different `portfolio/control_room_snapshot.json` passes C1 on worktree
-   bytes. The read declares `# snapshot: worktree`, so L1 is satisfied and a reviewer can see it.
-   Not fixed: making the suite behave differently under a hook is its own design, and the same
-   question applies to every suite in the tier.
+**Permanently unclosable — stated as limits IN the guard, not tracked as work (2)**
 
-2. **`check_s2a_migration`'s C3 says "EXISTS at HEAD" and fires on the INDEX.** Proven by
-   experiment — worktree-only 0 refutations, staged 3. Reading the index is the *correct* snapshot
-   for a pre-commit gate, so the check is right and the message is wrong. Not fixed: that file is
-   inside the owner's attestation bundle, and a one-word message repair is not worth a signature.
+1. **R3 is a deny-list.** A number-coded verdict, a verdict split across two fields, and a verdict
+   word nobody listed all get past it. The allowlist that *does* exist is the schema's
+   `unevaluatedProperties: false`, and R5 is what binds each store to one such entity. The
+   unclosable case is asserted as a fixture that EXPECTS not-caught.
+2. **R4's second-copy sweep does not catch `'TUN' + 'ABLE'`**, and its scope is three globs —
+   `scripts/_test/*.ps1`, `*.psm1` and MQL sources are not swept. No regex closes concatenation.
 
-3. **R3 is a deny-list and three counter-examples get past it**: a number-coded verdict, a verdict split
-   across two fields, a verdict word nobody listed. The allowlist that *does* exist is the schema's
-   `unevaluatedProperties: false`. The un-closable case is asserted as a fixture expecting
-   NOT-caught.
+**Owner-owned — I may not close these (3)**
 
-4. **R4's second-copy sweep does not catch `'TUN' + 'ABLE'`**, and its scope is three globs —
-   `scripts/_test/*.ps1`, `*.psm1` and MQL sources are not swept.
+3. **`factory/universe.jsonl` is not created.** Creating it refutes two D1 rows and D1 is inside
+   the owner's `bundle_sha256`. Measured: staged ⇒ the S2a gate goes red naming both; absent ⇒ 7/7
+   green. **This is the decision I most want checked** — I recorded the block rather than editing
+   D1, on the grounds that editing it spends an owner signature to hide a structural defect that
+   is already recorded (`approval-pinning-self-invalidates`).
+4. **`check_s2a_migration`'s C3 says "EXISTS at HEAD" and fires on the INDEX.** The check is right
+   and the message is wrong; the file is inside the bundle, so a one-word repair costs a signature.
+5. **Four of five registry stores carry no rows.** Each says why in its own header. The mechanism
+   is exercised against synthetic registries; `check_registries` prints `0 means UNTESTED by this
+   run` rather than a clean line.
 
-5. **R4 cannot prove two programs compute the same thing.** It proves the vocabulary exists in one
-   file and that every declared consumer reaches it. **A consumer that calls the resolver and then
-   ignores the answer is not caught.** `run_registry_tests.ps1` covers that for the one consumer
-   that exists; a second consumer added later is not automatically covered.
+**Real, and mine (3) — deliberately NOT started before this review**
 
-6. **`snapshot_build.reconcile()` reads the working tree**, so it describes the tree as it is, not
-   as a commit would contain it.
+6. **`run_schema_fixtures` judges the WORKTREE snapshot while the fast tier is a pre-commit hook.**
+   A staged-but-different snapshot passes C1 on worktree bytes.
+7. **`reconcile()` reads the working tree too** — same root as 6. Both are the same question asked
+   of the whole tier, not of one line, so they want one design rather than two patches.
+8. **R4's sweep scope** could widen to the globs named in 2.
 
-7. **An ABSENT snapshot file exits 3 (TOOL FAILURE) where "no document" would be more accurate.**
-   No reader takes that path — `Get-VerifiedSnapshot` `Test-Path`s first and returns
-   `Code=MISSING` — so only a human at the command line sees it.
+**No practical impact (1)**
 
-8. **`factory/universe.jsonl` is NOT CREATED**, and this is the one I most want checked. Creating
-   it refutes two rows of D1 (`TestUniverse: NO_CURRENT_OWNER`, `LogicalSymbol: NOT_YET_BUILT`,
-   both proposing that file), and D1 is inside the owner's `bundle_sha256`. Measured: with the file
-   staged the S2a gate goes red naming both; with it absent all 7 steps are green. I chose to
-   record the block rather than edit D1, because editing it would spend an owner signature to hide
-   a structural defect that is already recorded (`approval-pinning-self-invalidates`: every
-   `disposition: TRANSFER` row self-invalidates on execution). **Tell me if that was the wrong
-   call.**
+9. An ABSENT snapshot exits 3 (TOOL) where "no document" is more accurate. No reader takes that
+   path — `Get-VerifiedSnapshot` `Test-Path`s first and returns `Code=MISSING`.
 
-9. **The fast tier is now 39.4s** (median of five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s advisory**
-   budget, up from 18.1s. Most of the growth is ajv startup in the monitor fixtures, which are now
-   BUILT through the real pipeline rather than hand-authored. Per-path selection keeps a real
-   commit at 11–28s. Recorded in `run_fast_cages.ps1` as a number somebody must decide about.
+**Also recorded, and it needs a decision rather than a fix:** the fast tier is **39.4s** (median of
+five clean runs: 38.1 / 38.8 / 39.4 / 39.6 / 41.1) against a **15.0s advisory** budget. Most of the
+growth is ajv startup in fixtures that are now BUILT through the real pipeline instead of
+hand-authored, which is the cost of the tests being real. Per-path selection keeps a normal commit
+at 11–29s.
 
-10. **Three of five registry stores carry no rows**, each with a reason in its own header. The
-    mechanism is exercised against synthetic registries only. `check_registries.py` prints
-    `R2 NOT_APPLICABLE cells examined this run: 0 <- 0 means R2 is UNTESTED by this run` on every
-    run, so empty is never read as passed.
+## ALREADY FOUND AND FIXED IN ROUNDS 1–3 — do not re-report
+
+**Seventeen findings from three prior review rounds are fixed and fixtured.** Re-reporting them
+costs a round. Each is listed with the counter-example that produced it, so you can tell in one
+read whether the repair actually holds — which is a better use of the round than re-deriving them.
+
+### Round 3 (7 findings, all reproduced before acceptance)
+
+| | what it was | how it is closed |
+|---|---|---|
+| **P0** | `_stat_evidence` hashed bytes through one `open()`, closed it, then `os.path.getmtime(PATH)` — hash of OLD bytes with mtime of NEW | one handle: `os.fstat(fh.fileno())` |
+| **P1** | R3 scanned rows only, so `{"_comment":"note","verdict":"DEAD-STRUCTURAL"}` gave zero problems | metadata records scanned too |
+| **P1** | `_comment` on a real coverage row ERASED it (1 cell → 0/0/0 universe) | ONE `registry.classify_record`; a record that is both note and data is REFUSED |
+| **P1** | R5 accepted required values set to `null` + an unknown field; ajv rejected the same object | live rows validated against their entity in `run_schema_fixtures.py`, where ajv already runs |
+| **P1** | L0 globbed `check_*.py` only — 11 `scripts/check_*.ps1` were invisible to a completeness claim | both globs; `L1_NOT_PARSED` declares each with its reason |
+| **P2** | `build_id` ignored freshness — age 1h and 31h gave one id across two different verdicts | `mtime` + `fresh` hashed; `age_hours` deliberately not |
+| **P2** | inline code in a title read as the status — **11 live rows** misclassified | first span whose verb is a KNOWN status, old behaviour as fallback |
+
+### Round 2 (10 findings)
+
+Reader still returned different bytes than it verified (the repair for a two-read defect was itself
+a two-read defect) · L2's `[A-E]` regex found zero criteria in a checker emitting `R1–R6`, so the
+declared pair was inert · R5 compared the discriminator string only · a `_comment` key hid a whole
+row · **`-BindingsRoot` bought permission** — `--root` REPLACED the store, so canonical `LOCKED`
+gave REFUSE and an empty root gave ALLOW; it passes `--overlay-root` now and canonical wins every
+key it defines · `build_id` ignored the reconciliation · a wrong-shape coverage row was silently
+counted as an empty universe · `canonicalize` left a partial mutation and ignored its own `--root` ·
+`CANCELLED(agent)` landed in `cancelled_by_user` · one commit missing its trailer.
+
+### Round 1 (1 finding)
+
+`registry.resolve()` returned `optimizable=None` / `source=UNBOUND` and `optimize_guard` dropped it,
+so a run declared to belong to a revision swept a parameter that revision never described and
+nothing said so. It emits a NOTE now — **not** a refusal, because whether a revision's binding set
+must be COMPLETE is undecided. **The open question stands and your opinion on it is wanted.**
 
 ---
 
-## ALREADY FOUND BY THE FIRST REVIEW ATTEMPT, AND FIXED — do not re-report
+## ORIGINAL ROUND-1 DETAIL, kept because the repair pattern is the interesting part
 
 The first run of this review reached a real finding before its response was withheld by an
 automated content check. The finding was visible in the partial output, was reproduced here, and
