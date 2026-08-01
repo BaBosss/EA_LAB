@@ -41,10 +41,28 @@ an append to `MASTER_BACKLOG.md` **outside §2 passes** the front guard (`rc=0`)
 > marker (so it judged the disk, not the index) · one bad row at HEAD froze the log forever · the mutation
 > killed every criterion so it discriminated nothing · a broken git silently disabled append-only · and a
 > `_comment` row at any position was an unchecked free-text channel. All closed, cage **16 → 25 cases**.
-> **ONE IS STILL OPEN and is the next session's first S14 task: `AGENTS.md` is declared in `SUITE_GUARDS`,
-> so editing it RUNS this suite — but no code READS it, so widening the permission row would still land
-> green.** Pinning the row's text in the cage is the fix. Same shape as
-> `citation-guard-satisfied-by-a-universal-file`.
+> ✅ **M6 is now CLOSED (`S-2026-08-01-WRFIX3`).** It was the last one: `AGENTS.md` was declared in
+> `SUITE_GUARDS`, so editing it RAN this suite, and no code READ it — a guard firing on the exact
+> commit that widened the permission row, with no question to ask about it. **`W6`** pins the §2 row
+> by sha256 and requires it to appear **exactly once** (a second row is the evasion a digest alone
+> cannot see); **`W7`** refuses any other line of `AGENTS.md` that speaks about the receipts file
+> unless it is in the closed `ALLOWED_EXTRA_MENTIONS` declaration — a permission widens just as
+> easily in a sentence beside the row as inside it. Both run **first and always**, before the `W0`
+> early returns, because the grant is the premise of `W1-W5` and is checkable while the log is still
+> empty, which is the state it spends most of its life in. Cage **25 → 34 cases**.
+> 🔴 **STATED LIMIT, not claimed away:** the pin lives in a file agents may edit, so a commit that
+> widens the row *and* moves the pin together still passes. What is removed is the **silent**
+> widening. Putting the digest on an owner-signed surface costs a signature → **queued onto §4 item 2**.
+> 📐 Evidence, both directions and none of it from fixtures alone: the `WIRING` case is red-first
+> (with `check_grant` neutralised `main()` returns **0** on a widened grant, **1** with it consulted)
+> · appending a real widening to the real `AGENTS.md` on disk gives **`W7` at line 314 in worktree
+> mode and a PASS in index mode**, i.e. the read is snapshot-bound the way `M3` required (the file
+> was restored byte-exactly, digest compared) · cost measured 3 samples each: **0.3-0.8 ms** worktree,
+> **34-37 ms** under the hook, wrapper **0.60-0.62 s**.
+> ⚠️ Adding `W6` also produced a **false green inside this suite**: `main()`'s stub answered the
+> receipts header for `AGENTS.md` too, so the `W2`-deletion case returned 1 for a reason that had
+> nothing to do with `W2`. One stub now answers for both files. A rule added to a checker changes
+> what its existing cases are testing — check them, do not assume they still mean what they meant.
 >
 > ⚠️ **One honest limit to carry forward:** `AGENTS.md` §2 says a row may cite *only the writing
 > agent's own order id*. **Nothing enforces that** — every agent commits under one git identity.
@@ -92,7 +110,11 @@ digests before they were taken.
    is F1–F14) · `§4.2`'s *"7 records"* (8 since line 9) · the corpus file's own line-1 header still
    says *"DRAFT: not yet bound"* and cites a file that does not exist · and **state in `§4.5`** that
    once a drift is acked, the ack becomes a whole-file front-guard pin on `factory/coverage.jsonl`
-   until re-acked.
+   until re-acked. **Added 2026-08-01 by `WRFIX3`:** a candidate rider, not a commitment — move
+   `GRANT_ROW_SHA256` (the S14 §2 grant pin, `check_work_receipts.py`) onto an owner-signed surface,
+   which is the only thing that turns "an agent cannot widen the grant **silently**" into "an agent
+   cannot widen it". Judge it against what it costs: the pin would then need a signature to follow
+   any typo fix in that row.
 3. **`ORDER-731` item 2** stays OPEN, waiting for the abort to recur — but it is now *armed*:
    `_triage/tier_runs/` holds a per-suite transcript, and the reading procedure is in
    `_triage/HANDOFF_2026-08-01_TIERINSTR.md`.
@@ -125,6 +147,8 @@ digests before they were taken.
 |---|---|
 | both whole-file pins removed; §2 protection landed; two signatures spent and none pending | DONE |
 | the intermittent tier budget breach, driver identified as one suite's 7 s swing — **C1 taken up by a parallel lane, see `ORDER-830`** | ORDER-820 |
+| the S14 grant row is pinned and the pin is read (`W6`/`W7`) — M6, the last of the seven | DONE |
+| moving that pin onto an owner-signed surface, so a widening cannot be self-approved at all | ORDER-731 (batched onto the next signature, §4 item 2) |
 | the tier abort itself — armed with a transcript, waiting to recur | ORDER-731 |
 | I1 + the policy stale-count batch, to ride the next signature together | ORDER-731 |
 | a module should DECLARE the paths it reads | ORDER-761 |
