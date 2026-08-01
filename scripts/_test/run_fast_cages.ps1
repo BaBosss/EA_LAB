@@ -862,6 +862,39 @@ if (-not $isNestedTier) {
 $priorTierRunEnv = $env:EA_LAB_TIER_RUN
 $env:EA_LAB_TIER_RUN = '1'
 
+# The FOUR working-tree files `check_s2a_migration.input_fingerprint()` hashes (that function's
+# own list, check_s2a_migration.py:210). Stamping HEAD and the index alone was a REAL defect in the
+# first version of this instrumentation, found by reading the fingerprint it exists to explain:
+# those four are read from the WORKING TREE and can change without HEAD or the index moving at all
+# -- which is precisely the shape of the unexplained 2026-08-01 abort. A transcript that reported
+# "nothing moved" while the abort reported "something moved" would not merely be silent, it would
+# MISLEAD the next investigation, which is worse than having no transcript.
+$TIER_FINGERPRINT_INPUTS = @(
+    '_triage/factory_os/s2a_migration.jsonl',
+    '_triage/factory_os/s2a_coverage_reconciliation.json',
+    'MASTER_BACKLOG.md',
+    '_triage/factory_os/schemas.json'
+)
+
+function Get-InputHashes {
+    param([string]$Root)
+    # CRLF-folded sha256, the same normalization the fingerprint applies, so a checkout-line-ending
+    # difference is not reported as a change. Truncated to 12 chars: this detects CHANGE, it does
+    # not authenticate anything. Still pure file reads -- no git.
+    $out = [ordered]@{}
+    foreach ($rel in $TIER_FINGERPRINT_INPUTS) {
+        try {
+            $bytes = [System.IO.File]::ReadAllBytes((Join-Path $Root $rel))
+            $text = [System.Text.Encoding]::UTF8.GetString($bytes) -replace "`r`n", "`n"
+            $sha = [System.Security.Cryptography.SHA256]::Create()
+            $hash = $sha.ComputeHash([System.Text.Encoding]::UTF8.GetBytes($text))
+            $sha.Dispose()
+            $out[$rel] = ([System.BitConverter]::ToString($hash) -replace '-', '').Substring(0, 12).ToLower()
+        } catch { $out[$rel] = 'ABSENT-OR-UNREADABLE' }
+    }
+    return $out
+}
+
 function Get-GitStateStamp {
     param([string]$GitDir)
     $head = $null; $ref = $null; $idxTicks = $null; $idxLen = $null
@@ -889,6 +922,12 @@ function Write-TierStamp {
             at = (Get-Date).ToString('o'); phase = $Phase; suite = $Suite
             exit = $Exit; seconds = $Seconds
             head = $s.head; ref = $s.ref; index_ticks = $s.index_ticks; index_len = $s.index_len
+            # NOTE the asymmetry, stated so nobody reads more into it than is there: the abort's
+            # index component is sha256(`git ls-files -s`) -- CONTENT -- while this is the index
+            # file's (mtime, length). Matching it exactly would mean spawning git 17 times a run,
+            # which perturbs what it measures. So index_* is a PROXY and may move when the abort
+            # would not; `inputs` below is exact.
+            inputs = (Get-InputHashes -Root $RepoRoot)
             git_index_env = $env:GIT_INDEX_FILE
         }
         # NO BOM. `Add-Content -Encoding utf8` in PS 5.1 stamps a BOM on the first write, and a

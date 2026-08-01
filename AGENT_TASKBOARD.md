@@ -379,8 +379,10 @@ read that sentence.
 > Opened by lane `S-2026-08-01-TIERINSTR` while instrumenting `ORDER-731` item 2. **Not this
 > lane's doing, and that is measured rather than claimed** — see the decomposition below.
 
-**The number.** Four full-tier samples on 2026-08-01, machine otherwise idle:
-**91.8 · 91.5 · 91.7 · 91.1 s** against the **90.0 s ENFORCED** budget. The tier therefore
+**The number.** Five full-tier samples on 2026-08-01, machine otherwise idle:
+**91.8 · 91.5 · 91.7 · 91.1 · 93.6 s** against the **90.0 s ENFORCED** budget. The spread is
+**2.5 s**, which is itself worth noting: a budget breached by 1.1 s on one sample and 3.6 s on the
+next is being decided by variance, so C2 must not be tuned against a single run. The tier therefore
 **exits 1**. The budget's own message is the spec for what must happen: *"Displace a suite, make
 the named one faster, or raise the number DELIBERATELY in the same commit that says why — but do
 not leave it breached and green."* It is breached and RED, which is the budget working; this row
@@ -398,6 +400,7 @@ landed between the two measurements (`02e11b10`, `ORDER-731` M1-M4) touched only
 | everything `M1-M4` ADDED (`2× att.main --template` + `2× gen.build_rows`) | **1.8 s** |
 | the three suites it touched, in FULL (`attestation 1.6` + `migration 3.6` + `pin cage 0.3`) | **5.4 s** |
 | the whole S2a gate (`run_s2a_gate.py`, all 7 steps) | **5.2 s** |
+| the item-2 tier instrumentation, 17 stamps (one run's worth) | **0.09 s** |
 | `run_contract_binding_tests.ps1` | **31.6 s** |
 
 A subsystem that costs 5.4 s in total cannot have added 8.7 s. **The growth is somewhere else in
@@ -955,8 +958,24 @@ or a fail.
 > signal was wanted · and the child-marker env var **leaked out of the script**, so a second tier
 > run in the same shell silently wrote nothing and looked like a run that never happened.
 > All three verified fixed by measurement (first bytes `{`, 1 transcript/run, env restored ''),
-> plus bounded retention at 40 files. **The tier's own budget breach that these runs surfaced is
-> `ORDER-820`, opened rather than absorbed.**
+> plus bounded retention at 40 files.
+> 🔴 **A FOURTH, and it was the one that mattered — found by reading the fingerprint the
+> instrumentation exists to explain, before any reviewer got to it.** `input_fingerprint()`
+> (`check_s2a_migration.py:207-218`) has **four** components: fresh `rev-parse HEAD`,
+> `sha256(git ls-files -s)`, and the **CRLF-folded sha256 of four WORKING-TREE files**
+> (`s2a_migration.jsonl` · `s2a_coverage_reconciliation.json` · `MASTER_BACKLOG.md` ·
+> `schemas.json`). The first version stamped HEAD and `.git/index` only — so a run aborted by one
+> of those four files moving would have produced a transcript saying **"nothing moved"** while the
+> abort said "something did". Not silent: **actively misleading**, which is worse than no
+> transcript. Every stamp now carries those four hashes. Cross-check that it is computing the same
+> thing: the stamped values `3a96dcd5e8cf` / `f2a604b94ab3` are **byte-identical to the bundle
+> member digests Python computes**, i.e. two independent implementations agree.
+> The remaining asymmetry is **stated in the record itself**: `index_ticks`/`index_len` are a
+> `(mtime, length)` PROXY for the abort's `sha256(ls-files)`, because matching it exactly means
+> spawning git 17 times a run, and a probe that perturbs what it measures is the observer defect
+> this repo has paid for. **Cost, measured not assumed: 17 stamps = 0.09 s, ~5 ms each — 0.1 % of
+> a 93 s tier.** **The tier's own budget breach that these runs surfaced is `ORDER-820`, opened
+> rather than absorbed.**
 
 ### Acceptance
 - **C1** state, with a measurement, whether the pin should be read at the **index** (what the
