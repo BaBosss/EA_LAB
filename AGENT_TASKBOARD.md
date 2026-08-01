@@ -196,6 +196,47 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
+## ORDER-760 — [ledger] A literal `|` inside a ledger cell silently disarms that lane's own guard rails — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **🔴 FOUND BY DOING IT, in this lane's own reservation row, and it is the THIRD instance.**
+> `S-2026-08-01-PINFIX`'s row quoted the backlog row it was about to remove as `` `| D33 |` ``.
+> Backticks are markdown; `check_order_collision.ps1` splits the row on `|`, so the row parsed
+> as **12 cells instead of 8** and the status column was read from the wrong cell. The guard then
+> printed *"NOTE: no ACTIVE lane in docs/SESSION_LEDGER.md (55 row(s) parsed) -- reserved-block
+> and owned-path rules skipped"* and passed. **Two commits were made with RULE 2 and RULE 3
+> unarmed for this lane.** Neither introduced a new order number, so nothing was breached — but
+> that is luck, not the guard working.
+
+**Why the existing defence does not cover it.** `check_order_collision.ps1` already BLOCKS the
+whole-table failure: *"parsed 0 lane rows but the file contains ACTIVE — the lane table is
+unreadable"*. That fires when the table truncates. It cannot fire here, because 55 rows parsed
+**perfectly well**; exactly one row had its columns shifted, and a shifted column is
+indistinguishable from a row that says `CLOSED`. **The loud failure is guarded and the quiet one
+is not** — which is the same shape as `guard-disarmed-by-prose-reported-as-note`.
+
+**Prior instances, so this is not filed as news.** `S-2026-08-01-CODEXBRIEF` repaired **two**
+ledger rows for this on 2026-08-01 and wrote *"the table is split on `\|`, so those rows read as
+not-ACTIVE and would have had their reserved block silently dropped"*. It repaired the instances.
+Nothing stopped the next one, which arrived the same day, in the row of the lane that had just
+read that sentence.
+
+### Acceptance
+- **C1** a ledger row whose cell count differs from the header's is **reported**, not silently
+  parsed. Whether that is a BLOCK or a loud WARN is a judgement call — state which, and why, with
+  the count of rows in the current file that would trip it.
+- **C2** driven both ways: a row with a literal `|` in a cell is caught, and every row in the
+  real `docs/SESSION_LEDGER.md` at HEAD passes (or the ones that do not are listed and fixed in
+  the same commit).
+- **C3** the check must not fire on a legitimately escaped pipe (`\|` or `&#124;`) — otherwise it
+  bans the only correct way to write one.
+
+### ห้าม
+- ❌ Do not "fix" it by teaching the parser to ignore pipes inside backticks. Markdown tables do
+  not work that way, and a parser that disagrees with the renderer is a second source of truth.
+- ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-732 — [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Found by `/scrutinize` round 1 of `ORDER-710`, and it is the `BACKLOG-D32` shape one layer in.**
