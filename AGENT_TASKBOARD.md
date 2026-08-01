@@ -221,9 +221,13 @@ block.
 files it reads from the working tree) at the start and end of its run, and printed *"HEAD or the
 git index changed while this check was running … exiting 2 rather than reporting a verdict"* in
 **1 of 4** manual full-tier runs on 2026-08-01, inside `run_contract_binding_tests.ps1`. Green
-standalone and green on the other three; suites in that wrapper run sequentially, so nothing
-obvious was writing the index. **The abort is correct behaviour** — a stale verdict turned into a
-tool failure — so this is an unexplained trigger, not a defect report. **Wake condition:** it
+standalone and green on the other three. **The cause was almost certainly a concurrent lane:**
+`S-2026-08-01-OPERATE` committed twice while a later manual full-tier run was in flight, and a
+commit rewrites `.git/index`; the same run also failed `run_front_guard_evidence_tests`' C cleanup
+case, whose remaining condition after four identical shas is exactly `.git/index`'s mtime.
+**Both detectors were right** — the ground moved. What is left is not a defect but a usability
+question: neither can distinguish *another lane committed* from *something corrupted the run*, and
+a manual full-tier run is not a clean measurement while another lane is open. **Wake condition:** it
 fires a second time, or it fires inside a real `git commit`, where it would refuse the commit and
 the cause would matter. Until then: re-run, and never quote a run it aborted as a pass or a fail.
 

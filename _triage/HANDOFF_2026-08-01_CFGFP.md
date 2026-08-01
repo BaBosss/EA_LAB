@@ -96,10 +96,15 @@ budget after the trade below (81.3–81.8s before this lane).
    this lane's handoff routed to `ORDER-730` and `BACKLOG-D33`, both in the same commit, and the
    cage's `C1` went red with *"no `## ORDER-730` header exists"* because those two files were in
    the commit but not in `.git/index`. `git add` the paths first, then commit them.
-6. **A tier suite aborted once in four runs and nobody knows why** — `check_s2a_migration`'s
-   concurrency detector ("HEAD or the git index changed while this check was running … exiting 2
-   rather than reporting a verdict"). Green standalone, green on the other three. The abort is
-   *correct behaviour*; the trigger is unexplained. → `ORDER-731` item 2, with a wake condition.
+6. **A "mysterious" tier failure that turned out to be ANOTHER LANE COMMITTING.** Twice this
+   session a manual full-tier run went red in a way that did not reproduce: `check_s2a_migration`
+   hit its concurrency ABORT ("HEAD or the git index changed while this check was running"), and
+   later `run_front_guard_evidence_tests`' C cleanup case failed while printing four IDENTICAL
+   shas — its remaining condition is `.git/index` mtime. The cause was visible in `git log`:
+   `S-2026-08-01-OPERATE` committed twice during the run, and a commit rewrites `.git/index`.
+   **Both detectors were RIGHT** — the ground did move. **A manual full-tier run is not a clean
+   measurement while another lane is open**, and neither detector can distinguish "another lane
+   committed" from "something corrupted the run". → `ORDER-731` item 2.
 7. **🔴 `MASTER_BACKLOG.md` IS FROZEN, AND NOTHING TELLS YOU UNTIL AFTER YOU COMMIT.** This lane
    appended one dormant backlog row; the S2a attestation pins that file at a blob, so `F11`/`F5`
    and `check_coverage_transfer`'s `A8` all went red — **after** the commit landed, because the
@@ -160,3 +165,18 @@ migrating them would be a new order; the four owner decisions live in
 `S-2026-08-01-OPERATE` (block 740-749, the operate track) was ACTIVE throughout and
 `S-2026-08-01-CODEXBRIEF` (750-759) closed during it. Neither touched this lane's paths. If a
 board row here looks unfamiliar, check whose lane wrote it before assuming drift.
+
+## Post-close corrections (this lane reopened twice, and both are worth reading)
+
+1. **The closing commit broke an attested pin** — trap 7 above. Reverted byte-identically; the
+   repair commit itself had to be made with `--no-verify` **on the owner's explicit decision**,
+   because the guard reads `HEAD:` and HEAD held the wrong blob: every commit that could restore
+   it, including the restoring one, was refused. The gate blocked its own repair. Verified green
+   immediately after, and the staged oid is quoted in that commit's message.
+2. **The probe-id derivation threw when NO lane is ACTIVE**, which made
+   `run_front_guard_evidence_tests` unrunnable the moment every lane row closed — a cage broken by
+   its own repair, in the state it is most often run in. No ACTIVE lane is a legitimate regime
+   (the guard skips RULE 2 and says so), so any unused id serves there; both regimes are handled
+   and the assertion prints which one it was in.
+
+Final state: full tier **16/16 at 75.5s / 77.9s** of 90.0s, two clean runs with no lane open.
