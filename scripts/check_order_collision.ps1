@@ -54,6 +54,10 @@ param(
     [AllowEmptyString()][string]$ArchiveContent,
     [AllowEmptyString()][string]$HeadActiveContent,
     [AllowEmptyString()][string]$LedgerContent,
+    # ORDER-760 RULE 4 judges the STAGED ledger, so the cage needs to supply both vintages
+    # independently -- otherwise the one case that matters (a commit that REPAIRS a malformed
+    # row must land) cannot be expressed at all.
+    [AllowEmptyString()][string]$StagedLedgerContent,
     [AllowEmptyCollection()][string[]]$StagedFileList
 )
 
@@ -164,14 +168,28 @@ function Get-OrderHeaders {
 }
 
 function Split-MarkdownRow {
-    <# '| a | b | c |' -> @('a','b','c'). Returns $null for a non-table line. #>
+    <# '| a | b | c |' -> @('a','b','c'). Returns $null for a non-table line.
+
+       ORDER-760: the split is ESCAPE-AWARE. '\|' is how markdown writes a literal pipe inside a
+       table cell, and every renderer treats it as one -- so a parser that splits on it disagrees
+       with what a human sees, which is the "second source of truth" this order's own PROHIBITION
+       names. Measured before changing it: of the 56 lane rows in docs/SESSION_LEDGER.md, TWO had
+       a cell count that disagreed with the header, and ONE of them -- S-2026-08-01-CODEXBRIEF --
+       had already written '\|' CORRECTLY and was being mis-split by this function. So the escape
+       half is not a convenience; it is a live defect that made a correctly-written row malformed.
+
+       Backticks are NOT honoured, deliberately. Markdown tables do not treat a pipe inside code
+       ticks as literal either, so honouring them here would recreate the same disagreement in the
+       other direction. #>
     param([string]$Line)
     $t = $Line.Trim()
     if (-not $t.StartsWith('|')) { return $null }
     $t = $t.Substring(1)
-    if ($t.EndsWith('|')) { $t = $t.Substring(0, $t.Length - 1) }
-    $cells = @($t -split '\|')
-    return @($cells | ForEach-Object { $_.Trim() })
+    # A TRAILING '\|' is an escaped pipe, not the row terminator. Checking the raw last two chars
+    # before stripping keeps '...text \|' from losing its final cell boundary.
+    if ($t.EndsWith('|') -and -not $t.EndsWith('\|')) { $t = $t.Substring(0, $t.Length - 1) }
+    $cells = @($t -split '(?<!\\)\|')
+    return @($cells | ForEach-Object { ($_ -replace '\\\|', '|').Trim() })
 }
 
 function Get-CellPlain {
@@ -212,6 +230,7 @@ function Get-LedgerLanes {
     $lines = @($Text -split "`r?`n")
     $sawAnyTableLine = $false
     $headerIdx = -1
+    $headerCells = @()
     $colSession = -1
     $colBlock = -1
     $colOwns = -1
@@ -227,6 +246,7 @@ function Get-LedgerLanes {
         $si = [array]::IndexOf($lower, 'status')
         if ($bi -ge 0 -and $si -ge 0) {
             $headerIdx = $i
+            $headerCells = $cells      # ORDER-760: the width every lane row is held to
             $colBlock = $bi
             $colStatus = $si
             $colSession = [array]::IndexOf($lower, 'session id')
@@ -240,6 +260,11 @@ function Get-LedgerLanes {
         throw ('{0} has no lane table with both an "order block" and a "status" column' -f $LedgerPath)
     }
 
+    # ORDER-760: the header's own width is the contract every row is held to. Without it, a row
+    # with an extra cell reads its STATUS from the wrong column and a row with too few is dropped
+    # by the `continue` below -- and both look exactly like "this lane is not ACTIVE".
+    $expectedCells = $headerCells.Count
+
     $lanes = New-Object System.Collections.Generic.List[object]
     for ($i = $headerIdx + 1; $i -lt $lines.Count; $i++) {
         $cells = Split-MarkdownRow -Line $lines[$i]
@@ -248,7 +273,28 @@ function Get-LedgerLanes {
             break   # a non-blank, non-table line ends this table
         }
         if (Test-SeparatorRow -Cells $cells) { continue }
-        if ($cells.Count -le $colStatus) { continue }
+        if ($cells.Count -le $colStatus) {
+            # WAS a silent `continue`, and that silence is the whole of ORDER-760's instance A: a
+            # row shifted far enough to lose its status column vanished from the parse, the lane
+            # table still reported dozens of rows, and RULE 2 / RULE 3 switched themselves off
+            # with a NOTE that read like a quiet day. It is now RECORDED so the caller can refuse.
+            $lostId = 'unknown-session'
+            if ($colSession -ge 0 -and $cells.Count -gt $colSession) {
+                $v = Get-CellPlain $cells[$colSession]
+                if ($v) { $lostId = $v }
+            }
+            $lanes.Add([pscustomobject]@{
+                SessionId     = $lostId
+                Status        = '<UNREADABLE>'
+                Ranges        = @()
+                Malformed     = @()
+                OwnsPaths     = @()
+                CellCount     = $cells.Count
+                ExpectedCells = $expectedCells
+                LineNumber    = $i + 1
+            })
+            continue
+        }
 
         $sessionId = 'unknown-session'
         if ($colSession -ge 0 -and $cells.Count -gt $colSession) {
@@ -305,11 +351,14 @@ function Get-LedgerLanes {
         $statusVerb = if ($statusRaw -match '^(ACTIVE|CLOSED|ABANDONED|BLOCKED)\b') { $Matches[1] } else { $statusRaw }
 
         $lanes.Add([pscustomobject]@{
-            SessionId = $sessionId
-            Status    = $statusVerb
-            Ranges    = $ranges.ToArray()
-            Malformed = $malformed.ToArray()
-            OwnsPaths = $owns.ToArray()
+            SessionId     = $sessionId
+            Status        = $statusVerb
+            Ranges        = $ranges.ToArray()
+            Malformed     = $malformed.ToArray()
+            OwnsPaths     = $owns.ToArray()
+            CellCount     = $cells.Count
+            ExpectedCells = $expectedCells
+            LineNumber    = $i + 1
         })
     }
     return $lanes.ToArray()
@@ -358,7 +407,7 @@ function Test-PathOwned {
 # input acquisition -- offline (test overrides) or git
 # ===========================================================================
 
-$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedFileList')
+$overrideNames = @('StagedActiveContent', 'ArchiveContent', 'HeadActiveContent', 'LedgerContent', 'StagedLedgerContent', 'StagedFileList')
 $offline = $false
 foreach ($n in $overrideNames) { if ($PSBoundParameters.ContainsKey($n)) { $offline = $true } }
 
@@ -467,6 +516,31 @@ if ($offline) {
     if ($null -ne $t) { $ledgerPresent = $true; $ledgerText = $t }
 }
 
+# --- ORDER-760 RULE 4's OWN snapshot, and it is deliberately NOT the one above ---
+#
+# RULE 4 asks "is the lane table READABLE", which is a question about the bytes this commit will
+# contain. RULE 2 asks "what was reserved BEFORE this commit", which is a question about HEAD and
+# is a ratified rule. Reading both from HEAD made RULE 4 refuse the commit that REPAIRS a
+# malformed row -- caught immediately, on the very commit that introduced the rule, because HEAD
+# still held the bad row. That is ORDER-731's defect class ("the gate blocks its own repair")
+# recreated inside the fix for a different one, which is GUARD_SHAPES shape 5.
+#
+# So RULE 4 judges the STAGED ledger when the ledger is staged. This weakens nothing: RULE 2 and
+# RULE 3 keep reading HEAD exactly as ratified, so one commit still cannot reserve a block and
+# spend it. Only the SHAPE question moves, and it moves to the snapshot the question is about.
+$ledgerShapeText = $ledgerText
+if ($offline) {
+    if ($PSBoundParameters.ContainsKey('StagedLedgerContent')) { $ledgerShapeText = $StagedLedgerContent }
+} else {
+    $ledgerLedgerStaged = $false
+    foreach ($p in $stagedPaths) { if ($p -eq $LedgerPath) { $ledgerLedgerStaged = $true } }
+    if ($ledgerLedgerStaged) {
+        # snapshot: index -- the ledger as this commit will contain it. See the paragraph above.
+        $ts = Get-GitBlobText -Spec (':{0}' -f $LedgerPath)
+        if ($null -ne $ts) { $ledgerShapeText = $ts }
+    }
+}
+
 $violations = New-Object System.Collections.Generic.List[string]
 
 # ===========================================================================
@@ -518,6 +592,42 @@ if (-not $ledgerPresent) {
         Write-Host ('{0} TOOLING: {1}' -f $Tag, $_.Exception.Message)
         exit 2
     }
+    # --- RULE 4 (ORDER-760): every lane row must have the header's width ---
+    #
+    # WHY THIS BLOCKS RATHER THAN WARNS, with the number C1 asked for. Measured on the real
+    # ledger before writing it: of 56 lane rows, TWO disagreed with the 6-cell header -- and one
+    # of those was fixed by the escape-aware split alone, because it had written '\|' correctly
+    # and the parser was breaking on it. That leaves exactly ONE row, repaired in the same commit
+    # as this rule. So the steady-state cost of blocking is zero rows.
+    #
+    # And a WARN is precisely what already existed and already failed. On 2026-08-01 a row with a
+    # literal pipe made this guard print "NOTE: no ACTIVE lane ... rules skipped" and PASS, so two
+    # commits were made with RULE 2 and RULE 3 unarmed. A louder version of the thing that failed
+    # is not a fix; the failure mode is a guard switching ITSELF off, and the only answer to that
+    # is refusing to run rather than running blind.
+    # Judged on the STAGED ledger when one is staged (see the $ledgerShapeText paragraph above),
+    # so a commit that REPAIRS a malformed row is allowed to land. Re-parsed rather than reusing
+    # $lanes, because $lanes is the HEAD-vintage parse RULE 2 needs and mixing the two vintages in
+    # one verdict is the mistake this repo files as A2.
+    $shapeLanes = $lanes
+    if ($ledgerShapeText -ne $ledgerText) {
+        try {
+            $shapeLanes = @(Get-LedgerLanes -Text $ledgerShapeText)
+        } catch {
+            Write-Host ('{0} TOOLING: staged {1}: {2}' -f $Tag, $LedgerPath, $_.Exception.Message)
+            exit 2
+        }
+    }
+    $badShape = @($shapeLanes | Where-Object { $_.CellCount -ne $_.ExpectedCells })
+    if ($badShape.Count -gt 0) {
+        foreach ($b in $badShape) {
+            Write-Host ('{0} BLOCK: lane row {1} (line {2}) has {3} cells, but the table header has {4}. A row of the wrong width reads its STATUS from the wrong column -- which looks exactly like a lane that is not ACTIVE, so the reserved-block and owned-path rules switch themselves off silently. Write a literal pipe as \| (markdown escape); do not leave a bare | in a cell.' -f `
+                $Tag, $b.SessionId, $b.LineNumber, $b.CellCount, $b.ExpectedCells)
+        }
+        Write-Host ('{0} BLOCK: {1} malformed lane row(s) in {2} -- commit refused' -f $Tag, $badShape.Count, $LedgerPath)
+        exit 1
+    }
+
     $activeLanes = @($lanes | Where-Object { $_.Status -eq 'ACTIVE' })
     if ($activeLanes.Count -eq 0) {
         # "0 lanes parsed" and "every lane is closed" look identical in the output but mean

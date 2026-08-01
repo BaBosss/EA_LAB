@@ -196,7 +196,43 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
-## ORDER-760 — [ledger] Prose inside a ledger cell silently changes what the collision guard enforces — TWO instances, both in this lane's own row — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-760 — [ledger] Prose inside a ledger cell silently changes what the collision guard enforces — TWO instances, both in this lane's own row — `DONE` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### RESULT (lane `S-2026-08-01-PINFIX2`, 2026-08-01)
+>
+> **C1 — measured before writing the rule, and the measurement changed the design.** Of the **56**
+> lane rows in `docs/SESSION_LEDGER.md`, **2** disagreed with the 6-cell header — and **one of them
+> was `S-2026-08-01-CODEXBRIEF`, which had already written `\|` CORRECTLY and was being mis-split
+> by the guard itself.** So the escape half is not a convenience: **the parser, not the row, was
+> the defect** in half the live instances. `Split-MarkdownRow` now splits on `(?<!\\)\|` and
+> unescapes, which repairs that row without touching it.
+>
+> That leaves **exactly one** genuinely malformed row (`S-2026-07-27-QUEUE`, a duplicated trailing
+> status cell), repaired in the same commit ⇒ **steady-state cost of blocking = 0 rows.**
+>
+> **BLOCK, not WARN — and the number is why.** At one row it is payable, and *a WARN is exactly
+> what already existed and already failed*: the guard printed `NOTE: no ACTIVE lane … rules
+> skipped` and **passed**, so two commits were made with `RULE 2` and `RULE 3` unarmed. A louder
+> version of the thing that failed is not a fix. The failure mode is a guard switching **itself**
+> off; the only answer is refusing to run rather than running blind.
+>
+> **The silent-skip branch is closed too.** A row too short to reach the status column used to
+> `continue` in silence — it vanished from the parse while the table still reported plenty of rows.
+> It is now recorded as `<UNREADABLE>` and refused by name.
+>
+> **C2 / C3 — driven both ways, on fixtures and on the real file.** `run_order_collision_tests.ps1`
+> **29/29** (4 new): raw `|` ⇒ BLOCK naming the row · **escaped `\|` ⇒ PASS** (C3: a rule that fired
+> on the correct spelling would ban the only correct spelling) · short row ⇒ BLOCK · the ordinary
+> ledger unaffected. On the real ledger, before the repair the rule fired naming
+> `S-2026-07-27-QUEUE` at line 85; after it, `ORDER-775` inside the block ⇒ **PASS** and
+> `ORDER-905` outside ⇒ **BLOCK**, both through the guard's offline entry points.
+>
+> **C5 — the rule now lives where the cell is written.** `docs/SESSION_LEDGER.md` gained **กติกาข้อ 6**
+> next to the other five: no raw `|`; one range token and *no other block number, not even to
+> decline it*; and do not verify a ledger repair with the hook run that commits it. `ORDER-675`
+> warned about a **character class** — a symptom — which is why reading it did not prevent either
+> instance. The rule as stated now is *this cell is parsed; every number-looking token in it is
+> data.*
 
 > **Both were found by writing one row and then probing the guard, not by review.** The cell is
 > free prose AND the guard's input, and nothing marks where one ends and the other begins.

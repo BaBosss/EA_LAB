@@ -416,6 +416,77 @@ try {
         StagedFileList      = @('AGENT_TASKBOARD.md', '_mt5_auto/run.csv')
     } -MustContain @('WARN: staged path _mt5_auto/run.csv', 'BLOCK', 'ORDER-245 is outside')
 
+    # -----------------------------------------------------------------------------------------
+    # RULE 4 (ORDER-760) -- a lane row must have the header's width.
+    #
+    # The defect, twice on 2026-08-01 and once before that: a cell is free PROSE and the guard's
+    # INPUT at the same time. A literal '|' shifts every column after it, the status is read from
+    # the wrong cell, and the guard prints "no ACTIVE lane ... rules skipped" and PASSES. Two
+    # commits were made with RULE 2 and RULE 3 unarmed. These cases exist so that the next time it
+    # happens, something other than a human probing the guard notices.
+    $ledgerRawPipe = Write-Fixture 'ledger_rawpipe.md' (New-Ledger @(
+        ('| `S-PIPE` | 2026-08-01 | **230-239** | `docs/SESSION_LEDGER.md` | - | `ACTIVE`, and this cell has a raw | in it |')
+    ))
+    $ledgerEscapedPipe = Write-Fixture 'ledger_escpipe.md' (New-Ledger @(
+        ('| `S-ESC` | 2026-08-01 | **230-239** | `docs/SESSION_LEDGER.md` | - | `ACTIVE`, and this cell writes a literal \| the correct way |')
+    ))
+    $ledgerShortRow = Write-Fixture 'ledger_shortrow.md' (New-Ledger @(
+        ('| `S-SHORT` | 2026-08-01 | **230-239** | `docs/**` |')
+    ))
+
+    Test-Case -Name 'RULE 4 ATTACK a raw | in a lane cell BLOCKS instead of silently disarming RULE 2' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerRawPipe
+    } -MustContain @('BLOCK', 'S-PIPE', 'cells', 'header has')
+
+    # SPECIFICITY, and it is C3 of the order: '\|' is how markdown writes a literal pipe. A rule
+    # that fired on the CORRECT spelling would ban the only correct spelling -- and this is not
+    # hypothetical: S-2026-08-01-CODEXBRIEF had already written '\|' properly and the old splitter
+    # was breaking on it, which is why the escape half shipped with the count half.
+    Test-Case -Name 'RULE 4 SPECIFICITY an ESCAPED \| is a literal pipe, not a column break' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerEscapedPipe
+    } -MustContain @('enforcing reserved block(s): 230-239')
+
+    # A row too SHORT loses its status column entirely. That branch used to `continue` in silence,
+    # so the row vanished from the parse while the table still reported plenty of rows.
+    Test-Case -Name 'RULE 4 ATTACK a row too short to have a status column is refused, not dropped' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerShortRow
+    } -MustContain @('BLOCK', 'S-SHORT')
+
+    # CONTROL, and it is the case that ORDER-731 taught this repo to write. RULE 4 first read the
+    # ledger from HEAD like RULE 2 does -- and immediately refused the very commit that REPAIRED
+    # the malformed row, because HEAD still held it. A gate that blocks its own repair is exactly
+    # the defect ORDER-731 exists for, recreated inside the fix for a different one (shape 5).
+    # RULE 4 therefore judges the STAGED ledger; RULE 2 and RULE 3 keep their ratified HEAD read.
+    Test-Case -Name 'RULE 4 CONTROL a commit that REPAIRS a malformed row is allowed to land' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerRawPipe      # HEAD still holds the bad row
+        StagedLedgerContent = $ledgerActive       # ...and this commit fixes it
+    } -MustContain @('enforcing reserved block(s)') -MustNotContain @('BLOCK:')
+
+    # ...and the mirror image, which is the whole point of moving the snapshot: a commit that
+    # INTRODUCES a malformed row is refused BEFORE it lands, not after.
+    Test-Case -Name 'RULE 4 ATTACK a commit that INTRODUCES a malformed row is refused before it lands' -ExpectCode 1 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActive       # HEAD is clean
+        StagedLedgerContent = $ledgerRawPipe      # ...and this commit breaks it
+    } -MustContain @('BLOCK', 'S-PIPE')
+
+    # ENGAGEMENT: the well-formed fixtures every other case in this file uses must still pass, or
+    # RULE 4 is over-reaching and the greens above mean nothing.
+    Test-Case -Name 'RULE 4 ENGAGEMENT the ordinary well-formed ledger is unaffected' -ExpectCode 0 -Params @{
+        StagedActiveContent = $activeClean
+        ArchiveContent      = ''
+        LedgerContent       = $ledgerActive
+    } -MustContain @('enforcing reserved block(s)')
+
     Test-Case -Name 'ledger present but has no table at all -> exit 2 tooling' -ExpectCode 2 -Params @{
         StagedActiveContent = $activeClean
         ArchiveContent      = ''
