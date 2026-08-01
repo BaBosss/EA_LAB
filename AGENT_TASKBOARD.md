@@ -499,6 +499,19 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > every one of the 16 tier suites and 11 factory_os suites green. **The signature toll measurably
 > moved:** `MASTER_BACKLOG.md` 31 commits/14d → `factory/coverage.jsonl` 1 commit ever (~31×).
 >
+> ✅ **M1–M4 CLOSED same day** (lane `S-2026-08-01-OPT2FIX`, `02e11b10`, owner: *"แก้เลย"*). All four
+> landed in non-bundle files — **the gate exits 0 against the unchanged `d88f795b` digest, which is
+> the proof no signature was spent.** M1: `--template` pre-fills the ack via `note_for_owner` and
+> F2's message names the pinned path (4 new suite cases, both directions incl. no-note specificity).
+> M2: the template carries the in-force `expected_post_state` forward verbatim. M3: the front guard
+> installs an ack pin only for a D1-pinned path — the copy-paste resurrection is now a printed
+> `IGNORED` note + SPECIFICITY case, with the ENGAGEMENT half proving a D1-pinned ack is still
+> enforced. M4: `build_rows` REFUSES an owner pinning two distinct paths, so the sorted-first
+> tie-break can never decide anything (NEGATIVE + CONTROL both green; the real table still builds).
+> Suites after: attestation **50/0** · pin cage **23** (A10/C3/E4/S6) · migration green · conformance
+> **68/0** · mutate **37/0 INERT** · lint green. The stale-count batch below still rides the next
+> signature. *(The list below is kept as the record of what the review found.)*
+>
 > **The queue for the next implementation pass — all in NON-bundle files, zero signatures owed:**
 > - **M1** `--template` and F2's message both still speak `current_owner`; when the store next
 >   drifts, the signer is guided to write `path: MASTER_BACKLOG.md` and **F3 refuses it**. F2
