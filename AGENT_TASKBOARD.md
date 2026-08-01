@@ -846,11 +846,18 @@ is also under. The known failure mode with exactly this signature is `AllowLive=
 > Also opened by `ORDER-940`. `portfolio/expectations.csv` is what turns "0 trades" into a verdict.
 > Where it has no row, `rate_flag` reads `NA` and the lab has **no measurement that discriminates**.
 
-**Missing an expectations row (from the same snapshot):** `991005` US30m · `990208` GBPJPYm ·
-`992004` TrendRider_XAU · `990103` RSI_MR_GridLog · `991003` USDJPYm · `990020` EA_SUPERTREND ·
-`990301` Wave5 XAU · `990984` PairSpread · `990204` AUDCADm · `990206` EURUSDm SELL · `990302` Wave5 XAG.
-Four of those (`991005`, `990208`, `992004`, `990103`) are at **0 closed trades** with nothing to compare
-against — the same shape as `ORDER-941` but currently unfalsifiable.
+**Missing an expectations row — two numbers, because they answer different questions.** Inside the
+19 shortfall rows it is **11**: `991005` US30m · `990208` GBPJPYm · `992004` TrendRider_XAU ·
+`990103` RSI_MR_GridLog · `991003` USDJPYm · `990020` EA_SUPERTREND · `990301` Wave5 XAU ·
+`990984` PairSpread · `990204` AUDCADm · `990206` EURUSDm SELL · `990302` Wave5 XAG. Four of those
+(`991005`, `990208`, `992004`, `990103`) sit at **0 closed trades** with nothing to compare against —
+the `ORDER-941` shape, currently unfalsifiable.
+
+**Across every ACTIVE row that carries a judge date it is 17**, re-derived from the snapshot after
+`990026` became visible: the 11 above plus `990025` · `990026` · `990030` · `990110` · `990201` ·
+`990207`. The extra six are currently *projected capable*, which is why they do not show up in the
+shortfall list — **and that is the point: with no expected rate, "on track" is a projection from
+observed trades only, so it cannot notice an EA that is over-trading its design either.**
 
 **Acceptance** — **B1** every ACTIVE row with a judge date has an `expectations.csv` entry whose
 `expected_trades_per_week` is **derived from the accepting backtest** (trades ÷ window weeks), with the
