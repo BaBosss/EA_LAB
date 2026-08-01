@@ -320,15 +320,30 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
    is false but the EA trades ⇒ an input was changed by hand).
 5. **P1 audit backlog** (MASTER_BACKLOG §CODEX-AUDIT), slot in whenever a lane is free: gist redact →
    evidence lineage → drift monitor → backup drill.
-6. 🔴 **098 — fxDreema corpus: THIS ITEM DESCRIBED THREE ORDERS THAT WERE ALL ALREADY CLOSED, and the
-   third one it describes does not exist.** Checked against the boards 2026-08-01:
+6. ✅ **098 — fxDreema corpus: EVERY ORDER THIS ITEM DESCRIBES IS CLOSED, including the one the previous
+   revision of this bullet said had never existed.** Re-checked against both boards 2026-08-01:
    **098-A** FVG-fill flat-lot smoke = `CLOSED — REJECT` (2026-07-16) · **098-B** MACD-divergence =
-   `CLOSED — DEMO-ELIGIBLE`, XAU H4 passed (2026-07-16) · **098-C** on the board is *"FVG-fill + RSI
-   confluence gate"* = `DONE + REVIEWED — REJECT` (2026-07-17). **The "MM-parts library (cap+linear/log)"
-   this bullet calls 098-C was never issued under any number.** It is a real user directive with no order,
-   which is exactly the class `docs/WORK_LIFECYCLE.md` exists to stop — so it is now the only live part of
-   this item: **write it an order first, then build.** The waiting-for-the-user line is retired; what the
-   user was waiting to sequence has been decided by two of the three being rejected.
+   `CLOSED — DEMO-ELIGIBLE`, XAU H4 passed (2026-07-16).
+   🔴 **`ORDER-098-C` carries TWO DIFFERENT ORDERS** — that reuse is one of the three collisions
+   `docs/SESSION_LEDGER.md` cites as the reason lane reservation exists, and reading only the first one
+   is what produced the wrong answer below:
+   `ARCHIVE_TASKBOARD_2026-07A.md:7476` = *"FVG-fill + RSI confluence gate"* → `DONE + REVIEWED — REJECT`
+   (2026-07-17) · **`:7806` = *"reusable MM-parts library (dynamic close_money + Fibonacci-capped lot)"* →
+   `DONE + REVIEWED` (2026-07-26)** — i.e. the owner's **"cap + linear/log"** directive *does* have a
+   number, and it was **built**: `PROG_FIBONACCI` (`core/MoneyManagement.mqh`, capped by `_56_FibMaxStep`)
+   + `Exit_DynCloseTargetMoney()` (`core/ExitManager.mqh`), both off-by-default and regression-clean.
+   The linear/log half shipped earlier still — `PROG_LINEAR`(51) · `PROG_LOG`(54) · `PROG_LOG_POWER`(55)
+   are all in the enum and **LOG_POWER is Boss_14's live default**.
+   **It was then integrated and measured, and it lost:** `ORDER-197` (`REVIEWED 2026-07-24`) A/B'd the
+   Fibonacci cap against the incumbent on Boss_14 XAU (990207) — MAIN **1.91 → 1.83** (eqDD +30% relative),
+   BWD 1.19 → 1.23 ⇒ **NOT ADOPTED** against a bar registered before the runs; `PROG_LOG_POWER` stays.
+   ⇒ **There is nothing to commission here. The previous instruction — "write it an order first, then
+   build" — would have re-ordered closed work.**
+   **The one live thread is narrower and now has its own row: `ORDER-740`** — `_57_DynCloseOn` is **inert
+   on Boss_16/Kangaroo** (Kangaroo returns before `Exit_ManageBasket`, `core/LabCore.mqh:310-313`), which
+   `ORDER-197` assumed the opposite of, and the mold warns about the *other* inert shared input on that
+   chassis while staying silent about this one. Written, not built — it owes `tpl_regression`, whose lane
+   was held.
 
 **Boss V2 chassis — remaining:** sweep the **mechanism×symbol** axis (grid/DCA/hedge/progression on pairs
 not yet tried) via `/signal-scan` · note: modes 82/83/HEDGE_LOCK have never passed any backtest — first time

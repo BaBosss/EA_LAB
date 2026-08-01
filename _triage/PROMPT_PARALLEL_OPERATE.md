@@ -32,8 +32,14 @@ COLLISION RULES, measured 2026-08-01 -- not a general caution:
      `git log -1` immediately before staging.
   3. Everything else in this track (DEMO_DEPLOYMENT_PLAN.md, _mt5_auto/**, ea_template/**) is
      untouched by the Factory OS lane.
-  4. MT5 lane: the Factory OS lane reserves NONE, so any lane number is free -- but declare it in
-     the ledger row anyway, and Model 4 is exclusive machine-wide.
+  4. MT5 lane: [STALE within hours -- as of 2026-08-01 the ACTIVE Factory OS lane
+     S-2026-08-01-CFGFP DOES hold lane 1 (D:\Meta 5), because ORDER-710 owes tpl_regression and
+     that cage pins lane 1 explicitly. Re-read the ledger; do not trust this line.] ORIGINAL: the
+     Factory OS lane reserves NONE, so any lane number is free -- but declare it in the ledger row
+     anyway, and Model 4 is exclusive machine-wide.
+     CONSEQUENCE, since it is not obvious: any ea_template/core change owes tpl_regression
+     (Decision log 2026-07-06) and that cage pins lane 1 (Decision log 2026-07-30), so while that
+     lane is held this track can WRITE core work but cannot BUILD it.
 
 TASKS, in the order they should be done. Item 1 has a deadline nothing else here has.
 
@@ -61,12 +67,27 @@ TASKS, in the order they should be done. Item 1 has a deadline nothing else here
      about performing the update.
      Read the row before planning; do not re-derive its evidence.
 
-  3. The "MM-parts library (cap+linear/log)" the owner directed. PROJECT_STATE §7 item 6 called
-     this ORDER-098-C. IT IS NOT: the real 098-C is "FVG-fill + RSI confluence gate", closed
-     REJECT 2026-07-17. 098-A closed REJECT, 098-B closed DEMO-ELIGIBLE. So this directive has
-     NO ORDER NUMBER and never did. Write it an order first (docs/WORK_LIFECYCLE.md), then build.
-     It is the EV-order winner among build work: a multiplier on an existing edge, which
-     PROJECT_STATE §3 (2026-07-18) ranks above mechanism×symbol and above new ideas.
+  3. [SUPERSEDED 2026-08-01 -- this item was wrong and acting on it would have re-ordered closed
+     work. Left in place rather than deleted so the error is legible; the correction follows.]
+     ORIGINAL: The "MM-parts library (cap+linear/log)" the owner directed. PROJECT_STATE §7 item 6
+     called this ORDER-098-C. IT IS NOT: the real 098-C is "FVG-fill + RSI confluence gate", closed
+     REJECT 2026-07-17. So this directive has NO ORDER NUMBER and never did. Write it an order.
+
+     CORRECTION: ORDER-098-C carries TWO DIFFERENT ORDERS -- the same id-reuse that
+     docs/SESSION_LEDGER.md names as one of the three collisions lane reservation exists to stop.
+     ARCHIVE_TASKBOARD_2026-07A.md:7476 is the FVG-fill + RSI gate (REJECT), the one this item
+     found. :7806 is "reusable MM-parts library (dynamic close_money + Fibonacci-capped lot)",
+     DONE + REVIEWED 2026-07-26. The directive HAS a number and WAS built: PROG_FIBONACCI in
+     core/MoneyManagement.mqh and Exit_DynCloseTargetMoney in core/ExitManager.mqh, off-by-default
+     and regression-clean. The linear/log half shipped earlier still -- PROG_LINEAR(51),
+     PROG_LOG(54), PROG_LOG_POWER(55) are in the enum and LOG_POWER is Boss_14's live default.
+     ORDER-197 then A/B'd the Fibonacci cap against it on Boss_14 XAU 990207 and it LOST on MAIN
+     (1.91 -> 1.83, eqDD +30% relative) => REVIEWED NOT ADOPTED 2026-07-24.
+     The one live thread is ORDER-740, opened 2026-08-01: _57_DynCloseOn is INERT on
+     Boss_16/Kangaroo and the mold announces the other inert shared input but not this one.
+     THE LESSON IS THE SAME ONE THIS FILE ALREADY TEACHES, ONE LEVEL DEEPER: this item was itself
+     written as a correction of PROJECT_STATE, and it was checked by finding ONE board block with
+     the right id and stopping. A grep that stops at the first hit is not a check.
 
   4. /ea-monitor cadence -- needs the owner to export live_deals.csv (PROJECT_STATE §6). Ask for
      it; do not block on it.
@@ -93,15 +114,29 @@ summary bullets (stale nine times, BACKLOG-D29).
 | asked | actual state |
 |---|---|
 | **ORDER-370** (`check_stale_binaries` not scanning `_vps_deploy/**`) | **`DONE + REVIEWED` 2026-07-27**, in `ARCHIVE_TASKBOARD_2026-07A.md`. `PROJECT_STATE.md` §7 listed it under **"Open (2026-07-27)"** for five days after it closed, and that stale bullet was quoted back to the owner on 2026-08-01 as live work. Corrected in the same commit as this file. |
-| **ORDER-098** | Every lettered sub-order named in `PROJECT_STATE` §7 is closed: **098-A** REJECT · **098-B** DEMO-ELIGIBLE · **098-C** (FVG-fill + RSI gate) REJECT. The **"MM-parts library"** §7 attributes to 098-C is a real user directive that **was never issued under any number** — task 3 above. |
+| **ORDER-098** | Every lettered sub-order is closed: **098-A** REJECT · **098-B** DEMO-ELIGIBLE · **098-C** — and `098-C` is **two orders, not one** (`ARCHIVE:7476` FVG-fill + RSI gate = REJECT · `ARCHIVE:7806` **MM-parts library = `DONE + REVIEWED`**). ~~The "MM-parts library" was never issued under any number~~ — **wrong, corrected 2026-08-01**: it has a number, it was built, and `ORDER-197` measured it and did **NOT ADOPT** it. Live thread = `ORDER-740`. |
 
 **The general lesson, since it caused a wrong answer to the owner:** `PROJECT_STATE` §7 is a *cache*
 of the boards. It has no guard, nothing regenerates it, and it drifts exactly like the ledger's summary
 bullets do. **Check a claim against `AGENT_TASKBOARD.md` / `ARCHIVE_TASKBOARD_2026-07A.md` before acting
 on it** — including claims made by a previous session, including mine.
 
-## The one number that sets the priority
+## ~~The one number that sets the priority~~ — REFUTED 2026-08-01, by measuring the two sets
 
-18 judge decisions land within 90 days, starting **2026-10-09**, and 11 ACTIVE rows have no
-pre-registered kill criterion. Every other item on this list can slip a week without loss. That one
-cannot: a judge date arriving with no criterion is not a weak judgement, it is the absence of one.
+> ORIGINAL: *"18 judge decisions land within 90 days, starting 2026-10-09, and 11 ACTIVE rows have no
+> pre-registered kill criterion … a judge date arriving with no criterion is not a weak judgement, it
+> is the absence of one."*
+
+Both counts are right. **The sets are disjoint, so the sentence they were joined into is not.**
+
+- all **18** ACTIVE rows whose judge date falls inside 90 days already carry a `kill_rule`
+- all **11** rows with an empty `kill_rule` carry **no judge date at all**, and every one of them sits
+  on account `159475669`, whose every row is annotated *"user mix - lab does not certify this account"*
+
+⇒ **the number of rows that will reach a judge date with no criterion is ZERO.** This was bookkeeping
+debt, not a deadline — closed 2026-08-01 by filling the 11 cells with an honest `n/a - lab does not
+certify this account`, since writing the lab's default bar onto a row the lab does not judge would
+state a criterion nobody owns.
+
+**Two numbers being individually true does not make the sentence joining them true.** Neither count was
+wrong; the conjunction was never checked, and it is the conjunction that set the priority.
