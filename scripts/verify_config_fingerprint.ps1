@@ -95,6 +95,15 @@ function Invoke-Run([string]$tag, [string]$setFile) {
   & (Join-Path $PSScriptRoot 'mt5_run.ps1') -Expert $Expert -Symbol $Symbol -Period $Period `
       -FromDate $FromDate -ToDate $ToDate -SetFile $setFile -Model $Model `
       -ReportName ("O710_FP_" + $tag) -Terminal $Terminal -DataDir $DataDir | Out-Null
+  # THE TESTER'S EXIT CODE IS CHECKED, and /scrutinize round 2 is why. Without this, an ABORT
+  # (mt5_run refuses when the MT5 GUI is already running, exit 2) leaves the previous run's log
+  # file recently-written, so Get-LoggedFingerprint returns run A's line for run B -- and the
+  # script then reports "the EA printed the SAME hash for two different .set files", which is a
+  # fingerprint defect that did not happen. "I could not run it" and "it disagreed" are the two
+  # answers this repo refuses to conflate, and the misleading one was the louder.
+  if ($LASTEXITCODE -ne 0) {
+    Fail ("run " + $tag + ": mt5_run.ps1 exited " + $LASTEXITCODE + " -- the tester did not produce this run. Close the MT5 GUI (its guard aborts on a running instance of the same install) and re-run. NOTHING about the fingerprint is known from this.")
+  }
   $got = Get-LoggedFingerprint $started
   if (-not $got) {
     Fail ("run " + $tag + ": no '[CFG] input surface:' line in any agent log written after " + $started.ToString('HH:mm:ss') + ". Either the EA did not attach, or the enumeration is not wired into this binary. Agent root: " + $AgentRoot)

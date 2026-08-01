@@ -557,6 +557,15 @@ def _nearest(key, surface, limit=3):
            [d.name for d in surface.inputs if low and low in d.name.lower()][:limit]
 
 
+# The two scope labels, named so the MQL5 side has something to be checked AGAINST rather than a
+# string buried in a function body. `ea_template/core/ConfigFingerprint.mqh` must `#define
+# CFG_FP_SCOPE` to SCOPE_SURFACE_ONLY -- it is the first line of the hashed preimage on both
+# sides, so a rename here with no rename there makes every future comparison fail, silently and
+# permanently. `check_input_surface_gen.py` G3 is what holds the two together.
+SCOPE_SURFACE_ONLY = 'surface_only'
+SCOPE_WITH_CONSTANTS = 'surface+constants'
+
+
 def _constant_scope(locked_constants):
     """The fingerprint's honest name.
 
@@ -567,12 +576,12 @@ def _constant_scope(locked_constants):
     `name-it-honestly-when-you-cannot-prove-it`); silently calling it complete is the failure.
     """
     if not locked_constants:
-        return 'surface_only', {}
+        return SCOPE_SURFACE_ONLY, {}
     constants = dict(locked_constants)
     for k, v in constants.items():
         if not isinstance(k, str) or isinstance(v, (dict, list)):
             raise PresetRefusal('locked constant %r must be a scalar under a string name' % k)
-    return 'surface+constants', constants
+    return SCOPE_WITH_CONSTANTS, constants
 
 
 def canonical_double(value):

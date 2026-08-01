@@ -609,6 +609,19 @@ $SUITE_GUARDS = @{
                                           # declaration is per-suite and this suite reads it too.
                                           'ea_template/core/Inputs.mqh',
                                           'ea_template/core/InputSurface_gen.mqh',
+                                          # /scrutinize round 1: this file was in NEITHER this
+                                          # list NOR the generated pathspec, so a commit editing
+                                          # ONLY it ran zero cages and did not even trigger the
+                                          # tier -- and it holds the entire MQL5 half of the
+                                          # cross-language contract (CFG_FP_SCOPE, the lowercase
+                                          # hex alphabet, CryptEncode). Measured with
+                                          # -ExportSelection before declaring. The G3 criterion
+                                          # added in the same round is what now READS it.
+                                          # NOTE the sweep did not demand this: PART 4 sweeps a
+                                          # suite's own sources for repo paths and PART 4b walks
+                                          # the import closure for MODULES -- a path referenced
+                                          # by an imported module is in neither. ORDER-732.
+                                          'ea_template/core/ConfigFingerprint.mqh',
                                           # LabCore is where G2 checks the enumeration is wired
                                           # in at all: commenting the include out is a silent
                                           # loss of the whole fingerprint line.

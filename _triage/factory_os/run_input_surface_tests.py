@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""ORDER-710's cage: 5 criteria, each with an attack and a specificity half, plus mutations.
+"""ORDER-710's cage: every criterion below gets an attack, a specificity half and a mutation.
 
 WHAT IT CANNOT DO, said first because it decides how to read a green run. This suite does not
 execute MQL5. It cannot prove that MetaTrader's `CryptEncode(CRYPT_HASH_SHA256, ...)` and
@@ -10,6 +10,8 @@ silently afterwards:
 
   G1  the committed enumeration is what the generator produces from the committed `Inputs.mqh`
   G2  the enumeration is actually wired into a build
+  G3  the two constants that are NOT in the generated file -- the scope label and the lowercase
+      hex alphabet -- still agree with the Python side
   X1  the generated MQL5 enumerates EXACTLY the parsed surface, in order, through the
       canonicaliser its declared type requires -- read out of the emitted source, not assumed
   X2  the canonical double form is a function of the VALUE, never of the spelling, and is the
@@ -102,16 +104,23 @@ class FakeSource(object):
         return '##EVIDENCE-MODE## %s %s git_index=fixture' % (component, self.mode)
 
 
-def real_core_text():
-    return io.open(os.path.join(ROOT, REAL_CORE.replace('/', os.sep)),
+def real_file(rel):
+    """A real repo file used as a FIXTURE INPUT, never as a verdict. Worktree on purpose: these
+    cases inject their own content and assert on the checker, not on the repository."""
+    return io.open(os.path.join(ROOT, rel.replace('/', os.sep)),
                    encoding='utf-8-sig').read()  # snapshot: worktree -- a FIXTURE, not a verdict
 
 
-def files_for(M, inputs_text=FIXTURE_INPUTS, gen_text=None, core_text=None):
+def real_core_text():
+    return real_file(REAL_CORE)
+
+
+def files_for(M, inputs_text=FIXTURE_INPUTS, gen_text=None, core_text=None, fp_text=None):
     return {
         M.chk.INPUTS_PATH: inputs_text,
         M.chk.GEN_PATH: M.gen.emit(inputs_text) if gen_text is None else gen_text,
         M.chk.CORE_PATH: real_core_text() if core_text is None else core_text,
+        M.chk.FP_PATH: real_file(M.chk.FP_PATH) if fp_text is None else fp_text,
     }
 
 
@@ -180,6 +189,38 @@ def g2_specificity(M):
                                     '#include "InputSurface_gen.mqh"')
     if problems_for(M, core_text=core):
         return 'the include line was refused for carrying a trailing comment'
+    return None
+
+
+# -- G3 the two constants that live OUTSIDE the generated file ---------------------------------
+
+def g3_attack(M):
+    """a scope label or a hex alphabet edited on ONE side must be REFUSED"""
+    real = real_file(M.chk.FP_PATH)
+    renamed = real.replace('#define CFG_FP_SCOPE "surface_only"',
+                           '#define CFG_FP_SCOPE "surface+constants"')
+    if renamed == real:
+        return 'the fixture could not rename CFG_FP_SCOPE -- the anchor no longer matches the file'
+    if not any(p.startswith('G3') for p in problems_for(M, fp_text=renamed)):
+        return 'a scope label that disagrees with preset._constant_scope() was accepted'
+    upper = real.replace('"0123456789abcdef"', '"0123456789ABCDEF"')
+    if upper == real:
+        return 'the fixture could not upper-case the hex alphabet -- the anchor no longer matches'
+    if not any(p.startswith('G3') for p in problems_for(M, fp_text=upper)):
+        return 'an UPPERCASE hex alphabet was accepted, and it moves every digest the EA prints'
+    gone = real.replace('#define CFG_FP_SCOPE', '// #define CFG_FP_SCOPE')
+    if not any(p.startswith('G3') for p in problems_for(M, fp_text=gone)):
+        return 'a missing CFG_FP_SCOPE define was accepted -- an unreadable label is not a match'
+    return None
+
+
+def g3_specificity(M):
+    """the REAL pair agrees, and G3 does not fire on an unrelated edit to the same file"""
+    if problems_for(M):
+        return 'the real ConfigFingerprint.mqh was refused: %s' % problems_for(M)
+    noisy = real_file(M.chk.FP_PATH) + '\n// a comment added by an unrelated commit\n'
+    if problems_for(M, fp_text=noisy):
+        return 'an added comment was reported as a contract violation'
     return None
 
 
@@ -325,6 +366,11 @@ CASES = [
      ('check_input_surface_gen.py',
       '    if not INCLUDE_RE.search(_fold(core_text)):',
       '    if False:')),
+    ('G3', 'the scope label and hex alphabet agree across the two languages', g3_attack,
+     g3_specificity,
+     ('check_input_surface_gen.py',
+      "    elif m.group(1) != want_scope:",
+      "    elif False:")),
     ('X1', 'the emitted MQL5 is the parsed surface, in order', x1_attack, x1_specificity,
      ('gen_input_surface.py',
       "    if decl.mql_type in _CANON_CALL:\n        return _CANON_CALL[decl.mql_type] % decl.name",

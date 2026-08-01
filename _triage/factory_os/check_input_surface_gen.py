@@ -14,6 +14,12 @@ that drifted is the one nobody is checking.
       G1 alone leaves the shape `GUARD_SHAPES.md` calls "the mechanism never engages" -- a
       perfectly current enumeration that no build ever calls, with the fingerprint line silently
       absent from every journal.
+  G3  the two constants the generated file does NOT contain still agree with the Python side:
+      the scope label (the first line of the preimage) and the lowercase hex alphabet (the case
+      of every double's bits and of the digest). This is a SOURCE check and it is labelled one --
+      it cannot prove `CryptEncode` agrees with `hashlib`; only a tester run does, and ORDER-710
+      records four. What it refuses is the edit that moves every future digest while compiling
+      cleanly and passing G1 and G2.
 
 WHICH BYTES THIS JUDGES
 -----------------------
@@ -46,6 +52,15 @@ ToolFailure = evidence.ToolFailure   # the reader's type, not a look-alike (ORDE
 INPUTS_PATH = preset.INPUTS_REL
 GEN_PATH = gen.OUT_REL
 CORE_PATH = 'ea_template/core/LabCore.mqh'
+FP_PATH = 'ea_template/core/ConfigFingerprint.mqh'
+
+# G3's two constants. They are the whole cross-language contract that is NOT visible in the
+# generated file: the scope label goes into the preimage's first line, and the hex alphabet
+# decides whether a double's bits and the digest itself come out in the same case Python's
+# '%016x' and hexdigest() produce. Either one edited alone changes every fingerprint the EA
+# emits, compiles cleanly, and is invisible until somebody runs a tester comparison.
+SCOPE_DEFINE_RE = re.compile(r'^\s*#define\s+CFG_FP_SCOPE\s+"([^"]*)"\s*$', re.M)
+HEX_ALPHABET_RE = re.compile(r'StringSubstr\(\s*"([^"]*)"\s*,')
 
 # A trailing `// comment` is allowed on the include line -- the first version of this pattern
 # anchored at `$` and rejected the real file on its first run. What is NOT allowed is the line
@@ -89,6 +104,7 @@ def check(worktree=False, source=None):
     inputs_text = src.read_committed(INPUTS_PATH)      # snapshot: index (or --worktree; printed)
     committed_gen = src.read_committed(GEN_PATH)       # snapshot: index (or --worktree; printed)
     core_text = src.read_committed(CORE_PATH)          # snapshot: index (or --worktree; printed)
+    fp_text = src.read_committed(FP_PATH)              # snapshot: index (or --worktree; printed)
 
     expected = gen.emit(inputs_text)
     tags = sorted(preset.known_build_tags(inputs_text))
@@ -109,12 +125,45 @@ def check(worktree=False, source=None):
             'G2 %s does not #include "InputSurface_gen.mqh". The enumeration would be current and '
             'never compiled into anything -- the fingerprint line simply stops appearing, and an '
             'absent line is not a mismatch anyone notices.' % CORE_PATH)
-    if not CALL_RE.search(core_text):
+    if not CALL_RE.search(_fold(core_text)):
         problems.append(
             'G2 %s never calls CFG_Fingerprint(). Including the enumeration without emitting it is '
             'the same silence by a shorter route.' % CORE_PATH)
 
-    return problems, {'mode': src.mode, 'tags': tags, 'keys': keys}
+    # G3 -- the two constants that are NOT in the generated file, and are therefore the only part
+    # of the cross-language contract nothing else looks at. This is a SOURCE check, and it says so:
+    # it cannot prove MetaTrader's CryptEncode agrees with hashlib (only a tester run does that,
+    # and ORDER-710 records four). What it can do is refuse the edit that silently moves every
+    # future digest -- which compiles cleanly, passes G1 and G2, and shows up as a mismatch nobody
+    # can explain, with the binary as the first suspect.
+    want_scope = preset.SCOPE_SURFACE_ONLY
+    m = SCOPE_DEFINE_RE.search(_fold(fp_text))
+    if not m:
+        problems.append(
+            'G3 %s does not #define CFG_FP_SCOPE as a quoted literal, so the EA\'s preimage begins '
+            'with a scope label this checker cannot read -- and the label is the FIRST line of the '
+            'hashed string.' % FP_PATH)
+    elif m.group(1) != want_scope:
+        problems.append(
+            'G3 %s says CFG_FP_SCOPE is %r but preset._constant_scope() produces %r for the same '
+            'no-locked-constants case (preset.SCOPE_SURFACE_ONLY). The scope is the first line '
+            'of the preimage on BOTH '
+            'sides, so the two hashes can never match again -- and nothing else in the tier looks '
+            'at it.' % (FP_PATH, m.group(1), want_scope))
+    alphabets = [a for a in HEX_ALPHABET_RE.findall(_fold(fp_text)) if len(a) == 16]
+    if not alphabets:
+        problems.append(
+            'G3 %s has no 16-character hex alphabet literal. CFG_HexLower indexes one, and it is '
+            'what decides the CASE of every double\'s bits and of the digest itself.' % FP_PATH)
+    elif any(a != '0123456789abcdef' for a in alphabets):
+        problems.append(
+            'G3 %s uses the hex alphabet(s) %s. Python emits \'0x%%016x\' and hashlib.hexdigest(), '
+            'both LOWERCASE; an uppercase alphabet changes every digest the EA prints while '
+            'compiling cleanly and passing every other criterion here.'
+            % (FP_PATH, ', '.join(repr(a) for a in alphabets)))
+
+    return problems, {'mode': src.mode, 'tags': tags, 'keys': keys,
+                      'scope': m.group(1) if m else '(unreadable)'}
 
 
 def main(argv):
@@ -129,10 +178,11 @@ def main(argv):
         out.flush()
         return 2
     out.write('%s\n' % _source(worktree).marker('check_input_surface_gen'))
-    out.write('judged bytes : %s, %s and %s, all at %s\n'
-              % (INPUTS_PATH, GEN_PATH, CORE_PATH, info['mode']))
+    out.write('judged bytes : %s, %s, %s and %s, all at %s\n'
+              % (INPUTS_PATH, GEN_PATH, CORE_PATH, FP_PATH, info['mode']))
     out.write('surface      : %s\n'
               % ' '.join('%s=%d' % (t, info['keys'][t]) for t in info['tags']))
+    out.write('scope label  : %s (both sides)\n' % info['scope'])
     if problems:
         out.write('\n%s PROBLEM(S):\n' % len(problems))
         for p in problems:

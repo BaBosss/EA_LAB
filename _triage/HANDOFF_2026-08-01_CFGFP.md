@@ -180,3 +180,44 @@ board row here looks unfamiliar, check whose lane wrote it before assuming drift
    and the assertion prints which one it was in.
 
 Final state: full tier **16/16 at 75.5s / 77.9s** of 90.0s, two clean runs with no lane open.
+
+## `/scrutinize` x2 over this lane's own work — three defects, all in the guarding, none in the hash
+
+**The hash was fine. The things meant to keep it fine were not.**
+
+1. **MAJOR — `ea_template/core/ConfigFingerprint.mqh` was guarded by nothing and triggered nothing.**
+   It holds the entire MQL5 half of the contract (`CFG_FP_SCOPE`, the lowercase hex alphabet,
+   `CryptEncode`) and appeared in neither `$SUITE_GUARDS` nor `.githooks/fast_tier_pathspec` —
+   measured with `-ExportSelection` (*"1 staged path(s) matched NO suite"*) and with
+   `git diff --cached -- $(cat .githooks/fast_tier_pathspec)`, which returned empty, i.e. the tier
+   would not have run at all. A commit changing `0123456789abcdef` to uppercase would have moved
+   every future digest, compiled cleanly, and run zero cages. **Fixed twice over:** the file is
+   declared, and a new criterion **G3** now READS it, so the declaration is load-bearing rather
+   than remembered.
+   🔴 **The undeclared-reference sweep did NOT demand it** — PART 4 sweeps a suite's own sources
+   for repo paths and PART 4b walks the import closure for MODULES; a path referenced by an
+   *imported module* is in neither. That gap is `ORDER-732`, not a silent hand-fix.
+2. **MAJOR — a comment that described the opposite of its code.** The generated file's
+   unenumerated fallback said it emits *"a fingerprint that cannot be mistaken for a real one
+   rather than an empty string that would hash to a perfectly valid-looking digest"* — while
+   `CFG_Fingerprint()` hashed the literal `"UNENUMERATED"` into a perfectly ordinary 64-character
+   lowercase digest. The only thing protecting a reader was `build=NO_BUILD_TAG` on the same line.
+   The branch now returns the non-hex sentinel `UNENUMERATED-NO-BUILD-TAG`, so the field itself
+   carries the answer.
+3. **MAJOR — the verifier reported a tester ABORT as a fingerprint defect.** `Invoke-Run` did not
+   check `mt5_run.ps1`'s exit code. With the MT5 GUI open, run B aborts, the previous run's log is
+   still recently-written, `Get-LoggedFingerprint` returns **run A's** line, and the script prints
+   *"the EA printed the SAME hash for two different .set files"* — a defect that did not happen,
+   in the louder of the two possible messages. Exit code checked now, with its own message.
+4. **NIT, but the same family as the batch's own findings:** the cage's docstring said *"5
+   criteria"* beside a `len(CASES)` that printed 6 within the same round; the board carried the
+   same hand-typed count. Both now defer to the printed number. And `preset._constant_scope`'s
+   label is a named constant (`preset.SCOPE_SURFACE_ONLY`) so the checker binds to a declared
+   contract instead of reaching into a private.
+
+**Re-measured after the changes, not assumed:** compile 0/0 on 9 targets · the EA↔compiler
+fingerprints are **byte-identical to the pre-change run** (`9161b652…` / `0e063db8…`), which is
+what proves the sentinel branch changed nothing for a real build · `tpl_regression` **CLEAN 8/8**
+on lane 1 again · the staleness guard driven **red on the REAL files** for the first time (one
+input appended to a staged `Inputs.mqh` behind a temp index ⇒ `G1 ... REJECTED`, real
+`.git/index` untouched).

@@ -50,6 +50,7 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+ea_template/core/ConfigFingerprint.mqh
 ea_template/core/Inputs.mqh
 ea_template/core/InputSurface_gen.mqh
 ea_template/core/LabCore.mqh

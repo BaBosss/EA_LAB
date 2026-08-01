@@ -195,14 +195,18 @@ $scripts = @(
     @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @() },
     # 10. ORDER-710. The generated input-surface enumeration, in the same two entries as item 7
     #     and for the same reason -- they answer two different questions:
-    #       run_input_surface_tests.py --mutate -- can the guard fail? 5 criteria x (attack +
-    #                                              specificity) + 5 mutations, over FIXTURE
-    #                                              sources it injects, so it stays green no
-    #                                              matter what the real repository does.
+    #       run_input_surface_tests.py --mutate -- can the guard fail? Every criterion gets an
+    #                                              attack, a specificity half and a mutation,
+    #                                              over FIXTURE sources it injects, so it stays
+    #                                              green no matter what the real repo does.
+    #                                              (The count is printed by the run and is not
+    #                                              repeated here -- it went 5 -> 6 in one
+    #                                              /scrutinize round, which is the argument.)
     #       check_input_surface_gen.py         -- is the REAL enumeration current and wired in
     #                                              RIGHT NOW, judged at the commit's snapshot?
-    #     MEASURED 0.21s + 0.10s. Both belong in this wrapper rather than a 17th PowerShell
-    #     suite, per this file's own rule that the expensive part of a small cage is the process.
+    #     MEASURED 0.22s + 0.11s (re-measured after G3 joined). Both belong in this wrapper
+    #     rather than a 17th PowerShell suite, per this file's own rule that the expensive part
+    #     of a small cage is the process.
     @{ Path = '_triage\factory_os\run_input_surface_tests.py'; Args = @('--mutate') },
     @{ Path = '_triage\factory_os\check_input_surface_gen.py'; Args = @() }
 )

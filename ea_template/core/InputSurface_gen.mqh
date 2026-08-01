@@ -1068,8 +1068,7 @@ string CFG_SurfacePreimage()
 #ifndef CFG_SURFACE_ENUMERATED
 // No LAB_ENTRY_* tag was defined by the time this file was included. Inputs.mqh falls
 // back to LAB_ENTRY_11 when the wrapper defines none, so reaching here means this file
-// was included BEFORE Inputs.mqh. Emit a fingerprint that cannot be mistaken for a real
-// one rather than an empty string that would hash to a perfectly valid-looking digest.
+// was included BEFORE Inputs.mqh.
 string CFG_BuildTag()    { return("NO_BUILD_TAG"); }
 int    CFG_SurfaceKeys() { return(-1); }
 string CFG_SurfacePreimage() { return("UNENUMERATED"); }
@@ -1077,6 +1076,18 @@ string CFG_SurfacePreimage() { return("UNENUMERATED"); }
 
 // The entry point LabCore prints. It lives HERE, after every block, because it calls
 // CFG_SurfacePreimage() and the include that defines the canonicalisers is above.
-string CFG_Fingerprint() { return(CFG_Sha256Hex(CFG_SurfacePreimage())); }
+//
+// THE UNENUMERATED BRANCH RETURNS A NON-HEX SENTINEL, NOT A HASH. An earlier version
+// hashed the string "UNENUMERATED" and the comment above claimed the result "cannot be
+// mistaken for a real fingerprint" -- it is a perfectly ordinary 64-character lowercase
+// digest, and the claim was the opposite of what the code did. The only thing protecting
+// the reader was build=NO_BUILD_TAG on the same line. Now the field itself cannot be
+// mistaken for a digest, and nothing has to be inferred from a neighbouring field.
+string CFG_Fingerprint()
+  {
+   if(CFG_SurfaceKeys() < 0)
+      return("UNENUMERATED-NO-BUILD-TAG");
+   return(CFG_Sha256Hex(CFG_SurfacePreimage()));
+  }
 
 #endif // BOSS_INPUT_SURFACE_GEN_MQH
