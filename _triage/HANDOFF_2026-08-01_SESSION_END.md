@@ -36,6 +36,16 @@ an append to `MASTER_BACKLOG.md` **outside §2 passes** the front guard (`rc=0`)
 > refused, with cases that were red first.
 > 📐 **Seventh tier sample: 100.0 s** — the worst measured, `contract_binding` at 34.8 s vs 24.9 s
 > at best. The swing of that single suite is now **24.9-34.8 s**, which is `ORDER-830` C1's subject.
+> 🔴 **The S14 guard was scrutinized twice more and took SEVEN fixes in total** — it permitted deleting the
+> whole log · `W4` was a deny-list a nested `verdict` and `pf` both walked through · it emitted no evidence
+> marker (so it judged the disk, not the index) · one bad row at HEAD froze the log forever · the mutation
+> killed every criterion so it discriminated nothing · a broken git silently disabled append-only · and a
+> `_comment` row at any position was an unchecked free-text channel. All closed, cage **16 → 25 cases**.
+> **ONE IS STILL OPEN and is the next session's first S14 task: `AGENTS.md` is declared in `SUITE_GUARDS`,
+> so editing it RUNS this suite — but no code READS it, so widening the permission row would still land
+> green.** Pinning the row's text in the cage is the fix. Same shape as
+> `citation-guard-satisfied-by-a-universal-file`.
+>
 > ⚠️ **One honest limit to carry forward:** `AGENTS.md` §2 says a row may cite *only the writing
 > agent's own order id*. **Nothing enforces that** — every agent commits under one git identity.
 > The shape is enforced; the attribution is not. Written into the checker's docstring and item 2.
