@@ -374,7 +374,151 @@ read that sentence.
 
 ---
 
+## ORDER-830 — [tier] `ORDER-820` C1, measured: THREE entries drifted, not one — and the biggest is one `check_registries.py` call that costs 5.1s in `index` mode and 0.07s in `worktree` mode — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> Opened by lane `S-2026-08-01-TIERBUDGET` after taking `ORDER-820` C1 and being told to park it.
+> **The timing half of C1 is DONE and is below — do not re-measure it.** What is left is the two
+> questions the measurement raised, which are the actual work. `ORDER-820` keeps the budget
+> decision (its C2/C3); this row owns the attribution.
+
+### MEASURED (2026-08-01, `9f73f433`, machine otherwise idle, medians of 3 runs each)
+
+Every entry of `run_contract_binding_tests.ps1`, run individually through the same interpreter,
+same args, same order, same cwd as the wrapper. Harness parsed the entry list **out of the wrapper**
+rather than retyping it, so it cannot drift from it.
+
+| entry | measured | the wrapper's own comment says | delta |
+|---|---|---|---|
+| `run_registry_tests.py` | **8.77s** | "MEASURED 0.2s" | **+8.6s** |
+| `run_coverage_transfer_tests.py` | **5.10s** | *(no number was ever recorded)* | — |
+| `run_s2a_gate.py` | **5.04s** | "2.57s after memoizing" | **+2.5s** |
+| `run_schema_fixtures.py` | 2.46s | "2.2s, 89 cases" | +0.3s |
+| `run_snapshot_s4_tests.py` | **1.42s** | "MEASURED 0.35s" | **+1.1s** |
+| `check_coverage_transfer.py` | 0.97s | *(none)* | — |
+| `run_enforcement_status_tests.py` | 0.40s | "~0.8s" | −0.4s |
+| `run_attested_pin_staged_tests.py` | 0.29s | *(none)* | — |
+| `check_input_surface_gen.py` | 0.22s | "0.11s" | +0.1s |
+| `run_input_surface_tests.py --mutate` | 0.19s | "0.22s" | ~0 |
+| `run_snapshot_validator_tests.py` | 0.17s | *(inside "0.4s for the first two")* | — |
+| `run_guard_shape_lint.py` | 0.15s | *(none)* | — |
+| `run_s2a_conformance.py --mutate` | 0.13s | *(none)* | — |
+| `run_contract_binding_tests.py` | 0.09s | *(none)* | — |
+| `check_registries.py` | 0.08s | "MEASURED 0.2s" (shared with the suite above) | — |
+| `run_guard_shape_lint.py --self-test` | 0.07s | *(none)* | — |
+| `check_schema_structure.py` | 0.05s | *(none)* | — |
+| `gen_design_contracts.py --check` | 0.04s | *(inside "0.4s for the first two")* | — |
+| **sum of medians** | **25.64s** | | |
+
+**So `ORDER-820`'s framing is half wrong in a way that matters: it is not "+8.7s on one suite with
+nobody's name on it". Three entries drifted (+8.6 · +2.5 · +1.1 = +12.2s), and a fourth
+(`coverage_transfer`, 6.07s across its two entries) was never measured at all, so it cannot be said
+to have drifted or not.** A single-cause hunt would have found the 8.6s and stopped.
+
+### Where the 8.6s is, decomposed
+
+`run_registry_tests.py` 8.77s breaks down as (profiler wrapping `subprocess.Popen`, one charge per
+child process):
+
+| | |
+|---|---|
+| **one `check_registries.py` call in `EA_LAB_EVIDENCE=index` mode** | **5.15s** |
+| the same script, same repo, `EA_LAB_EVIDENCE=worktree` | **0.07s** |
+| ~130 git child processes against fixture repos (`ls-files` ×27, `show` ×19, `add` ×10, `init` ×6, …) | 3.4s |
+| everything in-process | 0.34s |
+
+**One call, one mode, 70× the cost of the other mode of the same script over the same repository.**
+That is 60% of the suite and ~59% of the whole +8.6s.
+
+### ⚠️ Read this against the SIXTH SAMPLE, which landed on `ORDER-820` while this was being measured
+
+Lane `S-2026-08-01-INSTRREV` measured a sixth full tier at **87.8 s** with
+`run_contract_binding_tests.ps1` at **24.9 s** rather than 31.6 s, i.e. **the suite swings
+24.9-32.1 s** and the breach is intermittent. Two things follow, and neither was visible from
+either measurement alone:
+
+1. **The sum above (25.64 s) sits at the LOW end of that swing** — so the per-entry table is a
+   picture of the suite on a *good* run, and the drifts it names are present even then.
+2. 🔴 **Every entry above was individually stable to ±0.03 s across three runs** — including
+   `run_registry_tests.py` (8.76 / 8.77 / 8.79). **So the 7 s swing is not inside any of these
+   eighteen scripts as this harness ran them.** It appears when the tier runs and not when the
+   entries run standalone, which points at the environment the hook supplies — most obviously
+   `GIT_INDEX_FILE`, since the one expensive item found here is precisely the one that changes
+   behaviour with the evidence mode. **That is a lead, not a finding; nobody has measured it.**
+
+### The two questions this leaves — this is the work
+
+- **A1 — why is `index` mode 5.1s?** Profile `check_registries.py` under `EA_LAB_EVIDENCE=index`
+  and name the operation, with numbers: **how many git child processes it spawns** and **how many
+  paths it walks**. The shape to expect (not to assume) is `ORDER-270`'s spawn pathology — a
+  per-path git call over a 5,000-file index — because that is what `run_s2a_gate.py`'s own header
+  says was found and memoized inside `check_s2a_migration.py` for exactly this reason. Whatever it
+  is, it must be **named**, since a number without a name is how this became a surprise.
+- **A2 — reconcile the 22.9s baseline, because the obvious culprit does not fit.** The index-mode
+  path and the two-mode CLI loop that calls it were both added by **`5082bd4d`** (`ORDER-670`
+  part 1, **2026-07-31**) — `git log -S` finds no other commit touching either. But `5082bd4d`
+  **predates both** measurements `ORDER-820` compares (22.9s at `ddbaec95` and 31.6s, both
+  2026-08-01), so **it cannot explain the jump between them.** Exactly one of these is true and
+  A2 must say which:
+  1. **the 22.9s and 31.6s figures are two draws from the 24.9-32.1s swing** and there was never a
+     jump to explain — the sixth sample makes this the front-runner, and if it is true then
+     **`ORDER-820`'s premise is wrong and its row must be corrected**, not quietly worked around; or
+  2. the 22.9s figure measured a different suite set (per-path selection, a warm hook index); or
+  3. index mode's cost **grows with repository state** rather than with any commit — in which case
+     "the commit that grew it" has no answer, C1 is unanswerable as written, and the order needs a
+     different acceptance.
+  Re-measure at `ddbaec95` with `git worktree add`, **never `git stash`** (see 🚫 below), and take
+  **at least three samples** — a single number is what produced this question in the first place.
+- **A2b — where the 7s swing lives.** The entries are stable standalone and the suite is not, so
+  bisect the difference: run the wrapper (a) standalone, (b) with `GIT_INDEX_FILE` set to a hook-
+  style temp index, (c) from inside a real hook run. Three samples each. Whichever step reproduces
+  the swing names it.
+- **A3 — the 5.9s that is not in the table.** Sum of medians is **25.64s**; the wrapper was
+  measured at **31.4-32.1s**. ~5.9s is PowerShell + 18 process starts + the wrapper itself, or it
+  is something else — it has never been measured either way. State the number.
+- **A4 — repair the wrapper's comments in the same commit as A1.** `run_contract_binding_tests.ps1`
+  currently tells its next reader that `run_registry_tests.py` costs **0.2s** when it costs 8.77s,
+  and `run_snapshot_s4_tests.py` **0.35s** when it costs 1.42s. Those comments are the file's own
+  budget reasoning; being wrong by 44× is not cosmetic. Correct them with the measured numbers and
+  the date.
+
+### Acceptance
+- **C1** A1 names the operation, with the process count and the path count.
+- **C2** A2 states which of the two branches is true, **with the re-measured number at `ddbaec95`**,
+  and if it is branch 1, `ORDER-820`'s row is corrected in the same commit.
+- **C3** A3's number is stated. **C4** A4's comments match the measurements.
+- Only then does `ORDER-820` C2 (make it faster / displace / raise) become answerable.
+
+### ห้าม
+- 🚫 **Do not raise the tier budget.** Unchanged from `ORDER-820`, and it is the one move the budget
+  exists to refuse (`ORDER-673` paid for the advisory version of that file).
+- 🚫 **Do not `git stash` to compare revisions** — it reverts the whole working tree silently. Use
+  `git worktree add`, or `git show <rev>:<path> >` into the scratchpad. (memory
+  `never-stash-to-compare-revisions`)
+- 🚫 **Do not "fix" this by skipping or defaulting away `index` mode.** Index mode is what the hook
+  runs and judging the commit rather than the worktree is the entire content of `ORDER-670`. Making
+  the guard cheaper by making it read the wrong thing is the defect class this repo has hit five
+  times.
+- 🚫 **Do not touch any S2a bundle member** (POLICY · VECTORS · D1 · D2 · reconciliation ·
+  `check_s2a_migration.py`) — a byte there costs an owner signature. Current digest `d88f795b`.
+- 🚫 No `REVIEWED`. No verdict.
+
+<sub>**A trap for whoever re-runs the profiling, because it cost me a round:** wrapping *both*
+`subprocess.run` and `subprocess.Popen` double-counts every call — `run()` is built on `Popen` and
+`communicate()` calls `wait()`. The first profile reported **288% of the suite spent in child
+processes**, which is how the bug announced itself. Instrument `Popen` only, and charge each process
+once behind a flag.</sub>
+
+---
+
 ## ORDER-820 — [tier] The full tier is OVER its enforced budget on every sample, and `run_contract_binding_tests.ps1` grew ~9s with nobody's name on it — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> 🔎 **C1's timing half is MEASURED and lives on `ORDER-830` (2026-08-01) — do not re-measure it.**
+> It says three entries drifted rather than one, and that the largest single item is a
+> `check_registries.py` call costing **5.1s in `index` mode against 0.07s in `worktree` mode**.
+> It also says **this row's premise may be wrong**: the only commit that introduced the expensive
+> path (`5082bd4d`) predates *both* the 22.9s and 31.6s measurements compared below, so it cannot
+> explain the jump between them. `ORDER-830` A2 decides which, and corrects this row if needed.
+> **C2 and C3 stay here and are not answerable until then.**
 
 > Opened by lane `S-2026-08-01-TIERINSTR` while instrumenting `ORDER-731` item 2. **Not this
 > lane's doing, and that is measured rather than claimed** — see the decomposition below.
