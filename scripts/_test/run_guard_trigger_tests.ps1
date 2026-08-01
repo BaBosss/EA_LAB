@@ -298,15 +298,24 @@ try {
     #     was the one edit its cage did not run.
     #     SPECIFICITY in the same case: it must select that suite WITHOUT falling back to the
     #     whole tier, or "selected" would just be the fail-open branch wearing the right answer.
+    #     THREE SUITES, NOT SIXTEEN, and the number is a measured trade rather than a shrug: each
+    #     Selection call is a PowerShell process (~0.29s), so all sixteen cost 4.6s against 7s of
+    #     full-tier headroom. Self-selection is ONE line in Select-Suites applying uniformly to
+    #     every suite, so three instances catch its regression exactly as well as sixteen; the
+    #     sixteenth would only pay for itself if selection ever became per-suite. If it does, this
+    #     loop widens and something else in the tier gets displaced.
+    $selfProbe = @($table.Suites[0], $table.Suites[[int]($table.Suites.Count / 2)],
+                   $table.Suites[$table.Suites.Count - 1]) | Select-Object -Unique
     $selfMissed = @()
     $selfWide = @()
-    foreach ($s in $table.Suites) {
+    foreach ($s in $selfProbe) {
+        if ($table.Suites -notcontains $s) { Bad ("PART 4b probes '{0}', which is not in the suite table" -f $s); continue }
         $sel = Selection @('scripts/_test/' + $s)
         if ($sel -notcontains $s) { $selfMissed += $s }
         elseif ($sel.Count -eq $table.Suites.Count) { $selfWide += $s }
     }
     if ($selfMissed.Count -eq 0) {
-        Good ("every suite is selected by its own file ({0} suites), not by the fail-open branch" -f $table.Suites.Count)
+        Good ("a suite's own file selects it ({0} probed: {1}), not the fail-open branch" -f $selfProbe.Count, ($selfProbe -join ', '))
     } else {
         Bad ("staging a suite's own file did not select it: {0}" -f ($selfMissed -join ', '))
     }
