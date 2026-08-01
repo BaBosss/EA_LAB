@@ -294,7 +294,14 @@ function Get-ProbeOrderId {
             $ranges += , @([int]$m.Groups[1].Value, [int]$m.Groups[2].Value)
         }
     }
-    if ($ranges.Count -eq 0) { throw 'no ACTIVE lane in docs/SESSION_LEDGER.md declares a NNN-NNN block at HEAD -- reserve one before running this cage (RULE 2 would be skipped entirely, so B0 would prove nothing)' }
+    # NO ACTIVE LANE IS A LEGITIMATE STATE, and the first version of this function threw on it --
+    # which made the whole suite unrunnable between sessions, when every lane row is CLOSED. That
+    # is a cage broken by its own repair. The guard itself handles this state explicitly: with no
+    # ACTIVE lane it prints "NOTE: no ACTIVE lane ... reserved-block and owned-path rules skipped"
+    # and RULE 2 cannot fire at all -- so B0's requirement (RULE 2 stays silent) is satisfied by
+    # ANY unused id. Say which regime we are in rather than pretending there is only one.
+    $ruleTwoLive = $ranges.Count -gt 0
+    if (-not $ruleTwoLive) { $ranges = @(, @(900, 998)) }
     $used = @{}
     foreach ($board in @('AGENT_TASKBOARD.md', 'AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md', 'ARCHIVE_TASKBOARD_2026-07A.md')) {
         $txt = GitText ('show ":{0}"' -f $board)
@@ -303,10 +310,13 @@ function Get-ProbeOrderId {
     }
     foreach ($r in $ranges) {
         for ($n = $r[0]; $n -le $r[1]; $n++) {
-            if (-not $used.ContainsKey($n)) { return [string]$n }
+            if (-not $used.ContainsKey($n)) {
+                $script:probeRegime = if ($ruleTwoLive) { 'inside the ACTIVE reserved block' } else { 'no ACTIVE lane, so RULE 2 is skipped by the guard and any unused id serves' }
+                return [string]$n
+            }
         }
     }
-    throw ('every number in the ACTIVE reserved block(s) is already on a board -- no free probe id')
+    throw ('no free probe id: every number in ' + $(if ($ruleTwoLive) { 'the ACTIVE reserved block(s)' } else { 'the fallback range 900-998' }) + ' is already on a board')
 }
 $probeId = Get-ProbeOrderId
 $probeHdr = "## ORDER-$probeId -- L3 probe, never committed"
@@ -379,7 +389,7 @@ try {
     StageBlobFrom $ACTIVE "`n$probeHdr`n"
     $b0 = RunCollision
     if ($b0.Code -eq 0) {
-        Good ('B0 SPECIFICITY a new order (ORDER-' + $probeId + ') on ONE board only is green -- the rule is not "always red", and the probe id is DERIVED from the ACTIVE block')
+        Good ('B0 SPECIFICITY a new order (ORDER-' + $probeId + ') on ONE board only is green -- the rule is not "always red"; probe id DERIVED (' + $script:probeRegime + ')')
     } else {
         Bad ("B0 SPECIFICITY expected exit 0 for a single-board order; got $($b0.Code). " +
              ($b0.Text -split "`n" | Select-Object -Last 2) -join ' | ')
