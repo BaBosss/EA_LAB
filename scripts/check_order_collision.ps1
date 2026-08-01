@@ -618,6 +618,12 @@ if (-not $ledgerPresent) {
             exit 2
         }
     }
+    # STATED LIMIT, because a reader will hit it before they find this file. When the ledger is
+    # NOT staged, the shape is judged at HEAD -- so a malformed row that somehow reached HEAD
+    # blocks EVERY commit, including ones with nothing to do with the ledger, until it is fixed.
+    # That is deliberate (a guard that switches itself off is the defect this rule exists for) and
+    # the only way in is --no-verify: the staged check above refuses a malformed row before it can
+    # land. The fix is always one edit to one row, and the message names the row and its line.
     $badShape = @($shapeLanes | Where-Object { $_.CellCount -ne $_.ExpectedCells })
     if ($badShape.Count -gt 0) {
         foreach ($b in $badShape) {
