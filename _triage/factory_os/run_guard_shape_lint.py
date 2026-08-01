@@ -141,6 +141,8 @@ L1_NOT_PARSED = {
         'PowerShell -- L1 has no parser for it',
     'scripts/check_order_collision.ps1':
         'PowerShell -- L1 has no parser for it',
+    'scripts/check_persist_legacy.ps1':
+        'PowerShell -- L1 has no parser for it',
     'scripts/check_precommit_staged.ps1':
         'PowerShell -- L1 has no parser for it',
     'scripts/check_stale_binaries.ps1':
@@ -158,8 +160,10 @@ L1_NOT_PARSED = {
 }
 # MEASURED at declaration time: 11 PowerShell checkers, discovered by the glob rather than
 # remembered. If one is added or removed, L0 says so on the next run instead of this number
-# quietly becoming wrong.
-assert len(L1_NOT_PARSED) == 11
+# quietly becoming wrong. It did, on the commit that added the twelfth
+# (`check_persist_legacy.ps1`, ORDER-510) -- the guard refused the commit and named the file,
+# which is the mechanism working rather than a number being edited to match reality.
+assert len(L1_NOT_PARSED) == 12
 
 # ---------------------------------------------------------------------------------------------
 # L3 -- THE POWERSHELL HALF, and it exists because the alternative was writing declarations

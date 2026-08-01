@@ -6191,6 +6191,60 @@ guard at `core/LabCore.mqh:235-239`; at today's SHA it is [`:254-257`](ea_templa
 `INIT_FAILED` on `_0_Magic==990001` outside the tester — a **second, independent** refusal that will be
 blamed on the legacy gate when a chart still wearing the default goes quiet after the upgrade.</sub>
 
+### STEP 1 VERIFIED + the one-command check DELIVERED 2026-08-01 (`S-2026-08-01-TEMPLATE`) — order still `OPEN`
+
+The factory session was told to **verify** the STEP 1 procedure against the trap rather than assume it
+covers it, and to add *"the one-command check that says whether a given chart is safe to update"*.
+Both done, **written and tested only — no VPS touched, no binary copied, no GV read or written.**
+STEP 2 and STEP 3 still need the terminals and the owner, so the status verb does not move.
+
+**A. The procedure holds, and re-reading it at the line found three things it did not say**
+([`_triage/ORDER510_ADOPT_ONCE_PROCEDURE.md`](_triage/ORDER510_ADOPT_ONCE_PROCEDURE.md) §11):
+
+1. 🔴 **§6 names the wrong journal line for a chart refused by trigger 1 or 2.** Legacy
+   `rc_kill_pending`/`rc_halted` are **not migrated** — they are consumed into the new `rc_state` enum
+   and then deleted ([`RiskControl.mqh:167-186`](ea_template/core/RiskControl.mqh:167)), so no
+   `[PERSIST] migrated` line is ever printed for them; the line is
+   `[RISK] migrated legacy halt/kill flags -> …rc_state=<1|2>` ([`:176`](ea_template/core/RiskControl.mqh:176)).
+   An operator following §6 literally on such a chart sees the expected line missing and concludes the
+   migration failed. **All four triggers do clear on one adopt-once attach** — `acct_hwm` via
+   [`RiskControl_AcctGateInit`](ea_template/core/RiskControl.mqh:81), which runs outside the
+   `RC_PersistHalt` block — they simply announce themselves in three different ways.
+2. 🔴 **The DryRun rehearsal is quieter on the dangerous triggers and parks the EA in KILL-PENDING.**
+   For trigger 3/4 it prints the value it would adopt; for triggers 1/2 it prints **no `[PERSIST]` line
+   at all** (the `rc_state` write is `!DryRun`-gated, [`:173`](ea_template/core/RiskControl.mqh:173)) and
+   instead sets `g_rc_kill_pending`/`g_rc_halted` **before** the DryRun check — so the rehearsed EA is
+   in kill-pending with **closes suppressed**. §5's *"only while FLAT"* was written for another reason
+   and happens to cover this; on a kill/halt chart it is not a precaution, it is the entire margin.
+3. Line drift, recorded: `RC_AdoptLegacyHalt` is at `Inputs.mqh:499` not `:497`; the legacy delete is
+   `Persist.mqh:140`, not the `:117` header. Neither changes an instruction.
+
+**B. The one-command check** = [`scripts/check_persist_legacy.ps1`](scripts/check_persist_legacy.ps1).
+Consumes the F3 census as a text file — **UTF-16LE with no BOM is sniffed and read**, the encoding that
+otherwise returns zero matches forever and reports *"nothing found"* as clean
+(memory `prove-the-instrument-can-see-the-file`). `exit 0` = nothing fires the gate · `exit 1` = at
+least one magic does, with the trigger named and any **live** kill/halt state called out as
+undeletable · `exit 2` = the check could not be performed, **including a census that parsed nothing at
+all** (indistinguishable from an empty file or a wrong path, so refused rather than certified;
+`-AssertDumpComplete` lets the operator certify an empty F3 and the report then says the conclusion
+rests on that assertion, not on evidence). It reproduces the gate's **specificity**: an inactive
+`rc_kill_pending=0.0` does not fire the gate, so that chart is called SAFE and told why. Trigger 4
+depends on `RC_AcctDDLimitPct`, which no census can contain — undeclared it is `CONDITIONAL` and
+**counted unsafe**.
+
+**Cage:** [`scripts/_test/run_persist_legacy_tests.ps1`](scripts/_test/run_persist_legacy_tests.ps1),
+**30 cases, 30 green**, with as many must-ALLOW cases as must-REFUSE. Red-first was **measured, not
+asserted**: four mechanisms neutralised one at a time in a scratchpad copy — removing the UTF-16 sniff
+flips the encoding case 1→2, firing trigger 1 on existence flips the residue case 0→1, certifying an
+empty parse flips the empty case 2→0, and letting the legacy pattern swallow `Boss2_` keys **does not
+move the exit code at all** (the misparse lands on no trigger) and is caught only by the
+legacy/scoped count assertion. That last probe is why the suite asserts on counts and not just exits.
+
+<sub>⚠️ Fire count, per the guard clause: **this check has never fired on real data — 0 real censuses
+have been run through it.** Its 30 firings are all fixtures. It is `UNTESTED` against a live terminal
+and must not be written up otherwise until STEP 2 runs one. What the fixtures do establish is that it
+can say both words and that it can read the encoding MT5 writes.</sub>
+
 
 ---
 

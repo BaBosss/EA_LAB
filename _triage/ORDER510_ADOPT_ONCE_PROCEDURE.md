@@ -212,3 +212,108 @@ chart's `[INIT]` line after the final restart.
 - ❌ conclude that any EA "is behaving correctly" by reading the current source, when the binary
   running is not built from it
 - ❌ run the rehearsal (§5) on a leg that is not FLAT — DryRun suppresses exits
+
+---
+
+## 11. Verification pass, 2026-08-01 (`S-2026-08-01-TEMPLATE`) — checked, not assumed
+
+The factory-session prompt asked for this document to be **verified against the trap rather than
+assumed to cover it**. Every claim above was re-read at the line. Result: **the procedure holds** —
+and three things it does not say were found, two of which change what an operator does at the
+terminal.
+
+**What was confirmed at the line, unchanged:** the four triggers and their gating
+([`RiskControl.mqh:137-156`](../ea_template/core/RiskControl.mqh:137)) · both key formats
+([`Persist.mqh:88`](../ea_template/core/Persist.mqh:88) / [`:39`](../ea_template/core/Persist.mqh:39)) ·
+`Persist_HasLegacy` testing nothing but the name ([`:90`](../ea_template/core/Persist.mqh:90)) ·
+the DryRun rehearsal writing nothing ([`:133-137`](../ea_template/core/Persist.mqh:133)) ·
+`DryRun` defaulting false ([`Inputs.mqh:130`](../ea_template/core/Inputs.mqh:130)) ·
+`RC_PersistHalt` default **true** and `RC_AdoptLegacyHalt` default **false** ·
+the `ORDER-129` default-magic refusal ([`LabCore.mqh:254-257`](../ea_template/core/LabCore.mqh:254)) ·
+`PersistMigrate_Test` refusing chart attach ([`:26`](../ea_template/tests/PersistMigrate_Test.mq5:26)).
+
+### 11.1 🔴 §6 names the wrong journal line for a chart refused by trigger 1 or 2
+
+§6 step 3 tells the operator to look for `[PERSIST] migrated legacy Boss_<magic>_rc_peak_eq -> …`.
+That line only ever appears for **trigger 3** (and for trigger 4, via the same helper). Legacy
+`rc_kill_pending`/`rc_halted` are **not migrated** — they are *consumed*: read once, folded into the
+new single `rc_state` enum, and the legacy flags then deleted
+([`RiskControl.mqh:167-186`](../ea_template/core/RiskControl.mqh:167)). The line to verify on such a
+chart is
+
+```
+[RISK] migrated legacy halt/kill flags -> Boss2_<scope>_rc_state=<1|2>
+```
+
+([`:176`](../ea_template/core/RiskControl.mqh:176)). An operator following §6 literally on a
+kill/halt chart finds no `[PERSIST] migrated` line, and the honest reading of that — *"the migration
+did not happen, stop"* — would be wrong. **All four triggers are cleared by one adopt-once attach**;
+they just announce themselves in three different ways. `acct_hwm` is migrated by the same helper from
+[`RiskControl_AcctGateInit`](../ea_template/core/RiskControl.mqh:81), which runs at
+[`:212`](../ea_template/core/RiskControl.mqh:212) — outside the `RC_PersistHalt` block, so trigger 4
+clears even with `RC_PersistHalt=false`.
+
+### 11.2 🔴 The DryRun rehearsal is *quieter* on the dangerous triggers, and it parks the EA in KILL-PENDING
+
+§5.2's rehearsal is real, but its output is not uniform:
+
+| refused by | what `RC_AdoptLegacyHalt=true` + `DryRun=true` prints |
+|---|---|
+| trigger 3 `rc_peak_eq` | `[PERSIST] DryRun: would migrate … (<value>)` — **names the value** |
+| trigger 4 `acct_hwm` | same line, via the same helper |
+| trigger 1 `rc_kill_pending` | **no `[PERSIST]` line at all** — the `rc_state` write is `!DryRun`-gated ([`:173`](../ea_template/core/RiskControl.mqh:173)); what appears instead is `[RISK] KILL-PENDING restored from persist` ([`:194`](../ea_template/core/RiskControl.mqh:194)) |
+| trigger 2 `rc_halted` | likewise `[RISK] HALT restored from persist (peak …)` ([`:201`](../ea_template/core/RiskControl.mqh:201)) |
+
+So the rehearsal **does not name the kill/halt value it would adopt** — that number comes from the
+F3 census (§4), not from the journal. And the second half matters more: those two paths set
+`g_rc_kill_pending` / `g_rc_halted` **before** the DryRun check, so the rehearsed EA is now sitting in
+kill-pending with **closes suppressed** ([`Execution.mqh:315`](../ea_template/core/Execution.mqh:315)
+and siblings). §5's *"rehearse only while FLAT"* was written for a different reason and happens to
+cover this — but on a kill/halt chart it is not a precaution, it is the whole safety margin.
+
+### 11.3 Line-reference drift, recorded not silently patched
+
+`RC_AdoptLegacyHalt` is at [`Inputs.mqh:499`](../ea_template/core/Inputs.mqh:499), not `:497`
+(`RC_PersistHalt` at `:484` is correct). §6 step 4 cites `Persist.mqh:117` for "migration deletes the
+legacy key after a confirmed copy"; `:117` is the function header and the delete itself is
+[`:140`](../ea_template/core/Persist.mqh:140). Neither changes any instruction.
+
+## 12. The one-command check
+
+`scripts/check_persist_legacy.ps1` turns the §4 census into a verdict, so the question *"is this
+chart safe to update"* has an answer that is not a human re-reading four trigger conditions at an F3
+window.
+
+```bash
+powershell -File scripts/check_persist_legacy.ps1 -GvDump census_415573666.txt -Account 415573666
+```
+
+Input is a text file with one GlobalVariable per line, in whatever shape and encoding the terminal
+produced — **UTF-16LE with no BOM is sniffed and read**, which is not decoration: that encoding is
+precisely how a byte-oriented reader comes back with zero matches forever and reports *"nothing
+found"* as a clean bill of health (memory `prove-the-instrument-can-see-the-file`).
+
+- `exit 0` — no magic in the census fires the gate. Safe **for this census, this terminal, this
+  moment**; it generalises to no other account.
+- `exit 1` — at least one magic fires. The report names which trigger, and separately flags any
+  **live** `rc_kill_pending`/`rc_halted` as state that adopt-once converts and deletion would disarm.
+- `exit 2` — the check could not be performed. This includes **a census that parsed nothing at all**:
+  that is indistinguishable from an empty file, a wrong path, or an encoding the reader mishandled,
+  so it is refused rather than certified. `-AssertDumpComplete` lets the operator certify an empty F3
+  by hand, and the report then states that the conclusion rests on that assertion and not on evidence.
+
+It reproduces the gate's **specificity**, not just its sensitivity: an inactive `rc_kill_pending=0.0`
+is benign residue that the gate does not fire on, so the check calls that chart SAFE and says why.
+Trigger 4 depends on `RC_AcctDDLimitPct`, which no census can contain — undeclared, an `acct_hwm` hit
+is reported `CONDITIONAL` and **counted as unsafe**; `-AcctDDLimitPct <n>` resolves it either way.
+With `-Account`, `DEPLOYMENTS.csv` is consulted so the report also names the magics it **cleared**
+and any legacy magic with no inventory row (the `990001` shape, `ORDER-511`).
+
+Cage: `scripts/_test/run_persist_legacy_tests.ps1`, **30 cases, green**, with as many must-ALLOW
+cases as must-REFUSE. Four mechanisms were neutralised one at a time in a copy of the checker to
+prove the cases discriminate; the suite's header records what each probe did, including the one where
+the exit code did **not** move and only a count assertion caught the defect.
+
+⚠️ **What it is not.** It reads a census; it does not read a terminal. It cannot see `_06_AllowLive`,
+it cannot see which binary is installed, and a chart it calls SAFE can still refuse to start for
+either reason in §8. `exit 0` is *"this gate will not stop you"*, never *"the upgrade will work"*.
