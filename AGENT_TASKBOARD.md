@@ -5790,7 +5790,7 @@ entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"�
 
 ---
 
-## ORDER-432 — [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in first-lot sizing and the Wave5 naked-order guard — `OPEN` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
+## ORDER-432 — [🔴 money path] ORDER-187 came back from blind audit NOT closed: three High defects in first-lot sizing and the Wave5 naked-order guard — `DONE(2026-08-01)` — see the closing note at the foot of this row; the one thing genuinely left is spun out as its own order below · runnable by: **Claude/Opus only** · 👉 recommended: Claude
 **bars:** N-A (defect repair on the money path, not an EA measurement) · **flat-lot probe:** N-A
 
 **Evidence:** `_triage/CODEX_AUDIT_RESULTS_2026-07-27.md` §1 — full finding list with file:line. Codex task `task-ms327ah8-0mtnut`, blind (it never saw the Claude-side reasoning). ORDER-187 was `DONE(2026-07-24) — waiting on Codex blind-audit`; the audit is now in and **the order may not be called closed.**
@@ -5832,6 +5832,73 @@ entry ใน EDGE_CATALOG ของ ORDER-217 ปิดท้ายว่า *"�
 **STEP 1:** reproduce each High item as a failing test **before** changing any code. **STEP 2:** fix. **STEP 3:** re-run `scripts/tpl_regression.ps1` (mandatory after any `ea_template/core/` edit) plus a Wave5 run under `FirstLotMode=42`, which has never been run — `TPLREG_Boss_17_Wave5.htm:63` shows the only existing report uses mode 41.
 
 **ห้าม / Prohibitions:** call ORDER-187 closed before every High item has a test that fails without the fix · delegate to qwen/Sonnet · edit `ea_template/core/` without running `tpl_regression.ps1` in the same session · touch a live account or any `_vps_deploy/` bundle · treat "zero trades in the report" as proof a guard fired · accept Codex's findings without reproducing them — **it audited the code, it did not run the EA**
+
+### CLOSED 2026-08-01 (`S-2026-08-01-TEMPLATE`) — grep-the-destination correction + G4 spun out
+
+`_triage/PROMPT_NEXT_SESSION_TEMPLATE_FACTORY.md` opened this session claiming *"still open: 1, 3,
+and the mediums 4/5"* — **that was stale.** This row's own body already shows **all six findings
+closed** on 2026-07-27 (`S-2026-07-27-MONEYPATH` + `-MONEYPATH-B`): finding 1 (spread-side reference)
+verified by the pre-registered spread-drift test (Boss_17 alone moved, 26 trades unchanged, net
+−86.89→−85.69) · finding 3 (naked-path off-switch) demonstrated firing (0 trades + `[INIT] FATAL`)
+with specificity checked (`SLMode=33` still trades, 24) · finding 4's real half fixed
+(`RC_DEPOSIT_LOAD_UNKNOWN`) · finding 5 fixed at **both** sites, open and close, with opposite
+correct fallbacks · finding 6 (fire counters + `unaccounted` self-check) is what made all of the
+above measurable. Re-verified this session: source at today's SHA still carries every one of these
+(`g_w5_n_sl_invalid`, the `unaccounted` computation, `Wave5_SLValid`, `RC_DEPOSIT_LOAD_UNKNOWN` all
+read at the cited lines) — nothing regressed since 07-27. **Memory `grep-destination-before-tasking-user`
+applies to the opener of a session, not just to a user request:** the prompt file's own status claim
+should not have been trusted without reading the row it summarized.
+
+**The one real gap, already named in this row and not invented now:** `sl_invalid=0` across every
+run so far (2936 bars) — guard G4, the naked-order backstop the whole ORDER-082 structural design
+rests on, has never been observed executing. Forcing it honestly (not by picking an unrealistic
+`_17_SLbufferATR` that no deployed `.set` would ever use) needs either a symbol/broker combination
+with a real `SYMBOL_TRADE_STOPS_LEVEL` large enough to exceed the ATR buffer, or a long enough
+sample that a genuine near-market invalidation level occurs — neither is a same-session task. Spun
+out as **`ORDER-950`** rather than left to block this row forever (`docs/SESSION_LEDGER.md` reserved
+950-959 for this lane). Per the VERDICT GATE guard clause this stays **`UNTESTED`**, stated as such,
+not written up as passed.
+
+---
+
+## ORDER-950 — [🔴 money path] Guard G4 (`Wave5_SLValid` / `g_w5_n_sl_invalid`) has never been observed firing — `OPEN` · runnable by: **Claude/Opus only** · 👉 recommended: Claude
+**bars:** N-A (guard-firing evidence, not an EA measurement) · **flat-lot probe:** N-A
+
+Split out of `ORDER-432` (2026-08-01, `S-2026-08-01-TEMPLATE`) because it was the one item left
+after that order's other six findings closed, and leaving it inside would block the row forever
+on an unfalsifiable runtime path rather than being tracked as its own piece of evidence-gathering.
+
+**The guard:** [`ExitManager.mqh:25-41`](ea_template/core/ExitManager.mqh:25) refuses a Wave5
+structural SL when it is on the wrong side of the current bid/ask, non-positive, or closer than
+`SYMBOL_TRADE_STOPS_LEVEL` — the last defense before `Lab_OpenOrder` would send a naked or
+broker-rejected stop. Counted at [`Entry_Wave5.mqh:211-213`](ea_template/core/entries/Entry_Wave5.mqh:211)
+into `g_w5_n_sl_invalid`, printed every run by `Entry_Wave5_LogCounters()`. Two runs so far, 2936
+bars each, both **0**.
+
+**Why it has not fired, most likely:** default `_17_SLbufferATR=0.5` ([`Inputs.mqh:291`](ea_template/core/Inputs.mqh:291))
+puts the SL a good fraction of an ATR from the invalidation level — on XAUUSD that is almost always
+far larger than any broker's points-based stops-level distance, so the guard's minimum-distance
+branch is structurally hard to reach at the shipped buffer. This is a hypothesis, not yet checked
+against the tester's actual `SYMBOL_TRADE_STOPS_LEVEL` for XAUUSD.
+
+**What would count as evidence, in order of preference (cheapest/most honest first):**
+1. Read the tester's `SYMBOL_TRADE_STOPS_LEVEL` for XAUUSD directly (`SymbolInfoInteger` in a
+   throwaway script, or from the broker's symbol spec in a report) and compute whether
+   `0.5 * typical Risk-ATR` in points is ever close to it — if the gap is enormous, the guard is
+   probably reachable only when price gaps hard against a fresh invalidation level, which is rare
+   by construction, and that is worth **stating as the guard's actual operating envelope** rather
+   than continuing to call it untested indefinitely.
+2. A longer / different-regime sample (BWD 2020-22, which this fleet owes anyway) may contain the
+   gap events the MAIN window did not.
+3. Only as a last resort, and labelled as a synthetic reachability probe rather than evidence about
+   the shipped config: a **separate** `.set` with `_17_SLbufferATR` set small enough to force the
+   guard, run once to confirm the branch is not dead code, then discarded — this proves the code
+   PATH is live, it does not prove anything about deployment risk, and must not be reported as
+   though it did (same distinction ORDER-510's rehearsal draws between a dry-run and a real state).
+
+**Prohibitions:** do not report `sl_invalid>0` from item 3 as if it happened under the deployed
+config · do not delete or weaken the guard to "resolve" the open item · do not fold this back into
+`ORDER-432`.
 
 ---
 
