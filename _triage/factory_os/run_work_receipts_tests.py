@@ -17,6 +17,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import check_work_receipts as wr  # noqa: E402
 
+NL = chr(10)
 HDR = '{"_comment": "header"}'
 R1 = '{"order_id": "ORDER-880", "agent": "qwen", "artifact": "reports/x.csv"}'
 R2 = '{"order_id": "ORDER-881", "agent": "sonnet", "artifact": "reports/y.csv"}'
@@ -108,6 +109,36 @@ def main():
     case('ENGAGEMENT', 'the W2 mutation is DETECTED (suite is load-bearing)',
          mutated == [] and any(x.startswith('W2') for x in run(real_staged, head=real_head)),
          'mutated=%r' % (mutated,))
+
+    # ---- W2 on the FILE, not just its rows. Found by probing main(), not by reading it: the
+    # ---- first version answered "is it in the index?", so `git rm --cached` printed "does not
+    # ---- exist yet" and exited 0 -- an append-only guard that permitted deleting the whole log.
+    # ---- check() never saw this because the hole was in main()'s early return, which is exactly
+    # ---- why a cage that only drives the pure function is not enough.
+    class _Src(object):
+        def __init__(self, present):
+            self.present = present
+
+        def exists_committed(self, rel):
+            return self.present
+
+        def read_committed(self, rel):
+            return HDR + NL
+
+    saved_head, saved_src = wr._head_text, wr._src
+    try:
+        wr._head_text = lambda: HDR + NL + R1 + NL      # HEAD HAS receipts
+        wr._src = lambda: _Src(False)                     # ...and the snapshot does not
+        rc_del = wr.main([])
+        wr._head_text = lambda: None                      # no history at all
+        wr._src = lambda: _Src(False)
+        rc_new = wr.main([])
+    finally:
+        wr._head_text, wr._src = saved_head, saved_src
+    case('ATTACK', 'W2 DELETING the whole file is refused, not read as "no file yet"',
+         rc_del == 1, 'main() returned %r' % rc_del)
+    case('CONTROL', 'W0 a file that never existed still passes (the two are told apart)',
+         rc_new == 0, 'main() returned %r' % rc_new)
 
     print()
     if _bad:

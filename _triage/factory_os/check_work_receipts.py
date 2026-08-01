@@ -66,6 +66,29 @@ def _norm(text):
     return (text or '').replace('\r\n', '\n')
 
 
+def _head_text():
+    """HEAD's content, or None when the path has no history yet.
+
+    A DIRECT git call rather than importing check_s2a_migration, and that is a deliberate
+    narrowing: the declaration cage (run_guard_trigger_tests PART 4b) walks the import closure, and
+    importing that module dragged check_s2a_migration and gen_design_contracts into this suite's
+    guarded set -- two bundle-adjacent files this guard has no business being coupled to. Two lines
+    of subprocess buy a closure of exactly {evidence.py}.
+
+    None means "no history", which is the only case where append-only has nothing to protect
+    (the attestation policy's G6 reasoning).
+    """
+    try:
+        import subprocess
+        p = subprocess.run(['git', 'cat-file', 'blob', 'HEAD:' + RECEIPTS_PATH],
+                           capture_output=True)  # snapshot: HEAD
+        if p.returncode == 0:
+            return p.stdout.decode('utf-8')
+    except Exception:
+        pass
+    return None
+
+
 def check(staged_text, head_text, problems):
     """The whole rule set, over TEXT -- so the cage can drive it without a git repo."""
     # W2 first: it is a claim about the file as a whole, and a rewrite makes every row suspect.
@@ -122,32 +145,40 @@ def main(argv=None):
     src = _src()
     problems = []
 
+    # HEAD is resolved FIRST, and that ordering is the fix for a hole found by PROBING this guard
+    # rather than reading it: the first version asked "is the file in the index?" and, on
+    # `git rm --cached factory/work_receipts.jsonl`, answered no, printed "does not exist yet" and
+    # exited 0. An APPEND-ONLY guard that permitted deleting the entire log -- every receipt gone in
+    # one commit, silently. W0 means "nobody has written one yet"; it does NOT mean "somebody
+    # removed them all", and only HEAD can tell those two apart.
+    head_text = _head_text()
+    present = src.exists_committed(RECEIPTS_PATH)
+
+    if head_text is not None and not present:
+        print('%s 0 receipt row(s); append-only judged against HEAD' % TAG)
+        print("  -> W2 %s exists at HEAD and is DELETED by this change. Append-only means the file "
+              "itself cannot be removed either -- every receipt recorded so far would go with it. "
+              "Moving or retiring it is a permission change, and therefore the owner's "
+              "(AGENTS.md section 2)." % RECEIPTS_PATH)
+        print(chr(10) + '=== 1 PROBLEM(S) -- the work-receipt grant was exceeded ===')
+        return 1
+
+    if not present:
+        # W0 proper: absent at HEAD AND absent now -- a file nobody has written to yet.
+        # DECLARED LIMIT: `exists_committed` returns `rc == 0` from git (evidence.py:195-200), so a
+        # git that FAILS is indistinguishable here from a path that is absent. The conflation is
+        # confined to this branch and is harmless in it -- with no such file at HEAD there is
+        # nothing an append-only rule could be protecting. Wherever the file DOES exist at HEAD the
+        # branch above turns the same ambiguity into a REFUSAL, i.e. it fails closed.
+        print('%s %s does not exist yet -- nothing to judge (W0)' % (TAG, RECEIPTS_PATH))
+        return 0
+
     try:
-        if not src.exists_committed(RECEIPTS_PATH):
-            # W0. Absent is not broken -- it is a file nobody has written to yet.
-            print('%s %s does not exist yet -- nothing to judge (W0)' % (TAG, RECEIPTS_PATH))
-            return 0
         staged_text = src.read_committed(RECEIPTS_PATH)  # snapshot: index under the hook
     except evidence.ToolFailure as exc:
         # "I could not read it" must never share an outcome with "there is nothing wrong".
         print('%s TOOL FAILURE: %s' % (TAG, exc))
         return 2
-
-    # HEAD is read with a DIRECT git call rather than by importing check_s2a_migration, and that is
-    # a deliberate narrowing rather than duplication: the declaration cage (run_guard_trigger_tests
-    # PART 4b) walks the import closure, and importing that module dragged check_s2a_migration and
-    # gen_design_contracts into this suite's guarded set -- two bundle-adjacent files this guard has
-    # no business being coupled to. Two lines of subprocess buy a closure of exactly {evidence.py}.
-    head_text = None
-    try:
-        import subprocess
-        p = subprocess.run(['git', 'cat-file', 'blob', 'HEAD:' + RECEIPTS_PATH],
-                           capture_output=True)  # snapshot: HEAD
-        if p.returncode == 0:
-            head_text = p.stdout.decode('utf-8')
-    except Exception:
-        # A file with no history yet has nothing to protect; append-only is silent (G6's reasoning).
-        head_text = None
 
     n = check(staged_text, head_text, problems)
     print('%s %d receipt row(s); append-only judged against %s'
