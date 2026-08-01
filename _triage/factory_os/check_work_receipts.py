@@ -14,9 +14,12 @@ WHAT IT ASSERTS -- each id is emitted verbatim so a failure names its own rule:
       reasoning as `s2a_attestations.jsonl` (policy G5), including CRLF normalisation on BOTH sides
       before the comparison -- a Windows checkout must not read as a rewrite.
   W3  a row carries a non-blank `order_id`.
-  W4  a row carries NO decision-bearing field. The closed list is DECISION_FIELDS below. This is
-      the clause that keeps the grant narrow: an agent may record THAT it did work, never what the
-      work was worth. Verdicts stay `Claude / the user only`.
+  W4  a row carries ONLY allowed fields (`ALLOWED_FIELDS`, a CLOSED allow-list), and hides no
+      judgement key at any depth (`BANNED_ANYWHERE`). This is the clause that keeps the grant
+      narrow: an agent may record THAT it did work and where the output went, never what the work
+      was worth. Verdicts stay `Claude / the user only`. It is an allow-list because a deny-list
+      over an open key space cannot be complete -- probing the deny-list version found two evasions
+      immediately (a nested `verdict`, and `pf`, which was never on it).
   W5  one row per order id -- a duplicate `order_id` is refused. Two receipts for one order is two
       answers to one question, and nothing downstream could choose between them.
   W0  an absent or header-only file is VALID, not an error: it means no receipt has been written
@@ -47,12 +50,30 @@ import evidence  # noqa: E402
 RECEIPTS_PATH = 'factory/work_receipts.jsonl'
 TAG = '[work-receipts]'
 
-# CLOSED list, not a heuristic. A substring test ("anything containing 'verdict'") would be the
-# N4 defect this repo has paid for: it refuses `verdict_note` while missing `pf`. Adding a field
-# here is a permission change and therefore an AGENTS.md edit, which is the owner's.
-DECISION_FIELDS = (
-    'verdict', 'decision', 'status', 'order_status', 'approved', 'signoff',
-    'signoff_state', 'kill_rule', 'judge', 'judge_date', 'promote', 'rating',
+# An ALLOW-LIST, and the switch from a deny-list is the whole point. The first version listed
+# banned names -- and probing it found two evasions in one minute: `{"result": {"verdict": "PASS"}}`
+# passed because only top-level keys were read, and `pf` / `net_profit` were not on the list at all,
+# though PF is the single most decision-bearing number this project has (the whole VERDICT GATE bar
+# table is PF). A deny-list over an open key space can never be complete: any new name evades it.
+# For a NARROW grant the correct instrument is a CLOSED declaration of what IS allowed -- the same
+# reasoning as the attestation policy's closed vocabularies (R5/R7) and memory
+# `citation-guard-satisfied-by-a-universal-file`.
+#
+# The rule these keys encode: an agent may record THAT work happened and where its output went.
+# Anything that says what the work was WORTH is a judgement and belongs to the owner and the seat.
+ALLOWED_FIELDS = (
+    'order_id', 'agent', 'artifact', 'artifacts', 'started_at', 'finished_at',
+    'seconds', 'command', 'note', 'lane', 'host', 'exit_code', 'rows', 'files',
+)
+
+# Belt and braces, because an allow-list only guards the keys it can see: these names are refused
+# ANYWHERE in the row, including nested, so a permitted key cannot smuggle a judgement inside its
+# own value. Not the primary defence -- ALLOWED_FIELDS is -- but it makes the nesting evasion that
+# was actually found impossible rather than merely unlikely.
+BANNED_ANYWHERE = (
+    'verdict', 'decision', 'approved', 'signoff', 'signoff_state', 'promote',
+    'rating', 'judge', 'judge_date', 'kill_rule', 'pf', 'profit_factor',
+    'net_profit', 'drawdown', 'score', 'status', 'order_status',
 )
 
 
@@ -60,6 +81,20 @@ def _src():
     mode = os.environ.get('EA_LAB_EVIDENCE', 'worktree')
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     return evidence.EvidenceSource(mode, root=root)
+
+
+def _banned_anywhere(node, found=None):
+    """Every BANNED_ANYWHERE key reachable from `node`, at any depth."""
+    found = set() if found is None else found
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if str(k).lower() in BANNED_ANYWHERE:
+                found.add(str(k))
+            _banned_anywhere(v, found)
+    elif isinstance(node, (list, tuple)):
+        for v in node:
+            _banned_anywhere(v, found)
+    return found
 
 
 def _norm(text):
@@ -130,12 +165,19 @@ def check(staged_text, head_text, problems):
                     % (RECEIPTS_PATH, n, oid, seen[oid]))
             else:
                 seen[oid] = n
-        bad = sorted(k for k in obj if k.lower() in DECISION_FIELDS)
+        bad = sorted(k for k in obj if k.lower() not in ALLOWED_FIELDS)
         if bad:
             problems.append(
-                'W4 %s line %d carries decision-bearing field(s) %s. The AGENTS.md section 2 grant '
-                'is APPEND a record of work, never a judgement of it -- verdicts and order status '
-                'stay with the owner and the Claude seat.' % (RECEIPTS_PATH, n, ', '.join(bad)))
+                'W4 %s line %d carries field(s) %s that are not in the allowed set %s. The '
+                'AGENTS.md section 2 grant is APPEND a record of work, never a judgement of it -- '
+                'anything describing what the work was WORTH stays with the owner and the Claude '
+                'seat.' % (RECEIPTS_PATH, n, ', '.join(bad), ', '.join(ALLOWED_FIELDS)))
+        nested = sorted(_banned_anywhere(obj))
+        if nested:
+            problems.append(
+                'W4 %s line %d hides judgement field(s) %s inside its values. A permitted key must '
+                'not smuggle a verdict in its payload -- this is refused at any depth.'
+                % (RECEIPTS_PATH, n, ', '.join(nested)))
     return len(rows)
 
 

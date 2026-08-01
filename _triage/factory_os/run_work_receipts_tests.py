@@ -86,6 +86,17 @@ def main():
     p = run(HDR + '\n{"order_id": "ORDER-883", "artifact": "a.csv", "seconds": 12, "agent": "qwen"}\n')
     case('SPECIFICITY', 'W4 stays SILENT on ordinary work fields',
          p == [], p)
+    # The two evasions that killed the deny-list version, found by probing it. Both must now fail,
+    # plus an invented name -- which is precisely what a deny-list can never cover.
+    p = run(HDR + NL + '{"order_id": "ORDER-884", "result": {"verdict": "PASS"}}' + NL)
+    case('ATTACK', 'W4 a NESTED verdict is refused (the deny-list missed it)',
+         any(x.startswith('W4') for x in p), p)
+    p = run(HDR + NL + '{"order_id": "ORDER-885", "pf": 2.1, "net_profit": 900}' + NL)
+    case('ATTACK', 'W4 pf / net_profit are refused (never on the deny-list at all)',
+         any(x.startswith('W4') for x in p), p)
+    p = run(HDR + NL + '{"order_id": "ORDER-886", "made_up_field": 1}' + NL)
+    case('ATTACK', 'W4 an INVENTED field is refused -- that is what an allow-list buys',
+         any(x.startswith('W4') for x in p), p)
 
     # ---- W5 ---------------------------------------------------------------------------------
     p = run(HDR + '\n' + R1 + '\n' + R1 + '\n')
