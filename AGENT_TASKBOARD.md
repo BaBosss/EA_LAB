@@ -490,6 +490,37 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > to five other entities — none has a record today, but a **per-row re-pin capability** is the
 > follow-up worth having · declared limit: an owner pinning several drifted paths gets the first in
 > sorted order enforced, the rest advisory (nobody is in that position today).
+>
+> #### Post-landing `/scrutinize` (independent, adversarial, on the landed commit): NO BLOCKER · full tier 16/16 at 83.3s · 6 MAJOR, all fixable WITHOUT a signature or batchable onto the next one
+>
+> Verified clean by sabotage, not by reading: superseded line 8 draws **nothing** even with notes
+> planted on its own ack path (G4 seam) · the front guard holds exactly one pin (the §2 section
+> pin) · `--check` honours the recorded `(commit, path)` pair and regenerates byte-identically ·
+> every one of the 16 tier suites and 11 factory_os suites green. **The signature toll measurably
+> moved:** `MASTER_BACKLOG.md` 31 commits/14d → `factory/coverage.jsonl` 1 commit ever (~31×).
+>
+> **The queue for the next implementation pass — all in NON-bundle files, zero signatures owed:**
+> - **M1** `--template` and F2's message both still speak `current_owner`; when the store next
+>   drifts, the signer is guided to write `path: MASTER_BACKLOG.md` and **F3 refuses it**. F2
+>   should name `note['path']`; `--template` should call `note_for_owner` and pre-fill the ack.
+> - **M2** the template omits `expected_post_state`, and a record in that exact shape passes green
+>   with **no post-state claim** ⇒ the §2 section pin silently evaporates at the next signature.
+>   The template must carry the in-force record's post-state forward.
+> - **M3 (sharpest):** an ack naming a path **no D1 row pins** is never validated by the checker
+>   (note=None skips F3-F5) but IS enforced by the front guard — so copy-pasting line 8's old ack
+>   into a future record passes green and **resurrects the whole-file toll on `MASTER_BACKLOG.md`**.
+>   Make an ack for an unpinned path an explicit refusal.
+> - **M4** `note_for_owner`'s sorted-first tie-break: `'M' < 'f'` asciibetically, so if any future
+>   D1 row pins `MASTER_BACKLOG.md` again (the DEFAULT — `ref_path` is opt-in), the enforced note
+>   silently flips back to the 31-commits/14d file. The tie-break needs to prefer the canonical
+>   ref, not the asciibetically-first.
+> - **Batch onto the NEXT signature (bundle members, stale counts only):** §7 row 5 "19 green"
+>   (is 21) · §9 "35 assertions" (46, though vintage-anchored) · §1 "five signatures" (eight,
+>   history ends `d88f795b`) · G4's text "F1–F11" (in-force set is F1–F14) · §4.2's "7 records"
+>   (8 since line 9) · the corpus file's own line-1 header still says "DRAFT: not yet bound" and
+>   cites a policy-draft file that does not exist · and **state Q4 step 5 in §4.5**: once the next
+>   drift is acked, the ack becomes a whole-file front-guard pin on `factory/coverage.jsonl` until
+>   re-acked — true, unstated.
 
 > ### 🔴 CORRECTION (lane `S-2026-08-01-PINFIX3B`, `/scrutinize` of the lane below) — **the claim "the payoff, demonstrated" is FALSE, and the gate is red right now**
 >
