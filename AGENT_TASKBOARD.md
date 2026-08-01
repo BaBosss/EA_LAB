@@ -251,6 +251,17 @@ writes to. Provenance: memory `approval-pinning-self-invalidates` (an approval t
 of the very thing it authorises editing) — recorded as ADVISORY there, now measured as a live
 block.
 
+🔴 **SECOND INSTANCE, BY A DIFFERENT LANE, WITHIN THE HOUR — and this one is still live.**
+`78a93129` (lane `S-2026-08-01-OPERATE`) appended `| D33 |` to `MASTER_BACKLOG.md` as the routing
+home its handoff needed. `MASTER_BACKLOG.md` is now blob `0740c0ea…` against the pinned
+`02c1d0ed…`, so `F11`/`F5` and `check_coverage_transfer`'s `A8` are **red at HEAD right now**, and
+every commit that selects `run_contract_binding_tests.ps1` is refused. That row is **not being
+reverted by this lane**: another lane's handoff routes to it, so removing it would break their
+handoff contract to repair mine. **This is an owner decision** (revert + re-home their routing ·
+another `--no-verify` · re-attest), and it is the strongest possible argument that this order is
+not theoretical: two independent lanes hit it in one afternoon, the second one an hour after the
+warning was written.
+
 **Item 2 — an unexplained concurrency ABORT, recorded rather than diagnosed.**
 `check_s2a_migration.py` compares an input fingerprint (HEAD oid + `git ls-files -s` + the four
 files it reads from the working tree) at the start and end of its run, and printed *"HEAD or the

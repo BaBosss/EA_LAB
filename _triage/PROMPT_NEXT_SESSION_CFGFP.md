@@ -36,6 +36,12 @@ What is actually open (checked before writing this, not assumed):
      check_coverage_transfer's A8 red -- AFTER the commit landed -- and the repair commit was then
      refused by the same guard, because it reads HEAD and HEAD held the wrong blob. It took an
      owner-approved --no-verify to restore. Do not append to that file; open an ORDER instead.
+     🔴 IT IS RED AT HEAD RIGHT NOW. Lane S-2026-08-01-OPERATE appended | D33 | in 78a93129 as
+     its handoff's routing home, so MASTER_BACKLOG.md is at 0740c0ea against the pinned 02c1d0ed
+     and EVERY commit that selects run_contract_binding_tests.ps1 is refused. That row was NOT
+     reverted -- another lane's handoff routes to it, and repairing one lane by breaking another
+     is not a call an agent makes. FIRST THING TO DO: get the owner's decision (revert + re-home
+     that routing row · another --no-verify · re-attest), then close ORDER-731.
      Item 2 of the same order: a tier abort that fired in 2 of 8 manual full-tier runs
      ("HEAD or the git index changed while this check was running"). One instance is explained (a
      concurrent lane committed); the other recurred with NO lane open, so something inside the
