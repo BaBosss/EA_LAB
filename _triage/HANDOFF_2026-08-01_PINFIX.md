@@ -69,7 +69,8 @@ what proves no signature is owed.
    Shape 1 inside the guard written to close a shape-1 defect. Closed with an index-vs-worktree
    DIFFERENTIAL (a mode-string assertion would have been shape 2). Detail in the `ORDER-731` row.
 3. **`ORDER-732` was closed by measuring it rather than by doing it.** 64 new declarations, and a
-   **36×** selection-cost increase on the most common commit shape in this repo. More decisive than
+   **35.8×** selection-cost increase on the most common commit shape in this repo (and the widened
+   `DEPLOYMENTS`/`PARAM_REGISTRY` commits land at 42-45s against a **65s per-path budget**). More decisive than
    the cost: the sweep is a text scan and **cannot tell a path a module READS from one it MENTIONS**.
    → `DEAD-OPTIMIZED` under its own `C3`, with `ORDER-761` opened for the mechanism that converges.
 
@@ -111,7 +112,7 @@ what proves no signature is owed.
 | full tier | **16/16**, four samples spanning **74.2–77.8s** of 90.0s. Reported as a RANGE: the spread is run-to-run variance, and the `/scrutinize` additions cost ~40 ms, which does not account for it |
 | conformance corpus | **every canonical vector reproduced** after the refactor ⇒ no owner signature owed |
 | lint | `T7` **7 of 7 bound** (was 6 of 6) · `L3` **6 of 11**, 5 suspended, unchanged |
-| `ORDER-732` widening | **64** new declarations · **36×** on the most common commit shape — first reported as 66, corrected by `/scrutinize`: the first pass measured with a **wider regex than the sweep it was measuring** (shape 4, in the number used to close an order) |
+| `ORDER-732` widening | **64** new declarations · **35.8×** on the most common commit shape — first reported as 66, corrected by `/scrutinize`: the first pass measured with a **wider regex than the sweep it was measuring** (shape 4, in the number used to close an order) |
 | `MASTER_BACKLOG.md` write rate | **30 commits / 14 days** (45 / 60) |
 
 ## Do not do these

@@ -290,18 +290,30 @@ read that sentence.
 > imports be declared, so at a green tier the declared set has absorbed the transitive closure.
 > If the tier were red, this measurement would under-count.
 >
-> **What the selection cost becomes** — suite wall-clock taken from this session's own tier run,
-> not estimated:
+> **What the selection cost becomes** — **every** suite cost below is a per-suite line from ONE
+> real `run_fast_cages.ps1` run, and the measuring script `assert`s that no suite in the table is
+> missing a measured cost rather than defaulting one:
 >
-> | commit shape | today | widened |
-> |---|---|---|
-> | a lane reserving its block (`docs/SESSION_LEDGER.md`) | 1 suite, **0.6s** | 3 suites, **21.8s** |
-> | a board pair (ledger + taskboard) | 2 suites, 20.8s | 4 suites, **42.0s** |
-> | a live-inventory edit (`portfolio/DEPLOYMENTS.csv`) | 1 suite, 20.2s | 4 suites, **40.0s** |
-> | a param-registry edit | 3 suites, 4.8s | 6 suites, **24.6s** |
+> | commit shape | today | widened | |
+> |---|---|---|---|
+> | a lane reserving its block (`docs/SESSION_LEDGER.md`) | 1 suite, **0.6s** | 3 suites, **21.5s** | **35.8×** |
+> | a board pair (ledger + taskboard) | 2 suites, 12.5s | 4 suites, **33.4s** | 2.7× |
+> | a live-inventory edit (`portfolio/DEPLOYMENTS.csv`) | 1 suite, 11.9s | 4 suites, **44.5s** | 3.7× |
+> | a param-registry edit | 3 suites, 9.3s | 6 suites, **41.9s** | 4.5× |
 >
-> **A 36× increase on the single most common commit in this repo.** Every lane commits its ledger
-> reservation, alone, as its first act — the shape this repo does more than any other.
+> **A 35.8× increase on the single most common commit in this repo.** Every lane commits its ledger
+> reservation, alone, as its first act — the shape this repo does more than any other. And the
+> widened `PARAM_REGISTRY` and `DEPLOYMENTS` rows land at 42–45s against a **65s per-path budget**,
+> so the widening does not merely cost time, it eats most of the remaining margin.
+>
+> 🔧 **Second `/scrutinize` correction, to this table.** The first version **invented** 1.0s for two
+> suites it had not measured: `run_monitor_integrity_tests.ps1` is **9.4s** and
+> `run_snapshot_s4_tests.ps1` is **5.7s**, so the `DEPLOYMENTS.csv` row was understated by ~13s.
+> A table where some cells are measured and some are guessed, presented uniformly, is shape 4 in
+> its most ordinary form. Redone with all sixteen per-suite timings captured from one run.
+> **Caveat kept rather than smoothed:** `run_front_guard_evidence_tests.ps1` measured 11.9s in that
+> run and 20.2s in another this session, so these totals are one sample of a noisy quantity — the
+> 35.8× headline survives either value because neither suite is in that row.
 >
 > **And the cost is not the real objection.** Reading the 66 shows the widening would be *wrong*,
 > not merely expensive: **PART 4's regex is a text scan, so it cannot distinguish a path a module
