@@ -66,6 +66,10 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 # this lint when rev 2 moves implementations out of the bundle -- recorded here so the exclusion is
 # a decision with an end date rather than a hole.
 L1_FILES = (
+    # S14 Work Receipts (AGENTS.md section 2 grant, 2026-08-01). L0 demanded this on its first
+    # run -- the SEVENTH consecutive time the list-completeness rule has named an addition its
+    # own author had not declared, which is the whole argument for the rule existing.
+    '_triage/factory_os/check_work_receipts.py',
     '_triage/factory_os/check_coverage_transfer.py',
     '_triage/factory_os/check_schema_structure.py',
     '_triage/factory_os/snapshot_validator.py',
@@ -301,6 +305,10 @@ DECLARATION = re.compile(r'#\s*snapshot:\s*(%s)\b' % '|'.join(SNAPSHOTS))
 # would be the lint deciding a file's category by omission, which is the shape it exists to stop.
 CATEGORIES = ('A', 'B', 'P', 'LIB', 'READER')
 CATEGORY = {
+    # Category A: it is a checker whose judged input is a repo file, so it must read through
+    # EvidenceSource -- under the hook the bytes it judges are the STAGED bytes, not the
+    # worktree's. That binding is the whole reason an append-only rule can be trusted at all.
+    '_triage/factory_os/check_work_receipts.py': 'A',
     '_triage/factory_os/check_coverage_transfer.py': 'A',
     '_triage/factory_os/check_schema_structure.py': 'A',
     '_triage/factory_os/check_registries.py': 'A',
@@ -363,6 +371,11 @@ A_BINDING_PENDING = {
 # ---------------------------------------------------------------------------------------------
 # L2 -- every criterion a checker can emit must be NAMED by its suite.
 L2_PAIRS = {
+    # S14 Work Receipts: W1-W5 must each be named by the cage, so a clause of the AGENTS.md
+    # grant cannot be added to the checker and left untested -- an unnamed clause is a clause
+    # nobody has shown can fire.
+    '_triage/factory_os/check_work_receipts.py':
+        ('_triage/factory_os/run_work_receipts_tests.py',),
     '_triage/factory_os/check_coverage_transfer.py':
         ('_triage/factory_os/run_coverage_transfer_tests.py',),
     '_triage/factory_os/check_s2a_attestation.py':

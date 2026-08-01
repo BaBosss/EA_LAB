@@ -328,6 +328,7 @@ $FAST_SUITES = @(
     # mutation probes and NONE of it ran on any commit -- fully tested and completely
     # unguarded at once, which is the same hole evidence.py was in.
     'run_preset_tests.ps1',
+    'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
     # the restore, so it is last in the list: nothing else should be mid-flight around it.
@@ -418,6 +419,15 @@ $SUITE_GUARDS = @{
                                           # the B and C cases stage into these two boards
                                           'AGENT_TASKBOARD.md',
                                           'ARCHIVE_TASKBOARD_2026-07A.md')
+    # ORDER: the S14 Work Receipt grant (AGENTS.md section 2, owner-confirmed 2026-08-01).
+    # The GRANT file itself is declared, so widening the permission row cannot land without
+    # the cage that enforces the narrow version running in the same commit -- which is the
+    # whole reason the grant was allowed to be narrow.
+    'run_work_receipts_tests.ps1'     = @('_triage/factory_os/check_work_receipts.py',
+                                          '_triage/factory_os/run_work_receipts_tests.py',
+                                          'factory/work_receipts.jsonl',
+                                          'AGENTS.md',
+                                          '_triage/factory_os/evidence.py')
     'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',
                                           '_triage/factory_os/run_preset_tests.py',
                                           # the compiler reads the build's input

@@ -42,7 +42,7 @@ overnight queue earns the coverage.
 
 ---
 
-## 2. ✅ DECIDED 2026-08-01 — narrow, append-only writer. **NOT YET APPLIED: `AGENTS.md` awaits the owner's exact wording.**
+## 2. ✅ DECIDED AND APPLIED 2026-08-01 — narrow, append-only writer. **`S14` is unblocked.**
 
 **Owner, verbatim:** *"เปิดแคบ append-only"*
 
@@ -50,12 +50,30 @@ overnight queue earns the coverage.
 nothing more — no editing an existing row, no second surface, and **verdicts stay with the owner and
 the Claude seat**, exactly as `AGENTS.md` §2 has them today.
 
-🔴 **Deliberately not applied yet, and the reason is the same rule that made this a decision at
-all:** the grant lives in `AGENTS.md` §2, and *"Claude editing `AGENTS.md` to authorise itself is
-forbidden outright"*. A ratified **direction** is not a ratified **sentence** — the same distinction
-that governed the two attestation signatures on 2026-08-01. The exact §2 text is drafted and shown
-to the owner in chat; it lands only after an explicit confirmation, in one commit, with the
-append-only cage beside it.
+✅ **APPLIED 2026-08-01 after the owner confirmed the EXACT §2 row in chat** (*"เอาตามนี้"*) — a
+ratified **direction** was deliberately not treated as a ratified **sentence**, the same distinction
+that governed both attestation signatures the same day, because `AGENTS.md` itself forbids Claude
+widening Claude's permissions.
+
+**What landed, in one commit:** the §2 row · `_triage/factory_os/check_work_receipts.py` (criteria
+**W0-W5**: append-only as a byte-prefix over CRLF-normalised text, JSON-object rows, `order_id`
+required, one receipt per order, and a **closed** decision-field list) · its cage
+`run_work_receipts_tests.py` (**16 cases** — CONTROL that an append still LANDS, ATTACK on every
+clause, two SPECIFICITY cases proving the closed list does not swallow ordinary work fields, and an
+ENGAGEMENT mutation that neutralises the comparison and requires the attacks to go red) · the tier
+wrapper + declaration + regenerated pathspec.
+
+**The three repo guards each demanded something before letting it in, which is them working:** the
+declaration cage refused until the import closure was declared (answered by *narrowing* the closure
+— the checker reads HEAD with a direct git call instead of importing `check_s2a_migration`, so it is
+coupled to `evidence.py` alone); then the shape lint's L0 named it as undeclared, then demanded a
+category, then demanded a paired suite for **W1-W5**. **Seventh consecutive time L0 has named an
+addition its own author had not declared.**
+
+⚠️ **The limit, stated rather than left to be found:** the grant SAYS own-order-only, but nothing
+mechanically enforces *whose* order a row cites — every agent commits under one git identity, which
+is Codex audit 8's point about the attestation log applying here unchanged. What is enforced is the
+**shape**; that gap is written into the checker's own docstring.
 
 ---
 

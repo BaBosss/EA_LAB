@@ -10,6 +10,7 @@ _triage/factory_os/check_registries.py
 _triage/factory_os/check_s2a_attestation.py
 _triage/factory_os/check_s2a_migration.py
 _triage/factory_os/check_schema_structure.py
+_triage/factory_os/check_work_receipts.py
 _triage/factory_os/CONTRACTS.md
 _triage/factory_os/evidence.py
 _triage/factory_os/gen_coverage.py
@@ -35,6 +36,7 @@ _triage/factory_os/run_s2a_migration_tests.py
 _triage/factory_os/run_schema_fixtures.py
 _triage/factory_os/run_snapshot_s4_tests.py
 _triage/factory_os/run_snapshot_validator_tests.py
+_triage/factory_os/run_work_receipts_tests.py
 _triage/factory_os/S2A_ATTESTATION_POLICY.md
 _triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl
 _triage/factory_os/s2a_attestations.jsonl
@@ -46,6 +48,7 @@ _triage/factory_os/snapshot_build.py
 _triage/factory_os/snapshot_validator.py
 _triage/PARAM_INACTIVE_AUDIT.md
 AGENT_TASKBOARD.md
+AGENTS.md
 ARCHIVE_TASKBOARD_2026-07A.md
 docs/GUARD_SHAPES.md
 docs/memory_control/B1_DATASET.csv
@@ -60,6 +63,7 @@ factory/coverage.jsonl
 factory/hypotheses.jsonl
 factory/instrument_profiles.jsonl
 factory/parameter_bindings.jsonl
+factory/work_receipts.jsonl
 MASTER_BACKLOG.md
 portfolio/control_room_snapshot.json
 portfolio/DEPLOYMENTS.csv
