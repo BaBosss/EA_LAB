@@ -153,6 +153,8 @@ budget after the trade below (81.3–81.8s before this lane).
 | an attested blob pin read at `HEAD` cannot refuse the commit that breaks it, and `MASTER_BACKLOG.md` is frozen without saying so · plus `check_s2a_migration`'s unexplained concurrency ABORT (1 of 4 full-tier runs) | ORDER-731 |
 | `ORDER-710` itself (generator · MQL5 canonicaliser + sha256 · the staleness guard and its cage · the verification tool · the four tester runs · `tpl_regression`) | DONE |
 | the two defects found in other lanes' work (B0's hardcoded probe id · a suite not selecting itself) | DONE |
+| the undeclared-reference sweep cannot see a path referenced by an IMPORTED module, so `ConfigFingerprint.mqh` had to be declared by hand (the fifth such widening) | ORDER-732 |
+| the three `/scrutinize` findings themselves (declaration + G3 · the fallback sentinel · the verifier's exit-code check) | DONE |
 | The five non-front-guard PowerShell checkers still suspended in L3, and the 4 items in `_triage/USER_DECISIONS_PENDING.md` | DONE |
 
 <sub>The last row is `DONE` in the routing sense only: it carries no work *this lane* owes. The five

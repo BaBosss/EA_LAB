@@ -196,6 +196,41 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
+## ORDER-732 — [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Found by `/scrutinize` round 1 of `ORDER-710`, and it is the `BACKLOG-D32` shape one layer in.**
+> `ea_template/core/ConfigFingerprint.mqh` — the file holding the whole MQL5 half of the
+> fingerprint contract — was in neither `$SUITE_GUARDS` nor `.githooks/fast_tier_pathspec`.
+> Measured: `-ExportSelection` printed *"1 staged path(s) matched NO suite"*, and
+> `git diff --cached -- $(cat .githooks/fast_tier_pathspec)` returned **empty**, so the tier would
+> not have run at all for a commit touching only it. It has been declared by hand (`ORDER-710`'s
+> `/scrutinize` commit), which is the fifth hand-widening this mechanism has needed.
+
+**The gap, precisely.** `run_guard_trigger_tests.ps1` PART 4 sweeps each suite's **own sources**
+for tracked repo paths it mentions but does not declare; PART 4b walks the suite's Python **import
+closure** and demands the imported MODULES be declared. A **path string inside an imported
+module** — `check_input_surface_gen.FP_PATH`, `preset.PARAM_REGISTRY_REL`, and others — is in
+neither set. The suite reads the file; nothing demands the declaration.
+
+**Why it is filed rather than fixed in place.** Widening the sweep to the import closure's path
+strings would demand several new declarations at once (each one widening the pathspec and pulling
+the 18s contract-binding suite onto more commits), and the tier has ~11s of headroom. This repo's
+own rule — written in `.githooks/pre-commit` since ORDER-500 — is that **changing the trigger
+needs its own cage**, and it is why the hand-widenings keep happening instead.
+
+### Acceptance
+- **C1** measure first: how many NEW declarations would the widened sweep demand across all 16
+  suites, and what does that do to the per-path selection cost of a typical commit? Numbers in
+  the same commit as the change.
+- **C2** the widened sweep is driven RED by a real omission and GREEN on the current tree.
+- **C3** if the measured cost is not payable, say so with the number and close this as
+  `DEAD-OPTIMIZED` — a documented "we chose not to" beats a sixth silent hand-widening.
+
+### ห้าม
+- ❌ Do not widen the pathspec without measuring the tier in the same commit. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **🔴 FOUND BY BREAKING IT, in this lane's own commit.** `f4c9fd9f` appended one dormant row to
