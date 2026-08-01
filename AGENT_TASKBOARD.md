@@ -4838,6 +4838,53 @@ legacy `rc_peak_eq` keys, so the key is written under narrower conditions than "
 measured per terminal, not inferred — and "the other accounts probably look like this one" is not a
 measurement.</sub>
 
+### STEP 1 DELIVERED 2026-08-01 (`S-2026-08-01-OPERATE`) — procedure written, **order stays `OPEN`**
+
+**Deliverable:** [`_triage/ORDER510_ADOPT_ONCE_PROCEDURE.md`](_triage/ORDER510_ADOPT_ONCE_PROCEDURE.md).
+Written only — **no VPS action, no binary copied, no GV read or written.** STEP 2 and STEP 3 still
+need the terminals and the owner, so the status verb does not move.
+
+**Four things reading the source added that this row did not have:**
+
+1. **🎁 There is a free rehearsal already in the code, and the order did not name it.** The gate is
+   evaluated *before* migration and consults only `RC_AdoptLegacyHalt`, while `Persist_MigrateLegacy`
+   honours `DryRun` ([`Persist.mqh:124`](ea_template/core/Persist.mqh:124),
+   [`:135`](ea_template/core/Persist.mqh:135)). So **`RC_AdoptLegacyHalt=true` + `DryRun=true`** passes
+   the gate, prints `[PERSIST] DryRun: would migrate <legacy> -> <scoped> (<value>) - skipped`, and
+   **writes nothing** — a full rehearsal of the real step, on the real terminal, that names the value
+   that would be adopted *before* consenting to adopt it. ⛔ Only while the leg is **FLAT**: `DryRun`
+   suppresses **closes** as well as opens ([`Execution.mqh:315`](ea_template/core/Execution.mqh:315)
+   and six sibling sites), so a DryRun attach on a leg holding a basket disables its exit.
+
+2. **🔴 This row's blanket "never delete a `Boss_<magic>_*` GV" and the EA's own FATAL message
+   contradict each other, and the contradiction had to be resolved before anyone stands at an F3
+   window.** [`RiskControl.mqh:149-153`](ea_template/core/RiskControl.mqh:149) prescribes deletion for
+   the *foreign-account* case explicitly. Both are right: **the prohibition's real target is triggers
+   1-2 (`rc_kill_pending`/`rc_halted` = live safety state), not trigger 3 (`rc_peak_eq` = a
+   measurement baseline).** Deleting the former disarms a kill; deleting the latter loses drawdown
+   history and disarms nothing. §7 of the procedure states the four conditions — and keeps the branch
+   shut anyway, because condition 1 (*establish the state is foreign*) **cannot be read off the key**:
+   the pre-132 format carries no login, which is the whole reason `ORDER-132` scoped it.
+
+3. **The rehearsal fixture needs no binary archaeology.** Trigger 3 fires on **existence**
+   ([`Persist_HasLegacy`](ea_template/core/Persist.mqh:90) tests nothing but the name), so a demo
+   terminal reproduces the refusal exactly by adding one F3 variable named `Boss_<magic>_rc_peak_eq`.
+   This row's claim that `PersistMigrate_Test` cannot serve as the evidence is **confirmed at the
+   line**: it is tester-only and refuses chart attach because it calls `GlobalVariablesDeleteAll`
+   ([`tests/PersistMigrate_Test.mq5:26`](ea_template/tests/PersistMigrate_Test.mq5:26)).
+
+4. **STEP 3's anomaly does not need to be settled for STEP 1 or STEP 2 to proceed** — but its two
+   readings run in **opposite** directions and both are dangerous, so neither may be assumed: a
+   foreign *poorer* peak leaves the kill line **too loose**, a foreign *richer* peak **kills on the
+   first tick**. Answerable only from the Journal of the binary that wrote it, per this row's own rule.
+
+<sub>Line-reference drift, noted not silently patched: this row cites the `ORDER-129` default-magic
+guard at `core/LabCore.mqh:235-239`; at today's SHA it is [`:254-257`](ea_template/core/LabCore.mqh:254)
+(`235-239` is now the compounding-stack warn). The guard itself is unchanged and still returns
+`INIT_FAILED` on `_0_Magic==990001` outside the tester — a **second, independent** refusal that will be
+blamed on the legacy gate when a chart still wearing the default goes quiet after the upgrade.</sub>
+
+
 ---
 
 ## ORDER-511 — [🔴 ops/integrity] มี template EA รันอยู่บน 463666728 โดยไม่ได้ pin magic — ใช้ค่า default `990001` — `REVIEWED(Claude/Opus 2026-07-28)` — user อ่าน Inputs ครบ 4 ช่องที่เหลือ ตรงกับ `.set` ทั้งหมด ⇒ `.set` ถูกโหลดจริง ไม่ใช่พิมพ์มือ · runnable by: **Claude/Opus** (user อ่าน chart) · 👉 recommended: Claude
