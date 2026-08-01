@@ -255,3 +255,112 @@ do:** read [`docs/GUARD_SHAPES.md`](../../docs/GUARD_SHAPES.md) first — five d
 previous independent reviewer from instances in this repo's own *repairs*, and it has since
 predicted defects in commits written after it. A sixth shape would be worth more than any single
 finding.</sub>
+
+---
+
+## 1c. THIRD RANGE — the S6 / tier-budget / front-guard batch, added 2026-08-01
+
+```
+01adfc65..2aae5241      48 commits
+```
+
+**A NEW SECTION, NOT A WIDENED RANGE.** §1 forbids silently extending a pinned range, and that
+rule binds its author. §1 and §1b are unchanged and stand on their own terms; this section stands
+or falls by itself.
+
+**CHECKED for this exact range, not assumed** — `git log --format='%h|%an|%s' 01adfc65..2aae5241`:
+48 commits, author `patip` on all of them, **and exactly ONE from the scheduled committer**:
+`4789fcff [auto] daily monitor snapshot 2026-08-01`. It is authored `patip` like every other
+commit, so **an author filter would have reported "no scheduled commits" and been wrong** — the
+subject line is the only reliable discriminator (memory `negative-claims-over-a-commit-range`).
+Exclude that one commit from any claim about deliberate work; do not exclude it from claims about
+what the tree now contains.
+
+Orders represented: `674` x9 · `670` x5 · `710` x4 · `700` x2 · `702` · `673` · `672` · `671`.
+
+---
+
+## 8. What this batch built, in the order it will matter to you
+
+| order | one line | where the evidence is |
+|---|---|---|
+| **700** | S6 preset compiler — full-surface `.set` or refuse; 9 criteria x (attack + specificity) + 9 mutation probes | `_triage/factory_os/preset.py`, `run_preset_tests.py --mutate` |
+| **672** | `build_tag` became a `ParameterBinding` FIELD; the resolver join now parses nothing | `registry.py`, `schemas.json`, `run_registry_tests.py` |
+| **671** | an UNBOUND swept parameter under a declared revision is a REFUSAL (owner-ratified, attribution grounds) | `scripts/optimize_guard.ps1`, `scripts/_test/run_registry_tests.ps1` |
+| **673** | the fast-tier time budget became a real ENFORCED number (65s per-path / 90s full tier) | `scripts/_test/run_fast_cages.ps1`, guard-trigger PART 7 |
+| **702** | the tier's trigger sweep follows each suite's **python import closure**; 12 undeclared dependencies on its first run | guard-trigger PART 4b |
+| **674** | the six PowerShell front guards judge the COMMIT; `check_state` had been judging the working tree over the live-money inventory | `scripts/lib/evidence.ps1`, `run_front_guard_evidence_tests.ps1` |
+| **670** | all 9 evidence migrations + T1–T7 | `_triage/factory_os/evidence.py`, `run_guard_shape_lint.py` |
+| **710** | the EA emits its own `effective_config_hash` and it matches the compiler's on 2 builds x 2 configs | `ea_template/core/InputSurface_gen.mqh`, `scripts/verify_config_fingerprint.ps1` |
+
+---
+
+## 9. Where I think you will find something — as questions, not defences
+
+These are the places this batch's author is least able to see. Each names what was already checked
+so you do not spend the round repeating it.
+
+1. **`ORDER-674`'s central claim rests on ONE guard.** `check_state` was migrated and proven by a
+   real attack. The other five front guards were *annotated* with `# snapshot:` declarations
+   checked by a new L3 lint — but a declaration is a claim about behaviour, not behaviour.
+   **Ask: for each of the five, does the declared snapshot match what the code actually reads?**
+   The batch's own evidence says declaring is *necessary, not sufficient* —
+   `check_order_collision` and `check_handoff_contract` both already read git and both still had a
+   mixed-vintage defect.
+
+2. **The budget numbers were raised twice in one day, both times after firing.** 75→90 (full tier)
+   and 30→65 (per-path). Each raise carries an itemised measurement in `run_fast_cages.ps1`'s
+   param block, so the arithmetic is auditable. **Ask instead: is 65s per-path still a BUDGET, or
+   is it now large enough that nothing realistic can breach it?** The stated purpose is preventing
+   `--no-verify`; a 65s hook may already be past that line, in which case the number is honest and
+   the mechanism no longer serves the reason it exists for.
+
+3. **`preset.py` refuses a lot, and refusals are where a compiler goes wrong quietly.**
+   **Ask: is there a legitimate preset it cannot express?** Specifically `UNIT_CONFLICT` is STRICT
+   on any unit-string difference, not only money-vs-not-money. It was measured against the real
+   `docs/PARAM_REGISTRY.csv` (zero conflicting bare names, so it refuses nothing today) — but that
+   measurement is a snapshot and the rule is permanent.
+
+4. **`ORDER-671` changed a guard's verdict from NOTE to REFUSE.** Blast radius was verified as zero
+   *because no caller passes `-HypothesisRevision` today*. **Ask: what happens the first time one
+   does?** The refusal fires per swept parameter, so a revision with a partial binding set fails
+   the whole run. That is the ratified intent — check the failure is *actionable* (names the
+   parameter, the revision, and both ways out) rather than merely correct.
+
+5. **The ledger table is parsed by splitting on `|`, and two rows contained literal pipes** — found
+   while writing this brief, repaired in `5e9406c2`. `check_order_collision` reads the status
+   column BY INDEX, so a pipe in any earlier cell shifts it and the lane silently reads as
+   not-ACTIVE, dropping its reserved block from the enforced union with no message. Both affected
+   rows happened to be CLOSED, so nothing was mis-enforced. **Ask: should the "no pipes" rule cover
+   the whole row rather than the order-block cell, and should a row whose cell count does not match
+   the header be a BLOCK rather than a silent skip?** No guard was added — deliberately, because
+   the right fix may be escaping on write, which changes how every lane writes its row.
+
+6. **Two `PROJECT_STATE` §7 bullets were quoted to the owner as live work while both were closed**
+   (`ORDER-370` closed five days earlier; the `098` sub-orders all closed, one of them describing
+   an order that was never issued). Repaired in `017741e1`. §7 is a hand-maintained cache of the
+   boards with no guard and nothing regenerating it. **Ask: how many other §7 bullets are stale
+   right now?** That question is cheap for you and expensive for the author, which is the whole
+   reason to ask you.
+
+---
+
+## 10. Honest coverage — what is NOT proven in this batch
+
+- **`ORDER-710`'s fingerprint scope is `surface_only`.** It hashes every exposed input; it does
+  **not** cover locked constants, because nothing enumerates them yet. The manifest says
+  `surface_only` rather than claiming completeness — verify that name is used consistently
+  everywhere the hash appears, including in prose.
+- **`preset.py` has no caller.** Nothing generates a preset into `factory/` deliberately (a new
+  store there is an S2a ownership question). The compiler is proven by fixtures and by parsing the
+  real `Inputs.mqh` — and by nothing downstream of it.
+- **`run_front_guard_evidence_tests.ps1` proves `check_state` and the hook wiring.** It does not
+  prove the other five guards read what they declare (§9.1).
+- **Three of the four `USER_DECISIONS_PENDING` items are untouched** and still gate S10/S14/S15.
+- **`ORDER-510` is open and is a money path** — the live VPS fleet runs pre-ORDER-132/138 binaries.
+  Nothing in this batch touched it. If you review anything outside the range, review that.
+
+<sub>**One standing request, unchanged from batch 1:** the most valuable output is a **sixth defect
+shape** for `docs/GUARD_SHAPES.md`, not a sixth instance of shape 1. Shapes 4 and 5 both recurred
+inside this batch — a stale number quoted from a row, and a repair graded by the finding it closed
+— which means the list works. What is *not* on it yet is worth more than what is.</sub>
