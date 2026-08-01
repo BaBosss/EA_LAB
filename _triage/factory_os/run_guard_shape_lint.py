@@ -104,6 +104,10 @@ L1_FILES = (
     # here for the reason the snapshot_build entry above gives: the guard's verdict is only as
     # good as the text this module emits, so its reads are judged inputs one layer down.
     '_triage/factory_os/gen_input_surface.py',
+    # ORDER-710's evidence tool. It compiles the surface the tester run is compared against, so a
+    # read of the wrong vintage here would produce a MISMATCH nobody could explain -- the
+    # expensive kind of failure, because the first suspect would be the EA.
+    '_triage/factory_os/gen_default_preset.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -314,6 +318,10 @@ CATEGORY = {
     # that defaulted its source would be a second decider of which bytes the enumeration
     # describes.
     '_triage/factory_os/gen_input_surface.py': 'LIB',
+    # B: a BUILDER. It reads in worktree mode on purpose and prints that it did -- the binary
+    # under test was compiled from the working tree, so judging the index would compare a binary
+    # against bytes it was not built from.
+    '_triage/factory_os/gen_default_preset.py': 'B',
 }
 
 # Category-A files whose migration to read_committed/list_committed has not landed yet. The

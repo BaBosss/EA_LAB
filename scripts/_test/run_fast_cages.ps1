@@ -622,7 +622,11 @@ $SUITE_GUARDS = @{
                                           # surface parser, so a commit touching only that
                                           # module must still run this cage. The wrapper's
                                           # path-string sweep cannot see an `import`.
-                                          '_triage/factory_os/preset.py')
+                                          '_triage/factory_os/preset.py',
+                                          # ORDER-710's evidence tool. Not run by any suite (it
+                                          # costs two tester runs), but the guard-shape lint
+                                          # parses it, and that lint runs in this wrapper.
+                                          '_triage/factory_os/gen_default_preset.py')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
                                           'scripts/_test/run_fast_cages.ps1')
