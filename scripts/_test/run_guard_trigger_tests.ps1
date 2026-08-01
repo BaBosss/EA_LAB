@@ -290,6 +290,30 @@ try {
         Bad ("staging '{0}' selected {1} of {2} suites -- the filter is inert or empty" -f $oneGuard, $subset.Count, $table.Suites.Count)
     }
 
+    # 4b. A SUITE'S OWN FILE MUST SELECT IT. Added 2026-08-01 after staging
+    #     run_front_guard_evidence_tests.ps1 alone ran two OTHER suites and skipped the one being
+    #     edited: the pathspec generator has always claimed every suite implicitly guards itself,
+    #     and Select-Suites matched only $SUITE_GUARDS, which never lists a suite's own path. The
+    #     claim was true of the TRIGGER and false of the SELECTION, so the edit that breaks a cage
+    #     was the one edit its cage did not run.
+    #     SPECIFICITY in the same case: it must select that suite WITHOUT falling back to the
+    #     whole tier, or "selected" would just be the fail-open branch wearing the right answer.
+    $selfMissed = @()
+    $selfWide = @()
+    foreach ($s in $table.Suites) {
+        $sel = Selection @('scripts/_test/' + $s)
+        if ($sel -notcontains $s) { $selfMissed += $s }
+        elseif ($sel.Count -eq $table.Suites.Count) { $selfWide += $s }
+    }
+    if ($selfMissed.Count -eq 0) {
+        Good ("every suite is selected by its own file ({0} suites), not by the fail-open branch" -f $table.Suites.Count)
+    } else {
+        Bad ("staging a suite's own file did not select it: {0}" -f ($selfMissed -join ', '))
+    }
+    if ($selfWide.Count -gt 0) {
+        Bad ("staging only {0} selected the WHOLE tier -- that is fail-open, not self-selection" -f ($selfWide -join ', '))
+    }
+
     # 5. FAIL-OPEN: staged paths that match NO suite must run EVERYTHING, not nothing.
     #    The pathspec is generated from these same guards, so "staged but unmatched" is a
     #    contradiction -- the list arrived mangled or the declarations drifted. This case is here

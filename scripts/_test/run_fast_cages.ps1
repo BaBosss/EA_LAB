@@ -697,6 +697,16 @@ function Select-Suites {
     if (-not $Staged -or $Staged.Count -eq 0) { return $Suites }
     $picked = New-Object System.Collections.Generic.List[string]
     foreach ($s in $Suites) {
+        # RULE 0 -- A SUITE GUARDS ITSELF. The pathspec generator has always said so ("every suite
+        # implicitly guards itself, the runner and the hooks") and added `scripts/_test/*` to the
+        # TRIGGER, so editing a suite has always run the tier. It did not run THAT suite: selection
+        # matched only $SUITE_GUARDS, which never lists the suite's own file. Measured 2026-08-01
+        # by staging run_front_guard_evidence_tests.ps1 alone -- the tier ran two OTHER suites and
+        # skipped the one being edited, while the comment above the table said otherwise. That is
+        # ORDER-420's own finding ("the tests for those guards ran on nothing") reappearing in the
+        # mechanism written to fix it, and it is the shape where it hurts most: the edit that
+        # breaks a cage is the edit its cage does not run.
+        if ($Staged -contains ('scripts/_test/' + $s)) { $picked.Add($s); continue }
         $g = $Guards[$s]
         if (-not $g -or $g.Count -eq 0) { $picked.Add($s); continue }   # rule 1: fail-open
         $hit = $false
