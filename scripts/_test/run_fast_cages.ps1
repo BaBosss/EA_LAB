@@ -836,6 +836,21 @@ $tierRunLog = $null
 # synthetic staged sets and temp indexes; one real tier produced SIX extra transcripts, each one
 # suite long, which turns the directory into noise exactly when it is being searched for signal.
 # The env var is set for children, so the OUTERMOST run is the only writer.
+# M3 (independent review): a standalone suite that invokes the tier produced SIX one-suite
+# transcripts, and at a retention of 40 that meant seven such runs evicted every real full-tier
+# transcript -- the artifact destroying its own evidence.
+#
+# 🔴 The obvious discriminator is WRONG and was caught before it landed, by reading the hook
+# instead of reasoning about it: `.githooks/pre-commit:218` invokes this script with
+# `-StagedPathsFile`, so "a synthetic staged set means a self-test" would have suppressed the
+# transcript on EVERY REAL HOOK RUN -- silencing the instrument precisely where it is the whole
+# point. `-Hook` does not discriminate either: PART 6's T4/T6 cases are hook-mode by design.
+#
+# So the suppression stays exactly as wide as the signal that is actually sound (a tier calling
+# ITSELF sets the env var for its children), the eviction is closed by RETENTION rather than by a
+# guess, and every transcript records `hook` + `staged_count` so a reader can classify one at a
+# glance instead of inferring. DECLARED RESIDUAL: a standalone suite run still leaves a few
+# short transcripts. They are noise, they are labelled, and they can no longer evict anything.
 $isNestedTier = [bool]$env:EA_LAB_TIER_RUN
 if (-not $isNestedTier) {
     try {
@@ -845,10 +860,13 @@ if (-not $isNestedTier) {
         }
         $tierRunLog = Join-Path $runDir ('tier_{0}_{1}.jsonl' -f (Get-Date -Format 'yyyyMMdd_HHmmss'), $PID)
         # Bounded retention. An unbounded breadcrumb directory is a disk leak, and the runs that
-        # matter are the recent ones -- a transcript from three weeks ago answers no question
-        # anybody is asking. Newest 40 kept.
+        # matter are the recent ones. The number is 200, not 40: a transcript is ~1 KB, the abort
+        # fired 2 times in 8 runs, and the whole point is to still HAVE the run when someone
+        # finally comes looking. 40 was chosen before it was known that other runs could evict --
+        # a retention bound tight enough to lose the evidence is not a bound, it is a leak with
+        # the sign flipped.
         $old = @(Get-ChildItem -LiteralPath $runDir -Filter 'tier_*.jsonl' -ErrorAction SilentlyContinue |
-                 Sort-Object LastWriteTime -Descending | Select-Object -Skip 40)
+                 Sort-Object LastWriteTime -Descending | Select-Object -Skip 200)
         foreach ($f in $old) { Remove-Item -LiteralPath $f.FullName -Force -ErrorAction SilentlyContinue }
     } catch {
         # Instrumentation must never be able to fail the tier it instruments.
@@ -895,6 +913,20 @@ function Get-InputHashes {
     return $out
 }
 
+function Get-IndexPath {
+    param([string]$GitDir)
+    # B2 (independent review). git honours GIT_INDEX_FILE, and `check_s2a_migration.py`'s `_git()`
+    # is a plain subprocess that inherits it -- so under the pre-commit hook the index the abort
+    # reads is a `next-index-<pid>.lock`, NOT `.git/index`. Stamping `.git/index` there described a
+    # file neither git nor the checker reads: a real change was invisible and an unrelated rewrite
+    # raised a false banner. PROVED from transcripts already on disk, which recorded
+    # `git_index_env = .../next-index-17736.lock` for real hook runs.
+    # This is the read-the-wrong-snapshot family, recreated inside the instrument built to
+    # diagnose it -- and line ~796 of THIS FILE already resolved it correctly. Same rule, one copy.
+    if ($env:GIT_INDEX_FILE) { return $env:GIT_INDEX_FILE }
+    return (Join-Path $GitDir 'index')
+}
+
 function Get-GitStateStamp {
     param([string]$GitDir)
     $head = $null; $ref = $null; $idxTicks = $null; $idxLen = $null
@@ -907,7 +939,7 @@ function Get-GitStateStamp {
         } else { $ref = $head }
     } catch { $ref = 'UNREADABLE' }
     try {
-        $fi = Get-Item -LiteralPath (Join-Path $GitDir 'index') -ErrorAction Stop
+        $fi = Get-Item -LiteralPath (Get-IndexPath -GitDir $GitDir) -ErrorAction Stop
         $idxTicks = $fi.LastWriteTimeUtc.Ticks; $idxLen = $fi.Length
     } catch { $idxTicks = -1; $idxLen = -1 }
     return [pscustomobject]@{ head = $head; ref = $ref; index_ticks = $idxTicks; index_len = $idxLen }
@@ -927,6 +959,16 @@ function Write-TierStamp {
             # file's (mtime, length). Matching it exactly would mean spawning git 17 times a run,
             # which perturbs what it measures. So index_* is a PROXY and may move when the abort
             # would not; `inputs` below is exact.
+            hook = [bool]$Hook
+            staged_count = @($StagedPaths).Count
+            index_path = (Get-IndexPath -GitDir $GitDir)
+            # M1: sampled on EVERY stamp, not only in the failure dump. `index.lock` during a
+            # concurrent commit lives tens of MILLISECONDS, and the dump fires after a suite
+            # that can run 31s -- so the dump's copy reads false in practically every real
+            # occurrence. A sub-millisecond Test-Path per suite is the only way this fact is
+            # ever observed. (fe1a9a2c's commit message claimed the dump caught it 'at the
+            # moment of detection'; that was wrong and is corrected on the ORDER-731 row.)
+            index_lock = (Test-Path -LiteralPath (Join-Path $GitDir 'index.lock'))
             inputs = (Get-InputHashes -Root $RepoRoot)
             git_index_env = $env:GIT_INDEX_FILE
         }
@@ -952,12 +994,27 @@ foreach ($suite in $selected) {
         # deleted or renamed is precisely how a cage stops existing without anyone noticing.
         Write-Host ("  MISSING {0}" -f $suite) -ForegroundColor Red
         $results.Add([pscustomobject]@{ Suite = $suite; Exit = 127; Seconds = 0.0; Output = 'suite file not found' })
+        # M4: stamp it too. `continue`ing straight past left a reader with fewer after-suite lines
+        # than suites and nothing saying why -- a gap in a transcript is read as a gap in the run.
+        Write-TierStamp -LogPath $tierRunLog -GitDir (Join-Path $RepoRoot '.git') -Phase 'missing-suite' `
+                        -Suite $suite -Exit 127 -Seconds 0
         continue
     }
 
     $sw = [Diagnostics.Stopwatch]::StartNew()
-    $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $path 2>&1
-    $code = $LASTEXITCODE
+    # M2 (independent review). `$ErrorActionPreference = 'Stop'` turns a native command's STDERR
+    # into a terminating error, so a suite that merely writes to stderr THREW out of this loop --
+    # past the stamp, past the failure dump, past the end line, and past Exit-Tier, leaving the
+    # child-marker env var set. It killed the instrumentation on exactly the abnormal path the
+    # instrumentation exists for. Caught here and converted into an ordinary non-zero result, so
+    # the run is recorded rather than vanishing.
+    try {
+        $out = & $ps -NoProfile -ExecutionPolicy Bypass -File $path 2>&1
+        $code = $LASTEXITCODE
+    } catch {
+        $out = "SUITE THREW (stderr under EAP=Stop, or the launcher failed): $($_.Exception.Message)"
+        $code = if ($LASTEXITCODE) { $LASTEXITCODE } else { 1 }
+    }
     $sw.Stop()
     $total += $sw.Elapsed.TotalSeconds
 
