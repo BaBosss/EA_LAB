@@ -256,13 +256,15 @@ block.
 files it reads from the working tree) at the start and end of its run, and printed *"HEAD or the
 git index changed while this check was running … exiting 2 rather than reporting a verdict"* in
 **1 of 4** manual full-tier runs on 2026-08-01, inside `run_contract_binding_tests.ps1`. Green
-standalone and green on the other three. **The cause was almost certainly a concurrent lane:**
-`S-2026-08-01-OPERATE` committed twice while a later manual full-tier run was in flight, and a
-commit rewrites `.git/index`; the same run also failed `run_front_guard_evidence_tests`' C cleanup
-case, whose remaining condition after four identical shas is exactly `.git/index`'s mtime.
-**Both detectors were right** — the ground moved. What is left is not a defect but a usability
-question: neither can distinguish *another lane committed* from *something corrupted the run*, and
-a manual full-tier run is not a clean measurement while another lane is open. **Wake condition:** it
+**MEASURED over 8 manual full-tier runs on 2026-08-01: it fired in 2.** The first instance is
+explained -- `S-2026-08-01-OPERATE` committed twice during the run, and a commit rewrites
+`.git/index`. **The second is NOT: it recurred with no lane open and nothing else running**, and
+that run also failed `run_guard_trigger_tests` PART 6 `T4 SPECIFICITY` with the nested tier's own
+message -- *"the index was rewritten during the tier"*. So the cause is **something inside the
+tier itself touching `.git/index`**, not only a concurrent writer, and the earlier "another lane
+committed" wording was a correct explanation of one instance generalised to both. **Both
+detectors are right either way** -- the index did move. What is unknown is what moved it when
+nobody else was committing. **Wake condition:** it
 fires a second time, or it fires inside a real `git commit`, where it would refuse the commit and
 the cause would matter. Until then: re-run, and never quote a run it aborted as a pass or a fail.
 

@@ -96,15 +96,17 @@ budget after the trade below (81.3–81.8s before this lane).
    this lane's handoff routed to `ORDER-730` and `BACKLOG-D33`, both in the same commit, and the
    cage's `C1` went red with *"no `## ORDER-730` header exists"* because those two files were in
    the commit but not in `.git/index`. `git add` the paths first, then commit them.
-6. **A "mysterious" tier failure that turned out to be ANOTHER LANE COMMITTING.** Twice this
-   session a manual full-tier run went red in a way that did not reproduce: `check_s2a_migration`
-   hit its concurrency ABORT ("HEAD or the git index changed while this check was running"), and
-   later `run_front_guard_evidence_tests`' C cleanup case failed while printing four IDENTICAL
-   shas — its remaining condition is `.git/index` mtime. The cause was visible in `git log`:
-   `S-2026-08-01-OPERATE` committed twice during the run, and a commit rewrites `.git/index`.
-   **Both detectors were RIGHT** — the ground did move. **A manual full-tier run is not a clean
-   measurement while another lane is open**, and neither detector can distinguish "another lane
-   committed" from "something corrupted the run". → `ORDER-731` item 2.
+6. **A tier failure I explained too confidently, and the correction is the useful part.**
+   Three detectors fired across the day on the same underlying event: `check_s2a_migration`'s
+   concurrency ABORT, `run_front_guard_evidence_tests`' C cleanup case (four IDENTICAL shas, so
+   its only live condition was `.git/index`'s mtime), and `run_guard_trigger_tests` PART 6's
+   nested tier (*"the index ... was rewritten during the tier"*). For the FIRST instance `git log`
+   gave the answer -- `S-2026-08-01-OPERATE` committed twice mid-run -- and I wrote that up as
+   **the** cause. **It then recurred with no lane open and nothing else running.** The honest
+   statement is: **2 of 8 manual full-tier runs, and something inside the tier itself is touching
+   `.git/index`**. Both detectors are right either way; the explanation was one instance
+   generalised to both. What still holds: a manual full-tier run is not a clean measurement while
+   another lane is open. -> `ORDER-731` item 2.
 7. **🔴 `MASTER_BACKLOG.md` IS FROZEN, AND NOTHING TELLS YOU UNTIL AFTER YOU COMMIT.** This lane
    appended one dormant backlog row; the S2a attestation pins that file at a blob, so `F11`/`F5`
    and `check_coverage_transfer`'s `A8` all went red — **after** the commit landed, because the
@@ -181,7 +183,8 @@ board row here looks unfamiliar, check whose lane wrote it before assuming drift
    (the guard skips RULE 2 and says so), so any unused id serves there; both regimes are handled
    and the assertion prints which one it was in.
 
-Final state: full tier **16/16 at 75.5s / 77.9s** of 90.0s, two clean runs with no lane open.
+Final state after both `/scrutinize` rounds: full tier **16/16 at 80.9 / 81.9 / 83.2s** of the
+90.0s budget -- the clean runs of the last five, ~7-9s headroom.
 
 ## `/scrutinize` x2 over this lane's own work — three defects, all in the guarding, none in the hash
 
