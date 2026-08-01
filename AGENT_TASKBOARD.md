@@ -540,7 +540,31 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > blob. That is "the tool broke" and "the file is wrong" sharing an outcome, in the file that cites
 > that rule. Low reachability (needs a gitlink or corrupt object), two lines to fix.
 >
-> *(also recorded, minor: fence parity is computed over the whole file, so an unbalanced fence
+> #### And from a second, independent pass that re-measured every number this lane wrote
+>
+> **Every count reproduces exactly** — conformance 62/0 · mutation 33 probed / 0 INERT (and the
+> "+7" checks out: 36→43 red) · pin cage 21 (A10/C3/E3/S5) · 46 OK / 0 BAD · corpus 63/19/43/1 ·
+> byte-prefix TRUE (78312→92028, `cmp` clean) · nothing renumbered · the section digest recomputed
+> with an INDEPENDENT extractor is identical at four commits, index and worktree · the `D33` row
+> byte-identical to `78a93129`'s · **and all three CONTROL cases genuinely pin the "let the repair
+> land" half** (each asserts `p == []`, and the §3-append CONTROL runs with a *different* whole-file
+> blob, so it goes red if the pin re-widens). **No shape-3 assertion and no name/assertion mismatch
+> in the new code.** The arithmetic was not the problem. **The category was: five suites were
+> re-run and the GATE they exist to protect was not.**
+>
+> 🔴 **Three defects inside the SIGNED policy — a bundle member, so each costs a signature to
+> correct, which is why they are recorded here rather than quietly fixed.** (1) `:535` states the
+> two lanes hit the pin *"within one hour"*; measured **2h23m39s** — a typed number in the one
+> document whose §7 boasts its counts were not typed. The true statement is that the second landed
+> **49 minutes after the first was reverted**. (2) `:442` says F13 has *"all three fail-closed
+> branches"*; §4.3.1 of the same file defines **four** — the not-UTF-8 branch ships in both readers
+> with no vector and no cage case, and "all" conceals it where B4 and R8 are declared out loud.
+> (3) `:15` still reads *"suite 35/35 green"* while the row beside it was updated 55→63 in the same
+> commit; actual is **46/46**.
+>
+> *(also recorded, minor: the front guard prints `still holds its pinned blob` for a **section**
+> pin — and that exact string was quoted upstream as evidence on the commit that broke the gate;
+> "45 minutes after CLOSED" is 43m21s and 45m41s; fence parity is computed over the whole file, so an unbalanced fence
 > thousands of lines away is P4 — fail-closed and repairable, but the P4 message's "edits OUTSIDE
 > this section are not what refused you" is false in that one case; and `UnicodeDecodeError` is named
 > beside its own parent `ValueError` in both `except` clauses, where the bare arm then reports any
@@ -726,9 +750,16 @@ message -- *"the index was rewritten during the tier"*. So the cause is **someth
 tier itself touching `.git/index`**, not only a concurrent writer, and the earlier "another lane
 committed" wording was a correct explanation of one instance generalised to both. **Both
 detectors are right either way** -- the index did move. What is unknown is what moved it when
-nobody else was committing. **Wake condition:** it
+nobody else was committing. ~~**Wake condition:** it
 fires a second time, or it fires inside a real `git commit`, where it would refuse the commit and
-the cause would matter. Until then: re-run, and never quote a run it aborted as a pass or a fail.
+the cause would matter.~~ 🔴 **SUPERSEDED — and this strikethrough is itself a correction.** The
+`PINFIX3` lane announced upstream that this condition had been "replaced"; it had not — `a4bf1407`
+was **54 insertions, 1 deletion** and never touched this line, so the dead text sat here unmarked
+about 140 lines below the block declaring it dead. Caught by a claims audit, not by the lane that
+wrote the announcement. **The live condition is the one in that block:** it fires in a run where
+`git log --all --since` shows **no commit inside the run's own recorded start–end window**, or it
+fires inside a real `git commit`. Until then: re-run, and never quote a run it aborted as a pass
+or a fail.
 
 ### Acceptance
 - **C1** state, with a measurement, whether the pin should be read at the **index** (what the
