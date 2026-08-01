@@ -242,6 +242,13 @@ def build(rows, cov):
                    % (r['canonical_or_derived'], r['signoff_owner'], r['signoff_state']))
         if r.get('refused_reason'):
             out.append('> **Why refused:** %s\n' % r['refused_reason'])
+        # A row whose PIN names a different file from its `current_owner` must say so HERE, in the
+        # document the owner actually reads, and not only in D1's JSON. The two fields answer two
+        # different questions (which bytes is this proposal about / who is the declared owner), and
+        # a reader who is not told that will read the pin as a claim about `current_owner`.
+        if r.get('owner_ref_path_reason'):
+            out.append('- **Pin (`owner_ref.path`) — NOT the same file as `current_owner`:** `%s` '
+                       '· %s' % (esc(r['owner_ref']['path']), esc(r['owner_ref_path_reason'])))
         for key, label in CHECKLIST_FIELDS:
             out.append('- **%s:** %s' % (label, r[key]))
         out.append('')

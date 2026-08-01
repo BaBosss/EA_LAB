@@ -108,6 +108,24 @@ ROWS = [
         proposed='factory/coverage.jsonl',
         disposition='TRANSFER',
         canonical_or_derived='canonical',
+        # The ONE row where the pin and the declared owner name different files, and the only
+        # mechanism by which they can (`ref_path`, build_rows). Set 2026-08-01, ORDER-731 option 2.
+        ref_path='factory/coverage.jsonl',
+        ref_path_reason=(
+            'The canonical bytes MOVED: section 2 of MASTER_BACKLOG.md is now GENERATED from '
+            'factory/coverage.jsonl (gen_coverage.py; the transfer landed in a424e90b at '
+            '2026-07-30T23:46:07+07:00, touching 9 files and NOT this table -- section 2\'s own '
+            'banner dates the change 2026-07-31). owner_ref exists to '
+            'answer ONE question -- "have the bytes this proposal is about changed since the owner '
+            'read them?" (N1-N4 in S2A_ATTESTATION_POLICY.md) -- so it must pin the file that now '
+            'holds those bytes, or it asks the question about the wrong file and reports STALE '
+            'every time an unrelated line of the backlog moves. current_owner is DELIBERATELY left '
+            'as MASTER_BACKLOG.md and is not a candidate for the same move: the append-only '
+            'attestation log references it (R6 -- all 7 historical records name this owner and '
+            'would become ineligible, unrepairably, because the log cannot be rewritten), and '
+            'check_s2a_migration.py C7 keys the existence of the Coverage edge on it. So the two '
+            'fields are answering two different questions and now say so.'
+        ),
         breaks_if_moved=(
             'MEASURED 2026-07-30: nothing machine-reads section 2, so no automated reader breaks. '
             'The only parser of "## 2. COVERAGE MATRIX" anywhere in the repo is '
@@ -875,8 +893,34 @@ def owner_ref_for(path, commit):
     return dict(_REF_MEMO[key])
 
 
+def _pin_commit(entity, path, pins, head):
+    """Which commit this row's pin is resolved against: the RECORDED one, or HEAD.
+
+    A recorded pin is `(commit, path)` and it is a claim about THAT PAIR -- "at commit X, this
+    file was this blob". Honouring the commit while the path has moved asks git a question the
+    recorded pin never answered, and the failure is not theoretical: the CoverageCell row is
+    pinned at `de70eb56`, `factory/coverage.jsonl` did not exist at `de70eb56`, and
+    `git rev-parse de70eb56:factory/coverage.jsonl` exits non-zero -- which `git_out` turns into
+    a bare SystemExit, i.e. the generator would die rather than report. So the rule is stated
+    once, in the general form rather than as a special case for one entity:
+
+        the recorded commit is honoured ONLY for the path it was recorded against.
+
+    When the path changes, the row is re-pinned at HEAD. That is not the drift guard tracking
+    HEAD (the defect build_rows' own docstring describes): it is a NEW pin, for a file this row
+    has never pinned before, and there is no older pin of it to honour. Once written, the
+    recorded pair is `(HEAD-at-write-time, new path)` and every later `--check` honours it
+    normally.
+    """
+    rec = (pins or {}).get(entity)
+    if not rec:
+        return head
+    commit, pinned_path = rec
+    return commit if pinned_path == path else head
+
+
 def build_rows(pins=None):
-    """pins: {entity: commit_oid} to honour instead of HEAD.
+    """pins: {entity: (commit_oid, path)} to honour instead of HEAD -- see _pin_commit.
 
     WHY THIS PARAMETER EXISTS -- a defect I shipped and caught one commit later.
     `--check` originally regenerated against HEAD and compared. That made the drift guard go RED on
@@ -971,7 +1015,16 @@ def build_rows(pins=None):
             row['owner_ref_absent_reason'] = NO_BLOB_UNOWNED
             row['unowned_evidence'] = spec['unowned_evidence']
         else:
-            row['owner_ref'] = owner_ref_for(owner, (pins or {}).get(spec['entity']) or commit)
+            # THE PIN FOLLOWS THE CANONICAL BYTES; `current_owner` RECORDS THE DECLARED OWNER.
+            # They are the same file for 13 of the 14 pinned rows, and `ref_path` is how a row says
+            # otherwise -- explicitly, with a reason emitted next to it, because a pin that silently
+            # points somewhere other than its own current_owner is exactly the kind of quiet
+            # divergence this table exists to make impossible.
+            ref_path = spec.get('ref_path') or owner
+            row['owner_ref'] = owner_ref_for(ref_path, _pin_commit(spec['entity'], ref_path,
+                                                                   pins, commit))
+            if ref_path != owner:
+                row['owner_ref_path_reason'] = spec['ref_path_reason']
         for k in ('keep_reason', 'same_blob_reason', 'refused_reason'):
             if spec.get(k):
                 row[k] = spec[k]
@@ -1109,7 +1162,8 @@ def main(argv):
                 continue
             obj = json.loads(line)
             if obj.get('owner_ref'):
-                pins[obj['entity']] = obj['owner_ref']['commit_oid']
+                pins[obj['entity']] = (obj['owner_ref']['commit_oid'],
+                                       obj['owner_ref']['path'])
     rows = build_rows(pins)
     cov = build_coverage()
     jsonl, covtxt = render(rows, cov)

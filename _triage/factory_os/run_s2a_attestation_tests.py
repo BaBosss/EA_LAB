@@ -25,8 +25,27 @@ import check_s2a_migration as chk      # noqa: E402
 import check_s2a_attestation as att    # noqa: E402
 import evidence                        # noqa: E402
 
-STALE_NOTE = {'entity': 'CoverageCell', 'path': 'MASTER_BACKLOG.md', 'kind': 'STALE',
-              'text': 'stale'}
+def _coverage_pin_path():
+    """The path the Coverage owner's D1 row PINS -- DERIVED, never hardcoded.
+
+    It was `'MASTER_BACKLOG.md'` here, which was the same string as the row's `current_owner` and
+    so looked like one fact when it was two. ORDER-731 option 2 moved the pin to
+    `factory/coverage.jsonl` (the file that now holds the canonical bytes) and left `current_owner`
+    alone, and every fixture below that had typed the owner's name where it meant the PIN went
+    green-but-meaningless in one commit: the synthetic note named a path this owner does not pin,
+    so no note could ever match and five RED cases silently became GREEN. Deriving it is the only
+    version of this fixture that cannot drift away from D1 again.
+    """
+    rows = [json.loads(l) for l in io.open(chk.MIGRATION_PATH, encoding='utf-8') if l.strip()]
+    for r in rows:
+        if r.get('entity') == 'CoverageCell' and (r.get('owner_ref') or {}).get('path'):
+            return r['owner_ref']['path']
+    raise SystemExit('CoverageCell has no owner_ref path in D1 -- this suite cannot build its '
+                     'stale-pin fixtures against nothing')
+
+
+PIN_PATH = _coverage_pin_path()
+STALE_NOTE = {'entity': 'CoverageCell', 'path': PIN_PATH, 'kind': 'STALE', 'text': 'stale'}
 
 
 def run_with(lines, vintage=()):
@@ -114,7 +133,7 @@ def main():
                                           'current_blob': 'y'})], 'but the stale pin is on'),
         ('F4 an acknowledgement with a wrong pinned blob',
          [good(stale_pin_acknowledged=True,
-               stale_pin_acknowledgement={'path': 'MASTER_BACKLOG.md', 'pinned_blob': 'b' * 40,
+               stale_pin_acknowledgement={'path': PIN_PATH, 'pinned_blob': 'b' * 40,
                                           'current_blob': 'y'})], 'but D1 pins'),
     ]
     for label, lines, expect in cases:
@@ -197,11 +216,20 @@ def main():
         bad += 1
     # a fully correct structured acknowledgement must be accepted, on the record
     head = chk.head_oid()
-    rc, live, _ = chk._rev_parse_cached('%s:MASTER_BACKLOG.md' % head)
+    # TWO different facts that used to be one string, and had to be split by ORDER-731 option 2:
+    #   `live`       HEAD's blob for the path the owner's D1 row PINS -- what an acknowledgement
+    #                names (F5), now `factory/coverage.jsonl`.
+    #   `owner_live` HEAD's blob for the record's own `current_owner` -- what an
+    #                `expected_post_state` names, because F7 forces eps.path == current_owner.
+    # They were identical while every row pinned its own owner, so one name served both and the
+    # difference was invisible. It is not invisible any more, and conflating them made two D2
+    # CONTROL cases assert that MASTER_BACKLOG.md was at coverage.jsonl's blob.
+    rc, live, _ = chk._rev_parse_cached('%s:%s' % (head, PIN_PATH))
+    _rc_o, owner_live, _ = chk._rev_parse_cached('%s:MASTER_BACKLOG.md' % head)
     pinned = next((r['owner_ref']['blob_oid'] for r in d1_rows
-                   if r.get('owner_ref') and r['owner_ref']['path'] == 'MASTER_BACKLOG.md'), None)
+                   if r.get('owner_ref') and r['owner_ref']['path'] == PIN_PATH), None)
     _, problems = run_with([good(stale_pin_acknowledged=True,
-                                 stale_pin_acknowledgement={'path': 'MASTER_BACKLOG.md',
+                                 stale_pin_acknowledgement={'path': PIN_PATH,
                                                             'pinned_blob': pinned,
                                                             'current_blob': live})], [STALE_NOTE])
     ok = not problems
@@ -214,7 +242,7 @@ def main():
     # latest line per owner wins. Because the log is append-only, an earlier row could never acquire
     # the acknowledgement it was being failed for, so one stale pin made that owner's records
     # permanently unrepairable -- the artifact could not be returned to green by ANY legal action.
-    ack_ok = {'path': 'MASTER_BACKLOG.md', 'pinned_blob': pinned, 'current_blob': live}
+    ack_ok = {'path': PIN_PATH, 'pinned_blob': pinned, 'current_blob': live}
     _, problems = run_with([good(decided_at='2026-07-30T10:00'),                     # no ack
                             good(decided_at='2026-07-31T04:30',
                                  stale_pin_acknowledged=True,
@@ -268,7 +296,7 @@ def main():
         bad += 1
 
     # ---- ORDER-613 D2: a record may declare the state its approved action PRODUCES -------------
-    _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': live},
+    _, problems = run_with([good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': owner_live},
                                  stale_pin_acknowledged=True,
                                  stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
     ok = not problems
@@ -303,9 +331,9 @@ def main():
     # F9's behalf, which is the exact wrong-reason conformance the runner refuses.
     for label, eps, want_id in (
             ('D2 CONTROL binding its OWN owner at the real blob',
-             {'path': 'MASTER_BACKLOG.md', 'blob': live}, None),
+             {'path': 'MASTER_BACKLOG.md', 'blob': owner_live}, None),
             ('F7 binding an UNRELATED file is refused',
-             {'path': 'AGENT_TASKBOARD.md', 'blob': live}, 'F7'),
+             {'path': 'AGENT_TASKBOARD.md', 'blob': owner_live}, 'F7'),
             ('F8 MISSING as a blob id is refused before HEAD is even consulted',
              {'path': 'MASTER_BACKLOG.md', 'blob': 'MISSING'}, 'F8'),
             # F9 (path absent at HEAD) and F10 (path is a tree) are UNREACHABLE from this
@@ -369,7 +397,7 @@ def main():
              {'path': 'MASTER_BACKLOG.md', 'section': '## 2. NO SUCH HEADING',
               'section_sha256': _sec_digest}, 'F13'),
             ('F6 a post-state carrying BOTH forms at once is REFUSED',
-             {'path': 'MASTER_BACKLOG.md', 'blob': live, 'section': _anchor,
+             {'path': 'MASTER_BACKLOG.md', 'blob': owner_live, 'section': _anchor,
               'section_sha256': _sec_digest}, 'F6')):
         _, problems = run_with([good(expected_post_state=eps,
                                      stale_pin_acknowledged=True,

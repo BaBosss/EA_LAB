@@ -11,8 +11,8 @@
 |---|---|
 | `policy_version` | **`s2a-attestation/1`** (proposed; see OPEN-1) |
 | supersedes | the prose criteria in the `check_s2a_attestation.py` module docstring (`A1`…`A8`) |
-| companion corpus | `S2A_ATTESTATION_VECTORS.jsonl` — **63 vectors**, 19 green / 43 red / 1 abort (counted from the file at the landing commit, not typed) |
-| written against | `check_s2a_attestation.py` at HEAD `7616f2de` bundle, suite **35/35** green |
+| companion corpus | `S2A_ATTESTATION_VECTORS.jsonl` — **69 vectors**, 21 green / 47 red / 1 abort (68 CANONICAL + 1 PROVISIONAL `V-R8-001`; counted from the file at the landing commit, not typed — and re-counted at THIS landing after a review caught the previous figure, 63, carried forward past the 6 option-2 vectors: the defect this row describes, in this row) |
+| written against | `check_s2a_attestation.py` at HEAD `7616f2de` bundle. **CORRECTED 2026-08-01:** this row said *"suite 35/35 green"* and had not been re-counted since the draft was written; `run_s2a_attestation_tests.py` reports **46 OK / 0 BAD** today (counted from the run, `grep -c '\[OK \]'`), and `run_s2a_conformance.py` reports **68 canonical + 1 provisional**. A count carried forward without being re-run is the defect this policy exists to refuse, so it is corrected rather than dropped. |
 | amended | **ORDER-731 option A (owner-ratified 2026-08-01)** — `expected_post_state` gains a SECTION form (§4.3.1). The WHOLE-FILE form is unchanged and stays valid. |
 
 ---
@@ -131,6 +131,38 @@ force (see G2).
 | **R7** | `current_owner` does not start with `EMBEDDED:` — an embedded fact owns no file and follows its parent, so the decision belongs against the parent's owner. R7 is separate from R6 because `EMBEDDED:*` values **do** appear in D1 and therefore pass R6. | record-intrinsic |
 | **R8** | `REFUSED` carries a non-empty `reason`. ⚠️ **DISPUTED — see OPEN-3.** As implemented this is **unreachable**: `reason` is in R4's required set, so a blank reason fails R4 first and R8 can never fire. It has **no vector that only it can explain**, and this document says so rather than presenting it as covered. | record-intrinsic |
 
+⚠️ **STATED LIMIT — R6 is labelled `record-intrinsic` but reads TODAY's D1, and the consequence is
+that no `TRANSFER` row's `current_owner` can ever be executed.** Added 2026-08-01 (ORDER-731 option
+2), stated and **not fixed** here, because fixing it changes what R6 demands and that owes its own
+vectors and its own signature.
+
+* **The contradiction with §3.** `record-intrinsic` means *"it was true when the row was written, or
+  the row should not exist"* — a claim about the record. R6 is not that: it resolves
+  `current_owner` against the D1 that exists **at the moment the checker runs**. It is therefore an
+  `in-force` claim wearing a `record-intrinsic` label, and because eligibility is a `[stop]` group
+  it decides which row is in force **before** any in-force criterion is reached — so the §3 rule
+  that history is never re-judged does not protect it.
+* **The consequence, measured not predicted (2026-08-01).** Every one of the **7** records in
+  `s2a_attestations.jsonl` names `current_owner: MASTER_BACKLOG.md`. With today's D1 that is
+  **7 eligible / 0 problems**. Re-running `eligible_records` against a D1 whose `CoverageCell` row
+  carries `current_owner: factory/coverage.jsonl` instead gives **0 eligible / 7 problems**, all of
+  them `R6 line N decides for 'MASTER_BACKLOG.md', which is not a current_owner in D1`. The log is
+  append-only, so **those seven records could never be repaired** — not by the owner, not by any
+  legal act. **Therefore: executing the `current_owner` of any `disposition: TRANSFER` row destroys
+  every historical record for that owner.** The one transfer this order exists for is
+  consequently unexecutable in the field the guard reads, whatever the owner decides.
+* **And there is no vocabulary for an executed transfer at all.** `SIGNOFF_STATES` is
+  `('PROPOSED', 'REFUSED')` — there is no `EXECUTED`; `DISPOSITIONS` is
+  `('TRANSFER', 'KEEP', 'RETIRE')` — there is no `TRANSFERRED`; and no field named
+  `previous_owner` or `executed_at` exists anywhere in the repository (grepped 2026-08-01: zero
+  hits across every `.py`, `.ps1`, `.json`, `.jsonl`). So even if R6 permitted the move, **D1 has
+  no way to record that a transfer HAS happened** as distinct from being proposed. That is why the
+  Coverage content transfer — which really did land, in `a424e90b` on 2026-07-31, touching 9 files
+  and not touching D1 — is still rendered by D2 as *"lives today: `MASTER_BACKLOG.md` … PROPOSED"*:
+  a stale description that every criterion reports as green. What ORDER-731 option 2 fixes is the
+  **pin** (§4.5), which can follow the bytes; the table's inability to describe its own execution
+  is untouched by it and is recorded here as an open defect.
+
 ### 4.3 In-force criteria
 
 Applied **only** to the row in force for each `current_owner`.
@@ -149,7 +181,7 @@ Applied **only** to the row in force for each `current_owner`.
 | **F9** | `expected_post_state.path` exists at HEAD. **Both forms.** | in-force | no (elif) |
 | **F10** | `expected_post_state.path` resolves to a **blob** at HEAD, not a **tree**. A directory has no content a decision could have approved, and git returns a tree oid happily. **Both forms.** | in-force | no (elif) |
 | **F11** | *WHOLE-FILE form only.* HEAD's blob at `expected_post_state.path` equals `expected_post_state.blob`. This is what turns an acknowledgement from a blanket exemption ("these bytes moved, fine") into a claim about a **specific** post-state. | in-force | no (elif) |
-| **F13** | *SECTION form only.* The section named by `expected_post_state.section` is **locatable deterministically** in HEAD's content at `path`, by the algorithm in §4.3.1. Not decodable as UTF-8, **zero** matching heading lines, **more than one** matching heading line, or an **unterminated fence** are each F13, and the message must say which. **This criterion FAILS CLOSED: a section that cannot be located is refused, never skipped.** | in-force | no (elif) |
+| **F13** | *SECTION form only.* The section named by `expected_post_state.section` is **locatable deterministically** in HEAD's content at `path`, by the algorithm in §4.3.1. Not decodable as UTF-8, **zero** matching heading lines, **more than one** matching heading line, or an **unterminated fence** are each F13, and the message must say which. **This criterion FAILS CLOSED: a section that cannot be located is refused, never skipped.** ⚠️ **Three of these four branches have vectors; the `not decodable as UTF-8` branch has NONE, and cannot have one in this corpus** — a vector supplies HEAD's content as a JSON **string** (`head_blobs[path].content`, §5), and a JSON string cannot express bytes that fail a strict UTF-8 decode. There is no cage case for it either. It is named here as unvectored for the same reason **B4** and **R8** are named: a branch that is stated and unproven must not be counted with the ones that are proven. | in-force | no (elif) |
 | **F14** | *SECTION form only.* `sha256` of the extracted section bytes (§4.3.1) equals `expected_post_state.section_sha256`. This is F11's claim, narrowed to the region the approval was about. | in-force | no (elif) |
 
 **Evaluation order inside `expected_post_state`** — normative, because the corpus asserts the exact
@@ -266,6 +298,68 @@ implementation that computes it can also leave the bundle.
 Both note kinds (`MISSING` and `STALE`) demand acknowledgement under F2. This is intentional and is
 stated because it is not obvious from the names.
 
+**What `owner_ref.path` pins, and why it is not always `current_owner`** (ORDER-731 option 2,
+owner-ratified 2026-08-01). N1–N4 derive **exclusively** from `owner_ref.path`. That field pins the
+file holding the entity's **canonical bytes** — the bytes the proposal is *about* — which is not
+necessarily the file named by `current_owner`:
+
+* **`owner_ref.path`** answers *"have the bytes this proposal is about changed since the owner read
+  them?"* It is the pin, and it must follow the bytes or it asks the question about the wrong file.
+* **`current_owner`** answers *"who is the declared owner of this fact today?"* It is the key the
+  append-only attestation log is written against (**R6**), and the key `check_s2a_migration.py` C7
+  uses to decide the Coverage edge exists at all.
+
+They were the same file for every row until 2026-08-01, so nothing had ever had to say which of the
+two questions the pin was answering. `CoverageCell` is the first row where they differ, and it
+differs because **the canonical bytes moved**: section 2 of `MASTER_BACKLOG.md` is now GENERATED
+from `factory/coverage.jsonl` (transfer commit `a424e90b`, `2026-07-30T23:46:07+07:00`; §2's own
+banner dates the change `2026-07-31`). Re-pointing `owner_ref` at `factory/coverage.jsonl` is
+what makes the pin describe reality again — the alternative is a pin that reports `STALE` every
+time an unrelated line of a 30-commits-in-14-days board moves, which is a false alarm, not a
+signal. `current_owner` is **deliberately left alone**: moving it would make all seven historical
+attestation records ineligible under R6 in a file that cannot be rewritten, and would make C7
+report the Coverage edge ABSENT. Re-pinning `owner_ref` has precedent (`59a27f97` re-pinned every
+row). `current_owner`, by contrast, has changed exactly once in D1's six-commit history and only
+for rows that name **no** file: `ea44077e` replaced the retired `UNOWNED` sentinel with the four
+owner-states on `TestUniverse` / `LogicalSymbol` / `SafeProjection` / `RunJournal`. No row naming a
+real path has ever had its `current_owner` changed, and `CoverageCell`'s has read
+`MASTER_BACKLOG.md` in all six commits.
+
+Any row where the two differ carries an `owner_ref_path_reason` string stating why, emitted by
+`gen_s2a_migration.py` next to the pin and rendered into D2. A pin that quietly names a different
+file from its own `current_owner` would be exactly the kind of divergence this table exists to
+prevent.
+
+**How a record is matched to a note — through D1, not by string identity.** This is the part that
+had to change with the pin, and it is stated here because getting it wrong is invisible. Notes are
+keyed on `owner_ref.path`; records are written against `current_owner`. Until 2026-08-01 those were
+the same string for every row, so looking a note up as `notes[record.current_owner]` was correct **by
+accident of the data**. The moment one pin moved, that lookup stopped matching: the note for
+`factory/coverage.jsonl` was still derived and still **printed**, while F2–F5 became **permanently
+unreachable** for the one owner this artifact exists for — a guard that reports and cannot refuse,
+described as a guard that refuses (memory `guard-disarmed-by-prose-reported-as-note`). Option 2 was
+bought to make the pin fire **rarely**, not never, so this was fixed rather than declared:
+
+> **The rule.** An owner is asked about the bytes **its own D1 rows pin**. The lookup resolves
+> `current_owner → {owner_ref.path}` from D1 and then matches a note by **exact path identity** on
+> that path. **N4 is unchanged** — the comparison is still identity, never containment; what moved
+> is *which* path is looked up, not *how* it is compared. Where the two fields are equal (every row
+> but one, and every row that existed before 2026-08-01) the result is byte-identical to the
+> previous lookup, which is why the whole frozen corpus still reproduces.
+
+The chain then works end to end for a split row: **F3** requires the acknowledgement to name the
+**pinned** path (`factory/coverage.jsonl`, not `MASTER_BACKLOG.md`), and **F4**/**F5** recompute
+that file's pinned and HEAD blobs. Vectors: `V-F2-005` · `V-F3-002` · `V-F4-002` · `V-F5-003` fire
+in order; `V-N3-002` and `V-N4-002` are the two silent halves. The mapping is derived **once**, next
+to `eligible_records`/`in_force_map`, so no second copy can drift.
+
+⚠️ **Declared limit — one owner, several pinned paths.** `stale_pin_acknowledgement` is a single
+object naming one path, so when an owner pins **more than one** path and more than one has drifted,
+the **first in sorted order** is the one enforced; the rest are reported by the advisory and not
+enforced. No owner is in that position today (`AGENT_TASKBOARD.md` is pinned twice, at the same
+path), and the behaviour is deterministic rather than arbitrary — but it is stated here rather than
+left to be discovered from a diff.
+
 ### 4.6 Bundle digest — `global`
 
 | id | semantics |
@@ -368,8 +462,8 @@ implementation itself or possessing a complete executable specification. This po
 Concretely:
 
 1. **A conforming implementation may differ on any input the corpus does not contain.** The corpus
-   is 63 points in an input space that is not finite. Two implementations that reproduce all 63 can
-   still disagree about the 56th.
+   is 69 points in an input space that is not finite. Two implementations that reproduce all 69 can
+   still disagree about the 70th.
 2. **`if False` is caught only where a vector exercises the predicate.** That is the mechanism, and
    it is a real one — every criterion in §4 has at least one vector whose expected result changes
    if its predicate is neutralized (§7). It is **not** a proof that no neutralization exists: it is
@@ -401,7 +495,7 @@ Concretely:
    what a caller reaches for when that price is not payable.
 
 **What it does buy, stated as plainly:** a repair to the implementation that keeps all `CANONICAL`
-vectors reproducing costs **no signature**, and a repair that changes any of the 63 documented
+vectors reproducing costs **no signature**, and a repair that changes any of the 69 documented
 behaviours cannot land silently. That is weaker than rev 1 pretended to give and stronger than
 rev 1 actually gave.
 
@@ -428,7 +522,7 @@ observed through the criterion it feeds.
 | R-SCOPE | `V-RSCOPE-001` | unique |
 | **R8** | `V-R8-001` | **none — OPEN-3** |
 | F1 | `V-F1-001` | unique |
-| F2 | `V-F2-001` · `V-F2-002` (string `"false"`) · `V-F2-003` (flag without object) · `V-F2-004` CONTROL | unique + control |
+| F2 | `V-F2-001` · `V-F2-002` (string `"false"`) · `V-F2-003` (flag without object) · `V-F2-004` CONTROL · **`V-F2-005`** (a SPLIT row: the pin has drifted and the record for `current_owner` is demanded an ack) | unique + control |
 | F3 | `V-F3-001` | unique |
 | F4 | `V-F4-001` | unique |
 | F5 | `V-F5-001` · `V-F5-002` (the `MISSING` literal branch) | unique |
@@ -439,7 +533,7 @@ observed through the criterion it feeds.
 | F9 | `V-F9-001` | unique |
 | F10 | `V-F10-001` | unique |
 | F11 | `V-F11-001` · `V-F11-002` CONTROL | minimal pair |
-| **F13** | `V-F13-001` (heading absent) · `V-F13-002` (heading twice) · `V-F13-003` (unterminated fence) | unique, all three fail-closed branches |
+| **F13** | `V-F13-001` (heading absent) · `V-F13-002` (heading twice) · `V-F13-003` (unterminated fence) | unique, **three of F13's four** fail-closed branches |
 | **F14** | `V-F14-001` (section digest mismatch) · `V-F14-002` **CONTROL** (the section matches while the REST of the file differs from anything a blob pin would allow — this is the vector that proves option A bought what it was for) | minimal pair |
 | G1 | `V-G1-001` | unique |
 | G2 | `V-G2-001` | unique |
@@ -452,6 +546,7 @@ observed through the criterion it feeds.
 | G8 | `V-G8-001` | unique |
 | N1 | `V-N1-001` | minimal pair with `V-POS-001` |
 | N2 | `V-N2-001` | minimal pair with `V-POS-001` |
+| **the record→note MAPPING** (§4.5; adds no criterion id — it changes which path F2–F5 are asked about) | FIRE: **`V-F2-005`** → **`V-F3-002`** → **`V-F4-002`** → **`V-F5-003`**, the whole chain on one SPLIT row · SILENT: **`V-N3-002`** (the pin equals HEAD, so no note exists) and **`V-N4-002`** (a note exists but belongs to another owner's pin) | **both directions, measured.** Revert to the `current_owner` identity lookup ⇒ all four FIRE vectors go red (`exit 0, expected 1`). Hand every owner with a pin the first note ⇒ **`V-N4-002`** goes red (`exit 1, expected 0`). `V-N3-002` is the minimal pair for `V-F2-005`: the only difference is the pinned file's blob at HEAD |
 | N3 | `V-N3-001` | unique |
 | N4 | `V-N4-001` | unique |
 | B1 | `V-B1-001` | unique |
@@ -502,7 +597,7 @@ recreates a defect shape is worse than no policy.
 | **1** — reads the wrong bytes | G5's snapshot is declared (**index**, worktree only when untracked) and pinned in both directions. Every context field in §5 names which snapshot it models. |
 | **2** — names not values | R5, R7 and B4 are closed vocabularies stated as **allowlists**. F4/F5/F11 compare **recomputed values**, never the presence of a field. §6.4 states plainly that reason-ids are matched as **names** and are therefore not evidence. |
 | **3** — cannot fail | **Two instances found and reported, not hidden:** R8 is unreachable (OPEN-3) and B4 is unvectorable (§4.6). A third is flagged at OPEN-5 (the `pinned and` guard in F4). |
-| **4** — a claim without measuring it | 63 / 19 / 43 / 1 were counted from the generated file, not typed (55 / 18 / 36 / 1 before ORDER-731 option A added eight). The digest constants in the corpus were computed, not invented. The five-digest history was read from `s2a_attestations.jsonl`. |
+| **4** — a claim without measuring it | 69 / 21 / 47 / 1 were counted from the generated file, not typed (55 / 18 / 36 / 1 before ORDER-731 option A added eight; 63 / 19 / 43 / 1 before option 2 added six — and the 63 figure survived one landing review before being caught, which is this row's own defect demonstrated against this row). The digest constants in the corpus were computed, not invented. The five-digest history was read from `s2a_attestations.jsonl`. |
 | **5** — the repair graded by the finding it closes | This draft is a **repair to a guard**, so the pre-flight applies to it. The engagement assertion is `V-POS-001` + the 19 green vectors: if the new machinery were inert or over-strict, they fail. The specificity assertions are `V-N3-001`, `V-N4-001`, `V-G5-005`, `V-F2-004`, `V-F11-002` — each fails if the repair over-reaches onto inputs the original counter-example never touched. |
 
 ---
@@ -532,11 +627,49 @@ and these are the calls, so the signed document carries them rather than a chat 
 - **ORDER-731 option A (2026-08-01)** the owner ratified narrowing `expected_post_state` from a
   whole-file blob to the approved SECTION (§4.3.1), after being shown the measurement: 30 commits
   to `MASTER_BACKLOG.md` in 14 days ⇒ ~2 owner signatures per day under the whole-file pin, and
-  two independent lanes (`f4c9fd9f`, `78a93129`) hit it within one hour on 2026-08-01. The
+  two independent lanes (`f4c9fd9f`, `78a93129`) hit it on 2026-08-01. **CORRECTED 2026-08-01
+  (ORDER-731 option 2):** this sentence said *"within one hour"*, which is false — the two commit
+  timestamps are `07:59:15` and `10:22:54`, i.e. **2h 23m 39s** apart. The true statement, and the
+  sharper one, is that the second landed **48m 53s** after `cc064445` **reverted** the first lane's
+  `MASTER_BACKLOG.md` row at `09:34:01` — so the collision was not two edits in one hour, it was a
+  file that could not stay still even while a lane was actively backing its own edit out. The
   WHOLE-FILE form is **kept**, not replaced (§4.3.2) — narrowing it away would have been a second
   rule change nobody asked for. This amendment edits the POLICY and the CORPUS, both bundle
   members, so it voided the record at line 7 and cost exactly one signature, shown to the owner in
   chat as a full line with its recomputed digest before it was appended.
+- **ORDER-731 option 2 (owner ratified 2026-08-01, verbatim: *"ทำ option 2 เลย"*)** — the second
+  whole-file pin on `MASTER_BACKLOG.md` is removed by **re-pointing `owner_ref` at the file that
+  now holds the canonical bytes** (`factory/coverage.jsonl`), not by moving `current_owner`.
+  Semantics are §4.5; the reason the owner field stays put is the R6 limit stated in §4.2, which
+  was **measured** rather than argued: moving it takes the log from `7 eligible / 0 problems` to
+  `0 eligible / 7 problems`, permanently, in an append-only file. The change is carried by an
+  explicit per-row `ref_path` key in `gen_s2a_migration.py` (one key, one `owner_ref_path_reason`
+  string, emitted into D1 and rendered into D2) — not by a second pinning mechanism. D1 was
+  **regenerated**, never hand-edited.
+  <br>**The blocker this uncovered, and closed in the same act.** Splitting the two fields exposed
+  that the record→note lookup was `notes[record.current_owner]` — correct only while every row's
+  two fields were equal. Left alone, option 2 would have made F2–F5 **permanently inert for the
+  Coverage row** while the note still printed: a silent disarm shipped under the description "the
+  pin now sits on a stable file". The lookup now resolves through D1's
+  `current_owner → owner_ref.path` mapping (§4.5). This edits `check_s2a_attestation.py`, which
+  policy §2.1 puts **outside** the bundle, so it costs **no additional signature** — which is
+  exactly what leaving the implementation out of its own bundle was for, and the first time that
+  decision has paid.
+  <br>**A real reduction in signal, accepted:** a plain write-mode generator run always re-pins
+  **every** row at HEAD, so the note map went from **7 STALE notes to 0** — but only one of those
+  seven belonged to `CoverageCell`. The other six (`AGENT_TASKBOARD.md` ×2, `DEPLOYMENTS.csv`,
+  `control_room_snapshot.json` ×2, `snapshot_validator.py`) were silenced as a side effect of a
+  re-pin nobody asked for on their behalf. None of those owners has an attestation record today, so
+  nothing was *enforced* away — but the advisory that would have told a future signer "this row
+  describes an older revision of its own owner" was reset for five entities that were not the
+  subject of this change. Precedent exists (`59a27f97` re-pinned every row) and the generator
+  offers no alternative, which is precisely the argument for **a per-row re-pin capability**: the
+  right shape is "re-pin the rows this proposal is about", and its absence is why a targeted change
+  had to be paid for with an untargeted one. Not built here — it is a generator feature, not a
+  policy rule, and this amendment is already carrying a signature.
+  <br>No criterion was added and no criterion changed. What this amendment edits is the POLICY, the
+  CORPUS, D1 and D2 — four bundle members — so it voids the record at line 8 and costs exactly one
+  signature.
 
 ## 11. OPEN QUESTIONS FOR THE LEAD
 

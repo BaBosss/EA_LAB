@@ -433,8 +433,60 @@ def in_force_map(rows, d1_owners, problems=None):
     return latest
 
 
+def owner_ref_paths(d1_rows):
+    """current_owner -> the sorted paths that owner's D1 rows PIN. Derived once, here.
+
+    WHY THIS EXISTS (ORDER-731 option 2, 2026-08-01). Notes are keyed on `owner_ref.path` (N1-N4);
+    records are written against `current_owner`. Until 2026-08-01 those were the same string for
+    every row in D1, so `stale.get(record['current_owner'])` was a correct lookup by accident of
+    the data rather than by design. The moment one row's pin moved to the file holding its
+    canonical bytes, that lookup silently stopped matching -- the note was still DERIVED and still
+    PRINTED for `factory/coverage.jsonl`, while F2-F5 became permanently unreachable for the one
+    owner the whole artifact exists for. A guard that reports and cannot refuse, presented as a
+    guard that refuses, is memory `guard-disarmed-by-prose-reported-as-note` exactly.
+
+    So the mapping is made explicit: an owner is asked about the bytes ITS OWN rows pin.
+
+      * Where `current_owner == owner_ref.path` -- 13 of the 14 pinned rows, and every row that
+        existed before 2026-08-01 -- this returns `{owner: [owner]}` and the lookup below is
+        byte-identical to the old one. That is what keeps the frozen corpus reproducing.
+      * N4 is UNCHANGED: the comparison is still exact path identity, never containment. What
+        moved is WHICH path is looked up, not how it is compared.
+      * An owner with no pinned row at all (`EMBEDDED:*`, the four owner-states) maps to `[]` and
+        can never draw a note -- which is what it did before, since nothing pinned it.
+
+    DECLARED LIMIT: one owner may pin SEVERAL paths (`AGENT_TASKBOARD.md` is pinned by both
+    `Hypothesis` and `WorkReceipt` -- the same path today, but nothing forbids two different ones).
+    `stale_pin_acknowledgement` is a single object and can name exactly one path, so when more than
+    one of an owner's paths has drifted, this matches the FIRST in sorted order and the others are
+    reported by the advisory but not enforced. Deterministic, and stated rather than discovered.
+    """
+    out = {}
+    for r in d1_rows or ():
+        owner = r.get('current_owner')
+        if not owner:
+            continue
+        ref = r.get('owner_ref') or {}
+        paths = out.setdefault(owner, set())
+        if ref.get('path'):
+            paths.add(ref['path'])
+    return {k: sorted(v) for k, v in out.items()}
+
+
+def note_for_owner(stale, ref_paths, owner):
+    """The note an owner must acknowledge, or None. Path identity only (N4)."""
+    for path in ref_paths.get(owner, ()):
+        if path in stale:
+            return stale[path]
+    return None
+
+
 def check(rows, problems, digest, d1_owners, vintage_notes):
     stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
+    # The record->note match goes through D1's own current_owner -> owner_ref.path mapping, NOT
+    # through string identity on current_owner. See owner_ref_paths for why, and for the one
+    # property that makes this a no-op everywhere else in the table.
+    ref_paths = owner_ref_paths(_D1_ROWS)
     # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
     # comment that asserted the opposite of the truth.
     #
@@ -593,7 +645,7 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # be returned to green by any legal action. Superseded rows stay in the file and stay
         # printed; they are history, not live claims. What is DEMANDED of the current row is
         # unchanged -- this narrows which row is judged, never what it must satisfy.
-        note = stale.get(r['current_owner']) if in_force else None
+        note = note_for_owner(stale, ref_paths, r['current_owner']) if in_force else None
         if note:
             ack = r.get('stale_pin_acknowledgement')
             # audit 8 MAJOR 5: this was `not row.get('stale_pin_acknowledged')`, so the STRING
