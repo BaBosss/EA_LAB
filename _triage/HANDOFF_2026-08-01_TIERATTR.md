@@ -123,6 +123,55 @@ went red in 3 of ~12 full-tier runs and green every time it was run alone: **it 
 - **`run_s2a_gate.py` drifted 2.57 → 4.94 s** with the memoization its comment describes still in
   place. Second-largest entry in the wrapper, and nobody has attributed it.
 
+## 6. 📌 AUDIT BRIEF — for the independent (non-author) audit `ORDER-830` still owes
+
+> **Status: NOT urgent, nothing gates on it.** `ORDER-830` is `DONE`, its acceptance C1-C4 is met,
+> and `REVIEWED` is needed only to archive the row. Written 2026-08-01 because **Codex quota was
+> out** and the owner chose to wait rather than spend a second Fable pass. Whoever picks this up:
+> you are the **third** pass — a `/scrutinize` self-review (7 fixes) and a **Fable-seat** review
+> (7 more, `F1-F7`) already ran and are both closed. **Your value is being a different vendor, not
+> being another careful reader** — go where a different set of blind spots would look.
+
+**Read, in this order:** `AGENT_TASKBOARD.md` → `ORDER-830`'s `RESULT` block (A1 · A2 · A2b · A3 ·
+A4 · Handed forward) and then `ORDER-820`'s correction box · this file §1-§4 ·
+`scripts/_test/run_contract_binding_tests.ps1` header comment block (the two-mode table).
+
+**🚫 Do NOT re-run the measurements.** They cost ~50 minutes of wall clock and the conclusions do
+not depend on re-running them — they depend on whether the *inferences drawn from them* hold.
+
+**The four questions worth a different vendor's eyes:**
+
+1. **Is the mode/shell decomposition actually complete?** Two variables were found (+8.5 s evidence
+   mode, 5-9 s shell/git-binary) and one ruled out (`GIT_INDEX_FILE`, no effect). **~4-5 s between
+   `sh`+`-Hook` (24.5-26.0 s) and a real pre-commit hook (20.3 s) is still unexplained** and is
+   attributed to nothing. Is there a third variable, or is the 20.3 s figure itself suspect?
+2. **Does `A2`'s inference survive a hostile read?** The claim is: the suite grew **+0.7 s**
+   (measured), therefore `ORDER-820`'s +8.7 s was the mode delta (**inference**, labelled as such,
+   because **no measured configuration reproduces its 22.9 s**). Attack it: is there a reading where
+   a real regression is hiding inside a mode difference?
+3. **Is `A1` naming the right operation?** `check_r4`'s sweep is 99.5 % of `main()` in index mode —
+   but the fix candidate handed to `ORDER-820` (one `git cat-file --batch` for ~128 per-path
+   `git show` spawns) has **not** been prototyped. Would it actually work through
+   `evidence.py`'s `read_committed` contract, which has a no-fallback rule and a decode/CRLF step
+   per path?
+4. **Was anything left worse than it was found?** Specifically: the wrapper header now carries a
+   hand-maintained two-mode table with **no cage**, in a repo whose most-repeated defect is exactly
+   that (`BACKLOG-D29`). It is marked *"re-count, do not quote"* — is that mitigation enough, or
+   did this order add a new drift surface while documenting one?
+
+**Already known and NOT worth your time:** the counts drifted 129→131 within the hour (fixed, and
+the fix is to stop quoting integers) · `PARKED` was not in the status vocabulary (fixed) · the tier
+transcript evidence is gitignored (fields quoted inline) · `run_front_guard_evidence_tests.ps1` is
+flaky under concurrent lanes because it judges `HEAD` (routed to `ORDER-731`).
+
+**One loose number for you to settle if you want a concrete deliverable:** lane `WRFIX` recorded a
+**seventh** full-tier sample — **100.0 s, suite at 34.8 s** — in its ledger cell only, with **no
+invocation recorded**. It exceeds every configuration `ORDER-830` measured. *Inference, not
+measurement:* 34.8 s ≈ PowerShell+index (33.4-34.1 s) **+ the ~0.5 s suite `S14GRANT` added**, and
+100.0 s ≈ PowerShell `-Hook` (97.6 s) + the same, so it most likely fits the PowerShell population
+exactly rather than widening any swing. **Nobody has confirmed that.** Confirming or refuting it is
+a clean, bounded task and it settles the last open number in the thread.
+
 ## 5. Routing
 
 <!-- HANDOFF-ROUTING -->

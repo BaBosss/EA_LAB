@@ -98,11 +98,35 @@ digests before they were taken.
 
 ## 4. Open work, in the order it is worth doing
 
-1. **`ORDER-820` → now carried by `ORDER-830`.** A parallel lane took C1 after this section was written and opened `ORDER-830` for it (`074901c0`) — **go to that row first**; the paragraph below is the evidence it started from, not the current status. Six samples: `91.8 · 91.5 · 91.7 · 91.1 · 93.6 · 87.8 s`
-   against an enforced `90.0 s`. **The breach is intermittent** and the driver is one suite,
-   `run_contract_binding_tests.ps1`, swinging **24.9-32.1 s**. C1 is now *"why does this suite vary
-   by 7 s"*, not *"what added 8.7 s"*. 🚫 Do not raise the budget to clear the red, and do not tune
-   against a single run in either direction.
+1. 🔴 **`ORDER-830` is now `DONE` and it REFUTED the paragraph that used to live here.** The text below is
+   kept struck-through because the next reader will meet the old claim elsewhere and needs to know it
+   was measured and dropped, not forgotten.
+   > ~~Six samples `91.8 · 91.5 · 91.7 · 91.1 · 93.6 · 87.8 s` against an enforced `90.0 s`; the breach is
+   > **intermittent** and one suite swings **24.9-32.1 s**; C1 = *"why does this suite vary by 7 s"*.~~
+
+   **What replaced it (`ORDER-830` RESULT, lanes `TIERATTR` → `SCRUT830` → `FABLEFIX`):** the suite does not
+   *vary* — it has **populations**, and none of the six samples above recorded which one it was in.
+   Two variables were found and measured: **`EA_LAB_EVIDENCE=index`** (set by `run_fast_cages.ps1` **only
+   under `-Hook`**) is worth **+8.5 s**, and **which `git.exe` the launching shell puts on PATH** is worth
+   another **5-9 s** (`cmd\git.exe` is a 45 KB shim; **+9.1..9.2 ms per spawn** interleaved, and this
+   suite spawns ~142). Measured the way `.githooks/pre-commit:220` actually invokes it, six full-tier
+   samples span **83.3 - 90.1 s against 90.0 s — ON THE LINE, one over**. The suite grew **+0.7 s** between
+   `ddbaec95` and HEAD, not +8.7 s. **✅ Nothing here is blocked — do not re-run any of it.**
+
+   📌 **`ORDER-830` owes an INDEPENDENT (non-author) audit before anyone writes `REVIEWED`, and it is
+   NOT urgent.** Codex quota was out at close (owner's call: wait rather than burn a second Fable pass).
+   Nothing gates on it — the acceptance is met, the status is terminal, and `REVIEWED` is needed only to
+   archive the row. **The audit brief — exactly what to check and what NOT to re-measure — is §6 of
+   `_triage/HANDOFF_2026-08-01_TIERATTR.md`.** A Fable pass already ran this session and its seven
+   findings are fixed; what is missing is a *different vendor's* eyes, which is Codex's whole value.
+
+1b. **`ORDER-820` — next session's work, and its premise has to be rebuilt before anything is spent.**
+   C1 is closed by `ORDER-830`. **C2** (make it faster / displace / raise) now has a named candidate — one
+   `git cat-file --batch` in `evidence.py` instead of ~128 per-path `git show` spawns in `check_r4`'s
+   sweep — **but do not spend it yet**: the tier may not need it. **First re-measure the full tier through
+   `.githooks/pre-commit`'s own line, three samples, stating shell + suite count + commit beside each
+   number.** **C3** must be restated the same way. 🚫 Do not raise the budget (unchanged). 🚫 Do not default
+   `index` mode away — judging the commit is the whole content of `ORDER-670`.
 2. **The next S2a signature — batch these onto it.** All are inside bundle members, so they cost
    nothing extra if they ride the same line: **I1** (make the abort print *which* fingerprint
    component moved) · policy `§7` row 5 *"19 green"* (is 21) · `§9` *"35 assertions"* (46) · `§1`
@@ -146,7 +170,9 @@ digests before they were taken.
 | item | destination |
 |---|---|
 | both whole-file pins removed; §2 protection landed; two signatures spent and none pending | DONE |
-| the intermittent tier budget breach, driver identified as one suite's 7 s swing — **C1 taken up by a parallel lane, see `ORDER-830`** | ORDER-820 |
+| ~~the intermittent tier budget breach~~ — **MEASURED and REFUTED: populations, not variance; suite grew +0.7 s; tier is ON THE LINE (83.3-90.1 s of 90.0 s) through the hook's own invocation** | ORDER-830 |
+| `ORDER-830`'s independent (non-author) audit — **NOT urgent, nothing gates on it**; Codex when quota returns; brief = §6 of `_triage/HANDOFF_2026-08-01_TIERATTR.md` | ORDER-830 |
+| `ORDER-820` C2/C3 — rebuild the premise FIRST (three full-tier samples through `.githooks/pre-commit`'s own line, shell + suite count + commit stated), then decide whether the `git cat-file --batch` candidate is even needed | ORDER-820 |
 | the S14 grant row is pinned and the pin is read (`W6`/`W7`) — M6, the last of the seven | DONE |
 | moving that pin onto an owner-signed surface, so a widening cannot be self-approved at all | ORDER-731 (batched onto the next signature, §4 item 2) |
 | the tier abort itself — armed with a transcript, waiting to recur | ORDER-731 |

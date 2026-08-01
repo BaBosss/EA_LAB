@@ -508,7 +508,7 @@ either measurement alone:
 processes**, which is how the bug announced itself. Instrument `Popen` only, and charge each process
 once behind a flag.</sub>
 
-### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — status `DONE`; an independent (non-author) review is still open to whoever writes `REVIEWED`
+### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — status `DONE`; an independent (non-author) audit is still owed before anyone writes `REVIEWED`, and it is **NOT urgent — nothing gates on it**. Brief: `_triage/HANDOFF_2026-08-01_TIERATTR.md` §6 (Codex when quota returns; a `/scrutinize` pass and a Fable pass have already run and are closed)
 
 > **One sentence:** every number in this order and in `ORDER-820` was quoted without saying **how it was
 > produced** — evidence mode *and* the shell that launched it — and those two variables are worth
@@ -734,7 +734,16 @@ edit: **green, 25.4 s, unchanged**.
 > | the full tier is **OVER budget on every sample** (the row title) | 🔴 **not supported by any measurement taken the way git invokes it.** The six samples carry no record of how they were launched, and the spread between invocations (83-98 s) is wider than the spread between the samples. This is **not** proof the tier is safe — it is proof the budget has been argued from numbers with no stated provenance. |
 > | C1 = *"which commit added 8.7 s"* | **unanswerable as written, and it does not need answering.** No commit added it. |
 >
-> **C1 is therefore CLOSED by `ORDER-830`.** **C2 stays here**, with one named candidate if it is still
+> 📐 **A seventh sample exists and is NOT on this row's list: 100.0 s, suite at 34.8 s**, recorded by
+> lane `S-2026-08-01-WRFIX` in its ledger cell with **no invocation recorded**. It exceeds every
+> configuration `ORDER-830` measured. *Inference, not measurement:* 34.8 s ≈ PowerShell+index (33.4-34.1 s)
+> **plus the ~0.5 s suite `S14GRANT` added that day**, and 100.0 s ≈ PowerShell `-Hook` (97.6 s) + the same —
+> so it most likely sits in the PowerShell population rather than widening any swing. **Nobody has
+> confirmed it.** Confirm or refute before quoting it.
+>
+> **C1 is therefore CLOSED by `ORDER-830`.** 🔴 **Order of work: rebuild the premise BEFORE spending anything
+> on C2** — three full-tier samples through `.githooks/pre-commit`'s own line, shell + suite count +
+> commit stated beside each. The tier may not need a fix at all. **C2 stays here**, with one named candidate if it is still
 > needed: replace `evidence.py`'s per-path `git show` (129 spawns in `check_r4`'s sweep) with one
 > `git cat-file --batch`. **But C2's premise must be re-established first** — time the full tier the way
 > the hook invokes it, and if it is inside budget there is nothing to displace, speed up, or raise.
