@@ -196,7 +196,21 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
-## ORDER-760 — [ledger] A literal `|` inside a ledger cell silently disarms that lane's own guard rails — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-760 — [ledger] Prose inside a ledger cell silently changes what the collision guard enforces — TWO instances, both in this lane's own row — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Both were found by writing one row and then probing the guard, not by review.** The cell is
+> free prose AND the guard's input, and nothing marks where one ends and the other begins.
+>
+> **Instance A — a literal `|` shifts every column after it.** Detail below.
+> **Instance B — citing ANY block number in prose reserves it.** The block cell said *"the next
+> free block by number was already reserved by another lane, so this lane takes …"* — naming the
+> other lane's range to explain why it was **declined**. The parser harvests every bare
+> `NNN-NNN` token in the cell, so the guard printed *enforcing reserved block(s): 760-769,
+> 750-759, 760-769*: this lane silently reserved a block it had just written down that it would
+> **not** take, plus a duplicate of its own. Then the FIRST repair — a warning sentence quoting
+> those numbers — added a fourth. **The text explaining the trap re-triggered the trap.**
+> Measured both times from the guard's own `enforcing reserved block(s):` line, which is the only
+> place either instance is visible.
 
 > **🔴 FOUND BY DOING IT, in this lane's own reservation row, and it is the THIRD instance.**
 > `S-2026-08-01-PINFIX`'s row quoted the backlog row it was about to remove as `` `| D33 |` ``.
@@ -221,18 +235,33 @@ Nothing stopped the next one, which arrived the same day, in the row of the lane
 read that sentence.
 
 ### Acceptance
-- **C1** a ledger row whose cell count differs from the header's is **reported**, not silently
-  parsed. Whether that is a BLOCK or a loud WARN is a judgement call — state which, and why, with
-  the count of rows in the current file that would trip it.
-- **C2** driven both ways: a row with a literal `|` in a cell is caught, and every row in the
-  real `docs/SESSION_LEDGER.md` at HEAD passes (or the ones that do not are listed and fixed in
-  the same commit).
-- **C3** the check must not fire on a legitimately escaped pipe (`\|` or `&#124;`) — otherwise it
-  bans the only correct way to write one.
+- **C1 (instance A)** a ledger row whose cell count differs from the header's is **reported**, not
+  silently parsed. Whether that is a BLOCK or a loud WARN is a judgement call — state which, and
+  why, with the count of rows in the current file that would trip it.
+- **C2 (instance A)** driven both ways: a row with a literal `|` in a cell is caught, and every
+  row in the real `docs/SESSION_LEDGER.md` at HEAD passes (or the ones that do not are listed and
+  fixed in the same commit).
+- **C3 (instance A)** the check must not fire on a legitimately escaped pipe (`\|` or `&#124;`) —
+  otherwise it bans the only correct way to write one.
+- **C4 (instance B)** an ACTIVE row declaring **more than one** range is either refused or
+  confirmed as deliberate. Today a lane can reserve three blocks by accident and the only sign is
+  a line of hook output nobody diffs. Measure first: how many rows in the real ledger declare more
+  than one range, and how many of those are intentional (`S-2026-07-31-SHAPES` genuinely claims
+  two, and its row says so) — a rule that fires on the honest case is not payable.
+- **C5 (instance B)** whatever lands, the ledger's own *"how to write this cell"* instructions
+  must state the rule where the cell is written, not only in this order. Both instances happened
+  to an author who had just read the existing warning about a **character class** in that cell
+  (`ORDER-675`) — so the warning was about a *symptom*, and the rule is *"this cell is parsed;
+  every number-looking token in it is data"*.
 
 ### ห้าม
-- ❌ Do not "fix" it by teaching the parser to ignore pipes inside backticks. Markdown tables do
-  not work that way, and a parser that disagrees with the renderer is a second source of truth.
+- ❌ Do not "fix" instance A by teaching the parser to ignore pipes inside backticks. Markdown
+  tables do not work that way, and a parser that disagrees with the renderer is a second source
+  of truth.
+- ❌ Do not fix instance B by making the parser take only the FIRST range. That silently drops the
+  second block of a lane that legitimately reserved two, which is a wrong reservation instead of a
+  loud one — the exact trade the range regex's own comment refuses ("I could not read it must
+  never look like there was nothing there").
 - ❌ No `REVIEWED`.
 
 ---
