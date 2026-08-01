@@ -28,7 +28,7 @@ WHAT IT ASSERTS -- OWNED BY THE POLICY, NOT BY THIS DOCSTRING (ORDER-614 rev 2)
   prose copy of the criteria here would be a second copy that drifts -- the earlier version of
   this header listed A1-A7 and had already drifted from the code beneath it (A5 was
   unreachable, and the header did not know).
-  Criterion ids emitted: R1-R7 (record-intrinsic) - F1-F11 (in-force) - G5/G7 (append-only) -
+  Criterion ids emitted: R1-R7 (record-intrinsic) - F1-F14 (in-force) - G5/G7 (append-only) -
   see the policy for G0-G8, N1-N4, B1-B4, X1.
 
 USAGE  tools\\python312\\python.exe _triage/factory_os/check_s2a_attestation.py [--template]
@@ -162,6 +162,87 @@ BLOB_OID = re.compile(r'^[0-9a-f]{40}$')
 
 def _is_blob_oid(value):
     return bool(BLOB_OID.match(str(value or '')))
+
+
+SECTION_SHA = re.compile(r'^[0-9a-f]{64}$')
+FENCE = ('```', '~~~')
+
+
+def _is_section_sha(value):
+    return bool(SECTION_SHA.match(str(value or '')))
+
+
+def _default_head_text(path):
+    """HEAD's content at `path`, as TEXT, decoded UTF-8 STRICT.
+
+    BYTES then decode, never `chk._git` -- that helper runs subprocess with `text=True`, which
+    decodes with the LOCALE codec. MASTER_BACKLOG.md is UTF-8 carrying Thai and an em-dash in the
+    very heading F13 anchors on, so a locale decode would mangle the exact region F14 hashes and
+    produce a mismatch nobody could attribute. Returns None when the path is not at HEAD (F9
+    already owns that case) and raises ValueError when the bytes are not UTF-8 (F13 owns that).
+    """
+    rc, oid, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), path))  # snapshot: HEAD
+    if rc != 0:
+        return None
+    p = subprocess.run(['git', 'cat-file', 'blob', oid], capture_output=True)  # snapshot: HEAD
+    if p.returncode != 0:
+        return None
+    return p.stdout.decode('utf-8')            # strict on purpose; ValueError is F13's input
+
+
+# THE SEAM the conformance runner replaces, in the same shape as `_index_src`. A vector's world
+# has no git, so the SECTION criteria need one named entry point rather than a git call the
+# runner has to guess at. Swapped by run_s2a_conformance.install_world, restored after.
+_head_text = _default_head_text
+
+
+def extract_section(text, anchor):
+    """(region_bytes, error) -- policy section 4.3.1, the ONE implementation of the rule.
+
+    `check_attested_pin_staged.py` imports THIS function rather than owning a copy: two readers
+    of one approved region is GUARD_SHAPES shape 5, and the region is what the owner signed.
+
+    Never raises for its own inputs. `error` is a human sentence naming WHICH fail-closed branch
+    fired; the caller decides whether that is F13 (post-commit) or P4 (front guard), because the
+    criterion id is a reporting convention and the RULE is not.
+    """
+    if text is None:
+        return None, 'the path has no content at this snapshot'
+    lines = text.replace('\r\n', '\n').split('\n')
+    want = (anchor or '').rstrip()
+    if not want:
+        return None, 'the record names no section anchor'
+    in_fence = False
+    fenced = []
+    for line in lines:
+        s = line.rstrip()
+        fenced.append(in_fence)
+        if s.startswith(FENCE):
+            in_fence = not in_fence
+    if in_fence:
+        return None, ('the file ends inside an unterminated fenced block, so the section end '
+                      'cannot be determined')
+    hits = [i for i, line in enumerate(lines) if not fenced[i] and line.rstrip() == want]
+    if not hits:
+        return None, 'the section heading %r does not appear at this snapshot' % want
+    if len(hits) > 1:
+        return None, ('the section heading %r appears %d times; two candidate regions is no '
+                      'region' % (want, len(hits)))
+    start = hits[0]
+    end = len(lines)
+    for j in range(start + 1, len(lines)):
+        if not fenced[j] and lines[j].rstrip().startswith('## '):
+            end = j
+            break
+    return ('\n'.join(lines[start:end]) + '\n').encode('utf-8'), None
+
+
+def section_digest(text, anchor):
+    """(sha256_hex, error). The pair `extract_section` is always consumed as."""
+    region, err = extract_section(text, anchor)
+    if err:
+        return None, err
+    return hashlib.sha256(region).hexdigest(), None
 
 
 def _is_blob_at_head(path):
@@ -415,43 +496,94 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # recomputed here rather than believed.
         eps = r.get('expected_post_state') if in_force else None
         if eps is not None:
-            if not isinstance(eps, dict) or not eps.get('path') or not eps.get('blob'):
-                problems.append('F6 line %s has expected_post_state that is not an object naming '
-                                '{path, blob}' % n)
+            # ORDER-731 option A (owner-ratified): expected_post_state has TWO forms and a record
+            # must be in exactly one. WHOLE-FILE {path, blob} is unchanged -- every vector written
+            # for it still reproduces. SECTION {path, section, section_sha256} narrows the claim to
+            # the region the approval was about, because a whole-file pin on MASTER_BACKLOG.md
+            # measured 30 commits / 14 days = ~2 owner signatures a day (ORDER-731 C1).
+            #
             # Codex round 2, Standards 3 + Spec 3: this bound ANY path to ANY value. A record
             # deciding for MASTER_BACKLOG.md could bind AGENT_TASKBOARD.md and pass; a
             # {path: "NO_SUCH_PATH", blob: "MISSING"} pair passed; and a directory path resolved
             # to its TREE oid and passed. So it never enforced "changed INTO the approved state" --
             # it enforced "some path is at some value", which is not a claim about this decision.
+            is_obj = isinstance(eps, dict)
+            has_blob = bool(is_obj and eps.get('blob'))
+            has_sec = bool(is_obj and (eps.get('section') or eps.get('section_sha256')))
+            whole = has_blob and not has_sec
+            section = bool(is_obj and eps.get('section') and eps.get('section_sha256')
+                           and not has_blob)
+            if not is_obj or not eps.get('path') or not (whole or section):
+                problems.append('F6 line %s has expected_post_state that is not an object naming '
+                                'EXACTLY ONE of {path, blob} or {path, section, section_sha256}. '
+                                'A record offering two answers to "what was approved" has not made '
+                                'one claim, it has made none.' % n)
             elif eps['path'] != r['current_owner']:
                 problems.append(
                     'F7 line %s decides for %r but its expected_post_state binds %r. A record may '
                     'only make a claim about the state of the file it decides for -- binding '
                     'anything else lets the approved target sit in a state nobody approved while '
                     'this criterion stays green.' % (n, r['current_owner'], eps['path']))
-            elif str(eps['blob']).upper() == 'MISSING' or not _is_blob_oid(eps['blob']):
+            elif whole and (str(eps['blob']).upper() == 'MISSING'
+                            or not _is_blob_oid(eps['blob'])):
                 problems.append(
                     'F8 line %s expects %s at %r, which is not a 40-hex blob id. "MISSING" and a '
                     'tree id are both accepted by git and neither is a statement about the CONTENT '
                     'this decision approved.' % (n, eps['path'], eps['blob']))
+            elif section and (str(eps['section_sha256']).upper() == 'MISSING'
+                              or not _is_section_sha(eps['section_sha256'])):
+                problems.append(
+                    'F12 line %s expects section %r at %r, which is not a 64-hex sha256. F8\'s '
+                    'reasoning one level down: a value sha256 would accept as an argument is not a '
+                    'statement about content.' % (n, eps['section'], eps['section_sha256']))
             else:
                 rc3, live3, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), eps['path']))
                 if rc3 != 0:
                     problems.append(
-                        'F9 line %s expects %s at blob %s, but that path does not exist at HEAD. A '
+                        'F9 line %s expects %s at %s, but that path does not exist at HEAD. A '
                         'record cannot approve the post-state of a file that is not there.'
-                        % (n, eps['path'], str(eps['blob'])[:12]))
+                        % (n, eps['path'], str(eps.get('blob') or eps.get('section'))[:40]))
                 elif not _is_blob_at_head(eps['path']):
                     problems.append(
                         'F10 line %s binds %s, which resolves to a TREE at HEAD, not a file. A '
                         'directory has no content this decision could have approved.'
                         % (n, eps['path']))
-                elif live3 != eps['blob']:
+                elif whole and live3 != eps['blob']:
                     problems.append(
                         'F11 line %s expects %s to be at blob %s after the action it approves, but '
                         'HEAD has %s. The record describes a change that did not happen, or a '
                         'different one happened -- either way this is not the state that was '
                         'approved.' % (n, eps['path'], str(eps['blob'])[:12], str(live3)[:12]))
+                elif section:
+                    # FAIL CLOSED. "I could not find the section" must never share an outcome with
+                    # "the section is unchanged" -- that is the one way a narrowed pin could be
+                    # weaker than the whole-file pin it replaces.
+                    try:
+                        text = _head_text(eps['path'])
+                    except (UnicodeDecodeError, ValueError) as exc:
+                        text, decode_err = None, str(exc)
+                    else:
+                        decode_err = None
+                    if decode_err:
+                        problems.append(
+                            'F13 line %s cannot locate section %r in %s: HEAD\'s content is not '
+                            'decodable as UTF-8 (%s). A section that cannot be located is REFUSED, '
+                            'never skipped.' % (n, eps['section'], eps['path'], decode_err))
+                    else:
+                        got, err = section_digest(text, eps['section'])
+                        if err:
+                            problems.append(
+                                'F13 line %s cannot locate section %r in %s at HEAD: %s. A section '
+                                'that cannot be located is REFUSED, never skipped.'
+                                % (n, eps['section'], eps['path'], err))
+                        elif got != eps['section_sha256']:
+                            problems.append(
+                                'F14 line %s expects section %r of %s to hash to %s after the '
+                                'action it approves, but HEAD hashes to %s. The record describes a '
+                                'change that did not happen, or a different one happened -- either '
+                                'way this is not the state that was approved.'
+                                % (n, eps['section'], eps['path'],
+                                   str(eps['section_sha256'])[:12], str(got)[:12]))
 
         # ORDER-613 D1: the stale-pin rule now judges ONLY the CURRENT record per owner.
         # It used to run for every row, including superseded ones -- while this file's own header

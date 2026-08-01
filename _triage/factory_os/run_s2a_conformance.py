@@ -97,6 +97,21 @@ class World(object):
         raise CorpusError('vector world has no answer for git %s -- the corpus does not model '
                           'this call, so a verdict over it would be meaningless' % (args,))
 
+    def head_text(self, path):
+        """The SECTION criteria (F13/F14) need HEAD's CONTENT, not its oid.
+
+        A vector that carries a section pin and no `content` is a CORPUS error, not a failing
+        vector: "the runner had nothing to hash" and "the digest did not match" must not share an
+        outcome. That is corpus contract 2b.
+        """
+        ent = self.head_blobs.get(path)
+        if not ent:
+            return None
+        if 'content' not in ent:
+            raise CorpusError('head_blobs[%r] carries no `content`, but a SECTION-form vector '
+                              'hashes it -- the corpus does not model this input' % path)
+        return ent['content']
+
     def subprocess_run(self, cmd, **kw):
         """check_append_only reaches git through RAW subprocess for BYTES (its own comment says
         chk._git decodes and is the wrong tool there), so the world must answer at that layer
@@ -120,7 +135,7 @@ class World(object):
 def install_world(world):
     """Swap the checker's git touchpoints for the vector's world. Returns a restore callable."""
     saved = (chk._git, chk.head_oid, chk._rev_parse_cached, att._D1_ROWS[:], att.subprocess,
-             att._index_src)
+             att._index_src, att._head_text)
 
     class _SubShim(object):
         run = staticmethod(world.subprocess_run)
@@ -151,12 +166,22 @@ def install_world(world):
 
     att._index_src = lambda: evidence.EvidenceSource('index', root=att._ROOT,
                                                      _git=_world_git_bytes)
+    # ORDER-731 option A. The SEVENTH slot, and it is saved/restored beside the other six for the
+    # reason the plan's risk 1 names: a runner that swapped a seam without restoring it would let
+    # the NEXT vector -- or the suite that runs after this module -- read the real repository
+    # through a name that says it is synthetic.
+    att._head_text = world.head_text
 
     def restore():
         chk._git, chk.head_oid, chk._rev_parse_cached = saved[0], saved[1], saved[2]
         att._D1_ROWS[:] = saved[3]
         att.subprocess = saved[4]
         att._index_src = saved[5]
+        att._head_text = saved[6]
+        # The SAME arity on both sides, asserted rather than reviewed: a slot added to `saved` and
+        # forgotten here is a seam that never goes back, and the symptom would appear in some
+        # later suite as a vector reading real git.
+        assert len(saved) == 7
     return restore
 
 

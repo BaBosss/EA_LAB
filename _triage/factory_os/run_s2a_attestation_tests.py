@@ -331,6 +331,58 @@ def main():
             print('        -> %s' % problems)
             bad += 1
 
+    # ---- ORDER-731 option A: the SECTION form, against the REAL MASTER_BACKLOG.md -------------
+    # The anchor is DERIVED from HEAD (the one line starting '## 2. ') and the digest is
+    # RECOMPUTED here by the checker's own rule. A typed constant for either would be guard
+    # shape 4 -- a claim stated without measuring it -- in the suite that judges the real repo.
+    _head = att._head_text('MASTER_BACKLOG.md')
+    _anchors = [l.rstrip() for l in (_head or '').replace('\r\n', '\n').split('\n')
+                if l.rstrip().startswith('## 2. ')]
+    ok = len(_anchors) == 1
+    print('  [%s] ORDER-731 the real MASTER_BACKLOG.md has EXACTLY ONE section-2 heading (the '
+          'input the SECTION form needs)' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> found %d: %r' % (len(_anchors), _anchors[:3]))
+        bad += 1
+        _anchors = _anchors[:1] or ['## 2. NO SUCH HEADING']
+    _anchor = _anchors[0]
+    _sec_digest, _sec_err = att.section_digest(_head, _anchor)
+    if _sec_err:
+        print('  [BAD] ORDER-731 the real section 2 could not be extracted: %s' % _sec_err)
+        bad += 1
+        _sec_digest = 'd' * 64
+
+    for label, eps, want_id in (
+            ('F14 CONTROL a SECTION post-state recomputed from HEAD is ACCEPTED',
+             {'path': 'MASTER_BACKLOG.md', 'section': _anchor,
+              'section_sha256': _sec_digest}, None),
+            ('F14 a SECTION post-state naming a digest that never arrived is REFUSED',
+             {'path': 'MASTER_BACKLOG.md', 'section': _anchor,
+              'section_sha256': 'a' * 64}, 'F14'),
+            # F12 is reachable from THIS suite (unlike F9/F10), so it gets a real case rather than
+            # a mention: a value sha256 would accept as an argument is not a statement about
+            # content, and it is refused before HEAD is consulted at all.
+            ('F12 a section_sha256 that is not 64-hex lowercase is REFUSED',
+             {'path': 'MASTER_BACKLOG.md', 'section': _anchor,
+              'section_sha256': 'MISSING'}, 'F12'),
+            ('F13 a SECTION heading that is not in HEAD is REFUSED, never skipped',
+             {'path': 'MASTER_BACKLOG.md', 'section': '## 2. NO SUCH HEADING',
+              'section_sha256': _sec_digest}, 'F13'),
+            ('F6 a post-state carrying BOTH forms at once is REFUSED',
+             {'path': 'MASTER_BACKLOG.md', 'blob': live, 'section': _anchor,
+              'section_sha256': _sec_digest}, 'F6')):
+        _, problems = run_with([good(expected_post_state=eps,
+                                     stale_pin_acknowledged=True,
+                                     stale_pin_acknowledgement=ack_ok)], [STALE_NOTE])
+        if want_id is None:
+            ok = not problems
+        else:
+            ok = want_id in problems
+        print('  [%s] %s' % ('OK ' if ok else 'BAD', label))
+        if not ok:
+            print('        -> %s' % (problems or 'NOTHING AT ALL'))
+            bad += 1
+
     # ---- Codex round 2, Spec 8: a JSON line that is not an object crashed the loader ----------
     import tempfile as _tf
     _fd, _tmp = _tf.mkstemp(suffix='.jsonl')

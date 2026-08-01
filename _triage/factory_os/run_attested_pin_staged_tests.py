@@ -13,7 +13,7 @@ counter-example is a POINT while the invariant is a REGION. So every case below 
                  trap it was written to close
 
 Every criterion this checker can emit is named in a string literal here, which is what L2 of
-run_guard_shape_lint.py parses for: P1, P2, P3.
+run_guard_shape_lint.py parses for: P1, P2, P3, P4.
 
 TWO KINDS OF CASE, and the split is the point:
 
@@ -49,6 +49,26 @@ PIN = '02c1d0edfa9123d88427e44f66c70583d1da61bb'
 OTHER = '0740c0eac9bc303807eeb9ff585fa70ccd0b8e53'
 PATH = 'MASTER_BACKLOG.md'
 
+# ORDER-731 option A. The SECTION fixtures, and every one of them is TEXT the test owns: the
+# approved region's digest is COMPUTED below from `BOARD_APPROVED` by the checker's own rule, never
+# typed as a constant. A typed digest here would be guard shape 4 -- a claim stated without
+# measuring it -- inside the cage written to catch exactly that.
+SECTION = '## 2. COVERAGE MATRIX'
+BOARD_APPROVED = '\n'.join([
+    '# BOARD', '', '## 1. FIRST', '', 'row one', '',
+    SECTION, '', '| cell | value |', '| A | 1 |', '',
+    '## 3. BACKLOG', '', '| D30 | an existing row |', '',
+])
+# §2 BYTE-IDENTICAL, §3 changed. This is the commit option A was bought to allow.
+BOARD_S3_APPENDED = BOARD_APPROVED.replace(
+    '| D30 | an existing row |',
+    '| D30 | an existing row |\n| D33 | a row appended by another lane |')
+# §2 CHANGED. This is the commit option A must still refuse.
+BOARD_S2_EDITED = BOARD_APPROVED.replace('| A | 1 |', '| A | 2 |')
+BOARD_NO_ANCHOR = BOARD_APPROVED.replace(SECTION, '## 2. COVERAGE MATRIX RENAMED')
+BOARD_ANCHOR_TWICE = BOARD_APPROVED + '\n' + SECTION + '\n\n| A | 9 |\n'
+BOARD_UNTERMINATED = BOARD_APPROVED + '\n```\nnobody closed this fence\n'
+
 RESULTS = []
 
 
@@ -63,7 +83,7 @@ def fired(problems, code):
 
 
 def run_rule_cases():
-    pins = {PATH: (PIN, 'expected_post_state.blob')}
+    pins = {PATH: guard.Pin('blob', PIN, 'expected_post_state.blob', None)}
 
     # ATTACK -- 78a93129 exactly: the pinned board is carried by the commit at a different blob.
     p = guard.evaluate(pins, {PATH}, resolve=lambda _p: OTHER)
@@ -88,15 +108,72 @@ def run_rule_cases():
     case('ATTACK', 'deleting the pinned path is refused with P2',
          fired(p, 'P2') and len(p) == 1, repr(p))
 
-    p = guard.evaluate({PATH: ('MISSING', 'stale_pin_acknowledgement.current_blob')},
-                       {PATH}, resolve=lambda _p: OTHER)
+    missing_pin = {PATH: guard.Pin('blob', 'MISSING',
+                                   'stale_pin_acknowledgement.current_blob', None)}
+    p = guard.evaluate(missing_pin, {PATH}, resolve=lambda _p: OTHER)
     case('ATTACK', 'adding a path pinned to the literal MISSING is refused with P2',
          fired(p, 'P2') and len(p) == 1, repr(p))
 
     # SPECIFICITY for the MISSING branch: absent is what that pin approves.
-    p = guard.evaluate({PATH: ('MISSING', 'stale_pin_acknowledgement.current_blob')},
-                       set(), resolve=lambda _p: None)
+    p = guard.evaluate(missing_pin, set(), resolve=lambda _p: None)
     case('SPECIFICITY', 'a MISSING pin does not fire when the commit leaves the path alone',
+         p == [], repr(p))
+
+
+def run_section_cases():
+    """ORDER-731 option A: the pin is now a SECTION, and this is where that is proved.
+
+    The digest is COMPUTED from the fixture the test owns, so the cage cannot pass by agreeing
+    with a number somebody typed. `read` is injected for the same reason `resolve` already was:
+    what is proved here is the RULE, with no index to arrange.
+    """
+    approved, err = att.section_digest(BOARD_APPROVED, SECTION)
+    if err:
+        case('ATTACK', 'the section fixture is extractable at all', False, err)
+        return
+    pins = {PATH: guard.Pin('section', approved,
+                            'expected_post_state.section_sha256', SECTION)}
+
+    def ev(text, staged=(PATH,)):
+        return guard.evaluate(pins, set(staged), resolve=lambda _p: OTHER,
+                              read=lambda _p: text)
+
+    # ATTACK -- the approved region itself moved. This is 78a93129's shape, narrowed.
+    p = ev(BOARD_S2_EDITED)
+    case('ATTACK', 'a commit whose staged section hashes differently is refused with P1',
+         fired(p, 'P1') and len(p) == 1, repr(p))
+
+    # CONTROL -- THE POINT OF THE WHOLE AMENDMENT. An append to an UNPINNED section must land.
+    # This is what goes red if a future repair re-widens the pin to the whole file, hashes the
+    # file instead of the region, or walks the region end off by one and swallows section 3.
+    p = ev(BOARD_S3_APPENDED)
+    case('CONTROL', 'appending a row to section 3 with section 2 byte-identical LANDS',
+         p == [], repr(p))
+
+    # CONTROL -- the ORDER-731 item-1 semantics, section-scoped: the REPAIR commit must land, or
+    # the guard has rebuilt the trap it was written to close.
+    p = ev(BOARD_APPROVED)
+    case('CONTROL', 'restoring the approved section after a bad edit is ALLOWED to land',
+         p == [], repr(p))
+
+    # FAIL CLOSED, all three branches. "I could not find the section" must never share an outcome
+    # with "the section is unchanged": each of these must be a REFUSAL naming P4, and a refusal is
+    # what makes main() exit non-zero.
+    p = ev(BOARD_NO_ANCHOR)
+    case('ATTACK', 'an anchor absent from the staged bytes is refused with P4',
+         fired(p, 'P4') and len(p) == 1, repr(p))
+
+    p = ev(BOARD_ANCHOR_TWICE)
+    case('ATTACK', 'an anchor present TWICE is refused with P4 (no first-match-wins)',
+         fired(p, 'P4') and len(p) == 1, repr(p))
+
+    p = ev(BOARD_UNTERMINATED)
+    case('ATTACK', 'staged bytes ending inside an unterminated fence are refused with P4',
+         fired(p, 'P4') and len(p) == 1, repr(p))
+
+    # SPECIFICITY -- a section pin still cannot fire for a commit that does not carry the path.
+    p = ev(BOARD_S2_EDITED, staged=('docs/SESSION_LEDGER.md',))
+    case('SPECIFICITY', 'a section pin does not fire for a commit that does not carry the path',
          p == [], repr(p))
 
 
@@ -114,9 +191,42 @@ def run_engagement_cases():
         return
     case('ENGAGEMENT', 'the real log yields at least one blob pin',
          len(pins) >= 1, 'pins=%r' % (pins,))
-    case('ENGAGEMENT', 'the pin found is a 40-hex oid, not a placeholder',
-         all(len(v[0]) == 40 or v[0].upper() == 'MISSING' for v in pins.values()),
+    case('ENGAGEMENT', 'the pin found carries a value of its KIND, not a placeholder',
+         all((len(v.value) == 64 if v.kind == 'section'
+              else (len(v.value) == 40 or v.value.upper() == 'MISSING'))
+             for v in pins.values()),
          'pins=%r' % (pins,))
+
+    # ORDER-731 option A, and this is the case that fails if `pinned_expectations` silently
+    # returns {} for the NEW form -- the "fail-closed and broken point the same way" trap this
+    # suite's header names. It is driven from a FIXTURE log rather than the real one on purpose:
+    # the real log only carries a section-form record after the owner signs one, and a case whose
+    # outcome depends on mutable repo state is not a case (the same rule the G5 fixtures state).
+    import tempfile
+    fd, tmp = tempfile.mkstemp(prefix='order731_sec_', suffix='.jsonl')
+    saved_path = att.ATTESTATION_PATH
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(json.dumps({
+                'bundle_sha256': 'probe', 'current_owner': PATH, 'decision': 'APPROVED',
+                'signer': 'run_attested_pin_staged_tests', 'decided_at': '2026-08-01T00:00',
+                'reason': 'ORDER-731 section-form engagement fixture -- never committed',
+                'expected_post_state': {'path': PATH, 'section': SECTION,
+                                        'section_sha256': 'c' * 64},
+            }, sort_keys=True) + '\n')
+        att.ATTESTATION_PATH = tmp
+        sec_pins = guard.pinned_expectations(src)
+    finally:
+        att.ATTESTATION_PATH = saved_path
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    got = sec_pins.get(PATH)
+    case('ENGAGEMENT', 'a SECTION-form record yields a section-KIND pin naming its heading',
+         got is not None and got.kind == 'section' and got.section == SECTION
+         and got.value == 'c' * 64
+         and got.field == 'expected_post_state.section_sha256', 'pins=%r' % (sec_pins,))
 
 
 def run_selection_cases():
@@ -220,8 +330,8 @@ def run_snapshot_cases():
             os.environ['GIT_INDEX_FILE'] = saved
         shutil.rmtree(tmp, ignore_errors=True)
 
-    idx_blob = (from_index.get(PATH) or ('', ''))[0]
-    wt_blob = (from_worktree.get(PATH) or ('', ''))[0]
+    idx_blob = getattr(from_index.get(PATH), 'value', '')
+    wt_blob = getattr(from_worktree.get(PATH), 'value', '')
     case('ATTACK', 'the guard reads the INDEX: a log staged behind a clean worktree moves the pin',
          idx_blob == TAMPERED, 'index saw %r, expected the tampered %r' % (idx_blob, TAMPERED))
     case('SPECIFICITY', 'a worktree source still sees the real pin -- the two sources DISAGREE',
@@ -261,11 +371,12 @@ def _capture(fn, argv, buf):
 
 def main():
     print('=== ORDER-731: check_attested_pin_staged cage ===')
-    print('    criteria this checker can emit: P1, P2, P3')
+    print('    criteria this checker can emit: P1, P2, P3, P4')
     cwd = os.getcwd()
     os.chdir(_ROOT)
     try:
         run_rule_cases()
+        run_section_cases()
         run_selection_cases()
         run_engagement_cases()
         run_snapshot_cases()

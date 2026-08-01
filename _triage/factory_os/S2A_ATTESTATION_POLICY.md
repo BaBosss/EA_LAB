@@ -11,8 +11,9 @@
 |---|---|
 | `policy_version` | **`s2a-attestation/1`** (proposed; see OPEN-1) |
 | supersedes | the prose criteria in the `check_s2a_attestation.py` module docstring (`A1`…`A8`) |
-| companion corpus | `S2A_ATTESTATION_VECTORS.jsonl` — **55 vectors**, 18 green / 36 red / 1 abort |
+| companion corpus | `S2A_ATTESTATION_VECTORS.jsonl` — **63 vectors**, 19 green / 43 red / 1 abort (counted from the file at the landing commit, not typed) |
 | written against | `check_s2a_attestation.py` at HEAD `7616f2de` bundle, suite **35/35** green |
+| amended | **ORDER-731 option A (owner-ratified 2026-08-01)** — `expected_post_state` gains a SECTION form (§4.3.1). The WHOLE-FILE form is unchanged and stays valid. |
 
 ---
 
@@ -141,12 +142,94 @@ Applied **only** to the row in force for each `current_owner`.
 | **F3** | `stale_pin_acknowledgement.path` equals the path the note is on. | in-force | no (elif after F2) |
 | **F4** | `stale_pin_acknowledgement.pinned_blob` equals the blob D1 pins for that path, **recomputed from D1**, not believed. | in-force | no (elif) |
 | **F5** | `stale_pin_acknowledgement.current_blob` equals the blob HEAD has for that path — or the **literal string `MISSING`** when the path is absent at HEAD. Recomputed from HEAD, not believed. | in-force | no (elif) |
-| **F6** | If `expected_post_state` is present it is an **object** naming a non-empty `path` and a non-empty `blob`. | in-force | no |
-| **F7** | `expected_post_state.path` equals `current_owner`. A record may only make a claim about the file it decides for; binding anything else lets the approved target sit in a state nobody approved while the criterion stays green. | in-force | no (elif) |
-| **F8** | `expected_post_state.blob` is a **40-character lowercase hex** oid and is not the literal `MISSING`. `MISSING` and an abbreviated oid are both accepted by git as arguments and neither is a statement about content. | in-force | no (elif) |
-| **F9** | `expected_post_state.path` exists at HEAD. | in-force | no (elif) |
-| **F10** | `expected_post_state.path` resolves to a **blob** at HEAD, not a **tree**. A directory has no content a decision could have approved, and git returns a tree oid happily. | in-force | no (elif) |
-| **F11** | HEAD's blob at `expected_post_state.path` equals `expected_post_state.blob`. This is what turns an acknowledgement from a blanket exemption ("these bytes moved, fine") into a claim about a **specific** post-state. | in-force | no (elif) |
+| **F6** | If `expected_post_state` is present it is an **object** naming a non-empty `path`, and it is in **exactly one** of two forms: the **WHOLE-FILE** form, which names a non-empty `blob` and neither `section` nor `section_sha256`; or the **SECTION** form, which names a non-empty `section` **and** a non-empty `section_sha256` and no `blob`. Naming both forms, half of the SECTION form, or neither, is F6. A record that offers two answers to "what was approved" has not made one claim, it has made none. | in-force | no |
+| **F7** | `expected_post_state.path` equals `current_owner`. A record may only make a claim about the file it decides for; binding anything else lets the approved target sit in a state nobody approved while the criterion stays green. **Both forms.** | in-force | no (elif) |
+| **F8** | *WHOLE-FILE form only.* `expected_post_state.blob` is a **40-character lowercase hex** oid and is not the literal `MISSING`. `MISSING` and an abbreviated oid are both accepted by git as arguments and neither is a statement about content. | in-force | no (elif) |
+| **F12** | *SECTION form only.* `expected_post_state.section_sha256` is a **64-character lowercase hex** digest and is not the literal `MISSING`. Same reasoning as F8, one level down: a value git or `sha256` would accept as an argument is not a statement about content. | in-force | no (elif, in F8's position) |
+| **F9** | `expected_post_state.path` exists at HEAD. **Both forms.** | in-force | no (elif) |
+| **F10** | `expected_post_state.path` resolves to a **blob** at HEAD, not a **tree**. A directory has no content a decision could have approved, and git returns a tree oid happily. **Both forms.** | in-force | no (elif) |
+| **F11** | *WHOLE-FILE form only.* HEAD's blob at `expected_post_state.path` equals `expected_post_state.blob`. This is what turns an acknowledgement from a blanket exemption ("these bytes moved, fine") into a claim about a **specific** post-state. | in-force | no (elif) |
+| **F13** | *SECTION form only.* The section named by `expected_post_state.section` is **locatable deterministically** in HEAD's content at `path`, by the algorithm in §4.3.1. Not decodable as UTF-8, **zero** matching heading lines, **more than one** matching heading line, or an **unterminated fence** are each F13, and the message must say which. **This criterion FAILS CLOSED: a section that cannot be located is refused, never skipped.** | in-force | no (elif) |
+| **F14** | *SECTION form only.* `sha256` of the extracted section bytes (§4.3.1) equals `expected_post_state.section_sha256`. This is F11's claim, narrowed to the region the approval was about. | in-force | no (elif) |
+
+**Evaluation order inside `expected_post_state`** — normative, because the corpus asserts the exact
+multiset of reasons:
+
+```
+F6 -> F7 -> [WHOLE-FILE: F8 -> F9 -> F10 -> F11]
+          -> [SECTION:    F12 -> F9 -> F10 -> F13 -> F14]
+```
+
+F9 and F10 are shared and sit in the same position in both branches: whether the pin is over a
+whole file or over a region of it, a path that is absent or is a directory makes every later
+question meaningless.
+
+### 4.3.1 Section extraction — how the SECTION form's bytes are determined
+
+**This is part of the policy, not of the implementation.** A pin over a region is only as good as
+the rule that says which region, and a rule that lives only in code is a rule that can be repaired
+into a different rule without a signature.
+
+Given HEAD's blob at `expected_post_state.path` and the anchor string `expected_post_state.section`:
+
+1. **Decode.** The blob's bytes are decoded as **UTF-8, strict**. A decode failure is **F13**
+   (`not decodable as UTF-8`) — never a skip, never a fallback encoding.
+2. **Normalize newlines.** `\r\n` → `\n`, then split on `\n`. (Same reason as B3: a Windows
+   checkout must not change the answer.)
+3. **Fence map.** A line whose text, after `rstrip()`, begins with ``` ``` ``` or `~~~` toggles
+   "inside a fenced block". If the file ends while inside a fence, that is **F13**
+   (`unterminated fence`) — the region's end cannot be determined, so it is refused.
+4. **Anchor.** Collect every line index `i` **not inside a fence** whose `rstrip()` is **exactly
+   equal** to the `rstrip()` of `expected_post_state.section`. Equality, not prefix, not substring
+   — N4's rule one artifact over: *a substring test standing in for an identity test* is the
+   ORDER-602 H4 weakness.
+   * exactly **one** match ⇒ `start = i`;
+   * **zero** matches ⇒ **F13** (`the section heading is not present at HEAD`). A renamed or
+     reworded heading lands here, and that is correct rather than unfortunate: the heading is
+     part of what the owner approved, so changing it changes the approved region and owes a new
+     record.
+   * **more than one** match ⇒ **F13** (`the section heading appears N times`). Two candidate
+     regions is no region.
+5. **End.** `end` is the smallest index `j > start`, **not inside a fence**, whose line `rstrip()`
+   starts with `'## '` — the same heading level the anchor is at, so a `### ` sub-heading stays
+   *inside* the section. If no such line exists, `end = len(lines)`.
+6. **Region bytes.** `('\n'.join(lines[start:end]) + '\n').encode('utf-8')`. The terminating
+   newline is unconditional, so a section at end-of-file and a section followed by a heading are
+   hashed by one rule. Trailing blank lines before the next heading **are** part of the region;
+   this is stated rather than left to be discovered from a diff.
+7. **Digest.** `sha256(region_bytes).hexdigest()`, compared to `section_sha256` by **F14**.
+
+**Declared limits of this rule, stated in the rule** (`GUARD_SHAPES.md`: the guard's own limits
+are stated in the guard):
+
+* It pins **only** the anchored region. An edit anywhere else in the file is invisible to F14 —
+  which is the entire point of the narrowing, and also the entire cost of it. The whole-file form
+  remains available for any owner where that cost is not acceptable.
+* It cannot tell a **moved** section from a deleted-and-re-added one: only the bytes are compared,
+  never the position. Two sections that swap places with no byte change both verify.
+* The fence rule recognises ``` ``` ``` and `~~~` only. An indented (four-space) code block that
+  contains a `## ` line will terminate the region early, which makes F14 **over-strict** (refuse),
+  never permissive.
+* A `## ` heading that appears **inside** a fenced block within the region does not end it, and a
+  fenced block is likewise the one place the anchor itself is not looked for. `MASTER_BACKLOG.md`
+  carries **0** fences today, so this is a declared limit rather than an exercised path; it is
+  accepted as such rather than given a vector, because over-strict refuses and never permits.
+
+### 4.3.2 Backward compatibility — the WHOLE-FILE form is not deprecated
+
+Both forms are permanently valid, and no existing record is invalidated by this amendment:
+
+* A record carrying `{path, blob}` is judged by F8/F11 **exactly** as before, byte for byte and
+  message for message. Every WHOLE-FILE vector in the corpus is unchanged.
+* Superseded rows are exempt from all in-force criteria (G4) regardless of form, so history is not
+  re-judged.
+* `in_force_map` is unchanged: form is not part of eligibility (R4–R7). Which row is in force is
+  decided before any `expected_post_state` is looked at, so a record cannot win or lose the
+  in-force slot by choosing a form.
+* **Which form to use is a judgement, and the policy states it once:** the SECTION form exists for
+  an owner whose file is a shared, high-churn board where the approval was about one region
+  (`MASTER_BACKLOG.md` took **30 commits in the 14 days** to 2026-08-01). The WHOLE-FILE form
+  remains right for a file that is small, generated, or rarely written.
 
 ### 4.4 Global — the log as a whole
 
@@ -218,7 +301,9 @@ not a vector (same rule as R3, deliberately).
       "d1_present": true,
       "d1_rows":    [ {"entity": "...", "current_owner": "...",
                        "owner_ref": {"path": "...", "blob_oid": "<40hex>"} | null} ],
-      "head_blobs": { "<path>": {"kind": "blob"|"tree", "oid": "<40hex>"} },
+      "head_blobs": { "<path>": {"kind": "blob"|"tree", "oid": "<40hex>",
+                                 "content": "<text>"} },   // `content` OPTIONAL; required only
+                                                           // by a SECTION-form vector (F13/F14)
       "current_bundle_sha256": "<64hex>",         // XOR with bundle_files
       "bundle_files":  [ {"path": "...", "content": "..."} ],   // XOR with current_bundle_sha256
       "append_only":   { "path": "...", "committed": "<text>"|null, "staged": "<text>"|null,
@@ -243,6 +328,11 @@ not a vector (same rule as R3, deliberately).
    **derived** from `d1_rows` + `head_blobs` by N1–N4; they are never supplied directly. `head_blobs`
    is the whole of git as far as a vector is concerned: a path absent from the map does not exist at
    HEAD, `kind: "tree"` is a directory, `kind: "blob"` is a file at `oid`.
+2b. `head_blobs[path].content`, when present, is HEAD's **text** at that path, and is what §4.3.1
+   extracts from. A vector that omits it models a path whose content no criterion in that vector
+   reads; a SECTION-form vector that omits it is a **corpus error** (exit 2), not a failing
+   vector — "the runner had nothing to hash" and "the digest did not match" must not share an
+   outcome.
 3. Exactly one of `current_bundle_sha256` and `bundle_files` is present. When `bundle_files` is
    present the digest is **computed** from it by §2.3, and `expected_bundle_sha256` asserts the
    result directly, so B1–B3 are pinned without reference to the real bundle.
@@ -278,7 +368,7 @@ implementation itself or possessing a complete executable specification. This po
 Concretely:
 
 1. **A conforming implementation may differ on any input the corpus does not contain.** The corpus
-   is 55 points in an input space that is not finite. Two implementations that reproduce all 55 can
+   is 63 points in an input space that is not finite. Two implementations that reproduce all 63 can
    still disagree about the 56th.
 2. **`if False` is caught only where a vector exercises the predicate.** That is the mechanism, and
    it is a real one — every criterion in §4 has at least one vector whose expected result changes
@@ -303,9 +393,15 @@ Concretely:
    the implementation's list, every vector still passes.
 8. **The corpus does not prove the criteria are the RIGHT criteria.** It proves an implementation
    reproduces them.
+9. **A SECTION pin is silent about the rest of the file, by construction.** F14 proves the
+   approved region is unchanged; it proves nothing about any other byte in that path. That is not
+   a gap in the vectors, it is the semantics the owner ratified in ORDER-731 option A, and the
+   price of it is stated here so it is never rediscovered as a finding: an edit to §3 of
+   `MASTER_BACKLOG.md` is **approved by nobody and refused by nothing.** The whole-file form is
+   what a caller reaches for when that price is not payable.
 
 **What it does buy, stated as plainly:** a repair to the implementation that keeps all `CANONICAL`
-vectors reproducing costs **no signature**, and a repair that changes any of the 55 documented
+vectors reproducing costs **no signature**, and a repair that changes any of the 63 documented
 behaviours cannot land silently. That is weaker than rev 1 pretended to give and stronger than
 rev 1 actually gave.
 
@@ -336,12 +432,15 @@ observed through the criterion it feeds.
 | F3 | `V-F3-001` | unique |
 | F4 | `V-F4-001` | unique |
 | F5 | `V-F5-001` · `V-F5-002` (the `MISSING` literal branch) | unique |
-| F6 | `V-F6-001` (bare string) · `V-F6-002` (object missing `blob`) | unique |
+| F6 | `V-F6-001` (bare string) · `V-F6-002` (object missing `blob`) · `V-F6-003` (BOTH forms at once) · `V-F6-004` (half the SECTION form) | unique |
 | F7 | `V-F7-001` | unique |
 | F8 | `V-F8-001` (`MISSING`) · `V-F8-002` (abbreviated) · `V-F8-003` (uppercase) | unique |
+| **F12** | `V-F12-001` (not 64-hex) | unique |
 | F9 | `V-F9-001` | unique |
 | F10 | `V-F10-001` | unique |
 | F11 | `V-F11-001` · `V-F11-002` CONTROL | minimal pair |
+| **F13** | `V-F13-001` (heading absent) · `V-F13-002` (heading twice) · `V-F13-003` (unterminated fence) | unique, all three fail-closed branches |
+| **F14** | `V-F14-001` (section digest mismatch) · `V-F14-002` **CONTROL** (the section matches while the REST of the file differs from anything a blob pin would allow — this is the vector that proves option A bought what it was for) | minimal pair |
 | G1 | `V-G1-001` | unique |
 | G2 | `V-G2-001` | unique |
 | G3 | `V-G3-001` | unique |
@@ -403,8 +502,8 @@ recreates a defect shape is worse than no policy.
 | **1** — reads the wrong bytes | G5's snapshot is declared (**index**, worktree only when untracked) and pinned in both directions. Every context field in §5 names which snapshot it models. |
 | **2** — names not values | R5, R7 and B4 are closed vocabularies stated as **allowlists**. F4/F5/F11 compare **recomputed values**, never the presence of a field. §6.4 states plainly that reason-ids are matched as **names** and are therefore not evidence. |
 | **3** — cannot fail | **Two instances found and reported, not hidden:** R8 is unreachable (OPEN-3) and B4 is unvectorable (§4.6). A third is flagged at OPEN-5 (the `pinned and` guard in F4). |
-| **4** — a claim without measuring it | 55 / 18 / 36 / 1 were counted from the generated file, not typed. The digest constants in the corpus were computed, not invented. The five-digest history was read from `s2a_attestations.jsonl`. |
-| **5** — the repair graded by the finding it closes | This draft is a **repair to a guard**, so the pre-flight applies to it. The engagement assertion is `V-POS-001` + the 18 green vectors: if the new machinery were inert or over-strict, they fail. The specificity assertions are `V-N3-001`, `V-N4-001`, `V-G5-005`, `V-F2-004`, `V-F11-002` — each fails if the repair over-reaches onto inputs the original counter-example never touched. |
+| **4** — a claim without measuring it | 63 / 19 / 43 / 1 were counted from the generated file, not typed (55 / 18 / 36 / 1 before ORDER-731 option A added eight). The digest constants in the corpus were computed, not invented. The five-digest history was read from `s2a_attestations.jsonl`. |
+| **5** — the repair graded by the finding it closes | This draft is a **repair to a guard**, so the pre-flight applies to it. The engagement assertion is `V-POS-001` + the 19 green vectors: if the new machinery were inert or over-strict, they fail. The specificity assertions are `V-N3-001`, `V-N4-001`, `V-G5-005`, `V-F2-004`, `V-F11-002` — each fails if the repair over-reaches onto inputs the original counter-example never touched. |
 
 ---
 
@@ -430,6 +529,14 @@ and these are the calls, so the signed document carries them rather than a chat 
   (`run_s2a_conformance.py`, outside the bundle); G3's partial coverage is frozen as-is by the
   corpus and remains flagged, not silently fixed -- fixing it changes behaviour and therefore
   owes its own vector-and-signature round.
+- **ORDER-731 option A (2026-08-01)** the owner ratified narrowing `expected_post_state` from a
+  whole-file blob to the approved SECTION (§4.3.1), after being shown the measurement: 30 commits
+  to `MASTER_BACKLOG.md` in 14 days ⇒ ~2 owner signatures per day under the whole-file pin, and
+  two independent lanes (`f4c9fd9f`, `78a93129`) hit it within one hour on 2026-08-01. The
+  WHOLE-FILE form is **kept**, not replaced (§4.3.2) — narrowing it away would have been a second
+  rule change nobody asked for. This amendment edits the POLICY and the CORPUS, both bundle
+  members, so it voided the record at line 7 and cost exactly one signature, shown to the owner in
+  chat as a full line with its recomputed digest before it was appended.
 
 ## 11. OPEN QUESTIONS FOR THE LEAD
 
