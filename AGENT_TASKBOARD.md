@@ -231,7 +231,70 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 
 ---
 
-## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `DONE (item 1); item 2 still OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### RESULT (lane `S-2026-08-01-PINFIX`, 2026-08-01)
+>
+> **The owner cleared HEAD first, in chat, after being shown the three options with their costs:
+> revert the `| D33 |` row and pay one `--no-verify`.** Done in `b0637b8a`; the staged oid is
+> quoted in that commit's own message (`02c1d0ed…`, byte-identical to `8d5bb2ed:MASTER_BACKLOG.md`)
+> and `check_coverage_transfer` + `check_s2a_attestation` both returned **exit 0** immediately
+> after. **`D33`'s text is not lost and is not duplicated into this board** — git is the copy:
+> `git show 78a93129:MASTER_BACKLOG.md | grep '^| D33 |'`. Until the pin stops being a whole-file
+> blob, lane `S-2026-08-01-OPERATE`'s handoff routing table points at a row that is not on the
+> board; that is a documentation debt, not a red gate (`check_handoff_contract` judges only a
+> handoff that is *staged*, and theirs is already committed).
+>
+> **C1 — answered with a measurement, and the answer is BOTH, in that order.**
+> `git log --oneline --since='14 days ago' -- MASTER_BACKLOG.md | wc -l` → **30** (60 days → 45).
+> That is ~2.1 writes a day to a board every lane appends to. So:
+> * *Reading the pin at the index* is right and is what landed — it converts an invisible landmine
+>   into an immediate, diagnosable refusal.
+> * *The pin is ALSO the wrong instrument.* At 2.1 writes/day a whole-file blob pin means ~2 owner
+>   signatures a day. The guard changes **when** the author finds out, not **how often**.
+>   Narrowing the pin to the section the approval was actually about (§2, the generated Coverage
+>   projection) is the real fix — and it is **the owner's**, because `F5`/`F11`'s HEAD semantics
+>   and `expected_post_state`'s `{path, blob}` shape are stated in `S2A_ATTESTATION_POLICY.md`,
+>   which is a **member of `bundle_sha256`**. Editing it voids the record and costs a signature.
+>   ⇒ written up as item **5** of `_triage/USER_DECISIONS_PENDING.md`. **Not decided here.**
+>
+> **C2 — satisfied, and the second half of it matters as much as the first.** New front guard
+> `_triage/factory_os/check_attested_pin_staged.py`, wired into `.githooks/pre-commit`. It reads
+> the **index**, so it refuses the breaking commit *before* it lands — **and it lets the REPAIR
+> commit land**, which is the half a naive "refuse any touch" guard would have got wrong and
+> would have rebuilt the exact trap (that is a `CONTROL` case in the cage, and mutation 3 below
+> proves the case can fail).
+> **End-to-end through the REAL hook, not a fixture:** a real `git commit` appending a row to
+> `MASTER_BACKLOG.md` printed
+> `P1 … would land at blob abd339ba793e, but the attestation record in force pins it at 02c1d0edfa91`
+> and was refused; `HEAD` unchanged. The marker line shows it read the partial commit's own
+> temporary index (`git_index=…/next-index-28508.lock`), which is the snapshot that was invisible
+> to the front-guard suite and cost a refused commit in `ORDER-710`.
+>
+> **C3 — driven both ways.** Cage `run_attested_pin_staged_tests.py`: **11 cases — ATTACK 5,
+> CONTROL 1, ENGAGEMENT 2, SPECIFICITY 3** (counted from the run's own output, not typed).
+> **3 mutations, 3 DETECTED**, each by the case written for it: comparison always-equal → the P1
+> attack fails · `pinned_expectations` returns `{}` → the ENGAGEMENT case fails (this is
+> GUARD_SHAPES shape 5's *"fail-closed and broken point the same way"*: an inert guard passes
+> everything, so a suite that only asserts "no problems" would have gone green) · comparison
+> always-unequal → the CONTROL case fails.
+> Also driven red **on the real files**, behind a temp index, before any of this was wired.
+>
+> **What was NOT touched, deliberately:** no bundle member. `run_s2a_conformance.py` reproduces
+> **every canonical vector** after the change, which is the proof that the refactor owes the owner
+> **no signature**. The one edit to `check_s2a_attestation.py` **extracts** the in-force predicate
+> (`eligible_records` / `in_force_map`) so the new guard *shares* it instead of owning a second
+> copy that can drift — shape 5 again, refused at the design step.
+> Lint: `T7` **7 of 7 bound** (was 6 of 6) · `L0` demanded the new checker on its first run, which
+> is the **fifth** consecutive time that list-completeness rule has named an addition its author
+> had not declared. Tier **16/16 at 74.2s / 74.3s** of 90.0s (two samples; the previous lane
+> measured 80.9–83.2s — that is run-to-run variance, **not** a speed-up this lane produced). The
+> front guard itself costs **197–198 ms** on every commit, measured over 3 runs.
+>
+> **Item 2 (the tier abort) is NOT closed** and is deliberately left `OPEN` on this row: it fired
+> in 2 of 8 manual full-tier runs on 2026-08-01, one instance explained by a concurrent lane and
+> one not. It did **not** fire in either of this lane's two full-tier runs, which is evidence of
+> nothing at n=2. Its wake condition is unchanged.
 
 > **🔴 FOUND BY BREAKING IT, in this lane's own commit.** `f4c9fd9f` appended one dormant row to
 > `MASTER_BACKLOG.md`. The S2a attestation record pins that file at blob `02c1d0ed…` *after the

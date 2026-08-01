@@ -108,6 +108,12 @@ L1_FILES = (
     # read of the wrong vintage here would produce a MISMATCH nobody could explain -- the
     # expensive kind of failure, because the first suspect would be the EA.
     '_triage/factory_os/gen_default_preset.py',
+    # ORDER-731. FIFTH consecutive addition L0 demanded rather than its author remembering -- and
+    # this one is a FRONT GUARD, so every read it makes is a judged input by construction: it
+    # exists to answer "what will this commit contain", and a read of the wrong vintage would make
+    # it answer about the working tree while printing a claim about the commit. That is the exact
+    # shape (GUARD_SHAPES 1) the guard was written to close one layer up.
+    '_triage/factory_os/check_attested_pin_staged.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -322,6 +328,13 @@ CATEGORY = {
     # under test was compiled from the working tree, so judging the index would compare a binary
     # against bytes it was not built from.
     '_triage/factory_os/gen_default_preset.py': 'B',
+    # ORDER-731. A: it judges the commit and refuses it. Its two judged file reads -- the
+    # attestation log and D1 -- both go through an EvidenceSource PINNED to the index, passed
+    # explicitly rather than inherited from the process mode, because the question "what will
+    # this commit contain" does not change when a human runs it by hand. The remaining reads are
+    # `git rev-parse :path` and `git diff --cached`, which name their snapshot IN THE CALL --
+    # the pattern T7 was written to reward, and the reason a bare open() never appears here.
+    '_triage/factory_os/check_attested_pin_staged.py': 'A',
 }
 
 # Category-A files whose migration to read_committed/list_committed has not landed yet. The
@@ -360,6 +373,11 @@ L2_PAIRS = {
     # ORDER-710: G1 (the enumeration is current) and G2 (it is wired into a build).
     '_triage/factory_os/check_input_surface_gen.py':
         ('_triage/factory_os/run_input_surface_tests.py',),
+    # ORDER-731: P1 (the pinned blob would move), P2 (the pinned path is deleted, or a MISSING
+    # pin is contradicted) and P3 (the index could not be read at all). A guard whose whole
+    # value is refusing ONE class of commit has to name that class somewhere a lint can read.
+    '_triage/factory_os/check_attested_pin_staged.py':
+        ('_triage/factory_os/run_attested_pin_staged_tests.py',),
 }
 # `[A-Z]`, not `[A-E]`. BLIND AUDIT 2026-07-31, reproduced: the class was `[A-E]` because the
 # checkers that existed when L2 was written emitted A1-E9. ORDER-630's checker emits R1-R6, so the

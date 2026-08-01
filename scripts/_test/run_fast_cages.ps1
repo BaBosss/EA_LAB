@@ -559,6 +559,16 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/check_s2a_attestation.py',
                                           '_triage/factory_os/run_s2a_attestation_tests.py',
                                           '_triage/factory_os/s2a_attestations.jsonl',
+                                          # ORDER-731: the FRONT guard that predicts F5/F11 at
+                                          # the index, and its cage. The guard runs from
+                                          # .githooks/pre-commit rather than here -- a suite
+                                          # cannot refuse a commit -- so the only thing that
+                                          # makes editing it trigger a cage is this declaration.
+                                          # ConfigFingerprint.mqh (ORDER-710) is the receipt for
+                                          # what happens without one: a file holding half a
+                                          # contract, guarded by nothing, matching no suite.
+                                          '_triage/factory_os/check_attested_pin_staged.py',
+                                          '_triage/factory_os/run_attested_pin_staged_tests.py',
                                           # ORDER-614 rev 2: the bound policy, the frozen corpus,
                                           # and the conformance runner that holds the (now
                                           # bundle-free) implementation to them. Editing ANY of

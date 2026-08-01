@@ -4,8 +4,10 @@
 > which are not yet made** · created 2026-07-31 because the owner said *"เคาะได้เลย แต่ผมกลัวหลุดหรือ
 > ตกหล่น"* — so they are written down here in full, with what breaks if they are missed.
 
-**Nothing here blocks the next three slice batches.** All four block the *tail*. They are recorded now
-so that when they do block, the context is not being reconstructed from memory.
+**Nothing here blocks the next three slice batches.** Items 1-4 block the *tail*. They are recorded
+now so that when they do block, the context is not being reconstructed from memory.
+**Item 5 (added 2026-08-01, `ORDER-731`) is different in kind:** it blocks nothing today, and it
+charges a toll every day it is undecided — roughly two refused commits a day, measured.
 
 **Rule for whoever reads this:** these are the owner's to decide. Do not infer, do not default, do
 not "proceed under a stated assumption". An owner decision recorded by anyone else is the defect
@@ -78,6 +80,41 @@ search, and a stop rule.**
 
 **If it stays undecided:** the scheduler must **report that compliance is undefined** rather than
 pick numbers silently. Do not let it choose.
+
+---
+
+## 5. The S2a pin is a WHOLE-FILE blob on a board every lane appends to
+
+**Blocks:** nothing today — `ORDER-731`'s front guard makes the breakage immediate and diagnosable
+instead of invisible. What it does not do is make it **rare**.
+
+**Why it is yours:** the fix is a policy change, and the policy is inside the approval.
+`S2A_ATTESTATION_POLICY.md` states `F5`/`F11` as *"HEAD's blob at `expected_post_state.path`"* and
+fixes `expected_post_state`'s shape at `{path, blob}`. That file is a **member of
+`bundle_sha256`**, so editing it voids your record and costs a signature — which is exactly the
+loop `ORDER-614` rev 2 was written to end. An agent narrowing the scope of your own approval is
+the same shape as writing your own approval.
+
+**Measured, not argued:** `MASTER_BACKLOG.md` took **30 commits in 14 days** (45 in 60) to
+2026-08-01 — `git log --oneline --since='14 days ago' -- MASTER_BACKLOG.md | wc -l`. A whole-file
+blob pin on that file means roughly **two owner signatures a day**, or two refused commits a day,
+forever. Two independent lanes hit it within one hour on 2026-08-01 (`f4c9fd9f`, `78a93129`), the
+second an hour *after* the warning was written down.
+
+**What is needed — one of:**
+1. **Narrow the pin** to what the approval was actually about: §2 of `MASTER_BACKLOG.md`, the
+   generated Coverage projection, rather than the whole file. Appends to unrelated sections then
+   land cleanly and cost nothing. Costs: one policy amendment + one signature, once.
+2. **Move the owner** of the Coverage edge to `factory/coverage.jsonl` — which is generated and
+   rarely hand-edited — so the pin sits on a stable file. Costs: a `check_s2a_migration.py` change,
+   and that file **is** in the bundle, so also one signature.
+3. **Keep it as is** and accept a signature per backlog row. Defensible if the answer is "backlog
+   rows should be rare"; it is not what the last 14 days measured.
+
+**If it stays undecided:** the guard holds — nothing lands broken. But every lane that wants to
+append a `BACKLOG-D<n>` row is blocked at the hook and has to come to you, and the first thing
+blocked is restoring **`| D33 |`**, which lane `S-2026-08-01-OPERATE`'s handoff routing table
+still points at (`git show 78a93129:MASTER_BACKLOG.md | grep '^| D33 |'`).
 
 ---
 

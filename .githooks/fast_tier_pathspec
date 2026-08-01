@@ -3,6 +3,7 @@
 .githooks/fast_tier_pathspec
 .githooks/pre-commit
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
+_triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
 _triage/factory_os/check_input_surface_gen.py
 _triage/factory_os/check_registries.py
@@ -19,6 +20,7 @@ _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
+_triage/factory_os/run_attested_pin_staged_tests.py
 _triage/factory_os/run_contract_binding_tests.py
 _triage/factory_os/run_coverage_transfer_tests.py
 _triage/factory_os/run_enforcement_status_tests.py

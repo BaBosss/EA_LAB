@@ -171,7 +171,13 @@ def _is_blob_at_head(path):
     return rc == 0 and out.strip() in ('blob', b'blob')
 
 
-def load_records():
+def load_records(src=None):
+    """ORDER-731 added `src`. The DEFAULT is unchanged -- the process source, so every existing
+    caller reads exactly the bytes it read before. A caller that is predicting what a COMMIT
+    will contain must pin the index whatever mode the process is in (the same reasoning as
+    `_index_src`), and passing it explicitly is how that caller says so."""
+    if src is None:
+        src = _src()
     rows, problems = [], []
     if os.path.isabs(ATTESTATION_PATH):
         # A FIXTURE'S OWN TEMP FILE (category C), and the split is by KIND of input rather than
@@ -189,13 +195,13 @@ def load_records():
         # Existence is a judged fact too: "the log is gone" and "the log is gone FROM THE COMMIT"
         # are different, and asking the disk while reading the commit is the mixed pair one line
         # apart.
-        if not _src().exists_committed(ATTESTATION_PATH):
+        if not src.exists_committed(ATTESTATION_PATH):
             return rows, problems
         # Through the process source: a decision APPENDED but not staged is not a decision this
         # commit records, and treating it as in force would let the gate pass on an approval the
         # commit does not contain. Manual runs still read the disk, which is where an owner has
         # just written; G5 below is the rule that holds the two vintages together.
-        text = _src().read_committed(ATTESTATION_PATH)
+        text = src.read_committed(ATTESTATION_PATH)
     for n, line in enumerate(text.split('\n'), 1):
         line = line.strip()
         if not line:
@@ -292,21 +298,19 @@ def check_append_only(problems, path=None, committed=None, working=None):
                         'removed rather than superseded by a new line.' % path)
 
 
-def check(rows, problems, digest, d1_owners, vintage_notes):
-    stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
-    # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
-    # comment that asserted the opposite of the truth.
-    #
-    # The first version built `latest` from EVERY row, including rows that fail A1. So appending one
-    # deliberately malformed line -- `{"signer": ""}` was enough -- made that line "in force", which
-    # demoted the REAL current decision to "superseded" and let it skip A2 and A6 entirely. Probed:
-    # a row carrying a wrong bundle AND a stale pin was reported for neither. The log still went red
-    # on the A1 problem, so it was not a green bypass, but `current` and `latest` genuinely
-    # disagreed about which row was in force -- while the comment claimed "stated once, so the two
-    # cannot disagree". A comment that is false about the code beside it is worse than no comment.
-    #
-    # Both now come from ONE list, built by ONE predicate: a row is ELIGIBLE if it survives the
-    # intrinsic checks. A malformed trailing line can no longer displace the decision in force.
+def eligible_records(rows, d1_owners, problems):
+    """R4/R5/R6/R7 -- the intrinsic checks that decide whether a row may be IN FORCE.
+
+    EXTRACTED (ORDER-731) rather than copied. `check_attested_pin_staged.py` has to answer
+    "which record is in force" to predict a pin, and a second hand-rolled copy of this
+    predicate is GUARD_SHAPES shape 5 exactly: the repair carries the class forward. There is
+    one predicate, in one place, and the conformance corpus already exercises it -- if this
+    extraction changed behaviour, the vectors go red rather than a reader having to notice.
+
+    `problems` is appended to, never read. A caller that is NOT judging the log's validity
+    passes a throwaway list: it wants the SELECTION, and the log's own verdict belongs to
+    check_s2a_attestation's exit code, not to it.
+    """
     eligible = []
     for r in rows:
         n = r.get('_line')
@@ -329,6 +333,43 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                             % (n, r['current_owner']))
             continue
         eligible.append(r)
+    return eligible
+
+
+def in_force_map(rows, d1_owners, problems=None):
+    """current_owner -> the row IN FORCE, by the same predicate `check()` uses.
+
+    Last eligible row per owner wins, which is what this log's header has always promised and
+    what ORDER-613 D1 made true in code. An INELIGIBLE row can no longer displace the decision
+    in force -- that hole is the one /scrutinize found, and it is closed here once for both
+    readers rather than once per reader.
+    """
+    if problems is None:
+        problems = []
+    latest = {}
+    for r in eligible_records(rows, d1_owners, problems):
+        latest[r['current_owner']] = r
+    return latest
+
+
+def check(rows, problems, digest, d1_owners, vintage_notes):
+    stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
+    # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
+    # comment that asserted the opposite of the truth.
+    #
+    # The first version built `latest` from EVERY row, including rows that fail A1. So appending one
+    # deliberately malformed line -- `{"signer": ""}` was enough -- made that line "in force", which
+    # demoted the REAL current decision to "superseded" and let it skip A2 and A6 entirely. Probed:
+    # a row carrying a wrong bundle AND a stale pin was reported for neither. The log still went red
+    # on the A1 problem, so it was not a green bypass, but `current` and `latest` genuinely
+    # disagreed about which row was in force -- while the comment claimed "stated once, so the two
+    # cannot disagree". A comment that is false about the code beside it is worse than no comment.
+    #
+    # Both now come from ONE list, built by ONE predicate: a row is ELIGIBLE if it survives the
+    # intrinsic checks. A malformed trailing line can no longer displace the decision in force.
+    # ORDER-731: that predicate now lives in `eligible_records` so the staged-pin front guard
+    # shares it instead of owning a second copy that can drift.
+    eligible = eligible_records(rows, d1_owners, problems)
 
     latest = {}
     for r in eligible:

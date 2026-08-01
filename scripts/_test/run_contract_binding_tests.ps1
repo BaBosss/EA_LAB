@@ -208,7 +208,13 @@ $scripts = @(
     #     rather than a 17th PowerShell suite, per this file's own rule that the expensive part
     #     of a small cage is the process.
     @{ Path = '_triage\factory_os\run_input_surface_tests.py'; Args = @('--mutate') },
-    @{ Path = '_triage\factory_os\check_input_surface_gen.py'; Args = @() }
+    @{ Path = '_triage\factory_os\check_input_surface_gen.py'; Args = @() },
+    # 11. ORDER-731. The cage for the attested-pin FRONT guard. Only the cage runs here -- the
+    #     guard itself runs in .githooks/pre-commit, one snapshot before this tier, because its
+    #     whole job is to refuse a commit and a suite cannot do that. Same trade this file states
+    #     for items 7 and 10: a python cage belongs in an existing python wrapper rather than a
+    #     17th PowerShell suite, and the tier has ~7-9s of headroom, not a process to spare.
+    @{ Path = '_triage\factory_os\run_attested_pin_staged_tests.py'; Args = @() }
 )
 
 $failed = 0

@@ -80,6 +80,36 @@ if [ "$rc" -ne 0 ]; then
   exit $rc
 fi
 
+# ORDER-731 (2026-08-01). The attestation gate compares an owner-pinned blob against HEAD:, and
+# during a pre-commit hook HEAD is the PREVIOUS commit -- so it was structurally incapable of
+# refusing the commit that breaks the pin, AND of accepting the commit that repairs it. Measured
+# twice in one afternoon: f4c9fd9f and 78a93129 both passed this hook and turned the gate red the
+# moment they landed; restoring MASTER_BACKLOG.md then needed an owner-approved --no-verify,
+# because HEAD held the wrong blob and every repairing commit was refused by the same rule.
+#
+# This guard asks the same question one snapshot earlier, at the INDEX. F5/F11 keep their HEAD
+# semantics on purpose: S2A_ATTESTATION_POLICY.md states them and that policy is inside
+# bundle_sha256, so moving them there would void the owner's record and cost a signature for a
+# repair that changes no rule -- the loop ORDER-614 rev 2 exists to end.
+#
+# FAIL-CLOSED on a missing interpreter, same rule as the PowerShell block at the top: a guard
+# that cannot run must block, never silently skip. Fast no-op when nothing it pins is staged.
+py="tools/python312/python.exe"
+if [ ! -x "$py" ] && [ ! -f "$py" ]; then
+  echo "PRECOMMIT-FAIL-CLOSED: $py not found -- cannot run check_attested_pin_staged.py, blocking commit"
+  exit 1
+fi
+"$py" _triage/factory_os/check_attested_pin_staged.py
+rc=$?
+if [ "$rc" -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] this commit would move a blob an owner attestation pins (above) -- ORDER-731."
+  echo "[pre-commit] Refused HERE because F5/F11 read HEAD: once it lands, the gate is red and the"
+  echo "[pre-commit] commit that would repair it is refused too. Restore the pinned bytes, or land"
+  echo "[pre-commit] the owner's re-attestation in the SAME commit."
+  exit $rc
+fi
+
 event_staged=$(git diff --cached --name-only -- 'docs/memory_control/experiment_events')
 if [ -n "$event_staged" ]; then
   "$ps" -NoProfile -ExecutionPolicy Bypass -File scripts/check_experiment_events.ps1
