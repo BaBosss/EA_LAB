@@ -315,8 +315,21 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
   what will remove it.
 - **ORDER-371** — tick history on `Meta 5b` differs from the primary terminal by **14×** (same window,
   PF 1.77 vs 2.08) ⇒ **numbers cannot be compared across installs anywhere in the lab.**
-- **Bookkeeping debt:** `kill_rule` in `DEPLOYMENTS.csv` is **empty on 12 rows** — that reads as "not yet
-  decided", not "decided and accepted".
+- ✅ **Bookkeeping debt — CLOSED 2026-08-01** (`734681b6`, lane `S-2026-08-01-OPERATE`). The count in
+  this bullet was **12**; it was **13** when measured across all statuses, and it is **2** now (one
+  `UNVERIFIED` row whose magic is still unknown, one `REMOVED` row). **Zero `ACTIVE` rows have an empty
+  `kill_rule`.** All 11 filled cells were on account `159475669` and read
+  `n/a - lab does not certify this account (retro-noted 2026-08-01)` — **not** the CLAUDE.md default
+  bar, because every row on that account is annotated *"user mix - lab does not certify"* and writing a
+  lab bar onto a row the lab does not judge states a criterion nobody owns. Owner ratified.
+  🔴 **Do not read the zero as protection:** `control_room_snapshot.ps1:129` counts blank `kill_rule`
+  on ACTIVE rows, so its gap counter went 11 → 0 **without one new kill criterion coming into
+  existence**. The rows are honestly labelled, not newly guarded.
+  <sub>The urgency this bullet was carrying was also wrong, and the two are worth keeping together:
+  `_triage/PROMPT_PARALLEL_OPERATE.md` paired these 11 rows with "18 judge dates inside 90 days" as one
+  deadline. **The sets are disjoint** — all 18 of those already carry a `kill_rule`, and all 11 blanks
+  carried no judge date at all ⇒ the number of rows reaching a judge with no criterion was **zero**.
+  Two individually-true counts, one false conjunction that nobody checked.</sub>
 - **SuperTrendFlip BTCUSD H4** = VALIDATED CANDIDATE awaiting the user's call on demo attach (see §2).
 
 **Work queue (pacing 1-2 orders per round):**
