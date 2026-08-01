@@ -266,7 +266,84 @@ read that sentence.
 
 ---
 
-## ORDER-732 — [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-732 — [tier] The undeclared-reference sweep cannot see a path referenced by an IMPORTED module — `DEAD-OPTIMIZED` (C3 invoked: measured, not payable) · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### RESULT (lane `S-2026-08-01-PINFIX`, 2026-08-01) — **C1 measured first, and the measurement killed it.**
+>
+> **The number C1 asked for: 66 distinct NEW declarations** across the 16 suites, concentrated in
+> `run_registry_tests.ps1` (34) and `run_contract_binding_tests.ps1` (32). Method: for each suite,
+> take the python modules it ALREADY declares (the closure `PART 4b` converges on) and run
+> `PART 4`'s own path regex over their sources, minus what is already declared or glob-covered.
+>
+> **What the selection cost becomes** — suite wall-clock taken from this session's own tier run,
+> not estimated:
+>
+> | commit shape | today | widened |
+> |---|---|---|
+> | a lane reserving its block (`docs/SESSION_LEDGER.md`) | 1 suite, **0.6s** | 3 suites, **21.8s** |
+> | a board pair (ledger + taskboard) | 2 suites, 20.8s | 4 suites, **42.0s** |
+> | a live-inventory edit (`portfolio/DEPLOYMENTS.csv`) | 1 suite, 20.2s | 4 suites, **40.0s** |
+> | a param-registry edit | 3 suites, 4.8s | 6 suites, **24.6s** |
+>
+> **A 36× increase on the single most common commit in this repo.** Every lane commits its ledger
+> reservation, alone, as its first act — the shape this repo does more than any other.
+>
+> **And the cost is not the real objection.** Reading the 66 shows the widening would be *wrong*,
+> not merely expensive: **PART 4's regex is a text scan, so it cannot distinguish a path a module
+> READS from a path a module MENTIONS.** `run_registry_tests.ps1` would be required to declare
+> `scripts/check_state.ps1`, `scripts/check_order_collision.ps1`, every other PowerShell checker,
+> `docs/GUARD_SHAPES.md` and `_triage/USER_DECISIONS_PENDING.md` — none of which it reads. They
+> appear because `run_guard_shape_lint.py` is in its closure and that file *names* them as its
+> subject. This repo's house style is unusually comment-heavy and cites paths constantly, which is
+> a virtue everywhere except inside a text-scanning sweep. Declaring 66 paths a suite does not
+> read is not coverage; it is noise that would then have to be maintained, and it drags a 17.8s
+> suite onto commits that have nothing to do with it.
+>
+> ⇒ **C3 invoked, which the order explicitly allows: "a documented *we chose not to* beats a sixth
+> silent hand-widening".** C2 is not owed — nothing was widened.
+>
+> **What is owed instead, and it is a different mechanism rather than a bigger sweep:**
+> a module should DECLARE its own inputs (a module-level tuple the sweep reads) instead of being
+> guessed at by a regex. That converges — a module knows what it opens — and it is checkable in a
+> way a text scan is not. Opened as **`ORDER-761`**. `ea_template/core/ConfigFingerprint.mqh`
+> stays hand-declared until then, and `ORDER-710`'s `G3` criterion READS it, so the declaration is
+> load-bearing rather than remembered.
+
+---
+
+## ORDER-761 — [tier] A module should DECLARE the paths it reads, instead of a regex guessing them — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> Opened by `ORDER-732`'s closure, as a NEW order rather than its remainder. The hand-widening
+> that has now happened **five** times is a symptom; the cause is that **nothing in a module says
+> what the module reads**, so the tier's trigger has to be either guessed (a text scan — measured
+> unusable in `ORDER-732`) or remembered (five widenings, and the sixth was `ConfigFingerprint.mqh`
+> holding half a cross-language contract while matching no suite at all).
+
+**The shape.** A module that opens repo files carries `GUARDED_INPUTS = (...)` — the paths it
+reads, as data. `PART 4b` already walks the import closure and demands the MODULES be declared;
+it would then union each declared module's `GUARDED_INPUTS` into what the suite must declare. A
+path in a comment is no longer a path in the sweep, which is exactly the failure that killed 732.
+
+### Acceptance
+- **C1** the declaration is CHECKED, not trusted: a module whose `GUARDED_INPUTS` omits a path it
+  actually opens must be caught. `run_guard_shape_lint.py`'s `L1` already parses every read in
+  these modules and knows its path argument where it is a literal — that is the engine, and this
+  order should use it rather than write a second parser.
+- **C2** measure the new declaration count and the per-path selection cost the same way ORDER-732
+  did, in the same commit, and compare against its table. If it lands near 66 again, it has not
+  solved anything and should be closed the same way.
+- **C3** driven both ways: a module that under-declares is refused; the current tree is green.
+- **C4** the tier stays inside 90.0s. Measure it; a new cage DISPLACES something.
+
+### ห้าม
+- ❌ Do not reintroduce the text scan as a fallback "in case a module forgets". A fallback that
+  fires on comments is ORDER-732's finding wearing a second hat, and it would make the declaration
+  optional — which is the same as not having one. ❌ No `REVIEWED`.
+
+---
+
+**`ORDER-732`, continued — the original filing, kept verbatim because the RESULT above is a
+decision *about* it and a decision loses its meaning without the thing it decided.**
 
 > **Found by `/scrutinize` round 1 of `ORDER-710`, and it is the `BACKLOG-D32` shape one layer in.**
 > `ea_template/core/ConfigFingerprint.mqh` — the file holding the whole MQL5 half of the
