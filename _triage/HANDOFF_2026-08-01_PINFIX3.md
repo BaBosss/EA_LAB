@@ -18,9 +18,10 @@ explicitly, and it is the seat's cost rule anyway).
 > '0740c0ea…'`), because **`stale_pin_acknowledgement.current_blob` is a SECOND whole-file pin on the
 > same file** and option A narrowed only `expected_post_state`. The front guard did not predict it
 > (`check_attested_pin_staged.py:165` adds the ack pin only `if path not in pins`, and the section pin
-> now takes that slot), so `ORDER-731`'s own C2 was violated by `ORDER-731`'s own fix. **HEAD is red;
-> `_triage/factory_os/**` and `MASTER_BACKLOG.md` are uncommittable** (a revert of `7baadb18` was
-> attempted and REFUSED). Full trace + the measured recommendation (option 2, `factory/coverage.jsonl`
+> now takes that slot), so `ORDER-731`'s own C2 was violated by `ORDER-731`'s own fix. **HEAD is red:
+> the 41 of 62 `_triage/factory_os/` files that are declared in `SUITE_GUARDS` — including every file
+> the repair touches — plus `MASTER_BACKLOG.md`, cannot commit** (a revert of `7baadb18` was
+> attempted and REFUSED; the other 21 factory_os files select no suite and still commit). Full trace + the measured recommendation (option 2, `factory/coverage.jsonl`
 > = 1 commit/14d vs `MASTER_BACKLOG.md` = 31) are on the `ORDER-731` row and in
 > `_triage/USER_DECISIONS_PENDING.md` item 5. Everything below is left unedited on purpose — a
 > handoff that is quietly rewritten is not a record.

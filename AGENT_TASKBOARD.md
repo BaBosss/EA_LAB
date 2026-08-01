@@ -475,9 +475,15 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > 🔴 **The gate now blocks its own repair — sixth instance of the family, inside the fix for the
 > fifth.** F5 reads HEAD, so during any repair commit's hook run HEAD still holds the bad blob.
 > **Measured, not reasoned:** `git revert --no-commit 7baadb18` then `git commit -- MASTER_BACKLOG.md`
-> was **refused** (`FAIL run_contract_binding_tests.ps1 … exit 1`) and HEAD did not move. Everything
-> under `_triage/factory_os/**` and `MASTER_BACKLOG.md` is therefore uncommittable until an owner
-> acts. `AGENT_TASKBOARD.md` / `docs/SESSION_LEDGER.md` select different suites and still commit.
+> was **refused** (`FAIL run_contract_binding_tests.ps1 … exit 1`) and HEAD did not move.
+> **Scope of the block, counted rather than waved at** (a `/scrutinize` round caught this paragraph
+> first saying *"everything under `_triage/factory_os/**`"*, which is not true and is the same
+> unmeasured-claim shape it is reporting): **41 of the 62** files in `_triage/factory_os/` are
+> declared in `SUITE_GUARDS`; those select the failing suite and cannot commit. The other 21 are
+> Codex-audit `.md` records that select no suite and still commit. **Every file the repair needs is
+> in the blocked 41** (`check_attested_pin_staged.py` · `run_s2a_conformance.py` ·
+> `S2A_ATTESTATION_POLICY.md`), as is `MASTER_BACKLOG.md`. `AGENT_TASKBOARD.md` and
+> `docs/SESSION_LEDGER.md` select different suites and still commit — which is how this row exists.
 >
 > **The costing in `_triage/USER_DECISIONS_PENDING.md` item 5 was wrong, and this is the finding
 > that matters most.** Option 1 was priced as *"one policy amendment + one signature, once"*; it
