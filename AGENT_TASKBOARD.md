@@ -540,6 +540,41 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > blob. That is "the tool broke" and "the file is wrong" sharing an outcome, in the file that cites
 > that rule. Low reachability (needs a gitlink or corrupt object), two lines to fix.
 >
+> ### 🔴 OPTION 2 IS BLOCKED BY A DEFECT IN `R6`, AND THIS IS WHY NO TRANSFER HAS EVER BEEN EXECUTED (lane `S-2026-08-01-OPT2`)
+>
+> The owner ratified option 2 (*"ทำ option 2 เลย"*, 2026-08-01). It cannot be executed as specified.
+> **Measured with the checker's own `eligible_records`, both ways:**
+>
+> | D1's owner vocabulary | eligible records | problems |
+> |---|---|---|
+> | today (`current_owner` = `MASTER_BACKLOG.md`) | **7** | **0** |
+> | after moving it to `factory/coverage.jsonl` | **0** | **7** — `R6 line N decides for 'MASTER_BACKLOG.md', which is not a current_owner in D1` |
+>
+> `MASTER_BACKLOG.md` is the `current_owner` of exactly **one** of D1's 27 rows, so executing that
+> row's transfer removes it from the vocabulary entirely — and **R6 is `record-intrinsic`, so it
+> judges every row, including the six superseded ones.** The log is **append-only**. Those seven
+> records could never be repaired, there would be **no record in force at all**, and the approval
+> that authorised the transfer would be destroyed *by executing the transfer*.
+>
+> **The rule R6 breaks is written in the same policy, two sections up.** §3: a criterion about the
+> record's relationship to **current external state** must apply **only to the row in force** —
+> *"demanding that history keep matching today's bytes is demanding that history be rewritten, and
+> in an append-only file that is not merely wrong, it is impossible — the artifact could never
+> survive its own evolution."* R6 is labelled `record-intrinsic` and reads **today's** D1. It is
+> mis-scoped by the policy's own stated rule, and **12 of the 27 rows are `disposition: TRANSFER`**,
+> so this is not specific to Coverage: **the migration table cannot execute any of its own proposals.**
+>
+> **Two further measurements that open the design space** (both refute assumptions the obvious fix
+> would rest on): `check_s2a_migration.py:485-525` **C4 does not require `owner_ref.path ==
+> current_owner`** — it only recomputes the pin's hashes from git; and the **note derivation N1–N4
+> keys on `owner_ref.path`, not on `current_owner`**, so the second whole-file pin (F2–F5) follows
+> the *ref*, not the *owner* field.
+>
+> **Status: not implemented, deliberately.** This is architecture on an append-only artifact inside
+> a signed bundle — a wrong answer is unrepairable by construction — so per `CLAUDE.md` it takes an
+> independent second opinion before the seat picks. Nothing has been staged. `MASTER_BACKLOG.md` is
+> **not** to be edited by this work: option 2's whole point is that the file stops being pinned.
+>
 > #### And from a second, independent pass that re-measured every number this lane wrote
 >
 > **Every count reproduces exactly** — conformance 62/0 · mutation 33 probed / 0 INERT (and the
