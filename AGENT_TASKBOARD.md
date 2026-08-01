@@ -374,7 +374,7 @@ read that sentence.
 
 ---
 
-## ORDER-830 — [tier] `ORDER-820` C1, measured: THREE entries drifted, not one — and the biggest is one `check_registries.py` call that costs 5.1s in `index` mode and 0.07s in `worktree` mode — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-830 — [tier] `ORDER-820` C1, measured, then ANSWERED: the biggest item is one `check_registries.py` call costing 5.0s in `index` mode and 0.07s in `worktree` mode — and the mode, not any commit, is the whole of `ORDER-820`'s "+8.7s regression" and its "intermittent breach" — `PARKED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > Opened by lane `S-2026-08-01-TIERBUDGET` after taking `ORDER-820` C1 and being told to park it.
 > **The timing half of C1 is DONE and is below — do not re-measure it.** What is left is the two
@@ -508,9 +508,147 @@ either measurement alone:
 processes**, which is how the bug announced itself. Instrument `Popen` only, and charge each process
 once behind a flag.</sub>
 
+### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — `PARKED` pending review
+
+> **One sentence:** every number in this order and in `ORDER-820` was quoted without saying which
+> **evidence mode** produced it, and the whole "+8.7 s regression" plus the whole "7 s intermittent
+> swing" are that one omission — `run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` **only under
+> `-Hook`** (line ~789), and that flag is worth **+8.7 s** on this suite.
+
+#### A1 — the operation is `check_r4`'s resolver sweep, and here are the counts
+
+Profiler wrapping `evidence._run_git` **only** (one charge per child process — the double-count
+trap in the footnote above was avoided by instrumenting the single place this module spawns git):
+
+| | |
+|---|---|
+| git child processes per run | **142** |
+| time inside those children | **3.92 s of a 3.94 s run — 99.5 %** |
+| `git show :path` | 131 calls |
+| `git ls-files` (existence) | 8 calls · `ls-files :(glob)` (enumeration) 3 calls |
+| by phase | `load_all` 9 calls / **`check_r4` 130 calls, 3.64 s** / `check_r6` 3 calls / R1·R2·R3·R5 **0** |
+| **paths walked by R4** | **129** — 33 `_triage/factory_os/*.py` + 91 `scripts/*.ps1` + 5 `scripts/lib/*.ps1` |
+
+**Named:** `check_r4` parts (b) and (c) enumerate 129 committed paths and then read **every one of
+them** with its own `git show :path`. It is `ORDER-270`'s spawn pathology in a new place — the shape
+the order said to expect, though not the form: it is not a per-path call over the 5,000-file index,
+it is a per-path call over a 129-path sweep.
+
+<sub>**And the 5.1 s inside `run_registry_tests.py` buys one assertion.** Its last two cases run
+`check_registries.py`'s real CLI once per mode (`run_registry_tests.py:1108-1126`) to check that the
+marker line names the mode. The `worktree` half costs 0.07 s; the `index` half costs 5.0 s — for the
+same one-line assertion.</sub>
+
+<sub>🔎 **A spawn costs 25.3 ms or 35.3 ms depending on which `git.exe` is on PATH, and that is not
+noise.** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**; `C:\Program Files\Git\mingw64\bin\git.exe`
+is the real **4.3 MB** binary. Benchmarked from ONE shell so the shell is held constant: **35.3 vs
+25.3 ms/spawn**, i.e. the shim's extra process start is **+10 ms**, **+1.4 s on this one script**.
+PowerShell resolves the shim (15 PATH entries); git-bash resolves the real binary (31 entries) — so
+it is not PATH length. **A lead for `ORDER-820` C2, not a finding: nobody has measured which one the
+real hook resolves.**</sub>
+
+#### A2 — **none of the three branches.** It is a fourth, and it is not distributional
+
+Re-measured with `git worktree add D:\_wt830 ddbaec95` (never `git stash`), 3 samples per cell,
+machine idle, each run a fresh `powershell -NoProfile -File`:
+
+| `run_contract_binding_tests.ps1` | `ddbaec95` | HEAD (`ffb4b3df`) | grew by |
+|---|---|---|---|
+| **worktree** mode | 24.28 / 24.32 / 24.43 → **24.32 s** | 24.89 / 24.98 / 25.09 → **24.98 s** | **+0.66 s** |
+| **index** mode | 32.77 / 32.78 / 33.25 → **32.78 s** | 33.43 / 33.48 / 33.94 → **33.48 s** | **+0.70 s** |
+| **mode delta** | **+8.46 s** | **+8.50 s** | |
+
+**The suite grew 0.7 s between the two commits, not 8.7 s.** The 22.9 s figure is a worktree-mode
+measurement and the 31.6 s figure is an index-mode one; the "+8.7 s" is the mode delta, which is
+**the same at both commits**. `5082bd4d` genuinely cannot explain the jump — because there was no
+jump. `ORDER-820`'s row is corrected in this commit, which is what C2 asks for.
+
+<sub>⚠️ **A fresh worktree cannot run this tier out of the box, and that is worth knowing before the
+next person tries.** `tools/python312/python.exe` is committed (34 files) but `python312.zip` — the
+stdlib — is matched by `.gitignore:85 *.zip`, so the checked-out interpreter dies with *"Python path
+configuration"*. Copy the zip in. The wrapper's own header calls the interpreter *"committed
+in-repo"*; it is committed except for the part that makes it run.</sub>
+
+#### A2b — the 7 s swing is **two populations**, not variance, and the breach is **not intermittent**
+
+`run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` for its children **if and only if `-Hook` is
+passed**. Full tier, this machine, today:
+
+| | samples | verdict |
+|---|---|---|
+| **`-Hook`** (what a committer actually pays) | **97.1 · 98.6 · 95.9 s** | **every one OVER** the 90.0 s budget |
+| standalone (no `-Hook`) | **89.8 · 87.5 s** | both **UNDER** |
+| this suite within them | hook **34.1 / 35.1 / 34.3 / 33.5 / 33.6** · standalone **25.4 / 25.0** | the "24.9-32.1 swing" |
+
+🔴 **The sixth sample that reframed `ORDER-820` as intermittent (87.8 s, suite at 24.9 s) was a
+standalone run.** My standalone run reproduces it at **87.5 s / 25.0 s**. There is no good half of
+the distribution to tune against — there is a configuration the hook never runs. **A fix aimed at
+the mean of the six samples would be aimed at a mean of two different things.**
+
+#### A3 — the "5.9 s not in the table" was the same mode confusion
+
+Every entry timed in **both** modes, 3-run medians, entry list parsed out of the wrapper:
+
+| | sum of the 18 entries | this wrapper, timed by the tier | unattributed |
+|---|---|---|---|
+| worktree | **23.29 s** | 25.4 s | **2.1 s** |
+| index | **32.97 s** | 34.1 s | **1.1 s** |
+
+**~1-2 s, and it is the 18 process starts plus this file's loop** — not 5.9 s. The old 25.64 s sum
+was a mixed-mode table (`check_registries` at its worktree cost, `coverage_transfer` at its index
+cost) compared against an index-mode wrapper total. The full two-mode table is now **in the
+wrapper's own header**, where the next reader will hit it before quoting a number.
+
+Where the index tax actually falls: `check_registries.py` **+4.89** · `run_coverage_transfer_tests.py`
+**+1.58** · `run_guard_shape_lint.py` **+1.34** · `run_s2a_gate.py` **+0.51** · `check_schema_structure.py`
+**+0.48** · `check_coverage_transfer.py` **+0.44** · `run_schema_fixtures.py` **+0.33** · rest ≤0.14.
+
+#### A4 — the wrapper's comments now match the measurements
+
+`run_registry_tests.py` **0.2 → 8.48/8.49 s** (wrong by 42×, and it is the largest single entry) ·
+`run_snapshot_s4_tests.py` **0.35 → 1.38/1.27 s** · `run_s2a_gate.py` **2.57 → 4.94/5.45 s** ·
+`run_enforcement_status_tests.py` **~0.8 → 0.38/0.41 s** · `run_schema_fixtures.py` 2.2 → **2.35/2.68 s**
+(held) · `run_input_surface_tests.py`/`check_input_surface_gen.py` 0.22+0.11 → **0.18+0.07 / 0.18+0.21**
+(held) · the two `coverage_transfer` entries got the **first numbers they have ever had** (3.67+0.84
+worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of headroom"* now says it is
+**7-9 s OVER** under the hook. Suite re-run after the edit: **green, 25.4 s, unchanged**.
+
+#### Handed forward, not done here
+
+1. **`ORDER-820` C2 now has a named candidate:** replace `evidence.py`'s per-path `git show` with one
+   `git cat-file --batch` process. 129 spawns → 1. **Not done in this lane** — `evidence.py` is not a
+   declared path here, and C2 belongs to `ORDER-820`. 🚫 The other route (default `index` away) stays
+   forbidden: judging the commit rather than the worktree is the whole content of `ORDER-670`.
+2. **`run_s2a_gate.py` drifted 2.57 → 4.94 s and nobody has attributed it.** The memoization its
+   comment describes is still in place, so something else grew. Second-largest entry.
+3. **The git-shim lever** (A1's footnote) — unmeasured against the real hook.
+
+#### What this order does NOT claim
+- No verdict, no `REVIEWED`, no budget raised, no S2a bundle member touched (digest `d88f795b`
+  untouched), no signature spent.
+- The three `-Hook` samples are **this machine, today, idle**. `ORDER-820` C3's "three consecutive
+  green full runs" is still owed by whatever fix lands — and it must now be stated as **three
+  consecutive `-Hook` runs**, since standalone runs pass today and prove nothing.
+
 ---
 
-## ORDER-820 — [tier] The full tier is OVER its enforced budget on every sample, and `run_contract_binding_tests.ps1` grew ~9s with nobody's name on it — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-820 — [tier] The full tier is OVER its enforced budget on **every `-Hook` run** (95.9-98.6s vs 90.0s) — but the suite did NOT grow ~9s; that number is the evidence-mode delta, corrected 2026-08-01 by `ORDER-830` — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> 🔴 **CORRECTED 2026-08-01 by `ORDER-830` (lane `S-2026-08-01-TIERATTR`), and the correction goes to
+> the PREMISE of this row, not to a detail in it. Everything below the next box is kept verbatim
+> because a decision loses its meaning without the thing it decided — but two of its headline claims
+> are refuted and must not be quoted forward.**
+>
+> | this row says | measured |
+> |---|---|
+> | `run_contract_binding_tests.ps1` **grew +8.7 s** between `ddbaec95` and now | it grew **+0.7 s**. The +8.7 s is the **evidence-mode delta**, and it is the same (+8.46 s) at `ddbaec95` itself. 22.9 s was a **worktree**-mode measurement, 31.6 s an **index**-mode one. |
+> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **not intermittent**. `run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` **only under `-Hook`**. With `-Hook`: **97.1 · 98.6 · 95.9 s — all over**. Standalone: **89.8 · 87.5 s — both under**. The sixth sample (87.8 s) was a standalone run and is reproduced at 87.5 s. |
+> | C1 = *"which commit added 8.7 s"* | **unanswerable as written, and it does not need answering.** No commit added it. |
+>
+> **C1 is therefore CLOSED by `ORDER-830`.** **C2 stays here and is now answerable**, with one named
+> candidate: replace `evidence.py`'s per-path `git show` (129 spawns in `check_r4`'s sweep) with one
+> `git cat-file --batch`. **C3 must be restated as three consecutive `-Hook` runs** — standalone runs
+> pass today and prove nothing about what a committer waits for.
 
 > 🔎 **C1's timing half is MEASURED and lives on `ORDER-830` (2026-08-01) — do not re-measure it.**
 > It says three entries drifted rather than one, and that the largest single item is a

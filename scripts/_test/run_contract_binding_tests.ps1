@@ -62,7 +62,8 @@
       fast tier   15.4s -> 17.3s       (17.3 / 17.2 / 17.3) against a 15.0s ADVISORY budget
     RE-MEASURED 2026-07-31 after ORDER-601's closure added run_enforcement_status_tests.py:
       fast tier   17.3s -> 18.1s       (18.0 / 18.1 / 18.3) -- now 3.1s over the advisory line.
-    That suite is worth its ~0.8s (it is the only thing stopping PLANNED/BUILT/WIRED from becoming
+    That suite is worth its ~0.8s -- RE-MEASURED 2026-08-01 (ORDER-830) at 0.38s worktree /
+    0.41s index, so this line was pessimistic by 2x rather than optimistic -- (it is the only thing stopping PLANNED/BUILT/WIRED from becoming
     the same unchecked label x-enforced-by already was), but the tier is now over by more than any
     single addition, which is the definition of the drift BACKLOG-D32 exists to end. Nothing further
     goes in this tier before per-path selection is built.
@@ -115,6 +116,50 @@ if (-not (Test-Path -LiteralPath $python)) {
     exit 1
 }
 
+# ⚠️ EVERY PER-ENTRY NUMBER BELOW IS MEANINGLESS WITHOUT ITS EVIDENCE MODE. Read this first.
+# ORDER-830, MEASURED 2026-08-01, medians of 3 runs each, machine idle, every entry launched
+# with the same interpreter/args/cwd this file uses. The entry list was PARSED OUT OF THIS FILE
+# by the harness rather than retyped, so the table cannot drift from the list below it.
+#
+# The tier sets EA_LAB_EVIDENCE=index for its children ONLY under -Hook (run_fast_cages.ps1
+# line ~789). A standalone run of this wrapper is therefore worktree mode and costs 8.7s LESS
+# than the same wrapper under the hook -- so a number quoted without its mode is not a number.
+# That single omission produced ORDER-820's "+8.7s regression" (there was none: +0.7s between
+# ddbaec95 and HEAD) and its "intermittent breach" (it is not intermittent: every hook run is
+# over, every standalone run is under).
+#
+#   entry                                 worktree   index    delta
+#   check_registries.py                       0.07    4.96    +4.89   <- R4's 129-path sweep
+#   run_coverage_transfer_tests.py            3.67    5.25    +1.58
+#   run_guard_shape_lint.py                   0.14    1.48    +1.34
+#   run_s2a_gate.py                           4.94    5.45    +0.51
+#   check_schema_structure.py                 0.05    0.53    +0.48
+#   check_coverage_transfer.py                0.84    1.28    +0.44
+#   run_schema_fixtures.py                    2.35    2.68    +0.33
+#   check_input_surface_gen.py                0.07    0.21    +0.14
+#   run_enforcement_status_tests.py           0.38    0.41    +0.03
+#   run_guard_shape_lint.py --self-test       0.07    0.11    +0.03
+#   run_registry_tests.py                     8.48    8.49    +0.02   <- pays index mode itself
+#   run_attested_pin_staged_tests.py          0.27    0.27     0.00
+#   run_input_surface_tests.py --mutate       0.18    0.18     0.00
+#   run_contract_binding_tests.py             0.08    0.08     0.00
+#   gen_design_contracts.py --check           0.04    0.04     0.00
+#   run_snapshot_validator_tests.py           0.16    0.16     0.00
+#   run_s2a_conformance.py --mutate           0.12    0.12     0.00
+#   run_snapshot_s4_tests.py                  1.38    1.27    -0.11
+#   SUM OF ENTRIES                           23.29   32.97    +9.68
+#   THIS WRAPPER, measured by the tier        25.4    34.1     +8.7
+#
+# The ~1-2s between the sum and the wrapper is 18 process starts plus this file's loop; it is
+# stated here because ORDER-830 A3 asked for it and "unattributed" is how 8.7s became a mystery.
+#
+# WHERE THE INDEX-MODE COST IS: check_registries.py's R4 sweep enumerates 129 committed paths
+# (33 _triage/factory_os/*.py + 91 scripts/*.ps1 + 5 scripts/lib/*.ps1) and reads EVERY ONE of
+# them through its own `git show :path` -- 142 git child processes per run, 99% of the script's
+# wall time, at 25-35 ms per spawn. ORDER-270's spawn pathology, in a new place. Do NOT "fix"
+# it by defaulting index mode away: judging the commit instead of the worktree is the whole
+# content of ORDER-670. A `git cat-file --batch` reader is the route, and it belongs to
+# ORDER-820 C2, not here.
 $scripts = @(
     @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
     @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
@@ -122,18 +167,26 @@ $scripts = @(
     # ORDER-612 (S4). The python half of the S4 acceptance -- C2 (N discovered => exactly N
     # categorized or an explicit reason), C4 (evidence DERIVED from disk, a contradicting builder
     # claim REFUSED), C5 (atomic build->validate->replace, previous file byte-unchanged on
-    # failure), C7 (version 5, and 4 refused by the schema). MEASURED 0.35s, which is why it is
+    # failure), C7 (version 5, and 4 refused by the schema). MEASURED 1.38s worktree / 1.27s index
+    # (ORDER-830, 2026-08-01; this line read 0.35s, wrong by 4x), which is why it is
     # here rather than in a suite of its own: this wrapper's own note says the expensive part of a
     # cage in this tier is the process, not the assertions. C1 stays in run_schema_fixtures.py
     # (it IS that file's real-snapshot line, now asserted rather than printed); C3 and C6 are the
     # PowerShell readers and live in scripts\_test\run_snapshot_s4_tests.ps1.
     @{ Path = '_triage\factory_os\run_snapshot_s4_tests.py'; Args = @() },
     # ORDER-630 (S5). The resolver's answers, and each of check_registries' five criteria observed
-    # going red for its own reason. MEASURED 0.2s. Same trade as the line above: a python cage
-    # belongs in an existing python wrapper unless it needs its own lifecycle.
+    # going red for its own reason. MEASURED 8.48s worktree / 8.49s index (ORDER-830, 2026-08-01;
+    # this line read 0.2s, wrong by 42x and the largest single item in the wrapper). It is mode-
+    # INDIFFERENT because it pins both modes itself: its last two cases run check_registries.py's
+    # real CLI once per mode, and the index one alone costs 5.0s of the 8.5s -- to assert that the
+    # marker line names the mode. Same trade as the line above: a python cage belongs in an
+    # existing python wrapper unless it needs its own lifecycle.
     @{ Path = '_triage\factory_os\run_registry_tests.py'; Args = @() },
     # ...and the guard itself, run over the REAL stores. The suite above drives it against
     # synthetic roots; this is the run that would notice a committed registry going wrong.
+    # MEASURED 0.07s worktree / 4.96s index (ORDER-830, 2026-08-01) -- a 70x mode spread, and the
+    # single biggest reason the tier costs 8.7s more under the hook than standing alone. The cost
+    # is R4's sweep: 129 enumerated paths, one `git show` child process each.
     @{ Path = '_triage\factory_os\check_registries.py'; Args = @() },
     # 4. check_schema_structure.py -- the SUPERSEDED lint, wired in by /scrutinize 2026-07-30.
     #    It is not the binding (that is item 1) and its own header says so. It is kept for two
@@ -154,6 +207,9 @@ $scripts = @(
     #    D1). MEASURED: as five separate entries it cost 4.57s; in one process 3.45s; and 2.57s after
     #    memoizing `git ls-files` and the schema $ref graph, which the mutation suite was otherwise
     #    re-paying 25 times in a single run -- the ORDER-270 spawn pathology at small scale.
+    #    RE-MEASURED 2026-08-01 (ORDER-830): 4.94s worktree / 5.45s index. The 2.57s was true when
+    #    it was written and is not true now, and the memoization is still in place -- so something
+    #    else grew here and nobody has attributed it. Second-largest entry in the wrapper.
     #    The mutation half is the part that matters: the other four can all be green while the
     #    checker is incapable of failing against the file it just passed.
     @{ Path = '_triage\factory_os\run_s2a_gate.py'; Args = @() },
@@ -177,6 +233,10 @@ $scripts = @(
     #                                         conditions right now? The mutation suite injects its
     #                                         inputs, so it would stay green if the real
     #                                         MASTER_BACKLOG.md were hand-edited tomorrow.
+    #    MEASURED 2026-08-01 (ORDER-830) -- no number had EVER been recorded for either, and
+    #    together they are 4.5s worktree / 6.5s index, the third-largest item here:
+    #      run_coverage_transfer_tests.py  3.67s worktree / 5.25s index
+    #      check_coverage_transfer.py      0.84s worktree / 1.28s index
     @{ Path = '_triage\factory_os\run_coverage_transfer_tests.py'; Args = @() },
     @{ Path = '_triage\factory_os\check_coverage_transfer.py'; Args = @() },
     # 8. ORDER-611 (S3). The REAL JSON Schema validation, wired at last. It was excluded for two
@@ -184,6 +244,7 @@ $scripts = @(
     #    the tier ran all 12 suites on any staged path (fixed by BACKLOG-D32's per-path selection).
     #    A schema edit now pays this suite and not 5.8s of optimize-guard cases.
     #    MEASURED 2026-07-31: 2.2s, 89 cases (35 root + 54 per-entity) + 3 harness probes.
+    #    RE-MEASURED 2026-08-01 (ORDER-830): 2.35s worktree / 2.68s index -- this one held.
     #    REQUIRES ajv-cli on PATH. If ajv is missing the suite reports ERROR, not "rejected" --
     #    that distinction is the whole reason its three-state discipline exists.
     @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
@@ -204,7 +265,8 @@ $scripts = @(
     #                                              /scrutinize round, which is the argument.)
     #       check_input_surface_gen.py         -- is the REAL enumeration current and wired in
     #                                              RIGHT NOW, judged at the commit's snapshot?
-    #     MEASURED 0.22s + 0.11s (re-measured after G3 joined). Both belong in this wrapper
+    #     MEASURED 0.22s + 0.11s (re-measured after G3 joined). RE-MEASURED 2026-08-01 (ORDER-830):
+    #     0.18s + 0.07s worktree, 0.18s + 0.21s index -- both held. Both belong in this wrapper
     #     rather than a 17th PowerShell suite, per this file's own rule that the expensive part
     #     of a small cage is the process.
     @{ Path = '_triage\factory_os\run_input_surface_tests.py'; Args = @('--mutate') },
@@ -214,6 +276,10 @@ $scripts = @(
     #     whole job is to refuse a commit and a suite cannot do that. Same trade this file states
     #     for items 7 and 10: a python cage belongs in an existing python wrapper rather than a
     #     17th PowerShell suite, and the tier has ~7-9s of headroom, not a process to spare.
+    #     🔴 THAT HEADROOM IS GONE and this line must not be quoted as if it were current: measured
+    #     2026-08-01 (ORDER-830), the full tier under -Hook is 95.9-98.6s against a 90.0s budget --
+    #     7-9s OVER, not under. Standalone it is 87.5-89.8s, which is the number that made this
+    #     look survivable. Nothing further goes in this wrapper until ORDER-820 C2 is answered.
     @{ Path = '_triage\factory_os\run_attested_pin_staged_tests.py'; Args = @() }
 )
 
