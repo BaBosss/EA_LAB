@@ -111,15 +111,23 @@ def main():
     # what makes the suite load-bearing: neutralise the append-only comparison and the ATTACK
     # cases must go red.
     real_head, real_staged = base, HDR + '\n'      # a deletion, the clearest breach
-    saved = wr._norm
+    # Round-2 review, M7: the old mutation neutralised `_norm`, which EVERY criterion runs through,
+    # so W1/W3/W4/W5 died alongside W2 and the case proved only "not entirely inert" -- something
+    # any other case already proves. A mutation that kills everything discriminates nothing. This
+    # one turns off the append comparison ALONE and asserts BOTH halves: W2 goes silent, and the
+    # row criteria keep firing. The second half is what makes it evidence about append-only.
+    row_probe = base + '{"order_id": "ORDER-887", "verdict": "PASS"}' + NL
+    saved = wr._is_append
     try:
-        wr._norm = lambda t: ''                     # mutation: every comparison becomes trivially true
-        mutated = run(real_staged, head=real_head)
+        wr._is_append = lambda h, s: True        # mutation: scoped to W2 and nothing else
+        mutated_w2 = run(real_staged, head=real_head)
+        still_firing = run(row_probe, head=base)
     finally:
-        wr._norm = saved
-    case('ENGAGEMENT', 'the W2 mutation is DETECTED (suite is load-bearing)',
-         mutated == [] and any(x.startswith('W2') for x in run(real_staged, head=real_head)),
-         'mutated=%r' % (mutated,))
+        wr._is_append = saved
+    case('ENGAGEMENT', 'a W2-ONLY mutation silences W2 and leaves the row criteria firing',
+         mutated_w2 == [] and any(x.startswith('W4') for x in still_firing)
+         and any(x.startswith('W2') for x in run(real_staged, head=real_head)),
+         'w2=%r rows=%r' % (mutated_w2, still_firing))
 
     # ---- W2 on the FILE, not just its rows. Found by probing main(), not by reading it: the
     # ---- first version answered "is it in the index?", so `git rm --cached` printed "does not
@@ -129,6 +137,9 @@ def main():
     class _Src(object):
         def __init__(self, present):
             self.present = present
+
+        def marker(self, component):
+            return '##EVIDENCE-MODE## %s stub git_index=stub' % component
 
         def exists_committed(self, rel):
             return self.present
@@ -150,6 +161,23 @@ def main():
          rc_del == 1, 'main() returned %r' % rc_del)
     case('CONTROL', 'W0 a file that never existed still passes (the two are told apart)',
          rc_new == 0, 'main() returned %r' % rc_new)
+
+    # ---- M4 grandfathering: a rule tightened later must not freeze the log forever -----------
+    old_head = HDR + NL + '{"order_id": "ORDER-890", "pf": 9}' + NL     # legal before the allow-list
+    case('CONTROL', 'W4 a legal append on top of a now-ILLEGAL HEAD row still lands',
+         run(old_head + R2 + NL, head=old_head) == [],
+         run(old_head + R2 + NL, head=old_head))
+    p = run(old_head + '{"order_id": "ORDER-891", "pf": 1}' + NL, head=old_head)
+    case('ATTACK', 'W4 still judges a NEW row -- grandfathering is not an amnesty',
+         any(x.startswith('W4') for x in p), p)
+    p = run(old_head + '{"order_id": "ORDER-890", "agent": "q"}' + NL, head=old_head)
+    case('ATTACK', 'W5 a new row re-using a GRANDFATHERED order id is still refused',
+         any(x.startswith('W5') for x in p), p)
+
+    # ---- N9: the _comment exemption is line 1 only ------------------------------------------
+    p = run(HDR + NL + '{"_comment": "ORDER-900 verdict PASS, promote to live"}' + NL)
+    case('ATTACK', 'N9 a _comment row below line 1 is judged, not waved through',
+         p != [], p)
 
     print()
     if _bad:

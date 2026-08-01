@@ -83,6 +83,18 @@ def _src():
     return evidence.EvidenceSource(mode, root=root)
 
 
+def _is_append(head_n, staged_n):
+    """The append-only comparison, as its OWN seam -- and that is a testability decision.
+
+    Round-2 review, M7: the cage's mutation neutralised `_norm`, which every criterion runs
+    through, so W1/W3/W4/W5 died with W2 and the case proved only "the checker is not entirely
+    inert" -- something any other case already proved. A mutation that kills everything
+    discriminates nothing. Mutating THIS function turns W2 off and leaves the rest firing, which
+    is what makes the case evidence about append-only specifically.
+    """
+    return staged_n.startswith(head_n)
+
+
 def _banned_anywhere(node, found=None):
     """Every BANNED_ANYWHERE key reachable from `node`, at any depth."""
     found = set() if found is None else found
@@ -99,6 +111,24 @@ def _banned_anywhere(node, found=None):
 
 def _norm(text):
     return (text or '').replace('\r\n', '\n')
+
+
+def _git_is_sane():
+    """Can we talk to git at all? Round-2 review, M2.
+
+    `evidence.exists_committed` returns `rc == 0` and never raises, and the HEAD read maps every
+    failure to None -- so a BROKEN git produced "no file yet" / "no history yet" and the guard
+    printed OK. The previous comment argued the conflation was confined to a harmless branch; that
+    argument was circular, because the thing doing the confining runs the SAME git. Two readers
+    failing in the same direction cannot be each other's cross-check. This asks a question whose
+    answer does not depend on the receipts file at all, so a broken git is visible as a broken git.
+    """
+    try:
+        import subprocess
+        p = subprocess.run(['git', 'rev-parse', '--git-dir'], capture_output=True)  # snapshot: none
+        return p.returncode == 0
+    except Exception:
+        return False
 
 
 def _head_text():
@@ -124,16 +154,35 @@ def _head_text():
     return None
 
 
-def check(staged_text, head_text, problems):
-    """The whole rule set, over TEXT -- so the cage can drive it without a git repo."""
+def check(staged_text, head_text, problems, grandfather=True):
+    """The whole rule set, over TEXT -- so the cage can drive it without a git repo.
+
+    GRANDFATHERING (round-2 review, M4). W2 judges the FILE and must see everything. The row-level
+    criteria judge only rows this change ADDS, because the log is append-only and a row already at
+    HEAD can never be repaired: one non-conforming row -- arrived via --no-verify, or made
+    non-conforming later when a rule is TIGHTENED -- would otherwise freeze the artifact forever,
+    since every legal remedy (edit it, delete it, delete the file) is refused by W2. A guard
+    blocking its own repair is the family this repo has paid for repeatedly, and this session made
+    it concrete: `pf` was a legal receipt field an hour before the allow-list landed.
+
+    Duplicates still cross the boundary -- old order ids stay in `seen`, so a NEW row re-using one
+    is refused. Only the old rows themselves stop being re-judged.
+    """
     # W2 first: it is a claim about the file as a whole, and a rewrite makes every row suspect.
     if head_text is not None:
         head_n, staged_n = _norm(head_text), _norm(staged_text)
-        if not staged_n.startswith(head_n):
+        if not _is_append(head_n, staged_n):
             problems.append(
                 'W2 %s is APPEND-ONLY and this change is not an append: the bytes at HEAD are no '
                 'longer a prefix of the staged bytes. An existing receipt was edited or deleted. '
                 'Add a new row instead -- history is the point of the file.' % RECEIPTS_PATH)
+
+    # Everything up to and including HEAD's last line is history: counted, never re-judged.
+    # `.rstrip(chr(10))` matters: a file ending in a newline splits to a trailing EMPTY element,
+    # and counting it made frozen_upto one too high -- which silently grandfathered the FIRST
+    # NEW row, i.e. the exact row the guard exists to judge. Caught by probing, not by reading.
+    _head_n = _norm(head_text).rstrip(chr(10)) if (grandfather and head_text is not None) else ''
+    frozen_upto = len(_head_n.split(chr(10))) if _head_n else 0
 
     rows, seen = [], {}
     for n, raw in enumerate(_norm(staged_text).split('\n'), start=1):
@@ -142,18 +191,29 @@ def check(staged_text, head_text, problems):
         try:
             obj = json.loads(raw)
         except ValueError as exc:
+            if n <= frozen_upto:
+                continue
             problems.append('W1 %s line %d is not valid JSON: %s' % (RECEIPTS_PATH, n, exc))
             continue
         if not isinstance(obj, dict):
+            if n <= frozen_upto:
+                continue
             problems.append('W1 %s line %d is a %s, not an object'
                             % (RECEIPTS_PATH, n, type(obj).__name__))
             continue
-        if list(obj.keys()) == ['_comment']:
-            continue          # W0: the header line is not a receipt
+        if list(obj.keys()) == ['_comment'] and n == 1:
+            # LINE 1 ONLY (round-2 review, N9): allowing it anywhere made an unchecked
+            # free-text channel -- a _comment row carrying a full verdict was accepted,
+            # uncounted, at any position.
+            continue
         rows.append((n, obj))
 
     for n, obj in rows:
         oid = str(obj.get('order_id') or '').strip()
+        if n <= frozen_upto:
+            if oid:
+                seen.setdefault(oid, n)   # history still blocks a NEW duplicate
+            continue
         if not oid:
             problems.append('W3 %s line %d carries no order_id, so nothing can be attributed to it'
                             % (RECEIPTS_PATH, n))
@@ -185,6 +245,11 @@ def main(argv=None):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
     src = _src()
+    # Round-2 review, M3: this printed no marker, so nothing could tell whether the mode ARRIVED.
+    # Probed: the same staged tamper exits 1 with EA_LAB_EVIDENCE=index and 0 with it unset -- the
+    # guard silently judged the DISK while the commit wrote the INDEX. evidence.py's own contract
+    # says every consumer prints marker() exactly once; five other checkers do. Now six.
+    print(src.marker('work-receipts'))
     problems = []
 
     # HEAD is resolved FIRST, and that ordering is the fix for a hole found by PROBING this guard
@@ -193,6 +258,11 @@ def main(argv=None):
     # exited 0. An APPEND-ONLY guard that permitted deleting the entire log -- every receipt gone in
     # one commit, silently. W0 means "nobody has written one yet"; it does NOT mean "somebody
     # removed them all", and only HEAD can tell those two apart.
+    if not _git_is_sane():
+        print('%s TOOL FAILURE: git is not answering, so "absent" and "unreadable" cannot be told '
+              'apart -- refusing to report a verdict.' % TAG)
+        return 2
+
     head_text = _head_text()
     present = src.exists_committed(RECEIPTS_PATH)
 

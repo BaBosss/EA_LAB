@@ -37,6 +37,16 @@ foreach ($p in @($py, $suite, $check)) {
     }
 }
 
+# ORDER-670's tier-verifiable evidence marker, named for THIS SUITE -- which is what the T4
+# allowlist matches on (run_fast_cages.ps1:1099 escapes the suite filename, not a component name).
+# The first attempt emitted the checker's own component marker and the tier REFUSED the commit
+# with "emitted NO evidence-mode marker", which is the guard working: silence must not pass.
+& $py -c "import sys, os; sys.path.insert(0, os.path.join(r'$RepoRoot', '_triage', 'factory_os')); import evidence; print(evidence.EvidenceSource.for_run().marker('run_work_receipts_tests.ps1'))"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '[work-receipts] FAIL: could not emit the evidence-mode marker' -ForegroundColor Red
+    exit 2
+}
+
 $out = & $py $suite 2>&1
 $code = $LASTEXITCODE
 $out | ForEach-Object { Write-Host $_ }
@@ -54,6 +64,13 @@ if (($out -join "`n") -notmatch 'ENGAGEMENT') {
 $out2 = & $py $check 2>&1
 $code2 = $LASTEXITCODE
 $out2 | ForEach-Object { Write-Host $_ }
+if ($code2 -eq 2) {
+    # Round-2 review, N8: this collapsed 2 into 1. The checker's contract is 2 = TOOL FAILURE, and
+    # the wrapper's own missing-file branch above already honours it -- discarding the distinction
+    # here is the "could not run the cage" / "the cage failed" conflation this repo refuses.
+    Write-Host "[work-receipts] TOOL FAILURE reading the receipts file (exit 2) -- not a verdict" -ForegroundColor Red
+    exit 2
+}
 if ($code2 -ne 0) {
     Write-Host "[work-receipts] the REAL factory/work_receipts.jsonl does not satisfy the grant (exit $code2)" -ForegroundColor Red
     exit 1

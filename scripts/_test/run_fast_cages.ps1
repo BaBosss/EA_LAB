@@ -788,7 +788,13 @@ $selected = Select-Suites -Suites $FAST_SUITES -Guards $SUITE_GUARDS -Staged $St
 # suite -> python, not what a wrapper believes. Grows one entry per migrated suite
 # (TIER_SNAPSHOT_DESIGN.md section 6); when all 14 are here, the list dissolves into
 # "every selected suite".
-$EVIDENCE_SUITES = @('run_registry_tests.ps1')
+$EVIDENCE_SUITES = @('run_registry_tests.ps1',
+                     # Round-2 review, M3: check_work_receipts judges the STAGED bytes, and
+                     # nothing verified the mode arrived. Probed: the same staged tamper exits
+                     # 1 with EA_LAB_EVIDENCE=index and 0 with it unset -- the guard silently
+                     # judged the disk while the commit wrote the index. Now the tier refuses
+                     # a run whose marker is missing.
+                     'run_work_receipts_tests.ps1')
 if ($null -ne $EvidenceSuitesOverride) {
     $EVIDENCE_SUITES = @($EvidenceSuitesOverride | Where-Object { $_ -and $_ -ne 'NONE' })
 }
