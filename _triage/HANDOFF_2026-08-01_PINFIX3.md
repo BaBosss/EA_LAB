@@ -12,6 +12,19 @@ Execute `_triage/HANDOFF_2026-08-01_PINFIX2.md`: **`ORDER-731` option A** (narro
 reading, drafting and implementation distributed to Opus subagents (the user asked for this
 explicitly, and it is the seat's cost rule anyway).
 
+> 🔴 **CORRECTED SAME DAY by lane `S-2026-08-01-PINFIX3B` (`/scrutinize`). Read this box before
+> anything below it.** This handoff calls `7baadb18` "the payoff, demonstrated". **That is false.**
+> That commit turned the S2a gate RED (`F5 line 8 acknowledges current_blob '02c1d0ed…' but HEAD has
+> '0740c0ea…'`), because **`stale_pin_acknowledgement.current_blob` is a SECOND whole-file pin on the
+> same file** and option A narrowed only `expected_post_state`. The front guard did not predict it
+> (`check_attested_pin_staged.py:165` adds the ack pin only `if path not in pins`, and the section pin
+> now takes that slot), so `ORDER-731`'s own C2 was violated by `ORDER-731`'s own fix. **HEAD is red;
+> `_triage/factory_os/**` and `MASTER_BACKLOG.md` are uncommittable** (a revert of `7baadb18` was
+> attempted and REFUSED). Full trace + the measured recommendation (option 2, `factory/coverage.jsonl`
+> = 1 commit/14d vs `MASTER_BACKLOG.md` = 31) are on the `ORDER-731` row and in
+> `_triage/USER_DECISIONS_PENDING.md` item 5. Everything below is left unedited on purpose — a
+> handoff that is quietly rewritten is not a record.
+
 ## The one-line state
 
 **`ORDER-731` option A is LANDED and owner-signed (`212c0555`), proven both ways on the real

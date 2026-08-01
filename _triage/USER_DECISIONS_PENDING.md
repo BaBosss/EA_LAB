@@ -83,17 +83,37 @@ pick numbers silently. Do not let it choose.
 
 ---
 
-## 5. ✅ DECIDED AND EXECUTED — option A, owner-ratified 2026-08-01, landed 2026-08-01 (`212c0555`)
+## 5. 🔴 STILL OPEN — option A was executed, and MEASURED NOT TO WORK. Option 2 is now the recommendation.
 
-**The owner ratified option 1 (narrow the pin) on 2026-08-01 ("ทำตามที่นายแนะนำเลยทั้งหมด", lane
-PINFIX2) and signed the digest in chat 13:32 ("ยืนยันทำเลย", lane PINFIX3).** The record in force
-(line 8) now pins **§2 only** (`section_sha256 8f5aa2e6c115`, bundle `e3f83efa`). Appends to other
-sections land cleanly — proven the same day: `7baadb18` restored `| D33 |` through the real hook,
-the exact commit the whole-file pin refused that morning. Cost paid: one policy amendment + one
-signature, exactly as priced below. Full evidence = the `ORDER-731` RESULT block (lane PINFIX3).
-Residual toll, stated at signing: a §2-heading rename and every `gen_coverage.py --apply` still
-cost a signature; option 2 below remains available as a complement if that measures too high.
-*The original write-up is kept below for provenance — it is no longer pending.*
+**What happened:** the owner ratified option 1 (2026-08-01, lane PINFIX2) and signed the digest in
+chat at 13:32 (lane PINFIX3). It landed in `212c0555`, correctly: the record in force (line 8) pins
+**§2 only** and the section machinery works. **Then the first real append (`7baadb18`, restoring
+`| D33 |`) turned the S2a gate RED** — `check_s2a_attestation.py` exit 1, `check_coverage_transfer.py`
+exit 1, `run_contract_binding_tests.ps1` exit 1, and a `git revert` of it was **refused** with HEAD
+unmoved. Everything under `_triage/factory_os/**` and `MASTER_BACKLOG.md` is uncommittable as of
+this writing.
+
+**Why option 1 could never have worked — the costing below is wrong and this line is the fix to it.**
+There are **TWO** whole-file pins on `MASTER_BACKLOG.md`, not one. Option 1 narrowed
+`expected_post_state` (F11 → F14). The other is **`stale_pin_acknowledgement.current_blob`, enforced
+by F5 against HEAD's whole-file blob**, and it is demanded by F2 because **D1 pins the file at
+`ca909b69` while HEAD is elsewhere, so N2 derives a permanent STALE note.** The note derivation
+(N1–N4) and D1 are *both bundle members*, so removing that second pin is a **second** signature —
+which option 1 was never priced to include.
+
+**Measured, which is what makes option 2 the recommendation rather than a preference:**
+`factory/coverage.jsonl` took **1** commit in the last 14 days; `MASTER_BACKLOG.md` took **31**.
+Moving the Coverage owner to the store removes **both** pins at once (the file stops being an owner,
+so there is no `owner_ref`, no note, no F2–F5, and no post-state claim to narrow), cuts signature
+pressure ~**31×**, and `check_coverage_transfer.py` continues to prove §2 matches the store — so §2's
+integrity is preserved by a mechanism that does not charge a signature per backlog row.
+
+**What is needed from you, in this order:** (a) **unblock HEAD** — either one `--no-verify` for the
+revert of `7baadb18` (the same shape you approved this morning, and it puts `D33` back in git
+history where `git show 78a93129:MASTER_BACKLOG.md` still finds it), or a new attestation line whose
+`current_blob` is the present blob (that is a signature, and it would demonstrate the toll rather
+than remove it); (b) **choose option 2 or accept the toll.** Full trace = the `ORDER-731` CORRECTION
+block on the taskboard. *The original write-up is kept below for provenance.*
 
 ### (resolved) The S2a pin is a WHOLE-FILE blob on a board every lane appends to
 
