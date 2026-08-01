@@ -502,9 +502,49 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > pin the whole file, which is the *"the guard's own limits are stated in the guard"* rule applied
 > to a document the owner signed.
 >
-> **What is NOT wrong:** the section machinery itself. `extract_section`/F13/F14/P4 behave as
-> documented, all five cages re-run green by the seat, and the tampered-§2 probe was refused with
-> `P1`. The defect is scope, not correctness.
+> **What is NOT wrong:** the section machinery itself. An independent adversarial pass ran **8
+> classes of attack on the extraction rule and could not construct a single digest-preserving change
+> to the approved region** — boundary truncation (inserting a `## ` right after the anchor), boundary
+> deletion (removing the section-ending heading), CRLF, trailing whitespace, six fence variants, and
+> leading-whitespace anchors all either move the digest or fail closed, each shown with its actual
+> region bytes. `extract_section`/F13/F14/P4 behave as documented and the tampered-§2 probe was
+> refused with `P1`. **The defect is scope and seams, not the rule.**
+>
+> #### Three further defects from that pass, none of them landable today (same block)
+>
+> 🔴 **A — the SIGNED POLICY misstates its own implementation, and it bites the section lanes
+> actually append to.** §4.3.1 step 6 says *"the terminating newline is unconditional, so a section at
+> end-of-file and a section followed by a heading are hashed by one rule."* They are not: `split('\n')`
+> on a file ending in `\n` leaves a trailing `''`, which is inside `lines[start:end]` only when the
+> pinned section is **last**, and `:237` then adds a second `'\n'`. Probed: same section text hashes
+> `ec945f1198a8` at EOF vs `eea31043623e` mid-file. Latent for §2 (mid-file) — **and §9 DORMANT
+> BACKLOG is the last section, which is where `D33` and every dormant row goes.** With a pin there,
+> adding a `## 10.` heading or an editor touching the final newline would change §9's digest with its
+> own bytes untouched. **Fix the CODE, not the document:** drop the trailing `''` before joining, and
+> the signed text becomes true at no signature. Correcting the policy instead would cost one.
+>
+> 🔴 **B — a BOTH-forms record is F6-invalid to the checker and silently re-widens to a whole-file
+> pin in the front guard.** `check_s2a_attestation` refuses `{path, blob, section, section_sha256}`
+> at F6; `check_attested_pin_staged.py:155-159` falls through to `elif eps.get('blob')` and pins the
+> whole file. Direction is strict, so not a bypass — but **the natural way to hand-write the next
+> record is to copy line 7 and add the section fields**, which produces exactly this shape and
+> reinstates the deadlock while the author believes they narrowed it. Fix: one shared `_form_of(eps)`
+> in the checker, imported by the guard — the same "ONE rule, two readers" already applied to
+> `extract_section` and `eligible_records`.
+>
+> 🔴 **C — a `ToolFailure` escapes `evaluate()`, and the docstring claiming otherwise is false.**
+> `check_attested_pin_staged.py:116-118` states a ToolFailure *"propagates to main() and becomes P3
+> (exit 2)"*. Probed: `ToolFailure` is a bare `Exception`, **not** a `ValueError`, so `evaluate`'s
+> `except (UnicodeDecodeError, ValueError)` misses it, and `main`'s `try` block **ends at `return 2`
+> before `evaluate` is called** — so it exits 1 with a traceback under a header about moving a pinned
+> blob. That is "the tool broke" and "the file is wrong" sharing an outcome, in the file that cites
+> that rule. Low reachability (needs a gitlink or corrupt object), two lines to fix.
+>
+> *(also recorded, minor: fence parity is computed over the whole file, so an unbalanced fence
+> thousands of lines away is P4 — fail-closed and repairable, but the P4 message's "edits OUTSIDE
+> this section are not what refused you" is false in that one case; and `UnicodeDecodeError` is named
+> beside its own parent `ValueError` in both `except` clauses, where the bare arm then reports any
+> ValueError from the swappable `_head_text` seam as a UTF-8 decode failure.)*
 
 > ### RESULT (lane `S-2026-08-01-PINFIX3`, 2026-08-01) — option A LANDED with the owner's signature
 >
