@@ -508,7 +508,7 @@ either measurement alone:
 processes**, which is how the bug announced itself. Instrument `Popen` only, and charge each process
 once behind a flag.</sub>
 
-### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — `PARKED` pending review
+### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — status `DONE`; an independent (non-author) review is still open to whoever writes `REVIEWED`
 
 > **One sentence:** every number in this order and in `ORDER-820` was quoted without saying **how it was
 > produced** — evidence mode *and* the shell that launched it — and those two variables are worth
@@ -516,8 +516,9 @@ once behind a flag.</sub>
 > intermittent swing" between them.
 >
 > 🔴 **This lane then made the same mistake and caught it in `A2b`** — read `A2b` before quoting any
-> tier total from this order. Measured the way `.githooks/pre-commit` actually invokes it, the full
-> tier is **83.3 · 86.4 · 87.2 s — inside** the 90.0 s budget, on 17 suites.
+> tier total from this order. Measured the way `.githooks/pre-commit` actually invokes it, six full-tier
+> samples span **83.3 - 90.1 s against 90.0 s — ON THE LINE, one of six over** (17 suites, commits
+> `7e4d8361`/`60a6eb12`).
 
 #### A1 — the operation is `check_r4`'s resolver sweep, and here are the counts
 
@@ -553,13 +554,13 @@ is a per-path call over the sweep.
 marker line names the mode. The `worktree` half costs 0.07 s; the `index` half costs 5.0 s — for the
 same one-line assertion.</sub>
 
-<sub>🔎 **A spawn costs 25.3 ms or 35.3 ms depending on which `git.exe` is on PATH, and that is not
-noise.** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**; `C:\Program Files\Git\mingw64\bin\git.exe`
-is the real **4.3 MB** binary. Benchmarked from ONE shell so the shell is held constant: **35.3 vs
-25.3 ms/spawn**, i.e. the shim's extra process start is **+10 ms**, **+1.4 s on this one script**.
-PowerShell resolves the shim (15 PATH entries); git-bash resolves the real binary (31 entries) — so
-it is not PATH length. **A lead for `ORDER-820` C2, not a finding: nobody has measured which one the
-real hook resolves.**</sub>
+<sub>🔎 **Which `git.exe` is on PATH moves every spawn, and that is not noise.** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**; `C:\Program Files\Git\mingw64\bin\git.exe`
+is the real **4.3 MB** binary. Benchmarked from ONE shell, **interleaved in both orders across 3
+rounds** so a warm-cache effect cannot hide: the shim costs **+9.1..9.2 ms/spawn, stable to 0.1 ms**
+— quote the delta, not the absolutes, which drift with load. **+~1.3 s on this one script.**
+PowerShell resolves the shim (15 PATH entries); git-bash the real binary (31 entries) — so it is not
+PATH length. **A lead for `ORDER-820` C2, not a finding: nobody has measured which one the real
+hook resolves.**</sub>
 
 #### A2 — **none of the three branches.** It is a fourth, and it is not distributional
 
@@ -695,8 +696,10 @@ Where the index tax actually falls: `check_registries.py` **+4.89** · `run_cove
 `run_enforcement_status_tests.py` **~0.8 → 0.38/0.41 s** · `run_schema_fixtures.py` 2.2 → **2.35/2.68 s**
 (held) · `run_input_surface_tests.py`/`check_input_surface_gen.py` 0.22+0.11 → **0.18+0.07 / 0.18+0.21**
 (held) · the two `coverage_transfer` entries got the **first numbers they have ever had** (3.67+0.84
-worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of headroom"* now says it is
-**7-9 s OVER** under the hook. Suite re-run after the edit: **green, 25.4 s, unchanged**.
+worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of headroom"* now says the headroom
+**is real but thin — 83.3-90.1 s against 90.0 s through the hook's own invocation, one sample over — and
+nothing further goes in the wrapper without re-measuring through that line**. Suite re-run after the
+edit: **green, 25.4 s, unchanged**.
 
 #### Handed forward, not done here
 
@@ -717,7 +720,7 @@ worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of he
 
 ---
 
-## ORDER-820 — [tier] The budget question is REOPENED, not answered: the suite did NOT grow ~9s (that is the evidence-mode delta) and the full tier measured the way the hook invokes it is 83.3-87.2s, INSIDE the 90.0s budget — every earlier sample was taken with no recorded invocation — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-820 — [tier] The budget question is REOPENED, not answered: the suite did NOT grow ~9s (that is the evidence-mode delta) and the full tier measured the way the hook invokes it spans 83.3-90.1s against the 90.0s budget — ON THE LINE, one of six samples over — every earlier sample was taken with no recorded invocation — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > 🔴 **CORRECTED 2026-08-01 by `ORDER-830` (lane `S-2026-08-01-TIERATTR`), and the correction goes to
 > the PREMISE of this row, not to a detail in it. Everything below the next box is kept verbatim
@@ -726,8 +729,8 @@ worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of he
 >
 > | this row says | measured |
 > |---|---|
-> | `run_contract_binding_tests.ps1` **grew +8.7 s** between `ddbaec95` and now | it grew **+0.7 s**. The +8.7 s is the **evidence-mode delta**, and it is the same (+8.46 s) at `ddbaec95` itself. 22.9 s was a **worktree**-mode measurement, 31.6 s an **index**-mode one. |
-> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **configuration, not variance** — and the direction is the opposite of what this row assumes. Reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell -File ... -Hook`), the full tier is **83.3 · 86.4 · 87.2 s — every one INSIDE the budget**, on **17** suites. The same script launched from PowerShell is 95.9-98.6 s, because every `git` spawn goes through a 45 KB `cmd\git.exe` shim (+10 ms × 142 spawns). |
+> | `run_contract_binding_tests.ps1` **grew +8.7 s** between `ddbaec95` and now | it grew **+0.7 s** (measured, mode and shell held constant at both commits). The +8.7 s matches the **evidence-mode delta**, which is the same (+8.46 s) at `ddbaec95` itself — the mode assignment of the original 22.9 s / 31.6 s figures is **inference**: neither recorded its invocation, and no measured configuration reproduces 22.9 s. |
+> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **configuration, not variance**. Reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell -File ... -Hook`), six full-tier samples span **83.3 - 90.1 s against 90.0 s — ON THE LINE, one over** (17 suites, `7e4d8361`/`60a6eb12`). The same script launched from PowerShell is 95.1-98.6 s, because every `git` spawn goes through a 45 KB `cmd\git.exe` shim (**+9.1..9.2 ms × ~142 spawns**, measured interleaved). |
 > | the full tier is **OVER budget on every sample** (the row title) | 🔴 **not supported by any measurement taken the way git invokes it.** The six samples carry no record of how they were launched, and the spread between invocations (83-98 s) is wider than the spread between the samples. This is **not** proof the tier is safe — it is proof the budget has been argued from numbers with no stated provenance. |
 > | C1 = *"which commit added 8.7 s"* | **unanswerable as written, and it does not need answering.** No commit added it. |
 >

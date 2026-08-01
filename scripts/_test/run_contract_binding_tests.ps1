@@ -294,10 +294,11 @@ $scripts = @(
     #     whole job is to refuse a commit and a suite cannot do that. Same trade this file states
     #     for items 7 and 10: a python cage belongs in an existing python wrapper rather than a
     #     17th PowerShell suite, and the tier has ~7-9s of headroom, not a process to spare.
-    #     RE-MEASURED 2026-08-01 (ORDER-830) and the headroom is real but thin: reproducing
-    #     .githooks/pre-commit:220 exactly (sh -> powershell -File run_fast_cages.ps1 -Hook), the
-    #     full tier is 83.3 / 86.4 / 87.2s against 90.0s -- on SEVENTEEN suites. The same script
-    #     launched from PowerShell reads 95.9-98.6s, which is the shim above, not the tier.
+    #     RE-MEASURED 2026-08-01 (ORDER-830) and the headroom is ON THE LINE, not real-but-thin:
+    #     reproducing .githooks/pre-commit:220 exactly (sh -> powershell -File run_fast_cages.ps1
+    #     -Hook), six full-tier samples span 83.3-90.1s against 90.0s -- ONE OF THEM OVER --
+    #     on SEVENTEEN suites (83.3/86.4/87.2 at 7e4d8361, 87.1/87.2/90.1 at 60a6eb12). The same
+    #     script launched from PowerShell reads 95.1-98.6s, which is the shim above, not the tier.
     #     Nothing further goes in this wrapper without re-measuring THROUGH THE HOOK'S OWN LINE.
     @{ Path = '_triage\factory_os\run_attested_pin_staged_tests.py'; Args = @() }
 )

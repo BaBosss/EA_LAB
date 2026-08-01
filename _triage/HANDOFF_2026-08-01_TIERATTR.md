@@ -130,8 +130,9 @@ went red in 3 of ~12 full-tier runs and green every time it was run alone: **it 
 | item | destination |
 |---|---|
 | A1 named (129 paths, 142 git spawns) · A2 (no regression, +0.7 s) · A2b (mode + shell, not variance) · A3 (residual is 1-2 s of process starts) · A4 (wrapper comments repaired) | ORDER-830 |
-| the budget question REOPENED: 83.3-87.2s through the hook's own invocation vs 95.9-98.6s from PowerShell — re-establish C2's premise before spending anything on it, and restate C3 as three runs through `.githooks/pre-commit`'s own line | ORDER-820 |
+| the budget question REOPENED: six samples 83.3-90.1s through the hook's own invocation (ON THE LINE, one over) vs 95.1-98.6s from PowerShell — re-establish C2's premise before spending anything on it, and restate C3 as three runs through `.githooks/pre-commit`'s own line with commit and shell stated | ORDER-820 |
 | the ~5s still unexplained between `sh`+`-Hook` and a real hook | ORDER-820 |
+| the git-shim lever: `cmd\git.exe` costs +9.1..9.2 ms/spawn vs `mingw64\bin\git.exe` — nobody has measured which one a real hook resolves | ORDER-820 |
 | `run_front_guard_evidence_tests.ps1` red in 3 of ~12 full-tier runs, green alone — it judges `HEAD` and parallel lanes move `HEAD` during a 90-second run | ORDER-731 |
 | the named candidate fix: one `git cat-file --batch` in `evidence.py` instead of 129 `git show` spawns | ORDER-820 |
 | `run_s2a_gate.py` 2.57 → 4.94 s, unattributed | ORDER-820 |
