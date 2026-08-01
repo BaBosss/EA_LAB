@@ -87,8 +87,8 @@
 <body>
 <h1>EA_LAB Live Dashboard</h1>
 <div class="meta">
-  Generated: 2026-07-31 07:37:26 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260731.csv, EA_LAB_deals_159503454_20260731.csv, EA_LAB_deals_415573666_20260731.csv, EA_LAB_deals_463666728_20260731.csv, EA_LAB_mt4_orders_141049900_20260731.csv, EA_LAB_mt4_orders_69424711_20260731.csv</code> &middot;
-  Accounts: <code>MT5 146237 (2026-07-10) + MT5 159475669 (2026-07-31) + MT5 159503454 (2026-07-31) + MT5 415573666 (2026-07-31) + MT5 463666728 (2026-07-31) + MT4 141049900 (2026-07-31) + MT4 69424711 (2026-07-31)</code><br>
+  Generated: 2026-08-01 07:37:26 &middot; Source CSV: <code>EA_LAB_deals_146237_20260710.csv, EA_LAB_deals_159475669_20260801.csv, EA_LAB_deals_159503454_20260801.csv, EA_LAB_deals_415573666_20260801.csv, EA_LAB_deals_463666728_20260801.csv, EA_LAB_mt4_orders_141049900_20260731.csv, EA_LAB_mt4_orders_69424711_20260731.csv</code> &middot;
+  Accounts: <code>MT5 146237 (2026-07-10) + MT5 159475669 (2026-08-01) + MT5 159503454 (2026-08-01) + MT5 415573666 (2026-08-01) + MT5 463666728 (2026-08-01) + MT4 141049900 (2026-07-31) + MT4 69424711 (2026-07-31)</code><br>
   Analysis windows (deals before these dates = earlier hand experiments, excluded):
   <code>141049900 from 2026-05-26 | 159475669 from 2026-05-26 | 159503454 from 2026-07-01 | 415573666 from 2026-07-06</code> &middot; excluded rows: 9287
 </div>
@@ -114,22 +114,16 @@
   Sorted red &rarr; unknown-base &rarr; yellow &rarr; green &rarr; white &rarr; unmapped.
 </div>
 
-<div class="card"><div class="mris-brief" style="border-left:4px solid #d9a406;padding:8px 12px;margin:8px 0;font-family:sans-serif">
-  <div style="font-weight:700">MRIS 🟡 สมดุล/เฝ้าระวัง (NEUTRAL) <span style="font-weight:400;color:#666">- RI -0.192 - conf MED</span></div>
-  <div style="font-size:0.9em;color:#444">2026-07-31 07:37 - balanced - watch for tilt</div>
-  <ul style="margin:6px 0;padding-left:18px;font-size:0.9em"><li>WARN: TRIPWIRE_NEAR: AUDJPY 112.75 only 2.5% above pin 110</li></ul>
-  <div style="font-size:0.85em;color:#555">ยังไม่ต้องลด — แต่ทบทวนสัดส่วนขา carry/JPY, ตั้ง alert ล่วงหน้าที่เส้น tripwire, เตรียมแผนลด lot ไว้ก่อน (ไม่ใช่ตอนราคาหลุดแล้ว)</div>
-  <div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><div style="font-weight:700;font-size:0.9em">โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)</div><ul style="margin:4px 0;padding-left:18px;font-size:0.85em"><li>Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) - 20.5/100 - 🟢 สงบ - ตัวขับหลัก: US 10Y yield level = 4.663%</li><li>เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) - 17.8/100 - 🟢 สงบ - ตัวขับหลัก: WTI % above its SMA200 = 11.139%</li><li>ความเครียดสินเชื่อ (สเปรด HY กว้าง) - 9.3/100 - 🟢 สงบ - ตัวขับหลัก: HY spread 5d widening (%) = 7.09%</li></ul><div style="font-size:0.75em;color:#777">คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)</div></div>
+<div class="card"><div class="mris-brief" style="border-left:4px solid #f46d43;padding:8px 12px;margin:8px 0;font-family:sans-serif">
+  <div style="font-weight:700">MRIS 🟠 ถอยรับความเสี่ยง (RISK-OFF) <span style="font-weight:400;color:#666">- RI -0.731 - conf HIGH</span></div>
+  <div style="font-size:0.9em;color:#444">2026-08-01 07:37 - defensive / reduce carry exposure</div>
+  <ul style="margin:6px 0;padding-left:18px;font-size:0.9em"><li>WARN: TRIPWIRE_NEAR: AUDJPY 110.56 only 0.51% above pin 110</li></ul>
+  <div style="font-size:0.85em;color:#555">ลด lot ขา DIRECT_CARRY/RISK_ON &#215;0.5 + block ไม้ใหม่ &#183; ทยอยสำรอง cash เผื่อของถูก Q4 &#183; ตั้ง alert ที่ tripwire</div>
+  <div style="margin-top:6px;border-top:1px solid #eee;padding-top:6px"><div style="font-weight:700;font-size:0.9em">โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)</div><ul style="margin:4px 0;padding-left:18px;font-size:0.85em"><li>เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) - 31.4/100 - 🟢 สงบ - ตัวขับหลัก: WTI % above its SMA200 = 14.505%</li><li>Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) - 29.6/100 - 🟢 สงบ - ตัวขับหลัก: US 10Y yield level = 4.745%</li><li>ความเครียดสินเชื่อ (สเปรด HY กว้าง) - 4.9/100 - 🟢 สงบ - ตัวขับหลัก: HY spread 5d widening (%) = 2.527%</li></ul><div style="font-size:0.75em;color:#777">คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)</div></div>
 </div></div>
 <div class="card" id="news-card">
-<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-07-31 07:37 &middot; source: ForexFactory feed</span><br>
-<table style="font-size:12px"><tr><th>Bangkok</th><th>CCY</th><th>Event</th><th>F&#39;cast</th><th>Prev</th></tr>
-<tr style="font-weight:600"><td>Fri 13:30</td><td>JPY</td><td style="text-align:left">Monetary Policy Statement</td><td></td><td></td></tr>
-<tr style="font-weight:600"><td>Fri 13:30</td><td>JPY</td><td style="text-align:left">BOJ Policy Rate</td><td><1.00%</td><td><1.00%</td></tr>
-<tr style="font-weight:600"><td>Fri 13:31</td><td>JPY</td><td style="text-align:left">BOJ Outlook Report</td><td></td><td></td></tr>
-<tr style="font-weight:600"><td>Fri 16:30</td><td>JPY</td><td style="text-align:left">BOJ Press Conference</td><td></td><td></td></tr>
-<tr style="font-weight:600"><td>Fri 23:30</td><td>CAD</td><td style="text-align:left">GDP m/m</td><td>0.2%</td><td>0.5%</td></tr>
-</table>
+<b>&#128680; High-impact news (today + tomorrow, Bangkok time)</b> <span style="font-size:11px;color:#888">updated 2026-08-01 07:37 &middot; source: ForexFactory feed</span><br>
+<span style="font-size:13px">No high-impact events in the next 2 days for portfolio currencies.</span>
 </div>
 
 <div class="card">
@@ -143,82 +137,77 @@
 <div class="card">
 <h2 style="font-size:16px;margin:0 0 8px 0;">&#9888;&#65039; FLOATING RISK &mdash; open baskets / margin (snapshot exporter, ORDER-092)</h2>
 <div class="card acct-card">
-<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:18 &middot; base equity UNKNOWN - no base_equity for 159503454 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
-<div class="acct-head">equity <b>7,666.21</b> vs balance <b>7,761.56</b> USC &middot; floating <span class="neg">-95.35</span> &middot; margin level <span class="ml-green">12,400.9%</span> &middot; distance to stop-out: 12,400.9 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>159503454</b> &middot; Blazing Arrow — REAL cent &#183; MT5 cohort 5 EA (validated) [LAB_MANAGED] &middot; snapshot 2026.08.01 00:36:14 &middot; base equity UNKNOWN - no base_equity for 159503454 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head">equity <b>7,441.23</b> vs balance <b>7,761.56</b> USC &middot; floating <span class="neg">-320.33</span> &middot; margin level <span class="ml-green">4,728.2%</span> &middot; distance to stop-out: 4,728.2 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">manual trades (magic 0)</td><td class="num-cell">0</td><td class="num-cell">XAGUSDc;XAUUSDc</td><td class="num-cell neg">-70.80</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">203.2</td><td class="num-cell">0</td><td class="label-cell">no declared criteria</td></tr>
-<tr class="st-nobase"><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990101</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-17.20</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">10.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159503454 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">(Boss)_RSI_MR_GridLog [REMOVED]</td><td class="num-cell">990103</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-7.35</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">395.6</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159503454 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr><td class="name-cell">manual trades (magic 0)</td><td class="num-cell">0</td><td class="num-cell">XAGUSDc;XAUUSDc</td><td class="num-cell neg">-171.40</td><td class="num-cell">0.03</td><td class="num-cell">3</td><td class="num-cell">227.2</td><td class="num-cell">0</td><td class="label-cell">no declared criteria</td></tr>
+<tr class="st-nobase"><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990101</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-140.20</td><td class="num-cell">0.05</td><td class="num-cell">5</td><td class="num-cell">34.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159503454 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">(Boss)_RSI_MR_GridLog [REMOVED]</td><td class="num-cell">990103</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-8.73</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">419.6</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159503454 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:19 &middot; base equity UNKNOWN - no base_equity for 159475669 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
-<div class="acct-head">equity <b>9,977.27</b> vs balance <b>10,087.47</b> USC &middot; floating <span class="neg">-110.20</span> &middot; margin level <span class="ml-green">24,598.8%</span> &middot; distance to stop-out: 24,598.8 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) [LAB_MANAGED] &middot; snapshot 2026.08.01 00:36:18 &middot; base equity UNKNOWN - no base_equity for 159475669 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head">equity <b>10,030.15</b> vs balance <b>10,157.25</b> USC &middot; floating <span class="neg">-127.10</span> &middot; margin level <span class="ml-green">29,216.9%</span> &middot; distance to stop-out: 29,216.9 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr class="st-nobase"><td class="name-cell">NuiIndy Dynamic RSI+ADX</td><td class="num-cell">1524</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-95.22</td><td class="num-cell">0.10</td><td class="num-cell">9</td><td class="num-cell">59.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">MatchaGrid</td><td class="num-cell">20240001</td><td class="num-cell">CHFJPYc</td><td class="num-cell neg">-59.65</td><td class="num-cell">0.09</td><td class="num-cell">8</td><td class="num-cell">394.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">NuiIndy Dynamic RSI+ADX</td><td class="num-cell">1524</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-108.92</td><td class="num-cell">0.10</td><td class="num-cell">9</td><td class="num-cell">83.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">MatchaGrid</td><td class="num-cell">20240001</td><td class="num-cell">CHFJPYc</td><td class="num-cell neg">-67.27</td><td class="num-cell">0.03</td><td class="num-cell">3</td><td class="num-cell">418.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">GoldReaper leg2</td><td class="num-cell">8002</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">3</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 <tr class="st-nobase"><td class="name-cell">GoldReaper leg1</td><td class="num-cell">8001</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">GoldReaper leg6</td><td class="num-cell">8012</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">1</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 <tr class="st-nobase"><td class="name-cell">GoldReaper leg3</td><td class="num-cell">8005</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 <tr class="st-nobase"><td class="name-cell">GoldReaper leg4</td><td class="num-cell">8008</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">GoldReaper leg8</td><td class="num-cell">8015</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">GoldReaper leg2</td><td class="num-cell">8002</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">4</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">GoldReaper leg8</td><td class="num-cell">8015</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">3</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">GoldReaper leg6</td><td class="num-cell">8012</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 <tr class="st-nobase"><td class="name-cell">GoldReaper leg5</td><td class="num-cell">8009</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">GoldReaper leg7</td><td class="num-cell">8014</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">2</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9397)</td><td class="num-cell">9397</td><td class="num-cell">GBPUSDc</td><td class="num-cell pos">44.67</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">926.6</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
+<tr class="st-nobase"><td class="name-cell">GoldReaper leg7</td><td class="num-cell">8014</td><td class="num-cell">XAUUSDc</td><td class="num-cell neu">0.00</td><td class="num-cell">0.00</td><td class="num-cell">0</td><td class="num-cell">0.0</td><td class="num-cell">3</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 159475669 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9397)</td><td class="num-cell">9397</td><td class="num-cell">GBPUSDc</td><td class="num-cell pos">49.09</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">950.6</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:16 &middot; base equity UNKNOWN - no base_equity for 141049900 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
-<div class="acct-head">equity <b>12,432.21</b> vs balance <b>12,407.77</b> USC &middot; floating <span class="pos">24.44</span> &middot; margin level <span class="ml-green">23,671.7%</span> &middot; distance to stop-out: 23,671.7 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>141049900</b> &middot; Celestial Woodfire — REAL cent &#183; MT4 gold fleet (user experiment) [LAB_MANAGED] &middot; snapshot 2026.07.31 20:58:59 &middot; base equity UNKNOWN - no base_equity for 141049900 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head">equity <b>11,992.72</b> vs balance <b>12,648.52</b> USC &middot; floating <span class="neg">-655.80</span> &middot; margin level <span class="ml-yellow">498.9%</span> &middot; distance to stop-out: 498.9 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr class="st-nobase"><td class="name-cell">Gold_Kangaroo L3</td><td class="num-cell">1114</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-26.98</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">1.4</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">Zeus Gold Hedge V1.2_fix (kill: manual kill floating DD 40%)</td><td class="num-cell">7777</td><td class="num-cell">EURUSDc</td><td class="num-cell pos">51.42</td><td class="num-cell">0.96</td><td class="num-cell">5</td><td class="num-cell">9.7</td><td class="num-cell">1</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">Zeus Gold Hedge V1.2_fix (kill: manual kill floating DD 40%)</td><td class="num-cell">7777</td><td class="num-cell">EURUSDc</td><td class="num-cell neg">-463.95</td><td class="num-cell">9.95</td><td class="num-cell">16</td><td class="num-cell">6.5</td><td class="num-cell">1</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">Gold_Kangaroo L3</td><td class="num-cell">1114</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-193.53</td><td class="num-cell">0.04</td><td class="num-cell">4</td><td class="num-cell">21.8</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">Gold_Kangaroo L1</td><td class="num-cell">1112</td><td class="num-cell">XAUUSDc</td><td class="num-cell neg">-5.14</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">2.8</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">Gold_Kangaroo L4</td><td class="num-cell">1115</td><td class="num-cell">XAUUSDc</td><td class="num-cell pos">6.82</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">3.5</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 141049900 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:21 &middot; base equity UNKNOWN - no base_equity for 415573666 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
-<div class="acct-head">equity <b>59,436.88</b> vs balance <b>59,344.27</b> USD &middot; floating <span class="pos">92.61</span> &middot; margin level <span class="ml-green">137,968.6%</span> &middot; distance to stop-out: 137,968.6 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols [LAB_MANAGED] &middot; snapshot 2026.08.01 00:35:28 &middot; base equity UNKNOWN - no base_equity for 415573666 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head">equity <b>58,815.97</b> vs balance <b>58,738.99</b> USD &middot; floating <span class="pos">76.98</span> &middot; margin level <span class="ml-green">649,182.9%</span> &middot; distance to stop-out: 649,182.9 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr class="st-nobase"><td class="name-cell">TsMom_XAU (S2)</td><td class="num-cell">992001</td><td class="num-cell">XAUUSDm</td><td class="num-cell neg">-14.68</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">8.6</td><td class="num-cell">0</td><td class="label-cell">kill 12% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">(Boss)_ZeusInspired_GridLog</td><td class="num-cell">990110</td><td class="num-cell">AUDJPYm</td><td class="num-cell pos">1.70</td><td class="num-cell">0.16</td><td class="num-cell">1</td><td class="num-cell">0.0</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">Boss_14_GridLog size-light</td><td class="num-cell">990203</td><td class="num-cell">EURJPYm</td><td class="num-cell pos">9.73</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">0.9</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">Boss_14_GridLog size-light thin</td><td class="num-cell">990205</td><td class="num-cell">CADJPYm</td><td class="num-cell pos">18.58</td><td class="num-cell">0.10</td><td class="num-cell">1</td><td class="num-cell">7.2</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990204</td><td class="num-cell">AUDCADm</td><td class="num-cell pos">77.28</td><td class="num-cell">0.13</td><td class="num-cell">1</td><td class="num-cell">267.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">Boss_14_GridLog</td><td class="num-cell">990204</td><td class="num-cell">AUDCADm</td><td class="num-cell pos">76.98</td><td class="num-cell">0.13</td><td class="num-cell">1</td><td class="num-cell">291.5</td><td class="num-cell">0</td><td class="label-cell">kill 25% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 415573666 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:16 &middot; base equity UNKNOWN - no base_equity for 69424711 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
-<div class="acct-head">equity <b>10,030.71</b> vs balance <b>10,151.77</b> USD &middot; floating <span class="neg">-121.06</span> &middot; margin level <span class="ml-green">28,456.8%</span> &middot; distance to stop-out: 28,456.8 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>69424711</b> &middot; Demo EA3 — DEMO MT4 cohort (monitor deferred) [LAB_MANAGED] &middot; snapshot 2026.07.31 21:55:10 &middot; base equity UNKNOWN - no base_equity for 69424711 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head">equity <b>10,194.91</b> vs balance <b>10,203.02</b> USD &middot; floating <span class="neg">-8.11</span> &middot; margin level <span class="ml-green">39,317.9%</span> &middot; distance to stop-out: 39,317.9 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr class="st-grey"><td class="name-cell">&#9888;&#65039; UNMAPPED (magic 9244)</td><td class="num-cell">9244</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-41.34</td><td class="num-cell">0.24</td><td class="num-cell">5</td><td class="num-cell">29.6</td><td class="num-cell">0</td><td class="label-cell">&#9888;&#65039; UNMAPPED - not in cohort map</td></tr>
-<tr class="st-nobase"><td class="name-cell">swb grid 4.1.0.3_h</td><td class="num-cell">990</td><td class="num-cell">AUDCADm</td><td class="num-cell neg">-35.18</td><td class="num-cell">0.30</td><td class="num-cell">2</td><td class="num-cell">10.9</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">2</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-30.81</td><td class="num-cell">0.13</td><td class="num-cell">5</td><td class="num-cell">15.6</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">RSI from pips_EA</td><td class="num-cell">5888</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-21.81</td><td class="num-cell">0.07</td><td class="num-cell">5</td><td class="num-cell">30.0</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
-<tr class="st-nobase"><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">1</td><td class="num-cell">EURUSDm</td><td class="num-cell pos">8.08</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">16.6</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">UnNomGuaiV1.132</td><td class="num-cell">2</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-7.58</td><td class="num-cell">0.07</td><td class="num-cell">3</td><td class="num-cell">6.9</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
+<tr class="st-nobase"><td class="name-cell">RSI from pips_EA</td><td class="num-cell">5888</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-0.53</td><td class="num-cell">0.02</td><td class="num-cell">2</td><td class="num-cell">5.8</td><td class="num-cell">0</td><td class="label-cell">kill 35% ref &mdash; <b>UNKNOWN</b>: no base_equity for account 69424711 in ACCOUNTS.csv, so no currency equivalent can be computed</td></tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>463666728</b> &middot; Demo bundle 10 [LAB_MANAGED] &middot; snapshot 2026.07.31 00:36:20 &middot; base equity 100,000 USD (ACCOUNTS.csv)</div>
-<div class="acct-head">equity <b>99,822.40</b> vs balance <b>99,856.35</b> USD &middot; floating <span class="neg">-33.95</span> &middot; margin level <span class="ml-green">510,339.5%</span> &middot; distance to stop-out: 510,339.5 pp above stop-out (0.0%)</div>
+<div class="acct-head"><b>463666728</b> &middot; Demo bundle 10 [LAB_MANAGED] &middot; snapshot 2026.07.31 20:58:59 &middot; base equity 100,000 USD (ACCOUNTS.csv)</div>
+<div class="acct-head">equity <b>99,877.91</b> vs balance <b>99,868.97</b> USD &middot; floating <span class="pos">8.94</span> &middot; margin level <span class="ml-green">546,079.3%</span> &middot; distance to stop-out: 546,079.3 pp above stop-out (0.0%)</div>
 <table>
 <tr><th>EA (cohort map)</th><th>Magic</th><th>Symbols</th><th>Float P&amp;L</th><th>Lots</th><th>Basket depth (pos)</th><th>Oldest pos (h)</th><th>Pending</th><th>Flag</th></tr>
-<tr><td class="name-cell">MacdDiv_Naked</td><td class="num-cell">999094</td><td class="num-cell">XAUUSDm</td><td class="num-cell neg">-34.82</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">20.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
-<tr><td class="name-cell">(Boss)_RSI_MR_GridLog</td><td class="num-cell">990103</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-6.78</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">29.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
-<tr><td class="name-cell">Boss_12_Breakout (MacroGate leg)</td><td class="num-cell">990120</td><td class="num-cell">USDJPYm</td><td class="num-cell neg">-5.51</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">9.9</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
-<tr><td class="name-cell">Boss_17_Wave5</td><td class="num-cell">990303</td><td class="num-cell">USDJPYm</td><td class="num-cell neg">-1.24</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">0.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
-<tr><td class="name-cell">PairSpread_StatArb</td><td class="num-cell">990984</td><td class="num-cell">GBPUSDm;EURUSDm</td><td class="num-cell pos">14.40</td><td class="num-cell">0.10</td><td class="num-cell">2</td><td class="num-cell">56.6</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
+<tr><td class="name-cell">(Boss)_RSI_MR_GridLog</td><td class="num-cell">990103</td><td class="num-cell">EURUSDm</td><td class="num-cell neg">-8.14</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">50.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
+<tr><td class="name-cell">PivotBreakout_XAU</td><td class="num-cell">992017</td><td class="num-cell">XAUUSDm</td><td class="num-cell neg">-3.30</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">8.0</td><td class="num-cell">0</td><td class="label-cell">kill 12% ref (12,000)</td></tr>
+<tr><td class="name-cell">Boss_17_Wave5</td><td class="num-cell">990301</td><td class="num-cell">XAUUSDm</td><td class="num-cell neg">-0.75</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">4.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
+<tr><td class="name-cell">Boss_12_Breakout (MacroGate leg)</td><td class="num-cell">990120</td><td class="num-cell">USDJPYm</td><td class="num-cell pos">6.45</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">3.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
+<tr><td class="name-cell">MacdDiv_Naked</td><td class="num-cell">999094</td><td class="num-cell">XAUUSDm</td><td class="num-cell pos">14.68</td><td class="num-cell">0.01</td><td class="num-cell">1</td><td class="num-cell">41.0</td><td class="num-cell">0</td><td class="label-cell">kill 15% ref (15,000)</td></tr>
 </table>
 </div>
 <table>
 <tr><th>Aggregate (across all accounts with a FRESH snapshot)</th><th>Value</th></tr>
-<tr><td class="name-cell">Total XAU-symbol exposure (all accounts)</td><td class="num-cell">0.06 lots &middot; floating <span class="neg">-133.18</span></td></tr>
-<tr><td class="name-cell">Total floating P&amp;L (all accounts)</td><td class="num-cell"><span class="neg">-243.51</span></td></tr>
+<tr><td class="name-cell">Total XAU-symbol exposure (all accounts)</td><td class="num-cell">0.15 lots &middot; floating <span class="neg">-410.52</span></td></tr>
+<tr><td class="name-cell">Total floating P&amp;L (all accounts)</td><td class="num-cell"><span class="neg">-1,025.42</span></td></tr>
 <tr><td class="name-cell">Coverage</td><td class="num-cell">fresh: 159503454, 159475669, 141049900, 415573666, 69424711, 463666728</td></tr>
 </table>
 </div>
@@ -237,7 +226,7 @@
 <td class="num-cell">0.64</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159503454 has no base_equity in ACCOUNTS.csv (kill 15% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -250,7 +239,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">8%</td>
-<td class="num-cell">13</td>
+<td class="num-cell">14</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159503454 has no base_equity in ACCOUNTS.csv (kill 8% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -263,7 +252,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">10%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159503454 has no base_equity in ACCOUNTS.csv (kill 10% cannot be evaluated)</td>
 </tr>
 <tr class="st-white">
@@ -302,13 +291,13 @@
 <td class="num-cell">0.11</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">3</td>
+<td class="num-cell">4</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) [LAB_MANAGED] &middot; window: from 2026-05-26 &middot; net <span class="pos">10,057.47</span> &middot; 305 trades &middot; base equity UNKNOWN - no base_equity for 159475669 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head"><b>159475669</b> &middot; Boss - Trend Swing — REAL cent &#183; user mix (lab ไม่รับรองบางตัว) [LAB_MANAGED] &middot; window: from 2026-05-26 &middot; net <span class="pos">10,127.25</span> &middot; 328 trades &middot; base equity UNKNOWN - no base_equity for 159475669 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-nobase">
@@ -321,7 +310,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">38</td>
+<td class="num-cell">39</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -334,7 +323,7 @@
 <td class="num-cell">1.16</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">31</td>
+<td class="num-cell">32</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -347,7 +336,7 @@
 <td class="num-cell">0.28</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -360,7 +349,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">31</td>
+<td class="num-cell">32</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -373,7 +362,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">31</td>
+<td class="num-cell">32</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -386,7 +375,7 @@
 <td class="num-cell">0.31</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -399,7 +388,7 @@
 <td class="num-cell">0.45</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -412,7 +401,7 @@
 <td class="num-cell">3.00</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -425,7 +414,7 @@
 <td class="num-cell">0.95</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -433,9 +422,9 @@
 <td class="name-cell">MatchaGrid</td>
 <td class="num-cell">20240001</td>
 <td class="num-cell">CHFJPYc</td>
-<td class="num-cell">50</td>
-<td class="num-cell pos">184.01</td>
-<td class="num-cell">6.39</td>
+<td class="num-cell">66</td>
+<td class="num-cell pos">241.45</td>
+<td class="num-cell">6.07</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
@@ -446,12 +435,12 @@
 <td class="name-cell">NuiIndy Dynamic RSI+ADX</td>
 <td class="num-cell">1524</td>
 <td class="num-cell">EURUSDc</td>
-<td class="num-cell">104</td>
-<td class="num-cell pos">188.70</td>
-<td class="num-cell">5.58</td>
+<td class="num-cell">111</td>
+<td class="num-cell pos">201.04</td>
+<td class="num-cell">5.88</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -464,7 +453,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">21</td>
+<td class="num-cell">22</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -477,7 +466,7 @@
 <td class="num-cell">12.70</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">16</td>
+<td class="num-cell">17</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -490,7 +479,7 @@
 <td class="num-cell">0.27</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">13</td>
+<td class="num-cell">14</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 159475669 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-white">
@@ -555,7 +544,7 @@
 <td class="num-cell">7.30</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">4</td>
+<td class="num-cell">5</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
@@ -574,7 +563,7 @@
 <td class="num-cell">1.64</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 141049900 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -587,7 +576,7 @@
 <td class="num-cell">4.14</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 141049900 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -600,7 +589,7 @@
 <td class="num-cell">1.62</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 141049900 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -613,7 +602,7 @@
 <td class="num-cell">2.71</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 141049900 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -626,13 +615,13 @@
 <td class="num-cell">1.60</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 141049900 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols [LAB_MANAGED] &middot; window: from 2026-07-06 &middot; net <span class="neg">-1,608.78</span> &middot; 59 trades &middot; base equity UNKNOWN - no base_equity for 415573666 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
+<div class="acct-head"><b>415573666</b> &middot; Demo Mt5-2 — DEMO &#183; Boss_14_GridLog bench x7 symbols [LAB_MANAGED] &middot; window: from 2026-07-06 &middot; net <span class="neg">-2,214.06</span> &middot; 66 trades &middot; base equity UNKNOWN - no base_equity for 415573666 in ACCOUNTS.csv; DD% and kill-DD equivalents are SUPPRESSED, not estimated</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-nobase">
@@ -640,9 +629,9 @@
 <td class="name-cell">(Boss)_ZeusInspired_GridLog</td>
 <td class="num-cell">990110</td>
 <td class="num-cell">AUDJPYm</td>
-<td class="num-cell">4</td>
-<td class="num-cell neg">-42.17</td>
-<td class="num-cell">0.43</td>
+<td class="num-cell">6</td>
+<td class="num-cell neg">-310.00</td>
+<td class="num-cell">0.09</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
@@ -658,7 +647,7 @@
 <td class="num-cell">3.90</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 415573666 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -671,7 +660,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">23</td>
+<td class="num-cell">24</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 415573666 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -684,7 +673,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">11</td>
+<td class="num-cell">12</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 415573666 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -697,7 +686,7 @@
 <td class="num-cell">0.33</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">8</td>
+<td class="num-cell">9</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 415573666 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -710,7 +699,7 @@
 <td class="num-cell">0.65</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 415573666 has no base_equity in ACCOUNTS.csv (kill 25% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -718,9 +707,9 @@
 <td class="name-cell">Boss_14_GridLog size-light</td>
 <td class="num-cell">990203</td>
 <td class="num-cell">EURJPYm</td>
-<td class="num-cell">3</td>
-<td class="num-cell neg">-17.87</td>
-<td class="num-cell">0.71</td>
+<td class="num-cell">5</td>
+<td class="num-cell neg">-207.33</td>
+<td class="num-cell">0.17</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
@@ -731,9 +720,9 @@
 <td class="name-cell">Boss_14_GridLog size-light thin</td>
 <td class="num-cell">990205</td>
 <td class="num-cell">CADJPYm</td>
-<td class="num-cell">2</td>
-<td class="num-cell pos">12.62</td>
-<td class="num-cell">1.90</td>
+<td class="num-cell">3</td>
+<td class="num-cell neg">-82.37</td>
+<td class="num-cell">0.24</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">25%</td>
 <td class="num-cell">0</td>
@@ -744,9 +733,9 @@
 <td class="name-cell">LondonORB_XAU (SS1 +trend filter)</td>
 <td class="num-cell">992003</td>
 <td class="num-cell">XAUUSDm</td>
-<td class="num-cell">5</td>
-<td class="num-cell neg">-35.01</td>
-<td class="num-cell">0.28</td>
+<td class="num-cell">6</td>
+<td class="num-cell neg">-42.77</td>
+<td class="num-cell">0.25</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">12%</td>
 <td class="num-cell">0</td>
@@ -757,9 +746,9 @@
 <td class="name-cell">TsMom_XAU (S2)</td>
 <td class="num-cell">992001</td>
 <td class="num-cell">XAUUSDm</td>
-<td class="num-cell">5</td>
-<td class="num-cell neg">-128.48</td>
-<td class="num-cell">0.25</td>
+<td class="num-cell">6</td>
+<td class="num-cell neg">-173.72</td>
+<td class="num-cell">0.19</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">12%</td>
 <td class="num-cell">0</td>
@@ -827,7 +816,7 @@
 <td class="num-cell">0.07</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">25</td>
+<td class="num-cell">26</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
@@ -846,7 +835,7 @@
 <td class="num-cell">3.35</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 69424711 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -859,7 +848,7 @@
 <td class="num-cell">0.68</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 69424711 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -872,7 +861,7 @@
 <td class="num-cell">1.41</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 69424711 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-nobase">
@@ -885,7 +874,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">35%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD% NOT COMPUTABLE - account 69424711 has no base_equity in ACCOUNTS.csv (kill 35% cannot be evaluated)</td>
 </tr>
 <tr class="st-grey">
@@ -898,13 +887,13 @@
 <td class="num-cell">1.80</td>
 <td class="num-cell">UNKNOWN</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
 </div>
 <div class="card acct-card">
-<div class="acct-head"><b>463666728</b> &middot; Demo bundle 10 [LAB_MANAGED] &middot; window: all history &middot; net <span class="neg">-143.65</span> &middot; 31 trades &middot; base equity 100,000 USD (ACCOUNTS.csv)</div>
+<div class="acct-head"><b>463666728</b> &middot; Demo bundle 10 [LAB_MANAGED] &middot; window: all history &middot; net <span class="neg">-131.03</span> &middot; 36 trades &middot; base equity 100,000 USD (ACCOUNTS.csv)</div>
 <table>
 <tr><th>Status</th><th>EA</th><th>Magic</th><th>Symbol</th><th>Trades</th><th>Net P&amp;L</th><th>PF</th><th>Max DD%</th><th>Kill DD%</th><th>Days idle</th><th>Detail</th></tr>
 <tr class="st-green">
@@ -917,7 +906,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">18%</td>
-<td class="num-cell">2</td>
+<td class="num-cell">3</td>
 <td class="label-cell">DD 0% normal (kill 18%)</td>
 </tr>
 <tr class="st-green">
@@ -925,12 +914,12 @@
 <td class="name-cell">Boss_12_Breakout (MacroGate leg)</td>
 <td class="num-cell">990120</td>
 <td class="num-cell">USDJPYm</td>
-<td class="num-cell">14</td>
-<td class="num-cell pos">7.20</td>
-<td class="num-cell">1.50</td>
+<td class="num-cell">15</td>
+<td class="num-cell pos">0.05</td>
+<td class="num-cell">1.00</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">0</td>
+<td class="num-cell">1</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -943,7 +932,7 @@
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">9</td>
+<td class="num-cell">10</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -956,8 +945,21 @@
 <td class="num-cell">0.60</td>
 <td class="num-cell">0.2%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD 0.2% normal (kill 15%)</td>
+</tr>
+<tr class="st-green">
+<td class="status-cell" title="DD 0% normal (kill 15%)">&#128994;</td>
+<td class="name-cell">Boss_17_Wave5</td>
+<td class="num-cell">990303</td>
+<td class="num-cell">USDJPYm</td>
+<td class="num-cell">1</td>
+<td class="num-cell pos">7.64</td>
+<td class="num-cell">&#8734;</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">15%</td>
+<td class="num-cell">0</td>
+<td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
 <td class="status-cell" title="DD 0% normal (kill 15%)">&#128994;</td>
@@ -969,7 +971,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">7</td>
+<td class="num-cell">8</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -982,7 +984,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.1%</td>
 <td class="num-cell">8%</td>
-<td class="num-cell">4</td>
+<td class="num-cell">5</td>
 <td class="label-cell">DD 0.1% normal (kill 8%)</td>
 </tr>
 <tr class="st-green">
@@ -990,12 +992,12 @@
 <td class="name-cell">EmaStoRev</td>
 <td class="num-cell">991070</td>
 <td class="num-cell">EURUSDm</td>
-<td class="num-cell">2</td>
-<td class="num-cell pos">0.83</td>
+<td class="num-cell">3</td>
+<td class="num-cell pos">1.71</td>
 <td class="num-cell">&#8734;</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -1008,7 +1010,20 @@
 <td class="num-cell">1.28</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">15%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
+<td class="label-cell">DD 0% normal (kill 15%)</td>
+</tr>
+<tr class="st-green">
+<td class="status-cell" title="DD 0% normal (kill 15%)">&#128994;</td>
+<td class="name-cell">PairSpread_StatArb</td>
+<td class="num-cell">990984</td>
+<td class="num-cell">GBPUSDm</td>
+<td class="num-cell">2</td>
+<td class="num-cell pos">11.25</td>
+<td class="num-cell">1.26</td>
+<td class="num-cell">0%</td>
+<td class="num-cell">15%</td>
+<td class="num-cell">0</td>
 <td class="label-cell">DD 0% normal (kill 15%)</td>
 </tr>
 <tr class="st-green">
@@ -1021,7 +1036,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0.1%</td>
 <td class="num-cell">12%</td>
-<td class="num-cell">1</td>
+<td class="num-cell">2</td>
 <td class="label-cell">DD 0.1% normal (kill 12%)</td>
 </tr>
 <tr class="st-white">
@@ -1104,35 +1119,9 @@
 </tr>
 <tr class="st-white">
 <td class="status-cell" title="no data yet">&#9898;</td>
-<td class="name-cell">Boss_17_Wave5</td>
-<td class="num-cell">990303</td>
-<td class="num-cell">USDJPYm</td>
-<td class="num-cell">0</td>
-<td class="num-cell neu">0.00</td>
-<td class="num-cell">N/A</td>
-<td class="num-cell">0%</td>
-<td class="num-cell">15%</td>
-<td class="num-cell">-</td>
-<td class="label-cell">no data yet</td>
-</tr>
-<tr class="st-white">
-<td class="status-cell" title="no data yet">&#9898;</td>
 <td class="name-cell">EA_BREAKOUT_XAU</td>
 <td class="num-cell">991005</td>
 <td class="num-cell">US30</td>
-<td class="num-cell">0</td>
-<td class="num-cell neu">0.00</td>
-<td class="num-cell">N/A</td>
-<td class="num-cell">0%</td>
-<td class="num-cell">15%</td>
-<td class="num-cell">-</td>
-<td class="label-cell">no data yet</td>
-</tr>
-<tr class="st-white">
-<td class="status-cell" title="no data yet">&#9898;</td>
-<td class="name-cell">PairSpread_StatArb</td>
-<td class="num-cell">990984</td>
-<td class="num-cell">GBPUSDm</td>
 <td class="num-cell">0</td>
 <td class="num-cell neu">0.00</td>
 <td class="num-cell">N/A</td>
@@ -1151,7 +1140,7 @@
 <td class="num-cell">0.00</td>
 <td class="num-cell">0%</td>
 <td class="num-cell">n/a</td>
-<td class="num-cell">3</td>
+<td class="num-cell">4</td>
 <td class="label-cell">unmapped magic - no declared criteria</td>
 </tr>
 </table>
@@ -1159,8 +1148,8 @@
 
 
 <div class="footer">
-  Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): 119,447.97 &middot;
-  total deal rows: 1537 &middot; generated by scripts\live_dashboard.ps1 (ORDER-058)
+  Grand total net P&amp;L across all magics in this CSV (incl. unmapped/balance rows): 118,925.09 &middot;
+  total deal rows: 1603 &middot; generated by scripts\live_dashboard.ps1 (ORDER-058)
 </div>
 </body>
 </html>
