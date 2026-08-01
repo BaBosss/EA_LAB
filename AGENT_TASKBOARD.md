@@ -196,7 +196,65 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
-## ORDER-710 — [factory/S6] `[CFG]` emits the input-surface fingerprint, so the manifest's hash stops being `surface_only` — `OPEN` · ⛔ **needs an MT5 lane — do not start without reserving one** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-730 — [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 asks for — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> Opened by `ORDER-710`'s closure, as a NEW order rather than a remainder of it. §5.6 defines
+> `effective_config_hash` as *"every input the build actually exposes **plus every locked
+> constant**"*. `ORDER-710` delivered the first half and both sides label it honestly —
+> `fingerprint_scope = surface_only`, in the manifest, in the `.set` header and inside the
+> preimage itself. **Nothing is broken; a claim is simply narrower than the design's.**
+
+**What is owed.** An enumeration of the compiled-in constants that change behaviour and are not
+inputs, on BOTH sides, moving together — `preset.py`'s `_constant_scope()` already accepts them
+and renames the scope to `surface+constants` when it has them, so the missing half is *what the
+constants are* and how the EA enumerates them.
+
+### Acceptance
+- **C1** the constant list is DERIVED from `ea_template/core/`, not hand-listed — the same rule
+  `ORDER-710` C1 applied to the input surface, one layer along.
+- **C2** the two sides move in ONE commit. A scope rename on one side alone silently turns a
+  matching pair into a mismatching one, and the first suspect would be the binary.
+- **C3** `scripts/verify_config_fingerprint.ps1` re-run and CLEAN on ≥2 builds afterwards, plus
+  `tpl_regression` CLEAN on a pinned lane if anything under `ea_template/core/` changes.
+
+### ห้าม
+- ❌ Do not rename `surface_only` before the constants are actually in the preimage.
+- ❌ Do not hand-list the constants to avoid the generator. ❌ No `REVIEWED`.
+
+---
+
+## ORDER-710 — [factory/S6] `[CFG]` emits the input-surface fingerprint — `DONE (Claude/Opus 2026-08-01) — the EA's digest and the compiler's MATCH on 2 builds x 2 configurations, measured on lane 1; C1 + C2 met, C3 kept HONEST rather than met` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-08-01 — the EA hashes its own live inputs, and the two implementations were driven against each other rather than reasoned about.
+>
+> **The measured pair, which is the whole acceptance** (`scripts/verify_config_fingerprint.ps1`, lane 1 `D:\Meta 5`, XAUUSD H1 2024.01.01–2024.01.15 model 1, 4 tester runs):
+>
+> | build | keys | config | compiler | EA (`[CFG] input surface:`) |
+> |---|---|---|---|---|
+> | `LAB_ENTRY_16` | 135 | declared defaults | `9161b652…a279c7` | **identical** |
+> | `LAB_ENTRY_16` | 135 | + `_9_StepPoints=444.0`, `DryRun=true` | `0e063db8…7c8c31` | **identical** |
+> | `LAB_ENTRY_11` | 113 | declared defaults | `67dacccc…04d152` | **identical** |
+> | `LAB_ENTRY_11` | 113 | + the same two overrides | `f6415256…8821aa` | **identical** |
+>
+> **Two runs per build, not one, and the second is the load-bearing half.** One matching run is also what a constant would print, or a digest computed from the source rather than from the live inputs. The verifier therefore REQUIRES the two hashes to differ from each other as well as to match their own compiler value — pass 1 and 2 while failing 3 would mean both sides compute something stable and neither computes the configuration.
+>
+> **C1 — GENERATED, and from the ONE parser.** `_triage/factory_os/gen_input_surface.py` emits `ea_template/core/InputSurface_gen.mqh` (1,082 lines, one `#ifdef LAB_ENTRY_nn` block per build) from `preset.parse_surface` — the same call on the same file the compiler uses. A second parser here would be a second opinion about what a build exposes, drifting exactly inside the hash that exists to prove they agree.
+>
+> **C2 — `tpl_regression` CLEAN on a lane pinned in this commit** (lane 1, the lane `deploy.ps1` compiles into and the lane the baseline was captured on), with the freshly-built binaries asserted present before measuring. Compile: **0 errors / 0 warnings on all 9 targets**.
+>
+> **C3 — `surface_only` STAYS, and that is the criterion being honoured, not skipped.** C3 says the manifest stops writing `surface_only` *only when* the fingerprint covers the real surface. It covers every input the build exposes and **no locked constant**, because nothing enumerates the locked constants yet — so the label is still true and both sides derive it from the same `#define`/constant. Relabelling it now would be the exact failure the name was chosen to avoid (memory `name-it-honestly-when-you-cannot-prove-it`). **OWED, stated rather than implied: the locked-constant half of design §5.6 is not built, and it is a new order, not a silent remainder of this one.**
+>
+> **🔴 The design change that made a cross-language hash possible at all.** The preimage used to carry the RENDERED `.set` text; a double therefore went in as `repr(3e-05)`, Python's shortest-round-trip spelling, which MQL5's `%g` does not reproduce (they disagree on `1.0` vs `1` and on exponent width). Hashing that would have made the fingerprint a claim about two printf implementations agreeing. Doubles now enter the preimage as their **IEEE-754 bits** — the value MT5 actually loaded, emitted with no formatting on either side — and `-0.0` is normalised to `+0.0` so a sign on a zero cannot move a hash without moving the configuration. `300`, `300.0` and `3e2` still collapse to one preimage, which is the canonicalisation `preset.py`'s header already promised.
+>
+> **The guard, and why it is a guard and not a comment.** A generated enumeration is a COPY of `Inputs.mqh`, so `check_input_surface_gen.py` (category A, T7-bound) regenerates from the committed source and refuses any commit where the two disagree — **both files read from ONE `EvidenceSource`**, because a staleness check is precisely where a mixed vintage hides: comparing a STAGED `Inputs.mqh` against a WORKTREE copy passes on the one commit the guard exists to refuse (the shape found twice in `check_order_collision`/`check_handoff_contract` on 2026-08-01). G2 additionally requires the enumeration to be INCLUDED and CALLED — a current enumeration nothing compiles is `GUARD_SHAPES` shape 5, and its symptom is a line that silently stops appearing.
+>
+> **Cage: 5 criteria × (attack + specificity) + 5 mutation probes, all DETECTED.** The one that earns its place is **X1**: it reads the emitted MQL5 back and requires the enumeration to be the parsed surface, in order, through the canonicaliser each declared type demands — `>900` real declarations across all 8 builds. Its mutant routes every type through `CFG_CanonDouble`, which produces a perfectly valid file that hashes cleanly on both sides and disagrees. G1 keeps the copy current; X1 is what notices "current" was generated wrongly. **`L0` demanded the new checker and its generator on their first run** (the fourth consecutive addition it has named), and T7 now reads **6 of 6 bound, 0 suspended**.
+>
+> **Two things the checker caught in its own author's work before any of this was committed:** the `#include` pattern was anchored at `$` and rejected the real `LabCore.mqh` line for carrying a trailing comment; and `gen_default_preset.py`'s first run was REFUSED by `preset.py`'s P8 for supplying a bare number for a money-denominated default — the unit rule doing its job on the tool written to test it.
+>
+> **What this suite still cannot do, said in its own header rather than left to be assumed:** it does not execute MQL5, so it cannot prove `CryptEncode(CRYPT_HASH_SHA256, ...)` and `hashlib.sha256` agree. Only the four tester runs above do that, and they are evidence with a date, not a cage that re-runs.
+
+**Files.** `_triage/factory_os/`: `gen_input_surface.py` (LIB) · `check_input_surface_gen.py` (A) · `run_input_surface_tests.py` · `gen_default_preset.py` (evidence tool) · `preset.py` (`canonical_double`/`canonical_for_hash`, `_fingerprint` takes the surface) · `run_preset_tests.py` (P3/P4 anchors) · `run_guard_shape_lint.py` (L1/CATEGORY/L2 entries). `ea_template/core/`: `ConfigFingerprint.mqh` (new) · `InputSurface_gen.mqh` (new, GENERATED) · `LabCore.mqh` (include + the `[CFG]` line). `scripts/`: `verify_config_fingerprint.ps1` (new, manual — 2 tester runs) · `_test/run_contract_binding_tests.ps1` + `_test/run_fast_cages.ps1` + `.githooks/fast_tier_pathspec` (wiring).
 
 > **🔴 THIS ORDER EXISTS BECAUSE A GUARD REFUSED A HANDOFF THAT ROUTED TO A NUMBER NOBODY HAD OPENED.**
 > The `[CFG]` work was split out of `ORDER-700` on 2026-07-31 and called **`ORDER-701`** in prose —
