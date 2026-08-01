@@ -22,6 +22,24 @@
 an append to `MASTER_BACKLOG.md` **outside §2 passes** the front guard (`rc=0`); an edit **inside
 §2 is refused** with `P1` naming both digests (`rc=1`).
 
+> ✅ **APPENDED at session close — the four owner decisions were answered and `S14` shipped.**
+> All five items in `_triage/USER_DECISIONS_PENDING.md` are now resolved (**0 pending**), so
+> **`S10` · `S13` · `S14` · `S15` are no longer blocked from your side.** Item 1 = a pilot Core
+> Universe (`XAUUSD`/`EURUSD`/`GBPUSD` × H1/M15, pinned for correction) with the remaining 12 fleet
+> underlyings queued for **idle/overnight batches** · item 2 = a **narrow append-only** Work Receipt
+> writer, landed with the guard that makes it narrow (`W0-W5`, 21-case cage) · item 3 = **global**
+> magic uniqueness, `PROJECT_STATE.md` amended, only `991001` is a true live collision · item 4 =
+> **advisory**, revisited after the first real `S13` round.
+> 🔴 **Two defects in that new guard were found by probing it the same evening and fixed:** it
+> permitted **deleting the whole log** (`W0`'s early return fired on a staged deletion), and `W4`
+> was a deny-list that a **nested `verdict`** and **`pf`** both walked straight through. Both now
+> refused, with cases that were red first.
+> 📐 **Seventh tier sample: 100.0 s** — the worst measured, `contract_binding` at 34.8 s vs 24.9 s
+> at best. The swing of that single suite is now **24.9-34.8 s**, which is `ORDER-830` C1's subject.
+> ⚠️ **One honest limit to carry forward:** `AGENTS.md` §2 says a row may cite *only the writing
+> agent's own order id*. **Nothing enforces that** — every agent commits under one git identity.
+> The shape is enforced; the attribution is not. Written into the checker's docstring and item 2.
+
 ## 2. What actually changed today, in one paragraph
 
 `MASTER_BACKLOG.md` carried **two** whole-file byte-pins from one owner approval, and between them
