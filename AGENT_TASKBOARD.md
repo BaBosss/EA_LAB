@@ -150,6 +150,52 @@ git ls-files -- $SPEC | grep -Fx <path>
 
 ---
 
+## ORDER-740 — [lever/integrity] `_57_DynCloseOn` is INERT on Boss_16/Kangaroo, and the mold announces the *other* inert shared input but stays silent about this one — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (code-path integrity — a lever that cannot fire is not a lever) · **flat-lot probe:** N-A
+
+**Why this order exists, and what it replaces.** `ORDER-197` closed the `ORDER-098` campaign's "recommended move #2" and left exactly one thread open: *"DynClose-on-Kangaroo (deferred above, exit-owner conflict) remains the one open thread from the shortlist if anyone wants to pick it up later"*. Its stated reason for deferring rather than killing was a claim about the code — *"`_57_DynCloseOn` (Exit_DynCloseTargetMoney) **does** run through the shared exit path (`LabCore.mqh:151`) so it could apply to Kangaroo"*. **That claim is wrong, and the mold contradicts it in its own comment.** The thread is not "deferred pending an A/B"; it is inert pending a code change.
+
+**Measured from source, not recalled:**
+- `Exit_DynCloseTargetMoney()` is only ever called from **inside** `Exit_ManageBasket()` — [`ExitManager.mqh:620`](ea_template/core/ExitManager.mqh:620) opens the function, [`:639`](ea_template/core/ExitManager.mqh:639) is the call site.
+- **Boss_16 never reaches `Exit_ManageBasket()`.** The shared call is [`LabCore.mqh:490`](ea_template/core/LabCore.mqh:490); `Kangaroo_OnTick` returns before it ([`Kangaroo.mqh:596`](ea_template/core/entries/Kangaroo.mqh:596)). This is not an inference — [`LabCore.mqh:310-313`](ea_template/core/LabCore.mqh:310) records it as standing fact, written by `ORDER-125` after a Codex MAJOR-3 finding: *"Boss_16 exits exclusively through Kangaroo's own exit owner (Kangaroo_OnTick returns before Exit_ManageBasket), so the shared vertical-barrier input is a silent no-op here."*
+
+⇒ **`_57_DynCloseOn=true` on a Boss_16 chart changes nothing at all.** It is inert by construction — structurally the same finding `ORDER-197` *did* make about `PROG_FIBONACCI` on this chassis (Kangaroo owns its own `Kangaroo_NextLot()` and never calls the shared `MM_NextLot`/`LotProg` dispatcher). One of the two parts `ORDER-098-C` built was checked against Kangaroo's dispatch; the other was not.
+
+**🔴 The asymmetry that makes this an order and not a footnote.** [`LabCore.mqh:314-315`](ea_template/core/LabCore.mqh:314) prints `[INIT] WARN: _2_MaxHoldBars has NO EFFECT on Boss_16/Kangaroo (Kangaroo owns its exits) - input ignored`. `_57_DynCloseOn` is inert on Boss_16 **for the identical reason, through the identical mechanism**, and prints nothing. The mold therefore teaches a reader that an inert shared input announces itself — while one of them does not. CLAUDE.md's guard row already owns this failure shape: *numbers identical in every digit are evidence a thing is **inert**, not evidence it is safe*. A silent inert dial is precisely how that reading gets made.
+
+### A — the cheap half (do first; it is the whole finding, made visible)
+Extend the existing `#ifdef LAB_ENTRY_16` warn block to name `_57_DynCloseOn` on the same terms as `_2_MaxHoldBars`. Additive, zero behaviour change when the input is off, no new input.
+
+**acceptance:**
+1. compile **0 errors / 0 warnings**
+2. `tpl_regression.ps1` **CLEAN** — mandatory for any `ea_template/core/` change (Decision log 2026-07-06) and the cage pins its lane explicitly (Decision log 2026-07-30)
+3. the WARN is proven to **FIRE** with `_57_DynCloseOn=true` on a Boss_16 chart **and** proven to stay **SILENT** on a build that is not `LAB_ENTRY_16` — both directions, per memory `gate-specificity-not-just-sensitivity`. A warn only shown to fire is half a test
+4. the text says the input **has no effect**; it must not imply the input is unsafe. `ORDER-125` chose "warn loudly rather than fail — the input is an inert dial, not a safety promise", and that wording is the precedent to match
+
+⛔ **BLOCKED ON A LANE, not on a decision:** `tpl_regression` pins **MT5 lane 1**, held by `S-2026-08-01-CFGFP`. Do not begin A until that lane closes. This order is written now precisely so the finding does not live only in a chat window.
+
+### B — the decision the retrofit actually needs (do NOT start without the owner)
+If DynClose is still wanted on Kangaroo it requires a code change routing it **inside** `Kangaroo_ManageExits()`. The moment that lands, two profit-target laws are armed on one basket:
+
+| owner | law | scales with |
+|---|---|---|
+| Kangaroo — [`Kangaroo.mqh:465-469`](ea_template/core/entries/Kangaroo.mqh:465) | `_16_BasketTpUsdPer01 * (TotalLots / 0.01)` | **total lots** |
+| shared — [`ExitManager.mqh:537-546`](ea_template/core/ExitManager.mqh:537) | `base + (openCount / _57_DynCloseDivisor) * base` | **open-order count** |
+
+Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a deepening ladder the two laws diverge rather than track each other (lots per level are not constant). **That is the "exit-owner conflict" `ORDER-197` named — now stated as a mechanism instead of a worry.** `990016` is a **live demo leg** (judge `2027-01-13`, kill `DD 12%`), so B is an owner decision about a running experiment, not a lever toggle.
+
+**Evidence bar if B is ever run:** the A/B must report **how many times the DynClose branch actually fired**, against a named base control run. Fired 0 times ⇒ `UNTESTED`, and must not be written up as passed (CLAUDE.md guard row).
+
+### ห้าม
+- ❌ Do not enable `_57_DynCloseOn` on Boss_16 expecting an effect — it cannot have one until B lands, and a run that shows "no change" is evidence of A, not of safety.
+- ❌ Do not touch `ea_template/core/**` while `S-2026-08-01-CFGFP` holds lane 1.
+- ❌ Do not re-open `PROG_FIBONACCI`. `ORDER-197` closed it against a bar pre-registered *before* the runs, and Decision log 2026-07-18 item 5 is explicit that a closed lever stays closed. <sub>Recorded once so nobody rediscovers it as news: it was ruled out at a single untuned `_56_FibMaxStep=5` and the sweep was forbidden in that pass. That is a reason **not to re-litigate**, not a reason to reopen.</sub>
+- ❌ No `REVIEWED` written by an agent — verdicts are the lead's.
+
+**corrects the record (both were checked against the boards, not recalled):** `ORDER-197`'s *"could apply to Kangaroo"* line · and `PROJECT_STATE.md` §7 item 6, which stated the owner's MM-parts directive was never issued under any number — it was, twice over: `ORDER-098-C` carries **two different orders** (`ARCHIVE_TASKBOARD_2026-07A.md:7476` = FVG-fill + RSI gate, REJECT · `:7806` = the MM-parts library, `DONE + REVIEWED`), which is one of the three collisions `docs/SESSION_LEDGER.md` cites as the reason lane reservation exists.
+
+---
+
 ## ORDER-710 — [factory/S6] `[CFG]` emits the input-surface fingerprint, so the manifest's hash stops being `surface_only` — `OPEN` · ⛔ **needs an MT5 lane — do not start without reserving one** · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **🔴 THIS ORDER EXISTS BECAUSE A GUARD REFUSED A HANDOFF THAT ROUTED TO A NUMBER NOBODY HAD OPENED.**
