@@ -99,7 +99,18 @@ budget after the trade below (81.3–81.8s before this lane).
 6. **A tier suite aborted once in four runs and nobody knows why** — `check_s2a_migration`'s
    concurrency detector ("HEAD or the git index changed while this check was running … exiting 2
    rather than reporting a verdict"). Green standalone, green on the other three. The abort is
-   *correct behaviour*; the trigger is unexplained. → `BACKLOG-D33`, with a wake condition.
+   *correct behaviour*; the trigger is unexplained. → `ORDER-731` item 2, with a wake condition.
+7. **🔴 `MASTER_BACKLOG.md` IS FROZEN, AND NOTHING TELLS YOU UNTIL AFTER YOU COMMIT.** This lane
+   appended one dormant backlog row; the S2a attestation pins that file at a blob, so `F11`/`F5`
+   and `check_coverage_transfer`'s `A8` all went red — **after** the commit landed, because the
+   pin is compared against `HEAD:`, which during a pre-commit hook is the PREVIOUS commit. The
+   row was reverted, the lane reopened to do it (a board row needs an ACTIVE reservation), and
+   the finding became `ORDER-731`. It is the ORDER-674 defect class one layer along: read what
+   the commit WILL contain, not what it already does. Memory `approval-pinning-self-invalidates`
+   predicted this as ADVISORY; it is now a measured block.
+8. **Do not read a shared doc with `utf-8-sig` and write it back without the BOM.** Rewriting the
+   ledger row through Python silently stripped `docs/SESSION_LEDGER.md`'s BOM in `8f70b0f4`
+   (restored in the next commit). PS 5.1 decodes a BOM-less file as ANSI, and that file is Thai.
 
 ## Numbers, all measured this session
 
@@ -134,7 +145,7 @@ budget after the trade below (81.3–81.8s before this lane).
 | item | destination |
 |---|---|
 | design §5.6's locked-constant half — the fingerprint covers inputs only, and both sides say so | ORDER-730 |
-| `check_s2a_migration`'s unexplained concurrency ABORT, seen once in four full-tier runs | BACKLOG-D33 |
+| an attested blob pin read at `HEAD` cannot refuse the commit that breaks it, and `MASTER_BACKLOG.md` is frozen without saying so · plus `check_s2a_migration`'s unexplained concurrency ABORT (1 of 4 full-tier runs) | ORDER-731 |
 | `ORDER-710` itself (generator · MQL5 canonicaliser + sha256 · the staleness guard and its cage · the verification tool · the four tester runs · `tpl_regression`) | DONE |
 | the two defects found in other lanes' work (B0's hardcoded probe id · a suite not selecting itself) | DONE |
 | The five non-front-guard PowerShell checkers still suspended in L3, and the 4 items in `_triage/USER_DECISIONS_PENDING.md` | DONE |

@@ -196,6 +196,53 @@ Both armed ⇒ the effective exit becomes a silent `min(` the two `)`, and on a 
 
 ---
 
+## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **🔴 FOUND BY BREAKING IT, in this lane's own commit.** `f4c9fd9f` appended one dormant row to
+> `MASTER_BACKLOG.md`. The S2a attestation record pins that file at blob `02c1d0ed…` *after the
+> action it approves*, so the append made `F11`/`F5` refuse and took `check_coverage_transfer`'s
+> `A8` (the attested bundle must still verify) with it. The row was reverted in `<this commit>`
+> and the gate is green again.
+
+**Item 1 — the pin is compared at the wrong snapshot.** `HEAD:MASTER_BACKLOG.md` during a
+pre-commit hook is the **previous** commit, so the gate was green while the commit was being made
+and red the moment it landed. Nothing in the tier can refuse the commit that breaks the pin. This
+is the same defect class ORDER-674 fixed across the front guards — *read what the commit will
+contain, not what it already contains* — one layer along, in the attestation gate.
+
+**And the consequence nobody is told about:** `MASTER_BACKLOG.md` is, in effect, **frozen** — any
+lane appending a backlog row turns the gate red after committing, and the file is one every lane
+writes to. Provenance: memory `approval-pinning-self-invalidates` (an approval that pins the bytes
+of the very thing it authorises editing) — recorded as ADVISORY there, now measured as a live
+block.
+
+**Item 2 — an unexplained concurrency ABORT, recorded rather than diagnosed.**
+`check_s2a_migration.py` compares an input fingerprint (HEAD oid + `git ls-files -s` + the four
+files it reads from the working tree) at the start and end of its run, and printed *"HEAD or the
+git index changed while this check was running … exiting 2 rather than reporting a verdict"* in
+**1 of 4** manual full-tier runs on 2026-08-01, inside `run_contract_binding_tests.ps1`. Green
+standalone and green on the other three; suites in that wrapper run sequentially, so nothing
+obvious was writing the index. **The abort is correct behaviour** — a stale verdict turned into a
+tool failure — so this is an unexplained trigger, not a defect report. **Wake condition:** it
+fires a second time, or it fires inside a real `git commit`, where it would refuse the commit and
+the cause would matter. Until then: re-run, and never quote a run it aborted as a pass or a fail.
+
+### Acceptance
+- **C1** state, with a measurement, whether the pin should be read at the **index** (what the
+  commit will contain) or whether the pin itself is the wrong instrument for a file every lane
+  appends to. Both answers are defensible; picking silently is not.
+- **C2** whichever is chosen, an edit to `MASTER_BACKLOG.md` must be **refused before it lands**
+  or **allowed to land cleanly** — the current "passes the hook, red afterwards" state is the one
+  outcome that is not acceptable.
+- **C3** driven both ways: a commit that breaks the pin, and one that does not.
+
+### ห้าม
+- ❌ Do not edit any file inside the attestation bundle to make this pass — that costs an owner
+  signature (ORDER-614 rev 2 is why `check_s2a_attestation.py` is out of it; `check_s2a_migration.py`
+  is still in). ❌ Do not re-attest on the owner's behalf. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-730 — [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 asks for — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > Opened by `ORDER-710`'s closure, as a NEW order rather than a remainder of it. §5.6 defines
