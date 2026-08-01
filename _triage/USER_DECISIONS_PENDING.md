@@ -83,7 +83,19 @@ pick numbers silently. Do not let it choose.
 
 ---
 
-## 5. The S2a pin is a WHOLE-FILE blob on a board every lane appends to
+## 5. ✅ DECIDED AND EXECUTED — option A, owner-ratified 2026-08-01, landed 2026-08-01 (`212c0555`)
+
+**The owner ratified option 1 (narrow the pin) on 2026-08-01 ("ทำตามที่นายแนะนำเลยทั้งหมด", lane
+PINFIX2) and signed the digest in chat 13:32 ("ยืนยันทำเลย", lane PINFIX3).** The record in force
+(line 8) now pins **§2 only** (`section_sha256 8f5aa2e6c115`, bundle `e3f83efa`). Appends to other
+sections land cleanly — proven the same day: `7baadb18` restored `| D33 |` through the real hook,
+the exact commit the whole-file pin refused that morning. Cost paid: one policy amendment + one
+signature, exactly as priced below. Full evidence = the `ORDER-731` RESULT block (lane PINFIX3).
+Residual toll, stated at signing: a §2-heading rename and every `gen_coverage.py --apply` still
+cost a signature; option 2 below remains available as a complement if that measures too high.
+*The original write-up is kept below for provenance — it is no longer pending.*
+
+### (resolved) The S2a pin is a WHOLE-FILE blob on a board every lane appends to
 
 **Blocks:** nothing today — `ORDER-731`'s front guard makes the breakage immediate and diagnosable
 instead of invisible. What it does not do is make it **rare**.

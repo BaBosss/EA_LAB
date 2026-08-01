@@ -441,7 +441,60 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 
 ---
 
-## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `DONE (item 1); item 2 still OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `DONE (item 1 + option A); item 2 still OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### RESULT (lane `S-2026-08-01-PINFIX3`, 2026-08-01) — option A LANDED with the owner's signature
+>
+> **The pin is narrowed to the section the approval was about.** The owner, shown the exact
+> attestation line and both digests in chat, confirmed ("ยืนยันทำเลย", 13:32); line 8 of
+> `s2a_attestations.jsonl` now pins **§2 of `MASTER_BACKLOG.md`** by
+> `expected_post_state = {path, section, section_sha256}` (bundle `e3f83efa` · section
+> `8f5aa2e6c115`, both computed at the INDEX, never hand-typed). Landed atomically in `212c0555`:
+> policy (new §4.3.1 extraction rule, fail-closed on not-UTF-8 / zero / duplicate anchor /
+> unterminated fence, + §4.3.2 backward compat), corpus (**8 vectors appended, old bytes a
+> byte-prefix of new**), checker (new criteria **F12/F13/F14**, nothing renumbered), front guard
+> (**P4**, typed `Pin` so a narrowed pin cannot be silently read as the old whole-file kind),
+> conformance runner (`_head_text` seam, 7 saved slots asserted), and both cages — one commit
+> carrying the owner's line, exactly as the handoff's ห้าม required.
+>
+> **Measured, all re-run by the seat after the Opus worker's run, not believed:** conformance
+> **62/0** canonical · mutation harness **33 probed, 0 INERT** (up 7 = the new red vectors, each
+> load-bearing) · pin-staged cage **21 cases** (ATTACK 10 / CONTROL 3 / ENGAGEMENT 3 /
+> SPECIFICITY 5) · real-repo suite **46 OK / 0 BAD** · guard-shape lint green, and **L2 itself
+> demanded the F12 case** on first run (sixth consecutive time that rule has named an addition).
+> Corpus counts re-counted from the file: **63 vectors, 19 green / 43 red / 1 abort**.
+>
+> **Driven both ways on the real repo after landing (C3's semantics for the new instrument):**
+> a tampered §2 row staged into a TEMP index (real index untouched, copy deleted) was refused
+> **P1** naming both digests; then `7baadb18` — **byte-identical restore of the `| D33 |` row**
+> that the whole-file pin refused this same morning (`78a93129` → reverted `b0637b8a`) — landed
+> through the REAL hook with the guard reporting `1 pinned path(s) (1 section-scoped) …
+> still holds its pinned blob`. That commit is the payoff, demonstrated, not asserted.
+> **Known costs, stated at signing:** renaming the §2 heading now costs a signature (anchor is
+> exact-equality, N4's rule) and `gen_coverage.py --apply` ends at a signature by design —
+> item-5 option 2 (move the owner to `factory/coverage.jsonl`) is the complement if that toll
+> ever measures too high.
+>
+> **Item 2 (tier abort) — investigated by an Opus subagent (report:
+> `scratchpad/tier_abort_report.md` of lane PINFIX3), findings folded in, still OPEN:**
+> (1) the "something inside the tier touches `.git/index`" hypothesis is **contradicted by the
+> tier's own evidence** — `run_front_guard_evidence_tests` asserts A6 (`.git/index` never
+> written) in the same runs, and no suite issues an index-writing git command; (2) the
+> unexplained instance has a better-supported candidate: `S-2026-08-01-OPERATE` committed at
+> 10:20:34 and 10:22:54, **45 minutes after its ledger row was marked CLOSED**, inside the
+> reflog window of the aborted run — "no lane open" was established from ledger rows, which
+> cannot see a late committer; (3) the scheduled committer is ruled out by measurement (sole
+> 08-01 invocation 07:30) and 60s of passive index observation showed 0 ambient writes;
+> (4) 🔴 **the wake condition below is DEAD** — it says "fires a second time" and the row
+> itself records 2-of-8, so it was satisfied the moment it was written and woke nothing.
+> **New wake condition:** it fires in a run where `git log --all --since` shows **no commit
+> inside the run's own start–end window** (record both timestamps when re-running), or it fires
+> inside a real `git commit`. Cheapest instrumentation if it recurs, in order: make the abort
+> print WHICH fingerprint component moved · a per-run transcript stamping HEAD + index mtime
+> after every suite · on-failure dump of reflog + `index.lock` + live git processes.
+> **Bookkeeping defect found in passing:** `BACKLOG-D33` was two different rows in one day
+> (tier-abort row `f4c9fd9f` → reverted → number reused by OPERATE's `/ea-monitor` row, which
+> `7baadb18` restored). Pointers written before `febb11e8` resolve to the wrong meaning.
 
 > ### RESULT (lane `S-2026-08-01-PINFIX`, 2026-08-01)
 >
