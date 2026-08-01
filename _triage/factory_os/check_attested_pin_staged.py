@@ -159,10 +159,24 @@ def pinned_expectations(src):
             pins[path] = Pin('blob', str(eps['blob']), 'expected_post_state.blob', None)
         # A record in NEITHER form pins nothing here. F6 is what reddens it, post-commit; this
         # guard predicts pins and does not judge the log (limit 1 in this file's header).
+    # ORDER-731 review M3: an ack pin predicts F5, and F5 can only fire for a path some D1 row
+    # PINS (a note needs an owner_ref; no ref, no note, no F2-F5). The checker never validates an
+    # ack naming an unpinned path -- note=None skips F3-F5 entirely, so its contents are read by
+    # NOBODY but this guard. Enforcing it here therefore predicted a criterion that cannot fire,
+    # and the concrete attack it enabled was measured: copy line 8's old ack (naming
+    # MASTER_BACKLOG.md, which no D1 row pins since option 2) into a future record -- the checker
+    # passes it GREEN and this guard would have resurrected the whole-file toll on the busiest
+    # file in the repo. Fidelity to F5's reachability, not a new rule.
+    d1_pinned = {p for paths in att.owner_ref_paths(d1).values() for p in paths}
     for row in in_force.values():
         ack = row.get('stale_pin_acknowledgement')
         if isinstance(ack, dict) and ack.get('path') and ack.get('current_blob'):
             path = str(ack['path'])
+            if path not in d1_pinned:
+                print('%s NOTE: ack pin for %s IGNORED -- no D1 row pins that path, so F5 can '
+                      'never fire for it and the ack is validated by nothing (ORDER-731 M3)'
+                      % (TAG, path))
+                continue
             if path not in pins:
                 pins[path] = Pin('blob', str(ack['current_blob']),
                                  'stale_pin_acknowledgement.current_blob', None)

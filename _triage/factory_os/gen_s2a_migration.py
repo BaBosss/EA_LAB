@@ -1029,6 +1029,26 @@ def build_rows(pins=None):
             if spec.get(k):
                 row[k] = spec[k]
         out.append(row)
+    # ORDER-731 review M4: one owner pinning SEVERAL DISTINCT paths would make note enforcement
+    # depend on `note_for_owner`'s sorted-first tie-break -- and asciibetically 'M' < 'f', so the
+    # day any row pins MASTER_BACKLOG.md again for that owner (the DEFAULT, since ref_path is
+    # opt-in), enforcement silently flips back to the 31-commits-in-14-days file the option-2
+    # signature was paid to leave. The policy declares the tie-break as a limit; this refusal
+    # makes the limit unreachable instead of waiting for it to bite. Same path twice is fine
+    # (Hypothesis and WorkReceipt both pin AGENT_TASKBOARD.md); DISTINCT paths are not.
+    by_owner = {}
+    for row in out:
+        ref = row.get('owner_ref')
+        if ref and ref.get('path'):
+            by_owner.setdefault(row['current_owner'], set()).add(ref['path'])
+    for owner, paths in sorted(by_owner.items()):
+        if len(paths) > 1:
+            raise SystemExit(
+                'REFUSED: owner %r would pin %d distinct paths %s. note_for_owner enforces only '
+                'the sorted-first of these and the rest become advisory -- which path wins would '
+                'be decided by ASCII, not by anyone. Give the extra row an explicit ref_path (one '
+                'canonical pin per owner), or split the owner. (ORDER-731 review M4)'
+                % (owner, len(paths), sorted(paths)))
     return out
 
 

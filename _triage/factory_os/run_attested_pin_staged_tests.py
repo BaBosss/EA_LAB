@@ -228,6 +228,63 @@ def run_engagement_cases():
          and got.value == 'c' * 64
          and got.field == 'expected_post_state.section_sha256', 'pins=%r' % (sec_pins,))
 
+    # ORDER-731 review M3, both directions. An ack pin predicts F5, and F5 can only fire for a
+    # path some D1 row PINS -- an ack naming anything else is validated by nobody (note=None skips
+    # F3-F5), so enforcing it would predict a criterion that cannot fire. The measured attack:
+    # copy the superseded line 8's ack (MASTER_BACKLOG.md, un-pinned since option 2) into a new
+    # record -- checker green, and the un-fixed guard resurrected the whole-file toll.
+    fd, tmp = tempfile.mkstemp(prefix='order731_m3_', suffix='.jsonl')
+    saved_path = att.ATTESTATION_PATH
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(json.dumps({
+                'bundle_sha256': 'probe', 'current_owner': PATH, 'decision': 'APPROVED',
+                'signer': 'run_attested_pin_staged_tests', 'decided_at': '2026-08-01T00:00',
+                'reason': 'ORDER-731 M3 fixture: ack naming a path NO D1 row pins -- never committed',
+                'stale_pin_acknowledged': True,
+                'stale_pin_acknowledgement': {'path': PATH, 'pinned_blob': '0' * 40,
+                                              'current_blob': '1' * 40,
+                                              'reason': 'resurrection attempt'},
+            }, sort_keys=True) + '\n')
+        att.ATTESTATION_PATH = tmp
+        m3_pins = guard.pinned_expectations(src)
+    finally:
+        att.ATTESTATION_PATH = saved_path
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    case('SPECIFICITY', 'an ack naming a path NO D1 row pins installs NO pin (F5 cannot fire for it)',
+         PATH not in m3_pins, 'pins=%r' % (m3_pins,))
+    # The other direction, or this case is the inert-guard trap itself: the SAME ack shape on a
+    # path D1 DOES pin must still be enforced. factory/coverage.jsonl is D1-pinned (CoverageCell).
+    fd, tmp = tempfile.mkstemp(prefix='order731_m3b_', suffix='.jsonl')
+    saved_path = att.ATTESTATION_PATH
+    try:
+        with os.fdopen(fd, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(json.dumps({
+                'bundle_sha256': 'probe', 'current_owner': PATH, 'decision': 'APPROVED',
+                'signer': 'run_attested_pin_staged_tests', 'decided_at': '2026-08-01T00:00',
+                'reason': 'ORDER-731 M3 control: ack naming the D1-pinned path -- never committed',
+                'stale_pin_acknowledged': True,
+                'stale_pin_acknowledgement': {'path': 'factory/coverage.jsonl',
+                                              'pinned_blob': '0' * 40,
+                                              'current_blob': '1' * 40,
+                                              'reason': 'legitimate ack shape'},
+            }, sort_keys=True) + '\n')
+        att.ATTESTATION_PATH = tmp
+        m3b_pins = guard.pinned_expectations(src)
+    finally:
+        att.ATTESTATION_PATH = saved_path
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    got_b = m3b_pins.get('factory/coverage.jsonl')
+    case('ENGAGEMENT', 'the SAME ack shape on a D1-pinned path IS still enforced (blob pin installed)',
+         got_b is not None and got_b.kind == 'blob' and got_b.value == '1' * 40,
+         'pins=%r' % (m3b_pins,))
+
 
 def run_selection_cases():
     """The in-force selection is SHARED with check_s2a_attestation, and these prove the sharing.

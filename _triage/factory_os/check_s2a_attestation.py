@@ -652,11 +652,17 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
             # "false" -- which reads as a refusal to acknowledge -- granted the exemption. Boolean
             # identity now, plus a structured record whose contents are recomputed below.
             if r.get('stale_pin_acknowledged') is not True or not isinstance(ack, dict):
-                problems.append('F2 line %s attests for %r whose pin is STALE. Set '
-                                '"stale_pin_acknowledged": true (JSON boolean, not a string) AND a '
-                                '"stale_pin_acknowledgement" object naming {path, pinned_blob, '
-                                'current_blob}, or re-pin with gen_s2a_migration.py.'
-                                % (n, r['current_owner']))
+                # ORDER-731 review M1: this message used to name only `current_owner`, while F3
+                # demands the ack name the PINNED path -- so when the two differ (option 2), the
+                # message guided the signer to exactly the line F3 refuses. The path the ack must
+                # name is stated here, once, from the note itself.
+                problems.append('F2 line %s attests for %r whose pin is STALE. The pinned path is '
+                                '%r -- the acknowledgement must name THAT path (F3 refuses any '
+                                'other). Set "stale_pin_acknowledged": true (JSON boolean, not a '
+                                'string) AND a "stale_pin_acknowledgement" object naming '
+                                '{path: %r, pinned_blob, current_blob}, or re-pin with '
+                                'gen_s2a_migration.py.'
+                                % (n, r['current_owner'], note['path'], note['path']))
             else:
                 head = chk.head_oid()
                 rc2, live, _ = chk._rev_parse_cached('%s:%s' % (head, note['path']))
@@ -711,16 +717,49 @@ def main(argv):
     d1_owners = sorted({r['current_owner'] for r in d1})
 
     if '--template' in argv:
-        print('# Append ONE line to %s. Nothing else changes -- no guard, no generator, no D1 edit.'
-              % ATTESTATION_PATH)
-        print(json.dumps({
+        owner = 'MASTER_BACKLOG.md'
+        line = {
             'bundle_sha256': digest,
-            'current_owner': 'MASTER_BACKLOG.md',
+            'current_owner': owner,
             'decision': 'APPROVED',
             'signer': 'user (Boss)',
             'decided_at': '<YYYY-MM-DDTHH:MM>',
             'reason': '<why - required for REFUSED, good practice for APPROVED>',
-        }, sort_keys=True))
+        }
+        # ORDER-731 review M2: the post-state claim is carried FORWARD from the record in force.
+        # `expected_post_state` is optional (F6-F14 sit inside `if eps is not None`), so a line in
+        # the bare template shape passes GREEN with no post-state claim at all -- the section pin
+        # option A bought would evaporate at the next signature by DEFAULT rather than by decision.
+        # The values are the in-force record's own; F11/F14 recompute them and refuse stale ones,
+        # so carrying them forward can mislead nobody.
+        rows_t, _ = load_records()
+        prev = in_force_map(rows_t, d1_owners, problems=[]).get(owner) or {}
+        eps_prev = prev.get('expected_post_state')
+        if isinstance(eps_prev, dict):
+            line['expected_post_state'] = eps_prev
+        # ORDER-731 review M1: when a note exists, the ack skeleton is emitted WITH the path the
+        # checker will actually demand -- through the SAME mapping F2-F5 enforce (note_for_owner),
+        # never through `current_owner`, which is a different question since option 2. The blobs
+        # are filled with the recomputed values a correct ack must carry; F4/F5 verify them again
+        # on every run, so a stale template is refused, not believed.
+        stale_t = {n['path']: n for n in chk.pin_vintage_notes(d1)
+                   if isinstance(n, dict) and n.get('path')}
+        note_t = note_for_owner(stale_t, owner_ref_paths(d1), owner)
+        if note_t:
+            pinned_t = next((row['owner_ref']['blob_oid'] for row in d1
+                             if row.get('owner_ref')
+                             and row['owner_ref']['path'] == note_t['path']), None)
+            rc_t, live_t, _ = chk._rev_parse_cached('%s:%s' % (chk.head_oid(), note_t['path']))
+            line['stale_pin_acknowledged'] = True
+            line['stale_pin_acknowledgement'] = {
+                'path': note_t['path'],
+                'pinned_blob': pinned_t,
+                'current_blob': live_t if rc_t == 0 else 'MISSING',
+                'reason': '<why this divergence is the approved change>',
+            }
+        print('# Append ONE line to %s. Nothing else changes -- no guard, no generator, no D1 edit.'
+              % ATTESTATION_PATH)
+        print(json.dumps(line, sort_keys=True))
         return 0
 
     print('=== ORDER-602 A (rescoped): S2a ATTESTATION log ===')

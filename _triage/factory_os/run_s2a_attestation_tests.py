@@ -558,6 +558,62 @@ def main():
         print('        -> %s' % (problems or current))
         bad += 1
 
+    # ---- ORDER-731 review M1+M2: the template is the surface a SIGNER reads, so it is tested
+    # ---- like a guard: it must carry the claims forward (M2), guide to the RIGHT ack path when
+    # ---- a note exists (M1), and stay silent when none does (specificity).
+    import contextlib
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc_t = att.main(['--template'])
+    tline = json.loads([l for l in buf.getvalue().splitlines() if l.startswith('{')][0])
+    in_force_eps = None
+    with io.open(att.ATTESTATION_PATH, encoding='utf-8') as fh:
+        for raw in fh:
+            if raw.strip():
+                rec = json.loads(raw)
+                if list(rec.keys()) != ['_comment'] and rec.get('current_owner') == 'MASTER_BACKLOG.md':
+                    in_force_eps = rec.get('expected_post_state')
+    ok = rc_t == 0 and tline.get('expected_post_state') == in_force_eps and in_force_eps is not None
+    print('  [%s] M2: --template carries the in-force expected_post_state forward verbatim'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> template=%r vs in-force=%r' % (tline.get('expected_post_state'), in_force_eps))
+        bad += 1
+    ok = 'stale_pin_acknowledgement' not in tline
+    print('  [%s] M1 specificity: no note today, so the template emits NO ack skeleton'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % (tline.get('stale_pin_acknowledgement'),))
+        bad += 1
+    # The fire direction: force a synthetic STALE note on the D1-pinned path and re-run. The ack
+    # skeleton must name THAT path (the mapping), never current_owner -- F3 refuses the other.
+    pin_path = _coverage_pin_path()
+    saved_notes = chk.pin_vintage_notes
+    try:
+        chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'STALE'}]
+        buf2 = io.StringIO()
+        with contextlib.redirect_stdout(buf2):
+            rc_t2 = att.main(['--template'])
+    finally:
+        chk.pin_vintage_notes = saved_notes
+    tline2 = json.loads([l for l in buf2.getvalue().splitlines() if l.startswith('{')][0])
+    ack2 = tline2.get('stale_pin_acknowledgement') or {}
+    ok = (rc_t2 == 0 and tline2.get('stale_pin_acknowledged') is True
+          and ack2.get('path') == pin_path and ack2.get('path') != 'MASTER_BACKLOG.md')
+    print('  [%s] M1: with a note on the pinned path, the ack skeleton names %s (not current_owner)'
+          % (('OK ' if ok else 'BAD'), pin_path))
+    if not ok:
+        print('        -> %r' % (ack2,))
+        bad += 1
+    # And the F2 message itself must now name the pinned path (the other human surface).
+    _cur_m1, probs_m1 = run_with([good()], vintage=[{'path': pin_path, 'kind': 'STALE'}])
+    ok = 'F2' in probs_m1 and pin_path in probs_m1
+    print('  [%s] M1: F2 names the PINNED path in its message, not only the owner'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %s' % (probs_m1,))
+        bad += 1
+
     after = (io.open(att.ATTESTATION_PATH, encoding='utf-8').read()
              if os.path.exists(att.ATTESTATION_PATH) else None)
     if after != before:

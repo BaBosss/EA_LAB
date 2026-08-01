@@ -624,6 +624,44 @@ def drift_guard_part():
             os.unlink(tmp)
         except OSError:
             pass
+    # ORDER-731 review M4, both directions. build_rows must REFUSE an owner pinning two DISTINCT
+    # paths (the sorted-first tie-break would decide enforcement by ASCII), and must keep
+    # accepting the same-path duplication that legitimately exists (Hypothesis + WorkReceipt).
+    dup = None
+    for spec in gen.ROWS:
+        if spec.get('entity') == 'CoverageCell':
+            dup = dict(spec)
+            break
+    if dup is None:
+        print('  [BAD] M4 probe could not find the CoverageCell spec in gen.ROWS')
+        bad += 1
+    else:
+        dup['entity'] = 'M4Probe'
+        dup.pop('ref_path', None)          # defaults to the owner => a SECOND distinct path
+        dup.pop('ref_path_reason', None)
+        saved_rows = gen.ROWS
+        try:
+            gen.ROWS = saved_rows + [dup]
+            try:
+                gen.build_rows()
+                fired = False
+            except SystemExit as exc:
+                fired = 'M4' in str(exc) and 'MASTER_BACKLOG.md' in str(exc)
+        finally:
+            gen.ROWS = saved_rows
+        print('  [%s] M4 NEGATIVE: an owner pinning two DISTINCT paths is REFUSED by build_rows'
+              % ('OK ' if fired else 'BAD'))
+        if not fired:
+            bad += 1
+        try:
+            gen.build_rows()
+            ok = True
+        except SystemExit:
+            ok = False
+        print('  [%s] M4 CONTROL: the real table (same-path duplication only) still builds'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
     # the real file must be byte-identical to how this part found it
     if io.open(saved, encoding='utf-8').read() != original:
         print('  [BAD] this suite modified the real D1 -- it must only ever read it')
