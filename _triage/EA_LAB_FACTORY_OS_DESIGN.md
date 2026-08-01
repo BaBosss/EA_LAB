@@ -990,14 +990,33 @@ several are the user's alone because they change a bar, change a governance rule
    *having no trades*, not *having too few to interpret* — hosts cleared BWD on 52–62 trades at <2% DD
    while failing hosts took 343–473. The Factory OS makes trades-per-window computable per cell for the
    first time. **The number is still the user's to set.**
-3. **Inputs.mqh token-guard refactor: rollout shape.** Per-Boss (safe, slow, two conventions coexist for
-   weeks) vs all-eight at once (fast, one convention, risks all eight builds together). Recommendation:
-   **per-Boss starting with Boss_14**, because `tpl_regression` gives per-EA drift detection and a broken
-   Boss is then one row, not eight. Needs confirmation because it sets the pace of everything after S6.
-4. **Old `.set` compatibility policy.** Fail-loud on unknown/removed keys (safe, breaks stored sets) vs
-   migrate-with-report (convenient, can silently mis-migrate). Recommendation: **fail-loud plus an
-   explicit migration tool**, because `.set` files are how live configuration reaches a chart and this
-   repo has already lost three days to a bundled `.set` that silently set `AllowLive=false`.
+3. ✅ **DECIDED 2026-08-01 (user) — Inputs.mqh token-guard rollout = PER-BOSS, starting with Boss_14.**
+   <sub>TH verbatim: *"ทำตามที่นายแนะนำ 2 ข้อเลย"* — ratifying the recommendation as written below.</sub>
+   Considered: per-Boss (safe, slow, two conventions coexist for weeks) vs all-eight at once (fast, one
+   convention, risks all eight builds together). **Chosen: per-Boss starting with Boss_14**, because
+   `tpl_regression.ps1` gives per-EA drift detection, so a broken Boss is one row and not eight.
+   **What this decision now binds:**
+   - Boss_14 is the first and only build converted until its parity + regression evidence is green; the
+     next Boss is a separate step, not a continuation of the same commit.
+   - **Two conventions coexisting is EXPECTED, not drift** — no guard may treat "some builds converted,
+     some not" as a failure while the rollout is in progress. A guard that cannot express *partially
+     rolled out* will be satisfied by rolling back, which is the opposite of the intent.
+   - The rollout order is recorded before the first conversion, and a build is only counted converted
+     when `tpl_regression` is CLEAN **on the lane that compiled it** (the lane-mismatch trap, §5.5).
+4. ✅ **DECIDED 2026-08-01 (user) — old `.set` policy = FAIL-LOUD plus a separate migration tool.**
+   Considered: fail-loud on unknown/removed keys (safe, breaks stored sets) vs migrate-with-report
+   (convenient, can silently mis-migrate). **Chosen: fail-loud, and migration is its own explicit tool** —
+   `.set` files are how live configuration reaches a chart, and this repo has already lost three days to a
+   bundled `.set` that silently set `AllowLive=false`.
+   **What this decision now binds:**
+   - An unknown or removed key in a `.set` is a **refusal that names the key**, never a skipped line and
+     never a default substituted underneath. Silence here is the exact failure mode being bought out.
+   - The migration tool **writes a new file and never edits in place**, and reports every key it changed,
+     dropped, or could not map — a migration whose report is empty must be provably a no-op.
+   - The `2,177` tracked `.set` files are **not** bulk-migrated. They fail loudly when used, and are
+     migrated on demand. A bulk pass is a silent rewrite of live configuration by another name.
+   - This does not soften `preset.py`'s existing rule (§5.7): a **partial** `.set` is still refused
+     outright, separately from the unknown-key rule.
 5. **Artifact store location and backup.** Blobs outside git (content-addressed dir + drilled restore) vs
    git-lfs. Affects cost and the backup drill, and there is a P2 backup-drill item already in the backlog.
 6. **Core Universe v1 membership.** Which symbol×TF cells are *mandatory* (decision 24 says Core Universe
