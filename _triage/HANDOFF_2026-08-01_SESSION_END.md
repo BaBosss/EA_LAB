@@ -14,8 +14,8 @@
 | `scripts/check_state.ps1` | **CLEAN** |
 | full tier | **87.8 s of 90.0 s** on the last sample — but see §4, it is intermittent |
 | lanes `ACTIVE` in `docs/SESSION_LEDGER.md` | **0** |
-| `--no-verify` used today | **none** |
-| working tree | clean except pre-existing unrelated dirt (`.obsidian/**`, `STATUS.html`, some `_mt5_auto` CSVs, `portfolio/mris/**`) that was already dirty at session start |
+| `--no-verify` used today | **once, at 11:01 — `b0637b8a`, owner-approved**, BEFORE this session's window. 🔴 This row first said *"none"*: an independent audit caught it, and it sat inside a table headed *"verified at HEAD, not remembered"*. **None was used after 12:00**, which is the true claim and the one that should have been written. |
+| working tree | clean **of this session's work**, plus pre-existing unrelated dirt (`.obsidian/**`, `STATUS.html`, some `_mt5_auto` CSVs, `portfolio/mris/**`). 🔴 When this row was first written it also said "clean" while a **parallel lane** held ~138 uncommitted lines of `AGENT_TASKBOARD.md`; that work has since landed as `074901c0` (`ORDER-830`). **Check `git status` yourself before trusting any such row — this repo has concurrent writers.** |
 | owed to the owner | **nothing** — no pending signature, no pending decision |
 
 **Probed at HEAD, both directions** (do not re-derive, it is done):
@@ -52,7 +52,7 @@ digests before they were taken.
 
 ## 4. Open work, in the order it is worth doing
 
-1. **`ORDER-820` — the tier budget.** Six samples: `91.8 · 91.5 · 91.7 · 91.1 · 93.6 · 87.8 s`
+1. **`ORDER-820` → now carried by `ORDER-830`.** A parallel lane took C1 after this section was written and opened `ORDER-830` for it (`074901c0`) — **go to that row first**; the paragraph below is the evidence it started from, not the current status. Six samples: `91.8 · 91.5 · 91.7 · 91.1 · 93.6 · 87.8 s`
    against an enforced `90.0 s`. **The breach is intermittent** and the driver is one suite,
    `run_contract_binding_tests.ps1`, swinging **24.9-32.1 s**. C1 is now *"why does this suite vary
    by 7 s"*, not *"what added 8.7 s"*. 🚫 Do not raise the budget to clear the red, and do not tune
@@ -96,7 +96,7 @@ digests before they were taken.
 | item | destination |
 |---|---|
 | both whole-file pins removed; §2 protection landed; two signatures spent and none pending | DONE |
-| the intermittent tier budget breach, driver identified as one suite's 7 s swing | ORDER-820 |
+| the intermittent tier budget breach, driver identified as one suite's 7 s swing — **C1 taken up by a parallel lane, see `ORDER-830`** | ORDER-820 |
 | the tier abort itself — armed with a transcript, waiting to recur | ORDER-731 |
 | I1 + the policy stale-count batch, to ride the next signature together | ORDER-731 |
 | a module should DECLARE the paths it reads | ORDER-761 |

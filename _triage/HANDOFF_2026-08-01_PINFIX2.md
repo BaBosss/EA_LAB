@@ -11,6 +11,11 @@ The owner ratified `_triage/USER_DECISIONS_PENDING.md` **item 5 as option A** (n
 to the section the approval was actually about) and the order of work proposed with it:
 **`ORDER-760` first because it costs no signature, then `ORDER-731` option A.**
 
+> ✅ **SUPERSEDED — `ORDER-731` option A was started and landed the next lane** (`212c0555`), and option 2
+> after it (`c66d5e57`). Both are owner-signed; the S2a gate is green at HEAD. Read
+> `_triage/HANDOFF_2026-08-01_SESSION_END.md` for the state; this file is kept for why option A was
+> deliberately NOT started *here*, which is still the right call for the reason it gives.
+
 ## The one-line state
 
 **`ORDER-760` is DONE. `ORDER-731` option A is specified, ratified in direction, and NOT started

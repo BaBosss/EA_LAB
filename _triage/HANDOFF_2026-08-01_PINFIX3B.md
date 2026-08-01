@@ -4,6 +4,15 @@
 > (Decision log 2026-07-26). Every forward-looking item has a home — the routing table at the
 > bottom says which.
 
+> ✅ **SUPERSEDED THE SAME DAY — the repository is NOT blocked. Do not act on the section below.**
+> Everything under this box was true when written and is now history. `ORDER-731` **option 2** landed
+> (`c66d5e57`, owner-signed, bundle `d88f795b`) and removed the second whole-file pin this lane discovered;
+> all three gates exit **0** at HEAD, and an append to `MASTER_BACKLOG.md` outside §2 passes the front guard
+> while an edit inside §2 is refused — both probed. **Forward pointer this file lacked:**
+> `_triage/HANDOFF_2026-08-01_OPT2.md` is the lane that resolved it, and
+> `_triage/HANDOFF_2026-08-01_SESSION_END.md` is the consolidated state.
+> The value that survives here is the DIAGNOSIS — two pins, not one — not the status.
+
 ## 🔴 READ FIRST — the repository is in a BLOCKED state and only the owner can clear it
 
 `check_s2a_attestation.py` **exit 1** · `check_coverage_transfer.py` **exit 1** ·
