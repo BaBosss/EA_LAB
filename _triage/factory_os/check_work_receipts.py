@@ -25,6 +25,26 @@ WHAT IT ASSERTS -- each id is emitted verbatim so a failure names its own rule:
   W0  an absent or header-only file is VALID, not an error: it means no receipt has been written
       yet. (Same shape as the attestation log's G0. A guard that fails on an empty artifact makes
       the artifact impossible to create.)
+  W6  the GRANT ITSELF has not moved: `AGENTS.md`'s section 2 row for this file must be byte-for-byte
+      the pinned text, and must appear exactly once.
+  W7  no OTHER line of `AGENTS.md` speaks about the receipts file, unless it is in the closed
+      `ALLOWED_EXTRA_MENTIONS` declaration.
+
+WHY W6/W7 EXIST (round-3 review, M6 -- the one finding the previous two rounds left open).
+`AGENTS.md` was declared in `$SUITE_GUARDS` for this suite, so editing it RUNS this guard. That is
+only half a mechanism: nothing here READ the file, so the suite ran, passed, and the widened
+permission row landed green. Declaring a file as a TRIGGER and never reading it is the same shape as
+memory `citation-guard-satisfied-by-a-universal-file` -- the guard fires on the right commit and then
+has no question to ask about it. W1-W5 police what agents WRITE under the grant; W6/W7 police the
+grant's own text, which is the sentence W1-W5 are derived from.
+
+WHAT W6 CAN AND CANNOT DO, stated rather than discovered. It cannot PREVENT a widening: the pin
+lives in this file, which any agent may edit, so a commit that widens the row and moves the pin
+together passes. What it removes is the SILENT widening -- the change now has to appear in a diff of
+this checker, under a constant whose only purpose is to be that signal, and the refusal text below
+names the owner requirement. Putting the digest somewhere an agent cannot edit means an owner-signed
+surface (the S2a bundle), which costs a signature; it is queued onto the next signature batch rather
+than taken here, and this paragraph is the record that the difference is known and not claimed away.
 
 WHAT IT DOES NOT ASSERT, stated rather than discovered:
   * it does not check that the order id EXISTS on a board. A receipt for a typo'd order is a
@@ -39,6 +59,7 @@ EXIT   0 valid  |  1 a rule was broken  |  2 tool failure (could not read what i
 """
 from __future__ import annotations
 
+import hashlib
 import io
 import json
 import os
@@ -48,7 +69,36 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import evidence  # noqa: E402
 
 RECEIPTS_PATH = 'factory/work_receipts.jsonl'
+GRANT_PATH = 'AGENTS.md'
 TAG = '[work-receipts]'
+
+# THE PIN (W6). sha256 of the section 2 row for RECEIPTS_PATH, stripped of leading/trailing space,
+# CRLF folded to LF, encoded utf-8. Taken from the row the owner confirmed verbatim in chat on
+# 2026-08-01 before it was written -- the same bytes `AGENTS.md` line 86 carries at `d2f85d8c`.
+#
+# The clauses this digest is standing guard over, so a reader knows what a mismatch means without
+# reconstructing it: APPEND ONLY, one row per order -- never edit or delete an existing row -- a row
+# may cite only the writing agent's own order id -- no verdict, no order status, no field that feeds
+# a decision. Every one of them is a limit W1-W5 implement; widening any of them widens this guard.
+#
+# TO RE-PIN, and it is deliberately a two-hand operation: a WIDENING needs the owner (AGENTS.md
+# section 2 is explicit that Claude may not widen its own permissions), and only then does the
+# digest move. A typo or formatting fix needs no owner but still needs this constant edited in the
+# same commit, which is what makes the change visible in a diff instead of invisible in prose.
+GRANT_ROW_SHA256 = '348c10aecc9118ed026e27ac59c84dd664515c47412d3d83433f506eb31f6cbf'
+
+# W7's closed declaration -- normalised, stripped lines of AGENTS.md that are allowed to mention the
+# receipts file BESIDES the pinned row. Empty today, and that is a measured fact, not a hope: at
+# `d2f85d8c` exactly one line of AGENTS.md mentions it. It is a tuple rather than a "count <= 1"
+# rule because a permission can be widened by a sentence somewhere else in the file just as easily
+# as by editing the row, and a rule that allows N mentions without saying WHICH cannot tell the two
+# apart. Adding a legitimate mention means adding it here, in a diff.
+ALLOWED_EXTRA_MENTIONS = ()
+
+# What counts as "speaking about the receipts file" for W7. The stem, not the full path, because
+# `work_receipts.jsonl` and `factory/work_receipts.jsonl` are the same subject and a rule that only
+# matched the long form would be evaded by dropping a directory.
+GRANT_SUBJECT = 'work_receipts'
 
 # An ALLOW-LIST, and the switch from a deny-list is the whole point. The first version listed
 # banned names -- and probing it found two evasions in one minute: `{"result": {"verdict": "PASS"}}`
@@ -241,6 +291,78 @@ def check(staged_text, head_text, problems, grandfather=True):
     return len(rows)
 
 
+def grant_rows(agents_text):
+    """Every section 2 table row whose FIRST cell names the receipts file, as (line_no, text).
+
+    The first cell only, and that is the point of the extraction: the row's subject is what makes it
+    a grant for THIS file. A row about something else that happens to mention the receipts file in
+    its prose is W7's business, not W6's, and conflating them would let a real second grant hide
+    inside a first cell this function never looked at.
+    """
+    out = []
+    for n, raw in enumerate(_norm(agents_text).split('\n'), start=1):
+        line = raw.strip()
+        if not line.startswith('|'):
+            continue
+        cells = line.split('|')
+        if len(cells) > 1 and RECEIPTS_PATH in cells[1]:
+            out.append((n, line))
+    return out
+
+
+def check_grant(agents_text, problems):
+    """W6 + W7 over TEXT, so the cage can drive both directions without touching the real file.
+
+    The digest actually seen is in the W6 failure text, not just in the return value: a pin failure
+    that does not hand back the new digest makes a legitimate re-pin a guessing game, and a guard
+    that is annoying to satisfy correctly gets satisfied incorrectly. The return value is for
+    callers that want it without parsing prose (probes, and a future re-pin helper); it is None when
+    the row is missing or duplicated, which are the two cases where no single digest exists.
+    """
+    rows = grant_rows(agents_text)
+    seen_digest = None
+
+    if not rows:
+        problems.append(
+            'W6 %s carries NO section 2 row for %s. The grant that authorises this log was removed '
+            'or renamed. Removing the grant is the owner\'s call, not an agent\'s -- and every limit '
+            'W1-W5 enforces is written in that row, so the checker would go on enforcing a sentence '
+            'the repo no longer contains.' % (GRANT_PATH, RECEIPTS_PATH))
+    elif len(rows) > 1:
+        problems.append(
+            'W6 %s carries %d section 2 rows for %s (lines %s). One file, one grant: a second row '
+            'is a second permission, and the pinned one staying intact proves nothing about it.'
+            % (GRANT_PATH, len(rows), RECEIPTS_PATH, ', '.join(str(n) for n, _ in rows)))
+    else:
+        n, text = rows[0]
+        seen_digest = hashlib.sha256(text.encode('utf-8')).hexdigest()
+        if seen_digest != GRANT_ROW_SHA256:
+            problems.append(
+                'W6 the %s section 2 grant row (line %d) is not the pinned text.\n'
+                '       pinned: %s\n'
+                '       staged: %s\n'
+                '     If this is a WIDENING of what agents may write, it needs the owner -- section '
+                '2 says Claude may not widen its own permissions, and the narrow grant is the only '
+                'reason this log was allowed to exist. If it is a typo or formatting fix, move '
+                'GRANT_ROW_SHA256 in check_work_receipts.py to the staged digest above, in this '
+                'same commit, so the change is in the diff rather than in the prose.'
+                % (GRANT_PATH, n, GRANT_ROW_SHA256, seen_digest))
+
+    pinned_lines = set(text for _n, text in rows)
+    for n, raw in enumerate(_norm(agents_text).split('\n'), start=1):
+        line = raw.strip()
+        if GRANT_SUBJECT not in line or line in pinned_lines:
+            continue
+        if line in ALLOWED_EXTRA_MENTIONS:
+            continue
+        problems.append(
+            'W7 %s line %d speaks about %s outside the pinned grant row: %s\n'
+            '     A permission can be widened by a sentence next to the row as easily as by editing '
+            'it. If this mention is legitimate, declare it in ALLOWED_EXTRA_MENTIONS.'
+            % (GRANT_PATH, n, RECEIPTS_PATH, line[:120] + ('...' if len(line) > 120 else '')))
+    return seen_digest
+
+
 def main(argv=None):
     root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     os.chdir(root)
@@ -262,6 +384,27 @@ def main(argv=None):
         print('%s TOOL FAILURE: git is not answering, so "absent" and "unreadable" cannot be told '
               'apart -- refusing to report a verdict.' % TAG)
         return 2
+
+    # W6/W7 run FIRST and run ALWAYS -- before the receipts file is even looked for. The grant is
+    # the premise of every other rule here, and it is checkable whether or not a single receipt has
+    # ever been written; deferring it until after the W0 early returns would leave the widening
+    # unguarded in exactly the state the log spends most of its life in (empty).
+    try:
+        grant_text = src.read_committed(GRANT_PATH)  # snapshot: index under the hook
+    except evidence.ToolFailure as exc:
+        print('%s TOOL FAILURE reading %s, so the grant could not be checked: %s'
+              % (TAG, GRANT_PATH, exc))
+        return 2
+    check_grant(grant_text, problems)
+    if problems:
+        for p in problems:
+            print('  -> %s' % p)
+        print(chr(10) + '=== %d PROBLEM(S) -- the work-receipt GRANT ITSELF moved ===' % len(problems))
+        return 1
+    # Said on EVERY path, including the W0 early returns below: a guard that only reports what it
+    # checked when it also found rows to judge is a guard whose silence is ambiguous.
+    print('%s grant row pinned OK (W6/W7) -- %s section 2 still says what W1-W5 enforce'
+          % (TAG, GRANT_PATH))
 
     head_text = _head_text()
     present = src.exists_committed(RECEIPTS_PATH)

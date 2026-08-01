@@ -10,12 +10,18 @@ nobody agreed to.
 MEASURED before adding, because the ORDER-673 budget means a new cage DISPLACES something:
 run_work_receipts_tests.py is ~0.15s -- it drives pure text through check(), spawning no git and
 touching no repo file, which is also why it can assert both directions cheaply.
+W6/W7 (M6) added a SECOND read to the checker -- AGENTS.md, the grant itself. Measured, 3 samples
+each rather than one: 0.3-0.8 ms in worktree mode, 34-37 ms under the hook, where it is one
+`git show :AGENTS.md`. The whole wrapper is 0.60-0.62s. Stated because "it is only a file read" is
+how a tier gets 8 seconds heavier with nobody able to say which commit did it (ORDER-820).
 
-WHAT IT RUNS. The cage (16 cases: CONTROL that an append still LANDS, ATTACK on every clause, two
-SPECIFICITY cases that the closed decision-field list does not swallow ordinary work fields, and an
-ENGAGEMENT mutation that neutralises the append-only comparison and requires the attack cases to go
-red). Then the checker itself against the REAL file, because a cage that only ever sees fixtures
-proves the rule and never proves the rule is applied.
+WHAT IT RUNS. The cage (34 cases: CONTROL that an append still LANDS, ATTACK on every clause, three
+SPECIFICITY cases that the closed lists do not swallow ordinary work fields or the declared mention,
+an ENGAGEMENT mutation that neutralises the append-only comparison and requires the attack cases to
+go red, and a WIRING case that main() actually CONSULTS the grant text). Then the checker itself
+against the REAL file, because a cage that only ever sees fixtures proves the rule and never proves
+the rule is applied -- and since W6 the real-file run is also the ONLY place the pin meets the real
+`AGENTS.md`: the fixtures deliberately use a synthetic row so the grant text is not duplicated here.
 
 USAGE  powershell -NoProfile -File scripts\_test\run_work_receipts_tests.ps1
 #>
@@ -58,6 +64,13 @@ if ($code -ne 0) {
 # nothing can fail -- the shape this repo has repaired more than once.
 if (($out -join "`n") -notmatch 'ENGAGEMENT') {
     Write-Host "[work-receipts] FAIL: no ENGAGEMENT case ran, so no criterion was shown able to fail" -ForegroundColor Red
+    exit 1
+}
+# Same reasoning one level up, for W6/W7 (M6): the whole finding was a rule that existed and was
+# never READ. Deleting the WIRING case would leave every W6 fixture green while main() consulted
+# nothing -- so the suite has to be unable to go quiet about it.
+if (($out -join "`n") -notmatch 'WIRING') {
+    Write-Host "[work-receipts] FAIL: no WIRING case ran, so nothing showed main() reads the grant at all" -ForegroundColor Red
     exit 1
 }
 
