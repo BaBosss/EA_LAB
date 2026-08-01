@@ -39,6 +39,7 @@ a hash difference means a CONFIG difference and never a spelling difference.
 import hashlib
 import json
 import re
+import struct
 
 import registry as _registry              # ORDER-672 G2: the ONE build-tag parser lives there
 from evidence import ToolFailure          # noqa: F401  (re-exported for callers)
@@ -529,7 +530,7 @@ def compile_preset(surface, layers, account_unit, unit_classes=None, locked_cons
 
     ordered = _ordered(surface, resolved)
     scope, constants = _constant_scope(locked_constants)
-    digest = _fingerprint(surface.build_tag, ordered, constants, scope)
+    digest = _fingerprint(surface, ordered, constants, scope)
     return Preset(surface, ordered, provenance, digest, scope, account_unit, constants,
                   enums=enums)
 
@@ -574,17 +575,65 @@ def _constant_scope(locked_constants):
     return 'surface+constants', constants
 
 
-def _fingerprint(build_tag, ordered_values, constants, scope):
+def canonical_double(value):
+    """A double as its IEEE-754 bits, lowercase hex. ORDER-710.
+
+    WHY THE BITS AND NOT THE TEXT. The EA has to reach the SAME hash from the values MT5 parsed
+    out of the `.set`, so the preimage may only contain forms both sides can produce exactly.
+    `repr(3e-05)` is Python's shortest-round-trip spelling; MQL5's `%g` is the C library's, and
+    they disagree on integral floats (`1.0` vs `1`) and on exponent width. Hashing the SPELLING
+    would make the fingerprint a claim about two printf implementations agreeing, which is not
+    the thing being checked -- and it would fail in the one direction that matters least
+    (`0.1` vs `0.10`) while a real config change stayed invisible.
+
+    The bit pattern is the value MT5 loaded, exactly, and both languages can emit it with no
+    formatting involved. `300`, `300.0` and `3e2` still collapse to one preimage, which is the
+    canonicalisation the module header promises.
+
+    -0.0 is normalised to +0.0: they compare equal and mean the same lot size, but their bits
+    differ, so an unnormalised pair would move the fingerprint without moving the config.
+    """
+    v = float(value)
+    if v == 0.0:
+        v = 0.0
+    return '0x%016x' % struct.unpack('>Q', struct.pack('>d', v))[0]
+
+
+def canonical_for_hash(decl, rendered):
+    """The rendered `.set` value -> the form BOTH this compiler and the EA hash.
+
+    `rendered` is what the `.set` line carries. For every type except double that text IS
+    already canonical (`true`/`false`, a decimal integer, the string itself). A double goes
+    through `float()` first -- which is exactly what MT5 does when it loads the line -- so what
+    is hashed is the value the binary ends up holding, not the digits somebody typed.
+    """
+    t = decl.mql_type
+    if t == 'double':
+        return canonical_double(rendered)
+    if t == 'bool' or t == 'string' or t in ('int', 'long') or t.startswith('ENUM_'):
+        return rendered
+    raise PresetRefusal('input %s has type %s, which has no canonical hash form'
+                        % (decl.name, t))
+
+
+def _fingerprint(surface, ordered_values, constants, scope):
     """sha256 over the CONFIG, and over nothing else.
 
-    In deliberately: the build tag (it selects which code the values reach) and every rendered
-    input value. Out deliberately: symbol, timeframe, model, window, lane, account unit, the
-    generation time and the file's comment header. Those describe the JOB, not the
-    configuration -- an EA at OnInit cannot see most of them, and the question this hash exists
-    to answer is "is the .set on this chart the .set we validated".
+    In deliberately: the build tag (it selects which code the values reach) and every input
+    value in its canonical form. Out deliberately: symbol, timeframe, model, window, lane,
+    account unit, the generation time and the file's comment header. Those describe the JOB, not
+    the configuration -- an EA at OnInit cannot see most of them, and the question this hash
+    exists to answer is "is the .set on this chart the .set we validated".
+
+    ORDER-710: the preimage is now written the same way on both sides. `ea_template/core/
+    InputSurface_gen.mqh` is GENERATED from the same parse of the same file, so the EA emits
+    this string from its own live inputs at OnInit and the two hashes are comparable. Any change
+    to the four lines below is a change to a cross-language contract -- the EA half moves with
+    it or the check silently stops checking.
     """
-    lines = ['scope=%s' % scope, 'build=%s' % build_tag]
-    lines += ['%s=%s' % (k, v) for k, v in ordered_values.items()]
+    lines = ['scope=%s' % scope, 'build=%s' % surface.build_tag]
+    lines += ['%s=%s' % (k, canonical_for_hash(surface.by_name[k], v))
+              for k, v in ordered_values.items()]
     lines += ['const:%s=%s' % (k, constants[k]) for k in sorted(constants)]
     return hashlib.sha256('\n'.join(lines).encode('utf-8')).hexdigest()
 

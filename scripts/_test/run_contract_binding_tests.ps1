@@ -192,7 +192,19 @@ $scripts = @(
     #    claims, and the second is the one this repo keeps needing: L1 and L2 are guards, and a
     #    guard with no proof it can fire is shape 3 -- the very thing L2 exists to catch.
     @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @('--self-test') },
-    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @() }
+    @{ Path = '_triage\factory_os\run_guard_shape_lint.py'; Args = @() },
+    # 10. ORDER-710. The generated input-surface enumeration, in the same two entries as item 7
+    #     and for the same reason -- they answer two different questions:
+    #       run_input_surface_tests.py --mutate -- can the guard fail? 5 criteria x (attack +
+    #                                              specificity) + 5 mutations, over FIXTURE
+    #                                              sources it injects, so it stays green no
+    #                                              matter what the real repository does.
+    #       check_input_surface_gen.py         -- is the REAL enumeration current and wired in
+    #                                              RIGHT NOW, judged at the commit's snapshot?
+    #     MEASURED 0.21s + 0.10s. Both belong in this wrapper rather than a 17th PowerShell
+    #     suite, per this file's own rule that the expensive part of a small cage is the process.
+    @{ Path = '_triage\factory_os\run_input_surface_tests.py'; Args = @('--mutate') },
+    @{ Path = '_triage\factory_os\check_input_surface_gen.py'; Args = @() }
 )
 
 $failed = 0

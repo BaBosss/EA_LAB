@@ -96,6 +96,14 @@ L1_FILES = (
     # It matters more since migration 6/9 gave it real reads: it judges committed checker sources,
     # which makes it a CHECKER by its own definition.
     '_triage/factory_os/run_guard_shape_lint.py',
+    # ORDER-710. L0 demanded this one on its first run too -- the fourth time in a row the
+    # completeness lint has named an addition its author had not thought to declare, which is
+    # the whole case for L0 existing rather than a review checklist.
+    '_triage/factory_os/check_input_surface_gen.py',
+    # ...and its GENERATOR, which is outside CHECKER_GLOBS and would never be demanded. It is
+    # here for the reason the snapshot_build entry above gives: the guard's verdict is only as
+    # good as the text this module emits, so its reads are judged inputs one layer down.
+    '_triage/factory_os/gen_input_surface.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -296,6 +304,16 @@ CATEGORY = {
     # bare open() is the fixture-temp-tree branch, declared `not-a-judged-input`,
     # which T7 allows precisely because a synthetic root is not judged evidence.
     '_triage/factory_os/run_guard_shape_lint.py': 'A',
+    # ORDER-710. A: it judges two committed files against each other and refuses the commit.
+    # Both reads go through ONE EvidenceSource, which is the point -- a staleness check is the
+    # place a mixed vintage hides best (compare a STAGED source against a WORKTREE copy and the
+    # one commit it exists to refuse passes).
+    '_triage/factory_os/check_input_surface_gen.py': 'A',
+    # LIB: emit() takes its source TEXT from the caller and opens nothing. Only the CLI reads a
+    # path, and it says which one it read in its own output. Same shape as preset.py: a library
+    # that defaulted its source would be a second decider of which bytes the enumeration
+    # describes.
+    '_triage/factory_os/gen_input_surface.py': 'LIB',
 }
 
 # Category-A files whose migration to read_committed/list_committed has not landed yet. The
@@ -331,6 +349,9 @@ L2_PAIRS = {
     # ORDER-630 (S5): check_registries emits R1-R5, and run_registry_tests.py must name each.
     '_triage/factory_os/check_registries.py':
         ('_triage/factory_os/run_registry_tests.py',),
+    # ORDER-710: G1 (the enumeration is current) and G2 (it is wired into a build).
+    '_triage/factory_os/check_input_surface_gen.py':
+        ('_triage/factory_os/run_input_surface_tests.py',),
 }
 # `[A-Z]`, not `[A-E]`. BLIND AUDIT 2026-07-31, reproduced: the class was `[A-E]` because the
 # checkers that existed when L2 was written emitted A1-E9. ORDER-630's checker emits R1-R6, so the

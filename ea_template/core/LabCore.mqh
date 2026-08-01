@@ -7,6 +7,9 @@
 #define BOSS_LAB_CORE_MQH
 
 #include "Inputs.mqh"
+// ORDER-710: must come AFTER Inputs.mqh -- it enumerates that file's inputs per build tag, and
+// Inputs.mqh is where the fallback tag is defined when a wrapper defines none.
+#include "InputSurface_gen.mqh"   // GENERATED (gen_input_surface.py); guarded by check_input_surface_gen.py
 #include "Indicators.mqh"
 #include "Regime.mqh"
 #include "Execution.mqh"
@@ -63,6 +66,22 @@ datetime g_lab_last_bar = 0;
 void Lab_LogEffectiveConfig()
 {
    Print("[CFG] ---- effective configuration (what actually wins at runtime) ----");
+
+   // ORDER-710 (design 5.6). The line above tells a reader what won; this one lets a MACHINE
+   // check it. The hash is over every input THIS BINARY EXPOSES, in the values it is actually
+   // holding -- so it answers "is the .set on this chart the .set we validated", which reading
+   // the .set file cannot (an unlisted input is filled from the per-terminal tester cache).
+   // preset.py computes the same digest from the same preimage; the two are comparable only
+   // because ea_template\core\InputSurface_gen.mqh is generated from the same parse of the
+   // same file. Log-only, like everything else in this function.
+   string cfg_fp = CFG_Fingerprint();
+   if(cfg_fp == "")
+      Print("[CFG] input surface: FINGERPRINT UNAVAILABLE - CryptEncode(CRYPT_HASH_SHA256) "
+            "failed on this terminal. The configuration on this chart is UNVERIFIED; do not "
+            "read the absence of a mismatch as a match.");
+   else
+      PrintFormat("[CFG] input surface: build=%s keys=%d scope=%s effective_config_hash=%s",
+                  CFG_BuildTag(), CFG_SurfaceKeys(), CFG_FP_SCOPE, cfg_fp);
 
    // --- first lot. Deliberately NOT calling MM_FirstLot here: mode 42 needs an SL
    // distance from indicator buffers that are not filled yet at OnInit, so a number

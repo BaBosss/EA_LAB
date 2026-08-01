@@ -597,7 +597,32 @@ $SUITE_GUARDS = @{
                                           # this file, so a change to it can falsify C8. Since
                                           # ORDER-610 it is ALSO the generated projection, so a
                                           # hand edit to it must trigger the same tier.
-                                          'MASTER_BACKLOG.md')
+                                          'MASTER_BACKLOG.md',
+                                          # ORDER-710 ([CFG] fingerprint). The generated
+                                          # enumeration is a COPY of Inputs.mqh, so the file it
+                                          # copies FROM has to be on this list or the staleness
+                                          # guard fires only when something else is staged --
+                                          # and the one commit it exists to refuse is exactly
+                                          # the one that touches Inputs.mqh alone.
+                                          # ea_template/core/Inputs.mqh is already declared by
+                                          # run_preset_tests.ps1; it is repeated here because a
+                                          # declaration is per-suite and this suite reads it too.
+                                          'ea_template/core/Inputs.mqh',
+                                          'ea_template/core/InputSurface_gen.mqh',
+                                          # LabCore is where G2 checks the enumeration is wired
+                                          # in at all: commenting the include out is a silent
+                                          # loss of the whole fingerprint line.
+                                          'ea_template/core/LabCore.mqh',
+                                          '_triage/factory_os/gen_input_surface.py',
+                                          '_triage/factory_os/check_input_surface_gen.py',
+                                          '_triage/factory_os/run_input_surface_tests.py',
+                                          # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
+                                          # run after the two entries above landed: both the
+                                          # generator and the cage import preset.py for the ONE
+                                          # surface parser, so a commit touching only that
+                                          # module must still run this cage. The wrapper's
+                                          # path-string sweep cannot see an `import`.
+                                          '_triage/factory_os/preset.py')
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
                                           'scripts/_test/run_fast_cages.ps1')
