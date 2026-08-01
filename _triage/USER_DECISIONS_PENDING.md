@@ -83,7 +83,17 @@ pick numbers silently. Do not let it choose.
 
 ---
 
-## 5. 🔴 STILL OPEN — option A was executed, and MEASURED NOT TO WORK. Option 2 is now the recommendation.
+## 5. ✅ RESOLVED — option 2 executed and owner-signed 2026-08-01 (`c66d5e57`); HEAD green
+
+**Final state:** the owner ratified option 2 (*"ทำ option 2 เลย"*) and confirmed the digest through a
+review-then-proceed instruction. `CoverageCell.owner_ref` pins `factory/coverage.jsonl`;
+`current_owner` unchanged (R6/C7 preserved, all 7 historical records eligible); the second
+whole-file pin is gone; record line 9 (bundle `d88f795b`) needs no acknowledgement; all three
+gates exit 0 at HEAD. The note→record match now goes through D1's `current_owner → owner_ref.path`
+mapping, proven to fire on drift and stay silent today. Residual toll = §2 edits only (the section
+pin, option A). Evidence = the `ORDER-731` RESULT blocks. *History below kept for provenance.*
+
+### (superseded 2026-08-01 by the resolution above) option A was executed, and MEASURED NOT TO WORK. Option 2 became the recommendation.
 
 **What happened:** the owner ratified option 1 (2026-08-01, lane PINFIX2) and signed the digest in
 chat at 13:32 (lane PINFIX3). It landed in `212c0555`, correctly: the record in force (line 8) pins

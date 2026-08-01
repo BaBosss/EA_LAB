@@ -441,7 +441,55 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 
 ---
 
-## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `REOPENED — option A is HALF the fix and HEAD is RED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-731 — [factory/S2a] An attested blob pin is checked against `HEAD`, so the commit that breaks it is never refused — and `MASTER_BACKLOG.md` is frozen without saying so — `DONE (items 1, option A, option 2 — HEAD GREEN); item 2 still OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### RESULT (lane `S-2026-08-01-OPT2`, 2026-08-01) — option 2 LANDED (`c66d5e57`), owner-signed, all three red gates GREEN at HEAD
+>
+> **What landed.** `CoverageCell.owner_ref` now pins `factory/coverage.jsonl` — the file that has
+> held the canonical Coverage bytes since `a424e90b` — via an explicit `ref_path` override in the
+> generator (D1 **regenerated, never hand-edited**; a `owner_ref_path_reason` is emitted on the one
+> row that uses it). `current_owner` is deliberately unchanged: moving it fails **R6** for all 7
+> historical records (measured 7 eligible → 0, unrepairable) and makes **C7**'s Coverage edge
+> absent. ⇒ the second whole-file pin on `MASTER_BACKLOG.md` (F5 via the permanent STALE note) is
+> **gone**, and record line 9 (bundle `d88f795b`, confirmed by the owner through a review-then-
+> proceed instruction with the digest delta stated in the record itself) needs **no acknowledgement
+> at all** — which is the honest form of "the toll is removed".
+>
+> 🔴 **The blocker found and closed in review, worth the whole exercise:** the first implementation
+> derived notes on `owner_ref.path` but matched them on `current_owner` — so the note for a drifted
+> `factory/coverage.jsonl` was **printed and never enforced**: F2–F5 permanently inert for the one
+> owner this artifact exists for (memory `guard-disarmed-by-prose-reported-as-note`, recreated in
+> the fix for the fifth instance of the pin family). Closed with `owner_ref_paths`/`note_for_owner`
+> (derived ONCE, N4's path-identity untouched — what moved is which path is looked up). **Proven in
+> both pre-registered directions** on the real D1: drifted store fires F2, F3 (ack naming the old
+> path is refused), F4, F5 — each by name with the actual message — and today's state is silent
+> with the gate at exit 0. The mapping is a measured no-op for the 26 rows where the two fields are
+> equal (whole-map before/after: 1 owner differs). 6 hermetic vectors added; the pair
+> `V-N3-002`/`V-N4-002` exists because the first silent vector **did not discriminate** the
+> over-reach mutant (nothing to hand out ≠ refused to hand out) — specificity needed a world where
+> a note EXISTS on another owner's pin.
+> `run_s2a_attestation_tests` had gone **vacuous** on a hardcoded note path (STALE_NOTE =
+> MASTER_BACKLOG.md, asserting a world that can no longer exist); it now derives the pin path from
+> D1 — 46/46, and the pre-fix lookup patched back in fails 6 cases.
+>
+> **Measured at the landing, re-run by the seat, not carried from the worker:** all three
+> previously-red gates **exit 0 at HEAD** (`check_s2a_attestation` · `check_coverage_transfer` ·
+> `run_s2a_gate`) · contract-binding suite green **through the real hook of the landing commit
+> itself** · conformance **68/0** · mutation **37 probed, 0 INERT** · migration suite **44/0, 32/32
+> mutations caught** · migration checker 9/9 · pin cage 21 · lint green · corpus append-only
+> byte-prefix-verified (+6/−0). Post-landing probes: staged append **outside** §2 passes the front
+> guard; staged tamper **inside** §2 refused with P1 naming both digests.
+> **The seat's own review round also caught** the policy header still reading 63/19/43/1 after the
+> six new vectors (shape 4, in the row that says "counted, not typed") — recounted to **69/21/47/1**
+> at landing; that recount is the only reason the signed digest moved `9054c1a1 → d88f795b`, and
+> the record's `recorded_by` states the sequence verbatim.
+>
+> **Residual costs, stated:** a §2 edit / `gen_coverage.py --apply` still ends at a signature (the
+> §2 section pin — option A, by design) · D1's write-mode regeneration re-pinned **all 14 rows** at
+> HEAD (no per-row mechanism exists; precedent `59a27f97`), silencing six advisory notes belonging
+> to five other entities — none has a record today, but a **per-row re-pin capability** is the
+> follow-up worth having · declared limit: an owner pinning several drifted paths gets the first in
+> sorted order enforced, the rest advisory (nobody is in that position today).
 
 > ### 🔴 CORRECTION (lane `S-2026-08-01-PINFIX3B`, `/scrutinize` of the lane below) — **the claim "the payoff, demonstrated" is FALSE, and the gate is red right now**
 >
