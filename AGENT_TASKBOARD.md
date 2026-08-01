@@ -3948,7 +3948,12 @@ to money rather than %") แล้ว **ไม่มีใครเป็นเ�
 **STEP 2:** Claude แก้ `portfolio/ACCOUNTS.csv` แล้วรัน `python scripts/portfolio_risk_admission.py` ใหม่ทั้งบัญชี
 **ห้าม:** เดาค่าเอง · แก้ช่อง currency โดยไม่มี user ยืนยัน (แถวนี้ถูกเว้นไว้โดยตั้งใจมาแล้วครั้งหนึ่ง)
 
-## ORDER-232 — [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด — `OPEN` · ทำได้: user ตัดสิน + Claude เสนอ · 👉 แนะ: user
+## ORDER-232 — [🔴 เงินจริง · disposition] MacroGate 990120: เก็บ / ย้าย AUDJPY / ถอด — `DONE` (user เคาะ 2026-07-28 = (a) คงไว้เป็น sensor advisory · ค้างเฉพาะ REVIEWED+archive) · ทำได้: user ตัดสิน + Claude เสนอ · 👉 แนะ: user
+
+> 🔴 **หัวข้อนี้เขียนว่า `OPEN` อยู่ 4 วันทั้งที่ user เคาะไปแล้ว** (บล็อก `### ✅ DECIDED` ข้างล่าง,
+> 2026-07-28) — และมันหลอกได้จริง: 2026-08-01 seat สรุปสถานะพอร์ตให้ user โดยรายงานใบนี้ว่า
+> *"เงินจริง ยังค้างรอเคาะ"* เพราะอ่าน header แล้วไม่ได้อ่านตัว body (`ORDER-940`)
+> **status ใน header คือสิ่งที่คนอ่านตอนเร่ง** — ถ้ามันไม่ตรงกับ body มันไม่ใช่แค่ค้าง มันคือข้อมูลผิด
 **bars:** N-A (decision) · **flat-lot probe:** N-A
 **ปัญหา:** ORDER-211 ถอดสถานะ VALIDATED → ADVISORY-ONLY แล้ว แต่ **990120 ยัง ACTIVE บน USDJPYm judge 2026-10-16**
 และมี **คำแนะนำที่ขัดกันเอง 2 ฉบับ** ค้างอยู่:
