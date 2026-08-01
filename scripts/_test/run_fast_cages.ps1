@@ -813,8 +813,98 @@ if ($StagedPaths -and $StagedPaths.Count -gt 0 -and $selected.Count -lt $FAST_SU
 
 Write-Host '[fast-cages] running the cages that guard the guards'
 
+# ---------------------------------------------------------------------------------------------
+# ORDER-731 item 2 -- the tier ABORT, instrumented rather than argued about.
+#
+# `check_s2a_migration.py` compares an input fingerprint at the start and end of its run and
+# exits 2 if HEAD or the git index moved underneath it. It fired in 2 of 8 manual full-tier runs
+# on 2026-08-01. One instance was explained by a concurrent lane committing; the other was NOT,
+# and it could not be diagnosed by anyone afterwards because NO RUN LEFT A TRACE -- the entire
+# record was prose retyped into a commit message. "It moved sometime during 78 seconds" is not a
+# diagnosis, and neither is a second opinion about it.
+#
+# So: stamp the two things that can move, AFTER EVERY SUITE. That converts an 80-second mystery
+# into a per-suite window, and the next occurrence names the suite it happened under.
+#
+# Deliberately PURE FILE READS -- no `git` subprocess. A probe that spawned git 16 times per run
+# would be perturbing the very state it is measuring (and `git` can write `.git/index` for its
+# own reasons), which is the observer defect this repo has paid for elsewhere. `.git/HEAD` plus
+# the resolved ref file plus the index's (mtime, length) are enough to detect CHANGE, and change
+# is the whole question.
+$tierRunLog = $null
+# NESTED runs write nothing. PART 7 and the self-test parts invoke this script again against
+# synthetic staged sets and temp indexes; one real tier produced SIX extra transcripts, each one
+# suite long, which turns the directory into noise exactly when it is being searched for signal.
+# The env var is set for children, so the OUTERMOST run is the only writer.
+$isNestedTier = [bool]$env:EA_LAB_TIER_RUN
+if (-not $isNestedTier) {
+    try {
+        $runDir = Join-Path $RepoRoot '_triage\tier_runs'
+        if (-not (Test-Path -LiteralPath $runDir)) {
+            New-Item -ItemType Directory -Path $runDir -Force | Out-Null
+        }
+        $tierRunLog = Join-Path $runDir ('tier_{0}_{1}.jsonl' -f (Get-Date -Format 'yyyyMMdd_HHmmss'), $PID)
+        # Bounded retention. An unbounded breadcrumb directory is a disk leak, and the runs that
+        # matter are the recent ones -- a transcript from three weeks ago answers no question
+        # anybody is asking. Newest 40 kept.
+        $old = @(Get-ChildItem -LiteralPath $runDir -Filter 'tier_*.jsonl' -ErrorAction SilentlyContinue |
+                 Sort-Object LastWriteTime -Descending | Select-Object -Skip 40)
+        foreach ($f in $old) { Remove-Item -LiteralPath $f.FullName -Force -ErrorAction SilentlyContinue }
+    } catch {
+        # Instrumentation must never be able to fail the tier it instruments.
+        $tierRunLog = $null
+    }
+}
+# Set for CHILDREN only, and restored at the end of this script -- an env var this script
+# leaves behind would make the NEXT tier run in the same shell think it is nested and write
+# no transcript at all. Measured: running the tier twice in one PowerShell session produced
+# one transcript, and the missing one looked exactly like a run that never happened.
+$priorTierRunEnv = $env:EA_LAB_TIER_RUN
+$env:EA_LAB_TIER_RUN = '1'
+
+function Get-GitStateStamp {
+    param([string]$GitDir)
+    $head = $null; $ref = $null; $idxTicks = $null; $idxLen = $null
+    try { $head = (Get-Content -LiteralPath (Join-Path $GitDir 'HEAD') -Raw -ErrorAction Stop).Trim() } catch { $head = 'UNREADABLE' }
+    try {
+        if ($head -like 'ref: *') {
+            $refPath = Join-Path $GitDir ($head.Substring(5).Trim() -replace '/', '\')
+            if (Test-Path -LiteralPath $refPath) { $ref = (Get-Content -LiteralPath $refPath -Raw).Trim() }
+            else { $ref = 'PACKED-OR-ABSENT' }
+        } else { $ref = $head }
+    } catch { $ref = 'UNREADABLE' }
+    try {
+        $fi = Get-Item -LiteralPath (Join-Path $GitDir 'index') -ErrorAction Stop
+        $idxTicks = $fi.LastWriteTimeUtc.Ticks; $idxLen = $fi.Length
+    } catch { $idxTicks = -1; $idxLen = -1 }
+    return [pscustomobject]@{ head = $head; ref = $ref; index_ticks = $idxTicks; index_len = $idxLen }
+}
+
+function Write-TierStamp {
+    param([string]$LogPath, [string]$GitDir, [string]$Phase, [string]$Suite, $Exit, $Seconds)
+    if (-not $LogPath) { return }
+    try {
+        $s = Get-GitStateStamp -GitDir $GitDir
+        $rec = [pscustomobject]@{
+            at = (Get-Date).ToString('o'); phase = $Phase; suite = $Suite
+            exit = $Exit; seconds = $Seconds
+            head = $s.head; ref = $s.ref; index_ticks = $s.index_ticks; index_len = $s.index_len
+            git_index_env = $env:GIT_INDEX_FILE
+        }
+        # NO BOM. `Add-Content -Encoding utf8` in PS 5.1 stamps a BOM on the first write, and a
+        # BOM on line 1 of a JSONL file breaks `json.loads` for whatever reads it later --
+        # instrumentation that cannot be parsed is not instrumentation (memory
+        # `dotnet-stdin-bom-corrupts-first-request`, same family).
+        [System.IO.File]::AppendAllText(
+            $LogPath, ($rec | ConvertTo-Json -Compress) + "`n",
+            (New-Object System.Text.UTF8Encoding($false)))
+    } catch { }
+}
+
 $results = New-Object System.Collections.Generic.List[object]
 $total = 0.0
+$stampStart = Get-GitStateStamp -GitDir (Join-Path $RepoRoot '.git')
+Write-TierStamp -LogPath $tierRunLog -GitDir (Join-Path $RepoRoot '.git') -Phase 'start' -Suite '' -Exit $null -Seconds 0
 
 foreach ($suite in $selected) {
     $path = Join-Path $testDir $suite
@@ -839,10 +929,46 @@ foreach ($suite in $selected) {
         Output  = ($out | Out-String)
     })
 
+    # ORDER-731 item 2: stamp AFTER EVERY SUITE, not only at the two ends. The whole value of
+    # the transcript is the per-suite window; a start/end pair reproduces the same 80-second
+    # mystery in a file instead of in a commit message.
+    Write-TierStamp -LogPath $tierRunLog -GitDir (Join-Path $RepoRoot '.git') -Phase 'after-suite' `
+                    -Suite $suite -Exit $code -Seconds ([math]::Round($sw.Elapsed.TotalSeconds, 2))
+
     if ($code -eq 0) {
         Write-Host ("  ok   {0,-34} {1,5:N1}s" -f $suite, $sw.Elapsed.TotalSeconds)
     } else {
         Write-Host ("  FAIL {0,-34} {1,5:N1}s (exit {2})" -f $suite, $sw.Elapsed.TotalSeconds, $code) -ForegroundColor Red
+        # ORDER-731 item 2, the on-failure half. Captured HERE, at the moment of detection --
+        # a reflog read minutes later cannot tell you whether `index.lock` existed while the
+        # suite was dying, and that is the single fact that separates "a concurrent writer" from
+        # "something in the tier itself", which is the question 2026-08-01 could not answer.
+        if ($tierRunLog) {
+            try {
+                $gd = Join-Path $RepoRoot '.git'
+                $lock = Test-Path -LiteralPath (Join-Path $gd 'index.lock')
+                $procs = @()
+                try {
+                    $procs = @(Get-Process -Name git, git-remote-https -ErrorAction SilentlyContinue |
+                               ForEach-Object { '{0}:{1}' -f $_.Id, $_.ProcessName })
+                } catch { }
+                $reflog = @()
+                try {
+                    $rl = Join-Path $gd 'logs\HEAD'
+                    if (Test-Path -LiteralPath $rl) { $reflog = @(Get-Content -LiteralPath $rl -Tail 3) }
+                } catch { }
+                $moved = ($stampStart.ref -ne (Get-GitStateStamp -GitDir $gd).ref)
+                $dump = [pscustomobject]@{
+                    at = (Get-Date).ToString('o'); phase = 'failure-dump'; suite = $suite; exit = $code
+                    index_lock_present = $lock; live_git_processes = $procs
+                    head_moved_since_tier_start = $moved; reflog_tail = $reflog
+                }
+                [System.IO.File]::AppendAllText(
+                    $tierRunLog, ($dump | ConvertTo-Json -Compress) + "`n",
+                    (New-Object System.Text.UTF8Encoding($false)))
+                Write-Host ("  [tier-instr] failure context written to {0}" -f $tierRunLog) -ForegroundColor Yellow
+            } catch { }
+        }
     }
 }
 
@@ -899,6 +1025,19 @@ foreach ($f in $failed) {
 Write-Host ''
 Write-Host ("[fast-cages] {0} suite(s), {1} failed, {2:N1}s total" -f $results.Count, $failed.Count, $total)
 
+# ORDER-731 item 2: the closing stamp, plus ONE line of visible provenance. A transcript nobody
+# knows exists is a transcript nobody reads when it finally matters -- the failure mode of every
+# detector this repo has had to repair (ORDER-260 / 341 / 390 / 411).
+Write-TierStamp -LogPath $tierRunLog -GitDir (Join-Path $RepoRoot '.git') -Phase 'end' -Suite '' `
+                -Exit $failed.Count -Seconds ([math]::Round($total, 2))
+if ($tierRunLog) {
+    $endStamp = Get-GitStateStamp -GitDir (Join-Path $RepoRoot '.git')
+    $movedNote = if ($endStamp.ref -ne $stampStart.ref) { ' -- HEAD MOVED DURING THIS RUN' }
+                 elseif ($endStamp.index_ticks -ne $stampStart.index_ticks) { ' -- .git/index was rewritten during this run' }
+                 else { '' }
+    Write-Host ("[tier-instr] transcript: {0}{1}" -f $tierRunLog, $movedNote)
+}
+
 # ---------------------------------------------------------------------------------------------
 # ORDER-673 -- the budget is ENFORCED. It was an advisory that printed yellow and exited 0, and
 # it had been breached on every commit for days with nothing happening. A check that cannot fail
@@ -911,8 +1050,16 @@ Write-Host ("[fast-cages] {0} suite(s), {1} failed, {2:N1}s total" -f $results.C
 # A SUITE FAILURE OUTRANKS THE BUDGET and is checked first: both exit 1, but "your commit is
 # slow" printed where "your commit is broken" belongs is a message that gets the wrong thing
 # fixed.
-if ($failed.Count -gt 0) { exit 1 }
-if ($evidenceProblems.Count -gt 0) { exit 1 }
+function Exit-Tier {
+    param([int]$Code)
+    # Restore the child-marker env var on EVERY path out of this script, not just the happy
+    # one. A guard that cleans up only when it passes is a guard that leaks exactly when
+    # something went wrong -- which is when the next run's transcript matters most.
+    $env:EA_LAB_TIER_RUN = $priorTierRunEnv
+    exit $Code
+}
+if ($failed.Count -gt 0) { Exit-Tier 1 }
+if ($evidenceProblems.Count -gt 0) { Exit-Tier 1 }
 
 $total += $DebugPadSeconds
 $isFullRun = ($selected.Count -eq $FAST_SUITES.Count)
@@ -934,7 +1081,7 @@ if ($total -gt $budget) {
     Write-Host ("               the failure this budget exists to prevent. Displace a suite, make the") -ForegroundColor Red
     Write-Host ("               named one faster, or raise the number DELIBERATELY in the same commit") -ForegroundColor Red
     Write-Host ("               that says why -- but do not leave it breached and green.") -ForegroundColor Red
-    exit 1
+    Exit-Tier 1
 }
 
 # Print the MARGIN on a green run, so the next person can see the headroom BEFORE spending it
@@ -942,4 +1089,4 @@ if ($total -gt $budget) {
 # gets discovered by a broken commit.
 Write-Host ("[fast-cages] budget: {0:N1}s of {1:N1}s {2} ({3:N1}s headroom)" -f `
             $total, $budget, $budgetLabel, ($budget - $total))
-exit 0
+Exit-Tier 0

@@ -10,6 +10,11 @@ terminalmt5.ini
 # Staging drop folder for manual MT5 reports (transient)
 _inbox/
 
+# ORDER-731 item 2: per-run tier transcripts. Diagnostic breadcrumbs for the concurrency
+# ABORT that fired in 2 of 8 full-tier runs on 2026-08-01 and could not be diagnosed because
+# no run left a trace. Local evidence, never history -- the finding goes on the board, not here.
+_triage/tier_runs/
+
 # Runtime logs and generated outputs
 logs/*
 # RUN_REGISTRY.* = DEPRECATED auto-output of run_pipeline.py (regenerated at root).

@@ -374,6 +374,50 @@ read that sentence.
 
 ---
 
+## ORDER-820 — [tier] The full tier is OVER its enforced budget on every sample, and `run_contract_binding_tests.ps1` grew ~9s with nobody's name on it — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> Opened by lane `S-2026-08-01-TIERINSTR` while instrumenting `ORDER-731` item 2. **Not this
+> lane's doing, and that is measured rather than claimed** — see the decomposition below.
+
+**The number.** Four full-tier samples on 2026-08-01, machine otherwise idle:
+**91.8 · 91.5 · 91.7 · 91.1 s** against the **90.0 s ENFORCED** budget. The tier therefore
+**exits 1**. The budget's own message is the spec for what must happen: *"Displace a suite, make
+the named one faster, or raise the number DELIBERATELY in the same commit that says why — but do
+not leave it breached and green."* It is breached and RED, which is the budget working; this row
+is the "say why" that has to come before the number moves.
+
+**Where it went, measured.** `run_contract_binding_tests.ps1` = **31.4-32.1 s**, i.e. **35 % of
+the whole tier**, against **22.9 s** measured by an independent pass earlier the same day
+(commit `ddbaec95`). That is **+8.7 s** on one suite.
+
+**It is not the S2a work, and this is the decomposition that rules it out** — the lane that
+landed between the two measurements (`02e11b10`, `ORDER-731` M1-M4) touched only S2a suites:
+
+| measured | |
+|---|---|
+| everything `M1-M4` ADDED (`2× att.main --template` + `2× gen.build_rows`) | **1.8 s** |
+| the three suites it touched, in FULL (`attestation 1.6` + `migration 3.6` + `pin cage 0.3`) | **5.4 s** |
+| the whole S2a gate (`run_s2a_gate.py`, all 7 steps) | **5.2 s** |
+| `run_contract_binding_tests.ps1` | **31.6 s** |
+
+A subsystem that costs 5.4 s in total cannot have added 8.7 s. **The growth is somewhere else in
+`contract_binding` — the ajv fixtures, the design-contract binding, or the snapshot validator —
+and nobody has attributed it.**
+
+### Acceptance
+- **C1** attribute the **+8.7 s**: time `run_contract_binding_tests.ps1`'s parts individually and
+  name which one grew, with the commit that grew it. A number without a name is how this became a
+  surprise.
+- **C2** then EITHER make the named part faster, OR displace a suite, OR raise the budget in the
+  commit that carries C1's measurement — **not** before it.
+- **C3** whichever is chosen, the tier must exit 0 on **three consecutive** full runs, and the
+  three numbers go in the RESULT — one clean run is a sample, not a state.
+- 🚫 **Do not raise the budget to make the red go away.** That is the one move the budget exists
+  to refuse, and `ORDER-673` already paid for the version of this file where it was advisory and
+  breached for days with nothing happening.
+
+<sub>**Day-to-day impact is smaller than the number looks, and that is why it can be an order rather than an emergency:** the hook selects suites **per path**, and the per-path budget is **65.0 s**. A normal commit runs 1-3 suites well inside it. The full tier runs when a change touches many declared paths — which is exactly when a breach is most likely to earn a `--no-verify`.</sub>
+
 ## ORDER-761 — [tier] A module should DECLARE the paths it reads, instead of a regex guessing them — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > Opened by `ORDER-732`'s closure, as a NEW order rather than its remainder. The hand-widening
@@ -887,6 +931,32 @@ wrote the announcement. **The live condition is the one in that block:** it fire
 `git log --all --since` shows **no commit inside the run's own recorded start–end window**, or it
 fires inside a real `git commit`. Until then: re-run, and never quote a run it aborted as a pass
 or a fail.
+>
+> ✅ **INSTRUMENTED 2026-08-01** (lane `S-2026-08-01-TIERINSTR`, user: *"ทำต่อเลยให้จบ"*). The
+> ladder's I2 and I3 are built; **I1 is deliberately NOT** — it edits `check_s2a_migration.py`,
+> a bundle member, so it rides the next signature with the stale-count batch rather than spending
+> one of its own. What exists now, in `scripts/_test/run_fast_cages.ps1`:
+> **I2** — a per-run transcript at `_triage/tier_runs/tier_<ts>_<pid>.jsonl` (gitignored) stamping
+> `.git/HEAD`, the resolved ref, and `.git/index`'s (mtime-ticks, length) **after EVERY suite**,
+> not just at the two ends. That is the whole point: it converts *"the index moved sometime during
+> 91 seconds"* — which is all 2026-08-01 could say — into a named per-suite window.
+> **I3** — on any suite failure, a `failure-dump` line capturing, **at the moment of detection**,
+> whether `.git/index.lock` exists, which `git` processes are alive, the last 3 reflog entries,
+> and whether HEAD moved since the tier started. A reflog read minutes later cannot answer the
+> lock question, and the lock is what separates *"a concurrent writer"* from *"something inside
+> the tier"* — the question that went unanswered.
+> **Deliberately pure file reads, no `git` subprocess:** a probe that spawned git 16 times a run
+> would perturb the state it measures, and `git` writes `.git/index` for its own reasons.
+> **Three defects in the instrumentation itself, found by running it and fixed here:** it wrote a
+> **BOM** on line 1 (PS 5.1 `Add-Content -Encoding utf8`), which would break `json.loads` for
+> whatever reads the transcript — a breadcrumb that cannot be parsed is not a breadcrumb ·
+> **nested tier invocations** (PART 7 and the self-tests) each wrote their own one-suite
+> transcript, **6 spurious files per real run**, turning the directory into noise exactly where
+> signal was wanted · and the child-marker env var **leaked out of the script**, so a second tier
+> run in the same shell silently wrote nothing and looked like a run that never happened.
+> All three verified fixed by measurement (first bytes `{`, 1 transcript/run, env restored ''),
+> plus bounded retention at 40 files. **The tier's own budget breach that these runs surfaced is
+> `ORDER-820`, opened rather than absorbed.**
 
 ### Acceptance
 - **C1** state, with a measurement, whether the pin should be read at the **index** (what the
