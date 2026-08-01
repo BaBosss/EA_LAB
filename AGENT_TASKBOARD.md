@@ -811,6 +811,83 @@ and nobody has attributed it.**
 
 <sub>**Day-to-day impact is smaller than the number looks, and that is why it can be an order rather than an emergency:** the hook selects suites **per path**, and the per-path budget is **65.0 s**. A normal commit runs 1-3 suites well inside it. The full tier runs when a change touches many declared paths — which is exactly when a breach is most likely to earn a `--no-verify`.</sub>
 
+## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `OPEN` · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+
+> Opened by `ORDER-940` (2026-08-01). The judge-policy question cannot be answered until this one is,
+> because **"not trading" and "trading rarely" produce the identical row** in every count the lab takes.
+
+**The measurement** (`portfolio/control_room_snapshot.json`, judge_readiness, refreshed 2026-08-01):
+
+| magic | EA | symbol | days | closed | obs/wk | expected/wk |
+|---|---|---|---|---|---|---|
+| `990066` | (EXP)_IchiADX_Naked_rev00 | USDJPYm | 16 | **0** | 0 | 1.1 |
+| `990067` | (EXP)_IchiADX_Naked_rev00 | USDJPYm | 16 | **0** | 0 | 1.1 |
+| `990069` | (EXP)_IchiADX_Naked_rev00 | XAUUSDm | 16 | **0** | 0 | 1.0 |
+| `990068` | (EXP)_IchiADX_Naked_rev00 | XAUUSDm | 16 | 1 | 0.4 | 1.0 |
+
+**Why this is not "thin".** 16 days ≈ 2.3 weeks at ~1.05/wk ⇒ ~2.4 expected trades per leg. One leg
+silent is unremarkable (P ≈ 9%); **three legs of the same EA silent together** is not, and the fourth
+is also under. The known failure mode with exactly this signature is `AllowLive=false` shipped in a
+`.set` — it silenced `990025` for three days in July while the chart looked healthy.
+
+**Acceptance**
+- **A1** the user reads the Inputs tab on each of the four charts (or one log export covering them) and
+  the values are recorded here — `_06_AllowLive` and `_06_Magic` first, they are the two that fail silently.
+- **A2** if the inputs are correct, state the alternative that was checked and how: the entry condition
+  genuinely not firing (count the signal on the same window in the tester with the SAME `.set`) — a
+  guard/entry that fires 0 times is `UNTESTED` by the VERDICT GATE, not "safe".
+- **A3** the outcome is written to `portfolio/DEPLOYMENTS.csv` notes per magic, and `expectations.csv`
+  gets the observed rate if the expected one is refuted.
+- 🚫 Do not re-base these four judge dates until A1/A2 answer which problem this is. A thin-EA
+  re-base applied to a silent EA buys 12 months of measuring nothing.
+
+## ORDER-942 — [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silent and thin cannot be told apart — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Also opened by `ORDER-940`. `portfolio/expectations.csv` is what turns "0 trades" into a verdict.
+> Where it has no row, `rate_flag` reads `NA` and the lab has **no measurement that discriminates**.
+
+**Missing an expectations row (from the same snapshot):** `991005` US30m · `990208` GBPJPYm ·
+`992004` TrendRider_XAU · `990103` RSI_MR_GridLog · `991003` USDJPYm · `990020` EA_SUPERTREND ·
+`990301` Wave5 XAU · `990984` PairSpread · `990204` AUDCADm · `990206` EURUSDm SELL · `990302` Wave5 XAG.
+Four of those (`991005`, `990208`, `992004`, `990103`) are at **0 closed trades** with nothing to compare
+against — the same shape as `ORDER-941` but currently unfalsifiable.
+
+**Acceptance** — **B1** every ACTIVE row with a judge date has an `expectations.csv` entry whose
+`expected_trades_per_week` is **derived from the accepting backtest** (trades ÷ window weeks), with the
+report path recorded · **B2** re-run the snapshot and report how many `NA` remain and why · **B3** any
+row whose observed rate is below half the expected for ≥3 weeks is listed for `ORDER-941` treatment.
+
+## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
+
+> `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
+> (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:
+> ≥3 months AND ≥30 closed trades; thin EAs <0.5/wk use `ORDER-235`'s 12-month rule instead).
+> **What does not exist is a decision for each of these EAs, and `ORDER-235` requires the thin
+> treatment to be pre-registered at attach — choosing it after seeing the numbers is the move the
+> whole gate was built to refuse.**
+
+**Acceptance** — **C1** each of the 19 gets exactly one of: `ORDER-235` thin treatment (with the
+pre-registration written now, before any judge date lands) · re-based judge date with the arithmetic
+shown (`needed/wk` vs `obs/wk` are both in the snapshot) · retire the leg · **C2** the user ratifies —
+this changes when real money can move, so it is not the seat's call alone · **C3** the decision is
+written into `DEPLOYMENTS.csv` (`kill_rule` / `judge_date` / notes), not into a handoff.
+🚫 Do not decide the four `ORDER-941` legs here. 🚫 Do not move a judge date to make a cohort look ready.
+
+## ORDER-944 — [ops/monitoring] A row that is not exactly `ACTIVE` is invisible to the Control Room, so "pending verify" silently means "unmonitored" — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Found while closing `ORDER-940`'s item 3. `990026` sat at `ACTIVE-PENDING-VERIFY` from 2026-07-28,
+> and `control_room_snapshot.ps1` counts `status == ACTIVE` only ⇒ the row appeared in **no**
+> `judge_readiness`, **no** `deployments`, **no** attestation and **no** rate check. The status was
+> invented to mean *"attached, verification owed"*; what it actually did was **remove the EA from every
+> instrument that would have noticed the verification was still owed.** Same family as memory
+> `stale-detector-masked-by-advisory-label` and `guard-disarmed-by-prose-reported-as-note`.
+
+**Acceptance** — **D1** the snapshot treats every attached-and-trading status as in-scope and carries the
+verification state as its own field, so an unverified row is **loud, not absent** · **D2** a cage case
+that is RED first: a row in a pending state must appear in `judge_readiness` with its state named ·
+**D3** the closed set of statuses is declared in one place and an unknown status **fails**, never
+silently drops (`check_state.ps1` currently validates columns, not the status vocabulary).
+
 ## ORDER-761 — [tier] A module should DECLARE the paths it reads, instead of a regex guessing them — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > Opened by `ORDER-732`'s closure, as a NEW order rather than its remainder. The hand-widening

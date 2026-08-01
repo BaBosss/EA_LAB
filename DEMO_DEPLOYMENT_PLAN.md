@@ -411,7 +411,7 @@ ST_EA03 แก้แล้ว 2026-06-22: `Lots_divided` 10,000,000 → **100,00
 | 2026-06-22 | **ทั้ง 8 EA deploy แล้ว** บน 10,000 cent account เดียว |
 | 2026-06-22 | ST_EA03 lot fix — Lots_divided แก้ → 100,000 ✅ |
 | 2026-06-28 | EA #6 v3 set ready — reload EA_BREAKOUT_XAU with BRK_XAU_live_v3.set (Bars=55, TP×8, EMA150) — ⛔ **เพิกถอน 2026-07-26 ไม่เคยทำและห้ามทำ** (v3 = selection-into-the-leak, ORDER-201/210) |
-| 2026-09-22 | ครบ 3 เดือน → judge ทุก EA พร้อมกัน |
+| ~~2026-09-22~~ | ~~ครบ 3 เดือน → judge ทุก EA พร้อมกัน~~ 🔴 **เพิกถอน 2026-08-01 (`ORDER-940`): ไม่มีแถวไหนใน `DEPLOYMENTS.csv` ถือวันนี้** — cohort สลายแล้ว (`9397` หายจากทะเบียน · `9398`/`990010` REMOVED · ที่เหลืออยู่บัญชีที่แล็บไม่รับรอง ⇒ judge_date ว่างโดยตั้งใจ) · วัน judge แรกจริง = **2026-10-09** · ปฏิทินจริง = generated (`scripts/control_room_snapshot.ps1` → `judge_cohorts`) ห้ามเขียนวันด้วยมืออีก |
 | หลัง judge | EA ที่ผ่าน (PF ≥ 1.40, ≥30 trades) → เพิ่ม port หรือเพิ่ม lot |
 
 ---

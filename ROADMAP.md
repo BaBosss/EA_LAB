@@ -70,8 +70,17 @@
 - **Operate 9 EA:** `/ea-monitor` ทุก 2 สัปดาห์ (user ส่ง live_deals.csv) — จับตา ST03 replica (คาด kill), MG grid DD, Gold Reaper
 - **Gate → Phase 3:** ถึงวัน judge + มี candidate bench ≥3 ตัวที่ demo อยู่
 
-### Phase 3 — Judge + พอร์ตจริงแรก (22 ก.ย. → ต.ค.)
-- attribution per (magic,symbol) → kill/keep 9 EA เดิม · ตัวผ่าน (PF≥1.40, ≥30 trades) = promote pool
+### Phase 3 — Judge + พอร์ตจริงแรก (~ต.ค. 2026 — **วันจริงมาจาก generated calendar ไม่ใช่บรรทัดนี้**)
+
+> 🔴 **แก้ 2026-08-01 (`ORDER-940`): หัวข้อนี้เคยเขียน "22 ก.ย. → ต.ค." — `2026-09-22` ไม่มีแถวไหนใน
+> `portfolio/DEPLOYMENTS.csv` ถืออยู่เลย** (cohort 9 EA เดิมสลายแล้ว — ดู `PROJECT_STATE.md` §4)
+> ⇒ วัน judge แรกจริง = **2026-10-09** · ปฏิทิน = `scripts/control_room_snapshot.ps1` → `judge_cohorts`
+> 🔴 **และ gate ของเฟสนี้ไม่ใช่ "ถึงวัน" แต่เป็น "มี sample พอ":** วันนี้ EA ที่ตัดสินได้ 7 ตัว
+> **มี judge_date ว่างทั้งหมด** (อยู่บัญชีที่แล็บไม่รับรอง) ส่วนตัวที่มี judge_date **19 ตัวคาดว่าไม้ไม่ถึง 30**
+> ต่อ 11 ตัวที่ถึง ⇒ ต้องเคลียร์ `ORDER-941`/`942`/`943` ก่อน ไม่งั้นถึงวันแล้วไม่มีอะไรให้ตัดสิน
+
+- attribution per (magic,symbol) → kill/keep · ตัวผ่าน (PF≥1.40, ≥30 trades — หรือกติกา thin `ORDER-235`
+  ถ้า pre-register ไว้ตอน attach) = promote pool
 - **ประกอบพอร์ต #1:** 2–3 EA ดีสุดที่ corr ≤0.40 (`portfolio-selector`) → **live micro account จริงทันที** (ตาม user decision) → `live-deployment-controller` + `vps-deploy-ops` เต็มรูป
 - demo account เดิม = โรงเพาะ cohort ถัดไป (EA ใหม่ทุกตัวยังต้อง demo ≥3 เดือนก่อน live — กฎเหล็กไม่เปลี่ยน)
 - ตั้ง **ปฏิทิน re-opt ทุก 6 เดือน** ของทุก EA live (เริ่มนับจากวัน live ของแต่ละตัว) — ใส่ MASTER_BACKLOG
@@ -91,7 +100,7 @@
    1,521 ตัว = ตัวอย่างจริง) → ปรับเกณฑ์ผ่านให้โหดขึ้นตามจำนวนที่ลอง · เข้า `SYSTEM_METRICS.md`
 3. 🥈 **Live tracking-error bands** — ต่อ EA: live เพี้ยนจาก backtest expectation เกินเกณฑ์ตัวเลข =
    probation/kill (เสริม `/ea-monitor` ที่มีอยู่ ให้เกณฑ์เป็นเลขไม่ใช่ดุลยพินิจ)
-- **เงื่อนไขเริ่ม:** หลัง judge 2026-09-22 + พอร์ต #1 live แล้ว (อย่าแทรกก่อน — demo 3 เดือน =
+- **เงื่อนไขเริ่ม:** หลัง judge รอบแรก (**2026-10-09** — `2026-09-22` ถูกเพิกถอน `ORDER-940`) + พอร์ต #1 live แล้ว (อย่าแทรกก่อน — demo 3 เดือน =
   experiment ที่แพงสุดที่กำลังรัน ห้ามรบกวน)
 
 ### Phase 4.5 — CONTROL ROOM (เลนขนาน · CR-001+ เริ่มได้ก่อน judge — เป็นงาน ops/evidence ตรงกับ FIX-THEN-SCALE)

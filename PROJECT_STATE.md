@@ -153,9 +153,13 @@ Note: "EA_Project" and "EA_CORE" = the same track (Project = repo, Core = engine
   duplication is intentional, not junk. Architecture + usage → `docs/EA_CORE_AND_TEMPLATE_GUIDE.md`.
 - **EA_CORE** — R&D parts warehouse. Loop closed 2026-07-02; engineering-complete framework ready to reuse
   once there is a signal with a genuine edge. **Do not re-tune this parameter family.**
-- **Live Portfolio 20%** — 9 EAs fully live (deploy confirmed 2026-07-02). Live clock started 2026-06-22 →
-  earliest judge **2026-09-22**. Blocker = time (waiting on the 3-month demo) + not yet expanded from
-  1 → multiple portfolios.
+- **Live Portfolio** — **58 ACTIVE rows across 6 accounts**, not the 9-EA single account this bullet used to
+  describe (it said *"9 EAs fully live … earliest judge 2026-09-22"*; corrected 2026-08-01, `ORDER-940` — see
+  §4). First lab judge date = **2026-10-09**. 🔴 **The blocker is no longer time, it is SAMPLE:** 7 EAs are
+  decision-capable today and **every one of them has a blank judge date** (they are on the account the lab
+  does not certify), while **19 of the EAs that do carry a judge date are forecast to arrive under 30 closed
+  trades** against 11 on track. Counts are generated — `powershell -File scripts/control_room_snapshot.ps1`,
+  never hand-copied into this bullet again.
 - **Signal hunt — not saturated.** Old dead concepts stay dead (see `MASTER_BACKLOG.md`), but the
   mechanism×symbol axis is still open.
 
@@ -225,7 +229,26 @@ Zeus build-on, the MERGE track) → **`PROJECT_HISTORY.md` §2 archive**.
 
 ## 4. LIVE PORTFOLIO (summary — full detail in `DEMO_DEPLOYMENT_PLAN.md`)
 
-One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, symbol)**.
+> 🔴 **CORRECTED 2026-08-01 (`ORDER-940`) — the judge day this section was built on does not exist.**
+> This section said *"One account, 10,000 cent · judge **2026-09-22**"*. Measured against
+> `portfolio/DEPLOYMENTS.csv`, which owns deployment facts (§0.5): **zero rows carry that date**, and
+> the cohort it describes has dissolved — `9397` is **not in the inventory at all**, `9398` · `990010`
+> are `REMOVED`, and `1524` · `990005` · `991001` sit on account **159475669**, annotated
+> *"user mix - lab does not certify this account"*, whose `judge_date` is therefore **blank by
+> design**. The table below is kept as the record of what was deployed on 2026-07-02; **it is history,
+> not a judge cohort.**
+>
+> **The real judge calendar is GENERATED, not written here** — `portfolio/control_room_snapshot.json`
+> (`judge_cohorts`), refreshed by `powershell -File scripts/control_room_snapshot.ps1`. First real
+> judge = **2026-10-09**, and the two facts that matter on 2026-08-01 are these:
+> **(a) all 7 EAs the lab could decide on today have a BLANK judge date** — every one is on the
+> account the lab does not certify · **(b) of the EAs that DO carry a lab judge date, 19 are forecast
+> to arrive with fewer than 30 closed trades and 11 are on track.** So the bar the whole funnel ends
+> at is currently unreachable for two thirds of the fleet, and was invisible because this line named a
+> date instead of pointing at the inventory. Same defect class as `BACKLOG-D29`: a hand-written cache
+> of a generated fact, read at exactly the moment it matters. **Do not re-write a date here.**
+
+Attribution key = **(magic, symbol)**. Deployed 2026-07-02 (history — see the correction above):
 
 | # | EA | Symbol/TF | Magic | OOS PF | Status |
 |---|---|---|---|---|---|
@@ -330,7 +353,19 @@ One account, 10,000 cent · judge **2026-09-22** · attribution key = **(magic, 
   deadline. **The sets are disjoint** — all 18 of those already carry a `kill_rule`, and all 11 blanks
   carried no judge date at all ⇒ the number of rows reaching a judge with no criterion was **zero**.
   Two individually-true counts, one false conjunction that nobody checked.</sub>
-- **SuperTrendFlip BTCUSD H4** = VALIDATED CANDIDATE awaiting the user's call on demo attach (see §2).
+- ✅ **SuperTrendFlip BTCUSD H4 — this bullet was stale for days: it said *"VALIDATED CANDIDATE awaiting the
+  user's call on demo attach"* while the user had already attached it.** Corrected 2026-08-01 (`ORDER-940`)
+  when the user supplied the Inputs tab. It is `990026` on account `463666728`, attached **2026-07-28** as
+  the `ORDER-353` tuned config (`MaxAdds=7`, ER gate `0.25`) — an **A/B partner of `990025`, not an
+  independent leg** (same concept, same symbol ⇒ corr ≈ 1; judge the pair as one experiment).
+  Verified from the screenshot: `_06_Magic=990026` and `_06_AllowLive=true` both read, and all 11 visible
+  inputs match the bundle `.set` byte for byte ⇒ the `.set` was loaded. Status flipped
+  `ACTIVE-PENDING-VERIFY` → `ACTIVE`, **which also made it visible again** — that status is excluded from
+  `control_room_snapshot`, so *pending verify* silently meant *unmonitored* (→ `ORDER-944`).
+  Still open, one scroll of the same dialog closes both: the binary is proven **rev04-or-newer** but not
+  rev05 (its only exclusive input, `_02_SlBufferAtr`, was scrolled off), and `_03_UseER`/`_03_ErMin` — the
+  two inputs this leg exists to test — were not visible. **0 closed deals 07-28 → 07-31**, which is expected
+  at ~0.57 trades/week; if it is still 0 on **2026-08-18**, investigate rather than assume.
 
 **Work queue (pacing 1-2 orders per round):**
 1. **091C — user-priority funnel queue** — start from `_triage\_archive\verdicts\order076-098\ORDER091C_FINALEA_PREP.md`
@@ -382,13 +417,28 @@ enabling = validate like a new mechanism.
 - An MT5 headless run without `-SetFile` may carry over values from the previous run, not the compiled
   default — always send a .set specifying every value in full.
 
-### 🟣 Until 2026-09-22 (judge) — operate track (9 existing EA — runs alongside the factory)
-- /ea-monitor every 1–2 weeks (send live_deals.csv) — watch Gold Reaper, MG grid DD, ST03 replica
-  (expected to be killed), KAUFMAN_ER if the user decides to deploy along the way
-- accumulate ≥30 real trades/EA
+### 🟣 Until the first judge date — operate track (runs alongside the factory)
 
-### 🟢 After 2026-09-22
-- per-EA attribution → promote passing ones (PF≥1.40, ≥30 trades) → increase lot / open a 2nd portfolio → aim for 10 portfolios
+> **The date was `2026-09-22` here and it does not exist** (`ORDER-940`, 2026-08-01 — see §4). First lab
+> judge = **2026-10-09**; the calendar is generated, `scripts/control_room_snapshot.ps1` → `judge_cohorts`.
+
+- **`ORDER-941` first — 8 EAs may not be trading at all, and the judge policy cannot be decided until that
+  is separated from thinness.** Three legs of the same EA (`990066`/`990067`/`990069`, IchiADX) show **0
+  closed trades in 16 days against an expected 1.0–1.1/week** — about 2.5 expected trades each, three legs
+  silent together. That is an attach/gate defect shape (the `990025` `AllowLive=false` precedent), not a
+  thin EA. `990068` on the same EA is at 1 vs ~2.3 expected.
+- **`ORDER-942` — 11 of the 19 shortfall EAs have no row in `portfolio/expectations.csv`**, so for them
+  *silent* and *thin* are not distinguishable by any measurement the lab currently takes. Fill the expected
+  rate before deciding anyone's judge policy.
+- **`ORDER-943` — then decide the 19, per EA**, between ORDER-235's thin-EA treatment (≥12 months, net
+  positive, no kill tripped, permanently small lot) and re-basing/retiring. **Decide before the date, not
+  on it**: on 2026-10-09 the 5-EA cohort currently has **0 decision-capable and 2 projected shortfall**.
+- /ea-monitor every 1–2 weeks (send `live_deals.csv`) — the collector is already writing
+  `portfolio/live_deals/` daily for 4 of 6 accounts; MT4 `141049900` and `69424711` are STALE (38.5 h).
+
+### 🟢 After the first judge date
+- per-EA attribution → promote passing ones (PF ≥ 1.40, ≥ 30 trades — or the ORDER-235 thin rule where it
+  has been pre-registered) → increase lot / open a 2nd portfolio → aim for 10 portfolios
 - if a new signal idea comes in (outside the existing TOP-8/10 shortlist) → /signal-scan as usual
 
 ---
