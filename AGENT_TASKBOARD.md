@@ -270,10 +270,25 @@ read that sentence.
 
 > ### RESULT (lane `S-2026-08-01-PINFIX`, 2026-08-01) — **C1 measured first, and the measurement killed it.**
 >
-> **The number C1 asked for: 66 distinct NEW declarations** across the 16 suites, concentrated in
-> `run_registry_tests.ps1` (34) and `run_contract_binding_tests.ps1` (32). Method: for each suite,
+> **The number C1 asked for: 64 distinct NEW declarations** across the 16 suites, concentrated in
+> `run_registry_tests.ps1` (34) and `run_contract_binding_tests.ps1` (31). Method: for each suite,
 > take the python modules it ALREADY declares (the closure `PART 4b` converges on) and run
 > `PART 4`'s own path regex over their sources, minus what is already declared or glob-covered.
+>
+> 🔧 **Corrected by `/scrutinize` — this first read 66, and the error is worth more than the two
+> declarations.** The first pass measured with a **WIDER regex than the sweep it was measuring**:
+> it had added the `factory/` and `ea_template/` prefixes and the `jsonl|mqh|mq5|set` extensions,
+> none of which `run_guard_trigger_tests.ps1:135` has. Measuring a mechanism with an instrument
+> the mechanism does not use is GUARD_SHAPES **shape 4** — a claim stated without measuring the
+> thing it is a claim about — and it happened in the number used to *close an order*. Re-run with
+> the regex transcribed character-for-character from that line: **64**. The selection-cost table
+> below is **unchanged** (both regexes match `docs/SESSION_LEDGER.md` and the `scripts/*.ps1`
+> mentions that drive it), and so is the conclusion.
+>
+> **STATED ASSUMPTION, because the method rests on it:** the declared python set is taken to BE
+> the import closure. That holds only because `PART 4b` converges — it demands a suite's direct
+> imports be declared, so at a green tier the declared set has absorbed the transitive closure.
+> If the tier were red, this measurement would under-count.
 >
 > **What the selection cost becomes** — suite wall-clock taken from this session's own tier run,
 > not estimated:
@@ -418,14 +433,35 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > temporary index (`git_index=…/next-index-28508.lock`), which is the snapshot that was invisible
 > to the front-guard suite and cost a refused commit in `ORDER-710`.
 >
-> **C3 — driven both ways.** Cage `run_attested_pin_staged_tests.py`: **11 cases — ATTACK 5,
-> CONTROL 1, ENGAGEMENT 2, SPECIFICITY 3** (counted from the run's own output, not typed).
-> **3 mutations, 3 DETECTED**, each by the case written for it: comparison always-equal → the P1
+> **C3 — driven both ways.** Cage `run_attested_pin_staged_tests.py`: **13 cases — ATTACK 6,
+> CONTROL 1, ENGAGEMENT 2, SPECIFICITY 4** (counted from the run's own output, not typed).
+> **4 mutations, 4 DETECTED**, each by the case written for it: comparison always-equal → the P1
 > attack fails · `pinned_expectations` returns `{}` → the ENGAGEMENT case fails (this is
 > GUARD_SHAPES shape 5's *"fail-closed and broken point the same way"*: an inert guard passes
 > everything, so a suite that only asserts "no problems" would have gone green) · comparison
-> always-unequal → the CONTROL case fails.
+> always-unequal → the CONTROL case fails · **`_index_source` returns a WORKTREE source → the two
+> snapshot cases fail** (added by `/scrutinize`, below).
 > Also driven red **on the real files**, behind a temp index, before any of this was wired.
+>
+> 🔴 **`/scrutinize` finding — MAJOR, and it was in this order's own cage: nothing proved the
+> guard reads the INDEX.** Mutating `_index_source` to return a worktree source left **all eleven**
+> original cases green. A guard that reads the working tree approves bytes the commit does not
+> contain — GUARD_SHAPES **shape 1, inside the guard written to close a shape-1 defect**, which is
+> **shape 5** (the repair graded by the finding it closes). The tests proved *the rule is correct*
+> and never *the rule is applied to the commit*; those are different claims and they needed
+> different evidence. **Fixed with a DIFFERENTIAL, not a mode assertion** — asserting
+> `_index_source().mode == 'index'` would have been shape 2, a name where a value is what matters.
+> A tampered log is staged into a **temporary** index (`hash-object -w` + a COPY of `.git/index`,
+> `GIT_INDEX_FILE` restored in `finally`); the index source must see the tampered pin **and** the
+> worktree source must still see the real one, so the two sources are required to DISAGREE. Both
+> cases fail under the mutation, naming the exact blobs. Real index and working tree verified
+> untouched afterwards.
+>
+> **Re-measured after the `/scrutinize` changes, not assumed:** lint green (`T7` 7 of 7) · the
+> contract-binding suite green · full tier **16/16 at 77.8s / 76.5s** of 90.0s. Four tier samples
+> this session span **74.2–77.8s**; the cage itself went 197→**232–237 ms** (it now spawns git),
+> which does not account for the spread — it is run-to-run variance and is reported as a range
+> rather than as a best number.
 >
 > **What was NOT touched, deliberately:** no bundle member. `run_s2a_conformance.py` reproduces
 > **every canonical vector** after the change, which is the proof that the refactor owes the owner
@@ -434,8 +470,9 @@ needs its own cage**, and it is why the hand-widenings keep happening instead.
 > copy that can drift — shape 5 again, refused at the design step.
 > Lint: `T7` **7 of 7 bound** (was 6 of 6) · `L0` demanded the new checker on its first run, which
 > is the **fifth** consecutive time that list-completeness rule has named an addition its author
-> had not declared. Tier **16/16 at 74.2s / 74.3s** of 90.0s (two samples; the previous lane
-> measured 80.9–83.2s — that is run-to-run variance, **not** a speed-up this lane produced). The
+> had not declared. Tier **16/16 across four samples this session, spanning 74.2–77.8s** of 90.0s
+> — reported as a range on purpose: the previous lane measured 80.9–83.2s and the `/scrutinize`
+> additions cost ~40 ms, so neither the drop nor the spread is something this lane produced. The
 > front guard itself costs **197–198 ms** on every commit, measured over 3 runs.
 >
 > **Item 2 (the tier abort) is NOT closed** and is deliberately left `OPEN` on this row: it fired

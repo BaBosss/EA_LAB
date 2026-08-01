@@ -35,6 +35,12 @@ limits are stated IN the guard"):
 
   1. It does not judge whether the log is VALID. A malformed log yields no in-force record and
      this guard passes -- check_s2a_attestation.py is what reddens that, and it still runs.
+     Concretely, the in-force selection shared with that checker applies `R4`-`R7` only, NOT `F1`
+     (the bundle digest). So when the bundle has moved, the record is void and `F1` reddens the
+     gate, while this guard still enforces that void record's pin. That is STRICTER than the
+     checker, never looser -- it can refuse a commit `F11` would not have reached, and it can
+     never let through one `F11` would have caught. The strict direction is the safe one for a
+     gate, and it is named here rather than left for a reader to derive.
   2. `F5`'s note-existence derivation (`pin_vintage_notes`, N1-N4) is NOT re-derived here. F5
      only fires when D1's pin for that owner is stale; this guard enforces the acknowledged pin
      whenever an in-force record carries one for a path no `expected_post_state` already covers.

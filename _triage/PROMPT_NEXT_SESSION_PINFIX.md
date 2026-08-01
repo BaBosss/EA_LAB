@@ -12,7 +12,8 @@
 Batch closed 2026-08-01: ORDER-731 item 1 + ORDER-732. THE GATE IS GREEN AT HEAD -- the red that
 blocked the previous session is cleared. A commit that would move an owner-attested blob is now
 REFUSED AT THE HOOK instead of turning the gate red after it lands, and the repair commit still
-lands. HEAD = <run git log --oneline -1> · full tier 16/16 at 74.2-74.3s of the 90.0s budget.
+lands. HEAD = <run git log --oneline -1> · full tier 16/16, four samples spanning 74.2-77.8s of
+the 90.0s budget (a RANGE, because the spread is run-to-run variance).
 
 Read in this order:
   PROJECT_STATE.md  §2 top entry + §3 (decision log)
@@ -66,8 +67,8 @@ Rules that still hold (restated because they are still true):
   - Do NOT edit an attestation BUNDLE member to make something pass -- that costs an owner
     signature (ORDER-614 rev 2). check_s2a_attestation.py is OUT of the bundle; the POLICY and the
     VECTORS are IN.
-  - Budgets are ENFORCED: 65s per-path / 90s full tier. ~15s of full-tier headroom at 74.2s.
-    A new cage DISPLACES something. Measure the tier in the same commit.
+  - Budgets are ENFORCED: 65s per-path / 90s full tier. 12-16s of full-tier headroom, measured as
+    a range across four samples. A new cage DISPLACES something. Measure the tier in the same commit.
   - Anything GENERATED must be regenerated in the same commit as its source:
     `powershell -File scripts/gen_fast_tier_pathspec.ps1` after touching $SUITE_GUARDS, and
     `tools\python312\python.exe _triage/factory_os/gen_input_surface.py --write` for the EA surface.
@@ -90,6 +91,8 @@ Rules that still hold (restated because they are still true):
 | a gate that reads `HEAD` can neither refuse the commit that breaks it nor accept the one that repairs it | measured twice in one afternoon; the repair needed an owner-approved `--no-verify`. The fix is a SECOND question at a DIFFERENT snapshot, not moving the first one — moving it would have edited a bundle member and cost a signature |
 | the hard half of a "refuse the bad commit" guard is letting the GOOD one through | a guard refusing every touch of the pinned path passes every attack test and rebuilds the trap. Mutation 3 exists to fail exactly there |
 | a guard that finds nothing passes everything, and looks identical to a guard that works | `pinned_expectations -> {}` broke only the ENGAGEMENT case; every "no problems" assertion stayed green (GUARD_SHAPES shape 5) |
+| "the rule is correct" and "the rule is applied to the COMMIT" are different claims needing different evidence | the ORDER-731 cage proved the first and not the second: mutating `_index_source` to a worktree source left all 11 cases green. Closed with an index-vs-worktree DIFFERENTIAL over a temp index — a `mode == 'index'` assertion would have been shape 2 |
+| measure a mechanism with the mechanism's OWN instrument | the first ORDER-732 count used a wider regex than the sweep it was measuring: 66 vs the true 64. Same shape as the claims this repo already tracks under GUARD_SHAPES 4 |
 | a warning about a SYMPTOM does not protect against the RULE | `ORDER-675` warned about a character class in the order-block cell. The author read it and then hit the same parser twice by other means — a literal pipe, and a block number in prose |
 | a repair is not verified by the run that lands it | the collision guard reads the ledger at HEAD by ratified rule, so the repair commit printed the pre-repair diagnosis. Only the offline entry points could answer |
-| measuring a widening can kill it more cleanly than building it | `ORDER-732`: 66 declarations, 36× on the commonest commit — and the decisive part was that a text scan cannot tell a path a module READS from one it MENTIONS |
+| measuring a widening can kill it more cleanly than building it | `ORDER-732`: 64 declarations, 36× on the commonest commit — and the decisive part was that a text scan cannot tell a path a module READS from one it MENTIONS |

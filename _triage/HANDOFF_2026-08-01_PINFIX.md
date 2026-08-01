@@ -64,7 +64,11 @@ what proves no signature is owed.
    **item 5**, with three costed options.
 2. **My own ledger row disarmed my own lane's guard rails, twice, in two different ways.** →
    `ORDER-760`. Read that row before writing yours; details in "live traps" below.
-3. **`ORDER-732` was closed by measuring it rather than by doing it.** 66 new declarations, and a
+   **And a third self-inflicted one, found by `/scrutinize`:** nothing in the cage proved the guard
+   reads the INDEX — mutating `_index_source` to a worktree source left all eleven cases green.
+   Shape 1 inside the guard written to close a shape-1 defect. Closed with an index-vs-worktree
+   DIFFERENTIAL (a mode-string assertion would have been shape 2). Detail in the `ORDER-731` row.
+3. **`ORDER-732` was closed by measuring it rather than by doing it.** 64 new declarations, and a
    **36×** selection-cost increase on the most common commit shape in this repo. More decisive than
    the cost: the sweep is a text scan and **cannot tell a path a module READS from one it MENTIONS**.
    → `DEAD-OPTIMIZED` under its own `C3`, with `ORDER-761` opened for the mechanism that converges.
@@ -101,13 +105,13 @@ what proves no signature is owed.
 
 | | |
 |---|---|
-| `ORDER-731` cage | **11 cases** — ATTACK 5, CONTROL 1, ENGAGEMENT 2, SPECIFICITY 3 (counted from the run) |
-| mutation probes | **3 of 3 DETECTED**, each by the case written for it |
-| front guard cost | **197–198 ms** per commit, 3 runs |
-| full tier | **16/16 at 74.2s / 74.3s** of 90.0s, two samples |
+| `ORDER-731` cage | **13 cases** — ATTACK 6, CONTROL 1, ENGAGEMENT 2, SPECIFICITY 4 (counted from the run) |
+| mutation probes | **4 of 4 DETECTED**, each by the case written for it |
+| front guard cost | **197–198 ms** per commit, 3 runs · the CAGE went 197 → **232–237 ms** once it began spawning git |
+| full tier | **16/16**, four samples spanning **74.2–77.8s** of 90.0s. Reported as a RANGE: the spread is run-to-run variance, and the `/scrutinize` additions cost ~40 ms, which does not account for it |
 | conformance corpus | **every canonical vector reproduced** after the refactor ⇒ no owner signature owed |
 | lint | `T7` **7 of 7 bound** (was 6 of 6) · `L3` **6 of 11**, 5 suspended, unchanged |
-| `ORDER-732` widening | **66** new declarations · **36×** on the most common commit shape |
+| `ORDER-732` widening | **64** new declarations · **36×** on the most common commit shape — first reported as 66, corrected by `/scrutinize`: the first pass measured with a **wider regex than the sweep it was measuring** (shape 4, in the number used to close an order) |
 | `MASTER_BACKLOG.md` write rate | **30 commits / 14 days** (45 / 60) |
 
 ## Do not do these
