@@ -380,9 +380,16 @@ read that sentence.
 > lane's doing, and that is measured rather than claimed** — see the decomposition below.
 
 **The number.** Five full-tier samples on 2026-08-01, machine otherwise idle:
-**91.8 · 91.5 · 91.7 · 91.1 · 93.6 s** against the **90.0 s ENFORCED** budget. The spread is
-**2.5 s**, which is itself worth noting: a budget breached by 1.1 s on one sample and 3.6 s on the
-next is being decided by variance, so C2 must not be tuned against a single run. The tier therefore
+**91.8 · 91.5 · 91.7 · 91.1 · 93.6 s** against the **90.0 s ENFORCED** budget.
+
+🔴 **SIXTH SAMPLE, and it changes the shape of this order: `87.8 s` — UNDER budget, 2.2 s of
+headroom**, with `run_contract_binding_tests.ps1` at **24.9 s** rather than 31.6 s (measured by
+lane `S-2026-08-01-INSTRREV`, machine idle, no code change between it and the 93.6 s sample that
+could account for 5.8 s). **So the breach is INTERMITTENT and the driver is one suite swinging
+24.9-32.1 s — a 7 s spread on a 90 s budget.** That reframes C1: the question is no longer only
+*"what added 8.7 s"* but *"why does this one suite vary by 7 s"*, and a fix aimed at the mean
+would leave the tier failing on the bad half of the distribution. **Do not tune against a single
+run in either direction** — five samples said "over", the sixth said "under", and both are true. The tier therefore
 **exits 1**. The budget's own message is the spec for what must happen: *"Displace a suite, make
 the named one faster, or raise the number DELIBERATELY in the same commit that says why — but do
 not leave it breached and green."* It is breached and RED, which is the budget working; this row
@@ -977,13 +984,13 @@ or a fail.
 > a 93 s tier.** **The tier's own budget breach that these runs surfaced is `ORDER-820`, opened
 > rather than absorbed.**
 >
-> #### 🔴 Independent review of that instrumentation: FIVE more defects, RECORDED NOT FIXED (lane `S-2026-08-01-INSTRREV`)
+> #### 🔴 Independent review of that instrumentation: FIVE more defects — ✅ ALL FIXED (`bcaf6c30`, lane `S-2026-08-01-INSTRREV`)
 >
-> **Why not fixed:** `S-2026-08-01-TIERBUDGET` was ACTIVE when this review landed and declares
-> `scripts/_test/run_fast_cages.ps1` (conditionally, for `ORDER-820` C2). Ledger rule 4 is
-> *wait or talk, not overwrite and hope* — so these are written down where that lane will read
-> them **before** it edits the file, rather than raced into it. **Whoever edits the tier runner
-> next owns this list.**
+> **Sequenced, not raced.** `S-2026-08-01-TIERBUDGET` was ACTIVE and declared
+> `scripts/_test/run_fast_cages.ps1`, so the findings were **recorded first and not touched**
+> (ledger rule 4: *wait or talk, not overwrite and hope*). The owner then stopped that lane; it
+> was verified to have committed nothing and left no dirt, marked `ABANDONED`, and the file taken
+> over **by declaration** before a byte moved.
 >
 > 🔴 **B2 — the index stamp reads the WRONG FILE under the hook, and the same file already
 > resolves it correctly 110 lines above.** `Get-GitStateStamp` hardcodes `.git\index`, but line
@@ -1029,6 +1036,31 @@ or a fail.
 > concurrent runs is impossible (PID in the name) · every transcript line parses · nothing
 > sensitive is recorded. **Cost re-measured independently: 18 stamps ≈ 0.11 s = 0.12 % of the
 > tier — confirming it is not the source of the budget breach.**
+>
+> **✅ How each was closed, with the measurement that proves it (`bcaf6c30`):**
+> **B2** — one `Get-IndexPath` resolving `GIT_INDEX_FILE` exactly as line ~796 already did, and
+> every stamp now records `index_path` so no reader has to guess which file the numbers describe.
+> **Proved on the real hook run of the fixing commit itself:** `hook=true`, `staged_count=1`,
+> `index_path = .git/next-index-28256.lock` — the temp index git actually used. The same line
+> also carries `index_lock=true`, i.e. **M1's per-stamp sampling immediately captured the lock
+> that the old failure-dump could never have seen**, on its first real commit.
+> **M2** — `try/catch` around the suite invocation converts an EAP=Stop stderr throw into an
+> ordinary non-zero result, so the abnormal path is the one that gets recorded instead of the one
+> that vanishes. **M4** — a missing suite leaves a `missing-suite` stamp instead of a silent gap.
+> **M1** — `index_lock` on every stamp; the false *"at the moment of detection"* claim in
+> `fe1a9a2c`'s message is corrected here rather than left in history unchallenged.
+>
+> 🔴 **M3's obvious fix was WRONG, and reading the hook instead of reasoning about it is what
+> caught it — before it landed.** Suppressing on "a synthetic staged set means a self-test" looks
+> right and is exactly backwards: `.githooks/pre-commit:218` invokes the tier with
+> `-StagedPathsFile`, so it would have **silenced the transcript on every real hook run** — the
+> instrument dark precisely where it is the whole point. `-Hook` does not discriminate either
+> (PART 6's T4/T6 are hook-mode by design). So suppression stays only as wide as the signal that
+> is sound, **eviction is closed by retention 40 → 200 instead of by a guess**, and `hook` +
+> `staged_count` are recorded so a reader classifies a transcript rather than inferring it.
+> Declared residual: a standalone suite run still leaves a few short, labelled transcripts that
+> can no longer evict anything. Measured after: standalone `run_guard_trigger_tests` → **0**
+> transcripts (was 6), a real tier → exactly **1**, env restored.
 
 ### Acceptance
 - **C1** state, with a measurement, whether the pin should be read at the **index** (what the
