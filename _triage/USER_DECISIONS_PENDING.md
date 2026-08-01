@@ -15,71 +15,92 @@ blind audit 8 raised as BLOCKER 1.
 
 ---
 
-## 1. Core Universe v1 — which symbol × TF cells are MANDATORY
+## 1. ✅ DECIDED 2026-08-01 — pilot FIRST, full universe on idle/overnight batches
 
-**Blocks:** `S15` (expansion) · shapes the cost of `S13` (the pilot matrix)
+**Owner, verbatim:** *"ทำตามข้อ 1 เพื่อแสกนดูเบื้องต้นว่าดีไม่ดี แล้วเมื่อตอนที่ว่างค่อยทำ B ทำทั้งหมดตอนรัน batch ตอนกลางคืน ตอนนอน เพื่อเก็บที่เหลือ"*
 
-**Why it is yours:** Grill decision 24 makes the Core Universe compulsory, and every cell added is
-*Baseline + probe × every hypothesis*. That is **direct wall-clock cost**, paid in tester hours. A
-system cannot choose how much of your time to spend.
+**The decision, restated so a machine can act on it:** Core Universe **v1 = the pilot**, and it is
+**expandable by construction, not a final target**. The remainder of the live fleet's underlyings is
+**not dropped** — it is queued as **overnight/idle batch work**, which is the right home for it
+because the binding constraint is **3 MT5 lanes of wall-clock**, and wall-clock at night is free.
 
-**What is needed:** a list of `symbol × timeframe` pairs, and whether `v1` is meant to be small
-(pilot-sized, expandable) or the real target.
+**v1 cells — PINNED HERE, correct them if this is not what you meant** (3 symbols × 2 TF, all three
+already carry proven work so the pilot measures the mechanism rather than a cold start):
+`XAUUSD H1` · `XAUUSD M15` · `EURUSD H1` · `EURUSD M15` · `GBPUSD H1` · `GBPUSD M15`.
+Grounding: the live fleet runs **20 symbol strings = ~15 underlyings**, and **XAU alone is 28 of 57
+positions (49 %)**, so a pilot that omitted XAU would not resemble the portfolio it is meant to
+inform.
 
-**If it stays undecided:** `S15` cannot start. The mechanism can be built and tested against a
-placeholder, but **do not invent symbols to claim S15 is complete** — the design says so explicitly.
+**Tier 2 (the overnight queue), for when lanes are idle:** the remaining underlyings measured in the
+fleet — `USDJPY` · `CHFJPY` · `AUDNZD` · `EURJPY` · `AUDCAD` · `CADJPY` · `AUDJPY` · `GBPJPY` ·
+`XAGUSD` · `US30` · `BTCUSD` · `ETHUSD`. **Order them by fleet weight, run them when nothing else
+holds a lane, and never let a tier-2 cell displace a tier-1 re-run.**
 
----
-
-## 2. `AGENTS.md` §2 — the Work Receipt writer surface
-
-**Blocks:** `S14` entirely.
-
-**Why it is yours:** the design gives *"any agent"* a new writable surface. Today §2 permits an agent
-to write **only its own taskboard order row plus new reports/CSV/sets per order**. Opening a writer
-surface is a governance change, and **Claude editing `AGENTS.md` to authorise itself is forbidden
-outright** — it is the same shape as writing your own approval.
-
-**What is needed:** either an amended §2 permission table, or an explicit "no, S14 stays closed".
-
-**If it stays undecided:** S14 does not start. The schema, a read-only importer, duplicate-detection
-fixtures and a provenance projection *can* be prepared — but **no writer is activated**.
+⚠️ **The one thing this decision does NOT license:** claiming `S15` complete on the pilot alone.
+The design forbids inventing symbols to claim completeness; the pilot proves the mechanism, the
+overnight queue earns the coverage.
 
 ---
 
-## 3. `PROJECT_STATE.md` §3 — the `account|magic` invariant contradicts your own ratified decision
+## 2. ✅ DECIDED 2026-08-01 — narrow, append-only writer. **NOT YET APPLIED: `AGENTS.md` awaits the owner's exact wording.**
 
-**Blocks:** `S10` (magic allocation) being *built*, not merely activated.
+**Owner, verbatim:** *"เปิดแคบ append-only"*
 
-**Why it is yours:** on 2026-07-30 you ratified **global magic scope** (Grill decision 56). But
-`PROJECT_STATE.md` §3 still asserts uniqueness on `account|magic`. **Two canonical documents now
-disagree**, and the design states the invariant must be amended by you before S10 is built.
+**What was chosen:** an agent may **append one Work Receipt row per order** to a single JSONL, and
+nothing more — no editing an existing row, no second surface, and **verdicts stay with the owner and
+the Claude seat**, exactly as `AGENTS.md` §2 has them today.
 
-**Measured cost you already accepted:** three magics (`990103`, `991001`, `991002`) sit on two
-accounts each today, and **`991001` is on real money**. Those are recorded as `legacy_exception` and
-**frozen until their judge date — never renumbered as a side effect.**
-
-**What is needed:** the amended §3 sentence.
-
-**If it stays undecided:** S10's machinery can be written, but activation stays blocked and the
-contradiction stays live — which means any reader can cite whichever document suits them.
+🔴 **Deliberately not applied yet, and the reason is the same rule that made this a decision at
+all:** the grant lives in `AGENTS.md` §2, and *"Claude editing `AGENTS.md` to authorise itself is
+forbidden outright"*. A ratified **direction** is not a ratified **sentence** — the same distinction
+that governed the two attestation signatures on 2026-08-01. The exact §2 text is drafted and shown
+to the owner in chat; it lands only after an explicit confirmation, in one commit, with the
+append-only cage beside it.
 
 ---
 
-## 4. "~10,000 combinations per round" — no executable definition
+## 3. ✅ DECIDED 2026-08-01 — GLOBAL magic uniqueness, with the three collisions registered as frozen exceptions
 
-**Blocks:** `S13`'s scheduler being able to report compliance at all.
+**Owner, verbatim:** *"Global uniqueness + legacy_exception"*
 
-**Why it is yours:** the ratified search policy says *fine complete grid ≤1,000 per zone*; the locked
-requirement says *~10,000 per round*. **These do not imply each other.** A genetic coarse pass plus
-**one** 125-combination fine grid satisfies "≤1,000 per zone" and misses "~10,000 per round" — and an
-orchestrator could declare compliance either way. Missing: **the number of zones, a minimum total
-search, and a stop rule.**
+This ratifies what Grill decision 56 already said on 2026-07-30 and ends the contradiction between
+two canonical documents. `PROJECT_STATE.md`'s invariant bullet is amended in the same commit as this
+line.
 
-**What is needed:** three numbers, or an explicit "compliance is advisory, do not gate on it".
+**The exceptions, measured from `portfolio/DEPLOYMENTS.csv` rather than quoted from the old text —
+and the count that matters is smaller than the file used to imply:**
 
-**If it stays undecided:** the scheduler must **report that compliance is undefined** rather than
-pick numbers silently. Do not let it choose.
+| magic | where it sits | live on both sides? |
+|---|---|---|
+| `991001` | `159475669` ACTIVE REAL_CENT **+** `159503454` ACTIVE REAL_CENT | **YES — real money on both. This is the only true live collision.** |
+| `991002` | `159475669` REMOVED **+** `159503454` ACTIVE REAL_CENT | no — one side is already REMOVED |
+| `990103` | `159503454` REMOVED **+** `463666728` ACTIVE DEMO | no — one side is already REMOVED |
+
+**Frozen until their judge date. Never renumbered as a side effect** — `991001` is real money, and a
+renumber would silently orphan its history.
+
+⚠️ **What is still enforced today:** `scripts/check_state.ps1` continues to check
+**`account|magic`**. Switching it to global uniqueness requires the exception list to exist in a form
+the checker reads, and **that is `S10`'s work, not this decision's** — flipping it now would turn the
+state check red on three rows the owner has just declared legitimate.
+
+---
+
+## 4. ✅ DECIDED 2026-08-01 — ADVISORY for now; the numbers are set after `S13` has run once
+
+**Owner, verbatim:** *"Advisory ก่อน ตั้งเลขหลัง S13 รันจริง"*
+
+`S13`'s scheduler **reports** the combination count it actually searched and **never gates on it**.
+It must print the number and the words *"advisory, not a bar"* — a figure printed without that
+qualifier gets read as compliance, which is the whole defect this item was raised for.
+
+**Why not set three numbers today:** nobody yet knows how many zones a real surface produces, and a
+bar set before the shape is known is a bar that can be cleared by not searching — the same family as
+memory `bar-cleared-by-non-participation`, which this project has already paid for once.
+
+**Revisit trigger, so this does not quietly become permanent:** after **the first real `S13` round**,
+take the observed zone count and total from that round and set the three numbers (zones per round ·
+minimum total · stop rule) against measured data.
 
 ---
 

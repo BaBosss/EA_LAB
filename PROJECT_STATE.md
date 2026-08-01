@@ -59,7 +59,7 @@ doc opens with the banner: `> ⚠️ canonical entry = PROJECT_STATE.md · this 
   wherever a deployment changes, the CSV must be changed first, and the checker will then force the
   dashboard map + docs to match
 - backtest window: **MAIN 2023.01–2025.12** (36 months, does not eat the 2026H1 holdout) · re-opt/re-pin every 6 months
-- magic numbers must not collide — enforced by the checker from the CSV (duplicate account|magic = WARN/block)
+- magic numbers must not collide — **scope = GLOBAL, one magic belongs to exactly one EA across every account** (owner-ratified Grill decision 56 on 2026-07-30, and ratified again explicitly on 2026-08-01 to end the contradiction this bullet used to carry: it asserted uniqueness per `account|magic` while the decision said global). **Three registered `legacy_exception` magics predate the rule and are FROZEN until their judge date, never renumbered as a side effect:** `991001` (the only live one — ACTIVE REAL_CENT on BOTH `159475669` and `159503454`), `991002` and `990103` (one side of each is already REMOVED). ⚠️ **What the checker enforces TODAY is still `account|magic`** — `scripts/check_state.ps1` flips to the global rule only when `S10` gives it an exception list to read, because flipping it first would redden the state check on three rows the owner has just declared legitimate. Decision recorded in `_triage/USER_DECISIONS_PENDING.md` item 3.
 - **the bot enforces this itself:** the git **pre-commit hook** (`.githooks/pre-commit`) runs
   `scripts/check_state.ps1 -Strict` automatically on every commit → validates every doc/dashboard-map against
   `DEPLOYMENTS.csv` in both directions (a CSV row missing from the map = a magic that is not monitored · a map
