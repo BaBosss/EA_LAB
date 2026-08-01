@@ -4,6 +4,20 @@
 > (Decision log 2026-07-26). Every forward-looking item has a home — the routing table at the
 > bottom says which. This is the LAST lane of a long 2026-08-01; read the state block first.
 
+> 🔴 **APPENDED after close by lane `S-2026-08-01-INSTRREV`.** An independent review of this
+> lane's instrumentation returned **five more defects**, recorded on the `ORDER-731` row and
+> **deliberately not fixed**: `S-2026-08-01-TIERBUDGET` was ACTIVE and declares
+> `scripts/_test/run_fast_cages.ps1`, so ledger rule 4 applies. **The one to read first is B2 —
+> the index stamp hardcodes `.git\index` while real hook runs set `GIT_INDEX_FILE` to a
+> `next-index-*.lock` (proved from the transcripts on disk), so under the hook it stamps a file
+> neither git nor the checker reads.** Also: a suite writing to stderr throws and kills the tier
+> before any stamp or `Exit-Tier` (env leaks); standalone suite runs still spawn spurious
+> transcripts and evict the real ones at retention 40; and `fe1a9a2c`'s commit message claim that
+> the dump captures `index.lock` *"at the moment of detection"* is **false** — it fires after the
+> suite exits, ~30 s late. **Whoever edits the tier runner next owns that list.** The procedure in
+> *"How to use the transcript"* below is still correct, with one caveat: until B2 is fixed,
+> `index_ticks`/`index_len` are unreliable under the hook — trust `head`, `ref` and `inputs`.
+
 ## State of the repo at close — read this before anything
 
 | | |

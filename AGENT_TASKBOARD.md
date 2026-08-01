@@ -976,6 +976,59 @@ or a fail.
 > this repo has paid for. **Cost, measured not assumed: 17 stamps = 0.09 s, ~5 ms each — 0.1 % of
 > a 93 s tier.** **The tier's own budget breach that these runs surfaced is `ORDER-820`, opened
 > rather than absorbed.**
+>
+> #### 🔴 Independent review of that instrumentation: FIVE more defects, RECORDED NOT FIXED (lane `S-2026-08-01-INSTRREV`)
+>
+> **Why not fixed:** `S-2026-08-01-TIERBUDGET` was ACTIVE when this review landed and declares
+> `scripts/_test/run_fast_cages.ps1` (conditionally, for `ORDER-820` C2). Ledger rule 4 is
+> *wait or talk, not overwrite and hope* — so these are written down where that lane will read
+> them **before** it edits the file, rather than raced into it. **Whoever edits the tier runner
+> next owns this list.**
+>
+> 🔴 **B2 — the index stamp reads the WRONG FILE under the hook, and the same file already
+> resolves it correctly 110 lines above.** `Get-GitStateStamp` hardcodes `.git\index`, but line
+> ~796 (the tier's own ORDER-670 T6 stamp) does
+> `if ($env:GIT_INDEX_FILE) { $env:GIT_INDEX_FILE } else { .git\index }` — and
+> `check_s2a_migration.py`'s `_git()` inherits the env, so git honours it too. **Proved from the
+> transcripts already on disk:** real pre-commit runs recorded
+> `git_index_env = D:/EA_LAB/.git/next-index-17736.lock`. So in exactly the runs that matter the
+> stamp describes a file neither git nor the checker reads: a real `next-index` change is
+> **invisible**, and an unrelated `.git/index` rewrite raises the *"index was rewritten"* banner
+> for something the abort never saw. **This is the read-the-wrong-snapshot family — the one this
+> whole day was spent closing — recreated inside the instrument built to diagnose it.**
+>
+> 🔴 **M2 — a suite writing to stderr THROWS and kills the tier before any stamp, dump, or
+> `Exit-Tier`.** `$ErrorActionPreference = 'Stop'` plus a bare `& $ps … -File $path 2>&1` with no
+> `try/catch` and no `trap`. Probed: the throw is real, and `EA_LAB_TIER_RUN` was still `'1'`
+> afterwards — the env leaks on **exactly the abnormal path the instrumentation exists for**.
+> Fix: `try/catch` on the suite call + `try/finally` from the env-set to the end.
+>
+> 🔴 **M3 — the nested-transcript fix does not cover standalone suite runs, and retention then
+> EVICTS the real ones.** Suppression keys on a var only a parent tier sets. Probed: one
+> standalone `run_guard_trigger_tests.ps1` took `_triage/tier_runs/` from **3 → 9** files. At a
+> retention of 40, **seven** such runs evict every real full-tier transcript — the artifact
+> destroying its own evidence.
+>
+> ⚠️ **M1 — and this one corrects a claim in `fe1a9a2c`'s own commit message.** That message says
+> the dump captures the lock *"at the moment of detection"*. It does not: the dump fires **after
+> the suite process exits**, and the abort happens at entry 5 of a 31.6 s suite, while
+> `index.lock` during a concurrent commit lives tens of milliseconds. So `index_lock_present` and
+> `live_git_processes` will read false/empty in practically every real occurrence — the two fields
+> justified by that sentence are the two the dump cannot observe. `reflog_tail` and
+> `head_moved_since_tier_start` are durable and do work. Fix: sample the lock on **every**
+> after-suite stamp (a `Test-Path`, sub-millisecond), or drop the two fields and say why.
+>
+> **M4** — the MISSING-suite branch `continue`s before both the stamp and the dump, so a reader
+> sees fewer `after-suite` lines than suites with nothing explaining the gap.
+>
+> **What the review confirmed CLEAN, so it is not re-litigated:** the dump *does* fire for the
+> real abort (`return 2` → gate `1` → suite `exit 1` → tier sees non-zero, and the abort prints to
+> **stdout** so M2's throw does not intercept that path) · all post-env exits go through
+> `Exit-Tier` except M2/Ctrl-C · `run_guard_trigger_tests` and `run_front_guard_evidence_tests`
+> both exit 0 and no suite asserts on the tier's exact line set · filename collision between
+> concurrent runs is impossible (PID in the name) · every transcript line parses · nothing
+> sensitive is recorded. **Cost re-measured independently: 18 stamps ≈ 0.11 s = 0.12 % of the
+> tier — confirming it is not the source of the budget breach.**
 
 ### Acceptance
 - **C1** state, with a measurement, whether the pin should be read at the **index** (what the
