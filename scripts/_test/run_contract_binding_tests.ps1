@@ -121,12 +121,22 @@ if (-not (Test-Path -LiteralPath $python)) {
 # with the same interpreter/args/cwd this file uses. The entry list was PARSED OUT OF THIS FILE
 # by the harness rather than retyped, so the table cannot drift from the list below it.
 #
-# The tier sets EA_LAB_EVIDENCE=index for its children ONLY under -Hook (run_fast_cages.ps1
-# line ~789). A standalone run of this wrapper is therefore worktree mode and costs 8.7s LESS
-# than the same wrapper under the hook -- so a number quoted without its mode is not a number.
-# That single omission produced ORDER-820's "+8.7s regression" (there was none: +0.7s between
-# ddbaec95 and HEAD) and its "intermittent breach" (it is not intermittent: every hook run is
-# over, every standalone run is under).
+# TWO variables, and BOTH must be stated with any number from this file:
+#   1. EVIDENCE MODE. The tier sets EA_LAB_EVIDENCE=index for its children ONLY under -Hook
+#      (run_fast_cages.ps1 line ~789). Worth +8.5s on this wrapper. The table below is per-mode
+#      for exactly this reason. ORDER-820's "+8.7s regression" was this delta: the suite grew
+#      +0.7s between ddbaec95 and HEAD, measured with mode and shell held constant at both.
+#   2. WHICH git.exe IS ON PATH, which is decided by the SHELL that launched the run.
+#      C:\Program Files\Git\cmd\git.exe is a 45 KB SHIM; mingw64\bin\git.exe is the real 4.3 MB
+#      binary. Benchmarked from one shell so the shell is held constant: 35.3 vs 25.3 ms per
+#      spawn. PowerShell resolves the shim, sh resolves the real binary, and it is NOT PATH
+#      length (PowerShell 15 entries, bash 31). This wrapper spawns 142 git children, so the
+#      shell alone moves it 5-8s. The table below was taken from PowerShell -- the EXPENSIVE
+#      side. From sh the same wrapper is 19.9-20.3s worktree / 25.6-27.2s index, and inside a
+#      REAL pre-commit hook it is 20.3s (_triage/tier_runs/tier_20260801_201847_24332.jsonl).
+# A tier number with no stated invocation is not evidence. ORDER-820 spent six samples proving
+# that: measured the way .githooks/pre-commit:220 actually invokes it, the full tier is
+# 83.3 / 86.4 / 87.2s -- INSIDE the 90.0s budget it was filed for breaching.
 #
 #   entry                                 worktree   index    delta
 #   check_registries.py                       0.07    4.96    +4.89   <- R4's 129-path sweep
@@ -276,10 +286,11 @@ $scripts = @(
     #     whole job is to refuse a commit and a suite cannot do that. Same trade this file states
     #     for items 7 and 10: a python cage belongs in an existing python wrapper rather than a
     #     17th PowerShell suite, and the tier has ~7-9s of headroom, not a process to spare.
-    #     🔴 THAT HEADROOM IS GONE and this line must not be quoted as if it were current: measured
-    #     2026-08-01 (ORDER-830), the full tier under -Hook is 95.9-98.6s against a 90.0s budget --
-    #     7-9s OVER, not under. Standalone it is 87.5-89.8s, which is the number that made this
-    #     look survivable. Nothing further goes in this wrapper until ORDER-820 C2 is answered.
+    #     RE-MEASURED 2026-08-01 (ORDER-830) and the headroom is real but thin: reproducing
+    #     .githooks/pre-commit:220 exactly (sh -> powershell -File run_fast_cages.ps1 -Hook), the
+    #     full tier is 83.3 / 86.4 / 87.2s against 90.0s -- on SEVENTEEN suites. The same script
+    #     launched from PowerShell reads 95.9-98.6s, which is the shim above, not the tier.
+    #     Nothing further goes in this wrapper without re-measuring THROUGH THE HOOK'S OWN LINE.
     @{ Path = '_triage\factory_os\run_attested_pin_staged_tests.py'; Args = @() }
 )
 

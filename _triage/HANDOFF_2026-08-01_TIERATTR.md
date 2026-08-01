@@ -56,14 +56,35 @@ Transcript: `_triage/tier_runs/tier_20260801_201847_24332.jsonl` (`hook: true`,
   Probed because `ORDER-830` A2b named it as the likely cause; it is not.
 - **~5 s between git-bash+index (25.7 s) and the real hook (20.3 s) is still unexplained.**
 
+### And the number that actually settles `ORDER-820`
+
+Reproducing `.githooks/pre-commit:220` exactly — `sh` → `powershell.exe -NoProfile
+-ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook` — full tier, three
+consecutive samples at `7e4d8361`, machine idle:
+
+| how the SAME script was invoked | suites | full tier |
+|---|---|---|
+| **from `sh`, `-Hook` — the hook's own line** | 17 | **83.3 · 86.4 · 87.2 s — every one INSIDE 90.0 s** |
+| from PowerShell, `-Hook` | 16 | 95.9 · 97.1 · 98.6 s — every one over |
+| from PowerShell, no `-Hook` | 16 | 87.5 · 89.8 s |
+
+🔴 **`ORDER-820`'s headline — "the full tier is OVER its enforced budget on every sample" — is not
+supported by any measurement taken the way git invokes it**, and the cheap column is the *bigger*
+tier (a parallel lane, `7e4d8361`, added a 17th suite mid-measurement). Its six samples carry no
+record of how they were launched, and the spread between invocations (83-98 s) is wider than the
+spread between its samples. **This does not prove the tier is safe.** It proves the budget has been
+argued from numbers whose provenance nobody wrote down.
+
 ## 3. 🚫 What must NOT be carried forward from this lane
 
 - ❌ **Do not quote my 97.1 / 98.6 / 95.9 s as "what a committer pays".** They are a manual
   `-Hook` invocation from PowerShell — the most expensive configuration measured, and not the one
   git runs. `ORDER-820`'s own five samples (91.1-93.6 s) and its sixth (87.8 s) have **no recorded
   invocation** either, so none of the six can be assigned to a configuration now.
-- ❌ **Do not conclude the tier is inside budget either.** No full tier has ever been timed under a
-  real hook. That measurement is the first thing `ORDER-820` C2 needs and it is **owed**.
+- ❌ **Do not read the 83.3-87.2 s as "the tier is fine" either.** It is three samples, one machine,
+  one evening, and there is still ~5 s between that invocation and a real hook nobody has explained.
+  What is established is narrower and more useful: **a tier total with no stated invocation is not
+  evidence**, and every number in this thread was one.
 - ❌ **Do not quote any per-entry number without its mode.** The two-mode table now lives in
   `scripts/_test/run_contract_binding_tests.ps1`'s own header, above the entry list, so the next
   reader hits it before quoting.
@@ -84,7 +105,8 @@ Transcript: `_triage/tier_runs/tier_20260801_201847_24332.jsonl` (`hook: true`,
 | item | destination |
 |---|---|
 | A1 named (129 paths, 142 git spawns) · A2 (no regression, +0.7 s) · A2b (mode + shell, not variance) · A3 (residual is 1-2 s of process starts) · A4 (wrapper comments repaired) | ORDER-830 |
-| time the FULL tier under a REAL pre-commit hook — no such measurement exists, and C2/C3 rest on it | ORDER-820 |
+| the budget question REOPENED: 83.3-87.2s through the hook's own invocation vs 95.9-98.6s from PowerShell — re-establish C2's premise before spending anything on it, and restate C3 as three runs through `.githooks/pre-commit`'s own line | ORDER-820 |
+| the ~5s still unexplained between `sh`+`-Hook` and a real hook | ORDER-820 |
 | the named candidate fix: one `git cat-file --batch` in `evidence.py` instead of 129 `git show` spawns | ORDER-820 |
 | `run_s2a_gate.py` 2.57 → 4.94 s, unattributed | ORDER-820 |
 | a module should DECLARE the paths it reads | ORDER-761 |

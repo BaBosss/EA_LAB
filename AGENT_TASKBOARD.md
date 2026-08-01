@@ -510,10 +510,14 @@ once behind a flag.</sub>
 
 ### RESULT 2026-08-01 — lane `S-2026-08-01-TIERATTR`. C1·C2·C3·C4 all answered, and the answer **collapses `ORDER-820`'s premise** — `PARKED` pending review
 
-> **One sentence:** every number in this order and in `ORDER-820` was quoted without saying which
-> **evidence mode** produced it, and the whole "+8.7 s regression" plus the whole "7 s intermittent
-> swing" are that one omission — `run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` **only under
-> `-Hook`** (line ~789), and that flag is worth **+8.7 s** on this suite.
+> **One sentence:** every number in this order and in `ORDER-820` was quoted without saying **how it was
+> produced** — evidence mode *and* the shell that launched it — and those two variables are worth
+> **+8.5 s** and **+5-8 s** respectively, which is the whole "+8.7 s regression" and the whole "7 s
+> intermittent swing" between them.
+>
+> 🔴 **This lane then made the same mistake and caught it in `A2b`** — read `A2b` before quoting any
+> tier total from this order. Measured the way `.githooks/pre-commit` actually invokes it, the full
+> tier is **83.3 · 86.4 · 87.2 s — inside** the 90.0 s budget, on 17 suites.
 
 #### A1 — the operation is `check_r4`'s resolver sweep, and here are the counts
 
@@ -569,21 +573,64 @@ stdlib — is matched by `.gitignore:85 *.zip`, so the checked-out interpreter d
 configuration"*. Copy the zip in. The wrapper's own header calls the interpreter *"committed
 in-repo"*; it is committed except for the part that makes it run.</sub>
 
-#### A2b — the 7 s swing is **two populations**, not variance, and the breach is **not intermittent**
+#### A2b — the swing is **configuration, not variance** — and my first answer to this was WRONG
 
-`run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` for its children **if and only if `-Hook` is
-passed**. Full tier, this machine, today:
+**What I wrote first, and it is left here because it is the finding:** I ran
+`run_fast_cages.ps1 -Hook` by hand **from PowerShell**, got **97.1 / 98.6 / 95.9 s** against the
+90.0 s budget, and concluded *"every hook run is over budget; the breach is not intermittent"*.
+🔴 **That is refuted by the next commit's own hook**, which ran the same suite in the same index
+mode in **20.3 s** — cheaper than every standalone number I had
+(`_triage/tier_runs/tier_20260801_201847_24332.jsonl`: `hook: true`, `seconds: 20.3`). I had
+measured the most expensive configuration of the tier and called it what a committer pays.
 
-| | samples | verdict |
+**Measured properly — reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell.exe
+-NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook`), full tier, three
+consecutive samples at `7e4d8361`, machine idle:**
+
+| how the SAME script was invoked | suites | full tier |
 |---|---|---|
-| **`-Hook`** (what a committer actually pays) | **97.1 · 98.6 · 95.9 s** | **every one OVER** the 90.0 s budget |
-| standalone (no `-Hook`) | **89.8 · 87.5 s** | both **UNDER** |
-| this suite within them | hook **34.1 / 35.1 / 34.3 / 33.5 / 33.6** · standalone **25.4 / 25.0** | the "24.9-32.1 swing" |
+| **from `sh`, `-Hook` — the hook's own line** | 17 | **83.3 · 86.4 · 87.2 s — every one INSIDE the 90.0 s budget** |
+| from PowerShell, `-Hook` | 16 | 95.9 · 97.1 · 98.6 s — every one over |
+| from PowerShell, no `-Hook` | 16 | 87.5 · 89.8 s |
 
-🔴 **The sixth sample that reframed `ORDER-820` as intermittent (87.8 s, suite at 24.9 s) was a
-standalone run.** My standalone run reproduces it at **87.5 s / 25.0 s**. There is no good half of
-the distribution to tune against — there is a configuration the hook never runs. **A fix aimed at
-the mean of the six samples would be aimed at a mean of two different things.**
+**The shell that launches the measurement moves the tier by more than its entire headroom, and it
+does so on 17 suites rather than 16** — a parallel lane (`S-2026-08-01-S14GRANT`, `7e4d8361`) added
+one mid-measurement, so the cheap column is also the *bigger* tier.
+
+**Why.** Two variables, both measured, neither previously named:
+
+1. **Evidence mode** (`EA_LAB_EVIDENCE=index`, set by `run_fast_cages.ps1` **only under `-Hook`**,
+   line ~789): **+8.5 s** on this suite.
+2. **Which `git.exe` is on PATH.** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**;
+   `mingw64\bin\git.exe` is the real **4.3 MB** binary. Benchmarked from ONE shell so the shell is
+   held constant: **35.3 vs 25.3 ms per spawn**. PowerShell resolves the shim, `sh` the real binary,
+   and **it is not PATH length** (PowerShell 15 entries, bash 31). At this suite's 142 spawns that
+   is **+1.4 s on `check_registries.py` alone** and **5-8 s across the wrapper**.
+3. **`GIT_INDEX_FILE` — no effect**, and A2b named it as the likely cause. Pointed at a copy of
+   `.git/index`, bash+index went 25.6 → **25.7 s**. Probed and ruled out.
+
+The same suite, same commit, same hour, five ways:
+
+| context | mode | suite |
+|---|---|---|
+| real pre-commit hook | index | **20.3 s** |
+| `sh` + `-Hook`, inside the full tier | index | 24.5 - 26.0 s |
+| `sh` standalone | worktree | 19.9 - 20.3 s |
+| `sh` standalone | index | 25.6 - 27.2 s |
+| PowerShell standalone | worktree | 24.9 - 25.4 s |
+| PowerShell standalone | index | 33.4 - 34.1 s |
+
+🔴 **What this does to `ORDER-820`.** Its headline — *"the full tier is OVER its enforced budget on
+every sample"* — **is not supported by any measurement taken the way git invokes it.** Its six
+samples (91.1 · 91.5 · 91.7 · 93.6 · 91.8, then 87.8) carry **no record of how they were
+launched**, and the spread between invocations (83 - 98 s) is wider than the spread between its
+samples. They cannot now be assigned to a configuration. **This does not prove the tier is safe** —
+it proves the budget has been argued from numbers whose provenance nobody wrote down. The first
+thing C2 needs is a stated invocation, and from now on every tier number must carry one.
+
+<sub>~4-5 s between `sh`+`-Hook` (24.5-26.0 s) and the real hook (20.3 s) is **still unexplained**.
+`GIT_INDEX_FILE` is ruled out; git's own environment (`GIT_DIR`, `GIT_EXEC_PATH`, a warm object
+store) is the remaining candidate and nobody has measured it.</sub>
 
 #### A3 — the "5.9 s not in the table" was the same mode confusion
 
@@ -632,7 +679,7 @@ worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of he
 
 ---
 
-## ORDER-820 — [tier] The full tier is OVER its enforced budget on **every `-Hook` run** (95.9-98.6s vs 90.0s) — but the suite did NOT grow ~9s; that number is the evidence-mode delta, corrected 2026-08-01 by `ORDER-830` — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-820 — [tier] The budget question is REOPENED, not answered: the suite did NOT grow ~9s (that is the evidence-mode delta) and the full tier measured the way the hook invokes it is 83.3-87.2s, INSIDE the 90.0s budget — every earlier sample was taken with no recorded invocation — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > 🔴 **CORRECTED 2026-08-01 by `ORDER-830` (lane `S-2026-08-01-TIERATTR`), and the correction goes to
 > the PREMISE of this row, not to a detail in it. Everything below the next box is kept verbatim
@@ -642,13 +689,17 @@ worktree / 5.25+1.28 index) · and the line claiming the tier has *"~7-9 s of he
 > | this row says | measured |
 > |---|---|
 > | `run_contract_binding_tests.ps1` **grew +8.7 s** between `ddbaec95` and now | it grew **+0.7 s**. The +8.7 s is the **evidence-mode delta**, and it is the same (+8.46 s) at `ddbaec95` itself. 22.9 s was a **worktree**-mode measurement, 31.6 s an **index**-mode one. |
-> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **not intermittent**. `run_fast_cages.ps1` sets `EA_LAB_EVIDENCE=index` **only under `-Hook`**. With `-Hook`: **97.1 · 98.6 · 95.9 s — all over**. Standalone: **89.8 · 87.5 s — both under**. The sixth sample (87.8 s) was a standalone run and is reproduced at 87.5 s. |
+> | the breach is **intermittent**, one suite swinging 24.9-32.1 s | it is **configuration, not variance** — and the direction is the opposite of what this row assumes. Reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell -File ... -Hook`), the full tier is **83.3 · 86.4 · 87.2 s — every one INSIDE the budget**, on **17** suites. The same script launched from PowerShell is 95.9-98.6 s, because every `git` spawn goes through a 45 KB `cmd\git.exe` shim (+10 ms × 142 spawns). |
+> | the full tier is **OVER budget on every sample** (the row title) | 🔴 **not supported by any measurement taken the way git invokes it.** The six samples carry no record of how they were launched, and the spread between invocations (83-98 s) is wider than the spread between the samples. This is **not** proof the tier is safe — it is proof the budget has been argued from numbers with no stated provenance. |
 > | C1 = *"which commit added 8.7 s"* | **unanswerable as written, and it does not need answering.** No commit added it. |
 >
-> **C1 is therefore CLOSED by `ORDER-830`.** **C2 stays here and is now answerable**, with one named
-> candidate: replace `evidence.py`'s per-path `git show` (129 spawns in `check_r4`'s sweep) with one
-> `git cat-file --batch`. **C3 must be restated as three consecutive `-Hook` runs** — standalone runs
-> pass today and prove nothing about what a committer waits for.
+> **C1 is therefore CLOSED by `ORDER-830`.** **C2 stays here**, with one named candidate if it is still
+> needed: replace `evidence.py`'s per-path `git show` (129 spawns in `check_r4`'s sweep) with one
+> `git cat-file --batch`. **But C2's premise must be re-established first** — time the full tier the way
+> the hook invokes it, and if it is inside budget there is nothing to displace, speed up, or raise.
+> **C3 must be restated as three consecutive runs THROUGH `.githooks/pre-commit`'s own invocation**,
+> with the shell and the suite count written down beside each number. A tier total with no stated
+> invocation is not evidence — that is the whole lesson of `ORDER-830`.
 
 > 🔎 **C1's timing half is MEASURED and lives on `ORDER-830` (2026-08-01) — do not re-measure it.**
 > It says three entries drifted rather than one, and that the largest single item is a
