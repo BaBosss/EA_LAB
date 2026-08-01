@@ -374,7 +374,7 @@ read that sentence.
 
 ---
 
-## ORDER-830 — [tier] `ORDER-820` C1, measured, then ANSWERED: the biggest item is one `check_registries.py` call costing 5.0s in `index` mode and 0.07s in `worktree` mode — and the mode, not any commit, is the whole of `ORDER-820`'s "+8.7s regression" and its "intermittent breach" — `PARKED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-830 — [tier] `ORDER-820` C1, measured, then ANSWERED: the biggest item is one `check_registries.py` call costing 5.0s in `index` mode and 0.07s in `worktree` mode — and the mode AND the shell, not any commit, are the whole of `ORDER-820`'s "+8.7s regression" and its "intermittent breach" — `DONE(Claude/Opus 2026-08-01)` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > Opened by lane `S-2026-08-01-TIERBUDGET` after taking `ORDER-820` C1 and being told to park it.
 > **The timing half of C1 is DONE and is below — do not re-measure it.** What is left is the two
@@ -527,16 +527,26 @@ trap in the footnote above was avoided by instrumenting the single place this mo
 | | |
 |---|---|
 | git child processes per run | **142** |
-| time inside those children | **3.92 s of a 3.94 s run — 99.5 %** |
+| time inside those children | **3.92 s of a 3.94 s `main()` — 99.5 %** (interpreter start is outside it and is ~0.07 s: that is the whole of `worktree` mode) |
 | `git show :path` | 131 calls |
 | `git ls-files` (existence) | 8 calls · `ls-files :(glob)` (enumeration) 3 calls |
 | by phase | `load_all` 9 calls / **`check_r4` 130 calls, 3.64 s** / `check_r6` 3 calls / R1·R2·R3·R5 **0** |
-| **paths walked by R4** | **129** — 33 `_triage/factory_os/*.py` + 91 `scripts/*.ps1` + 5 `scripts/lib/*.ps1` |
+| **paths enumerated by R4** | **129** — 33 `_triage/factory_os/*.py` + 91 `scripts/*.ps1` + 5 `scripts/lib/*.ps1` |
 
-**Named:** `check_r4` parts (b) and (c) enumerate 129 committed paths and then read **every one of
-them** with its own `git show :path`. It is `ORDER-270`'s spawn pathology in a new place — the shape
-the order said to expect, though not the form: it is not a per-path call over the 5,000-file index,
-it is a per-path call over a 129-path sweep.
+**Named:** `check_r4` parts (b) and (c) enumerate the sweep and then read it with one
+`git show :path` **per path**. It is `ORDER-270`'s spawn pathology in a new place — the shape the
+order said to expect, though not the form: it is not a per-path call over the 5,000-file index, it
+is a per-path call over the sweep.
+
+> 🔴 **Every integer in that table is a SNAPSHOT, and it had already drifted before this order was
+> reviewed.** Re-counted a few commits later, at `585a23a5`: **131** enumerated, not 129 — a
+> parallel lane added two files to `_triage/factory_os/`. And *"reads every one of them"*, which is
+> what this section said first, **is false**: `RESOLVER_SWEEP_EXEMPT` skips **6**, so the sweep reads
+> **127**, plus the **1** declared consumer (`scripts/optimize_guard.ps1`, read twice — once by part
+> (a), once by the sweep) = **128 `git show` calls inside `check_r4`**. The load-bearing claim is the
+> **shape — one git child process per swept path, and the count grows with the repository** — not
+> any of these numbers. Re-count, do not quote. (This is `BACKLOG-D29`'s failure mode arriving in a
+> comment I wrote in the same session that named it.)
 
 <sub>**And the 5.1 s inside `run_registry_tests.py` buys one assertion.** Its last two cases run
 `check_registries.py`'s real CLI once per mode (`run_registry_tests.py:1108-1126`) to check that the
@@ -562,10 +572,18 @@ machine idle, each run a fresh `powershell -NoProfile -File`:
 | **index** mode | 32.77 / 32.78 / 33.25 → **32.78 s** | 33.43 / 33.48 / 33.94 → **33.48 s** | **+0.70 s** |
 | **mode delta** | **+8.46 s** | **+8.50 s** | |
 
-**The suite grew 0.7 s between the two commits, not 8.7 s.** The 22.9 s figure is a worktree-mode
-measurement and the 31.6 s figure is an index-mode one; the "+8.7 s" is the mode delta, which is
-**the same at both commits**. `5082bd4d` genuinely cannot explain the jump — because there was no
-jump. `ORDER-820`'s row is corrected in this commit, which is what C2 asks for.
+**MEASURED: the suite grew 0.7 s between the two commits, not 8.7 s** — mode and shell held
+constant on both sides, three samples per cell. `5082bd4d` genuinely cannot explain the jump,
+because there was no jump. That much is measurement.
+
+**INFERRED, and it must be labelled as such:** that `ORDER-820`'s 22.9 s and 31.6 s differ by mode.
+The evidence for it is that the mode delta (+8.46 s at `ddbaec95`, +8.50 s at HEAD) matches its
++8.7 s almost exactly while no commit does. The evidence *against* over-reading it: **no
+configuration I measured reproduces 22.9 s** — the six I have at `ddbaec95`/HEAD are 19.9-20.3,
+24.3-25.1, 25.6-27.2, 32.8-33.9 s. 31.6 s sits close to `PowerShell + index` (32.8 s); 22.9 s sits
+between two of mine and on none. **Both figures were recorded without their invocation and cannot
+now be assigned to one** — which is the finding, not a detail of it. `ORDER-820`'s row is corrected
+in this commit, which is what C2 asks for.
 
 <sub>⚠️ **A fresh worktree cannot run this tier out of the box, and that is worth knowing before the
 next person tries.** `tools/python312/python.exe` is committed (34 files) but `python312.zip` — the
@@ -579,23 +597,39 @@ in-repo"*; it is committed except for the part that makes it run.</sub>
 `run_fast_cages.ps1 -Hook` by hand **from PowerShell**, got **97.1 / 98.6 / 95.9 s** against the
 90.0 s budget, and concluded *"every hook run is over budget; the breach is not intermittent"*.
 🔴 **That is refuted by the next commit's own hook**, which ran the same suite in the same index
-mode in **20.3 s** — cheaper than every standalone number I had
-(`_triage/tier_runs/tier_20260801_201847_24332.jsonl`: `hook: true`, `seconds: 20.3`). I had
-measured the most expensive configuration of the tier and called it what a committer pays.
+mode in **20.3 s** — cheaper than every standalone number I had. I had measured the most
+expensive configuration of the tier and called it what a committer pays.
+
+<sub>⚠️ **The evidence is quoted here because the file it came from is gitignored.**
+`_triage/tier_runs/` is matched by `.gitignore:16`, so `tier_20260801_201847_24332.jsonl` is
+untracked and will not survive — citing it by name would have left this correction resting on
+something no later reader can open. The decisive fields: `hook: true` ·
+`git_index_env: D:/EA_LAB/.git/next-index-5516.lock` · `suite: run_contract_binding_tests.ps1` ·
+`seconds: 20.3` · `ref: 7777ca27…`. **Any future claim resting on a tier transcript must quote it
+inline for the same reason.**</sub>
 
 **Measured properly — reproducing `.githooks/pre-commit:220` exactly (`sh` → `powershell.exe
 -NoProfile -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook`), full tier, three
 consecutive samples at `7e4d8361`, machine idle:**
 
-| how the SAME script was invoked | suites | full tier |
-|---|---|---|
-| **from `sh`, `-Hook` — the hook's own line** | 17 | **83.3 · 86.4 · 87.2 s — every one INSIDE the 90.0 s budget** |
-| from PowerShell, `-Hook` | 16 | 95.9 · 97.1 · 98.6 s — every one over |
-| from PowerShell, no `-Hook` | 16 | 87.5 · 89.8 s |
+| how the SAME script was invoked | suites | commit | full tier |
+|---|---|---|---|
+| **from `sh`, `-Hook` — the hook's own line** | 17 | `7e4d8361` | **83.3 · 86.4 · 87.2 s** |
+| **from `sh`, `-Hook`** | 17 | `60a6eb12` | **87.1 · 87.2 · 90.1 s** ← one of them **over** |
+| from PowerShell, `-Hook` | 17 | `585a23a5` | **95.1 · 97.6 · 97.6 s** — every one over |
+| from PowerShell, `-Hook` | 16 | earlier | 95.9 · 97.1 · 98.6 s |
+| from PowerShell, no `-Hook` | 16 | earlier | 87.5 · 89.8 s |
 
-**The shell that launches the measurement moves the tier by more than its entire headroom, and it
-does so on 17 suites rather than 16** — a parallel lane (`S-2026-08-01-S14GRANT`, `7e4d8361`) added
-one mid-measurement, so the cheap column is also the *bigger* tier.
+**The verdict is "ON THE LINE", not "inside".** Six samples through the hook's own invocation span
+**83.3 - 90.1 s against 90.0 s**, and the sixth is over it. What is solid is the *gap*: rows 2 and 3
+are the controlled pair — **same 17 suites, one commit apart, same `-Hook`, only the shell differs —
+87.1-90.1 s vs 95.1-97.6 s, about 9 s.** The shell is worth three times the budget's headroom.
+
+<sub>Every row carries its commit because HEAD moved **twice** during these measurements: parallel
+lanes committed mid-run, and a 90-second tier cannot assume a still repository. That is also why
+`run_front_guard_evidence_tests.ps1` went red in 3 of ~12 full-tier runs and green every time it was
+run alone — **it judges `HEAD`, and `HEAD` moved underneath it.** Routed to `ORDER-731`, whose item 2
+exists for exactly "something moved during the tier".</sub>
 
 **Why.** Two variables, both measured, neither previously named:
 
@@ -603,9 +637,13 @@ one mid-measurement, so the cheap column is also the *bigger* tier.
    line ~789): **+8.5 s** on this suite.
 2. **Which `git.exe` is on PATH.** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**;
    `mingw64\bin\git.exe` is the real **4.3 MB** binary. Benchmarked from ONE shell so the shell is
-   held constant: **35.3 vs 25.3 ms per spawn**. PowerShell resolves the shim, `sh` the real binary,
-   and **it is not PATH length** (PowerShell 15 entries, bash 31). At this suite's 142 spawns that
-   is **+1.4 s on `check_registries.py` alone** and **5-8 s across the wrapper**.
+   held constant, and **interleaved in both orders across 3 rounds** so a warm-cache ordering effect
+   cannot hide in it: the shim costs **+9.1 to +9.2 ms per spawn**, stable to 0.1 ms
+   (32.7 vs 23.6 ms in the interleaved run; 35.3 vs 25.3 ms in the first, one-order run — **quote
+   the delta, not the absolutes**, which drift with machine load). PowerShell resolves the shim,
+   `sh` the real binary, and **it is not PATH length** (PowerShell 15 entries, bash 31). At this
+   suite's ~142 spawns that is **+1.3 s on `check_registries.py` alone** and **5-9 s across the
+   wrapper**.
 3. **`GIT_INDEX_FILE` — no effect**, and A2b named it as the likely cause. Pointed at a copy of
    `.git/index`, bash+index went 25.6 → **25.7 s**. Probed and ruled out.
 

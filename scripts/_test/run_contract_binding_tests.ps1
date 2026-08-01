@@ -128,15 +128,21 @@ if (-not (Test-Path -LiteralPath $python)) {
 #      +0.7s between ddbaec95 and HEAD, measured with mode and shell held constant at both.
 #   2. WHICH git.exe IS ON PATH, which is decided by the SHELL that launched the run.
 #      C:\Program Files\Git\cmd\git.exe is a 45 KB SHIM; mingw64\bin\git.exe is the real 4.3 MB
-#      binary. Benchmarked from one shell so the shell is held constant: 35.3 vs 25.3 ms per
-#      spawn. PowerShell resolves the shim, sh resolves the real binary, and it is NOT PATH
-#      length (PowerShell 15 entries, bash 31). This wrapper spawns 142 git children, so the
-#      shell alone moves it 5-8s. The table below was taken from PowerShell -- the EXPENSIVE
-#      side. From sh the same wrapper is 19.9-20.3s worktree / 25.6-27.2s index, and inside a
-#      REAL pre-commit hook it is 20.3s (_triage/tier_runs/tier_20260801_201847_24332.jsonl).
+#      binary. Benchmarked from one shell so the shell is held constant, and INTERLEAVED in both
+#      orders across 3 rounds so a warm-cache ordering effect cannot hide in it: the shim costs
+#      +9.1 to +9.2 ms per spawn, stable to 0.1 ms. QUOTE THE DELTA, NOT THE ABSOLUTES (32.7 vs
+#      23.6 ms interleaved, 35.3 vs 25.3 ms in the first one-order run -- they drift with load).
+#      PowerShell resolves the shim, sh resolves the real binary, and it is NOT PATH length
+#      (PowerShell 15 entries, bash 31). This wrapper spawns ~142 git children, so the shell
+#      alone moves it 5-9s. The table below was taken from PowerShell -- the EXPENSIVE side.
+#      From sh the same wrapper is 19.9-20.3s worktree / 25.6-27.2s index, and inside a REAL
+#      pre-commit hook it is 20.3s.
 # A tier number with no stated invocation is not evidence. ORDER-820 spent six samples proving
-# that: measured the way .githooks/pre-commit:220 actually invokes it, the full tier is
-# 83.3 / 86.4 / 87.2s -- INSIDE the 90.0s budget it was filed for breaching.
+# that. Measured the way .githooks/pre-commit:220 actually invokes it, the full tier is
+# 83.3 / 86.4 / 87.2s at 7e4d8361 and 87.1 / 87.2 / 90.1s at 60a6eb12 (17 suites) -- ON the
+# 90.0s line, one sample over it, NOT comfortably inside. The controlled pair is those 17-suite
+# sh runs against 95.1 / 97.6 / 97.6s for the same 17 suites from PowerShell: ~9s of shell.
+# STATE THE COMMIT with any tier number -- HEAD moved twice under these measurements.
 #
 #   entry                                 worktree   index    delta
 #   check_registries.py                       0.07    4.96    +4.89   <- R4's 129-path sweep
@@ -163,10 +169,12 @@ if (-not (Test-Path -LiteralPath $python)) {
 # The ~1-2s between the sum and the wrapper is 18 process starts plus this file's loop; it is
 # stated here because ORDER-830 A3 asked for it and "unattributed" is how 8.7s became a mystery.
 #
-# WHERE THE INDEX-MODE COST IS: check_registries.py's R4 sweep enumerates 129 committed paths
-# (33 _triage/factory_os/*.py + 91 scripts/*.ps1 + 5 scripts/lib/*.ps1) and reads EVERY ONE of
-# them through its own `git show :path` -- 142 git child processes per run, 99% of the script's
-# wall time, at 25-35 ms per spawn. ORDER-270's spawn pathology, in a new place. Do NOT "fix"
+# WHERE THE INDEX-MODE COST IS: check_registries.py's R4 sweep enumerates
+# _triage/factory_os/*.py + scripts/*.ps1 + scripts/lib/*.ps1 and reads each swept path through
+# its own `git show :path` -- ~142 git child processes per run, 99% of main(), at 24-35 ms per
+# spawn. THE COUNTS GROW WITH THE REPOSITORY, so re-count rather than quoting: 129 enumerated
+# when first measured, 131 four commits later, of which RESOLVER_SWEEP_EXEMPT skips 6, giving
+# 128 `git show` calls inside check_r4. ORDER-270's spawn pathology, in a new place. Do NOT "fix"
 # it by defaulting index mode away: judging the commit instead of the worktree is the whole
 # content of ORDER-670. A `git cat-file --batch` reader is the route, and it belongs to
 # ORDER-820 C2, not here.

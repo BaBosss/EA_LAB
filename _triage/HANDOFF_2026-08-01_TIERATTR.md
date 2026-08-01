@@ -21,19 +21,29 @@ three samples per cell, mode and shell held constant across both commits:
 The `+8.7 s` that `ORDER-820` attributed to an unnamed commit is the **mode delta**, and it is the
 same size at `ddbaec95` (+8.46 s) as at HEAD (+8.50 s). There was never a regression to attribute.
 
-**Where the index-mode cost is (`A1`).** `check_registries.py`'s `check_r4` enumerates **129
-committed paths** (33 `_triage/factory_os/*.py` + 91 `scripts/*.ps1` + 5 `scripts/lib/*.ps1`) and
-reads **every one** through its own `git show :path` — **142 git child processes per run, 99.5 % of
-the script's wall time**, `check_r4` alone holding 130 of them. `ORDER-270`'s spawn pathology in a
-new place.
+**Where the index-mode cost is (`A1`).** `check_registries.py`'s `check_r4` enumerates
+`_triage/factory_os/*.py` + `scripts/*.ps1` + `scripts/lib/*.ps1` and reads each swept path through
+its own `git show :path` — **~142 git child processes per run, 99.5 % of `main()`**, `check_r4`
+alone holding ~130 of them. `ORDER-270`'s spawn pathology in a new place.
+
+🔴 **Do not quote the counts — re-count them.** I wrote "129 paths, reads every one of them" and
+both halves were wrong within the hour: it was **131** four commits later (a parallel lane added two
+files), and `RESOLVER_SWEEP_EXEMPT` **skips 6**, so the sweep reads **127** plus the 1 declared
+consumer (read twice) = **128 `git show` calls in `check_r4`**. The durable claim is the shape —
+**one git child process per swept path, growing with the repository**.
 
 ## 2. 🔴 The trap this lane fell into, and it is the repo's own recurring one
 
 I measured `run_fast_cages.ps1 -Hook` **by hand from PowerShell**, got 97.1 / 98.6 / 95.9 s against
 the 90.0 s budget, and wrote "every hook run is over budget". Then the **real** pre-commit hook ran
 the same suite, in index mode, and took **20.3 s** — cheaper than every standalone number I had.
-Transcript: `_triage/tier_runs/tier_20260801_201847_24332.jsonl` (`hook: true`,
-`git_index_env: .git/next-index-5516.lock`, `seconds: 20.3`).
+
+⚠️ **The evidence is quoted here rather than cited, because the file is gitignored.**
+`_triage/tier_runs/` is matched by `.gitignore:16`, so `tier_20260801_201847_24332.jsonl` is
+untracked and will not survive — a citation would have left this resting on something no later
+reader can open. Decisive fields: `hook: true` ·
+`git_index_env: D:/EA_LAB/.git/next-index-5516.lock` · `suite: run_contract_binding_tests.ps1` ·
+`seconds: 20.3` · `ref: 7777ca27…`. Any future claim resting on a tier transcript owes the same.
 
 **There are at least three variables, not one.** Same suite, same commit, same machine, same hour:
 
@@ -49,9 +59,12 @@ Transcript: `_triage/tier_runs/tier_20260801_201847_24332.jsonl` (`hook: true`,
   **+8.5 s**.
 - **Which `git.exe` is on PATH:** `C:\Program Files\Git\cmd\git.exe` is a **45 KB shim**;
   `mingw64\bin\git.exe` is the real **4.3 MB** binary. Benchmarked from one shell so the shell is
-  held constant: **35.3 vs 25.3 ms per spawn**. PowerShell resolves the shim, git-bash the real
-  binary — **and it is not PATH length** (PowerShell has 15 entries, bash 31). At 142 spawns that is
-  **+1.4 s on `check_registries.py` alone**, and ~5-8 s across the suite.
+  held constant, and **interleaved in both orders across 3 rounds** so a warm-cache ordering effect
+  cannot hide in it: **+9.1 to +9.2 ms per spawn, stable to 0.1 ms**. Quote the delta, not the
+  absolutes (32.7 vs 23.6 ms interleaved; 35.3 vs 25.3 ms in the first one-order run — they drift
+  with load). PowerShell resolves the shim, git-bash the real binary — **and it is not PATH length**
+  (PowerShell 15 entries, bash 31). At ~142 spawns that is **+1.3 s on `check_registries.py`
+  alone**, ~5-9 s across the suite.
 - **`GIT_INDEX_FILE`: no effect.** Pointed at a copy of `.git/index`, bash+index went 25.6 → 25.7 s.
   Probed because `ORDER-830` A2b named it as the likely cause; it is not.
 - **~5 s between git-bash+index (25.7 s) and the real hook (20.3 s) is still unexplained.**
@@ -62,18 +75,29 @@ Reproducing `.githooks/pre-commit:220` exactly — `sh` → `powershell.exe -NoP
 -ExecutionPolicy Bypass -File scripts/_test/run_fast_cages.ps1 -Hook` — full tier, three
 consecutive samples at `7e4d8361`, machine idle:
 
-| how the SAME script was invoked | suites | full tier |
-|---|---|---|
-| **from `sh`, `-Hook` — the hook's own line** | 17 | **83.3 · 86.4 · 87.2 s — every one INSIDE 90.0 s** |
-| from PowerShell, `-Hook` | 16 | 95.9 · 97.1 · 98.6 s — every one over |
-| from PowerShell, no `-Hook` | 16 | 87.5 · 89.8 s |
+| how the SAME script was invoked | suites | commit | full tier |
+|---|---|---|---|
+| **from `sh`, `-Hook` — the hook's own line** | 17 | `7e4d8361` | **83.3 · 86.4 · 87.2 s** |
+| **from `sh`, `-Hook`** | 17 | `60a6eb12` | **87.1 · 87.2 · 90.1 s** ← one **over** |
+| from PowerShell, `-Hook` | 17 | `585a23a5` | **95.1 · 97.6 · 97.6 s** |
+| from PowerShell, `-Hook` | 16 | earlier | 95.9 · 97.1 · 98.6 s |
+| from PowerShell, no `-Hook` | 16 | earlier | 87.5 · 89.8 s |
+
+**The verdict is "ON THE LINE", not "inside":** six samples through the hook's own invocation span
+**83.3 - 90.1 s against 90.0 s**, and one is over. The solid part is the **gap** — rows 2 and 3 are
+the controlled pair (same 17 suites, one commit apart, same `-Hook`, only the shell differs):
+**~9 s, three times the budget's headroom.**
 
 🔴 **`ORDER-820`'s headline — "the full tier is OVER its enforced budget on every sample" — is not
-supported by any measurement taken the way git invokes it**, and the cheap column is the *bigger*
-tier (a parallel lane, `7e4d8361`, added a 17th suite mid-measurement). Its six samples carry no
-record of how they were launched, and the spread between invocations (83-98 s) is wider than the
-spread between its samples. **This does not prove the tier is safe.** It proves the budget has been
-argued from numbers whose provenance nobody wrote down.
+supported by any measurement taken the way git invokes it.** Its six samples carry no record of how
+they were launched, and the spread between invocations (83-98 s) is wider than the spread between
+its samples. **This does not prove the tier is safe** — it proves the budget has been argued from
+numbers whose provenance nobody wrote down.
+
+<sub>Every row carries its commit because **HEAD moved twice during these measurements** — parallel
+lanes commit during a 90-second run. That also explains why `run_front_guard_evidence_tests.ps1`
+went red in 3 of ~12 full-tier runs and green every time it was run alone: **it judges `HEAD`, and
+`HEAD` moved underneath it.** Routed to `ORDER-731`.</sub>
 
 ## 3. 🚫 What must NOT be carried forward from this lane
 
@@ -81,10 +105,11 @@ argued from numbers whose provenance nobody wrote down.
   `-Hook` invocation from PowerShell — the most expensive configuration measured, and not the one
   git runs. `ORDER-820`'s own five samples (91.1-93.6 s) and its sixth (87.8 s) have **no recorded
   invocation** either, so none of the six can be assigned to a configuration now.
-- ❌ **Do not read the 83.3-87.2 s as "the tier is fine" either.** It is three samples, one machine,
-  one evening, and there is still ~5 s between that invocation and a real hook nobody has explained.
-  What is established is narrower and more useful: **a tier total with no stated invocation is not
-  evidence**, and every number in this thread was one.
+- ❌ **Do not read 83.3-90.1 s as "the tier is fine" either.** Six samples, one machine, one
+  evening, **one of them over the line**, and ~5 s still unexplained between that invocation and a
+  real hook. What is established is narrower and more useful: **a tier total with no stated
+  invocation and commit is not evidence**, and every number in this thread was one — mine included,
+  until this review put the commit in every row.
 - ❌ **Do not quote any per-entry number without its mode.** The two-mode table now lives in
   `scripts/_test/run_contract_binding_tests.ps1`'s own header, above the entry list, so the next
   reader hits it before quoting.
@@ -107,6 +132,7 @@ argued from numbers whose provenance nobody wrote down.
 | A1 named (129 paths, 142 git spawns) · A2 (no regression, +0.7 s) · A2b (mode + shell, not variance) · A3 (residual is 1-2 s of process starts) · A4 (wrapper comments repaired) | ORDER-830 |
 | the budget question REOPENED: 83.3-87.2s through the hook's own invocation vs 95.9-98.6s from PowerShell — re-establish C2's premise before spending anything on it, and restate C3 as three runs through `.githooks/pre-commit`'s own line | ORDER-820 |
 | the ~5s still unexplained between `sh`+`-Hook` and a real hook | ORDER-820 |
+| `run_front_guard_evidence_tests.ps1` red in 3 of ~12 full-tier runs, green alone — it judges `HEAD` and parallel lanes move `HEAD` during a 90-second run | ORDER-731 |
 | the named candidate fix: one `git cat-file --batch` in `evidence.py` instead of 129 `git show` spawns | ORDER-820 |
 | `run_s2a_gate.py` 2.57 → 4.94 s, unattributed | ORDER-820 |
 | a module should DECLARE the paths it reads | ORDER-761 |
