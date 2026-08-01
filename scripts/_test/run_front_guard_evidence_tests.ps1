@@ -265,10 +265,50 @@ if ($bogus.Code -ne 0 -and $bogus.Text -match "is not 'index' or 'worktree'") {
 $ACTIVE  = 'AGENT_TASKBOARD.md'
 $ARCHIVE = 'ARCHIVE_TASKBOARD_2026-07A.md'
 $collide = Join-Path $RepoRoot 'scripts\check_order_collision.ps1'
-# 711 is inside THIS lane's reserved block (S-2026-07-31-FRONTDECL, 710-719) on purpose: RULE 2
-# must stay silent so the assertion can only be satisfied by RULE 1. A probe id that also
-# breached the reserved-block rule would go red for the wrong reason and prove nothing.
-$probeId = '711'
+# THE PROBE ID IS DERIVED, NOT TYPED, and the reason is a failure this cage produced.
+#
+# It has to be inside the COMMITTING LANE's reserved block so RULE 2 stays silent and the
+# assertion can only be satisfied by RULE 1 -- a probe id that also breached the reserved-block
+# rule would go red for the wrong reason and prove nothing. It was written as the literal `711`,
+# which was inside the block of the lane that WROTE the cage (S-2026-07-31-FRONTDECL, 710-719).
+# That is an undeclared assumption about somebody else's table: the moment the next lane
+# reserved 730-739 and closed that row, B0 SPECIFICITY went red on the full tier with
+# "ORDER-711 is outside every ACTIVE reserved block" -- the guard being right and the fixture
+# being stale. Same shape as PART 6's "cheap" fixture in run_guard_trigger_tests.
+#
+# So: read the ledger AT HEAD (the snapshot RULE 2 itself reads), take the ACTIVE lanes' ranges,
+# and pick a number in one of them that no board is already using. If there is no such number the
+# case FAILS LOUDLY rather than falling back to a literal -- "I could not build the probe" and
+# "the probe passed" are not the same answer.
+function Get-ProbeOrderId {
+    $ledger = GitText 'show "HEAD:docs/SESSION_LEDGER.md"'
+    if (-not $ledger) { throw 'cannot read docs/SESSION_LEDGER.md from HEAD -- no lane table, no probe id' }
+    $ranges = @()
+    foreach ($line in ($ledger -split "`r?`n")) {
+        if ($line -notmatch '^\s*\|') { continue }
+        $cells = $line.Trim().Trim('|') -split '\|'
+        if ($cells.Count -lt 2) { continue }
+        $status = ($cells[$cells.Count - 1] -replace '[`*_]', '').Trim().ToUpperInvariant()
+        if ($status -notmatch '^ACTIVE\b') { continue }
+        foreach ($m in [regex]::Matches($line, '\b(\d{3})-(\d{3})\b')) {
+            $ranges += , @([int]$m.Groups[1].Value, [int]$m.Groups[2].Value)
+        }
+    }
+    if ($ranges.Count -eq 0) { throw 'no ACTIVE lane in docs/SESSION_LEDGER.md declares a NNN-NNN block at HEAD -- reserve one before running this cage (RULE 2 would be skipped entirely, so B0 would prove nothing)' }
+    $used = @{}
+    foreach ($board in @('AGENT_TASKBOARD.md', 'AGENT_TASKBOARD_MERGE.md', 'AGENT_TASKBOARD_PQUANT.md', 'ARCHIVE_TASKBOARD_2026-07A.md')) {
+        $txt = GitText ('show ":{0}"' -f $board)
+        if (-not $txt) { continue }
+        foreach ($m in [regex]::Matches($txt, '(?m)^##\s+ORDER-(\d+)\b')) { $used[[int]$m.Groups[1].Value] = $true }
+    }
+    foreach ($r in $ranges) {
+        for ($n = $r[0]; $n -le $r[1]; $n++) {
+            if (-not $used.ContainsKey($n)) { return [string]$n }
+        }
+    }
+    throw ('every number in the ACTIVE reserved block(s) is already on a board -- no free probe id')
+}
+$probeId = Get-ProbeOrderId
 $probeHdr = "## ORDER-$probeId -- L3 probe, never committed"
 
 function RunCollision {
@@ -339,7 +379,7 @@ try {
     StageBlobFrom $ACTIVE "`n$probeHdr`n"
     $b0 = RunCollision
     if ($b0.Code -eq 0) {
-        Good 'B0 SPECIFICITY a new order on ONE board only is green -- the rule is not "always red"'
+        Good ('B0 SPECIFICITY a new order (ORDER-' + $probeId + ') on ONE board only is green -- the rule is not "always red", and the probe id is DERIVED from the ACTIVE block')
     } else {
         Bad ("B0 SPECIFICITY expected exit 0 for a single-board order; got $($b0.Code). " +
              ($b0.Text -split "`n" | Select-Object -Last 2) -join ' | ')
