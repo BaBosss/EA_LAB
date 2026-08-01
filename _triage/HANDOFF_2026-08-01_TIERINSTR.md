@@ -4,19 +4,25 @@
 > (Decision log 2026-07-26). Every forward-looking item has a home — the routing table at the
 > bottom says which. This is the LAST lane of a long 2026-08-01; read the state block first.
 
-> 🔴 **APPENDED after close by lane `S-2026-08-01-INSTRREV`.** An independent review of this
-> lane's instrumentation returned **five more defects**, recorded on the `ORDER-731` row and
-> **deliberately not fixed**: `S-2026-08-01-TIERBUDGET` was ACTIVE and declares
-> `scripts/_test/run_fast_cages.ps1`, so ledger rule 4 applies. **The one to read first is B2 —
-> the index stamp hardcodes `.git\index` while real hook runs set `GIT_INDEX_FILE` to a
-> `next-index-*.lock` (proved from the transcripts on disk), so under the hook it stamps a file
-> neither git nor the checker reads.** Also: a suite writing to stderr throws and kills the tier
-> before any stamp or `Exit-Tier` (env leaks); standalone suite runs still spawn spurious
-> transcripts and evict the real ones at retention 40; and `fe1a9a2c`'s commit message claim that
-> the dump captures `index.lock` *"at the moment of detection"* is **false** — it fires after the
-> suite exits, ~30 s late. **Whoever edits the tier runner next owns that list.** The procedure in
-> *"How to use the transcript"* below is still correct, with one caveat: until B2 is fixed,
-> `index_ticks`/`index_len` are unreliable under the hook — trust `head`, `ref` and `inputs`.
+> ✅ **APPENDED after close by lane `S-2026-08-01-INSTRREV` — the independent review's five
+> defects are ALL FIXED (`bcaf6c30`); this box supersedes the caveat it originally carried.**
+> Sequenced rather than raced: `S-2026-08-01-TIERBUDGET` held the file, so the findings were
+> recorded and untouched (ledger rule 4); the owner then stopped that lane, it was verified to
+> have committed nothing, marked `ABANDONED`, and the file taken over by declaration.
+> **The one worth knowing:** the index stamp hardcoded `.git\index` while real hook runs set
+> `GIT_INDEX_FILE` to a `next-index-*.lock` — under the hook it stamped a file neither git nor
+> the checker reads. Fixed, and **proved on the fixing commit's own hook run**: the transcript
+> records `index_path = .git/next-index-28256.lock` and `index_lock = true`, i.e. it immediately
+> captured the lock the old failure-dump could never have seen. Also fixed: a suite writing to
+> stderr no longer throws past every stamp and leaks the env var; a missing suite leaves a stamp;
+> `index.lock` is sampled on every stamp, not ~30 s late (that claim in `fe1a9a2c`'s message was
+> false and is corrected on the board); spurious transcripts can no longer evict real ones
+> (retention 200) and every transcript is labelled `hook` + `staged_count`.
+> 🔴 **One thing for whoever edits this next:** the *obvious* fix for the spurious transcripts —
+> "a synthetic staged set means a self-test" — is **backwards**, because `.githooks/pre-commit:218`
+> invokes the tier with `-StagedPathsFile`; it would silence the transcript on every real hook
+> run. `-Hook` does not discriminate either. Read the hook before trusting either signal.
+> The *"How to use the transcript"* procedure below is now correct without caveat.
 
 ## State of the repo at close — read this before anything
 
