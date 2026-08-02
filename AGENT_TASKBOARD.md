@@ -6019,12 +6019,34 @@ branch is structurally hard to reach at the shipped buffer. This is a hypothesis
 against the tester's actual `SYMBOL_TRADE_STOPS_LEVEL` for XAUUSD.
 
 **What would count as evidence, in order of preference (cheapest/most honest first):**
-1. Read the tester's `SYMBOL_TRADE_STOPS_LEVEL` for XAUUSD directly (`SymbolInfoInteger` in a
-   throwaway script, or from the broker's symbol spec in a report) and compute whether
-   `0.5 * typical Risk-ATR` in points is ever close to it — if the gap is enormous, the guard is
-   probably reachable only when price gaps hard against a fresh invalidation level, which is rare
-   by construction, and that is worth **stating as the guard's actual operating envelope** rather
-   than continuing to call it untested indefinitely.
+1. ✅ **DONE 2026-08-02 (`S-2026-08-02-SCRUT730`, lane 1) — the hypothesis is CONFIRMED and the
+   envelope is now a measured number instead of a guess.**
+   [`ea_template/tests/StopsLevel_Probe.mq5`](ea_template/tests/StopsLevel_Probe.mq5) — read-only,
+   opens nothing — run on XAUUSD H1 2024.01.01–2024.07.01, model 1:
+
+   | quantity | measured |
+   |---|---|
+   | `SYMBOL_TRADE_STOPS_LEVEL` | **1 point** (digits=2, point=0.01) ⇒ `minDist` = **0.01** price units |
+   | `SYMBOL_TRADE_FREEZE_LEVEL` | 0 points |
+   | ATR(14,H1) across the window | min **1.837** · avg **5.629** · max **19.444** |
+   | smallest SL distance at the shipped `_17_SLbufferATR=0.5` | **0.919** |
+   | **ratio smallest-buffer / minDist** | **91.86×** |
+
+   ⇒ **the minimum-distance branch of `Wave5_SLValid` is unreachable at the shipped buffer on this
+   symbol and feed** — even the calmest hour of the window puts the stop ~92× further from the
+   market than the broker's minimum. `sl_invalid=0` is therefore **explained, not mysterious**: the
+   guard is a backstop whose envelope is "price gaps onto or past a fresh invalidation level", and
+   that is rare by construction rather than broken.
+
+   <sub>⚠️ **What this does and does not settle.** It explains **one** of `Wave5_SLValid`'s branches
+   ([`ExitManager.mqh:25-41`](ea_template/core/ExitManager.mqh:25)). The `slPrice <= 0.0`, tick-read
+   failure and **wrong-side** branches are untouched by it. The guard remains **`UNTESTED`** by the
+   VERDICT GATE's rule — a measured explanation for why something never fires is not the same as
+   having seen it fire — but it is no longer *unexplained*, which is what this route was for. Scope:
+   **one symbol, one broker, one lane**; a 3-digit gold feed or a broker with a real stops level
+   would have to be measured separately. Also, the probe's own log line says *"over 702163 bars"* and
+   that label is wrong — it counts **tick samples**, since collection is in `OnTick`. The min/avg/max
+   are correct; the noun is not.</sub>
 2. A longer / different-regime sample (BWD 2020-22, which this fleet owes anyway) may contain the
    gap events the MAIN window did not.
 3. Only as a last resort, and labelled as a synthetic reachability probe rather than evidence about
