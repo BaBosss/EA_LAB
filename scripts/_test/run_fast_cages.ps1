@@ -328,6 +328,11 @@ $FAST_SUITES = @(
     # mutation probes and NONE of it ran on any commit -- fully tested and completely
     # unguarded at once, which is the same hole evidence.py was in.
     'run_preset_tests.ps1',
+    # ORDER-1000 (S7), added on a MEASUREMENT like the one above it: ~0.6s, almost all of which
+    # is parsing the real Inputs.mqh once to build the surface its cases attack. It guards the
+    # owner-ratified old-.set policy, which until now existed only as a decision in a design
+    # document and a module nothing ran.
+    'run_setfile_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -428,6 +433,20 @@ $SUITE_GUARDS = @{
                                           'factory/work_receipts.jsonl',
                                           'AGENTS.md',
                                           '_triage/factory_os/evidence.py')
+    # ORDER-1000 (S7). The ratified old-.set policy: unknown key => a refusal that NAMES the
+    # key, and migration writes a NEW file. The suite builds build-14's surface out of the REAL
+    # Inputs.mqh, so an edit there changes what this cage proves, exactly as it does for
+    # run_preset_tests below.
+    'run_setfile_tests.ps1'           = @('_triage/factory_os/setfile.py',
+                                          '_triage/factory_os/run_setfile_tests.py',
+                                          '_triage/factory_os/preset.py',
+                                          'ea_template/core/Inputs.mqh',
+                                          # DEMANDED BY THE IMPORT SWEEP on this suite's FIRST
+                                          # run -- reached through preset.py's imports, which a
+                                          # path-string sweep of the wrapper cannot see. Same
+                                          # two modules, same reason, as run_preset_tests below.
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/registry.py')
     'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',
                                           '_triage/factory_os/run_preset_tests.py',
                                           # the compiler reads the build's input
