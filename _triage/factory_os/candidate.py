@@ -325,6 +325,19 @@ def validate_manifest(manifest, run_lookup=None):
                                 % (i, m['run_id']))
                 continue
             key = journal.get('execution_key') or {}
+            if not key:
+                # 🔴 /scrutinize round 3: THE `if f in key` GUARD BELOW TURNED "I CANNOT CHECK"
+                # INTO "CHECKED, FINE". A journal whose QUEUED line carries no ExecutionKey made
+                # every field comparison vacuous, and the manifest validated CLEAN -- probed by
+                # blanking the key on the cited runs: zero problems, while the metric still
+                # claimed a lane, a fingerprint and a model that nothing compared. That is the
+                # pin C9 exists to check, silently unchecked. A run that records no key cannot
+                # license a claim about the lane it ran on.
+                problems.append('C9 evidence[%d] cites %s, whose journal records no ExecutionKey '
+                                'at all -- there is nothing to compare the lane, fingerprint and '
+                                'model against, and an unverifiable pin is not a pin'
+                                % (i, m['run_id']))
+                continue
             states = [a.get('transition') for a in journal.get('attempts') or []]
             if 'EVIDENCE_REGISTERED' not in states:
                 problems.append('C9 evidence[%d] cites %s, which never reached '
@@ -332,7 +345,12 @@ def validate_manifest(manifest, run_lookup=None):
                                 'artifact was never registered has no committed artifact behind it'
                                 % (i, m['run_id'], states[-1] if states else 'nothing'))
             for f in ('lane', 'data_fingerprint', 'model'):
-                if f in key and S.normalize_numbers(key[f]) != S.normalize_numbers(m.get(f)):
+                if f not in key:
+                    # Same rule as the blanket case above, one field down: a key that is present
+                    # but silent about `lane` still cannot license a claim about it.
+                    problems.append('C9 evidence[%d] cites %s, whose ExecutionKey records no %s'
+                                    % (i, m['run_id'], f))
+                elif S.normalize_numbers(key[f]) != S.normalize_numbers(m.get(f)):
                     problems.append('C9 evidence[%d] claims %s=%r but run %s recorded %r'
                                     % (i, f, m.get(f), m['run_id'], key[f]))
     return problems
@@ -351,8 +369,14 @@ def manifest_path(candidate_id, root=None):
     return os.path.join(candidates_dir(root), candidate_id + '.json')
 
 
-def read_manifest(path, run_lookup=None):
+def read_manifest(path, run_lookup):
     """THE ONLY READER, and it RAISES rather than returning problems.
+
+    🔴 `run_lookup` IS REQUIRED, /scrutinize round 3. It had a `None` default, and that default
+    could never succeed: with no store, C9 returns its SKIPPED finding, `problems` is non-empty
+    and this raises -- every time. A parameter whose documented default always fails is a
+    signature telling the caller something untrue. Passing `None` explicitly is still allowed and
+    still refuses; what is gone is the impression that omitting it is a normal way to read.
 
     This is the acceptance in one function. A reader that returned `(manifest, problems)` would be
     a reader whose caller can ignore the second value, and the first caller in a hurry would --
@@ -479,7 +503,9 @@ def main(argv):
                       'candidate_id': candidate_id_for(digest)})
 
     if cmd == 'read':
-        lookup = None if args.get('no_runs') else S.load_all_runs(root)
+        # `--no-runs` is gone with the default it went with: it produced a read that always
+        # refused, which is a mode nobody should be offered. Reading a manifest resolves its pins.
+        lookup = S.load_all_runs(root)
         try:
             manifest = read_manifest(args['path'], run_lookup=lookup)
         except DigestMismatch as exc:

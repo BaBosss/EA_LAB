@@ -278,6 +278,19 @@ def part1_identity():
     unfinished = dict(RUNS, **{'RUN-20260802-001': _journal('RUN-20260802-001', terminal='FAILED')})
     refuses('a metric read off a run that never registered its evidence',
             C.validate_manifest(manifest(), run_lookup=unfinished), 'C9')
+    # 🔴 /scrutinize round 3: the `if f in key` guard turned "I cannot check" into "checked, fine".
+    #    Probed by blanking the key on the cited runs: ZERO problems, while the metric still
+    #    claimed a lane, a fingerprint and a model that nothing compared.
+    blind = copy.deepcopy(RUNS)
+    for _rid in blind:
+        blind[_rid]['execution_key'] = None
+    refuses('a metric citing a run whose journal records NO ExecutionKey (nothing to compare)',
+            C.validate_manifest(manifest(), run_lookup=blind), 'C9')
+    partial = copy.deepcopy(RUNS)
+    for _rid in partial:
+        del partial[_rid]['execution_key']['lane']
+    refuses('a metric citing a run whose ExecutionKey is silent about the lane',
+            C.validate_manifest(manifest(), run_lookup=partial), 'C9')
     # ...and the SKIP is reported rather than passing silently.
     refuses('no run store supplied: the skip is a finding, not a silent pass',
             C.validate_manifest(manifest(), run_lookup=None), 'C9')
@@ -378,6 +391,13 @@ def part1c_reader():
                   'it read cleanly -- the digest is decoration')
         except C.DigestMismatch as exc:
             check('reading a hand-edited manifest is REFUSED', 'C2' in str(exc), str(exc))
+
+        # /scrutinize round 3: `run_lookup` is REQUIRED. The old default could never succeed, so
+        # the signature advertised a normal way to read that always raised.
+        import inspect
+        sig = inspect.signature(C.read_manifest)
+        check('read_manifest requires run_lookup -- no default that can never succeed',
+              sig.parameters['run_lookup'].default is inspect.Parameter.empty, str(sig))
 
         # ...and the write-once rule, which is what stops the refusal above being fixed by
         # overwriting the file.
