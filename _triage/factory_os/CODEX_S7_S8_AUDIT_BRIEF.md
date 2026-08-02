@@ -143,3 +143,54 @@ reproduces it**. A finding that cannot be reproduced is a hypothesis — say so,
 worth filing.
 
 **Do not propose the parity harness** — it is `ORDER-1021`'s remaining work and is already specified.
+
+---
+
+## 🔴 ADDENDUM 2026-08-02, after this brief was written — S8 is now COMPLETE
+
+This brief was written when S8 was **half done**: the generator existed, the `Inputs.mqh` rollout
+and the parity harness did not. Both landed the same day (lane `S-2026-08-02-S8PARITY`,
+`ORDER-1021` = `DONE`). **Audit the finished tree, not the state this brief describes** — pin your
+read at commit **`029526a6`** or later.
+
+**What is new since, and therefore in scope:**
+
+| | |
+|---|---|
+| `ea_template/core/Inputs.mqh` | every input now sits in a `#ifndef` / `#ifdef LAB_CONST_<name>` guard pair. A build defining no `LAB_CONST_*` takes the `input` branch for all of them, so the eight hand-written `Boss_*.mq5` are inert to this **by construction**. `tpl_regression` CLEAN 8/8 on lane 1. |
+| `gen_wrapper.const_plan()` | decides which side each input compiles on, per revision. **Its rule is deliberately stricter than `activation.classify()`** and that difference is the thing most worth attacking — see below. |
+| `check_wrapper_gen` **W6/W7/W8** | guard-pair coverage · the const defines land somewhere · **the const set and the registry's HIDDEN set reconcile**. Cage 9 → 13 attacks. |
+| `_triage/factory_os/parity.py` + `scripts/parity_run.ps1` + `run_parity_tests.py` | the 7-point contract of design §5.5, its runner, and an 11-attack cage. |
+| `hypothesis_b14.LOCKED_SELECTORS` | gained `_4_DdAdaptiveOn` and `_57_DynCloseOn` (owner-ratified). Final surface: **87 const / 29 on the Inputs page / 0 kept**. |
+
+**The claims most worth attacking, stated so you can aim at them:**
+
+1. **`const_plan`'s soundness rule.** It const-s an input only when the input cannot matter under
+   ANY configuration the operator can still produce — not merely under the pinned one. The AND case
+   (`_closed_for_every_config`) claims one definitely-closed leg closes a conjunction even when
+   another leg reads a live input. **Is that reasoning right in every gate shape in
+   `activation.TABLE`?** A wrong `True` here compiles a live dial to a constant.
+2. **The `29` on the Inputs page.** Counted from the MT5 report's own `Inputs:` block, i.e. from the
+   binary. Every other statement of that number is derived from source. **Does the report's block
+   actually enumerate what the operator would see, or only what the `.set` supplied?**
+3. **Parity is satisfied at the CASE SET level, not per run** (a clean run raises no alerts; a
+   refusing run places no orders — so no single run can exercise all seven points). `parity.rollup()`
+   enforces "every point non-vacuous somewhere, none differs anywhere". **Is that a fair reading of
+   §5.5, or a weakening of it?**
+4. **`NOT_APPLICABLE` (`N/A-REFUSED`)** downgrades vacuous points, but only behind
+   `both_refused_identically`. **Can that precondition be satisfied by two runs that failed for
+   unrelated reasons that happen to print the same string?**
+5. **The `effective_config_hash` was byte-identical before and after the lock**, which is offered as
+   proof the lock changed no value. **Is the hash actually sensitive to what that claim needs it to
+   be sensitive to?** (`locked-absent` is the case built to show it is.)
+
+**Known limits, declared rather than left for you to find** — attacking these is welcome, but they
+are already written down: parity point 6 can only observe FAILED persistence (`Persist.mqh` prints
+on error only, and tester GlobalVariables are sandboxed and destroyed at pass end) · SAFETY inputs
+still compile as `input` rather than `sinput` (design §5.4 asks for `sinput`) · parity was measured
+under **Model 1**, and no EA verdict was issued from any of it.
+
+**Lane note.** Everything above can be audited from source plus the python cages, which need no MT5
+lane. Only re-running `tpl_regression` or `parity_run.ps1` does — and lane 1 (`D:\Meta 5`) is a
+single resource that `ORDER-371` forbids substituting. If your audit wants a tester run, say so and
+take the lane explicitly rather than assuming it is free.
