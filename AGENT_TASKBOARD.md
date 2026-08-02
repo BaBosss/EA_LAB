@@ -105,6 +105,38 @@
 
 ---
 
+## ORDER-1132 — [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser, and it is the single inventory for real money — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> **Found by breaking it, 2026-08-02 (`ORDER-943` C3).** The first write used `csv.DictWriter` and
+> **truncated the file from 65 lines to 9.** Restored from git immediately, byte-clean, before
+> anything else — but the truncation is the symptom, not the defect.
+
+**The defect:** **13 rows carry unquoted commas inside `notes`**, so every CSV reader parses them as
+extra fields and every CSV writer either drops the tail or dies. Affected: 12 rows on `159475669`
+(the uncertified "user mix" account — magics `990005` · `20240001` · `8001` · `8002` · `8005` ·
+`8008` · `8009` · `8012` · `8014` · `8015` · `99000512` · `991001`) plus the blank-magic row on
+`69424711`. Example, `990005`: the note ends `... not GBPUSD (registry symbol was wrong` and the rest
+lands in the parser's overflow bucket.
+
+**Why it matters beyond tidiness.** `scripts/check_state.ps1` runs `ConvertFrom-Csv` over this file on
+**every commit**, and it is the guard the hook runs FIRST over the live-money inventory. A row it
+cannot parse faithfully is a row whose content the guard is not really reading — the
+`unreadable-input-must-refuse-not-skip` family, on the highest-value file in the repo. `ORDER-943`
+worked around it (its writer is line-based and re-serialises only the lines it changes, reporting the
+rest as `skipped_malformed` rather than passing over them silently), but a workaround in one script is
+not a fix.
+
+**Acceptance** — **D1** every row round-trips: `read(write(read(f))) == read(f)`, driven as a cage
+· **D2** the fix is a **re-quote of the 13 rows**, not an edit of their content — prove it by
+comparing the parsed `notes` before and after, field by field, and show the 13 that gained their tail
+back · **D3** a guard refuses a future commit that adds an unquotable row, and it is **observed
+firing** with its control · **D4** the same check is applied to `portfolio/expectations.csv` and
+`portfolio/live_deals/*.csv`, because nothing suggests this file is special.
+🚫 Do not change any `magic`, `account`, `status`, `judge_date`, `kill_rule` or `start_date` — this
+order touches quoting and nothing else. 🚫 Do not "fix" it by deleting the commas.
+
+---
+
 ## ORDER-1130 — [tier] The budgets were raised to make the bound true; earn them back — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Opened by the owner's ratification (`_triage/USER_DECISIONS_PENDING.md` item 9). Raising a budget
@@ -1787,7 +1819,7 @@ is also under. The known failure mode with exactly this signature is `AllowLive=
 - 🚫 Do not re-base these four judge dates until A1/A2 answer which problem this is. A thin-EA
   re-base applied to a silent EA buys 12 months of measuring nothing.
 
-## ORDER-942 — [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silent and thin cannot be told apart — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-942 — [judge policy · blocker] 11 of the 19 shortfall EAs have no expected trade rate, so silent and thin cannot be told apart — `DONE (Claude/Opus 2026-08-02) — B1/B2/B3 all measured: the gap is 17 → 0, all 36 ACTIVE judge-dated rows carry a derived rate, and three live EAs are UNDER_RATE (two on the real-money account). The BRIEF ITSELF was corrected first: the count was right, the cause was three causes, and three rows had to NOT be derived` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Also opened by `ORDER-940`. `portfolio/expectations.csv` is what turns "0 trades" into a verdict.
 > Where it has no row, `rate_flag` reads `NA` and the lab has **no measurement that discriminates**.
@@ -1888,7 +1920,7 @@ latest collector CSV covers that whole span. If a collector only holds a recent 
 reads as slower than it is. That is why 25 rows show `TOO YOUNG` rather than a verdict — most of this
 fleet was attached or re-attached inside the last three weeks.</sub>
 
-## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
+## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `DONE (Claude/Opus proposed + user ratified 2026-08-02) — the whole judge-dated fleet decided in ONE pass now that ORDER-942 supplied the rates: 14 THIN (ORDER-235, pre-registered before any judge date lands) · 12 re-based on arithmetic · 7 on track · 3 HELD OUT to ORDER-941 because the projection is optimistic for them and two are real money. Written into DEPLOYMENTS.csv + DEMO_DEPLOYMENT_PLAN.md; check_state CLEAN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
 > (**2026-10-09**, 5 EAs) has **0 decision-capable today**. The bar exists (`CLAUDE.md` VERDICT GATE:
