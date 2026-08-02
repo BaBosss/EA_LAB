@@ -207,6 +207,45 @@ def t07():
 # TODAY - the ordering. design 7.1: "the order IS the product".
 # =======================================================================================
 
+@case('T16', 'round 1 · 7.1 LIVE', 'an account only ONE detector knows about is an exception, never a silent omission')
+def t16():
+    """
+    ROUND-1 BLOCKER, reproduced before it was touched. `build_live` iterated system_health and
+    joined floating_risk onto it, so an account with a risk row and NO health row contributed
+    NOTHING: zero LIVE rows, exception_count 0, and therefore `ALL CLEAR` on TODAY over a
+    detector that had never heard of the account. The probe used a BLIND sensor and 9.9 open
+    lots to make the cost concrete.
+    """
+    doc = snapshot()
+    doc['system_health'] = [{'account': ACCOUNT_A, 'state': 'FRESH'}]
+    doc['floating_risk'] = [{'account': ACCOUNT_A, 'state': 'FRESH', 'magics': []},
+                            {'account': ACCOUNT_B, 'state': 'BLIND',
+                             'magics': [{'magic': '990101', 'open_lots': 9.9, 'pos_count': 2}]}]
+    pages = cc.project(read_ok(doc))
+    sensor = [b for b in pages['live']['bands'] if b['id'] == 'SENSOR'][0]
+    accounts = [r.get('account') for r in sensor['rows']]
+    assert ACCOUNT_B in accounts, 'the account only the risk detector knows was dropped: %s' % sensor
+    assert pages['live']['exception_count'] >= 1, pages['live']['exception_count']
+    assert pages['today']['health']['headline'] != 'ALL CLEAR', pages['today']['health']
+
+
+@case('T17', 'round 1 · 7.1 TODAY (1)', 'a reader that says OK and hands back NO document REFUSES')
+def t17():
+    """
+    ROUND-1: `_health_row` read the verdict off `read.document or {}`, so the contradiction
+    OK-with-no-document rendered ATTENTION with zero reasons and numbers NOT suppressed - a
+    headline manufactured out of nothing at all. The reader contract (snapshot_reader.ps1) is
+    that Document is populated if and only if State is OK; a caller breaking it must not get a
+    page.
+    """
+    try:
+        cc.project(cc.SnapshotRead(cc.READ_OK, 'OK', '', None))
+    except cc.ShellRefusal as exc:
+        assert 'document' in str(exc).lower(), exc
+        return
+    raise AssertionError('a page was rendered from an OK read carrying no document')
+
+
 @case('T08', '7.1 TODAY order', 'the eight bands render in the fixed order, always all eight')
 def t08():
     ids = [b['id'] for b in cc.project(read_ok())['today']['bands']]
@@ -709,6 +748,42 @@ def sp12():
     doc['floating_risk'][0]['dd_band'] = 'WATCH'
     assert sp.build(doc)['accounts'][0]['dd_pct_band'] == 'WATCH'
     assert sp.build(snapshot())['accounts'][0]['dd_pct_band'] == 'UNKNOWN'
+
+
+@case('SP14', 'round 1 · S11 acceptance', 'the projection lists EVERY account either detector knows, never the intersection')
+def sp14():
+    """
+    ROUND-1, the same blocker on the projection side: `accounts` was built by walking
+    system_health alone, so an account the health detector has never seen was absent from the
+    masked list entirely. A list that omits an account is worse than one that says UNKNOWN,
+    because the reader counts it.
+    """
+    doc = snapshot()
+    doc['system_health'] = [{'account': ACCOUNT_A, 'state': 'FRESH'}]
+    doc['floating_risk'] = [{'account': ACCOUNT_A, 'state': 'FRESH', 'magics': []},
+                            {'account': ACCOUNT_B, 'state': 'BLIND', 'magics': []}]
+    projection = sp.build(doc)
+    masked = dict((a['account_masked'], a) for a in projection['accounts'])
+    assert sp.mask_account(ACCOUNT_B) in masked, masked
+    # and its sensor state is UNKNOWN, not defaulted to something healthy-looking
+    assert masked[sp.mask_account(ACCOUNT_B)]['sensor_state'] == 'UNKNOWN', masked
+    assert masked[sp.mask_account(ACCOUNT_A)]['sensor_state'] == 'FRESH', masked
+
+
+@case('SP15', 'round 1 · drift', 'REASON_SEVERITY covers the closed reason-code enum EXACTLY, both ways')
+def sp15():
+    """
+    build() refuses an unmapped reason code, which is the right direction - but it means a code
+    ADDED to schemas.json turns every real snapshot carrying it into a refusal, discovered in
+    production rather than here. snapshot_validator asserts its own predicate set against this
+    same enum for the same reason.
+    """
+    with io.open(os.path.join(REPO, sv.SCHEMA_PATH), encoding='utf-8-sig') as fh:
+        schema = json.load(fh)
+    enum = set(schema['$defs']['SnapshotVerdict']['properties']['reasons']['items']
+               ['properties']['code']['enum'])
+    mine = set(sp.REASON_SEVERITY)
+    assert enum == mine, 'schema-only=%s  map-only=%s' % (sorted(enum - mine), sorted(mine - enum))
 
 
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')

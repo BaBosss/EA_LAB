@@ -107,6 +107,20 @@ CAPPED_BANDS = ('READY', 'JUST_DONE')
 BAND_DISPLAY_CAP = 7
 
 
+def _assert_read_contract(read):
+    """
+    ROUND-1 FIX. `read.document or {}` turned the contradiction OK-with-no-document into
+    ATTENTION with zero reasons and numbers NOT suppressed - a headline manufactured out of
+    nothing at all. snapshot_reader.ps1's contract is that Document is populated if and ONLY if
+    State is OK ("deliberately, so a caller cannot accidentally read numbers off a document the
+    checker rejected"), so a caller that breaks it gets a refusal, not a page.
+    """
+    if read.state == READ_OK and not isinstance(read.document, dict):
+        _refuse('the reader reported OK and handed back no document (%s). OK means the bytes '
+                'were verified, so an absent document is a broken caller - and rendering one '
+                'would invent a headline from nothing.' % type(read.document).__name__)
+
+
 def _stuck(row):
     age = row.get('heartbeat_age_min')
     return (row.get('state') == 'IN_PROGRESS' and age is not None
@@ -324,7 +338,8 @@ def _health_row(read, live):
     if read.state != READ_OK:
         _refuse('unknown reader state %r - the three states are %s/%s/%s and a fourth would be '
                 'a fourth meaning' % (read.state, READ_OK, READ_REFUSED, READ_UNAVAILABLE))
-    doc = read.document or {}
+    _assert_read_contract(read)
+    doc = read.document
     verdict = doc.get('verdict') or {}
     reasons = list(verdict.get('reasons') or [])
     exceptions = live['exception_count'] if live else 0
@@ -431,27 +446,54 @@ def build_live(read):
     # Sensor freshness, and the CONFLICT rule: design 7.1 says the dashboard creates no
     # competing threshold and that "disagreement between detectors renders CONFLICT". The two
     # detectors that both speak about an account are system_health and floating_risk.
-    risk_state = {}
-    for row in doc.get('floating_risk', []) or []:
-        risk_state[row.get('account')] = row.get('state')
-    for row in doc.get('system_health', []) or []:
-        acct = row.get('account')
-        state = row.get('state')
-        if state not in SENSOR_KNOWN:
-            _refuse('system_health[%s] reports state %r, which this page does not know. '
-                    'Refusing rather than treating it as healthy.' % (acct, state))
-        other = risk_state.get(acct)
-        if other is not None and other in SENSOR_KNOWN and (
-                (state in SENSOR_HEALTHY) != (other in SENSOR_HEALTHY)):
+    # ROUND-1 BLOCKER FIX. This iterated system_health and joined floating_risk onto it, so an
+    # account only the RISK detector knew about produced no row, added nothing to
+    # exception_count, and therefore let TODAY render ALL CLEAR over a blind sensor with open
+    # lots. The walk is now over the UNION, and a detector that is SILENT about an account is
+    # itself the finding - symmetric in both directions, so neither detector is privileged.
+    seen = {}
+    order = []
+    for source in ('system_health', 'floating_risk'):
+        for row in doc.get(source, []) or []:
+            acct = row.get('account')
+            if acct not in seen:
+                seen[acct] = {}
+                order.append(acct)
+            seen[acct][source] = row
+    for acct in order:
+        pair = seen[acct]
+        states = {}
+        for source in ('system_health', 'floating_risk'):
+            row = pair.get(source)
+            if row is None:
+                continue
+            state = row.get('state')
+            if state not in SENSOR_KNOWN:
+                _refuse('%s[%s] reports state %r, which this page does not know. '
+                        'Refusing rather than treating it as healthy.' % (source, acct, state))
+            states[source] = state
+        missing = [s for s in ('system_health', 'floating_risk') if s not in states]
+        if missing:
+            bands['SENSOR']['rows'].append({
+                'account': acct, 'state': 'UNKNOWN',
+                'why': 'ตัวตรวจ %s ไม่รู้จักบัญชีนี้เลย — บัญชีที่ตัวตรวจตัวเดียวเห็น ยังไม่ถูกเฝ้าครบ '
+                       '(สถานะที่อีกตัวรายงาน: %s)'
+                       % (' + '.join(missing),
+                          ', '.join('%s=%s' % kv for kv in sorted(states.items())) or 'ไม่มีเลย')})
+            continue
+        healthy = set(states[s] in SENSOR_HEALTHY for s in states)
+        if len(healthy) > 1:
             bands['SENSOR']['rows'].append({
                 'account': acct, 'state': 'CONFLICT',
                 'why': 'system_health=%s แต่ floating_risk=%s — ตัวตรวจสองตัวไม่ตรงกัน '
-                       'จึงเรนเดอร์ CONFLICT ไม่ใช่เลือกข้าง' % (state, other)})
+                       'จึงเรนเดอร์ CONFLICT ไม่ใช่เลือกข้าง'
+                       % (states['system_health'], states['floating_risk'])})
             continue
-        if state not in SENSOR_HEALTHY:
+        if states['system_health'] not in SENSOR_HEALTHY:
             bands['SENSOR']['rows'].append({
-                'account': acct, 'state': state,
-                'why': 'sensor ไม่สด (%s) อายุ %s ชม.' % (state, row.get('age_hours'))})
+                'account': acct, 'state': states['system_health'],
+                'why': 'sensor ไม่สด (%s) อายุ %s ชม.'
+                       % (states['system_health'], pair['system_health'].get('age_hours'))})
 
     # A detector-supplied risk band, passed through. This page computes no drawdown.
     for row in doc.get('floating_risk', []) or []:
@@ -587,6 +629,7 @@ def project(read, rows=(), findings=()):
     if not isinstance(read, SnapshotRead):
         _refuse('project() takes a SnapshotRead, not %s - the reader states are the contract'
                 % type(read).__name__)
+    _assert_read_contract(read)
     live = build_live(read)
     return {
         'mode': 'SHADOW',

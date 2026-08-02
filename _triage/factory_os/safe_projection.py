@@ -347,13 +347,29 @@ def build(snapshot):
         if 'dd_band' in row:
             bands[acct] = _mapped(DD_BAND_MAP, row.get('dd_band'), 'dd_band',
                                   'floating_risk[%s]' % acct)
-    accounts = []
+
+    # ROUND-1 BLOCKER FIX. This walked system_health ALONE and joined the rest onto it, so an
+    # account the health detector had never seen was absent from the masked list entirely -
+    # not UNKNOWN, ABSENT. The probe used an account with a BLIND sensor and 9.9 open lots and
+    # it produced no row at all, on either surface. The account set is now the UNION of every
+    # detector that speaks about accounts, and a detector that is silent about one produces
+    # UNKNOWN rather than an omission. (memory: instrument-what-the-guard-actually-reads)
+    health = {}
     for row in snapshot.get('system_health', []) or []:
-        acct = row.get('account')
+        health[row.get('account')] = row
+    order = []
+    for source in ('system_health', 'floating_risk'):
+        for row in snapshot.get(source, []) or []:
+            if row.get('account') not in order:
+                order.append(row.get('account'))
+    accounts = []
+    for acct in order:
+        row = health.get(acct)
         accounts.append({
             'account_masked': mask_account(acct),
-            'sensor_state': _mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
-                                    'system_health[%s]' % acct),
+            'sensor_state': (_mapped(SENSOR_STATE_MAP, row.get('state'), 'sensor_state',
+                                     'system_health[%s]' % acct)
+                             if row is not None else 'UNKNOWN'),
             # No detector in this document publishes a drawdown band today, so this is UNKNOWN
             # for every account - and it is UNKNOWN by MEASUREMENT (the dict lookup above),
             # not by a constant, which is why a supplied band travels.
