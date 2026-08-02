@@ -273,6 +273,130 @@ compiling into lane 1 and measuring lane 5c as recently as 2026-07-30).
 
 ---
 
+## ORDER-1031 — [tier] The live-row schema guard spawns one `ajv` per row, so its cost is LINEAR in the size of a store the design intends to grow 10× — `DONE (Claude/Opus 2026-08-02) — 77.2s → 3.4s measured, and a second defect found in the fix` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Found by `ORDER-1020` landing 232 rows, and it could not have been found before.**
+`run_schema_fixtures.py`'s live-registry block called `run(SCHEMA, _rec)` **once per row** — one
+`ajv` process each. Three of the five stores were empty and the other two held a comment line, so
+the loop spawned **nothing** and the defect had no cost to measure.
+
+| | before | after |
+|---|---|---|
+| `run_schema_fixtures.py` | **77.2s** | **3.4s** |
+| `run_contract_binding_tests.ps1` (runs it) | **100.9s** | **26.4s** |
+| fast tier, per-path, on this commit | **160.7s** / 65.0s budget — **BREACHED by 95.7s** | see below |
+
+🔴 **The reason this is a defect and not just slow:** the cost is **~0.32s per row, linear**, and
+the Factory OS design intends this store to grow by an order of magnitude — 16 pilot cells × two
+hypotheses is only the start, and `S15` expands to the other seven Boss families. **2,000 rows
+would be an eleven-minute pre-commit hook**, which is exactly how a tier earns `--no-verify` —
+the failure `ORDER-673`'s budget exists to prevent.
+
+**The fix was already written, in the same file, for the same reason.** `run_batch`'s own docstring
+records the identical lesson from Codex audit 6 (*"11.5s, essentially all of it ajv process
+startup — one spawn per case, 35 spawns … batching all cases into ONE ajv process took it to
+1.8s"*). The live-row loop simply never used it. So this is not a new technique, it is the
+existing one applied to the block that was empty on the day the technique was invented.
+
+### 🔴 The second defect, found inside the fix, and it is the more interesting one
+
+Batching 234 rows into one `ajv` invocation produced a **~19,000-character command line**, and
+Windows caps that at ~8191. `cmd.exe` answered **"The command line is too long."** for the whole
+batch — and every one of the 234 rows was reported as a defect **while every one of them
+validates**.
+
+**What held, and it is worth naming:** the three-state discipline. `run_batch` returns `ERROR`
+(not `INVALID`, and never `VALID`) for a case with no verdict line, so *the tool failing was not
+reported as the contract passing*. The suite went red loudly instead of green quietly. That is the
+`AUDIT-5` rule in `run()`'s own comment doing its job one layer up.
+
+`run_batch` now **chunks** at a 7,000-character budget — deliberately under 8191, because the temp
+prefix is host-dependent and the headroom has to absorb a longer `TEMP` than this machine's.
+
+### ห้าม
+- ❌ Do not raise the tier budget to accommodate a linear cost — the number would have to move
+  again at every store growth, which is an unenforced budget with extra steps.
+- ❌ Do not drop the per-row attribution to get the speed: a batch that cannot say WHICH row failed
+  is not a check, and `run_batch` attributes by basename precisely so it still can. ❌ No `REVIEWED`.
+
+---
+
+## ORDER-1030 — [🔴 money path / factory] `optimize_guard` spelled a build tag `14` while every binding spells it `LAB_ENTRY_14`, so the guard was right by accident — `DONE (Claude/Opus 2026-08-02) — normalised in the ONE place that owns the encoding, an unrecognised spelling now REFUSES, 4 cases + a fixture-isolation pre-check` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Found the moment `ORDER-1020` put real rows in `factory/parameter_bindings.jsonl`. It could not
+have been found before, and that is the whole point of the entry.**
+
+`scripts/optimize_guard.ps1:547` passes `--build-tag=$build`, where `$build` is `14` — the form its
+`-Build` parameter has had since long before bindings existed. Every `ParameterBinding.build_tag`
+holds **`LAB_ENTRY_14`**; `schemas.json` pins the pattern `^LAB_ENTRY_[0-9A-Za-z_]+$`. So the
+literal `14` matched no `(revision, parameter, build_tag)` key, matched no `build_tag: null` row
+either, and came back **`source=UNBOUND`** — `role`, `surface` and `optimizable` all `null`.
+
+🔴 **Under `ORDER-671`'s ratified rule an UNBOUND parameter beneath a declared revision is a
+REFUSAL. So the guard refused every parameter of every declared revision, and printed `role=''`.
+The verdict was right by accident and the reason was wrong** — which is worse than a wrong verdict:
+a real `LOCKED` binding and a tag typo produced **identical output**, so the mechanism that exists
+to refuse could not be told apart from the mechanism failing to find anything. That is `F1`, the
+defect `ORDER-672` split `build_tag` out of the name to kill, **reappearing at the consumer seam**.
+
+**Why it was invisible until today:** an empty store answers `UNBOUND` to every question. Both the
+correct path and the broken path produced the same output for as long as `parameter_bindings.jsonl`
+carried no rows — so every existing green case stayed green while proving nothing about the join.
+
+### The fix, and where it had to go
+
+`registry.py` owns the tag encoding (`ORDER-672` G2: *only* it may know it), so the normaliser is
+`registry.canonical_build_tag()` — one function, called at the top of `resolve()` **and**
+`resolve_all()`. It accepts the canonical form and the two-digit shorthand, and **REFUSES anything
+else by name**. Putting it in `optimize_guard.ps1` instead would have made the consumer know the
+spelling, which is precisely what G2 forbids.
+
+**Refusing rather than missing is the load-bearing half.** A tag the resolver cannot parse matches
+no binding, so a lookup-that-misses returns `UNBOUND` → `REFUSE`, i.e. a typo is indistinguishable
+from a policy hit. `"I could not understand the question"` must never be published as
+`"nothing is bound"` — the same rule the guard already applies to an unreadable bindings file.
+
+### Observed, in both directions
+
+| | |
+|---|---|
+| `--build-tag=14` (what the guard actually sends) | `source=BOUND`, `role=INACTIVE` — **was** `UNBOUND` |
+| `--build-tag=LAB_ENTRY_14` | byte-identical answer — one tag, one verdict |
+| `--build-tag=LAB_ENTRY14` (a typo) | **REFUSED by name**, exit 1, no `source=UNBOUND` record |
+| no `--build-tag` at all | still answers — the normaliser did not make it mandatory |
+
+End to end through the real guard, on the real store: `LotProg` ⇒ `[REFUSE] role='LOCKED' …
+surface='HIDDEN'` · `_9_StepATRmult` ⇒ `[ALLOW]` · `RC_MaxLot` ⇒ `[REFUSE] role='SAFETY' …
+surface='OPERATOR'`. **That is design §8.6's *"`optimize_guard` observed refusing at least one real
+case"* satisfied with a real case rather than a fixture.**
+
+### 🔴 And a second defect, in the cage rather than the code
+
+`run_registry_tests.ps1` used `$rev = 'B14-H01-r1'` — fictional when written, **real** the moment
+`ORDER-1020` registered `B14-H01`. Its three UNBOUND cases assert a parameter comes back unbound,
+which holds only while nothing binds it; `-BindingsRoot` is an **overlay** (it ADDS, canonical
+winning — `optimize_guard.ps1:539`), so the fixture was never isolated from the canonical store. It
+passed for as long as that store was empty, **which is not the same thing as being correct**.
+
+Now `B14-H99-r1` (schema-valid, outside the `H01`/`H02` range §8.1 uses) **plus a PRE-CHECK that
+asserts the canonical store binds nothing under it**. If anyone registers that revision for real,
+one line goes red and says why, instead of three cases quietly changing meaning.
+
+<sub>Third, smaller, and recorded because it is the same class one level down: the first version of
+the typo-case assertion was `-notmatch 'UNBOUND'`, and the refusal message *names* UNBOUND while
+explaining what it refuses to produce — so the assertion could not tell a diagnosis from the thing
+it diagnoses. It now matches on a `"source": "UNBOUND"` **record**.</sub>
+
+**Cage:** `run_registry_tests.ps1` **26/26** (was 21/21 — +4 for section F, +1 for the isolation
+pre-check). Guarded-path declarations for `hypothesis_b14.py` / `gen_registry_rows.py` and their
+five-module import closure were **demanded by the sweep**, not remembered.
+
+### ห้าม
+- ❌ Do not teach `optimize_guard.ps1` the tag spelling — that is `ORDER-672` G2's second parser.
+- ❌ Do not make the normaliser permissive; an unrecognised tag must REFUSE. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-1022 — [infra/guard] A cage had a narrower idea of the ledger than the guard it tests, and the first four-digit order block exposed it — `DONE (Claude/Opus 2026-08-02) — one-line fix, the two parsers now share a pattern` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Found by it failing, on a healthy repo, on the first commit after order numbers crossed 999.**
