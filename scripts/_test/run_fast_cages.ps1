@@ -333,6 +333,10 @@ $FAST_SUITES = @(
     # owner-ratified old-.set policy, which until now existed only as a decision in a design
     # document and a module nothing ran.
     'run_setfile_tests.ps1',
+    # ORDER-1000 (S7), measured at ~1.3s before adding. It guards the reachability machinery that
+    # takes Boss_14 from 116 visible inputs to 38 reachable ones -- the number the Operator
+    # surface and the optimizer's allowed dimensions are both derived from.
+    'run_activation_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -445,6 +449,20 @@ $SUITE_GUARDS = @{
                                           # run -- reached through preset.py's imports, which a
                                           # path-string sweep of the wrapper cannot see. Same
                                           # two modules, same reason, as run_preset_tests below.
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/registry.py')
+    # ORDER-1000 (S7). The three modules that answer "can this input change anything", plus the
+    # two sources they answer it FROM: Inputs.mqh (the surface) and the build wrapper (the
+    # chassis version every ModuleUse row records).
+    'run_activation_tests.ps1'        = @('_triage/factory_os/activation.py',
+                                          '_triage/factory_os/architecture.py',
+                                          '_triage/factory_os/capability.py',
+                                          '_triage/factory_os/run_activation_tests.py',
+                                          '_triage/factory_os/preset.py',
+                                          'ea_template/core/Inputs.mqh',
+                                          'ea_template/Boss_14_GridLog.mq5',
+                                          # DEMANDED BY THE IMPORT SWEEP, reached through
+                                          # preset.py -- a path-string sweep cannot see an import.
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/registry.py')
     'run_preset_tests.ps1'            = @('_triage/factory_os/preset.py',

@@ -3,6 +3,9 @@
 .githooks/fast_tier_pathspec
 .githooks/pre-commit
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
+_triage/factory_os/activation.py
+_triage/factory_os/architecture.py
+_triage/factory_os/capability.py
 _triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
 _triage/factory_os/check_input_surface_gen.py
@@ -22,6 +25,7 @@ _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
+_triage/factory_os/run_activation_tests.py
 _triage/factory_os/run_attested_pin_staged_tests.py
 _triage/factory_os/run_contract_binding_tests.py
 _triage/factory_os/run_coverage_transfer_tests.py
@@ -58,6 +62,7 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+ea_template/Boss_14_GridLog.mq5
 ea_template/core/ConfigFingerprint.mqh
 ea_template/core/Inputs.mqh
 ea_template/core/InputSurface_gen.mqh
