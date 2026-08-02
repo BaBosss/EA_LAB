@@ -1054,8 +1054,35 @@ def main(argv):
     for line in lines:
         print('%-13s %-20s receipt=%s %s'
               % (line['channel'], line['outcome'], line['receipt'], line['detail']))
-    print('notifier: %d event(s), %d problem(s), OpenClaw=%s' % (len(lines), problems, oc))
-    return 1 if problems else 0
+
+    # TWO KINDS OF PROBLEM, TWO EXIT CODES, and the split exists because of a lesson already
+    # written into scripts\daily_monitor.ps1 by ORDER-219: "a report that turns the chain red
+    # every single morning is a report that gets muted inside a week".
+    #
+    #   FAILED        a channel that IS configured did not deliver. Something is wrong NOW.  -> 1
+    #   UNCONFIGURED  a channel has no credentials yet. Expected, stated, and true every day
+    #                 until the owner creates the bot -- so it must be LOUD IN THE LOG and must
+    #                 NOT mark the daily chain unhealthy.                                    -> 4
+    #
+    # Exit 4 is still non-zero: nothing here treats "not configured" as success. It is a
+    # DIFFERENT non-zero, so a caller can tell "you have not set this up" from "it broke".
+    failed = len([l for l in lines if l['outcome'] == 'FAILED'])
+    unconfigured = len([l for l in lines if l['outcome'] == 'UNCONFIGURED'])
+    print('notifier: %d event(s), %d failed, %d unconfigured, OpenClaw=%s'
+          % (len(lines), failed, unconfigured, oc))
+    if failed:
+        return 1
+    if unconfigured:
+        # STDOUT, not stderr, and that is not cosmetic. A caller that redirects a native
+        # command's stderr in PowerShell gets every line wrapped in a NativeCommandError, which
+        # buries a plain status message inside what reads as a crash. This IS a status - "you
+        # have not set this channel up yet" - and the machine-readable half of it is the exit
+        # code, which is where a caller should be reading it from anyway.
+        print('NOT CONFIGURED: %d event(s) had no channel credentials. This is a stated outcome, '
+              'not a silent skip, and it is recorded in %s. It stays true until the bot exists.'
+              % (unconfigured, LEDGER_REL))
+        return 4
+    return 0
 
 
 # The CLOSED declaration of this module's public surface, checked by the cage. Unlike S11's

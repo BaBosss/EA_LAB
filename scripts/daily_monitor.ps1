@@ -52,6 +52,59 @@ Step 'dashboard' { powershell -NoProfile -File D:\EA_LAB\scripts\live_dashboard.
 # dashboard so it reads the freshest data. Read-only projection (never writes owners); a
 # failure here is fail-visible like any step but never blocks dashboard/gist above.
 Step 'snapshot'  { powershell -NoProfile -File D:\EA_LAB\scripts\control_room_snapshot.ps1 *>> $log }
+# ORDER-1200 (S12): build the SafeProjection and send the Telegram alerts + Morning Brief.
+#
+# WHY IT SITS HERE AND NOWHERE ELSE, and why it is not a separate scheduled task. Every finding
+# the notifier can report is derived from the snapshot the line above just rebuilt, and that
+# rebuild happens ONCE A DAY. So an alerter running on its own timer would re-read the same
+# document and learn nothing - it would only manufacture the impression of watching. Owner
+# decision 2026-08-03: run it here, immediately after its input exists. If alert latency ever
+# needs to be shorter, the thing to shorten is the SNAPSHOT cadence, not this call.
+#
+# DELIBERATELY NOT A `Step`, for exactly the ORDER-219 reason written just below: until the owner
+# creates the `EA LAB Control Room` bot, every WARN/INFO alert and the Morning Brief report
+# UNCONFIGURED, and a chain that goes red every single morning gets muted inside a week. So the
+# notifier splits its exit codes and this block honours the split:
+#   1  a CONFIGURED channel failed to deliver  -> marks the chain unhealthy
+#   4  a channel has no credentials yet        -> logged loudly, chain stays healthy
+#   3  the local inputs could not be read      -> marks the chain unhealthy (an instrument fault)
+# `--brief` is passed because the Morning Brief is a rendering of the same page model, so it
+# costs one extra event rather than a second computation.
+"--- telegram notifier (ORDER-1200) ---" | Add-Content $log
+# THE CAPTURE ENCODING, and it is set here rather than assumed. PowerShell decodes a native
+# command's stdout using [Console]::OutputEncoding, which defaults to the ANSI codepage -- so
+# the child's UTF-8 Thai is mangled AT CAPTURE TIME, before `Add-Content -Encoding utf8` ever
+# sees it. Writing the file as UTF-8 therefore fixes nothing on its own; both halves are
+# needed. Saved and RESTORED so no other Step in this chain changes behaviour because of a
+# global this block set for itself.
+$prevOutEnc = [Console]::OutputEncoding
+[Console]::OutputEncoding = New-Object System.Text.UTF8Encoding $false
+try {
+# CAPTURED and appended with an EXPLICIT UTF-8 encoding rather than `*>> $log` like the
+# Steps above. Those emit ASCII; these two emit THAI, and `*>>` decodes a child's UTF-8
+# bytes with the ANSI codepage, so the message arrives as mojibake and the log stops being
+# readable exactly where it matters most. Measured, not assumed - the first run of this
+# block wrote its Thai as question marks.
+$projOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & 'D:\EA_LAB\tools\python312\python.exe' 'D:\EA_LAB\_triage\factory_os\safe_projection.py' build --repo-root 'D:\EA_LAB'; exit `$LASTEXITCODE"
+$projExit = $LASTEXITCODE
+$projOut | Add-Content $log -Encoding utf8
+if ($projExit -ne 0) {
+    $failed += 'notify-projection'
+    "ALERT: the SafeProjection could not be built, so NOTHING was sent - the sender has no other document it is allowed to read" | Add-Content $log
+} else {
+    $notifyOut = powershell -NoProfile -Command "`$env:PYTHONIOENCODING='utf-8'; & 'D:\EA_LAB\tools\python312\python.exe' 'D:\EA_LAB\_triage\factory_os\notifier.py' send --confirm --brief --repo-root 'D:\EA_LAB'; exit `$LASTEXITCODE"
+    $notifyExit = $LASTEXITCODE
+    $notifyOut | Add-Content $log -Encoding utf8
+    if ($notifyExit -eq 4) {
+        "NOTE: a Telegram channel is not configured yet - see ops\delivery_ledger.jsonl. Logged, and deliberately NOT marking the chain unhealthy (ORDER-219 rule: a daily red gets muted)." | Add-Content $log
+    } elseif ($notifyExit -ne 0) {
+        $failed += 'notify'
+        "ALERT: the notifier exited $notifyExit - a configured channel did not deliver, or the local inputs could not be read" | Add-Content $log
+    }
+}
+} finally {
+    [Console]::OutputEncoding = $prevOutEnc
+}
 # ORDER-219: surface what the run-time detectors already wrote. This is deliberately NOT a
 # Step - the digest exits 2 whenever anything is flagged, and a report that turns the chain
 # red every single morning is a report that gets muted inside a week. So:

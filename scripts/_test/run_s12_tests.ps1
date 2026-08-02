@@ -122,19 +122,24 @@ try {
     #   run_s12_tests.ps1 / run_s12_tests.py  this suite's own fixtures and this pattern itself
     #   safe_projection.py / schemas.json     where the shape is DEFINED and documented
     #   run_s11_tests.py                      S11's planted token fixture (1)
-    #   _triage/FXDREEMA_XRAY.md              FOUND BY THIS CHECK, 2026-08-02. A THIRD PARTY's
-    #     live-shaped Telegram bot token, committed inside the x-ray of a downloaded fxDreema
-    #     EA. It is not this project's credential and nothing here uses it, but it is somebody
-    #     else's credential sitting in this history -- and history rewriting is not a thing to
-    #     do as a side effect of a notifier slice. Quarantined at exactly 1 hit and carried as
-    #     an owed item on ORDER-1180 for the owner to decide.
+    #   _triage/FXDREEMA_XRAY.md              FOUND BY THIS CHECK 2026-08-02, REDACTED 2026-08-03
+    #     (ORDER-1200, owner-ratified). A THIRD PARTY's live-shaped Telegram bot token and the
+    #     chat id beside it, committed inside the x-ray of a downloaded fxDreema EA. Not this
+    #     project's credential and nothing here ever used it. Both VALUES removed at HEAD; the
+    #     input NAMES stay, because "this EA ships a hardcoded Telegram bot" is the analytical
+    #     fact the x-ray exists to record. History was NOT rewritten: this repo pins blob ids in
+    #     OwnerRef and in the S2a attestation, and a rewrite would point every one of them at a
+    #     blob that no longer exists.
+    #     The entry stays here at **0**, deliberately, and that is the whole point of declaring a
+    #     COUNT rather than an exclusion: the file is still watched, so a credential reappearing
+    #     in it fails this check instead of being silently permitted by an old exemption.
     $KNOWN = @{
         'scripts/_test/run_s12_tests.ps1'       = 99
         '_triage/factory_os/run_s12_tests.py'   = 99
         '_triage/factory_os/safe_projection.py' = 99
         '_triage/factory_os/schemas.json'       = 99
         '_triage/factory_os/run_s11_tests.py'   = 1
-        '_triage/FXDREEMA_XRAY.md'              = 1
+        '_triage/FXDREEMA_XRAY.md'              = 0
     }
     $counts = @(& git grep -I -c -E '[0-9]{6,}:[A-Za-z0-9_-]{30,}' -- ':(exclude)*.jsonl' ':(exclude)_triage/chatgpt_convs/*')
     $bad = @()

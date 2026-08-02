@@ -105,6 +105,79 @@
 
 ---
 
+## ORDER-1200 — [ops/S12] Wire the notifier into the daily chain, and remove the third-party credential — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S12WIRE)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Four owner decisions, 2026-08-03. This row carries two of them; the tier one (`ORDER-1130`,
+> attack `run_contract_binding_tests` first) belongs to the **ACTIVE** `S-2026-08-03-TIERROOM`
+> lane, which already declares it — this lane did not touch it. Slice **S13** also went to that
+> parallel session at the owner's direction.
+
+**1. The alert path now runs every morning, and WHERE it runs is the finding.** The notifier is
+called from `scripts/daily_monitor.ps1` immediately after the `snapshot` Step. **Every finding it
+can report is derived from that one document, and that document is rebuilt ONCE A DAY** — so an
+alerter on its own timer would re-read the same bytes and learn nothing, while manufacturing the
+impression of watching. Owner decision: run it where its input is produced. **If alert latency ever
+needs to be shorter, the thing to shorten is the SNAPSHOT cadence, not this call** — that is a
+different order, and naming it here is what stops someone "fixing" latency by polling.
+
+🔴 **It is deliberately NOT a `Step`, and the reason was already written in that file.** Until the
+owner creates the `EA LAB Control Room` bot, every `WARN`/`INFO` alert and the Morning Brief report
+`UNCONFIGURED` — every single morning. `ORDER-219` put the rule in this exact file: *a report that
+turns the chain red every morning is a report that gets muted inside a week*. So the notifier's exit
+codes were **split**, and the block honours the split:
+
+| exit | meaning | chain |
+|---|---|---|
+| `1` | a **configured** channel failed to deliver | **unhealthy** |
+| `4` | a channel has no credentials yet | logged loudly, **healthy** |
+| `3` | the local inputs could not be read (instrument fault) | **unhealthy** |
+
+Exit `4` is still non-zero — nothing treats "not set up" as success. It is a *different* non-zero,
+so a caller can tell *"you have not configured this"* from *"it broke"*. Cases `C05` (exit 4 + the
+message on stdout) and `C08` (a real failure still exits 1) drive both sides — a scheme that can
+never go red is the muted report by a longer route.
+
+🔴 **THREE DEFECTS, ALL FOUND BY DRIVING THE BLOCK RATHER THAN READING IT.** The probe extracts the
+block **verbatim from `daily_monitor.ps1`** and runs it, so what was tested is the file's own bytes:
+- **`powershell -Command` does not propagate a child's exit code** — the notifier returned 4 and the
+  caller saw 1, which would have marked the chain unhealthy every morning: the exact outcome the
+  split exists to prevent. Needs an explicit `; exit $LASTEXITCODE` **inside** the command string.
+- **…and that `$LASTEXITCODE` must be backtick-escaped**, or the outer shell expands it at parse
+  time and the child is handed a stale number from an unrelated command.
+- 🔴 **Writing the log as UTF-8 fixes nothing on its own.** PowerShell decodes a native command's
+  stdout using `[Console]::OutputEncoding`, which defaults to the ANSI codepage — so the Thai was
+  already mangled **at capture time**, before `Add-Content -Encoding utf8` ever saw it. Both halves
+  are needed: set `[Console]::OutputEncoding` (saved and **restored**, so no other Step in the chain
+  changes behaviour because of a global this block set for itself) *and* write the file as UTF-8.
+  Same family as `thai-output-kills-a-suite-inside-the-hook`, one layer out.
+
+Also moved off stderr: the `NOT CONFIGURED` line is a **status**, and a status on stderr gets wrapped
+in a `NativeCommandError` by any PowerShell caller that redirects — burying it inside what reads as a
+crash. The machine-readable half is the exit code, which is where a caller should read it anyway.
+
+**2. The third-party credential is gone from `HEAD`** (owner-ratified). A Telegram bot token **and
+the chat id beside it** — a delivery credential by this repo's own forbidden-key list — were
+committed inside the x-ray of a downloaded fxDreema EA. Both **values** removed; the input **names**
+kept, because *"this EA ships a hardcoded Telegram bot"* is the analytical fact the x-ray exists to
+record. **History was NOT rewritten:** this repo pins blob ids in `OwnerRef` and in the S2a
+attestation, and a rewrite would point every one of them at a blob that no longer exists.
+🔴 **The quarantine entry stays, at `0`** — which is the whole reason that table declares a COUNT
+rather than an exclusion: the file is still watched, so a credential reappearing in it fails the
+check instead of being waved through by a stale exemption.
+
+**Measured.** S12 cage **66 scenarios, 0 failed, both roll-ups**; `daily_monitor.ps1` parses clean;
+the notify block driven verbatim four times, ending green with the Thai readable and the chain
+correctly reporting healthy. **`check_state.ps1` CLEAN** apart from one unrelated pre-existing
+`SKILLS DRIFT` warning (a new `adhd-mode` skill appeared from outside this repo mid-session; syncing
+that mirror is nobody's lane yet and was not done here).
+
+**Not done, deliberately:** the tier work and re-registering the S12 cage (`ORDER-1130`, the parallel
+`TIERROOM` lane) · the `EA LAB Control Room` bot itself, which is two minutes of owner action and is
+the only thing between this wiring and a message on the phone · nothing schedules anything new — the
+chain that already runs every morning simply does one more thing.
+
+---
+
 ## ORDER-1180 — [factory/S12] Direct Telegram Control Room + Morning Brief — `DONE (Claude/Opus 2026-08-02, lane S-2026-08-02-S12TG) — every acceptance driven, one real message delivered with the gateway observed down, and the replay of it suppressed; the case count is printed by run_s12_tests.py --list and is deliberately not restated here` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
 
 **Acceptance (design §10, S12 row, verbatim)** — alerts work with OpenClaw stopped · the dedupe key

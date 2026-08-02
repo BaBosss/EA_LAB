@@ -1041,14 +1041,53 @@ def _c05():
         with _Captured() as cap:
             code = notifier.main(['notifier.py', 'send', '--confirm', '--repo-root', tmp])
         text = cap.out.getvalue()
-        eq(code, 1, 'an unconfigured channel must not exit 0:\n%s\n%s' % (text, cap.err.getvalue()))
+        # EXIT 4, NOT 1, AND NOT 0. `daily_monitor.ps1` runs this every morning, and until the
+        # owner creates the Control Room bot every WARN/INFO alert is UNCONFIGURED - so exiting
+        # 1 would turn the daily chain red every single day, which is how a report gets muted
+        # within a week (the ORDER-219 lesson, written in that same file). Exiting 0 would be a
+        # silent skip. A distinct non-zero says "you have not set this up" without saying
+        # "something broke".
+        eq(code, 4, 'an unconfigured channel needs its OWN non-zero code:\n%s\n%s'
+                    % (text, cap.err.getvalue()))
         if 'UNCONFIGURED' not in text:
             raise AssertionError(text)
+        # On STDOUT: a status routed to stderr gets wrapped in a NativeCommandError by any
+        # PowerShell caller that redirects, which buries it inside what reads as a crash.
+        if 'NOT CONFIGURED' not in text:
+            raise AssertionError('exit 4 must say what it means, on stdout: %s' % text)
+        if 'NOT CONFIGURED' in cap.err.getvalue():
+            raise AssertionError('the status went to stderr as well as stdout')
         rows = notifier.Ledger.load(os.path.join(tmp, notifier.LEDGER_REL)).rows
         if not rows:
             raise AssertionError('nothing was written to the ledger, so "did it arrive" is '
                                  'unanswerable for a run that really happened')
     finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+@case('C08', 'a REAL delivery failure exits 1, so the daily chain does go red when it should')
+def _c08():
+    # The other half of C05. The exit-code split is only worth anything if the FAILED side still
+    # marks the chain unhealthy - a scheme that never goes red is the muted report by a longer
+    # route. Driven by making the configured transport raise.
+    tmp = fixture_repo()
+    saved = notifier.resolve_channels
+    try:
+        notifier.resolve_channels = lambda cfg: {'EMERGENCY': notifier.Credentials('t', ['1']),
+                                                 'CONTROL_ROOM': notifier.Credentials('t', ['1'])}
+        saved_transport = notifier.TelegramTransport
+        notifier.TelegramTransport = lambda creds: Boom()
+        try:
+            with _Captured() as cap:
+                code = notifier.main(['notifier.py', 'send', '--confirm', '--repo-root', tmp])
+        finally:
+            notifier.TelegramTransport = saved_transport
+        eq(code, 1, 'a configured channel that could not deliver must fail the chain:\n%s'
+                    % cap.out.getvalue())
+        if 'FAILED' not in cap.out.getvalue():
+            raise AssertionError(cap.out.getvalue())
+    finally:
+        notifier.resolve_channels = saved
         shutil.rmtree(tmp, ignore_errors=True)
 
 
