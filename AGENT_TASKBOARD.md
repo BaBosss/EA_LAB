@@ -195,6 +195,67 @@ identity; issuing one is a verdict, and no verdict was owed this session) · no 
 appended to a real deployment · no magic was allocated, renumbered or retired · no deployment was
 auto-updated · S11 not started.
 
+### ⚠️ HARDENED THE SAME DAY BY LANE `S-2026-08-02-SCRUT10S` — four rounds, six defects, and the first one was a LIVE fail-open on real stored data. Do not read the section above without this one.
+
+**Every finding was REPRODUCED and printed before it was touched.** The probes are read-only and
+none of them edited a manifest — the store is append-only and round 1 is about *reading* it.
+
+🔴 **Round 1 (`1dea1201`) — criterion 3 had failed OPEN on the real store, and the skip that did it
+was ARGUED FOR.** Step 0 took `ini_hash` off the key; all three committed manifests hold 15-field
+keys; `execution_key_digest` refused every one; `find_cached` answered that with `continue`. Measured:
+re-queueing the exact configuration of `RUN-20260802-002` — which holds `EVIDENCE`, and whose refusal
+the S9 ledger records returning `evd_sha256_90c1f032…` — returned **`QUEUED`**. Found by lane
+`RATIFY9`, reproduced independently here. The part worth keeping is that the skip carried a comment
+reading *"safe in the blocking direction: an uncomparable run never licenses a re-run, it just fails
+to block one"* — **backwards for the gate it lives in**, whose whole job is to block. Fixed with a
+**closed** `LEGACY_DROPPED_KEY_FIELDS = ('ini_hash',)` (decision 6 removed that field *because* it was
+never the hash of an ini, so the remaining fourteen ARE the identity and are all present in the stored
+keys — measured: old and new spellings now produce the same digest and the cached evidence comes back)
+**plus** a new `UNCOMPARABLE_PRIOR` refusal, because counting-and-reporting would have converted a
+silent fail-open into a documented one: the CLI appends and exits 0, and the dispatcher branches on
+`action`, not on prose.
+
+🔴 **Round 2 (`7f6e695e`) — the authorization rule was inverted at exactly the wrong point.** `A6`'s
+second branch keyed on `actor == 'automation'`, so `user` and `claude` could make the **FIRST**
+candidate assignment — nothing to something — through an `OBSERVED` event carrying **no**
+`authorization_ref`, while the same actors were refused for the strictly smaller act of *moving* one.
+Probed both directions. The actor was never the right axis; the rule is on the EVENT, and it is now
+enumerated over every actor. Also: `fold` computed a `frozen` flag **nothing read** — a
+`CANDIDATE_REASSIGNED` straight after a `FROZEN` was allowed. Removed rather than enforced, because
+what `FROZEN` should forbid is a policy the design does not state and the obvious guess has no way
+back out (there is no unfreeze event type) — **owner question, in the handoff**. Generalised: the cage
+now asserts every boolean the fold exposes is declared and every declared flag is read.
+
+🔴 **Round 3 (`1f245d2b`) — `C9` turned "I cannot check this pin" into "checked, fine".** The
+comparison was guarded by `if f in key`, so a cited run whose journal carries no `ExecutionKey` made
+every field comparison vacuous — probed by blanking the key: **zero problems**, while the metric still
+claimed a lane, a fingerprint and a model nothing compared. That is the pin `C9` exists to check,
+silently unchecked. Also `read_manifest(path, run_lookup=None)` **could never succeed with its own
+default** (no store ⇒ C9's SKIPPED finding ⇒ raise, every time); `run_lookup` is now required and the
+`--no-runs` flag went with it.
+
+🔴 **Round 4 (`cb711d09`) — `gen_magic_allocations.py` was a declared trigger nothing ran.** Listed in
+`$SUITE_GUARDS` for this suite, so editing it fired the cage — and the cage had no question to ask
+about it. `magic.py verify` checks **collisions**; only `--check` checks **completeness** (every
+inventory magic has a row; no row hand-edited into something that still validates), and that half had
+zero enforcement. Now driven against the real repo **and proven able to fail**. Second half: **"60
+allocations" was restated in four places and nothing kept it true** — the `ORDER-1021` "38 inputs"
+lesson recurring inside the session that wrote that rule into its own handoff. Removed everywhere,
+replaced by the name of the module that prints it. The three legacy magics stay named on purpose:
+they are an owner-declared **closed set**, not a measurement, and naming them is what makes a fourth
+one visible.
+
+**The sentence worth keeping:** *three of the six were the same shape — an input the code could not
+read, rendered indistinguishable from a rule that had nothing to enforce.* `find_cached`'s `continue`,
+`C9`'s `if f in key`, and (from the S10 build itself) `[AllowNull()][string]` coercing `$null` to `''`.
+Two of them were in code written to close that exact family.
+
+**Close-out baseline:** `run_scheduler_tests.py` · `run_parity_tests.py` · `run_wrapper_gen_tests.py` ·
+`run_guard_shape_lint.py` · `run_s10_tests.py` · `run_schema_fixtures.py` ·
+`check_param_surface.py --worktree` · `check_wrapper_gen.py --worktree` · `check_schema_structure.py`
+— **all exit 0** · `check_state.ps1` **CLEAN** · full fast tier **24 suites, 0 failed, 106.9s of the
+120.0s budget**. No new order, no EA verdict, no MT5 lane, no manifest edited.
+
 ---
 
 ## ORDER-1080 — [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) — `DONE (Claude/Opus 2026-08-02, hardened by four /scrutinize rounds the same day) — all four acceptance criteria measured: the kill matrix is ENUMERATED (all nine §3.3 transitions killed on both sides of their own append; the cell and kill counts are printed by run_scheduler_tests.py itself and are not restated here), and the wiring was proven end-to-end on lane 1 with ONE launch and zero relaunches across a mid-flight driver stop` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
