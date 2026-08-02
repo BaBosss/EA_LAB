@@ -108,6 +108,12 @@ CHANNELS = ('EMERGENCY', 'CONTROL_ROOM')
 BRIEF_CHANNEL = 'CONTROL_ROOM'
 
 KINDS = ('ALERT', 'RECOVERY', 'MORNING_BRIEF', 'DELIVERY_PROBE')
+
+# States that produce NO message at all. `RESOLVED` is handled separately because it is where a
+# recovery is emitted from; this set is for states that are neither news nor a resolution.
+# See plan() for why HEALTHY_1_OF_2 is here - it is the difference between meeting design 7.3's
+# letter and meeting its point.
+SILENT_STATES = ('HEALTHY_1_OF_2',)
 OUTCOMES = ('DELIVERED', 'SUPPRESSED_DUPLICATE', 'UNCONFIGURED', 'FAILED')
 
 # Reason code -> finding class, so control_center.fold_finding can apply design 7.1's lifecycle.
@@ -551,6 +557,21 @@ def plan(records, projection=None, brief=None, probe=None, now=None):
         channel = _routed(r['severity'])
         if r.get('recovery_emitted'):
             events.append(_event('RECOVERY', channel, r, render_recovery(r), projection, now))
+        elif r['state'] in SILENT_STATES:
+            # FOUND BY ROUND 1, and it is the acceptance being met in letter and broken in
+            # spirit. design 7.3 says `OPEN -> HEALTHY_1_OF_2 -> OPEN` must not emit a RECOVERY
+            # message, "and treating it as one produces exactly the flapping spam the two-check
+            # rule exists to stop". The first version dutifully withheld the recovery LABEL and
+            # then sent an ALERT saying `HEALTHY_1_OF_2` instead - a message per flicker, which
+            # is the same spam under a different word. Traced on a five-run flicker: OPEN,
+            # HEALTHY_1_OF_2, OPEN, HEALTHY_1_OF_2, FLAPPING delivered THREE messages, the
+            # middle one announcing that a problem had been briefly absent.
+            #
+            # An intermediate healthy check is not news. The OPEN alert already went out and is
+            # still in force; if the health holds, RESOLVED emits exactly one recovery. So this
+            # state emits NOTHING - which is a decision about what an operator is told, and is
+            # therefore written here as a named set rather than as a condition inside an if.
+            continue
         elif r['state'] != 'RESOLVED':
             events.append(_event('ALERT', channel, r, render_alert(r), projection, now))
     if brief is not None:
@@ -958,12 +979,18 @@ def main(argv):
                          'rather than a suppressed duplicate forever.\n')
         return 2
 
-    try:
-        snapshot, projection = load_local(repo_root)
-    except Exception as exc:                                # noqa: BLE001 - reported, not swallowed
-        sys.stderr.write('the local inputs could not be read, so nothing was planned and '
-                         'nothing was sent: %s: %s\n' % (type(exc).__name__, exc))
-        return 3
+    # A DELIVERY PROBE READS NOTHING. It carries no finding, no account and no build, so it needs
+    # neither the snapshot nor the projection - and requiring them would be backwards: the moment
+    # you most want to prove the alert path still works is when the snapshot is broken. It also
+    # takes two verifications (~0.6s) off the cage, which is the fast tier's scarcest resource.
+    snapshot, projection = None, None
+    if verb != 'probe':
+        try:
+            snapshot, projection = load_local(repo_root)
+        except Exception as exc:                            # noqa: BLE001 - reported, not swallowed
+            sys.stderr.write('the local inputs could not be read, so nothing was planned and '
+                             'nothing was sent: %s: %s\n' % (type(exc).__name__, exc))
+            return 3
 
     journal_path = os.path.join(repo_root, JOURNAL_REL)
     ledger_path = os.path.join(repo_root, LEDGER_REL)
@@ -976,14 +1003,17 @@ def main(argv):
                     previous.append(json.loads(line))
 
     try:
-        records, journal_lines = observe(previous, findings_of(snapshot), now)
-        brief = _brief_scalars(repo_root, snapshot) if '--brief' in argv else None
-        probe = None
         if verb == 'probe':
             records, journal_lines, brief = [], [], None
             probe = (probe_id, probe_channel)
+            secrets = ()
+        else:
+            records, journal_lines = observe(previous, findings_of(snapshot), now)
+            brief = _brief_scalars(repo_root, snapshot) if '--brief' in argv else None
+            probe = None
+            secrets = safe_projection.secrets_of(snapshot)
         events = plan(records, projection, brief, probe, now)
-        assert_sendable(events, safe_projection.secrets_of(snapshot), repo_root)
+        assert_sendable(events, secrets, repo_root)
     except Exception as exc:                                # noqa: BLE001 - reported, not swallowed
         sys.stderr.write('REFUSED before anything was sent: %s: %s\n'
                          % (type(exc).__name__, exc))

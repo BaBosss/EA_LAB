@@ -177,6 +177,28 @@ in-memory set `deliver()` mutates — not against the FILE the next scheduled ru
 a real job losing an alert permanently the first time the API blips. Cases `L10` / `L11` close it,
 and the sweep is now 14/14.
 
+### Three `/scrutinize` rounds over this slice, in the same session
+
+**Round 1 — the acceptance was met in letter and broken in spirit.** design §7.3 says
+`OPEN → HEALTHY_1_OF_2 → OPEN` must emit no *recovery* message, "and treating it as one produces
+exactly the flapping spam the two-check rule exists to stop". The first version dutifully withheld
+the recovery **label** and then sent an `ALERT` saying `HEALTHY_1_OF_2` instead — the same spam under
+a different word. Traced on a five-run flicker: **three messages delivered**, the middle one
+announcing that a problem had been briefly absent. Worse, case `V01` asserted `['ALERT','ALERT',
+'ALERT']` — **the implementation written down as the requirement**. An intermediate healthy check now
+emits nothing at all (`SILENT_STATES`), the same flicker sends **two** messages, and `V05` counts what
+*leaves* rather than what is planned, which is the case that would have caught this alone.
+
+**Round 2 — the tier finding above.** It began as "S12 costs 3.2s of an 8s budget" and ended as
+"the 8s was a non-hook number, the real figure is 1.3s, and an unguarded staged path runs the whole
+tier". The measurement that settled it: the tier with S12 unregistered, three clean samples.
+
+**Round 3 — `notifier.PUBLIC_API` was declared and nothing read it.** A closed surface no check
+consumes reads as governance while being decoration (memory `declared-as-trigger-but-never-read`),
+and it matters here specifically because this module **sends**: a new public writer arriving
+unnoticed is the one thing the declaration exists to prevent. Case `P01` now crosses it against the
+module's real callables in both directions.
+
 **Two roll-ups, not one** (memory `completeness-rollup-measured-after-topup`): *coverage* — every
 routing target, event kind, delivery outcome, scan layer and OpenClaw state was produced by a real
 case, and the roll-up **prints which case first produced each**, so a bucket whose only contributor
@@ -189,14 +211,31 @@ So the check is an **AST import closure** over `notifier.py` + the three repo mo
 crossed with a closed `ALLOWED_IMPORTS`; `O06` plants `from openclaw.gateway import dispatch` and
 watches the allowlist reject it, so the guard is not a zero-fire one.
 
-**Measured.** Suite **3.2s / 3.3s / 3.2s** over three runs — down from **3.7s / 3.9s / 3.8s**, with no
-case dropped: it verifies the real snapshot once instead of three times, and `notifier.py` now settles
-a usage error before opening any document. Full tier with it registered: **26 suites, 0 failed,
-112.4s / 110.8s / 111.5s** of the 120.0s budget. **Reconciliation, because a single sample lies:** the
-`SCRUT11S` row records the 25-suite tier at 109.1 / 107.9 / 107.9, and the one baseline sample this
-lane took read 112.2s — noise-high. Against the three-sample baseline the delta is **≈ +3.3s**, which
-matches the suite's own 3.2s. **This is the most expensive thing S12 adds and it eats roughly a third
-of the tier's remaining headroom; `ORDER-1130` is the row that buys more, not this one.**
+🔴 **THE SUITE IS BUILT AND GREEN AND IS *NOT* REGISTERED IN THE FAST TIER — and that is the single
+most important line in this row.** The headroom everyone has been quoting, including this slice's
+own opening prompt ("~8s"), was **measured with the wrong invocation** (memory
+`tier-number-needs-its-invocation`). The tier costs **110.8s / 111.5s / 112.4s** launched from a
+shell and **118.6s / 118.7s / 118.7s** launched as `-Hook`, which is how the pre-commit hook launches
+it and therefore the only number that decides whether a commit lands. **Real hook-mode headroom:
+1.3s.** The S12 suite is **2.8s / 3.0s / 2.9s** (down from 3.2s, and from 3.9s before that, with no
+case dropped — it verifies the snapshot once instead of three times, `probe` no longer reads a
+snapshot it does not use, and a usage error is settled before any document is opened).
+
+**Why that is worse than a 1.6s overrun sounds.** Staged paths that match no guard fall back to
+running **everything** — `Select-Suites` fails open, by design. `-ExportSelection` over a single
+`_mt5_auto/*.csv` selects **all 26 suites**. So committing a backtest CSV, an ordinary act in this
+repo, is a full hook-mode run: with S12 registered that measured **122.0s / 121.6s / 122.1s** and the
+commit is **refused, OVER BUDGET**. Registering it would not have cost 2.9s of margin; it would have
+turned "commit a CSV" into "commit blocked" for everyone, discovered by the owner rather than by me.
+So the suite is **commented out of `$FAST_SUITES` together with its `$SUITE_GUARDS` entry** (both, or
+`run_guard_trigger_tests` fails on the key sets disagreeing — that guard doing its job), with the
+restore path written at the declaration. **Re-registering is uncommenting two blocks, the moment
+`ORDER-1130` buys the room.** Until then: `powershell -NoProfile -File scripts\_test\run_s12_tests.ps1`.
+
+<sub>The honest shape of this: the acceptance says "registered in the fast tier" and this row does not
+meet it. The alternative was to meet it by shipping a tier that refuses ordinary commits while the
+owner slept, or by raising a budget `run_guard_trigger_tests` asserts is "the measured 120.0s" —
+a ratified number, at 23:00, alone. Neither is a decision to take quietly.</sub>
 
 **`schemas.json`:** `AlertEvent` and `AlertDelivery` added, both `BUILT` with `x-enforcer` naming
 `notifier.py` — not `WIRED`, by the checker's own definition: the cage drives them, nothing in

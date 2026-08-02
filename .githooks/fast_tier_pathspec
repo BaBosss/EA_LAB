@@ -2,7 +2,6 @@
 .githooks/commit-msg
 .githooks/fast_tier_pathspec
 .githooks/pre-commit
-.gitignore
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
 _triage/factory_os/activation.py
 _triage/factory_os/architecture.py
@@ -34,7 +33,6 @@ _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/gen_wrapper.py
 _triage/factory_os/hypothesis_b14.py
 _triage/factory_os/magic.py
-_triage/factory_os/notifier.py
 _triage/factory_os/parity.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
@@ -51,7 +49,6 @@ _triage/factory_os/run_preset_tests.py
 _triage/factory_os/run_registry_tests.py
 _triage/factory_os/run_s10_tests.py
 _triage/factory_os/run_s11_tests.py
-_triage/factory_os/run_s12_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_conformance.py
 _triage/factory_os/run_s2a_gate.py
@@ -113,7 +110,6 @@ scripts/check_precommit_staged.ps1
 scripts/check_state.ps1
 scripts/check_taskboard_archive.ps1
 scripts/check_truncated_run.ps1
-scripts/config.example.yaml
 scripts/control_room_snapshot.ps1
 scripts/daily_monitor.ps1
 scripts/gen_fast_tier_pathspec.ps1

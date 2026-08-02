@@ -411,6 +411,28 @@ $FAST_SUITES = @(
     # schemas.json, and PART B's seam -- the REAL PowerShell reader's states fed to the REAL
     # python shell, which is the only way to catch the two vocabularies drifting apart.
     'run_s11_tests.ps1',
+    # ORDER-1180 (S12) IS NOT IN THE LIST ABOVE, AND THAT IS A MEASUREMENT, NOT AN OVERSIGHT.
+    # ------------------------------------------------------------------------------------
+    # The suite is built, green (64 scenarios, both roll-ups) and costs 2.9s / 3.0s / 2.9s. It
+    # does not fit, and the reason is that THE HEADROOM WAS MEASURED WITH THE WRONG INVOCATION
+    # (memory: tier-number-needs-its-invocation). The ~8s of headroom everyone has been quoting
+    # is a NON-HOOK number: this tier runs at 110.8s / 111.5s / 112.4s launched from a shell, and
+    # at 121.6s / 122.0s / 122.1s launched as `-Hook`, which is how the pre-commit hook launches
+    # it and therefore the only number that decides whether a commit lands. Hook-mode headroom
+    # before S12 is about ONE SECOND, not eight.
+    #
+    # WHY THAT MATTERS MORE THAN IT SOUNDS: staged paths that match no guard fall back to running
+    # EVERYTHING (Select-Suites, fails open). `-ExportSelection` over a single `_mt5_auto/*.csv`
+    # selects all 26 suites -- so committing a backtest CSV, an ordinary act in this repo, is a
+    # FULL hook-mode run. Registering a 2.9s suite therefore does not cost 2.9s of margin; it
+    # turns "commit a CSV" into "commit refused, OVER BUDGET" for everyone.
+    #
+    # TO RE-REGISTER, once ORDER-1130 buys the room: uncomment the one line above AND the
+    # $SUITE_GUARDS entry that goes with it (both, or run_guard_trigger_tests fails on the key
+    # sets disagreeing -- which is that guard doing its job). Nothing else changes.
+    # Run it meanwhile with: powershell -NoProfile -File scripts\_test\run_s12_tests.ps1
+    #
+    # The earlier registration comment, kept because its numbers are the evidence:
     # ORDER-1180 (S12), measured 3.2s / 3.3s / 3.2s over three runs (memory
     # phantom-regression-from-two-single-samples: two samples of a noisy number is not a
     # measurement). It was 3.7s / 3.9s / 3.8s before two trims that dropped no case -- the suite
@@ -429,7 +451,7 @@ $FAST_SUITES = @(
     # design 10 prohibition "no token in git" is a statement about what is TRACKED, which no
     # python assertion can make. It sends nothing: the real Telegram leg was driven once, by
     # hand, with the owner's go-ahead, and its receipt is quoted in ORDER-1180.
-    'run_s12_tests.ps1',
+    # 'run_s12_tests.ps1',   <-- BUILT, GREEN, AND DELIBERATELY NOT REGISTERED. See below.
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -942,15 +964,18 @@ $SUITE_GUARDS = @{
     #   control_room_snapshot.json              cases S11/B04/C01 drive the real document
     #   .gitignore                              PART B's prohibitions are assertions ABOUT it
     #   scripts/config.example.yaml             declares the channel keys resolve_channels reads
-    'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
-                                          '_triage/factory_os/run_s12_tests.py',
-                                          '_triage/factory_os/safe_projection.py',
-                                          '_triage/factory_os/control_center.py',
-                                          '_triage/factory_os/snapshot_validator.py',
-                                          '_triage/factory_os/schemas.json',
-                                          'portfolio/control_room_snapshot.json',
-                                          '.gitignore',
-                                          'scripts/config.example.yaml')
+    # ORDER-1180 (S12) guard list, COMMENTED OUT WITH ITS SUITE. run_guard_trigger_tests
+    # requires the key sets of $FAST_SUITES and $SUITE_GUARDS to match exactly, so these two
+    # blocks are uncommented together or not at all. Restoring both is the whole re-registration.
+    # 'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
+    # '_triage/factory_os/run_s12_tests.py',
+    # '_triage/factory_os/safe_projection.py',
+    # '_triage/factory_os/control_center.py',
+    # '_triage/factory_os/snapshot_validator.py',
+    # '_triage/factory_os/schemas.json',
+    # 'portfolio/control_room_snapshot.json',
+    # '.gitignore',
+    # 'scripts/config.example.yaml')
 }
 
 # Paths a suite references but which are NOT inputs to what it guards -- synthetic fixture

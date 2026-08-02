@@ -307,15 +307,45 @@ def _walk_states(present_flags, step_hours=1, day=2):
     return out
 
 
-@case('V01', 'OPEN -> HEALTHY_1_OF_2 -> OPEN emits NO recovery message')
+@case('V01', 'OPEN -> HEALTHY_1_OF_2 -> OPEN emits NO recovery message, and NO message at all '
+             'for the intermediate healthy check')
 def _v01():
     states = _walk_states([True, False, True])
     eq([s['state'] for s in states], ['OPEN', 'HEALTHY_1_OF_2', 'OPEN'], '')
     eq([s['recovery_emitted'] for s in states], [False, False, False],
        'an intermediate healthy check is not a recovery; calling it one is the flapping spam '
        'the two-check rule exists to stop')
-    for s in states:
-        eq([e['kind'] for e in notifier.plan([s], PROJECTION)], ['ALERT'], '')
+    # THIS ASSERTION USED TO READ ['ALERT'] FOR ALL THREE, and it was the implementation written
+    # down rather than the requirement. Withholding the word RECOVERY while sending a message
+    # that says HEALTHY_1_OF_2 is the same spam under a different label.
+    kinds = [[e['kind'] for e in notifier.plan([s], PROJECTION)] for s in states]
+    eq(kinds, [['ALERT'], [], ['ALERT']],
+       'the middle observation must produce NO event; the OPEN alert is already in force and a '
+       'brief absence is not news')
+
+
+@case('V05', 'END TO END, a flickering finding sends TWO messages over five runs, not four')
+def _v05():
+    # The claim V01 makes case by case, made once against the whole path: observe -> plan ->
+    # deliver, with a real ledger doing the deduping. This is the case that would have caught
+    # the round-1 defect on its own, because it counts what LEAVES rather than what is planned.
+    f = [{'finding_id': 'FND-flick', 'code': 'MANDATORY_SOURCE_STALE', 'detail': 's',
+          'severity': 'WARN', 'class': 'RUNTIME'}]
+    lines, delivered = [], set()
+    t = notifier.RecordingTransport()
+    seen = []
+    for i, present in enumerate([True, False, True, False, True]):
+        now = '2026-08-02T%02d:00:00' % i
+        recs, new = notifier.observe(lines, f if present else [], now)
+        lines += new
+        out, _ = notifier.deliver(notifier.plan(recs, PROJECTION, now=now), delivered,
+                                  {'CONTROL_ROOM': t}, now, 'NOT_RUNNING')
+        seen.append(recs[0]['state'])
+    eq(seen, ['OPEN', 'HEALTHY_1_OF_2', 'OPEN', 'HEALTHY_1_OF_2', 'FLAPPING'], '')
+    eq(len(t.sent), 2,
+       'exactly two messages: the OPEN alert, and the FLAPPING collapse. Every flicker in '
+       'between is already covered by the alert in force')
+    eq([s.splitlines()[0].rsplit('· ', 1)[-1] for _, s in t.sent], ['OPEN', 'FLAPPING'], '')
 
 
 @case('V02', 'a genuine recovery emits EXACTLY ONE recovery message, and never a second')
@@ -325,8 +355,10 @@ def _v02():
     eq([s['recovery_emitted'] for s in states], [False, False, True, False],
        'exactly one, and it is fold_finding that decides - not a second rule in the sender')
     kinds = [e['kind'] for s in states for e in notifier.plan([s], PROJECTION)]
-    eq(kinds, ['ALERT', 'ALERT', 'RECOVERY'],
-       'the fourth observation is RESOLVED with no recovery, so it produces NO event at all')
+    eq(kinds, ['ALERT', 'RECOVERY'],
+       'four observations, TWO messages: the opening alert, silence on the intermediate healthy '
+       'check, one recovery when the second healthy check confirms it, and nothing at all for '
+       'the fourth, which is RESOLVED with the recovery already sent')
     hit('kind:RECOVERY')
 
 
@@ -637,6 +669,24 @@ def _l11():
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+@case('P01', 'PUBLIC_API is the module\'s ACTUAL public surface, not a list nobody reads')
+def _p01():
+    # FOUND BY ROUND 3: notifier.PUBLIC_API was declared and NOTHING read it. A declaration no
+    # check consumes is worse than none - it reads as governance while being decoration, which
+    # is the shape memory `declared-as-trigger-but-never-read` is about. It matters here
+    # specifically because this module SENDS: a new public writer arriving unnoticed is the one
+    # thing a closed surface exists to prevent.
+    actual = set(n for n in dir(notifier)
+                 if not n.startswith('_')
+                 and getattr(getattr(notifier, n), '__module__', 'notifier') == 'notifier'
+                 and (callable(getattr(notifier, n)) or isinstance(getattr(notifier, n), type)))
+    declared = set(notifier.PUBLIC_API)
+    eq(sorted(actual - declared), [],
+       'these public callables are NOT in PUBLIC_API, so the surface grew without review')
+    eq(sorted(declared - actual), [],
+       'PUBLIC_API names things that do not exist, so it is stale')
+
+
 @case('S01', 'a sender is refused the FULL SNAPSHOT by path, before its bytes are opened')
 def _s01():
     refuses(lambda: safe_projection.read_for_sender(
@@ -937,6 +987,37 @@ def _c03():
     eq(code, 2, '')
     if 'needs --id' not in cap.err.getvalue():
         raise AssertionError(cap.err.getvalue())
+
+
+@case('C07', 'a probe works when the SNAPSHOT IS BROKEN - the moment you most want to prove the '
+             'alert path still runs')
+def _c07():
+    # A probe carries no finding, no account and no build, so requiring a verified snapshot to
+    # send one would be backwards: a broken snapshot is exactly the situation in which an
+    # operator needs to know whether alerts can still leave the machine. Driven against a repo
+    # that has NO snapshot and NO projection at all.
+    #
+    # `schemas.json` IS still required, and that is not an inconsistency: it is the declaration
+    # the outgoing event's shape is checked against, so a probe that skipped it would be the one
+    # message on this path that nothing verified. The first version of this case gave the fixture
+    # NEITHER file and went red naming exactly that -- which is the distinction worth keeping.
+    tmp = tempfile.mkdtemp(prefix='s12-nosnap-')
+    try:
+        dst = os.path.join(tmp, snapshot_validator.SCHEMA_PATH.replace('/', os.sep))
+        os.makedirs(os.path.dirname(dst))
+        shutil.copyfile(os.path.join(ROOT, snapshot_validator.SCHEMA_PATH.replace('/', os.sep)),
+                        dst)
+        rec_path = os.path.join(tmp, 'sent.jsonl')
+        with _Captured() as cap:
+            code = notifier.main(['notifier.py', 'probe', '--id', 'NOSNAP', '--channel',
+                                  'CONTROL_ROOM', '--confirm', '--record', rec_path,
+                                  '--repo-root', tmp])
+        eq(code, 0, 'a probe must not depend on a document it does not read:\n%s\n%s'
+                    % (cap.out.getvalue(), cap.err.getvalue()))
+        if 'DELIVERED' not in cap.out.getvalue():
+            raise AssertionError(cap.out.getvalue())
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 @case('C04', 'an unreadable local input stops the run before anything is planned or sent')

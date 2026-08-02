@@ -39,6 +39,33 @@ Entry point a human runs: `notifier.py plan` (never sends) · `send --confirm` �
 
 ## Owed, in the order a next lane should take them
 
+### 0. 🔴 THE FAST TIER HAS 1.3s OF HEADROOM, NOT 8s — and the S12 cage is sitting outside it
+
+This is the first thing to read and the reason the acceptance is a partial.
+
+| invocation | tier | measured (3 samples) |
+|---|---|---|
+| from a shell | 25 suites | **110.8 / 111.5 / 112.4s** |
+| `-Hook` (what the pre-commit hook uses) | 25 suites | **118.6 / 118.7 / 118.7s** |
+| `-Hook` **with `run_s12_tests.ps1` registered** | 26 suites | **122.0 / 121.6 / 122.1s — REFUSED, over the 120.0s budget** |
+
+The "~8s of headroom" in every recent handoff — including S12's own opening prompt — is a
+**non-hook** number. The hook is the only invocation that decides whether a commit lands
+(memory `tier-number-needs-its-invocation`). And staged paths that match no guard **fall back to
+running everything**: `-ExportSelection` over one `_mt5_auto/*.csv` selects all 26 suites, so
+committing a backtest CSV is a full hook-mode run.
+
+So `run_s12_tests.ps1` is **commented out of `$FAST_SUITES` together with its `$SUITE_GUARDS`
+entry** — both, or `run_guard_trigger_tests` fails on the key sets disagreeing. Run it by hand:
+
+```bash
+powershell -NoProfile -File scripts/_test/run_s12_tests.ps1
+```
+
+**Re-registering is uncommenting two blocks and regenerating the pathspec**, the moment
+`ORDER-1130` buys the room. `ORDER-1130` is not a nice-to-have any more: at 1.3s of headroom the
+next cage anyone writes hits this same wall.
+
 ### 1. The `EA LAB Control Room` bot does not exist (owner action, 2 minutes)
 Every `WARN`/`INFO` alert and the Morning Brief currently report **`UNCONFIGURED`** and the CLI
 exits non-zero. That is the designed behaviour, not a bug — but it means **nothing reaches the
@@ -131,7 +158,9 @@ control that tests the invocation.**
 | real delivery observed with OpenClaw stopped (`message_id=9`), replay suppressed | DONE |
 | `AlertEvent` / `AlertDelivery` in `schemas.json` + CONTRACTS.md + ajv fixtures | DONE |
 | S2a ownership rows for both entities, owner-ratified, one attestation line appended | DONE |
-| `run_s12_tests.ps1` registered in the fast tier, measured 3× | DONE |
+| three `/scrutinize` rounds: HEALTHY_1_OF_2 spam · the hook-mode tier budget · a dead `PUBLIC_API` | DONE |
+| 🔴 `run_s12_tests.ps1` is NOT registered in the fast tier — 1.3s of hook-mode headroom, suite is 2.9s | ORDER-1130 |
+| the "~8s headroom" figure quoted across recent handoffs is a NON-HOOK number and should stop being repeated | ORDER-1130 |
 | owner creates the `EA LAB Control Room` bot + fills the two config keys | ORDER-1180 (owed) |
 | schedule `notifier.py send`, and the ledger rotation that becomes real when it is scheduled | ORDER-1180 (owed) |
 | third-party Telegram token committed in `_triage/FXDREEMA_XRAY.md` — scrub or accept | ORDER-1180 (owed) |
