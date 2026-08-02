@@ -339,6 +339,23 @@ def g4_specificity(M):
     """a consistent closure passes -- including the REAL one -- and CRLF is not drift"""
     if problems_for(M):
         return 'a freshly generated constant pair was refused: %s' % problems_for(M)
+
+    # 🔴 A CONTENT PROBLEM MUST COME BACK AS A VERDICT, NOT AS A TRACEBACK. check()'s own docstring
+    # promises it never raises for one, and it did: main() catches only ToolFailure, so a commit
+    # that deleted a wrapper printed a Python traceback at the pre-commit hook. The reader cannot
+    # tell a refusal from a crash in the tool, and the fix for the two is different. Driven with
+    # the exact edit that exposed it.
+    files = files_for(M)
+    del files['ea_template/Boss_12_Fix.mq5']
+    try:
+        probs, _info = M.chk.check(source=FakeSource(files))
+    except M.chk.ToolFailure:
+        return 'a missing wrapper was reported as an unreadable input rather than as content'
+    except Exception as exc:
+        return ('a deleted wrapper escaped check() as %s -- the hook shows a traceback instead of '
+                'a criterion' % type(exc).__name__)
+    if not any(p.startswith('G4') for p in probs):
+        return 'a build tag with no wrapper produced no G4 problem: %s' % probs
     crlf = files_for(M)[M.chk.CONST_PATH].replace('\n', '\r\n')
     if problems_for(M, const_text=crlf):
         return 'the same enumeration in CRLF was reported as drift'
@@ -601,6 +618,50 @@ def x4_attack(M):
         return 'one name defined twice with different values in one build was accepted'
     except M.preset.PresetRefusal:
         pass
+
+    # -- the four /scrutinize round-1 findings, each as its own case ---------------------------
+    #
+    # 🔴 `#undef` WAS THE ONE THAT WENT SILENT. Every other gap in the walker ends in a refusal;
+    # ignoring #undef ended in a WRONG ANSWER -- the name stayed in `defined`, an #ifdef on it
+    # stayed live, and a constant the compiler never bakes in was enumerated and hashed. Probed
+    # before the fix: this fixture returned ['GONE', 'REACHED'].
+    undef = ('#define GONE 1\n#undef GONE\n#ifdef GONE\n#define REACHED 9\n#endif\n')
+    uf = {'ea_template/Boss_11_Fix.mq5':
+          '#define LAB_ENTRY_11\n#define LAB_ENTRY_TAG "11_Fix"\n#include "core/FixCore.mqh"\n',
+          'ea_template/core/FixCore.mqh': undef}
+    got = [c.name for c in M.gconst.scan(lambda rel: uf[rel], 'LAB_ENTRY_11',
+                                         'ea_template/Boss_11_Fix.mq5')]
+    if 'REACHED' in got:
+        return ('#undef was ignored, so a branch the compiler skips was enumerated: %s' % got)
+    if 'GONE' not in got:
+        return '#undef removed the constant from the enumeration as well as from `defined`'
+
+    # `#if` is not modelled. Unhandled it is not ignored, it is MIS-COUNTED: its #endif pops the
+    # enclosing frame. The walk did still fail, but saying `unbalanced #endif` -- which sends the
+    # reader looking for a directive that is not missing.
+    plain_if = ('#define KEEP 1\n#if SOMETHING\n#define HIDDEN 2\n#endif\n')
+    pf = dict(uf)
+    pf['ea_template/core/FixCore.mqh'] = plain_if
+    try:
+        M.gconst.scan(lambda rel: pf[rel], 'LAB_ENTRY_11', 'ea_template/Boss_11_Fix.mq5')
+        return 'a plain #if was accepted, and its #endif silently closed the enclosing branch'
+    except M.preset.PresetRefusal as exc:
+        if '#if' not in str(exc):
+            return 'the #if refusal names the wrong cause: %s' % exc
+
+    # a DOUBLE referenced in a later constant's arithmetic. Before the fix this raised ValueError
+    # out of the checker -- `float('0x3ff8000000000000')` -- instead of folding.
+    dbl = dict(uf)
+    dbl['ea_template/core/FixCore.mqh'] = '#define RATE 1.5\n#define DERIVED (RATE * 2)\n'
+    try:
+        vals = dict((c.name, c.text) for c in
+                    M.gconst.scan(lambda rel: dbl[rel], 'LAB_ENTRY_11',
+                                  'ea_template/Boss_11_Fix.mq5'))
+    except M.preset.PresetRefusal as exc:
+        return 'folding a double reference was refused rather than computed: %s' % exc
+    if vals.get('DERIVED') != M.preset.canonical_double(3.0):
+        return ('(RATE * 2) folded to %r, not the canonical form of 3.0'
+                % vals.get('DERIVED'))
     return None
 
 
@@ -646,7 +707,7 @@ CASES = [
     ('G4', 'the constant enumeration is the closure, and it is wired in', g4_attack,
      g4_specificity,
      ('check_input_surface_gen.py',
-      '    if _fold(committed_const) != _fold(expected_const):',
+      '    if expected_const is not None and _fold(committed_const) != _fold(expected_const):',
       '    if False:')),
     ('G5', 'the scope label and the constant enumeration cannot move apart', g5_attack,
      g5_specificity,

@@ -154,19 +154,41 @@ def check(worktree=False, source=None):
     core_text = read(CORE_PATH)                        # snapshot: index (or --worktree; printed)
     fp_text = read(FP_PATH)                            # snapshot: index (or --worktree; printed)
 
-    expected = gen.emit(inputs_text)
-    tags = sorted(preset.known_build_tags(inputs_text))
-    keys = dict((t, len(preset.parse_surface(inputs_text, t))) for t in tags)
+    # The SURFACE half has the same crash-instead-of-verdict hole and always did -- ORDER-730 only
+    # made it easy to reach. `parse_surface` refuses an unmodelled `#else`, an unbalanced `#endif`
+    # and an unknown type; all three are edits a commit can contain. Caught here for the same
+    # reason as the constant half below: exit 1 with a criterion is a verdict, a traceback is not.
+    try:
+        expected = gen.emit(inputs_text)
+        tags = sorted(preset.known_build_tags(inputs_text))
+        keys = dict((t, len(preset.parse_surface(inputs_text, t))) for t in tags)
+    except preset.PresetRefusal as exc:
+        return ([('G1 the input surface cannot be parsed from this snapshot, so no criterion here '
+                  'can be evaluated: %s' % exc)],
+                {'mode': src.mode, 'tags': [], 'keys': {}, 'consts': {},
+                 'enumerated': False, 'scope': '(not reached)'})
 
     # ORDER-730. The wrapper list is ENUMERATED at the same snapshot, not globbed off the disk:
     # a wrapper added in this commit has to be part of the closure this commit is judged against,
     # and a disk glob would answer about a directory rather than about the commit.
+    # A PresetRefusal here is a CONTENT problem -- a wrapper deleted, a constant whose value this
+    # module cannot reduce, one name defined twice with two values -- and this file's own docstring
+    # promises never to raise for one. It did: `main()` catches only ToolFailure, so a commit that
+    # removed a wrapper printed a Python traceback at the pre-commit hook instead of a named
+    # criterion. A traceback is not a verdict; the reader cannot tell a refusal from a crash in the
+    # tool, and the fix for the two is different.
     wrapper_rels = src.list_committed('%s/*.mq5' % gconst.WRAPPER_DIR)
-    expected_const = gconst.emit(read, inputs_text, wrapper_rels)
     const_keys = {}
-    _tags, wrappers = gconst._resolve_wrappers(read, inputs_text, wrapper_rels)
-    for t in tags:
-        const_keys[t] = len(gconst.scan(read, t, wrappers[t]))
+    expected_const = None
+    try:
+        expected_const = gconst.emit(read, inputs_text, wrapper_rels)
+        _tags, wrappers = gconst._resolve_wrappers(read, inputs_text, wrapper_rels)
+        for t in tags:
+            const_keys[t] = len(gconst.scan(read, t, wrappers[t]))
+    except preset.PresetRefusal as exc:
+        problems.append(
+            'G4 the locked-constant enumeration cannot be derived from this snapshot, so nothing '
+            'here can be compared: %s' % exc)
 
     # G1
     if _fold(committed_gen) != _fold(expected):
@@ -189,7 +211,7 @@ def check(worktree=False, source=None):
             'the same silence by a shorter route.' % CORE_PATH)
 
     # G4 -- ORDER-730, the constant enumeration. Same shape as G1/G2 one layer along.
-    if _fold(committed_const) != _fold(expected_const):
+    if expected_const is not None and _fold(committed_const) != _fold(expected_const):
         problems.append(
             'G4 %s is not what %s generates from the include closure at this snapshot (%s). '
             'Regenerate it in the same commit: `tools\\python312\\python.exe %s --write`. What the '

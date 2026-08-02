@@ -12,10 +12,15 @@ that carries a VALUE and reaches the build. Everything about that sentence is me
     (`LAB_ENTRY_16`) and `CFG_SURFACE_ENUMERATED` are all this shape, and all fall out
     automatically. No name appears in an exemption list, because there is no exemption list.
   * "reaches the build" is decided by evaluating the preprocessor, not by globbing the directory.
-    `entries/Entry_Wave5.mqh` is included only under `#ifdef LAB_ENTRY_17`, so its constants
-    belong to build 17 and to no other. A glob would enumerate constants the binary does not have,
-    and the EA half cannot even compile a reference to an undefined macro -- so the two sides would
-    not merely disagree, one of them would not build.
+    The live example is `WAVE5_DIVERG_DEPTH`, declared inside `#ifdef LAB_ENTRY_17` in
+    `ExitManager.mqh` -- which is why build 17 enumerates 24 constants and every other build 23.
+    A glob would enumerate constants the binary does not have, and the EA half cannot even compile
+    a reference to an undefined macro, so the two sides would not merely disagree: one of them
+    would not build.
+    <sub>An earlier draft of this paragraph cited `entries/Entry_Wave5.mqh` instead. That file is
+    genuinely included only under `#ifdef LAB_ENTRY_17`, so the sentence read correctly -- but it
+    defines NO valued constant, so it demonstrated nothing. A per-build claim illustrated by a
+    module that contributes nothing to the per-build result is a claim nobody can check.</sub>
   * A value this module cannot reduce to a scalar is a REFUSAL, never an omission. That is the
     difference between an enumeration and a sample: a silently-skipped constant makes
     `surface+constants` a claim about an unknown subset, which is the exact failure
@@ -67,6 +72,9 @@ WRAPPER_DIR = 'ea_template'
 # file the compiler never compiles on its own.
 _INCLUDE_RE = re.compile(r'^[ \t]*#include\s+"([^"]+)"')
 _DEFINE_RE = re.compile(r'^[ \t]*#define\s+([A-Za-z_][A-Za-z0-9_]*)[ \t]*(.*)$')
+# `#if` but NOT `#ifdef` / `#ifndef`, which are modelled. Matched rather than prefix-tested
+# because `'#ifdef'.startswith('#if')` is true and would refuse the two forms this walker handles.
+_PLAIN_IF_RE = re.compile(r'^#if(?![a-z])')
 
 # A double is a value whose LITERAL TEXT says so. `0.0` and `1e3` are doubles; `(4 * 3600)` is a
 # long. This is decided from the source spelling rather than from the evaluated Python type because
@@ -94,12 +102,16 @@ class Constant(object):
     evidence about the BINARY rather than a second copy of this file.
     """
 
-    def __init__(self, name, kind, text, raw, origin):
+    def __init__(self, name, kind, text, raw, origin, number=None):
         self.name = name
         self.kind = kind
         self.text = text
         self.raw = raw
         self.origin = origin
+        # The NUMERIC value, kept beside the canonical text because they are not the same thing
+        # for a double: `text` is the IEEE-754 hex that goes into the preimage, `number` is what
+        # a later constant's arithmetic can fold with. None for strings.
+        self.number = number
 
     def canon_call(self):
         return _CANON_CALL[self.kind] % self.name
@@ -169,18 +181,28 @@ def _eval_scalar(name, raw, resolved, origin):
         if not isinstance(value, str):
             raise preset.PresetRefusal(
                 'locked constant %s in %s does not evaluate to a string' % (name, origin))
-        return KIND_STRING, value
+        return KIND_STRING, value, None
 
     node = _parse_arith(name, txt, origin)
     value = _fold_arith(name, node, resolved, txt, origin)
-    if _LOOKS_DOUBLE_RE.search(txt):
-        return KIND_DOUBLE, preset.canonical_double(float(value))
+
+    # THE KIND IS THE SOURCE SPELLING **OR** A PROMOTION THROUGH A REFERENCE, and the second half
+    # was missing until a cage case went red for it. `#define DERIVED (RATE * 2)` has no decimal
+    # point of its own, so the spelling rule alone called it a long -- but MQL5 expands `RATE` and
+    # evaluates `(1.5 * 2)` as a DOUBLE. That happened to agree here, because `(long)3.0` is 3 and
+    # a non-integral result is refused two lines down; it agreed by luck, not by rule. C's own
+    # promotion is the rule: any double in the expression makes the result a double.
+    promoted = any(isinstance(n, ast.Name) and (resolved.get(n.id) is not None)
+                   and resolved[n.id].kind == KIND_DOUBLE
+                   for n in ast.walk(node))
+    if _LOOKS_DOUBLE_RE.search(txt) or promoted:
+        return KIND_DOUBLE, preset.canonical_double(float(value)), float(value)
     if isinstance(value, float) and value != int(value):
         raise preset.PresetRefusal(
             'locked constant %s in %s evaluates to the non-integral %r while its source text %s '
-            'contains no decimal point, so this module cannot tell whether the EA will hold a '
-            'long or a double.' % (name, origin, value, txt))
-    return KIND_LONG, str(int(value))
+            'contains no decimal point and references no double constant, so this module cannot '
+            'tell whether the EA will hold a long or a double.' % (name, origin, value, txt))
+    return KIND_LONG, str(int(value)), int(value)
 
 
 def _parse_arith(name, txt, origin):
@@ -202,13 +224,16 @@ def _fold_arith(name, node, resolved, txt, origin):
     if isinstance(node, ast.Expression):                       # pragma: no cover - defensive
         node = node.body
     num_types = (int, float)
-    if hasattr(ast, 'Constant') and isinstance(node, ast.Constant):
+    if isinstance(node, ast.Constant):
         if isinstance(node.value, bool) or not isinstance(node.value, num_types):
             raise preset.PresetRefusal(
                 'locked constant %s in %s: %s is not a number' % (name, origin, txt))
         return node.value
-    if isinstance(node, ast.Num):                              # pragma: no cover - py2/py3.7
-        return node.n
+    # There was an `ast.Num` fallback here for older interpreters. It was DEAD on this box --
+    # tools/python312 is the only interpreter and its ast.Num is a deprecated alias that emits a
+    # DeprecationWarning on every isinstance() -- so the checker printed a warning line above its
+    # own verdict on every run. A guard whose output carries permanent noise is one people stop
+    # reading, which is the same failure as a guard that cries wolf.
     if isinstance(node, ast.UnaryOp) and isinstance(node.op, (ast.UAdd, ast.USub)):
         inner = _fold_arith(name, node.operand, resolved, txt, origin)
         return inner if isinstance(node.op, ast.UAdd) else -inner
@@ -240,7 +265,14 @@ def _fold_arith(name, node, resolved, txt, origin):
             raise preset.PresetRefusal(
                 'locked constant %s in %s uses the string constant %s in arithmetic'
                 % (name, origin, node.id))
-        return float(ref.text_value) if ref.kind == KIND_DOUBLE else int(ref.text)
+        # A DOUBLE's stored text is its IEEE-754 HEX, not a number -- `canonical_double` already
+        # ran on it. The first version did `float(ref.text_value)` here and raised ValueError out
+        # of the whole checker instead of refusing: `float('0x3ff8000000000000')`. The numeric
+        # value is kept alongside the canonical text precisely so this branch has something real
+        # to fold with.
+        if ref.kind == KIND_DOUBLE:
+            return ref.number
+        return int(ref.text)
     raise preset.PresetRefusal(
         'locked constant %s in %s has the value %s, which this module cannot reduce to a scalar. '
         'A locked constant that cannot be canonicalised is REFUSED, not skipped.'
@@ -322,12 +354,30 @@ def _walk(read, rel, defined, resolved, order, stack, seen_chain):
             frame[0] = not frame[1]
             frame[1] = True
             continue
-        if stripped.startswith('#elif'):
-            # Not modelled, and deliberately not guessed at: `#elif` appears nowhere in
-            # ea_template/core, so there is no real branch to validate an implementation against.
+        if stripped.startswith('#elif') or _PLAIN_IF_RE.match(stripped):
+            # Not modelled, and deliberately not guessed at: neither appears anywhere in the
+            # closure today, so there is no real branch to validate an implementation against.
+            #
+            # `#if` IS LISTED HERE FOR A REASON THAT `#elif` DOES NOT HAVE. Left unhandled it is
+            # not ignored, it is MIS-COUNTED: the directive pushes no frame and its `#endif` then
+            # pops the ENCLOSING one, so every define after it is attributed to the wrong branch.
+            # The walk does still fail in the end -- the frame count cannot balance -- but it fails
+            # saying `unbalanced #endif`, which sends the reader hunting for a missing directive
+            # that is not missing. Naming it here turns a confusing symptom into the cause.
             raise preset.PresetRefusal(
-                '%s:%d uses #elif, which this module does not model. The constants it would '
-                'enumerate are not the constants the compiler bakes in.' % (rel, n))
+                '%s:%d uses %s, which this module does not model. The constants it would '
+                'enumerate are not the constants the compiler bakes in.'
+                % (rel, n, stripped.split()[0]))
+        if stripped.startswith('#undef'):
+            # THE ONE THAT WOULD HAVE BEEN SILENT. Every other gap in this walker ends in a
+            # refusal; ignoring `#undef` ends in a WRONG ANSWER -- the name stays in `defined`, an
+            # `#ifdef` on it stays live, and a constant the compiler never bakes in is enumerated
+            # and hashed. Modelling it is three lines, but the value of those lines is that they
+            # remove the only path here that produces a plausible hash instead of an error.
+            parts = stripped.split()
+            if len(parts) >= 2:
+                defined.discard(parts[1].strip())
+            continue
         if not all(f[0] for f in stack):
             continue
         inc = _INCLUDE_RE.match(stripped)
@@ -344,9 +394,8 @@ def _walk(read, rel, defined, resolved, order, stack, seen_chain):
         defined.add(name)
         if not value:
             continue                       # include guard / build selector: no value, no constant
-        kind, text_value = _eval_scalar(name, value, resolved, '%s:%d' % (rel, n))
-        const = Constant(name, kind, text_value, value, '%s:%d' % (rel, n))
-        const.text_value = text_value
+        kind, text_value, number = _eval_scalar(name, value, resolved, '%s:%d' % (rel, n))
+        const = Constant(name, kind, text_value, value, '%s:%d' % (rel, n), number)
         prev = resolved.get(name)
         if prev is not None:
             # REDEFINITION. Two headers giving one name two different values is not a style
