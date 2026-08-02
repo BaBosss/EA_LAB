@@ -2567,7 +2567,8 @@
           }
         }
       },
-      "x-enforcement-status": "PLANNED"
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/safe_projection.py"
     }
   }
 }

@@ -116,3 +116,12 @@ factory/runs/*.worker.*.log
 # The lane lease is live state for one install (an expiry, an owner). Committing it would let a
 # clone claim a lane it has never seen.
 factory/leases/
+
+# ORDER-1131 (S11). DERIVED renderings of the control-room snapshot: the local Control Center
+# page and the SafeProjection DTO. Both are a pure function of a snapshot that is itself
+# rebuilt by the daily chain, so committing them would create a file that goes stale on
+# somebody else's commit -- and a --check guard comparing them against HEAD would then be red
+# for a reason no author caused (memory: drift-guard-regenerating-against-head). The cage
+# builds both IN MEMORY from the real snapshot instead, so nothing here is unverified.
+build/
+

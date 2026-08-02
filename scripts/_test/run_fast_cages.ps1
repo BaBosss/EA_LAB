@@ -397,6 +397,18 @@ $FAST_SUITES = @(
     # the in-process cases cannot make. Trimming it also FOUND a defect: [AllowNull()][string]
     # coerces $null to '', so the "cannot read the exception list" branch was unreachable.
     'run_s10_tests.ps1',
+    # ORDER-1131 (S11), measured 1.4s / 1.4s / 1.3s over three runs -> 1.4s. It carries both halves of slice
+    # S11's acceptance: the derived TODAY/WORK/LIVE/SYSTEM scenario catalog (the count is printed
+    # by run_s11_tests.py --list and is deliberately not restated here) and the SafeProjection
+    # negative -- a recursive forbidden-key scan observed catching synthetic secret and account
+    # fixtures, with its control beside it.
+    #
+    # WHY IT IS THIS CHEAP. Every scenario is a pure fixture in one python process. Exactly three
+    # subprocess calls survive, and each buys a claim the fixtures cannot make: the shell rendered
+    # from the REAL snapshot through the one reader, the REAL projection validated by ajv against
+    # schemas.json, and PART B's seam -- the REAL PowerShell reader's states fed to the REAL
+    # python shell, which is the only way to catch the two vocabularies drifting apart.
+    'run_s11_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -874,6 +886,25 @@ $SUITE_GUARDS = @{
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
                                           'scripts/_test/run_fast_cages.ps1')
+    # ORDER-1131 (S11). Every entry here is READ by the suite, not merely mentioned by it --
+    # the round-4 lesson from S10, where a file was declared as a trigger and nothing ran it:
+    #   control_center.py / safe_projection.py  the modules under test
+    #   run_s11_tests.py                        the cage itself
+    #   schemas.json                            read TWICE at runtime - assert_shape derives the
+    #                                           sender's allowlist from it, and WIRE2 validates
+    #                                           the real projection against it with ajv
+    #   snapshot_validator.py                   load_verified() is how WIRE1/WIRE2 obtain the
+    #                                           real document; there is no second reader
+    #   snapshot_reader.ps1                     PART B dot-sources and DRIVES it
+    #   control_room_snapshot.json              WIRE1/WIRE2 and PART B read the real document,
+    #                                           so a rebuilt snapshot must re-run this cage
+    'run_s11_tests.ps1'               = @('_triage/factory_os/control_center.py',
+                                          '_triage/factory_os/safe_projection.py',
+                                          '_triage/factory_os/run_s11_tests.py',
+                                          '_triage/factory_os/schemas.json',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          'scripts/lib/snapshot_reader.ps1',
+                                          'portfolio/control_room_snapshot.json')
 }
 
 # Paths a suite references but which are NOT inputs to what it guards -- synthetic fixture
@@ -907,7 +938,12 @@ $NOT_A_DEPENDENCY = @(
     # waiting for a real 30s run. A selection key, not an input. (PART 4 refused the commit
     # that added it until this line existed, which is the sweep working: the reference is
     # real, and saying "not a dependency" out loud is the price of it being benign.)
-    'docs/SESSION_LEDGER.md'
+    'docs/SESSION_LEDGER.md',
+    # ORDER-1131 (S11): the two DERIVED renderings. safe_projection.py and control_center.py
+    # name them because they WRITE them; editing an output cannot change what the cage proves,
+    # and both are .gitignored, so neither can ever be staged to select a suite anyway.
+    'build/safe_projection.json',
+    'build/control_center.html'
 )
 
 if ($ExportGuards) {
