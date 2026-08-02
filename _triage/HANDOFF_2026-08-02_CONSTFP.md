@@ -59,8 +59,30 @@ it becomes sunk cost.
 - **`ORDER-941`** — one Inputs-tab read per chart for `990066`/`990067`/`990068`/`990069`
   (`_06_AllowLive`, `_06_Magic` first). Ask for **one log export covering all four**, not four
   screenshots.
-- **`ORDER-950`** — guard G4 has still never been observed firing; route 1 (read the tester's
-  actual `SYMBOL_TRADE_STOPS_LEVEL` for XAUUSD) is the cheap one.
+- ~~**`ORDER-950`** — guard G4 has still never been observed firing; route 1 is the cheap one.~~
+  ✅ **route 1 done 2026-08-02** (`S-2026-08-02-SCRUT730`): `SYMBOL_TRADE_STOPS_LEVEL=1 point`
+  (minDist 0.01) vs a smallest buffered SL distance of 0.919 = **91.86×**, so the
+  minimum-distance branch is unreachable at the shipped buffer and `sl_invalid=0` is explained.
+  Still `UNTESTED` — it explains one of four branches, and an explanation is not a sighting.
+  Routes 2 (BWD window) and 3 (synthetic probe) remain open on the row if a sighting is wanted.
+
+## Addendum — `ORDER-730` after three `/scrutinize` rounds (2026-08-02, `S-2026-08-02-SCRUT730`)
+
+**12 further defects, only one in the hash itself.** Cage 9 → 10 criteria; the generated file
+regenerates **byte-identical** after all twelve, so no tester re-run was owed — every one was in
+the guarding, and the four tester runs would have looked the same with all twelve still present.
+The two worth carrying forward as patterns:
+
+- **A criterion cannot check the generator that produces the file it reads.** G4 compares the
+  committed file against the generator's output, so an edit *in the generator* moves both and
+  stays green — deleting `+ CFG_ConstPreimage()` produced **zero problems everywhere** while the
+  EA would have hashed half the preimage under a full label. Any generated artifact needs at
+  least one criterion that reads it **as text**.
+- **Patterns that reject commented-out code must be written that way deliberately.** G2's include
+  check anchored at the `#` and rejected a commented-out directive; its call check did not, and
+  commenting out every call was ACCEPTED.
+
+Full detail on the `ORDER-730` row.
 
 ## Verification run this session
 
@@ -80,6 +102,6 @@ terminal. No `.set` changed. No EA verdict issued. No S2a bundle member, `MASTER
 |---|---|
 | decide whether the `GUARDED_INPUTS` mechanism is worth 102 declarations, then build or close | ORDER-761 |
 | `ORDER-510` STEP 2/3 (adopt-once per magic, needs terminals + owner) | ORDER-510 |
-| guard G4 fire-count evidence (`Wave5_SLValid`) | ORDER-950 |
+| guard G4: routes 2/3 if an actual SIGHTING is wanted (route 1 done, envelope measured) | ORDER-950 |
 | four IchiADX legs silent/thin, needs user's Inputs-tab read | ORDER-941 |
 | `ORDER-730` locked-constant fingerprint, C1+C2+C3 | DONE |
