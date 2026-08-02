@@ -105,7 +105,7 @@
 
 ---
 
-## ORDER-1020 — [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only — `PARTIAL (Claude/Opus 2026-08-02) — the reachability half is BUILT and CAGED (116 → 38, under design §5.3's ≤40) and the old-.set policy is CLOSED with 42 real fires; the ParameterBinding rows and param_registry_check's new criteria are NOT built` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-1020 — [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only — `DONE (Claude/Opus 2026-08-02) — all three acceptance criteria met and measured: param_registry_check CLEAN (it now runs the design §5.4 state table too) · Boss_14 Operator surface = 18 with ZERO optimize_stage=UNKNOWN · old .set fails loudly, 42 real fires` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Slice S7's acceptance, from design §10:** `param_registry_check` CLEAN · **zero `UNKNOWN` on
 > Boss_14's Operator surface** · an old `.set` migrates or **fails loudly**.
@@ -235,17 +235,17 @@ refactor.**
 
 ---
 
-## ORDER-1021 — [factory/S8] Thin Wrapper generator + the 7-point parity harness — `OPEN — NOT STARTED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-1021 — [factory/S8] Thin Wrapper generator + the 7-point parity harness — `PARTIAL (Claude/Opus 2026-08-02) — the generator is BUILT, CAGED and its output COMPILES 0/0; the 7-point parity harness and the Inputs.mqh token-guard rollout remain` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Acceptance (design §10):** all parity cases including **must-trade** and **deliberate-refusal** ·
 the wrapper contains **zero logic** · regenerating produces a **byte-identical** `.mq5`.
 **Prohibitions:** no wrapper edited by hand · no generation step that cannot be re-run.
 
-**Not started, and the honest reason is that `ORDER-1020` did not finish** — S8's generator emits
-the `LAB_CAP_*` allowlist header from the registry, and the registry rows that say which tokens a
-hypothesis carries are `ORDER-1020` item 1/2. The token DERIVATION exists and is caged
-(`_triage/factory_os/capability.py`, `enabled_tokens()`); what is missing is the row that records
-the answer and the header that compiles it.
+<sub>⚠️ **Superseded, kept because the prediction is the record.** This paragraph read *"Not started,
+and the honest reason is that `ORDER-1020` did not finish — what is missing is the row that records
+the answer and the header that compiles it."* `ORDER-1020` closed later the same day and both the
+rows and the header now exist. The entanglement it describes was real and is the reason the two
+slices were finished in one lane rather than two.</sub>
 
 **What is already in place for whoever picks this up:**
 - `capability.enabled_tokens(build_tag, config)` — the token set, derived from the same selectors
@@ -265,6 +265,61 @@ distance, which `MM-SAFETY-001` refuses at `OnInit`).
 Parity shares `tpl_regression`'s trigger, so **share its lane pin and its runner**, and it must
 assert **the binary it measured is the binary it built** (`ORDER-371`; `tpl_regression` was
 compiling into lane 1 and measuring lane 5c as recently as 2026-07-30).
+
+
+### ✅ 2026-08-02 — the generator is built, caged, and its output COMPILES
+
+`_triage/factory_os/gen_wrapper.py` emits, per registered revision, an allowlist header of
+`#define LAB_CAP_*` tokens and a **16-line** wrapper carrying `#define` and `#include` lines only.
+The token set is **derived** (`capability.enabled_tokens()` — the same call the architecture digest
+and the `Hypothesis` row's `module_set` go through), so the wrapper and the registry cannot
+disagree about what the binary contains.
+
+`check_wrapper_gen.py` holds **two of S8's three acceptance criteria** as criteria that can fail:
+**W1** byte-identical regeneration · **W2** zero logic · plus **W3** allowlist == `module_set` and
+**W4** wired (exactly one `LAB_ENTRY_*`, both includes present). Cage `run_wrapper_gen_tests.py`:
+**7/7 attacks caught**, real tree clean. The attacks are corrupted **artifacts**, not mutated code.
+
+🔴 **And then the first real compile found a defect all four criteria had passed.** Design §5.2's
+snippet shows `#include "generated/<REV>_allowlist.mqh"` **and** `#include "../core/LabCore.mqh"`
+in one wrapper — which cannot both be right. MetaEditor said so:
+`error 106: file '...\EALabTpl\generated\generated\B14_H01_r1_allowlist.mqh' not found`.
+The file was byte-identical to what the generator produced, contained zero logic, was fully wired
+and named the right tokens. **Only the compiler knew.** Settled by measurement: the **wrapper**
+sits beside the hand-written `Boss_*.mq5` (its include paths are then identical to theirs, which is
+what "thin" means), the **allowlist** in `generated/`.
+
+**Measured, lane 1 (`D:\Meta 5`):** `B14_H01_r1` **0 errors / 0 warnings**, `.ex5` written ·
+`B14_H02_r1` **0 errors / 0 warnings**, `.ex5` written · `tpl_regression` **CLEAN 8/8** on the
+same lane after the `ea_template/**` additions.
+
+<sub>The nine-target compile policy is **unchanged and deliberately so**: `deploy.ps1` discovers
+`Boss_*.mq5`, and these are not named `Boss_*`. Compiling a generated wrapper is an explicit step
+the parity harness will own — folding it into `deploy.ps1` now would change the 0/0-on-9-targets
+contract for a reason that has nothing to do with parity.</sub>
+
+### 🔴 What remains, in the order it has to be done
+
+1. **The `Inputs.mqh` capability-token rollout, Boss_14 only** (the owner's ratified per-Boss
+   shape, 2026-08-01). Until it lands the tokens are defined and `Inputs.mqh` ignores them, so a
+   generated wrapper compiles to a binary **identical** to the hand-written one. That is the safe
+   order: it makes parity case 1 a check on the **generator alone**, with the `Inputs.mqh` change
+   as a separate, separately falsifiable step. Doing both at once gives a parity failure two
+   candidate causes and no way to tell them apart.
+   <br>Two conventions coexisting is **EXPECTED, not drift** — a guard that reports "partially
+   rolled out" as a failure makes rollback the cheapest fix, which is the opposite of the decision.
+2. **The 7-point parity harness** (design §5.5, cases in `META_parity_cases`). It shares
+   `tpl_regression`'s trigger, so **share its lane pin and its runner**, and it must assert **the
+   binary it measured is the binary it built** (`ORDER-371`). The **must-trade** and
+   **deliberate-refusal** cases are not optional: a wrapper and its parent can both open zero
+   trades, so the lists match and parity "passes" while the wrapper failed `OnInit` on a wrong
+   generated `const`.
+3. Only then does evidence from a wrapper count. Evidence from an unparified wrapper is **void**.
+
+**Already in place for whoever takes it:** the token derivation · the const/input split
+(`activation.classify()` — 78 of Boss_14's 116 are unreachable under B14-H01) · the `[CFG]`
+`effective_config_hash` covering surface **and** locked constants, so **parity point 2 is already
+emittable and already comparable by a tester run**.
 
 ### ห้าม
 - ❌ No wrapper edited by hand. ❌ No evidence from an unparified wrapper counts — it is void.
