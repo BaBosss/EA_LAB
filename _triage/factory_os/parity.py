@@ -21,11 +21,14 @@ design decision in this module falls out of that one sentence:
     `verdict_for_case` refuses to accept a case declared must-trade that opened nothing.
   * `refused` and `silent` are different init results and are never folded together.
 
-🔴 WHAT THE SIDES ARE, AND THE ASYMMETRY THAT IS NOT A DEFECT. The wrapper exposes 38 inputs; its
-parent exposes 116. That is the POINT of the rollout, so their `.set` files are not the same file
--- but their EFFECTIVE CONFIGURATIONS are the same 116 values, which is why point 2 can demand an
-identical `effective_config_hash`: `CFG_SurfacePreimage()` enumerates all 116 names for build 14
-and reads each as a SYMBOL, and a `const` symbol reads exactly like an `input` one.
+🔴 WHAT THE SIDES ARE, AND THE ASYMMETRY THAT IS NOT A DEFECT. The wrapper exposes only the
+inputs its revision leaves live (29 under B14-H01 as of the 2026-08-02 lock -- but the number is
+`gen_wrapper.const_plan()`'s to state, not this docstring's: it moved 38->29 within HOURS of first
+being written down, and a count copied into prose is stale the day after). The parent exposes the
+build's full surface. That asymmetry is the POINT of the rollout -- but both sides' EFFECTIVE
+CONFIGURATIONS are the same full-surface value set, which is why point 2 can demand an identical
+`effective_config_hash`: `CFG_SurfacePreimage()` enumerates every name the build declares and
+reads each as a SYMBOL, and a `const` symbol reads exactly like an `input` one.
 
 CATEGORY (TIER_SNAPSHOT_DESIGN.md section 2/3.3): PURE. Text in, verdicts out. It opens nothing --
 `scripts/parity_run.ps1` owns the tester runs and hands this module the bytes they produced. That

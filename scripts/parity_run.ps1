@@ -17,11 +17,14 @@ THE BINARY IT MEASURED IS THE BINARY IT BUILT. Both .ex5 files are asserted pres
 every ea_template source file before either run starts. A parity pass over a stale wrapper would
 compare the current parent against last week's variant and call the difference a defect.
 
-WHY THE TWO SIDES GET DIFFERENT .set FILES. The wrapper exposes 38 inputs and the parent 116 -
-that is the POINT of the capability-token rollout. What has to match is the EFFECTIVE
-CONFIGURATION, so both sides are handed the same full-surface 116-key .set: the parent honours all
-of it, and the wrapper silently ignores the 78 keys its binary no longer has. Point 2 then demands
-they arrive at the same effective_config_hash, which is the check that they really did.
+WHY THE TWO SIDES GET DIFFERENT INPUT PAGES FROM ONE .set. The wrapper exposes only the inputs
+its revision leaves live and the parent exposes the build's full surface - that is the POINT of
+the capability-token rollout. (The counts are gen_wrapper.const_plan()'s to state, not this
+header's: the wrapper's count moved 38->29 within hours of first being written into prose.) What
+has to match is the EFFECTIVE CONFIGURATION, so both sides are handed the same full-surface .set:
+the parent honours all of it, the wrapper silently ignores the keys its binary no longer has, and
+point 2 demands they arrive at the same effective_config_hash - now TRIANGULAR against the
+compiler's expected hash too, so a .set that silently failed to apply on BOTH sides cannot pass.
 
 REQUIRES: MT5 GUI closed (mt5_run.ps1's guard), and ea_template\deploy.ps1 -Compile plus a compile
 of the generated wrappers. Like tpl_regression.ps1 this is a MANUAL evidence tool: it costs two
@@ -79,7 +82,8 @@ $Wrapper = 'EALabTpl\generated\' + $slug
 # so a .set naming either is ignored by the wrapper and the two sides would refuse for DIFFERENT
 # reasons - which is a parity failure manufactured by the case, not found by it. The refusal case
 # therefore uses _41_FixedLot=0, which is (a) the same MM_ConfigValid fail-closed seam, (b) an
-# input LIVE on the wrapper's own 38-key page, so both sides reach it identically.
+# input LIVE on the wrapper's own page (SIZING/OPERATOR - it survives every lock this revision
+# has), so both sides reach it identically.
 $cases = @{
   'must-trade'         = @{ kind = 'must-trade';         overrides = @() }
   'deliberate-refusal' = @{ kind = 'deliberate-refusal'; overrides = @('_41_FixedLot=0.0') }

@@ -216,6 +216,71 @@ def w8_registry_hides_what_the_binary_exposes():
     return {'overrides': {grr.BINDINGS_REL: chr(10).join(rows) + chr(10)}}
 
 
+def w9_const_soundness_sweep():
+    """ADDED BY THE THIRD AUDIT ROUND, and it is the strongest case in this suite: a BRUTE-FORCE
+    soundness sweep of every const decision, not an example-based attack. For every input
+    const_plan compiles away whose capability IS in the binary and which is not LOCKED by
+    decision, enumerate every combination of values the still-live selectors its gate reads can
+    take (enum members, both booleans, {0,1,100} for numerics) and assert the gate stays CLOSED
+    under all of them. The input's OWN value is deliberately NOT an axis: const-ing is precisely
+    what fixes it, so SELF_GT0-off is off forever -- the audit round first ran this sweep WITH
+    the self axis, got 17 hits, and every one was that convention misread as unsoundness (all 17
+    are INACTIVE/HIDDEN in the registry; none is advertised TUNABLE, which W8 checks separately).
+    A real hit here means a LIVE DIAL WAS COMPILED TO A CONSTANT -- the one failure the whole
+    rollout must never produce."""
+    import itertools
+    import hypothesis_b14 as HB
+    import activation
+    import capability
+    import preset as pr
+    surf = pr.parse_surface(_disk(pr.INPUTS_REL), HB.BUILD_TAG)
+    TB = activation.TABLE[HB.BUILD_TAG]
+
+    def candidates(sel):
+        d = surf.by_name[sel]
+        if d.mql_type.startswith('ENUM_') and d.mql_type in surf.enums:
+            return list(surf.enums[d.mql_type].keys())
+        if d.mql_type == 'bool':
+            return ['true', 'false']
+        return ['0', '1', '100']
+
+    def sels(g):
+        k = g[0]
+        if k in ('EQ', 'NE', 'GT0'):
+            return [g[1]]
+        if k == 'AND':
+            out = []
+            for s in g[1:]:
+                out.extend(sels(s))
+            return out
+        return []
+
+    unsound = []
+    for hyp_id in sorted(HB.HYPOTHESES):
+        hyp = HB.HYPOTHESES[hyp_id]
+        cfg = grr.pinned_config(hyp, surf)
+        plan = gw.const_plan(HB.BUILD_TAG, hyp, surf, cfg)
+        tokens = set(capability.enabled_tokens(HB.BUILD_TAG, cfg, surface=surf))
+        live = set(plan.live)
+        for name in plan.const_values:
+            tok, gate = TB[name]
+            if tok not in tokens or name in HB.LOCKED_SELECTORS:
+                continue
+            axes = [(s, candidates(s)) for s in sorted(set(sels(gate))) if s in live]
+            if not axes:
+                continue
+            for combo in itertools.product(*[v for _s, v in axes]):
+                probe = dict(cfg)
+                for (s, _v), val in zip(axes, combo):
+                    probe[s] = val
+                if activation._eval(gate, name, probe, surf):
+                    unsound.append((hyp_id, name, dict(zip([s for s, _v in axes], combo))))
+                    break
+    return (not unsound,
+            '%d const-ed input(s) whose gate a live selector can OPEN: %r'
+            % (len(unsound), unsound[:4]))
+
+
 def w5_status_rolled_back():
     """The lifecycle field left behind by the artifact. Both rows said `status: DRAFT` while
     their wrappers existed on disk, which is the state this criterion was written from."""
@@ -251,6 +316,12 @@ CASES = (
      w7_const_for_a_name_nothing_declares),
     ('W8', 'the registry hides a dial the binary still exposes',
      w8_registry_hides_what_the_binary_exposes),
+)
+
+# Not attack-shaped -- a PROPERTY sweep, run after the attacks. Each returns (ok, why).
+PROPERTY_CASES = (
+    ('W9', 'brute-force: no const-ed gate can be opened by ANY assignment of the live selectors',
+     w9_const_soundness_sweep),
 )
 
 
@@ -290,6 +361,13 @@ def main(argv):
         else:
             print('        -> NOT CAUGHT BY %s. Reported instead: %s'
                   % (tag, '; '.join(p[:70] for p in problems) or 'nothing at all'))
+
+    for tag, label, fn in PROPERTY_CASES:
+        ok, why = fn()
+        bad += 0 if ok else 1
+        print('  [%s] %-3s property %s' % ('OK ' if ok else 'BAD', tag, label))
+        if not ok:
+            print('        -> %s' % why)
 
     if bad:
         print('\n=== %d CASE(S) DID NOT BEHAVE AS DECLARED ===' % bad)
