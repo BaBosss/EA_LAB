@@ -151,8 +151,11 @@ BAND_RULES = (
      'ถึงกำหนด monitor / judge / reopt / audit'),
     ('B10', lambda r: r.get('state') == 'WAITING', 'WAITING',
      'รออยู่'),
+    # ROUND-2 FIX: this text used to end '...และยังมี heartbeat', asserted from the ABSENCE of a
+    # heartbeat field. The rule places the row; the measurement lives in _heartbeat_block, so
+    # the placement cannot claim something nobody measured.
     ('B11', lambda r: r.get('state') == 'IN_PROGRESS', 'START_NOW',
-     'กำลังทำอยู่และยังมี heartbeat'),
+     'กำลังทำอยู่'),
     ('B12', lambda r: r.get('state') in ('READY', 'CAPTURED'), 'READY',
      'พร้อมทำ'),
     ('B13', lambda r: r.get('state') in ('REVIEWED', 'CANCELLED_BY_USER'), 'JUST_DONE',
@@ -233,6 +236,24 @@ def _waiting_block(row):
     return {'ok': False, 'missing': missing, 'label': 'พักงานแบบไร้กำหนด — ต้องจัดการ'}
 
 
+def _heartbeat_block(row):
+    """
+    ROUND-2. design 7.1 gives a claim with no heartbeat FOR >30 MIN the stuck label. A claim
+    with NO heartbeat data at all is a third state, and rendering it as the healthy one is the
+    exact move this repo keeps paying for. Three outcomes, one per thing that is actually true.
+    """
+    if row.get('state') != 'IN_PROGRESS':
+        return None
+    age = row.get('heartbeat_age_min')
+    if age is None:
+        return {'known': False, 'age_min': None,
+                'label': 'heartbeat ไม่ทราบ — ยังไม่มีอะไรยืนยันว่า session ยังอยู่'}
+    if age > STALE_CLAIM_MINUTES:
+        return {'known': True, 'age_min': age,
+                'label': 'ไม่มี heartbeat มา %s นาที (เกิน %d)' % (age, STALE_CLAIM_MINUTES)}
+    return {'known': True, 'age_min': age, 'label': 'heartbeat ล่าสุด %s นาทีที่แล้ว' % age}
+
+
 def _stage_block(row):
     """
     design 7.1: "Audit is a stage of the same row (`BUILD 1/2 -> AUDIT 2/2`), never a separate
@@ -298,6 +319,7 @@ def build_today(read, rows, live):
         for name, block in (('decision', _decision_block(row) if row['priority'] == 'USER_DECISION' else None),
                             ('rework', _rework_block(row)),
                             ('waiting', _waiting_block(row)),
+                            ('heartbeat', _heartbeat_block(row)),
                             ('stage', _stage_block(row))):
             if block is not None:
                 rendered[name] = block
@@ -395,14 +417,22 @@ def build_work(read, rows):
         'duplicates': rec.get('duplicates'),
         'conflicts': rec.get('conflicts'),
     }
+    # ROUND-2 FIX. This asked "are there ZERO rows", which closed the empty case and left the
+    # PARTIAL one open: one rendered row beside discovered=334 came out unknown=False with an
+    # empty why, i.e. a page that reads like a queue of one. What has to be visible is the GAP,
+    # and the gap is the same defect at any size.
     discovered = rec.get('discovered') or 0
-    if not any(by_state.values()) and discovered > 0:
+    rendered = sum(len(v) for v in by_state.values())
+    page['rendered'] = rendered
+    if rendered < discovered:
         page['unknown'] = True
-        page['why'] = ('มี %d order ตาม reconciliation ของ snapshot แต่ไม่มี row ระดับรายการให้เรนเดอร์เลย — '
-                       'เจ้าของข้อมูลระดับ row ยังไม่มี (S14 Work Receipts) ⇒ UNKNOWN ไม่ใช่ "คิวว่าง"'
-                       % discovered)
+        page['unaccounted'] = discovered - rendered
+        page['why'] = ('snapshot นับ order ได้ %d แต่หน้านี้เรนเดอร์ได้ %d — ขาดอีก %d รายการที่ไม่มีเจ้าของ '
+                       'ระดับ row (S14 Work Receipts) ⇒ UNKNOWN ไม่ใช่ "คิวเท่านี้"'
+                       % (discovered, rendered, discovered - rendered))
     else:
         page['unknown'] = False
+        page['unaccounted'] = 0
         page['why'] = ''
     unclassified = rec.get('unclassified') or 0
     duplicates = rec.get('duplicates') or 0
@@ -714,10 +744,18 @@ def _row_html(row):
             head.append('<span class="pill">%s %s</span>' % (_esc(key), _esc(row[key])))
     title = _esc(row.get('title', '') or row.get('label', ''))
     extra = []
-    for key in ('decision', 'rework', 'waiting', 'stage'):
-        if row.get(key):
-            extra.append('<div class="why"><span class="k">%s</span> %s</div>'
-                         % (_esc(key), _esc(row[key].get('label', row[key]))))
+    for key in ('decision', 'rework', 'waiting', 'heartbeat', 'stage'):
+        block = row.get(key)
+        if not block:
+            continue
+        # ROUND-2 nit: `block.get('label', block)` printed a raw python dict for any block
+        # without a label (the healthy WAITING block has none), which is how a page starts
+        # looking like a debug dump. Blocks without a label render their fields.
+        text = block.get('label') if isinstance(block, dict) else block
+        if not text and isinstance(block, dict):
+            text = ' · '.join('%s=%s' % kv for kv in sorted(block.items()))
+        extra.append('<div class="why"><span class="k">%s</span> %s</div>'
+                     % (_esc(key), _esc(text)))
     return ('<div class="row">%s %s<div class="why">%s</div>%s</div>'
             % (''.join(head), title, _esc(row.get('why', '')), ''.join(extra)))
 

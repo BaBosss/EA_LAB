@@ -417,6 +417,65 @@ def w08():
         raise AssertionError('state %s was accepted' % bad)
 
 
+@case('W13', 'round 2 · 7.1 WORK', 'a claim with NO heartbeat data does not render as one that HAS a heartbeat')
+def w13():
+    """
+    ROUND-2: rule B11's text was 'กำลังทำอยู่อยู่และยังมี heartbeat', asserted from the ABSENCE of a
+    heartbeat field. design 7.1's stuck label is for a claim with no heartbeat FOR >30 MIN; no
+    data at all is a third thing, and it is the one this repo has paid for repeatedly.
+    """
+    rows = rows_of({'id': 'O-1', 'state': 'IN_PROGRESS', 'priority': 'READY'})
+    row = [r for b in cc.project(read_ok(), rows)['today']['bands']
+           for r in b['rows'] if r.get('id') == 'O-1'][0]
+    assert 'heartbeat' not in row['why'], row['why']
+    assert row['heartbeat']['known'] is False, row
+    # control: a row that DOES carry a heartbeat says so, with the number
+    rows = rows_of({'id': 'O-2', 'state': 'IN_PROGRESS', 'priority': 'READY',
+                    'heartbeat_age_min': 5})
+    row = [r for b in cc.project(read_ok(), rows)['today']['bands']
+           for r in b['rows'] if r.get('id') == 'O-2'][0]
+    assert row['heartbeat']['known'] is True and row['heartbeat']['age_min'] == 5, row
+
+
+@case('W14', 'round 2 · blind audit F4', 'a PARTIAL row list beside a large count is UNKNOWN too, with both numbers')
+def w14():
+    """
+    ROUND-2: W09 closed the zero-rows case and left the partial one open. One rendered row
+    beside `discovered=334` produced unknown=False and an empty `why` - a page that looks like
+    a queue of one. The gap is what must be visible, not the emptiness.
+    """
+    doc = snapshot()
+    doc['meta']['reconciliation']['discovered'] = 334
+    doc['meta']['reconciliation']['categorized'] = 306
+    page = cc.project(read_ok(doc), rows_of({'id': 'O-1', 'state': 'READY',
+                                             'priority': 'READY'}))['work']
+    assert page['unknown'] is True, page
+    assert '334' in page['why'] and '333' in page['why'], page['why']
+    # control: rows that DO account for the count are not flagged
+    doc2 = snapshot()
+    doc2['meta']['reconciliation']['discovered'] = 1
+    ok = cc.project(read_ok(doc2), rows_of({'id': 'O-1', 'state': 'READY',
+                                            'priority': 'READY'}))['work']
+    assert ok['unknown'] is False, ok
+
+
+@case('W15', 'round 2 · 7.1 WORK', 'STATE_CONFLICT goes to ต้องการคุณ - a human decides, the page does not pick')
+def w15():
+    rows = rows_of({'id': 'O-1', 'state': 'STATE_CONFLICT', 'priority': 'READY'})
+    bands = dict((b['id'], b) for b in cc.project(read_ok(), rows)['today']['bands'])
+    assert [r['id'] for r in bands['NEEDS_YOU']['rows']] == ['O-1'], bands['NEEDS_YOU']
+    assert bands['NEEDS_YOU']['rows'][0]['rule'] == 'B02', bands['NEEDS_YOU']['rows'][0]
+
+
+@case('W16', 'round 2 · 7.1 WORK', 'BLOCKED and STARTED_BUT_STUCK both land in ติดขัด, by their own rules')
+def w16():
+    rows = rows_of({'id': 'O-1', 'state': 'BLOCKED', 'priority': 'READY'},
+                   {'id': 'O-2', 'state': 'READY', 'priority': 'STARTED_BUT_STUCK'})
+    bands = dict((b['id'], b) for b in cc.project(read_ok(), rows)['today']['bands'])
+    got = dict((r['id'], r['rule']) for r in bands['STUCK']['rows'])
+    assert got == {'O-1': 'B06', 'O-2': 'B05'}, got
+
+
 @case('W09', 'blind audit F4', 'zero rows + a non-zero reconciliation renders UNKNOWN, never an empty queue')
 def w09():
     doc = snapshot()
@@ -923,8 +982,14 @@ def wire1():
     for tab in ('TODAY', 'WORK', 'LIVE', 'SYSTEM'):
         assert '>%s<' % tab in html, tab
     assert pages['today']['health']['headline'] in ('ALL CLEAR', 'ATTENTION'), pages['today']['health']
-    # the real repo has no work receipts yet, and the real reconciliation is non-zero
-    assert pages['work']['unknown'] is True, pages['work']
+    # ROUND-2 FIX: this used to assert `work.unknown is True`, which pins TODAY'S emptiness of
+    # factory/work_receipts.jsonl. The day S14 imports one receipt it would go red for a reason
+    # that is not a defect. Assert the RULE against the same document instead - it holds
+    # whatever the store contains, and it still fails if the rule stops being applied.
+    rendered = sum(len(v) for v in pages['work']['by_state'].values())
+    discovered = pages['work']['counts']['discovered'] or 0
+    assert pages['work']['unknown'] == (rendered < discovered), (rendered, discovered,
+                                                                 pages['work']['unknown'])
 
 
 @case('WIRE2', 'S11 wiring', 'the projection built from the real snapshot validates against schemas.json')
@@ -939,12 +1004,28 @@ def wire2():
 # Roll-ups
 # ---------------------------------------------------------------------------------------
 
-def rollups(ran):
+def rollups(ran, by_cases, by_probe):
+    """
+    ROUND-2 FIX, and the finding is about this function. R1 used to be computed AFTER main()
+    appended thirteen purpose-built rows that fire every placement rule, so it was green no
+    matter which scenarios existed -- a roll-up that could not fail, guarding against rules
+    that have a comment and no attack. It was hiding exactly that: THREE rules (B02, B05, B06)
+    were reached by no catalogued case at all.
+
+    The two claims are now separated, because they are different claims:
+      R1  every rule is fired BY A CATALOGUED SCENARIO  -- coverage, and it can go red.
+      R4  every rule is reachable at all                -- a dead rule, weaker and still worth
+                                                           having, driven by the probe rows.
+    (memory: pf5th-bar-cannot-fail-under-current-mc)
+    """
     problems = []
     declared = set(r[0] for r in cc.BAND_RULES)
-    if declared - FIRED_RULES:
-        problems.append('R1 placement rules never fired by any case: %s'
-                        % ', '.join(sorted(declared - FIRED_RULES)))
+    if declared - by_cases:
+        problems.append('R1 placement rules no CATALOGUED SCENARIO fires: %s'
+                        % ', '.join(sorted(declared - by_cases)))
+    if declared - by_probe:
+        problems.append('R4 placement rules that are unreachable even by a purpose-built row '
+                        '(a dead rule): %s' % ', '.join(sorted(declared - by_probe)))
     layers = set(['FORBIDDEN_KEY', 'KNOWN_SECRET'] + [r[0] for r in sp.FORBIDDEN_VALUE_RULES])
     if layers - FIRED_SCAN:
         problems.append('R2 scan layers with ZERO fires (a guard with zero fires is UNTESTED): %s'
@@ -974,9 +1055,12 @@ def main(argv):
             failed.append((cid, title, '%s: %s' % (type(exc).__name__, exc)))
             print('  FAIL %-6s %s\n         %s: %s' % (cid, title, type(exc).__name__, exc))
 
-    # The placement rules that no scenario reached are fired here on purpose-built rows, so
-    # R1 measures COVERAGE of the table rather than being satisfied by the cases that happened
-    # to be written. A rule that cannot be fired at all is a rule that is dead.
+    # Snapshot what the CATALOGUED SCENARIOS fired, BEFORE the probe rows below add to it.
+    # Taking this line out is what made R1 unfalsifiable for a whole slice.
+    by_cases = set(FIRED_RULES)
+
+    # Purpose-built rows, one per placement rule. These feed R4 (is the rule reachable at all)
+    # and deliberately NOT R1 (does a scenario exercise it).
     for row in (
         {'id': 'X1', 'state': 'STATE_CONFLICT', 'priority': 'READY'},
         {'id': 'X2', 'state': 'READY', 'priority': 'USER_DECISION'},
@@ -995,7 +1079,7 @@ def main(argv):
     ):
         place(row)
 
-    problems = rollups(ran)
+    problems = rollups(ran, by_cases, set(FIRED_RULES))
     for p in problems:
         print('  FAIL %s' % p)
     total = len(CASES)
