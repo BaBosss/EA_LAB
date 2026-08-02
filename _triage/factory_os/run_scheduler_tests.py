@@ -110,6 +110,7 @@ class World(object):
         self.report_fresh = {}
         self.report_mtime = {}
         self.clock = 0
+        self.testing_ticks = 0
         # OBSERVED COUNTERS -- the acceptance is read off these, not off the planner's opinion
         self.launches = 0
         self.live = 0
@@ -220,6 +221,27 @@ def _adv_silent_death(w):
         w.die_silently()
 
 
+def _adv_slow(w):
+    """A worker that is actually SLOW, which is what a tester run is.
+
+    🔴 /scrutinize round 1 added this scenario because the corrected roll-up immediately failed on
+    `RUNNING`: in every fast scenario the worker went starting -> testing -> done inside two ticks,
+    so by the time the driver held a PROCESS_OBSERVED line the exit record already existed and
+    `OBSERVE_RUNNING` was NEVER the action being killed. The old roll-up passed anyway, because it
+    counted a point REACHED in one cell as covering the cell that was supposed to kill there. So
+    the claim "all nine transitions killed on both sides" was not merely unmeasured -- it was
+    FALSE for RUNNING, and the measurement bug is what hid it. A real backtest takes minutes; this
+    scenario is the realistic one and the two-tick ones are the degenerate boundary.
+    """
+    if w.worker == 'starting':
+        w.worker = 'testing'
+        w.testing_ticks = 0
+    elif w.worker == 'testing':
+        w.testing_ticks += 1
+        if w.testing_ticks >= 3:
+            w.finish(0, True)
+
+
 def _adv_lease_stolen(w):
     """Another lane user takes the lease out from under this run. This is the ONLY scenario that
     reaches ABANDONED, and it exists because the roll-up refused to pass without it: the first
@@ -231,6 +253,7 @@ def _adv_lease_stolen(w):
 
 
 SCEN_OK = Scenario('completes', _adv_ok)
+SCEN_SLOW = Scenario('completes slowly, like a real tester run', _adv_slow)
 SCEN_EXIT1 = Scenario('tester error then retry', _adv_exit1)
 SCEN_KILLED = Scenario('worker killed with no exit record', _adv_silent_death)
 SCEN_LEASE = Scenario('lane lease stolen mid-run', _adv_lease_stolen)
@@ -252,12 +275,19 @@ ACTION_WRITES = {
 assert set(ACTION_WRITES) == set(S.ACTIONS), 'the driver does not cover the closed action set'
 
 
-def drive(world, kill_at=None, budget=60, observed=None, relaunch_bug=False):
+def drive(world, kill_at=None, budget=60, killed=None, relaunch_bug=False):
     """Run the loop until DONE/REFUSE, or until `kill_at` = (action, phase) is reached.
 
     `phase` is 'before' (the side effect has not happened) or 'after' (it has, and the line has
     not been written). Those are the only two crash windows a step has, which is why enumerating
     them is enumeration rather than sampling.
+
+    🔴 /scrutinize round 1: `killed` records ONLY the points where a kill actually fired. The
+    first version recorded every point the driver REACHED and the roll-up then printed "every
+    transition had a kill observed" over it. Reaching and being killed at are different facts, and
+    the set was shared across all 256 cells, so a point reached in one cell satisfied the roll-up
+    for every other. The conclusion happened to be true; the measurement did not establish it,
+    which is GUARD_SHAPES shape 4 -- a claim stated without measuring it in the same breath.
     """
     for _ in range(budget):
         journal = world.journal
@@ -268,16 +298,16 @@ def drive(world, kill_at=None, budget=60, observed=None, relaunch_bug=False):
             # instead of adopting is precisely the bug acceptance criterion 1 exists to forbid.
             name = 'LAUNCH'
             act = {'action': 'LAUNCH', 'attempt': act['attempt'], 'why': 'injected defect'}
-        if observed is not None:
-            observed.add((name, 'before'))
         if kill_at == (name, 'before'):
+            if killed is not None:
+                killed.add((name, 'before'))
             raise Killed()
 
         line = _perform(world, act, name)
 
-        if observed is not None:
-            observed.add((name, 'after'))
         if kill_at == (name, 'after'):
+            if killed is not None:
+                killed.add((name, 'after'))
             raise Killed()
 
         if line is not None:
@@ -371,16 +401,25 @@ def queue(world):
     world.append(dec['line'])
 
 
-def run_to_end(world, kills=(), delays=(), observed=None, relaunch_bug=False):
-    """Queue, then drive; on each kill, resume after `delay` ticks of the worker's own life."""
+def run_to_end(world, kills=(), delays=(), killed=None, relaunch_bug=False):
+    """Queue, then drive; on each kill, resume after `delay` ticks of the worker's own life.
+
+    Returns ('killed', final_action) when the kill fired and the resume converged, or
+    ('never-reached', final_action) when this scenario simply never reaches that point -- a
+    distinction the caller MUST keep, because a cell that was never killed is not a recovery and
+    must not be counted as one.
+    """
     queue(world)
+    fired = False
     for kill, delay in zip(kills, delays):
         try:
-            drive(world, kill_at=kill, observed=observed, relaunch_bug=relaunch_bug)
-            return 'converged-before-kill'
+            act = drive(world, kill_at=kill, killed=killed, relaunch_bug=relaunch_bug)
+            return 'never-reached', act
         except Killed:
+            fired = True
             world.tick(delay)
-    return drive(world, observed=observed, relaunch_bug=relaunch_bug)
+    act = drive(world, killed=killed, relaunch_bug=relaunch_bug)
+    return ('killed' if fired else 'never-reached'), act
 
 
 # =============================================================================================
@@ -389,8 +428,7 @@ sys.stdout.write('PART 1 - the kill matrix, ENUMERATED over every (action, phase
 
 # The no-kill control first. Without it every invariant below could be true because nothing ran.
 ctl = World(SCEN_OK)
-ctl_obs = set()
-run_to_end(ctl, observed=ctl_obs)
+run_to_end(ctl)
 check('CONTROL an unkilled run reaches EVIDENCE_REGISTERED with exactly one launch and one event',
       S.tail(ctl.journal) == 'EVIDENCE_REGISTERED' and ctl.launches == 1
       and ctl.event_appends == 1 and ctl.max_live == 1,
@@ -404,30 +442,43 @@ check('CONTROL and it HANDS THE LANE BACK before it exits -- the lease expiry is
 
 SCENARIOS = [
     ('completes', SCEN_OK, 'EVIDENCE_REGISTERED', 1),
+    ('completes-slowly', SCEN_SLOW, 'EVIDENCE_REGISTERED', 1),
     ('tester-error-then-retry', SCEN_EXIT1, None, 2),
     ('worker-killed-silently', SCEN_KILLED, None, 2),
     ('lane-lease-stolen', SCEN_LEASE, None, 0),
 ]
 DELAYS = (0, 9)          # 0 = the worker is exactly where the kill left it; 9 = it ran on and finished
 
-observed_points = set()
-matrix_rows = 0
+killed_points = set()
+matrix_cells = 0
+matrix_kills = 0
 matrix_bad = []
-for scen_name, scen, _expect_tail, _ in SCENARIOS:
+for scen_name, scen, expect_tail, _ in SCENARIOS:
     for action in S.ACTIONS:
         for phase in ('before', 'after'):
             for delay in DELAYS:
                 w = World(scen)
                 try:
-                    run_to_end(w, kills=[(action, phase)], delays=[delay],
-                               observed=observed_points)
+                    outcome, _final = run_to_end(w, kills=[(action, phase)], delays=[delay],
+                                                 killed=killed_points)
                 except Killed:
                     matrix_bad.append('%s/%s/%s/%d: a second kill fired' % (scen_name, action, phase, delay))
                     continue
                 except AssertionError as exc:
                     matrix_bad.append('%s/%s/%s/%d: %s' % (scen_name, action, phase, delay, exc))
                     continue
-                matrix_rows += 1
+                matrix_cells += 1
+                if outcome == 'killed':
+                    matrix_kills += 1
+                    # I6 RECOVERY CONVERGES. A resume that survives every invariant below and
+                    # still lands somewhere else than the unkilled control has not recovered, it
+                    # has taken a different path to a different answer -- and nothing else here
+                    # would say so. Only asserted for scenarios with ONE possible ending; the
+                    # retry and lease-theft scenarios legitimately end in several places.
+                    if expect_tail and S.tail(w.journal) != expect_tail:
+                        matrix_bad.append('%s/%s/%s/%d: killed run ended at %s, control ends at %s'
+                                          % (scen_name, action, phase, delay,
+                                             S.tail(w.journal), expect_tail))
                 # I1 nothing was ever launched twice at once -- MEASURED by the stub, not asserted
                 if w.max_live > 1:
                     matrix_bad.append('%s/%s/%s/%d: max_live=%d (a DOUBLE LAUNCH)'
@@ -457,14 +508,19 @@ for scen_name, scen, _expect_tail, _ in SCENARIOS:
 
 check('the matrix ran every (scenario x action x phase x delay) cell without an invalid line',
       not matrix_bad, '; '.join(matrix_bad[:6]))
-check('matrix size = %d resumes over %d scenarios x %d actions x 2 phases x 2 delays'
-      % (matrix_rows, len(SCENARIOS), len(S.ACTIONS)),
-      matrix_rows >= len(SCENARIOS) * len(S.ACTIONS))
+# TWO NUMBERS, because they are two different facts. /scrutinize round 1: the headline said
+# "256 resumes" and 256 was the CELL count -- most of a scenario's action list is unreachable in
+# it (SCEN_OK never abandons), so those cells converged without any kill and were counted as
+# recoveries anyway. The cell count says the sweep was complete; the kill count says how much of
+# it was a recovery. Reporting only the larger one is how a sweep flatters itself.
+check('matrix swept %d cells (%d scenarios x %d actions x 2 phases x 2 delays) of which %d were '
+      'a real kill-and-resume' % (matrix_cells, len(SCENARIOS), len(S.ACTIONS), matrix_kills),
+      matrix_cells >= len(SCENARIOS) * len(S.ACTIONS) and matrix_kills > 0)
 
 # --- THE ROLL-UP. A state the scenarios never reached is a hole, and it must FAIL here rather
 #     than leave a zero nobody reads. This is the parity harness's round-1 lesson made mechanical.
 killed_states = {}
-for (action, phase) in observed_points:
+for (action, phase) in killed_points:
     writes = ACTION_WRITES[action]
     if writes:
         killed_states.setdefault(writes, set()).add(phase)
@@ -801,6 +857,31 @@ else:
           (handled - {'ADOPT_PROCESS'}) != set(S.ACTIONS))
     check('the dispatcher gates its report read through the shared freshness guard',
           'Test-ReportIsFresh' in disp)
+    # 🔴 /scrutinize round 1. Two dispatcher-only defects the pure cage CANNOT see, because it
+    # models the design rather than the PowerShell: the observation layer is not driven by
+    # scheduler.py, so a permissive default inside it is invisible to all 256 recoveries.
+    #
+    #   (a) `RunStart` fell back to the epoch when the spawn marker was missing, which makes
+    #       Test-ReportIsFresh's mtime half accept ANY report on disk -- the guard's own defeat,
+    #       reintroduced by its caller, on the crash path.
+    #   (b) The spawn marker was written AFTER Start-Process, under a comment stating it was
+    #       written first. The crash window between them left no marker, so the resume read
+    #       "never spawned" and launched a second time.
+    #
+    # Both are greps, and both are stated as what the code must NOT contain plus what it MUST.
+    code_only_early = re.sub(r'#.*$', '', re.sub(r'(?s)<#.*?#>', '', disp), flags=re.M)
+    check('the freshness RunStart has no epoch/default fallback -- an undated report is refused, '
+          'not accepted', not re.search(r"1970-01-01|\[datetime\]::MinValue", code_only_early),
+          'a default run-start makes the mtime half of the freshness gate unfalsifiable')
+    check('the run start is read from the MANIFEST (launch_intent_at), which is the only '
+          'append-only record of when the attempt began',
+          'launch_intent_at' in code_only_early and 'intentAt' in code_only_early)
+    spawn_write = code_only_early.find('Spawn-Marker $a')
+    spawn_launch = code_only_early.find('Start-Process')
+    check('the spawn marker is written BEFORE Start-Process, so its ABSENCE proves no spawn '
+          'happened (the comment said so; the code did the opposite)',
+          spawn_write != -1 and spawn_launch != -1 and spawn_write < spawn_launch,
+          'first Spawn-Marker write at %d, Start-Process at %d' % (spawn_write, spawn_launch))
     # design section 10, verbatim: "no process kill, no -Force, no tester-safety change". The
     # first version of this check grepped for `-Force` anywhere and fired on
     # `New-Item -ItemType Directory -Force`, which is neither a kill nor a safety bypass -- a
@@ -864,5 +945,6 @@ if FAILS:
         sys.stdout.write('  - %s\n' % f)
     sys.exit(1)
 sys.stdout.write('=== every criterion refused its attack, and the kill matrix is COMPLETE: '
-                 '%d resumes, all nine transitions killed on both sides ===\n' % matrix_rows)
+                 '%d cells swept, %d of them a real kill-and-resume, all nine transitions '
+                 'killed on both sides ===\n' % (matrix_cells, matrix_kills))
 sys.exit(0)

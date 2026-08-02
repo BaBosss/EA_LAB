@@ -126,7 +126,18 @@ if ($WorkerMode) {
 # OBSERVE - the SAME set every iteration, unconditionally. A driver that chose which observations
 # to take would be making the decision the planner exists to own.
 # =================================================================================================
-function Get-Observation([int]$attempt) {
+function Get-Observation([int]$attempt, $journal) {
+  # THE RUN START COMES FROM THE MANIFEST, not from a sidecar and never from a default.
+  # /scrutinize round 1: this used the spawn marker's copy with `else { [datetime]'1970-01-01' }`,
+  # so an attempt whose marker was missing put RunStart at the epoch -- and Test-ReportIsFresh's
+  # mtime half then accepts ANY report on disk. That is the precise inference the guard exists to
+  # refuse ("the .htm exists is NOT evidence that THIS invocation produced it"), reintroduced by
+  # its own caller, in the branch that only runs after a crash. The manifest's LAUNCH_INTENT line
+  # is the authority: it is append-only, it is written before the spawn, and if it is absent then
+  # freshness is UNPROVABLE and must read false rather than default to permissive.
+  $intentAt = ($journal.attempts |
+               Where-Object { $_.attempt -eq $attempt -and $_.launch_intent_at } |
+               Select-Object -Last 1).launch_intent_at
   $lease = $null
   if (Test-Path $leaseFile) {
     $lease = Get-Content -LiteralPath $leaseFile -Raw | ConvertFrom-Json
@@ -150,8 +161,15 @@ function Get-Observation([int]$attempt) {
   $exitRec = $null; $fresh = $null; $mtime = $null
   if (Test-Path (Exit-Sidecar $attempt)) {
     $exitRec = Get-Content -LiteralPath (Exit-Sidecar $attempt) -Raw | ConvertFrom-Json
-    $runStart = if ($spawn) { [datetime]::Parse($spawn.launch_intent_at).ToUniversalTime() } else { [datetime]'1970-01-01' }
-    $fresh = [bool](Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit ([int]$exitRec.exit_code) -Label $ReportName -Quiet)
+    if (-not $intentAt) {
+      # No recorded run start => no way to tell this run's report from last week's. REFUSE, which
+      # routes to FAILED(TESTER_ERROR) and a retry, rather than passing a report nothing dates.
+      Write-Host "   [STALE-GUARD] attempt $attempt has an exit record but the manifest holds no launch_intent_at - freshness is UNPROVABLE, refusing." -ForegroundColor Red
+      $fresh = $false
+    } else {
+      $runStart = [datetime]::Parse($intentAt).ToUniversalTime()
+      $fresh = [bool](Test-ReportIsFresh -Htm $htm -RunStart $runStart -RunnerExit ([int]$exitRec.exit_code) -Label $ReportName -Quiet)
+    }
     if (Test-Path $htm) { $mtime = Stamp (Get-Item $htm).LastWriteTimeUtc }
   }
   # THE EVENT-STORE RECONCILE, and it is a real read rather than a remembered flag. The evidence
@@ -234,7 +252,7 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
     exit 1
   }
   $attempt = ($journal.attempts | Select-Object -Last 1).attempt
-  $act = Invoke-Plan (Get-Observation $attempt)
+  $act = Invoke-Plan (Get-Observation $attempt $journal)
   Say ($act.action + " - " + $act.why)
   $a = if ($act.attempt) { [int]$act.attempt } else { [int]$attempt }
 
@@ -258,6 +276,14 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
       # THE MARKER IS WRITTEN FIRST, and the order is the whole point: absence of the marker is
       # the only proof that no spawn happened. The residual window - marker written, spawn
       # refused - fails SAFE, into FAILED(KILLED) and a fresh attempt, never a silent relaunch.
+      #
+      # 🔴 /scrutinize round 1: THAT PARAGRAPH WAS TRUE OF THE DESIGN AND FALSE OF THE CODE. The
+      # marker was written AFTER Start-Process, because it carries the pid -- so the crash window
+      # between the spawn and the marker left NO marker, and the resume read "never spawned" and
+      # LAUNCHED AGAIN. The one defect the marker exists to prevent, reintroduced by the write
+      # order, underneath a comment asserting the opposite. Two writes now: an intent marker with
+      # no pid BEFORE the spawn, then the pid once it is known. A marker with a null pid means
+      # "a spawn may have happened", which the planner already treats as spawned.
       $intent = ($journal.attempts | Where-Object { $_.attempt -eq $a -and $_.launch_intent_at } |
                  Select-Object -Last 1).launch_intent_at
       # 🔴 EVERY PATH IS QUOTED, and the variable is not called $args. The first wiring run on a
@@ -279,6 +305,9 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
       # turn that correct-but-opaque verdict into a diagnosable one.
       $wout = Join-Path $runsDir ($Run + '.a' + $a + '.worker.out.log')
       $werr = Join-Path $runsDir ($Run + '.a' + $a + '.worker.err.log')
+      [PSCustomObject]@{ pid = $null; started_at = $null
+                         launch_intent_at = $intent; at = (Now-Stamp) } |
+        ConvertTo-Json | Set-Content -LiteralPath (Spawn-Marker $a) -Encoding UTF8
       $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $wargs -PassThru `
                 -NoNewWindow -RedirectStandardOutput $wout -RedirectStandardError $werr
       [PSCustomObject]@{ pid = $proc.Id; started_at = (Stamp $proc.StartTime)
