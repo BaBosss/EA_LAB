@@ -74,8 +74,15 @@ SYNTHETIC_PARAMS = (
     ('P4', 'ACTIVE'),
     ('P5', 'ACTIVE'),
     ('DeadParam', 'INACTIVE'),
-    ('SplitMode[BUILD_A]', 'ACTIVE'),
-    ('SplitMode[BUILD_B]', 'INACTIVE'),
+    # ORDER-1030: these were `BUILD_A`/`BUILD_B` until 2026-08-02. `schemas.json` pins
+    # ParameterBinding.build_tag to `^LAB_ENTRY_[0-9A-Za-z_]+$`, so those two values could
+    # never appear in a real store -- the whole tag-join section was exercising the join
+    # over data the schema forbids. `registry.canonical_build_tag` now REFUSES an
+    # unrecognised spelling (because a lookup that merely MISSES comes back UNBOUND, which
+    # ORDER-671 turns into a refusal indistinguishable from a real LOCKED hit), and it
+    # refused this fixture on its first run. The fixture was wrong, not the refusal.
+    ('SplitMode[LAB_ENTRY_A]', 'ACTIVE'),
+    ('SplitMode[LAB_ENTRY_B]', 'INACTIVE'),
 )
 
 
@@ -111,7 +118,7 @@ def seed(root, **content):
 def binding(rev='B14-H01-r1', param='SL_ATR', role='TUNABLE', surface='RESEARCH',
             build_tag=None, **extra):
     # ORDER-672: `parameter` is BARE and the tag is its own field. A fixture that still wrote
-    # `SplitMode[BUILD_B]` into the name would be testing the encoding the schema now refuses.
+    # `SplitMode[LAB_ENTRY_B]` into the name would be testing the encoding the schema now refuses.
     r = {'entity': 'ParameterBinding', 'hypothesis_revision': rev, 'parameter': param,
          'build_tag': build_tag, 'role': role, 'surface': surface,
          'definition_ref': {'entity': 'OwnerRef', 'owner_type': 'param_registry',
@@ -488,14 +495,14 @@ def main():
         # turned it optimizable. A silent permission grant is the failure mode named in the order.
         amb = seed(tempfile.mkdtemp(prefix='s5amb_'),
                    parameter_bindings=[binding(param='SplitMode'),
-                                       binding(param='SplitMode', build_tag='BUILD_A')])
+                                       binding(param='SplitMode', build_tag='LAB_ENTRY_A')])
         try:
             got = reg.resolve('B14-H01-r1', 'SplitMode', root=amb)
             check('G3 an UNTAGGED binding on a parameter whose CSV rows disagree stays '
                   'NOT optimizable after the field split',
                   got['optimizable'] is False and got['classification'] is None
                   and 'AMBIGUOUS' in (got['classification_source'] or ''), json.dumps(got))
-            tagged = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A', root=amb)
+            tagged = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A', root=amb)
             check('G3 SPECIFICITY naming the build RESOLVES it -- the refusal is about the '
                   'question being under-specified, not about the parameter being poisoned',
                   tagged['classification'] == 'ACTIVE', json.dumps(tagged))
@@ -513,20 +520,20 @@ def main():
         try:
             check('G2 `build_tag: null` means EVERY build, so a request naming one still '
                   'resolves to it',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
                               root=onlybare)['source'] == 'BOUND')
         finally:
             shutil.rmtree(onlybare, ignore_errors=True)
         # ...and the fact that IS worth refusing to invent: bound for another build entirely.
         otherbuild = seed(tempfile.mkdtemp(prefix='s5ub_'),
-                          parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B')])
+                          parameter_bindings=[binding(param='SplitMode', build_tag='LAB_ENTRY_B')])
         try:
             check('G2 SPECIFICITY a request for build A where only build B is bound is UNBOUND '
                   '-- the tag is not decoration',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
                               root=otherbuild)['source'] == 'UNBOUND')
             check('G2 SPECIFICITY and the exact build still resolves',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_B',
                               root=otherbuild)['source'] == 'BOUND')
         finally:
             shutil.rmtree(otherbuild, ignore_errors=True)
@@ -536,10 +543,10 @@ def main():
         # so a TAGGED binding was invisible -- and the resolver's own docstring instructs tagged
         # names for multi-build parameters. The two constraints were jointly unsatisfiable.
         tag = seed(tempfile.mkdtemp(prefix='s5tag_'),
-                   parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B',
+                   parameter_bindings=[binding(param='SplitMode', build_tag='LAB_ENTRY_B',
                                                role='LOCKED', surface='HIDDEN', locked_value=1)])
         try:
-            direct = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B', root=tag)
+            direct = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_B', root=tag)
             joined = reg.resolve('B14-H01-r1', 'SplitMode', root=tag)
             check('AUDIT F1 a BARE request joins to a TAGGED binding (probed: it returned UNBOUND, '
                   'silently degrading a LOCKED binding to a note)',
@@ -553,8 +560,8 @@ def main():
             shutil.rmtree(tag, ignore_errors=True)
         # ...and the join must REFUSE ambiguity rather than pick one.
         two = seed(tempfile.mkdtemp(prefix='s5two_'),
-                   parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_A'),
-                                       binding(param='SplitMode', build_tag='BUILD_B',
+                   parameter_bindings=[binding(param='SplitMode', build_tag='LAB_ENTRY_A'),
+                                       binding(param='SplitMode', build_tag='LAB_ENTRY_B',
                                                role='LOCKED', surface='HIDDEN', locked_value=1)])
         try:
             refuses('AUDIT F1 NEG two tagged bindings sharing a bare name make a BARE request '
@@ -562,9 +569,9 @@ def main():
                     lambda: reg.resolve('B14-H01-r1', 'SplitMode', root=two),
                     'more than one answer')
             check('AUDIT F1 SPECIFICITY and each EXACT name still resolves to its own row',
-                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A',
+                  reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A',
                               root=two)['role'] == 'TUNABLE'
-                  and reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B',
+                  and reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_B',
                                   root=two)['role'] == 'LOCKED')
         finally:
             shutil.rmtree(two, ignore_errors=True)
@@ -590,8 +597,8 @@ def main():
         print("\n--- BLIND AUDIT ROUND 4 ---")
         # S7: the resolver must combine BOTH layers. Its docstring said it did; it did not.
         both = seed(tempfile.mkdtemp(prefix='s5comb_'),
-                    parameter_bindings=[binding(param='SplitMode', build_tag='BUILD_B'),
-                                        binding(param='SplitMode', build_tag='BUILD_A'),
+                    parameter_bindings=[binding(param='SplitMode', build_tag='LAB_ENTRY_B'),
+                                        binding(param='SplitMode', build_tag='LAB_ENTRY_A'),
                                         binding(param='SplitMode'),
                                         binding(param='DeadParam'),
                                         binding(param='SL_ATR')])
@@ -605,8 +612,8 @@ def main():
             check('AUDIT S7 SPECIFICITY a TUNABLE binding on an ACTIVE parameter still IS',
                   live['optimizable'] is True, json.dumps(live))
             # The tag collision the audit's example actually rests on.
-            tagged_dead = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_B', root=both)
-            tagged_live = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='BUILD_A', root=both)
+            tagged_dead = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_B', root=both)
+            tagged_live = reg.resolve('B14-H01-r1', 'SplitMode', build_tag='LAB_ENTRY_A', root=both)
             check('AUDIT S7 a build-TAGGED name resolves to ITS OWN row, both ways',
                   tagged_dead['optimizable'] is False and tagged_live['optimizable'] is True,
                   '%s / %s' % (tagged_dead['classification'], tagged_live['classification']))
@@ -1129,8 +1136,19 @@ def main():
         py = os.path.join(reg.REPO_ROOT, 'tools', 'python312', 'python.exe')
         p = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'resolve', 'B14-H01-r1'],
                            capture_output=True, text=True, cwd=reg.REPO_ROOT)
-        check('the resolve CLI exits 0 and emits JSON against the REAL (empty) store',
-              p.returncode == 0 and json.loads(p.stdout) == {}, p.stdout[:120])
+        # ORDER-1030: this asserted `json.loads(p.stdout) == {}` -- i.e. that the REAL store is
+        # EMPTY -- which stopped being true the moment ORDER-1020 registered B14-H01. The intent
+        # was "the CLI both consumers go through works against the real repo", and `== {}` was an
+        # artifact of the store having no rows. Asserted as a PAIR now, which is strictly sharper:
+        # a registered revision comes back with rows and an unregistered one comes back empty, so
+        # a CLI that always returned the same thing cannot pass either way round.
+        check('the resolve CLI exits 0 and emits JSON for a REGISTERED revision',
+              p.returncode == 0 and isinstance(json.loads(p.stdout), dict)
+              and len(json.loads(p.stdout)) > 0, p.stdout[:120])
+        p_unreg = subprocess.run([py, os.path.join(HERE, 'registry.py'), 'resolve', 'B14-H99-r1'],
+                                 capture_output=True, text=True, cwd=reg.REPO_ROOT)
+        check('...and comes back EMPTY for a revision nothing binds -- the CLI discriminates',
+              p_unreg.returncode == 0 and json.loads(p_unreg.stdout) == {}, p_unreg.stdout[:120])
         p = subprocess.run([py, os.path.join(HERE, 'registry.py')],
                            capture_output=True, text=True, cwd=reg.REPO_ROOT)
         check('a bad invocation exits 2 (usage), never 0', p.returncode == 2)

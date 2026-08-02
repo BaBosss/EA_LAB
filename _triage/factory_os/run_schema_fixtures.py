@@ -915,17 +915,50 @@ def run_batch(schema, cases):
     tmpdir = tempfile.mkdtemp(prefix='ajvbatch_')
     try:
         names = {}
-        cmd = ['ajv', 'validate', '-s', schema, '--spec=draft2020', '--strict=false',
-               '--errors=line']
+        base_cmd = ['ajv', 'validate', '-s', schema, '--spec=draft2020', '--strict=false',
+                    '--errors=line']
+        # 🔴 CHUNKED, because Windows caps a command line at ~8191 characters and this batch is no
+        # longer a fixed 35 fixtures -- it also validates the LIVE registry stores, which went from
+        # 2 rows to 234 the day ORDER-1020 landed. Unchunked, the command reached ~19k characters
+        # and cmd.exe answered "The command line is too long." for the WHOLE batch. The three-state
+        # discipline held -- every case came back ERROR rather than VALID, so the tool failing was
+        # not reported as the contract passing -- but 234 rows were reported as defects when every
+        # one of them validates. The budget is deliberately well under 8191: the paths are absolute
+        # and the temp prefix is host-dependent, so the headroom absorbs a longer TEMP than this
+        # machine's.
+        CMDLINE_BUDGET = 7000
+        _fixed = sum(len(a) + 3 for a in base_cmd)
+        chunks, current, current_len = [], [], _fixed
         for i, c in enumerate(cases):
             base = 'case_%03d.json' % i
             p = os.path.join(tmpdir, base)
             with io.open(p, 'w', encoding='utf-8') as fh:
                 fh.write(json.dumps(c['instance']))
             names[base] = c['name']
-            cmd += ['-d', p]
-        proc = subprocess.run(cmd, capture_output=True, text=True, shell=True)
-        combined = (proc.stdout or '') + '\n' + (proc.stderr or '')
+            cost = len(p) + 6
+            if current and current_len + cost > CMDLINE_BUDGET:
+                chunks.append(current)
+                current, current_len = [], _fixed
+            current.append(p)
+            current_len += cost
+        if current:
+            chunks.append(current)
+
+        combined_parts = []
+        rc_last = 0
+        for chunk in chunks:
+            cmd = list(base_cmd)
+            for path in chunk:
+                cmd += ['-d', path]
+            proc = subprocess.run(cmd, capture_output=True, text=True, shell=True)
+            combined_parts.append((proc.stdout or '') + '\n' + (proc.stderr or ''))
+            if proc.returncode:
+                rc_last = proc.returncode
+
+        class _BatchProc(object):
+            returncode = rc_last
+        proc = _BatchProc()
+        combined = '\n'.join(combined_parts)
 
         results = {}
         lines = combined.splitlines()
@@ -1151,8 +1184,17 @@ def main():
         print("  TOOL FAILURE: %s" % _exc)
         bad += 1
         _stores = {}
+    # 🔴 BATCHED, and the measurement is the reason. This loop called `run()` -- ONE AJV SPAWN PER
+    # ROW -- which is the identical defect `run_batch`'s own docstring records being fixed for the
+    # fixture cases (11.5s of pure process startup, 35 spawns). It was invisible here for as long
+    # as the live stores were empty: three of five carried no rows, so the loop spawned nothing.
+    # MEASURED the day ORDER-1020 landed 232 ParameterBinding rows: this suite went
+    # **2.3s -> 77.2s**, and took `run_contract_binding_tests.ps1` (which runs it) to 100.9s and
+    # the whole per-path tier to 160.7s against a 65.0s budget. That is ~0.32s per row, LINEAR in
+    # the size of a store the Factory OS design intends to grow by an order of magnitude -- 2,000
+    # rows would be an eleven-minute pre-commit hook, which is how a tier earns `--no-verify`.
+    _cases = []
     for _rel in sorted(_stores):
-        _entity = _reg.STORES[_rel]
         _meta, _rows = _stores[_rel]
         for _n, _rec in _rows:
             # ORDER-610's imported coverage rows predate the `entity` discriminator and are pinned
@@ -1161,10 +1203,16 @@ def main():
             # rather than skipped silently, and it ends when S5's real CoverageCell rows land.
             if _rec.get('entity') is None and _rel == 'factory/coverage.jsonl':
                 continue
-            _live += 1
-            _got, _out = run(SCHEMA, _rec)
+            _cases.append({'name': '%s:%d' % (_rel, _n), 'instance': _rec})
+    _live = len(_cases)
+    if _cases:
+        _results = run_batch(SCHEMA, _cases)
+        for _c in _cases:
+            _got, _out = _results[_c['name']]
             if _got != VALID:
-                print("  [BAD] %s line %d does not validate as %s" % (_rel, _n, _entity))
+                _rel, _n = _c['name'].rsplit(':', 1)
+                print("  [BAD] %s line %s does not validate as %s"
+                      % (_rel, _n, _reg.STORES[_rel]))
                 print("        %s" % (_out.splitlines()[1][:220] if len(_out.splitlines()) > 1
                                       else _out[:220]))
                 bad += 1

@@ -268,6 +268,48 @@ def registry_name(parameter, build_tag):
     return '%s[%s]' % (bare, build_tag)
 
 
+# ORDER-1030. The ONE spelling of a build tag, and the ONE place a caller's shorthand is turned
+# into it. `schemas.json` pins `ParameterBinding.build_tag` to `^LAB_ENTRY_[0-9A-Za-z_]+$`, and
+# `scripts/optimize_guard.ps1` calls this resolver with `--build-tag=14` because that is the form
+# ITS `-Build` parameter has taken since long before bindings existed.
+#
+# 🔴 WHY THIS IS A REFUSAL AND NOT A LOOKUP THAT MISSES. Before this function, `--build-tag=14`
+# reached `_lookup` as a literal, matched no `(revision, parameter, '14')` key, matched no
+# `build_tag: null` row either, and returned `source=UNBOUND` -- role, surface and optimizable all
+# None. Under ORDER-671's ratified rule an UNBOUND parameter under a declared revision is a
+# REFUSAL, so the guard refused every parameter and printed `role=''`. **The verdict was right by
+# accident and the reason was wrong**, which is worse than a wrong verdict: a LOCKED binding and a
+# tag typo produce the same output, so the mechanism that exists to refuse cannot be told from the
+# mechanism failing to find anything. That is F1 -- the defect ORDER-672 split `build_tag` out to
+# kill -- reappearing at the consumer seam, and it was invisible for as long as the store was
+# empty, because an empty store returns UNBOUND for every question anyway.
+BUILD_TAG_RE = re.compile(r'^LAB_ENTRY_[0-9A-Za-z_]+$')
+_BUILD_SHORTHAND_RE = re.compile(r'^[0-9]{2}$')
+
+
+def canonical_build_tag(value):
+    """-> the canonical `LAB_ENTRY_nn`, or None. REFUSES anything it does not recognise.
+
+    Accepts the canonical form and the two-digit shorthand `optimize_guard -Build` uses. Anything
+    else is refused BY NAME rather than passed through: a tag this function does not recognise
+    cannot match a binding, and 'I could not understand the question' must never be published as
+    'nothing is bound'.
+    """
+    if value is None or value == '':
+        return None
+    text = str(value).strip()
+    if BUILD_TAG_RE.match(text):
+        return text
+    if _BUILD_SHORTHAND_RE.match(text):
+        return 'LAB_ENTRY_%s' % text
+    _refuse(
+        'build tag %r is neither the canonical `LAB_ENTRY_nn` that ParameterBinding.build_tag '
+        'holds nor the two-digit shorthand optimize_guard passes. Refused rather than looked up '
+        'as a literal: an unrecognised tag matches no binding and would come back UNBOUND, which '
+        'under ORDER-671 is a REFUSAL -- so a typo would produce exactly the output a real LOCKED '
+        'binding produces, and nothing could tell them apart.' % value)
+
+
 def classification_of(parameter, root=None, source=None):
     """-> (classification, why) for one parameter name. `classification` is None when unresolvable.
 
@@ -458,6 +500,10 @@ def resolve(hypothesis_revision, parameter, root=None, stores=None, overlay_root
     required to be complete, which no entity declares and no design row asks for -- so it is an
     open question, not a rule this module gets to invent.
     """
+    # ORDER-1030: normalise (or REFUSE) the caller's tag BEFORE any lookup, so an unrecognised
+    # spelling cannot become an UNBOUND that ORDER-671 then turns into a plausible-looking refusal.
+    build_tag = canonical_build_tag(build_tag)
+
     def _lookup(idx):
         # ORDER-672. THE JOIN NO LONGER PARSES ANYTHING.
         #
@@ -587,6 +633,11 @@ def resolve_all(hypothesis_revision, root=None, stores=None, overlay_root=None, 
     #
     # Keying by bare name is unambiguous BY CONSTRUCTION: resolve() refuses a revision that carries
     # two bindings sharing a bare name, so this dict can never silently lose one.
+    # ORDER-1030: the same normalisation resolve() does, applied here too. resolve_all passes its
+    # `build_tag` straight through to resolve(), so the refusal would fire anyway -- but only after
+    # the caller had already been told how many rows were "resolved", which is the number a reader
+    # trusts. Normalising here keeps the count and the answers computed from one spelling.
+    build_tag = canonical_build_tag(build_tag)
     if overlay_root is not None:
         idx = _overlay_index(root, overlay_root)
         names = sorted(set(p for (rev, p, _t) in idx if rev == hypothesis_revision))

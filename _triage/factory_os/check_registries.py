@@ -119,6 +119,13 @@ RESOLVER_SWEEP_EXEMPT = {
     '_triage/factory_os/check_registries.py': 'this file, which must name what it forbids',
     '_triage/factory_os/run_registry_tests.py': 'the suite, which must name what it asserts',
     '_triage/factory_os/CONTRACTS.md': 'a GENERATED projection of schemas.json',
+    '_triage/factory_os/hypothesis_b14.py':
+        'ORDER-1020: it is the DECISION TABLE, not a resolver. It records which role a human chose '
+        'for each parameter of B14-H01/H02 and never derives optimizability from one -- that stays '
+        'with the resolver, which gen_registry_rows.py calls. And the naming is not on trust: the '
+        'module validates every role and surface it names against registry.ROLES/SURFACES at '
+        'import, so it cannot introduce a value the resolver does not know. Sweeping it would '
+        'leave no legal place to WRITE a binding down.',
     '_triage/factory_os/run_contract_binding_tests.py':
         'MEASURED: it names the role enum as SCHEMA MUTATION material -- it deletes values from '
         'ParameterBinding.role to prove the design<->schema binding goes red. It never decides '
