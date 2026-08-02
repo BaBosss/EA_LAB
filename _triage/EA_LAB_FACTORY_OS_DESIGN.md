@@ -491,8 +491,15 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
   sha256 over the canonical serialization of `payload`; the payload **does not contain the id** — rev 1
   required the id inside the object whose hash it was defined to be, which has no normal construction and
   would have led to the check being disabled. The validator recomputes the digest on every read.
-  *Canonical serialization (key order, number formatting, unicode) is still undefined and is owed —
-  two serializers that disagree produce two digests for one candidate.*
+  ✅ **Canonical serialization is no longer owed (ORDER-1100, S10).** It is `scheduler.canonical()` —
+  sorted keys, no spaces, no ASCII escaping — preceded by `scheduler.normalize_numbers()`, which
+  collapses an integral float to an int at any depth. `candidate.py` **imports both**; it defines no
+  serialization of its own, and `run_s10_tests.py` proves the dependency by swapping each one out and
+  demanding the digest move. The normalization is not decoration: a probe during S9 produced **two
+  ExecutionKey digests for one deposit** from `10000` versus `10000.0`, which is this paragraph's
+  warning happening one entity along. What is this module's own is the FIELD SELECTION — the payload
+  is a closed set of fifteen fields and both a missing and an unknown one are refused, because a
+  digest over a shape that is not the contract is a digest of something else.
 
 ### 4.6 Magic allocation
 
@@ -506,9 +513,16 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
   `991002`, each on two accounts, `991001` on real money — are imported once as
   `LEGACY_ACCOUNT_SCOPED`, frozen to their judge dates, never renumbered as a side effect. **After the
   import cutover, minting a new legacy exception is refused.**
-- ⚠️ `check_state.ps1` enforces `account|magic` today and that invariant is still true of the running
-  fleet. It stays the backstop, and **`PROJECT_STATE` §3's invariant must be amended by the user before
-  S10 is built** (§11).
+- ✅ **DONE (ORDER-1100, S10, 2026-08-02).** The user amended the invariant on 2026-08-01
+  (`PROJECT_STATE.md` §0.5): scope is GLOBAL, and this checker was to flip "only when S10 gives it an
+  exception list to read". `factory/magic_allocations.jsonl` is that list — 60 allocations imported at
+  one cutover commit, of which **exactly three** are `LEGACY_ACCOUNT_SCOPED` (`990103` · `991001`, the
+  one on real money · `991002`). `check_state.ps1` now asks `scripts/lib/magic_guard.ps1`, which asks
+  `_triage/factory_os/magic.py` — one implementation of the rule, handed **judged bytes** rather than a
+  repo path, because a child process reading the working tree would rebuild ORDER-674's A7. The
+  `account|magic` check stays as the backstop: global uniqueness implies it, so it costs nothing.
+  The list is checked **in both directions** — every real collision must be declared, and every
+  declared exception must be a real collision, or the exception list becomes an off switch.
 
 ### 4.7 Entities whose rationale lives in §7 (operations surface)
 These are contracts of the Control Center, not of the factory registries, and §7 explains *why* each one
@@ -978,9 +992,12 @@ several are the user's alone because they change a bar, change a governance rule
 > flagged the cost first — three magics (`990103`, `991001`, `991002`) are on two accounts each today and
 > `991001` is on real money — and the user confirmed. Consequences now written into the design: global
 > scope applies to **new** allocations; the three existing collisions are recorded as `legacy_exception`
-> and **frozen until their judge date**, never renumbered as a side effect; and **`PROJECT_STATE.md` §3's
-> `account|magic` invariant must be amended by the user before S10 is built**, because the design and the
-> invariant currently contradict each other. Renumbering a live magic, if ever wanted, is its own order.
+> and **frozen until their judge date**, never renumbered as a side effect. Renumbering a live magic, if
+> ever wanted, is its own order.
+> ✅ **CLOSED 2026-08-02 (ORDER-1100, S10).** The invariant was amended by the user on 2026-08-01
+> (`PROJECT_STATE.md` §0.5) and the checker has now flipped, in that order — the exception list
+> (`factory/magic_allocations.jsonl`) had to exist first, because flipping the rule before it existed
+> would have reddened three rows the owner had just declared legitimate. Nothing here is owed.
 
 1. **Trial-count → required-confirmation ladder.** §6.7 records trial count but nothing consumes it.
    Proposal to react to: ≤50 trials ⇒ current bars · 51–500 ⇒ **plus** one independent confirmation
@@ -1142,7 +1159,7 @@ of them held. Nothing was accepted on the auditor's authority alone.
 | 11 | Lane provenance permits cross-install aggregation | **FIXED** | `MetricRef` — every metric carries its own run, lane, fingerprint, model; MAIN and BWD can no longer share one lane field |
 | 12 | Trade-list identity insufficient for parity | **FIXED** | §5.5 is now 7 points + must-trade and deliberate-refusal cases |
 | 13 | Deployment immutability only a promise | **FIXED** | append-only `DeploymentAttestationEvent`; any non-`OBSERVED` event requires a human authorization ref |
-| 14 | Magic allocator contradicts the ratified invariant | **USER DECIDED** | global scope adopted; legacy collisions frozen to judge; **`PROJECT_STATE` §3 amendment required before S10** |
+| 14 | Magic allocator contradicts the ratified invariant | **FIXED** | global scope adopted; legacy collisions frozen to judge; the invariant was amended by the user 2026-08-01 and `check_state.ps1` flipped to the global rule on 2026-08-02 (ORDER-1100) **once the exception list existed to read** — that order was the whole constraint |
 | 15 | "Safe projection by construction" has no construction | **FIXED** | `SafeProjection` allowlist DTO: masked account, DD **band** not number, no money/lots/logic; forbidden-key scan + secret fixtures in S11 |
 | 16 | Alert dedupe has no delivery state | **PARTIAL** | severity + `material_revision` in the dedupe key now; **per-channel delivery ledger and FLAPPING reminder policy owed in S12** |
 | 17 | Slice dependency order unusable; v4 collision | **FIXED** | §10 reordered to 15 slices; snapshot goes to **v5** |

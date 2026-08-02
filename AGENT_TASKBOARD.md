@@ -105,6 +105,96 @@
 
 ---
 
+## ORDER-1100 — [factory/S10] Candidate identity + append-only Deployment attestation + magic reservation (design §4.5–§4.7 / §10 S10 row) — `DONE (Claude/Opus 2026-08-02) — all four acceptance criteria measured; the field, cell and criterion counts are printed by run_s10_tests.py itself and are deliberately not restated here` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Acceptance (design §10, S10 row):** `candidate_digest` recomputed and compared on **every read** ·
+no non-`OBSERVED` attestation event without a human authorization ref · `check_state.ps1` stays green ·
+legacy magic exceptions preserved. **Prohibitions:** no auto-update of any deployment · no renumbering
+of a live magic.
+
+**Step 0 — the two owner decisions of 2026-08-02 executed first** (`f2836f74`), because both were
+ratified by lane `RATIFY9` while this lane held the files and had committed no code. `ExecutionKey`
+dropped `ini_hash` and is now **14 fields**; `RunAttempt` gained `ini_sha256`, written after the ini
+exists. The literal reading was not merely awkward: the ini carries `Report=<name>`, which differs
+every run, so a real ini hash would have given two runs of one configuration two digests and
+**criterion 3 could never have fired**. Decision 18's two-category mapping is ratified as written — no
+tuple changed, and the comment claiming `RETRYABLE_FOR_NEW_RUN` held *"exactly the decision's two
+classes"* while the tuple below it had held five since the wiring proof was corrected in the same commit.
+
+**What was built.** `candidate.py` (identity), `attestation.py` (the append-only event log),
+`magic.py` (the allocator) — all pure — plus `gen_magic_allocations.py` for the one-time cutover
+import and `scripts/lib/magic_guard.ps1`, which is the rule as a callable so that `check_state.ps1`
+and its cage drive **one implementation**.
+
+🔴 **The digest problem was solved by NOT solving it again.** design §4.5 left `candidate_digest`'s
+canonical form owed and named the cost in the same sentence. S9 had already earned the answer
+(`scheduler.canonical()` plus the numeric normalization a probe forced into existence when `10000`
+and `10000.0` produced **two ExecutionKey digests for one deposit**), so that normalization was
+lifted out of `execution_key_digest` unchanged and made recursive — a payload nests where a key does
+not — and `candidate.py` imports both. The cage does not take that on trust: it **swaps each one out
+and demands the digest move.**
+
+🔴 **The enumeration is what makes "recomputed on read" mean anything.** Every one of the payload's
+fields is mutated in turn and must move the digest, and the roll-up **refuses to pass** unless the
+mutation table covers the contract exactly — a field added to `CandidatePayload` and not to the table
+would otherwise sail through with every cell green. The attestation rule is crossed **every event
+type × every actor**, with the expectations hand-written from the rule rather than read back from the
+code under test. And a final roll-up refuses unless **every** criterion id the three modules can emit
+was fired by a case: it began red, naming six rules that had comments and no attack.
+
+🔴 **The authorization rule needed a second half to have teeth.** Read as "refuse a non-`OBSERVED`
+event with no ref", it is an enum check — automation then appends an `OBSERVED` event carrying a
+different `candidate_id`, the fold moves the deployment, and the human decision the entity exists to
+require is never asked for. That is the mutable `DeploymentAttestation` schemas.json's own Audit P1
+replaced, rebuilt through the field the replacement left open. `A6` refuses an observation that MOVES
+the candidate; an observation may report `attest_state` and `core_revision` and may not decide what
+the deployment IS.
+
+🔴 **The magic exception list is checked in BOTH directions, and the checker flipped only after it
+existed.** `factory/magic_allocations.jsonl` holds 60 allocations at one cutover commit, of which
+exactly three are `LEGACY_ACCOUNT_SCOPED` — `990103` · `991001` (**real money**, on two accounts) ·
+`991002` — asserted **by name** against the real `DEPLOYMENTS.csv`. Sensitivity: an undeclared
+collision is refused. Specificity: a declared exception that is **not** a collision is refused too,
+or the list is an off switch. `check_state.ps1` was flipped to the global rule in that order, per
+`PROJECT_STATE.md` §0.5, and gets **judged bytes** rather than a repo path — a child process reading
+the working tree would rebuild ORDER-674's A7 on the single inventory for real money. The
+prohibition on renumbering is enforced by the **absence** of any code that could: the cage asserts
+`magic.py` has no renumber path and never opens the store for writing.
+
+🔴 **The tier budget forced a redesign, and the redesign found a defect.** The first cage spawned the
+whole of `check_state.ps1` once per driven case — **13.1s** measured, against a full-tier budget with
+**0.3s** of headroom. The rule moved into `scripts/lib/magic_guard.ps1`, four cases now run in
+process, and exactly one end-to-end run survives: the WIRING case, the one claim the in-process cases
+cannot make. Suite cost **3.9s / 3.8s / 3.9s** over three runs. Trimming it is what made the
+missing-input case cheap enough to keep — and that case immediately went red on a real defect in the
+new library: `[AllowNull()][string]` **coerces `$null` to `''`**, so the "cannot read the exception
+list" branch was unreachable and a guard with no exception list would have reported a clean run over
+a file it never saw.
+
+🔴 **BOTH TIER BUDGETS RAISED, deliberately, and the numbers are the argument — this is the part to
+push back on if any of it is wrong.** The tier refused this slice's commit: **81.1s against the 65.0s
+per-path budget**, 7 of 24 suites selected, **all green**. Subtract S10's own suite entirely and the
+commit is **still 78.2s** — `run_contract_binding_tests` 30.3s + `run_front_guard_evidence_tests`
+21.1s + `run_guard_trigger_tests` 19.3s = 70.7s, **87% of the run**, none of it this slice's. The old
+bound had already become **unsatisfiable for a commit of that SHAPE** — a guard plus a schema, which
+is a common shape here, not an exotic one. The full tier tells the same story: measured **107.0s
+against 90.0s** at 24 suites all green, and **90.4s before this lane opened** (last recorded full run
+89.7s at 21 suites, plus `run_parity_tests` 0.3s and `run_scheduler_tests` 0.4s registered after it);
+`run_contract_binding_tests` alone drifted **27.0s → 35.8s across 2026-08-02**. So: per-path
+**65.0 → 90.0**, full tier **90.0 → 120.0**, ~11% above what was measured so growth still trips them,
+in the same commit that measures why — which is one of the three exits `run_fast_cages.ps1`'s own
+over-budget message offers, and the only one available to a lane that owns none of the expensive
+suites. `run_guard_trigger_tests.ps1`'s N1 pins both numbers on purpose, so this was a two-file act
+by design. **What it does NOT do is make the tier fast: it makes the bound true.** Speeding or
+displacing those three suites is its own order and is still owed.
+
+**Not done, deliberately:** no `CandidateManifest` was written for a real EA (S10 builds the
+identity; issuing one is a verdict, and no verdict was owed this session) · no attestation event was
+appended to a real deployment · no magic was allocated, renumbered or retired · no deployment was
+auto-updated · S11 not started.
+
+---
+
 ## ORDER-1080 — [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) — `DONE (Claude/Opus 2026-08-02, hardened by four /scrutinize rounds the same day) — all four acceptance criteria measured: the kill matrix is ENUMERATED (all nine §3.3 transitions killed on both sides of their own append; the cell and kill counts are printed by run_scheduler_tests.py itself and are not restated here), and the wiring was proven end-to-end on lane 1 with ONE launch and zero relaunches across a mid-flight driver stop` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Acceptance (design §10, S9 row):** kill at **every** state in §3.3 ⇒ resume re-runs zero completed

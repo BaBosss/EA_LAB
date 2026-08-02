@@ -1447,7 +1447,8 @@
           "description": "the verdict TEXT lives in EA_SCORECARD_AND_REGISTRY.md and is never copied here"
         }
       },
-      "x-enforcement-status": "PLANNED"
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/candidate.py"
     },
     "MagicAllocation": {
       "type": "object",
@@ -1673,7 +1674,8 @@
           }
         }
       ],
-      "x-enforcement-status": "PLANNED"
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/attestation.py"
     },
     "WorkReceipt": {
       "type": "object",

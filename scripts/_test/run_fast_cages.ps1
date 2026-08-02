@@ -112,12 +112,35 @@ param(
     # working, and it is also the number being wrong: per-path cost scales with how many suites
     # the staged set selects, so a bound derived from one-file commits describes a case that is
     # not the common one here.
-    # 65.0 sits above the measured 60.7s worst realistic selection and below the 90.0s full tier,
-    # so both remain enforceable and growth still trips them.
+    # 65.0 sat above the then-measured 60.7s worst realistic selection and below the 90.0s full
+    # tier, so both remained enforceable and growth still tripped them.
     # NOT FIXED, and stated rather than absorbed: 60s IS slow for a hook. Raising the ceiling
     # buys honesty, not speed -- two suites are 39s of it. Making them faster is its own order.
-    [double]$BudgetSeconds = 65.0,
-    [double]$FullTierBudgetSeconds = 90.0,
+    #
+    # 🔴 RAISED 2026-08-02, ORDER-1100 (S10), and the numbers are why. This file's own over-budget
+    # message offers three ways out -- "displace a suite, make the named one faster, or raise the
+    # number DELIBERATELY in the same commit that says why" -- and only the third was available
+    # to a lane that owns none of the expensive suites.
+    #
+    #   per-path   MEASURED 81.1s on a commit touching scripts/check_state.ps1 + schemas.json,
+    #              7 of 24 suites selected, ALL GREEN. Of that, 78.2s is suites that existed
+    #              before this slice: run_contract_binding_tests 30.3s, run_front_guard_evidence
+    #              21.1s, run_guard_trigger 19.3s = 70.7s, 87% of the run. The slice's own suite
+    #              is 2.9s. Subtract it entirely and the commit is STILL 78.2s against 65.0 --
+    #              i.e. the old bound had already become unsatisfiable for a commit of this
+    #              SHAPE (a guard plus a schema), which is a common shape here, not an exotic one.
+    #   full tier  MEASURED 107.0s, 24 suites, all green. It was 90.4s before this lane opened
+    #              (the last recorded full run was 89.7s at 21 suites, plus run_parity_tests 0.3s
+    #              and run_scheduler_tests 0.4s registered after it), i.e. ALREADY breached.
+    #              run_contract_binding_tests alone drifted 27.0s -> 35.8s across 2026-08-02.
+    #
+    # The new numbers sit ~11% above what was measured, so growth still trips them and neither is
+    # a round number pulled from comfort. What this DOES NOT do is make the tier fast: it makes
+    # the bound true. The three suites above are 65% of the full run and speeding or displacing
+    # them is its own order -- recorded on the ORDER-1100 board row with the measurements, so the
+    # next lane inherits the number and not just the complaint.
+    [double]$BudgetSeconds = 90.0,
+    [double]$FullTierBudgetSeconds = 120.0,
     # N2's negative needs a way to be over budget without waiting for a suite to genuinely rot.
     # Same shape as -DebugPretendIndexMoved below: a seam the cage drives, never the hook.
     [double]$DebugPadSeconds = 0.0,
@@ -359,6 +382,21 @@ $FAST_SUITES = @(
     # scheduler's real work needs a lane and lives in scripts\scheduler_run.ps1; the state machine
     # is proven here, by enumeration, which is the only reason it is affordable to prove at all.
     'run_scheduler_tests.ps1',
+    # ORDER-1100 (S10), measured 3.9s / 3.8s / 3.9s over three runs -> 3.9s. Three samples for the
+    # reason the entries above give. It carries all four of slice S10's acceptance criteria: three
+    # by enumeration in pure python (every CandidatePayload field mutated against the digest,
+    # every (event_type x actor) cell of the attestation rule decided, the three legacy magic
+    # exceptions asserted BY NAME against the real inventory), and the fourth by driving the
+    # PowerShell guard itself.
+    #
+    # WHERE THE 3.9s GOES, AND WHY IT IS NOT 13.1s. The first version spawned the whole of
+    # check_state.ps1 once per driven case: 4 x 3.0s = 13.1s, against a full-tier budget with
+    # 0.3s of headroom (the last full run before this slice was 89.7s of 90.0s). So the rule moved
+    # into scripts\lib\magic_guard.ps1, where the cage drives it IN PROCESS for hundredths of a
+    # second, and exactly ONE end-to-end run survives -- the WIRING case, which is the only claim
+    # the in-process cases cannot make. Trimming it also FOUND a defect: [AllowNull()][string]
+    # coerces $null to '', so the "cannot read the exception list" branch was unreachable.
+    'run_s10_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -519,6 +557,24 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_scheduler_tests.py',
                                           'scripts/scheduler_run.ps1',
                                           '_triage/factory_os/schemas.json')
+    # ORDER-1100 (S10). The three modules, their generator, their own suite, and the two files on
+    # the OTHER side of the seam: scripts/check_state.ps1 (PART B drives it, so an edit to the
+    # guard changes what this cage proves) and factory/magic_allocations.jsonl (the exception list
+    # PART 4 asserts BY NAME against portfolio/DEPLOYMENTS.csv -- which is here for the same
+    # reason: a magic added to the inventory changes whether the store is still complete, and a
+    # trigger list that named only the python would let the live-money inventory and its exception
+    # list drift apart in exactly the direction this suite exists to prevent).
+    'run_s10_tests.ps1'               = @('_triage/factory_os/candidate.py',
+                                          '_triage/factory_os/attestation.py',
+                                          '_triage/factory_os/magic.py',
+                                          '_triage/factory_os/gen_magic_allocations.py',
+                                          '_triage/factory_os/run_s10_tests.py',
+                                          '_triage/factory_os/scheduler.py',
+                                          '_triage/factory_os/schemas.json',
+                                          'scripts/check_state.ps1',
+                                          'scripts/lib/magic_guard.ps1',
+                                          'factory/magic_allocations.jsonl',
+                                          'portfolio/DEPLOYMENTS.csv')
     'run_wrapper_gen_tests.ps1'       = @('_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/run_wrapper_gen_tests.py',
                                           '_triage/factory_os/gen_wrapper.py',

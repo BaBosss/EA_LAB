@@ -469,8 +469,13 @@ try {
     # changed silently. Both properties are wanted, so the defaults are asserted separately, and
     # the values here are the ones the commit that set them measured.
     $cagesSrc = Get-Content -LiteralPath $cages -Raw
-    if ($cagesSrc -match '\$BudgetSeconds\s*=\s*65\.0') { Good 'N1 the per-path default is the measured 65.0s' } else { Bad 'N1 the per-path default is not 65.0 -- it was changed without this case being updated' }
-    if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*90\.0') { Good 'N1 the full-tier default is the measured 90.0s' } else { Bad 'N1 the full-tier default is not 90.0 -- it was changed without this case being updated' }
+    # RAISED 2026-08-02 by ORDER-1100: per-path 65.0 -> 90.0 (measured worst green selection
+    # 81.1s, of which 78.2s predates that slice) and full tier 90.0 -> 120.0 (measured 107.0s,
+    # already 90.4s before the slice opened). These two lines are the friction that makes raising
+    # a budget a deliberate two-file act, so they are updated WITH the numbers rather than to
+    # match whatever the other file now says -- the point is that someone had to type them.
+    if ($cagesSrc -match '\$BudgetSeconds\s*=\s*90\.0') { Good 'N1 the per-path default is the measured 90.0s' } else { Bad 'N1 the per-path default is not 90.0 -- it was changed without this case being updated' }
+    if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*120\.0') { Good 'N1 the full-tier default is the measured 120.0s' } else { Bad 'N1 the full-tier default is not 120.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
 
     if ($fail -gt 0) {

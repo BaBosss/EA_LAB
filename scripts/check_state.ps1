@@ -10,6 +10,10 @@
   Checks:
    1. PROJECT_STATE.md exists and declares the DEPLOYMENTS.csv pointer (section 0.5)
    2. DEPLOYMENTS.csv parses, has required columns, no duplicate account|magic
+   2b. GLOBAL magic uniqueness (ORDER-1100/S10) - one magic belongs to exactly one EA across
+       every account, with the three ratified legacy exceptions read out of
+       factory\magic_allocations.jsonl. Delegated to _triage\factory_os\magic.py so the rule has
+       ONE implementation; both inputs are handed to it as judged BYTES, never as repo paths.
    3. every account in the inventory appears in DEMO_DEPLOYMENT_PLAN.md
    4. every inventory row with a magic (status not UNVERIFIED) has a dashboard cohort
       map entry "account|magic" in scripts\live_dashboard.ps1
@@ -35,6 +39,8 @@ param(
 # The commit writes a corrupted LIVE-MONEY inventory with the gate green. A7 exactly, at the
 # highest-value target in the repo -- and this is the guard the pre-commit hook runs FIRST.
 . (Join-Path $PSScriptRoot 'lib\evidence.ps1')
+# ORDER-1100 (S10): the global magic rule, as one callable both this guard and its cage can drive.
+. (Join-Path $PSScriptRoot 'lib\magic_guard.ps1')
 
 $script:warn = 0
 $script:toolFail = 0
@@ -70,6 +76,10 @@ $DEMO = 'DEMO_DEPLOYMENT_PLAN.md'
 $BL   = 'MASTER_BACKLOG.md'
 $SC   = 'EA_SCORECARD_AND_REGISTRY.md'
 $INV  = 'portfolio/DEPLOYMENTS.csv'
+# ORDER-1100 (S10): the magic exception list. Read through the SAME judged reader as the
+# inventory, because the rule they are compared under is one rule and two vintages would let a
+# staged inventory be judged against a committed exception list.
+$ALLOC = 'factory/magic_allocations.jsonl'
 $DASH = 'scripts/live_dashboard.ps1'
 
 Write-Host "=== EA_LAB state consistency check (inventory-driven, ORDER-093) ===" -ForegroundColor Cyan
@@ -96,6 +106,34 @@ if ($null -ne $rows -and $rows.Count -gt 0) {
   $withMagic = @($rows | Where-Object { $_.magic -match '^\d+$' })
   $dups = @($withMagic | Group-Object { "$($_.account)|$($_.magic)" } | Where-Object Count -gt 1)
   Check ($dups.Count -eq 0) "no duplicate account|magic in inventory" ("duplicate account|magic: " + (($dups | ForEach-Object Name) -join ', '))
+
+  # 2b. THE GLOBAL MAGIC RULE. ORDER-1100 (slice S10).
+  #
+  # PROJECT_STATE section 0.5, owner-ratified 2026-08-01: uniqueness scope is GLOBAL -- one magic
+  # belongs to exactly one EA across every account -- and this checker "flips to the global rule
+  # only when S10 gives it an exception list to read, because flipping it first would redden the
+  # state check on three rows the owner has just declared legitimate". The list is
+  # factory\magic_allocations.jsonl and it exists now, so the rule is on.
+  #
+  # The account|magic check above STAYS. It is not superseded: it is strictly weaker (global
+  # uniqueness implies it) and the three legacy exceptions pass it by construction, so keeping it
+  # costs nothing and keeps the backstop schemas.json names on MagicAllocation.
+  #
+  # WHY THIS SHELLS OUT INSTEAD OF REIMPLEMENTING THE RULE HERE. The same rule written twice --
+  # once in python for the factory, once in PowerShell for the hook -- is two opinions, and the
+  # second one is the one nobody drives. _triage\factory_os\magic.py owns it, run_s10_tests.py
+  # enumerates it, and this guard asks that module rather than agreeing with it.
+  #
+  # WHY THE CHILD IS HANDED BYTES AND NOT PATHS. ORDER-674's A7 was exactly this shape: a guard
+  # that reached past the judged reader to the working tree passed a duplicate account|magic that
+  # was STAGED behind a clean worktree copy. A child process given a repo path would read the
+  # disk and reintroduce it. Both inputs therefore go through ReadJudged and are spilled to temp
+  # files; the disk is a transport here, not a source.
+  # THE RULE ITSELF LIVES IN scripts\lib\magic_guard.ps1 so the cage can drive it without paying
+  # 3.0s to spawn this whole script per case -- see that file's header for why that mattered.
+  $allocText = if (Test-CommittedPath -RelPath $ALLOC -RepoRoot $Root) { ReadJudged $ALLOC } else { $null }
+  $magic = Test-MagicUniqueness -RepoRoot $Root -AllocText $allocText -InvText $invText
+  Check $magic.ok "global magic uniqueness (magic.py, with the legacy exception list)" $magic.detail
 
   # 3. accounts present in the deployment narrative doc
   $demoRaw = if (Test-CommittedPath -RelPath $DEMO -RepoRoot $Root) { (ReadJudged $DEMO) } else { '' }

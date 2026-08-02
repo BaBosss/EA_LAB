@@ -5,6 +5,8 @@
 _triage/EA_LAB_FACTORY_OS_DESIGN.md
 _triage/factory_os/activation.py
 _triage/factory_os/architecture.py
+_triage/factory_os/attestation.py
+_triage/factory_os/candidate.py
 _triage/factory_os/capability.py
 _triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
@@ -23,11 +25,13 @@ _triage/factory_os/gen_default_preset.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_input_surface.py
 _triage/factory_os/gen_locked_constants.py
+_triage/factory_os/gen_magic_allocations.py
 _triage/factory_os/gen_registry_rows.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/gen_wrapper.py
 _triage/factory_os/hypothesis_b14.py
+_triage/factory_os/magic.py
 _triage/factory_os/parity.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
@@ -42,6 +46,7 @@ _triage/factory_os/run_param_surface_tests.py
 _triage/factory_os/run_parity_tests.py
 _triage/factory_os/run_preset_tests.py
 _triage/factory_os/run_registry_tests.py
+_triage/factory_os/run_s10_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_conformance.py
 _triage/factory_os/run_s2a_gate.py
@@ -86,6 +91,7 @@ ea_template/generated/B14_H02_r1_allowlist.mqh
 factory/coverage.jsonl
 factory/hypotheses.jsonl
 factory/instrument_profiles.jsonl
+factory/magic_allocations.jsonl
 factory/parameter_bindings.jsonl
 factory/work_receipts.jsonl
 MASTER_BACKLOG.md
@@ -106,6 +112,7 @@ scripts/daily_monitor.ps1
 scripts/gen_fast_tier_pathspec.ps1
 scripts/lib/b1_guard.ps1
 scripts/lib/evidence.ps1
+scripts/lib/magic_guard.ps1
 scripts/lib/monitor_coverage.ps1
 scripts/lib/report_freshness.ps1
 scripts/lib/snapshot_reader.ps1
