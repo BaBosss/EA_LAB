@@ -134,6 +134,12 @@ row (lines 982, 1029, 1038). **Restored byte-for-byte** in `021f3729`.</sub>
 - fast tier **green**, 19 suites, `0 failed` · per-path budget **22.4s of 65.0s** (42.6s headroom)
 - two suites added, both measured before adding per `ORDER-673`:
   `run_setfile_tests.ps1` **0.4s** · `run_activation_tests.ps1` **0.4s** (1.3s standalone)
+- 🔴 **but the FULL tier measured 88.7s against its 90.0s budget — 1.3s of headroom, and this lane
+  spent 0.8s of it.** That is `ORDER-673` N4 arriving: *"the next cage added has to displace
+  something."* It has not been displaced yet, and it is stated here rather than left for the next
+  lane to discover at a red hook. `ORDER-820` is already OPEN on exactly this number and is the
+  right place to settle it. **The next suite added to this tier must remove one, or raise the
+  budget with a measurement — not with an estimate.**
 - **`tpl_regression` was NOT run and was NOT owed** — this lane made **zero** `ea_template/**`
   edits. The MT5 lane 1 pin was declared for S8's parity harness, which did not start; **no tester
   run happened, and no number in this handoff comes from one.**
