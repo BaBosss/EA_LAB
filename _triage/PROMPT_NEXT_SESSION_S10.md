@@ -67,7 +67,43 @@ described code that no longer exists:
   the live-money inventory has been dead since `baa1b6f5`. If S10 touches magic uniqueness, that
   guard is in scope and its blast radius was measured at 0 duplicates.
 
-## ⚠️ Owed to the owner — ask these BEFORE building, both block or shape S10
+## ✅ ADDENDUM 2026-08-02 — both owner items below are now DECIDED. Read this before the section.
+
+<sub>Added by lane `S-2026-08-02-RATIFY9` after `S10CAND` had already reserved. Full text and the
+reasoning: `_triage/USER_DECISIONS_PENDING.md` items **6** and **7**.</sub>
+
+**Item 1 → `ExecutionKey.ini_hash` MOVES to `RunAttempt`.** `ExecutionKey` becomes **14 fields**;
+`RunAttempt` gains `ini_sha256`, written after the ini exists. Identity stays computable before the
+run; forensics keeps the real bytes. The literal reading was not merely awkward — the ini contains
+`Report=$ReportName`, which differs every run, so a real ini hash would give two runs of an
+identical configuration two different digests and **criterion 3 could never fire**. Same shape
+`schemas.json` already fixed by moving `pid` off the lease. **Measured: no candidate digest changes**
+— `CandidatePayload.evidence` is `MetricRef`, which carries `run_id`/`lane`/`data_fingerprint` and
+never the ExecutionKey.
+
+> **This is S10's to execute, as step 0, under its own block** — `S10CAND` already declares
+> `scheduler.py`, `schemas.json` and `CONTRACTS.md`, and had committed no code when this was
+> decided, so it lands before anything is built on the old shape. Touches: `EXECUTION_KEY_FIELDS`
+> in `scheduler.py` · the two `$defs` in `schemas.json` · regenerate `CONTRACTS.md` ·
+> `run_scheduler_tests.py`'s `BASE_KEY` and its 15-field attack (it becomes a 14-field attack, and
+> the "missing a field" case must still refuse). Re-run `run_scheduler_tests.py` — the
+> `execution_key_digest` shape check is what will tell you the tuple and the schema agree.
+
+**Item 2 → decision 18 reads as TWO CATEGORIES.** The mapping now in
+`RETRYABLE_FOR_NEW_RUN` is **ratified as-is**: tester = `TESTER_ERROR` · execution =
+`TERMINAL_ERROR`/`TIMEOUT`/`KILLED`/`LEASE_LOST` · neither = `CONFIG_REJECTED` (stays blocked).
+**No code change** — only the hedge in the comment ("this is an INTERPRETATION ... the owner can
+overrule") becomes a ratification, citing decision 7.
+
+<sub>⚠️ While editing that comment block, note it currently carries a **stale sentence** from the
+S9 build: the "TWO GATES, NOT ONE" paragraph still reads *"That is `RETRYABLE_FOR_NEW_RUN`, and it
+is exactly the decision's two classes"*, which the tuple below it has contradicted since the wiring
+proof widened it to five. A comment asserting the opposite of its own code is the exact defect
+`/scrutinize` round 1 found in `scheduler_run.ps1`; fix it in the same commit.</sub>
+
+---
+
+## ⚠️ Owed to the owner — ask these BEFORE building, both block or shape S10 <sub>(SUPERSEDED — see the addendum above; kept because it is the reasoning the decisions answer)</sub>
 
 1. **`ExecutionKey.ini_hash` is not knowable when the key is needed.** The ini is written *by the
    runner*, but the key is what gates whether the run may happen at all — the same shape

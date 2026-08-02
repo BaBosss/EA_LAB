@@ -199,6 +199,82 @@ still points at (`git show 78a93129:MASTER_BACKLOG.md | grep '^| D33 |'`).
 
 ---
 
+## 6. ✅ DECIDED 2026-08-02 — `ExecutionKey.ini_hash` MOVES to `RunAttempt`; identity stays computable before the run
+
+**Owner, verbatim:** *"ทำตามที่แนะนำเลย"* (on the recommendation below, presented with its
+alternatives).
+
+**The problem.** `ExecutionKey` is what `scheduler.queue` uses to decide *"has this configuration
+already been run?"* (design §3.3, decision 18) — so it must be **computable before the run exists**.
+But `ini_hash` is the hash of the `.ini`, and `scripts/mt5_run.ps1` writes that file at launch time.
+The S9 proof runs seeded the field from a canonical rendering of the other fields, which means a
+field named `ini_hash` was not the hash of an ini.
+
+🔴 **And the literal reading is worse than awkward — it is actively wrong.** The ini `mt5_run.ps1`
+writes contains `Report=$ReportName`, which **differs on every run**. Computing `ini_hash` from the
+real file would therefore give two runs of an *identical configuration* two different digests, and
+**criterion 3 (idempotency) could never fire at all.** The gate that exists to stop the lane being
+spent twice would be permanently disarmed by the field that was supposed to help it.
+
+**Decision — move it, do not redefine it in place:**
+
+| | before | after |
+|---|---|---|
+| `ExecutionKey` | 15 fields incl. `ini_hash` | **14 fields**, all of them things that change the numbers |
+| `RunAttempt` | — | new `ini_sha256`, recorded **after** the ini is written |
+
+Identity is computable before the run; forensics ("what exactly was handed to the tester") keeps the
+real bytes, per attempt, where they can actually be known.
+
+**Precedent, and it is exact:** `schemas.json` already fixed this same shape one level up — rev 3
+required `pid` on the lease, but `LEASED` happens *before* any process exists, so `pid` moved to
+`process_observed`. Its own SELF-REVIEW FIX note says *"A schema that demands a fact nobody can know
+yet is a schema that gets filled with a placeholder."* That is precisely what `ini_hash` was.
+
+**Blast radius, measured rather than assumed:** `CandidatePayload.evidence` is a list of `MetricRef`,
+which carries `run_id` · `lane` · `data_fingerprint` — **not** the ExecutionKey and **not**
+`ini_hash`. So **no candidate digest changes**, and there is nothing to migrate. Verified against
+`schemas.json` at `1d4743fb`.
+
+⚠️ **Who does it:** `S-2026-08-02-S10CAND`, which is **ACTIVE and already declares every file the
+change needs** (`scheduler.py`, `schemas.json`, `CONTRACTS.md`). It had committed **zero code** when
+this was decided, so the change lands *before* anything is built on the old shape. This lane did not
+touch those files — ledger rule 4.
+
+---
+
+## 7. ✅ DECIDED 2026-08-02 — decision 18 reads as TWO CATEGORIES, not two enum members
+
+**Owner, verbatim:** *"ทำตามที่แนะนำเลย"*.
+
+**The problem.** Decision 18 permits a re-run of an identical `(config, lane, data fingerprint)`
+*"except after an execution or tester error"* — a description of **two categories**. The failure-class
+enum has **seven** members. The first implementation read it as the literal pair
+(`TESTER_ERROR`, `TERMINAL_ERROR`), and the first real wiring run showed the cost immediately: the
+machine died mid-run, the configuration went to `FAILED(KILLED)` **holding no evidence at all**, and
+re-queueing it was refused **forever**. A slice whose entire purpose is recovery had made a crashed
+configuration permanently unrunnable — the only way out being to perturb some value until the digest
+changed.
+
+**The tell is inside the decision itself:** it continues *"...otherwise: return the cached
+evidence."* A refusal with **no cached evidence to return** is not the rule being enforced, it is the
+rule being applied where it does not reach.
+
+**The ratified mapping** (`RETRYABLE_FOR_NEW_RUN` in `_triage/factory_os/scheduler.py`):
+
+| category | classes |
+|---|---|
+| tester error | `TESTER_ERROR` |
+| execution error | `TERMINAL_ERROR` · `TIMEOUT` · `KILLED` · `LEASE_LOST` |
+| **neither — stays blocked** | `CONFIG_REJECTED` — the configuration was not honoured, which is a fact *about the configuration*; re-running the identical one is expecting a different answer, and a human should look first |
+
+**What still bounds it:** `MAX_ATTEMPTS = 3` caps retries *inside* a run · `CONFIG_REJECTED` stays
+closed · queueing a new run is a deliberate act, not an automatic loop.
+
+Overruling this changes exactly one tuple and nothing around it.
+
+---
+
 ## Not on this list, and why
 
 - **The Coverage transfer** — decided 2026-07-31, recorded in `s2a_attestations.jsonl`, executed.
