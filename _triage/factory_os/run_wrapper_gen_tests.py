@@ -32,6 +32,7 @@ sys.path.insert(0, HERE)
 import check_wrapper_gen as C                                               # noqa: E402
 import gen_registry_rows as grr                                            # noqa: E402
 import gen_wrapper as gw                                                   # noqa: E402
+import preset                                                              # noqa: E402
 
 REV = 'B14-H01-r1'
 # Derived from the generator's own constants rather than spelled out: the wrapper and the allowlist
@@ -160,6 +161,61 @@ def w2_smuggled_include():
                                            '#include "../core/Evil.mqh"' + chr(10) + keep)}}
 
 
+def w6_input_without_guard_pair():
+    """An input added to `Inputs.mqh` the way anyone would add one -- a plain `input` line, no
+    guard pair. This is the attack that matters most in the whole suite, because NOTHING ELSE SEES
+    IT: the allowlist regenerates perfectly (W1 green), it names exactly the right modules (W3
+    green), the wrapper is wired (W4 green) -- and the new input can never be compiled away, so it
+    sits on every generated wrapper's Inputs page forever no matter what the registry decides
+    about it. The rollout's whole mechanism is opt-in per declaration, and an opt-in mechanism
+    fails by omission, silently, in the direction of doing nothing."""
+    anchor = '#ifndef LAB_CONST__0_Slippage'
+    return {'overrides': {preset.INPUTS_REL: _mutate(
+        preset.INPUTS_REL, anchor,
+        'input int _0_UnguardedProbe = 3;' + chr(10) + anchor)}}
+
+
+def w7_const_without_value():
+    """`#define LAB_CONST_x` with no `LAB_CONSTVAL_x`. The const branch in Inputs.mqh reads
+    `= LAB_CONSTVAL_x`, so this is an undefined identifier -- it fails at COMPILE time, loudly,
+    which is the good case. The reason it is still caged is that the compiler is not in the fast
+    tier: without W7 the first thing that notices is a MetaEditor run somebody has to remember to
+    do, and design 5.2's include bug is the precedent for how long that can take."""
+    return {'overrides': {ALLOWLIST: _mutate(
+        ALLOWLIST, '#define LAB_CONSTVAL__31_SL_Pip 1000' + chr(10), '')}}
+
+
+def w7_const_for_a_name_nothing_declares():
+    """`#define LAB_CONST_NotAnInput`. The dangerous twin of the case above: there is no guard
+    pair to switch, so it compiles to NOTHING -- no error, no warning, no effect -- while reading
+    in every review as a decision that was applied. Silent-and-inert beats loud-and-broken in
+    every way except the one that matters."""
+    return {'overrides': {ALLOWLIST: _mutate(
+        ALLOWLIST, '#define LAB_CONST_ExitMode',
+        '#define LAB_CONST_NotAnInput' + chr(10) + '#define LAB_CONSTVAL_NotAnInput 1'
+        + chr(10) + '#define LAB_CONST_ExitMode')}}
+
+
+def w8_registry_hides_what_the_binary_exposes():
+    """A ParameterBinding row moved from OPERATOR to HIDDEN without the const plan changing. The
+    registry then says the operator cannot see the dial and the binary still offers it -- and
+    before W8 the two halves of the surface had no line of communication at all: the HIDDEN count
+    lived in `check_param_surface`, the const count lived in the allowlist header's comment, and
+    nothing subtracted one from the other."""
+    rows = []
+    for line in _disk(grr.BINDINGS_REL).split(chr(10)):
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if (rec.get('entity') == 'ParameterBinding' and rec.get('hypothesis_revision') == REV
+                and rec.get('parameter') == '_14_DistAtrMult'):
+            rec['surface'] = 'HIDDEN'
+            rows.append(json.dumps(rec, sort_keys=True))
+            continue
+        rows.append(line)
+    return {'overrides': {grr.BINDINGS_REL: chr(10).join(rows) + chr(10)}}
+
+
 def w5_status_rolled_back():
     """The lifecycle field left behind by the artifact. Both rows said `status: DRAFT` while
     their wrappers existed on disk, which is the state this criterion was written from."""
@@ -187,6 +243,14 @@ CASES = (
     ('W3', 'a wrapper for a revision no Hypothesis row registers', w3_unregistered),
     ('W4', 'a wrapper that includes no allowlist -- current, and engaging nothing', w4_no_allowlist),
     ('W4', 'two LAB_ENTRY_* build tokens in one wrapper', w4_two_builds),
+    ('W6', 'an input added to Inputs.mqh with no guard pair -- the ONLY case in this suite that '
+           'every other criterion is blind to', w6_input_without_guard_pair),
+    ('W7', 'LAB_CONST_ without its LAB_CONSTVAL_ -- an undefined identifier at compile time',
+     w7_const_without_value),
+    ('W7', 'LAB_CONST_ for a name nothing declares -- compiles to nothing, reads as applied',
+     w7_const_for_a_name_nothing_declares),
+    ('W8', 'the registry hides a dial the binary still exposes',
+     w8_registry_hides_what_the_binary_exposes),
 )
 
 

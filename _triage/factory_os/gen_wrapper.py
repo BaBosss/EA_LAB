@@ -27,17 +27,26 @@ wrapper compile" and "which modules does its Hypothesis row declare" cannot answ
 literal list in this file would be the second opinion that every one-resolver rule in this tree
 exists to prevent.
 
-WHAT THIS GENERATOR DOES **NOT** DO YET, STATED BECAUSE THE GAP IS THE POINT. Design 5.3 says
-"inputs outside the wrapper's capability set become `const` at their canonical default". That
-requires `ea_template/core/Inputs.mqh` to declare each input inside its capability token -- the
-PER-BOSS token-guard rollout the owner ratified on 2026-08-01, Boss_14 first. Until that lands, a
-generated wrapper defines the tokens and `Inputs.mqh` ignores them, so the wrapper compiles to a
-binary IDENTICAL to the hand-written `Boss_14_GridLog.mq5`.
+THE `Inputs.mqh` CAPABILITY-TOKEN ROLLOUT (STEP 1 of S8, landed 2026-08-02, Boss_14 only). Design
+5.3 says "inputs outside the wrapper's capability set become `const` at their canonical default"
+and 5.4's state table adds "locked by hypothesis -> `const`, not even present". `Inputs.mqh` now
+declares every input inside a `#ifndef LAB_CONST_<name>` / `#ifdef LAB_CONST_<name>` guard pair,
+and this generator decides which side each input takes, per revision.
 
-  That is not a defect, it is the safe order to do it in: it makes parity case 1 (baseline
-  equivalence) a check on the GENERATOR alone, with the Inputs.mqh change as a separate, separately
-  falsifiable step. The alternative -- rolling out token guards and generating wrappers in one
-  commit -- gives a parity failure two candidate causes and no way to tell them apart.
+  Before the rollout a generated wrapper defined the tokens and `Inputs.mqh` ignored them, so it
+  compiled to a binary IDENTICAL to the hand-written `Boss_14_GridLog.mq5` -- which is why the
+  rollout had to land BEFORE the parity harness rather than with it: a parity failure would
+  otherwise have had two candidate causes and no way to tell them apart.
+
+🔴 **CONST-ING AN INPUT IS A CLAIM ABOUT THE BINARY, AND `not reachable` IS NOT SUFFICIENT FOR IT.**
+`activation.classify()` answers "is this input reachable under THIS ONE configuration". A
+compile-time `const` is stronger: it says the input cannot matter under ANY configuration the
+operator can still produce. Those coincide only when every selector the input's gate reads is
+ITSELF fixed at compile time. Where they do not -- where a still-live `input` decides whether a
+would-be constant matters -- `const_plan()` REFUSES to const it and reports the pair, because
+freezing the dependent dials of a switch the optimizer is explicitly allowed to sweep would hand
+the optimizer one arm of a two-arm decision and let it report the result as the decision. That is
+memory `inert-axis-fake-plateau`, made structural: the axis would be inert in the binary itself.
 
 CATEGORY (TIER_SNAPSHOT_DESIGN.md section 2/3.3): BUILDER. Text comes from the caller through a
 `read(relpath) -> text` callable; only the CLI opens paths, and it says which.
@@ -49,6 +58,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
+import activation                                  # noqa: E402
 import architecture                                # noqa: E402
 import capability                                  # noqa: E402
 import gen_registry_rows as grr                    # noqa: E402
@@ -113,7 +123,128 @@ def entry_tag(read, build_tag):
         % rel)
 
 
-def emit_allowlist(revision_id, tokens):
+def _closed_for_every_config(gate, name, cfg, const, surface):
+    """-> (definitely_closed, blocking_selector).
+
+    The question a `const` decision has to answer is NOT "is this gate closed" -- `activation`
+    already answered that for one config -- but "is it closed for EVERY value the operator can
+    still choose". A selector that is itself const has one value; a selector still on the Inputs
+    page has any of them, so a leg that reads one is UNKNOWN rather than closed.
+
+    `SELF_GT0` is decidable either way: the leg reads the input's OWN value, and const-ing the
+    input is precisely what fixes it, so if it is off now it is off forever.
+
+    The AND case is why this is a function rather than a scan of selector names. A gate like
+    `AND(EQ(_9_StepUseATR, true), SELF_GT0)` is closed by its SELF leg alone -- `_9_StepUseATR`
+    being live cannot open it -- and a name-scan would refuse it, keeping an input alive on a
+    reason that does not hold. One definitely-closed leg closes an AND.
+    """
+    kind = gate[0]
+    if kind == 'ALWAYS':
+        return (False, None)
+    if kind == 'SELF_GT0':
+        return (not activation._eval(gate, name, cfg, surface), None)
+    if kind in ('EQ', 'NE', 'GT0'):
+        if gate[1] not in const:
+            return (False, gate[1])
+        return (not activation._eval(gate, name, cfg, surface), None)
+    if kind == 'AND':
+        blocker = None
+        for sub in gate[1:]:
+            closed, sub_blocker = _closed_for_every_config(sub, name, cfg, const, surface)
+            if closed:
+                return (True, None)          # one closed leg closes the conjunction
+            blocker = blocker or sub_blocker
+        return (False, blocker)
+    raise Refusal('const_plan cannot reason about activation gate kind %r on %s' % (kind, name))
+
+
+class ConstPlan(object):
+    """Which inputs a revision's wrapper compiles away, WITH the ones it refused to and why.
+
+    `refused` is not an error list -- it is the finding. Each entry is
+    `(input, selector, why)`: an input `activation` scored unreachable, which this generator will
+    NOT const because `selector` is still a live `input` on the wrapper's own page. Reporting it
+    is the point; a plan that silently const-ed them would be smaller and wrong.
+    """
+
+    __slots__ = ('const_values', 'refused', 'live')
+
+    def __init__(self, const_values, refused, live):
+        self.const_values = const_values      # name -> MQL5 source-form value expression
+        self.refused = refused                # [(name, selector, reason)]
+        self.live = live                      # names that remain `input` on the Inputs page
+
+
+def const_plan(build_tag, hyp, surface, cfg):
+    """-> ConstPlan for one hypothesis revision.
+
+    An input is const-able when it is unreachable for a reason that is settled at COMPILE time:
+
+      * its capability token is not in the wrapper's allowlist -- the module is not in the binary,
+        so no configuration can reach the input;
+      * the hypothesis LOCKED it -- design 5.4, `const` at the PINNED value, not the default;
+      * its own gate is closed and every selector that gate reads is itself const-able (so the
+        values the gate tested cannot move) -- computed to a fixpoint, because a chain like
+        `_2_PartialFrac1 <- _2_PartialPct1` is only decidable once the head of it is.
+
+    Anything else stays an `input`, and lands in `refused` with the selector that kept it alive.
+    """
+    table = activation.TABLE.get(build_tag)
+    if table is None:
+        raise Refusal(
+            'no activation table is declared for build %r, so which inputs this wrapper may '
+            'compile away cannot be derived. REFUSED rather than defaulted to "none": a wrapper '
+            'that const-ed nothing would compile, run, and be indistinguishable from its parent '
+            'while claiming to be a distinct revision.' % build_tag)
+
+    verdicts = activation.classify(build_tag, cfg, surface=surface)
+    locked = set(HB.LOCKED_SELECTORS)
+
+    # Seed: the two reasons that need no fixpoint. A LOCKED input is const even when it is
+    # perfectly reachable -- that is what "locked" means, and it is the only class whose value is
+    # not its canonical default.
+    const = set(n for n, v in verdicts.items() if not v.token_enabled)
+    const |= set(n for n in locked if n in verdicts)
+
+    # Fixpoint over the gate-closed remainder.
+    refused = []
+    changed = True
+    while changed:
+        changed = False
+        refused = []
+        for name, verdict in verdicts.items():
+            if name in const or verdict.gate_open:
+                continue
+            closed, blocker = _closed_for_every_config(table[name][1], name, cfg, const, surface)
+            if not closed:
+                refused.append((name, blocker,
+                                'its gate reads %s, which is still an input on this wrapper'
+                                % blocker))
+                continue
+            const.add(name)
+            changed = True
+
+    values = {}
+    for name in sorted(const):
+        decl = surface.by_name.get(name)
+        if decl is None:
+            raise Refusal(
+                'the const plan for %s names %r, which build %s does not expose. REFUSED: a '
+                '`#define LAB_CONST_%s` nothing declares would compile to nothing and read as a '
+                'decision that was applied.' % (hyp.get('preregistration_anchor', '?'), name,
+                                                build_tag, name))
+        expr = cfg[name]
+        # Validated, not merely copied: render_value REFUSES a symbol the surface does not know,
+        # so a pinned value that no longer names anything cannot reach the emitted header.
+        preset.render_value(decl, expr, surface.enums)
+        values[name] = expr
+
+    live = [d.name for d in surface.inputs if d.name not in const]
+    return ConstPlan(values, refused, live)
+
+
+def emit_allowlist(revision_id, tokens, plan=None):
     """-> the full text of `<REV>_allowlist.mqh`. Deterministic: sorted, no clock, no host path."""
     if not tokens:
         raise Refusal(
@@ -134,7 +265,8 @@ def emit_allowlist(revision_id, tokens):
     w.append('//| with the module_set on this revision\'s Hypothesis row.')
     w.append('//|')
     w.append('//| MQL5 has no `#if EXPR==n` and no `#elif` (Inputs.mqh:11 says so), so this file')
-    w.append('//| emits TOKEN #defines only. Any design that assumes expression conditionals is')
+    w.append('//| emits TOKEN #defines only -- plus, below, the per-input const decisions, which')
+    w.append('//| are token #defines too. Any design that assumes expression conditionals is')
     w.append('//| wrong on this platform.')
     w.append('//+------------------------------------------------------------------+')
     w.append('#ifndef BOSS_ALLOWLIST_%s_MQH' % slug.upper())
@@ -142,6 +274,27 @@ def emit_allowlist(revision_id, tokens):
     w.append('')
     for token in tokens:
         w.append('#define %s' % token)
+    if plan is not None:
+        w.append('')
+        w.append('//--- design 5.3 / 5.4: the inputs this revision compiles away ---------------')
+        w.append('//| %d const, %d left on the Inputs page.' % (len(plan.const_values),
+                                                                len(plan.live)))
+        w.append('//| Each pair switches ea_template/core/Inputs.mqh from its `input` branch to')
+        w.append('//| its `const` branch. LAB_CONSTVAL_* carries the EFFECTIVE value -- the')
+        w.append('//| canonical default for an unreachable input, the PINNED value for a locked')
+        w.append('//| one -- so a lock is applied rather than merely declared.')
+        if plan.refused:
+            w.append('//|')
+            w.append('//| NOT const-ed although unreachable under this config, and the reason is')
+            w.append('//| load-bearing: a still-live input decides whether each of these matters,')
+            w.append('//| so const-ing them would freeze one arm of a decision the optimizer is')
+            w.append('//| allowed to sweep. See gen_wrapper.const_plan().')
+            for name, selector, _why in sorted(plan.refused):
+                w.append('//|   %-22s kept, because %s is still an input' % (name, selector))
+        w.append('')
+        for name in sorted(plan.const_values):
+            w.append('#define LAB_CONST_%s' % name)
+            w.append('#define LAB_CONSTVAL_%s %s' % (name, plan.const_values[name]))
     w.append('')
     w.append('#endif // BOSS_ALLOWLIST_%s_MQH' % slug.upper())
     return '\n'.join(w) + '\n'
@@ -198,9 +351,11 @@ def build_for(revision_id, read):
     # have drifted, and that is worth discovering at generation rather than at parity.
     architecture.digest_for(build_tag, cfg, surface=surface)
 
+    plan = const_plan(build_tag, hyp, surface, cfg)
+
     slug = _slug(revision_id)
     return {
-        '%s/%s_allowlist.mqh' % (GENERATED_DIR, slug): emit_allowlist(revision_id, tokens),
+        '%s/%s_allowlist.mqh' % (GENERATED_DIR, slug): emit_allowlist(revision_id, tokens, plan),
         '%s/%s.mq5' % (WRAPPER_OUT_DIR, slug): emit_wrapper(revision_id, build_tag,
                                                             entry_tag(read, build_tag)),
     }

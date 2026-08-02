@@ -19,6 +19,20 @@ no longer implements while its filename still says it does.
   W4  the wrapper is WIRED: exactly one `LAB_ENTRY_*` build token, and both includes present. W1
       alone leaves the shape `GUARD_SHAPES.md` calls "the mechanism never engages" -- a perfectly
       current wrapper that includes no allowlist and therefore compiles the full surface.
+  W6  every input on every declared build's surface has a `#ifndef`/`#ifdef LAB_CONST_<name>`
+      GUARD PAIR in `Inputs.mqh`. W1-W5 are all blind to this: they regenerate the ALLOWLIST, and
+      an input added to `Inputs.mqh` without its pair regenerates a perfectly correct allowlist
+      that cannot possibly const it. The failure is silent and one-directional -- the input simply
+      stays on every wrapper's page forever, and the registry's word for it is never applied.
+  W7  every `LAB_CONST_<name>` in an allowlist names an input the build exposes, and carries its
+      `LAB_CONSTVAL_<name>`. A `LAB_CONST_` with no value macro compiles to
+      `const double x = LAB_CONSTVAL_x;` -- an undefined identifier, which at least fails loudly;
+      a `LAB_CONST_` for a name nothing declares compiles to NOTHING and reads as applied.
+  W8  the const plan and the ParameterBinding rows agree about what is off the page. Every input
+      the registry calls HIDDEN is either const-ed or in `const_plan().refused`, and every
+      const-ed input is HIDDEN. This is the criterion that makes `85 = 78 + 7` a CHECK instead of
+      a sentence in a handoff: the registry's HIDDEN count and the wrapper's Inputs page are two
+      independent statements of the same fact, and before W8 nothing compared them.
 
 WHAT THIS CANNOT CHECK, STATED RATHER THAN IMPLIED. It cannot prove the generated wrapper and the
 hand-written `Boss_14_GridLog.mq5` behave identically. That is the 7-point PARITY contract (design
@@ -61,6 +75,10 @@ _BUILD_TOKEN = re.compile(r'^\s*#define\s+(LAB_ENTRY_[0-9]+)\s*$', re.M)
 # clean lines. The allowed set is CLOSED and derived from the generator's own two includes.
 _INCLUDE = re.compile(r'^\s*#include\s+"([^"]+)"', re.M)
 _TOKEN_DEFINE = re.compile(r'^\s*#define\s+(LAB_CAP_[A-Z0-9_]+)\s*$', re.M)
+_CONST_DEFINE = re.compile(r'^\s*#define\s+LAB_CONST_([A-Za-z_][A-Za-z0-9_]*)\s*$', re.M)
+_CONSTVAL_DEFINE = re.compile(r'^\s*#define\s+LAB_CONSTVAL_([A-Za-z_][A-Za-z0-9_]*)\s+\S', re.M)
+_GUARD_IFNDEF = re.compile(r'^\s*#ifndef\s+LAB_CONST_([A-Za-z_][A-Za-z0-9_]*)\s*$', re.M)
+_GUARD_IFDEF = re.compile(r'^\s*#ifdef\s+LAB_CONST_([A-Za-z_][A-Za-z0-9_]*)\s*$', re.M)
 
 
 def _src(worktree=False):
@@ -101,6 +119,32 @@ def _params_missing_semantics(read, revision_id):
     return out
 
 
+def _surface_by_registry(read, revision_id):
+    """-> {parameter: surface} for one revision's ParameterBinding rows."""
+    out = {}
+    for line in read(grr.BINDINGS_REL).replace(chr(13) + chr(10), chr(10)).split(chr(10)):
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if (rec.get('entity') == 'ParameterBinding'
+                and rec.get('hypothesis_revision') == revision_id):
+            out[rec.get('parameter')] = rec.get('surface')
+    return out
+
+
+def _plan_for(read, revision_id):
+    """-> (ConstPlan, surface) for one revision, derived through the SAME calls the generator
+    uses. Re-deriving it here rather than re-reading the emitted header is the point: W7/W8 must
+    be able to disagree with the file, and a checker that read its expectation out of the artifact
+    it is checking can only ever agree with it."""
+    import hypothesis_b14 as HB
+    hyp_id = revision_id.rsplit('-r', 1)[0]
+    hyp = HB.HYPOTHESES[hyp_id]
+    surface = preset.parse_surface(read(preset.INPUTS_REL), HB.BUILD_TAG)
+    cfg = grr.pinned_config(hyp, surface)
+    return gw.const_plan(HB.BUILD_TAG, hyp, surface, cfg), surface
+
+
 def check(worktree=False, source=None):
     src = source or _src(worktree)
     problems = []
@@ -108,10 +152,33 @@ def check(worktree=False, source=None):
     def read(rel):
         return src.read_committed(rel)
 
+    # --- W6 every input carries its guard pair in Inputs.mqh -------------------------------------
+    # 🔴 EVALUATED BEFORE THE GENERATOR RUNS, and the cage is what forced that order. W6's attack
+    # -- an input added with no guard pair -- ALSO trips `activation.classify`, which refuses an
+    # input nobody has classified. So `build_all` raised first, `check()` returned the W1 refusal
+    # alone, and W6 never got to speak: the case failed with `NOT CAUGHT BY W6`. Two independent
+    # defences firing is good; the one that names the ACTUAL omission being unable to reach the
+    # output is not. W6 is a claim about `Inputs.mqh` by itself and needs nothing generated.
+    # Checked ONCE, over every declared build tag, because Inputs.mqh is shared: an input added
+    # under `#ifdef LAB_ENTRY_16` without a pair is just as unconstable as one added for 14, and
+    # the per-Boss rollout means build 16's turn comes later, not never.
+    inputs_text = read(preset.INPUTS_REL)
+    paired = set(_GUARD_IFNDEF.findall(inputs_text)) & set(_GUARD_IFDEF.findall(inputs_text))
+    for tag in sorted(preset.known_build_tags(inputs_text)):
+        declared = [d.name for d in preset.parse_surface(inputs_text, tag).inputs]
+        unguarded = [n for n in declared if n not in paired]
+        if unguarded:
+            problems.append(
+                'W6 %s declares %d input(s) on build %s with no `#ifndef`/`#ifdef LAB_CONST_<name>` '
+                'guard pair: %s. An unguarded input can never be compiled away, so it sits on '
+                'every generated wrapper\'s Inputs page whatever the registry says about it -- and '
+                'W1 stays green throughout, because the ALLOWLIST it regenerates is correct.'
+                % (preset.INPUTS_REL, len(unguarded), tag, ', '.join(sorted(unguarded)[:8])))
+
     try:
         expected = gw.build_all(read)
     except preset.PresetRefusal as exc:
-        return ['W1 the generator REFUSED to reproduce the wrappers: %s' % exc]
+        return problems + ['W1 the generator REFUSED to reproduce the wrappers: %s' % exc]
 
     # --- W1 byte-identical regeneration ---------------------------------------------------------
     for rel, text in sorted(expected.items()):
@@ -236,6 +303,62 @@ def check(worktree=False, source=None):
                 'modules a revision uses, disagreeing -- and this is the pair that decides what '
                 'the BINARY contains.' % (rel, in_file, revision_id, in_row))
 
+        # --- W7 / W8 the const decisions ---------------------------------------------------------
+        try:
+            plan, surface = _plan_for(read, revision_id)
+        except (preset.PresetRefusal, KeyError) as exc:
+            problems.append('W7 the const plan for %s could not be derived: %s' % (revision_id, exc))
+            continue
+
+        text = read(rel)
+        const_in_file = set(_CONST_DEFINE.findall(text))
+        val_in_file = set(_CONSTVAL_DEFINE.findall(text))
+        declared = set(d.name for d in surface.inputs)
+
+        stray = sorted(const_in_file - declared)
+        if stray:
+            problems.append(
+                'W7 %s defines LAB_CONST_ for %d name(s) build %s does not declare: %s. That '
+                'compiles to nothing at all -- there is no guard pair to switch -- while reading '
+                'in every review as a decision that was applied.'
+                % (rel, len(stray), surface.build_tag, ', '.join(stray[:8])))
+        valueless = sorted(const_in_file - val_in_file)
+        if valueless:
+            problems.append(
+                'W7 %s defines LAB_CONST_ without LAB_CONSTVAL_ for: %s. The const branch in '
+                '%s reads `= LAB_CONSTVAL_<name>`, so this is an undefined identifier at compile '
+                'time.' % (rel, ', '.join(valueless[:8]), preset.INPUTS_REL))
+        if const_in_file != set(plan.const_values):
+            missing = sorted(set(plan.const_values) - const_in_file)
+            surplus = sorted(const_in_file - set(plan.const_values))
+            problems.append(
+                'W7 %s const set disagrees with gen_wrapper.const_plan(): %d missing (%s), %d '
+                'surplus (%s).' % (rel, len(missing), ', '.join(missing[:6]) or '-',
+                                   len(surplus), ', '.join(surplus[:6]) or '-'))
+
+        # W8 -- the registry's HIDDEN set and the compile-time const set are two independent
+        # statements about which inputs are off the operator's page. Reconciled, not assumed.
+        by_registry = _surface_by_registry(read, revision_id)
+        if by_registry:
+            hidden = set(n for n, s in by_registry.items() if s == 'HIDDEN')
+            refused = set(n for n, _s, _w in plan.refused)
+            const = set(plan.const_values)
+            unexplained = sorted(hidden - const - refused)
+            if unexplained:
+                problems.append(
+                    'W8 %s: %d input(s) the registry calls HIDDEN are neither const-ed nor listed '
+                    'as refused: %s. HIDDEN means "the operator does not see this"; if the binary '
+                    'still exposes it and nothing recorded why, the two halves of the surface have '
+                    'drifted and the Inputs page is the one that is true.'
+                    % (revision_id, len(unexplained), ', '.join(unexplained[:8])))
+            visible_const = sorted(const - hidden)
+            if visible_const:
+                problems.append(
+                    'W8 %s: %d input(s) are compiled away although the registry advertises them '
+                    'as visible: %s. This is the dangerous direction -- the registry offers the '
+                    'operator (and optimize_guard) a dial the binary does not have.'
+                    % (revision_id, len(visible_const), ', '.join(visible_const[:8])))
+
     return problems
 
 
@@ -267,9 +390,20 @@ def main(argv):
                          'clean\n')
         return 1
     sys.stdout.write('  %d generated file(s) checked\n' % n)
+    try:
+        read = lambda rel: src.read_committed(rel)                              # noqa: E731
+        for rev in sorted(r for r in ('B14-H01-r1', 'B14-H02-r1')):
+            plan, _surface = _plan_for(read, rev)
+            sys.stdout.write('  %-12s %3d const / %3d on the Inputs page / %d unreachable but '
+                             'KEPT (a live input decides whether they matter)\n'
+                             % (rev, len(plan.const_values), len(plan.live), len(plan.refused)))
+    except Exception:                                                # pragma: no cover - reporting
+        pass
     sys.stdout.write('W1 byte-identical regeneration - W2 zero logic and no smuggled include - '
                      'W3 allowlist == module_set - W4 wired - W5 the lifecycle field matches the '
-                     'artifact, with its design 3.1 precondition re-measured: all hold\n')
+                     'artifact, with its design 3.1 precondition re-measured - W6 every input has '
+                     'its guard pair - W7 the const defines are complete and land somewhere - '
+                     'W8 the const set and the registry\'s HIDDEN set reconcile: all hold\n')
     sys.stdout.write('  NOT CHECKED HERE, and it is the acceptance that matters most: the 7-point '
                      'PARITY contract (design 5.5) needs the tester.\n')
     return 0
