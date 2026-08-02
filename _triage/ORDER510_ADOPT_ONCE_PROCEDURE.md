@@ -157,9 +157,17 @@ Run only after §4 (census) and §5 (rehearsal on demo) are both done, and only 
    deletes the legacy key after a confirmed copy, [`Persist.mqh:117`](../ea_template/core/Persist.mqh:117)).
    Both halves are checked: a `Boss2_` key appearing while the legacy key survives is a partial
    migration, not a success.
-5. **Set `RC_AdoptLegacyHalt` back to `false`** and restart the chart. It must start **cleanly** —
-   that is the proof the state is now scoped, and it is the only step that proves the consent flag
-   was not left standing.
+5. **Set `RC_AdoptLegacyHalt` back to `false`** and restart the chart. It must start **cleanly**.
+   > 🔴 **CORRECTION 2026-08-02, found by the first real run.** This step used to add *"and it is
+   > the only step that proves the consent flag was not left standing."* **That is false.** By the
+   > time step 5 runs, the legacy key is **gone** — step 4 verified exactly that — so the gate has
+   > nothing to fire on and the chart starts cleanly **whether the flag is `true` or `false`**. The
+   > clean start proves the state is scoped; it proves nothing at all about the flag.
+   > **What does prove it:** `RC_AdoptLegacyHalt` is one of the build's inputs, so it is inside the
+   > `[CFG] effective_config_hash` the EA prints at every attach. If the digest at step 5 **differs**
+   > from the digest at step 2, the configuration really changed — and since the two `.set` files
+   > differ in that one input, the flag is what changed. Compare the two `[CFG] input surface:`
+   > lines. A step that cannot fail is not a check (`GUARD_SHAPES` shape 5), and this one could not.
 6. Record: magic · account · snapshotted value · migrated value · journal timestamps · F3 before/after.
 
 **Precedent that this end-state is real, not theoretical:** `990016` on `463666728` was attached

@@ -93,10 +93,21 @@ STEP 3 - BACK TO NORMAL (do not skip this)
   [ ] Same chart. Inputs -> LOAD -> O510_990208_STEP3_NORMAL.set -> OK.
   [ ] The chart must start CLEANLY - no [RISK] FATAL line.
 
-      That clean start is the proof the state is now account-scoped, and it is
-      the only step that proves the consent flag was not left switched on. An EA
-      left with adopt=true would silently swallow foreign state on some future
-      account switch, which is the exact thing this gate exists to prevent.
+      !! CORRECTED 2026-08-02 after the first real run. This step used to say the
+      clean start proves the consent flag was not left switched on. IT DOES NOT.
+      By now the legacy key is gone (STEP 2 verified that), so the gate has
+      nothing to fire on and the chart starts cleanly whether the flag is true or
+      false. The clean start proves the state is SCOPED, and nothing more.
+
+  [ ] Compare the [CFG] input surface: line from STEP 2 with the one from STEP 3.
+      The effective_config_hash MUST BE DIFFERENT.
+
+      That is the real proof. RC_AdoptLegacyHalt is one of the 116 inputs, so it
+      is inside that digest; the two .set files differ in exactly that one input,
+      so a different digest means the flag actually changed. Same digest = the
+      STEP 3 file did not load and the flag is still ON - fix that before walking
+      away, because an EA left with adopt=true will silently swallow foreign state
+      on some future account switch, which is what this gate exists to prevent.
 
 ------------------------------------------------------------------------
 WHAT TO SEND BACK

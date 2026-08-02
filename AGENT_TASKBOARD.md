@@ -7110,6 +7110,75 @@ is a *partial* migration, not a success), and the stop conditions.
 screenshot**, and it is the number STEP 2 must print back. The checklist tells the owner to use what
 is on the screen and report a disagreement rather than trusting this repo's copy of it.</sub>
 
+### ✅ ADOPT-ONCE EXECUTED 2026-08-02 by the owner — `990208` MIGRATED (`S-2026-08-02-ADOPTDONE`)
+
+**It worked, on all three steps.** Evidence from the owner's three screenshots, read back line by line:
+
+| time | evidence |
+|---|---|
+| `13:04` | F3 still shows `Boss_990208_rc_peak_eq = 60027.15` (timestamp `13:04`, i.e. the **old** binary rewrote it on reload) |
+| `13:08:20.406` | `[PERSIST] migrated legacy Boss_990208_rc_peak_eq -> Boss2_1185e93f_415573666_GBPJPYm_990208_rc_peak_eq` |
+| `13:08` F3 | `Boss2_1185e93f_415573666_GBPJ…` = **60027.15** present · `Boss_990208_rc_peak_eq` **GONE** — both halves of the §6 step 4 check |
+| `13:10:43.272` | `[INIT] Boss_14_GridLog … dry=N` and **no `[RISK] FATAL`** — clean start |
+
+**The value survived exactly: `60027.15`**, which is also the number transcribed from the F3
+screenshot days earlier — so the provenance warning resolved in the good direction.
+
+**Why the owner thought nothing had happened, and it is a real reporting defect on our side:** F3's
+**Value** column reads `60027.15` before and after, because preserving the value *is* the migration.
+What changed is the **variable name**. Neither the procedure nor the checklist said "the value will
+look unchanged; watch the NAME", so the operator's honest reading of their own screen was that the
+step had failed.
+
+🔴 **And the first real run refuted §6 step 5's own claim.** It said a clean start at step 5 is *"the
+only step that proves the consent flag was not left standing."* **It proves no such thing:** by then
+the legacy key is gone (step 4 verified that), so the gate has nothing to fire on and the chart
+starts cleanly **with the flag either way**. A step that cannot fail is `GUARD_SHAPES` shape 5, and
+this one could not. **What actually proves it is in the log already:** `RC_AdoptLegacyHalt` is one of
+the 116 inputs, so it sits inside the `[CFG] effective_config_hash` — and the owner's two runs print
+**`cb45e0e68…` at 13:08 vs `3334c996b…` at 13:10**. The two `.set` files differ in exactly that one
+input, so the digest moving is the proof the flag flipped. Corrected in both the procedure and the
+checklist. <sub>Incidental: those `[CFG]` lines read `keys=116 scope=surface+constants` — the first
+time `ORDER-730`'s locked-constant fingerprint has run on a real chart rather than in the tester.</sub>
+
+⚠️ **OPEN, and not to be quoted as a pass:** recomputing those two digests from the shipped `.set`
+files through `preset.compile_preset` gives `d1335d39…` / `1de384c8…`, **which do not match the EA's
+`cb45e0e68…` / `3334c996b…`.** The *relative* evidence stands (the EA's own two digests differ, which
+is what proves the flag changed), but the cross-language match that `ORDER-710`/`730` demonstrated in
+the tester **is not reproduced here**, and until that is explained the fingerprint must not be used
+as a deploy-time "is this the config we validated" check on a live chart. Cause unknown — candidates
+are the money-unit handling in the recompute path, or MT5 not applying every line of a hand-built
+`.set`. → **`ORDER-1050`**.
+
+---
+
+## ORDER-1050 — [🔴 factory/S6] The live `[CFG]` digest does not match the compiler's for a hand-built `.set` — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (cross-language contract) · **flat-lot probe:** N-A
+
+Opened 2026-08-02 (`S-2026-08-02-ADOPTDONE`) from the first live use of the fingerprint.
+
+**The observation.** `Boss_14_GridLog` on `415573666` printed
+`effective_config_hash=cb45e0e68…` (STEP2 `.set`) and `3334c996b…` (STEP3 `.set`), both with
+`keys=116 scope=surface+constants`. Recompiling the **same two `.set` files** through
+`preset.compile_preset` yields `d1335d39…` and `1de384c8…`. Neither matches.
+
+**Why this matters more than it looks.** `ORDER-710` and `ORDER-730` proved the EA and the compiler
+agree — **on four tester runs driven by `gen_default_preset`**. This is the first time the pair has
+been exercised on a `.set` built another way, and it disagrees. Either the recompute path is wrong
+(most likely) or the agreement demonstrated in the tester does not generalise to how presets are
+actually shipped — and the second reading would make the fingerprint useless for the job design §5.6
+gives it: *"is the `.set` on this chart the `.set` we validated"*.
+
+**First moves, cheapest first:** (1) re-drive the same two `.set` through
+`scripts/verify_config_fingerprint.ps1`'s own path in the tester, which is known-good, and see
+whether the disagreement follows the `.set` or the caller · (2) diff the preimage, not the digest —
+dump both sides' line lists and find the first differing line · (3) check the money-unit branch,
+since the recompute passed `unit='usd'` for every money input by assumption.
+
+**Prohibitions:** ❌ do not quote the live digest as a validation check until this closes · ❌ do not
+"fix" it by changing what the EA hashes — the EA is the side reading real loaded values, and if the
+two disagree the compiler is the suspect.
+
 
 ---
 
