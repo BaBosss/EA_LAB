@@ -1545,7 +1545,39 @@ or a fail.
 
 ---
 
-## ORDER-730 — [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 asks for — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-730 — [factory/S6] The fingerprint covers the inputs but not the LOCKED CONSTANTS design §5.6 asks for — `DONE (Claude/Opus 2026-08-02) — C1 C2 C3 all met and measured; the scope label is now surface+constants on both sides because it is true, not because the order asked for it` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ✅ 2026-08-02 (`S-2026-08-02-CONSTFP`) — the EA and the compiler agree on a preimage that now includes the constants.
+>
+> **C3, the measurement, which is the acceptance** (lane 1 `D:\Meta 5`, XAUUSD H1 2024.01.01–2024.01.15 model 1, **4 tester runs**):
+>
+> | build | keys | constants | compiler A / EA A | compiler B / EA B | A≠B |
+> |---|---|---|---|---|---|
+> | `LAB_ENTRY_16` | 135 | **23** | `93b9e37d…832006` **identical** | `f2ea491c…f721b2` **identical** | ✅ |
+> | `LAB_ENTRY_17` | 121 | **24** | `71c13c43…297077` **identical** | `22a0748e…48c7bc` **identical** | ✅ |
+>
+> Both report `scope=surface+constants`. **The second build is evidence and not a repeat because its constant COUNT differs** — `WAVE5_DIVERG_DEPTH` lives behind `#ifdef LAB_ENTRY_17`, so a per-build derivation that was really a global one would show 23 twice.
+> **`tpl_regression` CLEAN 8/8**, every expert byte-identical to baseline (`Boss_17` still net −85.69 / PF 0.46 / 26 trades) — a log-only change must not move a trade. **Compile 0 errors / 0 warnings on all 9 targets.**
+>
+> **C1 — DERIVED as a RULE, not a list.** A locked constant is a `#define` that carries a **value** and **reaches the build**. Both halves are mechanical, and that is what keeps the exemption list empty: a valueless `#define` (every include guard, `LAB_ENTRY_16`, `CFG_SURFACE_ENUMERATED`) falls out without being named anywhere, and "reaches the build" is decided by **evaluating the preprocessor over the include closure**, not by globbing `core/`. A glob would hand build 11 a constant its binary does not define — and MQL5 would not merely disagree, it would fail to compile. A value the module cannot reduce to a scalar is **REFUSED by name**, never skipped: a silently-dropped constant makes `surface+constants` a claim about an unknown subset, which is precisely what the narrow label existed to avoid.
+>
+> **C2 — one commit** (`ec085d69`): `preset.py`'s constants path, the generator, the generated MQL5, the `CFG_FP_SCOPE` rename and the guard that pairs them all moved together. A scope rename on one side alone turns a matching pair into a permanently mismatching one, with the binary as the first suspect.
+>
+> **🔴 Three things the build FOUND rather than assumed, each of which had already produced a wrong answer:**
+> 1. **The closure starts at the WRAPPER `.mq5`, not at `LabCore.mqh`.** The first draft started at the core file and derived `LAB_ENTRY_TAG="??"` for all eight builds — the real value is defined two lines above the include, in the wrapper, and [`LabCore.mqh:54`](ea_template/core/LabCore.mqh:54) carries an `#ifndef` fallback that only fires when nothing set it. Every EA would have hashed `"11_GridTrend"` while this side hashed `"??"`. The compiler's translation unit is the wrapper.
+> 2. **`preset.parse_surface` says MQL5 has no `#else`, and that is false of the wider tree.** It is true of `Inputs.mqh`, the only file that walker reads — but [`MoneyManagement.mqh:88`](ea_template/core/MoneyManagement.mqh:88) and [`LabCore.mqh:123`](ea_template/core/LabCore.mqh:123) both use one, and this module **refused its own first run** on exactly that. A correct refusal resting on a false premise is the most expensive kind to inherit, so `#else` is modelled here rather than copied as a prohibition. `#elif` still is not: it appears nowhere in the tree, and a branch nobody writes is not one to guess at.
+> 3. **G5's "is anything actually enumerated" signal could not be `#define CFG_CONSTANTS_ENUMERATED`.** The emitter writes that once per build block **whether or not the block enumerates anything**, so a constant-free tree would have "declared" one and G5 would have called the wide label honest over an empty half. It matches a `const:` preimage **emission** instead. Found by the cage, not by reading.
+>
+> **The guard: G4 + G5 added to `check_input_surface_gen.py`** rather than a parallel checker — same contract (generated MQL5 must match its source), already category A, T7-bound and wired, so one suite grows instead of a second one needing its own tier plumbing. G4 = the constant enumeration is what the generator produces from the SAME snapshot, and it is `#include`d. G5 = the label and the enumeration cannot move apart, **in both directions** — and this is the criterion `ORDER-710` deliberately left for this order to *earn* rather than assert.
+>
+> **Cage: 9 criteria (was 6), attack + specificity each, all 9 mutation-DETECTED.** <br>**G4 deliberately does NOT assert that a moved VALUE is caught, and the first version of it failed for claiming otherwise.** The generated MQL5 emits `CFG_CanonLong((long)ONE)` — it names the **macro** and never transcribes the value — so `#define ONE 3600` becoming `7200` leaves the file byte-identical while both sides pick the new value up. There is no stale state to catch. What can go stale is the **name set** and the **canonical form**, so those are what is attacked: added, deleted, and kind-changed (`double`→`long`). <br>**G3's attack had to be INVERTED:** it used to rename `surface_only`→`surface+constants` and expect a refusal; that rename is now the *true* value, so a case left alone would have kept asserting the old world while going green.
+>
+> **🔴 A cost this order created and then paid, stated because the budget is enforced.** The constant walk made the checker issue **917** `read_committed` calls and take **22.83s**, taking the fast tier to **62.5s against the 65.0s ENFORCED budget** (Decision log 2026-07-31) — 2.5s of headroom on a budget whose whole purpose is that a slow hook gets `--no-verify`'d. Cause: the closure is walked 16 times (once per build to emit, once per build to count) over the same ~20 headers, and in index mode every read is a `git cat-file`. Fixed in `37a936c6` by memoising reads for the duration of **one** `check()` call: **1.86 / 1.87 / 1.86s over 3 samples, 38 reads**, suite back to **24.9s** and the tier to **40.1s of headroom**. The cache makes the snapshot *more* consistent, not less — it lives for one verdict and is discarded, so it cannot become the thing memory `name-it-honestly-when-you-cannot-prove-it` warns about.
+>
+> **Files.** `_triage/factory_os/`: `gen_locked_constants.py` (**new**, LIB) · `check_input_surface_gen.py` (G4/G5 + memo) · `gen_default_preset.py` (passes `locked_constants`) · `gen_input_surface.py` (`CFG_Fingerprint()` moved out) · `run_input_surface_tests.py` (G4/G5/X4 + fixture closure) · `run_guard_shape_lint.py` (L1_FILES + CATEGORY). `ea_template/core/`: `LockedConstants_gen.mqh` (**new, GENERATED**) · `ConfigFingerprint.mqh` (scope) · `LabCore.mqh` (the include, **which must stay last**). `scripts/_test/run_fast_cages.ps1` + `.githooks/fast_tier_pathspec` (regenerated).
+>
+> <sub>⚠️ **Not claimed:** this does not prove `CryptEncode(CRYPT_HASH_SHA256, …)` and `hashlib.sha256` agree in general — only the four tester runs above do, and they are evidence with a date, not a cage that re-runs. And the enumeration covers `#define` constants; a behaviour-changing value written as a `const` variable or baked into an expression is **not** in it, which is why the rule is stated in the module's own header rather than described as "every locked constant".</sub>
+
 
 > Opened by `ORDER-710`'s closure, as a NEW order rather than a remainder of it. §5.6 defines
 > `effective_config_hash` as *"every input the build actually exposes **plus every locked
