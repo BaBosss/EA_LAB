@@ -85,7 +85,21 @@ refused `parity_run.ps1`'s first commit for reading a report without gating it �
 produced it"*. Now wired through `Test-ReportIsFresh` with the runner's exit code, **and
 re-measured end to end afterwards** so the gate is proven not to false-refuse.
 
-## 🔴 The one thing owed to the owner
+## ✅ RESOLVED SAME DAY — the owner ratified the lock
+
+The section below was written while the decision was open. **The owner ratified locking both
+switches**, so the final state of this slice is **87 const / 29 on the Inputs page / 0 kept**, and
+the contradiction described below no longer exists. The wrapper `.ex5` shrank a further 2.5 KB
+(112,952 → 110,382), all nine targets and both wrappers recompiled **0/0**, and **all four parity
+cases were re-run against the new binaries** — same result, **0 DIFFER anywhere**.
+
+🔴 **The `effective_config_hash` is byte-identical before and after the lock** (`8f9497b8…`),
+which is the check that proves the lock changed no VALUE — both switches were already at their OFF
+default — only which side of the guard pair each input compiles on. The reasoning below is kept
+because the *reason* the number was 38 and not 31 is the durable part, and because it is the
+argument the ratification rests on.
+
+## The decision, as it was put to the owner
 
 **The opening prompt's acceptance number for the Inputs page was 31. The sound answer is 38, and
 the 7-input gap is not a shortfall — it is a contradiction that const-ing would have compiled into

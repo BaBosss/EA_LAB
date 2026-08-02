@@ -303,19 +303,35 @@ could not — **60/61, hash byte-identical to its own must-trade run**. That is 
 | **zero fires was not accepted as a pass** | `must-trade` left points 6 and 7 with nothing to compare, so `cage-fires` arms the account-DD gate at **0.3 %** instead of the pinned 12 %. It **TRIPPED once on each side**, identical to the cent (`DD 1.52% vs limit 0.30% (HWM 10007.41)`). |
 | **a guard that already existed caught the runner** | `run_report_freshness_tests` PART 5 refused `parity_run.ps1`'s first commit for reading a report without gating it — correctly, since `mt5_run.ps1`'s own header says *"the `.htm` exists is NOT evidence that THIS invocation produced it"*. Now wired through `Test-ReportIsFresh` **and re-measured end to end afterwards**, so the gate is proven not to false-refuse. |
 
-### 🔴 OWED TO THE OWNER — one decision, and it is not the rollout's to make
+### ✅ 2026-08-02 — OWNER RATIFIED THE LOCK, and the numbers moved to their final state
 
-**`_4_DdAdaptiveOn` and `_57_DynCloseOn` are on/off mechanism switches, which is exactly the shape
-of every member of `hypothesis_b14.LOCKED_SELECTORS`** (`_MG_SelfGate` and `_50_RegimeMode` are
-already there, and the file's own comment says these are *"the inputs that decide WHICH MECHANISM
-runs"*). They are currently `TUNABLE/RESEARCH` instead, and that is what keeps their 7 dependent
-dials alive.
-- **Lock them** ⇒ the const set becomes 87 and the Inputs page **29**; the contradiction disappears.
-- **Leave them** ⇒ page stays **38**, and `optimize_guard` will `ALLOW` each switch while
-  `REFUSE`ing every dial it controls — a sweep whose ON arm is frozen at factory defaults.
+The owner ratified locking **`_4_DdAdaptiveOn`** and **`_57_DynCloseOn`** the same day. Both are
+on/off switches for a whole mechanism, which is exactly the shape `LOCKED_SELECTORS`' own comment
+describes (*"the inputs that decide WHICH MECHANISM runs"*) and exactly the shape `_MG_SelfGate` —
+a bool that has been on that list from the start — already has. So this is a **correction, not a
+preference**: the rule already covered them and the rows were in the wrong table.
 
-Either is defensible; **only the owner may pick**, because it changes what the optimizer may sweep
-on a real EA. Nothing here assumes an answer — the sound (conservative) branch is what shipped.
+| | before | after |
+|---|---|---|
+| const | 78 | **87** |
+| on the Inputs page | 38 | **29** *(counted from the MT5 report, i.e. the BINARY)* |
+| unreachable but KEPT (the contradiction) | 7 | **0** |
+| wrapper `.ex5` | 112,952 | **110,382** — another 2.5 KB of dead branches folded away |
+
+9 hand-written targets **0/0** · both wrappers **0/0** · **all four parity cases re-run**:
+`must-trade` 5/7 AGREE 0 DIFFER · `cage-fires` 6/7 0 DIFFER · `deliberate-refusal` **PASS** ·
+`locked-absent` DIFFERS BY DESIGN. Roll-up: every point exercised by a real observation in at least
+one case, **none differs**. **W8 now reconciles at `87 HIDDEN = 87 const + 0 refused`.**
+
+🔴 **The check that makes this safe, and it is not obvious.** The `effective_config_hash` is
+`8f9497b8167d0f69…` on both sides **and it is byte-identical to what it was before the lock**.
+Locking changed no VALUE — both switches were already at their OFF default — only which side of the
+`Inputs.mqh` guard pair each input compiles on. So this is not a configuration change wearing a
+surface change's clothes, and **the fingerprint says so rather than the commit message.**
+
+The revision stays **`r1`**: a revision id exists so evidence can be attributed, and `r1` has
+produced none (parity is machinery, not EA evidence). Testing either mechanism from here is what it
+should always have been — **a new hypothesis, not a dial on this one.**
 
 ### Still owed on the mechanism, stated rather than implied
 - **SAFETY inputs still compile as `input`, not `sinput`** (design §5.4's state table asks for
