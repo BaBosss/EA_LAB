@@ -158,9 +158,22 @@ def a_p5_coherent_but_stale(rows):
     r['safe_range']['stop'] = r['safe_range']['stop'] + 1
 
 
+def a_p5_wrong_pin(rows):
+    """/scrutinize round 2. P5 first excluded the WHOLE OwnerRef from its comparison, to avoid
+    demanding that a historical pin track HEAD. It excluded too much: a `definition_ref` rewritten
+    to point at a file that owns none of these semantics produced ZERO problems. Only the three
+    git-resolved fields are excluded now, so `path` -- the STATEMENT the pin makes about what it
+    pins -- is compared like everything else."""
+    r = _first_of(rows, REV, lambda x: x.get('definition_ref'))
+    r['definition_ref'] = dict(r['definition_ref'])
+    r['definition_ref']['path'] = 'docs/NOT_THE_REGISTRY.csv'
+
+
 CASES = (
     ('P5', 'a store that is COHERENT but no longer what the generator produces',
      a_p5_coherent_but_stale),
+    ('P5', 'a definition_ref pointing at a file that owns none of these semantics',
+     a_p5_wrong_pin),
     ('P1', 'an input the build exposes with no binding row', a_p1_missing),
     ('P1', 'one parameter bound twice under one revision', a_p1_dupe),
     ('P2', 'role=LOCKED carrying no locked_value', a_p2_locked_no_value),

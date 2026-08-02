@@ -196,16 +196,24 @@ def check(worktree=False, source=None):
         problems.append('P5 the generator REFUSED to reproduce the stores: %s' % exc)
         return problems
 
-    # The OwnerRef pins move with HEAD by construction, so they are excluded from the comparison:
-    # a pin is a historical claim, and requiring it to track HEAD is the exact defect
-    # `check_s2a_migration`'s `--check` had to have removed (memory
-    # `drift-guard-regenerating-against-head`). Everything else must match byte for byte.
+    # WHICH PART OF AN OwnerRef IS EXCLUDED, and /scrutinize round 2 narrowed it. A pin is a
+    # HISTORICAL claim, so requiring `commit_oid`/`blob_oid`/`raw_sha256` to track HEAD is the
+    # exact defect `check_s2a_migration`'s `--check` had to have removed (memory
+    # `drift-guard-regenerating-against-head`). But the first version dropped the WHOLE ref -- and
+    # a probe showed the consequence: a `definition_ref` rewritten to point at
+    # `docs/NOT_THE_REGISTRY.csv` produced ZERO problems. `path`, `owner_type` and `anchor` are not
+    # git-resolved, they are the STATEMENT the pin makes about WHAT it pins, and a row claiming its
+    # semantics come from a file that owns none of them is exactly the drift this criterion is for.
+    _GIT_RESOLVED = ('commit_oid', 'blob_oid', 'raw_sha256')
+
     def _strip(rows):
         out = []
         for r in rows:
             c = dict(r)
-            c.pop('definition_ref', None)
-            c.pop('preregistration_ref', None)
+            for key in ('definition_ref', 'preregistration_ref'):
+                ref = c.get(key)
+                if isinstance(ref, dict):
+                    c[key] = dict((k, v) for k, v in ref.items() if k not in _GIT_RESOLVED)
             out.append(registry.canonical_line(c))
         return out
 

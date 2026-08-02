@@ -63,7 +63,13 @@ HYPOTHESES = {
         'coupling_class': 'COUPLED',        # money-denominated basket TP + lot progression
         'engine_edge': True,                # section 8.1 class label
         'experimental': True,               # no parity has ever run; design 3.2
-        'status': 'DRAFT',                  # -> REGISTERED when the rows land; -> WRAPPER_GENERATED in S8
+        # /scrutinize round 2: this said DRAFT while the rows WERE registered and the wrappers
+        # WERE generated -- a lifecycle field describing a state two commits in the past.
+        # design 3.1 REFUSES `WRAPPER_GENERATED` if any bound parameter lacks `active_when`,
+        # `context` or `causal_question` in docs/PARAM_REGISTRY.csv. MEASURED before writing it:
+        # 0 of build 14's 116 inputs are missing any of the three -- and `check_wrapper_gen` W5
+        # now re-measures it rather than trusting this comment.
+        'status': 'WRAPPER_GENERATED',
         'preregistration_anchor': PREREGISTRATION_ANCHOR_H01,
         'config': {
             # the architecture section 8.1 names
@@ -82,7 +88,7 @@ HYPOTHESES = {
         'coupling_class': 'COUPLED',
         'engine_edge': True,                # "ENGINE-EDGE until measured otherwise" (section 8.1)
         'experimental': True,
-        'status': 'DRAFT',
+        'status': 'WRAPPER_GENERATED',   # same measurement as H01; see the note there
         'preregistration_anchor': PREREGISTRATION_ANCHOR_H02,
         'config': {
             'LotProg':            'PROG_LOG_POWER',

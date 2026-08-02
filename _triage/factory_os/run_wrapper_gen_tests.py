@@ -151,7 +151,34 @@ def w4_two_builds():
                                            '#define LAB_ENTRY_14\n#define LAB_ENTRY_16')}}
 
 
+def w2_smuggled_include():
+    """/scrutinize round 2. `#include "../core/Evil.mqh"` is trading logic BY REFERENCE -- the
+    statement lives one file away and the wrapper still reads as sixteen clean lines. W1 fires
+    too, but it says "regenerate"; only W2 says which RULE was broken."""
+    keep = '#include "../core/LabCore.mqh"'
+    return {'overrides': {WRAPPER: _mutate(WRAPPER, keep,
+                                           '#include "../core/Evil.mqh"' + chr(10) + keep)}}
+
+
+def w5_status_rolled_back():
+    """The lifecycle field left behind by the artifact. Both rows said `status: DRAFT` while
+    their wrappers existed on disk, which is the state this criterion was written from."""
+    rows = []
+    for line in _disk(grr.HYPOTHESES_REL).split(chr(10)):
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if rec.get('entity') == 'Hypothesis':
+            rec['status'] = 'DRAFT'
+        rows.append(json.dumps(rec, sort_keys=True, ensure_ascii=False,
+                               separators=(', ', ': ')))
+    return {'overrides': {grr.HYPOTHESES_REL: chr(10).join(rows) + chr(10)}}
+
+
 CASES = (
+    ('W2', 'a smuggled include -- logic by reference, which W1 alone only calls drift',
+     w2_smuggled_include),
+    ('W5', 'a lifecycle field left behind by the artifact it describes', w5_status_rolled_back),
     ('W1', 'a wrapper edited by hand no longer regenerates byte-identically', w1_drift),
     ('W1', 'a registered revision whose wrapper was never generated', w1_absent),
     ('W2', 'a single statement added to a wrapper -- W2 names the RULE, not just the drift',

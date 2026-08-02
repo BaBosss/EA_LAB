@@ -54,12 +54,51 @@ ToolFailure = evidence.ToolFailure
 _ALLOWED = re.compile(r'^\s*(//.*|#(define|include|property|ifndef|ifdef|endif)\b.*)?$')
 
 _BUILD_TOKEN = re.compile(r'^\s*#define\s+(LAB_ENTRY_[0-9]+)\s*$', re.M)
+# /scrutinize round 2. W2 accepted ANY `#include`, so a wrapper carrying
+# `#include "../core/Evil.mqh"` was refused only by W1 -- which says "regenerate", not "you
+# smuggled a header in". Decision 7 is *no trading logic in a wrapper*, and an arbitrary include
+# is logic by reference: the statement lives one file away and the wrapper still reads as twelve
+# clean lines. The allowed set is CLOSED and derived from the generator's own two includes.
+_INCLUDE = re.compile(r'^\s*#include\s+"([^"]+)"', re.M)
 _TOKEN_DEFINE = re.compile(r'^\s*#define\s+(LAB_CAP_[A-Z0-9_]+)\s*$', re.M)
 
 
 def _src(worktree=False):
     mode = 'worktree' if worktree else os.environ.get('EA_LAB_EVIDENCE', 'index')
     return evidence.EvidenceSource(mode, root=ROOT)
+
+
+def _params_missing_semantics(read, revision_id):
+    """-> [(parameter, column)] for every parameter BOUND by this revision whose registry row is
+    missing one of design 3.1's three required cells. Reads the registry through the same source
+    as everything else, so a STAGED csv is judged and not the worktree's."""
+    import csv
+    import re as _re
+    bound = set()
+    for line in read(grr.BINDINGS_REL).replace(chr(13) + chr(10), chr(10)).split(chr(10)):
+        if not line.strip():
+            continue
+        rec = json.loads(line)
+        if (rec.get('entity') == 'ParameterBinding'
+                and rec.get('hypothesis_revision') == revision_id):
+            bound.add(rec.get('parameter'))
+    rows = {}
+    text = read(preset.PARAM_REGISTRY_REL)
+    body = [l for l in text.split(chr(10)) if not l.startswith('> ')]
+    for r in csv.DictReader(body):
+        key = _re.sub(r"\[.*\]", "", (r.get("name") or "").strip())
+        rows.setdefault(key, r)
+    out = []
+    for name in sorted(bound):
+        r = rows.get(name)
+        if r is None:
+            out.append((name, 'NO ROW'))
+            continue
+        for col in ('active_when', 'context', 'causal_question'):
+            v = (r.get(col) or '').strip()
+            if not v or v.upper() == 'UNKNOWN':
+                out.append((name, col))
+    return out
 
 
 def check(worktree=False, source=None):
@@ -124,6 +163,14 @@ def check(worktree=False, source=None):
         if 'core/LabCore.mqh' not in stored:
             problems.append('W4 %s does not include core/LabCore.mqh, so it compiles to an EA '
                             'with no OnInit and no OnTick' % rel)
+        allowed = set(_INCLUDE.findall(expected[rel]))   # what the GENERATOR emits for THIS wrapper
+        extra = sorted(set(_INCLUDE.findall(stored)) - allowed)
+        if extra:
+            problems.append(
+                'W2 %s includes %d header(s) the generator does not emit: %s. Decision 7 is no '
+                'trading logic in a wrapper, and an arbitrary include is logic BY REFERENCE -- the '
+                'statement lives one file away and the wrapper still reads as sixteen clean lines.'
+                % (rel, len(extra), ', '.join(extra)))
 
     # --- W3 the allowlist and the Hypothesis row tell ONE story ----------------------------------
     try:
@@ -159,6 +206,28 @@ def check(worktree=False, source=None):
                 'revision compiles, runs, and produces evidence attributed to nothing.'
                 % (rel, revision_id))
             continue
+        # --- W5 the lifecycle field is not two commits behind the artifact ---------------------
+        # /scrutinize round 2: both rows said `status: DRAFT` while their wrappers existed on
+        # disk. design 3.1's order is DRAFT -> REGISTERED -> WRAPPER_GENERATED, and it REFUSES
+        # the last transition if any bound parameter lacks `active_when`/`context`/
+        # `causal_question`. Both halves are checked here, because a status advanced without its
+        # precondition is worse than a stale one: it asserts a gate was passed.
+        status = row.get('status')
+        if status in ('DRAFT', 'REGISTERED'):
+            problems.append(
+                'W5 %s exists but %s is still status=%s. design 3.1 puts WRAPPER_GENERATED after '
+                'REGISTERED, so a generated wrapper on disk under a DRAFT row means the lifecycle '
+                'field describes a state the tree has already left.' % (rel, revision_id, status))
+        else:
+            thin = _params_missing_semantics(read, revision_id)
+            if thin:
+                problems.append(
+                    'W5 %s is status=%s but %d bound parameter(s) lack active_when / context / '
+                    'causal_question in %s: %s. design 3.1 REFUSES that transition -- and a status '
+                    'advanced without its precondition asserts a gate was passed.'
+                    % (revision_id, status, len(thin), preset.PARAM_REGISTRY_REL,
+                       ', '.join('%s.%s' % t for t in thin[:6])))
+
         in_file = sorted(_TOKEN_DEFINE.findall(read(rel)))
         in_row = sorted(m.get('token') for m in row.get('module_set') or [])
         if in_file != in_row:
@@ -198,8 +267,9 @@ def main(argv):
                          'clean\n')
         return 1
     sys.stdout.write('  %d generated file(s) checked\n' % n)
-    sys.stdout.write('W1 byte-identical regeneration - W2 zero logic - W3 allowlist == module_set '
-                     '- W4 wired: all hold\n')
+    sys.stdout.write('W1 byte-identical regeneration - W2 zero logic and no smuggled include - '
+                     'W3 allowlist == module_set - W4 wired - W5 the lifecycle field matches the '
+                     'artifact, with its design 3.1 precondition re-measured: all hold\n')
     sys.stdout.write('  NOT CHECKED HERE, and it is the acceptance that matters most: the 7-point '
                      'PARITY contract (design 5.5) needs the tester.\n')
     return 0
