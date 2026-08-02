@@ -981,6 +981,16 @@ else:
           re.search(r'\$relSha\s+-ne\s+\$htmSha', code_only_early) is not None)
     check('the recorded event id is read from the utility\'s returned record, not recomputed',
           'details.evidence_id' in code_only_early)
+    # /scrutinize round 4, two seams the pure cage cannot reach for the same reason as round 1's:
+    # they are properties of the PowerShell entry point, not of the state machine.
+    check('the report name defaults to the run id, so two runs on one lane cannot be handed the '
+          'same name and delete each other\'s report (mt5_run.ps1 clears <ReportName>* on launch, '
+          'and the ExecutionKey does not contain the report name)',
+          re.search(r"ReportName\s*=\s*\(\$Run\s+-replace", code_only_early) is not None)
+    check('a duplicate-line refusal (S4) is reported as ANOTHER DRIVER, not as a dispatcher bug -- '
+          'a second driver of the same run is what S4 exists to catch, and calling it "[BUG]" '
+          'sends the reader hunting for a code fault instead of for the other process',
+          '"S4 ' in code_only_early)
     spawn_write = code_only_early.find('Spawn-Marker $a')
     spawn_launch = code_only_early.find('Start-Process')
     check('the spawn marker is written BEFORE Start-Process, so its ABSENCE proves no spawn '

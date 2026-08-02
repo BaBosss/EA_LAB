@@ -105,7 +105,7 @@
 
 ---
 
-## ORDER-1080 — [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) — `DONE (Claude/Opus 2026-08-02) — all four acceptance criteria measured: the kill matrix is ENUMERATED (256 resumes, all nine §3.3 transitions killed on both sides of their own append), and the wiring was proven end-to-end on lane 1 with ONE launch and zero relaunches across a mid-flight driver stop` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-1080 — [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) — `DONE (Claude/Opus 2026-08-02, hardened by four /scrutinize rounds the same day) — all four acceptance criteria measured: the kill matrix is ENUMERATED (all nine §3.3 transitions killed on both sides of their own append; the cell and kill counts are printed by run_scheduler_tests.py itself and are not restated here), and the wiring was proven end-to-end on lane 1 with ONE launch and zero relaunches across a mid-flight driver stop` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Acceptance (design §10, S9 row):** kill at **every** state in §3.3 ⇒ resume re-runs zero completed
 attempts, double-launches nothing, duplicates no event · `COMPLETED` refused without a fresh report ·
@@ -123,11 +123,13 @@ The two halves are bound mechanically: the cage asserts the PowerShell switch ha
 the closed action set `plan()` can emit, so a new action reddens a cage rather than stalling a loop.
 
 **The cage is enumerated, not sampled** (the `dda6783a` W9 lesson): a kill at every
-(action × phase) × 2 resume delays × 4 scenarios = **256 recoveries**, and the roll-up **refuses to
-pass** unless all nine §3.3 transitions were killed on *both* sides of their own append. The
-invariants are read off counters the stub world keeps — launches, peak concurrent workers,
-event-store appends — not off the planner's own account of itself. Measured **0.08s ×3** before
-registering in the fast tier; 0.3–0.4s in the hook.
+(action × phase) × 2 resume delays × every scenario, and the roll-up **refuses to pass** unless all
+nine §3.3 transitions were killed on *both* sides of their own append. The invariants are read off
+counters the stub world keeps — launches, peak concurrent workers, event-store appends — not off
+the planner's own account of itself. **The cell and kill counts are printed by
+`run_scheduler_tests.py` on every run and are deliberately not copied here** — the first version of
+this row restated them and they were stale within the hour, which is the `ORDER-1021` "38 inputs"
+lesson (a prose number with no owner). Measured **0.08s ×3** before registering in the fast tier.
 
 🔴 **Three defects the enumeration found, none reachable by a two-state sample:**
 1. `LAUNCH_INTENT` + nothing running + no exit record has **two causes** — never spawned, or
@@ -146,6 +148,53 @@ hours after it was done ⇒ new `RELEASE_LEASE` planner action, written expired,
 **decision 18 names two categories, not two enum members** (see the owner note below) · and three
 separate reasons the evidence step could not report its own refusal, including that the event
 utility prints through `[Console]::Out.WriteLine`, which **bypasses every PowerShell stream**.
+
+### 🔴 2026-08-02 — four `/scrutinize` rounds (lane `S-2026-08-02-SCRUT9S`), nine more defects
+
+The build above was reviewed adversarially four times with fixes between rounds. Two of the nine
+were **blockers that defeated the fixes the slice was built around**, and the pattern is worth the
+row: *every one of the nine lived in a place the 400-cell matrix structurally cannot reach* — the
+PowerShell observation layer, the cage's own arithmetic, and the prose.
+
+- **`4f1900b2` round 1.** The spawn marker was written **after** `Start-Process`, under a comment
+  stating it was written first — so the crash window between them left no marker, the resume read
+  "never spawned", and it **launched again**: the exact defect the marker was added to prevent.
+  And the freshness `RunStart` fell back to `[datetime]'1970-01-01'` when that marker was missing,
+  which makes the mtime half of `Test-ReportIsFresh` accept **any** report on disk — the guard
+  defeated by its own caller, on the crash path, through the same window. Both are now greps.
+  Also: **the roll-up measured "reached" and printed "killed"**, and separating the two immediately
+  turned it red — `RUNNING` had **never** been the target of a kill in any cell, because every
+  scenario's worker finished inside two ticks. The headline was not unmeasured, it was **false**
+  for one of the nine. Fixed by adding the scenario that should have been first: a worker that is
+  actually slow. And "256 resumes" counted **cells**, not recoveries; of 256 cells, 108 were kills.
+- **`d63ad2cf` round 2.** **The lane lease was enforced at acquisition and decorative for the whole
+  run** — nothing renewed it, no in-flight state re-read it. Probed: with its own lease five hours
+  dead and the tester still going, the planner said `WAIT`; with the lane visibly **taken by
+  another run**, it said `WAIT` again. Now `RENEW_LEASE` inside the margin, and `ABANDON` on a lost
+  lease — with a finished attempt judged first, because `mt5_run.ps1` refuses to start while an
+  instance of this install is alive, so no other tester can have run concurrently and the report is
+  ours. Also: `queue` validated against `None`, so the one command that **creates** a manifest was
+  the one command that never read one (queueing a run id twice appended a second `QUEUED`, both
+  exits 0); `10000` and `10000.0` gave **two ExecutionKey digests for one configuration**; and two
+  runs with **no lane recorded** compared as "the same lane".
+- **`81dead9e` round 3.** The evidence id written into the manifest was hashed from `$htm` while the
+  artifact registered was `-EvidencePath` — different files ⇒ the manifest names an event that was
+  never created, and the reconcile then looks for that same wrong id and **registers a second
+  time**. "Duplicates no event" would have failed on exactly the input `-EvidencePath` exists to
+  accept. Closed by requiring the registered artifact to **be** this run's report (byte-identical,
+  refused otherwise) and taking the id from the utility's own record. **Observed firing**, with its
+  control. Also: `ADOPT_EVIDENCE` claimed "this run's evidence" while measuring "this artifact's
+  bytes".
+- **round 4 (this commit).** `-ReportName` was free-form and `mt5_run.ps1` clears `<ReportName>*`
+  before every launch, so two runs on one lane could delete each other's report — and the
+  ExecutionKey does not contain the report name, so criterion 3 could not see it. It now defaults
+  to the run id. A second driver started against the same run is correctly caught by `S4`, but was
+  reported as `[BUG] ... a line this dispatcher built`, sending the reader after a code fault
+  instead of after the other process.
+
+**Re-proved end-to-end after all four rounds** on a fresh window (`RUN-20260802-004`): full spine
+to `EVIDENCE_REGISTERED`, driver stopped mid-flight, one launch, zero relaunches, and the id in the
+manifest byte-equal to the id the evidence store holds.
 
 **Measured end-to-end on lane 1** (`D:\Meta 5` · XAUUSD H1 · 2024.01.02–16 · Model 1):
 `RUN-20260802-002` = QUEUED → LEASED → LAUNCH_INTENT → PROCESS_OBSERVED → COMPLETED →

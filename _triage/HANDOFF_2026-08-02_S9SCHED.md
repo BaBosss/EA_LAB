@@ -10,7 +10,7 @@
 | file | what it is |
 |---|---|
 | `_triage/factory_os/scheduler.py` | **PURE.** The monotonic transition validator (S1–S9), the resume planner, the idempotency gate, the cross-lane refusal. No clock, no process, no terminal. |
-| `_triage/factory_os/run_scheduler_tests.py` | The cage. 256-resume kill matrix + 46 attacks, every one RED-first. |
+| `_triage/factory_os/run_scheduler_tests.py` | The cage. The enumerated kill matrix + one attack per criterion, every one RED-first. **It prints its own cell and kill counts; this file deliberately does not restate them.** |
 | `scripts/scheduler_run.ps1` | The dispatcher. Observes, dispatches, appends. **Decides nothing.** Includes its own `-WorkerMode` re-invocation, which owns exactly one tester run. |
 | `scripts/_test/run_scheduler_tests.ps1` | Fast-tier wrapper. Fails if the matrix silently shrank. |
 | `factory/runs/<run_id>.jsonl` | The store. One `RunTransition` per line, append-only. `RunJournal` is derived and never written. |
@@ -21,10 +21,14 @@ Per-attempt recovery state — `*.spawn.json`, `*.exit.json`, `*.worker.*.log` �
 
 ## The four acceptance criteria, and how each was shown
 
-1. **Kill at every state.** Enumerated: every (action × phase) × 2 resume delays × 4 scenarios =
-   **256 recoveries**. The roll-up **refuses to pass** unless all nine §3.3 transitions were killed
-   on *both* sides of their own append. Invariants are **measured** by the stub world (`launches`,
-   `max_live`, `event_appends`), not asserted from the planner's own account of itself.
+1. **Kill at every state.** Enumerated: every (action × phase) × 2 resume delays × every scenario.
+   The roll-up **refuses to pass** unless all nine §3.3 transitions were killed on *both* sides of
+   their own append — and it counts **kills**, not cells, because `/scrutinize` round 1 found the
+   first version counting a point *reached* in one cell as covering the cell meant to kill there.
+   That laundering hid a real hole: `RUNNING` had never been killed in any cell. Invariants are
+   **measured** by the stub world (`launches`, `max_live`, `event_appends`), not asserted from the
+   planner's own account of itself. The counts are printed by the suite; they are not restated in
+   prose anywhere, on purpose.
 2. **`COMPLETED` refused without a fresh report.** Refusal `S6` in the validator, so no future
    caller can reach `COMPLETED` by another route. Four attacks: no proof · `fresh=false` ·
    runner exit 1 · a report older than the run claiming to have written it. The dispatcher gets its
@@ -110,6 +114,29 @@ being settled**, because a Candidate pins the run it came from.
 
 **Not done in this session, deliberately:** no EA verdict · no B1 row · no `.set` migrated · no
 second Boss converted · no S10 started · `mt5_run.ps1` and `mt5_optimize.ps1` untouched.
+
+---
+
+## ⚠️ Read this before trusting anything above: four `/scrutinize` rounds followed (`SCRUT9S`)
+
+The build described above was reviewed adversarially four times the same day and **nine more
+defects came out, two of them blockers that defeated the fixes the slice was built around**. The
+full account is on the `ORDER-1080` board row and in commits `4f1900b2` · `d63ad2cf` · `81dead9e`
+plus the round-4 commit. The one sentence worth carrying forward:
+
+> **Every one of the nine lived somewhere the 400-cell matrix structurally cannot reach** — the
+> PowerShell observation layer, the cage's own arithmetic, and the prose. An enumerated cage over a
+> pure planner proves the planner. It says nothing about the half that observes the world, and
+> nothing at all about whether the sentence describing it is true.
+
+The two that matter most, because they are the shape to look for next time:
+1. **A comment asserted the opposite of its own code.** "THE MARKER IS WRITTEN FIRST" sat above a
+   marker written *after* the spawn, which reintroduced the double-launch the marker existed to
+   prevent. Cheap defence, now installed: an ordering grep.
+2. **A roll-up measured one thing and printed another.** It recorded points *reached* and claimed
+   points *killed*, over a set shared by every cell. Correcting the measurement immediately proved
+   one of the nine transitions had never been killed at all. **A claim and its measurement must be
+   the same sentence.**
 
 <!-- HANDOFF-ROUTING -->
 

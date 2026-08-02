@@ -46,7 +46,13 @@ param(
   [string]$Cell,
   [string]$KeyFile,
   [string]$SetFile = '',
-  [string]$ReportName,
+  # DEFAULTS TO THE RUN ID, /scrutinize round 4. It was a free-form mandatory parameter, and
+  # mt5_run.ps1 CLEARS `<ReportName>*` from both the tester data dir and _mt5_auto\reports before
+  # every launch -- so two runs handed the same name on one lane delete each other's evidence, and
+  # the ExecutionKey does not contain the report name, so criterion 3 cannot see the collision.
+  # Deriving it from the run id makes the collision impossible for anyone who does not go out of
+  # their way to cause one.
+  [string]$ReportName = '',
   # The repo-relative path the evidence event points at. It DEFAULTS to the report the runner
   # wrote, and that default cannot succeed: `_mt5_auto/reports/` is gitignored (.gitignore:70) and
   # the manifest records committed Git artifacts only (design 4.5). So the real value is a
@@ -87,6 +93,7 @@ function Now-Stamp { (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ
 function Stamp([datetime]$d) { $d.ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ') }
 function Say([string]$m, [string]$c = 'Gray') { Write-Host ("   " + $m) -ForegroundColor $c }
 
+if (-not $ReportName) { $ReportName = ($Run -replace '[^A-Za-z0-9]', '_') }
 $key = Get-Content -LiteralPath $KeyFile -Raw | ConvertFrom-Json
 $laneTag  = ($key.lane -replace '[^A-Za-z0-9]', '_')
 $leaseFile = Join-Path $leaseDir ($laneTag + '.json')
@@ -220,9 +227,21 @@ function Invoke-Append($line) {
   ($line | ConvertTo-Json -Depth 6) | Set-Content -LiteralPath $f -Encoding UTF8
   $raw = & $py $sched append "--run=$Run" "--line-file=$f" "--root=$root"
   if ($LASTEXITCODE -ne 0) {
-    # The validator refused the line this script proposed. That is a defect in the DISPATCHER, not
-    # a scheduling outcome, and the two must never share an exit path: a resume that treated an
-    # invalid line as a failed attempt would retry into the same invalid line forever.
+    # 🔴 /scrutinize round 4: ONE of the ways this refusal happens is not a bug at all. A SECOND
+    # driver started against the same run id reads the same journal, plans the same action, and
+    # loses the race to append -- and S4 (this (attempt, transition) is already recorded) is the
+    # correct answer, not a defect. Reporting it as "[BUG] ... a line this dispatcher built" sends
+    # the reader hunting for a code fault instead of for the other process. The lane lease guards
+    # the LANE; nothing guards a run against a second driver of itself, and S4 is what catches it.
+    if ($raw -match '"S4 ') {
+      Write-Host ("[STOP] another driver is already advancing " + $Run + " -- its line landed " +
+                  "first and this one was refused as a duplicate. That is the append-only store " +
+                  "doing its job; stop one of the two drivers.") -ForegroundColor Yellow
+      exit 1
+    }
+    # Everything else IS a defect in the DISPATCHER, and it must never share an exit path with a
+    # scheduling outcome: a resume that treated an invalid line as a failed attempt would retry
+    # into the same invalid line forever.
     Write-Host ("[BUG] the monotonic validator refused a line this dispatcher built: " + $raw) -ForegroundColor Red
     exit 2
   }
