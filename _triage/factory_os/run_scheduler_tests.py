@@ -117,6 +117,7 @@ class World(object):
         self.max_live = 0
         self.event_appends = 0
         self.releases = 0
+        self.renewals = 0
 
     # -- time ---------------------------------------------------------------------------------
     def now(self):
@@ -190,11 +191,17 @@ class World(object):
 
 
 class Scenario(object):
-    """How the worker behaves once launched. One object per way a run can end."""
+    """How the worker behaves once launched. One object per way a run can end.
 
-    def __init__(self, name, on_advance):
+    `lease_seconds` is here rather than fixed in the driver because a lease long enough to outlast
+    every scenario makes `RENEW_LEASE` unreachable -- and an action the matrix can never reach is
+    an action the matrix says nothing about, however green it prints.
+    """
+
+    def __init__(self, name, on_advance, lease_seconds=3600):
         self.name = name
         self._advance = on_advance
+        self.lease_seconds = lease_seconds
 
     def advance(self, world):
         self._advance(world)
@@ -257,6 +264,10 @@ SCEN_SLOW = Scenario('completes slowly, like a real tester run', _adv_slow)
 SCEN_EXIT1 = Scenario('tester error then retry', _adv_exit1)
 SCEN_KILLED = Scenario('worker killed with no exit record', _adv_silent_death)
 SCEN_LEASE = Scenario('lane lease stolen mid-run', _adv_lease_stolen)
+# A lease SHORTER than the renewal margin, so a run that is still working must renew it. This is
+# the realistic shape for a Model-4 multi-year run against the dispatcher's 4-hour default.
+SCEN_RENEW = Scenario('slow worker on a short lease', _adv_slow,
+                      lease_seconds=S.RENEW_MARGIN_SEC // 2)
 
 
 # =============================================================================================
@@ -265,7 +276,7 @@ SCEN_LEASE = Scenario('lane lease stolen mid-run', _adv_lease_stolen)
 # What each action APPENDS, so the kill matrix can be keyed by state as well as by action. None
 # means "this action has a side effect but writes no line" -- LAUNCH is the important one.
 ACTION_WRITES = {
-    'ACQUIRE_LEASE': 'LEASED', 'ADOPT_LEASE': 'LEASED',
+    'ACQUIRE_LEASE': 'LEASED', 'ADOPT_LEASE': 'LEASED', 'RENEW_LEASE': None,
     'DECLARE_LAUNCH_INTENT': 'LAUNCH_INTENT', 'LAUNCH': None,
     'ADOPT_PROCESS': 'PROCESS_OBSERVED', 'OBSERVE_RUNNING': 'RUNNING', 'WAIT': None,
     'RECORD_COMPLETED': 'COMPLETED', 'RECORD_FAILED': 'FAILED', 'RECONCILE_ORPHAN': 'FAILED',
@@ -331,7 +342,7 @@ def _perform(world, act, name):
         return None
     if name == 'ACQUIRE_LEASE':
         world.lease = {'lease_id': 'L-%s-%d' % (RUN, attempt), 'owner': RUN,
-                       'expires_at': world.later(3600)}
+                       'expires_at': world.later(world.scenario.lease_seconds)}
         base['transition'] = 'LEASED'
         base['record'] = {'attempt': attempt, 'transition': 'LEASED', 'at': now,
                           'lease': dict(world.lease)}
@@ -382,6 +393,11 @@ def _perform(world, act, name):
         base['record'] = {'attempt': attempt, 'transition': 'EVIDENCE_REGISTERED', 'at': now,
                           'event_id': act['event_id']}
         return base
+    if name == 'RENEW_LEASE':
+        world.lease = {'lease_id': world.lease['lease_id'], 'owner': world.lease['owner'],
+                       'expires_at': act['expires_at']}
+        world.renewals += 1
+        return None
     if name == 'RELEASE_LEASE':
         world.lease = {'lease_id': world.lease['lease_id'], 'owner': world.lease['owner'],
                        'expires_at': now}
@@ -446,6 +462,7 @@ SCENARIOS = [
     ('tester-error-then-retry', SCEN_EXIT1, None, 2),
     ('worker-killed-silently', SCEN_KILLED, None, 2),
     ('lane-lease-stolen', SCEN_LEASE, None, 0),
+    ('slow-on-a-short-lease', SCEN_RENEW, 'EVIDENCE_REGISTERED', 1),
 ]
 DELAYS = (0, 9)          # 0 = the worker is exactly where the kill left it; 9 = it ran on and finished
 
@@ -837,6 +854,84 @@ check('SPAWN MARKER  present + nothing running + no exit record => RECONCILE_ORP
 p = S.plan(intent_j, dict(quiet, spawn_marker=True, tester_running=True))
 check('SPAWN MARKER  present + a live tester => ADOPT_PROCESS (the reconcile beats the marker)',
       p['action'] == 'ADOPT_PROCESS', str(p))
+
+# --- /scrutinize round 2: four holes, each REPRODUCED before it was fixed -----------------------
+inflight = S.fold([QUEUED_LINE, L('LEASED', at='2026-08-02T00:01:00Z'),
+                   L('LAUNCH_INTENT', at='2026-08-02T00:02:00Z',
+                     launch_intent_at='2026-08-02T00:02:00Z'),
+                   L('PROCESS_OBSERVED', at='2026-08-02T00:03:00Z'),
+                   L('RUNNING', at='2026-08-02T00:04:00Z')])
+flying = {'now': '2026-08-02T09:00:00Z', 'child_running': True, 'tester_running': True,
+          'spawn_marker': True, 'exit_record': None, 'report_fresh': None,
+          'report_path': 'r.htm', 'report_mtime': None, 'evidence': None}
+NAMED.add('RENEW_LEASE')
+p = S.plan(inflight, dict(flying, lease={'lease_id': 'L1', 'owner': RUN,
+                                         'expires_at': '2026-08-02T04:00:00Z'}))
+check('LEASE IN FLIGHT  an EXPIRED own lease is RENEWED, not ignored. Probed before the fix: the '
+      'planner said WAIT with the lease five hours dead -- the lane was enforced at acquisition '
+      'and decorative for the whole run, which is the only part that matters',
+      p['action'] == 'RENEW_LEASE', str(p))
+p = S.plan(inflight, dict(flying, lease={'lease_id': 'L9', 'owner': 'RUN-20260801-099',
+                                         'expires_at': '2026-08-02T20:00:00Z'}))
+check('LEASE IN FLIGHT  a lane TAKEN by another run mid-flight ABANDONS. Probed before the fix: '
+      'the planner said WAIT',
+      p['action'] == 'ABANDON' and p['failure_class'] == 'LEASE_LOST', str(p))
+p = S.plan(inflight, dict(flying, lease={'lease_id': 'L1', 'owner': RUN,
+                                         'expires_at': '2026-08-02T23:00:00Z'}))
+check('LEASE IN FLIGHT  CONTROL a healthy lease is left alone -- a renewal every poll would be a '
+      'write loop wearing the shape of a heartbeat', p['action'] == 'WAIT', str(p))
+p = S.plan(inflight, dict(flying, lease={'lease_id': 'L9', 'owner': 'RUN-20260801-099',
+                                         'expires_at': '2026-08-02T20:00:00Z'},
+                          exit_record={'exit_code': 0}, report_fresh=True,
+                          report_mtime='2026-08-02T08:00:00Z'))
+check('LEASE IN FLIGHT  a FINISHED attempt is still recorded even though the lease was lost -- '
+      'mt5_run refuses to start while an instance of this install is alive, so the other run '
+      'either waited or aborted; it cannot have run concurrently, and the report is ours',
+      p['action'] == 'RECORD_COMPLETED', str(p))
+
+check('CROSS_LANE  two runs that record NO lane are REFUSED, not called comparable. Probed before '
+      'the fix: they collapsed into one `None` bucket and returned COMPARABLE -- the answer '
+      'needing the most evidence produced by the branch holding the least',
+      (S.refuse_cross_lane({'A': _journal_for({}, [], 'RUN-20260801-021'),
+                            'B': _journal_for({}, [], 'RUN-20260801-022')}) or {}).get('code')
+      == 'CROSS_LANE')
+
+check('EXECUTION KEY  a deposit of 10000 and 10000.0 give ONE digest. Probed before the fix: two '
+      'digests for one configuration, which is the exact failure design §4.5 warns about and '
+      'which PowerShell produces by itself depending on what the caller\'s variable held',
+      S.execution_key_digest(BASE_KEY)
+      == S.execution_key_digest(dict(BASE_KEY, deposit=10000.0)))
+check('EXECUTION KEY  CONTROL a genuinely different deposit still gives a different digest',
+      S.execution_key_digest(BASE_KEY)
+      != S.execution_key_digest(dict(BASE_KEY, deposit=10001)))
+
+# The `queue` CLI path, driven end to end through a temp root. Probed before the fix: queueing one
+# run id TWICE appended a second QUEUED line and both calls exited 0, because the one command that
+# CREATES a manifest was the one command that validated against `None` instead of against the
+# manifest -- so S2 (ordering) and S4 (duplicates) were both sitting there unable to see it.
+import shutil                                                              # noqa: E402
+import tempfile                                                            # noqa: E402
+_root = tempfile.mkdtemp()
+try:
+    os.makedirs(os.path.join(_root, 'factory', 'runs'))
+    codes = [S.main(['queue', '--run=RUN-20260802-777', '--cell=' + CELL,
+                     '--now=2026-08-02T00:0%d:00Z' % i,
+                     '--key=' + __import__('json').dumps(BASE_KEY), '--root=' + _root])
+             for i in (1, 2)]
+    _lines = S.read_manifest(S.manifest_path('RUN-20260802-777', _root))
+    check('QUEUE CLI  queueing one run id twice is REFUSED by the run\'s own journal, and the '
+          'manifest keeps exactly one QUEUED line',
+          codes == [0, 1] and len(_lines) == 1, 'exits=%s lines=%d' % (codes, len(_lines)))
+finally:
+    shutil.rmtree(_root, ignore_errors=True)
+
+# RENEW_LEASE must actually be REACHED by the matrix, not merely handled. An action no scenario
+# reaches is an action the 408 cells say nothing about, however green they print.
+_w = World(SCEN_RENEW)
+run_to_end(_w)
+check('LEASE IN FLIGHT  the matrix has a scenario that genuinely renews (%d renewal(s) on a lease '
+      'shorter than the margin), so RENEW_LEASE is exercised rather than merely dispatched'
+      % _w.renewals, _w.renewals > 0)
 
 sys.stdout.write('\nPART 4 - the dispatcher and the vocabulary\n')
 

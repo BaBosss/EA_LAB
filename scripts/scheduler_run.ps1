@@ -387,6 +387,16 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
     'ADOPT_EVIDENCE' {
       Invoke-Append (New-Line 'EVIDENCE_REGISTERED' $a @{ event_id = $act.event_id })
     }
+    'RENEW_LEASE' {
+      # A HEARTBEAT, not a new lease: the id and the owner are preserved so the lane's history is
+      # one lease held continuously, not a series of re-acquisitions that would each look like a
+      # fresh claim to anyone reading the file.
+      $lease = Get-Content -LiteralPath $leaseFile -Raw | ConvertFrom-Json
+      [ordered]@{ lease_id = $lease.lease_id; owner = $lease.owner
+                  expires_at = $act.expires_at } |
+        ConvertTo-Json | Set-Content -LiteralPath $leaseFile -Encoding UTF8
+      Say ("renewed lane " + $key.lane + " until " + $act.expires_at) 'DarkGray'
+    }
     'RELEASE_LEASE' {
       # WRITTEN EXPIRED, NOT DELETED. This script owns no delete (PART 4 greps for Remove-Item),
       # and an expired lease is a record that the lane was held and handed back; an absent file

@@ -129,9 +129,17 @@ SUCCESSORS = {
 
 # The closed action set. `plan()` returns exactly one of these and nothing else; the PowerShell
 # dispatcher must handle exactly this set (asserted by the cage, not by review).
-ACTIONS = ('ACQUIRE_LEASE', 'ADOPT_LEASE', 'DECLARE_LAUNCH_INTENT', 'LAUNCH', 'ADOPT_PROCESS',
-           'OBSERVE_RUNNING', 'WAIT', 'RECORD_COMPLETED', 'RECORD_FAILED', 'RECONCILE_ORPHAN',
-           'REGISTER_EVIDENCE', 'ADOPT_EVIDENCE', 'RELEASE_LEASE', 'ABANDON', 'DONE', 'REFUSE')
+ACTIONS = ('ACQUIRE_LEASE', 'ADOPT_LEASE', 'RENEW_LEASE', 'DECLARE_LAUNCH_INTENT', 'LAUNCH',
+           'ADOPT_PROCESS', 'OBSERVE_RUNNING', 'WAIT', 'RECORD_COMPLETED', 'RECORD_FAILED',
+           'RECONCILE_ORPHAN', 'REGISTER_EVIDENCE', 'ADOPT_EVIDENCE', 'RELEASE_LEASE', 'ABANDON',
+           'DONE', 'REFUSE')
+
+# How long before expiry a live run renews its own lease. /scrutinize round 2: nothing renewed it
+# and no in-flight state re-read it, so the lane lease was enforced at ACQUISITION and then
+# decorative for the whole duration of the run -- which is the entire duration that matters. The
+# default lease is 4 hours and a Model-4 multi-year run outlives that comfortably, at which point
+# the lane is free while a tester is still on it.
+RENEW_MARGIN_SEC = 1800
 
 # The closed refusal set. Every one of these is an acceptance criterion wearing a machine-readable
 # name; the cage asserts that each is named by a test, which is the L2 idea applied to a module L2
@@ -151,6 +159,16 @@ TS_RE = re.compile(r'^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$')
 # ---------------------------------------------------------------------------------------------
 # CANONICAL SERIALIZATION AND THE EXECUTION KEY
 # ---------------------------------------------------------------------------------------------
+def ts_plus(ts, seconds):
+    """`ts` shifted by `seconds`, in the one format. PURE -- it parses the caller's string and
+    reads no clock, which is what keeps every planner branch reproducible in the cage."""
+    import datetime as _dt
+    if not TS_RE.match(str(ts)):
+        raise ValueError('%r is not the one timestamp format %s' % (ts, TS_RE.pattern))
+    base = _dt.datetime.strptime(ts, '%Y-%m-%dT%H:%M:%SZ')
+    return (base + _dt.timedelta(seconds=seconds)).strftime('%Y-%m-%dT%H:%M:%SZ')
+
+
 def canonical(obj):
     """The one serialization. Sorted keys, no spaces, no ASCII escaping, no trailing newline.
 
@@ -177,7 +195,21 @@ def execution_key_digest(key):
         raise ValueError('ExecutionKey missing %s / unknown %s -- a digest over a key whose shape '
                          'is not the contract is a digest of something else'
                          % (sorted(missing), sorted(extra)))
-    trimmed = dict((f, key[f]) for f in EXECUTION_KEY_FIELDS)
+    # 🔴 NUMERIC NORMALIZATION, /scrutinize round 2. `10000` and `10000.0` are the same deposit and
+    # serialized to different bytes, so ONE configuration had TWO digests -- exactly the failure
+    # design 4.5 warns about for `candidate_digest` ("two serializers that disagree produce two
+    # digests for one candidate"), in the function whose docstring claims not to inherit it.
+    # Reachable without anyone doing anything strange: PowerShell's ConvertTo-Json emits whichever
+    # the caller's variable happened to hold.
+    # STATED LIMIT: string fields are compared as written, so `D:\Meta 5` and `D:/Meta 5` are two
+    # lanes. Normalising paths would be guessing at an identity the repo has not defined; the
+    # lane id is expected to be pasted from the ledger, not typed.
+    trimmed = {}
+    for f in EXECUTION_KEY_FIELDS:
+        v = key[f]
+        if isinstance(v, float) and v.is_integer():
+            v = int(v)
+        trimmed[f] = v
     return hashlib.sha256(canonical(trimmed).encode('utf-8')).hexdigest()
 
 
@@ -584,6 +616,33 @@ def _plan_inner(journal, obs):
     # depend on which state we were in.
     if state in ('LAUNCH_INTENT', 'PROCESS_OBSERVED', 'RUNNING'):
         exit_rec = obs.get('exit_record')
+
+        # 🔴 THE LANE LEASE IS RE-READ WHILE IN FLIGHT, /scrutinize round 2. It used to be checked
+        # at acquisition and never again, so a run whose lease expired mid-flight -- the default is
+        # 4 hours and a Model-4 multi-year run outlives that -- kept going on a lane the store
+        # said was free. Probed: with the lease EXPIRED five hours earlier, and again with the lane
+        # visibly TAKEN by another run, the planner answered WAIT both times.
+        #
+        # THE ORDER IS THE ARGUMENT. A finished attempt is judged FIRST, because losing the lease
+        # does not invalidate a report that already exists: `mt5_run.ps1` refuses to start while an
+        # instance of this install is alive, so the other run either waited or aborted with exit 2
+        # -- it cannot have run a tester concurrently with ours. What losing the lease DOES
+        # invalidate is the right to keep occupying the lane, so an unfinished attempt abandons.
+        if not exit_rec:
+            lease = obs.get('lease')
+            _free, ours = lease_is_free(lease, journal['run_id'], now)
+            if not ours:
+                return _act('ABANDON', 'the lane lease is no longer held by this run and this '
+                                       'attempt has produced nothing -- continuing would occupy a '
+                                       'lane the store has already given away',
+                            attempt=attempt, failure_class='LEASE_LOST')
+            if str(lease.get('expires_at', '')) <= ts_plus(now, RENEW_MARGIN_SEC):
+                return _act('RENEW_LEASE',
+                            'this attempt is still in flight and its lease expires at %s -- '
+                            'renewing, because an expiry is for a machine that DIED, not for one '
+                            'that is still working' % lease.get('expires_at'),
+                            attempt=attempt, expires_at=ts_plus(now, 2 * RENEW_MARGIN_SEC))
+
         if exit_rec:
             trans, fc = classify_outcome(exit_rec, obs.get('report_fresh'))
             if trans == 'COMPLETED':
@@ -738,6 +797,15 @@ def refuse_cross_lane(journals):
     for run_id, journal in journals.items():
         key = (journal or {}).get('execution_key') or {}
         lanes.setdefault(key.get('lane'), []).append(run_id)
+    # 🔴 /scrutinize round 2: a run with NO lane recorded used to collapse into the single bucket
+    # `None`, so two runs whose lane nobody knows compared as "the same lane" -- the answer that
+    # requires the MOST evidence returned by the branch that has the LEAST. An unknown lane is
+    # refused, and the message says which runs are unknown rather than implying they differ.
+    unknown = lanes.pop(None, []) + lanes.pop('', [])
+    if unknown:
+        return _refuse('CROSS_LANE',
+                       'these runs record no lane at all: %s. A comparison cannot be licensed by '
+                       'the absence of the fact it depends on.' % sorted(unknown))
     if len(lanes) > 1:
         detail = '; '.join('%s: %s' % (lane, sorted(runs)) for lane, runs in sorted(
             lanes.items(), key=lambda kv: str(kv[0])))
@@ -861,7 +929,13 @@ def main(argv):
         dec = queue_decision(load_all_runs(root), key, args['cell'], args['now'], args['run'])
         if dec['action'] == 'REFUSE':
             return _emit(dec, 1)
-        problems = validate_transition(None, dec['line'])
+        # 🔴 VALIDATED AGAINST THE RUN'S OWN JOURNAL, /scrutinize round 2. This passed `None`, so
+        # the one command that CREATES a manifest was the one command that never looked at the
+        # manifest: queueing the same run id twice appended a SECOND `QUEUED` line, and the
+        # duplicate-refusal (S4) and the ordering rule (S2) both sat there unable to see it.
+        # Reproduced -- two calls, two lines, both exit 0.
+        existing = fold(read_manifest(manifest_path(args['run'], root)))
+        problems = validate_transition(existing, dec['line'])
         if problems:
             return _emit({'action': 'REFUSE', 'code': 'MALFORMED_KEY', 'why': problems}, 1)
         append_manifest(manifest_path(args['run'], root), dec['line'])
