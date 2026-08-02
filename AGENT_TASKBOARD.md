@@ -105,6 +105,67 @@
 
 ---
 
+## ORDER-1130 — [tier] The budgets were raised to make the bound true; earn them back — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Opened by the owner's ratification (`_triage/USER_DECISIONS_PENDING.md` item 9). Raising a budget
+> makes the bound TRUE, not the tier FAST, and the raise was explicitly ratified **with this order
+> attached**.
+
+**The measurement, and it is the whole brief.** Full tier: **24 suites, 0 failed, 106.9s of the
+120.0s budget**. Three suites are **65% of that run**:
+
+| suite | measured | note |
+|---|---|---|
+| `run_contract_binding_tests.ps1` | **35.8s** | drifted **27.0s → 35.8s across 2026-08-02 alone** — the growth is ongoing, not settled |
+| `run_front_guard_evidence_tests.ps1` | **21.2s** | stages into the real index and restores; ORDER-674's A7 cage |
+| `run_guard_trigger_tests.ps1` | **19.4s** | derives the pathspec and drives the budget refusal |
+
+**Acceptance** — **T1** each of the three has its cost **attributed to a phase**, measured three
+times (memory `phantom-regression-from-two-single-samples`), before any change · **T2** at least one
+of them is materially faster **with its own cage still green and still able to fail** — a suite that
+got fast by proving less is the defect this order exists to avoid, and `run_contract_binding_tests`'s
+own history (ORDER-421: a cage found running at 14% of itself) is the precedent · **T3** the full
+tier is re-measured three times and the number is written into `run_fast_cages.ps1`'s registration
+comment, not into prose · **T4** if a budget can then be LOWERED, lower it in the same commit.
+🚫 Do not make a suite faster by dropping a case. 🚫 Do not raise a budget again in this order —
+that decision has been made once and its remedy is this row.
+
+<sub>Suspected first: the S2a bundle digest costs six `git show` spawns per call and is cached on the
+source object (`check_s2a_attestation.py`) — if `run_contract_binding_tests` constructs a new source
+per case, the cache never hits. **Measure before believing that** — it is a hypothesis, not a finding.</sub>
+
+---
+
+## ORDER-1131 — [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode — `OPEN` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
+
+> Owner decision 2026-08-02: *"Codex/Sonnet ตาม design table"*, and the two lanes run **in parallel**
+> with `ORDER-942`/`943`. The full brief is `_triage/PROMPT_NEXT_SESSION_S11.md` — this row exists so
+> the work has a home on the board and a numbered acceptance, not to restate it.
+
+**Acceptance (design §10, S11 row, verbatim)** — **all 30 handoff acceptance scenarios** (design §7.1's
+`TODAY` ordering; the order **is** the product and every row must render **why it is where it is**) ·
+**`SafeProjection` DTO** with a **recursive** forbidden-key scan plus **synthetic secret/account
+fixtures**.
+**Prohibitions (design §10)** — no dispatch, claim or closure from the UI · Telegram must not be able
+to read the full snapshot.
+
+🔴 **The `SafeProjection` acceptance is a NEGATIVE, so build the fixtures FIRST.** A scan that finds
+nothing on a clean snapshot proves nothing; per CLAUDE.md's bar table a guard with zero fires is
+`UNTESTED`. Watch it catch a planted account number nested three levels down, with its control.
+
+🔴 **The tier has ~13s of headroom** (`ORDER-1130` is the row that fixes that, not this one). The S10
+lesson applies directly: when a cage is too slow, make it **cheaper to DRIVE, not cheaper to CARE** —
+S10's first cage spawned a whole guard per case (13.1s), the rule moved into a callable, cost fell to
+3.9s, **and the trimming is what found a real defect** because the cheap case became affordable to keep.
+
+**LANE BOUNDARY, because this runs beside `ORDER-942`/`943`.** This order owns the shell,
+`SafeProjection`, `_triage/factory_os/snapshot_validator.py` and `scripts/control_room_snapshot.ps1`.
+The `JUDGERATE` lane **reads** `control_room_snapshot.ps1` to count `NA` rows and never writes it, and
+owns `portfolio/expectations.csv` + `portfolio/DEPLOYMENTS.csv`. Neither lane may touch the other's
+list (ledger rule 4 · memory `shared-worktree-concurrent-writers`).
+
+---
+
 ## ORDER-1100 — [factory/S10] Candidate identity + append-only Deployment attestation + magic reservation (design §4.5–§4.7 / §10 S10 row) — `DONE (Claude/Opus 2026-08-02) — all four acceptance criteria measured; the field, cell and criterion counts are printed by run_s10_tests.py itself and are deliberately not restated here` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Acceptance (design §10, S10 row):** `candidate_digest` recomputed and compared on **every read** ·

@@ -63,23 +63,30 @@ where a verification cage exists, and here one does (the 30 scenarios are mechan
   secret/account fixtures FIRST and watch the scan catch them, or the check is `UNTESTED` by the
   bar table's own rule.
 
-## ⚠️ Owed to the owner — ask before it shapes the work
+## ✅ Nothing is owed to the owner — all four questions were answered 2026-08-02
 
-**What should a `FROZEN` attestation event forbid?** Today: nothing, deliberately. Round 2 found
-that `fold` computed a `frozen` flag nothing read, so a `CANDIDATE_REASSIGNED` straight after a
-`FROZEN` was allowed. The flag was **removed rather than enforced**, because the obvious rule —
-refuse every later candidate change — has no way back out (there is no unfreeze event type), and
-inventing one is policy. Three options, costed, in
-`_triage/HANDOFF_2026-08-02_SCRUT10S.md` §"One question". **S11's DEPLOYMENTS page renders
-attestation state, so it inherits whatever this becomes.**
+- **`FROZEN` forbids nothing; it is a marker.** Option (a), ratified — `_triage/USER_DECISIONS_PENDING.md`
+  item 8. The unread `frozen` flag was removed rather than enforced, which is that decision exactly, so
+  **S11's DEPLOYMENTS page renders `FROZEN` as history and must not treat it as a lock.**
+- **The tier budgets are ratified** (per-path 90.0 · full 120.0) and `ORDER-1130` is open to earn them
+  back. Item 9. Do not raise them again — that decision has been made once.
+- **This slice is assigned to Codex/Sonnet**, reviewed by the Opus seat. Its board row is `ORDER-1131`.
+- **It runs IN PARALLEL with `ORDER-942`/`943`** (judge-rate and the 19 shortfall EAs, on lane
+  `S-2026-08-02-JUDGERATE`). **Lane boundary, and it is not optional:** this slice owns the shell,
+  `SafeProjection`, `_triage/factory_os/snapshot_validator.py` and `scripts/control_room_snapshot.ps1`.
+  The other lane owns `portfolio/expectations.csv` and `portfolio/DEPLOYMENTS.csv`, and only **reads**
+  the snapshot script. Neither may touch the other's list (ledger rule 4 · memory
+  `shared-worktree-concurrent-writers`).
 
 ## Before you start — verify, do not assume
 
 - **Re-derive your order block from BOTH tests**: parse `## ORDER-<n>` out of all four board files
   (highest in use = **1100**) **and** check every ACTIVE lane's reserved block in
   `docs/SESSION_LEDGER.md` — a reserved-but-unused block is invisible to the number test. As of
-  this writing the next free block is **1130-1139** (`1120-1129` = `SCRUT10S`). **Commit the
-  reservation before using a number.**
+  this writing the next free block is **1140-1149** — `1130-1139` is held by the **ACTIVE**
+  `S-2026-08-02-JUDGERATE` lane, which already opened this slice's own row as **`ORDER-1131`**.
+  **Commit the reservation before using a number**, and put findings on `ORDER-1131` rather than
+  minting a new one.
 - **Baseline green first:** `run_scheduler_tests.py` · `run_s10_tests.py` · `run_parity_tests.py` ·
   `run_wrapper_gen_tests.py` · `run_guard_shape_lint.py` · `run_schema_fixtures.py` ·
   `check_param_surface.py --worktree` · `check_wrapper_gen.py --worktree` ·

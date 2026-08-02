@@ -275,6 +275,59 @@ Overruling this changes exactly one tuple and nothing around it.
 
 ---
 
+## 8. ✅ DECIDED 2026-08-02 — a `FROZEN` attestation event is a MARKER, and forbids nothing
+
+**Owner, verbatim:** *"(a) ปล่อยเป็น marker เฉยๆ"*.
+
+**The problem.** `/scrutinize` round 4 over S10 found that `attestation.fold` computed a `frozen`
+flag and `validate_event` never read it — probed: a `CANDIDATE_REASSIGNED` appended directly after a
+`FROZEN` was **allowed**. A field named `frozen` in a read-model is read by the next caller as "this
+is frozen, do not touch it", and there was nothing behind it.
+
+**The options put to the owner, with their costs:**
+
+| | rule | cost |
+|---|---|---|
+| **(a) chosen** | `FROZEN` is a marker in the history and forbids nothing | matches what the design actually states; adds no rule; **no dead end** |
+| (b) | `FROZEN` blocks a candidate change by `claude`; only `user` may move it after | has teeth, but invents a `user` vs `claude` split the schema does not make |
+| (c) | `FROZEN` blocks everything until an `UNFROZEN` event arrives | strongest; needs a new enum member, regenerated contracts and new cage cases |
+
+**What was built:** the unread `frozen` flag was **removed** rather than enforced, which is (a)
+exactly. Nothing further is owed. **The reason it was not simply enforced** is worth keeping: the
+obvious guess — refuse every later candidate change — has **no way back out**, because there is no
+unfreeze event type, so one `FROZEN` would make a pair permanently unmovable. A rule with no exit is
+worse than no rule.
+
+⚠️ **If this is ever revisited, (c) is the honest upgrade path** — (b) would make two actors the
+schema treats identically behave differently, which is the kind of split that gets forgotten.
+
+---
+
+## 9. ✅ RATIFIED 2026-08-02 — the fast-tier budgets are raised, and an order is opened to earn them back
+
+**Owner, verbatim:** *"ยืนยัน + เปิด order เร่งด้วย"*.
+
+**What was done before the ratification, and why it could not wait:** the tier **refused this work's
+own commit** at **81.1s against the 65.0s per-path budget**, 7 of 24 suites selected, **all green**.
+Subtract the new slice's own suite (2.9s) entirely and the commit is **still 78.2s** — so the old
+bound had already become **unsatisfiable for a commit of that shape** (a guard plus a schema), which
+is a common shape in this repo. The full tier told the same story: **107.0s against 90.0s**, and
+**90.4s before that lane opened**. `run_fast_cages.ps1`'s own over-budget message offers three exits
+— displace a suite, make the named one faster, or *"raise the number DELIBERATELY in the same commit
+that says why"* — and only the third was available to a lane that owns none of the expensive suites.
+
+**Ratified numbers:** per-path **65.0 → 90.0** · full tier **90.0 → 120.0**, ~11% above what was
+measured so growth still trips them. `run_guard_trigger_tests.ps1`'s N1 pins both on purpose, so
+raising one is a two-file act by design.
+
+**And the second half of the decision, which is the point:** raising a budget makes the bound TRUE,
+not the tier FAST. **`ORDER-1130`** is opened to earn it back — three suites are 65% of the full run
+(`run_contract_binding_tests` · `run_front_guard_evidence_tests` · `run_guard_trigger_tests`), and
+`run_contract_binding_tests` alone drifted 27.0s → 35.8s across a single day, so the growth is
+ongoing rather than settled.
+
+---
+
 ## Not on this list, and why
 
 - **The Coverage transfer** — decided 2026-07-31, recorded in `s2a_attestations.jsonl`, executed.

@@ -47,7 +47,11 @@ what generalises.
   migration; an unknown field outside the tuple, and a missing required field, both still refuse —
   and both are driven.
 
-## ⚠️ One question, and it is the owner's
+## ✅ The one question — ANSWERED 2026-08-02: option (a), `FROZEN` is a marker and forbids nothing
+
+<sub>Recorded as `_triage/USER_DECISIONS_PENDING.md` item 8. What shipped already **was** (a), so no
+code changed; the reasoning below is kept because it is what the decision was made against, and
+because (c) is the honest upgrade path if it is ever revisited.</sub>
 
 **What should a `FROZEN` attestation event forbid?** Today: nothing. `fold` computed a `frozen`
 flag and `validate_event` never read it, so a `CANDIDATE_REASSIGNED` appended directly after a
@@ -88,9 +92,10 @@ arrives. **(a) is what is shipped**; (b) and (c) both add rules the design has n
 |---|---|
 | round 1: criterion 3 fail-open on the real store, the closed legacy migration, `UNCOMPARABLE_PRIOR` | ORDER-1080 (DONE — the defect was in S9's `find_cached`, exposed by ORDER-1100 step 0) |
 | round 2: the inverted `A6` first-assignment rule | ORDER-1100 (DONE) |
-| round 2: what `FROZEN` should forbid | **owner decision** — `_triage/HANDOFF_2026-08-02_SCRUT10S.md` §"One question", three costed options; shipped as (a) |
+| round 2: what `FROZEN` should forbid | **DECIDED 2026-08-02 — option (a), a marker that forbids nothing** (`USER_DECISIONS_PENDING.md` item 8; what shipped already was (a), so nothing further is owed) |
 | round 3: `C9`'s vacuous pin check, `read_manifest`'s impossible default | ORDER-1100 (DONE) |
 | round 4: `gen_magic_allocations.py --check` now driven, and can fail | ORDER-1100 (DONE) |
 | round 4: the restated allocation count, removed from four documents | ORDER-1100 (DONE) |
-| speed or displace `run_contract_binding_tests` · `run_front_guard_evidence_tests` · `run_guard_trigger_tests` — 65% of the full tier | ORDER-1100 (owed — the budgets were raised, which made the bound true, not the tier fast) |
-| S11 Control Center shell | `_triage/PROMPT_NEXT_SESSION_S11.md` (not started) |
+| speed or displace `run_contract_binding_tests` · `run_front_guard_evidence_tests` · `run_guard_trigger_tests` — 65% of the full tier | **ORDER-1130** (opened 2026-08-02 with the owner's ratification of the raise — the raise and this row were decided together) |
+| the raised tier budgets (per-path 90.0 · full 120.0) | **RATIFIED 2026-08-02** — `USER_DECISIONS_PENDING.md` item 9 |
+| S11 Control Center shell | **ORDER-1131**, assigned to Codex/Sonnet per design §10; brief = `_triage/PROMPT_NEXT_SESSION_S11.md` |
