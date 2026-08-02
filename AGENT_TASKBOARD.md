@@ -105,6 +105,69 @@
 
 ---
 
+## ORDER-1170 — [portfolio design] The thin class is a PORTFOLIO problem, not a judging problem — raise the sample rate instead of waiting a year for it — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (เคาะทิศ) · 👉 แนะ: Claude
+
+> **Owner direction, 2026-08-02, verbatim:** *"พวก thin ทั้งหมดผมจะเอามารวมๆ กันแล้ว trade แบบ multi
+> symbol ใน EA ตัวเดียว ไม่ก็ optimize ให้ถี่ขึ้น หรือเอาอะไรมาช่วยให้ออกถี่ขึ้น หรือเอาไปรวมกับพวกไม้ถี่
+> ที่มัน corr ต่ำ"*
+>
+> This is the right frame and it is worth writing down as such: `ORDER-235`'s 12-month rule **manages**
+> a thin sample, it does not **fix** it. Waiting a year to judge one leg at 13 trades/year is the lab
+> paying a year of wall-clock for a statistic it could have bought in three months by changing the
+> deployment. The bar stays where it is; what changes is what gets attached.
+
+**The roster this order owns (12 legs, all currently `ORDER-235` thin).** `990204` and `990206` were
+pulled OUT on 2026-08-02 — they are observed at 2.6-4.1× expected, so their premise was false:
+
+| magic | EA | symbol | คาด/สัปดาห์ | acct |
+|---|---|---|---|---|
+| `991001` 🔴 | EA_BREAKOUT_XAU | XAUUSD | 0.25 | **REAL_CENT** |
+| `991004` 🔴 | (BRK)_SqueezeBreakout | XAUUSD | 0.29 | **REAL_CENT** — also `ORDER-941`, 0 trades |
+| `991003` | EA_BREAKOUT_XAU | USDJPYm | 0.42 | DEMO |
+| `991005` | EA_BREAKOUT_XAU | US30m | 0.21 | DEMO |
+| `990020` | EA_SUPERTREND | XAUUSDm | 0.31 | DEMO |
+| `990025` | EA_SUPERTREND crypto ST-BTC | BTCUSDm | 0.49 | DEMO |
+| `990026` | (TRD)_SuperTrendFlip_rev05 | BTCUSDm | 0.45 | DEMO |
+| `990205` | Boss_14_GridLog size-light | CADJPYm | 0.29 | DEMO |
+| `990303` | Boss_17_Wave5 | USDJPYm | 0.27 | DEMO |
+| `990984` | PairSpread_StatArb | EURUSDm | 0.64 | DEMO |
+| `992001` | TsMom_XAU (S2) | XAUUSDm | 0.17 | DEMO |
+| `992004` | TrendRider_XAU (W2 S1) | XAUUSD | 0.46 | DEMO |
+
+**Four routes the owner named, and what each one actually costs.** They are not alternatives to pick
+one of — they apply to different legs, and the first job is deciding *which leg gets which*:
+
+1. **One EA, many symbols.** `991001`/`991003`/`991005` are the SAME EA on three symbols, and
+   `990020`/`990025` are the same again. Merging the legs multiplies the sample rate by the symbol
+   count **without changing the signal**. ⚠️ Cost: one magic per basket means per-symbol attribution
+   is lost unless the EA stamps the symbol — and `ORDER-093`'s invariant is one row per magic. Decide
+   the attribution mechanism BEFORE merging, or the judge gains trades and loses the ability to say
+   which symbol earned them. Precedent to reuse: memory `feedback-attach-demo-as-basket-not-single-leg`
+   — *"the control is the sample-accumulation rate, not the risk"*, which is exactly this order.
+2. **Optimize for frequency.** A lever sweep whose objective is trades/week at a PF floor, rather than
+   PF at any trade count. ⚠️ Cost: this is selection pressure on a new axis, so it needs the full
+   ladder and both windows — `CLAUDE.md`'s VERDICT GATE does not get a discount for being about
+   frequency. And a config that trades more is not the config the existing evidence describes.
+3. **A mechanism that fires more often** (pending-limit entry, a second entry arm, a looser regime
+   gate). ⚠️ Cost: `ORDER-1017`'s doctrine — pending-rescue is valid for market-on-signal entries and
+   never for grid trigger-touch. Check the entry type per leg first.
+4. **Pair a thin leg with a high-frequency low-corr leg.** ⚠️ Cost: this raises the BASKET's sample
+   rate, not the thin leg's, so it changes what is being judged. Legitimate for a portfolio verdict,
+   **not** a way to judge the thin leg — say which one is being decided.
+
+**Acceptance** — **P1** each of the 12 gets exactly one route, with the reason and the cost named ·
+**P2** for every merge, the attribution mechanism is decided and written down before any `.set`
+moves · **P3** nothing on `159503454` (**real money**, `991001`/`991004`) changes without the owner
+· **P4** any frequency-optimized config re-enters the funnel at the ladder, not at its old verdict.
+🚫 Do not raise a leg's frequency and keep its old evidence. 🚫 Do not merge magics without solving
+attribution first.
+
+<sub>Why this is worth an order rather than a note: 12 of ~36 judge-dated legs are in this class, two
+on real money, and the current answer for all of them is "wait twelve months". That is a portfolio
+composition decision wearing a judging rule.</sub>
+
+---
+
 ## ORDER-1132 — [🔴 data integrity] `portfolio/DEPLOYMENTS.csv` does not round-trip through a CSV parser, and it is the single inventory for real money — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > **Found by breaking it, 2026-08-02 (`ORDER-943` C3).** The first write used `csv.DictWriter` and
