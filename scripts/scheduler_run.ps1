@@ -316,12 +316,30 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
       # no parallel evidence store exists. It is content-addressed and therefore idempotent on its
       # own; this script's reconcile is the first guard, not the only one.
       $rel = if ($EvidencePath) { $EvidencePath } else { '_mt5_auto/reports/' + $ReportName + '.htm' }
-      # 6>&1 is load-bearing (ORDER-219, memory writehost-stream6-swallows-detail): Write-Host
-      # goes to the INFORMATION stream in PS 5.0+, so `2>&1 | Out-String` alone captured NOTHING
-      # and this branch printed an empty reason next to a sentence guessing at the cause.
-      $res = & (Join-Path $PSScriptRoot 'experiment_event_log.ps1') -Command RegisterEvidence `
-                -RepoRoot $root -RegisterEvidencePath $rel -RegisterEvidenceCommitOid HEAD `
-                -RegisterEvidenceMediaType 'text/html' 2>&1 6>&1 | Out-String
+      # TWO CORRECTIONS, BOTH MEASURED AGAINST THE UTILITY RATHER THAN ASSUMED.
+      #
+      # (1) THE PARAMETER NAMES. `-Command RegisterEvidence` reads -ArtifactPath / -CommitOid /
+      #     -MediaType. The `-RegisterEvidence*` trio belongs to `-Command Append`'s inline
+      #     registration and is ignored here -- so the first version supplied a media type the
+      #     command never looked at and was told "MediaType is required" while holding one.
+      #
+      # (2) THE CAPTURE. The utility reports through [Console]::Out.WriteLine, which bypasses
+      #     EVERY PowerShell stream -- worse than the Write-Host/stream-6 trap this repo already
+      #     paid for (memory writehost-stream6-swallows-detail), because `2>&1 6>&1` does not
+      #     reach it either. Its output is capturable only when it is a CHILD PROCESS whose
+      #     stdout is a pipe. Hence powershell.exe here rather than a dot-call: the refusal text
+      #     is the whole value of this branch, and the first version printed an empty string.
+      #
+      # (3) THE MEDIA TYPE. `text/html` is NOT in evidence-v1.schema.json's enum, and the answer
+      #     was read off the three .htm rows already in the manifest (ORDER098B) rather than
+      #     chosen: they are `application/octet-stream`, which is also honest -- an MT5 report is
+      #     UTF-16LE and is not plain text by any reader's definition (memory
+      #     prove-the-instrument-can-see-the-file).
+      $ps = (Get-Command powershell.exe).Source
+      $res = & $ps -NoProfile -ExecutionPolicy Bypass `
+                -File (Join-Path $PSScriptRoot 'experiment_event_log.ps1') `
+                -Command RegisterEvidence -RepoRoot $root -ArtifactPath $rel `
+                -CommitOid HEAD -MediaType 'application/octet-stream' 2>&1 | Out-String
       $rc = $LASTEXITCODE
       if ($rc -ne 0) {
         # QUOTE THE UTILITY, DO NOT EXPLAIN IT. The first version of this branch asserted a cause
