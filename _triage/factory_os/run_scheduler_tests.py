@@ -971,6 +971,16 @@ else:
     check('the run start is read from the MANIFEST (launch_intent_at), which is the only '
           'append-only record of when the attempt began',
           'launch_intent_at' in code_only_early and 'intentAt' in code_only_early)
+    # 🔴 /scrutinize round 3. The evidence id written into the manifest was hashed from $htm while
+    # the artifact registered was $rel (-EvidencePath). Two different files => the manifest names
+    # an event that does not exist, and the reconcile (which also hashes $htm) looks for that same
+    # wrong id and registers a SECOND time. Both halves are checked: the two must be compared, and
+    # the recorded id must come from the utility's own record rather than a recomputation.
+    check('the registered artifact is proven byte-identical to the report this run produced, so '
+          'the evidence id cannot name a different file',
+          re.search(r'\$relSha\s+-ne\s+\$htmSha', code_only_early) is not None)
+    check('the recorded event id is read from the utility\'s returned record, not recomputed',
+          'details.evidence_id' in code_only_early)
     spawn_write = code_only_early.find('Spawn-Marker $a')
     spawn_launch = code_only_early.find('Start-Process')
     check('the spawn marker is written BEFORE Start-Process, so its ABSENCE proves no spawn '

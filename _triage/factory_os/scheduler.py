@@ -8,7 +8,12 @@ WHAT THIS IS, AND WHAT IT DELIBERATELY IS NOT
   of that is re-implemented here. What this module adds is the one thing the runner has no way to
   own: MEMORY ACROSS ITS OWN DEATH.
 
-  Everything in this file is PURE. It reads no clock, spawns no process, and touches no terminal.
+  Every DECISION in this file is pure: nothing below reads a clock (`obs['now']` is the only one),
+  spawns a process, or touches a terminal. The disk section near the bottom is the one exception
+  and it is deliberately thin -- it reads and appends the manifest and does nothing else, so that
+  the planner and the validator can be driven with no filesystem at all. (/scrutinize round 3
+  corrected this paragraph: it used to say "everything in this file is PURE", full stop, which was
+  a claim the reader could disprove by scrolling.)
   It folds an append-only manifest, judges a proposed transition, and answers ONE question:
   "given this manifest and these observations, what is the single next action?" The tester work
   lives in `scripts/scheduler_run.ps1`, which observes, dispatches, and records. That split is the
@@ -556,8 +561,16 @@ def _plan_inner(journal, obs):
             # EVIDENCE_REGISTERED line loses the id but not the event; appending a second one
             # would duplicate the occurrence in a store that is the owner of the experiment
             # timeline. Reconcile the store first, adopt what is there.
-            return _act('ADOPT_EVIDENCE', 'the event store already holds this run\'s evidence; '
-                                          'adopting its id instead of appending a second event',
+            # THE MESSAGE SAYS WHAT WAS MEASURED. /scrutinize round 3: it read "the event store
+            # already holds THIS RUN'S evidence", and the observation behind it is content-
+            # addressed -- it holds evidence for this ARTIFACT'S exact bytes, whoever registered
+            # them. Those coincide for every real case (criterion 3 refuses a second run of the
+            # same configuration, and two different configurations producing byte-identical
+            # reports would be a coincidence), but the claim was still wider than the check, and
+            # a probe reached it by handing one run another run's report.
+            return _act('ADOPT_EVIDENCE', 'the event store already holds evidence for this '
+                                          'artifact\'s exact content; adopting that id rather '
+                                          'than appending a second event for the same bytes',
                         attempt=attempt, event_id=obs['evidence']['event_id'],
                         evidence_id=obs['evidence'].get('evidence_id'))
         return _act('REGISTER_EVIDENCE', 'the attempt completed and no event exists yet',

@@ -345,6 +345,33 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
       # no parallel evidence store exists. It is content-addressed and therefore idempotent on its
       # own; this script's reconcile is the first guard, not the only one.
       $rel = if ($EvidencePath) { $EvidencePath } else { '_mt5_auto/reports/' + $ReportName + '.htm' }
+      # 🔴 /scrutinize round 3: THE ID WRITTEN INTO THE MANIFEST WAS HASHED FROM A DIFFERENT FILE
+      # THAN THE ONE REGISTERED. The utility was handed $rel (-EvidencePath, a committed copy) and
+      # the EVIDENCE_REGISTERED line carried the sha256 of $htm (the runner's own report). Point
+      # them at two different files and the manifest names an evidence record that was never
+      # created -- and the crash reconcile hashes $htm too, so it looks for the same wrong id and
+      # REGISTERS A SECOND TIME. "Duplicates no event" would have failed on exactly the input the
+      # -EvidencePath parameter exists to accept.
+      #
+      # Closed at the root rather than by hashing the right file: the registered artifact must BE
+      # the report this run produced, so the two are compared and a mismatch is REFUSED. With that
+      # invariant, hashing either one is the same answer, which is what makes the reconcile above
+      # sound even before the copy exists.
+      $absRel = Join-Path $root ($rel -replace '/', '\')
+      if (-not (Test-Path $absRel)) {
+        Write-Host ("[STOP] -EvidencePath " + $rel + " does not exist. The manifest records " +
+                    "COMMITTED Git artifacts only (design 4.5), and _mt5_auto/reports/ is " +
+                    "gitignored -- copy the report somewhere committed and re-invoke.") -ForegroundColor Yellow
+        exit 1
+      }
+      $relSha = (Get-FileHash -LiteralPath $absRel -Algorithm SHA256).Hash.ToLower()
+      $htmSha = (Get-FileHash -LiteralPath $htm -Algorithm SHA256).Hash.ToLower()
+      if ($relSha -ne $htmSha) {
+        Write-Host ("[STOP] " + $rel + " is NOT byte-identical to the report this run produced " +
+                    "(" + $relSha.Substring(0,12) + " vs " + $htmSha.Substring(0,12) + "). " +
+                    "Registering it would file one run's evidence under another artifact's id.") -ForegroundColor Red
+        exit 1
+      }
       # TWO CORRECTIONS, BOTH MEASURED AGAINST THE UTILITY RATHER THAN ASSUMED.
       #
       # (1) THE PARAMETER NAMES. `-Command RegisterEvidence` reads -ArtifactPath / -CommitOid /
@@ -381,7 +408,14 @@ for ($i = 0; $i -lt $MaxIterations; $i++) {
                     "resumes at REGISTER_EVIDENCE, which is the whole point of it.") -ForegroundColor Yellow
         exit 1
       }
-      $evId = 'evd_sha256_' + (Get-FileHash -LiteralPath $htm -Algorithm SHA256).Hash.ToLower()
+      # THE ID COMES FROM THE UTILITY'S OWN RECORD, not from a second computation of what it
+      # should have been. Recomputing it here is how the two halves drifted in the first place.
+      # The local sha is the fallback only, and it is only equal to the right answer because the
+      # byte-identity check above already refused every case where it would not be.
+      $evId = $null
+      $lastLine = ($res -split "`n" | Where-Object { $_.Trim() } | Select-Object -Last 1)
+      try { $evId = ($lastLine | ConvertFrom-Json).details.evidence_id } catch { $evId = $null }
+      if (-not $evId) { $evId = 'evd_sha256_' + $relSha }
       Invoke-Append (New-Line 'EVIDENCE_REGISTERED' $a @{ event_id = $evId })
     }
     'ADOPT_EVIDENCE' {
