@@ -21,9 +21,10 @@ never ALL CLEAR. That is a claim about the seam, which is the only claim worth a
   NO WORKTREE MUTATION. Every fixture lives under $env:TEMP. The real snapshot is read and never
   written; PART B asserts its bytes are unchanged at the end.
 
-MEASURED before registering, three times: 1.4s / 1.4s / 1.3s. Three samples, not one, per memory
-phantom-regression-from-two-single-samples. The same number is in run_fast_cages.ps1's
-registration comment, where the tier's own budget argument lives.
+MEASURED three times, not once, per memory phantom-regression-from-two-single-samples: 1.4s / 1.4s
+/ 1.3s at registration, and 1.6s / 1.6s / 1.6s after the three /scrutinize rounds added WIRE3
+(which drives the CLI end to end). The same numbers are in run_fast_cages.ps1's registration
+comment, where the tier's own budget argument lives.
 
 ASCII-only on purpose (Windows PowerShell 5.1 reads a BOM-less .ps1 as ANSI).
 USAGE  powershell -NoProfile -File scripts\_test\run_s11_tests.ps1

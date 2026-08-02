@@ -36,6 +36,9 @@ AND THE ONE THAT COST AN AUDIT ROUND ELSEWHERE
 TESTS  tools\\python312\\python.exe _triage/factory_os/run_s11_tests.py
 """
 import collections
+import io
+import json
+import os
 import sys
 
 # The reader states, spelled EXACTLY as scripts\lib\snapshot_reader.ps1 spells them, because
@@ -386,11 +389,51 @@ def _health_row(read, live):
 # WORK - the same rows, by lifecycle, plus the reconciliation the snapshot owns.
 # ---------------------------------------------------------------------------------------
 
-def build_work(read, rows):
+def read_work_rows(repo_root):
     """
-    Two halves that must not be confused:
+    -> (rows, source). ROUND-3.
+
+    The production CLI used to read factory/work_receipts.jsonl and hand every line straight to
+    normalise_row. Two defects in one line, and no case drove either:
+
+      1. A corrupt file raised out of the CLI instead of rendering WORK as UNKNOWN. "Cannot
+         read it" is not "there is nothing", and this is the page whose job is that distinction.
+      2. A `WorkReceipt` IS NOT A WORK ROW. schemas.json requires entity, receipt_id,
+         source_agent and requested_at, and says nothing about a lifecycle state - so the first
+         receipt S14 imports would have made normalise_row refuse and the CLI raise. The adapter
+         does not exist yet; that belongs on the page as a stated gap, not in a traceback.
+
+    So this returns NO rows today, and a `source` that says which of the three situations it is.
+    """
+    path = os.path.join(repo_root, 'factory', 'work_receipts.jsonl')
+    if not os.path.exists(path):
+        return [], {'readable': True, 'receipts_seen': 0,
+                    'note': 'ยังไม่มี %s' % path}
+    seen = 0
+    try:
+        with io.open(path, 'r', encoding='utf-8-sig') as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                obj = json.loads(line)
+                if isinstance(obj, dict) and obj.get('entity') == 'WorkReceipt':
+                    seen += 1
+    except (IOError, OSError, ValueError, UnicodeDecodeError) as exc:
+        return [], {'readable': False, 'receipts_seen': None,
+                    'note': 'อ่าน %s ไม่ได้: %s' % (path, exc)}
+    return [], {'readable': True, 'receipts_seen': seen,
+                'note': ('พบ WorkReceipt %d รายการ แต่ยังไม่มี adapter ที่แปลง receipt เป็น row ของ '
+                         'lifecycle (S14) — receipt ไม่มี state/priority ตามสัญญาใน schemas.json'
+                         % seen) if seen else 'ยังไม่มี WorkReceipt สักรายการ (S14 ยังไม่ import)'}
+
+
+def build_work(read, rows, source=None):
+    """
+    Three halves that must not be confused:
       by_state   the rows this shell was handed.
       counts     what the SNAPSHOT says exists.
+      source     what happened when the row-level store was read (ROUND-3).
     When the second is non-zero and the first is empty, the page renders UNKNOWN. It does NOT
     render an empty queue - "the taskboard could not be read so STATUS showed an empty work
     queue" is one of the failure scenarios the Codex blind audit wrote down, and today it is
@@ -402,7 +445,18 @@ def build_work(read, rows):
         row = normalise_row(raw)
         by_state[row['state']].append({'id': row['id'], 'title': row.get('title', ''),
                                        'state': row['state'], 'priority': row['priority']})
-    page = {'by_state': by_state, 'states': list(WORK_STATES)}
+    page = {'by_state': by_state, 'states': list(WORK_STATES), 'source': source}
+    # A source that could not be read outranks everything else on this page: no count from the
+    # snapshot can stand in for rows nobody could read.
+    if source is not None and not source.get('readable', True):
+        page['counts'] = None
+        page['unknown'] = True
+        page['rendered'] = 0
+        page['unaccounted'] = None
+        page['why'] = source.get('note', 'อ่านแหล่งข้อมูล row ไม่ได้')
+        page['unclassified_band'] = {'unclassified': None, 'duplicates': None, 'shown': False,
+                                     'why': 'ไม่แสดงตัวเลขเมื่ออ่าน row ไม่ได้'}
+        return page
     if read.state != READ_OK:
         page['counts'] = None
         page['unknown'] = True
@@ -424,16 +478,21 @@ def build_work(read, rows):
     discovered = rec.get('discovered') or 0
     rendered = sum(len(v) for v in by_state.values())
     page['rendered'] = rendered
+    # Two independent ways this page can fail to account for the work, and BOTH have to be
+    # checked: the snapshot counts more orders than were rendered, and the row store holds
+    # receipts that produced no row. W18 found the second one open - a fixture with one
+    # unadapted receipt and discovered=0 came out unknown=False, i.e. the adapter gap was
+    # invisible whenever the snapshot happened to be quiet.
+    reasons = []
+    page['unaccounted'] = max(0, discovered - rendered)
     if rendered < discovered:
-        page['unknown'] = True
-        page['unaccounted'] = discovered - rendered
-        page['why'] = ('snapshot นับ order ได้ %d แต่หน้านี้เรนเดอร์ได้ %d — ขาดอีก %d รายการที่ไม่มีเจ้าของ '
+        reasons.append('snapshot นับ order ได้ %d แต่หน้านี้เรนเดอร์ได้ %d — ขาดอีก %d รายการที่ไม่มีเจ้าของ '
                        'ระดับ row (S14 Work Receipts) ⇒ UNKNOWN ไม่ใช่ "คิวเท่านี้"'
                        % (discovered, rendered, discovered - rendered))
-    else:
-        page['unknown'] = False
-        page['unaccounted'] = 0
-        page['why'] = ''
+    if source is not None and (source.get('receipts_seen') or 0) > 0 and rendered == 0:
+        reasons.append(source.get('note', 'มี receipt อยู่แต่ไม่มี row ออกมาเลย'))
+    page['unknown'] = bool(reasons)
+    page['why'] = ' · '.join(reasons)
     unclassified = rec.get('unclassified') or 0
     duplicates = rec.get('duplicates') or 0
     page['unclassified_band'] = {
@@ -648,7 +707,7 @@ def build_system(read, findings):
 # The one public entry point.
 # ---------------------------------------------------------------------------------------
 
-def project(read, rows=(), findings=()):
+def project(read, rows=(), findings=(), source=None):
     """
     -> {'today':..., 'work':..., 'live':..., 'system':..., 'mode':'SHADOW'}
 
@@ -664,7 +723,7 @@ def project(read, rows=(), findings=()):
     return {
         'mode': 'SHADOW',
         'today': build_today(read, rows, live),
-        'work': build_work(read, rows),
+        'work': build_work(read, rows, source),
         'live': live,
         'system': build_system(read, findings),
     }
@@ -677,7 +736,7 @@ def project(read, rows=(), findings=()):
 PUBLIC_API = (
     'SnapshotRead', 'ShellRefusal',
     'project', 'build_today', 'build_work', 'build_live', 'build_system',
-    'normalise_row', 'place', 'fold_finding', 'render_html',
+    'normalise_row', 'place', 'fold_finding', 'render_html', 'read_work_rows',
     # `main` is the CLI that renders the local page. It is the ONE name here that writes
     # anything, and what it writes is build/control_center.html - a rendering, never a
     # dispatch, a claim or a closure. It is declared rather than excused: the cage asserts this
@@ -816,9 +875,6 @@ def render_html(pages):
 
 def main(argv):
     """One end-to-end run: read the REAL snapshot through the one reader, render the shell."""
-    import io
-    import json
-    import os
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import safe_projection
     import snapshot_validator as sv
@@ -838,27 +894,16 @@ def main(argv):
     except Exception as exc:                                  # noqa: BLE001 - reported, not swallowed
         read = SnapshotRead(READ_UNAVAILABLE, 'TOOL', '%s: %s' % (type(exc).__name__, exc), None)
 
-    receipts = []
-    rpath = os.path.join(repo_root, 'factory', 'work_receipts.jsonl')
-    if os.path.exists(rpath):
-        with io.open(rpath, 'r', encoding='utf-8-sig') as fh:
-            for line in fh:
-                line = line.strip()
-                if not line:
-                    continue
-                obj = json.loads(line)
-                if obj.get('entity') == 'WorkReceipt':
-                    receipts.append(obj)
-
-    pages = project(read, receipts, [])
+    rows, source = read_work_rows(repo_root)
+    pages = project(read, rows, [], source)
     d = os.path.dirname(out)
     if d and not os.path.isdir(d):
         os.makedirs(d)
     with io.open(out, 'w', encoding='utf-8', newline='\n') as fh:
         fh.write(render_html(pages))
-    print('control_center: %s · headline=%s · LIVE exceptions=%d · WORK unknown=%s'
+    print('control_center: %s · headline=%s · LIVE exceptions=%d · WORK unknown=%s · rows=%s'
           % (out, pages['today']['health']['headline'], pages['live']['exception_count'],
-             pages['work'].get('unknown')))
+             pages['work'].get('unknown'), source.get('note')))
     return 0
 
 

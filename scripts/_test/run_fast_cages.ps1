@@ -397,7 +397,9 @@ $FAST_SUITES = @(
     # the in-process cases cannot make. Trimming it also FOUND a defect: [AllowNull()][string]
     # coerces $null to '', so the "cannot read the exception list" branch was unreachable.
     'run_s10_tests.ps1',
-    # ORDER-1131 (S11), measured 1.4s / 1.4s / 1.3s over three runs -> 1.4s. It carries both halves of slice
+    # ORDER-1131 (S11), measured 1.6s / 1.6s / 1.6s over three runs after the three /scrutinize rounds (1.4s before them;
+    # the extra 0.2s is WIRE3, which drives the CLI a human actually runs -- the entry point where
+    # round 3 found both of its defects). It carries both halves of slice
     # S11's acceptance: the derived TODAY/WORK/LIVE/SYSTEM scenario catalog (the count is printed
     # by run_s11_tests.py --list and is deliberately not restated here) and the SafeProjection
     # negative -- a recursive forbidden-key scan observed catching synthetic secret and account

@@ -488,6 +488,18 @@ def _check_shape(node, schema, path, hits):
         pattern = schema.get('pattern')
         if pattern and not re.match(pattern, node):
             hits.append((path, 'SHAPE', 'does not match %s' % pattern))
+        return
+    # ROUND-3 FIX. Everything above is a construct this checker implements; anything else used
+    # to fall off the end and produce NO HITS -- `type: integer`, `type: boolean`, `$ref` and
+    # `oneOf` were all silently accepted, whatever the value was. SafeProjection's schema uses
+    # none of them TODAY, which is precisely why nobody would have noticed: the first field
+    # added with an integer type would have been unchecked, inside the function whose entire
+    # job is checking. An unimplemented construct is now a REFUSAL naming itself, so extending
+    # the schema forces extending the checker instead of quietly losing coverage.
+    hits.append((path, 'SHAPE_UNCHECKED',
+                 'this checker does not implement the schema construct %r, so it cannot verify '
+                 'this node - refusing rather than passing it'
+                 % sorted(k for k in schema if not k.startswith('x-') and k != 'description')))
 
 
 def assert_shape(doc, repo_root='.'):

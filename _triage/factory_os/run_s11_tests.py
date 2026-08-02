@@ -476,6 +476,57 @@ def w16():
     assert got == {'O-1': 'B06', 'O-2': 'B05'}, got
 
 
+@case('W17', 'round 3 · S11 rule 1', 'an UNREADABLE work-row source renders UNKNOWN naming it, never an empty queue')
+def w17():
+    """
+    ROUND-3: control_center.main() read factory/work_receipts.jsonl with a bare json.loads per
+    line and no guard, so a corrupt file killed the CLI instead of rendering WORK as UNKNOWN.
+    "Cannot read it" and "there is nothing" are different answers and this is the page whose
+    entire job is to tell them apart.
+    """
+    root = tempfile.mkdtemp(prefix='s11_')
+    try:
+        os.makedirs(os.path.join(root, 'factory'))
+        with io.open(os.path.join(root, 'factory', 'work_receipts.jsonl'), 'w',
+                     encoding='utf-8') as fh:
+            fh.write('{ this is not json\n')
+        rows, source = cc.read_work_rows(root)
+        assert rows == [], rows
+        assert source['readable'] is False, source
+        page = cc.build_work(read_ok(), rows, source)
+        assert page['unknown'] is True, page
+        assert 'อ่าน' in page['why'], page['why']
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
+@case('W18', 'round 3 · S14 boundary', 'a real WorkReceipt is NOT rendered as a lifecycle row - the adapter gap is stated')
+def w18():
+    """
+    ROUND-3: main() passed every WorkReceipt straight into normalise_row, which refuses it (a
+    receipt carries no id, no state and no priority - schemas.json requires entity, receipt_id,
+    source_agent, requested_at and nothing about a lifecycle). The production CLI would
+    therefore have raised the moment S14 imported its first row, and no case drove that path.
+    The gap belongs on the page, not in a traceback.
+    """
+    root = tempfile.mkdtemp(prefix='s11_')
+    try:
+        os.makedirs(os.path.join(root, 'factory'))
+        with io.open(os.path.join(root, 'factory', 'work_receipts.jsonl'), 'w',
+                     encoding='utf-8') as fh:
+            fh.write(json.dumps({'entity': 'WorkReceipt', 'receipt_id': 'WR-0001',
+                                 'source_agent': 'claude',
+                                 'requested_at': '2026-08-02T00:00:00'}) + '\n')
+        rows, source = cc.read_work_rows(root)
+        assert rows == [], 'a receipt was silently promoted to a work row: %s' % rows
+        assert source['readable'] is True and source['receipts_seen'] == 1, source
+        page = cc.build_work(read_ok(), rows, source)
+        assert page['unknown'] is True, page
+        assert 'adapter' in page['why'].lower() or 'S14' in page['why'], page['why']
+    finally:
+        shutil.rmtree(root, ignore_errors=True)
+
+
 @case('W09', 'blind audit F4', 'zero rows + a non-zero reconciliation renders UNKNOWN, never an empty queue')
 def w09():
     doc = snapshot()
@@ -970,6 +1021,45 @@ def sb04():
 # =======================================================================================
 # The two runs that make a claim the in-process cases cannot.
 # =======================================================================================
+
+@case('SB07', 'round 3 · S11 rule 1', 'the shape checker REFUSES a construct it cannot verify, instead of passing it')
+def sb07():
+    """
+    ROUND-3: _check_shape handled const/enum/string/array/object and fell off the end for
+    everything else, so `type: integer`, `type: boolean`, `$ref` and `oneOf` all produced NO
+    HITS - silently accepted. SafeProjection's schema uses none of them TODAY, which is exactly
+    why it would have gone unnoticed: the first field added with an integer type would have
+    been unchecked, in the one place whose whole job is checking.
+    """
+    for schema, node, label in (({'type': 'integer'}, '159503454', 'an account string typed as an integer'),
+                                ({'type': 'boolean'}, 'bot:secret', 'a token typed as a boolean'),
+                                ({'$ref': '#/$defs/OwnerRef'}, {'x': 1}, 'an unresolved $ref'),
+                                ({'oneOf': [{'type': 'string'}]}, 12345, 'an unresolved oneOf')):
+        hits = []
+        sp._check_shape(node, schema, '$', hits)
+        assert hits, '%s was silently accepted' % label
+    # control: the constructs it DOES implement still pass a good value and fail a bad one
+    ok, bad = [], []
+    sp._check_shape('***454', {'type': 'string', 'pattern': r'^\*{3}[0-9]{3}$'}, '$', ok)
+    sp._check_shape('159503454', {'type': 'string', 'pattern': r'^\*{3}[0-9]{3}$'}, '$', bad)
+    assert ok == [] and bad, (ok, bad)
+
+
+@case('WIRE3', 'round 3 · S11 wiring', 'the CLI a human actually runs works end to end')
+def wire3():
+    """
+    ROUND-3: `main` was in PUBLIC_API and no case ever called it. P01 checks the NAME; the one
+    entry point a person types was undriven, which is where W17/W18's defects were living.
+    """
+    out = os.path.join(REPO, 'build', 'control_center.html')
+    if os.path.exists(out):
+        os.remove(out)
+    rc = cc.main(['control_center.py', '--repo-root', REPO])
+    assert rc == 0, rc
+    assert os.path.exists(out), 'the CLI reported success and wrote no page'
+    html = io.open(out, encoding='utf-8').read()
+    assert 'SHADOW MODE' in html and '>TODAY<' in html, html[:200]
+
 
 @case('WIRE1', 'S11 wiring', 'the shell renders from the REAL snapshot through the ONE reader')
 def wire1():
