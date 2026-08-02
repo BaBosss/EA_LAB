@@ -82,6 +82,26 @@ EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model
                         'currency', 'leverage', 'set_hash', 'ex5_hash',
                         'effective_config_hash', 'data_fingerprint', 'lane')
 
+# 🔴 THE STORED KEYS FROM BEFORE THE DECISION, AND WHY THIS IS A CLOSED TUPLE AND NOT A RULE.
+#
+# The three manifests committed before 2026-08-02 hold FIFTEEN-field keys. After the decision above
+# `execution_key_digest` refuses them -- correctly, it is not the contract any more -- and
+# `find_cached` used to answer that refusal with `continue`. Measured on the real store
+# (ORDER-1100 round 1): re-queueing the exact configuration of `RUN-20260802-002`, which holds
+# EVIDENCE, returned QUEUED instead of IDENTICAL_RERUN. Criterion 3 FAILED OPEN for every run in
+# the store, and the S9 ledger records the same key being refused with `evd_sha256_90c1f032...`
+# returned -- so this is a before/after regression, not a latent hole.
+#
+# The migration is sound rather than convenient: decision 6 removed `ini_hash` BECAUSE it was never
+# the hash of an ini, so the remaining fourteen fields are the identity and they are all present in
+# the old keys. Dropping it is applying the owner's decision to stored data, not guessing at one.
+# Measured: the old and new spellings of `RUN-20260802-002`'s configuration produce the SAME digest.
+#
+# CLOSED, and that is the whole safety of it. This is not "drop fields you do not recognise" -- an
+# unknown field outside this tuple, or a MISSING required field, still refuses, and the cage drives
+# both. An open rule here would let any future key-shape drift launder itself as a migration.
+LEGACY_DROPPED_KEY_FIELDS = ('ini_hash',)
+
 # TWO GATES, NOT ONE, and conflating them was this module's first real defect.
 #
 # decision 18 governs QUEUEING A NEW RUN with an identical ExecutionKey: "refuse except after an
@@ -165,7 +185,7 @@ RENEW_MARGIN_SEC = 1800
 # name; the cage asserts that each is named by a test, which is the L2 idea applied to a module L2
 # does not reach (it globs `check_*.py`).
 REFUSAL_CODES = ('LANE_BUSY', 'IDENTICAL_RERUN', 'CROSS_LANE', 'RUN_DEAD', 'ATTEMPTS_EXHAUSTED',
-                 'MALFORMED_KEY', 'UNKNOWN_RUN')
+                 'MALFORMED_KEY', 'UNKNOWN_RUN', 'UNCOMPARABLE_PRIOR')
 
 RUN_ID_RE = re.compile(r'^RUN-[0-9]{8}-[0-9]{3,}$')
 # One timestamp format everywhere, so ordering and expiry are STRING comparisons and therefore
@@ -787,31 +807,65 @@ def run_disposition(journal):
     return 'IN_FLIGHT'
 
 
-def find_cached(all_runs, key_digest, exclude_run=None):
-    """The most blocking prior run for this ExecutionKey digest -> (run_id, journal, disposition),
-    or None when this configuration has never been run.
+def stored_key_digest(key):
+    """The digest of a key AS STORED, applying the closed legacy migration. -> (digest, dropped).
 
-    `exclude_run` exists because the caller is often itself in the store, and a run that refused
-    itself would be the idempotency check making the system unable to make progress -- which is
-    how a gate gets disabled.
+    Separate from `execution_key_digest` on purpose: that one judges a key a caller is proposing
+    NOW, and it must refuse anything that is not today's contract. This one reads a key written in
+    the past, where the only shapes that exist are today's and the ones a recorded owner decision
+    turned into today's. Anything else still raises.
+
+    `dropped` is returned so the caller can REPORT that a rewrite happened. It is not advisory:
+    `queue_decision` puts it in every answer, because a migration that fires invisibly is one
+    nobody can audit.
+    """
+    k = dict(key)
+    dropped = [f for f in LEGACY_DROPPED_KEY_FIELDS if f in k]
+    for f in dropped:
+        del k[f]
+    return execution_key_digest(k), tuple(dropped)
+
+
+def find_cached(all_runs, key_digest, exclude_run=None):
+    """-> (best, uncomparable, migrated) where best is the most blocking prior run for this digest
+    as (run_id, journal, disposition) or None, `uncomparable` lists every prior run whose stored key
+    could not be read at all, and `migrated` lists those the closed legacy rule had to rewrite
+    before it could read them.
+
+    `migrated` exists so the migration is OBSERVABLE in production and not only in the cage. A
+    rewrite that fires invisibly is a rewrite nobody can audit -- and it is the same shape as the
+    `dropped` value this function's helper used to return to nobody.
+
+    🔴 THE SECOND RETURN VALUE IS THE WHOLE FIX. This used to `continue` on an unreadable key under
+    a comment reading "safe in the blocking direction: an uncomparable run never licenses a re-run,
+    it just fails to block one". That reasoning is BACKWARDS for the gate it lives in: criterion 3's
+    entire job is to BLOCK, so "fails to block" is not a soft edge of the failure, it IS the
+    failure. And it was silent, so the day the key shape changed the gate went from enforcing to
+    absent with nothing in any output saying so -- which is exactly what happened.
+
+    Skipping is still what this function DOES with an unreadable key; what changed is that it hands
+    the fact back to `queue_decision`, which refuses. A count in a message would not have been
+    enough: the dispatcher reads `action`, not prose.
     """
     best = None
+    uncomparable = []
+    migrated = []
     for run_id, journal in sorted(all_runs.items()):
         if run_id == exclude_run or not journal or not journal.get('execution_key'):
             continue
         try:
-            digest = execution_key_digest(journal['execution_key'])
-        except ValueError:
-            # A stored key that is not the contract cannot be compared. Skipping it is the only
-            # honest option, and it is safe in the blocking direction: an uncomparable run never
-            # licenses a re-run, it just fails to block one.
+            digest, dropped = stored_key_digest(journal['execution_key'])
+        except ValueError as exc:
+            uncomparable.append((run_id, str(exc)))
             continue
+        if dropped:
+            migrated.append((run_id, list(dropped)))
         if digest != key_digest:
             continue
         disp = run_disposition(journal)
         if best is None or DISPOSITIONS.index(disp) < DISPOSITIONS.index(best[2]):
             best = (run_id, journal, disp)
-    return best
+    return best, uncomparable, migrated
 
 
 def queue_decision(all_runs, key, cell_id, now, run_id):
@@ -820,7 +874,8 @@ def queue_decision(all_runs, key, cell_id, now, run_id):
         digest = execution_key_digest(key)
     except ValueError as exc:
         return _refuse('MALFORMED_KEY', str(exc))
-    hit = find_cached(all_runs, digest, exclude_run=run_id)
+    hit, uncomparable, migrated = find_cached(all_runs, digest, exclude_run=run_id)
+    migrated_report = ['%s:%s' % (r, ','.join(f)) for r, f in migrated]
     if hit and hit[2] in BLOCKING:
         prior, journal, why = hit
         return _refuse('IDENTICAL_RERUN',
@@ -830,13 +885,35 @@ def queue_decision(all_runs, key, cell_id, now, run_id):
                        'again.' % (prior, why),
                        cached_run=prior, cached_state=why,
                        cached_event_id=_field(journal, current_attempt(journal), 'event_id'),
+                       execution_key_digest=digest,
+                       # Reported even on the blocking path: the answer is already correct here,
+                       # but the reader still needs to know the store was not fully readable.
+                       uncomparable_prior=[r for r, _ in uncomparable],
+                       migrated_prior=migrated_report)
+    if uncomparable:
+        # 🔴 A REFUSAL, NOT A NOTE. "I could not read part of the store" and "nothing in the store
+        # blocks this" are different answers, and only one of them licenses spending a lane. An
+        # annotated QUEUED would still be a QUEUED: the CLI appends the manifest and exits 0, and
+        # the dispatcher branches on `action`. This is memory
+        # guard-disarmed-by-prose-reported-as-note, in the gate that had already been caught by it.
+        return _refuse('UNCOMPARABLE_PRIOR',
+                       '%d prior run(s) hold an ExecutionKey this scheduler cannot read, so '
+                       'criterion 3 cannot answer whether this configuration has already been '
+                       'run: %s. Fix the stored shape or extend LEGACY_DROPPED_KEY_FIELDS with '
+                       'the owner decision that changed it -- do NOT edit the manifests, they are '
+                       'append-only.'
+                       % (len(uncomparable), '; '.join('%s (%s)' % (r, w[:90])
+                                                       for r, w in uncomparable)),
+                       uncomparable_prior=[r for r, _ in uncomparable],
+                       migrated_prior=migrated_report,
                        execution_key_digest=digest)
     line = {
         'entity': 'RunTransition', 'run_id': run_id, 'cell_id': cell_id,
         'execution_key': dict((f, key[f]) for f in EXECUTION_KEY_FIELDS),
         'attempt': 1, 'transition': 'QUEUED', 'at': now,
     }
-    return {'action': 'QUEUED', 'line': line, 'execution_key_digest': digest}
+    return {'action': 'QUEUED', 'line': line, 'execution_key_digest': digest,
+            'migrated_prior': migrated_report}
 
 
 # ---------------------------------------------------------------------------------------------

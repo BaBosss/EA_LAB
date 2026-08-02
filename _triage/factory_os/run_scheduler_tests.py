@@ -701,6 +701,67 @@ check('IDENTICAL_RERUN  CRITERION 3  an identical (config, lane, fingerprint) is
 check('IDENTICAL_RERUN  CRITERION 3  and the CACHED EVIDENCE is returned in its place',
       dec.get('cached_run') == 'RUN-20260801-001' and dec.get('cached_event_id'), str(dec))
 
+# --- /scrutinize round 1 over S10 (2026-08-02): CRITERION 3 HAD FAILED OPEN ON THE REAL STORE ---
+# Reproduced against the committed manifests before anything was changed: after the ORDER-1100
+# step-0 decision took `ini_hash` out of the key, all three stored keys became unreadable,
+# `find_cached` answered that with `continue`, and re-queueing the exact configuration of
+# RUN-20260802-002 -- which holds EVIDENCE, and whose refusal the S9 ledger records returning
+# `evd_sha256_90c1f032...` -- returned QUEUED. Four cases, because the obvious fix (count them and
+# say so) passes three of them while leaving the lane just as spendable.
+LEGACY_KEY = dict(BASE_KEY, ini_hash='b' * 64)          # the shape the store actually holds
+prior_legacy = {'RUN-20260801-003': _journal_for(LEGACY_KEY,
+                                                 ['COMPLETED', 'EVIDENCE_REGISTERED'],
+                                                 'RUN-20260801-003')}
+
+# (1) THE RESTORATION, and this is the case that proves the fix rather than the noise: a key
+#     written in the OLD shape must still BLOCK a re-queue in the NEW shape, and hand back the
+#     evidence. An implementation that only reported would fail exactly here.
+dec_l = S.queue_decision(prior_legacy, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
+check('CRITERION 3  a prior run stored in the PRE-decision 15-field shape still BLOCKS, and '
+      'returns its cached evidence',
+      dec_l['action'] == 'REFUSE' and dec_l.get('code') == 'IDENTICAL_RERUN'
+      and dec_l.get('cached_run') == 'RUN-20260801-003' and dec_l.get('cached_event_id'),
+      str(dec_l))
+check('CRITERION 3  ...and the answer REPORTS that a legacy key was rewritten to be read -- a '
+      'migration that fires invisibly is one nobody can audit',
+      dec_l.get('migrated_prior') == ['RUN-20260801-003:ini_hash'], str(dec_l))
+
+# (2) THE MIGRATION IS CLOSED. An unknown field OUTSIDE the declared tuple must not be laundered
+#     as a migration -- otherwise every future key-shape drift quietly becomes one.
+prior_alien = {'RUN-20260801-004': _journal_for(dict(BASE_KEY, some_new_field='x'),
+                                                ['COMPLETED', 'EVIDENCE_REGISTERED'],
+                                                'RUN-20260801-004')}
+dec_a = S.queue_decision(prior_alien, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
+NAMED.add('UNCOMPARABLE_PRIOR')
+check('UNCOMPARABLE_PRIOR  CRITERION 3  an unreadable prior key REFUSES the queue -- it does not '
+      'annotate a QUEUED, because the dispatcher branches on action and not on prose',
+      dec_a['action'] == 'REFUSE' and dec_a.get('code') == 'UNCOMPARABLE_PRIOR'
+      and dec_a.get('uncomparable_prior') == ['RUN-20260801-004'], str(dec_a))
+
+# (3) ...and a key MISSING a required field is uncomparable too, not silently narrowed.
+prior_short = {'RUN-20260801-005': _journal_for(dict((k, v) for k, v in BASE_KEY.items()
+                                                     if k != 'data_fingerprint'),
+                                                ['COMPLETED', 'EVIDENCE_REGISTERED'],
+                                                'RUN-20260801-005')}
+dec_s = S.queue_decision(prior_short, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
+check('UNCOMPARABLE_PRIOR  CRITERION 3  a stored key missing a required field is uncomparable, '
+      'not narrowed to the fields it happens to have',
+      dec_s['action'] == 'REFUSE' and dec_s.get('code') == 'UNCOMPARABLE_PRIOR', str(dec_s))
+
+# (4) CONTROL. The refusal must not be "any store with an old-shaped run is now unqueueable":
+#     a DIFFERENT configuration, with the legacy run present and readable, still queues.
+dec_c = S.queue_decision(prior_legacy, dict(BASE_KEY, symbol='EURUSD'), CELL,
+                         '2026-08-02T00:00:00Z', RUN)
+check('CRITERION 3  CONTROL a different configuration still QUEUES with a legacy-shaped run in '
+      'the store -- the migration reads it, it does not poison the store',
+      dec_c['action'] == 'QUEUED', str(dec_c))
+
+# (5) the closed tuple is the SCHEMA's business too: `ini_hash` must be gone from ExecutionKey and
+#     present on RunAttempt, or the migration is dropping a field the contract still requires.
+_sch = S.assert_vocabulary_matches_schema()
+check('CRITERION 3  the field the migration drops is genuinely off the contract '
+      '(vocabulary re-read from schemas.json)', not _sch, _sch)
+
 prior_failed = {'RUN-20260801-002': _journal_for(BASE_KEY, ['FAILED'], 'RUN-20260801-002')}
 dec2 = S.queue_decision(prior_failed, BASE_KEY, CELL, '2026-08-02T00:00:00Z', RUN)
 check('CRITERION 3  a re-run after a TESTER_ERROR is ALLOWED (decision 18\'s one exception)',
