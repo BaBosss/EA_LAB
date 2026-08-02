@@ -107,6 +107,42 @@ def a_one_refused_one_attached():
     return (a, b, P.DELIBERATE_REFUSAL, 'init', P.DIFFER)
 
 
+DEAL_EOT_A = ['2024.06.28 23:58:59', '59', 'XAUUSD', 'sell', 'out', '0.01', '2326.58', '59',
+              '0.00', '-41.35', '-92.77', '10 140.38', 'end of test']
+DEAL_EOT_B = ['2024.06.28 23:58:59', '60', 'XAUUSD', 'sell', 'out', '0.02', '2326.58', '60',
+              '0.00', '-41.35', '-102.55', '9 996.48', 'end of test']
+
+
+def a_end_state_differs():
+    """🔴 ADDED BY THE FIRST AUDIT ROUND, which found point 5 could not fail. The old end_state
+    read only non-terminal ORDERS -- impossible under B14-H01 (`_9_PendingMode` const 0) -- so it
+    returned [] == [] in every case, reported AGREE, and the roll-up counted it as exercised
+    three times over. The real observable is the `end of test` DEALS: the positions the window
+    closed on. Here the sides end holding different volumes, and the point must see it."""
+    return (obs('wrapper', deals=[DEAL_A, DEAL_EOT_A], orders=[ORDER_A], log=[CFG]),
+            obs('parent', deals=[DEAL_A, DEAL_EOT_B], orders=[ORDER_A], log=[CFG]),
+            P.NEUTRAL, 'end_state', P.DIFFER)
+
+
+def a_end_state_both_empty():
+    """The twin: both sides flat at end AND no deals at all -- must be UNTESTED, not AGREE.
+    This is the exact state the refusal case produced when the old code said AGREE."""
+    return (obs('wrapper', deals=[], orders=[], log=[CFG]),
+            obs('parent', deals=[], orders=[], log=[CFG]),
+            P.NEUTRAL, 'end_state', P.UNTESTED)
+
+
+def a_alert_ignores_host_noise():
+    """A terminal host message containing 'failed' lands in ONE side's slice on timing alone.
+    The first _ALERT regex matched bare 'failed' and would have called this a parity DIFFER."""
+    a = obs('wrapper', deals=[DEAL_A], orders=[ORDER_A],
+            log=[CFG, 'network connection failed, retrying'])
+    b = obs('parent', deals=[DEAL_A], orders=[ORDER_A], log=[CFG])
+    got = dict((p.point, p.verdict) for p in P.compare(a, b))
+    return (got['alerts'] != P.DIFFER,
+            'host noise produced a DIFFER on alerts: %r' % got['alerts'])
+
+
 def a_side_effects_differ():
     """Identical trades; only the wrapper trips the account-DD cage. Points 1-5 all agree."""
     return (obs('wrapper', deals=[DEAL_A], orders=[ORDER_A], log=[CFG, RISK]),
@@ -178,6 +214,9 @@ POINT_ATTACKS = (
      a_one_refused_one_attached),
     ('side_effects', 'identical trades, only one side trips the account-DD cage',
      a_side_effects_differ),
+    ('end_state', 'the sides end the window holding different open volumes', a_end_state_differs),
+    ('end_state', 'both flat with no deals -- UNTESTED, not the AGREE the first version printed',
+     a_end_state_both_empty),
 )
 
 PLAIN_ATTACKS = (
@@ -188,6 +227,8 @@ PLAIN_ATTACKS = (
     ('direction', 'a deliberate-refusal case that attached', d_refusal_that_attached),
     ('rollup', 'a case set in which a point was never once exercised',
      d_rollup_needs_every_point_exercised),
+    ('alerts', 'a host log line containing "failed" on one side only must NOT differ',
+     a_alert_ignores_host_noise),
 )
 
 

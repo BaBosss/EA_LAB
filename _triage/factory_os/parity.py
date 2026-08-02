@@ -62,7 +62,14 @@ _INIT_FATAL = re.compile(r'\[INIT\] FATAL: (.+?)\s*$')
 # CLOSED set rather than by a keyword sweep: "GlobalVariable" appears in comments and in unrelated
 # terminal chatter, and a side-effect point that fires on prose is a point that cannot fail.
 _SIDE_EFFECT = re.compile(r'\[(PERSIST|RISK|MG)\]\s*(.+?)\s*$')
-_ALERT = re.compile(r'(\[SAFETY\]|\[INIT\] FATAL|Alert:|cannot |failed)\s*(.*?)\s*$', re.I)
+# A CLOSED set, for the same reason _SIDE_EFFECT's comment gives one line up -- and the first
+# version broke its neighbour's rule: it also matched bare `cannot ` and `failed`, which is a
+# keyword sweep over a log the TERMINAL writes host messages into ("history sync failed",
+# connection retries). Those land in one side's slice or the other on timing alone, so the sweep
+# was a false DIFFER waiting for a bad network day. The set below is every alert-class prefix the
+# EA itself prints: the safety module, the OnInit fail-closed seam, MQL5 Alert(), and MM's
+# throttled "cannot size" line ([MM] first-lot sizing unavailable -- MoneyManagement.mqh).
+_ALERT = re.compile(r'(\[SAFETY\]|\[INIT\] FATAL|\[MM\] first-lot sizing unavailable|Alert:)')
 
 _ROW = re.compile(r'<tr[^>]*>(.*?)</tr>', re.S | re.I)
 _CELL = re.compile(r'<t[dh][^>]*>(.*?)</t[dh]>', re.S | re.I)
@@ -159,15 +166,32 @@ class Observation(object):
 
     @property
     def end_state(self):
-        """-> the orders NOT in a terminal state at end of run, plus the deals left un-closed.
+        """-> what was still OPEN when the window ended: pendings, and open positions.
 
-        Read from the Orders table's `State` column rather than from a separate section, because
-        the tester report has no separate one -- and an end-state point invented out of the trade
-        list would be a restatement of point 4 wearing a different name.
+        🔴 REWRITTEN BY THE FIRST AUDIT ROUND, because the first version could not observe
+        anything on this revision and nobody could see that. It read only the Orders table's
+        non-terminal rows -- but pendings cannot exist under B14-H01 (`_9_PendingMode` is const 0,
+        STACK_PYRAMID locked out), and an open position at end of run does not appear as a
+        non-terminal order at all: the tester force-closes it and writes a DEAL whose comment is
+        `end of test`. So the property returned `[] == []` in every case, `AGREE` was reported,
+        and the roll-up counted point 5 as "exercised" three times over -- a point that could not
+        fail, wearing the uniform of one that had passed. The two real observables are:
+
+          * orders not in a terminal state  = pendings still resting (none possible here today,
+            but real the day a STACK_PYRAMID hypothesis is registered);
+          * deals whose comment is `end of test` = the positions the window closed on, with
+            their volumes and forced-close prices.
+
+        The must-trade run has THREE of the latter on each side, so the point is now exercised by
+        a real observation, and `compare()` treats empty-on-both-sides as UNTESTED like every
+        other list-valued point.
         """
-        if self.orders is None:
+        if self.orders is None or self.deals is None:
             return None
-        return [r for r in self.orders if len(r) > 9 and r[-2].lower() not in ('filled', 'canceled')]
+        pending = [r for r in self.orders
+                   if len(r) > 9 and r[-2].lower() not in ('filled', 'canceled')]
+        open_at_end = [d for d in self.deals if d and d[-1].strip() == 'end of test']
+        return pending + open_at_end
 
 
 def observe(label, report_html=None, log_lines=None, expert=None, binary=None):
@@ -265,7 +289,7 @@ def compare(a, b):
         # built around, so these three carry `empty_is_untested`.
         _cmp('orders', titles['orders'], a.orders, b.orders, True),
         _cmp('deals', titles['deals'], a.deals, b.deals, True),
-        _cmp('end_state', titles['end_state'], a.end_state, b.end_state, False),
+        _cmp('end_state', titles['end_state'], a.end_state, b.end_state, True),
         _cmp('side_effects', titles['side_effects'], a.side_effects, b.side_effects, True),
         _cmp('alerts', titles['alerts'], a.alerts, b.alerts, True),
     ]
