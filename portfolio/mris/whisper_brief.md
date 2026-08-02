@@ -2,7 +2,7 @@
 
 _ตลาดไม่ตะโกนเตือน มันกระซิบ — ฟังทันแล้วเตรียมพร้อม. ก่อนจะรวย ต้องรอดก่อน._
 
-**2026-08-01 07:37 (Bangkok)** | สถานะ: 🟠 **ถอยรับความเสี่ยง (RISK-OFF)** | bias: defensive / reduce carry exposure | ความมั่นใจ: HIGH (0.75) | Risk Index: -0.731
+**2026-08-02 07:37 (Bangkok)** | สถานะ: 🟠 **ถอยรับความเสี่ยง (RISK-OFF)** | bias: defensive / reduce carry exposure | ความมั่นใจ: HIGH (0.75) | Risk Index: -0.654
 
 ## เส้นเตือนที่ใกล้ทริกเกอร์
 - WARN: TRIPWIRE_NEAR: AUDJPY 110.56 only 0.51% above pin 110
@@ -15,9 +15,9 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 | VIX | 0 | VIX 15.99 mid-range -> neutral |
 | DXY | 0 | DXY no strong move -> neutral |
 | XAUUSD | 0 | gold move is structural/USD-driven (no meaningful VIX co-move) -> neutral |
-| BTCUSD | -2 | below SMA200 AND fast drop beyond ATR band -> carry-unwind confirmed |
+| BTCUSD | -1 | below SMA200 -> risk-off lean |
 | US10Y_JP10Y | 0 | carry spread ~flat (6.6bps/5d) -> neutral |
-| COPPER | 1 | above SMA200, 5d 2.967% -> risk-on intact |
+| COPPER | 1 | above SMA200, 5d 1.835% -> risk-on intact |
 
 ## บทเรียนประวัติศาสตร์ที่คล้ายรอบนี้
 รูปแบบเริ่มคล้ายต้นทางปี 2013-16 (จีนชะลอ+คอมมอดิตี้ตก) และก่อน ส.ค. 2024 — AUD/JPY ร่วงนำตลาด
@@ -55,9 +55,9 @@ _ตลาดไม่ตะโกนเตือน มันกระซิบ
 ## โมเดลวิกฤต (advisory - ไม่กระทบ Risk Index)
 | model | score | label | ตัวขับหลัก |
 |---|---|---|---|
-| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 31.4/100 | 🟢 สงบ | WTI % above its SMA200 = 14.505% |
-| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 29.6/100 | 🟢 สงบ | US 10Y yield level = 4.745% |
-| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 4.9/100 | 🟢 สงบ | HY spread 5d widening (%) = 2.527% |
+| Yield ช็อก (ดอกเบี้ยพุ่ง หุ้นร่วง) | 32.3/100 | 🟢 สงบ | US 10Y yield level = 4.745% |
+| เงินเฟ้อ-น้ำมัน (น้ำมันพุ่ง ดอกเบี้ยขึ้น) | 27.0/100 | 🟢 สงบ | WTI % above its SMA200 = 11.711% |
+| ความเครียดสินเชื่อ (สเปรด HY กว้าง) | 3.4/100 | 🟢 สงบ | HY spread 5d widening (%) = 2.527% |
 
 _คะแนน 0-100 จาก barometer ที่อธิบายได้ - ผ่าน backtest 7/7 (จุดติดถูก episode + เงียบถูกตอนไม่ใช่เรื่องของมัน) แต่ยังเป็นชั้นเฝ้าระวังอย่างเดียว ไม่ auto-trade และยังไม่ได้คุมล็อตจริง (ORDER-200 Phase C)_
 
