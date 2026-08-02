@@ -140,11 +140,21 @@ def entry_token(build_tag):
     return ENTRY_TOKEN_PREFIX + module.replace('Entry_', '', 1).upper()
 
 
-def _canon(value):
-    """Compare selector values as the source writes them. `STACK_SINGLE`, `90` and `false` all
-    appear in real configs, so the comparison is on the trimmed string and nothing is coerced --
-    a numeric coercion here would make `0` and `off` the same token decision by accident."""
-    return str(value).strip()
+def _canon(value, decl=None, enums=None):
+    """-> the canonical (.set-form) spelling of a selector value.
+
+    /scrutinize round 1 (ORDER-1020): the first version compared trimmed strings and its
+    docstring argued that was the safe choice. It was the opposite: a real `.set` spells
+    `RecoveryMode=80` and `HedgeMode=0`, and a raw-string compare against `REC_NONE`/`HEDGE_OFF`
+    enabled LAB_CAP_RECOVERY and LAB_CAP_HEDGE at exactly their OFF values -- a wrapper compiling
+    modules the hypothesis does not use. When the declaration and the enum table are available
+    (every production path passes a surface), both sides go through `preset.render_value`, which
+    REFUSES an unknown symbol rather than coercing anything -- so `off` still cannot become `0`
+    by accident, which is the thing the old comment was right to fear."""
+    text = str(value).strip()
+    if decl is not None and enums is not None:
+        return preset.render_value(decl, text, enums)
+    return text
 
 
 def enabled_tokens(build_tag, config, surface=None):
@@ -178,8 +188,11 @@ def enabled_tokens(build_tag, config, surface=None):
                 'every input it owns into a const, which is a change of strategy made by an '
                 'omission.' % (token, selector))
         op, ref = test
-        held = _canon(config[selector])
-        if (op == 'NE' and held != _canon(ref)) or (op == 'EQ' and held == _canon(ref)):
+        decl = surface.by_name.get(selector) if surface is not None else None
+        enums = getattr(surface, 'enums', None) if surface is not None else None
+        held = _canon(config[selector], decl, enums)
+        want = _canon(ref, decl, enums)
+        if (op == 'NE' and held != want) or (op == 'EQ' and held == want):
             tokens.add(token)
     return tuple(sorted(tokens))
 

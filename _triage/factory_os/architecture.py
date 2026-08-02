@@ -114,7 +114,17 @@ def _selector_value(config, surface, name):
     value = config[name]
     if value is None:
         raise Refusal('architecture selector %r is present but null in the supplied config' % name)
-    return str(value).strip()
+    value = str(value).strip()
+    # /scrutinize round 1 (ORDER-1020): CANONICALISE, because one configuration has two spellings.
+    # A real `.set` says `RecoveryMode=80`; the declared default says `REC_NONE`. Compared raw,
+    # the same architecture produced TWO digests -- and the digest exists to force a revision at
+    # architecture changes, not at spelling changes. `preset.render_value` is the ONE resolver of
+    # a value's canonical (.set-form) spelling and it REFUSES an unknown symbol rather than
+    # guessing, so a typo cannot canonicalise to anything.
+    if surface is not None:
+        import preset as _preset
+        value = _preset.render_value(surface.by_name[name], value, surface.enums)
+    return value
 
 
 def architecture_of(build_tag, config, surface=None):

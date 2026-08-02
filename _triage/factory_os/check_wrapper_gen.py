@@ -143,11 +143,15 @@ def check(worktree=False, source=None):
         if not src.exists_committed(rel):
             continue
         slug = os.path.basename(rel)[:-len('_allowlist.mqh')]
-        revision_id = slug.replace('_', '-', 2).replace('-r', '-r')
-        # `B14_H01_r1` -> `B14-H01-r1`: only the first two separators are hyphens in the id.
+        # `B14_H01_r1` -> `B14-H01-r1`. A malformed slug is REFUSED rather than joined anyway:
+        # a name this parse cannot invert would silently look up nothing and W3 would report the
+        # wrong problem ("unregistered") for it.
         parts = slug.split('_')
-        if len(parts) == 3:
-            revision_id = '%s-%s-%s' % (parts[0], parts[1], parts[2])
+        if len(parts) != 3:
+            problems.append('W3 %s has a name this checker cannot map to a revision id '
+                            '(expected <FAM>_<HYP>_<REV>)' % rel)
+            continue
+        revision_id = '%s-%s-%s' % (parts[0], parts[1], parts[2])
         row = rows.get(revision_id)
         if row is None:
             problems.append(

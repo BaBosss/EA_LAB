@@ -266,14 +266,29 @@ def _value(config, name, whose):
     return str(config[name]).strip()
 
 
-def _eval(gate, name, config):
+def _canon(value, selector, surface):
+    """-> the canonical (.set-form) spelling. /scrutinize round 1 (ORDER-1020): gate values are
+    written symbolically here (`SL_ATR`, `true`) while a real `.set` supplies `33` -- compared
+    raw, the same configuration produced two different reachability answers, and reachability
+    decides what becomes a `const`. `preset.render_value` REFUSES an unknown symbol, so the
+    canonicalisation cannot invent a match."""
+    if surface is not None:
+        import preset as _preset
+        decl = surface.by_name.get(selector)
+        if decl is not None:
+            return _preset.render_value(decl, str(value).strip(), surface.enums)
+    return str(value).strip()
+
+
+def _eval(gate, name, config, surface=None):
     kind = gate[0]
     if kind == 'ALWAYS':
         return True
     if kind == 'EQ':
-        return _value(config, gate[1], name) in gate[2]
+        held = _canon(_value(config, gate[1], name), gate[1], surface)
+        return held in tuple(_canon(v, gate[1], surface) for v in gate[2])
     if kind == 'NE':
-        return _value(config, gate[1], name) != gate[2]
+        return _canon(_value(config, gate[1], name), gate[1], surface) !=             _canon(gate[2], gate[1], surface)
     if kind == 'SELF_GT0':
         v = _num(_value(config, name, name))
         if v is None:
@@ -289,7 +304,7 @@ def _eval(gate, name, config):
                           % (name, gate[1], config.get(gate[1])))
         return v > 0
     if kind == 'AND':
-        return all(_eval(g, name, config) for g in gate[1:])
+        return all(_eval(g, name, config, surface) for g in gate[1:])
     raise Refusal('unknown activation gate kind %r for %s' % (kind, name))
 
 
@@ -350,7 +365,7 @@ def classify(build_tag, config, surface=None):
     out = OrderedDict()
     for name in names:
         token, gate = table[name]
-        out[name] = Verdict(name, token, token in tokens, _eval(gate, name, config))
+        out[name] = Verdict(name, token, token in tokens, _eval(gate, name, config, surface))
     return out
 
 

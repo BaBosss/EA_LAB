@@ -246,15 +246,79 @@ def a7_specificity(mod):
     return None
 
 
+# --- A8 one configuration, two spellings, ONE answer (the /scrutinize round-1 defect) -----------
+
+# What a real `.set` carries. `ea_template/sets/regression/Boss_14_GridLog_regression_full.set`
+# spells every enum as a NUMBER -- `ExitMode=22`, `RecoveryMode=80`, `HedgeMode=0` -- while the
+# declared defaults in Inputs.mqh spell them `EXIT_ATR_TP`, `REC_NONE`, `HEDGE_OFF`.
+NUMERIC_FORM = {'ExitMode': '22', 'SLMode': '33', 'FirstLotMode': '41', 'LotProg': '50',
+                'StackMode': '92', 'StackConfirm': '0', 'RecoveryMode': '80', 'HedgeMode': '0'}
+
+
+def a8_attack(mod):
+    """THE DEFECT THIS CASE EXISTS FOR, reproduced before the fix and recorded so the pair cannot
+    be read as ceremony. Selector values were compared as RAW STRINGS. A config loaded from a real
+    `.set` therefore disagreed with the identical config expressed in declared defaults:
+
+        architecture digest   30420f65...  vs  6ba43c96...   -- one strategy, two revisions
+        capability tokens     8            vs  11            -- LAB_CAP_RECOVERY and LAB_CAP_HEDGE
+                                                                enabled AT THEIR OFF VALUES
+
+    The second line is the expensive one: the wrapper would compile the recovery and hedge modules
+    for a hypothesis that switches both off, and every input those modules own would stay visible
+    and sweepable. `mod` here is whichever of the three modules the case is registered against;
+    each half reaches for what it needs.
+    """
+    import architecture as _arch
+    import capability as _cap
+    base = base_config()
+    numeric = base_config(**NUMERIC_FORM)
+    _a, d1 = _arch.digest_for(BUILD, base, surface=SURFACE)
+    _b, d2 = _arch.digest_for(BUILD, numeric, surface=SURFACE)
+    if d1 != d2:
+        return ('the same architecture hashes differently depending on whether its enums are '
+                'spelled as symbols or as the numbers a real .set carries: %s vs %s' % (d1, d2))
+    t1 = _cap.enabled_tokens(BUILD, base, surface=SURFACE)
+    t2 = _cap.enabled_tokens(BUILD, numeric, surface=SURFACE)
+    if t1 != t2:
+        return ('the same config enables different capabilities per spelling: %s vs %s'
+                % (sorted(set(t1) ^ set(t2)), len(t1)))
+    v1 = mod.classify(BUILD, base, surface=SURFACE)
+    v2 = mod.classify(BUILD, numeric, surface=SURFACE)
+    moved = [n for n in v1 if v1[n].active != v2[n].active]
+    if moved:
+        return ('%d input(s) change reachability with the spelling, so what becomes a `const` '
+                'depends on how the .set was written: %s' % (len(moved), moved[:6]))
+    return None
+
+
+def a8_specificity(mod):
+    """...and canonicalising must NOT become "accept anything". An unknown symbol has to REFUSE:
+    a spelling nobody can resolve that quietly matched would be permission granted by a typo."""
+    import capability as _cap
+    try:
+        _cap.enabled_tokens(BUILD, base_config(RecoveryMode='REC_NONEE'), surface=SURFACE)
+        return ('a misspelled enum symbol was accepted. Canonicalisation that guesses is worse '
+                'than raw comparison, because it makes a typo look like a decision.')
+    except Exception as exc:                                    # noqa: BLE001
+        if 'REC_NONEE' not in str(exc):
+            return 'it refused the typo but did not name it: %s' % str(exc)[:120]
+    return None
+
+
 CASES = (
+    ('A8', 'one configuration in two spellings gives ONE digest, ONE token set, ONE reachability',
+     ACT, a8_attack, a8_specificity,
+     ("        return _preset.render_value(decl, str(value).strip(), surface.enums)",
+      "        return str(value).strip()")),
     ('A1', 'architecture: a missing selector is refused; mechanism moves the digest, a dial does not',
      ARCH, a1_attack, a1_specificity,
      ('        raise Refusal(\n            \'architecture selector %r has no value in the supplied config.',
       '        return "MISSING"; raise Refusal(\n            \'architecture selector %r has no value in the supplied config.')),
     ('A2', 'capability: an EQ-gated module does not fire at its other values',
      CAP, a2_attack, a2_specificity,
-     ("        if (op == 'NE' and held != _canon(ref)) or (op == 'EQ' and held == _canon(ref)):",
-      "        if held != _canon(ref):")),
+     ("        if (op == 'NE' and held != want) or (op == 'EQ' and held == want):",
+      "        if held != want:")),
     ('A3', 'capability: the Boss_16 ownership override is build-scoped',
      CAP, a3_attack, a3_specificity,
      ('    suppressed = _BUILD_TOKEN_SUPPRESS.get(build_tag, ())',
@@ -269,8 +333,8 @@ CASES = (
       '        extra = []')),
     ('A6', 'activation: a dial goes dark when its selector turns it off, AND comes back',
      ACT, a6_attack, a6_specificity,
-     ("    if kind == 'EQ':\n        return _value(config, gate[1], name) in gate[2]",
-      "    if kind == 'EQ':\n        return True")),
+     ("    if kind == 'EQ':\n        held = _canon(_value(config, gate[1], name), gate[1], surface)",
+      "    if kind == 'EQ':\n        return True; held = _canon(_value(config, gate[1], name), gate[1], surface)")),
     ('A7', 'activation: module-off and own-gate-closed are told apart',
      ACT, a7_attack, a7_specificity,
      ('    tokens = set(capability.enabled_tokens(build_tag, config, surface=surface))',

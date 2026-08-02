@@ -303,7 +303,14 @@ def main(argv):
                 'place; refusing rather than overwriting, because the destination is one typo '
                 'away from the source.\n' % dst)
             return 1
-        defaults = dict((d.name, d.default_expr) for d in surface.inputs)
+        # /scrutinize round 1 (ORDER-1020): defaults are RENDERED to the .set form, not copied as
+        # declared. The declared default of `_0_MAMethod` is the symbol `MODE_EMA`; a real `.set`
+        # carries `1`, and the first version of this line wrote the symbol -- producing a
+        # migrated file that MIXED numeric kept-values with symbolic filled-values. The terminal
+        # does not parse enum symbols in a `.set`, so the filled half would have loaded as
+        # something else, silently -- the exact defect class this tool exists to prevent.
+        defaults = dict((d.name, preset.render_value(d, d.default_expr, surface.enums))
+                        for d in surface.inputs)
         try:
             text, report = migrate_set(old_text, surface, defaults=defaults)
         except Refusal as exc:

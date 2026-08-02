@@ -238,7 +238,17 @@ def parse_surface(text, build_tag):
         raise PresetRefusal('%d unclosed #ifdef/#ifndef block(s) in the input source' % len(stack))
     if not decls:
         raise PresetRefusal('build %s exposes no inputs at all' % build_tag)
-    return Surface(build_tag, decls, tags)
+    surface = Surface(build_tag, decls, tags)
+    # ORDER-1020 /scrutinize round 1: the surface CARRIES its enum table, because the consumers
+    # that compare selector values (architecture / capability / activation) receive only the
+    # surface and a config -- and a real `.set` spells `RecoveryMode=80` while the declared
+    # default spells `REC_NONE`. Comparing those as raw strings made ONE configuration produce
+    # two architecture digests and two capability sets (numeric form enabled LAB_CAP_RECOVERY
+    # and LAB_CAP_HEDGE at their OFF values). The table is parsed from the SAME text in the same
+    # call, so it cannot describe a different file than the surface does.
+    surface.enums = dict(MQL_BUILTIN_ENUMS)
+    surface.enums.update(parse_enum_table(text))
+    return surface
 
 
 def parse_unit_classes(text):
