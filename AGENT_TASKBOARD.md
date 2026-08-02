@@ -811,7 +811,90 @@ and nobody has attributed it.**
 
 <sub>**Day-to-day impact is smaller than the number looks, and that is why it can be an order rather than an emergency:** the hook selects suites **per path**, and the per-path budget is **65.0 s**. A normal commit runs 1-3 suites well inside it. The full tier runs when a change touches many declared paths — which is exactly when a breach is most likely to earn a `--no-verify`.</sub>
 
-## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `OPEN` · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+## ORDER-941 — [🔴 attach integrity] Four IchiADX legs show 0-1 trades against an expected ~1/week — silent, or thin? — `OPEN` — **all three suspected causes REFUTED 2026-08-02 with the owner's evidence; the question is now UNFALSIFIABLE with the instrumentation that exists → `ORDER-1000`** · ทำได้: Claude/Opus + user (อ่าน Inputs) · 👉 แนะ: Claude
+
+> ### 🔴 2026-08-02 (`S-2026-08-02-OPERATOR`) — the owner read all four Inputs tabs and sent the account's 8-day Expert log. Every hypothesis this row was built on is dead, and what replaces them is worse to live with.
+>
+> **R1 — the `AllowLive=false` shape is refuted BY CONSTRUCTION: this EA has no such input.**
+> `(EXP)_IchiADX_Naked_rev00` is a **standalone** experimental EA, not a Boss-template build. Its
+> entire surface is 14 inputs — `TenkanPeriod` `KijunPeriod` `SenkouPeriod` `AdxPeriod` `AdxMin`
+> `RequireCloud` `ExitMode` `TpAtrMult` `SlAtrMult` `TrailAtrMult` `AtrPeriod` `FixedLot` `MagicNo`
+> `SlippagePts`. There is **no `_06_AllowLive` and no `_06_Magic`**. This row asked the owner to read
+> two fields that do not exist on the thing being diagnosed — a request built from the `990025`
+> precedent without checking that the two EAs share a chassis. They do not.
+>
+> **R2 — the wrong-magic shape is refuted, and the configs are byte-exact.** All four legs read
+> against their locked `_vps_deploy` `.set`, **14 of 14 inputs matching on every leg**:
+>
+> | chart | live `MagicNo` | Tenkan/Kijun/SenkouB | matches |
+> |---|---|---|---|
+> | USDJPYm H4 | `990066` | 12 / 34 / 68 | `IchiADX_USDJPY_H4_med_leg_A.set` ✅ |
+> | USDJPYm H1 | `990067` | 20 / 60 / 120 | `IchiADX_USDJPY_H1_slow_leg_B.set` ✅ |
+> | XAUUSDm H1 | `990068` | 20 / 60 / 120 | `IchiADX_XAUUSD_H1_slow.set` ✅ |
+> | XAUUSDm H4 | `990069` | 12 / 34 / 68 | `IchiADX_XAUUSD_H4_med.set` ✅ |
+>
+> Magics are distinct, correct, and match `DEPLOYMENTS.csv`. `AdxMin=20.0`, `RequireCloud=true`,
+> `ExitMode=2`, `FixedLot=0.10`, `SlippagePts=20` on all four — identical to the validated files.
+> (memory `feedback-verify-set-matches-live-before-verdict`, done the way it asks: grep the real
+> `.set`, diff against what the chart is holding.)
+>
+> **R3 — an init failure is refuted.** The EA's source contains exactly **four** `Print()` calls and
+> **every one is on a failure path** (`ExitMode` out of range, and three `INVALID_HANDLE` returns for
+> Ichimoku/ADX/ATR). None appears anywhere in the 8-day log.
+>
+> **🔴 R4 — AND THAT IS THE REAL FINDING: the instrument cannot answer the question.** With no
+> `Print()` on any success path, **silence in the Expert log is exactly what a healthy, running,
+> not-currently-signalling IchiADX looks like.** It is also what a stopped one looks like. The log
+> discriminates nothing.
+> **Proved the log CAN see this terminal, rather than assuming it:** 10 other EAs log on it, and at
+> **08:42:01 on 2026-08-02 the terminal re-initialised** — `Boss_16`, `Boss_17` (×3 charts) and
+> friends each printed their `[INIT]`/`[CFG]` block within the same 150 ms. **IchiADX printed nothing
+> in that window**, which is consistent with *both* readings and therefore settles neither. (The
+> archive is UTF-16LE with BOM — converted before searching, per memory
+> `prove-the-instrument-can-see-the-file`; a byte-oriented grep would have returned 0 hits and looked
+> like an answer.)
+>
+> ⇒ **A1 is met and A2 cannot be met by any amount of further reading.** The three named causes are
+> gone; what is left is *"running but not signalling"* vs *"not running"*, and **nothing on this
+> chassis can tell them apart**. That is not a diagnosis, it is a missing instrument — the same gap
+> `ORDER-432` finding 6 closed for Wave5 by adding per-reason counters, which is what made every
+> later Wave5 number interpretable. Opened as **`ORDER-1000`**.
+>
+> <sub>Not claimed: that the legs ARE running. Not claimed: that ~1.05/wk is the right expectation —
+> where that number comes from is `ORDER-942`'s question (11 of 19 judge-dated rows carry no expected
+> rate at all), and if it is wrong then "three legs silent together" was never surprising. Both stay
+> open.</sub>
+
+---
+
+## ORDER-1000 — [🔴 instrumentation] `(EXP)_IchiADX_Naked_rev00` cannot say whether it is evaluating — `OPEN` · runnable by: **Claude/Opus** · 👉 recommended: Claude
+**bars:** N-A (instrumentation, not an EA measurement) · **flat-lot probe:** N-A
+
+Split out of `ORDER-941` (2026-08-02) once the owner's evidence refuted all three of its suspected
+causes and left a question no reading can settle.
+
+**The gap.** The EA has four `Print()` calls and all four are failure paths. There is no output on
+`OnInit` success, none per evaluated bar, none on a rejected signal. So an EA that is running
+perfectly and an EA that is not running produce **byte-identical Expert logs**, and four legs have
+now been argued about for weeks on the strength of that silence.
+
+**What to add** — the `ORDER-432` finding-6 shape, which is already proven to work on this problem:
+- one `[INIT]` line naming build, symbol, timeframe, `MagicNo` and the three Ichimoku periods, so an
+  attach is visible and a `.set` mismatch is visible without opening a properties dialog;
+- per-reason rejection counters printed at `OnDeinit` (`evaluated`, `signalled`, `no_kumo`,
+  `adx_below`, `wrong_side`, `already_open`, …);
+- **and the `unaccounted = evaluated − Σ(counted)` self-check with a WARN when non-zero.** This is
+  not optional decoration: `ORDER-432` recorded the counters' arithmetic closing **by luck** in the
+  first version, with an uncounted return path, and the closing sum then being presented as proof
+  the counters were right. An invariant used as evidence has to be enforced, not observed.
+
+**Prohibitions:** ❌ do not change any signal, exit or sizing logic in the same commit — this is
+instrumentation, and a behaviour change riding along makes the next measurement uninterpretable ·
+❌ do not report a counter as evidence a guard works until it has been seen non-zero (VERDICT GATE
+guard clause) · ❌ do not close `ORDER-941` on this order's output alone: fresh counters answer the
+*next* 16 days, not the last ones.
+
+---
 
 > Opened by `ORDER-940` (2026-08-01). The judge-policy question cannot be answered until this one is,
 > because **"not trading" and "trading rarely" produce the identical row** in every count the lab takes.
@@ -895,7 +978,39 @@ that is RED first: a row in a pending state must appear in `judge_readiness` wit
 **D3** the closed set of statuses is declared in one place and an unknown status **fails**, never
 silently drops (`check_state.ps1` currently validates columns, not the status vocabulary).
 
-## ORDER-761 — [tier] A module should DECLARE the paths it reads, instead of a regex guessing them — `OPEN` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-761 — [tier] A module should DECLARE the paths it reads, instead of a regex guessing them — `DEAD-OPTIMIZED (owner-ratified 2026-08-02) — closed on its own C2, the same way ORDER-732 was` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> ### ❌ 2026-08-02 — CLOSED WITHOUT BEING BUILT, on the owner's call (`S-2026-08-02-OPERATOR`)
+>
+> The owner was given the measurement and the recommendation and ratified it: *"งาน 3 ตามที่นาย
+> แนะนำเลย"*. **This order dies by its own acceptance criterion, not by anyone losing interest.**
+>
+> **C2 in this row's own words:** *"if it lands near 66 again, it has not solved anything and should
+> be closed the same way."* Measured (C1, 2026-08-02): **102 new declarations** across the six real
+> suites — 179 counting the runner, which is a measurement artifact. It did not land near 66. It
+> landed **above** it.
+>
+> **Why that kills the premise rather than just raising the price.** The case for declaring over
+> guessing was that a text scan **over-counts** — it "cannot tell a path a module READS from one it
+> MENTIONS" — so the declared set should be the smaller, honest core. It is not smaller. The import
+> closure is wide (32 modules for a single suite) and a module genuinely reads most of the repo paths
+> it names as constants; `run_guard_shape_lint.py`'s own `L1_FILES` is 16 files it really opens. **The
+> over-counting was never where the cost was**, so the mechanism buys 102 declarations — each one
+> widening the pathspec and pulling suites onto more commits against a 90.0s tier budget — to replace
+> five hand-widenings.
+>
+> **What stays true, and what therefore stays open.** The underlying complaint is real: nothing in a
+> module says what it reads, so the tier's trigger is either guessed or remembered, and it has been
+> hand-widened five times. Closing this order closes **one proposed mechanism**, not the problem. If
+> a sixth hand-widening is needed, the right move is to record it against this row as evidence the
+> cost is accumulating — not to reopen the same design.
+>
+> <sub>⚠️ The measurement that closed this is a **proxy**, and its limits are stated in the C1 block
+> below rather than buried: it counts string literals assigned to a name in the closure that match a
+> tracked path, which is an **upper bound with the right order of magnitude**, not the exact demand.
+> It is above 64 by enough that sharpening it is unlikely to cross back, and sharpening it exactly
+> would mean building the mechanism this order is being closed instead of building.</sub>
+> <sub>❌ **No `REVIEWED`** — this row's own `ห้าม` forbids it, and closure is not review.</sub>
 
 > Opened by `ORDER-732`'s closure, as a NEW order rather than its remainder. The hand-widening
 > that has now happened **five** times is a symptom; the cause is that **nothing in a module says
@@ -6348,7 +6463,7 @@ shape as ORDER-511's silent leg and the `AllowLive=false` trap.
 | account | type | template magics on it | legacy-GV status |
 |---|---|---|---|
 | **463666728** | DEMO | 990301 990302 999094 991070 990066-069 990303 990984 990120 990103 990016 990026 (14) | ✅ **cleared** — user deleted 4 stale `rc_peak_eq` on 07-28 |
-| **415573666** | DEMO | 990201-990208 · 990110 (9) | 🔴 **UNCHECKED** |
+| **415573666** | DEMO | 990201-990208 · 990110 (9) | ⚠️ **CENSUS TAKEN 2026-08-02 — 1 legacy key: `Boss_990208_rc_peak_eq`** (see below) |
 | **141049900** | **REAL_CENT** | 1112 1113 1114 1115 | 🔴 **UNCHECKED** |
 | **159475669** | **REAL_CENT** | 990005 · 99000512 | 🔴 **UNCHECKED** |
 | **159503454** | **REAL_CENT** | 990101 | 🔴 **UNCHECKED** |
@@ -6470,6 +6585,43 @@ legacy/scoped count assertion. That last probe is why the suite asserts on count
 have been run through it.** Its 30 firings are all fixtures. It is `UNTESTED` against a live terminal
 and must not be written up otherwise until STEP 2 runs one. What the fixtures do establish is that it
 can say both words and that it can read the encoding MT5 writes.</sub>
+
+### ✅ STEP 2, ACCOUNT 1 of 4 — census taken 2026-08-02 (owner at the terminal, `S-2026-08-02-OPERATOR`)
+
+**`415573666` (DEMO) — NOT SAFE TO UPDATE, by exactly one magic.** First real run of
+`check_persist_legacy.ps1`, so the fire count above moves from 0 to 1 and it is no longer `UNTESTED`
+against a live terminal.
+
+```
+NOT SAFE  magic 990208 : gate fires on -> 3 rc_peak_eq EXISTS
+=== NOT SAFE TO UPDATE: 1 magic(s) fire the fail-closed gate, 0 clear ===
+```
+
+| what | value |
+|---|---|
+| the one legacy key | `Boss_990208_rc_peak_eq` = **60027.15**, last written **2026-07-28 13:08** |
+| everything else in F3 | 2 unrelated `Rebalance V6 by[NVF]` variables — **not** `Boss_`, not this gate's business |
+| inventory cross-check | 14 non-REMOVED rows on the account, **13 clear by absence** |
+
+🔴 **`990208` is `Boss_14` GBPJPY — the magic this row already names as "the one queued for real
+money".** Of all fourteen magics on the account, the single one carrying pre-132 state is the one
+whose next step was a promotion.
+
+🟢 **A worry that does NOT apply here, checked rather than assumed.** STEP 3's anomaly is a peak-equity
+value that cannot belong to its account (`10136.29` against equity ~99,944). This value is the
+opposite shape: the terminal's own status bar reads equity ≈ **58,721** against a stored peak of
+**60,027.15** — a peak slightly *above* current equity, i.e. ≈2.2% drawdown, which is exactly what a
+genuine high-water mark for this account looks like. **The foreign-state branch (§7 of the procedure)
+is not indicated**, and adopt-once (§6) is the route.
+
+<sub>⚠️ **Provenance, because it changes what this is worth.** The owner supplied a **screenshot** of
+the F3 window; `_triage/o510_census/census_415573666.txt` is a **transcription** of it by the seat,
+not a machine export. The window showed exactly three variables with no scrollbar, so the list is
+complete as displayed — but a transcription is where a digit goes missing, and **`60027.15` is the
+number §6 step 3 will compare a journal line against**. Re-read it off the screen before consenting
+to migrate; a mismatch there means "stop", and it must not be a mismatch this file invented.</sub>
+
+**Still owed on STEP 2: `141049900`, `159475669`, `159503454` — all three REAL_CENT.**
 
 
 ---
