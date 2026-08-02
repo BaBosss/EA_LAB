@@ -1810,6 +1810,38 @@ observed trades only, so it cannot notice an EA that is over-trading its design 
 report path recorded · **B2** re-run the snapshot and report how many `NA` remain and why · **B3** any
 row whose observed rate is below half the expected for ≥3 weeks is listed for `ORDER-941` treatment.
 
+> 🔴 **CORRECTED 2026-08-02 (lane `S-2026-08-02-JUDGERATE`) — the headline number was right and the
+> CAUSE was wrong, and acting on the brief as written would have done the wrong thing to three rows.**
+> Measured against the two real files before any work: **36** ACTIVE rows carry a judge date, and the
+> gap is **17** — the number above is correct. It is **not** one cause. It is three, with three
+> different fixes, and only one of them is "derive a number":
+>
+> | cause | count | the fix |
+> |---|---|---|
+> | row present, `trades_per_month_expected` = the literal sentinel **`UNKNOWN`** | **13** | derive it — this is the real work |
+> | row present **with a valid number, pointed at the OLD account** | **3** | **re-point the row. Do NOT derive** — a second derived value would be a second, conflicting expectation for one EA |
+> | no row at all | **1** (`990026` `(TRD)_SuperTrendFlip_rev05`) | create one, derived |
+> | already usable | 19 | — |
+>
+> **Zero rows are blank** — the field is populated everywhere it exists, which is why "missing a row"
+> described it wrongly. **The mechanism of the 3 is verified in code, not inferred:**
+> `scripts/control_room_snapshot.ps1:179` keys the lookup on `"$($e.account)|$($e.magic)"`, so an
+> account-scoped join misses a row that is right about everything except which account it names. All
+> three are **the same EA, same strategy, same symbol modulo the broker suffix**, and all three are
+> multi-account magics — the same class S10's legacy exceptions are about:
+> `990025` BTCUSD**m** vs BTCUSD (2.12/mo) · `990030` ETHUSD**m** vs ETHUSD (4.33/mo) ·
+> `990103` EURUSD**m** vs EURUSD (8.33/mo).
+>
+> 🔴 **This changes `ORDER-941`.** `990103` is listed there among the legs that are *unfalsifiable* at
+> 0 closed trades. **It is not** — an expectation of **8.33 trades/month** exists and is real; it is
+> simply not joined. At 0 closed trades against ~1.9/week, that leg is **falsifiably silent**, which is
+> a real-money signal the current brief hides behind an `NA`. The other three `941` legs are unaffected.
+>
+> **B1 is therefore amended:** the derivation set is **14** (13 sentinels + `990026`), not 17, and the
+> three join misses are fixed by correcting the row's account — with a note recording that the number
+> was derived on the other broker's data, because a trade RATE transfers across brokers far better than
+> a PF does but is not identical (`ORDER-371`).
+
 ## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
