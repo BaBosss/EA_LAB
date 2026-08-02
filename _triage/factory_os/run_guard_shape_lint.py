@@ -420,6 +420,14 @@ L2_PAIRS = {
     # value is refusing ONE class of commit has to name that class somewhere a lint can read.
     '_triage/factory_os/check_attested_pin_staged.py':
         ('_triage/factory_os/run_attested_pin_staged_tests.py',),
+    # ORDER-1080 (S9). VOLUNTARY: scheduler.py does not match CHECKER_GLOBS, so L0 would never
+    # have demanded this pair -- which is precisely the argument the snapshot_build entry makes
+    # one list up. Its monotonic transition validator emits S1-S9, and each of those is an
+    # acceptance criterion of the slice (S6 IS "COMPLETED is refused without a fresh report").
+    # Declaring the pair means the LINT notices the day an S10 is added to the validator with no
+    # cage naming it, instead of a reviewer having to.
+    '_triage/factory_os/scheduler.py':
+        ('_triage/factory_os/run_scheduler_tests.py',),
 }
 # `[A-Z]`, not `[A-E]`. BLIND AUDIT 2026-07-31, reproduced: the class was `[A-E]` because the
 # checkers that existed when L2 was written emitted A1-E9. ORDER-630's checker emits R1-R6, so the

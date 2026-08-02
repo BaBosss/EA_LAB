@@ -46,6 +46,7 @@ _triage/factory_os/run_s2a_attestation_tests.py
 _triage/factory_os/run_s2a_conformance.py
 _triage/factory_os/run_s2a_gate.py
 _triage/factory_os/run_s2a_migration_tests.py
+_triage/factory_os/run_scheduler_tests.py
 _triage/factory_os/run_schema_fixtures.py
 _triage/factory_os/run_setfile_tests.py
 _triage/factory_os/run_snapshot_s4_tests.py
@@ -58,6 +59,7 @@ _triage/factory_os/s2a_attestations.jsonl
 _triage/factory_os/s2a_coverage_reconciliation.json
 _triage/factory_os/s2a_migration.jsonl
 _triage/factory_os/S2A_OWNERSHIP_MIGRATION.md
+_triage/factory_os/scheduler.py
 _triage/factory_os/schemas.json
 _triage/factory_os/setfile.py
 _triage/factory_os/snapshot_build.py
@@ -116,3 +118,4 @@ scripts/mris/mris_web_feeder.ps1
 scripts/optimize_guard.ps1
 scripts/param_registry_check.ps1
 scripts/parity_run.ps1
+scripts/scheduler_run.ps1

@@ -352,6 +352,13 @@ $FAST_SUITES = @(
     # argue with. It cages S8's THIRD acceptance criterion -- the 7-point parity contract's JUDGE.
     # Parity itself needs the tester and lives in scripts\parity_run.ps1, on tpl_regression's pin.
     'run_parity_tests.ps1',
+    # ORDER-1080 (S9), measured 0.08s / 0.08s / 0.08s over three runs -> 0.1s. Three samples for
+    # the reason the entry above gives. It carries the slice's WHOLE acceptance: a kill at every
+    # (action, phase) of the resume loop x two resume delays = 240 recoveries, with the invariants
+    # read off counters the stub keeps rather than off the planner's own account of itself. The
+    # scheduler's real work needs a lane and lives in scripts\scheduler_run.ps1; the state machine
+    # is proven here, by enumeration, which is the only reason it is affordable to prove at all.
+    'run_scheduler_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -502,6 +509,16 @@ $SUITE_GUARDS = @{
     'run_parity_tests.ps1'            = @('_triage/factory_os/parity.py',
                                           '_triage/factory_os/run_parity_tests.py',
                                           'scripts/parity_run.ps1')
+    # ORDER-1080 (S9). The planner, its own suite, and the DISPATCHER -- the last one is not
+    # decoration: PART 4 asserts the PowerShell switch handles exactly the closed action set the
+    # planner can emit, so an edit to the dispatcher alone can turn that assertion red. A trigger
+    # list that named only the python would let the two halves drift apart in the one direction
+    # the cage exists to prevent. schemas.json is here for the same reason: the vocabulary check
+    # re-reads it, so a schema edit changes what this cage proves.
+    'run_scheduler_tests.ps1'         = @('_triage/factory_os/scheduler.py',
+                                          '_triage/factory_os/run_scheduler_tests.py',
+                                          'scripts/scheduler_run.ps1',
+                                          '_triage/factory_os/schemas.json')
     'run_wrapper_gen_tests.ps1'       = @('_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/run_wrapper_gen_tests.py',
                                           '_triage/factory_os/gen_wrapper.py',

@@ -104,3 +104,15 @@ STATUS.md
 # intent — the PROMPT/RESULT pairs beside them are the readable record). Ignored so a
 # stray `git add -A` cannot commit them into history permanently.
 _triage/_archive/**/*.log
+
+# ORDER-1080 (S9). The scheduler's per-attempt RECOVERY STATE, not evidence: the spawn marker
+# (written before the spawn, so its absence proves no spawn happened), the worker's exit sidecar,
+# and the worker transcripts. They must survive THIS MACHINE'S crash, which is why they are on
+# disk; they must not survive into history, because they describe one machine's attempt and the
+# committed record is factory/runs/<run_id>.jsonl beside them.
+factory/runs/*.spawn.json
+factory/runs/*.exit.json
+factory/runs/*.worker.*.log
+# The lane lease is live state for one install (an expiry, an owner). Committing it would let a
+# clone claim a lane it has never seen.
+factory/leases/
