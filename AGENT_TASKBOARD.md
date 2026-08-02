@@ -168,7 +168,7 @@ per case, the cache never hits. **Measure before believing that** — it is a hy
 
 ---
 
-## ORDER-1131 — [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode — `OPEN` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
+## ORDER-1131 — [factory/S11] Control Center shell + `TODAY`/`WORK`/`LIVE`/`SYSTEM` in shadow mode — `DONE (Claude/Opus 2026-08-02, lane S-2026-08-02-S11CC) — both halves of the acceptance driven; the scenario count is printed by run_s11_tests.py --list and is deliberately not restated here` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
 
 > Owner decision 2026-08-02: *"Codex/Sonnet ตาม design table"*, and the two lanes run **in parallel**
 > with `ORDER-942`/`943`. The full brief is `_triage/PROMPT_NEXT_SESSION_S11.md` — this row exists so
@@ -195,6 +195,82 @@ S10's first cage spawned a whole guard per case (13.1s), the rule moved into a c
 The `JUDGERATE` lane **reads** `control_room_snapshot.ps1` to count `NA` rows and never writes it, and
 owns `portfolio/expectations.csv` + `portfolio/DEPLOYMENTS.csv`. Neither lane may touch the other's
 list (ledger rule 4 · memory `shared-worktree-concurrent-writers`).
+
+**Executed by the Opus seat, not delegated — and the delegation call is the first thing to push back
+on if it is wrong.** design §10 assigns this slice to Codex/Sonnet, and the cost ladder says try the
+cheaper tier first *where a verification cage exists*. Here one did not: the cage **was** the work.
+The thirty scenarios had no source (below), so the catalog had to be derived from the design clause
+by clause, and the `SafeProjection` half is a **negative** acceptance whose first honest attempt
+failed — a defect a fixture-writing tier would have had no reason to look for. What is genuinely
+mechanical and still open to a cheaper tier is the **next** slice's fixture volume, once this
+catalog exists to copy the shape from.
+
+🔴 **THE THIRTY SCENARIOS HAVE NO SOURCE IN THIS REPO.** design §10 cites
+`EA_LAB_CONTROL_ROOM_HANDOFF_2026-07-29.md` ("22 sections + 30 acceptance scenarios") as an input.
+That file **was never committed** — checked with `git log --all --diff-filter=D` and a name sweep
+across every ref — and the owner confirmed on 2026-08-02 that they no longer have it. So the
+catalog in `run_s11_tests.py` is **DERIVED**: every case names the design §7.1 / §7.3 / §7.4 clause
+it tests, and this row does **not** claim it reproduces the missing thirty. It is larger than
+thirty, which is not the same as being the same thirty.
+
+🔴 **THE NEGATIVE WENT RED FIRST, AND ONE OF THE TWO FAILURES WAS REAL.** The cage was written
+before the modules satisfied it and its first run failed **two cases and two roll-ups**. Case `SB03`
+found that `read_for_sender()` released a document whose planted account number sat **three levels
+down in an undeclared field**: the recursive scan could not see it **because the sender has no
+snapshot to derive its known-secret list from** — the prohibition ("Telegram must not be able to
+read the full snapshot") disarming the very check that enforces it. Adding `source_account` to the
+forbidden-key list would have made that one fixture pass and taught nothing, because a blacklist of
+field names has no end. The boundary now checks the **SHAPE**, as an allowlist **read from
+`schemas.json`** so the two cannot drift, and an undeclared field is refused *for being undeclared*.
+The other two failures were the same lesson in small: `PEM_BLOCK` and `UNC_PATH` had **zero fires**,
+which by CLAUDE.md's bar table makes them `UNTESTED`, and one placement rule was reachable only
+through a helper no scenario called.
+
+**What was built.** `_triage/factory_os/control_center.py` — a pure projection producing the four
+pages, with the TODAY band placement written as a **numbered, ordered rule table** so every row
+renders the id of the rule that placed it, and a row no rule matches **refuses the build** instead
+of landing at the bottom of the page. `_triage/factory_os/safe_projection.py` — the allowlist-only
+DTO, the recursive scan (forbidden keys at any depth · literals taken from the source snapshot ·
+declared value shapes), and the sender boundary. `run_s11_tests.py` drives everything in process;
+`scripts/_test/run_s11_tests.ps1` adds **PART B**, the one claim python cannot make — the **real**
+`snapshot_reader.ps1` driven for real, its actual states handed to the **real** python shell, which
+is the only way two spellings of one vocabulary can be caught drifting apart.
+
+**Three roll-ups, and each began red:** every placement rule fired by some case · every scan layer
+fired at least once · every catalogued case ran.
+
+🔴 **NO DRAWDOWN IS COMPUTED ANYWHERE, and that has a visible consequence.** design §7.1: the
+dashboard creates no competing threshold. A `dd_pct_band` is therefore **passed through** from a
+detector or it is `UNKNOWN` — and **no detector in `control_room_snapshot.json` publishes one
+today**, so every band in the live projection reads `UNKNOWN`. That is a real gap in the design's
+"percentages instead of money amounts", surfaced rather than papered over, and it is `UNKNOWN` **by
+measurement**: case `SP12` supplies a band and watches it travel, so the constant is not hardcoded.
+
+🔴 **`WORK` renders `UNKNOWN`, not an empty queue.** `factory/work_receipts.jsonl` carries no
+receipts (that import is S14) while the snapshot's reconciliation counts **334 discovered**. An
+empty page there would be the Codex blind audit's own failure scenario F4. Case `W09` drives it.
+
+**Measured.** Suite **1.4s / 1.4s / 1.3s** over three runs. Full tier with it registered: **25
+suites, 0 failed, 109.1s / 107.9s / 107.9s** of the 120.0s budget — three samples, per memory
+`phantom-regression-from-two-single-samples`, and the single 111.6s baseline sample taken at the
+start of the lane was noise-high rather than this slice being free.
+
+**`schemas.json`:** `SafeProjection` flipped `PLANNED` → **`BUILT`** with `x-enforcer` naming
+`safe_projection.py`. Not `WIRED`, deliberately and by the checker's own definition: the cage drives
+it, nothing in production calls it yet. `check_schema_structure.py` verifies the label.
+
+**Not done, deliberately:** no dispatch, claim or closure exists anywhere in the UI layer (case
+`P01` asserts the module's public callables are a closed declaration carrying no write verb) · no
+Telegram path was built (S12) · no second snapshot producer, serializer or reader was created · no
+`factory/runs/*.jsonl` touched, no `CandidateManifest` issued, no attestation appended, no magic
+allocated · `build/**` is **git-ignored** rather than committed, because a derived rendering of a
+file the daily chain rebuilds would go stale on somebody else's commit and a `--check` guard would
+then be red for a reason no author caused (memory `drift-guard-regenerating-against-head`).
+
+**Owed, and named rather than left implicit:** a producer for `dd_band` · wiring the shell into a
+page anyone actually opens (it renders to `build/control_center.html` and nothing links it) ·
+`SafeProjection` → `WIRED` once something in production builds it · the tier speed-up is
+`ORDER-1130`, not this row.
 
 ---
 
