@@ -1,0 +1,116 @@
+========================================================================
+ORDER-510 adopt-once — magic 990208 — Boss_14 GridLog — GBPJPY H4
+account 415573666 (DEMO "Demo Mt5-2") — VPS 66.212.22.7
+built 2026-08-02 by S-2026-08-02-ADOPT208. NOT run by the seat; you run it.
+========================================================================
+
+WHY THIS EXISTS
+  F3 on 415573666 found ONE pre-ORDER-132 key:
+      Boss_990208_rc_peak_eq = 60027.15   (written 2026-07-28 13:08)
+  A post-132 binary meeting that key REFUSES to start unless it is told, once,
+  that adopting the account's own old state is intended. On screen that refusal
+  looks like "the EA is quiet", not like a refusal. This converts the key to the
+  account-scoped format so the refusal stops being possible.
+
+  This is the ONLY magic in the whole fleet that needs it. All four accounts were
+  censused 2026-08-02; the other three came back empty.
+
+FILES IN THIS FOLDER
+  Boss_14_GridLog.ex5                  the NEW binary. MD5 5D2C5A9E7CB9A5B4BB2D99EA1E07AA41
+                                       compiled 2026-08-02 from current source,
+                                       0 errors / 0 warnings on 9 targets.
+  Boss_14_GridLog_PRE132_2026-07-16.ex5.old
+                                       the binary running today, kept so you can
+                                       put it back. IT HAS NO GATE - that is the
+                                       whole reason nothing has migrated yet.
+  O510_990208_STEP1_REHEARSE.set       adopt=true  DryRun=true   writes nothing
+  O510_990208_STEP2_ADOPT.set          adopt=true  DryRun=false  the real one
+  O510_990208_STEP3_NORMAL.set         adopt=false DryRun=false  runs on this after
+  Boss14_GridLog_GBPJPY_H4_demo_leg8.set   the ORIGINAL 52-value set, untouched
+
+  All three STEP files are FULL SURFACE (all 116 inputs). The 52 values from the
+  deployed set are copied byte-for-byte - verified, 0 mismatches - and the only
+  deliberate differences between the three files are the two flags. The remaining
+  64 inputs are the declared defaults from Inputs.mqh, written explicitly so the
+  terminal's last-used cache cannot fill them in differently on a re-attach.
+
+------------------------------------------------------------------------
+STEP 0 - BEFORE YOU TOUCH ANYTHING
+------------------------------------------------------------------------
+  [ ] Terminal tab "Trade": is there ANY open position with magic 990208?
+
+      NO open position  -> continue to STEP 1.
+      YES, it holds one -> STOP. Do not run STEP 1.
+                           DryRun suppresses CLOSES as well as opens, so an EA in
+                           DryRun will not exit the basket it is holding. Wait for
+                           the basket to close, then start again at STEP 0.
+
+  [ ] Write down what F3 shows for Boss_990208_rc_peak_eq right now.
+      Expected: 60027.15
+      If it is a different number, that is fine - USE WHAT YOU SEE, and tell me.
+      The number below is the one STEP 2 must print back, and it came from a
+      transcription of your screenshot, not from a machine export.
+
+------------------------------------------------------------------------
+STEP 1 - REHEARSAL (free, writes nothing)
+------------------------------------------------------------------------
+  [ ] Copy Boss_14_GridLog.ex5 into the terminal's MQL5\Experts folder,
+      replacing the old one. (Keep the .old file somewhere you can reach it.)
+  [ ] Refresh the Navigator (right-click -> Refresh).
+  [ ] On the GBPJPYm H4 chart carrying magic 990208: attach the EA, and in the
+      Inputs tab press LOAD and pick   O510_990208_STEP1_REHEARSE.set
+  [ ] OK.
+
+  MUST SEE in the Experts/Journal tab:
+      [PERSIST] DryRun: would migrate Boss_990208_rc_peak_eq -> Boss2_..._rc_peak_eq (60027.15) - skipped (no writes in DryRun)
+
+  STOP AND TELL ME IF:
+    - the printed number is NOT the number you wrote down in STEP 0
+    - you see  [RISK] FATAL: legacy pre-13x state found ...
+      (that means the flag did not take - the .set did not load)
+    - no [PERSIST] line appears at all
+
+  [ ] F3 again: Boss_990208_rc_peak_eq must STILL BE THERE and unchanged.
+      Nothing was written. That is the point of this step.
+
+------------------------------------------------------------------------
+STEP 2 - THE REAL ADOPT (this one writes)
+------------------------------------------------------------------------
+  [ ] Same chart. Inputs -> LOAD -> O510_990208_STEP2_ADOPT.set -> OK.
+
+  MUST SEE:
+      [PERSIST] migrated legacy Boss_990208_rc_peak_eq -> Boss2_<...>_990208_rc_peak_eq (60027.15)
+
+  [ ] F3: check BOTH halves.
+        - a Boss2_..._990208_rc_peak_eq key now EXISTS
+        - Boss_990208_rc_peak_eq is GONE
+      A Boss2_ key appearing while the old key survives is a PARTIAL migration,
+      not a success. Stop and tell me if you see that.
+
+------------------------------------------------------------------------
+STEP 3 - BACK TO NORMAL (do not skip this)
+------------------------------------------------------------------------
+  [ ] Same chart. Inputs -> LOAD -> O510_990208_STEP3_NORMAL.set -> OK.
+  [ ] The chart must start CLEANLY - no [RISK] FATAL line.
+
+      That clean start is the proof the state is now account-scoped, and it is
+      the only step that proves the consent flag was not left switched on. An EA
+      left with adopt=true would silently swallow foreign state on some future
+      account switch, which is the exact thing this gate exists to prevent.
+
+------------------------------------------------------------------------
+WHAT TO SEND BACK
+------------------------------------------------------------------------
+  The Journal lines from STEP 1, 2 and 3 (or one screenshot each), plus the F3
+  before/after. I will record it on ORDER-510 and close STEP 2.
+
+------------------------------------------------------------------------
+NEVER, in any step
+------------------------------------------------------------------------
+  - Do NOT delete Boss_990208_* from F3 to "make it pass". The migration is the
+    route. Deleting is a different branch with its own preconditions and it needs
+    a decision that has not been made.
+  - Do NOT leave RC_AdoptLegacyHalt=true standing. STEP 3 exists for that.
+  - Do NOT copy this .ex5 to the other Boss charts as a batch while you are here.
+    They are cleared to receive it, but one chart at a time is how you keep the
+    ability to say which change caused what.

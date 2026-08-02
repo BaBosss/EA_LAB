@@ -68,3 +68,31 @@ KILL-SWITCH + NEXT
 - Attach Boss_14_GridLog on GBPJPY H4, load this .set, confirm DryRun=false + magic 990208 +
   first basket arms. Tell Claude attach date -> register 990208 in DEPLOYMENTS.csv + judge date.
 - Verdict: _triage/_archive/verdicts/order104-126/ORDER106_GBPJPY_RESCUE_VERDICT.md
+
+========================================================================
+2026-08-02 — ORDER-510 ADOPT-ONCE BUNDLE ADDED (S-2026-08-02-ADOPT208)
+========================================================================
+The .ex5 in this folder was REPLACED. The previous one (2026-07-16, MD5
+1A082ECF05B6EC5623A4E0A39576DC35) is kept as
+Boss_14_GridLog_PRE132_2026-07-16.ex5.old — it predates ORDER-132/138 and has
+no persist gate, which is why nothing has migrated on this chart yet.
+
+New: Boss_14_GridLog.ex5, MD5 5D2C5A9E7CB9A5B4BB2D99EA1E07AA41, compiled
+2026-08-02 from current source, 0 errors / 0 warnings on 9 targets.
+tpl_regression CLEAN 8/8 on lane 1 and ea_template/** is unchanged since that
+run (verified by git log), so Boss_14's behaviour is baseline-identical — the
+only deliberate difference on this leg is the two persist flags.
+
+F3 on 415573666 found ONE pre-132 key: Boss_990208_rc_peak_eq = 60027.15.
+This is the only magic in the fleet that needs adopt-once; the other three
+accounts censused empty on 2026-08-02.
+
+DO NOT attach from this folder without reading
+ADOPT_ONCE_990208_CHECKLIST.txt — the three O510_990208_STEP*.set files must
+be used in order, and STEP1 is only safe while the leg is FLAT (DryRun
+suppresses closes as well as opens).
+
+⚠️ The 52-value Boss14_GridLog_GBPJPY_H4_demo_leg8.set is kept for reference but
+is a PARTIAL set (the build exposes 116 inputs). The STEP files are full-surface
+for that reason; unlisted inputs otherwise come from the terminal's last-used
+cache and a re-attach is then not reproducible.
