@@ -29,23 +29,11 @@
 #define LAB_CAP_STACK
 
 //--- design 5.3 / 5.4: the inputs this revision compiles away ---------------
-//| 75 const, 41 left on the Inputs page.
+//| 84 const, 32 left on the Inputs page.
 //| Each pair switches ea_template/core/Inputs.mqh from its `input` branch to
 //| its `const` branch. LAB_CONSTVAL_* carries the EFFECTIVE value -- the
 //| canonical default for an unreachable input, the PINNED value for a locked
 //| one -- so a lock is applied rather than merely declared.
-//|
-//| NOT const-ed although unreachable under this config, and the reason is
-//| load-bearing: a still-live input decides whether each of these matters,
-//| so const-ing them would freeze one arm of a decision the optimizer is
-//| allowed to sweep. See gen_wrapper.const_plan().
-//|   _4_DdHardCapMult       kept, because _4_DdAdaptiveOn is still an input
-//|   _4_DdTier1Mult         kept, because _4_DdAdaptiveOn is still an input
-//|   _4_DdTier1Pct          kept, because _4_DdAdaptiveOn is still an input
-//|   _4_DdTier2Mult         kept, because _4_DdAdaptiveOn is still an input
-//|   _4_DdTier2Pct          kept, because _4_DdAdaptiveOn is still an input
-//|   _57_DynCloseBase       kept, because _57_DynCloseOn is still an input
-//|   _57_DynCloseDivisor    kept, because _57_DynCloseOn is still an input
 
 #define LAB_CONST_ExitMode
 #define LAB_CONSTVAL_ExitMode EXIT_ATR_TP
@@ -127,6 +115,18 @@
 #define LAB_CONSTVAL__43_BalanceAnchor 1000.0
 #define LAB_CONST__43_LotPerAnchor
 #define LAB_CONSTVAL__43_LotPerAnchor 0.01
+#define LAB_CONST__4_DdAdaptiveOn
+#define LAB_CONSTVAL__4_DdAdaptiveOn false
+#define LAB_CONST__4_DdHardCapMult
+#define LAB_CONSTVAL__4_DdHardCapMult 1.5
+#define LAB_CONST__4_DdTier1Mult
+#define LAB_CONSTVAL__4_DdTier1Mult 1.2
+#define LAB_CONST__4_DdTier1Pct
+#define LAB_CONSTVAL__4_DdTier1Pct 10.0
+#define LAB_CONST__4_DdTier2Mult
+#define LAB_CONSTVAL__4_DdTier2Mult 1.5
+#define LAB_CONST__4_DdTier2Pct
+#define LAB_CONSTVAL__4_DdTier2Pct 20.0
 #define LAB_CONST__50_ADX_Period
 #define LAB_CONSTVAL__50_ADX_Period 14
 #define LAB_CONST__50_ADX_TrendMin
@@ -155,6 +155,12 @@
 #define LAB_CONSTVAL__56_FibMaxStep 5
 #define LAB_CONST__57_DynCloseBalPct
 #define LAB_CONSTVAL__57_DynCloseBalPct 0
+#define LAB_CONST__57_DynCloseBase
+#define LAB_CONSTVAL__57_DynCloseBase 10.0
+#define LAB_CONST__57_DynCloseDivisor
+#define LAB_CONSTVAL__57_DynCloseDivisor 4.0
+#define LAB_CONST__57_DynCloseOn
+#define LAB_CONSTVAL__57_DynCloseOn false
 #define LAB_CONST__71_ATRMA
 #define LAB_CONSTVAL__71_ATRMA 20
 #define LAB_CONST__71_ATRRatio

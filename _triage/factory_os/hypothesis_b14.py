@@ -116,10 +116,32 @@ H02_EXPERIMENTAL_REASON = (
 # `optimize_guard` -- not sweepable and not even present. These are exactly the inputs that decide
 # WHICH MECHANISM runs; a numeric dial inside a selected mechanism is TUNABLE, not locked, or every
 # re-optimize would need a new hypothesis revision.
+#
+# 🔴 `_4_DdAdaptiveOn` AND `_57_DynCloseOn` WERE ADDED 2026-08-02 (owner-ratified), AND THE REASON
+# IS THAT THE RULE ABOVE ALREADY COVERED THEM. Both are on/off switches for a whole mechanism --
+# `_4_DdAdaptiveOn` arms the DD-adaptive first-lot multiplier, `_57_DynCloseOn` arms the dynamic
+# close-money target -- which is the same shape as `_MG_SelfGate`, a bool that has been on this
+# list from the start. They were sitting in `DECISIONS` as `TUNABLE/RESEARCH` instead.
+#
+# What that cost, and it is the reason this is a correction rather than a preference: a wrapper
+# const-s an input when it cannot matter under ANY configuration the operator can still produce
+# (`gen_wrapper.const_plan`). With the switches live, their SEVEN dependent dials
+# (`_4_DdTier1Pct/1Mult/2Pct/2Mult/HardCapMult`, `_57_DynCloseBase/Divisor`) could not be const-ed
+# -- the registry called them `INACTIVE` while declaring the switch sweepable, and both cannot be
+# true. `optimize_guard` would then ALLOW each switch and REFUSE every dial it controls, i.e. offer
+# the optimizer a sweep whose ON arm is frozen at factory defaults and let it report the result as
+# the decision (memory `inert-axis-fake-plateau`, made structural).
+#
+# Neither switch is part of B14-H01's causal claim -- the claim is that the edge lives in the
+# LogPower escalation -- and both sit at their OFF default, so locking them changes no VALUE and
+# therefore no `effective_config_hash`. It changes only which side of the guard pair each input
+# compiles on. Testing either mechanism is now what it should have been all along: a NEW
+# hypothesis, not a dial on this one.
 LOCKED_SELECTORS = (
     'ExitMode', 'SLMode', 'FirstLotMode', 'LotProg',
     'StackMode', 'StackConfirm', 'RecoveryMode', 'HedgeMode',
     '_50_RegimeMode', '_MG_SelfGate',
+    '_4_DdAdaptiveOn', '_57_DynCloseOn',
 )
 
 
@@ -159,12 +181,12 @@ DECISIONS = {
     '_2_BasketTP_BalPct': ('TUNABLE', 'OPERATOR', 'EXIT',    (0.5, 0.5, 5.0)),
     '_2_BasketTP_Money':  ('TUNABLE', 'RESEARCH', 'EXIT',    None),
     '_2_SuppressLegTP':   ('TUNABLE', 'RESEARCH', 'EXIT',    None),
-    '_57_DynCloseOn':     ('TUNABLE', 'RESEARCH', 'EXIT',    None),
     '_3_RiskATR_Period':  ('TUNABLE', 'RESEARCH', 'EXIT',    None),
     '_3_RiskATR_TF':      ('TUNABLE', 'RESEARCH', 'EXIT',    None),
-
-    # --- stress ------------------------------------------------------------------------------------
-    '_4_DdAdaptiveOn':    ('TUNABLE', 'RESEARCH', 'STRESS',  None),
+    # 🔴 `_57_DynCloseOn` and `_4_DdAdaptiveOn` used to have rows HERE, as TUNABLE/RESEARCH. They
+    # moved to LOCKED_SELECTORS on 2026-08-02 -- see the note there. A row left behind would not be
+    # harmless: `decisions_for` feeds the visible surface, so the same input would be advertised as
+    # a sweepable dial and compiled away as a constant in the same revision.
 
     # --- execution ---------------------------------------------------------------------------------
     '_0_BarOpenOnly':     ('TUNABLE', 'RESEARCH', 'EXECUTION', None),
