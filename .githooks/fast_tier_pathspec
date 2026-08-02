@@ -69,15 +69,15 @@ docs/memory_control/B1_DATASET.csv
 docs/PARAM_LINKAGE.md
 docs/PARAM_REGISTRY.csv
 docs/SESSION_LEDGER.md
+ea_template/B14_H01_r1.mq5
+ea_template/B14_H02_r1.mq5
 ea_template/Boss_14_GridLog.mq5
 ea_template/core/ConfigFingerprint.mqh
 ea_template/core/Inputs.mqh
 ea_template/core/InputSurface_gen.mqh
 ea_template/core/LabCore.mqh
 ea_template/core/LockedConstants_gen.mqh
-ea_template/generated/B14_H01_r1.mq5
 ea_template/generated/B14_H01_r1_allowlist.mqh
-ea_template/generated/B14_H02_r1.mq5
 ea_template/generated/B14_H02_r1_allowlist.mqh
 factory/coverage.jsonl
 factory/hypotheses.jsonl

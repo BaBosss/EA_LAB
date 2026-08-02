@@ -507,9 +507,13 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_design_contracts.py',
                                           'ea_template/core/Inputs.mqh',
                                           'ea_template/Boss_14_GridLog.mq5',
-                                          'ea_template/generated/B14_H01_r1.mq5',
+                                          # The wrapper sits BESIDE the hand-written Boss_*.mq5
+                                          # and the allowlist in generated/ -- a split settled by
+                                          # a compile, not by the design snippet, which showed
+                                          # two include paths that cannot both be right.
+                                          'ea_template/B14_H01_r1.mq5',
+                                          'ea_template/B14_H02_r1.mq5',
                                           'ea_template/generated/B14_H01_r1_allowlist.mqh',
-                                          'ea_template/generated/B14_H02_r1.mq5',
                                           'ea_template/generated/B14_H02_r1_allowlist.mqh',
                                           'factory/hypotheses.jsonl')
     'run_param_surface_tests.ps1'     = @('_triage/factory_os/check_param_surface.py',

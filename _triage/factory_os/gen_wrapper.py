@@ -53,6 +53,21 @@ import preset                                      # noqa: E402
 
 Refusal = preset.PresetRefusal
 
+# WHERE THE TWO ARTIFACTS LIVE, and it was decided BY A COMPILE rather than by reading the design.
+#
+# 🔴 Design 5.2's snippet shows `#include "generated/<REV>_allowlist.mqh"` AND
+# `#include "../core/LabCore.mqh"` in one wrapper -- which cannot both be right: the first says the
+# wrapper is one level ABOVE `generated/`, the second says it is one level BELOW `core/`. The first
+# version of this generator put the wrapper inside `generated/` and kept the design's include lines
+# verbatim; MetaEditor answered
+#     error 106: file '...\EALabTpl\generated\generated\B14_H01_r1_allowlist.mqh' not found
+# on the first real compile. A source-level cage cannot catch that -- the file was byte-identical
+# to what the generator produced, contained zero logic, was fully wired and named the right tokens.
+# Only the compiler knew.
+#
+# So: the WRAPPER sits beside the hand-written `Boss_*.mq5` (its include paths are then identical
+# to theirs, which is the point of a thin wrapper), and the ALLOWLIST sits in `generated/`.
+WRAPPER_OUT_DIR = 'ea_template'
 GENERATED_DIR = 'ea_template/generated'
 GENERATOR_REL = '_triage/factory_os/gen_wrapper.py'
 
@@ -140,6 +155,8 @@ def emit_wrapper(revision_id, build_tag, tag_string):
     w.append('#define LAB_HYP "%s"' % revision_id)
     w.append('#include "generated/%s_allowlist.mqh"' % slug)
     w.append('#include "core/LabCore.mqh"')
+    # Both paths are relative to `ea_template/`, exactly as in Boss_14_GridLog.mq5. See the note
+    # on WRAPPER_OUT_DIR: this pair was settled by a compile, not by the design snippet.
     return '\n'.join(w) + '\n'
 
 
@@ -171,8 +188,8 @@ def build_for(revision_id, read):
     slug = _slug(revision_id)
     return {
         '%s/%s_allowlist.mqh' % (GENERATED_DIR, slug): emit_allowlist(revision_id, tokens),
-        '%s/%s.mq5' % (GENERATED_DIR, slug): emit_wrapper(revision_id, build_tag,
-                                                          entry_tag(read, build_tag)),
+        '%s/%s.mq5' % (WRAPPER_OUT_DIR, slug): emit_wrapper(revision_id, build_tag,
+                                                            entry_tag(read, build_tag)),
     }
 
 
@@ -204,6 +221,7 @@ def main(argv):
 
     if '--write' in argv:
         os.makedirs(os.path.join(root, GENERATED_DIR.replace('/', os.sep)), exist_ok=True)
+        os.makedirs(os.path.join(root, WRAPPER_OUT_DIR.replace('/', os.sep)), exist_ok=True)
         for rel, text in sorted(files.items()):
             io.open(os.path.join(root, rel.replace('/', os.sep)), 'w',
                     encoding='utf-8', newline='\n').write(text)

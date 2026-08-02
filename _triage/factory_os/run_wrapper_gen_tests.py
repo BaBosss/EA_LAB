@@ -34,7 +34,11 @@ import gen_registry_rows as grr                                            # noq
 import gen_wrapper as gw                                                   # noqa: E402
 
 REV = 'B14-H01-r1'
-WRAPPER = '%s/B14_H01_r1.mq5' % gw.GENERATED_DIR
+# Derived from the generator's own constants rather than spelled out: the wrapper and the allowlist
+# live in DIFFERENT directories, and that split was settled by a compile (see gen_wrapper's note on
+# WRAPPER_OUT_DIR). A literal path here would have gone stale the moment it moved, in the suite
+# whose job is to notice things going stale.
+WRAPPER = '%s/B14_H01_r1.mq5' % gw.WRAPPER_OUT_DIR
 ALLOWLIST = '%s/B14_H01_r1_allowlist.mqh' % gw.GENERATED_DIR
 
 
