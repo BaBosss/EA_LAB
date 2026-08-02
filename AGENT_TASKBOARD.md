@@ -1904,6 +1904,53 @@ this changes when real money can move, so it is not the seat's call alone · **C
 written into `DEPLOYMENTS.csv` (`kill_rule` / `judge_date` / notes), not into a handoff.
 🚫 Do not decide the four `ORDER-941` legs here. 🚫 Do not move a judge date to make a cohort look ready.
 
+### C1 PROPOSAL (Claude/Opus 2026-08-02, lane `S-2026-08-02-JUDGERATE`) — **awaiting C2 ratification; nothing has been written to `DEPLOYMENTS.csv`**
+
+Now that `ORDER-942` gave all 36 judge-dated rows an expected rate, the projection is no longer
+observed-only. **Projected total = observed + expected/wk × weeks to judge**, against the 30-trade bar.
+That re-sorts the fleet: **11 THIN · 18 SHORTFALL · 7 ON TRACK** (the old 19/11 split was measured
+without a rate, which is precisely what `ORDER-942` existed to fix).
+
+**Bucket A — 11 rows are THIN by measurement** (expected **< 0.5 trades/week**, the `ORDER-235` line):
+`990205` · `990303` · `991001`🔴 · `991004`🔴 · `990025` · `990026` · `992001` · `991003` · `992004` ·
+`990020` · `991005`. → **`ORDER-235` treatment, pre-registered NOW** (12 months live · net positive ·
+no kill tripped · permanently small lot, never sized up on PF). Two are REAL_CENT (🔴).
+*This is the bucket the gate cares about: `ORDER-235` requires the thin treatment to be pre-registered
+at attach, and choosing it after seeing the numbers is the move the whole gate refuses. Registering it
+now, before any judge date lands, is the last moment that is still legitimate.*
+
+**Bucket B — 18 rows need a re-based judge date**, computed as `(30 − observed) ÷ expected/wk`:
+
+| slip | rows | reading |
+|---|---|---|
+| **≤ 34 days** | 11 rows (`991070` +1d · `999094` +10 · `990068` +11 · `990069` +18 · `990201` +24 · `990202` +24 · `990066`/`990067` +25 · `991002` +26 · `990103` +27 · `990030` +34) | the original date was simply set without a rate; the arithmetic barely moves it |
+| **57–127 days** | 3 rows (`990301` +57 · `990302` +73 · `990110` +127) | real slip, still inside a normal demo horizon |
+| **215–341 days** | 4 rows (`990204` +215 · `990984` +230 · `990206` +233 · `990208` +341) | ⚠️ see below |
+
+🔴 **The four big slips are an artefact of where the thin line sits, and it is worth deciding rather
+than absorbing.** All four expect **0.51–0.64 trades/week** — just *above* `ORDER-235`'s 0.5 cut. So
+`990208` at 0.51/wk gets a **341-day** re-based date, while an EA at 0.49/wk gets the 12-month thin
+rule: **the same waiting period, reached by two different routes, and only one of them is
+pre-registered.** Either those four move into Bucket A, or the 0.5 line needs a band. **Owner call.**
+
+🔴 **Bucket C — for three rows the projection above is OPTIMISTIC, and two are on real money.** B3
+found them `UNDER_RATE`; re-basing at the *expected* rate assumes a recovery that is not in evidence:
+
+| magic | | at EXPECTED | at OBSERVED |
+|---|---|---|---|
+| `991004` | 🔴 REAL_CENT, `(BRK)_SqueezeBreakout` | thin ⇒ judge 2027-07-09 | **0 trades — never** |
+| `991002` | 🔴 REAL_CENT, `(BRK)_TrendlineBreakout` | +26 days ⇒ 2027-02-11 | **100 weeks** |
+| `990202` | DEMO, `Boss_14_GridLog` AUDNZDm | +24 days ⇒ 2027-03-20 | **112 weeks** |
+
+**Recommendation: hold these three OUT of the blanket ratification.** Giving `991004` a 2027-07 thin
+date makes a real-money leg that has produced nothing look *scheduled* for eleven months. They belong
+to `ORDER-941`'s question — silent or thin — and that question now has an expectation to be falsified
+against, which it did not have this morning. Instrument first, decide after.
+
+**What C2 is being asked to ratify:** (1) Bucket A as written · (2) Bucket B's computed dates ·
+(3) whether the four 0.51–0.64/wk rows move to Bucket A · (4) the three Bucket C rows deferred to
+`ORDER-941`. **C3 (writing `DEPLOYMENTS.csv`) happens only after that, and not before.**
+
 ## ORDER-944 — [ops/monitoring] A row that is not exactly `ACTIVE` is invisible to the Control Room, so "pending verify" silently means "unmonitored" — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Found while closing `ORDER-940`'s item 3. `990026` sat at `ACTIVE-PENDING-VERIFY` from 2026-07-28,
