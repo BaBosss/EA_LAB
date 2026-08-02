@@ -647,6 +647,12 @@ $SUITE_GUARDS = @{
                                           # loss of the whole fingerprint line.
                                           'ea_template/core/LabCore.mqh',
                                           '_triage/factory_os/gen_input_surface.py',
+                                          # ORDER-730: the constant half. The generated
+                                          # enumeration and the generator that emits it are
+                                          # both judged inputs of G4/G5, and the wrappers are
+                                          # where the include closure STARTS.
+                                          'ea_template/core/LockedConstants_gen.mqh',
+                                          '_triage/factory_os/gen_locked_constants.py',
                                           '_triage/factory_os/check_input_surface_gen.py',
                                           '_triage/factory_os/run_input_surface_tests.py',
                                           # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first

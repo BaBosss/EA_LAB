@@ -17,6 +17,7 @@ _triage/factory_os/gen_coverage.py
 _triage/factory_os/gen_default_preset.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_input_surface.py
+_triage/factory_os/gen_locked_constants.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/preset.py
@@ -59,6 +60,7 @@ ea_template/core/ConfigFingerprint.mqh
 ea_template/core/Inputs.mqh
 ea_template/core/InputSurface_gen.mqh
 ea_template/core/LabCore.mqh
+ea_template/core/LockedConstants_gen.mqh
 factory/coverage.jsonl
 factory/hypotheses.jsonl
 factory/instrument_profiles.jsonl

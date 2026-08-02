@@ -14,6 +14,14 @@ that drifted is the one nobody is checking.
       G1 alone leaves the shape `GUARD_SHAPES.md` calls "the mechanism never engages" -- a
       perfectly current enumeration that no build ever calls, with the fingerprint line silently
       absent from every journal.
+  G4  ORDER-730: `ea_template/core/LockedConstants_gen.mqh` is likewise what
+      `gen_locked_constants.py` generates from the SAME snapshot, and it is included and reached.
+      Same failure shape as G1/G2 one layer along -- a constant is edited, nobody regenerates, and
+      the EA hashes 22 of its 23 constants while still printing a well-formed digest.
+  G5  the scope label and the enumeration cannot move apart. `surface+constants` while nothing
+      enumerates constants, or `surface_only` while the constant enumeration is compiled in, are
+      both a LABEL THAT LIES ABOUT ITS OWN PREIMAGE -- and this is the criterion ORDER-710
+      deliberately left for ORDER-730 to earn rather than assert.
   G3  the two constants the generated file does NOT contain still agree with the Python side:
       the scope label (the first line of the preimage) and the lowercase hex alphabet (the case
       of every double's bits and of the digest). This is a SOURCE check and it is labelled one --
@@ -45,12 +53,14 @@ sys.path.insert(0, HERE)
 
 import evidence                     # noqa: E402  (path is set above)
 import gen_input_surface as gen     # noqa: E402  (path is set above)
+import gen_locked_constants as gconst   # noqa: E402  (path is set above)
 import preset                       # noqa: E402  (path is set above)
 
 ToolFailure = evidence.ToolFailure   # the reader's type, not a look-alike (ORDER-670 9/9)
 
 INPUTS_PATH = preset.INPUTS_REL
 GEN_PATH = gen.OUT_REL
+CONST_PATH = gconst.OUT_REL
 CORE_PATH = 'ea_template/core/LabCore.mqh'
 FP_PATH = 'ea_template/core/ConfigFingerprint.mqh'
 
@@ -66,7 +76,18 @@ HEX_ALPHABET_RE = re.compile(r'StringSubstr\(\s*"([^"]*)"\s*,')
 # anchored at `$` and rejected the real file on its first run. What is NOT allowed is the line
 # being commented out, so the pattern still has to start at the directive.
 INCLUDE_RE = re.compile(r'^[ \t]*#include\s+"InputSurface_gen\.mqh"[ \t]*(?://.*)?$', re.M)
+CONST_INCLUDE_RE = re.compile(r'^[ \t]*#include\s+"LockedConstants_gen\.mqh"[ \t]*(?://.*)?$', re.M)
 CALL_RE = re.compile(r'\bCFG_Fingerprint\s*\(\s*\)')
+
+# G5's evidence that the enumeration is REALLY there, taken from the generated file's own content
+# rather than from its name.
+#
+# THIS MATCHES A PREIMAGE LINE, NOT `#define CFG_CONSTANTS_ENUMERATED`, and the difference was
+# found by the cage rather than reasoned out: the emitter writes that define once per build block
+# WHETHER OR NOT the block enumerates anything, so a tree with zero locked constants would still
+# have "declared" one and G5 would have called `surface+constants` honest over an empty half. What
+# decides the label is whether a `const:` line reaches the hashed string.
+CONST_BLOCK_RE = re.compile(r'^\s*s \+= "\\nconst:', re.M)
 
 _SRC = [None]
 
@@ -103,12 +124,23 @@ def check(worktree=False, source=None):
 
     inputs_text = src.read_committed(INPUTS_PATH)      # snapshot: index (or --worktree; printed)
     committed_gen = src.read_committed(GEN_PATH)       # snapshot: index (or --worktree; printed)
+    committed_const = src.read_committed(CONST_PATH)   # snapshot: index (or --worktree; printed)
     core_text = src.read_committed(CORE_PATH)          # snapshot: index (or --worktree; printed)
     fp_text = src.read_committed(FP_PATH)              # snapshot: index (or --worktree; printed)
 
     expected = gen.emit(inputs_text)
     tags = sorted(preset.known_build_tags(inputs_text))
     keys = dict((t, len(preset.parse_surface(inputs_text, t))) for t in tags)
+
+    # ORDER-730. The wrapper list is ENUMERATED at the same snapshot, not globbed off the disk:
+    # a wrapper added in this commit has to be part of the closure this commit is judged against,
+    # and a disk glob would answer about a directory rather than about the commit.
+    wrapper_rels = src.list_committed('%s/*.mq5' % gconst.WRAPPER_DIR)
+    expected_const = gconst.emit(src.read_committed, inputs_text, wrapper_rels)
+    const_keys = {}
+    _tags, wrappers = gconst._resolve_wrappers(src.read_committed, inputs_text, wrapper_rels)
+    for t in tags:
+        const_keys[t] = len(gconst.scan(src.read_committed, t, wrappers[t]))
 
     # G1
     if _fold(committed_gen) != _fold(expected):
@@ -130,14 +162,51 @@ def check(worktree=False, source=None):
             'G2 %s never calls CFG_Fingerprint(). Including the enumeration without emitting it is '
             'the same silence by a shorter route.' % CORE_PATH)
 
+    # G4 -- ORDER-730, the constant enumeration. Same shape as G1/G2 one layer along.
+    if _fold(committed_const) != _fold(expected_const):
+        problems.append(
+            'G4 %s is not what %s generates from the include closure at this snapshot (%s). '
+            'Regenerate it in the same commit: `tools\\python312\\python.exe %s --write`. What the '
+            'drift costs: a constant is edited, nobody regenerates, and the EA hashes every '
+            'constant except the one that moved -- while still printing a well-formed digest.'
+            % (CONST_PATH, gconst.GENERATOR_REL, src.mode, gconst.GENERATOR_REL))
+    if not CONST_INCLUDE_RE.search(_fold(core_text)):
+        problems.append(
+            'G4 %s does not #include "LockedConstants_gen.mqh". CFG_Fingerprint() lives in that '
+            'file since ORDER-730, so without the include nothing defines the entry point and the '
+            'fingerprint line stops appearing entirely.' % CORE_PATH)
+
+    # G5 -- the scope label and the enumeration may not move apart. This is the criterion
+    # ORDER-710 left unearned: it wrote `surface_only` BECAUSE nothing enumerated constants, and
+    # said the label must not change before that was fixed. Now that it has, the pairing itself is
+    # what gets checked, in BOTH directions -- a label claiming constants with no enumeration
+    # behind it, and an enumeration compiled in while the label still says it is not there. Either
+    # one is a label lying about its own preimage, which is the failure the honest name avoided.
+    enumerated = bool(CONST_BLOCK_RE.search(_fold(committed_const)))
+    label = m.group(1) if (m := SCOPE_DEFINE_RE.search(_fold(fp_text))) else None
+    if label == preset.SCOPE_WITH_CONSTANTS and not enumerated:
+        problems.append(
+            'G5 %s claims the scope is %r, but %s enumerates no constants for any build. The '
+            'label would be a promise about a preimage half that does not exist.'
+            % (FP_PATH, preset.SCOPE_WITH_CONSTANTS, CONST_PATH))
+    if label == preset.SCOPE_SURFACE_ONLY and enumerated:
+        problems.append(
+            'G5 %s still says %r while %s compiles a constant enumeration in. The EA would hash '
+            'the constants and label the result as though it had not -- and the Python side picks '
+            'its label from whether it WAS GIVEN constants, so the two stop matching.'
+            % (FP_PATH, preset.SCOPE_SURFACE_ONLY, CONST_PATH))
+
     # G3 -- the two constants that are NOT in the generated file, and are therefore the only part
     # of the cross-language contract nothing else looks at. This is a SOURCE check, and it says so:
     # it cannot prove MetaTrader's CryptEncode agrees with hashlib (only a tester run does that,
     # and ORDER-710 records four). What it can do is refuse the edit that silently moves every
     # future digest -- which compiles cleanly, passes G1 and G2, and shows up as a mismatch nobody
     # can explain, with the binary as the first suspect.
-    want_scope = preset.SCOPE_SURFACE_ONLY
-    m = SCOPE_DEFINE_RE.search(_fold(fp_text))
+    # ORDER-730: the expected label is now DERIVED from whether constants are enumerated, exactly
+    # as preset._constant_scope() derives it from whether it was handed any. Hard-coding it here
+    # would make this criterion a second opinion about the scope rather than a check that the two
+    # sides agree.
+    want_scope = preset.SCOPE_WITH_CONSTANTS if enumerated else preset.SCOPE_SURFACE_ONLY
     if not m:
         problems.append(
             'G3 %s does not #define CFG_FP_SCOPE as a quoted literal, so the EA\'s preimage begins '
@@ -145,11 +214,10 @@ def check(worktree=False, source=None):
             'hashed string.' % FP_PATH)
     elif m.group(1) != want_scope:
         problems.append(
-            'G3 %s says CFG_FP_SCOPE is %r but preset._constant_scope() produces %r for the same '
-            'no-locked-constants case (preset.SCOPE_SURFACE_ONLY). The scope is the first line '
-            'of the preimage on BOTH '
-            'sides, so the two hashes can never match again -- and nothing else in the tier looks '
-            'at it.' % (FP_PATH, m.group(1), want_scope))
+            'G3 %s says CFG_FP_SCOPE is %r but preset._constant_scope() produces %r for the case '
+            'this snapshot is in (constants enumerated: %s). The scope is the first line of the '
+            'preimage on BOTH sides, so the two hashes can never match again -- and nothing else '
+            'in the tier looks at it.' % (FP_PATH, m.group(1), want_scope, enumerated))
     alphabets = [a for a in HEX_ALPHABET_RE.findall(_fold(fp_text)) if len(a) == 16]
     if not alphabets:
         problems.append(
@@ -162,7 +230,8 @@ def check(worktree=False, source=None):
             'compiling cleanly and passing every other criterion here.'
             % (FP_PATH, ', '.join(repr(a) for a in alphabets)))
 
-    return problems, {'mode': src.mode, 'tags': tags, 'keys': keys,
+    return problems, {'mode': src.mode, 'tags': tags, 'keys': keys, 'consts': const_keys,
+                      'enumerated': enumerated,
                       'scope': m.group(1) if m else '(unreadable)'}
 
 
@@ -178,11 +247,14 @@ def main(argv):
         out.flush()
         return 2
     out.write('%s\n' % _source(worktree).marker('check_input_surface_gen'))
-    out.write('judged bytes : %s, %s, %s and %s, all at %s\n'
-              % (INPUTS_PATH, GEN_PATH, CORE_PATH, FP_PATH, info['mode']))
+    out.write('judged bytes : %s, %s, %s, %s and %s, all at %s\n'
+              % (INPUTS_PATH, GEN_PATH, CONST_PATH, CORE_PATH, FP_PATH, info['mode']))
     out.write('surface      : %s\n'
               % ' '.join('%s=%d' % (t, info['keys'][t]) for t in info['tags']))
-    out.write('scope label  : %s (both sides)\n' % info['scope'])
+    out.write('constants    : %s\n'
+              % ' '.join('%s=%d' % (t, info['consts'][t]) for t in info['tags']))
+    out.write('scope label  : %s (both sides; enumerated=%s)\n'
+              % (info['scope'], info['enumerated']))
     if problems:
         out.write('\n%s PROBLEM(S):\n' % len(problems))
         for p in problems:

@@ -108,6 +108,11 @@ L1_FILES = (
     # here for the reason the snapshot_build entry above gives: the guard's verdict is only as
     # good as the text this module emits, so its reads are judged inputs one layer down.
     '_triage/factory_os/gen_input_surface.py',
+    # ORDER-730's generator, here for the same reason as the one above and one step further: it
+    # decides which LOCKED CONSTANTS reach the preimage, by evaluating the preprocessor over the
+    # include closure. A read of the wrong vintage here enumerates a build that is not the one
+    # being committed.
+    '_triage/factory_os/gen_locked_constants.py',
     # ORDER-710's evidence tool. It compiles the surface the tester run is compared against, so a
     # read of the wrong vintage here would produce a MISMATCH nobody could explain -- the
     # expensive kind of failure, because the first suspect would be the EA.
@@ -336,6 +341,10 @@ CATEGORY = {
     # that defaulted its source would be a second decider of which bytes the enumeration
     # describes.
     '_triage/factory_os/gen_input_surface.py': 'LIB',
+    # LIB for the same reason, and it matters more here: scan() takes a `read(relpath)` CALLABLE,
+    # so the checker drives the whole include-closure walk off its own EvidenceSource. A version
+    # that opened paths itself would read the closure from the disk while judging a commit.
+    '_triage/factory_os/gen_locked_constants.py': 'LIB',
     # B: a BUILDER. It reads in worktree mode on purpose and prints that it did -- the binary
     # under test was compiled from the working tree, so judging the index would compare a binary
     # against bytes it was not built from.

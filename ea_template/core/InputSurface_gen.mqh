@@ -1074,20 +1074,14 @@ int    CFG_SurfaceKeys() { return(-1); }
 string CFG_SurfacePreimage() { return("UNENUMERATED"); }
 #endif
 
-// The entry point LabCore prints. It lives HERE, after every block, because it calls
-// CFG_SurfacePreimage() and the include that defines the canonicalisers is above.
+// ORDER-730 MOVED CFG_Fingerprint() OUT OF THIS FILE, into LockedConstants_gen.mqh.
+// It now hashes the surface AND the locked constants, and the constant macros are
+// defined by headers LabCore includes AFTER this one -- so an entry point here could
+// not name them. Not a preference: a reference to an undefined macro does not compile.
 //
-// THE UNENUMERATED BRANCH RETURNS A NON-HEX SENTINEL, NOT A HASH. An earlier version
-// hashed the string "UNENUMERATED" and the comment above claimed the result "cannot be
-// mistaken for a real fingerprint" -- it is a perfectly ordinary 64-character lowercase
-// digest, and the claim was the opposite of what the code did. The only thing protecting
-// the reader was build=NO_BUILD_TAG on the same line. Now the field itself cannot be
-// mistaken for a digest, and nothing has to be inferred from a neighbouring field.
-string CFG_Fingerprint()
-  {
-   if(CFG_SurfaceKeys() < 0)
-      return("UNENUMERATED-NO-BUILD-TAG");
-   return(CFG_Sha256Hex(CFG_SurfacePreimage()));
-  }
+// THE UNENUMERATED BRANCH RETURNS A NON-HEX SENTINEL, NOT A HASH, and that rule moved
+// with it. An earlier version hashed the string "UNENUMERATED" and the comment claimed
+// the result "cannot be mistaken for a real fingerprint" -- it is a perfectly ordinary
+// 64-character lowercase digest, and the claim was the opposite of what the code did.
 
 #endif // BOSS_INPUT_SURFACE_GEN_MQH

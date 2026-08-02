@@ -25,6 +25,7 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
 import evidence     # noqa: E402
+import gen_locked_constants as gen_consts   # noqa: E402
 import preset       # noqa: E402
 
 
@@ -58,9 +59,22 @@ def build(build_tag, overrides=None, root=ROOT):
     layers = defaults_layer(surface, unit_classes)
     if overrides:
         layers.append(preset.Layer('hypothesis', list(overrides)))
+    # ORDER-730: the locked constants join the preimage here, which is what moves the scope from
+    # `surface_only` to `surface+constants`. They come from the SAME EvidenceSource as the surface
+    # -- a constant read from the disk while the surface came from the index would fingerprint a
+    # configuration no single snapshot has.
+    consts = gen_consts.constants_for(
+        src.read_committed, build_tag,
+        gen_consts._resolve_wrappers(src.read_committed, src.read_committed(preset.INPUTS_REL),
+                                     _wrapper_rels(root))[1][build_tag])
     return preset.compile_preset(surface, layers, 'usd',
                                  unit_classes=unit_classes,
+                                 locked_constants=consts,
                                  enums=preset.load_enums(src)), surface
+
+
+def _wrapper_rels(root):
+    return gen_consts.wrapper_rels_on_disk(root)
 
 
 def main(argv):

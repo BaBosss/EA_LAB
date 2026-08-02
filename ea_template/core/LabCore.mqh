@@ -54,6 +54,13 @@
    #define LAB_ENTRY_TAG "??"
 #endif
 
+// ORDER-730: GENERATED (gen_locked_constants.py); guarded by check_input_surface_gen.py G4/G5.
+// THIS INCLUDE MUST STAY LAST. It enumerates every locked constant this build compiles in, by
+// NAMING each macro -- so every header that defines one has to have been included already, and
+// the LAB_ENTRY_TAG fallback directly above is one of them. Moved earlier, it does not produce a
+// wrong hash, it fails to compile. CFG_Fingerprint() lives in it for the same reason.
+#include "LockedConstants_gen.mqh"
+
 // _0_BarOpenOnly state (recompile-safe: reset in OnInit)
 datetime g_lab_last_bar = 0;
 

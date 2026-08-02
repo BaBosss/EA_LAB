@@ -38,6 +38,7 @@ sys.path.insert(0, HERE)
 
 import check_input_surface_gen as CHK   # noqa: E402
 import gen_input_surface as GEN         # noqa: E402
+import gen_locked_constants as GCONST   # noqa: E402
 import preset                           # noqa: E402
 
 # A minimal input source with two builds and one of every type this chassis declares. Small on
@@ -71,6 +72,46 @@ input double _12_Only    = 1.5;
 
 REAL_CORE = 'ea_template/core/LabCore.mqh'
 
+# ORDER-730. The constant half needs a translation unit, so the fixture grows a pair of wrappers
+# and a tiny core. `TWO` is the discriminator: it is defined only under `#ifdef LAB_ENTRY_12`, so
+# a scan that ignored the preprocessor would hand build 11 a constant its binary does not have --
+# and MQL5 would not compile the reference. `LAB_ENTRY_TAG` is defined in the WRAPPER, above the
+# include, which is the case that caught the first draft walking from the core file instead.
+FIXTURE_WRAPPERS = {
+    'ea_template/Boss_11_Fix.mq5': (
+        '#define LAB_ENTRY_11\n'
+        '#define LAB_ENTRY_TAG "11_Fix"\n'
+        '#include "core/FixCore.mqh"\n'),
+    'ea_template/Boss_12_Fix.mq5': (
+        '#define LAB_ENTRY_12\n'
+        '#define LAB_ENTRY_TAG "12_Fix"\n'
+        '#include "core/FixCore.mqh"\n'),
+}
+FIXTURE_CORE = (
+    '#ifndef FIX_CORE_MQH\n'
+    '#define FIX_CORE_MQH\n'
+    '#define CFG_FP_SCOPE "surface+constants"\n'
+    '#define ONE 3600            // a plain long\n'
+    '#define THROTTLE (4 * 900)  // folded arithmetic\n'
+    '#define RATE (-1.0)         // a double, by its literal text\n'
+    '#define PREFIX "GV_"        // a string\n'
+    '#define BARE                // no value: an include guard shape, not a constant\n'
+    '#ifdef LAB_ENTRY_12\n'
+    '#define TWO 2\n'
+    '#else\n'
+    '#define ONLY_11 1\n'
+    '#endif\n'
+    '#ifndef LAB_ENTRY_TAG\n'
+    '#define LAB_ENTRY_TAG "??"\n'
+    '#endif\n'
+    '#endif\n')
+
+
+def fixture_closure(extra_core=None):
+    files = dict(FIXTURE_WRAPPERS)
+    files['ea_template/core/FixCore.mqh'] = FIXTURE_CORE if extra_core is None else extra_core
+    return files
+
 
 class Mods(object):
     """The three modules under test, passed to every case as ONE handle.
@@ -81,10 +122,11 @@ class Mods(object):
     to refuse. Every case reads its modules off this object, so the mutant is unavoidable.
     """
 
-    def __init__(self, chk, gen, pre):
+    def __init__(self, chk, gen, pre, gconst=None):
         self.chk = chk
         self.gen = gen
         self.preset = pre
+        self.gconst = gconst if gconst is not None else GCONST
 
 
 class FakeSource(object):
@@ -99,6 +141,14 @@ class FakeSource(object):
         if rel not in self.files:
             raise CHK.ToolFailure('%s is not in the fixture source' % rel)
         return self.files[rel]
+
+    def list_committed(self, pattern):
+        """ORDER-730. Shaped like the real one: `*` stays inside one path segment, because the
+        real `list_committed` says so and a fixture that enumerated more generously would let a
+        case pass against a population the checker cannot actually see."""
+        pattern = pattern.replace(os.sep, '/')
+        rx = re.compile('^%s$' % '[^/]*'.join(re.escape(p) for p in pattern.split('*')))
+        return sorted(f for f in self.files if rx.match(f))
 
     def marker(self, component):
         return '##EVIDENCE-MODE## %s %s git_index=fixture' % (component, self.mode)
@@ -115,13 +165,20 @@ def real_core_text():
     return real_file(REAL_CORE)
 
 
-def files_for(M, inputs_text=FIXTURE_INPUTS, gen_text=None, core_text=None, fp_text=None):
-    return {
+def files_for(M, inputs_text=FIXTURE_INPUTS, gen_text=None, core_text=None, fp_text=None,
+              const_text=None, closure=None):
+    files = dict(closure if closure is not None else fixture_closure())
+    read = lambda rel: files[rel.replace(os.sep, '/')]        # noqa: E731 - a one-line reader
+    wrappers = sorted(f for f in files if f.endswith('.mq5'))
+    files.update({
         M.chk.INPUTS_PATH: inputs_text,
         M.chk.GEN_PATH: M.gen.emit(inputs_text) if gen_text is None else gen_text,
         M.chk.CORE_PATH: real_core_text() if core_text is None else core_text,
         M.chk.FP_PATH: real_file(M.chk.FP_PATH) if fp_text is None else fp_text,
-    }
+    })
+    files[M.chk.CONST_PATH] = (M.gconst.emit(read, inputs_text, wrappers)
+                               if const_text is None else const_text)
+    return files
 
 
 def problems_for(M, **kw):
@@ -160,7 +217,12 @@ def g1_specificity(M):
                           encoding='utf-8-sig').read()   # snapshot: worktree -- fixture input
     real_gen = io.open(os.path.join(ROOT, GEN.OUT_REL.replace('/', os.sep)),
                        encoding='utf-8-sig').read()      # snapshot: worktree -- fixture input
-    probs = problems_for(M, inputs_text=real_inputs, gen_text=real_gen)
+    # ORDER-730: the REAL Inputs.mqh declares eight builds, so it needs the REAL closure beside
+    # it -- the two-wrapper fixture would leave six builds with no translation unit, and the
+    # constant generator refuses that rather than skipping them.
+    probs = problems_for(M, inputs_text=real_inputs, gen_text=real_gen,
+                         closure=_real_closure(M),
+                         const_text=real_file(M.gconst.OUT_REL))
     if probs:
         return 'the REAL committed pair is refused: %s' % probs
     return None
@@ -195,14 +257,25 @@ def g2_specificity(M):
 # -- G3 the two constants that live OUTSIDE the generated file ---------------------------------
 
 def g3_attack(M):
-    """a scope label or a hex alphabet edited on ONE side must be REFUSED"""
+    """a scope label or a hex alphabet edited on ONE side must be REFUSED
+
+    ORDER-730 INVERTED THIS CASE, and the inversion is the point rather than a chore. It used to
+    rename `surface_only` -> `surface+constants` and expect a refusal, because nothing enumerated
+    constants and the wider label was the lie. Now the constants ARE enumerated, so that same
+    rename is the TRUE value and the lie is the narrow one. A case that had been left alone would
+    have kept asserting the old world and gone green for the wrong reason.
+    """
     real = real_file(M.chk.FP_PATH)
-    renamed = real.replace('#define CFG_FP_SCOPE "surface_only"',
-                           '#define CFG_FP_SCOPE "surface+constants"')
-    if renamed == real:
+    narrowed = real.replace('#define CFG_FP_SCOPE "surface+constants"',
+                            '#define CFG_FP_SCOPE "surface_only"')
+    if narrowed == real:
         return 'the fixture could not rename CFG_FP_SCOPE -- the anchor no longer matches the file'
-    if not any(p.startswith('G3') for p in problems_for(M, fp_text=renamed)):
+    if not any(p.startswith('G3') for p in problems_for(M, fp_text=narrowed)):
         return 'a scope label that disagrees with preset._constant_scope() was accepted'
+    invented = real.replace('#define CFG_FP_SCOPE "surface+constants"',
+                            '#define CFG_FP_SCOPE "everything"')
+    if not any(p.startswith('G3') for p in problems_for(M, fp_text=invented)):
+        return 'an invented scope label was accepted'
     upper = real.replace('"0123456789abcdef"', '"0123456789ABCDEF"')
     if upper == real:
         return 'the fixture could not upper-case the hex alphabet -- the anchor no longer matches'
@@ -221,6 +294,125 @@ def g3_specificity(M):
     noisy = real_file(M.chk.FP_PATH) + '\n// a comment added by an unrelated commit\n'
     if problems_for(M, fp_text=noisy):
         return 'an added comment was reported as a contract violation'
+    return None
+
+
+# -- G4 the constant enumeration is current, and it is wired in (ORDER-730) --------------------
+
+def g4_attack(M):
+    """a constant ADDED or REMOVED without regenerating, in either vintage, must be REFUSED
+
+    🔴 WHAT THIS CASE DELIBERATELY DOES NOT ASSERT, because trying to taught something real:
+    a constant whose VALUE moves does not need this guard at all, and an earlier version of this
+    case failed for claiming it did. The generated MQL5 emits `CFG_CanonLong((long)ONE)` -- it
+    names the MACRO and never transcribes the value -- so `#define ONE 3600` becoming `7200` leaves
+    the generated file byte-identical while BOTH sides pick the new value up automatically. There
+    is no stale state to catch. What the generated file encodes is the NAME SET and the CANONICAL
+    FORM, so those are what can go stale, and those are what is attacked here.
+    """
+    stale = files_for(M)[M.chk.CONST_PATH]
+    added = FIXTURE_CORE.replace('#define PREFIX "GV_"',
+                                 '#define PREFIX "GV_"\n#define EXTRA 5')
+    probs = problems_for(M, closure=fixture_closure(added), const_text=stale)
+    if not any(p.startswith('G4') for p in probs):
+        return 'a NEW constant left the stale enumeration accepted'
+    removed = FIXTURE_CORE.replace('#define PREFIX "GV_"        // a string\n', '')
+    probs = problems_for(M, closure=fixture_closure(removed), const_text=stale)
+    if not any(p.startswith('G4') for p in probs):
+        return 'a DELETED constant left the stale enumeration accepted -- the EA would name a macro that no longer exists'
+    retyped = FIXTURE_CORE.replace('#define RATE (-1.0)', '#define RATE (-1)')
+    probs = problems_for(M, closure=fixture_closure(retyped), const_text=stale)
+    if not any(p.startswith('G4') for p in probs):
+        return 'a constant that changed KIND (double -> long) left the stale canonicaliser accepted'
+    # the reverse vintage: enumeration ahead of its source
+    ahead = files_for(M, closure=fixture_closure(added))[M.chk.CONST_PATH]
+    if not any(p.startswith('G4') for p in problems_for(M, const_text=ahead)):
+        return 'an enumeration ahead of its closure was accepted'
+    core = real_core_text().replace('#include "LockedConstants_gen.mqh"',
+                                    '//#include "LockedConstants_gen.mqh"')
+    if not any(p.startswith('G4') for p in problems_for(M, core_text=core)):
+        return 'a commented-out LockedConstants_gen include was accepted'
+    return None
+
+
+def g4_specificity(M):
+    """a consistent closure passes -- including the REAL one -- and CRLF is not drift"""
+    if problems_for(M):
+        return 'a freshly generated constant pair was refused: %s' % problems_for(M)
+    crlf = files_for(M)[M.chk.CONST_PATH].replace('\n', '\r\n')
+    if problems_for(M, const_text=crlf):
+        return 'the same enumeration in CRLF was reported as drift'
+    # A comment edited beside a constant must NOT move the enumeration: the value is what is
+    # hashed. Without this half, G4 would be satisfied by any file-level diff at all.
+    recomment = FIXTURE_CORE.replace('// a plain long', '// a plain long, renamed in this commit')
+    if problems_for(M, closure=fixture_closure(recomment),
+                    const_text=files_for(M)[M.chk.CONST_PATH]):
+        return 'a comment edited next to a constant was reported as drift'
+    real_inputs = real_file(M.preset.INPUTS_REL)
+    real_const = real_file(M.gconst.OUT_REL)
+    probs = problems_for(M, inputs_text=real_inputs,
+                         gen_text=real_file(GEN.OUT_REL),
+                         closure=_real_closure(M),
+                         const_text=real_const)
+    if probs:
+        return 'the REAL committed closure is refused: %s' % probs
+    return None
+
+
+def _real_closure(M):
+    """Every real file the constant scan reaches, as a fixture dict. Read from the worktree on
+    purpose: these are fixture INPUTS, and the verdict under test is the checker's."""
+    files = {}
+    for name in sorted(os.listdir(os.path.join(ROOT, M.gconst.WRAPPER_DIR))):
+        if name.endswith('.mq5'):
+            rel = '%s/%s' % (M.gconst.WRAPPER_DIR, name)
+            files[rel] = real_file(rel)
+    for dirpath, _dirs, names in os.walk(os.path.join(ROOT, 'ea_template', 'core')):
+        for name in names:
+            if name.endswith('.mqh'):
+                rel = os.path.relpath(os.path.join(dirpath, name), ROOT).replace(os.sep, '/')
+                files[rel] = real_file(rel)
+    return files
+
+
+# -- G5 the label and the enumeration may not move apart (ORDER-730) ---------------------------
+
+def g5_attack(M):
+    """BOTH directions: a label promising constants with none behind it, and an enumeration
+    compiled in while the label still denies it"""
+    empty_core = FIXTURE_CORE.replace('#define CFG_FP_SCOPE "surface+constants"', '')
+    for line in ('#define ONE 3600', '#define THROTTLE (4 * 900)', '#define RATE (-1.0)',
+                 '#define PREFIX "GV_"', '#define TWO 2', '#define ONLY_11 1',
+                 '#define LAB_ENTRY_TAG "??"'):
+        empty_core = empty_core.replace(line, '')
+    closure = fixture_closure(empty_core)
+    for rel in list(closure):
+        if rel.endswith('.mq5'):
+            closure[rel] = closure[rel].replace('#define LAB_ENTRY_TAG "11_Fix"\n', '') \
+                                       .replace('#define LAB_ENTRY_TAG "12_Fix"\n', '')
+    stripped = files_for(M, closure=closure)[M.chk.CONST_PATH]
+    # The precondition asks the CHECKER'S OWN question, not a looser one of its own. A plain
+    # `'const:' in stripped` looked right and was wrong: the unenumerated fallback branch returns
+    # the literal "\nconst:UNENUMERATED", which is not a preimage EMISSION and which
+    # CFG_Fingerprint() never hashes -- so the fixture reported itself broken while being exactly
+    # what the case needed.
+    if M.chk.CONST_BLOCK_RE.search(stripped):
+        return 'the fixture meant to produce a constant-free enumeration still emits a const line'
+    probs = problems_for(M, closure=closure, const_text=stripped)
+    if not any(p.startswith('G5') for p in probs):
+        return 'the label claimed surface+constants while nothing enumerated a constant'
+
+    narrowed = real_file(M.chk.FP_PATH).replace('"surface+constants"', '"surface_only"')
+    probs = problems_for(M, fp_text=narrowed)
+    if not any(p.startswith('G5') for p in probs):
+        return 'an enumeration was compiled in while the label still said surface_only'
+    return None
+
+
+def g5_specificity(M):
+    """the matched pair -- label and enumeration together -- passes in the state the repo is in"""
+    if problems_for(M):
+        return 'the matched label/enumeration pair was refused: %s' % problems_for(M)
     return None
 
 
@@ -357,6 +549,86 @@ def x3_specificity(M):
     return None
 
 
+# -- X4 the DERIVATION rule itself: per build, and refuse what it cannot reduce (ORDER-730) -----
+
+def x4_attack(M):
+    """the preprocessor decides membership, and an unreducible value is refused BY NAME"""
+    files = fixture_closure()
+    read = lambda rel: files[rel]                              # noqa: E731
+    wrappers = sorted(f for f in files if f.endswith('.mq5'))
+    _tags, wmap = M.gconst._resolve_wrappers(read, FIXTURE_INPUTS, wrappers)
+
+    names11 = set(c.name for c in M.gconst.scan(read, 'LAB_ENTRY_11', wmap['LAB_ENTRY_11']))
+    names12 = set(c.name for c in M.gconst.scan(read, 'LAB_ENTRY_12', wmap['LAB_ENTRY_12']))
+    if 'TWO' in names11:
+        return 'TWO is behind `#ifdef LAB_ENTRY_12` and was handed to build 11 anyway'
+    if 'TWO' not in names12:
+        return 'TWO is missing from build 12, which does define it'
+    if 'ONLY_11' not in names11 or 'ONLY_11' in names12:
+        return 'the #else branch was not evaluated: ONLY_11 belongs to build 11 and only to it'
+    if 'BARE' in names11:
+        return 'a valueless #define was enumerated as a constant'
+
+    # the value, per build, must be the WRAPPER's -- the bug the first draft shipped
+    got = dict((c.name, c.text)
+               for c in M.gconst.scan(read, 'LAB_ENTRY_11', wmap['LAB_ENTRY_11']))
+    if got.get('LAB_ENTRY_TAG') != '11_Fix':
+        return ('LAB_ENTRY_TAG resolved to %r, not the wrapper value -- the closure is not '
+                'starting at the translation unit' % got.get('LAB_ENTRY_TAG'))
+    if got.get('THROTTLE') != '3600':
+        return 'the arithmetic value (4 * 900) did not fold to 3600'
+    if not got.get('RATE', '').startswith('0x'):
+        return 'a double-spelled constant did not canonicalise to IEEE bits'
+    if got.get('ONE') != '3600':
+        return 'an integer constant was not emitted as a plain decimal'
+
+    # unreducible -> REFUSED, not skipped
+    bad = FIXTURE_CORE.replace('#define ONE 3600', '#define ONE SymbolInfoDouble(_Symbol, 1)')
+    badfiles = fixture_closure(bad)
+    try:
+        M.gconst.scan(lambda rel: badfiles[rel], 'LAB_ENTRY_11', wmap['LAB_ENTRY_11'])
+        return 'a constant this module cannot reduce to a scalar was silently skipped'
+    except M.preset.PresetRefusal as exc:
+        if 'ONE' not in str(exc):
+            return 'the refusal did not name the constant it could not reduce'
+
+    # a conflicting redefinition inside ONE build is refused with both sites named
+    dup = FIXTURE_CORE.replace('#define PREFIX "GV_"',
+                               '#define PREFIX "GV_"\n#define ONE 99')
+    dupfiles = fixture_closure(dup)
+    try:
+        M.gconst.scan(lambda rel: dupfiles[rel], 'LAB_ENTRY_11', wmap['LAB_ENTRY_11'])
+        return 'one name defined twice with different values in one build was accepted'
+    except M.preset.PresetRefusal:
+        pass
+    return None
+
+
+def x4_specificity(M):
+    """the rule ALLOWS the ordinary cases, including the REAL tree, and an identical
+    redefinition -- a derivation that refuses everything is not a derivation"""
+    files = fixture_closure()
+    read = lambda rel: files[rel]                              # noqa: E731
+    wrappers = sorted(f for f in files if f.endswith('.mq5'))
+    _tags, wmap = M.gconst._resolve_wrappers(read, FIXTURE_INPUTS, wrappers)
+    same = FIXTURE_CORE.replace('#define PREFIX "GV_"', '#define PREFIX "GV_"\n#define ONE 3600')
+    samefiles = fixture_closure(same)
+    try:
+        M.gconst.scan(lambda rel: samefiles[rel], 'LAB_ENTRY_11', wmap['LAB_ENTRY_11'])
+    except M.preset.PresetRefusal as exc:
+        return 'an IDENTICAL redefinition was refused, and it changes nothing: %s' % exc
+    real = _real_closure(M)
+    try:
+        rt, rw = M.gconst._resolve_wrappers(lambda r: real[r], real_file(M.preset.INPUTS_REL),
+                                            [f for f in real if f.endswith('.mq5')])
+        for tag in rt:
+            if not M.gconst.scan(lambda r: real[r], tag, rw[tag]):
+                return 'build %s derived ZERO locked constants from the real tree' % tag
+    except M.preset.PresetRefusal as exc:
+        return 'the REAL tree cannot be scanned: %s' % exc
+    return None
+
+
 CASES = [
     ('G1', 'the committed enumeration is the committed surface', g1_attack, g1_specificity,
      ('check_input_surface_gen.py',
@@ -371,6 +643,21 @@ CASES = [
      ('check_input_surface_gen.py',
       "    elif m.group(1) != want_scope:",
       "    elif False:")),
+    ('G4', 'the constant enumeration is the closure, and it is wired in', g4_attack,
+     g4_specificity,
+     ('check_input_surface_gen.py',
+      '    if _fold(committed_const) != _fold(expected_const):',
+      '    if False:')),
+    ('G5', 'the scope label and the constant enumeration cannot move apart', g5_attack,
+     g5_specificity,
+     ('check_input_surface_gen.py',
+      '    enumerated = bool(CONST_BLOCK_RE.search(_fold(committed_const)))',
+      '    enumerated = True')),
+    ('X4', 'a locked constant is derived per BUILD, and an unreducible one is refused',
+     x4_attack, x4_specificity,
+     ('gen_locked_constants.py',
+      '        if not all(f[0] for f in stack):',
+      '        if False:')),
     ('X1', 'the emitted MQL5 is the parsed surface, in order', x1_attack, x1_specificity,
      ('gen_input_surface.py',
       "    if decl.mql_type in _CANON_CALL:\n        return _CANON_CALL[decl.mql_type] % decl.name",
@@ -389,7 +676,7 @@ CASES = [
 # EVERYTHING DOWNSTREAM OF IT IS RE-IMPORTED, so the mutation actually reaches the code being
 # probed. Skipping that step is how a mutation suite runs 5 probes against 5 pristine modules and
 # prints DETECTED for none of them.
-CHAIN = ('preset', 'gen_input_surface', 'check_input_surface_gen')
+CHAIN = ('preset', 'gen_input_surface', 'gen_locked_constants', 'check_input_surface_gen')
 
 
 def _fresh(name):
@@ -437,7 +724,7 @@ def load_mutant(filename, old, new):
             else:
                 loaded[step] = sys.modules[step]     # upstream: unchanged
         return (Mods(loaded['check_input_surface_gen'], loaded['gen_input_surface'],
-                     loaded['preset']), tmp, saved)
+                     loaded['preset'], loaded['gen_locked_constants']), tmp, saved)
     except Exception:
         sys.modules.update(saved)
         shutil.rmtree(tmp, ignore_errors=True)

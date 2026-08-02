@@ -22,12 +22,17 @@
 #ifndef BOSS_CONFIG_FINGERPRINT_MQH
 #define BOSS_CONFIG_FINGERPRINT_MQH
 
-// The scope label, and it is DERIVED FROM WHAT IS HASHED, not decoration: this preimage covers
-// every input the build exposes and no locked constant, because nothing enumerates the locked
-// constants yet. preset.py's _constant_scope() carries the same two names and the same reason.
-// When constants join the preimage BOTH sides change together or the comparison stops meaning
-// anything (memory name-it-honestly-when-you-cannot-prove-it).
-#define CFG_FP_SCOPE "surface_only"
+// The scope label, and it is DERIVED FROM WHAT IS HASHED, not decoration: this preimage now
+// covers every input the build exposes AND every locked constant that reaches it, which is what
+// design section 5.6 asks for. ORDER-730 moved it here from "surface_only"; ORDER-710 had
+// deliberately left it narrow while the constants were unenumerated, because an incomplete claim
+// gets an incomplete name (memory name-it-honestly-when-you-cannot-prove-it).
+//
+// preset.py's _constant_scope() carries the same two names and picks between them by WHETHER IT
+// WAS GIVEN CONSTANTS -- so this label and that one can only agree while both sides really do
+// hash the same two halves. check_input_surface_gen.py G3 is what holds them together, and G5
+// is what stops this line moving without the enumeration moving with it.
+#define CFG_FP_SCOPE "surface+constants"
 
 union CFG_DoubleBits
   {
