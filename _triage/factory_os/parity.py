@@ -393,6 +393,33 @@ def observe_manifest(man):
                    expert=man.get('expert'), binary=man.get('binary'))
 
 
+def anchor_reasons(man, obs):
+    """-> reasons the side disagrees with the COMPILER -- the third corner of point 2.
+
+    🔴 ADDED BY THE SECOND AUDIT ROUND, which found `expected_hash` written into every manifest
+    and read by NOTHING. Point 2 compared wrapper against parent only, and the failure that slips
+    through a two-sided comparison is exactly the one this repo has already paid for: MT5's
+    `[TesterInputs]` fills every UNLISTED input from the per-terminal cache, and a `.set` that
+    silently fails to apply does so for BOTH runs of a pair -- identical (wrong) hashes, point 2
+    `AGREE`, parity "holds" while measuring some other configuration entirely
+    (`mt5-tester-cache-nondeterminism`, `proving-a-set-was-loaded-on-a-chart`, ORDER-165's 8/8
+    false drift). The comparison has to be TRIANGULAR: wrapper == parent == compiler.
+
+    Skipped only when the side printed no `[CFG]` line at all -- a refused attach never reaches
+    the emitter, and point 1 owns that agreement. A side that printed a hash is held to it.
+    """
+    expected = man.get('expected_hash')
+    if not expected or obs.cfg is None:
+        return []
+    if obs.cfg.get('hash') != expected:
+        return ['%s: the EA hashed %s but the COMPILER expected %s for this .set. The two sides '
+                'may still agree with each other -- that is how a .set that silently failed to '
+                'apply passes a two-sided comparison -- so this case is judged against the '
+                'compiler as the third corner, and it does not hold.'
+                % (obs.label, obs.cfg.get('hash', '?')[:16], expected[:16])]
+    return []
+
+
 def _rollup_main(dirs):
     """--rollup <caseDir> ... -- judge the CASE SET, which is the level design 5.5 is satisfied at."""
     import os
@@ -414,6 +441,11 @@ def _rollup_main(dirs):
                              'DIFFER (it proves a const is applied)\n' % name)
             continue
         passed, _reasons = verdict_for_case(kind, obs_a, obs_b, points)
+        anchors = anchor_reasons(a, obs_a) + anchor_reasons(b, obs_b)
+        if anchors:
+            passed = False
+            for r in anchors:
+                sys.stdout.write('  ANCHOR: %s\n' % r)
         cases.append((name, kind, points))
         # THREE labels, not two, and the missing one was actively misleading. A case with an
         # UNTESTED point is not a FAILURE -- no case can exercise all seven, so calling it one
@@ -463,6 +495,10 @@ def main(argv):
     kind = manA.get('kind', NEUTRAL)
     points = compare(a, b)
     passed, reasons = verdict_for_case(kind, a, b, points)
+    anchors = anchor_reasons(manA, a) + anchor_reasons(manB, b)
+    if anchors:
+        passed = False
+        reasons = anchors + reasons
 
     sys.stdout.write('=== ORDER-1021 parity, design 5.5 -- %s ===\n' % manA.get('case', kind))
     sys.stdout.write('  lane   : %s\n' % manA.get('lane'))

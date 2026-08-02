@@ -143,6 +143,24 @@ def a_alert_ignores_host_noise():
             'host noise produced a DIFFER on alerts: %r' % got['alerts'])
 
 
+def a_anchor_catches_cache_poison():
+    """🔴 ADDED BY THE SECOND AUDIT ROUND. `expected_hash` was written into every manifest and
+    read by NOTHING -- point 2 compared wrapper against parent only. The failure that slips
+    through a two-sided comparison: MT5 fills every unlisted input from the per-terminal cache,
+    so a .set that silently fails to apply does so for BOTH runs -- identical wrong hashes,
+    point 2 AGREE, parity holds while measuring some other configuration (ORDER-165's 8/8 false
+    drift, memory mt5-tester-cache-nondeterminism). The anchor makes point 2 TRIANGULAR:
+    wrapper == parent == compiler. Both directions asserted: a matching side produces no reason,
+    a mismatched side produces exactly one that names both hashes."""
+    o = obs('wrapper', deals=[DEAL_A], orders=[ORDER_A], log=[CFG])
+    fired = P.anchor_reasons({'expected_hash': 'f' * 64}, o)
+    quiet = P.anchor_reasons({'expected_hash': 'a' * 64}, o)     # CFG's hash is 'a'*64
+    refused = P.anchor_reasons({'expected_hash': 'f' * 64}, obs('wrapper', log=[FATAL]))
+    return (len(fired) == 1 and quiet == [] and refused == [],
+            'fired=%d (want 1), quiet=%d (want 0), refused-side=%d (want 0 -- no [CFG] printed)'
+            % (len(fired), len(quiet), len(refused)))
+
+
 def a_side_effects_differ():
     """Identical trades; only the wrapper trips the account-DD cage. Points 1-5 all agree."""
     return (obs('wrapper', deals=[DEAL_A], orders=[ORDER_A], log=[CFG, RISK]),
@@ -229,6 +247,8 @@ PLAIN_ATTACKS = (
      d_rollup_needs_every_point_exercised),
     ('alerts', 'a host log line containing "failed" on one side only must NOT differ',
      a_alert_ignores_host_noise),
+    ('anchor', 'both sides cache-poisoned to the SAME wrong hash -- only the compiler corner sees it',
+     a_anchor_catches_cache_poison),
 )
 
 
