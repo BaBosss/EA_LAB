@@ -908,8 +908,54 @@ reads, as data. `PART 4b` already walks the import closure and demands the MODUL
 it would then union each declared module's `GUARDED_INPUTS` into what the suite must declare. A
 path in a comment is no longer a path in the sweep, which is exactly the failure that killed 732.
 
+### 🔴 C1 MEASURED 2026-08-02 (`S-2026-08-02-CONSTFP`) — the number points the OTHER way, and the order should be re-decided before it is built
+
+**C2 says: *"if it lands near 66 again, it has not solved anything and should be closed the same
+way."*** It does not land near 66 — it lands **higher**, which is the outcome nobody filed for.
+
+| suite | modules in closure | literal repo paths | already declared | **NEW** |
+|---|---|---|---|---|
+| `run_contract_binding_tests.ps1` | 32 | 75 | 53 | **35** |
+| `run_registry_tests.ps1` | 8 | 49 | 14 | **36** |
+| `run_monitor_integrity_tests.ps1` | 4 | 14 | 10 | **14** |
+| `run_snapshot_s4_tests.ps1` | 6 | 15 | 11 | **13** |
+| `run_preset_tests.ps1` | 4 | 6 | 7 | **3** |
+| `run_work_receipts_tests.ps1` | 3 | 2 | 4 | **1** |
+| **total** | | | | **102** |
+
+<sub>A seventh row, `run_fast_cages.ps1` (77 more), is **excluded as an artifact of the
+measurement**: it is the runner, not a key in `$SUITE_GUARDS`, so it has no declaration set to be
+short of. Counting it gives 179. Neither number is below ORDER-732's **64**.</sub>
+
+**What this says.** The premise behind this order is that declaring is cheaper than guessing
+because a text scan over-counts — it "cannot tell a path a module READS from one it MENTIONS", so
+the declared set should be the smaller, honest core. **It is not smaller.** The import closure is
+wide (32 modules for one suite), and a module genuinely reads most of the repo paths it names as
+constants — `run_guard_shape_lint.py`'s own `L1_FILES` is 16 files it really opens. The
+over-counting was never where the cost was.
+
+**So the decision this order actually faces is not "how do we implement `GUARDED_INPUTS`" but
+"is 102 more declarations, each widening the pathspec and pulling suites onto more commits, worth
+buying over the five hand-widenings it would replace?"** That is a judgement about the tier's
+budget (C4: 90.0s, and `ORDER-730` just spent and repaid 42s of it inside a single checker), and
+it should be made with these numbers in front of it rather than discovered halfway through the
+build.
+
+<sub>⚠️ **What this measurement is, exactly, so it is not over-read.** It is a **proxy**, run from
+the scratchpad and not committed as a mechanism: it counts *string literals assigned to a name in
+a module of the suite's import closure that match a tracked repo path*. A real `GUARDED_INPUTS`
+would cover *paths a module READS*, and those two sets are not identical — some of the 102 are
+registries a module lints rather than inputs it opens (which is the same read-vs-mention
+distinction this order exists to fix, one level up). The number is therefore an **upper bound with
+the right order of magnitude**, not the exact demand — and it is above 64 by enough that
+sharpening it is unlikely to cross back. Instrumenting it exactly means building the mechanism,
+which is what the decision above gates. Memory: `text-scan-cannot-tell-read-from-mention`,
+`instrument-what-the-guard-actually-reads`.</sub>
+
 ### Acceptance
-- **C1** the declaration is CHECKED, not trusted: a module whose `GUARDED_INPUTS` omits a path it
+- **C1** ✅ **measured above** (2026-08-02) — and the result reopens the order's premise rather
+  than clearing the way. Original text: the declaration is CHECKED, not trusted: a module whose
+  `GUARDED_INPUTS` omits a path it
   actually opens must be caught. `run_guard_shape_lint.py`'s `L1` already parses every read in
   these modules and knows its path argument where it is a literal — that is the engine, and this
   order should use it rather than write a second parser.
