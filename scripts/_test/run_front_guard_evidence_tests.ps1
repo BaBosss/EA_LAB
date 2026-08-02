@@ -290,7 +290,16 @@ function Get-ProbeOrderId {
         if ($cells.Count -lt 2) { continue }
         $status = ($cells[$cells.Count - 1] -replace '[`*_]', '').Trim().ToUpperInvariant()
         if ($status -notmatch '^ACTIVE\b') { continue }
-        foreach ($m in [regex]::Matches($line, '\b(\d{3})-(\d{3})\b')) {
+        # 🔴 THE SAME PATTERN THE GUARD USES, and it has to be. This read `\b(\d{3})-(\d{3})\b`
+        # until 2026-08-02, while check_order_collision.ps1:329 reads `(\d+)-(\d+)`. The two
+        # parsers agreed for as long as every reserved block was three digits, and disagreed the
+        # first day one was not: with 1000-1009 / 1010-1019 / 1020-1029 the only ACTIVE lanes,
+        # THIS function found no ranges at all, concluded "no ACTIVE lane", fell back to the
+        # 900-998 range and handed B0 a probe id outside every reserved block -- which the guard
+        # then correctly refused. B0 is the SPECIFICITY half, so the symptom was a cage failing
+        # on a healthy repo, and the cause was a cage that had a narrower idea of the file than
+        # the guard it exists to test. ORDER-1022.
+        foreach ($m in [regex]::Matches($line, '(?<![-\w.])(\d+)\s*-\s*(\d+)(?![-\w.])')) {
             $ranges += , @([int]$m.Groups[1].Value, [int]$m.Groups[2].Value)
         }
     }

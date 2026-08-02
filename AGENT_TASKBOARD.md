@@ -105,6 +105,210 @@
 
 ---
 
+## ORDER-1020 — [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only — `PARTIAL (Claude/Opus 2026-08-02) — the reachability half is BUILT and CAGED (116 → 38, under design §5.3's ≤40) and the old-.set policy is CLOSED with 42 real fires; the ParameterBinding rows and param_registry_check's new criteria are NOT built` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+> **Slice S7's acceptance, from design §10:** `param_registry_check` CLEAN · **zero `UNKNOWN` on
+> Boss_14's Operator surface** · an old `.set` migrates or **fails loudly**.
+> **Prohibitions:** no key renames · no strategy/default behaviour change.
+
+### ✅ A3 — the old-`.set` policy is CLOSED, and the refusal was observed firing on real files
+
+The owner ratified the policy on 2026-08-01 (design §11 decision 4). It existed only as prose
+until this order. `_triage/factory_os/setfile.py` implements both halves; `run_setfile_tests.py`
+is its cage — **5 criteria × (attack + specificity) = 10 green, 5/5 mutation probes DETECTED**.
+
+**Measured on the real repo, not on fixtures** — 50 template `.set` files whose build tag is
+certain (`ea_template/sets/**`, filename carries `Boss_NN`):
+
+| bucket | count | |
+|---|---|---|
+| `PARTIAL` | **42** | refused loudly, missing keys named |
+| `LOADS` | 8 | full-surface; the regression-cage files among them |
+| `UNKNOWN_KEY` | **0** | |
+
+So the partial-set branch has **42 real fires**. 🔴 **The unknown-key branch has fired only on
+fixtures and one deliberate cross-build probe, and is therefore `UNTESTED` on real data** — not
+"passed" (CLAUDE.md VERDICT GATE guard clause). It is easy to see fire and hard to see fire *for
+the right reason*, and this population does not contain the case.
+
+<sub>⚠️ A wider heuristic scan (162 files, build tag guessed from the filename) reported 23
+`UNKNOWN_KEY`. **That number is contaminated and must not be quoted:** the filename pattern
+matched standalone-EA `.set` files (`_06_AllowLive`, `_02_Macd*`) that belong to no Boss build at
+all, so the checker was correctly refusing files it was wrongly given. The 50-file number above is
+the one where the build tag is certain.</sub>
+
+Migration observed end to end on a real file — `ea_template/sets/B14_AB_on.set`: **57 kept + 59
+filled + 0 unmappable** → a new full-surface file that then loads; the same command run twice
+**REFUSES** rather than overwriting.
+
+### ✅ A2's precondition — Boss_14's 116 visible inputs reduce to **38 reachable**, derived
+
+Design §5.3 targets `Operator ≤ 40`. Three new modules get there by answering a question that has
+a right answer — *given this build and this config, can this input change anything at all?* —
+rather than by deciding which dials are "important".
+
+| | |
+|---|---|
+| `architecture.py` | the `architecture_digest` `schemas.json` requires of every `Hypothesis` and that **nothing in the tree produced**, so the only way to register one was to TYPE a digest |
+| `capability.py` | which capability modules a config enables, from the SAME selectors `architecture.py` reads · also settles `module_version` (the chassis version the wrapper declares) and `stability` (**`EXPERIMENTAL`**, because §3.2's condition for `CERTIFIABLE` is parity + regression CLEAN and the parity harness is S8 and has never run) |
+| `activation.py` | per-input reachability, encoding the `active_when` prose `docs/PARAM_REGISTRY.csv` already traced by code reading · **per BUILD**, and an undeclared build is a REFUSAL so "no table" cannot look like "no inactive inputs" |
+
+**Measured, build 14 at its declared defaults:** surface **116** · reachable **38** · unreachable
+**78** (36 capability-off + 42 own-gate-closed). Under the `B14-H01` config
+(`LotProg=PROG_LOG_POWER`, `SLMode=SL_NONE`) it is **38** again with the split at 30/48 — which is
+the point: the number is a function of the config, not a constant somebody wrote down.
+
+Cage `run_activation_tests.py`: **7 criteria × (attack + specificity) = 14 green, 7/7 mutation
+probes DETECTED**. 🔴 **A6 is the load-bearing criterion and it asserts in BOTH directions** — a
+classifier that calls everything unreachable passes every completeness check, produces a
+beautifully small Operator surface, and is completely wrong (memory `inert-axis-fake-plateau`). So
+the SL dials must go dark at `SLMode=SL_NONE` **and come back** at `SL_ATR` / `SL_STRUCT_DONCHIAN`.
+
+**Two findings the build produced rather than assumed:**
+- **A capability selector cannot belong to the capability it selects.** `LotProg` decides whether
+  `LAB_CAP_LOTPROG` is on; owned by that token, turning the capability off would `const` away the
+  input that decides it and the wrapper could never be configured back. Selectors are
+  chassis-level by construction.
+- **"enabled unless off" is not the only shape.** `Recovery` is off at exactly one value of
+  `RecoveryMode`; `PriceAction` is reachable at exactly **one** value of `StackConfirm` and
+  unreachable at the other four. A single `!= off` form kept an entire module's inputs visible and
+  sweepable under three values that cannot run it.
+
+### 🔴 NOT BUILT — and the reason is an ordering problem worth reading before picking this up
+
+`surface` (`OPERATOR`/`RESEARCH`/`HIDDEN`) is **not** a `docs/PARAM_REGISTRY.csv` column. The
+generated contract `META_parameter_registry_columns` says so in as many words: *"role /
+locked_value / safe_range / optimize_stage are per-hypothesis and live in
+`factory/parameter_bindings.jsonl`"*. So **"zero `UNKNOWN` on Boss_14's Operator surface" is a
+statement about `ParameterBinding` rows**, and a `ParameterBinding` requires a
+`hypothesis_revision` matching `^B(1[1-8])-H[0-9]{2}-r[0-9]+$`.
+
+`factory/hypotheses.jsonl` is **empty**, and `ORDER-630` recorded why: registering a hypothesis
+asserts a causal claim and pins the order that pre-registered it, *"and no such order exists in
+the B11-B18 form today"*. Design §8.1 supplies the claim and the falsifier for **B14-H01** and
+**B14-H02** — so the pre-registration is writable, and §8.6 requires it — but a `Hypothesis` also
+needs `module_set` (`LAB_CAP_*` tokens, which **no `.mqh` in the tree defines yet** — they are S8's
+allowlist header) and `architecture_digest` (which is why `architecture.py` was built first).
+
+**So S7 and S8 are entangled, and this order is the place that says so.** The three modules
+committed here are exactly the dependencies the entanglement produced; what remains needs the
+hypothesis rows, which want the tokens, which are S8.
+
+**Remaining, in order:**
+1. `factory/hypotheses.jsonl` — B14-H01/H02 rows. `preregistration_ref` → this order (it must
+   carry the causal claim and falsifier; **the registry must not copy them**, §8.6). Every field
+   is now computable except the `OwnerRef` pins, which need `commit_oid`/`blob_oid`/`raw_sha256`
+   from git.
+2. `factory/parameter_bindings.jsonl` — 116 rows under `B14-H01-r1`. `role`/`surface` for the
+   **38 reachable** inputs is the only hand-authored judgement left; the other **78** fall out of
+   `activation.classify()` as `role=INACTIVE, surface=HIDDEN`.
+3. `param_registry_check.ps1` — the §5.4 state-table criteria (wrapper ↔ registry ↔
+   `optimize_guard` must tell one story), plus `optimize_stage != UNKNOWN` on every
+   `surface=OPERATOR` row, plus the `Operator ≤ 40` count.
+4. `docs/PARAM_REGISTRY.csv` — add the three contract columns it lacks (`display_label`,
+   `enum_name`, `precedence_owner`). `display_label` and `enum_name` are mechanical (the trailing
+   `//` comment and the declared type); `precedence_owner` is needed only by the handful of
+   `OVERRIDE` rows.
+
+### 🔴 Two disagreements found between the contract and the shipped repo — recorded, NOT acted on
+
+Both are in the *contract table*, and "fixing" either by changing the CSV would silently change
+what `registry.py` and `optimize_guard` decide, which this slice's prohibitions forbid.
+
+1. **`classification` vocabulary.** The contract says `OPERATOR / TUNING / OVERRIDE / DEAD`. The
+   shipped `docs/PARAM_REGISTRY.csv` legend says `ACTIVE / INACTIVE / OVERRIDE / COMPATIBILITY`,
+   and `registry.py:136` reads `INACTIVE` by name to recover the right answer for
+   `StackMode[LAB_ENTRY_16]`. **Nothing checks the CSV against this table**, which is why they
+   could disagree at all.
+2. **`unit_true` / `coupled_with`.** The contract names them; the CSV ships `unit` and
+   `coupled_parameters`. §4.2 says in the same breath that *"existing columns keep their meaning
+   so `param_registry_check.ps1` keeps working across the change"* — so the design asks for both
+   the rename and the compatibility, and one of the two has to give.
+
+**These are the owner's or a follow-up order's to settle. Do not settle them inside a registry
+refactor.**
+
+### ห้าม
+- ❌ Do not rename an input key, and do not change strategy/default behaviour, under cover of the
+  registry work. ❌ Do not populate `hypotheses.jsonl` without a pre-registration that carries the
+  falsifier. ❌ Do not mark `REVIEWED`.
+
+---
+
+## ORDER-1021 — [factory/S8] Thin Wrapper generator + the 7-point parity harness — `OPEN — NOT STARTED` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Acceptance (design §10):** all parity cases including **must-trade** and **deliberate-refusal** ·
+the wrapper contains **zero logic** · regenerating produces a **byte-identical** `.mq5`.
+**Prohibitions:** no wrapper edited by hand · no generation step that cannot be re-run.
+
+**Not started, and the honest reason is that `ORDER-1020` did not finish** — S8's generator emits
+the `LAB_CAP_*` allowlist header from the registry, and the registry rows that say which tokens a
+hypothesis carries are `ORDER-1020` item 1/2. The token DERIVATION exists and is caged
+(`_triage/factory_os/capability.py`, `enabled_tokens()`); what is missing is the row that records
+the answer and the header that compiles it.
+
+**What is already in place for whoever picks this up:**
+- `capability.enabled_tokens(build_tag, config)` — the token set, derived from the same selectors
+  the architecture digest reads. Boss_14 at defaults = 8 tokens; under B14-H01 = 9.
+- `activation.classify(build_tag, config)` — which inputs become `const` (the **78** unreachable),
+  which stay `input` (the **38**).
+- `[CFG] effective_config_hash` covering surface **and** locked constants (`ORDER-710` + `ORDER-730`)
+  — parity point 2 is therefore already emittable and already compared by a tester run.
+
+**The seven parity points are design §5.5 and the case list is `META_parity_cases`. Read both
+before writing anything** — in particular why trade-list identity alone is not parity (a wrapper
+and its parent can both open **zero** trades, so the lists match and parity "passes" while the
+wrapper failed `OnInit` on a wrong generated `const`). Hence the two mandatory directions:
+**must-trade** and **deliberate-refusal** (`_42_RiskPct` paired with an `SLMode` yielding no
+distance, which `MM-SAFETY-001` refuses at `OnInit`).
+
+Parity shares `tpl_regression`'s trigger, so **share its lane pin and its runner**, and it must
+assert **the binary it measured is the binary it built** (`ORDER-371`; `tpl_regression` was
+compiling into lane 1 and measuring lane 5c as recently as 2026-07-30).
+
+### ห้าม
+- ❌ No wrapper edited by hand. ❌ No evidence from an unparified wrapper counts — it is void.
+- ❌ Do not compare `.ex5` hashes (MQL5 compilation is not byte-reproducible; staleness is mtime).
+- ❌ No `REVIEWED`.
+
+---
+
+## ORDER-1022 — [infra/guard] A cage had a narrower idea of the ledger than the guard it tests, and the first four-digit order block exposed it — `DONE (Claude/Opus 2026-08-02) — one-line fix, the two parsers now share a pattern` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Found by it failing, on a healthy repo, on the first commit after order numbers crossed 999.**
+
+`run_front_guard_evidence_tests.ps1` picks a probe order id by reading the ACTIVE lanes' reserved
+blocks out of `docs/SESSION_LEDGER.md` at `HEAD`. Its pattern was **`\b(\d{3})-(\d{3})\b`**.
+`scripts/check_order_collision.ps1:329` — the guard the suite exists to test — reads
+**`(?<![-\w.])(\d+)\s*-\s*(\d+)(?![-\w.])`**.
+
+The two agreed for as long as every reserved block was three digits. On 2026-08-02 the only ACTIVE
+lanes held `1000-1009`, `1010-1019` and `1020-1029`, so the suite's pattern matched **nothing**,
+it concluded *"no ACTIVE lane"*, took its documented fallback range `900-998`, and handed
+criterion **B0** a probe id outside every reserved block — which the guard then correctly refused.
+
+🔴 **The symptom and the cause point in opposite directions, which is why it is worth a row.** B0
+is the SPECIFICITY half ("a new order on one board only is green — the rule is not *always red*"),
+so what a reader saw was *a guard refusing a legitimate commit*. The actual defect was in the
+**cage**, and specifically in it holding a **second, narrower parser** of a file the guard already
+parses. That is the same shape as `ledger-cell-is-prose-and-parser-input` — where half the real
+cases turned out to be the parser's fault, not the prose's.
+
+**Fix:** the suite now uses the guard's pattern verbatim, so the two agree by construction rather
+than by both being maintained. **Observed:** B0 goes from `FAIL ... got 1` to
+`[ok] ... probe id DERIVED (inside the ACTIVE reserved block)`, and the whole suite is green.
+
+**Not fixed here, and stated rather than left implied:** nothing prevents a third copy of that
+pattern appearing. The durable repair is one exported ledger reader, which is bigger than this
+one-line stop-the-bleeding fix and belongs with `BACKLOG-D29`'s family of "the summary is a
+hand-maintained cache" items.
+
+### ห้าม
+- ❌ Do not widen the fallback range instead — the fallback exists for the genuinely-no-ACTIVE-lane
+  case, and reaching it while lanes ARE active is the bug, not the remedy. ❌ No `REVIEWED`.
+
+---
+
 ## ORDER-702 — [factory/tier] `evidence.py` is guarded by no suite, so a commit that touches only it runs ZERO cages — `DONE (Claude/Opus 2026-07-31) — the sweep follows the wrapper into its python and walks the whole import closure; 12 real undeclared dependencies found on its first run` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > ### ✅ 2026-07-31 — E1–E4 closed, and the sweep found eleven more holes than the one it was written for.
@@ -864,6 +1068,47 @@ and nobody has attributed it.**
 > where that number comes from is `ORDER-942`'s question (11 of 19 judge-dated rows carry no expected
 > rate at all), and if it is wrong then "three legs silent together" was never surprising. Both stay
 > open.</sub>
+>
+> ### ✅ 2026-08-02, later — THE DISCRIMINATOR, and it refutes this row's central claim (`S-2026-08-02-ICHIBT`)
+>
+> **The owner asked the question this order should have opened with: *"have you run all four over the
+> same window to see whether any trade comes out?"*** No. Everything above argues about whether the
+> live legs are executing; none of it asks whether **the signal fires at all** in these 17 days. It
+> is one tester run per leg, it needs no terminal and no owner, and it settles the thing the log
+> cannot.
+>
+> Four runs, lane 1, the **locked `_vps_deploy` `.set` verbatim**, `2026.07.16 → 2026.08.02` (the
+> exact live attach window), Model 1, history quality **100%**:
+>
+> | leg | symbol/TF | bars | **backtest deals** | live closed |
+> |---|---|---|---|---|
+> | `990066` | USDJPY H4 | 72 | **0** | 0 |
+> | `990067` | USDJPY H1 | 288 | **0** | 0 |
+> | `990068` | XAUUSD H1 | 276 | **4** (≈2 round trips), net −220.30 | 1 |
+> | `990069` | XAUUSD H4 | 72 | **0** | 0 |
+>
+> 🔴 **The backtest reproduces the live pattern leg for leg** — the same three are silent, and the
+> only one that trades is the same one that traded live. **"Three legs of the same EA silent together
+> is not thinness" — the sentence this whole order was built on — is REFUTED by measurement.** The
+> signal did not fire in this window; the legs were not prevented from trading, there was nothing to
+> trade.
+>
+> ⇒ **The remaining defect is the EXPECTATION, not the attach.** `~1.05/wk` predicts ≈2.4 trades per
+> leg over 2.4 weeks; the EA's own configs produce `0/0/2/0`. That number is `ORDER-942`'s subject
+> (11 of 19 judge-dated rows carry no expected rate at all) and it now has a concrete
+> counter-example rather than a suspicion.
+>
+> <sub>⚠️ **Caveats, because this is a positive control and not a live trace.** (1) **Different
+> broker:** the tester lane resolved `USDJPY`/`XAUUSD` on the **ThinkMarkets (TF Global)** feed, while
+> live is **Exness** with the `m` suffix — different spread, swap and tick stream (memory
+> `btc-tick-data-differs-per-mt5-install`). A signal this marginal could differ by a bar between
+> feeds; it will not differ between "2.4 trades" and "0". (2) It proves the SIGNAL is quiet, not that
+> the live binaries are executing — that still needs `ORDER-1000`'s counters. What it removes is the
+> reason to suspect they are not. (3) `990068` shows 4 deals vs 1 closed live, which is entry+exit
+> accounting plus the broker difference, not a discrepancy worth chasing.</sub>
+>
+> **Status: `ORDER-1000` is still owed** — not because the legs look broken, but because this row
+> spent weeks and one owner trip on a question the EA could have answered itself.
 
 ---
 
