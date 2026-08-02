@@ -77,7 +77,10 @@ BASE_KEY = {
     'expert': 'EALabTpl\\generated\\B14_H01_r1', 'symbol': 'XAUUSD', 'tf': 'H1',
     'from_date': '2024.01.01', 'to_date': '2024.01.15', 'model': 1, 'deposit': 10000,
     'currency': 'USD', 'leverage': 100,
-    'set_hash': 'a' * 64, 'ini_hash': 'b' * 64, 'ex5_hash': 'c' * 64,
+    # NO `ini_hash`: it moved to `RunAttempt.ini_sha256` (owner decision 2026-08-02, item 6). The
+    # shape refusal in `execution_key_digest` is what makes this a real change rather than a
+    # convention -- a key still carrying it is now an UNKNOWN field and is refused.
+    'set_hash': 'a' * 64, 'ex5_hash': 'c' * 64,
     'effective_config_hash': 'd' * 64,
     'data_fingerprint': 'lane1|XAUUSD|H1|2024.01.01|2024.01.15|1', 'lane': 'lane1',
 }

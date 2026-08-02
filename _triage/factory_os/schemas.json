@@ -942,7 +942,7 @@
     },
     "ExecutionKey": {
       "type": "object",
-      "description": "NEW. Audit P1: rev 1's idempotency key did not require the hashes, leverage, deposit, currency or data fingerprint, so a 10,000/1:100 run and a 100,000/1:200 run were indistinguishable and the scheduler would have returned the wrong cached evidence. This is the COMPLETE simulator input identity. Every field is required.",
+      "description": "NEW. Audit P1: rev 1's idempotency key did not require the hashes, leverage, deposit, currency or data fingerprint, so a 10,000/1:100 run and a 100,000/1:200 run were indistinguishable and the scheduler would have returned the wrong cached evidence. This is the COMPLETE simulator input identity. Every field is required. USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): ini_hash MOVED OUT to RunAttempt.ini_sha256 and this key is now 14 fields. The key gates whether a run may happen at all, so it must be computable BEFORE the run - but the ini is written by the runner at launch, and worse, it contains Report=<name>, which differs every run, so a literal ini hash would give two runs of an identical configuration two digests and criterion 3 could never fire. Same shape as the pid fix on the lease below: a schema that demands a fact nobody can know yet is a schema that gets filled with a placeholder.",
       "required": [
         "expert",
         "symbol",
@@ -954,7 +954,6 @@
         "currency",
         "leverage",
         "set_hash",
-        "ini_hash",
         "ex5_hash",
         "effective_config_hash",
         "data_fingerprint",
@@ -996,10 +995,6 @@
           "description": "written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op"
         },
         "set_hash": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "ini_hash": {
           "type": "string",
           "pattern": "^[0-9a-f]{64}$"
         },
@@ -1107,6 +1102,14 @@
             }
           }
         },
+        "ini_sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$",
+          "description": "USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): the sha256 of the .ini the runner actually wrote, recorded PER ATTEMPT and AFTER the file exists. It moved here from ExecutionKey, where it was a fact nobody could know at the moment the key was needed. Identity lives in the key; forensics - what exactly was handed to the tester - lives here, where it can be true."
+        },
         "exit_code": {
           "type": [
             "integer",
@@ -1124,7 +1127,7 @@
             "KILLED",
             "CONFIG_REJECTED"
           ],
-          "description": "the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR"
+          "description": "decision 18 permits a re-run of an identical ExecutionKey only after an execution or a tester error. USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 7) ratified that those are two CATEGORIES, not two enum members: tester = TESTER_ERROR; execution = TERMINAL_ERROR, TIMEOUT, KILLED, LEASE_LOST; neither, and therefore still blocked = CONFIG_REJECTED. This description used to name only TESTER_ERROR and TERMINAL_ERROR, and read literally it made a machine crash a permanent block on the configuration - in the slice whose whole purpose is recovery."
         },
         "report_fresh_proof": {
           "type": [

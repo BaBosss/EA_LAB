@@ -241,7 +241,7 @@ CASES = [
           "transition": "QUEUED", "at": "t",
           "execution_key": {"expert": "e", "symbol": "XAUUSD", "tf": "H4", "from_date": "2023.01.01",
                             "to_date": "2025.12.31", "model": 1, "currency": "USD", "leverage": 100,
-                            "set_hash": "0" * 64, "ini_hash": "1" * 64, "ex5_hash": "2" * 64,
+                            "set_hash": "0" * 64, "ex5_hash": "2" * 64,
                             "effective_config_hash": "3" * 64, "data_fingerprint": "f", "lane": "MT5_LANE_1"}}),
 
     # ---- audit-3: the legacy magic set ------------------------------------------
@@ -460,7 +460,7 @@ METRIC_OK = {"window": "MAIN", "pf": 1.31, "trades": 84, "dd_pct": 7.4,
              "run_id": "RUN-20260731-001", "lane": "MT5-A", "data_fingerprint": "df1", "model": 1}
 EXECKEY_OK = {"expert": "Boss_14", "symbol": "XAUUSD", "tf": "H1", "from_date": "2023.01.01",
               "to_date": "2025.12.31", "model": 1, "deposit": 10000.0, "currency": "USD",
-              "leverage": 100, "set_hash": H64, "ini_hash": H64, "ex5_hash": H64,
+              "leverage": 100, "set_hash": H64, "ex5_hash": H64,
               "effective_config_hash": H64, "data_fingerprint": "df1", "lane": "MT5-A"}
 ATTEMPT_OK = {"attempt": 1, "transition": "QUEUED", "at": "2026-07-31T00:00:00Z"}
 

@@ -69,15 +69,28 @@ TRANSITIONS = ('QUEUED', 'LEASED', 'LAUNCH_INTENT', 'PROCESS_OBSERVED', 'RUNNING
                'COMPLETED', 'FAILED', 'ABANDONED', 'EVIDENCE_REGISTERED')
 FAILURE_CLASSES = ('NONE', 'TESTER_ERROR', 'TERMINAL_ERROR', 'TIMEOUT', 'LEASE_LOST',
                    'KILLED', 'CONFIG_REJECTED')
+# 🔴 FOURTEEN, not fifteen. USER DECISION 2026-08-02 (`_triage/USER_DECISIONS_PENDING.md` item 6):
+# `ini_hash` MOVED OUT of the key onto `RunAttempt.ini_sha256`. The key gates whether a run may
+# happen at all, so it has to be computable BEFORE the run -- but the ini is written by the runner
+# at launch. S9 shipped with the field seeded from a canonical rendering of the other fields,
+# which means a field named `ini_hash` was not the hash of an ini.
+# And the literal reading is not merely awkward, it is disarming: the ini `mt5_run.ps1` writes
+# contains `Report=<name>`, which differs on EVERY run, so a real ini hash would give two runs of
+# an IDENTICAL configuration two different digests -- and criterion 3, the gate that stops the
+# lane being spent twice, could never fire at all.
 EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model', 'deposit',
-                        'currency', 'leverage', 'set_hash', 'ini_hash', 'ex5_hash',
+                        'currency', 'leverage', 'set_hash', 'ex5_hash',
                         'effective_config_hash', 'data_fingerprint', 'lane')
 
 # TWO GATES, NOT ONE, and conflating them was this module's first real defect.
 #
 # decision 18 governs QUEUEING A NEW RUN with an identical ExecutionKey: "refuse except after an
-# execution or tester error". That is `RETRYABLE_FOR_NEW_RUN`, and it is exactly the decision's
-# two classes.
+# execution or tester error". That is `RETRYABLE_FOR_NEW_RUN` -- the two CATEGORIES the decision
+# names, spread across the five failure classes that fall inside them.
+# (This sentence used to read "and it is exactly the decision's two classes", which the tuple
+# below has contradicted since the wiring proof widened it to five. A comment asserting the
+# opposite of its own code is the /scrutinize round 1 defect; it is corrected here rather than
+# left for the next reader to reconcile.)
 #
 # Resuming an EXISTING run's next attempt is a different act. A machine that died mid-run is the
 # case a recoverable scheduler exists for, so KILLED and TIMEOUT retry INSIDE the run -- bounded
@@ -103,8 +116,10 @@ EXECUTION_KEY_FIELDS = ('expert', 'symbol', 'tf', 'from_date', 'to_date', 'model
 #                     the configuration; running the identical one again is expecting a different
 #                     answer, and a human should look first.
 #
-# This is an INTERPRETATION of a user-owned decision, not a change to it, and it is flagged as
-# such in the handoff so the owner can overrule the mapping without touching the code around it.
+# ✅ RATIFIED BY THE OWNER 2026-08-02 (`_triage/USER_DECISIONS_PENDING.md` item 7, decision 7 in
+# the Decision log). This was flagged as an INTERPRETATION of a user-owned decision when S9 shipped;
+# the owner has now read the mapping and adopted it as written. The tuple below is the ratified
+# text, not a reading of it. Overruling it changes exactly one tuple and nothing around it.
 RETRYABLE_FOR_NEW_RUN = ('TESTER_ERROR', 'TERMINAL_ERROR', 'TIMEOUT', 'KILLED', 'LEASE_LOST')
 # The in-run gate is narrower by one: LEASE_LOST leads to ABANDONED rather than FAILED, so it can
 # never be the class a resume is deciding a retry against.
@@ -180,13 +195,43 @@ def canonical(obj):
     design 4.5 records that `candidate_digest`'s canonical form is still owed, and names the cost:
     two serializers that disagree produce two digests for one object. This module defines its own
     rather than inheriting that debt -- and refuses any field it was not told about, so a key that
-    grows a sixteenth field cannot silently keep its old digest.
+    grows a fifteenth field cannot silently keep its old digest.
     """
     return json.dumps(obj, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
 
+def normalize_numbers(obj):
+    """`canonical()`'s pre-pass: an integral float becomes an int, everywhere, at any depth.
+
+    🔴 THIS USED TO BE FOUR LINES INSIDE `execution_key_digest`, /scrutinize round 2's fix for
+    `10000` vs `10000.0` producing TWO digests for ONE deposit. ORDER-1100 (S10) lifted it out
+    unchanged, because `candidate_digest` needs exactly this and the alternative -- a second
+    normalization beside a shared serializer -- is the failure design 4.5 names ("two serializers
+    that disagree produce two digests for one candidate") reintroduced one layer down.
+
+    RECURSIVE, where the ExecutionKey version was flat. A key is fourteen scalars so the two agree
+    by construction over that domain (the cage asserts it on the real key rather than by argument);
+    a CandidatePayload nests -- `parameters` is a free-form object and `evidence` is a list of
+    objects -- and a flat pass would leave `{"pf": 1.0}` and `{"pf": 1}` as two candidates.
+
+    STATED LIMIT, and it is the same one `execution_key_digest` states: strings are compared as
+    written. `1e4` arriving as the STRING "1e4" stays a string and is not the number 10000.
+    """
+    if isinstance(obj, bool):
+        # Before the int branch, deliberately: `bool` is a subclass of `int` in Python, so `True`
+        # would otherwise normalize to `1` and a boolean field would collide with a numeric one.
+        return obj
+    if isinstance(obj, float) and obj.is_integer():
+        return int(obj)
+    if isinstance(obj, dict):
+        return dict((k, normalize_numbers(v)) for k, v in obj.items())
+    if isinstance(obj, (list, tuple)):
+        return [normalize_numbers(v) for v in obj]
+    return obj
+
+
 def execution_key_digest(key):
-    """sha256 over the canonical form of the 15 required ExecutionKey fields. Raises on any other
+    """sha256 over the canonical form of the 14 required ExecutionKey fields. Raises on any other
     shape.
 
     WHY IT IS SO WIDE (design 4.5): rev 1 omitted deposit, currency and leverage, so a
@@ -209,12 +254,10 @@ def execution_key_digest(key):
     # STATED LIMIT: string fields are compared as written, so `D:\Meta 5` and `D:/Meta 5` are two
     # lanes. Normalising paths would be guessing at an identity the repo has not defined; the
     # lane id is expected to be pasted from the ledger, not typed.
-    trimmed = {}
-    for f in EXECUTION_KEY_FIELDS:
-        v = key[f]
-        if isinstance(v, float) and v.is_integer():
-            v = int(v)
-        trimmed[f] = v
+    # The normalization itself now lives in `normalize_numbers` so `candidate_digest` can import
+    # the one implementation (ORDER-1100). This loop still selects the fourteen fields, which is
+    # the OTHER half of the refusal above and is specific to this key.
+    trimmed = normalize_numbers(dict((f, key[f]) for f in EXECUTION_KEY_FIELDS))
     return hashlib.sha256(canonical(trimmed).encode('utf-8')).hexdigest()
 
 

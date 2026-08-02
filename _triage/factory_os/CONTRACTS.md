@@ -333,8 +333,9 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `process_observed.pid` | `integer` | **yes** |  |
 | `process_observed.observed_at` | `string` | **yes** |  |
 | `process_observed.process_fingerprint` | `string` \| `null` | — |  |
+| `ini_sha256` | `string` \| `null` | — | pattern `^[0-9a-f]{64}$` · USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 6): the sha256 of the .ini the runner actually wrote, recorded PER ATTEMPT and AFTER the file exists. It moved here from ExecutionKey, where it was a fact nobody could know at the moment the key was needed. Identity lives in the key; forensics - what exactly was handed to the tester - lives here, where it can be true. |
 | `exit_code` | `integer` \| `null` | — | persisted immediately on receipt - the freshness guard needs exit 0/3 and cannot reconstruct it |
-| `failure_class` | `NONE` \| `TESTER_ERROR` \| `TERMINAL_ERROR` \| `TIMEOUT` \| `LEASE_LOST` \| `KILLED` \| `CONFIG_REJECTED` | — | the ONLY route that permits a re-run of an identical ExecutionKey is TESTER_ERROR or TERMINAL_ERROR |
+| `failure_class` | `NONE` \| `TESTER_ERROR` \| `TERMINAL_ERROR` \| `TIMEOUT` \| `LEASE_LOST` \| `KILLED` \| `CONFIG_REJECTED` | — | decision 18 permits a re-run of an identical ExecutionKey only after an execution or a tester error. USER DECISION 2026-08-02 (USER_DECISIONS_PENDING item 7) ratified that those are two CATEGORIES, not two enum members: tester = TESTER_ERROR; execution = TERMINAL_ERROR, TIMEOUT, KILLED, LEASE_LOST; neither, and therefore still blocked = CONFIG_REJECTED. This description used to name only TESTER_ERROR and TERMINAL_ERROR, and read literally it made a machine crash a permanent block on the configuration - in the slice whose whole purpose is recovery. |
 | `report_fresh_proof` | `object` \| `null` | — |  |
 | `event_id` | `string` \| `null` | — | id returned by the existing event-log append, so a crash between append and EVIDENCE_REGISTERED does not duplicate the occurrence on retry |
 
@@ -381,7 +382,6 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `currency` | `string` | **yes** |  |
 | `leverage` | `integer` | **yes** | written as 1:N in the ini and asserted post-run; a bare Leverage=N is a silent no-op |
 | `set_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
-| `ini_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `ex5_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `effective_config_hash` | `string` | **yes** | pattern `^[0-9a-f]{64}$` |
 | `data_fingerprint` | `string` | **yes** |  |
