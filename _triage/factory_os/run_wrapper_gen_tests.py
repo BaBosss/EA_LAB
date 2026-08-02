@@ -43,8 +43,14 @@ ALLOWLIST = '%s/B14_H01_r1_allowlist.mqh' % gw.GENERATED_DIR
 
 
 def _disk(rel):
-    return io.open(os.path.join(ROOT, rel.replace('/', os.sep)),
-                   encoding='utf-8-sig').read()                 # snapshot: worktree
+    # NEWLINES NORMALISED, because the real `EvidenceSource.read_committed` does it and a stub
+    # that does not is not a stub, it is a different reader. It cost two cases: git's autocrlf
+    # gives the worktree copy CRLF, so a fixture searching for a line ending in LF matched
+    # nothing, the mutation silently did not happen, and both attacks reported "nothing at all"
+    # -- a green-looking no-op rather than a failure anyone could read.
+    raw = io.open(os.path.join(ROOT, rel.replace('/', os.sep)),
+                  encoding='utf-8-sig').read()                 # snapshot: worktree
+    return raw.replace(chr(13) + chr(10), chr(10))
 
 
 class StubSource(object):
@@ -79,11 +85,30 @@ def fired(problems, tag):
     return [p for p in problems if p.startswith(tag)]
 
 
+def _mutate(rel, old, new):
+    """-> the file's text with `old` -> `new`, REFUSING if `old` was not there.
+
+    🔴 THIS ASSERTION IS THE WHOLE POINT AND IT WAS ADDED AFTER IT WAS NEEDED. Two fixtures below
+    used a bare `str.replace` against an include path that had MOVED. `replace` on a string that
+    does not contain the needle is a silent no-op, so the "corrupted" artifact was byte-identical
+    to the real one, `check()` correctly found nothing wrong with it, and the suite reported
+    `NOT CAUGHT BY W2 ... nothing at all`. That reads as "the checker is broken" and the checker was
+    fine. A fixture that quietly mutates nothing is the same defect class as a guard that quietly
+    checks nothing -- and it is worse here, because it accuses working code.
+    """
+    text = _disk(rel)
+    if old not in text:
+        raise AssertionError(
+            'fixture anchor not present in %s: %r. The attack would have mutated NOTHING and the '
+            'case would have blamed the checker for finding nothing wrong.' % (rel, old[:60]))
+    return text.replace(old, new)
+
+
 # --- attacks --------------------------------------------------------------------------------------
 
 def w1_drift():
-    text = _disk(WRAPPER).replace('#property version   "2.00"', '#property version   "2.01"')
-    return {'overrides': {WRAPPER: text}}
+    return {'overrides': {WRAPPER: _mutate(WRAPPER, '#property version   "2.00"',
+                                           '#property version   "2.01"')}}
 
 
 def w1_absent():
@@ -92,17 +117,15 @@ def w1_absent():
 
 def w2_logic():
     """One line of real MQL5 in a wrapper. W1 fires as well -- the assertion is that W2 fires."""
-    text = _disk(WRAPPER).replace('#include "core/LabCore.mqh"',
-                                  'int g_leak = 0;\n#include "core/LabCore.mqh"')
-    return {'overrides': {WRAPPER: text}}
+    return {'overrides': {WRAPPER: _mutate(WRAPPER, '#include "../core/LabCore.mqh"',
+                                           'int g_leak = 0;\n#include "../core/LabCore.mqh"')}}
 
 
 def w3_token_mismatch():
     """The allowlist gains a token the Hypothesis row does not declare. Nothing else notices: the
     file still regenerates differently (W1), but W3 is the one that names the DISAGREEMENT."""
-    text = _disk(ALLOWLIST).replace('#define LAB_CAP_STACK',
-                                    '#define LAB_CAP_STACK\n#define LAB_CAP_HEDGE')
-    return {'overrides': {ALLOWLIST: text}}
+    return {'overrides': {ALLOWLIST: _mutate(ALLOWLIST, '#define LAB_CAP_STACK',
+                                             '#define LAB_CAP_STACK\n#define LAB_CAP_HEDGE')}}
 
 
 def w3_unregistered():
@@ -119,14 +142,13 @@ def w3_unregistered():
 
 
 def w4_no_allowlist():
-    text = _disk(WRAPPER).replace('#include "generated/B14_H01_r1_allowlist.mqh"\n', '')
-    return {'overrides': {WRAPPER: text}}
+    return {'overrides': {WRAPPER: _mutate(WRAPPER,
+                                           '#include "B14_H01_r1_allowlist.mqh"\n', '')}}
 
 
 def w4_two_builds():
-    text = _disk(WRAPPER).replace('#define LAB_ENTRY_14',
-                                  '#define LAB_ENTRY_14\n#define LAB_ENTRY_16')
-    return {'overrides': {WRAPPER: text}}
+    return {'overrides': {WRAPPER: _mutate(WRAPPER, '#define LAB_ENTRY_14',
+                                           '#define LAB_ENTRY_14\n#define LAB_ENTRY_16')}}
 
 
 CASES = (

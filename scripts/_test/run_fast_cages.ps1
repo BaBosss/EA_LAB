@@ -507,12 +507,14 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_design_contracts.py',
                                           'ea_template/core/Inputs.mqh',
                                           'ea_template/Boss_14_GridLog.mq5',
-                                          # The wrapper sits BESIDE the hand-written Boss_*.mq5
-                                          # and the allowlist in generated/ -- a split settled by
-                                          # a compile, not by the design snippet, which showed
-                                          # two include paths that cannot both be right.
-                                          'ea_template/B14_H01_r1.mq5',
-                                          'ea_template/B14_H02_r1.mq5',
+                                          # BOTH artifacts live in generated/. Two measurements
+                                          # settled that: a wrapper INSIDE generated/ with the
+                                          # design's include lines does not compile, and a wrapper
+                                          # in ea_template/ root gives LAB_ENTRY_14 a SECOND
+                                          # translation unit, which the ORDER-730 locked-constant
+                                          # enumeration refuses -- correctly.
+                                          'ea_template/generated/B14_H01_r1.mq5',
+                                          'ea_template/generated/B14_H02_r1.mq5',
                                           'ea_template/generated/B14_H01_r1_allowlist.mqh',
                                           'ea_template/generated/B14_H02_r1_allowlist.mqh',
                                           'factory/hypotheses.jsonl')

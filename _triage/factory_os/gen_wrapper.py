@@ -11,6 +11,10 @@ WHAT IT EMITS, per hypothesis revision:
   ea_template/generated/<REV>_allowlist.mqh   one `#define LAB_CAP_*` per capability the revision's
                                               pinned config ENABLES, and nothing else
   ea_template/generated/<REV>.mq5             the wrapper: `#define`s and `#include`s, no statements
+                                              (BOTH in generated/ -- see the note on WRAPPER_OUT_DIR;
+                                               a wrapper in ea_template/ root would give LAB_ENTRY_14
+                                               a second translation unit and the locked-constant
+                                               enumeration REFUSES that, correctly)
 
 🔴 **NO TRADING LOGIC IN A WRAPPER, EVER (decision 7).** The generator emits only `#define` and
 `#include` lines; a wrapper containing a STATEMENT is a generator bug, and `check_wrapper_gen.py`
@@ -53,22 +57,30 @@ import preset                                      # noqa: E402
 
 Refusal = preset.PresetRefusal
 
-# WHERE THE TWO ARTIFACTS LIVE, and it was decided BY A COMPILE rather than by reading the design.
+# WHERE THE TWO ARTIFACTS LIVE, and it took TWO measurements to settle.
 #
 # 🔴 Design 5.2's snippet shows `#include "generated/<REV>_allowlist.mqh"` AND
 # `#include "../core/LabCore.mqh"` in one wrapper -- which cannot both be right: the first says the
 # wrapper is one level ABOVE `generated/`, the second says it is one level BELOW `core/`. The first
-# version of this generator put the wrapper inside `generated/` and kept the design's include lines
-# verbatim; MetaEditor answered
+# version put the wrapper inside `generated/` and kept BOTH lines verbatim, and MetaEditor said
 #     error 106: file '...\EALabTpl\generated\generated\B14_H01_r1_allowlist.mqh' not found
-# on the first real compile. A source-level cage cannot catch that -- the file was byte-identical
-# to what the generator produced, contained zero logic, was fully wired and named the right tokens.
-# Only the compiler knew.
+# on the first real compile. No source-level cage could catch that -- the file was byte-identical
+# to the generator's output, contained zero logic, was fully wired and named the right tokens.
 #
-# So: the WRAPPER sits beside the hand-written `Boss_*.mq5` (its include paths are then identical
-# to theirs, which is the point of a thin wrapper), and the ALLOWLIST sits in `generated/`.
-WRAPPER_OUT_DIR = 'ea_template'
+# The obvious repair was to move the WRAPPER up beside the hand-written `Boss_*.mq5`, and it
+# compiled 0/0. It also broke something no cage in this generator's own suite could see:
+# `gen_locked_constants.py` globs `ea_template/*.mq5` and REFUSES a build tag carrying more than
+# one wrapper -- "two translation units for one build means the closure this module walks is one of
+# two the compiler could build, and picking either makes the fingerprint a coin toss nobody can
+# see". Both generated wrappers `#define LAB_ENTRY_14`, so `LAB_ENTRY_14` acquired THREE, and the
+# ORDER-730 locked-constant enumeration refused the whole tree.
+#
+# So design 5.2 was right about the SECOND include and wrong about the first. Both artifacts live
+# in `generated/`; the allowlist is included from the SAME directory and LabCore from `../core/`.
+# That keeps `ea_template/*.mq5` at exactly one wrapper per build tag, and leaves deploy.ps1's
+# nine-target compile policy untouched.
 GENERATED_DIR = 'ea_template/generated'
+WRAPPER_OUT_DIR = GENERATED_DIR
 GENERATOR_REL = '_triage/factory_os/gen_wrapper.py'
 
 # The entry tag each build's wrapper declares. Taken from the HAND-WRITTEN wrapper rather than
@@ -153,10 +165,11 @@ def emit_wrapper(revision_id, build_tag, tag_string):
     w.append('#define %s' % build_tag)
     w.append('#define LAB_ENTRY_TAG "%s"' % tag_string)
     w.append('#define LAB_HYP "%s"' % revision_id)
-    w.append('#include "generated/%s_allowlist.mqh"' % slug)
-    w.append('#include "core/LabCore.mqh"')
-    # Both paths are relative to `ea_template/`, exactly as in Boss_14_GridLog.mq5. See the note
-    # on WRAPPER_OUT_DIR: this pair was settled by a compile, not by the design snippet.
+    w.append('#include "%s_allowlist.mqh"' % slug)
+    w.append('#include "../core/LabCore.mqh"')
+    # Both paths are relative to `ea_template/generated/`. See the note on WRAPPER_OUT_DIR: this
+    # pair was settled by two measurements, not by the design snippet, which got the second line
+    # right and the first wrong.
     return '\n'.join(w) + '\n'
 
 

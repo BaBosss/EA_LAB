@@ -111,7 +111,12 @@ def check(worktree=False, source=None):
                 'None means LabCore falls back to build 11; more than one means two entry modules '
                 'compile into one binary.' % (rel, len(builds), ', '.join(builds) or 'none'))
         slug = os.path.basename(rel)[:-4]
-        if 'generated/%s_allowlist.mqh' % slug not in stored:
+        # The include is matched on the FILE NAME, not on a directory-qualified path. The wrapper
+        # and the allowlist sit in the same directory today; they did not for one commit, and
+        # pinning the path here would have made W4 red for a wrapper that was correct. What W4 is
+        # actually asserting is that the wrapper reaches ITS OWN allowlist -- the directory
+        # relationship is `gen_wrapper`'s to decide and a compile's to confirm.
+        if '%s_allowlist.mqh' % slug not in stored:
             problems.append(
                 'W4 %s does not include its own allowlist header. The tokens would then be '
                 'undefined and every capability guard in Inputs.mqh would take its default '
