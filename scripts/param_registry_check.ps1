@@ -244,11 +244,41 @@ if ($lineMismatches.Count -gt 0) {
     Write-Host "OK: every Inputs.mqh:<N> line-number reference in the registry matches the current file." -ForegroundColor Green
 }
 
+# ---------------------------------------------------------------------------
+# ORDER-1020 (slice S7). The design 5.4 STATE TABLE.
+#
+# WHY IT IS RUN FROM HERE rather than only from the tier. Slice S7's acceptance names
+# `param_registry_check` CLEAN as one of its three criteria -- and until now this script only
+# checked that PARAM_REGISTRY.csv and Inputs.mqh agree about which identifiers exist. That is a
+# NAME check. It says nothing about whether the wrapper, the registry and optimize_guard agree
+# about what each input IS, which is the thing design 5.4 says must tell one story.
+#
+# The state table lives in python because it has to read the JSONL stores and re-derive
+# reachability through the same modules the generator uses. Calling it here means "param_registry
+# _check CLEAN" is one sentence covering both halves, instead of two commands a reader has to know
+# to run.
+Write-Host ""
+Write-Host "--- design 5.4 state table (ORDER-1020) ---"
+$pySurface = Join-Path $repoRoot 'tools\python312\python.exe'
+$surfaceCheck = Join-Path $repoRoot '_triage/factory_os/check_param_surface.py'
+if (-not (Test-Path -LiteralPath $pySurface) -or -not (Test-Path -LiteralPath $surfaceCheck)) {
+    # A CHECK THAT CANNOT RUN IS NOT A CHECK THAT PASSED. Same rule the fast-cage wrappers apply:
+    # "I could not perform it" and "there was nothing wrong" are the two answers this repo refuses
+    # to conflate.
+    Write-Host "FAIL: cannot run the state-table check (interpreter or checker missing)" -ForegroundColor Red
+    $hasError = $true
+} else {
+    $surfaceOut = & $pySurface $surfaceCheck '--worktree'
+    $surfaceRc = $LASTEXITCODE
+    $surfaceOut | ForEach-Object { Write-Host "  $_" }
+    if ($surfaceRc -ne 0) { $hasError = $true }
+}
+
 Write-Host ""
 if ($hasError) {
     Write-Host "RESULT: DISCREPANCIES FOUND - see above." -ForegroundColor Red
     exit 1
 } else {
-    Write-Host "RESULT: CLEAN - PARAM_REGISTRY.csv is in sync with Inputs.mqh." -ForegroundColor Green
+    Write-Host "RESULT: CLEAN - PARAM_REGISTRY.csv is in sync with Inputs.mqh, and the design 5.4 state table holds." -ForegroundColor Green
     exit 0
 }

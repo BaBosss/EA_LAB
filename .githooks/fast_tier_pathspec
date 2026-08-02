@@ -9,6 +9,7 @@ _triage/factory_os/capability.py
 _triage/factory_os/check_attested_pin_staged.py
 _triage/factory_os/check_coverage_transfer.py
 _triage/factory_os/check_input_surface_gen.py
+_triage/factory_os/check_param_surface.py
 _triage/factory_os/check_registries.py
 _triage/factory_os/check_s2a_attestation.py
 _triage/factory_os/check_s2a_migration.py
@@ -34,6 +35,7 @@ _triage/factory_os/run_coverage_transfer_tests.py
 _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_input_surface_tests.py
+_triage/factory_os/run_param_surface_tests.py
 _triage/factory_os/run_preset_tests.py
 _triage/factory_os/run_registry_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
@@ -103,3 +105,4 @@ scripts/mris/mris_crisis_models.ps1
 scripts/mris/mris_macro_feeder.ps1
 scripts/mris/mris_web_feeder.ps1
 scripts/optimize_guard.ps1
+scripts/param_registry_check.ps1

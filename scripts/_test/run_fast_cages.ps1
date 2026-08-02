@@ -337,6 +337,10 @@ $FAST_SUITES = @(
     # takes Boss_14 from 116 visible inputs to 38 reachable ones -- the number the Operator
     # surface and the optimizer's allowed dimensions are both derived from.
     'run_activation_tests.ps1',
+    # ORDER-1020 (S7), measured at 0.7s through its wrapper. It carries slice S7's own acceptance
+    # as criteria that can fail -- zero UNKNOWN on the OPERATOR surface, and design 5.3's <= 40
+    # target -- plus the anti-drift criterion that regenerates the 232 rows and compares.
+    'run_param_surface_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -479,6 +483,34 @@ $SUITE_GUARDS = @{
                                           # a brand-new suite cannot forget them.
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/registry.py')
+    # ORDER-1020 (S7). The state table reads BOTH stores, the build's input surface, and every
+    # module the generator derives a row from -- P5 regenerates and compares, so an edit to any of
+    # them changes what this cage proves.
+    'run_param_surface_tests.ps1'     = @('_triage/factory_os/check_param_surface.py',
+                                          '_triage/factory_os/run_param_surface_tests.py',
+                                          '_triage/factory_os/gen_registry_rows.py',
+                                          '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/activation.py',
+                                          '_triage/factory_os/architecture.py',
+                                          '_triage/factory_os/capability.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
+                                          # ...and its own closure, demanded by the sweep on the
+                                          # first run. gen_s2a_migration is imported ONLY for
+                                          # owner_ref_for -- the one OwnerRef builder in the tree
+                                          # -- and it drags two more modules behind it. Declared
+                                          # rather than exempted: they genuinely are inputs, and
+                                          # a second copy of the pin builder is what the
+                                          # alternative would have cost.
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          'ea_template/core/Inputs.mqh',
+                                          'ea_template/Boss_14_GridLog.mq5',
+                                          'factory/hypotheses.jsonl',
+                                          'factory/parameter_bindings.jsonl',
+                                          'scripts/param_registry_check.ps1')
     'run_registry_tests.ps1'          = @(
                                           # ORDER-702: DERIVED by the import sweep in
                                           # run_guard_trigger_tests PART 4b, not remembered.

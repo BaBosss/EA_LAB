@@ -123,6 +123,11 @@ L1_FILES = (
     # it answer about the working tree while printing a claim about the commit. That is the exact
     # shape (GUARD_SHAPES 1) the guard was written to close one layer up.
     '_triage/factory_os/check_attested_pin_staged.py',
+    # ORDER-1020 (S7). SIXTH consecutive addition L0 demanded rather than its author
+    # remembering -- and this one had a suite, a wrapper and a tier registration written
+    # before the lint asked, which is the point: remembering the list is not the same skill
+    # as writing the checker, and only one of the two is ever on anybody's mind.
+    '_triage/factory_os/check_param_surface.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -317,6 +322,7 @@ CATEGORY = {
     # Category A: it is a checker whose judged input is a repo file, so it must read through
     # EvidenceSource -- under the hook the bytes it judges are the STAGED bytes, not the
     # worktree's. That binding is the whole reason an append-only rule can be trusted at all.
+    '_triage/factory_os/check_param_surface.py': 'A',
     '_triage/factory_os/check_work_receipts.py': 'A',
     '_triage/factory_os/check_coverage_transfer.py': 'A',
     '_triage/factory_os/check_schema_structure.py': 'A',
@@ -387,6 +393,11 @@ L2_PAIRS = {
     # S14 Work Receipts: W1-W5 must each be named by the cage, so a clause of the AGENTS.md
     # grant cannot be added to the checker and left untested -- an unnamed clause is a clause
     # nobody has shown can fire.
+    # ORDER-1020: P1-P6 must each be named by the cage. A criterion the suite never names is a
+    # criterion nobody has shown can fire -- and P5, the anti-drift one, is exactly the criterion
+    # whose absence would be invisible because the other five stay green over a stale store.
+    '_triage/factory_os/check_param_surface.py':
+        ('_triage/factory_os/run_param_surface_tests.py',),
     '_triage/factory_os/check_work_receipts.py':
         ('_triage/factory_os/run_work_receipts_tests.py',),
     '_triage/factory_os/check_coverage_transfer.py':
