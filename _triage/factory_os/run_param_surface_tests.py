@@ -184,6 +184,48 @@ CASES = (
 )
 
 
+def _p5_vintage_case():
+    """/scrutinize round 3, and it is a criterion about the MESSAGE rather than the verdict.
+
+    `check()` reads the stores through its source but imports the generator from disk, so under
+    the hook it compares INDEX bytes against a WORKTREE generator. Probed by editing
+    `hypothesis_b14.py` without staging it: the run reported `P5 ... is not what
+    gen_registry_rows.py produces` and told the author to REGENERATE -- which would have staged
+    a change they had not decided to make. Both diagnoses go red; only one is true, and the
+    wrong one sends the reader to fix a file that is correct."""
+    target = "_triage/factory_os/gen_registry_rows.py"
+
+    class _MixedSource(StubSource):
+        mode = 'index'      # the only mode the vintage question exists in
+
+        def read_committed(self, rel, errors='strict'):
+            if rel == target:
+                return _disk(rel) + chr(10) + '# not the committed bytes'
+            return StubSource.read_committed(self, rel, errors)
+
+    # the store must ALSO differ, or there is nothing for the wrong message to be attached to
+    return C.check(source=_MixedSource(
+        {gen.BINDINGS_REL: mutate_bindings(a_p5_coherent_but_stale)}))
+
+
+def _p5_stale_import_case():
+    """The one that nearly shipped a decision nobody made: a same-length edit restored inside one
+    second leaves a `.pyc` CPython still considers valid, so `import` and the FILE disagree --
+    and P5 cannot see it, because it regenerates through that same import. Simulated by handing
+    the checker a source text that differs from what it imported."""
+    rel = '_triage/factory_os/hypothesis_b14.py'
+
+    class _StaleSource(StubSource):
+        def read_committed(self, rel_, errors='strict'):
+            if rel_ == rel:
+                return _disk(rel_).replace(
+                    "'_14_DistAtrMult':    ('TUNABLE', 'OPERATOR'",
+                    "'_14_DistAtrMult':    ('TUNABLE', 'RESEARCH'")
+            return StubSource.read_committed(self, rel_, errors)
+
+    return C.check(source=_StaleSource({}))
+
+
 def main(argv):
     os.chdir(ROOT)
     bad = 0
@@ -205,6 +247,20 @@ def main(argv):
             print('        -> %s' % p[:170])
         return 1
     print('  [OK ] specificity the REAL store produces ZERO problems')
+
+    for label, fn, needle, miss in (
+            ('a generator whose COMMITTED bytes are not the ones python imported',
+             _p5_vintage_case, 'CANNOT BE PERFORMED',
+             'NOT CAUGHT -- it would have told the author to regenerate'),
+            ('a stale .pyc: the IMPORT and the FILE disagree, and P5 shares the import',
+             _p5_stale_import_case, 'is not the DECISIONS in the file',
+             'NOT CAUGHT -- a decision nobody made would regenerate into the canonical store')):
+        got = fn()
+        hit = [p for p in got if needle in p]
+        ok = bool(hit)
+        bad += 0 if ok else 1
+        print('  [%s] P5  attack %s' % ('OK ' if ok else 'BAD', label))
+        print('        -> %s' % (hit or got or [miss])[0][:150])
 
     for tag, label, fn in CASES:
         try:

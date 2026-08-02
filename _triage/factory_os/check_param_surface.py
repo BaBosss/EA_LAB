@@ -72,6 +72,102 @@ def _rows_of(text, entity):
     return out
 
 
+# ---------------------------------------------------------------------------------------------
+# THE MIXED-VINTAGE GUARD, and it is a diagnosis rather than a fix.
+#
+# 🔴 /scrutinize round 3, PROBED: this checker reads the STORES through the EvidenceSource -- the
+# INDEX under the hook -- but the generator it compares against (`gen_registry_rows` and the four
+# modules it imports) is loaded by PYTHON, from DISK. So P5 compares index bytes against a
+# worktree generator. Demonstrated: an UNSTAGED edit to `hypothesis_b14.py` made an index-mode run
+# report `P5 ... is not what gen_registry_rows.py produces`, i.e. it refused a commit that does
+# not contain the edit -- and told the author to REGENERATE, which would stage a change they had
+# not decided to make.
+#
+# Loading the generator from the index is possible and NOT done here: it would mean exec'ing five
+# committed modules in a synthetic namespace, and `check_input_surface_gen` (ORDER-710/730) has
+# the identical shape, so the fix belongs to both at once rather than to whichever file was
+# touched last. What IS done is to stop the message being wrong: if any generator module differs
+# between the index and the worktree, say THAT, because "I am comparing two vintages" and "your
+# store is stale" have different next steps and only one of them is true.
+_GENERATOR_MODULES = (
+    '_triage/factory_os/gen_registry_rows.py',
+    '_triage/factory_os/hypothesis_b14.py',
+    '_triage/factory_os/activation.py',
+    '_triage/factory_os/architecture.py',
+    '_triage/factory_os/capability.py',
+)
+
+
+def _import_matches_source(src):
+    """-> a problem string when the IMPORTED decision table is not the one in the source file.
+
+    🔴 /scrutinize round 3, and this one nearly shipped a decision nobody made. A probe mutated
+    `hypothesis_b14.py`, restored it in a `finally`, and CPython kept serving the mutated
+    bytecode: a `.pyc` is reused when `(mtime, size)` match, the edit swapped `OPERATOR` for
+    `RESEARCH` (both 8 characters) and the restore landed in the same second -- so both matched
+    and the stale cache was considered valid. `gen_registry_rows.py --write` then baked
+    `_14_DistAtrMult: RESEARCH` into the canonical store.
+
+    P5 reported CLEAN throughout, and could not have done otherwise: it regenerates through the
+    SAME import, so both sides of its comparison carried the same stale code. That is the
+    "a guard that caches the value it watches" family (memory
+    `name-it-honestly-when-you-cannot-prove-it`) -- the only thing that caught it was comparing
+    the store against `HEAD` by hand.
+
+    So the table is re-executed from its own TEXT, in a throwaway namespace, and compared to what
+    python imported. It is deliberately a second reader of one fact -- normally the thing this
+    tree forbids -- because detecting that the import is NOT the source is exactly what a single
+    reader cannot do.
+    """
+    rel = '_triage/factory_os/hypothesis_b14.py'
+    try:
+        text = src.read_committed(rel)
+    except ToolFailure as exc:
+        return 'P5 could not read %s to check it against the import: %s' % (rel, exc)
+    ns = {'__name__': 'hypothesis_b14__source_check', '__file__': os.path.join(ROOT, rel)}
+    try:
+        exec(compile(text, rel, 'exec'), ns)                    # noqa: S102 -- our own module
+    except Exception as exc:                                    # noqa: BLE001
+        return 'P5 %s does not execute: %s: %s' % (rel, type(exc).__name__, str(exc)[:120])
+    for attr in ('HYPOTHESES', 'DECISIONS', 'DECISIONS_H02_EXTRA', 'LOCKED_SELECTORS'):
+        if ns.get(attr) != getattr(HB, attr):
+            return (
+                'P5 the %s python IMPORTED from %s is not the %s in the file. A stale __pycache__ '
+                'entry is served whenever (mtime, size) match, so a same-length edit restored '
+                'inside one second is invisible to CPython -- and P5 cannot see it either, because '
+                'it regenerates through the same import. Delete %s/__pycache__ and re-run.'
+                % (attr, rel, attr, os.path.dirname(rel)))
+    return None
+
+
+def _generator_vintage_mismatch(src):
+    """-> [relpath] whose committed bytes differ from the worktree copy python actually imported."""
+    if src.mode != 'index':
+        return []
+    out = []
+    for rel in _GENERATOR_MODULES:
+        try:
+            committed = src.read_committed(rel)
+        except ToolFailure:
+            out.append(rel)
+            continue
+        try:
+            # `evidence.observe` is the DECLARED door for a category-B read -- "the disk, in
+            # every mode" -- and this is one: the question is not "are these bytes correct", it
+            # is "is the copy python IMPORTED the copy the commit carries". T7 was right to
+            # refuse a bare open() here even with a snapshot comment -- a declaration does not
+            # CHOOSE bytes, and the door that does is this one. It also fstats before and after,
+            # so a file rewritten mid-read is refused rather than compared against a guess.
+            raw, _stat = evidence.observe(os.path.join(ROOT, rel.replace("/", os.sep)))
+            disk = raw.decode("utf-8").replace(chr(13) + chr(10), chr(10))
+        except (ToolFailure, UnicodeDecodeError):
+            out.append(rel)
+            continue
+        if committed != disk:
+            out.append(rel)
+    return out
+
+
 def check(worktree=False, source=None):
     """-> list of problem strings. Empty means the state table holds."""
     src = source or _src(worktree)
@@ -219,6 +315,20 @@ def check(worktree=False, source=None):
 
     stored_binds = _strip([r for _n, r in bindings])
     stored_hyps = _strip([r for _n, r in hypotheses])
+    cached = _import_matches_source(src)
+    if cached:
+        problems.append(cached)
+        return problems
+
+    stale = _generator_vintage_mismatch(src)
+    if stale and (_strip(binds) != stored_binds or _strip(hyps) != stored_hyps):
+        problems.append(
+            'P5 CANNOT BE PERFORMED, and that is not the same as failing. %d generator module(s) '
+            'differ between the index and the working tree (%s), so the regeneration below '
+            'compared committed stores against an UNCOMMITTED generator. Stage the module(s) or '
+            'revert them -- do NOT regenerate, which would stage a change you have not decided to '
+            'make.' % (len(stale), ', '.join(stale)))
+        return problems
     if _strip(binds) != stored_binds:
         problems.append(
             'P5 %s is not what gen_registry_rows.py produces from this snapshot. Regenerate with '

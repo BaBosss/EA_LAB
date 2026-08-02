@@ -54,11 +54,37 @@ BINDINGS_REL = 'factory/parameter_bindings.jsonl'
 INACTIVE_ROLE = 'INACTIVE'
 INACTIVE_SURFACE = 'HIDDEN'
 
-# The inputs that satisfy ENGINE-EDGE cage condition 1 -- a basket-level loss cap. At least ONE of
-# these must be REACHABLE in an engine_edge hypothesis's pinned config. CLOSED: a new cap added to
-# the chassis has to be named here, and until it is, pinning only that one does not satisfy the
-# check. That is the safe direction -- the failure is a refusal, not a false pass.
-LOSS_CAPS = ('_32_SL_Money', '_32_SL_BalPct', 'RC_AcctDDLimitPct', '_2_MaxHoldBars')
+# The inputs that satisfy ENGINE-EDGE cage condition 1 -- a basket-level loss cap -- each with the
+# CEILING the ratified rules put on it, or None where no rule states one.
+#
+# 🔴 /scrutinize round 3: the first version was a bare tuple and checked only that ONE cap was
+# REACHABLE, i.e. `> 0`. Probed: `_32_SL_BalPct = 9999` -- a stop at 9999% of balance, which no
+# account can ever reach -- SATISFIED the cage. `CLAUDE.md`'s condition 1 is not "a cap exists",
+# it is *"worst case is computable ... state the number: a single loss costs <= 15% equity at the
+# real sizing"*. A cap whose number caps nothing is the same shape as a guard that never fires:
+# present, green, and load-bearing for nothing.
+#
+# CLOSED: a new cap added to the chassis has to be named here, and until it is, pinning only that
+# one does not satisfy the check. The failure direction is a refusal, not a false pass.
+LOSS_CAPS = {
+    # CLAUDE.md ENGINE-EDGE cage condition 1, verbatim: a single loss costs <= 15% equity.
+    '_32_SL_BalPct': (15.0, "CLAUDE.md ENGINE-EDGE cage condition 1: 'a single loss costs "
+                            "<=15% equity at the real sizing'"),
+    # CLAUDE.md bar table, demo kill: eqDD > 12%. Capping at the same number makes the EA halt
+    # WHERE the judge would kill it rather than after it.
+    'RC_AcctDDLimitPct': (12.0, "CLAUDE.md bar table demo-kill: eqDD > 12%"),
+    # ABSOLUTE money (Inputs.mqh:394 marks it so), therefore instrument- and account-dependent:
+    # no ratified rule states a number that is meaningful across accounts, so none is enforced.
+    # It still COUNTS as a cap -- it just cannot be checked against a ceiling.
+    '_32_SL_Money': (None, 'absolute money; no portable ratified ceiling'),
+}
+
+# 🔴 `_2_MaxHoldBars` was in the first version of the list above and has been REMOVED. It is a TIME
+# stop, not a loss cap: it force-closes a basket after N bars regardless of what the basket is
+# worth, so it bounds DURATION and says nothing about the worst case in equity -- which is the only
+# quantity cage condition 1 is about. Recorded rather than deleted silently, because "we already
+# count that one" is exactly how a cage acquires a member that does not cage anything.
+_NOT_A_LOSS_CAP = {'_2_MaxHoldBars': 'a TIME stop: it bounds duration, not the worst case in equity'}
 
 
 def pinned_config(hyp, surface):
@@ -75,10 +101,15 @@ def pinned_config(hyp, surface):
     return cfg
 
 
-def _check_engine_edge_cage(hyp_id, hyp, verdicts):
+def _check_engine_edge_cage(hyp_id, hyp, verdicts, config):
+    """REFUSES an engine_edge hypothesis whose cage is absent OR whose cap does not cap.
+
+    Two questions, and the second is the one round 3 added: is a basket-level loss cap REACHABLE,
+    and is its pinned NUMBER within the ceiling the ratified rules put on it.
+    """
     if not hyp.get('engine_edge'):
         return
-    live = [n for n in LOSS_CAPS if n in verdicts and verdicts[n].active]
+    live = [n for n in sorted(LOSS_CAPS) if n in verdicts and verdicts[n].active]
     if not live:
         raise Refusal(
             '%s is labelled engine_edge and its pinned config leaves EVERY basket-level loss cap '
@@ -86,7 +117,24 @@ def _check_engine_edge_cage(hyp_id, hyp, verdicts):
             'case -- hard depth cap AND basket-SL/DD-kill, stated as a number. Refused at '
             'registration rather than caught at a verdict: a hypothesis that carries the label '
             'without the cage is the exact shape the label was invented to stop.'
-            % (hyp_id, ', '.join(LOSS_CAPS)))
+            % (hyp_id, ', '.join(sorted(LOSS_CAPS))))
+    for name in live:
+        ceiling, why = LOSS_CAPS[name]
+        if ceiling is None:
+            continue
+        try:
+            held = float(str(config[name]).strip())
+        except (KeyError, TypeError, ValueError):
+            raise Refusal(
+                '%s pins %s to %r, which is not a number, so whether the cage caps anything '
+                'cannot be answered.' % (hyp_id, name, config.get(name)))
+        if held > ceiling:
+            raise Refusal(
+                '%s is labelled engine_edge and pins %s = %s, above the ratified ceiling of %s '
+                '(%s). A cap whose number caps nothing is the same shape as a guard that never '
+                'fires: present, green, and load-bearing for nothing. Refused at registration, '
+                'because the label is what buys this hypothesis the right to proceed at all.'
+                % (hyp_id, name, held, ceiling, why))
 
 
 def hypothesis_row(hyp_id, hyp, surface, read, owner_ref):
@@ -116,7 +164,7 @@ def binding_rows(hyp_id, hyp, surface, owner_ref):
     """-> [ParameterBinding] for every input on the build's surface, in surface order."""
     cfg = pinned_config(hyp, surface)
     verdicts = activation.classify(surface.build_tag, cfg, surface=surface)
-    _check_engine_edge_cage(hyp_id, hyp, verdicts)
+    _check_engine_edge_cage(hyp_id, hyp, verdicts, cfg)
 
     decisions = HB.decisions_for(hyp_id)
     revision_id = '%s-r%d' % (hyp_id, hyp['revision'])
