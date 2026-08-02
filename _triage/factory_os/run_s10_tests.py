@@ -472,9 +472,26 @@ def part2_attestation():
     refuses('a claude OBSERVED event doing the same thing (the rule is the EVENT, not the actor)',
             A.validate_event(_event('OBSERVED', 'claude', event_id='ATT-20260802-002',
                                     candidate_id='CAND-' + '2' * 12), prior), 'A6')
-    refuses('an automation OBSERVED event naming the FIRST candidate for a pair',
+    # 🔴 /scrutinize round 2: THE FIRST ASSIGNMENT WAS THE HOLE, AND THE ASYMMETRY RAN THE WRONG
+    #    WAY. This case used to exist for `automation` only, so `user` and `claude` could make the
+    #    FIRST candidate assignment -- nothing to something -- through an OBSERVED event with NO
+    #    authorization_ref, while the same two actors were refused for the strictly smaller act of
+    #    moving an existing one. Probed both directions before the fix. Enumerated over every
+    #    actor now, because "the rule is on the EVENT, not the actor" is only a claim until every
+    #    actor has been asked.
+    first_assign = 0
+    for actor in A.ACTORS:
+        if refuses('a %-10s OBSERVED event naming the FIRST candidate for a pair' % actor,
+                   A.validate_event(_event('OBSERVED', actor, event_id='ATT-20260802-002',
+                                           candidate_id='CAND-' + '2' * 12), []), 'A6'):
+            first_assign += 1
+    check('ROLL-UP no actor may first-assign a candidate through an OBSERVED event (%d of %d)'
+          % (first_assign, len(A.ACTORS)), first_assign == len(A.ACTORS))
+    # ...and the honest shape for the same observation is still accepted: report what was seen
+    # WITHOUT deciding what the deployment is.
+    accepts('an OBSERVED event that reports attest_state and names no candidate',
             A.validate_event(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
-                                    candidate_id='CAND-' + '2' * 12), []), 'A6')
+                                    attest_state='FILE_MISSING'), []))
     accepts('...but an OBSERVED event that REPEATS the current candidate is fine -- that is what '
             'an observation is',
             A.validate_event(_event('OBSERVED', 'automation', event_id='ATT-20260802-002',
@@ -696,6 +713,21 @@ def part5_the_other_half():
     m = re.search(r'\$FAST_SUITES\s*=\s*@\((.*?)\n\)', tier, re.S)
     check('...and it is inside $FAST_SUITES, which is the array that actually runs',
           bool(m) and 'run_s10_tests.ps1' in m.group(1))
+
+    # (d2) 🔴 /scrutinize round 2, generalised: NO DERIVED FLAG THE FOLD EXPOSES MAY GO UNREAD.
+    #      `fold` carried a `frozen` flag that `validate_event` never mentioned, so a FROZEN event
+    #      changed nothing -- a read-model describing enforcement nobody performs, which the next
+    #      caller reads as a rule. The flag is gone; this check is what catches the next one,
+    #      because the shape recurs and inspection does not scale.
+    att_src = io.open(os.path.join(HERE, 'attestation.py'), encoding='utf-8').read()
+    body = att_src.split('def validate_event')[1].split('\ndef ')[0]
+    sample = A.fold([_event('RETIRED', 'user', authorization_ref=copy.deepcopy(AUTH))])
+    flags = sorted(k for k, v in list(sample.values())[0].items() if isinstance(v, bool))
+    check('every boolean the fold exposes is declared in DERIVED_FLAGS',
+          flags == sorted(A.DERIVED_FLAGS), 'fold=%s declared=%s' % (flags, sorted(A.DERIVED_FLAGS)))
+    unread = [f for f in A.DERIVED_FLAGS if ("'%s'" % f) not in body]
+    check('...and every declared flag is actually READ by validate_event', not unread,
+          '%s is computed and no rule consumes it -- a flag nobody reads reads as a rule' % unread)
 
     # (e) the vocabulary of all three modules is the schema's, re-read from the file.
     for name, mod in (('candidate', C), ('attestation', A), ('magic', M)):

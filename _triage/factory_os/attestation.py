@@ -81,24 +81,39 @@ def pair_key(event):
     return (str(event.get('account')), S.normalize_numbers(event.get('magic')))
 
 
+# Every DERIVED flag the fold exposes must be read by a rule in `validate_event`. The cage asserts
+# this list against that function, because the alternative is a read-model that describes
+# enforcement nobody performs -- see the `frozen` note in `fold` below.
+DERIVED_FLAGS = ('retired',)
+
+
 def fold(events):
     """{(account, magic): state}. State is what the LAST event that spoke about each field said,
     which is why a field absent from a later event must not erase it -- the same "last non-null"
-    rule scheduler.fold's `_field` uses, for the same reason: one attempt, several lines."""
+    rule scheduler.fold's `_field` uses, for the same reason: one attempt, several lines.
+
+    🔴 /scrutinize round 2: THERE WAS A `frozen` FLAG HERE AND NOTHING READ IT. `validate_event`
+    never mentioned it, so a `FROZEN` event changed nothing at all -- probed: a
+    `CANDIDATE_REASSIGNED` appended straight after a `FROZEN` was ALLOWED. A field named `frozen`
+    in a read-model will be read by the next caller as "this is frozen, do not touch it", and
+    there was nothing behind it. It is removed rather than enforced, because what `FROZEN` should
+    forbid is a POLICY the design does not state, and the obvious guess -- refuse every later
+    candidate change -- has no way back out: there is no unfreeze event type, so one `FROZEN`
+    would make a pair permanently unmovable. Inventing that is worse than not having it. The
+    question is written into the handoff as the owner's.
+    """
     out = {}
     for ev in events:
         key = pair_key(ev)
         st = out.setdefault(key, {'account': key[0], 'magic': key[1], 'candidate_id': None,
                                   'attest_state': None, 'core_revision': None,
-                                  'retired': False, 'frozen': False, 'events': 0})
+                                  'retired': False, 'events': 0})
         st['events'] += 1
         for f in ('candidate_id', 'attest_state', 'core_revision'):
             if ev.get(f) is not None:
                 st[f] = ev[f]
         if ev.get('event_type') == 'RETIRED':
             st['retired'] = True
-        if ev.get('event_type') == 'FROZEN':
-            st['frozen'] = True
     return out
 
 
@@ -196,10 +211,23 @@ def validate_event(event, prior_events):
                             'which candidate a magic is attested to is CANDIDATE_REASSIGNED, and '
                             'that needs a human authorization_ref'
                             % (event['account'], magic, current, event['candidate_id']))
-        elif current is None and event['actor'] == 'automation':
-            problems.append('A6 an automation OBSERVED event may not be the first thing to name a '
-                            'candidate for %s|%s -- the FIRST assignment is CANDIDATE_ASSIGNED, '
-                            'and an unauthorized first write is an unauthorized write'
+        elif current is None:
+            # 🔴 /scrutinize round 2: THIS BRANCH USED TO READ `and event['actor'] ==
+            # 'automation'`, and the asymmetry ran the wrong way. `user` and `claude` could make
+            # the FIRST candidate assignment -- nothing to something, the most consequential write
+            # in the entity -- through an OBSERVED event carrying NO authorization_ref, while the
+            # same two actors were refused for the strictly SMALLER act of moving an existing one.
+            # Probed: `user` ALLOWED and `claude` ALLOWED to first-assign; both REFUSED to move.
+            # The actor was never the right axis. Establishing what a deployment IS requires the
+            # named human decision more than changing it does, so the rule is on the EVENT: an
+            # observation reports what it saw and never decides. An observation that finds a
+            # candidate on a chart the ledger never assigned is a DISCREPANCY -- it can still be
+            # recorded, with `candidate_id: null` and an `attest_state`, which is the honest shape
+            # for "I saw something nobody authorized".
+            problems.append('A6 an OBSERVED event may not be the first thing to name a candidate '
+                            'for %s|%s -- the FIRST assignment is CANDIDATE_ASSIGNED and needs a '
+                            'human authorization_ref. An unauthorized first write is an '
+                            'unauthorized write, whoever makes it.'
                             % (event['account'], magic))
 
     # -- A7 RETIRED closes the pair. A magic is never re-issued once retired (design 4.6: a reused
