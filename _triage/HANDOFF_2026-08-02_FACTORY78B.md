@@ -1,4 +1,4 @@
-> ⚠️ canonical entry = **`PROJECT_STATE.md`** · this file owns: **shift-change note for lane
+﻿> ⚠️ canonical entry = **`PROJECT_STATE.md`** · this file owns: **shift-change note for lane
 > `S-2026-08-02-FACTORY78B`** — the continuation lane that finished slice **S7** and built the
 > generator half of **S8**. A note, not a queue: every forward item below already has a row on
 > `AGENT_TASKBOARD.md`.
@@ -53,8 +53,29 @@ additions.
 `#include "../core/LabCore.mqh"` in one wrapper, which cannot both be right. MetaEditor:
 `error 106: ...\generated\generated\B14_H01_r1_allowlist.mqh not found`. The file was
 byte-identical to what the generator produced, contained zero logic, was fully wired and named the
-right tokens. **Only the compiler knew.** The wrapper now sits beside the hand-written
-`Boss_*.mq5`, so its include paths are identical to theirs — which is what "thin" means.
+right tokens. **Only the compiler knew.**
+
+🔴 **And the obvious repair was wrong in a way only a THIRD guard could see.** Moving the wrapper up
+beside the hand-written `Boss_*.mq5` compiled 0/0 — and gave `LAB_ENTRY_14` a **second translation
+unit**, which `gen_locked_constants.py` refuses by design (*"two translation units for one build
+means the closure this module walks is one of two the compiler could build, and picking either
+makes the fingerprint a coin toss nobody can see"*). `check_input_surface_gen` refused the whole
+tree. **Final placement: both artifacts in `generated/`** — the allowlist included from the same
+directory, LabCore from `../core/`. So §5.2 was right about the second include line and wrong about
+the first. `ea_template/*.mq5` stays at exactly one wrapper per build tag and the nine-target
+compile policy is untouched.
+
+<sub>Two cage defects surfaced during that move, and both are worth more than the move. **W4 matched
+the allowlist include as a directory-qualified path**, so it went red for a wrapper that was
+correct — what it actually asserts is that the wrapper reaches *its own* allowlist, and the
+directory relationship is the generator's to decide. And **two fixtures used a bare `str.replace`
+against a path that had moved**: `replace` without its needle is a silent no-op, so the "corrupted"
+artifact was byte-identical to the real one, `check()` correctly found nothing wrong, and the suite
+printed *"NOT CAUGHT BY W2 … nothing at all"* — which reads as *the checker is broken* when the
+checker was fine. Every fixture now goes through `_mutate()`, which **refuses when its anchor is
+absent**. A fixture that quietly mutates nothing is the same defect class as a guard that quietly
+checks nothing, and worse, because it accuses working code. The stub reader also normalises
+newlines the way `EvidenceSource` does — git's autocrlf is what made the two fixtures miss.</sub>
 
 ## 🔴 Three defects the real rows exposed, all of which had been invisible
 
@@ -113,7 +134,7 @@ from them would end this. **Not built here** — it is `BACKLOG-D29`'s family an
 
 ## Cage state at close
 
-- fast tier **green** · per-path **20.5s of 65.0s** on the last commit; the widest commit of the
+- fast tier **green, 21/21, 0 failed** · per-path **20.5s of 65.0s** on the last commit · **full tier 88.9s of 90.0s — 1.1s of headroom, and `ORDER-820` is open on exactly that number**; the widest commit of the
   session peaked at **160.7s** and was brought to **65.9s** by fixing `ORDER-1031` rather than by
   raising the number
 - new suites, each measured before adding per `ORDER-673`: `run_param_surface_tests.ps1` **0.7s** ·
