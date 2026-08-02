@@ -235,11 +235,97 @@ refactor.**
 
 ---
 
-## ORDER-1021 — [factory/S8] Thin Wrapper generator + the 7-point parity harness — `PARTIAL (Claude/Opus 2026-08-02) — the generator is BUILT, CAGED and its output COMPILES 0/0; the 7-point parity harness and the Inputs.mqh token-guard rollout remain` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+## ORDER-1021 — [factory/S8] Thin Wrapper generator + the 7-point parity harness — `DONE (Claude/Opus 2026-08-02) — all three acceptance criteria measured: the rollout landed (38 on the Inputs page, counted from the BINARY's own report), tpl_regression CLEAN 8/8, and the parity case set satisfies design §5.5 with 0 DIFFER anywhere` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 **Acceptance (design §10):** all parity cases including **must-trade** and **deliberate-refusal** ·
 the wrapper contains **zero logic** · regenerating produces a **byte-identical** `.mq5`.
 **Prohibitions:** no wrapper edited by hand · no generation step that cannot be re-run.
+
+### ✅ 2026-08-02 (lane `S-2026-08-02-S8PARITY`) — STEP 1 and STEP 2 both closed, measured
+
+**STEP 1 — the `Inputs.mqh` capability-token rollout, Boss_14 only.** Every input is now declared
+inside a `#ifndef LAB_CONST_<name>` / `#ifdef LAB_CONST_<name>` guard pair; a build defining no
+`LAB_CONST_*` takes the `input` branch for all of them, so the eight hand-written `Boss_*.mq5` are
+inert to this **by construction** rather than by anyone remembering. Per revision:
+
+| revision | const | on the Inputs page | unreachable but KEPT |
+|---|---|---|---|
+| `B14-H01-r1` | **78** | **38** | 7 |
+| `B14-H02-r1` | 75 | 41 | 7 |
+
+Measured on lane 1 (`D:\Meta 5`): 9 hand-written targets **0 errors / 0 warnings** · both generated
+wrappers **0/0** · **`tpl_regression` CLEAN 8/8** · the wrapper `.ex5` is **66 KB smaller** than its
+parent, because a `const` selector folds its dead branches away. **The Inputs-page count of 38 was
+read from the MT5 report's own `Inputs:` block — from the BINARY, not from a table.**
+
+🔴 **The 7 kept inputs are the finding, and they are the reason the acceptance number is 38 and not
+the 31 the opening prompt asked for.** `activation.classify()` answers *"is this input reachable
+under THIS ONE config"*; a compile-time `const` claims something stronger — that it cannot matter
+under **any** config the operator can still produce. Those coincide only when every selector the
+gate reads is itself fixed at compile time. **`_4_DdAdaptiveOn` and `_57_DynCloseOn` are declared
+`TUNABLE` (a sweep may move them) while their 7 dependent dials are declared `INACTIVE`, and both
+cannot be true** — the moment the optimizer flips the switch, the dials are live. Const-ing them
+would hand the optimizer one arm of a two-arm decision and let it report the result as the
+decision: memory `inert-axis-fake-plateau`, made structural, because the axis would be inert *in
+the binary itself*. `31` is reachable only by **locking those two switches**, which is a change to
+strategy configuration and is explicitly out of scope for the rollout — **owner decision, see
+below.**
+
+**STEP 2 — the 7-point parity harness.** `scripts/parity_run.ps1` (runner, on `tpl_regression`'s
+lane pin, asserting the binary it measured is the binary it built) + `_triage/factory_os/parity.py`
+(PURE comparator) + `run_parity_tests.py` (11 attacks + specificity, **0.1 s**, in the fast tier).
+Four cases, lane 1, XAUUSD H1 2024.01.01–2024.07.01, Model 1, one `.set` handed to **both** sides:
+
+| case | result |
+|---|---|
+| `must-trade` | 5/7 AGREE · **0 DIFFER** |
+| `cage-fires` | 6/7 AGREE · **0 DIFFER** |
+| `deliberate-refusal` | 3/7 AGREE + 4 N/A · **0 DIFFER** · **PASS** |
+| `locked-absent` | **DIFFERS BY DESIGN — that is the evidence** |
+
+**Roll-up: every one of the seven points is exercised by a real observation in at least one case,
+and none differs anywhere.** The wrapper (38 inputs) and its parent (116) reach an **identical
+`effective_config_hash`**, an identical 60-order trace, an identical 61-deal trade list and an
+identical end state.
+
+🔴 **`locked-absent` is the decisive case.** Both sides were handed a `.set` asking for
+`_2_MaxHoldBars=5`. The parent honoured it — **82 orders, 83 deals, a different hash**. The wrapper
+could not — **60/61, hash byte-identical to its own must-trade run**. That is design §5.5 case 3/4
+(*absent from the page AND its value provably applied*) measured rather than asserted.
+
+### 🔴 Findings this work paid for
+
+| | |
+|---|---|
+| **design §5.5's "agree on all seven" is not satisfiable by ONE run** | A clean run raises no errors, so point 7 has nothing to compare; a refusing run places no orders, so points 2–6 have nothing to compare. The two mandatory directions are therefore **not good practice — they are the only way all seven get exercised**. The contract is satisfied by the **case set**, and `parity.rollup()` is what checks it. |
+| **the comparator had the exact defect it exists to refuse** | `_table` accepted any row with a non-empty cell, so the tester report's unlabelled **TOTALS row counted as a deal**. The Deals list was therefore **never empty** — not even for a run that refused at `OnInit` — so the vacuity check on point 4 **could not fire on a real report, ever**. Caught by the deliberate-refusal case reporting `deals AGREE` for two runs that never attached. That is the *second* reason §5.5 demands that case, and the one nobody had written down. |
+| **the design's own refusal example is not expressible on this revision** | §5.5 names `_42_RiskPct` paired with an `SLMode` yielding no distance. Under `B14-H01` **both ingredients are compiled away**, so a `.set` naming either is ignored by the wrapper and the two sides would refuse for *different* reasons — a parity failure manufactured by the case rather than found by it. The case uses `_41_FixedLot=0`: same `MM_ConfigValid` fail-closed seam, reached through an input **live on the wrapper's own 38-key page**. Both refused with a byte-identical reason string. |
+| **zero fires was not accepted as a pass** | `must-trade` left points 6 and 7 with nothing to compare, so `cage-fires` arms the account-DD gate at **0.3 %** instead of the pinned 12 %. It **TRIPPED once on each side**, identical to the cent (`DD 1.52% vs limit 0.30% (HWM 10007.41)`). |
+| **a guard that already existed caught the runner** | `run_report_freshness_tests` PART 5 refused `parity_run.ps1`'s first commit for reading a report without gating it — correctly, since `mt5_run.ps1`'s own header says *"the `.htm` exists is NOT evidence that THIS invocation produced it"*. Now wired through `Test-ReportIsFresh` **and re-measured end to end afterwards**, so the gate is proven not to false-refuse. |
+
+### 🔴 OWED TO THE OWNER — one decision, and it is not the rollout's to make
+
+**`_4_DdAdaptiveOn` and `_57_DynCloseOn` are on/off mechanism switches, which is exactly the shape
+of every member of `hypothesis_b14.LOCKED_SELECTORS`** (`_MG_SelfGate` and `_50_RegimeMode` are
+already there, and the file's own comment says these are *"the inputs that decide WHICH MECHANISM
+runs"*). They are currently `TUNABLE/RESEARCH` instead, and that is what keeps their 7 dependent
+dials alive.
+- **Lock them** ⇒ the const set becomes 87 and the Inputs page **29**; the contradiction disappears.
+- **Leave them** ⇒ page stays **38**, and `optimize_guard` will `ALLOW` each switch while
+  `REFUSE`ing every dial it controls — a sweep whose ON arm is frozen at factory defaults.
+
+Either is defensible; **only the owner may pick**, because it changes what the optimizer may sweep
+on a real EA. Nothing here assumes an answer — the sound (conservative) branch is what shipped.
+
+### Still owed on the mechanism, stated rather than implied
+- **SAFETY inputs still compile as `input`, not `sinput`** (design §5.4's state table asks for
+  `sinput`, which removes the dimension from the optimizer rather than declining to sweep it).
+- **Parity point 6 can only ever observe FAILED persistence.** `Persist.mqh` prints on error and
+  never on success, and tester `GlobalVariable`s are sandboxed and destroyed at pass end, so a
+  *successful* GV write is invisible to any log-derived check. What IS covered: the key **scope**
+  (via point 2, which hashes `LAB_ENTRY_TAG` and `_0_Magic`) and every cage transition that prints.
+- **Model 4 has not been run.** Parity asks whether two binaries agree and both ran Model 1; a grid
+  **verdict** needs Model 4, and no verdict is issued here.
 
 <sub>⚠️ **Superseded, kept because the prediction is the record.** This paragraph read *"Not started,
 and the honest reason is that `ORDER-1020` did not finish — what is missing is the row that records
