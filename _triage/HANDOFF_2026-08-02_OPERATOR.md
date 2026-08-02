@@ -45,6 +45,24 @@ same command. Then the adopt-once run itself, which needs the owner present per 
 `ORDER-432` finding-6 shape already proven on this exact problem. **Fresh counters answer the next
 16 days, not the last ones** — `ORDER-941` does not close on them.
 
+### 🔴 Then the owner asked the question the order should have opened with
+
+*"Have you run all four over the same window to see whether any trade comes out?"* No. Everything
+above argues about whether the legs are **executing**; nothing asked whether the **signal fires at
+all**. One tester run per leg, no terminal needed, and it settles what the log cannot.
+
+Four runs, lane 1, locked `.set` verbatim, `2026.07.16 → 2026.08.02`, Model 1, quality 100%:
+`990066` **0** · `990067` **0** · `990068` **4 deals** · `990069` **0** — against live `0/0/1/0`.
+
+**The backtest reproduces the live pattern leg for leg.** *"Three legs silent together is not
+thinness"* — the sentence the whole order rests on — **is refuted by measurement**. The legs were
+not prevented from trading; there was nothing to trade. **The defect is the `~1.05/wk` expectation
+(`ORDER-942`), not the attach.**
+
+Caveat kept with the number: the tester resolved these symbols on the **ThinkMarkets** feed while
+live is **Exness `m`** — enough to move a marginal signal by a bar, not enough to move 2.4 trades to
+zero.
+
 ## 3. `ORDER-761` — CLOSED without being built, owner-ratified
 
 Dies on its own **C2** (*"if it lands near 66 again it has not solved anything"*): measured **102**.
@@ -54,8 +72,9 @@ the row as evidence the cost is accumulating.
 
 ## Verification
 
-`check_state.ps1` CLEAN. Every commit through the full pre-commit hook, no `--no-verify`. No MT5
-lane taken — all evidence came from the owner's terminal.
+`check_state.ps1` CLEAN. Every commit through the full pre-commit hook, no `--no-verify`. MT5
+lane 1 was taken only for the four ORDER-941 backtests (lane `S-2026-08-02-ICHIBT`); every other piece
+of evidence came from the owner’s terminal.
 
 <!-- HANDOFF-ROUTING -->
 
@@ -63,6 +82,6 @@ lane taken — all evidence came from the owner's terminal.
 |---|---|
 | census the 3 remaining REAL_CENT accounts, then adopt-once per magic | ORDER-510 |
 | add the heartbeat + per-reason counters to `(EXP)_IchiADX_Naked_rev00` | ORDER-1000 |
-| decide silent-vs-thin once the counters have run | ORDER-941 |
-| where `~1.05/wk expected` comes from (11 of 19 rows carry no expected rate) | ORDER-942 |
+| ORDER-941 silent-vs-thin: ANSWERED by backtest (signal quiet, not blocked); row closes with ORDER-942 | ORDER-941 |
+| the `~1.05/wk` expectation the backtest just contradicted | ORDER-942 |
 | `ORDER-761` mechanism | DONE |
