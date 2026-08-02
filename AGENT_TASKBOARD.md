@@ -1834,13 +1834,59 @@ row whose observed rate is below half the expected for ≥3 weeks is listed for 
 >
 > 🔴 **This changes `ORDER-941`.** `990103` is listed there among the legs that are *unfalsifiable* at
 > 0 closed trades. **It is not** — an expectation of **8.33 trades/month** exists and is real; it is
-> simply not joined. At 0 closed trades against ~1.9/week, that leg is **falsifiably silent**, which is
-> a real-money signal the current brief hides behind an `NA`. The other three `941` legs are unaffected.
+> simply not joined. The other three `941` legs are unaffected.
+> <br>⚠️ **Correction, made by the measurement that followed and left here on purpose:** the sentence
+> above originally continued *"at 0 closed trades against ~1.9/week, that leg is falsifiably silent"*.
+> **That was premature.** B3 measured it: on the ACTIVE account `990103` is **1.3 weeks old**, so it is
+> `TOO YOUNG`, not silent. What the fix actually bought is that the leg is now *falsifi**able***, which
+> is the whole point of the order — it will become a real signal in another two weeks, and would have
+> stayed an `NA` forever without it.
 >
 > **B1 is therefore amended:** the derivation set is **14** (13 sentinels + `990026`), not 17, and the
 > three join misses are fixed by correcting the row's account — with a note recording that the number
 > was derived on the other broker's data, because a trade RATE transfers across brokers far better than
 > a PF does but is not identical (`ORDER-371`).
+
+**✅ B1 DONE — the gap is 17 → 0.** Re-measured with the snapshot's own join key: **36 of 36** ACTIVE
+judge-dated rows now carry a usable `trades_per_month_expected`. Every derived number is
+`trades ÷ window-weeks × 52/12`, taken from **the report the row already cited**, and both the trade
+count and the window are written into `source_evidence` so the arithmetic can be re-checked without
+re-running anything. 13 derived · 3 re-pointed (no derivation) · 1 created (`990026`, the only row that
+never existed — unit is **legs**, because that EA pyramids and the Control Room counts entry deals,
+so both sides count the same thing).
+
+🔴 **Four of the derivations rest on a window that INCLUDES 2026H1** — `990301` · `990302` · `990110` ·
+`990020` all cite ORDER-166/ST reports run `2023.01.01-2026.07.01`. Recorded in each row's notes rather
+than silently used: a **rate** is not a selection metric, so the contamination does not bias it the way
+it would bias a PF, but `CLAUDE.md`'s iron rule is MAIN ∩ HOLDOUT = ∅ and these are not clean MAIN
+windows. **Re-derive from a clean window when one exists.** One more is weaker still: `990984`'s
+`trade_count 126` comes from the MC json of the locked `ExitZ0.3` config, **which records no period**,
+so its window is an assumption — stated in the row so it is falsifiable.
+
+**✅ B2 DONE.** Zero `NA` remain. Measured with the identical join key the snapshot uses
+(`scripts/control_room_snapshot.ps1:179`, `"$($e.account)|$($e.magic)"`) rather than by running the
+producer, because `scripts/control_room_snapshot.ps1` belongs to the parallel `ORDER-1131` lane and this
+lane declared it read-only.
+
+**✅ B3 DONE — and this is the output that matters.** Observed entry-deals per magic from the latest
+collector, against the new expectations, for all 36 rows. **25 are `TOO YOUNG` (<3 weeks of history),
+8 are `OK`, and 3 are `UNDER_RATE`:**
+
+| magic | account | EA | observed | obs/mo | exp/mo | |
+|---|---|---|---|---|---|---|
+| `991004` | **159503454 REAL_CENT** | `(BRK)_SqueezeBreakout` | **0** | 0.00 | 1.25 | **0% of expected** |
+| `991002` | **159503454 REAL_CENT** | `(BRK)_TrendlineBreakout` | 1 | 1.26 | 4.58 | 28% |
+| `990202` | 415573666 | `Boss_14_GridLog` | 1 | 1.12 | 3.83 | 29% |
+
+🔴 **Two of the three are on the REAL-MONEY account**, and one of those has produced **nothing at all**.
+`991002` is also one of the three legacy-exception magics, and `991004` is one of the four EAs
+`ORDER-235`'s thin rule was written for — so "it is just thin" is a live hypothesis for it and **not**
+for `991002` at 4.58/month expected. All three are listed for `ORDER-941` treatment per B3.
+
+<sub>⚠️ **Stated limit of B3:** the observation window is `today − start_date`, and the rate assumes the
+latest collector CSV covers that whole span. If a collector only holds a recent slice, an older EA
+reads as slower than it is. That is why 25 rows show `TOO YOUNG` rather than a verdict — most of this
+fleet was attached or re-attached inside the last three weeks.</sub>
 
 ## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
 
