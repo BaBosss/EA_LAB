@@ -1,5 +1,5 @@
 <#
-run_setfile_tests.ps1 - ORDER-1000 (slice S7), wrapping the ratified old-.set policy cage.
+run_setfile_tests.ps1 - ORDER-1020 (slice S7), wrapping the ratified old-.set policy cage.
 
 WHAT IT GUARDS. The owner ratified on 2026-08-01 (design section 11 decision 4) that an unknown
 or removed key in a .set is a REFUSAL THAT NAMES THE KEY, never a skipped line and never a
@@ -8,8 +8,9 @@ full report. _triage\factory_os\setfile.py implements that; this suite is what m
 survive the next edit to it.
 
 MEASURED before adding, because the ORDER-673 budget means a new cage DISPLACES something:
-run_setfile_tests.py --mutate is ~0.6s (it parses the real Inputs.mqh once to build the build-14
-surface, which is the whole of that cost). Added on the measurement, not on "tests are good".
+run_setfile_tests.py --mutate is 0.4s in the hook tier, measured on the commit that added it.
+Almost all of that is one parse of the real Inputs.mqh to build the build-14 surface its cases
+attack. Measured in-session per ORDER-673 N1, not carried over from this comment.
 
 --mutate is passed HERE rather than left to a human, for the reason run_preset_tests.ps1 gives:
 without it the suite proves the criteria are green; with it, each one is proven able to go RED for

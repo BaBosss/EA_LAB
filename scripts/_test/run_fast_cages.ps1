@@ -328,12 +328,12 @@ $FAST_SUITES = @(
     # mutation probes and NONE of it ran on any commit -- fully tested and completely
     # unguarded at once, which is the same hole evidence.py was in.
     'run_preset_tests.ps1',
-    # ORDER-1000 (S7), added on a MEASUREMENT like the one above it: ~0.6s, almost all of which
+    # ORDER-1020 (S7), added on a MEASUREMENT like the one above it: 0.4s in the hook, almost all of which
     # is parsing the real Inputs.mqh once to build the surface its cases attack. It guards the
     # owner-ratified old-.set policy, which until now existed only as a decision in a design
     # document and a module nothing ran.
     'run_setfile_tests.ps1',
-    # ORDER-1000 (S7), measured at ~1.3s before adding. It guards the reachability machinery that
+    # ORDER-1020 (S7), measured at 1.3s standalone / 0.4s in the hook. It guards the machinery that
     # takes Boss_14 from 116 visible inputs to 38 reachable ones -- the number the Operator
     # surface and the optimizer's allowed dimensions are both derived from.
     'run_activation_tests.ps1',
@@ -437,7 +437,7 @@ $SUITE_GUARDS = @{
                                           'factory/work_receipts.jsonl',
                                           'AGENTS.md',
                                           '_triage/factory_os/evidence.py')
-    # ORDER-1000 (S7). The ratified old-.set policy: unknown key => a refusal that NAMES the
+    # ORDER-1020 (S7). The ratified old-.set policy: unknown key => a refusal that NAMES the
     # key, and migration writes a NEW file. The suite builds build-14's surface out of the REAL
     # Inputs.mqh, so an edit there changes what this cage proves, exactly as it does for
     # run_preset_tests below.
@@ -451,7 +451,7 @@ $SUITE_GUARDS = @{
                                           # two modules, same reason, as run_preset_tests below.
                                           '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/registry.py')
-    # ORDER-1000 (S7). The three modules that answer "can this input change anything", plus the
+    # ORDER-1020 (S7). The three modules that answer "can this input change anything", plus the
     # two sources they answer it FROM: Inputs.mqh (the surface) and the build wrapper (the
     # chassis version every ModuleUse row records).
     'run_activation_tests.ps1'        = @('_triage/factory_os/activation.py',

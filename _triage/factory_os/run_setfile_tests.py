@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_setfile_tests.py -- ORDER-1000 (S7). The cage for the ratified old-`.set` policy.
+"""run_setfile_tests.py -- ORDER-1020 (S7). The cage for the ratified old-`.set` policy.
 
 WHAT IS BEING CAGED. The owner ratified on 2026-08-01 that an unknown or removed key in a `.set`
 is a REFUSAL THAT NAMES THE KEY -- never a skipped line, never a default substituted underneath --
@@ -290,7 +290,7 @@ def load_mutant(old, new):
 def main(argv):
     os.chdir(ROOT)
     bad = 0
-    print('=== ORDER-1000 old-.set policy (ratified 2026-08-01): %d criteria, each with an '
+    print('=== ORDER-1020 old-.set policy (ratified 2026-08-01): %d criteria, each with an '
           'attack and a specificity half ===' % len(CASES))
     print('    build %s, %d inputs on its surface' % (BUILD, len(SURFACE)))
     for cid, label, attack, spec, _mut in CASES:

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""run_activation_tests.py -- ORDER-1000 (S7). The cage for the three modules that decide which
+"""run_activation_tests.py -- ORDER-1020 (S7). The cage for the three modules that decide which
 inputs a hypothesis can actually reach.
 
 WHAT IS BEING CAGED, AND WHY IT MATTERS MORE THAN IT LOOKS. `architecture.py`, `capability.py` and
@@ -323,7 +323,7 @@ def load_mutant(module, old, new):
 def main(argv):
     os.chdir(ROOT)
     bad = 0
-    print('=== ORDER-1000 reachability (S7): %d criteria, each with an attack and a specificity '
+    print('=== ORDER-1020 reachability (S7): %d criteria, each with an attack and a specificity '
           'half ===' % len(CASES))
     print('    build %s, %d inputs on its surface' % (BUILD, len(SURFACE)))
     for cid, label, module, attack, spec, _mut in CASES:

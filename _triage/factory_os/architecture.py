@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""architecture.py -- ORDER-1000 (slice S7). The `architecture_digest` a Hypothesis carries.
+"""architecture.py -- ORDER-1020 (slice S7). The `architecture_digest` a Hypothesis carries.
 
 WHY THIS EXISTS AT ALL. `schemas.json` requires every `Hypothesis` row to carry a 16-hex
 `architecture_digest` and says of it: *"hash of (entry, exit_owner, stack_owner, lot_owner,

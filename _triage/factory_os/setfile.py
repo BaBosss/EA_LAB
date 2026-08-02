@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""setfile.py -- ORDER-1000 (slice S7). Reading an existing `.set`, and migrating an old one.
+"""setfile.py -- ORDER-1020 (slice S7). Reading an existing `.set`, and migrating an old one.
 
 THE OWNER RATIFIED THIS POLICY ON 2026-08-01 (design section 11 decision 4, `PROJECT_STATE.md`
 section 3): **an unknown or removed key is a REFUSAL that NAMES THE KEY -- never a skipped line,

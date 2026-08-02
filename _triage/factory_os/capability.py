@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""capability.py -- ORDER-1000 (slice S7). Which capability modules a hypothesis actually uses.
+"""capability.py -- ORDER-1020 (slice S7). Which capability modules a hypothesis actually uses.
 
 WHAT DESIGN 5.3 ASKS FOR. "The allowlist header defines one capability token per module the
 hypothesis actually uses (`LAB_CAP_STACK`, `LAB_CAP_RECOVERY`, `LAB_CAP_HEDGE`, `LAB_CAP_REGIME`,

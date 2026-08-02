@@ -1,5 +1,5 @@
 <#
-run_activation_tests.ps1 - ORDER-1000 (slice S7), wrapping the reachability cage.
+run_activation_tests.ps1 - ORDER-1020 (slice S7), wrapping the reachability cage.
 
 WHAT IT GUARDS. architecture.py + capability.py + activation.py decide which of Boss_14's 116
 inputs a given hypothesis can actually reach. That answer decides what the operator is shown,
@@ -12,8 +12,9 @@ wrong. Criterion A6 therefore asserts in BOTH directions - a dial goes dark when
 turns it off, AND comes back when it turns on (memory inert-axis-fake-plateau).
 
 MEASURED before adding, because the ORDER-673 budget means a new cage DISPLACES something:
-run_activation_tests.py --mutate is ~1.3s, nearly all of it the Inputs.mqh surface parses its
-mutants need. Added on the measurement, not on "tests are good".
+run_activation_tests.py --mutate is 1.3s standalone and 0.4s inside the hook tier (the second
+number is the one that matters: it is what a real commit pays). Both were measured in the session
+that added it, per ORDER-673 N1 - not carried over from this comment.
 
 --mutate is passed HERE rather than left to a human, for the reason run_preset_tests.ps1 gives:
 without it the suite proves the criteria are green; with it, each one is proven able to go RED for

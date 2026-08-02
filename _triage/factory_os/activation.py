@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""activation.py -- ORDER-1000 (slice S7). Which of a build's inputs are REACHABLE, per config.
+"""activation.py -- ORDER-1020 (slice S7). Which of a build's inputs are REACHABLE, per config.
 
 WHY THIS FILE IS THE HEART OF S7. Slice S7's acceptance is an Operator surface with zero
 `UNKNOWN` on it, and design 5.3's target is `Operator <= 40` against Boss_14's **116 visible
