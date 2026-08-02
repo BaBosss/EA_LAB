@@ -272,6 +272,61 @@ page anyone actually opens (it renders to `build/control_center.html` and nothin
 `SafeProjection` → `WIRED` once something in production builds it · the tier speed-up is
 `ORDER-1130`, not this row.
 
+### Three `/scrutinize` rounds over this slice (lane `S-2026-08-02-SCRUT11S`, 2026-08-02)
+
+**Six more defects, all found after the slice was called DONE, each reproduced by a read-only probe
+before it was touched and each fix written as a failing case first.** Handoff:
+`_triage/HANDOFF_2026-08-02_SCRUT11S.md`.
+
+| round | commit | the defect |
+|---|---|---|
+| 1 | `c2576b97` | an account only ONE detector knew about was **invisible on both surfaces**; and `OK`-with-no-document **invented a headline** |
+| 2 | `6ff84dca` | the roll-up that refuses untested rules **could not fail** — and was hiding three; plus a partial row list that read as a queue, and a rule text asserting a heartbeat nobody measured |
+| 3 | `c9920c18` | the shape checker **silently accepted every construct it did not implement**; and the CLI a human runs held two defects because no case had called it |
+
+🔴 **ROUND 1 — `ALL CLEAR` could render over an account no health detector had ever seen.**
+`build_live` and `safe_projection.build` both walked `system_health` and joined the rest onto it,
+so an account with a `floating_risk` row and no `system_health` row produced **nothing**: no LIVE
+row, nothing added to `exception_count`, and no entry in the projection's masked account list. Not
+`UNKNOWN` — **absent**. The probe made the cost concrete with a BLIND sensor and 9.9 open lots.
+Both walks are now over the **union**, symmetric in both directions so neither detector is
+privileged, and a detector that is *silent* about an account is itself the finding. **The real
+snapshot renders identically before and after** (6 accounts, 6 exceptions) because its two
+detectors agree today — which is what makes it a hole rather than a bug: nothing on this machine
+would have shown it. Also: `_health_row` read the verdict off `read.document or {}`, so
+`OK`-with-no-document rendered `ATTENTION` with zero reasons and numbers **not** suppressed.
+
+🔴 **ROUND 2 — the roll-up designed to catch untested rules was the thing concealing them.** `R1`
+("every placement rule was fired by a case") was computed **after** `main()` appended thirteen
+synthetic rows that fire every rule, so it was green regardless of which scenarios existed. The
+probe printed what it hid: the catalogued scenarios fired **10 of 13**; `B02`, `B05` and `B06` were
+reached by none. Split into `R1` (fired by a catalogued scenario — coverage, and it can go red) and
+`R4` (reachable at all — a dead rule, weaker, still worth having); `W15`/`W16` added for the three.
+Same round: `W09` had closed the zero-rows case and left the **partial** one open (one row beside
+`discovered=334` came out `unknown=False`), rule `B11`'s text asserted *"ยังมี heartbeat"* from the
+**absence** of a heartbeat field, and `WIRE1` pinned today's empty `work_receipts.jsonl` in a way
+S14 would have turned red for no defect.
+
+🔴 **ROUND 3 — four of the six defects lived in code no case had ever executed.**
+`safe_projection._check_shape` implemented five constructs and fell off the end for the rest:
+`type: integer` handed an account string, `type: boolean` handed a token, an unresolved `$ref` and
+an unresolved `oneOf` — **all four produced no hits**, inside the function whose entire job is
+checking. And `control_center.main` — in `PUBLIC_API`, checked *by name* by `P01`, called by
+nothing — read `factory/work_receipts.jsonl` and handed every line to `normalise_row`: a corrupt
+file killed the CLI instead of rendering `UNKNOWN`, and a `WorkReceipt` **is not a work row**
+(`schemas.json` requires `entity`/`receipt_id`/`source_agent`/`requested_at` and nothing about a
+lifecycle), so the CLI would have raised on the day S14 imported its first row. `read_work_rows()`
+now returns no rows and a `source` stating which of the three situations it is, the adapter gap is
+rendered **on the page**, and `WIRE3` drives the CLI end to end — the one case that would have
+caught all of it.
+
+**The shape all six share:** the unhandled case rendering as the satisfied one. Rounds 1 and 3 are
+the family memory `unreadable-input-must-refuse-not-skip` already covers; round 2 is new and now has
+its own, `completeness-rollup-measured-after-topup`.
+
+**Measured after the rounds:** suite **1.6s / 1.6s / 1.6s** (1.4s before; the 0.2s is `WIRE3`).
+Full tier numbers are in the `S-2026-08-02-SCRUT11S` ledger row. `check_state.ps1` **CLEAN**.
+
 ---
 
 ## ORDER-1100 — [factory/S10] Candidate identity + append-only Deployment attestation + magic reservation (design §4.5–§4.7 / §10 S10 row) — `DONE (Claude/Opus 2026-08-02) — all four acceptance criteria measured; the field, cell and criterion counts are printed by run_s10_tests.py itself and are deliberately not restated here` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
