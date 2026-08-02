@@ -237,6 +237,17 @@ def g2_attack(M):
                              '//#include "InputSurface_gen.mqh"')
     if not any('#include' in p for p in problems_for(M, core_text=commented)):
         return 'a commented-out include was accepted'
+
+    # /scrutinize round 3: the include patterns anchor at the `#` and reject a commented-out
+    # directive; the CALL pattern did not, so `// ... CFG_Fingerprint())` satisfied it. Probed:
+    # commenting out every calling line was ACCEPTED -- shape 5 inside the criterion written to
+    # catch shape 5. The enumeration would be current, included, and never called.
+    nocall = '\n'.join(('//' + l) if ('CFG_Fingerprint()' in l and '#include' not in l) else l
+                       for l in core.split('\n'))
+    if nocall == core:
+        return 'the fixture found no CFG_Fingerprint() call to comment out'
+    if not any(p.startswith('G2') for p in problems_for(M, core_text=nocall)):
+        return 'a CFG_Fingerprint() call surviving only inside a comment satisfied G2'
     silent = re.sub(r'CFG_Fingerprint\s*\(\s*\)', 'CFG_NothingAtAll_()', core)
     if not any('CFG_Fingerprint' in p for p in problems_for(M, core_text=silent)):
         return 'a build that never calls CFG_Fingerprint() was accepted'

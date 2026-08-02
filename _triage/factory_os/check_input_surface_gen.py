@@ -79,6 +79,20 @@ INCLUDE_RE = re.compile(r'^[ \t]*#include\s+"InputSurface_gen\.mqh"[ \t]*(?://.*
 CONST_INCLUDE_RE = re.compile(r'^[ \t]*#include\s+"LockedConstants_gen\.mqh"[ \t]*(?://.*)?$', re.M)
 CALL_RE = re.compile(r'\bCFG_Fingerprint\s*\(\s*\)')
 
+# G2 SEARCHES CODE, NOT PROSE. The include patterns were written to reject a commented-out
+# directive -- they anchor at the `#` -- and the CALL pattern was not, so `// PrintFormat(...
+# CFG_Fingerprint())` satisfied it. Probed: commenting out every calling line in LabCore.mqh was
+# ACCEPTED. That is `GUARD_SHAPES` shape 5 (the mechanism never engages) living inside the
+# criterion written to catch shape 5 -- the enumeration would be current, included, and never
+# called, and the fingerprint line would simply stop appearing.
+_LINE_COMMENT_RE = re.compile(r'//.*$', re.M)
+_BLOCK_COMMENT_RE = re.compile(r'/\*.*?\*/', re.S)
+
+
+def _code_only(text):
+    """MQL5 source with comments removed, for criteria that must not be satisfied by prose."""
+    return _LINE_COMMENT_RE.sub('', _BLOCK_COMMENT_RE.sub('', text))
+
 # G5's evidence that the enumeration is REALLY there, taken from the generated file's own content
 # rather than from its name.
 #
@@ -218,10 +232,11 @@ def check(worktree=False, source=None):
             'G2 %s does not #include "InputSurface_gen.mqh". The enumeration would be current and '
             'never compiled into anything -- the fingerprint line simply stops appearing, and an '
             'absent line is not a mismatch anyone notices.' % CORE_PATH)
-    if not CALL_RE.search(_fold(core_text)):
+    if not CALL_RE.search(_code_only(_fold(core_text))):
         problems.append(
-            'G2 %s never calls CFG_Fingerprint(). Including the enumeration without emitting it is '
-            'the same silence by a shorter route.' % CORE_PATH)
+            'G2 %s never calls CFG_Fingerprint() in CODE. Including the enumeration without '
+            'emitting it is the same silence by a shorter route -- and a call that survives only '
+            'inside a comment is that silence wearing the shape of a call.' % CORE_PATH)
 
     # G4 -- ORDER-730, the constant enumeration. Same shape as G1/G2 one layer along.
     if expected_const is not None and _fold(committed_const) != _fold(expected_const):

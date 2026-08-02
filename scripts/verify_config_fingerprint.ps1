@@ -2,7 +2,10 @@
 verify_config_fingerprint.ps1 - ORDER-710. Does the EA's [CFG] fingerprint equal the compiler's?
 
 WHAT IT PROVES, and why nothing cheaper proves it. `_triage\factory_os\preset.py` hashes a
-preimage in Python; `ea_template\core\InputSurface_gen.mqh` builds the same preimage in MQL5 and
+preimage in Python; `ea_template\core\InputSurface_gen.mqh` (the input surface) plus
+`ea_template\core\LockedConstants_gen.mqh` (the locked constants, ORDER-730 - it also owns
+`CFG_Fingerprint()`, because it is included late enough for every constant macro to exist)
+build the same preimage in MQL5 and
 hashes it with CryptEncode(CRYPT_HASH_SHA256). The python cage
 (run_input_surface_tests.py) proves the two DESCRIPTIONS agree - same inputs, same order, same
 canonicaliser - by reading the emitted MQL5 back. It cannot prove the two IMPLEMENTATIONS agree,
