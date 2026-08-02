@@ -105,6 +105,80 @@
 
 ---
 
+## ORDER-1080 — [factory/S9] Recoverable, idempotent scheduler (design §6.5 / §3.3 = §20.8 Contract B) — `DONE (Claude/Opus 2026-08-02) — all four acceptance criteria measured: the kill matrix is ENUMERATED (256 resumes, all nine §3.3 transitions killed on both sides of their own append), and the wiring was proven end-to-end on lane 1 with ONE launch and zero relaunches across a mid-flight driver stop` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
+
+**Acceptance (design §10, S9 row):** kill at **every** state in §3.3 ⇒ resume re-runs zero completed
+attempts, double-launches nothing, duplicates no event · `COMPLETED` refused without a fresh report ·
+an identical (config, lane, data fingerprint) re-run refused with cached evidence returned ·
+cross-lane comparison refused, and `LEASED` refused without a free lane lease.
+**Prohibitions:** no process kill · no `-Force` · no tester-safety change.
+
+### ✅ 2026-08-02 (lane `S-2026-08-02-S9SCHED`) — built, caged, and run once for real
+
+**Shape.** `_triage/factory_os/scheduler.py` is PURE and owns every decision (monotonic transition
+validator, resume planner, idempotency gate, cross-lane refusal). `scripts/scheduler_run.ps1`
+observes, dispatches and appends, and decides nothing — it is a **wrapper** around `mt5_run.ps1`,
+which keeps its lane guard, its 1:N leverage assertion, its D3 clear and its truncation sidecar.
+The two halves are bound mechanically: the cage asserts the PowerShell switch handles **exactly**
+the closed action set `plan()` can emit, so a new action reddens a cage rather than stalling a loop.
+
+**The cage is enumerated, not sampled** (the `dda6783a` W9 lesson): a kill at every
+(action × phase) × 2 resume delays × 4 scenarios = **256 recoveries**, and the roll-up **refuses to
+pass** unless all nine §3.3 transitions were killed on *both* sides of their own append. The
+invariants are read off counters the stub world keeps — launches, peak concurrent workers,
+event-store appends — not off the planner's own account of itself. Measured **0.08s ×3** before
+registering in the fast tier; 0.3–0.4s in the hook.
+
+🔴 **Three defects the enumeration found, none reachable by a two-state sample:**
+1. `LAUNCH_INTENT` + nothing running + no exit record has **two causes** — never spawned, or
+   spawned and killed hard. Both answered `LAUNCH`, so a dead attempt was **relaunched in place**:
+   invisible in the manifest and unbounded by the attempt cap. Closed with a per-attempt **spawn
+   marker written before the spawn**, so its absence is proof; the residual window fails safe.
+2. The observation set was per-**run**, so attempt 2 opened while attempt 1's exit record was still
+   visible and the planner declared it finished before it had launched.
+3. The RED probe was **inert** — the injected double-launch defect stops the loop converging, and
+   the probe caught the exception and skipped its own counter check.
+
+🔴 **Four more the WIRING found, all in the dispatcher, none in the planner** — full detail in
+`495de787`: `Start-Process -ArgumentList` quotes nothing (`D:\Meta 5` split in two, worker died
+before its sidecar) · **a finished run never gave the lane back** (run 001 held lane 1 for four
+hours after it was done ⇒ new `RELEASE_LEASE` planner action, written expired, never deleted) ·
+**decision 18 names two categories, not two enum members** (see the owner note below) · and three
+separate reasons the evidence step could not report its own refusal, including that the event
+utility prints through `[Console]::Out.WriteLine`, which **bypasses every PowerShell stream**.
+
+**Measured end-to-end on lane 1** (`D:\Meta 5` · XAUUSD H1 · 2024.01.02–16 · Model 1):
+`RUN-20260802-002` = QUEUED → LEASED → LAUNCH_INTENT → PROCESS_OBSERVED → COMPLETED →
+EVIDENCE_REGISTERED. The driver was **stopped mid-flight** (`-MaxIterations 5`; nothing was killed)
+while the worker held the tester; the resume found the exit sidecar, put it through the shared
+`Test-ReportIsFresh` gate, and recorded `COMPLETED`. **One launch, zero relaunches, one event.**
+Criterion 3 live: re-queueing the identical key was **REFUSED** and returned
+`evd_sha256_90c1f032…`, the sha256 of the committed report. Criterion 4 live: run 002 was refused
+`LANE_BUSY` while 001 held the lease; two runs on one lane report `COMPARABLE`. The cross-lane
+*refusal* is proven by the cage only — a second install was not spent to re-prove `ORDER-371`.
+
+⚠️ **ONE ITEM OWED TO THE OWNER, and it is an interpretation of a decision that is yours.**
+Decision 18 permits a re-run of an identical ExecutionKey *"except after an execution or tester
+error"*. Read as the literal pair (`TESTER_ERROR`, `TERMINAL_ERROR`), a machine crash produces
+`FAILED(KILLED)` and that configuration can **never be queued again** — a slice whose whole purpose
+is recovery making a crashed configuration permanently unrunnable. It is now read as the **two
+categories** the decision actually names, with the seven failure classes mapped onto them:
+tester = `TESTER_ERROR` · execution = `TERMINAL_ERROR`, `TIMEOUT`, `KILLED`, `LEASE_LOST` ·
+neither = `CONFIG_REJECTED`, which stays blocked because it is a fact about the configuration.
+Overrule the mapping and only that table changes.
+
+⚠️ **OPEN, named rather than papered over:** `ExecutionKey.ini_hash` is only knowable **after** the
+runner writes the ini, but the key is what gates whether the run may happen at all — the same shape
+`schemas.json` already fixed one level up when it removed `pid` from the lease. For this proof it
+was seeded from a canonical rendering of the same fields. Either an ExecutionKey **builder** renders
+the ini itself, or the field is redefined. Owed to the next slice; **S10 depends on this being
+settled**, since a Candidate pins the run it came from.
+
+**No EA verdict, no B1 row owed, no `.set` migrated, no second Boss converted, no S10 started.**
+Handoff = `_triage/HANDOFF_2026-08-02_S9SCHED.md`.
+
+---
+
 ## ORDER-1020 — [factory/S7] Parameter registry extension + Operator/Research surface, Boss_14 only — `DONE (Claude/Opus 2026-08-02) — all three acceptance criteria met and measured: param_registry_check CLEAN (it now runs the design §5.4 state table too) · Boss_14 Operator surface = 18 with ZERO optimize_stage=UNKNOWN · old .set fails loudly, 42 real fires` · ทำได้: Claude/Opus (lead) · 👉 แนะ: Claude
 
 > **Slice S7's acceptance, from design §10:** `param_registry_check` CLEAN · **zero `UNKNOWN` on
