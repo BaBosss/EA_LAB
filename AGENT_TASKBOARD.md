@@ -1996,6 +1996,44 @@ latest collector CSV covers that whole span. If a collector only holds a recent 
 reads as slower than it is. That is why 25 rows show `TOO YOUNG` rather than a verdict — most of this
 fleet was attached or re-attached inside the last three weeks.</sub>
 
+🔴 **B3 WAS ONE-SIDED — `/scrutinize` round 2, 2026-08-02.** It flags `UNDER_RATE` at <50% of expected
+and has **no flag at all for the other tail**. Measured over the same rows: **four legs run at
+2.34×–4.05× their expected rate**, and *all four are in the thin bucket* — the bucket whose entire
+justification is "this EA trades too rarely for the 30-trade bar", and which carries a **permanent
+small-lot cap**.
+
+| magic | obs/wk | exp/wk | ratio | reaches 30 at the OBSERVED rate |
+|---|---|---|---|---|
+| `990206` Boss_14 SELL EURUSDm | 2.07 | 0.51 | **4.05×** | **2026-10-15** — i.e. essentially its ORIGINAL date (2026-10-09) |
+| `990205` Boss_14 size-light CADJPYm | 0.78 | 0.29 | 2.70× | 2027-04-02 |
+| `990204` Boss_14 AUDCADm | 1.56 | 0.60 | **2.61×** | **2026-11-18** |
+| `991001` EA_BREAKOUT_XAU 🔴 REAL | 0.58 | 0.25 | 2.34× | 2027-07-04 |
+
+**Why it matters twice over.** (1) An EA running several times its backtest rate is the **ORDER-165
+wrong-config signal** exactly as much as a silent one is — B3 only looked at the slow tail. (2)
+`990206` and `990204` are two of the four rows the owner moved INTO the thin bucket, and the reason
+given was that at 0.51–0.60 expected their computed date was 215–233 days out. **At their observed
+rate the date is 2–3 months out.** The move was made on a number their live behaviour contradicts.
+
+**Not reverted — flagged `PENDING-RATIFY(user)` in each row's notes.** Both errors run conservative
+(a later date, a smaller lot), and reversing a bucket the owner ratified is the owner's call, not a
+finding's. **What the owner is being asked:** pull `990206` and `990204` back out of thin, or keep
+them. `990205` and `991001` are recorded but their thin dates stay conservative against the observed
+rate, so nothing is owed there.
+
+<sub>Caveat stated rather than buried: the observation is **3.4–3.9 weeks**, which is thin evidence
+(memory `phantom-regression-from-two-single-samples`). It is 8 trades against ~2 expected for
+`990206`, which is not noise-level, but a second look after another month would be cheap and is worth
+having before any lot cap is removed.</sub>
+
+**Also checked in round 2 and CLEAN, so the rest of `ORDER-942` stands:** the unit the rate is
+expressed in was suspected of being wrong and is not — MT5's `Total Trades` counts **positions**, the
+collector counts **entry deals**, and a position has exactly one entry deal, so they are the same
+unit. Verified on `W2_S1_TrendRider_MAIN.htm` (72 trades / 144 deals = exactly 2 deals per position)
+and four Boss_14 reports. And the `expectations.csv` rewrite touched nothing it should not have: the
+only key changes are the 3 intended re-points and the 1 new row, with **zero** unexpected field
+changes outside `notes`/`source_evidence`/the rate.
+
 ## ORDER-943 — [judge policy] Decide the 19 projected-shortfall EAs before their dates arrive, one by one — `DONE (Claude/Opus proposed + user ratified 2026-08-02) — the whole judge-dated fleet decided in ONE pass now that ORDER-942 supplied the rates: 14 THIN (ORDER-235, pre-registered before any judge date lands) · 12 re-based on arithmetic · 7 on track · 3 HELD OUT to ORDER-941 because the projection is optimistic for them and two are real money. Written into DEPLOYMENTS.csv + DEMO_DEPLOYMENT_PLAN.md; check_state CLEAN` · ทำได้: Claude/Opus (เสนอ) + user (ratify) · 👉 แนะ: Claude
 
 > `ORDER-940` measured it: **19 projected SHORTFALL vs 11 projected capable**, and the nearest cohort
