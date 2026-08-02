@@ -1622,7 +1622,66 @@ or a fail.
 >
 > **Files.** `_triage/factory_os/`: `gen_locked_constants.py` (**new**, LIB) · `check_input_surface_gen.py` (G4/G5 + memo) · `gen_default_preset.py` (passes `locked_constants`) · `gen_input_surface.py` (`CFG_Fingerprint()` moved out) · `run_input_surface_tests.py` (G4/G5/X4 + fixture closure) · `run_guard_shape_lint.py` (L1_FILES + CATEGORY). `ea_template/core/`: `LockedConstants_gen.mqh` (**new, GENERATED**) · `ConfigFingerprint.mqh` (scope) · `LabCore.mqh` (the include, **which must stay last**). `scripts/_test/run_fast_cages.ps1` + `.githooks/fast_tier_pathspec` (regenerated).
 >
-> <sub>⚠️ **Not claimed:** this does not prove `CryptEncode(CRYPT_HASH_SHA256, …)` and `hashlib.sha256` agree in general — only the four tester runs above do, and they are evidence with a date, not a cage that re-runs. And the enumeration covers `#define` constants; a behaviour-changing value written as a `const` variable or baked into an expression is **not** in it, which is why the rule is stated in the module's own header rather than described as "every locked constant".</sub>
+> <sub>⚠️ **Not claimed:** this does not prove `CryptEncode(CRYPT_HASH_SHA256, …)` and `hashlib.sha256` agree in general — only the four tester runs above do, and they are evidence with a date, not a cage that re-runs. And the enumeration covers `#define` constants; a behaviour-changing value written as a `const` variable or baked into an expression is **not** in it, which is why the rule is stated in the module's own header rather than described as "every locked constant". **Nothing automated compares the EA's printed digest to the compiler's** — only the manual `verify_config_fingerprint.ps1` does, so this protection is operator-triggered, not continuous.</sub>
+>
+> ### 🔴 `/scrutinize` ×3 (2026-08-02, `S-2026-08-02-SCRUT730`) — **12 further defects, and only one was in the hash itself**
+>
+> Cage **9 → 10 criteria**, every one still attack + specificity + mutation-DETECTED. **The generated
+> `LockedConstants_gen.mqh` regenerates byte-identical after all twelve fixes**, so none of them
+> changed an output and **no tester re-run was owed** — which is also why they are worth reading:
+> every one was in the *guarding*, and the numbers above would have looked exactly the same with
+> all twelve still present.
+>
+> **Round 1 — five, four found by probing rather than reading.**
+> **M1** `#undef` was ignored. It was the **only** gap in the preprocessor walk that ends in a
+> *wrong answer* instead of an error: the name stays in `defined`, an `#ifdef` on it stays live, and
+> a constant the compiler never bakes in gets enumerated and hashed. Probed: the fixture returned
+> `['GONE', 'REACHED']`. · **M2** a `PresetRefusal` **escaped** `check()`, whose own docstring
+> promises it never raises for a content problem — `main()` catches only `ToolFailure`, so a commit
+> that **deleted a wrapper** printed a Python traceback at the pre-commit hook instead of a named
+> criterion. A traceback is not a verdict: the reader cannot tell a refusal from a crash in the
+> tool, and the fix for the two is different. The **surface half had the same hole and always did**;
+> `ORDER-730` only made it easy to reach. · **M3** a double referenced in another constant's
+> arithmetic raised `ValueError` (`float('0x3ff8000000000000')` — the stored text is IEEE hex, not a
+> number). · **M4** a plain `#if` was neither modelled nor refused; unhandled it is not ignored but
+> **mis-counted** (its `#endif` pops the enclosing frame), and the walk failed saying
+> *"unbalanced `#endif`"* — sending the reader after a directive that is not missing. · **M5** the
+> generator's **own docstring** justified per-build derivation with `entries/Entry_Wave5.mqh`, which
+> defines **no** valued constant and therefore demonstrated nothing.
+> **A sixth, found by the new case itself:** `#define DERIVED (RATE * 2)` was classed a `long`
+> because its own text has no decimal point, while MQL5 expands `RATE` and evaluates a `double`. It
+> agreed **by luck** — `(long)3.0` is 3, and non-integral results were already refused — not by rule.
+> C's promotion is the rule now.
+>
+> **Round 2 — the two that mattered most.**
+> **R2-1 BLOCKER: nothing checked that the digest is over BOTH halves.** G4 compares the committed
+> generated file against what the generator emits, so an edit made **in the generator** moves both
+> sides and stays green. Probed by deleting `+ CFG_ConstPreimage()` from the emitter: **zero
+> problems across every criterion** — G4 green because they still match, G5 green because `const`
+> lines still exist so the label is still "honest" — while the EA would hash the **surface alone**
+> under a `surface+constants` label. That is precisely the lie G5 exists to prevent, reached by a
+> route G5 does not watch. New **G6** reads the *committed text*, which is the one question G4
+> structurally cannot answer. · **R2-2** the preimage is newline-joined and has **no escaping**, so a
+> string constant containing a newline does not corrupt the hash — both sides emit the same bytes —
+> it makes the hash **ambiguous**: three constants, one of them `"p\nconst:A=y"`, produce **four**
+> preimage lines, and the injected line is indistinguishable from a real constant. Two constant
+> sets, one digest. Refused rather than escaped.
+>
+> **Round 3 — three, two of them documents this work itself falsified.**
+> **R3-1** **G2 was satisfied by a comment.** The include patterns anchor at the `#` and reject a
+> commented-out directive; the CALL pattern did not. Probed: commenting out every
+> `CFG_Fingerprint()` call in `LabCore.mqh` was **ACCEPTED** — `GUARD_SHAPES` shape 5 living inside
+> the criterion written to catch shape 5. · **R3-2** `PROJECT_STATE.md` §2 still said the label was
+> `surface_only` and that *"C3 is honoured by NOT being met"*; the entry above falsified both. Fixed
+> in place (old paragraph kept and marked SUPERSEDED — the reasoning for staying narrow is the
+> reusable part), with `PROJECT_STATE.md` **declared in the ledger row before being touched**. ·
+> **R3-3** `verify_config_fingerprint.ps1`'s header named only `InputSurface_gen.mqh` as the MQL5
+> side — the tool an operator reads before deciding whether to trust its four numbers.
+>
+> <sub>Two of the twelve were bugs in the **new cases themselves**, both caught by running them:
+> G4's first attack asserted that a moved *value* is caught (it is not, and needs no guard — the
+> generated MQL5 names the macro and never transcribes the value), and G6's specificity asserted
+> *"no problems at all"* for a whitespace edit and failed for catching **G4 doing its job**.</sub>
 
 
 > Opened by `ORDER-710`'s closure, as a NEW order rather than a remainder of it. §5.6 defines
