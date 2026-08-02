@@ -511,6 +511,26 @@ $SUITE_GUARDS = @{
                                           # here made the trigger cage red in both directions,
                                           # which is correct -- a pathspec cannot select a file
                                           # that is not in git. It is added when the block lifts.
+                                          # ORDER-1020: the two modules that WRITE the stores this
+                                          # suite reads. Neither is imported by the suite, so the
+                                          # import sweep cannot demand them -- and that is exactly
+                                          # the ORDER-702 hole: a commit editing only the decision
+                                          # table would change every binding row and run no cage.
+                                          # The suite's PRE-CHECK ("this parameter is ALLOW", "the
+                                          # canonical store binds nothing under $rev") is what a
+                                          # decision-table edit can silently falsify.
+                                          '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/gen_registry_rows.py',
+                                          # ...and the next level down, DEMANDED BY THE SWEEP on
+                                          # the first run after the two above were declared. The
+                                          # generator derives every row's reachability from these,
+                                          # so an edit to any of them changes what the stores
+                                          # contain without touching either module named above.
+                                          '_triage/factory_os/activation.py',
+                                          '_triage/factory_os/architecture.py',
+                                          '_triage/factory_os/capability.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
                                           'factory/instrument_profiles.jsonl',
                                           'factory/hypotheses.jsonl',
                                           'factory/parameter_bindings.jsonl',

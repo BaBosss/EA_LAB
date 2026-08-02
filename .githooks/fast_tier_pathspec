@@ -21,8 +21,10 @@ _triage/factory_os/gen_default_preset.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_input_surface.py
 _triage/factory_os/gen_locked_constants.py
+_triage/factory_os/gen_registry_rows.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
+_triage/factory_os/hypothesis_b14.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
 _triage/factory_os/run_activation_tests.py

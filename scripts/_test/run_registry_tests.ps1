@@ -60,7 +60,18 @@ New-Item -ItemType Directory -Path (Join-Path $work 'factory') -Force | Out-Null
 # the guard rather than by reading the registry and hoping.
 $param = '_2_BasketTP_ATRmult'
 $build = '14'
-$rev = 'B14-H01-r1'
+# ORDER-1030: A SYNTHETIC REVISION, and it has to be. This read 'B14-H01-r1' until 2026-08-02 --
+# a revision id that was fictional on the day it was written and became REAL the moment ORDER-1020
+# registered B14-H01. Cases A / A2 / U1 all assert that the parameter comes back UNBOUND, which is
+# only true while nothing binds it; the canonical store binds all 116 of build 14's inputs under
+# that revision, and `-BindingsRoot` is an OVERLAY (it ADDS, canonical winning -- see
+# optimize_guard.ps1:539), so the fixture was never isolated from it. It passed for as long as the
+# store was empty, which is not the same thing as being correct.
+#
+# H99 satisfies the schema pattern ^B(1[1-8])-H[0-9]{2}-r[0-9]+$ and is outside the H01/H02 range
+# design section 8.1 uses, so registering a real hypothesis cannot collide with it. The assertion
+# below makes that a CHECK rather than a convention.
+$rev = 'B14-H99-r1'
 
 function Seed([string]$role) {
     $stores = @('universe','instrument_profiles','hypotheses','parameter_bindings','coverage')
@@ -87,6 +98,14 @@ try {
 Write-Host '=== ORDER-630 (S5) R4 consumer half: optimize_guard reads the ONE resolver ==='
 
 Seed ''
+# ORDER-1030: ASSERT THE ISOLATION INSTEAD OF ASSUMING IT. The three UNBOUND cases below are only
+# meaningful if the CANONICAL store binds nothing under $rev -- and the previous fixture's silent
+# coupling to production data is exactly what an assumption costs. If someone ever registers this
+# revision for real, this line goes red and says why, instead of three cases quietly changing
+# meaning.
+$canonBind = Join-Path $RepoRoot 'factory\parameter_bindings.jsonl'
+Ok "PRE-CHECK: the canonical store binds NOTHING under '$rev', so the UNBOUND cases below mean what they say" `
+    (-not ((Get-Content -LiteralPath $canonBind -Raw) -match [regex]::Escape($rev)))
 $base = RunGuard @()
 Ok "PRE-CHECK: '$param' is ALLOW with no binding, so a binding is the only thing that can change it" `
     ($base -match "\[ALLOW\] $param")
@@ -191,6 +210,38 @@ try {
     if ($LASTEXITCODE -ne 0) { $threw = $true }
 } catch { $threw = $true; $msg = $_.Exception.Message }
 Ok 'D naming a revision whose bindings cannot be read is a FAILURE, not an empty resolve' $threw
+
+Write-Host '   -- F: ORDER-1030. The consumer spells a build tag `14`; the DATA spells it LAB_ENTRY_14 --'
+# THE DEFECT THIS PAIR EXISTS FOR, reproduced before the fix and recorded here so the pair cannot
+# be read as ceremony. optimize_guard passes `--build-tag=$build`, i.e. `14`. Every
+# ParameterBinding.build_tag holds `LAB_ENTRY_14` (schemas.json pins the pattern). Before the fix
+# the literal `14` matched no key, matched no `build_tag: null` row either, and came back
+# source=UNBOUND -- which ORDER-671 turns into a REFUSAL. So the guard refused every parameter of
+# every declared revision and printed `role=''`: THE VERDICT WAS RIGHT BY ACCIDENT AND THE REASON
+# WAS WRONG, which is worse than a wrong verdict, because a real LOCKED binding and a tag typo
+# produced identical output. Invisible for as long as the store was empty.
+$pyR = Join-Path $RepoRoot 'tools\python312\python.exe'
+$resolver = Join-Path $RepoRoot '_triage/factory_os/registry.py'
+$realRev = 'B14-H01-r1'   # the CANONICAL revision, deliberately: this case is about real rows
+$shortForm = (& $pyR $resolver 'resolve' $realRev '_2_BasketTP_ATRmult' '--build-tag=14') -join ''
+Ok 'F the shorthand optimize_guard actually passes resolves to a BOUND row, not UNBOUND' `
+    (($shortForm -match '"source": ?"BOUND"') -and ($shortForm -match '"role": ?"INACTIVE"'))
+$longForm = (& $pyR $resolver 'resolve' $realRev '_2_BasketTP_ATRmult' '--build-tag=LAB_ENTRY_14') -join ''
+Ok 'F and it gives the SAME answer as the canonical spelling -- one tag, one verdict' `
+    ($shortForm -eq $longForm)
+# SPECIFICITY, and it is the half that matters: normalising must not become "accept anything".
+# An unrecognised spelling has to REFUSE, because coming back UNBOUND is indistinguishable from a
+# real refusal -- which is the whole defect one level up.
+$bad = (& $pyR $resolver 'resolve' $realRev '_2_BasketTP_ATRmult' '--build-tag=LAB_ENTRY14') -join ''
+# The condition tests for a `source: UNBOUND` RECORD, not for the word UNBOUND -- the refusal
+# message itself names UNBOUND while explaining what it is refusing to produce, and the first
+# version of this line matched that and went red. A guard assertion that cannot tell a diagnosis
+# from the thing it diagnoses is the same mistake one level down.
+Ok 'F SPECIFICITY an unrecognised tag spelling is REFUSED by name, not silently reported UNBOUND' `
+    (($bad -match 'REFUSED') -and ($bad -match 'LAB_ENTRY14') -and ($bad -notmatch '"source": ?"UNBOUND"'))
+$noTag = (& $pyR $resolver 'resolve' $realRev '_2_BasketTP_ATRmult') -join ''
+Ok 'F SPECIFICITY asking with NO tag at all still works -- the normaliser did not make it mandatory' `
+    ($noTag -match '"parameter"')
 
 Write-Host ''
 if ($script:fail -gt 0) { Write-Host ("FAIL  {0}/{1} passed, {2} failed" -f $script:pass, ($script:pass+$script:fail), $script:fail); exit 1 }
