@@ -42,6 +42,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -683,6 +684,40 @@ def part4_real():
           sorted(live['legacy_accounts']) == ['159475669', '159503454'], live)
     sys.stdout.write('       (%d allocation(s), %d legacy, %d inventory row(s) carrying a magic)\n'
                      % (len(rows), len(legacy), len(inventory)))
+
+    # 🔴 /scrutinize round 4: `gen_magic_allocations.py` WAS A DECLARED TRIGGER THAT NOTHING RAN.
+    # It is listed in run_fast_cages.ps1's $SUITE_GUARDS for this suite, so editing it fires the
+    # suite -- and the suite had no question to ask about it. Memory
+    # `declared-as-trigger-but-never-read`, in the same slice that quotes the memory it came from.
+    # The consequence is not cosmetic: `magic.py verify` checks COLLISIONS, and only `--check`
+    # checks COMPLETENESS -- that every magic in the inventory has a row, and that no row was
+    # hand-edited into something that still validates (a `status` flipped, an
+    # `allocated_at_commit` retyped). That half had zero enforcement.
+    gen = os.path.join(HERE, 'gen_magic_allocations.py')
+    out = subprocess.run([sys.executable, gen, '--check', '--root=' + ROOT],
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    check('gen_magic_allocations.py --check regenerates the committed store byte-identically',
+          out.returncode == 0, out.stdout.decode('utf-8', 'replace')[-300:])
+
+    # ...and it must be able to FAIL, or the line above is a check that cannot fire. Drive it
+    # against a copy of the store with one row removed: the inventory still has that magic, so the
+    # regeneration no longer matches.
+    tmp = tempfile.mkdtemp(prefix='s10gen_')
+    try:
+        kept = [r for r in rows if S.normalize_numbers(r['magic']) != 992017]
+        check('the RED fixture actually removed a row', len(kept) == len(rows) - 1,
+              '%d vs %d' % (len(kept), len(rows)))
+        store = os.path.join(tmp, 'magic_allocations.jsonl')
+        with io.open(store, 'w', encoding='utf-8', newline='\n') as fh:
+            fh.write(''.join(S.canonical(r) + '\n' for r in kept))
+        out = subprocess.run([sys.executable, gen, '--check', '--root=' + ROOT,
+                              '--store=' + store],
+                             stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        text = out.stdout.decode('utf-8', 'replace')
+        check('RED  --check REFUSES a store that has fallen behind the inventory',
+              out.returncode == 1 and 'DRIFT' in text, text[-300:])
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
 
 
 # =============================================================================================

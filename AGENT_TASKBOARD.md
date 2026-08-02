@@ -151,9 +151,11 @@ the candidate; an observation may report `attest_state` and `core_revision` and 
 the deployment IS.
 
 🔴 **The magic exception list is checked in BOTH directions, and the checker flipped only after it
-existed.** `factory/magic_allocations.jsonl` holds 60 allocations at one cutover commit, of which
-exactly three are `LEGACY_ACCOUNT_SCOPED` — `990103` · `991001` (**real money**, on two accounts) ·
-`991002` — asserted **by name** against the real `DEPLOYMENTS.csv`. Sensitivity: an undeclared
+existed.** `factory/magic_allocations.jsonl` holds one row per distinct magic in the inventory,
+imported at one cutover commit, of which exactly three are `LEGACY_ACCOUNT_SCOPED` — `990103` ·
+`991001` (**real money**, on two accounts) · `991002` — asserted **by name** against the real
+`DEPLOYMENTS.csv`. (The three are an owner-declared closed set, so they are named; the row count is
+a measurement and is printed by `gen_magic_allocations.py --check`, not copied here.) Sensitivity: an undeclared
 collision is refused. Specificity: a declared exception that is **not** a collision is refused too,
 or the list is an off switch. `check_state.ps1` was flipped to the global rule in that order, per
 `PROJECT_STATE.md` §0.5, and gets **judged bytes** rather than a repo path — a child process reading

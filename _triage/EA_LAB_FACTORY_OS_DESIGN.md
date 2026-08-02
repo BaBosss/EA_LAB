@@ -515,9 +515,11 @@ the same input can be `LOCKED` in `B14-H01` and `TUNABLE` in `B14-H02`, and mark
   import cutover, minting a new legacy exception is refused.**
 - ✅ **DONE (ORDER-1100, S10, 2026-08-02).** The user amended the invariant on 2026-08-01
   (`PROJECT_STATE.md` §0.5): scope is GLOBAL, and this checker was to flip "only when S10 gives it an
-  exception list to read". `factory/magic_allocations.jsonl` is that list — 60 allocations imported at
-  one cutover commit, of which **exactly three** are `LEGACY_ACCOUNT_SCOPED` (`990103` · `991001`, the
-  one on real money · `991002`). `check_state.ps1` now asks `scripts/lib/magic_guard.ps1`, which asks
+  exception list to read". `factory/magic_allocations.jsonl` is that list — one row per distinct magic
+  in the inventory, imported at one cutover commit, of which **exactly three** are
+  `LEGACY_ACCOUNT_SCOPED` (`990103` · `991001`, the one on real money · `991002`). The three are an
+  owner-declared closed set and are named here on purpose; the ROW COUNT is a measurement and is
+  printed by `gen_magic_allocations.py --check` rather than copied into this sentence. `check_state.ps1` now asks `scripts/lib/magic_guard.ps1`, which asks
   `_triage/factory_os/magic.py` — one implementation of the rule, handed **judged bytes** rather than a
   repo path, because a child process reading the working tree would rebuild ORDER-674's A7. The
   `account|magic` check stays as the backstop: global uniqueness implies it, so it costs nothing.
