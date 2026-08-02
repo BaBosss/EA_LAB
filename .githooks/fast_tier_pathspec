@@ -28,6 +28,7 @@ _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_s2a_migration_doc.py
 _triage/factory_os/gen_wrapper.py
 _triage/factory_os/hypothesis_b14.py
+_triage/factory_os/parity.py
 _triage/factory_os/preset.py
 _triage/factory_os/registry.py
 _triage/factory_os/run_activation_tests.py
@@ -38,6 +39,7 @@ _triage/factory_os/run_enforcement_status_tests.py
 _triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_input_surface_tests.py
 _triage/factory_os/run_param_surface_tests.py
+_triage/factory_os/run_parity_tests.py
 _triage/factory_os/run_preset_tests.py
 _triage/factory_os/run_registry_tests.py
 _triage/factory_os/run_s2a_attestation_tests.py
@@ -113,3 +115,4 @@ scripts/mris/mris_macro_feeder.ps1
 scripts/mris/mris_web_feeder.ps1
 scripts/optimize_guard.ps1
 scripts/param_registry_check.ps1
+scripts/parity_run.ps1

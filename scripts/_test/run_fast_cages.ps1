@@ -346,6 +346,12 @@ $FAST_SUITES = @(
     # agreement that decides what the binary contains. The third (7-point parity) needs the
     # tester and is deliberately not approximated here.
     'run_wrapper_gen_tests.ps1',
+    # ORDER-1021 (S8), measured 0.13s / 0.04s / 0.05s over three runs -> 0.1s. Three samples
+    # rather than one, per memory phantom-regression-from-two-single-samples: the full tier had
+    # 1.1s of headroom when this was added (ORDER-820), so a number taken once was not enough to
+    # argue with. It cages S8's THIRD acceptance criterion -- the 7-point parity contract's JUDGE.
+    # Parity itself needs the tester and lives in scripts\parity_run.ps1, on tpl_regression's pin.
+    'run_parity_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -491,6 +497,11 @@ $SUITE_GUARDS = @{
     # ORDER-1020 (S7). The state table reads BOTH stores, the build's input surface, and every
     # module the generator derives a row from -- P5 regenerates and compares, so an edit to any of
     # them changes what this cage proves.
+    # ORDER-1021 (S8). The comparator plus its own suite. It reads NO other module -- parity.py
+    # is PURE by construction, which is what keeps this trigger list short and honest.
+    'run_parity_tests.ps1'            = @('_triage/factory_os/parity.py',
+                                          '_triage/factory_os/run_parity_tests.py',
+                                          'scripts/parity_run.ps1')
     'run_wrapper_gen_tests.ps1'       = @('_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/run_wrapper_gen_tests.py',
                                           '_triage/factory_os/gen_wrapper.py',
