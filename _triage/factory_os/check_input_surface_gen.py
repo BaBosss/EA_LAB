@@ -117,16 +117,42 @@ def _fold(text):
     return text.replace('\r\n', '\n')
 
 
+def _memo(read):
+    """One read per path per check() call.
+
+    MEASURED, not guessed: ORDER-730's constant walk made this checker issue **917**
+    `read_committed` calls and take **22.8s**, which took the whole pre-commit fast tier from 20s
+    to 62.5s against a 65.0s ENFORCED budget (Decision log 2026-07-31). The closure is walked
+    16 times -- once per build to emit, once per build to count -- over the same ~20 headers, and
+    in index mode every read is a `git cat-file`.
+
+    THE CACHE MAKES THE SNAPSHOT MORE CONSISTENT, NOT LESS, which is the only reason it is
+    acceptable here. It lives for exactly one `check()` call and is discarded, so it cannot do
+    what memory `name-it-honestly-when-you-cannot-prove-it` warns about -- a guard caching the
+    state it is supposed to be watching across runs. Within one verdict, reading a file twice and
+    getting two different answers is the bug, not the feature.
+    """
+    seen = {}
+
+    def cached(rel, errors='strict'):
+        key = (rel.replace(os.sep, '/'), errors)
+        if key not in seen:
+            seen[key] = read(rel, errors) if errors != 'strict' else read(rel)
+        return seen[key]
+    return cached
+
+
 def check(worktree=False, source=None):
     """-> (problems, info). Never raises for a content problem; raises ToolFailure for a read."""
     src = source or _source(worktree)
     problems = []
 
-    inputs_text = src.read_committed(INPUTS_PATH)      # snapshot: index (or --worktree; printed)
-    committed_gen = src.read_committed(GEN_PATH)       # snapshot: index (or --worktree; printed)
-    committed_const = src.read_committed(CONST_PATH)   # snapshot: index (or --worktree; printed)
-    core_text = src.read_committed(CORE_PATH)          # snapshot: index (or --worktree; printed)
-    fp_text = src.read_committed(FP_PATH)              # snapshot: index (or --worktree; printed)
+    read = _memo(src.read_committed)                   # snapshot: index (or --worktree; printed)
+    inputs_text = read(INPUTS_PATH)                    # snapshot: index (or --worktree; printed)
+    committed_gen = read(GEN_PATH)                     # snapshot: index (or --worktree; printed)
+    committed_const = read(CONST_PATH)                 # snapshot: index (or --worktree; printed)
+    core_text = read(CORE_PATH)                        # snapshot: index (or --worktree; printed)
+    fp_text = read(FP_PATH)                            # snapshot: index (or --worktree; printed)
 
     expected = gen.emit(inputs_text)
     tags = sorted(preset.known_build_tags(inputs_text))
@@ -136,11 +162,11 @@ def check(worktree=False, source=None):
     # a wrapper added in this commit has to be part of the closure this commit is judged against,
     # and a disk glob would answer about a directory rather than about the commit.
     wrapper_rels = src.list_committed('%s/*.mq5' % gconst.WRAPPER_DIR)
-    expected_const = gconst.emit(src.read_committed, inputs_text, wrapper_rels)
+    expected_const = gconst.emit(read, inputs_text, wrapper_rels)
     const_keys = {}
-    _tags, wrappers = gconst._resolve_wrappers(src.read_committed, inputs_text, wrapper_rels)
+    _tags, wrappers = gconst._resolve_wrappers(read, inputs_text, wrapper_rels)
     for t in tags:
-        const_keys[t] = len(gconst.scan(src.read_committed, t, wrappers[t]))
+        const_keys[t] = len(gconst.scan(read, t, wrappers[t]))
 
     # G1
     if _fold(committed_gen) != _fold(expected):
