@@ -7081,6 +7081,35 @@ a measurement.</sub>
 
 **STEP 2 is done. What remains is STEP 3 + the adopt-once run itself, for one magic.**
 
+### 🧰 ADOPT-ONCE BUNDLE BUILT 2026-08-02 (`S-2026-08-02-ADOPT208`) — built, **not run**
+
+[`_vps_deploy/BOSS14_GBPJPY/ADOPT_ONCE_990208_CHECKLIST.txt`](_vps_deploy/BOSS14_GBPJPY/ADOPT_ONCE_990208_CHECKLIST.txt)
+is what the owner works from. Two things stood between them and the procedure, and both are removed:
+
+1. 🔴 **The bundle's `.ex5` was dated 2026-07-16 — before the 07-19 persist work — so it carries no
+   gate at all.** Setting `RC_AdoptLegacyHalt=true` on it would have done **nothing, silently**: no
+   error, no migration, and an operator concluding the step had worked. Replaced with a fresh build
+   (MD5 `5D2C5A9E7CB9A5B4BB2D99EA1E07AA41`, 0 errors / 0 warnings on 9 targets); the old one is kept
+   as `.ex5.old` so it can be put back. `tpl_regression` was **CLEAN 8/8** on lane 1 and `git log`
+   confirms `ea_template/**` is unchanged since that run, so `Boss_14`'s behaviour is
+   baseline-identical — the only deliberate difference on this leg is the two persist flags.
+2. 🔴 **Neither flag is in the deployed `.set`,** which specifies **52 of the build's 116 inputs** —
+   so 64 come from the terminal's last-used cache and a re-attach is not a reproducible act
+   (memory `mt5-tester-cache-nondeterminism`). Three **full-surface** sets now exist, one per step:
+   `STEP1_REHEARSE` (adopt=true, DryRun=true — writes nothing) · `STEP2_ADOPT` (adopt=true,
+   DryRun=false) · `STEP3_NORMAL` (adopt=false — what it runs on afterwards). **The 52 deployed
+   values are copied byte-for-byte and that was verified, not assumed: 0 mismatches.**
+
+The checklist leads with the condition that makes the rehearsal safe rather than burying it —
+**STEP 0 is "is this leg flat?"**, because `DryRun` suppresses **closes** as well as opens, so a
+DryRun attach on a leg holding a basket disables its exit. It gives the exact journal line per step,
+**both halves** of the F3 check after migration (a `Boss2_` key appearing while the old key survives
+is a *partial* migration, not a success), and the stop conditions.
+
+<sub>It also carries the provenance warning forward: `60027.15` came from a **transcription of a
+screenshot**, and it is the number STEP 2 must print back. The checklist tells the owner to use what
+is on the screen and report a disagreement rather than trusting this repo's copy of it.</sub>
+
 
 ---
 
