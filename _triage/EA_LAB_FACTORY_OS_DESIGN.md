@@ -812,6 +812,16 @@ the existing Trade emergency bot (real-money/DD/critical only) and a new `EA LAB
 - **Delivery is receipted per channel.** A delivery ledger records `(event, channel, receipt)`, so "was
   this actually delivered" is answerable and a replay after an outage does not re-alert what already
   landed. Without it, dedupe is a claim about sending, not about arriving.
+- **Two entities carry this, and S12 built both.** The thing that crosses the seam to a channel, and
+  the record of what happened to it. The first is allowlist-only because its `text` is free-form and
+  is therefore the one field on which a careless renderer can put an account number on the wire; the
+  second carries a channel *name* and never a chat id, because a chat id is a delivery credential.
+  → **contract [`AlertEvent`](factory_os/CONTRACTS.md#alertevent)** — fields, types, required-set and validation rules.
+  → **contract [`AlertDelivery`](factory_os/CONTRACTS.md#alertdelivery)** — fields, types, required-set and validation rules.
+- **`material_revision` cannot come from the projection, and that is a structural fact rather than an
+  oversight.** The `SafeProjection` carries `public_id`/`severity`/`state` and nothing else, so the
+  dedupe key this section mandates is computed **local-side**, from an append-only finding journal,
+  before anything is handed to the sender. The internal `finding_id` stays in that journal.
 - `OPEN → HEALTHY_1_OF_2 → OPEN` must **not** emit a recovery message — an intermediate healthy check is
   not a recovery, and treating it as one produces exactly the flapping spam the two-check rule exists to
   stop. `FLAPPING` gets a **bounded reminder** rather than permanent silence, so a state that never

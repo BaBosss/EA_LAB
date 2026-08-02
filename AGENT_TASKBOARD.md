@@ -105,6 +105,134 @@
 
 ---
 
+## ORDER-1180 — [factory/S12] Direct Telegram Control Room + Morning Brief — `DONE (Claude/Opus 2026-08-02, lane S-2026-08-02-S12TG) — every acceptance driven, one real message delivered with the gateway observed down, and the replay of it suppressed; the case count is printed by run_s12_tests.py --list and is deliberately not restated here` · ทำได้: **Codex/Sonnet** (design §10 assigns this slice) · 👉 แนะ: Codex/Sonnet, reviewed by Claude/Opus
+
+**Acceptance (design §10, S12 row, verbatim)** — alerts work with OpenClaw stopped · the dedupe key
+includes **severity AND `material_revision`** · a **per-channel delivery ledger** `(event, channel,
+receipt)` · **one** recovery message, and an escalation is never swallowed.
+**Prohibitions (design §10)** — no token in git / logs / generated HTML / chat · OpenClaw not in the
+alert path.
+
+**Two owner decisions were taken as costed tables before a line was written, because both change
+what the product does rather than how it is built.**
+1. **Routing.** `REAL_MONEY` + `CRITICAL` → the existing Trade emergency bot · `WARN` + `INFO` +
+   Morning Brief → the new `EA LAB Control Room` bot. Design-literal, and the owner chose it after
+   being shown the measurement that makes the *safer-looking* alternative worse: the whole
+   `REASON_SEVERITY` table can produce `CRITICAL` (2 codes), `WARN` (9) and `INFO` (2), and
+   **nothing can produce `REAL_MONEY` today**. Routing only `REAL_MONEY` to the emergency bot would
+   have given that channel **zero reachable events** — `UNTESTED` by CLAUDE.md's own bar table —
+   while a `BLIND` sensor on a real-money account went to the quiet channel, which is the S11
+   round-1 defect wearing a different hat.
+2. **Where the token lives.** `scripts/config.yaml`, the arrangement the emergency bot has used all
+   along: **already git-ignored**, already scrubbed out of every `mris_notify.ps1` output including
+   exception text. Two new keys, documented in `scripts/config.example.yaml` with placeholders. A
+   second secret store would have been a second place to leak from.
+
+🔴 **THE REAL LEG WAS DRIVEN, NOT ASSERTED.** With the owner's explicit go-ahead, ONE real message
+was sent: `probe --id S12-2026-08-02 --channel EMERGENCY --confirm` → **`DELIVERED`, Telegram
+`message_id=9`, `openclaw=NOT_RUNNING`** — the observed gateway state is written on the ledger line
+beside the receipt, so "it worked with OpenClaw stopped" is a measurement stored next to its
+evidence rather than a sentence in a handoff. Running the identical command again returned
+**`SUPPRESSED_DUPLICATE` with zero HTTP calls.** A second, non-sending run against the live snapshot
+(`send --confirm --brief`) produced **6 × `UNCONFIGURED` and exit 1** — the Control Room bot does not
+exist yet, and that is a *stated failure*, which is the whole point: a sender that cannot send and
+reports nothing is indistinguishable from a quiet fleet.
+
+**The seam, and the prohibition that used to disarm its own check.** S11 found that taking the
+snapshot away from the sender emptied `scan_forbidden`'s `KNOWN_SECRET` layer, because that layer's
+input *is* the snapshot, and answered on the sender side with a shape check. S12 answers on the
+**other** side too: the planner still holds the snapshot, so `assert_sendable` runs the full literal
+scan **with the real secret list** before anything crosses. Shape on the far side, literals on the
+near side, and neither substitutes for the other (memory `prohibition-disarms-its-own-check`).
+
+🔴 **FOUR DEFECTS THE CAGE FOUND, three of them in code written this session and one of them older.**
+- **`occurrences_24h` counted observations, not recurrences.** An hourly collector would have turned
+  a single continuously-open finding into `FLAPPING — root cause required` before lunch — a
+  different and wrong statement about it, and one that collapses its alert into an incident nobody
+  opened. A *recurrence* is an appearance after an absence; that is what "3 recurrences in 24h"
+  means. Case `W01`, and `W04` holds the window shut.
+- **`FLAPPING` was permanently silent.** design §7.3 requires it to get a *bounded reminder* "so a
+  state that never changes cannot go unreported forever", and design §11 row 16 owes that to S12 by
+  name. With the design's four dedupe fields alone, a FLAPPING finding is alerted once and never
+  again. Only a FLAPPING key now carries the calendar day. Cases `W05` / `W06` / `W07`.
+- **The ledger would have written an unscrubbed provider error to disk.** `deliver()` wrote
+  `'%s: %s' % (type(exc), exc)` verbatim, so "no token in a log" rested entirely on every transport
+  scrubbing itself — and **the URL of a Telegram send request contains the token**. The guarantee now
+  holds at the boundary that writes the file. Case `L06`.
+- **A third party's live-shaped Telegram bot token is committed in `_triage/FXDREEMA_XRAY.md`**,
+  inside the x-ray of a downloaded fxDreema EA. Found by PART B's tracked-tree sweep. It is not this
+  project's credential and nothing here uses it, but it is somebody else's credential sitting in
+  this history. **Quarantined at exactly 1 hit in a closed declaration, not excluded** — a new one
+  anywhere still fails. History rewriting is not a thing to do as a side effect of a notifier slice,
+  so it is carried below as owed.
+
+🔴 **THE SUITE WENT GREEN ON ITS FIRST RUN, WHICH IS NOT THE SAME AS BEING RIGHT.** It was written
+after the module, so it never went red first, and saying "51/51 green" would have been the weakest
+kind of evidence. Instead **14 mutants were planted in `notifier.py` and `safe_projection.py`, one
+at a time** — dedupe drops severity · the ledger ignores the channel · the planner skips the
+known-secret scan · `UNKNOWN` collapses onto `NOT_RUNNING` · the shape check is skipped · and nine
+more. **13 died immediately. One survived, and it was the one that mattered:** a `Ledger.delivered()`
+counting `FAILED` as delivered passed every case, because the retry was only ever proven against the
+in-memory set `deliver()` mutates — not against the FILE the next scheduled run reads. That mutant is
+a real job losing an alert permanently the first time the API blips. Cases `L10` / `L11` close it,
+and the sweep is now 14/14.
+
+**Two roll-ups, not one** (memory `completeness-rollup-measured-after-topup`): *coverage* — every
+routing target, event kind, delivery outcome, scan layer and OpenClaw state was produced by a real
+case, and the roll-up **prints which case first produced each**, so a bucket whose only contributor
+exists for no other reason is visible rather than hidden behind a tick; *reachability* — every
+catalogued case ran, with the counter read **before** the first case executed.
+
+**OpenClaw is out of the path as a property, not a sentence.** A text scan for "openclaw" cannot tell
+a call from the paragraph explaining there is no call (memory `text-scan-cannot-tell-read-from-mention`).
+So the check is an **AST import closure** over `notifier.py` + the three repo modules it reaches,
+crossed with a closed `ALLOWED_IMPORTS`; `O06` plants `from openclaw.gateway import dispatch` and
+watches the allowlist reject it, so the guard is not a zero-fire one.
+
+**Measured.** Suite **3.2s / 3.3s / 3.2s** over three runs — down from **3.7s / 3.9s / 3.8s**, with no
+case dropped: it verifies the real snapshot once instead of three times, and `notifier.py` now settles
+a usage error before opening any document. Full tier with it registered: **26 suites, 0 failed,
+112.4s / 110.8s / 111.5s** of the 120.0s budget. **Reconciliation, because a single sample lies:** the
+`SCRUT11S` row records the 25-suite tier at 109.1 / 107.9 / 107.9, and the one baseline sample this
+lane took read 112.2s — noise-high. Against the three-sample baseline the delta is **≈ +3.3s**, which
+matches the suite's own 3.2s. **This is the most expensive thing S12 adds and it eats roughly a third
+of the tier's remaining headroom; `ORDER-1130` is the row that buys more, not this one.**
+
+**`schemas.json`:** `AlertEvent` and `AlertDelivery` added, both `BUILT` with `x-enforcer` naming
+`notifier.py` — not `WIRED`, by the checker's own definition: the cage drives them, nothing in
+production calls them yet. This forced the **S2a bundle**, and the forcing is worth recording because
+the next slice will hit it too: C1 demands an ownership row for **every** schema entity, so two new
+entities move `s2a_migration.jsonl`, the reconciliation, D2 and the checker — and moving any bundle
+member invalidates the owner's standing attestation (memory `approval-pinning-self-invalidates`, still
+open in this form). **The owner ratified both ownership statements in session** — `AlertEvent` =
+`TRANSIENT`/`KEEP` (never persisted; a stored copy would be a way to obtain one that never passed
+`assert_sendable`), `AlertDelivery` = `NO_CURRENT_OWNER` → `ops/delivery_ledger.jsonl` — and exactly
+one attestation line was appended. <sub>A trap for whoever does this next: regenerating **D2 after**
+taking the digest moves the digest, because D2 is itself a bundle member. Regenerate D1 **and** D2,
+*then* take the template, *then* append. And `Set-Content -Encoding utf8` writes a BOM the log's own
+reader refuses — both cost a red run here.</sub>
+
+**Not done, deliberately:** the `EA LAB Control Room` bot does not exist, so every WARN/INFO alert
+and the Morning Brief report `UNCONFIGURED` and exit non-zero until the owner creates it and fills
+the two keys · nothing **schedules** the notifier — that is the next step, and it is also the moment
+`ops/delivery_ledger.jsonl`'s retention question stops being theoretical · no `factory/runs/*.jsonl`
+touched, no `CandidateManifest`, no attestation event on a real deployment, no magic allocated · no
+DD band is computed anywhere: the brief prints what a detector publishes and says out loud that
+nobody publishes one (design §7.1, "the dashboard creates no competing threshold").
+
+**Owed, and named rather than left implicit:**
+- **the third-party token in `_triage/FXDREEMA_XRAY.md`** — an owner decision: scrub the line, or
+  accept it. It is quarantined either way, and the guard will not let a second one in.
+- **`WINDOWS_ABSOLUTE_PATH` matches the `s:/` inside `https://`**, so any URL in a failure detail is
+  redacted and the operator loses the HTTP status. Fail-closed and therefore acceptable, **measured
+  by case `L09` rather than discovered later** — but widening a rule shared with the projection's
+  leak scan is not a change to make as a side effect of a notifier.
+- a producer for `REAL_MONEY` severity (nothing emits one, so the emergency channel's only reachable
+  traffic today is `CRITICAL`) · a `dd_band` detector, still owed from S11 · `AlertEvent`/
+  `AlertDelivery` → `WIRED` once something in production sends.
+
+---
+
 ## ORDER-1170 — [portfolio design] The thin class is a PORTFOLIO problem, not a judging problem — raise the sample rate instead of waiting a year for it — `OPEN` · ทำได้: Claude/Opus (เสนอ) + user (เคาะทิศ) · 👉 แนะ: Claude
 
 > **Owner direction, 2026-08-02, verbatim:** *"พวก thin ทั้งหมดผมจะเอามารวมๆ กันแล้ว trade แบบ multi

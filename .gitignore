@@ -125,3 +125,13 @@ factory/leases/
 # builds both IN MEMORY from the real snapshot instead, so nothing here is unverified.
 build/
 
+# ORDER-1180 (S12). PER-MACHINE RUNTIME STATE of the alert path: the delivery ledger
+# (ops/delivery_ledger.jsonl) and the finding journal (ops/finding_journal.jsonl). Both are
+# append-only records of what THIS machine observed and sent, so committing them would put a
+# scheduled writer on the master branch -- a lane the commit guards cannot see (memory:
+# negative-claims-over-a-commit-range) -- and would grow by a line per event forever. They are
+# evidence for the operator at the machine, which is where the operator is. The SHAPE of both
+# is committed and checked: schemas.json declares AlertDelivery, and run_s12_tests.py drives
+# the ledger through a real file in a temp repo.
+ops/
+

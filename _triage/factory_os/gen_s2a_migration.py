@@ -667,6 +667,95 @@ ROWS = [
         ),
     ),
     dict(
+        entity='AlertEvent',
+        owner='TRANSIENT',
+        proposed='TRANSIENT',
+        disposition='KEEP',
+        canonical_or_derived='derived',
+        unowned_evidence='_triage/factory_os/schemas.json',
+        keep_reason=(
+            'correctly owned by nobody: the schema states "(in memory only) an AlertEvent is '
+            'never persisted; ops/delivery_ledger.jsonl records that one existed". It is a '
+            'function of the SafeProjection and the local finding journal, computed at send '
+            'time. Persisting it would create a THIRD copy of the same facts - the projection '
+            'has them, the ledger records what became of them - and the copy that disagreed '
+            'would be the one nobody recomputes.'
+        ),
+        breaks_if_moved=(
+            'Persisting it would break the seam this entity exists to define. An AlertEvent is '
+            'the ONLY thing that crosses from the side that holds the snapshot to the side that '
+            'talks to Telegram, and notifier.assert_sendable is the single gate it passes '
+            'through. A stored copy is a second way to obtain one, and the stored copy would '
+            'not have passed the gate - which is the exact shape of the S11 round-1 defect, '
+            'where a document reached a surface by a path the check did not cover.'
+        ),
+        breaks_if_not_moved=(
+            'Nothing. Every question an operator asks about a sent alert is answered by the '
+            'ledger (did it arrive, on which channel, with what receipt) or by the dashboard '
+            '(what the public_id refers to). No question needs the event itself after the send.'
+        ),
+        reverse_steps=(
+            'None required - nothing is created. To reverse the DECISION (start persisting '
+            'them) the steps would be: 1) add the store under ops/, 2) make assert_sendable the '
+            'only writer so a stored event cannot exist un-gated, 3) give it a retention window, '
+            'because the text field carries rendered prose and grows without bound.'
+        ),
+        evidence_lost=(
+            'Nothing that is not recomputable, PROVIDED the finding journal is kept: an event is '
+            'a pure function of (projection, journal record, clock). If the journal is lost, past '
+            'events are not reconstructible - which is a statement about ops/finding_journal.jsonl, '
+            'not about this entity.'
+        ),
+        retention_window=(
+            'none required - it exists for the duration of one notifier run.'
+        ),
+    ),
+    dict(
+        entity='AlertDelivery',
+        owner='NO_CURRENT_OWNER',
+        proposed='ops/delivery_ledger.jsonl',
+        disposition='TRANSFER',
+        canonical_or_derived='canonical',
+        unowned_evidence=DESIGN,
+        breaks_if_moved=(
+            'Nothing exists to break: before ORDER-1180 nothing in this repo recorded that a '
+            'notification had been sent, which is the gap design section 7.3 names outright - '
+            '"Without it, dedupe is a claim about sending, not about arriving." The hazard on '
+            'CREATION is the one this file is written against: the ledger must carry a channel '
+            'NAME and never a chat id, because a chat id is a delivery credential, and it must '
+            'not carry an unscrubbed provider error, because the URL of a Telegram send request '
+            'contains the bot token.'
+        ),
+        breaks_if_not_moved=(
+            'Deduplication stays a claim about sending rather than arriving, and a replay after '
+            'an outage re-alerts everything that already landed. Concretely: the notifier is '
+            'meant to run on a schedule, so the FIRST transient API failure would either be '
+            'retried forever or suppressed forever, and nothing would be able to tell an '
+            'operator which. TRIGGER: the moment anything schedules notifier.py, which is the '
+            'next step after this slice.'
+        ),
+        reverse_steps=(
+            '1) stop writing ops/delivery_ledger.jsonl. 2) delete it. Nothing is restored, '
+            'because nothing was moved: no prior owner is demoted by this row. The COST of '
+            'reversing is that every past "did this arrive" becomes unanswerable, which is the '
+            'state the repo was in before this slice.'
+        ),
+        evidence_lost=(
+            'Everything it holds, and none of it is recomputable: a receipt is a fact about what '
+            'a third-party API did at a moment in time. A deleted ledger cannot be regenerated '
+            'from the snapshot, the projection or the journal - it is the only record that a '
+            'message left this machine. That is why it is append-only and why the shape is '
+            'declared in schemas.json rather than left to whatever the writer felt like.'
+        ),
+        retention_window=(
+            'indefinite for now, and that is a decision with a known expiry: the file grows by '
+            'one line per event per run, so a scheduled notifier will make it unbounded. It is '
+            'per-machine and git-ignored, so nothing in history depends on it; when the size '
+            'becomes real the answer is rotation with the rotated files kept, never truncation, '
+            'because a truncated ledger silently re-enables a duplicate send.'
+        ),
+    ),
+    dict(
         entity='RunJournal',
         owner='TRANSIENT',
         proposed='TRANSIENT',

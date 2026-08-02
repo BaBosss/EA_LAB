@@ -15,8 +15,18 @@ report_drop_folder: "D:/EA_LAB/_mt5_report_drop"
 mt5_use_portable_default: false
 default_broker: "PLACEHOLDER_BROKER"
 default_account_type: "demo"
+# The EXISTING Trade emergency bot. design 7.3 routes REAL_MONEY and CRITICAL here (owner
+# decision 2026-08-02) - this is the one that is allowed to wake somebody at 3am.
 telegram_bot_token: "PLACEHOLDER_TELEGRAM_BOT_TOKEN"
 telegram_allowed_user_ids:
+  - 123456789
+# The `EA LAB Control Room` bot (ORDER-1180 / slice S12). Morning Brief, decisions, monitor
+# health - WARN and INFO. A SECOND bot rather than a second chat on the first one, so "which
+# bot woke me" is a property of the routing table instead of a chat id in a config file.
+# Left unset here on purpose: notifier.py reports an unset channel as UNCONFIGURED and exits
+# non-zero, which is a stated failure. It never skips quietly.
+telegram_control_room_bot_token: "PLACEHOLDER_TELEGRAM_BOT_TOKEN"
+telegram_control_room_chat_ids:
   - 123456789
 default_project_path: "D:/EA_LAB"
 codex_command: "codex"

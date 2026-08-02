@@ -411,6 +411,25 @@ $FAST_SUITES = @(
     # schemas.json, and PART B's seam -- the REAL PowerShell reader's states fed to the REAL
     # python shell, which is the only way to catch the two vocabularies drifting apart.
     'run_s11_tests.ps1',
+    # ORDER-1180 (S12), measured 3.2s / 3.3s / 3.2s over three runs (memory
+    # phantom-regression-from-two-single-samples: two samples of a noisy number is not a
+    # measurement). It was 3.7s / 3.9s / 3.8s before two trims that dropped no case -- the suite
+    # now verifies the real snapshot ONCE instead of three times, and notifier.py settles a
+    # usage error before opening any document. THIS IS THE MOST EXPENSIVE THING SLICE S12 ADDS
+    # and it eats ~40% of the headroom the tier had; ORDER-1130 is the row that buys more.
+    # It carries slice S12's whole acceptance: alerts work with OpenClaw stopped,
+    # the dedupe key carries severity AND material_revision, the per-channel delivery ledger,
+    # and exactly one recovery message with escalation never swallowed.
+    #
+    # WHY IT COSTS WHAT IT COSTS. Sixty-odd scenarios are pure fixtures in one python process
+    # and together cost under a fifth of a second. THREE subprocess calls survive, and they buy
+    # the one claim in-process code cannot honestly make: that the ledger stops a second send
+    # ACROSS A PROCESS BOUNDARY, which is the only form of "not sent twice" that means anything
+    # to a scheduled job. PART B adds six checks asked of GIT rather than of python -- the
+    # design 10 prohibition "no token in git" is a statement about what is TRACKED, which no
+    # python assertion can make. It sends nothing: the real Telegram leg was driven once, by
+    # hand, with the owner's go-ahead, and its receipt is quoted in ORDER-1180.
+    'run_s12_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -907,6 +926,31 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/snapshot_validator.py',
                                           'scripts/lib/snapshot_reader.ps1',
                                           'portfolio/control_room_snapshot.json')
+    # ORDER-1180 (S12). What the S12 cage guards:
+    #   notifier.py                             the module under test
+    #   run_s12_tests.py                        the cage itself
+    #   safe_projection.py                      CALLED at runtime, not merely referenced: the
+    #                                           sender boundary, the literal scan and the shape
+    #                                           checker (whose integer branch S12 added) all
+    #                                           live there, so a change to it changes this cage's
+    #                                           verdict
+    #   control_center.py                       fold_finding IS the recovery rule; a second copy
+    #                                           in the notifier is the drift case V04 exists for
+    #   snapshot_validator.py                   the only reader of the full snapshot
+    #   schemas.json                            AlertEvent's declared shape is read at runtime by
+    #                                           assert_sendable, so the schema is an INPUT
+    #   control_room_snapshot.json              cases S11/B04/C01 drive the real document
+    #   .gitignore                              PART B's prohibitions are assertions ABOUT it
+    #   scripts/config.example.yaml             declares the channel keys resolve_channels reads
+    'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
+                                          '_triage/factory_os/run_s12_tests.py',
+                                          '_triage/factory_os/safe_projection.py',
+                                          '_triage/factory_os/control_center.py',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          '_triage/factory_os/schemas.json',
+                                          'portfolio/control_room_snapshot.json',
+                                          '.gitignore',
+                                          'scripts/config.example.yaml')
 }
 
 # Paths a suite references but which are NOT inputs to what it guards -- synthetic fixture
@@ -945,7 +989,19 @@ $NOT_A_DEPENDENCY = @(
     # name them because they WRITE them; editing an output cannot change what the cage proves,
     # and both are .gitignored, so neither can ever be staged to select a suite anyway.
     'build/safe_projection.json',
-    'build/control_center.html'
+    'build/control_center.html',
+    # ORDER-1180 (S12): run_s12_tests.ps1's PART B names these two in a QUARANTINE DECLARATION,
+    # not as inputs. Its token-shape check is a `git grep` over the WHOLE tracked tree -- a
+    # scope no path list can express -- and the table beside it says "this file has exactly N
+    # known hits, for this reason", so the N+1th anywhere is a failure. Declaring them as guards
+    # would say the opposite of what is true: the suite does not read either file, and editing
+    # one cannot change what the suite proves. What CAN change is the hit count, and git
+    # answers that at run time rather than at selection time.
+    #   run_s11_tests.py    S11's planted token fixture (1 hit)
+    #   FXDREEMA_XRAY.md    a THIRD PARTY's token committed inside a downloaded EA's x-ray,
+    #                       found by this check on 2026-08-02 and carried as an owed item
+    '_triage/factory_os/run_s11_tests.py',
+    '_triage/FXDREEMA_XRAY.md'
 )
 
 if ($ExportGuards) {

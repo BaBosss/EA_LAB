@@ -77,6 +77,11 @@ PLANNED_PATHS = (
     'ops/findings.jsonl',
     'ops/receipts/',
     'build/safe_projection.json',
+    # ORDER-1180 (S12). The delivery ledger. Per-machine and git-ignored, like build/ above and
+    # for the same reason in reverse: build/ is derived and would go stale, this is a record of
+    # what one machine observed and sent, and committing it would put a scheduled writer on
+    # master -- a lane the commit guards cannot see (memory: negative-claims-over-a-commit-range).
+    'ops/delivery_ledger.jsonl',
 )
 
 COVERAGE_CURRENT_OWNER = 'MASTER_BACKLOG.md'
@@ -141,6 +146,13 @@ UNOWNABLE = {
                        'Generated projections go to'),
     'RunJournal':     ('TRANSIENT', '_triage/factory_os/schemas.json',
                        'Never persisted, never written'),
+    # ORDER-1180 (S12). Two new entities, and they land in DIFFERENT states on purpose -- the
+    # thing that crosses the seam is never written down; the record of what happened to it is
+    # the whole point of writing it down.
+    'AlertEvent':     ('TRANSIENT', '_triage/factory_os/schemas.json',
+                       'an AlertEvent is never persisted'),
+    'AlertDelivery':  ('NO_CURRENT_OWNER', '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                       'Without it, dedupe is a claim about sending, not about arriving'),
 }
 
 

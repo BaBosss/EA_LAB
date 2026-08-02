@@ -57,6 +57,8 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `SnapshotBuilderInput` | `NONE - transient. Produced by the snapshot builder, consumed by snapshot_validator, never persisted.` | — | snapshot_validator.build_snapshot: refuses a supplied answer via a recursive forbidden-key scan (verdict / reconciliation_clear / all_clear / reasons) UNCONDITIONALLY; refuses a schema-invalid input only when called with ajv_schema_validator, which the fast computation suite does not do. Treat the schema half as enforced at the load_verified() boundary, not on every code path |
 | `SnapshotMeta` | `the `meta` property of portfolio/control_room_snapshot.json` | — | — |
 | `SafeProjection` | `build/safe_projection.json (derived, never hand-written)` | — | projection_validator: recursive forbidden-key scan + synthetic secret/account fixtures; the Telegram sender MUST NOT be able to read the full snapshot |
+| `AlertEvent` | **derived, never written** — True | — | notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run |
+| `AlertDelivery` | `ops/delivery_ledger.jsonl` | — | notifier.deliver: every event produces exactly one line whatever happened, and dedupe reads DELIVERED and nothing else |
 
 <!-- END GENERATED CONTRACT: __STORAGE__ -->
 
@@ -765,6 +767,54 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 **Unknown fields:** rejected (closed object).
 
 <!-- END GENERATED CONTRACT: SafeProjection -->
+
+<!-- BEGIN GENERATED CONTRACT: AlertEvent -->
+### AlertEvent
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`AlertEvent`** · **DERIVED** — True · stored in `(in memory only) an AlertEvent is never persisted; ops/delivery_ledger.jsonl records that one existed` · enforced by *notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `AlertEvent` | **yes** |  |
+| `kind` | `ALERT` \| `RECOVERY` \| `MORNING_BRIEF` \| `DELIVERY_PROBE` | **yes** |  |
+| `channel` | `EMERGENCY` \| `CONTROL_ROOM` | **yes** | design 7.3 names two bots on ONE event system. The channel is decided by the severity routing table the owner ratified on 2026-08-02, not by a chat id in a config file. |
+| `public_id` | `string` | **yes** | pattern `^FP-[0-9a-f]{10}$` · The internal finding_id may embed an account, a magic or an EA name and MUST NOT travel. This is safe_projection.public_id() of it, so the id on Telegram and the id on the dashboard are pinned together as design 7.3 requires. |
+| `severity` | `INFO` \| `WARN` \| `CRITICAL` \| `REAL_MONEY` | **yes** |  |
+| `state` | `OPEN` \| `HEALTHY_1_OF_2` \| `RESOLVED` \| `FLAPPING` \| `SUPPRESSED_MAINTENANCE` | **yes** |  |
+| `class` | `RUNTIME` \| `GOVERNANCE` \| `DEPLOYMENT_DRIFT` \| `AUDIT` | **yes** | Safe to send: a four-value closed enum with no identity in it. It is what makes a thin alert actionable at 3am without a detail line. |
+| `material_revision` | `integer` | **yes** | min `0` · Part of the dedupe key. It cannot be computed from the SafeProjection - that surface carries public_id/severity/state and nothing else - so it is produced local-side by notifier.observe() from ops/finding_journal.jsonl. Naming that gap is the point. |
+| `dedupe_key` | `string` | **yes** | pattern `^[A-Za-z0-9\|_.:-]+$` · public_id + state + severity + material_revision, per design 7.3. Rev 1 deduped on (id, state), which suppressed a WARN escalating to REAL_MONEY while the state stayed OPEN. |
+| `build_id` | `string` | **yes** |  |
+| `text` | `string` | **yes** | The rendered message. The ONLY free-form field, and therefore the one assert_sendable's literal scan exists for. |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: AlertEvent -->
+
+<!-- BEGIN GENERATED CONTRACT: AlertDelivery -->
+### AlertDelivery
+
+<sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
+
+**`AlertDelivery`** · stored in `ops/delivery_ledger.jsonl` · enforced by *notifier.deliver: every event produces exactly one line whatever happened, and dedupe reads DELIVERED and nothing else*
+
+| field | type | required | rule |
+|---|---|---|---|
+| `entity` | const `AlertDelivery` | **yes** |  |
+| `dedupe_key` | `string` | **yes** |  |
+| `channel` | `EMERGENCY` \| `CONTROL_ROOM` | **yes** |  |
+| `kind` | `ALERT` \| `RECOVERY` \| `MORNING_BRIEF` \| `DELIVERY_PROBE` | **yes** |  |
+| `outcome` | `DELIVERED` \| `SUPPRESSED_DUPLICATE` \| `UNCONFIGURED` \| `FAILED` | **yes** | UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet. |
+| `receipt` | `string` \| `null` | **yes** | The provider's message id, which is what makes 'did this arrive' answerable. Null for every outcome that is not DELIVERED. |
+| `at` | `string` | **yes** |  |
+| `openclaw` | `RUNNING` \| `NOT_RUNNING` \| `UNKNOWN` | **yes** | design 10 requires alerts to work with OpenClaw stopped. Recording the OBSERVED gateway state beside the receipt turns that from a claim in a handoff into a measurement stored next to the evidence. UNKNOWN is a real third answer and is never collapsed onto NOT_RUNNING. |
+| `detail` | `string` | **yes** |  |
+
+**Unknown fields:** rejected (closed object).
+
+<!-- END GENERATED CONTRACT: AlertDelivery -->
 
 <!-- BEGIN GENERATED CONTRACT: META_parity_cases -->
 ### META_parity_cases

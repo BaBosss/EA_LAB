@@ -489,6 +489,43 @@ def _check_shape(node, schema, path, hits):
         if pattern and not re.match(pattern, node):
             hits.append((path, 'SHAPE', 'does not match %s' % pattern))
         return
+    # S12 (ORDER-1180). `AlertEvent.material_revision` is the first `type: integer` in this
+    # schema, and the ROUND-3 refusal below is what forced this branch to be written rather
+    # than the field to go unchecked -- which is the mechanism working, so it is extended here
+    # rather than routed around. `minimum` is honoured in the same breath: implementing the
+    # type and ignoring its constraint would put a keyword back into the silently-accepted
+    # bucket the refusal exists to empty.
+    if stype in ('integer', 'number'):
+        ok = isinstance(node, int) if stype == 'integer' else isinstance(node, (int, float))
+        # bool IS an int in python, so `True` would satisfy `type: integer` unless it is
+        # excluded here. A boolean where a revision counter belongs is a defect, not a 1.
+        if isinstance(node, bool) or not ok:
+            hits.append((path, 'SHAPE', 'must be %s' % stype))
+            return
+        if 'minimum' in schema and node < schema['minimum']:
+            hits.append((path, 'SHAPE', 'must be >= %s' % schema['minimum']))
+        return
+    if stype == 'boolean':
+        if not isinstance(node, bool):
+            hits.append((path, 'SHAPE', 'must be a boolean'))
+        return
+    if isinstance(stype, list):
+        # `type: [string, null]` - AlertDelivery.receipt. Satisfied if the node matches ANY of
+        # the listed types; the per-type constraints are checked by recursing into the branch
+        # that matched, so a `pattern` beside a list type is not lost.
+        for alt in stype:
+            probe = []
+            child = dict(schema)
+            child['type'] = alt
+            if alt == 'null':
+                if node is None:
+                    return
+                continue
+            _check_shape(node, child, path, probe)
+            if not probe:
+                return
+        hits.append((path, 'SHAPE', 'must be one of the declared types %s' % (stype,)))
+        return
     # ROUND-3 FIX. Everything above is a construct this checker implements; anything else used
     # to fall off the end and produce NO HITS -- `type: integer`, `type: boolean`, `$ref` and
     # `oneOf` were all silently accepted, whatever the value was. SafeProjection's schema uses

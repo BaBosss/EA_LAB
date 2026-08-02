@@ -229,6 +229,44 @@ CASES = [
                         "equity": 100000}],
           "findings": []}),
 
+    # ---- S12 (ORDER-1180): the two entities that carry the alert path -----------
+    # AlertEvent is the ONLY thing that crosses the seam to a channel, so its closed shape is
+    # what stops a field arriving on the wire because somebody added it upstream.
+    case("alert-event-valid", "the thin event with only opaque ids must pass", "pass",
+         {"entity": "AlertEvent", "kind": "ALERT", "channel": "EMERGENCY",
+          "public_id": "FP-0123456789", "severity": "CRITICAL", "state": "OPEN",
+          "class": "RUNTIME", "material_revision": 2,
+          "dedupe_key": "FP-0123456789|OPEN|CRITICAL|2", "build_id": "b1", "text": "t"}),
+    case("alert-event-carrying-the-internal-id",
+         "the internal finding_id may embed an account and must not be expressible here", "fail",
+         {"entity": "AlertEvent", "kind": "ALERT", "channel": "EMERGENCY",
+          "public_id": "FP-0123456789", "severity": "CRITICAL", "state": "OPEN",
+          "class": "RUNTIME", "material_revision": 2,
+          "dedupe_key": "FP-0123456789|OPEN|CRITICAL|2", "build_id": "b1", "text": "t",
+          "finding_id": "FND-sensor-159503454"}),
+    case("alert-event-without-material-revision",
+         "dedupe on (id,state,severity) alone swallows a payload change, so the field is required",
+         "fail",
+         {"entity": "AlertEvent", "kind": "ALERT", "channel": "EMERGENCY",
+          "public_id": "FP-0123456789", "severity": "CRITICAL", "state": "OPEN",
+          "class": "RUNTIME", "dedupe_key": "FP-0123456789|OPEN|CRITICAL",
+          "build_id": "b1", "text": "t"}),
+    case("alert-delivery-valid", "a receipted delivery line must pass", "pass",
+         {"entity": "AlertDelivery", "dedupe_key": "k", "channel": "EMERGENCY",
+          "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
+          "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": ""}),
+    case("alert-delivery-carrying-a-chat-id",
+         "a chat id is a delivery credential - the ledger names a CHANNEL, never a chat", "fail",
+         {"entity": "AlertDelivery", "dedupe_key": "k", "channel": "EMERGENCY",
+          "kind": "DELIVERY_PROBE", "outcome": "DELIVERED", "receipt": "1234",
+          "at": "2026-08-02T00:00:00", "openclaw": "NOT_RUNNING", "detail": "",
+          "chat_id": "123456789"}),
+    case("alert-delivery-inventing-an-outcome",
+         "a fifth outcome would be a fifth meaning nothing in deliver() can produce", "fail",
+         {"entity": "AlertDelivery", "dedupe_key": "k", "channel": "EMERGENCY",
+          "kind": "ALERT", "outcome": "PROBABLY_SENT", "receipt": None,
+          "at": "2026-08-02T00:00:00", "openclaw": "UNKNOWN", "detail": ""}),
+
     # ---- audit-2 P0-A: finding must pin the owner of detector state -------------
     case("finding-without-detector-ref", "audit-3 SystemFinding as a second drifting copy", "fail",
          {"entity": "SystemFinding", "finding_id": "FND-x-y", "public_id": "FP-0123456789",
@@ -697,6 +735,29 @@ epair('SafeProjection', SAFEPROJ_OK, with_(SAFEPROJ_OK, account="159503454"),
       'ORDER-611: the projection is what Telegram is allowed to read. A raw account number as a '
       'top-level field is the leak the closed DTO exists to prevent',
       [{'keyword': 'unevaluatedProperties', 'instancePath': ''}])
+
+ALERT_EVENT_OK = {"entity": "AlertEvent", "kind": "ALERT", "channel": "EMERGENCY",
+                  "public_id": "FP-0123456789", "severity": "CRITICAL", "state": "OPEN",
+                  "class": "RUNTIME", "material_revision": 2,
+                  "dedupe_key": "FP-0123456789|OPEN|CRITICAL|2", "build_id": "b1",
+                  "text": "[EA LAB] CRITICAL"}
+
+ALERT_DELIVERY_OK = {"entity": "AlertDelivery", "dedupe_key": "FP-0123456789|OPEN|CRITICAL|2",
+                     "channel": "EMERGENCY", "kind": "ALERT", "outcome": "DELIVERED",
+                     "receipt": "4471", "at": "2026-08-02T00:00:00",
+                     "openclaw": "NOT_RUNNING", "detail": ""}
+
+epair('AlertEvent', ALERT_EVENT_OK, with_(ALERT_EVENT_OK, finding_id="FND-sensor-159503454"),
+      'ORDER-1180 (S12): an AlertEvent is the ONLY thing that crosses the seam to a channel, and '
+      'the internal finding_id may embed an account, a magic or an EA name. The closed object is '
+      'what stops it arriving on the wire because somebody added it upstream',
+      [{'keyword': 'unevaluatedProperties', 'instancePath': ''}])
+
+epair('AlertDelivery', ALERT_DELIVERY_OK, with_(ALERT_DELIVERY_OK, outcome="PROBABLY_SENT"),
+      'ORDER-1180 (S12): the ledger answers "did this arrive". A fifth outcome would be a fifth '
+      'meaning that nothing in deliver() can produce, and the one it would most likely be '
+      'confused with is DELIVERED',
+      [{'keyword': 'enum', 'instancePath': '/outcome'}])
 
 epair('ControlRoomSnapshotV5', SNAP_OK, with_(SNAP_OK, verdict={"reasons": []}),
       'ORDER-611: a snapshot whose verdict carries no reconciliation_clear cannot answer the '

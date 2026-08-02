@@ -162,7 +162,9 @@
         "IdeaRef",
         "ControlRoomSnapshotV5",
         "SnapshotBuilderInput",
-        "SafeProjection"
+        "SafeProjection",
+        "AlertEvent",
+        "AlertDelivery"
       ]
     }
   },
@@ -318,6 +320,22 @@
         }
       },
       "$ref": "#/$defs/SafeProjection"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "AlertEvent"
+        }
+      },
+      "$ref": "#/$defs/AlertEvent"
+    },
+    {
+      "properties": {
+        "entity": {
+          "const": "AlertDelivery"
+        }
+      },
+      "$ref": "#/$defs/AlertDelivery"
     }
   ],
   "$defs": {
@@ -2569,6 +2587,169 @@
       },
       "x-enforcement-status": "BUILT",
       "x-enforcer": "_triage/factory_os/safe_projection.py"
+    },
+    "AlertEvent": {
+      "type": "object",
+      "x-owner-file": "(in memory only) an AlertEvent is never persisted; ops/delivery_ledger.jsonl records that one existed",
+      "x-derived": true,
+      "x-enforced-by": "notifier.assert_sendable: the declared SHAPE checked against this file, PLUS safe_projection.scan_forbidden run with the real snapshot secret list - the layer the sender structurally cannot run",
+      "description": "NEW in S12. The ONLY thing that crosses the seam from the local side to a channel. Allowlist-only and closed, because `text` is free-form and is therefore the one field on which a careless renderer can write an account number onto the wire. Everything else here is an enum or a hashed id.",
+      "required": [
+        "entity",
+        "kind",
+        "channel",
+        "public_id",
+        "severity",
+        "state",
+        "class",
+        "material_revision",
+        "dedupe_key",
+        "build_id",
+        "text"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": {
+          "const": "AlertEvent"
+        },
+        "kind": {
+          "enum": [
+            "ALERT",
+            "RECOVERY",
+            "MORNING_BRIEF",
+            "DELIVERY_PROBE"
+          ]
+        },
+        "channel": {
+          "enum": [
+            "EMERGENCY",
+            "CONTROL_ROOM"
+          ],
+          "description": "design 7.3 names two bots on ONE event system. The channel is decided by the severity routing table the owner ratified on 2026-08-02, not by a chat id in a config file."
+        },
+        "public_id": {
+          "type": "string",
+          "pattern": "^FP-[0-9a-f]{10}$",
+          "description": "The internal finding_id may embed an account, a magic or an EA name and MUST NOT travel. This is safe_projection.public_id() of it, so the id on Telegram and the id on the dashboard are pinned together as design 7.3 requires."
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARN",
+            "CRITICAL",
+            "REAL_MONEY"
+          ]
+        },
+        "state": {
+          "enum": [
+            "OPEN",
+            "HEALTHY_1_OF_2",
+            "RESOLVED",
+            "FLAPPING",
+            "SUPPRESSED_MAINTENANCE"
+          ]
+        },
+        "class": {
+          "enum": [
+            "RUNTIME",
+            "GOVERNANCE",
+            "DEPLOYMENT_DRIFT",
+            "AUDIT"
+          ],
+          "description": "Safe to send: a four-value closed enum with no identity in it. It is what makes a thin alert actionable at 3am without a detail line."
+        },
+        "material_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Part of the dedupe key. It cannot be computed from the SafeProjection - that surface carries public_id/severity/state and nothing else - so it is produced local-side by notifier.observe() from ops/finding_journal.jsonl. Naming that gap is the point."
+        },
+        "dedupe_key": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9|_.:-]+$",
+          "description": "public_id + state + severity + material_revision, per design 7.3. Rev 1 deduped on (id, state), which suppressed a WARN escalating to REAL_MONEY while the state stayed OPEN."
+        },
+        "build_id": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string",
+          "description": "The rendered message. The ONLY free-form field, and therefore the one assert_sendable's literal scan exists for."
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/notifier.py"
+    },
+    "AlertDelivery": {
+      "type": "object",
+      "x-owner-file": "ops/delivery_ledger.jsonl",
+      "x-enforced-by": "notifier.deliver: every event produces exactly one line whatever happened, and dedupe reads DELIVERED and nothing else",
+      "description": "NEW in S12. One line per attempted delivery. Without it, dedupe is a claim about SENDING rather than about ARRIVING, and a replay after an outage re-alerts what already landed. Carries a channel NAME and never a chat id: a chat id is a delivery credential.",
+      "required": [
+        "entity",
+        "dedupe_key",
+        "channel",
+        "kind",
+        "outcome",
+        "receipt",
+        "at",
+        "openclaw",
+        "detail"
+      ],
+      "unevaluatedProperties": false,
+      "properties": {
+        "entity": {
+          "const": "AlertDelivery"
+        },
+        "dedupe_key": {
+          "type": "string"
+        },
+        "channel": {
+          "enum": [
+            "EMERGENCY",
+            "CONTROL_ROOM"
+          ]
+        },
+        "kind": {
+          "enum": [
+            "ALERT",
+            "RECOVERY",
+            "MORNING_BRIEF",
+            "DELIVERY_PROBE"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "DELIVERED",
+            "SUPPRESSED_DUPLICATE",
+            "UNCONFIGURED",
+            "FAILED"
+          ],
+          "description": "UNCONFIGURED and FAILED are STATED failures that make the CLI exit non-zero. A sender that cannot send and reports nothing is indistinguishable from a quiet fleet."
+        },
+        "receipt": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The provider's message id, which is what makes 'did this arrive' answerable. Null for every outcome that is not DELIVERED."
+        },
+        "at": {
+          "type": "string"
+        },
+        "openclaw": {
+          "enum": [
+            "RUNNING",
+            "NOT_RUNNING",
+            "UNKNOWN"
+          ],
+          "description": "design 10 requires alerts to work with OpenClaw stopped. Recording the OBSERVED gateway state beside the receipt turns that from a claim in a handoff into a measurement stored next to the evidence. UNKNOWN is a real third answer and is never collapsed onto NOT_RUNNING."
+        },
+        "detail": {
+          "type": "string"
+        }
+      },
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/notifier.py"
     }
   }
 }

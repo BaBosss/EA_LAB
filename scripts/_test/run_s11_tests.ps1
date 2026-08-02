@@ -48,6 +48,15 @@ if (-not (Test-Path -LiteralPath $reader)) { Write-Host "[s11] FAIL: snapshot_re
 # ---------------------------------------------------------------------------------------
 # PART A -- the python cage
 # ---------------------------------------------------------------------------------------
+# ORDER-1180 (S12) FIX TO A LATENT S11 DEFECT, found when the S12 slice's own commit went red and
+# took this suite down with it. Every message in this repo is Thai, and python takes its stdout
+# encoding from the console codepage: interactively that is UTF-8, but a CHILD OF THE PRE-COMMIT
+# HOOK gets a pipe under the ANSI codepage, where the first Thai character raises
+# UnicodeEncodeError. The traceback goes to stderr, and `2>&1` below under
+# $ErrorActionPreference='Stop' turns any stderr line into a TERMINATING error -- so the tier
+# printed `run_s11_tests.ps1  0.3s (exit -1)  SUITE THREW` with the cause swallowed, while every
+# interactive run of the same suite was green. Reproduced with `chcp 1252`.
+$env:PYTHONIOENCODING = 'utf-8'
 $out  = & $py $suite 2>&1
 $code = $LASTEXITCODE
 $out | ForEach-Object { Write-Host $_ }

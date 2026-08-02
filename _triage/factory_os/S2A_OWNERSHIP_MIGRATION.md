@@ -68,6 +68,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 
 | entity | lives today | proposed | disposition | signer | state |
 |---|---|---|---|---|---|
+| `AlertDelivery` | `NO_CURRENT_OWNER` | `ops/delivery_ledger.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `CandidateManifest` | `EA_SCORECARD_AND_REGISTRY.md` | `factory/candidates/` | **TRANSFER** | user (Boss) | PROPOSED |
 | `CoverageCell` | `MASTER_BACKLOG.md` | `factory/coverage.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `Hypothesis` | `AGENT_TASKBOARD.md` | `factory/hypotheses.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
@@ -80,6 +81,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `SystemFinding` | `portfolio/control_room_snapshot.json` | `ops/findings.jsonl` | **TRANSFER** | claude (lead engineer) | PROPOSED |
 | `TestUniverse` | `NO_CURRENT_OWNER` | `factory/universe.jsonl` | **TRANSFER** | user (Boss) | PROPOSED |
 | `WorkReceipt` | `AGENT_TASKBOARD.md` | `ops/receipts/` | **TRANSFER** | user (Boss) | **REFUSED** |
+| `AlertEvent` | `TRANSIENT` | `TRANSIENT` | KEEP | user (Boss) | PROPOSED |
 | `CandidatePayload` | `EMBEDDED:CandidateManifest` | `EMBEDDED:CandidateManifest` | KEEP | claude (lead engineer) | PROPOSED |
 | `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json` | `portfolio/control_room_snapshot.json` | KEEP | claude (lead engineer) | PROPOSED |
 | `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv` | `portfolio/ATTESTATION_MAP.csv` | KEEP | claude (lead engineer) | PROPOSED |
@@ -96,7 +98,7 @@ Folded from D1 on every generation, so this table cannot drift from the data.
 | `SnapshotMeta` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 | `SnapshotVerdict` | `EMBEDDED:ControlRoomSnapshotV5` | `EMBEDDED:ControlRoomSnapshotV5` | KEEP | claude (lead engineer) | PROPOSED |
 
-**KEEP = 15 · TRANSFER = 12** · 27 rows total.
+**KEEP = 16 · TRANSFER = 13** · 29 rows total.
 
 ## The two coverage numbers, reconciled rather than equated
 
@@ -115,6 +117,16 @@ The LIVE cells are declared independently in `gen_s2a_migration.py` **and** pars
 ## Human review — the part the checker cannot do
 
 One block per row that proposes a move. These four fields are the reviewer checklist from `ORDER-600`; read them asking *"does this name a real reader, and a real failure"* — the rev-1 acceptance called this analysis "numeric, checkable", and it is not.
+
+### `AlertDelivery` — `NO_CURRENT_OWNER` → `ops/delivery_ledger.jsonl`
+
+*canonical · signer: user (Boss) · state: PROPOSED*
+
+- **Breaks if moved — names a specific reader or writer:** Nothing exists to break: before ORDER-1180 nothing in this repo recorded that a notification had been sent, which is the gap design section 7.3 names outright - "Without it, dedupe is a claim about sending, not about arriving." The hazard on CREATION is the one this file is written against: the ledger must carry a channel NAME and never a chat id, because a chat id is a delivery credential, and it must not carry an unscrubbed provider error, because the URL of a Telegram send request contains the bot token.
+- **Breaks if NOT moved — a concrete failure, with a date or trigger:** Deduplication stays a claim about sending rather than arriving, and a replay after an outage re-alerts everything that already landed. Concretely: the notifier is meant to run on a schedule, so the FIRST transient API failure would either be retried forever or suppressed forever, and nothing would be able to tell an operator which. TRIGGER: the moment anything schedules notifier.py, which is the next step after this slice.
+- **Reverse steps — executable, not "revert the commit":** 1) stop writing ops/delivery_ledger.jsonl. 2) delete it. Nothing is restored, because nothing was moved: no prior owner is demoted by this row. The COST of reversing is that every past "did this arrive" becomes unanswerable, which is the state the repo was in before this slice.
+- **Evidence lost — what cannot be reconstructed:** Everything it holds, and none of it is recomputable: a receipt is a fact about what a third-party API did at a moment in time. A deleted ledger cannot be regenerated from the snapshot, the projection or the journal - it is the only record that a message left this machine. That is why it is append-only and why the shape is declared in schemas.json rather than left to whatever the writer felt like.
+- **Retention window:** indefinite for now, and that is a decision with a known expiry: the file grows by one line per event per run, so a scheduled notifier will make it unbounded. It is per-machine and git-ignored, so nothing in history depends on it; when the size becomes real the answer is rotation with the rotated files kept, never truncation, because a truncated ledger silently re-enables a duplicate send.
 
 ### `CandidateManifest` — `EA_SCORECARD_AND_REGISTRY.md` → `factory/candidates/`
 
@@ -245,6 +257,7 @@ One block per row that proposes a move. These four fields are the reviewer check
 
 | entity | lives today | why KEEP |
 |---|---|---|
+| `AlertEvent` | `TRANSIENT` | correctly owned by nobody: the schema states "(in memory only) an AlertEvent is never persisted; ops/delivery_ledger.jsonl records that one existed". It is a function of the SafeProjection and the local finding journal, computed at send time. Persisting it would create a THIRD copy of the same fact… |
 | `CandidatePayload` | `EMBEDDED:CandidateManifest` | this fact is a sub-object of another entity and owns no file of its own, so there is no storage to transfer; it moves if and only if its parent moves |
 | `ControlRoomSnapshotV5` | `portfolio/control_room_snapshot.json` | design section 1.1 is explicit: scripts/control_room_snapshot.ps1 -> portfolio/control_room_snapshot.json "is already the single-projection pattern the handoff asks for. Extend it; do not write a second one." The v4/v5 schema migration is a change of SHAPE, not of owner, and belongs to S4. |
 | `DeploymentAttestationEvent` | `portfolio/ATTESTATION_MAP.csv` | design section 1.1 reuses this file directly for Candidate/Deployment identity (section 5.6). The schema's x-owner-file also mentions an "append-only event log" beside the CSV; that log is NOT proposed here, because no PLANNED_PATHS entry declares it and inventing a destination inside a proposal is… |
