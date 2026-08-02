@@ -89,6 +89,19 @@ CALL_RE = re.compile(r'\bCFG_Fingerprint\s*\(\s*\)')
 # decides the label is whether a `const:` line reaches the hashed string.
 CONST_BLOCK_RE = re.compile(r'^\s*s \+= "\\nconst:', re.M)
 
+# G6. The hashed string must actually be BOTH halves, asserted against the COMMITTED generated
+# text rather than against what the generator would emit today.
+#
+# WHY THAT DISTINCTION IS THE WHOLE CRITERION. G4 compares the committed file to the generator's
+# output, so a change made IN THE GENERATOR moves both sides at once and G4 stays green. Probed:
+# deleting `+ CFG_ConstPreimage()` from the emitter produced **0 problems** across every other
+# criterion -- G4 green (they match), G5 green (const lines still exist, so the label is still
+# "honest"), and the EA would hash the surface alone while every label in the repo read
+# `surface+constants`. That is the exact lie G5 was written to prevent, reached by a route G5 does
+# not watch. A generated file needs at least one criterion that reads it as TEXT.
+FINGERPRINT_BODY_RE = re.compile(
+    r'CFG_Sha256Hex\(\s*CFG_SurfacePreimage\(\)\s*\+\s*CFG_ConstPreimage\(\)\s*\)')
+
 _SRC = [None]
 
 
@@ -223,6 +236,15 @@ def check(worktree=False, source=None):
             'G4 %s does not #include "LockedConstants_gen.mqh". CFG_Fingerprint() lives in that '
             'file since ORDER-730, so without the include nothing defines the entry point and the '
             'fingerprint line stops appearing entirely.' % CORE_PATH)
+
+    # G6 -- the digest is over BOTH halves. Read out of the committed text, because that is the
+    # one question G4 structurally cannot answer (see FINGERPRINT_BODY_RE above).
+    if not FINGERPRINT_BODY_RE.search(_fold(committed_const)):
+        problems.append(
+            'G6 %s does not hash CFG_SurfacePreimage() + CFG_ConstPreimage(). Whatever it hashes '
+            'instead, the scope label says the constants are in it -- and G4 cannot see this, '
+            'because a change made in the generator moves the committed file with it.'
+            % CONST_PATH)
 
     # G5 -- the scope label and the enumeration may not move apart. This is the criterion
     # ORDER-710 left unearned: it wrote `surface_only` BECAUSE nothing enumerated constants, and

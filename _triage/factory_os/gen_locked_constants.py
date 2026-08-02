@@ -181,6 +181,19 @@ def _eval_scalar(name, raw, resolved, origin):
         if not isinstance(value, str):
             raise preset.PresetRefusal(
                 'locked constant %s in %s does not evaluate to a string' % (name, origin))
+        if '\n' in value or '\r' in value:
+            # THE PREIMAGE IS NEWLINE-JOINED AND HAS NO ESCAPING, so a string constant carrying a
+            # newline does not corrupt the hash -- both sides emit the same bytes -- it makes the
+            # hash AMBIGUOUS. Probed: three constants, one of them `"p\nconst:A=y"`, produce FOUR
+            # preimage lines, and the injected line is indistinguishable from a real constant `A`
+            # with value `y`. Two different constant sets then share one digest, which is the one
+            # property a fingerprint may not lose. Refused rather than escaped: nothing in the
+            # tree has such a constant today, so the strict rule costs nothing, and inventing an
+            # escaping scheme would need the MQL5 side to implement it identically.
+            raise preset.PresetRefusal(
+                'locked constant %s in %s contains a newline. The fingerprint preimage is joined '
+                'with newlines and carries no escaping, so this value would inject extra lines '
+                'and two different constant sets could hash the same.' % (name, origin))
         return KIND_STRING, value, None
 
     node = _parse_arith(name, txt, origin)

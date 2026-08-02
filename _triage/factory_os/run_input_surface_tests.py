@@ -566,6 +566,48 @@ def x3_specificity(M):
     return None
 
 
+# -- G6 the digest is over BOTH halves (/scrutinize round 2) -----------------------------------
+
+def g6_attack(M):
+    """a generated file that hashes only the surface, while every label says otherwise
+
+    THIS IS THE CASE G4 STRUCTURALLY CANNOT BE. G4 compares the committed file against what the
+    generator emits, so an edit made IN THE GENERATOR moves both and stays green -- probed, and it
+    produced ZERO problems across every other criterion while the EA would have hashed the surface
+    alone under a `surface+constants` label. The mutation for this case is that exact edit.
+    """
+    good = files_for(M)[M.chk.CONST_PATH]
+    half = good.replace('CFG_Sha256Hex(CFG_SurfacePreimage() + CFG_ConstPreimage())',
+                        'CFG_Sha256Hex(CFG_SurfacePreimage())')
+    if half == good:
+        return 'the fixture could not find the fingerprint body -- the anchor no longer matches'
+    if not any(p.startswith('G6') for p in problems_for(M, const_text=half)):
+        return 'a fingerprint that drops the constants half was accepted'
+    # ...and the surface half dropped is refused too, not just the constant half
+    other = good.replace('CFG_Sha256Hex(CFG_SurfacePreimage() + CFG_ConstPreimage())',
+                         'CFG_Sha256Hex(CFG_ConstPreimage())')
+    if not any(p.startswith('G6') for p in problems_for(M, const_text=other)):
+        return 'a fingerprint that drops the SURFACE half was accepted'
+    return None
+
+
+def g6_specificity(M):
+    """the real pair passes, and whitespace inside the call is not a violation"""
+    if problems_for(M):
+        return 'the generated fingerprint body was refused: %s' % problems_for(M)
+    spaced = files_for(M)[M.chk.CONST_PATH].replace(
+        'CFG_Sha256Hex(CFG_SurfacePreimage() + CFG_ConstPreimage())',
+        'CFG_Sha256Hex( CFG_SurfacePreimage()  +  CFG_ConstPreimage() )')
+    # G4 SHOULD fire on this -- the committed file no longer matches the generator, and
+    # regenerating is the fix. What must NOT fire is G6: the two halves are both still there, and
+    # a criterion that reported "you dropped the constants" for a whitespace edit would send the
+    # reader after the wrong defect. The first version of this case asserted "no problems at all"
+    # and failed for catching G4 doing its job.
+    if any(p.startswith('G6') for p in problems_for(M, const_text=spaced)):
+        return 'reformatting the call was reported as dropping a half'
+    return None
+
+
 # -- X4 the DERIVATION rule itself: per build, and refuse what it cannot reduce (ORDER-730) -----
 
 def x4_attack(M):
@@ -662,6 +704,20 @@ def x4_attack(M):
     if vals.get('DERIVED') != M.preset.canonical_double(3.0):
         return ('(RATE * 2) folded to %r, not the canonical form of 3.0'
                 % vals.get('DERIVED'))
+
+    # /scrutinize round 2: a string constant carrying a NEWLINE. It does not corrupt the hash --
+    # both sides emit the same bytes -- it makes the hash AMBIGUOUS, because the preimage is
+    # newline-joined and carries no escaping. Probed before the fix: three constants, one of them
+    # "p\nconst:A=y", produced FOUR preimage lines, with the injected line indistinguishable from
+    # a real constant A=y. Two constant sets, one digest.
+    nl = dict(uf)
+    nl['ea_template/core/FixCore.mqh'] = '#define A "x"\n#define B "p' + chr(92) + 'nconst:A=y"\n'
+    try:
+        M.gconst.scan(lambda rel: nl[rel], 'LAB_ENTRY_11', 'ea_template/Boss_11_Fix.mq5')
+        return 'a string constant containing a newline was accepted into a newline-joined preimage'
+    except M.preset.PresetRefusal as exc:
+        if 'newline' not in str(exc):
+            return 'the newline refusal does not name its cause: %s' % exc
     return None
 
 
@@ -714,6 +770,11 @@ CASES = [
      ('check_input_surface_gen.py',
       '    enumerated = bool(CONST_BLOCK_RE.search(_fold(committed_const)))',
       '    enumerated = True')),
+    ('G6', 'the digest is over BOTH halves, read out of the committed text', g6_attack,
+     g6_specificity,
+     ('gen_locked_constants.py',
+      "    w('   return(CFG_Sha256Hex(CFG_SurfacePreimage() + CFG_ConstPreimage()));')",
+      "    w('   return(CFG_Sha256Hex(CFG_SurfacePreimage()));')")),
     ('X4', 'a locked constant is derived per BUILD, and an unreducible one is refused',
      x4_attack, x4_specificity,
      ('gen_locked_constants.py',
