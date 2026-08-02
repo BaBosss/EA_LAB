@@ -128,6 +128,8 @@ L1_FILES = (
     # before the lint asked, which is the point: remembering the list is not the same skill
     # as writing the checker, and only one of the two is ever on anybody's mind.
     '_triage/factory_os/check_param_surface.py',
+    # ORDER-1021 (S8). Seventh, and it arrived in the same session as the sixth.
+    '_triage/factory_os/check_wrapper_gen.py',
 )
 # Checkers L1 CANNOT parse, with the reason. L1 walks a Python AST; PowerShell is a different
 # language and this lint does not have a parser for it. They are DECLARED so that L0's completeness
@@ -322,6 +324,7 @@ CATEGORY = {
     # Category A: it is a checker whose judged input is a repo file, so it must read through
     # EvidenceSource -- under the hook the bytes it judges are the STAGED bytes, not the
     # worktree's. That binding is the whole reason an append-only rule can be trusted at all.
+    '_triage/factory_os/check_wrapper_gen.py': 'A',
     '_triage/factory_os/check_param_surface.py': 'A',
     '_triage/factory_os/check_work_receipts.py': 'A',
     '_triage/factory_os/check_coverage_transfer.py': 'A',
@@ -398,6 +401,8 @@ L2_PAIRS = {
     # whose absence would be invisible because the other five stay green over a stale store.
     '_triage/factory_os/check_param_surface.py':
         ('_triage/factory_os/run_param_surface_tests.py',),
+    '_triage/factory_os/check_wrapper_gen.py':
+        ('_triage/factory_os/run_wrapper_gen_tests.py',),
     '_triage/factory_os/check_work_receipts.py':
         ('_triage/factory_os/run_work_receipts_tests.py',),
     '_triage/factory_os/check_coverage_transfer.py':

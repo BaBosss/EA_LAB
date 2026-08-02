@@ -341,6 +341,11 @@ $FAST_SUITES = @(
     # as criteria that can fail -- zero UNKNOWN on the OPERATOR surface, and design 5.3's <= 40
     # target -- plus the anti-drift criterion that regenerates the 232 rows and compares.
     'run_param_surface_tests.ps1',
+    # ORDER-1021 (S8), measured at 0.7s. Two of S8's three acceptance criteria -- zero logic
+    # in the wrapper, and byte-identical regeneration -- plus the allowlist/module_set
+    # agreement that decides what the binary contains. The third (7-point parity) needs the
+    # tester and is deliberately not approximated here.
+    'run_wrapper_gen_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -486,6 +491,27 @@ $SUITE_GUARDS = @{
     # ORDER-1020 (S7). The state table reads BOTH stores, the build's input surface, and every
     # module the generator derives a row from -- P5 regenerates and compares, so an edit to any of
     # them changes what this cage proves.
+    'run_wrapper_gen_tests.ps1'       = @('_triage/factory_os/check_wrapper_gen.py',
+                                          '_triage/factory_os/run_wrapper_gen_tests.py',
+                                          '_triage/factory_os/gen_wrapper.py',
+                                          '_triage/factory_os/gen_registry_rows.py',
+                                          '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/capability.py',
+                                          '_triage/factory_os/architecture.py',
+                                          '_triage/factory_os/activation.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          'ea_template/core/Inputs.mqh',
+                                          'ea_template/Boss_14_GridLog.mq5',
+                                          'ea_template/generated/B14_H01_r1.mq5',
+                                          'ea_template/generated/B14_H01_r1_allowlist.mqh',
+                                          'ea_template/generated/B14_H02_r1.mq5',
+                                          'ea_template/generated/B14_H02_r1_allowlist.mqh',
+                                          'factory/hypotheses.jsonl')
     'run_param_surface_tests.ps1'     = @('_triage/factory_os/check_param_surface.py',
                                           '_triage/factory_os/run_param_surface_tests.py',
                                           '_triage/factory_os/gen_registry_rows.py',
