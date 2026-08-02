@@ -6708,10 +6708,10 @@ shape as ORDER-511's silent leg and the `AllowLive=false` trap.
 | account | type | template magics on it | legacy-GV status |
 |---|---|---|---|
 | **463666728** | DEMO | 990301 990302 999094 991070 990066-069 990303 990984 990120 990103 990016 990026 (14) | ✅ **cleared** — user deleted 4 stale `rc_peak_eq` on 07-28 |
-| **415573666** | DEMO | 990201-990208 · 990110 (9) | ⚠️ **CENSUS TAKEN 2026-08-02 — 1 legacy key: `Boss_990208_rc_peak_eq`** (see below) |
-| **141049900** | **REAL_CENT** | 1112 1113 1114 1115 | 🔴 **UNCHECKED** |
-| **159475669** | **REAL_CENT** | 990005 · 99000512 | 🔴 **UNCHECKED** |
-| **159503454** | **REAL_CENT** | 990101 | 🔴 **UNCHECKED** |
+| **415573666** | DEMO | 990201-990208 · 990110 (9) | ⚠️ **CENSUS 2026-08-02 — 1 legacy key: `Boss_990208_rc_peak_eq`** (see below) |
+| **141049900** | **REAL_CENT** | 1112 1113 1114 1115 | ✅ **CENSUS 2026-08-02 — empty.** 🔴 **and it is an `MT4` terminal**, so it was never in scope (see below) |
+| **159475669** | **REAL_CENT** | 990005 · 99000512 | ✅ **CENSUS 2026-08-02 — empty, 13 magics clear by absence** |
+| **159503454** | **REAL_CENT** | 990101 | ✅ **CENSUS 2026-08-02 — empty, 4 magics clear by absence** |
 | 69424711 | DEMO | none | n/a — no template EA, cannot hold these keys |
 
 ⇒ **four accounts unchecked, and three of them are real money.** That is the inversion worth stating: the
@@ -6866,7 +6866,41 @@ complete as displayed — but a transcription is where a digit goes missing, and
 number §6 step 3 will compare a journal line against**. Re-read it off the screen before consenting
 to migrate; a mismatch there means "stop", and it must not be a mismatch this file invented.</sub>
 
-**Still owed on STEP 2: `141049900`, `159475669`, `159503454` — all three REAL_CENT.**
+### ✅ STEP 2 COMPLETE — all 4 accounts censused 2026-08-02 (owner at the terminal)
+
+The owner took F3 on the remaining three and confirmed each empty in writing. Censuses are in
+`_triage/o510_census/`; the checker was run on every one.
+
+| account | platform | census | verdict |
+|---|---|---|---|
+| `415573666` DEMO | MT5 | 1 legacy key | ⚠️ **NOT SAFE** — `Boss_990208_rc_peak_eq` |
+| `159475669` REAL_CENT | MT5 | empty | ✅ SAFE — 13 magics clear by absence |
+| `159503454` REAL_CENT | MT5 | empty | ✅ SAFE — 4 magics clear by absence |
+| `141049900` REAL_CENT | **MT4** | empty | ✅ SAFE, **and out of scope by construction** |
+
+**⇒ Of the whole fleet, exactly ONE magic blocks the upgrade: `990208`.** Everything else can take a
+new binary today. The three real-money accounts are clear — the inversion this row worried about
+("the entire remaining exposure sits on `REAL_CENT`") did not materialise.
+
+🔴 **`141049900` should never have been on the checklist, and the reason is worth keeping.** It is an
+**MT4** terminal (`platform=MT4` in `DEPLOYMENTS.csv`; the screenshot's title bar reads
+`Exness-Real35` with the MT4 UI and the chart carries `(Boss)_NewsGuard_MT4`). The
+`Boss_<magic>_*` GlobalVariables this gate hunts are written by
+[`ea_template/core/Persist.mqh`](ea_template/core/Persist.mqh), which is **MQL5**. They cannot exist
+there under any circumstances. The empty list is therefore **true but uninformative** — it confirms
+a state that was impossible either way, and the owner was sent to inspect a terminal where the thing
+being looked for could not occur. **Same shape as `ORDER-941` asking them to read inputs that do not
+exist on that EA**; both are now one memory, `reproduce-in-tester-before-tasking-the-owner`. The
+SECOND BLOCKER table above listed all five accounts by *"template magics on it"* without checking
+that the platform column made the question meaningful for each.
+
+<sub>The three empty censuses were accepted with `-AssertDumpComplete`, and each report says so:
+*"empty census accepted on the operator's -AssertDumpComplete, not on evidence."* The checker
+refuses a bare empty parse precisely because empty is indistinguishable from a wrong path — so the
+clearance here rests on the owner's eyes on the F3 window, which is stated rather than dressed up as
+a measurement.</sub>
+
+**STEP 2 is done. What remains is STEP 3 + the adopt-once run itself, for one magic.**
 
 
 ---

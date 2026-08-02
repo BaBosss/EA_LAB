@@ -1,0 +1,8 @@
+# ORDER-510 STEP 2 census - account 159503454 (REAL_CENT, MT5, VPS 66.212.22.7)
+# Taken 2026-08-02 by the owner: Tools -> Global Variables (F3). Read-only; nothing deleted.
+#
+# THE WINDOW WAS EMPTY. There is no line below this header, and that is the finding, not an
+# omission. PROVENANCE: the owner supplied a screenshot of an empty F3 list and confirmed it in
+# writing. The checker REFUSES an empty parse on its own - empty is indistinguishable from a wrong
+# path or an encoding it mishandled - so it is run with -AssertDumpComplete, and its report then
+# states that the conclusion rests on the operator's assertion rather than on parsed evidence.

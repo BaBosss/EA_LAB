@@ -24,8 +24,11 @@ not the `10136.29`-against-99,944 shape STEP 3 is about. **Adopt-once (§6) is t
 
 **The checker's fire count moved 0 → 1**, so it is no longer `UNTESTED` against a live terminal.
 
-**Next:** the three REAL_CENT accounts — `141049900`, `159475669`, `159503454`. Same procedure,
-same command. Then the adopt-once run itself, which needs the owner present per magic.
+**STEP 2 COMPLETE (all four censused 2026-08-02).** `159475669` · `159503454` · `141049900` all
+came back EMPTY — so of the whole fleet exactly ONE magic blocks the upgrade: `990208`. 🔴 And
+`141049900` is an **MT4** terminal, where these MQL5-written GVs cannot exist at all — it was never
+in scope, and the checklist sent the owner to look anyway. **Next: STEP 3 + the adopt-once run for
+`990208`, which needs the owner present.**
 
 ## 2. `ORDER-941` — all three suspected causes refuted; the gap is an instrument, not a fault
 
@@ -80,7 +83,7 @@ of evidence came from the owner’s terminal.
 
 | รายการ | ปลายทาง |
 |---|---|
-| census the 3 remaining REAL_CENT accounts, then adopt-once per magic | ORDER-510 |
+| STEP 3 (the peak-equity anomaly) + adopt-once for `990208` — the last owner-present step | ORDER-510 |
 | add the heartbeat + per-reason counters to `(EXP)_IchiADX_Naked_rev00` | ORDER-1000 |
 | ORDER-941 silent-vs-thin: ANSWERED by backtest (signal quiet, not blocked); row closes with ORDER-942 | ORDER-941 |
 | the `~1.05/wk` expectation the backtest just contradicted | ORDER-942 |
