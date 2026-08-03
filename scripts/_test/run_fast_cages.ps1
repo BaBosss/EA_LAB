@@ -509,6 +509,22 @@ $FAST_SUITES = @(
     # that matter are the negatives: BLOCKED can never satisfy EVIDENCE_COMPLETE, and a handler
     # that would issue an EA verdict is detected by name (design 10 stops automation at that line).
     'run_s13_tests.ps1',
+    # ORDER-1273. The cage for the SELECTION rule -- the code that turns a probe surface into the
+    # configuration a BWD run gets spent on. It is here rather than folded into run_s13_tests
+    # because it guards a different input set (the module, the registry's safe_range, the coverage
+    # store) and per-path selection would otherwise run the whole S13 suite for a one-line edit to
+    # a script S13 does not import.
+    # Registered AFTER measuring the tier with `-Hook` on a quiet lane, per the standing
+    # prohibition: 92.9 / 91.7s of 120.0s before (27 suites), 91.2 / 95.5s after (28 suites), and
+    # the suite's own line in the tier reads 1.1 / 1.2s. QUOTE THE INVOCATION -- memory
+    # `tier-number-needs-its-invocation`: all four samples are `powershell -NoProfile -File
+    # scripts/_test/run_fast_cages.ps1 -Hook` on a lane with no MT5 run in flight. The two
+    # before/after pairs overlap, which is the honest reading -- 1.2s is inside this box's noise,
+    # so the claim is "it costs about a second", not "it made the tier faster".
+    # PROVEN ABLE TO FAIL: six one-line mutations of pilot_probe_select.py (plateau -> top-1, the
+    # H1 floor 100 -> 99, the grid snap dropped, BOUNDARY never firing, the artefact-vs-store count
+    # check removed, the missing-dimension refusal removed) each redden exactly one named case.
+    'run_selection_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -1138,6 +1154,20 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_design_contracts.py',
                                           '_triage/factory_os/gen_s2a_migration.py',
                                           '_triage/factory_os/check_s2a_migration.py')
+    # ORDER-1273. Deliberately NARROW, and each entry is here because moving it changes what the
+    # selection returns:
+    #   scripts/pilot_probe_select.py       the rule itself
+    #   scripts/_test/run_selection_tests.py  the cases; a deleted attack must run the suite
+    #   factory/coverage.jsonl              PART 2 reads the cell list AND the trial_count each
+    #                                       surface is checked against
+    #   factory/parameter_bindings.jsonl    the safe_range IS the declared grid, so an edit here
+    #   _triage/factory_os/registry.py      or to its resolver moves a BOUNDARY without touching
+    #                                       one line of the selection code
+    'run_selection_tests.ps1'         = @('scripts/pilot_probe_select.py',
+                                          'scripts/_test/run_selection_tests.py',
+                                          'factory/coverage.jsonl',
+                                          'factory/parameter_bindings.jsonl',
+                                          '_triage/factory_os/registry.py')
     # ORDER-1130 RE-REGISTERED both blocks together, 2026-08-03, once the room was bought.
     'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
                                           '_triage/factory_os/run_s12_tests.py',
