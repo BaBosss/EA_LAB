@@ -100,13 +100,23 @@ before designing something new.
    whose `cell_id` is `B14-H01-r1/EURUSD,USDJPY,BTCUSD/H1,H4` — a bogus run kept deliberately as
    the evidence that the guard-rail was missing. Six H01 cells (EURUSD · USDJPY · BTCUSD × H1 · H4)
    were **queued behind the running batch** as this session ended; if that queue did not survive,
-   they are the six to run. Then teach `gen_pilot_cells.py` to derive `PROBE_RUN` from the records and
-   `--apply`. 🚫 **The transition must come from the generator** — the store is never hand-edited —
-   and 🚫 **it must not be ticked from the flat-lot arm**: `PROBE_DONE_STATES` excludes `BASELINE_RUN`
-   and case `C3` asserts it.
-2. **`ORDER-1272` — nothing runs `gen_pilot_cells.py --check`.** One grep proves it. Fix it *before*
-   step 1's `--apply`, or the store's only guarantee stays a sentence in a commit message. Measure
-   its cost against the tier budget first.
+   they are the six to run.
+   ✅ **The generator already does the transition — you do not build it, you run it.**
+   `gen_pilot_cells.py --check` reports `N of 16 cell(s) at PROBE_RUN`, names every probe row it
+   does **not** count, and exits 1 on drift. When the matrix is complete, `--apply`.
+   ⚠️ **The bar is `xml_present: true`, not `launcher_exit_code == 0`** — the launcher exited 0 on a
+   missing XML until today, so an old record cannot demonstrate its probe produced anything. Records
+   written before the field existed are covered by `scripts/pilot_probe_verify_xml.py`, which
+   measures the artefact and keeps the measurement as **its own** labelled evidence rather than
+   editing the record. **Run it after any run whose record lacks the field**, then `--check` again.
+   🚫 The transition must come from the generator — the store is never hand-edited — and 🚫 it must
+   not be ticked from the flat-lot arm: `PROBE_DONE_STATES` excludes `BASELINE_RUN`, case `C3`
+   asserts it, and the probe store is a different directory entirely.
+2. **`ORDER-1272` — nothing runs `gen_pilot_cells.py --check`.** One grep proves it. 🔴 **`--apply`
+   FIRST, then wire it in.** `--check` is red right now *and correctly so* (6 of 16 probed, store
+   still says none), so wiring it into the tier before the store catches up blocks every commit in
+   the repo. Measure its cost against the tier budget, and ship the control that proves it reddens
+   on a one-character edit to a committed cell.
 3. **`ORDER-1254` — BWD 2020–2022 (a HARD gate for ENGINE-EDGE), then Model 4.** After step 1, because
    BWD judges the configuration the probe selected. 🚫 **BWD is never a search surface** (design 6.2).
    Everything measured so far is Model 1, so **nothing produced yet is verdict-grade**.
