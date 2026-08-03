@@ -1,5 +1,5 @@
 ﻿{
-    "generated_utc":  "2026-08-02T00:37:23Z",
+    "generated_utc":  "2026-08-03T00:37:23Z",
     "state":  "RISK_OFF",
     "risk_index":  -0.654,
     "bias":  "defensive / reduce carry exposure",
@@ -7,7 +7,7 @@
     "confidence_frac":  0.75,
     "active_count":  8,
     "flags":  [
-                  "TRIPWIRE_NEAR: AUDJPY 110.56 only 0.51% above pin 110"
+
               ],
     "data_pending":  [
 
@@ -18,13 +18,13 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  3,
-                           "spot":  110.563,
-                           "sma200":  109.127,
-                           "chg5d_pct":  -3.379,
+                           "spot":  109.994,
+                           "sma200":  109.1241,
+                           "chg5d_pct":  -3.877,
                            "signal":  -1.5,
-                           "reason":  "fast drop (5d -3.379%) beyond ATR band -\u003e unwind starting",
+                           "reason":  "fast drop (5d -3.877%) beyond ATR band -\u003e unwind starting",
                            "flags":  [
-                                         "TRIPWIRE_NEAR: AUDJPY 110.56 only 0.51% above pin 110"
+
                                      ]
                        },
                        {
@@ -32,11 +32,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  2,
-                           "spot":  157.4,
-                           "sma200":  157.9271,
-                           "chg5d_pct":  -3.796,
+                           "spot":  156.087,
+                           "sma200":  157.9206,
+                           "chg5d_pct":  -4.599,
                            "signal":  -2,
-                           "reason":  "sharp reversal down (5d -3.796%) -\u003e JPY repatriation / carry unwind trigger",
+                           "reason":  "sharp reversal down (5d -4.599%) -\u003e JPY repatriation / carry unwind trigger",
                            "flags":  [
 
                                      ]
@@ -60,9 +60,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  99.8,
-                           "sma200":  99.1372,
-                           "chg5d_pct":  -1.646,
+                           "spot":  99.764,
+                           "sma200":  99.1407,
+                           "chg5d_pct":  -1.72,
                            "signal":  0,
                            "reason":  "DXY no strong move -\u003e neutral",
                            "flags":  [
@@ -74,9 +74,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  4049.1001,
-                           "sma200":  4479.494,
-                           "chg5d_pct":  -0.455,
+                           "spot":  4118.5,
+                           "sma200":  4479.393,
+                           "chg5d_pct":  1.08,
                            "signal":  0,
                            "reason":  "gold move is structural/USD-driven (no meaningful VIX co-move) -\u003e neutral",
                            "flags":  [
@@ -88,9 +88,9 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  62798.0586,
-                           "sma200":  71292.5896,
-                           "chg5d_pct":  -1.454,
+                           "spot":  63290.9883,
+                           "sma200":  71124.2243,
+                           "chg5d_pct":  -0.909,
                            "signal":  -1,
                            "reason":  "below SMA200 -\u003e risk-off lean",
                            "flags":  [
@@ -116,11 +116,11 @@
                            "active":  true,
                            "status":  "OK",
                            "weight":  1,
-                           "spot":  6.436,
-                           "sma200":  5.7909,
-                           "chg5d_pct":  1.835,
+                           "spot":  6.528,
+                           "sma200":  5.7986,
+                           "chg5d_pct":  2.982,
                            "signal":  1,
-                           "reason":  "above SMA200, 5d 1.835% -\u003e risk-on intact",
+                           "reason":  "above SMA200, 5d 2.982% -\u003e risk-on intact",
                            "flags":  [
 
                                      ]

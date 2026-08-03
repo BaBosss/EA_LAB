@@ -1,0 +1,3 @@
+ticket,open_time,close_time,symbol,magic,type,lots,open_price,close_price,profit,swap,commission,comment
+363629661,2026.07.31 18:11:09,2026.08.02 22:01:31,XAUUSDc,1112,0,0.01,4048.94700,4072.69500,23.75,0.00,0.00,Gk
+363646324,2026.08.01 04:13:06,2026.08.01 04:13:06,,0,6,0.01,0.00000,0.00000,13.00,0.00,0.00,D-INTARB-USC-INT-954852663298
