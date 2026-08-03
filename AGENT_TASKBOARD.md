@@ -540,14 +540,22 @@ state I had not reproduced. Correlating every instrumented run today:
 | 1 | 4 | 11.9s |
 | 1 | **7** (including this suite's own file and `run_fast_cages.ps1`) | **21.2s** |
 
-**The mechanism is NOT known and is deliberately not guessed at here** — staged=4 was *faster* than
-staged=0, so "it costs more when files are staged" is already refuted as a one-line explanation, and
-there is exactly one sample at the expensive end. What IS established: **this suite's cost is
-state-dependent by ~8s, its cheap number is the one you get when nothing is staged, and a commit is by
-definition the expensive case.** So `13.1s` must not be quoted as its tier cost, and the T3 totals
-above — all measured at staged=0 — are the FLOOR of what a real commit pays, not the typical cost.
-Anyone taking this further should reproduce at staged=7 three times *before* theorising: the same rule
-this order exists to enforce, and the one I broke on the last paragraph I wrote.
+**REFINED one commit later, with the discriminating sample.** The correction commit staged **one**
+file — `AGENT_TASKBOARD.md` — and front-guard cost **21.0s**. So it is not the staged COUNT (staged=4
+was *faster* than staged=0); it is **which** file. `AGENT_TASKBOARD.md` is one of this suite's own
+**declared guards**, so the suite is *selected exactly when it is expensive*: ~13s whenever nothing it
+guards is staged, ~21s on the commits that actually run it. **The mechanism is still NOT known and is
+deliberately not guessed at** — two samples name the condition, not the cause. What IS established: **this suite's cost is
+state-dependent by ~8s, its cheap number is the one you get when nothing is staged, and a commit that
+stages the board is by definition the expensive case.** So `13.1s` must not be quoted as its tier cost,
+and the T3 totals above — all measured at staged=0 — are the FLOOR of what a commit pays.
+**What this does NOT change:** Box 1's dangerous case is a staged path matching *no* guard (a
+`_mt5_auto/*.csv`), which fails open to running everything **with the board not staged**, i.e. with
+this suite in its cheap state — so the 107.0s full-tier figure stands for that scenario and the T4
+conclusion is unaffected. A commit that stages the board selects ~4 suites, not 26: the closing commit
+measured **68.6s of the 90.0s per-path budget** with the expensive 21.2s inside it.
+Anyone taking this further should reproduce three times *before* theorising: the same rule this order
+exists to enforce, and the one I broke on the last paragraph I wrote.
 
 <sub>⚠️ **Two things the next lane should know.** (1) `run_front_guard_evidence_tests.ps1` went red three
 times mid-session with `A6 .git/index was rewritten by this suite` — **not a defect in it**: a parallel
