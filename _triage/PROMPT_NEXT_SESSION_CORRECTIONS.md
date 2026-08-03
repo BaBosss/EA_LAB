@@ -111,17 +111,29 @@ a hand edit, **and nothing runs it**.
 
 ---
 
-## §D — S2, if it is not already written up
+## §D — S2 was audited TWICE, and the second read is in Part 5 of its file
 
-The S2 audit was dispatched twice. **The first run stalled at 51 tool calls and 1.03 MB without ever
-producing a report**, and the collector very nearly wrote its interim remark up as a finding. If
-`CODEX_AUDIT_S2_2026-08-03.md` does not exist, S2 is the one slice of the seven still unaudited —
-the brief is written and committed at `_triage/factory_os/CODEX_S2_AUDIT_BRIEF.md`.
+All seven slices are audited; `CODEX_AUDIT_S2_2026-08-03.md` exists and **Part 5 is not optional
+reading** — the first dispatch produced an independent report containing **two findings the second
+does not**, both verified:
+
+- the **strongest reproducer of `ORDER-1263` produced all day**: an `authorization_ref` whose `path`
+  is `VISION.md`, whose `blob_oid` is `PROJECT_STATE.md`'s, and whose `raw_sha256` is unrelated,
+  accepted on a `CANDIDATE_ASSIGNED`. Use that as the regression case, not a filler-oid one.
+- `check_attested_pin_staged.pinned_expectations()` pins **only** from `expected_post_state`, so the
+  front guard **had no pin for `factory/coverage.jsonl`** when the 16 rows landed → `ORDER-1269` #4.
+
+⚠️ **And a correction that matters to how you read this handoff.** I originally wrote that the first
+S2 run *"stalled at 51 tool calls without ever producing a report"*. **It had not stalled — it was
+slow.** It was idle for over a minute, my size-based poller called that finished, I abandoned it, and
+it resumed and completed at 1.21 MB. The re-dispatch was unnecessary; it was also lucky, because two
+independent reads of the same slice is worth more than one.
 
 **Use `scratchpad/collect_codex.py` and note what it now does:** a run is finished when the
 transcript carries a `task_complete` payload, **not** when the file stops growing. `last` REFUSES a
-transcript without one. Validated across six runs: the five that finished each have exactly one; the
-stalled one has none.
+transcript without one. The lesson survives the correction intact — **size was the wrong signal
+either way**; what changed is that the failure it caused was a *premature abandonment*, not a lost
+result.
 
 ---
 

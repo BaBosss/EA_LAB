@@ -246,9 +246,14 @@ reason IDs rather than mutating predicates.
 not be taken by a seat; this order only supplies the better diagnosis to decide with. #3 changes what
 an approval **displays**, which is the owner's word on their own record.
 
-✅ **One thing came out stronger than expected and must not be "fixed":**
-`check_attested_pin_staged.py` reads the **staged index**, not the working tree (`:78-120`,
-`:252-281`). That was the aim-point this repo has been burned by repeatedly, and it holds.
+| 4 | 🟠 | 🔴 **ADDED after a SECOND independent S2 read — and it corrects the line that used to sit here.** `check_attested_pin_staged.pinned_expectations()` derives a pin **only** from `expected_post_state`; its own comment says *"a record in NEITHER form pins nothing here."* D1 row 10 pins `factory/coverage.jsonl` via its `owner_ref`, but the attestation's `expected_post_state` names `MASTER_BACKLOG.md` — so **the only pin the front guard ever produced was for `MASTER_BACKLOG.md`**, and when `5e78ebc3` appended 16 rows to `factory/coverage.jsonl` **it had nothing to enforce on that path**. F2 reddened only *after* the commit was accepted. ⇒ **CoverageCell-owned facts can change without their recorded owner's re-attestation in the same commit; the system notices only afterwards.** **Measured** | `check_attested_pin_staged.py:129-161` |
+
+⚠️ **Correction, kept rather than overwritten.** This order previously said, from the second S2 read:
+*"`check_attested_pin_staged.py` reads the staged index, not the working tree — that aim-point holds,
+must not be fixed."* **That is still true and it is about the SOURCE it reads.** #4 above is about
+the **SET it enforces**, which is incomplete. Two different properties, found by two different runs;
+neither cancels the other. **The must-not-be-fixed note applies only to the evidence-source half** —
+do not let it talk you out of #4.
 
 🚫 Do not re-pin with `gen_s2a_migration.py` — D1 is inside its own attestation bundle (`ORDER-1257`).
 🚫 Do not append to `s2a_attestations.jsonl` on the owner's behalf; `signer` is `user (Boss)` on every
@@ -406,6 +411,23 @@ ref = {commit_oid: 'a'*40, blob_oid: 'b'*40, raw_sha256: 'c'*64,
 owner_ref_problems(ref) -> []
 CONTROL (raw_sha256 = 'NOT-A-SHA') -> caught, so the checker is live
 ```
+
+🔴 **STRONGER REPRODUCER, added after a SECOND independent S2 read (see that audit file's Part 5).**
+Filler oids invite the reply *"nobody would write that"*. These are **real oids from real files that
+have nothing to do with each other**, on the one event type that exists to require a human decision:
+
+```
+path       = VISION.md
+blob_oid   = PROJECT_STATE.md's actual blob   (23b53b8b5f3a...)
+raw_sha256 = unrelated
+
+validate_event(CANDIDATE_ASSIGNED, authorization_ref = that) -> []
+```
+
+**Re-measured by this seat.** `attestation.validate_event()` delegates the authorization check to
+`candidate.owner_ref_problems()`, so **the human approval required to assign a candidate to a live
+deployment is satisfied by a reference whose three fields identify three different documents.** Use
+this as the regression case, not the filler one.
 
 And the function contains **no resolution primitive at all** — no `rev-parse`, no `subprocess`, no
 `git`, no `os.path.exists`, no `open(`. It never resolves `commit_oid:path`, never compares
