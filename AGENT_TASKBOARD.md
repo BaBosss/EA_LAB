@@ -105,6 +105,114 @@
 
 ---
 
+## ORDER-1240 — [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confound the falsifier — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SIZE) — criterion written before the sweep; 0.03 selected; 3 arms x 16 cells; 2 of 4 owner-ratified items done, 2 blocked with reasons` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Follows `ORDER-1230`, which ran all 16 cells and found every flat-lot probe `UNTESTED-INERT`.
+> **No verdict is issued here** — design §10 stops this slice at `EVIDENCE_COMPLETE`.
+
+### 1. The first lot was resolved by a criterion written BEFORE the sweep ran
+
+ORDER-1230 left H01's falsifier satisfied by a mechanism that never executed. Fixing that means
+choosing a first lot — and choosing it after seeing which value gives the nicest PF is
+`ORDER-1220`'s pre-registration failure arriving through the back door. So the criterion was
+committed first, is mechanical, and **never reads a profit factor**:
+
+> the **smallest** first lot on the declared grid at which the flat-lot probe returns `EXERCISED`
+> on the declared reference cell (XAUUSD H1 — the deepest-participation cell in the matrix)
+
+*Smallest, not cleanest:* every step up is money at risk on a hypothesis labelled **ENGINE-EDGE**,
+which `CLAUDE.md` holds to permanently small sizing.
+
+| first lot | probe | escalated volumes | |
+|---|---|---|---|
+| 0.01 | `UNTESTED-INERT` | 0.01 | ← **negative control** — the ORDER-1230 defect reproduces |
+| 0.02 | `UNTESTED-INERT` | 0.02 | |
+| **0.03** | **`EXERCISED`** | **0.03 / 0.04** | ← **criterion resolves here** |
+| 0.04 | `EXERCISED` | 0.04 / 0.05 | |
+| 0.05 | `EXERCISED` | 0.05 / 0.06 | |
+| 0.10 | `EXERCISED` | 0.10 / 0.11 / 0.13 | ← positive anchor from ORDER-1230's control |
+
+The sweep **refuses to select anything** if 0.01 comes back `EXERCISED`, if nothing on the grid
+does, or if everything does — a harness that cannot reproduce the problem it was written to fix
+must not be allowed to pick a value.
+
+### 2. `/scrutinize` round 1 found the falsifier comparison was confounded — this is the important one
+
+The baseline arm ran the **wrapper**; the flat-lot arm had to run the **parent** (`LotProg` is a
+`LOCKED_SELECTOR`). So every pair differed in **two** variables — the lever *and* the binary — and
+the whole difference was being read as the lever. `ORDER-1230`'s commit claimed the substitution was
+licensed "because parity holds for this configuration"; **it is not that configuration.** Parity was
+demonstrated at XAUUSD H1 / 2024.01–2024.07 / model 1 / build-default lot, and the matrix runs
+2023.01–2025.12 over four symbols at 0.03.
+
+Fixed with a third arm: the escalated side is re-run **on the parent**, so the probe is
+parent-vs-parent and single-variable. The wrapper baseline remains the cell's evidence.
+
+🟢 **The re-run answers what the confound was hiding: `baseline == probe-escalated` on all 16 cells,
+digit for digit.** Wrapper ≡ parent is now **measured across the whole matrix** instead of assumed
+from one parity cell. The earlier numbers were not wrong — they were *unlicensed*. They are licensed now.
+
+### 3. The falsifier, measured (recorded — NOT judged)
+
+| cell | escalated PF (n) | flat-lot PF (n) |
+|---|---|---|
+| XAUUSD H1 | 0.45 (23) | **1.35 (100)** |
+| XAUUSD H4 | 0.25 (11) | 0.44 (22) |
+| EURUSD H1 | 1.95 (45) | 1.88 (45) |
+| EURUSD H4 | 0.62 (15) | 0.62 (15) |
+| USDJPY H1 | `UNDEF` (99) | `UNDEF` (99) → **NOT-COMPARABLE** |
+| USDJPY H4 | 12.46 (47) | 11.95 (47) |
+| BTCUSD H1 | 1.73 (127) | 1.57 (120) |
+| BTCUSD H4 | 1.18 (55) | **1.82 (84)** |
+
+⚠️ **Two things a reader must not skip.** The escalated arm frequently **trades far less** (XAUUSD H1:
+23 against 100), so these pairs differ in *participation* as well as sizing and a PF compared across
+different trade counts is not like-for-like. And drawdown moved to **15–17 %** almost everywhere
+against 1.5–11 % at 0.01 — at the sizing where the mechanism is measurable it is also pressing on
+`RC_AcctDDLimitPct=12.0`. Neither is visible in a PF column alone.
+
+### 4. Two more `/scrutinize` findings, both fixed
+
+- **R2** `pilot_carried.py` counts rows whose profit it could not parse and the caller discarded the
+  count — a carried total that silently drops rows understates the loss it exists to expose, in the
+  flattering direction. Now REFUSES on `unparsed_rows > 0` and on `readable == false`.
+- **R3** `EXERCISED` ≠ **COMPARABLE**. USDJPY H1 has no losing trades on either arm, so both PFs are
+  undefined and *"flat-lot PF ≥ escalated PF"* has nothing to read, while the cell rendered as fully
+  answered. Now carries `falsifier_comparable` and a `NOT-COMPARABLE` row. **Follow-up caught by
+  running the fix:** the footer counted those rows as "NOT EXERCISED" and used the inertness wording
+  — claiming two arms differing by 100 vs 99 trades were "the SAME EA". Two counters now, verified on
+  the cell that produces it.
+
+### 5. The two owner-ratified items that did NOT land, and exactly why
+
+- 🚫 **Move `run_contract_binding_tests` out of the fast tier — ATTEMPTED, REVERTED.** The cage
+  refused it: `[FAIL] E staging a registry store selects the suite where ajv validates live rows`.
+  `run_schema_fixtures.py` — which ajv-validates every live row of `factory/*.jsonl` — runs **inside
+  that wrapper**, and a blind audit already caught this exact hole once, so a dedicated case asserts
+  it cannot reopen. Displacing the wrapper means staging `factory/hypotheses.jsonl` no longer
+  validates it. Making it green requires editing the guard to accept the hole. **The real fix is to
+  split the wrapper** so the cheap contract/schema checks stay in the tier and only the expensive
+  part leaves — that is a new order, not this one. Budget stays **pinned at 120.0s**, unraised.
+- 🚫 **Register the 16 cells in `factory/coverage.jsonl` — BLOCKED on a schema decision the owner
+  owns.** Two independent obstacles: (a) that file currently holds *imported-claim* rows
+  (`ea`/`source_columns`), not `CoverageCell` entities, and `gen_coverage.py --render` projects it
+  into `MASTER_BACKLOG.md` §2; (b) **`MetricRef` requires `pf` as a `number`, so a cell with an
+  UNDEFINED profit factor cannot be represented at all** — and `CoverageCell` has
+  `unevaluatedProperties: false` with no field to say why a metric is missing, so USDJPY H1 would be
+  stored as a silently empty `metrics: []`. Writing `pf: 0` there is the exact inversion §4 above
+  just fixed. **How an undefined PF is represented is a schema change and needs the owner.**
+
+### 6. Acceptance
+
+**P1** criterion committed before the sweep, and never reads PF ✅ · **P2** negative control at 0.01
+reproduces INERT and the sweep refuses to select without it ✅ · **P3** 16/16 probes `EXERCISED` at
+0.03 ✅ · **P4** probe pair is single-variable (parent-vs-parent) ✅ · **P5** wrapper ≡ parent
+measured on all 16 cells ✅ · **P6** no verdict vocabulary ✅ · **P7** `check_pilot_acceptance`
+unchanged at **4 PASS / 0 FAIL / 10 BLOCKED** ✅ · **P8** §8.6 item 7 **NOT** ticked — the decision-13
+optimize probe, BWD 2020–22 and Model 4 all remain undone ✅
+
+---
+
 ## ORDER-1230 — [factory/S13] The pilot matrix, run end-to-end: parity holds, and the mechanism under test never ran — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13RUN) — 8 parity passes + 32 cell passes on one declared lane; all 16 flat-lot probes came back UNTESTED-INERT` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Slice **S13** (design §10), the half `ORDER-1210`/`ORDER-1220` could not do: **actually running it.**
