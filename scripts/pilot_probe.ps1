@@ -225,6 +225,27 @@ foreach ($rev in $Revisions) {
       # than inheriting the previous cell's success. On this script's first run a parameter-binding
       # failure was written into the record as `exit=0 guard_refused=False` -- a launcher that
       # never started, filed as a clean pass (memory `ps-function-returns-uncaptured-script-output`).
+      # 🔴 WAIT FOR THE LANE, because the launcher RETURNS WHILE STILL HOLDING IT.
+      # mt5_optimize.ps1 breaks out of its wait loop two seconds after the XML appears and does
+      # not wait for the terminal to exit -- but its FIRST action is a process guard that aborts
+      # with exit 2 when that terminal is running. Measured tonight: EURUSD H4 finished, MT5
+      # stayed up, and the next FOUR cells aborted in 0s each. The batch reported "all six
+      # attempted" and produced two. The records were honest (exit=2, xml_present=false) and
+      # gen_pilot_cells excluded them, so nothing was faked -- but four cells of tester time were
+      # lost to a script colliding with itself.
+      $waited = 0
+      while ((Get-Process terminal64 -ErrorAction SilentlyContinue |
+              Where-Object { $_.Path -eq $Terminal }) -and $waited -lt 300) {
+        if ($waited -eq 0) { Write-Host "waiting for the previous run to release $Terminal ..." }
+        Start-Sleep -Seconds 5; $waited += 5
+      }
+      if ($waited -ge 300) {
+        # REFUSE rather than record another exit=2 row. A junk record per cell is how a batch
+        # reports six attempts and two results.
+        Fail "the MT5 lane $Terminal was still held after 300s. Refusing to submit $slug into a busy lane -- the previous run has not released it, and recording another exit=2 row would turn a stuck lane into a run store full of attempts."
+      }
+      if ($waited -gt 0) { Write-Host "lane free after ${waited}s" }
+
       $prevEAP = $ErrorActionPreference
       $ErrorActionPreference = 'Continue'
       $global:LASTEXITCODE = $null
