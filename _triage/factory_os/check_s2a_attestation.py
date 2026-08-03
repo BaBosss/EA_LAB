@@ -107,6 +107,43 @@ BUNDLE = (
 
 _D1_ROWS = []          # set by main(); the D1 rows, for A6's recompute
 
+# ORDER-1269 #1: pins that `check()` decided NOT to enforce, each with the reason and the
+# instruments that carried the decision instead. Printed by main(). This list is the difference
+# between "narrowed deliberately" and "quietly stopped checking".
+PIN_NOTES = []
+
+# ORDER-1269 #3: owner -> line, for every in-force record that raised a problem OF ITS OWN.
+#
+# WHY THIS IS A SIDE CHANNEL AND NOT A CHANGE TO WHAT `check()` RETURNS -- the first version of
+# this repair did the obvious thing and withheld the failing row from `current`, which reads
+# better and cost an owner signature. `S2A_ATTESTATION_VECTORS.jsonl` is a BUNDLE MEMBER, and 29
+# of its 68 canonical vectors assert `expected_current: {OWNER.md: {decision: APPROVED}}` for
+# records their own `expected_reasons` refuses -- the defect, written into the signed policy
+# corpus. Editing them to expect UNVERIFIED changes the bundle digest, which fails F1 on the
+# record in force, which is the "signature to repair a signature" this same order prohibits.
+#
+# The ratified wording is the way out and it is exact: "The exit code is already honest; THE LINE
+# A HUMAN READS is not." Conformance compares `expected_current`, `expected_exit`,
+# `expected_reasons` and `expected_bundle_sha256` (run_s2a_conformance.run_vector) and never reads
+# printed output. So demoting the PRINT satisfies the decision, keeps the signed contract byte-
+# identical, and costs nothing. The returned map has exactly one other consumer -- main()'s own
+# print -- so nothing real is lost by leaving it alone.
+IN_FORCE_FAILED = {}
+
+
+def reported_decision(row, owner):
+    """(decision, note) for the line a human reads. ORDER-1269 #3.
+
+    Separate from the row's own `decision` field on purpose: a record can be well-formed, signed,
+    and refused by a criterion at the same time, and the printed line is the one surface where
+    saying "APPROVED" is a false statement rather than an incomplete one.
+    """
+    if owner in IN_FORCE_FAILED:
+        return 'UNVERIFIED', ('the record in force (line %s) is signed but did NOT pass its own '
+                              'checks -- see the problems below; it is not an approval in effect'
+                              % IN_FORCE_FAILED[owner])
+    return row.get('decision'), row.get('_note')
+
 # KEYED ON THE SOURCE OBJECT, and that is the whole design of this cache rather than a detail.
 #
 # In index mode the digest costs six `git show` spawns, and the suites call it once per case --
@@ -481,12 +518,96 @@ def note_for_owner(stale, ref_paths, owner):
     return None
 
 
+def executed_transfer_destinations(d1_rows):
+    """Paths whose pin aims at the DESTINATION of a transfer that has already been executed.
+
+    ORDER-1269 #1, owner-ratified as ORDER-1257 option (b) -- "change the instrument, not the
+    record". This is the predicate that instrument turns on, and it is DERIVED from the row rather
+    than typed as a path list, because a typed list is a second place for D1 to drift away from.
+
+    WHAT WENT WRONG, stated as aim rather than as staleness. `owner_ref` exists to answer one
+    question (N1-N4): "have the bytes this proposal is about changed since the owner read them?"
+    Every other TRANSFER row in D1 answers it by pinning the SOURCE -- the file the fact still
+    lives in while the move is only proposed -- so a change there really is the owner's reading
+    going out of date. Row 10 is the one row whose transfer has been EXECUTED (`a424e90b`), so its
+    pin was re-pointed at `proposed_owner`, the destination. A destination changing is the approval
+    SUCCEEDING. Pinning a whole blob there asks whether the approved outcome happened and treats
+    "yes" as a defect, which is why a legitimate 16-row append voided a one-time ownership decision.
+
+    IT IS A GRANULARITY MISMATCH AND ALSO AN AIM ERROR, and the second half is what makes a
+    narrower pin the wrong repair too. MEASURED, because I designed a byte-prefix pin first and it
+    would have been a guard that worked today and reintroduced the toll silently later: the pinned
+    9-line blob IS a byte-exact prefix of HEAD, but `ec47f37d` rewrote 16 EXISTING lines in place
+    (16 insertions / 16 deletions) when those cells changed state. The store is designed to MUTATE,
+    not merely to grow, so no pin over the whole store -- equality, prefix or otherwise -- can be
+    stable. Only a pin on something that does not move can be, which is the ratified wording:
+    the MIGRATION and the GENERATED SECTION.
+
+    BLAST RADIUS, measured against the real D1 rather than reasoned about (29 rows):
+      * `disposition == TRANSFER` AND `owner_ref.path == proposed_owner` selects exactly ONE row,
+        CoverageCell. The other 12 TRANSFER rows all pin a source path that differs from their
+        proposed owner, so they keep biting unchanged.
+      * five KEEP rows also have `path == proposed_owner` (nothing moves, so the pin correctly aims
+        at where the fact already lives). The TRANSFER conjunct is what excludes them, and the
+        SPECIFICITY case in the suite is what holds that.
+    """
+    out = set()
+    for r in d1_rows or ():
+        ref = r.get('owner_ref') or {}
+        if (r.get('disposition') == 'TRANSFER' and ref.get('path')
+                and ref['path'] == r.get('proposed_owner')):
+            out.add(ref['path'])
+    return out
+
+
+def pin_exemption_reason(note, eps, destinations, digest):
+    """Why this vintage note is NOT enforced, or None. ONE rule, TWO readers.
+
+    `check()` asks it to decide F2. `--template` asks it to decide whether to hand the signer an
+    acknowledgement skeleton. They must not be able to disagree: a handout that asks the owner to
+    acknowledge a pin the checker will not demand is defect #2 of this same order -- the deadlock
+    written into the owner's own instructions -- and a second copy of this predicate is how that
+    happens. GUARD_SHAPES shape 5, the same reasoning that made `check_attested_pin_staged.py`
+    import `extract_section` rather than own a copy of it.
+
+    The section claim is RE-RESOLVED here rather than trusted, so this answers "did the replacement
+    instrument work" and not "was one declared". F14 computes the identical comparison, which is
+    what keeps the two answers the same by construction rather than by inspection.
+    """
+    if not note or note.get('kind') != 'STALE':
+        return None
+    if note.get('path') not in (destinations or ()):
+        return None
+    # SECTION form only, and `blob` absent rather than merely falsy -- a record offering both forms
+    # has made no single claim (that is F6), and it must not buy an exemption here either.
+    if not (isinstance(eps, dict) and eps.get('path') and eps.get('section')
+            and eps.get('section_sha256') and not eps.get('blob')):
+        return None
+    try:
+        text = _head_text(eps['path'])
+    except (UnicodeDecodeError, ValueError):
+        return None                      # FAIL CLOSED, exactly as F13 does
+    got, err = section_digest(text, eps['section'])
+    if err or got != eps['section_sha256']:
+        return None
+    return ('the pin on %r is NOT enforced -- %r is the destination of a transfer D1 records as '
+            'already executed, so its bytes changing is the approved outcome, not the record going '
+            'stale. What binds this decision instead: the migration (bundle %s) and the generated '
+            'section %r of %s (sha %s), both re-resolved on this run. A MISSING note, a section '
+            'claim that did not reproduce, or no claim at all would all still demand the owner.'
+            % (note['path'], note['path'], str(digest)[:12], eps['section'], eps['path'],
+               str(eps['section_sha256'])[:12]))
+
+
 def check(rows, problems, digest, d1_owners, vintage_notes):
     stale = {n['path']: n for n in vintage_notes if isinstance(n, dict) and n.get('path')}
     # The record->note match goes through D1's own current_owner -> owner_ref.path mapping, NOT
     # through string identity on current_owner. See owner_ref_paths for why, and for the one
     # property that makes this a no-op everywhere else in the table.
     ref_paths = owner_ref_paths(_D1_ROWS)
+    transfer_destinations = executed_transfer_destinations(_D1_ROWS)
+    del PIN_NOTES[:]        # per run, not per process: the suites call check() many times in one
+    IN_FORCE_FAILED.clear()
     # ORDER-613 D1, in TWO PASSES. /scrutinize found the one-pass version had a real hole and a
     # comment that asserted the opposite of the truth.
     #
@@ -658,6 +779,46 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
         # printed; they are history, not live claims. What is DEMANDED of the current row is
         # unchanged -- this narrows which row is judged, never what it must satisfy.
         note = note_for_owner(stale, ref_paths, r['current_owner']) if in_force else None
+        # ORDER-1269 #1 = ORDER-1257 option (b), owner-ratified: CHANGE THE INSTRUMENT.
+        #
+        # The pin is not enforced on the destination of an already-executed transfer -- but ONLY
+        # when the two stable instruments the ratification names have actually done their work on
+        # THIS run. Not "are declared". VERIFIED:
+        #
+        #   the MIGRATION        F1, above, recomputed the bundle digest (D1 + D2 + the migration
+        #                        checker + POLICY + VECTORS) and the record still binds it. A row
+        #                        that failed F1 `continue`d and never reached this line.
+        #   the GENERATED SECTION  F6-F14, immediately above, resolved this record's
+        #                        `expected_post_state` against HEAD and it reproduced. F7 already
+        #                        forces that claim to bind `current_owner`, which for row 10 is
+        #                        MASTER_BACKLOG.md -- the generated projection a reader actually
+        #                        sees. `problems_before` is what proves it raised nothing.
+        #
+        # DELIBERATELY NARROW, four ways, because an exemption that is wider than its justification
+        # is how a guard stops guarding:
+        #   1. SECTION form only. A whole-file post-state claim is the granularity ORDER-731 C1
+        #      measured at ~2 owner signatures a day; accepting it here would swap one coarse
+        #      instrument for another.
+        #   2. `kind == STALE` only. A MISSING note means the destination was DELETED, and that is
+        #      not the approval succeeding -- it still demands the owner.
+        #   3. the post-state claim must have VERIFIED. If F13/F14 reddened, there is no working
+        #      replacement instrument and the whole-store pin is all that is left, so it stands.
+        #   4. no claim at all = no exemption. That is also the defect this order lists as #4
+        #      ("an APPROVED record may carry no expected_post_state, so the front guard pins
+        #      nothing"), and it must not be reachable through this door.
+        #
+        # PRINTED, never silent. A pin that is not enforced and says nothing is exactly
+        # memory `guard-disarmed-by-prose-reported-as-note`, which is the shape this same order
+        # was written to fix one layer up.
+        # `len(problems) == problems_before` is an ADDITIONAL condition, not a restatement of the
+        # helper's. The helper re-resolves the section claim; this says no OTHER F-check (F6 two
+        # forms, F7 binding a foreign path, F9 the path absent at HEAD, F10 a directory) reddened
+        # for this row either. A record that is broken in any of those ways has not earned an
+        # exemption from a different check.
+        _exempt = pin_exemption_reason(note, eps, transfer_destinations, digest)
+        if _exempt and len(problems) == problems_before:
+            PIN_NOTES.append('line %s: %s' % (n, _exempt))
+            note = None
         if note:
             ack = r.get('stale_pin_acknowledgement')
             # audit 8 MAJOR 5: this was `not row.get('stale_pin_acknowledged')`, so the STRING
@@ -695,11 +856,12 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                 elif ack.get('current_blob') != want_current:
                     problems.append('F5 line %s acknowledges current_blob %r but HEAD has %r'
                                     % (n, ack.get('current_blob'), want_current))
-        # ORDER-1269 #3: only a row that raised nothing OF ITS OWN is reported as its own decision.
-        # A row that did is left out here on purpose and picked up by the reconciliation below,
-        # which already knows how to say UNVERIFIED -- one demotion path, not two.
-        if len(problems) == problems_before:
-            current[r['current_owner']] = r
+        # ORDER-1269 #3: a row that raised problems OF ITS OWN is recorded here, so that what
+        # `check()` RETURNS is unchanged -- see IN_FORCE_FAILED for why that distinction is not
+        # cosmetic. The demotion happens on the printed line, which is what was ratified.
+        if len(problems) != problems_before:
+            IN_FORCE_FAILED[r['current_owner']] = n
+        current[r['current_owner']] = r
 
     # Codex round 2, Spec 9: when the in-force row failed a check it `continue`d before reaching
     # the line above, so `current` still reported the SUPERSEDED row as the decision in force. The
@@ -761,6 +923,13 @@ def main(argv):
         stale_t = {n['path']: n for n in chk.pin_vintage_notes(d1)
                    if isinstance(n, dict) and n.get('path')}
         note_t = note_for_owner(stale_t, owner_ref_paths(d1), owner)
+        # ORDER-1269 #1: through the SAME predicate F2 uses, so the handout and the checker cannot
+        # disagree about whether an acknowledgement is owed. Without this line the template would
+        # hand the owner a skeleton for a pin that is no longer enforced -- asking for a signature
+        # nothing demands, which is #2 of this order pointing the other way.
+        if note_t and pin_exemption_reason(note_t, eps_prev,
+                                           executed_transfer_destinations(d1), digest):
+            note_t = None
         if note_t:
             pinned_t = next((row['owner_ref']['blob_oid'] for row in d1
                              if row.get('owner_ref')
@@ -800,16 +969,20 @@ def main(argv):
     # KeyError the first time an F1-failed row was in force, i.e. the exact situation a bundle
     # change creates, on the day the bundle changed.
     print('  THE decision ORDER-600 blocks on:')
+    # ORDER-1269 #3: through `reported_decision`, so a record that failed its own checks cannot be
+    # announced as APPROVED four lines above its own failure.
+    _dec, _note = reported_decision(coverage, 'MASTER_BACKLOG.md') if coverage else (None, None)
     print('    MASTER_BACKLOG.md (Coverage edge) -> %s'
-          % ('%s by %s (line %s)%s' % (coverage['decision'], coverage.get('signer', '<n/a>'),
-                                       coverage['_line'],
-                                       ' -- ' + coverage['_note'] if coverage.get('_note') else '')
+          % ('%s by %s (line %s)%s' % (_dec, coverage.get('signer', '<n/a>'), coverage['_line'],
+                                       ' -- ' + _note if _note else '')
              if coverage else 'NOT YET RECORDED'))
     others = [o for o in d1_owners if o in current and o != 'MASTER_BACKLOG.md']
     print('  %d other owner(s) recorded, %d not yet -- none of them block ORDER-600'
           % (len(others), len(d1_owners) - len(current)))
     if vintage:
         print('  %d pin-vintage note(s); blocking only for the owners they name' % len(vintage))
+    for pn in PIN_NOTES:
+        print('  PIN NOT ENFORCED -> %s' % pn)
 
     if problems:
         print('')

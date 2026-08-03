@@ -156,52 +156,189 @@ def main():
     # SAYS while `problems` is non-empty. A checker can be perfectly red and still report the
     # failing row as the approved decision, which is exactly what it did.
     print('\n=== ORDER-1269 #3: what the reported decision SAYS when its own checks failed ===')
-    _f2, _ = run_with([good()], [STALE_NOTE])
-    _f2row = _f2.get('MASTER_BACKLOG.md', {})
-    ok = _f2row.get('decision') == 'UNVERIFIED'
-    print('  [%s] a record whose F2 pin check FAILED is not reported as APPROVED'
+
+    def _reported(lines, vintage=()):
+        """(printed decision, what check() returns) for the in-force Coverage record.
+
+        BOTH halves are asserted on every case below, and that is the point of this helper. The
+        first version of this repair demoted what `check()` RETURNS, which broke 29 canonical
+        vectors in `S2A_ATTESTATION_VECTORS.jsonl` -- a BUNDLE MEMBER, so repairing them would
+        have cost the owner a signature to fix a display bug. The ratified wording is narrower
+        than the obvious fix: "the line a HUMAN READS". So the pair is held apart deliberately,
+        and a future seat that "tidies" them back together will find out here rather than from a
+        red bundle digest.
+        """
+        cur, probs = run_with(lines, vintage)
+        row = cur.get('MASTER_BACKLOG.md', {})
+        shown, _ = att.reported_decision(row, 'MASTER_BACKLOG.md')
+        return shown, row.get('decision'), probs
+
+    _shown, _returned, _p = _reported([good()], [STALE_NOTE])
+    ok = _shown == 'UNVERIFIED'
+    print('  [%s] a record whose F2 pin check FAILED is not PRINTED as APPROVED'
           % ('OK ' if ok else 'BAD'))
     if not ok:
-        print('        -> reported %r, four lines above its own F2 failure'
-              % _f2row.get('decision'))
+        print('        -> printed %r, four lines above its own F2 failure' % _shown)
         bad += 1
-    # F14 as well as F2, because they enter `current` by the same fall-through: neither of them
+    ok = _returned == 'APPROVED'
+    print('  [%s] ...while what check() RETURNS is untouched, so the signed vector corpus and the '
+          'bundle digest are not disturbed' % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> check() returned %r; 29 canonical vectors declare APPROVED here' % _returned)
+        bad += 1
+    # F14 as well as F2, because they reach the report by the same fall-through: neither of them
     # `continue`s, which is the actual mechanism. One case would leave the other free to regress.
-    _f14, _f14p = run_with([good(expected_post_state={
+    _shown, _returned, _p = _reported([good(expected_post_state={
         'path': 'MASTER_BACKLOG.md', 'section': 'S2a coverage transfer',
         'section_sha256': 'c' * 64})])
-    ok = ('F13' in _f14p or 'F14' in _f14p) and \
-        _f14.get('MASTER_BACKLOG.md', {}).get('decision') == 'UNVERIFIED'
+    ok = ('F13' in _p or 'F14' in _p) and _shown == 'UNVERIFIED'
     print('  [%s] and so is one whose expected_post_state claim did not reproduce'
           % ('OK ' if ok else 'BAD'))
     if not ok:
-        print('        -> decision=%r problems=%r'
-              % (_f14.get('MASTER_BACKLOG.md', {}).get('decision'),
-                 _f14p.split('\n')[0] if _f14p else 'NOTHING AT ALL'))
+        print('        -> printed=%r problems=%r'
+              % (_shown, _p.split('\n')[0] if _p else 'NOTHING AT ALL'))
         bad += 1
     # CONTROL. Without this the block above is satisfiable by demoting every row unconditionally,
     # which would be a checker that cannot say APPROVED at all -- green for the wrong reason.
-    _cln, _clnp = run_with([good()])
-    ok = (not _clnp) and _cln.get('MASTER_BACKLOG.md', {}).get('decision') == 'APPROVED'
-    print('  [%s] CONTROL a record whose checks all PASSED still reports APPROVED'
+    _shown, _returned, _p = _reported([good()])
+    ok = (not _p) and _shown == 'APPROVED'
+    print('  [%s] CONTROL a record whose checks all PASSED still prints APPROVED'
           % ('OK ' if ok else 'BAD'))
     if not ok:
-        print('        -> decision=%r problems=%r'
-              % (_cln.get('MASTER_BACKLOG.md', {}).get('decision'), _clnp))
+        print('        -> printed=%r problems=%r' % (_shown, _p))
         bad += 1
     # SPECIFICITY, and it is the one that separates the correct fix from the cheap one. "Demote if
     # `problems` is non-empty" passes both cases above and is WRONG: `problems` is shared, so a
     # malformed line appended AFTER a good decision -- or a complaint raised by load_records for a
     # different owner entirely -- would silently un-approve a record that verified. The count has to
     # be snapshotted PER ROW.
-    _spec, _specp = run_with([good(), {'current_owner': 'MASTER_BACKLOG.md', 'signer': ''}])
-    ok = bool(_specp) and _spec.get('MASTER_BACKLOG.md', {}).get('decision') == 'APPROVED'
+    _shown, _returned, _p = _reported([good(), {'current_owner': 'MASTER_BACKLOG.md', 'signer': ''}])
+    ok = bool(_p) and _shown == 'APPROVED'
     print('  [%s] SPECIFICITY a malformed SEPARATE line does not un-approve a record that verified'
           % ('OK ' if ok else 'BAD'))
     if not ok:
-        print('        -> decision=%r problems=%r'
-              % (_spec.get('MASTER_BACKLOG.md', {}).get('decision'),
-                 _specp.split('\n')[0] if _specp else 'NOTHING AT ALL'))
+        print('        -> printed=%r problems=%r'
+              % (_shown, _p.split('\n')[0] if _p else 'NOTHING AT ALL'))
+        bad += 1
+
+    # ---- ORDER-1269 #1 = ORDER-1257 option (b), owner-ratified: CHANGE THE INSTRUMENT.
+    # ---- The whole-store pin on an already-executed transfer's DESTINATION stops being enforced.
+    # ---- Every case below exists to bound that exemption, because an exemption is only as good as
+    # ---- the list of things it still refuses.
+    print('\n=== ORDER-1269 #1: the pin instrument, and the six things the exemption still refuses ===')
+
+    def _real_eps(owner):
+        """The in-force record's own expected_post_state -- DERIVED from the live log, never typed.
+
+        A hand-written section_sha256 is a fixture of filler values: it is green whether or not the
+        section resolver works, so it cannot test resolution at all (memory
+        `fixture-of-filler-values-cannot-test-resolution`). The reproducer has to be the real thing.
+
+        LAST wins, and that is not a detail. The first version of this helper returned the FIRST
+        matching record and picked up a WHOLE-FILE claim left by an earlier signature, whose blob is
+        long stale -- so THE POINT failed on F11 while every refusal case passed. The log is
+        append-only and the record in force is the last one for that owner; anything else is
+        history.
+        """
+        found = None
+        with io.open(att.ATTESTATION_PATH, encoding='utf-8') as fh:
+            for raw in fh:
+                if raw.strip():
+                    rec = json.loads(raw)
+                    if (rec.get('current_owner') == owner
+                            and isinstance(rec.get('expected_post_state'), dict)):
+                        found = rec['expected_post_state']
+        return found
+
+    def _derived_section_eps(path):
+        """A section post-state claim for `path` that REALLY reproduces at HEAD, built at run time.
+
+        The anchor is the first `## ` heading that occurs exactly once, so this cannot rot as the
+        file changes -- which for AGENT_TASKBOARD.md is every few minutes.
+        """
+        text = att._head_text(path)
+        lines = [l.rstrip() for l in text.replace('\r\n', '\n').split('\n')]
+        heads = [l for l in lines if l.startswith('## ')]
+        for h in heads:
+            if heads.count(h) == 1:
+                sha, err = att.section_digest(text, h)
+                if not err:
+                    return {'path': path, 'section': h, 'section_sha256': sha}
+        raise SystemExit('no uniquely-occurring "## " heading in %s -- this suite cannot build a '
+                         'reproducing section claim against nothing' % path)
+
+    COV_EPS = _real_eps('MASTER_BACKLOG.md')
+    MISSING_NOTE = {'entity': 'CoverageCell', 'path': PIN_PATH, 'kind': 'MISSING', 'text': 'gone'}
+    _rc_mb, _mb_blob, _ = chk._rev_parse_cached('%s:MASTER_BACKLOG.md' % chk.head_oid())
+
+    if COV_EPS is None:
+        print('  [BAD] the in-force record carries no expected_post_state to derive from')
+        bad += 1
+    else:
+        _, _p = run_with([good(expected_post_state=COV_EPS)], [STALE_NOTE])
+        _notes = list(att.PIN_NOTES)
+        ok = (not _p) and len(_notes) == 1 and PIN_PATH in _notes[0]
+        print('  [%s] THE POINT a legitimate store change on the transfer DESTINATION costs no '
+              'owner signature' % ('OK ' if ok else 'BAD'))
+        if not ok:
+            print('        -> problems=%r pin_notes=%r' % (_p, _notes))
+            bad += 1
+        # ...and it is PRINTED. A pin that is not enforced and says nothing is
+        # `guard-disarmed-by-prose-reported-as-note`, the shape this same order fixes elsewhere.
+        ok = bool(_notes) and 'NOT enforced' in _notes[0] and 'already executed' in _notes[0]
+        print('  [%s] and the un-enforced pin is REPORTED with the instruments that replaced it'
+              % ('OK ' if ok else 'BAD'))
+        if not ok:
+            bad += 1
+
+        exemption_attacks = [
+            ('no post-state claim at all leaves nothing to replace the pin',
+             [good()], [STALE_NOTE]),
+            ('a section claim that does NOT reproduce is not a working instrument',
+             [good(expected_post_state=dict(COV_EPS, section_sha256='c' * 64))], [STALE_NOTE]),
+            ('a MISSING note -- the destination DELETED -- is not the approval succeeding',
+             [good(expected_post_state=COV_EPS)], [MISSING_NOTE]),
+            ('a WHOLE-FILE claim is the granularity ORDER-731 measured at ~2 signatures/day',
+             [good(expected_post_state={'path': 'MASTER_BACKLOG.md', 'blob': _mb_blob})],
+             [STALE_NOTE]),
+            # THE discriminating case. Every other TRANSFER row pins its SOURCE, where a change
+            # really is the owner's reading going out of date. If the exemption keyed on
+            # "disposition == TRANSFER" alone, this would go green and 12 rows would lose their pin.
+            ('SPECIFICITY a SOURCE-pinned transfer row still demands the acknowledgement',
+             [good(current_owner='AGENT_TASKBOARD.md',
+                   expected_post_state=_derived_section_eps('AGENT_TASKBOARD.md'))],
+             [{'entity': 'Hypothesis', 'path': 'AGENT_TASKBOARD.md', 'kind': 'STALE',
+               'text': 'stale'}]),
+        ]
+        for label, lines, vintage in exemption_attacks:
+            _, _ap = run_with(lines, vintage)
+            ok = 'pin is STALE' in _ap
+            print('  [%s] %-72s expect=RED got=%s'
+                  % ('OK ' if ok else 'BAD', label, 'RED ' if _ap else 'GREEN'))
+            if not ok:
+                bad += 1
+                print('        -> %s' % (_ap.split('\n')[0] if _ap else 'NOTHING AT ALL'))
+
+    # The predicate on its own. The end-to-end cases above cannot separate "KEEP rows are excluded"
+    # from "that KEEP row had no usable section anyway", so the conjunct is held here instead.
+    real_dests = att.executed_transfer_destinations(d1_rows)
+    ok = real_dests == {PIN_PATH}
+    print('  [%s] against the REAL D1 the predicate selects exactly the one executed transfer'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> selected %r, wanted {%r}' % (sorted(real_dests), PIN_PATH))
+        bad += 1
+    synth = att.executed_transfer_destinations([
+        {'disposition': 'TRANSFER', 'proposed_owner': 'a', 'owner_ref': {'path': 'a'}},   # in
+        {'disposition': 'KEEP', 'proposed_owner': 'b', 'owner_ref': {'path': 'b'}},       # out
+        {'disposition': 'TRANSFER', 'proposed_owner': 'c2', 'owner_ref': {'path': 'c1'}}, # out
+        {'disposition': 'TRANSFER', 'proposed_owner': 'd', 'owner_ref': None},            # out
+    ])
+    ok = synth == {'a'}
+    print('  [%s] and on synthetic rows only TRANSFER-with-path==proposed_owner is selected'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> %r' % sorted(synth))
         bad += 1
 
     print('\n=== G5-G8 append-only, enforced against HEAD rather than asserted in prose ===')
@@ -636,18 +773,34 @@ def main():
     if not ok:
         print('        -> template=%r vs in-force=%r' % (tline.get('expected_post_state'), in_force_eps))
         bad += 1
+    # ORDER-1269 #1: the COMPARISON below is unchanged; its STATED REASON was false and is deleted.
+    # It read "no note today, so the template emits NO ack skeleton" -- an assertion about the state
+    # of the world, not about the code, and a legitimate 16-row append to the coverage store made it
+    # RED without anything being wrong. (Measured at HEAD before this order: `--template` emitted
+    # the skeleton because three vintage notes genuinely exist.) What the template must actually do
+    # is AGREE WITH F2: emit a skeleton exactly when an acknowledgement is owed. Narrowed, not
+    # flipped -- a session that met this red and "repaired" it by asserting the skeleton IS present
+    # would have written the deadlock back into the owner's handout.
     ok = 'stale_pin_acknowledgement' not in tline
-    print('  [%s] M1 specificity: no note today, so the template emits NO ack skeleton'
+    print('  [%s] M1: the template emits NO ack skeleton, because F2 demands none for this owner'
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> %r' % (tline.get('stale_pin_acknowledgement'),))
         bad += 1
-    # The fire direction: force a synthetic STALE note on the D1-pinned path and re-run. The ack
+    # The fire direction: force a synthetic note on the D1-pinned path and re-run. The ack
     # skeleton must name THAT path (the mapping), never current_owner -- F3 refuses the other.
+    #
+    # ORDER-1269 #1 changed this fixture from STALE to MISSING, and the ASSERTION is untouched.
+    # The property under test is the MAPPING (which path the skeleton names), and a STALE note on
+    # this particular path is now exempt, so the old fixture would have tested the mapping through
+    # a door that no longer opens -- green or red for a reason that is not the mapping. MISSING is
+    # never exempt (deleting the destination is not the approval succeeding), so an acknowledgement
+    # is genuinely owed here and the mapping is exercised exactly as before. The exempt direction is
+    # not lost: it is asserted two cases below, against BOTH surfaces at once.
     pin_path = _coverage_pin_path()
     saved_notes = chk.pin_vintage_notes
     try:
-        chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'STALE'}]
+        chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'MISSING'}]
         buf2 = io.StringIO()
         with contextlib.redirect_stdout(buf2):
             rc_t2 = att.main(['--template'])
@@ -670,6 +823,31 @@ def main():
     if not ok:
         print('        -> %s' % (probs_m1,))
         bad += 1
+    # ORDER-1269 #1: THE TWO HUMAN SURFACES MUST AGREE, asserted from ONE forced condition rather
+    # than from whatever notes the repository happens to have today. A checker that stops demanding
+    # an acknowledgement while the handout keeps asking for one is this order's own defect #2
+    # pointing the other way: the owner is told to spend a signature nothing will read.
+    if COV_EPS is not None:
+        saved_notes2 = chk.pin_vintage_notes
+        try:
+            chk.pin_vintage_notes = lambda rows: [{'path': pin_path, 'kind': 'STALE'}]
+            buf3 = io.StringIO()
+            with contextlib.redirect_stdout(buf3):
+                rc_t3 = att.main(['--template'])
+            tline3 = json.loads([l for l in buf3.getvalue().splitlines() if l.startswith('{')][0])
+        finally:
+            chk.pin_vintage_notes = saved_notes2
+        _, probs_ag = run_with([good(expected_post_state=COV_EPS)],
+                               [{'entity': 'CoverageCell', 'path': pin_path, 'kind': 'STALE',
+                                 'text': 'stale'}])
+        template_asks = 'stale_pin_acknowledgement' in tline3
+        checker_demands = 'pin is STALE' in probs_ag
+        ok = rc_t3 == 0 and template_asks is False and checker_demands is False
+        print('  [%s] AGREEMENT under one forced STALE note the template and F2 give the SAME '
+              'answer (neither asks)' % ('OK ' if ok else 'BAD'))
+        if not ok:
+            print('        -> template_asks=%s checker_demands=%s' % (template_asks, checker_demands))
+            bad += 1
 
     after = (io.open(att.ATTESTATION_PATH, encoding='utf-8').read()
              if os.path.exists(att.ATTESTATION_PATH) else None)
