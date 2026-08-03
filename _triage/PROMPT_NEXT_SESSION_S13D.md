@@ -45,7 +45,35 @@ powershell -File scripts/_test/run_contract_binding_tests.ps1
 
 ---
 
-## 🔴 BOX 1 — ONE owner decision is open. It blocks nothing; do not stall on it.
+## 🔴 BOX 1 — TWO owner decisions are open. Read 1a FIRST; it is a red at HEAD.
+
+### 1a. The attestation that authorises the coverage store no longer verifies — `ORDER-1257`
+
+**Run this before anything else.** It is not in the pre-commit tier any more, which is the whole
+point of the finding:
+
+```bash
+powershell -File scripts/_test/run_contract_binding_tests.ps1
+```
+
+It is **RED at HEAD**, and the lane that caused it is the one that wrote this file. Measured with
+`git rev-parse`, not inferred: D1's `CoverageCell.owner_ref` pins `factory/coverage.jsonl` at
+`e049facab98f`; HEAD **before** `5e78ebc3` was `e049facab98f` — an exact match, gate green — and
+HEAD after it is `c6287ff57796`. Appending the 16 owner-ratified pilot cells **is** what moved it.
+Sixth occurrence of `approval-pinning-self-invalidates`.
+
+🔴 **And `ORDER-1252` moved the two checkers that would have caught it off the commit path in the
+SAME commit.** The split was ratified and it bought the tier its budget back; this is its measured
+cost, arriving within one commit rather than in three weeks.
+
+**The owner already approved the change in chat** (S13SIZE: *"อนุมัติเพิ่ม pilot cells ลง
+`factory/coverage.jsonl`"*). What is missing is the **record**, and the record is what the guard
+reads. Three options are written out in `ORDER-1257`. 🚫 Do not re-pin (D1 is inside its own
+bundle), 🚫 do not append the acknowledgement on the owner's behalf, 🚫 do not revert the cells.
+⚠️ Whatever is chosen, put `run_s2a_gate` + `check_coverage_transfer` back in the tier **in the
+same commit** — added while red, they block every commit in the repo.
+
+### 1b. §2 projects one of the store's two populations — cosmetic, blocks nothing
 
 `MASTER_BACKLOG.md` §2 says *"GENERATED from `factory/coverage.jsonl`"* while projecting **one of
 that store's two populations**. Nothing there is false, but a reader of that table cannot see that
@@ -139,5 +167,6 @@ so it can carry the generated line · (c) split the pilot cells into a store of 
 | Parity result manifest owned by `parity.py`; §8.6 items 3-4 | ORDER-1255 |
 | The last four stubs — §8.6 items 10, 11, 12, 14 | ORDER-1256 |
 | §2 projects one of the store's two populations; saying so needs an owner re-attestation | ORDER-1250 |
+| 🔴 the attestation pinning `factory/coverage.jsonl` was voided by the ratified cell registration, and the tier can no longer see it | ORDER-1257 |
 
 Open with: **"อ่านไฟล์นี้ แล้วเริ่มได้เลย — BOX 1 ถามครั้งเดียวแล้วเดินต่อ ไม่ต้องรอคำตอบ"**

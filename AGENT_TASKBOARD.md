@@ -340,6 +340,75 @@ the new case pass.
 
 ---
 
+## ORDER-1257 — [factory/S2a] 🔴 Registering the 16 cells VOIDED the attestation that authorises the coverage store, and the tier can no longer see it — `OPEN (needs the owner)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+
+**Found by running the hand-run wrapper at HEAD immediately after `ORDER-1250`+`1252` landed, which
+is the only thing that would have found it.** Reported by the lane that caused it.
+
+### What is red
+
+```
+F2 line 10 attests for 'MASTER_BACKLOG.md' whose pin is STALE. The pinned path is
+   'factory/coverage.jsonl' ... the acknowledgement must name THAT path
+A8 the attested bundle no longer verifies (check_s2a_attestation.py exit 1)
+```
+
+Measured with `git rev-parse`, not inferred:
+
+| | `factory/coverage.jsonl` blob |
+|---|---|
+| pinned by D1's `CoverageCell.owner_ref` | `e049facab98f` |
+| HEAD **before** `5e78ebc3` | `e049facab98f` — **exact match, the gate was green** |
+| HEAD **after** `5e78ebc3` | `c6287ff57796` |
+
+So `run_s2a_gate` and `check_coverage_transfer` were green at the session baseline and are red now.
+The cause is **the ratified work itself**: `ORDER-731` option 2 moved the `CoverageCell` pin onto
+`factory/coverage.jsonl` — the file that holds the canonical coverage bytes — and `ORDER-1250`
+appended 16 rows to it, exactly as the owner approved. This is
+`approval-pinning-self-invalidates` for the sixth time: *an approval that pins the bytes of the
+thing it authorises invalidates itself the moment the authorised change is executed.*
+
+### 🔴 The part that matters more than the red
+
+**`ORDER-1252` moved `run_s2a_gate` and `check_coverage_transfer` off the commit path in the SAME
+commit that turned them red.** The split was owner-ratified and it bought the tier its budget back
+— and within one commit it let a red land unseen. That is not an argument that the split was wrong;
+it is the measured cost of it, arriving immediately rather than in three weeks.
+
+### What must NOT be done
+
+🚫 Re-pin with `gen_s2a_migration.py`: D1 is **inside its own attestation bundle**, so regenerating
+it moves `bundle_sha256` and voids the record — a signature to repair a signature, which is the
+loop `ORDER-614` rev 2 was written to end.
+🚫 Append the acknowledgement on the owner's behalf. The log's own header says **the owner writes
+here**; `signer` is `user (Boss)` on every line and this seat may not transcribe a decision that
+was never given.
+🚫 Revert the 16 rows — that undoes owner-ratified BOX 1a.
+
+### What the owner has to decide, and it is one question
+
+The change was already approved in chat (S13SIZE lane: *"อนุมัติเพิ่ม pilot cells ลง
+`factory/coverage.jsonl`"*). What is missing is the **record**, and the record is what the guard
+reads. Options:
+
+- **(a)** append one attestation line carrying a `stale_pin_acknowledgement` naming
+  `{path: factory/coverage.jsonl, pinned_blob: e049facab98f, current_blob: <HEAD>}` — the same
+  shape lines 4–8 already carry, and `check_s2a_attestation.py --template` emits the skeleton;
+- **(b)** decide that a pin on a file the approved work is *expected* to keep changing is the wrong
+  instrument, and replace it — this is the structural fix, and it is what `ORDER-614` rev 2 did for
+  the checker-in-its-own-bundle version of the same loop;
+- **(c)** accept the red and leave both checkers hand-run.
+
+### And one thing to land WITH whichever is chosen
+
+Put `run_s2a_gate.py` (5.4s) and `check_coverage_transfer.py` (1.3s) back on the commit path. There
+is **24.9s of headroom** in the tier now, so the cost is affordable and these two are exactly the
+"does the real repository still satisfy the owner's conditions **right now**" checks a commit gate
+is for. ⚠️ **They must land in the SAME commit as the re-attestation** — added while red, they
+block every commit in the repository.
+
+---
+
 ## ORDER-1253 — [factory/S13] The decision-13 optimize probe, and `optimize_guard` OBSERVED refusing a real sweep — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 This is what §8.6 **item 7** actually means, and it is the item `ORDER-1250` deliberately left
