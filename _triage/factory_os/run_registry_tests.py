@@ -267,6 +267,47 @@ def main():
             finally:
                 shutil.rmtree(exroot, ignore_errors=True)
 
+        # ORDER-1251. The value test was an EQUALITY test, so a verdict written as prose walked
+        # past it in every store. The four cases below are the fix and its two brakes: it must
+        # catch the sentence, it must not catch an innocent word, and it must not start firing on
+        # the imported rows and metadata -- which is where a word search over EVERYTHING produced
+        # twelve hits on the live stores, all of them innocent.
+        for label, kind, row, expect in [
+                ('THE CASE: a verdict inside a sentence, in an authored row', 'universe',
+                 {'entity': 'TestUniverse',
+                  'note': 'parked as a BUILD-ON until the optimize probe runs'}, True),
+                ('a verdict inside a sentence, lowercased', 'universe',
+                 {'entity': 'TestUniverse', 'note': 'we will treat it as a candidate for now'},
+                 True),
+                # SPECIFICITY 1 -- the fix must not make the stores unwritable.
+                ('SPECIFICITY a verdict word as a FRAGMENT of a longer word', 'universe',
+                 {'entity': 'TestUniverse', 'note': 'the alert was DELIVERED and BUILD-ONLY runs'},
+                 False),
+                # SPECIFICITY 2 -- the measured false-positive class, kept out by construction.
+                # An imported row is TRANSCRIBED from a pinned blob this repo does not author.
+                ('SPECIFICITY prose in an IMPORTED row (the real "LIVE cell" shape)', 'coverage',
+                 {'cells': [{'cell': 'X', 'column': 'LIVE cell',
+                             'why_unverified': "inherited from this row's LIVE cell"}]}, False),
+                # ...but the imported rows are not a hiding place: equality still applies there.
+                ('an imported row whose value IS a verdict is still refused', 'coverage',
+                 {'cells': [{'cell': 'X', 'state': 'DEAD-STRUCTURAL'}]}, True)]:
+            wroot = seed(tempfile.mkdtemp(prefix='s5word_'), **{kind: [row]})
+            try:
+                chk.problems[:] = []
+                chk.check_r3(reg.load_all(root=wroot))
+                got = any(p.startswith('R3') for p in chk.problems)
+                check('R3 word-boundary: %s -> %s' % (label, 'REFUSED' if expect else 'accepted'),
+                      got is expect, str(chk.problems))
+            finally:
+                shutil.rmtree(wroot, ignore_errors=True)
+        # The exemption must still be REACHABLE after the change, or it has become dead code that
+        # asserts nothing -- ORDER-1251 acceptance (4). Measured against the real store rather
+        # than a fixture: 8 imported cells carry `status: LIVE` exactly.
+        _live = [c for _n, r in reg.load_all()['factory/coverage.jsonl'][1]
+                 for c in r.get('cells', []) if str(c.get('status', '')).strip().upper() == 'LIVE']
+        check('R3 the declared exemption is still REACHABLE (8 live cells exercise it)',
+              len(_live) == 8, 'found %d' % len(_live))
+
         # ROUND-1 FINDINGS, fixtured. Both were found by ATTACKING R3 and the resolver, not by
         # re-reading them.
         for label, row, expect in [

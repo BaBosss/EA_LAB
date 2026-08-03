@@ -104,6 +104,24 @@ VERDICT_VALUE_EXEMPTIONS = {
         "ORDER-610's transfer from MASTER_BACKLOG section 2 and pinned to its source blob.",
 }
 
+# ORDER-1251. Word-boundary, not substring: `LIVE` must not fire inside `DELIVERED`, and
+# `CANDIDATE` must not fire inside `CANDIDATES-ONLY`. The class excludes `-` as well as word
+# characters because every compound verdict already contains one -- without that, `BUILD-ON`
+# would match inside `BUILD-ONLY`. Case-insensitive: the rule is about content, and a lowercase
+# verdict is still a verdict (the ORDER-1220 matcher was case-sensitive and missed a real heading).
+_VERDICT_WORD_RX = tuple(
+    (w, re.compile(r'(?<![A-Za-z0-9_-])' + re.escape(w) + r'(?![A-Za-z0-9_-])', re.I))
+    for w in FORBIDDEN_VERDICT_VALUES)
+
+
+def _verdict_word_in(value):
+    """-> the first verdict word appearing as a WORD inside `value`, or None."""
+    for word, rx in _VERDICT_WORD_RX:
+        if rx.search(value):
+            return word
+    return None
+
+
 # R4: the ONE file allowed to define the role vocabulary or derive optimizability.
 RESOLVER = '_triage/factory_os/registry.py'
 # Consumers that MUST reach the resolver, and the token that proves each one does. Declared, so
@@ -276,8 +294,27 @@ def check_r3(stores):
         for n, rec in [(None, m) for m in meta] + list(rows):
             where = ('line %d' % n) if n is not None else ('metadata record %s'
                                                             % json.dumps(rec, sort_keys=True)[:70])
+            # ORDER-1251. The VALUE test is a word search for rows this system AUTHORS, and stays
+            # an equality test everywhere else. That split is not a compromise, it is what the
+            # measurement forced:
+            #
+            #   * equality alone lets `"parked as a BUILD-ON until the optimize probe runs"` --
+            #     a verdict, in a free-text field, in a registry store -- pass clean;
+            #   * a word search over EVERYTHING fires 12 times on the live stores today and every
+            #     one is innocent: eleven are the ORDER-610 imported rows describing a
+            #     MASTER_BACKLOG column literally named "LIVE cell", and one is a module comment
+            #     that uses the word Candidate while explaining what an InstrumentProfile is for.
+            #     Shipping that would make the stores unwritable, which is how a guard earns the
+            #     exemption list that then swallows it (memory
+            #     `citation-guard-satisfied-by-a-universal-file`).
+            #
+            # An authored row is one carrying the `entity` discriminator. The imported rows are
+            # TRANSCRIBED from a blob this repo pins and does not author, and metadata is prose
+            # ABOUT the store -- neither is a place this system can put a verdict without also
+            # writing an authored row saying the same thing.
+            authored = isinstance(rec, dict) and rec.get('entity') is not None
 
-            def seen(k, v, path, rel=rel, n=where):
+            def seen(k, v, path, rel=rel, n=where, authored=authored):
                 if k is not None and k.strip().upper() in FORBIDDEN_VERDICT_VALUES:
                     problems.append(
                         'R3 %s %s uses the verdict word %r as a KEY at %s. Probed and found '
@@ -288,14 +325,29 @@ def check_r3(stores):
                         'R3 %s %s carries a verdict-shaped KEY at %s. These stores hold '
                         'facts and references; a verdict belongs in the scorecard.'
                         % (rel, n, path))
-                if isinstance(v, str) and v.strip().upper() in FORBIDDEN_VERDICT_VALUES:
-                    if (rel, k, v.strip().upper()) in VERDICT_VALUE_EXEMPTIONS:
-                        return
+                if not isinstance(v, str):
+                    return
+                exact = v.strip().upper()
+                word = _verdict_word_in(v) if authored else None
+                if exact not in FORBIDDEN_VERDICT_VALUES and word is None:
+                    return
+                # The exemption is keyed on the EXACT value, and it stays that way: an exemption
+                # that matched a value CONTAINING `LIVE` would excuse any sentence mentioning it.
+                if (rel, k, exact) in VERDICT_VALUE_EXEMPTIONS:
+                    return
+                if exact in FORBIDDEN_VERDICT_VALUES:
                     problems.append(
                         'R3 %s %s carries the verdict VALUE %r at %s. Checking key names '
                         'and not values is the exact defect audit finding A3 shipped: '
                         '"status": "DEAD-STRUCTURAL" passed a name check and carried a verdict '
                         'into a store whose acceptance forbids one.' % (rel, n, v, path))
+                else:
+                    problems.append(
+                        'R3 %s %s carries the verdict word %r INSIDE a free-text value at %s: %r. '
+                        'An equality test never fired on this shape, so a verdict written as '
+                        'prose passed every store (ORDER-1251). These stores hold facts and '
+                        'references; a verdict belongs in the scorecard.'
+                        % (rel, n, word, path, v[:120]))
             _walk(rec, 'row', seen)
 
 
