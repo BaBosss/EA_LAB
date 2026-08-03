@@ -42,29 +42,43 @@ load. **Measure it on a quiet lane before you trust the 24.9s of headroom the la
 
 ---
 
-## 🔴 BOX 1 — the SAME owner decision as last time, and it now has a second reason
+## ✅ BOX 1 IS CLOSED — the owner ratified four decisions in-session. Do not re-ask.
 
-### 1a. `ORDER-1257` — the attestation authorising the coverage store still does not verify
+Recorded in **`PROJECT_STATE.md` §3** (the canonical home for a ratified rule) before any of them was
+acted on. Read them there; the operative summary:
+
+1. **`ORDER-1257` → option (b): replace the instrument.** An approval must not pin the bytes of the
+   thing it authorises. Do **not** ask the owner to sign an acknowledgement.
+2. **Sequencing, ratified in the same message: register the 16 probe cells FIRST, then close 1a once,
+   at the end.** This is why `factory/coverage.jsonl` was left frozen — signing while the file is
+   still moving sends the owner round the same loop twice.
+3. **The repository is PRIVATE** (owner-stated). No lane probed the remote; do not probe it.
+4. **`ORDER-1262` → accepted risk, recorded, not rewritten, not notified.** A rewrite is not free
+   here: blob and commit oids are pinned inside `OwnerRef`s, so rewriting downstream of `cc40731c`
+   invalidates every pin in the attestation system at once. 🚫 This does **not** license leaving new
+   secrets in git, and `ORDER-1261`'s repair of the `B1` secret cage is unaffected and still owed.
+
+⚠️ **So the only thing left on 1a is engineering, and it is yours.** `run_s2a_gate` +
+`check_coverage_transfer` stay hand-run until it lands, and **return to the tier in the same commit
+as the fix** — added while red they block every commit in the repo.
+
+### 1a. `ORDER-1257` — what is still red, and what the fix has to survive
 
 ```bash
 powershell -File scripts/_test/run_contract_binding_tests.ps1
 ```
 
-**Still RED at HEAD** (F2 stale pin + A8 bundle no longer verifies), exactly as reported. It was
-reproduced at this lane's baseline and **not repaired here**: the log's `signer` is `user (Boss)` on
-every line, and this seat may not transcribe a decision that was never given. Three options are
-written out in `ORDER-1257`. 🚫 Do not re-pin · 🚫 do not append the acknowledgement for the owner ·
-🚫 do not revert the cells. ⚠️ Whatever is chosen, `run_s2a_gate` + `check_coverage_transfer` go back
-in the tier **in the same commit**.
+**Still RED at HEAD** (F2 stale pin + A8 bundle no longer verifies), reproduced at this lane's
+baseline. 🚫 Do not re-pin with `gen_s2a_migration.py` — D1 is inside its own bundle, so regenerating
+it moves `bundle_sha256`: a signature to repair a signature, which is the loop `ORDER-614` rev 2 was
+written to end. 🚫 Do not append the acknowledgement (option **a** was not the one chosen). 🚫 Do not
+revert the cells.
 
-🔴 **The new reason, and it costs the owner something to ignore:** option (a) has the owner sign an
-acknowledgement naming `current_blob` of `factory/coverage.jsonl`. **The next step of `ORDER-1253`
-changes that file again** (16 cells `BASELINE_RUN` → `PROBE_RUN`). Signing before that lands means
-signing a blob that is stale on arrival, and sending the owner round the same loop twice.
-**So `factory/coverage.jsonl` was left frozen this session on purpose** — the probe runs write to
-`factory/runs/pilot/probe/`, never to the store. Either settle 1a first and then register the cells,
-or register the cells first and let the owner sign once, at the end. **Pick one deliberately; do not
-drift into signing in the middle.**
+⚠️ **The trap the replacement has to survive** is the same one that has now caught this repo six
+times: whatever new instrument is chosen, ask *"does approving this pin the bytes of something the
+approved work is expected to change?"* before building it. `ORDER-614` rev 2 solved the sibling case
+(a checker inside its own bundle) by moving implementations OUT of the bundle — read what it did
+before designing something new.
 
 ---
 
@@ -76,10 +90,17 @@ drift into signing in the middle.**
    ```bash
    cat factory/runs/pilot/probe/*.jsonl | tools/python312/python.exe -c "import sys,json;rs=[json.loads(l) for l in sys.stdin if l.strip()];print(len(rs),'record(s)');[print(r['cell_id'],r['arm'],'exit=%s'%r['launcher_exit_code'],'%ss'%r['elapsed_sec']) for r in rs]"
    ```
-   **Measured cost: 675.5s for the first cell** (XAUUSD H1, 7 dimensions, genetic, MAIN, 20 tester
-   agents), so a missing cell is ~11 minutes, not a day. Re-run any that are absent or carry
-   `launcher_exit_code` other than `0`, with `scripts/pilot_probe.ps1 -Symbols X -Periods Y
-   -Revisions Z`. Then teach `gen_pilot_cells.py` to derive `PROBE_RUN` from the probe records and
+   **Measured costs: 675.5s / 910s / 735.5s / 1192.2s** for the four XAUUSD cells (7 dimensions on
+   H01, **10 on H02**, genetic, MAIN, 20 tester agents), so a missing cell is 11–20 minutes, not a
+   day. Re-run any that are absent or carry `launcher_exit_code` other than `0` **or
+   `xml_present: false`**, with `scripts/pilot_probe.ps1 -Symbols X -Periods Y -Revisions Z`
+   (**one value each — the script now refuses a comma, see the traps**).
+   🔴 **Two rows in that store are not cells and you must not count them:** the
+   `deliberate-refusal` arm (`exit=3`, which is 8.6 item 6's evidence, not item 7's), and one row
+   whose `cell_id` is `B14-H01-r1/EURUSD,USDJPY,BTCUSD/H1,H4` — a bogus run kept deliberately as
+   the evidence that the guard-rail was missing. Six H01 cells (EURUSD · USDJPY · BTCUSD × H1 · H4)
+   were **queued behind the running batch** as this session ended; if that queue did not survive,
+   they are the six to run. Then teach `gen_pilot_cells.py` to derive `PROBE_RUN` from the records and
    `--apply`. 🚫 **The transition must come from the generator** — the store is never hand-edited —
    and 🚫 **it must not be ticked from the flat-lot arm**: `PROBE_DONE_STATES` excludes `BASELINE_RUN`
    and case `C3` asserts it.
@@ -111,6 +132,16 @@ is a human's.
 
 ## Traps this lane paid for (the new ones)
 
+- **`powershell -File x.ps1 -Symbols A,B,C` delivers ONE element `"A,B,C"`** to a `[string[]]`
+  parameter — the comma is never parsed. It produced a single "cell" named after three symbols, ran
+  14.4s, and **the six real cells were never attempted while the batch reported success.** The trap
+  was already documented in `run_optimize_guard_tests.ps1`, four directories away, and I walked into
+  it anyway. `pilot_probe.ps1` refuses a comma now; use `-Command`, or one value per invocation.
+- 🔴 **`mt5_optimize.ps1` printed `NO XML` and exited 0** — a launcher whose only product is an
+  optimizer XML reporting success with no XML, for as long as the script has existed. It exits **4**
+  now, so `optimize_loop.ps1` · `run_batch.ps1` · `qwen_batch_runner.ps1` will see failures where
+  they saw successes. **That is the correction, not a regression** — each was accepting "no
+  optimization happened" as a completed pass. Expect it and do not soften it back.
 - **`@array` splatting in PowerShell passes elements POSITIONALLY.** `@('-Expert', $x, '-Symbol', $y)`
   bound the literal string `'-Expert'` to `-Expert` and by the seventh slot handed `-Model` the string
   `"-FromDate"`. It was caught only because the target refused to bind — **had the shifted values been
