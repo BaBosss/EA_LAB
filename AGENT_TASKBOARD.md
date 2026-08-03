@@ -912,7 +912,55 @@ this is cheap to re-measure — do that first.)*
 
 ---
 
-## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `#1 + Part 2 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT3`, `446f7539`) · **#2 still OPEN, untouched** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ✅ CLOSED 2026-08-04 — #1 and Part 2. #2 is untouched and still true
+
+**Every claim measured at HEAD before anything was repaired**, one synthetic literal planted five
+ways: the exact value **DETECTED** (the control — the scan was live), while three formatted
+spellings, the value **split across list items**, the value used as a **dict key**, and an **empty
+recognizer list** were all **CLEAN** — the last of those returning exactly what a genuinely clean
+document returns.
+
+**Part 2 was settled first, as the order demanded, and it is a real end-to-end route:** a formatted
+account in `build_id` passed the schema (unconstrained string), passed the scan (no recognizer),
+passed `assert_sendable`, and `notifier.py:540` interpolates `build_id` **verbatim** into the
+Morning Brief text that becomes `AlertEvent.text`. Closed by **constraining the shape** —
+`^[0-9a-f]{16}$` and the `ToString('s')` timestamp — both **derived from their producers**, never
+invented, and an allowlist rather than another blacklist entry. Four ajv fixtures held `"b1"` and
+Z-suffixed timestamps, values neither producer can emit; they were green only because the field was
+unconstrained.
+
+**#1 in three parts:** `known_secrets` now has **three states** (supplied · `NO_KNOWN_SECRETS_-
+AVAILABLE` declared · anything else empty = **REFUSED**) · normalised comparison so formatting is
+not an evasion · a dict **key** is scanned as **text**. `read_for_sender` **declares** — it reads a
+projection file and has no snapshot, which is the honest repair the order named.
+
+🔴 **The armed cage was FLIPPED, not reverted.** `run_s11_tests.py` SP07 required the refusal to
+**restate** the account it had just refused to let travel — the leak moved into the exception text,
+asserted as a feature. It now requires the **rule named** and the **value absent**.
+
+⚠️ **Two designs backed out, both worth carrying:** (1) the "layer not run" notice as a **pseudo-hit**
+in the returned list breaks both real callers — `assert_sendable` raises on any non-empty result and
+`redact_for_log` treats one as "redact this", so every error string would have been replaced, on the
+error path. (2) the notice on **stderr** was green when hand-run and **the fast tier caught it**:
+`.ps1` wrappers run under `EAP=Stop`, so any stderr from a native command is a thrown error and both
+S11 and S12 returned `exit -1 SUITE THREW` while their python exited 0.
+
+🎯 **The blast radius was found by RUNNING, and one of the twelve call sites is production:**
+notifier's `probe` branch set `secrets = ()` because a delivery probe exists to prove the alert path
+still runs **when the snapshot is broken** — it genuinely has nothing to derive from, on exactly the
+run you most want to succeed. That branch is why this is a sentinel and not a lint.
+
+**Measured after:** S11 78/0 · S12 66/0 · S10 · S13 · `run_schema_cages.ps1` · the full
+`run_contract_binding_tests.ps1` wrapper — all exit 0, and both `.ps1` wrappers green under the tier.
+
+**STILL OPEN — #2**, and it is confirmed rather than assumed: `floating_risk.state` is named in the
+module's own contract as **the** example of a refusal and is never read. Reading `build()`, the only
+`state` it consults is the `system_health` row's. A future state meaning BREACH can still coexist
+with a safe-looking `sensor_state`. **Also declared open:** the **split-value** gap — a secret spread
+across two fields is still not caught. `SP16` asserts that gap is open rather than leaving silence,
+so a later seat that closes it gets a failing case instead of nothing.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S11_2026-08-03.md`.
 
