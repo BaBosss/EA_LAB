@@ -105,6 +105,71 @@
 
 ---
 
+## ORDER-1273 — [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, written before anyone opens one — `OPEN` · ทำได้: Claude/Opus (the lane AFTER this one) · 👉 แนะ: Claude
+
+🔴 **THIS ORDER EXISTS BECAUSE THE EVIDENCE ALREADY EXISTS.** Ten optimizer XMLs are on disk and
+six more are coming. `ORDER-1220` established the rule this repo pays for: a criterion chosen after
+seeing the result is not a criterion. Every hour these surfaces sit unread with no committed rule
+is an hour in which the rule can be shaped by a glance. **Nothing in this order was written with a
+profit factor in view** — the only thing read out of any XML so far is `<Row>` count (2,765–4,437
+per cell), which is how much searching happened, not what it found.
+
+**Owner-ratified 2026-08-03, and it is a deviation that needed a signature.** Design §6.2's ladder
+is *"already ratified — reused verbatim, not re-decided"*: coarse genetic → **fine complete grid
+≤1,000 per zone** → plateau-center. The owner ratified running **the coarse half now** and keeping
+the fine half as real, queued work (`ORDER-1274`), on the ground that decision 13 asks each cell for
+a *"small optimize probe"* and the full ladder belongs to an optimize campaign.
+<br>(TH verbatim: *"ผมอยากให้ทำหมด เดินเต็มนะ แต่เดินแบบข้อ1ก่อน พอทำเสร็จ ให้ติดแบบเต็มแบบข้อ2ไว้เป็น รอทำตอนว่าง"*)
+
+### The criterion. Mechanical, and every constant is pinned HERE rather than chosen later.
+
+1. **Admissible set `A`** = passes in the cell's XML whose trade count clears the §6.2 MAIN floor
+   for that timeframe: **H1 ≥ 100 · H4 ≥ 60**. 🚫 The floor is not lowered to produce a selection.
+2. **`A` empty ⇒ the cell has NO selected configuration.** Record it and say so. It is not a verdict
+   about the EA and must not be written as one — it is the statement that this surface contains
+   nothing interpretable at the participation the policy requires. ⚠️ **Expect this often:** at
+   baseline **1 of 16 cells** clears its floor (BTCUSD H1 = 130 trades; USDJPY H1 = 99 misses by
+   one; the best H4 cell is 58). That number is stated now, before selection, so a lane that finds
+   fourteen empty cells knows it is the predicted outcome and not a broken script.
+3. **Plateau candidate set `P`** = the top **10 %** of `A` by the optimizer's criterion column.
+   Ten percent of ~3,000 admissible passes is ~300 rows — enough for a median to be stable, and far
+   enough from `top-1`, which §6.2 **bans**. The 10 % is pinned here precisely because it is the one
+   number a later reader could otherwise tune until the answer improved.
+4. **The selected configuration is the per-dimension MEDIAN of `P`**, snapped to that dimension's
+   nearest declared grid value. Not the best row: the centre of the plateau, which is what §6.2
+   means and what survives a small shift in the data.
+5. **BOUNDARY (§6.3, decision 19):** if the median lands on the first or last grid value of ANY
+   dimension, the cell is flagged `BOUNDARY` and **the grid is expanded and re-run** — the cell is
+   not closed on it (memory `grid-answer-outside-the-grid`).
+6. **The selected configuration is RE-RUN as a single verification test before it is handed to
+   `ORDER-1254`.** A per-dimension median need not correspond to any row that was actually
+   evaluated, so without this the number handed to BWD would be interpolated rather than measured.
+   One backtest per cell.
+
+**Prohibited:** relaxing the floor · reading a PF before this order is committed · selecting `top-1`
+under any name · picking a cell's configuration by a different rule than another cell's · treating
+"no admissible pass" as a verdict.
+
+---
+
+## ORDER-1274 — [factory/S13] The fine half of the §6.2 ladder, queued rather than dropped — `OPEN (queued — run when the lane is idle)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+The owner ratified running the coarse half now **and doing the full ladder afterwards**, so this
+row exists to make "afterwards" a thing on the board rather than an intention.
+
+Per §6.2, after the coarse genetic: **fine complete grid ≤1,000 combinations per zone**, then
+plateau-center. The zone is the neighbourhood of the plateau `ORDER-1273` selects, so this order is
+blocked on that one and on nothing else.
+
+**Cost, so it is scheduled rather than discovered:** the coarse pass measured **675–3,211 s per
+cell** (H01 sweeps 7 dimensions, H02 sweeps 10; BTCUSD H1 was the slowest at 3,211 s). A complete
+grid of ≤1,000 combinations per cell is the same order of magnitude, so budget **20-30 hours of
+tester wall-clock for 16 cells** and run it on the pinned lane `D:\Meta 5` when nothing else needs
+it. 🚫 Do not shorten the window to save time (§6.2). 🚫 Do not run it on a second install — design
+§8.3 pins `BTCUSD` to the primary for its whole life.
+
+---
+
 ## ORDER-1272 — [factory/S13] `gen_pilot_cells.py --check` is the only thing standing between the coverage store and a hand edit, and NOTHING RUNS IT — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 `ORDER-1250` registered the 16 pilot cells and stated the guarantee in writing — *"generated by
