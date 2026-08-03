@@ -252,10 +252,72 @@ def _invocation_text():
 
 _wiring = _invocation_text()
 
+# ---------------------------------------------------------------------- ORDER-1264 #1
+# THE COMPLETENESS INVENTORY. Until 2026-08-03 the loop below opened with
+#
+#     if not isinstance(_body, dict) or not _body.get("x-enforced-by"): continue
+#
+# so an entity that LOST its enforcement declaration left the check entirely instead of
+# reddening it. The S3 blind audit measured what that cost: 13 of 29 entities carried no
+# declaration and were therefore never checked at all -- `OwnerRef` among them, which is
+# exactly why ORDER-1263 (the pin primitive validates shape and resolves nothing) stayed
+# invisible. A constraint and its enforcement metadata could be deleted TOGETHER and this
+# lint still printed STRUCTURE OK.
+#
+# The absence is now a CLASSIFICATION instead of a silence. Both sets are closed and their
+# union must equal $defs exactly, in BOTH directions, so a new entity is red until someone
+# puts it in one of them, a renamed one is red until the stale entry goes, and moving an
+# entity between them is an edit to THIS file rather than a deletion over in schemas.json.
+# Same self-policing shape as OPEN_ROOT_BY_DESIGN above, for the same reason.
+#
+# _NO_ENFORCEMENT_DECLARATION is named for what it IS and not for what would be
+# comfortable: it does NOT assert that these entities need no enforcement declaration.
+# Several demonstrably do -- `ExecutionKey` gates whether a run may happen at all,
+# `ParameterBinding`'s own description says the wrapper generator and optimize_guard MUST
+# read the same resolver, `RunAttempt` is append-only -- and writing a TRUE declaration for
+# each means auditing its enforcer one at a time, which is ORDER-1280. What this list buys
+# today is only that the hole cannot widen, move, or close itself without a code edit.
+_ENFORCEMENT_DECLARED = frozenset((
+    "AlertDelivery", "AlertEvent", "CandidateManifest", "ControlRoomSnapshotV5",
+    "CoverageCell", "DeploymentAttestationEvent", "Hypothesis", "MagicAllocation",
+    "MetricRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
+    "SnapshotBuilderInput", "SnapshotVerdict", "SystemFinding", "WorkReceipt",
+))
+_NO_ENFORCEMENT_DECLARATION = frozenset((
+    "CandidatePayload", "EvidenceRef", "ExecutionKey", "IdeaRef", "InstrumentProfile",
+    "LogicalSymbol", "ModuleUse", "OwnerRef", "ParameterBinding", "RunAttempt", "RunJournal",
+    "SnapshotMeta", "TestUniverse",
+))
+# `OwnerRef` is on that list TODAY and it is the most expensive entry on it: it is the pin
+# primitive S2's whole ownership discipline rests on, and being unchecked here is why
+# ORDER-1263 survived. It moves to _ENFORCEMENT_DECLARED in the commit that gives it a
+# resolver, not before -- a declaration written ahead of its enforcer is the false
+# governance state this whole block exists to end.
+_inventory = _ENFORCEMENT_DECLARED | _NO_ENFORCEMENT_DECLARATION
+_defs_names = set(d["$defs"])
+chk(not (_ENFORCEMENT_DECLARED & _NO_ENFORCEMENT_DECLARATION),
+    "the two inventory sets are disjoint (both=%s)"
+    % sorted(_ENFORCEMENT_DECLARED & _NO_ENFORCEMENT_DECLARATION))
+chk(_inventory == _defs_names,
+    "every $defs entity is classified by the inventory (unclassified=%s stale-entry=%s) -- an "
+    "entity in neither set would be SKIPPED by every check below, which is the defect ORDER-1264 "
+    "closed" % (sorted(_defs_names - _inventory), sorted(_inventory - _defs_names)))
+_lost = sorted(n for n in _ENFORCEMENT_DECLARED
+               if isinstance(d["$defs"].get(n), dict) and not d["$defs"][n].get("x-enforced-by"))
+chk(not _lost,
+    "no entity classified as declaring enforcement has LOST its x-enforced-by (lost=%s) -- before "
+    "ORDER-1264 this deletion removed the entity from the check instead of failing it" % _lost)
+_gained = sorted(n for n in _NO_ENFORCEMENT_DECLARATION
+                 if isinstance(d["$defs"].get(n), dict) and d["$defs"][n].get("x-enforced-by"))
+chk(not _gained,
+    "no entity classified as undeclared has quietly GAINED an x-enforced-by (gained=%s) -- move it "
+    "to _ENFORCEMENT_DECLARED so its PLANNED/BUILT/WIRED label is actually verified" % _gained)
+
 _counts = {s: 0 for s in _STATUSES}
-for _name, _body in sorted(d["$defs"].items()):
+for _name in sorted(_ENFORCEMENT_DECLARED):
+    _body = d["$defs"].get(_name)
     if not isinstance(_body, dict) or not _body.get("x-enforced-by"):
-        continue
+        continue  # already failed by name above; skipping here only avoids a second, vaguer report
     _st = _body.get("x-enforcement-status")
     _enf = _body.get("x-enforcer")
     chk(_st in _STATUSES,
@@ -273,8 +335,9 @@ for _name, _body in sorted(d["$defs"].items()):
             chk(bool(_enf) and os.path.basename(_enf) in _wiring,
                 "%s is WIRED and %s is actually invoked by a hook or the tier"
                 % (_name, os.path.basename(_enf or "")))
-print("  PLANNED=%d BUILT=%d WIRED=%d -- only WIRED means the constraint is enforced today"
-      % (_counts["PLANNED"], _counts["BUILT"], _counts["WIRED"]))
+print("  PLANNED=%d BUILT=%d WIRED=%d UNDECLARED=%d -- only WIRED means the constraint is enforced "
+      "today, and UNDECLARED is a hole this lint now NAMES instead of skipping (ORDER-1280)"
+      % (_counts["PLANNED"], _counts["BUILT"], _counts["WIRED"], len(_NO_ENFORCEMENT_DECLARATION)))
 
 print("\n=== %s ===" % ("STRUCTURE OK" if fail == 0 else "%d STRUCTURAL FAILURES" % fail))
 sys.exit(1 if fail else 0)

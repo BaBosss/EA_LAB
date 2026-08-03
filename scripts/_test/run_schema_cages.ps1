@@ -1,8 +1,9 @@
 <#
     run_schema_cages.ps1 -- ORDER-1252 (BOX 1b of the S13C handoff, owner-ratified 2026-08-03).
 
-    THE THREE CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
+    THE CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
     IN THE PRE-COMMIT TIER WHILE THE EXPENSIVE PART LEAVES IT.
+    (Three entries at ORDER-1252; a fourth joined at ORDER-1264 and is listed below.)
 
     WHY THE SPLIT RATHER THAN THE DISPLACEMENT. The owner's first choice was to move
     run_contract_binding_tests.ps1 out of the fast tier wholesale. That was attempted by the
@@ -16,22 +17,34 @@
     checker existed, worked, and was not on the commit path of the file it governs") and closed
     with a dedicated case. Displacing the wrapper reopens it.
 
-    So the three entries below stay, and only they do:
+    So the entries below stay, and only they do:
 
-      run_schema_fixtures.py          3.71s   ajv over 41 root + 64 per-entity fixtures AND over
-                                              every live registry row. THE reason this suite
-                                              exists: it is what case E is about.
-      check_schema_structure.py       0.71s   discriminator consistency, the closed-object
-                                              inventory across every entity, and the
-                                              PLANNED/BUILT/WIRED labels checked against the repo
-      gen_design_contracts.py --check 0.05s   CONTRACTS.md still matches schemas.json, and the
-                                              design still links every contract in it
+      run_schema_fixtures.py          5.8-7.2s  ajv over 41 root + 64 per-entity fixtures AND over
+                                                every live registry row. THE reason this suite
+                                                exists: it is what case E is about.
+      check_schema_structure.py       1.1-1.5s  discriminator consistency, the closed-object
+                                                inventory across every entity, the completeness
+                                                inventory (ORDER-1264), and the PLANNED/BUILT/
+                                                WIRED labels checked against the repo
+      run_enforcement_status_tests.py 1.0-1.2s  ORDER-1264: the cage proving the entry above can
+                                                go RED -- 10 mutations, each refused by name
+      gen_design_contracts.py --check 0.1s      CONTRACTS.md still matches schemas.json, and the
+                                                design still links every contract in it
 
-    MEASURED under -Hook (evidence mode index), which is the only number worth quoting -- memory
-    `tier-number-needs-its-invocation`. The entries sum to 4.47s; the wrapper adds one PowerShell
-    process. The 37s that LEFT the tier with run_contract_binding_tests.ps1 is what buys the
-    budget back, and that removal is the owner's ratified decision, recorded in ORDER-1252 with
-    the list of exactly which guards are no longer on the commit path.
+    MEASURED with -Timing under EA_LAB_EVIDENCE=index, which is the only number worth quoting --
+    memory `tier-number-needs-its-invocation`. THREE samples, because one number here would be a
+    fiction: SUM OF ENTRIES = 10.05 / 8.06 / 8.85s, and the wrapper adds one PowerShell process.
+
+    ORDER-1264, 2026-08-03: the table above used to read 3.71 / 0.71 / 0.05 = 4.47s and it was
+    stale in every row -- the SAME three entries now measure 8.8 / 7.1 / 7.9s summed. Recorded
+    rather than quietly overwritten, because the drift is the point: this is the fourth time in
+    this repo a hand-typed timing table has been found wrong (4x, 42x, 41x, and now ~2x), and it
+    is why -Timing exists on this wrapper. It was NOT re-derived on suspicion; it was re-derived
+    because adding an entry required it.
+
+    The 37s that LEFT the tier with run_contract_binding_tests.ps1 is what buys the budget back,
+    and that removal is the owner's ratified decision, recorded in ORDER-1252 with the list of
+    exactly which guards are no longer on the commit path.
 
     Interpreter: tools\python312\python.exe, committed in-repo. run_schema_fixtures.py REQUIRES
     ajv-cli on PATH; if ajv is missing it reports ERROR rather than "rejected", and that
@@ -72,7 +85,15 @@ if (-not (Test-Path -LiteralPath $python)) {
 $scripts = @(
     @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
     @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
-    @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') }
+    @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
+    # ORDER-1264, 2026-08-03. This is the cage that proves the entry above it can FAIL, and it
+    # was left behind in run_contract_binding_tests.ps1 when ORDER-1252 moved that wrapper off
+    # the commit path -- so check_schema_structure.py was running on every schema commit while
+    # the only thing proving its checks can go red ran by hand. That is the ORDER-1272 shape
+    # ("the only thing standing between the store and a hand edit, and NOTHING RUNS IT") and it
+    # would have been repeated here by omission. Measured at 0.38-0.41s when it last ran in a
+    # tier wrapper; re-measured with -Timing in this one below.
+    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() }
 )
 
 $failed = 0

@@ -29,17 +29,72 @@ import gen_design_contracts as gen  # noqa: E402
 
 CHECKER = '_triage/factory_os/check_schema_structure.py'
 
+def _patch(entity, **fields):
+    def mutate(doc):
+        doc['$defs'][entity].update(fields)
+    return mutate
+
+
+def _drop(entity, *keys):
+    def mutate(doc):
+        for k in keys:
+            doc['$defs'][entity].pop(k, None)
+    return mutate
+
+
+def _rename(entity, new):
+    def mutate(doc):
+        doc['$defs'][new] = doc['$defs'].pop(entity)
+    return mutate
+
+
+def _add_entity(name):
+    def mutate(doc):
+        doc['$defs'][name] = {'type': 'object', 'description': 'a contract nobody classified'}
+    return mutate
+
+
+# (label, the name a [FAIL] line must NAME, mutation)
 CASES = (
     ('a PLANNED constraint relabelled WIRED', 'Hypothesis',
-     {'x-enforcement-status': 'WIRED'}),
+     _patch('Hypothesis', **{'x-enforcement-status': 'WIRED'})),
     ('a BUILT row whose enforcer does not exist', 'SnapshotVerdict',
-     {'x-enforcer': '_triage/factory_os/does_not_exist.py'}),
+     _patch('SnapshotVerdict', **{'x-enforcer': '_triage/factory_os/does_not_exist.py'})),
     ('a WIRED row whose enforcer nothing invokes', 'MagicAllocation',
-     {'x-enforcer': '_triage/factory_os/snapshot_validator.py'}),
+     _patch('MagicAllocation', **{'x-enforcer': '_triage/factory_os/snapshot_validator.py'})),
     ('an invented status value', 'WorkReceipt',
-     {'x-enforcement-status': 'TOTALLY_FINE'}),
+     _patch('WorkReceipt', **{'x-enforcement-status': 'TOTALLY_FINE'})),
     ('a PLANNED row quietly naming a real enforcer', 'CoverageCell',
-     {'x-enforcer': 'scripts/check_state.ps1'}),
+     _patch('CoverageCell', **{'x-enforcer': 'scripts/check_state.ps1'})),
+
+    # ---- ORDER-1264 #1. FOUR of the five cases below were GREEN against the pre-fix checker
+    # (measured 2026-08-03 by running each mutation against `git show HEAD:` of the checker,
+    # not assumed), because an entity carrying no `x-enforced-by` was `continue`d past rather
+    # than failed and nothing held an inventory of which entities must carry one. The first two
+    # are the audit's own words -- "a constraint and its enforcement metadata can be deleted
+    # TOGETHER and the lint still prints STRUCTURE OK".
+    #
+    # The exception is stated rather than left to read as a fifth catch: the ExecutionKey case
+    # was ALREADY red at HEAD, because once `x-enforced-by` appeared the old loop stopped
+    # skipping the entity and demanded a valid `x-enforcement-status`, which it had none. What
+    # ORDER-1264 changed for it is only WHICH check fires and what the message tells you to do
+    # (move it to _ENFORCEMENT_DECLARED). It is kept because it pins the inventory's second
+    # direction, not because it is evidence of the repair.
+    ('ORDER-1264: x-enforced-by DELETED from a declared entity', 'SafeProjection',
+     _drop('SafeProjection', 'x-enforced-by')),
+    ('ORDER-1264: constraint AND metadata deleted together', 'ReconciliationEvidence',
+     _drop('ReconciliationEvidence', 'x-enforced-by', 'x-enforcement-status', 'x-enforcer')),
+    ('ORDER-1264: an undeclared entity quietly GAINS a declaration', 'ExecutionKey',
+     _patch('ExecutionKey', **{'x-enforced-by': 'somebody_validator: trust me'})),
+    ('ORDER-1264: a new entity classified by nobody', 'TotallyNewContract',
+     _add_entity('TotallyNewContract')),
+    # Both inventory directions at once: the new name is unclassified AND the old one is a stale
+    # entry. A rename is used rather than a deletion deliberately -- deleting a ROUTED entity
+    # crashes the branch-resolution check at line 77 with a KeyError before the inventory
+    # assertion is ever reached, so a delete-case would be green for the wrong reason. Measured,
+    # not assumed. `ModuleUse` is a helper, so renaming it reaches the assertion cleanly.
+    ('ORDER-1264: a renamed entity leaves a stale inventory entry', 'ModuleUse',
+     _rename('ModuleUse', 'ModuleUseRenamed')),
 )
 
 
@@ -73,9 +128,9 @@ def main():
 
     print('\n=== %d mutations, each must be refused BY NAME ===' % len(CASES))
     try:
-        for label, entity, patch in CASES:
+        for label, entity, mutate in CASES:
             doc = json.loads(original)
-            doc['$defs'][entity].update(patch)
+            mutate(doc)
             io.open(gen.SCHEMA_PATH, 'w', encoding='utf-8', newline='\n').write(
                 json.dumps(doc, indent=2, ensure_ascii=False) + '\n')
             rc, out = run_checker()

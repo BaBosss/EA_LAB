@@ -857,6 +857,11 @@ $SUITE_GUARDS = @{
                                           'factory/parameter_bindings.jsonl',
                                           '_triage/factory_os/run_schema_fixtures.py',
                                           '_triage/factory_os/check_schema_structure.py',
+                                          # ORDER-1264: the cage that proves check_schema_structure
+                                          # can go RED joined this wrapper, and PART 4b demanded
+                                          # this line on the first run after it did -- which is the
+                                          # trigger map working, not paperwork.
+                                          '_triage/factory_os/run_enforcement_status_tests.py',
                                           # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
                                           # run after this suite was registered, not remembered:
                                           # run_schema_fixtures imports registry (to load every

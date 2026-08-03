@@ -32,12 +32,21 @@ HOW IT GOT INTO THE PRE-COMMIT TIER -- ORDER-611, 2026-07-31
   2.2s standalone, three batched ajv processes (root cases, per-entity isolation, harness probes).
 
 ORDER-611: what "every entity" means here
-  S3's acceptance says every entity must reject at least one crafted bad instance. Measured before
-  the order was written: 15 of 27 entities had NO negative and only 5 had ANY positive -- including
-  `OwnerRef`, the pin primitive every other entity references. The per-entity half runs against an
-  ISOLATION HARNESS rather than the real root, because the real root is a 19-branch `oneOf` where
-  one malformed instance yields 20 errors from branches it has nothing to do with. See
-  build_isolation_schema for the measurement that killed the first, pattern-matching design.
+  S3's acceptance says every entity must reject at least one crafted bad instance. Measured on
+  2026-07-31, before the order was written: 15 of the 27 entities THAT EXISTED THEN had NO
+  negative and only 5 had ANY positive -- including `OwnerRef`, the pin primitive every other
+  entity references. The per-entity half runs against an ISOLATION HARNESS rather than the real
+  root, because the real root is a `oneOf` over every routed entity, where one malformed instance
+  yields an error from each branch it has nothing to do with. See build_isolation_schema for the
+  measurement that killed the first, pattern-matching design.
+
+ORDER-1264 #2, 2026-08-03: THE COUNTS IN THIS HEADER WERE STALE AND NOTHING NOTICED
+  The S3 blind audit re-measured them: 29 `$defs` against a header saying 27, a 21-branch root
+  against a stated 19. Every present-tense arity in this file is therefore now either derived at
+  runtime or declared once in HEADER_COUNTS and CHECKED by check_header_counts(), which runs
+  first in main(). Numbers that appear in prose below with a DATE are historical measurements and
+  are true of that date -- they are deliberately not rewritten to today's values, because a
+  historical measurement rewritten to match the present stops being evidence of anything.
 
 REQUIRES  ajv-cli  (npm install -g ajv-cli)
 USAGE     python _triage/factory_os/run_schema_fixtures.py
@@ -1110,10 +1119,69 @@ def run(schema, instance):
         os.unlink(path)
 
 
+# ----------------------------------------------------------------------- ORDER-1264 #2
+# These counts used to live in the header as prose, and the S3 blind audit found every one of
+# them stale: it re-measured 29 `$defs` and a 21-branch root against a header claiming 27 and 19.
+# Nothing noticed, because a hand-typed measurement has no harness -- the repo has paid for that
+# lesson three times (memory `measurement-table-needs-its-harness`). They are declared here and
+# CHECKED below, so adding an entity or a fixture reddens this suite in the same commit instead
+# of quietly ageing a sentence nobody re-reads. If a number below is wrong, the schema is not the
+# thing to change: update the number, in the commit that changed the thing it counts.
+HEADER_COUNTS = {
+    'defs': 29,
+    'root_branches': 21,
+    'root_cases': 41,
+    'entity_cases': 64,
+    'entity_negatives': 33,
+    'entities_with_a_negative': 29,
+}
+
+
+def measured_counts():
+    doc = json.loads(io.open(SCHEMA, encoding='utf-8').read())
+    negatives = [c for c in ENTITY_CASES if c['expect'] == INVALID]
+    return {
+        'defs': len(doc['$defs']),
+        'root_branches': len(doc['oneOf']),
+        'root_cases': len(CASES),
+        'entity_cases': len(ENTITY_CASES),
+        'entity_negatives': len(negatives),
+        'entities_with_a_negative': len({c.get('covers') for c in negatives if c.get('covers')}),
+    }
+
+
+def check_header_counts():
+    """Return the number of counts that have drifted, having printed each one."""
+    live = measured_counts()
+    drifted = 0
+    for key in sorted(HEADER_COUNTS):
+        ok = live[key] == HEADER_COUNTS[key]
+        if not ok:
+            drifted += 1
+        print("  [%s] %-26s declared=%-4d measured=%d%s"
+              % ('OK ' if ok else 'BAD', key, HEADER_COUNTS[key], live[key],
+                 '' if ok else '   <- update HEADER_COUNTS in this file, not the schema'))
+    # `entities_with_a_negative` is the S3 acceptance itself, so it gets a second, absolute
+    # assertion rather than only an equality against a number I typed: EVERY entity must have
+    # one. A declared 29 that matched a measured 29 would still be green if the schema grew to
+    # 30 entities and the 30th had no negative -- the equality above catches that through
+    # `defs`, but only while both numbers are maintained together, and this does not depend on
+    # my having remembered to maintain either.
+    covered = live['entities_with_a_negative'] == live['defs']
+    if not covered:
+        drifted += 1
+    print("  [%s] every $defs entity has at least one NEGATIVE fixture (%d of %d)"
+          % ('OK ' if covered else 'BAD', live['entities_with_a_negative'], live['defs']))
+    return drifted
+
+
 def main():
     print("=== real JSON Schema validation (ajv, draft 2020-12) ===")
     print("schema: %s\n" % SCHEMA)
     bad = 0
+    print("COUNTS THIS SUITE CLAIMS ABOUT ITSELF (ORDER-1264 #2)")
+    bad += check_header_counts()
+    print("")
     batch = run_batch(SCHEMA, CASES)
     for c in CASES:
         got, out = batch[c['name']]
