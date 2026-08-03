@@ -1,7 +1,9 @@
 # OPENING PROMPT — the selection ran, and it asks a question before it answers one
 
 > Written 2026-08-04 by lane `S-2026-08-04-S13E` (`ORDER-1273` DONE · `ORDER-1272` DONE ·
-> `1300`-`1302` opened). **`ORDER-1254` is NOT next**, and that is the whole point of this file.
+> `ORDER-1300` opened **and ratified in-session** · `1301`-`1302` opened).
+> **The next action is `ORDER-1273` step 6 — two backtests — and it is unblocked.** `ORDER-1254`
+> may then proceed on those two cells and on nothing else.
 > ⚠️ A second lane, `S-2026-08-04-CORRECT3` (block `1310-1319`), was live throughout and may still
 > be. Read `docs/SESSION_LEDGER.md` first. It owns `ORDER-1269`/`1267`/`1266`/`1257` and the
 > `_triage/factory_os/check_s2a_*` files; it declares 🚫 on `factory/**`, `scripts/pilot_probe_*`
@@ -47,34 +49,49 @@ checker-not-implemented)`** — this lane produced no new acceptance evidence, d
 
 ---
 
-## 🔴 THE THING TO SETTLE FIRST — `ORDER-1300`, and it needs the owner
+## ✅ `ORDER-1300` IS SETTLED — the owner ratified it in-session, do not re-ask
 
-Design §6.2, one sentence: *"`Criterion` 0→7 (Complex), **engine-edge uses PF + double trade
-floor** · trade floors H4/D1 ≥60, H1/M30 ≥100"*. `pilot_probe.ps1` quotes the first half of that
-sentence to justify launching with `-Criterion 1`. Both pilot hypotheses carry `engine_edge=true`.
-**`ORDER-1273` pinned the undoubled floor** — H1 ≥ 100, H4 ≥ 60 — while its own prohibition list
-opens with *"relaxing the floor"*.
+Design §6.2 says *"engine-edge uses PF + **double** trade floor"*, both pilot hypotheses carry
+`engine_edge=true`, and `ORDER-1273` pinned the **undoubled** floor. Measured over all sixteen
+surfaces, base (100/60) against doubled (200/120): **only 2 of 16 cells keep the same selected
+configuration**, and both `EURUSD` cells of H01 lose their selection entirely. It was raised rather
+than decided from the seat, and the owner chose:
 
-Measured over all sixteen surfaces, base (100/60) against doubled (200/120):
+> ✅ **KEEP the base floor — H1 ≥ 100 · H4 ≥ 60.** (TH: *"คง floor เดิม 100/60"*.)
+> The rule and its **scope** are in **`PROJECT_STATE.md` §3**. The doubling rule is NOT deleted —
+> it stays in force wherever §6.2 governs an optimize **campaign** or a deploy-track number; what
+> was ratified is that a decision-13 *"small optimize probe"* is not that campaign.
 
-| | base | doubled |
-|---|---|---|
-| cells with an admissible pass | 16/16 | 14/16 (both `EURUSD` cells of H01 fall to zero) |
-| cells whose selected configuration is IDENTICAL | — | **2 of 16** |
+**So `ORDER-1273`'s sixteen selections are final at that floor.** 🚫 Do not re-run the selector under
+any other floor and record the output as *the* selection. 🚫 100/60 is now pinned for this step —
+lowering it further needs a new ratification.
 
-So the floor decides what fourteen cells hand to BWD, and whether two hand anything.
-**Do not decide this from the seat.** `ORDER-1220` is precisely about who may change a criterion
-after the surfaces have been read; the doubled floor being *stricter* and *design-ratified* makes it
-the likely answer, not a licence to apply it unilaterally. 🚫 Do not re-run the selector under the
-doubled floor and record the output as *the* selection. 🚫 Do not settle it by counting how many
-cells each floor leaves alive.
+🔴 **Still owed, and it is why `ORDER-1300` is `DONE` rather than closed silently:**
+`_triage/EA_LAB_FACTORY_OS_DESIGN.md` §6.2 must be amended to say **which step each floor governs**.
+Until then the design text and the executed criterion still read as disagreeing, and the next reader
+re-opens the question — which is exactly the loop a ratification is meant to end. This lane was
+prohibited from touching that file, so it goes to whoever owns the design next.
 
 ---
 
 ## The work, in the order the evidence forces
 
-1. **`ORDER-1300` — the floor.** Owner decision. Everything downstream reads differently depending
-   on it, so nothing below is worth tester wall-clock until it lands.
+1. 🔵 **`ORDER-1273` step 6 — re-run the two SELECTED configurations once each. THIS IS THE NEXT
+   ACTION, and it is unblocked.** The ratification made it so mid-session and this lane did not run
+   it; that is a deliberate stop, not an oversight. A per-dimension median need not correspond to
+   any row that was evaluated, so without this the number handed to `ORDER-1254` is interpolated
+   rather than measured. Two cells only: `B14-H01-r1/BTCUSD/H4` and `B14-H02-r1/BTCUSD/H4`; the
+   selected values are in `factory/runs/pilot/selection/selection_20260804_051809.jsonl`.
+   **The design decision to make first, because it is the only reason this was not done here:**
+   `pilot_cells.ps1` already has the three pieces — `Get-EffectiveSet` (pinned hypothesis config +
+   overrides → `gen_default_preset.py`), `Invoke-Cell` (`mt5_run.ps1` + the freshness check), and
+   `Get-ReportMetrics` (`parse_mt5_report.py`). Either **extract those three into
+   `scripts/lib/pilot_run.ps1`** and dot-source from both, or write a separate verifier that calls
+   the same three PYTHON tools directly — the single-implementation rule binds on
+   `gen_default_preset.py` / `parse_mt5_report.py`, not on the thin PowerShell wrappers. What must
+   **not** happen is a second preset generator or a second report parser.
+   ⚠️ Apply `_41_FixedLot=0.03` (the probe swept the `lot0p03` configuration; a verification at a
+   different lot verifies a different thing) and keep `-Window MAIN -Model 1`.
 2. **`ORDER-1302` — the fourteen BOUNDARY cells, and the conflict inside "expand the grid".** The
    declared grid *is* `safe_range` in `factory/parameter_bindings.jsonl` — the range the store calls
    **safe**. Widening it to satisfy §6.3 widens a safety declaration, and four edges cannot be
@@ -90,12 +107,11 @@ cells each floor leaves alive.
    deferred, not by edge (memory `guard-bounds-floating-not-episode`). No verdict follows from this
    and no re-ranking may be done on the existing surfaces — but nobody should quote a plateau PF of
    12,211 as a quality number.
-4. **`ORDER-1273` step 6 — re-run each selected configuration once.** Blocked on item 1: a
-   verification run of a configuration that may not be the selected one buys nothing.
-5. **`ORDER-1254` — BWD then Model 4.** Re-blocked on 1300 + 1302 and marked so on the board.
-6. `ORDER-1270` / `1271` (the guard layers still off for every non-pilot caller) · `ORDER-1255` ·
-   `ORDER-1256` · `ORDER-1274` (the fine half of the §6.2 ladder) are untouched and unblocked by
-   any of the above — **these are the ones to take if the owner is not available.**
+4. **`ORDER-1254` — BWD then Model 4.** May proceed **on the two verified cells only**, after step 6.
+   Everything else waits on `ORDER-1302`. 🚫 BWD is never a search surface (§6.2).
+5. `ORDER-1270` / `1271` (the guard layers still off for every non-pilot caller) · `ORDER-1255` ·
+   `ORDER-1256` · `ORDER-1274` (the fine half of the §6.2 ladder) are untouched and blocked by
+   nothing above — **these are the ones to take if the MT5 lane is busy.**
 
 🚫 **Still: no verdict from automation.** Design §10 stops this slice at `EVIDENCE_COMPLETE`.
 Everything measured is **Model 1 on MAIN**, so nothing produced so far is verdict-grade.
@@ -153,8 +169,9 @@ Everything measured is **Model 1 on MAIN**, so nothing produced so far is verdic
 
 ## Do NOT do in this session
 
-- 🚫 Decide `ORDER-1300` from the seat · 🚫 re-run the selector under a different floor and record it
-  as the selection · 🚫 re-rank the existing surfaces on a different column · 🚫 relax either floor.
+- 🚫 Re-ask the owner about the trade floor — it is ratified, `PROJECT_STATE.md` §3 · 🚫 re-run the
+  selector under a different floor and record it as the selection · 🚫 re-rank the existing surfaces
+  on a different column · 🚫 relax either floor.
 - 🚫 Close a BOUNDARY cell by widening only the dimensions that are cheap to widen · 🚫 shorten the
   window to save time (§6.2) · 🚫 run any pilot cell on a second install (§8.3 pins `BTCUSD`) ·
   🚫 search on BWD.
@@ -172,10 +189,12 @@ Everything measured is **Model 1 on MAIN**, so nothing produced so far is verdic
 |---|---|
 | the pre-registered criterion, executed; 2 SELECTED / 14 BOUNDARY / 0 empty | ORDER-1273 — **DONE** |
 | `gen_pilot_cells --check` on the commit path + its cage + the live one-character control | ORDER-1272 — **DONE** |
-| 🔴 the pinned floor is §6.2's BASE floor while both revisions are engine-edge, which doubles it | ORDER-1300 |
+| the pinned floor vs §6.2's doubling rule for engine-edge | ORDER-1300 — **DONE, owner ratified: keep 100/60** |
+| 🔴 amend §6.2 to say which step each floor governs, so the two texts stop disagreeing | ORDER-1300 |
 | the PF-max plateau is entirely configurations with no realised loss | ORDER-1301 |
 | 14 of 16 cells are BOUNDARY, and expanding the grid edits a `safe_range` | ORDER-1302 |
-| re-run each selected configuration once, and BWD 2020-22 then Model 4 | ORDER-1254 |
+| 🔵 re-run the two SELECTED configurations once each (step 6) — UNBLOCKED, next action | ORDER-1273 |
+| BWD 2020-22 then Model 4, on the two verified cells only | ORDER-1254 |
 | the guard's build + ParameterBinding layers are off for every non-pilot caller | ORDER-1270 |
 | enumerate every path by which a parameter value is SELECTED | ORDER-1271 |
 | the parity result manifest; §8.6 items 3-4 | ORDER-1255 |
