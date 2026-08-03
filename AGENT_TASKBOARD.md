@@ -245,6 +245,42 @@ under any name · picking a cell's configuration by a different rule than anothe
 
 ---
 
+## ORDER-1275 — [factory/S13·infra] 🔴 `mt5_optimize.ps1` RETURNS while still holding the lane its own process guard blocks on — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+**Measured tonight, and it cost four cells.** `mt5_optimize.ps1:138-142` breaks out of its wait loop
+**two seconds after the optimizer XML appears** and returns. It never waits for `terminal64.exe` to
+exit and never closes it. Its own FIRST action (`:44-47`) is a process guard that aborts with
+**exit 2** when a terminal with that exe path is running. So a serial batch collides with itself:
+
+```
+20:54  EURUSD H4  OK OPTIMIZER XML ... -> launcher returns, terminal64 STILL UP
+20:54  USDJPY H1  ABORT: this MT5 instance is running   exit=2   0s
+       USDJPY H4  ABORT  exit=2  0s    BTCUSD H1  ABORT  exit=2  0s    BTCUSD H4  ABORT  exit=2  0s
+```
+
+The terminal was still up **15 minutes later** (pid 29128, tester agents idle for 124s), so this is
+not a two-second shutdown race — MT5 does not always exit after a headless optimization, and nothing
+makes it.
+
+🔴 **The batch reported "all six attempted" and produced two.** Nothing was faked: the probe records
+say `exit=2, xml_present=false` and `gen_pilot_cells` excluded them by name, so the evidence chain
+held exactly as designed. What was lost was tester time.
+
+**Fixed only in the caller, deliberately.** `scripts/pilot_probe.ps1` waits for the lane to be free
+before each cell (bounded 300s) and **REFUSES** rather than recording another `exit=2` row — a junk
+record per cell is how a batch reports six attempts and two results. That repairs this lane's
+batches and nothing else: `mt5_run.ps1` has no kill either, and every other serial caller of either
+launcher has the same hole.
+
+**Acceptance.** The launcher leaves the lane in the state its own guard expects when it returns:
+wait for the process to exit with a bounded timeout, and if it has not, close it **by executable
+path** (memory `mt5-selfupdate-breaks-startup-ini-and-pid-kill` — never by pid). ⚠️ Prove the XML is
+already moved before closing anything, and ship a SPECIFICITY case showing a still-working optimizer
+is not killed mid-run. 🚫 Do not "fix" it by adding `-Force` to the callers: that disables the guard
+that stops two runs sharing one install.
+
+---
+
 ## ORDER-1274 — [factory/S13] The fine half of the §6.2 ladder, queued rather than dropped — `OPEN (queued — run when the lane is idle)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 The owner ratified running the coarse half now **and doing the full ladder afterwards**, so this
