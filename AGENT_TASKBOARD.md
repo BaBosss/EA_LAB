@@ -209,6 +209,59 @@ genuinely good and will be persuasive again.
 
 ---
 
+## ORDER-1290 — [factory/S6·S9] A run's SURFACE STATE is printed and lost, so its committed evidence still cannot be asked afterwards — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+Opened by `ORDER-1268`'s own lane, naming the half of its acceptance that is **weaker than the
+sentence implies**. That acceptance reads: *"the runners either refuse a partial `.set` or record
+that they used one, **so a run's own evidence says whether its remainder came from the cache**."*
+
+`ORDER-1268` delivered the first clause and the middle of the second. What all three launchers do
+today is `Write-Output "surface: <STATE> -- <message>"`. Callers capture stdout, so the fact is
+**available at run time** — and it is **gone by the time anyone reads the evidence**. The `.htm`
+report does not carry it, the `.ini` does not carry it, and nothing in `factory/` does. So the
+question the clause was written to make answerable — *"was this number produced with a full
+surface, or partly from the terminal cache?"* — is still unanswerable from anything committed,
+which is the state the clause exists to end.
+
+**Why it was not done in `ORDER-1268`.** Two reasons, both stated rather than discovered later:
+the obvious destination (`_mt5_auto/**`) was held by the live `S-2026-08-03-S13D` lane, and
+writing a `;`-comment into the generated `.ini` is a change to what the **tester** parses, which
+cannot be validated without an MT5 terminal — and that lane held the terminal too.
+
+**Acceptance.** A run leaves a **durable, committed** record of its `.set` surface state alongside
+whatever else identifies it, and a reader asking *"is this number reproducible?"* can answer from
+that record without re-running anything. ⚠️ Decide **where** before writing anything: `RunJournal`
+already exists and already carries an `ExecutionKey`, so a new sidecar may be the wrong shape and a
+`set_surface_state` field on the existing record the right one. ⚠️ Do **not** close this by adding
+another `Write-Output`.
+
+---
+
+## ORDER-1291 — [factory/S10] C10 resolves a candidate's surface at TODAY's vintage, which is a different claim than the one the payload makes — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+Opened by `ORDER-1268`'s own lane, and the limit is already written into
+`candidate.parameter_surface_problems`'s docstring rather than left for a reader to discover.
+
+C10 asks *"is `parameters` the full surface of `build_tag`?"* by parsing `ea_template/core/Inputs.mqh`
+**as the EvidenceSource sees it now** — the index under the hook, the worktree on a manual run. For
+a validator on the commit path that is the right question. It is **not** the question a stored
+candidate asks: a manifest written in August and re-validated in November is claiming its
+parameters were the full surface **of the build it ran on**, and if an input was added to that
+`LAB_ENTRY` tag in between, C10 will refuse a candidate that was correct when it was written.
+
+Nothing is broken today and that is measured, not assumed: `factory/candidates/` does not exist, so
+there is no stored candidate for this to mis-judge. The order exists so the first one does not
+arrive without an answer.
+
+**Acceptance.** Either a candidate carries enough to pin the surface it was full of — the payload
+already holds `source_sha256`, and `OwnerRef` is the repo's pin primitive and now actually resolves
+(`ORDER-1263`) — or the module states in one place that C10 is a HEAD-vintage check and something
+else owns the historical claim. ⚠️ **Do not** answer it by relaxing C10 to a key-count or a
+match-any-known-build test; both are exactly what the ORDER-1268 cage's `LAB_ENTRY_17`-under-`_14`
+case exists to refuse.
+
+---
+
 ## ORDER-1284 — [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is visible from inside it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 `run_guard_trigger_tests.ps1` PART 4 is the check that a suite cannot read a tracked file it has not
@@ -547,7 +600,70 @@ line.
 
 ---
 
-## ORDER-1268 — [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that claims to is a non-emptiness test — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1268 — [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that claims to is a non-emptiness test — `DONE 2026-08-03` (lane `S-2026-08-03-CORRECT2`, limb 1 = `e5d81804`, limb 2 = `b14c7b84`) · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+**OUTCOME — both limbs landed, and the measurement changed the shape of the fix.**
+
+**Re-measured at HEAD before anything was touched**, per the handoff's rule that a Part-2 claim is
+not promoted by fixing it. It reproduces exactly:
+
+```
+parameters = {'OnlyOneKey': 1}  ->  candidate.validate_payload returned []      the defect
+parameters = {}                 ->  refused                                     all it caught
+declared surfaces               =   113 / 116 / 117 / 119 / 121 / 135 inputs
+```
+
+🎯 **THE FINDING WORTH CARRYING FORWARD, and it is not the one in the order's title.** The refusal
+this order asks for **already existed and was already caged**:
+`setfile.read_set(text, surface, require_full_surface=True)` refuses a partial `.set` and names
+every missing key. **Its only caller in the repository was its own test suite.** So the defect was
+never "no such check exists" — it was that the one place a configuration reaches the evidence store
+was judged by a weaker rule in a different file. That is the `BUILT`-not-`WIRED` shape
+`ORDER-1281` names one layer along, and writing a second implementation inside `candidate.py`
+would have rebuilt it with the copies swapped.
+
+**Limb 1 — the evidence path.** `setfile.surface_problems()` is now the single public owner of the
+policy; `read_set` and `candidate` C10 are both callers. `CandidatePayload` gains `build_tag`,
+because *"parameters is the FULL surface"* is unenforceable while nothing names the surface it is
+full **of** — `Inputs.mqh` declares `StackMode` eight times, once per `LAB_ENTRY` tag. Schema change
+cost zero data: `factory/candidates/` does not exist yet. The cage attacks the measured reproducer,
+`{}`, the surface **minus one input**, an undeclared key, a tag naming a build that does not exist,
+and a malformed tag — with a **control** (the real 116-input `LAB_ENTRY_14` surface validates) and
+the case a key **count** cannot tell apart (`LAB_ENTRY_17`'s full surface carried under
+`LAB_ENTRY_14`). The fixture's parameter map is **derived from the real `Inputs.mqh` at run time**;
+a typed-out map of plausible keys is green whether C10 resolves or is deleted.
+
+**Limb 2 — the run path.** `REFUSE OR RECORD`, which is `ORDER-700`'s reasoning and not a
+compromise: `MISMATCH` (a compiled preset that no longer matches its own `; build=... surface=N`
+header) and `UNREADABLE` are **refused**; `UNDECLARED` (the 2,177 legacy files) is **recorded
+loudly**; `NOSETFILE` stays allowed. ⚠️ **A third launcher was found while wiring the two this
+order names, and it was the worst:** `run_backtest.ps1`'s `Get-SetInputs` returns an **empty list**
+for a missing path and prints nothing, so a typo in `-SetFilePath` produced a run configured
+entirely from the tester cache with no warning anywhere in its output. All three are wired.
+**None of the three was guarded by any suite in `$SUITE_GUARDS` before this** — a commit touching a
+launcher ran no cage at all.
+
+🔴 **The mutation probe earned its keep, and the second mutant is the lesson.** Deleting the
+dot-source from `mt5_optimize.ps1` left the WIRING check **GREEN**: it was
+`-notmatch 'setfile_surface\.ps1'`, and the comment two lines above the deleted statement names the
+library — so the guard was satisfied by a **mention** of the file it existed to prove was
+**loaded**. `text-scan-cannot-tell-read-from-mention`, caught by running the control rather than by
+reading the check. It requires a dot-source statement now and goes red under the same mutation.
+
+**Evidence.** `run_s10_tests` green, C1–C10 each attacked, roll-up 9→10 · `run_setfile_tests`
+PART 1 green **with** mutation probes + PART 2 green (7 states, 3 wiring rows) ·
+`run_schema_cages` / `check_schema_structure` / `gen_design_contracts --check` green ·
+`run_guard_trigger_tests` **red first, then green** (it demanded `preset.py`, `setfile.py`,
+`registry.py` on `run_s10_tests`, then the new library tracked and in the pathspec) ·
+`run_guard_shape_lint` green · `check_state` CLEAN.
+
+🚫 **NOT DONE, and must not be inferred:** **no launcher was executed.** The MT5 lane belongs to
+`S-2026-08-03-S13D`; this seat ran no backtest, so every claim is about the library and the wiring,
+never about observed tester behaviour. **Two residual gaps, filed rather than papered over:**
+`ORDER-1290` (the recorded line goes to stdout, which callers capture but which is not a durable
+artefact — a run's committed evidence still cannot be asked afterwards) and `ORDER-1291` (C10
+resolves the surface at the EvidenceSource's vintage, so a candidate carried across a surface
+change is a different claim than the one C10 answers).
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S6_2026-08-03.md` §1.8. **This one crosses slices**, which
 is why it is its own order rather than a row inside `ORDER-1266`.
