@@ -128,7 +128,7 @@ def load_xml_backfill(root=None):
     """
     import glob
     base = os.path.join(root or ROOT, PROBE_DIR.replace('/', os.sep))
-    out = set()
+    out = {}
     for path in sorted(glob.glob(os.path.join(base, 'xml_backfill_*.jsonl'))):
         with io.open(path, encoding='utf-8') as fh:
             for n, line in enumerate(fh, 1):
@@ -143,7 +143,11 @@ def load_xml_backfill(root=None):
                     raise SystemExit('gen_pilot_cells: %s line %d is entity=%r in a back-fill file'
                                      % (os.path.basename(path), n, rec.get('entity')))
                 if rec.get('xml'):
-                    out.add(rec['xml'])
+                    # A row without `passes` predates the pass count; a later row for the same
+                    # artefact supersedes it. Never the reverse -- a known count must not be
+                    # replaced by silence.
+                    if rec['xml'] not in out or rec.get('passes') is not None:
+                        out[rec['xml']] = rec.get('passes')
     return out
 
 
@@ -197,6 +201,15 @@ def probed_cells(probe_runs, baseline_by_cell, backfilled=frozenset()):
                     'gen_pilot_cells: probe %s ran with %s=%r but its baseline used %r. A probe '
                     'measured under a different configuration is not this cell\'s probe.'
                     % (where, field, rec.get(field), base.get(field)))
+        # THE PASS COUNT IS PART OF QUALIFYING, not an optional extra. design 6.7 makes
+        # `trial_count` "the total number of configurations that were ever scored", so a cell at
+        # PROBE_RUN carrying trial_count=0 would state that it was probed and that nothing was
+        # scored -- two claims that cannot both be true. Either the cell knows how much searching
+        # it cost or it is not at PROBE_RUN yet.
+        if backfilled.get(rec.get('xml')) is None:
+            excluded.append('%s: no pass count is recorded for its XML, so trial_count would be 0 '
+                            'for a probed cell. Run scripts/pilot_probe_verify_xml.py.' % where)
+            continue
         if cid in qualifying:
             raise SystemExit(
                 'gen_pilot_cells: cell %s has TWO qualifying optimize-probe records (%s and %s). '
@@ -236,7 +249,8 @@ def build_cells(runs):
     # because a store that silently ignores rows is a store that can hide one.
     baseline_by_cell = {cid: by_cell[cid][REGISTERED_ARM]
                         for cid in order if REGISTERED_ARM in by_cell[cid]}
-    probed, probe_excluded = probed_cells(load_probe_runs(), baseline_by_cell, load_xml_backfill())
+    _backfill = load_xml_backfill()
+    probed, probe_excluded = probed_cells(load_probe_runs(), baseline_by_cell, _backfill)
 
     cells = []
     for cid in order:
@@ -298,15 +312,12 @@ def build_cells(runs):
             # FALSIFIER, it is not in the probe store, and it answers a different question.
             'state': 'PROBE_RUN' if cid in probed else 'BASELINE_RUN',
             'metrics': [metric],
-            # The trials the probe SPENT are not counted here, and the omission is deliberate
-            # rather than an oversight. Design 6.7 defines trial_count as "the total number of
-            # configurations that were ever scored", and that number lives in the optimizer XML --
-            # which is not committed, so deriving it here would make this generator's output
-            # depend on one machine's disk. The number belongs in the probe RECORD, written by the
-            # runner that has the XML in hand, and then read from there. Until it is, 0 is the
-            # honest value for "this generator has not been told", and a reader can see it has
-            # not moved. Tracked with the rest of ORDER-1253.
-            'trial_count': 0,
+            # design 6.7: "the total number of configurations that were ever scored". It is read
+            # from the committed back-fill row, which counted the optimizer XML's scored rows --
+            # NOT re-derived here, because the XML is not committed and a generator whose output
+            # depends on one machine's disk is not a generator. 0 stays 0 for a cell that has not
+            # been probed, which is the only state in which 0 is true.
+            'trial_count': _backfill.get((probed.get(cid) or {}).get('xml'), 0) or 0,
         })
     return cells, probe_excluded
 

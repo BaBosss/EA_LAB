@@ -23,10 +23,16 @@ hours of tester wall-clock to re-derive a fact that is verifiable in millisecond
 cheap, but an unnecessary re-run also re-opens every question about determinism that the existing
 records already answer.
 
+IT ALSO COUNTS THE PASSES, and that is why it runs for EVERY probe record rather than only the
+ones missing `xml_present`. Design §6.7 defines `trial_count` as "the total number of
+configurations that were ever scored"; `gen_pilot_cells` wrote 0 for every cell because that
+number lives in the XML, which the repo does not commit. 0 was true while no probe had run and
+became FALSE the moment one did. Reading it here keeps one reader of the artefact instead of two.
+
 WHAT THIS DOES NOT DO. It does not say the probe was CORRECT, that the search converged, or that
-the surface means anything. It says one thing: a file exists at the path the record names, with
-this many bytes, at this mtime. `gen_pilot_cells.py` treats that as satisfying `xml_present` and
-nothing more.
+the surface means anything -- and it reads no result column. It says two structural things: a file
+exists at the path the record names (this many bytes, this mtime), and it contains this many
+scored configurations.
 
 USAGE
   tools\\python312\\python.exe scripts/pilot_probe_verify_xml.py            # write the back-fill
@@ -37,6 +43,7 @@ import glob
 import io
 import json
 import os
+import re
 import sys
 import time
 
@@ -45,17 +52,51 @@ PROBE_DIR = os.path.join(ROOT, 'factory', 'runs', 'pilot', 'probe')
 ENTITY = 'PilotProbeXmlBackfill'
 
 
+def count_passes(xml_path):
+    """-> (passes, why). The number of CONFIGURATIONS the optimizer scored in this XML.
+
+    design §6.7 defines `trial_count` as "the total number of configurations that were ever
+    scored", and `gen_pilot_cells` wrote 0 for every cell because that number lives here, in a
+    file the repo does not commit. 0 was true while no probe had run and became false the moment
+    one did -- a store stating that nothing was ever scored while ~3,000 configurations were.
+
+    The count is structural, not a result: `<Row>` elements minus the header row, and the header
+    is VERIFIED to be a header rather than assumed (its first cell reads `Pass`). If it does not,
+    this refuses instead of returning a number off by one in an unknown direction.
+    """
+    raw = io.open(xml_path, 'rb').read()
+    text = raw.decode('utf-16' if raw[:2] in (b'\xff\xfe', b'\xfe\xff') else 'utf-8', 'replace')
+    rows = re.findall(r'<Row[^>]*>(.*?)</Row>', text, re.S)
+    if not rows:
+        return 0, 'the XML contains no <Row> elements'
+    first = re.findall(r'<Data[^>]*>(.*?)</Data>', rows[0], re.S)
+    if not first or first[0].strip() != 'Pass':
+        raise SystemExit('pilot_probe_verify_xml: %s row 0 starts with %r, not the expected '
+                         '`Pass` header. Refusing to guess whether it is a header or a result, '
+                         'because the answer changes the count by one in an unknown direction.'
+                         % (os.path.basename(xml_path), (first or ['<empty>'])[0][:40]))
+    return len(rows) - 1, ('<Row> elements minus the verified header row (first cell reads '
+                           '`Pass`); this is how many configurations the optimizer scored')
+
+
 def main(argv):
     dry = '--dry-run' in argv
     rows, missing, already = [], [], 0
     seen = set()
 
     # Any back-fill already recorded, so re-running this is idempotent rather than additive.
+    #
+    # ...but only a row that carries `passes` counts as done. The first ten rows were written
+    # before this tool counted passes, and treating them as complete would leave those cells
+    # with a pass count of zero forever -- idempotence measured against the wrong field, which
+    # is how a back-fill quietly stops back-filling.
     for path in sorted(glob.glob(os.path.join(PROBE_DIR, 'xml_backfill_*.jsonl'))):
         with io.open(path, encoding='utf-8') as fh:
             for line in fh:
                 if line.strip():
-                    seen.add(json.loads(line).get('xml'))
+                    rec = json.loads(line)
+                    if rec.get('passes') is not None:
+                        seen.add(rec.get('xml'))
 
     for path in sorted(glob.glob(os.path.join(PROBE_DIR, 'probe_runs_*.jsonl'))):
         with io.open(path, encoding='utf-8') as fh:
@@ -64,9 +105,6 @@ def main(argv):
                     continue
                 rec = json.loads(line)
                 if rec.get('arm') != 'optimize-probe':
-                    continue
-                if rec.get('xml_present') is not None:
-                    already += 1          # the record speaks for itself; leave it alone
                     continue
                 xml = rec.get('xml')
                 if not xml:
@@ -82,20 +120,24 @@ def main(argv):
                     missing.append('%s -> %s' % (rec.get('cell_id'), xml))
                     continue
                 st = os.stat(xml)
+                passes, why_passes = count_passes(xml)
                 rows.append({
                     'entity': ENTITY,
                     'cell_id': rec.get('cell_id'),
                     'hypothesis_revision': rec.get('hypothesis_revision'),
                     'xml': xml,
                     'bytes': st.st_size,
+                    'passes': passes,
+                    'why_passes': why_passes,
                     'mtime_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(st.st_mtime)),
                     'measured_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
                     'measured_by': 'scripts/pilot_probe_verify_xml.py',
                     'source_record': os.path.basename(path),
-                    'why': ('the PilotProbeRun predates the xml_present field, and its '
-                            'launcher_exit_code cannot be trusted because mt5_optimize.ps1 exited '
-                            '0 on a missing XML until ORDER-1253. This row asserts ONLY that the '
-                            'file exists, measured after the fact.'),
+                    'why': ('measured after the fact, from the artefact itself. It asserts the '
+                            'file EXISTS and how many configurations it scored -- nothing about '
+                            'what they scored. For records written before the xml_present field '
+                            'existed this is also the only evidence the probe produced anything, '
+                            'because mt5_optimize.ps1 exited 0 on a missing XML until ORDER-1253.'),
                 })
 
     for m in missing:
@@ -106,7 +148,8 @@ def main(argv):
         return 1 if missing else 0
     out = os.path.join(PROBE_DIR, 'xml_backfill_%s.jsonl' % time.strftime('%Y%m%d_%H%M%S'))
     for r in rows:
-        print('  %-40s %9d bytes  %s' % (r['cell_id'], r['bytes'], r['mtime_utc']))
+        print('  %-40s %9d bytes  %5d passes  %s'
+              % (r['cell_id'], r['bytes'], r['passes'], r['mtime_utc']))
     if dry:
         print('--dry-run: nothing written')
         return 0
