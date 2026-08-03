@@ -6,17 +6,29 @@
 
 ---
 
-## 🔴 READ THIS BEFORE YOU PLAN ANYTHING
+## 🔴 THIS SESSION AUDITS. IT DOES NOT FIX. READ THIS BEFORE YOU PLAN ANYTHING.
 
-**`S-2026-08-03-S13SCHEMA` is ACTIVE and owns almost every file the audit findings touch** —
-`parity.py` · `factory/parity/**` · `scripts/pilot_*` · `check_pilot_acceptance.py` ·
-`run_s13_tests.py` · `schemas.json` · `run_fast_cages.ps1` · `coverage.jsonl` ·
-`MASTER_BACKLOG.md` §2. **It also holds the MT5 lane.**
+**The owner split the work three ways on purpose (2026-08-03):**
 
-So this session **does not fix the audit findings.** Check `docs/SESSION_LEDGER.md` at the start: if
-S13SCHEMA is CLOSED, the corrections in §C below become available; if it is still ACTIVE, stay off
-its paths entirely and do §A/§B only. Do not "just quickly" edit one of its files — the ledger's
-rule 4 exists because that has cost this project real work.
+| session | job |
+|---|---|
+| `S-2026-08-03-S13SCHEMA` (13C) | builds the BOX 1 items. **Told explicitly NOT to audit** |
+| **this one** | **audits only** — read, judge, write findings. Fixes nothing |
+| a later one | applies the corrections, using the findings both of the above produced |
+
+**Do not collapse those roles, even when it looks efficient and even after 13C closes.** Two
+reasons, and the second is the one that matters:
+
+1. 13C owns almost every file the findings touch — `parity.py` · `factory/parity/**` ·
+   `scripts/pilot_*` · `check_pilot_acceptance.py` · `run_s13_tests.py` · `schemas.json` ·
+   `run_fast_cages.ps1` · `coverage.jsonl` · `MASTER_BACKLOG.md` §2 — **and it holds the MT5 lane.**
+   Editing under it is the collision the ledger's rule 4 exists to prevent.
+2. **An auditor that also repairs ends up grading its own repair.** That is the same principle
+   `AGENTS.md` §5.2 already applies to Codex, applied one level up. §C below is a **handover list**,
+   not a to-do list — write it, hand it on, do not work it.
+
+Check `docs/SESSION_LEDGER.md` at the start anyway, to know what is live and what is finished. If
+13C has CLOSED, its output becomes **another thing to audit** (see §A), not something to fix.
 
 ---
 
@@ -40,6 +52,11 @@ Two carry more risk than the other five and go **first**:
 
 Then **S9** (recoverable scheduler — the resume contract), **S3** (schema validator + negative
 fixtures), **S6** (preset compiler), **S11** (SafeProjection), **S2** (OwnerRef discipline).
+
+**And when 13C closes, its output joins the queue** — the `pf_state` schema change, the 16 registered
+`CoverageCell` rows, the split of the `contract_binding` wrapper, and the parity result manifest. The
+manifest is the highest-value target of the whole list, because §8.6 items 3–4 will be resting on it
+and finding 1.3 already showed the roll-up beneath it discards per-case verdicts.
 
 ## §B — How to run them, learned the hard way today
 
@@ -66,9 +83,10 @@ fixtures), **S6** (preset compiler), **S11** (SafeProjection), **S2** (OwnerRef 
 Write each result to `_triage/factory_os/CODEX_AUDIT_<slice>_<date>.md` — new files, no collisions —
 and record confirmed defects as orders on the board.
 
-## §C — Only once S13SCHEMA is CLOSED: the corrections it owes
+## §C — The corrections owed. **A HANDOVER LIST — this session does not work it.**
 
-Do **not** start these while that lane is ACTIVE.
+Carry these forward, add anything §A turns up, and hand the whole list to the corrections session.
+Writing to any of these files from here is the mistake this prompt exists to prevent.
 
 1. **Correct the carried-loss claim in all six places.** It is false: the tester books a force-closed
    position as a closed deal, so it is inside `gross_loss` and inside PF. Rewrite it as
@@ -109,9 +127,12 @@ Do **not** start these while that lane is ACTIVE.
 | Codex audits A + B, three verified findings + twelve claims | `_triage/factory_os/CODEX_AUDIT_A_B_2026-08-03.md` — DONE |
 | Audit S10 (money path) and S12 (token) | new order, this session |
 | Audit S9 · S3 · S6 · S11 · S2 | new order, this session |
-| Correct the carried-loss claim in six places | §C1 — blocked until S13SCHEMA closes |
-| Fix `_rollup_main()` discarding per-case verdicts, cage first | §C2 — blocked until S13SCHEMA closes |
-| Three missing §8.4 parity cases, or drop the item 3 claim | §C3 — blocked until S13SCHEMA closes |
-| Financing deducted for real, or rename the field | §C4 — blocked until S13SCHEMA closes |
+| Audit 13C's output once it closes — parity result manifest first | new order, this session |
+| Correct the carried-loss claim in six places | §C1 — **handover, corrections session** |
+| Fix `_rollup_main()` discarding per-case verdicts, cage first | §C2 — **handover, corrections session** |
+| Three missing §8.4 parity cases, or drop the item 3 claim | §C3 — **handover, corrections session** |
+| Financing deducted for real, or rename the field | §C4 — **handover, corrections session** |
+| Check `ExitMode=22` + `_2_SuppressLegTP=false` | §C5 — **handover, corrections session** |
+| Record the unmeasured second falsifier limb | §C6 — **handover, corrections session** |
 
-Open with: **"อ่านไฟล์นี้ แล้วเริ่ม — เช็ค ledger ก่อนว่า S13SCHEMA ปิดยัง ถ้ายังให้ทำ §A/§B อย่างเดียว"**
+Open with: **"อ่านไฟล์นี้ แล้วเริ่ม — session นี้ audit อย่างเดียว ไม่แก้อะไรทั้งนั้น เริ่มที่ S10 กับ S12"**
