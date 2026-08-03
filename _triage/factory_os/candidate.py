@@ -60,7 +60,12 @@ PAYLOAD_FIELDS = ('hypothesis_revision', 'module_set', 'experimental', 'logical_
 MANIFEST_FIELDS = ('entity', 'candidate_id', 'candidate_digest', 'payload', 'scorecard_ref')
 PROFILE_KEYS = ('instrument', 'exit', 'sizing', 'safety', 'execution')
 HEX64_PAYLOAD_FIELDS = ('ex5_sha256', 'source_sha256', 'allowlist_sha256', 'effective_config_hash')
-METRIC_FIELDS = ('window', 'pf', 'trades', 'dd_pct', 'run_id', 'lane', 'data_fingerprint', 'model')
+# ORDER-1250: `pf_state` joined MetricRef's required set when `pf` became nullable. This list is
+# held to schemas.json by run_s10_tests ("candidate's vocabulary IS schemas.json's, re-read from
+# the file"), which is what caught the omission the moment the schema moved -- exactly the drift
+# the comment above this block exists to prevent.
+METRIC_FIELDS = ('window', 'pf', 'pf_state', 'trades', 'dd_pct', 'run_id', 'lane',
+                 'data_fingerprint', 'model')
 MODULE_FIELDS = ('token', 'module_version', 'stability')
 OWNER_REF_FIELDS = ('entity', 'owner_type', 'path', 'commit_oid', 'blob_oid', 'raw_sha256')
 WINDOWS = ('MAIN', 'BWD', 'HOLDOUT', 'OTHER')

@@ -37,7 +37,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `TestUniverse` | `factory/universe.jsonl` | claude|user | — |
 | `LogicalSymbol` | `factory/universe.jsonl` | — | — |
 | `InstrumentProfile` | `factory/instrument_profiles.jsonl` | — | — |
-| `MetricRef` | *embedded in its parent — no file* | — | — |
+| `MetricRef` | *embedded in its parent — no file* | — | run_schema_fixtures.py: ajv validates the pf/pf_state conditional in BOTH directions, over the crafted fixtures AND over every live row of every registry store |
 | `CoverageCell` | `factory/coverage.jsonl` | automation for state; claude only for not_applicable_reason | coverage_validator: comparison-group same-lane rule; MASTER_BACKLOG section 2 regenerated from this, never hand-edited |
 | `ExecutionKey` | *embedded in its parent — no file* | — | — |
 | `RunAttempt` | *embedded in its parent — no file* | — | — |
@@ -274,12 +274,13 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`MetricRef`** · embedded — has no file of its own
+**`MetricRef`** · embedded — has no file of its own · enforced by *run_schema_fixtures.py: ajv validates the pf/pf_state conditional in BOTH directions, over the crafted fixtures AND over every live row of every registry store*
 
 | field | type | required | rule |
 |---|---|---|---|
 | `window` | `MAIN` \| `BWD` \| `HOLDOUT` \| `OTHER` | **yes** |  |
-| `pf` | `number` | **yes** |  |
+| `pf` | `number` \| `null` | **yes** | null ONLY with pf_state = UNDEFINED_NO_LOSSES. Never 0 to mean undefined: 0 is a real PF (a run with winners worth nothing) and the tester prints it for both, which is how the inversion happened. |
+| `pf_state` | `DEFINED` \| `UNDEFINED_NO_LOSSES` | **yes** | Why pf is or is not a number. Required so that an absent denominator has to be DECLARED rather than encoded as a value. |
 | `trades` | `integer` | **yes** | min `0` |
 | `dd_pct` | `number` | **yes** |  |
 | `run_id` | `string` | **yes** |  |
@@ -288,6 +289,10 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | `model` | `1` \| `2` \| `4` | **yes** |  |
 
 **Unknown fields:** rejected (closed object).
+
+**Conditional requirements:**
+- **when `pf_state` = `DEFINED`** → `pf` → `number`
+- **when `pf_state` = `UNDEFINED_NO_LOSSES`** → `pf` → `null`
 
 <!-- END GENERATED CONTRACT: MetricRef -->
 

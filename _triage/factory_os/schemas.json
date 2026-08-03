@@ -798,10 +798,14 @@
     },
     "MetricRef": {
       "type": "object",
-      "description": "NEW. Audit P1: rev 1's CoverageCell held MAIN and BWD metrics beside ONE lane and ONE data_fingerprint - but the fingerprint includes the window, so MAIN and BWD can never share one. The pair could be filled from different lanes and rendered as if same-lane. Every metric now carries its own provenance.",
+      "x-enforced-by": "run_schema_fixtures.py: ajv validates the pf/pf_state conditional in BOTH directions, over the crafted fixtures AND over every live row of every registry store",
+      "x-enforcer": "_triage/factory_os/run_schema_fixtures.py",
+      "x-enforcement-status": "WIRED",
+      "description": "NEW. Audit P1: rev 1's CoverageCell held MAIN and BWD metrics beside ONE lane and ONE data_fingerprint - but the fingerprint includes the window, so MAIN and BWD can never share one. The pair could be filled from different lanes and rendered as if same-lane. Every metric now carries its own provenance. ORDER-1250 (owner-ratified 2026-08-03): `pf` is NULLABLE and travels with a required `pf_state`. The pilot found a cell -- USDJPY H1, 99 trades, 99 winners, gross_loss = 0 -- whose profit factor has NO DENOMINATOR. `pf` was `number`, so that cell could only be stored by writing a number that is not true: the tester prints `0` there, and ORDER-1230 already had to repair exactly that inversion, where the best win rate in the matrix rendered as the worst result in it. A bare nullable would have been enough to REPRESENT the case and not enough to make it UNFAKEABLE, so the reason rides along with the number and the two are bound in both directions: DEFINED demands a number, UNDEFINED_NO_LOSSES demands null. A cell with zero trades also has no denominator and is UNDEFINED_NO_LOSSES -- literally true, and `trades` is required beside it so a reader can tell the two apart.",
       "required": [
         "window",
         "pf",
+        "pf_state",
         "trades",
         "dd_pct",
         "run_id",
@@ -820,7 +824,18 @@
           ]
         },
         "pf": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ],
+          "description": "null ONLY with pf_state = UNDEFINED_NO_LOSSES. Never 0 to mean undefined: 0 is a real PF (a run with winners worth nothing) and the tester prints it for both, which is how the inversion happened."
+        },
+        "pf_state": {
+          "enum": [
+            "DEFINED",
+            "UNDEFINED_NO_LOSSES"
+          ],
+          "description": "Why pf is or is not a number. Required so that an absent denominator has to be DECLARED rather than encoded as a value."
         },
         "trades": {
           "type": "integer",
@@ -846,7 +861,47 @@
             4
           ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "pf_state": {
+                "const": "DEFINED"
+              }
+            },
+            "required": [
+              "pf_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "pf": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "pf_state": {
+                "const": "UNDEFINED_NO_LOSSES"
+              }
+            },
+            "required": [
+              "pf_state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "pf": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
     },
     "CoverageCell": {
       "type": "object",

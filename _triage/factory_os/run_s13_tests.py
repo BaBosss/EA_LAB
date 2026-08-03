@@ -472,6 +472,134 @@ check('H8 ATTACK H01 ADVANCED with no cage evidence -> BLOCKED, and the five con
       state == PA.BLOCKED and 'Model-4' in detail, '%s: %s' % (state, detail))
 
 
+# -- items 7, 8 and 9: the cell store, ORDER-1250 -------------------------------------------------
+# These three stopped being stubs when factory/coverage.jsonl gained real CoverageCell rows, so
+# every one of them owes both directions here. The fixtures are synthetic on purpose: driving
+# them against the real store would make each case's answer change the day the pilot advances,
+# which is a cage that reports on the repository instead of on the code.
+
+def metric(**over):
+    m = {'window': 'MAIN', 'pf': 1.31, 'pf_state': 'DEFINED', 'trades': 84, 'dd_pct': 7.4,
+         'run_id': 'S13CELL_fixture', 'lane': r'D:\Meta 5\terminal64.exe',
+         'data_fingerprint': 'df1', 'model': 1}
+    m.update(over)
+    return m
+
+
+def cell(cid, **over):
+    c = {'entity': 'CoverageCell', 'cell_id': cid, 'hypothesis_revision': 'B14-H01-r1',
+         'logical_symbol': 'XAUUSD', 'tf': 'H1', 'universe_version': 'design-8.3-pilot',
+         'state': 'BASELINE_RUN', 'metrics': [metric()], 'trial_count': 0}
+    c.update(over)
+    return c
+
+
+def cell_source(cells, runs=None, extra=None):
+    files = {PA.DESIGN_REL: REAL_DESIGN,
+             PA.COVERAGE_REL: '\n'.join(json.dumps(c) for c in cells)}
+    if runs is not None:
+        files['factory/runs/pilot/fixture.jsonl'] = '\n'.join(json.dumps(r) for r in runs)
+    files.update(extra or {})
+    return FakeSource(files)
+
+
+def sixteen(**over):
+    return [cell('B14-H01-r1/S%d/H1' % i, **over) for i in range(PA.PILOT_CELL_COUNT)]
+
+
+# item 7 ------------------------------------------------------------------------------------------
+state, detail = PA.item_cells_baseline_probe(cell_source([]))
+check('C1 no registered cell -> BLOCKED, not FAIL (absent evidence is not contradiction)',
+      state == PA.BLOCKED and 'no pilot cell is registered' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_cells_baseline_probe(cell_source(sixteen(state='PROBE_RUN')))
+check('C2 POSITIVE 16 cells all at PROBE_RUN -> PASS',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+# 🔴 THE CASE THIS ITEM EXISTS FOR. Every cell has had its Baseline and the flat-lot falsifier
+# arm; none has had the decision-13 optimize probe. If this returned PASS, the item would be
+# tickable from an arm that answers a different question -- which is the single thing the order
+# that wrote this handler was told, by name, not to do.
+state, detail = PA.item_cells_baseline_probe(cell_source(sixteen()))
+check('C3 ATTACK 16 cells at BASELINE_RUN -> BLOCKED, and it says the probe is still owed',
+      state == PA.BLOCKED and 'decision-13 optimize probe' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_cells_baseline_probe(cell_source(sixteen()[:9] + [
+    cell('B14-H01-r1/S99/H1', state='NOT_APPLICABLE',
+         not_applicable_reason='no tick history on this lane before 2020')]))
+check('C4 a NOT_APPLICABLE cell with a written reason counts as satisfied (the second limb)',
+      state == PA.BLOCKED and 'S99' not in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_cells_baseline_probe(cell_source(
+    sixteen(state='PROBE_RUN')[:15]
+    + [cell('B14-H01-r1/S99/H1', state='NOT_APPLICABLE', not_applicable_reason='no')]))
+check('C5 ATTACK NOT_APPLICABLE with no written reason -> FAIL (a cell excluded for no reason)',
+      state == PA.FAIL and 'no written reason' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_cells_baseline_probe(cell_source(sixteen(state='PROBE_RUN') + [
+    cell('B14-H01-r1/S99/H4', state='PROBE_RUN')]))
+check('C6 ATTACK 17 cells -> FAIL (a cell outside the pre-registered universe)',
+      state == PA.FAIL and 'larger than the design' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_cells_baseline_probe(cell_source(sixteen(state='PROBE_RUN')[:4]))
+check('C7 fewer cells than the design -> BLOCKED and it SAYS how many are unregistered',
+      state == PA.BLOCKED and 'not registered at all' in detail, '%s: %s' % (state, detail))
+
+# item 8 ------------------------------------------------------------------------------------------
+state, detail = PA.item_pf_with_n_and_dd(cell_source([cell('c1')]))
+check('D1 POSITIVE a cell with a metric displays PF, n and DD together -> PASS',
+      state == PA.PASS and 'PF=1.31' in detail and 'n=84' in detail and 'DD=7.4' in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_pf_with_n_and_dd(cell_source([cell('c1', metrics=[])]))
+check('D2 ATTACK a cell with an empty metrics array -> FAIL, not a blank row',
+      state == PA.FAIL and 'no metric at all' in detail, '%s: %s' % (state, detail))
+
+# 🔴 The inversion ORDER-1230 had to repair, asserted rather than trusted: the tester prints 0
+# for a run with no losing trade, and 0 is also a REAL profit factor. If UNDEF ever rendered as a
+# number again, the best win rate in the matrix would read as the worst result in it.
+state, detail = PA.item_pf_with_n_and_dd(cell_source([
+    cell('c1', metrics=[metric(pf=None, pf_state='UNDEFINED_NO_LOSSES', trades=99)])]))
+check('D3 an UNDEFINED profit factor renders as UNDEF, never as a number',
+      state == PA.PASS and 'UNDEF' in detail and 'PF=0' not in detail,
+      '%s: %s' % (state, detail))
+
+state, detail = PA.item_pf_with_n_and_dd(cell_source([]))
+check('D4 no cells at all -> BLOCKED (nothing to display is not a clean display)',
+      state == PA.BLOCKED, '%s: %s' % (state, detail))
+
+# item 9 ------------------------------------------------------------------------------------------
+runs_ok = [{'entity': 'PilotCellRun', 'cell_id': 'c1', 'arm': 'baseline',
+            'lane': r'D:\Meta 5\terminal64.exe', 'data_fingerprint': 'df1'}]
+state, detail = PA.item_lane_and_fingerprint(cell_source([cell('c1')], runs=runs_ok))
+check('L1 POSITIVE every metric and run carries lane + fingerprint on ONE lane -> PASS',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+state, detail = PA.item_lane_and_fingerprint(cell_source([], runs=None))
+check('L2 nothing committed at all -> BLOCKED, not PASS (silence is not a clean lane)',
+      state == PA.BLOCKED, '%s: %s' % (state, detail))
+
+state, detail = PA.item_lane_and_fingerprint(
+    cell_source([cell('c1', metrics=[metric(data_fingerprint='')])], runs=runs_ok))
+check('L3 ATTACK a metric with no data fingerprint -> FAIL',
+      state == PA.FAIL and 'data_fingerprint' in detail, '%s: %s' % (state, detail))
+
+# The load-bearing one: BTC tick history differs 14x across installs, so two lanes in one body of
+# evidence is a WRONG number, not a noisy one.
+state, detail = PA.item_lane_and_fingerprint(cell_source(
+    [cell('c1'), cell('c2', metrics=[metric(lane=r'D:\Meta 5b\terminal64.exe')])], runs=runs_ok))
+check('L4 ATTACK evidence spanning two MT5 installs -> FAIL naming both lanes',
+      state == PA.FAIL and 'Meta 5b' in detail and 'cross-install' in detail,
+      '%s: %s' % (state, detail))
+
+# SPECIFICITY: the run half is not decoration. A run record missing a lane must be caught even
+# when every registered METRIC is clean -- otherwise the rule silently covers a third of the runs.
+state, detail = PA.item_lane_and_fingerprint(cell_source(
+    [cell('c1')], runs=[dict(runs_ok[0], lane='')]))
+check('L5 SPECIFICITY a RUN record with no lane is caught even when every metric is clean',
+      state == PA.FAIL and 'fixture.jsonl' in detail, '%s: %s' % (state, detail))
+
+
 # =================================================================================================
 print('')
 print('[s13] PART 6 -- the output cannot kill its own process (the -1 SUITE THREW shape)')

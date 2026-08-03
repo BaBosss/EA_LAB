@@ -185,12 +185,40 @@ Write-Host '   -- E: the ajv live-row guard must be TRIGGERED by the store it go
 # -- but staging factory/instrument_profiles.jsonl selected only THIS suite. The checker existed,
 # worked, and was not on the commit path of the file it governs. A guard the governed input does
 # not trigger runs when something ELSE is staged, which is BACKLOG-D32's defect one layer up.
+# ORDER-1252 (BOX 1b): this case USED to name `run_contract_binding_tests.ps1` literally, and
+# that wrapper has now left the fast tier with the ajv guard moving to `run_schema_cages.ps1`.
+# Retyping the new name here would leave the same weakness one rename away, and -- worse -- a
+# case whose assertion is a suite NAME can be satisfied by renaming rather than by wiring.
+#
+# So the assertion is DERIVED: whatever suites the store selects, at least one of them must
+# actually INVOKE run_schema_fixtures.py. That is the guarantee the blind audit asked for, stated
+# as itself. Editing this is not making a FAIL go away -- the rule is unchanged and strictly
+# stronger; only the suite's identity moved, and it moved by the owner's ratified decision.
 $selFile = Join-Path $work 'staged.txt'
 Set-Content -LiteralPath $selFile -Encoding ASCII -Value 'factory/instrument_profiles.jsonl'
 $sel = & powershell @('-NoProfile','-File',(Join-Path $RepoRoot ('scripts'+[char]92+'_test'+[char]92+'run_fast_cages.ps1')),
                       '-StagedPathsFile',$selFile,'-ExportSelection') 2>&1
-Ok 'E staging a registry store selects the suite where ajv validates live rows' `
-    ((@($sel) -join ' ') -match 'run_contract_binding_tests\.ps1')
+$selected = @($sel) -join ' '
+$ajvHost = $null
+foreach ($f in (Get-ChildItem -LiteralPath (Join-Path $RepoRoot 'scripts\_test') -Filter '*.ps1')) {
+    if ($selected -notmatch [regex]::Escape($f.Name)) { continue }
+    $body = Get-Content -Raw -LiteralPath $f.FullName
+    # 🔴 The EXECUTED array only, never the whole file. The first version of this search matched
+    # anywhere in the text and answered `run_registry_tests.ps1` -- THIS file -- because the
+    # comment four lines above names run_schema_fixtures.py while explaining the case. Being
+    # named in prose is not being invoked (memory `text-scan-cannot-tell-read-from-mention`), and
+    # check_schema_structure._invocation_text solves the identical problem the identical way:
+    # whitelist the array that actually executes things, because blacklisting prose is not
+    # decidable.
+    $m = [regex]::Match($body, '(?s)\$scripts\s*=\s*@\((.*?)\r?\n\)')
+    if (-not $m.Success) { continue }
+    if ($m.Groups[1].Value -match 'run_schema_fixtures\.py') {
+        $ajvHost = $f.Name
+        break
+    }
+}
+Ok "E staging a registry store selects the suite where ajv validates live rows (found: $ajvHost)" `
+    ($null -ne $ajvHost)
 Ok 'E and it still selects this suite too, so neither replaced the other' `
     ((@($sel) -join ' ') -match 'run_registry_tests\.ps1')
 # SPECIFICITY: an unrelated staged path must NOT select them, or the assertion above proves

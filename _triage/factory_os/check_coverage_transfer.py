@@ -58,6 +58,8 @@ import gen_coverage as gen  # noqa: E402  (path is set above)
 BACKLOG_PATH = gen.BACKLOG_PATH
 COVERAGE_PATH = gen.COVERAGE_PATH
 RECON_PATH = gen.RECONCILIATION_PATH
+# ORDER-1250: the contract a native CoverageCell row is judged against, read as a judged input.
+SCHEMAS_PATH = '_triage/factory_os/schemas.json'
 PHRASE = gen.GENERATED_PHRASE
 
 # Header region = everything before the first `## ` heading. That is where the owner banner lives
@@ -336,11 +338,17 @@ def a2_covers_the_hand_table(section, records, problems):
     n_rows = len(b_records)
     n_cells = sum(len(b['cells']) for b in b_records)
     n_live = sum(len(b.get('live_cells') or []) for b in b_records)
-    got_cells = sum(len(r.get('cells') or []) for r in records)
-    got_live = sum(len(r.get('live_cells') or []) for r in records)
-    if len(records) < n_rows or got_cells < n_cells or got_live < n_live:
+    # ORDER-1250: IMPORTED rows only. The owner's condition is that the generated table is not
+    # thinner than the hand table it replaced, and a native CoverageCell appears in neither. If
+    # the count included them, adding pilot cells would MASK the deletion of an imported row --
+    # a guard that a growing store switches off.
+    imported = [r for r in records if not gen.is_native(r)]
+    got_cells = sum(len(r.get('cells') or []) for r in imported)
+    got_live = sum(len(r.get('live_cells') or []) for r in imported)
+    if len(imported) < n_rows or got_cells < n_cells or got_live < n_live:
         problems.append('A2 counts regressed: baseline %s rows / %s cells / %s LIVE, store %s / %s '
-                        '/ %s' % (n_rows, n_cells, n_live, len(records), got_cells, got_live))
+                        '/ %s (imported rows only)'
+                        % (n_rows, n_cells, n_live, len(imported), got_cells, got_live))
     return n_rows, n_cells, n_live
 
 
@@ -354,6 +362,26 @@ def _walk_keys(obj, path=''):
         for i, v in enumerate(obj):
             for kk in _walk_keys(v, path + '[%d]' % i):
                 yield kk
+
+
+def _walk_values(obj, path=''):
+    """Every LEAF value with its path. The counterpart to _walk_keys.
+
+    Codex audit round 2, Spec 1 made exactly this point one level down: A3 checked key NAMES and
+    never VALUES, so a cell could carry `"status": "DEAD-STRUCTURAL"` and pass. That repair was
+    scoped to one field of one shape; a native CoverageCell has free-text fields of its own
+    (`not_applicable_reason`), so the walk is generalised rather than re-special-cased.
+    """
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            for vv in _walk_values(v, path + '/' + str(k)):
+                yield vv
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            for vv in _walk_values(v, path + '[%d]' % i):
+                yield vv
+    elif obj is not None:
+        yield obj, path or '/'
 
 
 # Codex audit P1: A3 was a BLACKLIST of key names, so a root field the list did not anticipate --
@@ -385,9 +413,95 @@ def _closed(obj, allowed, where, problems):
                         % (where, extra))
 
 
+# ORDER-1250. The verdict vocabulary, as VALUES. check_registries.check_r3 walks every store for
+# these already; it is repeated here so this checker's own acceptance does not silently depend on
+# a sibling checker being run -- the failure mode where two guards each assume the other covers a
+# case and neither does.
+#
+# 🔴 SEARCHED WITH WORD BOUNDARIES, NOT COMPARED FOR EQUALITY, and the first draft of this rule
+# got it wrong in a way its own fixture caught: a native CoverageCell's `not_applicable_reason`
+# is FREE TEXT, so an equality test against it can essentially never fire. The attack that
+# exposed it read "parked as a BUILD-ON until the optimize probe runs" -- a verdict, in prose,
+# passing a check whose entire purpose is to stop verdicts appearing in this store. An exact
+# match is the right shape for a closed enum field and the wrong shape for a sentence.
+FORBIDDEN_VERDICT_VALUES = (
+    'DEAD-STRUCTURAL', 'DEAD-OPTIMIZED', 'PARKED-VERIFY', 'BUILD-ON', 'VALIDATED CANDIDATE',
+    'CANDIDATE', 'DEMO', 'LIVE', 'PASS', 'FAIL', 'CONDITIONAL', 'ROBUST', 'MARGINAL',
+)
+VERDICT_RE = re.compile(r'(?<![A-Za-z0-9])(%s)(?![A-Za-z0-9])'
+                        % '|'.join(re.escape(v) for v in FORBIDDEN_VERDICT_VALUES),
+                        re.IGNORECASE)
+
+
+def _native_allowed_keys(schema_text):
+    """The key names a native CoverageCell row may carry, READ FROM THE SCHEMA.
+
+    Not a blacklist extension, and the reason is a scar: a prohibition that is maintained as a
+    list of bad names gets widened by whoever needs a new field, and the check that reads it
+    quietly stops meaning anything (memory `prohibition-disarms-its-own-check`). The legal shape
+    of a CoverageCell is already declared, once, in schemas.json -- both it and MetricRef set
+    `unevaluatedProperties: false`, so a key nobody declared cannot validate in the first place.
+    Reading the declaration is therefore the honest form of this rule: it CANNOT drift from the
+    contract, because it is the contract.
+
+    That is what makes `pf` admissible here while it stays forbidden in an imported row. The
+    imported rows carry transcribed prose columns, so a `pf` key there is an unsourced quality
+    claim. `MetricRef.pf` is a measurement the schema will not accept without `trades`, `dd_pct`,
+    `run_id`, `lane`, `data_fingerprint` and `model` beside it -- the opposite of a claim: a
+    number nobody can write down without saying where it came from.
+    """
+    # The bytes arrive from check(), read through the SAME source as everything else it judges --
+    # or injected by the same caller that injected the store. A read of its own here would let a
+    # commit widen CoverageCell on disk, keep the widening out of the index, and have this
+    # allowlist accept a key the committed contract does not declare.
+    d = json.loads(schema_text)  # snapshot: not-a-judged-input -- the bytes are chosen by check()
+    keys = set()
+    for name in ('CoverageCell', 'MetricRef', 'OwnerRef'):
+        body = d['$defs'][name]
+        if body.get('unevaluatedProperties') is not False:
+            raise ToolFailure(
+                'A3 cannot derive the native key set: $defs/%s is not a closed object, so "the '
+                'schema already names every legal key" is not true and this allowlist would be '
+                'a guess.' % name)
+        keys |= set(body.get('properties') or {})
+    return keys
+
+
+def a3_native_rows(records, problems, schema_text):
+    """The half of A3 that applies to real CoverageCell rows. -> how many were judged."""
+    allowed = _native_allowed_keys(schema_text)
+    n = 0
+    for r in records:
+        if not gen.is_native(r):
+            continue
+        n += 1
+        cid = r.get('cell_id')
+        for key, where in _walk_keys(r):
+            if str(key) not in allowed:
+                problems.append(
+                    'A3 CoverageCell %r carries the key %r at %s, which $defs/CoverageCell, '
+                    '$defs/MetricRef and $defs/OwnerRef do not declare. A closed contract is the '
+                    'only thing making "this store holds no verdicts" checkable rather than '
+                    'aspirational.' % (cid, key, where))
+        for value, where in _walk_values(r):
+            hit = VERDICT_RE.search(str(value))
+            if hit:
+                problems.append(
+                    'A3 CoverageCell %r carries the verdict word %r at %s (in %r). A coverage '
+                    'store records what was covered, not whether it was any good -- verdicts '
+                    'live in EA_SCORECARD_AND_REGISTRY.md and nowhere else.'
+                    % (cid, hit.group(1), where, str(value)[:90]))
+    return n
+
+
 def a3_closed_shape_and_no_verdict(section, records, problems, allowed_status):
     _closed(section, SECTION_KEYS, '_section', problems)
     for r in records:
+        if gen.is_native(r):
+            # Judged by a3_native_rows against the schema's own closed shape. Falling through to
+            # the imported-row rules below would report every field of a legitimate CoverageCell
+            # as undeclared -- the two populations have nothing in common but the file.
+            continue
         ea = r.get('ea')
         _closed(r, RECORD_KEYS, 'row %r' % ea, problems)
         _closed(r.get('imported_from') or {}, IMPORTED_FROM_KEYS,
@@ -503,7 +617,8 @@ def a8_attestation_still_valid(problems):
 
 # --------------------------------------------------------------------------- driver
 
-def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
+def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False,
+          schema_text=None):
     """Returns (problems, info). Raises ToolFailure when it cannot read what it must judge."""
     info = {}
     if backlog_text is None:
@@ -514,6 +629,16 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
         coverage_text, info['coverage_source'] = read_input(COVERAGE_PATH, worktree)
     else:
         info['coverage_source'] = 'injected'
+    # ORDER-1250, and it is the SAME mixed-vintage crime the comment ~30 lines below records for
+    # the reconciliation -- caught here by the suite rather than by an audit. A3's native-row
+    # allowlist is derived from schemas.json, so if that came from a fixed mode while the store
+    # was INJECTED, a caller supplying a store could not supply the contract it is judged against.
+    # The mutation suite hit it immediately: every CONTROL went red because the worktree store
+    # carried `pf_state` and the indexed schema did not yet declare it. One verdict, two moments.
+    if schema_text is None:
+        schema_text, info['schema_source'] = read_input(SCHEMAS_PATH, worktree)
+    else:
+        info['schema_source'] = 'injected'
 
     # ORDER-670 migration 9/9 DELETED TWO REFUSALS FROM HERE, and that deletion is the point of
     # the migration rather than a casualty of it. They were:
@@ -567,11 +692,16 @@ def check(backlog_text=None, coverage_text=None, worktree=False, skip_a8=False):
     info['body_is_generated'] = a1_banner_and_body(backlog_text, section, records, problems)
     info['baseline'] = a2_covers_the_hand_table(section, records, problems)
     a3_closed_shape_and_no_verdict(section, records, problems, allowed_status)
+    info['native'] = a3_native_rows(records, problems, schema_text)
     a4_renderer_is_deterministic(section, records, problems)
     if not skip_a8:
         a8_attestation_still_valid(problems)
-    info['records'] = len(records)
-    info['cells'] = sum(len(r.get('cells') or []) for r in records)
+    # ORDER-1250: counted per POPULATION. `len(records)` used to be quoted as the store size while
+    # every A2 comparison it backs is about the imported rows only; once native CoverageCell rows
+    # landed, that one number would have grown while the thing it claims to measure stood still.
+    imported = [r for r in records if not gen.is_native(r)]
+    info['records'] = len(imported)
+    info['cells'] = sum(len(r.get('cells') or []) for r in imported)
     return problems, info
 
 
@@ -590,7 +720,14 @@ def main(argv):
               % (BACKLOG_PATH, info['backlog_source'], COVERAGE_PATH, info['coverage_source']))
     out.write('baseline     : blob %s -> %s rows / %s cells / %s LIVE (recomputed, not stored)\n'
               % ((gen.BASELINE_BLOB[:12],) + info['baseline']))
-    out.write('store        : %s rows / %s cells\n' % (info['records'], info['cells']))
+    out.write('store        : %s imported row(s) / %s cells, + %s native CoverageCell row(s) '
+              'judged against the schema\'s closed shape\n'
+              % (info['records'], info['cells'], info.get('native', 0)))
+    if info.get('native'):
+        # The disclosure section 2 cannot carry without an owner re-attestation. Printed by a
+        # CHECKER that runs in the pre-commit tier, derived from the store on every run, so it
+        # cannot go stale the way a hand-written banner would. See gen_coverage.NATIVE_NOTE_*.
+        out.write('unprojected  : %s\n' % (gen.NATIVE_NOTE_UNPROJECTED % info['native']))
     out.write('section 2    : %s\n' % ('GENERATED output' if info['body_is_generated']
                                        else 'still hand-written'))
     if problems:

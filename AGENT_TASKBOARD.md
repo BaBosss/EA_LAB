@@ -105,6 +105,241 @@
 
 ---
 
+## ORDER-1250 — [factory/S13] BOX 1a: give an UNDEFINED profit factor a shape, then register the 16 pilot cells — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SCHEMA) — MetricRef.pf nullable + pf_state; 16 CoverageCell rows; items 7/8/9 stop being stubs; 4 PASS -> 6 PASS` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Follows `ORDER-1240`, which ran the matrix at a sizing where the mechanism actually executes and
+> then could not register a single cell. **No verdict is issued here** — design §10 stops this
+> slice at `EVIDENCE_COMPLETE`, and this order moves no item to PASS that depends on an EA result.
+
+### 1. The blocker, and the shape the owner ratified for it
+
+`MetricRef` required `pf` as a `number`. One pilot cell — **USDJPY H1, 99 trades, 99 winners,
+`gross_loss = 0`** — has a profit factor with **no denominator**, and `CoverageCell` sets
+`unevaluatedProperties: false` with no field able to explain a missing metric. So that cell could
+only be registered by writing a number that is not true. The tester prints `0` there, and
+`ORDER-1230` had already had to repair exactly that inversion, where the best win rate in the
+matrix rendered as the worst result in it.
+
+Ratified and built: **`pf` becomes nullable AND a required `pf_state` enum
+(`DEFINED` | `UNDEFINED_NO_LOSSES`) travels with it**, bound in *both* directions.
+
+| instance | real schema | conditional REMOVED |
+|---|---|---|
+| `pf: 1.31` + `DEFINED` | VALID | VALID |
+| `pf: null` + `UNDEFINED_NO_LOSSES` | VALID | VALID |
+| `pf: null` + `DEFINED` | **REJECTED** | VALID |
+| `pf: 1.31` + `UNDEFINED_NO_LOSSES` | **REJECTED** | VALID |
+| `pf_state` omitted | **REJECTED** | VALID |
+
+The right-hand column is the **control**: delete the conditional and all three attacks validate
+again, so the rejections are attributable to the rule under test and not to something else in a
+19-branch `oneOf`. A bare nullable would have made the case *representable*; the pair makes it
+*unfakeable*. The reverse direction is not decoration — without it, `pf: 0` could be filed under
+"no denominator", which is the same inversion wearing the other mask.
+
+### 2. Registering the cells turned `factory/coverage.jsonl` into a TWO-POPULATION store
+
+`registry.STORES` has always declared that file the `CoverageCell` store, and both
+`check_registries.check_r5` and `run_schema_fixtures`' live-row block carry an exemption for the
+ORDER-610 imported rows reading, verbatim, *"it ends when S5's real CoverageCell rows land"*.
+These are those rows — generated, never hand-written, by
+`_triage/factory_os/gen_pilot_cells.py --apply`, with a `--check` mode that re-derives them from
+the run store and diffs.
+
+What that cost, because none of it was free:
+
+- **`gen_coverage.render_from`** now partitions. A native cell has no six-column shape, and
+  synthesizing one would mean inventing an EA name, a class and an "Optimized?" answer for a
+  hypothesis cell that has none — fiction, in the fleet's coverage table. So natives are **not
+  rendered as rows**, and they are **not rendered as nothing** either: `check_coverage_transfer`
+  prints an `unprojected:` line derived from the store on every run, inside the pre-commit tier.
+  🚫 **It is not in §2, and that is the owner's call rather than a preference** — see §5.
+- A record that is **neither** population is a **`ToolFailure`**, not a skip. Classifying by
+  "has `source_columns`" alone would let a *malformed* imported row fall into the native bucket
+  and vanish from the projection silently.
+- **A2 counts imported rows only.** Had the count included natives, adding pilot cells would have
+  *masked* the deletion of an imported row — a guard a growing store switches off.
+- **A3 routes natives to the schema's own closed shape.** `FORBIDDEN_KEYS` contains `pf`, which is
+  correct for an imported row (an unsourced quality claim) and wrong for a `MetricRef.pf` (a number
+  the schema will not accept without `trades`, `dd_pct`, `run_id`, `lane`, `data_fingerprint` and
+  `model` beside it). The allowlist is **read from `$defs`**, not maintained as a list — and the
+  suite proves it by narrowing the schema by one property and requiring the same store to be
+  refused for that property alone, plus a control refusing to derive an allowlist at all from an
+  entity that is not closed.
+
+🔴 **Two defects the new cases caught in this order's own work.** (a) The verdict-value scan was
+written as an **equality test**, which can essentially never fire against `not_applicable_reason` —
+free text. The attack that exposed it read *"parked as a BUILD-ON until the optimize probe runs"*:
+a verdict, in prose, passing the check whose entire purpose is to stop verdicts entering this
+store. Now a word-boundary search, with a specificity case proving an innocent reason still passes.
+(b) A3 read `schemas.json` while the store was **injected**, so the mutation suite ran a worktree
+store against an indexed contract and every CONTROL went red — the **mixed-vintage verdict** this
+same file records being paid for twice. The schema is now an injectable input read through the one
+source.
+
+### 3. Three checklist items stopped being stubs
+
+`4 PASS · 0 FAIL · 10 BLOCKED` → **`6 PASS · 0 FAIL · 8 BLOCKED`**, and — more useful than the
+count — item 7 moved from *"checker not implemented"* to *"awaiting evidence"*: 1 of the 8 BLOCKED
+items is now blocked on the pilot rather than on this repo.
+
+- **item 8** (PF displayed with n and DD) — **PASS**. The detail line *is* the display, and an
+  absent denominator renders `UNDEF(no losses)`, never a number.
+- **item 9** (lane + fingerprint on every run, no cross-install comparison) — **PASS** over 16
+  metrics and 80 run records, all naming one lane. It reads the run store as well as the cell
+  store, because the cell store registers one arm and a rule about *runs* that looks at a third of
+  them would not notice the other two.
+- **item 7** (16/16 cells reach Baseline + probe) — **BLOCKED, awaiting evidence.** All 16 cells
+  are `BASELINE_RUN`. 🚫 **This item must not be ticked from the flat-lot arm**: that arm is H01's
+  *falsifier* and the probe design §8.3 owes each cell is the **decision-13 optimize probe**, which
+  has not been run. The prohibition is mechanical now — `PROBE_DONE_STATES` does not contain
+  `BASELINE_RUN`, and case `C3` asserts it.
+
+### 4. Evidence
+
+`run_s13_tests` **63 cases / 0 failed** (16 new, every one of the three implemented items driven in
+both directions plus a specificity half) · `run_schema_fixtures` **105 cases** (4 new) ·
+`run_coverage_transfer_tests` every criterion refused its own attack (7 new + 2 schema-derivation
+probes) · `check_registries` R1-R5 hold over 257 rows · `check_coverage_transfer` ACCEPTED ·
+`check_schema_structure` OK · `gen_design_contracts --check` 32/32 · `run_guard_shape_lint` both
+shapes hold — **it caught the new schema read with no snapshot declaration, which is how the
+mixed-vintage bug in §2 was found.**
+
+⚠️ **Filed, not fixed, and outside this order's declared paths:** `check_registries.check_r3`'s
+verdict-VALUE scan is the same equality test §2(a) had to repair here — so a verdict word inside
+prose passes it in **every** store. → `ORDER-1251`.
+
+### 5. 🔴 ONE THING NEEDS THE OWNER, and it was refused rather than worked around
+
+The first implementation put the "16 rows are not projected here" line **inside** §2 and
+`.githooks/pre-commit` **refused the commit**:
+
+```
+P1 MASTER_BACKLOG.md section '## 2. COVERAGE MATRIX ...' would land hashing 65e6da5e71d3,
+   but the attestation record in force pins it at 8f5aa2e6c115
+```
+
+Attestation line 10 pins §2 by `expected_post_state.section_sha256`, so **any** change to those
+bytes — including one that makes the section more truthful — needs the owner to re-attest **in the
+same commit**. That is a signature this seat may not spend, and the shape is a known scar: the same
+pin cost **five re-records in one day** on 2026-07-31 (memory `approval-pinning-self-invalidates`).
+
+§2 was therefore **restored byte-for-byte** and the disclosure moved to a checker that runs in the
+tier. Putting it in the file's header region instead was considered and rejected: that region is
+outside A1's body comparison, so the line would be a hand-maintained cache of a generated fact —
+`BACKLOG-D29` exactly.
+
+**What is still owed, and it is a decision, not a task.** §2 says *"GENERATED from
+`factory/coverage.jsonl`"* while projecting **one of the store's two populations**. Nothing there
+is false, but a reader of that table cannot see that 16 more rows exist in the file it names. The
+options are (a) leave it — the checker states it on every run; (b) re-attest §2 once to carry the
+generated line; (c) split the pilot cells into a store of their own. **Not decided here.**
+
+---
+
+## ORDER-1252 — [factory/tier] BOX 1b: SPLIT `run_contract_binding_tests`, do not displace it — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SCHEMA) — the three cheap schema cages stay on the commit path; ~37s leaves the tier; budget stays pinned at 120.0s` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Owner-ratified 2026-08-03. **The budget was NOT raised** and the wrapper was **not** displaced
+> wholesale — that was tried by the previous lane and reverted.
+
+### 1. Why the displacement was refused, and by what
+
+The owner's earlier instruction was to move `run_contract_binding_tests.ps1` out of the fast tier
+whole. A cage refused it:
+
+```
+[FAIL] E staging a registry store selects the suite where ajv validates live rows
+```
+
+`run_schema_fixtures.py` ajv-validates **every live row of every `factory/*.jsonl` store**, and it
+ran *inside* that wrapper. Moving the wrapper takes the ajv guard off the commit path of the files
+it governs — a hole a blind audit already found once (*"the checker existed, worked, and was not on
+the commit path of the file it governs"*) and closed with a dedicated case.
+
+### 2. What was actually built
+
+Measured under `-Hook` first, because a tier number with no stated invocation is not evidence
+(memory `tier-number-needs-its-invocation`). 18 entries, **41.56s**. The three that had to stay are
+**4.47s** of it:
+
+| moved to `run_schema_cages.ps1` (in the tier) | -Hook |
+|---|---|
+| `run_schema_fixtures.py` — ajv over 105 fixtures **and every live registry row** | 3.71s |
+| `check_schema_structure.py` — discriminators, closed-object inventory, PLANNED/BUILT/WIRED | 0.71s |
+| `gen_design_contracts.py --check` — CONTRACTS.md still matches schemas.json | 0.05s |
+
+Everything else stayed in the wrapper, and **the wrapper left the tier**.
+
+⚠️ **What is no longer run at commit time, stated rather than discovered later:**
+`run_registry_tests.py` (9.4s) · `check_registries.py` (6.2s) · `run_coverage_transfer_tests.py`
+(6.1s) · `run_s2a_gate.py` (5.4s) · `run_input_surface_tests.py` · `run_guard_shape_lint.py` ·
+`check_input_surface_gen.py` · `check_coverage_transfer.py` · `run_snapshot_s4_tests.py` ·
+`run_enforcement_status_tests.py` · `run_attested_pin_staged_tests.py` ·
+`run_snapshot_validator_tests.py` · `run_s2a_conformance.py` · `run_contract_binding_tests.py`.
+They are **hand-run** now — the same status as `run_chainwalk_tests` and `run_order101/103/105`,
+which `.githooks/pre-commit` already names in its closing lines:
+
+```bash
+powershell -File scripts/_test/run_contract_binding_tests.ps1
+```
+
+### 3. Three couplings that would have gone silently wrong
+
+- **`check_schema_structure._invocation_text()`** whitelists the arrays that actually *execute*
+  things, and one of them was `run_contract_binding_tests.ps1`'s `$scripts`. Left alone, a `WIRED`
+  claim would have rested on a suite the tier no longer runs — the exact false-governance state
+  that block was built to end. It reads `run_schema_cages.ps1` now.
+- **Case E's assertion named the suite literally.** Retyping the new name leaves the same weakness
+  one rename away, so it is **derived**: whatever suites the store selects, at least one must
+  actually invoke `run_schema_fixtures.py`. 🔴 The first version of that search matched **anywhere
+  in the file** and answered `run_registry_tests.ps1` — *itself* — because the comment four lines
+  above names the script while explaining the case. Being named in prose is not being invoked
+  (memory `text-scan-cannot-tell-read-from-mention`). It now searches the executed `$scripts`
+  array only, the same way `_invocation_text` solves the identical problem.
+- **The import sweep demanded two declarations the path-string sweep cannot see:**
+  `run_schema_fixtures` imports `registry` and `snapshot_validator`, so a commit touching only one
+  of those would have run no cage. Found by `run_guard_trigger_tests` PART 4b on the new suite's
+  first run.
+
+The departed suite's guard declarations are kept **as a comment**, not as a second live table: a
+declaration for a suite the tier does not run would put its inputs in the trigger pathspec and
+select nothing — a pathspec claiming coverage that no longer exists.
+
+### 4. Evidence
+
+`run_guard_trigger_tests` all seven parts green · `run_registry_tests` 26/26 with case E now
+resolving to `run_schema_cages.ps1` · `run_schema_cages` green · `check_schema_structure` OK with
+`MetricRef` still `WIRED` · pathspec regenerated (`137 → 106` entries, and the drop is the departed
+suite's declarations leaving) · **budget untouched at 120.0s.**
+
+---
+
+## ORDER-1251 — [factory/guards] `check_r3`'s verdict-value scan is an equality test, so prose walks past it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`_triage/factory_os/check_registries.py:291` reads
+`if isinstance(v, str) and v.strip().upper() in FORBIDDEN_VERDICT_VALUES`. That fires only when a
+value is **exactly** a verdict word, so `"parked as a BUILD-ON until the optimize probe runs"` — a
+verdict, in a free-text field, in a registry store — passes R3 clean. Found while repairing the
+identical shape in `check_coverage_transfer.a3_native_rows` (`ORDER-1250` §2a), where a fixture
+demonstrated it rather than an argument.
+
+The **key** half one line above has the same shape but is not the same risk: a key is an
+identifier, so equality is the right test there.
+
+**Acceptance.** (1) A word-boundary search replaces the equality test for values. (2) A negative
+fixture in `run_registry_tests.py` plants a verdict word inside a sentence in a real store shape
+and requires R3 to catch it. (3) A **specificity** case proving an innocent description that merely
+contains a verdict word as a *fragment* is still accepted — the fix must not make the stores
+unwritable, which is how a guard earns an exemption list. (4) `VERDICT_VALUE_EXEMPTIONS` still
+excuses exactly what it excuses today (`coverage.jsonl` / `status` / `LIVE`) and no more — check
+the exemption is still reachable after the change, or it has become dead code asserting nothing.
+
+**Prohibited:** widening `FORBIDDEN_VERDICT_VALUES` to compensate · adding a substring exemption
+(memory `citation-guard-satisfied-by-a-universal-file`) · changing what the guard judges to make
+the new case pass.
+
+---
+
 ## ORDER-1240 — [factory/S13] Resolve the pilot first lot MECHANICALLY, re-run the matrix, and de-confound the falsifier — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SIZE) — criterion written before the sweep; 0.03 selected; 3 arms x 16 cells; 2 of 4 owner-ratified items done, 2 blocked with reasons` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Follows `ORDER-1230`, which ran all 16 cells and found every flat-lot probe `UNTESTED-INERT`.

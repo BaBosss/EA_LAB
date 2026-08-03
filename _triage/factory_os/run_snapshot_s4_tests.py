@@ -628,6 +628,39 @@ def main():
             check('AUDIT P1-8 SPECIFICITY metadata is still skipped and a real cell still counts',
                   r['coverage']['cells_in_universe'] == 1 and r['coverage']['tested'] == 1,
                   json.dumps(r['coverage']))
+
+            # ORDER-1250: the store now holds NATIVE CoverageCell rows too, and a native row IS
+            # one cell rather than a container of them. Counted, not refused -- but the refusal
+            # above had to be NARROWED to allow that, so these three cases exist to prove the
+            # narrowing did not open it: a native row counts into its part, a native row whose
+            # state is in no part is still REFUSED, and an unclassifiable row still is too.
+            native = ('{"entity": "CoverageCell", "cell_id": "c1", '
+                      '"hypothesis_revision": "B14-H01-r1", "logical_symbol": "XAUUSD", '
+                      '"tf": "H1", "universe_version": "u", "state": "%s", "metrics": [], '
+                      '"trial_count": 0}')
+            with io.open(os.path.join(badcov, 'factory', 'coverage.jsonl'), 'w',
+                         encoding='utf-8') as fh:
+                fh.write('{"_comment": "c"}' + chr(10)
+                         + '{"cells": [{"cell": "EURUSD H1", "status": "LIVE"}]}' + chr(10)
+                         + (native % 'BASELINE_RUN') + chr(10)
+                         + (native % 'NOT_APPLICABLE') + chr(10))
+            r = sb.reconcile(root=badcov)
+            check('ORDER-1250 a native CoverageCell counts as ONE cell, in the part its state names',
+                  r['coverage']['cells_in_universe'] == 3 and r['coverage']['tested'] == 2
+                  and r['coverage']['not_applicable'] == 1, json.dumps(r['coverage']))
+
+            with io.open(os.path.join(badcov, 'factory', 'coverage.jsonl'), 'w',
+                         encoding='utf-8') as fh:
+                fh.write((native % 'SOMETHING_NEW') + chr(10))
+            refuses('ORDER-1250 ATTACK a native cell in NO coverage part is REFUSED, not counted '
+                    'into the universe and out of every part',
+                    lambda: sb.reconcile(root=badcov), 'in no coverage part')
+
+            with io.open(os.path.join(badcov, 'factory', 'coverage.jsonl'), 'w',
+                         encoding='utf-8') as fh:
+                fh.write('{"bogus": 1}' + chr(10))
+            refuses('ORDER-1250 SPECIFICITY the original refusal still fires on a row that is '
+                    'NEITHER shape', lambda: sb.reconcile(root=badcov), 'has no `cells` key')
         finally:
             shutil.rmtree(badcov, ignore_errors=True)
 

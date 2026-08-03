@@ -269,7 +269,33 @@ $FAST_SUITES = @(
     # 0.1s, because the expensive part of a suite here is the process, not the assertions.
     # THAT is the displacement lesson, and it is cheaper than displacing anything:
     # a python cage belongs in an existing python wrapper unless it needs its own lifecycle.
-    'run_contract_binding_tests.ps1',
+    #
+    # 🔴 ORDER-1252 (BOX 1b, owner-ratified 2026-08-03). `run_contract_binding_tests.ps1` IS NO
+    # LONGER IN THIS TIER, and the line above is kept because its reasoning is still why the
+    # wrapper exists at all. What changed is that the wrapper grew to 18 entries and 42.6s under
+    # -Hook -- 35% of a tier that measures 120.8-139.4s against a pinned 120.0s -- and it began
+    # refusing ordinary commits on the 90.0s PER-PATH budget (measured: a schema edit selected
+    # 14 suites and cost 99.2s).
+    #
+    # The owner's first instruction was to displace the whole wrapper. That was attempted by the
+    # ORDER-1240 lane and REVERTED, because a cage refused it and was right to: case E of
+    # run_registry_tests.ps1 requires that staging a registry store selects the suite where ajv
+    # validates live rows, and run_schema_fixtures.py runs inside this wrapper. So the wrapper is
+    # SPLIT instead -- the three cheap schema cages (4.47s) go to run_schema_cages.ps1 below and
+    # stay on the commit path; the remaining ~37s leaves the tier.
+    #
+    # ⚠️ WHAT IS NO LONGER RUN AT COMMIT TIME, stated rather than discovered later:
+    #   run_registry_tests.py (9.4s) · check_registries.py (6.2s) · run_coverage_transfer_tests.py
+    #   (6.1s) · run_s2a_gate.py (5.4s) · run_input_surface_tests.py (2.3s) ·
+    #   run_guard_shape_lint.py (2.3s) · check_input_surface_gen.py (1.9s) ·
+    #   check_coverage_transfer.py (1.3s) · run_snapshot_s4_tests.py (1.3s) ·
+    #   run_enforcement_status_tests.py · run_attested_pin_staged_tests.py ·
+    #   run_snapshot_validator_tests.py · run_s2a_conformance.py · run_contract_binding_tests.py
+    # They are not deleted and they are not weaker; they are now HAND-RUN, the same status as
+    # run_chainwalk_tests and run_order101/103/105 (which .githooks/pre-commit already names in
+    # its closing lines). Run the wrapper directly at any session boundary:
+    #   powershell -File scripts\_test\run_contract_binding_tests.ps1
+    'run_schema_cages.ps1',
     # ORDER-612 (S4, 2026-07-31): the READER half of the snapshot boundary -- C3 (a missing /
     # unreadable / stale mandatory source cannot render ALL CLEAR, each observed firing and the
     # fire count printed) and C6 (make_status and the daily digest consume ONLY a validated
@@ -794,25 +820,21 @@ $SUITE_GUARDS = @{
     # both files are inputs to it. Declaring them is what puts them in the trigger pathspec --
     # without these two lines the cage would run only when something ELSE it guards was staged,
     # which is the exact five-times-in-four-days failure BACKLOG-D32 exists to end.
-    'run_contract_binding_tests.ps1'  = @(
+    # 🔴 ORDER-1252 (BOX 1b). This key is `run_schema_cages.ps1` now, not
+    # `run_contract_binding_tests.ps1` -- the wrapper left the tier and the three cheap schema
+    # cages stayed. run_guard_trigger_tests requires the key sets of $FAST_SUITES and
+    # $SUITE_GUARDS to match EXACTLY, so the rename happens in both places or neither.
+    #
+    # The factory/*.jsonl entries below are the load-bearing ones and the comment they carry is
+    # kept verbatim, because the finding is unchanged and the whole reason the split took this
+    # shape instead of the displacement the owner first asked for.
+    'run_schema_cages.ps1'            = @(
                                           # ORDER-702: DERIVED by the import sweep in
                                           # run_guard_trigger_tests PART 4b, not remembered.
                                           # This suite's python imports it, so a commit
                                           # touching only that module must still run a cage.
                                           '_triage/factory_os/evidence.py',
 '_triage/factory_os/gen_design_contracts.py',
-                                          '_triage/factory_os/run_contract_binding_tests.py',
-                                          '_triage/factory_os/snapshot_validator.py',
-                                          '_triage/factory_os/run_snapshot_validator_tests.py',
-                                          # ORDER-612 (S4): run_snapshot_s4_tests.py joins this
-                                          # wrapper (MEASURED 0.35s) instead of becoming a 13th
-                                          # PowerShell suite, per the trade recorded above.
-                                          '_triage/factory_os/snapshot_build.py',
-                                          '_triage/factory_os/run_snapshot_s4_tests.py',
-                                          # ORDER-630 (S5): the python half, same trade.
-                                          '_triage/factory_os/registry.py',
-                                          '_triage/factory_os/check_registries.py',
-                                          '_triage/factory_os/run_registry_tests.py',
                                           # BLIND AUDIT round 4, and the strongest finding of the
                                           # batch: run_schema_fixtures.py validates every LIVE
                                           # registry row against its entity with ajv, and it runs
@@ -830,133 +852,164 @@ $SUITE_GUARDS = @{
                                           'factory/parameter_bindings.jsonl',
                                           '_triage/factory_os/run_schema_fixtures.py',
                                           '_triage/factory_os/check_schema_structure.py',
-                                          # ORDER-601 closure: proves the PLANNED/BUILT/WIRED
-                                          # enforcement labels are verified against the repo rather
-                                          # than merely declared.
-                                          '_triage/factory_os/run_enforcement_status_tests.py',
+                                          # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
+                                          # run after this suite was registered, not remembered:
+                                          # run_schema_fixtures imports registry (to load every
+                                          # live store) and snapshot_validator (the real-snapshot
+                                          # line, ORDER-612 C1). A commit touching only one of
+                                          # those modules changes what this cage answers, and the
+                                          # wrapper's path-string sweep cannot see an `import`.
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/snapshot_validator.py',
                                           '_triage/factory_os/schemas.json',
                                           # The generated tables moved out of the design into
                                           # CONTRACTS.md; the design is still an input because
                                           # --check refuses when it stops linking a contract.
                                           '_triage/factory_os/CONTRACTS.md',
-                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
-                                          # ORDER-600 (S2a). Declared here so that editing the
-                                          # migration table or its checker TRIGGERS the tier that
-                                          # guards them -- a cage whose own inputs are outside the
-                                          # pathspec is enforced only when something else happens
-                                          # to be staged, which is the D32 defect this map exists
-                                          # to close.
-                                          '_triage/factory_os/run_s2a_gate.py',
-                                          '_triage/factory_os/check_s2a_migration.py',
-                                          '_triage/factory_os/run_s2a_migration_tests.py',
-                                          '_triage/factory_os/gen_s2a_migration.py',
-                                          '_triage/factory_os/gen_s2a_migration_doc.py',
-                                          '_triage/factory_os/s2a_migration.jsonl',
-                                          '_triage/factory_os/s2a_coverage_reconciliation.json',
-                                          '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
-                                          # ORDER-602 A: the sign-off log and its checker. The log is
-                                          # the file the OWNER edits, so an edit to it must trigger
-                                          # the tier that validates it.
-                                          '_triage/factory_os/check_s2a_attestation.py',
-                                          '_triage/factory_os/run_s2a_attestation_tests.py',
-                                          '_triage/factory_os/s2a_attestations.jsonl',
-                                          # ORDER-731: the FRONT guard that predicts F5/F11 at
-                                          # the index, and its cage. The guard runs from
-                                          # .githooks/pre-commit rather than here -- a suite
-                                          # cannot refuse a commit -- so the only thing that
-                                          # makes editing it trigger a cage is this declaration.
-                                          # ConfigFingerprint.mqh (ORDER-710) is the receipt for
-                                          # what happens without one: a file holding half a
-                                          # contract, guarded by nothing, matching no suite.
-                                          '_triage/factory_os/check_attested_pin_staged.py',
-                                          '_triage/factory_os/run_attested_pin_staged_tests.py',
-                                          # ORDER-614 rev 2: the bound policy, the frozen corpus,
-                                          # and the conformance runner that holds the (now
-                                          # bundle-free) implementation to them. Editing ANY of
-                                          # the three must trigger the tier -- an unwatched
-                                          # corpus is an unbound policy.
-                                          '_triage/factory_os/S2A_ATTESTATION_POLICY.md',
-                                          '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',
-                                          '_triage/factory_os/run_s2a_conformance.py',
-                                          # ORDER-610 (S2): the Coverage transfer. coverage.jsonl is
-                                          # now the CANONICAL owner of section 2, so an edit to it
-                                          # must trigger the suite that proves section 2 still
-                                          # matches it -- otherwise the store and its projection
-                                          # drift apart between commits and the new banner becomes
-                                          # a false statement.
-                                          # ORDER-611 (S3): the real ajv fixtures, wired now that
-                                          # per-path selection exists. schemas.json is already
-                                          # declared above; this is the suite that reads it.
-                                          '_triage/factory_os/run_schema_fixtures.py',
-                                          # ORDER-616: the shape lint reads the checkers
-                                          # AND their suites, so both sides are inputs.
-                                          '_triage/factory_os/run_guard_shape_lint.py',
-                                          # ORDER-674 owed half: L3 now READS the PowerShell
-                                          # checkers, so editing one changes what this suite
-                                          # proves. Declared as a glob because L0 discovers them
-                                          # by glob -- a hand-typed list of eleven filenames is
-                                          # the hand-maintained cache L0 exists to refuse, and
-                                          # the twelfth checker would be enforced only when
-                                          # something else happened to be staged (D32).
-                                          'scripts/check_*.ps1',
-                                          'docs/GUARD_SHAPES.md',
-                                          '_triage/factory_os/gen_coverage.py',
-                                          '_triage/factory_os/check_coverage_transfer.py',
-                                          '_triage/factory_os/run_coverage_transfer_tests.py',
-                                          'factory/coverage.jsonl',
-                                          # D1's coverage numbers are RECOMPUTED from section 2 of
-                                          # this file, so a change to it can falsify C8. Since
-                                          # ORDER-610 it is ALSO the generated projection, so a
-                                          # hand edit to it must trigger the same tier.
-                                          'MASTER_BACKLOG.md',
-                                          # ORDER-710 ([CFG] fingerprint). The generated
-                                          # enumeration is a COPY of Inputs.mqh, so the file it
-                                          # copies FROM has to be on this list or the staleness
-                                          # guard fires only when something else is staged --
-                                          # and the one commit it exists to refuse is exactly
-                                          # the one that touches Inputs.mqh alone.
-                                          # ea_template/core/Inputs.mqh is already declared by
-                                          # run_preset_tests.ps1; it is repeated here because a
-                                          # declaration is per-suite and this suite reads it too.
-                                          'ea_template/core/Inputs.mqh',
-                                          'ea_template/core/InputSurface_gen.mqh',
-                                          # /scrutinize round 1: this file was in NEITHER this
-                                          # list NOR the generated pathspec, so a commit editing
-                                          # ONLY it ran zero cages and did not even trigger the
-                                          # tier -- and it holds the entire MQL5 half of the
-                                          # cross-language contract (CFG_FP_SCOPE, the lowercase
-                                          # hex alphabet, CryptEncode). Measured with
-                                          # -ExportSelection before declaring. The G3 criterion
-                                          # added in the same round is what now READS it.
-                                          # NOTE the sweep did not demand this: PART 4 sweeps a
-                                          # suite's own sources for repo paths and PART 4b walks
-                                          # the import closure for MODULES -- a path referenced
-                                          # by an imported module is in neither. ORDER-732.
-                                          'ea_template/core/ConfigFingerprint.mqh',
-                                          # LabCore is where G2 checks the enumeration is wired
-                                          # in at all: commenting the include out is a silent
-                                          # loss of the whole fingerprint line.
-                                          'ea_template/core/LabCore.mqh',
-                                          '_triage/factory_os/gen_input_surface.py',
-                                          # ORDER-730: the constant half. The generated
-                                          # enumeration and the generator that emits it are
-                                          # both judged inputs of G4/G5, and the wrappers are
-                                          # where the include closure STARTS.
-                                          'ea_template/core/LockedConstants_gen.mqh',
-                                          '_triage/factory_os/gen_locked_constants.py',
-                                          '_triage/factory_os/check_input_surface_gen.py',
-                                          '_triage/factory_os/run_input_surface_tests.py',
-                                          # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
-                                          # run after the two entries above landed: both the
-                                          # generator and the cage import preset.py for the ONE
-                                          # surface parser, so a commit touching only that
-                                          # module must still run this cage. The wrapper's
-                                          # path-string sweep cannot see an `import`.
-                                          '_triage/factory_os/preset.py',
-                                          # ORDER-710's evidence tool. Not run by any suite (it
-                                          # costs two tester runs), but the guard-shape lint
-                                          # parses it, and that lint runs in this wrapper.
-                                          '_triage/factory_os/gen_default_preset.py')
+                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md')
+
+# ---------------------------------------------------------------------------------------
+# ORDER-1252: the guard declarations of the suite that LEFT this tier, kept as a record of what
+# it still governs when it is run by hand. It is deliberately NOT a $SUITE_GUARDS key -- a
+# declaration for a suite the tier does not run would put its inputs in the trigger pathspec and
+# select nothing, which is worse than absent: the pathspec would claim coverage that no longer
+# exists. run_guard_trigger_tests enforces the key sets matching, so this cannot drift back in
+# by accident.
+#   $DEPARTED_SUITE_GUARDS -- KEPT AS A COMMENT, DELIBERATELY NOT AS CODE.
+#   A second live table in the file whose whole contract is that ONE table decides
+#   what is enforced would invite the next reader to wire it back in. This is a
+#   record of what the departed suite still governs when it is run BY HAND:
+#   $DEPARTED_SUITE_GUARDS = @{
+#       'run_contract_binding_tests.ps1'  = @(
+#                                             '_triage/factory_os/evidence.py',
+#                                             '_triage/factory_os/run_contract_binding_tests.py',
+#                                             '_triage/factory_os/snapshot_validator.py',
+#                                             '_triage/factory_os/run_snapshot_validator_tests.py',
+#                                             '_triage/factory_os/snapshot_build.py',
+#                                             '_triage/factory_os/run_snapshot_s4_tests.py',
+#                                             '_triage/factory_os/registry.py',
+#                                             '_triage/factory_os/check_registries.py',
+#                                             '_triage/factory_os/run_registry_tests.py',
+#                                             '_triage/factory_os/run_enforcement_status_tests.py',
+#                                             '_triage/factory_os/schemas.json',
+#                                             # ORDER-600 (S2a). Declared here so that editing the
+#                                             # migration table or its checker TRIGGERS the tier that
+#                                             # guards them -- a cage whose own inputs are outside the
+#                                             # pathspec is enforced only when something else happens
+#                                             # to be staged, which is the D32 defect this map exists
+#                                             # to close.
+#                                             '_triage/factory_os/run_s2a_gate.py',
+#                                             '_triage/factory_os/check_s2a_migration.py',
+#                                             '_triage/factory_os/run_s2a_migration_tests.py',
+#                                             '_triage/factory_os/gen_s2a_migration.py',
+#                                             '_triage/factory_os/gen_s2a_migration_doc.py',
+#                                             '_triage/factory_os/s2a_migration.jsonl',
+#                                             '_triage/factory_os/s2a_coverage_reconciliation.json',
+#                                             '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
+#                                             # ORDER-602 A: the sign-off log and its checker. The log is
+#                                             # the file the OWNER edits, so an edit to it must trigger
+#                                             # the tier that validates it.
+#                                             '_triage/factory_os/check_s2a_attestation.py',
+#                                             '_triage/factory_os/run_s2a_attestation_tests.py',
+#                                             '_triage/factory_os/s2a_attestations.jsonl',
+#                                             # ORDER-731: the FRONT guard that predicts F5/F11 at
+#                                             # the index, and its cage. The guard runs from
+#                                             # .githooks/pre-commit rather than here -- a suite
+#                                             # cannot refuse a commit -- so the only thing that
+#                                             # makes editing it trigger a cage is this declaration.
+#                                             # ConfigFingerprint.mqh (ORDER-710) is the receipt for
+#                                             # what happens without one: a file holding half a
+#                                             # contract, guarded by nothing, matching no suite.
+#                                             '_triage/factory_os/check_attested_pin_staged.py',
+#                                             '_triage/factory_os/run_attested_pin_staged_tests.py',
+#                                             # ORDER-614 rev 2: the bound policy, the frozen corpus,
+#                                             # and the conformance runner that holds the (now
+#                                             # bundle-free) implementation to them. Editing ANY of
+#                                             # the three must trigger the tier -- an unwatched
+#                                             # corpus is an unbound policy.
+#                                             '_triage/factory_os/S2A_ATTESTATION_POLICY.md',
+#                                             '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',
+#                                             '_triage/factory_os/run_s2a_conformance.py',
+#                                             # ORDER-610 (S2): the Coverage transfer. coverage.jsonl is
+#                                             # now the CANONICAL owner of section 2, so an edit to it
+#                                             # must trigger the suite that proves section 2 still
+#                                             # matches it -- otherwise the store and its projection
+#                                             # drift apart between commits and the new banner becomes
+#                                             # a false statement.
+#                                             # ORDER-611 (S3): the real ajv fixtures, wired now that
+#                                             # per-path selection exists. schemas.json is already
+#                                             # declared above; this is the suite that reads it.
+#                                             '_triage/factory_os/run_schema_fixtures.py',
+#                                             # ORDER-616: the shape lint reads the checkers
+#                                             # AND their suites, so both sides are inputs.
+#                                             '_triage/factory_os/run_guard_shape_lint.py',
+#                                             # ORDER-674 owed half: L3 now READS the PowerShell
+#                                             # checkers, so editing one changes what this suite
+#                                             # proves. Declared as a glob because L0 discovers them
+#                                             # by glob -- a hand-typed list of eleven filenames is
+#                                             # the hand-maintained cache L0 exists to refuse, and
+#                                             # the twelfth checker would be enforced only when
+#                                             # something else happened to be staged (D32).
+#                                             'scripts/check_*.ps1',
+#                                             'docs/GUARD_SHAPES.md',
+#                                             '_triage/factory_os/gen_coverage.py',
+#                                             '_triage/factory_os/check_coverage_transfer.py',
+#                                             '_triage/factory_os/run_coverage_transfer_tests.py',
+#                                             'factory/coverage.jsonl',
+#                                             # D1's coverage numbers are RECOMPUTED from section 2 of
+#                                             # this file, so a change to it can falsify C8. Since
+#                                             # ORDER-610 it is ALSO the generated projection, so a
+#                                             # hand edit to it must trigger the same tier.
+#                                             'MASTER_BACKLOG.md',
+#                                             # ORDER-710 ([CFG] fingerprint). The generated
+#                                             # enumeration is a COPY of Inputs.mqh, so the file it
+#                                             # copies FROM has to be on this list or the staleness
+#                                             # guard fires only when something else is staged --
+#                                             # and the one commit it exists to refuse is exactly
+#                                             # the one that touches Inputs.mqh alone.
+#                                             # ea_template/core/Inputs.mqh is already declared by
+#                                             # run_preset_tests.ps1; it is repeated here because a
+#                                             # declaration is per-suite and this suite reads it too.
+#                                             'ea_template/core/Inputs.mqh',
+#                                             'ea_template/core/InputSurface_gen.mqh',
+#                                             # /scrutinize round 1: this file was in NEITHER this
+#                                             # list NOR the generated pathspec, so a commit editing
+#                                             # ONLY it ran zero cages and did not even trigger the
+#                                             # tier -- and it holds the entire MQL5 half of the
+#                                             # cross-language contract (CFG_FP_SCOPE, the lowercase
+#                                             # hex alphabet, CryptEncode). Measured with
+#                                             # -ExportSelection before declaring. The G3 criterion
+#                                             # added in the same round is what now READS it.
+#                                             # NOTE the sweep did not demand this: PART 4 sweeps a
+#                                             # suite's own sources for repo paths and PART 4b walks
+#                                             # the import closure for MODULES -- a path referenced
+#                                             # by an imported module is in neither. ORDER-732.
+#                                             'ea_template/core/ConfigFingerprint.mqh',
+#                                             # LabCore is where G2 checks the enumeration is wired
+#                                             # in at all: commenting the include out is a silent
+#                                             # loss of the whole fingerprint line.
+#                                             'ea_template/core/LabCore.mqh',
+#                                             '_triage/factory_os/gen_input_surface.py',
+#                                             # ORDER-730: the constant half. The generated
+#                                             # enumeration and the generator that emits it are
+#                                             # both judged inputs of G4/G5, and the wrappers are
+#                                             # where the include closure STARTS.
+#                                             'ea_template/core/LockedConstants_gen.mqh',
+#                                             '_triage/factory_os/gen_locked_constants.py',
+#                                             '_triage/factory_os/check_input_surface_gen.py',
+#                                             '_triage/factory_os/run_input_surface_tests.py',
+#                                             # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first
+#                                             # run after the two entries above landed: both the
+#                                             # generator and the cage import preset.py for the ONE
+#                                             # surface parser, so a commit touching only that
+#                                             # module must still run this cage. The wrapper's
+#                                             # path-string sweep cannot see an `import`.
+#                                             '_triage/factory_os/preset.py',
+#                                             # ORDER-710's evidence tool. Not run by any suite (it
+#                                             # costs two tester runs), but the guard-shape lint
+#                                             # parses it, and that lint runs in this wrapper.
+#                                             '_triage/factory_os/gen_default_preset.py')
+#   -- end of the departed declaration --
     'run_guard_trigger_tests.ps1'     = @('scripts/gen_fast_tier_pathspec.ps1',
                                           '.githooks/fast_tier_pathspec',
                                           'scripts/_test/run_fast_cages.ps1')
@@ -1016,10 +1069,16 @@ $SUITE_GUARDS = @{
     # inheriting their imports. A commit touching only `preset.py` changes what item 5 answers,
     # so it has to run this cage; the wrapper's path-STRING sweep cannot see an `import`, which
     # is precisely the hole PART 4b of run_guard_trigger_tests closes.
+    #   factory/coverage.jsonl              ORDER-1250: items 7, 8 and 9 read the pilot's
+    #                                       CoverageCell rows out of it. Registering a cell, or
+    #                                       moving one to PROBE_RUN, changes what three items
+    #                                       answer -- so the store has to trigger this cage the
+    #                                       same way hypotheses.jsonl does for items 1 and 13.
     'run_s13_tests.ps1'               = @('_triage/factory_os/check_pilot_acceptance.py',
                                           '_triage/factory_os/run_s13_tests.py',
                                           '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                                           'factory/hypotheses.jsonl',
+                                          'factory/coverage.jsonl',
                                           '_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/check_param_surface.py',
                                           '_triage/factory_os/evidence.py',

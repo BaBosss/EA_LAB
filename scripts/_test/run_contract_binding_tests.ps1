@@ -192,8 +192,23 @@ if (-not (Test-Path -LiteralPath $python)) {
 # it by defaulting index mode away: judging the commit instead of the worktree is the whole
 # content of ORDER-670. A `git cat-file --batch` reader is the route, and it belongs to
 # ORDER-820 C2, not here.
+# 🔴 ORDER-1252 (BOX 1b, owner-ratified 2026-08-03). THIS SUITE IS NO LONGER IN THE FAST TIER,
+# and three of its entries are no longer here at all.
+#
+# What moved to scripts\_test\run_schema_cages.ps1, which IS in the tier:
+#     run_schema_fixtures.py  ·  check_schema_structure.py  ·  gen_design_contracts.py --check
+# Those three are 4.47s of the 41.56s measured under -Hook, and they are the ones that must stay
+# on the commit path: run_schema_fixtures ajv-validates every LIVE row of every factory/*.jsonl
+# store, which is exactly what case E of run_registry_tests.ps1 protects. Displacing this whole
+# wrapper (the owner's first instruction) was attempted by the ORDER-1240 lane and REVERTED
+# because that case refused it and was right to.
+#
+# What stays here, and is now HAND-RUN rather than run at commit time:
+#     powershell -File scripts\_test\run_contract_binding_tests.ps1
+# Same status as run_chainwalk_tests and run_order101/103/105, which .githooks/pre-commit already
+# names in its closing lines. Run it at every session boundary. The guard declarations this suite
+# used to carry are kept as a comment in run_fast_cages.ps1 next to the $SUITE_GUARDS table.
 $scripts = @(
-    @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
     @{ Path = '_triage\factory_os\run_contract_binding_tests.py'; Args = @() },
     @{ Path = '_triage\factory_os\run_snapshot_validator_tests.py'; Args = @() },
     # ORDER-612 (S4). The python half of the S4 acceptance -- C2 (N discovered => exactly N
@@ -230,7 +245,7 @@ $scripts = @(
     #    "all routed entities except ['ControlRoomSnapshotV5']" after that root was closed. A lint
     #    in no suite and no hook is a lint that can die without anyone learning it died, which is
     #    ORDER-270's finding applied to a file rather than to a runtime.
-    @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
+    #    ORDER-1252: MOVED to run_schema_cages.ps1, which is in the tier this suite left.
     # 5. run_s2a_gate.py -- ORDER-600 (S2a), wired in the same commit that landed D1, which is what
     #    check_s2a_migration.py's own header says to do: it exits 2 while D1 is absent, so wiring it
     #    any earlier would have made this tier permanently red.
@@ -279,7 +294,8 @@ $scripts = @(
     #    RE-MEASURED 2026-08-01 (ORDER-830): 2.35s worktree / 2.68s index -- this one held.
     #    REQUIRES ajv-cli on PATH. If ajv is missing the suite reports ERROR, not "rejected" --
     #    that distinction is the whole reason its three-state discipline exists.
-    @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
+    #    ORDER-1252: MOVED to run_schema_cages.ps1. It is the reason that suite exists -- the
+    #    live-row half must stay on the commit path of the stores it validates (case E).
     # 9. ORDER-616. The four defect SHAPES behind 24 audit findings, made mechanical where they
     #    can be. TWO entries because "the lint passes" and "the lint can fail" are different
     #    claims, and the second is the one this repo keeps needing: L1 and L2 are guards, and a

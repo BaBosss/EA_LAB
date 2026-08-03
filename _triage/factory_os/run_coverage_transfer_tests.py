@@ -79,9 +79,22 @@ def backlog_post(section=None, records=None, top_banner=True, section_banner=Tru
     return '\n'.join(lines)
 
 
-def run(backlog_text, section, records):
+def worktree_schema():
+    """schemas.json AS IT IS ON DISK -- the same vintage as the store these cases build from.
+
+    ORDER-1250. Without this the suite reads a WORKTREE store and an INDEXED contract, so every
+    control goes red for the length of time a schema change sits unstaged. That is the
+    mixed-vintage verdict this checker's own comments record being paid for twice; a cage that
+    reproduces it is a cage that would teach the next person to distrust its controls.
+    """
+    return io.open(os.path.join(chk.ROOT, chk.SCHEMAS_PATH.replace('/', os.sep)),
+                   encoding='utf-8').read()  # snapshot: worktree -- a FIXTURE, matching real_store
+
+
+def run(backlog_text, section, records, schema_text=None):
     return chk.check(backlog_text=backlog_text,
                      coverage_text=store_text(section, records),
+                     schema_text=schema_text if schema_text is not None else worktree_schema(),
                      skip_a8=True)[0]
 
 
@@ -158,7 +171,7 @@ def main():
 
     def drop_live(rs):
         for r in rs:
-            if r['ea'] == 'ST_EA03 MACD':
+            if r.get('ea') == 'ST_EA03 MACD':
                 r['live_cells'] = [c for c in r['live_cells'] if c != 'USDCAD H1']
                 r['cells'] = [c for c in r['cells'] if c.get('cell') != 'USDCAD H1']
     case('a LIVE cell dropped from the store', post, section, mutate(records, drop_live), True,
@@ -166,7 +179,7 @@ def main():
 
     def drop_import(rs):
         for r in rs:
-            if r['ea'] == 'EA_BREAKOUT_XAU':
+            if r.get('ea') == 'EA_BREAKOUT_XAU':
                 r['cells'] = [c for c in r['cells'] if c.get('cell') != 'XAUUSD H4']
     case('an UNVERIFIED_IMPORT cell dropped', post, section, mutate(records, drop_import), True,
          r"A2 row .*lost cell 'XAUUSD H4'")
@@ -178,7 +191,7 @@ def main():
     # label with something meaningless. The token stays findable in the source; the label is junk.
     def relabel(rs):
         for r in rs:
-            if r['ea'] == 'NuiIndy RSI+ADX':
+            if r.get('ea') == 'NuiIndy RSI+ADX':
                 for c in r['cells']:
                     if c.get('cell') == 'GBPUSD':
                         c['cell'] = 'MEANINGLESS-CELL-1'
@@ -331,7 +344,7 @@ def main():
 
     def strip_token(rs):
         for r in rs:
-            if r['ea'] == 'NuiIndy RSI+ADX':
+            if r.get('ea') == 'NuiIndy RSI+ADX':
                 for c in r['cells']:
                     if c.get('declared_status'):
                         c.pop('source_token', None)
@@ -340,7 +353,7 @@ def main():
 
     def new_word(rs):
         for r in rs:
-            if r['ea'] == 'NuiIndy RSI+ADX':
+            if r.get('ea') == 'NuiIndy RSI+ADX':
                 for c in r['cells']:
                     if c.get('declared_status'):
                         c['declared_status'] = 'PROBABLY_FINE'
@@ -494,6 +507,110 @@ def main():
     say('  again -- check_s2a_attestation.py must exit 0 -- which is what ORDER-610 pre-registered')
     say('  before I amended it. Its negative fixture is the attestation suite, not this one.')
 
+    # ------------------------------------------------------------------ ORDER-1250
+    # The store now holds two populations, and every rule above was written when it held one.
+    # These cases exist because the cheapest way to get a two-population store wrong is for the
+    # imported-row rules to be silently skipped on the new rows and nothing to take their place.
+    say()
+    say('=== ORDER-1250 the store holds TWO populations: imported rows and native CoverageCells ===')
+    native = [r for r in records if gen.is_native(r)]
+    if not native:
+        say('  [FAIL] the real store carries no native CoverageCell row, so every case below is')
+        say('         vacuous -- it would pass by having nothing to judge')
+        FAILURES.append('native population is empty')
+    else:
+        say('  [OK ] CONTROL the real store carries %d native row(s), so these cases have a '
+            'subject' % len(native))
+
+        # CONTROL. Without this, every RED below is indistinguishable from "native rows are
+        # always rejected", which would be a checker that simply cannot hold this store.
+        case('CONTROL the real two-population store is ACCEPTED',
+             backlog_post(section, records), section, records, False)
+
+        def smuggle_verdict(rs):
+            for r in rs:
+                if gen.is_native(r):
+                    r['state'] = 'NOT_APPLICABLE'
+                    r['not_applicable_reason'] = ('parked as a BUILD-ON until the optimize probe '
+                                                  'runs')
+                    return
+        case('a native cell smuggling a verdict word into free text',
+             post, section, mutate(records, smuggle_verdict), True,
+             r'A3 CoverageCell .* carries the verdict word')
+
+        def undeclared_key(rs):
+            for r in rs:
+                if gen.is_native(r):
+                    r['outcome'] = 'looks promising'
+                    return
+        case('a native cell carrying a key the schema does not declare',
+             post, section, mutate(records, undeclared_key), True,
+             r'A3 CoverageCell .* carries the key')
+
+        def unclassifiable(rs):
+            for r in rs:
+                if gen.is_native(r):
+                    del r['entity']            # no longer native...
+                    del r['metrics']           # ...and still has no source_columns
+                    return
+        # The row is now NEITHER population. The renderer must REFUSE rather than drop it: a
+        # projection that silently omits what it cannot classify is how a table stops being true
+        # while continuing to be produced.
+        case('a row that is neither imported nor native is REFUSED, not dropped',
+             post, section, mutate(records, unclassifiable), True,
+             r'TOOLFAILURE.*neither an imported row')
+
+        # SPECIFICITY for the word-boundary search: the vocabulary must not fire on ordinary
+        # text that merely CONTAINS one of the words as a fragment. Without this, the fix for
+        # the free-text hole above could have been "match anywhere", which would make a
+        # legitimate reason unwritable and get the check switched off.
+        def innocent_reason(rs):
+            for r in rs:
+                if gen.is_native(r):
+                    r['state'] = 'NOT_APPLICABLE'
+                    r['not_applicable_reason'] = ('no tick history on this lane before 2020, so '
+                                                  'the window cannot be measured at all')
+                    return
+        case('SPECIFICITY an innocent NOT_APPLICABLE reason is still accepted',
+             backlog_post(section, mutate(records, innocent_reason)), section,
+             mutate(records, innocent_reason), False)
+
+        # The allowlist is DERIVED FROM THE SCHEMA, not hardcoded -- and this is what proves it.
+        # Narrow $defs/MetricRef by one property and the same unmutated store must be refused for
+        # that property alone. Without this case, "read from the schema" is a claim in a comment.
+        narrowed = json.loads(worktree_schema())
+        narrowed['$defs']['MetricRef']['properties'].pop('pf_state')
+        problems = run(post, section, records, schema_text=json.dumps(narrowed))
+        hit = [p for p in problems if "carries the key 'pf_state'" in p]
+        if hit:
+            say('  [OK ] %-58s expect=RED got=RED'
+                % 'the allowlist follows the schema (drop pf_state -> refused)')
+        else:
+            say('  [FAIL] the allowlist did NOT follow the schema -- it is hardcoded somewhere')
+            FAILURES.append('allowlist is not schema-derived')
+
+        # ...and the control for that: an entity that is NOT closed must make the checker REFUSE
+        # to derive an allowlist at all, rather than quietly derive a permissive one.
+        opened = json.loads(worktree_schema())
+        opened['$defs']['CoverageCell']['unevaluatedProperties'] = True
+        try:
+            run(post, section, records, schema_text=json.dumps(opened))
+            say('  [FAIL] an OPEN CoverageCell was accepted -- the allowlist would be a guess')
+            FAILURES.append('open entity not refused')
+        except chk.ToolFailure as exc:
+            ok = 'not a closed object' in str(exc)
+            say('  %s %-58s expect=ToolFailure got=ToolFailure'
+                % ('[OK ]' if ok else '[FAIL]', 'an OPEN CoverageCell is REFUSED, not guessed at'))
+            if not ok:
+                FAILURES.append('open entity refusal message')
+
+        # SPECIFICITY: the imported-row rules must still bite with native rows present. Without
+        # this, "A2 now counts imported rows only" could have been implemented by counting
+        # nothing at all.
+        case('SPECIFICITY a dropped LIVE cell is still caught with native rows in the store',
+             post, section, mutate(records, drop_live), True, r'A2 row .* lost (LIVE )?cell')
+
+    say()
     say('=== WHY THE PINNED BLOB IS LOAD-BEARING (the inertness probe) ===')
     say('  The naive A2 derives the baseline from the store it is judging. Below is that exact')
     say('  implementation, run against the store with a LIVE cell deleted.')
@@ -505,7 +622,7 @@ def main():
             return (section['heading'], section['header_columns'], section['note'],
                     [{'ea': r['ea'], 'source_columns': r['source_columns'],
                       'live_cells': r.get('live_cells') or [], 'cells': r.get('cells') or []}
-                     for r in dropped])
+                     for r in dropped if not gen.is_native(r)])
         gen.build_records = self_referential
         naive = run(post, section, dropped)
     finally:

@@ -494,8 +494,13 @@ D40 = "d" * 40
 H64 = "e" * 64
 
 MODULE_OK = {"token": "LAB_CAP_STACK", "module_version": "1", "stability": "CERTIFIABLE"}
-METRIC_OK = {"window": "MAIN", "pf": 1.31, "trades": 84, "dd_pct": 7.4,
+METRIC_OK = {"window": "MAIN", "pf": 1.31, "pf_state": "DEFINED", "trades": 84, "dd_pct": 7.4,
              "run_id": "RUN-20260731-001", "lane": "MT5-A", "data_fingerprint": "df1", "model": 1}
+# ORDER-1250. The cell that forced the schema change: USDJPY H1, 99 trades, 99 winners,
+# gross_loss = 0, so the profit factor has no denominator at all.
+METRIC_UNDEF_OK = {"window": "MAIN", "pf": None, "pf_state": "UNDEFINED_NO_LOSSES", "trades": 99,
+                   "dd_pct": 1.9, "run_id": "RUN-20260803-016", "lane": "MT5-A",
+                   "data_fingerprint": "df1", "model": 1}
 EXECKEY_OK = {"expert": "Boss_14", "symbol": "XAUUSD", "tf": "H1", "from_date": "2023.01.01",
               "to_date": "2025.12.31", "model": 1, "deposit": 10000.0, "currency": "USD",
               "leverage": 100, "set_hash": H64, "ex5_hash": H64,
@@ -686,6 +691,42 @@ epair('MetricRef', METRIC_OK, with_(METRIC_OK, model=3),
       'ORDER-611: model 3 does not exist in the tester. A metric that cannot name which fill '
       'model produced it is a number with no provenance -- the Model-2 ban rests on this field',
       [{'keyword': 'enum', 'instancePath': '/model'}])
+
+# ---- ORDER-1250: the UNDEFINED profit factor, owner-ratified 2026-08-03 --------------------
+# Four cases, because a nullable `pf` on its own would make the undefined case REPRESENTABLE and
+# leave it FAKEABLE, and the whole point of the ratified design is that the reason travels with
+# the number and is bound to it in both directions.
+#
+#   1  the undefined cell VALIDATES               (pf: null + UNDEFINED_NO_LOSSES)
+#   2  null while claiming DEFINED is REFUSED     <- the negative BOX 1a names by name
+#   3  a number while claiming UNDEFINED is REFUSED  <- the other direction; without it a run
+#                                                      could carry pf: 0 under the undefined
+#                                                      label, which is the exact inversion
+#                                                      ORDER-1230 had to repair
+#   4  omitting pf_state entirely is REFUSED      <- otherwise every pre-1250 row keeps
+#                                                    validating and the field is optional in
+#                                                    practice while `required` says it is not
+epair('MetricRef', METRIC_UNDEF_OK, with_(METRIC_UNDEF_OK, pf_state="DEFINED"),
+      'ORDER-1250: a null profit factor labelled DEFINED is a metric whose own explanation '
+      'contradicts it. The pilot cell that forced this change (99 trades, 99 winners, '
+      'gross_loss = 0) has NO denominator, and the tester prints 0 for it -- so the label is the '
+      'only thing standing between "undefined" and the most invertible number in the table',
+      [{'keyword': 'type', 'instancePath': '/pf'}], name='pf-undefined')
+
+ecase('MetricRef', 'pf-defined-cannot-be-undefined-labelled',
+      'ORDER-1250: the reverse direction. A real number under UNDEFINED_NO_LOSSES would let a '
+      'pf of 0 be filed as "no denominator", which is the inversion this whole field exists to '
+      'stop -- 0 is a REAL profit factor and must never be reachable as a synonym for absent',
+      'fail', with_(METRIC_OK, pf_state="UNDEFINED_NO_LOSSES"),
+      says=[{'keyword': 'type', 'instancePath': '/instance/pf'}])
+
+ecase('MetricRef', 'pf-state-is-not-optional',
+      'ORDER-1250: pf_state is REQUIRED, not merely available. Without this case every row '
+      'written before the change keeps validating, and a field nothing forces you to fill is '
+      'optional however the required list is worded',
+      'fail', without(METRIC_UNDEF_OK, 'pf_state'),
+      says=[{'keyword': 'required', 'instancePath': '/instance',
+             'missingProperty': 'pf_state'}])
 
 epair('CandidatePayload', PAYLOAD_OK, without(PAYLOAD_OK, "trial_count"),
       'ORDER-611: trial_count is what makes discovery risk computable at all (design 6.7); a '

@@ -85,6 +85,77 @@ SECTION_BANNER = [
     'byte-for-byte — nothing was dropped in the move.' % (BASELINE_BLOB[:12], BASELINE_COMMIT[:8]),
 ]
 
+# ORDER-1250. The store now holds TWO populations and this table projects only one of them.
+#
+#   IMPORTED rows  the ORDER-610 migration of this very table -- six verbatim `source_columns`,
+#                  no `entity` discriminator, pinned to the pre-transfer blob.
+#   NATIVE rows    real `CoverageCell` objects (`entity: CoverageCell`), which the imported rows'
+#                  own exemption in check_registries.check_r5 and run_schema_fixtures says this
+#                  moment would bring: "it ends when S5's real CoverageCell rows land".
+#
+# A native row has no six-column shape, and synthesizing one would mean inventing an EA name, a
+# class and an "Optimized?" answer for a hypothesis cell that has none of those things -- writing
+# fiction into the fleet's coverage table. So they are NOT rendered as rows.
+#
+# 🔴 THEY ARE ALSO NOT RENDERED AS NOTHING -- but the line that says so is NOT in section 2, and
+# that is an owner decision rather than a design preference.
+#
+# The first implementation put a generated "N rows are not projected here" banner INSIDE the
+# section. `.githooks/pre-commit` refused the commit, correctly: attestation line 10 pins section
+# 2 by `expected_post_state.section_sha256`, so ANY change to those bytes -- including one that
+# makes the section more truthful -- needs the owner to re-attest in the same commit. That is a
+# signature this seat may not spend (memory `approval-pinning-self-invalidates`; the same shape
+# cost five re-records in one day on 2026-07-31).
+#
+# So the disclosure lives where it can be made without a signature and cannot go stale: it is
+# DERIVED and printed by check_coverage_transfer on every run, which is in the pre-commit tier.
+# Putting it in MASTER_BACKLOG.md's header region instead was considered and rejected -- that
+# region is outside A1's body comparison, so the line would be a hand-maintained cache of a
+# generated fact, which is precisely BACKLOG-D29.
+#
+# WHAT IS THEREFORE STILL OWED, and it is the owner's to settle: section 2 says "GENERATED from
+# factory/coverage.jsonl" while projecting one of the store's two populations. Nothing here is
+# wrong, but a reader of that table cannot see that 16 more rows exist. Raised in ORDER-1250 and
+# in the next-session prompt as a decision, not fixed silently.
+NATIVE_NOTE_UNPROJECTED = ('%d CoverageCell row(s) are in the store and NOT projected into '
+                           'section 2 -- they are hypothesis-pilot cells with no EA name, no '
+                           'class and no "Optimized?" answer, so there is no honest six-column '
+                           'row to write for them. Saying so INSIDE section 2 needs an owner '
+                           're-attestation (the section is pinned); see ORDER-1250.')
+
+
+def is_native(rec):
+    """A real CoverageCell object rather than an ORDER-610 imported row."""
+    return isinstance(rec, dict) and rec.get('entity') == 'CoverageCell'
+
+
+def partition(records):
+    """-> (imported, native). REFUSES a record that is neither.
+
+    The refusal is the point. Classifying by "has source_columns" alone would let a row that is
+    merely MALFORMED -- an imported row whose columns were dropped -- fall into the native bucket
+    and vanish from the table without a word, which is the same silent-shrink this whole banner
+    exists to stop.
+    """
+    imported, native = [], []
+    for i, r in enumerate(records):
+        if is_native(r):
+            native.append(r)
+        elif isinstance(r, dict) and 'source_columns' in r:
+            imported.append(r)
+        else:
+            # ToolFailure, NOT SystemExit. This function is called from a CHECKER as well as from
+            # this generator, and a SystemExit there escapes past the checker's own handler as a
+            # traceback -- which reads as "the file is wrong" when the truth is "I cannot tell
+            # what this record is". That conflation is the one check_coverage_transfer's
+            # ToolFailure alias exists to prevent, and it arrived here through the back door.
+            raise evidence.ToolFailure(
+                'gen_coverage: store record %d is neither an imported row (no `source_columns`) '
+                'nor a CoverageCell (`entity` is %r). Refusing to render: a record this function '
+                'cannot classify would be dropped from the projection silently.'
+                % (i, (r or {}).get('entity') if isinstance(r, dict) else None))
+    return imported, native
+
 
 def _git(*args):
     p = subprocess.run(('git',) + args, capture_output=True, cwd=ROOT)
@@ -303,12 +374,13 @@ def render_from(section, records):
     the duplication the A8 downgrade design argues against ("a rule written twice will disagree
     with itself"). The checker now calls this.
     """
+    imported, _native = partition(records)
     out = [section['heading'], '']
     out.extend(SECTION_BANNER)
     out.append('')
     out.append(join_row(section['header_columns']))
     out.append('|' + '---|' * len(section['header_columns']))
-    for r in records:
+    for r in imported:
         out.append(join_row(r['source_columns']))
     out.append('')
     if section.get('note'):
@@ -385,4 +457,11 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    raise SystemExit(main(sys.argv[1:]))
+    try:
+        raise SystemExit(main(sys.argv[1:]))
+    except evidence.ToolFailure as _exc:
+        # partition() refuses an unclassifiable record with a ToolFailure so that the CHECKER can
+        # distinguish "unreadable" from "wrong". At the CLI that still has to be a non-zero exit
+        # with the message, not a traceback.
+        print('[gen_coverage] REFUSED: %s' % _exc)
+        raise SystemExit(2)

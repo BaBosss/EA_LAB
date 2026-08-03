@@ -79,6 +79,7 @@ for _stream in (sys.stdout, sys.stderr):
 ROOT = evidence.REPO_ROOT
 DESIGN_REL = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'
 HYPOTHESES_REL = 'factory/hypotheses.jsonl'
+COVERAGE_REL = 'factory/coverage.jsonl'
 
 PASS = 'PASS'
 FAIL = 'FAIL'
@@ -339,29 +340,204 @@ def item_optimize_guard(src):
             'zero real fires is UNTESTED, so this is BLOCKED rather than borrowed from the cage.')
 
 
+def _pilot_cells(src):
+    """-> [CoverageCell] for the pilot hypotheses, from the coverage store.
+
+    ORDER-1250. This is what "the pilot cell result store" turned out to mean. `registry.STORES`
+    has always declared factory/coverage.jsonl to be the CoverageCell store, and the ORDER-610
+    imported rows carry an explicit exemption in check_registries.check_r5 reading "it ends when
+    S5's real CoverageCell rows land". The 16 rows this reads ARE those rows.
+
+    Imported rows are skipped by DISCRIMINATOR, not by shape: a row that fails to parse is a
+    Refusal, because a cell store that silently drops rows makes 16/16 unfalsifiable.
+    """
+    cells = []
+    for n, line in enumerate(_read(src, COVERAGE_REL).split('\n'), 1):
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError as exc:
+            raise Refusal('%s line %d is unparseable: %s' % (COVERAGE_REL, n, exc))
+        if obj.get('entity') != 'CoverageCell':
+            continue
+        if str(obj.get('hypothesis_revision', '')).split('-r')[0] in PILOT_HYPOTHESES:
+            cells.append(obj)
+    return cells
+
+
+# The states in which a cell has been through BOTH a Baseline and the decision-13 probe. A cell at
+# BASELINE_RUN has had one of the two, which is why this tuple does not contain it.
+#
+# 🔴 The flat-lot arm that HAS been run against all 16 cells is H01's FALSIFIER -- it answers
+# "does the edge live in the engine or the signal". The probe design 8.3 owes each cell is the
+# decision-13 OPTIMIZE probe, a different run answering a different question. Ticking this item
+# from the falsifier is prohibited by name in the order that implemented this handler, and the
+# store says BASELINE_RUN for all 16 precisely so that the prohibition is mechanical rather than
+# a note somebody has to remember.
+PROBE_DONE_STATES = ('PROBE_RUN', 'PULSE', 'NO_PULSE', 'RESCUE_IN_PROGRESS', 'EVIDENCE_COMPLETE')
+
+
 def item_cells_baseline_probe(src):
     """8.6.7 -- 16/16 cells reach Baseline + probe, or carry a written NOT_APPLICABLE reason."""
-    return (BLOCKED,
-            'no pilot cell evidence is committed; 0 of %d cells have a Baseline + probe. '
-            'factory/runs/ today holds S9 scheduler fixtures, not pilot cells.' % PILOT_CELL_COUNT)
+    cells = _pilot_cells(src)
+    if not cells:
+        return (BLOCKED,
+                'no pilot cell is registered in %s. The runs may exist under factory/runs/pilot/, '
+                'but an untyped run record is not a cell: nothing can route it to a contract.'
+                % COVERAGE_REL)
+    if len(cells) > PILOT_CELL_COUNT:
+        return (FAIL,
+                '%s holds %d pilot cells; design 8.3 declares exactly %d (4 symbols x 2 TF x 2 '
+                'hypotheses). A universe larger than the design is not extra coverage, it is a '
+                'cell nobody pre-registered.' % (COVERAGE_REL, len(cells), PILOT_CELL_COUNT))
+
+    done, waiting, bad = [], [], []
+    for c in cells:
+        cid = c.get('cell_id')
+        state = c.get('state')
+        if state == 'NOT_APPLICABLE':
+            why = c.get('not_applicable_reason')
+            if isinstance(why, str) and len(why.strip()) >= 10:
+                done.append(cid)
+            else:
+                bad.append('%s is NOT_APPLICABLE with no written reason' % cid)
+        elif state in PROBE_DONE_STATES:
+            done.append(cid)
+        else:
+            waiting.append('%s=%s' % (cid, state))
+    if bad:
+        return (FAIL, '; '.join(bad))
+    if len(cells) < PILOT_CELL_COUNT:
+        waiting.append('%d of %d cells are not registered at all'
+                       % (PILOT_CELL_COUNT - len(cells), PILOT_CELL_COUNT))
+    if waiting:
+        return (BLOCKED,
+                '%d of %d cells have reached Baseline + probe. Still owed: %s. A cell at '
+                'BASELINE_RUN has had its Baseline and NOT the decision-13 optimize probe -- the '
+                'flat-lot arm already run against every cell is H01\'s falsifier, which answers a '
+                'different question and must not be counted here.'
+                % (len(done), PILOT_CELL_COUNT, ', '.join(sorted(waiting))))
+    return (PASS,
+            'all %d cells reach Baseline + probe or carry a written NOT_APPLICABLE reason'
+            % PILOT_CELL_COUNT)
+
+
+def _fmt_pf(metric):
+    """PF as a string that CANNOT be read as a number when it is not one.
+
+    ORDER-1230 had to repair the opposite of this: the tester prints `0` for a run with no losing
+    trade, so the cell with the best win rate in the matrix rendered as the worst result in it.
+    `pf_state` exists to make that unfakeable in the store; this makes it unfakeable in the output.
+    """
+    if metric.get('pf_state') == 'UNDEFINED_NO_LOSSES':
+        return 'UNDEF(no losses)'
+    pf = metric.get('pf')
+    return 'n/a' if pf is None else ('%.2f' % pf)
 
 
 def item_pf_with_n_and_dd(src):
     """8.6.8 -- every cell's PF is displayed with its trade count and drawdown."""
-    return (BLOCKED,
-            'no cell results exist to display. NOTE for whoever builds the renderer: CLAUDE.md\'s '
-            'un-numbered PENDING-RATIFY note requires trade count AND drawdown beside PF precisely '
-            'because a bar can be cleared by non-participation (memory '
-            '`bar-cleared-by-non-participation`), so this item is not cosmetic.')
+    cells = _pilot_cells(src)
+    if not cells:
+        return (BLOCKED, 'no pilot cell is registered in %s, so there is nothing to display'
+                % COVERAGE_REL)
+    empty = [c.get('cell_id') for c in cells if not (c.get('metrics') or [])]
+    if empty:
+        return (FAIL,
+                '%d cell(s) carry no metric at all: %s. An empty `metrics` array is how a cell '
+                'that was never measured renders as a cell with nothing to report.'
+                % (len(empty), ', '.join(sorted(str(e) for e in empty))))
+    # The DISPLAY is this detail line. CLAUDE.md's un-numbered PENDING-RATIFY note requires the
+    # trade count AND the drawdown beside PF precisely because a bar can be cleared by
+    # non-participation (memory `bar-cleared-by-non-participation`) -- two BWD-clearing hosts took
+    # 52 and 62 trades at under 2% DD while every failing host took 343-473. A PF alone cannot
+    # tell those apart, so this item is not cosmetic.
+    shown = []
+    for c in sorted(cells, key=lambda x: str(x.get('cell_id'))):
+        for m in c['metrics']:
+            shown.append('%s [%s] PF=%s n=%s DD=%s%%'
+                         % (c.get('cell_id'), m.get('window'), _fmt_pf(m), m.get('trades'),
+                            m.get('dd_pct')))
+    return (PASS,
+            'every registered cell displays PF with its trade count and drawdown, and an absent '
+            'denominator is displayed as UNDEF rather than as a number:\n        '
+            + '\n        '.join(shown))
+
+
+def _pilot_run_records(src):
+    """-> [(rel, line_no, record)] for every committed pilot run record.
+
+    Read as well as the cell store because 8.6.9 says every RUN, and the cell store registers one
+    metric per cell -- the Baseline arm. The probe arms are runs too, and a rule about runs that
+    only ever looks at a third of them is a rule that would not notice the other two.
+    """
+    out = []
+    try:
+        paths = src.list_committed('factory/runs/pilot/*.jsonl')
+    except evidence.ToolFailure:
+        return out
+    for rel in sorted(paths):
+        for n, line in enumerate(_read(src, rel).split('\n'), 1):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                out.append((rel, n, json.loads(line)))
+            except ValueError as exc:
+                raise Refusal('%s line %d is unparseable: %s' % (rel, n, exc))
+    return out
 
 
 def item_lane_and_fingerprint(src):
     """8.6.9 -- every run carries lane + data fingerprint; no cross-install comparison anywhere."""
-    return (BLOCKED,
-            'no pilot run records exist to carry a lane or a data fingerprint. The rule is '
-            'load-bearing: BTC tick history differs 14x across installs (memory '
-            '`btc-tick-data-differs-per-mt5-install`), so a cross-install comparison is a wrong '
-            'number, not a slightly noisy one.')
+    cells = _pilot_cells(src)
+    runs = _pilot_run_records(src)
+    if not cells and not runs:
+        return (BLOCKED,
+                'no pilot cell and no pilot run record is committed, so there is nothing carrying '
+                'a lane or a data fingerprint to check.')
+
+    missing, lanes, fingerprints = [], {}, set()
+    for c in cells:
+        for i, m in enumerate(c.get('metrics') or []):
+            where = '%s metrics[%d]' % (c.get('cell_id'), i)
+            for f in ('lane', 'data_fingerprint'):
+                if not m.get(f):
+                    missing.append('%s has no %s' % (where, f))
+            if m.get('lane'):
+                lanes.setdefault(m['lane'], []).append(where)
+            if m.get('data_fingerprint'):
+                fingerprints.add(m['data_fingerprint'])
+    for rel, n, rec in runs:
+        where = '%s:%d' % (rel, n)
+        for f in ('lane', 'data_fingerprint'):
+            if not rec.get(f):
+                missing.append('%s has no %s' % (where, f))
+        if rec.get('lane'):
+            lanes.setdefault(rec['lane'], []).append(where)
+
+    if missing:
+        return (FAIL,
+                '%d run/metric record(s) carry no lane or no data fingerprint; first: %s. Without '
+                'both, a number cannot be told apart from the same number produced somewhere else.'
+                % (len(missing), missing[0]))
+    if len(lanes) > 1:
+        return (FAIL,
+                'the pilot evidence spans %d MT5 lanes (%s), so a cross-install comparison exists '
+                'in the output. BTC tick history differs 14x across installs (memory '
+                '`btc-tick-data-differs-per-mt5-install`), which makes such a comparison a WRONG '
+                'number rather than a noisy one.'
+                % (len(lanes), '; '.join('%s x%d' % (k, len(v)) for k, v in sorted(lanes.items()))))
+    lane = next(iter(lanes)) if lanes else '<none>'
+    return (PASS,
+            'every one of the %d metric(s) and %d run record(s) carries a lane and a data '
+            'fingerprint, and all of them name ONE lane (%s), so no cross-install comparison '
+            'exists in the output. Distinct data fingerprints among the registered metrics: %d '
+            '(one per window x symbol x TF, which is what makes them comparable).'
+            % (sum(len(c.get('metrics') or []) for c in cells), len(runs), lane,
+               len(fingerprints)))
 
 
 def item_crypto_financing(src):
@@ -460,14 +636,6 @@ UNIMPLEMENTED = {
     'item_optimize_guard':
         'needs a record of real pilot sweep submissions, ALLOWed and REFUSEd. No such artefact '
         'exists; optimize_guard.ps1 today leaves no committed decision log.',
-    'item_cells_baseline_probe':
-        'needs the pilot cell result store. factory/runs/ holds S9 scheduler fixtures and has no '
-        'cell entity.',
-    'item_pf_with_n_and_dd':
-        'needs the cell result store above, plus the renderer that displays PF with n and DD.',
-    'item_lane_and_fingerprint':
-        'needs the run record to carry lane + data fingerprint; the fields are designed but no '
-        'pilot run writes them yet.',
     'item_crypto_financing':
         'needs a crypto cell result AND the post-hoc financing deduction recorded beside it.',
     'item_scheduler_resume':

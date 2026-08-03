@@ -722,6 +722,23 @@ def reconcile(root=None):
                     sv._refuse(str(exc))
                 if kind == 'META':
                     continue
+                # ORDER-1250. The moment the comment above COVERAGE_PART anticipated: a real
+                # `CoverageCell` object IS one cell, and its `state` is the 9-state enum that
+                # table already spells out. An imported row is a container of `cells`; a native
+                # row is a cell. Counted here rather than refused -- but the refusal below is
+                # NARROWED, not removed, so a row that is neither shape still stops the build.
+                if rec.get('entity') == 'CoverageCell':
+                    cells_in_universe += 1
+                    state = str(rec.get('state') or '')
+                    part = COVERAGE_PART.get(state)
+                    if part is None:
+                        sv._refuse(
+                            'factory/coverage.jsonl line %d is a CoverageCell whose state %r is '
+                            'in no coverage part. Refused rather than counted into the universe '
+                            'and out of every part, which would make cells_in_universe disagree '
+                            'with the parts sum for a reason nobody could see.' % (n, state))
+                    parts[part] += 1
+                    continue
                 if 'cells' not in rec:
                     sv._refuse(
                         'factory/coverage.jsonl line %d has no `cells` key and is not a metadata '

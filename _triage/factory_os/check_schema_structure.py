@@ -234,8 +234,13 @@ def _invocation_text():
     # and keeping the rest was tried first and still passed a bogus WIRED claim, because the same
     # filename reappears further down in another declaration block. Whitelisting the executed arrays
     # is decidable; blacklisting prose is not.
+    # ORDER-1252: `run_contract_binding_tests.ps1` LEFT the fast tier, so its `$scripts` array no
+    # longer describes anything a hook or the tier invokes -- reading it here would let a WIRED
+    # claim rest on a suite that now only runs by hand, which is precisely the false-governance
+    # state this whole block was built to end. `run_schema_cages.ps1` is what took its place in
+    # the tier and is read instead.
     for path, marker in (("scripts/_test/run_fast_cages.ps1", "$FAST_SUITES"),
-                         ("scripts/_test/run_contract_binding_tests.ps1", "$scripts")):
+                         ("scripts/_test/run_schema_cages.ps1", "$scripts")):
         if not src.exists_committed(path):
             continue
         body = src.read_committed(path, errors="replace")
