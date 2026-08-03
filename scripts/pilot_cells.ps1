@@ -190,7 +190,18 @@ function Resolve-PF([hashtable]$m) {
 function Get-CarriedAtEnd([string]$htm) {
   $out = & $py (Join-Path $root 'scripts\pilot_carried.py') $htm
   if ($LASTEXITCODE -ne 0) { Fail ("pilot_carried.py failed on " + $htm) }
-  return (($out -join "`n") | ConvertFrom-Json)
+  $c = ($out -join "`n") | ConvertFrom-Json
+  # /scrutinize round 2: the tool COUNTS rows it could not parse and the caller was discarding the
+  # count. A carried figure that silently dropped rows understates exactly the loss it exists to
+  # reveal -- and it understates it in the flattering direction, which is the direction nobody
+  # audits. Two ways it must not pass quietly:
+  if (-not $c.readable) {
+    Fail ("pilot_carried.py could not read the Deals table of " + $htm + " -- 'no carried positions' and 'I could not look' are different facts and this cell must not be recorded as if they were the same.")
+  }
+  if ($c.unparsed_rows -gt 0) {
+    Fail ("pilot_carried.py could not parse the profit of " + $c.unparsed_rows + " force-closed row(s) in " + $htm + ". The carried total would be understated by an unknown amount, so it is refused rather than reported.")
+  }
+  return $c
 }
 
 # design 6.4: data_fingerprint = hash(lane . symbol . tf . from . to . model . bars . ticks .
@@ -334,11 +345,73 @@ foreach ($rev in $Revisions) {
       }) | Out-Null
 
       if (-not $SkipFlatLotProbe) {
-        # PARENT-SIDE, and legitimate only because parity holds -- see the header.
+        # 🔴 THE ESCALATED ARM OF THE COMPARISON IS RUN AGAIN, ON THE PARENT, AND THE BASELINE ABOVE
+        # IS NOT REUSED FOR IT. Found by /scrutinize round 1 over this file's own first results.
+        # The baseline runs the WRAPPER and the flat-lot arm must run the PARENT (LotProg is a
+        # LOCKED_SELECTOR, so the wrapper cannot express it). Comparing those two directly makes
+        # every pair differ in TWO variables -- the lever AND the binary -- and attributes the whole
+        # difference to the lever.
+        #
+        # Parity does license substituting the parent for the wrapper, but only where it was
+        # DEMONSTRATED: XAUUSD H1, 2024.01..2024.07, model 1, at the build-default first lot. This
+        # matrix runs 2023.01..2025.12 over four symbols at a different first lot, and parity has
+        # never been run there. "Parity holds for this configuration" was the claim; it is not the
+        # configuration parity was measured on.
+        #
+        # So the comparison is now parent-vs-parent and single-variable, which is what
+        # pilot_sizing_sweep.ps1 already did. The wrapper baseline stays as the CELL's evidence --
+        # the pilot is validating the wrapper -- and the falsifier is judged on the probe pair.
+        $htmE = Invoke-Cell $Parent $symbol $period $baseSet.path ('S13CELL_' + $tag + '_probeesc')
         $htmF = Invoke-Cell $Parent $symbol $period $flatSet.path ('S13CELL_' + $tag + '_flatlot')
         $mf = Get-ReportMetrics $htmF
         $pfInfoF = Resolve-PF $mf
         $carriedF = Get-CarriedAtEnd $htmF
+        $me = Get-ReportMetrics $htmE
+        $pfInfoE = Resolve-PF $me
+        $carriedE = Get-CarriedAtEnd $htmE
+
+        # The escalated side of the comparison gets its OWN record and its own row. Without it the
+        # table shows a flat-lot arm next to a WRAPPER baseline and a reader compares those two --
+        # which is the confound this arm exists to remove, reintroduced by the renderer.
+        $recE = [ordered]@{
+          entity                = 'PilotCellRun'
+          cell_id               = $cellId
+          hypothesis_revision   = $rev
+          arm                   = 'probe-escalated'
+          expert                = $Parent
+          logical_symbol        = $symbol
+          tf                    = $period
+          window                = $Window
+          first_lot             = $(if ($FirstLot) { $FirstLot } else { 'build-default (0.01)' })
+          from_date             = $FromDate
+          to_date               = $ToDate
+          model                 = $Model
+          lane                  = $Terminal
+          data_fingerprint      = (Get-DataFingerprint $me $symbol $period)
+          effective_config_hash = $baseSet.hash
+          set                   = $baseSet.path
+          report                = $htmE
+          pf                    = $pfInfoE.pf
+          pf_undefined          = $pfInfoE.undefined
+          trades                = (As-Num $me['total_trades'])
+          dd_pct                = (As-Num $me['equity_drawdown_maximal_pct'])
+          gross_profit          = (As-Num $me['gross_profit'])
+          gross_loss            = (As-Num $me['gross_loss'])
+          carried_at_end_count  = $carriedE.carried_count
+          carried_at_end_profit = $carriedE.carried_profit
+          net_profit            = (As-Num $me['net_profit'])
+          notes                 = @(
+            ('THE ESCALATED SIDE OF THE FALSIFIER, run on ' + $Parent + ' with the SAME effective ' +
+             'config as the wrapper baseline. It exists so the probe pair is parent-vs-parent and ' +
+             'differs only in LotProg. Compare THIS against the flat-lot arm -- not the wrapper ' +
+             'baseline, which differs in the binary too.')
+          )
+        }
+        $records.Add($recE) | Out-Null
+        $rows.Add([pscustomobject]@{
+          cell = $cellId; arm = 'probe-escalated'; pf = $recE.pf; n = $recE.trades; dd = $recE.dd_pct
+          undef = $pfInfoE.undefined; carried = $carriedE.carried_profit
+        }) | Out-Null
         $recF = [ordered]@{
           entity                = 'PilotCellRun'
           cell_id               = $cellId
@@ -387,7 +460,8 @@ foreach ($rev in $Revisions) {
         # as a falsified claim. pilot_probe_compare.py compares the TRADE LISTS, because identical
         # PF with different lists is two strategies agreeing on one window while identical lists is
         # the lever doing nothing, and only the second is inertness.
-        $cmpJson = & $py (Join-Path $root 'scripts\pilot_probe_compare.py') $htm $htmF
+        # $htmE, NOT $htm: parent-vs-parent, so the only difference between the two sides is LotProg.
+        $cmpJson = & $py (Join-Path $root 'scripts\pilot_probe_compare.py') $htmE $htmF
         if ($LASTEXITCODE -ne 0) { Fail ("pilot_probe_compare.py failed for " + $cellId) }
         $cmp = ($cmpJson -join "`n") | ConvertFrom-Json
         $recF.probe_state = $cmp.probe_state
@@ -397,6 +471,25 @@ foreach ($rev in $Revisions) {
         if ($cmp.probe_state -ne 'EXERCISED') {
           $recF.notes += ('PROBE ' + $cmp.probe_state + ' -- the falsifier CANNOT be evaluated ' +
                           'from this pair. ' + $cmp.why)
+        }
+
+        # /scrutinize round 3: EXERCISED is NOT the same as COMPARABLE, and the comparator says
+        # "the falsifier comparison is meaningful for this cell" when it reaches that verdict.
+        # It cannot know better -- it deliberately never reads a profit factor, which is what stops
+        # it being talked into one. But H01's falsifier is literally "flat-lot PF >= escalated PF",
+        # and USDJPY H1 has NO losing trades on either arm, so both PFs are UNDEFINED and the
+        # comparison has nothing to compare even though the lever demonstrably moved. Left alone,
+        # that cell reads as a fully exercised, fully answered falsifier. It is neither.
+        $recF.falsifier_comparable = -not ($pfInfoE.undefined -or $pfInfoF.undefined)
+        if (-not $recF.falsifier_comparable) {
+          $recF.notes += ('FALSIFIER NOT COMPARABLE despite probe=' + $cmp.probe_state + ': at ' +
+                          'least one arm has an UNDEFINED profit factor (no losing trades, so no ' +
+                          'denominator). "flat-lot PF >= escalated PF" cannot be evaluated here. ' +
+                          'The lever moved; the criterion still has nothing to read.')
+          $rows.Add([pscustomobject]@{
+            cell = $cellId; arm = '  ^ falsifier'; pf = $null; n = $null; dd = $null
+            undef = $true; carried = $null; probe = 'NOT-COMPARABLE'
+          }) | Out-Null
         }
 
         $records.Add($recF) | Out-Null
@@ -452,12 +545,28 @@ Write-Host ("  PF 'UNDEF' = no losing trades at all, so the ratio has no denomin
 Write-Host ("  and the tester printing 0 there is the single most invertible number in this table.") -ForegroundColor DarkGray
 Write-Host ("  'carried' = positions the tester force-closed at the window end. Under SL_NONE a basket") -ForegroundColor DarkGray
 Write-Host ("  closes only in profit, so a carried loss NEVER enters the PF beside it.") -ForegroundColor DarkGray
-$inert = @($rows | Where-Object { $_.PSObject.Properties.Match('probe').Count -gt 0 -and $_.probe -and $_.probe -ne 'EXERCISED' })
+# TWO COUNTERS, NOT ONE. The first version filtered on "probe is set and is not EXERCISED", which
+# swept up the NOT-COMPARABLE rows and then described them with the INERT wording -- telling the
+# reader that USDJPY H1's two arms are "the SAME EA" when they demonstrably differ (100 vs 99
+# trades) and the real problem is that neither arm has a defined PF. One message for two distinct
+# states is how a reader learns the wrong lesson from a correct warning.
+$inert = @($rows | Where-Object {
+  $_.PSObject.Properties.Match('probe').Count -gt 0 -and $_.probe -and
+  $_.probe -ne 'EXERCISED' -and $_.probe -ne 'NOT-COMPARABLE' })
+$notcmp = @($rows | Where-Object {
+  $_.PSObject.Properties.Match('probe').Count -gt 0 -and $_.probe -eq 'NOT-COMPARABLE' })
 if ($inert.Count -gt 0) {
   Write-Host ""
   Write-Host ("  !! " + $inert.Count + " flat-lot probe(s) are NOT EXERCISED. For those cells the two arms are the") -ForegroundColor Yellow
   Write-Host ("     SAME EA, so 'flat-lot PF >= escalated PF' is satisfied trivially and means NOTHING.") -ForegroundColor Yellow
   Write-Host ("     A mechanism with zero fires is UNTESTED -- never passed, and never falsified.") -ForegroundColor Yellow
+}
+if ($notcmp.Count -gt 0) {
+  Write-Host ""
+  Write-Host ("  !! " + $notcmp.Count + " cell(s) have an EXERCISED lever but a NON-COMPARABLE falsifier. Different") -ForegroundColor Yellow
+  Write-Host ("     problem from the line above: the arms DO differ, but at least one has no losing") -ForegroundColor Yellow
+  Write-Host ("     trade, so its PF has no denominator and 'flat-lot PF >= escalated PF' has nothing") -ForegroundColor Yellow
+  Write-Host ("     to read. The lever moved; the criterion still cannot be evaluated.") -ForegroundColor Yellow
 }
 Write-Host ""
 Write-Host ("  records -> " + $outFile)
