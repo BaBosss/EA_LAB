@@ -105,6 +105,98 @@
 
 ---
 
+## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `OPEN (needs the owner)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+
+**Found by executing `ORDER-1273`, not by reading it.** Design §6.2 says, in one sentence:
+*"`Criterion` 0→7 (Complex), **engine-edge uses PF + double trade floor** · trade floors H4/D1 ≥60,
+H1/M30 ≥100, ≤M15 ≥250 per MAIN"*. `pilot_probe.ps1` cites the first half of that sentence in its
+own header to justify launching with `-Criterion 1`, and both pilot hypotheses carry
+`engine_edge=true`. `ORDER-1273` pinned **H1 ≥ 100 · H4 ≥ 60** — the base floor, **undoubled** —
+while its own prohibition list opens with *"relaxing the floor"*.
+
+**It is not a rounding detail. Measured over all sixteen surfaces, base (100/60) against doubled
+(200/120):**
+
+| | base | doubled |
+|---|---|---|
+| cells with an admissible pass | 16/16 | 14/16 (`B14-H01-r1/EURUSD/H1` and `/EURUSD/H4` fall to zero) |
+| cells whose selected configuration is IDENTICAL under both | — | **2 of 16** |
+
+So the floor decides which configuration fourteen cells hand to BWD, and whether two cells hand
+anything at all.
+
+**Why this is the owner's and not mine.** `ORDER-1220` established that a criterion chosen after
+seeing the result is not a criterion. The doubled floor is *stricter* and it comes from a ratified
+design rather than from a glance at a surface — but it is still a change to a pre-registered rule
+made by someone who has now read the surfaces, and that is exactly the position the pre-registration
+existed to keep anyone out of. **Recorded, measured, and handed up rather than acted on.**
+
+**Acceptance.** One ratified sentence saying which floor governs an engine-edge probe, written where
+a rule lives (`PROJECT_STATE.md` §3), with `ORDER-1273`'s text corrected or superseded in the same
+commit so the two stop disagreeing.
+🚫 Do not re-run `pilot_probe_select.py` under the doubled floor and record the output as *the*
+selection. 🚫 Do not lower either floor. 🚫 Do not settle it by picking whichever floor leaves more
+cells alive — that is the failure this order is about.
+
+---
+
+## ORDER-1301 — [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is what a basket martingale looks like when it is measured on PF — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+**An observation about the surfaces, made while executing `ORDER-1273`. It is not a verdict, it does
+not change the criterion, and it must reach whoever spends the BWD run.**
+
+Measured on `B14-H01-r1/BTCUSD/H4`, one of only two cells that selected cleanly:
+
+* the `Result` column equals `Profit Factor` **to the digit** for every plateau row, so
+  `-Criterion 1` is ranking on PF and nothing else;
+* **303 of 303 plateau rows have PF > 100**; the top row reads PF 12,211 and the cut row 833;
+* implied gross loss over the whole three-year MAIN window — `Profit / (PF - 1)`, both committed
+  columns — has a **median of $0.68** across the plateau, and $0.61 at the top;
+* those same rows carry **6.6 – 14.3 % equity drawdown**.
+
+Read together: the plateau is the set of configurations that almost never *realise* a loss while
+carrying real floating drawdown. For an escalation engine that is not a measure of edge, it is a
+measure of how long the engine can defer a loss — memory `guard-bounds-floating-not-episode`, and
+the same shape as `pyramid-depth-is-leverage-not-edge`. Ranking by PF sorts the surface by
+deferral ability, and the trade floor does not touch it because these configurations trade plenty.
+
+**Acceptance.** A recorded decision on whether PF is the right ranking column for an engine-edge
+probe, and — if it stays — a line beside every selection saying that its plateau PF is a statement
+about realised losses only, so no later reader quotes 12,211 as a quality number.
+🚫 No verdict about `B14` from this. 🚫 Do not re-rank the existing surfaces on a different column
+and call the result a selection: that is `ORDER-1220` again.
+
+---
+
+## ORDER-1302 — [factory/S13] 14 of 16 cells are BOUNDARY, and "expand the grid" here means editing a `safe_range` — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+`ORDER-1273` item 5 / design §6.3 (decision 19): a median on the first or last grid value ⇒ **expand
+the range and re-run**, and the cell is **not closed** on it. Executed, that lands on **14 of 16
+cells** — the full per-cell list with the dimension and edge named is committed in
+`factory/runs/pilot/selection/selection_20260804_051809.jsonl`. Only `B14-H01-r1/BTCUSD/H4` and
+`B14-H02-r1/BTCUSD/H4` came out clean.
+
+🔴 **The conflict to settle BEFORE any range moves.** The "declared grid" is
+`safe_range{start, step, stop}` in `factory/parameter_bindings.jsonl` — the range the store declares
+**safe**, not a search convenience. Widening it to satisfy §6.3 widens a *safety declaration*, and
+several of the edges cannot be widened in the direction the median points at all:
+`_2_BasketTP_BalPct` at 0.5 (a basket TP below half a percent of balance), `_14_MinDistPips` at 5,
+`_H_Ratio` at 0.5, `_0_ATR_Period` at 7. **Either the grid and the safe range are two different
+things and the store must carry both, or a boundary at the edge of a safe range means "the answer is
+outside what we permit" — which is a finding, not a re-run.** That choice is the first deliverable
+here; the re-runs are the second.
+
+**Cost, so it is scheduled and not discovered:** the coarse pass measured **675–3,211 s per cell**,
+so fourteen cells is **3–12 hours** of tester wall-clock on the pinned lane `D:\Meta 5`.
+🚫 Do not shorten the window to save time (§6.2). 🚫 Do not run any of it on a second install —
+§8.3 pins `BTCUSD` to the primary for its whole life. 🚫 Do not close a BOUNDARY cell by widening
+only the dimensions that are cheap to widen.
+
+**This blocks `ORDER-1254`:** BWD judges the configuration the probe selected, and fourteen cells do
+not have one yet.
+
+---
+
 ## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 **This order is CITED FROM CODE** — `check_schema_structure.py`'s `_NO_ENFORCEMENT_DECLARATION`
@@ -317,7 +409,31 @@ the honest response is to wait for the machine, never `--no-verify`.
 
 ---
 
-## ORDER-1273 — [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, written before anyone opens one — `OPEN` · ทำได้: Claude/Opus (the lane AFTER this one) · 👉 แนะ: Claude
+## ORDER-1273 — [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, written before anyone opens one — `DONE (Claude/Opus 2026-08-04, lane S-2026-08-04-S13E) — criterion executed verbatim as scripts/pilot_probe_select.py; 2 SELECTED, 14 BOUNDARY, 0 empty; three findings handed to ORDER-1300/1301/1302` · ทำได้: Claude/Opus (the lane AFTER this one) · 👉 แนะ: Claude
+
+### ✅ EXECUTED 2026-08-04 — what the criterion returned
+
+Rendered as `scripts/pilot_probe_select.py` and run over all sixteen surfaces; the record is
+`factory/runs/pilot/selection/selection_20260804_051809.jsonl`, the cage is
+`scripts/_test/run_selection_tests.ps1` (16 cases, every attack paired with a control, proven able
+to fail on six one-line mutations of the module).
+
+* **16/16 cells have an admissible pass.** `SELECTED` 2 · `BOUNDARY` 14 · `NO_ADMISSIBLE_PASS` 0.
+* **The prediction in item 2 was wrong, and it is worth saying why rather than quietly dropping it.**
+  It read *"expect ~1 cell in 16 to clear its floor"*, derived from the BASELINE trade counts
+  (BTCUSD H1 = 130, USDJPY H1 = 99, best H4 = 58). But the floor is applied to the **swept surface**,
+  where thousands of configurations trade far more than the baseline one did — e.g.
+  `B14-H01-r1/BTCUSD/H4` has 3,030 admissible passes out of 3,991. The *rule* held; the *guess about
+  what it would return* did not, and it was a guess about the wrong population. Nothing was adjusted
+  to fit either.
+* **Only two cells produced a configuration**: `B14-H01-r1/BTCUSD/H4` and `B14-H02-r1/BTCUSD/H4`.
+  The other fourteen are held open by item 5 → **`ORDER-1302`**.
+* Two findings the execution surfaced, each recorded rather than acted on:
+  **`ORDER-1300`** (the pinned floor is §6.2's base floor while both revisions are engine-edge, which
+  §6.2 doubles — and the floor changes the answer in 14 of 16 cells) and **`ORDER-1301`** (every row
+  of the PF-max plateau has essentially no realised loss).
+* 🚫 Step 6 (re-run the selected configuration once) has **not** been run, and deliberately: with
+  `ORDER-1300` open, the two configurations below may not be the ones the criterion selects.
 
 🔴 **THIS ORDER EXISTS BECAUSE THE EVIDENCE ALREADY EXISTS.** Ten optimizer XMLs are on disk and
 six more are coming. `ORDER-1220` established the rule this repo pays for: a criterion chosen after
@@ -1504,7 +1620,15 @@ the back door · any EA verdict (design §10 stops this slice at `EVIDENCE_COMPL
 
 ---
 
-## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253`) · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253` ✅, and now on `ORDER-1300` + `ORDER-1302`) · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> 🔴 **Re-blocked 2026-08-04 by executing `ORDER-1273`, and both blockers are about the input this
+> order judges.** BWD judges *the configuration the probe selected*, and (a) **fourteen of sixteen
+> cells do not have one** — they are `BOUNDARY` and item 5 holds them open (`ORDER-1302`); (b) the
+> two that do select were selected under a **trade floor whose correctness is now an open question**
+> (`ORDER-1300` — §6.2 doubles the floor for the engine-edge class and the pre-registration pinned
+> the base one). Running BWD now would spend the hard gate on a configuration that may not be the
+> one the criterion picks.
 
 BOX 1c of the S13C handoff, owner-ratified: **run H01's pre-registration to the end before judging
 it.** Today's evidence is **MAIN-only under Model 1**, which `CLAUDE.md` says is not verdict-grade
