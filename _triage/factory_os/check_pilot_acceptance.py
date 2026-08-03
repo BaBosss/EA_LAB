@@ -200,13 +200,15 @@ def item_hypotheses_preregistered(src):
                 % (hid, ' and '.join([w for w, ok in (('a causal claim', has_claim),
                                                       ('a falsifier', has_falsifier)) if not ok])))
         # ...and the registry row must NOT restate them. hypotheses.jsonl's own header says so.
-        blob_txt = json.dumps(row)
+        # (A `json.dumps(row)` was computed here and immediately deleted -- dead code from an
+        # earlier substring-based draft, removed in /scrutinize round 1. It looked like the check
+        # was scanning the serialised row when it is scanning the KEYS, which is the correct
+        # reading of "must not copy": a copy is a field, not a coincidence of wording.)
         for banned in ('causal_claim', 'falsifier', 'acceptance', 'bar'):
             if banned in row:
                 problems.append('%s COPIES %r into the registry row; 8.6 says the registry must '
                                 'not copy the claim or the falsifier -- it must reference them.'
                                 % (hid, banned))
-        del blob_txt
     if problems:
         return (FAIL, ' · '.join(problems))
     return (PASS, 'both pilot hypotheses pin an order carrying claim + falsifier; registry copies '
@@ -345,15 +347,19 @@ def item_scheduler_resume(src):
 def item_evidence_complete_no_verdict(src):
     """8.6.12 -- EVIDENCE_COMPLETE is reached with no verdict issued by automation."""
     # Two halves, and the second is checkable RIGHT NOW even though the first is not.
-    leaks = check_no_verdict_vocab()
+    # This half scans the handler DOCSTRINGS only -- it cannot see the rendered details, because
+    # it is itself one of the handlers being rendered. The rendered-detail scan is in `evaluate`,
+    # where the full result set exists, and it REFUSES rather than reporting FAIL: a checker that
+    # violates its own prohibition is a broken checker, not a failed pilot.
+    leaks = scan_verdict_vocab(handler_docstrings())
     if leaks:
         return (FAIL,
-                'this checker itself would emit verdict vocabulary %s -- design section 10 forbids '
+                'a handler docstring carries verdict vocabulary %s -- design section 10 forbids '
                 'automation issuing a verdict for this slice.' % ', '.join(sorted(leaks)))
     return (BLOCKED,
             'EVIDENCE_COMPLETE is not reached (see the roll-up), so the compound claim is not yet '
-            'true. The half that IS testable today passes: this module emits no verdict '
-            'vocabulary, asserted over its own rendered output, not merely intended.')
+            'true. The half that IS testable today passes: no handler docstring names a verdict, '
+            'and `evaluate` separately scans every RENDERED detail before returning.')
 
 
 def item_h01_engine_edge_cage(src):
@@ -445,21 +451,37 @@ def bind(items):
     return pairs
 
 
-def check_no_verdict_vocab():
-    """-> set of verdict tokens this module's own STATIC detail strings would emit.
+def scan_verdict_vocab(texts):
+    """-> set of banned verdict tokens occurring in `texts`.
 
     design section 10 forbids automation issuing a verdict for this slice, and a prohibition
-    nothing reads is decoration (memory `declared-as-trigger-but-never-read`). Scanning the
-    rendered detail strings rather than the source, because the source legitimately NAMES the
-    banned vocabulary in this very docstring and in VERDICT_VOCAB itself.
+    nothing reads is decoration (memory `declared-as-trigger-but-never-read`).
+
+    🔴 THIS TAKES ITS TEXTS FROM THE CALLER, and round 1 of /scrutinize is why. The first version
+    was `check_no_verdict_vocab()` with no argument: its docstring said it scanned "the rendered
+    detail strings", and its body scanned `handler.__doc__` -- the ONE surface that is never
+    printed. A handler returning `'B14-H01 is a VALIDATED CANDIDATE, promote it'` was therefore
+    invisible to it, which was reproduced before this was rewritten. The cage did not catch it
+    because the attack case planted the token in the mutant's DOCSTRING, so it proved the
+    docstring path and left the printed path unguarded -- a guard checking the wrong surface, with
+    a green test agreeing.
+
+    The banned vocabulary is now scanned where it would actually reach a reader: over every
+    rendered detail (see `evaluate`) AND over the handler docstrings, because a docstring that
+    names a verdict is a strong hint the handler is drifting toward issuing one.
     """
     leaks = set()
-    for text, handler in [(getattr(h, '__doc__', '') or '', h) for _a, h in CHECKLIST_BINDINGS]:
-        del handler
+    for text in texts:
+        if not text:
+            continue
         for tok in VERDICT_VOCAB:
             if tok in text:
                 leaks.add(tok)
     return leaks
+
+
+def handler_docstrings():
+    return [getattr(h, '__doc__', '') or '' for _a, h in CHECKLIST_BINDINGS]
 
 
 def evaluate(worktree=False, source=None):
@@ -484,6 +506,19 @@ def evaluate(worktree=False, source=None):
     if len(results) != len(items):
         raise Refusal('%d items parsed from design 8.6 but %d evaluated -- an item was dropped '
                       'between binding and evaluation' % (len(items), len(results)))
+    # 🔴 THE PROHIBITION, ENFORCED ON THE SURFACE THAT REACHES A READER (/scrutinize round 1).
+    # Every rendered detail is scanned here, where the whole result set exists. A leak REFUSES
+    # rather than being reported as an item FAIL: this module emitting a verdict is a defect in
+    # the module, and reporting it through the same channel it just corrupted would be asking the
+    # liar to grade the lie.
+    leaked = scan_verdict_vocab([d for _t, _s, d in results])
+    if leaked:
+        raise Refusal(
+            'this checker would EMIT verdict vocabulary %s in its rendered output. design '
+            'section 10 stops this slice\'s automation at EVIDENCE_COMPLETE, so a rendered '
+            'verdict is a defect in the checker -- refusing rather than printing it.'
+            % ', '.join(sorted(leaked)))
+
     counts = dict((s, 0) for s in STATES)
     for _t, s, _d in results:
         counts[s] += 1

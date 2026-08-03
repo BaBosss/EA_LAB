@@ -219,24 +219,65 @@ refuses('R7 ATTACK a handler returning an INVENTED state is refused, not coerced
 print('')
 print('[s13] PART 4 -- the design 10 prohibition: automation must not issue a verdict')
 
-check('V1 SPECIFICITY the real module emits no verdict vocabulary',
-      PA.check_no_verdict_vocab() == set(),
-      'leaked: %r' % PA.check_no_verdict_vocab())
+check('V1 SPECIFICITY the real module leaks no verdict vocabulary from its docstrings',
+      PA.scan_verdict_vocab(PA.handler_docstrings()) == set(),
+      'leaked: %r' % PA.scan_verdict_vocab(PA.handler_docstrings()))
 
 
-def _leaky(src):
+def _leaky_doc(src):
     """A handler that would call the pilot a CANDIDATE."""
     return (PA.PASS, 'looks good')
 
 
+def _leaky_detail(src):
+    """A perfectly innocent docstring."""
+    return (PA.PASS, 'B14-H01 is a VALIDATED CANDIDATE, promote it')
+
+
 saved = PA.CHECKLIST_BINDINGS
 try:
-    PA.CHECKLIST_BINDINGS = ((PA.CHECKLIST_BINDINGS[0][0], _leaky),) + PA.CHECKLIST_BINDINGS[1:]
-    leaks = PA.check_no_verdict_vocab()
-    check('V2 ATTACK a handler that issues a verdict IS detected by name',
+    PA.CHECKLIST_BINDINGS = ((saved[0][0], _leaky_doc),) + saved[1:]
+    leaks = PA.scan_verdict_vocab(PA.handler_docstrings())
+    check('V2 ATTACK a handler whose DOCSTRING names a verdict is detected by name',
           'CANDIDATE' in leaks, 'not detected; leaks=%r' % leaks)
 finally:
     PA.CHECKLIST_BINDINGS = saved
+
+# 🔴 V4 IS THE CASE /scrutinize ROUND 1 ADDED, AND IT IS THE ONE THAT MATTERS.
+# V2 plants the token in the mutant's DOCSTRING -- the one surface that is never printed. The
+# original guard scanned only docstrings while its own comment claimed it scanned "the rendered
+# detail strings", so a handler RETURNING `'... VALIDATED CANDIDATE ...'` was invisible to it and
+# V2 stayed green throughout. A test that can only catch the attack it was shaped around is not a
+# cage. This drives the REAL surface: the detail the user reads.
+saved = PA.CHECKLIST_BINDINGS
+try:
+    # EVERY OTHER handler is neutralised, and that is not tidiness -- it is the difference between
+    # a case that tests its property and one that passes by accident. The first version replaced
+    # only binding[0] and left the real handlers in place; `item_wrappers_generate` then called
+    # check_wrapper_gen against the synthetic source, raised a read Refusal, and `refuses()` was
+    # satisfied by a refusal that had nothing to do with verdict vocabulary. It was green for the
+    # wrong reason -- the exact defect this round is fixing, reproduced inside its own fix.
+    benign = tuple((a, (lambda src: (PA.PASS, 'benign'))) for a, _h in saved)
+    PA.CHECKLIST_BINDINGS = ((benign[0][0], _leaky_detail),) + benign[1:]
+    check('V4 SPECIFICITY the docstring scan alone does NOT see a leak in the rendered detail',
+          PA.scan_verdict_vocab(PA.handler_docstrings()) == set(),
+          'the docstring scan saw it, so V4 is not testing what it claims')
+    refuses('V4 ATTACK a handler EMITTING a verdict in its rendered detail makes evaluate REFUSE',
+            lambda: PA.evaluate(source=FakeSource({PA.DESIGN_REL: REAL_DESIGN})),
+            'would EMIT verdict vocabulary')
+    # ...and the control: the same all-benign set with NO leak must evaluate cleanly, or V4 would
+    # be satisfied by an evaluate() that refuses everything.
+    PA.CHECKLIST_BINDINGS = benign
+    _r, _roll = PA.evaluate(source=FakeSource({PA.DESIGN_REL: REAL_DESIGN}))
+    check('V4 CONTROL the same handler set WITHOUT the leak evaluates without refusing',
+          _roll['evidence_complete'])
+finally:
+    PA.CHECKLIST_BINDINGS = saved
+
+check('V5 SPECIFICITY the real module, rendered end to end, emits no verdict vocabulary',
+      PA.scan_verdict_vocab(
+          [d for _t, _s, d in PA.evaluate(
+              source=evidence.EvidenceSource('worktree'))[0]]) == set())
 
 check('V3 the vocabulary list is not empty (an empty blacklist detects nothing)',
       len(PA.VERDICT_VOCAB) >= 5)
