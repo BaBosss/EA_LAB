@@ -397,6 +397,40 @@ state, detail = PA.item_hypotheses_preregistered(hyp_source([]))
 check('H5 no hypothesis rows at all -> BLOCKED, not FAIL (absent evidence is not contradiction)',
       state == PA.BLOCKED, '%s: %s' % (state, detail))
 
+# --- /scrutinize round 3: the window bled past the end of the pinned order ----------------------
+# 🔴 THE ATTACK THAT WAS PASSING. The first version searched `text[index(anchor):][:8000]` -- a
+# magic character count that does not stop at the end of the pinned section. An order whose own
+# text stated NO method PASSED, because the window ran on into the next `## ORDER-` heading and
+# matched a DIFFERENT order's causal claim and falsifier. Item 1 is one of only four implemented
+# checks in this module, so a false PASS there is most of its credibility.
+BLEED = (b'## ORDER-1000\n<!-- B14-H01-PREREGISTRATION -->\nthis order states no method at all\n\n'
+         b'## ORDER-1001 a DIFFERENT order that merely follows it\n'
+         b'The causal claim: something else entirely.\nThe falsifier: some other test.\n\n'
+         b'<!-- B14-H02-PREREGISTRATION -->\nThe causal claim: a. The falsifier: b.\n')
+state, detail = PA.item_hypotheses_preregistered(hyp_source(both, BLEED))
+check('H9 ATTACK the claim+falsifier belong to the NEXT order, not the pinned one -> FAIL',
+      state == PA.FAIL and 'B14-H01' in detail, '%s: %s' % (state, detail))
+
+# CONTROL for H9: the same shape with each order carrying its OWN claim and falsifier must PASS,
+# or H9 would be satisfied by a check that simply stopped working.
+BOUNDED = (b'## ORDER-1000\n<!-- B14-H01-PREREGISTRATION -->\n'
+           b'The causal claim: g. The falsifier: h.\n\n'
+           b'## ORDER-1001\n<!-- B14-H02-PREREGISTRATION -->\n'
+           b'The causal claim: a. The falsifier: b.\n')
+state, detail = PA.item_hypotheses_preregistered(hyp_source(both, BOUNDED))
+check('H9 CONTROL each order carrying its OWN claim+falsifier still PASSes',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+# schemas.json: the anchor "must occur EXACTLY once in the blob". Presence is weaker than that in
+# the direction that matters -- a duplicated anchor is an AMBIGUOUS reference, and resolving to
+# one place is the entire purpose of an OwnerRef.
+DUP = (b'<!-- B14-H01-PREREGISTRATION -->\nThe causal claim: c. The falsifier: f.\n'
+       b'<!-- B14-H01-PREREGISTRATION -->\nand again, somewhere else\n'
+       b'<!-- B14-H02-PREREGISTRATION -->\nThe causal claim: a. The falsifier: b.\n')
+state, detail = PA.item_hypotheses_preregistered(hyp_source(both, DUP))
+check('H10 ATTACK a DUPLICATED anchor is FAIL (schemas.json says EXACTLY once), and says ambiguous',
+      state == PA.FAIL and 'ambiguous' in detail, '%s: %s' % (state, detail))
+
 # -- item 13, the disjunction ---------------------------------------------------------------------
 state, detail = PA.item_h01_engine_edge_cage(hyp_source([hyp_row('B14-H01')]))
 check('H6 POSITIVE H01 not advanced + engine_edge -> PASS (the "or is not advanced" limb)',

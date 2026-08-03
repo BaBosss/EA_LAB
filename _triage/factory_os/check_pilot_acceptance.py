@@ -36,9 +36,11 @@ never satisfy the roll-up.
 
 🚫 THE ONE PROHIBITION DESIGN section 10 PUTS ON THIS SLICE: "automation stops at
 `EVIDENCE_COMPLETE`". This module reports whether the EVIDENCE is complete. It must never emit an
-EA verdict -- no `CANDIDATE`, no `DEAD-*`, no PF judgement, no promotion. `check_no_verdict_vocab`
-below enforces that against this module's own output, because a prohibition nothing checks is
-decoration (memory `declared-as-trigger-but-never-read`).
+EA verdict -- no `CANDIDATE`, no `DEAD-*`, no PF judgement, no promotion. `scan_verdict_vocab` is
+run by `evaluate` over every RENDERED detail and REFUSES on a leak, because a prohibition nothing
+checks is decoration (memory `declared-as-trigger-but-never-read`) -- and because the first
+version of that guard scanned handler docstrings while claiming to scan the rendered output,
+which is a prohibition checked on the one surface nobody reads.
 
 USAGE
   tools\\python312\\python.exe _triage/factory_os/check_pilot_acceptance.py [--worktree] [--json]
@@ -48,7 +50,7 @@ EXIT
   2  this checker could not answer (contract/binding/read failure) -- NOT a verdict about the pilot
   3  no FAILs, but at least one item BLOCKED -- the ordinary state of a pilot in progress
 """
-import io
+
 import json
 import os
 import re
@@ -185,14 +187,36 @@ def item_hypotheses_preregistered(src):
             continue
         text = blob.decode('utf-8', 'replace')
         anchor = ref['anchor']
-        if anchor not in text:
-            problems.append('%s pins an order whose text does not contain its own anchor %r'
-                            % (hid, anchor))
+        # EXACTLY ONCE, which is what schemas.json says verbatim -- "must occur EXACTLY once in
+        # the blob and contain no spaces". The first version tested mere PRESENCE, which is
+        # weaker than the declared constraint in the direction that matters: a DUPLICATED anchor
+        # is an ambiguous reference, and the whole purpose of an OwnerRef is that it resolves to
+        # one place. /scrutinize round 3.
+        occurrences = text.count(anchor)
+        if occurrences != 1:
+            problems.append(
+                '%s pins an order whose text contains its anchor %r %d time(s); schemas.json '
+                'requires EXACTLY once (%s)'
+                % (hid, anchor, occurrences,
+                   'the reference does not resolve' if occurrences == 0
+                   else 'the reference is ambiguous'))
             continue
-        # The claim and the falsifier must BOTH be in the pinned order.
-        seg = text[text.index(anchor):]
-        has_claim = re.search(r'causal claim|CAUSAL CLAIM', seg[:8000]) is not None
-        has_falsifier = re.search(r'falsifier|FALSIFIER', seg[:8000]) is not None
+
+        # 🔴 THE SECTION IS BOUNDED, and round 3 found this passing on a neighbour's homework.
+        # The first version took `text[index(anchor):][:8000]` -- a magic character window that
+        # does not stop at the end of the pinned order. Reproduced before the fix: an order whose
+        # own section stated no method at all PASSED, because the window ran on into the NEXT
+        # `## ORDER-` heading and matched that order's causal claim and falsifier. Item 1 is one
+        # of only four implemented checks here, so a false PASS in it is most of this module's
+        # credibility.
+        # The window now ends at whichever comes first: the next taskboard order heading, the
+        # next preregistration anchor, or end of text.
+        start = text.index(anchor) + len(anchor)
+        ends = [m.start() for m in re.finditer(r'^##\s+ORDER-', text[start:], re.M)]
+        ends += [m.start() for m in re.finditer(r'B14-H\d+-PREREGISTRATION', text[start:])]
+        seg = text[start:start + min(ends)] if ends else text[start:]
+        has_claim = re.search(r'causal claim|CAUSAL CLAIM', seg) is not None
+        has_falsifier = re.search(r'falsifier|FALSIFIER', seg) is not None
         if not has_claim or not has_falsifier:
             problems.append(
                 '%s pins an order that is missing %s. 8.6 requires the pinned order to carry the '
