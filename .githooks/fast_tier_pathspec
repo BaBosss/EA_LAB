@@ -22,6 +22,7 @@ _triage/factory_os/evidence.py
 _triage/factory_os/gen_coverage.py
 _triage/factory_os/gen_design_contracts.py
 _triage/factory_os/gen_magic_allocations.py
+_triage/factory_os/gen_pilot_cells.py
 _triage/factory_os/gen_registry_rows.py
 _triage/factory_os/gen_s2a_migration.py
 _triage/factory_os/gen_wrapper.py
@@ -36,6 +37,7 @@ _triage/factory_os/run_activation_tests.py
 _triage/factory_os/run_guard_shape_lint.py
 _triage/factory_os/run_param_surface_tests.py
 _triage/factory_os/run_parity_tests.py
+_triage/factory_os/run_pilot_cells_tests.py
 _triage/factory_os/run_preset_tests.py
 _triage/factory_os/run_registry_tests.py
 _triage/factory_os/run_s10_tests.py
@@ -74,6 +76,8 @@ factory/instrument_profiles.jsonl
 factory/magic_allocations.jsonl
 factory/optimize_decisions.jsonl
 factory/parameter_bindings.jsonl
+factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl
+factory/runs/pilot/probe/*.jsonl
 factory/work_receipts.jsonl
 portfolio/control_room_snapshot.json
 portfolio/DEPLOYMENTS.csv

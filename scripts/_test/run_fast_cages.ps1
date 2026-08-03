@@ -1132,7 +1132,19 @@ $SUITE_GUARDS = @{
     #                                       is not evidence -- so an edit to that array changes
     #                                       what item 6 answers, exactly as a design edit changes
     #                                       what the checklist parse answers.
+    # ORDER-1272. COST FIRST, THEN PLACED, as that order requires: run_s13_tests goes 1.9s -> 4.1 /
+    # 4.2s and the full tier 91.2/95.5s -> 93.6/94.0s of 120.0s, all under
+    # `powershell -NoProfile -File scripts/_test/run_fast_cages.ps1 -Hook` on a quiet lane. The
+    # budget stays PINNED at 120.0s.
+    # ORDER-1272 added the last four entries. The first three are what `gen_pilot_cells.py --check`
+    # RE-DERIVES FROM -- the store was already declared, but its pinned source run record and the
+    # probe directory were not, so editing either moved the generator's answer without running it.
+    # A generated store whose *inputs* are unguarded is guarded against hand edits only.
     'run_s13_tests.ps1'               = @('_triage/factory_os/check_pilot_acceptance.py',
+                                          '_triage/factory_os/gen_pilot_cells.py',
+                                          '_triage/factory_os/run_pilot_cells_tests.py',
+                                          'factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl',
+                                          'factory/runs/pilot/probe/*.jsonl',
                                           '_triage/factory_os/run_s13_tests.py',
                                           '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                                           'factory/hypotheses.jsonl',

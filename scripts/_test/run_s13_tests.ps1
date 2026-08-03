@@ -97,6 +97,54 @@ try {
     $summary = @($realText -split "`n" | Where-Object { $_ -match '\[pilot-acceptance\] \d+ item' })[0]
     Write-Host ''
     Write-Host ('[s13] real repository: ' + $summary.Trim())
+
+    # --- ORDER-1272 -----------------------------------------------------------------------
+    # `gen_pilot_cells.py --check` is the ONLY thing standing between `factory/coverage.jsonl` and
+    # a hand edit, and until this block existed NOTHING RAN IT -- one grep returned the generator
+    # and no other caller. `factory/coverage.jsonl` did trigger this suite, so a hand edit ran the
+    # ACCEPTANCE cases, which read the store and would happily agree with whatever it said.
+    # Nothing re-derived it from its source. `declared-as-trigger-but-never-read`, exactly.
+    #
+    # Its cage runs FIRST and the real re-derivation second, in that order on purpose: if the
+    # checker is broken, "the store matches" is not information.
+    $cage = & $python (Join-Path $RepoRoot '_triage\factory_os\run_pilot_cells_tests.py') 2>&1
+    $cageRc = $LASTEXITCODE
+    if ($cageRc -ne 0) {
+        Write-Host '[s13] FAIL: the gen_pilot_cells cage went red -- the drift detector itself is' -ForegroundColor Red
+        Write-Host '       broken, so nothing it says about the store can be believed.' -ForegroundColor Red
+        Write-Host ($cage | Out-String).TrimEnd()
+        exit 1
+    }
+    Write-Host (($cage | Out-String).TrimEnd() -split "`n" | Select-Object -Last 1)
+
+    $gen = & $python (Join-Path $RepoRoot '_triage\factory_os\gen_pilot_cells.py') '--check' 2>&1
+    $genRc = $LASTEXITCODE
+    $genText = ($gen | Out-String)
+    # Exit codes are THREE, not two: 0 the store re-derives, 1 DRIFT, 2 the reader could not
+    # answer. 2 must not be reported as drift -- telling a committer their store is wrong when
+    # what happened is that nothing could read it sends them to fix the wrong file.
+    if ($genRc -eq 2) {
+        Write-Host '[s13] FAIL: gen_pilot_cells --check CANNOT ANSWER (exit 2) -- an input could' -ForegroundColor Red
+        Write-Host '       not be read from the snapshot in force. This is a reader failure, NOT' -ForegroundColor Red
+        Write-Host '       a statement that the coverage store is wrong.' -ForegroundColor Red
+        Write-Host $genText.TrimEnd()
+        exit 1
+    }
+    if ($genRc -ne 0) {
+        Write-Host '[s13] FAIL: factory/coverage.jsonl does not match what the run evidence' -ForegroundColor Red
+        Write-Host '       generates. The store is GENERATED -- re-run gen_pilot_cells.py --apply,' -ForegroundColor Red
+        Write-Host '       or explain the row it calls UNDERIVABLE. Do not hand-edit the store.' -ForegroundColor Red
+        Write-Host $genText.TrimEnd()
+        exit 1
+    }
+    # The marker proves WHICH BYTES were re-derived from. Without it a green --check in the hook
+    # could have been a green --check of the working tree, which is the defect this migration closed.
+    if ($genText -notmatch '##EVIDENCE-MODE## gen_pilot_cells ') {
+        Write-Host '[s13] FAIL: gen_pilot_cells --check emitted no evidence-mode marker' -ForegroundColor Red
+        exit 1
+    }
+    Write-Host (($genText.TrimEnd() -split "`n" | Select-Object -Last 1))
+
     Write-Host '[s13] S13 cage green; the 8.6 checklist is derived from the design, not restated here'
     exit 0
 } finally {

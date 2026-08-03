@@ -31,6 +31,19 @@ DETERMINISM
   Every field is derived from the source run record. `--check` regenerates and compares against
   the committed store, so a hand edit to either side is a diff rather than a silent divergence.
 
+WHICH BYTES (ORDER-1272). `--check` is a CHECKER and now reads through `evidence.EvidenceSource`:
+in the pre-commit tier that is the INDEX, everywhere else the working tree, and the mode is
+printed once as a marker the tier verifies. Before this it imported `registry` and not `evidence`
+and every read was a bare `io.open`, so wiring it into a hook would have compared an unstaged run
+store against an unstaged coverage store and passed or failed a commit on files the commit does
+not contain -- `ORDER-670`'s finding in one file.
+
+`--apply` is a BUILDER and reads the WORKING TREE in every mode, deliberately and explicitly. It
+rewrites `factory/coverage.jsonl` in place while preserving that file's meta and imported lines
+verbatim, so it must read the copy it is about to overwrite; reading the index there would delete
+any uncommitted meta line the moment someone regenerated. "A builder observes the world, a checker
+judges the commit" -- both halves of that sentence are load-bearing here.
+
 USAGE
   tools\\python312\\python.exe _triage/factory_os/gen_pilot_cells.py --check
   tools\\python312\\python.exe _triage/factory_os/gen_pilot_cells.py --apply
@@ -45,7 +58,22 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 sys.path.insert(0, HERE)
 
+import evidence                                                              # noqa: E402
 import registry as reg                                                       # noqa: E402
+
+# ORDER-1272. ONE source per process, chosen once. `_source()` is lazy rather than a module-level
+# constant so that `--apply` can pin itself to the worktree without the import order deciding it,
+# and so a caller can inject one in a test.
+_SRC = None
+
+
+def source(src=None):
+    global _SRC
+    if src is not None:
+        _SRC = src
+    if _SRC is None:
+        _SRC = evidence.EvidenceSource.for_run()
+    return _SRC
 
 # The source of truth for the cell facts: the run store the pilot matrix wrote. Pinned by NAME
 # rather than by "the newest file in the directory" -- a generator that picks up whatever ran
@@ -74,23 +102,26 @@ PROBE_DIR = 'factory/runs/pilot/probe'
 PROBE_ARM = 'optimize-probe'
 
 
-def load_source(path=None):
-    path = path or os.path.join(ROOT, SOURCE)
+def load_source(rel=None):
+    rel = rel or SOURCE
     rows = []
-    with io.open(path, encoding='utf-8') as fh:
-        for line in fh:
-            if line.strip():
-                rows.append(json.loads(line))
+    for line in source().read_committed(rel).splitlines():
+        if line.strip():
+            rows.append(json.loads(line))
     return rows
 
 
-def load_probe_runs(root=None):
-    """-> [PilotProbeRun] across every file in the probe directory. Order is filename order."""
-    import glob
-    base = os.path.join(root or ROOT, PROBE_DIR.replace('/', os.sep))
+def load_probe_runs():
+    """-> [PilotProbeRun] across every file in the probe directory. Order is filename order.
+
+    ENUMERATION IS A JUDGED READ (evidence.py, design 3.2). `glob.glob` picks paths off the DISK,
+    so a probe record that is staged but whose worktree copy was deleted is invisible to it and
+    present in the commit -- the generator would then derive a store from a population the commit
+    does not have. `list_committed` asks the same question of whichever snapshot is in force.
+    """
     rows = []
-    for path in sorted(glob.glob(os.path.join(base, '*.jsonl'))):
-        name = os.path.basename(path)
+    for rel in source().list_committed('%s/*.jsonl' % PROBE_DIR):
+        name = os.path.basename(rel)
         # ROUTE BY PREFIX, and REFUSE an unrecognised one. Narrowing this glob to `probe_runs_*`
         # would have been the one-character fix and it is the wrong one: a third file family
         # appearing in this directory would then be read by nobody, which is how a store grows a
@@ -102,21 +133,20 @@ def load_probe_runs(root=None):
             raise SystemExit('gen_pilot_cells: %s is in %s and matches no known file family '
                              '(probe_runs_* | xml_backfill_*). Refusing rather than ignoring it.'
                              % (name, PROBE_DIR))
-        with io.open(path, encoding='utf-8') as fh:
-            for n, line in enumerate(fh, 1):
-                if not line.strip():
-                    continue
-                try:
-                    rec = json.loads(line)
-                except ValueError as exc:
-                    raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
-                                     % (os.path.basename(path), n, exc))
-                rec['_source_file'] = os.path.basename(path)
-                rows.append(rec)
+        for n, line in enumerate(source().read_committed(rel).splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError as exc:
+                raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
+                                 % (name, n, exc))
+            rec['_source_file'] = name
+            rows.append(rec)
     return rows
 
 
-def load_xml_backfill(root=None):
+def load_xml_backfill():
     """-> {xml path} asserted to exist by scripts/pilot_probe_verify_xml.py.
 
     A SEPARATE FILE, DELIBERATELY. The records these cover were written by a launcher that could
@@ -126,28 +156,26 @@ def load_xml_backfill(root=None):
     after the fact, by a named tool, and kept as its own evidence that a reader can weigh
     differently from a record the runner wrote about itself.
     """
-    import glob
-    base = os.path.join(root or ROOT, PROBE_DIR.replace('/', os.sep))
     out = {}
-    for path in sorted(glob.glob(os.path.join(base, 'xml_backfill_*.jsonl'))):
-        with io.open(path, encoding='utf-8') as fh:
-            for n, line in enumerate(fh, 1):
-                if not line.strip():
-                    continue
-                try:
-                    rec = json.loads(line)
-                except ValueError as exc:
-                    raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
-                                     % (os.path.basename(path), n, exc))
-                if rec.get('entity') != 'PilotProbeXmlBackfill':
-                    raise SystemExit('gen_pilot_cells: %s line %d is entity=%r in a back-fill file'
-                                     % (os.path.basename(path), n, rec.get('entity')))
-                if rec.get('xml'):
-                    # A row without `passes` predates the pass count; a later row for the same
-                    # artefact supersedes it. Never the reverse -- a known count must not be
-                    # replaced by silence.
-                    if rec['xml'] not in out or rec.get('passes') is not None:
-                        out[rec['xml']] = rec.get('passes')
+    for rel in source().list_committed('%s/xml_backfill_*.jsonl' % PROBE_DIR):
+        name = os.path.basename(rel)
+        for n, line in enumerate(source().read_committed(rel).splitlines(), 1):
+            if not line.strip():
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError as exc:
+                raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
+                                 % (name, n, exc))
+            if rec.get('entity') != 'PilotProbeXmlBackfill':
+                raise SystemExit('gen_pilot_cells: %s line %d is entity=%r in a back-fill file'
+                                 % (name, n, rec.get('entity')))
+            if rec.get('xml'):
+                # A row without `passes` predates the pass count; a later row for the same
+                # artefact supersedes it. Never the reverse -- a known count must not be
+                # replaced by silence.
+                if rec['xml'] not in out or rec.get('passes') is not None:
+                    out[rec['xml']] = rec.get('passes')
     return out
 
 
@@ -336,21 +364,19 @@ def build_cells(runs):
     return cells, probe_excluded
 
 
-def read_store(path=None):
+def read_store(rel=None):
     """-> (meta_lines, imported_rows, native_rows) with the raw text of each line kept."""
-    path = path or os.path.join(ROOT, COVERAGE)
     meta, imported, native = [], [], []
-    with io.open(path, encoding='utf-8') as fh:
-        for line in fh:
-            if not line.strip():
-                continue
-            obj = json.loads(line)
-            if reg.classify_record(obj, where=COVERAGE) == 'META':
-                meta.append(line.rstrip('\n'))
-            elif obj.get('entity') == 'CoverageCell':
-                native.append(obj)
-            else:
-                imported.append(line.rstrip('\n'))
+    for line in source().read_committed(rel or COVERAGE).splitlines():
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        if reg.classify_record(obj, where=COVERAGE) == 'META':
+            meta.append(line.rstrip('\n'))
+        elif obj.get('entity') == 'CoverageCell':
+            native.append(obj)
+        else:
+            imported.append(line.rstrip('\n'))
     return meta, imported, native
 
 
@@ -366,7 +392,16 @@ def write_store(cells, path=None):
     never existed".
     """
     path = path or os.path.join(ROOT, COVERAGE)
-    meta, imported, _native = read_store(path)
+    # The read here is the WORKTREE copy this function is about to overwrite -- see the module
+    # docstring. `main` pins the source to worktree mode before calling this, so the assertion is
+    # cheap and it is the one that would catch a caller wiring --apply into a hook.
+    if source().mode != 'worktree':
+        raise SystemExit('gen_pilot_cells: --apply is a builder and rewrites the working tree, so '
+                         'it must read the working tree. It was called with evidence mode %r, '
+                         'which would preserve the INDEX\'s meta lines into a file written over '
+                         'the disk\'s -- silently dropping any meta line that is not yet staged.'
+                         % source().mode)
+    meta, imported, _native = read_store()
     generated_ids = {c.get('cell_id') for c in cells}
     orphans = sorted(c.get('cell_id') for c in _native
                      if c.get('cell_id') not in generated_ids)
@@ -382,11 +417,25 @@ def write_store(cells, path=None):
         fh.write('\n'.join(out) + '\n')
 
 
-def main(argv):
+def main(argv, src=None):
     mode = argv[1] if len(argv) > 1 else '--check'
     if mode not in ('--check', '--apply'):
         print('usage: gen_pilot_cells.py [--check|--apply]')
         return 2
+    # ORDER-1272. --apply is a builder and pins itself to the worktree; --check is a checker and
+    # takes the mode the tier hands it. The marker is printed EXACTLY ONCE, before any read, so
+    # the tier can verify which snapshot was judged even when the run then refuses.
+    #
+    # `src` IS AN EXPLICIT PARAMETER, not a module global the caller pre-sets. The first draft let
+    # a cage inject through `source()` and then main() overwrote it two lines later, so every
+    # mutation case ran against the REAL repository and passed by not happening. A test hook that
+    # the code under test silently discards is worse than none: it makes the suite green for the
+    # wrong reason. Nothing in this module reads an injected source without main having seen it.
+    if src is None:
+        src = (evidence.EvidenceSource('worktree') if mode == '--apply'
+               else evidence.EvidenceSource.for_run())
+    source(src)
+    print(src.marker('gen_pilot_cells'))
     cells, probe_excluded = build_cells(load_source())
     probed = sum(1 for c in cells if c['state'] == 'PROBE_RUN')
     print('[pilot-cells] %d of %d cell(s) at PROBE_RUN' % (probed, len(cells)))
@@ -422,4 +471,13 @@ def main(argv):
 
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+    # 🔴 EXIT 2 IS NOT EXIT 1. `ToolFailure` means "this reader cannot answer" -- the file is not
+    # in the index, the bytes do not decode, git could not be run. Reporting that as DRIFT (1)
+    # would tell a committer their store is wrong when what actually happened is that nothing
+    # could read it, and reporting it as 0 would be the silent pass this whole migration exists
+    # to close. Every checker in this tree keeps the two apart and so does this one.
+    try:
+        sys.exit(main(sys.argv))
+    except evidence.ToolFailure as exc:
+        print('[pilot-cells] CANNOT ANSWER: %s' % exc)
+        sys.exit(2)
