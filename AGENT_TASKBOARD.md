@@ -105,6 +105,72 @@
 
 ---
 
+## ORDER-1210 — [factory/S13] The pilot acceptance checklist, made mechanical — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13PILOT) — 14/14 items bound to handlers in BOTH directions; the first run found a real defect in factory/hypotheses.jsonl` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+> Slice **S13** (design §10). The slice's full job is the `Boss_14` H01/H02 pilot matrix end-to-end;
+> this order builds the thing that decides when that job is **done**, because §8.6 — *"the pass/fail
+> for the whole Stage-4 pilot"* — was fourteen markdown tickboxes with nothing able to read them.
+> §8.4 of the same document already records where that ends: *"asserted as five cases while it had
+> already grown to seven — a count and a list that disagreed, in one section, with nothing able to
+> notice."* 8.4 was cured by generating the list. This does the same for 8.6.
+
+**What was built.** `_triage/factory_os/check_pilot_acceptance.py` **parses the checklist out of the
+design** and binds each item to a handler **in both directions**: an item with no handler, a handler
+whose item was deleted, an item reworded past its anchor, or an item matching two anchors all make it
+**REFUSE and evaluate nothing** (exit 2, which is explicitly *not* a statement about the pilot). That
+is the `$FAST_SUITES`/`$SUITE_GUARDS` key-set discipline applied to a spec — you cannot change the
+acceptance without the checker noticing.
+
+**Three states, and the third is the point.** `PASS` / `FAIL` / `BLOCKED`, where BLOCKED means *the
+evidence this item judges does not exist yet*. Collapsing BLOCKED into FAIL makes the report useless;
+collapsing it into PASS is the defect this repo has paid for repeatedly — a guard reporting CLEAN
+because it could not look. **BLOCKED can never satisfy the roll-up**, and that is driven by three
+separate attack cases rather than asserted.
+
+**Current honest state of the pilot: `14 item(s): 3 PASS · 1 FAIL · 10 BLOCKED`.** Not
+EVIDENCE_COMPLETE, and the report says exactly which evidence is missing and why each item needs it.
+
+🔴 **THE FIRST RUN FOUND A REAL DEFECT, and it is not in this slice.** `factory/hypotheses.jsonl`
+pins both pilot hypotheses to `preregistration_ref.anchor` values — `B14-H01-PREREGISTRATION` and
+`B14-H02-PREREGISTRATION` — that **occur ZERO times in the 824 KB blob they pin**. `schemas.json`
+states the constraint verbatim: *"must occur EXACTLY once in the blob and contain no spaces"*. It
+carries **no `x-enforcement-status`** and **no checker enforces it**, so both references have been
+undereferenceable since they were written. §8.6 item 1 requires the pinned order to carry the causal
+claim **and** the falsifier; today it cannot be shown to carry either, because the anchor does not
+resolve. **This lane declared `factory/*.jsonl` read-only and did not touch it** — the fix is an
+owner/next-lane decision, not a side effect of building the checker.
+
+**Acceptance, all driven** — **A1** the checklist is parsed, never retyped, and a design with no §8.6
+heading or an empty §8.6 is REFUSED rather than treated as vacuously satisfied · **A2** binding fails
+in both directions, four attacks · **A3** BLOCKED never satisfies EVIDENCE_COMPLETE (3 attacks incl.
+all-BLOCKED) · **A4** design §10's prohibition — *automation stops at `EVIDENCE_COMPLETE`* — is
+**checked**, not merely respected: a handler that would emit verdict vocabulary is detected by name
+· **A5** each item handler driven in both directions over synthetic sources · **A6** the suite is
+green under `chcp 1252`, the codepage the pre-commit hook actually hands its children.
+**Suite: 32 cases, 0 failed.** Registered in the fast tier at **1.8s** hook-mode.
+
+<sub>🔴 **Three defects this cage caught in its own author's work on their first runs, recorded because
+each is a repo-wide pattern.** (1) `check_pilot_acceptance` died with `UnicodeEncodeError` on §8.6's
+own `§`/`≤` glyphs — the exact `thai-output-kills-a-suite-inside-the-hook` shape, which inside the tier
+surfaces as `exit -1 SUITE THREW` with the cause swallowed; both the module and the wrapper now force
+utf-8, and the suite is driven under `chcp 1252` to prove it. (2) The wrapper's summary line used
+`(... | Where-Object {...})[0]`, which for a **single** match indexes into the *string* and returns a
+`[char]` with no `.Trim()` — memory `powershell-pipeline-count-null-on-single-result`, and here it
+would have thrown **every** time, not intermittently. (3) A negative case asserted `FAIL` and got
+`BLOCKED` because its fixture omitted the second hypothesis, so the handler short-circuited before
+reaching the rule under test — memory `discriminating-test-must-be-able-to-discriminate`: the fixture
+must differ from the passing one in exactly the property being tested and nothing else.</sub>
+
+<sub>⚠️ **Two guards of this repo's own demanded work as a consequence of adding one file, and both
+were right.** `run_guard_trigger_tests` PART 4b named **12 transitive imports** reached through
+`check_wrapper_gen`/`check_param_surface` that the new suite had to declare — the price of *calling*
+the existing checkers instead of re-implementing their rules, which is the right trade. And
+`run_guard_shape_lint`'s L0 list-completeness rule REFUSED until the new checker was registered in
+`L1_FILES` **and** classified in `CATEGORY` — the **eighth** consecutive time that rule has named an
+addition its own author had not declared.</sub>
+
+---
+
 ## ORDER-1200 — [ops/S12] Wire the notifier into the daily chain, and remove the third-party credential — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S12WIRE)` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Four owner decisions, 2026-08-03. This row carries two of them; the tier one (`ORDER-1130`,

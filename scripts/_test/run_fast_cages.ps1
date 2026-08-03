@@ -469,6 +469,20 @@ $FAST_SUITES = @(
     # design 10 prohibition "no token in git" is a statement about what is TRACKED, which no
     # python assertion can make. It sends nothing: the real Telegram leg was driven once, by
     # hand, with the owner's go-ahead, and its receipt is quoted in ORDER-1180.
+    # ORDER-1210 (S13). Measured 0.65 / 0.67 / 0.66s standalone and 1.8 / 1.8 / 1.9s under -Hook
+    # (index mode costs it ~1.1s: the real end-to-end run reads the design, hypotheses.jsonl and
+    # two pinned blobs through `git show`). QUOTE THE HOOK NUMBER -- memory
+    # `tier-number-needs-its-invocation`. All 32 cases are pure fixtures in ONE python process
+    # plus that one real run over committed evidence.
+    # Registered AFTER measuring the tier with `-Hook`, per the standing prohibition: the tier
+    # with it is 110.1 / 108.8 / 109.1s of 120.0s (median 109.1, 10.9s headroom), against
+    # 107.0 / 108.9 / 106.8s without it.
+    # It carries slice S13's foundation: design 8.6 -- "the pass/fail for the whole Stage-4
+    # pilot" -- is PARSED from the design and bound to handlers in both directions, so an item
+    # added, deleted or reworded there REFUSES rather than being silently unchecked. The cases
+    # that matter are the negatives: BLOCKED can never satisfy EVIDENCE_COMPLETE, and a handler
+    # that would issue an EA verdict is detected by name (design 10 stops automation at that line).
+    'run_s13_tests.ps1',
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -984,6 +998,42 @@ $SUITE_GUARDS = @{
     # ORDER-1180 (S12) guard list, COMMENTED OUT WITH ITS SUITE. run_guard_trigger_tests
     # requires the key sets of $FAST_SUITES and $SUITE_GUARDS to match exactly, so these two
     # blocks are uncommented together or not at all. Restoring both is the whole re-registration.
+    # ORDER-1210 (S13). What the pilot-acceptance cage guards:
+    #   check_pilot_acceptance.py           the module under test
+    #   run_s13_tests.py                    the cage itself
+    #   EA_LAB_FACTORY_OS_DESIGN.md         🔴 THE SPEC IT PARSES. This is the load-bearing entry:
+    #                                       the whole design of the checker is that section 8.6 is
+    #                                       the source of truth, so an edit to the checklist MUST
+    #                                       re-run this cage -- otherwise an item could be added
+    #                                       with no handler and nothing would say so until someone
+    #                                       happened to run it.
+    #   factory/hypotheses.jsonl            items 1 and 13 read the pilot's Hypothesis rows
+    #   check_wrapper_gen.py                item 2 CALLS it (it owns byte-identical regeneration)
+    #   check_param_surface.py              item 5 CALLS it (it owns the inert-input rules)
+    # THE TRANSITIVE CLOSURE BELOW IS NOT PADDING, and the cage named every entry on its first
+    # run. Items 2 and 5 deliberately CALL check_wrapper_gen and check_param_surface rather than
+    # re-implementing their rules (there must be one decider per rule) -- and calling them means
+    # inheriting their imports. A commit touching only `preset.py` changes what item 5 answers,
+    # so it has to run this cage; the wrapper's path-STRING sweep cannot see an `import`, which
+    # is precisely the hole PART 4b of run_guard_trigger_tests closes.
+    'run_s13_tests.ps1'               = @('_triage/factory_os/check_pilot_acceptance.py',
+                                          '_triage/factory_os/run_s13_tests.py',
+                                          '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
+                                          'factory/hypotheses.jsonl',
+                                          '_triage/factory_os/check_wrapper_gen.py',
+                                          '_triage/factory_os/check_param_surface.py',
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/registry.py',
+                                          '_triage/factory_os/activation.py',
+                                          '_triage/factory_os/architecture.py',
+                                          '_triage/factory_os/capability.py',
+                                          '_triage/factory_os/hypothesis_b14.py',
+                                          '_triage/factory_os/gen_wrapper.py',
+                                          '_triage/factory_os/gen_registry_rows.py',
+                                          '_triage/factory_os/gen_design_contracts.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
+                                          '_triage/factory_os/check_s2a_migration.py')
     # ORDER-1130 RE-REGISTERED both blocks together, 2026-08-03, once the room was bought.
     'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
                                           '_triage/factory_os/run_s12_tests.py',

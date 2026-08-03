@@ -66,6 +66,13 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 # this lint when rev 2 moves implementations out of the bundle -- recorded here so the exclusion is
 # a decision with an end date rather than a hole.
 L1_FILES = (
+    # ORDER-1210 (S13). L0 demanded this on its first run -- the EIGHTH consecutive time the
+    # list-completeness rule has named an addition its own author had not declared, which remains
+    # the whole argument for the rule existing. Every read in check_pilot_acceptance.py is
+    # category A (the design document it parses, factory/hypotheses.jsonl, and the pinned
+    # preregistration blobs through read_blob), because the whole module is a CHECKER: it judges
+    # what the commit contains, never what happens to be on the disk.
+    '_triage/factory_os/check_pilot_acceptance.py',
     # S14 Work Receipts (AGENTS.md section 2 grant, 2026-08-01). L0 demanded this on its first
     # run -- the SEVENTH consecutive time the list-completeness rule has named an addition its
     # own author had not declared, which is the whole argument for the rule existing.
@@ -324,6 +331,12 @@ CATEGORY = {
     # Category A: it is a checker whose judged input is a repo file, so it must read through
     # EvidenceSource -- under the hook the bytes it judges are the STAGED bytes, not the
     # worktree's. That binding is the whole reason an append-only rule can be trusted at all.
+    # ORDER-1210 (S13). Category A without qualification: every input it judges is a repo file at
+    # the commit's snapshot -- design section 8.6 (the spec it parses), factory/hypotheses.jsonl,
+    # and the preregistration blobs it dereferences by pinned sha. Under the hook it must judge
+    # the STAGED design, or an item added to 8.6 in this very commit would be checked against the
+    # previous one -- which is the whole failure mode ORDER-670 exists to close.
+    '_triage/factory_os/check_pilot_acceptance.py': 'A',
     '_triage/factory_os/check_wrapper_gen.py': 'A',
     '_triage/factory_os/check_param_surface.py': 'A',
     '_triage/factory_os/check_work_receipts.py': 'A',
