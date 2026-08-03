@@ -36,7 +36,18 @@ param(
   [int]$TimeoutSec = 7200,
   [switch]$Portable,   # 2nd portable install (D:\Meta 5b): pass -Terminal/-DataDir there too
   [switch]$Force,
-  [switch]$SkipOptimizeGuard   # override: proceed even if optimize_guard.ps1 refuses a swept dimension
+  [switch]$SkipOptimizeGuard,  # override: proceed even if optimize_guard.ps1 refuses a swept dimension
+  # ORDER-1253. Both are passed straight through to optimize_guard.ps1 and both default to the
+  # behaviour every existing call site already gets.
+  #
+  # WHY THEY HAD TO EXIST. The pilot's own probe .ini names a GENERATED WRAPPER as its Expert, so
+  # the guard resolves no Boss build and prints "build-inertness NOT checked" for every dimension
+  # -- and with no revision declared, the per-hypothesis ParameterBinding layer (design 5.4, the
+  # one resolver) never runs either. The two checks with the most evidence behind them were both
+  # silently inactive on exactly the sweeps the Factory OS pilot exists to judge, and the decision
+  # record's `binding` field was null on every real submission as a result.
+  [string]$HypothesisRevision = '',
+  [Nullable[int]]$GuardBuild = $null
 )
 $ErrorActionPreference = "Stop"
 # guard scoped by exe PATH (same convention as mt5_run.ps1) so the two installs
@@ -99,13 +110,16 @@ $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
 # The repo root is derived, not typed: a hardcoded D:\EA_LAB defeats the worktree cage (memory
 # `hardcoded-repo-path-defeats-worktree-cage`, and the `$auto` line above is an instance of it).
 $decisionLog = Join-Path (Split-Path -Parent $PSScriptRoot) "factory\optimize_decisions.jsonl"
+$guardExtra = @{ DecisionLog = $decisionLog; Lane = $Terminal }
+if ($HypothesisRevision -ne '') { $guardExtra['HypothesisRevision'] = $HypothesisRevision }
+if ($null -ne $GuardBuild)      { $guardExtra['Build'] = $GuardBuild }
 if (Test-Path $guardScript) {
   if ($SkipOptimizeGuard) {
     Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
-    & $guardScript -IniPath $ini -WarnOnly -DecisionLog $decisionLog -Lane $Terminal | Write-Output
+    & $guardScript -IniPath $ini -WarnOnly @guardExtra | Write-Output
   }
   else {
-    & $guardScript -IniPath $ini -DecisionLog $decisionLog -Lane $Terminal | Write-Output
+    & $guardScript -IniPath $ini @guardExtra | Write-Output
     if ($LASTEXITCODE -ne 0) {
       Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
       Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."
