@@ -26,9 +26,57 @@
     Run standalone; it is wired into the fast tier so it guards itself.
 #>
 [CmdletBinding()]
-param([string]$RepoRoot)
+param(
+    [string]$RepoRoot,
+    # ORDER-1130 T1: attribute this suite's cost to a PART, reproducibly, instead of to prose.
+    [switch]$Timing
+)
 
 $ErrorActionPreference = 'Stop'
+
+# ORDER-1130 T1. `Phase` is the only thing that may name a part, so the timing table and the
+# headings cannot drift apart -- the failure the comment table in run_contract_binding_tests.ps1
+# spent a year demonstrating. Prints the heading in every mode; records the clock only under
+# -Timing, so an ordinary tier run pays one Stopwatch and nothing else.
+$script:phaseTimes = @()
+$script:phaseSw = $null
+$script:phaseName = $null
+# CAPTURED AT START, NOT AT REPORT TIME, and this is not a style preference: PART 6 sets
+# EA_LAB_EVIDENCE and REMOVES it again in its finally block, so a report that read the variable
+# at the end printed `worktree (default)` for a run launched with index. Observed on this
+# instrumentation's first run. A number labelled with a mode that was not the mode is worse than
+# an unlabelled number, because it is quotable.
+$script:phaseMode = if ($env:EA_LAB_EVIDENCE) { $env:EA_LAB_EVIDENCE } else { 'worktree (default)' }
+function Phase([string]$title) {
+    if ($script:phaseSw) {
+        $script:phaseSw.Stop()
+        $script:phaseTimes += [pscustomobject]@{
+            Phase = $script:phaseName
+            Seconds = [math]::Round($script:phaseSw.Elapsed.TotalSeconds, 2)
+        }
+    }
+    Write-Host $title
+    $script:phaseName = $title
+    $script:phaseSw = [System.Diagnostics.Stopwatch]::StartNew()
+}
+function PhaseReport([string]$label) {
+    if ($script:phaseSw) {
+        $script:phaseSw.Stop()
+        $script:phaseTimes += [pscustomobject]@{
+            Phase = $script:phaseName
+            Seconds = [math]::Round($script:phaseSw.Elapsed.TotalSeconds, 2)
+        }
+        $script:phaseSw = $null
+    }
+    if (-not $Timing) { return }
+    Write-Host ''
+    Write-Host ("[$label] TIMING -- evidence mode: {0}" -f $script:phaseMode)
+    foreach ($t in $script:phaseTimes) {
+        Write-Host ('    {0,-72} {1,6:N2}s' -f $t.Phase, $t.Seconds)
+    }
+    Write-Host ('    {0,-72} {1,6:N2}s' -f 'SUM OF PHASES',
+                ($script:phaseTimes | Measure-Object -Property Seconds -Sum).Sum)
+}
 
 if (-not $RepoRoot) {
     $here = $PSScriptRoot
@@ -59,7 +107,7 @@ try {
     foreach ($p in $table.Guards.PSObject.Properties) { $declaredFor[$p.Name] = @($p.Value) }
     $notDep = @($table.NotADependency)
 
-    Write-Host '[guard-trigger] PART 1 -- every suite declares what it guards'
+    Phase '[guard-trigger] PART 1 -- every suite declares what it guards'
     foreach ($s in $suites) {
         if (-not $declaredFor.ContainsKey($s) -or $declaredFor[$s].Count -eq 0) {
             Bad "suite $s is in the fast tier but declares no guarded paths"
@@ -87,7 +135,7 @@ try {
         }
     }
 
-    Write-Host '[guard-trigger] PART 2 -- every declared path exists in git'
+    Phase '[guard-trigger] PART 2 -- every declared path exists in git'
     $before = $fail
     foreach ($s in $suites) {
         foreach ($p in $declaredFor[$s]) {
@@ -100,7 +148,7 @@ try {
     }
     if ($fail -eq $before) { Good 'all declared paths are tracked' }
 
-    Write-Host '[guard-trigger] PART 3 -- the committed pathspec is current, and selects every declared path'
+    Phase '[guard-trigger] PART 3 -- the committed pathspec is current, and selects every declared path'
     $before = $fail
     & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $RepoRoot 'scripts\gen_fast_tier_pathspec.ps1') -Check | Out-Null
     if ($LASTEXITCODE -ne 0) { Bad '.githooks/fast_tier_pathspec is stale -- run scripts/gen_fast_tier_pathspec.ps1' }
@@ -128,7 +176,7 @@ try {
     }
     if ($fail -eq $before) { Good 'pathspec current, and every declared input is selected by it' }
 
-    Write-Host '[guard-trigger] PART 4 -- undeclared references sweep'
+    Phase '[guard-trigger] PART 4 -- undeclared references sweep'
     $before = $fail
     foreach ($s in $suites) {
         $src = Get-Content -LiteralPath (Join-Path $RepoRoot "scripts\_test\$s") -Raw
@@ -241,7 +289,7 @@ try {
 
     # -------------------------------------------------------------------------------------
     Write-Host ''
-    Write-Host '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'
+    Phase '[guard-trigger] PART 5 -- BACKLOG-D32 per-path suite SELECTION'
     # This part exists because the repo's own memory says a path-filter must not land without a
     # targeted test: filtering the pre-commit trigger wrong means guards stop running while
     # everything still looks green. The selection is designed to fail OPEN, and these cases assert
@@ -342,7 +390,7 @@ try {
     Write-Host ''
     # -------------------------------------------------------------------------------------
     Write-Host ''
-    Write-Host '[guard-trigger] PART 6 -- ORDER-670 evidence-mode plumbing (T4 marker allowlist, T6 moved-index)'
+    Phase '[guard-trigger] PART 6 -- ORDER-670 evidence-mode plumbing (T4 marker allowlist, T6 moved-index)'
     # The tier in -Hook mode must (a) fail when a declared evidence suite emits no marker --
     # the ALLOWLIST that replaced a "fail on the word worktree" blacklist, which passed a
     # suite that reported nothing -- and (b) refuse when the index moved mid-run. Both
@@ -423,7 +471,7 @@ try {
 
     # -------------------------------------------------------------------------------------
     Write-Host ''
-    Write-Host '[guard-trigger] PART 7 -- ORDER-673 the time budget is ENFORCED, not advisory'
+    Phase '[guard-trigger] PART 7 -- ORDER-673 the time budget is ENFORCED, not advisory'
     # It printed yellow and exited 0 for days while breached. This drives the refusal so it is
     # OBSERVED, and the control so the refusal is not simply "always fail".
     $before = $fail
@@ -478,6 +526,9 @@ try {
     if ($cagesSrc -match '\$FullTierBudgetSeconds\s*=\s*120\.0') { Good 'N1 the full-tier default is the measured 120.0s' } else { Bad 'N1 the full-tier default is not 120.0 -- it was changed without this case being updated' }
     if ($fail -eq $before) { Good 'the budget can fail, and does not fail a healthy run' }
 
+    # Reported before BOTH exits: a suite that only attributes its cost when it passes cannot
+    # answer "which part got slow" on the run where that question is actually being asked.
+    PhaseReport 'guard-trigger'
     if ($fail -gt 0) {
         Write-Host "[guard-trigger] $fail FAILURE(S)" -ForegroundColor Red
         exit 1

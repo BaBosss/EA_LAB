@@ -96,9 +96,23 @@
     by run_guard_trigger_tests.ps1.
 #>
 [CmdletBinding()]
-param([string]$RepoRoot)
+param(
+    [string]$RepoRoot,
+    # ORDER-1130 T1. The per-entry table in the comment block below was measured by a harness
+    # that lived in a scratchpad and was thrown away, so the table can only be re-derived by
+    # rebuilding the harness -- which is why it is now a year of vintages deep and two of its
+    # lines were wrong by 4x and 42x when ORDER-830 finally re-measured. Attribution that lives
+    # only in a comment goes stale in exactly the way this repo keeps paying for.
+    # -Timing measures every entry and prints the table. It costs one Stopwatch per entry.
+    [switch]$Timing
+)
 
 $ErrorActionPreference = 'Stop'
+
+# Captured at START, not at report time -- a sibling suite's instrumentation printed the mode
+# AFTER a part had unset the variable, labelling an index run `worktree`. Same trap, closed here
+# before it can be sprung.
+$evidenceMode = if ($env:EA_LAB_EVIDENCE) { $env:EA_LAB_EVIDENCE } else { 'worktree (default)' }
 
 if (-not $RepoRoot) {
     $here = $PSScriptRoot
@@ -304,6 +318,7 @@ $scripts = @(
 )
 
 $failed = 0
+$timings = @()
 foreach ($s in $scripts) {
     $full = Join-Path $RepoRoot $s.Path
     if (-not (Test-Path -LiteralPath $full)) {
@@ -311,12 +326,34 @@ foreach ($s in $scripts) {
         $failed++
         continue
     }
+    $sw = if ($Timing) { [System.Diagnostics.Stopwatch]::StartNew() } else { $null }
     $out = & $python $full @($s.Args) 2>&1
+    if ($sw) {
+        $sw.Stop()
+        # The label is DERIVED from the entry, never retyped -- the comment table above drifted
+        # because it was a hand copy of this list, and a hand copy is a second source of truth.
+        $timings += [pscustomobject]@{
+            Entry   = (Split-Path -Leaf $s.Path) + $(if ($s.Args.Count) { ' ' + ($s.Args -join ' ') } else { '' })
+            Seconds = [math]::Round($sw.Elapsed.TotalSeconds, 2)
+        }
+    }
     if ($LASTEXITCODE -ne 0) {
         Write-Host ("[contract-binding] FAIL {0}" -f $s.Path) -ForegroundColor Red
         Write-Host ($out | Out-String)
         $failed++
     }
+}
+
+if ($Timing) {
+    # The mode is printed WITH the numbers, because a number from this file without its evidence
+    # mode and its shell is not evidence -- the comment block above spends 25 lines on why.
+    Write-Host ''
+    Write-Host ("[contract-binding] TIMING -- evidence mode: {0}" -f $evidenceMode)
+    foreach ($t in ($timings | Sort-Object -Property Seconds -Descending)) {
+        Write-Host ('    {0,-42} {1,6:N2}s' -f $t.Entry, $t.Seconds)
+    }
+    Write-Host ('    {0,-42} {1,6:N2}s' -f 'SUM OF ENTRIES',
+                ($timings | Measure-Object -Property Seconds -Sum).Sum)
 }
 
 if ($failed -gt 0) { exit 1 }

@@ -53,11 +53,53 @@ ASCII-only (Windows PowerShell 5.1 decodes a BOM-less .ps1 as ANSI).
 USAGE  powershell -NoProfile -File scripts\_test\run_front_guard_evidence_tests.ps1
 #>
 [CmdletBinding()]
-param([string]$RepoRoot = '')
+param(
+    [string]$RepoRoot = '',
+    # ORDER-1130 T1: attribute this suite's cost to a section, reproducibly, instead of to prose.
+    [switch]$Timing
+)
+
+# Captured at START -- see the note in run_guard_trigger_tests.ps1: a report that reads the mode
+# at the end can print a mode a later section unset.
+$script:phaseTimes = @()
+$script:phaseSw = $null
+$script:phaseName = $null
+$script:phaseMode = if ($env:EA_LAB_EVIDENCE) { $env:EA_LAB_EVIDENCE } else { 'worktree (default)' }
+function Phase([string]$title) {
+    if ($script:phaseSw) {
+        $script:phaseSw.Stop()
+        $script:phaseTimes += [pscustomobject]@{
+            Phase = $script:phaseName
+            Seconds = [math]::Round($script:phaseSw.Elapsed.TotalSeconds, 2)
+        }
+    }
+    if ($Timing) { Write-Host ("[front-guards] section {0}" -f $title) }
+    $script:phaseName = $title
+    $script:phaseSw = [System.Diagnostics.Stopwatch]::StartNew()
+}
+function PhaseReport {
+    if ($script:phaseSw) {
+        $script:phaseSw.Stop()
+        $script:phaseTimes += [pscustomobject]@{
+            Phase = $script:phaseName
+            Seconds = [math]::Round($script:phaseSw.Elapsed.TotalSeconds, 2)
+        }
+        $script:phaseSw = $null
+    }
+    if (-not $Timing) { return }
+    Write-Host ''
+    Write-Host ("[front-guards] TIMING -- evidence mode: {0}" -f $script:phaseMode)
+    foreach ($t in $script:phaseTimes) {
+        Write-Host ('    {0,-56} {1,6:N2}s' -f $t.Phase, $t.Seconds)
+    }
+    Write-Host ('    {0,-56} {1,6:N2}s' -f 'SUM OF SECTIONS',
+                ($script:phaseTimes | Measure-Object -Property Seconds -Sum).Sum)
+}
 
 $ErrorActionPreference = 'Stop'
 if (-not $RepoRoot) { $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path }
 Push-Location $RepoRoot
+Phase 'A -- check_state / check_precommit_staged, staged-attack + restore'
 
 $fail = 0
 function Bad([string]$m) { Write-Host "  [FAIL] $m" -ForegroundColor Red; $script:fail++ }
@@ -246,6 +288,7 @@ if ($realIndexAfter -eq $realIndexBefore) {
          'and a test of a guard must not cost a guard.')
 }
 
+Phase 'A3 -- an invented evidence mode is refused, not defaulted'
 # --- A3: an invented mode is refused, not defaulted ----------------------------------------
 $bogus = RunGuard 'indx'
 if ($bogus.Code -ne 0 -and $bogus.Text -match "is not 'index' or 'worktree'") {
@@ -262,6 +305,7 @@ if ($bogus.Code -ne 0 -and $bogus.Text -match "is not 'index' or 'worktree'") {
 # Same attack shape as A, and the same reason for a TEMP index: staging into `.git/index` is
 # what ORDER-670's T6 refuses, correctly.
 # ===========================================================================================
+Phase 'B -- check_order_collision judged at the index, not at HEAD'
 $ACTIVE  = 'AGENT_TASKBOARD.md'
 $ARCHIVE = 'ARCHIVE_TASKBOARD_2026-07A.md'
 $collide = Join-Path $RepoRoot 'scripts\check_order_collision.ps1'
@@ -450,6 +494,7 @@ if ($nowActiveIdx -eq $origActiveIdx -and $nowArchiveIdx -eq $origArchiveIdx -an
 # the archive. A handoff in that same commit routing an item to ORDER-X resolved against
 # NEITHER board -- gone from the staged active, not yet in HEAD's archive.
 # ===========================================================================================
+Phase 'C -- check_handoff_contract resolves ORDER tokens at one snapshot'
 $handoff = Join-Path $RepoRoot 'scripts\check_handoff_contract.ps1'
 $probeC = '712'
 $probeRel = '_triage/HANDOFF_FG674_PROBE.md'
@@ -524,6 +569,7 @@ if ($nowArchiveIdx2 -eq $origArchiveIdx2 -and $nowArchiveDisk2 -eq $origArchiveD
          $(if (Test-Path -LiteralPath $probeAbs) { " -- AND $probeRel is still on disk" } else { '' }))
 }
 
+Phase 'A4 -- the hook actually exports EA_LAB_EVIDENCE=index'
 # --- A4: the hook actually sets it, or the whole migration is inert where it matters --------
 $hook = [System.IO.File]::ReadAllText((Join-Path $RepoRoot '.githooks\pre-commit'))
 if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
@@ -533,6 +579,7 @@ if ($hook -match '(?m)^\s*export\s+EA_LAB_EVIDENCE=index') {
          'in the only place it matters, and nothing else in this tree would notice')
 }
 
+PhaseReport
 Pop-Location
 if ($fail -gt 0) {
     Write-Host "[front-guards] $fail FAILURE(S)" -ForegroundColor Red

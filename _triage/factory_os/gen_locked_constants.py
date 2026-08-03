@@ -48,6 +48,7 @@ passes a `read(relpath) -> text` callable, so the checker can drive it from an `
 judge the bytes a commit carries. Only the CLI opens files, and it says which ones.
 """
 import ast
+import functools
 import io
 import os
 import re
@@ -117,6 +118,7 @@ class Constant(object):
         return _CANON_CALL[self.kind] % self.name
 
 
+@functools.lru_cache(maxsize=65536)
 def _strip_comment(line):
     """Drop `//` and a single-line `/* ... */`, but never inside a string literal.
 
@@ -124,6 +126,23 @@ def _strip_comment(line):
     this being right: cutting at the first `//` regardless of quoting would truncate a value, and
     ignoring comments entirely would make `LAB_ENTRY_11          // fallback build` look like a
     valued define whose value is a comment.
+
+    ORDER-1130 T2 -- MEMOISED, and the reason it is SAFE to memoise is the reason it is worth
+    memoising. This is a pure `str -> str`: it reads `line` and nothing else, so the answer for a
+    given line is the same answer forever, in any repository, in any evidence mode. A cache keyed
+    on the whole input can therefore never return a stale or foreign result -- unlike a cache over
+    a FILE, which is the shape memory `name-it-honestly-when-you-cannot-prove-it` warns about (a
+    guard caching the state it is supposed to be watching). Nothing here watches anything.
+
+    WHY IT MATTERS, measured rather than assumed (ORDER-1130 T1, index mode, 3 samples):
+    `_walk` strips every line of every file in the include closure, and `scan()` re-walks that
+    same closure once per build tag per case. In `run_input_surface_tests.py --mutate` that came
+    to **2,438,476 calls** over a few thousand DISTINCT lines -- the same handful of headers
+    re-stripped character by character, ~350 times over. It was 73% of that suite's runtime and
+    the largest single item in the whole pre-commit tier.
+
+    The cache is bounded so a pathological input cannot grow it without limit; at the observed
+    distinct-line count it never evicts, and if it ever does the only cost is the old behaviour.
     """
     out = []
     i = 0

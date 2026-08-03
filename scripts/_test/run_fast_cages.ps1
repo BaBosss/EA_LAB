@@ -411,26 +411,44 @@ $FAST_SUITES = @(
     # schemas.json, and PART B's seam -- the REAL PowerShell reader's states fed to the REAL
     # python shell, which is the only way to catch the two vocabularies drifting apart.
     'run_s11_tests.ps1',
-    # ORDER-1180 (S12) IS NOT IN THE LIST ABOVE, AND THAT IS A MEASUREMENT, NOT AN OVERSIGHT.
+    # ORDER-1180 (S12) -- RE-REGISTERED 2026-08-03 by ORDER-1130, which bought the room it needed.
     # ------------------------------------------------------------------------------------
-    # The suite is built, green (64 scenarios, both roll-ups) and costs 2.9s / 3.0s / 2.9s. It
-    # does not fit, and the reason is that THE HEADROOM WAS MEASURED WITH THE WRONG INVOCATION
-    # (memory: tier-number-needs-its-invocation). The ~8s of headroom everyone has been quoting
-    # is a NON-HOOK number: this tier runs at 110.8s / 111.5s / 112.4s launched from a shell, and
-    # at 121.6s / 122.0s / 122.1s launched as `-Hook`, which is how the pre-commit hook launches
-    # it and therefore the only number that decides whether a commit lands. Hook-mode headroom
-    # before S12 is about ONE SECOND, not eight.
+    # THE TIER, MEASURED THE WAY .githooks/pre-commit:220 LAUNCHES IT (`-Hook`, which sets
+    # EA_LAB_EVIDENCE=index for every child), three samples each, this machine, HEAD b42a8c94 for
+    # the before and this commit for the after. A tier number with no stated invocation is not
+    # evidence -- memory `tier-number-needs-its-invocation`, which is what this whole block is:
     #
-    # WHY THAT MATTERS MORE THAN IT SOUNDS: staged paths that match no guard fall back to running
-    # EVERYTHING (Select-Suites, fails open). `-ExportSelection` over a single `_mt5_auto/*.csv`
-    # selects all 26 suites -- so committing a backtest CSV, an ordinary act in this repo, is a
-    # FULL hook-mode run. Registering a 2.9s suite therefore does not cost 2.9s of margin; it
-    # turns "commit a CSV" into "commit refused, OVER BUDGET" for everyone.
+    #   before ORDER-1130   114.4 / 113.1 / 112.4s   25 suites  median 113.1  ->  6.9s headroom
+    #   after  ORDER-1130   105.3 / 102.9 / 103.1s   25 suites  median 103.1  -> 16.9s headroom
+    #   after + this suite  107.0 / 108.9 / 106.8s   26 suites  median 107.0  -> 13.0s headroom
     #
-    # TO RE-REGISTER, once ORDER-1130 buys the room: uncomment the one line above AND the
-    # $SUITE_GUARDS entry that goes with it (both, or run_guard_trigger_tests fails on the key
-    # sets disagreeing -- which is that guard doing its job). Nothing else changes.
-    # Run it meanwhile with: powershell -NoProfile -File scripts\_test\run_s12_tests.ps1
+    # So S12's cage is IN, and the tier is still 6.1s FASTER than before this order. That is the
+    # whole trade ORDER-1130 existed to make, and it is why the budget is NOT lowered here: the
+    # room was bought in order to be SPENT on the cage that was blocked, not banked as slack.
+    # T4's "lower it if you can" is answered with the spread above -- 120.0 minus the worst
+    # observed post-registration state (~112s, applying yesterday's +5.6s load delta) leaves ~8s,
+    # and any line below ~118 puts a REFUSED COMMIT inside ordinary load variation. Moving that
+    # number is a deliberate two-file act (run_guard_trigger_tests PART 7 N1 pins it); it should
+    # be moved on a spread measurement, not on one machine's good afternoon.
+    #
+    # WHERE THE 10s CAME FROM, because "it got faster" is not a finding. ORDER-1130 T1 attributed
+    # all three heavy suites to phases (run any of them with -Timing to reproduce the table). The
+    # board row's suspected cause -- the S2a bundle digest -- was REFUTED by the measurement. The
+    # real cause was `gen_locked_constants._strip_comment`, a pure str->str called 2,438,476 times
+    # over ~6,500 DISTINCT lines because `_walk` re-strips the whole include closure once per build
+    # tag per case. Memoising it took `run_input_surface_tests.py --mutate` from 7.42s to 2.53s and
+    # `check_input_surface_gen.py` from 2.65s to 1.55s. NO CASE WAS DROPPED: the differential probe
+    # compared memoised against unmemoised output over 6,517 distinct real lines plus crafted
+    # adversarial ones (0 mismatches), and neutralising the `//` cut inside the memoised function
+    # still fails the suite -- so it got cheaper to DRIVE, not cheaper to CARE.
+    #
+    # WHY THE HEADROOM STILL MATTERS EVEN NOW: staged paths that match no guard fall back to
+    # running EVERYTHING (Select-Suites, fails open). `-ExportSelection` over a single
+    # `_mt5_auto/*.csv` selects every suite -- so committing a backtest CSV, an ordinary act in
+    # this repo, is a FULL hook-mode run. And the SAME COMMIT measured 118.7s yesterday against
+    # 113.1s today: a 6.3s same-commit load spread on one machine. Any future budget decision is
+    # bounded by that spread, not by one lucky median.
+    'run_s12_tests.ps1',
     #
     # The earlier registration comment, kept because its numbers are the evidence:
     # ORDER-1180 (S12), measured 3.2s / 3.3s / 3.2s over three runs (memory
@@ -451,7 +469,6 @@ $FAST_SUITES = @(
     # design 10 prohibition "no token in git" is a statement about what is TRACKED, which no
     # python assertion can make. It sends nothing: the real Telegram leg was driven once, by
     # hand, with the owner's go-ahead, and its receipt is quoted in ORDER-1180.
-    # 'run_s12_tests.ps1',   <-- BUILT, GREEN, AND DELIBERATELY NOT REGISTERED. See below.
     'run_work_receipts_tests.ps1',
     # ORDER-674. Drives the A7 attack against check_state -- the guard the hook runs FIRST,
     # over the live-money inventory. It stages into the REAL index and restores, asserting
@@ -967,15 +984,16 @@ $SUITE_GUARDS = @{
     # ORDER-1180 (S12) guard list, COMMENTED OUT WITH ITS SUITE. run_guard_trigger_tests
     # requires the key sets of $FAST_SUITES and $SUITE_GUARDS to match exactly, so these two
     # blocks are uncommented together or not at all. Restoring both is the whole re-registration.
-    # 'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
-    # '_triage/factory_os/run_s12_tests.py',
-    # '_triage/factory_os/safe_projection.py',
-    # '_triage/factory_os/control_center.py',
-    # '_triage/factory_os/snapshot_validator.py',
-    # '_triage/factory_os/schemas.json',
-    # 'portfolio/control_room_snapshot.json',
-    # '.gitignore',
-    # 'scripts/config.example.yaml')
+    # ORDER-1130 RE-REGISTERED both blocks together, 2026-08-03, once the room was bought.
+    'run_s12_tests.ps1'               = @('_triage/factory_os/notifier.py',
+                                          '_triage/factory_os/run_s12_tests.py',
+                                          '_triage/factory_os/safe_projection.py',
+                                          '_triage/factory_os/control_center.py',
+                                          '_triage/factory_os/snapshot_validator.py',
+                                          '_triage/factory_os/schemas.json',
+                                          'portfolio/control_room_snapshot.json',
+                                          '.gitignore',
+                                          'scripts/config.example.yaml')
 }
 
 # Paths a suite references but which are NOT inputs to what it guards -- synthetic fixture

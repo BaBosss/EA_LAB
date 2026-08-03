@@ -440,7 +440,7 @@ order touches quoting and nothing else. 🚫 Do not "fix" it by deleting the com
 
 ---
 
-## ORDER-1130 — [tier] The budgets were raised to make the bound true; earn them back — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+## ORDER-1130 — [tier] The budgets were raised to make the bound true; earn them back — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-TIERROOM) — 10.0s bought on the hook-mode median, spent on registering S12's cage; the suspected cause was refuted by the measurement` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Opened by the owner's ratification (`_triage/USER_DECISIONS_PENDING.md` item 9). Raising a budget
 > makes the bound TRUE, not the tier FAST, and the raise was explicitly ratified **with this order
@@ -468,6 +468,73 @@ that decision has been made once and its remedy is this row.
 <sub>Suspected first: the S2a bundle digest costs six `git show` spawns per call and is cached on the
 source object (`check_s2a_attestation.py`) — if `run_contract_binding_tests` constructs a new source
 per case, the cache never hits. **Measure before believing that** — it is a hypothesis, not a finding.</sub>
+
+### CLOSED 2026-08-03 — and the hypothesis above was wrong, which is the reason it was written down
+
+**Every number here is `-Hook`** (`EA_LAB_EVIDENCE=index`), the way `.githooks/pre-commit:220` launches
+the tier, because that is the only invocation that decides whether a commit lands. Memory
+`tier-number-needs-its-invocation`. Three samples everywhere, never one.
+
+**T1 — attributed, and the attribution is now REPRODUCIBLE rather than prose.** All three suites take
+`-Timing` and print their own phase table, so the next reader re-derives it in one command instead of
+trusting a comment. That was the actual disease: `run_contract_binding_tests.ps1` carried a hand-typed
+per-entry table whose measuring harness had been thrown away, and two of its lines were wrong by **4x
+and 42x** by the time ORDER-830 re-measured.
+
+| suite | this order (3 samples) | the row above said | by phase |
+|---|---|---|---|
+| `run_contract_binding_tests.ps1` | **39.17s** | 35.8s — drifted further | 18 entries; top: `run_registry_tests.py` 7.55 · `run_input_surface_tests.py --mutate` 7.42 · `check_registries.py` 4.62 · `run_s2a_gate.py` 4.19 |
+| `run_guard_trigger_tests.ps1` | **20.96s** | 19.4s | PART 5 (per-path selection) 8.8 · PART 6 (evidence plumbing) 7.4 · PART 7 (budget refusal) 3.3 — the three that nest tier runs |
+| `run_front_guard_evidence_tests.ps1` | **13.08s** | 21.2s — the row's number was stale high | section A (staged attack + restore) 7.9 · B 2.9 · C 1.7 |
+
+**The suspected cause was REFUTED.** The S2a digest is not the problem: `run_s2a_gate.py` is 4.19s and
+flat. The growth was `gen_locked_constants._strip_comment` — a pure `str -> str` called **2,438,476
+times over ~6,500 DISTINCT lines**, because `_walk` re-strips the entire `#include` closure once per
+build tag per case. It was **73%** of `run_input_surface_tests.py --mutate` and the largest single item
+in the whole tier, and ORDER-830 had measured that same entry at **0.18s** — it grew 41x while every
+handoff quoted the old table.
+
+**T2 — one suite materially faster, and the two questions that owes were DRIVEN, not argued.**
+Memoising `_strip_comment` (`functools.lru_cache`; safe because it reads its argument and nothing else,
+so it is not a guard caching the state it watches — memory `name-it-honestly-when-you-cannot-prove-it`):
+`run_input_surface_tests.py --mutate` **7.42s → 2.53s**, `check_input_surface_gen.py` **2.65s → 1.55s**,
+wrapper sum **~40.3s → 33.6s**, and the run-to-run variance collapsed with it.
+· **Did any answer change?** A differential probe compared memoised against unmemoised output over
+**6,517 distinct real closure lines plus 13 crafted adversarial ones** (quoted `//`, unterminated
+string, unterminated block comment, escaped quote, tail comment): **0 mismatches**.
+· **Can it still fail?** Neutralising the `//` cut *inside the memoised function* and re-running the
+suite through its own mutation machinery → **exit 1**. It got cheaper to DRIVE, not cheaper to CARE.
+🚫 No case was dropped. No budget was raised.
+
+**T3 — the full tier, re-measured, written into `run_fast_cages.ps1`'s registration comment:**
+
+| state | samples | median | headroom |
+|---|---|---|---|
+| before | 114.4 / 113.1 / 112.4s (25 suites) | 113.1 | 6.9s |
+| after the fix | 105.3 / 102.9 / 103.1s (25 suites) | 103.1 | 16.9s |
+| **after + `run_s12_tests.ps1` registered** | **107.0 / 108.9 / 106.8s (26 suites)** | **107.0** | **13.0s** |
+
+**S12's cage is in the tier and the tier is still 6.1s faster than before this order.** That closes the
+`ORDER-1180` partial: `run_s12_tests.ps1` and its `$SUITE_GUARDS` entry are uncommented **together**,
+`.githooks/fast_tier_pathspec` regenerated (135 entries), key sets agree, `run_guard_trigger_tests`
+green.
+
+**T4 — the budget is deliberately NOT lowered, and this is the evidence rather than an omission.**
+The room was bought to be **spent** on the blocked cage, not banked. What is left is bounded by a
+measured **same-commit load spread of 6.3s on this one machine** — the identical commit ran 118.7s
+yesterday and 113.1s today. Applying that delta, the worst realistic post-registration state is ~112s,
+so any line below ~118.0 puts a **refused commit** inside ordinary load variation, and a hook that
+refuses commits at random is how a tier earns the `--no-verify` it exists to avoid. `PART 7 N1` pins
+120.0 as a ratified number; it should move on a spread measurement, not on one machine's good
+afternoon.
+
+<sub>⚠️ **Two things the next lane should know.** (1) `run_front_guard_evidence_tests.ps1` went red three
+times mid-session with `A6 .git/index was rewritten by this suite` — **not a defect in it**: a parallel
+lane (`S-2026-08-03-S12WIRE`) was committing into the shared worktree, and a `-Strict` skills-mirror
+drift from an `adhd-mode` skill installed from outside the repo was failing `check_state` at the same
+time. Both cleared. The suite is honest; it just cannot tell "someone else committed" from "I damaged
+the index", and in a shared worktree that is worth knowing before diagnosing it. (2) The three suites'
+`-Timing` switches are the deliverable, not the numbers above — re-measure, do not quote.</sub>
 
 ---
 
