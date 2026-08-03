@@ -217,6 +217,101 @@ building before the question is asked.
 
 ---
 
+## ORDER-1265 — [factory/S9] The scheduler's cache identity does not match what the driver runs, and the kill matrix cannot stop where the defects live — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S9_2026-08-03.md`. Brief committed before the audit ran.
+**Codex refutes all four of this slice's acceptance criteria (C1–C4).** Most of its case is
+hypotheses it says plainly it could not execute — those stay in that file's Part 2 and are **not**
+in this order. What is below was measured.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🟠 | **`currency` is hashed into the cache identity and never passed to the runner**, which hardcodes `Currency=USD`; **`deposit` is a contractual number the driver coerces to `[int]`.** Measured: `currency` ∈ `EXECUTION_KEY_FIELDS`, `scheduler_run.ps1` mentions it **0 times**, `mt5_run.ps1` has `"Currency=USD"` and `[int]$Deposit`. A later request for EUR or for `10000.5` gets a **distinct digest** and is answered by `find_cached()` with evidence produced under USD at a rounded deposit | `scheduler.py:81` · `scripts/mt5_run.ps1` · `scripts/scheduler_run.ps1` |
+| 2 | 🟡 | **Terminal build is in no identity** — not in `EXECUTION_KEY_FIELDS`, not in design §6.4's data fingerprint. Update MT5 in place and old-build evidence is served as fresh. This repo has already measured tick history differing **14× across installs**; terminal build is the same class of difference, unpinned | `scheduler.py:81` |
+
+**The finding that is really about the cage, and it is the one worth acting on first.** Two of the
+three critical hypotheses are unreproducible **because the cage cannot represent the state they live
+in**: it cannot stop between `Start-Process` succeeding and the PID being written to the marker, and
+it creates report-freshness and the exit record **atomically**, so "report exists, sidecar does not"
+is unrepresentable. A kill-at-every-**state** matrix that can only stop *at* states and never
+*between* them is not measuring the acceptance sentence. **Fix the cage's expressiveness before
+judging the hypotheses** — otherwise they can neither be confirmed nor closed.
+
+ℹ️ The S9 brief said **seven** refusal codes; there are **eight** (`UNCOMPARABLE_PRIOR` was the one
+missed). The brief was wrong and the audit caught it — no code change owed.
+
+**Next cheapest step:** claim 2.7 (`COMPLETED` accepts a caller-asserted `fresh=true`, a nonexistent
+report path, a forged `run_start`, and `runner_exit=3`) is **purely in-process and needs no lane**.
+This seat's probe `CANNOT-BUILD` on an input-shape error, which is a failed probe and not a
+refutation. Settle it first.
+
+---
+
+## ORDER-1264 — [factory/S3] A contract can lose its enforcement declaration and vanish from the check instead of reddening it — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S3_2026-08-03.md`.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🟠 | **13 of 29 entities are SKIPPED by the enforcement check, not failed by it.** `if not _body.get("x-enforced-by"): continue`, with no completeness inventory of which contracts must carry a declaration. Measured, and the list is not obscure: `CandidatePayload · EvidenceRef · ExecutionKey · IdeaRef · InstrumentProfile · LogicalSymbol · ModuleUse · **OwnerRef** · ParameterBinding · RunAttempt · RunJournal · SnapshotMeta · TestUniverse`. **`OwnerRef` being on it is exactly why `ORDER-1263` was invisible**, and `ExecutionKey` is on it too — whose own defect the S9 audit found the same day. A constraint and its enforcement metadata can be deleted **together** and the lint still prints `STRUCTURE OK` | `check_schema_structure.py:256-258` |
+| 2 | 🟡 | **The suite header's counts are stale**, which is why the brief ordered them re-measured rather than read: `$defs` **29** not 27 · root branches **21** not 19 · per-entity cases **64**, of which **33** negative · entities with a declared negative **29/29**. The coverage story is genuinely good; the documentation of it is not | `run_schema_fixtures.py` header |
+
+**Unverified but pointed, and in that file's Part 2:** the `OwnerRef` positive/negative pair proves
+only that a regex exists (the negative changes `raw_sha256` to `NOT-A-SHA` and nothing else), and the
+closed-object inventory omits seven helper contracts, so removing `unevaluatedProperties:false` from
+`ModuleUse`/`ExecutionKey`/`MetricRef` and four others leaves every cage green. **No entity lacks it
+today** — the finding is that a removal could not be caught.
+
+⚠️ **This slice's suite could not reach `ajv` at all in the audit run** — no writable temp dir **and
+`ajv-cli` absent from `PATH`**. It failed closed, which is right. What is still unknown is what the
+suite does when `ajv-cli` is missing **on a machine where the tier runs**. Answer that before
+trusting a green from it.
+
+---
+
+## ORDER-1263 — [factory/S2·S3·S10] 🔴 `OwnerRef` validates shape and resolves nothing, so every pin in this system is an unchecked citation — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+**Two independent blind audits reached this separately on the same day, neither seeing the other** —
+the S3 audit found it directly, and the S10 audit raised it as its own claim 2.1. That convergence is
+why it is verified rather than filed as a claim.
+
+**Measured**, with a control:
+
+```
+ref = {commit_oid: 'a'*40, blob_oid: 'b'*40, raw_sha256: 'c'*64,
+       path: 'AGENT_TASKBOARD.md', anchor: 'not unique anchor'}   <- anchor breaks the
+                                                                     schema's OWN prose rule
+owner_ref_problems(ref) -> []
+CONTROL (raw_sha256 = 'NOT-A-SHA') -> caught, so the checker is live
+```
+
+And the function contains **no resolution primitive at all** — no `rev-parse`, no `subprocess`, no
+`git`, no `os.path.exists`, no `open(`. It never resolves `commit_oid:path`, never compares
+`blob_oid` or `raw_sha256` to anything, and never checks `anchor`.
+
+### Why this is a BLOCKER and not a HIGH
+
+`OwnerRef` is the pin primitive **S2's entire ownership discipline is built on**, and it is embedded
+in hypothesis pre-registration, `CandidateManifest.scorecard_ref`, and — the one that costs money —
+**`DeploymentAttestationEvent.authorization_ref`**. So S10's acceptance *"no non-`OBSERVED`
+attestation event without a human authorization ref"* is currently satisfied by **a ref that resolves
+to nothing**. Every statement in this system of the form *"this artifact cites its owner"* is right
+now a statement about a citation **nobody resolved**.
+
+### Acceptance
+
+Resolution is enforced for at least `commit_oid` + `path` → `blob_oid`, and `anchor` is checked
+against the schema's stated uniqueness rule — **each shipping with a control proving it goes red**,
+because `ORDER-1264` #1 is the reason this stayed invisible and a fix that is itself unenforced
+repeats it.
+
+⚠️ **Cost and evidence-source first.** Resolving a pin means reading git, and this repo already has
+a rule about that: a judged read goes through `EvidenceSource` (the index in hook mode, the worktree
+on a manual run), never a raw repo path. A resolver that shells out per ref will also be measured
+against a **pinned 120.0s** tier budget. Design the read before writing it.
+
+---
+
 ## ORDER-1262 — [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed history, and today's redaction did not reach it — `OPEN (needs the owner — this is not a code fix)` · ทำได้: user (Boss) decides; Claude/Opus prepares the options · 👉 แนะ: user
 
 **Found by the first independent audit of S12** (`_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md` §0.1),
