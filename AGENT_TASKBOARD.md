@@ -217,6 +217,45 @@ building before the question is asked.
 
 ---
 
+## ORDER-1269 — [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and the owner's own handout tells them to weaken its checker — `OPEN` · ทำได้: Claude/Opus prepares · 👉 แนะ: **user (Boss) decides #1 and #3** · Claude for #2 and #4
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S2_2026-08-03.md`. Seventh and last audit of the coverage
+set. **This order does not repeat `ORDER-1263`** (`OwnerRef` resolves nothing) — S2 found it a **third
+time**, from a third blind read, and it adds two consumers worth carrying into that fix:
+`check_pilot_acceptance.py:177-190` reads `blob_oid` **directly and ignores the claimed `path`,
+`commit_oid` and `raw_sha256`**, and the **strong resolver already exists** at
+`check_s2a_migration.py:522-536` — scoped only to the migration table's own fields. **The code to fix
+1263 is already written; it is pointed at one file.**
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🔴 | **The RED F2/A8 is a granularity mismatch, not just a self-invalidating pin.** D1 line 10 pins the **entire `factory/coverage.jsonl` blob**, while the attestation pins the **generated section of `MASTER_BACKLOG.md`**. So a legitimate append of 16 rows (`5e78ebc3`, `e049faca → c6287ff5`) voids the one-time ownership decision even though the proposal bundle and the approved section are unchanged. **Every store update creates another owner-attestation toll.** Independently diagnosed from the bytes with the cause deliberately withheld | `s2a_migration.jsonl:10` · `check_s2a_attestation.py:648-685` · `check_coverage_transfer.py:595-614` |
+| 2 | 🟠 | **The document policy §2.1 calls *"what the owner actually reads"* still instructs the three-file deadlock C5 claims was removed** — set `signoff_state: APPROVED`, and *"the criterion has to be relaxed to accept the owner's act **in the same commit that records your approval**"*. That is `guard-removed-in-the-commit-that-reddens-it` **written as an instruction, in the owner's handout** — and it is **generated** by `gen_s2a_migration_doc.py:142-155`, so it regenerates. Meanwhile C2 still refuses the state the document prescribes. **Measured** | `S2A_OWNERSHIP_MIGRATION.md:337-340` |
+| 3 | 🟡 | **A record whose pin failed still prints `APPROVED`** — four lines before its own F2 failure. F2–F14 append problems but do not stop the row entering `current`. The exit code is honest; the line a human reads is not. **Measured** | `check_s2a_attestation.py:549-686` · `:695-701` |
+
+**Unverified but pointed** (that file's Part 2, ranked): an **`APPROVED` record may carry no
+`expected_post_state` at all**, so the front guard creates **no target-file pin** — the difference
+between an approval that binds bytes and one that binds nothing · every consumer describes the
+attestation as **owner authorization** although its own checker says it cannot be · the migration
+model **cannot represent an executed transfer** (`current_owner` still says `MASTER_BACKLOG.md` while
+`factory/coverage.jsonl` declares itself canonical, and moving it breaks R6 permanently) ·
+**conformance never reads the policy**, only the corpus, and its mutation harness removes emitted
+reason IDs rather than mutating predicates.
+
+**Why #1 and #3 are the owner's.** #1 is the same decision `ORDER-1257` already put to them and must
+not be taken by a seat; this order only supplies the better diagnosis to decide with. #3 changes what
+an approval **displays**, which is the owner's word on their own record.
+
+✅ **One thing came out stronger than expected and must not be "fixed":**
+`check_attested_pin_staged.py` reads the **staged index**, not the working tree (`:78-120`,
+`:252-281`). That was the aim-point this repo has been burned by repeatedly, and it holds.
+
+🚫 Do not re-pin with `gen_s2a_migration.py` — D1 is inside its own attestation bundle (`ORDER-1257`).
+🚫 Do not append to `s2a_attestations.jsonl` on the owner's behalf; `signer` is `user (Boss)` on every
+line.
+
+---
+
 ## ORDER-1268 — [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that claims to is a non-emptiness test — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S6_2026-08-03.md` §1.8. **This one crosses slices**, which
