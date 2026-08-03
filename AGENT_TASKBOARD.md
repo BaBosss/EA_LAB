@@ -773,7 +773,12 @@ the code, not a flag. Both are the stronger shape. The failure is in **recognisi
 > **The recommendation, for the seat that picks this up.** Split it, and do the half that carries
 > the actual harm first: *cached USD evidence satisfying a cent request* is decided by
 > `scheduler.EXECUTION_KEY_FIELDS`, which is **pure Python, needs no terminal, and does not have
-> `account_unit` in it** (measured). Fixing that closes the money hole. Then decide the preimage
+> `account_unit` in it** (measured). Fixing that closes the money hole. ⚠️ **It is pure Python but
+> it is NOT free, and the cost is not in the code:** `ExecutionKey` is a **closed** schema with a
+> required-field list, and `factory/runs/*.jsonl` already holds **live folded `RunJournal` rows
+> carrying one** (`RUN-20260802-001` · `-002` · `-004`, measured). A new required field invalidates
+> every one of them, so that repair arrives **with a store migration**, and `factory/runs/**` is a
+> path the live `S13D` lane holds. Do not start it while that row is `ACTIVE`. Then decide the preimage
 > question separately and deliberately — and if the answer is that the surface fingerprint stays
 > unit-free, the cage case at `:296-300` should not be flipped but **narrowed**, keeping its
 > assertion and deleting its reason: the comment *"so it is not config either"* is the false
