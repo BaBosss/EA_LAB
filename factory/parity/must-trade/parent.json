@@ -1,0 +1,18 @@
+﻿{
+    "label":  "parent",
+    "case":  "must-trade",
+    "kind":  "must-trade",
+    "expert":  "EALabTpl\\Boss_14_GridLog",
+    "binary":  "C:\\Users\\patip\\AppData\\Roaming\\MetaQuotes\\Terminal\\9CA16B8382AE4CF692710FB36B9DA355\\MQL5\\Experts\\EALabTpl\\Boss_14_GridLog.ex5",
+    "binary_mtime":  "2026-08-02 13:59:03",
+    "report":  "D:\\EA_LAB\\_mt5_auto\\reports\\PARITY_B14_H01_r1_musttrade_parent.htm",
+    "log":  "D:\\EA_LAB\\factory\\parity\\must-trade\\parent.log.txt",
+    "lane":  "D:\\Meta 5\\terminal64.exe",
+    "symbol":  "XAUUSD",
+    "period":  "H1",
+    "from":  "2024.01.01",
+    "to":  "2024.07.01",
+    "model":  1,
+    "set":  "D:\\EA_LAB\\factory\\parity\\must-trade\\effective.set",
+    "expected_hash":  "8f9497b8167d0f69fa4785b832be8140650558c93cde065a92ff20caa63d7b76"
+}

@@ -1,0 +1,326 @@
+﻿CS	0	10:37:53.869	Startup	MetaTester 5 build 6061, 24 Jul 2026
+CS	0	10:37:53.870	Startup	Windows 11 build 26200, 20 x 13th Gen Intel Core i5-13500, AVX2, 16 / 31 Gb memory, 84 / 465 Gb disk, UAC, GMT+7
+CS	0	10:37:53.871	Server	MetaTester 5 started on 127.0.0.1:3000
+CS	0	10:37:53.872	Startup	cloud network mode is off
+CS	0	10:37:53.872	Startup	initialization finished
+CS	0	10:37:54.188	127.0.0.1	login (build 6061)
+CS	0	10:37:54.195	Network	16516 bytes of account info loaded
+CS	0	10:37:54.195	Network	1478 bytes of tester parameters loaded
+CS	0	10:37:54.195	Network	22724 bytes of input parameters loaded
+CS	0	10:37:54.197	Network	10386 bytes of symbols list loaded (1402 symbols)
+CS	0	10:37:54.197	Tester	expert file added: Experts\EALabTpl\generated\B14_H01_r1.ex5. 110397 bytes loaded
+CS	0	10:37:54.200	Tester	16541 Mb available, 206 blocks set for ticks generating
+CS	0	10:37:54.200	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	10:37:54.200	Tester	successfully initialized
+CS	0	10:37:54.200	Network	121 Kb of total initialization data received
+CS	0	10:37:54.200	Tester	13th Gen Intel Core i5-13500, 32535 MB
+CS	0	10:37:54.204	Symbols	XAUUSD: symbol to be synchronized
+CS	0	10:37:54.204	Symbols	XAUUSD: symbol synchronized, 3720 bytes of symbol info received
+CS	0	10:37:54.207	History	XAUUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+CS	0	10:37:54.207	History	XAUUSD: history synchronized from 2016.01.04 to 2026.07.31
+CS	0	10:37:54.227	History	XAUUSD,H1: history cache allocated for 9049 bars and contains 5894 bars from 2023.01.03 01:00 to 2023.12.29 23:00
+CS	0	10:37:54.227	History	XAUUSD,H1: history begins from 2023.01.03 01:00
+CS	0	10:37:54.227	Tester	XAUUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+CS	0	10:37:54.228	Tester	XAUUSD,H1: testing of Experts\EALabTpl\generated\B14_H01_r1.ex5 from 2024.01.01 00:00 to 2024.07.01 00:00 started with inputs:
+CS	0	10:37:54.228	Tester	  === Mode selectors (code = value) ====
+CS	0	10:37:54.228	Tester	  DryRun=false
+CS	0	10:37:54.228	Tester	  _0_BarOpenOnly=false
+CS	0	10:37:54.228	Tester	  === 9x Stack (how orders stack) ====
+CS	0	10:37:54.228	Tester	  _9_StepUseATR=true
+CS	0	10:37:54.228	Tester	  _9_StepATRmult=1.0
+CS	0	10:37:54.228	Tester	  _9_StepPoints=300.0
+CS	0	10:37:54.228	Tester	  _9_StepATRShift=0
+CS	0	10:37:54.228	Tester	  _9_MaxLevels=5
+CS	0	10:37:54.228	Tester	  === 14 Entry: GridLog (Zeus-inspired breakout-arm) ====
+CS	0	10:37:54.228	Tester	  _14_Direction=1
+CS	0	10:37:54.228	Tester	  _14_DistAtrMult=1.5
+CS	0	10:37:54.228	Tester	  _14_MinDistPips=20.0
+CS	0	10:37:54.228	Tester	  === Trend MA (shared) ====
+CS	0	10:37:54.228	Tester	  === 7x Filter params ====
+CS	0	10:37:54.228	Tester	  === 50x Regime (market-state gate) ====
+CS	0	10:37:54.228	Tester	  === 2x Exit / TP params ====
+CS	0	10:37:54.228	Tester	  _22_TP_ATRmult=3.0
+CS	0	10:37:54.228	Tester	  _2_BasketTP_Money=0.0
+CS	0	10:37:54.228	Tester	  _2_BasketTP_BalPct=1.0
+CS	0	10:37:54.228	Tester	  _2_SuppressLegTP=false
+CS	0	10:37:54.228	Tester	  === 3x Stop loss params ====
+CS	0	10:37:54.228	Tester	  _32_SL_BalPct=15.0
+CS	0	10:37:54.228	Tester	  === ATR (2 contexts) ====
+CS	0	10:37:54.228	Tester	  _0_ATR_Period=14
+CS	0	10:37:54.228	Tester	  _0_ATR_TF=0
+CS	0	10:37:54.228	Tester	  _3_RiskATR_Period=14
+CS	0	10:37:54.228	Tester	  _3_RiskATR_TF=0
+CS	0	10:37:54.228	Tester	  === 4x/5x Money management ====
+CS	0	10:37:54.228	Tester	  _41_FixedLot=0.01
+CS	0	10:37:54.228	Tester	  _55_LogPowerFactor=1.3
+CS	0	10:37:54.228	Tester	  _55_UseLnNotLog10=true
+CS	0	10:37:54.228	Tester	  === 0x Protection (cage - always on) ====
+CS	0	10:37:54.228	Tester	  ProtectLevel=2
+CS	0	10:37:54.228	Tester	  RC_MaxLot=0.2
+CS	0	10:37:54.228	Tester	  RC_AcctDDLimitPct=12.0
+CS	0	10:37:54.228	Tester	  RC_PersistHalt=true
+CS	0	10:37:54.228	Tester	  RC_AdoptLegacyHalt=false
+CS	0	10:37:54.228	Tester	  === 8x Recovery (cage-capped) ====
+CS	0	10:37:54.228	Tester	  === Hedge (defensive lock) ====
+CS	0	10:37:54.228	Tester	  === MacroGate self-gate (backtest A/B only) ====
+CS	0	10:37:54.228	Tester	  === General ====
+CS	0	10:37:54.228	Tester	  _0_Magic=990001
+CS	0	10:37:54.228	Tester	  _0_Slippage=20
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [INIT] Boss_14_GridLog | exit=22 sl=30 stack=92 conf=0 firstLot=41 prog=55 protect=2 dry=N
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- effective configuration (what actually wins at runtime) ----
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] input surface: build=LAB_ENTRY_14 keys=116 scope=surface+constants effective_config_hash=8f9497b8167d0f69fa4785b832be8140650558c93cde065a92ff20caa63d7b76
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] sizing: 41 FIXED -> first lot 0.0100
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] caps: RC_MaxLot 0.20 | ProtectLevel 2 (killDD 25% / depositLoad 30% / recSteps 3) | maxLevels 3
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket TP: _2_BasketTP_BalPct 1.000% = 100.00 money -- IGNORING _2_BasketTP_ATRmult 0.00 and _2_BasketTP_Money 0.00
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket STOP: _32_SL_BalPct 15.000% = 1500.00 money -- IGNORING _32_SL_Money 0.00
+CS	0	10:37:54.235	B14_H01_r1 (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- end effective configuration ----
+CS	0	10:37:54.257	Trade	2024.01.02 07:36:20   market buy 0.01 XAUUSD tp: 2083.48 (2072.05 / 2072.25 / 2072.05)
+CS	0	10:37:54.257	Trades	2024.01.02 07:36:20   deal #2 buy 0.01 XAUUSD at 2072.25 done (based on order #2)
+CS	0	10:37:54.257	Trade	2024.01.02 07:36:20   deal performed [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:37:54.257	Trade	2024.01.02 07:36:20   order performed buy 0.01 at 2072.25 [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:37:54.259	Trade	2024.01.02 14:03:40   market buy 0.01 XAUUSD tp: 2078.98 (2066.25 / 2066.44 / 2066.25)
+CS	0	10:37:54.259	Trades	2024.01.02 14:03:40   deal #3 buy 0.01 XAUUSD at 2066.44 done (based on order #3)
+CS	0	10:37:54.259	Trade	2024.01.02 14:03:40   deal performed [#3 buy 0.01 XAUUSD at 2066.44]
+CS	0	10:37:54.259	Trade	2024.01.02 14:03:40   order performed buy 0.01 at 2066.44 [#3 buy 0.01 XAUUSD at 2066.44]
+CS	0	10:37:54.260	Trade	2024.01.02 17:37:40   market buy 0.01 XAUUSD tp: 2072.34 (2055.76 / 2055.95 / 2055.76)
+CS	0	10:37:54.260	Trades	2024.01.02 17:37:40   deal #4 buy 0.01 XAUUSD at 2055.95 done (based on order #4)
+CS	0	10:37:54.260	Trade	2024.01.02 17:37:40   deal performed [#4 buy 0.01 XAUUSD at 2055.95]
+CS	0	10:37:54.260	Trade	2024.01.02 17:37:40   order performed buy 0.01 at 2055.95 [#4 buy 0.01 XAUUSD at 2055.95]
+CS	0	10:37:54.736	Trade	2024.03.01 18:07:40   take profit triggered #4 buy 0.01 XAUUSD 2055.95 tp: 2072.34 [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:37:54.736	Trades	2024.03.01 18:07:40   deal #5 sell 0.01 XAUUSD at 2072.34 done (based on order #5)
+CS	0	10:37:54.736	Trade	2024.03.01 18:07:40   deal performed [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:37:54.736	Trade	2024.03.01 18:07:40   order performed sell 0.01 at 2072.34 [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:37:54.736	Trade	2024.03.01 18:39:40   take profit triggered #3 buy 0.01 XAUUSD 2066.44 tp: 2078.98 [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:37:54.736	Trades	2024.03.01 18:39:40   deal #6 sell 0.01 XAUUSD at 2078.98 done (based on order #6)
+CS	0	10:37:54.736	Trade	2024.03.01 18:39:40   deal performed [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:37:54.736	Trade	2024.03.01 18:39:40   order performed sell 0.01 at 2078.98 [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:37:54.736	Trade	2024.03.01 19:08:40   take profit triggered #2 buy 0.01 XAUUSD 2072.25 tp: 2083.48 [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:37:54.736	Trades	2024.03.01 19:08:40   deal #7 sell 0.01 XAUUSD at 2083.48 done (based on order #7)
+CS	0	10:37:54.736	Trade	2024.03.01 19:08:40   deal performed [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:37:54.736	Trade	2024.03.01 19:08:40   order performed sell 0.01 at 2083.48 [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:37:54.737	Trade	2024.03.04 16:16:40   market buy 0.01 XAUUSD tp: 2106.80 (2095.40 / 2095.60 / 2095.40)
+CS	0	10:37:54.737	Trades	2024.03.04 16:16:40   deal #8 buy 0.01 XAUUSD at 2095.60 done (based on order #8)
+CS	0	10:37:54.737	Trade	2024.03.04 16:16:40   deal performed [#8 buy 0.01 XAUUSD at 2095.60]
+CS	0	10:37:54.737	Trade	2024.03.04 16:16:40   order performed buy 0.01 at 2095.60 [#8 buy 0.01 XAUUSD at 2095.60]
+CS	0	10:37:54.737	Trade	2024.03.04 17:55:40   take profit triggered #8 buy 0.01 XAUUSD 2095.60 tp: 2106.80 [#9 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:37:54.737	Trades	2024.03.04 17:55:40   deal #9 sell 0.01 XAUUSD at 2106.80 done (based on order #9)
+CS	0	10:37:54.737	Trade	2024.03.04 17:55:40   deal performed [#9 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:37:54.737	Trade	2024.03.04 17:55:40   order performed sell 0.01 at 2106.80 [#9 sell 0.01 XAUUSD at 2106.80]
+CS	0	10:37:54.737	Trade	2024.03.04 18:12:40   market buy 0.01 XAUUSD tp: 2129.12 (2114.07 / 2114.27 / 2114.07)
+CS	0	10:37:54.737	Trades	2024.03.04 18:12:40   deal #10 buy 0.01 XAUUSD at 2114.27 done (based on order #10)
+CS	0	10:37:54.737	Trade	2024.03.04 18:12:40   deal performed [#10 buy 0.01 XAUUSD at 2114.27]
+CS	0	10:37:54.737	Trade	2024.03.04 18:12:40   order performed buy 0.01 at 2114.27 [#10 buy 0.01 XAUUSD at 2114.27]
+CS	0	10:37:54.737	Trade	2024.03.04 18:23:40   market buy 0.01 XAUUSD tp: 2123.50 (2107.94 / 2108.14 / 2107.94)
+CS	0	10:37:54.737	Trades	2024.03.04 18:23:40   deal #11 buy 0.01 XAUUSD at 2108.14 done (based on order #11)
+CS	0	10:37:54.737	Trade	2024.03.04 18:23:40   deal performed [#11 buy 0.01 XAUUSD at 2108.14]
+CS	0	10:37:54.737	Trade	2024.03.04 18:23:40   order performed buy 0.01 at 2108.14 [#11 buy 0.01 XAUUSD at 2108.14]
+CS	0	10:37:54.744	Trade	2024.03.05 11:17:40   take profit triggered #11 buy 0.01 XAUUSD 2108.14 tp: 2123.50 [#12 sell 0.01 XAUUSD at 2123.50]
+CS	0	10:37:54.744	Trades	2024.03.05 11:17:40   deal #12 sell 0.01 XAUUSD at 2123.50 done (based on order #12)
+CS	0	10:37:54.744	Trade	2024.03.05 11:17:40   deal performed [#12 sell 0.01 XAUUSD at 2123.50]
+CS	0	10:37:54.744	Trade	2024.03.05 11:17:40   order performed sell 0.01 at 2123.50 [#12 sell 0.01 XAUUSD at 2123.50]
+CS	0	10:37:54.746	Trade	2024.03.05 15:22:40   take profit triggered #10 buy 0.01 XAUUSD 2114.27 tp: 2129.12 [#13 sell 0.01 XAUUSD at 2129.12]
+CS	0	10:37:54.746	Trades	2024.03.05 15:22:40   deal #13 sell 0.01 XAUUSD at 2129.12 done (based on order #13)
+CS	0	10:37:54.746	Trade	2024.03.05 15:22:40   deal performed [#13 sell 0.01 XAUUSD at 2129.12]
+CS	0	10:37:54.746	Trade	2024.03.05 15:22:40   order performed sell 0.01 at 2129.12 [#13 sell 0.01 XAUUSD at 2129.12]
+CS	0	10:37:54.746	Trade	2024.03.05 15:31:40   market buy 0.01 XAUUSD tp: 2151.39 (2136.36 / 2136.56 / 2136.36)
+CS	0	10:37:54.746	Trades	2024.03.05 15:31:40   deal #14 buy 0.01 XAUUSD at 2136.56 done (based on order #14)
+CS	0	10:37:54.746	Trade	2024.03.05 15:31:40   deal performed [#14 buy 0.01 XAUUSD at 2136.56]
+CS	0	10:37:54.746	Trade	2024.03.05 15:31:40   order performed buy 0.01 at 2136.56 [#14 buy 0.01 XAUUSD at 2136.56]
+CS	0	10:37:54.746	Trade	2024.03.05 15:39:40   market buy 0.01 XAUUSD tp: 2146.97 (2130.74 / 2130.94 / 2130.74)
+CS	0	10:37:54.746	Trades	2024.03.05 15:39:40   deal #15 buy 0.01 XAUUSD at 2130.94 done (based on order #15)
+CS	0	10:37:54.746	Trade	2024.03.05 15:39:40   deal performed [#15 buy 0.01 XAUUSD at 2130.94]
+CS	0	10:37:54.746	Trade	2024.03.05 15:39:40   order performed buy 0.01 at 2130.94 [#15 buy 0.01 XAUUSD at 2130.94]
+CS	0	10:37:54.746	Trade	2024.03.05 15:41:40   market buy 0.01 XAUUSD tp: 2141.27 (2125.04 / 2125.24 / 2125.04)
+CS	0	10:37:54.746	Trades	2024.03.05 15:41:40   deal #16 buy 0.01 XAUUSD at 2125.24 done (based on order #16)
+CS	0	10:37:54.746	Trade	2024.03.05 15:41:40   deal performed [#16 buy 0.01 XAUUSD at 2125.24]
+CS	0	10:37:54.746	Trade	2024.03.05 15:41:40   order performed buy 0.01 at 2125.24 [#16 buy 0.01 XAUUSD at 2125.24]
+CS	0	10:37:54.757	Trade	2024.03.06 16:32:40   take profit triggered #16 buy 0.01 XAUUSD 2125.24 tp: 2141.27 [#17 sell 0.01 XAUUSD at 2141.27]
+CS	0	10:37:54.757	Trades	2024.03.06 16:32:40   deal #17 sell 0.01 XAUUSD at 2141.27 done (based on order #17)
+CS	0	10:37:54.757	Trade	2024.03.06 16:32:40   deal performed [#17 sell 0.01 XAUUSD at 2141.27]
+CS	0	10:37:54.757	Trade	2024.03.06 16:32:40   order performed sell 0.01 at 2141.27 [#17 sell 0.01 XAUUSD at 2141.27]
+CS	0	10:37:54.757	Trade	2024.03.06 16:48:40   take profit triggered #15 buy 0.01 XAUUSD 2130.94 tp: 2146.97 [#18 sell 0.01 XAUUSD at 2146.97]
+CS	0	10:37:54.757	Trades	2024.03.06 16:48:40   deal #18 sell 0.01 XAUUSD at 2146.97 done (based on order #18)
+CS	0	10:37:54.757	Trade	2024.03.06 16:48:40   deal performed [#18 sell 0.01 XAUUSD at 2146.97]
+CS	0	10:37:54.757	Trade	2024.03.06 16:48:40   order performed sell 0.01 at 2146.97 [#18 sell 0.01 XAUUSD at 2146.97]
+CS	0	10:37:54.758	Trade	2024.03.06 20:30:40   take profit triggered #14 buy 0.01 XAUUSD 2136.56 tp: 2151.39 [#19 sell 0.01 XAUUSD at 2151.39]
+CS	0	10:37:54.758	Trades	2024.03.06 20:30:40   deal #19 sell 0.01 XAUUSD at 2151.39 done (based on order #19)
+CS	0	10:37:54.758	Trade	2024.03.06 20:30:40   deal performed [#19 sell 0.01 XAUUSD at 2151.39]
+CS	0	10:37:54.758	Trade	2024.03.06 20:30:40   order performed sell 0.01 at 2151.39 [#19 sell 0.01 XAUUSD at 2151.39]
+CS	0	10:37:54.759	Trade	2024.03.07 15:05:40   market buy 0.01 XAUUSD tp: 2178.71 (2163.76 / 2163.96 / 2163.76)
+CS	0	10:37:54.759	Trades	2024.03.07 15:05:40   deal #20 buy 0.01 XAUUSD at 2163.96 done (based on order #20)
+CS	0	10:37:54.759	Trade	2024.03.07 15:05:40   deal performed [#20 buy 0.01 XAUUSD at 2163.96]
+CS	0	10:37:54.759	Trade	2024.03.07 15:05:40   order performed buy 0.01 at 2163.96 [#20 buy 0.01 XAUUSD at 2163.96]
+CS	0	10:37:54.759	Trade	2024.03.07 15:08:40   market buy 0.01 XAUUSD tp: 2173.48 (2158.33 / 2158.53 / 2158.33)
+CS	0	10:37:54.759	Trades	2024.03.07 15:08:40   deal #21 buy 0.01 XAUUSD at 2158.53 done (based on order #21)
+CS	0	10:37:54.759	Trade	2024.03.07 15:08:40   deal performed [#21 buy 0.01 XAUUSD at 2158.53]
+CS	0	10:37:54.759	Trade	2024.03.07 15:08:40   order performed buy 0.01 at 2158.53 [#21 buy 0.01 XAUUSD at 2158.53]
+CS	0	10:37:54.760	Trade	2024.03.07 16:31:40   market buy 0.01 XAUUSD tp: 2169.07 (2152.95 / 2153.15 / 2152.95)
+CS	0	10:37:54.760	Trades	2024.03.07 16:31:40   deal #22 buy 0.01 XAUUSD at 2153.15 done (based on order #22)
+CS	0	10:37:54.760	Trade	2024.03.07 16:31:40   deal performed [#22 buy 0.01 XAUUSD at 2153.15]
+CS	0	10:37:54.760	Trade	2024.03.07 16:31:40   order performed buy 0.01 at 2153.15 [#22 buy 0.01 XAUUSD at 2153.15]
+CS	0	10:37:54.768	Trade	2024.03.08 11:57:40   take profit triggered #22 buy 0.01 XAUUSD 2153.15 tp: 2169.07 [#23 sell 0.01 XAUUSD at 2169.07]
+CS	0	10:37:54.768	Trades	2024.03.08 11:57:40   deal #23 sell 0.01 XAUUSD at 2169.07 done (based on order #23)
+CS	0	10:37:54.768	Trade	2024.03.08 11:57:40   deal performed [#23 sell 0.01 XAUUSD at 2169.07]
+CS	0	10:37:54.768	Trade	2024.03.08 11:57:40   order performed sell 0.01 at 2169.07 [#23 sell 0.01 XAUUSD at 2169.07]
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   take profit triggered #20 buy 0.01 XAUUSD 2163.96 tp: 2178.71 [#24 sell 0.01 XAUUSD at 2178.71]
+CS	0	10:37:54.770	Trades	2024.03.08 15:31:40   deal #24 sell 0.01 XAUUSD at 2178.71 done (based on order #24)
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   deal performed [#24 sell 0.01 XAUUSD at 2178.71]
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   order performed sell 0.01 at 2178.71 [#24 sell 0.01 XAUUSD at 2178.71]
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   take profit triggered #21 buy 0.01 XAUUSD 2158.53 tp: 2173.48 [#25 sell 0.01 XAUUSD at 2173.48]
+CS	0	10:37:54.770	Trades	2024.03.08 15:31:40   deal #25 sell 0.01 XAUUSD at 2173.48 done (based on order #25)
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   deal performed [#25 sell 0.01 XAUUSD at 2173.48]
+CS	0	10:37:54.770	Trade	2024.03.08 15:31:40   order performed sell 0.01 at 2173.48 [#25 sell 0.01 XAUUSD at 2173.48]
+CS	0	10:37:54.770	Trade	2024.03.08 19:05:40   market buy 0.01 XAUUSD tp: 2214.89 (2191.54 / 2191.74 / 2191.54)
+CS	0	10:37:54.770	Trades	2024.03.08 19:05:40   deal #26 buy 0.01 XAUUSD at 2191.74 done (based on order #26)
+CS	0	10:37:54.770	Trade	2024.03.08 19:05:40   deal performed [#26 buy 0.01 XAUUSD at 2191.74]
+CS	0	10:37:54.770	Trade	2024.03.08 19:05:40   order performed buy 0.01 at 2191.74 [#26 buy 0.01 XAUUSD at 2191.74]
+CS	0	10:37:54.770	Trade	2024.03.08 19:53:40   market buy 0.01 XAUUSD tp: 2206.18 (2182.05 / 2182.25 / 2182.05)
+CS	0	10:37:54.770	Trades	2024.03.08 19:53:40   deal #27 buy 0.01 XAUUSD at 2182.25 done (based on order #27)
+CS	0	10:37:54.770	Trade	2024.03.08 19:53:40   deal performed [#27 buy 0.01 XAUUSD at 2182.25]
+CS	0	10:37:54.770	Trade	2024.03.08 19:53:40   order performed buy 0.01 at 2182.25 [#27 buy 0.01 XAUUSD at 2182.25]
+CS	0	10:37:54.771	Trade	2024.03.08 21:03:40   market buy 0.01 XAUUSD tp: 2198.82 (2172.44 / 2172.64 / 2172.44)
+CS	0	10:37:54.771	Trades	2024.03.08 21:03:40   deal #28 buy 0.01 XAUUSD at 2172.64 done (based on order #28)
+CS	0	10:37:54.771	Trade	2024.03.08 21:03:40   deal performed [#28 buy 0.01 XAUUSD at 2172.64]
+CS	0	10:37:54.771	Trade	2024.03.08 21:03:40   order performed buy 0.01 at 2172.64 [#28 buy 0.01 XAUUSD at 2172.64]
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   take profit triggered #26 buy 0.01 XAUUSD 2191.74 tp: 2214.89 [#29 sell 0.01 XAUUSD at 2214.89]
+CS	0	10:37:54.861	Trades	2024.03.21 01:16:40   deal #29 sell 0.01 XAUUSD at 2214.89 done (based on order #29)
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   deal performed [#29 sell 0.01 XAUUSD at 2214.89]
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   order performed sell 0.01 at 2214.89 [#29 sell 0.01 XAUUSD at 2214.89]
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   take profit triggered #27 buy 0.01 XAUUSD 2182.25 tp: 2206.18 [#30 sell 0.01 XAUUSD at 2206.18]
+CS	0	10:37:54.861	Trades	2024.03.21 01:16:40   deal #30 sell 0.01 XAUUSD at 2206.18 done (based on order #30)
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   deal performed [#30 sell 0.01 XAUUSD at 2206.18]
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   order performed sell 0.01 at 2206.18 [#30 sell 0.01 XAUUSD at 2206.18]
+CS	0	10:37:54.861	Trade	2024.03.21 01:16:40   take profit triggered #28 buy 0.01 XAUUSD 2172.64 tp: 2198.82 [#31 sell 0.01 XAUUSD at 2198.82]
+CS	0	10:37:54.861	Trades	2024.03.21 01:16:40   deal #31 sell 0.01 XAUUSD at 2198.82 done (based on order #31)
+CS	0	10:37:54.862	Trade	2024.03.21 01:16:40   deal performed [#31 sell 0.01 XAUUSD at 2198.82]
+CS	0	10:37:54.862	Trade	2024.03.21 01:16:40   order performed sell 0.01 at 2198.82 [#31 sell 0.01 XAUUSD at 2198.82]
+CS	0	10:37:54.867	Trade	2024.03.28 23:49:40   market buy 0.01 XAUUSD tp: 2263.20 (2235.88 / 2236.08 / 2235.88)
+CS	0	10:37:54.867	Trades	2024.03.28 23:49:40   deal #32 buy 0.01 XAUUSD at 2236.08 done (based on order #32)
+CS	0	10:37:54.867	Trade	2024.03.28 23:49:40   deal performed [#32 buy 0.01 XAUUSD at 2236.08]
+CS	0	10:37:54.867	Trade	2024.03.28 23:49:40   order performed buy 0.01 at 2236.08 [#32 buy 0.01 XAUUSD at 2236.08]
+CS	0	10:37:54.867	Trade	2024.03.28 23:50:40   market buy 0.01 XAUUSD tp: 2253.07 (2225.75 / 2225.95 / 2225.75)
+CS	0	10:37:54.867	Trades	2024.03.28 23:50:40   deal #33 buy 0.01 XAUUSD at 2225.95 done (based on order #33)
+CS	0	10:37:54.867	Trade	2024.03.28 23:50:40   deal performed [#33 buy 0.01 XAUUSD at 2225.95]
+CS	0	10:37:54.867	Trade	2024.03.28 23:50:40   order performed buy 0.01 at 2225.95 [#33 buy 0.01 XAUUSD at 2225.95]
+CS	0	10:37:54.867	Trade	2024.04.01 03:32:40   take profit triggered #33 buy 0.01 XAUUSD 2225.95 tp: 2253.07 [#34 sell 0.01 XAUUSD at 2253.07]
+CS	0	10:37:54.867	Trades	2024.04.01 03:32:40   deal #34 sell 0.01 XAUUSD at 2253.07 done (based on order #34)
+CS	0	10:37:54.867	Trade	2024.04.01 03:32:40   deal performed [#34 sell 0.01 XAUUSD at 2253.07]
+CS	0	10:37:54.867	Trade	2024.04.01 03:32:40   order performed sell 0.01 at 2253.07 [#34 sell 0.01 XAUUSD at 2253.07]
+CS	0	10:37:54.869	Trade	2024.04.01 06:40:40   take profit triggered #32 buy 0.01 XAUUSD 2236.08 tp: 2263.20 [#35 sell 0.01 XAUUSD at 2263.20]
+CS	0	10:37:54.869	Trades	2024.04.01 06:40:40   deal #35 sell 0.01 XAUUSD at 2263.20 done (based on order #35)
+CS	0	10:37:54.869	Trade	2024.04.01 06:40:40   deal performed [#35 sell 0.01 XAUUSD at 2263.20]
+CS	0	10:37:54.869	Trade	2024.04.01 06:40:40   order performed sell 0.01 at 2263.20 [#35 sell 0.01 XAUUSD at 2263.20]
+CS	0	10:37:54.870	Trade	2024.04.02 22:54:20   market buy 0.01 XAUUSD tp: 2304.96 (2279.36 / 2279.56 / 2279.36)
+CS	0	10:37:54.870	Trades	2024.04.02 22:54:20   deal #36 buy 0.01 XAUUSD at 2279.56 done (based on order #36)
+CS	0	10:37:54.870	Trade	2024.04.02 22:54:20   deal performed [#36 buy 0.01 XAUUSD at 2279.56]
+CS	0	10:37:54.870	Trade	2024.04.02 22:54:20   order performed buy 0.01 at 2279.56 [#36 buy 0.01 XAUUSD at 2279.56]
+CS	0	10:37:54.872	Trade	2024.04.03 10:27:40   market buy 0.01 XAUUSD tp: 2291.99 (2273.14 / 2273.34 / 2273.14)
+CS	0	10:37:54.872	Trades	2024.04.03 10:27:40   deal #37 buy 0.01 XAUUSD at 2273.34 done (based on order #37)
+CS	0	10:37:54.872	Trade	2024.04.03 10:27:40   deal performed [#37 buy 0.01 XAUUSD at 2273.34]
+CS	0	10:37:54.872	Trade	2024.04.03 10:27:40   order performed buy 0.01 at 2273.34 [#37 buy 0.01 XAUUSD at 2273.34]
+CS	0	10:37:54.874	Trade	2024.04.03 15:23:40   market buy 0.01 XAUUSD tp: 2284.43 (2266.24 / 2266.44 / 2266.24)
+CS	0	10:37:54.874	Trades	2024.04.03 15:23:40   deal #38 buy 0.01 XAUUSD at 2266.44 done (based on order #38)
+CS	0	10:37:54.874	Trade	2024.04.03 15:23:40   deal performed [#38 buy 0.01 XAUUSD at 2266.44]
+CS	0	10:37:54.874	Trade	2024.04.03 15:23:40   order performed buy 0.01 at 2266.44 [#38 buy 0.01 XAUUSD at 2266.44]
+CS	0	10:37:54.875	Trade	2024.04.03 17:01:40   take profit triggered #38 buy 0.01 XAUUSD 2266.44 tp: 2284.43 [#39 sell 0.01 XAUUSD at 2284.43]
+CS	0	10:37:54.875	Trades	2024.04.03 17:01:40   deal #39 sell 0.01 XAUUSD at 2284.43 done (based on order #39)
+CS	0	10:37:54.875	Trade	2024.04.03 17:01:40   deal performed [#39 sell 0.01 XAUUSD at 2284.43]
+CS	0	10:37:54.875	Trade	2024.04.03 17:01:40   order performed sell 0.01 at 2284.43 [#39 sell 0.01 XAUUSD at 2284.43]
+CS	0	10:37:54.876	Trade	2024.04.03 19:28:40   take profit triggered #37 buy 0.01 XAUUSD 2273.34 tp: 2291.99 [#40 sell 0.01 XAUUSD at 2291.99]
+CS	0	10:37:54.876	Trades	2024.04.03 19:28:40   deal #40 sell 0.01 XAUUSD at 2291.99 done (based on order #40)
+CS	0	10:37:54.876	Trade	2024.04.03 19:28:40   deal performed [#40 sell 0.01 XAUUSD at 2291.99]
+CS	0	10:37:54.876	Trade	2024.04.03 19:28:40   order performed sell 0.01 at 2291.99 [#40 sell 0.01 XAUUSD at 2291.99]
+CS	0	10:37:54.882	Trade	2024.04.04 21:56:40   take profit triggered #36 buy 0.01 XAUUSD 2279.56 tp: 2304.96 [#41 sell 0.01 XAUUSD at 2304.96]
+CS	0	10:37:54.882	Trades	2024.04.04 21:56:40   deal #41 sell 0.01 XAUUSD at 2304.96 done (based on order #41)
+CS	0	10:37:54.882	Trade	2024.04.04 21:56:40   deal performed [#41 sell 0.01 XAUUSD at 2304.96]
+CS	0	10:37:54.882	Trade	2024.04.04 21:56:40   order performed sell 0.01 at 2304.96 [#41 sell 0.01 XAUUSD at 2304.96]
+CS	0	10:37:54.883	Trade	2024.04.05 17:32:40   market buy 0.01 XAUUSD tp: 2343.17 (2315.46 / 2315.66 / 2315.46)
+CS	0	10:37:54.883	Trades	2024.04.05 17:32:40   deal #42 buy 0.01 XAUUSD at 2315.66 done (based on order #42)
+CS	0	10:37:54.883	Trade	2024.04.05 17:32:40   deal performed [#42 buy 0.01 XAUUSD at 2315.66]
+CS	0	10:37:54.883	Trade	2024.04.05 17:32:40   order performed buy 0.01 at 2315.66 [#42 buy 0.01 XAUUSD at 2315.66]
+CS	0	10:37:54.885	Trade	2024.04.08 01:19:20   market buy 0.01 XAUUSD tp: 2337.03 (2303.77 / 2303.97 / 2303.77)
+CS	0	10:37:54.885	Trades	2024.04.08 01:19:20   deal #43 buy 0.01 XAUUSD at 2303.97 done (based on order #43)
+CS	0	10:37:54.885	Trade	2024.04.08 01:19:20   deal performed [#43 buy 0.01 XAUUSD at 2303.97]
+CS	0	10:37:54.885	Trade	2024.04.08 01:19:20   order performed buy 0.01 at 2303.97 [#43 buy 0.01 XAUUSD at 2303.97]
+CS	0	10:37:54.886	Trade	2024.04.08 05:36:40   take profit triggered #43 buy 0.01 XAUUSD 2303.97 tp: 2337.03 [#44 sell 0.01 XAUUSD at 2337.03]
+CS	0	10:37:54.886	Trades	2024.04.08 05:36:40   deal #44 sell 0.01 XAUUSD at 2337.03 done (based on order #44)
+CS	0	10:37:54.886	Trade	2024.04.08 05:36:40   deal performed [#44 sell 0.01 XAUUSD at 2337.03]
+CS	0	10:37:54.886	Trade	2024.04.08 05:36:40   order performed sell 0.01 at 2337.03 [#44 sell 0.01 XAUUSD at 2337.03]
+CS	0	10:37:54.886	Trade	2024.04.08 05:37:40   take profit triggered #42 buy 0.01 XAUUSD 2315.66 tp: 2343.17 [#45 sell 0.01 XAUUSD at 2343.17]
+CS	0	10:37:54.886	Trades	2024.04.08 05:37:40   deal #45 sell 0.01 XAUUSD at 2343.17 done (based on order #45)
+CS	0	10:37:54.886	Trade	2024.04.08 05:37:40   deal performed [#45 sell 0.01 XAUUSD at 2343.17]
+CS	0	10:37:54.886	Trade	2024.04.08 05:37:40   order performed sell 0.01 at 2343.17 [#45 sell 0.01 XAUUSD at 2343.17]
+CS	0	10:37:54.887	Trade	2024.04.09 12:20:40   market buy 0.01 XAUUSD tp: 2377.74 (2362.27 / 2362.47 / 2362.27)
+CS	0	10:37:54.887	Trades	2024.04.09 12:20:40   deal #46 buy 0.01 XAUUSD at 2362.47 done (based on order #46)
+CS	0	10:37:54.887	Trade	2024.04.09 12:20:40   deal performed [#46 buy 0.01 XAUUSD at 2362.47]
+CS	0	10:37:54.887	Trade	2024.04.09 12:20:40   order performed buy 0.01 at 2362.47 [#46 buy 0.01 XAUUSD at 2362.47]
+CS	0	10:37:54.888	Trade	2024.04.09 13:30:40   market buy 0.01 XAUUSD tp: 2373.47 (2356.44 / 2356.64 / 2356.44)
+CS	0	10:37:54.888	Trades	2024.04.09 13:30:40   deal #47 buy 0.01 XAUUSD at 2356.64 done (based on order #47)
+CS	0	10:37:54.888	Trade	2024.04.09 13:30:40   deal performed [#47 buy 0.01 XAUUSD at 2356.64]
+CS	0	10:37:54.888	Trade	2024.04.09 13:30:40   order performed buy 0.01 at 2356.64 [#47 buy 0.01 XAUUSD at 2356.64]
+CS	0	10:37:54.888	Trade	2024.04.09 14:39:40   market buy 0.01 XAUUSD tp: 2368.12 (2349.74 / 2349.94 / 2349.74)
+CS	0	10:37:54.888	Trades	2024.04.09 14:39:40   deal #48 buy 0.01 XAUUSD at 2349.94 done (based on order #48)
+CS	0	10:37:54.888	Trade	2024.04.09 14:39:40   deal performed [#48 buy 0.01 XAUUSD at 2349.94]
+CS	0	10:37:54.888	Trade	2024.04.09 14:39:40   order performed buy 0.01 at 2349.94 [#48 buy 0.01 XAUUSD at 2349.94]
+CS	0	10:37:54.914	Trade	2024.04.11 22:42:40   take profit triggered #48 buy 0.01 XAUUSD 2349.94 tp: 2368.12 [#49 sell 0.01 XAUUSD at 2368.12]
+CS	0	10:37:54.914	Trades	2024.04.11 22:42:40   deal #49 sell 0.01 XAUUSD at 2368.12 done (based on order #49)
+CS	0	10:37:54.914	Trade	2024.04.11 22:42:40   deal performed [#49 sell 0.01 XAUUSD at 2368.12]
+CS	0	10:37:54.914	Trade	2024.04.11 22:42:40   order performed sell 0.01 at 2368.12 [#49 sell 0.01 XAUUSD at 2368.12]
+CS	0	10:37:54.914	Trade	2024.04.11 22:57:40   take profit triggered #47 buy 0.01 XAUUSD 2356.64 tp: 2373.47 [#50 sell 0.01 XAUUSD at 2373.47]
+CS	0	10:37:54.914	Trades	2024.04.11 22:57:40   deal #50 sell 0.01 XAUUSD at 2373.47 done (based on order #50)
+CS	0	10:37:54.914	Trade	2024.04.11 22:57:40   deal performed [#50 sell 0.01 XAUUSD at 2373.47]
+CS	0	10:37:54.914	Trade	2024.04.11 22:57:40   order performed sell 0.01 at 2373.47 [#50 sell 0.01 XAUUSD at 2373.47]
+CS	0	10:37:54.915	Trade	2024.04.11 23:47:40   take profit triggered #46 buy 0.01 XAUUSD 2362.47 tp: 2377.74 [#51 sell 0.01 XAUUSD at 2377.74]
+CS	0	10:37:54.915	Trades	2024.04.11 23:47:40   deal #51 sell 0.01 XAUUSD at 2377.74 done (based on order #51)
+CS	0	10:37:54.915	Trade	2024.04.11 23:47:40   deal performed [#51 sell 0.01 XAUUSD at 2377.74]
+CS	0	10:37:54.915	Trade	2024.04.11 23:47:40   order performed sell 0.01 at 2377.74 [#51 sell 0.01 XAUUSD at 2377.74]
+CS	0	10:37:54.915	Trade	2024.04.12 05:03:40   market buy 0.01 XAUUSD tp: 2420.48 (2393.46 / 2393.66 / 2393.46)
+CS	0	10:37:54.915	Trades	2024.04.12 05:03:40   deal #52 buy 0.01 XAUUSD at 2393.66 done (based on order #52)
+CS	0	10:37:54.915	Trade	2024.04.12 05:03:40   deal performed [#52 buy 0.01 XAUUSD at 2393.66]
+CS	0	10:37:54.915	Trade	2024.04.12 05:03:40   order performed buy 0.01 at 2393.66 [#52 buy 0.01 XAUUSD at 2393.66]
+CS	0	10:37:54.916	Trade	2024.04.12 06:42:40   market buy 0.01 XAUUSD tp: 2411.00 (2384.45 / 2384.65 / 2384.45)
+CS	0	10:37:54.916	Trades	2024.04.12 06:42:40   deal #53 buy 0.01 XAUUSD at 2384.65 done (based on order #53)
+CS	0	10:37:54.916	Trade	2024.04.12 06:42:40   deal performed [#53 buy 0.01 XAUUSD at 2384.65]
+CS	0	10:37:54.916	Trade	2024.04.12 06:42:40   order performed buy 0.01 at 2384.65 [#53 buy 0.01 XAUUSD at 2384.65]
+CS	0	10:37:54.920	Trade	2024.04.12 17:12:40   take profit triggered #53 buy 0.01 XAUUSD 2384.65 tp: 2411.00 [#54 sell 0.01 XAUUSD at 2411.00]
+CS	0	10:37:54.920	Trades	2024.04.12 17:12:40   deal #54 sell 0.01 XAUUSD at 2411.00 done (based on order #54)
+CS	0	10:37:54.920	Trade	2024.04.12 17:12:40   deal performed [#54 sell 0.01 XAUUSD at 2411.00]
+CS	0	10:37:54.920	Trade	2024.04.12 17:12:40   order performed sell 0.01 at 2411.00 [#54 sell 0.01 XAUUSD at 2411.00]
+CS	0	10:37:54.920	Trade	2024.04.12 17:53:40   take profit triggered #52 buy 0.01 XAUUSD 2393.66 tp: 2420.48 [#55 sell 0.01 XAUUSD at 2420.48]
+CS	0	10:37:54.920	Trades	2024.04.12 17:53:40   deal #55 sell 0.01 XAUUSD at 2420.48 done (based on order #55)
+CS	0	10:37:54.920	Trade	2024.04.12 17:53:40   deal performed [#55 sell 0.01 XAUUSD at 2420.48]
+CS	0	10:37:54.920	Trade	2024.04.12 17:53:40   order performed sell 0.01 at 2420.48 [#55 sell 0.01 XAUUSD at 2420.48]
+CS	0	10:37:54.938	Trade	2024.05.20 04:01:40   market buy 0.01 XAUUSD tp: 2467.88 (2439.07 / 2439.27 / 2439.07)
+CS	0	10:37:54.938	Trades	2024.05.20 04:01:40   deal #56 buy 0.01 XAUUSD at 2439.27 done (based on order #56)
+CS	0	10:37:54.938	Trade	2024.05.20 04:01:40   deal performed [#56 buy 0.01 XAUUSD at 2439.27]
+CS	0	10:37:54.938	Trade	2024.05.20 04:01:40   order performed buy 0.01 at 2439.27 [#56 buy 0.01 XAUUSD at 2439.27]
+CS	0	10:37:54.938	Trade	2024.05.20 04:17:40   market buy 0.01 XAUUSD tp: 2458.01 (2428.93 / 2429.13 / 2428.93)
+CS	0	10:37:54.938	Trades	2024.05.20 04:17:40   deal #57 buy 0.01 XAUUSD at 2429.13 done (based on order #57)
+CS	0	10:37:54.938	Trade	2024.05.20 04:17:40   deal performed [#57 buy 0.01 XAUUSD at 2429.13]
+CS	0	10:37:54.938	Trade	2024.05.20 04:17:40   order performed buy 0.01 at 2429.13 [#57 buy 0.01 XAUUSD at 2429.13]
+CS	0	10:37:54.943	Trade	2024.05.20 15:20:40   market buy 0.01 XAUUSD tp: 2448.30 (2419.15 / 2419.35 / 2419.15)
+CS	0	10:37:54.943	Trades	2024.05.20 15:20:40   deal #58 buy 0.01 XAUUSD at 2419.35 done (based on order #58)
+CS	0	10:37:54.943	Trade	2024.05.20 15:20:40   deal performed [#58 buy 0.01 XAUUSD at 2419.35]
+CS	0	10:37:54.943	Trade	2024.05.20 15:20:40   order performed buy 0.01 at 2419.35 [#58 buy 0.01 XAUUSD at 2419.35]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   position closed due end of test at 2326.58 [#58 buy 0.01 XAUUSD 2419.35 tp: 2448.30]
+CS	0	10:37:55.264	Trades	2024.06.28 23:58:59   deal #59 sell 0.01 XAUUSD at 2326.58 done (based on order #59)
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   deal performed [#59 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   order performed sell 0.01 at 2326.58 [#59 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   position closed due end of test at 2326.58 [#57 buy 0.01 XAUUSD 2429.13 tp: 2458.01]
+CS	0	10:37:55.264	Trades	2024.06.28 23:58:59   deal #60 sell 0.01 XAUUSD at 2326.58 done (based on order #60)
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   deal performed [#60 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   order performed sell 0.01 at 2326.58 [#60 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   position closed due end of test at 2326.58 [#56 buy 0.01 XAUUSD 2439.27 tp: 2467.88]
+CS	0	10:37:55.264	Trades	2024.06.28 23:58:59   deal #61 sell 0.01 XAUUSD at 2326.58 done (based on order #61)
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   deal performed [#61 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Trade	2024.06.28 23:58:59   order performed sell 0.01 at 2326.58 [#61 sell 0.01 XAUUSD at 2326.58]
+CS	0	10:37:55.264	Tester	final balance 9842.44 USD
+CS	0	10:37:55.267	Tester	XAUUSD,H1: 702163 ticks, 2936 bars generated. Test passed in 0:00:01.065 (including ticks preprocessing 0:00:00.015).
+CS	0	10:37:55.267	Tester	58 Mb memory used including 0.94 Mb of history data, 64 Mb of tick data
+CS	0	10:37:55.267	Tester	log file "C:\Users\patip\AppData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710FB36B9DA355\Agent-127.0.0.1-3000\logs\20260803.log" written
+CS	0	10:37:55.267	Tester	test Experts\EALabTpl\generated\B14_H01_r1.ex5 on XAUUSD,H1 thread finished
+CS	0	10:37:55.344	127.0.0.1	tester forced to close
+CS	0	10:37:55.344	127.0.0.1	prepare for shutdown
+CS	0	10:37:55.344	127.0.0.1	stop immediately
+CS	0	10:37:55.344	127.0.0.1	shutdown finished
+CS	0	10:37:55.577	Server	MetaTester 5 stopped

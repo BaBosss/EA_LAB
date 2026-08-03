@@ -1,0 +1,199 @@
+﻿CS	0	10:39:10.812	Startup	MetaTester 5 build 6061, 24 Jul 2026
+CS	0	10:39:10.813	Startup	Windows 11 build 26200, 20 x 13th Gen Intel Core i5-13500, AVX2, 16 / 31 Gb memory, 84 / 465 Gb disk, UAC, GMT+7
+CS	0	10:39:10.814	Server	MetaTester 5 started on 127.0.0.1:3000
+CS	0	10:39:10.814	Startup	cloud network mode is off
+CS	0	10:39:10.815	Startup	initialization finished
+CS	0	10:39:11.112	127.0.0.1	login (build 6061)
+CS	0	10:39:11.126	Network	16516 bytes of account info loaded
+CS	0	10:39:11.126	Network	1478 bytes of tester parameters loaded
+CS	0	10:39:11.126	Network	67268 bytes of input parameters loaded
+CS	0	10:39:11.128	Network	10386 bytes of symbols list loaded (1402 symbols)
+CS	0	10:39:11.129	Tester	expert file added: Experts\EALabTpl\Boss_14_GridLog.ex5. 178340 bytes loaded
+CS	0	10:39:11.131	Tester	16779 Mb available, 209 blocks set for ticks generating
+CS	0	10:39:11.131	Tester	initial deposit 10000.00 USD, leverage 1:100
+CS	0	10:39:11.131	Tester	successfully initialized
+CS	0	10:39:11.131	Network	186 Kb of total initialization data received
+CS	0	10:39:11.132	Tester	13th Gen Intel Core i5-13500, 32535 MB
+CS	0	10:39:11.136	Symbols	XAUUSD: symbol to be synchronized
+CS	0	10:39:11.136	Symbols	XAUUSD: symbol synchronized, 3720 bytes of symbol info received
+CS	0	10:39:11.139	History	XAUUSD: load 27 bytes of history data to synchronize in 0:00:00.001
+CS	0	10:39:11.139	History	XAUUSD: history synchronized from 2016.01.04 to 2026.07.31
+CS	0	10:39:11.158	History	XAUUSD,H1: history cache allocated for 9049 bars and contains 5894 bars from 2023.01.03 01:00 to 2023.12.29 23:00
+CS	0	10:39:11.158	History	XAUUSD,H1: history begins from 2023.01.03 01:00
+CS	0	10:39:11.159	Tester	XAUUSD,H1 (ThinkMarkets-Live): 1 minutes OHLC ticks generating
+CS	0	10:39:11.159	Tester	XAUUSD,H1: testing of Experts\EALabTpl\Boss_14_GridLog.ex5 from 2024.01.01 00:00 to 2024.07.01 00:00 started with inputs:
+CS	0	10:39:11.159	Tester	  === Mode selectors (code = value) ====
+CS	0	10:39:11.159	Tester	  ExitMode=22
+CS	0	10:39:11.159	Tester	  SLMode=30
+CS	0	10:39:11.159	Tester	  FirstLotMode=41
+CS	0	10:39:11.159	Tester	  LotProg=55
+CS	0	10:39:11.159	Tester	  TradeDir=60
+CS	0	10:39:11.159	Tester	  TrendFilter=70
+CS	0	10:39:11.159	Tester	  RecoveryMode=80
+CS	0	10:39:11.159	Tester	  HedgeMode=0
+CS	0	10:39:11.159	Tester	  DryRun=false
+CS	0	10:39:11.159	Tester	  _0_BarOpenOnly=false
+CS	0	10:39:11.159	Tester	  === 9x Stack (how orders stack) ====
+CS	0	10:39:11.159	Tester	  StackMode=92
+CS	0	10:39:11.159	Tester	  StackConfirm=0
+CS	0	10:39:11.159	Tester	  _9_StepUseATR=true
+CS	0	10:39:11.159	Tester	  _9_StepATRmult=1.0
+CS	0	10:39:11.159	Tester	  _9_StepPoints=300.0
+CS	0	10:39:11.159	Tester	  _9_StepMinPips=0.0
+CS	0	10:39:11.159	Tester	  _9_StepATRShift=0
+CS	0	10:39:11.159	Tester	  _9_MaxLevels=5
+CS	0	10:39:11.159	Tester	  _9_RegimeGateAdds=false
+CS	0	10:39:11.159	Tester	  _9_PA_MinBodyRatio=1.0
+CS	0	10:39:11.159	Tester	  _9_PendingMode=0
+CS	0	10:39:11.159	Tester	  _9_PendingLegs=0
+CS	0	10:39:11.159	Tester	  === 14 Entry: GridLog (Zeus-inspired breakout-arm) ====
+CS	0	10:39:11.159	Tester	  _14_Direction=1
+CS	0	10:39:11.159	Tester	  _14_DistAtrMult=1.5
+CS	0	10:39:11.159	Tester	  _14_MinDistPips=20.0
+CS	0	10:39:11.159	Tester	  === Trend MA (shared) ====
+CS	0	10:39:11.159	Tester	  _0_FastMA=20
+CS	0	10:39:11.159	Tester	  _0_SlowMA=50
+CS	0	10:39:11.159	Tester	  _0_MAMethod=1
+CS	0	10:39:11.159	Tester	  _0_MA_TF=0
+CS	0	10:39:11.159	Tester	  === 7x Filter params ====
+CS	0	10:39:11.159	Tester	  _71_ATRMA=20
+CS	0	10:39:11.159	Tester	  _71_ATRRatio=1.0
+CS	0	10:39:11.159	Tester	  _72_SlopeBar=3
+CS	0	10:39:11.159	Tester	  === 50x Regime (market-state gate) ====
+CS	0	10:39:11.159	Tester	  _50_RegimeMode=0
+CS	0	10:39:11.159	Tester	  _50_AllowTrendUp=true
+CS	0	10:39:11.159	Tester	  _50_AllowTrendDown=true
+CS	0	10:39:11.159	Tester	  _50_AllowRange=true
+CS	0	10:39:11.159	Tester	  _50_Regime_TF=16388
+CS	0	10:39:11.159	Tester	  _50_ADX_Period=14
+CS	0	10:39:11.159	Tester	  _50_ADX_TrendMin=25.0
+CS	0	10:39:11.159	Tester	  _50_StormATRmult=2.0
+CS	0	10:39:11.159	Tester	  _50_StormLookback=100
+CS	0	10:39:11.159	Tester	  === 2x Exit / TP params ====
+CS	0	10:39:11.159	Tester	  _21_TP_Pip=500.0
+CS	0	10:39:11.159	Tester	  _22_TP_ATRmult=3.0
+CS	0	10:39:11.159	Tester	  _2_BasketTP_Money=0.0
+CS	0	10:39:11.159	Tester	  _2_BasketTP_ATRmult=0.0
+CS	0	10:39:11.159	Tester	  _2_BasketTP_BalPct=1.0
+CS	0	10:39:11.159	Tester	  _23_TrailStart=300.0
+CS	0	10:39:11.159	Tester	  _23_TrailStep=100.0
+CS	0	10:39:11.159	Tester	  _2_PartialPct1=0.0
+CS	0	10:39:11.159	Tester	  _2_PartialFrac1=0.3
+CS	0	10:39:11.159	Tester	  _2_PartialPct2=0.0
+CS	0	10:39:11.159	Tester	  _2_PartialFrac2=0.3
+CS	0	10:39:11.159	Tester	  _2_SuppressLegTP=false
+CS	0	10:39:11.159	Tester	  _2_MaxHoldBars=0
+CS	0	10:39:11.159	Tester	  _57_DynCloseOn=false
+CS	0	10:39:11.159	Tester	  _57_DynCloseBase=10.0
+CS	0	10:39:11.159	Tester	  _57_DynCloseBalPct=0.0
+CS	0	10:39:11.159	Tester	  _57_DynCloseDivisor=4.0
+CS	0	10:39:11.159	Tester	  === 3x Stop loss params ====
+CS	0	10:39:11.159	Tester	  _31_SL_Pip=1000.0
+CS	0	10:39:11.159	Tester	  _33_SL_ATRmult=2.0
+CS	0	10:39:11.159	Tester	  _33_SL_MaxPips=0.0
+CS	0	10:39:11.159	Tester	  _33_SL_MaxATRmult=0.0
+CS	0	10:39:11.159	Tester	  _33_AdaptiveON=false
+CS	0	10:39:11.159	Tester	  _33_AdaptiveN=50
+CS	0	10:39:11.159	Tester	  _32_SL_Money=0.0
+CS	0	10:39:11.159	Tester	  _32_SL_BalPct=15.0
+CS	0	10:39:11.159	Tester	  _34_DonchianBars=50
+CS	0	10:39:11.159	Tester	  _35_SRBars=20
+CS	0	10:39:11.159	Tester	  _36_SD_Mult=2.0
+CS	0	10:39:11.159	Tester	  _36_SD_Period=20
+CS	0	10:39:11.159	Tester	  === ATR (2 contexts) ====
+CS	0	10:39:11.159	Tester	  _0_ATR_Period=14
+CS	0	10:39:11.159	Tester	  _0_ATR_TF=0
+CS	0	10:39:11.159	Tester	  _3_RiskATR_Period=14
+CS	0	10:39:11.159	Tester	  _3_RiskATR_TF=0
+CS	0	10:39:11.159	Tester	  === 4x/5x Money management ====
+CS	0	10:39:11.159	Tester	  _41_FixedLot=0.01
+CS	0	10:39:11.159	Tester	  _42_RiskPct=1.0
+CS	0	10:39:11.159	Tester	  _43_LotPerAnchor=0.01
+CS	0	10:39:11.159	Tester	  _43_BalanceAnchor=1000.0
+CS	0	10:39:11.159	Tester	  _51_ProgFactor=0.5
+CS	0	10:39:11.159	Tester	  _52_ProgMult=1.3
+CS	0	10:39:11.159	Tester	  _53_PlusLot=0.01
+CS	0	10:39:11.159	Tester	  _55_LogPowerFactor=1.3
+CS	0	10:39:11.159	Tester	  _55_UseLnNotLog10=true
+CS	0	10:39:11.159	Tester	  _56_FibMaxStep=5
+CS	0	10:39:11.159	Tester	  _4_DdAdaptiveOn=false
+CS	0	10:39:11.159	Tester	  _4_DdTier1Pct=10.0
+CS	0	10:39:11.159	Tester	  _4_DdTier1Mult=1.2
+CS	0	10:39:11.159	Tester	  _4_DdTier2Pct=20.0
+CS	0	10:39:11.159	Tester	  _4_DdTier2Mult=1.5
+CS	0	10:39:11.159	Tester	  _4_DdHardCapMult=1.5
+CS	0	10:39:11.159	Tester	  === 0x Protection (cage - always on) ====
+CS	0	10:39:11.159	Tester	  ProtectLevel=2
+CS	0	10:39:11.159	Tester	  RC_MaxLot=0.2
+CS	0	10:39:11.159	Tester	  RC_RecMultMax=1.3
+CS	0	10:39:11.159	Tester	  RC_MaxLevelsOverride=0
+CS	0	10:39:11.159	Tester	  RC_AcctDDLimitPct=0.3
+CS	0	10:39:11.159	Tester	  RC_PersistHalt=true
+CS	0	10:39:11.159	Tester	  RC_AdoptLegacyHalt=false
+CS	0	10:39:11.159	Tester	  === 8x Recovery (cage-capped) ====
+CS	0	10:39:11.159	Tester	  _8_TriggerATR=1.5
+CS	0	10:39:11.159	Tester	  _8_StepATR=1.0
+CS	0	10:39:11.159	Tester	  _8_RecMult=1.3
+CS	0	10:39:11.159	Tester	  _8_DDRefMoney=100.0
+CS	0	10:39:11.159	Tester	  _8_DDRefBalPct=0.0
+CS	0	10:39:11.159	Tester	  === Hedge (defensive lock) ====
+CS	0	10:39:11.159	Tester	  _H_TriggerDDPct=8.0
+CS	0	10:39:11.159	Tester	  _H_ReleaseDDPct=3.0
+CS	0	10:39:11.159	Tester	  _H_Ratio=1.0
+CS	0	10:39:11.159	Tester	  _H_MaxLot=0.0
+CS	0	10:39:11.159	Tester	  === MacroGate self-gate (backtest A/B only) ====
+CS	0	10:39:11.159	Tester	  _MG_SelfGate=false
+CS	0	10:39:11.159	Tester	  _MG_RegimeFile=EA_LAB_mris_regime.csv
+CS	0	10:39:11.159	Tester	  _MG_InCommon=true
+CS	0	10:39:11.159	Tester	  _MG_LotMult=0.5
+CS	0	10:39:11.159	Tester	  _MG_BlockNew=true
+CS	0	10:39:11.159	Tester	  _MG_TriggerRiskOff=true
+CS	0	10:39:11.159	Tester	  _MG_OffsetHours=0
+CS	0	10:39:11.159	Tester	  === General ====
+CS	0	10:39:11.159	Tester	  _0_Magic=990001
+CS	0	10:39:11.159	Tester	  _0_Slippage=20
+CS	0	10:39:11.159	Tester	  _0_MaxSpread=0
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [INIT] Boss_14_GridLog | exit=22 sl=30 stack=92 conf=0 firstLot=41 prog=55 protect=2 dry=N
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- effective configuration (what actually wins at runtime) ----
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] input surface: build=LAB_ENTRY_14 keys=116 scope=surface+constants effective_config_hash=cb15cdf18327ec3dd9da3e244537d2da35f15219aa92c2e6735c9ee8f3a2ecba
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] sizing: 41 FIXED -> first lot 0.0100
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] caps: RC_MaxLot 0.20 | ProtectLevel 2 (killDD 25% / depositLoad 30% / recSteps 3) | maxLevels 3
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket TP: _2_BasketTP_BalPct 1.000% = 100.00 money -- IGNORING _2_BasketTP_ATRmult 0.00 and _2_BasketTP_Money 0.00
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] basket STOP: _32_SL_BalPct 15.000% = 1500.00 money -- IGNORING _32_SL_Money 0.00
+CS	0	10:39:11.168	Boss_14_GridLog (XAUUSD,H1)	2024.01.01 00:00:00   [CFG] ---- end effective configuration ----
+CS	0	10:39:11.190	Trade	2024.01.02 07:36:20   market buy 0.01 XAUUSD tp: 2083.48 (2072.05 / 2072.25 / 2072.05)
+CS	0	10:39:11.190	Trades	2024.01.02 07:36:20   deal #2 buy 0.01 XAUUSD at 2072.25 done (based on order #2)
+CS	0	10:39:11.190	Trade	2024.01.02 07:36:20   deal performed [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:39:11.190	Trade	2024.01.02 07:36:20   order performed buy 0.01 at 2072.25 [#2 buy 0.01 XAUUSD at 2072.25]
+CS	0	10:39:11.192	Trade	2024.01.02 14:03:40   market buy 0.01 XAUUSD tp: 2078.98 (2066.25 / 2066.44 / 2066.25)
+CS	0	10:39:11.192	Trades	2024.01.02 14:03:40   deal #3 buy 0.01 XAUUSD at 2066.44 done (based on order #3)
+CS	0	10:39:11.192	Trade	2024.01.02 14:03:40   deal performed [#3 buy 0.01 XAUUSD at 2066.44]
+CS	0	10:39:11.192	Trade	2024.01.02 14:03:40   order performed buy 0.01 at 2066.44 [#3 buy 0.01 XAUUSD at 2066.44]
+CS	0	10:39:11.193	Trade	2024.01.02 17:37:40   market buy 0.01 XAUUSD tp: 2072.34 (2055.76 / 2055.95 / 2055.76)
+CS	0	10:39:11.193	Trades	2024.01.02 17:37:40   deal #4 buy 0.01 XAUUSD at 2055.95 done (based on order #4)
+CS	0	10:39:11.193	Trade	2024.01.02 17:37:40   deal performed [#4 buy 0.01 XAUUSD at 2055.95]
+CS	0	10:39:11.193	Trade	2024.01.02 17:37:40   order performed buy 0.01 at 2055.95 [#4 buy 0.01 XAUUSD at 2055.95]
+CS	0	10:39:11.669	Trade	2024.03.01 18:07:40   take profit triggered #4 buy 0.01 XAUUSD 2055.95 tp: 2072.34 [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:39:11.669	Trades	2024.03.01 18:07:40   deal #5 sell 0.01 XAUUSD at 2072.34 done (based on order #5)
+CS	0	10:39:11.669	Trade	2024.03.01 18:07:40   deal performed [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:39:11.669	Trade	2024.03.01 18:07:40   order performed sell 0.01 at 2072.34 [#5 sell 0.01 XAUUSD at 2072.34]
+CS	0	10:39:11.669	Trade	2024.03.01 18:39:40   take profit triggered #3 buy 0.01 XAUUSD 2066.44 tp: 2078.98 [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:39:11.669	Trades	2024.03.01 18:39:40   deal #6 sell 0.01 XAUUSD at 2078.98 done (based on order #6)
+CS	0	10:39:11.669	Trade	2024.03.01 18:39:40   deal performed [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:39:11.669	Trade	2024.03.01 18:39:40   order performed sell 0.01 at 2078.98 [#6 sell 0.01 XAUUSD at 2078.98]
+CS	0	10:39:11.669	Trade	2024.03.01 19:08:40   take profit triggered #2 buy 0.01 XAUUSD 2072.25 tp: 2083.48 [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:39:11.669	Trades	2024.03.01 19:08:40   deal #7 sell 0.01 XAUUSD at 2083.48 done (based on order #7)
+CS	0	10:39:11.669	Trade	2024.03.01 19:08:40   deal performed [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:39:11.669	Trade	2024.03.01 19:08:40   order performed sell 0.01 at 2083.48 [#7 sell 0.01 XAUUSD at 2083.48]
+CS	0	10:39:11.670	Boss_14_GridLog (XAUUSD,H1)	2024.03.04 16:16:40   [RISK] acct-DD gate TRIP: DD 1.52% vs limit 0.30% (HWM 10007.41) - blocking new first-entries
+CS	0	10:39:11.734	Tester	final balance 9855.60 USD
+CS	0	10:39:11.737	Tester	XAUUSD,H1: 702163 ticks, 2936 bars generated. Environment synchronized in 0:00:00.020. Test passed in 0:00:00.604 (including ticks preprocessing 0:00:00.031).
+CS	0	10:39:11.737	Tester	XAUUSD,H1: total time from login to stop testing 0:00:00.624 (including 0:00:00.020 for history data synchronization)
+CS	0	10:39:11.737	Tester	58 Mb memory used including 0.94 Mb of history data, 64 Mb of tick data
+CS	0	10:39:11.737	Tester	log file "C:\Users\patip\AppData\Roaming\MetaQuotes\Tester\9CA16B8382AE4CF692710FB36B9DA355\Agent-127.0.0.1-3000\logs\20260803.log" written
+CS	0	10:39:11.737	Tester	test Experts\EALabTpl\Boss_14_GridLog.ex5 on XAUUSD,H1 thread finished
+CS	0	10:39:11.810	127.0.0.1	tester forced to close
+CS	0	10:39:11.810	127.0.0.1	prepare for shutdown
+CS	0	10:39:11.810	127.0.0.1	stop immediately
+CS	0	10:39:11.810	127.0.0.1	shutdown finished
+CS	0	10:39:12.018	Server	MetaTester 5 stopped
