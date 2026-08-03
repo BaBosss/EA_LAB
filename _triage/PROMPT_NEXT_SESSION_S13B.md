@@ -1,40 +1,36 @@
-# OPENING PROMPT — after `ORDER-1210`: one decision is owed, then run the pilot
+# OPENING PROMPT — the pilot is pre-registered; now RUN it
 
 > Written 2026-08-03 by lane `S-2026-08-03-S13PILOT`, after building the §8.6 acceptance checker
-> and running three `/scrutinize` rounds over it. **Read BOX 1 before planning** — it is the only
-> thing in this chain that needs a human answer.
+> and running three `/scrutinize` rounds over it; extended the same day by lane
+> `S-2026-08-03-PREREG`, which closed BOX 1. **Nothing in this chain now needs a human answer** —
+> the next lane runs the pilot.
 
 ---
 
-## 🔴 BOX 1 — THE PILOT'S PRE-REGISTRATION DOES NOT RESOLVE, AND THAT IS A DECISION, NOT A BUG FIX
+## ✅ BOX 1 — ANSWERED AND DONE (2026-08-03). Read it once, then move on.
 
-`factory/hypotheses.jsonl` pins both pilot hypotheses to anchors that **occur ZERO times in the
-824 KB blob they pin**:
+The pilot's pre-registration **did not resolve**: both `preregistration_ref` pins named anchors that
+occurred **zero times** in the blob they pinned, while `schemas.json` requires *exactly once*. It had
+no `x-enforcement-status` and nothing enforced it until `ORDER-1210` built the checker.
 
-| hypothesis | anchor | occurrences in the pinned blob |
-|---|---|---|
-| `B14-H01` | `B14-H01-PREREGISTRATION` | **0** |
-| `B14-H02` | `B14-H02-PREREGISTRATION` | **0** |
+**The owner chose option 1, and it is closed.** `ORDER-1220` now carries the pre-registration for
+both hypotheses — causal claim and falsifier **copied verbatim from design §8.1**, which owns them —
+and both rows are re-pinned at that commit. All three git-derived fields recompute, each anchor
+occurs exactly once, and the registry copies neither the claim nor the falsifier.
 
-`schemas.json` states the constraint verbatim — *"must occur EXACTLY once in the blob and contain no
-spaces"* — carries **no `x-enforcement-status`**, and **nothing enforced it** until
-`check_pilot_acceptance` was written. Both references have been undereferenceable since they were
-written.
+**The ordering was the whole point and it held: this was written with 0 of the 16 cells run.** H01's
+falsifier IS the flat-lot probe — the test that decides whether the edge lives in the escalation
+engine or in the signal — so writing it after the runs would have been choosing the criterion having
+seen the result. **If you re-open this, you cannot restore that property.**
 
-**Why it is a decision and not a repair.** §8.6 item 1 requires the pinned order to carry the
-**causal claim** and the **falsifier**. If nobody ever wrote them, adding an anchor points at
-nothing — the anchor is not the missing thing, *the pre-registration is*. Writing a hypothesis's
-causal claim and its falsifier is the act that makes the pilot's evidence mean anything, and it
-belongs to the lead/owner, not to a repair script. The three options:
+<sub>Writing the first real pre-registration immediately exposed a matcher defect worth remembering:
+the claim/falsifier test was case-sensitive, so it did not match `**Causal claim.**` — and the
+falsifier half missed its heading too yet still reported PRESENT, because the word appears lowercase
+in a footnote further down the section. One half strict, the other accidentally lenient, identical
+from outside. Both are now case-insensitive with a control proving a section carrying neither word
+still fails.</sub>
 
-1. **Write the pre-registration** into a taskboard order (claim + falsifier per hypothesis), then
-   re-pin `preregistration_ref` at that commit. This is the only option that makes item 1 passable.
-2. **Re-pin to an existing order** that already carries both — if one exists. Verify by reading it,
-   not by grepping for the words.
-3. **Accept the FAIL** for now and run the pilot anyway, knowing item 1 can never pass and
-   `EVIDENCE_COMPLETE` is therefore unreachable for a second reason.
-
-Whichever is chosen, `factory/*.jsonl` is a canonical store — **declare it in the ledger row first.**
+**Nothing here needs a decision now.** The next lane runs the pilot.
 
 ---
 
@@ -44,7 +40,7 @@ Whichever is chosen, `factory/*.jsonl` is a canonical store — **declare it in 
 tools/python312/python.exe _triage/factory_os/check_pilot_acceptance.py
 ```
 
-Today that prints **`14 item(s): 3 PASS · 1 FAIL · 10 BLOCKED (0 awaiting evidence, 10
+Today that prints **`14 item(s): 4 PASS · 0 FAIL · 10 BLOCKED (0 awaiting evidence, 10
 checker-not-implemented)`** and says outright that `EVIDENCE_COMPLETE` is **UNREACHABLE**, because
 ten of the fourteen handlers are declared stubs. **That is not a defect to fix by hand** — each stub
 is listed in `UNIMPLEMENTED` with what it needs, and implementing one means deleting its entry. Most
@@ -52,12 +48,12 @@ need an evidence store that does not exist yet, so the order of work is: **run t
 the checker to read what the pilot produced.**
 
 - **Baseline green first:** `run_fast_cages.ps1` (27 suites, ~109s of 120.0s under `-Hook`) ·
-  `run_s13_tests.ps1` (45 cases) · `run_s2a_gate.py` · `run_schema_fixtures.py` ·
+  `run_s13_tests.ps1` (47 cases) · `run_s2a_gate.py` · `run_schema_fixtures.py` ·
   `check_schema_structure.py` · `gen_design_contracts.py --check` · `check_state.ps1`.
 - **Delete `_triage/factory_os/__pycache__`** before the first generator run.
 - **Re-derive your order block from BOTH tests** — parse `## ORDER-<n>` out of all four board files
   **and** check every reserved block in `docs/SESSION_LEDGER.md`. As of this writing the highest in
-  use is **1210** and the highest reserved block is **1210-1219**, so **1220-1229** is next — **but
+  use is **1220** and the highest reserved block is **1220-1229**, so **1230-1239** is next — **but
   check, and commit the reservation before using a number.** Note `1190-1199` was reserved and never
   used; leave it as buffer.
 - `git log --oneline -15`.
@@ -124,4 +120,4 @@ the checker to read what the pilot produced.**
 - 🚫 Touch `MASTER_BACKLOG.md` §2 · `AGENTS.md` · `PROJECT_STATE.md` · any `.set` migration · any
   magic allocate/renumber/retire.
 
-Open with: **"อ่านไฟล์นี้ แล้วเริ่ม — ตอบ BOX 1 ก่อน แล้วค่อยลงมือรัน pilot S13"**
+Open with: **"อ่านไฟล์นี้ แล้วเริ่ม — จอง MT5 lane ก่อน แล้วรัน parity ตามด้วย 16 cells ของ S13"**
