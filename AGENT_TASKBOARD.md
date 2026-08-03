@@ -105,6 +105,82 @@
 
 ---
 
+## ORDER-1220 — [factory/S13] PRE-REGISTRATION of the pilot hypotheses B14-H01 and B14-H02 — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-PREREG) — written BEFORE any pilot cell was run, which is the only thing that makes it a pre-registration` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> **This order exists to be pinned.** `factory/hypotheses.jsonl` carries a `preregistration_ref`
+> for each pilot hypothesis; §8.6 item 1 requires the pinned order to carry the **causal claim** and
+> the **falsifier**, and **forbids the registry from copying them** — the registry holds the pin,
+> this row holds the content. `ORDER-1020` said in its own Remaining list that its
+> `preregistration_ref` should point at an order carrying both, and that step was never finished:
+> the two pins resolved to a blob in which their anchors occurred **zero** times, and nothing
+> noticed until `ORDER-1210` built the checker.
+>
+> 🔴 **WHY THE DATE ON THIS ROW MATTERS MORE THAN ITS CONTENT.** A pre-registration is worth exactly
+> the amount of evidence that did not exist when it was written. **0 of the 16 pilot cells have been
+> run** (design §8.3 universe: `XAUUSD · EURUSD · USDJPY · BTCUSD` × `H1 · H4` × 2 hypotheses), no
+> MT5 lane has been declared, and `factory/runs/` holds only S9 scheduler fixtures. H01's falsifier
+> **is the flat-lot probe** — the test that decides whether the edge lives in the escalation engine
+> or in the signal — so writing it after the runs would be choosing the criterion having seen the
+> result, which is the exact move the VERDICT GATE exists to prevent.
+>
+> **Content copied VERBATIM from design §8.1, not re-derived.** The design is the owner of these two
+> claims; this row is the taskboard-shaped surface an `OwnerRef` can pin, because `owner_type` has no
+> value for a design document (`schemas.json` enum: `taskboard_order · scorecard · project_state ·
+> deployments_csv · accounts_csv · attestation_map · master_backlog · param_registry · param_linkage
+> · intake_queue · event_log · evidence_manifest · session_ledger · optimization_procedure`). If
+> §8.1 and this row ever disagree, **§8.1 wins and this row is the defect.**
+
+<!-- B14-H01-PREREGISTRATION -->
+
+### B14-H01 — GridLog + martingale progression + **no broker SL**
+
+**Causal claim.** On a ranging instrument, a distribution of ATR-spaced grid entries with LOG-power
+lot progression and a basket money target extracts more from mean reversion than a single entry
+does, **after cost**, and **the escalation is what produces the edge**.
+
+**Falsifier.** flat-lot variant PF ≥ escalated PF (edge is in the signal, not the engine) **or**
+worst-case single loss > 15% equity at real sizing.
+
+**Coupling class** `COUPLED` (money-denominated basket TP + progression) · **Class label**
+**ENGINE-EDGE**.
+
+<sub>Both limbs of that falsifier are already binding rules elsewhere, and neither was invented here:
+the flat-lot limb is `CLAUDE.md`'s ENGINE-EDGE clause (*flat-lot PF<1 while escalated PF>1 is no
+longer an auto-kill → it is a diagnosis of where the edge lives*), and the 15% limb is cage
+condition 1 of the same clause (*a computable worst case, stated as a number*). A falsifier that
+restates a rule the project already enforces is a feature: it means H01 cannot be rescued by
+arguing about the bar afterwards.</sub>
+
+<!-- B14-H02-PREREGISTRATION -->
+
+### B14-H02 — GridLog + `HEDGE_LOCK`
+
+**Causal claim.** Replacing unbounded adverse exposure with an **opposite-direction lock** on
+basket-DD breach preserves the grid's edge while bounding the worst case.
+
+**Falsifier.** hedged variant's both-window PF < unhedged at equal measured DD.
+
+**Coupling class** `COUPLED` · **Class label** ENGINE-EDGE until measured otherwise.
+
+<sub>⚠️ Design §8.2 gate 2 applies to this one and is not optional: `HEDGE_LOCK` **has never passed
+any backtest** (`PROJECT_STATE` §7 records modes 82/83/HEDGE_LOCK as never having passed one), so
+enabling it the first time is **validating a new mechanism**, not toggling a flag. H02 therefore
+starts `EXPERIMENTAL` and cannot produce promotion evidence until its module is promoted to Stable
+Core (§3.2). *"At equal measured DD"* is load-bearing in the falsifier: comparing hedged against
+unhedged at their own DDs would compare two different risk budgets and call the difference an edge.</sub>
+
+**Acceptance for this order** — **P1** each hypothesis's anchor occurs **exactly once** in this file
+(`schemas.json`: *"must occur EXACTLY once in the blob and contain no spaces"*) · **P2** each pinned
+section carries a causal claim **and** a falsifier, bounded by its own heading — `ORDER-1210` round 3
+found that rule passing on a *neighbouring* order's text, so the boundary is now enforced · **P3**
+both `preregistration_ref` pins in `factory/hypotheses.jsonl` recompute against git
+(`blob_oid = rev-parse <commit>:<path>`, `raw_sha256` = sha256 of those bytes) · **P4** the registry
+copies **neither** the claim nor the falsifier · **P5** `check_pilot_acceptance` item 1 turns
+**FAIL → PASS**, and the rest of its report is unchanged.
+🚫 The checker must not be edited to make its own FAIL go away — the repair belongs in the data.
+
+---
+
 ## ORDER-1210 — [factory/S13] The pilot acceptance checklist, made mechanical — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13PILOT) — 14/14 items bound to handlers in BOTH directions; the first run found a real defect in factory/hypotheses.jsonl` · ทำได้: Claude/Opus · 👉 แนะ: Claude
 
 > Slice **S13** (design §10). The slice's full job is the `Boss_14` H01/H02 pilot matrix end-to-end;
@@ -131,8 +207,13 @@ separate attack cases rather than asserted.
 EVIDENCE_COMPLETE, and the report says exactly which evidence is missing and why each item needs it.
 
 🔴 **THE FIRST RUN FOUND A REAL DEFECT, and it is not in this slice.** `factory/hypotheses.jsonl`
-pins both pilot hypotheses to `preregistration_ref.anchor` values — `B14-H01-PREREGISTRATION` and
-`B14-H02-PREREGISTRATION` — that **occur ZERO times in the 824 KB blob they pin**. `schemas.json`
+pins both pilot hypotheses to `preregistration_ref.anchor` values — the two per-hypothesis
+`-PREREGISTRATION` tokens — that **occurred ZERO times in the 824 KB blob they pinned**.
+<sub>The literal anchor strings are deliberately NOT spelled here. They are now real anchors living
+in `ORDER-1220`, and this file is the blob they are pinned into: writing them again in this row
+would make them occur **twice**, which `schemas.json` forbids and which this very order's round-3
+rule reports as an *ambiguous reference*. A document that names an anchor is a document that
+competes with it.</sub> `schemas.json`
 states the constraint verbatim: *"must occur EXACTLY once in the blob and contain no spaces"*. It
 carries **no `x-enforcement-status`** and **no checker enforces it**, so both references have been
 undereferenceable since they were written. §8.6 item 1 requires the pinned order to carry the causal
