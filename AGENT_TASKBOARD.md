@@ -105,6 +105,116 @@
 
 ---
 
+## ORDER-1262 — [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed history, and today's redaction did not reach it — `OPEN (needs the owner — this is not a code fix)` · ทำได้: user (Boss) decides; Claude/Opus prepares the options · 👉 แนะ: user
+
+**Found by the first independent audit of S12** (`_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md` §0.1),
+raised by Codex against the slice's *"no token in git"* prohibition and then **re-measured here, where
+it turned out to be larger than reported.** Codex established that history was not rewritten. It did
+not establish where that history went.
+
+### What is in the repository
+
+```
+git log --all -G'[0-9]{8,10}:[A-Za-z0-9_-]{35}'
+  cc40731c  2026-07-10  ORDER-074 ... fxDreema X-ray parser + full-corpus cards
+  c7d97b6a  2026-08-03  ORDER-1200 ... the third-party credential is gone
+```
+
+`cc40731c` added a Telegram-token-shaped string inside `_triage/FXDREEMA_XRAY.md`, a 47,186-line card
+file generated from a **downloaded third-party EA corpus**. It is **somebody else's bot token**,
+harvested out of somebody else's EA. `c7d97b6a` (today, lane `S12WIRE`) removed it from `HEAD`.
+
+### What the redaction did not do — measured, not assumed
+
+```
+git merge-base --is-ancestor cc40731c origin/master   -> YES
+                             ... origin/HEAD          -> YES
+                             ... 3 origin/claude/* branches -> YES
+remote: https://github.com/BaBosss/EA_LAB.git
+```
+
+**The commit is an ancestor of `origin/master`.** Removing a string at `HEAD` does not remove its blob
+from a pushed history. It is reachable in every clone and on the remote.
+
+### Two things are true at once and both belong in the record
+
+- **S12's own token is NOT implicated.** The four token-shaped strings still tracked at this pin are
+  all in test files (`run_s11_tests.py` · `run_s12_tests.py` · `run_s12_tests.ps1`) and are declared
+  fixtures. Verified by shape (distinct-character count on the secret half), **without opening,
+  printing or reconstructing any value** — by Codex and again by this seat.
+- **The prohibition's literal claim is refuted by history**, and because the credential is a third
+  party's, this is not only a hygiene question.
+
+### Why this is the owner's, not a lane's
+
+Whether that GitHub repository is public **was deliberately not probed**. The remedies are all
+outward-facing or irreversible — history rewrite (which invalidates every existing clone), a
+disclosure to whoever owns the credential, or an explicit accepted-risk decision — and none of them
+is a seat's call. `AGENT_TASKBOARD` is also the wrong place to decide it.
+
+**Options to be put to the owner, not chosen here:** (A) rewrite history on the affected paths and
+force-push, accepting the cost to clones and to every commit oid downstream of `cc40731c` — note that
+this repo **pins blob and commit oids inside `OwnerRef`s**, so a rewrite is not free · (B) leave
+history and treat it as accepted risk, recorded as such · (C) rewrite **and** notify.
+
+🚫 **Do not act on any of these from a lane.** 🚫 Do not probe the remote's visibility. 🚫 Do not
+print the value into a commit message, an order, or a chat reply while deciding.
+
+**Related, and it is the reason this was invisible:** `ORDER-1261` carries claim 2.2 — `B1`, the cage
+that exists to make *"no token in git"* checkable, greps the worktree without `--cached`, excludes
+`*.jsonl`, and rejects only counts above a permissive `99`. A prohibition nobody can check is a
+sentence.
+
+---
+
+## ORDER-1261 — [factory/S12] Five verified defects from the first independent audit: a reopened incident is silenced forever, and the secret guard prints what it catches — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Full evidence + controls = `_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md`. Brief =
+`CODEX_S12_AUDIT_BRIEF.md`, committed **before** the audit ran. Every item below was **re-measured by
+the audit lane after Codex raised it**; the unverified claims are in that file's Part 2 and are
+**not** in this order.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🔴 | **A finding that reopens after a genuine recovery is suppressed forever, and is not counted as a problem.** `Ledger.delivered()` is the whole history with no time bound, so `OPEN → RESOLVED → OPEN` at unchanged severity/revision reproduces a key already delivered. Measured: `SUPPRESSED_DUPLICATE`, `problems=0`, so the exit code stays clean. **Control: the `CRITICAL → REAL_MONEY` escalation still delivers** — this is *recurrence*, which the rev-1 fix did not touch | `notifier.py:432-464` · `:811-813` · `:865-869` |
+| 2 | 🔴 | **The secret guard blocks the wire and then writes the caught secret into an exception `main()` does not handle.** `scan_forbidden` interpolates the literal into its `KNOWN_SECRET` detail; `assert_sendable` joins it into `ProjectionLeak`; the CLI is driven by `daily_monitor.ps1`, which appends child output to a log. **The fix already exists one function away**: `safe_detail()` reports only the rule name, and says why | `safe_projection.py:233-235` · `notifier.py:643-647` |
+| 3 | 🟠 | **`safe_detail()` is called with no `known_secrets`**, so the layer that catches an account number typed into an allowed field has no input at the one boundary that writes the ledger file. Measured: a bare account number passes through unchanged. The docstring is honest (it says *value-shape* rules) — this is `prohibition-disarms-its-own-check`, not a false claim | `notifier.py:841` |
+| 4 | 🟠 | **The "hard seam" is a call-order convention, not an invariant.** `deliver()` is in `PUBLIC_API`, never calls `assert_sendable` or `scan_forbidden`, and sends `ev['text']` directly. `imports_of()` cannot cover it — `io`/`os`/`subprocess`/`snapshot_validator` are already allowed | `notifier.py:849-889` · `:1091` |
+| 5 | 🟠 | **One torn JSONL line stops every later alert.** Unguarded `json.loads()` in both readers; the raise happens **before any delivery decision**, so nothing is planned, sent, or recorded about why. These are append-only runtime files written by a scheduled job on a workstation that hibernates | `notifier.py:801-808` |
+| 6 | 🟠 | **A missing credential is a NOTE and the chain stays green.** Exit 4 carries one meaning for *"Control Room not provisioned yet"* and *"the EMERGENCY credential disappeared"*. The muting rationale (`ORDER-219`) is real; the two situations must stop sharing a code | `notifier.py:870-877` · `scripts/daily_monitor.ps1:95-99` |
+
+**Do not fix #1 by adding a time window to the ledger without deciding what a *distinct incident* is** —
+that is the design question underneath it, and a 24h window would only move the boundary.
+🚫 Do not edit a cage to make its own FAIL go away. 🚫 No `--confirm` path while testing.
+
+---
+
+## ORDER-1260 — [factory/S10] Five verified defects from the first independent audit of the money path: a candidate can be built on another strategy's evidence — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Full evidence + controls = `_triage/factory_os/CODEX_AUDIT_S10_2026-08-03.md`. Brief =
+`CODEX_S10_AUDIT_BRIEF.md`, committed **before** the audit ran. Reproduction harness =
+`scratchpad/verify_s10.py`, five probes each with its control. Unverified claims are in that file's
+Part 2 and are **not** in this order — 2.3 (`check_state.ps1` judging staged bytes with worktree
+code) is the one most worth settling first.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🔴 | **A candidate can cite ANOTHER strategy's run and validate clean.** C9 binds `lane`, `data_fingerprint`, `model` — and never `logical_symbol`, `tf`, `ex5_sha256`, `effective_config_hash`, `parameters` or `module_set`. Measured: a manifest for `EURUSD/M15` citing a run whose key says `XAUUSD/H4` on a different expert returns `[]`. **Control: a mismatched lane IS caught**, so C9 is live. The digest protects a false provenance statement faithfully | `candidate.py:314-361` |
+| 2 | 🔴 | **Three non-assignment event types move the candidate.** A6 is written on the event-type axis (`== 'OBSERVED'`); `fold()` applies `candidate_id` from any event. Measured: `ATTEST_STATE_CHANGED`, `FROZEN` and `RETIRED` all move it. The severity is *semantic*, not *unauthorized* — A3 still demands a ref, but the ref authorized a freeze and what happened was a reassignment. **`RETIRED` is the sharpest: the event that closes a pair forever can reassign it on the way out** | `attestation.py:90-117` · `:204-231` |
+| 3 | 🔴 | **`verify_log()` re-validates an EDITED log clean**, which makes its own docstring false (*"one that was EDITED does not"*). No chain hash, no prefix pin. Measured: editing a `CANDIDATE_ASSIGNED`'s `candidate_id` in place → `verify_log() = []` and `fold()` returns the new candidate. The module's *absence-of-a-rewrite-function* argument is sound about **this module** and says nothing about a text editor or a merge | `attestation.py:283-294` |
+| 4 | 🟠 | **The closed legacy set takes a fourth member.** M6 binds membership to *"one `allocated_at_commit`"*, never to `{990103, 991001, 991002}`. Measured against the real 60-row store: a fourth legacy row reusing the cutover oid passes `validate_allocation`, `store_problems` **and** `inventory_problems`. **Control: the same row at a different commit is refused.** The three magics are named in prose in three places and derived in none | `magic.py:145-151` · `:178-187` |
+| 5 | 🟠 | **An ACTIVE deployment with a malformed or blank magic vanishes from every uniqueness check.** Measured: 3 ACTIVE rows in, 1 out, no refusal and no count. The docstring's *"drops exactly the rows with no magic and nothing else"* is a statement about the file's **past**, not a property the filter enforces — `unreadable-input-must-refuse-not-skip`, inside the module that owns global uniqueness for a real-money magic | `magic.py:73-90` + the same filter in `scripts/check_state.ps1` |
+| 6 | 🟡 | **The documented allocation path cannot stay green.** `allocate()` stamps the current commit; `gen_magic_allocations.py --check` then sees two commits and refuses. The two workarounds it leaves are a hand-edit or a false cutover provenance — `feedback-audit-rule-rationale-not-compliance` | `magic.py:230-270` vs `gen_magic_allocations.py:108-125` |
+
+**Sequencing note for whoever takes this:** #2 and #3 are one file and want one pass; #1 is
+independent; #4/#5/#6 are one file. Fixing #4 by hardcoding the three magics would trade a loose rule
+for a copy — the design already says the exception list must be a **closed declaration**, so derive
+membership from the declaration rather than from a commit oid.
+
+🚫 Do not edit a cage to make its own FAIL go away. 🚫 No magic allocate/renumber/retire while fixing.
+
+---
+
 ## ORDER-1250 — [factory/S13] BOX 1a: give an UNDEFINED profit factor a shape, then register the 16 pilot cells — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13SCHEMA) — MetricRef.pf nullable + pf_state; 16 CoverageCell rows; items 7/8/9 stop being stubs; 4 PASS -> 6 PASS` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Follows `ORDER-1240`, which ran the matrix at a sizing where the mechanism actually executes and
