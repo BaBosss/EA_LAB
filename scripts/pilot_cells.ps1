@@ -64,6 +64,12 @@ param(
   # so a pulse-finding pass is the right cost here -- and every record carries `model`, so nothing
   # produced under Model 1 can later be quoted as if it had been produced under Model 4.
   [int]$Model          = 1,
+  # ORDER-1240. Empty = use the build default, which is 0.01 and is the sizing ORDER-1230 measured
+  # as INERT on all 16 cells. A value here is applied to BOTH arms of every cell, so it changes the
+  # sizing under test and never the comparison. It is resolved by scripts\pilot_sizing_sweep.ps1
+  # against a criterion that does not read a profit factor -- do not set it by hand to a value that
+  # "looks better", because that is choosing the configuration having seen the result.
+  [string]$FirstLot = '',
   [switch]$SkipFlatLotProbe,
   [string]$Parent      = 'EALabTpl\Boss_14_GridLog',
   [string]$Terminal    = 'D:\Meta 5\terminal64.exe',
@@ -99,8 +105,13 @@ if (-not (Test-Path $Terminal)) { Fail ("terminal not found on the pinned lane: 
 # what the revision IS. Instrument-specific tuning is the InstrumentProfile entity's job (design
 # 4.3) and this pilot deliberately does not do it -- so a weak cell here means "this config on this
 # symbol", never "this symbol cannot work", and the records say so.
+# The first lot goes into every generated name. Without it a 0.03 run silently overwrites the 0.01
+# run's .set files and reports, and the two sizings become indistinguishable on disk -- which is the
+# one thing this whole ORDER-1240 comparison depends on being able to tell apart.
+$lotTag = if ($FirstLot) { '_lot' + ($FirstLot -replace '\.', 'p') } else { '' }
+
 function Get-EffectiveSet([string]$rev, [string]$tag, [string[]]$overrides) {
-  $setFile = Join-Path $OutDir ('effective_' + ($rev -replace '-', '_') + '_' + $tag + '.set')
+  $setFile = Join-Path $OutDir ('effective_' + ($rev -replace '-', '_') + '_' + $tag + $lotTag + '.set')
   $pins = & $py -c @"
 import sys, os, io
 sys.path.insert(0, r'$root\_triage\factory_os')
@@ -112,6 +123,9 @@ for k, v in sorted(hyp['config'].items()):
   if ($LASTEXITCODE -ne 0) { Fail ("could not read the pinned config for " + $rev + ": " + ($pins -join ' ')) }
   $eff = [ordered]@{}
   foreach ($p in $pins) { if ($p.Trim()) { $kv = $p.Trim() -split '=', 2; $eff[$kv[0]] = $kv[1] } }
+  # Applied to BOTH arms, before the per-case overrides, so it moves the sizing under test and
+  # never the escalated-vs-flat comparison itself.
+  if ($FirstLot) { $eff['_41_FixedLot'] = $FirstLot }
   # Merged into ONE map before the compiler sees it, override winning. Appending both lists makes a
   # key appear twice in the same layer and compile_preset refuses it by name -- correctly, because
   # rank exists BETWEEN layers, not inside one (the same trap parity_run.ps1 records).
@@ -240,7 +254,7 @@ foreach ($rev in $Revisions) {
       Write-Host ""
       Write-Host (">> cell " + $cellId) -ForegroundColor Cyan
 
-      $tag = $slug + '_' + $symbol + '_' + $period + '_' + $Window
+      $tag = $slug + '_' + $symbol + '_' + $period + '_' + $Window + $lotTag
       $htm = Invoke-Cell $wrapper $symbol $period $baseSet.path ('S13CELL_' + $tag + '_baseline')
       $m = Get-ReportMetrics $htm
       $pfInfo = Resolve-PF $m
@@ -255,6 +269,10 @@ foreach ($rev in $Revisions) {
         logical_symbol        = $symbol
         tf                    = $period
         window                = $Window
+        # The INDEPENDENT VARIABLE of ORDER-1240, recorded explicitly rather than left implicit in
+        # the .set path and the config hash. '' means the build default (0.01), which is the sizing
+        # ORDER-1230 measured as inert.
+        first_lot             = $(if ($FirstLot) { $FirstLot } else { 'build-default (0.01)' })
         from_date             = $FromDate
         to_date               = $ToDate
         model                 = $Model
@@ -398,7 +416,7 @@ foreach ($rev in $Revisions) {
 
 # --- output ---------------------------------------------------------------------------------------
 $stamp = (Get-Date).ToString('yyyyMMdd_HHmmss')
-$outFile = Join-Path $OutDir ('pilot_cells_' + $Window + '_' + $stamp + '.jsonl')
+$outFile = Join-Path $OutDir ('pilot_cells_' + $Window + $lotTag + '_' + $stamp + '.jsonl')
 $sw = New-Object System.IO.StreamWriter($outFile, $false, (New-Object System.Text.UTF8Encoding($false)))
 foreach ($r in $records) { $sw.WriteLine(($r | ConvertTo-Json -Depth 8 -Compress)) }
 $sw.Close()
