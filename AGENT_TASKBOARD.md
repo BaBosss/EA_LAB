@@ -485,7 +485,7 @@ and 42x** by the time ORDER-830 re-measured.
 |---|---|---|---|
 | `run_contract_binding_tests.ps1` | **39.17s** | 35.8s — drifted further | 18 entries; top: `run_registry_tests.py` 7.55 · `run_input_surface_tests.py --mutate` 7.42 · `check_registries.py` 4.62 · `run_s2a_gate.py` 4.19 |
 | `run_guard_trigger_tests.ps1` | **20.96s** | 19.4s | PART 5 (per-path selection) 8.8 · PART 6 (evidence plumbing) 7.4 · PART 7 (budget refusal) 3.3 — the three that nest tier runs |
-| `run_front_guard_evidence_tests.ps1` | **13.08s** | 21.2s — the row's number was stale high | section A (staged attack + restore) 7.9 · B 2.9 · C 1.7 |
+| `run_front_guard_evidence_tests.ps1` | **13.08s** (see the correction below) | 21.2s | section A (staged attack + restore) 7.9 · B 2.9 · C 1.7 |
 
 **The suspected cause was REFUTED.** The S2a digest is not the problem: `run_s2a_gate.py` is 4.19s and
 flat. The growth was `gen_locked_constants._strip_comment` — a pure `str -> str` called **2,438,476
@@ -527,6 +527,27 @@ so any line below ~118.0 puts a **refused commit** inside ordinary load variatio
 refuses commits at random is how a tier earns the `--no-verify` it exists to avoid. `PART 7 N1` pins
 120.0 as a ratified number; it should move on a spread measurement, not on one machine's good
 afternoon.
+
+🔴 **CORRECTION, written by the same lane minutes after closing this row — it refutes something stated
+above.** The draft called the old `21.2s` for `run_front_guard_evidence_tests.ps1` "stale high", on the
+strength of eleven runs that all measured 12.7–13.4s. **The commit that closed this order then measured
+it at exactly 21.2s in its own pre-commit hook.** The old number was never stale; it was measured in a
+state I had not reproduced. Correlating every instrumented run today:
+
+| runs | staged files | front-guard |
+|---|---|---|
+| 10 | 0 | 12.7 – 13.4s |
+| 1 | 4 | 11.9s |
+| 1 | **7** (including this suite's own file and `run_fast_cages.ps1`) | **21.2s** |
+
+**The mechanism is NOT known and is deliberately not guessed at here** — staged=4 was *faster* than
+staged=0, so "it costs more when files are staged" is already refuted as a one-line explanation, and
+there is exactly one sample at the expensive end. What IS established: **this suite's cost is
+state-dependent by ~8s, its cheap number is the one you get when nothing is staged, and a commit is by
+definition the expensive case.** So `13.1s` must not be quoted as its tier cost, and the T3 totals
+above — all measured at staged=0 — are the FLOOR of what a real commit pays, not the typical cost.
+Anyone taking this further should reproduce at staged=7 three times *before* theorising: the same rule
+this order exists to enforce, and the one I broke on the last paragraph I wrote.
 
 <sub>⚠️ **Two things the next lane should know.** (1) `run_front_guard_evidence_tests.ps1` went red three
 times mid-session with `A6 .git/index was rewritten by this suite` — **not a defect in it**: a parallel
