@@ -105,6 +105,84 @@
 
 ---
 
+## ORDER-1270 — [factory/S13] Every optimize sweep on a generated wrapper ran with the two strongest guard layers switched off, and nothing said so — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+**Found by running the pilot's own decision-13 probe through the guard for the first time**
+(`ORDER-1253`), not by reading anything. The first real submission printed this against **all seven**
+swept dimensions:
+
+```
+- note: build-inertness NOT checked (no Boss build resolved - pass -Build or -IniPath)
+```
+
+and the decision record it wrote carried `"binding": null` on every one.
+
+### Why both layers were inactive, and why it is specific to the Factory OS path
+
+`optimize_guard.ps1` resolves the Boss build from the `.ini`'s `Expert=` line. A Factory OS probe
+`.ini` names a **generated wrapper** (`EALabTpl\generated\B14_H01_r1`), which is not a Boss build, so
+build resolution fails and the `PARAM_INACTIVE_AUDIT` build-dead-zone layer sits out — it says so, in
+a note, once per dimension, in the middle of a long console dump.
+
+The second is worse because it is silent. `mt5_optimize.ps1` never passed `-HypothesisRevision`, so
+the **per-hypothesis `ParameterBinding` layer never ran at all** — the entire `ORDER-630` resolver,
+the one design 5.4 exists to make single, was not consulted on the sweeps the pilot exists to judge.
+`ORDER-671` made an **UNBOUND** dimension a refusal precisely so a run claiming to be evidence about a
+revision cannot sweep a dial that revision never mentions; with no revision declared, that rule has
+nothing to fire on.
+
+### What is already fixed, and exactly how far it reaches
+
+`mt5_optimize.ps1` takes `-HypothesisRevision` and `-GuardBuild` (both default to today's behaviour),
+and `pilot_probe.ps1` passes `B14-H01-r1`/`14`. Measured after: the same deliberate refusal now
+carries **two independent reasons** instead of one —
+
+```
+REFUSE _9_MaxLevels
+  - SAFETY: name matches RC_*/ProtectLevel/_9_MaxLevels rule
+  - ParameterBinding: role='SAFETY' in B14-H01-r1 is not optimizable (resolved by registry.py)
+```
+
+🔴 **It reaches one caller.** Every other call site of `mt5_optimize.ps1` still declares neither, so
+every non-pilot sweep still runs with both layers off, exactly as before. An opt-in check is a check
+that is off wherever nobody opted in.
+
+### The decision this order needs
+
+1. **Make the declaration mandatory for wrapper Experts.** An `Expert=` under `EALabTpl\generated\`
+   with no `-HypothesisRevision` is a run that cannot say what it is evidence about — refuse it,
+   the same fail-closed shape the unresolvable-identifier rule already uses.
+2. **Promote the build note to a refusal when a `[LAB_ENTRY_nn]` tag is resolvable another way**
+   (the bindings all carry `build_tag: LAB_ENTRY_14`, so the build IS knowable without the `.ini`).
+3. Either way it ships with a **SPECIFICITY** case proving a legacy non-wrapper sweep is unaffected.
+
+**Prohibited:** widening this into "refuse every unregistered EA" — that is the mistake the
+`-SkipOptimizeGuard` escape was invented to survive, and the header of `optimize_guard.ps1` records
+what it cost.
+
+---
+
+## ORDER-1271 — [factory/S13] The decision log makes the guard's coverage visible, and it is smaller than it reads — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`factory/optimize_decisions.jsonl` (`ORDER-1253`) records every submission that reaches
+`mt5_optimize.ps1`, and that script is the **only MT5 optimizer launcher in the repo** — measured, not
+assumed: `mt5_run.ps1` and `run_backtest.ps1` both write `Optimization=0`.
+
+🔴 **What the log therefore does NOT cover, stated here so the file is never read as more than it is:**
+a PowerShell grid loop over single tests selects a configuration with the optimizer flag at `0`, and
+the guard never sees it (memory `optimization-flag-launders-hand-rolled-selection`, which is a
+recorded real occurrence in this repo, not a hypothetical). `scripts/optimize_loop.ps1`,
+`scripts/run_batch.ps1` and `scripts/qwen_batch_runner.ps1` all reference the launcher and are the
+places to start.
+
+**Acceptance.** Enumerate every path by which a parameter value gets SELECTED in this repo; for each,
+state whether a decision record is produced; and for the ones that produce none, say whether that is
+acceptable or a gap to close. A count of selection paths and a count of recorded ones, both derived.
+🚫 Do not answer it by adding a record-writer to each loop before the enumeration exists — that is
+building before the question is asked.
+
+---
+
 ## ORDER-1262 — [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed history, and today's redaction did not reach it — `OPEN (needs the owner — this is not a code fix)` · ทำได้: user (Boss) decides; Claude/Opus prepares the options · 👉 แนะ: user
 
 **Found by the first independent audit of S12** (`_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md` §0.1),
