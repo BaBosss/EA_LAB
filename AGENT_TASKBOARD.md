@@ -137,6 +137,30 @@ wrapper to buy it back.
 ⚠️ **Do not "fix" this by having the checker re-derive the store itself.** That makes the acceptance
 checker a second generator, and one rule with two implementations is one rule and one liability.
 
+### 🔴 Two things found by `/scrutinize` that must be settled BEFORE it is wired in
+
+**1. `gen_pilot_cells.py` reads the WORKTREE, and the tier is a pre-commit hook.** Measured: the
+module imports `registry` and **not** `evidence`, and every read is a bare `io.open` (lines 80 · 105
+· 133 · 318). `run_fast_cages -Hook` sets `EA_LAB_EVIDENCE=index` for its children and this module
+ignores it, so wired in as-is it would compare an unstaged run store against an unstaged coverage
+store and pass or fail a commit on files the commit does not contain. That is `ORDER-670`'s class
+exactly — *"31 of 32 declared reads of judged evidence read the working tree while the tier is a
+pre-commit hook"*. Migrate it through `evidence.EvidenceSource` first, or it enforces the wrong
+snapshot. ⚠️ `--apply` must keep writing the worktree; only the READ side moves.
+
+**2. `--check` is RED right now and correctly so** (6 of 16 cells probed, the store still says
+none). **`--apply` before wiring**, or every commit in the repository blocks on this drift.
+
+### And the twin, recorded rather than fixed here
+
+`run_s10_tests.py:769` asserts its own suite is on the commit path with
+`'run_s10_tests.ps1' in m.group(1)` — the **same substring test over the same array** that
+`ORDER-1253`'s round-1 review had to repair in `check_pilot_acceptance`. `$FAST_SUITES` carries
+**294 comment lines**, so deleting the entry and leaving the comment above it satisfies that
+assertion. It is not fixed in this order because it belongs to a suite this lane does not own;
+whoever takes it should reuse `check_pilot_acceptance._tier_entries` rather than write a third
+parser.
+
 ---
 
 ## ORDER-1270 — [factory/S13] Every optimize sweep on a generated wrapper ran with the two strongest guard layers switched off, and nothing said so — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude

@@ -115,6 +115,22 @@ def parse(text, where='factory/optimize_decisions.jsonl'):
             if d.get('verdict') not in ('ALLOW', 'REFUSE'):
                 raise LogRefusal('%s line %d dimension %r has verdict=%r'
                                  % (where, n, d.get('name'), d.get('verdict')))
+        # THE COUNTS AND THE LIST MUST AGREE. The writer derives both from the same variables, so
+        # they can only disagree in a record nobody's guard produced -- and this repo has a
+        # section of its own design (8.4) whose whole lesson is a count and a list that disagreed
+        # "in one section, with nothing able to notice". A reader that trusts `refuse_count`
+        # while a reader that trusts `dimensions` disagrees is two answers to one question.
+        # Verified against all 11 live records before this was added: zero disagreements, so it
+        # is a floor under the current writer rather than a rule the store already breaks.
+        allow = sum(1 for d in dims if d.get('verdict') == 'ALLOW')
+        refuse = sum(1 for d in dims if d.get('verdict') == 'REFUSE')
+        for field, counted in (('allow_count', allow), ('refuse_count', refuse),
+                               ('checked', len(dims))):
+            if rec.get(field) != counted:
+                raise LogRefusal('%s line %d says %s=%r but lists %d matching dimension(s). A '
+                                 'count that disagrees with the list it summarises makes the '
+                                 'answer depend on which one the reader trusts.'
+                                 % (where, n, field, rec.get(field), counted))
         records.append(rec)
     return records
 

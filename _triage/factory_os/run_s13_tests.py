@@ -592,6 +592,24 @@ state, detail = PA.item_optimize_guard(
 check('G5b CONTROL a real entry surrounded by comments still PASSes',
       state == PA.PASS, '%s: %s' % (state, detail))
 
+refuses('G6b ATTACK a count that disagrees with the dimensions it summarises -> Refusal',
+        lambda: PA.item_optimize_guard(
+            FakeSource({PA.DESIGN_REL: REAL_DESIGN, PA.FAST_TIER_REL: TIER_OK,
+                        PA.OPTIMIZE_LOG_REL: json.dumps(decision(refuse_count=9))})),
+        'disagrees with the list')
+
+# THE STATED LIMIT, asserted so it is a documented gap rather than a surprise. 8.6's own
+# parenthetical defines the bar as "a guard never seen firing is UNTESTED", so ANY real refusal
+# satisfies it -- including one for a typo'd identifier, which says nothing about whether the
+# SAFETY layer works. The PASS detail names the refused dimension so a reader can see which kind
+# of fire was observed; the handler does not require it to be a safety refusal.
+state, detail = PA.item_optimize_guard(guard_source([
+    decision(dims=[{'name': '_99_NotARealInput', 'verdict': 'REFUSE',
+                    'facts': [{'refuse': True, 'text': 'unknown identifier - fail closed'}]}]),
+    ALLOW_REC]))
+check('G10 STATED LIMIT a fail-closed typo refusal also satisfies "observed firing"',
+      state == PA.PASS and '_99_NotARealInput' in detail, '%s: %s' % (state, detail))
+
 refuses('G6 ATTACK a record the reader cannot validate -> Refusal, never a quiet PASS',
         lambda: PA.item_optimize_guard(
             FakeSource({PA.DESIGN_REL: REAL_DESIGN, PA.FAST_TIER_REL: TIER_OK,
