@@ -58,11 +58,22 @@ acted on. Read them there; the operative summary:
    invalidates every pin in the attestation system at once. 🚫 This does **not** license leaving new
    secrets in git, and `ORDER-1261`'s repair of the `B1` secret cage is unaffected and still owed.
 
-⚠️ **So the only thing left on 1a is engineering, and it is yours.** `run_s2a_gate` +
-`check_coverage_transfer` stay hand-run until it lands, and **return to the tier in the same commit
-as the fix** — added while red they block every commit in the repo.
+🔴 **ROUTING CHANGE, made after this prompt was first written — do NOT build the 1a fix here.**
+The corrections lane took it: `ORDER-1269` **#1** is *"change the pin instrument"*, which is the same
+work as `ORDER-1257` option (b), and the S2 audit reframed it usefully — it is a **granularity
+mismatch** (the pin covers a whole store that is *designed to grow*, while what the owner approved
+was a migration and a section), not merely a self-invalidating pin. **Two lanes building one
+replacement is worse than neither building it.**
 
-### 1a. `ORDER-1257` — what is still red, and what the fix has to survive
+⚠️ **Ordering between the two lanes, and it matters:** `gen_pilot_cells.py --apply` (step 1 below)
+moves `factory/coverage.jsonl` — the very file the new instrument has to pin. **Apply FIRST, then let
+the corrections lane design against a file that has stopped moving.** That is the owner's ratified
+register-then-close sequencing, now spread across two lanes instead of one.
+
+`run_s2a_gate` + `check_coverage_transfer` stay hand-run until that lands, and **return to the tier in
+the same commit as the fix** — added while red they block every commit in the repo.
+
+### 1a. `ORDER-1257` — what is still red (context only; the fix belongs to `ORDER-1269` #1)
 
 ```bash
 powershell -File scripts/_test/run_contract_binding_tests.ps1
@@ -193,7 +204,7 @@ is a human's.
 | BWD 2020-22 as a HARD gate, then Model 4 | ORDER-1254 |
 | the parity result manifest, owned by `parity.py`; §8.6 items 3-4 | ORDER-1255 |
 | the last four stubs — §8.6 items 10, 11, 12, 14 | ORDER-1256 |
-| `check_r3`'s verdict-value scan is an equality test, so prose walks past it | ORDER-1251 |
-| 🔴 the attestation pinning `factory/coverage.jsonl` still does not verify | ORDER-1257 |
+| `check_r3`'s verdict-value scan is an equality test, so prose walks past it | ORDER-1251 — **DONE** |
+| 🔴 the attestation pinning `factory/coverage.jsonl` still does not verify | ORDER-1257 → **handed to the corrections lane as `ORDER-1269` #1; apply the cells FIRST** |
 
 Open with: **"อ่านไฟล์นี้ แล้วเริ่มได้เลย — นับ probe cell ที่เสร็จจริงก่อน แล้วค่อยเดินตามลำดับ"**
