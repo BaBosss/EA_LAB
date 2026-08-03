@@ -112,10 +112,28 @@ before designing something new.
    the evidence that the guard-rail was missing. Six H01 cells (EURUSD · USDJPY · BTCUSD × H1 · H4)
    were **queued behind the running batch** as this session ended; if that queue did not survive,
    they are the six to run.
+   ✅ **`ORDER-1273` is the SELECTION criterion and it is already pre-registered — execute it,
+   do not rewrite it.** Every constant is pinned in the order (trade floor `Trades` H1≥100/H4≥60 ·
+   plateau set = top 10 % by `Result` · per-dimension median snapped to grid · BOUNDARY expands the
+   grid · the selected config is RE-RUN once before it goes to `ORDER-1254`). It was committed
+   before any surface was read, which is the only thing that makes it a criterion. `ORDER-1274`
+   holds the fine half of the §6.2 ladder, queued with its measured cost.
    ✅ **The generator already does the transition — you do not build it, you run it.**
    `gen_pilot_cells.py --check` reports `N of 16 cell(s) at PROBE_RUN`, names every probe row it
    does **not** count, and exits 1 on drift. When the matrix is complete, `--apply`.
-   ⚠️ **The bar is `xml_present: true`, not `launcher_exit_code == 0`** — the launcher exited 0 on a
+   **The four steps that finish this slice, in order — nothing else is owed:**
+   ```bash
+   powershell -NoProfile -File scripts/pilot_probe.ps1 -Revisions B14-H01-r1 -Symbols BTCUSD -Periods H4
+   ```
+   (…one invocation per missing cell — **one value per flag**), then
+   ```bash
+   tools/python312/python.exe scripts/pilot_probe_verify_xml.py
+   ```
+   then `gen_pilot_cells.py --check` until it reads **16 of 16**, then `--apply`, then measure the
+   full tier on a quiet lane and close the ledger row.
+   ⚠️ **`pilot_probe_verify_xml.py` must run after ANY new probe run** — it is what records the pass
+   count, and a cell without one is held back by name rather than registered with `trial_count: 0`.
+   ⚠️ **The bar is `xml_present: true` AND a pass count > 0**, not `launcher_exit_code == 0` — the launcher exited 0 on a
    missing XML until today, so an old record cannot demonstrate its probe produced anything. Records
    written before the field existed are covered by `scripts/pilot_probe_verify_xml.py`, which
    measures the artefact and keeps the measurement as **its own** labelled evidence rather than
