@@ -12,8 +12,8 @@
 
 ## ✅ What changed, so you do not rebuild it
 
-`check_pilot_acceptance` went **`6 PASS · 0 FAIL · 8 BLOCKED`** → **`7 PASS · 0 FAIL · 7 BLOCKED`**.
-Verify, do not assume:
+`check_pilot_acceptance` went **`6 PASS · 0 FAIL · 8 BLOCKED`** → **`8 PASS · 0 FAIL · 6 BLOCKED`**,
+and all six remaining are *checker-not-implemented*. Verify, do not assume:
 
 ```bash
 tools/python312/python.exe _triage/factory_os/check_pilot_acceptance.py
@@ -39,9 +39,13 @@ tools/python312/python.exe _triage/factory_os/check_pilot_acceptance.py
    proven able to fail: renaming one field in the PowerShell writer reddens it and names which end
    broke.
 
-⚠️ **The full-tier time was deliberately NOT measured** and no number is claimed — an MT5 optimization
-held this lane for most of the session, and a tier sample taken under that load is a number about the
-load. **Measure it on a quiet lane before you trust the 24.9s of headroom the last prompt quoted.**
+6. **§8.6 item 7 is GREEN: 16/16 cells at `PROBE_RUN`**, 2,764–4,575 scored configurations each. A
+   cell qualifies only on `xml_present` (or a back-fill row) **AND** a pass count above zero —
+   `launcher_exit_code == 0` was never evidence, and a run that scored nothing is not a probe.
+
+✅ **The full tier WAS re-measured on a quiet lane, which the earlier revision of this prompt said was
+owed: 86.6 / 86.7s of 120.0s, 27 suites, 0 failed — 33.3s headroom.** The 95.1s the previous handoff
+quoted was never re-taken; these two samples were, after the MT5 lane went idle.
 
 ---
 
@@ -111,11 +115,12 @@ before designing something new.
    stated in the order in advance, and it is not a verdict about the EA.
    `ORDER-1274` holds the fine half of the §6.2 ladder, queued with its measured cost.
 
-2. **`ORDER-1272` — nothing runs `gen_pilot_cells.py --check`.** One grep proves it. 🔴 **`--apply`
-   FIRST, then wire it in.** `--check` is red right now *and correctly so* (6 of 16 probed, store
-   still says none), so wiring it into the tier before the store catches up blocks every commit in
-   the repo. Measure its cost against the tier budget, and ship the control that proves it reddens
-   on a one-character edit to a committed cell.
+2. **`ORDER-1272` — nothing runs `gen_pilot_cells.py --check`.** One grep proves it. ✅ The blocker
+   is gone: the store is applied and `--check` is **green**, so it can be wired in without blocking
+   every commit. ⚠️ Read that order's two pre-conditions first — the generator reads the **worktree**
+   (it imports `registry`, not `evidence`), so inside a pre-commit hook it would judge unstaged
+   files; migrate the READ side through `EvidenceSource` before wiring. Measure its cost against the
+   33.3s of tier headroom, and ship the control that proves it reddens on a one-character edit.
 3. **`ORDER-1254` — BWD 2020–2022 (a HARD gate for ENGINE-EDGE), then Model 4.** After step 1, because
    BWD judges the configuration the probe selected. 🚫 **BWD is never a search surface** (design 6.2).
    Everything measured so far is Model 1, so **nothing produced yet is verdict-grade**.
