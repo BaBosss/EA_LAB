@@ -511,6 +511,18 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
     current = {}
     for r in eligible:
         n = r.get('_line')
+        # ORDER-1269 #3, owner-ratified: "a record whose pin failed must print UNVERIFIED, not
+        # APPROVED". F1 and the R-checks `continue` out of this loop, so a row they refuse never
+        # reached the assignment at the bottom and the reconciliation below caught it. F2-F14 do
+        # NOT continue -- they append to `problems` and fall through -- so a record could fail its
+        # own pin check and still be reported as the decision in force, four printed lines above
+        # its own failure. The exit code was honest the whole time; the line a human reads was not.
+        #
+        # The count is snapshotted PER ROW, not tested as `if problems`. `problems` is shared with
+        # load_records, check_append_only and every other row, so "non-empty" would un-approve a
+        # record that verified perfectly because a malformed line was appended after it. That
+        # distinction is what the SPECIFICITY case in the suite exists to hold.
+        problems_before = len(problems)
         # ORDER-613 D1, EXTENDED after running it: A2 had the same defect A6 did, and narrowing
         # only A6 was not enough -- the log stayed red on lines 2 and 3, made under the previous
         # bundle, which append-only means can never be corrected.
@@ -683,7 +695,11 @@ def check(rows, problems, digest, d1_owners, vintage_notes):
                 elif ack.get('current_blob') != want_current:
                     problems.append('F5 line %s acknowledges current_blob %r but HEAD has %r'
                                     % (n, ack.get('current_blob'), want_current))
-        current[r['current_owner']] = r
+        # ORDER-1269 #3: only a row that raised nothing OF ITS OWN is reported as its own decision.
+        # A row that did is left out here on purpose and picked up by the reconciliation below,
+        # which already knows how to say UNVERIFIED -- one demotion path, not two.
+        if len(problems) == problems_before:
+            current[r['current_owner']] = r
 
     # Codex round 2, Spec 9: when the in-force row failed a check it `continue`d before reaching
     # the line above, so `current` still reported the SUPERSEDED row as the decision in force. The

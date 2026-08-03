@@ -147,6 +147,63 @@ def main():
             print('        -> wanted %r; got: %s'
                   % (expect, (problems.split('\n')[0] if problems else 'NOTHING AT ALL')))
 
+    # ---- ORDER-1269 #3 (owner-ratified): "a record whose pin failed must print UNVERIFIED, not
+    # ---- APPROVED". The exit code was already honest; the line a human reads was not, and this
+    # ---- file is the record of who approved what.
+    #
+    # Why this needs its own block rather than one more row in `cases` above: every case up there
+    # asserts on `problems`, and #3 is not about `problems` at all -- it is about what `current`
+    # SAYS while `problems` is non-empty. A checker can be perfectly red and still report the
+    # failing row as the approved decision, which is exactly what it did.
+    print('\n=== ORDER-1269 #3: what the reported decision SAYS when its own checks failed ===')
+    _f2, _ = run_with([good()], [STALE_NOTE])
+    _f2row = _f2.get('MASTER_BACKLOG.md', {})
+    ok = _f2row.get('decision') == 'UNVERIFIED'
+    print('  [%s] a record whose F2 pin check FAILED is not reported as APPROVED'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> reported %r, four lines above its own F2 failure'
+              % _f2row.get('decision'))
+        bad += 1
+    # F14 as well as F2, because they enter `current` by the same fall-through: neither of them
+    # `continue`s, which is the actual mechanism. One case would leave the other free to regress.
+    _f14, _f14p = run_with([good(expected_post_state={
+        'path': 'MASTER_BACKLOG.md', 'section': 'S2a coverage transfer',
+        'section_sha256': 'c' * 64})])
+    ok = ('F13' in _f14p or 'F14' in _f14p) and \
+        _f14.get('MASTER_BACKLOG.md', {}).get('decision') == 'UNVERIFIED'
+    print('  [%s] and so is one whose expected_post_state claim did not reproduce'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> decision=%r problems=%r'
+              % (_f14.get('MASTER_BACKLOG.md', {}).get('decision'),
+                 _f14p.split('\n')[0] if _f14p else 'NOTHING AT ALL'))
+        bad += 1
+    # CONTROL. Without this the block above is satisfiable by demoting every row unconditionally,
+    # which would be a checker that cannot say APPROVED at all -- green for the wrong reason.
+    _cln, _clnp = run_with([good()])
+    ok = (not _clnp) and _cln.get('MASTER_BACKLOG.md', {}).get('decision') == 'APPROVED'
+    print('  [%s] CONTROL a record whose checks all PASSED still reports APPROVED'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> decision=%r problems=%r'
+              % (_cln.get('MASTER_BACKLOG.md', {}).get('decision'), _clnp))
+        bad += 1
+    # SPECIFICITY, and it is the one that separates the correct fix from the cheap one. "Demote if
+    # `problems` is non-empty" passes both cases above and is WRONG: `problems` is shared, so a
+    # malformed line appended AFTER a good decision -- or a complaint raised by load_records for a
+    # different owner entirely -- would silently un-approve a record that verified. The count has to
+    # be snapshotted PER ROW.
+    _spec, _specp = run_with([good(), {'current_owner': 'MASTER_BACKLOG.md', 'signer': ''}])
+    ok = bool(_specp) and _spec.get('MASTER_BACKLOG.md', {}).get('decision') == 'APPROVED'
+    print('  [%s] SPECIFICITY a malformed SEPARATE line does not un-approve a record that verified'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> decision=%r problems=%r'
+              % (_spec.get('MASTER_BACKLOG.md', {}).get('decision'),
+                 _specp.split('\n')[0] if _specp else 'NOTHING AT ALL'))
+        bad += 1
+
     print('\n=== G5-G8 append-only, enforced against HEAD rather than asserted in prose ===')
     # audit 8 BLOCKER 3: deleting an earlier record used to stay green.
     # State-INDEPENDENT: the committed and working bytes are injected, so the rule is exercised
