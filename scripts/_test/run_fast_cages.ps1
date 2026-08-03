@@ -557,6 +557,11 @@ $SUITE_GUARDS = @{
     'run_optimize_guard_tests.ps1'    = @('scripts/optimize_guard.ps1',
                                           'docs/PARAM_REGISTRY.csv',
                                           'docs/PARAM_LINKAGE.md',
+                                          # ORDER-1253: PART 2 of that suite is the SEAM between
+                                          # the PowerShell writer and this python reader, so the
+                                          # reader is a real dependency of the cage. The undeclared
+                                          # -references sweep demanded this on its first run.
+                                          '_triage/factory_os/optimize_log.py',
                                           '_triage/PARAM_INACTIVE_AUDIT.md')
     'run_monitor_integrity_tests.ps1' = @('scripts/daily_monitor.ps1',
                                           # ORDER-702: DERIVED by the import sweep in
@@ -1074,11 +1079,25 @@ $SUITE_GUARDS = @{
     #                                       moving one to PROBE_RUN, changes what three items
     #                                       answer -- so the store has to trigger this cage the
     #                                       same way hypotheses.jsonl does for items 1 and 13.
+    #   factory/optimize_decisions.jsonl    ORDER-1253: item 6 reads it, and the same argument the
+    #                                       coverage.jsonl entry above makes applies word for word
+    #                                       -- appending a decision record changes what item 6
+    #                                       answers, so the store must trigger this cage.
+    #   optimize_log.py                     item 6 CALLS it (it owns the record shape), so this is
+    #                                       the same transitive-import case as check_param_surface.
+    #   scripts/_test/run_fast_cages.ps1    🔴 THIS FILE. Item 6 FAILs if the optimize_guard cage
+    #                                       leaves $FAST_SUITES, because a cage that does not run
+    #                                       is not evidence -- so an edit to that array changes
+    #                                       what item 6 answers, exactly as a design edit changes
+    #                                       what the checklist parse answers.
     'run_s13_tests.ps1'               = @('_triage/factory_os/check_pilot_acceptance.py',
                                           '_triage/factory_os/run_s13_tests.py',
                                           '_triage/EA_LAB_FACTORY_OS_DESIGN.md',
                                           'factory/hypotheses.jsonl',
                                           'factory/coverage.jsonl',
+                                          'factory/optimize_decisions.jsonl',
+                                          '_triage/factory_os/optimize_log.py',
+                                          'scripts/_test/run_fast_cages.ps1',
                                           '_triage/factory_os/check_wrapper_gen.py',
                                           '_triage/factory_os/check_param_surface.py',
                                           '_triage/factory_os/evidence.py',
