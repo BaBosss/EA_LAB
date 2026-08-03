@@ -1,9 +1,10 @@
 <#
     run_schema_cages.ps1 -- ORDER-1252 (BOX 1b of the S13C handoff, owner-ratified 2026-08-03).
 
-    THE CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
+    THE THREE CHEAP SCHEMA CAGES, SPLIT OUT OF run_contract_binding_tests.ps1 SO THEY CAN STAY
     IN THE PRE-COMMIT TIER WHILE THE EXPENSIVE PART LEAVES IT.
-    (Three entries at ORDER-1252; a fourth joined at ORDER-1264 and is listed below.)
+    (ORDER-1264 briefly made it four; ORDER-1283 took that one back out the same day, and the
+    note beside the array says why -- it writes to the file it tests. Back to three.)
 
     WHY THE SPLIT RATHER THAN THE DISPLACEMENT. The owner's first choice was to move
     run_contract_binding_tests.ps1 out of the fast tier wholesale. That was attempted by the
@@ -26,14 +27,15 @@
                                                 inventory across every entity, the completeness
                                                 inventory (ORDER-1264), and the PLANNED/BUILT/
                                                 WIRED labels checked against the repo
-      run_enforcement_status_tests.py 1.0-1.2s  ORDER-1264: the cage proving the entry above can
-                                                go RED -- 10 mutations, each refused by name
       gen_design_contracts.py --check 0.1s      CONTRACTS.md still matches schemas.json, and the
                                                 design still links every contract in it
 
     MEASURED with -Timing under EA_LAB_EVIDENCE=index, which is the only number worth quoting --
     memory `tier-number-needs-its-invocation`. THREE samples, because one number here would be a
-    fiction: SUM OF ENTRIES = 10.05 / 8.06 / 8.85s, and the wrapper adds one PowerShell process.
+    fiction: SUM OF ENTRIES = 10.05 / 8.06 / 8.85s. Those three samples INCLUDE the fourth entry
+    ORDER-1283 has since removed (1.0-1.2s of each), and they were taken on a machine held by an
+    18-agent optimize batch. Both facts are stated rather than corrected away, because a number
+    re-typed to look tidier is exactly what the paragraph below is about.
 
     ORDER-1264, 2026-08-03: the table above used to read 3.71 / 0.71 / 0.05 = 4.47s and it was
     stale in every row -- the SAME three entries now measure 8.8 / 7.1 / 7.9s summed. Recorded
@@ -85,15 +87,27 @@ if (-not (Test-Path -LiteralPath $python)) {
 $scripts = @(
     @{ Path = '_triage\factory_os\run_schema_fixtures.py'; Args = @() },
     @{ Path = '_triage\factory_os\check_schema_structure.py'; Args = @() },
-    @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') },
-    # ORDER-1264, 2026-08-03. This is the cage that proves the entry above it can FAIL, and it
-    # was left behind in run_contract_binding_tests.ps1 when ORDER-1252 moved that wrapper off
-    # the commit path -- so check_schema_structure.py was running on every schema commit while
-    # the only thing proving its checks can go red ran by hand. That is the ORDER-1272 shape
-    # ("the only thing standing between the store and a hand edit, and NOTHING RUNS IT") and it
-    # would have been repeated here by omission. Measured at 0.38-0.41s when it last ran in a
-    # tier wrapper; re-measured with -Timing in this one below.
-    @{ Path = '_triage\factory_os\run_enforcement_status_tests.py'; Args = @() }
+    @{ Path = '_triage\factory_os\gen_design_contracts.py'; Args = @('--check') }
+    # 🔴 ORDER-1264 ADDED run_enforcement_status_tests.py HERE, AND ORDER-1283 TOOK IT BACK OUT
+    # THE SAME DAY. The reasoning for adding it was sound and still is -- it is the cage that
+    # proves check_schema_structure.py can go RED, it was left behind when ORDER-1252 moved
+    # run_contract_binding_tests.ps1 off the commit path, and a checker running on the commit
+    # path whose only cage runs by hand is the ORDER-1272 shape.
+    #
+    # What the reasoning missed is HOW that cage works: it writes mutations into the LIVE,
+    # TRACKED _triage/factory_os/schemas.json and restores it in a `finally`. On a hand-run
+    # wrapper that is merely untidy. On the COMMIT PATH of a repo where two lanes commit
+    # concurrently it is a data-loss path, and it was OBSERVED rather than theorised -- within
+    # twenty minutes of the change, a hand run and another lane's pre-commit hook (commits
+    # 1b144630 20:37, 7eb883d7 20:44, 5389b0b8 20:46) collided on the file: one died with
+    # OSError 22 and the other's `finally` restored ITS idea of the original, leaving
+    # `WorkReceipt.x-enforcement-status = "TOTALLY_FINE"` sitting in the working tree.
+    # Whichever process reads while the other holds a mutation restores the MUTATION.
+    #
+    # It goes back in when it stops writing to the file it tests -- that is ORDER-1283, and it
+    # needs check_schema_structure.py to be drivable with an injected document instead of only
+    # as a subprocess over a fixed path. Until then it runs by hand, and that is a known,
+    # named gap rather than a silent one.
 )
 
 $failed = 0
