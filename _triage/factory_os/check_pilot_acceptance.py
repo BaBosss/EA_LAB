@@ -335,6 +335,26 @@ def item_operator_surface(src):
     return (PASS, 'check_param_surface CLEAN (it owns the inert-input and pseudo-enum rules)')
 
 
+def _tier_entries(array_text):
+    """-> {suite name} actually LISTED in a PowerShell array literal, comments excluded.
+
+    🔴 THE FIRST VERSION OF THIS CHECK WAS `OPTIMIZE_GUARD_CAGE in array_text`, and it was the
+    exact defect its own docstring cited as the reason for the check. Measured: `$FAST_SUITES`
+    holds **294 comment lines**, several of which name suites while explaining them, so deleting
+    the real entry `'run_optimize_guard_tests.ps1',` leaves the string present and the substring
+    test reports the cage is on the commit path when it no longer runs
+    (memory `text-scan-cannot-tell-read-from-mention`).
+
+    A `#` is dropped with the rest of its line before quoted tokens are extracted. Suite names
+    contain no `#`, so a trailing comment cannot take an entry with it.
+    """
+    entries = set()
+    for line in array_text.split('\n'):
+        code = line.split('#', 1)[0]
+        entries.update(re.findall(r"""['"]([^'"]+)['"]""", code))
+    return entries
+
+
 def item_optimize_guard(src):
     """8.6.6 -- optimize_guard ALLOWs every intended sweep dimension, REFUSEs every locked one,
     and has been OBSERVED refusing at least one real case.
@@ -363,7 +383,7 @@ def item_optimize_guard(src):
     if not m:
         raise Refusal('cannot locate the $FAST_SUITES array in %s, so whether the optimize_guard '
                       'cage is on the commit path cannot be answered' % FAST_TIER_REL)
-    if OPTIMIZE_GUARD_CAGE not in m.group(1):
+    if OPTIMIZE_GUARD_CAGE not in _tier_entries(m.group(1)):
         return (FAIL,
                 '%s is not inside $FAST_SUITES in %s. The both-directions half of this item is '
                 'carried by that suite; a cage that does not run is not evidence.'

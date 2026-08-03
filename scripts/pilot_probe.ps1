@@ -36,7 +36,7 @@ records where it landed; it does not judge the EA, and it does not decide whethe
 USAGE
   powershell -NoProfile -File scripts\pilot_probe.ps1 -Symbols XAUUSD -Periods H1
   powershell -NoProfile -File scripts\pilot_probe.ps1 -Symbols XAUUSD -Periods H1 -DeliberateRefusal
-  powershell -NoProfile -File scripts\pilot_probe.ps1 -PreflightOnly     # guard only, no tester
+  (one -Symbols / -Periods value per invocation: `-File` never parses a comma-joined list)
 ASCII only (PS 5.1 reads a BOM-less .ps1 as ANSI).
 #>
 [CmdletBinding()]
@@ -62,7 +62,13 @@ param(
   # SAME configuration the baseline measured, or the two are not comparable.
   [string]$LotTag      = 'lot0p03',
   [switch]$DeliberateRefusal,
-  [switch]$PreflightOnly,
+  # 🚫 -PreflightOnly WAS HERE AND IS GONE. It printed "the launcher will be invoked and is
+  # expected to stop at the guard or the process check" and then invoked the launcher normally --
+  # so on a FREE lane it would have run a full 11-25 minute optimization under a flag whose name
+  # promises the opposite. A flag that is only safe because something else happens to be busy is
+  # not a preflight. Removed rather than fixed: the guard runs INSIDE mt5_optimize.ps1, and
+  # calling it separately here would make this script a second consumer of the same rule with its
+  # own argument list, which is how two consumers drift apart.
   [switch]$Force
 )
 $ErrorActionPreference = 'Stop'
@@ -164,6 +170,18 @@ foreach ($rev in $Revisions) {
   Write-Host ("$rev probe dimensions ({0}, from the ParameterBinding store):" -f $dims.Count) -ForegroundColor Yellow
   foreach ($d in $dims) { Write-Host ("  {0,-22} {1} .. {2} step {3}" -f $d.Name, $d.Start, $d.Stop, $d.Step) }
   $baseSet = Join-Path $root ('factory\runs\pilot\effective_' + ($rev -replace '-', '_') + '_baseline_' + $LotTag + '.set')
+  # DERIVED FROM THE .set, NEVER TYPED. This was the literal string '0.03' in the record while
+  # -LotTag chose which file to read, and the two sets on disk carry DIFFERENT lots
+  # (`_lot0p03` -> 0.03, the plain one -> 0.01). So `-LotTag baseline` would have written a record
+  # claiming 0.03 for a run made at 0.01 -- and gen_pilot_cells compares exactly that field to
+  # decide whether a probe belongs to a cell, so the check written to catch a mismatched
+  # configuration would have been defeated by the field it reads.
+  if (-not (Test-Path -LiteralPath $baseSet)) { Fail "base .set not found: $baseSet" }
+  $lotLine = @(Get-Content -LiteralPath $baseSet | Where-Object { $_ -match '^_41_FixedLot=' })
+  if ($lotLine.Count -ne 1) {
+    Fail ("$baseSet declares _41_FixedLot " + $lotLine.Count + " time(s); exactly one is required to state the sizing this probe ran at")
+  }
+  $firstLot = ($lotLine[0] -split '=', 2)[1].Trim()
   $wrapper = 'EALabTpl\generated\' + ($rev -replace '-', '_')
 
   foreach ($symbol in $Symbols) {
@@ -203,12 +221,6 @@ foreach ($rev in $Revisions) {
         GuardBuild = 14
       }
       if ($Force) { $optArgs['Force'] = $true }
-      if ($PreflightOnly) {
-        # The guard runs inside mt5_optimize.ps1, so a preflight-only mode cannot call the guard
-        # itself without becoming a SECOND caller with its own arguments - which is how two
-        # consumers of one rule drift apart. It calls the same launcher and stops at the abort.
-        Write-Host "(preflight only: the launcher will be invoked and is expected to stop at the guard or the process check)"
-      }
       # $LASTEXITCODE is CLEARED first, and a launcher that never ran is recorded as -1 rather
       # than inheriting the previous cell's success. On this script's first run a parameter-binding
       # failure was written into the record as `exit=0 guard_refused=False` -- a launcher that
@@ -229,6 +241,14 @@ foreach ($rev in $Revisions) {
       if ($launchError) { $rc = -1 }
       $ErrorActionPreference = $prevEAP
       $elapsed = [math]::Round(((Get-Date) - $started).TotalSeconds, 1)
+      $xmlPath = Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml')
+      $xmlIsFresh = $false
+      if (Test-Path -LiteralPath $xmlPath) {
+        # -ge, not -gt: a run shorter than the filesystem's timestamp resolution would otherwise
+        # fail its own freshness test. The window this leaves open is one clock tick, against a
+        # stale file that is minutes or hours old.
+        $xmlIsFresh = ((Get-Item -LiteralPath $xmlPath).LastWriteTime -ge $started)
+      }
 
       $rec = [ordered]@{
         entity              = 'PilotProbeRun'
@@ -245,7 +265,7 @@ foreach ($rev in $Revisions) {
         optimization        = $Optimization
         criterion           = $Criterion
         lane                = $Terminal
-        first_lot           = '0.03'
+        first_lot           = $firstLot
         set                 = $probeSet
         dimensions          = @($dims | ForEach-Object { $_.Name })
         injected_dimension  = $injected
@@ -255,9 +275,15 @@ foreach ($rev in $Revisions) {
         # RECORDED SEPARATELY FROM THE EXIT CODE, on purpose. The launcher used to print
         # "NO XML" and exit 0, so a run that produced nothing was indistinguishable in this
         # record from one that produced a full surface. That is fixed at the source (exit 4),
-        # and this field is the second, independent statement: the artefact either exists or
-        # it does not, and this record says which without trusting the caller's own verdict.
-        xml_present         = (Test-Path -LiteralPath (Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml')))
+        # and this field is the second, independent statement.
+        #
+        # 🔴 "EXISTS" IS NOT ENOUGH, AND A SMOKE RUN PROVED IT. Re-submitting a cell whose
+        # launcher ABORTED (MT5 already running) still found the XML from that cell's EARLIER
+        # successful run sitting at the same path, and recorded xml_present=true for a run that
+        # never started. The destination is keyed on the report name, so it survives across
+        # attempts. The artefact must therefore be NEWER than this attempt, or the field is a
+        # statement about history rather than about this run.
+        xml_present         = $xmlIsFresh
         # 3 = optimize_guard refused. Named here because "the launcher exited non-zero" and "the
         # guard refused this sweep" are different events and only one of them is evidence for 8.6.
         guard_refused       = ($rc -eq 3)

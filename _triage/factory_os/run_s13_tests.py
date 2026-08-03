@@ -568,6 +568,30 @@ state, detail = PA.item_optimize_guard(guard_source([decision(), ALLOW_REC], tie
 check('G5 ATTACK the cage is not inside $FAST_SUITES -> FAIL (a cage that does not run)',
       state == PA.FAIL and 'not inside $FAST_SUITES' in detail, '%s: %s' % (state, detail))
 
+# 🔴 G5b IS THE CASE G5 COULD NOT MAKE. G5's fixture does not mention the cage at all, so it
+# passes against a SUBSTRING test just as happily as against a real membership test -- it cannot
+# discriminate the two. The real $FAST_SUITES holds 294 comment lines and several name suites
+# while explaining them, so "the entry was deleted and the comment above it remains" is the shape
+# that actually occurs. The first version of this handler reported PASS for exactly that.
+TIER_MENTION_ONLY = ('$FAST_SUITES = @(\n'
+                     '  # ORDER-xxxx: run_optimize_guard_tests.ps1 used to live here and was\n'
+                     '  # removed when the tier went over budget; see the order for why.\n'
+                     '  "run_s13_tests.ps1"\n)\n')
+state, detail = PA.item_optimize_guard(
+    guard_source([decision(), ALLOW_REC], tier=TIER_MENTION_ONLY))
+check('G5b ATTACK the cage is MENTIONED in a comment but not listed -> FAIL, not PASS',
+      state == PA.FAIL, '%s: %s' % (state, detail))
+
+# ...and the control, so "FAIL" above is not "this parser fails on anything with comments".
+TIER_WITH_COMMENTS = ('$FAST_SUITES = @(\n'
+                      '  # a comment that names run_s13_tests.ps1 while explaining it\n'
+                      "  'run_optimize_guard_tests.ps1',   # trailing comment\n"
+                      "  'run_s13_tests.ps1'\n)\n")
+state, detail = PA.item_optimize_guard(
+    guard_source([decision(), ALLOW_REC], tier=TIER_WITH_COMMENTS))
+check('G5b CONTROL a real entry surrounded by comments still PASSes',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
 refuses('G6 ATTACK a record the reader cannot validate -> Refusal, never a quiet PASS',
         lambda: PA.item_optimize_guard(
             FakeSource({PA.DESIGN_REL: REAL_DESIGN, PA.FAST_TIER_REL: TIER_OK,
