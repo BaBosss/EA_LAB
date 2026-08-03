@@ -215,8 +215,21 @@ def item_hypotheses_preregistered(src):
         ends = [m.start() for m in re.finditer(r'^##\s+ORDER-', text[start:], re.M)]
         ends += [m.start() for m in re.finditer(r'B14-H\d+-PREREGISTRATION', text[start:])]
         seg = text[start:start + min(ends)] if ends else text[start:]
-        has_claim = re.search(r'causal claim|CAUSAL CLAIM', seg) is not None
-        has_falsifier = re.search(r'falsifier|FALSIFIER', seg) is not None
+        # CASE-INSENSITIVE, and the reason is a defect this matcher produced the first time a real
+        # pre-registration was written against it (ORDER-1220). The pattern was
+        # `causal claim|CAUSAL CLAIM`, which does not match `**Causal claim.**` -- the ordinary way
+        # a human writes a heading. The rule §8.6 states is about CONTENT ("carries the causal
+        # claim and the falsifier"); capitalisation is not part of it, so a matcher that turns on
+        # capitalisation was testing something the rule never asked for.
+        #
+        # 🔴 The falsifier half was WORSE, and only luck exposed it: `falsifier|FALSIFIER` missed
+        # the `**Falsifier.**` heading too, but the item still reported the falsifier as present --
+        # because the word appears in lowercase in a FOOTNOTE further down the same section. It was
+        # matching prose ABOUT the falsifier rather than the falsifier's own heading, i.e. passing
+        # for a reason unrelated to the thing it checks. Both are now case-insensitive, which makes
+        # the two halves behave the same way instead of one of them being accidentally lenient.
+        has_claim = re.search(r'causal\s+claim', seg, re.I) is not None
+        has_falsifier = re.search(r'falsifier', seg, re.I) is not None
         if not has_claim or not has_falsifier:
             problems.append(
                 '%s pins an order that is missing %s. 8.6 requires the pinned order to carry the '

@@ -431,6 +431,31 @@ state, detail = PA.item_hypotheses_preregistered(hyp_source(both, DUP))
 check('H10 ATTACK a DUPLICATED anchor is FAIL (schemas.json says EXACTLY once), and says ambiguous',
       state == PA.FAIL and 'ambiguous' in detail, '%s: %s' % (state, detail))
 
+# --- ORDER-1220: the matcher was case-sensitive, and one half passed by accident ----------------
+# Writing the first REAL pre-registration exposed both. `causal claim|CAUSAL CLAIM` did not match
+# `**Causal claim.**` -- the ordinary way a human writes a heading -- and §8.6's rule is about
+# CONTENT, not capitalisation. The falsifier half was worse: it missed `**Falsifier.**` too, but
+# still reported present because the word appears lowercase in a FOOTNOTE lower down the section,
+# i.e. it was matching prose ABOUT the falsifier rather than the falsifier.
+HEADINGS = (b'<!-- B14-H01-PREREGISTRATION -->\n**Causal claim.** something.\n'
+            b'**Falsifier.** flat-lot PF >= escalated PF.\n'
+            b'<!-- B14-H02-PREREGISTRATION -->\n**Causal claim.** other.\n'
+            b'**Falsifier.** hedged < unhedged.\n')
+state, detail = PA.item_hypotheses_preregistered(hyp_source(both, HEADINGS))
+check('H11 POSITIVE capitalised headings (`**Causal claim.**` / `**Falsifier.**`) are accepted',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+# 🔴 THE CONTROL THAT MAKES H11 WORTH ANYTHING. Loosening a matcher to accept more is only safe if
+# it still REJECTS the thing it exists to catch. A section with neither word, in any casing, must
+# still fail -- otherwise "case-insensitive" would just mean "stopped checking".
+NEITHER = (b'<!-- B14-H01-PREREGISTRATION -->\nthis order states a plan and some dates.\n'
+           b'<!-- B14-H02-PREREGISTRATION -->\n**Causal claim.** x. **Falsifier.** y.\n')
+state, detail = PA.item_hypotheses_preregistered(hyp_source(both, NEITHER))
+check('H11 CONTROL a section with NEITHER word still FAILs, naming both as missing',
+      state == PA.FAIL and 'B14-H01' in detail
+      and 'causal claim' in detail and 'falsifier' in detail,
+      '%s: %s' % (state, detail))
+
 # -- item 13, the disjunction ---------------------------------------------------------------------
 state, detail = PA.item_h01_engine_edge_cage(hyp_source([hyp_row('B14-H01')]))
 check('H6 POSITIVE H01 not advanced + engine_edge -> PASS (the "or is not advanced" limb)',
