@@ -136,6 +136,20 @@ function New-ProbeSet {
   [System.IO.File]::WriteAllLines($OutPath, $out, (New-Object System.Text.UTF8Encoding($false)))
 }
 
+# --- fail closed on the `powershell -File` array trap ---------------------------------------------
+# `powershell -File script.ps1 -Symbols A,B,C` delivers ONE element "A,B,C" to a [string[]]
+# parameter -- the comma is never parsed. MEASURED THE HARD WAY: an invocation of this script from
+# bash produced a single "cell" called `B14-H01-r1/EURUSD,USDJPY,BTCUSD/H1,H4`, ran 14.4s, produced
+# no optimizer XML, and was recorded as a completed probe -- while the six real cells it was meant
+# to run were never attempted. The trap is already documented in
+# scripts/_test/run_optimize_guard_tests.ps1's Invoke-Guard, and I walked into it anyway, which is
+# the argument for a refusal rather than a comment.
+foreach ($tok in ($Symbols + $Periods + $Revisions)) {
+  if ($tok -match ',') {
+    Fail "'$tok' contains a comma. Under ``powershell -File`` a comma-joined list arrives as ONE string, so this would run a single cell named after all of them and silently skip the rest. Use -Command, or pass one -Symbols/-Periods value per invocation."
+  }
+}
+
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $recordPath = Join-Path $outDir ("probe_runs_" + $stamp + ".jsonl")
 Write-Host "=== pilot_probe.ps1 - the decision-13 optimize probe ===" -ForegroundColor Cyan
@@ -238,6 +252,12 @@ foreach ($rev in $Revisions) {
         launcher_exit_code  = $rc
         launcher_error      = $launchError
         elapsed_sec         = $elapsed
+        # RECORDED SEPARATELY FROM THE EXIT CODE, on purpose. The launcher used to print
+        # "NO XML" and exit 0, so a run that produced nothing was indistinguishable in this
+        # record from one that produced a full surface. That is fixed at the source (exit 4),
+        # and this field is the second, independent statement: the artefact either exists or
+        # it does not, and this record says which without trusting the caller's own verdict.
+        xml_present         = (Test-Path -LiteralPath (Join-Path $root ('_mt5_auto\optimizations\' + $reportName + '.xml')))
         # 3 = optimize_guard refused. Named here because "the launcher exited non-zero" and "the
         # guard refused this sweep" are different events and only one of them is evidence for 8.6.
         guard_refused       = ($rc -eq 3)

@@ -147,4 +147,16 @@ if (Test-Path $srcXml) {
 }
 else {
   Write-Output "NO XML (exited=$($proc.HasExited)). If the test ran but produced no .xml, the optimization report may export differently on this build. Check the $ReportName files in $DataDir and the Tester logs."
+  # ORDER-1253: EXIT 4, not 0. This printed the line above and then fell off the end of the
+  # script, which PowerShell exits 0 for -- so a launcher whose ONLY product is an optimizer XML
+  # reported SUCCESS when that XML did not exist. Measured, not theorised: a pilot probe
+  # submission with a malformed symbol ran 14.4s, produced nothing, and was written into
+  # factory/runs/pilot/probe/ as `launcher_exit_code: 0`, indistinguishable from the 675.5s run
+  # beside it that produced a real surface.
+  #
+  # BLAST RADIUS, stated rather than discovered: every caller of this script that checks the exit
+  # code now sees a failure where it previously saw success -- scripts/optimize_loop.ps1,
+  # scripts/run_batch.ps1, scripts/qwen_batch_runner.ps1. That is the correction, not a
+  # side effect: each of them was accepting "no optimization happened" as a completed pass.
+  exit 4
 }
