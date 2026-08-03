@@ -80,6 +80,11 @@ ROOT = evidence.REPO_ROOT
 DESIGN_REL = '_triage/EA_LAB_FACTORY_OS_DESIGN.md'
 HYPOTHESES_REL = 'factory/hypotheses.jsonl'
 COVERAGE_REL = 'factory/coverage.jsonl'
+# ORDER-1253 (8.6 item 6). The guard's committed decision records, and the cage that drives its
+# two directions on fixtures. The tier file is read to prove the cage is in the array that RUNS.
+OPTIMIZE_LOG_REL = 'factory/optimize_decisions.jsonl'
+OPTIMIZE_GUARD_CAGE = 'run_optimize_guard_tests.ps1'
+FAST_TIER_REL = 'scripts/_test/run_fast_cages.ps1'
 
 PASS = 'PASS'
 FAIL = 'FAIL'
@@ -332,12 +337,71 @@ def item_operator_surface(src):
 
 def item_optimize_guard(src):
     """8.6.6 -- optimize_guard ALLOWs every intended sweep dimension, REFUSEs every locked one,
-    and has been OBSERVED refusing at least one real case."""
-    return (BLOCKED,
-            'the ALLOW/REFUSE pair is driven by scripts/_test/run_optimize_guard_tests.ps1 (in the '
-            'fast tier, 14 cases, both directions) -- but 8.6 asks for the guard observed refusing '
-            'a REAL pilot sweep, and no pilot sweep has been submitted. Per CLAUDE.md a guard with '
-            'zero real fires is UNTESTED, so this is BLOCKED rather than borrowed from the cage.')
+    and has been OBSERVED refusing at least one real case.
+
+    ORDER-1253. THREE conditions, and the third is the one CLAUDE.md's `UNTESTED` rule adds:
+
+      (a) the both-directions cage exists AND is in the array the tier actually runs -- not merely
+          named somewhere in the tier file, because a text search cannot tell "invoked" from
+          "mentioned" (memory `text-scan-cannot-tell-read-from-mention`);
+      (b) the guard REFUSED at least one dimension of a REAL submission;
+      (c) the guard ALLOWED at least one real submission outright. A guard broken closed refuses
+          every real case too, so (b) alone cannot distinguish it from a working one.
+
+    All three are read from committed artefacts. The cage's 14 fixture cases are NOT counted as
+    fires: that is the borrowing this item is written to forbid.
+    """
+    try:
+        import optimize_log
+    except ImportError as exc:                                 # pragma: no cover - import guard
+        raise Refusal('cannot import optimize_log: %s' % exc)
+
+    # (a) The cage, and its membership of the array that runs. `_read` goes through the evidence
+    #     source, so in hook mode this is the tier AS COMMITTED, not as edited in the worktree.
+    tier = _read(src, FAST_TIER_REL)
+    m = re.search(r'\$FAST_SUITES\s*=\s*@\((.*?)\n\)', tier, re.S)
+    if not m:
+        raise Refusal('cannot locate the $FAST_SUITES array in %s, so whether the optimize_guard '
+                      'cage is on the commit path cannot be answered' % FAST_TIER_REL)
+    if OPTIMIZE_GUARD_CAGE not in m.group(1):
+        return (FAIL,
+                '%s is not inside $FAST_SUITES in %s. The both-directions half of this item is '
+                'carried by that suite; a cage that does not run is not evidence.'
+                % (OPTIMIZE_GUARD_CAGE, FAST_TIER_REL))
+
+    # (b) + (c) the real submissions.
+    if not src.exists_committed(OPTIMIZE_LOG_REL):
+        return (BLOCKED,
+                'the both-directions pair is driven by %s (in the fast tier), but no decision log '
+                'is committed at %s, so the guard has NOT been observed judging a real submission. '
+                'Per CLAUDE.md a guard with zero real fires is UNTESTED, and the cage\'s fixture '
+                'cases must not be borrowed to fill that gap.'
+                % (OPTIMIZE_GUARD_CAGE, OPTIMIZE_LOG_REL))
+    try:
+        records = optimize_log.parse(_read(src, OPTIMIZE_LOG_REL), OPTIMIZE_LOG_REL)
+    except optimize_log.LogRefusal as exc:
+        raise Refusal('the decision log cannot be read as a log: %s' % exc)
+
+    refusals = optimize_log.real_refusals(records)
+    allows = optimize_log.real_allows(records)
+    if not refusals or not allows:
+        return (BLOCKED,
+                '%d decision record(s) committed, but the observed pair is incomplete: %d '
+                'submission(s) had a dimension REFUSED and %d were ALLOWed outright. Both '
+                'directions are required -- a guard that refuses everything also refuses at least '
+                'one real case, so the refusal alone does not distinguish a working guard from one '
+                'broken closed.' % (len(records), len(refusals), len(allows)))
+
+    r0 = refusals[0]
+    refused_names = ', '.join(sorted(d.get('name', '?')
+                                     for d in optimize_log.refused_dimensions(r0)))
+    return (PASS,
+            '%d real submission(s) recorded in %s: %d with a dimension REFUSED, %d ALLOWed '
+            'outright. First observed refusal: %s refused %s on lane %s (revision %r). The '
+            'both-directions fixture pair is carried by %s, which is inside $FAST_SUITES.'
+            % (len(records), OPTIMIZE_LOG_REL, len(refusals), len(allows),
+               r0.get('submitted_utc'), refused_names, r0.get('lane'),
+               r0.get('hypothesis_revision') or '(none declared)', OPTIMIZE_GUARD_CAGE))
 
 
 def _pilot_cells(src):
@@ -633,9 +697,6 @@ UNIMPLEMENTED = {
     'item_parity_directions':
         'same manifest as item_parity_all_points; the DIRECTIONS (must-trade actually traded, '
         'refusal actually refused) come from parity.verdict_for_case, not from a re-read.',
-    'item_optimize_guard':
-        'needs a record of real pilot sweep submissions, ALLOWed and REFUSEd. No such artefact '
-        'exists; optimize_guard.ps1 today leaves no committed decision log.',
     'item_crypto_financing':
         'needs a crypto cell result AND the post-hoc financing deduction recorded beside it.',
     'item_scheduler_resume':

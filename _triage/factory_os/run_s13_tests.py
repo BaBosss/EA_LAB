@@ -92,6 +92,12 @@ class FakeSource(object):
         rx = re.compile('^%s$' % '[^/]*'.join(re.escape(p) for p in pattern.split('*')))
         return sorted(f for f in self.files if rx.match(f))
 
+    def exists_committed(self, rel):
+        # ORDER-1253. item 6 asks a question the other handlers do not: "is the artefact there at
+        # all". Absent must be answerable WITHOUT raising, or "no decision log has been written
+        # yet" and "this checker could not read" would arrive as the same outcome.
+        return rel.replace(os.sep, '/') in self.files
+
     def marker(self, component):
         return '##EVIDENCE-MODE## %s %s git_index=fixture' % (component, self.mode)
 
@@ -505,6 +511,86 @@ def cell_source(cells, runs=None, extra=None):
 
 def sixteen(**over):
     return [cell('B14-H01-r1/S%d/H1' % i, **over) for i in range(PA.PILOT_CELL_COUNT)]
+
+
+# item 6 (ORDER-1253) -----------------------------------------------------------------------------
+# The handler reads TWO committed artefacts: the tier file (is the fixture cage on the commit
+# path) and the decision log (was the guard observed on a real submission). Both are fixtures
+# here; the end-to-end binding between the guard's WRITER and optimize_log's READER is asserted
+# in scripts/_test/run_optimize_guard_tests.ps1, which runs the real .ps1 into a temp file.
+
+def decision(result='REFUSE', dims=None, **over):
+    rec = {'record_version': 1, 'submitted_utc': '2026-08-03T09:00:00Z',
+           'lane': r'D:\Meta 5\terminal64.exe', 'hypothesis_revision': 'B14-H01-r1',
+           'result': result, 'checked': 1, 'allow_count': 0, 'refuse_count': 1,
+           'exit_code': 1,
+           'dimensions': dims if dims is not None else
+           [{'name': '_9_MaxLevels', 'verdict': 'REFUSE',
+             'facts': [{'refuse': True, 'text': 'SAFETY'}]}]}
+    rec.update(over)
+    return rec
+
+
+ALLOW_REC = decision(result='ALLOW', exit_code=0, allow_count=1, refuse_count=0,
+                     dims=[{'name': '_14_DistAtrMult', 'verdict': 'ALLOW', 'facts': []}])
+TIER_OK = '$FAST_SUITES = @(\n  "run_optimize_guard_tests.ps1",\n  "run_s13_tests.ps1"\n)\n'
+TIER_WITHOUT = '$FAST_SUITES = @(\n  "run_s13_tests.ps1"\n)\n'
+
+
+def guard_source(records, tier=TIER_OK, omit_log=False):
+    files = {PA.DESIGN_REL: REAL_DESIGN, PA.FAST_TIER_REL: tier}
+    if not omit_log:
+        files[PA.OPTIMIZE_LOG_REL] = '\n'.join(json.dumps(r) for r in records)
+    return FakeSource(files)
+
+
+state, detail = PA.item_optimize_guard(guard_source([decision(), ALLOW_REC]))
+check('G1 POSITIVE one real REFUSE + one real ALLOW, cage in the tier -> PASS',
+      state == PA.PASS and '_9_MaxLevels' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_optimize_guard(guard_source([], omit_log=True))
+check('G2 no decision log committed -> BLOCKED and it names the UNTESTED rule',
+      state == PA.BLOCKED and 'UNTESTED' in detail, '%s: %s' % (state, detail))
+
+# 🔴 THE CASE THIS HANDLER EXISTS FOR. A guard broken CLOSED refuses every real submission too,
+# so "observed refusing at least one real case" is satisfied by a guard that is useless. The
+# ALLOW direction is what tells the two apart, and it must be measured on real submissions --
+# borrowing it from the 14 fixture cases is the exact move CLAUDE.md's UNTESTED rule forbids.
+state, detail = PA.item_optimize_guard(guard_source([decision(), decision()]))
+check('G3 ATTACK refusals only -> BLOCKED (a guard broken closed refuses real cases too)',
+      state == PA.BLOCKED and 'broken closed' in detail, '%s: %s' % (state, detail))
+
+state, detail = PA.item_optimize_guard(guard_source([ALLOW_REC, ALLOW_REC]))
+check('G4 ATTACK allows only -> BLOCKED (the guard has never been observed firing)',
+      state == PA.BLOCKED, '%s: %s' % (state, detail))
+
+state, detail = PA.item_optimize_guard(guard_source([decision(), ALLOW_REC], tier=TIER_WITHOUT))
+check('G5 ATTACK the cage is not inside $FAST_SUITES -> FAIL (a cage that does not run)',
+      state == PA.FAIL and 'not inside $FAST_SUITES' in detail, '%s: %s' % (state, detail))
+
+refuses('G6 ATTACK a record the reader cannot validate -> Refusal, never a quiet PASS',
+        lambda: PA.item_optimize_guard(
+            FakeSource({PA.DESIGN_REL: REAL_DESIGN, PA.FAST_TIER_REL: TIER_OK,
+                        PA.OPTIMIZE_LOG_REL: json.dumps(decision(lane='  '))})),
+        'names no lane')
+
+# SPECIFICITY, both halves. An innocent extra row must not break a satisfied item, and a log made
+# ENTIRELY of submissions that judged nothing must not satisfy it.
+nothing_rec = decision(result='NOTHING_TO_CHECK', dims=[], checked=0, refuse_count=0, exit_code=0)
+state, detail = PA.item_optimize_guard(guard_source([decision(), ALLOW_REC, nothing_rec]))
+check('G7 SPECIFICITY a NOTHING_TO_CHECK row alongside a real pair still PASSes',
+      state == PA.PASS, '%s: %s' % (state, detail))
+
+state, detail = PA.item_optimize_guard(guard_source([nothing_rec, nothing_rec]))
+check('G8 ATTACK a log of nothing-to-check rows only -> BLOCKED',
+      state == PA.BLOCKED, '%s: %s' % (state, detail))
+
+# -WarnOnly makes the process exit 0 while the dimension verdict stays REFUSE. The question 8.6
+# asks is whether the guard was observed REFUSING, not whether a caller let the exit code through.
+state, detail = PA.item_optimize_guard(
+    guard_source([decision(exit_code=0, warn_only=True), ALLOW_REC]))
+check('G9 a -WarnOnly refusal is still an observed refusal (exit code is not the signal)',
+      state == PA.PASS, '%s: %s' % (state, detail))
 
 
 # item 7 ------------------------------------------------------------------------------------------

@@ -86,13 +86,26 @@ $ini = "$auto\ini\$ReportName.ini"
 # optimizes away a safety cap (RC_*/ProtectLevel/_9_MaxLevels). Default = blocks on REFUSE;
 # -SkipOptimizeGuard proceeds anyway (still prints the REFUSE lines via -WarnOnly, never silent).
 $guardScript = Join-Path $PSScriptRoot "optimize_guard.ps1"
+# ORDER-1253 (design 8.6 item 6). The guard's verdicts used to be printed and lost, so "the guard
+# has been observed refusing a real case" was unanswerable from anything committed. Every pass
+# through here now leaves ONE record.
+#
+# SCOPE, STATED HONESTLY: this is the only MT5 OPTIMIZER launcher in the repo (mt5_run.ps1 and
+# run_backtest.ps1 both write `Optimization=0`), so every optimizer sweep is recorded. It is NOT
+# "every parameter selection is recorded" -- a PowerShell grid loop over single tests selects a
+# config with the optimizer flag at 0 and this guard never sees it (memory
+# `optimization-flag-launders-hand-rolled-selection`). That hole is unchanged by this record.
+#
+# The repo root is derived, not typed: a hardcoded D:\EA_LAB defeats the worktree cage (memory
+# `hardcoded-repo-path-defeats-worktree-cage`, and the `$auto` line above is an instance of it).
+$decisionLog = Join-Path (Split-Path -Parent $PSScriptRoot) "factory\optimize_decisions.jsonl"
 if (Test-Path $guardScript) {
   if ($SkipOptimizeGuard) {
     Write-Output "optimize_guard: -SkipOptimizeGuard passed, running in warn-only mode (will not block)"
-    & $guardScript -IniPath $ini -WarnOnly | Write-Output
+    & $guardScript -IniPath $ini -WarnOnly -DecisionLog $decisionLog -Lane $Terminal | Write-Output
   }
   else {
-    & $guardScript -IniPath $ini | Write-Output
+    & $guardScript -IniPath $ini -DecisionLog $decisionLog -Lane $Terminal | Write-Output
     if ($LASTEXITCODE -ne 0) {
       Write-Output "ABORT: optimize_guard.ps1 refused at least one swept dimension in $ini (see REFUSE lines above)."
       Write-Output "        Re-run with -SkipOptimizeGuard to proceed anyway (e.g. a confirmed false positive)."

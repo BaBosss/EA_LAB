@@ -155,8 +155,143 @@ foreach ($c in $cases) {
     }
 }
 
+# =============================================================================================
+# PART 2 - ORDER-1253: the DECISION RECORD, and the seam between the two languages.
+#
+# The writer is this PowerShell script and the reader is _triage/factory_os/optimize_log.py, so
+# the record's shape is necessarily stated twice. That is the arrangement this repo has been
+# burned by, so these cases do not check that the two descriptions AGREE IN PROSE: they run the
+# REAL guard into a temp file and hand the bytes to the REAL reader. A cage that drove only the
+# python module would prove only the python half (memory `pure-cage-proves-only-the-pure-half`).
+# =============================================================================================
 Write-Host ""
-Write-Host ("--- {0} passed / {1} failed / {2} total ---" -f $pass, $fail, $cases.Count)
-if ($fail -gt 0) { Write-Host "=== OPTIMIZE-GUARD CAGE RED ===" -ForegroundColor Red; exit 1 }
+Write-Host "=== PART 2: the decision record (ORDER-1253) ===" -ForegroundColor Cyan
+
+$p2pass = 0; $p2fail = 0
+function Check2 {
+    param([string]$Id, [bool]$Ok, [string]$Detail = '')
+    if ($Ok) { Write-Host ("[PASS] {0}" -f $Id) -ForegroundColor Green; $script:p2pass++ }
+    else     { Write-Host ("[FAIL] {0}  {1}" -f $Id, $Detail) -ForegroundColor Red; $script:p2fail++ }
+}
+
+$tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("optguard_dec_" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+$log = Join-Path $tmp 'dec.jsonl'
+try {
+    # --- CONTROL: with -DecisionLog omitted, not one line of behaviour changes ----------------
+    # This is the claim the default-off design rests on, and it is the claim a new parameter
+    # most easily breaks. Asserted by DIFFING the two consoles, not by reading the source.
+    $bare = & powershell -NoProfile -Command "& '$guard' -ParamNames 'RC_MaxLot' -Build 14 -WarnOnly" 2>&1 | Out-String
+    $withLog = & powershell -NoProfile -Command "& '$guard' -ParamNames 'RC_MaxLot' -Build 14 -WarnOnly -DecisionLog '$log' -Lane 'CAGE-LANE'" 2>&1 | Out-String
+    # Blank runs are collapsed on BOTH sides before comparing, because the record line is printed
+    # with a leading blank for readability. Collapsing whitespace is the only tolerance granted --
+    # every non-blank line still has to match, in order.
+    function Normalise-Console {
+        param([string]$Text)
+        $keep = ($Text -split "`r?`n") | Where-Object { $_ -notmatch '^DECISION RECORD ->' }
+        return (($keep | Where-Object { $_.Trim() -ne '' }) -join "`n").Trim()
+    }
+    $stripped = Normalise-Console $withLog
+    $bareNorm = Normalise-Console $bare
+    Check2 'control-no-decisionlog-changes-nothing' ($stripped -eq $bareNorm) `
+        'the console output differs beyond the one DECISION RECORD line'
+    Check2 'control-no-decisionlog-writes-no-file' (-not (Test-Path (Join-Path $tmp 'nothing.jsonl')))
+
+    # --- the WarnOnly REFUSE is still an observed REFUSAL --------------------------------------
+    Check2 'refuse-submission-appends-a-record' (Test-Path $log)
+
+    # --- a real ALLOW submission ---------------------------------------------------------------
+    & powershell -NoProfile -Command "& '$guard' -ParamNames '_2_BasketTP_ATRmult','_2_BasketTP_BalPct=0' -Build 14 -DecisionLog '$log' -Lane 'CAGE-LANE'" 2>&1 | Out-Null
+
+    # --- FAIL-CLOSED, twice. Both cases assert the REASON, not merely a non-zero exit: a suite
+    #     that accepted "it failed somehow" would go green on a typo in the invocation.
+    #     $ErrorActionPreference is dropped to Continue around them because a child that writes to
+    #     stderr surfaces as a NativeCommandError under `Stop` and would abort the whole suite --
+    #     which is how PART 2 killed itself on its first run.
+    $prevEAP = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    $noLaneOut = (& powershell -NoProfile -Command "& '$guard' -ParamNames 'RC_MaxLot' -Build 14 -WarnOnly -DecisionLog '$log'" 2>&1 | Out-String)
+    $noLaneRc = $LASTEXITCODE
+    $auditOut = (& powershell -NoProfile -Command "& '$guard' -DecisionLog '$log' -Lane 'CAGE-LANE'" 2>&1 | Out-String)
+    $auditRc = $LASTEXITCODE
+    $ErrorActionPreference = $prevEAP
+    Check2 'decisionlog-without-lane-refuses' (($noLaneRc -ne 0) -and ($noLaneOut -match '-DecisionLog was given without -Lane')) `
+        "rc=$noLaneRc"
+    Check2 'decisionlog-in-audit-mode-refuses' (($auditRc -ne 0) -and ($auditOut -match 'whole-registry audit mode')) `
+        "rc=$auditRc"
+
+    # --- the seam: the REAL reader, on the REAL bytes -------------------------------------------
+    $py = Join-Path $root 'tools\python312\python.exe'
+    $probe = Join-Path $tmp 'probe.py'
+    $probeSrc = @'
+import io, json, os, sys
+sys.path.insert(0, os.path.join(sys.argv[2], '_triage', 'factory_os'))
+import optimize_log as OL
+text = io.open(sys.argv[1], encoding='utf-8').read()
+out = []
+def ck(name, ok, detail=''):
+    out.append(('PASS' if ok else 'FAIL', name, detail))
+# The seam itself. A writer that drops or renames a field lands HERE, and it must arrive as a
+# named FAIL rather than as a traceback the wrapper reports as "SUITE THREW" -- the whole point
+# of this case is to say WHICH end broke.
+try:
+    recs = OL.parse(text, 'cage')
+except OL.LogRefusal as exc:
+    print('FAIL|the-writer-and-the-reader-still-agree|%s' % exc)
+    sys.exit(1)
+ck('reader-accepts-the-writers-bytes', len(recs) == 2, 'got %d record(s)' % len(recs))
+ck('every-required-field-survived-the-writer',
+   all(all(f in r for f in OL.REQUIRED) for r in recs))
+ck('facts-are-objects-not-a-stringified-type',
+   all(isinstance(f, dict) for r in recs for d in r['dimensions'] for f in d['facts']))
+refus = OL.real_refusals(recs)
+allows = OL.real_allows(recs)
+ck('warnonly-refusal-still-counts-as-an-observed-refusal', len(refus) == 1 and refus[0]['exit_code'] == 0,
+   'refusals=%d' % len(refus))
+ck('the-allow-direction-is-observed-too', len(allows) == 1, 'allows=%d' % len(allows))
+ck('the-refused-dimension-is-the-safety-one',
+   [d['name'] for d in OL.refused_dimensions(refus[0])] == ['RC_MaxLot'])
+# SPECIFICITY: a submission that judged nothing is a record, and it is NOT a fire.
+nothing = dict(recs[0], result='NOTHING_TO_CHECK', dimensions=[], checked=0,
+               allow_count=0, refuse_count=0)
+ck('a-NOTHING_TO_CHECK-record-is-not-an-observed-fire',
+   not OL.real_refusals([nothing]) and not OL.real_allows([nothing]))
+# ATTACK: each of these must be REFUSED, never dropped.
+for name, mutate in (('missing-lane', lambda r: {k: v for k, v in r.items() if k != 'lane'}),
+                     ('empty-lane', lambda r: dict(r, lane='   ')),
+                     ('future-version', lambda r: dict(r, record_version=2)),
+                     ('unknown-result', lambda r: dict(r, result='MAYBE')),
+                     ('dimension-without-a-verdict',
+                      lambda r: dict(r, dimensions=[{'name': 'x', 'facts': []}]))):
+    try:
+        OL.parse(json.dumps(mutate(recs[0])), 'cage')
+        ck('attack-%s-is-refused' % name, False, 'it parsed')
+    except OL.LogRefusal:
+        ck('attack-%s-is-refused' % name, True)
+# CONTROL for the attacks: the unmutated row still parses, so "refused" above is not "refuses all".
+try:
+    OL.parse(json.dumps(recs[0]), 'cage')
+    ck('control-the-innocent-record-still-parses', True)
+except OL.LogRefusal as exc:
+    ck('control-the-innocent-record-still-parses', False, str(exc))
+for state, name, detail in out:
+    print('%s|%s|%s' % (state, name, detail))
+sys.exit(1 if any(s == 'FAIL' for s, _n, _d in out) else 0)
+'@
+    [System.IO.File]::WriteAllText($probe, $probeSrc, (New-Object System.Text.UTF8Encoding($false)))
+    $probeOut = & $py $probe $log $root 2>&1 | Out-String
+    foreach ($line in ($probeOut -split "`r?`n")) {
+        if ($line -match '^(PASS|FAIL)\|([^|]*)\|(.*)$') { Check2 $Matches[2] ($Matches[1] -eq 'PASS') $Matches[3] }
+        elseif ($line.Trim()) { Write-Host "       $line" }
+    }
+}
+finally {
+    Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+Write-Host ""
+Write-Host ("--- part 1: {0} passed / {1} failed / {2} total ---" -f $pass, $fail, $cases.Count)
+Write-Host ("--- part 2: {0} passed / {1} failed ---" -f $p2pass, $p2fail)
+if ($fail -gt 0 -or $p2fail -gt 0) { Write-Host "=== OPTIMIZE-GUARD CAGE RED ===" -ForegroundColor Red; exit 1 }
 Write-Host "=== OPTIMIZE-GUARD CAGE GREEN ===" -ForegroundColor Green
 exit 0

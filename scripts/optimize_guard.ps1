@@ -112,7 +112,24 @@ param(
     # end. It passes --overlay-root now, and registry.py merges canonical-LAST, so the canonical
     # store wins every key it defines and an overlay cannot remove or relax a binding. The property
     # holds by construction rather than by this comment being persuasive.
-    [string]$BindingsRoot = ''
+    [string]$BindingsRoot = '',
+    # ORDER-1253 (S13, design 8.6 item 6). The guard's verdicts were WRITTEN TO THE CONSOLE AND
+    # LOST. `scripts\_test\run_optimize_guard_tests.ps1` drives 14 cases in both directions, but
+    # CLAUDE.md's rule is that a guard with zero real fires is `UNTESTED` -- and there was nothing
+    # an acceptance checker could read even after a real sweep happened, because no run left a
+    # record behind. This appends ONE JSON object per submission to the named file.
+    #
+    # DEFAULT-OFF ON PURPOSE, and the honesty cost is stated rather than hidden: with -DecisionLog
+    # omitted not one line of behaviour changes (asserted as a CONTROL in the cage), so a
+    # submission can decline to be recorded. What the log proves is that the submissions IN IT
+    # were judged -- never that every submission was. The alternative, writing unconditionally to
+    # a fixed path, would make all 14 cage cases append to the committed store on every tier run.
+    [string]$DecisionLog = '',
+    # The MT5 install the sweep would run on. REQUIRED whenever -DecisionLog is given: design
+    # 8.6 item 9 is "every run carries lane + data fingerprint", and a decision record that cannot
+    # name the lane it authorised is not evidence about any particular lane. Fail-closed, like
+    # every other unresolvable input in this script.
+    [string]$Lane = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -124,6 +141,43 @@ $auditPath    = Join-Path $repoRoot '_triage\PARAM_INACTIVE_AUDIT.md'
 
 foreach ($p in @($registryPath, $linkagePath, $auditPath)) {
     if (-not (Test-Path -LiteralPath $p)) { throw "Not found: $p" }
+}
+
+# ---------------------------------------------------------------------------
+# ORDER-1253: the decision record. One JSON object per submission, appended.
+# ---------------------------------------------------------------------------
+if ($DecisionLog -ne '' -and $Lane -eq '') {
+    throw "optimize_guard: -DecisionLog was given without -Lane. A decision record that cannot name the MT5 install it authorised is not evidence about any lane (design 8.6 item 9). Pass -Lane, or drop -DecisionLog and run it unrecorded."
+}
+
+function Write-DecisionRecord {
+    <#
+      Appends one record and returns nothing. The SHAPE is read back by
+      _triage/factory_os/optimize_log.py, and the two ends are bound by a cage that RUNS this
+      script into a temp file and hands the result to that module -- not by this comment.
+
+      UTF-8 WITHOUT BOM, via AppendAllText rather than Out-File/Add-Content. Both of those write
+      the console codepage or a BOM depending on host, and a BOM in the first line of a .jsonl
+      makes json.loads fail on line 1 only, which reads as "the writer is broken" forever
+      (memory `thai-output-kills-a-suite-inside-the-hook` is the same family: an encoding default
+      that only bites inside another process).
+    #>
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][hashtable]$Record
+    )
+    $dir = Split-Path -Parent $Path
+    if ($dir -and -not (Test-Path -LiteralPath $dir)) {
+        New-Item -ItemType Directory -Path $dir -Force | Out-Null
+    }
+    # -Depth 6: the default is 2, which silently renders the per-dimension `facts` array as the
+    # string "System.Collections.Hashtable". A record whose reasons stringify to a type name is
+    # the free-text failure this repo already has a memory for, arriving through the serializer.
+    $json = ($Record | ConvertTo-Json -Depth 6 -Compress)
+    $enc = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::AppendAllText($Path, $json + "`n", $enc)
+    Write-Host ""
+    Write-Host "DECISION RECORD -> $Path" -ForegroundColor Cyan
 }
 
 # ---------------------------------------------------------------------------
@@ -437,6 +491,12 @@ Write-Host ""
 
 # ---- mode 0: no -IniPath and no -ParamNames -> whole-registry summary ----
 if (-not $IniPath -and (-not $ParamNames -or $ParamNames.Count -eq 0)) {
+    if ($DecisionLog -ne '') {
+        # This mode judges no submission -- it tallies the registry. Writing a record here would
+        # put a row in the log that no sweep ever asked for, and staying silent would drop a
+        # record the caller asked for. Refuse instead of choosing one of those for them.
+        throw "optimize_guard: -DecisionLog was given in whole-registry audit mode (no -IniPath and no -ParamNames). That mode judges no submission, so there is no decision to record. Give the .ini or the parameter list you want judged."
+    }
     Write-Host "No -IniPath / -ParamNames given: reporting whole-registry never-optimizable summary." -ForegroundColor Yellow
     Write-Host ""
     $safetyNamePattern = { param($n) ($n -match '^RC_') -or ($n -eq 'ProtectLevel') -or ($n -eq '_9_MaxLevels') }
@@ -467,11 +527,14 @@ $iniValues = @{}
 $build = $Build
 $checkList = New-Object System.Collections.Generic.List[string]
 $source = @{}   # Name -> how it entered the check set (for reporting)
+$expertName = ''    # ORDER-1253: set from the .ini when there is one; '' is the honest value otherwise
+$bindingFor = @{}   # ORDER-1253: Name -> the resolver's answer, kept STRUCTURED for the record
 
 if ($IniPath) {
     $ini = Get-IniTesterInputs -Path $IniPath
     foreach ($k in $ini.Inputs.Keys) { $iniValues[$k] = $ini.Inputs[$k] }
     if (-not $build) { $build = $ini.Build }
+    $expertName = $ini.Expert          # ORDER-1253: carried into the decision record
     Write-Host "Ini file   : $IniPath"
     Write-Host "Expert     : $($ini.Expert)"
     Write-Host "Boss build : $(if ($build) { $build } else { '(unresolved)' })"
@@ -502,6 +565,27 @@ if ($ParamNames) {
 
 if ($checkList.Count -eq 0) {
     Write-Host "Nothing to check (no Y-flagged sweep dimensions in the .ini and no -ParamNames given)." -ForegroundColor Yellow
+    if ($DecisionLog -ne '') {
+        # RECORDED, not skipped. A submission that judged nothing must not be absent from the log,
+        # or "the guard never refused anything" and "the guard was never asked anything" become
+        # the same reading of the same file.
+        Write-DecisionRecord -Path $DecisionLog -Record @{
+            record_version      = 1
+            submitted_utc       = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+            lane                = $Lane
+            hypothesis_revision = $HypothesisRevision
+            build               = $(if ($build) { $build } else { $null })
+            ini_path            = $IniPath
+            expert              = $expertName
+            warn_only           = [bool]$WarnOnly
+            result              = 'NOTHING_TO_CHECK'
+            checked             = 0
+            allow_count         = 0
+            refuse_count        = 0
+            dimensions          = @()
+            exit_code           = 0
+        }
+    }
     exit 0
 }
 
@@ -568,6 +652,15 @@ foreach ($name in $checkList) {
         # `optimizable` is DERIVED by the resolver and read here as a value. This script does not
         # know which roles are optimizable and must not learn -- that list is an allowlist in
         # registry.py, so a role added to the enum later is refused until somebody decides.
+        # ORDER-1253: the resolver's answer, kept as FIELDS. The same answer also lands in the
+        # fact text below, and that text is prose -- a reader asking "was this refused by the
+        # binding layer" against prose is the equality-on-free-text shape ORDER-1251 exists for.
+        $bindingFor[$name] = @{
+            role        = $b.role
+            optimizable = [bool]($b.optimizable -eq $true)
+            surface     = $b.surface
+            source      = 'ParameterBinding'
+        }
         if ($b.optimizable -ne $true) {
             $r.Facts.Add([pscustomobject]@{ Refuse = $true; Text = "ParameterBinding: role='$($b.role)' in $HypothesisRevision is not optimizable (resolved by _triage/factory_os/registry.py, surface='$($b.surface)')" }) | Out-Null
             $r.Verdict = 'REFUSE'
@@ -608,6 +701,12 @@ foreach ($name in $checkList) {
         # changes. That is U2, and it is asserted next to U1 in run_registry_tests.ps1 so neither
         # can be quoted without the other -- the first version of this repair fired on every
         # legacy call site and was caught only because that assertion already existed.
+        $bindingFor[$name] = @{
+            role        = $null
+            optimizable = $false
+            surface     = $null
+            source      = 'UNBOUND'
+        }
         $r.Facts.Add([pscustomobject]@{ Refuse = $true; Text = "ParameterBinding: UNBOUND - '$name' is swept under $HypothesisRevision, but that revision registers no binding for it (build tag: $(if ($build) { $build } else { '(none)' })). REFUSED (ORDER-671, owner-ratified): declaring -HypothesisRevision claims this run is EVIDENCE ABOUT $HypothesisRevision, and a dimension that revision never describes cannot be evidence about it. Either register a ParameterBinding for '$name' in $HypothesisRevision, or drop -HypothesisRevision and run it as an undeclared sweep." }) | Out-Null
         $r.Verdict = 'REFUSE'
     }
@@ -632,6 +731,45 @@ Write-Host "--- Summary ---"
 Write-Host "Checked : $($results.Count)"
 Write-Host "ALLOW   : $allowCount"
 Write-Host "REFUSE  : $refuseCount"
+
+# ORDER-1253. The verdict is decided ONCE, here, and both the console line and the record read the
+# same two variables. Computing "what the record says" separately from "what the operator was told"
+# is how a log ends up disagreeing with the run it describes.
+$overall  = if ($refuseCount -gt 0) { 'REFUSE' } else { 'ALLOW' }
+$exitCode = if ($refuseCount -gt 0 -and -not $WarnOnly) { 1 } else { 0 }
+
+if ($DecisionLog -ne '') {
+    $dims = @()
+    foreach ($r in $results) {
+        $facts = @()
+        foreach ($f in $r.Facts) {
+            $facts += @{ refuse = [bool]$f.Refuse; text = [string]$f.Text }
+        }
+        $dims += @{
+            name    = [string]$r.Name
+            verdict = [string]$r.Verdict
+            source  = [string]$source[$r.Name]
+            binding = $(if ($bindingFor.ContainsKey($r.Name)) { $bindingFor[$r.Name] } else { $null })
+            facts   = $facts
+        }
+    }
+    Write-DecisionRecord -Path $DecisionLog -Record @{
+        record_version      = 1
+        submitted_utc       = (Get-Date).ToUniversalTime().ToString('yyyy-MM-ddTHH:mm:ssZ')
+        lane                = $Lane
+        hypothesis_revision = $HypothesisRevision
+        build               = $(if ($build) { $build } else { $null })
+        ini_path            = $IniPath
+        expert              = $expertName
+        warn_only           = [bool]$WarnOnly
+        result              = $overall
+        checked             = $results.Count
+        allow_count         = $allowCount
+        refuse_count        = $refuseCount
+        dimensions          = $dims
+        exit_code           = $exitCode
+    }
+}
 
 if ($refuseCount -gt 0) {
     if ($WarnOnly) {
