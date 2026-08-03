@@ -92,22 +92,38 @@ $destHtm = "$auto\reports\$ReportName.htm"
 # ⇒ CALLERS MUST CHECK THE EXIT CODE (0 ok / 1 no report / 2 abort / 3 leverage mismatch), and
 #   ideally also that the report's mtime is newer than the moment they started the run. Both probe
 #   scripts now do exactly that; copy that gate rather than inferring freshness from existence.
+#   ORDER-1268 added a THIRD abort (exit 2): a -SetFile that cannot be read, or that declares a
+#   surface it does not carry. It is deliberately the existing code rather than a new one -- every
+#   caller already handles 2 as "did not run", and a fourth code nobody checks is a refusal that
+#   reads as a pass. It is taken AFTER the clear below, so that abort leaves no report at all.
 Get-ChildItem $DataDir -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 Get-ChildItem "$auto\reports" -Filter "$ReportName*" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
+# ORDER-1268: WHAT DOES THIS .set SAY ABOUT ITS OWN SURFACE, AND DOES THE RUN RECORD IT?
+# Until 2026-08-03 this block accepted ANY existing file and warned only when NONE was supplied,
+# so a single-assignment .set launched a run whose other 115 inputs came from the per-terminal
+# tester cache, and nothing the run produced said so. The policy is REFUSE OR RECORD (see
+# scripts\lib\setfile_surface.ps1 for why it is not simply "refuse": ORDER-700 already reasoned
+# that a guard which refuses the 2,177 legacy files gets switched off, and was right).
+#
+# DELIBERATELY PLACED AFTER THE REPORT CLEAR ABOVE, not before it. The ORDER-372 note there says
+# an abort taken BEFORE the clear leaves a previous run's report exactly where it was, and that a
+# probe then read PF=1.77 off it as though it were fresh. Refusing here means the destination is
+# already empty, so a caller that ignores the exit code finds NO report rather than an old one.
+. (Join-Path $PSScriptRoot 'lib\setfile_surface.ps1')
+$surface = Get-SetSurfaceState -Path $SetFile
+if ($surface.Refuse) {
+  Write-Output "ABORT: $($surface.Message)"
+  exit 2
+}
+Write-Output "surface: $($surface.State) -- $($surface.Message)"
+
 $inputs = @()
-if ($SetFile -and (Test-Path $SetFile)) {
+if ($surface.State -ne 'NOSETFILE') {
   foreach ($l in Get-Content $SetFile) {
     $t = $l.Trim()
     if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
   }
-} else {
-  # ORDER-165: without a set file, every input comes from the per-terminal tester cache
-  # (MQL5\Profiles\Tester\<Expert>.set = last-used values, rewritten by any session that
-  # touches this EA in this terminal) - the run is NOT reproducible and not comparable to
-  # any other run of the "same" EA. Loud warning, not a hard fail: some callers (default-
-  # capture, throwaway probes) do this deliberately.
-  Write-Output "WARN: no -SetFile - unlisted inputs come from this terminal's tester cache (MQL5\Profiles\Tester) = NON-REPRODUCIBLE. Pass a FULL .set for any number you intend to keep."
 }
 
 # ORDER-165: leverage MUST be the "1:N" string form - the numeric form is silently ignored

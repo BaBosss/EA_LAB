@@ -73,10 +73,26 @@ if (Test-Path $testerCache) {
   Get-ChildItem $testerCache -Filter "*.opt" -File -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 }
 
+# ORDER-1268: the same REFUSE-OR-RECORD gate mt5_run.ps1 applies, and this launcher needed it
+# MORE. mt5_run at least warned when no .set was supplied; this one read whatever it was handed
+# and said nothing at all. An optimize pass launched off a partial file explores a grid whose
+# UNSWEPT axes come from the per-terminal tester cache, so the winning row names a configuration
+# that cannot be reproduced -- and an optimize result is exactly the artifact this lab then locks
+# a .set from. The judging lives in scripts\lib\setfile_surface.ps1; one owner, three launchers (mt5_run · mt5_optimize · run_backtest).
+. (Join-Path $PSScriptRoot 'lib\setfile_surface.ps1')
+$surface = Get-SetSurfaceState -Path $SetFile
+if ($surface.Refuse) {
+  Write-Output "ABORT: $($surface.Message)"
+  exit 2
+}
+Write-Output "surface: $($surface.State) -- $($surface.Message)"
+
 $inputs = @()
-foreach ($l in Get-Content $SetFile) {
-  $t = $l.Trim()
-  if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
+if ($surface.State -ne 'NOSETFILE') {
+  foreach ($l in Get-Content $SetFile) {
+    $t = $l.Trim()
+    if ($t -and -not $t.StartsWith(";") -and $t.Contains("=")) { $inputs += $t }
+  }
 }
 
 $lines = @(

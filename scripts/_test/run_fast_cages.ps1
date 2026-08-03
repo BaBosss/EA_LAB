@@ -622,6 +622,15 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/run_setfile_tests.py',
                                           '_triage/factory_os/preset.py',
                                           'ea_template/core/Inputs.mqh',
+                                          # ORDER-1268, PART 2 of this suite: the same .set policy
+                                          # at the RUN end. These three were guarded by NO suite in
+                                          # this table before -- a commit touching either launcher
+                                          # ran no cage at all, which is how they came to accept
+                                          # any file at all for as long as they did.
+                                          'scripts/lib/setfile_surface.ps1',
+                                          'scripts/mt5_run.ps1',
+                                          'scripts/mt5_optimize.ps1',
+                                          'scripts/run_backtest.ps1',
                                           # DEMANDED BY THE IMPORT SWEEP on this suite's FIRST
                                           # run -- reached through preset.py's imports, which a
                                           # path-string sweep of the wrapper cannot see. Same

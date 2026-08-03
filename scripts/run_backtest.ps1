@@ -142,6 +142,18 @@ $TesterConfigPath = Join-Path $OutputFolder "tester_config.ini"
 $LogFile = Join-Path $LogFolder "backtest_$Timestamp.log"
 $ShutdownValue = if ($NoShutdown.IsPresent -or $DebugVisible.IsPresent) { "0" } else { "1" }
 $VisualValue = if ($DebugVisible.IsPresent) { "1" } else { "0" }
+# ORDER-1268: the THIRD launcher, found while wiring the other two, and the worst of the three.
+# `Get-SetInputs` above returns an EMPTY LIST when the path is missing or unreadable and says
+# nothing at all -- so a typo in -SetFilePath produced a run configured entirely from the
+# per-terminal tester cache, with no warning anywhere in the output. Same library, same policy:
+# REFUSE what can be shown false, RECORD what merely cannot be verified.
+. (Join-Path $PSScriptRoot 'lib\setfile_surface.ps1')
+$surface = Get-SetSurfaceState -Path $SetFilePath
+if ($surface.Refuse) {
+    Write-Host "ABORT: $($surface.Message)" -ForegroundColor Red
+    exit 2
+}
+Write-Host "surface: $($surface.State) -- $($surface.Message)"
 $SetInputs = Get-SetInputs -Path $SetFilePath
 
 $ini = New-Object System.Collections.Generic.List[string]
