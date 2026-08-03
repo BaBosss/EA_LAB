@@ -121,6 +121,13 @@ def main(argv):
                     continue
                 st = os.stat(xml)
                 passes, why_passes = count_passes(xml)
+                # MARK IT SEEN INSIDE THE LOOP. `seen` was loaded once from the existing
+                # back-fill files and never updated, so two probe records naming the SAME report
+                # -- a failed attempt and its successful re-run -- each produced a row, and the
+                # same artefact was asserted twice in one file. Harmless to the generator (a dict,
+                # same value) and still wrong: an evidence file that states one fact twice invites
+                # a reader to wonder which one is the measurement.
+                seen.add(xml)
                 rows.append({
                     'entity': ENTITY,
                     'cell_id': rec.get('cell_id'),
