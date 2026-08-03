@@ -151,7 +151,11 @@ def load_xml_backfill(root=None):
     return out
 
 
-def probed_cells(probe_runs, baseline_by_cell, backfilled=frozenset()):
+def probed_cells(probe_runs, baseline_by_cell, backfilled):
+    # `backfilled` is REQUIRED and is a {xml: passes} map. It defaulted to frozenset() when it
+    # only carried membership, and the default survived the change to a dict -- so any caller
+    # using it would have hit `frozenset.get` at the first qualifying record. A default that is
+    # the wrong type is a landmine that only fires on the happy path.
     """-> ({cell_id: record}, [excluded note]) for cells whose optimize probe DEMONSTRABLY ran.
 
     THE BAR IS `xml_present is True`, AND NOTHING ELSE WILL DO. `launcher_exit_code == 0` is not
@@ -206,9 +210,19 @@ def probed_cells(probe_runs, baseline_by_cell, backfilled=frozenset()):
         # PROBE_RUN carrying trial_count=0 would state that it was probed and that nothing was
         # scored -- two claims that cannot both be true. Either the cell knows how much searching
         # it cost or it is not at PROBE_RUN yet.
-        if backfilled.get(rec.get('xml')) is None:
+        passes = backfilled.get(rec.get('xml'))
+        if passes is None:
             excluded.append('%s: no pass count is recorded for its XML, so trial_count would be 0 '
                             'for a probed cell. Run scripts/pilot_probe_verify_xml.py.' % where)
+            continue
+        if passes <= 0:
+            # `is None` alone was not enough, and a two-line test showed it: count_passes returns
+            # 0 for an XML with no <Row> elements, 0 is not None, so a cell whose optimizer scored
+            # NOTHING reached PROBE_RUN with trial_count=0 -- the precise contradiction the check
+            # four lines up exists to prevent, walked straight past by the check itself.
+            excluded.append('%s: its XML records %d scored configuration(s). An optimizer run that '
+                            'scored nothing is not a probe, whatever its exit code said.'
+                            % (where, passes))
             continue
         if cid in qualifying:
             raise SystemExit(

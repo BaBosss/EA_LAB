@@ -207,15 +207,24 @@ a *"small optimize probe"* and the full ladder belongs to an optimize campaign.
 
 ### The criterion. Mechanical, and every constant is pinned HERE rather than chosen later.
 
-1. **Admissible set `A`** = passes in the cell's XML whose trade count clears the §6.2 MAIN floor
-   for that timeframe: **H1 ≥ 100 · H4 ≥ 60**. 🚫 The floor is not lowered to produce a selection.
+1. **Admissible set `A`** = passes in the cell's XML whose **`Trades`** column clears the §6.2 MAIN
+   floor for that timeframe: **H1 ≥ 100 · H4 ≥ 60**. 🚫 The floor is not lowered to produce a
+   selection. <sub>The column is named because "trade count" is not a column — the header is
+   `Pass · Result · Profit · Expected Payoff · Profit Factor · Recovery Factor · Sharpe Ratio ·
+   Custom · Equity DD % · Trades · <the seven swept dimensions>`, read structurally without
+   touching a value.</sub>
 2. **`A` empty ⇒ the cell has NO selected configuration.** Record it and say so. It is not a verdict
    about the EA and must not be written as one — it is the statement that this surface contains
    nothing interpretable at the participation the policy requires. ⚠️ **Expect this often:** at
    baseline **1 of 16 cells** clears its floor (BTCUSD H1 = 130 trades; USDJPY H1 = 99 misses by
    one; the best H4 cell is 58). That number is stated now, before selection, so a lane that finds
    fourteen empty cells knows it is the predicted outcome and not a broken script.
-3. **Plateau candidate set `P`** = the top **10 %** of `A` by the optimizer's criterion column.
+3. **Plateau candidate set `P`** = the top **10 %** of `A` by the **`Result`** column — the value
+   of the optimization criterion the run was launched with, which for these runs is
+   `-Criterion 1` (PF max, design §6.2's engine-edge rule). Named from the LAUNCHER's argument,
+   not by reading a number: leaving it as "the criterion column" would let a later lane pick
+   `Profit` or `Custom` instead, and choosing between columns after the surfaces exist is exactly
+   what this pre-registration is for.
    Ten percent of ~3,000 admissible passes is ~300 rows — enough for a median to be stable, and far
    enough from `top-1`, which §6.2 **bans**. The 10 % is pinned here precisely because it is the one
    number a later reader could otherwise tune until the answer improved.
