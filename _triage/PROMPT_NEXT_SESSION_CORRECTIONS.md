@@ -8,6 +8,20 @@
 
 ---
 
+## §00 — 🎯 THREE OWNER DECISIONS ARE ALREADY RATIFIED. Do not re-ask them.
+
+Put to the owner 2026-08-03 with options and a recommendation; all three ratified. Full wording and
+the rejected alternatives are in the order rows — **read those before implementing, because the
+*reasons* for the rejections constrain the fix.**
+
+| | decision | order |
+|---|---|---|
+| credential in pushed history | **(B) accept + record + close the forward path.** 🚫 **NOT a history rewrite** — the token was already distributed inside a publicly circulated EA, and this repo pins `commit_oid` inside `OwnerRef` and the attestation log, so a rewrite breaks the very pins `ORDER-1263` is about to fix | `ORDER-1262` |
+| the pin that reddens F2/A8 | **`ORDER-1257` option (b) — change the instrument.** Pin what was authorised (a migration + a generated section), not the whole evolving store. (a) *append an acknowledgement* and (c) *accept the red* both declined | `ORDER-1269` #1 |
+| a failed pin still printing `APPROVED` | **Fix it** — print `UNVERIFIED` when any F-check fails | `ORDER-1269` #3 |
+
+---
+
 ## §0 — Before you plan anything, three things that will bite
 
 ### 0.1 🔴 Two cages ASSERT the defects you are about to fix

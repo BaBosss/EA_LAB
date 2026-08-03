@@ -217,7 +217,36 @@ building before the question is asked.
 
 ---
 
-## ORDER-1269 — [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and the owner's own handout tells them to weaken its checker — `OPEN` · ทำได้: Claude/Opus prepares · 👉 แนะ: **user (Boss) decides #1 and #3** · Claude for #2 and #4
+## ORDER-1269 — [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and the owner's own handout tells them to weaken its checker — `RATIFIED 2026-08-03 — #1 = ORDER-1257 option (b), the structural fix. #3 = suppress APPROVED when any F-check fails` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ✅ OWNER DECISIONS, 2026-08-03 — recorded before any work
+
+**#1 → `ORDER-1257` option (b): change the instrument, not the record.** A pin that covers a store
+the approved work is *expected to keep growing* is the wrong instrument; replace it so the pin
+matches **what was actually authorised — a migration and a generated section** — instead of the
+whole file. Options (a) *append one acknowledgement* and (c) *accept the red* were both declined:
+(a) is a toll payable again on every store update, and (c) leaves two checkers off the commit path
+indefinitely, which is the guard-that-nobody-runs shape.
+
+<sub>(TH verbatim: *"(b) เปลี่ยนเครื่องมือ pin — แก้เชิงโครงสร้าง"*)</sub>
+
+**What decided it, and it arrived after `ORDER-1257` was written:** the S2 audit's diagnosis that
+this is a **granularity mismatch**, not merely a self-invalidating pin — plus **#4 below**, which
+shows the front guard had **no pin for that path to enforce at all**. Both point at the instrument.
+
+**#3 → suppress the `APPROVED` line.** A record whose pin failed must print `UNVERIFIED`, not
+`APPROVED`. The exit code is already honest; the line a human reads is not, and this is the record
+of who approved what.
+
+<sub>(TH verbatim: *"แก้ — ห้ามพิมพ์ APPROVED ถ้ามี F-check ล้ม"*)</sub>
+
+⚠️ **Constraints that still bind whoever implements #1** — these are `ORDER-1257`'s and they did not
+lapse: 🚫 re-pinning with `gen_s2a_migration.py` (D1 is inside its own attestation bundle, so
+regenerating it voids the record — a signature to repair a signature) · 🚫 appending the
+acknowledgement on the owner's behalf (`signer` is `user (Boss)` on every line) · 🚫 reverting the 16
+rows (that undoes owner-ratified BOX 1a). **And whichever shape #1 takes must land WITH
+`run_s2a_gate` + `check_coverage_transfer` returning to the tier in the same commit** — added while
+red they block every commit in the repo.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S2_2026-08-03.md`. Seventh and last audit of the coverage
 set. **This order does not repeat `ORDER-1263`** (`OwnerRef` resolves nothing) — S2 found it a **third
@@ -456,7 +485,38 @@ against a **pinned 120.0s** tier budget. Design the read before writing it.
 
 ---
 
-## ORDER-1262 — [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed history, and today's redaction did not reach it — `OPEN (needs the owner — this is not a code fix)` · ทำได้: user (Boss) decides; Claude/Opus prepares the options · 👉 แนะ: user
+## ORDER-1262 — [security/repo] 🔴 A THIRD PARTY's Telegram credential is in this repository's pushed history, and today's redaction did not reach it — `RATIFIED 2026-08-03 — option B: accept, record, and close the forward path. NOT a history rewrite` · ทำได้: Claude/Opus (the forward half) · 👉 แนะ: Claude
+
+### ✅ OWNER DECISION, 2026-08-03 — recorded before any work
+
+**Chosen: (B) accept the risk, record it as accepted, and add a secret scrubber to the corpus
+pipeline** so a card file generated from a downloaded EA library can never commit a harvested
+credential again.
+
+**Rejected, with the reason kept so it is not re-litigated:** a history rewrite. Two facts decided
+it. The token was **already distributed inside a publicly circulated EA** — anyone who downloaded
+that EA has it, so rewriting *our* copy recalls nothing. And the rewrite cost here is unusually
+high: this repo **pins `commit_oid` inside `OwnerRef` and inside the attestation log**, so
+rewriting history from 2026-07-10 breaks every pin that names a rewritten commit — including the
+ones `ORDER-1263` is about to start resolving for real.
+
+<sub>(TH verbatim: *"รับความเสี่ยง + บันทึก + ปิดทางข้างหน้า"*)</sub>
+
+**What this order now IS:**
+
+1. Record the accepted risk where a future reader will find it — this row, plus a line in the audit
+   file `CODEX_AUDIT_S12_2026-08-03.md` §0.1.
+2. **The forward fix, which is the part with value:** the corpus intake path that produced
+   `_triage/FXDREEMA_XRAY.md` must scan generated card files for credential shapes **before** they
+   are written, and refuse rather than warn. ⚠️ Ship it with a **control** — a synthetic
+   credential-shaped literal in a fixture that the scrubber must catch, and a benign lookalike it
+   must not.
+3. 🚫 **Not owed and explicitly not to be done:** `git filter-repo`, `force-push`, any rewrite of
+   `cc40731c` or later, and any contact with the credential's owner. The owner considered and
+   declined all three.
+
+🚫 **Do not test whether the credential still works.** That is using someone else's credential, and
+its validity was deliberately never established.
 
 **Found by the first independent audit of S12** (`_triage/factory_os/CODEX_AUDIT_S12_2026-08-03.md` §0.1),
 raised by Codex against the slice's *"no token in git"* prohibition and then **re-measured here, where
