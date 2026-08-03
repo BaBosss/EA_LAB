@@ -105,6 +105,90 @@
 
 ---
 
+## ORDER-1280 — [factory/S3] Twelve contracts still carry no enforcement declaration, and the inventory that now names them is not a substitute for writing them — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+**This order is CITED FROM CODE** — `check_schema_structure.py`'s `_NO_ENFORCEMENT_DECLARATION`
+block and the `UNDECLARED=12` line of its own report both name it — so it is not optional
+bookkeeping. `ORDER-1264` closed the hole where a declaration could **vanish**; it did not fill the
+twelve that were never written.
+
+| | |
+|---|---|
+| still undeclared | `CandidatePayload` · `EvidenceRef` · `ExecutionKey` · `IdeaRef` · `InstrumentProfile` · `LogicalSymbol` · `ModuleUse` · `ParameterBinding` · `RunAttempt` · `RunJournal` · `SnapshotMeta` · `TestUniverse` |
+| why it is not one commit | each needs its enforcer **audited**, not named. The schema's own rule (line 16) is that `x-enforced-by` marks a constraint **JSON Schema cannot express**, and the status must then be verified against the repo: `PLANNED` = enforced by nothing · `BUILT` = the enforcer exists with negative fixtures · `WIRED` = a hook or the tier actually invokes it. Writing a comfortable label is the *original* defect (Codex audit 7 MAJOR 7: seven of ten names had no implementation at all) |
+
+**At least five of the twelve demonstrably DO carry an extra-schema constraint**, from their own
+descriptions: `ExecutionKey` (*"the key gates whether a run may happen at all"* — and the S9 audit's
+`ORDER-1265` says the cache identity does not match what the driver runs) · `ParameterBinding`
+(*"the wrapper generator and optimize_guard MUST read the same resolver"*) · `RunAttempt`
+(append-only, *"transitions are now appended, never overwritten"*) · `ModuleUse` (an EXPERIMENTAL
+module's evidence must not reach a Candidate) · `SnapshotMeta` (the mandatory-source registry and
+the reconciliation equation).
+
+**Acceptance:** every `$defs` entity is in `_ENFORCEMENT_DECLARED` with a status verified against
+the repo, **or** its move to a `SCHEMA_ONLY` classification is argued in the commit that makes it —
+and `_NO_ENFORCEMENT_DECLARATION` is **empty**. Do them one at a time; a batch of twelve labels
+written in one sitting is the thing this order exists to prevent.
+
+⚠️ **Do not "fix" this by relaxing the inventory.** The two sets are closed and their union must
+equal `$defs`; an entity moved out of the check is the `ORDER-1264` defect wearing a code edit.
+
+---
+
+## ORDER-1281 — [factory/S2·S10] Pin resolution exists but nothing on the commit path resolves a live pin — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`ORDER-1263` gave `OwnerRef` a resolver and `run_s10_tests` proves it can go red. What it did **not**
+do is put it in front of the stores: `OwnerRef` is declared **BUILT, not WIRED**, because no checker
+in the pre-commit tier resolves the pins that are actually committed. A pin in
+`factory/parameter_bindings.jsonl` can rot — the commit it names garbage-collected, the blob
+replaced — and nothing would say so until someone reads it.
+
+**The cost is already measured and it is small:** 234 live `OwnerRef`s across three distinct
+`(commit, path)` targets resolve in **0.30s** with the caches `ORDER-1263` shipped (11.54s without
+them, which is why they exist). **All 234 resolve today** — measured 2026-08-03, so this starts from
+a clean baseline and any red is news.
+
+**Acceptance:** a checker on the commit path resolves every `OwnerRef` in every live `factory/*.jsonl`
+row and reddens on a pin that does not · a control proving it goes red on a planted bad pin · and
+`OwnerRef`'s `x-enforcement-status` moves **BUILT → WIRED** in the same commit, since that label is
+the claim this order makes true.
+
+⚠️ **Budget first, and it is not free right now.** `check_registries.py` is the natural home and it
+left the fast tier with `run_contract_binding_tests.ps1` at `ORDER-1252`, so wiring it there does
+**not** put the check on the commit path. Whatever host is chosen, the tier is **already over its
+pinned 120.0s** (see `ORDER-1282`) and the budget must not be raised to make room.
+
+---
+
+## ORDER-1282 — [infra/tier] The fast tier is over its pinned 120.0s budget, and one commit was refused by the 90.0s per-path budget — `OPEN` · ทำได้: Claude/Opus (needs an IDLE machine) · 👉 แนะ: Claude
+
+Measured by `S-2026-08-03-CORRECT` on 2026-08-03 while landing `ORDER-1263`/`1264`:
+
+| run | measured | budget |
+|---|---|---|
+| full tier | **141.8s** then **132.2s**, 27 suites, **0 failed** | 120.0s pinned |
+| per-path (a real commit) | **98.2s** → **91.9s** → **89.4s** (landed on the third, 0.6s of headroom) | 90.0s pinned |
+
+**The budget was NOT raised and the hook was never bypassed** — both are standing prohibitions, and
+the third attempt passed on its own.
+
+🔴 **The cause is measured, not guessed, and it is why this is filed rather than acted on: 18
+`metatester64` agents (the concurrent `S-2026-08-03-S13D` lane's optimize batch) held every core
+during every one of those runs.** The `S13SCHEMA` lane measured the same tier at **95.1s** on an idle
+machine earlier the same day. This lane's own additions account for roughly **2s** (`run_enforcement_
+status_tests` measured 1.0-1.2s, plus three `_pin()` calls in the S10 suite).
+
+**Top consumers on the loaded box:** `run_front_guard_evidence_tests` 26.5s · `run_guard_trigger_tests`
+23.9s · `run_monitor_integrity_tests` 15.4s. None of them this lane's.
+
+**Acceptance:** re-measure the full tier and one per-path commit on an **idle** machine, three samples
+each because one number here has already been a fiction twice · if the breach survives, displace a
+suite or make a named one faster · **the number itself is pinned and raising it is the last resort,
+not the first**. Until then: a commit that trips this is a real signal on a contended machine, and
+the honest response is to wait for the machine, never `--no-verify`.
+
+---
+
 ## ORDER-1273 — [factory/S13] PRE-REGISTRATION: how a configuration is selected out of a probe surface, written before anyone opens one — `OPEN` · ทำได้: Claude/Opus (the lane AFTER this one) · 👉 แนะ: Claude
 
 🔴 **THIS ORDER EXISTS BECAUSE THE EVIDENCE ALREADY EXISTS.** Ten optimizer XMLs are on disk and
@@ -492,7 +576,48 @@ refutation. Settle it first.
 
 ---
 
-## ORDER-1264 — [factory/S3] A contract can lose its enforcement declaration and vanish from the check instead of reddening it — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1264 — [factory/S3] A contract can lose its enforcement declaration and vanish from the check instead of reddening it — `DONE 2026-08-03 (S-2026-08-03-CORRECT, commit 14276944)` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+**OUTCOME — both items closed, and the first one caught its own author on its first run.**
+
+**#1.** The absence is now a **classification**, not a silence: two closed sets in
+`check_schema_structure.py` whose union must equal `$defs` in **both** directions. A new entity is
+red until classified, a renamed one leaves a red stale entry, and moving an entity between them is
+an edit to the checker rather than a deletion in `schemas.json`. `_NO_ENFORCEMENT_DECLARATION` is
+named for what it is and **does not** assert those entities need no declaration — several
+demonstrably do — so writing a true declaration for each is left as **`ORDER-1280`** rather than
+guessed at. The completeness assertion fired immediately on `OwnerRef`, which I had left out of both
+sets while writing it.
+
+**CONTROL, measured against `git show HEAD:` of the checker, not assumed: 4 of the 5 new mutation
+cases were GREEN before the fix** — `x-enforced-by` deleted · constraint+metadata deleted together ·
+a new unclassified entity · a rename leaving a stale entry. The fifth (an undeclared entity *gaining*
+a declaration) was **already red at HEAD** for a different reason, and the suite says so rather than
+letting it read as a fifth catch. A delete-an-entity case is deliberately **not** shipped: deleting a
+routed entity crashes the branch check with a `KeyError` before the inventory assertion is reached,
+so it would have been green for the wrong reason. The rename reaches it and exercises both directions.
+
+**#2.** The header counts were stale in every row (27 `$defs` against a measured **29**, a 19-branch
+root against **21**). They move into `HEADER_COUNTS` and are **checked first thing in `main()`**, plus
+an absolute assertion that every entity has a negative fixture — which does not depend on anyone
+having maintained either number. Control: restoring the old `19` reddens the suite naming the row.
+Dated historical measurements are left alone; rewriting one to match the present stops it being
+evidence.
+
+🔴 **And the cage was one commit away from being a cage nobody runs.**
+`run_enforcement_status_tests.py` was left behind in `run_contract_binding_tests.ps1` when
+`ORDER-1252` moved that wrapper off the commit path — so `check_schema_structure.py` ran on every
+schema commit while the only thing proving it can go red ran **by hand**. That is the `ORDER-1272`
+shape exactly. It joins `run_schema_cages.ps1` (measured **1.0-1.2s**), and PART 4b of the trigger
+cage then demanded the dependency declaration and a regenerated pathspec.
+
+⚠️ **That wrapper's own timing table was ~2x stale** (3.71/0.71/0.05 = 4.47s claimed; the SAME three
+entries now measure 8.8/7.1/7.9s summed over three `-Timing` samples under `EA_LAB_EVIDENCE=index`).
+Corrected in place with the drift recorded rather than overwritten. It was not re-derived on
+suspicion — adding an entry required it, which is the argument for `-Timing` existing at all.
+
+⚠️ **NOT done here:** the ajv-absent question the audit's Part 3 left open (*what does the suite do
+when `ajv-cli` is missing on a machine where the tier runs?*). Unmeasured, and still open.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S3_2026-08-03.md`.
 
@@ -514,7 +639,44 @@ trusting a green from it.
 
 ---
 
-## ORDER-1263 — [factory/S2·S3·S10] 🔴 `OwnerRef` validates shape and resolves nothing, so every pin in this system is an unchecked citation — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1263 — [factory/S2·S3·S10] 🔴 `OwnerRef` validates shape and resolves nothing, so every pin in this system is an unchecked citation — `DONE 2026-08-03 (S-2026-08-03-CORRECT, commit 007e9f65)` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+**OUTCOME — the acceptance is met, and both halves of it shipped with a control.**
+
+Four rules, named so a failure reads: **R1** `commit_oid:path` resolves to a blob · **R2** it is the
+blob `blob_oid` names · **R3** sha256 over the blob's **raw bytes** equals `raw_sha256` · **R4**
+`anchor` has no spaces and occurs **exactly once** — the rule `schemas.json` states in prose on the
+field, which nothing had ever read.
+
+**CONTROL, measured against `git show HEAD:candidate.py` rather than asserted: ALL FIVE attacks were
+ACCEPTED by the pre-fix validator** — R1, the VISION/PROJECT_STATE cross, a wrong `raw_sha256`, an
+anchor with a space, an anchor absent from the blob. Ten new cases in `run_s10_tests`, with the
+specificity half present: a real pin resolves and is accepted, an anchor occurring exactly once is
+accepted, `anchor=None` is accepted.
+
+**The S2 Part-5 reproducer is the regression case**, not a filler-oid one, exactly as the handoff
+asked. The two anchor fixtures are **derived from the pinned blob** (a once-only and a twice-over
+token) rather than hardcoded, and if the blob cannot supply them the suite **fails** rather than
+skipping.
+
+🔴 **The fixtures were the other half of the defect.** `run_s10_tests` pinned `commit_oid='b'*40`,
+`blob_oid='c'*40` — S10's own claim 2.1: a fabricated pin proves a regex exists and nothing else, and
+it is green whether the resolver works or is absent. They now pin **real** objects derived from HEAD
+at import time.
+
+**Cost, measured because it decided the design.** The live stores hold **234** `OwnerRef`s across
+**three** distinct `(commit, path)` targets, 232 of them the same one. The first working version took
+**11.54s** — one `cat-file` per *reference*. Content-addressed caches at both levels take the same
+234 refs to **0.30s**, and **all 234 resolve**. The read goes through `EvidenceSource` per
+`ORDER-670`; `resolve_pin` is a new category-P primitive there rather than a second git
+implementation inside `candidate.py`. It returns `None` for a pin that does not resolve (a finding)
+but raises `ToolFailure` when the commit is absent **and the repository is shallow**, because there
+"the pin is wrong" and "the history was not fetched" are indistinguishable.
+
+**`OwnerRef` moved to `_ENFORCEMENT_DECLARED` in this commit and not one earlier** — the sequencing
+`ORDER-1264` was built to make possible. Status **BUILT, not WIRED**, deliberately: nothing on the
+commit path sweeps the live stores for pin resolution yet, and claiming WIRED would be the false
+governance state the whole status split exists to end. **That sweep is `ORDER-1281`.**
 
 **Two independent blind audits reached this separately on the same day, neither seeing the other** —
 the S3 audit found it directly, and the S10 audit raised it as its own claim 2.1. That convergence is
