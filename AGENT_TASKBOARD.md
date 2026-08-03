@@ -105,6 +105,120 @@
 
 ---
 
+## ORDER-1230 — [factory/S13] The pilot matrix, run end-to-end: parity holds, and the mechanism under test never ran — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-S13RUN) — 8 parity passes + 32 cell passes on one declared lane; all 16 flat-lot probes came back UNTESTED-INERT` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Slice **S13** (design §10), the half `ORDER-1210`/`ORDER-1220` could not do: **actually running it.**
+> `ORDER-1210` made §8.6 mechanical, `ORDER-1220` pre-registered the two hypotheses with **0 of 16
+> cells run** — this row is the first evidence that pre-registration was written against.
+> **No verdict is issued here, and none may be inferred from it:** design §10 stops this slice at
+> `EVIDENCE_COMPLETE`, and `check_pilot_acceptance` REFUSES if its own output would carry verdict
+> vocabulary. Every PF below is a **measurement**.
+
+### 1. The MT5 lane was declared before anything ran
+
+`D:\Meta 5` (primary/roaming), committed in `docs/SESSION_LEDGER.md` **first**, because design §8.3
+pins `BTCUSD` to the primary install **for its whole life** — tick history differs **14×** across
+installs and only the primary carries BTC back to 2020, so a cell on the wrong lane is a *wrong*
+number rather than a noisy one. Every one of the 40 tester passes ran on it, and every record
+carries it.
+
+### 2. Parity (§8.4) — the gate every cell's evidence depends on — PASSES at the case-set level
+
+Four cases, eight passes, `XAUUSD H1 2024.01.01..2024.07.01` model 1, both sides:
+
+| case | kind | the point only it could exercise |
+|---|---|---|
+| `must-trade` | must-trade | `end_state` — 3 `end of test` deals per side, 61 deals, so "it traded" is observed |
+| `deliberate-refusal` | deliberate-refusal | `alerts` — both refuse at `OnInit` on `_41_FixedLot=0.0`, **same** reason |
+| `cage-fires` | must-trade | `side_effects` — DD gate armed at 0.3 % so it actually trips inside the window |
+| `locked-absent` | neutral | **excluded by `parity.py` itself** — expected to differ; the disagreement *is* the evidence |
+
+> **`=== THE CASE SET SATISFIES design 5.5 ===`** — every point exercised by a real observation in at
+> least one case, none differs, both mandatory directions present.
+
+⚠️ **`must-trade` and `cage-fires` each exit 1 and that is NOT a failure.** `parity.py`'s header
+states why: no single case can exercise all seven points, because a clean run raises no errors
+(point 7 has nothing to compare) and a refused attach places no orders (points 2–6 have nothing to
+compare). The contract is satisfied at the **SET** level and `--rollup` is what judges it. Anyone
+reading the per-case exit codes as pass/fail will reach the opposite conclusion from the correct one.
+Wrapper Inputs page **29**, parent **116** — the asymmetry is the point of the rollout.
+
+### 3. All 16 cells ran — and the headline is not a PF
+
+Design §8.3's universe (`XAUUSD · EURUSD · USDJPY · BTCUSD` × `H1 · H4` × 2 revisions), MAIN
+`2023.01.01..2025.12.31`, model 1, 32 passes. **All 16 flat-lot probes returned `UNTESTED-INERT`.**
+
+B14-H01's pre-registered falsifier is *"flat-lot variant PF ≥ escalated PF (edge is in the signal,
+not the engine)"*. **Every cell satisfies it — and satisfying it means nothing, because the two arms
+are the same EA.** `_41_FixedLot=0.01` on a 0.01-step broker quantizes the LOG-power progression
+away: `lot = firstLot × 1.3^ln(orderN)` first rounds up to 0.02 at `orderN=5`, and baskets only ever
+reach **L2**. Measured, not inferred — L0/L1/L2 each place `0.01`, and the two arms produce
+**byte-identical trade lists**.
+
+🔴 **Read literally, this matrix falsifies H01 sixteen times.** That reading would retire the causal
+claim on evidence that **the escalation engine never executed** — the most expensive misreading
+available, and exactly the shape of the standing rule that a mechanism with zero fires is `UNTESTED`,
+never passed and never failed.
+
+**With its control, because "it says INERT" is worthless if it can only say INERT.** Re-running one
+cell at `_41_FixedLot=0.10` (still under `RC_MaxLot=0.2`) makes the escalated arm place
+**0.10 / 0.11 / 0.13** at L0/L1/L2 against flat-lot's 0.10 everywhere, and the detector returns
+`EXERCISED`. The detector discriminates, and the cause is the **sizing**, not the lever.
+
+### 4. Two reporting defects, both found in my own first table
+
+1. **USDJPY H1 printed `PF 0.00`.** It has 99 trades, **99 winners**, `gross_loss = 0` — PF is
+   **UNDEFINED**, no denominator. The tester prints `0` and that renders the best win rate in the
+   matrix as the worst result in it. **Exactly inverted**, and it would have been quoted from the
+   table by anyone who did not open the report. Now stored as `null` and printed as `UNDEF`.
+2. **PF excludes what the tester force-closed at the window end.** Under `SL_NONE` a basket closes
+   only in profit, so an unresolved one is carried and never enters the ratio. `XAUUSD H1` reports
+   **PF 3.05 while carrying −433.34**; `BTCUSD H1` reports **1.44 while carrying −1,064.29** on a
+   10,000 deposit. Every cell now prints its carried figure beside its PF.
+
+### 5. H02's mechanism is mostly inert too
+
+Given design §8.2 gate 2 (*"`HEDGE_LOCK` has never passed a backtest; enabling it is validating a new
+mechanism"*) this is a finding, not a footnote. **H01 and H02 are identical in every digit on 6 of
+the 8 symbol × TF pairs** — `HEDGE_LOCK` never fired. Where it *did* fire it made both numbers worse:
+`XAUUSD H1` 3.05 → 0.86 with DD 9.39 % → 16.95 %, `BTCUSD H1` 1.44 → 0.96 with DD 11.64 % → 13.45 %.
+H02's falsifier is *"hedged PF < unhedged **at equal measured DD**"* and the DDs are not equal, so
+this does **not** evaluate it — it records the direction.
+
+### 6. What is explicitly NOT done, so the next lane does not have to rediscover it
+
+- 🚫 **The decision-13 optimize probe is NOT done.** What ran is the **flat-lot** probe (H01's
+  falsifier arm). §8.6 item 7's *"Baseline + probe"* means the optimize probe, so **item 7 is not
+  satisfied by this row** and must not be ticked from it.
+- 🚫 **BWD 2020–2022 not run** — MAIN only. For the ENGINE-EDGE class BWD is a **HARD** gate.
+- 🚫 **Model 4 not run.** Model 1 is a pulse-finding pass; `CLAUDE.md` makes Model 4 mandatory for
+  the ENGINE-EDGE class both hypotheses carry, so **nothing here is verdict-grade**.
+- 🚫 **`BTCUSD H4` PF 346.08** (79 winners, one −4.82 loss) is reported as measured and should be
+  read as *a number wanting an explanation*, not an edge.
+- 🚫 **§8.6 items 3–4 remain `BLOCKED`** and deliberately: `.gitignore:70` ignores
+  `_mt5_auto/reports/`, so the committed parity manifests name reports that are **not** in the
+  repository, and `--rollup` reproduces only on the machine that ran it. Wiring the checker to
+  re-read those directories would make it pass on surviving local scratch. The stub already names
+  the fix: **a parity result manifest owned by `parity.py`**, with the checker driving
+  `parity.verdict_for_case` rather than becoming a second reader.
+- 🚫 **The pilot cells are NOT in `factory/coverage.jsonl`.** They cannot be: `gen_coverage.py
+  --apply` regenerates `MASTER_BACKLOG.md` §2 from that store, §2 is owner-protected, and this lane
+  is prohibited from touching it. **Adding pilot rows there needs the owner's approval first** —
+  recorded here rather than worked around.
+
+### 7. Acceptance for this order
+
+**P1** parity `--rollup` prints `THE CASE SET SATISFIES design 5.5` on one named lane ✅ ·
+**P2** 16/16 cells produce a baseline record carrying lane + data fingerprint + model ✅ ·
+**P3** every PF is displayed with its trade count **and** its drawdown ✅ ·
+**P4** crypto cells carry a post-hoc financing deduction and say so ✅ ·
+**P5** the inertness detector ships with a control proving it can return `EXERCISED` ✅ ·
+**P6** no verdict vocabulary in any output ✅ · **P7** `check_pilot_acceptance` unchanged at
+**4 PASS · 0 FAIL · 10 BLOCKED** — this row deliberately turns **no** item green, because the
+evidence exists and the checkers that would read it do not ✅
+
+---
+
 ## ORDER-1220 — [factory/S13] PRE-REGISTRATION of the pilot hypotheses B14-H01 and B14-H02 — `DONE (Claude/Opus 2026-08-03, lane S-2026-08-03-PREREG) — written BEFORE any pilot cell was run, which is the only thing that makes it a pre-registration` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > **This order exists to be pinned.** `factory/hypotheses.jsonl` carries a `preregistration_ref`
