@@ -155,4 +155,27 @@ tier timings, and if a commit is refused by the budget on a loaded machine, **wa
   `_mt5_auto/**` and the `D:\Meta 5` lane. `AGENT_TASKBOARD.md` is shared — stage hunk-by-hunk into
   the **index**, because `git commit -- <path>` commits the working tree of that path.
 
-Open with: **"`_triage/PROMPT_NEXT_SESSION_CORRECTIONS_2.md` ทำต่อเลย"**
+---
+
+## §5 — 🔴 ONE order is BLOCKED by the live lane, and the other six are not
+
+Measured at this file's close (2026-08-03 21:2x), not assumed: `S-2026-08-03-S13D` is still `ACTIVE`,
+18 `metatester64` agents are running, and its matrix stands at **12 of 16 cells**.
+
+| | |
+|---|---|
+| 🚫 **`ORDER-1269` — DO NOT START IT** | its #1 is the ratified `ORDER-1257` option (b) **re-pin**, and the thing it re-pins is `factory/coverage.jsonl`. That file is **still held by S13D and will move once more** (`gen_pilot_cells.py --apply` when the matrix completes). Re-pinning now means the write invalidates the pin within the hour — which is `approval-pinning-self-invalidates`, the seventh occurrence, and the exact defect `ORDER-1269` exists to end. **Wait for that row to close.** |
+| ✅ **the other six are clear** | `1260` `candidate.py`/`attestation.py`/`magic.py` · `1261` `notifier.py` · `1265` `scheduler.py` · `1266` `preset.py` · `1267` `safe_projection.py` · `1268` preset/setfile/wrapper-gen. **None is a path S13D holds**, and it released `scripts/_test/**` early (its row says so), which is where every cage fix lands |
+
+**Suggested order, and the reason is in §1 rather than preference:** `ORDER-1268` first — the check
+that claims to refuse a partial `.set` is a non-emptiness test, so the weak check is *why* the hole
+survives, the same shape as `1264`→`1263`. Then `1266` and `1267`, the two carrying cages that assert
+their own defects (§2). `1269` last, or in the session after this one.
+
+**Two taxes, neither a blocker:** the tier will refuse commits while the batch runs (§3 — retry, or
+stage fewer `scripts/_test/**` paths per commit; **never `--no-verify`**), and `AGENT_TASKBOARD.md` is
+shared with S13D, so stage it hunk-by-hunk into the **index**.
+
+---
+
+Open with: **"`_triage/PROMPT_NEXT_SESSION_CORRECTIONS_2.md` ทำต่อเลย — จองบล็อก 1290-1299 ก่อน · ข้าม ORDER-1269 ไว้ก่อน (S13D ยังถือ `factory/coverage.jsonl`) · เริ่มที่ ORDER-1268"**
