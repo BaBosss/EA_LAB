@@ -330,8 +330,28 @@ def read_store(path=None):
 
 
 def write_store(cells, path=None):
+    """Rewrite the native population from `cells`, keeping meta and imported rows verbatim.
+
+    🔴 REFUSES TO DROP A ROW IT DID NOT GENERATE. Measured before this guard existed: adding one
+    native `CoverageCell` the run evidence does not derive and calling `--apply` took the store
+    from 26 rows to 25 and said nothing. `--check` calls that row UNDERIVABLE and prints it, but
+    nothing forces anyone to run `--check` first, and `--apply` is the command someone reaches for
+    when they already believe the store is behind. A generator that silently deletes what it
+    cannot re-derive is a generator that turns "I did not understand this row" into "this row
+    never existed".
+    """
     path = path or os.path.join(ROOT, COVERAGE)
     meta, imported, _native = read_store(path)
+    generated_ids = {c.get('cell_id') for c in cells}
+    orphans = sorted(c.get('cell_id') for c in _native
+                     if c.get('cell_id') not in generated_ids)
+    if orphans:
+        raise SystemExit(
+            'gen_pilot_cells: --apply would DELETE %d native row(s) the run evidence does not '
+            'derive: %s. Refusing. Either the source that produced them is missing, or they were '
+            'hand-written into a generated store -- both are decisions, and neither is this '
+            'command\'s to make silently. Run --check to see the full diff.'
+            % (len(orphans), ', '.join(orphans)))
     out = meta + imported + [reg.canonical_line(c) for c in cells]
     with io.open(path, 'w', encoding='utf-8', newline='\n') as fh:
         fh.write('\n'.join(out) + '\n')
