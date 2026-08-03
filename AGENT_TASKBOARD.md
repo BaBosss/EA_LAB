@@ -687,7 +687,60 @@ building before the question is asked.
 
 ---
 
-## ORDER-1269 — [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and the owner's own handout tells them to weaken its checker — `RATIFIED 2026-08-03 — #1 = ORDER-1257 option (b), the structural fix. #3 = suppress APPROVED when any F-check fails` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1269 — [factory/S2] The approval that authorises the Coverage transfer binds an evolving whole store, and the owner's own handout tells them to weaken its checker — `#1 + #3 DONE 2026-08-04` (lane `S-2026-08-04-CORRECT3`: `e272a34b` #3 first form · `ddf3153f` #1 + #3 reworked · `929f3b18` the tier wiring) · **#2 and #4 still OPEN** · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+### ✅ CLOSED 2026-08-04 — #1 and #3. What was done, and the two traps it hit
+
+**#1 — the instrument changed, and D1 was not touched.** `owner_ref`'s whole-blob pin on
+`factory/coverage.jsonl` is no longer enforced, because that path is the DESTINATION of a transfer
+D1 records as already executed — its bytes changing is the approval succeeding. What binds the
+decision instead is what the ratification named: the **migration** (F1's bundle digest) and the
+**generated section** (F13/F14 on `expected_post_state`), both re-resolved on the run that grants
+the exemption. The predicate is derived (`disposition == TRANSFER` **and**
+`owner_ref.path == proposed_owner`), not a typed path list, and it selects **exactly one of the 29
+D1 rows** — measured. `--template` goes through the same predicate, so the handout cannot ask for a
+signature the checker will not demand.
+
+⚠️ **A byte-prefix pin was designed first and MEASUREMENT killed it.** The pinned 9-line blob *is*
+a byte-exact prefix of HEAD, so it would have gone green — but `ec47f37d` rewrote **16 existing
+lines in place** (16 insertions / 16 deletions) when those cells changed state. The store is
+designed to **mutate**, not merely to grow, so no pin over the whole store can be stable. That is
+why the ratified wording is the right one and a narrower whole-store pin is not.
+
+🔴 **#3's first form cost a signature and had to be reworked — the trap is worth carrying.**
+Withholding the failing row from what `check()` RETURNS broke **29 of the 68 canonical vectors** in
+`S2A_ATTESTATION_VECTORS.jsonl`, which declare `expected_current: {OWNER.md: {decision: APPROVED}}`
+for records their own `expected_reasons` refuses — the defect, written into the signed policy
+corpus. That file is a **BUNDLE MEMBER**, so editing it changes the digest, fails F1, and costs the
+owner a signature to repair a display bug: the "signature to repair a signature" this order
+prohibits. The ratified wording is the escape and it is exact — *"the exit code is already honest;
+**the line a human reads** is not."* Conformance never reads printed output, so the demotion moved
+to `reported_decision()` at the print. **Bundle digest across the whole slice: `e28c5c9d68bbd299`,
+unchanged.** It was not caught before the first commit because none of these checkers were on the
+commit path — which is what limb 2 fixes.
+
+**Tier wiring (the order's own constraint).** `run_s2a_gate` + `check_coverage_transfer` are back on
+the commit path as `scripts/_test/run_s2a_cages.ps1` — **only those two** of the fourteen entries
+`ORDER-1252` moved off, in a wrapper selected only by S2a paths, so that order is honoured rather
+than reversed. Full tier **88.1s → median 97.5s of the pinned 120.0s** (22.5s headroom), three
+samples, idle machine.
+
+**Measured, all of it hand-run because none of it was on the commit path until limb 2:**
+`check_s2a_attestation` exit 1 → 0 · `run_s2a_gate` 2 of 7 steps failed → 7/7 · `check_coverage_transfer`
+exit 0 · `run_s2a_conformance` 29 of 68 failed after `e272a34b` → 68 run / 0 failed ·
+`run_s2a_attestation_tests` +13 cases, green · the full `run_contract_binding_tests.ps1` wrapper, exit 0.
+
+**Two existing cases NARROWED, not flipped, each with its false stated reason deleted:** M1
+specificity read *"no note today"* — an assertion about the state of the world that a legitimate
+16-row append reddened with nothing wrong; and the M1 fire-direction fixture moved `STALE` →
+`MISSING`, because a STALE note on that path is now exempt and the case would otherwise have tested
+the path-mapping through a door that no longer opens.
+
+**STILL OPEN on this order:** **#2** (the generated §2.1 of `S2A_OWNERSHIP_MIGRATION.md` still
+instructs the three-file deadlock, and it *regenerates* from `gen_s2a_migration_doc.py:142-155`) and
+**#4** (`pinned_expectations()` derives a pin only from `expected_post_state`, so a record without
+one pins nothing at the front guard). #4's shape is now partly closed *through this door only* — the
+exemption refuses a record with no post-state claim — but the front guard itself is untouched.
 
 ### ✅ OWNER DECISIONS, 2026-08-03 — recorded before any work
 
