@@ -296,6 +296,19 @@ $FAST_SUITES = @(
     # its closing lines). Run the wrapper directly at any session boundary:
     #   powershell -File scripts\_test\run_contract_binding_tests.ps1
     'run_schema_cages.ps1',
+    # ORDER-1269 #1 (owner-ratified as ORDER-1257 option (b)). run_s2a_gate.py (5.4s) and
+    # check_coverage_transfer.py (1.3s) return to the tier, and ONLY those two of the fourteen
+    # entries ORDER-1252 moved off it. That order's reason was the WRAPPER -- 18 entries, 42.6s,
+    # and a per-path breadth that cost 99.2s on a schema edit -- so a 2-entry wrapper selected
+    # only by S2a paths does not reopen it. They could not be added before ORDER-1269 landed
+    # because they were RED, and a red suite here blocks every commit in the repo.
+    # MEASURED on an idle machine (Get-Process metatester64 checked first -- the same tier has
+    # measured 141.8s under an 18-agent batch): full tier 88.1s before, ONE sample, and
+    # 97.5 / 98.4 / 95.5 -> median 97.5s of the PINNED 120.0s after. 22.5s headroom.
+    # The 5.4 + 1.3 = 6.7s above is ORDER-1252's own recorded per-entry estimate and the suite
+    # actually costs a median 7.82s standalone; both numbers are kept so the drift is visible.
+    # See run_s2a_cages.ps1's header for the per-entry table and the -Timing switch re-deriving it.
+    'run_s2a_cages.ps1',
     # ORDER-612 (S4, 2026-07-31): the READER half of the snapshot boundary -- C3 (a missing /
     # unreadable / stale mandatory source cannot render ALL CLEAR, each observed firing and the
     # fire count printed) and C6 (make_status and the daily digest consume ONLY a validated
@@ -875,6 +888,44 @@ $SUITE_GUARDS = @{
     # The factory/*.jsonl entries below are the load-bearing ones and the comment they carry is
     # kept verbatim, because the finding is unchanged and the whole reason the split took this
     # shape instead of the displacement the owner first asked for.
+    # ORDER-1269 #1. The bytes these two checkers actually JUDGE, not the files they happen to
+    # live near. The bundle's six members are here because F1 fingerprints them and a change to
+    # any one voids the owner's record; `factory/coverage.jsonl` and `MASTER_BACKLOG.md` are here
+    # because check_coverage_transfer recomputes both owner conditions from exactly those two
+    # files -- the blind-audit-round-4 shape, one directory over: a checker that is not on the
+    # commit path of the file it governs runs when something ELSE is staged.
+    #
+    # The last two are HOT paths for the other lane's `gen_pilot_cells.py --apply` commits, and
+    # that cost (6.7s) is accepted rather than trimmed: those commits are precisely the ones that
+    # can invalidate the transfer acceptance, so they are the ones that must pay for it.
+    'run_s2a_cages.ps1'               = @(
+                                          '_triage/factory_os/s2a_migration.jsonl',
+                                          '_triage/factory_os/s2a_attestations.jsonl',
+                                          '_triage/factory_os/s2a_coverage_reconciliation.json',
+                                          '_triage/factory_os/S2A_OWNERSHIP_MIGRATION.md',
+                                          '_triage/factory_os/S2A_ATTESTATION_POLICY.md',
+                                          '_triage/factory_os/S2A_ATTESTATION_VECTORS.jsonl',
+                                          '_triage/factory_os/check_s2a_migration.py',
+                                          '_triage/factory_os/check_s2a_attestation.py',
+                                          '_triage/factory_os/check_coverage_transfer.py',
+                                          '_triage/factory_os/gen_s2a_migration.py',
+                                          '_triage/factory_os/gen_s2a_migration_doc.py',
+                                          '_triage/factory_os/run_s2a_gate.py',
+                                          '_triage/factory_os/run_s2a_attestation_tests.py',
+                                          '_triage/factory_os/run_s2a_migration_tests.py',
+                                          'factory/coverage.jsonl',
+                                          'MASTER_BACKLOG.md',
+                                          # DEMANDED BY THE IMPORT SWEEP (PART 4b) on its first run
+                                          # after this suite was registered, not remembered. Each
+                                          # is reached through an `import`, which the wrapper's
+                                          # path-string sweep cannot see:
+                                          #   evidence.py           <- run_s2a_attestation_tests
+                                          #   gen_coverage.py       <- check_coverage_transfer
+                                          #   gen_design_contracts  <- check_s2a_migration
+                                          '_triage/factory_os/evidence.py',
+                                          '_triage/factory_os/gen_coverage.py',
+                                          '_triage/factory_os/gen_design_contracts.py'
+                                        )
     'run_schema_cages.ps1'            = @(
                                           # ORDER-702: DERIVED by the import sweep in
                                           # run_guard_trigger_tests PART 4b, not remembered.
