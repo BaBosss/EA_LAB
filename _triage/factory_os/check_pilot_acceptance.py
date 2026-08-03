@@ -397,6 +397,52 @@ def item_regression_and_registry_clean(src):
             'lane has been declared by this slice, so the compound claim cannot be evidenced.')
 
 
+# 🔴 UNIMPLEMENTED, DECLARED -- /scrutinize round 2.
+#
+# Round 2 asked a question the roll-up could not answer: which handlers can EVER return PASS?
+# Ten of the fourteen could not. They are stubs that read nothing and return a hardcoded BLOCKED,
+# so `EVIDENCE_COMPLETE` was UNREACHABLE BY CONSTRUCTION and exit code 0 was dead code.
+#
+# That is bad in a specific and familiar way. "BLOCKED because the pilot has not run" and "BLOCKED
+# because nobody wrote this check yet" are DIFFERENT WORK ITEMS with different owners, and the
+# report collapsed them into one word. The failure mode is concrete: someone runs the pilot, the
+# evidence appears, these items still say BLOCKED because they never look at anything -- and the
+# reader concludes the checklist is broken, or hand-waves it. A guard that can never go green is
+# the mirror of a guard that can never fire, and this repo has paid for both.
+#
+# So the stubs are DECLARED, the report separates them, and the cage asserts the declaration is
+# exact in both directions. Implementing one means DELETING its name here -- which is the forcing
+# function: you cannot quietly leave a stub in place while claiming the checklist is mechanical.
+UNIMPLEMENTED = {
+    'item_parity_all_points':
+        'needs the parity result manifest schema, owned by parity.py. Reading it here would be a '
+        'second reader; wire through parity.verdict_for_case.',
+    'item_parity_directions':
+        'same manifest as item_parity_all_points; the DIRECTIONS (must-trade actually traded, '
+        'refusal actually refused) come from parity.verdict_for_case, not from a re-read.',
+    'item_optimize_guard':
+        'needs a record of real pilot sweep submissions, ALLOWed and REFUSEd. No such artefact '
+        'exists; optimize_guard.ps1 today leaves no committed decision log.',
+    'item_cells_baseline_probe':
+        'needs the pilot cell result store. factory/runs/ holds S9 scheduler fixtures and has no '
+        'cell entity.',
+    'item_pf_with_n_and_dd':
+        'needs the cell result store above, plus the renderer that displays PF with n and DD.',
+    'item_lane_and_fingerprint':
+        'needs the run record to carry lane + data fingerprint; the fields are designed but no '
+        'pilot run writes them yet.',
+    'item_crypto_financing':
+        'needs a crypto cell result AND the post-hoc financing deduction recorded beside it.',
+    'item_scheduler_resume':
+        'needs a killed-and-resumed PILOT batch; the scheduler journal exists and is cage-tested, '
+        'but nothing ties a journal to a pilot batch id yet.',
+    'item_evidence_complete_no_verdict':
+        'the compound claim can only be evaluated once every other item can PASS; the half that '
+        'is testable today (no verdict vocabulary) IS implemented and driven.',
+    'item_regression_and_registry_clean':
+        'needs an end-of-pilot marker and a tpl_regression run on the declared lane.',
+}
+
 # ANCHOR -> handler. The anchor is a distinctive substring of the DESIGN's own wording; the
 # binding check below proves each matches exactly one item and each item exactly one anchor.
 CHECKLIST_BINDINGS = (
@@ -444,6 +490,12 @@ def bind(items):
         if anchor not in used:
             problems.append('handler anchored on %r matches no item in design 8.6 -- the '
                             'checklist changed and this module did not' % anchor)
+    # The UNIMPLEMENTED declaration must be exact in BOTH directions, for the same reason the
+    # anchor binding is: a stale entry means the report lies about which items are stubs, and a
+    # missing entry means a stub is being reported as ordinary BLOCKED.
+    known = set(h.__name__ for _a, h in CHECKLIST_BINDINGS)
+    for name in sorted(set(UNIMPLEMENTED) - known):
+        problems.append('UNIMPLEMENTED declares %r, which is not a bound handler' % name)
     if problems:
         raise Refusal('checklist binding failed, so NOTHING was evaluated (this is a contract '
                       'failure in the checker, not a statement about the pilot):\n  - '
@@ -525,12 +577,34 @@ def evaluate(worktree=False, source=None):
     if sum(counts.values()) != len(items):
         raise Refusal('state counts sum to %d over %d items' % (sum(counts.values()), len(items)))
 
+    # Split BLOCKED by CAUSE. Same word, two different owners: "the pilot has not produced this
+    # evidence" is work for whoever runs the pilot; "this check is a stub" is work for whoever
+    # builds the checker. /scrutinize round 2.
+    stub_names = set(UNIMPLEMENTED)
+    handler_by_item = dict((t, h) for (t, h) in pairs)
+    blocked_stub = 0
+    stub_items = {}
+    for t, s, _d in results:
+        name = handler_by_item[t].__name__
+        if name in stub_names:
+            stub_items[t] = UNIMPLEMENTED[name]
+            if s == BLOCKED:
+                blocked_stub += 1
+
     rollup = {
         'items': len(items),
         'pass': counts[PASS],
         'fail': counts[FAIL],
         'blocked': counts[BLOCKED],
+        'blocked_awaiting_evidence': counts[BLOCKED] - blocked_stub,
+        'blocked_checker_unimplemented': blocked_stub,
         'evidence_complete': counts[PASS] == len(items),
+        # Honest and load-bearing: while any bound handler is a declared stub, EVIDENCE_COMPLETE
+        # cannot be reached however good the pilot's evidence gets. A reader must not have to
+        # infer that from a wall of BLOCKED lines.
+        'evidence_complete_reachable': not stub_names,
+        'unimplemented': sorted(stub_names),
+        'stub_items': stub_items,
         'mode': src.mode,
     }
     return results, rollup
@@ -563,9 +637,20 @@ def main(argv):
             mark = {PASS: '[PASS ]', FAIL: '[FAIL ]', BLOCKED: '[BLOCK]'}[state]
             print('%s %2d. %s' % (mark, i, text[:104]))
             print('        %s' % detail)
+            # Say WHICH KIND of blocked, on the line, where the reader is looking.
+            stub = rollup['stub_items'].get(text)
+            if state == BLOCKED and stub:
+                print('        ^ CHECKER NOT IMPLEMENTED (not merely awaiting evidence): %s' % stub)
         print('')
-        print('[pilot-acceptance] %d item(s): %d PASS · %d FAIL · %d BLOCKED'
-              % (rollup['items'], rollup['pass'], rollup['fail'], rollup['blocked']))
+        print('[pilot-acceptance] %d item(s): %d PASS · %d FAIL · %d BLOCKED '
+              '(%d awaiting evidence, %d checker-not-implemented)'
+              % (rollup['items'], rollup['pass'], rollup['fail'], rollup['blocked'],
+                 rollup['blocked_awaiting_evidence'], rollup['blocked_checker_unimplemented']))
+        if not rollup['evidence_complete_reachable']:
+            print('[pilot-acceptance] ⚠ EVIDENCE_COMPLETE is currently UNREACHABLE: %d of the %d '
+                  'items are stub checkers, so no amount of pilot evidence can turn this green '
+                  'until they are implemented.'
+                  % (rollup['blocked_checker_unimplemented'], rollup['items']))
 
     if rollup['fail']:
         print('[pilot-acceptance] NOT EVIDENCE_COMPLETE -- %d item(s) contradicted by the evidence.'

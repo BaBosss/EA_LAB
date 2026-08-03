@@ -173,12 +173,17 @@ print('[s13] PART 3 -- ROLL-UP: BLOCKED can never satisfy EVIDENCE_COMPLETE')
 def evaluate_with(states):
     """Drive PA.evaluate with handlers forced to `states` (one per real item)."""
     saved = PA.CHECKLIST_BINDINGS
-    anchors = [a for a, _h in saved]
     forced = []
-    for anchor, state in zip(anchors, states):
+    for (anchor, real), state in zip(saved, states):
         def mk(s):
             return lambda src: (s, 'forced %s' % s)
-        forced.append((anchor, mk(state)))
+        fn = mk(state)
+        # CARRY THE REAL HANDLER'S NAME. Without this the forced handlers are `<lambda>`, the
+        # UNIMPLEMENTED declaration matches nothing, and bind() correctly refuses -- which is the
+        # strict binding working, but it also means the stub-split assertions below would be
+        # testing a world where no stub exists. Keeping the names makes U3/U4 meaningful.
+        fn.__name__ = real.__name__
+        forced.append((anchor, fn))
     PA.CHECKLIST_BINDINGS = tuple(forced)
     try:
         return PA.evaluate(source=FakeSource({PA.DESIGN_REL: REAL_DESIGN}))
@@ -209,6 +214,44 @@ check('R5 FAIL and BLOCKED together are both counted, neither masks the other',
 
 check('R6 the state counts always sum to the parsed item count',
       roll['pass'] + roll['fail'] + roll['blocked'] == roll['items'] == n)
+
+# --- /scrutinize round 2: BLOCKED has two causes and they are different work items --------------
+# Round 2 asked which handlers can EVER return PASS. Ten of fourteen could not: they are stubs
+# that read nothing. So EVIDENCE_COMPLETE was unreachable BY CONSTRUCTION and exit 0 was dead
+# code -- and a reader watching the pilot produce evidence would have seen those items stay
+# BLOCKED forever with no way to tell "not run yet" from "not implemented yet".
+check('U1 the stub declaration is non-empty today (if it empties, U2/U3 must be re-read)',
+      len(PA.UNIMPLEMENTED) > 0)
+
+refuses('U2 ATTACK UNIMPLEMENTED naming a handler that is not bound is refused',
+        lambda: (PA.UNIMPLEMENTED.setdefault('item_does_not_exist', 'x'),
+                 PA.bind(items))[1],
+        'not a bound handler')
+PA.UNIMPLEMENTED.pop('item_does_not_exist', None)
+
+_r, roll = evaluate_with([PA.BLOCKED] * n)
+check('U3 the two kinds of BLOCKED sum to the BLOCKED total',
+      roll['blocked_awaiting_evidence'] + roll['blocked_checker_unimplemented']
+      == roll['blocked'], repr(roll))
+
+check('U4 evidence_complete_reachable is FALSE while any stub is declared',
+      roll['evidence_complete_reachable'] is False)
+
+_saved_unimpl = dict(PA.UNIMPLEMENTED)
+try:
+    PA.UNIMPLEMENTED.clear()
+    _r, roll2 = evaluate_with([PA.PASS] * n)
+    check('U5 SPECIFICITY with NO stubs declared, reachable flips to TRUE '
+          '(the flag tracks the declaration, it is not hardcoded)',
+          roll2['evidence_complete_reachable'] is True
+          and roll2['blocked_checker_unimplemented'] == 0)
+finally:
+    PA.UNIMPLEMENTED.update(_saved_unimpl)
+
+check('U6 every declared stub is a real bound handler (the reverse direction of U2)',
+      set(PA.UNIMPLEMENTED) <= set(h.__name__ for _a, h in PA.CHECKLIST_BINDINGS),
+      'orphans: %r' % (set(PA.UNIMPLEMENTED)
+                       - set(h.__name__ for _a, h in PA.CHECKLIST_BINDINGS)))
 
 refuses('R7 ATTACK a handler returning an INVENTED state is refused, not coerced',
         lambda: evaluate_with(['PROBABLY_FINE'] + [PA.PASS] * (n - 1)),
@@ -257,7 +300,12 @@ try:
     # check_wrapper_gen against the synthetic source, raised a read Refusal, and `refuses()` was
     # satisfied by a refusal that had nothing to do with verdict vocabulary. It was green for the
     # wrong reason -- the exact defect this round is fixing, reproduced inside its own fix.
-    benign = tuple((a, (lambda src: (PA.PASS, 'benign'))) for a, _h in saved)
+    def _benign_for(real):
+        fn = lambda src: (PA.PASS, 'benign')                   # noqa: E731
+        fn.__name__ = real.__name__       # keep the UNIMPLEMENTED declaration bindable (see U2)
+        return fn
+
+    benign = tuple((a, _benign_for(h)) for a, h in saved)
     PA.CHECKLIST_BINDINGS = ((benign[0][0], _leaky_detail),) + benign[1:]
     check('V4 SPECIFICITY the docstring scan alone does NOT see a leak in the rendered detail',
           PA.scan_verdict_vocab(PA.handler_docstrings()) == set(),
