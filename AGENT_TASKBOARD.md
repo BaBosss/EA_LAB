@@ -105,7 +105,18 @@
 
 ---
 
-## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `OPEN (needs the owner)` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+## ORDER-1300 — [factory/S13] 🔴 The pre-registered floor is §6.2's BASE floor, and both pilot revisions are engine-edge — which §6.2 says doubles it — `DONE (user ratified in-session 2026-08-04, lane S-2026-08-04-S13E) — KEEP the base floor 100/60 for the decision-13 probe; recorded in PROJECT_STATE.md §3; ORDER-1273's selection stands as committed` · ทำได้: user (Boss) decides; Claude/Opus prepares · 👉 แนะ: user
+
+> ✅ **RATIFIED 2026-08-04 — `H1 ≥ 100 · H4 ≥ 60` stands.** (TH: *"คง floor เดิม 100/60"*.) The rule
+> and its scope live in **`PROJECT_STATE.md` §3**; read it there, not here. Operative consequences:
+> `ORDER-1273`'s sixteen selections are final at that floor · **`ORDER-1273` step 6 is UNBLOCKED for
+> the two `SELECTED` cells** · the fourteen `BOUNDARY` cells stay held by `ORDER-1302` · the doubling
+> rule remains in force for optimize **campaigns** and deploy-track numbers.
+> 🔴 **Still owed, and it is the reason this order is DONE rather than closed silently:** §6.2 must be
+> amended to say which step each floor governs. Until it is, the design text and the executed
+> criterion still read as disagreeing, and the next reader re-opens this — which is exactly the loop
+> a ratification is supposed to end. That edit is `_triage/EA_LAB_FACTORY_OS_DESIGN.md`, which this
+> lane is prohibited from touching, so it goes to whoever owns the design next.
 
 **Found by executing `ORDER-1273`, not by reading it.** Design §6.2 says, in one sentence:
 *"`Criterion` 0→7 (Complex), **engine-edge uses PF + double trade floor** · trade floors H4/D1 ≥60,
@@ -432,8 +443,12 @@ to fail on six one-line mutations of the module).
   **`ORDER-1300`** (the pinned floor is §6.2's base floor while both revisions are engine-edge, which
   §6.2 doubles — and the floor changes the answer in 14 of 16 cells) and **`ORDER-1301`** (every row
   of the PF-max plateau has essentially no realised loss).
-* 🚫 Step 6 (re-run the selected configuration once) has **not** been run, and deliberately: with
-  `ORDER-1300` open, the two configurations below may not be the ones the criterion selects.
+* ✅ **Step 6 (re-run the selected configuration once) is UNBLOCKED as of the 2026-08-04
+  ratification** — the owner kept the base floor, so the two configurations below are the ones the
+  criterion selects. It is owed for `B14-H01-r1/BTCUSD/H4` and `B14-H02-r1/BTCUSD/H4` **only**; the
+  other fourteen are `BOUNDARY` and held by `ORDER-1302`. A per-dimension median need not
+  correspond to any row that was evaluated, so without this the number handed to `ORDER-1254` would
+  be interpolated rather than measured.
 
 🔴 **THIS ORDER EXISTS BECAUSE THE EVIDENCE ALREADY EXISTS.** Ten optimizer XMLs are on disk and
 six more are coming. `ORDER-1220` established the rule this repo pays for: a criterion chosen after
@@ -1651,13 +1666,13 @@ the back door · any EA verdict (design §10 stops this slice at `EVIDENCE_COMPL
 
 ## ORDER-1254 — [factory/S13] BWD 2020-22 as a HARD gate, then Model 4 — `OPEN` (blocked on `ORDER-1253` ✅, and now on `ORDER-1300` + `ORDER-1302`) · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
-> 🔴 **Re-blocked 2026-08-04 by executing `ORDER-1273`, and both blockers are about the input this
-> order judges.** BWD judges *the configuration the probe selected*, and (a) **fourteen of sixteen
-> cells do not have one** — they are `BOUNDARY` and item 5 holds them open (`ORDER-1302`); (b) the
-> two that do select were selected under a **trade floor whose correctness is now an open question**
-> (`ORDER-1300` — §6.2 doubles the floor for the engine-edge class and the pre-registration pinned
-> the base one). Running BWD now would spend the hard gate on a configuration that may not be the
-> one the criterion picks.
+> 🔴 **Re-blocked 2026-08-04 by executing `ORDER-1273`.** BWD judges *the configuration the probe
+> selected*, and **fourteen of sixteen cells do not have one** — they are `BOUNDARY` and item 5
+> holds them open (`ORDER-1302`).
+> ✅ The second blocker cleared the same day: `ORDER-1300` is **ratified — the base floor 100/60
+> stands** — so the two `SELECTED` cells (`B14-H01-r1/BTCUSD/H4` · `B14-H02-r1/BTCUSD/H4`) carry
+> configurations that are final. **BWD may proceed on those two once `ORDER-1273` step 6 has
+> re-run them**, and on nothing else until `ORDER-1302` lands.
 
 BOX 1c of the S13C handoff, owner-ratified: **run H01's pre-registration to the end before judging
 it.** Today's evidence is **MAIN-only under Model 1**, which `CLAUDE.md` says is not verdict-grade
