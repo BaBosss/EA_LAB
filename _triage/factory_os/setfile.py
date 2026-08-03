@@ -104,6 +104,59 @@ def parse_set(text):
     return lines, comments
 
 
+def surface_problems(names, surface, what='this .set', linenos=None, require_full_surface=True):
+    """-> [] when `names` IS build `surface.build_tag`'s full input surface; else every reason.
+
+    ORDER-1268. THIS FUNCTION IS THE POLICY, AND IT IS PUBLIC ON PURPOSE. Until 2026-08-03 the
+    only implementation of "a partial configuration is refused" lived inside `read_set`, whose
+    only caller was `run_setfile_tests.py` -- BUILT, never WIRED. The map that actually reaches
+    the evidence store, `CandidatePayload.parameters`, was judged by `candidate.py` against
+    NON-EMPTINESS, so `{'OnlyOneKey': 1}` validated clean while carrying the same defect in the
+    same repository (measured at HEAD before this was written).
+
+    The fix is not a second copy of the rule in `candidate.py`. Two implementations of one policy
+    is how the two halves drift apart, and the drifted half is always the one that matters --
+    `check_registries` R4 refuses exactly this shape one layer up. So the rule lives HERE, once,
+    and `read_set` and `candidate.validate_payload` are both callers.
+
+    `what` names the thing being judged so one message can serve a `.set` on the run path and a
+    parameter map on the evidence path without either reading as though it were the other.
+    `linenos` is optional: a `.set` can say WHERE, a dict cannot, and a refusal that omits the
+    location it does not have is better than one that invents it.
+    """
+    problems = []
+    names = list(names)
+    unknown = [n for n in names if n not in surface.by_name]
+    if unknown:
+        detail = '; '.join(
+            '%r (%snearest declared: %s)'
+            % (n,
+               ('line %d, ' % linenos[n]) if linenos and n in linenos else '',
+               ', '.join(preset._nearest(n, surface)) or 'none')
+            for n in unknown)
+        problems.append(
+            '%s carries %d key(s) that build %s does not expose: %s. REFUSED, and the '
+            'key(s) are named because that is the whole point -- a reader that dropped them '
+            'would produce a run configured partly from this file and partly from the '
+            'terminal cache, and the report would not say so. Migrate the file with '
+            'migrate_set.py, which writes a NEW file and reports every key it changed, dropped '
+            'or could not map.' % (what, len(unknown), surface.build_tag, detail))
+
+    if require_full_surface:
+        have = set(names)
+        missing = [d.name for d in surface.inputs if d.name not in have]
+        if missing:
+            shown = ', '.join(missing[:12]) + ('' if len(missing) <= 12 else
+                                               ', ... (%d more)' % (len(missing) - 12))
+            problems.append(
+                '%s covers %d of build %s\'s %d inputs; %d are missing: %s. REFUSED: '
+                'MT5 fills an unlisted input from the PER-TERMINAL tester cache, so a partial '
+                'set produces a run whose configuration depends on what that terminal ran last '
+                '(memory `mt5-tester-cache-nondeterminism`, the ORDER-165 8/8 false drift).'
+                % (what, len(have), surface.build_tag, len(surface), len(missing), shown))
+    return problems
+
+
 def read_set(text, surface, require_full_surface=True):
     """-> OrderedDict name -> value, for a `.set` that is valid for `surface`.
 
@@ -112,36 +165,19 @@ def read_set(text, surface, require_full_surface=True):
     -- because an uncovered input is filled from the terminal cache, which is the ORDER-165
     defect. Callers that genuinely want a partial overlay (the migration tool reading an OLD
     file) pass False and say so.
+
+    The judging is `surface_problems` above, not this function -- see its docstring for why the
+    policy had to leave here. Both reasons are reported together now rather than the unknown-key
+    one hiding the missing-key one; a file with both defects has both.
     """
     from collections import OrderedDict
     lines, _comments = parse_set(text)
 
-    unknown = [ln for ln in lines if ln.name not in surface.by_name]
-    if unknown:
-        detail = '; '.join(
-            '%r (line %d, nearest declared: %s)'
-            % (ln.name, ln.lineno, ', '.join(preset._nearest(ln.name, surface)) or 'none')
-            for ln in unknown)
-        raise Refusal(
-            'this .set carries %d key(s) that build %s does not expose: %s. REFUSED, and the '
-            'key(s) are named because that is the whole point -- a reader that dropped them '
-            'would produce a run configured partly from this file and partly from the '
-            'terminal cache, and the report would not say so. Migrate the file with '
-            'migrate_set.py, which writes a NEW file and reports every key it changed, dropped '
-            'or could not map.' % (len(unknown), surface.build_tag, detail))
-
-    if require_full_surface:
-        have = set(ln.name for ln in lines)
-        missing = [d.name for d in surface.inputs if d.name not in have]
-        if missing:
-            shown = ', '.join(missing[:12]) + ('' if len(missing) <= 12 else
-                                               ', ... (%d more)' % (len(missing) - 12))
-            raise Refusal(
-                'this .set covers %d of build %s\'s %d inputs; %d are missing: %s. REFUSED: '
-                'MT5 fills an unlisted input from the PER-TERMINAL tester cache, so a partial '
-                'set produces a run whose configuration depends on what that terminal ran last '
-                '(memory `mt5-tester-cache-nondeterminism`, the ORDER-165 8/8 false drift).'
-                % (len(have), surface.build_tag, len(surface), len(missing), shown))
+    problems = surface_problems([ln.name for ln in lines], surface,
+                                linenos=dict((ln.name, ln.lineno) for ln in lines),
+                                require_full_surface=require_full_surface)
+    if problems:
+        raise Refusal(' '.join(problems))
 
     out = OrderedDict()
     for decl in surface.inputs:

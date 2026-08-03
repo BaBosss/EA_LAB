@@ -534,7 +534,8 @@ def epair(entity, positive, negative, guards, says, name='core'):
 
 
 PAYLOAD_OK = {"hypothesis_revision": "B14-H01-r1", "module_set": [MODULE_OK],
-              "logical_symbol": "XAUUSD", "tf": "H1", "parameters": {"GridStepATR": 1.5},
+              "logical_symbol": "XAUUSD", "tf": "H1", "build_tag": "LAB_ENTRY_14",
+              "parameters": {"GridStepATR": 1.5},
               "profiles": {"instrument": H64, "exit": H64, "sizing": H64, "safety": H64,
                            "execution": H64},
               "evidence": [METRIC_OK], "ex5_sha256": H64, "source_sha256": H64,
@@ -741,6 +742,25 @@ epair('CandidatePayload', PAYLOAD_OK, without(PAYLOAD_OK, "trial_count"),
       'ORDER-611: trial_count is what makes discovery risk computable at all (design 6.7); a '
       'payload without it silently reports "no trials"',
       [{'keyword': 'required', 'instancePath': '', 'missingProperty': 'trial_count'}])
+
+# ORDER-1268. Two deltas, because `build_tag` fails in two different places and only one of them
+# is this schema's to catch. ABSENT is a `required` failure and belongs here. A tag naming a build
+# Inputs.mqh does not declare is NOT expressible as a schema rule -- no pattern knows which builds
+# exist -- and is `candidate.py`'s C10 resolution instead; run_s10_tests attacks it there. The
+# split is stated so a later reader does not add a build enum here, which would be a second, and
+# immediately stale, list of the builds.
+epair('CandidatePayload', PAYLOAD_OK, without(PAYLOAD_OK, "build_tag"),
+      'ORDER-1268: `parameters` is contractually the FULL surface, and a surface belongs to ONE '
+      'build. Without build_tag the only enforceable reading of that rule is non-emptiness, which '
+      'is what let a one-key parameter map validate clean',
+      [{'keyword': 'required', 'instancePath': '', 'missingProperty': 'build_tag'}],
+      name='build-tag-absent')
+
+epair('CandidatePayload', PAYLOAD_OK, with_(PAYLOAD_OK, build_tag='entry14'),
+      'ORDER-1268: a build_tag that is not a LAB_ENTRY_ tag cannot name a surface, so the '
+      'full-surface rule has nothing to be full of',
+      [{'keyword': 'pattern', 'instancePath': '/build_tag'}],
+      name='build-tag-malformed')
 
 epair('ExecutionKey', EXECKEY_OK, with_(EXECKEY_OK, model=3),
       'ORDER-611: the execution key is the cache key for evidence reuse. A model outside {1,2,4} '
@@ -1131,8 +1151,8 @@ HEADER_COUNTS = {
     'defs': 29,
     'root_branches': 21,
     'root_cases': 41,
-    'entity_cases': 64,
-    'entity_negatives': 33,
+    'entity_cases': 68,        # ORDER-1268: +4 = two CandidatePayload minimal pairs for build_tag
+    'entity_negatives': 35,    # ORDER-1268: +2 = build-tag-absent, build-tag-malformed
     'entities_with_a_negative': 29,
 }
 

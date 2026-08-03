@@ -43,6 +43,17 @@ WHAT THIS FILE DELIBERATELY DOES NOT DO
               live below the RESOLUTION AND DISK banner so the boundary is a place in the file
               and not a claim in a docstring.
 
+  🔴 CORRECTED AGAIN 2026-08-03 (ORDER-1268), by the seat that moved the line. `validate_payload`
+  is listed as PURE above and is NOT any more: C10 asks the repository which inputs a build
+  exposes, so it resolves. The line is corrected in place rather than rewritten, because the
+  correction IS the record -- the same paragraph has now been wrong twice for the same reason,
+  which is that a purity claim written next to a growing validator ages the moment a criterion
+  needs a fact it cannot compute. Read the table as: PURE = canonical_payload, candidate_digest,
+  validate_manifest, and the FIRST HALF of both owner_ref_problems and validate_payload; IMPURE =
+  owner_ref_resolution_problems, parameter_surface_problems, read/write_manifest -- all four
+  below the banner, which is still the boundary that matters because it is a place and not a
+  sentence.
+
   Resolution is NOT opt-in, and that is deliberate: a checker you must remember to switch on is
   the state ORDER-1263 repaired. The cost is that `owner_ref_problems` now needs a git repository,
   and a caller without one gets `evidence.ToolFailure` -- "I could not resolve this", never a
@@ -63,6 +74,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import evidence as ev                                                      # noqa: E402
 import scheduler as S                                                      # noqa: E402
+import preset as P                                                         # noqa: E402
+import setfile as SF                                                       # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -72,7 +85,7 @@ CANDIDATES_DIR_REL = 'factory/candidates'
 # schemas.json and the cage calls it, for the reason scheduler.py states: a writer with a private
 # field list produces a manifest its own validator rejects, at the moment it is needed most.
 PAYLOAD_FIELDS = ('hypothesis_revision', 'module_set', 'experimental', 'logical_symbol', 'tf',
-                  'parameters', 'profiles', 'evidence', 'ex5_sha256', 'source_sha256',
+                  'build_tag', 'parameters', 'profiles', 'evidence', 'ex5_sha256', 'source_sha256',
                   'allowlist_sha256', 'generator_version', 'effective_config_hash',
                   'universe_version', 'trial_count')
 MANIFEST_FIELDS = ('entity', 'candidate_id', 'candidate_digest', 'payload', 'scorecard_ref')
@@ -98,6 +111,10 @@ HEX64_RE = re.compile(r'^[0-9a-f]{64}$')
 HEX40_RE = re.compile(r'^[0-9a-f]{40}$')
 CAND_ID_RE = re.compile(r'^CAND-[0-9a-f]{12}$')
 MODULE_TOKEN_RE = re.compile(r'^LAB_CAP_[A-Z0-9_]+$')
+# ORDER-1268. Kept identical to the schema's `build_tag` pattern, and `assert_vocabulary_matches_
+# schema` is what holds them together -- a private spelling here is the drift this module already
+# paid for once with METRIC_FIELDS.
+BUILD_TAG_RE = re.compile(r'^LAB_ENTRY_[0-9A-Za-z_]+$')
 
 # DISPLAY LENGTH. CONTRACTS.md: "DISPLAY id = first 12 hex of candidate_digest. Never the hash
 # input." The second half of that sentence is what `C2` below enforces.
@@ -186,9 +203,15 @@ def owner_ref_problems(ref, where, src=None):
     return owner_ref_resolution_problems(ref, where, src)
 
 
-def validate_payload(payload):
+def validate_payload(payload, src=None):
     """Shape rules that live BELOW the digest: the digest proves the payload has not changed, it
-    proves nothing about whether the payload was ever right."""
+    proves nothing about whether the payload was ever right.
+
+    ORDER-1268: C10 is SHAPE here and RESOLUTION below, the same split C2 uses for OwnerRef, so
+    this function is no longer filesystem-free. `src` is an EvidenceSource for callers that want
+    to pin the mode; passing nothing gets `for_run()` -- the index under the hook, the worktree
+    on a manual run.
+    """
     problems = []
     try:
         canonical_payload(payload)
@@ -278,10 +301,37 @@ def validate_payload(payload):
         problems.append('C7 trial_count %r is not an integer >= 0 -- it is how many configurations '
                         'were tried before this one, and an absent count reads as one'
                         % (payload['trial_count'],))
-    if not isinstance(payload['parameters'], dict) or not payload['parameters']:
-        problems.append('C7 parameters must be the FULL effective surface. A partial set lets '
-                        'unlisted inputs be filled from the per-terminal tester cache -- the '
-                        'documented root cause of the ORDER-165 8/8 false drift.')
+
+    # -- C10 (ORDER-1268) parameters IS build_tag's declared surface, key for key.
+    #
+    #    WHAT THIS REPLACED, AND WHY IT WAS NOT A SMALL GAP. Until 2026-08-03 this criterion was
+    #    `not payload['parameters']` -- a NON-EMPTINESS test carrying the sentence "parameters
+    #    must be the FULL effective surface" as its own failure message. Measured at HEAD before
+    #    the repair: `parameters = {'OnlyOneKey': 1}` returned []. The real surfaces are 113-135
+    #    inputs, so the check passed a map covering under 1% of the configuration and the message
+    #    it would have printed was already the correct rule. A rule stated in the failure text of
+    #    a check that cannot enforce it is the worst of the three possible states -- it reads to
+    #    the next author as though the rule is enforced.
+    #
+    #    SHAPE HERE, RESOLUTION BELOW, exactly as C2/OwnerRef does it: `build_tag` must look like
+    #    a build before it is worth asking the repository which inputs that build exposes.
+    tag = payload['build_tag']
+    params = payload['parameters']
+    tag_ok = bool(BUILD_TAG_RE.match(str(tag)))
+    params_ok = isinstance(params, dict) and bool(params)
+    if not tag_ok:
+        problems.append('C10 build_tag %r is not a LAB_ENTRY_* build tag. `parameters` is required '
+                        'to be the FULL surface, and a surface belongs to ONE build -- Inputs.mqh '
+                        'declares StackMode eight times and no build exposes all 184 declarations, '
+                        'so a parameter map that names no build is full of nothing.' % (tag,))
+    if not params_ok:
+        problems.append('C10 parameters must be the FULL effective surface of build %r. A partial '
+                        'set lets unlisted inputs be filled from the per-terminal tester cache -- '
+                        'the documented root cause of the ORDER-165 8/8 false drift.' % (tag,))
+    if tag_ok and params_ok:
+        # Resolving a surface for a tag that is not a tag, or comparing against a map that is not
+        # a map, answers a question nobody asked -- the same ordering C2 uses for OwnerRef.
+        problems.extend(parameter_surface_problems(tag, params, src))
     return problems
 
 
@@ -413,6 +463,65 @@ def _blob_facts(src, oid, why):
         raw = src.read_blob(oid, why=why)
         _BLOB_FACTS[oid] = (hashlib.sha256(raw).hexdigest(), raw.decode('utf-8', 'replace'))
     return _BLOB_FACTS[oid]
+
+
+# ORDER-1268. Parsing Inputs.mqh is ~184 declarations of regex per call and `validate_payload` is
+# called once per candidate, so a manifest sweep would re-parse the same file once per row. Keyed
+# by (build_tag, sha256 of the bytes actually read) rather than by build_tag alone: an index-mode
+# read and a worktree-mode read of the same tag are DIFFERENT surfaces mid-edit, and a cache that
+# conflated them would answer a staged question with a worktree answer -- the mixed-vintage defect
+# `check_r3` already paid for.
+_SURFACE_CACHE = {}
+
+
+def parameter_surface_problems(build_tag, parameters, src=None):
+    """ORDER-1268. Is this parameter map build `build_tag`'s declared input surface, key for key?
+
+    THE DEFECT THIS ANSWERS. `CandidatePayload.parameters` is contractually the FULL effective
+    surface -- the schema says so, the criterion's own failure message said so -- and what was
+    enforced was that the dict was not empty. Measured at HEAD on 2026-08-03, before the repair:
+    a payload whose `parameters` was `{'OnlyOneKey': 1}` validated with an empty problem list.
+    That is the ORDER-165 defect with a clean bill of health attached: MT5 fills every unlisted
+    input from the per-terminal tester cache, so the run behind such a candidate was configured
+    partly by the candidate and partly by whatever that terminal happened to run last.
+
+    IT DOES NOT IMPLEMENT THE RULE, IT CALLS IT. `setfile.surface_problems` is the one owner --
+    see its docstring. The whole reason this defect survived is that the repository already had a
+    correct, caged implementation of "a partial configuration is refused" (`setfile.read_set`)
+    whose only caller was its own test suite, while the map that actually reaches the evidence
+    store was judged by a different, weaker rule in a different file. Adding a second copy here
+    would rebuild that situation with the copies swapped.
+
+    WHICH VINTAGE IT JUDGES AGAINST, stated because it is a real limit and not a detail: the
+    surface comes from `Inputs.mqh` as the EvidenceSource sees it NOW -- the index under the hook,
+    the worktree on a manual run. So the question answered is *"is this map the full surface of
+    build X as this repository declares it today"*, not *"...as it was declared when the run
+    happened"*. For a validator that runs on the commit path that is the right question; a
+    candidate carried forward across a surface change is a DIFFERENT claim and is out of scope
+    here (`ORDER-1291`).
+
+    A ToolFailure from the reader is deliberately not caught, for the reason
+    `owner_ref_resolution_problems` states one function down: "I could not read Inputs.mqh" and
+    "this map is not a surface" are different facts, and turning the first into a clean list is
+    reporting CLEAN over a read that never happened.
+    """
+    src = src or ev.EvidenceSource.for_run()
+    text = src.read_committed(P.INPUTS_REL)
+    key = (build_tag, hashlib.sha256(text.encode('utf-8', 'replace')).hexdigest())
+    if key not in _SURFACE_CACHE:
+        try:
+            _SURFACE_CACHE[key] = P.parse_surface(text, build_tag)
+        except P.PresetRefusal as exc:
+            # A tag that is well-formed and does not exist is not a tooling failure -- it is a
+            # payload naming a build this repository does not have, which is precisely a C10
+            # problem. The known tags go in the message for the same reason setfile names the
+            # missing keys: a refusal the reader cannot act on gets worked around.
+            return ['C10 build_tag %r: %s (declared in %s: %s)'
+                    % (build_tag, exc, P.INPUTS_REL,
+                       ', '.join(sorted(P.known_build_tags(text))) or 'none')]
+    surface = _SURFACE_CACHE[key]
+    return ['C10 %s' % p for p in SF.surface_problems(
+        parameters, surface, what='CandidatePayload.parameters')]
 
 
 def owner_ref_resolution_problems(ref, where, src=None):

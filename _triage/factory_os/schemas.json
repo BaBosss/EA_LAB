@@ -1373,6 +1373,7 @@
         "module_set",
         "logical_symbol",
         "tf",
+        "build_tag",
         "parameters",
         "profiles",
         "evidence",
@@ -1407,6 +1408,11 @@
         "tf": {
           "type": "string"
         },
+        "build_tag": {
+          "type": "string",
+          "pattern": "^LAB_ENTRY_[0-9A-Za-z_]+$",
+          "description": "ORDER-1268. The build whose input surface `parameters` claims to BE. Added because `parameters` was required to be the FULL effective surface while nothing named the surface it was full OF, so the only enforceable reading of the rule was non-emptiness - and a one-key map validated clean. Inputs.mqh declares StackMode eight times, once per LAB_ENTRY tag, and no single build exposes all 184 declarations, so a parameter map without its build is a map against no surface at all."
+        },
         "parameters": {
           "type": "object",
           "additionalProperties": {
@@ -1416,7 +1422,7 @@
               "boolean"
             ]
           },
-          "description": "FULL effective surface. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift."
+          "description": "FULL effective surface OF build_tag, key for key. A partial set lets unlisted inputs be filled from the per-terminal tester cache - the documented root cause of the ORDER-165 8/8 false drift. ORDER-1268: enforced by resolving build_tag's surface out of ea_template/core/Inputs.mqh and comparing key sets, through the same setfile.surface_problems the .set reader uses - one policy, two callers."
         },
         "profiles": {
           "type": "object",

@@ -693,6 +693,17 @@ $SUITE_GUARDS = @{
                                           # sweep on the first run after that landed -- the
                                           # wrapper's path-string sweep cannot see an `import`.
                                           '_triage/factory_os/evidence.py',
+                                          # ORDER-1268: C10 asks the repository which inputs a
+                                          # build exposes, so candidate.py now imports preset.py
+                                          # (the surface parser) and setfile.py (the one owner of
+                                          # "is this key set the full surface"); preset.py in turn
+                                          # imports registry.py. All three demanded by PART 4b on
+                                          # the first run after C10 landed. A commit touching only
+                                          # setfile.py would otherwise change what a candidate is
+                                          # validated against and run no S10 cage at all.
+                                          '_triage/factory_os/preset.py',
+                                          '_triage/factory_os/setfile.py',
+                                          '_triage/factory_os/registry.py',
                                           '_triage/factory_os/schemas.json',
                                           'scripts/check_state.ps1',
                                           'scripts/lib/magic_guard.ps1',

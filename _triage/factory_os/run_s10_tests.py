@@ -51,6 +51,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import attestation as A                                                    # noqa: E402
 import candidate as C                                                      # noqa: E402
 import magic as M                                                          # noqa: E402
+import preset as P                                                         # noqa: E402
 import scheduler as S                                                      # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -165,13 +166,35 @@ OWNER = _pin('scorecard', 'EA_SCORECARD_AND_REGISTRY.md')
 AUTH = _pin('taskboard_order', 'AGENT_TASKBOARD.md')
 DEPLOY_REF = _pin('deployments_csv', 'portfolio/DEPLOYMENTS.csv')
 
+# ORDER-1268. The fixture's `parameters` is DERIVED FROM THE REAL Inputs.mqh at run time, not
+# typed out. A hand-written map of plausible-looking keys is the `fixture-of-filler-values-cannot-
+# test-resolution` shape: it would be green both when C10 resolves the surface and when C10 is
+# deleted, because nothing about it is tied to what the build actually declares. Deriving it means
+# a build whose surface moves breaks this fixture, which is the point -- the fixture is then a
+# statement about the repository rather than about itself.
+#
+# The map it produces is exactly the surface, so it is also the SPECIFICITY control for every C10
+# attack below: each attack is this map with one thing wrong.
+BUILD_TAG = 'LAB_ENTRY_14'
+
+
+def _full_surface_parameters(build_tag=None):
+    text = io.open(os.path.join(ROOT, P.INPUTS_REL.replace('/', os.sep)),
+                   encoding='utf-8-sig').read()                 # snapshot: worktree
+    surface = P.parse_surface(text, build_tag or BUILD_TAG)
+    return dict((d.name, d.default_expr) for d in surface.inputs)
+
+
+FULL_PARAMETERS = _full_surface_parameters()
+
 PAYLOAD = {
     'hypothesis_revision': 'B14-H01-r1',
     'module_set': [{'token': 'LAB_CAP_STACK', 'module_version': '1', 'stability': 'CERTIFIABLE'}],
     'experimental': False,
     'logical_symbol': 'XAUUSD',
     'tf': 'H1',
-    'parameters': {'_01_BreakoutBars': 40, '_02_SlAtrMult': 1.5, '_06_AllowLive': True},
+    'build_tag': BUILD_TAG,
+    'parameters': dict(FULL_PARAMETERS),
     'profiles': {'instrument': '1' * 64, 'exit': '2' * 64, 'sizing': '3' * 64,
                  'safety': '4' * 64, 'execution': '5' * 64},
     'evidence': [{'window': 'MAIN', 'pf': 1.31, 'pf_state': 'DEFINED', 'trades': 84, 'dd_pct': 7.4,
@@ -222,6 +245,11 @@ MUTATIONS = {
     'experimental': True,
     'logical_symbol': 'EURUSD',
     'tf': 'H4',
+    # ORDER-1268. A DIFFERENT REAL BUILD, and the mutation moves `parameters` with it, because
+    # this table asks one question only -- does the digest notice this field? -- and a build_tag
+    # paired with another build's surface would make the pair unvalidatable for a reason that has
+    # nothing to do with the digest.
+    'build_tag': 'LAB_ENTRY_17',
     'parameters': {'_01_BreakoutBars': 55, '_02_SlAtrMult': 1.5, '_06_AllowLive': True},
     'profiles': {'instrument': '1' * 64, 'exit': '2' * 64, 'sizing': '3' * 64,
                  'safety': '4' * 64, 'execution': 'e' * 64},
@@ -327,10 +355,61 @@ def part1_identity():
     bad = copy.deepcopy(PAYLOAD)
     bad['trial_count'] = -1
     refuses('a negative trial_count', C.validate_payload(bad), 'C7')
+
+    # -- C10 (ORDER-1268): `parameters` IS build_tag's declared surface, key for key.
+    #
+    #    THE FIRST ATTACK IS THE MEASURED REPRODUCER, not an invented one. Run against this
+    #    module at HEAD on 2026-08-03, `parameters = {'OnlyOneKey': 1}` returned [] -- the
+    #    criterion was a non-emptiness test wearing the full-surface rule as its failure message,
+    #    so it caught `{}` and nothing else. That is why `{}` is kept below as a SECOND case
+    #    rather than the only one: the old check passed the case that mattered and failed the
+    #    case that did not, and a suite that only carries `{}` would have been green throughout.
+    bad = copy.deepcopy(PAYLOAD)
+    bad['parameters'] = {'OnlyOneKey': 1}
+    refuses('a single-assignment parameter map (the ORDER-1268 reproducer: this returned [] at '
+            'HEAD before the repair)', C.validate_payload(bad), 'C10')
     bad = copy.deepcopy(PAYLOAD)
     bad['parameters'] = {}
     refuses('an empty parameter surface (ORDER-165: unlisted inputs come from the tester cache)',
-            C.validate_payload(bad), 'C7')
+            C.validate_payload(bad), 'C10')
+    bad = copy.deepcopy(PAYLOAD)
+    bad['parameters'] = dict(FULL_PARAMETERS)
+    dropped = sorted(bad['parameters'])[0]
+    del bad['parameters'][dropped]
+    refuses('a surface missing exactly ONE input -- the near miss, because a check that only '
+            'catches a map covering 1% of the surface is a size test, not a surface test',
+            C.validate_payload(bad), 'C10')
+    bad = copy.deepcopy(PAYLOAD)
+    bad['parameters'] = dict(FULL_PARAMETERS)
+    bad['parameters']['_99_NotAnInputOnAnyBuild'] = 1
+    refuses('a surface carrying a key the build does not expose',
+            C.validate_payload(bad), 'C10')
+    bad = copy.deepcopy(PAYLOAD)
+    bad['build_tag'] = 'LAB_ENTRY_NOT_A_BUILD'
+    refuses('a well-formed build_tag naming a build this repository does not have',
+            C.validate_payload(bad), 'C10')
+    bad = copy.deepcopy(PAYLOAD)
+    bad['build_tag'] = 'entry14'
+    refuses('a build_tag that is not a LAB_ENTRY_ tag', C.validate_payload(bad), 'C10')
+
+    #    THE SPECIFICITY HALF, and it carries the whole weight of the criterion. Every attack
+    #    above is this payload with one thing wrong, so if C10 refused everything -- the cheap way
+    #    to make the six lines above green -- this line is what goes red. It also proves the
+    #    surface is being RESOLVED rather than counted: the map here is the real Inputs.mqh
+    #    surface for LAB_ENTRY_14, derived at run time.
+    ok = copy.deepcopy(PAYLOAD)
+    accepts('the real full surface of build %s (%d inputs), resolved from Inputs.mqh'
+            % (BUILD_TAG, len(FULL_PARAMETERS)), C.validate_payload(ok))
+
+    #    AND THE ONE A COUNT-BASED CHECK CANNOT TELL APART: a map that is the full surface of a
+    #    DIFFERENT build. Inputs.mqh declares StackMode eight times, once per LAB_ENTRY tag, and
+    #    the surfaces are close in size (119 vs 121 on the day this was written), so "the right
+    #    number of keys" is a rule a wrong build passes.
+    other = 'LAB_ENTRY_17'
+    bad = copy.deepcopy(PAYLOAD)
+    bad['parameters'] = _full_surface_parameters(other)
+    refuses('the full surface of build %s carried under build_tag %s -- the case a key COUNT '
+            'cannot distinguish' % (other, BUILD_TAG), C.validate_payload(bad), 'C10')
 
     # -- C9: the pin is checked, not merely stored. Three ways to be wrong, one per fact.
     m = manifest()
@@ -919,7 +998,7 @@ def part5_the_other_half():
     #     refusal in the module -- and the roll-up below is what stops a criterion being deleted
     #     from a module and quietly disappearing from the report.
     expected = set()
-    for mod, prefix, n in ((C, 'C', 9), (A, 'A', 7), (M, 'M', 6)):
+    for mod, prefix, n in ((C, 'C', 10), (A, 'A', 7), (M, 'M', 6)):
         for i in range(1, n + 1):
             expected.add('%s%d' % (prefix, i))
     unnamed = sorted(expected - NAMED)

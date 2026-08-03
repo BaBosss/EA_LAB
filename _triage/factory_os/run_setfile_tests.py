@@ -251,8 +251,8 @@ def s5_specificity(mod):
 CASES = (
     ('S1', 'unknown/removed key refused AND named',
      s1_attack, s1_specificity,
-     ('% (len(unknown), surface.build_tag, detail))',
-      "% (len(unknown), surface.build_tag, '<redacted>'))")),
+     ('% (what, len(unknown), surface.build_tag, detail))',
+      "% (what, len(unknown), surface.build_tag, '<redacted>'))")),
     ('S2', 'partial .set refused AND the missing keys named',
      s2_attack, s2_specificity,
      ('    if require_full_surface:', '    if False and require_full_surface:')),
