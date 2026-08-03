@@ -36,6 +36,7 @@ CANONICALISATION IS PART OF THE POINT. `300`, `300.0` and `3e2` written in three
 one value, and the fingerprint must say so. Every value is rendered through one function, so
 a hash difference means a CONFIG difference and never a spelling difference.
 """
+import decimal
 import hashlib
 import json
 import re
@@ -315,6 +316,13 @@ def is_money_unit(unit_text):
 
 _BOOL_LITERALS = {'true': True, 'false': False}
 
+# MQL5's integer widths, as Decimals so the comparison never routes through float on the way to
+# deciding whether a value fits. ENUM_* is int-backed and shares the `int` row.
+_INT_RANGES = {
+    'int':  (decimal.Decimal(-2 ** 31), decimal.Decimal(2 ** 31 - 1)),
+    'long': (decimal.Decimal(-2 ** 63), decimal.Decimal(2 ** 63 - 1)),
+}
+
 
 def render_value(decl, value, enums):
     """ONE representation per value, whatever it was written as. -> str for a .set line."""
@@ -329,7 +337,7 @@ def render_value(decl, value, enums):
         elif v.strip('"') in enums and not _is_number(v):
             value = enums[v.strip('"')]
         elif _is_number(v):
-            value = float(v) if ('.' in v or 'e' in low) else int(v)
+            value = _to_number(v, decl)
         else:
             raise PresetRefusal(
                 'cannot resolve %r for input %s (%s): it is not a number, not `true`/`false`, '
@@ -357,11 +365,85 @@ def render_value(decl, value, enums):
 
 
 def _is_number(text):
+    """Does this LOOK numeric? Routing only -- `_to_number` decides whether it can be used.
+
+    Decimal rather than float, and the difference is not cosmetic: `float('1e9999')` is `inf`, so
+    the old spelling answered "yes, a number" for a literal no integer type can hold and the
+    caller then met a raw `OverflowError`. Decimal parses the SYNTAX without deciding the value is
+    usable, which is the question this predicate is actually asked.
+    """
     try:
-        float(text)
+        decimal.Decimal(str(text).strip())
         return True
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, decimal.InvalidOperation):
         return False
+
+
+def _to_number(text, decl):
+    """ORDER-1266 #2 and #7. Exact text -> number, for the type `decl` actually declares.
+
+    #2, MEASURED at HEAD before this existed: every numeric literal went through
+    `float(v) if ('.' in v or 'e' in low) else int(v)`, so ANY exponent spelling of an integer
+    took the float branch -- including MQL `long`. `9007199254740992e0` and `9007199254740993e0`
+    both rendered as `9007199254740992` and hashed identically. Above 2^53 a float64 has no bit
+    left to tell consecutive integers apart, so two configurations became one fingerprint.
+
+      WHY THAT MATTERS MORE HERE THAN THE SIZE OF THE NUMBER SUGGESTS: magic numbers are the
+      values this repository must never conflate. `magic.py` exists, is append-only, and refuses
+      renumbering precisely because a reused magic silently re-attributes historical deals to
+      another EA. A fingerprint that cannot distinguish two magics is a hole under that whole
+      discipline, reached by nothing more exotic than writing one in exponent form.
+
+    Decimal converts exactly, at any magnitude, so an integer type never touches a float at all.
+    `double` still goes through float64 -- that is the TYPE's precision, not the parser's, and
+    pretending otherwise would be the compiler inventing a wider double than MQL5 has.
+
+    #7, also measured: `1e9999` reached `int(float(...))` and exited as `OverflowError`, while
+    `nan` and `inf` exited as `ValueError` -- three raw Python exceptions outside the
+    `{PresetRefusal, ToolFailure}` set this module's own docstring declares. A caller catching the
+    declared set does not catch these, so a refusal arrived as a crash, which every layer above
+    reads as a tool failure rather than a verdict about the input.
+    """
+    t = decl.mql_type
+    try:
+        d = decimal.Decimal(str(text).strip())
+    except (TypeError, ValueError, decimal.InvalidOperation):
+        raise PresetRefusal('input %s (%s): %r is not a number this compiler can read'
+                            % (decl.name, t, text))
+    if not d.is_finite():
+        raise PresetRefusal(
+            'input %s (%s): %r is not a finite number. Refused as a VERDICT about the input '
+            'rather than escaping as a raw Python exception -- a caller catching this module\'s '
+            'declared refusal set would not catch the latter, and a crash reads as a broken tool '
+            'instead of a bad value.' % (decl.name, t, text))
+    if t in ('int', 'long') or t.startswith('ENUM_'):
+        if d != d.to_integral_value():
+            raise PresetRefusal('input %s is %s but got the non-integral %r'
+                                % (decl.name, t, text))
+        # RANGE, and it is not defensive padding. MQL5's `int` is 32-bit and `long` is 64-bit; a
+        # literal outside that is not a large value, it is a value the terminal cannot hold and
+        # will take some other meaning from. Found by re-running the #7 probe after the #2 fix:
+        # `1e9999` stopped overflowing float and started raising Python 3.12's 4300-digit
+        # int-to-string ValueError instead -- a DIFFERENT raw exception escaping the same
+        # declared set. Bounding by the declared type answers both, and answers them for the
+        # right reason rather than by chasing whichever exception the runtime raises this year.
+        lo, hi = _INT_RANGES['long' if t == 'long' else 'int']
+        if d < lo or d > hi:
+            raise PresetRefusal(
+                'input %s is %s, which holds %s..%s, and %r is outside it. Refused rather than '
+                'truncated: a value the terminal cannot hold does not arrive as itself.'
+                % (decl.name, t, lo, hi, text))
+        # int(Decimal) is exact at every magnitude. This is the #2 fix, and it is one line
+        # because the defect was one line.
+        return int(d)
+    if t == 'double':
+        try:
+            return float(d)
+        except (OverflowError, ValueError):
+            raise PresetRefusal(
+                'input %s is double but %r is outside the range a float64 can hold. Refused, '
+                'not silently rendered as inf.' % (decl.name, text))
+    return int(d) if d == d.to_integral_value() else float(d)
 
 
 # ---------------------------------------------------------------------------------------------

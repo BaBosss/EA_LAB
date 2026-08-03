@@ -719,7 +719,66 @@ the code, not a flag. Both are the stronger shape. The failure is in **recognisi
 
 ---
 
-## ORDER-1266 — [factory/S6] The effective-config fingerprint is broken in both directions, and one of them is asserted by its own cage — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+## ORDER-1266 — [factory/S6] The effective-config fingerprint is broken in both directions, and one of them is asserted by its own cage — `OPEN — 2 of 7 REPAIRED, 5 MEASURED and left OPEN with reasons` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+> ### 📋 PROGRESS 2026-08-03, lane `S-2026-08-03-CORRECT2`. Every one of the seven was re-measured at HEAD FIRST, as this order's own closing line asks.
+>
+> | # | measured at HEAD | state |
+> |---|---|---|
+> | **2** | `9007199254740992e0` and `...93e0` **both rendered `9007199254740992`** | ✅ **REPAIRED** |
+> | **7** | `1e9999` → `OverflowError` · `nan` → `ValueError` · `inf` → `ValueError`, all three **outside** the declared `{PresetRefusal, ToolFailure}` set | ✅ **REPAIRED** |
+> | **1** | `account_unit` is in **neither** the fingerprint preimage **nor** `EXECUTION_KEY_FIELDS` — confirmed both halves | ⏳ see the decision below |
+> | **3** | `sinput ` declarations in the real `Inputs.mqh` today: **0**. The parser regex genuinely recognises `input` only | ⏳ **LATENT, confirmed** — the audit's own word, and the measurement agrees. It arms itself when the design's conversion lands, not before |
+> | **4** | not measured | ⏳ OPEN |
+> | **5** | `_ordered()` iterates `surface.inputs`, i.e. **declaration order is hash order** — confirmed by reading the function | ⏳ OPEN (the mechanism is confirmed; a reordering reproducer was not run) |
+> | **6** | not measured | ⏳ OPEN |
+>
+> **#2 and #7 landed together because they are one line apart and one fix.** Every numeric literal
+> went through `float(v) if ('.' in v or 'e' in low) else int(v)`, so **any** exponent spelling of
+> an integer took the float branch — including MQL `long`, where above 2^53 a float64 has no bit
+> left to separate consecutive integers. `_to_number()` now converts through `Decimal`, exactly, at
+> any magnitude; `double` still goes through float64 because that is the **type's** precision and
+> not the parser's to invent away. 🎯 **Why this one mattered more than a 🟠 suggests:** magic
+> numbers are the values this repo must never conflate — `magic.py` is append-only and refuses
+> renumbering precisely because a reused magic re-attributes historical deals — and the collision
+> was reachable by nothing more exotic than writing one in exponent form.
+>
+> ⚠️ **The #7 fix changed which exception escapes, and that was found by re-running the probe
+> rather than by reasoning.** After the #2 repair, `1e9999` stopped overflowing float and started
+> raising Python 3.12's *4300-digit int-to-string* `ValueError` — a **different** raw exception
+> leaving the same declared set. Chasing exceptions would have kept missing the next one, so the
+> bound is now the **declared MQL type**: `int` is 32-bit, `long` is 64-bit, and a literal outside
+> that is refused as a verdict. Cage `P10` attacks the collision and all three escapes, with a
+> specificity half asserting the ordinary numbers still work (three spellings of 250 → one value;
+> both `long` limits round-trip; a plain double is still a double) and a mutant that restores the
+> exact pre-repair spelling `int(float(d))` and is **seen red**.
+>
+> 🔴 **#1 IS NOT A SIMPLE FLIP OF ITS CAGE, and this is the part the next seat must read before
+> touching it.** The handoff says to change `run_preset_tests.py:296-300` to assert the account
+> unit is **inside** the fingerprint. Look at what that case actually compares first: `base` holds
+> `_4_TpUsd = 50 usd`, `cent` holds `_4_TpUsd = 50 cent`, and they hash the same **because the
+> rendered bytes are the same** — MT5's `.set` format has no unit. So the disagreement is about
+> what the hash is FOR, and `_fingerprint`'s own docstring contains both answers pulling in
+> opposite directions: *"sha256 over the CONFIG"* and *"the question this hash exists to answer is
+> 'is the .set on this chart the .set we validated'"*.
+>
+> **The blocker is real and is not reluctance.** `ORDER-710` made this preimage a **cross-language
+> contract**: `ea_template/core/InputSurface_gen.mqh` is generated from the same parse, and the EA
+> emits the same string from its live inputs at `OnInit`. Adding `account_unit` to the preimage
+> therefore needs the EA half to produce it — and an EA at `OnInit` **cannot reliably derive**
+> whether it is on a cent account (it is a broker convention, not a platform fact), so it would
+> need a new declared input. That is an MQL5 change requiring a compile and a terminal to verify,
+> and **the MT5 lane belongs to `S-2026-08-03-S13D`**.
+>
+> **The recommendation, for the seat that picks this up.** Split it, and do the half that carries
+> the actual harm first: *cached USD evidence satisfying a cent request* is decided by
+> `scheduler.EXECUTION_KEY_FIELDS`, which is **pure Python, needs no terminal, and does not have
+> `account_unit` in it** (measured). Fixing that closes the money hole. Then decide the preimage
+> question separately and deliberately — and if the answer is that the surface fingerprint stays
+> unit-free, the cage case at `:296-300` should not be flipped but **narrowed**, keeping its
+> assertion and deleting its reason: the comment *"so it is not config either"* is the false
+> sentence, not the comparison under it. 🚫 **Whichever way it goes, do not delete the case to
+> make a red go away** — that is the trap both handoffs put above their defect lists.
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S6_2026-08-03.md`. The brief asked for the fingerprint to be
 attacked both ways — two configs sharing a hash, one config with two. **It found both, three times

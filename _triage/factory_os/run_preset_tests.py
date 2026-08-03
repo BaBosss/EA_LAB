@@ -541,6 +541,61 @@ def p9_specificity(mod):
     return None
 
 
+def _long(mod):
+    return mod.InputDecl('Magic', 'long', '0', 1)
+
+
+def p10_attack(mod):
+    """ORDER-1266 #2 and #7: an integer type never routes through float, and every rejection
+    leaves through the DECLARED refusal set.
+
+    #2 measured at HEAD before the repair: `9007199254740992e0` and `...93e0` both rendered as
+    `9007199254740992` and hashed identically, because any exponent spelling took the float
+    branch. Above 2^53 a float64 has no bit left to separate consecutive integers. This is the
+    attack rather than a smaller one because MAGIC NUMBERS are the values this repo must never
+    conflate -- `magic.py` is append-only and refuses renumbering for exactly that reason.
+    """
+    d = _long(mod)
+    enums = dict(mod.MQL_BUILTIN_ENUMS)
+    a = mod.render_value(d, '9007199254740992e0', enums)
+    b = mod.render_value(d, '9007199254740993e0', enums)
+    if a == b:
+        return ('two consecutive longs above 2^53 rendered identically (%s) -- they share a '
+                'fingerprint, and a shared fingerprint over two magics is a re-attributed deal '
+                'history' % a)
+    # #7: the declared set is {PresetRefusal, ToolFailure}. A caller catching it does not catch
+    # OverflowError or ValueError, so a verdict about the input arrives as a broken tool.
+    for spell in ('nan', 'inf', '1e9999'):
+        try:
+            mod.render_value(d, spell, enums)
+            return '%r on a long was ACCEPTED' % spell
+        except mod.PresetRefusal:
+            pass
+        except Exception as exc:                                        # noqa: BLE001
+            return ('%r on a long left as %s, which is outside the declared refusal set this '
+                    'module\'s own docstring names' % (spell, type(exc).__name__))
+    return None
+
+
+def p10_specificity(mod):
+    """the ordinary numbers it must NOT start refusing, and the canonicalisation it must keep"""
+    d = _long(mod)
+    enums = dict(mod.MQL_BUILTIN_ENUMS)
+    # one value, three spellings, still one rendering -- P3's rule, re-checked at the boundary
+    # this case moved, because "make longs exact" is one bad edit away from "stop canonicalising"
+    if len(set(mod.render_value(d, f, enums) for f in ('250', '250.0', '2.5e2'))) != 1:
+        return 'three spellings of 250 no longer render as one value'
+    # the extremes a long legitimately holds must round-trip, or the range check is a size limit
+    for edge in ('9223372036854775807', '-9223372036854775808', '0'):
+        if mod.render_value(d, edge, enums) != edge:
+            return 'a long at its own limit (%s) did not round-trip' % edge
+    # and a double is still a double: float64 precision is the TYPE's, not the parser's to fix
+    dd = mod.InputDecl('Ratio', 'double', '0.0', 1)
+    if mod.render_value(dd, '1.5', enums) != '1.5':
+        return 'a plain double stopped rendering as itself'
+    return None
+
+
 CASES = (
     # The P1 mutant models the defect that actually happens: silently completing the set from
     # the declared defaults instead of refusing. `if False and missing:` would only make the
@@ -576,6 +631,12 @@ CASES = (
     ('P9', 'the REAL Inputs.mqh, parsed per build', p9_attack, p9_specificity,
      ('            stack.append(stripped.split(None, 1)[1].strip() in defined)',
       '            stack.append(True)')),
+    # The mutant restores the EXACT pre-repair spelling of the defect -- an integer routed
+    # through float -- rather than disabling a branch, so what goes red is the collision itself.
+    ('P10', 'an integer type never routes through float, and every rejection is DECLARED',
+     p10_attack, p10_specificity,
+     ('        # because the defect was one line.\n        return int(d)',
+      '        # because the defect was one line.\n        return int(float(d))')),
 )
 
 
