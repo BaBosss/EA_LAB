@@ -225,15 +225,15 @@ CASES = [
 
     # ---- audit-2 #15 + audit-3: the privacy surface -----------------------------
     case("safe-projection-leaking-raw-finding-id", "audit-3 raw finding_id can embed an account",
-         "fail", {"entity": "SafeProjection", "build_id": "b1", "generated_at": "2026-07-30T00:00:00Z",
+         "fail", {"entity": "SafeProjection", "build_id": "b7b0c1826bece6b3", "generated_at": "2026-07-30T00:00:00",
                   "accounts": [{"account_masked": "***454", "sensor_state": "FRESH", "dd_pct_band": "OK"}],
                   "findings": [{"finding_id": "FND-sensor-159503454", "severity": "WARN", "state": "OPEN"}]}),
     case("safe-projection-valid", "the projection with only opaque ids must pass", "pass",
-         {"entity": "SafeProjection", "build_id": "b1", "generated_at": "2026-07-30T00:00:00Z",
+         {"entity": "SafeProjection", "build_id": "b7b0c1826bece6b3", "generated_at": "2026-07-30T00:00:00",
           "accounts": [{"account_masked": "***454", "sensor_state": "FRESH", "dd_pct_band": "OK"}],
           "findings": [{"public_id": "FP-0123456789", "severity": "WARN", "state": "OPEN"}]}),
     case("safe-projection-with-money", "an exact money amount must not be expressible", "fail",
-         {"entity": "SafeProjection", "build_id": "b1", "generated_at": "2026-07-30T00:00:00Z",
+         {"entity": "SafeProjection", "build_id": "b7b0c1826bece6b3", "generated_at": "2026-07-30T00:00:00",
           "accounts": [{"account_masked": "***454", "sensor_state": "FRESH", "dd_pct_band": "OK",
                         "equity": 100000}],
           "findings": []}),
@@ -542,8 +542,14 @@ PAYLOAD_OK = {"hypothesis_revision": "B14-H01-r1", "module_set": [MODULE_OK],
               "allowlist_sha256": H64, "generator_version": "1.0", "effective_config_hash": H64,
               "universe_version": "v1", "trial_count": 12, "experimental": False}
 
-SAFEPROJ_OK = {"entity": "SafeProjection", "build_id": "b1",
-               "generated_at": "2026-07-31T00:00:00Z",
+# ORDER-1267 Part 2: `build_id` and `generated_at` were `"b1"` and `"...T00:00:00Z"` -- neither is
+# a value either producer can emit (compute_build_id returns sha256[:16]; control_room_snapshot.ps1
+# writes ToString('s'), which has no zone). They were placeholders standing where a shape belongs,
+# and they went green only because the schema declared both fields as unconstrained strings, which
+# is the leak this order closed. Realistic values now, so the positive case exercises the pattern
+# rather than sitting one delta away from it.
+SAFEPROJ_OK = {"entity": "SafeProjection", "build_id": "b7b0c1826bece6b3",
+               "generated_at": "2026-07-31T00:00:00",
                "accounts": [{"account_masked": "***454", "sensor_state": "FRESH",
                              "dd_pct_band": "OK"}],
                "findings": [{"public_id": "FP-0123456789", "severity": "WARN", "state": "OPEN"}]}

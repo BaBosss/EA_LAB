@@ -757,7 +757,7 @@ def sp02():
 def sp03():
     doc = leaky_projection()
     doc['accounts'][0]['balance'] = 7761.56
-    hits = fired(sp.scan_forbidden(doc))
+    hits = fired(sp.scan_forbidden(doc, sp.NO_KNOWN_SECRETS_AVAILABLE))
     assert any(h[1] == 'FORBIDDEN_KEY' and 'balance' in h[2] for h in hits), hits
 
 
@@ -765,7 +765,7 @@ def sp03():
 def sp04():
     doc = leaky_projection()
     doc['findings'][0]['state'] = 'OPEN ' + PLANTED_TOKEN
-    hits = fired(sp.scan_forbidden(doc))
+    hits = fired(sp.scan_forbidden(doc, sp.NO_KNOWN_SECRETS_AVAILABLE))
     assert any(h[1] == 'TELEGRAM_BOT_TOKEN' for h in hits), hits
 
 
@@ -776,7 +776,7 @@ def sp05():
     doc['accounts'][0]['share'] = r'\\vps-01\deploy\Boss_14.ex5'
     doc['findings'][0]['hint'] = 'api_key: abc123'
     doc['findings'][0]['cert'] = '-----BEGIN RSA PRIVATE KEY-----\nMIIE...'
-    hits = fired(sp.scan_forbidden(doc))
+    hits = fired(sp.scan_forbidden(doc, sp.NO_KNOWN_SECRETS_AVAILABLE))
     kinds = set(h[1] for h in hits)
     # Named one by one on purpose: "the scan found something" is what lets a fixture get
     # credited to a rule it never reached.
@@ -788,7 +788,7 @@ def sp05():
 def sp06():
     doc = leaky_projection()
     doc['findings'][0]['finding_id'] = 'DD-159503454-990101'
-    hits = fired(sp.scan_forbidden(doc))
+    hits = fired(sp.scan_forbidden(doc, sp.NO_KNOWN_SECRETS_AVAILABLE))
     assert any(h[1] == 'FORBIDDEN_KEY' and 'finding_id' in h[2] for h in hits), hits
 
 
@@ -799,7 +799,18 @@ def sp07():
     try:
         sp.assert_safe(doc, known_secrets=[PLANTED_ACCOUNT])
     except sp.ProjectionLeak as exc:
-        assert 'balance' in str(exc) and PLANTED_ACCOUNT in str(exc), exc
+        # ORDER-1267, FLIPPED IN THE SAME COMMIT AS THE FIX AND ASSERTING THE OPPOSITE.
+        # This read `PLANTED_ACCOUNT in str(exc)` -- it required the refusal to RESTATE the
+        # account it had just refused to let travel. That is the leak moved into the exception
+        # text, the log line and whatever ships them, asserted as a feature. The rule must be
+        # NAMED (so the refusal is still diagnosable) and the VALUE must be ABSENT.
+        #
+        # A session that met this red and "repaired" it by reverting would have used the cage to
+        # reinstate the defect (memory `cage-asserts-the-defect`).
+        assert 'balance' in str(exc), exc
+        assert 'KNOWN_SECRET' in str(exc), 'the rule must still be named: %s' % exc
+        assert PLANTED_ACCOUNT not in str(exc), \
+            'the refusal RESTATES the account it refused: %s' % exc
         return
     raise AssertionError('a leaking document was accepted')
 
@@ -894,6 +905,98 @@ def sp15():
                ['properties']['code']['enum'])
     mine = set(sp.REASON_SEVERITY)
     assert enum == mine, 'schema-only=%s  map-only=%s' % (sorted(enum - mine), sorted(mine - enum))
+
+
+# =======================================================================================
+# ORDER-1267. Everything below was MEASURED at HEAD before it was repaired, with ONE synthetic
+# literal planted five ways. The exact value was DETECTED (so the scanner was live) and the
+# formatted variants, the split value, the value used as a dict key and an EMPTY recognizer list
+# were all CLEAN -- the last of those being indistinguishable in the return value from a clean
+# document, which is `unreadable-input-must-refuse-not-skip`.
+# =======================================================================================
+
+@case('SP16', 'ORDER-1267 #1', 'a KNOWN secret is caught however it is SPELLED, not only verbatim')
+def sp16():
+    doc = {'entity': 'SafeProjection', 'build_id': 'b0000000000000ff',
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [], 'findings': []}
+    # CONTROL first: the exact literal must fire, or every negative below is green because the
+    # scanner is dead rather than because it is thorough.
+    hits = fired(sp.scan_forbidden(dict(doc, build_id=PLANTED_ACCOUNT), [PLANTED_ACCOUNT]))
+    assert any(h[1] == 'KNOWN_SECRET' for h in hits), 'CONTROL: the exact literal did not fire'
+    # Formatting is the cheapest evasion and the one a human leaks by accident. Each spelling is
+    # asserted separately: "the scan found something" is what lets a fixture be credited to a
+    # case it never reached.
+    for spelling in ('9001-12233', '900 112 233', 'acct#900-11-2233', '900.112.233'):
+        h = fired(sp.scan_forbidden(dict(doc, build_id=spelling), [PLANTED_ACCOUNT]))
+        assert any(x[1] == 'KNOWN_SECRET' for x in h), 'spelling %r was CLEAN' % spelling
+    # DECLARED LIMIT, stated rather than discovered: a value SPLIT across two fields is still not
+    # caught, and it is not attempted. Catching it needs the document concatenated, and with
+    # secrets_of admitting any 4-character literal that is a false-positive engine. Asserted as a
+    # KNOWN GAP so that a later seat finds a failing case if they close it, not silence.
+    split = dict(doc, findings=[{'public_id': 'FP-a', 'severity': 'LOW', 'state': '900112'},
+                                {'public_id': 'FP-b', 'severity': 'LOW', 'state': '233'}])
+    assert not [h for h in sp.scan_forbidden(split, [PLANTED_ACCOUNT])
+                if h[1] == 'KNOWN_SECRET'], \
+        'the split-value gap is CLOSED -- good, but this case declares it open; update it'
+
+
+@case('SP17', 'ORDER-1267 #1', 'a secret used as a dict KEY is scanned as text, not only as a name')
+def sp17():
+    doc = {'entity': 'SafeProjection', 'build_id': 'b0000000000000ff',
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [],
+           'findings': [{PLANTED_ACCOUNT: 'anything'}]}
+    hits = fired(sp.scan_forbidden(doc, [PLANTED_ACCOUNT]))
+    assert any(h[1] == 'KNOWN_SECRET' for h in hits), \
+        '_walk yields keys but only tested them against FORBIDDEN_KEYS: %s' % hits
+
+
+@case('SP18', 'ORDER-1267 #1', 'known_secrets has THREE states: supplied, declared-absent, and a bug')
+def sp18():
+    doc = {'entity': 'SafeProjection', 'build_id': PLANTED_ACCOUNT,
+           'generated_at': '2026-08-02T00:00:00', 'accounts': [], 'findings': []}
+    # 1. supplied -> the layer runs
+    assert any(h[1] == 'KNOWN_SECRET' for h in sp.scan_forbidden(doc, [PLANTED_ACCOUNT]))
+    # 2. a bug -> REFUSED. This is the defect: an empty list used to return [], which is the same
+    #    answer a clean document gives.
+    try:
+        sp.scan_forbidden(doc, [])
+        raise AssertionError('an empty recognizer list was accepted and reported CLEAN')
+    except sp.ProjectionRefusal as exc:
+        assert 'did not declare why' in str(exc), exc
+    # 3. declared absent -> the layer does NOT run, and SAYS so on stderr. Not silence, and not a
+    #    failure. The notice is deliberately NOT a hit: `notifier.assert_sendable` raises on any
+    #    non-empty result and `notifier.redact_for_log` treats one as "redact this text", so a
+    #    pseudo-hit would have redacted every error string on the error path. Captured here rather
+    #    than trusted, because "it prints something" is the kind of claim that rots silently.
+    #    The record is DATA, not a stream write. It was stderr for one iteration and the FAST TIER
+    #    caught what hand-running could not: .ps1 wrappers run under EAP=Stop, so any stderr from
+    #    a native command is a thrown error and both this suite and S12 came back `exit -1 SUITE
+    #    THREW` while their python exited 0.
+    del sp.LAYERS_NOT_RUN[:]
+    hits = sp.scan_forbidden(doc, sp.NO_KNOWN_SECRETS_AVAILABLE)
+    assert any('KNOWN_SECRET' in r for r in sp.LAYERS_NOT_RUN), \
+        'the skipped layer was silent: %r' % sp.LAYERS_NOT_RUN
+    assert not any(h[1] == 'KNOWN_SECRET' for h in hits), \
+        'the layer reported a hit while declaring it did not run: %s' % hits
+    # ...and that report must not turn into a refusal, or the sender surface goes down entirely --
+    # including the delivery probe, whose whole job is to run when the snapshot is broken.
+    sp.assert_safe(doc, sp.NO_KNOWN_SECRETS_AVAILABLE)
+
+
+@case('SP19', 'ORDER-1267 Part 2', 'build_id and generated_at are SHAPES, so an account cannot ride in them')
+def sp19():
+    """MEASURED end-to-end at HEAD before the repair: a formatted account in `build_id` passed the
+    schema, passed the scan, passed assert_sendable, and notifier.py:540 interpolates build_id
+    verbatim into the Morning Brief text that becomes AlertEvent.text. The transport sends it."""
+    real = sp.build(snapshot())
+    sp.assert_shape(real, REPO)          # CONTROL: the real build still satisfies the new patterns
+    for field, bad in (('build_id', '9001-12233'), ('generated_at', 'acct 900112233'),
+                       ('build_id', 'B0000000000000FF')):   # uppercase hex is not what it emits
+        try:
+            sp.assert_shape(dict(real, **{field: bad}), REPO)
+            raise AssertionError('%s=%r was accepted' % (field, bad))
+        except sp.ProjectionLeak as exc:
+            assert 'SHAPE' in str(exc), exc
 
 
 @case('SP13', '7.3 dedupe', 'public ids are opaque, stable across builds, and differ per finding')

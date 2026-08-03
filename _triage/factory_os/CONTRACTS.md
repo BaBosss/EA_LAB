@@ -759,8 +759,8 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 | field | type | required | rule |
 |---|---|---|---|
 | `entity` | const `SafeProjection` | **yes** |  |
-| `build_id` | `string` | **yes** |  |
-| `generated_at` | `string` | **yes** |  |
+| `build_id` | `string` | **yes** | pattern `^[0-9a-f]{16}$` · ORDER-1267 Part 2: constrained because it was an unconstrained string that the notifier interpolates verbatim into the text it sends. Shape DERIVED, not invented -- snapshot_build.compute_build_id returns sha256(...).hexdigest()[:16]. |
+| `generated_at` | `string` | **yes** | pattern `^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$` · ORDER-1267 Part 2, same reasoning and same route as build_id. Shape DERIVED -- control_room_snapshot.ps1 writes $now.ToString('s'): yyyy-MM-ddTHH:mm:ss, no fraction, no zone. |
 | `accounts` | array of object *(fields below)* | **yes** | items closed · items require `account_masked`, `sensor_state`, `dd_pct_band` |
 | `accounts[].account_masked` | `string` | **yes** | pattern `^\*{3}[0-9]{3}$` |
 | `accounts[].sensor_state` | `FRESH` \| `STALE` \| `BLIND` \| `MISSING` \| `UNKNOWN` | **yes** |  |

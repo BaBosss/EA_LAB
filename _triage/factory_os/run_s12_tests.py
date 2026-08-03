@@ -697,7 +697,7 @@ def _s01():
 def _s02():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['finding_id'] = 'FND-sensor-159503454'
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'not declared')
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'not declared')
     hit('scan:SHAPE')
 
 
@@ -710,7 +710,7 @@ def _s03():
             kinds=(safe_projection.ProjectionLeak,))
     # and the control: the SAME event with no secret list would sail through, which is exactly
     # why this check lives on the planner and not on the sender.
-    notifier.assert_sendable(ev, (), ROOT)
+    notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT)
     hit('scan:KNOWN_SECRET')
 
 
@@ -718,7 +718,7 @@ def _s03():
 def _s04():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['text'] = 'could not read D:\\EA_LAB\\portfolio\\control_room_snapshot.json'
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'WINDOWS_ABSOLUTE_PATH',
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'WINDOWS_ABSOLUTE_PATH',
             kinds=(safe_projection.ProjectionLeak,))
     hit('scan:WINDOWS_ABSOLUTE_PATH')
 
@@ -727,7 +727,7 @@ def _s04():
 def _s05():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['text'] = 'using 1234567890:AAHfakefakefakefakefakefakefakefake12'
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'TELEGRAM_BOT_TOKEN',
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'TELEGRAM_BOT_TOKEN',
             kinds=(safe_projection.ProjectionLeak,))
     hit('scan:TELEGRAM_BOT_TOKEN')
 
@@ -737,7 +737,7 @@ def _s05():
 def _s06():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['material_revision'] = '2'
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'must be integer')
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'must be integer')
     hit('scan:SHAPE_INTEGER')
 
 
@@ -745,14 +745,14 @@ def _s06():
 def _s07():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['material_revision'] = True
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'must be integer')
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'must be integer')
 
 
 @case('S08', 'the declared `minimum` is enforced, not silently dropped along with the type')
 def _s08():
     ev = notifier.plan([rec()], PROJECTION)
     ev[0]['material_revision'] = -1
-    refuses(lambda: notifier.assert_sendable(ev, (), ROOT), 'must be >=')
+    refuses(lambda: notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT), 'must be >=')
 
 
 @case('S09', 'the shape checker still REFUSES a construct it does not implement (S11 SB07 is '
@@ -871,7 +871,7 @@ def _b01():
     for want in ('ATTENTION', 'FRESH 1', 'STALE 1', 'LIVE exception: 6', 'UNKNOWN'):
         if want not in text:
             raise AssertionError('the brief did not render %r:\n%s' % (want, text))
-    notifier.assert_sendable(ev, (), ROOT)
+    notifier.assert_sendable(ev, safe_projection.NO_KNOWN_SECRETS_AVAILABLE, ROOT)
     hit('kind:MORNING_BRIEF')
 
 

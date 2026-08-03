@@ -838,7 +838,13 @@ def safe_detail(text):
     sees `TELEGRAM_BOT_TOKEN` knows both what was withheld and why, which a bare `[redacted]`
     does not tell them.
     """
-    hits = safe_projection.scan_forbidden([str(text)])
+    # ORDER-1267 #1: DECLARED. This helper scrubs an arbitrary error string and has no source
+    # document to derive recognizers from, so the KNOWN_SECRET layer structurally cannot run here
+    # -- VALUE_SHAPE is the whole of what redacts. Passing the sentinel says that out loud; an
+    # empty list is now refused precisely because it used to mean this AND "I forgot", with the
+    # same return value for both.
+    hits = safe_projection.scan_forbidden([str(text)],
+                                          safe_projection.NO_KNOWN_SECRETS_AVAILABLE)
     if not hits:
         return str(text)
     rules = sorted(set(h[1] for h in hits))
@@ -1006,7 +1012,13 @@ def main(argv):
         if verb == 'probe':
             records, journal_lines, brief = [], [], None
             probe = (probe_id, probe_channel)
-            secrets = ()
+            # ORDER-1267 #1: DECLARED, and this branch is the reason the sentinel is a sentinel
+            # rather than a lint. A probe exists to prove the alert path still runs WHEN THE
+            # SNAPSHOT IS BROKEN -- so there is no document to derive recognizers from, by design,
+            # on exactly the run you most want to succeed. `()` said that and also said "I
+            # forgot", with the same result. Saying which one it is costs nothing and is the whole
+            # repair. (S12 C06 and C07 are the cases that drive this branch.)
+            secrets = safe_projection.NO_KNOWN_SECRETS_AVAILABLE
         else:
             records, journal_lines = observe(previous, findings_of(snapshot), now)
             brief = _brief_scalars(repo_root, snapshot) if '--brief' in argv else None

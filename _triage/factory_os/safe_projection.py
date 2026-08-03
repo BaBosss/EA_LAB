@@ -204,6 +204,38 @@ def _walk(node, path='$'):
                 yield item
 
 
+# ORDER-1267 #1. A caller that structurally CANNOT supply recognizers says so with this, and
+# nothing else may. It is a sentinel and not a default, because the whole defect is that
+# "I have no snapshot to derive recognizers from" and "I forgot to pass them" produced the same
+# empty tuple, and an empty result is indistinguishable from a clean document.
+NO_KNOWN_SECRETS_AVAILABLE = 'NO_KNOWN_SECRETS_AVAILABLE'
+
+# Every scan in this process that ran with a layer switched off, appended as it happens. The CLI's
+# `check` verb prints it; the suites assert on it.
+#
+# 🔴 IT IS NOT stderr, AND THAT IS NOT A STYLE CHOICE. The first version wrote the notice to
+# stderr. run_s11_tests.py and run_s12_tests.py were green when hand-run and the FAST TIER caught
+# it: `.ps1` wrappers run under $ErrorActionPreference='Stop', where ANY stderr from a native
+# command is a thrown error, so both suites came back `exit -1 SUITE THREW` while their python
+# exited 0. Same shape as memory `thai-output-kills-a-suite-inside-the-hook`, one channel over.
+# stdout is no better: a library that prints into a caller's stdout can corrupt whatever parses it.
+# So the record is DATA, and the surfaces that want to say it out loud read it.
+LAYERS_NOT_RUN = []
+
+
+def _normalised(text):
+    """Lowercased, with every non-alphanumeric removed.
+
+    ORDER-1267 #1: the KNOWN_SECRET layer was a bare `secret in text`, so the exact literal was
+    DETECTED while `5123-4567`, `51 234 567` and `acct#5123-4567` were all CLEAN -- measured, one
+    synthetic literal, at HEAD. Formatting is the cheapest possible evasion and it is the one a
+    human doing the leaking would reach for by accident, not by malice. Comparing normalised
+    forms answers every spelling at once instead of chasing separators one at a time, which is the
+    lesson ORDER-1266 #2 paid for with `OverflowError` and then `ValueError`.
+    """
+    return re.sub(r'[^0-9a-z]', '', str(text).lower())
+
+
 def scan_forbidden(doc, known_secrets=()):
     """
     Return a list of (path, rule, detail) - EVERY hit, not the first.
@@ -219,25 +251,74 @@ def scan_forbidden(doc, known_secrets=()):
 
     Reporting every hit rather than raising on the first is deliberate: a fixture that plants
     three leaks and is told about one teaches the author to fix one.
+
+    ORDER-1267 #1 -- `known_secrets` HAS THREE STATES, NOT TWO. Measured at HEAD: this function
+    returned `[]` for a clean document AND `[]` for the exact planted account scanned with an
+    empty recognizer list. That is `unreadable-input-must-refuse-not-skip` exactly -- a scan that
+    could not run reported the same thing as a scan that found nothing.
+
+      a non-empty list                 scan with it
+      NO_KNOWN_SECRETS_AVAILABLE       the caller has DECLARED it cannot derive recognizers. The
+                                       layer is announced as NOT RUN on stderr, so a reader is
+                                       never told a document was cleared by a layer that did not
+                                       execute.
+      anything else that is empty      REFUSED. This is the forgot-to-pass case and it must not
+                                       silently degrade into "clean".
+
+    THE NOTICE IS NOT A HIT, and that is deliberate rather than tidy. The first version of this
+    repair appended a `KNOWN_SECRET_LAYER_NOT_RUN` pseudo-hit to the returned list, which reads
+    well and breaks both real callers: `notifier.assert_sendable` raises ProjectionLeak on any
+    non-empty result, and `notifier.redact_for_log` treats any non-empty result as "redact this
+    text" -- so every error string would have been replaced by a redaction notice, on the error
+    path, where it is hardest to notice. The return value stays exactly what every caller already
+    means by it: REAL hits, and nothing else.
     """
     hits = []
-    secrets = [str(s) for s in known_secrets if str(s) != '']
+    if known_secrets == NO_KNOWN_SECRETS_AVAILABLE:
+        secrets = []
+        LAYERS_NOT_RUN.append(
+            'KNOWN_SECRET: the caller declared it cannot derive recognizers, so this document was '
+            'cleared by FORBIDDEN_KEY, VALUE_SHAPE and the declared SHAPE only. A literal from the '
+            'source snapshot typed into a permitted field would not have been caught.')
+    else:
+        secrets = [str(s) for s in known_secrets if str(s) != '']
+        if not secrets:
+            _refuse('scan_forbidden was given no recognizers and did not declare why. Pass the '
+                    'literals from the source document, or pass NO_KNOWN_SECRETS_AVAILABLE to '
+                    'state that this caller structurally cannot derive them. An empty list is '
+                    'refused because its result is identical to a clean scan, which is how a '
+                    'document gets credited to a layer that never ran.')
     for path, key, value in _walk(doc):
         if key is not None and key in FORBIDDEN_KEYS:
             hits.append((path, 'FORBIDDEN_KEY', '%s: %s' % (key, FORBIDDEN_KEYS[key])))
-        if isinstance(value, (dict, list, tuple)):
-            continue
-        if value is None or isinstance(value, bool):
-            continue
-        text = value if isinstance(value, str) else repr(value)
-        for secret in secrets:
-            if secret in text:
-                hits.append((path, 'KNOWN_SECRET',
-                             'carries a literal taken from the full snapshot: %s' % secret))
-        for name, rx, why in FORBIDDEN_VALUE_RULES:
-            if rx.search(text):
-                hits.append((path, name, why))
+        # ORDER-1267 #1: a KEY is scanned as TEXT as well as against FORBIDDEN_KEYS. `_walk`
+        # always yielded keys, but only their NAMES were tested, so an account number used as a
+        # dict key was never scanned at all -- measured CLEAN at HEAD. Both the key and the value
+        # are text somebody can read off the wire; only one of them was being read here.
+        for text in ([key] if key is not None else []) + (
+                [] if isinstance(value, (dict, list, tuple)) or value is None
+                or isinstance(value, bool)
+                else [value if isinstance(value, str) else repr(value)]):
+            norm = _normalised(text)
+            for secret in secrets:
+                secret_norm = _normalised(secret)
+                if secret in str(text) or (secret_norm and secret_norm in norm):
+                    hits.append((path, 'KNOWN_SECRET', _secret_detail(secret)))
+            for name, rx, why in FORBIDDEN_VALUE_RULES:
+                if rx.search(str(text)):
+                    hits.append((path, name, why))
     return hits
+
+
+# ORDER-1267: the refusal message must not restate the secret. A leak detector that prints the
+# value it caught has MOVED the leak into the exception text, the log line and whatever ships
+# them -- and `assert_safe`'s message is built from these details. The path already says WHERE and
+# the length and last three digits are enough to identify WHICH literal without reproducing it,
+# which is the same bargain `mask_account` already strikes for the wire.
+def _secret_detail(secret):
+    s = str(secret)
+    return ('carries a literal taken from the full snapshot (%d chars, ends %r) -- the value is '
+            'deliberately NOT restated here' % (len(s), s[-3:] if len(s) >= 3 else '?'))
 
 
 def assert_safe(doc, known_secrets=()):
@@ -576,7 +657,15 @@ def read_for_sender(path, repo_root='.'):
         _refuse('the document at %s is not a %s (entity=%r)'
                 % (path, ENTITY, doc.get('entity') if isinstance(doc, dict) else None))
     assert_shape(doc, repo_root)
-    return assert_safe(doc)
+    # ORDER-1267 #1: DECLARED, not defaulted. This function reads a projection FILE and has no
+    # snapshot, so it has nothing to derive recognizers from -- the honest repair named in the
+    # order. Saying so out loud is what makes the difference: before this, `assert_safe(doc)`
+    # passed an empty tuple and the KNOWN_SECRET layer was structurally inert on the ONE path
+    # that matters, while returning a result indistinguishable from three layers agreeing.
+    # What carries the weight here instead is the declared SHAPE (assert_shape, above -- and
+    # ORDER-1267 Part 2 constrained `build_id` and `generated_at` precisely because they were
+    # unconstrained strings on this path), plus FORBIDDEN_KEY and VALUE_SHAPE.
+    return assert_safe(doc, NO_KNOWN_SECRETS_AVAILABLE)
 
 
 # ---------------------------------------------------------------------------------------
@@ -617,6 +706,11 @@ def main(argv):
             return 1
         print('safe_projection: %s matches the snapshot (%d account(s), %d finding(s))'
               % (PROJECTION_REL, len(projection['accounts']), len(projection['findings'])))
+        # ORDER-1267 #1: a human running `check` is told which layers did NOT run. "This document
+        # is clean" must never be silently shorthand for "clean according to the layers that could
+        # execute". Deduplicated because read_for_sender declares on every call.
+        for line in sorted(set(LAYERS_NOT_RUN)):
+            print('safe_projection: LAYER NOT RUN -- %s' % line)
         return 0
     d = os.path.dirname(out)
     if d and not os.path.isdir(d):
