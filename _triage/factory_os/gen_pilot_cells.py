@@ -64,6 +64,15 @@ UNIVERSE_VERSION = 'design-8.3-pilot'
 # The arm whose numbers become the cell's registered metric. See the docstring.
 REGISTERED_ARM = 'baseline'
 
+# ORDER-1253 acceptance 3: the decision-13 optimize probe. Its records live in their own directory,
+# one file per invocation, and they are read as a SET rather than pinned by name -- the baseline
+# source is pinned because two matrices exist at two different first lots and picking "the newest"
+# would silently re-point at the other sizing. That risk does not transfer: every probe record
+# carries the configuration it ran under, so this reads them all and REFUSES any whose
+# configuration disagrees with the baseline it is being attached to. Validating beats trusting.
+PROBE_DIR = 'factory/runs/pilot/probe'
+PROBE_ARM = 'optimize-probe'
+
 
 def load_source(path=None):
     path = path or os.path.join(ROOT, SOURCE)
@@ -73,6 +82,129 @@ def load_source(path=None):
             if line.strip():
                 rows.append(json.loads(line))
     return rows
+
+
+def load_probe_runs(root=None):
+    """-> [PilotProbeRun] across every file in the probe directory. Order is filename order."""
+    import glob
+    base = os.path.join(root or ROOT, PROBE_DIR.replace('/', os.sep))
+    rows = []
+    for path in sorted(glob.glob(os.path.join(base, '*.jsonl'))):
+        name = os.path.basename(path)
+        # ROUTE BY PREFIX, and REFUSE an unrecognised one. Narrowing this glob to `probe_runs_*`
+        # would have been the one-character fix and it is the wrong one: a third file family
+        # appearing in this directory would then be read by nobody, which is how a store grows a
+        # population nothing validates (the exact shape `factory/coverage.jsonl` already had to be
+        # taught). The prefixes are closed; adding one is a decision, not an accident.
+        if name.startswith('xml_backfill_'):
+            continue                       # read by load_xml_backfill(), deliberately separate
+        if not name.startswith('probe_runs_'):
+            raise SystemExit('gen_pilot_cells: %s is in %s and matches no known file family '
+                             '(probe_runs_* | xml_backfill_*). Refusing rather than ignoring it.'
+                             % (name, PROBE_DIR))
+        with io.open(path, encoding='utf-8') as fh:
+            for n, line in enumerate(fh, 1):
+                if not line.strip():
+                    continue
+                try:
+                    rec = json.loads(line)
+                except ValueError as exc:
+                    raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
+                                     % (os.path.basename(path), n, exc))
+                rec['_source_file'] = os.path.basename(path)
+                rows.append(rec)
+    return rows
+
+
+def load_xml_backfill(root=None):
+    """-> {xml path} asserted to exist by scripts/pilot_probe_verify_xml.py.
+
+    A SEPARATE FILE, DELIBERATELY. The records these cover were written by a launcher that could
+    exit 0 with no XML, and they predate the field that would say otherwise. Editing them to add
+    the field would make the store claim an observation the instrument never made; assuming in
+    their favour is the silent pass this transition exists to prevent. So the measurement is taken
+    after the fact, by a named tool, and kept as its own evidence that a reader can weigh
+    differently from a record the runner wrote about itself.
+    """
+    import glob
+    base = os.path.join(root or ROOT, PROBE_DIR.replace('/', os.sep))
+    out = set()
+    for path in sorted(glob.glob(os.path.join(base, 'xml_backfill_*.jsonl'))):
+        with io.open(path, encoding='utf-8') as fh:
+            for n, line in enumerate(fh, 1):
+                if not line.strip():
+                    continue
+                try:
+                    rec = json.loads(line)
+                except ValueError as exc:
+                    raise SystemExit('gen_pilot_cells: %s line %d is unparseable: %s'
+                                     % (os.path.basename(path), n, exc))
+                if rec.get('entity') != 'PilotProbeXmlBackfill':
+                    raise SystemExit('gen_pilot_cells: %s line %d is entity=%r in a back-fill file'
+                                     % (os.path.basename(path), n, rec.get('entity')))
+                if rec.get('xml'):
+                    out.add(rec['xml'])
+    return out
+
+
+def probed_cells(probe_runs, baseline_by_cell, backfilled=frozenset()):
+    """-> ({cell_id: record}, [excluded note]) for cells whose optimize probe DEMONSTRABLY ran.
+
+    THE BAR IS `xml_present is True`, AND NOTHING ELSE WILL DO. `launcher_exit_code == 0` is not
+    sufficient evidence for any record written before ORDER-1253's second fix, because
+    mt5_optimize.ps1 printed "NO XML" and exited 0 -- a launcher reporting success with none of the
+    output it exists to produce. A record from that era cannot say whether its probe ran, so it is
+    not counted, and the cell stays at BASELINE_RUN until a run that CAN say so replaces it. Five
+    such records exist and the honest repair is to re-run those cells, not to assume in their
+    favour: the whole point of this transition is that a cell reaching PROBE_RUN was probed.
+
+    EXACTLY ONE qualifying record per cell. Two would make "which run is this cell's probe" a
+    question this generator answers by picking, and picking the newest is how a generator silently
+    re-points at a different configuration -- the exact risk the pinned baseline SOURCE avoids.
+    """
+    qualifying, excluded = {}, []
+    for rec in probe_runs:
+        where = '%s (%s)' % (rec.get('cell_id'), rec.get('_source_file'))
+        if rec.get('entity') != 'PilotProbeRun':
+            raise SystemExit('gen_pilot_cells: %s is in the probe store but is entity=%r'
+                             % (where, rec.get('entity')))
+        cid = rec.get('cell_id')
+        if rec.get('arm') != PROBE_ARM:
+            # The deliberate-refusal arm is design 8.6 ITEM 6's evidence, not item 7's. Named, not
+            # dropped: a store that silently ignores rows is a store that can hide one.
+            excluded.append('%s: arm=%r is not the optimize probe' % (where, rec.get('arm')))
+            continue
+        if cid not in baseline_by_cell:
+            # The one real occurrence: `B14-H01-r1/EURUSD,USDJPY,BTCUSD/H1,H4`, produced by the
+            # `powershell -File` comma trap. It is KEPT in the store as the evidence that the
+            # guard-rail was missing, so this must neither refuse forever nor skip in silence.
+            excluded.append('%s: names no cell in the design 8.3 universe' % where)
+            continue
+        if rec.get('xml_present') is not True and rec.get('xml') not in backfilled:
+            excluded.append('%s: xml_present=%r and no back-fill row names its XML, so this record '
+                            'cannot demonstrate the probe produced anything (exit_code=%r is not '
+                            'sufficient -- the launcher reported success without an XML until '
+                            'ORDER-1253)'
+                            % (where, rec.get('xml_present'), rec.get('launcher_exit_code')))
+            continue
+        if rec.get('launcher_exit_code') != 0:
+            excluded.append('%s: launcher_exit_code=%r' % (where, rec.get('launcher_exit_code')))
+            continue
+        base = baseline_by_cell[cid]
+        for field in ('lane', 'window', 'from_date', 'to_date', 'first_lot', 'model'):
+            if rec.get(field) != base.get(field):
+                raise SystemExit(
+                    'gen_pilot_cells: probe %s ran with %s=%r but its baseline used %r. A probe '
+                    'measured under a different configuration is not this cell\'s probe.'
+                    % (where, field, rec.get(field), base.get(field)))
+        if cid in qualifying:
+            raise SystemExit(
+                'gen_pilot_cells: cell %s has TWO qualifying optimize-probe records (%s and %s). '
+                'Choosing between them is a decision, and picking the newest is how a generator '
+                'silently re-points at a different run.'
+                % (cid, qualifying[cid]['_source_file'], rec['_source_file']))
+        qualifying[cid] = rec
+    return qualifying, excluded
 
 
 def build_cells(runs):
@@ -97,6 +229,14 @@ def build_cells(runs):
             raise SystemExit('gen_pilot_cells: cell %s has two %r arms; the source is ambiguous '
                              'about which run the cell was measured on' % (cid, arm))
         by_cell[cid][arm] = r
+
+    # ORDER-1253 acceptance 3. The probe evidence, resolved ONCE for the whole matrix so that the
+    # per-cell loop below only reads an answer. `excluded` is carried out to the caller and
+    # PRINTED: rows the probe store holds and this generator does not count are stated by name,
+    # because a store that silently ignores rows is a store that can hide one.
+    baseline_by_cell = {cid: by_cell[cid][REGISTERED_ARM]
+                        for cid in order if REGISTERED_ARM in by_cell[cid]}
+    probed, probe_excluded = probed_cells(load_probe_runs(), baseline_by_cell, load_xml_backfill())
 
     cells = []
     for cid in order:
@@ -151,15 +291,24 @@ def build_cells(runs):
             'logical_symbol': base['logical_symbol'],
             'tf': base['tf'],
             'universe_version': UNIVERSE_VERSION,
-            # BASELINE_RUN, never PROBE_RUN. See the module docstring: the probe design 8.3 owes
-            # each cell is the decision-13 OPTIMIZE probe, and it has not been run.
-            'state': 'BASELINE_RUN',
+            # PROBE_RUN only when the decision-13 optimize probe DEMONSTRABLY produced a search
+            # surface for THIS cell, under the same configuration the baseline measured.
+            # BASELINE_RUN otherwise -- and "otherwise" includes a probe that ran but cannot show
+            # it produced anything. 🚫 The flat-lot arm can never satisfy this: it is H01's
+            # FALSIFIER, it is not in the probe store, and it answers a different question.
+            'state': 'PROBE_RUN' if cid in probed else 'BASELINE_RUN',
             'metrics': [metric],
-            # Zero parameter trials have been spent on these cells. The first lot was resolved by
-            # a mechanical criterion that never reads a PF, which is a sizing pin and not a trial.
+            # The trials the probe SPENT are not counted here, and the omission is deliberate
+            # rather than an oversight. Design 6.7 defines trial_count as "the total number of
+            # configurations that were ever scored", and that number lives in the optimizer XML --
+            # which is not committed, so deriving it here would make this generator's output
+            # depend on one machine's disk. The number belongs in the probe RECORD, written by the
+            # runner that has the XML in hand, and then read from there. Until it is, 0 is the
+            # honest value for "this generator has not been told", and a reader can see it has
+            # not moved. Tracked with the rest of ORDER-1253.
             'trial_count': 0,
         })
-    return cells
+    return cells, probe_excluded
 
 
 def read_store(path=None):
@@ -193,7 +342,11 @@ def main(argv):
     if mode not in ('--check', '--apply'):
         print('usage: gen_pilot_cells.py [--check|--apply]')
         return 2
-    cells = build_cells(load_source())
+    cells, probe_excluded = build_cells(load_source())
+    probed = sum(1 for c in cells if c['state'] == 'PROBE_RUN')
+    print('[pilot-cells] %d of %d cell(s) at PROBE_RUN' % (probed, len(cells)))
+    for note in probe_excluded:
+        print('[pilot-cells] probe row NOT counted -- %s' % note)
     if mode == '--apply':
         write_store(cells)
         print('[pilot-cells] wrote %d CoverageCell row(s) to %s' % (len(cells), COVERAGE))
