@@ -30,7 +30,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 | entity | canonical storage | writer | enforced by |
 |---|---|---|---|
-| `OwnerRef` | *embedded in its parent — no file* | — | — |
+| `OwnerRef` | *embedded in its parent — no file* | — | candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event. |
 | `Hypothesis` | `factory/hypotheses.jsonl` | claude|user | hypothesis_validator: status transitions, and the refusal to register without a falsifier |
 | `ModuleUse` | *embedded in its parent — no file* | — | — |
 | `ParameterBinding` | `factory/parameter_bindings.jsonl` | claude | — |
@@ -111,7 +111,7 @@ references is an entity nobody reviews, and `validate_coverage` refuses it.
 
 <sub>⚙️ Generated from `_triage/factory_os/schemas.json` by `_triage/factory_os/gen_design_contracts.py`. **Do not edit by hand** — edit the schema and regenerate. `--check` runs in the fast cage tier.</sub>
 
-**`OwnerRef`** · embedded — has no file of its own
+**`OwnerRef`** · embedded — has no file of its own · enforced by *candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event.*
 
 | field | type | required | rule |
 |---|---|---|---|

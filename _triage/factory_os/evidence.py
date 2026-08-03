@@ -53,6 +53,15 @@ _HERE = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(_HERE, '..', '..'))
 
 
+# ORDER-1263. Pin resolution is a git subprocess per distinct (commit, path), and the live
+# stores hold 235 OwnerRefs across THREE distinct targets -- 232 of them the same one. Without
+# a cache that is 235 spawns inside a 120.0s tier, which is the ORDER-270 shape (1,506 spawns
+# for 5 commits' worth of real work). Keyed by object name, so it is safe by construction: the
+# content behind a sha does not change, which is what a sha is for.
+_PIN_CACHE = {}
+_SHALLOW = None
+
+
 class ToolFailure(Exception):
     """The reader could not answer. NOT a violation -- different exit code, different fix."""
 
@@ -228,6 +237,61 @@ class EvidenceSource(object):
                 'instead would join a live vintage to a pinned one inside one verdict.'
                 % (sha, err.decode('utf-8', 'replace').strip(), why))
         return out
+
+    def resolve_pin(self, commit_oid, rel, why):
+        """ORDER-1263. `<commit_oid>:<rel>` -> the blob oid git actually has there.
+
+        Category P, like read_blob: INDEPENDENT of mode, and that is the point. A pin is a
+        claim about a historical object; answering it from the index or the worktree would
+        answer a different question than the one asked.
+
+        Returns the 40-hex blob oid, or None when the pin does not resolve -- an absent
+        commit, a path that commit does not contain, or a path that is a tree rather than a
+        blob. None is a FINDING about the reference, not a tool failure, and the caller says
+        so by name.
+
+        The one case that is NOT a finding is a repository that could not hold the answer:
+        in a shallow clone a valid pin at an old commit is unresolvable for a reason that has
+        nothing to do with the pin. That raises ToolFailure, because "I cannot judge this"
+        and "this pin is wrong" are different facts and a checker that merges them reports
+        red on a healthy repo the first time it runs somewhere new.
+        """
+        if not isinstance(commit_oid, str) or not re.match(r'^[0-9a-f]{7,40}$', commit_oid):
+            raise ToolFailure('resolve_pin(%r): not an object name -- a pin that is not a sha '
+                              'cannot be resolved against anything (%s)' % (commit_oid, why))
+        rel = str(rel).replace(os.sep, '/')
+        key = (self.root, commit_oid, rel)
+        if key in _PIN_CACHE:
+            return _PIN_CACHE[key]
+        rc, out, _err = self._git('rev-parse', '--verify', '--quiet',
+                                  '%s:%s' % (commit_oid, rel))
+        if rc == 0:
+            oid = out.decode('ascii', 'replace').strip()
+            # rev-parse resolves a directory to a TREE oid just as happily as a file to a blob,
+            # and a pin whose path is a directory would otherwise "resolve" to something no
+            # reader can ever hash. Ask what kind of object it is rather than assuming.
+            rc2, kind, _e2 = self._git('cat-file', '-t', oid)
+            if rc2 == 0 and kind.decode('ascii', 'replace').strip() == 'blob':
+                _PIN_CACHE[key] = oid
+                return oid
+            _PIN_CACHE[key] = None
+            return None
+        rcc, _o, _e = self._git('cat-file', '-e', '%s^{commit}' % commit_oid)
+        if rcc != 0 and self.is_shallow():
+            raise ToolFailure(
+                'pin %s:%s names a commit this repository does not have, and the repository is '
+                'SHALLOW -- so "the pin is wrong" and "the history was not fetched" are '
+                'indistinguishable here. Refusing rather than guessing. It is pinned because %s'
+                % (commit_oid, rel, why))
+        _PIN_CACHE[key] = None
+        return None
+
+    def is_shallow(self):
+        global _SHALLOW
+        if _SHALLOW is None:
+            rc, out, _err = self._git('rev-parse', '--is-shallow-repository')
+            _SHALLOW = (rc == 0 and out.decode('ascii', 'replace').strip() == 'true')
+        return _SHALLOW
 
     def list_committed(self, pattern):
         """Enumerate committed paths matching a /-separated glob (no `**`; `*` stays inside

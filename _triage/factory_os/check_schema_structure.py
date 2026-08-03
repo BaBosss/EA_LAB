@@ -280,18 +280,18 @@ _wiring = _invocation_text()
 _ENFORCEMENT_DECLARED = frozenset((
     "AlertDelivery", "AlertEvent", "CandidateManifest", "ControlRoomSnapshotV5",
     "CoverageCell", "DeploymentAttestationEvent", "Hypothesis", "MagicAllocation",
-    "MetricRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
+    "MetricRef", "OwnerRef", "ReconciliationEvidence", "RunTransition", "SafeProjection",
     "SnapshotBuilderInput", "SnapshotVerdict", "SystemFinding", "WorkReceipt",
 ))
 _NO_ENFORCEMENT_DECLARATION = frozenset((
     "CandidatePayload", "EvidenceRef", "ExecutionKey", "IdeaRef", "InstrumentProfile",
-    "LogicalSymbol", "ModuleUse", "OwnerRef", "ParameterBinding", "RunAttempt", "RunJournal",
+    "LogicalSymbol", "ModuleUse", "ParameterBinding", "RunAttempt", "RunJournal",
     "SnapshotMeta", "TestUniverse",
 ))
-# `OwnerRef` is on that list TODAY and it is the most expensive entry on it: it is the pin
-# primitive S2's whole ownership discipline rests on, and being unchecked here is why
-# ORDER-1263 survived. It moves to _ENFORCEMENT_DECLARED in the commit that gives it a
-# resolver, not before -- a declaration written ahead of its enforcer is the false
+# `OwnerRef` was on the second list when ORDER-1264 froze it, and it was the most expensive
+# entry on it: the pin primitive S2's whole ownership discipline rests on, unchecked here,
+# which is why ORDER-1263 survived. It moved up in the commit that gave it a resolver, and
+# not one commit earlier -- a declaration written ahead of its enforcer is exactly the false
 # governance state this whole block exists to end.
 _inventory = _ENFORCEMENT_DECLARED | _NO_ENFORCEMENT_DECLARATION
 _defs_names = set(d["$defs"])

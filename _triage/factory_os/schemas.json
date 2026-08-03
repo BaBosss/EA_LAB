@@ -342,6 +342,9 @@
     "OwnerRef": {
       "type": "object",
       "description": "The ONLY legal way for a Factory OS artifact to carry a fact owned elsewhere. Pins the owner at a commit so the reference cannot silently drift, exactly as the existing event log does. Rev 1's mutable copies are replaced by this everywhere.",
+      "x-enforced-by": "candidate.owner_ref_resolution_problems: RESOLUTION, which JSON Schema cannot express. R1 commit_oid:path resolves to a blob; R2 that blob is the one blob_oid names; R3 sha256 over the blob's raw bytes equals raw_sha256; R4 anchor contains no spaces and occurs EXACTLY once in the blob - the rule stated in prose on the field below, which nothing read until ORDER-1263. The schema checks the PATTERNS only, and three well-formed hex fields can identify three different documents: an authorization_ref whose path was VISION.md, whose blob_oid was PROJECT_STATE.md's and whose raw_sha256 was unrelated validated clean on a CANDIDATE_ASSIGNED event.",
+      "x-enforcement-status": "BUILT",
+      "x-enforcer": "_triage/factory_os/candidate.py",
       "required": [
         "entity",
         "owner_type",

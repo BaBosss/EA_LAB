@@ -687,6 +687,12 @@ $SUITE_GUARDS = @{
                                           '_triage/factory_os/gen_magic_allocations.py',
                                           '_triage/factory_os/run_s10_tests.py',
                                           '_triage/factory_os/scheduler.py',
+                                          # ORDER-1263: candidate.py now RESOLVES an OwnerRef
+                                          # instead of only shape-checking it, and it resolves
+                                          # through evidence.py. Demanded by PART 4b's import
+                                          # sweep on the first run after that landed -- the
+                                          # wrapper's path-string sweep cannot see an `import`.
+                                          '_triage/factory_os/evidence.py',
                                           '_triage/factory_os/schemas.json',
                                           'scripts/check_state.ps1',
                                           'scripts/lib/magic_guard.ps1',

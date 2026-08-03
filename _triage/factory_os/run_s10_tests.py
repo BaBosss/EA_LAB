@@ -37,6 +37,7 @@ EXIT   0 = every criterion refused its attack and both enumerations are complete
 """
 
 import copy
+import hashlib
 import io
 import json
 import os
@@ -90,9 +91,64 @@ def accepts(label, problems):
 
 H64 = 'a' * 64
 H40 = 'b' * 40
-OWNER = {'entity': 'OwnerRef', 'owner_type': 'scorecard', 'path': 'EA_SCORECARD_AND_REGISTRY.md',
-         'commit_oid': H40, 'blob_oid': 'c' * 40, 'raw_sha256': 'd' * 64, 'anchor': None}
-AUTH = dict(OWNER, owner_type='taskboard_order', path='AGENT_TASKBOARD.md')
+
+# ------------------------------------------------------------------------------ ORDER-1263
+# THESE PINS USED TO BE FILLER, AND THAT IS THE FINDING, NOT AN INCONVENIENCE.
+# OWNER was `commit_oid='b'*40, blob_oid='c'*40, raw_sha256='d'*40` and every case in this
+# suite passed, because `owner_ref_problems` validated the SHAPE of a pin and never resolved
+# it. The S3 and S10 blind audits found that independently on the same day; S10 recorded it as
+# unverified claim 2.1 -- "the positive fixture proves a regex exists and nothing else".
+#
+# So the fixtures now pin REAL objects, resolved from HEAD at import time. A test whose pins
+# are fabricated cannot tell a working resolver from an absent one: it is green under both.
+# Deriving them from git rather than pasting today's oids also means they do not need
+# re-pinning every commit -- a hand-pasted oid here would be stale within the hour and the
+# suite would start refusing its own controls.
+def _pin(owner_type, path, anchor=None):
+    """A REAL OwnerRef at HEAD, resolvable by candidate.owner_ref_resolution_problems.
+
+    HEAD, not the index: under the pre-commit hook HEAD is the previous commit, which is
+    exactly what a pin written by the commit being made would legitimately cite.
+    """
+    def git(*args):
+        p = subprocess.run(['git', '-C', ROOT] + list(args), capture_output=True)
+        if p.returncode != 0:
+            raise RuntimeError('git %s failed: %s' % (' '.join(args), p.stderr.decode('utf-8',
+                                                                                      'replace')))
+        return p.stdout
+    commit = git('rev-parse', 'HEAD').decode('ascii').strip()
+    blob = git('rev-parse', 'HEAD:%s' % path).decode('ascii').strip()
+    raw = git('cat-file', 'blob', blob)
+    return {'entity': 'OwnerRef', 'owner_type': owner_type, 'path': path,
+            'commit_oid': commit, 'blob_oid': blob,
+            'raw_sha256': hashlib.sha256(raw).hexdigest(), 'anchor': anchor}
+
+
+def _blob_text(blob_oid):
+    p = subprocess.run(['git', '-C', ROOT, 'cat-file', 'blob', blob_oid], capture_output=True)
+    return p.stdout.decode('utf-8', 'replace')
+
+
+def _token_occurring(text, n):
+    """A whitespace-free token whose SUBSTRING count in `text` is exactly n, or None.
+
+    Substring count, not token count, because that is what the rule and the checker both mean:
+    `ORDER-126` occurs inside `ORDER-1263`, and an anchor is looked for in the bytes, not in a
+    tokenisation of them.
+    """
+    seen = set()
+    for tok in text.split():
+        if len(tok) < 8 or tok in seen:
+            continue
+        seen.add(tok)
+        if text.count(tok) == n:
+            return tok
+    return None
+
+
+OWNER = _pin('scorecard', 'EA_SCORECARD_AND_REGISTRY.md')
+AUTH = _pin('taskboard_order', 'AGENT_TASKBOARD.md')
+DEPLOY_REF = _pin('deployments_csv', 'portfolio/DEPLOYMENTS.csv')
 
 PAYLOAD = {
     'hypothesis_revision': 'B14-H01-r1',
@@ -419,8 +475,7 @@ def _event(event_type, actor, **kw):
     ev = {'entity': 'DeploymentAttestationEvent', 'event_id': 'ATT-20260802-001',
           'account': '159503454', 'magic': 991001, 'event_type': event_type,
           'at': '2026-08-02T00:00:00Z', 'actor': actor,
-          'deployment_ref': dict(OWNER, owner_type='deployments_csv',
-                                 path='portfolio/DEPLOYMENTS.csv')}
+          'deployment_ref': DEPLOY_REF}
     ev.update(kw)
     return ev
 
@@ -482,6 +537,61 @@ def part2_attestation():
     refuses('an authorization_ref that is not a real OwnerRef',
             A.validate_event(_event('FROZEN', 'user', authorization_ref={'entity': 'OwnerRef'}), []),
             'A3')
+
+    # -- ORDER-1263. The comment above ("a citation that does not resolve is the same as no
+    #    citation") was ASPIRATIONAL until 2026-08-03: the case above it is a SHAPE violation,
+    #    and a ref with three well-formed hex fields that identify three different documents
+    #    walked straight through. Every case below returned [] before that commit -- measured
+    #    against `git show HEAD:candidate.py`, not assumed.
+    def refuses_pin(label, ref, rule):
+        problems = A.validate_event(
+            _event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                   authorization_ref=ref), [])
+        hit = [p for p in problems if p.startswith('A3 ') and (' %s ' % rule) in p]
+        return check('A3  %-58s [%s]' % (label, rule), bool(hit),
+                     'expected an A3 finding naming %s, got %s' % (rule, problems or 'nothing'))
+
+    def accepts_pin(label, ref):
+        problems = A.validate_event(
+            _event('CANDIDATE_ASSIGNED', 'user', candidate_id='CAND-' + '1' * 12,
+                   authorization_ref=ref), [])
+        return accepts(label, problems)
+
+    refuses_pin('a well-formed pin at a commit this repo does not have',
+                dict(AUTH, commit_oid='b' * 40), 'R1')
+    # THE REPRODUCER FROM THE S2 AUDIT'S PART 5, and it is used here in preference to a
+    # filler-oid one deliberately: filler invites "nobody would write that". These are real
+    # oids of real files that have nothing to do with each other, on the one event type that
+    # exists to require a human decision before a candidate reaches a live deployment.
+    VISION = _pin('project_state', 'VISION.md')
+    PSTATE = _pin('project_state', 'PROJECT_STATE.md')
+    refuses_pin('path=VISION.md, blob_oid=PROJECT_STATE.md, sha256 unrelated',
+                dict(VISION, blob_oid=PSTATE['blob_oid'], raw_sha256='c' * 64), 'R2')
+    refuses_pin('the right blob, a raw_sha256 over something else',
+                dict(AUTH, raw_sha256='d' * 64), 'R3')
+
+    # -- R4, the anchor. The schema states the rule in prose ON THE FIELD -- "must occur EXACTLY
+    #    once in the blob and contain no spaces" -- and nothing read it. The two anchors below
+    #    are DERIVED from the pinned blob rather than hardcoded: a pasted token is stale the
+    #    next time that file is edited, and a case whose fixture has rotted is green for the
+    #    wrong reason. If the blob cannot supply one, that FAILS here rather than skipping.
+    _auth_text = _blob_text(AUTH['blob_oid'])
+    once = _token_occurring(_auth_text, 1)
+    twice = _token_occurring(_auth_text, 2)
+    check('fixture: the pinned blob supplies a once-only and a twice-over token',
+          bool(once) and bool(twice),
+          'once=%r twice=%r -- cannot construct the R4 cases from this blob' % (once, twice))
+    if once and twice:
+        refuses_pin('an anchor containing a space', dict(AUTH, anchor='not unique anchor'), 'R4')
+        refuses_pin('an anchor that occurs nowhere in the blob',
+                    dict(AUTH, anchor='ANCHOR-THAT-IS-NOT-THERE-1263'), 'R4')
+        refuses_pin('an anchor that occurs twice -- ambiguous points at no one place',
+                    dict(AUTH, anchor=twice), 'R4')
+        accepts_pin('an anchor occurring EXACTLY once is accepted', dict(AUTH, anchor=once))
+    # THE SPECIFICITY HALF for the whole of R1-R4: a real pin, resolved, must pass. Without it
+    # this block reads identically against a resolver that refuses everything.
+    accepts_pin('a REAL pin at HEAD resolves and is accepted', copy.deepcopy(AUTH))
+    accepts_pin('a real pin with anchor=None is accepted', dict(AUTH, anchor=None))
 
     # -- A6 THE ONE WITH TEETH. Without it, A3 is an enum check and automation reassigns the
     #    deployment through the field the entity was rewritten to protect.
