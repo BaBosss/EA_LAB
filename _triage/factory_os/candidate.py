@@ -28,8 +28,25 @@ WHY THERE IS NO SECOND SERIALIZER
 WHAT THIS FILE DELIBERATELY DOES NOT DO
   It does not write verdicts. The verdict TEXT lives in `EA_SCORECARD_AND_REGISTRY.md` and the
   manifest carries an `OwnerRef` to it, never a copy (CONTRACTS.md says so on the field). It does
-  not read the scorecard, the taskboard or DEPLOYMENTS.csv. Everything except the two functions in
-  the DISK section is PURE and is driven by the cage with no filesystem at all.
+  not read the scorecard, the taskboard or DEPLOYMENTS.csv for their CONTENT.
+
+  🔴 CORRECTED 2026-08-03 (ORDER-1263). This paragraph used to end "Everything except the two
+  functions in the DISK section is PURE and is driven by the cage with no filesystem at all", and
+  that stopped being true in the commit that gave `OwnerRef` a resolver: resolution reads git, so
+  a pin check spawns subprocesses. The sentence is corrected rather than deleted, because the
+  boundary it describes is still real and still worth defending -- it just moved:
+
+    PURE      identity (canonical_payload / candidate_digest) and SHAPE (owner_ref_problems'
+              first half, validate_payload, validate_manifest). Driven by the cage with no
+              filesystem, exactly as before.
+    IMPURE    RESOLUTION (owner_ref_resolution_problems) and DISK (read/write_manifest). Both
+              live below the RESOLUTION AND DISK banner so the boundary is a place in the file
+              and not a claim in a docstring.
+
+  Resolution is NOT opt-in, and that is deliberate: a checker you must remember to switch on is
+  the state ORDER-1263 repaired. The cost is that `owner_ref_problems` now needs a git repository,
+  and a caller without one gets `evidence.ToolFailure` -- "I could not resolve this", never a
+  clean list.
 
 USAGE  tools\\python312\\python.exe _triage/factory_os/candidate.py <command> [args]
        commands: digest | read | --self-test
@@ -167,90 +184,6 @@ def owner_ref_problems(ref, where, src=None):
         # message would bury the first. Shape first, then what the shape points AT.
         return problems
     return owner_ref_resolution_problems(ref, where, src)
-
-
-# ORDER-1263. Content-addressed, so it is safe by construction: the bytes behind a blob oid do
-# not change, which is what an oid is for. It exists because the first working version spent
-# 11.54s resolving the 234 live pins -- one `git cat-file blob` per REFERENCE, where the live
-# stores hold 232 references to ONE blob. Measured before and after, not guessed: the same 234
-# refs cost 0.35s with this. Uncached, this check could not have gone on the commit path at all
-# without eating a tenth of the pinned 120.0s tier budget on its own.
-_BLOB_FACTS = {}
-
-
-def _blob_facts(src, oid, why):
-    """-> (sha256 of the blob's raw bytes, its utf-8 text) for the anchor scan."""
-    if oid not in _BLOB_FACTS:
-        raw = src.read_blob(oid, why=why)
-        _BLOB_FACTS[oid] = (hashlib.sha256(raw).hexdigest(), raw.decode('utf-8', 'replace'))
-    return _BLOB_FACTS[oid]
-
-
-def owner_ref_resolution_problems(ref, where, src=None):
-    """ORDER-1263. Does this pin point at what it says it points at?
-
-    Until 2026-08-03 `owner_ref_problems` validated SHAPE and nothing else -- it contained no
-    resolution primitive at all: no rev-parse, no subprocess, no open(). Two blind audits
-    (S3 and S10) found that independently on the same day, and a third read produced the
-    reproducer that made it undeniable: an `authorization_ref` whose `path` is VISION.md,
-    whose `blob_oid` is PROJECT_STATE.md's, and whose `raw_sha256` is unrelated to either,
-    accepted on a CANDIDATE_ASSIGNED event -- the one event type that exists to require a
-    human decision before a candidate reaches a live deployment.
-
-    `OwnerRef` is the pin primitive S2's whole ownership discipline rests on, and it is
-    embedded in hypothesis pre-registration, CandidateManifest.scorecard_ref and
-    DeploymentAttestationEvent.authorization_ref. So S10's acceptance -- "no non-OBSERVED
-    attestation event without a human authorization ref" -- was satisfied by a reference
-    whose three fields identified three different documents.
-
-    FOUR facts are checked, in the order that makes a failure readable:
-      R1  <commit_oid>:<path> resolves to a blob at all
-      R2  ... and that blob is the one `blob_oid` names
-      R3  sha256 over the blob's RAW BYTES equals `raw_sha256`
-      R4  `anchor`, when present, contains no spaces and occurs EXACTLY once in the blob
-          -- the rule the schema states in prose on the field itself and nothing read
-
-    R3 hashes the bytes git stores, via read_blob, NOT the worktree copy: evidence.py's own
-    stated limit is that index-vintage and disk-vintage hashes are incommensurable under
-    core.autocrlf, so hashing the file on disk would fail every text pin on this machine for
-    a reason that has nothing to do with the pin.
-
-    A ToolFailure from the reader is deliberately NOT caught. "I could not resolve this" and
-    "this pin is a fiction" are different facts with different exit codes, and a checker that
-    turns the first into a clean list has reported CLEAN over a read that never happened --
-    the failure this repo has now paid for in three separate guards.
-    """
-    src = src or ev.EvidenceSource.for_run()
-    problems = []
-    oid = src.resolve_pin(ref['commit_oid'], ref['path'], why='%s pins its owner here' % where)
-    if oid is None:
-        problems.append('%s R1 %s:%s resolves to no blob -- the pin cites a commit/path pair '
-                        'this repository does not have' % (where, ref['commit_oid'][:10],
-                                                           ref['path']))
-        return problems
-    if oid != ref['blob_oid']:
-        problems.append('%s R2 blob_oid says %s but %s:%s is %s -- the reference names one '
-                        'document and points at another'
-                        % (where, ref['blob_oid'][:10], ref['commit_oid'][:10], ref['path'],
-                           oid[:10]))
-        return problems
-    got, text = _blob_facts(src, oid, '%s pins this blob and claims a sha256 over it' % where)
-    if got != ref['raw_sha256']:
-        problems.append('%s R3 raw_sha256 says %s but the pinned blob hashes to %s'
-                        % (where, ref['raw_sha256'][:10], got[:10]))
-    anchor = ref.get('anchor')
-    if anchor is not None:
-        if ' ' in str(anchor):
-            problems.append('%s R4 anchor %r contains a space -- the schema forbids it on this '
-                            'field' % (where, anchor))
-        elif str(anchor) not in text:
-            problems.append('%s R4 anchor %r does not occur in the pinned blob'
-                            % (where, anchor))
-        elif text.count(str(anchor)) != 1:
-            problems.append('%s R4 anchor %r occurs %d times in the pinned blob -- the schema '
-                            'requires EXACTLY once, because an ambiguous reference points at '
-                            'no one place' % (where, anchor, text.count(str(anchor))))
-    return problems
 
 
 def validate_payload(payload):
@@ -456,9 +389,106 @@ def validate_manifest(manifest, run_lookup=None):
 
 
 # ---------------------------------------------------------------------------------------------
-# DISK. Kept thin and at the edge, exactly as scheduler.py keeps it, so that everything above is
+# RESOLUTION AND DISK -- the impure half, kept together and at the edge so the boundary the module
+# docstring describes is a PLACE IN THIS FILE rather than a claim about it. Everything ABOVE this
+# line is identity and shape: no filesystem, no subprocess, drivable by the cage alone. Everything
+# below reads something -- git, for a pin (ORDER-1263), or the disk, for a manifest.
+# ---------------------------------------------------------------------------------------------
+# ORDER-1263. Content-addressed, so it is safe by construction: the bytes behind a blob oid do
+# not change, which is what an oid is for. Deliberately NOT keyed by repo root, unlike
+# evidence._PIN_CACHE and _SHALLOW which must be -- the same oid in two repositories is the same
+# bytes by definition, so a cross-root hit here is correct rather than a leak. Stated because the
+# difference between these three caches is not obvious and "make it consistent" would be wrong.
+# It exists because the first working version spent
+# 11.54s resolving the 234 live pins -- one `git cat-file blob` per REFERENCE, where the live
+# stores hold 232 references to ONE blob. Measured before and after, not guessed: the same 234
+# refs cost 0.35s with this. Uncached, this check could not have gone on the commit path at all
+# without eating a tenth of the pinned 120.0s tier budget on its own.
+_BLOB_FACTS = {}
+
+
+def _blob_facts(src, oid, why):
+    """-> (sha256 of the blob's raw bytes, its utf-8 text) for the anchor scan."""
+    if oid not in _BLOB_FACTS:
+        raw = src.read_blob(oid, why=why)
+        _BLOB_FACTS[oid] = (hashlib.sha256(raw).hexdigest(), raw.decode('utf-8', 'replace'))
+    return _BLOB_FACTS[oid]
+
+
+def owner_ref_resolution_problems(ref, where, src=None):
+    """ORDER-1263. Does this pin point at what it says it points at?
+
+    Until 2026-08-03 `owner_ref_problems` validated SHAPE and nothing else -- it contained no
+    resolution primitive at all: no rev-parse, no subprocess, no open(). Two blind audits
+    (S3 and S10) found that independently on the same day, and a third read produced the
+    reproducer that made it undeniable: an `authorization_ref` whose `path` is VISION.md,
+    whose `blob_oid` is PROJECT_STATE.md's, and whose `raw_sha256` is unrelated to either,
+    accepted on a CANDIDATE_ASSIGNED event -- the one event type that exists to require a
+    human decision before a candidate reaches a live deployment.
+
+    `OwnerRef` is the pin primitive S2's whole ownership discipline rests on, and it is
+    embedded in hypothesis pre-registration, CandidateManifest.scorecard_ref and
+    DeploymentAttestationEvent.authorization_ref. So S10's acceptance -- "no non-OBSERVED
+    attestation event without a human authorization ref" -- was satisfied by a reference
+    whose three fields identified three different documents.
+
+    FOUR facts are checked, in the order that makes a failure readable:
+      R1  <commit_oid>:<path> resolves to a blob at all
+      R2  ... and that blob is the one `blob_oid` names
+      R3  sha256 over the blob's RAW BYTES equals `raw_sha256`
+      R4  `anchor`, when present, contains no spaces and occurs EXACTLY once in the blob
+          -- the rule the schema states in prose on the field itself and nothing read
+
+    R3 hashes the bytes git stores, via read_blob, NOT the worktree copy: evidence.py's own
+    stated limit is that index-vintage and disk-vintage hashes are incommensurable under
+    core.autocrlf, so hashing the file on disk would fail every text pin on this machine for
+    a reason that has nothing to do with the pin.
+
+    A ToolFailure from the reader is deliberately NOT caught. "I could not resolve this" and
+    "this pin is a fiction" are different facts with different exit codes, and a checker that
+    turns the first into a clean list has reported CLEAN over a read that never happened --
+    the failure this repo has now paid for in three separate guards.
+    """
+    src = src or ev.EvidenceSource.for_run()
+    problems = []
+    oid = src.resolve_pin(ref['commit_oid'], ref['path'], why='%s pins its owner here' % where)
+    if oid is None:
+        problems.append('%s R1 %s:%s resolves to no blob -- the pin cites a commit/path pair '
+                        'this repository does not have' % (where, ref['commit_oid'][:10],
+                                                           ref['path']))
+        return problems
+    if oid != ref['blob_oid']:
+        problems.append('%s R2 blob_oid says %s but %s:%s is %s -- the reference names one '
+                        'document and points at another'
+                        % (where, ref['blob_oid'][:10], ref['commit_oid'][:10], ref['path'],
+                           oid[:10]))
+        return problems
+    got, text = _blob_facts(src, oid, '%s pins this blob and claims a sha256 over it' % where)
+    if got != ref['raw_sha256']:
+        problems.append('%s R3 raw_sha256 says %s but the pinned blob hashes to %s'
+                        % (where, ref['raw_sha256'][:10], got[:10]))
+    anchor = ref.get('anchor')
+    if anchor is not None:
+        if ' ' in str(anchor):
+            problems.append('%s R4 anchor %r contains a space -- the schema forbids it on this '
+                            'field' % (where, anchor))
+        elif str(anchor) not in text:
+            problems.append('%s R4 anchor %r does not occur in the pinned blob'
+                            % (where, anchor))
+        elif text.count(str(anchor)) != 1:
+            problems.append('%s R4 anchor %r occurs %d times in the pinned blob -- the schema '
+                            'requires EXACTLY once, because an ambiguous reference points at '
+                            'no one place' % (where, anchor, text.count(str(anchor))))
+    return problems
+
+
+# ---------------------------------------------------------------------------------------------
+# DISK. Kept thin and at the edge, exactly as scheduler.py keeps it, so that IDENTITY AND SHAPE are
 # drivable with no filesystem -- and so that there is ONE reader, which is what makes "recomputed
 # on every read" a property of the module rather than a habit of its callers.
+# (ORDER-1263: this used to say "everything above is drivable with no filesystem". Resolution now
+# sits above it and reads git, so the sentence names the two sections it is still true of rather
+# than a line number it stopped being true of.)
 # ---------------------------------------------------------------------------------------------
 def candidates_dir(root=None):
     return os.path.join(root or ROOT, CANDIDATES_DIR_REL.replace('/', os.sep))

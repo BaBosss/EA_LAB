@@ -18,7 +18,18 @@ Both board rows carry the full outcome. **The controls are the part to trust:** 
 run against `git show HEAD:` of the file it guards, so "this was broken before" is a measurement in
 each order rather than a claim.
 
-**Three orders were opened, and one of them is cited from code:**
+> 🔴 **REVISED after `/scrutinize`, and the revision is the most important line in this file.**
+> `ORDER-1264` also moved `run_enforcement_status_tests.py` onto the **commit path**. That was
+> **wrong and is reverted** — the cage mutates the live, tracked `schemas.json`, so on a repo where
+> two lanes commit concurrently it is a data-loss path. **Observed within twenty minutes** (a hand
+> run collided with another lane's hook; one died with `OSError 22`, the other restored *its* idea
+> of the original, leaving a synthetic `x-enforcement-status` in the working tree). The repo had
+> **already recorded this exact failure by name on 2026-07-31** and flagged the mutate-a-copy fix as
+> its own task; I did not read it first. Now `ORDER-1283`, with the pattern already proven by
+> `run_preset_tests.py --mutate`. **Do not re-add that suite to the tier before it mutates a copy** —
+> the argument for adding it is genuinely good, which is exactly why it is dangerous.
+
+**Five orders were opened, and one of them is cited from code:**
 
 - **`ORDER-1280`** — the **12** contracts still carrying no enforcement declaration.
   `check_schema_structure.py` names this order in a comment *and* prints `UNDECLARED=12` in its own
@@ -28,6 +39,15 @@ each order rather than a claim.
 - **`ORDER-1281`** — nothing on the commit path resolves a **live** pin. `OwnerRef` is `BUILT`, not
   `WIRED`, and that gap is the honest reason. Cost is already measured: **0.30s for 234 refs**.
 - **`ORDER-1282`** — the tier budget. See §3; do not start work assuming a quiet machine.
+- **`ORDER-1283`** — make the enforcement cage mutate a **copy**, then put it back in the tier. The
+  design is not open: copy `run_preset_tests.py --mutate` (temp copy, anchor must match exactly
+  once, 9/9 detected). Acceptance includes killing it mid-loop and finding the tree unchanged —
+  **but not via `git status`**: the suite restores with LF into a CRLF checkout, so a perfectly
+  clean run already shows the file as modified while `git diff` is empty. Use `git diff --quiet`.
+- **`ORDER-1284`** — PART 4's undeclared-reference sweep reads **only** `scripts/_test/<suite>.ps1`,
+  never the Python file it runs, **and** its regex cannot match a repo-root path. Two structural
+  blind spots, measured. Widening it will redden suites that are fine — absorb them one at a time
+  with reasons, never a bulk exemption list.
 
 ---
 
@@ -102,11 +122,15 @@ tier timings, and if a commit is refused by the budget on a loaded machine, **wa
 
 ## §4 — Two smaller things worth inheriting
 
-1. **The trigger map earns its keep, twice per session.** PART 4b of `run_guard_trigger_tests`
-   demanded a dependency declaration on the first run after *each* change that created one — the new
-   suite entry in `run_schema_cages.ps1`, then `evidence.py` becoming reachable from `run_s10_tests`
-   through `candidate.py`'s new import. Neither was remembered; both were caught. Expect the same
-   and budget a `scripts/gen_fast_tier_pathspec.ps1` run after any import you add.
+1. **The trigger map earns its keep, twice per session — and misses more than it catches.** PART 4b
+   demanded a dependency declaration on the first run after *each* change that created one, and
+   neither was remembered. Budget a `scripts/gen_fast_tier_pathspec.ps1` run after any import you
+   add. **But see `ORDER-1284`: PART 4 reads only the `.ps1` and cannot match a repo-root path**, so
+   a green there is narrower evidence than it reads.
+1b. **Search the board before you "fix" something.** `ORDER-1283` existed as a known, named,
+   deliberately-deferred task on this board since 2026-07-31, and I re-created its failure by
+   improving something adjacent to it. `grep` the taskboard for the file you are about to change —
+   it is cheaper than the incident.
 2. **A measurement table with no harness rots at about 2x per quarter.** `run_schema_cages.ps1`
    claimed 4.47s for three entries that now measure 8.8/7.1/7.9s. It was not re-derived on suspicion
    — adding a fourth entry required it. That is the argument for `-Timing` living on the wrapper, and
@@ -123,7 +147,7 @@ tier timings, and if a commit is refused by the budget on a loaded machine, **wa
   `PROJECT_STATE.md` · `s2a_attestations.jsonl` · any `.set` migration · any magic
   allocate/renumber/retire · any history rewrite (`ORDER-1262` is RATIFIED as option **B**).
 - **Reserve your order block and commit the reservation before using a number.** Re-derive from BOTH
-  tests. As of this lane's close the highest in use is **`ORDER-1282`** and blocks through **1289**
+  tests. As of this lane's close the highest in use is **`ORDER-1284`** and blocks through **1289**
   are taken — **derive it yourself rather than trusting that sentence.**
 - **A criterion is committed in its own commit, before the run that resolves it.**
 - ⚠️ **`S-2026-08-03-S13D` may still be ACTIVE.** Check the ledger. It holds

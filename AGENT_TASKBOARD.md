@@ -160,6 +160,79 @@ pinned 120.0s** (see `ORDER-1282`) and the budget must not be raised to make roo
 
 ---
 
+## ORDER-1283 — [infra/cages] A cage that mutates the LIVE `schemas.json` must mutate a COPY, and the repo wrote that down before I broke it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`run_enforcement_status_tests.py` proves `check_schema_structure.py`'s labels can go red by
+**writing mutations into the live, tracked `_triage/factory_os/schemas.json`** and restoring them in
+a `finally`. `ORDER-1264` put that suite in `run_schema_cages.ps1`, i.e. on the **commit path**;
+`ORDER-1283` is that decision being taken back, and this order is what remains.
+
+**OBSERVED, not theorised — twenty minutes after the change:**
+
+```
+1b144630 20:37 · 7eb883d7 20:44 · 5389b0b8 20:46   (another lane's commits, each running the tier)
+a hand run of the suite at the same time           -> OSError 22 on schemas.json
+left in the working tree afterwards                -> WorkReceipt.x-enforcement-status = "TOTALLY_FINE"
+```
+
+The mechanism is worse than a stranded mutation: **whichever process reads the file while the other
+holds a mutation restores THE MUTATION**, because each one's "original" is whatever it read at
+start-up. A partial commit of that state writes a schema nobody authored.
+
+🔴 **The repo already had this receipt.** 2026-07-31, `run_preset_tests.py`'s row: *"an interrupted
+suite that mutates a real repo file has already turned two unrelated gates red here once
+(`run_enforcement_status_tests`), and the handoff named it as a thing not to repeat"*. And the
+`GIT_INDEX_FILE` incident row: *"a stranded mutation from `run_enforcement_status_tests.py` ... the
+mutate-a-copy fix is flagged as its own task, not silently absorbed"*. It was never done, and
+`ORDER-1264` walked into it.
+
+**So there is nothing to design.** `run_preset_tests.py --mutate` is the proven pattern: it rewrites
+one line of a **temp copy**, requires an anchor to match exactly once (a mutation that changes
+nothing would print a false green forever), and detects 9/9. Apply it here.
+
+**Acceptance:** the suite never writes to a tracked path · the tree is unchanged before and after a
+run, **including after an interrupted one** (kill it mid-loop and check) · all ten mutation cases
+still refused BY NAME · and only then does it go back into `run_schema_cages.ps1`, with the
+`🚫 DO NOT PUT THIS ON THE COMMIT PATH` banner in its own docstring removed **in the same commit**.
+
+⚠️ **`git status` is the WRONG instrument for that acceptance, measured 2026-08-03.** The suite's
+`finally` writes with `newline='\n'` into a CRLF checkout, so **even a completely clean run leaves
+`schemas.json` listed as modified** while `git diff` is empty — the content is identical and only
+the line endings differ. So `git status` reports dirty on a good run and dirty on a corrupted one,
+which is exactly no information. Compare with `git diff --quiet -- <path>`, or hash the bytes before
+and after. This is also why the real incident above was easy to miss: the file had been showing as
+modified all along.
+
+⚠️ **Do not re-add it before the mutation is on a copy.** The banner is in the file and the array
+comment in `run_schema_cages.ps1` says the same thing, because the argument for adding it is
+genuinely good and will be persuasive again.
+
+---
+
+## ORDER-1284 — [infra/cages] PART 4's undeclared-reference sweep has two blind spots, and neither is visible from inside it — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
+
+`run_guard_trigger_tests.ps1` PART 4 is the check that a suite cannot read a tracked file it has not
+declared. Measured 2026-08-03 while landing `ORDER-1263`, and **both** limits are structural rather
+than a missing entry:
+
+| # | blind spot | evidence |
+|---|---|---|
+| 1 | it reads **only** `scripts/_test/<suite>.ps1` — never the Python file the wrapper runs | `run_guard_trigger_tests.ps1:182` — `Get-Content (Join-Path $RepoRoot "scripts\_test\$s")`. Every path string inside a `run_*_tests.py` is outside the sweep |
+| 2 | its regex requires a directory prefix from a closed set (`scripts\|docs\|_triage\|portfolio\|tools\|.githooks`), so a **repo-root** path can never match — `AGENT_TASKBOARD.md`, `VISION.md`, `PROJECT_STATE.md`, `EA_SCORECARD_AND_REGISTRY.md`, `MASTER_BACKLOG.md` are all invisible | `:183` |
+
+**Live instance:** `ORDER-1263` made `run_s10_tests.py` read five tracked files at HEAD and only
+`portfolio/DEPLOYMENTS.csv` is declared — and PART 4 stayed green for both reasons at once. That
+instance is **benign and deliberately left undeclared** (the suite derives every pin from whatever
+HEAD holds, so it is invariant to their content, and declaring `AGENT_TASKBOARD.md` would put a 9.4s
+suite on the commit path of the repo's most-edited file); the reasoning is written into `_pin()`'s
+docstring. **The blind spot is the finding, not that instance.**
+
+⚠️ **Widening the sweep will redden suites that are fine**, so it needs the `$NOT_A_DEPENDENCY`
+escape hatch to absorb them deliberately, one at a time, each with a reason. Do not widen it and then
+bulk-add exemptions to get back to green — that converts a real check into a list of names.
+
+---
+
 ## ORDER-1282 — [infra/tier] The fast tier is over its pinned 120.0s budget, and one commit was refused by the 90.0s per-path budget — `OPEN` · ทำได้: Claude/Opus (needs an IDLE machine) · 👉 แนะ: Claude
 
 Measured by `S-2026-08-03-CORRECT` on 2026-08-03 while landing `ORDER-1263`/`1264`:
@@ -175,8 +248,10 @@ the third attempt passed on its own.
 🔴 **The cause is measured, not guessed, and it is why this is filed rather than acted on: 18
 `metatester64` agents (the concurrent `S-2026-08-03-S13D` lane's optimize batch) held every core
 during every one of those runs.** The `S13SCHEMA` lane measured the same tier at **95.1s** on an idle
-machine earlier the same day. This lane's own additions account for roughly **2s** (`run_enforcement_
-status_tests` measured 1.0-1.2s, plus three `_pin()` calls in the S10 suite).
+machine earlier the same day. This lane's own additions account for well under **1s** — three `_pin()` calls in the
+S10 suite. <sub>⚠️ This line first said "roughly 2s", counting `run_enforcement_status_tests` at
+1.0-1.2s. `ORDER-1283` then took that suite back out of the tier, so it is no longer part of the
+number and the number is corrected rather than left to read as if it were.</sub>
 
 **Top consumers on the loaded box:** `run_front_guard_evidence_tests` 26.5s · `run_guard_trigger_tests`
 23.9s · `run_monitor_integrity_tests` 15.4s. None of them this lane's.
@@ -242,42 +317,6 @@ a *"small optimize probe"* and the full ladder belongs to an optimize campaign.
 **Prohibited:** relaxing the floor · reading a PF before this order is committed · selecting `top-1`
 under any name · picking a cell's configuration by a different rule than another cell's · treating
 "no admissible pass" as a verdict.
-
----
-
-## ORDER-1275 — [factory/S13·infra] 🔴 `mt5_optimize.ps1` RETURNS while still holding the lane its own process guard blocks on — `OPEN` · ทำได้: Claude/Opus · 👉 แนะ: Claude
-
-**Measured tonight, and it cost four cells.** `mt5_optimize.ps1:138-142` breaks out of its wait loop
-**two seconds after the optimizer XML appears** and returns. It never waits for `terminal64.exe` to
-exit and never closes it. Its own FIRST action (`:44-47`) is a process guard that aborts with
-**exit 2** when a terminal with that exe path is running. So a serial batch collides with itself:
-
-```
-20:54  EURUSD H4  OK OPTIMIZER XML ... -> launcher returns, terminal64 STILL UP
-20:54  USDJPY H1  ABORT: this MT5 instance is running   exit=2   0s
-       USDJPY H4  ABORT  exit=2  0s    BTCUSD H1  ABORT  exit=2  0s    BTCUSD H4  ABORT  exit=2  0s
-```
-
-The terminal was still up **15 minutes later** (pid 29128, tester agents idle for 124s), so this is
-not a two-second shutdown race — MT5 does not always exit after a headless optimization, and nothing
-makes it.
-
-🔴 **The batch reported "all six attempted" and produced two.** Nothing was faked: the probe records
-say `exit=2, xml_present=false` and `gen_pilot_cells` excluded them by name, so the evidence chain
-held exactly as designed. What was lost was tester time.
-
-**Fixed only in the caller, deliberately.** `scripts/pilot_probe.ps1` waits for the lane to be free
-before each cell (bounded 300s) and **REFUSES** rather than recording another `exit=2` row — a junk
-record per cell is how a batch reports six attempts and two results. That repairs this lane's
-batches and nothing else: `mt5_run.ps1` has no kill either, and every other serial caller of either
-launcher has the same hole.
-
-**Acceptance.** The launcher leaves the lane in the state its own guard expects when it returns:
-wait for the process to exit with a bounded timeout, and if it has not, close it **by executable
-path** (memory `mt5-selfupdate-breaks-startup-ini-and-pid-kill` — never by pid). ⚠️ Prove the XML is
-already moved before closing anything, and ship a SPECIFICITY case showing a still-working optimizer
-is not killed mid-run. 🚫 Do not "fix" it by adding `-Force` to the callers: that disables the guard
-that stops two runs sharing one install.
 
 ---
 
@@ -649,12 +688,29 @@ having maintained either number. Control: restoring the old `19` reddens the sui
 Dated historical measurements are left alone; rewriting one to match the present stops it being
 evidence.
 
-🔴 **And the cage was one commit away from being a cage nobody runs.**
-`run_enforcement_status_tests.py` was left behind in `run_contract_binding_tests.ps1` when
-`ORDER-1252` moved that wrapper off the commit path — so `check_schema_structure.py` ran on every
-schema commit while the only thing proving it can go red ran **by hand**. That is the `ORDER-1272`
-shape exactly. It joins `run_schema_cages.ps1` (measured **1.0-1.2s**), and PART 4b of the trigger
-cage then demanded the dependency declaration and a regenerated pathspec.
+🔴 **I MOVED THE CAGE ONTO THE COMMIT PATH AND IT WAS THE WRONG CALL — REVERTED THE SAME DAY BY
+`ORDER-1283`, and the reversal is the more useful half of this row.**
+The reasoning was sound as far as it went: `run_enforcement_status_tests.py` was left behind in
+`run_contract_binding_tests.ps1` when `ORDER-1252` moved that wrapper off the commit path, so
+`check_schema_structure.py` ran on every schema commit while the only thing proving it can go red
+ran **by hand** — the `ORDER-1272` shape. So I added it to `run_schema_cages.ps1` (measured
+1.0-1.2s) and PART 4b duly demanded the dependency declaration.
+
+**What the reasoning missed is HOW that cage works: it writes its mutations into the LIVE, TRACKED
+`schemas.json` and restores them in a `finally`.** On a hand-run wrapper that is untidy; on the
+commit path of a repo where two lanes commit concurrently it is a data-loss path. **Observed within
+twenty minutes, not theorised** — a hand run and another lane's pre-commit hook (`1b144630` 20:37 ·
+`7eb883d7` 20:44 · `5389b0b8` 20:46) collided on the file, one died with `OSError 22`, and the
+other's `finally` restored **its** idea of the original, leaving
+`WorkReceipt.x-enforcement-status = "TOTALLY_FINE"` in the working tree.
+
+🔴 **And the repo had already written this down, by name, on 2026-07-31** — the `preset.py` row says
+*"an interrupted suite that mutates a real repo file has already turned two unrelated gates red here
+once (`run_enforcement_status_tests`), and the handoff named it as a thing not to repeat"*, and the
+`GIT_INDEX_FILE` row logs the stranded mutation with *"the mutate-a-copy fix is flagged as its own
+task, not silently absorbed"*. **I did not read either before amplifying the exposure.** The fix is
+therefore not a design problem: `run_preset_tests.py --mutate` already mutates a **temp copy**, 9/9
+detected, and `ORDER-1283` is that pattern applied here.
 
 ⚠️ **That wrapper's own timing table was ~2x stale** (3.71/0.71/0.05 = 4.47s claimed; the SAME three
 entries now measure 8.8/7.1/7.9s summed over three `-Timing` samples under `EA_LAB_EVIDENCE=index`).

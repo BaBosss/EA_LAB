@@ -59,7 +59,7 @@ REPO_ROOT = os.path.abspath(os.path.join(_HERE, '..', '..'))
 # for 5 commits' worth of real work). Keyed by object name, so it is safe by construction: the
 # content behind a sha does not change, which is what a sha is for.
 _PIN_CACHE = {}
-_SHALLOW = None
+_SHALLOW = {}
 
 
 class ToolFailure(Exception):
@@ -287,11 +287,15 @@ class EvidenceSource(object):
         return None
 
     def is_shallow(self):
-        global _SHALLOW
-        if _SHALLOW is None:
+        # Keyed by ROOT, not a bare module global. A bare one was the first version and it is the
+        # same shape as the GIT_INDEX_FILE incident this file's own `_run_git` comment records: a
+        # fixture repo under a temp root would have answered for the real repo, or poisoned the
+        # answer for it. Shallowness is a property of A repository, so the cache key has to be one.
+        if self.root not in _SHALLOW:
             rc, out, _err = self._git('rev-parse', '--is-shallow-repository')
-            _SHALLOW = (rc == 0 and out.decode('ascii', 'replace').strip() == 'true')
-        return _SHALLOW
+            _SHALLOW[self.root] = (rc == 0
+                                   and out.decode('ascii', 'replace').strip() == 'true')
+        return _SHALLOW[self.root]
 
     def list_committed(self, pattern):
         """Enumerate committed paths matching a /-separated glob (no `**`; `*` stays inside

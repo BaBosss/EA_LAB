@@ -109,6 +109,21 @@ def _pin(owner_type, path, anchor=None):
 
     HEAD, not the index: under the pre-commit hook HEAD is the previous commit, which is
     exactly what a pin written by the commit being made would legitimately cite.
+
+    ⚠️ WHAT THIS SUITE NOW READS, stated because the trigger map structurally cannot see it.
+    This suite reads five tracked files at HEAD -- EA_SCORECARD_AND_REGISTRY.md,
+    AGENT_TASKBOARD.md, portfolio/DEPLOYMENTS.csv, VISION.md, PROJECT_STATE.md. Only the third
+    is declared in run_fast_cages.ps1's $SUITE_GUARDS, and PART 4's undeclared-reference sweep
+    would not catch the other four for TWO independent reasons, both measured: it reads only
+    `scripts/_test/<suite>.ps1` and never the python file, and its regex requires a directory
+    prefix from a fixed set, so a repo-root path can never match it. Filed as ORDER-1283.
+
+    It is left UNDECLARED on purpose rather than by omission. Every pin here is DERIVED from
+    whatever HEAD holds, so the suite's result is invariant to those files' CONTENT -- declaring
+    AGENT_TASKBOARD.md would put a 9.4s suite on the commit path of the repo's most-edited file
+    to guard a dependency that does not exist. The ONE exception is the pair of anchor tokens
+    below, which are drawn from the taskboard blob; if it ever fails to supply them the fixture
+    check FAILS BY NAME rather than skipping, which is the whole reason that check is there.
     """
     def git(*args):
         p = subprocess.run(['git', '-C', ROOT] + list(args), capture_output=True)

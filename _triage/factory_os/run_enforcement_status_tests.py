@@ -16,6 +16,19 @@ WHY THIS EXISTS
   Only whitelisting the arrays that are actually executed made it decidable. Being named in a
   dependency list is not being invoked, and two attempts got that wrong.
 
+🔴 DO NOT PUT THIS SUITE ON THE COMMIT PATH UNTIL IT STOPS WRITING TO schemas.json (ORDER-1283)
+  This suite tests the checker by MUTATING the live, tracked `_triage/factory_os/schemas.json`
+  and restoring it in a `finally`. On a hand-run wrapper that is untidy. In the pre-commit tier
+  of a repo where two lanes commit concurrently it is a DATA-LOSS PATH, and that was OBSERVED,
+  not theorised: ORDER-1264 added it to run_schema_cages.ps1, and within twenty minutes a hand
+  run and another lane's hook collided on the file -- one died with OSError 22, the other's
+  `finally` restored ITS idea of "the original", and `WorkReceipt.x-enforcement-status` was left
+  sitting in the working tree as "TOTALLY_FINE". Whichever process reads the file while the
+  other holds a mutation restores THE MUTATION.
+
+  It goes back in the tier when the checker is drivable with an INJECTED document instead of
+  only as a subprocess over a fixed path. Adding it back before then re-opens the same hole.
+
 USAGE  tools\\python312\\python.exe _triage/factory_os/run_enforcement_status_tests.py
 """
 import io
