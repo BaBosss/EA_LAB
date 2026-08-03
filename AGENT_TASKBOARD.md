@@ -217,6 +217,89 @@ building before the question is asked.
 
 ---
 
+## ORDER-1268 — [factory/S6·S10] 🔴 Nothing refuses a partial `.set` ENTERING a run, and the check that claims to is a non-emptiness test — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S6_2026-08-03.md` §1.8. **This one crosses slices**, which
+is why it is its own order rather than a row inside `ORDER-1266`.
+
+S6's compiler is right and does its job: *full surface or nothing* governs **what it emits**, and
+`ORDER-700` deliberately scoped it not to judge the 2,177 existing partial files, because a guard that
+refuses valid work gets switched off. That decision was sound. **The gap it left was never closed by
+anything else.**
+
+- `scripts/mt5_run.ps1:98-110` and `scripts/mt5_optimize.ps1:65-69` accept **any** existing `.set`,
+  including a single-assignment one. The warning fires only when **no** file is supplied.
+- `_triage/factory_os/candidate.py:254-257` refuses only an **empty** `parameters` dict, while its own
+  message says *"parameters must be the FULL effective surface. A partial set lets unlisted inputs be
+  filled from the per-terminal tester cache — the documented root cause of the ORDER-165 8/8 false
+  drift."*
+
+```
+payload['parameters'] = {'OnlyOneKey': 1}
+candidate.validate_payload(payload) -> []
+```
+
+**Consequence.** Run A uses a partial file, another tester session changes the cached remainder, Run B
+uses the identical file. Same command, same bytes, different effective configuration, no warning — and
+the resulting one-key parameter map then passes candidate validation and becomes evidence.
+
+**Acceptance.** A parameter map is checked against the **declared surface for that build**, not against
+non-emptiness — and the runners either refuse a partial `.set` or record that they used one, so a run's
+own evidence says whether its remainder came from the cache. ⚠️ Do **not** close this by making the
+compiler judge the 2,177 files; `ORDER-700` already reasoned that through and was right.
+
+*(Codex-reported with its output quoted; `preset.py` and `candidate.py` both import cleanly here, so
+this is cheap to re-measure — do that first.)*
+
+---
+
+## ORDER-1267 — [factory/S11] The leak scanner reports CLEAN on a formatted account, and on having no recognizer at all — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S11_2026-08-03.md`.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🔴 | **`scan_forbidden()` cannot distinguish "scanned clean" from "had nothing to scan with".** Measured with one synthetic literal: exact value **DETECTED** (the control — the scanner is live), while the **formatted** variant, the value **split across list items**, and the value used as a **dict key** all report CLEAN — as does an **empty recognizer list**, which is indistinguishable in the return value from a clean document. `read_for_sender()`, the sender's one door, is the caller that passes none | `safe_projection.py:207-240` · `:578-579` |
+| 2 | 🟠 | **`floating_risk.state` is named in the module's own contract as the example of a refusal and is never read.** The implementation reads `account` and an optional `dd_band` only; the schema permits arbitrary row members; test SP11 covers `system_health.state` instead. A future state meaning BREACH can coexist with a safe-looking projected `sensor_state` | `safe_projection.py:30-34` vs `:341-376` |
+
+**Unverified but pointed** (that file's Part 2): `build_id` and `generated_at` are **unconstrained
+strings** in the schema, so a formatted account placed in `build_id` passes the schema, passes
+`read_for_sender`'s scan, passes `assert_sendable`, and reaches `AlertEvent.text` — the transport sends
+it. The mechanism is #1, which is measured; the end-to-end path is not. **Settle this first.**
+
+**What holds and should not be "fixed":** the allowlist is structural — `build()` constructs field by
+field rather than copying and pruning — and the no-dispatch prohibition is enforced by the absence of
+the code, not a flag. Both are the stronger shape. The failure is in **recognising**, not in structure.
+
+---
+
+## ORDER-1266 — [factory/S6] The effective-config fingerprint is broken in both directions, and one of them is asserted by its own cage — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
+
+Evidence = `_triage/factory_os/CODEX_AUDIT_S6_2026-08-03.md`. The brief asked for the fingerprint to be
+attacked both ways — two configs sharing a hash, one config with two. **It found both, three times
+over**, while `run_preset_tests.py` exits 0 with all 18 cases green.
+
+| # | sev | defect | file |
+|---|---|---|---|
+| 1 | 🔴 | **USD and CENT share the `.set` bytes AND the fingerprint.** The compiler validates account unit as semantically significant; the fingerprint deliberately excludes it and `ExecutionKey` has no field for it. `BasketMoney=50` on a usd account and on a cent account emit identical bytes and one hash — **$50 and 50 cents**. Cached USD evidence satisfies a cent request. **This repo runs cent accounts** (`session-2026-07-23g-cent-scalp-portfolio`) | `preset.py:481-507` · `:638-657` · `scheduler.py:81` |
+| 2 | 🟠 | **Two `long` values above 2^53 collide through `float`.** Any exponent spelling goes through `float`, including MQL `long`. `9007199254740992e0` and `...93e0` render identically and hash identically. **Magic numbers are the values this repo must never conflate** — `magic.py` exists because a reused magic silently re-attributes historical deals | `preset.py:329-332` · `:346-350` · `:556-561` |
+| 3 | 🟠 | **`sinput` is outside the "full" surface.** The parser recognises only `input`, while design §5.4 (L610-624) explicitly assigns **safety** parameters to `sinput`. The compiler reports the reduced surface, emits it as *full*, fingerprints it, and neither refuses nor names what is missing. Latent today; it arms itself the moment the design's own conversion lands | `preset.py:73-76` · `:220-236` |
+| 4 | 🟠 | **`compile_preset` ignores the enum table `Surface` carries** and takes a separately supplied one, which the generator gets by re-reading `Inputs.mqh`. Two reads, two vintages: an unchanged symbolic `Mode=OFF` gets two hashes, and the corrupted run becomes comparable to an intentional numeric run | `preset.py:241-250` · `:426-436` · `gen_default_preset.py:55-73` |
+| 5 | 🟡 | **Declaration order gives one configuration two fingerprints** — inputs are hashed in source order, not canonical key order. Directly contradicts C6: declaration order **is** spelling | `preset.py:548-553` · `:653-657` |
+| 6 | 🟡 | **`ToolFailure` and `PresetRefusal` collapse at the CLI** — the generator returns `1` for both where the evidence contract wants `2` and `1`, and callers label every non-zero *"refused"*. **`preset.py`'s own docstring names this exact failure** and the CLI undoes it | `gen_default_preset.py:107-111` · `evidence.py:41-42` |
+| 7 | 🟡 | **The declared refusal set leaks raw Python exceptions** — `_is_number` accepts non-finite/overflowing floats; `1e9999` or `nan` on a `long` exits through an uncaught `OverflowError`, outside `{PresetRefusal, ToolFailure}` | `preset.py:331-350` · `:359-364` |
+
+🔴 **READ THIS BEFORE FIXING #1.** `run_preset_tests.py:296-300` **asserts the account-unit exclusion**.
+The same trap sits on `ORDER-1267`/`ORDER-1261` at `run_s11_tests.py:802`, which asserts the planted
+secret **is** present in the exception. **Fixing either defect turns its cage red**, and a session that
+meets a red test and "repairs" it by reverting will have used the cage to reinstate the bug. Change the
+cage in the **same commit**, and make the replacement assert the opposite.
+
+*(All seven are Codex-reported with observed output quoted; `preset.py` imports cleanly here, so every
+one is cheap to settle in-process. Re-measure before repairing.)*
+
+---
+
 ## ORDER-1265 — [factory/S9] The scheduler's cache identity does not match what the driver runs, and the kill matrix cannot stop where the defects live — `OPEN` · ทำได้: Claude/Opus (corrections lane) · 👉 แนะ: Claude
 
 Evidence = `_triage/factory_os/CODEX_AUDIT_S9_2026-08-03.md`. Brief committed before the audit ran.
