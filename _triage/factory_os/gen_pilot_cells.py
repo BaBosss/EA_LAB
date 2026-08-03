@@ -391,7 +391,12 @@ def write_store(cells, path=None):
     cannot re-derive is a generator that turns "I did not understand this row" into "this row
     never existed".
     """
-    path = path or os.path.join(ROOT, COVERAGE)
+    # 🔴 THE SOURCE'S ROOT, NOT THE MODULE'S. `ROOT` is this file's repository, so with an injected
+    # source pointing anywhere else -- which is exactly what a cage does -- `--apply` would read a
+    # temp root and WRITE THE REAL STORE. Found by a cage that needed to normalise its own copy;
+    # nothing had called --apply with an injected source before, so the default had never been
+    # wrong in practice and would have gone on looking correct until the first time it mattered.
+    path = path or os.path.join(source().root, COVERAGE.replace('/', os.sep))
     # The read here is the WORKTREE copy this function is about to overwrite -- see the module
     # docstring. `main` pins the source to worktree mode before calling this, so the assertion is
     # cheap and it is the one that would catch a caller wiring --apply into a hook.

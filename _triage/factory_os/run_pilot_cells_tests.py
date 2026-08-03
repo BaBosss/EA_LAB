@@ -14,6 +14,14 @@ root and an `EvidenceSource` is pointed at it, so a mutation is applied to real 
 and the repository is never touched. Fixtures of filler values cannot test resolution (memory
 `fixture-of-filler-values-cannot-test-resolution`); a real row with one character changed can.
 
+🔴 AND EVERY ANCHOR IS DERIVED FROM THE COPY AT RUN TIME, never written as a literal. The first
+version pinned `'"dd_pct": 15.72'` and a cell id in source. THE LIVE CONTROL CAUGHT IT: a
+one-character edit was made to the real `factory/coverage.jsonl` and a commit attempted, to prove
+the hook blocks. The hook did block -- but because THIS SUITE THREW looking for a string the
+mutated store no longer contained, not because the drift checker reported drift. A cage whose
+fixture is a quotation of the live repository goes red on the very change it exists to describe,
+and it reports it as a stack trace. The anchors below are read out of the copied rows.
+
 THE CONTROL IS THE POINT. Case 1 asserts the untouched copy is GREEN, so every later red is
 evidence about the mutation rather than about the copy, the temp root or the injected source.
 
@@ -21,6 +29,7 @@ USAGE  tools\\python312\\python.exe _triage/factory_os/run_pilot_cells_tests.py
 """
 
 import io
+import json
 import os
 import shutil
 import sys
@@ -43,7 +52,22 @@ def check(name, cond, detail=''):
 
 
 def build_root(tmp):
-    """Copy the three inputs --check reads into a temp root. Returns the root."""
+    """Copy the three inputs --check reads into a temp root, then NORMALISE it. Returns the root.
+
+    🔴 THE NORMALISE STEP IS THE SECOND THING THE LIVE CONTROL TAUGHT. Without it the baseline copy
+    is a photograph of the working tree, so when the real store IS drifted -- which is the one
+    moment this suite matters -- the CONTROL case ("an untouched copy re-derives") goes red and the
+    tier reports the cage as broken instead of reporting the drift. Two different questions were
+    riding on one artefact:
+
+        does the CHECKER notice a change?      <- this suite, and it needs a self-consistent start
+        is the LIVE store currently correct?   <- `gen_pilot_cells.py --check`, run right after
+                                                  this suite by run_s13_tests.ps1
+
+    Running `--apply` against the COPY makes the first question answerable no matter what the
+    answer to the second is. It cannot touch the repository: `--apply` writes
+    `source().root`, which here is the temp directory.
+    """
     for rel in (gen.SOURCE, gen.COVERAGE):
         dst = os.path.join(tmp, rel.replace('/', os.sep))
         if not os.path.isdir(os.path.dirname(dst)):
@@ -55,7 +79,42 @@ def build_root(tmp):
     for name in os.listdir(src_dir):
         if name.endswith('.jsonl'):
             shutil.copyfile(os.path.join(src_dir, name), os.path.join(dst_dir, name))
+    buf, real = io.StringIO(), sys.stdout
+    sys.stdout = buf
+    try:
+        rc = gen.main(['gen_pilot_cells.py', '--apply'],
+                      src=evidence.EvidenceSource('worktree', root=tmp))
+    finally:
+        sys.stdout = real
+        gen._SRC = None
+    if rc != 0:
+        raise SystemExit('run_pilot_cells_tests: --apply on the copied root exited %s, so the '
+                         'baseline these cases mutate is not self-consistent:\n%s' % (rc, buf.getvalue()))
     return tmp
+
+
+def a_cell(root):
+    """-> (cell_id, raw_line, parsed) for the FIRST CoverageCell row in the copied store.
+
+    Derived, never quoted. Which cell it is does not matter to any case here -- what matters is
+    that it is a row that actually exists in the snapshot under test, so the mutation lands.
+    """
+    p = os.path.join(root, gen.COVERAGE.replace('/', os.sep))
+    for line in io.open(p, encoding='utf-8').read().splitlines():
+        if not line.strip():
+            continue
+        obj = json.loads(line)
+        if obj.get('entity') == 'CoverageCell' and obj.get('metrics'):
+            return obj['cell_id'], line, obj
+    raise SystemExit('run_pilot_cells_tests: the copied coverage store holds no CoverageCell row '
+                     'carrying a metric, so there is nothing for these cases to mutate. That is a '
+                     'refusal, not a skip -- silently passing here would report a cage that never '
+                     'ran as a cage that found nothing.')
+
+
+def bump_last_digit(text):
+    """'15.72' -> '15.73'. One character, and the case name says one character."""
+    return text[:-1] + str((int(text[-1]) + 1) % 10)
 
 
 def run_check(root):
@@ -109,11 +168,20 @@ def edit_line(root, rel, must_contain, old, new):
 def main():
     tmp = tempfile.mkdtemp(prefix='pilotcells_')
     try:
+      # 🔴 THE NET, and the live control is why it is here. Anything this suite raises becomes a
+      # named FAIL with a roll-up line, never a bare traceback: the tier surfaces an uncaught
+      # exception as `exit -1 SUITE THREW` with the cause truncated, which blocks the commit for a
+      # reason nobody can read. Reported as a failure of THIS suite, which is what it is.
+      try:
         # --- CONTROL: the unmutated copy is green -------------------------------------------
         root = build_root(tmp)
+        n_cells = sum(1 for l in io.open(os.path.join(root, gen.COVERAGE.replace('/', os.sep)),
+                                         encoding='utf-8').read().splitlines()
+                      if l.strip() and json.loads(l).get('entity') == 'CoverageCell')
         rc, out = run_check(root)
         check('CONTROL: an untouched copy of the real stores is GREEN',
-              rc == 0 and 'holds exactly the 16' in out, 'exit=%s %s' % (rc, out[-200:]))
+              rc == 0 and ('holds exactly the %d' % n_cells) in out,
+              'exit=%s %s' % (rc, out[-200:]))
         check('CONTROL: the run prints its evidence-mode marker exactly once',
               out.count('##EVIDENCE-MODE## gen_pilot_cells ') == 1,
               str(out.count('##EVIDENCE-MODE## gen_pilot_cells ')))
@@ -123,7 +191,10 @@ def main():
         # red on a one-character edit to a committed cell".
         shutil.rmtree(tmp); tmp = tempfile.mkdtemp(prefix='pilotcells_')
         root = build_root(tmp)
-        edit(root, gen.COVERAGE, '"dd_pct": 15.72', '"dd_pct": 15.73')
+        cid, _line, obj = a_cell(root)
+        was = repr(obj['metrics'][0]['dd_pct'])
+        now = bump_last_digit(was)
+        edit(root, gen.COVERAGE, '"dd_pct": %s' % was, '"dd_pct": %s' % now)
         rc, out = run_check(root)
         # The diff names the CONTAINING field, `metrics`, because dd_pct lives inside a MetricRef
         # list and the comparison is per top-level key. So the assertion is: the right cell is
@@ -133,35 +204,37 @@ def main():
         # about wiring.
         check('ATTACK: one character changed in a committed cell -> DRIFT, naming cell and values',
               rc == 1 and 'DRIFT' in out
-              and 'B14-H01-r1/BTCUSD/H1.metrics committed=' in out
-              and "'dd_pct': 15.73" in out and "'dd_pct': 15.72" in out,
-              'exit=%s %s' % (rc, out[-300:]))
+              and ('%s.metrics committed=' % cid) in out
+              and ("'dd_pct': %s" % now) in out and ("'dd_pct': %s" % was) in out,
+              'exit=%s (%s -> %s) %s' % (rc, was, now, out[-300:]))
 
         # --- ATTACK 2: a whole cell row deleted from the store --------------------------------
         shutil.rmtree(tmp); tmp = tempfile.mkdtemp(prefix='pilotcells_')
         root = build_root(tmp)
+        cid, _line, _obj = a_cell(root)
         lines = io.open(os.path.join(root, gen.COVERAGE.replace('/', os.sep)),
                         encoding='utf-8').read().splitlines()
-        kept = [l for l in lines if 'B14-H01-r1/BTCUSD/H4' not in l]
+        kept = [l for l in lines if ('"cell_id": "%s"' % cid) not in l]
         check('ATTACK 2 precondition: exactly one line was removed',
               len(kept) == len(lines) - 1, '%d -> %d' % (len(lines), len(kept)))
         io.open(os.path.join(root, gen.COVERAGE.replace('/', os.sep)), 'w',
                 encoding='utf-8', newline='\n').write('\n'.join(kept) + '\n')
         rc, out = run_check(root)
         check('ATTACK: a deleted cell row -> DRIFT, naming it MISSING',
-              rc == 1 and 'MISSING B14-H01-r1/BTCUSD/H4' in out, 'exit=%s %s' % (rc, out[-300:]))
+              rc == 1 and ('MISSING %s' % cid) in out, 'exit=%s %s' % (rc, out[-300:]))
 
         # --- ATTACK 3: a hand-written row the run evidence does not derive ---------------------
         shutil.rmtree(tmp); tmp = tempfile.mkdtemp(prefix='pilotcells_')
         root = build_root(tmp)
+        cid, rogue, _obj = a_cell(root)
         p = os.path.join(root, gen.COVERAGE.replace('/', os.sep))
         text = io.open(p, encoding='utf-8').read()
-        rogue = [l for l in text.splitlines() if 'B14-H01-r1/BTCUSD/H4' in l][0]
+        fake = 'B14-H99-r1/HANDWRITTEN/H4'
         io.open(p, 'w', encoding='utf-8', newline='\n').write(
-            text + rogue.replace('B14-H01-r1/BTCUSD/H4', 'B14-H99-r1/HANDWRITTEN/H4') + '\n')
+            text + rogue.replace(cid, fake) + '\n')
         rc, out = run_check(root)
         check('ATTACK: a hand-written cell -> DRIFT, naming it UNDERIVABLE',
-              rc == 1 and 'UNDERIVABLE B14-H99-r1/HANDWRITTEN/H4' in out,
+              rc == 1 and ('UNDERIVABLE %s' % fake) in out,
               'exit=%s %s' % (rc, out[-300:]))
 
         # --- ATTACK 4: the store is untouched and the SOURCE moved ----------------------------
@@ -169,9 +242,11 @@ def main():
         # exactly as committed, and the run record it is derived FROM changed underneath it.
         shutil.rmtree(tmp); tmp = tempfile.mkdtemp(prefix='pilotcells_')
         root = build_root(tmp)
+        cid, _line, obj = a_cell(root)
+        trades = obj['metrics'][0]['trades']
         edit_line(root, gen.SOURCE,
-                  ('"cell_id":"B14-H01-r1/BTCUSD/H1"', '"arm":"baseline"'),
-                  '"trades":127', '"trades":128')
+                  ('"cell_id":"%s"' % cid, '"arm":"%s"' % gen.REGISTERED_ARM),
+                  '"trades":%d' % trades, '"trades":%d' % (trades + 1))
         rc, out = run_check(root)
         check('ATTACK: the store untouched and its pinned SOURCE moved -> DRIFT',
               rc == 1 and 'DRIFT' in out, 'exit=%s %s' % (rc, out[-300:]))
@@ -216,6 +291,9 @@ def main():
             gen._SRC = None
         check('--apply REFUSES to read a snapshot it is not about to overwrite',
               refused and 'builder' in msg, msg[:160])
+      except BaseException as exc:  # noqa: BLE001 -- see THE NET above
+        check('the cage ran to the end without throwing', False,
+              '%s: %s' % (type(exc).__name__, exc))
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 
