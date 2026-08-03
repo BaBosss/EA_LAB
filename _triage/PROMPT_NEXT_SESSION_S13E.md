@@ -1,9 +1,12 @@
-# OPENING PROMPT — the guard has fired for real; now finish the matrix and register it
+# OPENING PROMPT — the pilot has its evidence; what is left is checkers
 
-> Written 2026-08-03 by lane `S-2026-08-03-S13D` (`ORDER-1253` parts 1-3, `ORDER-1270` · `1271` · `1272`).
-> **A second lane was live the whole time this ran** (`S-2026-08-03-AUDITCOV`, the audit-only lane) and
-> may still be. Check `docs/SESSION_LEDGER.md` before you touch a shared file — one commit here died on
-> `cannot lock ref HEAD` mid-hook because of it.
+> Written 2026-08-03 by lane `S-2026-08-03-S13D` (`ORDER-1253` DONE · `1251` DONE · `1270`-`1275` opened).
+> **The lane is CLOSED and the probe matrix is COMPLETE.** `check_pilot_acceptance` reads
+> **`8 PASS · 0 FAIL · 6 BLOCKED (0 awaiting evidence, 6 checker-not-implemented)`** — read that
+> parenthetical before planning anything: **nothing is waiting to be measured any more.**
+> ⚠️ A second lane, `S-2026-08-03-CORRECT`, was live all evening and may still be. Read
+> `docs/SESSION_LEDGER.md` first, and stage the shared boards **at the index** — this lane hit its
+> `.git/index.lock` three times and carried one line of its work into a commit before learning that.
 
 ---
 
@@ -95,52 +98,19 @@ before designing something new.
 
 ## The work, in the order the evidence forces
 
-1. **Finish and register the probe — `ORDER-1253` acceptance 3.** 🔴 **FIRST, COUNT WHAT ACTUALLY
-   FINISHED. Do not assume 16.** Fifteen cells were launched serially in the background as this
-   session ended and may have been interrupted:
-   ```bash
-   cat factory/runs/pilot/probe/*.jsonl | tools/python312/python.exe -c "import sys,json;rs=[json.loads(l) for l in sys.stdin if l.strip()];print(len(rs),'record(s)');[print(r['cell_id'],r['arm'],'exit=%s'%r['launcher_exit_code'],'%ss'%r['elapsed_sec']) for r in rs]"
-   ```
-   **Measured costs: 675.5s / 910s / 735.5s / 1192.2s** for the four XAUUSD cells (7 dimensions on
-   H01, **10 on H02**, genetic, MAIN, 20 tester agents), so a missing cell is 11–20 minutes, not a
-   day. Re-run any that are absent or carry `launcher_exit_code` other than `0` **or
-   `xml_present: false`**, with `scripts/pilot_probe.ps1 -Symbols X -Periods Y -Revisions Z`
-   (**one value each — the script now refuses a comma, see the traps**).
-   🔴 **Two rows in that store are not cells and you must not count them:** the
-   `deliberate-refusal` arm (`exit=3`, which is 8.6 item 6's evidence, not item 7's), and one row
-   whose `cell_id` is `B14-H01-r1/EURUSD,USDJPY,BTCUSD/H1,H4` — a bogus run kept deliberately as
-   the evidence that the guard-rail was missing. Six H01 cells (EURUSD · USDJPY · BTCUSD × H1 · H4)
-   were **queued behind the running batch** as this session ended; if that queue did not survive,
-   they are the six to run.
-   ✅ **`ORDER-1273` is the SELECTION criterion and it is already pre-registered — execute it,
-   do not rewrite it.** Every constant is pinned in the order (trade floor `Trades` H1≥100/H4≥60 ·
-   plateau set = top 10 % by `Result` · per-dimension median snapped to grid · BOUNDARY expands the
-   grid · the selected config is RE-RUN once before it goes to `ORDER-1254`). It was committed
-   before any surface was read, which is the only thing that makes it a criterion. `ORDER-1274`
-   holds the fine half of the §6.2 ladder, queued with its measured cost.
-   ✅ **The generator already does the transition — you do not build it, you run it.**
-   `gen_pilot_cells.py --check` reports `N of 16 cell(s) at PROBE_RUN`, names every probe row it
-   does **not** count, and exits 1 on drift. When the matrix is complete, `--apply`.
-   **The four steps that finish this slice, in order — nothing else is owed:**
-   ```bash
-   powershell -NoProfile -File scripts/pilot_probe.ps1 -Revisions B14-H01-r1 -Symbols BTCUSD -Periods H4
-   ```
-   (…one invocation per missing cell — **one value per flag**), then
-   ```bash
-   tools/python312/python.exe scripts/pilot_probe_verify_xml.py
-   ```
-   then `gen_pilot_cells.py --check` until it reads **16 of 16**, then `--apply`, then measure the
-   full tier on a quiet lane and close the ledger row.
-   ⚠️ **`pilot_probe_verify_xml.py` must run after ANY new probe run** — it is what records the pass
-   count, and a cell without one is held back by name rather than registered with `trial_count: 0`.
-   ⚠️ **The bar is `xml_present: true` AND a pass count > 0**, not `launcher_exit_code == 0` — the launcher exited 0 on a
-   missing XML until today, so an old record cannot demonstrate its probe produced anything. Records
-   written before the field existed are covered by `scripts/pilot_probe_verify_xml.py`, which
-   measures the artefact and keeps the measurement as **its own** labelled evidence rather than
-   editing the record. **Run it after any run whose record lacks the field**, then `--check` again.
-   🚫 The transition must come from the generator — the store is never hand-edited — and 🚫 it must
-   not be ticked from the flat-lot arm: `PROBE_DONE_STATES` excludes `BASELINE_RUN`, case `C3`
-   asserts it, and the probe store is a different directory entirely.
+1. ✅ **DONE — the probe matrix is complete and applied.** 16/16 cells at `PROBE_RUN` in
+   `factory/coverage.jsonl`, 2,764–4,575 scored configurations each, every artefact verified and
+   counted. Do **not** re-run it. If you add any probe run later, `scripts/pilot_probe_verify_xml.py`
+   must run after it — that is what records the pass count, and a cell without one is held back by
+   name rather than registered claiming zero.
+   🔴 **`ORDER-1273` is the SELECTION criterion and it is PRE-REGISTERED — execute it, never rewrite
+   it.** Trade floor on the `Trades` column (H1≥100 · H4≥60) · plateau set = top 10 % by `Result` ·
+   per-dimension median snapped to grid · BOUNDARY expands the grid · the selected config is RE-RUN
+   once before it reaches `ORDER-1254`. It was committed before any surface was read, and that is
+   the only thing that makes it a criterion. **Expect ~1 cell in 16 to clear its floor** — that is
+   stated in the order in advance, and it is not a verdict about the EA.
+   `ORDER-1274` holds the fine half of the §6.2 ladder, queued with its measured cost.
+
 2. **`ORDER-1272` — nothing runs `gen_pilot_cells.py --check`.** One grep proves it. 🔴 **`--apply`
    FIRST, then wire it in.** `--check` is red right now *and correctly so* (6 of 16 probed, store
    still says none), so wiring it into the tier before the store catches up blocks every commit in
