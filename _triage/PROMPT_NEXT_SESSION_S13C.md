@@ -3,31 +3,38 @@
 > Written 2026-08-03 by lanes `S-2026-08-03-S13RUN` (`ORDER-1230`) and `S-2026-08-03-S13SIZE`
 > (`ORDER-1240`). The pilot matrix has been **run twice** — once at the inert sizing, once at a
 > sizing where the mechanism actually executes — and reviewed in three `/scrutinize` rounds.
-> **Two owner decisions are already made and recorded here. Two items are blocked on things only
-> the owner can settle, and they are the first thing below.**
+> **Nothing in this chain needs a human answer.** The three open questions were put to the owner
+> before this session closed and all three are ratified in BOX 1 — read it once, then build.
 
 ---
 
-## 🔴 BOX 1 — TWO THINGS NEED THE OWNER. Nothing else in this file is blocked.
+## ✅ BOX 1 — ALL THREE OWNER DECISIONS ARE MADE (2026-08-03). Read once, then build.
 
-### 1a. How does `MetricRef` represent an **undefined** profit factor?
+**Nothing in this chain is waiting on a human.** The owner was asked before this session closed,
+precisely so the next one does not stop to ask. Recorded verbatim below with the reasoning that
+survives them.
 
-`schemas.json` `MetricRef` requires `pf` as a `number`. USDJPY H1 has **99 trades, 99 winners,
-`gross_loss = 0`** — PF has no denominator. `CoverageCell` sets `unevaluatedProperties: false` and
-offers no field to explain a missing metric, so that cell can only be stored as a silently empty
-`metrics: []`. Writing `pf: 0` is not an option: the tester prints `0` there and `ORDER-1230` already
-had to fix exactly that inversion once, where the best win rate in the matrix rendered as the worst
-result in it.
+### 1a. `MetricRef` gets a nullable `pf` plus a `pf_state` enum — **RATIFIED**
 
-**Until this is answered, the 16 pilot cells cannot be registered in `factory/coverage.jsonl`,** and
-§8.6 item 7 stays `BLOCKED` for want of a cell entity. Options are a nullable `pf` plus a required
-reason, a `pf_state` enum, or storing gross_profit/gross_loss and deriving. **Do not pick one
-silently — it is a schema change.**
+The problem: `MetricRef` requires `pf` as a `number`, but USDJPY H1 has **99 trades, 99 winners,
+`gross_loss = 0`**, so PF has no denominator. `CoverageCell` sets `unevaluatedProperties: false` and
+has no field to explain a missing metric, so that cell could only be stored as a silently empty
+`metrics: []`. Writing `pf: 0` is not an option — the tester prints `0` there and `ORDER-1230`
+already had to fix exactly that inversion, where the best win rate in the matrix rendered as the
+worst result in it.
 
-### 1b. The fast-tier displacement the owner ratified is refused by a cage, correctly
+**Build:** `pf` becomes nullable **and** a new required `pf_state` enum
+(`DEFINED` | `UNDEFINED_NO_LOSSES`) travels with it. Chosen because the reason then rides along with
+the number and cannot be dropped, and because a bare `null` still fails the schema — the least
+invasive option that makes the undefined case *unfakeable* rather than merely representable.
+Then register the 16 cells and clear §8.6 item 7's "no cell entity" blocker.
+**This is a schema change: it needs its negative fixture, and `run_schema_fixtures.py` must reject a
+`pf: null` with `pf_state: DEFINED`.**
 
-The owner chose *"move `run_contract_binding_tests` out of the fast tier"* over raising the 120.0s
-budget. **It was attempted and reverted.** The cage refuses it:
+### 1b. Split the `contract_binding` wrapper — **RATIFIED**
+
+The owner's earlier choice was to displace `run_contract_binding_tests` wholesale rather than raise
+the 120.0s budget. **That was attempted and reverted**, because the cage refuses it and is right to:
 
 ```
 [FAIL] E staging a registry store selects the suite where ajv validates live rows
@@ -36,14 +43,29 @@ budget. **It was attempted and reverted.** The cage refuses it:
 `run_schema_fixtures.py` — which ajv-validates every live row of `factory/*.jsonl` — runs **inside
 that wrapper**, along with `gen_design_contracts --check`, the S4 snapshot python and the S5 registry
 python. A blind audit already caught this hole once and a dedicated case exists to stop it reopening.
-Displacing the wrapper means staging `factory/hypotheses.jsonl` no longer validates it, and making
-the cage green would mean editing the guard to accept the hole.
 
-**The real fix is to split the wrapper** — cheap contract/schema checks stay in the tier, the
-expensive part leaves. That is a new order. Note the per-path budget was never the problem: 46.2s
-fits inside 90.0s comfortably, so the displacement fixes a number that only manifests on a **full**
-run while removing protection from targeted runs that were already inside budget. **The budget stays
-pinned at 120.0s and must not be raised.**
+**Build instead:** pull the cheap checks (`run_schema_fixtures` · `gen_design_contracts --check` ·
+`check_schema_structure`) into their own fast-tier suite and let only the expensive part leave. That
+keeps case E green while removing the bulk of the 46.2s. **Measure the whole tier again afterwards
+under `-Hook`, and the budget stays pinned at 120.0s — it must not be raised.**
+
+⚠️ Worth knowing while you do it: the per-path budget was never the problem — 46.2s fits inside 90.0s
+comfortably — so this only ever mattered for a **full** run. Five samples span **120.8–137.3s**.
+
+### 1c. H01 runs its pre-registration to the end — **RATIFIED**
+
+The falsifier now reads, and it is starting to point one way: flat-lot beats escalated on XAUUSD H1
+(1.35 vs 0.45) and BTCUSD H4 (1.82 vs 1.18), with the rest roughly level. That is the pre-registered
+condition *"flat-lot PF ≥ escalated PF ⇒ the edge is in the signal, not the engine"*.
+
+**Do not shortcut it.** The owner's decision is to run **optimize probe → BWD 2020–22 → Model 4**
+first and judge only then. The reason is the whole point of having pre-registered: a criterion is
+worth what it cost to write before the result was visible, and today's evidence is **MAIN-only under
+Model 1**, which `CLAUDE.md` says is not verdict-grade for the ENGINE-EDGE class. Concluding now
+would be stopping the moment the answer looked clear — the failure the pre-registration exists to
+prevent, arriving one step later than usual.
+
+🚫 **And still: no verdict from automation.** Design §10 stops this slice at `EVIDENCE_COMPLETE`.
 
 ---
 
@@ -92,7 +114,8 @@ now exists and the checkers that would read it still do not. `EVIDENCE_COMPLETE`
 
 ## The work, in the order the design forces
 
-1. **Answer BOX 1a**, then register the 16 cells and close §8.6 item 7's "no cell entity" blocker.
+1. **Build BOX 1a** (nullable `pf` + `pf_state`, with its negative fixture), then register the 16
+   cells and close §8.6 item 7's "no cell entity" blocker.
 2. **The decision-13 optimize probe.** *This is what item 7 actually means* — the flat-lot probe that
    has been run is H01's **falsifier arm**, not the optimize probe. **Item 7 must not be ticked from
    what exists today.** `optimize_guard` must be observed **refusing a real pilot sweep** for item 6
@@ -154,10 +177,11 @@ now exists and the checkers that would read it still do not. `EVIDENCE_COMPLETE`
 |---|---|
 | Pilot matrix run end-to-end; parity passes; flat-lot probes inert at 0.01 | ORDER-1230 — DONE |
 | First lot resolved to 0.03; falsifier de-confounded; 3 `/scrutinize` rounds | ORDER-1240 — DONE |
-| How `MetricRef` represents an undefined PF, then register the 16 cells | BOX 1a — owner decision, then a new order in 1250-1259 |
-| Split `run_contract_binding_tests` so the cheap schema cages stay in the fast tier | BOX 1b — new order in 1250-1259 |
+| `MetricRef` nullable `pf` + `pf_state` enum, then register the 16 cells | BOX 1a — RATIFIED 2026-08-03; new order in 1250-1259 |
+| Split `run_contract_binding_tests` so the cheap schema cages stay in the fast tier | BOX 1b — RATIFIED 2026-08-03; new order in 1250-1259 |
+| Run H01's pre-registration to the end before judging it | BOX 1c — RATIFIED 2026-08-03; no shortcut |
 | decision-13 optimize probe + `optimize_guard` observed refusing a real sweep | new order in 1250-1259 (this is what §8.6 item 7 means) |
 | BWD 2020-22 (HARD gate for ENGINE-EDGE) and Model 4 | new order in 1250-1259 |
 | Parity result manifest owned by `parity.py`; wire §8.6 items 3-4 | new order in 1250-1259 |
 
-Open with: **"อ่านไฟล์นี้ แล้วเริ่ม — ตอบ BOX 1a ก่อน แล้วเดินตามลำดับงาน"**
+Open with: **"อ่านไฟล์นี้ แล้วเริ่มได้เลย — BOX 1 เคาะครบแล้ว ไม่ต้องถามซ้ำ เดินตามลำดับงาน"**
