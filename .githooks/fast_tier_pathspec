@@ -91,6 +91,7 @@ factory/parameter_bindings.jsonl
 factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl
 factory/runs/pilot/probe/*.jsonl
 factory/runs/pilot/selection/*.jsonl
+factory/runs/pilot/verification/*.jsonl
 factory/work_receipts.jsonl
 MASTER_BACKLOG.md
 portfolio/control_room_snapshot.json
@@ -98,6 +99,7 @@ portfolio/DEPLOYMENTS.csv
 scripts/*.ps1
 scripts/_test/*
 scripts/_test/run_fast_cages.ps1
+scripts/_test/run_pilot_verify_tests.py
 scripts/_test/run_selection_tests.py
 scripts/check_handoff_contract.ps1
 scripts/check_order_collision.ps1
@@ -128,5 +130,7 @@ scripts/optimize_guard.ps1
 scripts/param_registry_check.ps1
 scripts/parity_run.ps1
 scripts/pilot_probe_select.py
+scripts/pilot_selected_surface_row.py
+scripts/pilot_verify_check.py
 scripts/run_backtest.ps1
 scripts/scheduler_run.ps1

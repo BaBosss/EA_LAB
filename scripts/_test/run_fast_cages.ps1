@@ -1226,7 +1226,23 @@ $SUITE_GUARDS = @{
     # RE-DERIVES FROM -- the store was already declared, but its pinned source run record and the
     # probe directory were not, so editing either moved the generator's answer without running it.
     # A generated store whose *inputs* are unguarded is guarded against hand edits only.
+    # ORDER-1273 step 6 adds the next three. run_s13_tests now also runs the pilot-verify cage and
+    # `pilot_verify_check.py`, which re-derives `factory/runs/pilot/verification/` -- the THIRD
+    # generated store in this family to have had nothing re-deriving it. The verification records
+    # are declared for the same reason the pilot_cells run record above is: a generated store whose
+    # INPUTS are unguarded is guarded against hand edits only.
+    # 🔴 These were caught by run_guard_trigger_tests the moment the files became TRACKED, not when
+    # the call was written -- a suite can reference a path for a whole session without the guard
+    # seeing it, because the guard's question is about tracked paths. Committing the tool is what
+    # arms the check on its caller.
+    # Cost re-measured on a quiet lane after adding them: run_pilot_verify_tests 97/98/99 ms,
+    # run_s13_tests 1.67/1.68/1.69s, full tier 98.6-100.5s of 120.0s at 29 suites.
+    # The budget stays PINNED at 120.0s.
     'run_s13_tests.ps1'               = @('_triage/factory_os/check_pilot_acceptance.py',
+                                          'scripts/_test/run_pilot_verify_tests.py',
+                                          'scripts/pilot_verify_check.py',
+                                          'scripts/pilot_selected_surface_row.py',
+                                          'factory/runs/pilot/verification/*.jsonl',
                                           '_triage/factory_os/gen_pilot_cells.py',
                                           '_triage/factory_os/run_pilot_cells_tests.py',
                                           'factory/runs/pilot/pilot_cells_MAIN_lot0p03_*.jsonl',
