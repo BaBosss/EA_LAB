@@ -81,6 +81,34 @@ def run_with(lines, vintage=(), d1_override=None):
             pass
 
 
+def _derived_section_eps(path, exclude=None):
+    """A section post-state claim for `path` that REALLY reproduces at HEAD, built at run time.
+
+    The anchor is the first `## ` heading that occurs exactly once, so this cannot rot as the
+    file changes -- which for AGENT_TASKBOARD.md is every few minutes.
+
+    `exclude` (ORDER-1310 #1) skips a heading, so the attack fixture can be "a DIFFERENT
+    section of the SAME file, correctly hashed" -- derived at run time for the same reason the
+    rest is: a hand-typed heading is a fixture of filler values that would go green the day
+    the file is reorganised (memory `fixture-of-filler-values-cannot-test-resolution`).
+
+    MODULE SCOPE since ORDER-1310 #9, because the F14 case that needs it runs BEFORE the block
+    this used to be nested in -- and being unable to reach a real section is exactly how that case
+    ended up anchored on a heading that does not exist.
+    """
+    text = att._head_text(path)
+    lines = [l.rstrip() for l in text.replace('\r\n', '\n').split('\n')]
+    heads = [l for l in lines if l.startswith('## ')]
+    for h in heads:
+        if h != exclude and heads.count(h) == 1:
+            sha, err = att.section_digest(text, h)
+            if not err:
+                return {'path': path, 'section': h, 'section_sha256': sha}
+    raise SystemExit('no uniquely-occurring "## " heading in %s (excluding %r) -- this suite '
+                     'cannot build a reproducing section claim against nothing'
+                     % (path, exclude))
+
+
 def good(**over):
     row = {'bundle_sha256': att.bundle_digest(),
            'current_owner': 'MASTER_BACKLOG.md',
@@ -199,11 +227,34 @@ def main():
         bad += 1
     # F14 as well as F2, because they reach the report by the same fall-through: neither of them
     # `continue`s, which is the actual mechanism. One case would leave the other free to regress.
+    #
+    # 🔴 ORDER-1310 #9 -- THIS CASE COULD NOT DISCRIMINATE, AND THE ONLY THING WRONG WITH IT WAS
+    # ITS FIXTURE. It claimed section 'S2a coverage transfer', which is not an exact heading of
+    # MASTER_BACKLOG.md, so it always died at F13 and the hash comparison was never reached. The
+    # independent review proved it with a mutation: `elif got != eps['section_sha256']` -> `elif
+    # False` SURVIVED. The other wrong-hash fixture in this file is masked by F2 and asserts only
+    # 'pin is STALE', so nothing anywhere required F14 to fire. The section is now DERIVED so it
+    # really resolves, only the digest is wrong -- and the assertion names F14 alone and requires
+    # F13 to be ABSENT, so a case that falls back to "could not locate the section" is a failure
+    # rather than a pass by a different criterion.
+    _shown, _returned, _p = _reported([good(expected_post_state=dict(
+        _derived_section_eps('MASTER_BACKLOG.md'), section_sha256='c' * 64))])
+    ok = 'F14' in _p and 'F13' not in _p and _shown == 'UNVERIFIED'
+    print('  [%s] and so is one whose expected_post_state DIGEST did not reproduce (F14 itself)'
+          % ('OK ' if ok else 'BAD'))
+    if not ok:
+        print('        -> printed=%r problems=%r'
+              % (_shown, _p.split('\n')[0] if _p else 'NOTHING AT ALL'))
+        bad += 1
+    # ...and the F13 half, which the case above used to be testing by accident. It is kept as its
+    # OWN case rather than folded back into a disjunction: two criteria reach the report by the
+    # same fall-through and each must be observed doing it, or one of them is free to regress
+    # behind the other (which is precisely what happened).
     _shown, _returned, _p = _reported([good(expected_post_state={
-        'path': 'MASTER_BACKLOG.md', 'section': 'S2a coverage transfer',
+        'path': 'MASTER_BACKLOG.md', 'section': '## no such heading in this file',
         'section_sha256': 'c' * 64})])
-    ok = ('F13' in _p or 'F14' in _p) and _shown == 'UNVERIFIED'
-    print('  [%s] and so is one whose expected_post_state claim did not reproduce'
+    ok = 'F13' in _p and 'F14' not in _p and _shown == 'UNVERIFIED'
+    print('  [%s] and so is one whose expected_post_state SECTION could not be located (F13)'
           % ('OK ' if ok else 'BAD'))
     if not ok:
         print('        -> printed=%r problems=%r'
@@ -263,29 +314,6 @@ def main():
                             and isinstance(rec.get('expected_post_state'), dict)):
                         found = rec['expected_post_state']
         return found
-
-    def _derived_section_eps(path, exclude=None):
-        """A section post-state claim for `path` that REALLY reproduces at HEAD, built at run time.
-
-        The anchor is the first `## ` heading that occurs exactly once, so this cannot rot as the
-        file changes -- which for AGENT_TASKBOARD.md is every few minutes.
-
-        `exclude` (ORDER-1310 #1) skips a heading, so the attack fixture can be "a DIFFERENT
-        section of the SAME file, correctly hashed" -- derived at run time for the same reason the
-        rest is: a hand-typed heading is a fixture of filler values that would go green the day
-        the file is reorganised.
-        """
-        text = att._head_text(path)
-        lines = [l.rstrip() for l in text.replace('\r\n', '\n').split('\n')]
-        heads = [l for l in lines if l.startswith('## ')]
-        for h in heads:
-            if h != exclude and heads.count(h) == 1:
-                sha, err = att.section_digest(text, h)
-                if not err:
-                    return {'path': path, 'section': h, 'section_sha256': sha}
-        raise SystemExit('no uniquely-occurring "## " heading in %s (excluding %r) -- this suite '
-                         'cannot build a reproducing section claim against nothing'
-                         % (path, exclude))
 
     COV_EPS = _real_eps('MASTER_BACKLOG.md')
     MISSING_NOTE = {'entity': 'CoverageCell', 'path': PIN_PATH, 'kind': 'MISSING', 'text': 'gone'}
