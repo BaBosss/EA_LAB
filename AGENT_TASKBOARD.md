@@ -9261,6 +9261,60 @@ Boss_14 legs อื่นที่มี DEMO set อยู่แล้ว (USDJ
 
 <sub>ราคาที่จ่ายไปกับใบนี้คุ้มที่จะจำ: เลือก host ผิด **3 ครั้ง** — RSI-MR (ไม่เปิด `.mq5` เลย EA ไม่มี input) · Boss_14 AUDNZD (เชื่อ prose ในสกอร์การ์ด) · แล้วรอบที่สาม **ผมไม่ได้เลือกผิด ผมปฏิเสธ host ที่ผ่านบาร์ของตัวเอง** ซึ่งเป็นความผิดคนละชนิดและอันตรายกว่า เพราะมันทำให้ pre-registration ไร้ความหมาย · สิ่งที่กันไว้ได้ทั้งสามครั้งคือกฎที่เขียนก่อนเห็นตัวเลข — ครั้งที่สามมันกันผมจากตัวเอง แต่ต้องรอ auditor คนนอกมาชี้</sub>
 
+### ✅ STEP 2 RESULT — 8 of 8 runs completed (delegated batch, lane `S-2026-08-04-QUOTA4`, 2026-08-04)
+
+🚫 **No verdict is issued here.** The lead seat was at 4% of its weekly allowance and did not walk the
+decision tree; this block is the numbers, the proof that they are readable, and what is still owed.
+
+**STEP 0 (binary freshness) PASS** — `Boss_14_GridLog.ex5` in lane `D:\Meta 5b` is `2026-08-02 13:59`,
+newer than the newest file in `ea_template\core\` (`2026-08-02 12:49`). No recompile was performed.
+**STEP 1 gate PASS** — CTRL BWD PF `2.28` at `53` trades, against the pre-registered `≥1.20 at ≥30`.
+
+**🔴 The input-cache trap this order warns about is CLOSED, and it is closed by reading the reports, not
+by assuming.** All four Inputs pages were read back out of the generated reports:
+
+| report | `StackConfirm` | `_9_RegimeGateAdds` | `_50_RegimeMode` |
+|---|---|---|---|
+| `O236_XAU_CTRL_MAIN` | 0 | false | 0 |
+| `O236_XAU_B_MAIN` | **4** | false | 0 |
+| `O236_XAU_A_MAIN` | 0 | **true** | **1** |
+| `O236_XAU_AB_MAIN` | **4** | **true** | **1** |
+
+Four distinct configurations were actually loaded. So the identical rows below are **not** two runs of the
+same thing.
+
+**Results — XAUUSD H1 · Model 4 · lane `D:\Meta 5b` · leverage `1:100` verified on every run**
+(reports `_mt5_auto/reports/O236_XAU_*.htm`, raw parse output `_mt5_auto/O236_XAU_RESULTS.md`):
+
+| cell | MAIN PF | trades | DD% | net | BWD PF | trades | DD% | net |
+|---|---|---|---|---|---|---|---|---|
+| **CTRL** `B14_AB_off` | 0.95 | 237 | 6.90% | −148.87 | 2.28 | 53 | 2.78% | 749.01 |
+| **A** `B14_AB_on` (regime gate) | 0.97 | 235 | 6.54% | −99.31 | **1.99** | 57 | 3.52% | 663.02 |
+| **B** `B14_PAon` (PA engulf) | 0.95 | 237 | 6.90% | −148.87 | 2.28 | 53 | 2.78% | 749.01 |
+| **AB** `AB_both` | 0.97 | 235 | 6.54% | −99.31 | 1.99 | 57 | 3.52% | 663.02 |
+
+**🔴 `CONF_PA_ENGULF` is INERT on this host — B equals CTRL in every digit, net to the cent, and `AB`
+equals `A` in every digit.** Two independent confirmations, one with the regime gate off and one with it
+on. Per the bar table in `CLAUDE.md`: *numbers identical to base in every digit are evidence a filter is
+**inert**, not evidence it is safe.* ⚠️ **Fire count for `StackConfirm=4` is `UNKNOWN`** — this EA emits no
+counter for it, so "the confirm never triggered" and "it triggered and changed nothing" cannot be told
+apart from these runs. That instrumentation is owed before the lever is called dead rather than untested.
+
+**Delta against the bar this order pre-registered** (better on BOTH windows = pass · worse on either =
+dead · better on one = do not accept): **A is better on MAIN (+0.02) and worse on BWD (−0.29) ⇒ it lands
+in `dead`. B and AB produce no delta at all ⇒ not measurable.**
+
+**🚫 Two reasons that reading may not be turned into a verdict as it stands, both written by this order
+before the numbers existed:** (1) BWD carries only **53–57 trades**, and this row already forbids
+interpreting a delta smaller than the noise of a sample that size — `−0.29` on 53 trades has not been shown
+to clear it; (2) the host's own MAIN is **0.95**, below 1.0, so every delta here describes what a lever does
+to a *losing* base and is not a route to deploy.
+
+**One anomaly to explain before anyone builds on this:** the regime gate is a gate on grid **adds**, yet BWD
+deal count **rises** 53 → 57 when it is switched on. Blocking an add changes the basket path, so this is not
+by itself a defect — but it is unexplained, and an unexplained sign flip in the direction of the mechanism
+is what `ORDER-1220` is about.
+
 ## ORDER-239 — [monitoring gap] RSI-MR: หางเวลาถือ basket 98-182 วัน ยาวกว่าวัน judge — `OPEN` · ทำได้: Claude · 👉 แนะ: Claude
 **bars:** N-A (เพิ่ม field ใน monitoring) · **flat-lot probe:** N-A
 **ปัญหา:** config ที่ re-optimize แล้วมี worst basket recovery **98 วัน MAIN / 182 วัน BWD** — หางนี้ไม่เคยถูกเห็นบนข้อมูล live
