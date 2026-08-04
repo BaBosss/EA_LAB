@@ -151,7 +151,7 @@ cells alive — that is the failure this order is about.
 
 ---
 
-## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+## ORDER-1330 — [factory/S13] The same configuration produced different money on two different days, and both identity fields the pipeline records said it was the same run — `OPEN (item 3 DONE 2026-08-04, lane S-2026-08-04-S13G: reproduced on 7 more cells and the mechanism is named — the tester charges the broker's CURRENT swap rates, which no record carries. Items 1 and 2 still owed)` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
 
 > Opened 2026-08-04 by lane `S-2026-08-04-S13F` while auditing its own `ORDER-1273` step-6 work.
 > **Nothing was adjusted to fit and no verdict follows from it** — this is a measurement about the
@@ -209,6 +209,76 @@ the next cell need not be.
 Evidence: `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260803_123147.jsonl` (08-03) vs
 `…_20260804_081932.jsonl` and `…_20260804_082029.jsonl` (08-04, both committed).
 
+### ✅ Item 3 executed — 2026-08-04, lane `S-2026-08-04-S13G`. Predictions committed before the run.
+
+Full write-up `_triage/ORDER-1330_reproduction_result_S13G.md`; predictions
+`_triage/ORDER-1330_reproduction_prereg_S13G.md` (`6953bfea`, committed **before** the runner
+started); records `factory/runs/pilot/pilot_cells_MAIN_lot0p03_20260804_11{0950,1101,1301,1509}.jsonl`.
+Eight H4 cells re-run on the identical invocation — MAIN · Model 1 · lot 0.03 · same lane.
+
+🔴 **All 8 differ from their 08-03 records, and in the 5 whose deal lists are otherwise identical the
+ENTIRE difference is the `Swap` column.** `H02/BTCUSD/H4`: swap **+15.28**, profit column identical
+to the cent, and +15.28 is exactly the change in net profit. `H01/EURUSD/H4`: swap **+204.78**,
+profit identical, **PF 0.62 → 1.06**. `H01/USDJPY/H4`: swap **+163.31**, profit identical, gross loss
+**−92.69 → −11.06**, **PF 12.46 → 111.77**. Three cells cross or move around a PF bar with **no
+configuration change of any kind**.
+
+**The mechanism, by elimination rather than by assumption.** The BTCUSD tick and 2026 history files
+were rewritten at 08:39 and 08:47 — *after* the 08:19/08:20 runs — and today's 11:09 run reproduced
+08:19 **byte-identically at deal level**, so current-year data updates are ruled out. What is left
+before 08:19 is `symbols-146237.dat` at **08:13:59**, the symbol-specification store, which is where
+swap rates live; the deal-level diff points at the same field independently. Meanwhile `D:\Meta 5\Bases`
+— the directory §6.4's marker names — **has not had one file modified since 2026-08-01**, so hashing
+it would have separated nothing. ⇒ **item 1's missing component is not a `Bases\` marker, it is the
+symbol specification in force at run time** (swap long/short + mode at minimum). Still not hashed in
+from this lane: that decision carries the migration item 1 already describes.
+
+**P1 restated with its evidence:** *"same session reproducible, across sessions not"* was too strong.
+Runs reproduce exactly while the external state holds — the state moved **once** between 08-03 12:31
+and 08-04 08:19 and has held across two sessions since. **P4 refuted in 2 of 8:** `H02/EURUSD/H4`
+(33 → 45 deals) and `H01/XAUUSD/H4` flat-lot (45 → 103) changed behaviour, both on symbols whose
+price history was also rewritten. **Two mechanisms, not one.**
+
+**Item 2 is now bigger than it was written:** the session-to-session move on these eight cells ranges
+from 0.5 % to a PF crossing 1.0, not ±2–3 %.
+
+---
+
+## ORDER-1350 — [factory/S13] 🔴 The tester IS charging BTCUSD swap, so every crypto record deducts the financing a second time — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
+
+> Opened 2026-08-04 by lane `S-2026-08-04-S13G`, found while executing `ORDER-1330` item 3 — the
+> deal-level diff that named the swap column is the same evidence that shows the column is not zero.
+> **Nothing is recomputed here and no number is restated**, because the honest fix starts with a probe.
+
+`scripts/swap_adjust_crypto.py` states its own premise in its docstring, measured 2026-07-26:
+`BTCUSD SYMBOL_SWAP_MODE_INTEREST_CURRENT -> swap is NOT charged (net == price-only P&L to the cent)`.
+**On the runs behind the current evidence that premise is false** — the reports carry a non-zero
+tester `Swap` column and the post-hoc cost is applied on top of it:
+
+| run | tester already charged | deducted again post-hoc |
+|---|---|---|
+| `B14-H02-r1/BTCUSD/H4` BWD **M4** | **−218.96** | −379.08 |
+| `B14-H02-r1/BTCUSD/H4` MAIN **M4** | **−762.57** | −1304.25 |
+| `B14-H01-r1/BTCUSD/H4` BWD **M4** | **−134.80** | −239.94 |
+| `B14-H01-r1/BTCUSD/H4` MAIN **M4** | **−356.91** | −620.97 |
+
+It is not a token charge: the implied annual rate on the tester's own swaps, per position over
+`H01/BTCUSD/H4` MAIN, has a **mean of 14.3 %** against the broker's stated `SYMBOL_SWAP_LONG` of
+**14.67 %** (median 10.6 %; the spread is FIFO pairing across a grid basket and weekend handling on
+my side, not the tester's).
+
+🔴 **Direction matters and must travel with this row: the financing-adjusted numbers are too
+PESSIMISTIC, not too optimistic.** `B14-H02-r1`'s financing-adjusted BWD margin of **1.20** — the
+number the owner's participation question rests on — is understated.
+
+**Owed, in this order:** (1) re-run `ea_projects/(TST)_SymbolSwapProbe/` on the pinned lane and
+record the symbol's swap mode **as of a dated run**, because "a probe said otherwise nine days ago"
+is precisely how this got written; (2) decide whether `swap_adjust_crypto.py` applies to BTCUSD at
+all, and if not, what happens to every record already carrying `financing_deducted.applied = true`;
+(3) the same question for ETHUSD and any other INTEREST-mode symbol the tool is aimed at.
+⚠️ Coupled to `ORDER-1330`: if the swap rate is an unrecorded input that moves, then *when* the probe
+ran is part of its result, and a single dated probe is not a permanent answer.
+
 ---
 
 ## ORDER-1301 — [factory/S13] Every configuration in the PF-max plateau has essentially no realized loss, which is what a basket martingale looks like when it is measured on PF — `OPEN` · ทำได้: Claude/Opus (lead act) · 👉 แนะ: Claude
@@ -265,6 +335,33 @@ only the dimensions that are cheap to widen.
 
 **This blocks `ORDER-1254`:** BWD judges the configuration the probe selected, and fourteen cells do
 not have one yet.
+
+⚠️ **Added 2026-08-04 by lane `S-2026-08-04-S13G` — a reason to settle the first deliverable before
+buying the tester time, not a decision on it.** `ORDER-1330` item 3 re-ran eight H4 cells of exactly
+the kind these surfaces are made of and **all eight moved**, three of them across or around a PF bar,
+with no configuration change — the tester charges the broker's *current* swap rates and no record
+carries them. **A boundary located on a surface whose money is not reproducible across days cannot be
+chased by widening a range**: the median that sits on the edge today need not sit there tomorrow.
+Two further facts measured while reading these 16 records, both cheap and both bearing on the choice:
+
+- **32 boundary hits across the 14 cells**, and they are not scattered — `_2_BasketTP_BalPct` at its
+  **first** edge in 6 cells, `_14_DistAtrMult` first in 5, `_9_StepATRmult` first in 5,
+  `_22_TP_ATRmult` first in 4, `_14_MinDistPips` first in 1. **21 of 32 point at smaller TP or
+  tighter grid spacing** — the direction that manufactures a profit factor by never realising a loss,
+  which is `ORDER-1301`'s mechanism. Widening those edges chases the artefact, it does not escape it.
+  Only `_0_ATR_Period` (4 hits at `stop`=28) is a plain indicator period that could be widened
+  without touching a risk envelope.
+- **The design never says the grid IS the `safe_range`.** §6.3 decision 19 says "grid boundary ⇒
+  expand the range"; §6.2 speaks of search grids and budgets; **the string `safe_range` does not
+  appear in the design document at all.** The binding was made by `pilot_probe.ps1` when it chose
+  `safe_range` as the grid source. On the other side, `docs/PARAM_REGISTRY.csv` states in its own
+  header that `safe_range` is `UNKNOWN unless a citable source is named in the cell itself (an order,
+  a scorecard row, a doc, or an explicit code clamp)` — a permanent semantic that may not be guessed.
+  And `schemas.json` gives `safe_range` **no description at all**: `{start, step, stop}` and nothing
+  saying what it means. So the conflict is not two documents disagreeing; it is **one field with no
+  stated meaning being read as a safety envelope by the registry and as a search convenience by the
+  probe.** 🚫 No schema edit was made — `_triage/factory_os/schemas.json` is declared by the other
+  ACTIVE lane in `docs/SESSION_LEDGER.md` (rule 4), so the store change waits for a lane that owns it.
 
 ---
 
